@@ -4,7 +4,7 @@
 #include <CCA/Components/Arches/TransportEqns/DQMOMEqn.h>
 #include <CCA/Components/Arches/TransportEqns/DQMOMEqnFactory.h>
 #include <CCA/Components/Arches/CoalModels/PartVel.h>
-#include <CCA/Components/Arches/ParticleModels/ParticleHelper.h>
+#include <CCA/Components/Arches/ParticleModels/ParticleTools.h>
 #include <CCA/Components/Arches/ArchesLabel.h>
 #include <Core/Exceptions/ProblemSetupException.h>
 
@@ -100,25 +100,25 @@ DragModel::problemSetup(const ProblemSpecP& params, int qn)
   }
   
   // Need a size IC: 
-  std::string length_root = ParticleHelper::parse_for_role_to_label(db, "size"); 
-  std::string length_name = ParticleHelper::append_env( length_root, d_quadNode ); 
+  std::string length_root = ParticleTools::parse_for_role_to_label(db, "size"); 
+  std::string length_name = ParticleTools::append_env( length_root, d_quadNode ); 
   _length_varlabel = VarLabel::find(length_name); 
 
   // Need a density
-  std::string density_root = ParticleHelper::parse_for_role_to_label(db, "density"); 
-  _density_name = ParticleHelper::append_env( density_root, d_quadNode ); 
+  std::string density_root = ParticleTools::parse_for_role_to_label(db, "density"); 
+  _density_name = ParticleTools::append_env( density_root, d_quadNode ); 
 
   // Need velocity scaling constant
   std::string vel_root; 
   if ( _dir == 0 ){ 
-    vel_root = ParticleHelper::parse_for_role_to_label(db, "uvel"); 
+    vel_root = ParticleTools::parse_for_role_to_label(db, "uvel"); 
   } else if ( _dir == 1){ 
-    vel_root = ParticleHelper::parse_for_role_to_label(db, "vvel"); 
+    vel_root = ParticleTools::parse_for_role_to_label(db, "vvel"); 
   } else { 
-    vel_root = ParticleHelper::parse_for_role_to_label(db, "wvel"); 
+    vel_root = ParticleTools::parse_for_role_to_label(db, "wvel"); 
   }
   
-  vel_root = ParticleHelper::append_qn_env( vel_root, d_quadNode ); 
+  vel_root = ParticleTools::append_qn_env( vel_root, d_quadNode ); 
   EqnBase& temp_current_eqn = dqmom_eqn_factory.retrieve_scalar_eqn(vel_root);
   DQMOMEqn& current_eqn = dynamic_cast<DQMOMEqn&>(temp_current_eqn);
   _vel_scaling_constant = current_eqn.getScalingConstant(d_quadNode);
@@ -127,17 +127,17 @@ DragModel::problemSetup(const ProblemSpecP& params, int qn)
 
   //get the birth term if any: 
   const std::string birth_name = current_eqn.get_model_by_type( "SimpleBirth" ); 
-  std::string birth_qn_name = ParticleHelper::append_qn_env(birth_name, d_quadNode); 
+  std::string birth_qn_name = ParticleTools::append_qn_env(birth_name, d_quadNode); 
   if ( birth_name != "NULLSTRING" ){ 
     _birth_label = VarLabel::find( birth_qn_name ); 
   }
 
   // Need weight name and scaling constant
-  std::string weight_name = ParticleHelper::append_env("w", d_quadNode); 
+  std::string weight_name = ParticleTools::append_env("w", d_quadNode); 
   _weight_varlabel = VarLabel::find(weight_name); 
-  std::string scaled_weight_name = ParticleHelper::append_qn_env("w", d_quadNode); 
+  std::string scaled_weight_name = ParticleTools::append_qn_env("w", d_quadNode); 
   _scaled_weight_varlabel = VarLabel::find(scaled_weight_name); 
-  std::string weightqn_name = ParticleHelper::append_qn_env("w", d_quadNode); 
+  std::string weightqn_name = ParticleTools::append_qn_env("w", d_quadNode); 
   EqnBase& temp_current_eqn2 = dqmom_eqn_factory.retrieve_scalar_eqn(weightqn_name);
   DQMOMEqn& current_eqn2 = dynamic_cast<DQMOMEqn&>(temp_current_eqn2);
   _weight_small = current_eqn2.getSmallClipPlusTol();
@@ -151,6 +151,13 @@ DragModel::problemSetup(const ProblemSpecP& params, int qn)
 void 
 DragModel::sched_initVars( const LevelP& level, SchedulerP& sched )
 {
+  string taskname = "DragModel::initVars"; 
+  Task* tsk = scinew Task(taskname, this, &DragModel::initVars);
+
+  tsk->computes(d_modelLabel);
+  tsk->computes(d_gasLabel);
+
+  sched->addTask(tsk, level->eachPatch(), d_sharedState->allArchesMaterials());
 }
 
 //-------------------------------------------------------------------------
@@ -163,6 +170,22 @@ DragModel::initVars( const ProcessorGroup * pc,
                             DataWarehouse        * old_dw, 
                             DataWarehouse        * new_dw )
 {
+  //patch loop
+  for (int p=0; p < patches->size(); p++){
+    const Patch* patch = patches->get(p);
+    int archIndex = 0;
+    int matlIndex = d_sharedState->getArchesMaterial(archIndex)->getDWIndex(); 
+
+    CCVariable<double> model; 
+    CCVariable<double> gas_source;
+    
+    new_dw->allocateAndPut( model, d_modelLabel, matlIndex, patch );
+    model.initialize(0.0);
+    new_dw->allocateAndPut( gas_source, d_gasLabel, matlIndex, patch );
+    gas_source.initialize(0.0);
+
+
+  }
 }
 
 

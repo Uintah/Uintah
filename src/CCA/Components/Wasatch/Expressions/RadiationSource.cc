@@ -104,7 +104,7 @@ namespace Wasatch {
     Uintah::Task* task = scinew Uintah::Task( "RadiationSource: setup bndflux", this,
                                              &RadiationSource::setup_bndflux );
     
-    task->computes(Uintah::VarLabel::find("boundFlux"));
+    task->computes(Uintah::VarLabel::find("RMCRTboundFlux"));
     sched->addTask(task, level->eachPatch(), materials);
   }
 
@@ -120,7 +120,7 @@ namespace Wasatch {
     for (int p=0; p < patches->size(); p++){
       const Uintah::Patch* patch = patches->get(p);
       Uintah::CCVariable<Uintah::Stencil7> boundFlux;
-      newDW->allocateAndPut( boundFlux, Uintah::VarLabel::find("boundFlux"), 0, patch );
+      newDW->allocateAndPut( boundFlux, Uintah::VarLabel::find("RMCRTboundFlux"), 0, patch );
       
       for (Uintah::CellIterator iter = patch->getExtraCellIterator(); !iter.done(); iter++){
         Uintah::IntVector origin = *iter;

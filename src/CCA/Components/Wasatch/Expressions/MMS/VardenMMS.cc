@@ -20,18 +20,22 @@
 template<typename FieldT>
 VarDen1DMMSMixFracSrc<FieldT>::
 VarDen1DMMSMixFracSrc( const Expr::Tag& xTag,
-                     const Expr::Tag& tTag,
-                     const double D,
-                     const double rho0,
-                     const double rho1 )
+                      const Expr::Tag& tTag,
+                      const Expr::Tag& dtTag,
+                      const double D,
+                      const double rho0,
+                      const double rho1,
+                      const bool atNPlus1)
 : Expr::Expression<FieldT>(),
 d_   ( D    ),
 rho0_( rho0 ),
-rho1_( rho1 )
+rho1_( rho1 ),
+atNPlus1_( atNPlus1 )
 {
   this->set_gpu_runnable( true );
-   x_ = this->template create_field_request<FieldT>(xTag);
-   t_ = this->template create_field_request<TimeField>(tTag);
+  x_ = this->template create_field_request<FieldT>(xTag);
+  t_ = this->template create_field_request<TimeField>(tTag);
+  dt_ = this->template create_field_request<TimeField>(dtTag);
 }
 
 //--------------------------------------------------------------------
@@ -45,39 +49,50 @@ evaluate()
   FieldT& result = this->value();
   const FieldT& x = x_->field_ref();
   const TimeField& t = t_->field_ref();
+  
+  SpatialOps::SpatFldPtr<TimeField> tNew_ = SpatialOps::SpatialFieldStore::get<TimeField>( result );
+  if (atNPlus1_) {
+    const TimeField& dt = dt_->field_ref();
+    *tNew_ <<= t + dt;
+  } else {
+    *tNew_ <<= t;
+  }
+  
+  const TimeField& tNew = *tNew_;
+  
   result <<=
   (
-   ( 5 * rho0_ * (rho1_ * rho1_) * exp( (5 * (x * x))/(t + 10.))
-    * ( 1500. * d_ - 120. * t + 75. * (t * t) * (x * x)
-       + 30. * (t * t * t) * (x * x) + 750 * d_ * t
-       + 1560. * d_ * (t * t) + 750 * d_ * (t * t * t)
-       + 60. * d_ * (t * t * t * t) - 1500 * d_ * (x * x)
-       + 30. * t * (x * x) - 606. * (t * t) - 120. * (t * t * t)
-       - 6. * (t * t * t * t) + 75 * (x * x)
-       + 7500. * t * x * sin((2 * PI * x)/(3. * (t + 10.)))
-       - 250. * PI * (t * t) * cos((2 * PI * x)/(3.*(t + 10.)))
-       - 20. * PI * (t * t * t)*cos((2 * PI * x)/(3.*(t + 10.)))
-       - 1500. * d_ * (t * t) * (x * x)
-       - 600. * d_ * (t * t * t) * (x * x)
-       + 3750. * (t * t) * x * sin((2 * PI * x)/(3. * (t + 10.)))
-       + 300. * (t * t * t) * x * sin((2 * PI * x)/(3.*(t + 10.)))
-       - 500. * PI * t * cos((2 * PI * x)/(3. * (t + 10.)))
-       - 600. * d_ * t * (x * x) - 600
+   ( 5 * rho0_ * (rho1_ * rho1_) * exp( (5 * (x * x))/(tNew + 10.))
+    * ( 1500. * d_ - 120. * tNew + 75. * (tNew * tNew) * (x * x)
+       + 30. * (tNew * tNew * tNew) * (x * x) + 750 * d_ * tNew
+       + 1560. * d_ * (tNew * tNew) + 750 * d_ * (tNew * tNew * tNew)
+       + 60. * d_ * (tNew * tNew * tNew * tNew) - 1500 * d_ * (x * x)
+       + 30. * tNew * (x * x) - 606. * (tNew * tNew) - 120. * (tNew * tNew * tNew)
+       - 6. * (tNew * tNew * tNew * tNew) + 75 * (x * x)
+       + 7500. * tNew * x * sin((2 * PI * x)/(3. * (tNew + 10.)))
+       - 250. * PI * (tNew * tNew) * cos((2 * PI * x)/(3.*(tNew + 10.)))
+       - 20. * PI * (tNew * tNew * tNew)*cos((2 * PI * x)/(3.*(tNew + 10.)))
+       - 1500. * d_ * (tNew * tNew) * (x * x)
+       - 600. * d_ * (tNew * tNew * tNew) * (x * x)
+       + 3750. * (tNew * tNew) * x * sin((2 * PI * x)/(3. * (tNew + 10.)))
+       + 300. * (tNew * tNew * tNew) * x * sin((2 * PI * x)/(3.*(tNew + 10.)))
+       - 500. * PI * tNew * cos((2 * PI * x)/(3. * (tNew + 10.)))
+       - 600. * d_ * tNew * (x * x) - 600
        )
     )/3
    +
-   ( 250 * rho0_ * rho1_ * (rho0_ - rho1_) * (t + 10.) * (3 * d_ + 3 * d_ * (t * t)
-                                                            - PI * t * cos(
-                                                                             (2 * PI * x)/(3. * (t + 10.))))
+   ( 250 * rho0_ * rho1_ * (rho0_ - rho1_) * (tNew + 10.) * (3 * d_ + 3 * d_ * (tNew * tNew)
+                                                          - PI * tNew * cos(
+                                                                         (2 * PI * x)/(3. * (tNew + 10.))))
     )/ 3
    )
   /
   (
-   ( (t * t) + 1.)*((t + 10.) * (t + 10.))
+   ( (tNew * tNew) + 1.)*((tNew + 10.) * (tNew + 10.))
    *
    (
-    (5 * rho0_ - 5 * rho1_ + 5 * rho1_ * exp((5 * (x * x))/(t + 10.)) + 2 * rho1_ * t * exp((5 * (x * x))/(t + 10.)))
-    *(5 * rho0_ - 5 * rho1_ + 5 * rho1_ * exp((5 * (x * x))/(t + 10.)) + 2 * rho1_ * t * exp((5 * (x * x))/(t + 10.)))
+    (5 * rho0_ - 5 * rho1_ + 5 * rho1_ * exp((5 * (x * x))/(tNew + 10.)) + 2 * rho1_ * tNew * exp((5 * (x * x))/(tNew + 10.)))
+    *(5 * rho0_ - 5 * rho1_ + 5 * rho1_ * exp((5 * (x * x))/(tNew + 10.)) + 2 * rho1_ * tNew * exp((5 * (x * x))/(tNew + 10.)))
     )
    );
 }
@@ -89,15 +104,19 @@ VarDen1DMMSMixFracSrc<FieldT>::Builder::
 Builder( const Expr::Tag& result,
         const Expr::Tag& xTag,
         const Expr::Tag& tTag,
+        const Expr::Tag& dtTag,
         const double D,
         const double rho0,
-        const double rho1  )
+        const double rho1,
+        const bool atNPlus1)
 : ExpressionBuilder(result),
 d_   ( D    ),
 rho0_( rho0 ),
 rho1_( rho1 ),
+atNPlus1_(atNPlus1),
 xTag_( xTag ),
-tTag_( tTag )
+tTag_( tTag ),
+dtTag_(dtTag)
 {}
 
 //--------------------------------------------------------------------
@@ -107,7 +126,7 @@ Expr::ExpressionBase*
 VarDen1DMMSMixFracSrc<FieldT>::Builder::
 build() const
 {
-  return new VarDen1DMMSMixFracSrc<FieldT>( xTag_, tTag_, d_, rho0_, rho1_ );
+  return new VarDen1DMMSMixFracSrc<FieldT>( xTag_, tTag_, dtTag_, d_, rho0_, rho1_, atNPlus1_ );
 }
 
 //--------------------------------------------------------------------
@@ -115,33 +134,33 @@ build() const
 template<typename FieldT>
 VarDen1DMMSContinuitySrc<FieldT>::
 VarDen1DMMSContinuitySrc( const double rho0,
-                          const double rho1,
-                          const Expr::Tag densTag,
-                          const Expr::Tag densStarTag,
-                          const Expr::Tag dens2StarTag,
-                          const Expr::TagList& velTags,
-                          const Expr::Tag& xTag,
-                          const Expr::Tag& tTag,
-                          const Expr::Tag& dtTag,
-                          const Wasatch::VarDenParameters varDenParams)
+                         const double rho1,
+                         const Expr::Tag densTag,
+                         const Expr::Tag densStarTag,
+                         const Expr::Tag dens2StarTag,
+                         const Expr::TagList& velTags,
+                         const Expr::Tag& xTag,
+                         const Expr::Tag& tTag,
+                         const Expr::Tag& dtTag,
+                         const Wasatch::VarDenParameters varDenParams)
 : Expr::Expression<FieldT>(),
-  rho0_( rho0 ),
-  rho1_( rho1 ),
-  doX_( velTags[0]!=Expr::Tag() ),
-  doY_( velTags[1]!=Expr::Tag() ),
-  doZ_( velTags[2]!=Expr::Tag() ),
-  is3d_( doX_ && doY_ && doZ_ ),
-  a0_( varDenParams.alpha0 ),
-  model_( varDenParams.model ),
-  useOnePredictor_(varDenParams.onePredictor),
-  varDenParams_(varDenParams)
+rho0_( rho0 ),
+rho1_( rho1 ),
+doX_( velTags[0]!=Expr::Tag() ),
+doY_( velTags[1]!=Expr::Tag() ),
+doZ_( velTags[2]!=Expr::Tag() ),
+is3d_( doX_ && doY_ && doZ_ ),
+a0_( varDenParams.alpha0 ),
+model_( varDenParams.model ),
+useOnePredictor_(varDenParams.onePredictor),
+varDenParams_(varDenParams)
 {
   this->set_gpu_runnable( true );
-   x_ = this->template create_field_request<FieldT>(xTag);
-   t_ = this->template create_field_request<TimeField>(tTag);
-   dt_ = this->template create_field_request<TimeField>(dtTag);
+  x_ = this->template create_field_request<FieldT>(xTag);
+  t_ = this->template create_field_request<TimeField>(tTag);
+  dt_ = this->template create_field_request<TimeField>(dtTag);
   if (model_ != Wasatch::VarDenParameters::CONSTANT) {
-     dens_ = this->template create_field_request<FieldT>(densTag);
+    dens_ = this->template create_field_request<FieldT>(densTag);
     if (useOnePredictor_)  densStar_ = this->template create_field_request<SVolField>(densStarTag);
     else                   dens2Star_ = this->template create_field_request<SVolField>(dens2StarTag);
     if (doX_)  u_ = this->template create_field_request<XVolField>(velTags[0]);
@@ -181,13 +200,13 @@ evaluate()
   FieldT& result = this->value();
   const TimeField& time = t_->field_ref();
   const TimeField& dt = dt_->field_ref();
-
+  
   const FieldT& x = x_->field_ref();
   
   SpatFldPtr<TimeField> t = SpatialFieldStore::get<TimeField>( time );
   *t <<= time + dt;
   
-
+  
   SpatialOps::SpatFldPtr<SVolField> drhodtstar = SpatialOps::SpatialFieldStore::get<SVolField>( result );
   switch (model_) {
     case Wasatch::VarDenParameters::IMPULSE:
@@ -202,9 +221,9 @@ evaluate()
     default:
       break;
   }
-
+  
   SpatialOps::SpatFldPtr<SVolField> alpha = SpatialOps::SpatialFieldStore::get<SVolField>( result );
-
+  
   switch (model_) {
     case Wasatch::VarDenParameters::CONSTANT:
       *alpha <<= a0_;
@@ -219,7 +238,7 @@ evaluate()
       const double c = varDenParams_.gaussWidth;
       *alpha <<= a0_ + (1.0 - a0_)*exp(- *drhodtstar * *drhodtstar/(2.0*c*c));
     }
-      break;      
+      break;
     case Wasatch::VarDenParameters::DYNAMIC:
     {
       const SVolField& dens = dens_->field_ref();
@@ -250,7 +269,7 @@ evaluate()
       *alpha <<= 0.1;
       break;
   }
-
+  
   result <<= *alpha *
   (
    (
@@ -294,16 +313,16 @@ evaluate()
 template< typename FieldT >
 VarDen1DMMSContinuitySrc<FieldT>::Builder::
 Builder( const Expr::Tag& result,
-         const double rho0,
-         const double rho1,
-         const Expr::Tag densTag,
-         const Expr::Tag densStarTag,
-         const Expr::Tag dens2StarTag,
-         const Expr::TagList& velTags,
-         const Expr::Tag& xTag,
-         const Expr::Tag& tTag,
-         const Expr::Tag& timestepTag,
-         const Wasatch::VarDenParameters varDenParams)
+        const double rho0,
+        const double rho1,
+        const Expr::Tag densTag,
+        const Expr::Tag densStarTag,
+        const Expr::Tag dens2StarTag,
+        const Expr::TagList& velTags,
+        const Expr::Tag& xTag,
+        const Expr::Tag& tTag,
+        const Expr::Tag& timestepTag,
+        const Wasatch::VarDenParameters varDenParams)
 : ExpressionBuilder(result),
 rho0_( rho0 ),
 rho1_( rho1 ),
@@ -332,12 +351,12 @@ build() const
 template<typename FieldT>
 VarDen1DMMSPressureContSrc<FieldT>::
 VarDen1DMMSPressureContSrc( const Expr::Tag continutySrcTag,
-                          const Expr::Tag& dtTag)
+                           const Expr::Tag& dtTag)
 : Expr::Expression<FieldT>()
 {
   this->set_gpu_runnable( true );
-   continutySrc_ = this->template create_field_request<FieldT>(continutySrcTag);
-   dt_ = this->template create_field_request<TimeField>(dtTag);
+  continutySrc_ = this->template create_field_request<FieldT>(continutySrcTag);
+  dt_ = this->template create_field_request<TimeField>(dtTag);
 }
 
 //--------------------------------------------------------------------

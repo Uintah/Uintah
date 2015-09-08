@@ -271,6 +271,7 @@ BUILD_ICE=@BUILD_ICE@
 BUILD_MODELS_RADIATION=@BUILD_MODELS_RADIATION@
 BUILD_MPM=@BUILD_MPM@
 BUILD_WASATCH=@BUILD_WASATCH@
+BUILD_WASATCH_FOR_ARCHES=@BUILD_WASATCH_FOR_ARCHES@
 
 SSTREAM_COMPAT := @SSTREAM_COMPAT@
 ifeq ($(SSTREAM_COMPAT),yes)
@@ -468,7 +469,7 @@ endif
 #       dependencies after the compilation phase.
 #
 ifeq ($(SCI_MAKE_BE_QUIET),true)
-	@echo "Compiling: $<"
+	@echo "Compiling CUDA file: $<"
 	@$(NVCC) $(NVCC_CXXFLAGS) $(INCLUDES) -Xcompiler $(CC_DEPEND_REGEN) $(call repository,$@) -c -dc $< -o $@
 	@rm -f $(basename $@).$(CC_DEPEND_EXT)
 	@$(NVCC) $(NVCC_CXXFLAGS) $(INCLUDES) -M $< | sed 's,^$(notdir $@),$@,g' > $(basename $@).$(CC_DEPEND_EXT)

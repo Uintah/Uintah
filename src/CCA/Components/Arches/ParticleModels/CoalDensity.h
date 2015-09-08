@@ -10,18 +10,18 @@ namespace Uintah{
 
 public: 
 
-    CoalDensity( std::string task_name, int matl_index ); 
+    CoalDensity( std::string task_name, int matl_index, const int N );
     ~CoalDensity(); 
 
     void problemSetup( ProblemSpecP& db ); 
 
-    void register_initialize( std::vector<VariableInformation>& variable_registry );
+    void register_initialize( std::vector<ArchesFieldContainer::VariableInformation>& variable_registry );
 
-    void register_timestep_init( std::vector<VariableInformation>& variable_registry ); 
+    void register_timestep_init( std::vector<ArchesFieldContainer::VariableInformation>& variable_registry ); 
 
-    void register_timestep_eval( std::vector<VariableInformation>& variable_registry, const int time_substep ); 
+    void register_timestep_eval( std::vector<ArchesFieldContainer::VariableInformation>& variable_registry, const int time_substep ); 
 
-    void register_compute_bcs( std::vector<VariableInformation>& variable_registry, const int time_substep ){}; 
+    void register_compute_bcs( std::vector<ArchesFieldContainer::VariableInformation>& variable_registry, const int time_substep ){}; 
 
     void compute_bcs( const Patch* patch, ArchesTaskInfoManager* tsk_info, 
                       SpatialOps::OperatorDatabase& opr ){}; 
@@ -51,25 +51,30 @@ public:
 
       public: 
 
-      Builder( std::string task_name, int matl_index ) : _task_name(task_name), _matl_index(matl_index){}
+      Builder( std::string task_name, int matl_index, const int N ) : _task_name(task_name), _matl_index(matl_index), _Nenv(N){}
       ~Builder(){}
 
       CoalDensity* build()
-      { return scinew CoalDensity( _task_name, _matl_index ); }
+      { return scinew CoalDensity( _task_name, _matl_index, _Nenv ); }
 
       private: 
 
       std::string _task_name; 
-      int _matl_index; 
+      int _matl_index;
+      int _Nenv;
 
     };
 
 private: 
 
+    bool _const_size;
     int _Nenv; 
     double _value; 
     double _rhop_o;
-    double _pi; 
+    double _pi;
+    double _raw_coal_mf;
+    double _char_mf;
+    double _ash_mf;
 
     std::vector<double> _init_ash;
     std::vector<double> _init_rawcoal;
@@ -77,7 +82,8 @@ private:
     std::vector<double> _sizes;
     std::vector<double> _denom; 
 
-    std::string _rawcoal_base_name; 
+    std::string _diameter_base_name;
+    std::string _rawcoal_base_name;
     std::string _char_base_name; 
 
     struct CoalAnalysis{ 

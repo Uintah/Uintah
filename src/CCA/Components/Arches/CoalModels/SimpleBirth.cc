@@ -2,7 +2,7 @@
 #include <CCA/Components/Arches/TransportEqns/EqnFactory.h>
 #include <CCA/Components/Arches/TransportEqns/EqnBase.h>
 #include <CCA/Components/Arches/TransportEqns/DQMOMEqn.h>
-#include <CCA/Components/Arches/ParticleModels/ParticleHelper.h>
+#include <CCA/Components/Arches/ParticleModels/ParticleTools.h>
 #include <CCA/Components/Arches/ArchesLabel.h>
 
 #include <Core/ProblemSpec/ProblemSpec.h>
@@ -84,13 +84,13 @@ SimpleBirth::problemSetup(const ProblemSpecP& inputdb, int qn)
       throw ProblemSetupException("Error: Must specify an abscissa label for this model.",__FILE__,__LINE__);
     }
 
-    std::string a_name = ParticleHelper::append_qn_env( _abscissa_name, d_quadNode ); 
+    std::string a_name = ParticleTools::append_qn_env( _abscissa_name, d_quadNode ); 
     EqnBase& a_eqn = dqmomFactory.retrieve_scalar_eqn( a_name ); 
     _a_scale = a_eqn.getScalingConstant(d_quadNode); 
 
   }
 
-  std::string w_name = ParticleHelper::append_qn_env( "w", d_quadNode ); 
+  std::string w_name = ParticleTools::append_qn_env( "w", d_quadNode ); 
   EqnBase& temp_eqn = dqmomFactory.retrieve_scalar_eqn(w_name);
   DQMOMEqn& eqn = dynamic_cast<DQMOMEqn&>(temp_eqn);
   double weight_clip = eqn.getSmallClip();
@@ -121,6 +121,13 @@ SimpleBirth::problemSetup(const ProblemSpecP& inputdb, int qn)
 void 
 SimpleBirth::sched_initVars( const LevelP& level, SchedulerP& sched )
 {
+  string taskname = "SimpleBirth::initVars"; 
+  Task* tsk = scinew Task(taskname, this, &SimpleBirth::initVars);
+
+  tsk->computes(d_modelLabel);
+  tsk->computes(d_gasLabel);
+
+  sched->addTask(tsk, level->eachPatch(), d_sharedState->allArchesMaterials());
 }
 
 //-------------------------------------------------------------------------
@@ -133,6 +140,20 @@ SimpleBirth::initVars( const ProcessorGroup * pc,
                             DataWarehouse        * old_dw, 
                             DataWarehouse        * new_dw )
 {
+  //patch loop
+  for (int p=0; p < patches->size(); p++){
+    const Patch* patch = patches->get(p);
+    int archIndex = 0;
+    int matlIndex = d_sharedState->getArchesMaterial(archIndex)->getDWIndex(); 
+
+    CCVariable<double> model; 
+    CCVariable<double> gas_source;
+    
+    new_dw->allocateAndPut( model, d_modelLabel, matlIndex, patch );
+    model.initialize(0.0);
+    new_dw->allocateAndPut( gas_source, d_gasLabel, matlIndex, patch );
+    gas_source.initialize(0.0);
+  }
 }
 
 
@@ -147,7 +168,7 @@ SimpleBirth::sched_computeModel( const LevelP& level, SchedulerP& sched, int tim
   Task* tsk = scinew Task(taskname, this, &SimpleBirth::computeModel, timeSubStep );
 
   if ( !_is_weight ){ 
-    std::string abscissa_name = ParticleHelper::append_env( _abscissa_name, d_quadNode ); 
+    std::string abscissa_name = ParticleTools::append_env( _abscissa_name, d_quadNode ); 
     _abscissa_label = VarLabel::find(abscissa_name); 
     if ( _abscissa_label == 0 )
       throw InvalidValue("Error: Abscissa not found: "+abscissa_name, __FILE__, __LINE__); 

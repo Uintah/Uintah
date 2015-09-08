@@ -35,24 +35,24 @@
 /**************************************
 CLASS
    NonlinearSolver
-   
+
    Class NonlinearSolver is an abstract base class
    which defines the operations needed to implement
    a nonlinear solver for the ImplicitTimeIntegrator.
 
 GENERAL INFORMATION
    NonlinearSolver.h - declaration of the class
-   
+
    Author: Rajesh Rawat (rawat@crsim.utah.edu)
 
    All major modifications since 01.01.2004 done by:
    Stanislav Borodai(borodai@crsim.utah.edu)
-      
+
    Creation Date:   Mar 1, 2000
-   
-   C-SAFE 
-   
-   
+
+   C-SAFE
+
+
 KEYWORDS
 
 
@@ -66,84 +66,71 @@ WARNING
 ****************************************/
 
 namespace Uintah {
-class EnthalpySolver;
 class TimeIntegratorLabel;
-class PartVel; 
+class PartVel;
 class DQMOM;
 class CQMOM;
 class CQMOM_Convection;
 class CQMOMSourceWrapper;
-class MomentumSolver;
 class NonlinearSolver {
 
 public:
 
-  // GROUP: Constructors:
-  ////////////////////////////////////////////////////////////////////////
-  // Blank constructor for NonlinearSolver.
-  NonlinearSolver(const ProcessorGroup* myworld);
+  NonlinearSolver( const ProcessorGroup* myworld );
 
-  // GROUP: Destructors:
-  ////////////////////////////////////////////////////////////////////////
-  // Virtual destructor for NonlinearSolver.
   virtual ~NonlinearSolver();
 
+  virtual void problemSetup( const ProblemSpecP& db, SimulationStateP& ) = 0;
 
-  // GROUP: Problem Setup :
-  ///////////////////////////////////////////////////////////////////////
-  // Interface for Set up of the problem specification database
-  virtual void problemSetup(const ProblemSpecP& db,SimulationStateP&) = 0;
+  virtual void sched_interpolateFromFCToCC( SchedulerP&,
+                                            const PatchSet* patches,
+                                            const MaterialSet* matls,
+                                            const TimeIntegratorLabel* timelabels,
+                                            const int curr_level) = 0;
 
-
-  virtual void sched_interpolateFromFCToCC(SchedulerP&, 
-                                           const PatchSet* patches,
-                                           const MaterialSet* matls,
-                                           const TimeIntegratorLabel* timelabels, 
-                                           const int curr_level) = 0;
-  // GROUP: Schedule Action Computations :
-  ///////////////////////////////////////////////////////////////////////
-  // Interface for Solve the nonlinear system, return some error code.
-  //    [in] 
-  //        documentation here
-  //    [out] 
-  //        documentation here
   virtual int nonlinearSolve( const LevelP& level,
                               SchedulerP& sched ) = 0;
-
 
   const std::string& getTimeIntegratorType() const
   {
     return d_timeIntegratorType;
   }
-  virtual double recomputeTimestep(double current_dt) = 0;
 
-  virtual double getAdiabaticAirEnthalpy() const = 0;
+  virtual double recomputeTimestep(double current_dt) = 0;
 
   virtual bool restartableTimesteps() = 0;
 
-  virtual MomentumSolver* get_momentum_solver() = 0;
-
-  virtual void setPartVel(PartVel* partVel) = 0; 
+  virtual void setPartVel(PartVel* partVel) = 0;
 
   virtual void setDQMOMSolver(DQMOM* dqmomSolver) = 0;
-  
+
   virtual void setCQMOMSolver(CQMOM* cqmomSolver) = 0;
-  
+
   virtual void setCQMOMConvect(CQMOM_Convection* cqmomConvect) = 0;
-  
+
   virtual void setCQMOMSource(CQMOMSourceWrapper* cqmomSource) = 0;
 
   virtual void sched_setInitVelCond( const LevelP& level, SchedulerP& sched, const MaterialSet* mats) = 0;
-  
+
   virtual void checkMomBCs( SchedulerP& sched,
                             const LevelP& level,
                             const MaterialSet* matls) = 0;
-  
+
+  class NLSolverBuilder {
+
+    public:
+
+      NLSolverBuilder(){}
+
+      virtual ~NLSolverBuilder() {}
+
+      virtual NonlinearSolver* build() = 0;
+
+  };
+
 protected:
    const ProcessorGroup * d_myworld;
    std::string            d_timeIntegratorType;
-
-   EnthalpySolver       * d_enthalpySolver;
 
 private:
 
@@ -151,5 +138,3 @@ private:
 } // End namespace Uintah
 
 #endif
-
-

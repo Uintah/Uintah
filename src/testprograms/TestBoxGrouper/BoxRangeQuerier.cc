@@ -31,7 +31,7 @@ Uintah::BoxRangeQuerier::~BoxRangeQuerier()
   delete d_rangeTree;
 }
 
-void Uintah::BoxRangeQuerier::query(const SCIRun::IntVector& low, const SCIRun::IntVector& high,
+void Uintah::BoxRangeQuerier::query(const IntVector& low, const IntVector& high,
 			    std::list<const Box*>& foundBoxes)
 {
   std::list<BoxPoint*> foundPoints;
@@ -39,10 +39,10 @@ void Uintah::BoxRangeQuerier::query(const SCIRun::IntVector& low, const SCIRun::
   // Note: factor of 2 is to make calculations simple and not
   // require rounding, but think of this as doing a query on
   // the box centers and think of these query values as halved.
-  SCIRun::IntVector centerLowTimes2 =
-    low * SCIRun::IntVector(2, 2, 2) - d_maxBoxDimensions;
-  SCIRun::IntVector centerHighTimes2 =
-    high * SCIRun::IntVector(2, 2, 2) + d_maxBoxDimensions;
+  IntVector centerLowTimes2 =
+    low * IntVector(2, 2, 2) - d_maxBoxDimensions;
+  IntVector centerHighTimes2 =
+    high * IntVector(2, 2, 2) + d_maxBoxDimensions;
 
   BoxPoint lowBoxPoint(centerLowTimes2);
   BoxPoint highBoxPoint(centerHighTimes2);
@@ -67,13 +67,13 @@ void Uintah::BoxRangeQuerier::query(const SCIRun::IntVector& low, const SCIRun::
 }
 
 void
-Uintah::BoxRangeQuerier::queryNeighbors(const SCIRun::IntVector& low, const SCIRun::IntVector& high,
+Uintah::BoxRangeQuerier::queryNeighbors(const IntVector& low, const IntVector& high,
 				std::list<const Box*>& foundBoxes)
 {
   std::list<BoxPoint*> foundPoints;
   for (int i = 0; i < 3; i++) {
-    SCIRun::IntVector sideLow = low; --sideLow[i];
-    SCIRun::IntVector sideHigh = high; sideHigh[i] = sideLow[i];
+    IntVector sideLow = low; --sideLow[i];
+    IntVector sideHigh = high; sideHigh[i] = sideLow[i];
     query(sideLow, sideHigh, foundBoxes);
     sideHigh = high; ++sideHigh[i];
     sideLow = low; sideLow[i] = sideHigh[i];
@@ -85,7 +85,7 @@ Uintah::BoxRangeQuerier::queryNeighbors(const SCIRun::IntVector& low, const SCIR
 }
 
 /*
-std::list<const Box*> Uintah::BoxRangeQuerier::query(const SCIRun::IntVector& low, const SCIRun::IntVector& high)
+std::list<const Box*> Uintah::BoxRangeQuerier::query(const IntVector& low, const IntVector& high)
 {
   std::list<const Box*> results;
   for (unsigned long i = 0; i < d_boxPoints.size(); i++) {
@@ -96,7 +96,7 @@ std::list<const Box*> Uintah::BoxRangeQuerier::query(const SCIRun::IntVector& lo
   return results;
 }
 
-std::list<const Box*> Uintah::BoxRangeQuerier::queryNeighbors(const SCIRun::IntVector& low, const SCIRun::IntVector& high)
+std::list<const Box*> Uintah::BoxRangeQuerier::queryNeighbors(const IntVector& low, const IntVector& high)
 {
   std::list<const Box*> results;
   for (unsigned long i = 0; i < d_boxPoints.size(); i++) {

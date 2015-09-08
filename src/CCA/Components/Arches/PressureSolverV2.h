@@ -208,6 +208,7 @@ private:
   
   int d_indx;             // Arches matl index.
   int d_iteration;
+  int nExtraSources;
   IntVector d_pressRef;   // cell index for reference pressure
 
   const ProcessorGroup* d_myworld;
@@ -221,6 +222,7 @@ private:
   SolverParameters* d_hypreSolver_parameters;
 
   std::vector<std::string> d_new_sources;
+  std::vector<const VarLabel *> extraSourceLabels;
   
   
 }; // End class PressureSolver

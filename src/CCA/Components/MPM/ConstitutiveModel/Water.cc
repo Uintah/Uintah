@@ -52,6 +52,7 @@ Water::Water(ProblemSpecP& ps, MPMFlags* Mflag)
   ps->require("bulk_modulus", d_initialData.d_Bulk);
   ps->require("viscosity",    d_initialData.d_Viscosity);
   ps->require("gamma",        d_initialData.d_Gamma);
+  initializeLocalMPMLabels();
 }
 
 Water::Water(const Water* cm) : ConstitutiveModel(cm)
@@ -64,6 +65,8 @@ Water::Water(const Water* cm) : ConstitutiveModel(cm)
 
 Water::~Water()
 {
+  VarLabel::destroy(pLocalizedLabel);
+  VarLabel::destroy(pLocalizedLabel_preReloc);
 }
 
 void Water::outputProblemSpec(ProblemSpecP& ps,bool output_cm_tag)
@@ -84,6 +87,14 @@ Water* Water::clone()
   return scinew Water(*this);
 }
 
+void Water::initializeLocalMPMLabels()
+{
+  pLocalizedLabel = VarLabel::create("p.localized",
+    ParticleVariable<int>::getTypeDescription());
+  pLocalizedLabel_preReloc = VarLabel::create("p.localized+",
+    ParticleVariable<int>::getTypeDescription());
+}
+
 void Water::initializeCMData(const Patch* patch,
                              const MPMMaterial* matl,
                              DataWarehouse* new_dw)
@@ -93,6 +104,14 @@ void Water::initializeCMData(const Patch* patch,
   initSharedDataForExplicit(patch, matl, new_dw);
 
   computeStableTimestep(patch, matl, new_dw);
+
+  ParticleSubset* pset = new_dw->getParticleSubset(matl->getDWIndex(), patch);
+
+  ParticleVariable<int>     pLocalized;
+  new_dw->allocateAndPut(pLocalized,         pLocalizedLabel, pset);
+  for(ParticleSubset::iterator iter = pset->begin();iter != pset->end();iter++){
+    pLocalized[*iter] = 0;
+  }
 }
 
 void Water::computeStableTimestep(const Patch* patch,
@@ -153,22 +172,30 @@ void Water::computeStressTensor(const PatchSubset* patches,
     ParticleVariable<Matrix3> pstress;
     constParticleVariable<double> pvolume;
     constParticleVariable<Vector> pvelocity;
+    constParticleVariable<int> pLocalized;
+    ParticleVariable<int> pLocalized_new;
     ParticleVariable<double> pdTdt,p_q;
-
 
     delt_vartype delT;
     old_dw->get(delT, lb->delTLabel, getLevel(patches));
 
     old_dw->get(pvelocity,           lb->pVelocityLabel,           pset);
     old_dw->get(deformationGradient, lb->pDeformationMeasureLabel, pset);
+    old_dw->get(pLocalized,          pLocalizedLabel,              pset);
 
     new_dw->allocateAndPut(pstress,  lb->pStressLabel_preReloc,    pset);
     new_dw->allocateAndPut(pdTdt,    lb->pdTdtLabel,               pset);
     new_dw->allocateAndPut(p_q,      lb->p_qLabel_preReloc,        pset);
+    new_dw->allocateAndPut(pLocalized_new,
+                           pLocalizedLabel_preReloc,               pset);
     new_dw->get(deformationGradient_new,
                             lb->pDeformationMeasureLabel_preReloc, pset);
     new_dw->get(pvolume,             lb->pVolumeLabel_preReloc,    pset);
     new_dw->get(velGrad,             lb->pVelGradLabel_preReloc,   pset);
+
+    // Get the particle IDs, useful in case a simulation goes belly up
+    constParticleVariable<long64> pParticleID;
+    old_dw->get(pParticleID, lb->pParticleIDLabel, pset);
 
     double viscosity = d_initialData.d_Viscosity;
     double bulk  = d_initialData.d_Bulk;
@@ -182,7 +209,22 @@ void Water::computeStressTensor(const PatchSubset* patches,
       // Assign zero internal heating by default - modify if necessary.
       pdTdt[idx] = 0.0;
 
+      // Carry forward the pLocalized tag for now, alter below
+      pLocalized_new[idx] = pLocalized[idx];
+
       J = deformationGradient_new[idx].Determinant();
+
+      if(!(J > 0.) || J > 1.e5){
+          cerr << "**ERROR** Negative (or huge) Jacobian of deformation gradient."
+               << "  Deleting particle in water model" << pParticleID[idx] << endl;
+          cerr << "l = " << velGrad[idx] << endl;
+          cerr << "F_new = " << deformationGradient_new[idx] << endl;
+          cerr << "J = " << J << endl;
+          cerr << "DWI = " << matl->getDWIndex() << endl;
+          pLocalized_new[idx]=-999;
+
+          J=1;
+      }
 
       // Calculate rate of deformation D, and deviatoric rate DPrime,
       Matrix3 D = (velGrad[idx] + velGrad[idx].Transpose())*0.5;
@@ -206,6 +248,14 @@ void Water::computeStressTensor(const PatchSubset* patches,
       WaveSpeed=Vector(Max(c_dil+fabs(pvelocity_idx.x()),WaveSpeed.x()),
                        Max(c_dil+fabs(pvelocity_idx.y()),WaveSpeed.y()),
                        Max(c_dil+fabs(pvelocity_idx.z()),WaveSpeed.z()));
+
+      if(!(pstress[idx].Norm()>0) && !(pstress[idx].Norm()<1e15)){
+        cout << "F_new = " << deformationGradient_new[idx] << endl;
+        cout << "pressure = " << p << endl;
+        cout << "shear = " << Shear << endl;
+        cout << "pstress = " << pstress[idx] << endl;
+        cout << "J = " << J << endl;
+      }
                                                                                 
       // Compute artificial viscosity term
       if (flag->d_artificial_viscosity) {
@@ -229,10 +279,20 @@ void Water::computeStressTensor(const PatchSubset* patches,
   }
 }
 
-void Water::addParticleState(std::vector<const VarLabel*>& ,
-                                   std::vector<const VarLabel*>& )
+void Water::addParticleState(std::vector<const VarLabel*>& from,
+                                   std::vector<const VarLabel*>& to)
 {
   // Add the local particle state data for this constitutive model.
+  from.push_back(pLocalizedLabel);
+  to.push_back(pLocalizedLabel_preReloc);
+}
+
+void Water::addInitialComputesAndRequires(Task* task,
+                                          const MPMMaterial* matl,
+                                          const PatchSet* patch) const
+{
+  const MaterialSubset* matlset = matl->thisMaterial();
+  task->computes(pLocalizedLabel,     matlset);
 }
 
 void Water::carryForward(const PatchSubset* patches,
@@ -261,8 +321,8 @@ void Water::carryForward(const PatchSubset* patches,
 }
 
 void Water::addComputesAndRequires(Task* task,
-                                          const MPMMaterial* matl,
-                                          const PatchSet* patches) const
+                                   const MPMMaterial* matl,
+                                   const PatchSet* patches) const
 {
   // Add the computes and requires that are common to all explicit 
   // constitutive models.  The method is defined in the ConstitutiveModel
@@ -270,16 +330,42 @@ void Water::addComputesAndRequires(Task* task,
   const MaterialSubset* matlset = matl->thisMaterial();
   addSharedCRForExplicit(task, matlset, patches);
 
+  Ghost::GhostType  gnone = Ghost::None;
+  task->requires(Task::OldDW, pLocalizedLabel,        matlset, gnone);
+  task->requires(Task::OldDW, lb->pParticleIDLabel,   matlset, gnone);
+  task->computes(pLocalizedLabel_preReloc,            matlset);
 }
 
-void 
-Water::addComputesAndRequires(Task* ,
+void Water::addComputesAndRequires(Task* ,
                                    const MPMMaterial* ,
                                    const PatchSet* ,
                                    const bool ) const
 {
 }
 
+void Water::addRequiresDamageParameter(Task* task,
+                                       const MPMMaterial* matl,
+                                       const PatchSet* ) const
+{
+  const MaterialSubset* matlset = matl->thisMaterial();
+  task->requires(Task::NewDW, pLocalizedLabel_preReloc,matlset,Ghost::None);
+}
+
+void Water::getDamageParameter(const Patch* patch,
+                               ParticleVariable<int>& damage,
+                               int dwi,
+                               DataWarehouse* old_dw,
+                               DataWarehouse* new_dw)
+{
+  ParticleSubset* pset = old_dw->getParticleSubset(dwi,patch);
+  constParticleVariable<int> pLocalized;
+  new_dw->get(pLocalized, pLocalizedLabel_preReloc, pset);
+
+  ParticleSubset::iterator iter;
+  for (iter = pset->begin(); iter != pset->end(); iter++) {
+    damage[*iter] = pLocalized[*iter];
+  }
+}
 
 // The "CM" versions use the pressure-volume relationship of the CNH model
 double Water::computeRhoMicroCM(double pressure, 

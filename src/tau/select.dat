@@ -2,19 +2,19 @@
 
 BEGIN_EXCLUDE_LIST
 
-void Uintah::Patch::findCellAndShapeDerivatives(const SCIRun::Point &, SCIRun::IntVector *, SCIRun::Vector *) const  
+void Uintah::Patch::findCellAndShapeDerivatives(const SCIRun::Point &, IntVector *, SCIRun::Vector *) const  
 
 SCIRun::Point Uintah::Level::positionToIndex(const SCIRun::Point &) const  
 
-void Uintah::Patch::findCellAndWeightsAndShapeDerivatives(const SCIRun::Point &, SCIRun::IntVector *, double *, SCIRun::Vector *) const  
+void Uintah::Patch::findCellAndWeightsAndShapeDerivatives(const SCIRun::Point &, IntVector *, double *, SCIRun::Vector *) const  
 
-Uintah::Box Uintah::Level::getBox(const SCIRun::IntVector &, const SCIRun::IntVector &) const  
+Uintah::Box Uintah::Level::getBox(const IntVector &, const IntVector &) const  
 
-SCIRun::Point Uintah::Level::getNodePosition(const SCIRun::IntVector &) const  
+SCIRun::Point Uintah::Level::getNodePosition(const IntVector &) const  
 
 Uintah::Box Uintah::Patch::getBox() const  
 
-void Uintah::Patch::findCellAndWeights(const SCIRun::Point &, SCIRun::IntVector *, double *) const  
+void Uintah::Patch::findCellAndWeights(const SCIRun::Point &, IntVector *, double *) const  
 
 bool Uintah::BoxGeometryPiece::inside(const SCIRun::Point &) const  
 
@@ -38,15 +38,15 @@ SCIRun::Point SCIRun::BBox::max#
 
 void Uintah::LinearInterpolator::findCellAndWeightsAndShapeDerivatives#
 SCIRun::Point Uintah::Patch::nodePosition#
-SCIRun::IntVector Uintah::Patch::getInteriorNodeLowIndex#
+IntVector Uintah::Patch::getInteriorNodeLowIndex#
 void Uintah::LinearInterpolator::findCellAndWeights#
 bool Uintah::Level::containsPoint#
 void Uintah::LinearInterpolator::findCellAndShapeDerivatives#
 double Uintah::MPMMaterial::getInitialDensity#
-SCIRun::IntVector Uintah::GeometryObject::getNumParticlesPerCell#
+IntVector Uintah::GeometryObject::getNumParticlesPerCell#
 SCIRun::Vector Uintah::Patch::dCell#
 Uintah::ConstitutiveModel *Uintah::MPMMaterial::getConstitutiveModel#
-SCIRun::IntVector Uintah::Level::getCellIndex#
+IntVector Uintah::Level::getCellIndex#
 SCIRun::Vector Uintah::ConstitutiveModel::getInitialFiberDir#
 bool Uintah::Patch::findCell#
 void Uintah::ParticleCreator::applyForceBC#
@@ -71,14 +71,14 @@ END_FILE_EXCLUDE_LIST
 BEGIN_EXCLUDE_LIST
 int SCIRun::DebugBuf::overflow(int)  
 void Uintah::TaskGraph::createDetailedDependencies(Uintah::DetailedTasks *, Uintah::LoadBalancer *, Uintah::DetailedTask *, Uintah::Task::Dependency *, Uintah::CompTable &, bool)  
-std::ostream &operator<<(std::ostream &, const SCIRun::IntVector &)  
+std::ostream &operator<<(std::ostream &, const IntVector &)  
 bool Uintah::SideBCData::inside(const SCIRun::Point &) const  
-void Uintah::Patch::findNodesFromCell(const SCIRun::IntVector &, SCIRun::IntVector *) const  
-void Uintah::Patch::computeExtents(Uintah::Patch::VariableBasis, const SCIRun::IntVector &, const SCIRun::IntVector &, const SCIRun::IntVector &, SCIRun::IntVector &, SCIRun::IntVector &) const  
+void Uintah::Patch::findNodesFromCell(const IntVector &, IntVector *) const  
+void Uintah::Patch::computeExtents(Uintah::Patch::VariableBasis, const IntVector &, const IntVector &, const IntVector &, IntVector &, IntVector &) const  
 Uintah::Patch::BCType Uintah::Patch::getBCType(Uintah::Patch::FaceType) const  
 bool Uintah::RefCounted::removeReference() const  
 void Uintah::RefCounted::addReference() const  
-SCIRun::Point Uintah::Level::getCellPosition(const SCIRun::IntVector &) const  
+SCIRun::Point Uintah::Level::getCellPosition(const IntVector &) const  
 MPI_Isend()  
 void Uintah::RefCounted::~RefCounted()  
 Uintah::RefCounted &Uintah::RefCounted::RefCounted()  
@@ -88,18 +88,18 @@ void SCIRun::Thread::couldBlockDone(int)
 bool Uintah::VarLabelMatlPatch::operator<(const Uintah::VarLabelMatlPatch &) const  
 Uintah::EquationOfState *Uintah::ICEMaterial::getEOS() const  
 void printTask(std::ostream &, Uintah::DetailedTask *)  
-SCIRun::IntVector Uintah::Level::mapCellToCoarser(const SCIRun::IntVector &) const  
-SCIRun::IntVector Uintah::Patch::neighborsHigh() const  
-SCIRun::IntVector Uintah::Patch::neighborsLow() const  
-SCIRun::IntVector Uintah::Patch::getLowIndex(Uintah::Patch::VariableBasis, const SCIRun::IntVector &) const  
-SCIRun::IntVector Uintah::Patch::getHighIndex(Uintah::Patch::VariableBasis, const SCIRun::IntVector &) const  
+IntVector Uintah::Level::mapCellToCoarser(const IntVector &) const  
+IntVector Uintah::Patch::neighborsHigh() const  
+IntVector Uintah::Patch::neighborsLow() const  
+IntVector Uintah::Patch::getLowIndex(Uintah::Patch::VariableBasis, const IntVector &) const  
+IntVector Uintah::Patch::getHighIndex(Uintah::Patch::VariableBasis, const IntVector &) const  
 bool Uintah::CompTable::Data::operator==(const Uintah::CompTable::Data &)  
 void Uintah::IdealGas::computePressEOS(double, double, double, double, double &, double &, double &)  
-void Uintah::Level::selectPatches(const SCIRun::IntVector &, const SCIRun::IntVector &, Uintah::Level::selectType &) const  
+void Uintah::Level::selectPatches(const IntVector &, const IntVector &, Uintah::Level::selectType &) const  
 void Uintah::BCData::~BCData()  
 void Uintah::TaskGraph::remembercomps(Uintah::DetailedTask *, Uintah::Task::Dependency *, Uintah::CompTable &)  
 void Uintah::Patch::getOtherLevelPatches(int, Uintah::Patch::selectType &) const  
-void Uintah::PatchRangeTree::query(const SCIRun::IntVector &, const SCIRun::IntVector &, Uintah::Patch::selectType &)  
+void Uintah::PatchRangeTree::query(const IntVector &, const IntVector &, Uintah::Patch::selectType &)  
 bool Uintah::CompTable::findcomp(Uintah::Task::Dependency *, const Uintah::Patch *, int, Uintah::DetailedTask *&, Uintah::Task::Dependency *&, const Uintah::ProcessorGroup *)  
 Uintah::CompTable::Data &Uintah::CompTable::Data::Data(Uintah::DetailedTask *, Uintah::Task::Dependency *, const Uintah::Patch *, int)  
 double SCIRun::Time::currentSeconds()  
@@ -108,18 +108,18 @@ double Uintah::IdealGas::computeRhoMicro(double, double, double, double, double)
 void Uintah::Variable::~Variable()  
 Uintah::Variable &Uintah::Variable::Variable()  
 bool Uintah::ComputeSubset<const Uintah::Patch *>::compareElems(const Uintah::Patch *, const Uintah::Patch *)  
-void Uintah::CCVariableBase::getMPIBuffer(Uintah::BufferInfo &, const SCIRun::IntVector &, const SCIRun::IntVector &)  
+void Uintah::CCVariableBase::getMPIBuffer(Uintah::BufferInfo &, const IntVector &, const IntVector &)  
 Uintah::BCData &Uintah::BCData::operator=(const Uintah::BCData &)  
-void Uintah::DetailedTasks::possiblyCreateDependency(Uintah::DetailedTask *, Uintah::Task::Dependency *, const Uintah::Patch *, Uintah::DetailedTask *, Uintah::Task::Dependency *, const Uintah::Patch *, int, const SCIRun::IntVector &, const SCIRun::IntVector &)  
+void Uintah::DetailedTasks::possiblyCreateDependency(Uintah::DetailedTask *, Uintah::Task::Dependency *, const Uintah::Patch *, Uintah::DetailedTask *, Uintah::Task::Dependency *, const Uintah::Patch *, int, const IntVector &, const IntVector &)  
 void Uintah::Sendlist::~Sendlist()  
-const Uintah::BoundCondBase *Uintah::Patch::getArrayBCValues(Uintah::Patch::FaceType, int, std::string, std::vector<SCIRun::IntVector, std::allocator<SCIRun::IntVector>> &, std::vector<SCIRun::IntVector, std::allocator<SCIRun::IntVector>> &, std::vector<SCIRun::IntVector, std::allocator<SCIRun::IntVector>> &, std::vector<SCIRun::IntVector, std::allocator<SCIRun::IntVector>> &, std::vector<SCIRun::IntVector, std::allocator<SCIRun::IntVector>> &, int) const  
+const Uintah::BoundCondBase *Uintah::Patch::getArrayBCValues(Uintah::Patch::FaceType, int, std::string, std::vector<IntVector, std::allocator<IntVector>> &, std::vector<IntVector, std::allocator<IntVector>> &, std::vector<IntVector, std::allocator<IntVector>> &, std::vector<IntVector, std::allocator<IntVector>> &, std::vector<IntVector, std::allocator<IntVector>> &, int) const  
 void Uintah::CCVariableBase::~CCVariableBase()  
 Uintah::CCVariableBase &Uintah::CCVariableBase::CCVariableBase()  
 void Uintah::BufferInfo::add(void *, int, MPI_Datatype, bool)  
 Uintah::Patch::VariableBasis Uintah::Patch::translateTypeToBasis(Uintah::TypeDescription::Type, bool)  
 void Uintah::PackBufferInfo::get_type(void *&, int &, MPI_Datatype &, MPI_Comm)  
-void Uintah::Patch::computeVariableExtents(Uintah::Patch::VariableBasis, const SCIRun::IntVector &, Uintah::Ghost::GhostType, int, SCIRun::IntVector &, SCIRun::IntVector &) const  
-void Uintah::Patch::computeVariableExtents(Uintah::TypeDescription::Type, const SCIRun::IntVector &, Uintah::Ghost::GhostType, int, SCIRun::IntVector &, SCIRun::IntVector &) const  
+void Uintah::Patch::computeVariableExtents(Uintah::Patch::VariableBasis, const IntVector &, Uintah::Ghost::GhostType, int, IntVector &, IntVector &) const  
+void Uintah::Patch::computeVariableExtents(Uintah::TypeDescription::Type, const IntVector &, Uintah::Ghost::GhostType, int, IntVector &, IntVector &) const  
 Uintah::BCData &Uintah::BCData::BCData(const Uintah::BCData &)  
 void Uintah::FastMatrix::destructiveSolve(double *, double *)  
 void Uintah::BufferInfo::addSendlist(Uintah::RefCounted *)  
@@ -127,11 +127,11 @@ bool Uintah::LoadBalancerCommon::inNeighborhood(const Uintah::Patch *)
 void Uintah::DependencyBatch::reset()  
 double Uintah::IdealGas::getAlpha(double, double, double, double)  
 void Uintah::PackBufferInfo::~PackBufferInfo()  
-void Uintah::Patch::getGhostOffsets(Uintah::Patch::VariableBasis, Uintah::Ghost::GhostType, int, SCIRun::IntVector &, SCIRun::IntVector &)  
+void Uintah::Patch::getGhostOffsets(Uintah::Patch::VariableBasis, Uintah::Ghost::GhostType, int, IntVector &, IntVector &)  
 const Uintah::LevelP &Uintah::Grid::getLevel(int) const  
-SCIRun::IntVector Uintah::Patch::getSFCYHighIndex() const  
-SCIRun::IntVector Uintah::Patch::getSFCXHighIndex() const  
-SCIRun::IntVector Uintah::Patch::getSFCZHighIndex() const  
+IntVector Uintah::Patch::getSFCYHighIndex() const  
+IntVector Uintah::Patch::getSFCXHighIndex() const  
+IntVector Uintah::Patch::getSFCZHighIndex() const  
 const Uintah::BoundCondBase *Uintah::BCDataArray::getBoundCondData(int, std::string, int) const  
 unsigned int Uintah::CompTable::Data::string_hash(const char *)  
 void Uintah::CompTable::Data::~Data()  
@@ -145,8 +145,8 @@ void Uintah::CompTable::remembercomp(Uintah::DetailedTask *, Uintah::Task::Depen
 Uintah::VelocityBoundCond *Uintah::VelocityBoundCond::clone()  
 bool CompareDep::operator()(Uintah::DependencyBatch *, Uintah::DependencyBatch *)  
 Uintah::constHandle<Uintah::ComputeSubset<const Uintah::Patch *>> Uintah::Task::Dependency::getPatchesUnderDomain(const Uintah::PatchSubset *) const  
-void Uintah::Patch::computeVariableExtents(Uintah::Patch::VariableBasis, const SCIRun::IntVector &, Uintah::Ghost::GhostType, int, Uintah::Patch::selectType &, SCIRun::IntVector &, SCIRun::IntVector &) const  
-SCIRun::IntVector Uintah::Patch::getInteriorNodeHighIndex() const  
+void Uintah::Patch::computeVariableExtents(Uintah::Patch::VariableBasis, const IntVector &, Uintah::Ghost::GhostType, int, Uintah::Patch::selectType &, IntVector &, IntVector &) const  
+IntVector Uintah::Patch::getInteriorNodeHighIndex() const  
 Uintah::constHandle<Uintah::MaterialSubset> Uintah::Task::Dependency::getMaterialsUnderDomain(const Uintah::MaterialSubset *) const  
 void Uintah::SideBCData::getBCData(Uintah::BCData &) const  
 Uintah::DensityBoundCond *Uintah::DensityBoundCond::clone()  
@@ -159,7 +159,7 @@ void Uintah::BufferInfo::~BufferInfo()
 void Uintah::PressureBoundCond::~PressureBoundCond()  
 void Uintah::TemperatureBoundCond::~TemperatureBoundCond()  
 void Uintah::DensityBoundCond::~DensityBoundCond()  
-SCIRun::IntVector Uintah::Level::mapCellToFiner(const SCIRun::IntVector &) const  
+IntVector Uintah::Level::mapCellToFiner(const IntVector &) const  
 Uintah::DetailedTask &Uintah::DetailedTask::DetailedTask(Uintah::Task *, const Uintah::PatchSubset *, const Uintah::MaterialSubset *, Uintah::DetailedTasks *)  
 void Uintah::TaskGraph::createDetailedTask(Uintah::DetailedTasks *, Uintah::Task *, const Uintah::PatchSubset *, const Uintah::MaterialSubset *)  
 void Uintah::DetailedTask::~DetailedTask()  
@@ -169,39 +169,39 @@ Uintah::ProblemSpecP Uintah::ProblemSpec::findNextBlock(const std::string &) con
 void Uintah::DetailedTasks::setScrubCount(const Uintah::VarLabel *, int, const Uintah::Patch *, int, std::vector<Uintah::OnDemandDataWarehouseP, std::allocator<Uintah::OnDemandDataWarehouseP>> &)  
 const Uintah::SuperPatch *Uintah::LocallyComputedPatchVarMap::getConnectedPatchGroup(const Uintah::VarLabel *, const Uintah::Patch *) const  
 void Uintah::Variable::setForeign()  
-void Uintah::Patch::getFace(Uintah::Patch::FaceType, const SCIRun::IntVector &, const SCIRun::IntVector &, SCIRun::IntVector &, SCIRun::IntVector &) const  
+void Uintah::Patch::getFace(Uintah::Patch::FaceType, const IntVector &, const IntVector &, IntVector &, IntVector &) const  
 Uintah::PackBufferInfo &Uintah::PackBufferInfo::PackBufferInfo()  
 Uintah::BufferInfo &Uintah::BufferInfo::BufferInfo()  
 int Uintah::BufferInfo::count() const  
 void Uintah::PackBufferInfo::unpack(MPI_Comm)  
-void Uintah::BCDataArray::getSFCXIterator(int, std::vector<SCIRun::IntVector, std::allocator<SCIRun::IntVector>> &, int) const  
-void Uintah::BCDataArray::getBoundaryIterator(int, std::vector<SCIRun::IntVector, std::allocator<SCIRun::IntVector>> &, int) const  
-void Uintah::BCDataArray::getSFCZIterator(int, std::vector<SCIRun::IntVector, std::allocator<SCIRun::IntVector>> &, int) const  
-void Uintah::BCDataArray::getNBoundaryIterator(int, std::vector<SCIRun::IntVector, std::allocator<SCIRun::IntVector>> &, int) const  
+void Uintah::BCDataArray::getSFCXIterator(int, std::vector<IntVector, std::allocator<IntVector>> &, int) const  
+void Uintah::BCDataArray::getBoundaryIterator(int, std::vector<IntVector, std::allocator<IntVector>> &, int) const  
+void Uintah::BCDataArray::getSFCZIterator(int, std::vector<IntVector, std::allocator<IntVector>> &, int) const  
+void Uintah::BCDataArray::getNBoundaryIterator(int, std::vector<IntVector, std::allocator<IntVector>> &, int) const  
 void Uintah::FastMatrix::destructiveSolve(double *)  
-void Uintah::BCDataArray::getSFCYIterator(int, std::vector<SCIRun::IntVector, std::allocator<SCIRun::IntVector>> &, int) const  
+void Uintah::BCDataArray::getSFCYIterator(int, std::vector<IntVector, std::allocator<IntVector>> &, int) const  
 void Uintah::FastMatrix::destructiveSolve(SCIRun::Vector *)  
 int Uintah::Level::numPatches() const  
 Uintah::BCDataArray &Uintah::BCDataArray::BCDataArray(const Uintah::BCDataArray &)  
 MPI_Irecv()  
 void Uintah::CompTable::remembercomp(Uintah::CompTable::Data *, const Uintah::ProcessorGroup *)  
 void Uintah::DetailedTask::addInternalDependency(Uintah::DetailedTask *, const Uintah::VarLabel *)  
-SCIRun::IntVector Uintah::Patch::faceDirection(Uintah::Patch::FaceType) const  
+IntVector Uintah::Patch::faceDirection(Uintah::Patch::FaceType) const  
 void Uintah::ProblemSpec::~ProblemSpec()  
 void checkForInputError(const std::string &, const std::string &)  
 bool Uintah::LoadBalancerCommon::inNeighborhood(const Uintah::PatchSubset *, const Uintah::MaterialSubset *)  
-SCIRun::IntVector Uintah::Patch::faceAxes(const Uintah::Patch::FaceType &) const  
-void Uintah::BCGeomBase::getBoundaryIterator(std::vector<SCIRun::IntVector, std::allocator<SCIRun::IntVector>> &) const  
+IntVector Uintah::Patch::faceAxes(const Uintah::Patch::FaceType &) const  
+void Uintah::BCGeomBase::getBoundaryIterator(std::vector<IntVector, std::allocator<IntVector>> &) const  
 void Uintah::SFCYVariableBase::~SFCYVariableBase()  
 void Uintah::SFCXVariableBase::~SFCXVariableBase()  
 Uintah::SFCXVariableBase &Uintah::SFCXVariableBase::SFCXVariableBase()  
 Uintah::SFCYVariableBase &Uintah::SFCYVariableBase::SFCYVariableBase()  
-void Uintah::BCGeomBase::getSFCYIterator(std::vector<SCIRun::IntVector, std::allocator<SCIRun::IntVector>> &) const  
-void Uintah::BCGeomBase::getSFCXIterator(std::vector<SCIRun::IntVector, std::allocator<SCIRun::IntVector>> &) const  
+void Uintah::BCGeomBase::getSFCYIterator(std::vector<IntVector, std::allocator<IntVector>> &) const  
+void Uintah::BCGeomBase::getSFCXIterator(std::vector<IntVector, std::allocator<IntVector>> &) const  
 void Uintah::SFCZVariableBase::~SFCZVariableBase()  
-void Uintah::BCGeomBase::getNBoundaryIterator(std::vector<SCIRun::IntVector, std::allocator<SCIRun::IntVector>> &) const  
-void Uintah::BCGeomBase::getSFCZIterator(std::vector<SCIRun::IntVector, std::allocator<SCIRun::IntVector>> &) const  
-void Uintah::Patch::getFaceCells(Uintah::Patch::FaceType, int, SCIRun::IntVector &, SCIRun::IntVector &) const  
+void Uintah::BCGeomBase::getNBoundaryIterator(std::vector<IntVector, std::allocator<IntVector>> &) const  
+void Uintah::BCGeomBase::getSFCZIterator(std::vector<IntVector, std::allocator<IntVector>> &) const  
+void Uintah::Patch::getFaceCells(Uintah::Patch::FaceType, int, IntVector &, IntVector &) const  
 bool Uintah::DependencyBatch::makeMPIRequest()  
 Uintah::SFCZVariableBase &Uintah::SFCZVariableBase::SFCZVariableBase()  
 void Uintah::BCGeomBase::~BCGeomBase()  

@@ -22,27 +22,31 @@
  * IN THE SOFTWARE.
  */
 
-#ifndef Packages_Uintah_CCA_Components_Switcher_h
-#define Packages_Uintah_CCA_Components_Switcher_h
+#ifndef UINTAH_CCA_COMPONENTS_PARENT_SWITCHER_H
+#define UINTAH_CCA_COMPONENTS_PARENT_SWITCHER_H
 
-#include <Core/Parallel/UintahParallelComponent.h>
 #include <CCA/Ports/SimulationInterface.h>
+
 #include <Core/Grid/Variables/ComputeSet.h>
 #include <Core/Grid/Variables/VarLabel.h>
+#include <Core/Parallel/UintahParallelComponent.h>
 
 #include <map>
 #include <set>
 
 namespace Uintah {
+
   class Switcher : public UintahParallelComponent, public SimulationInterface {
+
   public:
+
     Switcher( const ProcessorGroup* myworld, ProblemSpecP& ups, bool doAMR, const std::string & uda );
     virtual ~Switcher();
 
     virtual void problemSetup(const ProblemSpecP& params, 
                               const ProblemSpecP& restart_prob_spec, 
-                              GridP& grid,
-                              SimulationStateP&);
+                                    GridP&        grid,
+                                    SimulationStateP&);
 
     virtual void outputProblemSpec(ProblemSpecP& ps);
     virtual void outputPS(Dir& dir);
@@ -59,16 +63,14 @@ namespace Uintah {
 
     virtual bool needRecompile(double time, double delt, const GridP& grid);
     virtual void restartInitialize();
-
     virtual bool restartableTimesteps();
-
     virtual double recomputeTimestep(double);
 
     // AMR
-    virtual void scheduleRefineInterface(const LevelP& fineLevel,
-                                         SchedulerP& scheduler,
-                                         bool needCoarseOld, 
-                                         bool needCoarseNew);
+    virtual void scheduleRefineInterface(const LevelP&     fineLevel,
+                                               SchedulerP& scheduler,
+                                               bool        needCoarseOld,
+                                               bool        needCoarseNew);
                                          
     virtual void scheduleRefine (const PatchSet* patches,  SchedulerP& sched); 
     
@@ -76,28 +78,34 @@ namespace Uintah {
 
     virtual void scheduleInitialErrorEstimate(const LevelP& coarseLevel,SchedulerP& sched);
                                                
-    virtual void scheduleErrorEstimate(       const LevelP& coarseLevel,SchedulerP& sched);
+    virtual void scheduleErrorEstimate(const LevelP& coarseLevel,SchedulerP& sched);
 
 
     enum switchState { idle, switching };
+
+
   private:
+
     void switchTest(const ProcessorGroup*,
-                    const PatchSubset* patches,
+                    const PatchSubset*    patches,
                     const MaterialSubset* matls,
-                    DataWarehouse* old_dw, DataWarehouse* new_dw);
+                          DataWarehouse*  old_dw,
+                          DataWarehouse*  new_dw);
 
     void initNewVars(const ProcessorGroup*,
-                    const PatchSubset* patches,
-                    const MaterialSubset* matls,
-                    DataWarehouse* old_dw, DataWarehouse* new_dw);
+                     const PatchSubset*    patches,
+                     const MaterialSubset* matls,
+                           DataWarehouse*  old_dw,
+                           DataWarehouse*  new_dw);
 
     void carryOverVars(const ProcessorGroup*,
-                    const PatchSubset* patches,
-                    const MaterialSubset* matls,
-                    DataWarehouse* old_dw, DataWarehouse* new_dw);
+                       const PatchSubset*    patches,
+                       const MaterialSubset* matls,
+                             DataWarehouse*  old_dw,
+                             DataWarehouse*  new_dw);
                     
-    void readSwitcherState( const ProblemSpecP&, 
-                            SimulationStateP& state );
+    void readSwitcherState(const ProblemSpecP&,
+                                 SimulationStateP& state);
 
     ProblemSpecP d_master_ups;
 
@@ -111,21 +119,19 @@ namespace Uintah {
     bool d_restarting;
 
     SimulationInterface* d_sim;
-
-    SimulationStateP d_sharedState;
-    unsigned int d_numComponents;
-    unsigned int d_componentIndex;
+    SimulationStateP     d_sharedState;
+    unsigned int         d_numComponents;
+    unsigned int         d_componentIndex;
     
     struct initVars{
-      std::vector<std::string>            varNames;
-      std::vector<std::string>            matlSetNames;
+      std::vector<std::string>        varNames;
+      std::vector<std::string>        matlSetNames;
       std::vector<const MaterialSet*> matls;
-      std::vector<int>               levels;
-      std::vector<VarLabel*>         varLabels;
+      std::vector<int>                levels;
+      std::vector<VarLabel*>          varLabels;
     };
     
-    std::map<int, initVars*> d_initVars;
-    
+    std::map<int, initVars*>                     d_initVars;
     std::set<const VarLabel*, VarLabel::Compare> d_computedVars;
     
 
@@ -136,6 +142,7 @@ namespace Uintah {
     std::vector<bool>                 d_carryOverFinestLevelOnly; // either all levels or finest only
     std::vector<std::vector<bool> >   d_doCarryOverVarPerLevel;   // size to numlevels
 
+    // disable copy and assignment
     Switcher(const Switcher&);
     Switcher& operator=(const Switcher&);
 	 
@@ -143,4 +150,4 @@ namespace Uintah {
 
 }
 
-#endif
+#endif  // UINTAH_CCA_COMPONENTS_PARENT_SWITCHER_H

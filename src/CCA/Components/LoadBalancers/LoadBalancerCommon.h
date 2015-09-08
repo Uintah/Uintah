@@ -148,9 +148,16 @@ public:
   virtual int getOutputProc(const Patch* patch) { return (getPatchwiseProcessorAssignment(patch)/d_outputNthProc)*d_outputNthProc; }
 
   //! Returns the patchset of all patches that have work done on this processor.
-  virtual const PatchSet* getPerProcessorPatchSet(const LevelP& level) { return d_levelPerProcPatchSets[level->getIndex()].get_rep(); }
-  virtual const PatchSet* getPerProcessorPatchSet(const GridP& grid) { return d_gridPerProcPatchSet.get_rep(); }
-  virtual const PatchSet* getOutputPerProcessorPatchSet(const LevelP& level) { return d_outputPatchSets[level->getIndex()].get_rep(); };
+  virtual const PatchSet* getPerProcessorPatchSet(const LevelP& level) { 
+    return d_levelPerProcPatchSets[level->getIndex()].get_rep(); 
+  }
+  virtual const PatchSet* getPerProcessorPatchSet(const GridP& grid) { 
+    return d_gridPerProcPatchSet.get_rep(); 
+  }
+  
+  virtual const PatchSet* getOutputPerProcessorPatchSet(const LevelP& level) { 
+    return d_outputPatchSets[level->getIndex()].get_rep(); 
+  };
 
   //! Assigns the patches to the processors they ended up on in the previous
   //! Simulation.  Returns true if we need to re-load balance (if we have a 
@@ -181,8 +188,8 @@ protected:
   int    d_oldAssignmentBasePatch;
 
   std::vector<int> d_processorAssignment; ///< stores which proc each patch is on
-  std::vector<int> d_oldAssignment; ///< stores which proc each patch used to be on
-  std::vector<int> d_tempAssignment; ///< temp storage for checking to reallocate
+  std::vector<int> d_oldAssignment;       ///< stores which proc each patch used to be on
+  std::vector<int> d_tempAssignment;      ///< temp storage for checking to reallocate
 
   SFC <double> d_sfc;
   bool         d_doSpaceCurve;
@@ -199,10 +206,11 @@ protected:
   virtual const PatchSet* createPerProcessorPatchSet( const GridP  & grid );
   virtual const PatchSet* createOutputPatchSet(       const LevelP & level );
 
-  SimulationStateP d_sharedState; ///< to keep track of timesteps
-  Scheduler* d_scheduler; ///< store the scheduler to not have to keep passing it in
+  SimulationStateP d_sharedState;     ///< to keep track of timesteps
+  Scheduler* d_scheduler;             ///< store the scheduler to not have to keep passing it in
   std::set<const Patch*> d_neighbors; ///< the neighborhood.  See createNeighborhood
   std::set<int> d_neighborProcessors; //a list of processors that are in this processors neighborhood
+  
   //! output on every nth processor.  This variable needs to be shared 
   //! with the DataArchiver as well, but we keep it here because the lb
   //! needs it to assign the processor resource.

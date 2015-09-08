@@ -89,6 +89,22 @@
         </ParticleVariables>
       </EulerianParticles>   
 
+      <ParticleModels>
+        <model label="ux" type="constant">
+          <grid dependent_type="svol" independent_type="svol"/>
+          <constant>[1.0,1.0]</constant>
+        </model>
+        <model label="uy" type="constant">
+          <grid dependent_type="svol" independent_type="svol"/>
+          <constant>[1.0,1.0]</constant>
+        </model>
+        <model label="uz" type="constant">
+          <grid dependent_type="svol" independent_type="svol"/>
+          <constant>[1.0,1.0]</constant>
+        </model>
+      </ParticleModels>
+
+
 <!-- EXTRA SCALARS -->
       <TransportEqns>
         <Eqn label="scalar_0" type="CCscalar">
@@ -131,12 +147,7 @@
           </Optimization>
         </LinearSolver>
 <!-- particle models -->
-        <VelModel type="Balachandar">
-          <kinematic_viscosity>0.00001</kinematic_viscosity>
-          <rho_ratio>1000</rho_ratio>
-          <regime>2</regime>
-          <L>.4</L>
-          <eta>10</eta>
+        <VelModel type="Dragforce">
         </VelModel>
 
         <Models>

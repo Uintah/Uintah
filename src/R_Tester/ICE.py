@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 
 from sys import argv, exit
-from os import environ
+from os import environ, system
 from helpers.runSusTests import runSusTests, inputs_root, generatingGoldStandards
 from helpers.modUPS import modUPS
 
@@ -101,5 +101,10 @@ if __name__ == "__main__":
   TESTS = getTestList( environ['WHICH_TESTS'] )
 
   result = runSusTests(argv, TESTS, "ICE")
+  
+  # cleanup modified files
+  command = "/bin/rm -rf %s/tmp > /dev/null 2>&1 " % (the_dir)
+  system( command )
+  
   exit( result )
 

@@ -53,6 +53,9 @@ namespace Uintah {
 
 class Level;
 class OutputContext;
+#if HAVE_PIDX
+class PIDXOutputContext;
+#endif
 class ProcessorGroup;
 class VarLabel;
 class Task;
@@ -130,17 +133,17 @@ public:
   // everybody -- BJW, May 05
   virtual ParticleSubset* createParticleSubset(  particleIndex numParticles,
                                                  int matlIndex, const Patch*,
-                                                 SCIRun::IntVector low = SCIRun::IntVector(0,0,0),
-                                                 SCIRun::IntVector high = SCIRun::IntVector(0,0,0) ) = 0;
+                                                 IntVector low = IntVector(0,0,0),
+                                                 IntVector high = IntVector(0,0,0) ) = 0;
   virtual void saveParticleSubset(ParticleSubset* psubset,
                                   int matlIndex, const Patch*,
-                                  SCIRun::IntVector low = SCIRun::IntVector(0,0,0),
-                                  SCIRun::IntVector high = SCIRun::IntVector(0,0,0)) = 0;
+                                  IntVector low = IntVector(0,0,0),
+                                  IntVector high = IntVector(0,0,0)) = 0;
   virtual bool haveParticleSubset(int matlIndex, const Patch*,
-                                  SCIRun::IntVector low = SCIRun::IntVector(0,0,0),
-                                  SCIRun::IntVector high = SCIRun::IntVector(0,0,0), bool exact = false) = 0;
+                                  IntVector low = IntVector(0,0,0),
+                                  IntVector high = IntVector(0,0,0), bool exact = false) = 0;
   virtual ParticleSubset* getParticleSubset(int matlIndex, const Patch*,
-                                            SCIRun::IntVector low, SCIRun::IntVector high) = 0;
+                                            IntVector low, IntVector high) = 0;
   virtual ParticleSubset* getParticleSubset(int matlIndex, const Patch*) = 0;
   virtual ParticleSubset* getDeleteSubset(int matlIndex, const Patch*) = 0;
   virtual std::map<const VarLabel*, ParticleVariableBase*>* getNewParticleState(int matlIndex, const Patch*) = 0;
@@ -148,7 +151,7 @@ public:
 					    Ghost::GhostType,
 					    int numGhostCells,
 					    const VarLabel* posvar) = 0;
-  virtual ParticleSubset* getParticleSubset(int matlIndex, SCIRun::IntVector low, SCIRun::IntVector high,
+  virtual ParticleSubset* getParticleSubset(int matlIndex, IntVector low, IntVector high,
                                             const Patch* relPatch,
                                             const VarLabel* posvar, const Level* level=0) = 0;
   virtual void allocateTemporary(ParticleVariableBase&,
@@ -188,8 +191,8 @@ public:
 
   virtual void allocateTemporary( GridVariableBase& var, const Patch* patch,
                                   Ghost::GhostType gtype = Ghost::None, int numGhostCells = 0 ) = 0;
-//                                  const SCIRun::IntVector& boundaryLayer ) = 0;
-//                                const SCIRun::IntVector& boundaryLayer = SCIRun::IntVector(0,0,0)) = 0;
+//                                  const IntVector& boundaryLayer ) = 0;
+//                                const IntVector& boundaryLayer = IntVector(0,0,0)) = 0;
 
   virtual void allocateAndPut( GridVariableBase& var,
                                const VarLabel* label, int matlIndex,
@@ -207,7 +210,7 @@ public:
 
   virtual void getRegion(constGridVariableBase&, const VarLabel*,
                           int matlIndex, const Level* level,
-                          const SCIRun::IntVector& low, const SCIRun::IntVector& high,
+                          const IntVector& low, const IntVector& high,
                           bool useBoundaryCells = true) = 0;
 
   // Copy out of the warehouse into an allocated variable.
@@ -245,6 +248,11 @@ public:
 
   virtual void emit(OutputContext&, const VarLabel* label,
 		    int matlIndex, const Patch* patch) = 0;
+
+#if HAVE_PIDX
+  virtual void emit(PIDXOutputContext&, const VarLabel* label, int matlIndex, const Patch* patch, double* buffer) = 0;
+#endif
+
 
   // Scrubbing
   enum ScrubMode {

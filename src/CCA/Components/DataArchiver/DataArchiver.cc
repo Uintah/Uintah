@@ -30,6 +30,9 @@
 #include <CCA/Ports/DataWarehouse.h>
 #include <CCA/Ports/LoadBalancer.h>
 #include <CCA/Ports/OutputContext.h>
+#if HAVE_PIDX
+#include <CCA/Ports/PIDXOutputContext.h>
+#endif
 #include <CCA/Ports/Scheduler.h>
 #include <CCA/Ports/SimulationInterface.h>
 
@@ -1933,6 +1936,7 @@ DataArchiver::outputVariables(const ProcessorGroup * /*world*/,
   string dataFilebase;
   string dataFilename;
   const Level* level = NULL;
+  IntVector clowIndex,chighIndex;
 
   // find the xml filename and data filename that we will write to
   // Normal reductions will be handled by outputReduction, but checkpoint
@@ -1942,7 +1946,22 @@ DataArchiver::outputVariables(const ProcessorGroup * /*world*/,
     ostringstream lname;
     ASSERT(patches->size() != 0);
     ASSERT(patches->get(0) != 0);
+
     level = patches->get(0)->getLevel();
+
+#if HAVE_PIDX
+    IntVector lowIndex,highIndex;
+    //level->findIndexRange(lowIndex,highIndex);
+    //level->findNodeIndexRange(lowIndex,highIndex);
+    //level->findCellIndexRange(lowIndex,highIndex);
+    level->findCellIndexRange(clowIndex,chighIndex);
+    //printf("clowIndex: %d %d %d, chighindex: %d %d %d\n",clowIndex[0],clowIndex[1],clowIndex[2],chighIndex[0],chighIndex[1],chighIndex[2]);
+    //level->findInteriorIndexRange(lowIndex,highIndex);
+    //level->findInteriorNodeIndexRange(lowIndex,highIndex);
+    //level->findInteriorCellIndexRange(lowIndex,highIndex);
+#endif
+
+
 #if SCI_ASSERTION_LEVEL >= 1
     for(int i=0;i<patches->size();i++)
       ASSERT(patches->get(i)->getLevel() == level);
@@ -2164,6 +2183,275 @@ DataArchiver::outputVariables(const ProcessorGroup * /*world*/,
   d_outputLock.unlock(); 
 
   dbg << "  end\n";
+
+
+
+#if HAVE_PIDX
+
+  bool pidx_io =  true;
+  if (pidx_io == true) 
+  {
+    bool use_float=false;//for data conversion, float is faster (and most of the data from vulcan is float)
+    IntVector adjust_offset;//for data conversion, some datasets start at -1,-1,-1, this will soon be handled automatically by pidx 
+    adjust_offset.x(1); // <ctc> for temporal jet, set to 0,0,1, use_float=false,agg_size=4
+    adjust_offset.y(1);
+    adjust_offset.z(1);
+
+    int number_of_variables;
+    int *number_of_materials;
+    
+    unsigned int timeStep = d_sharedState->getCurrentTopLevelTimeStep();
+    
+    number_of_variables =  saveLabels.size();
+    const int agg_size = number_of_variables;
+    number_of_materials = (int*)malloc(sizeof(int) * number_of_variables);
+    
+    string idxFilename(dir.getName());
+    idxFilename = idxFilename + ".idx";
+
+    int globalExtents[3];
+    globalExtents[0] = chighIndex[0] - clowIndex[0] ;
+    globalExtents[1] = chighIndex[1] - clowIndex[1] ;
+    globalExtents[2] = chighIndex[2] - clowIndex[2] ;
+    
+    int rank;
+    MPI_Comm_rank(d_myworld->getComm(), &rank);
+    
+    if(rank == 0)
+    {
+      printf("[PIDX] IDX file name = %s\n", (char*)idxFilename.c_str());
+      printf("[PIDX] The global volume = %d %d %d\n", globalExtents[0], globalExtents[1], globalExtents[2]);
+      printf("[PIDX] Current time step = %d\n", timeStep);
+      printf("[PIDX] Total number of variable = %d\n", number_of_variables);
+    }
+    
+
+    PIDXOutputContext pc;
+    pc.initialize(idxFilename, timeStep, globalExtents, d_myworld->getComm());
+    
+    int vc = 0;
+    int var_counter = 0;
+    int actual_number_of_variables = 0;
+    vector<SaveItem>::iterator saveIter;
+    for(saveIter = saveLabels.begin(); saveIter!= saveLabels.end(); saveIter++) 
+    {
+      const VarLabel* var = saveIter->label;
+      string type = var->typeDescription()->getName().c_str();
+      //if (strstr(type.c_str(), "Vector") != NULL)
+      //cout << "type = " << type << endl;
+      
+      map<int, MaterialSetP>::iterator iter = saveIter->matlSet.end();
+      const MaterialSubset* var_matls = 0;
+
+      if (level) {
+        iter = saveIter->matlSet.find(level->getIndex());
+        if (iter == saveIter->matlSet.end())
+          iter = saveIter->matlSet.find(level->getIndex() - level->getGrid()->numLevels());
+        if (iter == saveIter->matlSet.end())
+          iter = saveIter->matlSet.find(ALL_LEVELS);
+        if (iter != saveIter->matlSet.end()) {
+          var_matls = iter->second.get_rep()->getUnion();
+        }
+      }
+      else { // checkpoint reductions
+        map<int, MaterialSetP>::iterator liter;
+        for (liter = saveIter->matlSet.begin(); liter != saveIter->matlSet.end(); liter++) {
+          var_matls = saveIter->getMaterialSet(liter->first)->getUnion();
+          break;
+        }
+      }
+      if (var_matls == 0)
+        continue;
+      
+      number_of_materials[var_counter++]=var_matls->size();
+      if(rank == 0)
+        printf("Number of materials for variable %d = %d\n", var_counter, var_matls->size());
+
+      actual_number_of_variables += var_matls->size();
+    }
+    
+    PIDX_set_variable_count(pc.file, actual_number_of_variables);
+    
+    pc.variable = (PIDX_variable**) malloc(sizeof (PIDX_variable*) * number_of_variables);
+    memset(pc.variable, 0, sizeof (PIDX_variable*) * number_of_variables);
+    for(int i = 0 ; i < number_of_variables ; i++){
+      pc.variable[i] = (PIDX_variable*) malloc(sizeof (PIDX_variable) * number_of_materials[i]);
+      memset(pc.variable[i], 0, sizeof (PIDX_variable) * number_of_materials[i]);
+    }
+    
+    int var_cnt = 0; // keep track of how many fields are queued for aggregation
+    double ***patch_buffer;
+    patch_buffer = (double***)malloc(sizeof(double**) * actual_number_of_variables);
+    for(saveIter = saveLabels.begin(), vc=0; saveIter!= saveLabels.end(); saveIter++, vc++) 
+    {
+      const VarLabel* var = saveIter->label;
+      //IntVector vhi, vlow, vrange;
+      //vlow = var->getCellLowIndex();
+      //vhi = var->getCellHighIndex();
+      // check to see if we need to save on this level
+      // check is done by absolute level, or relative to end of levels (-1 finest, -2 second finest,...)
+      // find the materials to output on that level
+      map<int, MaterialSetP>::iterator iter = saveIter->matlSet.end();
+      const MaterialSubset* var_matls = 0;
+
+      if (level) 
+      {
+        iter = saveIter->matlSet.find(level->getIndex());
+        if (iter == saveIter->matlSet.end())
+          iter = saveIter->matlSet.find(level->getIndex() - level->getGrid()->numLevels());
+        if (iter == saveIter->matlSet.end())
+          iter = saveIter->matlSet.find(ALL_LEVELS);
+        if (iter != saveIter->matlSet.end()) {
+          var_matls = iter->second.get_rep()->getUnion();
+        }
+      }
+      else { // checkpoint reductions
+        map<int, MaterialSetP>::iterator liter;
+        for (liter = saveIter->matlSet.begin(); liter != saveIter->matlSet.end(); liter++) {
+          var_matls = saveIter->getMaterialSet(liter->first)->getUnion();
+          break;
+        }
+      }
+      if (var_matls == 0)
+        continue;
+      
+      // loop through patches and materials
+      string type1 = var->typeDescription()->getName().c_str();
+      if (rank == 0)
+        printf("var type = %s\n",type1.c_str());
+      int sample_per_variable = 1;
+      bool prev_use_float=use_float;
+      if (strstr(type1.c_str(), "Vector") != NULL) 
+      {
+        sample_per_variable = 3;
+        use_float = false;  //vectors are implicitly of type double (though we should check)
+      }
+      for(int m=0;m<var_matls->size();m++)
+      {
+        int matlIndex = var_matls->get(m);
+        string var_mat_name;
+        
+        if (var_matls->size() == 1)
+          var_mat_name = var->getName();
+        else
+	{
+	  std::ostringstream s;
+	  s << m;
+	  var_mat_name = var->getName() + "_m" + s.str();
+	}
+
+        char data_type[512];
+        if (use_float)
+          sprintf(data_type, "%d*float32", sample_per_variable); 
+        else
+          sprintf(data_type, "%d*float64", sample_per_variable);
+        
+        if(rank == 0)
+          printf("[%d] [%d] Name = %s Patch Count = %d Sample per variable %d\n", vc, m, (char*)var_mat_name.c_str(), patches->size(), sample_per_variable);
+        
+        PIDX_variable_create((char*)var_mat_name.c_str(), sample_per_variable * (use_float?sizeof(float):sizeof(double)) * 8, data_type, &(pc.variable[vc][m]));
+        
+        patch_buffer[var_cnt] = (double**)malloc(sizeof(double*) * patches->size());
+        for(int p=0;p<(type==CHECKPOINT_REDUCTION?1:patches->size());p++)
+        {
+          const Patch* patch;
+          int patchID;
+          IntVector hiE, lowE;
+          if (type == CHECKPOINT_REDUCTION) {
+            // to consolidate into this function, force patch = 0
+            patch = 0;
+            patchID = -1;
+            patch_buffer[var_cnt][p] = (double*)NULL;
+
+          } else {
+            patch = patches->get(p);
+            patchID = patch->getID();
+
+            IntVector hi, low, range;
+            
+            low = patch->getCellLowIndex();
+            hi = patch->getCellHighIndex();
+            hiE = patch->getExtraCellHighIndex();
+            lowE = patch->getExtraCellLowIndex();
+            
+            if(rank == 0)
+              printf("[%d] Offset and Count %d %d %d : %d %d %d\n", vc, lowE.x(), lowE.y(), lowE.z(), (hiE.x() - lowE.x()), (hiE.y() - lowE.y()), (hiE.z() - lowE.z()));
+            
+            PIDX_point local_offset_point, local_box_count_point;
+            
+            PIDX_set_point_5D(local_offset_point, lowE.x()+adjust_offset.x(), lowE.y()+adjust_offset.y(), lowE.z()+adjust_offset.z(), 0, 0);
+
+            PIDX_set_point_5D(local_box_count_point, hiE.x() - lowE.x(), hiE.y() - lowE.y(), hiE.z() - lowE.z(), 1, 1);
+            
+            if (rank==0)
+              printf("patch_buffer size: %ld\n",sample_per_variable * (use_float?sizeof(float):sizeof(double)) * ((hiE.x() - lowE.x()) * (hiE.y() - lowE.y()) * (hiE.z() - lowE.z())));
+
+            patch_buffer[var_cnt][p] = (double*)malloc(sample_per_variable * (use_float?sizeof(float):sizeof(double)) * ((hiE.x() - lowE.x()) * (hiE.y() - lowE.y()) * (hiE.z() - lowE.z())));
+            
+            int v=0,u=0,j=0,k=0, i1;
+            new_dw->emit(pc, var, matlIndex, patch, patch_buffer[var_cnt][p]);
+
+	    PIDX_variable_write_data_layout(pc.variable[vc][m], local_offset_point, local_box_count_point, patch_buffer[var_cnt][p], PIDX_row_major);
+                        
+          }
+
+        }//  Patches
+
+        PIDX_append_and_write_variable(pc.file, pc.variable[vc][m]);
+
+        var_cnt++;
+
+      }//  Materials
+
+      //reset use_float
+      if (strstr(type1.c_str(), "Vector") != NULL) 
+      {
+        use_float=prev_use_float; //hacks beget hacks
+      }
+
+    }//  Variables
+    
+    double start_time, end_time, io_time, max_time;
+    start_time = MPI_Wtime();
+    PIDX_close(pc.file);
+    end_time = MPI_Wtime();
+    
+#if 1//not PIDX_FLUSH
+    //free buffers
+    for (int i=0;i<var_cnt;i++)
+    {
+      for(int p=0;p<(type==CHECKPOINT_REDUCTION?1:patches->size());p++)
+      {
+        free(patch_buffer[i][p]);
+        patch_buffer[i][p] = 0;
+      }
+      free(patch_buffer[i]);
+      patch_buffer[i] = 0;
+    }
+#endif
+
+    //free memory
+    for (int i=0; i<number_of_variables; i++)
+      free(pc.variable[i]);
+    free(pc.variable); pc.variable=0;
+    free(number_of_materials); number_of_materials=0;
+    free(patch_buffer);
+    patch_buffer = 0;
+
+    //compute pidx runtime
+    io_time = end_time - start_time;
+    MPI_Allreduce(&io_time,&max_time, 1,MPI_DOUBLE,MPI_MAX, d_myworld->getComm() );
+    if (io_time == max_time)
+      cout << "Timestep = " << timeStep 
+           << " Global Volume = " << globalExtents[0] << "," << globalExtents[1]
+           << "," << globalExtents[2] << "," 
+           << " Throughput = " 
+           << (globalExtents[0]*globalExtents[1]*globalExtents[2]*number_of_variables*(use_float?sizeof(float):sizeof(double)))/(1024.*1024.*max_time) << " MiB/sec " << " Max Time = " << max_time  
+           << " Number of variables = " << number_of_variables 
+           << endl;
+    
+  }
+#endif
 
 } // end output()
 

@@ -502,30 +502,30 @@ namespace Wasatch {
     SpatialOps::GhostData gd(ng);
     const SpatialOps::MemoryWindow window = Wasatch::get_memory_window_for_masks<SVolField>( patch );
     myBndIters.svolExtraCellSpatialMask = new SpatialOps::SpatialMask<SVolField>(window, bcInfo, gd, neboExtraBndSOIter);
-#     ifdef HAVE_CUDA
+#   ifdef HAVE_CUDA
     myBndIters.svolExtraCellSpatialMask->add_consumer(GPU_INDEX);
-#     endif
+#   endif
     
     const SpatialOps::MemoryWindow xwindow = Wasatch::get_memory_window_for_masks<XVolField>( patch );
     SpatialOps::BoundaryCellInfo xBCInfo = SpatialOps::BoundaryCellInfo::build<XVolField>(bcPlus);
     myBndIters.xvolExtraCellSpatialMask = new SpatialOps::SpatialMask<XVolField>(xwindow, xBCInfo, gd, neboExtraBndSOIter);
-#     ifdef HAVE_CUDA
+#   ifdef HAVE_CUDA
     myBndIters.xvolExtraCellSpatialMask->add_consumer(GPU_INDEX);
-#     endif
+#   endif
     
     const SpatialOps::MemoryWindow ywindow = Wasatch::get_memory_window_for_masks<YVolField>( patch );
     SpatialOps::BoundaryCellInfo yBCInfo = SpatialOps::BoundaryCellInfo::build<YVolField>(bcPlus);
     myBndIters.yvolExtraCellSpatialMask = new SpatialOps::SpatialMask<YVolField>(ywindow, yBCInfo, gd, neboExtraBndSOIter);
-#     ifdef HAVE_CUDA
+#   ifdef HAVE_CUDA
     myBndIters.yvolExtraCellSpatialMask->add_consumer(GPU_INDEX);
-#     endif
+#   endif
     
     const SpatialOps::MemoryWindow zwindow = Wasatch::get_memory_window_for_masks<ZVolField>( patch );
     SpatialOps::BoundaryCellInfo zBCInfo = SpatialOps::BoundaryCellInfo::build<ZVolField>(bcPlus);
     myBndIters.zvolExtraCellSpatialMask = new SpatialOps::SpatialMask<ZVolField>(zwindow, zBCInfo, gd, neboExtraBndSOIter);
-#     ifdef HAVE_CUDA
+#   ifdef HAVE_CUDA
     myBndIters.zvolExtraCellSpatialMask->add_consumer(GPU_INDEX);
-#     endif
+#   endif
   }
 
   

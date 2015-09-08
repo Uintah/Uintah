@@ -26,7 +26,6 @@
 #define __PARTICLE_CREATOR_H__
 
 #include <Core/Thread/CrowdMonitor.h>
-
 #include <Core/GeometryPiece/GeometryPiece.h>
 #include <Core/Grid/Variables/CCVariable.h>
 #include <Core/Grid/Variables/ParticleVariable.h>
@@ -59,7 +58,7 @@ namespace Uintah {
 
 
     virtual particleIndex createParticles(MPMMaterial* matl,
-                                            CCVariable<short int>& cellNAPID,
+                                            CCVariable<int>& cellNAPID,
                                             const Patch*,DataWarehouse* new_dw,
                                             std::vector<GeometryObject*>&);
 
@@ -94,7 +93,7 @@ namespace Uintah {
     ParticleVariable<double> pmass, pvolume, ptemperature, psp_vol,perosion;
     ParticleVariable<double> pcolor,ptempPrevious,p_q;
     ParticleVariable<long64> pparticleID;
-    ParticleVariable<Vector> pdisp;
+    ParticleVariable<Vector> pdisp,pTempGrad;
     ParticleVariable<Vector> pfiberdir; 
     ParticleVariable<int> pLoadCurveID;
     ParticleVariable<int> plocalized;
@@ -128,7 +127,7 @@ namespace Uintah {
                                     MPMMaterial* matl,
                                     Point p, IntVector cell_idx,
                                     particleIndex i,
-                                    CCVariable<short int>& cellNAPI,
+                                    CCVariable<int>& cellNAPI,
                                     ParticleVars& pvars);
     
     //////////////////////////////////////////////////////////////////////////

@@ -159,7 +159,6 @@
     <nDivQRays>          3          </nDivQRays>
     <Threshold>         0.05        </Threshold>
     <StefanBoltzmann>   5.67051e-8  </StefanBoltzmann>
-    <benchmark>         1           </benchmark>
 
     <algorithm type='dataOnion'>
       <halo>           [4,4,4]      </halo>

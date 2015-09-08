@@ -909,7 +909,7 @@
   <!--______________________________________________________________________-->
   <!--                 EXAMPLES                                             -->
   
-  <!-- RMCRT_Test     -->
+  <!-- RMCRT_Test   component  -->
   <include href="RMCRT_test.xml"/>
   
   <!-- Burger         -->

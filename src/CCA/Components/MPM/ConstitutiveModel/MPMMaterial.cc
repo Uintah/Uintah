@@ -254,7 +254,7 @@ ScalarDiffusionModel* MPMMaterial::getScalarDiffusionModel() const
 }
 
 particleIndex MPMMaterial::createParticles(
-                                  CCVariable<short int>& cellNAPID,
+                                  CCVariable<int>& cellNAPID,
                                   const Patch* patch,
                                   DataWarehouse* new_dw)
 {
