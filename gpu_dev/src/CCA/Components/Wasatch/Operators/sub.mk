@@ -36,9 +36,14 @@ SRCDIR   := CCA/Components/Wasatch/Operators
 # WARNING: If you add a file to the list of CUDA_SRCS, you must add a
 # corresponding rule at the end of this file!
 #
-CUDA_ENABLED_SRCS =       \
-        FluxLimiterInterpolant
-     
+CUDA_ENABLED_SRCS =             \
+        UpwindInterpolant       \
+        FluxLimiterInterpolant  
+
+ifeq ($(BUILD_WASATCH_FOR_ARCHES),no)
+  CUDA_ENABLED_SRCS += Extrapolant
+endif
+
 ifeq ($(HAVE_CUDA),yes)
 
    # CUDA enabled files, listed here (and with a rule at the end of
@@ -55,11 +60,11 @@ else
 
 endif
 
-SRCS +=                                 \
-        $(SRCDIR)/Extrapolant.cc        \
-        $(SRCDIR)/Operators.cc          \
-        $(SRCDIR)/UpwindInterpolant.cc  
-        
+ifeq ($(BUILD_WASATCH_FOR_ARCHES),no)
+  SRCS += \
+        $(SRCDIR)/Operators.cc
+endif
+
 ########################################################################
 #
 # Rules to copy CUDA enabled source (.cc) files to the binary build tree
@@ -71,5 +76,11 @@ ifeq ($(HAVE_CUDA),yes)
 
   $(OBJTOP_ABS)/$(SRCDIR)/FluxLimiterInterpolant.cu : $(SRCTOP_ABS)/$(SRCDIR)/FluxLimiterInterpolant.cc
 	cp $< $@
-        
+
+  $(OBJTOP_ABS)/$(SRCDIR)/UpwindInterpolant.cu : $(SRCTOP_ABS)/$(SRCDIR)/UpwindInterpolant.cc
+	cp $< $@
+
+  $(OBJTOP_ABS)/$(SRCDIR)/Extrapolant.cu : $(SRCTOP_ABS)/$(SRCDIR)/Extrapolant.cc
+	cp $< $@
+
 endif

@@ -159,7 +159,12 @@ OnDemandDataWarehouse::OnDemandDataWarehouse( const ProcessorGroup* myworld,
       //GPUDataWarehouse* gpuDW = new (placementNewBuffer) GPUDataWarehouse(i, placementNewBuffer);
 
       GPUDataWarehouse* gpuDW = (GPUDataWarehouse*)malloc(sizeof(GPUDataWarehouse) - sizeof(GPUDataWarehouse::dataItem) * MAX_VARDB_ITEMS);
-      gpuDW->init(i);
+      std::ostringstream out;
+      out << "Host-side GPU DW "
+          << "MPIRank: " << Uintah::Parallel::getMPIRank()
+          << " Thread:" << Thread::self()->myid();
+
+      gpuDW->init(i, out.str());
       gpuDW->setDebug(gpudbg.active());
       d_gpuDWs.push_back(gpuDW);
     }
@@ -2787,6 +2792,73 @@ OnDemandDataWarehouse::emit(       OutputContext& oc,
   }
   var->emit(oc, l, h, label->getCompressionMode());
 }
+
+#if HAVE_PIDX
+void
+OnDemandDataWarehouse::emit(PIDXOutputContext& pc,
+                            const VarLabel* label,
+                            int matlIndex,
+                            const Patch* patch,
+                             double* buffer
+			    )
+{
+  checkGetAccess( label, matlIndex, patch );
+
+  Variable* var = NULL;
+  IntVector l, h;
+  if( patch ) {
+    // Save with the boundary layer, otherwise restarting from the DataArchive won't work.                                                                                      
+    patch->computeVariableExtents( label->typeDescription()->getType(), label->getBoundaryLayer(),
+                                   Ghost::None, 0, l, h );
+    switch ( label->typeDescription()->getType() ) {
+    case TypeDescription::NCVariable :
+    case TypeDescription::CCVariable :
+    case TypeDescription::SFCXVariable :
+    case TypeDescription::SFCYVariable :
+    case TypeDescription::SFCZVariable :
+      //get list                                                                                                                                                              
+      {
+	std::vector<Variable*> varlist;
+        d_varDB.getlist( label, matlIndex, patch, varlist );
+
+        GridVariableBase* v = NULL;
+        for( std::vector<Variable*>::iterator rit = varlist.begin();; ++rit ) {
+          if( rit == varlist.end() ) {
+            v = NULL;
+            break;
+          }
+          v = dynamic_cast<GridVariableBase*>( *rit );
+          //verify that the variable is valid and matches the dependencies requirements.                                                                                        
+          if( v && v->isValid() && Min( l, v->getLow() ) == v->getLow()
+              && Max( h, v->getHigh() ) == v->getHigh() )  //find a completed region                                                                                            
+            break;
+        }
+        var = v;
+      }
+      break;
+    case TypeDescription::ParticleVariable :
+      var = d_varDB.get( label, matlIndex, patch );
+      break;
+    default :
+      var = d_varDB.get( label, matlIndex, patch );
+    }
+  }
+  else {
+    l = h = IntVector( -1, -1, -1 );
+
+    const Level* level = patch ? patch->getLevel() : 0;
+    if( d_levelDB.exists( label, matlIndex, level ) )
+      var = d_levelDB.get( label, matlIndex, level );
+  }
+
+  if( var == NULL ) {
+    SCI_THROW(
+	      UnknownVariable(label->getName(), getID(), patch, matlIndex, "on emit", __FILE__, __LINE__) );
+  }
+  var->emit(pc, l, h, label->getCompressionMode(), buffer);
+}
+
+#endif
 
 //______________________________________________________________________
 //

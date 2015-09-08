@@ -178,8 +178,8 @@ Builder::Builder( const InterpT& rhoEval,
                   const Expr::TagList& resultsTag,
                   const Expr::Tag& rhoFTag  )
   : ExpressionBuilder( resultsTag ),
-    rhoFTag_(rhoFTag),
-    rhoEval_( rhoEval.clone() )
+    rhoEval_( rhoEval.clone() ),
+    rhoFTag_(rhoFTag)
 {
   if( resultsTag[0].context() != Expr::CARRY_FORWARD ){
     std::ostringstream msg;

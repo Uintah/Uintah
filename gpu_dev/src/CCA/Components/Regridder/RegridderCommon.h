@@ -47,7 +47,7 @@ namespace Uintah {
   class LoadBalancer;
   class Scheduler;
 
-  typedef std::vector<SCIRun::IntVector> SizeList;
+  typedef std::vector<IntVector> SizeList;
 
   /**
    *  @ingroup Regridders

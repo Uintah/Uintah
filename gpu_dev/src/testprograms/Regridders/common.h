@@ -57,7 +57,7 @@ private:
 };
 
 unsigned int
-getTotalNumFlags(std::vector<SCIRun::IntVector> flags)
+getTotalNumFlags(std::vector<IntVector> flags)
 {
   unsigned int num = flags.size();
   unsigned int gnum;
@@ -74,7 +74,7 @@ getTotalNumPatches(std::vector<Uintah::Region> patches)
 }
 
 void
-makeFlagsList(const std::vector<Uintah::Region> &patches, std::vector<Uintah::CCVariable<int>*> flags, std::vector<SCIRun::IntVector> &lflags)
+makeFlagsList(const std::vector<Uintah::Region> &patches, std::vector<Uintah::CCVariable<int>*> flags, std::vector<IntVector> &lflags)
 {
   lflags.resize(0);
   for (unsigned int p = 0; p < patches.size(); p++) {
@@ -93,8 +93,8 @@ outputPatches(std::vector<Uintah::Region> &patches, std::ostream& out)
     for (unsigned int i = 0; i < patches.size(); i++) {
       Uintah::Region p = patches[i];
 
-      SCIRun::IntVector l = p.getLow();
-      SCIRun::IntVector h = p.getHigh();
+      IntVector l = p.getLow();
+      IntVector h = p.getHigh();
 
       out << l[0] << " " << l[1] << " " << l[2] << " " << h[0] << " " << h[1] << " " << h[2] << std::endl;
     }
@@ -102,7 +102,7 @@ outputPatches(std::vector<Uintah::Region> &patches, std::ostream& out)
 }
 
 void
-gatherFlags(std::vector<SCIRun::IntVector> &flags, std::vector<SCIRun::IntVector> &gflags)
+gatherFlags(std::vector<IntVector> &flags, std::vector<IntVector> &gflags)
 {
   std::vector<int> num_flags(num_procs);
   int num = flags.size();
@@ -114,8 +114,8 @@ gatherFlags(std::vector<SCIRun::IntVector> &flags, std::vector<SCIRun::IntVector
 
   int total = 0;
   for (int i = 0; i < num_procs; i++) {
-    counts[i] = num_flags[i] * sizeof(SCIRun::IntVector);
-    displ[i] = total * sizeof(SCIRun::IntVector);
+    counts[i] = num_flags[i] * sizeof(IntVector);
+    displ[i] = total * sizeof(IntVector);
     total += num_flags[i];
   }
 
@@ -124,14 +124,14 @@ gatherFlags(std::vector<SCIRun::IntVector> &flags, std::vector<SCIRun::IntVector
 }
 
 void
-outputFlags(std::vector<SCIRun::IntVector> &flags, std::ostream &out)
+outputFlags(std::vector<IntVector> &flags, std::ostream &out)
 {
-  std::vector<SCIRun::IntVector> global_flags;
+  std::vector<IntVector> global_flags;
   gatherFlags(flags, global_flags);
 
   if (rank == 0) {
     for (unsigned int i = 0; i < global_flags.size(); i++) {
-      SCIRun::IntVector f = global_flags[i];
+      IntVector f = global_flags[i];
 
       out << f[0] << " " << f[1] << " " << f[2] << std::endl;
     }
@@ -186,8 +186,8 @@ splitPatches(std::vector<Uintah::Region> &patches, std::vector<Uintah::Region> &
     to_split_patches.pop_back();
     //std::cout << "thresh: " << thresh << " vol: " << patch.getVolume() << std::endl;
     if (patch.getVolume() > thresh) {
-      SCIRun::IntVector low = patch.getLow(), high = patch.getHigh();
-      SCIRun::IntVector size = high - low;
+      IntVector low = patch.getLow(), high = patch.getHigh();
+      IntVector size = high - low;
       int max_d = 0;
       if (size[max_d] < size[1]) {
         max_d = 1;

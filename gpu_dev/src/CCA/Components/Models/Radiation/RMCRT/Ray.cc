@@ -49,6 +49,21 @@
   create a vector (isComputedVarLabels) that contains boundryFlux, VRFlux, radiationVolq
   and use it for scheduling.  Add logic to what is actually in that vector.
 
+Critical:
+  - How do you coarsen cell type and retain information?
+  - Memory issues.
+  - Fix getRegion() for L-shaped domains.
+
+
+Optimizations:
+  - Spatial scheduling, used by radiometer.  Only need to execute & communicate
+    variables on a subset of patches.
+  - Temporal scheduling:  To reduce task graph recompilations create two task graphs 
+    that can be swapped while runninng.
+  - Create a LevelDB.  Push an pull the communicated variables
+  - DO: Reconstruct the fine level using interpolation and coarse level values
+  - Investigate why floats are slow.
+  -  
 ______________________________________________________________________*/
 
 
@@ -67,11 +82,8 @@ static SCIRun::DebugStream dbg_BC("RAY_BC", false);
 //---------------------------------------------------------------------------
 Ray::Ray( const TypeDescription::Type FLT_DBL ) : RMCRTCommon( FLT_DBL)
 {
-  // The outputput of RMCRT
-  d_boundFluxLabel       = VarLabel::create( "boundFlux",        CCVariable<Stencil7>::getTypeDescription() );
-  d_boundFluxFiltLabel   = VarLabel::create( "boundFluxFilt",    CCVariable<Stencil7>::getTypeDescription() );
-  d_divQFiltLabel        = VarLabel::create( "divQFilt",         CCVariable<double>::getTypeDescription() );
-  d_radiationVolqLabel   = VarLabel::create( "radiationVolq",    CCVariable<double>::getTypeDescription() );
+//  d_boundFluxFiltLabel   = VarLabel::create( "boundFluxFilt",    CCVariable<Stencil7>::getTypeDescription() );
+//  d_divQFiltLabel        = VarLabel::create( "divQFilt",         CCVariable<double>::getTypeDescription() );
 
   // internal variables for RMCRT
   d_flaggedCellsLabel    = VarLabel::create( "flaggedCells",     CCVariable<int>::getTypeDescription() );
@@ -143,9 +155,9 @@ Ray::~Ray()
   VarLabel::destroy( d_ROI_LoCellLabel );
   VarLabel::destroy( d_ROI_HiCellLabel );
   VarLabel::destroy( d_boundFluxLabel );
-  VarLabel::destroy( d_divQFiltLabel );
-  VarLabel::destroy( d_boundFluxFiltLabel );
-  VarLabel::destroy( d_radiationVolqLabel );
+//  VarLabel::destroy( d_divQFiltLabel );
+//  VarLabel::destroy( d_boundFluxFiltLabel );
+
 
   if( d_radiometer) {
     delete d_radiometer;
@@ -177,6 +189,7 @@ Ray::problemSetup( const ProblemSpecP& prob_spec,
   rmcrt_ps->getWithDefault( "allowReflect"   ,  d_allowReflect,     true );             // Allow for ray reflections. Make false for DOM comparisons.
   rmcrt_ps->getWithDefault( "solveDivQ"      ,  d_solveDivQ,        true );             // Allow for solving of divQ for flow cells.
   rmcrt_ps->getWithDefault( "applyFilter"    ,  d_applyFilter,      false );            // Allow filtering of boundFlux and divQ.
+  rmcrt_ps->getWithDefault( "rayDirSampleAlgo", d_rayDirSampleAlgo,      "naive" );             // Change Monte-Carlo Sampling technique for RayDirection.
 
 
   //__________________________________
@@ -558,6 +571,8 @@ Ray::rayTrace( const ProcessorGroup* pg,
 
       //__________________________________
       //
+      vector <int> rand_i( "LHC"== d_rayDirSampleAlgo ? d_nFluxRays : 0);  // only needed for LHC scheme
+
       for (CellIterator iter = patch->getCellIterator(); !iter.done(); iter++){
         IntVector origin = *iter;
 
@@ -579,6 +594,12 @@ Ray::rayTrace( const ProcessorGroup* pg,
           double sumI     = 0;
           double sumProjI = 0;
           double sumI_prev= 0;
+          double sumCos=0;    // used to force sumCostheta/nRays == 0.5 or  sum (d_Omega * cosTheta) == pi
+
+          if (d_rayDirSampleAlgo=="LHC"){   
+            randVector(rand_i,mTwister);
+          }
+
 
           //__________________________________
           // Flux ray loop
@@ -586,19 +607,28 @@ Ray::rayTrace( const ProcessorGroup* pg,
 
             Vector direction_vector, ray_location;
             double cosTheta;
-            rayDirection_cellFace( mTwister, origin, d_dirIndexOrder[RayFace], d_dirSignSwap[RayFace], iRay,
-                                   direction_vector, cosTheta );
 
-            rayLocation_cellFace( mTwister, origin, d_locationIndexOrder[RayFace], d_locationShift[RayFace],
-                                  DyDx, DzDx, ray_location);
+            if (d_rayDirSampleAlgo=="LHC"){    // Latin-Hyper-Cube sampling
+              rayDirectionHyperCube_cellFace( mTwister, origin, d_dirIndexOrder[RayFace], d_dirSignSwap[RayFace], iRay,
+                                              direction_vector, cosTheta, rand_i[iRay],iRay);
+            } else{                            // Naive Monte-Carlo sampling
+              rayDirection_cellFace( mTwister, origin, d_dirIndexOrder[RayFace], d_dirSignSwap[RayFace], iRay,
+                                     direction_vector, cosTheta );
+            }
+
+              rayLocation_cellFace( mTwister, origin, d_locationIndexOrder[RayFace], d_locationShift[RayFace],
+                                    DyDx, DzDx, ray_location);
 
             updateSumI<T>( direction_vector, ray_location, origin, Dx, sigmaT4OverPi, abskg, celltype, size, sumI, mTwister);
 
             sumProjI += cosTheta * (sumI - sumI_prev);   // must subtract sumI_prev, since sumI accumulates intensity
+            sumCos += cosTheta;   
 
             sumI_prev = sumI;
 
           } // end of flux ray loop
+          
+          sumProjI = sumProjI * d_nFluxRays/sumCos/2.0; // This operation corrects for error in the first moment over a half range of the solid angle (Modest Radiative Heat Transfer page 545 1rst edition)
 
           //__________________________________
           //  Compute Net Flux to the boundary
@@ -620,20 +650,31 @@ Ray::rayTrace( const ProcessorGroup* pg,
     //         S O L V E   D I V Q
     //______________________________________________________________________
   if( d_solveDivQ){
+
+    vector <int> rand_i( "LHC"== d_rayDirSampleAlgo ? d_nDivQRays : 0);  // only needed for LHC scheme
+
     for (CellIterator iter = patch->getCellIterator(); !iter.done(); iter++){
       IntVector origin = *iter;
 
+      if (d_rayDirSampleAlgo=="LHC"){   
+        randVector(rand_i,mTwister);
+      }
       double sumI = 0;
 
       // ray loop
       for (int iRay=0; iRay < d_nDivQRays; iRay++){
 
-        Vector direction_vector =findRayDirection(mTwister, d_isSeedRandom, origin, iRay );
+        Vector direction_vector;
+        if (d_rayDirSampleAlgo=="LHC"){   
+          direction_vector =findRayDirectionHyperCube(mTwister, d_isSeedRandom, origin, iRay,rand_i[iRay],iRay );
+        }else{
+          direction_vector =findRayDirection(mTwister, d_isSeedRandom, origin, iRay );
+        }
 
-        Vector ray_location;
-        rayLocation( mTwister, origin, DyDx,  DzDx, d_CCRays, ray_location);
+        Vector rayOrigin;
+        ray_Origin( mTwister, origin, DyDx,  DzDx, d_CCRays, rayOrigin);
 
-        updateSumI< T >( direction_vector, ray_location, origin, Dx,  sigmaT4OverPi, abskg, celltype, size, sumI, mTwister);
+        updateSumI< T >( direction_vector, rayOrigin, origin, Dx,  sigmaT4OverPi, abskg, celltype, size, sumI, mTwister);
 
       }  // Ray loop
 
@@ -919,10 +960,16 @@ Ray::rayTrace_dataOnion( const ProcessorGroup* pg,
 
     //__________________________________
     //
+    
+    vector <int> rand_i( "LHC"== d_rayDirSampleAlgo ? d_nDivQRays : 0);  // only needed for LHC scheme
+
     for (CellIterator iter = finePatch->getCellIterator(); !iter.done(); iter++){
 
       IntVector origin = *iter;
 
+      if (d_rayDirSampleAlgo=="LHC"){   
+        randVector(rand_i,mTwister);
+      }
 /*`==========TESTING==========*/
 #if 0 
       if( isDbgCell(origin) && d_isDbgOn ){
@@ -944,13 +991,18 @@ Ray::rayTrace_dataOnion( const ProcessorGroup* pg,
       for (int iRay=0; iRay < d_nDivQRays; iRay++){
 
         //dbg2 << "===== iRay: " << iRay << endl;
-        Vector ray_direction = findRayDirection( mTwister,d_isSeedRandom, origin, iRay );
+        Vector direction_vector;
+        if (d_rayDirSampleAlgo=="LHC"){   
+          direction_vector =findRayDirectionHyperCube(mTwister, d_isSeedRandom, origin, iRay,rand_i[iRay],iRay );
+        }else{
+          direction_vector =findRayDirection(mTwister, d_isSeedRandom, origin, iRay );
+        }
 
-        Vector ray_location;
+        Vector rayOrigin;
         int my_L = maxLevels - 1;
-        rayLocation( mTwister, origin, DyDx[my_L],  DzDx[my_L], d_CCRays, ray_location);
+        ray_Origin( mTwister, origin, DyDx[my_L],  DzDx[my_L], d_CCRays, rayOrigin);
 
-        updateSumI_ML< T >( ray_direction, ray_location, origin, Dx, domain_BB, maxLevels, fineLevel, DyDx,DzDx,
+        updateSumI_ML< T >( direction_vector, rayOrigin, origin, Dx, domain_BB, maxLevels, fineLevel, DyDx,DzDx,
                        fineLevel_ROI_Lo, fineLevel_ROI_Hi, regionLo, regionHi, sigmaT4OverPi, abskg, cellType,
                        nRaySteps, sumI, mTwister);
 
@@ -1113,7 +1165,77 @@ void Ray::rayDirection_cellFace( MTRand& mTwister,
   directionVector[2] = tmp[indexOrder[2]] * signOrder[2];
 }
 
+ 
 //______________________________________________________________________
+//  Uses stochastically selected regions in polar and azimuthal space to  
+//  generate the Monte-Carlo directions. Samples Uniformly on a hemisphere
+//  and as hence does not include the cosine in the sample.
+//______________________________________________________________________
+void
+Ray::rayDirectionHyperCube_cellFace(MTRand& mTwister,
+                                 const IntVector& origin,
+                                 const IntVector& indexOrder,
+                                 const IntVector& signOrder,
+                                 const int iRay,
+                                 Vector& directionVector,
+                                 double& cosTheta,
+                                 const int bin_i,
+                                 const int bin_j)
+{
+  if( d_isSeedRandom == false ){                 // !! This could use a compiler directive for speed-up
+    mTwister.seed((origin.x() + origin.y() + origin.z()) * iRay +1);
+  }
+
+ // randomly sample within each randomly selected region (may not be needed, alternatively choose center of subregion)
+  cosTheta = (mTwister.randDblExc() + (double) bin_i)/d_nFluxRays;
+
+  double theta = acos(cosTheta);      // polar angle for the hemisphere
+  double phi = 2.0 * M_PI * (mTwister.randDblExc() + (double) bin_j)/d_nFluxRays;        // Uniform betwen 0-2Pi
+
+  cosTheta = cos(theta);
+
+  //Convert to Cartesian
+  Vector tmp;
+  tmp[0] =  sin(theta) * cos(phi);
+  tmp[1] =  sin(theta) * sin(phi);
+  tmp[2] =  cosTheta;
+
+  //Put direction vector as coming from correct face,
+  directionVector[0] = tmp[indexOrder[0]] * signOrder[0];
+  directionVector[1] = tmp[indexOrder[1]] * signOrder[1];
+  directionVector[2] = tmp[indexOrder[2]] * signOrder[2];
+  
+}
+
+//______________________________________________________________________
+//  Uses stochastically selected regions in polar and azimuthal space to  
+//  generate the Monte-Carlo directions.  Samples uniformly on a sphere.
+//______________________________________________________________________
+Vector
+Ray::findRayDirectionHyperCube(MTRand& mTwister,
+                               const bool isSeedRandom,
+                               const IntVector& origin,
+                               const int iRay,
+                               const int bin_i,
+                               const int bin_j)
+{
+  if( isSeedRandom == false ){
+    mTwister.seed((origin.x() + origin.y() + origin.z()) * iRay +1);
+  }
+
+  // Random Points On Sphere
+  double plusMinus_one = 2.0 *(mTwister.randDblExc() + (double) bin_i)/d_nDivQRays - 1.0;  // add fuzz to avoid inf in 1/dirVector
+  double r = sqrt(1.0 - plusMinus_one * plusMinus_one);     // Radius of circle at z
+  double phi = 2.0 * M_PI * (mTwister.randDblExc() + (double) bin_j)/d_nDivQRays;        // Uniform betwen 0-2Pi
+
+  Vector direction_vector;
+  direction_vector[0] = r*cos(phi);                       // Convert to cartesian
+  direction_vector[1] = r*sin(phi);
+  direction_vector[2] = plusMinus_one;
+
+  return direction_vector;
+}
+
 //  Compute the Ray location from a cell face
 void Ray::rayLocation_cellFace( MTRand& mTwister,
                                 const IntVector& origin,
@@ -2007,6 +2129,7 @@ void Ray::computeCellType( const ProcessorGroup*,
   }  // threshold while loop.
 }
 
+#if 0
 //---------------------------------------------------------------------------
 //
 //---------------------------------------------------------------------------
@@ -2102,16 +2225,11 @@ Ray::filter( const ProcessorGroup*,
     }
   }
 }
-
-
-
-
-
+#endif
 
 
 //______________________________________________________________________
 // Explicit template instantiations:
-
 template void Ray::setBC<int, int>(       CCVariable<int>&    Q_CC, const string& desc, const Patch* patch, const int mat_id);
 template void Ray::setBC<double,double>(  CCVariable<double>& Q_CC, const string& desc, const Patch* patch, const int mat_id);
 template void Ray::setBC<float, double>(  CCVariable<float>&  Q_CC, const string& desc, const Patch* patch, const int mat_id);

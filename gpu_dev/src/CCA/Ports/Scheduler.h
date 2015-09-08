@@ -154,6 +154,8 @@ class Scheduler : public UintahParallelPort {
     virtual void replaceDataWarehouse( int index, const GridP& grid, bool initialization = false ) = 0;
 
     virtual void setRestartable( bool restartable ) = 0;
+    
+    virtual bool isRestartInitTimestep()=0;
 
 //        protected:
 

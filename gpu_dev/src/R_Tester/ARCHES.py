@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 
-from os import symlink,environ
+from os import symlink,environ, system
 from sys import argv,exit,platform
 from helpers.runSusTests import runSusTests, inputs_root, generatingGoldStandards
 from helpers.modUPS import modUPS
@@ -82,6 +82,7 @@ NIGHTLYTESTS = [
    ("coal_RadPropsPlanck"               , "Coal/coal_RadPropsPlanck.ups"                            , 1.1 , "Linux" , ["exactComparison"])   , 
    ("pcoal_drag"                        , "Coal/pcoal_drag.ups"                                     , 1.1 , "Linux" , ["exactComparison"])   , 
    ("methane_RCCE"                      , "methane_RCCE.ups"                                        , 1.1 , "Linux" , ["exactComparison"])   , 
+   ("channel_WD_CO"                     , "channel_WD_CO.ups"                                       , 1.1 , "Linux" , ["exactComparison"])   , 
    ("DOM16"                             , "DOM16.ups"                                               , 3   , "Linux" , ["exactComparison"     , "no_restart"]) , 
    ("DO_RadProps"                       , "DO_RadProps.ups"                                         , 1.1 , "Linux" , ["exactComparison"])   , 
    ("CQMOM_1x1"                         , "CQMOM_regression/CQMOM_1x1.ups"                          , 1.1 , "Linux" , ["exactComparison"     , "no_restart"]) , 
@@ -93,6 +94,9 @@ NIGHTLYTESTS = [
    ("CQMOM_4D"                          , "CQMOM_regression/CQMOM_4D.ups"                           , 1.1 , "Linux" , ["exactComparison"     , "no_restart"]) ,
    ("CQMOM_7D"                          , "CQMOM_regression/CQMOM_7D.ups"                           , 1.1 , "Linux" , ["exactComparison"     , "no_restart"]) ,
    ("singleJet_poly"                    , "CQMOM_regression/singleJet_poly.ups"                     , 1.1 , "Linux" , ["exactComparison"     , "no_restart"]) ,
+   ("angledWall"                        , "CQMOM_regression/angledWall.ups"                         , 1.1 , "Linux" , ["exactComparison"     , "no_restart"]) ,
+   ("angledWall3D"                      , "CQMOM_regression/angledWall3D.ups"                       , 1.1 , "Linux" , ["exactComparison"     , "no_restart"]) ,
+   ("Constant_Deposition"               , "CQMOM_regression/Constant_Deposition.ups"                , 1.1 , "Linux" , ["exactComparison"     , "no_restart"]) ,
    ("regridTestArches"                  , "regridTestArches"                                        , 8   , "Linux" , ["startFromCheckpoint" , "no_restart"]) , 
    ("channel_LagPart_inlet"             , "LagrangianParticles/channel_flow_x_lagrangian_inlet.ups" , 1.1 , "Linux" , ["exactComparison"     , "no_restart"]) , 
    ("OFC4"                               , "Coal/OFC4.ups"                                                , 3   , "All"  , ["exactComparison"   ]) , 
@@ -139,14 +143,14 @@ LOCALTESTS = [
    ("source_channel_conden"             , "verify_masssource/source_channel_conden.ups"             , 1.1 , "All"  , ["exactComparison"   , "no_restart"]) , 
    ("source_channel_varden"             , "verify_masssource/source_channel_varden.ups"             , 1.1 , "All"  , ["exactComparison"   , "no_restart"]) , 
    ("heptane_pipe"                      , "heptane_pipe.ups"                                        , 1.1 , "All"  , ["exactComparison"]) , 
-   ("methane_RCCE"                      , "methane_RCCE.ups"                                        , 1.1 , "All " , ["exactComparison"]) , 
+   ("methane_RCCE"                      , "methane_RCCE.ups"                                        , 1.1 , "All"  , ["exactComparison"]) , 
+   ("channel_WD_CO"                     , "channel_WD_CO.ups"                                       , 1.1 , "All"  , ["exactComparison"]) , 
    ("coal_table_pipe"                   , "coal_table_pipe.ups"                                     , 1.1 , "All"  , ["exactComparison"]) , 
    ("pcoal_drag"                        , "Coal/pcoal_drag.ups"                                     , 1.1 , "All"  , ["exactComparison"]) , 
    ("scalar_var_1eqn"                   , "scalar_variance_1eqn.ups"                                , 4   , "All"  , ["exactComparison"   , "no_restart"]) , 
    ("scalar_var_2eqn"                   , "scalar_variance_2eqn.ups"                                , 4   , "All"  , ["exactComparison"   , "no_restart"]) , 
    ("coal_channel_FOWY"                 , "Coal/coal_channel_FOWY.ups"                              , 1.1 , "All"  , ["exactComparison"   , "no_restart"]) , 
-   ("coal_RadPropsPlanck"               , "Coal/coal_RadPropsPlanck.ups"                            , 1.1 , "Linux" , ["exactComparison"]), 
-   ("methane_RCCE"                      , "methane_RCCE.ups"                                        , 1.1 , "All " , ["exactComparison"]) , 
+   ("coal_RadPropsPlanck"               , "Coal/coal_RadPropsPlanck.ups"                            , 1.1 , "All" , ["exactComparison"]), 
    ("DOM16"                             , "DOM16.ups"                                               , 3   , "All"  , ["exactComparison"   , "no_restart"]) , 
    ("DO_RadProps"                       , "DO_RadProps.ups"                                         , 1.1 , "All"  , ["exactComparison"]) , 
    ("CQMOM_1x1"                         , "CQMOM_regression/CQMOM_1x1.ups"                          , 1.1 , "All"  , ["exactComparison"   , "no_restart"]) , 
@@ -158,6 +162,9 @@ LOCALTESTS = [
    ("CQMOM_4D"                          , "CQMOM_regression/CQMOM_4D.ups"                           , 1.1 , "All"  , ["exactComparison"   , "no_restart"]) ,
    ("CQMOM_7D"                          , "CQMOM_regression/CQMOM_7D.ups"                           , 1.1 , "All"  , ["exactComparison"   , "no_restart"]) ,
    ("singleJet_poly"                    , "CQMOM_regression/singleJet_poly.ups"                     , 1.1 , "All"  , ["exactComparison"   , "no_restart"]) ,
+   ("angledWall"                        , "CQMOM_regression/angledWall.ups"                         , 1.1 , "All"  , ["exactComparison"   , "no_restart"]) ,
+   ("angledWall3D"                      , "CQMOM_regression/angledWall3D.ups"                       , 1.1 , "All"  , ["exactComparison"   , "no_restart"]) ,
+   ("Constant_Deposition"               , "CQMOM_regression/Constant_Deposition.ups"                , 1.1 , "All"  , ["exactComparison"   , "no_restart"]) ,
    ("channel_LagPart_inlet"             , "LagrangianParticles/channel_flow_x_lagrangian_inlet.ups" , 1.1 , "All"  , ["exactComparison"   , "no_restart"]) , 
    ("OFC4"                               , "Coal/OFC4.ups"                                                , 3   , "All"  , ["exactComparison"   ]) , 
    
@@ -217,6 +224,9 @@ CQMOMTESTS = [
   ("CQMOM_4D"                    , "CQMOM_regression/CQMOM_4D.ups"                , 1.1 , "All"  , ["exactComparison", "no_restart"]),
   ("CQMOM_7D"                    , "CQMOM_regression/CQMOM_7D.ups"                , 1.1 , "All"  , ["exactComparison", "no_restart"]),
   ("singleJet_poly"              , "CQMOM_regression/singleJet_poly.ups"          , 1.1 , "All"  , ["exactComparison", "no_restart"]),
+  ("angledWall"                  , "CQMOM_regression/angledWall.ups"              , 1.1 , "All"  , ["exactComparison", "no_restart"]),
+  ("angledWall3D"                , "CQMOM_regression/angledWall3D.ups"            , 1.1 , "All"  , ["exactComparison", "no_restart"]),
+  ("Constant_Deposition"         , "CQMOM_regression/Constant_Deposition.ups"     , 1.1 , "All"  , ["exactComparison", "no_restart"]),
 ]
 
 # NO RMCRT due to the segfault on the MAC
@@ -250,6 +260,7 @@ NORMCRT = [
    ("source_channel_varden"             , "verify_masssource/source_channel_varden.ups"             , 1.1 , "All"  , ["exactComparison"   , "no_restart"]) , 
    ("heptane_pipe"                      , "heptane_pipe.ups"                                        , 1.1 , "All"  , ["exactComparison"]) , 
    ("methane_RCCE"                      , "methane_RCCE.ups"                                        , 1.1 , "All " , ["exactComparison"]) , 
+   ("channel_WD_CO"                     , "channel_WD_CO.ups"                                       , 1.1 , "All"  , ["exactComparison"]) , 
    ("coal_table_pipe"                   , "coal_table_pipe.ups"                                     , 1.1 , "All"  , ["exactComparison"]) , 
    ("scalar_var_1eqn"                   , "scalar_variance_1eqn.ups"                                , 4   , "All"  , ["exactComparison"   , "no_restart"]) , 
    ("scalar_var_2eqn"                   , "scalar_variance_2eqn.ups"                                , 4   , "All"  , ["exactComparison"   , "no_restart"]) , 
@@ -305,6 +316,11 @@ if __name__ == "__main__":
   TESTS = getTestList( environ['WHICH_TESTS'] )
 
   result = runSusTests(argv, TESTS, "ARCHES")
+  
+  # cleanup modified files
+  command = "/bin/rm -rf %s/tmp > /dev/null 2>&1 " % (the_dir)
+  system( command )
+  
   exit( result )
 
 

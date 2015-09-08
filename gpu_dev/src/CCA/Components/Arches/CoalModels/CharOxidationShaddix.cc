@@ -2,7 +2,7 @@
 #include <CCA/Components/Arches/CoalModels/Devolatilization.h>
 #include <CCA/Components/Arches/TransportEqns/EqnFactory.h>
 #include <CCA/Components/Arches/TransportEqns/EqnBase.h>
-#include <CCA/Components/Arches/ParticleModels/ParticleHelper.h>
+#include <CCA/Components/Arches/ParticleModels/ParticleTools.h>
 #include <CCA/Components/Arches/TransportEqns/DQMOMEqn.h>
 #include <CCA/Components/Arches/ArchesLabel.h>
 #include <Core/ProblemSpec/ProblemSpec.h>
@@ -80,19 +80,19 @@ CharOxidationShaddix::problemSetup(const ProblemSpecP& params, int qn)
   ProblemSpecP db_coal_props = params_root->findBlock("CFD")->findBlock("ARCHES")->findBlock("Coal")->findBlock("Properties");
   
   // create raw coal mass var label 
-  std::string rcmass_root = ParticleHelper::parse_for_role_to_label(db, "raw_coal"); 
-  std::string rcmass_name = ParticleHelper::append_env( rcmass_root, d_quadNode ); 
-  std::string rcmassqn_name = ParticleHelper::append_qn_env(rcmass_root, d_quadNode ); 
+  std::string rcmass_root = ParticleTools::parse_for_role_to_label(db, "raw_coal");
+  std::string rcmass_name = ParticleTools::append_env( rcmass_root, d_quadNode );
+  std::string rcmassqn_name = ParticleTools::append_qn_env(rcmass_root, d_quadNode );
   _rcmass_varlabel = VarLabel::find(rcmass_name);
-  std::string rc_weighted_scaled_name = ParticleHelper::append_qn_env( rcmass_root, d_quadNode ); 
+  std::string rc_weighted_scaled_name = ParticleTools::append_qn_env( rcmass_root, d_quadNode );
   _rcmass_weighted_scaled_varlabel = VarLabel::find(rc_weighted_scaled_name); 
  
   // check for char mass and get scaling constant
-  std::string char_root = ParticleHelper::parse_for_role_to_label(db, "char"); 
-  std::string char_name = ParticleHelper::append_env( char_root, d_quadNode ); 
-  std::string charqn_name = ParticleHelper::append_qn_env( char_root, d_quadNode ); 
+  std::string char_root = ParticleTools::parse_for_role_to_label(db, "char");
+  std::string char_name = ParticleTools::append_env( char_root, d_quadNode );
+  std::string charqn_name = ParticleTools::append_qn_env( char_root, d_quadNode );
   _char_varlabel = VarLabel::find(char_name);
-  std::string char_weighted_scaled_name = ParticleHelper::append_qn_env( char_root, d_quadNode ); 
+  std::string char_weighted_scaled_name = ParticleTools::append_qn_env( char_root, d_quadNode );
   _charmass_weighted_scaled_varlabel = VarLabel::find(char_weighted_scaled_name); 
 
 
@@ -104,7 +104,7 @@ CharOxidationShaddix::problemSetup(const ProblemSpecP& params, int qn)
 
   //CHAR get the birth term if any: 
   const std::string char_birth_name = char_eqn.get_model_by_type( "SimpleBirth" ); 
-  std::string char_birth_qn_name = ParticleHelper::append_qn_env(char_birth_name, d_quadNode); 
+  std::string char_birth_qn_name = ParticleTools::append_qn_env(char_birth_name, d_quadNode); 
   if ( char_birth_name != "NULLSTRING" ){ 
     _char_birth_label = VarLabel::find( char_birth_qn_name ); 
   }
@@ -117,24 +117,24 @@ CharOxidationShaddix::problemSetup(const ProblemSpecP& params, int qn)
 
   //RAW COAL get the birth term if any: 
   const std::string rawcoal_birth_name = rcmass_eqn.get_model_by_type( "SimpleBirth" ); 
-  std::string rawcoal_birth_qn_name = ParticleHelper::append_qn_env(rawcoal_birth_name, d_quadNode); 
+  std::string rawcoal_birth_qn_name = ParticleTools::append_qn_env(rawcoal_birth_name, d_quadNode);
   if ( rawcoal_birth_name != "NULLSTRING" ){ 
     _rawcoal_birth_label = VarLabel::find( rawcoal_birth_qn_name ); 
   }
 
   // check for particle temperature 
-  std::string temperature_root = ParticleHelper::parse_for_role_to_label(db, "temperature"); 
-  std::string temperature_name = ParticleHelper::append_env( temperature_root, d_quadNode ); 
+  std::string temperature_root = ParticleTools::parse_for_role_to_label(db, "temperature"); 
+  std::string temperature_name = ParticleTools::append_env( temperature_root, d_quadNode ); 
   _particle_temperature_varlabel = VarLabel::find(temperature_name);
   if(_particle_temperature_varlabel == 0){
     throw ProblemSetupException("Error: Unable to find coal temperature label!!!! Looking for name: "+temperature_name, __FILE__, __LINE__); 
   }
  
   // check for length  
-  _nQn_part = ParticleHelper::get_num_env(db,ParticleHelper::DQMOM); 
-  std::string length_root = ParticleHelper::parse_for_role_to_label(db, "size"); 
+  _nQn_part = ParticleTools::get_num_env(db,ParticleTools::DQMOM); 
+  std::string length_root = ParticleTools::parse_for_role_to_label(db, "size"); 
   for (int i=0; i<_nQn_part;i++ ){ 
-    std::string length_name = ParticleHelper::append_env( length_root, i ); 
+    std::string length_name = ParticleTools::append_env( length_root, i ); 
     _length_varlabel.push_back(  VarLabel::find(length_name));
   }
   
@@ -153,14 +153,15 @@ CharOxidationShaddix::problemSetup(const ProblemSpecP& params, int qn)
     // Enthalpy of formation (J/mol)
     _HF_CO2 = Shaddix_char_coefficients[7];
     _HF_CO  = Shaddix_char_coefficients[8];
+  
   } else { 
     throw ProblemSetupException("Error: Shaddix_char_coefficients missing in <CoalProperties>.", __FILE__, __LINE__); 
   }
 
   // get weight scaling constant
-  std::string weightqn_name = ParticleHelper::append_qn_env("w", d_quadNode); 
+  std::string weightqn_name = ParticleTools::append_qn_env("w", d_quadNode); 
   for (int i=0; i<_nQn_part;i++ ){ 
-  std::string weight_name = ParticleHelper::append_env("w", i); 
+  std::string weight_name = ParticleTools::append_env("w", i); 
     _weight_varlabel.push_back( VarLabel::find(weight_name) ); 
   }
   EqnBase& temp_weight_eqn = dqmom_eqn_factory.retrieve_scalar_eqn(weightqn_name);
@@ -168,7 +169,7 @@ CharOxidationShaddix::problemSetup(const ProblemSpecP& params, int qn)
   _weight_small = weight_eqn.getSmallClipPlusTol();
   _weight_scaling_constant = weight_eqn.getScalingConstant(d_quadNode);
 
-  std::string number_density_name = ParticleHelper::parse_for_role_to_label(db, "total_number_density");
+  std::string number_density_name = ParticleTools::parse_for_role_to_label(db, "total_number_density");
   _number_density_varlabel = VarLabel::find(number_density_name); 
 
   // get Char source term label and devol lable from the devolatilization model
@@ -181,6 +182,80 @@ CharOxidationShaddix::problemSetup(const ProblemSpecP& params, int qn)
       _devolRCLabel = iModel->second->getModelLabel() ;
     }
   }
+
+  // Ensure the following species are populated from table
+  // (this is expensive and should be avoided, if a species isn't needed)
+  d_fieldLabels->add_species("temperature");
+  d_fieldLabels->add_species("O2");
+  d_fieldLabels->add_species("CO2");
+  d_fieldLabels->add_species("H2O");
+  d_fieldLabels->add_species("N2");
+  d_fieldLabels->add_species("mixture_molecular_weight");
+
+}
+
+
+//---------------------------------------------------------------------------
+// Method: Schedule the initialization of special variables unique to model
+//---------------------------------------------------------------------------
+void 
+CharOxidationShaddix::sched_initVars( const LevelP& level, SchedulerP& sched )
+{
+  string taskname = "CharOxidationShaddix::initVars"; 
+  Task* tsk = scinew Task(taskname, this, &CharOxidationShaddix::initVars);
+
+  tsk->computes(d_modelLabel);
+  tsk->computes(d_gasLabel);
+  tsk->computes(d_particletempLabel);
+  tsk->computes(d_surfacerateLabel);
+  tsk->computes(d_PO2surfLabel);
+
+  sched->addTask(tsk, level->eachPatch(), d_sharedState->allArchesMaterials());
+}
+
+//-------------------------------------------------------------------------
+// Method: Initialize special variables unique to the model
+//-------------------------------------------------------------------------
+void
+CharOxidationShaddix::initVars( const ProcessorGroup * pc, 
+                              const PatchSubset    * patches, 
+                              const MaterialSubset * matls, 
+                              DataWarehouse        * old_dw, 
+                              DataWarehouse        * new_dw )
+{
+  //patch loop
+  for (int p=0; p < patches->size(); p++){
+    const Patch* patch = patches->get(p);
+    int archIndex = 0;
+    int matlIndex = d_sharedState->getArchesMaterial(archIndex)->getDWIndex(); 
+
+    CCVariable<double> char_rate;
+    CCVariable<double> gas_char_rate; 
+    CCVariable<double> particle_temp_rate;
+    CCVariable<double> surface_rate;
+    CCVariable<double> PO2surf_;
+    
+    new_dw->allocateAndPut( char_rate, d_modelLabel, matlIndex, patch );
+    char_rate.initialize(0.0);
+    new_dw->allocateAndPut( gas_char_rate, d_gasLabel, matlIndex, patch );
+    gas_char_rate.initialize(0.0);
+    new_dw->allocateAndPut( particle_temp_rate, d_particletempLabel, matlIndex, patch );
+    particle_temp_rate.initialize(0.0);
+    new_dw->allocateAndPut(surface_rate, d_surfacerateLabel, matlIndex, patch );
+    surface_rate.initialize(0.0);
+    new_dw->allocateAndPut(PO2surf_, d_PO2surfLabel, matlIndex, patch );
+    PO2surf_.initialize(0.0);
+
+
+  }
+}
+
+//---------------------------------------------------------------------------
+// Method: Schedule the calculation of the Model 
+//---------------------------------------------------------------------------
+void 
+CharOxidationShaddix::sched_computeModel( const LevelP& level, SchedulerP& sched, int timeSubStep )
+{
 
   // get gas phase temperature label 
   if (VarLabel::find("temperature")) {
@@ -219,35 +294,6 @@ CharOxidationShaddix::problemSetup(const ProblemSpecP& params, int qn)
     throw InvalidValue("ERROR: CharOxidationShaddix: problemSetup(): can't find gas phase mixture_molecular_weight.",__FILE__,__LINE__);
   }
 
-}
-
-
-//---------------------------------------------------------------------------
-// Method: Schedule the initialization of special variables unique to model
-//---------------------------------------------------------------------------
-void 
-CharOxidationShaddix::sched_initVars( const LevelP& level, SchedulerP& sched )
-{
-}
-
-//-------------------------------------------------------------------------
-// Method: Initialize special variables unique to the model
-//-------------------------------------------------------------------------
-void
-CharOxidationShaddix::initVars( const ProcessorGroup * pc, 
-                              const PatchSubset    * patches, 
-                              const MaterialSubset * matls, 
-                              DataWarehouse        * old_dw, 
-                              DataWarehouse        * new_dw )
-{
-}
-
-//---------------------------------------------------------------------------
-// Method: Schedule the calculation of the Model 
-//---------------------------------------------------------------------------
-void 
-CharOxidationShaddix::sched_computeModel( const LevelP& level, SchedulerP& sched, int timeSubStep )
-{
   std::string taskname = "CharOxidationShaddix::sched_computeModel";
   Task* tsk = scinew Task(taskname, this, &CharOxidationShaddix::computeModel, timeSubStep );
 
@@ -439,8 +485,8 @@ CharOxidationShaddix::computeModel( const ProcessorGroup * pc,
     
 
     for (CellIterator iter=patch->getCellIterator(); !iter.done(); iter++){
-      IntVector c = *iter; 
-   
+      IntVector c = *iter;
+ 
       if (weight[d_quadNode][c]/_weight_scaling_constant < _weight_small) {
         char_production_rate_ = 0.0;
         char_rate[c] = 0.0;
@@ -560,6 +606,7 @@ CharOxidationShaddix::computeModel( const ProcessorGroup * pc,
               )/ weightph )
               *_char_scaling_constant*_weight_scaling_constant, 0.0); // equation assumes RC_scaling=Char_scaling
         }
+
 
         max_char_reaction_rate_ = min( max_char_reaction_rate_ ,max_char_reaction_rate_O2_ );
         char_reaction_rate_ = min(_pi*(pow(lengthph,2.0))*_WC*q , max_char_reaction_rate_); // kg/(s.#)    

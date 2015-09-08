@@ -117,7 +117,7 @@ Operators::create_patch_operators( const LevelP& level, SchedulerP& sched, const
       IntVector low = patch->getExtraCellLowIndex(); 
       IntVector high = patch->getExtraCellHighIndex(); 
 
-      const SCIRun::IntVector udim = patch->getCellHighIndex() - patch->getCellLowIndex();
+      const IntVector udim = patch->getCellHighIndex() - patch->getCellLowIndex();
 
       std::vector<int> dim(3,1);
       for( size_t i=0; i<3; ++i ){ dim[i] = udim[i];}

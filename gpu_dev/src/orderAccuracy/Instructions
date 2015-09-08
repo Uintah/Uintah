@@ -6,18 +6,15 @@ This assumes that the code and all of the utilities
 __________________________________
 Setup:
 -  cd opt/StandAlone
--  ln -s ../../src/orderAccuracy/
--  csh/tcsh: set here = `readlink -f orderAccuracy/`
--  Edit the file and uncomment the component to test.
+
+-  Create a symbolic link to the orderAccuracy directory:
+          make link_orderAccuracy
+
+-  Edit the components.xml file and uncomment the component you wish to test.
     vim orderAccuracy/test_config_files/components.xml
 
-Running the tests:
--  orderAccuracy/framework_scripts/masterScript.pl $here
+Run the tests:
+-  orderAccuracy/runTests
 
 To examine the results look in the directory:
     order_of_accuracy/<component>/<test>
-
-
-How to setup a new test:
-__________________________________
-to be filled in.

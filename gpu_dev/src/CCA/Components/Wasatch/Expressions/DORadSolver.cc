@@ -147,9 +147,10 @@ namespace Wasatch {
   : Expr::Expression<SVolField>(),
 
     svec_( svec ),
-    temperatureTag_(temperatureTag),
     hasAbsCoef_ (  absCoefTag != Expr::Tag() ),
     hasScatCoef_( scatCoefTag != Expr::Tag() ),
+  
+    temperatureTag_(temperatureTag),
 
     doX_( true ),
     doY_( true ),

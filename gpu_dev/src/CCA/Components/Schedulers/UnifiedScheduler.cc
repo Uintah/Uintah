@@ -1615,8 +1615,9 @@ void UnifiedScheduler::prepareGpuDependencies(DeviceGridVariables& deviceVars,
             (Task::WhichDW) dep->req->mapDataWarehouse(), GpuUtilities::sameDeviceSameMpiRank);
 
 
-        //GPU to GPU copies needs another entry indicating a peer to peer transfer.
+
         if (dest == GpuUtilities::anotherDeviceSameMpiRank) {
+          //GPU to GPU copies needs another entry indicating a peer to peer transfer.
 
           if (gpu_stats.active()) {
             cerrLock.lock();
@@ -1638,6 +1639,27 @@ void UnifiedScheduler::prepareGpuDependencies(DeviceGridVariables& deviceVars,
              temp,
              fromDeviceIndex, toDeviceIndex, fromresource, toresource,
              (Task::WhichDW) dep->req->mapDataWarehouse(), GpuUtilities::anotherDeviceSameMpiRank);
+
+        } else if (dest == GpuUtilities::anotherMpiRank)  {
+          if (gpu_stats.active()) {
+            cerrLock.lock();
+            gpu_stats << myRankThread()
+                << " prepareGpuDependencies - Preparing a GPU to host ghost cell copy"
+                << " for " << dep->req->var->getName().c_str()
+                << " from patch " << fromPatch->getID()
+                << " to patch " << toPatch->getID()
+                << " between shared low (" << dep->low.x() << ", " << dep->low.y() << ", " << dep->low.z() << ")"
+                << " and shared high (" << dep->high.x() << ", " << dep->high.y() << ", " << dep->high.z() << ")"
+                << " and host offset (" << host_offset.x() << ", " << host_offset.y() << ", " << host_offset.z() << ")"
+                << endl;
+            cerrLock.unlock();
+          }
+          ghostVars.add(dep->req->var, fromPatch, toPatch,
+             matlIndx, levelID, true, true, host_offset, host_size, dep->low, dep->high,
+             OnDemandDataWarehouse::getTypeDescriptionSize(dep->req->var->typeDescription()->getSubType()->getType()),
+             temp,
+             fromDeviceIndex, toDeviceIndex, fromresource, toresource,
+             (Task::WhichDW) dep->req->mapDataWarehouse(), GpuUtilities::anotherMpiRank);
 
         }
         /*gpudw->prepareGpuGhostCellIntoGpuArray(task,
@@ -2843,13 +2865,15 @@ void UnifiedScheduler::initiateH2DCopies(DetailedTask* dtask) {
                       cerrLock.lock();
                       {
                         gpu_stats << myRankThread()
-                            << " InitiateH2D() - The CPU has ghost cells needed from patch "
+                            << " InitiateH2D() - The CPU has ghost cells needed for "
+                            << curDependency->var->getName()
+                            << " from patch "
                             << sourcePatch->getID() << " to "
                             << patches->get(i)->getID() << " within device " << destDeviceNum;
                         if (iter->validNeighbor->isForeign()) {
-                          gpu_stats << ".  The ghost cell data's is foreign.  ";
+                          gpu_stats << ".  The ghost cells data is foreign.  ";
                         } else {
-                          gpu_stats << ".  The ghost cell data's is not foreign.  ";
+                          gpu_stats << ".  The ghost cells data is not foreign.  ";
                         }
                           gpu_stats << "The ghost variable is at (" << ghost_host_low.x()
                             << ", " << ghost_host_low.y()
@@ -2906,6 +2930,16 @@ void UnifiedScheduler::initiateH2DCopies(DetailedTask* dtask) {
                           cerrLock.unlock();
                         }
                       }
+
+                      ghostVars.add(curDependency->var,
+                                     sourcePatch, patches->get(i), matlID, levelID,
+                                     iter->validNeighbor->isForeign(), false,
+                                     ghost_host_offset, ghost_host_size,
+                                     iter->low, iter->high,
+                                     elementDataSize, virtualOffset,
+                                     destDeviceNum, destDeviceNum, -1, -1,   /* we're copying within a device, so destDeviceNum -> destDeviceNum */
+                                     (Task::WhichDW) curDependency->mapDataWarehouse(),
+                                     GpuUtilities::sameDeviceSameMpiRank);
                     } else {
 
                       //Copy this patch into the GPU. (If it came from another node
@@ -2913,6 +2947,9 @@ void UnifiedScheduler::initiateH2DCopies(DetailedTask* dtask) {
                       //just the contiguous array(s) containing ghost cells data.
                       //If there are periodic boundary conditions, the source region of a patch
                       //could show up multiple times.)
+
+                      //TODO: Instead of copying the entire patch for a ghost cell, we should just create a foreign var, copy
+                      //a contiguous array of ghost cell data into that foreign var, then copy in that foreign var.
                       if (!deviceVars.varAlreadyExists(curDependency->var, sourcePatch, matlID, levelID, curDependency->mapDataWarehouse())) {
                         /*
                         if (gpu_stats.active()) {
@@ -2954,8 +2991,17 @@ void UnifiedScheduler::initiateH2DCopies(DetailedTask* dtask) {
                         taskVars.addTaskGpuDWVar(sourcePatch, matlID, levelID,
                             ghost_host_strides.x(), curDependency, destDeviceNum);
 
-                        //The information about how to copy the ghost cells is just below
-                      } else {
+                        ghostVars.add(curDependency->var,
+                                       sourcePatch, patches->get(i), matlID, levelID,
+                                       iter->validNeighbor->isForeign(), false,
+                                       ghost_host_offset, ghost_host_size,
+                                       iter->low, iter->high,
+                                       elementDataSize, virtualOffset,
+                                       destDeviceNum, destDeviceNum, -1, -1,   /* we're copying within a device, so destDeviceNum -> destDeviceNum */
+                                       (Task::WhichDW) curDependency->mapDataWarehouse(),
+                                       GpuUtilities::sameDeviceSameMpiRank);
+
+                      } else {  //else the variable is not already in deviceVars
                         if (gpu_stats.active()) {
                           cerrLock.lock();
                           {
@@ -3722,7 +3768,8 @@ void UnifiedScheduler::prepareGhostCellsIntoTaskDW(DetailedTask* dtask,
     //and call a kernel to copy those coordinates.
 
     //Peer to peer GPU copies will be handled elsewhere.
-    if (it->second.dest != GpuUtilities::anotherDeviceSameMpiRank) {
+    //GPU to another MPI ranks will be handled elsewhere.
+    if (it->second.dest != GpuUtilities::anotherDeviceSameMpiRank && it->second.dest != GpuUtilities::anotherMpiRank) {
       int dwIndex = it->first.dataWarehouse;
 
       //We can copy it manually internally within the device via a kernel.
@@ -4759,7 +4806,12 @@ void UnifiedScheduler::createTaskGpuDWs(DetailedTask * task,
       //GPUDataWarehouse* old_taskGpuDW = new (placementNewBuffer) GPUDataWarehouse( currentDevice, placementNewBuffer);
 
       GPUDataWarehouse* old_taskGpuDW = (GPUDataWarehouse *) malloc(objectSizeInBytes);
-      old_taskGpuDW->init( currentDevice);
+      std::ostringstream out;
+      out << "Old task GPU DW"
+          << " MPIRank: " << Uintah::Parallel::getMPIRank()
+          << " Thread:" << Thread::self()->myid()
+          << " Task: " << task->getName();
+      old_taskGpuDW->init( currentDevice, out.str());
       old_taskGpuDW->setDebug(gpudbg.active());
       old_taskGpuDW->init_device(objectSizeInBytes, numItemsInDW);
       task->setTaskGpuDataWarehouse(currentDevice, Task::OldDW, old_taskGpuDW);
@@ -4789,7 +4841,12 @@ void UnifiedScheduler::createTaskGpuDWs(DetailedTask * task,
       //void *placementNewBuffer = malloc(objectSizeInBytes);
       //GPUDataWarehouse* new_taskGpuDW = new (placementNewBuffer) GPUDataWarehouse(currentDevice, placementNewBuffer);
       GPUDataWarehouse* new_taskGpuDW = (GPUDataWarehouse *) malloc(objectSizeInBytes);
-      new_taskGpuDW->init(currentDevice);
+      std::ostringstream out;
+      out << "New task GPU DW"
+          << " MPIRank: " << Uintah::Parallel::getMPIRank()
+          << " Thread:" << Thread::self()->myid()
+          << " Task: " << task->getName();
+      new_taskGpuDW->init(currentDevice, out.str());
       new_taskGpuDW->setDebug(gpudbg.active());
       new_taskGpuDW->init_device(objectSizeInBytes, numItemsInDW);
 
@@ -4969,7 +5026,7 @@ void UnifiedScheduler::findIntAndExtGpuDependencies(
           cerrLock.lock();
           gpu_stats << myRankThread()
               << " --> Preparing GPU dependencies for sending " << *req
-              << ", ghost: " << req->req->gtype << ", "
+              << ", ghosttype: " << req->req->gtype << ", number of ghost cells: "
               << req->req->numGhostCells << " from dw " << dw->getID() << '\n';
           cerrLock.unlock();
         }
@@ -5202,9 +5259,10 @@ void UnifiedScheduler::copyAllExtGpuDependenciesToHost(const DetailedTask* dtask
   //everything out via MPI that way and avoid the manual D2H copy and the H2H copy.
   const map<GpuUtilities::GhostVarsTuple, DeviceGhostCellsInfo> & ghostVarMap = ghostVars.getMap();
   for (map<GpuUtilities::GhostVarsTuple, DeviceGhostCellsInfo>::const_iterator it=ghostVarMap.begin(); it!=ghostVarMap.end(); ++it) {
-
+    printf("In for loop\n");
     //TODO: Needs a particle section
     if (it->second.dest == GpuUtilities::anotherMpiRank) {
+      printf("Destination is another MPI rank...\n");
       void* host_ptr    = NULL;    // host base pointer to raw data
       void* device_ptr  = NULL;  // device base pointer to raw data
       size_t host_bytes = 0;
@@ -5299,6 +5357,8 @@ void UnifiedScheduler::copyAllExtGpuDependenciesToHost(const DetailedTask* dtask
   }
 
   if (copiesExist) {
+    printf("Copies exist\n");
+
     //Wait until all streams are done
     //Further optimization could be to check each stream one by one and make copies before waiting for other streams to complete.
     //TODO: There's got to be a better way to do this.
@@ -5312,7 +5372,7 @@ void UnifiedScheduler::copyAllExtGpuDependenciesToHost(const DetailedTask* dtask
 
       if (it->second.dest == GpuUtilities::anotherMpiRank) {
         //TODO: Needs a particle section
-
+        printf("Here 1\n");
         IntVector host_low, host_high, host_offset, host_size, host_strides;
 
         //We created a temporary host variable for this earlier,
@@ -5384,10 +5444,10 @@ void UnifiedScheduler::copyAllExtGpuDependenciesToHost(const DetailedTask* dtask
         dw->refinalize();
 
 
-        /*
-        If there's ever a need to manually verify what was copied host-to-host, use this code below.
 
-        if (it->second.sourcePatchPointer->getID() == 1) {
+        //If there's ever a need to manually verify what was copied host-to-host, use this code below.
+        printf("Here 2\n");
+        if (/*it->second.sourcePatchPointer->getID() == 1 && */ item.dep->var->d_name == "phi") {
 
           //double *phi_data = (double*)phi.getWindow()->getData()->getPointer();
           double * phi_data = new double[gridVar->getDataSize()/sizeof(double)];
@@ -5417,7 +5477,7 @@ void UnifiedScheduler::copyAllExtGpuDependenciesToHost(const DetailedTask* dtask
               }
             }
           }
-        }*/
+        }
 
         //let go of our reference counters.
         delete gridVar;

@@ -93,7 +93,7 @@
       <save label = "divQ"    />
       <save label = "abskg"   />
       <save label = "sigmaT4" />
-      <save label = "boundFlux" />
+      <save label = "RMCRTboundFlux" />
       <save label = "radiationVolq" />
       
       <checkpoint cycle = "1" timestepInterval = "1"/>

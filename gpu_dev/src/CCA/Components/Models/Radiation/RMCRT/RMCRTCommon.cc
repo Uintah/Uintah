@@ -65,6 +65,9 @@ MaterialSet* RMCRTCommon::d_matlSet = 0;
 const VarLabel* RMCRTCommon::d_sigmaT4Label;
 const VarLabel* RMCRTCommon::d_abskgLabel;
 const VarLabel* RMCRTCommon::d_divQLabel;
+const VarLabel* RMCRTCommon::d_boundFluxLabel;
+const VarLabel* RMCRTCommon::d_radiationVolqLabel;
+
 const VarLabel* RMCRTCommon::d_compAbskgLabel;
 const VarLabel* RMCRTCommon::d_compTempLabel;
 const VarLabel* RMCRTCommon::d_cellTypeLabel;
@@ -85,6 +88,9 @@ RMCRTCommon::RMCRTCommon( TypeDescription::Type FLT_DBL )
     proc0cout << "__________________________________ USING FLOAT VERSION OF RMCRT" << endl;
   }
 
+  d_boundFluxLabel     = VarLabel::create( "RMCRTboundFlux",   CCVariable<Stencil7>::getTypeDescription() );
+  d_radiationVolqLabel = VarLabel::create( "radiationVolq",    CCVariable<double>::getTypeDescription() );
+
   d_gac     = Ghost::AroundCells;
   d_gn      = Ghost::None;
   d_flowCell = -1; //<----HARD CODED FLOW CELL
@@ -97,6 +103,9 @@ RMCRTCommon::RMCRTCommon( TypeDescription::Type FLT_DBL )
 RMCRTCommon::~RMCRTCommon()
 {
   VarLabel::destroy( d_sigmaT4Label );
+  VarLabel::destroy( d_boundFluxLabel );
+  VarLabel::destroy( d_radiationVolqLabel );
+
   if (RMCRTCommon::d_FLT_DBL == TypeDescription::float_type){
     VarLabel::destroy( d_abskgLabel );
   }
@@ -238,8 +247,23 @@ RMCRTCommon::sched_sigmaT4( const LevelP& level,
 
   printSchedule(level,dbg,taskname);
 
+  //__________________________________
+  // Be careful if you modify this.  This additional logic
+  // is needed when restarting from an uda that
+  // was previously run without RMCRT.  It's further
+  // complicated when the calc_frequency >1  If you change
+  // it then test by restarting from an uda that was
+  // previously run with Arches + DO with calc_frequency > 1.
+  bool old_dwExists = false;
+  if( sched->get_dw(0) ){
+    old_dwExists = true;
+  }
+
+  if(old_dwExists){
+    tsk->requires( Task::OldDW, d_sigmaT4Label, d_gn, 0 );
+  }
+
   tsk->requires( temp_dw, d_compTempLabel,    d_gn, 0 );
-  tsk->requires( Task::OldDW, d_sigmaT4Label, d_gn, 0 );
   tsk->computes(d_sigmaT4Label);
 
   sched->addTask( tsk, level->eachPatch(), d_matlSet );
@@ -342,25 +366,27 @@ RMCRTCommon::findRayDirection(MTRand& mTwister,
 
   return direction_vector;
 }
+
+
 //______________________________________________________________________
 //  Compute the physical location of the ray
 //______________________________________________________________________
 void
-RMCRTCommon::rayLocation( MTRand& mTwister,
+RMCRTCommon::ray_Origin( MTRand& mTwister,
                          const IntVector origin,
                          const double DyDx,
                          const double DzDx,
                          const bool useCCRays,
-                         Vector& location)
+                         Vector& rayOrigin)
 {
   if( useCCRays == false ){
-    location[0] =   origin[0] +  mTwister.rand() ;             // FIX ME!!! This is not the physical location of the ray.
-    location[1] =   origin[1] +  mTwister.rand() * DyDx ;      // this is index space.
-    location[2] =   origin[2] +  mTwister.rand() * DzDx ;
+    rayOrigin[0] =   origin[0] +  mTwister.rand() ;             // FIX ME!!! This is not the physical location of the ray.
+    rayOrigin[1] =   origin[1] +  mTwister.rand() * DyDx ;      // this is index space.
+    rayOrigin[2] =   origin[2] +  mTwister.rand() * DzDx ;
   }else{
-    location[0] =   origin[0] +  0.5 ;
-    location[1] =   origin[1] +  0.5 * DyDx ;
-    location[2] =   origin[2] +  0.5 * DzDx ;
+    rayOrigin[0] =   origin[0] +  0.5 ;
+    rayOrigin[1] =   origin[1] +  0.5 * DyDx ;
+    rayOrigin[2] =   origin[2] +  0.5 * DzDx ;
   }
 }
 
@@ -693,6 +719,29 @@ RMCRTCommon::isDbgCell( const IntVector me)
   return false;
 }
 
+//______________________________________________________________________
+//  Populate vector with integers which have been randomly shuffled.
+//  This is sampling without replacement and can be used to in a
+//  Latin-Hyper-Cube sampling scheme.  The algorithm used is the
+//  modern fisher-yates shuffle.
+//______________________________________________________________________
+void
+RMCRTCommon::randVector( vector <int> &int_array,MTRand& mTwister ){
+   int rand_int;
+   int temp;
+   int max= int_array.size();
+
+   for (int i=0; i<max; i++){   // populate sequential array from 0 to max-1
+     int_array[i] = i;
+   }
+
+   for (int i=max-1; i>0; i--){  // fisher-yates shuffle starting with max-1
+     rand_int =  mTwister.randInt(i);
+     temp = int_array[i];
+     int_array[i]=int_array[rand_int];
+     int_array[rand_int]=temp;
+   }
+}
 
 //______________________________________________________________________
 //

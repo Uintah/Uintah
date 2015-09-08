@@ -49,6 +49,7 @@
 #include <CCA/Ports/Scheduler.h>
 #include <Core/Grid/Task.h>
 #include <Core/Grid/Material.h>
+#include <Core/Grid/SimulationState.h>
 
 #ifndef PIDOFFSET
 #define PIDOFFSET 1000000000000ul
@@ -172,7 +173,7 @@ namespace Uintah {
 
     /*
      *  \brief Parse the particle spec and create the position varlabels. This is an essential step
-     that MUST be called during Wasatch::ProblemSetup
+     that MUST be called during Component::ProblemSetup
      */
     void problem_setup(Uintah::ProblemSpecP uintahSpec,
                        Uintah::ProblemSpecP particleEqsSpec,
@@ -221,27 +222,7 @@ namespace Uintah {
     virtual void schedule_find_boundary_particles(const Uintah::LevelP& level,
                                                   Uintah::SchedulerP& sched);
   protected:
-    
-    //****************************************************************************
-    /**
-     *  @struct ParticleBoundarySpec
-     *  @author Tony Saad
-     *  @date   July 2014
-     *  @brief  Stores boundary information in a convenient way.
-     */
-    //****************************************************************************
-    struct ParticleBoundarySpec
-    {
-      std::string              name;      // name of the boundary
-      Uintah::Patch::FaceType  face;      // x-minus, x-plus, y-minus, y-plus, z-minus, z-plus
-      std::vector<int>         patchIDs;  // List of patch IDs that this boundary lives on.
-      // returns true if this Boundary has parts of it on patchID
-      bool has_patch(const int& patchID) const
-      {
-        return std::find(patchIDs.begin(), patchIDs.end(), patchID) != patchIDs.end();
-      };
-    };
-    
+        
     // This vector stores a list of all particle variables that require relocation(except position).
     static std::vector<std::string> needsRelocation_;
     static std::vector<std::string> needsBC_;

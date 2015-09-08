@@ -83,7 +83,11 @@ ifeq ($(BUILD_ICE),yes)
   ICE_LIB            = CCA/Components/ICE
 endif
 
+# Cover both cases when Wasatch lib should be built.
 ifeq ($(BUILD_WASATCH),yes)
+  WASATCH_LIB        = CCA/Components/Wasatch
+endif
+ifeq ($(BUILD_WASATCH_FOR_ARCHES),yes)
   WASATCH_LIB        = CCA/Components/Wasatch
 endif
 

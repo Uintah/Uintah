@@ -108,7 +108,7 @@ ScalabilityTestSrc<FieldT>::evaluate()
   FieldT& val = this->value();
   val <<= 0.0;
 
-  for (int i =0; i < phi_.size(); ++i) {
+  for (size_t i =0; i < phi_.size(); ++i) {
     val <<= val + exp(phi_[i]->field_ref());
   }
 

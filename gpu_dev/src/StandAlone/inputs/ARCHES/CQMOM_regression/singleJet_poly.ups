@@ -613,65 +613,47 @@
 
       </ExplicitSolver>
 
- 
+      <EulerianParticles>
+        <ParticleVariables>
+          <variable label="diameter" role="size" />
+          <variable label="partRho"  role="density" />
+          <variable label="partUVel" role="uvel" />
+          <variable label="partVVel" role="vvel" />
+          <variable label="partWVel" role="wvel" />
+        </ParticleVariables>
+      </EulerianParticles>
+
       <ParticleModels>
          <model label="gravityx" type="gravity">
            <grid dependent_type="svol" independent_type="svol"/>
            <IC> partUVel </IC>
-           <particle_density type="constant"> 
-             <constant> 2500.0 </constant>
-           </particle_density>
            <direction> x </direction>
          </model>
 
         <model label="dragx" type="drag">
           <grid dependent_type="svol" independent_type="svol"/>
           <IC> partUVel </IC>
-          <particle_density type="constant">
-            <constant> 2500.0 </constant>
-          </particle_density>
-          <diameter type="node_specific">
-            <diameter_label> diameter </diameter_label>
-          </diameter>  
           <direction> x </direction>
-          <u_velocity_label> partUVel </u_velocity_label>
-          <v_velocity_label> partVVel </v_velocity_label> 
-          <w_velocity_label> partWVel </w_velocity_label>
         </model>
  
-        
         <model label="dragy" type="drag">
           <grid dependent_type="svol" independent_type="svol"/>
           <IC> partVVel </IC>
-          <particle_density type="constant">
-            <constant> 2500.0 </constant>
-          </particle_density>
-          <diameter type="node_specific">
-            <diameter_label> diameter </diameter_label>
-          </diameter>  
           <direction> y </direction>
-          <u_velocity_label> partUVel </u_velocity_label>
-          <v_velocity_label> partVVel </v_velocity_label> 
-          <w_velocity_label> partWVel </w_velocity_label>
         </model>
         
         <model label="dragz" type="drag">
           <grid dependent_type="svol" independent_type="svol"/>
           <IC> partWVel </IC>
-          <particle_density type="constant">
-            <constant> 2500.0 </constant>
-          </particle_density>
-          <diameter type="node_specific">
-            <diameter_label> diameter </diameter_label>
-          </diameter>  
           <direction> z </direction>
-          <u_velocity_label> partUVel </u_velocity_label>
-          <v_velocity_label> partVVel </v_velocity_label> 
-          <w_velocity_label> partWVel </w_velocity_label>
         </model>
          
+        <model label="partRho" type="constant">
+          <grid dependent_type="svol" independent_type="svol"/>
+          <IC> none </IC>
+          <constant> [2500.0, 2500.0, 2500.0, 2500.0] </constant>
+        </model>
       </ParticleModels>
-
 
       <CQMOM partvel="true">
         <!-- base information-->

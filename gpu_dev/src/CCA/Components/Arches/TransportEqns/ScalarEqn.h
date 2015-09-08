@@ -157,7 +157,10 @@ private:
   //For advanced clipping
   bool _reinitialize_from_other_var; 
   std::string _reinit_var_name; 
-  const VarLabel* _reinit_var_label; 
+  const VarLabel* _reinit_var_label;
+  
+  int nExtraSources;
+  std::vector<const VarLabel *> extraSourceLabels;
 
 }; // class ScalarEqn
 } // namespace Uintah

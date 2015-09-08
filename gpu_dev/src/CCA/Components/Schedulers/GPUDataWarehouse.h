@@ -72,6 +72,7 @@ public:
 
   //GPUDataWarehouse(int id, void * placementNewBuffer) : allocateLock("allocate lock"), varLock("var lock"){ };
 
+
   virtual ~GPUDataWarehouse() {};
 
   enum GhostType {
@@ -502,7 +503,7 @@ public:
   HOST_DEVICE void* getPlacementNewBuffer();
   
   __host__ void init_device(size_t objectSizeInBytes, unsigned int maxdVarDBItems );
-  __host__ void init(int id);
+  __host__ void init(int id, std::string internalName);
   __host__ void cleanup();
 
 
@@ -528,6 +529,8 @@ private:
   //mutable SCIRun::CrowdMonitor varLock;
   mutable SCIRun::CrowdMonitor *allocateLock;
   mutable SCIRun::CrowdMonitor *varLock;
+  char _internalName[80];
+  //std::string        *_internalName;
 
   materialItem       d_materialDB[MAX_MATERIALSDB_ITEMS];
   dataItem           d_levelDB[MAX_LEVELDB_ITEMS];

@@ -1,9 +1,8 @@
 #include <CCA/Components/Arches/TransportEqns/DQMOMEqn.h>
-#include <CCA/Components/Arches/ParticleModels/ParticleHelper.h>
+#include <CCA/Components/Arches/ParticleModels/ParticleTools.h>
 #include <CCA/Components/Arches/SourceTerms/SourceTermFactory.h>
 #include <CCA/Components/Arches/SourceTerms/SourceTermBase.h>
 #include <CCA/Components/Arches/SourceTerms/SourceTermBase.h>
-#include <CCA/Components/Arches/ParticleModels/ParticleHelper.h>
 #include <CCA/Ports/Scheduler.h>
 #include <Core/Grid/SimulationState.h>
 #include <Core/Grid/Variables/VarTypes.h>
@@ -131,14 +130,14 @@ DQMOMEqn::problemSetup( const ProblemSpecP& inputdb )
     m_db->getAttribute("label", model_name); 
 
     // now tag on the internal coordinate
-    std::string model_qn_name = ParticleHelper::append_qn_env(model_name, d_quadNode); 
+    std::string model_qn_name = ParticleTools::append_qn_env(model_name, d_quadNode); 
 
     // put it in the list
     d_models.push_back(model_qn_name);
 
     map<string,string>::iterator icheck = d_type_to_model.find(model_type); 
     if ( icheck == d_type_to_model.end() ){ 
-      std::string model_type = ParticleHelper::get_model_type( m_db, model_name, ParticleHelper::DQMOM ); 
+      std::string model_type = ParticleTools::get_model_type( m_db, model_name, ParticleTools::DQMOM ); 
       d_type_to_model[model_type] = model_name; 
     }
 
@@ -198,7 +197,7 @@ DQMOMEqn::problemSetup( const ProblemSpecP& inputdb )
   // Scaling information:
   db->require( "scaling_const", d_scalingConstant ); 
 
-  unsigned int Nqn = ParticleHelper::get_num_env( db, ParticleHelper::DQMOM ); 
+  unsigned int Nqn = ParticleTools::get_num_env( db, ParticleTools::DQMOM ); 
 
   if ( Nqn != d_scalingConstant.size() ){ 
     throw InvalidValue("Error: The number of scaling constants isn't consistent with the number of environments for: "+d_ic_name, __FILE__, __LINE__);

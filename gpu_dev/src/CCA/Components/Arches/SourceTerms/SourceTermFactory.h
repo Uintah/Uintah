@@ -69,7 +69,7 @@ public:
 
   void commonSrcProblemSetup( const ProblemSpecP& db ); 
 
-  void extraSetup( GridP& grid, BoundaryCondition* bc );
+  void extraSetup( GridP& grid, BoundaryCondition* bc, Properties* prop);
 
   /** @brief Determine if a source term is contained in the factory. */
   bool source_term_exists( const std::string name );

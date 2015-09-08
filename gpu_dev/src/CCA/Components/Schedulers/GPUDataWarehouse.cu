@@ -76,7 +76,7 @@ GPUDataWarehouse::get(const GPUGridVariableBase& var, char const* label, int pat
     var.setArray3(vp.device_offset, vp.device_size, vp.device_ptr);
   }
   else {
-    printf("I'm at GPUDW %p\n", this);
+    printf("I'm GPUDW %s at %p \n", _internalName, this);
     printGetError("GPUDataWarehouse::get(GPUGridVariableBase& var, ...)", label, levelIndx, patchID, matlIndx);
   }
   varLock->readUnlock();
@@ -1417,13 +1417,16 @@ GPUDataWarehouse::remove(char const* label, int patchID, int matlIndx, int level
 //______________________________________________________________________
 //
 __host__ void
-GPUDataWarehouse::init(int id)
+GPUDataWarehouse::init(int id, std::string internalName)
 {
 #ifdef __CUDA_ARCH__
   printf("GPUDataWarehouse::init() should not be called on the device.\n");
 #else
 
+
   d_device_id = id;
+  //this->_internalName = new std::string(internalName);
+  strncpy(_internalName, internalName.c_str(), sizeof(_internalName));
   objectSizeInBytes = 0;
   maxdVarDBItems = 0;
   //this->placementNewBuffer = placementNewBuffer;
@@ -1614,7 +1617,7 @@ GPUDataWarehouse::clear()
 
   varLock->writeUnlock();
 
-  init(d_device_id);
+  init(d_device_id, _internalName);
 
 #endif
 }
@@ -2066,8 +2069,18 @@ GPUDataWarehouse::copyGpuGhostCellsToGpuVars() {
    int threadID = threadIdx.x +  blockDim.x * threadIdx.y + (blockDim.x * blockDim.y) * threadIdx.z;  //threadID in the block
    int totalThreads = numThreads * gridDim.x * gridDim.y * gridDim.z;
    int assignedCellID;
+   if (threadID == 0) {
+     printf("d_numVarDBItems = %d\n", d_numVarDBItems);
+   }
    //go through every ghost cell var we need
    for (int i = 0; i < d_numVarDBItems; i++) {
+     if (threadID == 0) {
+       if (d_varDB[i].ghostItem.dest_varDB_index != -1) {
+         printf("d_varDB[%d].label is %s\n", i, d_varDB[d_varDB[i].ghostItem.dest_varDB_index].label, d_numVarDBItems);
+       } else {
+         printf("d_varDB[%d].label is %s\n", i, d_varDB[i].label, d_numVarDBItems);
+       }
+     }
      //some things in d_varDB are meta data for simulation variables
      //other things in d_varDB are meta data for how to copy ghost cells.
      //Make sure we're only dealing with ghost cells here
@@ -2144,9 +2157,9 @@ GPUDataWarehouse::copyGpuGhostCellsToGpuVars() {
              //      threadID, x, y, z, x_source_real, y_source_real, z_source_real,
              //      destIndex, d_varDB[destIndex].var_ptr,  destOffset, (double*)(d_varDB[i].var_ptr) + sourceOffset);
              //}
-
-               printf("Thread %d - At (%d, %d, %d), real: (%d, %d, %d), copying within region between (%d, %d, %d) and (%d, %d, %d).  Source d_varDB index (%d, %d, %d) varSize (%d, %d, %d) virtualOffset(%d, %d, %d), varOffset(%d, %d, %d), sourceOffset %d actual pointer %p, value %e.   Dest d_varDB index %d ptr %p destOffset %d actual pointer. %p\n",
-                   threadID, x, y, z, x_source_real, y_source_real, z_source_real,
+               //if (d_varDB[destIndex].label[3] == '0') {
+               printf("Thread %d - %s At (%d, %d, %d), real: (%d, %d, %d), copying within region between (%d, %d, %d) and (%d, %d, %d).  Source d_varDB index (%d, %d, %d) varSize (%d, %d, %d) virtualOffset(%d, %d, %d), varOffset(%d, %d, %d), sourceOffset %d actual pointer %p, value %e.   Dest d_varDB index %d ptr %p destOffset %d actual pointer. %p\n",
+                   threadID, d_varDB[destIndex].label, x, y, z, x_source_real, y_source_real, z_source_real,
                    d_varDB[i].ghostItem.sharedLowCoordinates.x, d_varDB[i].ghostItem.sharedLowCoordinates.y, d_varDB[i].ghostItem.sharedLowCoordinates.z,
                    d_varDB[i].ghostItem.sharedHighCoordinates.x, d_varDB[i].ghostItem.sharedHighCoordinates.y, d_varDB[i].ghostItem.sharedHighCoordinates.z,
                    x + d_varDB[i].ghostItem.sharedLowCoordinates.x - d_varDB[i].ghostItem.virtualOffset.x,
@@ -2157,6 +2170,7 @@ GPUDataWarehouse::copyGpuGhostCellsToGpuVars() {
                    d_varDB[i].var_offset.x, d_varDB[i].var_offset.y, d_varDB[i].var_offset.z,
                    sourceOffset, (double*)(d_varDB[i].var_ptr) + sourceOffset, *((double*)(d_varDB[i].var_ptr) + sourceOffset),
                    destIndex, d_varDB[destIndex].var_ptr,  destOffset, (double*)(d_varDB[destIndex].var_ptr) + destOffset);
+              //}
 
            }
            //or copy all 4 bytes of an int in one shot.
@@ -2225,12 +2239,14 @@ GPUDataWarehouse::copyGpuGhostCellsToGpuVarsInvoker(cudaStream_t* stream)
     delete[] hostSideVar;
     }
     */
-
+    printf("%s Copying my ghost cells\n", UnifiedScheduler::myRankThread().c_str());
     copyGpuGhostCellsToGpuVarsKernel<<< dimGrid, dimBlock, 0, *stream >>>(this->d_device_copy);
+    //TODO: Take this out
+    cudaDeviceSynchronize();
 
     /*
     {
-    cudaDeviceSynchronize();
+
     //pull out phi0
     Uintah::GPUGridVariable<double> myDeviceVar;
     getModifiable( myDeviceVar, "phi1", 0, 0 );
@@ -2307,12 +2323,17 @@ GPUDataWarehouse::putGhostCell(char const* label, int sourcePatchID, int destPat
       index = varPointers->operator[](lpml_source).varDB_index;
     }
   } else {
-    //If the source is staging, then the shared coordinates are also the ghost coordinates.
+    //Find the variable that contains the region in which our ghost cells exist.
+    //Usually the sharedLowCoordinates and sharedHighCoordinates correspond
+    //exactly to the size of the staging variable.  But sometimes the ghost data is found within
+    //a larger staging variable.
     stagingVar sv;
-    sv.device_offset = sharedLowCoordinates;
-    sv.device_size = make_int3(sharedHighCoordinates.x-sharedLowCoordinates.x,
-                               sharedHighCoordinates.y-sharedLowCoordinates.y,
-                               sharedHighCoordinates.z-sharedLowCoordinates.z);
+    //sv.device_offset = sharedLowCoordinates;
+    //sv.device_size = make_int3(sharedHighCoordinates.x-sharedLowCoordinates.x,
+    //                           sharedHighCoordinates.y-sharedLowCoordinates.y,
+    //                           sharedHighCoordinates.z-sharedLowCoordinates.z);
+    sv.device_offset = varOffset;
+    sv.device_size = varSize;
 
     std::map<stagingVar, stagingVarInfo>::iterator staging_it = varPointers->operator[](lpml_source).stagingVars.find(sv);
     if (staging_it != varPointers->operator[](lpml_source).stagingVars.end()) {
@@ -2321,7 +2342,7 @@ GPUDataWarehouse::putGhostCell(char const* label, int sourcePatchID, int destPat
     } else {
       printf("ERROR: GPUDataWarehouse::putGhostCell( %s ). Size %d, No staging variable found label %s patch %d matl %d level %d offset (%d, %d, %d) size (%d, %d, %d) on DW at %p.\n",
                     label, varPointers->operator[](lpml_source).stagingVars.size(), label, sourcePatchID, matlIndx, levelIndx,
-                    sharedLowCoordinates.x, sharedLowCoordinates.y, sharedLowCoordinates.z,
+                    sv.device_offset.x, sv.device_offset.y, sv.device_offset.z,
                     sv.device_size.x, sv.device_size.y, sv.device_size.z,
                     this);
       varLock->writeUnlock();
@@ -2385,6 +2406,7 @@ GPUDataWarehouse::putGhostCell(char const* label, int sourcePatchID, int destPat
   std::map<labelPatchMatlLevel, allVarPointersInfo>::iterator it = varPointers->find(lpml_dest);
   if (it != varPointers->end()) {
     if (deststaging) {
+      //TODO: Do the same thing as the source.
       //If the destination is staging, then the shared coordinates are also the ghost coordinates.
       stagingVar sv;
       sv.device_offset = sharedLowCoordinates;
@@ -2697,8 +2719,8 @@ GPUDataWarehouse::printGetError(const char* msg, char const* label, int levelInd
 #else
   //__________________________________
   //  CPU code
-  printf("  \nERROR: %s( \"%s\", levelIndx: %i, patchID: %i, matl: %i)  unknown variable\n",
-         msg, label, levelIndx, patchID, matlIndx);
+  printf("  \nERROR: %s( \"%s\", levelIndx: %i, patchID: %i, matl: %i)  unknown variable in DW %s\n",
+         msg, label, levelIndx, patchID, matlIndx, _internalName);
   for (int i = 0; i < d_numVarDBItems; i++) {
     printf("   Available varDB labels(%i): \"%-15s\" matl: %i, patchID: %i, level: %i\n", d_numVarDBItems, d_varDB[i].label, d_varDB[i].matlIndx,
            d_varDB[i].domainID, d_varDB[i].levelIndx);

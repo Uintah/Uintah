@@ -16,6 +16,7 @@ SRCS += \
   $(SRCDIR)/ConstantModel.cc  \
   $(SRCDIR)/HeatTransfer.cc \
   $(SRCDIR)/EnthalpyShaddix.cc \
+  $(SRCDIR)/MaximumTemperature.cc \
 	$(SRCDIR)/SimpleBirth.cc \
 	$(SRCDIR)/ParticleConvection.cc \
   $(SRCDIR)/DragModel.cc 
