@@ -444,7 +444,7 @@ void UnifiedScheduler::runTask(DetailedTask* task, int iteration,
       prepareDeviceVars(task, deviceVars);
       prepareTaskVarsIntoTaskDW(task, taskVars);
       prepareGhostCellsIntoTaskDW(task, ghostVars);
-      syncTaskGpuDWs(task);  //TODO: Fix for multiple GPUs
+      syncTaskGpuDWs(task);
 
       //get these ghost cells to contiguous arrays so they can be copied to host.
       performInternalGhostCellCopies(task);  //TODO: Fix for multiple GPUs
@@ -2773,6 +2773,11 @@ void UnifiedScheduler::initiateH2DCopies(DetailedTask* dtask) {
                 bool useGpuGhostCells = false;
                 bool useGpuStaging = false;
 
+                //Assume for now that the ghost cell region is also the exact same size as the
+                //staging var.  (If in the future ghost cell data is managed a bit better as
+                //it currently does on the CPU, then some ghost cell regions will be found
+                //*within* an existing staging var.  This is known to happen with Wasatch
+                //computations involving periodic boundary scenarios.)
                 useGpuStaging = dw->getGPUDW(destDeviceNum)->stagingVarExists(
                                       curDependency->var->getName().c_str(),
                                       patches->get(i)->getID(), matlID, levelID,
@@ -3113,15 +3118,19 @@ void UnifiedScheduler::initiateH2DCopies(DetailedTask* dtask) {
                         iter->low, iter->high - iter->low,
                         ghost_host_strides.x(), curDependency, destDeviceNum);
 
-                    //Store the source and destination patch, and the range of the ghost cells
-                    //A GPU kernel will use this collection to do all internal GPU ghost cell copies for
-                    //that one specific GPU.
+                    //Assume for now that the ghost cell region is also the exact same size as the
+                    //staging var.  (If in the future ghost cell data is managed a bit better as
+                    //it currently does on the CPU, then some ghost cell regions will be found
+                    //*within* an existing staging var.  This is known to happen with Wasatch
+                    //computations involving periodic boundary scenarios.)
                     ghostVars.add(curDependency->var,
                         patches->get(i), patches->get(i),   /*We're merging the staging variable on in*/
                         matlID, levelID,
                         true, false,
-                        ghost_host_offset, ghost_host_size,
-                        iter->low, iter->high,
+                        iter->low,              /*Assuming ghost cell region is the variable size */
+                        IntVector(iter->high.x() - iter->low.x(), iter->high.y() - iter->low.y(), iter->high.z() - iter->low.z()),
+                        iter->low,
+                        iter->high,
                         elementDataSize, virtualOffset,
                         destDeviceNum, destDeviceNum, -1, -1,   /* we're copying within a device, so destDeviceNum -> destDeviceNum */
                         (Task::WhichDW) curDependency->mapDataWarehouse(),
@@ -3134,10 +3143,10 @@ void UnifiedScheduler::initiateH2DCopies(DetailedTask* dtask) {
                             << curDependency->var->getName().c_str() << " from patch "
                             << patchID << " staging true to patch " << patchID
                             << " staging false using a variable starting at ("
-                            << ghost_host_offset.x() << ", " << ghost_host_offset.y() << ", "
-                            << ghost_host_offset.z() << ") and size ("
-                            << ghost_host_size.x() << ", " << ghost_host_size.y() << ", "
-                            << ghost_host_size.z() << ")"
+                            << iter->low.x() << ", " << iter->low.y() << ", "
+                            << iter->low.z() << ") and size ("
+                            << (iter->high.x() - iter->low.x()) << ", " << (iter->high.y() - iter->low.y()) << ", "
+                            << (iter->high.z() - iter->low.z()) << ")"
                             << " copying from ("
                             << iter->low.x() << ", " << iter->low.y() << ", "
                             << iter->low.z() << ")" << " to (" << iter->high.x()
@@ -3339,11 +3348,9 @@ void UnifiedScheduler::initiateH2DCopies(DetailedTask* dtask) {
   prepareDeviceVars(dtask, deviceVars);
 
   prepareTaskVarsIntoTaskDW(dtask, taskVars);
-  printf("After prepareTaskVarsIntoTaskDW, calling syncTaskGpuDWs\n");
-  syncTaskGpuDWs(dtask);
+
   prepareGhostCellsIntoTaskDW(dtask, ghostVars);
-  printf("After prepareGhostCellsIntoTaskDW, calling syncTaskGpuDWs\n");
-  syncTaskGpuDWs(dtask);
+
 }
 
 void UnifiedScheduler::prepareDeviceVars(DetailedTask* dtask,
@@ -4850,7 +4857,7 @@ void UnifiedScheduler::createTaskGpuDWs(DetailedTask * task,
       new_taskGpuDW->setDebug(gpudbg.active());
       new_taskGpuDW->init_device(objectSizeInBytes, numItemsInDW);
 
-      printf("%s setting a task gpu dw at %p for device %d\n", myRankThread().c_str(), new_taskGpuDW, currentDevice);
+      //printf("%s setting a task gpu dw at %p for device %d\n", myRankThread().c_str(), new_taskGpuDW, currentDevice);
       task->setTaskGpuDataWarehouse(currentDevice, Task::NewDW, new_taskGpuDW);
 
       if (gpu_stats.active()) {
@@ -5259,10 +5266,8 @@ void UnifiedScheduler::copyAllExtGpuDependenciesToHost(const DetailedTask* dtask
   //everything out via MPI that way and avoid the manual D2H copy and the H2H copy.
   const map<GpuUtilities::GhostVarsTuple, DeviceGhostCellsInfo> & ghostVarMap = ghostVars.getMap();
   for (map<GpuUtilities::GhostVarsTuple, DeviceGhostCellsInfo>::const_iterator it=ghostVarMap.begin(); it!=ghostVarMap.end(); ++it) {
-    printf("In for loop\n");
     //TODO: Needs a particle section
     if (it->second.dest == GpuUtilities::anotherMpiRank) {
-      printf("Destination is another MPI rank...\n");
       void* host_ptr    = NULL;    // host base pointer to raw data
       void* device_ptr  = NULL;  // device base pointer to raw data
       size_t host_bytes = 0;
@@ -5357,14 +5362,13 @@ void UnifiedScheduler::copyAllExtGpuDependenciesToHost(const DetailedTask* dtask
   }
 
   if (copiesExist) {
-    printf("Copies exist\n");
 
     //Wait until all streams are done
     //Further optimization could be to check each stream one by one and make copies before waiting for other streams to complete.
     //TODO: There's got to be a better way to do this.
     while (!dtask->checkAllCUDAStreamsDone()) {
       //sleep?
-      printf("Sleeping\n");
+      //printf("Sleeping\n");
     }
 
 
@@ -5372,7 +5376,6 @@ void UnifiedScheduler::copyAllExtGpuDependenciesToHost(const DetailedTask* dtask
 
       if (it->second.dest == GpuUtilities::anotherMpiRank) {
         //TODO: Needs a particle section
-        printf("Here 1\n");
         IntVector host_low, host_high, host_offset, host_size, host_strides;
 
         //We created a temporary host variable for this earlier,
@@ -5446,38 +5449,30 @@ void UnifiedScheduler::copyAllExtGpuDependenciesToHost(const DetailedTask* dtask
 
 
         //If there's ever a need to manually verify what was copied host-to-host, use this code below.
-        printf("Here 2\n");
-        if (/*it->second.sourcePatchPointer->getID() == 1 && */ item.dep->var->d_name == "phi") {
-
-          //double *phi_data = (double*)phi.getWindow()->getData()->getPointer();
-          double * phi_data = new double[gridVar->getDataSize()/sizeof(double)];
-          tempGhostVar->copyOut(phi_data);
-
-          IntVector l = ghostLow;
-          IntVector h = ghostHigh;
-          int zhigh = h.z();
-          int yhigh = h.y();
-          int xhigh = h.x();
-          int ghostLayers = 1;
-          int ystride = yhigh + ghostLayers;
-          int xstride = xhigh + ghostLayers;
-
-          printf(" - Going to copy data between (%d, %d, %d) and (%d, %d, %d)\n", l.x(), l.y(), l.z(), h.x(), h.y(), h.z());
-
-
-          for (int k = l.z(); k < zhigh; k++) {
-            for (int j = l.y(); j < yhigh; j++) {
-              for (int i = l.x(); i < xhigh; i++) {
-                //cout << "(x,y,z): " << k << "," << j << "," << i << endl;
-                // For an array of [ A ][ B ][ C ], we can index it thus:
-                // (a * B * C) + (b * C) + (c * 1)
-                int idx = i + (j * xstride) + (k * xstride * ystride);
-
-                printf(" - phi(%d, %d, %d) is %1.6lf ptr %p\n", i, j, k, phi_data[idx], phi_data + idx);
-              }
-            }
-          }
-        }
+        //if (/*it->second.sourcePatchPointer->getID() == 1 && */ item.dep->var->d_name == "phi") {
+        //  double * phi_data = new double[gridVar->getDataSize()/sizeof(double)];
+        //  tempGhostVar->copyOut(phi_data);
+        //  IntVector l = ghostLow;
+        //  IntVector h = ghostHigh;
+        //  int zhigh = h.z();
+        //  int yhigh = h.y();
+        //  int xhigh = h.x();
+        //  int ghostLayers = 1;
+        //  int ystride = yhigh + ghostLayers;
+        //  int xstride = xhigh + ghostLayers;
+        //  printf(" - Going to copy data between (%d, %d, %d) and (%d, %d, %d)\n", l.x(), l.y(), l.z(), h.x(), h.y(), h.z());
+        //  for (int k = l.z(); k < zhigh; k++) {
+        //    for (int j = l.y(); j < yhigh; j++) {
+        //      for (int i = l.x(); i < xhigh; i++) {
+        //        //cout << "(x,y,z): " << k << "," << j << "," << i << endl;
+        //        // For an array of [ A ][ B ][ C ], we can index it thus:
+        //        // (a * B * C) + (b * C) + (c * 1)
+        //        int idx = i + (j * xstride) + (k * xstride * ystride);
+        //        printf(" - phi(%d, %d, %d) is %1.6lf ptr %p\n", i, j, k, phi_data[idx], phi_data + idx);
+        //      }
+        //    }
+        //  }
+        //}
 
         //let go of our reference counters.
         delete gridVar;

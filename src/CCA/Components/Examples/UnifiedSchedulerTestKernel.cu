@@ -116,7 +116,7 @@ unifiedSchedulerTestKernel( int                patchID,
                    + phi(i, j, k-1)
                    + phi(i, j, k+1));
       //if (i == 1 && j == 1 && k == 1) {
-              printf("gpu - newphi(%d, %d, %d) is %1.6lf ptr %p from %1.6lf %1.6lf %1.6lf %1.6lf %1.6lf %1.6lf\n", i, j, k, newphi(i, j, k), &newphi(i,j,k), phi(i-1, j, k), phi(i+1, j, k), phi(i, j-1, k), phi(i, j+1, k), phi(i, j, k-1), phi(i, j, k+1));
+      //        printf("gpu - newphi(%d, %d, %d) is %1.6lf ptr %p from %1.6lf %1.6lf %1.6lf %1.6lf %1.6lf %1.6lf\n", i, j, k, newphi(i, j, k), &newphi(i,j,k), phi(i-1, j, k), phi(i+1, j, k), phi(i, j-1, k), phi(i, j+1, k), phi(i, j, k-1), phi(i, j, k+1));
       //}
       //if (i == 1 && j == 1 && k == domainLow.z) {
       //        printf("gpu - newphi(%d, %d, %d) is %1.6lf from %1.6lf %1.6lf %1.6lf %1.6lf %1.6lf %1.6lf\n", i, j, k, newphi(i, j, k), phi(i-1, j, k), phi(i+1, j, k), phi(i, j-1, k), phi(i, j+1, k), phi(i, j, k-1), phi(i, j, k+1));

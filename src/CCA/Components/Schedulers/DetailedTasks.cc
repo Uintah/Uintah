@@ -1689,7 +1689,6 @@ void DetailedTask::deleteTaskGpuDataWarehouses() {
           //of the things in the GPU.  The host side GPU DWs is responsible for
           //deallocating all the GPU resources.  The only thing we do want to clean
           //up is that this GPUDW lives on the GPU.
-          printf("!!!!Deallocating %p\n", it->second.TaskGpuDW[i]);
           it->second.TaskGpuDW[i]->deleteSelfOnDevice();
 
           //void * getPlacementNewBuffer = it->second.TaskGpuDW[i]->getPlacementNewBuffer();
