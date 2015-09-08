@@ -299,8 +299,9 @@ Thread::niceAbort(void* context /* = 0 */, bool print /*= true */)
   }
 
   const char* smode = getenv("SCI_SIGNALMODE");
-  if (!smode)
-    smode = defaultAbortMode; //"e"; 
+  if (!smode) {
+    smode = defaultAbortMode;
+  }
 	
   Thread* s=Thread::self();
   if(print)
