@@ -35,10 +35,6 @@
 
 #include <sci_defs/uintah_defs.h>
 
-#if defined( HAVE_ZOLTAN )
-#  include <zoltan_cpp.h>
-#endif
-
 #include <set>
 #include <string>
 
@@ -70,22 +66,6 @@ namespace Uintah {
      WARNING
       
      ****************************************/
-
-#if defined( HAVE_ZOLTAN )
-  class ZoltanFuncs {
-  public:
-    //Zoltan input functions
-    static void zoltan_get_object_list( void *data, int sizeGID, int sizeLID,
-                                        ZOLTAN_ID_PTR globalID, ZOLTAN_ID_PTR localID,
-                                        int wgt_dim, float *obj_wgts, int *ierr );
-    static int zoltan_get_number_of_objects( void *data, int *ierr );
-    static int zoltan_get_number_of_geometry( void *data, int *ierr );
-    static void zoltan_get_geometry_list( void *data, int sizeGID, int sizeLID,
-                                          int num_obj,
-                                          ZOLTAN_ID_PTR globalID, ZOLTAN_ID_PTR localID,
-                                          int num_dim, double *geom_vec, int *ierr );
-  };
-#endif
 
   class DynamicLoadBalancer : public LoadBalancerCommon {
   public:
@@ -144,7 +124,7 @@ namespace Uintah {
 
     std::vector<IntVector> d_minPatchSize;
     CostForecasterBase *d_costForecaster;
-    enum { static_lb, cyclic_lb, random_lb, patch_factor_lb, zoltan_sfc_lb };
+    enum { static_lb, cyclic_lb, random_lb, patch_factor_lb };
 
     DynamicLoadBalancer(const DynamicLoadBalancer&);
     DynamicLoadBalancer& operator=(const DynamicLoadBalancer&);
@@ -155,7 +135,6 @@ namespace Uintah {
     bool assignPatchesFactor(const GridP& grid, bool force);
     bool assignPatchesRandom(const GridP& grid, bool force);
     bool assignPatchesCyclic(const GridP& grid, bool force);
-    bool assignPatchesZoltanSFC(const GridP& grid, bool force);
 
     bool thresholdExceeded(const std::vector<std::vector<double> >& patch_costs);
 
@@ -180,12 +159,6 @@ namespace Uintah {
     int  d_dynamicAlgorithm;
     bool d_collectParticles;
 
-#if defined( HAVE_ZOLTAN )    
-    // Zoltan global vars
-    Zoltan * zz;
-    std::string d_zoltanAlgorithm;  //This will be the algorithm that zoltan will use (HSFC, RCB, etc)
-    std::string d_zoltanIMBTol;     //This will be the amount of imalance should be acceptable
-#endif
   };
 } // End namespace Uintah
 

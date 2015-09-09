@@ -215,15 +215,6 @@
         <BCType id="all" label="uy_qn2" var="Dirichlet">
           <value>0.0</value>
         </BCType>
-        <BCType id="all" label="vel_qn0" var="Dirichlet">
-          <value>[0, 0, 0]</value>
-        </BCType>
-        <BCType id="all" label="vel_qn1" var="Dirichlet">
-          <value>[0, 0, 0]</value>
-        </BCType>
-        <BCType id="all" label="vel_qn2" var="Dirichlet">
-          <value>[0, 0, 0]</value>
-        </BCType>
         <BCType id="all" label="RCmass_qn0" var="Neumann">
           <value>0.0</value>
         </BCType>
@@ -324,15 +315,6 @@
         </BCType>
         <BCType id="all" label="uy_qn2" var="Dirichlet">
           <value>0.0</value>
-        </BCType>
-        <BCType id="all" label="vel_qn0" var="Dirichlet">
-          <value>[0, 0, 0]</value>
-        </BCType>
-        <BCType id="all" label="vel_qn1" var="Dirichlet">
-          <value>[0, 0, 0]</value>
-        </BCType>
-        <BCType id="all" label="vel_qn2" var="Dirichlet">
-          <value>[0, 0, 0]</value>
         </BCType>
         <BCType id="all" label="RCmass_qn0" var="Neumann">
           <value>0.0</value>
@@ -435,15 +417,6 @@
         <BCType id="all" label="uy_qn2" var="Dirichlet">
           <value>0.0</value>
         </BCType>
-        <BCType id="all" label="vel_qn0" var="Dirichlet">
-          <value>[0, 0, 0]</value>
-        </BCType>
-        <BCType id="all" label="vel_qn1" var="Dirichlet">
-          <value>[0, 0, 0]</value>
-        </BCType>
-        <BCType id="all" label="vel_qn2" var="Dirichlet">
-          <value>[0, 0, 0]</value>
-        </BCType>
         <BCType id="all" label="RCmass_qn0" var="Neumann">
           <value>0.0</value>
         </BCType>
@@ -544,15 +517,6 @@
         </BCType>
         <BCType id="all" label="uy_qn2" var="Dirichlet">
           <value>-0.0</value>
-        </BCType>
-        <BCType id="all" label="vel_qn0" var="Dirichlet">
-          <value>[0, 0, 0]</value>
-        </BCType>
-        <BCType id="all" label="vel_qn1" var="Dirichlet">
-          <value>[0, 0, 0]</value>
-        </BCType>
-        <BCType id="all" label="vel_qn2" var="Dirichlet">
-          <value>[0, 0, 0]</value>
         </BCType>
         <BCType id="all" label="RCmass_qn0" var="Neumann">
           <value>0.0</value>
@@ -655,15 +619,6 @@
         <BCType id="all" label="uy_qn2" var="Dirichlet">
           <value>0.0</value>
         </BCType>
-        <BCType id="all" label="vel_qn0" var="Dirichlet">
-          <value>[0, 0, 0]</value>
-        </BCType>
-        <BCType id="all" label="vel_qn1" var="Dirichlet">
-          <value>[0, 0, 0]</value>
-        </BCType>
-        <BCType id="all" label="vel_qn2" var="Dirichlet">
-          <value>[0, 0, 0]</value>
-        </BCType>
         <BCType id="all" label="RCmass_qn0" var="Neumann">
           <value>0.0</value>
         </BCType>
@@ -764,15 +719,6 @@
         </BCType>
         <BCType id="all" label="uy_qn2" var="Dirichlet">
           <value>0.0</value>
-        </BCType>
-        <BCType id="all" label="vel_qn0" var="Dirichlet">
-          <value>[0, 0, 0]</value>
-        </BCType>
-        <BCType id="all" label="vel_qn1" var="Dirichlet">
-          <value>[0, 0, 0]</value>
-        </BCType>
-        <BCType id="all" label="vel_qn2" var="Dirichlet">
-          <value>[0, 0, 0]</value>
         </BCType>
         <BCType id="all" label="RCmass_qn0" var="Neumann">
           <value>0.0</value>
@@ -877,15 +823,6 @@
         <BCType id="all" label="uy_qn2" var="Dirichlet">
           <value>0.0</value>
         </BCType>
-        <BCType id="all" label="vel_qn0" var="Dirichlet">
-          <value>[5.8129272652473993, 0, 0]</value>
-        </BCType>
-        <BCType id="all" label="vel_qn1" var="Dirichlet">
-          <value>[5.8129272652473993, 0, 0]</value>
-        </BCType>
-        <BCType id="all" label="vel_qn2" var="Dirichlet">
-          <value>[5.8129272652473993, 0, 0]</value>
-        </BCType>
         <BCType id="all" label="RCmass_qn0" var="Dirichlet">
           <value>1.0</value>
         </BCType>
@@ -988,15 +925,6 @@
         </BCType>
         <BCType id="all" label="uy_qn2" var="Dirichlet">
           <value>0.0</value>
-        </BCType>
-        <BCType id="all" label="vel_qn0" var="Dirichlet">
-          <value>[5.8155802859863606, 0, 0]</value>
-        </BCType>
-        <BCType id="all" label="vel_qn1" var="Dirichlet">
-          <value>[5.8155802859863606, 0, 0]</value>
-        </BCType>
-        <BCType id="all" label="vel_qn2" var="Dirichlet">
-          <value>[5.8155802859863606, 0, 0]</value>
         </BCType>
         <BCType id="all" label="RCmass_qn0" var="Dirichlet">
           <value>1e-15</value>
@@ -1101,15 +1029,6 @@
         <BCType id="all" label="uy_qn2" var="Dirichlet">
           <value>0.66368798030714615e-15</value>
         </BCType>
-        <BCType id="all" label="vel_qn0" var="Dirichlet">
-          <value>[0, 0.66368798030714615, 0]</value>
-        </BCType>
-        <BCType id="all" label="vel_qn1" var="Dirichlet">
-          <value>[0, 0.66368798030714615, 0]</value>
-        </BCType>
-        <BCType id="all" label="vel_qn2" var="Dirichlet">
-          <value>[0, 0.66368798030714615, 0]</value>
-        </BCType>
         <BCType id="all" label="RCmass_qn0" var="Dirichlet">
           <value>1e-15</value>
         </BCType>
@@ -1212,15 +1131,6 @@
         </BCType>
         <BCType id="all" label="uy_qn2" var="Dirichlet">
           <value>0.75850054892245278e-15</value>
-        </BCType>
-        <BCType id="all" label="vel_qn0" var="Dirichlet">
-          <value>[0, 0.75850054892245278, 0]</value>
-        </BCType>
-        <BCType id="all" label="vel_qn1" var="Dirichlet">
-          <value>[0, 0.75850054892245278, 0]</value>
-        </BCType>
-        <BCType id="all" label="vel_qn2" var="Dirichlet">
-          <value>[0, 0.75850054892245278, 0]</value>
         </BCType>
         <BCType id="all" label="RCmass_qn0" var="Dirichlet">
           <value>1e-15</value>
@@ -1325,15 +1235,6 @@
         <BCType id="all" label="uy_qn2" var="Dirichlet">
           <value>0.75850054892245278e-15</value>
         </BCType>
-        <BCType id="all" label="vel_qn0" var="Dirichlet">
-          <value>[0, 0.75850054892245278, 0]</value>
-        </BCType>
-        <BCType id="all" label="vel_qn1" var="Dirichlet">
-          <value>[0, 0.75850054892245278, 0]</value>
-        </BCType>
-        <BCType id="all" label="vel_qn2" var="Dirichlet">
-          <value>[0, 0.75850054892245278, 0]</value>
-        </BCType>
         <BCType id="all" label="RCmass_qn0" var="Dirichlet">
           <value>1e-15</value>
         </BCType>
@@ -1434,15 +1335,6 @@
         </BCType>
         <BCType id="all" label="uy_qn2" var="Neumann">
           <value>0.0</value>
-        </BCType>
-        <BCType id="all" label="vel_qn0" var="Neumann">
-          <value>[0, 0, 0]</value>
-        </BCType>
-        <BCType id="all" label="vel_qn1" var="Neumann">
-          <value>[0, 0, 0]</value>
-        </BCType>
-        <BCType id="all" label="vel_qn2" var="Neumann">
-          <value>[0, 0, 0]</value>
         </BCType>
         <BCType id="all" label="RCmass_qn0" var="Neumann">
           <value>0.0</value>

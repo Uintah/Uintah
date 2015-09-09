@@ -92,15 +92,15 @@
       <ParticleModels>
         <model label="ux" type="constant">
           <grid dependent_type="svol" independent_type="svol"/>
-          <constant>[1.0,1.0]</constant>
+          <constant>[1.0,1.0,1.0]</constant>
         </model>
         <model label="uy" type="constant">
           <grid dependent_type="svol" independent_type="svol"/>
-          <constant>[1.0,1.0]</constant>
+          <constant>[1.0,1.0,1.0]</constant>
         </model>
         <model label="uz" type="constant">
           <grid dependent_type="svol" independent_type="svol"/>
-          <constant>[1.0,1.0]</constant>
+          <constant>[1.0,1.0,1.0]</constant>
         </model>
       </ParticleModels>
 
