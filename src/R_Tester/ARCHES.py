@@ -169,9 +169,9 @@ LOCALTESTS = [
    ("OFC4"                               , "Coal/OFC4.ups"                                                , 3   , "All"  , ["exactComparison"   ]) , 
    
 # multi-threaded LOCAL tests
-   ("rmcrt_bm1_1L_thread"                , "RMCRT/rmcrt_bm1_1L.ups"               , 1.1 , "Linux"    , ["no_restart", "exactComparison", "sus_options=-nthreads 4"]),
-   ("rmcrt_bm1_ML_thread"                , "RMCRT/rmcrt_bm1_ML.ups"               , 1.1 , "Linux"    , ["no_restart", "exactComparison", "sus_options=-nthreads 4"]),
-   ("rmcrt_bm1_DO_thread"                , "RMCRT/rmcrt_bm1_DO.ups"               , 1.1 , "Linux"    , ["no_restart", "exactComparison", "sus_options=-nthreads 8"]),   
+#   ("rmcrt_bm1_1L_thread"                , "RMCRT/rmcrt_bm1_1L.ups"               , 1.1 , "Linux"    , ["no_restart", "exactComparison", "sus_options=-nthreads 4"]),
+#   ("rmcrt_bm1_ML_thread"                , "RMCRT/rmcrt_bm1_ML.ups"               , 1.1 , "Linux"    , ["no_restart", "exactComparison", "sus_options=-nthreads 4"]),
+#   ("rmcrt_bm1_DO_thread"                , "RMCRT/rmcrt_bm1_DO.ups"               , 1.1 , "Linux"    , ["no_restart", "exactComparison", "sus_options=-nthreads 8"]),   
 ]
 
 NEWTESTS = [
