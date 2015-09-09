@@ -20,13 +20,7 @@
  * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
  * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
  * IN THE SOFTWARE.
- */
-
-// Allgatherv currently performs poorly on Kraken.  
-// This hack changes the Allgatherv to an allgather 
-// by padding the digits.
-//
-#define AG_HACK  
+ */  
 
 #include <CCA/Components/LoadBalancers/ParticleLoadBalancer.h>
 
@@ -304,40 +298,9 @@ void ParticleLoadBalancer::collectParticles(const Grid* grid, vector<vector<int>
       displs[i] = displs[i-1]+recvcounts[i-1];
     }
 
-#ifdef AG_HACK
-    //compute maximum elements across all processors
-    int max_size=recvcounts[0];
-    for(int p=1;p<d_myworld->size();p++)
-      if(max_size<recvcounts[p])
-        max_size=recvcounts[p];
-
-    //create temporary vectors
-    vector<PatchInfo> particleList2(particleList), all_particles2;
-    particleList2.resize(max_size/sizeof(PatchInfo));
-    all_particles2.resize(particleList2.size()*d_myworld->size());
-
-    //gather regions
-    MPI_Allgather(&particleList2[0],max_size,MPI_BYTE,&all_particles2[0],max_size, MPI_BYTE,d_myworld->getComm());
-
-    //copy to original vectors
-    int j=0;
-    for(int p=0;p<d_myworld->size();p++)
-    {
-      int start=particleList2.size()*p;
-      int end=start+recvcounts[p]/sizeof(PatchInfo);
-      for(int i=start;i<end;i++)
-        all_particles[j++]=all_particles2[i];          
-    }
-
-    //free memory
-    particleList2.clear();
-    all_particles2.clear();
-
-#else
     MPI_Allgatherv(&particleList[0], particleList.size()*sizeof(PatchInfo),  MPI_BYTE,
-        &all_particles[0], &recvcounts[0], &displs[0], MPI_BYTE,
-        d_myworld->getComm());
-#endif    
+                   &all_particles[0], &recvcounts[0], &displs[0], MPI_BYTE, d_myworld->getComm());
+
     if (dbg.active() && d_myworld->myrank() == 0) {
       for (unsigned i = 0; i < all_particles.size(); i++) {
         PatchInfo& pi = all_particles[i];

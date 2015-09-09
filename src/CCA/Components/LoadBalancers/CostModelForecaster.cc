@@ -74,15 +74,19 @@ void CostModelForecaster::outputError(const GridP grid)
   getWeights(grid.get_rep(), num_particles,costs);
 
   double size=0;
-  double sum_error_local=0;
-  double sum_aerror_local=0;
-  double max_error_local=0;
+  double sum_error_local = 0;
+  double sum_aerror_local= 0;
+  double max_error_local = 0;
   
+  //__________________________________
+  //
   for(int l=0;l<grid->numLevels();l++)
   {
     LevelP level=grid->getLevel(l);
     size+=level->numPatches();
     
+    //__________________________________
+    //
     for(int p=0;p<level->numPatches();p++)
     {
       const Patch* patch=level->getPatch(p);
@@ -91,7 +95,6 @@ void CostModelForecaster::outputError(const GridP grid)
         continue;
       }
       
-
       double error = (d_execTimes[patch->getID()] - costs[l][p])/(d_execTimes[patch->getID()] + costs[l][p]);
 
 //      cout << d_myworld->myrank() << " patch:" << patch->getID() << " exectTime: " << d_execTimes[patch->getID()] 
@@ -389,7 +392,7 @@ CostModelForecaster::finalizeContributions( const GridP currentGrid )
       
       //singular on this field, set its coefficent to 0
       if(j == patch_info.size()){  
-        proc0cout << "Removing profiling field '" << PatchInfo::type(i) << "' because it is singular\n";
+        proc0cout << "Removing profiling field (i=" << i <<") '" << PatchInfo::type(i) << "' because it is singular\n";
         d_x[i]=0;
       }
     }
@@ -458,6 +461,7 @@ CostModelForecaster::finalizeContributions( const GridP currentGrid )
   
   d_execTimes.clear();
 }
+
 //______________________________________________________________________
 //
 void
@@ -465,7 +469,9 @@ CostModelForecaster::getWeights(const Grid* grid, vector<vector<int> > num_parti
 {
   CostModeler::getWeights(grid,num_particles,costs);
 }
-  
+
+//______________________________________________________________________
+// 
 ostream& operator<<(ostream& out, const CostModelForecaster::PatchInfo &pi)
 {
   out << "NumCells: " << pi.num_cells << " NumExtraCells: " << pi.num_extraCells << " NumParticles: " << pi.num_particles << " ExecTime: " << pi.execTime ;

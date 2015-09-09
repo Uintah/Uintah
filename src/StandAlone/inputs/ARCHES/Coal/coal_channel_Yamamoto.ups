@@ -129,9 +129,6 @@
         <BCType id="all" label="eta" var="Dirichlet">
           <value>0.0</value>
         </BCType>
-        <BCType id = "all" label = "vel_qn0" var = "Dirichlet">
-          <value>[10.0,0.0,0.0]</value>
-        </BCType>
         <BCType id = "all" label = "length_qn0" var = "Dirichlet">
           <value>23.4139</value>
         </BCType>
@@ -156,9 +153,6 @@
         <BCType id="all" label="pE_qn0" var="Dirichlet">
           <value>-7.605108111316770</value>
         </BCType>
-        <BCType id = "all" label = "vel_qn1" var = "Dirichlet">
-          <value>[10.0,0.0,0.0]</value>
-        </BCType>
         <BCType id = "all" label = "length_qn1" var = "Dirichlet">
           <value>49.3847</value>
         </BCType>
@@ -182,9 +176,6 @@
         </BCType>
         <BCType id="all" label="pE_qn1" var="Dirichlet">
           <value>-39.790882273706707</value>
-        </BCType>
-        <BCType id = "all" label = "vel_qn2" var = "Dirichlet">
-          <value>[10.0,0.0,0.0]</value>
         </BCType>
         <BCType id = "all" label = "length_qn2" var = "Dirichlet">
           <value>10.10143</value>
@@ -240,9 +231,6 @@
         <BCType id="all" label="eta" var="Neumann">
           <value>0.0</value>
         </BCType>
-        <BCType id="all" label="vel_qn0" var="Neumann">
-          <value>[0.0,0.0,0.0]</value>
-        </BCType>
         <BCType id="all" label="length_qn0" var="Neumann">
           <value>0.0</value>
         </BCType>
@@ -267,9 +255,6 @@
         <BCType id="all" label="pE_qn0" var="Neumann">
           <value>0.0</value>
         </BCType>
-        <BCType id="all" label="vel_qn1" var="Neumann">
-          <value>[0.0,0.0,0.0]</value>
-        </BCType>
         <BCType id="all" label="length_qn1" var="Neumann">
           <value>0.0</value>
         </BCType>
@@ -293,9 +278,6 @@
         </BCType>
         <BCType id="all" label="pE_qn1" var="Neumann">
           <value>0.0</value>
-        </BCType>
-        <BCType id="all" label="vel_qn2" var="Neumann">
-          <value>[0.0,0.0,0.0]</value>
         </BCType>
         <BCType id="all" label="length_qn2" var="Neumann">
           <value>0.0</value>
@@ -351,9 +333,6 @@
         <BCType id="all" label="eta" var="Neumann">
           <value>0.0</value>
         </BCType>
-        <BCType id="all" label="vel_qn0" var="Dirichlet">
-          <value>[0.0,0.0,0.0]</value>
-        </BCType>
         <BCType id="all" label="length_qn0" var="Neumann">
           <value>0.0</value>
         </BCType>
@@ -378,9 +357,6 @@
         <BCType id="all" label="pE_qn0" var="Neumann">
           <value>0.0</value>
         </BCType>
-        <BCType id="all" label="vel_qn1" var="Dirichlet">
-          <value>[0.0,0.0,0.0]</value>
-        </BCType>
         <BCType id="all" label="length_qn1" var="Neumann">
           <value>0.0</value>
         </BCType>
@@ -404,9 +380,6 @@
         </BCType>
         <BCType id="all" label="pE_qn1" var="Neumann">
           <value>0.0</value>
-        </BCType>
-        <BCType id="all" label="vel_qn2" var="Dirichlet">
-          <value>[0.0,0.0,0.0]</value>
         </BCType>
         <BCType id="all" label="length_qn2" var="Neumann">
           <value>0.0</value>
@@ -469,9 +442,6 @@
         <BCType id="all" label="eta" var="Neumann">
           <value>0.0</value>
         </BCType>
-        <BCType id="all" label="vel_qn0" var="Dirichlet">
-          <value>[0.0,0.0,0.0]</value>
-        </BCType>
         <BCType id="all" label="length_qn0" var="Neumann">
           <value>0.0</value>
         </BCType>
@@ -496,9 +466,6 @@
         <BCType id="all" label="pE_qn0" var="Neumann">
           <value>0.0</value>
         </BCType>
-        <BCType id="all" label="vel_qn1" var="Dirichlet">
-          <value>[0.0,0.0,0.0]</value>
-        </BCType>
         <BCType id="all" label="length_qn1" var="Neumann">
           <value>0.0</value>
         </BCType>
@@ -522,9 +489,6 @@
         </BCType>
         <BCType id="all" label="pE_qn1" var="Neumann">
           <value>0.0</value>
-        </BCType>
-        <BCType id="all" label="vel_qn2" var="Dirichlet">
-          <value>[0.0,0.0,0.0]</value>
         </BCType>
         <BCType id="all" label="length_qn2" var="Neumann">
           <value>0.0</value>
@@ -580,9 +544,6 @@
         <BCType id="all" label="eta" var="Neumann">
           <value>0.0</value>
         </BCType>
-        <BCType id="all" label="vel_qn0" var="Dirichlet">
-          <value>[0.0,0.0,0.0]</value>
-        </BCType>
         <BCType id="all" label="length_qn0" var="Neumann">
           <value>0.0</value>
         </BCType>
@@ -607,9 +568,6 @@
         <BCType id="all" label="pE_qn0" var="Neumann">
           <value>0.0</value>
         </BCType>
-        <BCType id="all" label="vel_qn1" var="Dirichlet">
-          <value>[0.0,0.0,0.0]</value>
-        </BCType>
         <BCType id="all" label="length_qn1" var="Neumann">
           <value>0.0</value>
         </BCType>
@@ -633,9 +591,6 @@
         </BCType>
         <BCType id="all" label="pE_qn1" var="Neumann">
           <value>0.0</value>
-        </BCType>
-        <BCType id="all" label="vel_qn2" var="Dirichlet">
-          <value>[0.0,0.0,0.0]</value>
         </BCType>
         <BCType id="all" label="length_qn2" var="Neumann">
           <value>0.0</value>
@@ -691,9 +646,6 @@
         <BCType id="all" label="eta" var="Neumann">
           <value>0.0</value>
         </BCType>
-        <BCType id="all" label="vel_qn0" var="Dirichlet">
-          <value>[0.0,0.0,0.0]</value>
-        </BCType>
         <BCType id="all" label="length_qn0" var="Neumann">
           <value>0.0</value>
         </BCType>
@@ -718,9 +670,6 @@
         <BCType id="all" label="pE_qn0" var="Neumann">
           <value>0.0</value>
         </BCType>
-        <BCType id="all" label="vel_qn1" var="Dirichlet">
-          <value>[0.0,0.0,0.0]</value>
-        </BCType>
         <BCType id="all" label="length_qn1" var="Neumann">
           <value>0.0</value>
         </BCType>
@@ -744,9 +693,6 @@
         </BCType>
         <BCType id="all" label="pE_qn1" var="Neumann">
           <value>0.0</value>
-        </BCType>
-        <BCType id="all" label="vel_qn2" var="Dirichlet">
-          <value>[0.0,0.0,0.0]</value>
         </BCType>
         <BCType id="all" label="length_qn2" var="Neumann">
           <value>0.0</value>

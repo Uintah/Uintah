@@ -240,6 +240,146 @@ void RadPropertyCalculator::BurnsChriston::compute_abskg( const Patch* patch, co
     }
   } 
 }
+/// --------------------------------------
+//  Weighted Sum of Grey Gases from G. Krishnamoorthy 2013 
+// ---------------------------------------
+RadPropertyCalculator::GauthamWSGG::GauthamWSGG(){
+
+// Set up coefficients from Krishnamoorthy 2013
+ _K =vector< vector<double> > (4,vector<double> (4,0.0));
+ _C1=vector< vector<double> > (4,vector<double> (4,0.0));
+ _C2=vector< vector<double> > (4,vector<double> (4,0.0));
+
+_K[0][0]=0.06592; _K[0][1]=0.99698; _K[0][2]=10.00038; _K[0][3]=100.00000;
+_K[1][0]=0.10411; _K[1][1]=1.00018; _K[1][2]=9.99994;  _K[1][3]=100.00000;
+_K[2][0]=0.20616; _K[2][1]=1.39587; _K[2][2]=8.56904;  _K[2][3]=99.75698;
+_K[3][0]=0.21051; _K[3][1]=1.33782; _K[3][2]=8.55495;  _K[3][3]=99.75649;
+
+_C1[0][0]=7.85445e-5; _C1[0][1]=-9.47416e-5; _C1[0][2]=-5.51091e-5; _C1[0][3]=7.26634e-6;
+_C1[1][0]=9.33340e-5; _C1[1][1]=-5.32833e-5; _C1[1][2]=-1.01806e-4; _C1[1][3]=-2.25973e-5;
+_C1[2][0]=9.22363e-5; _C1[2][1]=-4.25444e-5; _C1[2][2]=-9.89282e-5; _C1[2][3]=-3.83770e-5;
+_C1[3][0]=1.07579e-4; _C1[3][1]=-3.09769e-5; _C1[3][2]=-1.13634e-4; _C1[3][3]=-3.43141e-5;
+
+_C2[0][0]=2.39641e-1; _C2[0][1]=3.42342e-1; _C2[0][2]=1.37773e-1; _C2[0][3]=4.40724e-2;
+_C2[1][0]=1.89029e-1; _C2[1][1]=2.87021e-1; _C2[1][2]=2.54516e-1; _C2[1][3]=6.54289e-2;
+_C2[2][0]=1.91464e-1; _C2[2][1]=2.34876e-1; _C2[2][2]=2.47320e-1; _C2[2][3]=9.59426e-2;
+_C2[3][0]=1.54129e-1; _C2[3][1]=2.43637e-1; _C2[3][2]=2.84084e-1; _C2[3][3]=8.57853e-2;
+
+
+};
+
+
+RadPropertyCalculator::GauthamWSGG::~GauthamWSGG() {};
+    
+bool 
+RadPropertyCalculator::GauthamWSGG::problemSetup( const ProblemSpecP& db ) {
+  ProblemSpecP db_h = db;
+  db_h->require("opl",d_opl);
+  _co2_name = "CO2"; 
+  if ( db_h->findBlock("co2")){ 
+    db_h->findBlock("co2")->getAttribute("label",_co2_name);  
+  }
+  _h2o_name = "H2O"; 
+  if ( db_h->findBlock("h2o")){ 
+    db_h->findBlock("h2o")->getAttribute("label",_h2o_name);  
+  }
+  _soot_name = "soot"; 
+  if ( db_h->findBlock("soot")){ 
+    db_h->findBlock("soot")->getAttribute("label",_soot_name);  
+  }
+  
+  if ( db_h->findBlock("abskg") ){ 
+    db_h->findBlock("abskg")->getAttribute("label",_abskg_name); 
+  } else { 
+    _abskg_name = "abskg"; 
+  }
+
+  const VarLabel* test_label = VarLabel::find(_abskg_name); 
+  if ( test_label == 0 ){ 
+    _abskg_label = VarLabel::create(_abskg_name, CCVariable<double>::getTypeDescription() ); 
+  } else { 
+    throw ProblemSetupException("Error: Abskg label already created before GauthamWSGG Radproperties: "+_abskg_name,__FILE__, __LINE__);
+  }
+
+    db_h->getWithDefault("mix_mol_w_label",_mixMolecWeight,"mixture_molecular_weight"); 
+
+    _sp_mw = vector < double> (0);
+    _sp_mw.push_back(1.0/44.0); // CO2
+    _sp_mw.push_back(1.0/18.0); // H2O
+
+
+
+
+  bool property_on = true;
+  return property_on; 
+
+}
+
+void 
+RadPropertyCalculator::GauthamWSGG::compute_abskg( const Patch* patch, 
+    constCCVariable<double>& VolFractionBC, RadCalcSpeciesList species, 
+    constCCVariable<double>& mixT, CCVariable<double>& abskg ){ 
+
+
+  vector< double > a(4,0.0);
+  int ii;
+  for (CellIterator iter=patch->getCellIterator(); !iter.done(); iter++){
+    IntVector c = *iter;
+    if (VolFractionBC[c] > 0.0){
+
+
+
+      // compute molfraction from mass fraction
+      double molFracCO2 =   (species[0])[c] * _sp_mw[0] * 1.0 / (species[2])[c]  ;
+      double molFracH2O =   (species[1])[c] * _sp_mw[1] * 1.0 / (species[2])[c]  ;
+      double totalAttenGas= molFracCO2+molFracH2O;  // total attenuating gases
+      double Ratio =  molFracCO2==0.0 ? 1e6 : molFracH2O/molFracCO2;
+
+
+      if (Ratio <= 0.2){
+        ii =0;
+      } else if ( Ratio  <= 0.67){
+        ii =1;
+      } else if ( Ratio  <= 1.50){
+        ii =2;
+      } else if ( Ratio  <= 4.00){
+        ii =3;
+      } else {
+        ii =3; // throw error? Extrapolate?
+      }
+
+      double emissivity =0.0; 
+
+      for (int i=0; i<4; i++){
+          a[i]    =  _C1[ii][i]  *   mixT[c]      + _C2[ii][i];
+      // ^weight^    ^C1^         ^Temperature(K)^  ^C2^
+      }
+
+      for (int i=0; i<4; i++){
+        emissivity += a[i]*(1.0 - exp( -_K[ii][i] * (totalAttenGas) *  d_opl));
+      }
+      abskg[c] = 1.0/ d_opl * -log(1.0-emissivity);
+
+    } else{
+      abskg[c] = 1.0; // emissivity of wall = 1;
+    }
+
+  }
+
+}
+
+
+
+vector<std::string> 
+RadPropertyCalculator::GauthamWSGG::get_sp(){
+
+  vector<std::string> temp (0);
+  temp.push_back(_co2_name);
+  temp.push_back(_h2o_name);
+  temp.push_back(_mixMolecWeight);
+   return temp;
+
+}
 
 
 
