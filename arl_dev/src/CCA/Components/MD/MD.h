@@ -42,22 +42,13 @@
 #include <fstream>
 #include <iomanip>
 
-// Original
-#define isPrincipleThread (   Uintah::Parallel::getMPIRank() == 0              \
-                           &&(                                                 \
-                                (  Uintah::Parallel::getNumThreads() > 1       \
-                                 && SCIRun::Thread::self()->myid() == 0 )      \
-                              ||(  Uintah::Parallel::getNumThreads() <= 1 )    \
-                             )                                                 \
-                          )
-
 namespace Uintah {
 
-  static DebugStream md_dbg("            MDDebug",                 false);
-  static DebugStream md_cout("           MDCout",                  false);
-  static DebugStream particleDebug("     MDParticleVariableDebug", false);
-  static DebugStream electrostaticDebug("MDElectrostaticDebug",    false);
-  static DebugStream mdFlowDebug("       MDLogicFlowDebug",        false);
+  static DebugStream md_dbg(             "MDDebug",                 false);
+  static DebugStream md_cout(            "MDCout",                  false);
+  static DebugStream particleDebug(      "MDParticleVariableDebug", false);
+  static DebugStream electrostaticDebug( "MDElectrostaticDebug",    false);
+  static DebugStream mdFlowDebug(        "MDLogicFlowDebug",        false);
 
   class SimpleMaterial;
   class SPME;
@@ -550,12 +541,9 @@ namespace Uintah {
       MD(const MD&);
       MD& operator=(const MD&);
 
-//      bool isPrincipleThread;
-
       double d_referenceEnergy;
       double d_baseTimeStep;
       bool   d_referenceStored;
-
 
       bool   d_firstIntegration;
       bool   d_secondIntegration;

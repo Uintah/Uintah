@@ -13,13 +13,23 @@
    <!--____________________________________________________________________-->
 
    <Time>
+   
+   <!--
        <maxTime>25000.0</maxTime>
        <initTime>0.0</initTime>
        <delt_min>1.00</delt_min>
        <delt_max>1.00</delt_max>
        <delt_init>1.00</delt_init>
-       <max_Timesteps>25000</max_Timesteps>
+       <max_Timesteps>100</max_Timesteps>
        <timestep_multiplier>1</timestep_multiplier>
+   -->
+       
+       <maxTime>1.e-6</maxTime>
+       <initTime>0.0</initTime>
+       <delt_min>1e-10</delt_min>
+       <delt_max>5.e-8</delt_max>
+       <timestep_multiplier>0.1</timestep_multiplier>
+       
    </Time>
 
 
@@ -43,11 +53,13 @@
     <!--____________________________________________________________________-->
 
     <!--
-   <LoadBalancer type="DLB">
-     <timestepInterval>2</timestepInterval>
-     <dynamicAlgorithm>patchFactorParticles</dynamicAlgorithm>
-   </LoadBalancer>
-   -->
+    
+    <LoadBalancer type="DLB">
+      <timestepInterval>2</timestepInterval>
+      <dynamicAlgorithm>patchFactorParticles</dynamicAlgorithm>
+    /LoadBalancer>
+    
+    -->
 
 
     <!--____________________________________________________________________-->
@@ -95,7 +107,7 @@
               <lower>[0,0,0]</lower>
               <upper>[55.9709435199820,55.9709435199820,55.9709435199820]</upper>
               <resolution>[56,56,56]</resolution>
-              <patches>[4,4,4]</patches>
+              <patches>[1,1,1]</patches>
            </Box>
            <periodic>[1,1,1]</periodic>
        </Level>
