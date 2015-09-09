@@ -98,6 +98,11 @@ ExplicitSolver(ArchesLabel* label,
                ScaleSimilarityModel* scaleSimilarityModel,
                PhysicalConstants* physConst,
                RadPropertyCalculator* rad_properties,
+               PartVel* partVel,
+               DQMOM* dqmomSolver,
+               CQMOM* cqmomSolver,
+               CQMOM_Convection* cqmomConvect,
+               CQMOMSourceWrapper* cqmomSource,
                std::map<std::string, boost::shared_ptr<TaskFactoryBase> >& boost_fac_map,
                const ProcessorGroup* myworld,
                SolverInterface* hypreSolver):
@@ -108,6 +113,11 @@ ExplicitSolver(ArchesLabel* label,
                d_physicalConsts(physConst),
                d_hypreSolver(hypreSolver),
                d_rad_prop_calc(rad_properties),
+               d_partVel(partVel),
+               d_dqmomSolver(dqmomSolver),
+               d_cqmomSolver(cqmomSolver),
+               d_cqmomConvect(cqmomConvect),
+               d_cqmomSource(cqmomSource),
                _boost_fac_map(boost_fac_map)
 {
   d_pressSolver = 0;

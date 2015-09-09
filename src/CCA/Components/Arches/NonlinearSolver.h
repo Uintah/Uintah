@@ -97,16 +97,6 @@ public:
 
   virtual bool restartableTimesteps() = 0;
 
-  virtual void setPartVel(PartVel* partVel) = 0;
-
-  virtual void setDQMOMSolver(DQMOM* dqmomSolver) = 0;
-
-  virtual void setCQMOMSolver(CQMOM* cqmomSolver) = 0;
-
-  virtual void setCQMOMConvect(CQMOM_Convection* cqmomConvect) = 0;
-
-  virtual void setCQMOMSource(CQMOMSourceWrapper* cqmomSource) = 0;
-
   virtual void sched_setInitVelCond( const LevelP& level, SchedulerP& sched, const MaterialSet* mats) = 0;
 
   virtual void checkMomBCs( SchedulerP& sched,
