@@ -22,15 +22,12 @@
  * IN THE SOFTWARE.
  */
 
-
 #include <CCA/Ports/Scheduler.h>
-#include <Core/Parallel/Parallel.h>
-#include <Core/Thread/Thread.h>
-#include <Core/ProblemSpec/ProblemSpec.h>
-#include <Core/Grid/SimulationState.h>
+
 #include <Core/Grid/DbgOutput.h>
-#include <Core/Grid/Task.h>
 #include <Core/Grid/Level.h>
+#include <Core/Grid/SimulationState.h>
+#include <Core/Grid/Task.h>
 #include <Core/Grid/SimpleMaterial.h>
 #include <Core/Grid/Variables/VarTypes.h>
 #include <Core/Grid/Variables/ParticleVariable.h>
@@ -38,16 +35,14 @@
 #include <Core/Exceptions/ProblemSetupException.h>
 #include <Core/Geometry/Vector.h>
 #include <Core/Geometry/Point.h>
+#include <Core/Parallel/Parallel.h>
 #include <Core/Parallel/ProcessorGroup.h>
+#include <Core/ProblemSpec/ProblemSpec.h>
 #include <Core/Malloc/Allocator.h>
+#include <Core/Math/Matrix3.h>
+#include <Core/Thread/Thread.h>
 #include <Core/Util/DebugStream.h>
 
-#include <Core/Math/Matrix3.h>
-
-#include <iostream>
-#include <iomanip>
-#include <fstream>
-#include <sstream>
 
 #include <CCA/Components/MD/MD.h>
 
@@ -68,6 +63,11 @@
 #include <CCA/Components/MD/atomMap.h>
 #include <CCA/Components/MD/atomFactory.h>
 
+#include <iostream>
+#include <iomanip>
+#include <fstream>
+#include <sstream>
+
 
 //.......0123456789..........0123456789..........0123456789..........0123456789
 using namespace Uintah;
@@ -75,19 +75,11 @@ using namespace Uintah;
 extern SCIRun::Mutex cerrLock;
 SCIRun::Mutex testFileLock("Locks for test output files");
 
-//static DebugStream md_dbg("MDDebug", false);
-//static DebugStream md_cout("MDCout", false);
-//static DebugStream particleDebug("MDParticleVariableDebug", false);
-//static DebugStream electrostaticDebug("MDElectrostaticDebug", false);
-//static DebugStream mdFlowDebug("MDLogicFlowDebug", false);
-//
-//#define isPrincipleThread (   Uintah::Parallel::getMPIRank() == 0            \
-//                           &&(                                               \
-//                                (  Uintah::Parallel::getNumThreads() > 1     \
-//                                 && SCIRun::Thread::self()->myid() == 1 )    \
-//                              ||(  Uintah::Parallel::getNumThreads() <= 1 )  \
-//                             )                                               \
-//                          )
+#define isPrincipleThread (        Uintah::Parallel::getMPIRank() == 0         \
+                           && ( (  Uintah::Parallel::getNumThreads() > 1       \
+                           &&      SCIRun::Thread::self()->myid() == 1 )       \
+                           || (    Uintah::Parallel::getNumThreads() <= 1 ) )  \
+                          )
 
 #define isPrincipleProc (Uintah::Parallel::getMPIRank() == 0)
 
@@ -171,9 +163,10 @@ void MD::problemSetup(const ProblemSpecP&   params,
   if (!d_dataArchiver) {
     throw InternalError("MD: couldn't get output port", __FILE__, __LINE__);
   }
-
   // Initialize base scheduler and attach the position variable
-  dynamic_cast<Scheduler*> (getPort("scheduler"))->setPositionVar(d_label->global->pX);
+  if (d_sharedState->d_switchState) {
+    dynamic_cast<Scheduler*>(getPort("scheduler"))->setPositionVar(d_label->global->pX);
+  }
 
 //------> Set up components inherent to MD
   // create the coordinate system interface
@@ -353,7 +346,7 @@ void MD::scheduleInitialize(const LevelP&       level,
                                   SchedulerP&   sched)
 {
   const std::string flowLocation = "MD::scheduleInitialize | ";
-  printSchedule(level, md_cout, flowLocation);
+  printSchedule(level->eachPatch(), md_cout, flowLocation);
 
   /*
    * Note there are multiple tasks scheduled here. All three need only ever happen once.
@@ -370,15 +363,12 @@ void MD::scheduleInitialize(const LevelP&       level,
 
   Task* task = scinew Task("MD::initialize", this, &MD::initialize);
 
-  proc0cout << " Number of materials in MD::scheduleInitialize --> "
-            << materials->size() << std::endl;
-
   // Initialize will load position, velocity, and ID tags
   task->computes(d_label->global->pX);
   task->computes(d_label->global->pV);
   task->computes(d_label->global->pID);
 
-  //FIXME:  Do we still need this here?
+  // FIXME:  Do we still need this here?
   task->computes(d_label->electrostatic->dSubschedulerDependency);
 
   task->computes(d_label->global->rKineticEnergy);
@@ -416,7 +406,7 @@ void MD::scheduleRestartInitialize(const LevelP&     level,
 void MD::switchInitialize(const LevelP&     level,
                                 SchedulerP& sched )
 {
-    scheduleInitialize(level, sched);
+  // Do nothing for now
 }
 
 void MD::scheduleComputeStableTimestep(const LevelP&     level,
@@ -487,7 +477,7 @@ void MD::scheduleTimeAdvance(const LevelP&      level,
                                     d_sharedState->d_cohesiveZoneState,
                                     d_label->global->pID,
                                     atomTypes,
-                                    1);
+                                    2);
 
   if (mdFlowDebug.active()) {
     mdFlowDebug << flowLocation

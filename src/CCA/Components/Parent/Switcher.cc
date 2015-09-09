@@ -276,39 +276,49 @@ Switcher::problemSetup( const ProblemSpecP     & /*params*/,
     readSwitcherState(restart_prob_spec, sharedState);
   }
   
-  proc0cout << "\n------------ Switching to component (" << d_componentIndex <<") \n";
-  proc0cout << "  Reading input file: " << d_in_file[d_componentIndex] << "\n";
-  
-  d_sharedState = sharedState;
+  ProblemSpecP subCompUps = NULL;
+  Scheduler* sched        = NULL;
+  Output* dataArchiver    = NULL;
+  ModelMaker* modelmaker  = NULL;
 
-  d_sim =                         dynamic_cast<SimulationInterface*>(     getPort("sim",d_componentIndex) );
-  UintahParallelComponent* comp = dynamic_cast<UintahParallelComponent*>( getPort("sim",d_componentIndex) );
-  Scheduler* sched              = dynamic_cast<Scheduler*>(               getPort("scheduler") );
-  Output* dataArchiver          = dynamic_cast<Output*>(                  getPort("output") );
-  ModelMaker* modelmaker        = dynamic_cast<ModelMaker*>(              getPort("modelmaker") );
-  
-  comp->attachPort("scheduler", sched);
-  comp->attachPort("output",    dataArchiver);
-  comp->attachPort("modelmaker",modelmaker);
+  // Call problemSetup() for all subcomponents.
+  for (d_componentIndex = 0; d_componentIndex < d_numComponents; ++d_componentIndex) {
+    proc0cout << "\n------------ Switching to component (" << d_componentIndex <<") \n";
+    proc0cout << "  Reading input file: " << d_in_file[d_componentIndex] << "\n";
 
-  //__________________________________
-  //Read the ups file for the first subcomponent   
-  ProblemSpecP subCompUps = ProblemSpecReader().readInputFile(d_in_file[d_componentIndex]);
+    d_sharedState = sharedState;
 
-  dataArchiver->problemSetup(subCompUps, d_sharedState.get_rep());
+    d_sim                         = dynamic_cast<SimulationInterface*>(     getPort("sim",d_componentIndex) );
+    UintahParallelComponent* comp = dynamic_cast<UintahParallelComponent*>( getPort("sim",d_componentIndex) );
+    sched                         = dynamic_cast<Scheduler*>(               getPort("scheduler") );
+    dataArchiver                  = dynamic_cast<Output*>(                  getPort("output") );
+    modelmaker                    = dynamic_cast<ModelMaker*>(              getPort("modelmaker") );
 
-  d_sim->problemSetup(subCompUps, restart_prob_spec, grid, sharedState);
+    comp->attachPort("scheduler", sched);
+    comp->attachPort("output",    dataArchiver);
+    comp->attachPort("modelmaker",modelmaker);
+
+    //__________________________________
+    //Read the ups file for the first subcomponent
+    subCompUps = ProblemSpecReader().readInputFile(d_in_file[d_componentIndex]);
+
+    dataArchiver->problemSetup(subCompUps, d_sharedState.get_rep());
+
+    d_sim->problemSetup(subCompUps, restart_prob_spec, grid, sharedState);
+  }
+
+  d_componentIndex = 0;
+  d_sim = dynamic_cast<SimulationInterface*>(getPort("sim", d_componentIndex));
 
   // read in the grid adaptivity flag from the ups file
   Regridder* regridder = dynamic_cast<Regridder*>(getPort("regridder"));
   if (regridder) {
     regridder->switchInitialize(subCompUps);
   }
-  
-  
+
   // read in <Time> block from ups file
-  d_sharedState->d_simTime->problemSetup( subCompUps );    
-    
+  d_sharedState->d_simTime->problemSetup( subCompUps );
+
   //__________________________________
   // init Variables:
   //   - determine the label from the string names
@@ -367,8 +377,25 @@ Switcher::problemSetup( const ProblemSpecP     & /*params*/,
 void Switcher::scheduleInitialize(const LevelP     & level,
                                         SchedulerP & sched)
 {
+//  printSchedule(level, dbg, "Switcher::scheduleInitialize");
+//  d_sim->scheduleInitialize(level,sched);
+
   printSchedule(level, dbg, "Switcher::scheduleInitialize");
-  d_sim->scheduleInitialize(level,sched);
+
+  // Call scheduleInitialize() for all subcomponents.
+  proc0cout << "\n-----------------------------------\n";
+
+  for (d_componentIndex = 0; d_componentIndex < d_numComponents; ++d_componentIndex) {
+
+    proc0cout << "  Scheduling initialization for component: " << d_componentIndex << "\n";
+
+    d_sim = dynamic_cast<SimulationInterface*>(getPort("sim", d_componentIndex));
+    d_sim->scheduleInitialize(level, sched);
+  }
+
+  proc0cout << "-----------------------------------\n\n";
+  d_componentIndex = 0;
+  d_sim = dynamic_cast<SimulationInterface*>(getPort("sim", d_componentIndex));
 }
 
 //______________________________________________________________________
@@ -499,7 +526,12 @@ void Switcher::scheduleInitNewVars(const LevelP     & level,
 
     const MaterialSubset* matl_ss = matls->getUnion();
 
-    t->computes(label, matl_ss);
+    if (label->typeDescription()->getType() == TypeDescription::ReductionVariable) {
+      t->computes(label);
+    }
+    else {
+      t->computes(label, matl_ss);
+    }
   }
 
   d_initVars[nextComp_indx]->matls = matlSet;
@@ -760,8 +792,9 @@ void Switcher::initNewVars(const ProcessorGroup *,
           case TypeDescription::ReductionVariable : {
             switch ( l->typeDescription()->getSubType()->getType() ) {
               case Uintah::TypeDescription::double_type : {
-                ReductionVariable<double, Reductions::Max<double> > var_d;
+                ReductionVariable<double, Reductions::Sum<double> > var_d;
                 new_dw->put(var_d, l);
+                break;
               }
               default :
                 throw InternalError("ERROR:Switcher::initNewVars Unknown ReductionVariable type", __FILE__, __LINE__);
@@ -803,11 +836,10 @@ void Switcher::carryOverVars(const ProcessorGroup *,
 
           switch ( label->typeDescription()->getSubType()->getType() ) {
             case Uintah::TypeDescription::double_type : {
-              ReductionVariable<double, Reductions::Max<double> > var_d;
-              old_dw->get(var_d, label);
+              ReductionVariable<double, Reductions::Sum<double> > var_d;
               new_dw->put(var_d, label);
-            }
               break;
+            }
             default :
               throw InternalError("ERROR:Switcher::carryOverVars - Unknown reduction variable type", __FILE__, __LINE__);
           }
