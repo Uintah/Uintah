@@ -182,6 +182,13 @@ Arches::Arches(const ProcessorGroup* myworld, const bool doAMR) :
   cqmomfactory.set_number_moments(0);
   d_doCQMOM                        = false;
 
+  //eulerian particles:
+  d_partVel = 0;
+  d_dqmomSolver = 0;
+  d_cqmomSource = 0;
+  d_cqmomSolver = 0;
+  d_cqmomConvect = 0;
+
   //lagrangian particles:
   _particlesHelper = scinew ArchesParticlesHelper();
   _particlesHelper->sync_with_arches(this);
@@ -592,7 +599,6 @@ Arches::problemSetup(const ProblemSpecP& params,
     // Create a velocity model
     d_partVel = scinew PartVel( d_lab );
     d_partVel->problemSetup( dqmom_db );
-    d_nlSolver->setPartVel( d_partVel );
     // Do through and initialze all DQMOM equations and call their respective problem setups.
     const int numQuadNodes = eqn_factory.get_quad_nodes();
 
@@ -663,9 +669,6 @@ Arches::problemSetup(const ProblemSpecP& params,
     d_dqmomSolver = scinew DQMOM( d_lab, d_which_dqmom );
     d_dqmomSolver->problemSetup( dqmom_db );
 
-    // now pass it off to the nonlinear solver:
-    d_nlSolver->setDQMOMSolver( d_dqmomSolver );
-
   }
 
 
@@ -679,7 +682,6 @@ Arches::problemSetup(const ProblemSpecP& params,
     //set up source terms and pass to explicit solver
     d_cqmomSource = scinew CQMOMSourceWrapper( d_lab );
     d_cqmomSource->problemSetup( cqmom_db );
-    d_nlSolver->setCQMOMSource( d_cqmomSource );
 
     //register all equations.
     Arches::registerCQMOMEqns(cqmom_db);
@@ -721,14 +723,10 @@ Arches::problemSetup(const ProblemSpecP& params,
     d_cqmomSolver = scinew CQMOM( d_lab, d_usePartVel );
     d_cqmomSolver->problemSetup( cqmom_db );
 
-    //pass it to the explicit solver
-    d_nlSolver->setCQMOMSolver( d_cqmomSolver );
-
     // set up convection
     d_cqmomConvect = scinew CQMOM_Convection( d_lab );
     if (d_usePartVel ) {
       d_cqmomConvect->problemSetup( cqmom_db );
-      d_nlSolver->setCQMOMConvect( d_cqmomConvect );
     }
   }
 
@@ -801,9 +799,15 @@ Arches::problemSetup(const ProblemSpecP& params,
 
     builder = scinew ExplicitSolver::Builder( d_lab, d_MAlab, d_props,
                                               d_boundaryCondition,
-                                              d_turbModel, d_scaleSimilarityModel,
+                                              d_turbModel,
+                                              d_scaleSimilarityModel,
                                               d_physicalConsts,
                                               d_rad_prop_calc,
+                                              d_partVel,
+                                              d_dqmomSolver,
+                                              d_cqmomSolver,
+                                              d_cqmomConvect,
+                                              d_cqmomSource,
                                               _boost_factory_map,
                                               d_myworld,
                                               hypreSolver );

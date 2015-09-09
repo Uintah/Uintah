@@ -36,7 +36,7 @@
     <save label="eqn2"/>
     <save label="var"/>
     <save label="var2"/>
-    <checkpoint cycle="2" interval="0.05"/>
+    <checkpoint cycle="2" interval="0.0001"/>
     <compression>gzip</compression>
   </DataArchiver>
 
