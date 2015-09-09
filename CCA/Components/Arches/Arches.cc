@@ -277,7 +277,7 @@ Arches::problemSetup(const ProblemSpecP& params,
   for ( BFM::iterator i = _boost_factory_map.begin(); i != _boost_factory_map.end(); i++ ) {
 
     proc0cout << "   " << i->first << std::endl;
-    i->second->set_shared_state(d_sharedState); 
+    i->second->set_shared_state(d_sharedState);
     i->second->register_all_tasks(db);
 
   }
@@ -309,16 +309,6 @@ Arches::problemSetup(const ProblemSpecP& params,
 
   db->getWithDefault("turnonMixedModel",    d_mixedModel,false);
   db->getWithDefault("recompileTaskgraph",  d_lab->recompile_taskgraph,false);
-
-  string nlSolver;
-  if (db->findBlock("ExplicitSolver")) {
-    nlSolver = "explicit";
-    db->findBlock("ExplicitSolver")->getWithDefault("extraProjection",     d_extraProjection,false);
-    d_underflow = false;
-    if ( db->findBlock("ExplicitSolver")->findBlock("scalarUnderflowCheck") ) d_underflow = true;
-    db->findBlock("ExplicitSolver")->getWithDefault("initial_dt", d_initial_dt, 1.0);
-
-  }
 
   // physical constant
   d_physicalConsts = scinew PhysicalConstants();
@@ -542,22 +532,6 @@ Arches::problemSetup(const ProblemSpecP& params,
     throw InternalError("ARCHES:couldn't get hypreSolver port", __FILE__, __LINE__);
   }
 
-  if (nlSolver == "explicit") {
-    d_nlSolver = scinew ExplicitSolver(d_lab, d_MAlab, d_props,
-                                       d_boundaryCondition,
-                                       d_turbModel, d_scaleSimilarityModel,
-                                       d_physicalConsts,
-                                       d_rad_prop_calc,
-                                       _boost_factory_map,
-                                       d_myworld,
-                                       hypreSolver);
-
-  }
-  else{
-    throw InvalidValue("Nonlinear solver not supported: "+nlSolver, __FILE__, __LINE__);
-  }
-  d_nlSolver->problemSetup(db,sharedState);
-  d_timeIntegratorType = d_nlSolver->getTimeIntegratorType();
   //__________________
   //This is not the proper way to get our DA.  Scheduler should
   //pass us a DW pointer on every function call.  I don't think
@@ -820,6 +794,34 @@ Arches::problemSetup(const ProblemSpecP& params,
         << " inside of the <AMR> section for multi-level ARCHES & MPMARCHES. \n";
     throw ProblemSetupException(msg.str(),__FILE__, __LINE__);
   }
+
+  //--- Create the solver/algorithm ---
+  NonlinearSolver::NLSolverBuilder* builder;
+  if ( db->findBlock("ExplicitSolver") ) {
+
+    builder = scinew ExplicitSolver::Builder( d_lab, d_MAlab, d_props,
+                                              d_boundaryCondition,
+                                              d_turbModel, d_scaleSimilarityModel,
+                                              d_physicalConsts,
+                                              d_rad_prop_calc,
+                                              _boost_factory_map,
+                                              d_myworld,
+                                              hypreSolver );
+
+  } else {
+
+    throw InvalidValue("Nonlinear solver not supported.", __FILE__, __LINE__);
+
+  }
+
+  //User the builder to build the solver, delete the builder when done.
+  d_nlSolver = builder->build();
+  delete builder;
+
+  d_nlSolver->problemSetup( db, d_sharedState );
+
+  //-------------------------------------
+
 }
 
 // ****************************************************************************
@@ -1145,12 +1147,8 @@ Arches::sched_paramInit(const LevelP& level,
   if ( VarLabel::find("true_wall_temperature"))
     tsk->computes(VarLabel::find("true_wall_temperature"));
 
-  if (!((d_timeIntegratorType == "FE")||(d_timeIntegratorType == "BE"))) {
-    tsk->computes(d_lab->d_pressurePredLabel);
-  }
-  if (d_timeIntegratorType == "RK3SSP") {
-    tsk->computes(d_lab->d_pressureIntermLabel);
-  }
+  tsk->computes(d_lab->d_pressurePredLabel);
+  tsk->computes(d_lab->d_pressureIntermLabel);
 
   tsk->computes(d_lab->d_densityCPLabel);
   tsk->computes(d_lab->d_viscosityCTSLabel);
@@ -1249,15 +1247,10 @@ Arches::paramInit(const ProcessorGroup* pg,
     wVelRhoHat.initialize(0.0);
 
     new_dw->allocateAndPut(pressure, d_lab->d_pressurePSLabel, indx, patch);
-
-    if (!((d_timeIntegratorType == "FE")||(d_timeIntegratorType == "BE"))) {
-      new_dw->allocateAndPut(pressurePred, d_lab->d_pressurePredLabel,indx, patch);
-      pressurePred.initialize(0.0);
-    }
-    if (d_timeIntegratorType == "RK3SSP") {
-      new_dw->allocateAndPut(pressureInterm, d_lab->d_pressureIntermLabel,indx, patch);
-      pressureInterm.initialize(0.0);
-    }
+    new_dw->allocateAndPut(pressurePred, d_lab->d_pressurePredLabel,indx, patch);
+    pressurePred.initialize(0.0);
+    new_dw->allocateAndPut(pressureInterm, d_lab->d_pressureIntermLabel,indx, patch);
+    pressureInterm.initialize(0.0);
 
     if (d_MAlab) {
       new_dw->allocateAndPut(pPlusHydro, d_lab->d_pressPlusHydroLabel, indx, patch);
@@ -1395,7 +1388,7 @@ Arches::computeStableTimeStep(const ProcessorGroup*,
         indexHigh = indexHigh + IntVector(0,0,1);
       }
 
-      double delta_t = d_initial_dt;
+      double delta_t = d_nlSolver->get_initial_dt();
       double small_num = 1e-30;
       double delta_t2 = delta_t;
 
@@ -1464,7 +1457,7 @@ Arches::computeStableTimeStep(const ProcessorGroup*,
         }
       }
 
-      if (d_underflow) {
+      if (d_nlSolver->get_underflow()) {
         indexLow = patch->getFortranCellLowIndex();
         indexHigh = patch->getFortranCellHighIndex();
 

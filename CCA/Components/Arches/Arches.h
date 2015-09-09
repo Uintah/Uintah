@@ -98,7 +98,7 @@ WARNING
 
 namespace Uintah {
 
-  class TaskFactoryBase; 
+  class TaskFactoryBase;
   class VarLabel;
   class PhysicalConstants;
   class NonlinearSolver;
@@ -115,8 +115,8 @@ namespace Uintah {
   class CQMOM;
   class CQMOM_Convection;
   class CQMOMSourceWrapper;
-  class RadPropertyCalculator; 
-  class ArchesParticlesHelper; 
+  class RadPropertyCalculator;
+  class ArchesParticlesHelper;
 
 class Arches : public UintahParallelComponent, public SimulationInterface {
 
@@ -141,7 +141,7 @@ public:
 
   virtual void scheduleInitialize(const LevelP& level,
                                   SchedulerP&);
-                                  
+
   virtual void scheduleRestartInitialize(const LevelP& level,
                                          SchedulerP& sched);
 
@@ -152,8 +152,8 @@ public:
 
   virtual void scheduleComputeStableTimestep(const LevelP& level,
                                              SchedulerP&);
-  void 
-  MPMArchesIntrusionSetupForResart( const LevelP& level, SchedulerP& sched, 
+  void
+  MPMArchesIntrusionSetupForResart( const LevelP& level, SchedulerP& sched,
                                     bool& recompile, bool doing_restart );
 
   virtual void scheduleTimeAdvance( const LevelP& level,
@@ -168,14 +168,14 @@ public:
                                 SchedulerP& );
   virtual void sched_weightedAbsInit( const LevelP& level,
                                       SchedulerP& );
-                                      
+
   virtual void sched_scalarInit( const LevelP& level,
                                  SchedulerP& sched );
   virtual void sched_momentInit( const LevelP& level,
                                  SchedulerP& sched );
-                                 
+
   //__________________________________
-  //  Multi-level/AMR 
+  //  Multi-level/AMR
   // stub functions.  Needed for multi-level RMCRT and
   // if you want to change the coarse level patch configuration
   virtual void scheduleCoarsen(const LevelP& ,
@@ -185,9 +185,9 @@ public:
                                        SchedulerP&,
                                        bool, bool){ /* do Nothing */};
 
-  virtual void scheduleInitialErrorEstimate( const LevelP& , 
+  virtual void scheduleInitialErrorEstimate( const LevelP& ,
                                              SchedulerP&  ){/* do Nothing */};
-  virtual void scheduleErrorEstimate( const LevelP& , 
+  virtual void scheduleErrorEstimate( const LevelP& ,
                                       SchedulerP&  ){/* do Nothing */};
 
   // for multimaterial
@@ -217,7 +217,7 @@ public:
     d_with_mpmarches = true;
   };
 
-  void sched_create_patch_operators( const LevelP& level, SchedulerP& sched ); 
+  void sched_create_patch_operators( const LevelP& level, SchedulerP& sched );
   void create_patch_operators( const ProcessorGroup* pg,
                                const PatchSubset* patches,
                                const MaterialSubset* matls,
@@ -253,7 +253,7 @@ private:
                               const MaterialSubset*,
                               DataWarehouse* ,
                               DataWarehouse* new_dw);
-  
+
   void getCCVelocities(const ProcessorGroup*,
                        const PatchSubset* patches,
                        const MaterialSubset*,
@@ -276,7 +276,7 @@ private:
                    const MaterialSubset*,
                    DataWarehouse* old_dw,
                    DataWarehouse* new_dw );
-  
+
   void momentInit( const ProcessorGroup* ,
                    const PatchSubset* patches,
                    const MaterialSubset*,
@@ -307,8 +307,7 @@ private:
   std::string d_whichTurbModel;
   bool d_mixedModel;
   bool d_with_mpmarches;
-  bool d_extraProjection;
-  double d_initial_dt; 
+  double d_initial_dt;
 
   ScaleSimilarityModel* d_scaleSimilarityModel;
   PhysicalConstants* d_physicalConsts;
@@ -328,8 +327,6 @@ private:
 
   const MPMArchesLabel* d_MAlab;
 
-  std::string d_timeIntegratorType;
-
   std::vector<AnalysisModule*> d_analysisModules;
 
   std::string d_init_inputfile;
@@ -347,7 +344,7 @@ private:
   ExplicitTimeInt* d_timeIntegrator;
   PartVel* d_partVel;
   DQMOM* d_dqmomSolver;
-  
+
   bool d_doCQMOM;
   bool d_usePartVel;
   CQMOM* d_cqmomSolver;
@@ -356,26 +353,25 @@ private:
 
   bool d_doingRestart;
   bool d_newBC_on_Restart;
-  bool d_do_dummy_solve; 
-  
+  bool d_do_dummy_solve;
+
   //__________________________________
   //  Multi-level related
   int d_archesLevelIndex;
   bool d_doAMR;
 
-  //NEW TASK INTERFACE STUFF: 
-  std::map<std::string, TaskFactoryBase*> _factory_map; 
+  //NEW TASK INTERFACE STUFF:
+  std::map<std::string, TaskFactoryBase*> _factory_map;
 
-  Uintah::ProblemSpecP _arches_spec; 
+  Uintah::ProblemSpecP _arches_spec;
 
-  ArchesParticlesHelper* _particlesHelper; 
-  bool _doLagrangianParticles; 
+  ArchesParticlesHelper* _particlesHelper;
+  bool _doLagrangianParticles;
 
-  std::map<std::string, boost::shared_ptr<TaskFactoryBase> > _boost_factory_map; 
+  std::map<std::string, boost::shared_ptr<TaskFactoryBase> > _boost_factory_map;
 
 }; // end class Arches
 
 } // End namespace Uintah
 
 #endif
-

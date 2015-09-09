@@ -15,7 +15,7 @@ namespace Uintah{
 
 public:
 
-    enum EXPR {ADD, SUBTRACT, MULTIPLY, DIVIDE};
+    enum EXPR {ADD, SUBTRACT, MULTIPLY, DIVIDE, POW, EXP};
 
     TaskAlgebra<IT1, IT2, DT>( std::string task_name, int matl_index );
     ~TaskAlgebra<IT1, IT2, DT>();
@@ -43,13 +43,19 @@ public:
 
 protected:
 
-    void register_initialize( std::vector<ArchesFieldContainer::VariableInformation>& variable_registry );
+    void register_initialize(
+      std::vector<ArchesFieldContainer::VariableInformation>& variable_registry );
 
-    void register_timestep_init( std::vector<ArchesFieldContainer::VariableInformation>& variable_registry ){}
+    void register_timestep_init(
+      std::vector<ArchesFieldContainer::VariableInformation>& variable_registry );
 
-    void register_timestep_eval( std::vector<ArchesFieldContainer::VariableInformation>& variable_registry, const int time_substep );
+    void register_timestep_eval(
+      std::vector<ArchesFieldContainer::VariableInformation>& variable_registry,
+      const int time_substep );
 
-    void register_compute_bcs( std::vector<ArchesFieldContainer::VariableInformation>& variable_registry, const int time_substep ){};
+    void register_compute_bcs(
+      std::vector<ArchesFieldContainer::VariableInformation>& variable_registry,
+      const int time_substep ){};
 
     void compute_bcs( const Patch* patch, ArchesTaskInfoManager* tsk_info,
                       SpatialOps::OperatorDatabase& opr ){};
@@ -58,7 +64,7 @@ protected:
                      SpatialOps::OperatorDatabase& opr );
 
     void timestep_init( const Patch* patch, ArchesTaskInfoManager* tsk_info,
-                        SpatialOps::OperatorDatabase& opr ){}
+                        SpatialOps::OperatorDatabase& opr );
 
     void eval( const Patch* patch, ArchesTaskInfoManager* tsk_info,
                SpatialOps::OperatorDatabase& opr );
@@ -87,6 +93,11 @@ private:
 
   OPMAP all_operations;
   STRVEC order;
+
+  /** @brief Search a vector for a string **/
+  inline bool use_variable( std::string item, std::vector<std::string> vector){
+    return std::find(vector.begin(), vector.end(), item)!=vector.end();
+  }
 
   };
 
@@ -121,6 +132,8 @@ private:
       //get variable names:
       op_db->require("dep", new_op.dep);
       op_db->require("ind1", new_op.ind1);
+
+      new_op.use_constant = false;
       if ( op_db->findBlock("ind2")){
         op_db->require("ind2", new_op.ind2);
       } else if ( op_db->findBlock("constant") ){
@@ -138,13 +151,17 @@ private:
       op_db->getAttribute( "type", value );
 
       if ( value == "ADD" ) {
-          new_op.expression_type = ADD;
+        new_op.expression_type = ADD;
       } else if ( value == "SUBTRACT" ){
-          new_op.expression_type = SUBTRACT;
+        new_op.expression_type = SUBTRACT;
       } else if ( value == "MULTIPLY" ){
-          new_op.expression_type = MULTIPLY;
+        new_op.expression_type = MULTIPLY;
       } else if ( value == "DIVIDE" ){
-          new_op.expression_type = DIVIDE;
+        new_op.expression_type = DIVIDE;
+      } else if ( value =="POW" ){
+        new_op.expression_type = POW;
+      } else if ( value == "EXP" ){
+        new_op.expression_type = EXP;
       } else {
         throw InvalidValue("Error: expression type not recognized",__FILE__,__LINE__);
       }
@@ -154,17 +171,15 @@ private:
 
     }
 
-
     ProblemSpecP db_order = db->findBlock("exe_order");
     if ( db_order == 0 ){
       throw ProblemSetupException("Error: must specify an order of operations.",__FILE__,__LINE__);
     }
-    for ( ProblemSpecP db_order = db->findBlock("op"); db_order !=  0;
-          db_order = db_order->findNextBlock("op")){
+    for ( ProblemSpecP db_oneop = db_order->findBlock("op"); db_oneop !=  0;
+          db_oneop = db_oneop->findNextBlock("op")){
 
       std::string label;
-      db_order->getAttribute("label", label);
-
+      db_oneop->getAttribute("label", label);
       order.push_back(label);
 
     }
@@ -188,13 +203,67 @@ private:
   void TaskAlgebra<IT1, IT2, DT>::register_initialize(
     std::vector<ArchesFieldContainer::VariableInformation>& variable_registry ){
 
-      //do nothing?
+    for ( typename OPMAP::iterator iter = all_operations.begin(); iter != all_operations.end(); iter++ ){
+      if ( iter->second.create_new_variable ){
+
+        register_variable( iter->second.dep, ArchesFieldContainer::COMPUTES, variable_registry );
+
+      }
+    }
 
   }
 
   template <typename IT1, typename IT2, typename DT>
   void TaskAlgebra<IT1, IT2, DT>::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info,
                                         SpatialOps::OperatorDatabase& opr ){
+
+    using namespace SpatialOps;
+    using SpatialOps::operator *;
+    typedef SpatialOps::SpatFldPtr<DT> DTFP;
+
+    for ( typename OPMAP::iterator iter = all_operations.begin(); iter != all_operations.end(); iter++ ){
+      if ( iter->second.create_new_variable ){
+
+        DTFP dep = tsk_info->get_so_field<DT>(iter->second.dep);
+        *dep <<= 0.0;
+
+      }
+    }
+  }
+
+  // Timestep initialize ---------------------------------------------------------------------------
+  template <typename IT1, typename IT2, typename DT>
+  void TaskAlgebra<IT1, IT2, DT>::register_timestep_init(
+    std::vector<ArchesFieldContainer::VariableInformation>& variable_registry ){
+
+    for ( typename OPMAP::iterator iter = all_operations.begin();
+          iter != all_operations.end(); iter++ ){
+
+      if ( iter->second.create_new_variable ){
+
+        register_variable( iter->second.dep, ArchesFieldContainer::COMPUTES, variable_registry );
+
+      }
+    }
+  }
+
+  template <typename IT1, typename IT2, typename DT>
+  void TaskAlgebra<IT1, IT2, DT>::timestep_init(
+    const Patch* patch, ArchesTaskInfoManager* tsk_info,
+    SpatialOps::OperatorDatabase& opr ){
+
+    using namespace SpatialOps;
+    using SpatialOps::operator *;
+    typedef SpatialOps::SpatFldPtr<DT> DTFP;
+
+    for ( typename OPMAP::iterator iter = all_operations.begin(); iter != all_operations.end(); iter++ ){
+      if ( iter->second.create_new_variable ){
+
+        DTFP dep = tsk_info->get_so_field<DT>(iter->second.dep);
+        *dep <<= 0.0;
+
+      }
+    }
   }
 
   // Timestep work ---------------------------------------------------------------------------------
@@ -203,6 +272,10 @@ private:
     std::vector<ArchesFieldContainer::VariableInformation>& variable_registry,
     const int time_substep ){
 
+    std::vector<std::string> new_variables;
+    std::vector<std::string> mod_variables;
+    std::vector<std::string> req_variables;
+
     for (STRVEC::iterator iter = order.begin(); iter != order.end(); iter++){
 
       typename OPMAP::iterator op_iter = all_operations.find(*iter);
@@ -210,16 +283,29 @@ private:
         throw InvalidValue("Error: Operator not found: "+*iter, __FILE__,__LINE__ );
       }
 
-      if ( op_iter->second.create_new_variable )
-        register_variable( op_iter->second.dep, ArchesFieldContainer::COMPUTES, variable_registry );
-      else
-        register_variable( op_iter->second.dep, ArchesFieldContainer::MODIFIES, variable_registry );
+      if ( op_iter->second.create_new_variable ){
+        if ( !use_variable(op_iter->second.dep, new_variables)){
+          register_variable( op_iter->second.dep, ArchesFieldContainer::MODIFIES, variable_registry );
+          new_variables.push_back(op_iter->second.dep);
+        }
+      } else {
+        if ( !use_variable(op_iter->second.dep, mod_variables)){
+          register_variable( op_iter->second.dep, ArchesFieldContainer::MODIFIES, variable_registry );
+          mod_variables.push_back(op_iter->second.dep);
+        }
+      }
 
       //require from newdw on everything else?
-      register_variable( op_iter->second.ind1, ArchesFieldContainer::REQUIRES, 0, ArchesFieldContainer::NEWDW, variable_registry );
-      if ( !op_iter->second.use_constant )
-        register_variable( op_iter->second.ind2, ArchesFieldContainer::REQUIRES, 0, ArchesFieldContainer::NEWDW, variable_registry );
-
+      if ( !use_variable(op_iter->second.ind1, req_variables) ){
+        register_variable( op_iter->second.ind1, ArchesFieldContainer::REQUIRES, 0, ArchesFieldContainer::NEWDW, variable_registry );
+        req_variables.push_back(op_iter->second.ind1);
+      }
+      if ( !op_iter->second.use_constant ){
+        if ( !use_variable(op_iter->second.ind2, req_variables) ){
+          register_variable( op_iter->second.ind2, ArchesFieldContainer::REQUIRES, 0, ArchesFieldContainer::NEWDW, variable_registry );
+          req_variables.push_back(op_iter->second.ind2);
+        }
+      }
 
     }
   }
@@ -257,6 +343,12 @@ private:
           case DIVIDE:
             *dep <<= *ind1 / op_iter->second.constant;
             break;
+          case POW:
+            *dep <<= pow(*ind1, op_iter->second.constant);
+            break;
+          case EXP:
+            *dep <<= exp(op_iter->second.constant);
+            break;
           default:
             throw InvalidValue("Error: TaskAlgebra not supported.",__FILE__,__LINE__);
         }
@@ -277,6 +369,12 @@ private:
             break;
           case DIVIDE:
             *dep <<= *ind1 / *ind2;
+            break;
+          case POW:
+            *dep <<= pow(*ind1, *ind2);
+            break;
+          case EXP:
+            *dep <<= exp(*ind1);
             break;
           default:
             throw InvalidValue("Error: TaskAlgebra not supported.",__FILE__,__LINE__);

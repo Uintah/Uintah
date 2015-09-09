@@ -56,7 +56,10 @@ namespace Uintah{
         return iter->second;
       }
 
-      throw InvalidValue("Error: While attempting to retrieve a list of tasks by type ("+type+"), nothing was found.",__FILE__,__LINE__);
+      //else return an empty vector
+      std::vector<std::string> empty;
+      empty.clear();
+      return empty;
 
     }
 

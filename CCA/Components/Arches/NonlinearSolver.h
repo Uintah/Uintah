@@ -80,6 +80,8 @@ public:
 
   virtual ~NonlinearSolver();
 
+  void commonProblemSetup( ProblemSpecP db );
+
   virtual void problemSetup( const ProblemSpecP& db, SimulationStateP& ) = 0;
 
   virtual void sched_interpolateFromFCToCC( SchedulerP&,
@@ -90,11 +92,6 @@ public:
 
   virtual int nonlinearSolve( const LevelP& level,
                               SchedulerP& sched ) = 0;
-
-  const std::string& getTimeIntegratorType() const
-  {
-    return d_timeIntegratorType;
-  }
 
   virtual double recomputeTimestep(double current_dt) = 0;
 
@@ -128,9 +125,18 @@ public:
 
   };
 
+  /** @brief specialized CFL condition **/
+  inline bool get_underflow(){ return d_underflow; }
+
+  /** @brief Return the initial dt **/
+  inline double get_initial_dt(){ return d_initial_dt; }
+
 protected:
    const ProcessorGroup * d_myworld;
    std::string            d_timeIntegratorType;
+
+   double                 d_initial_dt;
+   bool                   d_underflow;
 
 private:
 
