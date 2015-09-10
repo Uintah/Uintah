@@ -136,6 +136,7 @@ SerialMPM::~SerialMPM()
   delete contactModel;
   delete thermalContactModel;
   delete heatConductionModel;
+  delete sdInterfaceModel;
   MPMPhysicalBCFactory::clean();
   
   if(d_analysisModules.size() != 0){
@@ -384,10 +385,10 @@ void SerialMPM::scheduleInitialize(const LevelP& level,
   }
 
   // Adding initial computes and requires for scalar diffusion
-	// models.
+  // models.
   if (flags->d_doScalarDiffusion){
     sdInterfaceModel->addInitialComputesAndRequires(t, patches);
-	}
+  }
 
   sched->addTask(t, patches, d_sharedState->allMPMMaterials());
 
