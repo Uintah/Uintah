@@ -81,7 +81,9 @@ RFElasticPlastic::RFElasticPlastic(ProblemSpecP& ps,MPMFlags* Mflag)
 {
   ps->require("bulk_modulus",d_initialData.Bulk);
   ps->require("shear_modulus",d_initialData.Shear);
-  ps->require("partial_volume",d_initialData.partial_volume);
+  //********** Concentration Component****************************
+  ps->require("volume_expansion_coeff",d_initialData.vol_exp_coeff);
+  //********** Concentration Component****************************
 
   d_initialData.alpha = 0.0; // default is per K.  Only used in implicit code
   ps->get("coeff_thermal_expansion", d_initialData.alpha);
@@ -211,7 +213,9 @@ RFElasticPlastic::RFElasticPlastic(const RFElasticPlastic* cm) :
   d_initialData.alpha = cm->d_initialData.alpha;
   d_initialData.Chi = cm->d_initialData.Chi;
   d_initialData.sigma_crit = cm->d_initialData.sigma_crit;
-  d_initialData.partial_volume = cm->d_initialData.partial_volume;
+  //********** Concentration Component****************************
+  d_initialData.vol_exp_coeff = cm->d_initialData.vol_exp_coeff;
+  //********** Concentration Component****************************
 
   d_tol = cm->d_tol ;
   d_useModifiedEOS = cm->d_useModifiedEOS;
@@ -688,8 +692,10 @@ RFElasticPlastic::addComputesAndRequires(Task* task,
   task->requires(Task::OldDW, lb->pParticleIDLabel,   matlset, gnone);
   task->requires(Task::OldDW, pEnergyLabel,           matlset, gnone);
 
+  //********** Concentration Component****************************
   task->requires(Task::OldDW, d_rdlb->pConcPreviousLabel, matlset, gnone); 
   task->requires(Task::OldDW, d_rdlb->pConcentrationLabel, matlset, gnone); 
+  //********** Concentration Component****************************
 
   task->computes(pRotationLabel_preReloc,       matlset);
   task->computes(pStrainRateLabel_preReloc,     matlset);
@@ -742,6 +748,10 @@ RFElasticPlastic::computeStressTensor(const PatchSubset* patches,
   double Tm    = matl->getMeltTemperature();
   double sqrtThreeTwo = sqrt(1.5);
   double sqrtTwoThird = 1.0/sqrtThreeTwo;
+
+  //********** Concentration Component****************************
+  double vol_exp_coeff = d_initialData.vol_exp_coeff;
+  //********** Concentration Component****************************
   
   double totalStrainEnergy = 0.0;
   double include_AV_heating=0.0;
@@ -768,12 +778,22 @@ RFElasticPlastic::computeStressTensor(const PatchSubset* patches,
     constParticleVariable<Matrix3> pDeformGrad;
     constParticleVariable<Matrix3> pStress;
 
+    //********** Concentration Component****************************
+    constParticleVariable<double> pConcentration;
+    constParticleVariable<double> pConc_prenew;
+    //********** Concentration Component****************************
+
     old_dw->get(pMass,        lb->pMassLabel,               pset);
     old_dw->get(pVolume,      lb->pVolumeLabel,             pset);
     old_dw->get(pTemperature, lb->pTemperatureLabel,        pset);
     old_dw->get(pVelocity,    lb->pVelocityLabel,           pset);
     old_dw->get(pStress,      lb->pStressLabel,             pset);
     old_dw->get(pDeformGrad,  lb->pDeformationMeasureLabel, pset);
+
+    //********** Concentration Component****************************
+    old_dw->get(pConcentration, d_rdlb->pConcentrationLabel, pset);
+    old_dw->get(pConc_prenew,   d_rdlb->pConcPreviousLabel,  pset);
+    //********** Concentration Component****************************
 
     constParticleVariable<double> pPlasticStrain, pDamage, pPorosity;
     constParticleVariable<double> pStrainRate, pPlasticStrainRate, pEnergy;
@@ -881,6 +901,13 @@ RFElasticPlastic::computeStressTensor(const PatchSubset* patches,
       // Calculate the current density and deformed volume
       double rho_cur = rho_0/J;
 
+      //********** Concentration Component****************************
+			// Compute rate of concentration
+			double concentration = pConcentration[idx];
+			double concentration_pn = pConc_prenew[idx];
+			double conc_rate = (concentration - concentration_pn)/delT;
+      //********** Concentration Component****************************
+
       // Calculate rate of deformation tensor (D)
       tensorD = (tensorL + tensorL.Transpose())*0.5;
 
@@ -890,6 +917,11 @@ RFElasticPlastic::computeStressTensor(const PatchSubset* patches,
       // Rotate the total rate of deformation tensor back to the 
       // material configuration
       tensorD = (tensorR.Transpose())*(tensorD*tensorR);
+
+      //********** Concentration Component****************************
+			// Remove concentration dependent portion of rate of deformation 
+			tensorD = tensorD - one * vol_exp_coeff * (conc_rate/3);
+      //********** Concentration Component****************************
 
       // Calculate the deviatoric part of the non-thermal part
       // of the rate of deformation tensor
