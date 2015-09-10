@@ -90,7 +90,9 @@ class RFElasticPlastic : public ConstitutiveModel, public ImplicitCM {
       double alpha;   /*< Coeff. of thermal expansion */
       double Chi;     /*< Taylor-Quinney coefficient */
       double sigma_crit; /*< Critical stress */
-      double partial_volume; //Partial volume
+      //********** Concentration Component****************************
+      double vol_exp_coeff; //Volume expansion coefficient
+      //********** Concentration Component****************************
     };   
 
     // Create datatype for storing porosity parameters
@@ -158,7 +160,9 @@ class RFElasticPlastic : public ConstitutiveModel, public ImplicitCM {
     bool   d_doMelting;
     bool   d_checkStressTriax;
 
+    //********** Concentration Component****************************
     ReactionDiffusionLabel* d_rdlb;
+    //********** Concentration Component****************************
 
     std::string  d_plasticConvergenceAlgo;
     // Erosion algorithms

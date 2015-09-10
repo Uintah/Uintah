@@ -12,13 +12,13 @@
      <initTime>0.0</initTime>
      <delt_min>1.0e-16</delt_min>
      <delt_max>1.0e-9</delt_max>
-     <max_Timesteps>1000</max_Timesteps>
+     <max_Timesteps>10000</max_Timesteps>
      <timestep_multiplier>0.4</timestep_multiplier>
   </Time>
 
   <DataArchiver>
     <filebase>nano_pillar3_2D_FBC.uda</filebase>
-    <outputTimestepInterval>10</outputTimestepInterval>
+    <outputTimestepInterval>100</outputTimestepInterval>
     <save label="p.x"/>
     <save label="p.particleID"/>
     <save label="p.velocity"/>
@@ -53,11 +53,9 @@
        <material name="pillar">
          <density>2330</density> <!-- micrograms/mm^3 -->
          <constitutive_model type="rf_elastic_plastic"> 
-           <!--<K>      0.0   </K>-->  <!-- micrograms/mm microsecond^2 -->
-           <K>      6.5e4   </K>  <!-- micrograms/mm microsecond^2 -->
-           <!--<G>      0.0   </G>-->  <!-- micrograms/mm microsecond^2 -->
-           <G>      3.0e4   </G>  <!-- micrograms/mm microsecond^2 -->
-           <alpha>  0.5     </alpha>
+           <bulk_modulus>            6.5e4    </bulk_modulus>  <!-- micrograms/mm microsecond^2 -->
+           <shear_modulus>           3.0e4    </shear_modulus>  <!-- micrograms/mm microsecond^2 -->
+           <volume_expansion_coeff>  0.56     </volume_expansion_coeff>
          </constitutive_model>
          <thermal_conductivity>0.0</thermal_conductivity>
          <specific_heat>5</specific_heat>
