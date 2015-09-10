@@ -2050,7 +2050,6 @@
         <turbModelCalcFreq>1</turbModelCalcFreq>
         <turbModelCalcForAllRKSteps>true</turbModelCalcForAllRKSteps>
         <max_ke_allowed>9.9999999999999997e+98</max_ke_allowed>
-        <extraProjection>false</extraProjection>
         <restartOnNegativeDensityGuess>false</restartOnNegativeDensityGuess>
         <NoisyDensityGuess>false</NoisyDensityGuess>
         <kineticEnergy_fromFC>false</kineticEnergy_fromFC>
