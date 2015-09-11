@@ -45,8 +45,6 @@
 #include <Core/Util/FancyAssert.h>
 #include <Core/Util/DebugStream.h>
 
-#include <TauProfilerForSCIRun.h>
-
 #include <iostream> // debug only
 #include <stack>
 #include <vector>
@@ -982,7 +980,6 @@ bool
 DynamicLoadBalancer::possiblyDynamicallyReallocate( const GridP & grid, int state )
 {
   MALLOC_TRACE_TAG_SCOPE("DynamicLoadBalancer::possiblyDynamicallyReallocate");
-  TAU_PROFILE("DynamicLoadBalancer::possiblyDynamicallyReallocate()", " ", TAU_USER);
 
   if (d_myworld->myrank() == 0) {
     dbg << d_myworld->myrank() << " In DLB, state " << state << endl;
@@ -1013,24 +1010,29 @@ DynamicLoadBalancer::possiblyDynamicallyReallocate( const GridP & grid, int stat
     
     //__________________________________
     //  temp assignment can be set if the regridder has already called the load balancer
-    if(d_tempAssignment.empty())
-    {
+    if (d_tempAssignment.empty()) {
       int num_patches = 0;
-      for(int l=0;l<grid->numLevels();l++){
+      for (int l = 0; l < grid->numLevels(); l++) {
         const LevelP& level = grid->getLevel(l);
         num_patches += level->numPatches();
       }
-    
+
       d_tempAssignment.resize(num_patches);
       switch (d_dynamicAlgorithm) {
-        case patch_factor_lb:  dynamicAllocate = assignPatchesFactor(grid, force); break;
-        case cyclic_lb:        dynamicAllocate = assignPatchesCyclic(grid, force); break;
-        case random_lb:        dynamicAllocate = assignPatchesRandom(grid, force); break;
+        case patch_factor_lb :
+          dynamicAllocate = assignPatchesFactor(grid, force);
+          break;
+        case cyclic_lb :
+          dynamicAllocate = assignPatchesCyclic(grid, force);
+          break;
+        case random_lb :
+          dynamicAllocate = assignPatchesRandom(grid, force);
+          break;
       }
     }
     else  //regridder has called dynamic load balancer so we must dynamically Allocate
     {
-      dynamicAllocate=true;
+      dynamicAllocate = true;
     }
 
     //__________________________________
@@ -1046,7 +1048,7 @@ DynamicLoadBalancer::possiblyDynamicallyReallocate( const GridP & grid, int stat
         d_oldAssignment = d_processorAssignment;
         d_oldAssignmentBasePatch = d_assignmentBasePatch;
       }
-      
+
       //__________________________________
       //  Debugging output
       if (lb.active()) {
@@ -1056,12 +1058,14 @@ DynamicLoadBalancer::possiblyDynamicallyReallocate( const GridP & grid, int stat
           LevelP curLevel = grid->getLevel(0);
           Level::const_patchIterator iter = curLevel->patchesBegin();
           lb << "  Changing the Load Balance\n";
-          
+
           for (unsigned int i = 0; i < d_processorAssignment.size(); i++) {
-            lb << myrank << " patch " << i << " (real " << (*iter)->getID() << ") -> proc " << d_processorAssignment[i] << " (old " << d_oldAssignment[i] << ") patch size: "  << (*iter)->getNumExtraCells() << " low:" << (*iter)->getExtraCellLowIndex() << " high: " << (*iter)->getExtraCellHighIndex() <<"\n";
+            lb << myrank << " patch " << i << " (real " << (*iter)->getID() << ") -> proc " << d_processorAssignment[i] << " (old "
+               << d_oldAssignment[i] << ") patch size: " << (*iter)->getNumExtraCells() << " low:"
+               << (*iter)->getExtraCellLowIndex() << " high: " << (*iter)->getExtraCellHighIndex() << "\n";
             IntVector range = ((*iter)->getExtraCellHighIndex() - (*iter)->getExtraCellLowIndex());
             iter++;
-            if (iter == curLevel->patchesEnd() && i+1 < d_processorAssignment.size()) {
+            if (iter == curLevel->patchesEnd() && i + 1 < d_processorAssignment.size()) {
               curLevel = curLevel->getFinerLevel();
               iter = curLevel->patchesBegin();
             }

@@ -22,8 +22,6 @@
  * IN THE SOFTWARE.
  */
 
-#include <TauProfilerForSCIRun.h>
-
 #include <CCA/Components/Schedulers/MPIScheduler.h>
 #include <CCA/Components/Schedulers/OnDemandDataWarehouse.h>
 #include <CCA/Components/Schedulers/SendState.h>
@@ -152,7 +150,6 @@ MPIScheduler::verifyChecksum()
 {
 #if SCI_ASSERTION_LEVEL >= 3
   if (Uintah::Parallel::usingMPI()) {
-    TAU_PROFILE("MPIScheduler::verifyChecksum()", " ", TAU_USER);
 
     // Compute a simple checksum to make sure that all processes are trying to
     // execute the same graph.  We should do two things in the future:
@@ -207,20 +204,12 @@ MPIScheduler::verifyChecksum()
 
 //______________________________________________________________________
 //
-#ifdef USE_TAU_PROFILING
-extern int create_tau_mapping( const string&      taskname,
-                               const PatchSubset* patches );
-#endif
-
-//______________________________________________________________________
-//
 void MPIScheduler::initiateTask( DetailedTask* task,
                                  bool          only_old_recvs,
                                  int           abort_point,
                                  int           iteration )
 {
   MALLOC_TRACE_TAG_SCOPE("MPIScheduler::initiateTask");
-  TAU_PROFILE("MPIScheduler::initiateTask()", " ", TAU_USER);
 
   postMPIRecvs(task, only_old_recvs, abort_point, iteration);
   if (only_old_recvs) {
@@ -233,8 +222,6 @@ void MPIScheduler::initiateTask( DetailedTask* task,
 void
 MPIScheduler::initiateReduction( DetailedTask* task )
 {
-  TAU_PROFILE("MPIScheduler::initiateReduction()", " ", TAU_USER);
-
   if (reductionout.active() && d_myworld->myrank() == 0) {
     coutLock.lock();
     reductionout << "Running Reduction Task: " << task->getName() << std::endl;
@@ -260,7 +247,6 @@ MPIScheduler::runTask( DetailedTask* task,
                        int           thread_id /*=0*/ )
 {
   MALLOC_TRACE_TAG_SCOPE("MPIScheduler::runTask");
-  TAU_PROFILE("MPIScheduler::runTask()", " ", TAU_USER);
 
   if (waitout.active()) {
     waittimesLock.lock();
@@ -552,10 +538,7 @@ void MPIScheduler::postMPIRecvs( DetailedTask* task,
   MALLOC_TRACE_TAG_SCOPE("MPIScheduler::postMPIRecvs");
 
   double recvstart = Time::currentSeconds();
-  TAU_PROFILE("MPIScheduler::postMPIRecvs()", " ", TAU_USER);
-
   bool dbg_active = dbg.active();
-  // Receive any of the foreign requires
 
   if (dbg_active) {
     cerrLock.lock();
@@ -581,6 +564,7 @@ void MPIScheduler::postMPIRecvs( DetailedTask* task,
     std::sort(sorted_reqs.begin(), sorted_reqs.end(), comparator);
     std::vector<DependencyBatch*>::iterator sorted_iter = sorted_reqs.begin();
 
+  // Receive any of the foreign requires
   recvLock.writeLock();
   {
     for (; sorted_iter != sorted_reqs.end(); sorted_iter++) {
@@ -760,7 +744,7 @@ void MPIScheduler::postMPIRecvs( DetailedTask* task,
 //
 void MPIScheduler::processMPIRecvs(int how_much)
 {
-  MALLOC_TRACE_TAG_SCOPE("MPIScheduler::processMPIRecvs"); TAU_PROFILE("MPIScheduler::processMPIRecvs()", " ", TAU_USER);
+  MALLOC_TRACE_TAG_SCOPE("MPIScheduler::processMPIRecvs");
 
   // Should only have external receives in the MixedScheduler version which
   // shouldn't use this function.
@@ -823,16 +807,6 @@ MPIScheduler::execute( int tgnum     /* = 0 */,
                        int iteration /* = 0 */ )
 {
   MALLOC_TRACE_TAG_SCOPE("MPIScheduler::execute");
-
-  TAU_PROFILE("MPIScheduler::execute()", " ", TAU_USER);
-  TAU_PROFILE_TIMER(reducetimer, "Reductions", "[MPIScheduler::execute()] " , TAU_USER);
-  TAU_PROFILE_TIMER(sendtimer, "Send Dependency", "[MPIScheduler::execute()] " , TAU_USER);
-  TAU_PROFILE_TIMER(recvtimer, "Recv Dependency", "[MPIScheduler::execute()] " , TAU_USER);
-  TAU_PROFILE_TIMER(outputtimer, "Task Graph Output", "[MPIScheduler::execute()] ", TAU_USER);
-  TAU_PROFILE_TIMER(testsometimer, "Test Some", "[MPIScheduler::execute()] ", TAU_USER);
-  TAU_PROFILE_TIMER(finalwaittimer, "Final Wait", "[MPIScheduler::execute()] ", TAU_USER);
-  TAU_PROFILE_TIMER(sorttimer, "Topological Sort", "[MPIScheduler::execute()] ", TAU_USER);
-  TAU_PROFILE_TIMER(sendrecvtimer, "Initial Send Recv", "[MPIScheduler::execute()] ", TAU_USER);
 
   ASSERTRANGE(tgnum, 0, (int )graphs.size());
   TaskGraph* tg = graphs[tgnum];
@@ -903,8 +877,6 @@ MPIScheduler::execute( int tgnum     /* = 0 */,
     dws[dwmap[Task::OldDW]]->exchangeParticleQuantities(dts, getLoadBalancer(), reloc_new_posLabel_, iteration);
   }
 
-  TAU_PROFILE_TIMER(doittimer, "Task execution", "[MPIScheduler::execute() loop] ", TAU_USER); TAU_PROFILE_START(doittimer);
-
   int i = 0;
   while (numTasksDone < ntasks) {
     i++;
@@ -928,6 +900,7 @@ MPIScheduler::execute( int tgnum     /* = 0 */,
     DetailedTask * task = dts->getNextInternalReadyTask();
 
     numTasksDone++;
+
     if (taskorder.active()) {
       taskorder << d_myworld->myrank() << " Running task static order: " << task->getStaticOrder() << " , scheduled order: "
                 << numTasksDone << std::endl;
@@ -938,47 +911,6 @@ MPIScheduler::execute( int tgnum     /* = 0 */,
       printTask(taskdbg, task);
       taskdbg << '\n';
     }
-
-#ifdef USE_TAU_PROFILING
-    int id;
-    const PatchSubset* patches = task->getPatches();
-    id = create_tau_mapping( task->getTask()->getName(), patches );
-
-    string phase_name = "no patches";
-    if (patches && patches->size() > 0) {
-      phase_name = "level";
-      for(int i=0;i<patches->size();i++) {
-
-        ostringstream patch_num;
-        patch_num << patches->get(i)->getLevel()->getIndex();
-
-        if (i == 0) {
-          phase_name = phase_name + " " + patch_num.str();
-        }
-        else {
-          phase_name = phase_name + ", " + patch_num.str();
-        }
-      }
-    }
-
-    static map<string,int> phase_map;
-    static int unique_id = 99999;
-    int phase_id;
-    map<string,int>::iterator iter = phase_map.find( phase_name );
-    if( iter != phase_map.end() ) {
-      phase_id = (*iter).second;
-    }
-    else {
-      TAU_MAPPING_CREATE( phase_name, "", (TauGroup_t) unique_id, "TAU_USER", 0 );
-      phase_map[ phase_name ] = unique_id;
-      phase_id = unique_id++;
-    }
-    // Task name
-    TAU_MAPPING_OBJECT(tautimer)
-    TAU_MAPPING_LINK(tautimer, (TauGroup_t)id);// EXTERNAL ASSOCIATION
-    TAU_MAPPING_PROFILE_TIMER(doitprofiler, tautimer, 0)
-    TAU_MAPPING_PROFILE_START(doitprofiler,0);
-#endif
 
     if (task->getTask()->getType() == Task::Reduction) {
       if (!abort) {
@@ -999,16 +931,12 @@ MPIScheduler::execute( int tgnum     /* = 0 */,
       }
     }
   
-      TAU_MAPPING_PROFILE_STOP(0);
-
     if(!abort && dws[dws.size()-1] && dws[dws.size()-1]->timestepAborted()){
       abort = true;
       abort_point = task->getTask()->getSortedOrder();
       dbg << "Aborting timestep after task: " << *task->getTask() << '\n';
     }
   } // end while( numTasksDone < ntasks )
-
-  TAU_PROFILE_STOP(doittimer);
 
   if (timeout.active()) {
     emitTime("MPI send time", mpi_info_.totalsendmpi);

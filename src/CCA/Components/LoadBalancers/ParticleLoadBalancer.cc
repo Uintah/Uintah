@@ -44,8 +44,6 @@
 #include <Core/Util/DebugStream.h>
 #include <Core/Util/FancyAssert.h>
 
-#include <TauProfilerForSCIRun.h>
-
 #include <iostream> // debug only
 #include <stack>
 #include <vector>
@@ -773,7 +771,6 @@ void ParticleLoadBalancer::getCosts(const Grid* grid, vector<vector<double> >&pa
 bool ParticleLoadBalancer::possiblyDynamicallyReallocate(const GridP& grid, int state)
 {
   MALLOC_TRACE_TAG_SCOPE("ParticleLoadBalancer::possiblyDynamicallyReallocate");
-  TAU_PROFILE("ParticleLoadBalancer::possiblyDynamicallyReallocate()", " ", TAU_USER);
 
   if (d_myworld->myrank() == 0)
     dbg << d_myworld->myrank() << " In DLB, state " << state << endl;

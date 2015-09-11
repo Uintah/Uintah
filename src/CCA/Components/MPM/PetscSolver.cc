@@ -27,7 +27,6 @@
 #include <sci_defs/mpi_defs.h>
 #include <sci_defs/petsc_defs.h>
 
-#include <TauProfilerForSCIRun.h>
 #include <CCA/Components/MPM/PetscSolver.h>
 #include <Core/Exceptions/UintahPetscError.h>
 #include <Core/Parallel/ProcessorGroup.h>
@@ -162,7 +161,6 @@ MPMPetscSolver::createLocalToGlobalMapping(const ProcessorGroup* d_myworld,
                                            const int DOFsPerNode,
                                            const int n8or27)
 {
-  TAU_PROFILE("MPMPetscSolver::createLocalToGlobalMapping", " ", TAU_USER);
   int numProcessors = d_myworld->size();
   d_numNodes.resize(numProcessors, 0);
   d_startIndex.resize(numProcessors);
@@ -265,7 +263,6 @@ MPMPetscSolver::createLocalToGlobalMapping(const ProcessorGroup* d_myworld,
 
 void MPMPetscSolver::solve(vector<double>& guess)
 {
-  TAU_PROFILE("MPMPetscSolver::solve", " ", TAU_USER);
   PC          precond;           
   KSP         solver;
 #if 0
@@ -298,10 +295,7 @@ void MPMPetscSolver::solve(vector<double>& guess)
     }
 
   }
-  TAU_PROFILE_TIMER(solve, "Petsc:KPSolve()", "", TAU_USER);
-  TAU_PROFILE_START(solve);
   KSPSolve(solver,d_B,d_x);
-  TAU_PROFILE_STOP(solve);
 #ifdef LOG
   KSPView(solver,PETSC_VIEWER_STDOUT_WORLD);
   int its;
@@ -319,7 +313,6 @@ void MPMPetscSolver::solve(vector<double>& guess)
 void MPMPetscSolver::createMatrix(const ProcessorGroup* d_myworld,
                                   const map<int,int>& dof_diag)
 {
-  TAU_PROFILE("MPMPetscSolver::createMatrix", " ", TAU_USER);
   int me = d_myworld->myrank();
   int numlrows = d_numNodes[me];
   
@@ -489,7 +482,6 @@ void MPMPetscSolver::createMatrix(const ProcessorGroup* d_myworld,
 
 void MPMPetscSolver::destroyMatrix(bool recursion)
 {
-  TAU_PROFILE("MPMPetscSolver::destroyMatrix", " ", TAU_USER);
   if (recursion) {
     MatZeroEntries(d_A);
     PetscScalar zero = 0.;
@@ -635,7 +627,6 @@ MPMPetscSolver::copyL2G(Array3<int>& mapping,const Patch* patch)
 void
 MPMPetscSolver::removeFixedDOF()
 {
-  TAU_PROFILE("MPMPetscSolver::removeFixedDOF", " ", TAU_USER);
   flushMatrix();
   IS is;
   int* indices;
@@ -733,10 +724,7 @@ MPMPetscSolver::removeFixedDOF()
 
 void MPMPetscSolver::removeFixedDOFHeat()
 {
-  TAU_PROFILE("MPMPetscSolver::removeFixedDOFHEAT", " ", TAU_USER);
-
   //do matrix modifications first 
- 
   for (set<int>::iterator iter = d_DOFZero.begin(); iter != d_DOFZero.end();
        iter++) {
     int j = *iter;

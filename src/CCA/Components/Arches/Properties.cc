@@ -23,7 +23,6 @@
  */
 
 //----- Properties.cc --------------------------------------------------
-#include <TauProfilerForSCIRun.h>
 #include <CCA/Components/Arches/Properties.h>
 #include <CCA/Components/Arches/Arches.h>
 #include <CCA/Components/Arches/ArchesLabel.h>

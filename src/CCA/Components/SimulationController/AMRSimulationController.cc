@@ -62,8 +62,6 @@
 #include <CCA/Ports/Scheduler.h>
 #include <CCA/Ports/SimulationInterface.h>
 
-#include <TauProfilerForSCIRun.h>
-
 #include <iostream>
 #include <iomanip>
 
@@ -226,12 +224,6 @@ AMRSimulationController::run()
 	barrier_times[i]=0;
       }
     }
-#ifdef USE_TAU_PROFILING
-    char tmpname[512];
-    sprintf (tmpname, "Iteration %d", iterations);
-    TAU_PROFILE_TIMER_DYNAMIC(iteration_timer, tmpname, "", TAU_USER);
-    TAU_PROFILE_START(iteration_timer); 
-#endif
      
     //__________________________________
     //    Regridding
@@ -435,15 +427,8 @@ AMRSimulationController::run()
       d_output->findNext_OutputCheckPoint_Timestep(  delt, currentGrid );
       d_output->writeto_xml_files( delt, currentGrid );
     }
-#ifdef USE_TAU_PROFILING
-    TAU_PROFILE_STOP(iteration_timer);
-//      TAU_PROFILE_TIMER(sleepy, "Sleep", "", TAU_USER);
-//      TAU_PROFILE_START(sleepy);
-//      sleep(1);
-//      TAU_PROFILE_STOP(sleepy);
-#endif
+
     time += delt;
-    TAU_DB_DUMP();
 
     // If VisIt has been included into the build, check the lib sim state
     // to see if there is a connection and if so if anything needs to be
@@ -816,7 +801,7 @@ bool
 AMRSimulationController::doRegridding( GridP & currentGrid, bool initialTimestep )
 {
   MALLOC_TRACE_TAG_SCOPE("AMRSimulationController::doRegridding()");
-  TAU_PROFILE("AMRSimulationController::doRegridding()", " ", TAU_USER);
+
   double start = Time::currentSeconds();
 
   GridP oldGrid = currentGrid;
@@ -1000,9 +985,8 @@ void
 AMRSimulationController::executeTimestep(double t, double& delt, GridP& currentGrid, int totalFine)
 {
   MALLOC_TRACE_TAG_SCOPE("AMRSimulationController::executeTimestep()");
-  TAU_PROFILE("AMRSimulationController::executeTimestep()"," ", TAU_USER);
-  // If the timestep needs to be
-  // restarted, this loop will execute multiple times.
+
+  // If the timestep needs to be restarted, this loop will execute multiple times.
   bool success = true;
   double orig_delt = delt;
   do {

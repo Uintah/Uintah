@@ -22,8 +22,6 @@
  * IN THE SOFTWARE.
  */
 
-#include <TauProfilerForSCIRun.h>
-
 //-- Uintah component includes --//
 #include <CCA/Components/Regridder/RegridderCommon.h>
 #include <CCA/Components/Regridder/PerPatchVars.h>
@@ -163,9 +161,8 @@ RegridderCommon::needRecompile(double /*time*/, double /*delt*/, const GridP& /*
 bool
 RegridderCommon::needsToReGrid(const GridP &oldGrid)
 {
-  TAU_PROFILE("RegridderCommon::needsToReGrid()", " ", TAU_USER);
-
   rdbg << "RegridderCommon::needsToReGrid() BGN" << std::endl;
+
   int timeStepsSinceRegrid = d_sharedState->getCurrentTopLevelTimeStep() - d_lastRegridTimestep;
   int retval = false;
 

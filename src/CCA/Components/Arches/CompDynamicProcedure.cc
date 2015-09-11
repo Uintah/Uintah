@@ -24,8 +24,6 @@
 
 //----- CompDynamicProcedure.cc --------------------------------------------------
 
-#include <TauProfilerForSCIRun.h>
-
 #include <CCA/Components/Arches/ArchesLabel.h>
 #include <CCA/Components/Arches/ArchesMaterial.h>
 #include <CCA/Components/Arches/BoundaryCondition.h>
@@ -632,8 +630,6 @@ CompDynamicProcedure::reComputeFilterValues(const ProcessorGroup* pc,
 {
   for (int p = 0; p < patches->size(); p++) {
 
-    TAU_PROFILE_TIMER(compute1, "Compute1", "[reComputeFilterValues::compute1]" , TAU_USER);
-    TAU_PROFILE_TIMER(compute2, "Compute2", "[reComputeFilterValues::compute2]" , TAU_USER);
     const Patch* patch = patches->get(p);
     int archIndex = 0; // only one arches material
     int indx = d_lab->d_sharedState->getArchesMaterial(archIndex)->getDWIndex(); 
@@ -747,7 +743,6 @@ CompDynamicProcedure::reComputeFilterValues(const ProcessorGroup* pc,
     int endX = idxHi.x();
     if (xplus) endX--;
 
-    TAU_PROFILE_START(compute1);
     for (int colZ = startZ; colZ < endZ; colZ ++) {
       for (int colY = startY; colY < endY; colY ++) {
         for (int colX = startX; colX < endX; colX ++) {
@@ -795,7 +790,7 @@ CompDynamicProcedure::reComputeFilterValues(const ProcessorGroup* pc,
         }
       }
     }
-    TAU_PROFILE_STOP(compute1);
+
     Array3<double> filterRhoUU(patch->getExtraCellLowIndex(), patch->getExtraCellHighIndex());
     filterRhoUU.initialize(0.0);
     Array3<double> filterRhoUV(patch->getExtraCellLowIndex(), patch->getExtraCellHighIndex());
@@ -846,8 +841,6 @@ CompDynamicProcedure::reComputeFilterValues(const ProcessorGroup* pc,
 
     string msg = "Time for the Filter operation in Turbulence Model: (patch: ";
     proc0cerr << msg << p << ") " << Time::currentSeconds() - start_turbTime << " seconds\n";
-
-    TAU_PROFILE_START(compute2);
 
     Vector Dx = patch->dCell(); 
     double fhat = 3.0;
@@ -934,7 +927,6 @@ CompDynamicProcedure::reComputeFilterValues(const ProcessorGroup* pc,
                       );
 
     }
-    TAU_PROFILE_STOP(compute2);
   }
 }
 
