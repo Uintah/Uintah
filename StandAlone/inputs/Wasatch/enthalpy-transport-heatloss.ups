@@ -7,7 +7,7 @@
   <SimulationComponent type="wasatch"/>
    <Solver type="hypre"/>
   <Wasatch>
-    <TimeIntegrator> RK3SSP </TimeIntegrator>    
+    <TimeIntegrator> FE </TimeIntegrator>    
     
     <Density>
       <NameTag name="density" state="CARRY_FORWARD"/>

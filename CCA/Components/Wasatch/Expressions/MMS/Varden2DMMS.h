@@ -6,7 +6,6 @@
 
 #include <spatialops/structured/FVStaggeredFieldTypes.h>
 #include <spatialops/structured/stencil/FVStaggeredOperatorTypes.h>
-#include <CCA/Components/Wasatch/VardenParameters.h>
 #include <limits>
 #include <iostream>
 #include <fstream>
@@ -74,12 +73,14 @@ public:
              const double w,
              const double k,
              const double uf,
-             const double vf);
+             const double vf,
+             const bool atNP1);
     ~Builder(){}
     Expr::ExpressionBase* build() const;
   private:
     const double r0_, r1_, d_, w_, k_, uf_, vf_;
     const Expr::Tag xTag_, yTag_, tTag_;
+    const bool atNP1_;
   };
   
   void evaluate();
@@ -96,10 +97,12 @@ private:
                                  const double w,
                                  const double k,
                                  const double uf,
-                                 const double vf);
+                                 const double vf,
+                                 const bool atNP1);
   const double r0_, r1_, d_, w_, k_, uf_, vf_;
+  const bool atNP1_;
   DECLARE_FIELDS(FieldT, x_, y_)
-  DECLARE_FIELD (TimeField, t_)
+  DECLARE_FIELDS (TimeField, t_, dt_)
 };
 
 //**********************************************************************
@@ -126,7 +129,6 @@ public:
     Builder( const Expr::Tag& result,
              const Expr::Tag densTag,
              const Expr::Tag densStarTag,
-             const Expr::Tag dens2StarTag,
              const Expr::TagList& velTags,
              const Expr::TagList& velStarTags,
              const double r0,
@@ -138,8 +140,7 @@ public:
              const Expr::Tag& xTag,
              const Expr::Tag& yTag,
              const Expr::Tag& tTag,
-             const Expr::Tag& timestepTag,
-             const Wasatch::VarDenParameters varDenParams);
+             const Expr::Tag& timestepTag);
     ~Builder(){}
     Expr::ExpressionBase* build() const;
   private:
@@ -147,7 +148,6 @@ public:
     const Expr::Tag xTag_, yTag_, tTag_, timestepTag_;
     const Expr::Tag denst_, densStart_, dens2Start_;
     const Expr::TagList velTs_,velStarTs_;
-    const Wasatch::VarDenParameters varDenParams_;
   };
   
   void bind_operators( const SpatialOps::OperatorDatabase& opDB);
@@ -174,7 +174,6 @@ private:
   
   VarDenMMSOscillatingContinuitySrc( const Expr::Tag densTag,
                                      const Expr::Tag densStarTag,
-                                     const Expr::Tag dens2StarTag,
                                      const Expr::TagList& velTags,
                                      const Expr::TagList& velStarTags,
                                      const double r0,
@@ -186,16 +185,11 @@ private:
                                      const Expr::Tag& xTag,
                                      const Expr::Tag& yTag,
                                      const Expr::Tag& tTag,
-                                     const Expr::Tag& timestepTag,
-                                     const Wasatch::VarDenParameters varDenParams );
+                                     const Expr::Tag& timestepTag);
   const Expr::Tag xVelt_, yVelt_, zVelt_, xVelStart_, yVelStart_, zVelStart_, denst_, densStart_, dens2Start_;
   const bool doX_, doY_, doZ_, is3d_;
   const double r0_, r1_, wf_, k_, uf_, vf_;
   const Expr::Tag xTag_, yTag_, tTag_, timestepTag_;
-  const double a0_;
-  const Wasatch::VarDenParameters::VariableDensityModels model_;
-  const bool useOnePredictor_;
-  const Wasatch::VarDenParameters varDenParams_;
   
   DECLARE_FIELDS(XVolField, uStar_, u_)
   DECLARE_FIELDS(YVolField, vStar_, v_)
