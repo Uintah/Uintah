@@ -22,8 +22,6 @@
  * IN THE SOFTWARE.
  */
 
-#include <TauProfilerForSCIRun.h>
-
 #include <CCA/Components/Schedulers/DynamicMPIScheduler.h>
 #include <CCA/Components/Schedulers/OnDemandDataWarehouse.h>
 #include <CCA/Components/Schedulers/TaskGraph.h>
@@ -52,10 +50,6 @@ static DebugStream dynamicmpi_dbg(        "DynamicMPI_DBG",         false);
 static DebugStream dynamicmpi_timeout(    "DynamicMPI_TimingsOut",  false);
 static DebugStream dynamicmpi_queuelength("DynamicMPI_QueueLength", false);
 
-#ifdef USE_TAU_PROFILING
-extern int create_tau_mapping( const string&      taskname,
-                               const PatchSubset* patches );  // ThreadPool.cc
-#endif
 
 //______________________________________________________________________
 //
@@ -168,16 +162,6 @@ DynamicMPIScheduler::execute( int tgnum     /*=0*/,
 
   MALLOC_TRACE_TAG_SCOPE("DynamicMPIScheduler::execute");
 
-  TAU_PROFILE("DynamicMPIScheduler::execute()", " ", TAU_USER); 
-  TAU_PROFILE_TIMER(reducetimer, "Reductions", "[DynamicMPIScheduler::execute()] " , TAU_USER); 
-  TAU_PROFILE_TIMER(sendtimer, "Send Dependency", "[DynamicMPIScheduler::execute()] " , TAU_USER); 
-  TAU_PROFILE_TIMER(recvtimer, "Recv Dependency", "[DynamicMPIScheduler::execute()] " , TAU_USER); 
-  TAU_PROFILE_TIMER(outputtimer, "Task Graph Output", "[DynamicMPIScheduler::execute()] ", TAU_USER);
-  TAU_PROFILE_TIMER(testsometimer, "Test Some", "[DynamicMPIScheduler::execute()] ", TAU_USER);
-  TAU_PROFILE_TIMER(finalwaittimer, "Final Wait", "[DynamicMPIScheduler::execute()] ", TAU_USER);
-  TAU_PROFILE_TIMER(sorttimer, "Topological Sort", "[DynamicMPIScheduler::execute()] ",TAU_USER);
-  TAU_PROFILE_TIMER(sendrecvtimer, "Initial Send Recv", "[DynamicMPIScheduler::execute()] ", TAU_USER);
-
   ASSERTRANGE(tgnum, 0, (int)graphs.size());
   TaskGraph* tg = graphs[tgnum];
   tg->setIteration(iteration);
@@ -239,9 +223,7 @@ DynamicMPIScheduler::execute( int tgnum     /*=0*/,
     dws[dwmap[Task::OldDW]]->exchangeParticleQuantities(dts, getLoadBalancer(), reloc_new_posLabel_, iteration);
   }
 
-  TAU_PROFILE_TIMER(doittimer, "Task execution", "[DynamicMPIScheduler::execute() loop] ", TAU_USER); 
-  TAU_PROFILE_START(doittimer);
-
+  // TODO  - figure out if we can remove this #if - APH 09/10/15
 #if 0
   // hook to post all the messages up front
   if (useDynamicScheduling_ && !d_sharedState->isCopyDataTimestep()) {
@@ -251,6 +233,7 @@ DynamicMPIScheduler::execute( int tgnum     /*=0*/,
     }
   }
 #endif
+
   int currphase=0;
   std::map<int, int> phaseTasks;
   std::map<int, int> phaseTasksDone;
@@ -326,45 +309,7 @@ DynamicMPIScheduler::execute( int tgnum     /*=0*/,
       }
      
       DetailedTask * task = dts->getNextExternalReadyTask();
-#ifdef USE_TAU_PROFILING
-      int id;
-      const PatchSubset* patches = task->getPatches();
-      id = create_tau_mapping( task->getTask()->getName(), patches );
 
-      string phase_name = "no patches";
-      if (patches && patches->size() > 0) {
-        phase_name = "level";
-        for(int i=0;i<patches->size();i++) {
-
-          ostringstream patch_num;
-          patch_num << patches->get(i)->getLevel()->getIndex();
-
-          if (i == 0) {
-            phase_name = phase_name + " " + patch_num.str();
-          } else {
-            phase_name = phase_name + ", " + patch_num.str();
-          }
-        }
-      }
-
-      static map<string,int> phase_map;
-      static int unique_id = 99999;
-      int phase_id;
-      map<string,int>::iterator iter = phase_map.find( phase_name );
-      if( iter != phase_map.end() ) {
-        phase_id = (*iter).second;
-      } else {
-        TAU_MAPPING_CREATE( phase_name, "",
-            (TauGroup_t) unique_id, "TAU_USER", 0 );
-        phase_map[ phase_name ] = unique_id;
-        phase_id = unique_id++;
-      }
-      // Task name
-      TAU_MAPPING_OBJECT(tautimer)
-      TAU_MAPPING_LINK(tautimer, (TauGroup_t)id);  // EXTERNAL ASSOCIATION
-      TAU_MAPPING_PROFILE_TIMER(doitprofiler, tautimer, 0)
-      TAU_MAPPING_PROFILE_START(doitprofiler,0);
-#endif
       if (taskdbg.active()) {
         cerrLock.lock();
         taskdbg << d_myworld->myrank() << " Running task " << *task << "(" << dts->numExternalReadyTasks() << "/"
@@ -385,10 +330,6 @@ DynamicMPIScheduler::execute( int tgnum     /*=0*/,
         }
       }
       phaseTasksDone[task->getTask()->d_phase]++;
-
-#ifdef USE_TAU_PROFILING
-      TAU_MAPPING_PROFILE_STOP(doitprofiler);
-#endif
     } 
 
     if ((phaseSyncTask.find(currphase) != phaseSyncTask.end()) && (phaseTasksDone[currphase] == phaseTasks[currphase] - 1)) {  //if it is time to run the reduction task
@@ -457,8 +398,6 @@ DynamicMPIScheduler::execute( int tgnum     /*=0*/,
     }
   } // end while( numTasksDone < ntasks )
 
-  TAU_PROFILE_STOP(doittimer);
-  
   if (dynamicmpi_queuelength.active()) {
     float lengthsum = 0;
     totaltasks += ntasks;

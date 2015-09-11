@@ -24,7 +24,6 @@
 
 //----- CompLocalDynamicProcedure.cc --------------------------------------------------
 
-#include <TauProfilerForSCIRun.h>
 #include <CCA/Components/Arches/CompLocalDynamicProcedure.h>
 #include <CCA/Components/Arches/PhysicalConstants.h>
 #include <CCA/Components/Arches/BoundaryCondition.h>
@@ -1468,8 +1467,6 @@ CompLocalDynamicProcedure::reComputeFilterValues(const ProcessorGroup* pc,
 {
   //int nofTimeSteps=d_lab->d_sharedState->getCurrentTopLevelTimeStep();
   for (int p = 0; p < patches->size(); p++) {
-  TAU_PROFILE_TIMER(compute1, "Compute1", "[reComputeFilterValues::compute1]" , TAU_USER);
-  TAU_PROFILE_TIMER(compute2, "Compute2", "[reComputeFilterValues::compute2]" , TAU_USER);
     const Patch* patch = patches->get(p);
     int archIndex = 0; // only one arches material
     int indx = d_lab->d_sharedState->getArchesMaterial(archIndex)->getDWIndex(); 
@@ -1755,7 +1752,6 @@ CompLocalDynamicProcedure::reComputeFilterValues(const ProcessorGroup* pc,
     int endX = idxHi.x();
     if (xplus) endX--;
 
-  TAU_PROFILE_START(compute1);
 //#ifdef use_fortran
 //    IntVector start(startX, startY, startZ);
 //    IntVector end(endX - 1, endY - 1, endZ -1);
@@ -1860,7 +1856,6 @@ CompLocalDynamicProcedure::reComputeFilterValues(const ProcessorGroup* pc,
       }
     }
 //#endif
-  TAU_PROFILE_STOP(compute1);
     Array3<double> filterRhoUU(patch->getExtraCellLowIndex(), patch->getExtraCellHighIndex());
     filterRhoUU.initialize(0.0);
     Array3<double> filterRhoUV(patch->getExtraCellLowIndex(), patch->getExtraCellHighIndex());
@@ -1965,7 +1960,6 @@ CompLocalDynamicProcedure::reComputeFilterValues(const ProcessorGroup* pc,
     if (pc->myrank() == 0)
       cerr << "Time for the Filter operation in Turbulence Model: " << 
         Time::currentSeconds()-start_turbTime << " seconds\n";
-  TAU_PROFILE_START(compute2);
 #endif
 #ifdef use_fortran
     fort_comp_dynamic_2loop(cellinfo->sew,cellinfo->sns,cellinfo->stb,
@@ -2216,7 +2210,6 @@ CompLocalDynamicProcedure::reComputeFilterValues(const ProcessorGroup* pc,
       }
     }
 #endif
-  TAU_PROFILE_STOP(compute2);
 
   }
 }

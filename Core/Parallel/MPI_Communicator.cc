@@ -25,7 +25,7 @@
 #if !defined(__APPLE__) && !defined(__sgi)
 #include <sci_defs/mpi_defs.h> // For MPIPP_H on SGI
 // We mustn't call the PMPI routines when using TAU, or they won't get profiled.
-#if defined(LAM_MPI) && !defined(USE_TAU_PROFILING)
+#if defined(LAM_MPI)
 #include <iostream>
 #include <unistd.h>
 #include <cstdlib>

@@ -21,7 +21,6 @@
  * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
  * IN THE SOFTWARE.
  */
-#include <TauProfilerForSCIRun.h>
 
 #include <CCA/Components/Schedulers/UnifiedScheduler.h>
 #include <CCA/Components/Schedulers/OnDemandDataWarehouse.h>
@@ -49,6 +48,7 @@
 
 #include <cstring>
 #include <iomanip>
+
 #define USE_PACKING
 
 using namespace Uintah;
@@ -323,7 +323,6 @@ UnifiedScheduler::runTask( DetailedTask*         task,
                            int                   thread_id /* = 0 */,
                            Task::CallBackEvent   event )
 {
-  TAU_PROFILE("UnifiedScheduler::runTask()", " ", TAU_USER);
 
   if (waitout.active()) {
     waittimesLock.lock();
@@ -414,16 +413,6 @@ UnifiedScheduler::execute( int tgnum     /* = 0 */,
 
   MALLOC_TRACE_TAG_SCOPE("UnifiedScheduler::execute");
 
-  TAU_PROFILE("UnifiedScheduler::execute()", " ", TAU_USER);
-  TAU_PROFILE_TIMER(reducetimer, "Reductions", "[UnifiedScheduler::execute()] " , TAU_USER);
-  TAU_PROFILE_TIMER(sendtimer, "Send Dependency", "[UnifiedScheduler::execute()] " , TAU_USER);
-  TAU_PROFILE_TIMER(recvtimer, "Recv Dependency", "[UnifiedScheduler::execute()] " , TAU_USER);
-  TAU_PROFILE_TIMER(outputtimer, "Task Graph Output", "[UnifiedScheduler::execute()] ", TAU_USER);
-  TAU_PROFILE_TIMER(testsometimer, "Test Some", "[UnifiedScheduler::execute()] ", TAU_USER);
-  TAU_PROFILE_TIMER(finalwaittimer, "Final Wait", "[UnifiedScheduler::execute()] ", TAU_USER);
-  TAU_PROFILE_TIMER(sorttimer, "Topological Sort", "[UnifiedScheduler::execute()] ", TAU_USER);
-  TAU_PROFILE_TIMER(sendrecvtimer, "Initial Send Recv", "[UnifiedScheduler::execute()] ", TAU_USER);
-
   ASSERTRANGE(tgnum, 0, (int )graphs.size());
   TaskGraph* tg = graphs[tgnum];
   tg->setIteration(iteration);
@@ -481,8 +470,6 @@ UnifiedScheduler::execute( int tgnum     /* = 0 */,
     dws[dwmap[Task::OldDW]]->exchangeParticleQuantities(dts, getLoadBalancer(), reloc_new_posLabel_, iteration);
   }
 
-  TAU_PROFILE_TIMER(doittimer, "Task execution", "[UnifiedScheduler::execute() loop] ", TAU_USER);TAU_PROFILE_START(doittimer);
-
   currentIteration = iteration;
   currphase = 0;
   numPhases = tg->getNumTaskPhases();
@@ -535,8 +522,6 @@ UnifiedScheduler::execute( int tgnum     /* = 0 */,
 
   // main thread also executes tasks
   runTasks(Thread::self()->myid());
-
-  TAU_PROFILE_STOP(doittimer);
 
   // wait for all tasks to finish
   d_nextmutex.lock();
@@ -1142,7 +1127,6 @@ void
 UnifiedScheduler::postH2DCopies( DetailedTask* dtask ) {
 
   MALLOC_TRACE_TAG_SCOPE("UnifiedScheduler::postH2DCopies");
-  TAU_PROFILE("UnifiedScheduler::postH2DCopies()", " ", TAU_USER);
 
   // set the device and CUDA context
   cudaError_t retVal;
@@ -1497,7 +1481,6 @@ void
 UnifiedScheduler::preallocateDeviceMemory( DetailedTask* dtask )
 {
   MALLOC_TRACE_TAG_SCOPE("UnifiedScheduler::preallocateDeviceMemory");
-  TAU_PROFILE("UnifiedScheduler::preallocateDeviceMemory()", " ", TAU_USER);
 
   // NOTE: the device and CUDA context are set in the call: dw->getGPUDW()->allocateAndPut()
 
@@ -1694,7 +1677,6 @@ void
 UnifiedScheduler::postD2HCopies( DetailedTask* dtask )
 {
   MALLOC_TRACE_TAG_SCOPE("UnifiedScheduler::postD2HCopies");
-  TAU_PROFILE("UnifiedScheduler::postD2HCopies()", " ", TAU_USER);
 
   // set the device and CUDA context
   cudaError_t retVal;

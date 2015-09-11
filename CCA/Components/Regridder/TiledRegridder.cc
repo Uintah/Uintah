@@ -22,8 +22,6 @@
  * IN THE SOFTWARE.
  */
 
-#include <TauProfilerForSCIRun.h>
-
 #include <CCA/Components/Regridder/TiledRegridder.h>
 #include <CCA/Ports/LoadBalancer.h>
 #include <CCA/Ports/Scheduler.h>
@@ -160,13 +158,13 @@ double rtimes[20]={0};
 //
 Grid* TiledRegridder::regrid(Grid* oldGrid)
 {
+  MALLOC_TRACE_TAG_SCOPE("TiledRegridder::regrid");
+
   if(rgtimes.active()) {
     for(int i=0;i<20;i++)
       rtimes[i]=0;
   }
   double start=Time::currentSeconds();
-  MALLOC_TRACE_TAG_SCOPE("TiledRegridder::regrid");
-  TAU_PROFILE("TiledRegridder::regrid", " ", TAU_USER);
 
   vector< vector<IntVector> > tiles(min(oldGrid->numLevels()+1,d_maxLevels));
 
@@ -217,11 +215,7 @@ Grid* TiledRegridder::regrid(Grid* oldGrid)
   start=Time::currentSeconds();
 
   //finalize the grid
-  TAU_PROFILE_TIMER(finalizetimer, "TiledRegridder::finalize grid", "", TAU_USER);
-  TAU_PROFILE_START(finalizetimer);
-  
   IntVector periodic = oldGrid->getLevel(0)->getPeriodicBoundaries();
-
   for(int l=0;l<newGrid->numLevels();l++) {
     LevelP level= newGrid->getLevel(l);
     level->finalizeLevel(periodic.x(), periodic.y(), periodic.z());
@@ -230,7 +224,6 @@ Grid* TiledRegridder::regrid(Grid* oldGrid)
 
   rtimes[9]+=Time::currentSeconds()-start;
   start=Time::currentSeconds();
-  TAU_PROFILE_STOP(finalizetimer);
 
   d_newGrid = true;
   d_lastRegridTimestep = d_sharedState->getCurrentTopLevelTimeStep();
@@ -253,24 +246,22 @@ Grid* TiledRegridder::regrid(Grid* oldGrid)
 
 
   // ignore...
-  if(rgtimes.active()) {
-    double avg[20]={0};
-    MPI_Reduce(&rtimes,&avg,20,MPI_DOUBLE,MPI_SUM,0,d_myworld->getComm());
-    if(d_myworld->myrank()==0) {
+  if (rgtimes.active()) {
+    double avg[20] = { 0 };
+    MPI_Reduce(&rtimes, &avg, 20, MPI_DOUBLE, MPI_SUM, 0, d_myworld->getComm());
+    if (d_myworld->myrank() == 0) {
       cout << "Regrid Avg Times: ";
-      for(int i=0;i<20;i++)
-      {
-        avg[i]/=d_myworld->size();
+      for (int i = 0; i < 20; i++) {
+        avg[i] /= d_myworld->size();
         cout << i << ":" << avg[i] << " ";
       }
       cout << endl;
     }
-    double max[20]={0};
-    MPI_Reduce(&rtimes,&max,20,MPI_DOUBLE,MPI_MAX,0,d_myworld->getComm());
-    if(d_myworld->myrank()==0) {
+    double max[20] = { 0 };
+    MPI_Reduce(&rtimes, &max, 20, MPI_DOUBLE, MPI_MAX, 0, d_myworld->getComm());
+    if (d_myworld->myrank() == 0) {
       cout << "Regrid Max Times: ";
-      for(int i=0;i<20;i++)
-      {
+      for (int i = 0; i < 20; i++) {
         cout << i << ":" << max[i] << " ";
       }
       cout << endl;
@@ -285,9 +276,8 @@ Grid* TiledRegridder::CreateGrid(Grid* oldGrid, vector<vector<IntVector> > &tile
 {
 
   MALLOC_TRACE_TAG_SCOPE("TiledRegridd::CreateGrid");
-  TAU_PROFILE("TiledRegridder::CreateGrid()", " ", TAU_USER);
+
   Grid* newGrid = scinew Grid();
-  
   Vector spacing = oldGrid->getLevel(0)->dCell();
   Point anchor =   oldGrid->getLevel(0)->getAnchor();
   IntVector extraCells = oldGrid->getLevel(0)->getExtraCells();
@@ -295,8 +285,9 @@ Grid* TiledRegridder::CreateGrid(Grid* oldGrid, vector<vector<IntVector> > &tile
   //For each level Coarse -> Fine
   for(int l=0; l < oldGrid->numLevels()+1 && l < d_maxLevels;l++) {
     // if level is not needed, don't create any more levels
-    if(tiles[l].size()==0)
+    if(tiles[l].size()==0) {
        break;
+    }
 
     LevelP level = newGrid->addLevel(anchor, spacing);
     level->setExtraCells(extraCells);
@@ -504,7 +495,6 @@ TiledRegridder::problemSetup_BulletProofing( const int L )
 void TiledRegridder::CoarsenFlags(GridP oldGrid, int l, vector<IntVector> tiles)
 {
   MALLOC_TRACE_TAG_SCOPE("TiledRegridder::CoarsenFlags");
-  TAU_PROFILE("TiledRegridder::CoarsenFlags()", " ", TAU_USER);
 
   ASSERT(l-1>=0);
 
