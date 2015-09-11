@@ -154,7 +154,7 @@ ifeq ($(HAVE_CUDA),yes)
   $(OBJTOP_ABS)/$(SRCDIR)/ScalarRHS.cu : $(SRCTOP_ABS)/$(SRCDIR)/ScalarRHS.cc
 	cp $< $@
 
-  $(OBJTOP_ABS)/$(SRCDIR)/ScalarRHS.cu : $(SRCTOP_ABS)/$(SRCDIR)/ScalarEOSCoupling.cc
+  $(OBJTOP_ABS)/$(SRCDIR)/ScalarEOSCoupling.cu : $(SRCTOP_ABS)/$(SRCDIR)/ScalarEOSCoupling.cc
 	cp $< $@
 
   $(OBJTOP_ABS)/$(SRCDIR)/SetCurrentTime.cu : $(SRCTOP_ABS)/$(SRCDIR)/SetCurrentTime.cc
