@@ -58,9 +58,15 @@ ifeq ($(BUILD_MPM),yes)
     MPMICE := $(SRCDIR)/MPMICE
   endif
 endif
+
 ifeq ($(BUILD_ICE),yes)
   ICE      := $(SRCDIR)/ICE
 endif
+
+ifeq ($(BUILD_MINIAERO),yes)
+  MINIAERO := $(SRCDIR)/MiniAero
+endif
+
 ifeq ($(BUILD_ARCHES),yes)
   ARCHES   := $(SRCDIR)/Arches
   ifeq ($(BUILD_MPM),yes)
@@ -75,6 +81,7 @@ SUBDIRS := \
         $(ARCHES)                      \
         $(MPMARCHES)                   \
         $(WASATCH)                     \
+        $(MINIAERO)                    \
         $(SRCDIR)/DataArchiver         \
         $(SRCDIR)/Examples             \
         $(SRCDIR)/LoadBalancers        \

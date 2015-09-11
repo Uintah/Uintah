@@ -87,6 +87,7 @@ public:
     Short27,   // for Fracture
     Stencil4,
     Stencil7,
+    Vector5,   // vector of 5 doubles
     Unknown,
     Other
   };

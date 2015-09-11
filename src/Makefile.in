@@ -83,6 +83,10 @@ ifeq ($(BUILD_ICE),yes)
   ICE_LIB            = CCA/Components/ICE
 endif
 
+ifeq ($(BUILD_MINIAERO),yes)
+  MINIAERO_LIB       = CCA/Components/MiniAero
+endif
+
 # Cover both cases when Wasatch lib should be built.
 ifeq ($(BUILD_WASATCH),yes)
   WASATCH_LIB        = CCA/Components/Wasatch
@@ -126,6 +130,7 @@ ALL_PSE_LIBS =             \
         $(MPMARCHES_LIB)                    \
         $(MPM_LIB)                          \
         $(ICE_LIB)                          \
+        $(MINIAERO_LIB)			                \
         $(MPMICE_LIB)                       \
         $(WASATCH_LIB)                      
 
@@ -146,6 +151,7 @@ ALL_STATIC_PSE_LIBS =                   \
     $(MPMARCHES_LIB)                    \
     $(MPM_LIB)                          \
     $(ICE_LIB)                          \
+    $(MINIAERO_LIB)			                \
     $(MPMICE_LIB)                       \
     $(WASATCH_LIB)                      \
                                         \
