@@ -70,6 +70,9 @@
 #  include <CCA/Components/Wasatch/Wasatch.h>
 #endif
 
+#ifndef NO_MINIAERO
+#include <CCA/Components/MiniAero/MiniAero.h>
+#endif
 #include <iosfwd>
 #include <string>
 
@@ -233,6 +236,15 @@ ComponentFactory::create( ProblemSpecP& ps, const ProcessorGroup* world,
   if (sim_comp == "reduce_uda") {
     return new UdaReducer(world, uda);
   } 
+#ifndef NO_MINIAERO
+  if (sim_comp == "miniaero") {
+    return new MiniAero(world);
+  }
+#else
+  turned_off_options += "MINIAERO ";
+#endif
+
+
   throw ProblemSetupException("Unknown simulationComponent ('" + sim_comp + "'). Must specify -arches, -ice, -mpm, "
                               "-impm, -mpmice, -mpmarches, -burger, -wave, -poisson1, -poisson2, -poisson3 or -benchmark.\n"
                               "Note: the following components were turned off at configure time: " + turned_off_options + "\n"
