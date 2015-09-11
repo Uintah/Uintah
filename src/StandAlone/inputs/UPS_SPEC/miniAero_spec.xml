@@ -1,0 +1,18 @@
+<?xml version='1.0' encoding='ISO-8859-1' ?>
+<Uintah_Include>
+
+ 
+
+      <MiniAero               spec="MULTIPLE NO_DATA"
+                                attribute1="name OPTIONAL STRING" >
+        <CFL                  spec="REQUIRED DOUBLE 'positive'" />
+        <gamma                spec="REQUIRED DOUBLE 'positive'" />
+	 <R                    spec="REQUIRED DOUBLE 'positive'" />
+	 <RKSteps              spec="REQUIRED INTEGER 'positive'" />
+        <geom_object          spec="MULTIPLE" />
+        <Is_visc_flow         spec="REQUIRED BOOLEAN" />  <!-- FIXME: What is the default? -->
+        <Is_second_order      spec="REQUIRED BOOLEAN" />  <!-- FIXME: What is the default? -->
+      </MiniAero>
+
+
+</Uintah_Include>

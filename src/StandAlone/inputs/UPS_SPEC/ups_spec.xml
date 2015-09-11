@@ -365,7 +365,7 @@
                                     attribute1="type REQUIRED STRING
                                                 'arches,
                                                 burger,dosweep, ice,
-                                                impm, mpm,
+                                                impm, mpm, miniaero
                                                 mpmarches, 
                                                 mpmf, mpmice, amrmpm, wasatch, reduce_uda,
                                                 advectslabs,
@@ -671,6 +671,9 @@
     <include href="arches_spec.xml" section="CFD/ARCHES" />
 
   </CFD>
+  
+  
+  <include href="miniAero_spec.xml"/>
 
   <!--__________________________________-->
 
