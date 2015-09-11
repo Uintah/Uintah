@@ -836,12 +836,14 @@ DEF_WASATCH
 DEF_MODELS_RADIATION
 DEF_NO_FORTRAN
 DEF_MPM
+DEF_MINIAERO
 DEF_ICE
 DEF_ARCHES
 BUILD_WASATCH_FOR_ARCHES
 BUILD_WASATCH
 BUILD_MPM
 BUILD_MODELS_RADIATION
+BUILD_MINIAERO
 BUILD_ICE
 BUILD_ARCHES
 OGL_ERR_MACRO
@@ -981,6 +983,7 @@ enable_throw_level
 enable_rpath
 enable_arches
 enable_ice
+enable_miniaero
 enable_mpm
 enable_wasatch
 enable_all_components
@@ -1644,6 +1647,7 @@ Optional Features:
 --enable-rpath          Set a default runtime library search path
 --enable-arches         Turn on the Arches component - and Radiation Model.
 --enable-ice            Turn on the Ice component.
+--enable-miniaero       Turn on the MiniAero component.
 --enable-mpm            Turn on the Mpm component.
 --enable-wasatch        Turn on the Wasatch component.
 --enable-all-components Turn on the all components.
@@ -3934,6 +3938,18 @@ fi
 
 
 
+  # Check whether --enable-miniaero was given.
+if test "${enable_miniaero+set}" = set; then :
+  enableval=$enable_miniaero; BUILD_MINIAERO="yes"
+else
+  BUILD_MINIAERO="no"
+   DEF_MINIAERO="#define NO_MINIAERO"
+fi
+
+  sci_arg_enable_list="$sci_arg_enable_list --enable-miniaero --disable-miniaero"
+
+
+
   # Check whether --enable-mpm was given.
 if test "${enable_mpm+set}" = set; then :
   enableval=$enable_mpm; BUILD_MPM="yes"
@@ -3963,6 +3979,7 @@ if test "${enable_all_components+set}" = set; then :
   enableval=$enable_all_components; use_all_components="yes"
    BUILD_ARCHES="yes"
    BUILD_ICE="yes"
+   BUILD_MINIAERO="yes"
    BUILD_MPM="yes"
    BUILD_WASATCH="yes"
    DEF_ARCHES=
@@ -6509,6 +6526,8 @@ if test "$with_fortran" = no; then
 fi
 
 # NO_FORTRAN is used in configVars.mk[.in] and DEF_NO_FORTRAN is used in uintah_testdefs.h.in
+
+
 
 
 
