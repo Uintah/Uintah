@@ -508,7 +508,7 @@ namespace Wasatch {
     /**
      *  \brief This function updates the pressure coefficient matrix for boundary conditions
      */
-    void update_pressure_matrix( Uintah::CCVariable<Uintah::Stencil4>& pMatrix,
+    void update_pressure_matrix( Uintah::CCVariable<Uintah::Stencil7>& pMatrix,
                                  const SVolField* const svolFrac,
                                  const Uintah::Patch* patch );
 

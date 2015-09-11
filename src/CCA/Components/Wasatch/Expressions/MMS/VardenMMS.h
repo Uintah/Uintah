@@ -6,13 +6,12 @@
 #include <spatialops/structured/FVStaggered.h>
 
 #include <Core/Exceptions/ProblemSetupException.h>
-#include <CCA/Components/Wasatch/VardenParameters.h>
 #include <limits>
 #include <iostream>
 #include <fstream>
 #include <algorithm>
 
-#include <ctime>            // std::time
+#include <ctime>
 
 //--------------------------------------------------------------------
 
@@ -110,21 +109,14 @@ public:
     Builder( const Expr::Tag& result,
              const double rho0,
              const double rho1,
-             const Expr::Tag densTag,
-             const Expr::Tag densStarTag,
-             const Expr::Tag dens2StarTag,
-             const Expr::TagList& velTags,
              const Expr::Tag& xTag,
              const Expr::Tag& tTag,
-             const Expr::Tag& timestepTag,
-             const Wasatch::VarDenParameters varDenParams );
+             const Expr::Tag& dtTag);
     ~Builder(){}
     Expr::ExpressionBase* build() const;
   private:
     const double rho0_, rho1_;
-    const Expr::TagList velTs_;
-    const Expr::Tag densTag_, densStarTag_, dens2StarTag_, xTag_, tTag_, timestepTag_;
-    const Wasatch::VarDenParameters varDenParams_;
+    const Expr::Tag xTag_, tTag_, dtTag_;
   };
   
   void bind_operators( const SpatialOps::OperatorDatabase& opDB);
@@ -133,44 +125,15 @@ public:
 private:
   typedef typename SpatialOps::SingleValueField TimeField;
   
-  typedef SpatialOps::OperatorTypeBuilder< SpatialOps::GradientX, SVolField, SVolField >::type GradXT;
-  typedef SpatialOps::OperatorTypeBuilder< SpatialOps::GradientY, SVolField, SVolField >::type GradYT;
-  typedef SpatialOps::OperatorTypeBuilder< SpatialOps::GradientZ, SVolField, SVolField >::type GradZT;
-  
-  typedef SpatialOps::OperatorTypeBuilder< SpatialOps::Interpolant, XVolField, SVolField >::type X2SInterpOpT;
-  typedef SpatialOps::OperatorTypeBuilder< SpatialOps::Interpolant, YVolField, SVolField >::type Y2SInterpOpT;
-  typedef SpatialOps::OperatorTypeBuilder< SpatialOps::Interpolant, ZVolField, SVolField >::type Z2SInterpOpT;
-  
   VarDen1DMMSContinuitySrc( const double rho0,
                             const double rho1,
-                            const Expr::Tag densTag,
-                            const Expr::Tag densStarTag,
-                            const Expr::Tag dens2StarTag,
-                            const Expr::TagList& velTags,
                             const Expr::Tag& xTag,
                             const Expr::Tag& tTag,
-                            const Expr::Tag& timestepTag,
-                            const Wasatch::VarDenParameters varDenParams);
+                            const Expr::Tag& dtTag);
   const double rho0_, rho1_;
-  const bool doX_, doY_, doZ_, is3d_;
-  const double a0_;
-  const Wasatch::VarDenParameters::VariableDensityModels model_;
-  const bool useOnePredictor_;
-  const Wasatch::VarDenParameters varDenParams_;
   
   DECLARE_FIELD(FieldT, x_)
-  DECLARE_FIELD(XVolField, u_)
-  DECLARE_FIELD(YVolField, v_)
-  DECLARE_FIELD(ZVolField, w_)
-  DECLARE_FIELDS(SVolField, dens_, densStar_, dens2Star_)
   DECLARE_FIELDS(TimeField, t_, dt_)
-  
-  const GradXT* gradXOp_;
-  const GradYT* gradYOp_;
-  const GradZT* gradZOp_;
-  const X2SInterpOpT* x2SInterpOp_;
-  const Y2SInterpOpT* y2SInterpOp_;
-  const Z2SInterpOpT* z2SInterpOp_;
 };
 
 
@@ -199,11 +162,14 @@ public:
      */
     Builder( const Expr::Tag& result,
             const Expr::Tag continutySrcTag,
-            const Expr::Tag& timestepTag );
+            const Expr::Tag rhoStarTag,
+            const Expr::Tag fStarTag,
+            const Expr::Tag dRhoDfStarTag,
+            const Expr::Tag& dtTag );
     ~Builder(){}
     Expr::ExpressionBase* build() const;
   private:
-    const Expr::Tag continutySrcTag_, timestepTag_;
+    const Expr::Tag continutySrcTag_, rhoStarTag_, fStarTag_, dRhoDfStarTag_, dtTag_;
   };
   
   void evaluate();
@@ -211,11 +177,58 @@ public:
 private:
   
   VarDen1DMMSPressureContSrc( const Expr::Tag continutySrcTag,
-                            const Expr::Tag& timestepTag);
+                             const Expr::Tag rhoStarTag,
+                             const Expr::Tag fStarTag,
+                             const Expr::Tag dRhoDfStarTag,
+                            const Expr::Tag& dtTag);
 
   typedef typename SpatialOps::SingleValueField TimeField;
-  DECLARE_FIELD(FieldT, continutySrc_)
+  DECLARE_FIELDS(FieldT, continutySrc_, rhoStar_, fStar_, dRhoDfStar_)
   DECLARE_FIELD(TimeField, dt_)
 };
 
-#endif /* defined(__uintah_xcode_local__VardenMMS__) */
+/**
+ *  \class VarDenEOSCouplingMixFracSrc
+ *  \author Tony Saad
+ *  \date August, 2015
+ *  \brief Computes contributions from the scalar source of an MMS and adds those to the scalar EOS
+ coupling term which in turn feeds into the predicted div(u)^{n+1} constraint.
+ *
+ */
+template< typename FieldT >
+class VarDenEOSCouplingMixFracSrc : public Expr::Expression<FieldT>
+{
+  
+public:
+  struct Builder : public Expr::ExpressionBuilder
+  {
+    /**
+     * @param result          Tag of the resulting expression.
+     * @param mixFracSrcTag   Mixture fraction source term
+     * @param rhoStarTag      density at n+1
+     * @param dRhoDfStarTag   EOS Jacobian at n+1
+     */
+    Builder( const Expr::Tag& result,
+            const Expr::Tag mixFracSrcTag,
+            const Expr::Tag rhoStarTag,
+            const Expr::Tag dRhoDfStarTag);
+    ~Builder(){}
+    Expr::ExpressionBase* build() const;
+  private:
+    const Expr::Tag mixFracSrcTag_, rhoStarTag_, dRhoDfStarTag_;
+  };
+  
+  void evaluate();
+  
+private:
+  
+  VarDenEOSCouplingMixFracSrc( const Expr::Tag mixFracSrcTag,
+                             const Expr::Tag rhoStarTag,
+                             const Expr::Tag dRhoDfStarTag);
+  
+  typedef typename SpatialOps::SingleValueField TimeField;
+  DECLARE_FIELDS(FieldT, mixFracSrc_, rhoStar_, dRhoDfStar_)
+};
+
+
+#endif
