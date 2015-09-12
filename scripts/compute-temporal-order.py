@@ -198,7 +198,7 @@ for var in myvars:
   errAll = []
   for i in range(0,nLevels-1):
     diff = phiAll[i+1] - phiAll[i]
-    err = np.linalg.norm(diff,2)
+    err = np.linalg.norm(diff,1)
     print 'error', err
     errAll.append(err)
     

@@ -40,7 +40,7 @@
 #include <Core/Grid/Grid.h>
 #include <Core/Grid/Variables/VarLabel.h>
 #include <Core/Grid/Variables/Stencil7.h>
-#include <Core/Grid/Variables/Stencil7.h>
+#include <Core/Grid/Variables/Stencil4.h>
 #include <Core/Grid/Variables/CCVariable.h>
 #include <CCA/Components/Models/Radiation/RMCRT/Ray.h>
 
@@ -111,7 +111,7 @@ public:
              const Expr::Tag& celltypeTag,
              Uintah::Ray* rmcrt,
              Uintah::ProblemSpecP& radiationSpec,
-             Uintah::SimulationStateP sharedState,
+             Uintah::SimulationStateP& sharedState,
              Uintah::GridP& grid);
     ~Builder(){}
     Expr::ExpressionBase* build() const;

@@ -41,7 +41,7 @@
 #include <CCA/Components/Wasatch/Expressions/BoundaryConditions/BoundaryConditionBase.h>
 #include <CCA/Components/Wasatch/Expressions/BoundaryConditions/BoundaryConditions.h>
 #include <CCA/Components/Wasatch/BCHelper.h>
-#include <CCA/Components/Wasatch/Expressions/ScalarEOSCoupling.h>
+
 //-- Uintah includes --//
 #include <Core/Parallel/Parallel.h>
 #include <Core/ProblemSpec/ProblemSpec.h>
@@ -187,6 +187,18 @@ namespace Wasatch{
         convFluxParams=convFluxParams->findNextBlock("ConvectiveFlux") )
     {
       setup_convective_flux_expression<FieldT>( convFluxParams, solnVarTag, "", factory, info );
+      
+      if( !isConstDensity_ ){
+        std::string dir;
+        convFluxParams->getAttribute("direction",dir);
+        const TagNames& tagNames = TagNames::self();
+        Expr::Tag convFluxTag = Expr::Tag( solnVarName_ + tagNames.convectiveflux + dir, Expr::STATE_NONE );
+        factory.cleave_from_children( factory.get_id(convFluxTag) );
+
+        setup_convective_flux_expression<FieldT>( convFluxParams, solnVarTag, TagNames::self().star, factory, infoStar_ );
+        Expr::Tag convFluxStarTag = Expr::Tag( solnVarName_ + tagNames.star + tagNames.convectiveflux + dir, Expr::STATE_NONE );
+        factory.cleave_from_children( factory.get_id(convFluxStarTag) );
+      }
     }
   }
 
@@ -214,13 +226,11 @@ namespace Wasatch{
   {
 
     typedef typename ScalarRHS<FieldT>::Builder RHSBuilder;
-    typedef typename ScalarEOSCoupling<FieldT>::Builder ScalarEOSBuilder;
     Expr::ExpressionFactory& factory = *gc_[ADVANCE_SOLUTION]->exprFactory;
     const TagNames& tagNames = TagNames::self();
 
     info[PRIMITIVE_VARIABLE] = primVarTag_;
 
-    // for variable density flows:
     if( !isConstDensity_ || !isStrong_ ){
       factory.register_expression( new typename PrimVar<FieldT,SVolField>::Builder( primVarTag_, solnVarTag_, densityTag_) );
 
@@ -240,19 +250,7 @@ namespace Wasatch{
         }
         const Expr::Tag solnVarTagNp1( solnVarTag_.name(), Expr::STATE_NONE );
         factory.register_expression( new typename PrimVar<FieldT,SVolField>::Builder( primVarStarTag, solnVarTagNp1, densityStarTag ) );
-
-        const Expr::Tag scalEOSTag (primVarStarTag.name() + "_EOS_Coupling", Expr::STATE_NONE);
-        const Expr::Tag dRhoDfStarTag("drhod" + primVarStarTag.name(), Expr::STATE_NONE);
-        factory.register_expression( scinew ScalarEOSBuilder( scalEOSTag, infoStar_, srcTags, densityStarTag, dRhoDfStarTag, isStrong_) );
-        
-        // register an expression for divu. divu is just a constant expression to which we add the
-        // necessary couplings from the scalars that represent the equation of state.
-        if( !factory.have_entry( tagNames.divu ) ) { // if divu has not been registered yet, then register it!
-          typedef typename Expr::ConstantExpr<SVolField>::Builder divuBuilder;
-          factory.register_expression( new divuBuilder(tagNames.divu, 0.0)); // set the value to zero so that we can later add sources to it
-        }
-
-        factory.attach_dependency_to_expression(scalEOSTag, tagNames.divu);
+        factory.register_expression( scinew RHSBuilder( rhsStarTag, infoStar_, srcTags, densityStarTag, isConstDensity_, isStrong_, tagNames.drhodtstar ) );
       }
     }
 

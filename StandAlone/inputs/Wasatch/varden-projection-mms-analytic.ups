@@ -21,7 +21,7 @@
         <NameTag name="XSVOL"/>
       </GaussianFunction>
     </BasicExpression>
-
+    <VariableDensity model="IMPULSE" coefficient="1.0"/>
     <!-- Set up a tabular property evaluation to extract density for initialization-->
     <TwoStreamMixing rho1="2" rho0="1">
       <Density>
@@ -149,12 +149,15 @@
     <outputInitTimestep/>
     <checkpoint cycle="2" interval="0.001"/>
     <save label="density"/>
-    <save label="density*"/>    
+    <save label="u*"/>
+    <save label="density*"/>
+    <save label="density**"/>
     <save label="x-mom"/>
     <save label="x-mom_rhs_partial"/>
     <save label="u"/>
     <save label="mms_mixture_fraction_src"/>
-    <save label="f"/>    
+    <save label="f"/>
+    <save label="varden_alpha"/>
     <save label="rhof"/>
     <save label="pressure"/>
     <save label="pressure_src"/>

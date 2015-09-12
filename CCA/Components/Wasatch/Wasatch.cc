@@ -541,6 +541,13 @@ namespace Wasatch{
     parse_turbulence_input(turbulenceModelParams, turbParams);
 
     //
+    // get the variable density model params, if any, and parse them.
+    //
+    Uintah::ProblemSpecP varDenModelParams = wasatchSpec_->findBlock("VariableDensity");
+    VarDenParameters varDenParams;
+    parse_varden_input(varDenModelParams, varDenParams);
+
+    //
     // Build transport equations.  This registers all expressions as
     // appropriate for solution of each transport equation.
     //
@@ -584,6 +591,7 @@ namespace Wasatch{
           // note - parse_momentum_equations returns a vector of equation adaptors
           const EquationAdaptors adaptors = parse_momentum_equations( momEqnParams,
                                                                       turbParams,
+                                                                      varDenParams,
                                                                       useAdaptiveDt,
                                                                       isConstDensity,
                                                                       densityTag,
@@ -847,7 +855,6 @@ namespace Wasatch{
       }
       proc0cout << "------------------------------------------------\n";
 
-      process_field_clipping( wasatchSpec_, graphCategories_, allPatches );
       // -----------------------------------------------------------------------
       try{
         TaskInterface* const task = scinew TaskInterface( icGraphHelper->rootIDs,

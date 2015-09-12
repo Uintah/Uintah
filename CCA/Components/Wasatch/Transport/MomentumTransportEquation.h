@@ -32,6 +32,7 @@
 #include <CCA/Components/Wasatch/FieldTypes.h>
 #include <CCA/Components/Wasatch/BCHelperTools.h>
 #include <CCA/Components/Wasatch/Expressions/Turbulence/TurbulenceParameters.h>
+#include <CCA/Components/Wasatch/VardenParameters.h>
 #include <CCA/Components/Wasatch/Transport/TransportEquation.h>
 
 //-- Uintah includes --//
@@ -84,6 +85,7 @@ namespace Wasatch{
      *  \param gc
      *  \param params Parser information for this momentum equation
      *  \param turbulenceParams
+     *  \param varDenParams
      *  \param linSolver the linear solver object for the pressure solve
      *  \param sharedState contains useful stuff like the value of timestep, etc.
      */
@@ -96,6 +98,7 @@ namespace Wasatch{
                                GraphCategories& gc,
                                Uintah::ProblemSpecP params,
                                TurbulenceParameters turbulenceParams,
+                               VarDenParameters varDenParams,
                                Uintah::SolverInterface& linSolver,
                                Uintah::SimulationStateP sharedState );
 

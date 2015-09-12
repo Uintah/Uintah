@@ -79,7 +79,7 @@ namespace Wasatch {
    *  \param material The Uintah material ID (an integer).
    */      
   void update_poisson_rhs( const Expr::Tag& poissonTag,
-                            Uintah::CCVariable<Uintah::Stencil7>& poissonMatrix,
+                            Uintah::CCVariable<Uintah::Stencil4>& poissonMatrix,
                             SVolField& poissonField,
                             SVolField& poissonRHS,
                             const Uintah::Patch* patch,
@@ -103,7 +103,7 @@ namespace Wasatch {
    *  \param material The Uintah material ID (an integer).
    */    
   void update_poisson_matrix( const Expr::Tag& poissonTag,
-                               Uintah::CCVariable<Uintah::Stencil7>& poissonMatrix,
+                               Uintah::CCVariable<Uintah::Stencil4>& poissonMatrix,
                                const Uintah::Patch* patch,
                                const int material);
   /**
@@ -124,7 +124,7 @@ namespace Wasatch {
    *  \param refCell A SCIRun::IntVector that designates the reference cell. 
                      This defaults to [1,1,1].
    */  
-  void set_ref_poisson_coefs( Uintah::CCVariable<Uintah::Stencil7>& pressureMatrix,
+  void set_ref_poisson_coefs( Uintah::CCVariable<Uintah::Stencil4>& pressureMatrix,
                                const Uintah::Patch* patch,
                                const SCIRun::IntVector refCell );
 

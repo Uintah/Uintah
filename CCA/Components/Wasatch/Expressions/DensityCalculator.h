@@ -65,11 +65,10 @@ protected:
 
   virtual const std::pair<double,double>& get_bounds( const unsigned i ) const =0;
 
-  const double rtol_;    ///< relative error tolerance
-  const unsigned maxIter_; ///< maximum number of iterations
-
 private:
   const int neq_;        ///< number of equations to solve
+  const double rtol_;    ///< relative error tolerance
+  const unsigned maxIter_; ///< maximum number of iterations
   DoubleVec jac_, res_;
   std::vector<int> ipiv_;  ///< integer work array for linear solver
 };
@@ -94,9 +93,7 @@ class DensFromMixfrac : public Expr::Expression<FieldT>, protected DensityCalcul
   DECLARE_FIELD(FieldT, rhoF_)
   
   DensFromMixfrac( const InterpT& rhoEval,
-                   const Expr::Tag& rhoFTag,
-                  const double rtol,
-                  const unsigned maxIter);
+                   const Expr::Tag& rhoFTag );
 
   void calc_jacobian_and_res( const DoubleVec& passThrough,
                               const DoubleVec& soln,
@@ -120,17 +117,13 @@ public:
      */
     Builder( const InterpT& rhoEval,
              const Expr::TagList& resultsTag,
-             const Expr::Tag& rhoFTag,
-             const double rtol,
-             const unsigned maxIter);
+             const Expr::Tag& rhoFTag );
     ~Builder(){ delete rhoEval_; }
     Expr::ExpressionBase* build() const;
 
   private:
     const InterpT* const rhoEval_;
     const Expr::Tag rhoFTag_;
-    const double rtol_;    ///< relative error tolerance
-    const unsigned maxIter_; ///< maximum number of iterations    
   };
 
   ~DensFromMixfrac();
@@ -229,7 +222,7 @@ public:
 
 /**
  *  \class TwoStreamMixingDensity
- *  \author James C. Sutherland, Tony Saad
+ *  \author James C. Sutherland
  *  \date   November, 2013
  *
  *  \brief Computes the density from the density-weighted mixture fraction.
@@ -268,7 +261,7 @@ public:
      *  @brief Build a TwoStreamMixingDensity expression
      *  @param resultTag the tag for the value that this expression computes
      */
-    Builder( const Expr::TagList& resultsTagList,
+    Builder( const Expr::Tag& resultTag,
              const Expr::Tag& rhofTag,
              const double rho0,
              const double rho1 );

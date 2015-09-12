@@ -9,7 +9,7 @@
   <Wasatch>
     <TimeIntegrator> FE </TimeIntegrator>    
 
-		
+		<VariableDensity model="IMPULSE" coefficient="0.1">
 		<UseOnePredictor/>
 		</VariableDensity>
     <Density>
@@ -174,14 +174,17 @@
     <outputTimestepInterval>1000</outputTimestepInterval>
     <outputInitTimestep/>
     <checkpoint cycle="0" interval="0"/>
-    <save label="density"/>    
+    <save label="density"/>
+    <save label="u*"/>
     <save label="density*"/>
+
     <save label="x-mom"/>
     <save label="x-mom_rhs_partial"/>
     <save label="u"/>
     <save label="mms_mixture_fraction_src"/>
     <save label="f"/>
-    <save label="rhof"/>    
+    <save label="rhof"/>
+    <save label="varden_alpha"/>
     <save label="pressure"/>
     <save label="pressure_src"/>
   </DataArchiver> 

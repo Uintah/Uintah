@@ -50,12 +50,13 @@ CUDA_ENABLED_SRCS =       \
      PressureSource       \
      PrimVar              \
      ScalarRHS            \
-     ScalarEOSCoupling    \
 	 SetCurrentTime       \
      SimpleEmission		  \
      SolnVarEst           \
      Strain               \
      ScalabilityTestSrc   \
+     WeakConvectiveTerm   \
+     DivmomStar	          \
      VelEst        \
      ExprAlgebra   \
      TimeAdvance
@@ -154,9 +155,6 @@ ifeq ($(HAVE_CUDA),yes)
   $(OBJTOP_ABS)/$(SRCDIR)/ScalarRHS.cu : $(SRCTOP_ABS)/$(SRCDIR)/ScalarRHS.cc
 	cp $< $@
 
-  $(OBJTOP_ABS)/$(SRCDIR)/ScalarRHS.cu : $(SRCTOP_ABS)/$(SRCDIR)/ScalarEOSCoupling.cc
-	cp $< $@
-
   $(OBJTOP_ABS)/$(SRCDIR)/SetCurrentTime.cu : $(SRCTOP_ABS)/$(SRCDIR)/SetCurrentTime.cc
 	cp $< $@
 
@@ -170,6 +168,12 @@ ifeq ($(HAVE_CUDA),yes)
 	cp $< $@
 
   $(OBJTOP_ABS)/$(SRCDIR)/ScalabilityTestSrc.cu : $(SRCTOP_ABS)/$(SRCDIR)/ScalabilityTestSrc.cc
+	cp $< $@
+
+  $(OBJTOP_ABS)/$(SRCDIR)/WeakConvectiveTerm.cu : $(SRCTOP_ABS)/$(SRCDIR)/WeakConvectiveTerm.cc
+	cp $< $@
+
+  $(OBJTOP_ABS)/$(SRCDIR)/DivmomStar.cu : $(SRCTOP_ABS)/$(SRCDIR)/DivmomStar.cc
 	cp $< $@
 
   $(OBJTOP_ABS)/$(SRCDIR)/VelEst.cu : $(SRCTOP_ABS)/$(SRCDIR)/VelEst.cc

@@ -77,11 +77,9 @@ bool DensityCalculatorBase::solve( const DoubleVec& passThrough,
 template< typename FieldT >
 DensFromMixfrac<FieldT>::
 DensFromMixfrac( const InterpT& rhoEval,
-                 const Expr::Tag& rhoFTag,
-                const double rtol,
-                const unsigned maxIter)
+                 const Expr::Tag& rhoFTag )
   : Expr::Expression<FieldT>(),
-    DensityCalculatorBase( 1, rtol, maxIter ),
+    DensityCalculatorBase( 1, 1e-6, 5 ),
     rhoEval_( rhoEval ),
     bounds_( rhoEval.get_bounds()[0] )
 {
@@ -113,18 +111,16 @@ evaluate()
   // we would only need one field, not two...
   FieldT& rho = *results[0];
   FieldT& badPts = *results[1];
-  FieldT& drhodf = *results[2];
   badPts <<= 0.0;
 
   const FieldT& rhoF = rhoF_->field_ref();
   typename FieldT::const_iterator irhoF = rhoF.begin();
   typename FieldT::iterator irho = rho.begin();
   typename FieldT::iterator ibad = badPts.begin();
-  typename FieldT::iterator idrhodf = drhodf.begin();
   const typename FieldT::iterator irhoe = rho.end();
   size_t nbad = 0;
   DoubleVec soln(1), vals(1);
-  for( ; irho!=irhoe; ++irho, ++irhoF, ++ibad, ++idrhodf){
+  for( ; irho!=irhoe; ++irho, ++irhoF, ++ibad){
     vals[0] = *irhoF;
     soln[0] = *irhoF / *irho;   // initial guess for the mixture fraction
     const bool converged = this->solve( vals, soln );  // soln contains the mixture fraction
@@ -133,9 +129,6 @@ evaluate()
       *ibad = 1.0;
     }
     *irho = *irhoF / soln[0];
-
-    const double& f = soln[0];
-    *idrhodf = rhoEval_.derivative(&f, 0);
   }
   if( nbad>0 ){
     std::cout << "\tConvergence failed at " << nbad << " points.\n";
@@ -183,14 +176,10 @@ template< typename FieldT >
 DensFromMixfrac<FieldT>::
 Builder::Builder( const InterpT& rhoEval,
                   const Expr::TagList& resultsTag,
-                  const Expr::Tag& rhoFTag,
-                 const double rtol,
-                 const unsigned maxIter)
+                  const Expr::Tag& rhoFTag  )
   : ExpressionBuilder( resultsTag ),
     rhoEval_( rhoEval.clone() ),
-    rhoFTag_(rhoFTag          ),
-    rtol_   (rtol             ),
-    maxIter_(maxIter          )
+    rhoFTag_(rhoFTag)
 {
   if( resultsTag[0].context() != Expr::CARRY_FORWARD ){
     std::ostringstream msg;
@@ -207,7 +196,7 @@ Expr::ExpressionBase*
 DensFromMixfrac<FieldT>::
 Builder::build() const
 {
-  return new DensFromMixfrac<FieldT>( *rhoEval_, rhoFTag_, rtol_, maxIter_ );
+  return new DensFromMixfrac<FieldT>( *rhoEval_, rhoFTag_ );
 }
 
 
@@ -399,32 +388,25 @@ TwoStreamMixingDensity<FieldT>::
 evaluate()
 {
   using namespace SpatialOps;
-  //FieldT& result = this->value();
-  typename Expr::Expression<FieldT>::ValVec& results  = this->get_value_vec();
-  FieldT& rho    = *results[0];
-  FieldT& drhodf = *results[1];
-
-  
+  FieldT& result = this->value();
   const FieldT& rf = rhof_->field_ref();
   
   // compute the density in one shot from rhof
-  rho <<= rho0_ + (1 - rho0_/rho1_)*rf;
+  result <<= rho0_ + (1 - rho0_/rho1_)*rf;
 
   // repair bounds
-  rho <<= max ( min(rho, rhoMax_), rhoMin_);
-  
-  drhodf <<= (1/rho0_ - 1/rho1_)*rho*rho;
+  result <<= max ( min(result, rhoMax_), rhoMin_);
 }
 
 //--------------------------------------------------------------------
 
 template< typename FieldT >
 TwoStreamMixingDensity<FieldT>::
-Builder::Builder( const Expr::TagList& resultsTagList,
+Builder::Builder( const Expr::Tag& resultTag,
                   const Expr::Tag& rhofTag,
                   const double rho0,
                   const double rho1 )
-  : ExpressionBuilder( resultsTagList ),
+  : ExpressionBuilder( resultTag ),
     rho0_(rho0), rho1_(rho1),
     rhofTag_( rhofTag )
 {}

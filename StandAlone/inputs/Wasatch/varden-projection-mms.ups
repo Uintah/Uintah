@@ -15,8 +15,7 @@
     
     <!-- Setup the parameters for variable density MMS -->
     <VariableDensityMMS>
-       <Scalar>f</Scalar>    
-       <ConservedScalar>rhof</ConservedScalar>           
+       <scalar>rhof</scalar>    
     </VariableDensityMMS>
 
     <!-- Set the initial condition expression for mixture fraction -->
@@ -60,9 +59,6 @@
           <DensityWeightedMixtureFraction>
             <NameTag name="rhof" state="STATE_DYNAMIC"/>
           </DensityWeightedMixtureFraction>       
-          <MixtureFraction>
-            <NameTag name="f"/>
-          </MixtureFraction>                 
         </ModelBasedOnMixtureFraction>
       </ExtractDensity>
       
@@ -206,8 +202,10 @@
     <outputTimestepInterval>1</outputTimestepInterval>
     <outputInitTimestep/>
     <checkpoint cycle="2" interval="0.001"/>
-    <save label="density"/>    
-    <save label="density*"/>    
+    <save label="density"/>
+    <save label="u*"/>
+    <save label="density*"/>
+    <save label="density**"/>
     <save label="x-mom"/>
     <save label="x-mom_rhs_partial"/>
     <save label="u"/>

@@ -139,7 +139,8 @@ namespace Wasatch{
   enum DensityEvaluationLevel
   {
     NORMAL,
-    STAR
+    STAR,
+    STARSTAR
   };
 
   Expr::ExpressionID
@@ -168,22 +169,15 @@ namespace Wasatch{
     switch (densLevel){
       case NORMAL    : tagNameAppend=scalarTagNameAppend="";                          break;
       case STAR      : tagNameAppend=TagNames::self().star; scalarTagNameAppend = ""; break;
+      case STARSTAR  : tagNameAppend=scalarTagNameAppend=TagNames::self().doubleStar; break;
     }
 
     densityTag.name() += tagNameAppend;
 
-    double rtol = 1e-6;
-    int maxIter = 5;
-    
-    if (params->findAttribute("tolerance")) params->getAttribute("tolerance",rtol);
-    if (params->findAttribute("maxiter")) params->getAttribute("maxiter",maxIter);
-    std::cout << "max iter = " << maxIter << std::endl;
-    std::cout << "rtol = " << rtol << std::endl;
     if( params->findBlock("ModelBasedOnMixtureFraction") ){
 
       const Uintah::ProblemSpecP modelParams = params->findBlock("ModelBasedOnMixtureFraction");
       Expr::Tag rhofTag = parse_nametag( modelParams->findBlock("DensityWeightedMixtureFraction")->findBlock("NameTag") );
-      Expr::Tag fTag = parse_nametag(modelParams->findBlock("MixtureFraction")->findBlock("NameTag"));
       if( densLevel != NORMAL   ) rhofTag.context() = Expr::STATE_NONE;
       rhofTag.name() += scalarTagNameAppend;
 
@@ -192,11 +186,8 @@ namespace Wasatch{
       Expr::Tag unconvPts = TagNames::self().unconvergedpts;
       unconvPts.name() += tagNameAppend;
       
-      Expr::Tag drhodfTag("drhod" + fTag.name(), Expr::STATE_NONE);
-      drhodfTag.name() += tagNameAppend;
-      
-      const Expr::TagList theTagList( tag_list( densityTag, unconvPts,drhodfTag ));
-      densCalcID = factory.register_expression( scinew DensCalc( *densInterp, theTagList, rhofTag, rtol, (size_t) maxIter) );
+      const Expr::TagList theTagList( tag_list( densityTag, unconvPts));
+      densCalcID = factory.register_expression( scinew DensCalc( *densInterp, theTagList, rhofTag ) );
 
     }
     else if( params->findBlock("ModelBasedOnMixtureFractionAndHeatLoss") ){
@@ -341,7 +332,9 @@ namespace Wasatch{
         gh.exprFactory->register_expression( scinew PropEvaluator( dvarTag, *interp, ivarNames ) );
         if( doDenstPlus && dvarTableName=="Density" ){
           const Expr::Tag densStarTag ( dvarTag.name()+TagNames::self().star,       dvarTag.context() );
+          const Expr::Tag densStar2Tag( dvarTag.name()+TagNames::self().doubleStar, dvarTag.context() );
           gh.rootIDs.insert( gh.exprFactory->register_expression( scinew PropEvaluator( densStarTag,  *interp, ivarNames ) ) );
+          gh.rootIDs.insert( gh.exprFactory->register_expression( scinew PropEvaluator( densStar2Tag, *interp, ivarNames ) ) );
         }
         break;
       }
@@ -407,9 +400,9 @@ namespace Wasatch{
       parse_density_solver( densityParams, table, densityTag, NORMAL, gh, lockedFields );
       if( doDenstPlus ){
         const Expr::ExpressionID id1 = parse_density_solver( densityParams, table, densityTag, STAR,     gh, lockedFields );
-        //const Expr::ExpressionID id2 = parse_density_solver( densityParams, table, densityTag, STARSTAR, gh, lockedFields );
+        const Expr::ExpressionID id2 = parse_density_solver( densityParams, table, densityTag, STARSTAR, gh, lockedFields );
         gh.exprFactory->cleave_from_children( id1 );
-        //gh.exprFactory->cleave_from_children( id2 );
+        gh.exprFactory->cleave_from_children( id2 );
       }
     }
 
@@ -437,27 +430,27 @@ namespace Wasatch{
 
       if( doDenstPlus ){
         const Expr::Tag icRhoStarTag ( rhoTag.name()+TagNames::self().star,       Expr::STATE_NONE );
-//        const Expr::Tag icRhoStar2Tag( rhoTag.name()+TagNames::self().doubleStar, Expr::STATE_NONE );
+        const Expr::Tag icRhoStar2Tag( rhoTag.name()+TagNames::self().doubleStar, Expr::STATE_NONE );
         gh.rootIDs.insert( gh.exprFactory->register_expression( scinew ICDensExpr(icRhoStarTag, fTag,rho0,rho1) ) );
-//        gh.rootIDs.insert( gh.exprFactory->register_expression( scinew ICDensExpr(icRhoStar2Tag,fTag,rho0,rho1) ) );
+        gh.rootIDs.insert( gh.exprFactory->register_expression( scinew ICDensExpr(icRhoStar2Tag,fTag,rho0,rho1) ) );
       }
     }
 
     typedef TwoStreamMixingDensity<SVolField>::Builder DensExpr;
-    const Expr::Tag drhodfTag("drhod" + fTag.name(), Expr::STATE_NONE);
-    const Expr::TagList theTagList( tag_list( rhoTag, drhodfTag ));
-    gc[ADVANCE_SOLUTION]->exprFactory->register_expression( scinew DensExpr(theTagList,rhofTag,rho0,rho1) );
+    gc[ADVANCE_SOLUTION]->exprFactory->register_expression( scinew DensExpr(rhoTag,rhofTag,rho0,rho1) );
 
     if( doDenstPlus ){
       const TagNames& names = TagNames::self();
 
       Expr::Tag rhoStar ( rhoTag .name()+names.star, rhoTag.context() );
       Expr::Tag rhofStar( rhofTag.name(), Expr::STATE_NONE );
+      const Expr::ExpressionID id1 = gc[ADVANCE_SOLUTION]->exprFactory->register_expression( scinew DensExpr(rhoStar,rhofStar,rho0,rho1) );
 
-      const Expr::Tag drhodfStarTag("drhod" + fTag.name() + "*", Expr::STATE_NONE);
-      const Expr::TagList theTagList( tag_list( rhoStar, drhodfStarTag ));
-      const Expr::ExpressionID id1 = gc[ADVANCE_SOLUTION]->exprFactory->register_expression( scinew DensExpr(theTagList,rhofStar,rho0,rho1) );
+      rhoStar .name() = rhoTag.name()  + names.doubleStar;
+      rhofStar.name() = rhofTag.name() + names.doubleStar;
+      const Expr::ExpressionID id2 = gc[ADVANCE_SOLUTION]->exprFactory->register_expression( scinew DensExpr(rhoStar,rhofStar,rho0,rho1) );
       gc[ADVANCE_SOLUTION]->exprFactory->cleave_from_children(id1);
+      gc[ADVANCE_SOLUTION]->exprFactory->cleave_from_children(id2);
     }
   }
 
@@ -482,6 +475,14 @@ namespace Wasatch{
 
       // Here we get the variables needed for calculations at the stage "*"
       const Expr::Tag solnVarTagNp1  ( solnVarName,                 Expr::STATE_NONE ); // tag for rhof_{n+1}
+
+      // Here we get the variables needed for calculations at the stage "**"
+      const Expr::Tag solnVarRHSStarTag = tagNames.make_star_rhs(solnVarName);;
+      const Expr::Tag solnVar2StarTag   = tagNames.make_double_star(solnVarName);
+
+      if( !solnGraphHelper.exprFactory->have_entry( solnVar2StarTag ) ){
+        solnGraphHelper.exprFactory->register_expression( scinew SolnVarEst<SVolField>::Builder( solnVar2StarTag, solnVarTagNp1, solnVarRHSStarTag, tagNames.dt ));
+      }
     }
   }
 
@@ -528,6 +529,8 @@ namespace Wasatch{
       const Category cat = parse_tasklist( tabPropsParams,false);
       parse_tabprops( tabPropsParams, *gc[cat], cat, doDenstPlus, lockedFields );
     }
+
+    if( doDenstPlus ) setup_scalar_predictors( params, *gc[ADVANCE_SOLUTION] );
   }
 
   //====================================================================
