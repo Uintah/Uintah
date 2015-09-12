@@ -109,15 +109,17 @@ namespace Wasatch{
 
     // varden
     const std::string
-    star, rhs;
+    star, doubleStar, rhs;
     
     const std::string
     convectiveflux, diffusiveflux;
     
     const Expr::Tag
     pressuresrc,
-    divu, drhodtstar, drhodtstarnp1,
-    drhodt,drhodtnp1,unconvergedpts;
+    vardenalpha, vardenbeta,
+    divmomstar, drhodtstar,
+    drhodt,drhodtnp1,
+    unconvergedpts;
     
     // mms varden
     const Expr::Tag
@@ -132,8 +134,15 @@ namespace Wasatch{
     const Expr::Tag make_star(T someTag,
                               Expr::Context newContext=Expr::STATE_NONE) const;
     template < typename T >
+    const Expr::Tag make_double_star(T someTag,
+                                     Expr::Context newContext=Expr::STATE_NONE) const;
+    template < typename T >
     const Expr::Tag make_star_rhs(T someTag,
                                   Expr::Context newContext=Expr::STATE_NONE) const;
+    template < typename T >
+    const Expr::Tag make_double_star_rhs(T someTag,
+                                         Expr::Context newContext=Expr::STATE_NONE) const;
+
   private:
     TagNames();
   };

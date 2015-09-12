@@ -101,13 +101,15 @@ namespace Wasatch{
   
   // predictor related variables
   star("*"),
+  doubleStar("**"),
   rhs("_rhs"),
   convectiveflux("_convFlux_"),
   diffusiveflux("_diffFlux_"),
   pressuresrc( "pressure_src", Expr::STATE_NONE ),
-  divu       ("divu",Expr::STATE_NONE),
+  vardenalpha( "varden_alpha", Expr::STATE_NONE ),
+  vardenbeta ( "varden_beta",  Expr::STATE_NONE ),
+  divmomstar ( "divmom*",     Expr::STATE_NONE ),
   drhodtstar ( "drhodt*",     Expr::STATE_NONE ),
-  drhodtstarnp1 ( "drhodt*",     Expr::STATE_NP1 ),
   drhodt     ( "drhodt",       Expr::STATE_NONE ),
   drhodtnp1  ( "drhodt",       Expr::STATE_NP1  ),
   unconvergedpts("UnconvergedPts", Expr::STATE_NONE),
@@ -116,6 +118,7 @@ namespace Wasatch{
   mms_mixfracsrc( "mms_mixture_fraction_src", Expr::STATE_NONE ),
   mms_continuitysrc("mms_continuity_src", Expr::STATE_NONE),
   mms_pressurecontsrc("mms_pressure_continuity_src", Expr::STATE_NONE),
+  
   // postprocessing
   continuityresidual( "ContinuityResidual", Expr::STATE_NONE )
   
@@ -130,10 +133,24 @@ namespace Wasatch{
   }
   
   template<>
+  const Expr::Tag TagNames::make_double_star(Expr::Tag someTag,
+                                             Expr::Context newContext) const
+  {
+    return Expr::Tag(someTag.name() + doubleStar, newContext);
+  }
+  
+  template<>
   const Expr::Tag TagNames::make_star_rhs(Expr::Tag someTag,
                                       Expr::Context newContext) const
   {
     return Expr::Tag(someTag.name() + star + rhs, newContext);
+  }
+
+  template<>
+  const Expr::Tag TagNames::make_double_star_rhs(Expr::Tag someTag,
+                                             Expr::Context newContext) const
+  {
+    return Expr::Tag(someTag.name() + doubleStar + rhs, newContext);
   }
 
   template<>
@@ -144,12 +161,26 @@ namespace Wasatch{
   }
   
   template<>
+  const Expr::Tag TagNames::make_double_star(std::string someName,
+                                             Expr::Context newContext) const
+  {
+    return Expr::Tag(someName + doubleStar, newContext);
+  }
+  
+  template<>
   const Expr::Tag TagNames::make_star_rhs(std::string someName,
                                           Expr::Context newContext) const
   {
     return Expr::Tag(someName + star + rhs, newContext);
   }
   
+  template<>
+  const Expr::Tag TagNames::make_double_star_rhs(std::string someName,
+                                                 Expr::Context newContext) const
+  {
+    return Expr::Tag(someName + doubleStar + rhs, newContext);
+  }
+
 
   //------------------------------------------------------------------
 

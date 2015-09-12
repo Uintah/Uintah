@@ -83,6 +83,7 @@ ifeq ($(BUILD_WASATCH_FOR_ARCHES),no)
         $(SRCDIR)/ReductionHelper.cc                 \
         $(SRCDIR)/TagNames.cc                        \
         $(SRCDIR)/TaskInterface.cc                   \
+        $(SRCDIR)/VardenParameters.cc                \
         $(SRCDIR)/WasatchParticlesHelper.cc          
 endif
 

@@ -11,12 +11,9 @@
 
 		<!-- ================================================================================== -->            
 		<!-- Specification of the diffusive flux -->
-    <!-- The coefficient attribute will always take precedence over the DiffusionCoefficient below-->		
-    <!-- isvelocity determines whether the coefficient that the user has provided rho*gamma instead of gamma-->		    
 		<DiffusiveFlux  spec="OPTIONAL NO_DATA"
 										attribute1="direction REQUIRED STRING 'X,Y,Z,XY,XZ,YZ,XYZ'"																														
-										attribute2="coefficient OPTIONAL DOUBLE" 
-										attribute3="isvelocity OPTIONAL BOOLEAN">
+										attribute2="coefficient OPTIONAL DOUBLE" > <!-- The coefficient attribute will always take precedence over the DiffusionCoefficient below-->
 
 			<!-- specify an expression for the diffusion coefficient. A diffusive flux expression will be built. -->
 			<DiffusionCoefficient   spec="OPTIONAL NO_DATA">
@@ -732,7 +729,17 @@
                 attribute2="name REQUIRED STRING" />          
       <NameTag  spec="OPTIONAL" />
     </Density>   
-        
+    
+    <!-- =========================================================================== -->
+    <!-- CAUTION! FOR DEVELOPER USE ONLY -->
+    <!-- =========================================================================== -->
+    <VariableDensity spec="OPTIONAL NO_DATA" 
+                     attribute1="model REQUIRED STRING 'CONSTANT, IMPULSE, SMOOTHIMPULSE, DYNAMIC'"
+                     attribute2="coefficient REQUIRED DOUBLE">
+      <ImpulseWidth spec="OPTIONAL DOUBLE" need_applies_to="model SMOOTHIMPULSE"/>
+      <UseOnePredictor spec="OPTIONAL NO_DATA"/>
+    </VariableDensity>
+    
     <!-- ============================ -->
     <!-- Spec for a TransportEquation -->
     <!-- ============================ -->
@@ -862,8 +869,7 @@
       <D       spec="OPTIONAL DOUBLE"/>                                   
       <rho0    spec="OPTIONAL DOUBLE"/>                                   
       <rho1    spec="OPTIONAL DOUBLE"/>                               
-      <Scalar  spec="REQUIRED STRING"/>
-      <ConservedScalar  spec="REQUIRED STRING"/> <!-- The conserved scalar is created by the transport equation. just Specify the name here -->      
+      <scalar  spec="REQUIRED STRING"/>
     </VariableDensityMMS>
 
     <VarDenOscillatingMMS  spec="OPTIONAL NO_DATA"
@@ -1133,9 +1139,7 @@
                                          ModelBasedOnMixtureFraction,
                                          ModelBasedOnMixtureFractionAndHeatLoss
                                        )"
-                      children2="ONE_OF( CHILD NameTag)"
-                      attribute1="tolerance OPTIONAL DOUBLE"
-                      attribute2="maxiter OPTIONAL INTEGER">
+                      children2="ONE_OF( CHILD NameTag)">
         
         <!-- name for the density: -->       
         <NameTag      spec="REQUIRED" />
@@ -1149,9 +1153,6 @@
           <DensityWeightedMixtureFraction spec="REQUIRED NO_DATA">
             <NameTag          spec="REQUIRED" />
           </DensityWeightedMixtureFraction>
-          <MixtureFraction spec="REQUIRED NO_DATA">
-            <NameTag spec="REQUIRED"/>
-          </MixtureFraction>
         </ModelBasedOnMixtureFraction>
         
         <!-- 

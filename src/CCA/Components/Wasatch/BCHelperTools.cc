@@ -35,7 +35,7 @@
 #include <Core/Grid/Variables/CCVariable.h>
 #include <Core/Grid/Variables/CellIterator.h>
 #include <Core/Grid/Variables/Iterator.h>
-#include <Core/Grid/Variables/Stencil7.h>
+#include <Core/Grid/Variables/Stencil4.h>
 
 //-- SpatialOps includes --//
 #include <spatialops/OperatorDatabase.h>
@@ -117,7 +117,7 @@ namespace Wasatch {
    */
   //****************************************************************************      
   void update_poisson_rhs( const Expr::Tag& poissonTag,
-                            Uintah::CCVariable<Uintah::Stencil7>& poissonMatrix,
+                            Uintah::CCVariable<Uintah::Stencil4>& poissonMatrix,
                             SVolField& poissonField,
                             SVolField& poissonRHS,
                             const Uintah::Patch* patch,
@@ -252,7 +252,7 @@ namespace Wasatch {
    */
   //****************************************************************************      
   void update_poisson_matrix( const Expr::Tag& poissonTag,
-                              Uintah::CCVariable<Uintah::Stencil7>& poissonMatrix,
+                              Uintah::CCVariable<Uintah::Stencil4>& poissonMatrix,
                               const Uintah::Patch* patch,
                               const int material)
   {
@@ -310,7 +310,7 @@ namespace Wasatch {
         if( bcKind == "Dirichlet" ){ // pressure Outlet BC. don't forget to update pressure_rhs also.
           for( boundPtr.reset(); !boundPtr.done(); boundPtr++ ){
             SCIRun::IntVector bcPointIndices(*boundPtr);
-            Uintah::Stencil7& coefs = poissonMatrix[hasExtraCells ? bcPointIndices - insideCellDir : bcPointIndices];
+            Uintah::Stencil4& coefs = poissonMatrix[hasExtraCells ? bcPointIndices - insideCellDir : bcPointIndices];
             
             switch(face){
               case Uintah::Patch::xminus: coefs.w = 0.0; coefs.p +=1.0/dx2; break;
@@ -326,7 +326,7 @@ namespace Wasatch {
           for( boundPtr.reset(); !boundPtr.done(); boundPtr++ ) {
             SCIRun::IntVector bcPointIndices(*boundPtr);
             
-            Uintah::Stencil7& coefs = poissonMatrix[hasExtraCells ? bcPointIndices - insideCellDir : bcPointIndices];
+            Uintah::Stencil4& coefs = poissonMatrix[hasExtraCells ? bcPointIndices - insideCellDir : bcPointIndices];
             
             switch(face){
               case Uintah::Patch::xminus: coefs.w = 0.0; coefs.p -=1.0/dx2; break;
@@ -342,7 +342,7 @@ namespace Wasatch {
           for( boundPtr.reset(); !boundPtr.done(); boundPtr++ ) {
             SCIRun::IntVector bcPointIndices(*boundPtr);
             
-            Uintah::Stencil7& coefs = poissonMatrix[hasExtraCells ? bcPointIndices - insideCellDir : bcPointIndices];
+            Uintah::Stencil4& coefs = poissonMatrix[hasExtraCells ? bcPointIndices - insideCellDir : bcPointIndices];
             
             switch(face){
               case Uintah::Patch::xminus: coefs.w = 0.0; coefs.p += 1.0/dx2; break;
@@ -359,7 +359,7 @@ namespace Wasatch {
           for( boundPtr.reset(); !boundPtr.done(); boundPtr++ ) {
             SCIRun::IntVector bcPointIndices(*boundPtr);
             
-            Uintah::Stencil7& coefs = poissonMatrix[hasExtraCells ? bcPointIndices - insideCellDir : bcPointIndices];
+            Uintah::Stencil4& coefs = poissonMatrix[hasExtraCells ? bcPointIndices - insideCellDir : bcPointIndices];
             
             switch(face){
               case Uintah::Patch::xminus: coefs.w = 0.0; coefs.p -=1.0/dx2; break;
@@ -385,7 +385,7 @@ namespace Wasatch {
    *
    */
   //****************************************************************************      
-  void set_ref_poisson_coefs( Uintah::CCVariable<Uintah::Stencil7>& poissonMatrix,
+  void set_ref_poisson_coefs( Uintah::CCVariable<Uintah::Stencil4>& poissonMatrix,
                               const Uintah::Patch* patch,
                               const SCIRun::IntVector refCell )
   {
@@ -393,7 +393,7 @@ namespace Wasatch {
     std::ostringstream msg;
     if (patch->containsCell(refCell)) {
 
-      Uintah::Stencil7& refCoef = poissonMatrix[refCell];
+      Uintah::Stencil4& refCoef = poissonMatrix[refCell];
       refCoef.w = 0.0;
       refCoef.s = 0.0;
       refCoef.b = 0.0;

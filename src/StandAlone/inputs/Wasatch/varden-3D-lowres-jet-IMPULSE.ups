@@ -11,7 +11,7 @@
       <NameTag name="density" state="CARRY_FORWARD"/>
     </Density>
     
-    
+    <VariableDensity model="IMPULSE" coefficient="0.1"/>
     
     <TimeIntegrator>FE</TimeIntegrator>
     
@@ -156,8 +156,8 @@
      <save label="f"/>
      <!-- save label="f*"/>
      <save label="density*"/>
-    
-    
+    <save label="density**"/>
+    <save label="rhof*"/>
     <save label="rhof**"/ -->
     <save label="density"/>
     <!-- save label="drhodt*"/>
@@ -169,7 +169,7 @@
     <save label="w"/>
     <save label="viscosity"/>
     <!-- save label="u*"/>
-    
+    <save label="v*"/>
     <save label="w*"/ -->
     <save label="tau_xy"/>
     <save label="tau_yx"/>

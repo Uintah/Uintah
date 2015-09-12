@@ -7,7 +7,7 @@
 #include <expression/Expression.h>
 
 #include <spatialops/structured/FVStaggered.h>
-#include <CCA/Components/Wasatch/Operators/OperatorTypes.h>
+#include <CCA/Components/Wasatch/VardenParameters.h>
 #include <CCA/Components/Wasatch/TimeIntegratorTools.h>
 /**
  *  \ingroup WasatchExpressions
@@ -57,20 +57,30 @@ class PressureSource : public Expr::Expression<SVolField>
   typedef SpatialOps::OperatorTypeBuilder< SpatialOps::Gradient, YVolField, SVolField >::type GradYT;
   typedef SpatialOps::OperatorTypeBuilder< SpatialOps::Gradient, ZVolField, SVolField >::type GradZT;
   
-  DECLARE_FIELDS(XVolField, xMom_, xMomOld_, xVel_)
-  DECLARE_FIELDS(YVolField, yMom_, yMomOld_, yVel_)
-  DECLARE_FIELDS(ZVolField, zMom_, zMomOld_, zVel_)
-  DECLARE_FIELDS(SVolField, dil_, rho_, rhoStar_, divu_)
+  typedef SpatialOps::OperatorTypeBuilder< SpatialOps::GradientX, SVolField, SVolField >::type GradXST;
+  typedef SpatialOps::OperatorTypeBuilder< SpatialOps::GradientY, SVolField, SVolField >::type GradYST;
+  typedef SpatialOps::OperatorTypeBuilder< SpatialOps::GradientZ, SVolField, SVolField >::type GradZST;
+
+  DECLARE_FIELDS(XVolField, xMom_, xMomOld_, uStar_, xVel_)
+  DECLARE_FIELDS(YVolField, yMom_, yMomOld_, vStar_, yVel_)
+  DECLARE_FIELDS(ZVolField, zMom_, zMomOld_, wStar_, zVel_)
+  DECLARE_FIELDS(SVolField, dil_, dens_, densStar_, dens2Star_, divmomstar_)
   DECLARE_FIELDS(TimeField, dt_, rkStage_)
   
-  const bool isConstDensity_, doX_, doY_, doZ_, is3d_;
+  const bool isConstDensity_, doX_, doY_, doZ_, is3d_, useOnePredictor_;
   
   const Wasatch::TimeIntegrator* timeIntInfo_;
+
+  const double a0_;
+  const Wasatch::VarDenParameters::VariableDensityModels model_;
+  const Wasatch::VarDenParameters varDenParams_;
   
   const GradXT* gradXOp_;
   const GradYT* gradYOp_;
   const GradZT* gradZOp_;
-  
+  const GradXST* gradXSOp_;
+  const GradYST* gradYSOp_;
+  const GradZST* gradZSOp_;
   const S2XInterpOpT* s2XInterpOp_;
   const S2YInterpOpT* s2YInterpOp_;
   const S2ZInterpOpT* s2ZInterpOp_;  
@@ -81,10 +91,13 @@ class PressureSource : public Expr::Expression<SVolField>
   PressureSource( const Expr::TagList& momTags,
                   const Expr::TagList& oldMomTags,
                   const Expr::TagList& velTags,
-                  const Expr::Tag& divuTag,
+                  const Expr::TagList& velStarTags,
                   const bool isConstDensity,
-                  const Expr::Tag& rhoTag,
-                  const Expr::Tag& rhoStarTag);
+                  const Expr::Tag& densTag,
+                  const Expr::Tag& densStarTag,
+                  const Expr::Tag& dens2StarTag,
+                  const Wasatch::VarDenParameters varDenParams,
+                  const Expr::Tag& divmomstarTag);
 public:
   
   /**
@@ -104,20 +117,29 @@ public:
      *         all directions
      *  \param velTags a list tag which holds the tags for velocity at
      *         the current time stage in all directions
+     *  \param velStarTags a list tag which holds the tags for velocity at
+     *         the time stage "*" in all directions
      *  \param isConstDensity
      *  \param densTag a tag to hold density in constant density cases, which is 
      *         needed to obtain drhodt 
      *  \param densStarTag a tag for estimation of density at the time stage "*"
      *         which is needed to obtain momentum at that stage.
+     *  \param dens2StarTag a tag for estimation of density at the time stage "**"
+     *         which is needed to calculate drhodt
+     *  \param varDenParams
+     *  \param divMomStarTag a tag for estimation of divmom at the time stage "*"
      */
     Builder( const Expr::TagList& results,
              const Expr::TagList& momTags,
              const Expr::TagList& oldMomTags,
              const Expr::TagList& velTags,
-             const Expr::Tag& divuTag,
+             const Expr::TagList& velStarTags,
              const bool isConstDensity,
-             const Expr::Tag& rhoTag,
-             const Expr::Tag& rhoStarTag);
+             const Expr::Tag& densTag,
+             const Expr::Tag& densStarTag,
+             const Expr::Tag& dens2StarTag,
+             const Wasatch::VarDenParameters varDenParams,
+             const Expr::Tag& divMomStarTag);
     
     ~Builder(){}
     
@@ -125,8 +147,9 @@ public:
     
   private:
     const bool isConstDens_;
-    const Expr::TagList momTs_, oldMomTags_, velTs_;
-    const Expr::Tag rhot_, rhoStart_, divuTag_;
+    const Expr::TagList momTs_, oldMomTags_, velTs_, velStarTs_;
+    const Expr::Tag denst_, densStart_, dens2Start_, divmomstart_;
+    const Wasatch::VarDenParameters varDenParams_;
   };
   
   ~PressureSource();
