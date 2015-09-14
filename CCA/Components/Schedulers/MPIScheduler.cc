@@ -955,14 +955,13 @@ MPIScheduler::execute( int tgnum     /* = 0 */,
 
     d_lasttime = time;
 
-    emitTime("Other execution time",
-             totalexec - mpi_info_.totalsend - mpi_info_.totalrecv - mpi_info_.totaltask - mpi_info_.totalreduce);
+    emitTime("Other execution time", totalexec - mpi_info_.totalsend - mpi_info_.totalrecv - mpi_info_.totaltask - mpi_info_.totalreduce);
   }
 
   if( !parentScheduler_ ) { // If this scheduler is the root scheduler...
-    d_sharedState->taskExecTime += mpi_info_.totaltask - d_sharedState->outputTime; // don't count output time...
-    d_sharedState->taskLocalCommTime += mpi_info_.totalrecv + mpi_info_.totalsend;
-    d_sharedState->taskWaitCommTime += mpi_info_.totalwaitmpi;
+    d_sharedState->taskExecTime       += mpi_info_.totaltask - d_sharedState->outputTime; // don't count output time...
+    d_sharedState->taskLocalCommTime  += mpi_info_.totalrecv + mpi_info_.totalsend;
+    d_sharedState->taskWaitCommTime   += mpi_info_.totalwaitmpi;
     d_sharedState->taskGlobalCommTime += mpi_info_.totalreduce;
   }
 
@@ -1164,7 +1163,7 @@ MPIScheduler::emitTime( const char* label )
 {
    double time = Time::currentSeconds();
    emitTime(label, time-d_lasttime);
-   d_lasttime=time;
+   d_lasttime = time;
 }
 
 //______________________________________________________________________

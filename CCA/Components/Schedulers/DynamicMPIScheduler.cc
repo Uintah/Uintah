@@ -59,6 +59,31 @@ DynamicMPIScheduler::DynamicMPIScheduler( const ProcessorGroup*      myworld,
   : MPIScheduler( myworld, oport, parentScheduler )
 {
   taskQueueAlg_ =  MostMessages;
+
+  if (dynamicmpi_timeout.active()) {
+    char filename[64];
+    sprintf(filename, "timingStats.%d", d_myworld->myrank());
+    timingStats.open(filename);
+    if (d_myworld->myrank() == 0) {
+      sprintf(filename, "timingStats.avg");
+      avgStats.open(filename);
+      sprintf(filename, "timingStats.max");
+      maxStats.open(filename);
+    }
+  }
+}
+
+//______________________________________________________________________
+//
+DynamicMPIScheduler::~DynamicMPIScheduler()
+{
+  if (dynamicmpi_timeout.active()) {
+    timingStats.close();
+    if (d_myworld->myrank() == 0) {
+      avgStats.close();
+      maxStats.close();
+    }
+  }
 }
 
 //______________________________________________________________________
@@ -121,19 +146,6 @@ DynamicMPIScheduler::problemSetup( const ProblemSpecP&     prob_spec,
   }
   log.problemSetup(prob_spec);
   SchedulerCommon::problemSetup(prob_spec, state);
-}
-
-//______________________________________________________________________
-//
-DynamicMPIScheduler::~DynamicMPIScheduler()
-{
-  if (dynamicmpi_timeout.active()) {
-    timingStats.close();
-    if (d_myworld->myrank() == 0) {
-      avgStats.close();
-      maxStats.close();
-    }
-  }
 }
 
 //______________________________________________________________________
@@ -214,8 +226,8 @@ DynamicMPIScheduler::execute( int tgnum     /*=0*/,
 
   int numTasksDone = 0;
 
-  bool abort=false;
-  int abort_point = 987654;
+  bool abort       = false;
+  int  abort_point = 987654;
 
   int i = 0;
 
@@ -380,13 +392,13 @@ DynamicMPIScheduler::execute( int tgnum     /*=0*/,
         currphase++;
       }
       else if (dts->numExternalReadyTasks() > 0 || dts->numInternalReadyTasks() > 0
-               || (phaseSyncTask.find(currphase) != phaseSyncTask.end() && phaseTasksDone[currphase] == phaseTasks[currphase] - 1))  //if there is work to do
+               || (phaseSyncTask.find(currphase) != phaseSyncTask.end() && phaseTasksDone[currphase] == phaseTasks[currphase] - 1))  // if there is work to do
           {
         processMPIRecvs(TEST);  // receive what is ready and do not block
       }
       else {
         // we have nothing to do, so wait until we get something
-        processMPIRecvs(WAIT_ONCE);  //There is no other work to do so block until some receives are completed
+        processMPIRecvs(WAIT_ONCE);  // there is no other work to do so block until some receives are completed
       }
     }
 
@@ -430,18 +442,16 @@ DynamicMPIScheduler::execute( int tgnum     /*=0*/,
 
     d_lasttime = time;
 
-    emitTime("Other excution time",
-             totalexec - mpi_info_.totalsend - mpi_info_.totalrecv - mpi_info_.totaltask - mpi_info_.totalreduce);
+    emitTime("Other excution time", totalexec - mpi_info_.totalsend - mpi_info_.totalrecv - mpi_info_.totaltask - mpi_info_.totalreduce);
   }
 
   if (d_sharedState != 0) {  // subschedulers don't have a sharedState
-    d_sharedState->taskExecTime += mpi_info_.totaltask - d_sharedState->outputTime;  // don't count output time...
-    d_sharedState->taskLocalCommTime += mpi_info_.totalrecv + mpi_info_.totalsend;
-    d_sharedState->taskWaitCommTime += mpi_info_.totalwaitmpi;
+    d_sharedState->taskExecTime       += mpi_info_.totaltask - d_sharedState->outputTime;  // don't count output time...
+    d_sharedState->taskLocalCommTime  += mpi_info_.totalrecv + mpi_info_.totalsend;
+    d_sharedState->taskWaitCommTime   += mpi_info_.totalwaitmpi;
     d_sharedState->taskGlobalCommTime += mpi_info_.totalreduce;
   }
 
-  // Don't need to lock sends 'cause all threads are done at this point.
   sends_[0].waitall(d_myworld);
   ASSERT(sends_[0].numRequests() == 0);
   //if(timeout.active())
@@ -516,7 +526,7 @@ DynamicMPIScheduler::execute( int tgnum     /*=0*/,
         continue;
       }
 
-      total += d_times[i];
+      total    += d_times[i];
       avgTotal += d_avgtimes[i];
       maxTotal += d_maxtimes[i];
     }
