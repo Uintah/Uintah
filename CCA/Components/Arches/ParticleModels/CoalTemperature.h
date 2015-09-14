@@ -75,8 +75,7 @@ public:
 private: 
 
     bool _const_size;
-    bool _scale_flag;
-    int _Nenv; 
+    int _Nenv;
     double _value; 
     double _rhop_o;
     double _pi; 
@@ -89,8 +88,6 @@ private:
     double _RdMW; 
     double _MW_avg;
     double _ash_mf;
-    std::vector<double>  _weight_small; 
-    std::vector<std::string>  _weightqn_name; 
 
     std::vector<double> _init_ash;
     std::vector<double> _init_rawcoal;
@@ -102,11 +99,11 @@ private:
     std::string _rawcoal_base_name;
     std::string _char_base_name; 
     std::string _enthalpy_base_name; 
-    std::string _weight_base_name; 
     std::string _dTdt_base_name; 
-    std::string _gas_temperature_name; 
+    std::string _gas_temperature_name;
+    std::string _vol_fraction_name;
 
-    struct CoalAnalysis{ 
+    struct CoalAnalysis{
       double C;
       double H; 
       double O; 
