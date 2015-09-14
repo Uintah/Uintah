@@ -28,10 +28,10 @@
 # Epilogue fragment for subdirectories.  This is included from
 # either smallso_epilogue.mk or largeso_epilogue.mk
 
-OBJS := $(patsubst %.cc,%.$(OBJEXT),$(filter %.cc,$(SRCS)))   \
+OBJS := $(patsubst %.cu,%.$(OBJEXT),$(filter %.cu,$(SRCS))) \
+        $(patsubst %.cc,%.$(OBJEXT),$(filter %.cc,$(SRCS)))   \
         $(patsubst %.cpp,%.$(OBJEXT),$(filter %.cpp,$(SRCS))) \
         $(patsubst %.cxx,%.$(OBJEXT),$(filter %.cxx,$(SRCS))) \
-        $(patsubst %.cu,%.$(OBJEXT),$(filter %.cu,$(SRCS)))   \
         $(patsubst %.c,%.$(OBJEXT),$(filter %.c,$(SRCS)))     \
         $(patsubst %.s,%.$(OBJEXT),$(filter %.s,$(SRCS)))     \
         $(patsubst %.F,%.$(OBJEXT),$(filter %.F,$(SRCS)))     \
