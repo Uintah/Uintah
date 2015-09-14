@@ -71,9 +71,11 @@ using namespace Uintah;
 // declarations
 void usage(const std::string& badarg, const std::string& progname);
 void getParticleStrains(DataArchive* da, int mat, long64 particleID, 
-		        string flag);
+		        string flag, unsigned long time_step_lower,
+                                     unsigned long time_step_upper);
 void getParticleStresses(DataArchive* da, int mat, long64 particleID, 
-		         string flag);
+		         string flag, unsigned long time_step_lower,
+                                      unsigned long time_step_upper);
 void printParticleVariable(DataArchive* da, int mat, string particleVariable,
                            long64 particleID, unsigned long time_step_lower,
                            unsigned long time_step_upper,
@@ -182,16 +184,34 @@ main( int argc, char** argv )
 
   try {
     DataArchive* da = scinew DataArchive(filebase);
-    
+ 
+    // Recover time data
+    vector<int> index;
+    vector<double> times;
+    da->queryTimesteps(index, times);
+    ASSERTEQ(index.size(), times.size());
+    if (!tslow_set)
+      time_step_lower =0;
+    else if (time_step_lower >= times.size()) {
+      cerr << "timesteplow must be between 0 and " << times.size()-1 << endl;
+      abort();
+    }
+    if (!tsup_set)
+      time_step_upper = times.size()-1;
+    else if (time_step_upper >= times.size()) {
+      cerr << "timestephigh must be between 0 and " << times.size()-1 <<endl;
+      abort();
+    }
+
     // Get the particle stresses
     if (do_part_stress) {
       if (do_av_part_stress) {
         cout << "\t Volume average stress = " << endl;
-        getParticleStresses(da, mat, particleID, "avg");
+        getParticleStresses(da, mat, particleID,"avg",  time_step_lower, time_step_upper);
       } else if (do_equiv_part_stress) {
-        getParticleStresses(da, mat, particleID, "equiv");
+        getParticleStresses(da, mat, particleID,"equiv",time_step_lower, time_step_upper);
       } else {
-        getParticleStresses(da, mat, particleID, "all");
+        getParticleStresses(da, mat, particleID,"all",  time_step_lower, time_step_upper);
       }
     } 
 
@@ -199,38 +219,22 @@ main( int argc, char** argv )
     if (do_part_strain) {
       if (do_av_part_strain) {
         cout << "\t Volume average strain = " << endl;
-        getParticleStrains(da, mat, particleID, "avg");
+        getParticleStrains(da,mat, particleID,"avg",     time_step_lower,time_step_upper);
       } else if (do_true_part_strain) {
-        getParticleStrains(da, mat, particleID, "true");
+        getParticleStrains(da,mat, particleID,"true",    time_step_lower,time_step_upper);
       } else if (do_equiv_part_strain) {
-        getParticleStrains(da, mat, particleID, "equiv");
+        getParticleStrains(da,mat, particleID,"equiv",   time_step_lower,time_step_upper);
       } else if (do_lagrange_part_strain) {
-        getParticleStrains(da, mat, particleID, "lagrange");
+        getParticleStrains(da,mat, particleID,"lagrange",time_step_lower,time_step_upper);
       } else if (do_euler_part_strain) {
-        getParticleStrains(da, mat, particleID, "euler");
+        getParticleStrains(da,mat, particleID,"euler",   time_step_lower,time_step_upper);
       } else {
-        getParticleStrains(da, mat, particleID, "all");
+        getParticleStrains(da,mat, particleID,"all",     time_step_lower,time_step_upper);
       }
     } 
 
     // Print a particular particle variable
     if (do_partvar) {
-      vector<int> index;
-      vector<double> times;
-      da->queryTimesteps(index, times);
-      ASSERTEQ(index.size(), times.size());
-      if (!tslow_set)
-        time_step_lower =0;
-      else if (time_step_lower >= times.size()) {
-        cerr << "timesteplow must be between 0 and " << times.size()-1 << endl;
-        abort();
-      }
-      if (!tsup_set)
-        time_step_upper = times.size()-1;
-      else if (time_step_upper >= times.size()) {
-        cerr << "timestephigh must be between 0 and " << times.size()-1 <<endl;
-        abort();
-      }
       printParticleVariable(da, mat, particleVariable, particleID, 
                             time_step_lower, time_step_upper, time_step_inc);
     }
@@ -266,7 +270,8 @@ void usage(const std::string& badarg, const std::string& progname)
 //
 ////////////////////////////////////////////////////////////////////////////
 void 
-getParticleStrains(DataArchive* da, int mat, long64 particleID, string flag) {
+getParticleStrains(DataArchive* da, int mat, long64 particleID, string flag,
+                   unsigned long time_step_lower, unsigned long time_step_upper) {
 
   // Parse the flag and check which option is needed
   bool doAverage = false;
@@ -314,9 +319,6 @@ getParticleStrains(DataArchive* da, int mat, long64 particleID, string flag) {
   da->queryTimesteps(index, times);
   ASSERTEQ(index.size(), times.size());
 //  cerr << "There are " << index.size() << " timesteps:\n";
-      
-  unsigned long time_step_lower = 0;
-  unsigned long time_step_upper = times.size() - 1 ;
       
   // Loop thru all time steps and store the volume and variable (stress/strain)
   for(unsigned long t=time_step_lower;t<=time_step_upper;t++){
@@ -523,7 +525,8 @@ getParticleStrains(DataArchive* da, int mat, long64 particleID, string flag) {
 //
 ////////////////////////////////////////////////////////////////////////////
 void 
-getParticleStresses(DataArchive* da, int mat, long64 particleID, string flag) {
+getParticleStresses(DataArchive* da, int mat, long64 particleID, string flag,
+                    unsigned long time_step_lower, unsigned long time_step_upper) {
 
   // Parse the flag and check which option is needed
   bool doAverage = false;
@@ -565,9 +568,6 @@ getParticleStresses(DataArchive* da, int mat, long64 particleID, string flag) {
   da->queryTimesteps(index, times);
   ASSERTEQ(index.size(), times.size());
   //cout << "There are " << index.size() << " timesteps:\n";
-      
-  unsigned long time_step_lower = 0;
-  unsigned long time_step_upper = times.size() - 1 ;
       
   // Loop thru all time steps and store the volume and variable (stress/strain)
   for(unsigned long t=time_step_lower;t<=time_step_upper;t++){
