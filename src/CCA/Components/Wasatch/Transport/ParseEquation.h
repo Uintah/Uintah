@@ -34,7 +34,6 @@
 #include <CCA/Components/Wasatch/Transport/TransportEquation.h>
 #include <CCA/Components/Wasatch/ConvectiveInterpolationMethods.h>
 #include <CCA/Components/Wasatch/Expressions/Turbulence/TurbulenceParameters.h>
-#include <CCA/Components/Wasatch/VardenParameters.h>
 
 #include <CCA/Components/Wasatch/Expressions/RHSTerms.h>
 
@@ -118,7 +117,6 @@ namespace Wasatch{
    *  \param momentumSpec The XML block from the input file specifying the
    *         momentum equation. This will be \verbatim <MomentumEquations>\endverbatim.
    *  \param turbParams
-   *  \param varDenParams
    *  \param useAdaptiveDt true for variable dt
    *  \param isConstDensity true if density is constant
    *  \param densityTag the tag for the mixture mass density
@@ -132,7 +130,6 @@ namespace Wasatch{
   std::vector<EqnTimestepAdaptorBase*>
   parse_momentum_equations( Uintah::ProblemSpecP momentumSpec,
                             const TurbulenceParameters turbParams,
-                            const VarDenParameters varDenParams,
                             const bool useAdaptiveDt,
                             const bool isConstDensity,
                             const Expr::Tag densityTag,
