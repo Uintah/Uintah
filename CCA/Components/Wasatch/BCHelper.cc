@@ -1314,7 +1314,7 @@ namespace Wasatch {
 
   //------------------------------------------------------------------------------------------------
   
-  void BCHelper::update_pressure_matrix( Uintah::CCVariable<Uintah::Stencil4>& pMatrix,
+  void BCHelper::update_pressure_matrix( Uintah::CCVariable<Uintah::Stencil7>& pMatrix,
                                          const SVolField* const volFrac,
                                          const Uintah::Patch* patch )
   {
@@ -1351,7 +1351,7 @@ namespace Wasatch {
         }
         
         for( bndMask.reset(); !bndMask.done(); ++bndMask ){
-          Uintah::Stencil4& coefs = pMatrix[*bndMask - unitNormal];
+          Uintah::Stencil7& coefs = pMatrix[*bndMask - unitNormal];
           
           // if we are inside a solid, then don't do anything because we already handle this in the pressure expression
           if( volFrac ){
@@ -1363,13 +1363,13 @@ namespace Wasatch {
           
           //
           switch(myBndSpec.face){
-            case Uintah::Patch::xminus: coefs.w = 0.0; coefs.p += sign/dx2; break;
-            case Uintah::Patch::xplus :                coefs.p += sign/dx2; break;
-            case Uintah::Patch::yminus: coefs.s = 0.0; coefs.p += sign/dy2; break;
-            case Uintah::Patch::yplus :                coefs.p += sign/dy2; break;
-            case Uintah::Patch::zminus: coefs.b = 0.0; coefs.p += sign/dz2; break;
-            case Uintah::Patch::zplus :                coefs.p += sign/dz2; break;
-            default:                                                        break;
+            case Uintah::Patch::xminus: coefs.p += sign*std::abs(coefs.w); coefs.w = 0.0; break;
+            case Uintah::Patch::xplus : coefs.p += sign*std::abs(coefs.e); coefs.e = 0.0; break;
+            case Uintah::Patch::yminus: coefs.p += sign*std::abs(coefs.s); coefs.s = 0.0; break;
+            case Uintah::Patch::yplus : coefs.p += sign*std::abs(coefs.n); coefs.n = 0.0; break;
+            case Uintah::Patch::zminus: coefs.p += sign*std::abs(coefs.b); coefs.b = 0.0; break;
+            case Uintah::Patch::zplus : coefs.p += sign*std::abs(coefs.t); coefs.t = 0.0; break;
+            default:                                                                      break;
           }
         }
       }
