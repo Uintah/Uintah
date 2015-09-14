@@ -10,7 +10,8 @@ function [sf] = shapeFunction()
   sf.findNodesAndWeightGradients_gimp   = @findNodesAndWeightGradients_gimp;
   sf.findNodesAndWeightGradients_gimp2  = @findNodesAndWeightGradients_gimp2;
   %__________________________________
-%
+
+%______________________________________________________________________
 function[node, dx]=positionToNode(xp, nRegions, Regions)
  
   n_offset = 1;                              % the left node is owned by the right patch 
@@ -30,7 +31,7 @@ function[node, dx]=positionToNode(xp, nRegions, Regions)
     n_offset = (n_offset) + R.NN;           % increment the offset
   end
   
-  %bulletproofing
+  % bulletproofing
   if( xp < Regions{1}.min || xp > Regions{nRegions}.max)
     fprintf( 'ERROR: positionToNode(), the particle (xp: %g) is outside the computational domain( %g, %g )\n',xp,Regions{1}.min,Regions{nRegions}.max  );
     input('stop'); 
@@ -42,7 +43,7 @@ function[node, dx]=positionToNode(xp, nRegions, Regions)
 end
 
 
-%__________________________________
+%______________________________________________________________________
 function[nodes,dx]=positionToClosestNodes(xp,nRegions,Regions, nodePos)
   [node, dx]=positionToNode(xp, nRegions, Regions);
   
@@ -65,7 +66,8 @@ function[nodes,dx]=positionToClosestNodes(xp,nRegions,Regions, nodePos)
   nodes(3) = nodes(2) + 1;
   %fprintf( 'xp:%g, node(1):%g, node(2):%g, node(3):%g relativePosition:%g\n',xp, nodes(1), nodes(2), nodes(3), relativePosition);
 end
-%__________________________________
+
+%______________________________________________________________________
 % returns the initial volP and lp
 function[volP_0, lp_0]=positionToVolP(xp, nRegions, Regions)
   volP_0 = -9.0;
@@ -81,7 +83,7 @@ function[volP_0, lp_0]=positionToVolP(xp, nRegions, Regions)
 end
 
 
-%__________________________________
+%______________________________________________________________________
 %  Equation 14 of "Structured Mesh Refinement in Generalized Interpolation Material Point Method
 %  for Simulation of Dynamic Problems"
 function [nodes,Ss]=findNodesAndWeights_linear(xp, notused, nRegions, Regions, nodePos, Lx)
@@ -152,7 +154,7 @@ function [nodes,Ss]=findNodesAndWeights_linear(xp, notused, nRegions, Regions, n
 end
 
 
-%__________________________________
+%______________________________________________________________________
 %  Reference:  Uintah Documentation Chapter 7 MPM, Equation 7.16
 function [nodes,Ss]=findNodesAndWeights_gimp(xp, lp, nRegions, Regions, nodePos, notUsed)
   global NSFN;
@@ -205,7 +207,7 @@ function [nodes,Ss]=findNodesAndWeights_gimp(xp, lp, nRegions, Regions, nodePos,
   
 end
 
-%__________________________________
+%______________________________________________________________________
 %  Equation 15 of "Structured Mesh Refinement in Generalized Interpolation Material Point Method
 %  for Simulation of Dynamic Problems"
 function [nodes,Ss]=findNodesAndWeights_gimp2(xp, lp, nRegions, Regions, nodePos, Lx)
@@ -296,7 +298,7 @@ function [nodes,Ss]=findNodesAndWeights_gimp2(xp, lp, nRegions, Regions, nodePos
   end
 end
 
-%__________________________________
+%______________________________________________________________________
 %  Reference:  Uintah Documentation Chapter 7 MPM, Equation 7.14
 function [nodes,Gs, dx]=findNodesAndWeightGradients_linear(xp, notUsed, nRegions, Regions, nodePos, notUsed2)
  
@@ -313,7 +315,7 @@ function [nodes,Gs, dx]=findNodesAndWeightGradients_linear(xp, notUsed, nRegions
   Gs(2) = 1/dx;
 end
 
-%__________________________________
+%______________________________________________________________________
 %  Reference:  Uintah Documentation Chapter 7 MPM, Equation 7.17
 function [nodes,Gs, dx]=findNodesAndWeightGradients_gimp(xp, lp, nRegions, Regions, nodePos,notUsed)
 
@@ -367,7 +369,7 @@ function [nodes,Gs, dx]=findNodesAndWeightGradients_gimp(xp, lp, nRegions, Regio
   end
 end
 
-%__________________________________
+%______________________________________________________________________
 %  The equations for this function are derived in the hand written notes.  
 % The governing equations for the derivation come from equation 15.
 function [nodes,Gs, dx]=findNodesAndWeightGradients_gimp2(xp, lp, nRegions, Regions, nodePos,Lx)
