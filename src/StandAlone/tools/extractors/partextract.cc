@@ -75,7 +75,8 @@ void getParticleStrains(DataArchive* da, int mat, long64 particleID,
                                      unsigned long time_step_upper);
 void getParticleStresses(DataArchive* da, int mat, long64 particleID, 
 		         string flag, unsigned long time_step_lower,
-                                      unsigned long time_step_upper);
+                                      unsigned long time_step_upper,
+                                      bool include_position_output);
 void printParticleVariable(DataArchive* da, int mat, string particleVariable,
                            long64 particleID, unsigned long time_step_lower,
                            unsigned long time_step_upper,
@@ -109,6 +110,7 @@ main( int argc, char** argv )
   bool do_true_part_strain = false;
   bool do_lagrange_part_strain = false;
   bool do_euler_part_strain = false;
+  bool include_position_output = false;
   unsigned long time_step_lower = 0;
   unsigned long time_step_upper = 1;
   unsigned long time_step_inc = 1;
@@ -172,7 +174,8 @@ main( int argc, char** argv )
       tsup_set = true;
     } else if (s == "-timestepinc") {
       time_step_inc = strtoul(argv[++i],(char**)NULL,10);
-//      tsinc_set = true;
+    } else if (s == "-include_position_output") {
+      include_position_output = true;
     } 
   }
   filebase = argv[argc-1];
@@ -207,11 +210,14 @@ main( int argc, char** argv )
     if (do_part_stress) {
       if (do_av_part_stress) {
         cout << "\t Volume average stress = " << endl;
-        getParticleStresses(da, mat, particleID,"avg",  time_step_lower, time_step_upper);
+        getParticleStresses(da, mat, particleID,"avg",  time_step_lower, time_step_upper,
+                            include_position_output);
       } else if (do_equiv_part_stress) {
-        getParticleStresses(da, mat, particleID,"equiv",time_step_lower, time_step_upper);
+        getParticleStresses(da, mat, particleID,"equiv",time_step_lower, time_step_upper,
+                            include_position_output);
       } else {
-        getParticleStresses(da, mat, particleID,"all",  time_step_lower, time_step_upper);
+        getParticleStresses(da, mat, particleID,"all",  time_step_lower, time_step_upper,
+                            include_position_output);
       }
     } 
 
@@ -260,6 +266,7 @@ void usage(const std::string& badarg, const std::string& progname)
   cerr << "  -part_strain [avg/true/equiv/all/lagrangian/eulerian]\n", 
   cerr << "  -timesteplow [int] (only outputs timestep from int)\n";
   cerr << "  -timestephigh [int] (only outputs timesteps upto int)\n";
+  cerr << "  -include_position_output (add particle position before other data output)\n";
   cerr << "USAGE IS NOT FINISHED\n\n";
   exit(1);
 }
@@ -526,7 +533,8 @@ getParticleStrains(DataArchive* da, int mat, long64 particleID, string flag,
 ////////////////////////////////////////////////////////////////////////////
 void 
 getParticleStresses(DataArchive* da, int mat, long64 particleID, string flag,
-                    unsigned long time_step_lower, unsigned long time_step_upper) {
+                    unsigned long time_step_lower, unsigned long time_step_upper,
+                    bool include_position_output) {
 
   // Parse the flag and check which option is needed
   bool doAverage = false;
@@ -577,6 +585,7 @@ getParticleStresses(DataArchive* da, int mat, long64 particleID, string flag,
 
     vector<double> volumeVector;
     vector<Matrix3> stressVector;
+    vector<Point> posVector;
     double totVol = 0.0;
 
     // Loop thru all the levels
@@ -664,6 +673,11 @@ getParticleStresses(DataArchive* da, int mat, long64 particleID, string flag,
                 ParticleVariable<long64> pid;
                 da->query(pid, "p.particleID", matl, patch, t);
                 ParticleSubset* pset = value.getParticleSubset();
+
+
+                ParticleVariable<Point> value_pos;
+                da->query(value_pos, "p.x", matl, patch, t);
+
                 if(pset->numParticles() > 0){
                   ParticleSubset::iterator iter = pset->begin();
                   for(;iter != pset->end(); iter++){
@@ -675,6 +689,11 @@ getParticleStresses(DataArchive* da, int mat, long64 particleID, string flag,
 
                       cout << time << " " << pid[*iter] << " " << patchIndex 
                            << " " << matl ;
+                      if(include_position_output){
+                        cout << " " << value_pos[*iter].x()
+                             << " " << value_pos[*iter].y()
+                             << " " << value_pos[*iter].z() ;
+                      }
 
                       if (doEquiv) {
                         double sigeff = 0.0;
@@ -692,6 +711,11 @@ getParticleStresses(DataArchive* da, int mat, long64 particleID, string flag,
 
                       cout << time << " " << pid[*iter] << " " << patchIndex 
                            << " " << matl ;
+                      if(include_position_output){
+                        cout << " " << value_pos[*iter].x()
+                             << " " << value_pos[*iter].y()
+                             << " " << value_pos[*iter].z() ;
+                      }
 
                       if (doEquiv) {
                         double sigeff = 0.0;
