@@ -2,18 +2,24 @@ function k=plotShapeFunctions
 
 %____________________________________________________________________
 % This function plots the shape functions
+% It uses functions that are defined in 
+%     initializationFunctions.m
+%     shapeFunctions.m
+%______________________________________________________________________
   close all;
   clear all;
   global PPC;
   global NSFN;
+
   PPC = 8;
  [sf]  = shapeFunctions;                 % load all the shape functions
- [IF]  = initializationFunctions   % load initialization functions
+ [IF]  = initializationFunctions         % load initialization functions
 
-  interpolation = 'GIMP';
+  interpolation = 'GIMP';              %  'linear' or 'GIMP'
   domain        = 1;
   dx            = 1;
   d_smallNum    = double(1e-16);
+  
   
   [Regions, nRegions,NN] = IF.initialize_Regions(domain,PPC,dx,interpolation, d_smallNum);
   R = Regions{1};
@@ -22,15 +28,19 @@ function k=plotShapeFunctions
   
   [Lx]       = IF.initialize_Lx(NN, nodePos);
   
-  Lx(2,1) = dx/4;
+%  Lx(2,1) = dx/4;
 %  Lx(5,1) = dx/4;
   Lx
 
 
   L  = dx;
   lp = R.lp
-
+  
   maxpts = int32(100);
+  
+  %__________________________________
+  % define 
+  
   if( strcmp(interpolation,'GIMP') )
     NSFN      = 3;                        % Number of shape function nodes Linear:2, linear:3
     xp(1)     =  -L-lp ;                  % starting postition GIMP
@@ -80,11 +90,12 @@ function k=plotShapeFunctions
       [nodes,G2, dx]= sf.findNodesAndWeightGradients_gimp2(xp(c), lp, nRegions, Regions, nodePos,Lx);
     else
       [nodes,S1]    = sf.findNodesAndWeights_linear( xp(c), lp, nRegions, Regions, nodePos, Lx);
-      [nodes,S2]    = sf.findNodesAndWeights_linear(xp(c), lp, nRegions, Regions, nodePos, Lx);
+      [nodes,S2]    = sf.findNodesAndWeights_linear( xp(c), lp, nRegions, Regions, nodePos, Lx);
     
-      [nodes,G1, dx]= sf.findNodesAndWeightGradients_linear( xp(c), lp, nRegions, Regions, nodePos,Lx);
-      [nodes,G2, dx]= sf.findNodesAndWeightGradients_linear(xp(c), lp, nRegions, Regions, nodePos,Lx);
+      [nodes,G1, dx]= sf.findNodesAndWeightGradients_linear(  xp(c), lp, nRegions, Regions, nodePos,Lx);
+      [nodes,G2, dx]= sf.findNodesAndWeightGradients_linear( xp(c), lp, nRegions, Regions, nodePos,Lx);
     end
+    
     % find the index that corresponds to the focusNode
     for index=1:length(nodes)
       if(nodes(index) == focusNode)
