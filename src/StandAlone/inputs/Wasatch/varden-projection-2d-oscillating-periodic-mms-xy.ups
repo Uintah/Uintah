@@ -8,8 +8,6 @@
    <Solver type="hypre"/>
   <Wasatch>
     <TimeIntegrator> FE </TimeIntegrator>    
-
-		<VariableDensity model="IMPULSE" coefficient="0.1"/>
     <Density>
       <NameTag name="density" state="CARRY_FORWARD"/>
     </Density>
