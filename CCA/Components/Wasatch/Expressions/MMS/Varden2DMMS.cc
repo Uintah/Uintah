@@ -36,9 +36,9 @@ vf_ ( vf ),
 atNP1_(atNP1)
 {
   this->set_gpu_runnable( true );
-   x_ = this->template create_field_request<FieldT>(xTag);
-   y_ = this->template create_field_request<FieldT>(yTag);
-   t_ = this->template create_field_request<TimeField>(tTag);
+  x_ = this->template create_field_request<FieldT>(xTag);
+  y_ = this->template create_field_request<FieldT>(yTag);
+  t_ = this->template create_field_request<TimeField>(tTag);
   dt_ = this->template create_field_request<TimeField>(Wasatch::TagNames::self().dt);
 }
 
@@ -372,7 +372,7 @@ evaluate()
     
   SpatFldPtr<FieldT> xh_ = SpatialFieldStore::get<FieldT>( x ); FieldT& xh = *xh_;
   SpatFldPtr<FieldT> yh_ = SpatialFieldStore::get<FieldT>( y ); FieldT& yh = *yh_;
-//  const TimeField& t = *t_;
+
   xh <<= x - uf_ * t;
   yh <<= y - vf_ * t;
   
@@ -480,8 +480,6 @@ evaluate()
   const FieldT& y = y_->field_ref();
   const SVolField& rho = rho_->field_ref();
   const TimeField& t = t_->field_ref();
-  
-//  const double om=2.0, k=2.0, uf=0.5, vf=0.5; // Parameter values for the manufactured solutions
   
   SpatFldPtr<FieldT> xh = SpatialFieldStore::get<FieldT>( x );
   SpatFldPtr<FieldT> yh = SpatialFieldStore::get<FieldT>( y );
@@ -646,7 +644,7 @@ DiffusiveConstant( const Expr::Tag& rhoTag,
   d_(d)
 {
   this->set_gpu_runnable( true );
-   rho_ = this->template create_field_request<FieldT>(rhoTag);
+  rho_ = this->template create_field_request<FieldT>(rhoTag);
 }
 
 //--------------------------------------------------------------------
