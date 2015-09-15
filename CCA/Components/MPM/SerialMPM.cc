@@ -3398,7 +3398,7 @@ void SerialMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
       new_dw->get(gvelocity_star,  lb->gVelocityStarLabel,   dwi,patch,gac,NGP);
       new_dw->get(gacceleration,   lb->gAccelerationLabel,   dwi,patch,gac,NGP);
       new_dw->get(gTemperatureRate,lb->gTemperatureRateLabel,dwi,patch,gac,NGP);
-      if (flags->d_GEVelProj && flags->d_doExplicitHeatConduction){
+      if (flags->d_GEVelProj || flags->d_doExplicitHeatConduction){
         new_dw->get(gTempStar,     lb->gTemperatureStarLabel,dwi,patch,gac,NGP);
       }
       new_dw->get(frictionTempRate,lb->frictionalWorkLabel,  dwi,patch,gac,NGP);
@@ -3495,7 +3495,7 @@ void SerialMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
         }
         pVelGrad[idx]=tensorL;
         pTempGrad[idx] = Vector(0.0,0.0,0.0);
-        if (flags->d_GEVelProj && flags->d_doExplicitHeatConduction){
+        if (flags->d_GEVelProj || flags->d_doExplicitHeatConduction){
          if(flags->d_axisymmetric){
            cout << "Fix the pTempGradient calc for axisymmetry" << endl;
          }
