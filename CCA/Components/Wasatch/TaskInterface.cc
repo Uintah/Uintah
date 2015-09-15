@@ -324,8 +324,6 @@ namespace Wasatch{
       }
 #     endif
 
-      tree->register_fields( *fml_ );
-
       PatchInfoMap::const_iterator ipim = patchInfoMap.find(patchID);
       assert( ipim != patchInfoMap.end() );
       Info info;
