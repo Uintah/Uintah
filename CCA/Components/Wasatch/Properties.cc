@@ -177,8 +177,6 @@ namespace Wasatch{
     
     if (params->findAttribute("tolerance")) params->getAttribute("tolerance",rtol);
     if (params->findAttribute("maxiter")) params->getAttribute("maxiter",maxIter);
-    std::cout << "max iter = " << maxIter << std::endl;
-    std::cout << "rtol = " << rtol << std::endl;
     if( params->findBlock("ModelBasedOnMixtureFraction") ){
 
       const Uintah::ProblemSpecP modelParams = params->findBlock("ModelBasedOnMixtureFraction");
@@ -407,9 +405,7 @@ namespace Wasatch{
       parse_density_solver( densityParams, table, densityTag, NORMAL, gh, lockedFields );
       if( doDenstPlus ){
         const Expr::ExpressionID id1 = parse_density_solver( densityParams, table, densityTag, STAR,     gh, lockedFields );
-        //const Expr::ExpressionID id2 = parse_density_solver( densityParams, table, densityTag, STARSTAR, gh, lockedFields );
         gh.exprFactory->cleave_from_children( id1 );
-        //gh.exprFactory->cleave_from_children( id2 );
       }
     }
 
@@ -437,9 +433,7 @@ namespace Wasatch{
 
       if( doDenstPlus ){
         const Expr::Tag icRhoStarTag ( rhoTag.name()+TagNames::self().star,       Expr::STATE_NONE );
-//        const Expr::Tag icRhoStar2Tag( rhoTag.name()+TagNames::self().doubleStar, Expr::STATE_NONE );
         gh.rootIDs.insert( gh.exprFactory->register_expression( scinew ICDensExpr(icRhoStarTag, fTag,rho0,rho1) ) );
-//        gh.rootIDs.insert( gh.exprFactory->register_expression( scinew ICDensExpr(icRhoStar2Tag,fTag,rho0,rho1) ) );
       }
     }
 

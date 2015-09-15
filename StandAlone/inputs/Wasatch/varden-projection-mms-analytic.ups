@@ -11,7 +11,8 @@
     </Density>
     <!-- Setup the parameters for variable density MMS -->
     <VariableDensityMMS>
-      <scalar>rhof</scalar>
+      <ConservedScalar>rhof</ConservedScalar>
+      <Scalar>f</Scalar>
     </VariableDensityMMS>
     <!-- Set the initial condition expression for mixture fraction -->
     <BasicExpression type="SVOL">

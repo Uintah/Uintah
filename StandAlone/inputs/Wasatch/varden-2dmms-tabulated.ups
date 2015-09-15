@@ -9,9 +9,6 @@
   <Wasatch>
     <TimeIntegrator> FE </TimeIntegrator>    
 
-		
-		  <UseOnePredictor/>
-		</VariableDensity>
     <Density>
       <NameTag name="density" state="CARRY_FORWARD"/>
     </Density>
@@ -57,8 +54,11 @@
         <NameTag name="density" state="CARRY_FORWARD"/>
         <ModelBasedOnMixtureFraction>
           <DensityWeightedMixtureFraction>
-          <NameTag name="rhof" state="STATE_DYNAMIC"/>
+            <NameTag name="rhof" state="STATE_DYNAMIC"/>
           </DensityWeightedMixtureFraction>       
+          <MixtureFraction>
+            <NameTag name="f"/>
+          </MixtureFraction>                           
         </ModelBasedOnMixtureFraction>
       </ExtractDensity>
       
