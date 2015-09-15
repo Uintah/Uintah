@@ -902,10 +902,10 @@ RFElasticPlastic::computeStressTensor(const PatchSubset* patches,
       double rho_cur = rho_0/J;
 
       //********** Concentration Component****************************
-			// Compute rate of concentration
-			double concentration = pConcentration[idx];
-			double concentration_pn = pConc_prenew[idx];
-			double conc_rate = (concentration - concentration_pn)/delT;
+      // Compute rate of concentration
+      double concentration = pConcentration[idx];
+      double concentration_pn = pConc_prenew[idx];
+      double conc_rate = (concentration - concentration_pn)/delT;
       //********** Concentration Component****************************
 
       // Calculate rate of deformation tensor (D)
@@ -919,8 +919,8 @@ RFElasticPlastic::computeStressTensor(const PatchSubset* patches,
       tensorD = (tensorR.Transpose())*(tensorD*tensorR);
 
       //********** Concentration Component****************************
-			// Remove concentration dependent portion of rate of deformation 
-			tensorD = tensorD - one * vol_exp_coeff * (conc_rate/3);
+      // Remove concentration dependent portion of rate of deformation 
+      tensorD = tensorD - one * vol_exp_coeff * (conc_rate);
       //********** Concentration Component****************************
 
       // Calculate the deviatoric part of the non-thermal part
@@ -953,7 +953,11 @@ RFElasticPlastic::computeStressTensor(const PatchSubset* patches,
       state->plasticStrain       = pPlasticStrain[idx] 
                                  + state->plasticStrainRate*delT;
       state->pressure            = pressure;
-      state->temperature         = temperature;
+      //********** Concentration Component****************************
+      // Used to cancel out temperature component of JohnsonCook
+      // flowstress model
+      state->temperature         = 298.0;
+      //********** Concentration Component****************************
       state->initialTemperature  = d_initialMaterialTemperature;
       state->density             = rho_cur;
       state->initialDensity      = rho_0;
@@ -974,10 +978,14 @@ RFElasticPlastic::computeStressTensor(const PatchSubset* patches,
         state->specificHeat = C_p;
       }
     
-      // Calculate the shear modulus and the melting temperature at the
-      // start of the time step and update the plasticity state
-      double Tm_cur = d_melt->computeMeltingTemp(state);
-      state->meltingTemp = Tm_cur ;
+      //********** Concentration Component****************************
+      // --For the time being temperature dependent sure is not being used
+      //
+      // // Calculate the shear modulus and the melting temperature at the
+      // // start of the time step and update the plasticity state
+      // double Tm_cur = d_melt->computeMeltingTemp(state);
+      // state->meltingTemp = Tm_cur ;
+      //********** Concentration Component****************************
       
       double mu_cur = d_shear->computeShearModulus(state);
       state->shearModulus = mu_cur ;
@@ -1013,32 +1021,41 @@ RFElasticPlastic::computeStressTensor(const PatchSubset* patches,
                                                     matl, idx);
       state->yieldStress = flowStress;
 
-      // Material has melted if flowStress <= 0.0
-      bool melted  = false;
-      bool plastic = false;
-      if (temperature > Tm_cur || flowStress <= 0.0) {
-
-        melted = true;
-        // Set the deviatoric stress to zero
-        if (d_doMelting){
-           tensorS = 0.0;
-        } else {
-           cerr << "The material has exceed the melt temperature, but you haven't turned \n";
-           cerr << "melting on.  RFElasticPlastic does nonsensical things here.  You should \n";
-           cerr << "probably either set <do_melting>true</do_melting>, or increase the material\n";
-           cerr << "<melt_temp> to a level that won't be exceeded.\n";
-        }
-
-        d_flow->updateElastic(idx);
-
-      } else {
+      //********** Concentration Component****************************
+      // // Material has melted if flowStress <= 0.0
+      // bool melted  = false;
+      // bool plastic = false;
+      // if (temperature > Tm_cur || flowStress <= 0.0) {
+      //
+      //   melted = true;
+      //   // Set the deviatoric stress to zero
+      //   if (d_doMelting){
+      //      tensorS = 0.0;
+      //   } else {
+      //      cerr << "The material has exceed the melt temperature, but you haven't turned \n";
+      //      cerr << "melting on.  RFElasticPlastic does nonsensical things here.  You should \n";
+      //      cerr << "probably either set <do_melting>true</do_melting>, or increase the material\n";
+      //      cerr << "<melt_temp> to a level that won't be exceeded.\n";
+      //   }
+      //
+      //   d_flow->updateElastic(idx);
+      //
+      // } else {
+      //********** Concentration Component****************************
 
         // Get the current porosity 
         double porosity = pPorosity[idx];
 
         // Evaluate yield condition
+        // ???????????
         double traceOfTrialStress = 3.0*pressure + 
                                         tensorD.Trace()*(2.0*mu_cur*delT);
+
+        // ????????????????????????????????????????????????????????????????
+        // Shouldn't the above statement be:
+        // double traceOfTrialStress = 3.0*pressure + 
+        //                                tensorD.Trace()*(3.0*bulk*delT);
+        // ????????????????????????????????????????????????????????????????
                                         
         double flow_rule = d_yield->evalYieldCondition(equivStress, flowStress,
                                                        traceOfTrialStress, 
@@ -1104,7 +1121,9 @@ RFElasticPlastic::computeStressTensor(const PatchSubset* patches,
           d_devStress->updateInternalStresses(idx, dp, defState, delT);
 
         } // end of flow_rule if
-      } // end of temperature if
+      //********** Concentration Component****************************
+      // } // end of temperature if
+      //********** Concentration Component****************************
 
       // Calculate the updated hydrostatic stress
       double p = d_eos->computePressure(matl, state, tensorF_new, tensorD,delT);
