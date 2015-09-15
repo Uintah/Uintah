@@ -757,7 +757,7 @@ namespace Wasatch{
         ptags.push_back( pressure_tag() );
         ptags.push_back( Expr::Tag( pressure_tag().name() + "_rhs", pressure_tag().context() ) );
         const Expr::Tag rhoStarTag = isConstDensity ? densityTag_ : tagNames.make_star(densityTag_, densityTag_.context()); // get the tagname of rho*
-        std::cout <<"rhostar tag = " << densityTag_ << std::endl;
+        
         Expr::ExpressionBuilder* pbuilder = new typename Pressure::Builder( ptags, fxt, fyt, fzt,
                                                                             tagNames.pressuresrc, tagNames.dt, embedGeom.vol_frac_tag<SVolField>(), rhoStarTag,
                                                                             embedGeom.has_moving_geometry(), usePressureRefPoint, refPressureValue,
