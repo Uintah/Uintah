@@ -33,6 +33,7 @@
 #include <Core/Grid/BoundaryConditions/BCData.h>
 #include <Core/Grid/BoundaryConditions/BCDataArray.h>
 #include <Core/Grid/BoundaryConditions/BoundCond.h>
+#include <Core/Grid/BoundaryConditions/BoundCondFactory.h>
 #include <Core/Containers/StaticArray.h>
 #include <Core/Thread/AtomicCounter.h>
 #include <Core/Thread/Mutex.h>
@@ -209,6 +210,38 @@ void Patch::findCellNodes27(const Point& pos, IntVector ni[27]) const
 }
 
 
+    /**
+     *  \author  Derek Harris
+     *  \date    September, 2015
+     *  Allows a component to add a boundary condition, if it doesn't already exist.
+     */
+  void Patch::possiblyAddBC(const Patch::FaceType face, // face
+                     const int child,   // child (each child is only applicable to one face)
+                     const std::string &desc, // field label (label) 
+                     const int mat_id,        // material 
+                     const double bc_value,   // value of boundary condition
+                     const std::string &bc_kind, // bc type, dirichlet or neumann
+                     const std::string &bcFieldName, // Field variable Name (var)
+                     const std::string &faceName)  const  //  
+{
+  if (getModifiableBCDataArray(face)->checkForBoundCondData(mat_id,bcFieldName,child)  ){  // avoid adding duplicate boundary conditions 
+    return;
+  }
+
+
+  if (getModifiableBCDataArray(face)->checkForBoundCondData(mat_id,desc,child)  ){  // avoid seg fault, when there are no boundary conditions on a face 
+
+    if ( getModifiableBCDataArray(face)->getBCGeom(mat_id)[child]->getBCName()  == faceName  ){
+      {int mat_idx=0; 
+        BoundCondBase* bc;
+        BoundCondFactory::customBC( bc, mat_idx, faceName, bc_value,bcFieldName, bc_kind );
+        getModifiableBCDataArray(face)->getBCGeom(mat_idx)[child]->addBC(bc);
+        delete bc;
+      }
+    }
+  }
+}
+
 /**
  * Returns the position of the node idx in domain coordinates.
  */
@@ -359,6 +392,29 @@ Patch::setInteriorBndArrayBCValues(Patch::FaceType face, BCDataArray* bc)
 //-----------------------------------------------------------------------------------------------
 
 const BCDataArray* Patch::getBCDataArray(Patch::FaceType face) const
+{
+  if (d_arrayBCS) {
+    if ((*d_arrayBCS)[face]) {
+      return (*d_arrayBCS)[face];
+    } else {
+      ostringstream msg;
+      msg << "face = " << face << endl;
+      SCI_THROW(InternalError("d_arrayBCS[face] has not been allocated",
+                              __FILE__, __LINE__));
+    }
+  } else {
+    SCI_THROW(InternalError("Error: d_arrayBCs not allocated. This means that no boundary conditions were found. If you are solving a periodic problem, please add a <periodic> tag to your input file to avoid this error. Otherwise, add a <BoundaryConditions> block.",
+                            __FILE__, __LINE__));
+  }
+
+}
+
+    /**
+     *  \author  Derek Harris
+     *  \date    September, 2015
+     *  Allows a component to alter or add a boundary condition.  
+     */
+BCDataArray* Patch::getModifiableBCDataArray(Patch::FaceType face) const
 {
   if (d_arrayBCS) {
     if ((*d_arrayBCS)[face]) {
