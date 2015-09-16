@@ -83,8 +83,6 @@ GaoElastic::GaoElastic(ProblemSpecP& ps,MPMFlags* Mflag)
   ps->require("shear_modulus",d_initialData.Shear);
   ps->require("volume_expansion_coeff",d_initialData.vol_exp_coeff);
 
-  cout << "vol_coeff: " << d_initialData.vol_exp_coeff << endl;
-
   d_tol = 1.0e-10;
   ps->get("tolerance",d_tol);
 
