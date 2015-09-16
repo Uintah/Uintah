@@ -618,7 +618,6 @@ void AMRMPM::schedulePartitionOfUnity(SchedulerP& sched,
   sched->addTask(t, patches, matls);
 }
 
-
 //______________________________________________________________________
 //
 void AMRMPM::scheduleComputeZoneOfInfluence(SchedulerP& sched,
@@ -1123,6 +1122,11 @@ void AMRMPM::scheduleComputeLAndF(SchedulerP& sched,
   t->computes(lb->pDeformationMeasureLabel_preReloc);
   t->computes(lb->pVolumeLabel_preReloc);
 
+  if(flags->d_doScalarDiffusion){
+    t->requires(Task::NewDW, lb->gConcentrationStarLabel,       gac,NGN);
+    t->computes(lb->pConcGradientLabel_preReloc);
+  }
+
   sched->addTask(t, patches, matls);
 }
 //______________________________________________________________________
@@ -1172,9 +1176,6 @@ void AMRMPM::scheduleInterpolateToParticlesAndUpdate(SchedulerP& sched,
   t->computes(lb->pTempPreviousLabel_preReloc); // for thermal stress
   t->computes(lb->pMassLabel_preReloc);
   t->computes(lb->pLocalizedMPMLabel_preReloc);
-//  t->computes(lb->pVelGradLabel_preReloc);
-//  t->computes(lb->pDeformationMeasureLabel_preReloc);
-//  t->computes(lb->pVolumeLabel_preReloc);
   t->computes(lb->pXXLabel);
 
   // Carry Forward particle refinement flag
@@ -1680,7 +1681,7 @@ void AMRMPM::partitionOfUnity(const ProcessorGroup*,
     for(int m = 0; m < numMatls; m++){
       MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial( m );
       int dwi = mpm_matl->getDWIndex();
-      
+
       ParticleSubset* pset = old_dw->getParticleSubset(dwi, patch);
       constParticleVariable<Point> px;
       constParticleVariable<Matrix3> psize;
@@ -3186,9 +3187,11 @@ void AMRMPM::computeLAndF(const ProcessorGroup*,
       constParticleVariable<double> pmass;
       constParticleVariable<Matrix3> pFOld;
       ParticleVariable<Matrix3> pFNew,pVelGrad;
+      ParticleVariable<Vector> pConcGradNew;
 
       // Get the arrays of grid data on which the new particle values depend
       constNCVariable<Vector> gvelocity_star;
+      constNCVariable<double> gConcStar;
 
       ParticleSubset* pset = old_dw->getParticleSubset(dwi, patch);
 
@@ -3204,6 +3207,13 @@ void AMRMPM::computeLAndF(const ProcessorGroup*,
 
       Ghost::GhostType  gac = Ghost::AroundCells;
       new_dw->get(gvelocity_star,  lb->gVelocityStarLabel,   dwi,patch,gac,NGP);
+
+      if(flags->d_doScalarDiffusion){
+        new_dw->get(gConcStar,              lb->gConcentrationStarLabel, dwi,
+                                                               patch, gac, NGP);
+        new_dw->allocateAndPut(pConcGradNew,lb->pConcGradientLabel_preReloc,
+                                                                          pset);
+      }
 
       // Compute velocity gradient and deformation gradient on every particle
       // This can/should be combined into the loop above, once it is working
@@ -3230,6 +3240,13 @@ void AMRMPM::computeLAndF(const ProcessorGroup*,
                                                                    px[idx]);
         }
         pVelGrad[idx]=tensorL;
+        pConcGradNew[idx] = Vector(0.0, 0.0, 0.0);
+        for(int k = 0; k < flags->d_8or27; k++) {
+          IntVector node = ni[k];
+          for(int j = 0; j < 3; j++){
+            pConcGradNew[idx][j] += gConcStar[ni[k]] * d_S[k][j] * oodx[j];
+          }
+        }
 
         if(flags->d_min_subcycles_for_F>0){
           double Lnorm_dt = tensorL.Norm()*delT;
@@ -3682,6 +3699,7 @@ void AMRMPM::addParticles(const ProcessorGroup*,
       for( unsigned int pp=0; pp<origNParticles; ++pp ){
         prefOld[pp] = pref[pp];
         // Conditions to refine particle based on physical state
+        // TODO:  Check below, should be < or <= in first conditional
         if(pref[pp]<levelIndex && pstress[pp].Norm() > 1){
           pref[pp]++;
           numNewPartNeeded++;
@@ -3842,7 +3860,6 @@ void AMRMPM::addParticles(const ProcessorGroup*,
           }
 //          cout << "new_index = " << new_index << endl;
           pidstmp[new_index]    = (cellID | (long64) myCellNAPID);
-        cout << "pids_new = " << pidstmp[new_index] << endl;
           pxtmp[new_index]      = new_part_pos[i];
           pvoltmp[new_index]    = .125*pvolume[idx];
           pmasstmp[new_index]   = .125*pmass[idx];
