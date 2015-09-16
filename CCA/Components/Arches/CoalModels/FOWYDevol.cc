@@ -75,7 +75,13 @@ FOWYDevol::problemSetup(const ProblemSpecP& params, int qn)
 
   DQMOMEqnFactory& dqmom_eqn_factory = DQMOMEqnFactory::self();
   
-  ProblemSpecP db_coal_props = params_root->findBlock("CFD")->findBlock("ARCHES")->findBlock("Coal")->findBlock("Properties");
+  ProblemSpecP db_coal_props = params_root->findBlock("CFD")->findBlock("ARCHES")->findBlock("ParticleProperties");
+
+    std::string particleType;  
+    db_coal_props->getAttribute("type",particleType);
+    if (particleType != "coal"){
+      throw InvalidValue("ERROR: FOWYDevol: Can't use particles of type: "+particleType,__FILE__,__LINE__);
+    }
   
   // create raw coal mass var label and get scaling constant
   std::string rcmass_root = ParticleTools::parse_for_role_to_label(db, "raw_coal"); 

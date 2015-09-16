@@ -1440,8 +1440,7 @@
           <constant>0.0</constant>
         </model>
       </PropertyModels>
-      <Coal>
-        <Properties>
+        <ParticleProperties type="coal">
           <diameter_distribution>[15e-6,50e-6,150e-6]</diameter_distribution>
           <!-- [m] -->
           <!--particle_weights>[0.574,0.263,0.163]</particle_weights-->
@@ -1490,8 +1489,7 @@
           <!-- Shaddix char oxidation coefficients in the following order:  -->
           <!-- D1[O2/CO2 m2/s], D2[O2/H2O m2/s], D3[O2/CO2 m2/s], T0[K], As[mol/s.m^2.atm^n], Es[J/mol] n[], HF_CO2[J/mol], HF_CO[J/mol]  -->
           <ksi>1</ksi>
-        </Properties>
-      </Coal>
+        </ParticleProperties>
       <EulerianParticles>
         <ParticleVariables>
           <variable label="RCmass" role="raw_coal"/>

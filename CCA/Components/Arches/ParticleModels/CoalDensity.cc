@@ -22,9 +22,9 @@ CoalDensity::problemSetup( ProblemSpecP& db ){
   db->getWithDefault("const_size",_const_size,true);
   
   const ProblemSpecP db_root = db->getRootNode();
-  if ( db_root->findBlock("CFD")->findBlock("ARCHES")->findBlock("Coal")->findBlock("Properties") ){
+  if ( db_root->findBlock("CFD")->findBlock("ARCHES")->findBlock("ParticleProperties") ){
 
-    ProblemSpecP db_coal_props = db_root->findBlock("CFD")->findBlock("ARCHES")->findBlock("Coal")->findBlock("Properties");
+    ProblemSpecP db_coal_props = db_root->findBlock("CFD")->findBlock("ARCHES")->findBlock("ParticleProperties");
 
     db_coal_props->require("density",_rhop_o);
     db_coal_props->require("diameter_distribution", _sizes);
