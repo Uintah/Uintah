@@ -83,6 +83,8 @@ GaoElastic::GaoElastic(ProblemSpecP& ps,MPMFlags* Mflag)
   ps->require("shear_modulus",d_initialData.Shear);
   ps->require("volume_expansion_coeff",d_initialData.vol_exp_coeff);
 
+  cout << "vol_coeff: " << d_initialData.vol_exp_coeff << endl;
+
   d_tol = 1.0e-10;
   ps->get("tolerance",d_tol);
 
@@ -487,7 +489,7 @@ GaoElastic::computeStressTensor(const PatchSubset* patches,
       //--tensorD = (tensorR.Transpose())*(tensorD*tensorR);
 
       // Remove stress free concentration dependent component
-      tensorD = tensorD - one * alpha * (conc_rate/3);
+      tensorD = tensorD - one * vol_coeff * conc_rate;
 
       // Calculate the deviatoric part of the non-thermal part
       // of the rate of deformation tensor
@@ -552,7 +554,7 @@ GaoElastic::computeStressTensor(const PatchSubset* patches,
    
       // Calculate the total stress
       //sigma = tensorS + tensorHy;
-      sigma = sigma + (2*shear*tensorEta + one*3*bulk*dTrace) * delT;
+      sigma = sigma + (2*shear*tensorEta + one*bulk*dTrace) * delT;
 
       //-----------------------------------------------------------------------
       // Stage 4:

@@ -73,13 +73,13 @@
          <constitutive_model type="gao_elastic"> 
            <bulk_modulus>            6.5e4    </bulk_modulus>
            <shear_modulus>           3.0e4    </shear_modulus>
-           <volume_expansion_coeff>  0.56     </volume_expansion_coeff>
+           <volume_expansion_coeff>  100.00     </volume_expansion_coeff>
          </constitutive_model>
          <thermal_conductivity>0.0</thermal_conductivity>
          <specific_heat>5</specific_heat>
 
          <diffusion_model type = "rf1">
-           <diffusivity>  2e-4   </diffusivity>
+           <diffusivity>  2e-3   </diffusivity>
            <max_concentration>  1.0      </max_concentration>
            <init_conc> 0.0  </init_conc>
            <tuning1>   1.95 </tuning1>
