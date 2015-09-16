@@ -641,7 +641,7 @@ RadPropertyCalculator::coalOptics::coalOptics(const ProblemSpecP& db, bool scatt
   }
   //-----------------------------------------------------------------------------------//
   
- ProblemSpecP db_coal=db->findBlock("particles")->getRootNode()->findBlock("CFD")->findBlock("ARCHES")->findBlock("Coal")->findBlock("Properties");
+ ProblemSpecP db_coal=db->findBlock("particles")->getRootNode()->findBlock("CFD")->findBlock("ARCHES")->findBlock("ParticleProperties");
  
  if (db_coal == 0){
    throw ProblemSetupException("Error: Coal properties not found! Need Optical Coal properties!",__FILE__, __LINE__);
@@ -700,13 +700,13 @@ RadPropertyCalculator::coalOptics::coalOptics(const ProblemSpecP& db, bool scatt
     }
   }
   double density;
-  db->findBlock("abskg")->getRootNode()->findBlock("CFD")->findBlock("ARCHES")->findBlock("Coal")->findBlock("Properties")->require( "density", density ); 
+  db->findBlock("abskg")->getRootNode()->findBlock("CFD")->findBlock("ARCHES")->findBlock("ParticleProperties")->require( "density", density ); 
 
   vector<double>  particle_sizes ;        /// particle sizes in diameters
-  db->findBlock("abskg")->getRootNode()->findBlock("CFD")->findBlock("ARCHES")->findBlock("Coal")->findBlock("Properties")->require( "diameter_distribution", particle_sizes ); 
+  db->findBlock("abskg")->getRootNode()->findBlock("CFD")->findBlock("ARCHES")->findBlock("ParticleProperties")->require( "diameter_distribution", particle_sizes ); 
 
   double ash_massfrac;  
-  db->findBlock("abskg")->getRootNode()->findBlock("CFD")->findBlock("ARCHES")->findBlock("Coal")->findBlock("Properties")->findBlock("ultimate_analysis")->require("ASH", ash_massfrac); 
+  db->findBlock("abskg")->getRootNode()->findBlock("CFD")->findBlock("ARCHES")->findBlock("ParticleProperties")->findBlock("ultimate_analysis")->require("ASH", ash_massfrac); 
 
   _ash_mass = vector<double>(_nQn_part);        /// particle sizes in diameters
 

@@ -415,18 +415,19 @@
         </ParticleVariables>
       </EulerianParticles>
 
-      <!-- Coal specifics -->
-      <Coal                             spec="OPTIONAL NO_DATA">
+      <ParticleProperties               spec="OPTIONAL NO_DATA"
+                                        attribute1="type REQUIRED STRING 'coal'">
 
-        <!-- Coal Properties -->
-
-        <Properties                     spec="REQUIRED NO_DATA">
           <diameter_distribution        spec="REQUIRED MULTIPLE_DOUBLES" />    <!-- Initial particle size distribution in particle diameter -->
           <particle_weights             spec="OPTIONAL MULTIPLE_DOUBLES" />    <!-- This is not used (it is for python script) -->
           <small_weights                spec="OPTIONAL MULTIPLE_DOUBLES" />    <!-- small value for each scaled weight (used in temperature calculation -->
           <density                      spec="REQUIRED DOUBLE" />              <!-- Initial coal density -->
           <temperature                  spec="REQUIRED DOUBLE" />              <!-- Initial coal temperature -->
-          <ultimate_analysis            spec="REQUIRED NO_DATA">               <!-- Ultimate analysis. Specified as mass fractions. -->
+
+
+        <!-- Coal Properties -->
+          <ultimate_analysis            spec="REQUIRED NO_DATA"               
+                                          need_applies_to="type coal"><!-- Ultimate analysis. Specified as mass fractions. -->
             <C                          spec="REQUIRED DOUBLE"/>
             <H                          spec="REQUIRED DOUBLE"/>
             <O                          spec="REQUIRED DOUBLE"/>
@@ -438,20 +439,29 @@
           </ultimate_analysis>
 
           <!-- as received mass fractions C+H+O+N+S+char+ash+moisture=1 -->
-          <ksi                            spec="OPTIONAL DOUBLE" /> <!-- Fraction of heat released by char oxidation that goes to the particle, default = 1.0 -->
-          <raw_coal_enthalpy              spec="REQUIRED DOUBLE" /> <!-- Enthalpy of formation for raw coal at 298.15 K -->
-          <char_enthalpy                  spec="REQUIRED DOUBLE" /> <!-- Enthalpy of formation for char at 298.15 K -->
-          <ash_enthalpy                   spec="REQUIRED DOUBLE" /> <!-- Enthalpy of formation for ash at 298.15 K -->
-          <Yamamoto_coefficients          spec="OPTIONAL MULTIPLE_DOUBLES" />
+          <ksi                            spec="OPTIONAL DOUBLE"  
+                                          need_applies_to="type coal"/><!-- Fraction of heat released by char oxidation that goes to the particle, default = 1.0 -->
+          <raw_coal_enthalpy              spec="REQUIRED DOUBLE"  
+                                          need_applies_to="type coal"/><!-- Enthalpy of formation for ash at 298.15 K -->
+          <char_enthalpy                  spec="REQUIRED DOUBLE"  
+                                          need_applies_to="type coal"/><!-- Enthalpy of formation for ash at 298.15 K -->
+          <ash_enthalpy                   spec="REQUIRED DOUBLE"      
+                                          need_applies_to="type coal"/><!-- Enthalpy of formation for ash at 298.15 K -->
+
+          <Yamamoto_coefficients          spec="OPTIONAL MULTIPLE_DOUBLES" 
+                                               need_applies_to="type coal"/>
           <!-- Yamamto 1 step rate coefficients in the following order:  -->
           <!-- Av[1/s], Ev[J/mole], Yv[-], c0[-], c1[-], c2[-] c3[-], c4[-], c5[-]  -->
-          <KobayashiSarofim_coefficients          spec="OPTIONAL MULTIPLE_DOUBLES" />
+          <KobayashiSarofim_coefficients          spec="OPTIONAL MULTIPLE_DOUBLES" 
+                                                  need_applies_to="type coal"/>
           <!-- KobayashiSarofim 2 step rate coefficients in the following order:  -->
           <!-- A1[1/s], A2[1/s], E1[kcal/kmol], E2[kcal/kmol], Y1[volatile fraction from prox analysis], Y2[fraction devolatilzed at higher temperatures]  -->
-          <RichardsFletcher_coefficients          spec="OPTIONAL MULTIPLE_DOUBLES" />
+          <RichardsFletcher_coefficients          spec="OPTIONAL MULTIPLE_DOUBLES" 
+                                                  need_applies_to="type coal"/>
           <!-- RichardsFletcher 2 step rate coefficients in the following order:  -->
           <!-- A1[1/s], A2[1/s], E1[kcal/kmol], E2[kcal/kmol], Y1[volatile fraction from prox analysis], Y2[fraction devolatilzed at higher temperatures], c0_1-c5_1, c0_2-c5_2  -->
-          <FOWYDevol                        spec="OPTIONAL NO_DATA">
+          <FOWYDevol                        spec="OPTIONAL NO_DATA"
+                                            need_applies_to="type coal">
             <v_hiT                        spec="REQUIRED DOUBLE" />
             <Tig                          spec="REQUIRED DOUBLE" />
             <A                            spec="REQUIRED DOUBLE" />
@@ -462,20 +472,20 @@
             <e                            spec="REQUIRED DOUBLE" />
             <sigma                        spec="REQUIRED DOUBLE" />
           </FOWYDevol>
-          <Shaddix_char_coefficients      spec="OPTIONAL MULTIPLE_DOUBLES" />
+          <Shaddix_char_coefficients      spec="OPTIONAL MULTIPLE_DOUBLES" 
+                                          need_applies_to="type coal"/>
           <!-- Shaddix char oxidation coefficients in the following order:  -->
           <!-- D1[O2/CO2 m2/s], D2[O2/H2O m2/s], D3[O2/CO2 m2/s], T0[K], As[mol/s.m^2.atm^n], Es[J/mol] n[], HF_CO2[J/mol], HF_CO[J/mol]  -->
 
-          <optics                       spec="OPTIONAL NO_DATA" >
+          <optics                       spec="OPTIONAL NO_DATA" 
+                                            need_applies_to="type coal">
             <RawCoal_real            spec="REQUIRED DOUBLE 'positive'"/> <!-- Real part of the complex index of refraction -->
             <RawCoal_imag            spec="REQUIRED DOUBLE 'negative'"/> <!-- Imaginary part of the complex index of refraction -->
             <Ash_real                spec="REQUIRED DOUBLE 'positive'"/> <!-- This is a range, the high and low applies to the real component -->
             <Ash_imag                spec="REQUIRED DOUBLE 'negative'"/>
           </optics>
 
-        </Properties>
-
-      </Coal>
+      </ParticleProperties>
         <!-- Helper python information -->
       <Python_BC                        spec="OPTIONAL NO_DATA">
         <HHV                            spec="OPTIONAL DOUBLE" /> <!-- used in python script only -->
