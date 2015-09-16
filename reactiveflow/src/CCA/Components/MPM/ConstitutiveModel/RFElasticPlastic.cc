@@ -1021,6 +1021,7 @@ RFElasticPlastic::computeStressTensor(const PatchSubset* patches,
                                                     matl, idx);
       state->yieldStress = flowStress;
 
+      bool plastic = false;
       //********** Concentration Component****************************
       // // Material has melted if flowStress <= 0.0
       // bool melted  = false;
@@ -1231,13 +1232,13 @@ RFElasticPlastic::computeStressTensor(const PatchSubset* patches,
         pdTdt[idx] += Tdot_PW;
       }
 
+      /**
       //-----------------------------------------------------------------------
       // Stage 4:
       //-----------------------------------------------------------------------
       // Find if the particle has failed/localized
       bool isLocalized = false;
       double tepla = 0.0;
-
       if (flag->d_doErosion) {
 
         // Check 1: Look at the temperature
@@ -1335,6 +1336,7 @@ RFElasticPlastic::computeStressTensor(const PatchSubset* patches,
           }
         }
       }
+      **/
 
       //-----------------------------------------------------------------------
       // Stage 5:
