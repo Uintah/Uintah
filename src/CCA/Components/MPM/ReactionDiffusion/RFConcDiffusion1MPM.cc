@@ -58,16 +58,15 @@ void RFConcDiffusion1MPM::scheduleComputeFlux(Task* task, const MPMMaterial* mat
   task->requires(Task::OldDW, d_lb->pVolumeLabel,              matlset, gan, NGP);
   task->requires(Task::OldDW, d_lb->pDeformationMeasureLabel,  matlset, gan, NGP);
   task->requires(Task::NewDW, d_lb->gMassLabel,                matlset, gnone);
-  task->requires(Task::NewDW, d_rdlb->gConcentrationLabel,     matlset, gan, 2*NGN);
-
   task->requires(Task::OldDW, d_rdlb->pConcentrationLabel,     matlset, gan, NGP);
+  task->requires(Task::OldDW, d_lb->pConcGradientLabel,        matlset, gan, NGP);
   task->requires(Task::NewDW, d_rdlb->gHydrostaticStressLabel, matlset, gan, 2*NGN);
 
   task->computes(d_rdlb->gdCdtLabel,  matlset);
 }
 
 void RFConcDiffusion1MPM::computeFlux(const Patch* patch, const MPMMaterial* matl,
-                                                DataWarehouse* old_dw, DataWarehouse* new_dw)
+                                      DataWarehouse* old_dw, DataWarehouse* new_dw)
 {
 
   Ghost::GhostType  gac   = Ghost::AroundCells;
@@ -91,10 +90,10 @@ void RFConcDiffusion1MPM::computeFlux(const Patch* patch, const MPMMaterial* mat
   constParticleVariable<double>  pConcentration;
   constParticleVariable<Matrix3> psize;
   constParticleVariable<Matrix3> deformationGradient;
+  constParticleVariable<Vector>  pConcGrad;
   constNCVariable<double>        gConcentration,gMass;
   constNCVariable<double>        gHydrostaticStress;
 
-  ParticleVariable<Vector>       pConcentrationGradient;
   ParticleVariable<Vector>       pHydroStressGradient;
   ParticleVariable<Vector>       pPotentialFlux;
   NCVariable<double>             gdCdt;
@@ -106,14 +105,13 @@ void RFConcDiffusion1MPM::computeFlux(const Patch* patch, const MPMMaterial* mat
   old_dw->get(pMass,               d_lb->pMassLabel,               pset);
   old_dw->get(psize,               d_lb->pSizeLabel,               pset);
   old_dw->get(pConcentration,      d_rdlb->pConcentrationLabel,    pset);
+  old_dw->get(pConcGrad,           d_lb->pConcGradientLabel,       pset);
   old_dw->get(deformationGradient, d_lb->pDeformationMeasureLabel, pset);
 
-  new_dw->get(gConcentration,     d_rdlb->gConcentrationLabel,     dwi, patch, gac,2*NGN);
   new_dw->get(gHydrostaticStress, d_rdlb->gHydrostaticStressLabel, dwi, patch, gac,2*NGN);
   new_dw->get(gMass,              d_lb->gMassLabel,                dwi, patch, gnone, 0);
   new_dw->allocateAndPut(gdCdt,   d_rdlb->gdCdtLabel,    dwi, patch);
 
-  new_dw->allocateTemporary(pConcentrationGradient, pset);
   new_dw->allocateTemporary(pHydroStressGradient,   pset);
   new_dw->allocateTemporary(pPotentialFlux,         pset);
   
@@ -127,20 +125,18 @@ void RFConcDiffusion1MPM::computeFlux(const Patch* patch, const MPMMaterial* mat
     // Get the node indices that surround the cell
     interpolator->findCellAndShapeDerivatives(px[idx],ni,d_S,psize[idx],deformationGradient[idx]);
 
-    pConcentrationGradient[idx] = Vector(0.0,0.0,0.0);
     pHydroStressGradient[idx]   = Vector(0.0,0.0,0.0);
     for (int k = 0; k < d_Mflag->d_8or27; k++){
       for (int j = 0; j<3; j++) {
-          pConcentrationGradient[idx][j] += gConcentration[ni[k]] * d_S[k][j] * oodx[j];
           pHydroStressGradient[idx][j] += gHydrostaticStress[ni[k]] * d_S[k][j] * oodx[j];
       }
-	  }
+    }
 
     chem_potential = -diffusivity;
     mech_potential = diffusivity * (1 - pConcentration[idx]/max_concentration)
                      * pConcentration[idx]*init_potential;
 
-    pPotentialFlux[idx] = chem_potential*pConcentrationGradient[idx]
+    pPotentialFlux[idx] = chem_potential*pConcGrad[idx]
                           + mech_potential*pHydroStressGradient[idx];
     //cout << "id: " << idx << " CG: " << pConcentrationGradient[idx] << ", PF: " << pPotentialFlux[idx] << endl;
   } //End of Particle Loop
