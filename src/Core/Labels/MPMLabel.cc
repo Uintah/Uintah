@@ -244,6 +244,12 @@ MPMLabel::MPMLabel()
   pTemperatureGradientLabel_preReloc =VarLabel::create("p.temperatureGradient+",
 			ParticleVariable<Vector>::getTypeDescription() );
 
+  pConcGradientLabel = VarLabel::create( "p.concentrationGradient",
+			ParticleVariable<Vector>::getTypeDescription() );
+
+  pConcGradientLabel_preReloc =VarLabel::create("p.concentrationGradient+",
+			ParticleVariable<Vector>::getTypeDescription() );
+
   // Node Centered Variables
   
   gAccelerationLabel = VarLabel::create( "g.acceleration",
@@ -776,6 +782,8 @@ MPMLabel::~MPMLabel()
   VarLabel::destroy(p_qLabel_preReloc);
   VarLabel::destroy(pTemperatureGradientLabel);
   VarLabel::destroy(pTemperatureGradientLabel_preReloc);
+  VarLabel::destroy(pConcGradientLabel);
+  VarLabel::destroy(pConcGradientLabel_preReloc);
   VarLabel::destroy(pPartitionUnityLabel);
 
   VarLabel::destroy(gAccelerationLabel);

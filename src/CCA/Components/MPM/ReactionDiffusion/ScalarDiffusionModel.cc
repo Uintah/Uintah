@@ -96,11 +96,12 @@ void ScalarDiffusionModel::setIncludeHydroStress(bool value){
 }
 
 void ScalarDiffusionModel::addInitialComputesAndRequires(Task* task,
-                                                         const MPMMaterial* matl,
-                                                         const PatchSet* patch) const{
+                                                   const MPMMaterial* matl,
+                                                   const PatchSet* patch) const{
   const MaterialSubset* matlset = matl->thisMaterial();
   task->computes(d_rdlb->pConcentrationLabel, matlset);
   task->computes(d_rdlb->pConcPreviousLabel,  matlset);
+  task->computes(d_rdlb->pConcGradientLabel,  matlset);
 }
 
 void ScalarDiffusionModel::initializeSDMData(const Patch* patch,
@@ -126,9 +127,11 @@ void ScalarDiffusionModel::addParticleState(std::vector<const VarLabel*>& from,
 {
   from.push_back(d_rdlb->pConcentrationLabel);
   from.push_back(d_rdlb->pConcPreviousLabel);
+  from.push_back(d_lb->pConcGradientLabel);
 
   to.push_back(d_rdlb->pConcentrationLabel_preReloc);
   to.push_back(d_rdlb->pConcPreviousLabel_preReloc);
+  to.push_back(d_lb->pConcGradientLabel_preReloc);
 }
 
 #if 0  // DON'T DELETE YET - JG

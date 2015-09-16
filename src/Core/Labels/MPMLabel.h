@@ -113,6 +113,8 @@ namespace Uintah {
       const VarLabel* pScaleFactorLabel_preReloc;
       const VarLabel* pTemperatureGradientLabel; //for heat conduction
       const VarLabel* pTemperatureGradientLabel_preReloc; //for heat conduction
+      const VarLabel* pConcGradientLabel; //for scalar diffusion
+      const VarLabel* pConcGradientLabel_preReloc; //for scalar diffusion
       
       const VarLabel* gLambdaDotLabel;
       const VarLabel* gColorLabel;
