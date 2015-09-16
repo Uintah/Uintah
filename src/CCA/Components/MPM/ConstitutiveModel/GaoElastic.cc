@@ -81,7 +81,7 @@ GaoElastic::GaoElastic(ProblemSpecP& ps,MPMFlags* Mflag)
 {
   ps->require("bulk_modulus",d_initialData.Bulk);
   ps->require("shear_modulus",d_initialData.Shear);
-  ps->require("alpha",alpha);
+  ps->require("volume_expansion_coeff",d_initialData.vol_exp_coeff);
 
   d_tol = 1.0e-10;
   ps->get("tolerance",d_tol);
@@ -346,6 +346,7 @@ GaoElastic::computeStressTensor(const PatchSubset* patches,
 
   double bulk  = d_initialData.Bulk;
   double shear = d_initialData.Shear;
+  double vol_coeff = d_initialData.vol_exp_coeff;
   double rho_0 = matl->getInitialDensity();
   double sqrtThreeTwo = sqrt(1.5);
   double sqrtTwoThird = 1.0/sqrtThreeTwo;
@@ -469,11 +470,11 @@ GaoElastic::computeStressTensor(const PatchSubset* patches,
       // Calculate the current density and deformed volume
       double rho_cur = rho_0/J;
 
-			// Get concentrations
+      // Get concentrations
       double temperature = pTemperature[idx];
-			double concentration = pConcentration[idx];
-			double concentration_pn = pConc_prenew[idx];
-			double conc_rate = (concentration - concentration_pn)/delT;
+      double concentration = pConcentration[idx];
+      double concentration_pn = pConc_prenew[idx];
+      double conc_rate = (concentration - concentration_pn)/delT;
 
       // Calculate rate of deformation tensor (D)
       tensorD = (tensorL + tensorL.Transpose())*0.5;
@@ -485,15 +486,15 @@ GaoElastic::computeStressTensor(const PatchSubset* patches,
       // material configuration
       //--tensorD = (tensorR.Transpose())*(tensorD*tensorR);
 
-			// Remove stress free concentration dependent component
-			tensorD = tensorD - one * alpha * (conc_rate/3);
+      // Remove stress free concentration dependent component
+      tensorD = tensorD - one * alpha * (conc_rate/3);
 
       // Calculate the deviatoric part of the non-thermal part
       // of the rate of deformation tensor
-			double dTrace = tensorD.Trace();
+      double dTrace = tensorD.Trace();
       tensorEta = tensorD - one*(dTrace/3.0);
      
-		  // Calculate strain rate
+      // Calculate strain rate
       pStrainRate_new[idx] = sqrtTwoThird*tensorD.Norm();
 
       // Rotate the Cauchy stress back to the 
@@ -504,7 +505,7 @@ GaoElastic::computeStressTensor(const PatchSubset* patches,
       //double pressure = sigma.Trace()/3.0; 
       //tensorS = sigma - one * pressure;
 
-			double mu_cur = shear;
+      double mu_cur = shear;
 
       // compute the local sound wave speed
       double c_dil = sqrt((bulk + 4.0*mu_cur/3.0)/rho_cur);
@@ -551,10 +552,7 @@ GaoElastic::computeStressTensor(const PatchSubset* patches,
    
       // Calculate the total stress
       //sigma = tensorS + tensorHy;
-      sigma = sigma + (2*shear*(.9*(1-concentration) + .1)*tensorEta + one*bulk*(.9*(1-concentration) + .1)*dTrace) * delT;
-      //sigma = sigma + (2*shear*tensorEta + one*bulk*dTrace) * delT;
-      //sigma = sigma + (2*shear*(.9*(1-concentration) + .1)*tensorEta + one*bulk*(.9*(1-concentration) + .1)*dTrace) * delT;
-      //sigma = sigma + (2*shear*(.9*(1+concentration) + .1)*tensorEta + one*bulk*(.9*(1+concentration) + .1)*dTrace) * delT;
+      sigma = sigma + (2*shear*tensorEta + one*3*bulk*dTrace) * delT;
 
       //-----------------------------------------------------------------------
       // Stage 4:
@@ -596,7 +594,7 @@ GaoElastic::computeStressTensor(const PatchSubset* patches,
     double delT_new = WaveSpeed.minComponent();
 
     new_dw->put(delt_vartype(delT_new), lb->delTLabel, patch->getLevel());
-	}
+  }
 }
 
 //______________________________________________________________________
