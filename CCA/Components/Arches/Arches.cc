@@ -50,7 +50,6 @@
 #include <CCA/Components/Arches/TransportEqns/DQMOMEqn.h>
 #include <CCA/Components/Arches/TransportEqns/ScalarEqn.h>
 #include <CCA/Components/Arches/ArchesParticlesHelper.h>
-#include <CCA/Components/Arches/ParticleModels/CoalHelper.h>
 //NOTE: new includes for CQMOM
 #include <CCA/Components/Arches/CQMOM.h>
 #include <CCA/Components/Arches/TransportEqns/CQMOMEqnFactory.h>
@@ -256,10 +255,6 @@ Arches::problemSetup(const ProblemSpecP& params,
   ProblemSpecP db = params->findBlock("CFD")->findBlock("ARCHES");
   _arches_spec = db;
   d_lab->problemSetup( db );
-
-  //Look for coal information
-  CoalHelper& coal_helper = CoalHelper::self();
-  coal_helper.parse_for_coal_info( db );
 
   //==============NEW TASK STUFF
   //build the factories
