@@ -22,8 +22,6 @@
  * IN THE SOFTWARE.
  */
 
-#include <TauProfilerForSCIRun.h>
-
 #include <CCA/Components/DataArchiver/DataArchiver.h>
 
 #include <CCA/Components/ProblemSpecification/ProblemSpecReader.h>

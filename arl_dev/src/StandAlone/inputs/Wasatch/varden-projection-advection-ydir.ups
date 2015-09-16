@@ -142,7 +142,7 @@
     <save label="y-mom"/>
     <save label="y-mom_rhs_partial"/>
     <save label="v"/>
-    <save label="v*"/>
+    
     <save label="f"/>
     <save label="rhof"/>
     <save label="pressure"/>

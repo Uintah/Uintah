@@ -99,7 +99,8 @@ NIGHTLYTESTS = [
    ("Constant_Deposition"               , "CQMOM_regression/Constant_Deposition.ups"                , 1.1 , "Linux" , ["exactComparison"     , "no_restart"]) ,
    ("regridTestArches"                  , "regridTestArches"                                        , 8   , "Linux" , ["startFromCheckpoint" , "no_restart"]) , 
    ("channel_LagPart_inlet"             , "LagrangianParticles/channel_flow_x_lagrangian_inlet.ups" , 1.1 , "Linux" , ["exactComparison"     , "no_restart"]) , 
-   ("OFC4"                               , "Coal/OFC4.ups"                                                , 3   , "All"  , ["exactComparison"   ]) , 
+   ("OFC4"                              , "Coal/OFC4.ups"                                           , 3   , "All"  , ["exactComparison"   ]) , 
+   ("task_math"                         , "task_math.ups"                                           , 1.1 , "All"  , ["exactComparison", "no_restart"]) , 
 
 
 # multi-threaded NIGHTLY tests
@@ -166,7 +167,8 @@ LOCALTESTS = [
    ("angledWall3D"                      , "CQMOM_regression/angledWall3D.ups"                       , 1.1 , "All"  , ["exactComparison"   , "no_restart"]) ,
    ("Constant_Deposition"               , "CQMOM_regression/Constant_Deposition.ups"                , 1.1 , "All"  , ["exactComparison"   , "no_restart"]) ,
    ("channel_LagPart_inlet"             , "LagrangianParticles/channel_flow_x_lagrangian_inlet.ups" , 1.1 , "All"  , ["exactComparison"   , "no_restart"]) , 
-   ("OFC4"                               , "Coal/OFC4.ups"                                                , 3   , "All"  , ["exactComparison"   ]) , 
+   ("OFC4"                              , "Coal/OFC4.ups"                                           , 3   , "All"  , ["exactComparison"   ]) , 
+   ("task_math"                         , "task_math.ups"                                           , 1.1 , "All"  , ["exactComparison", "no_restart"]) , 
    
 # multi-threaded LOCAL tests
    ("rmcrt_bm1_1L_thread"                , "RMCRT/rmcrt_bm1_1L.ups"               , 1.1 , "Linux"    , ["no_restart", "exactComparison", "sus_options=-nthreads 4"]),

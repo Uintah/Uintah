@@ -162,7 +162,8 @@ CoalDensity::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info,
       *initAsh <<= _ash_mf * *massDry;
       *denom <<= *initAsh + _char_mf * *massDry + _raw_coal_mf * *massDry;
       
-      *ratio <<= ( *cchar + *rc + *initAsh) / *denom;
+      *ratio <<= cond( *denom > 0.0, ( *cchar + *rc + *initAsh) / *denom )
+                     (1.01);
       
       *rho <<= cond( *ratio > 1.0, _rhop_o )
                    ( *ratio < *initAsh/ *denom, *initAsh / *denom * _rhop_o )
@@ -255,7 +256,8 @@ CoalDensity::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info,
       *initAsh <<= _ash_mf * *massDry;
       *denom <<= *initAsh + _char_mf * *massDry + _raw_coal_mf * *massDry;
       
-      *ratio <<= ( *cchar + *rc + *initAsh) / *denom;
+      *ratio <<= cond( *denom > 0.0, ( *cchar + *rc + *initAsh) / *denom )
+                     (1.01);
       
       *rho <<= cond( *ratio > 1.0, _rhop_o )
                    ( *ratio < *initAsh/ *denom, *initAsh / *denom * _rhop_o )

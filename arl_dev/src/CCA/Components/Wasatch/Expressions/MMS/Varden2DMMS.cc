@@ -3,7 +3,7 @@
 //-- SpatialOps Includes --//
 #include <spatialops/OperatorDatabase.h>
 #include <spatialops/structured/SpatialFieldStore.h>
-
+#include <CCA/Components/Wasatch/TagNames.h>
 #ifndef PI
 #define PI 3.1415926535897932384626433832795
 #endif
@@ -15,15 +15,16 @@
 template<typename FieldT>
 VarDenMMSOscillatingMixFracSrc<FieldT>::
 VarDenMMSOscillatingMixFracSrc( const Expr::Tag& xTag,
-                        const Expr::Tag& yTag,
-                        const Expr::Tag& tTag,
+                                const Expr::Tag& yTag,
+                               const Expr::Tag& tTag,
                                const double r0,
                                const double r1,
                                const double d,
                                const double w,
                                const double k,
                                const double uf,
-                               const double vf)
+                               const double vf,
+                               const bool atNP1)
 : Expr::Expression<FieldT>(),
 r0_( r0 ),
 r1_( r1 ),
@@ -31,12 +32,14 @@ d_ ( d ),
 w_ ( w ),
 k_ ( k ),
 uf_ ( uf ),
-vf_ ( vf )
+vf_ ( vf ),
+atNP1_(atNP1)
 {
   this->set_gpu_runnable( true );
-   x_ = this->template create_field_request<FieldT>(xTag);
-   y_ = this->template create_field_request<FieldT>(yTag);
-   t_ = this->template create_field_request<TimeField>(tTag);
+  x_ = this->template create_field_request<FieldT>(xTag);
+  y_ = this->template create_field_request<FieldT>(yTag);
+  t_ = this->template create_field_request<TimeField>(tTag);
+  dt_ = this->template create_field_request<TimeField>(Wasatch::TagNames::self().dt);
 }
 
 //--------------------------------------------------------------------
@@ -51,15 +54,21 @@ evaluate()
   
   const FieldT& x = x_->field_ref();
   const FieldT& y = y_->field_ref();
-  const TimeField& t = t_->field_ref();
-//  const double A = 0.001, w=2.0, k=2.0, uf=0.5, vf=0.5; // Parameter values for the manufactured solutions
-  const double k2 = k_*k_;
-
+  
+  
+  SpatFldPtr<TimeField> ta = SpatialFieldStore::get<TimeField>( result );
+  *ta <<= t_->field_ref();
+  if (atNP1_) {
+    *ta <<= t_->field_ref() + dt_->field_ref();
+  }
+  
+  const TimeField& t = *ta;
+  
   SpatFldPtr<FieldT> xh = SpatialFieldStore::get<FieldT>( x );
   SpatFldPtr<FieldT> yh = SpatialFieldStore::get<FieldT>( y );
   *xh <<= x - uf_ * t;
   *yh <<= y - vf_ * t;
-  
+
   SpatFldPtr<FieldT> s0_ = SpatialFieldStore::get<FieldT>( result );
   SpatFldPtr<FieldT> s1_ = SpatialFieldStore::get<FieldT>( result );
   SpatFldPtr<FieldT> s2_ = SpatialFieldStore::get<FieldT>( result );
@@ -68,8 +77,9 @@ evaluate()
   SpatFldPtr<FieldT> s5_ = SpatialFieldStore::get<FieldT>( result );
   SpatFldPtr<FieldT> s6_ = SpatialFieldStore::get<FieldT>( result );
   SpatFldPtr<FieldT> s7_ = SpatialFieldStore::get<FieldT>( result );
-  SpatFldPtr<FieldT> s8_ = SpatialFieldStore::get<FieldT>( result );
-  SpatFldPtr<FieldT> s9_ = SpatialFieldStore::get<FieldT>( result );
+  SpatFldPtr<FieldT> s10_ = SpatialFieldStore::get<FieldT>( result );
+  SpatFldPtr<FieldT> s11_ = SpatialFieldStore::get<FieldT>( result );
+  SpatFldPtr<FieldT> s12_ = SpatialFieldStore::get<FieldT>( result );
   
   FieldT& s0  = *s0_;
   FieldT& s1  = *s1_;
@@ -79,52 +89,31 @@ evaluate()
   FieldT& s5  = *s5_;
   FieldT& s6  = *s6_;
   FieldT& s7  = *s7_;
-  FieldT& s8  = *s8_;
-  FieldT& s9  = *s9_;
-  
+  FieldT& s10  = *s10_;
+  FieldT& s11  = *s11_;
+  FieldT& s12  = *s12_;
+
 
   s0 <<= cos(PI * w_ * t);
   s1 <<= sin(PI * w_ * t);
-  s2 <<= cos(k_ * PI * x);
-  s3 <<= sin(k_ * PI * x);
-  s4 <<= cos(k_ * PI * y);
-  s5 <<= sin(k_ * PI * y);
+  s2 <<= sin(k_ * PI * (x - uf_ * t) );
+  s3 <<= sin(k_ * PI * (y - vf_ * t) );
 
-  s6 <<= sin(k_ * PI * (x - uf_ * t) );
-  s7 <<= sin(k_ * PI * (y - vf_ * t) );
+  s4 <<= cos(k_ * PI * (x - uf_ * t) );
+  s5 <<= cos(k_ * PI * (y - vf_ * t) );
   
-  s8 <<= cos(k_ * PI * (x - uf_ * t) );
-  s9 <<= cos(k_ * PI * (y - vf_ * t) );
-
-  const double s10 = r0_ + r1_;
-  const double s11 = r0_ - r1_;
-
-  result <<= -0.25*PI*r1_/pow(s10 - s0*s11*s6*s7,3)*
-            ( 16*d_*k2*PI*r0_*s0*s0*s9*s9*s11*s6*s6
-             - 16*d_*k2*PI*r0_*s0*s10*s6*s7
-             + 16*d_*k2*PI*r0_*s0*s0*s8*s8*s11*s7*s7
-             + 16*d_*k2*PI*r0_*s0*s0*s11*s6*s6*s7*s7
-             + 2*k_*s0*s8*s10*s10*s10*s7*uf_
-             - 6*k_*r0_*r0_*s0*s0*s8*s11*s6*s7*s7*uf_
-             - 12*k_*r0_*r1_*s0*s0*s8*s11*s6*s7*s7*uf_
-             - 6*k_*r1_*r1_*s0*s0*s8*s11*s6*s7*s7*uf_
-             + 6*k_*s0*s0*s0*s8*s10*s11*s11*s6*s6*s7*s7*s7*uf_
-             - 2*k_*s0*s0*s0*s0*s8*s11*s11*s11*s6*s6*s6*s7*s7*s7*s7*uf_
-             + 2*k_*s0*s9*s10*s10*s10*s6*vf_
-             - 6*k_*r0_*r0_*s0*s0*s9*s11*s6*s6*s7*vf_
-             - 12*k_*r0_*r1_*s0*s0*s9*s11*s6*s6*s7*vf_
-             - 6*k_*r1_*r1_*s0*s0*s9*s11*s6*s6*s7*vf_
-             + 6*k_*s0*s0*s0*s9*s10*s11*s11*s6*s6*s6*s7*s7*vf_
-             - 2*k_*s0*s0*s0*s0*s9*s11*s11*s11*s6*s6*s6*s6*s7*s7*s7*vf_
-             - 2*r0_*s0*s1*s9*s9*s10*s11*s6*s6*w_
-             + 4*r0_*s1*s10*s10*s6*s7*w_
-             + 2*r0_*s0*s0*s1*s9*s9*s11*s11*s6*s6*s6*s7*w_
-             - 5*r0_*s0*s1*s10*s11*s7*s7*w_
-             + 3*r0_*s0*s1*s8*s8*s10*s11*s7*s7*w_
-             - 3*r0_*s0*s1*s10*s11*s6*s6*s7*s7*w_
-             + 2*r0_*s0*s0*s1*s8*s8*s11*s11*s6*s7*s7*s7*w_
-             + 4*r0_*r0_*s0*s0*s1*s11*s6*s6*s6*s7*s7*s7*w_
-             - 4*r0_*r1_*s0*s0*s1*s11*s6*s6*s6*s7*s7*s7*w_ );
+  s6 <<= sin(2.0*PI*w_*t);
+  s7 <<= cos(2.0 * k_ * PI * (x - uf_ * t) );
+  const double s8 = r0_ - r1_;
+  const double s9 = r0_ + r1_;
+  s10 <<= 8.0*d_*k_*k_*PI + s1 * s2 * s3 * s8 * w_;
+  s11 <<= 4.0*d_*k_*k_*PI + s1*s2*s3*s8*w_;
+  s12 <<= -5.0 + 3.0 * s7;
+  
+  result <<= -(PI*r0_*r1_*(pow(s0,2)*(pow(s3,2)*(2*s11*pow(s2,2) + s10*pow(s4,2))
+             + s10*pow(s2,2)*pow(s5,2))*s8 - 8*d_*pow(k_,2)*PI*s0*s2*s3*s9 -
+              (s9*(2*pow(s2,2)*pow(s5,2)*s6*s8 - s3*(s12*s3*s6*s8 + 8*s1*s2*s9))*w_)/4.))/
+              (2.*pow(-(s0*s2*s3*s8) + s9,3));
 }
 
 //--------------------------------------------------------------------
@@ -141,7 +130,8 @@ Builder( const Expr::Tag& result,
         const double w,
         const double k,
         const double uf,
-        const double vf)
+        const double vf,
+        const bool atNP1)
 : ExpressionBuilder(result),
 r0_( r0 ),
 r1_( r1 ),
@@ -152,7 +142,8 @@ uf_ ( uf ),
 vf_ ( vf ),
 xTag_( xTag ),
 yTag_( yTag ),
-tTag_( tTag )
+tTag_( tTag ),
+atNP1_(atNP1)
 {}
 
 //--------------------------------------------------------------------
@@ -162,7 +153,7 @@ Expr::ExpressionBase*
 VarDenMMSOscillatingMixFracSrc<FieldT>::Builder::
 build() const
 {
-  return new VarDenMMSOscillatingMixFracSrc<FieldT>( xTag_, yTag_, tTag_, r0_, r1_, d_, w_, k_, uf_, vf_ );
+  return new VarDenMMSOscillatingMixFracSrc<FieldT>( xTag_, yTag_, tTag_, r0_, r1_, d_, w_, k_, uf_, vf_, atNP1_ );
 }
 
 //**********************************************************************
@@ -173,7 +164,6 @@ template<typename FieldT>
 VarDenMMSOscillatingContinuitySrc<FieldT>::
 VarDenMMSOscillatingContinuitySrc( const Expr::Tag densTag,
                                    const Expr::Tag densStarTag,
-                                   const Expr::Tag dens2StarTag,
                                    const Expr::TagList& velTags,
                                    const Expr::TagList& velStarTags,
                                    const double r0,
@@ -185,8 +175,7 @@ VarDenMMSOscillatingContinuitySrc( const Expr::Tag densTag,
                                    const Expr::Tag& xTag,
                                    const Expr::Tag& yTag,
                                    const Expr::Tag& tTag,
-                                   const Expr::Tag& dtTag,
-                                   const Wasatch::VarDenParameters varDenParams )
+                                   const Expr::Tag& dtTag )
 : Expr::Expression<FieldT>(),
   doX_( velStarTags[0]!=Expr::Tag() ),
   doY_( velStarTags[1]!=Expr::Tag() ),
@@ -197,16 +186,11 @@ VarDenMMSOscillatingContinuitySrc( const Expr::Tag densTag,
   wf_ ( wf ),
   k_ ( k ),
   uf_ ( uf ),
-  vf_ ( vf ),
-  a0_(varDenParams.alpha0),
-  model_(varDenParams.model),
-  useOnePredictor_(varDenParams.onePredictor),
-  varDenParams_(varDenParams)
+  vf_ ( vf )
 {
   this->set_gpu_runnable( true );
-   dens_ = this->template create_field_request<SVolField>(densTag);
-   densStar_ = this->template create_field_request<SVolField>(densStarTag);
-  if (!useOnePredictor_)  dens2Star_ = this->template create_field_request<SVolField>(dens2StarTag);
+  dens_ = this->template create_field_request<SVolField>(densTag);
+  densStar_ = this->template create_field_request<SVolField>(densStarTag);
   
    x_ = this->template create_field_request<FieldT>(xTag);
    y_ = this->template create_field_request<FieldT>(yTag);
@@ -215,17 +199,13 @@ VarDenMMSOscillatingContinuitySrc( const Expr::Tag densTag,
   
   if (doX_) {
      u_ = this->template create_field_request<XVolField>(velTags[0]);
-     uStar_ = this->template create_field_request<XVolField>(velStarTags[0]);
   }
   if (doY_) {
      v_ = this->template create_field_request<YVolField>(velTags[1]);
-     vStar_ = this->template create_field_request<YVolField>(velStarTags[1]);
   }
   if (doZ_) {
      w_ = this->template create_field_request<ZVolField>(velTags[2]);
-     wStar_ = this->template create_field_request<ZVolField>(velStarTags[2]);
   }
-  
 }
 
 //--------------------------------------------------------------------
@@ -271,101 +251,24 @@ evaluate()
   const FieldT& x = x_->field_ref();
   const FieldT& y = y_->field_ref();
   
-  SpatialOps::SpatFldPtr<SVolField> drhodtstar = SpatialOps::SpatialFieldStore::get<SVolField>( result );
-  if   ( useOnePredictor_ ) *drhodtstar <<= (rhoStar - rho)/(dt);
-  else                      *drhodtstar <<= (rhoStar - rho)/(2.0 * dt);
+  SpatFldPtr<TimeField> ta = SpatialFieldStore::get<TimeField>( time );
+  *ta <<= time + dt;
   
-  SpatialOps::SpatFldPtr<SVolField> divmomstar = SpatialOps::SpatialFieldStore::get<SVolField>( result );
-
-  if (is3d_) {
-    *divmomstar <<=   (*gradXOp_) ( (*s2XInterpOp_)(rhoStar) * ( uStar_->field_ref() ) )
-                    + (*gradYOp_) ( (*s2YInterpOp_)(rhoStar) * ( vStar_->field_ref() ) )
-                    + (*gradZOp_) ( (*s2ZInterpOp_)(rhoStar) * ( wStar_->field_ref() ) );
-  } else {
-    if(doX_) *divmomstar <<=               (*gradXOp_) ( (*s2XInterpOp_)(rhoStar) * ( uStar_->field_ref() ) );
-    else     *divmomstar <<= 0.0;
-    if(doY_) *divmomstar <<= *divmomstar + (*gradYOp_) ( (*s2YInterpOp_)(rhoStar) * ( vStar_->field_ref() ) );
-    if(doZ_) *divmomstar <<= *divmomstar + (*gradZOp_) ( (*s2ZInterpOp_)(rhoStar) * ( wStar_->field_ref() ) );
-  }
-  
-  SpatialOps::SpatFldPtr<SVolField> beta = SpatialOps::SpatialFieldStore::get<SVolField>( result );
-  
-  // beta is the ratio of drhodt to div(mom*)
-  *beta  <<= //cond (abs(abs(*drhodtstar) - abs(*divmomstar)) <= 1e-16, 1.0)
-            cond (abs(*drhodtstar) <= 1e-10, 0.0)
-            (abs(*divmomstar) <= 1e-10, abs(*drhodtstar) / 1e-10)
-            (abs(*drhodtstar / *divmomstar));
-  
-  SpatialOps::SpatFldPtr<SVolField> alpha = SpatialOps::SpatialFieldStore::get<SVolField>( result );
-//      *alpha <<= cond( *beta != *beta, 0.0 )
-//                    ( 1.0/(*beta + 1.0)  );
-  
-//  const double r = ( r1_/r0_ >= r0_/r1_ ? r0_/r1_ : r1_/r0_ );
-//  *alpha <<= cond( *beta != *beta, 0.0 )
-//                 ( exp(log(0.2)*(pow(*beta, 0.2))) ); // Increase the value of the exponent to get closer to a step function
-  
-//  *alpha <<= 0.1; // use this for the moment until we figure out the proper model for alpha
-  switch (model_) {
-    case Wasatch::VarDenParameters::CONSTANT:
-      *alpha <<= a0_;
-      break;
-    case Wasatch::VarDenParameters::IMPULSE:
-      *alpha <<= cond(*drhodtstar == 0.0, 1.0)(a0_);
-      break;
-    case Wasatch::VarDenParameters::SMOOTHIMPULSE:
-    {
-      const double c = varDenParams_.gaussWidth;
-      *alpha <<= a0_ + (1.0 - a0_)*exp(- *drhodtstar * *drhodtstar/(2.0*c*c));
-    }
-      break;      
-    case Wasatch::VarDenParameters::DYNAMIC:
-    {
-      SpatialOps::SpatFldPtr<SVolField> velDotDensGrad = SpatialOps::SpatialFieldStore::get<SVolField>( result );
-      if( is3d_ ){ // for 3D cases, inline the whole thing
-        *velDotDensGrad <<= (*x2SInterpOp_)(u_->field_ref()) * (*gradXSOp_)(rho) + (*y2SInterpOp_)(v_->field_ref()) * (*gradYSOp_)(rho) + (*z2SInterpOp_)(w_->field_ref()) * (*gradZSOp_)(rho);
-      } else {
-        // for 1D and 2D cases, we are not as efficient - add terms as needed...
-        if( doX_ ) *velDotDensGrad <<= (*x2SInterpOp_)(u_->field_ref()) * (*gradXSOp_)(rho);
-        else       *velDotDensGrad <<= 0.0;
-        if( doY_ ) *velDotDensGrad <<= *velDotDensGrad + (*y2SInterpOp_)(v_->field_ref()) * (*gradYSOp_)(rho);
-        if( doZ_ ) *velDotDensGrad <<= *velDotDensGrad + (*z2SInterpOp_)(w_->field_ref()) * (*gradZSOp_)(rho);
-      } // 1D, 2D cases
-      *velDotDensGrad <<= abs(*velDotDensGrad);
-      *alpha <<= cond(*drhodtstar == 0.0, 1.0)( (1.0 - a0_) * ((0.1 * *velDotDensGrad) / ( 0.1 * *velDotDensGrad + 1)) + a0_ );
-    }
-      //    case Wasatch::VarDenParameters::DYNAMIC:
-      //    {
-      //      SpatialOps::SpatFldPtr<SVolField> densGrad = SpatialOps::SpatialFieldStore::get<SVolField>( result );
-      //      *densGrad <<= sqrt( (*gradXSOp_)(*dens_) * (*gradXSOp_)(*dens_) + (*gradYSOp_)(*dens_) * (*gradYSOp_)(*dens_) + (*gradZSOp_)(*dens_) * (*gradZSOp_)(*dens_));
-      //
-      //      //      alpha <<= 1.0 / ( 1.0 + exp(10- *densGrad));
-      //      *alpha <<= 0.9*((0.1 * *densGrad) / ( 0.1 * *densGrad + 1))+0.1;
-      //    }
-      break;
-    default:
-      *alpha <<= 0.1;
-      break;
-  }
-  
-  SpatFldPtr<TimeField> t = SpatialFieldStore::get<TimeField>( time );
-  *t <<= time + dt;
+  TimeField& t = *ta;
   
   SpatFldPtr<FieldT> xh = SpatialFieldStore::get<FieldT>( x );
   SpatFldPtr<FieldT> yh = SpatialFieldStore::get<FieldT>( y );
-  *xh <<= x - uf_ * *t;
-  *yh <<= y - vf_ * *t;
+  *xh <<= x - uf_ * t;
+  *yh <<= y - vf_ * t;
   
   SpatFldPtr<FieldT> xb = SpatialFieldStore::get<FieldT>( x );
   SpatFldPtr<FieldT> yb = SpatialFieldStore::get<FieldT>( y );
   SpatFldPtr<TimeField> tb = SpatialFieldStore::get<TimeField>( time);
   *xb <<= PI * k_ * *xh;
   *yb <<= PI * k_ * *yh;
-  *tb <<= PI * wf_ * *t;
+  *tb <<= PI * wf_ * t;
   
-  result <<= *alpha *
-  (
-   -0.5 * (r0_ - r1_) * PI*k_*cos(*tb) * ( uf_ * cos(*xb)*sin(*yb) + vf_ * cos(*yb)*sin(*xb) )
-   );
+  result <<= (1.0L/2.0L)*PI*k_*(-r0_*uf_*sin(PI*k_*(t*vf_ - y))*cos(PI*k_*(t*uf_ - x)) - r0_*vf_*sin(PI*k_*(t*uf_ - x))*cos(PI*k_*(t*vf_ - y)) + r1_*uf_*sin(PI*k_*(t*vf_ - y))*cos(PI*k_*(t*uf_ - x)) + r1_*vf_*sin(PI*k_*(t*uf_ - x))*cos(PI*k_*(t*vf_ - y)))*cos(PI*t*wf_);
 }
 
 //--------------------------------------------------------------------
@@ -375,7 +278,6 @@ VarDenMMSOscillatingContinuitySrc<FieldT>::Builder::
 Builder( const Expr::Tag& result,
          const Expr::Tag densTag,
          const Expr::Tag densStarTag,
-         const Expr::Tag dens2StarTag,
          const Expr::TagList& velTags,
          const Expr::TagList& velStarTags,
          const double r0,
@@ -387,8 +289,7 @@ Builder( const Expr::Tag& result,
          const Expr::Tag& xTag,
          const Expr::Tag& yTag,
          const Expr::Tag& tTag,
-         const Expr::Tag& timestepTag,
-         const Wasatch::VarDenParameters varDenParams )
+         const Expr::Tag& timestepTag)
 : ExpressionBuilder(result),
   r0_( r0 ),
   r1_( r1 ),
@@ -402,10 +303,7 @@ Builder( const Expr::Tag& result,
   timestepTag_( timestepTag ),
   denst_     ( densTag      ),
   densStart_ ( densStarTag  ),
-  dens2Start_( dens2StarTag ),
-  velTs_     ( velTags ),
-  velStarTs_ ( velStarTags  ),
-  varDenParams_(varDenParams)
+  velTs_     ( velTags )
 {}
 
 //--------------------------------------------------------------------
@@ -415,13 +313,10 @@ Expr::ExpressionBase*
 VarDenMMSOscillatingContinuitySrc<FieldT>::Builder::
 build() const
 {
-  return new VarDenMMSOscillatingContinuitySrc<FieldT>( denst_, densStart_, dens2Start_, velTs_, velStarTs_, r0_, r1_, wf_, k_, uf_, vf_, xTag_, yTag_, tTag_, timestepTag_, varDenParams_ );
+  return new VarDenMMSOscillatingContinuitySrc<FieldT>( denst_, densStart_, velTs_, velStarTs_, r0_, r1_, wf_, k_, uf_, vf_, xTag_, yTag_, tTag_, timestepTag_ );
 }
 
-
 //--------------------------------------------------------------------
-//--------------------------------------------------------------------
-
 
 template<typename FieldT>
 VarDenOscillatingMMSxVel<FieldT>::
@@ -474,24 +369,23 @@ evaluate()
   const FieldT& y = y_->field_ref();
   const SVolField& rho = rho_->field_ref();
   const TimeField& t = t_->field_ref();
-  const double w=2.0, k=2.0, uf=0.5, vf=0.5; // Parameter values for the manufactured solutions
     
   SpatFldPtr<FieldT> xh_ = SpatialFieldStore::get<FieldT>( x ); FieldT& xh = *xh_;
   SpatFldPtr<FieldT> yh_ = SpatialFieldStore::get<FieldT>( y ); FieldT& yh = *yh_;
-//  const TimeField& t = *t_;
-  xh <<= x - uf * t;
-  yh <<= y - vf * t;
+
+  xh <<= x - uf_ * t;
+  yh <<= y - vf_ * t;
   
   SpatFldPtr<FieldT> xb_ = SpatialFieldStore::get<FieldT>( x ); FieldT& xb = *xb_;
   SpatFldPtr<FieldT> yb_ = SpatialFieldStore::get<FieldT>( y ); FieldT& yb = *yb_;
   SpatFldPtr<TimeField> tb_ = SpatialFieldStore::get<TimeField>( t ); TimeField& tb = *tb_;
-  xb <<= PI * k * xh;
-  yb <<= PI * k * yh;
-  tb <<= PI * w * t;
+  xb <<= PI * k_ * xh;
+  yb <<= PI * k_ * yh;
+  tb <<= PI * w_ * t;
   
   SpatFldPtr<FieldT> rho_interp = SpatialFieldStore::get<FieldT>( result );
   s2FInterpOp_->apply_to_field(rho,*rho_interp);
-  const double q =  (-w/(4*k)) * (r1_-r0_);
+  const double q =  (-w_/(4*k_)) * (r1_ - r0_);
   result <<= q * cos(xb) * sin(yb) * sin(tb) / *rho_interp;
 }
 
@@ -534,8 +428,6 @@ build() const
 }
 
 //--------------------------------------------------------------------
-//--------------------------------------------------------------------
-
 
 template<typename FieldT>
 VarDenOscillatingMMSyVel<FieldT>::
@@ -589,23 +481,21 @@ evaluate()
   const SVolField& rho = rho_->field_ref();
   const TimeField& t = t_->field_ref();
   
-  const double om=2.0, k=2.0, uf=0.5, vf=0.5; // Parameter values for the manufactured solutions
-  
   SpatFldPtr<FieldT> xh = SpatialFieldStore::get<FieldT>( x );
   SpatFldPtr<FieldT> yh = SpatialFieldStore::get<FieldT>( y );
-  *xh <<= x - uf * t;
-  *yh <<= y - vf * t;
+  *xh <<= x - uf_ * t;
+  *yh <<= y - vf_ * t;
   
   SpatFldPtr<FieldT> xb = SpatialFieldStore::get<FieldT>( x );
   SpatFldPtr<FieldT> yb = SpatialFieldStore::get<FieldT>( y );
   SpatFldPtr<TimeField> tb = SpatialFieldStore::get<TimeField>( t );
-  *xb <<= PI * k * *xh;
-  *yb <<= PI * k * *yh;
-  *tb <<= PI * om * t;
+  *xb <<= PI * k_ * *xh;
+  *yb <<= PI * k_ * *yh;
+  *tb <<= PI * w_ * t;
   
   SpatFldPtr<FieldT> rho_interp = SpatialFieldStore::get<FieldT>( result );
   s2FInterpOp_->apply_to_field(rho,*rho_interp);
-  result <<= (-om/(4*k)) * (r1_-r0_) * sin(*xb) * cos(*yb) * sin(*tb) / *rho_interp;
+  result <<= (-w_/(4*k_)) * (r1_ - r0_) * sin(*xb) * cos(*yb) * sin(*tb) / *rho_interp;
 }
 
 //--------------------------------------------------------------------
@@ -754,7 +644,7 @@ DiffusiveConstant( const Expr::Tag& rhoTag,
   d_(d)
 {
   this->set_gpu_runnable( true );
-   rho_ = this->template create_field_request<FieldT>(rhoTag);
+  rho_ = this->template create_field_request<FieldT>(rhoTag);
 }
 
 //--------------------------------------------------------------------

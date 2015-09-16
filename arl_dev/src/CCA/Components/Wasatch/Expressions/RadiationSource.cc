@@ -246,7 +246,7 @@ namespace Wasatch {
                                     const Expr::Tag& celltypeTag,
                                     Uintah::Ray* rmcrt,
                                     Uintah::ProblemSpecP& radiationSpec,
-                                    Uintah::SimulationStateP& sharedState,
+                                    Uintah::SimulationStateP sharedState,
                                     Uintah::GridP& grid)
   : ExpressionBuilder  ( results        ),
   temperatureTag_    ( temperatureTag ),
