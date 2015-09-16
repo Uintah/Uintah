@@ -324,8 +324,6 @@ namespace Wasatch{
       }
 #     endif
 
-      tree->register_fields( *fml_ );
-
       PatchInfoMap::const_iterator ipim = patchInfoMap.find(patchID);
       assert( ipim != patchInfoMap.end() );
       Info info;
@@ -366,7 +364,7 @@ namespace Wasatch{
    */
   void
   add_fields_to_task( Uintah::Task& task,
-                      const Expr::ExpressionTree& tree,
+                      Expr::ExpressionTree& tree,
                       Expr::FieldManagerList& fml,
                       const Uintah::PatchSubset* const patches,
                       const Uintah::MaterialSubset* const materials,
@@ -452,6 +450,12 @@ namespace Wasatch{
         //________________
         // set field mode
         if( tree.computes_field( fieldTag ) ){
+
+          // carry forward fields should be persisten. Here we enforce that.
+          if( fieldTag.context() == Expr::CARRY_FORWARD )
+          {
+            tree.set_expr_is_persistent(fieldTag, fml);
+          }
 
           // if the field uses dynamic allocation, then the uintah task should not be aware of this field
           if( ! tree.is_persistent(fieldTag) ){

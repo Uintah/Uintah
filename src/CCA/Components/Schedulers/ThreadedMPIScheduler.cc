@@ -22,8 +22,6 @@
  * IN THE SOFTWARE.
  */
 
-#include <TauProfilerForSCIRun.h>
-
 #include <CCA/Components/Schedulers/ThreadedMPIScheduler.h>
 #include <CCA/Components/Schedulers/OnDemandDataWarehouse.h>
 #include <CCA/Components/Schedulers/TaskGraph.h>
@@ -261,16 +259,6 @@ ThreadedMPIScheduler::execute( int tgnum     /* = 0 */,
 
   MALLOC_TRACE_TAG_SCOPE("ThreadedMPIScheduler::execute");
 
-  TAU_PROFILE("ThreadedMPIScheduler::execute()", " ", TAU_USER);
-  TAU_PROFILE_TIMER(reducetimer, "Reductions", "[ThreadedMPIScheduler::execute()] " , TAU_USER);
-  TAU_PROFILE_TIMER(sendtimer, "Send Dependency", "[ThreadedMPIScheduler::execute()] " , TAU_USER);
-  TAU_PROFILE_TIMER(recvtimer, "Recv Dependency", "[ThreadedMPIScheduler::execute()] " , TAU_USER);
-  TAU_PROFILE_TIMER(outputtimer, "Task Graph Output", "[ThreadedMPIScheduler::execute()] ", TAU_USER);
-  TAU_PROFILE_TIMER(testsometimer, "Test Some", "[ThreadedMPIScheduler::execute()] ", TAU_USER);
-  TAU_PROFILE_TIMER(finalwaittimer, "Final Wait", "[ThreadedMPIScheduler::execute()] ", TAU_USER);
-  TAU_PROFILE_TIMER(sorttimer, "Topological Sort", "[ThreadedMPIScheduler::execute()] ", TAU_USER);
-  TAU_PROFILE_TIMER(sendrecvtimer, "Initial Send Recv", "[ThreadedMPIScheduler::execute()] ", TAU_USER);
-
   ASSERTRANGE(tgnum, 0, static_cast<int>(graphs.size()));
   TaskGraph* tg = graphs[tgnum];
   tg->setIteration(iteration);
@@ -328,9 +316,6 @@ ThreadedMPIScheduler::execute( int tgnum     /* = 0 */,
   if (reloc_new_posLabel_ && dws[dwmap[Task::OldDW]] != 0) {
     dws[dwmap[Task::OldDW]]->exchangeParticleQuantities(dts, getLoadBalancer(), reloc_new_posLabel_, iteration);
   }
-
-  TAU_PROFILE_TIMER(doittimer, "Task execution", "[ThreadedMPIScheduler::execute() loop] ", TAU_USER);
-  TAU_PROFILE_START(doittimer);
 
   int currphase = 0;
   int numPhases = tg->getNumTaskPhases();
@@ -493,8 +478,6 @@ ThreadedMPIScheduler::execute( int tgnum     /* = 0 */,
     }
 
   }  // end while( numTasksDone < ntasks )
-
-  TAU_PROFILE_STOP(doittimer);
 
   // wait for all tasks to finish
   d_nextmutex.lock();

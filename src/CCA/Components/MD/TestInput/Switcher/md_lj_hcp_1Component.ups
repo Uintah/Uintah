@@ -96,22 +96,5 @@
      </Electrostatics>
    </MD>
 
-
-    <!--____________________________________________________________________-->
-    <!--   G R I D     S P E C I F I C A T I O N                            -->
-    <!--____________________________________________________________________-->
-
-    <Grid>
-       <Level>
-           <Box label = "1">
-              <lower>[0,0,0]</lower>
-              <upper>[55.9709435199820,55.9709435199820,55.9709435199820]</upper>
-              <resolution>[56,56,56]</resolution>
-              <patches>[1,1,1]</patches>
-           </Box>
-           <periodic>[1,1,1]</periodic>
-       </Level>
-    </Grid>
-
 </Uintah_specification>
 

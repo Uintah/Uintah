@@ -39,9 +39,9 @@
 #include <Core/Exceptions/ParameterNotFound.h>
 #include <Core/Math/MinMax.h>
 #include <Core/Malloc/Allocator.h>
+
 #include <fstream>
 #include <iostream>
-#include <TauProfilerForSCIRun.h>
 
 using std::cerr;
 using namespace Uintah;

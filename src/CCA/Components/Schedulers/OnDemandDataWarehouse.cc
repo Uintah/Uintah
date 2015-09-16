@@ -22,8 +22,6 @@
  * IN THE SOFTWARE.
  */
 
-#include <TauProfilerForSCIRun.h>
-
 #include <CCA/Components/Schedulers/OnDemandDataWarehouse.h>
 #include <CCA/Ports/LoadBalancer.h>
 #include <CCA/Ports/Scheduler.h>
@@ -1125,7 +1123,6 @@ OnDemandDataWarehouse::getParticleSubset(       int       matlIndex,
                                                 IntVector high )
 {
   MALLOC_TRACE_TAG_SCOPE("OnDemandDataWarehouse::getParticleSubset-a");
-  TAU_PROFILE("OnDemandDataWarehouse::getParticleSubset-a", " ", TAU_USER);
   
   const Patch* realPatch = (patch != 0) ? patch->getRealPatch() : 0;
   ParticleSubset* subset = 0;
@@ -1152,7 +1149,6 @@ OnDemandDataWarehouse::getParticleSubset( int matlIndex,
                                           const VarLabel *pos_var )
 {
   MALLOC_TRACE_TAG_SCOPE( "OnDemandDataWarehouse::getParticleSubset-b" );
-  TAU_PROFILE("OnDemandDataWarehouse::getParticleSubset-a", " ", TAU_USER);
 
   const Patch* realPatch = (patch != 0) ? patch->getRealPatch() : 0;
   ParticleSubset* subset = 0;
@@ -1201,7 +1197,7 @@ OnDemandDataWarehouse::getParticleSubset(       int       matlIndex,
                                           const Level*    oldLevel )  //level is ONLY used when querying from an old grid, otherwise the level will be determined from the patch
 {
   MALLOC_TRACE_TAG_SCOPE("OnDemandDataWarehouse::getParticleSubset-c");
-  TAU_PROFILE("OnDemandDataWarehouse::getParticleSubset-b", " ", TAU_USER);
+
   // relPatch can be NULL if trying to get a particle subset for an arbitrary spot on the level
   Patch::selectType neighbors;
  
@@ -1379,7 +1375,6 @@ OnDemandDataWarehouse::get(       constParticleVariableBase& constVar,
                                   ParticleSubset*            pset )
 {
   MALLOC_TRACE_TAG_SCOPE( "OnDemandDataWarehouse::get()-2" );
-  TAU_PROFILE("OnDemandDataWarehouse::get(particle variable)", " ", TAU_USER);
   int matlIndex = pset->getMatlIndex();
   const Patch* patch = pset->getPatch();
 
@@ -1504,7 +1499,7 @@ OnDemandDataWarehouse::allocateTemporary( ParticleVariableBase& var,
                                           ParticleSubset*       pset )
 {  
   MALLOC_TRACE_TAG_SCOPE("OnDemandDataWarehouse::allocateTemporary(Particle Variable):");
-  //TAU_PROFILE("allocateTemporary()", "OnDemand.cc", TAU_USER);
+
   var.allocate(pset);
 }
 
@@ -1516,6 +1511,7 @@ OnDemandDataWarehouse::allocateAndPut(       ParticleVariableBase& var,
                                              ParticleSubset*       pset)
 {
   MALLOC_TRACE_TAG_SCOPE("OnDemandDataWarehouse::allocateAndPut(Particle Variable):" + label->getName());
+
   int matlIndex = pset->getMatlIndex();
   const Patch* patch = pset->getPatch();
   
@@ -1536,6 +1532,7 @@ OnDemandDataWarehouse::put(       ParticleVariableBase& var,
                                   bool                  replace /*= false*/ )
 {
   MALLOC_TRACE_TAG_SCOPE("OnDemandDataWarehouse::put(Particle Variable):" + label->getName());
+
   ASSERT(!d_finalized);  
 
   ParticleSubset* pset = var.getParticleSubset();
@@ -2716,7 +2713,6 @@ OnDemandDataWarehouse::getGridVar(       GridVariableBase& var,
                                          Ghost::GhostType  gtype,
                                          int               numGhostCells )
 {
-  TAU_PROFILE("OnDemandDataWarehouse::getGridVar", " ", TAU_USER);
   Patch::VariableBasis basis = Patch::translateTypeToBasis(label->typeDescription()->getType(), false);
   ASSERTEQ(basis, Patch::translateTypeToBasis(var.virtualGetTypeDescription()->getType(), true));
 

@@ -1837,6 +1837,13 @@ namespace Uintah {
     void setInteriorBndArrayBCValues(FaceType face, BCDataArray* bc);
     
     const BCDataArray* getBCDataArray(Patch::FaceType face) const;
+    /**
+     *  \author  Derek Harris
+     *  \date    September, 2015
+     *  Allows a component to alter or add a boundary condition.  
+     */
+    BCDataArray* getModifiableBCDataArray(Patch::FaceType face) const;
+
     const BCDataArray* getInteriorBndBCDataArray(Patch::FaceType face) const;
     
     const BoundCondBase* getArrayBCValues(FaceType face,int mat_id,
@@ -1949,7 +1956,23 @@ namespace Uintah {
      * the face.
      */
     IntVector getSFCZFORTHighIndex__Old() const;
-    
+
+    /**
+     *  \author  Derek Harris
+     *  \date    September, 2015
+     *  Allows a component to add an additional boundary condition for a particular field. 
+     *  This field will inherit the iterator and other features of the boundary condition object,
+     *  but allow a new scalar value to be set.
+     */
+    void possiblyAddBC(const Patch::FaceType face, // face
+        const int child,               // child (each child is only applicable to one face)
+        const std::string &desc,       // field label (label) 
+        const int mat_id,              // material 
+        const double bc_value,         // value of boundary condition
+        const std::string &bc_kind,    // bc type, dirichlet or neumann
+        const std::string &bcFieldName,// Field variable Name (var)
+        const std::string &faceName)  const ; //  name of Face, from input file
+
   protected:
     friend class Level;
     friend class NodeIterator;

@@ -133,7 +133,7 @@ void RMCRT_Test::problemSetup(const ProblemSpecP& prob_spec,
   }
  
   // bulletproofing
-  if ( d_benchmark > 7 || d_benchmark < 0  ){
+  if ( d_benchmark > 8 || d_benchmark < 0  ){
      ostringstream warn;
      warn << "RMCRT:ERROR:  Benchmark ("<< d_benchmark <<") only valid options are 1-7" << endl;
      throw ProblemSetupException(warn.str(), __FILE__, __LINE__);
@@ -667,6 +667,32 @@ void RMCRT_Test::initialize (const ProcessorGroup*,
         
         double tmp = 1.0e7 * (2.0 * x + 1.0);
         color[c] = pow( tmp, 0.25 ); 
+      }   
+    } 
+;
+;
+
+    if (d_benchmark == 8 ){
+      if (patch->getID() == 0 ){
+        proc0cout << "__________________________________\n"
+                  << "      RMCRT:Initialization (8)\n"
+                  << "      abskg =(max(sin(x*5*pi).*abs((sin(z*3*pi+pi)) + (sin(y *3*pi+pi+pi))),0.0)+max(sin(x*5*pi+pi),0).*max(sin(z*3*pi+pi) + sin(y *3*pi+pi),0.0))*5.0 \n"
+                  << "       T =  (max(sin(x*5*pi).*max(sin((z)*3*pi) + sin((y) *3*pi),0.0),0.0)+max(sin(x*5*pi),0).*max(sin(z*3*pi+pi) + sin(y *3*pi+pi),0.0))*1000.0\n"
+                  << "__________________________________\n";
+      }
+      
+      for ( CellIterator iter(patch->getCellIterator()); !iter.done(); iter++) {
+        IntVector c = *iter;
+        Point p = patch->cellPosition( c );
+
+        double x = p(0);
+        double y = p(1);
+        double z = p(2);
+        
+        abskg[c] =   (max(sin(x*5*M_PI)*abs((sin(z*3*M_PI+M_PI)) + (sin(y *3*M_PI))),0.0)+max(sin(x*5.0*M_PI+M_PI),0.0)*max(sin(z*3*M_PI+M_PI) + sin(y *3*M_PI+M_PI),0.0))*5.0;
+        double tmp = (max(sin(x*5.0*M_PI)*max(sin((z)*3.0*M_PI)      +  sin((y) *3.0*M_PI),0.0),0.0)+max(sin(x*5.0*M_PI),0.0)*max(sin(z*3.0*M_PI+M_PI) + sin(y *3.0*M_PI+M_PI),0.0))*1000.0 ;
+
+        color[c] = tmp; 
       }   
     } 
     

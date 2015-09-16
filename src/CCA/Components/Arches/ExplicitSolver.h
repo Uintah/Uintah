@@ -87,6 +87,81 @@ class ExplicitSolver: public NonlinearSolver {
 
 public:
 
+  //Builder::
+  class Builder : public  NonlinearSolver::NLSolverBuilder {
+
+  public:
+
+    Builder( ArchesLabel* label,
+             const MPMArchesLabel* MAlb,
+             Properties* props,
+             BoundaryCondition* bc,
+             TurbulenceModel* turbModel,
+             ScaleSimilarityModel* scaleSimilarityModel,
+             PhysicalConstants* physConst,
+             RadPropertyCalculator* rad_properties,
+             PartVel* partVel,
+             DQMOM* dqmomSolver,
+             CQMOM* cqmomSolver,
+             CQMOM_Convection* cqmomConvect,
+             CQMOMSourceWrapper* cqmomSource,
+             std::map<std::string,
+             boost::shared_ptr<TaskFactoryBase> >& boost_fac_map,
+             const ProcessorGroup* myworld,
+             SolverInterface* hypreSolver ) :
+             _label(label), _MAlb(MAlb), _props(props),
+             _bc(bc), _turbModel(turbModel), _scaleSimilarityModel(scaleSimilarityModel),
+             _physConst(physConst), _rad_properties(rad_properties),
+             _partVel(partVel), _dqmomSolver(dqmomSolver),
+             _cqmomSolver(cqmomSolver), _cqmomConvect(cqmomConvect), _cqmomSource(cqmomSource),
+             _boost_fac_map(boost_fac_map),
+             _myworld(myworld), _hypreSolver(hypreSolver)
+    { }
+
+    ~Builder(){}
+
+    ExplicitSolver* build(){
+      return scinew ExplicitSolver( _label,
+                                    _MAlb,
+                                    _props,
+                                    _bc,
+                                    _turbModel,
+                                    _scaleSimilarityModel,
+                                    _physConst,
+                                    _rad_properties,
+                                    _partVel,
+                                    _dqmomSolver,
+                                    _cqmomSolver,
+                                    _cqmomConvect,
+                                    _cqmomSource,
+                                    _boost_fac_map,
+                                    _myworld,
+                                    _hypreSolver
+                                  );
+    }
+
+  private:
+
+    ArchesLabel* _label;
+    const MPMArchesLabel* _MAlb;
+    Properties* _props;
+    BoundaryCondition* _bc;
+    TurbulenceModel* _turbModel;
+    ScaleSimilarityModel* _scaleSimilarityModel;
+    PhysicalConstants* _physConst;
+    RadPropertyCalculator* _rad_properties;
+    PartVel* _partVel;
+    DQMOM* _dqmomSolver;
+    CQMOM* _cqmomSolver;
+    CQMOM_Convection* _cqmomConvect;
+    CQMOMSourceWrapper* _cqmomSource;
+    std::map<std::string,boost::shared_ptr<TaskFactoryBase> >& _boost_fac_map;
+    const ProcessorGroup* _myworld;
+    SolverInterface* _hypreSolver;
+
+  };
+
+
   ExplicitSolver(ArchesLabel* label,
                  const MPMArchesLabel* MAlb,
                  Properties* props,
@@ -95,6 +170,11 @@ public:
                  ScaleSimilarityModel* scaleSimilarityModel,
                  PhysicalConstants* physConst,
                  RadPropertyCalculator* rad_properties,
+                 PartVel* partVel,
+                 DQMOM* dqmomSolver,
+                 CQMOM* cqmomSolver,
+                 CQMOM_Convection* cqmomConvect,
+                 CQMOMSourceWrapper* cqmomSource,
                  std::map<std::string, boost::shared_ptr<TaskFactoryBase> >& boost_fac_map,
                  const ProcessorGroup* myworld,
                  SolverInterface* hypreSolver);
@@ -289,26 +369,9 @@ private:
                       DataWarehouse* new_dw,
                       const TimeIntegratorLabel* timelabels);
 
-
-  void setPartVel( PartVel* partVel ) {
-    d_partVel = partVel; };
-
-  void setDQMOMSolver( DQMOM* dqmomSolver ) {
-    d_dqmomSolver = dqmomSolver; };
-
-  void setCQMOMSolver( CQMOM* cqmomSolver ) {
-    d_cqmomSolver = cqmomSolver; };
-
-  void setCQMOMConvect( CQMOM_Convection* cqmomConvect ) {
-    d_cqmomConvect = cqmomConvect; };
-
-  void setCQMOMSource( CQMOMSourceWrapper* cqmomSource ) {
-    d_cqmomSource = cqmomSource; };
-
   // const VarLabel*
   ArchesLabel* d_lab;
   const MPMArchesLabel* d_MAlab;
-  // generation variable for DataWarehouse creation
 
   // Total number of nonlinear iterates
   int d_nonlinear_its;

@@ -16,6 +16,35 @@
                                                                           co2, h2o, soot, specific_heat'"/>
       </VarID>
 
+      <!-- Utility functions -->
+      <Utilities                        spec="OPTIONAL NO_DATA">
+        <utility                        spec="MULTIPLE NO_DATA"
+                                        attribute1="label REQUIRED STRING"
+                                        attribute2="type REQUIRED STRING 'variable_math'">
+
+          <!-- variable math options -->
+          <!-- the op of the basic unit operation -->
+          <op                           spec="MULTIPLE NO_DATA"
+                                        attribute1="type REQUIRED STRING 'MULTIPLY, ADD, SUBTRACT, DIVIDE, POW, EXP'"
+                                        attribute2="label REQUIRED STRING"
+                                        need_applies_to="type variable_math"> <!-- The label is the label
+                                        of the operation (unique/operation) -->
+            <dep                        spec="REQUIRED STRING"/> <!-- dependent variable -->
+            <ind1                       spec="REQUIRED STRING"/> <!-- independent variable -->
+            <ind2                       spec="OPTIONAL STRING"/> <!-- second independent variable -->
+            <new_variable               spec="OPTIONAL NO_DATA"/> <!-- if the dependent variable
+                                                                      doesn't exisit -->
+            <constant                   spec="OPTIONAL DOUBLE"/> <!-- use of a double instead of the
+                                                                      second iv -->
+          </op>
+          <exe_order                    spec="REQUIRED NO_DATA"> <!-- defines the order of operations -->
+            <op                         spec="MULTIPLE NO_DATA"
+                                        attribute1="label REQUIRED STRING"/>
+          </exe_order>
+        </utility>
+
+      </Utilities>
+
       <!-- These are new task properties -->
       <PropertyModelsV2                 spec="OPTIONAL NO_DATA">
         <model                          spec="MULTIPLE NO_DATA"
@@ -778,7 +807,6 @@
 
         <print_total_ke 								spec="OPTIONAL NO_DATA" />  <!-- prints the total kinetic energy to STDIO -->
         <max_ke_allowed                 spec="OPTIONAL DOUBLE"/>    <!-- Exit the case if the kinetic energy exceeds this upper threshhold -->
-        <extraProjection                spec="OPTIONAL BOOLEAN" />
         <scalarUnderflowCheck           spec="OPTIONAL NO_DATA" />  <!-- Uses dt = 0.5*rho/div(rhoU)*dx for timestep. Note: only used positive (outbound) div -->
 
         <kineticEnergy_fromFC           spec="OPTIONAL BOOLEAN" /> <!-- FIXME: what does this default to? -->
@@ -1044,7 +1072,7 @@
             <!-- constant property model: set a constant/environment -->
             <constant                   spec="REQUIRED MULTIPLE_DOUBLES"
                                         need_applies_to="type constant"/>
-                                        
+
             <!-- constant property model: set a constant/environment -->
            <const_size                  spec="OPTIONAL BOOLEAN"
                                         need_applies_to="type coal_temperature, coal_density"/>  <!-- defaults to true, so no change to DQMOM input files needed -->

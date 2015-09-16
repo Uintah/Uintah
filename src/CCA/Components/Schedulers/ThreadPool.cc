@@ -26,8 +26,6 @@
 #include <CCA/Components/Schedulers/ThreadPool.h>
 #include <CCA/Components/Schedulers/OnDemandDataWarehouse.h>
 
-#include <TauProfilerForSCIRun.h>
-
 #include <CCA/Components/Schedulers/MPIScheduler.h>
 #include <CCA/Components/Schedulers/MixedScheduler.h>
 #include <CCA/Components/Schedulers/DetailedTasks.h>
@@ -56,60 +54,6 @@ extern SCIRun::Mutex       cerrLock;
 extern DebugStream mixedDebug;
 
 #define DAV_DEBUG 1
-
-#ifdef USE_TAU_PROFILING
-// Turn this on to get profiling split up by patches
-// #define TAU_SEPARATE_PATCHES
-
-map<string,int> taskname_to_id_map;
-int unique_id = 9999;
-
-int
-create_tau_mapping( const string & taskname, const PatchSubset * patches )
-{
-  string full_name = taskname;
-
-#ifdef TAU_SEPARATE_PATCHES 
-  if( patches ) {
-    for(int i=0;i<patches->size();i++) {
-
-      ostringstream patch_num;
-      patch_num << patches->get(i)->getID();
-
-      full_name = full_name + "-" + patch_num.str();
-    }
-  }
-#else  //TAU_SEPARATE_PATCHES
-  int levelnum = 0;
-  if( patches && patches->size() > 0) {
-    levelnum = patches->get(0)->getLevel()->getIndex();
-  }
-  ostringstream level;
-  level << "Level " << levelnum;
-
-  full_name = full_name + "-" + level.str();
-#endif //TAU_SEPARATE_PATCHES
-
-  map<string,int>::iterator iter = taskname_to_id_map.find( full_name );
-  if( iter != taskname_to_id_map.end() )
-    {
-      return (*iter).second;
-    }
-  else
-    {
-      if( mixedDebug.active() ) {
-	cerrLock.lock();
-	mixedDebug << "creating TAU mapping for: " << full_name << "\n";
-	cerrLock.unlock();
-      }
-      TAU_MAPPING_CREATE( full_name, "[MPIScheduler::execute()]",
-			  (TauGroup_t) unique_id, full_name.c_str(), 0 );
-      taskname_to_id_map[ full_name ] = unique_id;
-      unique_id++;
-      return (unique_id - 1);
-    }
-}
-#endif // USE_TAU_PROFILING
 
 /////////////// Worker //////////////////
 
@@ -146,10 +90,6 @@ Worker::assignTask( DetailedTask          * task)
 void
 Worker::run()
 {
-  TAU_REGISTER_THREAD();
-  TAU_PROFILE("Worker_run()", "void ()", TAU_DEFAULT);
-  TAU_PROFILE_TIMER(doittimer, "doit Task", "[Worker::run()]", TAU_DEFAULT);
-
   //if( mixedDebug.active() ) {
    cerrLock.lock();
    cerr/*mixedDebug*/ << "Worker " << proc_group_ << "-" << d_id 
@@ -177,7 +117,6 @@ Worker::run()
       cerrLock.lock(); mixedDebug << "Worker "  << proc_group_ << "-" << d_id 
 				  << " quitting\n";
       cerrLock.unlock();
-      TAU_PROFILE_EXIT( "thread quitting" );
       return;
     }
 
@@ -355,10 +294,6 @@ Receiver::addAwaitingTasks()
 void
 Receiver::run()
 {
-  TAU_REGISTER_THREAD();
-  TAU_PROFILE("Receiver_run()", "void ()", TAU_DEFAULT);
-  TAU_PROFILE_TIMER(doittimer, "doit Task", "[Receiver::run()]", TAU_DEFAULT);
-
   cerr << "Running thread " << my_thread_ << "\n";
 
   //if( mixedDebug.active() ) {
@@ -391,7 +326,6 @@ Receiver::run()
       cerrLock.lock(); mixedDebug << "Receiver " << proc_group_
 				  << "-" << d_id << " quitting\n";
       cerrLock.unlock();
-      TAU_PROFILE_EXIT( "thread quitting" );
       return;
     }
 
@@ -528,10 +462,6 @@ void MPIReducer::quit(  )
 
 void MPIReducer::run()
 {
-  TAU_REGISTER_THREAD();
-  TAU_PROFILE("Reducer_run()", "void ()", TAU_DEFAULT);
-  TAU_PROFILE_TIMER(doittimer, "doit Task", "[Reducer::run()]", TAU_DEFAULT);
-
   //if( mixedDebug.active() ) {
     cerrLock.lock();
     cerr /*mixedDebug*/ << "Reducer " << proc_group_
@@ -550,7 +480,6 @@ void MPIReducer::run()
     if (quit_) {
       cerrLock.lock(); mixedDebug << "MPIReducer quitting\n";
       cerrLock.unlock();
-      TAU_PROFILE_EXIT( "thread quitting" );
       return;  
     }
     ASSERT(!tasks_.empty());

@@ -28,13 +28,6 @@
 # copy of the vars. This file has all of the variables and rules common to 
 # all generated makefiles.
 
-TAU_MAKEFILE := @TAU_MAKEFILE@
-ifneq ($(TAU_MAKEFILE),)
-  include $(TAU_MAKEFILE)
-  PDTPARSE = $(PDTDIR)/$(PDTARCHDIR)/bin/cxxparse
-  TAUINSTR = $(TAUROOT)/$(CONFIG_ARCH)/bin/tau_instrumentor
-endif
-
 # 'a' if archives, 'so' if shared libs.
 SO_OR_A_FILE := @SO_OR_ARCHIVE_EXTENSION@
 IS_STATIC_BUILD := @IS_STATIC_BUILD@
@@ -123,7 +116,6 @@ HAVE_PIDX := @HAVE_PIDX@
 PIDX_LIBRARY := @PIDX_LIB_DIR_FLAG@ @PIDX_LIB_FLAG@
 PIDX_INCLUDE := @INC_PIDX_H@
 
-
 # MallocTrace
 MALLOC_TRACE_INCLUDE = @INC_MALLOC_TRACE_H@
 MALLOC_TRACE_LIBRARY = @MALLOC_TRACE_LIB_DIR_FLAG@ @MALLOC_TRACE_LIB_FLAG@
@@ -174,17 +166,6 @@ HAVE_LAPACKMP  := @HAVE_LAPACKMP@
 LAPACK_LIBRARY := @LAPACK_LIB_DIR_FLAG@ @LAPACK_LIB_FLAG@
 LAPACKMP_LIBRARY := @LAPACKMP_LIB_DIR_FLAG@ @LAPACKMP_LIB_FLAG@
 
-ifneq ($(TAU_MAKEFILE),)
-  TAU_LIB_DIR       := $(TAU_PREFIX_INSTALL_DIR)/$(CONFIG_ARCH)/lib
-  TAU_LIB_FLAG      := $(TAU_MPI_LIBS) $(TAU_SHLIBS)
-
-  CFLAGS := $(CFLAGS) -DUSE_TAU_PROFILING $(TAU_DEFS)
-  CXXFLAGS := $(CXXFLAGS) -DUSE_TAU_PROFILING $(TAU_DEFS)
-  TAU_LIBRARY := $(LDRUN_PREFIX)$(TAU_LIB_DIR) -L$(TAU_LIB_DIR) $(TAU_LIB_FLAG)
-else
-  TAU_LIBRARY :=
-endif
-
 ifeq ($(IS_BGQ),yes)
   CFLAGS   := $(CFLAGS) -DPETSC_RESTRICT=__restrict__ -DPETSC_DEPRECATED\(why\)= 
   CXXFLAGS := $(CXXFLAGS) -DPETSC_RESTRICT=__restrict__ -DPETSC_DEPRECATED\(why\)= 
@@ -204,9 +185,8 @@ HAVE_FFTW        := @HAVE_FFTW@
 FFTW_LIBRARY     := @FFTW_LIB_DIR_FLAG@ @FFTW_LIB_FLAG@
 FFTW_INCLUDE     := @INC_FFTW_H@
 
-# Always put $(TAU_LIBRARY) in front of $(MPI_LIBRARY) for the TAU_MPI wrapper
 MPI_INCLUDE := @INC_MPI_H@
-MPI_LIBRARY := $(TAU_LIBRARY) @MPI_LIB_DIR_FLAG@ @MPI_LIB_FLAG@
+MPI_LIBRARY := @MPI_LIB_DIR_FLAG@ @MPI_LIB_FLAG@
 
 # not blank.  Its "value" is not useful.
 HAVE_MPI := @HAVE_MPI@
@@ -359,70 +339,43 @@ else
 	-rm -f $@
 endif
 ifeq ($(CC_DEPEND_MODE),normal)
-  ifneq ($(TAU_MAKEFILE),)
-    ifneq ($(PDTDIR),)
-	-echo "Building $*.$(OBJEXT) ..." ; \
-	pdbfile=`basename $< .cc`.pdb ; \
-	rm $$pdbfile ; \
-	$(PDTPARSE) $< $(TAU_INCLUDE) $(TAU_MPI_INCLUDE) $(CXXFLAGS) $(INCLUDES) $(CC_DEPEND_REGEN) $(call repository,$@) -DSCI_Hash_Map_h -DSCI_HASH_SET_H -DPDT_PARSER; \
-	rm $*.inst.cc ; \
-	$(TAUINSTR) $$pdbfile $< -o $*.inst.cc -f $(SRCTOP)/tau/select.dat ; \
-        $(CXX) $(CXXFLAGS) $(INCLUDES) $(CC_DEPEND_REGEN) $(call repository,$@) -c -I`dirname $<` $*.inst.cc -o $@
-	@if [ -f $@ ] ; then  \
-	echo " *** Instrumented $*.$(OBJEXT) successfully  " ; \
-	else \
-	echo " *** Failed to instrumented $*.$(OBJEXT)  " ; \
-	$(CXX) $(CXXFLAGS) $(INCLUDES) $(CC_DEPEND_REGEN) $(call repository,$@) -c $< -o $@ ; \
-	ls -l $@; \
-	fi ; \
-	rm -f $$pdbfile ; 
-    else
-      ifeq ($(SCI_MAKE_BE_QUIET),true)
-	@echo "Compiling: $<"
-	@$(CXX) $(CXXFLAGS) $(INCLUDES) $(CC_DEPEND_REGEN) $(call repository,$@) -c $< -o $@ ; 
-      else
-	$(CXX) $(CXXFLAGS) $(INCLUDES) $(CC_DEPEND_REGEN) $(call repository,$@) -c $< -o $@ ; 
-      endif
-    endif
+  ifeq ($(SCI_MAKE_BE_QUIET),true)
+	  @echo "Compiling: $<"
+	  @$(CXX) $(CXXFLAGS) $(INCLUDES) $(CC_DEPEND_REGEN) $(call repository,$@) -c $< -o $@
   else
-    ifeq ($(SCI_MAKE_BE_QUIET),true)
-	@echo "Compiling: $<"
-	@$(CXX) $(CXXFLAGS) $(INCLUDES) $(CC_DEPEND_REGEN) $(call repository,$@) -c $< -o $@
-    else
-	$(CXX) $(CXXFLAGS) $(INCLUDES) $(CC_DEPEND_REGEN) $(call repository,$@) -c $< -o $@
-    endif
+	  $(CXX) $(CXXFLAGS) $(INCLUDES) $(CC_DEPEND_REGEN) $(call repository,$@) -c $< -o $@
   endif
 else
   ifeq ($(CC_DEPEND_MODE),modify)
     ifeq ($(SCI_MAKE_BE_QUIET),true)
-	@echo "Compiling: $<"
-	@$(CXX) $(CXXFLAGS) $(INCLUDES) $(CC_DEPEND_REGEN) $(call repository,$@) -c $< -o $@ && $(SED) -e 's,^$(notdir $@),$@,' $(basename $@).$(CC_DEPEND_EXT) > $(basename $@).$(CC_DEPEND_EXT).tmp && mv -f $(basename $@).$(CC_DEPEND_EXT).tmp $(basename $@).$(CC_DEPEND_EXT)
+	    @echo "Compiling: $<"
+	    @$(CXX) $(CXXFLAGS) $(INCLUDES) $(CC_DEPEND_REGEN) $(call repository,$@) -c $< -o $@ && $(SED) -e 's,^$(notdir $@),$@,' $(basename $@).$(CC_DEPEND_EXT) > $(basename $@).$(CC_DEPEND_EXT).tmp && mv -f $(basename $@).$(CC_DEPEND_EXT).tmp $(basename $@).$(CC_DEPEND_EXT)
     else
-	$(CXX) $(CXXFLAGS) $(INCLUDES) $(CC_DEPEND_REGEN) $(call repository,$@) -c $< -o $@ && $(SED) -e 's,^$(notdir $@),$@,' $(basename $@).$(CC_DEPEND_EXT) > $(basename $@).$(CC_DEPEND_EXT).tmp && mv -f $(basename $@).$(CC_DEPEND_EXT).tmp $(basename $@).$(CC_DEPEND_EXT)
+	    $(CXX) $(CXXFLAGS) $(INCLUDES) $(CC_DEPEND_REGEN) $(call repository,$@) -c $< -o $@ && $(SED) -e 's,^$(notdir $@),$@,' $(basename $@).$(CC_DEPEND_EXT) > $(basename $@).$(CC_DEPEND_EXT).tmp && mv -f $(basename $@).$(CC_DEPEND_EXT).tmp $(basename $@).$(CC_DEPEND_EXT)
     endif
   else
     ifeq ($(CC_DEPEND_MODE),move)
       ifeq ($(SCI_MAKE_BE_QUIET),true)
-	@echo "Compiling: $<"
-	@$(CXX) $(CXXFLAGS) $(INCLUDES) $(CC_DEPEND_REGEN) $(call repository,$@) -c $< -o $@
-	@sed 's,^$(basename $@),$@,g' $(basename $(notdir $@)).$(CC_DEPEND_EXT) > $(basename $@).$(CC_DEPEND_EXT)
-	@rm $(basename $(notdir $@)).$(CC_DEPEND_EXT)
+	      @echo "Compiling: $<"
+	      @$(CXX) $(CXXFLAGS) $(INCLUDES) $(CC_DEPEND_REGEN) $(call repository,$@) -c $< -o $@
+	      @sed 's,^$(basename $@),$@,g' $(basename $(notdir $@)).$(CC_DEPEND_EXT) > $(basename $@).$(CC_DEPEND_EXT)
+	      @rm $(basename $(notdir $@)).$(CC_DEPEND_EXT)
       else
-	$(CXX) $(CXXFLAGS) $(INCLUDES) $(CC_DEPEND_REGEN) $(call repository,$@) -c $< -o $@
-	sed 's,^$(basename $@),$@,g' $(basename $(notdir $@)).$(CC_DEPEND_EXT) > $(basename $@).$(CC_DEPEND_EXT)
-	rm $(basename $(notdir $@)).$(CC_DEPEND_EXT)
+	      $(CXX) $(CXXFLAGS) $(INCLUDES) $(CC_DEPEND_REGEN) $(call repository,$@) -c $< -o $@
+	      sed 's,^$(basename $@),$@,g' $(basename $(notdir $@)).$(CC_DEPEND_EXT) > $(basename $@).$(CC_DEPEND_EXT)
+	      rm $(basename $(notdir $@)).$(CC_DEPEND_EXT)
       endif
     else
       ifeq ($(CC_DEPEND_MODE),modify_and_move)
         ifeq ($(SCI_MAKE_BE_QUIET),true)
-	  @echo "Compiling: $<"
-	  @$(CXX) $(CXXFLAGS) $(INCLUDES) $(CC_DEPEND_REGEN) $(call repository,$@) -c $< -o $@ && \
-             $(SED) -e 's,^$(notdir $@),$@,' $(basename $(notdir $@)).$(CC_DEPEND_EXT) > $(basename $@).$(CC_DEPEND_EXT)
-	  @rm $(basename $(notdir $@)).$(CC_DEPEND_EXT)
+	        @echo "Compiling: $<"
+	        @$(CXX) $(CXXFLAGS) $(INCLUDES) $(CC_DEPEND_REGEN) $(call repository,$@) -c $< -o $@ && \
+          $(SED) -e 's,^$(notdir $@),$@,' $(basename $(notdir $@)).$(CC_DEPEND_EXT) > $(basename $@).$(CC_DEPEND_EXT)
+	        @rm $(basename $(notdir $@)).$(CC_DEPEND_EXT)
         else
-	  $(CXX) $(CXXFLAGS) $(INCLUDES) $(CC_DEPEND_REGEN) $(call repository,$@) -c $< -o $@ && \
-             $(SED) -e 's,^$(notdir $@),$@,' $(basename $(notdir $@)).$(CC_DEPEND_EXT) > $(basename $@).$(CC_DEPEND_EXT)
-	  rm $(basename $(notdir $@)).$(CC_DEPEND_EXT)
+	        $(CXX) $(CXXFLAGS) $(INCLUDES) $(CC_DEPEND_REGEN) $(call repository,$@) -c $< -o $@ && \
+          $(SED) -e 's,^$(notdir $@),$@,' $(basename $(notdir $@)).$(CC_DEPEND_EXT) > $(basename $@).$(CC_DEPEND_EXT)
+	        rm $(basename $(notdir $@)).$(CC_DEPEND_EXT)
         endif
       else
         ifeq ($(CC_DEPEND_MODE),stdout)
@@ -434,24 +387,24 @@ else
           # <path_to_file>/filename.o.  Then remove the temp file.
           #
           ifeq ($(SCI_MAKE_BE_QUIET),true)
-	    @echo "Compiling: $<"
-	    @rm -f $(basename $@).$(CC_DEPEND_EXT)
-	    @$(CXX) $(CXXFLAGS) $(INCLUDES) $(CC_DEPEND_REGEN) -c $< | sed 's,^$(notdir $@),$@,g' > $(basename $@).$(CC_DEPEND_EXT)
+	          @echo "Compiling: $<"
+	          @rm -f $(basename $@).$(CC_DEPEND_EXT)
+	          @$(CXX) $(CXXFLAGS) $(INCLUDES) $(CC_DEPEND_REGEN) -c $< | sed 's,^$(notdir $@),$@,g' > $(basename $@).$(CC_DEPEND_EXT)
 
             # Now do the actual compile!
-	    @$(CXX) $(CXXFLAGS) $(INCLUDES) $(call repository,$@) -c $< -o $@
+	          @$(CXX) $(CXXFLAGS) $(INCLUDES) $(call repository,$@) -c $< -o $@
           else
-	    @echo "CREATING DEPENDENCY INFORMATION:"
-	    @rm -f $(basename $@).$(CC_DEPEND_EXT)
-	    $(CXX) $(CXXFLAGS) $(INCLUDES) $(CC_DEPEND_REGEN) -c $< | sed 's,^$(notdir $@),$@,g' > $(basename $@).$(CC_DEPEND_EXT)
+	          @echo "CREATING DEPENDENCY INFORMATION:"
+	          @rm -f $(basename $@).$(CC_DEPEND_EXT)
+	          $(CXX) $(CXXFLAGS) $(INCLUDES) $(CC_DEPEND_REGEN) -c $< | sed 's,^$(notdir $@),$@,g' > $(basename $@).$(CC_DEPEND_EXT)
 
             # Now do the actual compile!
-	    @echo "ACTUALLY COMPILING:"
-	    $(CXX) $(CXXFLAGS) $(INCLUDES) $(call repository,$@) -c $< -o $@
+	          @echo "ACTUALLY COMPILING:"
+	          $(CXX) $(CXXFLAGS) $(INCLUDES) $(call repository,$@) -c $< -o $@
           endif
         else
-	  @echo ".cc rule: Unknown CC_DEPEND_MODE: $(CC_DEPEND_MODE)"
-	  @exit 1
+	        @echo ".cc rule: Unknown CC_DEPEND_MODE: $(CC_DEPEND_MODE)"
+	         @exit 1
         endif
       endif
     endif
@@ -728,10 +681,3 @@ else
     endif
   endif
 endif
-
-JAVAC := @JAVAC@
-JAR := @JAR@
-#ifeq ($(HAVE_JAVA),yes)
-# .java.class:
-#$(JAVAC) -classpath ...
-#endif

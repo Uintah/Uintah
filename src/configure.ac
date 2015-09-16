@@ -3564,45 +3564,6 @@ fi
 
 AC_SUBST(XALAN_PATH)
 
-##  --  if building uintah, search for TAU makefile  ---------------------
-
-if test "$sci_required_tau" = "yes"; then
-  if test ! -f "$with_tau" ; then
-    SCI_MSG_ERROR($with_tau does not exist.  Bye!)
-  fi
-
-  AC_MSG_RESULT(Using TAU makefile: $with_tau)
-
-  cat > conftest-tau.cc <<EOF
-
-  #include <Profile/Profiler.h>
-
-  int main(int argc, char **argv)
-  {
-    TAU_PROFILE("main", "int (int, char **)", TAU_DEFAULT);
-    TAU_PROFILE_INIT(argc, argv);
-    return 0;
-  }
-EOF
-
-  cat > conftest-tau-makefile <<EOF
-include $with_tau
-all:
-	\$(TAU_CXX) -o conftest-tau-a.out \$(TAU_DEFS) \$(TAU_INCLUDE) conftest-tau.cc \$(TAU_SHLIBS) \$(TAU_MPI_LIBS)
-EOF
-
-  ac_try="$MAKE TAU_MAKEFILE=$with_tau -f conftest-tau-makefile > conftestout1 2> conftesterr1"
-  (eval $ac_try) 2>&5
-  ac_status=$?
-  rm -f conftest-tau.cc conftest-tau-makefile conftest-tau-a.out conftestout1 conftesterr1
-  if test "$ac_status" != 0; then
-    SCI_MSG_ERROR(TAU libraries not working. Bye!)
-  fi
-
-  TAU_MAKEFILE="$with_tau"
-fi
-
-AC_SUBST(TAU_MAKEFILE)
 
 ##  --  search for papi stuff  -------------------------------------------
 _sci_lib=

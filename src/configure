@@ -730,7 +730,6 @@ PAPI_LIB_DIR_FLAG
 INC_PAPI_H
 DEF_PAPI
 HAVE_PAPI
-TAU_MAKEFILE
 XALAN_PATH
 INC_PETSC_H
 DEF_PETSC
@@ -34994,102 +34993,6 @@ $as_echo "not found" >&6; }
 
 fi
 
-
-
-##  --  if building uintah, search for TAU makefile  ---------------------
-
-if test "$sci_required_tau" = "yes"; then
-  if test ! -f "$with_tau" ; then
-
-## SCI_MSG_ERROR
-if test -z "$verbose"; then
-  { $as_echo "$as_me:${as_lineno-$LINENO}: WARNING:
-    Adding '--enable-verbosity' to configure line
-    _may_ give more information about what is breaking.
-    IF YOU KNOW WHAT YOU ARE DOING - TRY THIS:
-    Digging through the config.log file is your best option
-    for determining what went wrong.  Search for the specific lib/file
-    that configured failed to find.  There should be a compile line
-    and source code near that check.  If you cut the source code into
-    a test.cc and then use the compile line to compile it - the true
-    error most likely will show up.
-  " >&5
-$as_echo "$as_me: WARNING:
-    Adding '--enable-verbosity' to configure line
-    _may_ give more information about what is breaking.
-    IF YOU KNOW WHAT YOU ARE DOING - TRY THIS:
-    Digging through the config.log file is your best option
-    for determining what went wrong.  Search for the specific lib/file
-    that configured failed to find.  There should be a compile line
-    and source code near that check.  If you cut the source code into
-    a test.cc and then use the compile line to compile it - the true
-    error most likely will show up.
-  " >&2;}
-fi
-
-as_fn_error $? "$with_tau does not exist.  Bye!" "$LINENO" 5
-
-  fi
-
-  { $as_echo "$as_me:${as_lineno-$LINENO}: result: Using TAU makefile: $with_tau" >&5
-$as_echo "Using TAU makefile: $with_tau" >&6; }
-
-  cat > conftest-tau.cc <<EOF
-
-  #include <Profile/Profiler.h>
-
-  int main(int argc, char **argv)
-  {
-    TAU_PROFILE("main", "int (int, char **)", TAU_DEFAULT);
-    TAU_PROFILE_INIT(argc, argv);
-    return 0;
-  }
-EOF
-
-  cat > conftest-tau-makefile <<EOF
-include $with_tau
-all:
-	\$(TAU_CXX) -o conftest-tau-a.out \$(TAU_DEFS) \$(TAU_INCLUDE) conftest-tau.cc \$(TAU_SHLIBS) \$(TAU_MPI_LIBS)
-EOF
-
-  ac_try="$MAKE TAU_MAKEFILE=$with_tau -f conftest-tau-makefile > conftestout1 2> conftesterr1"
-  (eval $ac_try) 2>&5
-  ac_status=$?
-  rm -f conftest-tau.cc conftest-tau-makefile conftest-tau-a.out conftestout1 conftesterr1
-  if test "$ac_status" != 0; then
-
-## SCI_MSG_ERROR
-if test -z "$verbose"; then
-  { $as_echo "$as_me:${as_lineno-$LINENO}: WARNING:
-    Adding '--enable-verbosity' to configure line
-    _may_ give more information about what is breaking.
-    IF YOU KNOW WHAT YOU ARE DOING - TRY THIS:
-    Digging through the config.log file is your best option
-    for determining what went wrong.  Search for the specific lib/file
-    that configured failed to find.  There should be a compile line
-    and source code near that check.  If you cut the source code into
-    a test.cc and then use the compile line to compile it - the true
-    error most likely will show up.
-  " >&5
-$as_echo "$as_me: WARNING:
-    Adding '--enable-verbosity' to configure line
-    _may_ give more information about what is breaking.
-    IF YOU KNOW WHAT YOU ARE DOING - TRY THIS:
-    Digging through the config.log file is your best option
-    for determining what went wrong.  Search for the specific lib/file
-    that configured failed to find.  There should be a compile line
-    and source code near that check.  If you cut the source code into
-    a test.cc and then use the compile line to compile it - the true
-    error most likely will show up.
-  " >&2;}
-fi
-
-as_fn_error $? "TAU libraries not working. Bye!" "$LINENO" 5
-
-  fi
-
-  TAU_MAKEFILE="$with_tau"
-fi
 
 
 

@@ -46,8 +46,6 @@
 #include <Core/Util/Handle.h>
 #include <Core/Util/ProgressiveWarning.h>
 
-#include <TauProfilerForSCIRun.h>
-
 #include <algorithm>
 #include <cmath>
 #include <iostream>
@@ -478,8 +476,6 @@ Level::positionToIndex( const Point & p ) const
 void Level::selectPatches(const IntVector& low, const IntVector& high,
                           selectType& neighbors, bool withExtraCells, bool cache) const
 {
- TAU_PROFILE("Level::selectPatches", " ", TAU_USER);
-    
  if(cache){
    // look it up in the cache first
    d_cachelock.readLock();
@@ -569,7 +565,6 @@ bool Level::containsCell(const IntVector& idx) const
 void Level::finalizeLevel()
 {
   MALLOC_TRACE_TAG_SCOPE("Level::finalizeLevel");
-  TAU_PROFILE("Level::finalizeLevel()", " ", TAU_USER);
   
   d_each_patch = scinew PatchSet();
   d_each_patch->addReference();
@@ -592,7 +587,7 @@ void Level::finalizeLevel()
   //determines and sets the boundary conditions for the patches
   setBCTypes();
 
-  //finalize the patches
+  // finalize the patches - Currently, finalizePatch() does nothing... empty method - APH 09/10/15
   for(patchIterator iter=d_virtualAndRealPatches.begin();iter!=d_virtualAndRealPatches.end();iter++){
     (*iter)->finalizePatch();
   }
@@ -617,7 +612,6 @@ void Level::finalizeLevel()
 void Level::finalizeLevel(bool periodicX, bool periodicY, bool periodicZ)
 {
   MALLOC_TRACE_TAG_SCOPE("Level::finalizeLevel(periodic)");
-  TAU_PROFILE("Level::finalizeLevel(periodic)", " ", TAU_USER);
 
   // set each_patch and all_patches before creating virtual patches
   d_each_patch = scinew PatchSet();
@@ -711,7 +705,7 @@ void Level::setBCTypes()
   double start=Time::currentSeconds();
 
   MALLOC_TRACE_TAG_SCOPE("Level::setBCTypes");
-  TAU_PROFILE("Level::setBCTypes", " ", TAU_USER);
+
   if (d_bvh != NULL){
     delete d_bvh;
   }
@@ -740,12 +734,13 @@ void Level::setBCTypes()
   int div=d_virtualAndRealPatches.size()/numProcs;
   int mod=d_virtualAndRealPatches.size()%numProcs;
   
-  for(int p=0;p<numProcs;p++){
-    if(p<mod) {
-      recvcounts[p]=div+1;
-    } else {
-      recvcounts[p]=div;
-  }
+  for (int p = 0; p < numProcs; p++) {
+    if (p < mod) {
+      recvcounts[p] = div + 1;
+    }
+    else {
+      recvcounts[p] = div;
+    }
   }
 
   displacements[0]=0;
@@ -928,8 +923,6 @@ void Level::setBCTypes()
 void
 Level::assignBCS( const ProblemSpecP & grid_ps, LoadBalancer * lb )
 {
-  TAU_PROFILE("Level::assignBCS()", " ", TAU_USER);
-  
   ProblemSpecP bc_ps = grid_ps->findBlock( "BoundaryConditions" );
   if( bc_ps == 0 ) {
     if ( Parallel::getMPIRank() == 0 ){

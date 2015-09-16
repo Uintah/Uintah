@@ -98,6 +98,11 @@ ExplicitSolver(ArchesLabel* label,
                ScaleSimilarityModel* scaleSimilarityModel,
                PhysicalConstants* physConst,
                RadPropertyCalculator* rad_properties,
+               PartVel* partVel,
+               DQMOM* dqmomSolver,
+               CQMOM* cqmomSolver,
+               CQMOM_Convection* cqmomConvect,
+               CQMOMSourceWrapper* cqmomSource,
                std::map<std::string, boost::shared_ptr<TaskFactoryBase> >& boost_fac_map,
                const ProcessorGroup* myworld,
                SolverInterface* hypreSolver):
@@ -108,6 +113,11 @@ ExplicitSolver(ArchesLabel* label,
                d_physicalConsts(physConst),
                d_hypreSolver(hypreSolver),
                d_rad_prop_calc(rad_properties),
+               d_partVel(partVel),
+               d_dqmomSolver(dqmomSolver),
+               d_cqmomSolver(cqmomSolver),
+               d_cqmomConvect(cqmomConvect),
+               d_cqmomSource(cqmomSource),
                _boost_fac_map(boost_fac_map)
 {
   d_pressSolver = 0;
@@ -143,6 +153,8 @@ ExplicitSolver::problemSetup( const ProblemSpecP & params, SimulationStateP & st
 
   ProblemSpecP db = params->findBlock("ExplicitSolver");
   ProblemSpecP db_parent = params;
+
+  commonProblemSetup( db );
 
   if ( db->findBlock( "print_total_ke" ) ){
     d_printTotalKE = true;
@@ -384,9 +396,11 @@ int ExplicitSolver::nonlinearSolve(const LevelP& level,
     //================ NEW TASK STUFF=============================
 
     //Build RHS
-    for ( TaskFactoryBase::TaskMap::iterator i = init_all_tasks.begin(); i != init_all_tasks.end(); i++){
-      i->second->schedule_task(level, sched, matls, TaskInterface::STANDARD_TASK, curr_level);
-    }
+
+    //These are all utility tasks. They probably shouldn't be scheduled like this...
+    // for ( TaskFactoryBase::TaskMap::iterator i = init_all_tasks.begin(); i != init_all_tasks.end(); i++){
+    //   i->second->schedule_task(level, sched, matls, TaskInterface::STANDARD_TASK, curr_level);
+    // }
 
     //(scalars)
     for ( SVec::iterator i = scalar_rhs_builders.begin(); i != scalar_rhs_builders.end(); i++){
@@ -873,6 +887,17 @@ int ExplicitSolver::nonlinearSolve(const LevelP& level,
 
   if ( d_wall_ht_models != 0 ){
     d_wall_ht_models->sched_copyWallTintoT( level, sched );
+  }
+
+  //variable math:
+  const std::vector<std::string> math_tasks =
+    i_util->second->retrieve_tasks_by_type("variable_math");
+
+  for (std::vector<std::string>::const_iterator i = math_tasks.begin();
+       i != math_tasks.end(); i++ ){
+    TaskInterface* tsk = i_util->second->retrieve_task(*i);
+    //time substep??
+    tsk->schedule_task( level, sched, matls, TaskInterface::STANDARD_TASK, 0 );
   }
 
   //Property Models before starting over

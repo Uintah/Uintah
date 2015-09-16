@@ -36,7 +36,7 @@
 //-- Uintah Includes --//
 #include <Core/Grid/Variables/VarLabel.h>
 #include <Core/Grid/Variables/Stencil7.h>
-#include <Core/Grid/Variables/Stencil4.h>
+#include <Core/Grid/Variables/Stencil7.h>
 #include <Core/Grid/Variables/CCVariable.h>
 
 namespace Uintah{
@@ -92,7 +92,7 @@ namespace Wasatch{
     
     DECLARE_FIELD(SVolField, phiRhs_)
     
-    typedef Uintah::CCVariable<Uintah::Stencil4> MatType;
+    typedef Uintah::CCVariable<Uintah::Stencil7> MatType;
     MatType matrix_;
     const Uintah::Patch* patch_;
     // NOTE that this expression computes a rhs locally. We will need to modify 

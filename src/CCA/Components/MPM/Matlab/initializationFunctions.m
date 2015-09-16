@@ -29,9 +29,10 @@ function [IF] = initializationFunctions
   end
   
   %______________________________________________________________________
+  %   Compute the zone of influence
   function[Lx]  = initialize_Lx(NN, nodePos)
     Lx      = zeros(NN,2);
-    % compute the zone of influence
+
     Lx(1,1)  = 0.0;
     Lx(1,2)  = nodePos(2) - nodePos(1);
     Lx(NN,1) = nodePos(NN) - nodePos(NN-1);
@@ -44,9 +45,9 @@ function [IF] = initializationFunctions
   end
 
   %______________________________________________________________________
+  % Create the particles
   function[xp, NP] = initialize_xp(NN, nodePos, interpolation, PPC, bar_min, bar_max)
-     %__________________________________
-     % create particles
+ 
      fprintf('Particle Position\n');
      ip = 1;
 
@@ -87,11 +88,13 @@ function [IF] = initializationFunctions
      xp = reshape(xp, NP,1);  
   end
   %______________________________________________________________________
+  %   Initialize the regions
+  %
   function [Regions, nRegions,NN, dx_min] = initialize_Regions(domain,PPC,R1_dx,interpolation,d_smallNum)
     %__________________________________
     % region structure 
     %
-    if(0)
+if(1)
     fprintf('USING plotShapeFunction regions\n');
 
     nRegions      = int32(1);              % partition the domain into numRegions
@@ -104,11 +107,11 @@ function [IF] = initializationFunctions
     R.NN          = int32( (R.max - R.min)/R.dx +1 ); % number of nodes interior nodes
     R.lp          = R.dx/(2 * PPC);
     Regions{1}    = R;
-    end
+end
 
 
-    if(0)
-    %____________
+if(0)
+    %__________________________________
     % single level
     nRegions    = int32(2);               % partition the domain into nRegions
     Regions       = cell(nRegions,1);     % array that holds the individual region information
@@ -129,10 +132,11 @@ function [IF] = initializationFunctions
     R.NN          = int32( (R.max - R.min)/R.dx );
     R.lp          = R.dx/(2 * PPC);
     Regions{2}    = R;
-    end
-    %____________
+end
+
+    %__________________________________
     % 2 level
-    if(1)
+if(0)
     nRegions    = int32(3);               % partition the domain into nRegions
     Regions       = cell(nRegions,1);     % array that holds the individual region information
 
@@ -163,11 +167,11 @@ function [IF] = initializationFunctions
     R.lp          = R.dx/(2 * PPC);
     Regions{3}    = R;
 
-    end
+end
 
-    %____________
+    %__________________________________
     % 3 levels
-    if(0)
+if(0)
 
     nRegions    = int32(5);               % partition the domain into nRegions
     Regions       = cell(nRegions,1);     % array that holds the individual region information
@@ -217,7 +221,7 @@ function [IF] = initializationFunctions
     R.lp          = R.dx/(2 * PPC);
     Regions{5}    = R;
 
-    end
+end
 
     % increase the number of nodes in the first and last region if using gimp.
     if(strcmp(interpolation,'GIMP'))
