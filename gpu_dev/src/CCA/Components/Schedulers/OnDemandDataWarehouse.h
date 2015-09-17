@@ -392,7 +392,6 @@ class OnDemandDataWarehouse : public DataWarehouse {
    static size_t getTypeDescriptionSize(const TypeDescription::Type& type);
    static GPUGridVariableBase* createGPUGridVariable(size_t sizeOfDataType);
    static GPUPerPatchBase* createGPUPerPatch(size_t sizeOfDataType);
-   void copyGPUGhostCellsBetweenDevices(DetailedTask* dtask, int numDevices);
 
 #endif
 

@@ -323,9 +323,11 @@ namespace Uintah {
 
     //bool queryCUDAStreamCompletion();
 
-    void setCUDAStream(cudaStream_t* s);
+    //void setCUDAStream(cudaStream_t* s);
 
     void setCUDAStream(unsigned int deviceNum, cudaStream_t* s);
+
+    void clearCUDAStreams();
 
     bool checkCUDAStreamDone() const;
 

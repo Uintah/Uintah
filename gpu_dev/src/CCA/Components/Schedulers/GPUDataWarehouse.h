@@ -110,6 +110,7 @@ public:
   struct VarItem {
     GhostType       gtype;
     unsigned int    numGhostCells;
+    bool            staging;
     bool            validOnGPU; //true if the GPU copy is the "live" copy and not an old version of the data. //TODO: Remove me
     bool            validOnCPU; //true if the CPU copy is the current "live" copy. (It's possible to be both.)  //TODO: Remove me
   };
