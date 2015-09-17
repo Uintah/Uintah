@@ -1,4 +1,4 @@
-#!/bin/csh
+#!/bin/csh -f
 #______________________________________________________________________
 #  plotCPU_usage
 #
@@ -88,7 +88,10 @@ cat > gp << fin
 set terminal postscript color solid "Times-Roman" 12
 set output "cpu_usage.jpg"
 fin
-endif
+else
+cat > gp << fin
+set terminal x11 font "fixed,bold,12" size 1024,768
+fin
 #__________________________________
 # generate the  plot script
 cat >> gp << fin
