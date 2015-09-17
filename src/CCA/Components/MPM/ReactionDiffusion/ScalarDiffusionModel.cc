@@ -134,100 +134,6 @@ void ScalarDiffusionModel::addParticleState(std::vector<const VarLabel*>& from,
   to.push_back(d_lb->pConcGradientLabel_preReloc);
 }
 
-#if 0  // DON'T DELETE YET - JG
-void ScalarDiffusionModel::scheduleInterpolateParticlesToGrid(Task* task,
-                                                   const MPMMaterial* matl,
-                                                   const PatchSet* patch) const
-{
-  const MaterialSubset* matlset = matl->thisMaterial();
-  Ghost::GhostType  gan = Ghost::AroundNodes;
-//  Ghost::GhostType  gnone = Ghost::None;
-
-  task->requires(Task::OldDW, d_lb->pXLabel,                 matlset, gan, NGP);
-  task->requires(Task::OldDW, d_lb->pMassLabel,              matlset, gan, NGP);
-  task->requires(Task::OldDW, d_lb->pSizeLabel,              matlset, gan, NGP);
-  task->requires(Task::OldDW, d_lb->pDeformationMeasureLabel,matlset, gan, NGP);
-  task->requires(Task::OldDW, d_lb->pStressLabel,            matlset, gan, NGP);
-  task->requires(Task::OldDW, d_rdlb->pConcentrationLabel,   matlset, gan, NGP);
-//task->requires(Task::NewDW, d_lb->gMassLabel,               matlset, gnone);
-
-  task->computes(d_rdlb->gConcentrationLabel,      matlset);
-  task->computes(d_rdlb->gHydrostaticStressLabel,  matlset);
-  task->computes(d_rdlb->gConcentrationNoBCLabel,  matlset);
-}
-
-void ScalarDiffusionModel::interpolateParticlesToGrid(const Patch* patch,
-                                                      const MPMMaterial* matl,
-                                                      DataWarehouse* old_dw,
-                                                      DataWarehouse* new_dw)
-{
-  Ghost::GhostType  gan = Ghost::AroundNodes;
-
-  ParticleInterpolator* interpolator = d_Mflag->d_interpolator->clone(patch); 
-
-  vector<IntVector> ni(interpolator->size());
-  vector<double> S(interpolator->size());
-
-  constParticleVariable<Point>  px;
-  constParticleVariable<double> pmass;
-  constParticleVariable<Matrix3> psize;
-  constParticleVariable<Matrix3> pFOld;
-  constParticleVariable<double> pConcentration;
-  constParticleVariable<Matrix3> pStress;
-//  constNCVariable<double>       gmass;
-
-  int dwi = matl->getDWIndex();
-  ParticleSubset* pset = old_dw->getParticleSubset(dwi, patch, gan, NGP,
-	                                                 d_lb->pXLabel);
-
-  old_dw->get(px,             d_lb->pXLabel,                  pset);
-  old_dw->get(pmass,          d_lb->pMassLabel,               pset);
-  old_dw->get(psize,          d_lb->pSizeLabel,               pset);
-  old_dw->get(pFOld,          d_lb->pDeformationMeasureLabel, pset);
-  old_dw->get(pConcentration, d_rdlb->pConcentrationLabel,    pset);
-  old_dw->get(pStress,        d_lb->pStressLabel,             pset);
-
-  NCVariable<double> gconcentration;
-  NCVariable<double> gconcentrationNoBC;
-  NCVariable<double> ghydrostaticstress;
-
-  new_dw->allocateAndPut(gconcentration,      d_rdlb->gConcentrationLabel,
-	                       dwi,  patch);
-  new_dw->allocateAndPut(gconcentrationNoBC,  d_rdlb->gConcentrationNoBCLabel,
-	                       dwi,  patch);
-  new_dw->allocateAndPut(ghydrostaticstress,  d_rdlb->gHydrostaticStressLabel,
-	                       dwi,  patch);
-
-  gconcentration.initialize(0);
-  gconcentrationNoBC.initialize(0);
-  ghydrostaticstress.initialize(0);
-
-  int n8or27 = d_Mflag->d_8or27;
-  double one_third = 1./3.;
-  for (ParticleSubset::iterator iter  = pset->begin(); 
-                                iter != pset->end(); iter++){
-    particleIndex idx = *iter;
-
-    interpolator->findCellAndWeights(px[idx],ni,S,psize[idx],pFOld[idx]);
-    double phydrostress = one_third*pStress[idx].Trace();
-
-    IntVector node;
-    for(int k = 0; k < n8or27; k++) {
-      node = ni[k];
-      if(patch->containsNode(node)) {
-        ghydrostaticstress[node] += phydrostress        * pmass[idx] * S[k];
-        gconcentration[node]     += pConcentration[idx] * pmass[idx] * S[k];
-      }
-    }
-  }
-
-  // Mass Normalization takes place in 
-  // ScalarDiffusion::MassNormalizeConcentration() task
-
-  delete interpolator;
-}
-#endif
-
 void ScalarDiffusionModel::scheduleComputeFlux(Task* task,
                                                const MPMMaterial* matl, 
 		                               const PatchSet* patch) const
@@ -287,12 +193,6 @@ void ScalarDiffusionModel::computeDivergence(const Patch* patch,
   constNCVariable<double> gConc_OldNoBC;
   NCVariable<double> gConcRate;
 
-//  constNCVariable<double> gMass;
-//  constNCVariable<double> gConc_Old;
-//  NCVariable<double> gConcStar;
-//  delt_vartype delT;
-//  old_dw->get(delT, d_sharedState->get_delt_label(), patch->getLevel() );
-
   ParticleSubset* pset = old_dw->getParticleSubset(dwi, patch, gan, NGP,
                                                           d_lb->pXLabel);
 
@@ -305,11 +205,10 @@ void ScalarDiffusionModel::computeDivergence(const Patch* patch,
 
   new_dw->allocateAndPut(gConcRate,  d_rdlb->gConcentrationRateLabel,dwi,patch);
 
-
   gConcRate.initialize(0.0);
 
   // THIS IS COMPUTING A MASS WEIGHTED gConcRate.  THE DIVISION BY MASS, AND
-  // SUBSEQUENT CALCULATIONS WILL BE DONE IN A LATER TASK, NAME::TBD. 
+  // SUBSEQUENT CALCULATIONS IS DONE IN computeAndIntegrateAcceleration. 
 
   for(ParticleSubset::iterator iter = pset->begin();
                                iter != pset->end(); iter++){
@@ -332,26 +231,6 @@ void ScalarDiffusionModel::computeDivergence(const Patch* patch,
       }
     }
   } // End of Particle Loop
-
-  // All of this needs to go in coarsenNodalData_CFI2, done AFTER
-  // computeDivergence_CFI
-#if 0
-  for(NodeIterator iter=patch->getExtraNodeIterator(); !iter.done();iter++){
-    IntVector c = *iter; 
-    gdCdt[c]   /= gMass[c];
-    gConcStar[c] = gConc_Old[c] + gdCdt[c] * delT;
-  }
-
-  MPMBoundCond bc;
-
-  bc.setBoundaryCondition(patch, dwi,"SD-Type", gConcStar,
-                                                d_Mflag->d_interpolator_type);
-
-  for(NodeIterator iter=patch->getExtraNodeIterator(); !iter.done();iter++){
-    IntVector c = *iter;
-    gConcRate[c] = (gConcStar[c] - gConc_OldNoBC[c]) / delT;
-  }
-#endif
 }
 
 void ScalarDiffusionModel::scheduleComputeDivergence_CFI(Task* t,
