@@ -101,7 +101,7 @@ public:
             const std::string& compressionModeHint);
 #if HAVE_PIDX
   void emit(PIDXOutputContext&, const IntVector& l, const IntVector& h,
-            const std::string& compressionModeHint, double* buffer);
+            const std::string& compressionModeHint, unsigned char* buffer);
 #endif
   void read(InputContext&, long end, bool swapbytes, int nByteMode,
             const std::string& compressionMode);

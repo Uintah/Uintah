@@ -190,7 +190,7 @@ void
 Variable::emit(PIDXOutputContext& pc,
 	       const IntVector& l,
 	       const IntVector& h, const string& compressionModeHint,
-               double* pidx_buffer
+               unsigned char* pidx_buffer
 	       )
 {
   // cout << "Start of PIDX emit" << endl;                                                                                                                                      

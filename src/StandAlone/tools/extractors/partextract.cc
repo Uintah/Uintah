@@ -80,7 +80,8 @@ void getParticleStresses(DataArchive* da, int mat, long64 particleID,
 void printParticleVariable(DataArchive* da, int mat, string particleVariable,
                            long64 particleID, unsigned long time_step_lower,
                            unsigned long time_step_upper,
-                           unsigned long time_step_inc);
+                           unsigned long time_step_inc,
+                           bool include_position_output);
 void computeEquivStress(const Matrix3& sig, double& sigeqv);
 void computeEquivStrain(const Matrix3& F, double& epseqv);
 void computeTrueStrain(const Matrix3& F, Vector& strain);
@@ -242,7 +243,8 @@ main( int argc, char** argv )
     // Print a particular particle variable
     if (do_partvar) {
       printParticleVariable(da, mat, particleVariable, particleID, 
-                            time_step_lower, time_step_upper, time_step_inc);
+                            time_step_lower, time_step_upper, time_step_inc,
+                            include_position_output);
     }
   } catch (Exception& e) {
     cerr << "Caught exception: " << e.message() << endl;
@@ -763,7 +765,8 @@ void printParticleVariable(DataArchive* da,
                            long64 particleID,
                            unsigned long time_step_lower,
                            unsigned long time_step_upper,
-                           unsigned long time_step_inc){
+                           unsigned long time_step_inc,
+                           bool include_position_output){
 
   // Check if the particle variable is available
   vector<string> vars;
@@ -824,6 +827,8 @@ void printParticleVariable(DataArchive* da,
 
               // Find the name of the variable
               if (var == particleVariable) {
+                ParticleVariable<Point> pos;
+                da->query(pos, "p.x", matl, patch, t);
                 //cout << "Material: " << matl << endl;
                 switch(subtype->getType()){
                 case Uintah::TypeDescription::double_type:
@@ -839,6 +844,11 @@ void printParticleVariable(DataArchive* da,
                         for(;iter != pset->end(); iter++){
                           cout << time << " " << patchIndex << " " << matl; 
                           cout << " " << pid[*iter];
+                          if(include_position_output){
+                            cout << " " << pos[*iter].x()
+                                 << " " << pos[*iter].y()
+                                 << " " << pos[*iter].z() ;
+                          }
                           cout << " " << value[*iter] << endl;
                         }
                       } else {
@@ -846,6 +856,11 @@ void printParticleVariable(DataArchive* da,
                           if (particleID != pid[*iter]) continue;
                           cout << time << " " << patchIndex << " " << matl; 
                           cout << " " << pid[*iter];
+                          if(include_position_output){
+                            cout << " " << pos[*iter].x()
+                                 << " " << pos[*iter].y()
+                                 << " " << pos[*iter].z() ;
+                          }
                           cout << " " << value[*iter] << endl;
                         }
                       }
@@ -865,6 +880,11 @@ void printParticleVariable(DataArchive* da,
                         for(;iter != pset->end(); iter++){
                           cout << time << " " << patchIndex << " " << matl ;
                           cout << " " << pid[*iter];
+                          if(include_position_output){
+                            cout << " " << pos[*iter].x()
+                                 << " " << pos[*iter].y()
+                                 << " " << pos[*iter].z() ;
+                          }
                           cout << " " << value[*iter] << endl;
                         }
                       } else {
@@ -872,6 +892,11 @@ void printParticleVariable(DataArchive* da,
                           if (particleID != pid[*iter]) continue;
                           cout << time << " " << patchIndex << " " << matl ;
                           cout << " " << pid[*iter];
+                          if(include_position_output){
+                            cout << " " << pos[*iter].x()
+                                 << " " << pos[*iter].y()
+                                 << " " << pos[*iter].z() ;
+                          }
                           cout << " " << value[*iter] << endl;
                         }
                       }
@@ -891,6 +916,11 @@ void printParticleVariable(DataArchive* da,
                         for(;iter != pset->end(); iter++){
                           cout << time << " " << patchIndex << " " << matl;
                           cout << " " << pid[*iter];
+                          if(include_position_output){
+                            cout << " " << pos[*iter].x()
+                                 << " " << pos[*iter].y()
+                                 << " " << pos[*iter].z() ;
+                          }
                           cout << " " << value[*iter] << endl;
                         }
                       } else {
@@ -898,6 +928,11 @@ void printParticleVariable(DataArchive* da,
                           if (particleID != pid[*iter]) continue;
                           cout << time << " " << patchIndex << " " << matl;
                           cout << " " << pid[*iter];
+                          if(include_position_output){
+                            cout << " " << pos[*iter].x()
+                                 << " " << pos[*iter].y()
+                                 << " " << pos[*iter].z() ;
+                          }
                           cout << " " << value[*iter] << endl;
                         }
                       }
@@ -917,6 +952,11 @@ void printParticleVariable(DataArchive* da,
                         for(;iter != pset->end(); iter++){
                           cout << time << " " << patchIndex << " " << matl ;
                           cout << " " << pid[*iter];
+                          if(include_position_output){
+                            cout << " " << pos[*iter].x()
+                                 << " " << pos[*iter].y()
+                                 << " " << pos[*iter].z() ;
+                          }
                           cout << " " << value[*iter](0) 
                                << " " << value[*iter](1)
                                << " " << value[*iter](2) << endl;
@@ -926,6 +966,11 @@ void printParticleVariable(DataArchive* da,
                           if (particleID != pid[*iter]) continue;
                           cout << time << " " << patchIndex << " " << matl ;
                           cout << " " << pid[*iter];
+                          if(include_position_output){
+                            cout << " " << pos[*iter].x()
+                                 << " " << pos[*iter].y()
+                                 << " " << pos[*iter].z() ;
+                          }
                           cout << " " << value[*iter](0) 
                                << " " << value[*iter](1)
                                << " " << value[*iter](2) << endl;
@@ -947,6 +992,11 @@ void printParticleVariable(DataArchive* da,
                         for(;iter != pset->end(); iter++){
                           cout << time << " " << patchIndex << " " << matl ;
                           cout << " " << pid[*iter];
+                          if(include_position_output){
+                            cout << " " << pos[*iter].x()
+                                 << " " << pos[*iter].y()
+                                 << " " << pos[*iter].z() ;
+                          }
                           cout << " " << value[*iter][0] 
                                << " " << value[*iter][1]
                                << " " << value[*iter][2] << endl;
@@ -956,6 +1006,11 @@ void printParticleVariable(DataArchive* da,
                           if (particleID != pid[*iter]) continue;
                           cout << time << " " << patchIndex << " " << matl ;
                           cout << " " << pid[*iter];
+                          if(include_position_output){
+                            cout << " " << pos[*iter].x()
+                                 << " " << pos[*iter].y()
+                                 << " " << pos[*iter].z() ;
+                          }
                           cout << " " << value[*iter][0] 
                                << " " << value[*iter][1]
                                << " " << value[*iter][2] << endl;
@@ -977,6 +1032,11 @@ void printParticleVariable(DataArchive* da,
                         for(;iter != pset->end(); iter++){
                           cout << time << " " << patchIndex << " " << matl ;
                           cout << " " << pid[*iter];
+                          if(include_position_output){
+                            cout << " " << pos[*iter].x()
+                                 << " " << pos[*iter].y()
+                                 << " " << pos[*iter].z() ;
+                          }
                           for (int ii = 0; ii < 3; ++ii) {
                             for (int jj = 0; jj < 3; ++jj) {
                               cout << " " << value[*iter](ii,jj) ;
@@ -989,6 +1049,11 @@ void printParticleVariable(DataArchive* da,
                           if (particleID != pid[*iter]) continue;
                           cout << time << " " << patchIndex << " " << matl ;
                           cout << " " << pid[*iter];
+                          if(include_position_output){
+                            cout << " " << pos[*iter].x()
+                                 << " " << pos[*iter].y()
+                                 << " " << pos[*iter].z() ;
+                          }
                           for (int ii = 0; ii < 3; ++ii) {
                             for (int jj = 0; jj < 3; ++jj) {
                               cout << " " << value[*iter](ii,jj) ;

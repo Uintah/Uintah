@@ -37,7 +37,7 @@ namespace Uintah
 
     PIDX_set_dims(this->file, global_bounding_box);
     PIDX_set_current_time_step(this->file, timeStep);
-    PIDX_set_block_size(this->file, 14);
+    PIDX_set_block_size(this->file, 15);
     PIDX_set_block_count(this->file, 256);
 
   }

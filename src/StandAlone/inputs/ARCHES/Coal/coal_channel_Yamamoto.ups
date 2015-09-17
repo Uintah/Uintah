@@ -743,7 +743,7 @@
     <ARCHES>
  
       <!-- include the coal data base that you are using -->
-      <include href="inputs/ARCHES/Coal/CoalDB/example_coal.xml" section="Coal" />
+      <include href="inputs/ARCHES/Coal/CoalDB/example_coal.xml" section="ParticleProperties" />
       <EulerianParticles>
         <ParticleVariables>
           <variable label="RCmass" role="raw_coal" />

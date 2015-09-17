@@ -1,7 +1,6 @@
 <?xml version="1.0" encoding="ISO-8859-1"?>
 <Uintah_Include>
-  <Coal>
-    <Properties>
+  <ParticleProperties type="coal">
       <!-- REQUIRED ARCHES/PYTHON INPUTS -->
       <diameter_distribution>[40e-06,80e-6,100e-06]</diameter_distribution><!-- [m] -->
       <density>1300.0</density><!-- [kg/m^3] -->
@@ -30,8 +29,7 @@
 
       <!-- OPTIONAL INPUTS -->
       <ksi>0.5</ksi><!-- Optional Fraction of the heat released by char oxidation that goes to the particle (default=1.0) -->
-    </Properties>
-  </Coal>
+  </ParticleProperties>
 
   <Coal_Properties>
     <!-- REQUIRED ARCHES/PYTHON INPUTS -->
@@ -53,5 +51,5 @@
     <!-- OPTIONAL INPUTS -->
     <ksi>0.5</ksi><!-- Optional Fraction of the heat released by char oxidation that goes to the particle (default=1.0) -->
 
-  </Coal_Properties>
+  </Coal_properties>
 </Uintah_Include>
