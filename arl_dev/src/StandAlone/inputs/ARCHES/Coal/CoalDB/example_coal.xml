@@ -1,7 +1,6 @@
 <?xml version="1.0" encoding="ISO-8859-1"?>
 <Uintah_Include>
-  <Coal>
-    <Properties>
+  <ParticleProperties type="coal">
 
     <!-- REQUIRED ARCHES/PYTHON INPUTS -->
 
@@ -55,6 +54,5 @@
       <Ash_imag>-0.01</Ash_imag>
     </optics>
 
-    </Properties>
-  </Coal>
+  </ParticleProperties>
 </Uintah_Include>

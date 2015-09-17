@@ -250,7 +250,7 @@ public:
 		    int matlIndex, const Patch* patch) = 0;
 
 #if HAVE_PIDX
-  virtual void emit(PIDXOutputContext&, const VarLabel* label, int matlIndex, const Patch* patch, double* buffer) = 0;
+  virtual void emit(PIDXOutputContext&, const VarLabel* label, int matlIndex, const Patch* patch, unsigned char* buffer) = 0;
 #endif
 
 

@@ -88,7 +88,7 @@ using namespace std;
 using namespace SCIRun;
 
 static DebugStream dbg("DataArchiver", false);
-
+static int PIDX_ts = 0;
 bool DataArchiver::d_wereSavesAndCheckpointsInitialized = false;
 
 DataArchiver::DataArchiver(const ProcessorGroup* myworld, int udaSuffix)
@@ -1981,7 +1981,20 @@ DataArchiver::outputVariables(const ProcessorGroup * /*world*/,
 
   // Not only lock to prevent multiple threads from writing over the same
   // file, but also lock because xerces (DOM..) has thread-safety issues.
-
+  
+  int uda_vis_dump = 1;
+#if HAVE_PIDX
+  uda_vis_dump = 0;
+#else
+  uda_vis_dump = 1;
+#endif
+  
+  int uda_checkpoint_dump = 0;
+  if (type == CHECKPOINT_REDUCTION)
+    uda_checkpoint_dump = 1;
+  
+  //if (uda_checkpoint_dump == 1 || uda_vis_dump == 1)
+  //{
   d_outputLock.lock(); 
   { // make sure doc's constructor is called after the lock.
     ProblemSpecP doc; 
@@ -2180,6 +2193,7 @@ DataArchiver::outputVariables(const ProcessorGroup * /*world*/,
     d_sharedState->outputTime += Time::currentSeconds()-start;
   }
   d_outputLock.unlock(); 
+  //}
 
   dbg << "  end\n";
 
@@ -2188,7 +2202,8 @@ DataArchiver::outputVariables(const ProcessorGroup * /*world*/,
 #if HAVE_PIDX
 
   bool pidx_io =  true;
-  if (pidx_io == true) 
+  
+  if (pidx_io == true && type != CHECKPOINT_REDUCTION) 
   {
     bool use_float=false;//for data conversion, float is faster (and most of the data from vulcan is float)
     IntVector adjust_offset;//for data conversion, some datasets start at -1,-1,-1, this will soon be handled automatically by pidx 
@@ -2226,18 +2241,22 @@ DataArchiver::outputVariables(const ProcessorGroup * /*world*/,
     
 
     PIDXOutputContext pc;
-    pc.initialize(idxFilename, timeStep, globalExtents, d_myworld->getComm());
+    pc.initialize(idxFilename, /*timeStep*/PIDX_ts++, globalExtents, d_myworld->getComm());
     
     int vc = 0;
     int var_counter = 0;
+    int cc_var_count = 0;
     int actual_number_of_variables = 0;
     vector<SaveItem>::iterator saveIter;
-    for(saveIter = saveLabels.begin(); saveIter!= saveLabels.end(); saveIter++) 
+    for(saveIter = saveLabels.begin(), var_counter = 0; saveIter!= saveLabels.end(), var_counter < number_of_variables; saveIter++, var_counter++) 
     {
       const VarLabel* var = saveIter->label;
-      string type = var->typeDescription()->getName().c_str();
-      //if (strstr(type.c_str(), "Vector") != NULL)
-      //cout << "type = " << type << endl;
+      string typestr = var->typeDescription()->getName().c_str();
+      if (strstr(typestr.c_str(), "CCVariable") == NULL)
+        continue;
+
+      //if (rank == 0)
+      //  cout << "type = " << type << endl;
       
       map<int, MaterialSetP>::iterator iter = saveIter->matlSet.end();
       const MaterialSubset* var_matls = 0;
@@ -2262,28 +2281,33 @@ DataArchiver::outputVariables(const ProcessorGroup * /*world*/,
       if (var_matls == 0)
         continue;
       
-      number_of_materials[var_counter++]=var_matls->size();
-      if(rank == 0)
-        printf("Number of materials for variable %d = %d\n", var_counter, var_matls->size());
+      number_of_materials[cc_var_count]=var_matls->size();
+      //if(rank == 0)
+      //  printf("Number of materials for variable %d = %d\n", cc_var_count, var_matls->size());
 
+      cc_var_count++;
       actual_number_of_variables += var_matls->size();
     }
     
     PIDX_set_variable_count(pc.file, actual_number_of_variables);
     
-    pc.variable = (PIDX_variable**) malloc(sizeof (PIDX_variable*) * number_of_variables);
-    memset(pc.variable, 0, sizeof (PIDX_variable*) * number_of_variables);
-    for(int i = 0 ; i < number_of_variables ; i++){
+    pc.variable = (PIDX_variable**) malloc(sizeof (PIDX_variable*) * cc_var_count);
+    memset(pc.variable, 0, sizeof (PIDX_variable*) * cc_var_count);
+    for(int i = 0 ; i < cc_var_count ; i++){
       pc.variable[i] = (PIDX_variable*) malloc(sizeof (PIDX_variable) * number_of_materials[i]);
       memset(pc.variable[i], 0, sizeof (PIDX_variable) * number_of_materials[i]);
     }
-    
+#if 1    
     int var_cnt = 0; // keep track of how many fields are queued for aggregation
-    double ***patch_buffer;
-    patch_buffer = (double***)malloc(sizeof(double**) * actual_number_of_variables);
-    for(saveIter = saveLabels.begin(), vc=0; saveIter!= saveLabels.end(); saveIter++, vc++) 
+    unsigned char ***patch_buffer;
+    patch_buffer = (unsigned char***)malloc(sizeof(unsigned char**) * actual_number_of_variables);
+    vc = 0;
+    for(saveIter = saveLabels.begin(); saveIter!= saveLabels.end(); saveIter++) 
     {
       const VarLabel* var = saveIter->label;
+      string type2 = var->typeDescription()->getName().c_str();
+      if (strstr(type2.c_str(), "CCVariable") == NULL)
+        continue;
       //IntVector vhi, vlow, vrange;
       //vlow = var->getCellLowIndex();
       //vhi = var->getCellHighIndex();
@@ -2316,11 +2340,11 @@ DataArchiver::outputVariables(const ProcessorGroup * /*world*/,
       
       // loop through patches and materials
       string type1 = var->typeDescription()->getName().c_str();
-      if (rank == 0)
-        printf("var type = %s\n",type1.c_str());
+      //if (rank == 0)
+      //  printf("var type = %s\n",type1.c_str());
       int sample_per_variable = 1;
       bool prev_use_float=use_float;
-      if (strstr(type1.c_str(), "Vector") != NULL) 
+      if (strstr(type1.c_str(), "Vector") != NULL)
       {
         sample_per_variable = 3;
         use_float = false;  //vectors are implicitly of type double (though we should check)
@@ -2340,17 +2364,24 @@ DataArchiver::outputVariables(const ProcessorGroup * /*world*/,
 	}
 
         char data_type[512];
+        /*
         if (use_float)
           sprintf(data_type, "%d*float32", sample_per_variable); 
         else
           sprintf(data_type, "%d*float64", sample_per_variable);
+        */
+        if (strstr(type1.c_str(), "double") != NULL || strstr(type1.c_str(), "Vector") != NULL)
+          sprintf(data_type, "%d*float32", sample_per_variable); 
+        if (strstr(type1.c_str(), "int") != NULL)
+          sprintf(data_type, "%d*int32", sample_per_variable); 
+        //if(rank == 0)
+        //  printf("[%d] [%d] Name = %s Patch Count = %d Sample per variable %d\n", vc, m, (char*)var_mat_name.c_str(), patches->size(), sample_per_variable);
         
-        if(rank == 0)
-          printf("[%d] [%d] Name = %s Patch Count = %d Sample per variable %d\n", vc, m, (char*)var_mat_name.c_str(), patches->size(), sample_per_variable);
+        //PIDX_variable_create((char*)var_mat_name.c_str(), sample_per_variable * (use_float?sizeof(float):sizeof(double)) * 8, data_type, &(pc.variable[vc][m]));
+        PIDX_variable_create((char*)var_mat_name.c_str(), sample_per_variable * sizeof(float) * 8, data_type, &(pc.variable[vc][m]));
         
-        PIDX_variable_create((char*)var_mat_name.c_str(), sample_per_variable * (use_float?sizeof(float):sizeof(double)) * 8, data_type, &(pc.variable[vc][m]));
         
-        patch_buffer[var_cnt] = (double**)malloc(sizeof(double*) * patches->size());
+        patch_buffer[vc] = (unsigned char**)malloc(sizeof(unsigned char*) * patches->size());
         for(int p=0;p<(type==CHECKPOINT_REDUCTION?1:patches->size());p++)
         {
           const Patch* patch;
@@ -2360,7 +2391,7 @@ DataArchiver::outputVariables(const ProcessorGroup * /*world*/,
             // to consolidate into this function, force patch = 0
             patch = 0;
             patchID = -1;
-            patch_buffer[var_cnt][p] = (double*)NULL;
+            //patch_buffer[vc][p] = (float*)NULL;
 
           } else {
             patch = patches->get(p);
@@ -2373,8 +2404,9 @@ DataArchiver::outputVariables(const ProcessorGroup * /*world*/,
             hiE = patch->getExtraCellHighIndex();
             lowE = patch->getExtraCellLowIndex();
             
-            if(rank == 0)
-              printf("[%d] Offset and Count %d %d %d : %d %d %d\n", vc, lowE.x(), lowE.y(), lowE.z(), (hiE.x() - lowE.x()), (hiE.y() - lowE.y()), (hiE.z() - lowE.z()));
+            //if(rank == 0)
+            if(vc == 0)
+            printf("[PIDX %d] [%d] Offset and Count %d %d %d : %d %d %d\n", rank, vc, lowE.x(), lowE.y(), lowE.z(), (hiE.x() - lowE.x()), (hiE.y() - lowE.y()), (hiE.z() - lowE.z()));
             
             PIDX_point local_offset_point, local_box_count_point;
             
@@ -2382,23 +2414,64 @@ DataArchiver::outputVariables(const ProcessorGroup * /*world*/,
 
             PIDX_set_point_5D(local_box_count_point, hiE.x() - lowE.x(), hiE.y() - lowE.y(), hiE.z() - lowE.z(), 1, 1);
             
-            if (rank==0)
-              printf("patch_buffer size: %ld\n",sample_per_variable * (use_float?sizeof(float):sizeof(double)) * ((hiE.x() - lowE.x()) * (hiE.y() - lowE.y()) * (hiE.z() - lowE.z())));
+            //if (rank==0)
+            //  printf("[PIDX %d] patch_buffer size: %ld\n", rank, sample_per_variable * (use_float?sizeof(float):sizeof(double)) * ((hiE.x() - lowE.x()) * (hiE.y() - lowE.y()) * (hiE.z() - lowE.z())));
 
-            patch_buffer[var_cnt][p] = (double*)malloc(sample_per_variable * (use_float?sizeof(float):sizeof(double)) * ((hiE.x() - lowE.x()) * (hiE.y() - lowE.y()) * (hiE.z() - lowE.z())));
+            unsigned char *t_buffer; 
+            if (strstr(type1.c_str(), "double") != NULL)
+            {
+              t_buffer = (unsigned char*)malloc(sample_per_variable * sizeof(double) * ((hiE.x() - lowE.x()) * (hiE.y() - lowE.y()) * (hiE.z() - lowE.z())));
+              memset(t_buffer, 0, sample_per_variable * sizeof(double) * ((hiE.x() - lowE.x()) * (hiE.y() - lowE.y()) * (hiE.z() - lowE.z())));
+
+              patch_buffer[vc][p] = (unsigned char*)malloc(sample_per_variable * sizeof(float) * ((hiE.x() - lowE.x()) * (hiE.y() - lowE.y()) * (hiE.z() - lowE.z())));
+              memset(patch_buffer[vc][p], 0, sample_per_variable * sizeof(float) * ((hiE.x() - lowE.x()) * (hiE.y() - lowE.y()) * (hiE.z() - lowE.z())));
+            }
+            if (strstr(type1.c_str(), "int") != NULL)
+            {
+              t_buffer = (unsigned char*)malloc(sample_per_variable * sizeof(int) * ((hiE.x() - lowE.x()) * (hiE.y() - lowE.y()) * (hiE.z() - lowE.z())));
+              memset(t_buffer, 0, sample_per_variable * sizeof(int) * ((hiE.x() - lowE.x()) * (hiE.y() - lowE.y()) * (hiE.z() - lowE.z())));
+
+              patch_buffer[vc][p] = (unsigned char*)malloc(sample_per_variable * sizeof(int) * ((hiE.x() - lowE.x()) * (hiE.y() - lowE.y()) * (hiE.z() - lowE.z())));
+              memset(patch_buffer[vc][p], 0, sample_per_variable * sizeof(int) * ((hiE.x() - lowE.x()) * (hiE.y() - lowE.y()) * (hiE.z() - lowE.z())));
+            }
+            if (strstr(type1.c_str(), "Vector") != NULL)
+            {
+              t_buffer = (unsigned char*)malloc(sample_per_variable * sizeof(double) * ((hiE.x() - lowE.x()) * (hiE.y() - lowE.y()) * (hiE.z() - lowE.z())));
+              memset(t_buffer, 0, sample_per_variable * sizeof(double) * ((hiE.x() - lowE.x()) * (hiE.y() - lowE.y()) * (hiE.z() - lowE.z())));
+
+              patch_buffer[vc][p] = (unsigned char*)malloc(sample_per_variable * sizeof(float) * ((hiE.x() - lowE.x()) * (hiE.y() - lowE.y()) * (hiE.z() - lowE.z())));
+              memset(patch_buffer[vc][p], 0, sample_per_variable * sizeof(float) * ((hiE.x() - lowE.x()) * (hiE.y() - lowE.y()) * (hiE.z() - lowE.z())));
+            }
             
-            int v=0,u=0,j=0,k=0, i1;
-            new_dw->emit(pc, var, matlIndex, patch, patch_buffer[var_cnt][p]);
+            //new_dw->emit(pc, var, matlIndex, patch, patch_buffer[vc][p]);
+            new_dw->emit(pc, var, matlIndex, patch, t_buffer);
 
-	    PIDX_variable_write_data_layout(pc.variable[vc][m], local_offset_point, local_box_count_point, patch_buffer[var_cnt][p], PIDX_row_major);
+            if (strstr(type1.c_str(), "double") != NULL || (strstr(type1.c_str(), "Vector") != NULL))
+            {
+              double* tt_buffer = (double*)malloc(sample_per_variable * sizeof(double) * ((hiE.x() - lowE.x()) * (hiE.y() - lowE.y()) * (hiE.z() - lowE.z())));
+              memcpy(tt_buffer, t_buffer, sample_per_variable * sizeof(double) * ((hiE.x() - lowE.x()) * (hiE.y() - lowE.y()) * (hiE.z() - lowE.z())));
+              float* ff_buffer = (float*)malloc(sample_per_variable * sizeof(float) * ((hiE.x() - lowE.x()) * (hiE.y() - lowE.y()) * (hiE.z() - lowE.z())));
+              std::copy(tt_buffer, tt_buffer + (sample_per_variable * ((hiE.x() - lowE.x()) * (hiE.y() - lowE.y()) * (hiE.z() - lowE.z()))), ff_buffer);
+              free(tt_buffer);
+              memcpy(patch_buffer[vc][p], ff_buffer, sample_per_variable * sizeof(float) * ((hiE.x() - lowE.x()) * (hiE.y() - lowE.y()) * (hiE.z() - lowE.z())));
+              free (ff_buffer);
+            }
+
+            if (strstr(type1.c_str(), "int") != NULL)
+            {
+              memcpy(patch_buffer[vc][p], t_buffer, sample_per_variable * sizeof(int) * ((hiE.x() - lowE.x()) * (hiE.y() - lowE.y()) * (hiE.z() - lowE.z())));
+              
+            }
+            
+            free(t_buffer);
+
+	    PIDX_variable_write_data_layout(pc.variable[vc][m], local_offset_point, local_box_count_point, patch_buffer[vc][p], PIDX_row_major);
                         
           }
 
         }//  Patches
-
         PIDX_append_and_write_variable(pc.file, pc.variable[vc][m]);
-
-        var_cnt++;
+        vc++;
 
       }//  Materials
 
@@ -2417,7 +2490,7 @@ DataArchiver::outputVariables(const ProcessorGroup * /*world*/,
     
 #if 1//not PIDX_FLUSH
     //free buffers
-    for (int i=0;i<var_cnt;i++)
+    for (int i=0;i<actual_number_of_variables;i++)
     {
       for(int p=0;p<(type==CHECKPOINT_REDUCTION?1:patches->size());p++)
       {
@@ -2430,7 +2503,8 @@ DataArchiver::outputVariables(const ProcessorGroup * /*world*/,
 #endif
 
     //free memory
-    for (int i=0; i<number_of_variables; i++)
+    //for (int i=0; i<number_of_variables; i++)
+    for (int i=0; i<cc_var_count; i++)
       free(pc.variable[i]);
     free(pc.variable); pc.variable=0;
     free(number_of_materials); number_of_materials=0;
@@ -2449,9 +2523,9 @@ DataArchiver::outputVariables(const ProcessorGroup * /*world*/,
            << " Number of variables = " << number_of_variables 
            << endl;
     
+#endif
   }
 #endif
-
 } // end output()
 
 //______________________________________________________________________
