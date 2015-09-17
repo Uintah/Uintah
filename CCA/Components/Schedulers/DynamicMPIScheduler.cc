@@ -40,10 +40,6 @@ extern SCIRun::Mutex      coutLock;
 extern SCIRun::Mutex      cerrLock;
 
 extern DebugStream        taskdbg;
-extern std::map<std::string,double> waittimes;
-extern std::map<std::string,double> exectimes;
-extern DebugStream        waitout;
-extern DebugStream        execout;
 extern DebugStream        taskorder;
 
 static DebugStream dynamicmpi_dbg(        "DynamicMPI_DBG",         false);
@@ -214,18 +210,17 @@ DynamicMPIScheduler::execute( int tgnum     /*=0*/,
   //if(timeout.active())
     //emitTime("taskGraph output");
 
-  mpi_info_.totalreduce = 0;
-  mpi_info_.totalsend = 0;
-  mpi_info_.totalrecv = 0;
-  mpi_info_.totaltask = 0;
+  mpi_info_.totalreduce    = 0;
+  mpi_info_.totalsend      = 0;
+  mpi_info_.totalrecv      = 0;
+  mpi_info_.totaltask      = 0;
   mpi_info_.totalreducempi = 0;
-  mpi_info_.totalsendmpi = 0;
-  mpi_info_.totalrecvmpi = 0;
-  mpi_info_.totaltestmpi = 0;
-  mpi_info_.totalwaitmpi = 0;
+  mpi_info_.totalsendmpi   = 0;
+  mpi_info_.totalrecvmpi   = 0;
+  mpi_info_.totaltestmpi   = 0;
+  mpi_info_.totalwaitmpi   = 0;
 
   int numTasksDone = 0;
-
   bool abort       = false;
   int  abort_point = 987654;
 
@@ -246,7 +241,7 @@ DynamicMPIScheduler::execute( int tgnum     /*=0*/,
   }
 #endif
 
-  int currphase=0;
+  int currphase = 0;
   std::map<int, int> phaseTasks;
   std::map<int, int> phaseTasksDone;
   std::map<int,  DetailedTask *> phaseSyncTask;
@@ -416,7 +411,7 @@ DynamicMPIScheduler::execute( int tgnum     /*=0*/,
     for (unsigned int i = 1; i < histogram.size(); i++) {
       lengthsum = lengthsum + i * histogram[i];
     }
-    // if (me==0) cout << endl;
+
     float queuelength = lengthsum / totaltasks;
     float allqueuelength = 0;
 
@@ -439,7 +434,6 @@ DynamicMPIScheduler::execute( int tgnum     /*=0*/,
 
     double time = Time::currentSeconds();
     double totalexec = time - d_lasttime;
-
     d_lasttime = time;
 
     emitTime("Other excution time", totalexec - mpi_info_.totalsend - mpi_info_.totalrecv - mpi_info_.totaltask - mpi_info_.totalreduce);
@@ -454,13 +448,14 @@ DynamicMPIScheduler::execute( int tgnum     /*=0*/,
 
   sends_[0].waitall(d_myworld);
   ASSERT(sends_[0].numRequests() == 0);
-  //if(timeout.active())
-    //emitTime("final wait");
+
   if (restartable && tgnum == (int)graphs.size() - 1) {
     // Copy the restart flag to all processors
     int myrestart = dws[dws.size() - 1]->timestepRestarted();
     int netrestart;
+
     MPI_Allreduce(&myrestart, &netrestart, 1, MPI_INT, MPI_LOR, d_myworld->getComm());
+
     if (netrestart) {
       dws[dws.size() - 1]->restartTimestep();
       if (dws[0]) {
@@ -470,165 +465,11 @@ DynamicMPIScheduler::execute( int tgnum     /*=0*/,
   }
 
   finalizeTimestep();
+  log.finishTimestep();
   
 
-  log.finishTimestep();
-  if( dynamicmpi_timeout.active() && !parentScheduler_ ){ // only do on toplevel scheduler
-    //emitTime("finalize");
-
-    // add number of cells, patches, and particles
-    int numCells = 0, numParticles = 0;
-    OnDemandDataWarehouseP dw = dws[dws.size()-1];
-    const GridP grid(const_cast<Grid*>(dw->getGrid()));
-    const PatchSubset* myPatches = getLoadBalancer()->getPerProcessorPatchSet(grid)->getSubset(d_myworld->myrank());
-    for (int p = 0; p < myPatches->size(); p++) {
-      const Patch* patch = myPatches->get(p);
-      IntVector range = patch->getExtraCellHighIndex() - patch->getExtraCellLowIndex();
-      numCells += range.x()*range.y()*range.z();
-
-      // go through all materials since getting an MPMMaterial correctly would depend on MPM
-      for (int m = 0; m < d_sharedState->getNumMatls(); m++) {
-        if (dw->haveParticleSubset(m, patch))
-          numParticles += dw->getParticleSubset(m, patch)->numParticles();
-      }
-    }
-
-    emitTime("NumPatches", myPatches->size());
-    emitTime("NumCells", numCells);
-    emitTime("NumParticles", numParticles);
-    std::vector<double> d_totaltimes(d_times.size());
-    std::vector<double> d_maxtimes(d_times.size());
-    std::vector<double> d_avgtimes(d_times.size());
-    double avgTask = -1, maxTask = -1;
-    double avgComm = -1, maxComm = -1;
-    double avgCell = -1, maxCell = -1;
-
-    MPI_Reduce(&d_times[0], &d_totaltimes[0], static_cast<int>(d_times.size()), MPI_DOUBLE, MPI_SUM, 0, d_myworld->getComm());
-    MPI_Reduce(&d_times[0], &d_maxtimes[0],   static_cast<int>(d_times.size()), MPI_DOUBLE, MPI_MAX, 0, d_myworld->getComm());
-
-    double total = 0, avgTotal = 0, maxTotal = 0;
-    for (int i = 0; i < static_cast<int>(d_totaltimes.size()); i++) {
-      d_avgtimes[i] = d_totaltimes[i] / d_myworld->size();
-      if (strcmp(d_labels[i], "Total task time") == 0) {
-        avgTask = d_avgtimes[i];
-        maxTask = d_maxtimes[i];
-      }
-      else if (strcmp(d_labels[i], "Total comm time") == 0) {
-        avgComm = d_avgtimes[i];
-        maxComm = d_maxtimes[i];
-      }
-      else if (strncmp(d_labels[i], "Num", 3) == 0) {
-        if (strcmp(d_labels[i], "NumCells") == 0) {
-          avgCell = d_avgtimes[i];
-          maxCell = d_maxtimes[i];
-        }
-        // these are independent stats - not to be summed
-        continue;
-      }
-
-      total    += d_times[i];
-      avgTotal += d_avgtimes[i];
-      maxTotal += d_maxtimes[i];
-    }
-
-    // to not duplicate the code
-    std::vector <std::ofstream*> files;
-    std::vector <std::vector<double>* > data;
-    files.push_back(&timingStats);
-    data.push_back(&d_times);
-
-    if (me == 0) {
-      files.push_back(&avgStats);
-      files.push_back(&maxStats);
-      data.push_back(&d_avgtimes);
-      data.push_back(&d_maxtimes);
-    }
-
-    for (unsigned file = 0; file < files.size(); file++) {
-      std::ofstream& out = *files[file];
-      out << "Timestep " << d_sharedState->getCurrentTopLevelTimeStep() << std::endl;
-      for (int i = 0; i < static_cast<int>((*data[file]).size()); i++) {
-        out << "DynamicMPIScheduler: " << d_labels[i] << ": ";
-        int len = (int)(strlen(d_labels[i]) + strlen("DynamicMPIScheduler: ") + strlen(": "));
-        for (int j = len; j < 55; j++) {
-          out << ' ';
-        }
-        double percent;
-        if (strncmp(d_labels[i], "Num", 3) == 0) {
-          percent = d_totaltimes[i] == 0 ? 100 : (*data[file])[i] / d_totaltimes[i] * 100;
-        }
-        else {
-          percent = (*data[file])[i] / total * 100;
-        }
-        out << (*data[file])[i] << " (" << percent << "%)\n";
-      }
-      out << std::endl << std::endl;
-    }
-
-    if (me == 0) {
-      dynamicmpi_timeout << "  Avg. exec: " << avgTask << ", max exec: " << maxTask << " = " << (1-avgTask/maxTask)*100 << " load imbalance (exec)%\n";
-      dynamicmpi_timeout << "  Avg. comm: " << avgComm << ", max comm: " << maxComm << " = " << (1-avgComm/maxComm)*100 << " load imbalance (comm)%\n";
-      dynamicmpi_timeout << "  Avg.  vol: " << avgCell << ", max  vol: " << maxCell << " = " << (1-avgCell/maxCell)*100 << " load imbalance (theoretical)%\n";
-    }
-
-    double time = Time::currentSeconds();
-    d_lasttime = time;
-  }
-
-  if (execout.active()) {
-    static int count = 0;
-
-    // only output the exec times every 10 timesteps
-    if (++count % 10 == 0) {
-      std::ofstream fout;
-      char filename[100];
-      sprintf(filename, "exectimes.%d.%d", d_myworld->size(), d_myworld->myrank());
-      fout.open(filename);
-
-      // Report which timesteps TaskExecTime values have been accumulated over
-      fout << "Reported values are cumulative over 10 timesteps ("
-           << d_sharedState->getCurrentTopLevelTimeStep()-9
-           << " through "
-           << d_sharedState->getCurrentTopLevelTimeStep()
-           << ")" << std::endl;
-
-      for (std::map<std::string, double>::iterator iter = exectimes.begin(); iter != exectimes.end(); iter++) {
-        fout << std::fixed << d_myworld->myrank() << ": TaskExecTime(s): " << iter->second << " Task:" << iter->first << std::endl;
-      }
-      fout.close();
-      exectimes.clear();
-    }
-  }
-
-  if (waitout.active()) {
-    static int count = 0;
-
-    // only output the wait times every 10 timesteps
-    if (++count % 10 == 0) {
-
-      if (d_myworld->myrank() == 0 || d_myworld->myrank() == d_myworld->size() / 2
-          || d_myworld->myrank() == d_myworld->size() - 1) {
-
-        std::ofstream wout;
-        char fname[100];
-        sprintf(fname, "WaitTimes.%d.%d", d_myworld->size(), d_myworld->myrank());
-        wout.open(fname);
-
-        for (std::map<std::string, double>::iterator iter = waittimes.begin(); iter != waittimes.end(); iter++) {
-          wout << std::fixed << d_myworld->myrank() << ": TaskWaitTime(TO): " << iter->second << " Task:" << iter->first << std::endl;
-        }
-
-        for (std::map<std::string, double>::iterator iter = DependencyBatch::waittimes.begin(); iter != DependencyBatch::waittimes.end();
-            iter++) {
-          wout << std::fixed << d_myworld->myrank() << ": TaskWaitTime(FROM): " << iter->second << " Task:" << iter->first << std::endl;
-        }
-
-        wout.close();
-      }
-
-      waittimes.clear();
-      DependencyBatch::waittimes.clear();
-    }
+  if( dynamicmpi_timeout.active() && !parentScheduler_ ) {  // only do on toplevel scheduler
+    outputTimingStats("DynamicMPIScheduler");
   }
 
   if( dynamicmpi_dbg.active()) {
