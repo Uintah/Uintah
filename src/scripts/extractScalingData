@@ -46,7 +46,7 @@ foreach X ( $out[*] )
     echo $nThreads > $here/nThreads 
 
     grep "(timestep $startTimestep)" $X | awk -F "=" '{print $4}' | cut -d "," -f1 > $here/startTime
-    grep "(timestep $endTimestep)"   $X | awk -F "=" '{print $4}' | cut -d "," -f1 > $here/endTime
+    grep "(timestep $endTimestep)"   $X | awk -F "=" '{print $4}' | cut -d "(" -f1 > $here/endTime
 
     paste -d " " $here/file $here/nMPI $here/threadsPerMPI $here/nThreads $here/startTime $here/endTime >> $here/data
 
@@ -124,5 +124,5 @@ endif
 
 more scalingData
 
-#/bin/rm -rf $here
+/bin/rm -rf $here
 exit
