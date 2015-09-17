@@ -166,8 +166,6 @@ class UnifiedScheduler : public MPIScheduler  {
         LoadBalancer* lb,
         GpuUtilities::DeviceVarDestination dest);
 
-    void copyGpuInternalDependencies(DetailedTask * task, int iteration, int t_id);
-
     void createTaskGpuDWs(DetailedTask * task,
         const DeviceGridVariables& taskVars,
         const DeviceGhostCells& ghostVars);
@@ -214,7 +212,7 @@ class UnifiedScheduler : public MPIScheduler  {
 
     void preallocateDeviceMemory( DetailedTask* dtask );
 
-    void createCudaStreams(int numStreams, int device);
+    //void createCudaStreams(int numStreams, int device);
 
     void reclaimCudaStreams( DetailedTask* dtask );
 
@@ -262,7 +260,8 @@ class UnifiedScheduler : public MPIScheduler  {
     int  currentDevice_;
 
     /* thread shared data, needs lock protection when accessed */
-    std::vector<std::queue<cudaStream_t*> >  idleStreams;
+    //std::vector<std::queue<cudaStream_t*> >  idleStreams;
+    std::map <unsigned int, queue<cudaStream_t*> > idleStreams;
     std::vector< std::string >               materialsNames;
 
     // All are multiple reader, single writer locks (pthread_rwlock_t wrapper)

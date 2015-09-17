@@ -290,7 +290,6 @@ DetailedTask::DetailedTask(       Task*           task,
   deviceExternallyReady_ = false;
   completed_             = false;
   deviceNum_             = -1;
-  setCUDAStream(NULL);
 #endif
 }
 
@@ -1575,39 +1574,53 @@ cudaStream_t* DetailedTask::getCUDAStream(unsigned int deviceNum) const
   return NULL;
 }
 
-void DetailedTask::setCUDAStream(cudaStream_t* s)
-{
-  //d_cudaStream = s;
-  setCUDAStream(0, s);
-};
+
+//void DetailedTask::setCUDAStream(cudaStream_t* s)
+//{
+//  //d_cudaStream = s;
+//  setCUDAStream(0, s);
+//};
 
 void DetailedTask::setCUDAStream(unsigned int deviceNum, cudaStream_t* s)
 {
   if (s == NULL) {
     d_cudaStreams.erase(deviceNum);
   } else {
+    //printf("For device %d inserting stream at %p\n", deviceNum, s);
+    //TODO: Needs a write lock.
     d_cudaStreams.insert(std::pair<unsigned int, cudaStream_t*>(deviceNum,s));
   }
 };
 
+void DetailedTask::clearCUDAStreams() {
+  d_cudaStreams.clear();
+}
 
 bool DetailedTask::checkCUDAStreamDone() const
 {
   //Check all
   cudaError_t retVal;
   for (std::map<unsigned int, cudaStream_t*>::const_iterator it = d_cudaStreams.begin(); it != d_cudaStreams.end(); ++it) {
+
+    OnDemandDataWarehouse::uintahSetCudaDevice(it->first);
     retVal = cudaStreamQuery(*(it->second));
     if (retVal == cudaSuccess) {
     //  cout << "checking cuda stream " << d_cudaStream << "ready" << endl;
       continue;
     } else if (retVal == cudaErrorNotReady ) {
+
+      for (int i = 0; i < 200; i++) {
+        retVal = cudaStreamQuery(*(it->second));
+      }
       return false;
     }
     else if (retVal ==  cudaErrorLaunchFailure) {
+      printf("ERROR! - DetailedTask::checkCUDAStreamDone() - CUDA kernel execution failure on Task: %s\n", getName().c_str());
       SCI_THROW(InternalError("Detected CUDA kernel execution failure on Task:"+ getName() , __FILE__, __LINE__));
       return false;
     } else { //other error
-      CUDA_RT_SAFE_CALL (retVal);
+      printf("ERROR! - DetailedTask::checkCUDAStreamDone() - The stream %p had this error code %d.  This could mean that something else in the stream just hit an error.\n", it->second, retVal);
+      SCI_THROW(InternalError("ERROR! - Invalid stream query", __FILE__, __LINE__));
       return false;
     }
 

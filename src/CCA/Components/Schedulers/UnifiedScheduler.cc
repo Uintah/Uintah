@@ -102,8 +102,7 @@ UnifiedScheduler::UnifiedScheduler(const ProcessorGroup* myworld,
 
     // we need one of these for each GPU, as each device will have it's own CUDA context
     for (int i = 0; i < numDevices_; i++) {
-      printf("Creating stream for device %d\n", i);
-      idleStreams.push_back(std::queue<cudaStream_t*>());
+      getCudaStream(i);
     }
 
     // disable memory windowing on variables.  This will ensure that
@@ -129,10 +128,11 @@ UnifiedScheduler::UnifiedScheduler(const ProcessorGroup* myworld,
       if (i != j) {
         cudaDeviceCanAccessPeer(&can_access, i, j);
         if (can_access) {
+          printf("GOOD\n GPU device %d can access GPU device %d\n", i, j);
           cudaDeviceEnablePeerAccess(j, 0);
         } else {
           printf("ERROR\n GPU device %d cannot access GPU device %d\n", i, j);
-          SCI_THROW( InternalError("Two GPU devices cannot talk to each other", __FILE__, __LINE__));
+          SCI_THROW( InternalError("** Two GPU devices cannot talk to each other", __FILE__, __LINE__));
         }
       }
     }
@@ -466,15 +466,9 @@ void UnifiedScheduler::runTask(DetailedTask* task, int iteration,
     }
 #ifdef HAVE_CUDA
 
-    //Go through internal dependencies and external dependencies.  For
-    //anything in a GPU, copy the ghost cells into a contiguous chunk of data.
-    //Then copy the internal dependencies from one GPU to another.
-    //Then also copy external dependencies to the CPU so the MPI engine can handle those.
     if (Uintah::Parallel::usingDevice()) {
-      //copyGpuInternalDependencies(task, iteration, thread_id);
       task->deleteTaskGpuDataWarehouses();
     }
-    reclaimCudaStreams(task);
 
 #endif
     task->done(dws);  // should this be timed with taskstart? - BJW
@@ -1081,14 +1075,16 @@ void UnifiedScheduler::runTasks(int thread_id) {
        *
        * gpuFinalizeDevicePreparation = true
        */
-      else if (usingDevice == true && dts->numFinalizeDevicePreparation() > 0) {
-        readyTask = dts->peekNextFinalizeDevicePreparationTask();
-        if (readyTask->checkCUDAStreamDone()) {
+      else if (usingDevice == true
+          && dts->numFinalizeDevicePreparation() > 0
+          && dts->peekNextFinalizeDevicePreparationTask()->checkCUDAStreamDone()) {
+        //readyTask = dts->peekNextFinalizeDevicePreparationTask();
+        //if (readyTask->checkCUDAStreamDone()) {
           readyTask = dts->getNextFinalizeDevicePreparationTask();
           gpuFinalizeDevicePreparation = true;
           havework = true;
           break;
-        }
+        //}
       }
       /*
        * (1.4.1)
@@ -1130,6 +1126,12 @@ void UnifiedScheduler::runTasks(int thread_id) {
         numTasksDone++; //If there's a GPU, then all host run tasks have to go through here.
         // recycle this task's D2H copies streams and events
         readyTask = dts->getNextInitiallyReadyHostTask();
+        cerrLock.lock();
+        {
+          gpu_stats << myRankThread() << " Reclaiming stream for CPU task " << readyTask->getName() << std::endl;
+        }
+        cerrLock.unlock();
+
         reclaimCudaStreams(readyTask);
         cpuRunReady = true;
         havework = true;
@@ -1274,6 +1276,11 @@ void UnifiedScheduler::runTasks(int thread_id) {
         //processD2HCopies(readyTask);
         runTask(readyTask, currentIteration, thread_id, Task::postGPU);
         // recycle this task's stream
+        cerrLock.lock();
+        {
+          gpu_stats << myRankThread() << " Reclaiming stream for GPU task " << readyTask->getName() << std::endl;
+        }
+        cerrLock.unlock();
         reclaimCudaStreams(readyTask);
 
       }
@@ -1286,6 +1293,11 @@ void UnifiedScheduler::runTasks(int thread_id) {
           // If a task has multiple patches, then assume that all patches for this
           // task are on the same device, so the 0th patch will work.
           //TODO, bad assumption as output var task will work on multiple patches.
+          cerrLock.lock();
+          {
+            gpu_stats << myRankThread() << " Issuing stream(s) for CPU task " << readyTask->getName() << std::endl;
+          }
+          cerrLock.unlock();
           assignDevicesAndStreams(readyTask);
 
           //See if there are any copies needed from the GPU.
@@ -1468,35 +1480,7 @@ void UnifiedScheduler::prepareGpuDependencies(DeviceGridVariables& deviceVars,
     case TypeDescription::SFCXVariable:
     case TypeDescription::SFCYVariable:
     case TypeDescription::SFCZVariable: {
-      /*
-       d_lock.readLock();
-       if( ! dw->exists(label, matlIndx, fromPatch)) {
-       cout << d_myworld->myrank() << "  Needed by " << *dep << " on task " << *dep->toTasks.front() << endl;
-       SCI_THROW(UnknownVariable(label->getName(), dw->getID(), fromPatch, matlIndx,
-       "in OnDemandDataWarehouse::prepareGPUDependencies", __FILE__, __LINE__));
-       }
-       IntVector host_low, host_high, host_offset, host_size, host_strides;
 
-       //TODO: Does this need to be deallocated?
-       GridVariableBase* var = dynamic_cast<GridVariableBase*>(dep->req->var->typeDescription()->createInstance());
-
-       // check for case when INF ghost cells are requested such as in RMCRT
-       //   in this case we need deto use getRegion()
-       bool uses_SHRT_MAX = (dep->req->numGhostCells == SHRT_MAX);
-       if (uses_SHRT_MAX) {
-       const Level* level = getLevel(task->getPatches());
-       IntVector domainLo_EC, domainHi_EC;
-       level->findCellIndexRange(domainLo_EC, domainHi_EC);  // including extraCells
-       dw->getRegion(*var, dep->req->var, fromPatch->getID(), level, domainLo_EC, domainHi_EC, true);
-       var->getSizes(domainLo_EC, domainHi_EC, host_offset, host_size, host_strides);
-       } else {
-       dw->getGridVar(*var, dep->req->var, matlIndx, fromPatch->getID(), GhostCells::None, 0);
-       var->getSizes(host_low, host_high, host_offset, host_size, host_strides);
-       }
-
-       //var = dynamic_cast<GridVariableBase*>(d_varDB.get(label, matlIndx, fromPatch));
-       d_lock.readUnlock();
-       */
       //
       //var->getSizes(host_low, host_high, host_offset, host_size, host_strides);
       //TODO, This compiles a list of regions we need to copy into contiguous arrays.
@@ -1662,44 +1646,6 @@ void UnifiedScheduler::prepareGpuDependencies(DeviceGridVariables& deviceVars,
              (Task::WhichDW) dep->req->mapDataWarehouse(), GpuUtilities::anotherMpiRank);
 
         }
-        /*gpudw->prepareGpuGhostCellIntoGpuArray(task,
-         make_int3(dep->low.x(), dep->low.y(), dep->low.z()),
-         make_int3(dep->high.x(), dep->high.y(), dep->high.z()),
-         OnDemandDataWarehouse::getTypeDescriptionSize(dep->req->var->typeDescription()->getSubType()->getType()),
-         label->d_name.c_str(),
-         matlIndx,
-         fromPatch->getID(),
-         toTask->getPatches()->get(0)->getID(),
-         fromDeviceIndex,
-         toDeviceIndex,
-         fromresource,
-         toresource);
-         */
-        //Previously we made sure the ghost cell data is a contiguous array on the GPU.
-        //Here we will copy that data from the GPU to the CPU.
-        //Note: In order to make *GPU context aware* MPI work, the receiving end will have had to prepare
-        //space in GPU memory to receive such ghost cell data, *and* that address information
-        //will have to be known among the sending processes.  So for now, do it the slower, manual way.
-
-        //gpudw->copyTempGhostCellsToHostVar(tempGhostvar->getBasePointer(),
-        //                               make_int3(dep->low.x(), dep->low.y(), dep->low.z()),
-        //                               make_int3(dep->high.x(), dep->high.y(), dep->high.z()),
-        //                               label->d_name.c_str(),
-        //                               patch->getID(),
-        //                               matlIndx,
-        //                               0);
-        //Test data:
-        //double* tmp = (double*)tempGhostvar->getBasePointer();
-        //for (int i = 0; i < 101 * 101; i++) {
-        //   tmp[i] = (double)i;
-        //}
-        //I only need this var to live long enough to have the MPI_Send complete, then
-        //it cleans it up for us.
-        //Will setting it to foreign properly accomplish this?
-        //tempGhostvar->setForeign();
-        //d_varDB.putForeign(label, matlIndx, patch, tempGhostvar, d_scheduler->isCopyDataTimestep()); //put new var in data warehouse
-        //send it all
-        //make the temp array on the host
       }
     }
       break;
@@ -4008,6 +3954,16 @@ void UnifiedScheduler::initiateD2H(DetailedTask* dtask) {
       const int patchID = patches->get(i)->getID();
       const Level* level = getLevel(dtask->getPatches());
       const int levelID = level->getID();
+      int deviceNum = GpuUtilities::getGpuIndexForPatch(patches->get(i));
+      OnDemandDataWarehouse::uintahSetCudaDevice(deviceNum);
+      cudaStream_t* stream = dtask->getCUDAStream(deviceNum);
+
+      //TODO: This should never set a CUDA stream.  Allocating streams should be
+      //determined previously.
+      if (stream == NULL) {
+        stream = getCudaStream(deviceNum);
+        dtask->setCUDAStream(deviceNum, stream);
+      }
       if (gpudw != NULL) {
         for (int j = 0; j < numMatls; j++) {
           const int matlID = matls->get(j);
@@ -4150,15 +4106,6 @@ void UnifiedScheduler::initiateD2H(DetailedTask* dtask) {
                   //                    pinnedHostPtrs.insert(host_ptr);
                   //                  }
                   //                }
-                  int deviceNum = GpuUtilities::getGpuIndexForPatch(patches->get(i));
-                  cudaStream_t* stream = dtask->getCUDAStream(deviceNum);
-
-                  //TODO: This should never set a CUDA stream.  Allocating streams should be
-                  //determined previously.
-                  if (stream == NULL) {
-                    stream = getCudaStream(deviceNum);
-                    dtask->setCUDAStream(deviceNum, stream);
-                  }
 
                   if (gpu_stats.active()) {
                     cerrLock.lock();
@@ -4173,9 +4120,6 @@ void UnifiedScheduler::initiateD2H(DetailedTask* dtask) {
                     cerrLock.unlock();
                   }
                   cudaError_t retVal;
-
-
-
                   //printf("***InitiateD2H invoked***\n");
                   CUDA_RT_SAFE_CALL(
                       retVal = cudaMemcpyAsync(host_ptr, device_ptr, host_bytes,
@@ -4240,17 +4184,6 @@ void UnifiedScheduler::initiateD2H(DetailedTask* dtask) {
                   OnDemandDataWarehouse::createGPUPerPatch(host_bytes);
               device_ptr = gpuPerPatchVar->getVoidPointer();
 
-              //Since we know we need a stream, obtain one.
-              int deviceNum = GpuUtilities::getGpuIndexForPatch(
-                   patches->get(i));
-
-              cudaStream_t* stream = dtask->getCUDAStream(deviceNum);
-              //TODO: This should never set a CUDA stream.  Allocating streams should be
-              //determined previously.
-              if (stream == NULL) {
-                stream = getCudaStream(deviceNum);
-                dtask->setCUDAStream(deviceNum, stream);
-              }
 
               if (gpu_stats.active()) {
                 cerrLock.lock();
@@ -4337,6 +4270,19 @@ void UnifiedScheduler::copyAllDataD2H(DetailedTask* dtask) {
       const int patchID = patches->get(i)->getID();
       const Level* level = getLevel(dtask->getPatches());
       const int levelID = level->getID();
+
+      int deviceNum = GpuUtilities::getGpuIndexForPatch(patches->get(i));
+      OnDemandDataWarehouse::uintahSetCudaDevice(deviceNum);
+
+      cudaStream_t* stream = dtask->getCUDAStream(deviceNum);
+
+      //TODO: This should never set a CUDA stream.  Allocating streams should be
+      //determined previously.
+      if (stream == NULL) {
+        stream = getCudaStream(deviceNum);
+        dtask->setCUDAStream(deviceNum, stream);
+      }
+
       for (int j = 0; j < numMatls; j++) {
         const int matlID = matls->get(j);
         TypeDescription::Type type = comp->var->typeDescription()->getType();
@@ -4608,35 +4554,35 @@ void UnifiedScheduler::processD2HCopies(DetailedTask* dtask) {
 //______________________________________________________________________
 //
 
-void UnifiedScheduler::createCudaStreams(int device, int numStreams /* = 1 */) {
-  cudaError_t retVal;
-
-  idleStreamsLock_.writeLock();
-  cerrLock.lock();
-   gpu_stats << myRankThread() << " locking createCudaStreams" << std::endl;
-  cerrLock.unlock();
-  {
-    OnDemandDataWarehouse::uintahSetCudaDevice(device);
-    for (int j = 0; j < numStreams; j++) {
-      cudaStream_t* stream = (cudaStream_t*) malloc(sizeof(cudaStream_t));
-      CUDA_RT_SAFE_CALL(retVal = cudaStreamCreate(&(*stream)));
-      idleStreams[device].push(stream);
-
-      if (gpu_stats.active()) {
-        cerrLock.lock();
-        {
-          gpu_stats << myRankThread() << " Created CUDA stream " << std::hex
-              << stream << " on device " << std::dec << device << std::endl;
-        }
-        cerrLock.unlock();
-      }
-    }
-  }
-  cerrLock.lock();
-   gpu_stats << myRankThread() << " unlocking createCudaStreams" << std::endl;
-  cerrLock.unlock();
-  idleStreamsLock_.writeUnlock();
-}
+//void UnifiedScheduler::createCudaStreams(int device, int numStreams /* = 1 */) {
+//  cudaError_t retVal;
+//
+//  idleStreamsLock_.writeLock();
+//  cerrLock.lock();
+//   gpu_stats << myRankThread() << " locking createCudaStreams" << std::endl;
+//  cerrLock.unlock();
+//  {
+//    OnDemandDataWarehouse::uintahSetCudaDevice(device);
+//    for (int j = 0; j < numStreams; j++) {
+//      cudaStream_t* stream = (cudaStream_t*) malloc(sizeof(cudaStream_t));
+//      CUDA_RT_SAFE_CALL(retVal = cudaStreamCreate(&(*stream)));
+//      idleStreams[device].push(stream);
+//
+//      if (gpu_stats.active()) {
+//        cerrLock.lock();
+//        {
+//          gpu_stats << myRankThread() << " Created CUDA stream " << std::hex
+//              << stream << " on device " << std::dec << device << std::endl;
+//        }
+//        cerrLock.unlock();
+//      }
+//    }
+//  }
+//  cerrLock.lock();
+//   gpu_stats << myRankThread() << " unlocking createCudaStreams" << std::endl;
+//  cerrLock.unlock();
+//  idleStreamsLock_.writeUnlock();
+//}
 
 //______________________________________________________________________
 //
@@ -4650,40 +4596,35 @@ void UnifiedScheduler::freeCudaStreams() {
    gpu_stats << myRankThread() << " locking freeCudaStreams" << std::endl;
   cerrLock.unlock();
   {
-    size_t numQueues = idleStreams.size();
-
-    if (gpu_stats.active()) {
-      size_t totalStreams = 0;
-      for (size_t i = 0; i < numQueues; i++) {
-        totalStreams += idleStreams[i].size();
-      }
-      cerrLock.lock();
-      {
-        gpu_stats << myRankThread() << " Deallocating " << totalStreams
-            << " total CUDA stream(s) for " << numQueues << " device(s)"
-            << std::endl;
-      }
-      cerrLock.unlock();
-    }
-
-    for (size_t i = 0; i < numQueues; i++) {
-      //TODO: Bug, not every device is going to be assigned, or even assigned in order.
-      //the idleStreams is just a vector. - BRP 7/10/2015
-      OnDemandDataWarehouse::uintahSetCudaDevice(i);
-
+    unsigned int totalStreams = 0;
+    for (map<unsigned int, queue<cudaStream_t*> >::const_iterator it=idleStreams.begin(); it!=idleStreams.end(); ++it) {
+      totalStreams += it->second.size();
       if (gpu_stats.active()) {
         cerrLock.lock();
         {
-          gpu_stats << myRankThread() << " Deallocating "
-              << idleStreams[i].size() << " CUDA stream(s) on device " << retVal
+          gpu_stats << myRankThread() << " Preparing to deallocate " << it->second.size()
+              << " CUDA stream(s) for device #" << it->first
               << std::endl;
         }
         cerrLock.unlock();
       }
+    }
 
-      while (!idleStreams[i].empty()) {
-        cudaStream_t* stream = idleStreams[i].front();
-        idleStreams[i].pop();
+
+    for (map<unsigned int, queue<cudaStream_t*> >::const_iterator it=idleStreams.begin(); it!=idleStreams.end(); ++it) {
+      unsigned int device = it->first;
+      OnDemandDataWarehouse::uintahSetCudaDevice(device);
+
+      while (!idleStreams[device].empty()) {
+        cudaStream_t* stream = idleStreams[device].front();
+        idleStreams[device].pop();
+        if (gpu_stats.active()) {
+          cerrLock.lock();
+          gpu_stats << myRankThread() << " Performing cudaStreamDestroy for stream "
+                      << stream << " on device " << device
+                      << std::endl;
+          cerrLock.unlock();
+        }
         CUDA_RT_SAFE_CALL(retVal = cudaStreamDestroy(*stream));
         free(stream);
       }
@@ -4751,31 +4692,27 @@ void UnifiedScheduler::reclaimCudaStreams(DetailedTask* dtask) {
   std::set<unsigned int> deviceNums = dtask->getDeviceNums();
   for (std::set<unsigned int>::iterator iter = deviceNums.begin();
       iter != deviceNums.end(); ++iter) {
+    //printf("For task %s reclaiming stream for deviceNum %d\n", dtask->getName().c_str(), *iter);
     cudaStream_t* stream = dtask->getCUDAStream(*iter);
     if (stream != NULL) {
 
       idleStreamsLock_.writeLock();
-       cerrLock.lock();
-        gpu_stats << myRankThread() << " locking reclaimCudaStreams" << std::endl;
-       cerrLock.unlock();
       idleStreams[*iter].push(stream);
-      cerrLock.lock();
-        gpu_stats << myRankThread() << " unlocking reclaimCudaStreams" << std::endl;
-       cerrLock.unlock();
-       idleStreamsLock_.writeUnlock();
-
-      dtask->setCUDAStream(*iter, NULL);
-    }
-    if (gpu_stats.active()) {
-      cerrLock.lock();
-      {
-        gpu_stats << myRankThread() << " Reclaimed CUDA stream " << std::hex
-            << stream << " on device " << std::dec << *iter << std::endl;
+      idleStreamsLock_.writeUnlock();
+      if (gpu_stats.active()) {
+        cerrLock.lock();
+        {
+          gpu_stats << myRankThread() << " Reclaimed CUDA stream " << std::hex
+              << stream << " on device " << std::dec << *iter << std::endl;
+        }
+        cerrLock.unlock();
       }
-      cerrLock.unlock();
+
+      //It seems that task objects persist between timesteps.  So make sure we remove
+      //all knowledge of any formerly used streams.
+      dtask->clearCUDAStreams();
     }
   }
-
 }
 
 /*
@@ -4891,7 +4828,17 @@ void UnifiedScheduler::assignDevicesAndStreams(DetailedTask* task) {
     int index = GpuUtilities::getGpuIndexForPatch(patch);
     if (index >= 0) {
       task->assignDevice(index);
-      task->setCUDAStream(index, getCudaStream(index));
+      cudaStream_t* stream = getCudaStream(index);
+      cerrLock.lock();
+      {
+        gpu_stats << myRankThread() << " Assigning for CPU task " << task->getName()
+                << " stream " << std::hex << stream << std::dec
+                << " for device " << index
+                << std::endl;
+      }
+      cerrLock.unlock();
+
+      task->setCUDAStream(index, stream);
     } else {
       cerrLock.lock();
       cerr << "Could not find the assigned GPU for this patch." << endl;
@@ -5067,21 +5014,6 @@ void UnifiedScheduler::findIntAndExtGpuDependencies(
     }  // end for (DependencyBatch * batch = task->getComputes() )
   }
 }
-
-//______________________________________________________________________
-//
-void UnifiedScheduler::copyGpuInternalDependencies(DetailedTask * task,
-    int iteration, int t_id) {
-  MALLOC_TRACE_TAG_SCOPE("UnifiedScheduler::copyGpuInternalDependencies");
-
-  for (int i = 0; i < (int) dws.size(); i++) {
-    if (task->getInternalComputes() != NULL) {
-      dws[i]->copyGPUGhostCellsBetweenDevices(task,
-          OnDemandDataWarehouse::getNumDevices());
-    }
-  }
-}
-
 
 //______________________________________________________________________
 //
