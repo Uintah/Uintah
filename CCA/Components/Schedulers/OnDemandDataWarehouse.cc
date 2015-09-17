@@ -2451,7 +2451,7 @@ OnDemandDataWarehouse::emit(PIDXOutputContext& pc,
                             const VarLabel* label,
                             int matlIndex,
                             const Patch* patch,
-                             double* buffer
+                             unsigned char* buffer
 			    )
 {
   checkGetAccess( label, matlIndex, patch );
