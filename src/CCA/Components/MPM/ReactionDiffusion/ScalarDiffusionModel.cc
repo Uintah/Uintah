@@ -256,12 +256,9 @@ void ScalarDiffusionModel::scheduleComputeDivergence(Task* task,
   task->requires(Task::OldDW, d_lb->pDeformationMeasureLabel,        gan, NGP);
   task->requires(Task::NewDW, d_lb->gMassLabel,                      gnone);
 
-//  task->requires(Task::NewDW, d_rdlb->gConcentrationLabel,     gnone);
-//  task->requires(Task::NewDW, d_rdlb->gConcentrationNoBCLabel, gnone);
   task->requires(Task::NewDW, d_rdlb->pFluxLabel,              gan, NGP);
 
   task->computes(d_rdlb->gConcentrationRateLabel, matlset);
-//  task->computes(d_rdlb->gConcentrationStarLabel, matlset);
 }
 
 void ScalarDiffusionModel::computeDivergence(const Patch* patch,
@@ -269,7 +266,6 @@ void ScalarDiffusionModel::computeDivergence(const Patch* patch,
                                              DataWarehouse* old_dw, 
                                              DataWarehouse* new_dw)
 {
-//  Ghost::GhostType  gnone = Ghost::None;
   Ghost::GhostType  gan   = Ghost::AroundNodes;
   int dwi = matl->getDWIndex();
 
@@ -309,13 +305,6 @@ void ScalarDiffusionModel::computeDivergence(const Patch* patch,
 
   new_dw->allocateAndPut(gConcRate,  d_rdlb->gConcentrationRateLabel,dwi,patch);
 
-//new_dw->get(gMass,         d_lb->gMassLabel,               dwi,patch,gnone,0);
-//new_dw->get(gConc_Old,     d_rdlb->gConcentrationLabel,    dwi,patch,gnone,0);
-//new_dw->get(gConc_OldNoBC, d_rdlb->gConcentrationNoBCLabel,dwi,patch,gnone,0);
-//new_dw->allocateAndPut(gConcStar,  d_rdlb->gConcentrationStarLabel,dwi,patch);
-//  new_dw->allocateTemporary(gdCdt,     patch);
-//  gdCdt.initialize(0.0);
-//  gConcStar.initialize(0.0);
 
   gConcRate.initialize(0.0);
 
@@ -497,7 +486,7 @@ void ScalarDiffusionModel::computeDivergence_CFI(const PatchSubset* finePatches,
                                             * pmass_coarse[idx];
                gConcRate[fineNode] -= Cdot_cond;
             }  // contains node
-          }  // node loop          
+          }  // node loop
         }  // pset loop
       }  // coarse Patch loop
     }  // patch has CFI faces
