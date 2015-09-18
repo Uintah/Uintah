@@ -39,7 +39,7 @@ bool DensityCalculatorBase::solve( const DoubleVec& passThrough,
 {
   unsigned niter = 0;
   double relErr = 0.0;
-
+  if (maxIter_ == 0) return true;
   do{
     calc_jacobian_and_res( passThrough, soln, jac_, res_ );
     switch( neq_ ){
@@ -127,17 +127,23 @@ evaluate()
   for( ; irho!=irhoe; ++irho, ++irhoF, ++ibad, ++idrhodf){
     vals[0] = *irhoF;
     soln[0] = *irhoF / *irho;   // initial guess for the mixture fraction
-    const bool converged = this->solve( vals, soln );  // soln contains the mixture fraction
-    if( !converged ) {
-      ++nbad;
-      *ibad = 1.0;
+    if (maxIter_ == 0) {
+      const double& f = soln[0];
+      *irho = rhoEval_.value(&f);
+      *idrhodf = rhoEval_.derivative(&f, 0);
+    } else {
+      const bool converged = this->solve( vals, soln );  // soln contains the mixture fraction
+      if( !converged ) {
+        ++nbad;
+        *ibad = 1.0;
+      }
+      *irho = *irhoF / soln[0];
+      
+      const double& f = soln[0];
+      *idrhodf = rhoEval_.derivative(&f, 0);
     }
-    *irho = *irhoF / soln[0];
-
-    const double& f = soln[0];
-    *idrhodf = rhoEval_.derivative(&f, 0);
   }
-  if( nbad>0 ){
+  if( nbad>0 && maxIter_ != 0){
     std::cout << "\tConvergence failed at " << nbad << " points.\n";
   }
 }
