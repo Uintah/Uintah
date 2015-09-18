@@ -336,6 +336,17 @@ DQMOMEqn::problemSetup( const ProblemSpecP& inputdb )
     // ------------ Other initialization function --------------------
     }
   }
+
+  // need particle info for partMassFlowInlet
+  d_partVelNames = std::vector<std::string>(3,"NotSet");   
+  if (ParticleTools::check_for_particle_method(db, ParticleTools::DQMOM )){
+    std::string str3D = "uvw";
+    for(unsigned int i = 0; i<str3D.length(); i++) {
+      std::string velLabelName =ParticleTools::parse_for_role_to_label(db,std::string (1,str3D[i])+"vel");
+      d_partVelNames[i]=velLabelName+"_qn";
+
+    }
+  }
 }
 
 //---------------------------------------------------------------------------
