@@ -415,11 +415,17 @@ namespace Wasatch{
   void
   parse_twostream_mixing( Uintah::ProblemSpecP params,
                           const bool doDenstPlus,
-                          GraphCategories& gc )
+                          GraphCategories& gc,
+                          std::set<std::string>& lockedFields)
   {
     const Expr::Tag fTag    = parse_nametag( params->findBlock("MixtureFraction")->findBlock("NameTag") );
     const Expr::Tag rhofTag = parse_nametag( params->findBlock("DensityWeightedMixtureFraction")->findBlock("NameTag") );
     const Expr::Tag rhoTag  = parse_nametag( params->findBlock("Density")->findBlock("NameTag") );
+
+    // Lock the density because on initialization this may be an intermediate
+    // quantity, but is always needed as a guess for the solver here.
+    lockedFields.insert( rhoTag.name() );
+
     double rho0, rho1;
     params->getAttribute("rho0",rho0);
     params->getAttribute("rho1",rho1);
@@ -511,7 +517,7 @@ namespace Wasatch{
                            && params->findBlock("TransportEquation");
 
     if( twoStreamParams ){
-      parse_twostream_mixing( twoStreamParams, doDenstPlus, gc );
+      parse_twostream_mixing( twoStreamParams, doDenstPlus, gc, lockedFields );
     }
 
     // TabProps
