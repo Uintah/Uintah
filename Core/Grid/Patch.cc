@@ -218,26 +218,24 @@ void Patch::findCellNodes27(const Point& pos, IntVector ni[27]) const
   void Patch::possiblyAddBC(const Patch::FaceType face, // face
                      const int child,   // child (each child is only applicable to one face)
                      const std::string &desc, // field label (label) 
-                     const int mat_id,        // material 
+                     int mat_id,        // material 
                      const double bc_value,   // value of boundary condition
                      const std::string &bc_kind, // bc type, dirichlet or neumann
                      const std::string &bcFieldName, // Field variable Name (var)
                      const std::string &faceName)  const  //  
 {
+    // avoid adding duplicate boundary conditions 
   if (getModifiableBCDataArray(face)->checkForBoundCondData(mat_id,bcFieldName,child)  ){  // avoid adding duplicate boundary conditions 
     return;
   }
-
-
+ 
   if (getModifiableBCDataArray(face)->checkForBoundCondData(mat_id,desc,child)  ){  // avoid seg fault, when there are no boundary conditions on a face 
 
     if ( getModifiableBCDataArray(face)->getBCGeom(mat_id)[child]->getBCName()  == faceName  ){
-      {int mat_idx=0; 
-        BoundCondBase* bc;
-        BoundCondFactory::customBC( bc, mat_idx, faceName, bc_value,bcFieldName, bc_kind );
-        getModifiableBCDataArray(face)->getBCGeom(mat_idx)[child]->addBC(bc);
-        delete bc;
-      }
+      BoundCondBase* bc;
+      BoundCondFactory::customBC( bc, mat_id, faceName, bc_value,bcFieldName, bc_kind );
+      getModifiableBCDataArray(face)->getBCGeom(mat_id)[child]->addBC(bc);
+      delete bc;
     }
   }
 }

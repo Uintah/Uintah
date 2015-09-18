@@ -440,19 +440,19 @@ BCDataArray::getBoundCondData(int mat_id, const string type, int ichild) const
 }
 
 bool 
-BCDataArray::checkForBoundCondData(int mat_id, const string type, int ichild) 
+BCDataArray::checkForBoundCondData(int &mat_id, const string type, int ichild) 
 {
-  //  cout << "type = " << type << endl;
   BCData new_bc,new_bc_all;
   // Need to check two scenarios -- the given mat_id and the all mat_id (-1)
+  // will update mat_id, to represent the applicable material.
   // Check the given mat_id
   bcDataArrayType::const_iterator itr = d_BCDataArray.find(mat_id);
-  
   if (itr != d_BCDataArray.end()) {
     itr->second[ichild]->getBCData(new_bc);
     bool found_it = new_bc.find(type);
-    if (found_it == true)
+    if (found_it == true){
       return true;
+    }
   }
   // Check the mat_id = "all" case
   itr = d_BCDataArray.find(-1);
@@ -460,8 +460,10 @@ BCDataArray::checkForBoundCondData(int mat_id, const string type, int ichild)
     if (ichild < (int)itr->second.size()) {
       itr->second[ichild]->getBCData(new_bc_all);
       bool found_it = new_bc_all.find(type);
-      if (found_it == true)
+      if (found_it == true){
+        mat_id=-1;
         return true;
+      }
     }
   }
   return false;
