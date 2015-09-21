@@ -652,7 +652,7 @@ namespace Wasatch{
     //__________________
     // Pressure source term        
     if( !factory.have_entry( tagNames.pressuresrc ) ){
-      const Expr::Tag densStarTag  = tagNames.make_star(densTag, Expr::CARRY_FORWARD);
+      const Expr::Tag densStarTag  = tagNames.make_star(densTag, Expr::STATE_NONE);
       
       set_mom_tags( params, momTags_ );
       set_mom_tags( params, oldMomTags_, true );
@@ -864,7 +864,7 @@ namespace Wasatch{
         const Expr::Tag rhoTagInit(densityTag_.name(), Expr::STATE_NONE);
         const Expr::Tag rhoStarTag = tagNames.make_star(densityTag_); // get the tagname of rho*
         bcHelper.create_dummy_dependency<SVolField, SVolField>(rhoStarTag, tag_list(rhoTagInit), INITIALIZATION);
-        const Expr::Tag rhoTagAdv(densityTag_.name(), Expr::CARRY_FORWARD);
+        const Expr::Tag rhoTagAdv(densityTag_.name(), Expr::STATE_NONE);
         bcHelper.create_dummy_dependency<SVolField, SVolField>(rhoStarTag, tag_list(rhoTagAdv), ADVANCE_SOLUTION);
       }
     }
@@ -895,7 +895,7 @@ namespace Wasatch{
             bcHelper.add_boundary_condition(bndName, rhoStarBCSpec);
           }
           if (!advSlnFactory.have_entry(rhoStarBCTag)){
-            const Expr::Tag rhoTag(densityTag_.name(), Expr::CARRY_FORWARD);
+            const Expr::Tag rhoTag(densityTag_.name(), Expr::STATE_NONE);
             advSlnFactory.register_expression ( new typename BCCopier<SVolField>::Builder(rhoStarBCTag, rhoTag) );
             bcHelper.add_boundary_condition(bndName, rhoStarBCSpec);
           }
@@ -1096,11 +1096,11 @@ namespace Wasatch{
       const TagNames& tagNames = TagNames::self();
 
       // set bcs for density
-      const Expr::Tag densTag( densityTag_.name(), Expr::CARRY_FORWARD );
+      const Expr::Tag densTag( densityTag_.name(), Expr::STATE_NONE );
       bcHelper.apply_boundary_condition<SVolField>(densTag, taskCat);
       
       // set bcs for density_*
-      bcHelper.apply_boundary_condition<SVolField>( tagNames.make_star(densityTag_,Expr::CARRY_FORWARD), taskCat );
+      bcHelper.apply_boundary_condition<SVolField>( tagNames.make_star(densityTag_,Expr::STATE_NONE), taskCat );
     }
   }
 

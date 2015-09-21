@@ -10,7 +10,7 @@
     <TimeIntegrator> FE </TimeIntegrator>    
     
     <Density>
-      <NameTag name="density" state="CARRY_FORWARD"/>
+      <NameTag name="density" />
     </Density>
     
     <!-- Set the initial condition expression for mixture fraction -->
@@ -23,7 +23,7 @@
     </BasicExpression>
     
     <TwoStreamMixing rho0="1.0" rho1="3.0">
-      <Density><NameTag name="density" state="CARRY_FORWARD"/></Density>
+      <Density><NameTag name="density" /></Density>
       <MixtureFraction> <NameTag name="f"/> </MixtureFraction>
       <DensityWeightedMixtureFraction> <NameTag name="rhof" state="STATE_DYNAMIC"/> </DensityWeightedMixtureFraction>
     </TwoStreamMixing>  

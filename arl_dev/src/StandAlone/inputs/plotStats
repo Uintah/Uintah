@@ -1,7 +1,6 @@
 #!/bin/csh -f
 #______________________________________________________________________
-#  This script pulls out data from sus 
-#   output and plot it using gnuplot.
+#  This script parses sus output and plots it using gnuplot.
 #  Usage:
 #     plotStat <sus output file> < output postScript and pdf files (y/Y), default is no>
 #
@@ -12,7 +11,7 @@
 set tmp = (`which gnuplot`)
 
 if ( $status ) then
-  echo " ERROR: Could not find one of gnuplot"
+  echo " ERROR: Could not find gnuplot"
   exit(0)
 endif
 
@@ -33,7 +32,7 @@ endif
 
 unalias rm
 #__________________________________
-# ake a copy of the output file
+# Make a copy of the output file
 
 mkdir scraps >&/dev/null
 cp $out scraps/tmp
@@ -51,16 +50,19 @@ echo "?">>meanTime  # mean time data isn't collect the first 4 timestps
 echo "?">>meanTime
 echo "?">>meanTime
 
-grep elap rawData.clean | cut -d"=" -f4 | cut -d"," -f1 >& elapsedTime
-grep mean rawData.clean | cut -d":" -f2 | cut -d" " -f2 >> meanTime
+grep elap rawData.clean | cut -d"=" -f4 | awk '{print $1}'>& elapsedTime
+grep mean rawData.clean | cut -d":" -f2 | cut -d")" -f1 >> meanTime
 grep elap rawData.clean | cut -d"=" -f2 | cut -d" " -f1 >& physicalTime
 grep delT rawData.clean | cut -d"=" -f3 | cut -d"," -f1 >& delT
 
 grep delT rawData.clean | cut -d"=" -f5 | cut -d" " -f2  > memAve
 grep delT rawData.clean | cut -d"=" -f5 | cut -d" " -f5  > memMax
-paste -d "  " elapsedTime meanTime physicalTime delT memAve memMax>& data
 
-set procs   = `grep processors tmp | cut -d" " -f 2`
+paste -d "  " elapsedTime meanTime physicalTime delT memAve memMax>& data
+sed  -i s/","//g data    # eliminate any ","
+
+set procs   = `grep "MPI processes" tmp | awk '{print $2}'`
+set threads = `grep "threads per MPI process" tmp | awk '{print $2}'`
 set machine = `grep Machine    tmp | cut -d":" -f 2`
 set date    = `grep -m1 Date   tmp | cut -d" " -f2-8,10`
 
@@ -80,6 +82,10 @@ cat > gp << fin
 set terminal x11 1
 set terminal postscript color solid "Times-Roman" 12
 set output "plotStat.ps"
+fin
+else
+cat > gp << fin
+set terminal x11 font "fixed,bold,12" size 1024,768
 fin
 endif
 
@@ -104,7 +110,7 @@ set y2tics
 #__________________________________ TOP
 set size   1.0, 0.33       
 set origin 0.0, 0.66
-set title "$date : $machine : $procs Processors"
+set title "$date : $machine : $procs Processors: ($threads) Threads"
 set ylabel 'Delt'           textcolor lt 1
 set y2label 'Physical Time' textcolor lt 2
 
@@ -116,13 +122,11 @@ plot 'data' using 1:4           t 'Delt' with lines, \
 #__________________________________ Middle
 set origin 0.0,0.33
 set title ''
-set ylabel 'Physical Time'       textcolor lt 1
-set y2label 'Mean Time/timestep' textcolor lt 2
-
-set y2range[B_mean - 2*B_stddev:B_mean + 2*B_stddev]
-
-plot 'data' using 1:3           t 'Physical Time' with lines,\
-     'data' using 1:2 axes x1y2 t 'meanTime/timestep' with lines
+set ylabel 'Mean Time/timestep'
+unset y2label
+unset y2tics
+set yrange[B_mean - 2*B_stddev:B_mean + 2*B_stddev]
+plot 'data' using 1:2 t 'meanTime/timestep' with lines
 
 
 #__________________________________Bottom   
@@ -132,6 +136,7 @@ set xlabel "ElapsedTime"
 set ylabel "Memory useage [MB]"
 unset y2label
 unset y2tics
+set autoscale
 
 plot 'data' using 1:5   t 'ave' with lines, \
      'data' using 1:6   t 'max' with lines

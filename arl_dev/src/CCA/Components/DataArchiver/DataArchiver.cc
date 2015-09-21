@@ -1990,11 +1990,11 @@ DataArchiver::outputVariables(const ProcessorGroup * /*world*/,
 #endif
   
   int uda_checkpoint_dump = 0;
-  if (type == CHECKPOINT_REDUCTION)
+  if (type == CHECKPOINT)
     uda_checkpoint_dump = 1;
   
-  //if (uda_checkpoint_dump == 1 || uda_vis_dump == 1)
-  //{
+  if (uda_checkpoint_dump == 1 || uda_vis_dump == 1)
+  {
   d_outputLock.lock(); 
   { // make sure doc's constructor is called after the lock.
     ProblemSpecP doc; 
@@ -2193,7 +2193,7 @@ DataArchiver::outputVariables(const ProcessorGroup * /*world*/,
     d_sharedState->outputTime += Time::currentSeconds()-start;
   }
   d_outputLock.unlock(); 
-  //}
+  }
 
   dbg << "  end\n";
 
@@ -2203,7 +2203,7 @@ DataArchiver::outputVariables(const ProcessorGroup * /*world*/,
 
   bool pidx_io =  true;
   
-  if (pidx_io == true && type != CHECKPOINT_REDUCTION) 
+  if (pidx_io == true && type != CHECKPOINT) 
   {
     bool use_float=false;//for data conversion, float is faster (and most of the data from vulcan is float)
     IntVector adjust_offset;//for data conversion, some datasets start at -1,-1,-1, this will soon be handled automatically by pidx 

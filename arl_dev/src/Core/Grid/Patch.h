@@ -1967,7 +1967,7 @@ namespace Uintah {
     void possiblyAddBC(const Patch::FaceType face, // face
         const int child,               // child (each child is only applicable to one face)
         const std::string &desc,       // field label (label) 
-        const int mat_id,              // material 
+        int mat_id,              // material 
         const double bc_value,         // value of boundary condition
         const std::string &bc_kind,    // bc type, dirichlet or neumann
         const std::string &bcFieldName,// Field variable Name (var)

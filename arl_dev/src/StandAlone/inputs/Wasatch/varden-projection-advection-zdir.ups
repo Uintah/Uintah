@@ -10,7 +10,7 @@
     <TimeIntegrator> FE </TimeIntegrator>    
 
     <Density>
-      <NameTag name="density" state="CARRY_FORWARD"/>
+      <NameTag name="density" />
     </Density>
     
     <!-- Set the initial condition expression for mixture fraction -->
@@ -50,7 +50,7 @@
       </IndependentVariable>
       
       <ExtractDensity>
-        <NameTag name="density" state="CARRY_FORWARD"/>
+        <NameTag name="density" />
         <ModelBasedOnMixtureFraction>
           <DensityWeightedMixtureFraction>
           <NameTag name="rhof" state="STATE_DYNAMIC"/>
