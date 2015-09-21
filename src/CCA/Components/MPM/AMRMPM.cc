@@ -3240,11 +3240,13 @@ void AMRMPM::computeLAndF(const ProcessorGroup*,
                                                                    px[idx]);
         }
         pVelGrad[idx]=tensorL;
-        pConcGradNew[idx] = Vector(0.0, 0.0, 0.0);
-        for(int k = 0; k < flags->d_8or27; k++) {
-          IntVector node = ni[k];
-          for(int j = 0; j < 3; j++){
-            pConcGradNew[idx][j] += gConcStar[ni[k]] * d_S[k][j] * oodx[j];
+        if(flags->d_doScalarDiffusion){
+          pConcGradNew[idx] = Vector(0.0, 0.0, 0.0);
+          for(int k = 0; k < flags->d_8or27; k++) {
+            IntVector node = ni[k];
+            for(int j = 0; j < 3; j++){
+              pConcGradNew[idx][j] += gConcStar[ni[k]] * d_S[k][j] * oodx[j];
+            }
           }
         }
 
