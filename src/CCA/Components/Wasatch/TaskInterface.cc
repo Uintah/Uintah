@@ -253,7 +253,7 @@ namespace Wasatch{
                                     const int rkStage,
                                     Uintah::SimulationStateP state,
                                     const std::set<std::string>& ioFieldSet,
-                                    const bool lockAllFields)
+                                    const bool lockAllFields )
     : scheduler_( sched ),
       patches_( patches ),
       materials_( materials ),
