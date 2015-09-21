@@ -39,7 +39,8 @@
     
     <DataArchiver>
         <filebase>lj_hcp_1component.uda</filebase>
-        <outputInterval>1000</outputInterval>
+        <outputInterval> 0.0 </outputInterval> <!-- (Explicitly) don't save any data... -->
+        <checkpoint cycle = "0" interval = "0"/>
         
     <!--
         <save label = "p.x_MD"/>

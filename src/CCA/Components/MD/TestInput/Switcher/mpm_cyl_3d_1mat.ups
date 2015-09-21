@@ -7,7 +7,7 @@
         <title>Compaction of cylinders</title>
     </Meta>
 
-    <SimulationComponent type ="amrmpm" /> 
+    <SimulationComponent type ="mpm" /> 
         <Time>
             <maxTime>1.e-6</maxTime>
             <initTime>0.0</initTime>
@@ -18,6 +18,9 @@
    
     <DataArchiver>
         <filebase>mpm_cyl_3d_1mat.uda</filebase>
+        <outputInterval> 0.0 </outputInterval> <!-- (Explicitly) don't save any data... -->
+        <checkpoint cycle = "0" interval = "0"/>
+    <!--
         <outputInterval>5.e-7</outputInterval>
         <save label = "p.x"/>
         <save label = "p.velocity"/>
@@ -30,6 +33,7 @@
         <save label = "g.temperature"/>
         <save label = "g.velocity"/>
         <checkpoint cycle = "2" interval = "0.4e-6"/>
+    -->
     </DataArchiver>
 
     <MPM>

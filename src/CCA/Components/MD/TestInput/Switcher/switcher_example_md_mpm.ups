@@ -2,114 +2,116 @@
 <!-- @version: -->
 <Uintah_specification>
 
-  <Meta>
-    <title>none</title>
-  </Meta>
-  
-  <!--____________________________________________________________________-->
-  <!--         C O M P O N E N T   S W I T C H E R                        -->
-  <!--____________________________________________________________________-->
-  <SimulationComponent type="switcher" >
-  
-      <subcomponent>
-          <SimulationComponent type="mpm" />
-          <input_file>mpm_cyl_3d_1mat.ups</input_file>
-          <SwitchCriteria type = "Timestep">
-            <timestep> 10 </timestep>
-          </SwitchCriteria>
-      </subcomponent>
-        
-      <subcomponent>
-          <SimulationComponent type="md" />
-          <input_file>md_lj_hcp_1Component.ups</input_file>
-          <init var = "e_nb"        matls = "md_matls" levels = "0"/>
-          <init var = "e_elec_inv"  matls = "md_matls" levels = "0"/>
-          <init var = "e_elec_real" matls = "md_matls" levels = "0"/>
-          <init var = "e_kin"       matls = "md_matls" levels = "0"/>
-          <init var = "p.ID_MD"     matls = "md_matls" levels = "0"/>
-      </subcomponent>
-  </SimulationComponent>  
-   
-  <!--____________________________________________________________________-->
-  <!--      T  I  M  E     V  A  R  I  A  B  L  E  S                      -->
-  <!--____________________________________________________________________-->
-  <Time>
-     <maxTime>1.e-6</maxTime>      <!-- persistent across all subcomponents -->
-     <initTime>0.0</initTime>      <!-- ignored -->
-     <delt_min>0</delt_min>        <!-- ignored -->
-     <delt_max>0</delt_max>        <!-- ignored -->
-     <timestep_multiplier>0.0</timestep_multiplier>
-  </Time>
-
-  <!--____________________________________________________________________-->
-  <!--   O  U  P  U  T     V  A  R  I  A  B  L  E  S                      -->
-  <!--____________________________________________________________________-->
-  <DataArchiver>  
-    <filebase>md_mpm_switch.uda</filebase>
-    <outputInterval> 0.0 </outputInterval> <!-- (Explicitly) don't save any data... -->
-  </DataArchiver>
-
-  <!--____________________________________________________________________-->
-  <!--      G  R  I  D     V  A  R  I  A  B  L  E  S                      -->
-  <!--  This is the grid used by the first sub-component                  -->
-  <!--____________________________________________________________________-->
-  <Grid>
-     <BoundaryConditions>
-       <Face side = "x-">
-         <BCType id = "all" var = "symmetry" label = "Symmetric">
-           </BCType>
-       </Face>
-       <Face side = "x+">
-         <BCType id = "all" var = "symmetry" label = "Symmetric">
-           </BCType>
-       </Face>
-       <Face side = "y-">
-         <BCType id = "all" var = "symmetry" label = "Symmetric">
-           </BCType>
-       </Face>                  
-       <Face side = "y+">
-         <BCType id = "all" var = "symmetry" label = "Symmetric">
-           </BCType>
-       </Face>
-       <Face side = "z-">
-         <BCType id = "all" var = "symmetry" label = "Symmetric">
-         </BCType>
-       </Face>
-       <Face side = "z+">
-         <BCType id = "all" var = "symmetry" label = "Symmetric">
-         </BCType>
-       </Face>
-     </BoundaryConditions>
+    <Meta>
+        <title>none</title>
+    </Meta>
+    
+    <!--____________________________________________________________________-->
+    <!--         C O M P O N E N T   S W I T C H E R                        -->
+    <!--____________________________________________________________________-->
+    <SimulationComponent type="switcher" >
+    
+        <subcomponent>
+            <SimulationComponent type="mpm" />
+            <input_file>mpm_cyl_3d_1mat.ups</input_file>
+            <SwitchCriteria type = "Timestep">
+                <timestep> 10 </timestep>
+            </SwitchCriteria>
+        </subcomponent>
+          
+        <subcomponent>
+            <SimulationComponent type="md" />
+            <input_file>md_lj_hcp_1Component.ups</input_file>
+            <init var = "e_nb"        matls = "md_matls" levels = "0"/>
+            <init var = "e_elec_inv"  matls = "md_matls" levels = "0"/>
+            <init var = "e_elec_real" matls = "md_matls" levels = "0"/>
+            <init var = "e_kin"       matls = "md_matls" levels = "0"/>
+            <init var = "p.ID_MD"     matls = "md_matls" levels = "0"/>
+        </subcomponent>
+    </SimulationComponent>  
      
-     <Level>
-       <Box label = "0">
-         <lower>[  0.00,            0.00,            0.00]</lower>
-         <upper>[559.709435199820,559.709435199820,559.709435199820]</upper>
-         <resolution>[80,80,80]</resolution>
-         <patches>[1,1,1]</patches>
-       </Box>
-     </Level>
-     
-     <Level>
-         <Box label = "1">
-            <lower>[ 0.00,            0.00,            0.00]</lower>
-            <upper>[55.9709435199820,55.9709435199820,55.9709435199820]</upper>
-            <resolution>[56,56,56]</resolution>
-            <patches>[4,4,4]</patches>
-         </Box>
-         <periodic>[1,1,1]</periodic>
-     </Level>
-  </Grid>
-  
-  <!--____________________________________________________________________-->
-  <!--    A M R   G R I D                                                 -->
-  <!--____________________________________________________________________-->
-  <AMR>
-      <useLockStep>true</useLockStep>
-      <MPM>
-          <min_grid_level>0</min_grid_level>
-          <max_grid_level>0</max_grid_level>
-      </MPM>
-  </AMR>
+    <!--____________________________________________________________________-->
+    <!--      T  I  M  E     V  A  R  I  A  B  L  E  S                      -->
+    <!--____________________________________________________________________-->
+    <Time>
+        <maxTime>1.e-6</maxTime>      <!-- persistent across all subcomponents -->
+        <initTime>0.0</initTime>      <!-- ignored -->
+        <delt_min>0</delt_min>        <!-- ignored -->
+        <delt_max>0</delt_max>        <!-- ignored -->
+        <timestep_multiplier>0.0</timestep_multiplier>
+    </Time>
+    
+    <!--____________________________________________________________________-->
+    <!--   O  U  P  U  T     V  A  R  I  A  B  L  E  S                      -->
+    <!--____________________________________________________________________-->
+    <DataArchiver>  
+        <filebase>md_mpm_switch.uda</filebase>
+        <outputInterval> 0.0 </outputInterval> <!-- (Explicitly) don't save any data... -->
+        <checkpoint cycle = "0" interval = "0"/>
+    </DataArchiver>
+    
+    <!--____________________________________________________________________-->
+    <!--      G  R  I  D     V  A  R  I  A  B  L  E  S                      -->
+    <!--  This is the grid used by the first sub-component                  -->
+    <!--____________________________________________________________________-->
+    <Grid>
+        <BoundaryConditions>
+            <Face side = "x-">
+                <BCType id = "all" var = "symmetry" label = "Symmetric">
+                </BCType>
+            </Face>
+            <Face side = "x+">
+                <BCType id = "all" var = "symmetry" label = "Symmetric">
+                </BCType>
+            </Face>
+            <Face side = "y-">
+                <BCType id = "all" var = "symmetry" label = "Symmetric">
+                </BCType>
+            </Face>                  
+            <Face side = "y+">
+                <BCType id = "all" var = "symmetry" label = "Symmetric">
+                </BCType>
+            </Face>
+            <Face side = "z-">
+                <BCType id = "all" var = "symmetry" label = "Symmetric">
+                </BCType>
+            </Face>
+            <Face side = "z+">
+                <BCType id = "all" var = "symmetry" label = "Symmetric">
+                </BCType>
+            </Face>
+        </BoundaryConditions>
+       
+        <Level>
+            <Box label = "0">
+                <lower>[  0.00,            0.00,            0.00]</lower>
+                <upper>[559.709435199820,559.709435199820,559.709435199820]</upper>
+                <resolution>[80,80,80]</resolution>
+                <patches>[1,1,1]</patches>
+            </Box>
+        </Level>
+       
+        <Level>
+            <Box label = "1">
+                <lower>[ 0.00,            0.00,            0.00]</lower>
+                <upper>[55.9709435199820,55.9709435199820,55.9709435199820]</upper>
+                <resolution>[56,56,56]</resolution>
+                <patches>[4,4,4]</patches>
+            </Box>
+            <periodic>[1,1,1]</periodic>
+        </Level>
+    </Grid>
+    
+    <!--____________________________________________________________________-->
+    <!--    A M R   G R I D                                                 -->
+    <!--____________________________________________________________________-->
+    <doAMR>true</doAMR>
+    <AMR>
+        <useLockStep>true</useLockStep>
+        <MPM>
+            <min_grid_level>0</min_grid_level>
+            <max_grid_level>0</max_grid_level>
+        </MPM>
+    </AMR>
   
 </Uintah_specification>
