@@ -324,7 +324,6 @@ Pressure::setup_matrix( const SVolField* const rhoStar,
   // We should probably move the matrix construction to the evaluate() method.
   // need a way to get access to the patch so that we can loop over the cells.
   // p is current cell
-  double p = 0.0;
   // n: north, s: south, e: east, w: west, t: top, b: bottom coefficient
   double w = 0.0, s = 0.0, b = 0.0;
   using namespace SpatialOps;
@@ -429,7 +428,6 @@ Pressure::evaluate()
   SVolField& rhs = *results[1];
 
   const TimeField& tstep = timestep_->field_ref();
-  const TimeField& t = t_->field_ref();
   std::ostringstream strs;
   strs << "_timestep_"<< (int) tstep[0] << "_rkstage_"<< rkStage_ << "_patch";
 
