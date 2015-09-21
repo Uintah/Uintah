@@ -103,8 +103,14 @@ class DensFromMixfrac : public Expr::Expression<FieldT>, protected DensityCalcul
                               const DoubleVec& soln,
                               DoubleVec& jac,
                               DoubleVec& res );
-  double get_normalization_factor( const unsigned i ) const;
-  const std::pair<double,double>& get_bounds( const unsigned i ) const;
+  inline double get_normalization_factor( const unsigned i ) const{
+    return 0.5; // nominal value for mixture fraction
+  }
+
+  inline const std::pair<double,double>& get_bounds( const unsigned i ) const{
+    return bounds_;
+  }
+
 
 public:
   /**
@@ -127,7 +133,9 @@ public:
              const unsigned maxIter);
     
     ~Builder(){ delete rhoEval_; }
-    Expr::ExpressionBase* build() const;
+    Expr::ExpressionBase* build() const{
+      return new DensFromMixfrac<FieldT>( *rhoEval_, rhoOldTag_, rhoFTag_, rtol_, maxIter_ );
+    }
 
   private:
     const InterpT* const rhoEval_;
@@ -194,8 +202,14 @@ class DensHeatLossMixfrac
                               const DoubleVec& soln,
                               DoubleVec& jac,
                               DoubleVec& res );
-  double get_normalization_factor( const unsigned i ) const;
-  const std::pair<double,double>& get_bounds( const unsigned i ) const;
+  double get_normalization_factor( const unsigned i ) const{
+    return 0.5; // nominal value for mixture fraction and heat loss (which range [0,1] and [-1,1] respectively).
+  }
+
+  const std::pair<double,double>& get_bounds( const unsigned i ) const{
+    return bounds_[i];
+  }
+
 
 public:
     /**
@@ -223,7 +237,10 @@ public:
              const InterpT& densEvaluator,
              const InterpT& enthEvaluator );
     ~Builder(){ delete densEval_; delete enthEval_; }
-    Expr::ExpressionBase* build() const;
+    Expr::ExpressionBase* build() const{
+      return new DensHeatLossMixfrac<FieldT>( rhoOldTag_, gammaOldTag_, rhofTag_,rhohTag_,*densEval_,*enthEval_ );
+    }
+
 
   private:
     const Expr::Tag rhoOldTag_, gammaOldTag_, rhofTag_, rhohTag_;

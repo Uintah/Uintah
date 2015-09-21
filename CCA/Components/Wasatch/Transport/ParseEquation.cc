@@ -470,19 +470,16 @@ namespace Wasatch{
     
     const TagNames& tagNames = TagNames::self();
     
-    Uintah::ProblemSpecP densityParams  = wasatchParams->findBlock("Density");
+    Uintah::ProblemSpecP densityParams = wasatchParams->findBlock("Density");
     Uintah::ProblemSpecP momEqnParams  = wasatchParams->findBlock("MomentumEquations");
-    Expr::Tag densityTag = parse_nametag( densityParams->findBlock("NameTag") );
     
-    Expr::Tag densStarTag  = tagNames.make_star(densityTag, Expr::STATE_NONE);
-
-    const Expr::Tag solnVarRHSTag     = Expr::Tag(solnVarName+"_rhs",Expr::STATE_NONE);
+    const Expr::Tag densityTag = parse_nametag( densityParams->findBlock("NameTag") );
+    const Expr::Tag densStarTag = tagNames.make_star( densityTag, Expr::STATE_NONE );
+    const Expr::Tag solnVarRHSTag( solnVarName+"_rhs", Expr::STATE_NONE );
 
     std::string x1="X", x2="Y";
-    if (varDens2DMMSParams->findAttribute("x1"))
-      varDens2DMMSParams->getAttribute("x1",x1);
-    if (varDens2DMMSParams->findAttribute("x2"))
-      varDens2DMMSParams->getAttribute("x2",x2);
+    if( varDens2DMMSParams->findAttribute("x1") ) varDens2DMMSParams->getAttribute("x1",x1);
+    if( varDens2DMMSParams->findAttribute("x2") ) varDens2DMMSParams->getAttribute("x2",x2);
 
     Expr::Tag x1Tag, x2Tag, x1XTag, x1YTag, x2XTag, x2YTag;
     
