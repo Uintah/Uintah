@@ -146,7 +146,7 @@ namespace Wasatch{
                                GraphHelper& gh,
                                Uintah::SolverInterface& linSolver,
                                Uintah::SimulationStateP& sharedState,
-                               std::set<std::string>& lockedFields );
+                               std::set<std::string>& persistentFields );
 
 
   /**
