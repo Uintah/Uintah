@@ -77,17 +77,18 @@ bool DensityCalculatorBase::solve( const DoubleVec& passThrough,
 template< typename FieldT >
 DensFromMixfrac<FieldT>::
 DensFromMixfrac( const InterpT& rhoEval,
+                 const Expr::Tag& rhoOldTag,
                  const Expr::Tag& rhoFTag,
-                const double rtol,
-                const unsigned maxIter)
+                 const double rtol,
+                 const unsigned maxIter)
   : Expr::Expression<FieldT>(),
     DensityCalculatorBase( 1, rtol, maxIter ),
     rhoEval_( rhoEval ),
     bounds_( rhoEval.get_bounds()[0] )
 {
   this->set_gpu_runnable(false);
-  
-   rhoF_ = this->template create_field_request<FieldT>(rhoFTag);
+  rhoOld_ = this->template create_field_request<FieldT>(rhoOldTag);
+  rhoF_ = this->template create_field_request<FieldT>(rhoFTag);
 }
 
 //--------------------------------------------------------------------
@@ -112,6 +113,8 @@ evaluate()
   // jcs: can we do the linear solve in place? We probably can. If so,
   // we would only need one field, not two...
   FieldT& rho = *results[0];
+  rho <<= rhoOld_->field_ref();
+  
   FieldT& badPts = *results[1];
   FieldT& drhodf = *results[2];
   badPts <<= 0.0;
@@ -189,22 +192,17 @@ template< typename FieldT >
 DensFromMixfrac<FieldT>::
 Builder::Builder( const InterpT& rhoEval,
                   const Expr::TagList& resultsTag,
+                 const Expr::Tag& rhoOldTag,
                   const Expr::Tag& rhoFTag,
                  const double rtol,
                  const unsigned maxIter)
   : ExpressionBuilder( resultsTag ),
-    rhoEval_( rhoEval.clone() ),
-    rhoFTag_(rhoFTag          ),
-    rtol_   (rtol             ),
-    maxIter_(maxIter          )
-{
-  if( resultsTag[0].context() != Expr::CARRY_FORWARD ){
-    std::ostringstream msg;
-    msg << "ERROR: Density must have CARRY_FORWARD context so that an initial guess is available\n\t"
-        << __FILE__ << " : " << __LINE__ << std::endl;
-    throw std::runtime_error( msg.str() );
-  }
-}
+    rhoEval_   ( rhoEval.clone() ),
+    rhoOldTag_ (rhoOldTag        ),
+    rhoFTag_   (rhoFTag          ),
+    rtol_      (rtol             ),
+    maxIter_   (maxIter          )
+{}
 
 //--------------------------------------------------------------------
 
@@ -213,7 +211,7 @@ Expr::ExpressionBase*
 DensFromMixfrac<FieldT>::
 Builder::build() const
 {
-  return new DensFromMixfrac<FieldT>( *rhoEval_, rhoFTag_, rtol_, maxIter_ );
+  return new DensFromMixfrac<FieldT>( *rhoEval_, rhoOldTag_, rhoFTag_, rtol_, maxIter_ );
 }
 
 
@@ -222,7 +220,9 @@ Builder::build() const
 
 template< typename FieldT >
 DensHeatLossMixfrac<FieldT>::
-DensHeatLossMixfrac( const Expr::Tag& rhofTag,
+DensHeatLossMixfrac( const Expr::Tag& rhoOldTag,
+                     const Expr::Tag& gammaOldTag,
+                     const Expr::Tag& rhofTag,
                      const Expr::Tag& rhohTag,
                      const InterpT& densEvaluator,
                      const InterpT& enthEvaluator )
@@ -232,8 +232,10 @@ DensHeatLossMixfrac( const Expr::Tag& rhofTag,
     enthEval_( enthEvaluator ),
     bounds_( densEvaluator.get_bounds() )
 {
-   rhof_ = this->template create_field_request<FieldT>(rhofTag);
-   rhoh_ = this->template create_field_request<FieldT>(rhohTag);
+  rhoOld_ = this->template create_field_request<FieldT>(rhoOldTag);
+  gammaOld_ = this->template create_field_request<FieldT>(gammaOldTag);
+  rhof_ = this->template create_field_request<FieldT>(rhofTag);
+  rhoh_ = this->template create_field_request<FieldT>(rhohTag);
 }
 
 //--------------------------------------------------------------------
@@ -254,6 +256,9 @@ evaluate()
   FieldT& density = *result[0];
   FieldT& gamma   = *result[1];
 
+  density <<= rhoOld_->field_ref();
+  gamma   <<= gammaOld_->field_ref();
+  
   const FieldT& rhof = rhof_->field_ref();
   const FieldT& rhoh = rhoh_->field_ref();
   
@@ -343,30 +348,20 @@ DensHeatLossMixfrac<FieldT>::get_bounds( const unsigned i ) const
 
 template< typename FieldT >
 DensHeatLossMixfrac<FieldT>::
-Builder::Builder( const Expr::Tag& rhoTag,
+Builder::Builder( const Expr::Tag& rhoOldTag,
+                  const Expr::Tag& rhoTag,
+                  const Expr::Tag& gammaOldTag,
                   const Expr::Tag& gammaTag,
                   const Expr::Tag& rhofTag,
                   const Expr::Tag& rhohTag,
                   const InterpT& densEvaluator,
                   const InterpT& enthEvaluator )
   : ExpressionBuilder( tag_list(rhoTag,gammaTag) ),
-    densEval_( densEvaluator.clone() ),
-    enthEval_( enthEvaluator.clone() )
-{
-  if( rhoTag.context() != Expr::CARRY_FORWARD ){
-    std::ostringstream msg;
-    msg << "ERROR: Density must have CARRY_FORWARD context so that an initial guess is available\n\t"
-        << __FILE__ << " : " << __LINE__ << std::endl;
-    throw std::runtime_error( msg.str() );
-  }
-  if( gammaTag.context() != Expr::CARRY_FORWARD ){
-    std::ostringstream msg;
-    msg << "ERROR: Heat loss must have CARRY_FORWARD context so that an initial guess is available\n\t"
-        << "specified tag: " << gammaTag << "\n\t"
-        << __FILE__ << " : " << __LINE__ << std::endl;
-    throw std::runtime_error( msg.str() );
-  }
-}
+    rhoOldTag_   ( rhoOldTag             ),
+    gammaOldTag_ ( gammaOldTag_          ),
+    densEval_    ( densEvaluator.clone() ),
+    enthEval_    ( enthEvaluator.clone() )
+{}
 
 //--------------------------------------------------------------------
 
@@ -375,7 +370,7 @@ Expr::ExpressionBase*
 DensHeatLossMixfrac<FieldT>::
 Builder::build() const
 {
-  return new DensHeatLossMixfrac<FieldT>( rhofTag_,rhohTag_,*densEval_,*enthEval_ );
+  return new DensHeatLossMixfrac<FieldT>( rhoOldTag_, gammaOldTag_, rhofTag_,rhohTag_,*densEval_,*enthEval_ );
 }
 
 //====================================================================

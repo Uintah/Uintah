@@ -10,7 +10,7 @@
     <TimeIntegrator> FE </TimeIntegrator>    
     
     <Density>
-      <NameTag name="density" state="CARRY_FORWARD"/>
+      <NameTag name="density" />
     </Density>
     
     <!-- Set the initial condition expression for mixture fraction -->
@@ -72,16 +72,16 @@
         <NameInTable>MixtureFraction</NameInTable>
       </IndependentVariable>
       <IndependentVariable>
-        <NameTag name="gamma" state="CARRY_FORWARD"/>
+        <NameTag name="gamma" />
         <NameInTable>HeatLoss</NameInTable>
       </IndependentVariable>
             
       <ExtractDensity>
-        <NameTag name="density" state="CARRY_FORWARD"/>
+        <NameTag name="density" />
         <ModelBasedOnMixtureFractionAndHeatLoss>
           <DensityWeightedMixtureFraction><NameTag name="rhof" state="STATE_DYNAMIC"/></DensityWeightedMixtureFraction>    
           <DensityWeightedEnthalpy>       <NameTag name="rhoh" state="STATE_DYNAMIC"/></DensityWeightedEnthalpy>
-          <HeatLoss>                      <NameTag name="gamma" state="CARRY_FORWARD"/></HeatLoss>
+          <HeatLoss>                      <NameTag name="gamma" /></HeatLoss>
         </ModelBasedOnMixtureFractionAndHeatLoss>
       </ExtractDensity>
 

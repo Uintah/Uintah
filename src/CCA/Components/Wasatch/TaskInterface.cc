@@ -431,31 +431,9 @@ namespace Wasatch{
         // we modify the values already in the new DW.
         fieldInfo.useOldDataWarehouse = (rkStage < 1);
 
-        if( fieldTag.context() == Expr::CARRY_FORWARD ){
-          fieldInfo.mode = Expr::COMPUTES;
-          fieldInfo.useOldDataWarehouse = false;
-          task.requires( Uintah::Task::OldDW,
-                         fieldInfo.varlabel,
-                         patches, Uintah::Task::ThisLevel,
-                         materials, Uintah::Task::NormalDomain,
-                         fieldInfo.ghostType, fieldInfo.nghost );
-
-          dbg_fields << std::setw(10) << "(REQUIRES)"
-                     << std::setw(20) << std::left << fieldInfo.varlabel->getName()
-                     << " OLD   "
-                     << std::left << std::setw(5) << fieldInfo.nghost
-                     << *patches << endl;
-        }
-
         //________________
         // set field mode
         if( tree.computes_field( fieldTag ) ){
-
-          // carry forward fields should be persisten. Here we enforce that.
-          if( fieldTag.context() == Expr::CARRY_FORWARD )
-          {
-            tree.set_expr_is_persistent(fieldTag, fml);
-          }
 
           // if the field uses dynamic allocation, then the uintah task should not be aware of this field
           if( ! tree.is_persistent(fieldTag) ){

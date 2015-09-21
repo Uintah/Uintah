@@ -91,12 +91,13 @@ class DensFromMixfrac : public Expr::Expression<FieldT>, protected DensityCalcul
 {
   const InterpT& rhoEval_;
   const std::pair<double,double> bounds_;
-  DECLARE_FIELD(FieldT, rhoF_)
+  DECLARE_FIELDS(FieldT, rhoOld_, rhoF_)
   
   DensFromMixfrac( const InterpT& rhoEval,
+                   const Expr::Tag& rhoOldTag,
                    const Expr::Tag& rhoFTag,
-                  const double rtol,
-                  const unsigned maxIter);
+                   const double rtol,
+                   const unsigned maxIter);
 
   void calc_jacobian_and_res( const DoubleVec& passThrough,
                               const DoubleVec& soln,
@@ -120,15 +121,17 @@ public:
      */
     Builder( const InterpT& rhoEval,
              const Expr::TagList& resultsTag,
+             const Expr::Tag& rhoOldTag,
              const Expr::Tag& rhoFTag,
              const double rtol,
              const unsigned maxIter);
+    
     ~Builder(){ delete rhoEval_; }
     Expr::ExpressionBase* build() const;
 
   private:
     const InterpT* const rhoEval_;
-    const Expr::Tag rhoFTag_;
+    const Expr::Tag rhoOldTag_, rhoFTag_;
     const double rtol_;    ///< relative error tolerance
     const unsigned maxIter_; ///< maximum number of iterations    
   };
@@ -176,11 +179,13 @@ template< typename FieldT >
 class DensHeatLossMixfrac
  : public Expr::Expression<FieldT>, protected DensityCalculatorBase
 {
-  DECLARE_FIELDS(FieldT, rhof_, rhoh_)
+  DECLARE_FIELDS(FieldT, rhoOld_, gammaOld_, rhof_, rhoh_)
   const InterpT &densEval_, &enthEval_;
   const std::vector< std::pair<double,double> > bounds_;
 
-  DensHeatLossMixfrac( const Expr::Tag& rhofTag,
+  DensHeatLossMixfrac( const Expr::Tag& rhoOldTag,
+                       const Expr::Tag& gammaOldTag,
+                       const Expr::Tag& rhofTag,
                        const Expr::Tag& rhohTag,
                        const InterpT& densEvaluator,
                        const InterpT& enthEvaluator );
@@ -209,7 +214,9 @@ public:
      *  @param densEvaluator The function to evaluate density from mixture fraction and heat loss
      *  @param enthEvaluator The function to evaluate enthalpy from mixture fraction and heat loss
      */
-    Builder( const Expr::Tag& rhoTag,
+    Builder( const Expr::Tag& rhoOldTag,
+             const Expr::Tag& rhoTag,
+             const Expr::Tag& gammaOldTag,
              const Expr::Tag& gammaTag,
              const Expr::Tag& rhofTag,
              const Expr::Tag& rhohTag,
@@ -219,7 +226,7 @@ public:
     Expr::ExpressionBase* build() const;
 
   private:
-    const Expr::Tag rhofTag_, rhohTag_;
+    const Expr::Tag rhoOldTag_, gammaOldTag_, rhofTag_, rhohTag_;
     const InterpT * const densEval_, * const enthEval_;
   };
 
