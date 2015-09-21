@@ -200,7 +200,7 @@
         <BCType id="all" label="radiation_temperature" var="Tabulated">
           <value>temperature</value>
         </BCType>
-        <BCType id="0"  label= "abskg"              var="ForcedDirichlet">
+        <BCType id="all"  label= "abskg"              var="ForcedDirichlet">
                             <value> 1.0 </value>
         </BCType>
       </Face>
@@ -302,7 +302,7 @@
         <BCType id="all" label="radiation_temperature" var="Dirichlet">
           <value>298.0</value>
         </BCType>
-        <BCType id="0"  label= "abskg"              var="ForcedDirichlet">
+        <BCType id="all"  label= "abskg"              var="ForcedDirichlet">
                             <value> 1.0 </value>
         </BCType>
       </Face>
@@ -404,7 +404,7 @@
         <BCType id="all" label="radiation_temperature" var="Dirichlet">
           <value>1200.0</value>
         </BCType>
-        <BCType id="0"  label= "abskg"              var="ForcedDirichlet">
+        <BCType id="all"  label= "abskg"              var="ForcedDirichlet">
                             <value> 1.0 </value>
         </BCType>
       </Face>
@@ -417,7 +417,7 @@
         <BCType id="all" label="radiation_temperature" var="Dirichlet">
           <value>1200</value>
         </BCType>
-        <BCType id="0"  label= "abskg"              var="ForcedDirichlet">
+        <BCType id="all"  label= "abskg"              var="ForcedDirichlet">
                             <value> 1.0 </value>
         </BCType>
         <BCType id="all" label="enthalpy" var="Neumann">
@@ -519,7 +519,7 @@
         <BCType id="all" label="radiation_temperature" var="Dirichlet">
           <value>1200</value>
         </BCType>
-        <BCType id="0"  label= "abskg"              var="ForcedDirichlet">
+        <BCType id="all"  label= "abskg"              var="ForcedDirichlet">
                             <value> 1.0 </value>
         </BCType>
         <BCType id="all" label="enthalpy" var="Neumann">
@@ -621,7 +621,7 @@
         <BCType id="all" label="radiation_temperature" var="Dirichlet">
           <value>1200</value>
         </BCType>
-        <BCType id="0"  label= "abskg"              var="ForcedDirichlet">
+        <BCType id="all"  label= "abskg"              var="ForcedDirichlet">
                             <value> 1.0 </value>
         </BCType>
         <BCType id="all" label="enthalpy" var="Neumann">
