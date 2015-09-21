@@ -289,7 +289,7 @@ namespace Wasatch{
                                GraphHelper& gh,
                                Uintah::SolverInterface& linSolver,
                                Uintah::SimulationStateP& sharedState,
-                               std::set<std::string>& lockedFields )
+                               std::set<std::string>& persistentFields )
   {
     const Expr::Tag tempTag = parse_nametag( params->findBlock("Temperature")->findBlock("NameTag") );
     const Expr::Tag divQTag = parse_nametag( params->findBlock("DivQ")->findBlock("NameTag") );
@@ -330,7 +330,7 @@ namespace Wasatch{
         gh.exprFactory->cleave_from_children( id );
         gh.exprFactory->cleave_from_parents ( id );
         BOOST_FOREACH( const Expr::Tag& tag, radSolver->get_tags() ){
-          lockedFields.insert( tag.name() );
+          persistentFields.insert( tag.name() );
         }
       }
       gh.exprFactory->register_expression( new DORadSrc::Builder( divQTag, tempTag, absCoefTag, discOrd ) );
@@ -410,7 +410,7 @@ namespace Wasatch{
     
     Uintah::ProblemSpecP densityParams = wasatchParams->findBlock("Density");
     const Expr::Tag densityTag   = parse_nametag( densityParams->findBlock("NameTag") );
-    const Expr::Tag densStarTag  = tagNames.make_star(densityTag, Expr::CARRY_FORWARD);
+    const Expr::Tag densStarTag  = tagNames.make_star(densityTag, Expr::STATE_NONE);
     
     // attach Sf_{n+1} to the scalar EOS coupling term
     const Expr::Tag mms_EOSMixFracSrcTag(tagNames.mms_mixfracsrc.name() + "*_EOS", Expr::STATE_NONE);
@@ -474,7 +474,7 @@ namespace Wasatch{
     Uintah::ProblemSpecP momEqnParams  = wasatchParams->findBlock("MomentumEquations");
     Expr::Tag densityTag = parse_nametag( densityParams->findBlock("NameTag") );
     
-    Expr::Tag densStarTag  = tagNames.make_star(densityTag, Expr::CARRY_FORWARD);
+    Expr::Tag densStarTag  = tagNames.make_star(densityTag, Expr::STATE_NONE);
 
     const Expr::Tag solnVarRHSTag     = Expr::Tag(solnVarName+"_rhs",Expr::STATE_NONE);
 
@@ -1183,7 +1183,7 @@ namespace Wasatch{
         diffFluxTag = Expr::Tag( primVarName + suffix + tagNames.diffusiveflux + dir, Expr::STATE_NONE );
         // make new Tags for density and primVar by adding the appropriate suffix ( "_*" or nothing ). This
         // is because we need the ScalarRHS at time step n+1 for our pressure projection method
-        const Expr::Tag densityCorrectedTag = Expr::Tag(densityTag.name() + suffix, Expr::CARRY_FORWARD);
+        const Expr::Tag densityCorrectedTag = Expr::Tag(densityTag.name() + suffix, Expr::STATE_NONE);
         const Expr::Tag primVarCorrectedTag = Expr::Tag(primVarTag.name() + suffix, Expr::STATE_NONE);
         
         Expr::ExpressionBuilder* builder = NULL;

@@ -117,12 +117,12 @@ namespace Wasatch {
 
     // don't allow the ExpressionTree to reclaim memory for this field since
     // it will need to be seen by the task that copies it to the "old" value.
-    if( wasatch_->locked_fields().find( srcTag.name() ) == wasatch_->locked_fields().end() ){
-      wasatch_->locked_fields().insert( srcTag.name() );
+    if( wasatch_->persistent_fields().find( srcTag.name() ) == wasatch_->persistent_fields().end() ){
+      wasatch_->persistent_fields().insert( srcTag.name() );
     }
 
-    if( wasatch_->locked_fields().find( resultTag.name() ) == wasatch_->locked_fields().end() ){
-      wasatch_->locked_fields().insert( resultTag.name() );
+    if( wasatch_->persistent_fields().find( resultTag.name() ) == wasatch_->persistent_fields().end() ){
+      wasatch_->persistent_fields().insert( resultTag.name() );
     }
   }
 

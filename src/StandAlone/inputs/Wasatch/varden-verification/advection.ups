@@ -11,7 +11,7 @@
     
 		
     <Density>
-      <NameTag name="density" state="CARRY_FORWARD"/>
+      <NameTag name="density" />
     </Density>
     
     <!-- Set the initial condition expression for mixture fraction -->
@@ -24,7 +24,7 @@
     </BasicExpression>
     
     <TwoStreamMixing rho1="1.29985" rho0="0.081889">
-      <Density><NameTag name="density" state="CARRY_FORWARD"/></Density>
+      <Density><NameTag name="density" /></Density>
       <MixtureFraction> <NameTag name="f"/> </MixtureFraction>
       <DensityWeightedMixtureFraction> <NameTag name="rhof" state="STATE_DYNAMIC"/> </DensityWeightedMixtureFraction>
     </TwoStreamMixing>  

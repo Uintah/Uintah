@@ -160,6 +160,8 @@ class MPIScheduler : public SchedulerCommon {
 
     void emitTime( const char* label, double time );
 
+    void outputTimingStats( const char* label );
+
     MessageLog                  log;
     const Output*               oport_;
     CommRecMPI                  sends_[MAX_THREADS];

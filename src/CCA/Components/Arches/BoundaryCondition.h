@@ -98,8 +98,8 @@ public:
 
 //** WARNING: This needs to be duplicated in BoundaryCond_new.h for now until BoundaryCondition goes away **//
 //** WARNING!!! ** //
-enum BC_TYPE { VELOCITY_INLET, MASSFLOW_INLET, VELOCITY_FILE, MASSFLOW_FILE, STABL, PRESSURE,
-         OUTLET, NEUTRAL_OUTLET, WALL, MMWALL, INTRUSION, SWIRL, TURBULENT_INLET };
+enum BC_TYPE { VELOCITY_INLET, MASSFLOW_INLET,  VELOCITY_FILE, MASSFLOW_FILE, STABL, PRESSURE,
+         OUTLET, NEUTRAL_OUTLET, WALL, MMWALL, INTRUSION, SWIRL, TURBULENT_INLET, PARTMASSFLOW_INLET};
 //** END WARNING!!! **//
 
 
@@ -562,6 +562,7 @@ struct BCInfo {
   // Common:
   //int id;
   std::string name;
+  std::string faceName;
 
   // Inlets:
   Vector velocity;
@@ -587,6 +588,10 @@ struct BCInfo {
   const VarLabel* total_area_label;
 
   DigitalFilterInlet * TurbIn;
+
+ std::vector<double> vWeights;
+ std::vector<std::vector<double> > vVelScalingConst;
+ std::vector<std::vector<std::string> > vVelLabels;
 
 };
 
@@ -875,6 +880,7 @@ BoundaryCondition_new* d_newBC;
 int index_map[3][3];
 
 const VarLabel* d_radiation_temperature_label;           // a copy of temperature from table with "forced" BC in the extra cell
+const VarLabel* d_DummyLabel;                            // a label whose only purpose to force the order of tasks.
 const VarLabel* d_temperature_label;
 
 inline int getNormal( Patch::FaceType face ) {          // This routine can be replaced with:

@@ -43,6 +43,8 @@
 #include <CCA/Components/Arches/PhysicalConstants.h>
 #include <CCA/Components/Arches/Properties.h>
 #include <CCA/Components/Arches/ArchesMaterial.h>
+#include <CCA/Components/Arches/ParticleModels/ParticleTools.h>
+
 #include <CCA/Ports/Scheduler.h>
 #include <CCA/Ports/DataWarehouse.h>
 
@@ -112,6 +114,10 @@ BoundaryCondition::BoundaryCondition(const ArchesLabel* label,
 
   d_radiation_temperature_label = VarLabel::create("radiation_temperature", CCVariable<double>::getTypeDescription());
 
+  // Since this task may alter a member of patch, we need to force it to happen in a certain order.
+  // To achive this, a computes/requires combination to achieve this.  See EqnBase.cc for requires portion.
+  d_DummyLabel = VarLabel::create("ForceTaskExecutionOrder", CCVariable<double>::getTypeDescription());
+
 }
 
 
@@ -136,6 +142,7 @@ BoundaryCondition::~BoundaryCondition()
   }
 
   VarLabel::destroy(d_radiation_temperature_label);
+  VarLabel::destroy(d_DummyLabel);
 }
 
 //****************************************************************************
@@ -375,6 +382,7 @@ BoundaryCondition::pressureBC(const Patch* patch,
   sub_types.push_back( WALL );
   sub_types.push_back( INTRUSION );
   sub_types.push_back( MASSFLOW_INLET );
+  sub_types.push_back( PARTMASSFLOW_INLET );
   sub_types.push_back( VELOCITY_INLET );
   sub_types.push_back( VELOCITY_FILE );
   sub_types.push_back( MASSFLOW_FILE );
@@ -950,8 +958,9 @@ BoundaryCondition::velRhoHatInletBC(const Patch* patch,
 
             setVelFromExtraValue__NEW( patch, face, vars->uVelRhoHat, vars->vVelRhoHat, vars->wVelRhoHat, constvars->new_density, bound_ptr, bc_iter->second.velocity );
 
+          } else if ( bc_iter->second.type == PARTMASSFLOW_INLET ) {
+             // do nothing, boundary conditions are added to uintah BC objects
           }
-
         }
       }
     }
@@ -1939,6 +1948,7 @@ BoundaryCondition::setupBCs( ProblemSpecP& db )
   d_bc_type_to_string.insert( std::make_pair( TURBULENT_INLET, "TurbulentInlet" ) );
   d_bc_type_to_string.insert( std::make_pair( VELOCITY_INLET, "VelocityInlet" ) );
   d_bc_type_to_string.insert( std::make_pair( MASSFLOW_INLET, "MassFlowInlet" ) );
+  d_bc_type_to_string.insert( std::make_pair( PARTMASSFLOW_INLET, "PartMassFlowInlet" ) );
   d_bc_type_to_string.insert( std::make_pair( VELOCITY_FILE, "VelocityFileInput" ) );
   d_bc_type_to_string.insert( std::make_pair( PRESSURE, "PressureBC" ) );
   d_bc_type_to_string.insert( std::make_pair( OUTLET, "OutletBC" ) );
@@ -1965,6 +1975,9 @@ BoundaryCondition::setupBCs( ProblemSpecP& db )
       } else if ( db_face->getAttribute( "ellipse", which_face)) {
         db_face->getAttribute("ellipse",which_face);
       }
+
+      std::string faceName;
+      db_face->getAttribute("name",faceName);
 
       //avoid the "or" in case I want to add more logic
       //re: the face normal.
@@ -1994,6 +2007,7 @@ BoundaryCondition::setupBCs( ProblemSpecP& db )
         db_BCType->getAttribute("label", name);
         db_BCType->getAttribute("var", type);
         my_info.name = name;
+        my_info.faceName=faceName;
         std::stringstream color;
         color << bc_type_index;
 
@@ -2174,6 +2188,92 @@ BoundaryCondition::setupBCs( ProblemSpecP& db )
           found_bc = true;
 
         }
+         else if ( type == "PartMassFlowInlet" ) {
+         my_info.type = PARTMASSFLOW_INLET;
+         my_info.total_area_label = VarLabel::create( "bc_area"+color.str()+name, ReductionVariable<double, Reductions::Sum<double> >::getTypeDescription());
+         my_info.velocity = Vector(0,0,0);
+         my_info.mass_flow_rate = 0.0;
+         found_bc = true;
+
+         int qn_total; 
+         qn_total=ParticleTools::get_num_env(db_face,ParticleTools::DQMOM);
+
+         double MassParticleDensity=0;  // (kg/ m^3)
+         my_info.vWeights = std::vector<double>(qn_total) ;
+         my_info.vVelScalingConst = std::vector<std::vector<double > > (qn_total,std::vector<double> (3,0.0));
+         my_info.vVelLabels = std::vector<std::vector<std::string > > (qn_total,std::vector<std::string> (3));
+         
+
+          //// convert #/m^3  --->  kg/m^3, we need weight, diameter, and particle density at inlet
+         for (int qn=0; qn< qn_total; qn++){
+           // get weight BC
+           double weightScalingConstant = ParticleTools::getScalingConstant(db_BCType,"weight",qn); 
+           double weight;
+           for ( ProblemSpecP db_BCType2 = db_face->findBlock("BCType"); db_BCType2 != 0;
+               db_BCType2 = db_BCType2->findNextBlock("BCType") ) {
+             std::string tempLabelName;
+             db_BCType2->getAttribute("label",tempLabelName);
+
+             std::string weightNode=ParticleTools::append_qn_env ("w",qn);
+             if (tempLabelName == weightNode){
+               db_BCType2->require("value",weight);
+               break;
+             }
+
+             if(db_BCType2 == 0  ){
+               throw ProblemSetupException("Arches was unable to find weight boundary condition", __FILE__, __LINE__);
+             }
+           }
+
+           my_info.vWeights[qn]=weight;
+
+            // get radius BC (radius particle model will dominate BC specification)
+           double diameter;
+           std::string sizeLabelName =ParticleTools::parse_for_role_to_label(db_BCType,"size");
+           if (ParticleTools::getModelValue(db_BCType,sizeLabelName,qn,diameter)== false){
+             double diameterScalingConstant = ParticleTools::getScalingConstant(db_BCType,sizeLabelName,qn); 
+
+             for ( ProblemSpecP db_BCType2 = db_face->findBlock("BCType"); db_BCType2 != 0;
+                 db_BCType2 = db_BCType2->findNextBlock("BCType") ) {
+               std::string tempLabelName;
+               db_BCType2->getAttribute("label",tempLabelName);
+
+               std::string sizeNode=ParticleTools::append_qn_env(sizeLabelName,qn);
+               if (tempLabelName == sizeNode){
+                 db_BCType2->require("value",diameter);
+                 break;
+               }
+               if(db_BCType2 == 0  ){
+                 throw ProblemSetupException("Arches was unable to find length model or boundary condition", __FILE__, __LINE__);
+               }
+             }
+
+             diameter = diameter/weight*diameterScalingConstant;
+           }
+
+           std::string str3D = "uvw";
+           for(unsigned int i = 0; i<str3D.length(); i++) {
+             std::string velLabelName =ParticleTools::parse_for_role_to_label(db_BCType,std::string (1,str3D[i])+"vel");
+             my_info.vVelScalingConst[qn][i] =  ParticleTools::getScalingConstant(db_BCType,velLabelName,qn); 
+             my_info.vVelLabels[qn][i] = ParticleTools::append_qn_env(velLabelName,qn);
+           }
+
+           // compute actual particle density (#/m^3)
+           weight=weight*weightScalingConstant;
+
+           // get particle density 
+           double density = ParticleTools::getInletParticleDensity(db_face);
+
+           MassParticleDensity+=weight*M_PI*diameter*diameter*diameter/6.0*density;  // (kg/ m^3)
+
+           my_info.density = MassParticleDensity;
+         }
+
+         // note that the mass flow rate is in the BCstruct value
+
+
+
+         }
 
         if ( found_bc ) {
           d_bc_information.insert( std::make_pair(bc_type_index, my_info));
@@ -2533,6 +2633,8 @@ BoundaryCondition::sched_setupBCInletVelocities__NEW(SchedulerP& sched,
 
   }
 
+  tsk->computes(d_DummyLabel); 
+
   if ( doing_restart ) {
     tsk->requires( Task::OldDW, d_lab->d_volFractionLabel, Ghost::None, 0 );
   } else {
@@ -2671,6 +2773,26 @@ BoundaryCondition::setupBCInletVelocities__NEW(const ProcessorGroup*,
                 bc_iter->second.mass_flow_rate = 0.0;
                 break;
 
+              case (PARTMASSFLOW_INLET):
+                { bc_iter->second.mass_flow_rate = bc_value;
+                  double pm = -1.0*insideCellDir[norm];
+                  if ( bc_iter->second.density > 0.0 ) {
+                    bc_iter->second.velocity[norm] = pm*bc_iter->second.mass_flow_rate /
+                      (area * bc_iter->second.density);
+                    bc_kind = "Dirichlet"; // this must be specifeid for setting uintah BC
+
+                    int qn_total =  bc_iter->second.vWeights.size();
+                    for (int qn=0; qn< qn_total; qn++){
+
+                      for(unsigned int i = 0; i < 3; i++) {
+                        double uintahVal = bc_iter->second.velocity[i]*bc_iter->second.vWeights[qn]*bc_iter->second.vVelScalingConst[qn][i]; // use weighted scaled boundary condition
+                        patch->possiblyAddBC(face, child, bc_iter->second.name, matl_index,uintahVal, bc_kind,bc_iter->second.vVelLabels[qn][i],bc_iter->second.faceName );
+                      }
+                    }
+                  }
+
+                  break;
+                }
               default:
                 break;
 

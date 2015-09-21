@@ -81,7 +81,7 @@ namespace Uintah {
                                            const std::string type,
                                            int ichild) const;
 
-     bool checkForBoundCondData(int mat_id,
+     bool checkForBoundCondData(int &mat_id,
                                 const std::string type,
                                 int ichild) ;
 

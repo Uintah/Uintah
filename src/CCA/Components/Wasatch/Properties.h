@@ -44,12 +44,12 @@ namespace Wasatch{
    *  \param [in] params The parser block.  This block will be searched for
    *         one containing the \verbatim <PropertyEvaluator> \endverbatim tag.
    *  \param [in] gc
-   *  \param [inout] lockedFields the fields that should be persistent (not
+   *  \param [inout] persistentFields the fields that should be persistent (not
    *         scratch/temporary).  These will be managed by Uintah.
    */
   void setup_property_evaluation( Uintah::ProblemSpecP& params,
                                   GraphCategories& gc,
-                                  std::set<std::string>& lockedFields );
+                                  std::set<std::string>& persistentFields );
 
 } // namespace Wasatch
 

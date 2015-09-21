@@ -206,8 +206,8 @@ namespace Wasatch {
 
     // don't allow the ExpressionTree to reclaim memory for this field since
     // it will need to be seen by the task that copies it to the "old" value.
-    if ( wasatch_->locked_fields().find( var.name() ) == wasatch_->locked_fields().end() )  {
-      wasatch_->locked_fields().insert( var.name() );
+    if ( wasatch_->persistent_fields().find( var.name() ) == wasatch_->persistent_fields().end() )  {
+      wasatch_->persistent_fields().insert( var.name() );
     }
   }
 

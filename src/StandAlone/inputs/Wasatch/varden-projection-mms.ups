@@ -10,7 +10,7 @@
     <TimeIntegrator> FE </TimeIntegrator>    
 
     <Density>
-      <NameTag name="density" state="CARRY_FORWARD"/>
+      <NameTag name="density"/>
     </Density>
     
     <!-- Setup the parameters for variable density MMS -->
@@ -55,7 +55,7 @@
       </IndependentVariable>
       
       <ExtractDensity>
-        <NameTag name="density" state="CARRY_FORWARD"/>
+        <NameTag name="density"/>
         <ModelBasedOnMixtureFraction>
           <DensityWeightedMixtureFraction>
             <NameTag name="rhof" state="STATE_DYNAMIC"/>
@@ -206,6 +206,7 @@
     <outputTimestepInterval>1</outputTimestepInterval>
     <outputInitTimestep/>
     <checkpoint cycle="2" interval="0.001"/>
+<!-- 
     <save label="density"/>    
     <save label="density*"/>    
     <save label="x-mom"/>
@@ -216,6 +217,7 @@
     <save label="rhof"/>
     <save label="pressure"/>
     <save label="pressure_src"/>
+ -->
   </DataArchiver> 
 
   <Grid>
