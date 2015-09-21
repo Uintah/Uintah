@@ -8,11 +8,18 @@
   <!--____________________________________________________________________-->
   <!--         C O M P O N E N T   S W I T C H E R                        -->
   <!--____________________________________________________________________-->
+  <AMR>
+   <useLockStep>true</useLockStep> 
+    <MPM>
+        <min_grid_level>0</min_grid_level>
+        <max_grid_level>0</max_grid_level>
+    </MPM>
+  </AMR>   
   <SimulationComponent type="switcher" >
   
       <subcomponent>
           <SimulationComponent type="mpm" />
-          <input_file>mpm_4disks_2d_1mat.ups</input_file>
+          <input_file>mpm_cyl_3d_1mat.ups</input_file>
           <SwitchCriteria type = "Timestep">
             <timestep> 10 </timestep>
           </SwitchCriteria>
@@ -27,7 +34,6 @@
           <init var = "e_kin"       matls = "md_matls" levels = "0"/>
           <init var = "p.ID_MD"     matls = "md_matls" levels = "0"/>
       </subcomponent>
-        
   </SimulationComponent>  
    
     <!--____________________________________________________________________-->
@@ -56,52 +62,50 @@
     <Grid>
     
        <BoundaryConditions>
-              <Face side = "x-">
-                   <BCType id = "all" var = "symmetry" label = "Symmetric">
-              </BCType>
-                </Face>
-                <Face side = "x+">
-                   <BCType id = "all" var = "symmetry" label = "Symmetric">
-              </BCType>
-                </Face>
-                <Face side = "y-">
-                   <BCType id = "all" var = "symmetry" label = "Symmetric">
-              </BCType>
-                </Face>                  
-              <Face side = "y+">
-                   <BCType id = "all" var = "symmetry" label = "Symmetric">
-              </BCType>
-                </Face>
-                <Face side = "z-">
-                   <BCType id = "all" var = "symmetry" label = "Symmetric">
-              </BCType>
-                </Face>
-                <Face side = "z+">
-                   <BCType id = "all" var = "symmetry" label = "Symmetric">
-              </BCType>
-                </Face>
+         <Face side = "x-">
+           <BCType id = "all" var = "symmetry" label = "Symmetric">
+             </BCType>
+         </Face>
+         <Face side = "x+">
+           <BCType id = "all" var = "symmetry" label = "Symmetric">
+             </BCType>
+         </Face>
+         <Face side = "y-">
+           <BCType id = "all" var = "symmetry" label = "Symmetric">
+             </BCType>
+         </Face>                  
+         <Face side = "y+">
+           <BCType id = "all" var = "symmetry" label = "Symmetric">
+             </BCType>
+         </Face>
+         <Face side = "z-">
+           <BCType id = "all" var = "symmetry" label = "Symmetric">
+           </BCType>
+         </Face>
+         <Face side = "z+">
+           <BCType id = "all" var = "symmetry" label = "Symmetric">
+           </BCType>
+         </Face>
        </BoundaryConditions>
        
        <Level>
-           <Box label = "0">
-              <lower>[-0.55, 0.00, -0.10]</lower>
-              <upper>[ 0.55, 0.05,  4.10]</upper>
-              <resolution>[22,1,84]</resolution>
-              <patches>[1,1,1]</patches>
-           </Box>
+         <Box label = "0">
+           <lower>[  0.00,            0.00,            0.00]</lower>
+           <upper>[559.709435199820,559.709435199820,559.709435199820]</upper>
+           <resolution>[80,80,80]</resolution>
+           <patches>[1,1,1]</patches>
+         </Box>
        </Level>
        
-       <!-- need to fix this to be an integral refinement ratio - basically need a simpler MPM example for now 
        <Level>
            <Box label = "1">
-              <lower>[-0.55, 0.00, -0.10]</lower>
+              <lower>[ 0.00,            0.00,            0.00]</lower>
               <upper>[55.9709435199820,55.9709435199820,55.9709435199820]</upper>
-              <resolution>[44,2,168]</resolution>
+              <resolution>[56,56,56]</resolution>
               <patches>[4,4,4]</patches>
            </Box>
            <periodic>[1,1,1]</periodic>
        </Level>
-       -->
        
     </Grid>
 </Uintah_specification>

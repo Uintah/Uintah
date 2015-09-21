@@ -1,0 +1,115 @@
+Scatter Record:
+  const Patch*    fromPatch;
+  const Patch*    toPatch;
+  IntVector       vectorToNeighbor;
+  int		      material;
+  int             levelIndex;
+  ParticleSubset* send_pset;
+  
+Typedefs:
+  maptype     -> multimap<pair<const Patch*, int>, ScatterRecord*>
+  procmaptype -> map<int, MPIScatterProcessorRecord*>
+  patchestype -> vector<const Patch*>
+  recmaptype  -> map<pair<const Patch*, int>, MPIRecvBuffer*>
+  
+MPIScatterProcessorRecord:
+  patchestype 	patches;
+  void 			sortPatches();
+  
+MPIRecvBuffer:
+  MPIRecvBuffer*	next;
+  char*				databuf;
+  int				bufsize;
+  int				numParticles;
+  
+MPIScatterRecords:
+  maptype			records;
+  pcormaptype		procs;
+  recvmaptype       recvs;
+  
+  ScatterRecord* 	findOrInsertRecord(const Patch* 			from
+                                       const Patch* 			to
+                                             int    			matl
+                                             int				curLevelIndex
+                                             ParticleSubset* 	pset)
+                                             
+  ScatterRecord*	findRecord	      (const Patch*				from
+                                       const Patch*             to
+                                             int                matl
+                                             int                curLevelIndex
+                                             ParticleSubset*    pset)
+                                            
+  void              addNeighbor       (      LoadBalancer*      lb
+                                       const ProcessorGroup*    pg
+                                       const Patch*             to)
+                                       
+  void              saveRecv          (const Patch*             to
+                                             int                matl
+                                             char*              databuf
+                                             int                bufsize
+                                             int                numParticles)
+                                             
+  MPIRecvBuffer*    findRecv          (const Patch*             to
+                                             int                matl)
+                                             
+Relocate:
+
+  scheduleParticleRelocation          (      Scheduler*                                /*null*/
+                                       const ProcessorGroup*                             pg
+                                             LoadBalancer*                               lb
+                                       const LevelP&                                     level
+                                       const VarLabel*                                   old_posLabel
+                                       const std::vector<std::vector<const VarLabel*> >& old_labels
+                                       const VarLabel*                                   new_posLabel
+                                       const std::vector<std::vector<const VarLabel*> >& new_labels
+                                       const VarLabel*                                   particleIDLabel
+                                       const MaterialSet*                                materials)
+                                       
+   const MaterialSet* getMaterialSet() const  -->  Returns the material set across which relocation is defined.
+                            
+ private methods:
+   void  relocateParticlesModifies          (const ProcessorGroup*                           /*null*/
+                                             const PatchSubset*                                patches
+                                             const MaterialSubset*                             matls
+                                                   DataWarehouse*                              old_dw
+                                                   DataWarehouse*                              new_dw
+                                             const Level*                                      coarsestLevelwithParticles)
+   
+   void  relocateParticles                  (const ProcessorGroup*                           /*null*/
+                                             const PatchSubset*                                patches
+                                             const MaterialSubset*                             matls
+                                                   DataWarehouse*                              old_dw
+                                                   DataWarehouse*                              new_dw
+                                             const Level*                                      coarsestLevelwithParticles)
+                 
+   void  exchangeParticles                  (const ProcessorGroup*                           /*null*/
+                                             const PatchSubset*                                patches
+                                             const MaterialSubset*                             matls
+                                                   DataWarehouse*                              old_dw
+                                                   DataWarehouse*                              new_dw
+                                                   MPIScatterRecords*                          scatter_records
+                                                   int                                         total_reloc[3])
+                                                   
+   void  findNeighboringPatches             (const Patch*                                      patch
+                                             const Level*                                      level
+                                             const bool                                        findFiner
+                                             const bool                                        findCoarser
+                                                   Patch::selectType&                          AllNeighborPatches)
+                                                   
+   void  finalizeCommunication()
+   
+  data:
+   const VarLabel* 									reloc_old_posLabel
+         std::vector<std::vector<const VarLabel*> > reloc_old_labels
+        
+   const VarLabel*									reloc_new_posLabel
+         std::vector<std::vector<const VarLabel*> > reloc_new_labels
+         
+   const VarLabel*                                  particleIDLabel_
+   const MaterialSet*                               reloc_matls
+         LoadBalancer*                              lb
+         
+         std::vector<char*>                         recvbuffers
+         std::vector<char*>                         sendbuffers
+         std::vector<MPI_Request>                   sendrequests
+                                                                                                                                                     
