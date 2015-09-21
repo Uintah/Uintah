@@ -1056,12 +1056,9 @@ namespace Wasatch{
     // tsaad: boundary conditions will not be applied on the initial condition of momentum. This leads
     // to tremendous complications in our graphs. Instead, specify velocity initial conditions
     // and velocity boundary conditions, and momentum bcs will appropriately propagate.
-    Expr::ExpressionFactory& icfactory = *gc_[ADVANCE_SOLUTION]->exprFactory;
-    //if ( !icfactory.have_entry(thisVelTag_) ) {
     bcHelper.apply_boundary_condition<FieldT>(initial_condition_tag(), taskCat);
-    //}
     
-    if (!isConstDensity_) {
+    if( !isConstDensity_ ){
       const TagNames& tagNames = TagNames::self();
       
       // set bcs for density

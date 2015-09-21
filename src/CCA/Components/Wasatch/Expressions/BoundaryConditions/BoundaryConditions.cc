@@ -315,9 +315,7 @@ evaluate()
 {
   using namespace SpatialOps;
 
-  FieldT& f = this->value();
-
-  if (this->spatialMask_) {
+  if( this->spatialMask_ ){
     FieldT& lhs =  this->value();
     masked_assign(*this->spatialMask_, lhs, bcValue_);
     masked_assign(convert<FieldT>(*this->spatialMask_, this->shiftSide_), lhs, bcValue_);
@@ -332,7 +330,7 @@ LinearBC<FieldT>::
 evaluate()
 {
   using namespace SpatialOps;
-  if( this->spatialMask_ ) {
+  if( this->spatialMask_ ){
     FieldT& lhs =  this->value();
     const FieldT& x = x_->field_ref();
     APPLY_COMPLEX_BC(lhs, a_ * x + b_);
@@ -347,7 +345,7 @@ ParabolicBC<FieldT>::
 evaluate()
 {
   using namespace SpatialOps;
-  if( this->spatialMask_ ) {
+  if( this->spatialMask_ ){
     FieldT& lhs =  this->value();
     const FieldT& x = x_->field_ref();
     APPLY_COMPLEX_BC(lhs, a_ * (x - x0_)*(x - x0_) + b_ * (x - x0_) + c_);
@@ -362,7 +360,7 @@ PowerLawBC<FieldT>::
 evaluate()
 {
   using namespace SpatialOps;
-  if( this->spatialMask_ ) {
+  if( this->spatialMask_ ){
     FieldT& lhs =  this->value();
     const FieldT& x = x_->field_ref();
     APPLY_COMPLEX_BC(lhs, phic_ * pow( 1.0 - abs(x - x0_) / R_ , 1.0/n_ ));

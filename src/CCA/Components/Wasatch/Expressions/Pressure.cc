@@ -486,13 +486,6 @@ void Pressure::process_embedded_boundaries( const SVolField& volfrac )
   // cell offset used to calculate local cell index with respect to patch.
   const int ng = get_n_ghost<SVolField>();
   const SCIRun::IntVector patchCellOffset = patch_->getExtraCellLowIndex(ng);
-  const Uintah::Vector spacing = patch_->dCell();
-  const double dx = spacing[0];
-  const double dy = spacing[1];
-  const double dz = spacing[2];
-  const double dx2 = dx*dx;
-  const double dy2 = dy*dy;
-  const double dz2 = dz*dz;
 
   if( !didMatrixUpdate_ || hasMovingGeometry_ ){
     
@@ -504,7 +497,7 @@ void Pressure::process_embedded_boundaries( const SVolField& volfrac )
       IntVector iCell = *iter;
       Uintah::Stencil7&  coefs = matrix_[iCell];
       
-      IntVector iCellOffset = iCell - patchCellOffset;
+      const IntVector iCellOffset = iCell - patchCellOffset;
       
       // interior
       const IntVec intCellIJK( iCellOffset[0],
