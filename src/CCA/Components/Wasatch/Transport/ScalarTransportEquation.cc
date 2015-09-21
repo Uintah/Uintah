@@ -302,8 +302,6 @@ namespace Wasatch{
   setup_boundary_conditions( BCHelper& bcHelper,
                              GraphCategories& graphCat )
   {
-    const TagNames& tagNames = TagNames::self();
-  
     // make logical decisions based on the specified boundary types
     BOOST_FOREACH( const BndMapT::value_type& bndPair, bcHelper.get_boundary_information() ){
       const std::string& bndName = bndPair.first;
