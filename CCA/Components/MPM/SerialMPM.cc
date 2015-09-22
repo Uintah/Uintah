@@ -478,13 +478,11 @@ void SerialMPM::totalParticleCount(const ProcessorGroup*,
   }
 }
 
-
 void SerialMPM::scheduleInitializePressureBCs(const LevelP& level,
                                               SchedulerP& sched)
 {
   const PatchSet* patches = level->eachPatch();
-  
-  
+
   d_loadCurveIndex = scinew MaterialSubset();
   d_loadCurveIndex->add(0);
   d_loadCurveIndex->addReference();
@@ -3121,7 +3119,7 @@ void SerialMPM::applyExternalLoads(const ProcessorGroup* ,
 {
   // Get the current time
   double time = d_sharedState->getElapsedTime();
-  
+
   if (cout_doing.active())
     cout_doing << "Current Time (applyExternalLoads) = " << time << endl;
 

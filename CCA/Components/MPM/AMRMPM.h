@@ -95,15 +95,18 @@ public:
   void scheduleInitialErrorEstimate(const LevelP& coarseLevel, SchedulerP& sched);
 
 
-  void setMPMLabel(MPMLabel* Mlb) {
-    delete lb;
-    lb = Mlb;
-  };
+//  void setMPMLabel(MPMLabel* Mlb) {
+//    delete lb;
+//    lb = Mlb;
+//  };
 
-  enum IntegratorType {
-    Explicit,
-    Implicit,
-  };
+//  enum IntegratorType {
+//    Explicit,
+//    Implicit,
+//  };
+
+  //Inherit this from the SerialMPM base class
+  //SimulationStateP d_sharedState;
 
 protected:
   enum coarsenFlag{
@@ -215,16 +218,6 @@ protected:
                                  const MaterialSubset* ,
                                  DataWarehouse* old_dw,
                                  DataWarehouse* new_dw);
-  //////////
-  // This task is to be used for setting particle external force
-  // and external heat rate.  I'm creating a separate task so that
-  // user defined schemes for setting these can be implemented without
-  // editing the core routines
-  void applyExternalLoads(const ProcessorGroup*,
-                          const PatchSubset* patches,
-                          const MaterialSubset* ,
-                          DataWarehouse* old_dw,
-                          DataWarehouse* new_dw);
 
   // Compute Vel. Grad and Def Grad
   void computeLAndF(const ProcessorGroup*,
@@ -356,11 +349,6 @@ protected:
   void scheduleSetGridBoundaryConditions(SchedulerP&, 
                                          const PatchSet*,
                                          const MaterialSet* matls);
-                                                 
-  void scheduleApplyExternalLoads(SchedulerP&, 
-                                  const PatchSet*,
-                                  const MaterialSet*);
-
   void scheduleComputeLAndF(SchedulerP&, const PatchSet*, const MaterialSet*);
 
   virtual void scheduleInterpolateToParticlesAndUpdate(SchedulerP&, 
@@ -413,14 +401,13 @@ protected:
   void coarseLevelCFI_Patches(const PatchSubset* patches,
                               Level::selectType& CFI_patches );
   
-  SimulationStateP d_sharedState;
-  MPMLabel* lb;
-  MPMFlags* flags;
-  Output* dataArchiver;
+//  MPMLabel* lb;
+//  MPMFlags* flags;
+//  Output* dataArchiver;
 
-  double   d_SMALL_NUM_MPM;
-  int      NGP;                     // Number of ghost particles needed.
-  int      NGN;                     // Number of ghost nodes  needed.
+//  double   d_SMALL_NUM_MPM;
+//  int      NGP;                     // Number of ghost particles needed.
+//  int      NGN;                     // Number of ghost nodes  needed.
   int      d_nPaddingCells_Coarse;  // Number of cells on the coarse level that contain particles and surround a fine patch.
                                     // Coarse level particles are used in the task interpolateToParticlesAndUpdate_CFI.
                                    
