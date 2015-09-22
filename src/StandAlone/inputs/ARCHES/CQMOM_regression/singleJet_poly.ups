@@ -89,7 +89,7 @@
     <BoundaryConditions>
       <DefaultMaterial>0</DefaultMaterial>
       <Face side="x-">
-        <BCType id = "all" label = "wallxm" var = "WallBC">
+        <BCType  label = "wallxm" var = "WallBC">
           <value> 0.0 </value>
         </BCType>
         <BCType label="mixture_fraction" var="Dirichlet">
@@ -152,7 +152,7 @@
       </Face>
 
       <!--Face circle="x-" origin="0 .14 .14" radius="0.007112">
-        <BCType id = "all" label="inletx" var="TurbulentInlet">
+        <BCType  label="inletx" var="TurbulentInlet">
           <value> [11.6,0,0] </value>
           <inputfile> circle_25.txt </inputfile>
           <timeperiod> 8.05e-5  </timeperiod>
@@ -224,7 +224,7 @@
       </Face> 
           
       <Face side="x+">
-        <BCType id = "all" label = "outletx" var = "OutletBC">
+        <BCType  label = "outletx" var = "OutletBC">
           <value> 0.0 </value>
         </BCType>
         <BCType label="mixture_fraction" var="Neumann">
@@ -288,7 +288,7 @@
       </Face>
 
         <Face side="y-">
-        <BCType id = "all" label = "ymout" var = "PressureBC">
+        <BCType  label = "ymout" var = "PressureBC">
           <value> 0.0 </value>
         </BCType>
         <BCType label="mixture_fraction" var="Neumann">
@@ -351,7 +351,7 @@
       </Face>
 
       <Face side="y+">
-        <BCType id = "all" label = "ypout" var = "PressureBC">
+        <BCType  label = "ypout" var = "PressureBC">
           <value> 0.0 </value>
         </BCType>
         <BCType label="mixture_fraction" var="Neumann">
@@ -414,7 +414,7 @@
       </Face>
 
       <Face side="z-">
-        <BCType id = "all" label = "zmout" var = "PressureBC">
+        <BCType  label = "zmout" var = "PressureBC">
           <value> 0.0 </value>
         </BCType>
         <BCType label="mixture_fraction" var="Neumann">
@@ -477,7 +477,7 @@
       </Face>
 
       <Face side="z+">
-        <BCType id = "all" label = "zpout" var = "PressureBC">
+        <BCType  label = "zpout" var = "PressureBC">
           <value> 0.0 </value>
         </BCType>
         <BCType label="mixture_fraction" var="Neumann">

@@ -498,7 +498,6 @@
       </PropertyModelsV2>
 
       <BoundaryConditions>
-      <DefaultMaterial>0</DefaultMaterial>
         <intrusions>
     <intrusion label="box">
       <geom_object>

@@ -96,7 +96,7 @@
       </Face>
 
       <Face rectangle="x-" lower="0 0.2 0" upper="0 0.4 .2">
-        <BCType id = "all" label = "inletx" var = "VelocityInlet">
+        <BCType  label = "inletx" var = "VelocityInlet">
           <value> [0,0,0] </value>
         </BCType>
         <!-- transported moments -->
@@ -133,7 +133,7 @@
       </Face>
 
       <Face side="x+">
-        <BCType id = "all" label = "outletx" var = "OutletBC">
+        <BCType  label = "outletx" var = "OutletBC">
           <value> 0.0 </value>
         </BCType>
         <!-- transported moments -->
@@ -170,7 +170,7 @@
       </Face>
 
       <Face side="y-">
-        <BCType id = "all" label = "ymwall" var = "WallBC">
+        <BCType  label = "ymwall" var = "WallBC">
           <value> 0.0 </value>
         </BCType>
         <BCType label="m_00" var="ForcedDirichlet">
@@ -206,7 +206,7 @@
       </Face>
 
       <Face side="y+">
-        <BCType id = "all" label = "ypwall" var = "WallBC">
+        <BCType  label = "ypwall" var = "WallBC">
           <value> 0.0 </value>
         </BCType>
         <BCType label="m_00" var="ForcedDirichlet">

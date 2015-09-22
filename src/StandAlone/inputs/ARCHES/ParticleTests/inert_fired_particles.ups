@@ -67,22 +67,22 @@
         <BCType var="Dirichlet" label="scalar_var"> 
           <value>0.0</value>
         </BCType>
-        <BCType id = "all" label = "vel_qn0" var = "Dirichlet">
+        <BCType  label = "vel_qn0" var = "Dirichlet">
           <value>[1.0,0.0,0.0]</value>
         </BCType>
-        <BCType id = "all" label = "vel_qn1" var = "Dirichlet">
+        <BCType  label = "vel_qn1" var = "Dirichlet">
           <value>[1.0,0.0,0.0]</value>
         </BCType>
-        <BCType id = "all" label = "vel_qn2" var = "Dirichlet">
+        <BCType  label = "vel_qn2" var = "Dirichlet">
           <value>[1.0,0.0,0.0]</value>
         </BCType>
-        <BCType id = "all" label = "w_qn0" var = "Dirichlet">
+        <BCType  label = "w_qn0" var = "Dirichlet">
           <value>1.0</value>
         </BCType>
-        <BCType id = "all" label = "w_qn1" var = "Dirichlet">
+        <BCType  label = "w_qn1" var = "Dirichlet">
           <value>1.0</value>
         </BCType>
-        <BCType id = "all" label = "w_qn2" var = "Dirichlet">
+        <BCType  label = "w_qn2" var = "Dirichlet">
           <value>1.0</value>
         </BCType>
         <BCType label="ux_qn0" var="Dirichlet">
@@ -135,22 +135,22 @@
         <BCType var="Dirichlet" label="scalar_var"> 
           <value>0.0</value>
         </BCType>
-        <BCType id = "all" label = "vel_qn0" var = "Dirichlet">
+        <BCType  label = "vel_qn0" var = "Dirichlet">
           <value>[1.0,0.0,0.0]</value>
         </BCType>
-        <BCType id = "all" label = "vel_qn1" var = "Dirichlet">
+        <BCType  label = "vel_qn1" var = "Dirichlet">
           <value>[1.0,0.0,0.0]</value>
         </BCType>
-        <BCType id = "all" label = "vel_qn2" var = "Dirichlet">
+        <BCType  label = "vel_qn2" var = "Dirichlet">
           <value>[1.0,0.0,0.0]</value>
         </BCType>
-        <BCType id = "all" label = "w_qn0" var = "Dirichlet">
+        <BCType  label = "w_qn0" var = "Dirichlet">
           <value>0.0</value>
         </BCType>
-        <BCType id = "all" label = "w_qn1" var = "Dirichlet">
+        <BCType  label = "w_qn1" var = "Dirichlet">
           <value>0.0</value>
         </BCType>
-        <BCType id = "all" label = "w_qn2" var = "Dirichlet">
+        <BCType  label = "w_qn2" var = "Dirichlet">
           <value>0.0</value>
         </BCType>
         <BCType label="ux_qn0" var="Dirichlet">
@@ -203,22 +203,22 @@
         <BCType label="mixture_fraction" var="Neumann">
           <value>0.0</value>
         </BCType>
-        <BCType id = "all" label = "vel_qn0" var = "Dirichlet">
+        <BCType  label = "vel_qn0" var = "Dirichlet">
           <value>[0.0,0.0,0.0]</value>
         </BCType>
-        <BCType id = "all" label = "vel_qn1" var = "Dirichlet">
+        <BCType  label = "vel_qn1" var = "Dirichlet">
           <value>[0.0,0.0,0.0]</value>
         </BCType>
-        <BCType id = "all" label = "vel_qn2" var = "Dirichlet">
+        <BCType  label = "vel_qn2" var = "Dirichlet">
           <value>[0.0,0.0,0.0]</value>
         </BCType>
-        <BCType id = "all" label = "w_qn0" var = "Neumann">
+        <BCType  label = "w_qn0" var = "Neumann">
           <value>0.0</value>
         </BCType>
-        <BCType id = "all" label = "w_qn1" var = "Neumann">
+        <BCType  label = "w_qn1" var = "Neumann">
           <value>0.0</value>
         </BCType>
-        <BCType id = "all" label = "w_qn2" var = "Neumann">
+        <BCType  label = "w_qn2" var = "Neumann">
           <value>0.0</value>
         </BCType>
         <BCType label="ux_qn0" var="Dirichlet">
@@ -272,22 +272,22 @@
         <BCType var="Neumann" label="scalar_var"> 
           <value>0.0</value>
         </BCType>
-        <BCType id = "all" label = "vel_qn0" var = "Dirichlet">
+        <BCType  label = "vel_qn0" var = "Dirichlet">
           <value>[0.0,0.0,0.0]</value>
         </BCType>
-        <BCType id = "all" label = "vel_qn1" var = "Dirichlet">
+        <BCType  label = "vel_qn1" var = "Dirichlet">
           <value>[0.0,0.0,0.0]</value>
         </BCType>
-        <BCType id = "all" label = "vel_qn2" var = "Dirichlet">
+        <BCType  label = "vel_qn2" var = "Dirichlet">
           <value>[0.0,0.0,0.0]</value>
         </BCType>
-        <BCType id = "all" label = "w_qn0" var = "Neumann">
+        <BCType  label = "w_qn0" var = "Neumann">
           <value>0.0</value>
         </BCType>
-        <BCType id = "all" label = "w_qn1" var = "Neumann">
+        <BCType  label = "w_qn1" var = "Neumann">
           <value>0.0</value>
         </BCType>
-        <BCType id = "all" label = "w_qn2" var = "Neumann">
+        <BCType  label = "w_qn2" var = "Neumann">
           <value>0.0</value>
         </BCType>
         <BCType label="ux_qn0" var="Dirichlet">
@@ -341,22 +341,22 @@
         <BCType var="Neumann" label="scalar_var"> 
           <value>0.0</value>
         </BCType>
-        <BCType id = "all" label = "vel_qn0" var = "Dirichlet">
+        <BCType  label = "vel_qn0" var = "Dirichlet">
           <value>[0.0,0.0,0.0]</value>
         </BCType>
-        <BCType id = "all" label = "vel_qn1" var = "Dirichlet">
+        <BCType  label = "vel_qn1" var = "Dirichlet">
           <value>[0.0,0.0,0.0]</value>
         </BCType>
-        <BCType id = "all" label = "vel_qn2" var = "Dirichlet">
+        <BCType  label = "vel_qn2" var = "Dirichlet">
           <value>[0.0,0.0,0.0]</value>
         </BCType>
-        <BCType id = "all" label = "w_qn0" var = "Neumann">
+        <BCType  label = "w_qn0" var = "Neumann">
           <value>0.0</value>
         </BCType>
-        <BCType id = "all" label = "w_qn1" var = "Neumann">
+        <BCType  label = "w_qn1" var = "Neumann">
           <value>0.0</value>
         </BCType>
-        <BCType id = "all" label = "w_qn2" var = "Neumann">
+        <BCType  label = "w_qn2" var = "Neumann">
           <value>0.0</value>
         </BCType>
         <BCType label="ux_qn0" var="Dirichlet">
@@ -410,22 +410,22 @@
         <BCType var="Neumann" label="scalar_var"> 
           <value>0.0</value>
         </BCType>
-        <BCType id = "all" label = "vel_qn0" var = "Dirichlet">
+        <BCType  label = "vel_qn0" var = "Dirichlet">
           <value>[0.0,0.0,0.0]</value>
         </BCType>
-        <BCType id = "all" label = "vel_qn1" var = "Dirichlet">
+        <BCType  label = "vel_qn1" var = "Dirichlet">
           <value>[0.0,0.0,0.0]</value>
         </BCType>
-        <BCType id = "all" label = "vel_qn2" var = "Dirichlet">
+        <BCType  label = "vel_qn2" var = "Dirichlet">
           <value>[0.0,0.0,0.0]</value>
         </BCType>
-        <BCType id = "all" label = "w_qn0" var = "Neumann">
+        <BCType  label = "w_qn0" var = "Neumann">
           <value>0.0</value>
         </BCType>
-        <BCType id = "all" label = "w_qn1" var = "Neumann">
+        <BCType  label = "w_qn1" var = "Neumann">
           <value>0.0</value>
         </BCType>
-        <BCType id = "all" label = "w_qn2" var = "Neumann">
+        <BCType  label = "w_qn2" var = "Neumann">
           <value>0.0</value>
         </BCType>
         <BCType label="ux_qn0" var="Dirichlet">
@@ -479,22 +479,22 @@
         <BCType var="Neumann" label="scalar_var"> 
           <value>0.0</value>
         </BCType>
-        <BCType id = "all" label = "vel_qn0" var = "Dirichlet">
+        <BCType  label = "vel_qn0" var = "Dirichlet">
           <value>[0.0,0.0,0.0]</value>
         </BCType>
-        <BCType id = "all" label = "vel_qn1" var = "Dirichlet">
+        <BCType  label = "vel_qn1" var = "Dirichlet">
           <value>[0.0,0.0,0.0]</value>
         </BCType>
-        <BCType id = "all" label = "vel_qn2" var = "Dirichlet">
+        <BCType  label = "vel_qn2" var = "Dirichlet">
           <value>[0.0,0.0,0.0]</value>
         </BCType>
-        <BCType id = "all" label = "w_qn0" var = "Neumann">
+        <BCType  label = "w_qn0" var = "Neumann">
           <value>0.0</value>
         </BCType>
-        <BCType id = "all" label = "w_qn1" var = "Neumann">
+        <BCType  label = "w_qn1" var = "Neumann">
           <value>0.0</value>
         </BCType>
-        <BCType id = "all" label = "w_qn2" var = "Neumann">
+        <BCType  label = "w_qn2" var = "Neumann">
           <value>0.0</value>
         </BCType>
         <BCType label="ux_qn0" var="Dirichlet">
@@ -547,22 +547,22 @@
         <BCType var="Neumann" label="scalar_var"> 
           <value>0.0</value>
         </BCType>
-        <BCType id = "all" label = "vel_qn0" var = "Dirichlet">
+        <BCType  label = "vel_qn0" var = "Dirichlet">
           <value>[0.0,0.0,0.0]</value>
         </BCType>
-        <BCType id = "all" label = "vel_qn1" var = "Dirichlet">
+        <BCType  label = "vel_qn1" var = "Dirichlet">
           <value>[0.0,0.0,0.0]</value>
         </BCType>
-        <BCType id = "all" label = "vel_qn2" var = "Dirichlet">
+        <BCType  label = "vel_qn2" var = "Dirichlet">
           <value>[0.0,0.0,0.0]</value>
         </BCType>
-        <BCType id = "all" label = "w_qn0" var = "Neumann">
+        <BCType  label = "w_qn0" var = "Neumann">
           <value>0.0</value>
         </BCType>
-        <BCType id = "all" label = "w_qn1" var = "Neumann">
+        <BCType  label = "w_qn1" var = "Neumann">
           <value>0.0</value>
         </BCType>
-        <BCType id = "all" label = "w_qn2" var = "Neumann">
+        <BCType  label = "w_qn2" var = "Neumann">
           <value>0.0</value>
         </BCType>
         <BCType label="ux_qn0" var="Dirichlet">
