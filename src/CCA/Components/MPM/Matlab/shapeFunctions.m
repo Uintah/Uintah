@@ -210,7 +210,7 @@ end
 %______________________________________________________________________
 %  Equation 15 of "Structured Mesh Refinement in Generalized Interpolation Material Point Method
 %  for Simulation of Dynamic Problems"
-function [nodes,Ss]=findNodesAndWeights_gimp2(xp, lp, nRegions, Regions, nodePos, Lx)
+function [nodes,Ss]=findNodesAndWeights_gimp2(xp, lp, nRegions, Regions, nodePos, Lx, doBulletProofing)
 
   global NSFN;
   % find the nodes that surround the given location and
@@ -273,14 +273,16 @@ function [nodes,Ss]=findNodesAndWeights_gimp2(xp, lp, nRegions, Regions, nodePos
   
   %__________________________________
   % bullet proofing
-  sum = double(0);
-  for ig=1:NSFN
-    sum = sum + Ss(ig);
-  end
-  if ( abs(sum-1.0) > 1e-10)
-    fprintf('findNodesAndWeights_gimp2 \n');
-    fprintf('node(1):%g, node(1):%g ,node(3):%g, xp:%g Ss(1): %g, Ss(2): %g, Ss(3): %g, sum: %g\n',nodes(1),nodes(2),nodes(3), xp, Ss(1), Ss(2), Ss(3), sum)
-    input('error: the shape functions dont sum to 1.0 \n');
+  if (doBulletProofing)
+    sum = double(0);
+    for ig=1:NSFN
+      sum = sum + Ss(ig);
+    end
+    if ( abs(sum-1.0) > 1e-10)
+      fprintf('findNodesAndWeights_gimp2 \n');
+      fprintf('node(1):%g, node(1):%g ,node(3):%g, xp:%g Ss(1): %g, Ss(2): %g, Ss(3): %g, sum: %g\n',nodes(1),nodes(2),nodes(3), xp, Ss(1), Ss(2), Ss(3), sum)
+      input('error: the shape functions dont sum to 1.0 \n');
+    end
   end
   
   %__________________________________
@@ -372,7 +374,7 @@ end
 %______________________________________________________________________
 %  The equations for this function are derived in the hand written notes.  
 % The governing equations for the derivation come from equation 15.
-function [nodes,Gs, dx]=findNodesAndWeightGradients_gimp2(xp, lp, nRegions, Regions, nodePos,Lx)
+function [nodes,Gs, dx]=findNodesAndWeightGradients_gimp2(xp, lp, nRegions, Regions, nodePos, Lx, doBulletProofing)
 
   global NSFN;
   
@@ -453,14 +455,16 @@ function [nodes,Gs, dx]=findNodesAndWeightGradients_gimp2(xp, lp, nRegions, Regi
   
   %__________________________________
   % bullet proofing
-  sum = double(0);
-  for ig=1:NSFN
-    sum = sum + Gs(ig);
-  end
-  if ( abs(sum) > 1e-10)
-    fprintf('findNodesAndWeightGradients_gimp2 \n');
-    fprintf('node(1):%g, node(2):%g ,node(3):%g, xp:%g Gs(1): %g, Gs(2): %g, Gs(3): %g, sum: %g\n',nodes(1),nodes(2),nodes(3), xp, Gs(1), Gs(2), Gs(3), sum)
-    input('error: the gradient of the shape functions (gimp2) dont sum to 0.0 \n');
+  if (doBulletProofing) 
+    sum = double(0);
+    for ig=1:NSFN
+      sum = sum + Gs(ig);
+    end
+    if ( abs(sum) > 1e-10)
+      fprintf('findNodesAndWeightGradients_gimp2 \n');
+      fprintf('node(1):%g, node(2):%g ,node(3):%g, xp:%g Gs(1): %g, Gs(2): %g, Gs(3): %g, sum: %g\n',nodes(1),nodes(2),nodes(3), xp, Gs(1), Gs(2), Gs(3), sum)
+      input('error: the gradient of the shape functions (gimp2) dont sum to 0.0 \n');
+    end
   end
 end
 end
