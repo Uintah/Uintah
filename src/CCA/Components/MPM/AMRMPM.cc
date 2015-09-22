@@ -31,6 +31,7 @@
 #include <CCA/Components/MPM/ReactionDiffusion/SDInterfaceModelFactory.h>
 #include <CCA/Components/MPM/MMS/MMS.h>
 #include <CCA/Components/MPM/MPMBoundCond.h>
+#include <CCA/Components/MPM/PhysicalBC/MPMPhysicalBCFactory.h>
 #include <CCA/Components/MPM/ParticleCreator/ParticleCreator.h>
 #include <CCA/Components/Regridder/PerPatchVars.h>
 #include <CCA/Ports/DataWarehouse.h>
@@ -176,6 +177,7 @@ void AMRMPM::problemSetup(const ProblemSpecP& prob_spec,
   cout_doing<<"Doing problemSetup\t\t\t\t\t AMRMPM"<<endl;
   
   d_sharedState = sharedState;
+
   dynamic_cast<Scheduler*>(getPort("scheduler"))->setPositionVar(lb->pXLabel);
 
   dataArchiver = dynamic_cast<Output*>(getPort("output"));
@@ -183,7 +185,7 @@ void AMRMPM::problemSetup(const ProblemSpecP& prob_spec,
   if(!dataArchiver){
     throw InternalError("AMRMPM:couldn't get output port", __FILE__, __LINE__);
   }
-   
+
   ProblemSpecP mat_ps = 0;
   if (restart_prob_spec){
     mat_ps = restart_prob_spec;
@@ -266,9 +268,11 @@ void AMRMPM::problemSetup(const ProblemSpecP& prob_spec,
     NGP=2;
     NGN=2;
   }
+
+  MPMPhysicalBCFactory::create(mat_ps, grid, flags);
   
   contactModel = ContactFactory::create(UintahParallelComponent::d_myworld,
-                                                           mat_ps,sharedState,lb,flags);
+                                        mat_ps,sharedState,lb,flags);
 
   // Determine extents for coarser level particle data
   // Linear Interpolation:  1 layer of coarse level cells
@@ -394,6 +398,12 @@ void AMRMPM::scheduleInitialize(const LevelP& level, SchedulerP& sched)
 
   if (level->getIndex() == 0 ) schedulePrintParticleCount(level, sched); 
 
+  if (flags->d_useLoadCurves) {
+    // Schedule the initialization of pressure BCs per particle
+    cout << "load curves haven't yet been tested for mutliple levels" << endl;
+    scheduleInitializePressureBCs(level, sched);
+  }
+
 }
 //______________________________________________________________________
 //
@@ -404,6 +414,7 @@ void AMRMPM::schedulePrintParticleCount(const LevelP& level,
                   this, &AMRMPM::printParticleCount);
   t->requires(Task::NewDW, lb->partCountLabel);
   t->setType(Task::OncePerProc);
+
   sched->addTask(t, sched->getLoadBalancer()->getPerProcessorPatchSet(level), d_sharedState->allMPMMaterials());
 }
 //______________________________________________________________________
@@ -414,6 +425,7 @@ void AMRMPM::scheduleComputeStableTimestep(const LevelP&,
   // Nothing to do here - delt is computed as a by-product of the
   // consitutive model
 }
+
 //______________________________________________________________________
 //
 void AMRMPM::scheduleTimeAdvance(const LevelP & level,
@@ -642,28 +654,6 @@ void AMRMPM::scheduleComputeZoneOfInfluence(SchedulerP& sched,
 
 //______________________________________________________________________
 //
-void AMRMPM::scheduleApplyExternalLoads(SchedulerP& sched,
-                                        const PatchSet* patches,
-                                        const MaterialSet* matls)
-{
-  const Level* level = getLevel(patches);
-  if (!flags->doMPMOnLevel(level->getIndex(), level->getGrid()->numLevels())){
-    return;
-  }
-
-  printSchedule(patches,cout_doing,"AMRMPM::scheduleApplyExternalLoads");
-
-  Task* t=scinew Task("AMRMPM::applyExternalLoads",
-                this, &AMRMPM::applyExternalLoads);
-
-  t->requires(Task::OldDW, lb->pExternalForceLabel,    Ghost::None);
-  t->computes(             lb->pExtForceLabel_preReloc);
-
-  sched->addTask(t, patches, matls);
-}
-
-//______________________________________________________________________
-//
 void AMRMPM::scheduleInterpolateParticlesToGrid(SchedulerP& sched,
                                                 const PatchSet* patches,
                                                 const MaterialSet* matls)
@@ -691,8 +681,6 @@ void AMRMPM::scheduleInterpolateParticlesToGrid(SchedulerP& sched,
   t->requires(Task::OldDW, lb->pTemperatureLabel,        gan,NGP);
   t->requires(Task::NewDW, lb->pSizeLabel_preReloc,      gan,NGP);
   t->requires(Task::OldDW, lb->pDeformationMeasureLabel, gan,NGP);
-
-  //t->requires(Task::OldDW, lb->pExternalHeatRateLabel, gan,NGP);
 
   t->computes(lb->gMassLabel);
   t->computes(lb->gVolumeLabel);
@@ -837,11 +825,15 @@ void AMRMPM::scheduleCoarsenNodalData_CFI2(SchedulerP& sched,
   #define allPatches 0
   #define allMatls 0
 
-  t->requires(Task::NewDW, lb->gMassLabel,          allPatches, Task::FineLevel,allMatls, ND, gn,0);
-  t->requires(Task::NewDW, lb->gInternalForceLabel, allPatches, Task::FineLevel,allMatls, ND, gn,0);
+  t->requires(Task::NewDW, lb->gMassLabel,          allPatches,
+                                           Task::FineLevel,allMatls, ND, gn,0);
+  t->requires(Task::NewDW, lb->gInternalForceLabel, allPatches,
+                                           Task::FineLevel,allMatls, ND, gn,0);
   
   t->modifies(lb->gInternalForceLabel);
   if(flags->d_doScalarDiffusion){
+    t->requires(Task::NewDW, lb->gConcentrationRateLabel, allPatches,
+                                           Task::FineLevel,allMatls, ND, gn,0);
     t->modifies(lb->gConcentrationRateLabel);
   }
 
@@ -1472,24 +1464,6 @@ void AMRMPM::coarsen(const ProcessorGroup*,
 
       coarseMinMax[0] = fineXYZMaxMin/RR;
       coarseMinMax[1] = fineXYZMinMax/RR;
-#if 0
-      coarseMinMax[2] = fineXZMaxYMin/RR;
-      coarseMinMax[3] = fineXZMinYMax/RR;
-      coarseMinMax[4] = fineXYMaxZMin/RR;
-      coarseMinMax[5] = fineXYMinZMax/RR;
-      coarseMinMax[6] = fineXMinYZMax/RR;
-      coarseMinMax[7] = fineXMaxYZMin/RR;
-
-      // This only sets the refine flags at the 8 corners of the
-      // extents of the refined region, may leave holes.  See below...
-      for(int i=0; i<8; i++){
-//       cout << "coarseMinMax = " << coarseMinMax[i] << endl;
-        if(coarsePatch->containsCell(coarseMinMax[i])){
-//         cout << "A patch contains " << coarseMinMax[i] << endl;
-          refineCell[coarseMinMax[i]]=1;
-        }
-     }
-#endif
 
     // Set the refine flags to 1 in all cells in the interior of the minimum
     // and maximum to ensure a rectangular region is refined.
@@ -3092,64 +3066,6 @@ void AMRMPM::computeZoneOfInfluence(const ProcessorGroup*,
   }  // patch loop
 }
 
-//______________________________________________________________________
-//
-void AMRMPM::applyExternalLoads(const ProcessorGroup* ,
-                                const PatchSubset* patches,
-                                const MaterialSubset*,
-                                DataWarehouse* old_dw,
-                                DataWarehouse* new_dw)
-{
-  // Get the current time
-  double time = d_sharedState->getElapsedTime();
-  
-  if (cout_doing.active())
-    cout_doing << "Current Time (applyExternalLoads) = " << time << endl;
-
-  // Loop thru patches to update external force vector
-  for(int p=0;p<patches->size();p++){
-    const Patch* patch = patches->get(p);
-    
-    printTask(patches, patch,cout_doing,"Doing AMRMPM::applyExternalLoads");
-    
-    // Place for user defined loading scenarios to be defined,
-    // otherwise pExternalForce is just carried forward.
-    
-    int numMPMMatls=d_sharedState->getNumMPMMatls();
-    
-    for(int m = 0; m < numMPMMatls; m++){
-      MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial( m );
-      int dwi = mpm_matl->getDWIndex();
-    
-      ParticleSubset* pset = old_dw->getParticleSubset(dwi, patch);
-
-      // Carry forward the old pEF, scale by d_forceIncrementFactor
-      // Get the external force data and allocate new space for
-      // external force and copy the data
-      constParticleVariable<Vector> pExternalForce;
-      ParticleVariable<Vector> pExternalForce_new;
-      old_dw->get(pExternalForce, lb->pExternalForceLabel, pset);
-      new_dw->allocateAndPut(pExternalForce_new, 
-                             lb->pExtForceLabel_preReloc,  pset);
-
-
-      string mms_type = flags->d_mms_type;
-      if(!mms_type.empty()) {
-        MMS MMSObject;                                                                                
-        MMSObject.computeExternalForceForMMS(old_dw,new_dw,time,pset,lb,
-                                                    flags,pExternalForce_new);
-      } else {
-        // Iterate over the particles
-        ParticleSubset::iterator iter = pset->begin();
-        for(;iter != pset->end(); iter++){
-          particleIndex idx = *iter;
-          pExternalForce_new[idx] = pExternalForce[idx]
-                                                 *flags->d_forceIncrementFactor;
-        }
-      }
-    } // matl loop
-  }  // patch loop
-}
 //______________________________________________________________________
 //
 void AMRMPM::computeLAndF(const ProcessorGroup*,
