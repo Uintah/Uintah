@@ -70,7 +70,7 @@
       </Face>
 
       <Face rectangle="x-" lower="0 0.4 0" upper="0 0.6 .1">
-        <BCType id = "all" label = "inletx" var = "VelocityInlet">
+        <BCType  label = "inletx" var = "VelocityInlet">
           <value> [0,0,0] </value>
         </BCType>
         <BCType label="m_00" var="ForcedDirichlet">
@@ -94,7 +94,7 @@
       </Face>
 
       <Face side="x+">
-        <BCType id = "all" label = "outletx" var = "OutletBC">
+        <BCType  label = "outletx" var = "OutletBC">
           <value> 0.0 </value>
         </BCType>
         <BCType label="m_00" var="Neumann">
@@ -118,7 +118,7 @@
       </Face>
 
       <Face side="y-">
-        <BCType id = "all" label = "ymwall" var = "OutletBC">
+        <BCType  label = "ymwall" var = "OutletBC">
           <value> 0.0 </value>
         </BCType>
         <BCType label="m_00" var="Neumann">
@@ -142,7 +142,7 @@
       </Face>
 
       <Face side="y+">
-        <BCType id = "all" label = "ypwall" var = "OutletBC">
+        <BCType  label = "ypwall" var = "OutletBC">
           <value> 0.0 </value>
         </BCType>
         <BCType label="m_00" var="Neumann">

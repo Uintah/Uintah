@@ -1281,7 +1281,7 @@ void BoundCondReader::bulletProofing()
       
       if ( nSides != 1 ){
         ostringstream warn;
-        warn<<"ERROR: <BoundaryConditions> <"<< Patch::getFaceName(face) << ">\n" 
+        warn<<"ERROR: <BoundaryConditions> <"<< Patch::getFaceName(face) << ">  nSides=" <<nSides<<  "but should equal 1!\n" 
             << "There must be 1 and only 1 side boundary condition specified \n\n";
         throw ProblemSetupException(warn.str(), __FILE__, __LINE__);
       }

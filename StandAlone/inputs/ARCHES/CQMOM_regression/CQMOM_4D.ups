@@ -217,7 +217,7 @@
       </Face>
 
       <Face rectangle="x-" lower="0 .2 .2" upper="0 .4 .4">
-        <BCType id = "all" label = "inletx" var = "VelocityInlet">
+        <BCType  label = "inletx" var = "VelocityInlet">
           <value> [0,0,0] </value>
         </BCType>
         <BCType label="mixture_fraction" var="Dirichlet">
@@ -364,7 +364,7 @@
       </Face>
  
       <Face side="x+">
-        <BCType id = "all" label = "outletx" var = "OutletBC">
+        <BCType  label = "outletx" var = "OutletBC">
           <value> 0.0 </value>
         </BCType>
         <BCType label="mixture_fraction" var="Neumann">
@@ -512,7 +512,7 @@
       </Face>
 
         <Face side="y-">
-        <BCType id = "all" label = "ymout" var = "OutletBC">
+        <BCType  label = "ymout" var = "OutletBC">
           <value> 0.0 </value>
         </BCType>
         <BCType label="mixture_fraction" var="Neumann">
@@ -659,7 +659,7 @@
       </Face>
 
       <Face side="y+">
-        <BCType id = "all" label = "ypout" var = "OutletBC">
+        <BCType  label = "ypout" var = "OutletBC">
           <value> 0.0 </value>
         </BCType>
         <BCType label="mixture_fraction" var="Neumann">
@@ -806,7 +806,7 @@
       </Face>
 
       <Face side="z-">
-        <BCType id = "all" label = "zmout" var = "OutletBC">
+        <BCType  label = "zmout" var = "OutletBC">
           <value> 0.0 </value>
         </BCType>
         <BCType label="mixture_fraction" var="Neumann">
@@ -953,7 +953,7 @@
       </Face>
 
       <Face side="z+">
-        <BCType id = "all" label = "zpout" var = "OutletBC">
+        <BCType  label = "zpout" var = "OutletBC">
           <value> 0.0 </value>
         </BCType>
         <BCType label="mixture_fraction" var="Neumann">

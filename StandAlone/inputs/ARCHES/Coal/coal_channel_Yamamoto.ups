@@ -130,10 +130,10 @@
         <BCType label="eta" var="Dirichlet">
           <value>0.0</value>
         </BCType>
-        <BCType id = "all" label = "length_qn0" var = "Dirichlet">
+        <BCType  label = "length_qn0" var = "Dirichlet">
           <value>23.4139</value>
         </BCType>
-        <BCType id = "all" label = "w_qn0" var = "Dirichlet">
+        <BCType  label = "w_qn0" var = "Dirichlet">
           <value>5.8535</value>
         </BCType>
         <BCType label="ux_qn0" var="Dirichlet">
@@ -154,10 +154,10 @@
         <BCType label="pE_qn0" var="Dirichlet">
           <value>-7.605108111316770</value>
         </BCType>
-        <BCType id = "all" label = "length_qn1" var = "Dirichlet">
+        <BCType  label = "length_qn1" var = "Dirichlet">
           <value>49.3847</value>
         </BCType>
-        <BCType id = "all" label = "w_qn1" var = "Dirichlet">
+        <BCType  label = "w_qn1" var = "Dirichlet">
           <value>7.83884</value>
         </BCType>
         <BCType label="ux_qn1" var="Dirichlet">
@@ -178,10 +178,10 @@
         <BCType label="pE_qn1" var="Dirichlet">
           <value>-39.790882273706707</value>
         </BCType>
-        <BCType id = "all" label = "length_qn2" var = "Dirichlet">
+        <BCType  label = "length_qn2" var = "Dirichlet">
           <value>10.10143</value>
         </BCType>
-        <BCType id = "all" label = "w_qn2" var = "Dirichlet">
+        <BCType  label = "w_qn2" var = "Dirichlet">
           <value>1.01014</value>
         </BCType>
         <BCType label="ux_qn2" var="Dirichlet">
