@@ -79,9 +79,11 @@ static DebugStream gheapchecker("HeapChecker",             false);
 
 double amr_barrier_times[5]={0};
 
-AMRSimulationController::AMRSimulationController(const ProcessorGroup* myworld,
-                                                 bool doAMR, ProblemSpecP pspec) :
-  SimulationController(myworld, doAMR, pspec)
+AMRSimulationController::AMRSimulationController( const ProcessorGroup * myworld,
+                                                        bool             doAMR,
+                                                        bool             doMultiScale,
+                                                        ProblemSpecP     pspec)
+  : SimulationController(myworld, doAMR, doMultiScale, pspec)
 {
 #ifdef HAVE_VISIT
   do_visit = true;

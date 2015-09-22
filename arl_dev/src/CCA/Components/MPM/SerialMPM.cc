@@ -143,7 +143,8 @@ void SerialMPM::problemSetup(const ProblemSpecP& prob_spec,
                              const ProblemSpecP& restart_prob_spec,GridP& grid,
                              SimulationStateP& sharedState)
 {
-  cout_doing<<"Doing SerialMPM::problemSetup\t\t\t\t\t MPM"<<endl;
+  cout_doing << "Doing MPM::problemSetup\t\t\t\t\t MPM" << endl;
+
   d_sharedState = sharedState;
   dynamic_cast<Scheduler*>(getPort("scheduler"))->setPositionVar(lb->pXLabel);
 
@@ -1898,7 +1899,7 @@ void SerialMPM::actuallyInitialize(const ProcessorGroup*,
   for(int p=0;p<patches->size();p++){
     const Patch* patch = patches->get(p);
 
-    printTask(patches, patch,cout_doing,"Doing actuallyInitialize");
+    printTask(patches, patch,cout_doing,"Doing MPM::actuallyInitialize");
 
     CCVariable<int> cellNAPID;
     new_dw->allocateAndPut(cellNAPID, lb->pCellNAPIDLabel, 0, patch);
