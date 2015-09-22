@@ -378,8 +378,8 @@ void RadProperties::computeProp(const ProcessorGroup* pc,
     //actually compute the properties
     _calc->compute_abskg( patch, vol_fraction, species, temperature, abskg ); 
 
-    // update absk_tot at the walls
-    _boundaryCond->setScalarValueBC( pc, patch, abskg, _prop_name );
+    // update absk_tot at the walls  // removed to prevent users from thinking they can set boundary conditions
+    //_boundaryCond->setScalarValueBC( pc, patch, abskg, _prop_name );
 
     //copy the gas portion to the total: 
     absk_tot.copyData(abskg); 
