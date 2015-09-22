@@ -11,6 +11,7 @@ function [sf] = shapeFunction()
   sf.findNodesAndWeightGradients_gimp2  = @findNodesAndWeightGradients_gimp2;
   %__________________________________
 
+
 %______________________________________________________________________
 function[node, dx]=positionToNode(xp, nRegions, Regions)
  
@@ -24,7 +25,7 @@ function[node, dx]=positionToNode(xp, nRegions, Regions)
     if ((xp >= R.min) && (xp < R.max))   
       n    = floor((xp - R.min)/R.dx);      % # of nodes from the start of the current region
       node = n + n_offset;                  % add an offset to the local node number
-%     fprintf( 'region: %g, n: %g, node:%g, xp: %16.15E dx: %g R.min: %16.15E , R.max: %16.15E  n_offset: %g\n',r, n, node, xp, dx, R.min, R.max,n_offset);
+     %fprintf( 'region: %g, n: %g, node:%g, xp: %16.15E dx: %g R.min: %16.15E , R.max: %16.15E  n_offset: %g\n',r, n, node, xp, dx, R.min, R.max,n_offset);
       return;
     end
 
@@ -86,7 +87,7 @@ end
 %______________________________________________________________________
 %  Equation 14 of "Structured Mesh Refinement in Generalized Interpolation Material Point Method
 %  for Simulation of Dynamic Problems"
-function [nodes,Ss]=findNodesAndWeights_linear(xp, notused, nRegions, Regions, nodePos, Lx)
+function [nodes,Ss, sum]=findNodesAndWeights_linear(xp, notused, nRegions, Regions, nodePos, Lx, doBulletProofing)
   global NSFN;
   % find the nodes that surround the given location and
   % the values of the shape functions for those nodes
@@ -145,10 +146,13 @@ function [nodes,Ss]=findNodesAndWeights_linear(xp, notused, nRegions, Regions, n
   for ig=1:NSFN
     sum = sum + Ss(ig);
   end
-  if ( abs(sum-1.0) > 1e-10)
-    fprintf('findNodesAndWeights_linear\n');
-    fprintf('node(1):%g, node(2):%g, xp:%g Ss(1): %g, Ss(2): %g, sum: %g\n',nodes(1),nodes(2), xp, Ss(1), Ss(2), sum)
-    input('error: the shape functions (linear) dont sum to 1.0 \n');
+  
+  if (doBulletProofing)
+    if ( abs(sum-1.0) > 1e-10)
+      fprintf('findNodesAndWeights_linear\n');
+      fprintf('node(1):%g, node(2):%g, xp:%g Ss(1): %g, Ss(2): %g, sum: %g\n',nodes(1),nodes(2), xp, Ss(1), Ss(2), sum)
+      input('error: the shape functions (linear) dont sum to 1.0 \n');
+    end
   end
 
 end
@@ -156,7 +160,7 @@ end
 
 %______________________________________________________________________
 %  Reference:  Uintah Documentation Chapter 7 MPM, Equation 7.16
-function [nodes,Ss]=findNodesAndWeights_gimp(xp, lp, nRegions, Regions, nodePos, notUsed)
+function [nodes,Ss,sum]=findNodesAndWeights_gimp(xp, lp, nRegions, Regions, nodePos, notUsed, doBulletProofing)
   global NSFN;
 
  [nodes,dx]=positionToClosestNodes(xp,nRegions,Regions, nodePos);
@@ -199,18 +203,19 @@ function [nodes,Ss]=findNodesAndWeights_gimp(xp, lp, nRegions, Regions, nodePos,
   for ig=1:NSFN
     sum = sum + Ss(ig);
   end
-  if ( abs(sum-1.0) > 1e-10)
-    fprintf('findNodesAndWeights_gimp\n');
-    fprintf('delX: %g, node(1):%g, node(2):%g ,node(3):%g, xp:%g Ss(1): %g, Ss(2): %g, Ss(3): %g, sum: %g\n',delX,nodes(1),nodes(2),nodes(3), xp, Ss(1), Ss(2), Ss(3), sum)
-    input('error: the shape functions dont sum to 1.0 \n');
+  if (doBulletProofing)
+    if ( abs(sum-1.0) > 1e-10)
+      fprintf('findNodesAndWeights_gimp\n');
+      fprintf('delX: %g, node(1):%g, node(2):%g ,node(3):%g, xp:%g Ss(1): %g, Ss(2): %g, Ss(3): %g, sum: %g\n',delX,nodes(1),nodes(2),nodes(3), xp, Ss(1), Ss(2), Ss(3), sum)
+      input('error: the shape functions dont sum to 1.0 \n');
+    end
   end
-  
 end
 
 %______________________________________________________________________
 %  Equation 15 of "Structured Mesh Refinement in Generalized Interpolation Material Point Method
 %  for Simulation of Dynamic Problems"
-function [nodes,Ss]=findNodesAndWeights_gimp2(xp, lp, nRegions, Regions, nodePos, Lx, doBulletProofing)
+function [nodes,Ss, sum]=findNodesAndWeights_gimp2(xp, lp, nRegions, Regions, nodePos, Lx, doBulletProofing)
 
   global NSFN;
   % find the nodes that surround the given location and
@@ -273,11 +278,12 @@ function [nodes,Ss]=findNodesAndWeights_gimp2(xp, lp, nRegions, Regions, nodePos
   
   %__________________________________
   % bullet proofing
+  sum = double(0);
+  for ig=1:NSFN
+    sum = sum + Ss(ig);
+  end
+  
   if (doBulletProofing)
-    sum = double(0);
-    for ig=1:NSFN
-      sum = sum + Ss(ig);
-    end
     if ( abs(sum-1.0) > 1e-10)
       fprintf('findNodesAndWeights_gimp2 \n');
       fprintf('node(1):%g, node(1):%g ,node(3):%g, xp:%g Ss(1): %g, Ss(2): %g, Ss(3): %g, sum: %g\n',nodes(1),nodes(2),nodes(3), xp, Ss(1), Ss(2), Ss(3), sum)
@@ -289,7 +295,7 @@ function [nodes,Ss]=findNodesAndWeights_gimp2(xp, lp, nRegions, Regions, nodePos
   % error checking
   % Only turn this on with single resolution grids
   if(0)
-  [nodes,Ss_old]=findNodesAndWeights_gimp(xp, nRegions, Regions, nodePos, Lx);
+  [nodes,Ss_old, sum]=findNodesAndWeights_gimp(xp, nRegions, Regions, nodePos, Lx);
   for ig=1:NSFN
     if ( abs(Ss_old(ig)-Ss(ig)) > 1e-10 )
       fprintf(' The methods (old/new) for computing the shape functions dont match\n');
@@ -302,7 +308,7 @@ end
 
 %______________________________________________________________________
 %  Reference:  Uintah Documentation Chapter 7 MPM, Equation 7.14
-function [nodes,Gs, dx]=findNodesAndWeightGradients_linear(xp, notUsed, nRegions, Regions, nodePos, notUsed2)
+function [nodes,Gs, dx, sum]=findNodesAndWeightGradients_linear(xp, notUsed, nRegions, Regions, nodePos, notUsed2)
  
   % find the nodes that surround the given location and
   % the values of the gradients of the linear shape functions.
@@ -315,11 +321,13 @@ function [nodes,Gs, dx]=findNodesAndWeightGradients_linear(xp, notUsed, nRegions
 
   Gs(1) = -1/dx;
   Gs(2) = 1/dx;
+  
+  sum = Gs(1) + Gs(2);
 end
 
 %______________________________________________________________________
 %  Reference:  Uintah Documentation Chapter 7 MPM, Equation 7.17
-function [nodes,Gs, dx]=findNodesAndWeightGradients_gimp(xp, lp, nRegions, Regions, nodePos,notUsed)
+function [nodes,Gs, dx, sum]=findNodesAndWeightGradients_gimp(xp, lp, nRegions, Regions, nodePos,notUsed, doBulletProofing)
 
   global NSFN;
   % find the nodes that surround the given location and
@@ -364,17 +372,19 @@ function [nodes,Gs, dx]=findNodesAndWeightGradients_gimp(xp, lp, nRegions, Regio
   for ig=1:NSFN
     sum = sum + Gs(ig);
   end
-  if ( abs(sum) > 1e-10)
-    fprintf('findNodesAndWeightGradients_gimp \n');
-    fprintf('delX:%g node(1):%g, node(1):%g ,node(3):%g, xp:%g Gs(1): %g, Gs(2): %g, Gs(3): %g, sum: %g\n',delX,nodes(1),nodes(2),nodes(3), xp, Gs(1), Gs(2), Gs(3), sum)
-    input('error: the gradient of the shape functions (gimp) dont sum to 1.0 \n');
+  if (doBulletProofing)
+    if ( abs(sum) > 1e-10)
+      fprintf('findNodesAndWeightGradients_gimp \n');
+      fprintf('delX:%g node(1):%g, node(1):%g ,node(3):%g, xp:%g Gs(1): %g, Gs(2): %g, Gs(3): %g, sum: %g\n',delX,nodes(1),nodes(2),nodes(3), xp, Gs(1), Gs(2), Gs(3), sum)
+      input('error: the gradient of the shape functions (gimp) dont sum to 1.0 \n');
+    end
   end
 end
 
 %______________________________________________________________________
 %  The equations for this function are derived in the hand written notes.  
 % The governing equations for the derivation come from equation 15.
-function [nodes,Gs, dx]=findNodesAndWeightGradients_gimp2(xp, lp, nRegions, Regions, nodePos, Lx, doBulletProofing)
+function [nodes,Gs, dx,sum]=findNodesAndWeightGradients_gimp2(xp, lp, nRegions, Regions, nodePos, Lx, doBulletProofing)
 
   global NSFN;
   
@@ -455,11 +465,12 @@ function [nodes,Gs, dx]=findNodesAndWeightGradients_gimp2(xp, lp, nRegions, Regi
   
   %__________________________________
   % bullet proofing
-  if (doBulletProofing) 
-    sum = double(0);
-    for ig=1:NSFN
-      sum = sum + Gs(ig);
-    end
+  sum = double(0);
+  for ig=1:NSFN
+    sum = sum + Gs(ig);
+  end
+  
+  if (doBulletProofing)
     if ( abs(sum) > 1e-10)
       fprintf('findNodesAndWeightGradients_gimp2 \n');
       fprintf('node(1):%g, node(2):%g ,node(3):%g, xp:%g Gs(1): %g, Gs(2): %g, Gs(3): %g, sum: %g\n',nodes(1),nodes(2),nodes(3), xp, Gs(1), Gs(2), Gs(3), sum)

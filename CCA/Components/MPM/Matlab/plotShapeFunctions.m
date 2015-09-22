@@ -11,91 +11,105 @@ function k=plotShapeFunctions
   global PPC;
   global NSFN;
   global d_doPlotShapeFunction;
-
+  %______________________________________________________________________
+  
   PPC = 2;
+  maxpts        = int32(50);             % number of points in plot
+  interpolation = 'GIMP';              %  'linear' or 'GIMP'
+  domain        = 1;
+  dx_L          = 1;                     % dx in Left region
+  lp            = dx_L/(2 * PPC)
+  d_smallNum    = double(1e-16);
+  
+  %______________________________________________________________________
+  
   d_doPlotShapeFunction = true;
   [sf]  = shapeFunctions;                 % load all the shape functions
   [IF]  = initializationFunctions         % load initialization functions
+  
+  [Regions, nRegions,NN] = IF.initialize_Regions(domain,PPC,dx_L,interpolation, d_smallNum);
+  
+  [nodePos]  = IF.initialize_NodePos(NN, Regions, nRegions, interpolation)
+  [Lx]       = IF.initialize_Lx(NN, nodePos)
 
-  interpolation = 'GIMP';              %  'linear' or 'GIMP'
-  domain        = 1;
-  dx            = 1;
-  d_smallNum    = double(1e-16);
-  
-  
-  [Regions, nRegions,NN] = IF.initialize_Regions(domain,PPC,dx,interpolation, d_smallNum);
-  R = Regions{1};
-  
-  [nodePos]  = IF.initialize_NodePos(NN, dx, Regions, nRegions, interpolation)
-  
-  [Lx]       = IF.initialize_Lx(NN, nodePos);
-  
-  L  = dx;
-  lp = R.lp
-  
-  maxpts = int32(100);
-  
   %__________________________________
-  %             GIMP
+  %             GIMP  dx_L == dx_R
   %Pos:    -2     dx   -1            0            1            2
   %        |-----xxxxxxx|xxxxxxxxxxxx|xxxxxxxxxxxx|xxxxxx------|
   %Node:  (1)           2            3            4            5
   %            -L-lp                 0                  L+lp
+  %
+  %
+  %             GIMP  dx_L= 1,  dx_R = 0.5
+  %Pos:    -2     dx   -1            0      0.5     1
+  %        |-----xxxxxxx|xxxxxxxxxxxx|xxxxxx|xxx----|
+  %Node:  (1)           2            3      4       5
+  %            (-dx-lp)_L                 0             (dx+lp)_R
   %               
-  % loop over all cells from (-L -lp) to (L + lp) relative to focus node (3)
-  
-  
-    %             LINEAR
+  % loop over all positions from (-L -lp)_L to (L + lp)_R relative to focus node (3)  
+  %
+  %__________________________________
+  %             LINEAR  dx_L == dx_R
   %Pos:   -1            0            1
   %        |xxxxxxxxxxxx|xxxxxxxxxxxx|
   %Node:  (1)           2            3
   %       -L            0            L
+  %
+  %             LINEAR  dx_L =1, dx_R = 0.5
+  %Pos:   -1            0     0.5
+  %        |xxxxxxxxxxxx|xxxxx|
+  %Node:  (1)           2     3
   %               
-  % loop over all cells from (-L) to (L) relative to focus node (2)
+  % loop over all positions from (-1) to (0.5) relative to focus node (2)
   %__________________________________
+  R_L = Regions{1};                
+  R_R = Regions{nRegions};         
    
   if( strcmp(interpolation,'GIMP') )
     NSFN      = 3;                        % Number of shape function nodes Linear:2, GIMP:3
-    xp(1)     =  -L-lp ;                  % starting postition GIMP
-    delX      = ( 2*(L + lp))/double(maxpts)
+    dx_L      = R_L.dx;  
+    dx_R      = R_R.dx; 
+    
+    xp(1)     =  -dx_L - lp ;           % starting postition GIMP
+    delX      = ( (dx_R + lp) -(-dx_L - lp) )/double(maxpts)
     focusNode = 3;
     doBulletProofing = false;
     
   else
     NSFN      = 2;                        % Number of shape function nodes Linear:2, GIMP:3
-    xp(1)     = -L;
-    delX      = 2*L/double(maxpts)
+    xp(1)     = R_L.min;
+    delX      = (R_R.max - R_L.min)/double(maxpts)
     focusNode = 2;
+    doBulletProofing = true;
   end
 
-  Lx(focusNode,2) = dx/4;                 % Set dx_R = dx_L/4
-  Lx
-
-
-  
-  Ss1(1) = 0.0;
-  Ss2(1) = 0.0;
-  
-  Gs(1)  = 0.0;
-  Gs2(1) = 0.0;
+  %__________________________________
+  % pre-allocate variables for speed
+  Ss1   = zeros(maxpts,1); 
+  Ss2   = zeros(maxpts,1); 
+  Gs1   = zeros(maxpts,1); 
+  Gs2   = zeros(maxpts,1); 
+  SumS1 = zeros(maxpts,1); 
+  SumS2 = zeros(maxpts,1);
+  SumGs1 = zeros(maxpts,1);
+  SumGs2 = zeros(maxpts,1);
 
   for (c=2:maxpts)
     xp(c) = xp(c-1) + delX;
     
     if( strcmp(interpolation,'GIMP') )
-      [nodes,S1]    = sf.findNodesAndWeights_gimp( xp(c), lp, nRegions, Regions, nodePos, Lx);
-      [nodes,S2]    = sf.findNodesAndWeights_gimp2(xp(c), lp, nRegions, Regions, nodePos, Lx, doBulletProofing);
+      [nodes, S1, SumS1(c) ]     = sf.findNodesAndWeights_gimp( xp(c), lp, nRegions, Regions, nodePos, Lx, doBulletProofing);
+      [nodes, S2, SumS2(c) ]     = sf.findNodesAndWeights_gimp2(xp(c), lp, nRegions, Regions, nodePos, Lx, doBulletProofing);
     
-      [nodes,G1, dx]= sf.findNodesAndWeightGradients_gimp( xp(c), lp, nRegions, Regions, nodePos,Lx);
-      [nodes,G2, dx]= sf.findNodesAndWeightGradients_gimp2(xp(c), lp, nRegions, Regions, nodePos,Lx, doBulletProofing);
+      [nodes, G1, dx, SumG1(c) ] = sf.findNodesAndWeightGradients_gimp( xp(c), lp, nRegions, Regions, nodePos,Lx, doBulletProofing);
+      [nodes, G2, dx, SumG2(c) ] = sf.findNodesAndWeightGradients_gimp2(xp(c), lp, nRegions, Regions, nodePos,Lx, doBulletProofing);
     else
-      [nodes,S1]    = sf.findNodesAndWeights_linear( xp(c), lp, nRegions, Regions, nodePos, Lx);
-      [nodes,S2]    = sf.findNodesAndWeights_linear( xp(c), lp, nRegions, Regions, nodePos, Lx);
-    
-      [nodes,G1, dx]= sf.findNodesAndWeightGradients_linear(  xp(c), lp, nRegions, Regions, nodePos,Lx);
-      [nodes,G2, dx]= sf.findNodesAndWeightGradients_linear( xp(c), lp, nRegions, Regions, nodePos,Lx);
+      [nodes, S1, SumS1(c) ]      = sf.findNodesAndWeights_linear( xp(c), lp, nRegions, Regions, nodePos, Lx, doBulletProofing);
+      [nodes, G1, dx, SumG1(c) ]  = sf.findNodesAndWeightGradients_linear( xp(c), lp, nRegions, Regions, nodePos,Lx);
+      S2 = S1;   % so you don't have to put conditional statements everywhere
+      G2 = G1;
     end
-    
+
     % find the index that corresponds to the focusNode
     for index=1:length(nodes)
       if(nodes(index) == focusNode)
@@ -108,6 +122,7 @@ function k=plotShapeFunctions
     
     Gs1(c) = G1(index);
     Gs2(c) = G2(index);
+    
   end
  
   % Numerically differentiate the shape functions
@@ -117,16 +132,79 @@ function k=plotShapeFunctions
   ML_grad2(maxpts) = 0.0;  
  
   %__________________________________
-  % plot up the results
-  set(gcf,'position',[50,100,900,900]);
-  subplot(2,1,1),plot(xp,Ss1, xp, Ss2)
-  tmp = sprintf('Shape Function, PPC %g: dx_R = dx_L/4',PPC);
-  title(tmp);
-  xlabel('xp')
-  legend('Single Level','multi-level');
   
-  subplot(2,1,2),plot(xp,Gs1, 'b+', xp,Gs2, 'r.', xp,ML_grad,xp,ML_grad2)
-  title('Gradient of the Shape Function');
-  xlabel('xp')
-  legend('Single Level','multi-level', 'Numerically Differentiated', 'Numerically Differentiated');
+  if( strcmp(interpolation,'GIMP') )
+    %__________________________________
+    % plot shape Function and gradient of shape function
+    set(gcf,'position',[50,100,900,900]);
+    subplot(2,1,1),plot(xp, Ss1, xp, Ss2)
+    tmp = sprintf('Shape Function, PPC %g: dx_R = dx_L/4',PPC);
+    title(tmp);
+    xlabel('xp')
+    legend('Single Level','multi-level');
+
+    subplot(2,1,2),plot(xp, Gs1, 'b+', xp, Gs2, 'r.', xp,ML_grad, xp,ML_grad2)
+    title('Gradient of the Shape Function');
+    xlabel('xp')
+    legend('Single Level','multi-level', 'Numerically Differentiated', 'Numerically Differentiated');
+
+
+    %__________________________________
+    % plot 1.0 - Sum (shape Function) and sum (gradient of shape function)
+
+    figure(2)
+    set(gcf,'position',[950,100,900,900]);
+    diff1 = 1.0 - SumS1;
+    diff2 = 1.0 - SumS2;
+    
+    subplot(2,1,1),plot(xp,diff1, xp, diff2)
+    tmp = sprintf('1.0 - (Sum Shape Function), PPC %g: dx_R = dx_L/4',PPC);
+    title(tmp);
+    xlabel('xp')
+    ylim([-0.1 0.1])
+    legend('Single Level','multi-level');
+
+    subplot(2,1,2),plot(xp,SumGs1, 'b+', xp,SumGs2, 'r.')
+    title('Sum (Gradient of the Shape Function)');
+    xlabel('xp')
+    ylim([-0.1 0.1])
+    legend('Single Level','multi-level'); 
+    
+  else
+    %__________________________________
+    % plot shape Function and gradient of shape function
+    set(gcf,'position',[50,100,900,900]);
+    subplot(2,1,1)
+    plot( xp, Ss1 )
+    tmp = sprintf('Linear Shape Function, PPC %g: dx_R = dx_L/4',PPC);
+    title(tmp);
+    xlabel('xp')
+    legend('multi-Level');
+
+    subplot(2,1,2)
+    plot( xp, Gs1, 'b+', xp, ML_grad )
+    title('Gradient of the Shape Function');
+    xlabel('xp')
+    legend('multi-Level', 'Numerically Differentiated');
+
+
+    %__________________________________
+    % plot Sum (shape Function) and sum (gradient of shape function)
+
+    figure(2)
+    set(gcf,'position',[950,100,900,900]);
+    diff1 = 1.0 - SumS1;
+    subplot(2,1,1),plot(xp,diff1)
+    tmp = sprintf('1.0 - Sum(Shape Function), PPC %g: dx_R = dx_L/4',PPC);
+    title(tmp);
+    ylim([-0.1 0.1])
+    xlabel('xp')
+    legend('multi-level');
+
+    subplot(2,1,2),plot(xp,SumGs1, 'b+')
+    title('Sum (Gradient of the Shape Function)');
+    xlabel('xp')
+    legend('multi-level');  
+  end 
+  
 end
