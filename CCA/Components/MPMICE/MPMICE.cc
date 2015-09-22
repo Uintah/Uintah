@@ -1983,7 +1983,7 @@ void MPMICE::computeEquilibrationPressure(const ProcessorGroup*,
         //     << " Cell : " << c << " on level " << lev << " having a difficult time converging. \n"
         //    << " Now performing a binary pressure search " << endl;
 
-        int binaryPressCount;
+        //int binaryPressCount;
         binaryPressureSearch( Temp, rho_micro, vol_frac, rho_CC_new,
                               speedSound,  dp_drho,  dp_de, 
                               press_eos, press, press_new, press_ref,
