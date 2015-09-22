@@ -22,7 +22,15 @@ namespace Uintah{
         int Nenv; 
         double value; 
         double rhop_o;
-        double pi; 
+        double pi;
+        double raw_coal_mf;
+        double char_mf;
+        double ash_mf;
+        double mw_avg;
+        double h_c0;
+        double h_ch0;
+        double h_a0;
+        double ksi;
 
         std::vector<double> init_ash;
         std::vector<double> init_rawcoal;
@@ -44,7 +52,7 @@ namespace Uintah{
           double H2O; 
         };
 
-        CoalAnalysis coal; 
+        CoalAnalysis coal;
 
       };
 
@@ -65,7 +73,11 @@ namespace Uintah{
           }
 
           db_coal_props->require("density",_coal_db.rhop_o); 
-          db_coal_props->require("diameter_distribution", _coal_db.sizes); 
+          db_coal_props->require("diameter_distribution", _coal_db.sizes);
+          db_coal_props->require("raw_coal_enthalpy", _coal_db.h_c0);
+          db_coal_props->require("char_enthalpy", _coal_db.h_ch0);
+          db_coal_props->require("ash_enthalpy", _coal_db.h_a0);
+          db_coal_props->getWithDefault( "ksi",_coal_db.ksi,1.0); // Fraction of the heat released by char oxidation that goes to the particle
 
           if ( db_coal_props->findBlock("ultimate_analysis")){ 
 
@@ -86,9 +98,9 @@ namespace Uintah{
             double coal_dry = _coal_db.coal.C + _coal_db.coal.H 
               + _coal_db.coal.O + _coal_db.coal.N + _coal_db.coal.S 
               + _coal_db.coal.ASH + _coal_db.coal.CHAR; //moisture free coal
-            double raw_coal_mf = coal_daf / coal_dry; 
-            double char_mf = _coal_db.coal.CHAR / coal_dry; 
-            double ash_mf = _coal_db.coal.ASH / coal_dry; 
+            _coal_db.raw_coal_mf = coal_daf / coal_dry;
+            _coal_db.char_mf = _coal_db.coal.CHAR / coal_dry;
+            _coal_db.ash_mf = _coal_db.coal.ASH / coal_dry;
 
             _coal_db.init_char.clear(); 
             _coal_db.init_rawcoal.clear(); 
@@ -100,14 +112,29 @@ namespace Uintah{
             for ( unsigned int i = 0; i < _coal_db.sizes.size(); i++ ){ 
 
               double mass_dry = (pi/6.0) * pow(_coal_db.sizes[i],3) * _coal_db.rhop_o;     // kg/particle
-              _coal_db.init_ash.push_back(mass_dry  * ash_mf);                      // kg_ash/particle (initial)  
-              _coal_db.init_char.push_back(mass_dry * char_mf);                     // kg_char/particle (initial)
-              _coal_db.init_rawcoal.push_back(mass_dry * raw_coal_mf);              // kg_ash/particle (initial)
+              _coal_db.init_ash.push_back(mass_dry  * _coal_db.ash_mf);                    // kg_ash/particle (initial)
+              _coal_db.init_char.push_back(mass_dry * _coal_db.char_mf);                   // kg_char/particle (initial)
+              _coal_db.init_rawcoal.push_back(mass_dry * _coal_db.raw_coal_mf);            // kg_ash/particle (initial)
               _coal_db.denom.push_back( _coal_db.init_ash[i] + 
                   _coal_db.init_char[i] + 
                   _coal_db.init_rawcoal[i] );
 
             }
+            _coal_db.pi = pi;
+            
+            double yElem [5];
+            yElem[0]=_coal_db.coal.C/coal_daf; // C daf
+            yElem[1]=_coal_db.coal.H/coal_daf; // H daf
+            yElem[2]=_coal_db.coal.N/coal_daf; // N daf
+            yElem[3]=_coal_db.coal.O/coal_daf; // O daf
+            yElem[4]=_coal_db.coal.S/coal_daf; // S daf
+            
+            double MW [5] = { 12., 1., 14., 16., 32.}; // Atomic weight of elements (C,H,N,O,S) - kg/kmol
+            double mw_avg = 0.0; // Mean atomic weight of coal
+            for(int i=0;i<5;i++){
+              mw_avg += yElem[i]/MW[i];
+            }
+            _coal_db.mw_avg = 1.0/mw_avg;
 
           } else { 
             throw ProblemSetupException("Error: No <ultimate_analysis> found in input file.", __FILE__, __LINE__); 
