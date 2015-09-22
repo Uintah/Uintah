@@ -1281,7 +1281,7 @@
                                                                                                                             includes the effect of the abskp. abskg = abskg(gas only) + abskp -->
             <DORadiationModel           spec="OPTIONAL NO_DATA" need_applies_to="type do_radiation" >
               <ordinates                  spec="OPTIONAL INTEGER" />                                   <!-- number of ordinants, default = 2 -->
-              <ReflectOn                  spec="OPTIONAL BOOLEAN" /> <!-- reflections are off by default.-->
+              <!--ReflectOn                  spec="OPTIONAL BOOLEAN" /--> <!-- reflections are off by default.-->
               <initialGuess               spec="OPTIONAL STRING 'zeros, prevDir, prevRadSolve'"/> <!-- prevRadSolvei -> use previous radiation solve as previous guess.  prevDir= use previous direction for initial guess.  zeros=use zeros as initial guess (default)-->
               <ScatteringOn               spec="OPTIONAL BOOLEAN" /> <!-- turn on scattering -->
               <LinearSolver               spec="OPTIONAL NO_DATA"
