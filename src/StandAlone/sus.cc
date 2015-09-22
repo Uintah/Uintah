@@ -630,9 +630,9 @@ main( int argc, char *argv[], char *env[] )
 
     SimulationController* ctl = NULL;
     if (do_multi_scale) {
-      ctl = scinew MultiScaleSimulationController( world, do_multi_scale, ups );
+      ctl = scinew MultiScaleSimulationController( world, do_AMR, do_multi_scale, ups );
     } else {
-      ctl = scinew AMRSimulationController( world, do_AMR, ups );
+      ctl = scinew AMRSimulationController( world, do_AMR, do_multi_scale, ups );
     }
 
 

@@ -70,18 +70,19 @@ using namespace Uintah;
 
 static DebugStream amrout(      "MultiScale",                     false);
 static DebugStream dbg(         "MultiScaleSimulationController", false);
-static DebugStream dbg_barrier( "MPIBarriers",             false);
-static DebugStream dbg_dwmem(   "LogDWMemory",             false);
-static DebugStream gprofile(    "CPUProfiler",             false);
-static DebugStream gheapprofile("HeapProfiler",            false);
-static DebugStream gheapchecker("HeapChecker",             false);
+static DebugStream dbg_barrier( "MPIBarriers",                    false);
+static DebugStream dbg_dwmem(   "LogDWMemory",                    false);
+static DebugStream gprofile(    "CPUProfiler",                    false);
+static DebugStream gheapprofile("HeapProfiler",                   false);
+static DebugStream gheapchecker("HeapChecker",                    false);
 
 double multi_scale_barrier_times[5]={0};
 
 MultiScaleSimulationController::MultiScaleSimulationController( const ProcessorGroup * myworld,
-                                                                      bool             do_multi_scale,
-                                                                      ProblemSpecP     pspec) :
-  SimulationController(myworld, do_multi_scale, pspec)
+                                                                      bool             doAMR,
+                                                                      bool             doMultiScale,
+                                                                      ProblemSpecP     pspec)
+  : SimulationController(myworld, doAMR, doMultiScale, pspec)
 {
 }
 
@@ -716,7 +717,7 @@ MultiScaleSimulationController::doInitialTimestep(GridP& grid, double& t)
 
       proc0cout << "Compiling initialization taskgraph...\n";
 
-      // Initialize the CFD and/or MPM data
+      // Initialize the per-level data
       for (int i = grid->numLevels() - 1; i >= 0; i--) {
         d_sim->scheduleInitialize(grid->getLevel(i), d_scheduler);
 
@@ -1036,8 +1037,8 @@ MultiScaleSimulationController::executeTimestep(double t, double& delt, GridP& c
 //
 
 void
-MultiScaleSimulationController::scheduleComputeStableTimestep( const GridP& grid,
-                                                        SchedulerP& sched )
+MultiScaleSimulationController::scheduleComputeStableTimestep( const GridP      & grid,
+                                                                     SchedulerP & sched )
 {
 
   for (int i = 0; i < grid->numLevels(); i++) {

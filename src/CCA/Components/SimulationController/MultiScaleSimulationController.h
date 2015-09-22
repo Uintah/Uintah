@@ -66,7 +66,7 @@ class MultiScaleSimulationController : public SimulationController {
 
   public:
 
-    MultiScaleSimulationController(const ProcessorGroup* myworld, bool doAMR, ProblemSpecP pspec);
+    MultiScaleSimulationController(const ProcessorGroup* myworld, bool doAMR, bool doMultiScale, ProblemSpecP pspec);
 
     virtual ~MultiScaleSimulationController();
 

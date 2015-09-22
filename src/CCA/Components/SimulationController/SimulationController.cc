@@ -94,8 +94,12 @@ stdDeviation( double sum_of_x, double sum_of_x_squares, int n )
 
 SimulationController::SimulationController( const ProcessorGroup * myworld,
                                                   bool             doAMR,
-                                                  ProblemSpecP     pspec ) :
-  UintahParallelComponent( myworld ), d_ups( pspec ), d_doAMR( doAMR )
+                                                  bool             doMultiScale,
+                                                  ProblemSpecP     pspec )
+  : UintahParallelComponent( myworld ),
+    d_ups( pspec ),
+    d_doAMR( doAMR ),
+    d_doMultiScale(doMultiScale)
 {
   d_n                      = 0;
   d_wallTime               = 0;

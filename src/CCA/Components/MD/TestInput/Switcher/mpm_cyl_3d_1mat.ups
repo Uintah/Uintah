@@ -43,7 +43,6 @@
         <convergence_criteria_disp>1.e-10</convergence_criteria_disp>
         <convergence_criteria_energy>4.e-10</convergence_criteria_energy>
         <DoImplicitHeatConduction>true</DoImplicitHeatConduction>
-        <AMR>true</AMR>
     </MPM>
 
     <MultiScale>
