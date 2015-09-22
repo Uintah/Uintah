@@ -47,64 +47,65 @@
         </Level>
         
         <BoundaryConditions>
+      <DefaultMaterial>0</DefaultMaterial>
 
           <Face side="x-">
-            <BCType id="0" label="coflow_inlet" var="VelocityInlet">
+            <BCType label="coflow_inlet" var="VelocityInlet">
               <value>[0.0405,0,0]</value>
             </BCType>
-            <BCType id="0" label="MixtureFraction" var="Dirichlet">
+            <BCType label="MixtureFraction" var="Dirichlet">
               <value>0.0</value>
             </BCType>
           </Face>
 
           <Face circle="x-" origin="0 0.069 0.069" radius=".023">
-            <BCType id="0" label="helium_inlet" var="VelocityInlet">
+            <BCType label="helium_inlet" var="VelocityInlet">
               <value>[0.135,0,0]</value>
             </BCType>
-            <BCType id="0" label="MixtureFraction" var="Dirichlet">
+            <BCType label="MixtureFraction" var="Dirichlet">
               <value>1.0</value>
             </BCType>
           </Face>
 
           <Face side="x+">
-            <BCType id="0" label="outlet" var="OutletBC">
+            <BCType label="outlet" var="OutletBC">
               <value>0.0</value>
             </BCType>
-            <BCType id="0" label="MixtureFraction" var="Neumann">
+            <BCType label="MixtureFraction" var="Neumann">
               <value>0.0</value>
             </BCType>
           </Face>
 
           <Face side="y-">
-            <BCType id="0" label="y-pressure" var="PressureBC">
+            <BCType label="y-pressure" var="PressureBC">
               <value>0.0</value>
             </BCType>
-            <BCType id="0" label="MixtureFraction" var="Neumann">
+            <BCType label="MixtureFraction" var="Neumann">
               <value>0.0</value>
             </BCType>
           </Face>
           <Face side="y+">
-            <BCType id="0" label="y+pressure" var="PressureBC">
+            <BCType label="y+pressure" var="PressureBC">
               <value>0.0</value>
             </BCType>
-            <BCType id="0" label="MixtureFraction" var="Neumann">
+            <BCType label="MixtureFraction" var="Neumann">
               <value>0.0</value>
             </BCType>
           </Face>
 
           <Face side="z-">
-            <BCType id="0" label="z-pressure" var="PressureBC">
+            <BCType label="z-pressure" var="PressureBC">
               <value>0.0</value>
             </BCType>
-            <BCType id="0" label="MixtureFraction" var="Neumann">
+            <BCType label="MixtureFraction" var="Neumann">
               <value>0.0</value>
             </BCType>
           </Face>
           <Face side="z+">
-            <BCType id="0" label="z+pressure" var="PressureBC">
+            <BCType label="z+pressure" var="PressureBC">
               <value>0.0</value>
             </BCType>
-            <BCType id="0" label="MixtureFraction" var="Neumann">
+            <BCType label="MixtureFraction" var="Neumann">
               <value>0.0</value>
             </BCType>
           </Face>

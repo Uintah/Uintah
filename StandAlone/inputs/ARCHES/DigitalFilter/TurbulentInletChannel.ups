@@ -36,8 +36,9 @@
   <Grid>
 
     <BoundaryConditions>
+      <DefaultMaterial>0</DefaultMaterial>
       <Face side="x-">
-        <BCType id="all" label="mixture_fraction" var="Dirichlet">
+        <BCType label="mixture_fraction" var="Dirichlet">
           <value> 1.0 </value>
         </BCType>
       </Face>
@@ -48,13 +49,13 @@
         <!--BCType id = "all" label = "inletx" var = "VelocityInlet">
           <value> [1,0,0] </value>
         </BCType-->
-        <BCType id="all" label="Turb_In" var = "TurbulentInlet">
+        <BCType label="Turb_In" var = "TurbulentInlet">
           <inputfile> inputs/ARCHES/DigitalFilter/DFGChannel.txt.gz </inputfile>
           <!--period> 34 </period-->
           <period> 5 </period> <!-- smaller than norm so it changes in short RT -->
           <value> [1,0,0] </value>
         </BCType>
-        <BCType id="all" label="mixture_fraction" var="Dirichlet">
+        <BCType label="mixture_fraction" var="Dirichlet">
           <value> 1.0 </value>
         </BCType>
       </Face>
@@ -63,7 +64,7 @@
         <BCType id = "all" label = "outletx" var = "OutletBC">
           <value> 0.0 </value>
         </BCType>
-        <BCType id="all" label="mixture_fraction" var="Neumann">
+        <BCType label="mixture_fraction" var="Neumann">
           <value> 0.0 </value>
         </BCType>
       </Face>
@@ -72,7 +73,7 @@
         <BCType id = "all" label = "ymwall" var = "WallBC">
           <value> 0.0 </value>
         </BCType>
-        <BCType id="all" label="mixture_fraction" var="Neumann">
+        <BCType label="mixture_fraction" var="Neumann">
           <value> 0.0 </value>
         </BCType>
       </Face>
@@ -81,7 +82,7 @@
         <BCType id = "all" label = "ypwall" var = "WallBC">
           <value> 0.0 </value>
         </BCType>
-        <BCType id="all" label="mixture_fraction" var="Neumann">
+        <BCType label="mixture_fraction" var="Neumann">
           <value> 0.0 </value>
         </BCType>
       </Face>
@@ -90,7 +91,7 @@
         <BCType id = "all" label = "zmwall" var = "WallBC">
           <value> 0.0 </value>
         </BCType>
-        <BCType id="all" label="mixture_fraction" var="Neumann">
+        <BCType label="mixture_fraction" var="Neumann">
           <value> 0.0 </value>
         </BCType>
       </Face>
@@ -99,7 +100,7 @@
         <BCType id = "all" label = "zpwall" var = "WallBC">
           <value> 0.0 </value>
         </BCType>
-        <BCType id="all" label="mixture_fraction" var="Neumann">
+        <BCType label="mixture_fraction" var="Neumann">
           <value> 0.0 </value>
         </BCType>
       </Face>    

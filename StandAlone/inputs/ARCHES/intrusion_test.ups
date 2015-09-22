@@ -45,55 +45,56 @@
     
     <Grid>
         <BoundaryConditions>
+      <DefaultMaterial>0</DefaultMaterial>
             <Face side="x-" name="x- wall">
-                <BCType id="all" label="bottom_wall" var="WallBC">
+                <BCType label="bottom_wall" var="WallBC">
                   <value>0.0</value>
                 </BCType>
-                <BCType id="all" label="mixture_fraction" var="Dirichlet">
+                <BCType label="mixture_fraction" var="Dirichlet">
                     <value>0.0</value>
                 </BCType>
             </Face>
             <Face side="x+" name="x+ wall">
-                <BCType id="all" label="outlet" var="OutletBC">
+                <BCType label="outlet" var="OutletBC">
                   <value>0.0</value>
                 </BCType>
-                <BCType id="all" label="mixture_fraction" var="Neumann">
+                <BCType label="mixture_fraction" var="Neumann">
                     <value>0.0</value>
                 </BCType>
             </Face>
             
             <Face side="y-" name="y- wall">
-                <BCType id="all" label="y-pressure" var="PressureBC">
+                <BCType label="y-pressure" var="PressureBC">
                     <value>0.0</value>
                 </BCType>
-                <BCType id="all" label="mixture_fraction" var="Neumann">
+                <BCType label="mixture_fraction" var="Neumann">
                     <value>0.0</value>
                 </BCType>
             </Face>
             
             <Face side="y+" name="y+ wall">
-                <BCType id="all" label="y+pressure" var="PressureBC">
+                <BCType label="y+pressure" var="PressureBC">
                     <value>0.0</value>
                 </BCType>
-                <BCType id="all" label="mixture_fraction" var="Neumann">
+                <BCType label="mixture_fraction" var="Neumann">
                     <value>0.0</value>
                 </BCType>
             </Face>
             
             <Face side="z-" name="z- wall">
-                <BCType id="all" label="z-pressure" var="PressureBC">
+                <BCType label="z-pressure" var="PressureBC">
                     <value>0.0</value>
                 </BCType>
-                <BCType id="all" label="mixture_fraction" var="Neumann">
+                <BCType label="mixture_fraction" var="Neumann">
                     <value>0.0</value>
                 </BCType>
             </Face>
             
             <Face side="z+" name="z+ wall">
-                <BCType id="all" label="z+pressure" var="PressureBC">
+                <BCType label="z+pressure" var="PressureBC">
                     <value>0.0</value>
                 </BCType>
-                <BCType id="all" label="mixture_fraction" var="Neumann">
+                <BCType label="mixture_fraction" var="Neumann">
                     <value>0.0</value>
                 </BCType>
             </Face>

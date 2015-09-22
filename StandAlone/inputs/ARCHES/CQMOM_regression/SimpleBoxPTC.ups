@@ -45,29 +45,30 @@
   <Grid>
 
     <BoundaryConditions>
+      <DefaultMaterial>0</DefaultMaterial>
       <Face side="x-">
-        <BCType id="all" label="xmwall" var="WallBC">
+        <BCType label="xmwall" var="WallBC">
           <value> 1.0 </value>
         </BCType>
-        <BCType id="all" label="mixture_fraction" var="Dirichlet">
+        <BCType label="mixture_fraction" var="Dirichlet">
           <value> 0.0 </value>
         </BCType>
-        <BCType id="all" label="m_00" var="ForcedDirichlet">
+        <BCType label="m_00" var="ForcedDirichlet">
           <value> 0.0 </value>
         </BCType>
-        <BCType id="all" label="m_10" var="ForcedDirichlet">
+        <BCType label="m_10" var="ForcedDirichlet">
           <value> 0.0 </value>
         </BCType>
-        <BCType id="all" label="m_20" var="ForcedDirichlet">
+        <BCType label="m_20" var="ForcedDirichlet">
           <value> 0.0 </value>
         </BCType>
-        <BCType id="all" label="m_30" var="ForcedDirichlet">
+        <BCType label="m_30" var="ForcedDirichlet">
           <value> 0.0 </value>
         </BCType>
-        <BCType id="all" label="m_01" var="ForcedDirichlet">
+        <BCType label="m_01" var="ForcedDirichlet">
           <value> 0.0 </value>
         </BCType>
-        <BCType id="all" label="m_11" var="ForcedDirichlet">
+        <BCType label="m_11" var="ForcedDirichlet">
           <value> 0.0 </value>
         </BCType>
       </Face>
@@ -76,25 +77,25 @@
         <BCType id = "all" label = "inletx" var = "VelocityInlet">
           <value> [0,0,0] </value>
         </BCType>
-        <BCType id="all" label="mixture_fraction" var="Dirichlet">
+        <BCType label="mixture_fraction" var="Dirichlet">
           <value> 1.0 </value>
         </BCType>
-        <BCType id="all" label="m_00" var="ForcedDirichlet">
+        <BCType label="m_00" var="ForcedDirichlet">
           <value> 1.0 </value>
         </BCType>
-        <BCType id="all" label="m_10" var="ForcedDirichlet">
+        <BCType label="m_10" var="ForcedDirichlet">
           <value> 1.0 </value>
         </BCType>
-        <BCType id="all" label="m_20" var="ForcedDirichlet">
+        <BCType label="m_20" var="ForcedDirichlet">
           <value> 1.0 </value>
         </BCType>
-        <BCType id="all" label="m_30" var="ForcedDirichlet">
+        <BCType label="m_30" var="ForcedDirichlet">
           <value> 1.0 </value>
         </BCType>
-        <BCType id="all" label="m_01" var="ForcedDirichlet">
+        <BCType label="m_01" var="ForcedDirichlet">
           <value> 0.0 </value>
         </BCType>
-        <BCType id="all" label="m_11" var="ForcedDirichlet">
+        <BCType label="m_11" var="ForcedDirichlet">
           <value> 0.0 </value>
         </BCType>
       </Face>
@@ -103,26 +104,26 @@
         <BCType id = "all" label = "inletx" var = "VelocityInlet">
           <value> [0,0,0] </value>
         </BCType>
-        <BCType id="all" label="mixture_fraction" var="Dirichlet">
+        <BCType label="mixture_fraction" var="Dirichlet">
           <value> 1.0 </value>
         </BCType>
         <!-- transported moments -->
-        <BCType id="all" label="m_00" var="ForcedDirichlet">
+        <BCType label="m_00" var="ForcedDirichlet">
           <value> 1.0 </value>
         </BCType>
-        <BCType id="all" label="m_10" var="ForcedDirichlet">
+        <BCType label="m_10" var="ForcedDirichlet">
           <value> 0.0 </value>
         </BCType>
-        <BCType id="all" label="m_20" var="ForcedDirichlet">
+        <BCType label="m_20" var="ForcedDirichlet">
           <value> 0.0 </value>
         </BCType>
-        <BCType id="all" label="m_30" var="ForcedDirichlet">
+        <BCType label="m_30" var="ForcedDirichlet">
           <value> 0.0 </value>
         </BCType>
-        <BCType id="all" label="m_01" var="ForcedDirichlet">
+        <BCType label="m_01" var="ForcedDirichlet">
           <value> 1.0 </value>
         </BCType>
-        <BCType id="all" label="m_11" var="ForcedDirichlet">
+        <BCType label="m_11" var="ForcedDirichlet">
           <value> 0.0 </value>
         </BCType>
       </Face>
@@ -131,26 +132,26 @@
         <BCType id = "all" label = "outletx" var = "OutletBC">
           <value> 0.0 </value>
         </BCType>
-        <BCType id="all" label="mixture_fraction" var="Neumann">
+        <BCType label="mixture_fraction" var="Neumann">
           <value> 0.0 </value>
         </BCType>
         <!-- transported moments -->
-        <BCType id="all" label="m_00" var="Neumann">
+        <BCType label="m_00" var="Neumann">
           <value> 0.0 </value>
         </BCType>
-        <BCType id="all" label="m_10" var="Neumann">
+        <BCType label="m_10" var="Neumann">
           <value> 0.0 </value>
         </BCType>
-        <BCType id="all" label="m_20" var="Neumann">
+        <BCType label="m_20" var="Neumann">
           <value> 0.0 </value>
         </BCType>
-        <BCType id="all" label="m_30" var="Neumann">
+        <BCType label="m_30" var="Neumann">
           <value> 0.0 </value>
         </BCType>
-        <BCType id="all" label="m_01" var="Neumann">
+        <BCType label="m_01" var="Neumann">
           <value> 0.0 </value>
         </BCType>
-        <BCType id="all" label="m_11" var="Neumann">
+        <BCType label="m_11" var="Neumann">
           <value> 0.0 </value>
         </BCType>
       </Face>
@@ -159,25 +160,25 @@
         <BCType id = "all" label = "ymwall" var = "WallBC">
           <value> 0.0 </value>
         </BCType>
-        <BCType id="all" label="mixture_fraction" var="Neumann">
+        <BCType label="mixture_fraction" var="Neumann">
           <value> 0.0 </value>
         </BCType>
-        <BCType id="all" label="m_00" var="ForcedDirichlet">
+        <BCType label="m_00" var="ForcedDirichlet">
           <value> 0.0 </value>
         </BCType>
-        <BCType id="all" label="m_10" var="ForcedDirichlet">
+        <BCType label="m_10" var="ForcedDirichlet">
           <value> 0.0 </value>
         </BCType>
-        <BCType id="all" label="m_20" var="ForcedDirichlet">
+        <BCType label="m_20" var="ForcedDirichlet">
           <value> 0.0 </value>
         </BCType>
-        <BCType id="all" label="m_30" var="ForcedDirichlet">
+        <BCType label="m_30" var="ForcedDirichlet">
           <value> 0.0 </value>
         </BCType>
-        <BCType id="all" label="m_01" var="ForcedDirichlet">
+        <BCType label="m_01" var="ForcedDirichlet">
           <value> 0.0 </value>
         </BCType>
-        <BCType id="all" label="m_11" var="ForcedDirichlet">
+        <BCType label="m_11" var="ForcedDirichlet">
           <value> 0.0 </value>
         </BCType>
       </Face>
@@ -186,25 +187,25 @@
         <BCType id = "all" label = "ypwall" var = "OutletBC">
           <value> 0.0 </value>
         </BCType>
-        <BCType id="all" label="mixture_fraction" var="Neumann">
+        <BCType label="mixture_fraction" var="Neumann">
           <value> 0.0 </value>
         </BCType>
-        <BCType id="all" label="m_00" var="Neumann">
+        <BCType label="m_00" var="Neumann">
           <value> 0.0 </value>
         </BCType>
-        <BCType id="all" label="m_10" var="Neumann">
+        <BCType label="m_10" var="Neumann">
           <value> 0.0 </value>
         </BCType>
-        <BCType id="all" label="m_20" var="Neumann">
+        <BCType label="m_20" var="Neumann">
           <value> 0.0 </value>
         </BCType>
-        <BCType id="all" label="m_30" var="Neumann">
+        <BCType label="m_30" var="Neumann">
           <value> 0.0 </value>
         </BCType>
-        <BCType id="all" label="m_01" var="Neumann">
+        <BCType label="m_01" var="Neumann">
           <value> 0.0 </value>
         </BCType>
-        <BCType id="all" label="m_11" var="Neumann">
+        <BCType label="m_11" var="Neumann">
           <value> 0.0 </value>
         </BCType>
       </Face>
