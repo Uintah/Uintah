@@ -10,10 +10,12 @@ function k=plotShapeFunctions
   clear all;
   global PPC;
   global NSFN;
+  global d_doPlotShapeFunction;
 
-  PPC = 8;
- [sf]  = shapeFunctions;                 % load all the shape functions
- [IF]  = initializationFunctions         % load initialization functions
+  PPC = 2;
+  d_doPlotShapeFunction = true;
+  [sf]  = shapeFunctions;                 % load all the shape functions
+  [IF]  = initializationFunctions         % load initialization functions
 
   interpolation = 'GIMP';              %  'linear' or 'GIMP'
   domain        = 1;
@@ -28,33 +30,12 @@ function k=plotShapeFunctions
   
   [Lx]       = IF.initialize_Lx(NN, nodePos);
   
-%  Lx(2,1) = dx/4;
-%  Lx(5,1) = dx/4;
-  Lx
-
-
   L  = dx;
   lp = R.lp
   
   maxpts = int32(100);
   
   %__________________________________
-  % define 
-  
-  if( strcmp(interpolation,'GIMP') )
-    NSFN      = 3;                        % Number of shape function nodes Linear:2, linear:3
-    xp(1)     =  -L-lp ;                  % starting postition GIMP
-    delX      = ( 2*(L + lp))/double(maxpts-1)
-    focusNode = 3;
-    
-  else
-    NSFN      = 2;                        % Number of shape function nodes Linear:2, linear:3
-    xp(1)     = -L;
-    delX      = 2*L/double(maxpts)
-    focusNode = 2;
-  end
-  
-  
   %             GIMP
   %Pos:    -2     dx   -1            0            1            2
   %        |-----xxxxxxx|xxxxxxxxxxxx|xxxxxxxxxxxx|xxxxxx------|
@@ -71,7 +52,26 @@ function k=plotShapeFunctions
   %       -L            0            L
   %               
   % loop over all cells from (-L) to (L) relative to focus node (2)
-  
+  %__________________________________
+   
+  if( strcmp(interpolation,'GIMP') )
+    NSFN      = 3;                        % Number of shape function nodes Linear:2, GIMP:3
+    xp(1)     =  -L-lp ;                  % starting postition GIMP
+    delX      = ( 2*(L + lp))/double(maxpts)
+    focusNode = 3;
+    doBulletProofing = false;
+    
+  else
+    NSFN      = 2;                        % Number of shape function nodes Linear:2, GIMP:3
+    xp(1)     = -L;
+    delX      = 2*L/double(maxpts)
+    focusNode = 2;
+  end
+
+  Lx(focusNode,2) = dx/4;                 % Set dx_R = dx_L/4
+  Lx
+
+
   
   Ss1(1) = 0.0;
   Ss2(1) = 0.0;
@@ -84,10 +84,10 @@ function k=plotShapeFunctions
     
     if( strcmp(interpolation,'GIMP') )
       [nodes,S1]    = sf.findNodesAndWeights_gimp( xp(c), lp, nRegions, Regions, nodePos, Lx);
-      [nodes,S2]    = sf.findNodesAndWeights_gimp2(xp(c), lp, nRegions, Regions, nodePos, Lx);
+      [nodes,S2]    = sf.findNodesAndWeights_gimp2(xp(c), lp, nRegions, Regions, nodePos, Lx, doBulletProofing);
     
       [nodes,G1, dx]= sf.findNodesAndWeightGradients_gimp( xp(c), lp, nRegions, Regions, nodePos,Lx);
-      [nodes,G2, dx]= sf.findNodesAndWeightGradients_gimp2(xp(c), lp, nRegions, Regions, nodePos,Lx);
+      [nodes,G2, dx]= sf.findNodesAndWeightGradients_gimp2(xp(c), lp, nRegions, Regions, nodePos,Lx, doBulletProofing);
     else
       [nodes,S1]    = sf.findNodesAndWeights_linear( xp(c), lp, nRegions, Regions, nodePos, Lx);
       [nodes,S2]    = sf.findNodesAndWeights_linear( xp(c), lp, nRegions, Regions, nodePos, Lx);

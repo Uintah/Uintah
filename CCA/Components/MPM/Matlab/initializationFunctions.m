@@ -91,36 +91,43 @@ function [IF] = initializationFunctions
   %   Initialize the regions
   %
   function [Regions, nRegions,NN, dx_min] = initialize_Regions(domain,PPC,R1_dx,interpolation,d_smallNum)
+    global d_doPlotShapeFunction;
     %__________________________________
     % region structure 
     %
-if(1)
-    fprintf('USING plotShapeFunction regions\n');
+    
+    %__________________________________
+    %  PLOT SHAPE FUNCTION
+    if(d_doPlotShapeFunction)
+      fprintf('USING plotShapeFunction regions\n');
 
-    nRegions      = int32(1);              % partition the domain into numRegions
-    Regions       = cell(nRegions,1);      % array that holds the individual region information
-    R.refineRatio = 1;
+      nRegions      = int32(1);              % partition the domain into numRegions
+      Regions       = cell(nRegions,1);      % array that holds the individual region information
+      R.refineRatio = 1;
 
-    R.min         = -1;                     % location of left node
-    R.max         = 1;                     % location of right node
-    R.dx          = 1;
-    R.NN          = int32( (R.max - R.min)/R.dx +1 ); % number of nodes interior nodes
-    R.lp          = R.dx/(2 * PPC);
-    Regions{1}    = R;
-end
+      R.min         = -1;                    % physical location of left node
+      R.max         = 1;                     % physical location of right node
+      R.dx          = 1;
+      R.NN          = int32( (R.max - R.min)/R.dx +1); % number of nodes interior nodes
+      R.lp          = R.dx/(2 * PPC);
+      Regions{1}    = R;
+      NN            = R.NN
+    end
 
-
+    %__________________________________
+    %  AMRMPM REGIONS
+    
 if(0)
     %__________________________________
     % single level
     nRegions    = int32(2);               % partition the domain into nRegions
     Regions       = cell(nRegions,1);     % array that holds the individual region information
-    R.min         = 0;                    % location of left point
-    R.max         = domain/2;             % location of right point
+    R.min         = 0;                    % physical location of left point  Region 1
+    R.max         = domain/2;             % physical location of right point Region 1 
     R.refineRatio = 1;
     R.dx          = R1_dx;
     R.volP        = R.dx/PPC;
-    R.NN          = int32( (R.max - R.min)/R.dx +1 );
+    R.NN          = int32( (R.max - R.min)/R.dx +1);
     R.lp          = R.dx/(2 * PPC);
     Regions{1}    = R;
 
