@@ -387,7 +387,7 @@ void Switcher::scheduleInitialize(const LevelP     & level,
 
   for (d_componentIndex = 0; d_componentIndex < d_numComponents; ++d_componentIndex) {
 
-    proc0cout << "  Scheduling initialization for component: " << d_componentIndex << "\n";
+    proc0cout << "  Scheduling initialization for component: " << d_componentIndex << " (level: " <<  level->getIndex() << ")\n";
 
     d_sim = dynamic_cast<SimulationInterface*>(getPort("sim", d_componentIndex));
     d_sim->scheduleInitialize(level, sched);

@@ -206,6 +206,20 @@ void SerialMPM::problemSetup(const ProblemSpecP& prob_spec,
     mpm_amr_ps->getWithDefault("max_grid_level", flags->d_maxGridLevel, 1000);
   }
 
+  // read in AMR flags from the main ups file
+  ProblemSpecP multi_scale_ps = prob_spec->findBlock("MultiScale");
+  if (multi_scale_ps) {
+    ProblemSpecP mpm_multi_scale_ps = multi_scale_ps->findBlock("MPM");
+    if(!mpm_multi_scale_ps){
+      ostringstream warn;
+      warn<<"ERROR:MPM:\n missing MPM section in the MultiScale section of the input file\n";
+      throw ProblemSetupException(warn.str(), __FILE__, __LINE__);
+    }
+
+    mpm_multi_scale_ps->getWithDefault("min_grid_level", flags->d_minGridLevel, 0);
+    mpm_multi_scale_ps->getWithDefault("max_grid_level", flags->d_maxGridLevel, 1000);
+  }
+
   if(flags->d_8or27==8){
     NGP=1;
     NGN=1;

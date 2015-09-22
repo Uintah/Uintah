@@ -729,7 +729,7 @@ Grid::getLength( Vector & length, const string & flag ) const
 }
 
 void 
-Grid::problemSetup(const ProblemSpecP& params, const ProcessorGroup *pg, bool do_amr)
+Grid::problemSetup(const ProblemSpecP& params, const ProcessorGroup *pg, bool do_amr_or_multi_scale)
 {
    ProblemSpecP grid_ps = params->findBlock("Grid");
    if(!grid_ps)
@@ -1276,7 +1276,7 @@ Grid::problemSetup(const ProblemSpecP& params, const ProcessorGroup *pg, bool do
         } // end for(int i=0;i<patches.x();i++){
       } // end for(ProblemSpecP box_ps = level_ps->findBlock("Box");
 
-      if (pg->size() > 1 && (level->numPatches() < pg->size()) && !do_amr) {
+      if (pg->size() > 1 && (level->numPatches() < pg->size()) && !do_amr_or_multi_scale) {
         throw ProblemSetupException("Number of patches must >= the number of processes in an mpi run",
                                     __FILE__, __LINE__);
       }
@@ -1293,10 +1293,13 @@ Grid::problemSetup(const ProblemSpecP& params, const ProcessorGroup *pg, bool do
       //level->assignBCS(grid_ps,0);
       levelIndex++;
    }
-   if(numLevels() >1 && !do_amr) {  // bullet proofing
-     throw ProblemSetupException("Grid.cc:problemSetup: Multiple levels encountered in non-AMR grid",
-                                __FILE__, __LINE__);
-   }
+
+  if (numLevels() > 1 && !do_amr_or_multi_scale) {  // bullet proofing
+    throw ProblemSetupException("Grid.cc:problemSetup: Multiple levels encountered in non-AMR or non-MultiScale grid",
+    __FILE__,
+                                __LINE__);
+  }
+
 } // end problemSetup()
 
 namespace Uintah
