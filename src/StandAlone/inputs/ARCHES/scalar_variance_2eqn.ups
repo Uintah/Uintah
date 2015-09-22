@@ -52,146 +52,147 @@
       <periodic> [0,0,1] </periodic>
     </Level>
     <BoundaryConditions>
+      <DefaultMaterial>0</DefaultMaterial>
       <Face side="x-" name="floor">
-        <BCType id="all" label="bottom wall" var="WallBC">
+        <BCType label="bottom wall" var="WallBC">
           <value>0.0</value>
         </BCType>
-        <BCType id="all" label="mixture_fraction" var="Neumann">
+        <BCType label="mixture_fraction" var="Neumann">
           <value>0.0</value>
         </BCType>
-        <BCType id="all" label="passive_scalar" var="Neumann">
+        <BCType label="passive_scalar" var="Neumann">
           <value>0.0</value>
         </BCType>
-        <BCType id="all" label="normScalarVar" var="Neumann">
+        <BCType label="normScalarVar" var="Neumann">
           <value>0.0</value>
         </BCType>
-        <BCType id="all" label="SolidWallTemperature" var="Dirichlet">
+        <BCType label="SolidWallTemperature" var="Dirichlet">
           <value>293.0</value>
         </BCType>
-        <BCType id="all" label="mf_moment_2" var="Neumann">
+        <BCType label="mf_moment_2" var="Neumann">
           <value> 0.0 </value>
         </BCType>
-        <BCType id="all" label="gradmf2" var="Neumann">
+        <BCType label="gradmf2" var="Neumann">
           <value> 0.0 </value>
         </BCType>
       </Face>
       <Face rectangle="x-" lower="0 .075 0" upper="0 .125 0.1" name="inlet">
-        <BCType id="all" label="inlet" var="VelocityInlet">
+        <BCType label="inlet" var="VelocityInlet">
           <value>[1.0,0.0,0.0]</value>
         </BCType>
-        <BCType id="all" label="mixture_fraction" var="Dirichlet">
+        <BCType label="mixture_fraction" var="Dirichlet">
           <value>1.0</value>
         </BCType>
-        <BCType id="all" label="passive_scalar" var="Dirichlet">
+        <BCType label="passive_scalar" var="Dirichlet">
           <value>1.0</value>
         </BCType>
-        <BCType id="all" label="normScalarVar" var="Dirichlet">
+        <BCType label="normScalarVar" var="Dirichlet">
           <value>0.0</value>
         </BCType>
-        <BCType id="all" label="mf_moment_2" var="Dirichlet">
+        <BCType label="mf_moment_2" var="Dirichlet">
          <value> 1.0 </value>
         </BCType>
-        <BCType id="all" label="gradmf2" var="Dirichlet">
+        <BCType label="gradmf2" var="Dirichlet">
           <value> 0.0 </value>
         </BCType>
       </Face>
       <Face side="x+" name="x+ wall">
-        <BCType id="all" label="top" var="OutletBC">
+        <BCType label="top" var="OutletBC">
           <value>0.0</value>
         </BCType>
-        <BCType id="all" label="mixture_fraction" var="Neumann">
+        <BCType label="mixture_fraction" var="Neumann">
           <value>0.0</value>
         </BCType>
-        <BCType id="all" label="passive_scalar" var="Neumann">
+        <BCType label="passive_scalar" var="Neumann">
           <value>0.0</value>
         </BCType>
-        <BCType id="all" label="normScalarVar" var="Neumann">
+        <BCType label="normScalarVar" var="Neumann">
           <value>0.0</value>
         </BCType>
-        <BCType id="all" label="mf_moment_2" var="Neumann">
+        <BCType label="mf_moment_2" var="Neumann">
           <value> 0.0 </value>
         </BCType>
-        <BCType id="all" label="gradmf2" var="Neumann">
+        <BCType label="gradmf2" var="Neumann">
           <value> 0.0 </value>
         </BCType>
       </Face>
       <Face side="y-" name="y- wall">
-        <BCType id="all" label="y-pressure" var="PressureBC">
+        <BCType label="y-pressure" var="PressureBC">
           <value>0.0</value>
         </BCType>
-        <BCType id="all" label="mixture_fraction" var="Neumann">
+        <BCType label="mixture_fraction" var="Neumann">
           <value>0.0</value>
         </BCType>
-        <BCType id="all" label="passive_scalar" var="Neumann">
+        <BCType label="passive_scalar" var="Neumann">
           <value>0.0</value>
         </BCType>
-        <BCType id="all" label="normScalarVar" var="Dirichlet">
+        <BCType label="normScalarVar" var="Dirichlet">
           <value>0.0</value>
         </BCType>
-        <BCType id="all" label="mf_moment_2" var="Neumann">
+        <BCType label="mf_moment_2" var="Neumann">
           <value> 0.0 </value>
         </BCType>
-        <BCType id="all" label="gradmf2" var="Neumann">
+        <BCType label="gradmf2" var="Neumann">
           <value> 0.0 </value>
         </BCType> 
       </Face>
       <Face side="y+" name="y+ wall">
-        <BCType id="all" label="y+pressure" var="PressureBC">
+        <BCType label="y+pressure" var="PressureBC">
           <value>0.0</value>
         </BCType>
-        <BCType id="all" label="mixture_fraction" var="Neumann">
+        <BCType label="mixture_fraction" var="Neumann">
           <value>0.0</value>
         </BCType>
-        <BCType id="all" label="passive_scalar" var="Neumann">
+        <BCType label="passive_scalar" var="Neumann">
           <value>0.0</value>
         </BCType>
-        <BCType id="all" label="normScalarVar" var="Dirichlet">
+        <BCType label="normScalarVar" var="Dirichlet">
           <value>0.0</value>
         </BCType>
-        <BCType id="all" label="mf_moment_2" var="Neumann">
+        <BCType label="mf_moment_2" var="Neumann">
           <value> 0.0 </value>
         </BCType>
-        <BCType id="all" label="gradmf2" var="Neumann">
+        <BCType label="gradmf2" var="Neumann">
           <value> 0.0 </value>
         </BCType> 
       </Face>
       <Face side="z-" name="z- wall">
-        <BCType id="all" label="z-pressure" var="PressureBC">
+        <BCType label="z-pressure" var="PressureBC">
           <value>0.0</value>
         </BCType>
-        <BCType id="all" label="mixture_fraction" var="Neumann">
+        <BCType label="mixture_fraction" var="Neumann">
           <value>0.0</value>
         </BCType>
-        <BCType id="all" label="passive_scalar" var="Neumann">
+        <BCType label="passive_scalar" var="Neumann">
           <value>0.0</value>
         </BCType>
-        <BCType id="all" label="normScalarVar" var="Dirichlet">
+        <BCType label="normScalarVar" var="Dirichlet">
           <value>0.0</value>
         </BCType>
-        <BCType id="all" label="mf_moment_2" var="Neumann">
+        <BCType label="mf_moment_2" var="Neumann">
           <value> 0.0 </value>
         </BCType>
-        <BCType id="all" label="gradmf2" var="Neumann">
+        <BCType label="gradmf2" var="Neumann">
           <value> 0.0 </value>
         </BCType> 
       </Face>
       <Face side="z+" name="z+ wall">
-        <BCType id="all" label="z+pressure" var="PressureBC">
+        <BCType label="z+pressure" var="PressureBC">
           <value>0.0</value>
         </BCType>
-        <BCType id="all" label="mixture_fraction" var="Neumann">
+        <BCType label="mixture_fraction" var="Neumann">
           <value>0.0</value>
         </BCType>
-        <BCType id="all" label="passive_scalar" var="Neumann">
+        <BCType label="passive_scalar" var="Neumann">
           <value>0.0</value>
         </BCType>
-        <BCType id="all" label="normScalarVar" var="Neumann">
+        <BCType label="normScalarVar" var="Neumann">
           <value>0.0</value>
         </BCType>
-        <BCType id="all" label="mf_moment_2" var="Neumann">
+        <BCType label="mf_moment_2" var="Neumann">
           <value> 0.0 </value>
         </BCType>
-        <BCType id="all" label="gradmf2" var="Neumann">
+        <BCType label="gradmf2" var="Neumann">
           <value> 0.0 </value>
         </BCType>
       </Face>

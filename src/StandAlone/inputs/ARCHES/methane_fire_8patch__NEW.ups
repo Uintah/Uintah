@@ -53,164 +53,165 @@
       </Box>
     </Level>
     <BoundaryConditions>
+      <DefaultMaterial>0</DefaultMaterial>
       <Face side="x-">
-        <BCType id="0" var="WallBC"  label="x-wall">
+        <BCType var="WallBC"  label="x-wall">
           <value>0.0</value>
         </BCType>
-        <BCType id="0" var="Neumann" label="mixture_fraction"> 
+        <BCType var="Neumann" label="mixture_fraction"> 
           <value>0.0</value>
         </BCType>
-        <BCType id="0" var="Neumann" label="heat_loss"> 
+        <BCType var="Neumann" label="heat_loss"> 
           <value>0.0</value>
         </BCType>
-        <BCType id="0" var="Neumann" label="scalar_var"> 
+        <BCType var="Neumann" label="scalar_var"> 
           <value>0.0</value>
         </BCType>
-        <BCType id="0" var="Neumann" label="enthalpy"> 
+        <BCType var="Neumann" label="enthalpy"> 
           <value>0.0</value>
         </BCType>
-        <BCType id="all"  label = "radiation_temperature" var="Dirichlet">
+        <BCType  label = "radiation_temperature" var="Dirichlet">
           <value> 298.0 </value>
         </BCType>
-        <BCType id="0"  label= "abskg"              var="ForcedDirichlet">
+        <BCType  label= "abskg"              var="ForcedDirichlet">
                             <value> 1.0 </value>
         </BCType>
       </Face>
       <Face circle="x-" origin="0 1.5 1.5" radius="0.5" name="main inlet">
-        <BCType id="0" var="MassFlowInlet"  label="mass flow inlet">
+        <BCType var="MassFlowInlet"  label="mass flow inlet">
           <value>0.04527</value>
         </BCType>
-        <BCType id="0" var="Dirichlet" label="mixture_fraction"> 
+        <BCType var="Dirichlet" label="mixture_fraction"> 
           <value>1.0</value>
         </BCType>
-        <BCType id="0" var="Dirichlet" label="heat_loss"> 
+        <BCType var="Dirichlet" label="heat_loss"> 
           <value>0.0</value>
         </BCType>
-        <BCType id="0" var="Dirichlet" label="scalar_var"> 
+        <BCType var="Dirichlet" label="scalar_var"> 
           <value>0.0</value>
         </BCType>
-        <BCType id="0" var="Tabulated" label="enthalpy"> 
+        <BCType var="Tabulated" label="enthalpy"> 
           <value>adiabaticenthalpy</value>
         </BCType>
-        <BCType id="all"  label = "radiation_temperature" var="Tabulated">
+        <BCType  label = "radiation_temperature" var="Tabulated">
           <value>temperature</value>
         </BCType>
-        <BCType id="0"  label= "abskg"              var="ForcedDirichlet">
+        <BCType  label= "abskg"              var="ForcedDirichlet">
                             <value> 1.0 </value>
         </BCType>
       </Face> 
       <Face side="x+">
-        <BCType id="0" var="OutletBC"  label="the outlet">
+        <BCType var="OutletBC"  label="the outlet">
           <value>0.0</value>
         </BCType>
-        <BCType id="0" var="Neumann" label="mixture_fraction"> 
+        <BCType var="Neumann" label="mixture_fraction"> 
           <value>0.0</value>
         </BCType>
-        <BCType id="0" var="Neumann" label="heat_loss"> 
+        <BCType var="Neumann" label="heat_loss"> 
           <value>0.0</value>
         </BCType>
-        <BCType id="0" var="Neumann" label="scalar_var"> 
+        <BCType var="Neumann" label="scalar_var"> 
           <value>0.0</value>
         </BCType>
-        <BCType id="0" var="Neumann" label="enthalpy"> 
+        <BCType var="Neumann" label="enthalpy"> 
           <value>0.0</value>
         </BCType>
-        <BCType id="all"  label = "radiation_temperature" var="Dirichlet">
+        <BCType  label = "radiation_temperature" var="Dirichlet">
           <value> 298.0 </value>
         </BCType>
-        <BCType id="0"  label= "abskg"              var="ForcedDirichlet">
+        <BCType  label= "abskg"              var="ForcedDirichlet">
                             <value> 1.0 </value>
         </BCType>
       </Face>
       <Face side="y-">
-        <BCType id="0" var="PressureBC"  label="y-pressure">
+        <BCType var="PressureBC"  label="y-pressure">
           <value>0.0</value>
         </BCType>
-        <BCType id="0" var="Neumann" label="mixture_fraction"> 
+        <BCType var="Neumann" label="mixture_fraction"> 
           <value>0.0</value>
         </BCType>
-        <BCType id="0" var="Neumann" label="heat_loss"> 
+        <BCType var="Neumann" label="heat_loss"> 
           <value>0.0</value>
         </BCType>
-        <BCType id="0" var="Neumann" label="scalar_var"> 
+        <BCType var="Neumann" label="scalar_var"> 
           <value>0.0</value>
         </BCType>
-        <BCType id="0" var="Neumann" label="enthalpy"> 
+        <BCType var="Neumann" label="enthalpy"> 
           <value>0.0</value>
         </BCType>
-        <BCType id="all"  label = "radiation_temperature" var="Dirichlet">
+        <BCType  label = "radiation_temperature" var="Dirichlet">
           <value> 298.0 </value>
         </BCType>
-        <BCType id="0"  label= "abskg"              var="ForcedDirichlet">
+        <BCType  label= "abskg"              var="ForcedDirichlet">
                             <value> 1.0 </value>
         </BCType>
       </Face>
       <Face side="y+">
-        <BCType id="0" var="PressureBC"  label="y+pressure">
+        <BCType var="PressureBC"  label="y+pressure">
           <value>0.0</value>
         </BCType>
-        <BCType id="0" var="Neumann" label="mixture_fraction"> 
+        <BCType var="Neumann" label="mixture_fraction"> 
           <value>0.0</value>
         </BCType>
-        <BCType id="0" var="Neumann" label="heat_loss"> 
+        <BCType var="Neumann" label="heat_loss"> 
           <value>0.0</value>
         </BCType>
-        <BCType id="0" var="Neumann" label="scalar_var"> 
+        <BCType var="Neumann" label="scalar_var"> 
           <value>0.0</value>
         </BCType>
-        <BCType id="0" var="Neumann" label="enthalpy"> 
+        <BCType var="Neumann" label="enthalpy"> 
           <value>0.0</value>
         </BCType>
-        <BCType id="all"  label = "radiation_temperature" var="Dirichlet">
+        <BCType  label = "radiation_temperature" var="Dirichlet">
           <value> 298.0 </value>
         </BCType>
-        <BCType id="0"  label= "abskg"              var="ForcedDirichlet">
+        <BCType  label= "abskg"              var="ForcedDirichlet">
                             <value> 1.0 </value>
         </BCType>
       </Face>
       <Face side="z-">
-        <BCType id="0" var="PressureBC"  label="z-pressure">
+        <BCType var="PressureBC"  label="z-pressure">
           <value>0.0</value>
         </BCType>
-        <BCType id="0" var="Neumann" label="mixture_fraction"> 
+        <BCType var="Neumann" label="mixture_fraction"> 
           <value>0.0</value>
         </BCType>
-        <BCType id="0" var="Neumann" label="heat_loss"> 
+        <BCType var="Neumann" label="heat_loss"> 
           <value>0.0</value>
         </BCType>
-        <BCType id="0" var="Neumann" label="scalar_var"> 
+        <BCType var="Neumann" label="scalar_var"> 
           <value>0.0</value>
         </BCType>
-        <BCType id="0" var="Neumann" label="enthalpy"> 
+        <BCType var="Neumann" label="enthalpy"> 
           <value>0.0</value>
         </BCType>
-        <BCType id="all"  label = "radiation_temperature" var="Dirichlet">
+        <BCType  label = "radiation_temperature" var="Dirichlet">
           <value> 298.0 </value>
         </BCType>
-        <BCType id="0"  label= "abskg"              var="ForcedDirichlet">
+        <BCType  label= "abskg"              var="ForcedDirichlet">
                             <value> 1.0 </value>
         </BCType>
       </Face>
       <Face side="z+">
-        <BCType id="0" var="PressureBC"  label="z+pressure">
+        <BCType var="PressureBC"  label="z+pressure">
           <value>0.0</value>
         </BCType>
-        <BCType id="0" var="Neumann" label="mixture_fraction"> 
+        <BCType var="Neumann" label="mixture_fraction"> 
           <value>0.0</value>
         </BCType>
-        <BCType id="0" var="Neumann" label="heat_loss"> 
+        <BCType var="Neumann" label="heat_loss"> 
           <value>0.0</value>
         </BCType>
-        <BCType id="0" var="Neumann" label="scalar_var"> 
+        <BCType var="Neumann" label="scalar_var"> 
           <value>0.0</value>
         </BCType>
-        <BCType id="0" var="Neumann" label="enthalpy"> 
+        <BCType var="Neumann" label="enthalpy"> 
           <value>0.0</value>
         </BCType>
-        <BCType id="all"  label = "radiation_temperature" var="Dirichlet">
+        <BCType  label = "radiation_temperature" var="Dirichlet">
           <value> 298.0 </value>
         </BCType>
-        <BCType id="0"  label= "abskg"              var="ForcedDirichlet">
+        <BCType  label= "abskg"              var="ForcedDirichlet">
                             <value> 1.0 </value>
         </BCType>
       </Face>

@@ -67,35 +67,36 @@
       </Box>
     </Level>
     <BoundaryConditions>
+      <DefaultMaterial>0</DefaultMaterial>
     
       <!-- Secondary, Co-Flow Inlet --> 
       <Face side="x-" name="coflow">
         <!-- Momentum BCs --> 
-        <BCType id="0" label="co-flow inlet"        var="MassFlowInlet">
+        <BCType label="co-flow inlet"        var="MassFlowInlet">
                             <value>1.204</value>
         </BCType>
         <!-- Table BCs --> 
-        <BCType id="0" label="mixture_fraction"       var="Dirichlet">
+        <BCType label="mixture_fraction"       var="Dirichlet">
                             <value>0.0</value>
         </BCType>
-        <BCType id="0" label="heat_loss"              var="Dirichlet">
+        <BCType label="heat_loss"              var="Dirichlet">
                             <value>0.0</value>
         </BCType>
-        <BCType id="0" label="normalizedScalarVar"    var="Dirichlet">
+        <BCType label="normalizedScalarVar"    var="Dirichlet">
                             <value>0.0</value>
         </BCType>
         <!-- Energy BC --> 
-        <BCType id="0" label="enthalpy_rmcrt"         var="Tabulated">
+        <BCType label="enthalpy_rmcrt"         var="Tabulated">
                             <value>adiabaticenthalpy</value> <!-- Pure oxidizer enthalpy --> 
         </BCType>
-        <BCType id="0" label="enthalpy_do"             var="Tabulated">
+        <BCType label="enthalpy_do"             var="Tabulated">
                             <value>adiabaticenthalpy</value> <!-- Pure oxidizer enthalpy --> 
         </BCType>
                         <!-- for RMCRT-->
-        <BCType id="0"  label= "radiation_temperature"  var="Tabulated">
+        <BCType  label= "radiation_temperature"  var="Tabulated">
                             <value>temperature</value>
         </BCType>
-        <BCType id="0"  label= "abskg"                  var="ForcedDirichlet">
+        <BCType  label= "abskg"                  var="ForcedDirichlet">
                             <value> 1. </value>
         </BCType>
       </Face>
@@ -103,31 +104,31 @@
       <!-- Bottom Annular Ring -->
       <Face annulus="x-" origin="0.0 2.0 2.0" inner_radius="0.5" outer_radius="1.01" name="annulus">
         <!-- Momentum BCs --> 
-        <BCType id="0" label="annular ring" var="WallBC">
+        <BCType label="annular ring" var="WallBC">
                             <value>0.0</value>
         </BCType>
         <!-- Table BCs --> 
-        <BCType id="0" label="mixture_fraction"       var="Neumann">
+        <BCType label="mixture_fraction"       var="Neumann">
                             <value>0.0</value>
         </BCType>
-        <BCType id="0" label="heat_loss"              var="Neumann">
+        <BCType label="heat_loss"              var="Neumann">
                             <value>0.0</value>
         </BCType>
-        <BCType id="0" label="normalizedScalarVar"    var="Neumann">
+        <BCType label="normalizedScalarVar"    var="Neumann">
                             <value>0.0</value>
         </BCType>
         <!-- Energy BC --> 
-        <BCType id="0" label="enthalpy_rmcrt"         var="Neumann">
+        <BCType label="enthalpy_rmcrt"         var="Neumann">
                             <value>0.0</value> 
         </BCType> 
-        <BCType id="0" label="enthalpy_do"             var="Neumann">
+        <BCType label="enthalpy_do"             var="Neumann">
                             <value>0.0</value> <!-- Pure oxidizer enthalpy --> 
         </BCType>
                         <!-- for RMCRT-->
-        <BCType id="0"  label= "radiation_temperature"  var="Dirichlet">
+        <BCType  label= "radiation_temperature"  var="Dirichlet">
                             <value> 298 </value>
         </BCType>
-        <BCType id="0"  label= "abskg"                  var="ForcedDirichlet">
+        <BCType  label= "abskg"                  var="ForcedDirichlet">
                             <value> 1. </value>
         </BCType>
       </Face>
@@ -135,31 +136,31 @@
       <!-- Primary Flow Inlet --> 
       <Face circle="x-" origin="0.0 2.0 2.0" radius="0.5" name="primary">
         <!-- Momentum BCs --> 
-        <BCType id="0" label="primary inlet"        var="MassFlowInlet">
+        <BCType label="primary inlet"        var="MassFlowInlet">
                             <value>0.0990</value>
         </BCType>
         <!-- Table BCs --> 
-        <BCType id="0" label="mixture_fraction"     var="Dirichlet">
+        <BCType label="mixture_fraction"     var="Dirichlet">
                             <value>1.0</value>
         </BCType>
-        <BCType id="0" label="heat_loss"            var="Dirichlet">
+        <BCType label="heat_loss"            var="Dirichlet">
                             <value>0.0</value>
         </BCType>
-        <BCType id="0" label="normalizedScalarVar"  var="Dirichlet">
+        <BCType label="normalizedScalarVar"  var="Dirichlet">
                             <value>0.0</value>
         </BCType>
         <!-- Energy BC --> 
-        <BCType id="0" label="enthalpy_rmcrt"       var="Tabulated">
+        <BCType label="enthalpy_rmcrt"       var="Tabulated">
                             <value>adiabaticenthalpy</value> <!-- Pure fuel enthalpy --> 
         </BCType>
-        <BCType id="0" label="enthalpy_do"          var="Tabulated">
+        <BCType label="enthalpy_do"          var="Tabulated">
                             <value>adiabaticenthalpy</value> <!-- Pure oxidizer enthalpy --> 
         </BCType>
                         <!-- for RMCRT-->
-        <BCType id="0"  label= "radiation_temperature" var="Tabulated">
+        <BCType  label= "radiation_temperature" var="Tabulated">
                             <value> temperature </value>
         </BCType>
-        <BCType id="0"  label= "abskg"              var="ForcedDirichlet">
+        <BCType  label= "abskg"              var="ForcedDirichlet">
                             <value> 1. </value>
         </BCType>
       </Face>
@@ -168,124 +169,124 @@
       <!--__________________________________  y- -->
       <Face side="y-">
         <!-- Momentum BCs --> 
-        <BCType id="0" label="y- pressure"          var="PressureBC">
+        <BCType label="y- pressure"          var="PressureBC">
                             <value>0.0</value>
         </BCType>
         <!-- Table BCs --> 
-        <BCType id="0" label="mixture_fraction"     var="Neumann">
+        <BCType label="mixture_fraction"     var="Neumann">
                             <value>0.0</value>
         </BCType>
-        <BCType id="0" label="heat_loss"            var="Neumann">
+        <BCType label="heat_loss"            var="Neumann">
                             <value>0.0</value>
         </BCType>
-        <BCType id="0" label="normalizedScalarVar"  var="Neumann">
+        <BCType label="normalizedScalarVar"  var="Neumann">
                             <value>0.0</value>
         </BCType>
         <!-- Energy BC --> 
-        <BCType id="0" label="enthalpy_rmcrt"       var="Neumann">
+        <BCType label="enthalpy_rmcrt"       var="Neumann">
                             <value>0.0</value> 
         </BCType>
-        <BCType id="0" label="enthalpy_do"          var="Neumann">
+        <BCType label="enthalpy_do"          var="Neumann">
                             <value>0.0</value> 
         </BCType>
                         <!-- for RMCRT-->
-        <BCType id="0"  label= "radiation_temperature" var="Dirichlet">
+        <BCType  label= "radiation_temperature" var="Dirichlet">
                             <value> 298 </value>
         </BCType>
-        <BCType id="0"  label= "abskg"              var="ForcedDirichlet">
+        <BCType  label= "abskg"              var="ForcedDirichlet">
                             <value> 1. </value>
         </BCType>
       </Face>
       <!--__________________________________  Y+ -->
       <Face side="y+">
         <!-- Momentum BCs --> 
-        <BCType id="0" label="y+ pressure"          var="PressureBC">
+        <BCType label="y+ pressure"          var="PressureBC">
                             <value>0.0</value>
         </BCType>
         <!-- Table BCs --> 
-        <BCType id="0" label="mixture_fraction"     var="Neumann">
+        <BCType label="mixture_fraction"     var="Neumann">
                             <value>0.0</value>
         </BCType>
-        <BCType id="0" label="heat_loss"            var="Neumann">
+        <BCType label="heat_loss"            var="Neumann">
                             <value>0.0</value>
         </BCType>
-        <BCType id="0" label="normalizedScalarVar"  var="Neumann">
+        <BCType label="normalizedScalarVar"  var="Neumann">
                             <value>0.0</value>
         </BCType>
         <!-- Energy BC --> 
-        <BCType id="0" label="enthalpy_rmcrt"       var="Neumann">
+        <BCType label="enthalpy_rmcrt"       var="Neumann">
                             <value>0.0</value> 
         </BCType>
-        <BCType id="0" label="enthalpy_do"          var="Neumann">
+        <BCType label="enthalpy_do"          var="Neumann">
                             <value>0.0</value> 
         </BCType>
                         <!-- for RMCRT-->
-        <BCType id="0"  label= "radiation_temperature"  var="Dirichlet">
+        <BCType  label= "radiation_temperature"  var="Dirichlet">
                             <value> 298 </value>
         </BCType>
-        <BCType id="0"  label= "abskg"              var="ForcedDirichlet">
+        <BCType  label= "abskg"              var="ForcedDirichlet">
                             <value> 1. </value>
         </BCType>
       </Face>
       <!--__________________________________  Z- -->
       <Face side="z-">
         <!-- Momentum BCs --> 
-        <BCType id="0" label="z- pressure"          var="PressureBC">
+        <BCType label="z- pressure"          var="PressureBC">
                             <value>0.0</value>
         </BCType>
         <!-- Table BCs --> 
-        <BCType id="0" label="mixture_fraction"     var="Neumann">
+        <BCType label="mixture_fraction"     var="Neumann">
                             <value>0.0</value>
         </BCType>
-        <BCType id="0" label="heat_loss"            var="Neumann">
+        <BCType label="heat_loss"            var="Neumann">
                             <value>0.0</value>
         </BCType>
-        <BCType id="0" label="normalizedScalarVar"  var="Neumann">
+        <BCType label="normalizedScalarVar"  var="Neumann">
                             <value>0.0</value>
         </BCType>
         <!-- Energy BC --> 
-        <BCType id="0" label="enthalpy_rmcrt"       var="Neumann">
+        <BCType label="enthalpy_rmcrt"       var="Neumann">
                             <value>0.0</value> 
         </BCType>
-        <BCType id="0" label="enthalpy_do"          var="Neumann">
+        <BCType label="enthalpy_do"          var="Neumann">
                             <value>0.0</value> 
         </BCType>
                         <!-- for RMCRT-->
-        <BCType id="0"  label= "radiation_temperature" var="Dirichlet">
+        <BCType  label= "radiation_temperature" var="Dirichlet">
                             <value> 298 </value>
         </BCType>
-        <BCType id="0"  label= "abskg"              var="ForcedDirichlet">
+        <BCType  label= "abskg"              var="ForcedDirichlet">
                             <value> 1. </value>
         </BCType>
       </Face>
       <!--__________________________________  Z+ -->
       <Face side="z+">
         <!-- Momentum BCs --> 
-        <BCType id="0" label="z+ pressure"          var="PressureBC">
+        <BCType label="z+ pressure"          var="PressureBC">
                             <value>0.0</value>
         </BCType>
         <!-- Table BCs --> 
-        <BCType id="0" label="mixture_fraction"     var="Neumann">
+        <BCType label="mixture_fraction"     var="Neumann">
                             <value>0.0</value>
         </BCType>
-        <BCType id="0" label="heat_loss"            var="Neumann">
+        <BCType label="heat_loss"            var="Neumann">
                             <value>0.0</value>
         </BCType>
-        <BCType id="0" label="normalizedScalarVar"  var="Neumann">
+        <BCType label="normalizedScalarVar"  var="Neumann">
                             <value>0.0</value>
         </BCType>
         <!-- Energy BC --> 
-        <BCType id="0" label="enthalpy_rmcrt"       var="Neumann">
+        <BCType label="enthalpy_rmcrt"       var="Neumann">
                             <value>0.0</value> 
         </BCType>
-        <BCType id="0" label="enthalpy_do"          var="Neumann">
+        <BCType label="enthalpy_do"          var="Neumann">
                             <value>0.0</value> 
         </BCType>
                         <!-- for RMCRT-->
-        <BCType id="0"  label= "radiation_temperature" var="Dirichlet">
+        <BCType  label= "radiation_temperature" var="Dirichlet">
                             <value> 298 </value>
         </BCType>
-        <BCType id="0"  label= "abskg"              var="ForcedDirichlet">
+        <BCType  label= "abskg"              var="ForcedDirichlet">
                             <value> 1. </value>
         </BCType>
       </Face>
@@ -293,31 +294,31 @@
       <!-- Outlet --> 
       <Face side="x+">
         <!-- Momentum BCs --> 
-        <BCType id="0" label="outlet"               var="OutletBC">
+        <BCType label="outlet"               var="OutletBC">
                             <value>0.0</value>
         </BCType>
         <!-- Table BCs --> 
-        <BCType id="0" label="mixture_fraction"     var="Neumann">
+        <BCType label="mixture_fraction"     var="Neumann">
                             <value>0.0</value>
         </BCType>
-        <BCType id="0" label="heat_loss"            var="Neumann">
+        <BCType label="heat_loss"            var="Neumann">
                             <value>0.0</value>
         </BCType>
-        <BCType id="0" label="normalizedScalarVar"  var="Neumann">
+        <BCType label="normalizedScalarVar"  var="Neumann">
                             <value>0.0</value>
         </BCType>
         <!-- Energy BC --> 
-        <BCType id="0" label="enthalpy_rmcrt"       var="Neumann">
+        <BCType label="enthalpy_rmcrt"       var="Neumann">
                             <value>0.0</value>
         </BCType>
-        <BCType id="0" label="enthalpy_do"          var="Neumann">
+        <BCType label="enthalpy_do"          var="Neumann">
                             <value>0.0</value>
         </BCType>
                         <!-- for RMCRT-->
-        <BCType id="0"  label= "radiation_temperature"  var="Dirichlet">
+        <BCType  label= "radiation_temperature"  var="Dirichlet">
                             <value> 298 </value>
         </BCType>
-        <BCType id="0"  label= "abskg"              var="ForcedDirichlet">
+        <BCType  label= "abskg"              var="ForcedDirichlet">
                             <value> 1. </value>
         </BCType>
         

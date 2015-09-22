@@ -39,77 +39,78 @@
       </Box>
     </Level>
     <BoundaryConditions>
+      <DefaultMaterial>0</DefaultMaterial>
       <!-- Secondary, Co-Flow Inlet --> 
       <Face side="x-">
         <!-- Momentum BCs --> 
-        <BCType id="0" label="co-flow inlet" var="MassFlowInlet">
+        <BCType label="co-flow inlet" var="MassFlowInlet">
           <value>0.01</value>
         </BCType>
         <!-- Table BCs --> 
-        <BCType id="0" label="mixture_fraction" var="Dirichlet">
+        <BCType label="mixture_fraction" var="Dirichlet">
           <value>0.0</value>
         </BCType>
       </Face>
       <!-- Bottom Inlet -->
       <Face circle="x-" origin="0.0 1.5 1.5" radius="0.5">
         <!-- Momentum BCs --> 
-        <BCType id="0" label="helium inlet" var="MassFlowInlet">
+        <BCType label="helium inlet" var="MassFlowInlet">
           <value>0.351</value>
         </BCType>
         <!-- Table BCs --> 
-        <BCType id="0" label="mixture_fraction" var="Dirichlet">
+        <BCType label="mixture_fraction" var="Dirichlet">
           <value>1.0</value>
         </BCType>
       </Face>
       <!-- Pressure BC's --> 
       <Face side="y-">
         <!-- Momentum BCs --> 
-        <BCType id="0" label="y- pressure" var="PressureBC">
+        <BCType label="y- pressure" var="PressureBC">
           <value>0.0</value>
         </BCType>
         <!-- Table BCs --> 
-        <BCType id="0" label="mixture_fraction" var="Neumann">
+        <BCType label="mixture_fraction" var="Neumann">
           <value>0.0</value>
         </BCType>
       </Face>
       <Face side="y+">
         <!-- Momentum BCs --> 
-        <BCType id="0" label="y+ pressure" var="PressureBC">
+        <BCType label="y+ pressure" var="PressureBC">
           <value>0.0</value>
         </BCType>
         <!-- Table BCs --> 
-        <BCType id="0" label="mixture_fraction" var="Neumann">
+        <BCType label="mixture_fraction" var="Neumann">
           <value>0.0</value>
         </BCType>
       </Face>
       <Face side="z-">
         <!-- Momentum BCs --> 
-        <BCType id="0" label="z- pressure" var="PressureBC">
+        <BCType label="z- pressure" var="PressureBC">
           <value>0.0</value>
         </BCType>
         <!-- Table BCs --> 
-        <BCType id="0" label="mixture_fraction" var="Neumann">
+        <BCType label="mixture_fraction" var="Neumann">
           <value>0.0</value>
         </BCType>
       </Face>
       <Face side="z+">
         <!-- Momentum BCs --> 
-        <BCType id="0" label="z+ pressure" var="PressureBC">
+        <BCType label="z+ pressure" var="PressureBC">
           <value>0.0</value>
         </BCType>
         <!-- Table BCs --> 
-        <BCType id="0" label="mixture_fraction" var="Neumann">
+        <BCType label="mixture_fraction" var="Neumann">
           <value>0.0</value>
         </BCType>
       </Face>
       <!-- Outlet --> 
       <Face side="x+">
         <!-- Momentum BCs --> 
-        <BCType id="0" label="outlet" var="OutletBC">
+        <BCType label="outlet" var="OutletBC">
           <value>0.0</value>
         </BCType>
         <!-- Table BCs --> 
-        <BCType id="0" label="mixture_fraction" var="Neumann">
+        <BCType label="mixture_fraction" var="Neumann">
           <value>0.0</value>
         </BCType>
       </Face>

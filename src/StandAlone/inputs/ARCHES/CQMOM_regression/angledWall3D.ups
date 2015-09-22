@@ -62,50 +62,51 @@
       </Box>
     </Level>
     <BoundaryConditions>
+      <DefaultMaterial>0</DefaultMaterial>
       <Face side="x-">
       <BCType id = "all" label = "wallx" var = "WallBC">
           <value> 0.0 </value>
         </BCType>
-        <BCType id="all" label="m_000" var="ForcedDirichlet">
+        <BCType label="m_000" var="ForcedDirichlet">
           <value> 0.0 </value>
         </BCType>
-        <BCType id="all" label="m_100" var="ForcedDirichlet">
+        <BCType label="m_100" var="ForcedDirichlet">
           <value> 0.0 </value>
         </BCType>
-        <BCType id="all" label="m_200" var="ForcedDirichlet">
+        <BCType label="m_200" var="ForcedDirichlet">
           <value> 0.0 </value>
         </BCType>
-        <BCType id="all" label="m_300" var="ForcedDirichlet">
+        <BCType label="m_300" var="ForcedDirichlet">
           <value> 0.0 </value>
         </BCType>
-        <BCType id="all" label="m_010" var="ForcedDirichlet">
+        <BCType label="m_010" var="ForcedDirichlet">
           <value> 0.0 </value>
         </BCType>
-        <BCType id="all" label="m_020" var="ForcedDirichlet">
+        <BCType label="m_020" var="ForcedDirichlet">
           <value> 0.0 </value>
         </BCType>
-        <BCType id="all" label="m_030" var="ForcedDirichlet">
+        <BCType label="m_030" var="ForcedDirichlet">
           <value> 0.0 </value>
         </BCType>
-        <BCType id="all" label="m_110" var="ForcedDirichlet">
+        <BCType label="m_110" var="ForcedDirichlet">
           <value> 0.0 </value>
         </BCType>
-        <BCType id="all" label="m_120" var="ForcedDirichlet">
+        <BCType label="m_120" var="ForcedDirichlet">
           <value> 0.0 </value>
         </BCType>
-        <BCType id="all" label="m_130" var="ForcedDirichlet">
+        <BCType label="m_130" var="ForcedDirichlet">
           <value> 0.0 </value>
         </BCType>
-        <BCType id="all" label="m_001" var="ForcedDirichlet">
+        <BCType label="m_001" var="ForcedDirichlet">
           <value> 0.0 </value>
         </BCType>
-        <BCType id="all" label="m_101" var="ForcedDirichlet">
+        <BCType label="m_101" var="ForcedDirichlet">
           <value> 0.0 </value>
         </BCType>
-        <BCType id="all" label="m_011" var="ForcedDirichlet">
+        <BCType label="m_011" var="ForcedDirichlet">
           <value> 0.0 </value>
         </BCType>
-        <BCType id="all" label="m_111" var="ForcedDirichlet">
+        <BCType label="m_111" var="ForcedDirichlet">
           <value> 0.0 </value>
         </BCType>
       </Face>
@@ -114,46 +115,46 @@
         <BCType id = "all" label = "inletz" var = "VelocityInlet">
           <value> [0,0,0] </value>
         </BCType>
-        <BCType id="all" label="m_000" var="ForcedDirichlet">
+        <BCType label="m_000" var="ForcedDirichlet">
           <value> 1.0 </value>
         </BCType>
-        <BCType id="all" label="m_100" var="ForcedDirichlet">
+        <BCType label="m_100" var="ForcedDirichlet">
           <value> 3.0 </value>
         </BCType>
-        <BCType id="all" label="m_200" var="ForcedDirichlet">
+        <BCType label="m_200" var="ForcedDirichlet">
           <value> 9.0 </value>
         </BCType>
-        <BCType id="all" label="m_300" var="ForcedDirichlet">
+        <BCType label="m_300" var="ForcedDirichlet">
           <value> 27.0 </value>
         </BCType>
-        <BCType id="all" label="m_010" var="ForcedDirichlet">
+        <BCType label="m_010" var="ForcedDirichlet">
           <value> 0.2 </value>
         </BCType>
-        <BCType id="all" label="m_020" var="ForcedDirichlet">
+        <BCType label="m_020" var="ForcedDirichlet">
           <value> 0.04 </value>
         </BCType>
-        <BCType id="all" label="m_030" var="ForcedDirichlet">
+        <BCType label="m_030" var="ForcedDirichlet">
           <value> 0.008 </value>
         </BCType>
-        <BCType id="all" label="m_110" var="ForcedDirichlet">
+        <BCType label="m_110" var="ForcedDirichlet">
           <value> 0.6 </value>
         </BCType>
-        <BCType id="all" label="m_120" var="ForcedDirichlet">
+        <BCType label="m_120" var="ForcedDirichlet">
           <value> 0.12 </value>
         </BCType>
-        <BCType id="all" label="m_130" var="ForcedDirichlet">
+        <BCType label="m_130" var="ForcedDirichlet">
           <value> 0.024 </value>
         </BCType>
-        <BCType id="all" label="m_001" var="ForcedDirichlet">
+        <BCType label="m_001" var="ForcedDirichlet">
           <value> 0.1 </value>
         </BCType>
-        <BCType id="all" label="m_101" var="ForcedDirichlet">
+        <BCType label="m_101" var="ForcedDirichlet">
           <value> 0.3 </value>
         </BCType>
-        <BCType id="all" label="m_011" var="ForcedDirichlet">
+        <BCType label="m_011" var="ForcedDirichlet">
           <value> 0.02 </value>
         </BCType>
-        <BCType id="all" label="m_111" var="ForcedDirichlet">
+        <BCType label="m_111" var="ForcedDirichlet">
           <value> 0.06 </value>
         </BCType>
       </Face>
@@ -162,46 +163,46 @@
         <BCType id = "all" label = "outletx" var = "OutletBC">
           <value> 0.0 </value>
         </BCType>
-        <BCType id="all" label="m_000" var="Neumann">
+        <BCType label="m_000" var="Neumann">
           <value> 0.0 </value>
         </BCType>
-        <BCType id="all" label="m_100" var="Neumann">
+        <BCType label="m_100" var="Neumann">
           <value> 0.0 </value>
         </BCType>
-        <BCType id="all" label="m_200" var="Neumann">
+        <BCType label="m_200" var="Neumann">
           <value> 0.0 </value>
         </BCType>
-        <BCType id="all" label="m_300" var="Neumann">
+        <BCType label="m_300" var="Neumann">
           <value> 0.0 </value>
         </BCType>
-        <BCType id="all" label="m_010" var="Neumann">
+        <BCType label="m_010" var="Neumann">
           <value> 0.0 </value>
         </BCType>
-        <BCType id="all" label="m_020" var="Neumann">
+        <BCType label="m_020" var="Neumann">
           <value> 0.0 </value>
         </BCType>
-        <BCType id="all" label="m_030" var="Neumann">
+        <BCType label="m_030" var="Neumann">
           <value> 0.0 </value>
         </BCType>
-        <BCType id="all" label="m_110" var="Neumann">
+        <BCType label="m_110" var="Neumann">
           <value> 0.0 </value>
         </BCType>
-        <BCType id="all" label="m_120" var="Neumann">
+        <BCType label="m_120" var="Neumann">
           <value> 0.0 </value>
         </BCType>
-        <BCType id="all" label="m_130" var="Neumann">
+        <BCType label="m_130" var="Neumann">
           <value> 0.0 </value>
         </BCType>
-        <BCType id="all" label="m_001" var="Neumann">
+        <BCType label="m_001" var="Neumann">
           <value> 0.0 </value>
         </BCType>
-        <BCType id="all" label="m_101" var="Neumann">
+        <BCType label="m_101" var="Neumann">
           <value> 0.0 </value>
         </BCType>
-        <BCType id="all" label="m_011" var="Neumann">
+        <BCType label="m_011" var="Neumann">
           <value> 0.0 </value>
         </BCType>
-        <BCType id="all" label="m_111" var="Neumann">
+        <BCType label="m_111" var="Neumann">
           <value> 0.0 </value>
         </BCType>
       </Face>
@@ -210,46 +211,46 @@
         <BCType id = "all" label = "ymout" var = "OutletBC">
           <value> 0.0 </value>
         </BCType>
-        <BCType id="all" label="m_000" var="Neumann">
+        <BCType label="m_000" var="Neumann">
           <value> 0.0 </value>
         </BCType>
-        <BCType id="all" label="m_100" var="Neumann">
+        <BCType label="m_100" var="Neumann">
           <value> 0.0 </value>
         </BCType>
-        <BCType id="all" label="m_200" var="Neumann">
+        <BCType label="m_200" var="Neumann">
           <value> 0.0 </value>
         </BCType>
-        <BCType id="all" label="m_300" var="Neumann">
+        <BCType label="m_300" var="Neumann">
           <value> 0.0 </value>
         </BCType>
-        <BCType id="all" label="m_010" var="Neumann">
+        <BCType label="m_010" var="Neumann">
           <value> 0.0 </value>
         </BCType>
-        <BCType id="all" label="m_020" var="Neumann">
+        <BCType label="m_020" var="Neumann">
           <value> 0.0 </value>
         </BCType>
-        <BCType id="all" label="m_030" var="Neumann">
+        <BCType label="m_030" var="Neumann">
           <value> 0.0 </value>
         </BCType>
-        <BCType id="all" label="m_110" var="Neumann">
+        <BCType label="m_110" var="Neumann">
           <value> 0.0 </value>
         </BCType>
-        <BCType id="all" label="m_120" var="Neumann">
+        <BCType label="m_120" var="Neumann">
           <value> 0.0 </value>
         </BCType>
-        <BCType id="all" label="m_130" var="Neumann">
+        <BCType label="m_130" var="Neumann">
           <value> 0.0 </value>
         </BCType>
-        <BCType id="all" label="m_001" var="Neumann">
+        <BCType label="m_001" var="Neumann">
           <value> 0.0 </value>
         </BCType>
-        <BCType id="all" label="m_101" var="Neumann">
+        <BCType label="m_101" var="Neumann">
           <value> 0.0 </value>
         </BCType>
-        <BCType id="all" label="m_011" var="Neumann">
+        <BCType label="m_011" var="Neumann">
           <value> 0.0 </value>
         </BCType>
-        <BCType id="all" label="m_111" var="Neumann">
+        <BCType label="m_111" var="Neumann">
           <value> 0.0 </value>
         </BCType>
       </Face>
@@ -258,46 +259,46 @@
         <BCType id = "all" label = "ypout" var = "OutletBC">
           <value> 0.0 </value>
         </BCType>
-        <BCType id="all" label="m_000" var="Neumann">
+        <BCType label="m_000" var="Neumann">
           <value> 0.0 </value>
         </BCType>
-        <BCType id="all" label="m_100" var="Neumann">
+        <BCType label="m_100" var="Neumann">
           <value> 0.0 </value>
         </BCType>
-        <BCType id="all" label="m_200" var="Neumann">
+        <BCType label="m_200" var="Neumann">
           <value> 0.0 </value>
         </BCType>
-        <BCType id="all" label="m_300" var="Neumann">
+        <BCType label="m_300" var="Neumann">
           <value> 0.0 </value>
         </BCType>
-        <BCType id="all" label="m_010" var="Neumann">
+        <BCType label="m_010" var="Neumann">
           <value> 0.0 </value>
         </BCType>
-        <BCType id="all" label="m_020" var="Neumann">
+        <BCType label="m_020" var="Neumann">
           <value> 0.0 </value>
         </BCType>
-        <BCType id="all" label="m_030" var="Neumann">
+        <BCType label="m_030" var="Neumann">
           <value> 0.0 </value>
         </BCType>
-        <BCType id="all" label="m_110" var="Neumann">
+        <BCType label="m_110" var="Neumann">
           <value> 0.0 </value>
         </BCType>
-        <BCType id="all" label="m_120" var="Neumann">
+        <BCType label="m_120" var="Neumann">
           <value> 0.0 </value>
         </BCType>
-        <BCType id="all" label="m_130" var="Neumann">
+        <BCType label="m_130" var="Neumann">
           <value> 0.0 </value>
         </BCType>
-        <BCType id="all" label="m_001" var="Neumann">
+        <BCType label="m_001" var="Neumann">
           <value> 0.0 </value>
         </BCType>
-        <BCType id="all" label="m_101" var="Neumann">
+        <BCType label="m_101" var="Neumann">
           <value> 0.0 </value>
         </BCType>
-        <BCType id="all" label="m_011" var="Neumann">
+        <BCType label="m_011" var="Neumann">
           <value> 0.0 </value>
         </BCType>
-        <BCType id="all" label="m_111" var="Neumann">
+        <BCType label="m_111" var="Neumann">
           <value> 0.0 </value>
         </BCType>
       </Face>
@@ -306,46 +307,46 @@
         <BCType id = "all" label = "zmout" var = "OutletBC">
           <value> 0.0 </value>
         </BCType>
-        <BCType id="all" label="m_000" var="Neumann">
+        <BCType label="m_000" var="Neumann">
           <value> 0.0 </value>
         </BCType>
-        <BCType id="all" label="m_100" var="Neumann">
+        <BCType label="m_100" var="Neumann">
           <value> 0.0 </value>
         </BCType>
-        <BCType id="all" label="m_200" var="Neumann">
+        <BCType label="m_200" var="Neumann">
           <value> 0.0 </value>
         </BCType>
-        <BCType id="all" label="m_300" var="Neumann">
+        <BCType label="m_300" var="Neumann">
           <value> 0.0 </value>
         </BCType>
-        <BCType id="all" label="m_010" var="Neumann">
+        <BCType label="m_010" var="Neumann">
           <value> 0.0 </value>
         </BCType>
-        <BCType id="all" label="m_020" var="Neumann">
+        <BCType label="m_020" var="Neumann">
           <value> 0.0 </value>
         </BCType>
-        <BCType id="all" label="m_030" var="Neumann">
+        <BCType label="m_030" var="Neumann">
           <value> 0.0 </value>
         </BCType>
-        <BCType id="all" label="m_110" var="Neumann">
+        <BCType label="m_110" var="Neumann">
           <value> 0.0 </value>
         </BCType>
-        <BCType id="all" label="m_120" var="Neumann">
+        <BCType label="m_120" var="Neumann">
           <value> 0.0 </value>
         </BCType>
-        <BCType id="all" label="m_130" var="Neumann">
+        <BCType label="m_130" var="Neumann">
           <value> 0.0 </value>
         </BCType>
-        <BCType id="all" label="m_001" var="Neumann">
+        <BCType label="m_001" var="Neumann">
           <value> 0.0 </value>
         </BCType>
-        <BCType id="all" label="m_101" var="Neumann">
+        <BCType label="m_101" var="Neumann">
           <value> 0.0 </value>
         </BCType>
-        <BCType id="all" label="m_011" var="Neumann">
+        <BCType label="m_011" var="Neumann">
           <value> 0.0 </value>
         </BCType>
-        <BCType id="all" label="m_111" var="Neumann">
+        <BCType label="m_111" var="Neumann">
           <value> 0.0 </value>
         </BCType>
       </Face>
@@ -354,46 +355,46 @@
         <BCType id = "all" label = "zpout" var = "OutletBC">
           <value> 0.0 </value>
         </BCType>
-        <BCType id="all" label="m_000" var="Neumann">
+        <BCType label="m_000" var="Neumann">
           <value> 0.0 </value>
         </BCType>
-        <BCType id="all" label="m_100" var="Neumann">
+        <BCType label="m_100" var="Neumann">
           <value> 0.0 </value>
         </BCType>
-        <BCType id="all" label="m_200" var="Neumann">
+        <BCType label="m_200" var="Neumann">
           <value> 0.0 </value>
         </BCType>
-        <BCType id="all" label="m_300" var="Neumann">
+        <BCType label="m_300" var="Neumann">
           <value> 0.0 </value>
         </BCType>
-        <BCType id="all" label="m_010" var="Neumann">
+        <BCType label="m_010" var="Neumann">
           <value> 0.0 </value>
         </BCType>
-        <BCType id="all" label="m_020" var="Neumann">
+        <BCType label="m_020" var="Neumann">
           <value> 0.0 </value>
         </BCType>
-        <BCType id="all" label="m_030" var="Neumann">
+        <BCType label="m_030" var="Neumann">
           <value> 0.0 </value>
         </BCType>
-        <BCType id="all" label="m_110" var="Neumann">
+        <BCType label="m_110" var="Neumann">
           <value> 0.0 </value>
         </BCType>
-        <BCType id="all" label="m_120" var="Neumann">
+        <BCType label="m_120" var="Neumann">
           <value> 0.0 </value>
         </BCType>
-        <BCType id="all" label="m_130" var="Neumann">
+        <BCType label="m_130" var="Neumann">
           <value> 0.0 </value>
         </BCType>
-        <BCType id="all" label="m_001" var="Neumann">
+        <BCType label="m_001" var="Neumann">
           <value> 0.0 </value>
         </BCType>
-        <BCType id="all" label="m_101" var="Neumann">
+        <BCType label="m_101" var="Neumann">
           <value> 0.0 </value>
         </BCType>
-        <BCType id="all" label="m_011" var="Neumann">
+        <BCType label="m_011" var="Neumann">
           <value> 0.0 </value>
         </BCType>
-        <BCType id="all" label="m_111" var="Neumann">
+        <BCType label="m_111" var="Neumann">
           <value> 0.0 </value>
         </BCType>
       </Face>    

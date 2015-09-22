@@ -38,111 +38,112 @@
   <!--__________________________________-->
   <Grid>
     <BoundaryConditions>
+      <DefaultMaterial>0</DefaultMaterial>
       <Face side="x-" name="inlet">
-        <BCType id="all" label="x- wall" var="WallBC">
+        <BCType label="x- wall" var="WallBC">
           <value>0</value>
         </BCType>
-        <BCType id="all" label="mixture_f"      var="Neumann">
+        <BCType label="mixture_f"      var="Neumann">
           <value>0.0</value>
         </BCType>
-        <BCType id="all" label="enthalpy"       var="Neumann">
+        <BCType label="enthalpy"       var="Neumann">
           <value>0.0</value>
         </BCType>
         <!-- for RMCRT-->
-        <BCType id="all"  label = "radiation_temperature" var="Dirichlet">
+        <BCType  label = "radiation_temperature" var="Dirichlet">
           <value> 0. </value>
         </BCType>
-        <BCType id="all"  label = "abskg"    var="ForcedDirichlet">
+        <BCType  label = "abskg"    var="ForcedDirichlet">
           <value> 1. </value>
         </BCType>
       </Face>
       <Face side="x+" name="inlet">
-        <BCType id="all" label="x+ wall" var="WallBC">
+        <BCType label="x+ wall" var="WallBC">
           <value>0</value>
         </BCType>
-        <BCType id="all" label="mixture_f"      var="Neumann">
+        <BCType label="mixture_f"      var="Neumann">
           <value>0.0</value>
         </BCType>
-        <BCType id="all" label="enthalpy"       var="Neumann">
+        <BCType label="enthalpy"       var="Neumann">
           <value>0.0</value>
         </BCType>
         <!-- for RMCRT-->
-        <BCType id="all"  label = "radiation_temperature" var="Dirichlet">
+        <BCType  label = "radiation_temperature" var="Dirichlet">
           <value> 0. </value>
         </BCType>
-        <BCType id="all"  label = "abskg"    var="ForcedDirichlet">
+        <BCType  label = "abskg"    var="ForcedDirichlet">
           <value> 1. </value>
         </BCType>
       </Face>
       <Face side="y-" name="inlet">
-        <BCType id="all" label="y- wall" var="WallBC">
+        <BCType label="y- wall" var="WallBC">
           <value>0</value>
         </BCType>
-        <BCType id="all" label="mixture_f"      var="Neumann">
+        <BCType label="mixture_f"      var="Neumann">
           <value>0.0</value>
         </BCType>
-        <BCType id="all" label="enthalpy"       var="Neumann">
+        <BCType label="enthalpy"       var="Neumann">
           <value>0.0</value>
         </BCType>
         <!-- for RMCRT-->
-        <BCType id="all"  label = "radiation_temperature" var="Dirichlet">
+        <BCType  label = "radiation_temperature" var="Dirichlet">
           <value> 0. </value>
         </BCType>
-        <BCType id="all"  label = "abskg"    var="ForcedDirichlet">
+        <BCType  label = "abskg"    var="ForcedDirichlet">
           <value> 1. </value>
         </BCType>
       </Face>
       <Face side="y+" name="inlet">
-        <BCType id="all" label="y+ wall" var="WallBC">
+        <BCType label="y+ wall" var="WallBC">
           <value>0</value>
         </BCType>
-        <BCType id="all" label="mixture_f"      var="Neumann">
+        <BCType label="mixture_f"      var="Neumann">
           <value>0.0</value>
         </BCType>
-        <BCType id="all" label="enthalpy"       var="Neumann">
+        <BCType label="enthalpy"       var="Neumann">
           <value>0.0</value>
         </BCType>
         <!-- for RMCRT-->
-        <BCType id="all"  label = "radiation_temperature" var="Dirichlet">
+        <BCType  label = "radiation_temperature" var="Dirichlet">
           <value> 0. </value>
         </BCType>
-        <BCType id="all"  label = "abskg"    var="ForcedDirichlet">
+        <BCType  label = "abskg"    var="ForcedDirichlet">
           <value> 1. </value>
         </BCType>
       </Face>
       <Face side="z-" name="inlet">
-        <BCType id="all" label="z- wall" var="WallBC">
+        <BCType label="z- wall" var="WallBC">
           <value>0</value>
         </BCType>
-        <BCType id="all" label="mixture_f"      var="Neumann">
+        <BCType label="mixture_f"      var="Neumann">
           <value>0.0</value>
         </BCType>
-        <BCType id="all" label="enthalpy"       var="Neumann">
+        <BCType label="enthalpy"       var="Neumann">
           <value>0.0</value>
         </BCType>
         <!-- for RMCRT-->
-        <BCType id="all"  label = "radiation_temperature" var="Dirichlet">
+        <BCType  label = "radiation_temperature" var="Dirichlet">
           <value> 0. </value>
         </BCType>
-        <BCType id="all"  label = "abskg"    var="ForcedDirichlet">
+        <BCType  label = "abskg"    var="ForcedDirichlet">
           <value> 1. </value>
         </BCType>
       </Face>
       <Face side="z+" name="inlet">
-        <BCType id="all" label="z+ wall" var="WallBC">
+        <BCType label="z+ wall" var="WallBC">
           <value>0</value>
         </BCType>
-        <BCType id="all" label="mixture_f"      var="Neumann">
+        <BCType label="mixture_f"      var="Neumann">
           <value>0.0</value>
         </BCType>
-        <BCType id="all" label="enthalpy"       var="Neumann">
+        <BCType label="enthalpy"       var="Neumann">
           <value>0.0</value>
         </BCType>
         <!-- for RMCRT-->
-        <BCType id="all"  label = "radiation_temperature" var="Dirichlet">
+        <BCType  label = "radiation_temperature" var="Dirichlet">
           <value> 0. </value>
         </BCType>
-        <BCType id="all"  label = "abskg"    var="ForcedDirichlet">
+        <BCType  label = "abskg"    var="ForcedDirichlet">
           <value> 1. </value>
         </BCType>
       </Face>

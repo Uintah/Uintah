@@ -40,30 +40,31 @@
       <periodic>[0,0,1]</periodic>
     </Level>
     <BoundaryConditions>
+      <DefaultMaterial>0</DefaultMaterial>
       <Face rectangle="x-" lower="0 -.1 -.1" upper="0 .1 .1" name="doineedthis">
-        <BCType id="0" label="inlet" var="VelocityInlet">
+        <BCType label="inlet" var="VelocityInlet">
           <value>[0.1,0,0]</value>
         </BCType>
       </Face>
       <Face side="x-" name="myx-">
-        <BCType id="0" label="backwall" var="WallBC">
+        <BCType label="backwall" var="WallBC">
           <value>0</value>
         </BCType>
       </Face>
       <Face side="y-" name="myy-">
-        <BCType id="0" label="y- pressure" var="PressureBC">
+        <BCType label="y- pressure" var="PressureBC">
           <value>0.0</value>
         </BCType>
       </Face>
       <Face side="y+" name="myy+">
-        <BCType id="0" label="y+ pressure" var="PressureBC">
+        <BCType label="y+ pressure" var="PressureBC">
           <value>0.0</value>
         </BCType>
       </Face>
       <!-- Outlet --> 
       <Face side="x+" name="myx+">
         <!-- Momentum BCs --> 
-        <BCType id="0" label="outlet" var="OutletBC">
+        <BCType label="outlet" var="OutletBC">
           <value>0.0</value>
         </BCType>
       </Face>
