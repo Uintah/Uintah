@@ -51,9 +51,9 @@
     </DataArchiver>
     
     
-     <!--____________________________________________________________________-->
-     <!--   M D    S I M U L A T I O N     O P T I O N S                     -->
-     <!--____________________________________________________________________-->
+    <!--____________________________________________________________________-->
+    <!--   M D    S I M U L A T I O N     O P T I O N S                     -->
+    <!--____________________________________________________________________-->
     
     <MD>
         <Forcefield type="Lucretius">
@@ -84,6 +84,13 @@
             </polarizable>
         </Electrostatics>
     </MD>
+    
+    <MultiScale>
+        <MD>
+            <min_grid_level>1</min_grid_level>
+            <max_grid_level>1</max_grid_level>
+        </MD>
+    </MultiScale>    
 
 </Uintah_specification>
 

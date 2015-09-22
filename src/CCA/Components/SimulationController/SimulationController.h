@@ -130,6 +130,7 @@ protected:
   DataArchive*         d_archive;
 
   bool d_doAMR;
+  bool d_doMultiScale;
   bool d_doMultiTaskgraphing;
 
   /* For restarting */

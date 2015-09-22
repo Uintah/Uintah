@@ -163,6 +163,21 @@ void MD::problemSetup(const ProblemSpecP&   params,
   if (!d_dataArchiver) {
     throw InternalError("MD: couldn't get output port", __FILE__, __LINE__);
   }
+
+  // read in AMR flags from the main ups file
+  ProblemSpecP multi_scale_ps = params->findBlock("MultiScale");
+  if (multi_scale_ps) {
+    ProblemSpecP md_multi_scale_ps = multi_scale_ps->findBlock("MD");
+    if(!md_multi_scale_ps){
+      std::ostringstream warn;
+      warn<<"ERROR:MD:\n missing MD section in the MultiScale section of the input file\n";
+      throw ProblemSetupException(warn.str(), __FILE__, __LINE__);
+    }
+
+    md_multi_scale_ps->getWithDefault("min_grid_level", d_minGridLevel, 0);
+    md_multi_scale_ps->getWithDefault("max_grid_level", d_maxGridLevel, 1000);
+  }
+
   // Initialize base scheduler and attach the position variable
   if (d_sharedState->d_switchState) {
     dynamic_cast<Scheduler*>(getPort("scheduler"))->setPositionVar(d_label->global->pX);
@@ -345,6 +360,10 @@ void MD::problemSetup(const ProblemSpecP&   params,
 void MD::scheduleInitialize(const LevelP&       level,
                                   SchedulerP&   sched)
 {
+  if (!doMDOnLevel(level->getIndex(), level->getGrid()->numLevels())) {
+    return;
+  }
+
   const std::string flowLocation = "MD::scheduleInitialize | ";
   printSchedule(level->eachPatch(), md_cout, flowLocation);
 
@@ -438,6 +457,10 @@ void MD::scheduleComputeStableTimestep(const LevelP&     level,
 void MD::scheduleTimeAdvance(const LevelP&      level,
                                    SchedulerP&  sched)
 {
+  if (!doMDOnLevel(level->getIndex(), level->getGrid()->numLevels())) {
+    return;
+  }
+
   const std::string flowLocation = "MD::scheduleTimeAdvance | ";
   printSchedule(level, md_cout, flowLocation);
 
@@ -532,8 +555,7 @@ void MD::scheduleNonbondedInitialize(SchedulerP&        sched,
                            this,
                            &MD::nonbondedInitialize);
 
-  MDSubcomponent* d_nonbondedInterface =
-                      dynamic_cast<MDSubcomponent*> (d_nonbonded);
+  MDSubcomponent* d_nonbondedInterface = dynamic_cast<MDSubcomponent*> (d_nonbonded);
 
   d_nonbondedInterface->addInitializeRequirements(task, d_label);
   d_nonbondedInterface->addInitializeComputes(task, d_label);
@@ -1491,4 +1513,9 @@ void MD::createBasePermanentParticleState() {
                 << "END"
                 << std::endl;
   }
+}
+
+bool MD::doMDOnLevel(int level, int numLevels) const
+{
+  return (level >= d_minGridLevel && level <= d_maxGridLevel) || (d_minGridLevel < 0 && level == numLevels + d_minGridLevel);
 }

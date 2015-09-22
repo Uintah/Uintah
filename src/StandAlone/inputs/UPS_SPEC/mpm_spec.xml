@@ -203,5 +203,12 @@
       </Refine_Regions>
     </MPM>
   </AMR>
+  
+  <MultiScale>
+    <MPM                                spec="OPTIONAL NO_DATA" >
+      <min_grid_level                   spec="OPTIONAL INTEGER" />   <!-- MPM-MD needs Multi-Scale -->
+      <max_grid_level                   spec="OPTIONAL INTEGER" />
+    </MPM>
+  </MultiScale>  
 
 </Uintah_Include>

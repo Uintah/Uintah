@@ -31,8 +31,9 @@ include $(SCIRUN_SCRIPTS)/smallso_prologue.mk
 
 SRCDIR   := CCA/Components/SimulationController
 
-SRCS     += $(SRCDIR)/SimulationController.cc \
-            $(SRCDIR)/AMRSimulationController.cc 
+SRCS     += $(SRCDIR)/SimulationController.cc            \
+            $(SRCDIR)/AMRSimulationController.cc         \
+            $(SRCDIR)/MultiScaleSimulationController.cc
 
 PSELIBS := \
 	Core/DataArchive \

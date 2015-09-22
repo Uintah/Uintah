@@ -103,15 +103,16 @@
     </Grid>
     
     <!--____________________________________________________________________-->
-    <!--    A M R   G R I D                                                 -->
+    <!--    M U L T I - S C A L E     G R I D                               -->
     <!--____________________________________________________________________-->
-    <doAMR>true</doAMR>
-    <AMR>
-        <useLockStep>true</useLockStep>
+    
+    <doMultiScale>true</doMultiScale>
+    
+    <MultiScale>
         <MPM>
             <min_grid_level>0</min_grid_level>
             <max_grid_level>0</max_grid_level>
         </MPM>
-    </AMR>
+    </MultiScale>
   
 </Uintah_specification>

@@ -506,6 +506,13 @@ namespace Uintah {
                 (p.z() >= l.z() && p.z() < h.z()));
       }
 
+      /**
+       * @brief
+       * @param
+       * @return
+       */
+      bool doMDOnLevel(int level, int numLevels) const;
+
 
     private:
 
@@ -549,6 +556,9 @@ namespace Uintah {
       bool   d_secondIntegration;
       double d_KineticBase;
       double d_PotentialBase;
+
+      int    d_minGridLevel; // Only do MD on this grid level
+      int    d_maxGridLevel; // Only do MD on this grid level
   };
 
 }

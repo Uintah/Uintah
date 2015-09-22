@@ -380,7 +380,7 @@ SimulationController::gridSetup( void )
       throw InternalError("No simulation component", __FILE__, __LINE__);
     }
     d_sim->preGridProblemSetup(d_ups, grid, d_sharedState);
-    grid->problemSetup(d_ups, d_myworld, d_doAMR);
+    grid->problemSetup(d_ups, d_myworld, (d_doAMR || d_doMultiScale));
   }
   else {
     // tsaad & bisaac: At this point, and during a restart, there's not a legitimate load balancer. This

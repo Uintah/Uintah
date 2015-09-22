@@ -117,7 +117,7 @@ WARNING
     
     //////////
     // Problem setup functions called from simulation controller
-    void problemSetup(const ProblemSpecP& params, const ProcessorGroup *pg, bool do_amr); 
+    void problemSetup(const ProblemSpecP& params, const ProcessorGroup *pg, bool do_amr_or_multi_scale);
 
     // For comparing grids - level and patch structure must be equal
     bool operator==(const Grid& othergrid) const;

@@ -46,12 +46,12 @@
         <AMR>true</AMR>
     </MPM>
 
-    <AMR>
+    <MultiScale>
         <MPM>
             <min_grid_level>0</min_grid_level>
             <max_grid_level>0</max_grid_level>
         </MPM>
-    </AMR>
+    </MultiScale>
 
     <PhysicalConstants>
         <gravity>[0,0,0]</gravity>

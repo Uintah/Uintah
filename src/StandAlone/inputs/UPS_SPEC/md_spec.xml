@@ -2,6 +2,7 @@
 <Uintah_Include>   
 
   <MD                           spec="OPTIONAL NO_DATA" >
+  
     <Forcefield                   spec="REQUIRED NO_DATA"
                                   attribute1 = "type REQUIRED STRING 'Lucretius'">
           <!-- Lucretius has a coordinate input file, a forcefield input file, and a molecular connectivity/ff mapping file -->
@@ -33,7 +34,7 @@
     </System>
     
     <Integrator                 spec="REQUIRED NO_DATA"
-                                attribute1 = "type REQUIRED STRING 'velocity'">
+                                  attribute1 = "type REQUIRED STRING 'velocity'">
        <timestep                spec="REQUIRED DOUBLE 'positive'"/>
        <numberSteps             spec="REQUIRED INTEGER 'positive'"/>
                                 <!-- Eventually the rRESPA control strings with multi-timestep will go here -->
@@ -59,26 +60,7 @@
         </polarizable>
     </Electrostatics>
 
-          
-<!-- // Old spec info      
-    <MDSystem                   spec="OPTIONAL NO_DATA">
-      <numAtoms                 spec="REQUIRED INTEGER"/>
-      <pressure                 spec="REQUIRED VECTOR"/>
-      <temperature              spec="REQUIRED DOUBLE"/>
-      <orthorhombic             spec="REQUIRED BOOLEAN"/>
-      <boxSize                  spec="REQUIRED VECTOR" />
-      <ghostcells               spec="REQUIRED INTEGER"/>
-      <cutoffRadius             spec="OPTIONAL DOUBLE 'positive'"/>
-    </MDSystem>
-    
-    <forcefield                 spec="REQUIRED STRING" >
-      <coordinateInputFile      spec="OPTIONAL STRING" />
-      <forcefieldInputFile      spec="OPTIONAL STRING" />
-      <controlInputFile         spec="OPTIONAL STRING" />
-      <connectivityInputFile    spec="OPTIONAL STRING" />
-    </forcefield>      
--->        
-
   </MD>
+  
 
 </Uintah_Include>

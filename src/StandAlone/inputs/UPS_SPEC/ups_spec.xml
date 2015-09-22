@@ -425,7 +425,9 @@
   </Time>
 
 
-  <doAMR                spec="OPTIONAL BOOLEAN" />  <!-- defaults to TRUE -->
+  <doAMR                spec="OPTIONAL BOOLEAN" />
+  
+  <doMultiScale         spec="OPTIONAL BOOLEAN" />
 
   <!-- NOTE: while the DataArchiver section is required, if no 'save' tags are specified,
              then no data will be saved (and no .uda dir will be created). -->
@@ -792,6 +794,10 @@
 
     </Regridder>
   </AMR>
+  
+  <MultiScale                           spec="OPTIONAL NO_DATA" >
+    <include href="mpm_spec.xml"        section="MultiScale/MPM" />
+  </MultiScale>
   
   <!-- Scheduler Options -->
   
