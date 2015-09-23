@@ -34,7 +34,6 @@ SRCS     += \
 	$(SRCDIR)/ParticleCreator.cc	\
 	$(SRCDIR)/ParticleCreatorFactory.cc	\
 	$(SRCDIR)/ImplicitParticleCreator.cc	\
-	$(SRCDIR)/FractureParticleCreator.cc	\
 	$(SRCDIR)/MembraneParticleCreator.cc	\
 	$(SRCDIR)/ShellParticleCreator.cc 
 
