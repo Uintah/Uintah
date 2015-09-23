@@ -1630,7 +1630,6 @@
                 <pctype>jacobi</pctype>
                 <max_iter>1500</max_iter>
               </LinearSolver>
-              <ReflectOn>false</ReflectOn>
               <initialGuess>prevRadSolve</initialGuess>
               <ScatteringOn>true</ScatteringOn>
             </DORadiationModel>
