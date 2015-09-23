@@ -91,7 +91,6 @@ void SDInterfaceModel::computeDivergence(const Patch* patch,
   for(int m = 0; m < numMatls; m++){
     MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial(m);
     ScalarDiffusionModel* sdm = mpm_matl->getScalarDiffusionModel();
-    std::cout << "Material = " << m << std::endl;
     sdm->computeDivergence(patch, mpm_matl, old_dw, new_dw);
   }
 }

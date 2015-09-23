@@ -112,13 +112,16 @@ void ScalarDiffusionModel::initializeSDMData(const Patch* patch,
 
   ParticleVariable<double>  pConcentration;
   ParticleVariable<double>  pConcPrevious;
+  ParticleVariable<Vector>  pConcGradient;
 
   new_dw->allocateAndPut(pConcentration,  d_rdlb->pConcentrationLabel, pset);
   new_dw->allocateAndPut(pConcPrevious,   d_rdlb->pConcPreviousLabel,  pset);
+  new_dw->allocateAndPut(pConcGradient,   d_rdlb->pConcGradientLabel,  pset);
 
   for(ParticleSubset::iterator iter = pset->begin();iter != pset->end();iter++){
     pConcentration[*iter] = 0.0;
     pConcPrevious[*iter]  = 0.0;
+    pConcGradient[*iter]  = Vector(0.0,0.0,0.0);
   }
 }
 

@@ -132,6 +132,21 @@ protected:
                            int dwi, 
                            const Patch* patch);
 
+  void scheduleInitializeScalarFluxBCs(const LevelP& level, SchedulerP&);
+
+  void countMaterialPointsPerFluxLoadCurve(const ProcessorGroup*,
+                                           const PatchSubset* patches,
+                                           const MaterialSubset* matls,
+                                           DataWarehouse* old_dw,
+                                           DataWarehouse* new_dw);
+
+  void initializeScalarFluxBC(const ProcessorGroup*,
+                              const PatchSubset* patches,
+                              const MaterialSubset* matls,
+                              DataWarehouse* old_dw,
+                              DataWarehouse* new_dw);
+
+
   void actuallyComputeStableTimestep(const ProcessorGroup*,
                                      const PatchSubset* patches,
                                      const MaterialSubset* matls,

@@ -32,6 +32,7 @@
 #include <CCA/Components/MPM/MMS/MMS.h>
 #include <CCA/Components/MPM/MPMBoundCond.h>
 #include <CCA/Components/MPM/PhysicalBC/MPMPhysicalBCFactory.h>
+#include <CCA/Components/MPM/PhysicalBC/PressureBC.h>
 #include <CCA/Components/MPM/ParticleCreator/ParticleCreator.h>
 #include <CCA/Components/Regridder/PerPatchVars.h>
 #include <CCA/Ports/DataWarehouse.h>
@@ -398,10 +399,16 @@ void AMRMPM::scheduleInitialize(const LevelP& level, SchedulerP& sched)
 
   if (level->getIndex() == 0 ) schedulePrintParticleCount(level, sched); 
 
-  if (flags->d_useLoadCurves) {
+  if (flags->d_useLoadCurves && !flags->d_doScalarDiffusion) {
     // Schedule the initialization of pressure BCs per particle
-    cout << "load curves haven't yet been tested for mutliple levels" << endl;
+    cout << "Pressure load curves are untested for mutliple levels" << endl;
     scheduleInitializePressureBCs(level, sched);
+  }
+
+  if (flags->d_useLoadCurves && flags->d_doScalarDiffusion) {
+    // Schedule the initialization of scalar fluxBCs per particle
+    cout << "Scalar load curves are untested for mutliple levels" << endl;
+    scheduleInitializeScalarFluxBCs(level, sched);
   }
 
 }
@@ -4621,4 +4628,198 @@ void AMRMPM::computeDivergence_CFI(const ProcessorGroup*,
     ScalarDiffusionModel* sdm = mpm_matl->getScalarDiffusionModel();
     sdm->computeDivergence_CFI(patches, mpm_matl, old_dw, new_dw);
   }
+}
+
+void AMRMPM::scheduleInitializeScalarFluxBCs(const LevelP& level,
+                                             SchedulerP& sched)
+{
+  const PatchSet* patches = level->eachPatch();
+  
+  d_loadCurveIndex = scinew MaterialSubset();
+  d_loadCurveIndex->add(0);
+  d_loadCurveIndex->addReference();
+  
+  int nofSFBCs = 0;
+  for (int ii = 0; ii<(int)MPMPhysicalBCFactory::mpmPhysicalBCs.size(); ii++){
+    string bcs_type = MPMPhysicalBCFactory::mpmPhysicalBCs[ii]->getType();
+    if (bcs_type == "Pressure"){
+      d_loadCurveIndex->add(nofSFBCs++);
+    }
+  }
+  if (nofSFBCs > 0) {
+   printSchedule(patches,cout_doing,"MPM::countMaterialPointsPerFluxLoadCurve");
+   printSchedule(patches,cout_doing,"MPM::scheduleInitializeScalarFluxBCs");
+    // Create a task that calculates the total number of particles
+    // associated with each load curve.  
+    Task* t = scinew Task("MPM::countMaterialPointsPerFluxLoadCurve",
+                          this, &AMRMPM::countMaterialPointsPerFluxLoadCurve);
+    t->requires(Task::NewDW, lb->pLoadCurveIDLabel, Ghost::None);
+    t->computes(lb->materialPointsPerLoadCurveLabel, d_loadCurveIndex,
+                Task::OutOfDomain);
+    sched->addTask(t, patches, d_sharedState->allMPMMaterials());
+
+    // Create a task that calculates the force to be associated with
+    // each particle based on the pressure BCs
+    t = scinew Task("MPM::initializeScalarFluxBC",
+                    this, &AMRMPM::initializeScalarFluxBC);
+    t->requires(Task::NewDW, lb->pXLabel,                        Ghost::None);
+    t->requires(Task::NewDW, lb->pSizeLabel,                     Ghost::None);
+    t->requires(Task::NewDW, lb->pDeformationMeasureLabel,       Ghost::None);
+    t->requires(Task::NewDW, lb->pLoadCurveIDLabel,              Ghost::None);
+    t->requires(Task::NewDW, lb->materialPointsPerLoadCurveLabel,
+                            d_loadCurveIndex, Task::OutOfDomain, Ghost::None);
+    t->modifies(lb->pExternalForceLabel);
+#if 0
+    if (flags->d_useCBDI) {
+       t->computes(             lb->pExternalForceCorner1Label);
+       t->computes(             lb->pExternalForceCorner2Label);
+       t->computes(             lb->pExternalForceCorner3Label);
+       t->computes(             lb->pExternalForceCorner4Label);
+    }
+#endif
+    sched->addTask(t, patches, d_sharedState->allMPMMaterials());
+  }
+  
+  if(d_loadCurveIndex->removeReference())
+    delete d_loadCurveIndex;
+}
+
+// Calculate the number of material points per load curve
+void AMRMPM::countMaterialPointsPerFluxLoadCurve(const ProcessorGroup*,
+                                                 const PatchSubset* patches,
+                                                 const MaterialSubset*,
+                                                 DataWarehouse* ,
+                                                 DataWarehouse* new_dw)
+{
+  printTask(patches, patches->get(0), cout_doing,
+                     "countMaterialPointsPerLoadCurve");
+  // Find the number of pressure BCs in the problem
+  int nofSFBCs = 0;
+  for (int ii = 0; ii<(int)MPMPhysicalBCFactory::mpmPhysicalBCs.size(); ii++){
+    string bcs_type = MPMPhysicalBCFactory::mpmPhysicalBCs[ii]->getType();
+    if (bcs_type == "Pressure") {
+      nofSFBCs++;
+
+      // Loop through the patches and count
+      for(int p=0;p<patches->size();p++){
+        const Patch* patch = patches->get(p);
+        int numMPMMatls=d_sharedState->getNumMPMMatls();
+        int numPts = 0;
+        for(int m = 0; m < numMPMMatls; m++){
+          MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial( m );
+          int dwi = mpm_matl->getDWIndex();
+
+          ParticleSubset* pset = new_dw->getParticleSubset(dwi, patch);
+          constParticleVariable<int> pLoadCurveID;
+          new_dw->get(pLoadCurveID, lb->pLoadCurveIDLabel, pset);
+
+          ParticleSubset::iterator iter = pset->begin();
+          for(;iter != pset->end(); iter++){
+            particleIndex idx = *iter;
+            if (pLoadCurveID[idx] == (nofSFBCs)) ++numPts;
+          }
+        } // matl loop
+        new_dw->put(sumlong_vartype(numPts),
+                    lb->materialPointsPerLoadCurveLabel, 0, nofSFBCs-1);
+      }  // patch loop
+    }
+  }
+}
+
+void AMRMPM::initializeScalarFluxBC(const ProcessorGroup*,
+                                    const PatchSubset* patches,
+                                    const MaterialSubset*,
+                                    DataWarehouse* ,
+                                    DataWarehouse* new_dw)
+{
+  // Get the current time
+  double time = 0.0;
+  printTask(patches, patches->get(0),cout_doing,"Doing initializePressureBC");
+  if (cout_doing.active())
+    cout_doing << "Current Time (Initialize Pressure BC) = " << time << endl;
+
+
+  // Calculate the force vector at each particle
+  for(int p=0;p<patches->size();p++){
+    const Patch* patch = patches->get(p);
+    int numMPMMatls=d_sharedState->getNumMPMMatls();
+    for(int m = 0; m < numMPMMatls; m++){
+      MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial( m );
+      int dwi = mpm_matl->getDWIndex();
+
+      ParticleSubset* pset = new_dw->getParticleSubset(dwi, patch);
+      constParticleVariable<Point> px;
+      constParticleVariable<Matrix3> psize;
+      constParticleVariable<Matrix3> pDeformationMeasure;
+      new_dw->get(px, lb->pXLabel, pset);
+      new_dw->get(psize, lb->pSizeLabel, pset);
+      new_dw->get(pDeformationMeasure, lb->pDeformationMeasureLabel, pset);
+      constParticleVariable<int> pLoadCurveID;
+      new_dw->get(pLoadCurveID, lb->pLoadCurveIDLabel, pset);
+      ParticleVariable<Vector> pExternalForce;
+      new_dw->getModifiable(pExternalForce, lb->pExternalForceLabel, pset);
+
+      ParticleVariable<Point> pExternalForceCorner1, pExternalForceCorner2,
+                              pExternalForceCorner3, pExternalForceCorner4;
+      if (flags->d_useCBDI) {
+        new_dw->allocateAndPut(pExternalForceCorner1,
+                               lb->pExternalForceCorner1Label, pset);
+        new_dw->allocateAndPut(pExternalForceCorner2,
+                               lb->pExternalForceCorner2Label, pset);
+        new_dw->allocateAndPut(pExternalForceCorner3,
+                               lb->pExternalForceCorner3Label, pset);
+        new_dw->allocateAndPut(pExternalForceCorner4,
+                               lb->pExternalForceCorner4Label, pset);
+      }
+      int nofSFBCs = 0;
+      for(int ii = 0; ii<(int)MPMPhysicalBCFactory::mpmPhysicalBCs.size();ii++){
+        string bcs_type = MPMPhysicalBCFactory::mpmPhysicalBCs[ii]->getType();
+        if (bcs_type == "Pressure") {
+
+          // Get the material points per load curve
+          sumlong_vartype numPart = 0;
+          new_dw->get(numPart, lb->materialPointsPerLoadCurveLabel,
+                      0, nofSFBCs++);
+
+          // Save the material points per load curve in the PressureBC object
+          PressureBC* pbc =
+            dynamic_cast<PressureBC*>(MPMPhysicalBCFactory::mpmPhysicalBCs[ii]);
+          pbc->numMaterialPoints(numPart);
+
+          if (cout_doing.active())
+          cout_doing << "    Load Curve = "
+                   << nofSFBCs << " Num Particles = " << numPart << endl; 
+          // Calculate the force per particle at t = 0.0
+          double forcePerPart = pbc->forcePerParticle(time);
+
+          // Loop through the patches and calculate the force vector
+          // at each particle
+
+          ParticleSubset::iterator iter = pset->begin();
+          for(;iter != pset->end(); iter++){
+            particleIndex idx = *iter;
+            if (pLoadCurveID[idx] == nofSFBCs) {
+               pExternalForce[idx] = pbc->getForceVector(px[idx],
+                                                        forcePerPart,time);
+#if 0
+              if (flags->d_useCBDI) {
+               Vector dxCell = patch->dCell();
+               pExternalForce[idx] = pbc->getForceVectorCBDI(px[idx],psize[idx],
+                                    pDeformationMeasure[idx],forcePerPart,time,
+                                    pExternalForceCorner1[idx],
+                                    pExternalForceCorner2[idx],
+                                    pExternalForceCorner3[idx],
+                                    pExternalForceCorner4[idx],
+                                    dxCell);
+              } else {
+               pExternalForce[idx] = pbc->getForceVector(px[idx],
+                                                        forcePerPart,time);
+              }// if CBDI
+#endif
+            } // if pLoadCurveID...
+          }  // loop over particles
+        }   // if pressure loop
+      }    // loop over all Physical BCs
+    }     // matl loop
+  }      // patch loop
 }
