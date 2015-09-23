@@ -206,12 +206,10 @@ namespace Wasatch{
         
         std::string basePhiName;
         params_->get( "SolutionVariable", basePhiName );
-        const Expr::Tag basePhiTag ( basePhiName, Expr::STATE_DYNAMIC );
-        
+        const Expr::Tag basePhiTag ( basePhiName, Expr::STATE_DYNAMIC );        
         typedef typename ScalabilityTestSrc<FieldT>::Builder coupledSrcTerm;
         factory.register_expression( scinew coupledSrcTerm( srcTag, basePhiTag, nEqs) );
       } else {
-        std::cout << "registering uncoupled source term \n";
         typedef typename ScalabilityTestSrcUncoupled<FieldT>::Builder uncoupledSrcTerm;
         factory.register_expression( scinew uncoupledSrcTerm( srcTag, this->solution_variable_tag()) );
       }
