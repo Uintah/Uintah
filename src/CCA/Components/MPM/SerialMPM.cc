@@ -138,8 +138,6 @@ SerialMPM::~SerialMPM()
   if(d_switchCriteria) {
     delete d_switchCriteria;
   }
-  
-  
 }
 
 void SerialMPM::problemSetup(const ProblemSpecP& prob_spec, 

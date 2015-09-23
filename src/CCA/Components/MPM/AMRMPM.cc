@@ -144,8 +144,8 @@ AMRMPM::AMRMPM(const ProcessorGroup* myworld) :SerialMPM(myworld)
 
 AMRMPM::~AMRMPM()
 {
-  delete lb;
-  delete flags;
+//  delete lb;
+//  delete flags;
   if(flags->d_doScalarDiffusion){
     delete sdInterfaceModel;
   }
