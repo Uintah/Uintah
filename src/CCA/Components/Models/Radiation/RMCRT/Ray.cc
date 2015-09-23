@@ -154,7 +154,6 @@ Ray::~Ray()
   VarLabel::destroy( d_flaggedCellsLabel );
   VarLabel::destroy( d_ROI_LoCellLabel );
   VarLabel::destroy( d_ROI_HiCellLabel );
-  VarLabel::destroy( d_boundFluxLabel );
 //  VarLabel::destroy( d_divQFiltLabel );
 //  VarLabel::destroy( d_boundFluxFiltLabel );
 
