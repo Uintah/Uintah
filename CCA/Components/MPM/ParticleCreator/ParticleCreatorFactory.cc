@@ -26,7 +26,6 @@
 #include <CCA/Components/MPM/ParticleCreator/ImplicitParticleCreator.h>
 #include <CCA/Components/MPM/ParticleCreator/MembraneParticleCreator.h>
 #include <CCA/Components/MPM/ParticleCreator/ShellParticleCreator.h>
-#include <CCA/Components/MPM/ParticleCreator/FractureParticleCreator.h>
 #include <Core/Exceptions/ProblemSetupException.h>
 #include <CCA/Components/MPM/MPMFlags.h>
 #include <Core/ProblemSpec/ProblemSpec.h>
@@ -50,9 +49,6 @@ ParticleCreator* ParticleCreatorFactory::create(ProblemSpecP& ps,
 
   if (flags->d_integrator_type == "implicit") 
     return scinew ImplicitParticleCreator(mat,flags);
-
-  else if (flags->d_integrator_type == "fracture") 
-    return scinew FractureParticleCreator(mat,flags);
 
   else if (mat_type == "membrane")
     return scinew MembraneParticleCreator(mat,flags);
