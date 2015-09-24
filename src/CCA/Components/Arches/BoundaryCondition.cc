@@ -2776,10 +2776,17 @@ BoundaryCondition::setupBCInletVelocities__NEW(const ProcessorGroup*,
               case (PARTMASSFLOW_INLET):
                 { bc_iter->second.mass_flow_rate = bc_value;
                   double pm = -1.0*insideCellDir[norm];
-                  if ( bc_iter->second.density > 0.0 ) {
+
+                  if ( bc_iter->second.density < 1e-200 &&  bc_iter->second.mass_flow_rate > 1e-300 ) {
+                    throw ProblemSetupException("Arches was unable to satisfy the specified mass flow inlet of particles.  Did you specify reasonable particle density and weights? ", __FILE__, __LINE__);
+                  }
+                  if(bc_iter->second.mass_flow_rate <= 1e-300){
+                    bc_iter->second.velocity[norm]=0.0;
+                  }else{
                     bc_iter->second.velocity[norm] = pm*bc_iter->second.mass_flow_rate /
-                      (area * bc_iter->second.density);
-                    bc_kind = "Dirichlet"; // this must be specifeid for setting uintah BC
+                                                     (area * bc_iter->second.density);
+                  }
+                    bc_kind = "Dirichlet"; // this must be specified for setting uintah BC
 
                     int qn_total =  bc_iter->second.vWeights.size();
                     for (int qn=0; qn< qn_total; qn++){
@@ -2789,7 +2796,6 @@ BoundaryCondition::setupBCInletVelocities__NEW(const ProcessorGroup*,
                         patch->possiblyAddBC(face, child, bc_iter->second.name, matl_index,uintahVal, bc_kind,bc_iter->second.vVelLabels[qn][i],bc_iter->second.faceName );
                       }
                     }
-                  }
 
                   break;
                 }
