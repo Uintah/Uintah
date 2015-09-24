@@ -21,14 +21,17 @@
  * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
  * IN THE SOFTWARE.
  */
+
 #include <CCA/Components/Schedulers/Relocate.h>
 #include <CCA/Ports/Scheduler.h>
+
 #include <Core/Containers/Array2.h>
 #include <Core/Grid/DbgOutput.h>
 #include <Core/Grid/Variables/ParticleVariable.h>
 #include <Core/Thread/Mutex.h>
 #include <Core/Util/DebugStream.h>
 #include <Core/Util/ProgressiveWarning.h>
+
 #include <sci_algorithm.h>
 
 #include <map>
@@ -41,22 +44,23 @@ using namespace Uintah;
 using namespace SCIRun;
 
 
-// Debug: Used to sync cerr so it is readable (when output by
-// multiple threads at the same time)  From sus.cc:
+// Used to sync cerr so it is readable when output by multiple threads
 extern SCIRun::Mutex       cerrLock;
+
 extern DebugStream mixedDebug;
 extern DebugStream mpidbg;
 static DebugStream coutdbg("RELOCATE_DBG", false);
 
 Relocate::Relocate()
+  :   reloc_old_posLabel(NULL)
+    , reloc_new_posLabel(NULL)
+    , reloc_matls(NULL)
 {
-  reloc_old_posLabel = reloc_new_posLabel = 0;
-  reloc_matls = 0;
 }
 
 Relocate::~Relocate()
 {
-  if(reloc_matls && reloc_matls->removeReference()) {
+  if (reloc_matls && reloc_matls->removeReference()) {
     delete reloc_matls;
   }
   for (size_t p = 0; p < destroyMe_.size(); p++) {
@@ -65,6 +69,7 @@ Relocate::~Relocate()
 }
 
 namespace Uintah {
+
   struct ScatterRecord {
     const Patch* fromPatch;
     const Patch* toPatch;    
@@ -84,7 +89,7 @@ namespace Uintah {
 
     // Note that when the ScatterRecord going from a real patch to
     // a virtual patch has an equivalent representation going from
-    // a virtual patch to a real patch (wrap-around, periodic bound. cond.).
+    // a virtual patch to a real patch (wrap-around, periodic BC.).
     bool equivalent(const ScatterRecord& sr){ 
       return (toPatch->getRealPatch() == sr.toPatch->getRealPatch()) && (matl == sr.matl) && (vectorToNeighbor == sr.vectorToNeighbor);
     }
@@ -103,7 +108,6 @@ namespace Uintah {
     out.setf(ios::scientific ,ios::floatfield);
     return out;
   }
-
 
   typedef multimap<pair<const Patch*, int>, ScatterRecord*> maptype;
 
@@ -139,35 +143,52 @@ namespace Uintah {
 
 
   struct MPIRecvBuffer {
-    MPIRecvBuffer* next;
-    char* databuf;
-    int bufsize;
-    int numParticles;
+    MPIRecvBuffer * next;
+    char          * databuf;
+    int             bufsize;
+    int             numParticles;
+
     MPIRecvBuffer(char* databuf, int bufsize, int numParticles)
-      : next(0), databuf(databuf), bufsize(bufsize), numParticles(numParticles)
-    {
-    }
+      :   next(0)
+        , databuf(databuf)
+        , bufsize(bufsize)
+        , numParticles(numParticles)
+    { }
   };
+
   typedef map<pair<const Patch*, int>, MPIRecvBuffer*> recvmaptype;
 
+
+
   class MPIScatterRecords {
-  public:
-    // map the to patch and matl to the ScatterRecord
-    maptype records;
-    
-    procmaptype procs;
 
-    ScatterRecord* findOrInsertRecord(const Patch* from, const Patch* to, int matl, int curLevelIndex, ParticleSubset* pset);
-    ScatterRecord* findRecord(const Patch* from, const Patch* to, int matl, int curLevelIndex);
-    
-    void addNeighbor(LoadBalancer* lb, const ProcessorGroup* pg, const Patch* to);
+    public:
 
-    recvmaptype recvs;
-    void saveRecv(const Patch* to, int matl, char* databuf, int bufsize, int numParticles);
-    MPIRecvBuffer* findRecv(const Patch* to, int matl);
+      // map the "to" patch and matl to the ScatterRecord
+      maptype records;
 
-    ~MPIScatterRecords();
+      procmaptype procs;
+
+      ScatterRecord*
+      findOrInsertRecord(const Patch* from, const Patch* to, int matl, int curLevelIndex, ParticleSubset* pset);
+
+      ScatterRecord*
+      findRecord(const Patch* from, const Patch* to, int matl, int curLevelIndex);
+
+      void
+      addNeighbor(LoadBalancer* lb, const ProcessorGroup* pg, const Patch* to);
+
+      void
+      saveRecv(const Patch* to, int matl, char* databuf, int bufsize, int numParticles);
+
+      MPIRecvBuffer*
+      findRecv(const Patch* to, int matl);
+
+      ~MPIScatterRecords();
+
+      recvmaptype recvs;
   };
+
 } // End namespace Uintah
 
 
@@ -175,13 +196,13 @@ namespace Uintah {
 // All variables that will be relocated must exist on the same levels.
 // You cannot have one variable that exists on a different number of levels
 void
-Relocate::scheduleParticleRelocation(Scheduler* sched,
-                                     const ProcessorGroup* pg,
-                                     LoadBalancer* lb,
-                                     const LevelP& coarsestLevelwithParticles,
-                                     const VarLabel* posLabel,
-                                     const vector<vector<const VarLabel*> >& otherLabels,
-                                     const MaterialSet* matls)
+Relocate::scheduleParticleRelocation(       Scheduler                              * sched,
+                                      const ProcessorGroup                         * pg,
+                                            LoadBalancer                           * lb,
+                                            const LevelP                           & coarsestLevelwithParticles,
+                                            const VarLabel                         * posLabel,
+                                            const vector<vector<const VarLabel*> > & otherLabels,
+                                            const MaterialSet                      * matls)
 {
   //In this version of the relocation algorithm, the user provides a list of varlabels that require
   // relocation. Uintah will create a mirror list of temporary, post-reloc variables. Uintah will
@@ -195,6 +216,7 @@ Relocate::scheduleParticleRelocation(Scheduler* sched,
   
   // create a vector of post relocation variables
   vector<vector<const VarLabel*> > postRelocOtherLabels;
+
   // fill the list of post relocation variables
   for (size_t m = 0; m < otherLabels.size(); m++) {
     vector<const VarLabel*> tmp;
@@ -205,13 +227,15 @@ Relocate::scheduleParticleRelocation(Scheduler* sched,
       const VarLabel* pPostRelocVarLabel;
       if (VarLabel::find(pPostRelocVarName)) {
         pPostRelocVarLabel = VarLabel::find(pPostRelocVarName);
-      } else {
+      }
+      else {
         pPostRelocVarLabel = VarLabel::create(pPostRelocVarName, pVarLabel->typeDescription());
         destroyMe_.push_back(pPostRelocVarLabel);
       }
       postRelocOtherLabels[m].push_back(pPostRelocVarLabel);
     }
   }
+
   // Only allow particles at the finest level for now
   //  if(level->getIndex() != level->getGrid()->numLevels()-1)
   //    return;
@@ -220,13 +244,14 @@ Relocate::scheduleParticleRelocation(Scheduler* sched,
   reloc_new_posLabel = posPostRelocLabel;
   reloc_new_labels   = postRelocOtherLabels;
   
-  if(reloc_matls && reloc_matls->removeReference()){
+  if (reloc_matls && reloc_matls->removeReference()) {
     delete reloc_matls;
   }
   
   reloc_matls = matls;
   reloc_matls->addReference();
   ASSERTEQ(reloc_old_labels.size(), reloc_new_labels.size());
+
   int numMatls = (int)reloc_old_labels.size();
   ASSERTEQ(matls->size(), 1);
   
@@ -235,47 +260,48 @@ Relocate::scheduleParticleRelocation(Scheduler* sched,
   // subset whenever you schedule a task or use the dw.
   const MaterialSubset* matlsub = matls->getSubset(0);
   ASSERTEQ(numMatls, matlsub->size());
-  
-  for (int m = 0; m< numMatls; m++){
+
+  for (int m = 0; m < numMatls; m++) {
     ASSERTEQ(reloc_old_labels[m].size(), reloc_new_labels[m].size());
   }
-  Task* t = scinew Task("Relocate::relocateParticles",
-                        this, &Relocate::relocateParticlesModifies, coarsestLevelwithParticles.get_rep());
-  if(lb){
+  Task* t = scinew Task("Relocate::relocateParticles", this, &Relocate::relocateParticlesModifies,
+                        coarsestLevelwithParticles.get_rep());
+  if (lb) {
     t->usesMPI(true);
   }
-  t->requires( Task::NewDW, reloc_old_posLabel, Ghost::None);
-  //t->modifies( reloc_old_posLabel );
+  t->requires(Task::NewDW, reloc_old_posLabel, Ghost::None);
+//  t->modifies( reloc_old_posLabel );
   
-  for(int m=0;m < numMatls;m++){
+  for (int m = 0; m < numMatls; m++) {
     MaterialSubset* thismatl = scinew MaterialSubset();
     thismatl->add(matlsub->get(m));
-    
-    for(int i=0;i<(int)reloc_old_labels[m].size();i++){
-      t->requires( Task::NewDW, reloc_old_labels[m][i], Ghost::None);
+
+    for (int i = 0; i < (int)reloc_old_labels[m].size(); i++) {
+      t->requires(Task::NewDW, reloc_old_labels[m][i], Ghost::None);
 //      t->modifies( reloc_old_labels[m][i] );
     }
-    
-    t->computes( reloc_new_posLabel, thismatl);
-    for(int i=0;i<(int)reloc_new_labels[m].size();i++){
+
+    t->computes(reloc_new_posLabel, thismatl);
+    for (int i = 0; i < (int)reloc_new_labels[m].size(); i++) {
       t->computes(reloc_new_labels[m][i], thismatl);
     }
   }
   
   PatchSet* patches;
-  if(!coarsestLevelwithParticles->hasFinerLevel()){
+  if (!coarsestLevelwithParticles->hasFinerLevel()) {
     // only case since the below version isn't const
     patches = const_cast<PatchSet*>(lb->getPerProcessorPatchSet(coarsestLevelwithParticles));
-  }else {
+  }
+  else {
     GridP grid = coarsestLevelwithParticles->getGrid();
     // make per-proc patch set of each level >= level
     patches = scinew PatchSet();
     patches->createEmptySubsets(pg->size());
-    
+
     for (int i = coarsestLevelwithParticles->getIndex(); i < grid->numLevels(); i++) {
-      
+
       const PatchSet* p = lb->getPerProcessorPatchSet(grid->getLevel(i));
-      
+
       for (int proc = 0; proc < pg->size(); proc++) {
         for (int j = 0; j < p->getSubset(proc)->size(); j++) {
           const Patch* patch = p->getSubset(proc)->get(j);
@@ -285,45 +311,47 @@ Relocate::scheduleParticleRelocation(Scheduler* sched,
     }
   }
 
-  printSchedule(patches,coutdbg,"Relocate::scheduleRelocateParticles");
+  printSchedule(patches, coutdbg, "Relocate::scheduleRelocateParticles");
 
   t->setType(Task::OncePerProc);
   sched->addTask(t, patches, matls);
-  this->lb=lb;
+  this->lb = lb;
 }
 
 //______________________________________________________________________
 // All variables that will be relocated must exist on the same levels. 
 // You cannot have one variable that exists on a different number of levels  
 void
-Relocate::scheduleParticleRelocation(Scheduler* sched,
-                                     const ProcessorGroup* pg,
-                                     LoadBalancer* lb,
-                                     const LevelP& coarsestLevelwithParticles,
-                                     const VarLabel* old_posLabel,
-                                     const vector<vector<const VarLabel*> >& old_labels,
-                                     const VarLabel* new_posLabel,
-                                     const vector<vector<const VarLabel*> >& new_labels,
-                                     const VarLabel* particleIDLabel,
-                                     const MaterialSet* matls)
+Relocate::scheduleParticleRelocation(       Scheduler                        * sched,
+                                      const ProcessorGroup                   * pg,
+                                            LoadBalancer                     * lb,
+                                      const LevelP                           & coarsestLevelwithParticles,
+                                      const VarLabel                         * old_posLabel,
+                                      const vector<vector<const VarLabel*> > & old_labels,
+                                      const VarLabel                         * new_posLabel,
+                                      const vector<vector<const VarLabel*> > & new_labels,
+                                      const VarLabel                         * particleIDLabel,
+                                      const MaterialSet                      * matls)
 {
-// Only allow particles at the finest level for now
-//  if(level->getIndex() != level->getGrid()->numLevels()-1)
+//  // Only allow particles at the finest level for now
+//  if (coarsestLevelwithParticles->getIndex() != coarsestLevelwithParticles->getGrid()->numLevels() - 1) {
 //    return;
+//  }
+
   reloc_old_posLabel = old_posLabel;
   reloc_old_labels   = old_labels;
   reloc_new_posLabel = new_posLabel;
   reloc_new_labels   = new_labels;
   particleIDLabel_   = particleIDLabel;
-  
-  if(reloc_matls && reloc_matls->removeReference()){
+
+  if (reloc_matls && reloc_matls->removeReference()) {
     delete reloc_matls;
   }
-    
+
   reloc_matls = matls;
   reloc_matls->addReference();
   ASSERTEQ(reloc_old_labels.size(), reloc_new_labels.size());
-  int numMatls = (int)reloc_old_labels.size();
+  int numMatls = static_cast<int>(reloc_old_labels.size());
   ASSERTEQ(matls->size(), 1);
 
   // be careful with matls - we need to access reloc_labels linearly, but
@@ -331,60 +359,61 @@ Relocate::scheduleParticleRelocation(Scheduler* sched,
   // subset whenever you schedule a task or use the dw.
   const MaterialSubset* matlsub = matls->getSubset(0);
   ASSERTEQ(numMatls, matlsub->size());
-  
-  for (int m = 0; m< numMatls; m++){
+
+  for (int m = 0; m < numMatls; m++) {
     ASSERTEQ(reloc_old_labels[m].size(), reloc_new_labels[m].size());
   }
-  Task* t = scinew Task("Relocate::relocateParticles",
-                  this, &Relocate::relocateParticles, coarsestLevelwithParticles.get_rep());
-  if(lb){
+
+  Task* t = scinew Task("Relocate::relocateParticles", this, &Relocate::relocateParticles, coarsestLevelwithParticles.get_rep());
+
+  if (lb) {
     t->usesMPI(true);
   }
-  t->requires( Task::NewDW, old_posLabel, Ghost::None);
-  
-  for(int m=0;m < numMatls;m++){
+  t->requires(Task::NewDW, old_posLabel, Ghost::None);
+
+  for (int m = 0; m < numMatls; m++) {
     MaterialSubset* thismatl = scinew MaterialSubset();
     thismatl->add(matlsub->get(m));
-    
-    for(int i=0;i<(int)old_labels[m].size();i++){
-      t->requires( Task::NewDW, old_labels[m][i], thismatl, Ghost::None);
+
+    for (int i = 0; i < (int)old_labels[m].size(); i++) {
+      t->requires(Task::NewDW, old_labels[m][i], thismatl, Ghost::None);
     }
-    
-    t->computes( new_posLabel, thismatl);
-    for(int i=0;i<(int)new_labels[m].size();i++){
+
+    t->computes(new_posLabel, thismatl);
+    for (int i = 0; i < (int)new_labels[m].size(); i++) {
       t->computes(new_labels[m][i], thismatl);
     }
   }
-  
+
   PatchSet* patches;
-  if(!coarsestLevelwithParticles->hasFinerLevel()){
+  if (!coarsestLevelwithParticles->hasFinerLevel()) {
     // only case since the below version isn't const
-    patches = const_cast<PatchSet*>(lb->getPerProcessorPatchSet(coarsestLevelwithParticles)); 
-  }else {
+    patches = const_cast<PatchSet*>(lb->getPerProcessorPatchSet(coarsestLevelwithParticles));
+  }
+  else {
     GridP grid = coarsestLevelwithParticles->getGrid();
     // make per-proc patch set of each level >= level
     patches = scinew PatchSet();
     patches->createEmptySubsets(pg->size());
-   
-    for (int i = coarsestLevelwithParticles->getIndex(); i < grid->numLevels(); i++) {
-      
-      const PatchSet* p = lb->getPerProcessorPatchSet(grid->getLevel(i));
-      
+
+//    for (int i = coarsestLevelwithParticles->getIndex(); i < grid->numLevels(); i++) {
+
+      const PatchSet* p = lb->getPerProcessorPatchSet(grid->getLevel(coarsestLevelwithParticles->getIndex()));
+
       for (int proc = 0; proc < pg->size(); proc++) {
         for (int j = 0; j < p->getSubset(proc)->size(); j++) {
           const Patch* patch = p->getSubset(proc)->get(j);
           patches->getSubset(lb->getPatchwiseProcessorAssignment(patch))->add(patch);
         }
       }
-    }
+//    }
   }
-  
-  
-  printSchedule(patches,coutdbg,"Relocate::scheduleRelocateParticles");
-  
+
+  printSchedule(patches, coutdbg, "Relocate::scheduleRelocateParticles");
+
   t->setType(Task::OncePerProc);
   sched->addTask(t, patches, matls);
-  this->lb=lb;
+  this->lb = lb;
 }
 //______________________________________________________________________
 //
