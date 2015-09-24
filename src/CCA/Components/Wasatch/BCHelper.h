@@ -314,32 +314,6 @@ namespace Wasatch {
     // map is indexed by the (unique) boundary name.
     BndMapT                    bndNameBndSpecMap_;
     
-    /**
-     \brief Returns a pointer to the list of particles that are near a given boundary on a given patch ID.
-     This pointer is set externally through the ParticlesHelper class.
-     */
-    const std::vector<int>* get_particles_bnd_mask( const BndSpec& myBndSpec,
-                                                    const int& patchID ) const;
-    
-    template<typename FieldT>
-    const std::vector<IntVecT>* get_extra_bnd_mask( const BndSpec& myBndSpec,
-                                                    const int& patchID ) const;
-    
-    template<typename FieldT>
-    const std::vector<IntVecT>* get_interior_bnd_mask( const BndSpec& myBndSpec,
-                                                      const int& patchID ) const;
-
-    // returns the extra cell SpatialMask associated with this boundary given the field type
-    template<typename FieldT>
-    const SpatialOps::SpatialMask<FieldT>* get_spatial_mask( const BndSpec& myBndSpec,
-                                                             const int& patchID ) const;
-
-    Uintah::Iterator& get_uintah_extra_bnd_mask( const BndSpec& myBndSpec,
-                                                 const int& patchID );
-    
-    const std::vector<IntVecT>* get_edge_mask( const BndSpec& myBndSpec,
-                                                  const int& patchID ) const;
-    
     // Add boundary iterator (mask) for boundary "bndName" and patch "patchID"
     void add_boundary_mask( const BoundaryIterators& myIters,
                             const std::string& bndName,
@@ -369,7 +343,52 @@ namespace Wasatch {
              const Uintah::MaterialSet* const materials );
         
     ~BCHelper();
+
+    /**
+     \brief Returns a pointer to the list of particles that are near a given boundary on a given patch ID.
+     This pointer is set externally through the ParticlesHelper class.
+     */
+    const std::vector<int>* get_particles_bnd_mask( const BndSpec& myBndSpec,
+                                                   const int& patchID ) const;
     
+    /**
+     \brief Returns a pointer to the extra cell indices at the specified boundary. The indices correspond
+     to the specific FieldType passed to the function template. This covers volume fields ONLY: 
+     SVolField, XVolField, YVolField, and ZVolField.
+     */
+    template<typename FieldT>
+    const std::vector<IntVecT>* get_extra_bnd_mask( const BndSpec& myBndSpec,
+                                                   const int& patchID ) const;
+
+    /**
+     \brief Returns a pointer to the interior cell indices at the specified boundary. The indices correspond
+     to the specific FieldType passed to the function template. This covers volume fields ONLY:
+     SVolField, XVolField, YVolField, and ZVolField.
+     */
+    template<typename FieldT>
+    const std::vector<IntVecT>* get_interior_bnd_mask( const BndSpec& myBndSpec,
+                                                      const int& patchID ) const;
+    
+    /**
+     \brief Returns the extra cell SpatialMask associated with this boundary given the field type.
+     This covers volume fields ONLY: SVolField, XVolField, YVolField, and ZVolField.
+     */
+    template<typename FieldT>
+    const SpatialOps::SpatialMask<FieldT>* get_spatial_mask( const BndSpec& myBndSpec,
+                                                            const int& patchID ) const;
+
+    /**
+     \brief Returns the original Uintah boundary cell iterator.
+     */
+    Uintah::Iterator& get_uintah_extra_bnd_mask( const BndSpec& myBndSpec,
+                                                const int& patchID );
+
+    /**
+     \brief Returns the domain edge cells. This will be deprecated in the near future.
+     */
+    const std::vector<IntVecT>* get_edge_mask( const BndSpec& myBndSpec,
+                                              const int& patchID ) const;
+
     /**
      *  \brief Function that allows one to add an auxiliary boundary condition based on an existing
      *  one. This situation typically arises when one needs to specify an auxiliary boundary condition
