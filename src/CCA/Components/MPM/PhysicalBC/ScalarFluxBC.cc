@@ -65,7 +65,6 @@ ScalarFluxBC::ScalarFluxBC(ProblemSpecP& ps, const GridP& grid,
     d_surface = scinew BoxGeometryPiece(child);
     //Box box = d_surface->getBoundingBox();
     d_surfaceType = "box";
-    cout << "Got a box" << endl;
   } else if (go_type == "sphere") {
     d_surface = scinew SphereGeometryPiece(child);
     d_surfaceType = "sphere";
@@ -162,7 +161,6 @@ ScalarFluxBC::flagMaterialPoint(const Point& p,
                               const Vector& dxpp)
 {
 
-  cout << "IN flagMP " << endl;
   bool flag = false;
   if (d_surfaceType == "box") {
     // Create box that is min-dxpp, max+dxpp;
@@ -264,10 +262,8 @@ ScalarFluxBC::getSurfaceArea() const
 double 
 ScalarFluxBC::fluxPerParticle(double time) const
 {
-  cout << "HERE in fPP at time = " << time << endl;
   if (d_numMaterialPoints < 1) return 0.0;
 
-  cout << "got further in fPP" << endl;
   // Get the area of the surface on which the scalar flux BC is applied
   double area = getSurfaceArea();
 
