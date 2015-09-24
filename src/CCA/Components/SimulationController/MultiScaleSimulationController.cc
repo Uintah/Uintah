@@ -67,13 +67,13 @@
 using namespace SCIRun;
 using namespace Uintah;
 
-static DebugStream amrout(      "MultiScale",                     false);
-static DebugStream dbg(         "MultiScaleSimulationController", false);
-static DebugStream dbg_barrier( "MPIBarriers",                    false);
-static DebugStream dbg_dwmem(   "LogDWMemory",                    false);
-static DebugStream gprofile(    "CPUProfiler",                    false);
-static DebugStream gheapprofile("HeapProfiler",                   false);
-static DebugStream gheapchecker("HeapChecker",                    false);
+static DebugStream multiscaleout("MultiScale",                     false);
+static DebugStream dbg(          "MultiScaleSimulationController", false);
+static DebugStream dbg_barrier(  "MPIBarriers",                    false);
+static DebugStream dbg_dwmem(    "LogDWMemory",                    false);
+static DebugStream gprofile(     "CPUProfiler",                    false);
+static DebugStream gheapprofile( "HeapProfiler",                   false);
+static DebugStream gheapchecker( "HeapChecker",                    false);
 
 double multi_scale_barrier_times[5]={0};
 
@@ -456,13 +456,14 @@ MultiScaleSimulationController::subCycleCompile( GridP & grid,
   LevelP coarseLevel;
   int coarseStartDW;
   int coarseDWStride;
-  int numCoarseSteps; // how many steps between this level and the coarser
-  int numFineSteps;   // how many steps between this level and the finer
+  int numCoarseSteps;  // how many steps between this level and the coarser
+  int numFineSteps;    // how many steps between this level and the finer
+
   if (numLevel > 0) {
     numCoarseSteps = d_sharedState->isLockstepAMR() ? 1 : fineLevel->getRefinementRatioMaxDim();
-    coarseLevel = grid->getLevel(numLevel-1);
+    coarseLevel = grid->getLevel(numLevel - 1);
     coarseDWStride = dwStride * numCoarseSteps;
-    coarseStartDW = (startDW/coarseDWStride)*coarseDWStride;
+    coarseStartDW = (startDW / coarseDWStride) * coarseDWStride;
   }
   else {
     coarseDWStride = dwStride;
@@ -503,18 +504,20 @@ MultiScaleSimulationController::subCycleCompile( GridP & grid,
   d_scheduler->mapDataWarehouse(Task::NewDW, startDW+dwStride);
   d_scheduler->mapDataWarehouse(Task::CoarseOldDW, coarseStartDW);
   d_scheduler->mapDataWarehouse(Task::CoarseNewDW, coarseStartDW+coarseDWStride);
+
   d_sim->scheduleFinalizeTimestep(fineLevel, d_scheduler);
 
   // do refineInterface after the freshest data we can get; after the finer
-  // level's coarsen completes
-  // do all the levels at this point in time as well, so all the coarsens go in order,
-  // and then the refineInterfaces
+  // level's coarsen completes do all the levels at this point in time as well,
+  // so all the coarsens go in order, and then the refineInterfaces
   if (d_doAMR && (step < numCoarseSteps -1 || numLevel == 0)) {
     
     for (int i = fineLevel->getIndex(); i < fineLevel->getGrid()->numLevels(); i++) {
+
       if (i == 0) {
         continue;
       }
+
       if (i == fineLevel->getIndex() && numLevel != 0) {
         d_scheduler->mapDataWarehouse(Task::CoarseOldDW, coarseStartDW);
         d_scheduler->mapDataWarehouse(Task::CoarseNewDW, coarseStartDW + coarseDWStride);
@@ -541,8 +544,9 @@ MultiScaleSimulationController::subCycleExecute( GridP & grid,
   // there are 2n+1 taskgraphs, n for the basic timestep, n for intermediate 
   // timestep work, and 1 for the errorEstimate and stableTimestep, where n
   // is the number of levels.
-  
-  //amrout << "Start AMRSimulationController::subCycleExecute, level=" << numLevel << '\n';
+  if (multiscaleout.active()) {
+    multiscaleout << "Start MultiScaleSimulationController::subCycleExecute, level=" << grid->numLevels() << '\n';
+  }
   // We are on (the fine) level numLevel
   int numSteps;
   if (levelNum == 0 || d_sharedState->isLockstepAMR())
@@ -817,20 +821,20 @@ MultiScaleSimulationController::doRegridding( GridP & currentGrid,
       }
       std::cout << std::endl;
       
-      if (amrout.active()) {
-        amrout << "---------- NEW GRID ----------" << std::endl;
-        amrout << "Grid has " << currentGrid->numLevels() << " level(s)" << std::endl;
+      if (multiscaleout.active()) {
+        multiscaleout << "---------- NEW GRID ----------" << std::endl;
+        multiscaleout << "Grid has " << currentGrid->numLevels() << " level(s)" << std::endl;
       
         for ( int levelIndex = 0; levelIndex < currentGrid->numLevels(); levelIndex++ ) {
           LevelP level = currentGrid->getLevel( levelIndex );
           
-          amrout << "  Level " << level->getID()
+          multiscaleout << "  Level " << level->getID()
                  << ", indx: "<< level->getIndex()
                  << " has " << level->numPatches() << " patch(es)" << std::endl;
             
           for ( Level::patchIterator patchIter = level->patchesBegin(); patchIter < level->patchesEnd(); patchIter++ ) {
             const Patch* patch = *patchIter;
-            amrout << "(Patch " << patch->getID() << " proc " << d_lb->getPatchwiseProcessorAssignment(patch)
+            multiscaleout << "(Patch " << patch->getID() << " proc " << d_lb->getPatchwiseProcessorAssignment(patch)
                    << ": box=" << patch->getExtraBox()
                    << ", lowIndex=" << patch->getExtraCellLowIndex() << ", highIndex="
                    << patch->getExtraCellHighIndex() << ")" << std::endl;
@@ -921,7 +925,9 @@ MultiScaleSimulationController::recompile( double  t,
     d_scheduler->addTaskGraph(Scheduler::IntermediateTaskGraph);
   }
   else {
+
     subCycleCompile(currentGrid, 0, totalFine, 0, 0);
+
     d_scheduler->clearMappings();
     d_scheduler->mapDataWarehouse(Task::OldDW, 0);
     d_scheduler->mapDataWarehouse(Task::NewDW, totalFine);

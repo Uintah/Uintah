@@ -283,7 +283,8 @@ Switcher::problemSetup( const ProblemSpecP     & /*params*/,
 
   // Call problemSetup() for all subcomponents.
   for (d_componentIndex = 0; d_componentIndex < d_numComponents; ++d_componentIndex) {
-    proc0cout << "\n------------ Switching to component (" << d_componentIndex <<") \n";
+    proc0cout << "\n------------ Switching to component: (" << d_componentIndex << ") \n";
+    proc0cout << "  Doing problemSetup for component:  (" << d_componentIndex << ") \n";
     proc0cout << "  Reading input file: " << d_in_file[d_componentIndex] << "\n";
 
     d_sharedState = sharedState;
