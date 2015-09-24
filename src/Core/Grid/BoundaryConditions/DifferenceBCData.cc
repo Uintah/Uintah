@@ -107,7 +107,12 @@ void DifferenceBCData::addBCData(BCData& bc)
 
 void DifferenceBCData::addBC(BoundCondBase* bc)
 {
-  
+
+}
+
+void DifferenceBCData::sudoAddBC(BoundCondBase* bc)
+{
+  left->sudoAddBC(bc);
 }
 
 void DifferenceBCData::getBCData(BCData& bc) const

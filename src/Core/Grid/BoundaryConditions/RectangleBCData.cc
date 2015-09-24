@@ -82,6 +82,11 @@ void RectangleBCData::addBC(BoundCondBase* bc)
   d_bc.setBCValues(bc);
 }
 
+void RectangleBCData::sudoAddBC(BoundCondBase* bc)
+{
+  d_bc.setBCValues(bc);
+}
+
 void RectangleBCData::getBCData(BCData& bc) const
 {
   bc = d_bc;
