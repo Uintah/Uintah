@@ -31,7 +31,6 @@
 //-- Wasatch includes --//
 #include <CCA/Components/Wasatch/FieldTypes.h>
 #include <CCA/Components/Wasatch/Expressions/ScalarRHS.h>
-#include <CCA/Components/Wasatch/BCHelperTools.h>
 
 //-- Uintah includes --//
 #include <Core/ProblemSpec/ProblemSpecP.h>
@@ -101,7 +100,7 @@ namespace Wasatch{
 
     ~ScalabilityTestTransportEquation();
 
-    void setup_boundary_conditions( BCHelper& bcHelper,
+    void setup_boundary_conditions( WasatchBCHelper& bcHelper,
                                     GraphCategories& graphCat ){}
     
     /**
@@ -111,7 +110,7 @@ namespace Wasatch{
      *  \param bcHelper
      */
     void apply_initial_boundary_conditions( const GraphHelper& graphHelper,
-                                            BCHelper& bcHelper );
+                                            WasatchBCHelper& bcHelper );
 
     /**
      *  \brief setup the boundary conditions associated with this transport equation
@@ -119,7 +118,7 @@ namespace Wasatch{
      *  \param bcHelper
      */
     void apply_boundary_conditions( const GraphHelper& graphHelper,
-                                    BCHelper& bcHelper );
+                                    WasatchBCHelper& bcHelper );
 
     /**
      *  \brief setup the initial conditions for this transport equation.

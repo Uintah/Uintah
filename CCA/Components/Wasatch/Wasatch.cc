@@ -81,7 +81,6 @@
 #include <CCA/Components/Wasatch/Transport/TransportEquation.h>
 #include <CCA/Components/Wasatch/Transport/EquationBase.h>
 
-#include <CCA/Components/Wasatch/BCHelperTools.h>
 #include <CCA/Components/Wasatch/ParseTools.h>
 #include <CCA/Components/Wasatch/FieldClippingTools.h>
 #include <CCA/Components/Wasatch/OldVariable.h>
@@ -89,6 +88,7 @@
 #include <CCA/Components/Wasatch/ParticlesHelper.h>
 #include <CCA/Components/Wasatch/WasatchParticlesHelper.h>
 #include <CCA/Components/Wasatch/BCHelper.h>
+#include <CCA/Components/Wasatch/WasatchBCHelper.h>
 #include <CCA/Components/Wasatch/Expressions/CellType.h>
 using std::endl;
 
@@ -801,7 +801,7 @@ namespace Wasatch{
       particlesHelper_->schedule_initialize(level,sched);
     }
     
-    bcHelperMap_[level->getID()] = scinew BCHelper(localPatches, materials_, patchInfoMap_, graphCategories_,  bcFunctorMap_);
+    bcHelperMap_[level->getID()] = scinew WasatchBCHelper(localPatches, materials_, patchInfoMap_, graphCategories_,  bcFunctorMap_);
     
     // handle intrusion boundaries
     if( wasatchSpec_->findBlock("EmbeddedGeometry") ){
@@ -1020,7 +1020,7 @@ namespace Wasatch{
         particlesHelper_->schedule_find_boundary_particles(level,sched);
       }
 
-      bcHelperMap_[level->getID()] = scinew BCHelper(localPatches, materials_, patchInfoMap_, graphCategories_,  bcFunctorMap_);
+      bcHelperMap_[level->getID()] = scinew WasatchBCHelper(localPatches, materials_, patchInfoMap_, graphCategories_,  bcFunctorMap_);
     }
     
     if( doParticles_ ){

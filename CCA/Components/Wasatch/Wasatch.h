@@ -116,6 +116,7 @@
 #include "GraphHelperTools.h"
 #include "FieldTypes.h"
 #include "BCHelper.h"
+#include "WasatchBCHelper.h"
 #include "TimeIntegratorTools.h"
 //-- ExprLib Includes --//
 #include <expression/ExpressionFactory.h>
@@ -169,7 +170,7 @@ namespace Wasatch{
   public:
 
     typedef std::vector<EqnTimestepAdaptorBase*> EquationAdaptors;
-    typedef std::map< int, BCHelper* > BCHelperMapT;
+    typedef std::map< int, WasatchBCHelper* > BCHelperMapT;
     
     Wasatch( const Uintah::ProcessorGroup* myworld );
 

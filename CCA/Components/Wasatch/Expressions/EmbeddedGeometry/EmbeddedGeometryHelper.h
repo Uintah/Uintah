@@ -30,6 +30,7 @@
 
 #include <CCA/Components/Wasatch/GraphHelperTools.h>
 #include <CCA/Components/Wasatch/BCHelper.h>
+#include <CCA/Components/Wasatch/WasatchBCHelper.h>
 #include <Core/Exceptions/InvalidState.h>
 
 /**
@@ -99,7 +100,7 @@ namespace Wasatch{
                            GraphCategories& gc );
   
   void
-  apply_intrusion_boundary_conditions(BCHelper& bcHelper);
+  apply_intrusion_boundary_conditions(WasatchBCHelper& bcHelper);
 
 } // namespace Wasatch
 

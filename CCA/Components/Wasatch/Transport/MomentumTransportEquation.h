@@ -30,7 +30,6 @@
 
 //-- Wasatch includes --//
 #include <CCA/Components/Wasatch/FieldTypes.h>
-#include <CCA/Components/Wasatch/BCHelperTools.h>
 #include <CCA/Components/Wasatch/Expressions/Turbulence/TurbulenceParameters.h>
 #include <CCA/Components/Wasatch/Transport/TransportEquation.h>
 
@@ -101,7 +100,7 @@ namespace Wasatch{
 
     ~MomentumTransportEquation();
 
-    void setup_boundary_conditions(BCHelper& bcHelper,
+    void setup_boundary_conditions(WasatchBCHelper& bcHelper,
                                     GraphCategories& graphCat);
     
     /**
@@ -109,13 +108,13 @@ namespace Wasatch{
      *         associated with this transport equation
      */
     void apply_initial_boundary_conditions( const GraphHelper& graphHelper,
-                                           BCHelper& bcHelper );
+                                           WasatchBCHelper& bcHelper );
 
     /**
      *  \brief setup the boundary conditions associated with this momentum equation
      */
     void apply_boundary_conditions( const GraphHelper& graphHelper,
-                                   BCHelper& bcHelper );
+                                   WasatchBCHelper& bcHelper );
     /**
      *  \brief setup the initial conditions for this momentum equation.
      */
