@@ -1486,9 +1486,11 @@
             <e>-1.23</e>
             <sigma>8.258e2</sigma>
           </FOWYDevol>
-          <Shaddix_char_coefficients>[0.153e-4,0.24e-4,0.219e-4,293,344.0,45.5e3,0.18,-393509.0,-110525.0]</Shaddix_char_coefficients>
-          <!-- Shaddix char oxidation coefficients in the following order:  -->
-          <!-- D1[O2/CO2 m2/s], D2[O2/H2O m2/s], D3[O2/CO2 m2/s], T0[K], As[mol/s.m^2.atm^n], Es[J/mol] n[], HF_CO2[J/mol], HF_CO[J/mol]  -->
+          <ShaddixChar>
+            <As> 344.0 </As>
+            <Es> 45.5e3 </Es>
+            <n> 0.18 </n>
+          </ShaddixChar>
           <ksi>1</ksi>
         </ParticleProperties>
       <EulerianParticles>
