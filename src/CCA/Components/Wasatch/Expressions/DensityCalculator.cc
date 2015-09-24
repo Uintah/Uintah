@@ -310,7 +310,7 @@ Builder::Builder( const Expr::Tag& rhoOldTag,
                   const InterpT& enthEvaluator )
   : ExpressionBuilder( tag_list(rhoTag,gammaTag) ),
     rhoOldTag_   ( rhoOldTag             ),
-    gammaOldTag_ ( gammaOldTag_          ),
+    gammaOldTag_ ( gammaOldTag           ),
     densEval_    ( densEvaluator.clone() ),
     enthEval_    ( enthEvaluator.clone() )
 {}
