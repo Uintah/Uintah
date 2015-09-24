@@ -21,9 +21,11 @@
       <Yamamoto_coefficients>[3.2159e16,2.647e5,0.58,7.008,-79.38,379.9,-853.0,836.7,-301.1]</Yamamoto_coefficients>
       <!-- Yamamto 1 step rate coefficients in the following order:  -->
       <!-- Av[1/s], Ev[J/mole], Yv[-], c0[-], c1[-], c2[-] c3[-], c4[-], c5[-]  -->     
-      <Shaddix_char_coefficients>[0.153e-4,0.24e-4,0.219e-4,293,344.0,45.5e3,0.18,-393509.0,-110525.0]</Shaddix_char_coefficients>
-      <!-- Shaddix char oxidation coefficients in the following order:  -->
-      <!-- D1[O2/CO2 m2/s], D2[O2/H2O m2/s], D3[O2/CO2 m2/s], T0[K], As[mol/s.m^2.atm^n], Es[J/mol] n[], HF_CO2[J/mol], HF_CO[J/mol]  -->
+      <ShaddixChar>
+        <As> 344.0 </As>
+        <Es> 45.5e3 </Es>
+        <n> 0.18 </n>
+      </ShaddixChar>
 
 
 
@@ -42,9 +44,11 @@
     <Yamamoto_coefficients>[3.2159e16,2.647e5,0.58,7.008,-79.38,379.9,-853.0,836.7,-301.1]</Yamamoto_coefficients>
     <!-- Yamamto 1 step rate coefficients in the following order:  -->
     <!-- Av[1/s], Ev[J/mole], Yv[-], c0[-], c1[-], c2[-] c3[-], c4[-], c5[-]  -->     
-    <Shaddix_char_coefficients>[0.153e-4,0.24e-4,0.219e-4,293,344.0,45.5e3,0.18,-393509.0,-110525.0]</Shaddix_char_coefficients>
-    <!-- Shaddix char oxidation coefficients in the following order:  -->
-    <!-- D1[O2/CO2 m2/s], D2[O2/H2O m2/s], D3[O2/CO2 m2/s], T0[K], As[mol/s.m^2.atm^n], Es[J/mol] n[], HF_CO2[J/mol], HF_CO[J/mol]  -->
+    <ShaddixChar>
+      <As> 344.0 </As>
+      <Es> 45.5e3 </Es>
+      <n> 0.18 </n>
+    </ShaddixChar>
 
 
 
