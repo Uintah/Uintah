@@ -33,6 +33,7 @@
 #include <CCA/Components/MPM/MPMBoundCond.h>
 #include <CCA/Components/MPM/PhysicalBC/MPMPhysicalBCFactory.h>
 #include <CCA/Components/MPM/PhysicalBC/PressureBC.h>
+#include <CCA/Components/MPM/PhysicalBC/ScalarFluxBC.h>
 #include <CCA/Components/MPM/ParticleCreator/ParticleCreator.h>
 #include <CCA/Components/Regridder/PerPatchVars.h>
 #include <CCA/Ports/DataWarehouse.h>
@@ -104,8 +105,8 @@ extern Mutex cerrLock;
 
 AMRMPM::AMRMPM(const ProcessorGroup* myworld) :SerialMPM(myworld)
 {
-  lb = scinew MPMLabel();
-  flags = scinew MPMFlags(myworld);
+  //lb = scinew MPMLabel();
+  //flags = scinew MPMFlags(myworld);
   flags->d_minGridLevel = 0;
   flags->d_maxGridLevel = 1000;
 
@@ -451,7 +452,8 @@ void AMRMPM::scheduleTimeAdvance(const LevelP & level,
     const PatchSet* patches = level->eachPatch();
     schedulePartitionOfUnity(               sched, patches, matls);
     scheduleComputeZoneOfInfluence(         sched, patches, matls);
-    scheduleApplyExternalLoads(             sched, patches, matls);
+    //scheduleApplyExternalLoads(             sched, patches, matls);
+    scheduleApplyExternalScalarFlux(        sched, patches, matls);
   }
 
   for (int l = 0; l < maxLevels; l++) {
@@ -4642,7 +4644,7 @@ void AMRMPM::scheduleInitializeScalarFluxBCs(const LevelP& level,
   int nofSFBCs = 0;
   for (int ii = 0; ii<(int)MPMPhysicalBCFactory::mpmPhysicalBCs.size(); ii++){
     string bcs_type = MPMPhysicalBCFactory::mpmPhysicalBCs[ii]->getType();
-    if (bcs_type == "Pressure"){
+    if (bcs_type == "ScalarFlux"){
       d_loadCurveIndex->add(nofSFBCs++);
     }
   }
@@ -4697,7 +4699,7 @@ void AMRMPM::countMaterialPointsPerFluxLoadCurve(const ProcessorGroup*,
   int nofSFBCs = 0;
   for (int ii = 0; ii<(int)MPMPhysicalBCFactory::mpmPhysicalBCs.size(); ii++){
     string bcs_type = MPMPhysicalBCFactory::mpmPhysicalBCs[ii]->getType();
-    if (bcs_type == "Pressure") {
+    if (bcs_type == "ScalarFlux") {
       nofSFBCs++;
 
       // Loop through the patches and count
@@ -4734,9 +4736,9 @@ void AMRMPM::initializeScalarFluxBC(const ProcessorGroup*,
 {
   // Get the current time
   double time = 0.0;
-  printTask(patches, patches->get(0),cout_doing,"Doing initializePressureBC");
+  printTask(patches,patches->get(0),cout_doing,"Doing initialize ScalarFluxBC");
   if (cout_doing.active())
-    cout_doing << "Current Time (Initialize Pressure BC) = " << time << endl;
+    cout_doing << "Current Time (Initialize ScalarFlux BC) = " << time << endl;
 
 
   // Calculate the force vector at each particle
@@ -4759,6 +4761,7 @@ void AMRMPM::initializeScalarFluxBC(const ProcessorGroup*,
       ParticleVariable<Vector> pExternalForce;
       new_dw->getModifiable(pExternalForce, lb->pExternalForceLabel, pset);
 
+#if 0
       ParticleVariable<Point> pExternalForceCorner1, pExternalForceCorner2,
                               pExternalForceCorner3, pExternalForceCorner4;
       if (flags->d_useCBDI) {
@@ -4771,19 +4774,20 @@ void AMRMPM::initializeScalarFluxBC(const ProcessorGroup*,
         new_dw->allocateAndPut(pExternalForceCorner4,
                                lb->pExternalForceCorner4Label, pset);
       }
+#endif
       int nofSFBCs = 0;
       for(int ii = 0; ii<(int)MPMPhysicalBCFactory::mpmPhysicalBCs.size();ii++){
         string bcs_type = MPMPhysicalBCFactory::mpmPhysicalBCs[ii]->getType();
-        if (bcs_type == "Pressure") {
+        if (bcs_type == "ScalarFlux") {
 
           // Get the material points per load curve
           sumlong_vartype numPart = 0;
           new_dw->get(numPart, lb->materialPointsPerLoadCurveLabel,
                       0, nofSFBCs++);
 
-          // Save the material points per load curve in the PressureBC object
-          PressureBC* pbc =
-            dynamic_cast<PressureBC*>(MPMPhysicalBCFactory::mpmPhysicalBCs[ii]);
+          // Save the material points per load curve in the ScalarFluxBC object
+          ScalarFluxBC* pbc =
+          dynamic_cast<ScalarFluxBC*>(MPMPhysicalBCFactory::mpmPhysicalBCs[ii]);
           pbc->numMaterialPoints(numPart);
 
           if (cout_doing.active())
@@ -4822,4 +4826,188 @@ void AMRMPM::initializeScalarFluxBC(const ProcessorGroup*,
       }    // loop over all Physical BCs
     }     // matl loop
   }      // patch loop
+}
+
+void AMRMPM::scheduleApplyExternalScalarFlux(SchedulerP& sched,
+                                                const PatchSet* patches,
+                                                const MaterialSet* matls)
+{
+  if (!flags->doMPMOnLevel(getLevel(patches)->getIndex(),
+                           getLevel(patches)->getGrid()->numLevels()))
+    return;
+
+  printSchedule(patches,cout_doing,"MPM::scheduleApplyExternalScalarFlux");
+
+  Task* t=scinew Task("MPM::applyExternalScalarFlux",
+                    this, &AMRMPM::applyExternalScalarFlux);
+
+  t->requires(Task::OldDW, lb->pXLabel,                 Ghost::None);
+  t->requires(Task::OldDW, lb->pSizeLabel,              Ghost::None);
+  t->requires(Task::OldDW, lb->pMassLabel,              Ghost::None);
+  t->requires(Task::OldDW, lb->pDeformationMeasureLabel,Ghost::None);
+  t->requires(Task::OldDW, lb->pExternalForceLabel,     Ghost::None);
+  t->computes(             lb->pExtForceLabel_preReloc);
+  if (flags->d_useLoadCurves) {
+    t->requires(Task::OldDW, lb->pLoadCurveIDLabel,     Ghost::None);
+    t->computes(             lb->pLoadCurveIDLabel_preReloc);
+/*
+    if (flags->d_useCBDI) {
+       t->computes(             lb->pExternalForceCorner1Label);
+       t->computes(             lb->pExternalForceCorner2Label);
+       t->computes(             lb->pExternalForceCorner3Label);
+       t->computes(             lb->pExternalForceCorner4Label);
+    }
+*/
+  }
+
+  sched->addTask(t, patches, matls);
+}
+
+void AMRMPM::applyExternalScalarFlux(const ProcessorGroup* ,
+                                     const PatchSubset* patches,
+                                     const MaterialSubset*,
+                                     DataWarehouse* old_dw,
+                                     DataWarehouse* new_dw)
+{
+  // Get the current time
+  double time = d_sharedState->getElapsedTime();
+
+  if (cout_doing.active())
+    cout_doing << "Current Time (applyExternalScalarFlux) = " << time << endl;
+
+  // Calculate the force vector at each particle for each pressure bc
+  std::vector<double> forcePerPart;
+  std::vector<ScalarFluxBC*> pbcP;
+  if (flags->d_useLoadCurves) {
+    cout << "HERE 1" << endl;
+    for (int ii = 0;ii < (int)MPMPhysicalBCFactory::mpmPhysicalBCs.size();ii++){
+      string bcs_type = MPMPhysicalBCFactory::mpmPhysicalBCs[ii]->getType();
+      if (bcs_type == "ScalarFlux") {
+
+    cout << "HERE 2" << endl;
+        ScalarFluxBC* pbc =
+          dynamic_cast<ScalarFluxBC*>(MPMPhysicalBCFactory::mpmPhysicalBCs[ii]);
+        pbcP.push_back(pbc);
+
+        // Calculate the force per particle at current time
+        forcePerPart.push_back(pbc->forcePerParticle(time));
+        cout << "fPP = " << pbc->forcePerParticle(time) << endl;
+      }
+    }
+  }
+
+  // Loop thru patches to update external force vector
+  for(int p=0;p<patches->size();p++){
+    const Patch* patch = patches->get(p);
+    printTask(patches, patch,cout_doing,"Doing applyExternalScalarFlux");
+
+    // Place for user defined loading scenarios to be defined,
+    // otherwise pExternalForce is just carried forward.
+
+    int numMPMMatls=d_sharedState->getNumMPMMatls();
+
+    for(int m = 0; m < numMPMMatls; m++){
+      MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial( m );
+      int dwi = mpm_matl->getDWIndex();
+      ParticleSubset* pset = old_dw->getParticleSubset(dwi, patch);
+
+      // Get the particle data
+      constParticleVariable<Point>   px;
+      constParticleVariable<Matrix3> psize;
+      constParticleVariable<Matrix3> pDeformationMeasure;
+      ParticleVariable<Vector> pExternalForce_new;
+
+      old_dw->get(px,    lb->pXLabel,    pset);
+      old_dw->get(psize, lb->pSizeLabel, pset);
+      old_dw->get(pDeformationMeasure, lb->pDeformationMeasureLabel, pset);
+      new_dw->allocateAndPut(pExternalForce_new,
+                             lb->pExtForceLabel_preReloc,  pset);
+
+      if (flags->d_useLoadCurves) {
+        bool do_PressureBCs=false;
+        for (int ii = 0;
+             ii < (int)MPMPhysicalBCFactory::mpmPhysicalBCs.size(); ii++) {
+          string bcs_type =
+            MPMPhysicalBCFactory::mpmPhysicalBCs[ii]->getType();
+          if (bcs_type == "ScalarFlux") {
+            do_PressureBCs=true;
+          }
+        }
+
+        // Get the load curve data
+        constParticleVariable<int> pLoadCurveID;
+        old_dw->get(pLoadCurveID, lb->pLoadCurveIDLabel, pset);
+        // Recycle the loadCurveIDs
+        ParticleVariable<int> pLoadCurveID_new;
+        new_dw->allocateAndPut(pLoadCurveID_new,
+                               lb->pLoadCurveIDLabel_preReloc, pset);
+        pLoadCurveID_new.copyData(pLoadCurveID);
+        if(do_PressureBCs){
+          // Get the external force data and allocate new space for
+          // external force
+          constParticleVariable<Vector> pExternalForce;
+          old_dw->get(pExternalForce, lb->pExternalForceLabel, pset);
+
+#if 0
+          ParticleVariable<Point> pExternalForceCorner1, pExternalForceCorner2,
+                                  pExternalForceCorner3, pExternalForceCorner4;
+          if (flags->d_useCBDI) {
+            new_dw->allocateAndPut(pExternalForceCorner1,
+                                  lb->pExternalForceCorner1Label, pset);
+            new_dw->allocateAndPut(pExternalForceCorner2,
+                                  lb->pExternalForceCorner2Label, pset);
+            new_dw->allocateAndPut(pExternalForceCorner3,
+                                  lb->pExternalForceCorner3Label, pset);
+            new_dw->allocateAndPut(pExternalForceCorner4,
+                                  lb->pExternalForceCorner4Label, pset);
+           }
+#endif
+          // Iterate over the particles
+          ParticleSubset::iterator iter = pset->begin();
+          for(;iter != pset->end(); iter++){
+            particleIndex idx = *iter;
+            int loadCurveID = pLoadCurveID[idx]-1;
+            if (loadCurveID < 0) {
+              pExternalForce_new[idx] = pExternalForce[idx];
+            } else {
+              ScalarFluxBC* pbc = pbcP[loadCurveID];
+              double force = forcePerPart[loadCurveID];
+
+              pExternalForce_new[idx]=pbc->getForceVector(px[idx],force,time);
+#if 0
+              if (flags->d_useCBDI) {
+               Vector dxCell = patch->dCell();
+               pExternalForce_new[idx] = pbc->getForceVectorCBDI(px[idx],
+                                 psize[idx],pDeformationMeasure[idx],force,time,
+                                    pExternalForceCorner1[idx],
+                                    pExternalForceCorner2[idx],
+                                    pExternalForceCorner3[idx],
+                                    pExternalForceCorner4[idx],
+                                    dxCell);
+              } else {
+               pExternalForce_new[idx]=pbc->getForceVector(px[idx],force,time);
+              }
+#endif
+            }
+          }
+        } else {
+           for(ParticleSubset::iterator iter = pset->begin();
+               iter != pset->end(); iter++){
+             pExternalForce_new[*iter] = 0.;
+           }
+        }
+      } else {
+        // Get the external force data and allocate new space for
+        // external force and copy the data
+        constParticleVariable<Vector> pExternalForce;
+        old_dw->get(pExternalForce, lb->pExternalForceLabel, pset);
+  
+        for(ParticleSubset::iterator iter = pset->begin(); iter != pset->end();
+                                                         iter++){
+        particleIndex idx = *iter;
+        pExternalForce_new[idx] = pExternalForce[idx]*flags->d_forceIncrementFactor;
+        }
+      }
+    } // matl loop
+  }  // patch loop
 }
