@@ -15,7 +15,7 @@
             <SimulationComponent type="mpm" />
             <input_file>mpm_cyl_3d_1mat.ups</input_file>
             <SwitchCriteria type = "Timestep">
-                <timestep> 10 </timestep>
+                <timestep> 2 </timestep>
             </SwitchCriteria>
         </subcomponent>
           
