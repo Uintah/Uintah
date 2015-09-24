@@ -465,11 +465,10 @@ void MD::scheduleTimeAdvance(const LevelP&      level,
   printSchedule(level, md_cout, flowLocation);
 
   // Get list of MD materials for scheduling
-  const MaterialSet*    atomTypes       =   d_sharedState->allMDMaterials();
-        LoadBalancer*   loadBal         =   sched->getLoadBalancer();
-  const PatchSet*       perProcPatches  =
-                            loadBal->getPerProcessorPatchSet(level);
-  const PatchSet*       patches         =   level->eachPatch();
+  const MaterialSet* atomTypes = d_sharedState->allMDMaterials();
+  LoadBalancer* loadBal = sched->getLoadBalancer();
+  const PatchSet* perProcPatches = loadBal->getPerProcessorPatchSet(level);
+  const PatchSet* patches = level->eachPatch();
 
   scheduleOutputStatistics(sched, perProcPatches, atomTypes, level);
 

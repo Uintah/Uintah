@@ -22,10 +22,17 @@
  * IN THE SOFTWARE.
  */
 
-#include <sci_defs/malloc_defs.h>
-#include <sci_defs/gperftools_defs.h>
-
 #include <CCA/Components/SimulationController/MultiScaleSimulationController.h>
+
+#include <CCA/Ports/DataWarehouse.h>
+#include <CCA/Ports/LoadBalancer.h>
+#include <CCA/Ports/Output.h>
+#include <CCA/Ports/ProblemSpecInterface.h>
+#include <CCA/Ports/Regridder.h>
+#include <CCA/Components/ReduceUda/UdaReducer.h>
+#include <CCA/Components/Regridder/PerPatchVars.h>
+#include <CCA/Ports/Scheduler.h>
+#include <CCA/Ports/SimulationInterface.h>
 
 #include <Core/Containers/Array3.h>
 #include <Core/Exceptions/ProblemSetupException.h>
@@ -51,16 +58,8 @@
 #include <Core/ProblemSpec/ProblemSpecP.h>
 #include <Core/Thread/Time.h>
 
-#include <CCA/Components/ReduceUda/UdaReducer.h>
-#include <CCA/Components/Regridder/PerPatchVars.h>
-
-#include <CCA/Ports/DataWarehouse.h>
-#include <CCA/Ports/LoadBalancer.h>
-#include <CCA/Ports/Output.h>
-#include <CCA/Ports/ProblemSpecInterface.h>
-#include <CCA/Ports/Regridder.h>
-#include <CCA/Ports/Scheduler.h>
-#include <CCA/Ports/SimulationInterface.h>
+#include <sci_defs/malloc_defs.h>
+#include <sci_defs/gperftools_defs.h>
 
 #include <iostream>
 #include <iomanip>
@@ -446,7 +445,11 @@ MultiScaleSimulationController::run()
 
 //______________________________________________________________________
 void
-MultiScaleSimulationController::subCycleCompile(GridP& grid, int startDW, int dwStride, int step, int numLevel)
+MultiScaleSimulationController::subCycleCompile( GridP & grid,
+                                                 int     startDW,
+                                                 int     dwStride,
+                                                 int     step,
+                                                 int     numLevel)
 {
   // We are on (the fine) level numLevel
   LevelP fineLevel = grid->getLevel(numLevel);
@@ -529,7 +532,11 @@ MultiScaleSimulationController::subCycleCompile(GridP& grid, int startDW, int dw
 //______________________________________________________________________
 //
 void
-MultiScaleSimulationController::subCycleExecute( GridP & grid, int startDW, int dwStride, int levelNum, bool rootCycle )
+MultiScaleSimulationController::subCycleExecute( GridP & grid,
+                                                 int     startDW,
+                                                 int     dwStride,
+                                                 int     levelNum,
+                                                 bool    rootCycle )
 {
   // there are 2n+1 taskgraphs, n for the basic timestep, n for intermediate 
   // timestep work, and 1 for the errorEstimate and stableTimestep, where n
@@ -640,9 +647,9 @@ MultiScaleSimulationController::subCycleExecute( GridP & grid, int startDW, int 
 
 //______________________________________________________________________
 bool
-MultiScaleSimulationController::needRecompile( double        time,
-                                               double        delt,
-                                               const GridP & grid )
+MultiScaleSimulationController::needRecompile(       double   time,
+                                                     double   delt,
+                                               const GridP  & grid )
 {
   // Currently, d_output, d_sim, d_lb, d_regridder can request a recompile.  --bryan
   bool recompile = false;
@@ -660,7 +667,8 @@ MultiScaleSimulationController::needRecompile( double        time,
 }
 //______________________________________________________________________
 void
-MultiScaleSimulationController::doInitialTimestep(GridP& grid, double& t)
+MultiScaleSimulationController::doInitialTimestep( GridP  & grid,
+                                                   double & t )
 {
   MALLOC_TRACE_TAG_SCOPE("AMRSimulationController::doInitialTimestep()");
   double start = Time::currentSeconds();
@@ -763,7 +771,8 @@ MultiScaleSimulationController::doInitialTimestep(GridP& grid, double& t)
 //______________________________________________________________________
 
 bool
-MultiScaleSimulationController::doRegridding( GridP & currentGrid, bool initialTimestep )
+MultiScaleSimulationController::doRegridding( GridP & currentGrid,
+                                              bool    initialTimestep )
 {
   double start = Time::currentSeconds();
 
@@ -855,7 +864,10 @@ MultiScaleSimulationController::doRegridding( GridP & currentGrid, bool initialT
 
 //______________________________________________________________________
 void
-MultiScaleSimulationController::recompile(double t, double delt, GridP& currentGrid, int totalFine)
+MultiScaleSimulationController::recompile( double  t,
+                                           double  delt,
+                                           GridP & currentGrid,
+                                           int     totalFine )
 {
   proc0cout << "Compiling taskgraph...\n";
   d_lastRecompileTimestep = d_sharedState->getCurrentTopLevelTimeStep();
@@ -943,7 +955,10 @@ MultiScaleSimulationController::recompile(double t, double delt, GridP& currentG
 }
 //______________________________________________________________________
 void
-MultiScaleSimulationController::executeTimestep(double t, double& delt, GridP& currentGrid, int totalFine)
+MultiScaleSimulationController::executeTimestep( double   t,
+                                                 double & delt,
+                                                 GridP  & currentGrid,
+                                                 int      totalFine )
 {
   // If the timestep needs to be restarted, this loop will execute multiple times.
   bool success = true;
@@ -1070,11 +1085,11 @@ MultiScaleSimulationController::scheduleComputeStableTimestep( const GridP      
 //______________________________________________________________________
 //
 void
-MultiScaleSimulationController::reduceSysVar( const ProcessorGroup *,
-                                       const PatchSubset    * patches,
-                                       const MaterialSubset * /*matls*/,
-                                             DataWarehouse  * /*old_dw*/,
-                                             DataWarehouse  *  new_dw )
+MultiScaleSimulationController::reduceSysVar( const ProcessorGroup * /*pg*/,
+                                              const PatchSubset    * patches,
+                                              const MaterialSubset * /*matls*/,
+                                                    DataWarehouse  * /*old_dw*/,
+                                                    DataWarehouse  *  new_dw )
 {
   // the goal of this task is to line up the delt across all levels.  If the coarse one
   // already exists (the one without an associated level), then we must not be doing AMR
