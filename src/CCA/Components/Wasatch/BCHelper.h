@@ -31,8 +31,8 @@
  ########   ######  ##     ## ######## ######## ##        ######## ##     ##
  ----------------------------------------------------------------------------*/
 
-#ifndef WASATCH_BC_HELPER
-#define WASATCH_BC_HELPER
+#ifndef BC_HELPER
+#define BC_HELPER
 
 //-- C++ Includes --//
 #include <map>
@@ -51,8 +51,6 @@
 #include <Core/Grid/BoundaryConditions/BCGeomBase.h>
 
 //-- Wasatch Includes --//
-#include "PatchInfo.h"
-#include "GraphHelperTools.h"
 #include "Operators/OperatorTypes.h"
 
 
@@ -259,94 +257,6 @@ namespace Wasatch {
                                                             // the indices of those particles that are near a boundary.
   };
   
-  //****************************************************************************
-  /**
-   *  @struct BCOpTypeSelectorBase
-   *  @author Tony Saad
-   *
-   *  @brief This templated struct is used to simplify boundary
-   *         condition operator selection.
-   */
-  //****************************************************************************
-  template< typename FieldT>
-  struct BCOpTypeSelectorBase
-  {
-  private:
-    typedef OpTypes<FieldT> Ops;
-    
-  public:
-    typedef typename Ops::InterpC2FX   InterpX;
-    typedef typename Ops::InterpC2FY   InterpY;
-    typedef typename Ops::InterpC2FZ   InterpZ;
-    
-    typedef typename Ops::InterpC2FX   DirichletX;
-    typedef typename Ops::InterpC2FY   DirichletY;
-    typedef typename Ops::InterpC2FZ   DirichletZ;
-    
-    typedef typename Ops::GradX   NeumannX;
-    typedef typename Ops::GradY   NeumannY;
-    typedef typename Ops::GradZ   NeumannZ;
-  };
-  
-  //
-  template< typename FieldT>
-  struct BCOpTypeSelector : public BCOpTypeSelectorBase<FieldT>
-  { };
-
-  // partial specialization for particles. Use SVolField to get this to compile. Classic Boundary operators are meaningless for particles.
-  template<>
-  struct BCOpTypeSelector<ParticleField> : public BCOpTypeSelectorBase<SVolField>
-  { };
-
-  // partial specialization with inheritance for XVolFields
-  template<>
-  struct BCOpTypeSelector<XVolField> : public BCOpTypeSelectorBase<XVolField>
-  {
-    typedef SpatialOps::OperatorTypeBuilder<Interpolant, XVolField, XVolField >::type InterpX;
-    typedef SpatialOps::OperatorTypeBuilder<SpatialOps::GradientX, XVolField, XVolField >::type NeumannX;
-  };
-  
-  // partial specialization with inheritance for YVolFields
-  template<>
-  struct BCOpTypeSelector<YVolField> : public BCOpTypeSelectorBase<YVolField>
-  {
-    typedef SpatialOps::OperatorTypeBuilder<Interpolant, YVolField, YVolField >::type InterpY;
-    typedef SpatialOps::OperatorTypeBuilder<SpatialOps::GradientY, YVolField, YVolField >::type NeumannY;
-  };
-  
-  // partial specialization with inheritance for ZVolFields
-  template<>
-  struct BCOpTypeSelector<ZVolField> : public BCOpTypeSelectorBase<ZVolField>
-  {
-    typedef SpatialOps::OperatorTypeBuilder<Interpolant, ZVolField, ZVolField >::type InterpZ;
-    typedef SpatialOps::OperatorTypeBuilder<SpatialOps::GradientZ, ZVolField, ZVolField >::type NeumannZ;
-  };
-  
-  //
-  template<>
-  struct BCOpTypeSelector<FaceTypes<XVolField>::XFace>
-  {
-  public:
-    typedef SpatialOps::OperatorTypeBuilder<Interpolant, SpatialOps::XSurfXField, SpatialOps::XVolField >::type DirichletX;
-    typedef SpatialOps::OperatorTypeBuilder<Interpolant, SpatialOps::XSurfXField, SpatialOps::XVolField >::type InterpX;
-    typedef SpatialOps::OperatorTypeBuilder<Divergence,  SpatialOps::XSurfXField, SpatialOps::XVolField >::type NeumannX;
-  };
-  //
-  template<>
-  struct BCOpTypeSelector<FaceTypes<YVolField>::YFace>
-  {
-    typedef SpatialOps::OperatorTypeBuilder<Interpolant, SpatialOps::YSurfYField, SpatialOps::YVolField >::type DirichletY;
-    typedef SpatialOps::OperatorTypeBuilder<Interpolant, SpatialOps::YSurfYField, SpatialOps::YVolField >::type InterpY;
-    typedef SpatialOps::OperatorTypeBuilder<Divergence,  SpatialOps::YSurfYField, SpatialOps::YVolField >::type NeumannY;
-  };
-  //
-  template<>
-  struct BCOpTypeSelector<FaceTypes<ZVolField>::ZFace>
-  {
-    typedef SpatialOps::OperatorTypeBuilder<Interpolant, SpatialOps::ZSurfZField, SpatialOps::ZVolField >::type DirichletZ;
-    typedef SpatialOps::OperatorTypeBuilder<Interpolant, SpatialOps::ZSurfZField, SpatialOps::ZVolField >::type InterpZ;
-    typedef SpatialOps::OperatorTypeBuilder<Divergence,  SpatialOps::ZSurfZField, SpatialOps::ZVolField >::type NeumannZ;
-  };
 
   //****************************************************************************
   /**
@@ -387,16 +297,13 @@ namespace Wasatch {
   //****************************************************************************
   class BCHelper {
     
-  private:
+  protected:
     typedef SpatialOps::IntVec                            IntVecT          ;  // SpatialOps IntVec
     typedef std::map <int, BoundaryIterators            > PatchIDBndItrMapT;  // temporary typedef map that stores boundary iterators per patch id: Patch ID -> Bnd Iterators
     typedef std::map <std::string, PatchIDBndItrMapT    > MaskMapT         ;  // boundary name -> (patch ID -> Boundary iterators )
     
     const Uintah::PatchSet*    const localPatches_;
     const Uintah::MaterialSet* const materials_   ;
-    const PatchInfoMap&        patchInfoMap_      ;
-    BCFunctorMap&              bcFunctorMap_      ;
-    GraphCategories&           grafCat_           ;
     
     // This map stores the iterators associated with each boundary condition name.
     // The iterators are stored in a map keyed by patch ID. a single iterator will be associated
@@ -422,7 +329,7 @@ namespace Wasatch {
     const std::vector<IntVecT>* get_interior_bnd_mask( const BndSpec& myBndSpec,
                                                       const int& patchID ) const;
 
-    // returns the cell centered extra cell SpatialMask associated with this boundary
+    // returns the extra cell SpatialMask associated with this boundary given the field type
     template<typename FieldT>
     const SpatialOps::SpatialMask<FieldT>* get_spatial_mask( const BndSpec& myBndSpec,
                                                              const int& patchID ) const;
@@ -459,10 +366,7 @@ namespace Wasatch {
   public:
     
     BCHelper( const Uintah::PatchSet* const localPatches,
-             const Uintah::MaterialSet* const materials,
-             const PatchInfoMap& patchInfoMap,
-             GraphCategories& grafCat,
-             BCFunctorMap& bcFunctorMap );
+             const Uintah::MaterialSet* const materials );
         
     ~BCHelper();
     
@@ -497,61 +401,7 @@ namespace Wasatch {
      *  \brief Adds a boundary condition on ALL boundaries
      */
     void add_boundary_condition( const BndCondSpec& bcSpec   );
-    
-
-    // The necessary evils of the pressure expression.
-    /**
-     *  \brief This passes the BCHelper to ALL pressure expressions in the factory (per patch that is)
-     */
-    void synchronize_pressure_expression();
-
-    /**
-     *  \brief This function updates the pressure coefficient matrix for boundary conditions
-     */
-    void update_pressure_matrix( Uintah::CCVariable<Uintah::Stencil7>& pMatrix,
-                                 const SVolField* const svolFrac,
-                                 const Uintah::Patch* patch );
-
-    /**
-     *  \brief This function applies the boundary conditions on the pressure. The pressure is a special
-     * expression in that modifiers can't work with it directly since we have to schedule the hypre
-     * solver first and then apply the BCs
-     */
-    void apply_pressure_bc( SVolField& pressureField,
-                            const Uintah::Patch* patch );
-
-    /**
-     *  \ingroup WasatchCore
-     *
-     *  \brief Function that updates poisson rhs when boundaries are present.
-     *
-     *  \param pressureRHS A reference to the poisson RHS field. This should be
-     *  a MODIFIABLE field since it will be updated using bcs on the poisson field.
-     *
-     *  \param patch A pointer to the current patch. If the patch does NOT contain
-     *  the reference cells, then nothing is set.
-     */
-    void update_pressure_rhs( SVolField& pressureRHS,
-                              const Uintah::Patch* patch );
-
-
-    /**
-     *  \brief Key member function that applies a boundary condition on a given expression.
-     *
-     *  \param varTag The Expr::Tag of the expression on which the boundary
-     *   condition is to be applied.
-     *
-     *  \param taskCat Specifies on which graph to apply this boundary condition.
-     *
-     *  \param setOnExtraOnly Optional boolean flag - specifies whether to set the boundary value
-     *  DIRECTLY on the extra cells without doing averaging using interior cells. This is only useful
-     *  for DIRICHLET boundary conditions.
-     */
-    template<typename FieldT>
-    void apply_boundary_condition( const Expr::Tag& varTag,
-                                   const Category& taskCat,
-                                   const bool setOnExtraOnly=false );
-    
+   
     /**
      *  \brief Retrieve a reference to the boundary and boundary condition information stored in this
      *  BCHelper
@@ -563,17 +413,6 @@ namespace Wasatch {
      */
     bool has_boundaries() const;
     
-    /**
-     *  \brief Allows one to inject dummy dependencies to help with boundary condition expressions.
-     *  \param targetTag    The Expression tag on which we want to attach a new dependency
-     *  \param dependencies A TagList of new dependencies to attach to targetTag
-     *  \param taskCat      The task in which the dependencies are to be added
-     *
-     */
-    template<typename SrcT, typename TargetT >
-    void create_dummy_dependency(const Expr::Tag& targetTag,
-                                 const Expr::TagList dependencies,
-                                 const Category taskCat);
     /**
      *  \brief Print boundary conditions summary.
      *

@@ -33,6 +33,7 @@
 #include <CCA/Components/Wasatch/Operators/Operators.h>
 #include <CCA/Components/Wasatch/Operators/OperatorTypes.h>
 #include <CCA/Components/Wasatch/BCHelper.h>
+#include <CCA/Components/Wasatch/WasatchBCHelper.h>
 
 //-- Uintah Includes --//
 #include <Core/Grid/Variables/VarLabel.h>
@@ -131,7 +132,7 @@ class Pressure
   typedef Uintah::CCVariable<Uintah::Stencil7> MatType;
   MatType matrix_;
   const Uintah::Patch* patch_;
-  BCHelper* bcHelper_;
+  WasatchBCHelper* bcHelper_;
 
   Pressure( const std::string& pressureName,
             const std::string& pressureRHSName,
@@ -221,7 +222,7 @@ public:
                             const Uintah::MaterialSubset* const materials,
                             const int RKStage );
   
-  void set_bchelper( BCHelper* bcHelper ) { bcHelper_ = bcHelper;}
+  void set_bchelper( WasatchBCHelper* bcHelper ) { bcHelper_ = bcHelper;}
 
   /**
    *  \brief allows Wasatch::TaskInterface to reach in and provide

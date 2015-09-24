@@ -83,7 +83,7 @@ namespace Wasatch{
      *   the user has specified any velocity BCs at that boundary. See examples
      *   in the momentum transport equation.
      */
-    void setup_boundary_conditions( BCHelper& bcHelper,
+    void setup_boundary_conditions( WasatchBCHelper& bcHelper,
                                            GraphCategories& graphCat)
     {}
     
@@ -92,7 +92,7 @@ namespace Wasatch{
      *  Equation.
      */
     void apply_initial_boundary_conditions( const GraphHelper& graphHelper,
-                                                   BCHelper& bcHelper )
+                                                   WasatchBCHelper& bcHelper )
     {}
     
     /**
@@ -100,7 +100,7 @@ namespace Wasatch{
      *  Equation.
      */
     void apply_boundary_conditions( const GraphHelper& graphHelper,
-                                           BCHelper& bcHelper )
+                                           WasatchBCHelper& bcHelper )
     {}
 
   private:
