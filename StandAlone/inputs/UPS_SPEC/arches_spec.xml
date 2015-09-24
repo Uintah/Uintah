@@ -61,9 +61,6 @@
                   3) The total power [W] to the exposed surface, label+"_power"
                   4) Area of the exposed face, stored as label+"_area"
                 Note that currently, the emissivity is assumed constant across all walls. This can be modified with some work -->
-          <emissivity                   spec="REQUIRED DOUBLE"
-                                        need_applies_to="type wall_heatflux_variable"/> <!-- wall emissivity assumed across all walls -->
-
           <use_exact_guess              spec="OPTIONAL NO_DATA"
                                         need_applies_to="type density_predictor"/> <!-- for the cold flow model, use the exact solution for
                                                                                         the density-f relationship rather than the guess -->
