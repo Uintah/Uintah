@@ -476,6 +476,13 @@
                                           need_applies_to="type coal"/>
           <!-- Shaddix char oxidation coefficients in the following order:  -->
           <!-- D1[O2/CO2 m2/s], D2[O2/H2O m2/s], D3[O2/CO2 m2/s], T0[K], As[mol/s.m^2.atm^n], Es[J/mol] n[], HF_CO2[J/mol], HF_CO[J/mol]  -->
+          
+          <ShaddixChar                    spec="OPTIONAL NO_DATA"
+                                          need_applies_to="type coal">
+            <As                           spec="REQUIRED DOUBLE"/> <!-- [mol/s.m^2.atm^n] -->
+            <Es                           spec="REQUIRED DOUBLE"/> <!-- [J/mol] -->
+            <n                            spec="REQUIRED DOUBLE"/> <!-- [] -->
+          </ShaddixChar>
 
           <optics                       spec="OPTIONAL NO_DATA" 
                                             need_applies_to="type coal">
@@ -1050,7 +1057,10 @@
                                                                         coal_temperature_nebo,
                                                                         coal_temperature,
                                                                         coal_mass_clip,
-                                                                        total_number_density'">
+                                                                        total_number_density,
+                                                                        fowy_devolatilization,
+                                                                        shaddix_oxidation,
+                                                                        shaddix_enthalpy'">
 
             <!-- The grid parameter is used for templated properties -->
             <grid                       spec="REQUIRED NO_DATA"
@@ -1084,8 +1094,33 @@
                                         need_applies_to="type constant"/>
 
             <!-- constant property model: set a constant/environment -->
-           <const_size                  spec="OPTIONAL BOOLEAN"
+            <const_size                 spec="OPTIONAL BOOLEAN"
                                         need_applies_to="type coal_temperature, coal_density"/>  <!-- defaults to true, so no change to DQMOM input files needed -->
+                                        
+            <!-- FOWY devolatilization -->
+            <birth_label                spec="OPTIONAL STRING"
+                                        need_applies_to="type fowy_devolatilization, shaddix_oxidation"/>
+            <weight_clip                spec="OPTIONAL DOUBLE"
+                                        need_applies_to="type fowy_devolatilization, shaddix_oxidation, shaddix_enthalpy"/>
+            
+            <!-- Shaddix Oxidation -->
+            <char_production_label      spec="REQUIRED STRING"
+                                        need_applies_to="type shaddix_oxidation"/>
+                                        
+            <!-- Shaddix Enthalpy -->
+            <char_temprate_label        spec="REQUIRED STRING"
+                                        need_applies_to="type shaddix_enthalpy"/>
+            <surf_rate_label            spec="REQUIRED STRING"
+                                        need_applies_to="type shaddix_enthalpy"/>
+            <char_gas_label             spec="REQUIRED STRING"
+                                        need_applies_to="type shaddix_enthalpy"/>
+            <devol_gas_label            spec="REQUIRED STRING"
+                                        need_applies_to="type shaddix_enthalpy"/>
+            <noRadiation                spec="OPTIONAL NO_DATA"/>
+            
+            <!-- gas source name, optional name for integrated gas source term, else default to gas_"model"_tot -->
+            <gas_source_name            spec="OPTIONAL STRING"
+                                        need_applies_to="type fowy_devolatilization, shaddix_oxidation, shaddix_enthalpy"/>
         </model>
 
       </ParticleModels>
