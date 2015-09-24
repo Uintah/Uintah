@@ -51,7 +51,6 @@ ScalarDiffusionModel::ScalarDiffusionModel(ProblemSpecP& ps, SimulationStateP& s
   d_rdlb = scinew ReactionDiffusionLabel();
 
   ps->require("diffusivity", diffusivity);
-  ps->require("max_concentration", max_concentration);
 
   if(d_Mflag->d_8or27==8){
     NGP=1;
@@ -93,45 +92,6 @@ double ScalarDiffusionModel::getMaxConcentration(){
 
 void ScalarDiffusionModel::setIncludeHydroStress(bool value){
   include_hydrostress = value;
-}
-
-void ScalarDiffusionModel::addInitialComputesAndRequires(Task* task,
-                                                   const MPMMaterial* matl,
-                                                   const PatchSet* patch) const{
-  const MaterialSubset* matlset = matl->thisMaterial();
-  task->computes(d_rdlb->pConcentrationLabel, matlset);
-  task->computes(d_rdlb->pConcPreviousLabel,  matlset);
-  task->computes(d_rdlb->pConcGradientLabel,  matlset);
-}
-
-void ScalarDiffusionModel::initializeSDMData(const Patch* patch,
-                                             const MPMMaterial* matl,
-                                             DataWarehouse* new_dw)
-{
-  ParticleSubset* pset = new_dw->getParticleSubset(matl->getDWIndex(), patch);
-
-  ParticleVariable<double>  pConcentration;
-  ParticleVariable<double>  pConcPrevious;
-
-  new_dw->allocateAndPut(pConcentration,  d_rdlb->pConcentrationLabel, pset);
-  new_dw->allocateAndPut(pConcPrevious,   d_rdlb->pConcPreviousLabel,  pset);
-
-  for(ParticleSubset::iterator iter = pset->begin();iter != pset->end();iter++){
-    pConcentration[*iter] = 0.0;
-    pConcPrevious[*iter]  = 0.0;
-  }
-}
-
-void ScalarDiffusionModel::addParticleState(std::vector<const VarLabel*>& from,
-                                            std::vector<const VarLabel*>& to)
-{
-  from.push_back(d_rdlb->pConcentrationLabel);
-  from.push_back(d_rdlb->pConcPreviousLabel);
-  from.push_back(d_lb->pConcGradientLabel);
-
-  to.push_back(d_rdlb->pConcentrationLabel_preReloc);
-  to.push_back(d_rdlb->pConcPreviousLabel_preReloc);
-  to.push_back(d_lb->pConcGradientLabel_preReloc);
 }
 
 void ScalarDiffusionModel::scheduleComputeFlux(Task* task,

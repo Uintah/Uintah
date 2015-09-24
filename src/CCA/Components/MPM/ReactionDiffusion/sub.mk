@@ -36,6 +36,7 @@ SRCS     += \
 	$(SRCDIR)/JGConcentrationDiffusion.cc \
 	$(SRCDIR)/SDInterfaceModel.cc \
 	$(SRCDIR)/ScalarDiffusionModelFactory.cc \
+	$(SRCDIR)/NullIFConcDiff.cc \
 	$(SRCDIR)/CommonIFConcDiff.cc \
 	$(SRCDIR)/SDInterfaceModelFactory.cc \
 	$(SRCDIR)/RFConcDiffusion1MPM.cc \

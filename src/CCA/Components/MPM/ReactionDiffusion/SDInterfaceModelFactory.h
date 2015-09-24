@@ -42,9 +42,8 @@ namespace Uintah {
   public:
     // this function has a switch for all known mat_types
     
-    static SDInterfaceModel* create(ProblemSpecP& ps,
-                                        SimulationStateP& ss,
-                                        MPMFlags* flags);
+    static SDInterfaceModel* create(ProblemSpecP& ps, SimulationStateP& ss,
+                                    MPMFlags* flags);
 
   };
 } // End namespace Uintah

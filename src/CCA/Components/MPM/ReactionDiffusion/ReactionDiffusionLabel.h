@@ -45,6 +45,7 @@ namespace Uintah {
 
     const VarLabel* pConcentrationLabel_preReloc;
     const VarLabel* pConcPreviousLabel_preReloc;
+    const VarLabel* pConcGradientLabel_preReloc;
     const VarLabel* pdCdtLabel_preReloc;
 
     // Grid Variables
