@@ -106,6 +106,18 @@
           </load_curve>
           <res                    spec="OPTIONAL VECTOR" />
         </pressure>
+        <scalar_flux                 spec="MULTIPLE NO_DATA" >
+          <geom_object />
+          <outward_normal         spec="OPTIONAL BOOLEAN" />
+          <load_curve             spec="REQUIRED NO_DATA" >
+            <id                   spec="REQUIRED INTEGER" />
+            <time_point           spec="MULTIPLE NO_DATA" >
+              <time               spec="REQUIRED INTEGER" />
+              <load               spec="REQUIRED INTEGER" />
+            </time_point>
+          </load_curve>
+          <res                    spec="OPTIONAL VECTOR" />
+        </scalar_flux>
         <heat_flux                spec="MULTIPLE NO_DATA" >
           <geom_object />
           <load_curve             spec="REQUIRED NO_DATA" >

@@ -359,6 +359,7 @@
     <use_time_temperature_equation spec="OPTIONAL BOOLEAN" />   <!-- FIXME: What is the default -->
     <viscosity                     spec="OPTIONAL DOUBLE" />
     <volfracHE                     spec="OPTIONAL DOUBLE" />
+    <volume_expansion_coeff        spec="OPTIONAL DOUBLE" />
     <yield_condition               spec="OPTIONAL NO_DATA"
                                      attribute1="type REQUIRED STRING 'gurson, rousselier, vonMises'" >
       <f_c                         spec="OPTIONAL DOUBLE" />   <!-- FIXME: really optional? -->
