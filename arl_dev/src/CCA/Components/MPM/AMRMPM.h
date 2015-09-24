@@ -37,6 +37,7 @@
 #include <Core/Math/Matrix3.h>
 #include <Core/Math/Short27.h>
 #include <Core/Labels/MPMLabel.h>
+#include <CCA/Components/MPM/ReactionDiffusion/ReactionDiffusionLabel.h>
 #include <CCA/Components/MPM/MPMCommon.h>
 #include <Core/Geometry/Vector.h>
 #include <CCA/Components/MPM/MPMFlags.h>
@@ -415,6 +416,7 @@ protected:
   
   SimulationStateP d_sharedState;
   MPMLabel* lb;
+  ReactionDiffusionLabel* rdlb;
   MPMFlags* flags;
   Output* dataArchiver;
 
@@ -523,6 +525,10 @@ private:
                                   const MaterialSubset* matls,
                                   DataWarehouse* old_dw,
                                   DataWarehouse* new_dw);
+
+  void scheduleSDInterfaceInterpolated(SchedulerP& sched, 
+                                       const PatchSet* patches,
+                                       const MaterialSet* matls);
 
   virtual void scheduleComputeFlux(SchedulerP&,
                                    const PatchSet*, const MaterialSet*);

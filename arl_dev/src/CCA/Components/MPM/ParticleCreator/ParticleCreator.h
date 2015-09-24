@@ -47,6 +47,7 @@ namespace Uintah {
   class MPMLabel;
   class ParticleSubset;
   class VarLabel;
+  class ReactionDiffusionLabel;
 
   class ParticleCreator {
   public:
@@ -58,9 +59,9 @@ namespace Uintah {
 
 
     virtual particleIndex createParticles(MPMMaterial* matl,
-                                            CCVariable<int>& cellNAPID,
-                                            const Patch*,DataWarehouse* new_dw,
-                                            std::vector<GeometryObject*>&);
+                                          CCVariable<int>& cellNAPID,
+                                          const Patch*,DataWarehouse* new_dw,
+                                          std::vector<GeometryObject*>&);
 
 
 
@@ -80,6 +81,7 @@ namespace Uintah {
     geomvols d_object_vols;
     geomvols d_object_temps;
     geomvols d_object_colors;
+    geomvols d_object_concentration;
     geomvecs d_object_forces;
     geomvecs d_object_fibers;  
     geomvecs d_object_velocity; // gcd add
@@ -105,6 +107,9 @@ namespace Uintah {
     ParticleVariable<double> pExternalHeatFlux;
     //MembraneParticleCreator
     ParticleVariable<Vector> pTang1, pTang2, pNorm;
+    ParticleVariable<double> pConcentration;
+    ParticleVariable<double> pConcPrevious;
+    ParticleVariable<Vector> pConcGrad;
     } ParticleVars;
 
   protected:
@@ -151,10 +156,12 @@ namespace Uintah {
     
 
     MPMLabel* d_lb;
+    ReactionDiffusionLabel* d_rdlb;
     MPMFlags* d_flags;
 
     bool d_useLoadCurves;
     bool d_with_color;
+    bool d_doScalarDiffusion;
     bool d_artificial_viscosity;
     bool d_computeScaleFactor;
     bool d_useCPTI;

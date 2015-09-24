@@ -26,56 +26,17 @@
 #define __COMMONIFCONCDIFF_H__
 
 #include <CCA/Components/MPM/ReactionDiffusion/SDInterfaceModel.h>
-#include <Core/Grid/SimulationStateP.h>
-#include <Core/Grid/SimulationState.h>
-#include <CCA/Components/MPM/MPMFlags.h>
-#include <Core/ProblemSpec/ProblemSpecP.h>
+#include <CCA/Components/MPM/ReactionDiffusion/NullIFConcDiff.h>
 
 namespace Uintah {
 
-  class Task;
-  class MPMFlags;
-  class MPMLabel;
-  class MPMMaterial;
-  class ReactionDiffusionLabel;
-  class DataWarehouse;
-  class ProcessorGroup;
-
-  
-  class CommonIFConcDiff : public SDInterfaceModel {
+  class CommonIFConcDiff : public NullIFConcDiff {
   public:
     
     CommonIFConcDiff(ProblemSpecP& ps, SimulationStateP& sS, MPMFlags* Mflag);
     ~CommonIFConcDiff();
 
-    virtual void addInitialComputesAndRequires(Task* task,
-                                               const PatchSet* patch) const;
-
-    virtual void initializeSDMData(const Patch* patch, DataWarehouse* new_dw);
-
-#if 0
-    virtual void scheduleInterpolateParticlesToGrid(Task* task,
-                                                 const PatchSet* patches) const;
-
-    virtual void interpolateParticlesToGrid(const Patch* patch,
-                                            DataWarehouse* old_dw,
-                                            DataWarehouse* new_dw);
-#endif
-
-    virtual void computeDivergence(const Patch* patch, DataWarehouse* old_dw,
-		                               DataWarehouse* new_dw);
-
   protected:
-    MPMLabel* d_lb;
-    MPMFlags* d_Mflag;
-    SimulationStateP d_sharedState;
-    ReactionDiffusionLabel* d_rdlb;
-
-    int NGP, NGN;
-    int numMPMmatls;
-    bool do_explicit;
-    bool include_hydrostress;
-
     CommonIFConcDiff(const CommonIFConcDiff&);
     CommonIFConcDiff& operator=(const CommonIFConcDiff&);
     
