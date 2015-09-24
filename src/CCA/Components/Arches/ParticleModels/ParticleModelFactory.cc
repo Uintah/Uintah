@@ -11,6 +11,9 @@
 #include <CCA/Components/Arches/ParticleModels/CoalDensity.h>
 #include <CCA/Components/Arches/ParticleModels/CoalMassClip.h>
 #include <CCA/Components/Arches/ParticleModels/TotNumDensity.h>
+#include <CCA/Components/Arches/ParticleModels/FOWYDevol.h>
+#include <CCA/Components/Arches/ParticleModels/ShaddixOxidation.h>
+#include <CCA/Components/Arches/ParticleModels/ShaddixEnthalpy.h>
 
 using namespace Uintah; 
 
@@ -177,7 +180,7 @@ ParticleModelFactory::register_all_tasks( ProblemSpecP& db )
   
       } else if ( type == "coal_density" ){ 
 
-        TaskInterface::TaskBuilder* tsk = scinew CoalDensity::Builder(task_name,0,N); 
+        TaskInterface::TaskBuilder* tsk = scinew CoalDensity::Builder(task_name,0,N);
         register_task( task_name, tsk ); 
 
         _active_tasks.push_back(task_name); 
@@ -216,9 +219,85 @@ ParticleModelFactory::register_all_tasks( ProblemSpecP& db )
         register_task( task_name, tsk );
 
         _active_tasks.push_back(task_name); 
-        _pre_update_particle_tasks.push_back(task_name); 
+        _pre_update_particle_tasks.push_back(task_name);
         
-      } else { 
+      } else if  ( type == "fowy_devolatilization" ) {
+        
+        std::string dependent_type;
+        std::string independent_type;
+        db_model->findBlock("grid")->getAttribute("dependent_type", dependent_type);
+        db_model->findBlock("grid")->getAttribute("independent_type", independent_type);
+        
+        if ( dependent_type == "svol" ){
+          
+          if ( independent_type == "svol"){
+            
+            TaskInterface::TaskBuilder* tsk = scinew
+            FOWYDevol<SVol,SVol>::Builder(task_name, 0, model_name, N);
+            
+            register_task( task_name, tsk );
+            _active_tasks.push_back(task_name);
+            _pre_update_particle_tasks.push_back(task_name);
+            
+          } else {
+            throw InvalidValue("Error: Independent grid type not recognized: "+independent_type,__FILE__,__LINE__);
+          }
+          
+        } else {
+          throw InvalidValue("Error: Dependent grid type not recognized.",__FILE__,__LINE__);
+        }
+
+      } else if  ( type == "shaddix_oxidation" ) {
+          
+        std::string dependent_type;
+        std::string independent_type;
+        db_model->findBlock("grid")->getAttribute("dependent_type", dependent_type);
+        db_model->findBlock("grid")->getAttribute("independent_type", independent_type);
+          
+        if ( dependent_type == "svol" ){
+            
+          if ( independent_type == "svol"){
+              
+            TaskInterface::TaskBuilder* tsk = scinew
+            ShaddixOxidation<SVol,SVol>::Builder(task_name, 0, model_name, N);
+              
+            register_task( task_name, tsk );
+            _active_tasks.push_back(task_name);
+            _pre_update_particle_tasks.push_back(task_name);
+              
+          } else {
+            throw InvalidValue("Error: Independent grid type not recognized: "+independent_type,__FILE__,__LINE__);
+          }
+        } else {
+          throw InvalidValue("Error: Dependent grid type not recognized.",__FILE__,__LINE__);
+        }
+      
+      } else if  ( type == "shaddix_enthalpy" ) {
+
+        std::string dependent_type;
+        std::string independent_type;
+        db_model->findBlock("grid")->getAttribute("dependent_type", dependent_type);
+        db_model->findBlock("grid")->getAttribute("independent_type", independent_type);
+        
+        if ( dependent_type == "svol" ){
+          
+          if ( independent_type == "svol"){
+            
+            TaskInterface::TaskBuilder* tsk = scinew
+            ShaddixEnthalpy<SVol,SVol>::Builder(task_name, 0, model_name, N);
+            
+            register_task( task_name, tsk );
+            _active_tasks.push_back(task_name);
+            _pre_update_particle_tasks.push_back(task_name);
+            
+          } else {
+            throw InvalidValue("Error: Independent grid type not recognized: "+independent_type,__FILE__,__LINE__);
+          }
+        } else {
+          throw InvalidValue("Error: Dependent grid type not recognized.",__FILE__,__LINE__);
+        }
+
+      } else {
 
         throw InvalidValue("Error: Particle model not recognized.",__FILE__,__LINE__);
 
