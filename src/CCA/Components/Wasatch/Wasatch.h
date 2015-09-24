@@ -289,7 +289,6 @@ namespace Wasatch{
     BCFunctorMap bcFunctorMap_;
     BCHelperMapT bcHelperMap_;
     
-    CellType* cellType_;
 
     /**
      *  a container of information for constructing ExprLib graphs.
@@ -305,6 +304,7 @@ namespace Wasatch{
     Uintah::SolverInterface* linSolver_;
 
     Uintah::Ray* rmcrt_; // RMCRT solver. needed to pass along to other tasks and expressions...
+    CellType* cellType_;
     
     EquationAdaptors adaptors_;  ///< set of transport equations to be solved
 
