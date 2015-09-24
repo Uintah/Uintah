@@ -85,6 +85,11 @@ void EllipseBCData::addBC(BoundCondBase* bc)
   d_bc.setBCValues(bc);
 }
 
+void EllipseBCData::sudoAddBC(BoundCondBase* bc) 
+{
+  d_bc.setBCValues(bc);
+}
+
 void EllipseBCData::getBCData(BCData& bc) const 
 {
   bc = d_bc;

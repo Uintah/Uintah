@@ -142,6 +142,9 @@ namespace Uintah {
     /// For old boundary conditions
     virtual void addBC(BoundCondBase* bc)  = 0;
 
+    /// Allows a component to add a boundary condition, which already has an iterator.
+    virtual void sudoAddBC(BoundCondBase* bc)  = 0;
+
     void getCellFaceIterator(Iterator& b_ptr);
 
     void getNodeFaceIterator(Iterator& b_ptr);

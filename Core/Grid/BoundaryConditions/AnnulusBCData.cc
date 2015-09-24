@@ -83,6 +83,11 @@ void AnnulusBCData::addBC(BoundCondBase* bc)
   d_bc.setBCValues(bc);
 }
 
+void AnnulusBCData::sudoAddBC(BoundCondBase* bc) 
+{
+  d_bc.setBCValues(bc);
+}
+
 void AnnulusBCData::getBCData(BCData& bc) const 
 {
   bc = d_bc;
