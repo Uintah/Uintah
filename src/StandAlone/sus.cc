@@ -92,10 +92,6 @@
 
 #include <svn_info.h>
 
-#ifdef USE_VAMPIR
-#  include <Core/Parallel/Vampir.h>
-#endif
-
 #ifdef HAVE_VISIT
 #  include <VisIt/libsim/visit_libsim.h>
 #endif
@@ -479,10 +475,6 @@ main( int argc, char *argv[], char *env[] )
       Thread::exitAll( 1 );
     }
   }
-
-  #ifdef USE_VAMPIR
-  VTsetup();
-  #endif
 
   char * start_addr = (char*)sbrk(0);
 

@@ -157,7 +157,7 @@ namespace Uintah {
     };
     
     static const int MAX_PATCH_SELECT = 32;
-    typedef fixedvector<const Patch*, MAX_PATCH_SELECT> selectType;
+    typedef FixedVector<const Patch*, MAX_PATCH_SELECT> selectType;
     
     
     /**************New Public Interaface*******************
