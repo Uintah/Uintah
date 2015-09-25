@@ -539,7 +539,7 @@ namespace Uintah{
         }
 
         std::stringstream msg;
-        msg << "Error: variable with name" << name << " not found in the registry." <<
+        msg << "Error: variable with name: " << name << " not found in the registry." <<
         " Did you register it?" << std::endl;
         throw InvalidValue( msg.str(), __FILE__, __LINE__ );
 

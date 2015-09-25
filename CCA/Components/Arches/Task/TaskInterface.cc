@@ -200,15 +200,15 @@ void TaskInterface::schedule_task( const LevelP& level,
 
   VariableRegistry variable_registry;
 
-  register_timestep_eval( variable_registry, time_substep );
-
   Task* tsk;
 
-  if ( task_type == STANDARD_TASK )
+  if ( task_type == STANDARD_TASK ){
+    register_timestep_eval( variable_registry, time_substep );
     tsk = scinew Task( _task_name, this, &TaskInterface::do_task, variable_registry, time_substep );
-  else if ( task_type == BC_TASK )
+  } else if ( task_type == BC_TASK ) {
+    register_compute_bcs( variable_registry, time_substep );
     tsk = scinew Task( _task_name+"_bc_task", this, &TaskInterface::do_bcs, variable_registry, time_substep );
-  else
+  } else
     throw InvalidValue("Error: Task type not recognized.",__FILE__,__LINE__);
 
   int counter = 0;
@@ -422,7 +422,7 @@ void TaskInterface::do_bcs( const ProcessorGroup* pc,
     Operators& opr = Operators::self();
     Operators::PatchInfoMap::iterator i_opr = opr.patch_info_map.find(patch->getID());
 
-    eval( patch, tsk_info_mngr, i_opr->second._sodb );
+    compute_bcs( patch, tsk_info_mngr, i_opr->second._sodb );
 
     //clean up
     delete tsk_info_mngr;

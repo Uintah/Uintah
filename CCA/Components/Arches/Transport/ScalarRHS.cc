@@ -327,6 +327,7 @@ ScalarRHS::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info,
 
 void
 ScalarRHS::register_compute_bcs( std::vector<ArchesFieldContainer::VariableInformation>& variable_registry, const int time_substep ){
+  //register_variable( _task_name, ArchesFieldContainer::MODIFIES, variable_registry, time_substep );
 }
 
 void
@@ -336,6 +337,19 @@ ScalarRHS::compute_bcs( const Patch* patch, ArchesTaskInfoManager* tsk_info,
 
   using namespace SpatialOps;
   using SpatialOps::operator *;
+  using namespace std;
+
+  typedef std::map< int, Wasatch::BCHelper* > BCHelperMapTL;
+  for ( BCHelperMapTL::iterator i = _bcHelperMap->begin(); i != _bcHelperMap->end(); i++ ){
+
+    const Wasatch::BndMapT& bc =  i->second->get_boundary_information();
+    map<std::string, Wasatch::BndSpec>::const_iterator test=bc.begin();
+    cout << test->first << endl;
+
+    const Wasatch::BndCondSpec* bnd = test->second.find(_task_name);
+    const Wasatch::BndCondTypeEnum d = bnd->bcType;
+
+  }
 
 }
 

@@ -85,7 +85,13 @@ namespace Uintah{
 
     }
 
-    void set_bchelper( std::map< int, Wasatch::BCHelper* >* helper ){ _bcHelperMap = helper; }
+    /** @brief Set the helper to this factory and active tasks **/
+    void set_bchelper( std::map< int, Wasatch::BCHelper* >* helper ){
+      _bcHelperMap = helper;
+      for ( TaskMap::iterator itsk = _tasks.begin(); itsk != _tasks.end(); itsk++ ){
+        itsk->second->set_bchelper( _bcHelperMap );
+      }
+    }
 
   protected:
 

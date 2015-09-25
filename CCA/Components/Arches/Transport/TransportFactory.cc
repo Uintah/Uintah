@@ -52,7 +52,6 @@ TransportFactory::register_all_tasks( ProblemSpecP& db )
       TaskInterface::TaskBuilder* tsk = scinew ScalarRHS::Builder(eqn_name,0);
       register_task( eqn_name, tsk );
 
-      _active_tasks.push_back(eqn_name);
       _scalar_builders.push_back(eqn_name);
 
     }
@@ -67,8 +66,6 @@ TransportFactory::register_all_tasks( ProblemSpecP& db )
     SSPInt<SVol>::Builder* tsk2 = scinew SSPInt<SVol>::Builder( ssp_task_name, 0, _scalar_builders );
     register_task( ssp_task_name, tsk2 );
 
-    _active_tasks.push_back( update_task_name );
-    _active_tasks.push_back( ssp_task_name );
     _scalar_update.push_back( update_task_name );
     _scalar_ssp.push_back( ssp_task_name );
 
@@ -91,7 +88,6 @@ TransportFactory::register_all_tasks( ProblemSpecP& db )
     TaskInterface::TaskBuilder* umom_tsk = scinew URHS<XVol>::Builder( task_name, 0, u_name, v_name, w_name );
     register_task( task_name, umom_tsk );
 
-    _active_tasks.push_back(task_name);
     _momentum_builders.push_back(task_name);
 
     //---v
@@ -99,7 +95,6 @@ TransportFactory::register_all_tasks( ProblemSpecP& db )
     TaskInterface::TaskBuilder* vmom_tsk = scinew URHS<YVol>::Builder( task_name, 0, v_name, w_name, u_name );
     register_task( task_name, vmom_tsk );
 
-    _active_tasks.push_back(task_name);
     _momentum_builders.push_back(task_name);
 
     //---w
@@ -107,7 +102,6 @@ TransportFactory::register_all_tasks( ProblemSpecP& db )
     TaskInterface::TaskBuilder* wmom_tsk = scinew URHS<ZVol>::Builder( task_name, 0, w_name, u_name, v_name );
     register_task( task_name, wmom_tsk );
 
-    _active_tasks.push_back(task_name);
     _momentum_builders.push_back(task_name);
 
     typedef SpatialOps::XVolField XVol;
@@ -118,7 +112,6 @@ TransportFactory::register_all_tasks( ProblemSpecP& db )
     u_up_tsk.push_back("umom");
     FEUpdate<XVol>::Builder* utsk = scinew FEUpdate<XVol>::Builder( update_task_name, 0, u_up_tsk, false );
     register_task( update_task_name, utsk );
-    _active_tasks.push_back( update_task_name );
     _momentum_update.push_back( update_task_name );
 
     update_task_name = "vmom_fe_update";
@@ -126,7 +119,6 @@ TransportFactory::register_all_tasks( ProblemSpecP& db )
     v_up_tsk.push_back("vmom");
     FEUpdate<YVol>::Builder* vtsk = scinew FEUpdate<YVol>::Builder( update_task_name, 0, v_up_tsk, false );
     register_task( update_task_name, vtsk );
-    _active_tasks.push_back( update_task_name );
     _momentum_update.push_back( update_task_name );
 
     update_task_name = "wmom_fe_update";
@@ -134,23 +126,19 @@ TransportFactory::register_all_tasks( ProblemSpecP& db )
     w_up_tsk.push_back("wmom");
     FEUpdate<YVol>::Builder* wtsk = scinew FEUpdate<YVol>::Builder( update_task_name, 0, w_up_tsk, false );
     register_task( update_task_name, wtsk );
-    _active_tasks.push_back( update_task_name );
     //_momentum_update.push_back( update_task_name );
 
     //std::string ssp_task_name = "umom_ssp_update";
     //SSPInt<XVol>::Builder* ssp_utsk = scinew SSPInt<XVol>::Builder( ssp_task_name, 0, u_up_tsk );
     //register_task( ssp_task_name, ssp_utsk );
-    //_active_tasks.push_back( ssp_task_name );
 
     //ssp_task_name = "vmom_ssp_update";
     //SSPInt<YVol>::Builder* ssp_vtsk = scinew SSPInt<YVol>::Builder( ssp_task_name, 0, v_up_tsk );
     //register_task( ssp_task_name, ssp_vtsk );
-    //_active_tasks.push_back( ssp_task_name );
 
     //ssp_task_name = "wmom_ssp_update";
     //SSPInt<ZVol>::Builder* ssp_wtsk = scinew SSPInt<ZVol>::Builder( ssp_task_name, 0, w_up_tsk );
     //register_task( ssp_task_name, ssp_wtsk );
-    //_active_tasks.push_back( ssp_task_name );
 
   }
 }
@@ -171,7 +159,6 @@ TransportFactory::build_all_tasks( ProblemSpecP& db )
       tsk->problemSetup( eqn_db );
 
       tsk->create_local_labels();
-      tsk->set_bchelper(_bcHelperMap); 
 
     }
 
