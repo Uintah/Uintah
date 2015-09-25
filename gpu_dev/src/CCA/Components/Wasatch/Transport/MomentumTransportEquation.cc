@@ -688,8 +688,8 @@ namespace Wasatch{
     }
     
     if( !factory.have_entry( tagNames.pressuresrc ) ){
-      const Expr::Tag densStarTag  = tagNames.make_star(densTag, Expr::CARRY_FORWARD);
-      const Expr::Tag dens2StarTag = tagNames.make_double_star(densTag, Expr::CARRY_FORWARD);
+      const Expr::Tag densStarTag  = tagNames.make_star(densTag, Expr::STATE_NONE);
+      const Expr::Tag dens2StarTag = tagNames.make_double_star(densTag, Expr::STATE_NONE);
       Expr::TagList velStarTags = Expr::TagList();
       
       set_vel_star_tags( velTags_, velStarTags );
@@ -865,13 +865,6 @@ namespace Wasatch{
         bcHelper.create_dummy_dependency<FieldT, FieldT>(momTimeAdvanceTag, tag_list(thisVelTag_),INITIALIZATION);
       }
 
-      if( !isConstDensity_ ){
-        const Expr::Tag rhoTagInit(densityTag_.name(), Expr::STATE_NONE);
-        const Expr::Tag rhoStarTag = tagNames.make_star(densityTag_); // get the tagname of rho*
-        bcHelper.create_dummy_dependency<SVolField, SVolField>(rhoStarTag, tag_list(rhoTagInit), INITIALIZATION);
-        const Expr::Tag rhoTagAdv(densityTag_.name(), Expr::CARRY_FORWARD);
-        bcHelper.create_dummy_dependency<SVolField, SVolField>(rhoStarTag, tag_list(rhoTagAdv), ADVANCE_SOLUTION);
-      }
     }
     //
     // END DUMMY MODIFIER SETUP
@@ -884,28 +877,6 @@ namespace Wasatch{
       const BndSpec& myBndSpec = bndPair.second;
 
       const bool isNormal = is_normal_to_boundary(this->staggered_location(), myBndSpec.face);
-      
-      // variable density: add bcopiers on all boundaries
-      if( !isConstDensity_ ){
-        // if we are solving a variable density problem, then set bcs on density estimate rho*
-        const Expr::Tag rhoStarTag = tagNames.make_star(densityTag_); // get the tagname of rho*
-        // check if this boundary applies a bc on the density
-        if (myBndSpec.has_field(densityTag_.name())) {
-          // create a bc copier for the density estimate
-          const Expr::Tag rhoStarBCTag( rhoStarTag.name() + "_" + bndName +"_bccopier", Expr::STATE_NONE);
-          BndCondSpec rhoStarBCSpec = {rhoStarTag.name(), rhoStarBCTag.name(), 0.0, DIRICHLET, FUNCTOR_TYPE};
-          if (!initFactory.have_entry(rhoStarBCTag)){
-            const Expr::Tag rhoTag(densityTag_.name(), Expr::STATE_NONE);
-            initFactory.register_expression ( new typename BCCopier<SVolField>::Builder(rhoStarBCTag, rhoTag) );
-            bcHelper.add_boundary_condition(bndName, rhoStarBCSpec);
-          }
-          if (!advSlnFactory.have_entry(rhoStarBCTag)){
-            const Expr::Tag rhoTag(densityTag_.name(), Expr::CARRY_FORWARD);
-            advSlnFactory.register_expression ( new typename BCCopier<SVolField>::Builder(rhoStarBCTag, rhoTag) );
-            bcHelper.add_boundary_condition(bndName, rhoStarBCSpec);
-          }
-        }
-      }
       
       switch (myBndSpec.type) {
         case WALL:
@@ -1204,11 +1175,11 @@ namespace Wasatch{
       bcHelper.apply_boundary_condition<FieldT>(velStarTag, taskCat);
 
       // set bcs for density
-      const Expr::Tag densTag( densityTag_.name(), Expr::CARRY_FORWARD );
+      const Expr::Tag densTag( densityTag_.name(), Expr::STATE_NONE );
       bcHelper.apply_boundary_condition<SVolField>(densTag, taskCat);
       
       // set bcs for density_*
-      bcHelper.apply_boundary_condition<SVolField>( tagNames.make_star(densityTag_,Expr::CARRY_FORWARD), taskCat );
+      bcHelper.apply_boundary_condition<SVolField>( tagNames.make_star(densityTag_,Expr::STATE_NONE), taskCat );
 
       // set bcs for divmom*
       bcHelper.apply_boundary_condition<SVolField>(tagNames.divmomstar, taskCat);

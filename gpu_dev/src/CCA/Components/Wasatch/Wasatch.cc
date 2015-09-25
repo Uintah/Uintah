@@ -1119,32 +1119,6 @@ namespace Wasatch{
       taskInterfaceList_.push_back( task );
     }
     proc0cout << "Wasatch: done creating post-processing task(s)" << std::endl;
-
-    // ensure that any "CARRY_FORWARD" variable has an initialization provided for it.
-    if( buildTimeIntegrator_ ){ // make sure that we have a timestepper created - this is needed for wasatch-in-arches
-      const Expr::ExpressionFactory* const icFactory = graphCategories_[INITIALIZATION]->exprFactory;
-      typedef std::list< TaskInterface* > TIList;
-      bool isOk = true;
-      Expr::TagList missingTags;
-      const TIList& tilist = timeStepper_->get_task_interfaces();
-      for( TIList::const_iterator iti=tilist.begin(); iti!=tilist.end(); ++iti ){
-        const Expr::TagList tags = (*iti)->collect_tags_in_task();
-        for( Expr::TagList::const_iterator itag=tags.begin(); itag!=tags.end(); ++itag ){
-          if( itag->context() == Expr::CARRY_FORWARD ){
-            if( !icFactory->have_entry(*itag) ) missingTags.push_back( *itag );
-          }
-        }
-      }
-      if( !isOk ){
-        std::ostringstream msg;
-        msg << "ERORR: The following fields were marked 'CARRY_FORWARD' but were not initialized." << std::endl
-            << "       Ensure that all of these fields are present on the initialization graph:" << std::endl;
-        for( Expr::TagList::const_iterator it=missingTags.begin(); it!=missingTags.end(); ++it ){
-          msg << "         " << *it << std::endl;
-        }
-        throw Uintah::ProblemSetupException( msg.str(), __FILE__, __LINE__ );
-      }
-    }
     
     //_________________________
     // After the time advance graphs have all finished executing, it is time

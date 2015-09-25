@@ -414,8 +414,8 @@ namespace Wasatch{
     Uintah::ProblemSpecP densityParams = wasatchParams->findBlock("Density");
     Uintah::ProblemSpecP momEqnParams  = wasatchParams->findBlock("MomentumEquations");
     const Expr::Tag densityTag   = parse_nametag( densityParams->findBlock("NameTag") );
-    const Expr::Tag densStarTag  = tagNames.make_star(densityTag, Expr::CARRY_FORWARD);
-    const Expr::Tag dens2StarTag = tagNames.make_double_star(densityTag, Expr::CARRY_FORWARD);
+    const Expr::Tag densStarTag  = tagNames.make_star(densityTag, Expr::STATE_NONE);
+    const Expr::Tag dens2StarTag = tagNames.make_double_star(densityTag, Expr::STATE_NONE);
     
     std::string xvelname, yvelname, zvelname;
     Uintah::ProblemSpecP doxvel,doyvel, dozvel;
@@ -497,8 +497,8 @@ namespace Wasatch{
     Uintah::ProblemSpecP momEqnParams  = wasatchParams->findBlock("MomentumEquations");
     Expr::Tag densityTag = parse_nametag( densityParams->findBlock("NameTag") );
     
-    Expr::Tag densStarTag  = tagNames.make_star(densityTag, Expr::CARRY_FORWARD);
-    Expr::Tag dens2StarTag = tagNames.make_double_star(densityTag, Expr::CARRY_FORWARD);
+    Expr::Tag densStarTag  = tagNames.make_star(densityTag, Expr::STATE_NONE);
+    Expr::Tag dens2StarTag = tagNames.make_double_star(densityTag, Expr::STATE_NONE);
     
     std::string xvelname, yvelname, zvelname;
     Uintah::ProblemSpecP doxvel,doyvel, dozvel;
@@ -1220,7 +1220,7 @@ namespace Wasatch{
         diffFluxTag = Expr::Tag( primVarName + suffix + tagNames.diffusiveflux + dir, Expr::STATE_NONE );
         // make new Tags for density and primVar by adding the appropriate suffix ( "_*" or nothing ). This
         // is because we need the ScalarRHS at time step n+1 for our pressure projection method
-        const Expr::Tag densityCorrectedTag = Expr::Tag(densityTag.name() + suffix, Expr::CARRY_FORWARD);
+        const Expr::Tag densityCorrectedTag = Expr::Tag(densityTag.name() + suffix, Expr::STATE_NONE);
         const Expr::Tag primVarCorrectedTag = Expr::Tag(primVarTag.name() + suffix, Expr::STATE_NONE);
         
         Expr::ExpressionBuilder* builder = NULL;

@@ -180,14 +180,7 @@ Builder::Builder( const InterpT& rhoEval,
   : ExpressionBuilder( resultsTag ),
     rhoEval_( rhoEval.clone() ),
     rhoFTag_(rhoFTag)
-{
-  if( resultsTag[0].context() != Expr::CARRY_FORWARD ){
-    std::ostringstream msg;
-    msg << "ERROR: Density must have CARRY_FORWARD context so that an initial guess is available\n\t"
-        << __FILE__ << " : " << __LINE__ << std::endl;
-    throw std::runtime_error( msg.str() );
-  }
-}
+{}
 
 //--------------------------------------------------------------------
 
@@ -335,21 +328,7 @@ Builder::Builder( const Expr::Tag& rhoTag,
   : ExpressionBuilder( tag_list(rhoTag,gammaTag) ),
     densEval_( densEvaluator.clone() ),
     enthEval_( enthEvaluator.clone() )
-{
-  if( rhoTag.context() != Expr::CARRY_FORWARD ){
-    std::ostringstream msg;
-    msg << "ERROR: Density must have CARRY_FORWARD context so that an initial guess is available\n\t"
-        << __FILE__ << " : " << __LINE__ << std::endl;
-    throw std::runtime_error( msg.str() );
-  }
-  if( gammaTag.context() != Expr::CARRY_FORWARD ){
-    std::ostringstream msg;
-    msg << "ERROR: Heat loss must have CARRY_FORWARD context so that an initial guess is available\n\t"
-        << "specified tag: " << gammaTag << "\n\t"
-        << __FILE__ << " : " << __LINE__ << std::endl;
-    throw std::runtime_error( msg.str() );
-  }
-}
+{}
 
 //--------------------------------------------------------------------
 
