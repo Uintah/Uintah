@@ -2,17 +2,17 @@
 #  The MIT License
 #
 #  Copyright (c) 1997-2015 The University of Utah
-# 
+#
 #  Permission is hereby granted, free of charge, to any person obtaining a copy
 #  of this software and associated documentation files (the "Software"), to
 #  deal in the Software without restriction, including without limitation the
 #  rights to use, copy, modify, merge, publish, distribute, sublicense, and/or
 #  sell copies of the Software, and to permit persons to whom the Software is
 #  furnished to do so, subject to the following conditions:
-# 
+#
 #  The above copyright notice and this permission notice shall be included in
 #  all copies or substantial portions of the Software.
-# 
+#
 #  THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
 #  IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
 #  FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -20,9 +20,9 @@
 #  LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
 #  FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
 #  IN THE SOFTWARE.
-# 
-# 
-# Makefile fragment for this subdirectory 
+#
+#
+# Makefile fragment for this subdirectory
 
 include $(SCIRUN_SCRIPTS)/smallso_prologue.mk
 
@@ -33,6 +33,7 @@ SRCS += $(SRCDIR)/Arches.cc                    \
         $(SRCDIR)/ArchesLabel.cc               \
         $(SRCDIR)/ArchesMaterial.cc            \
         $(SRCDIR)/ArchesParticlesHelper.cc     \
+        $(SRCDIR)/ArchesBCHelper.cc     \
         $(SRCDIR)/ArchesVariables.cc           \
         $(SRCDIR)/BoundaryCondition.cc         \
         $(SRCDIR)/BoundaryCond_new.cc          \
@@ -56,7 +57,7 @@ SRCS += $(SRCDIR)/Arches.cc                    \
         $(SRCDIR)/SmagorinskyModel.cc          \
         $(SRCDIR)/Source.cc                    \
         $(SRCDIR)/TurbulenceModel.cc           \
-        $(SRCDIR)/TurbulenceModelPlaceholder.cc 
+        $(SRCDIR)/TurbulenceModelPlaceholder.cc
 
 ifeq ($(HAVE_CUDA),yes)
   SRCS += $(SRCDIR)/constructLinearSystemKernel.cu
@@ -88,12 +89,12 @@ PSELIBS := \
 ifeq ($(HAVE_PETSC),yes)
    SRCS += $(SRCDIR)/PetscCommon.cc \
            $(SRCDIR)/Filter.cc
-   LIBS := $(LIBS) $(PETSC_LIBRARY) 
+   LIBS := $(LIBS) $(PETSC_LIBRARY)
    INCLUDES += $(PETSC_INCLUDE)
 endif
 
 ifeq ($(HAVE_HYPRE),yes)
-   LIBS := $(LIBS) $(HYPRE_LIBRARY) 
+   LIBS := $(LIBS) $(HYPRE_LIBRARY)
    INCLUDES += $(HYPRE_INCLUDE)
 endif
 
@@ -123,7 +124,7 @@ SUBDIRS := $(SRCDIR)/ChemMix             \
            $(SRCDIR)/Transport           \
            $(SRCDIR)/TransportEqns       \
            $(SRCDIR)/Utility             \
-           $(SRCDIR)/WallHTModels        
+           $(SRCDIR)/WallHTModels
 
 
 include $(SCIRUN_SCRIPTS)/recurse.mk
@@ -135,7 +136,7 @@ include $(SCIRUN_SCRIPTS)/smallso_epilogue.mk
 # I don't know of any reason that these are actually made into separate libraries...
 # perhaps just for historical reasons.  It would be just as easy to fold them into
 # libArches if there ever was a reason to...
-SUBDIRS := $(SRCDIR)/fortran           
+SUBDIRS := $(SRCDIR)/fortran
 
 include $(SCIRUN_SCRIPTS)/recurse.mk
 #### End handle subdirs
