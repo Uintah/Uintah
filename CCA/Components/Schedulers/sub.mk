@@ -70,7 +70,7 @@ PSELIBS := \
         Core/Thread      \
         Core/Util        
 
-LIBS := $(XML2_LIBRARY) $(MPI_LIBRARY) $(VAMPIR_LIBRARY) $(CUDA_LIBRARY)
+LIBS := $(XML2_LIBRARY) $(MPI_LIBRARY) $(CUDA_LIBRARY)
 
 include $(SCIRUN_SCRIPTS)/smallso_epilogue.mk
 
