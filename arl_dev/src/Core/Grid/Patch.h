@@ -29,7 +29,7 @@
 #include <Core/Grid/Ghost.h>
 #include <Core/Grid/Level.h>
 #include <Core/Disclosure/TypeDescription.h>
-#include <Core/Grid/fixedvector.h>
+#include <Core/Grid/FixedVector.h>
 #include <Core/Grid/Variables/CellIterator.h>
 #include <Core/Grid/Variables/NodeIterator.h>
 #include <Core/Grid/Variables/Iterator.h>
@@ -157,7 +157,7 @@ namespace Uintah {
     };
     
     static const int MAX_PATCH_SELECT = 32;
-    typedef fixedvector<const Patch*, MAX_PATCH_SELECT> selectType;
+    typedef FixedVector<const Patch*, MAX_PATCH_SELECT> selectType;
     
     
     /**************New Public Interaface*******************

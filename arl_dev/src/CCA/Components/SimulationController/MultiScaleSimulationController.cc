@@ -224,15 +224,15 @@ MultiScaleSimulationController::run()
 
     // Compute number of dataWarehouses - multiplies by the time refinement ratio for each level you increase
     int totalFine = 1;
-    if (!d_sharedState->isLockstepAMR()) {
+    if (!d_doMultiScale && !d_sharedState->isLockstepAMR()) {
       for (int i = 1; i < currentGrid->numLevels(); i++) {
         totalFine *= currentGrid->getLevel(i)->getRefinementRatioMaxDim();
       }
     }
-     
+
     d_sharedState->d_prev_delt = delt;
     iterations++;
- 
+
     // get delt and adjust it
     delt_vartype delt_var;
     DataWarehouse* newDW = d_scheduler->getLastDW();
@@ -243,8 +243,6 @@ MultiScaleSimulationController::run()
     // delt adjusted based on timeinfo parameters
     adjustDelT( delt, d_sharedState->d_prev_delt, first, time );
     newDW->override(delt_vartype(delt), d_sharedState->get_delt_label());
-
-    // printSimulationStats( d_sharedState, delt, time );
 
     if (dbg_dwmem.active()) {
       // Remember, this isn't logged if DISABLE_SCI_MALLOC is set
@@ -449,19 +447,18 @@ MultiScaleSimulationController::subCycleCompile( GridP & grid,
                                                  int     startDW,
                                                  int     dwStride,
                                                  int     step,
-                                                 int     numLevel)
+                                                 int     level_idx)
 {
-  // We are on (the fine) level numLevel
-  LevelP fineLevel = grid->getLevel(numLevel);
+  LevelP base_level = grid->getLevel(level_idx);
   LevelP coarseLevel;
   int coarseStartDW;
   int coarseDWStride;
   int numCoarseSteps;  // how many steps between this level and the coarser
   int numFineSteps;    // how many steps between this level and the finer
 
-  if (numLevel > 0) {
-    numCoarseSteps = d_sharedState->isLockstepAMR() ? 1 : fineLevel->getRefinementRatioMaxDim();
-    coarseLevel = grid->getLevel(numLevel - 1);
+  if (level_idx > 0) {
+    numCoarseSteps = d_sharedState->isLockstepAMR() ? 1 : base_level->getRefinementRatioMaxDim();
+    coarseLevel = grid->getLevel(level_idx - 1);
     coarseDWStride = dwStride * numCoarseSteps;
     coarseStartDW = (startDW / coarseDWStride) * coarseDWStride;
   }
@@ -471,31 +468,31 @@ MultiScaleSimulationController::subCycleCompile( GridP & grid,
     numCoarseSteps = 0;
   }
   
-  ASSERT(dwStride > 0 && numLevel < grid->numLevels())
+  ASSERT(dwStride > 0 && level_idx < grid->numLevels())
   d_scheduler->clearMappings();
   d_scheduler->mapDataWarehouse(Task::OldDW, startDW);
   d_scheduler->mapDataWarehouse(Task::NewDW, startDW+dwStride);
   d_scheduler->mapDataWarehouse(Task::CoarseOldDW, coarseStartDW);
   d_scheduler->mapDataWarehouse(Task::CoarseNewDW, coarseStartDW+coarseDWStride);
   
-  d_sim->scheduleTimeAdvance(fineLevel, d_scheduler);
+  d_sim->scheduleTimeAdvance(base_level, d_scheduler);
 
   if (d_doAMR) {
-    if(numLevel+1 < grid->numLevels()){
-      numFineSteps = d_sharedState->isLockstepAMR() ? 1 : fineLevel->getFinerLevel()->getRefinementRatioMaxDim();
+    if(level_idx+1 < grid->numLevels()){
+      numFineSteps = d_sharedState->isLockstepAMR() ? 1 : base_level->getFinerLevel()->getRefinementRatioMaxDim();
       int newStride = dwStride/numFineSteps;
-      
+
       for(int substep=0;substep < numFineSteps;substep++){
-        subCycleCompile(grid, startDW+substep*newStride, newStride, substep, numLevel+1);
+        subCycleCompile(grid, startDW+substep*newStride, newStride, substep, level_idx+1);
       }
-      
+
       // Coarsen and then refine_CFI at the end of the W-cycle
       d_scheduler->clearMappings();
       d_scheduler->mapDataWarehouse(Task::OldDW, 0);
       d_scheduler->mapDataWarehouse(Task::NewDW, startDW+dwStride);
       d_scheduler->mapDataWarehouse(Task::CoarseOldDW, startDW);
       d_scheduler->mapDataWarehouse(Task::CoarseNewDW, startDW+dwStride);
-      d_sim->scheduleCoarsen(fineLevel, d_scheduler);
+      d_sim->scheduleCoarsen(base_level, d_scheduler);
     }
   }
 
@@ -505,29 +502,29 @@ MultiScaleSimulationController::subCycleCompile( GridP & grid,
   d_scheduler->mapDataWarehouse(Task::CoarseOldDW, coarseStartDW);
   d_scheduler->mapDataWarehouse(Task::CoarseNewDW, coarseStartDW+coarseDWStride);
 
-  d_sim->scheduleFinalizeTimestep(fineLevel, d_scheduler);
+  d_sim->scheduleFinalizeTimestep(base_level, d_scheduler);
 
   // do refineInterface after the freshest data we can get; after the finer
   // level's coarsen completes do all the levels at this point in time as well,
   // so all the coarsens go in order, and then the refineInterfaces
-  if (d_doAMR && (step < numCoarseSteps -1 || numLevel == 0)) {
-    
-    for (int i = fineLevel->getIndex(); i < fineLevel->getGrid()->numLevels(); i++) {
+  if (d_doAMR && (step < numCoarseSteps -1 || level_idx == 0)) {
+
+    for (int i = base_level->getIndex(); i < base_level->getGrid()->numLevels(); i++) {
 
       if (i == 0) {
         continue;
       }
 
-      if (i == fineLevel->getIndex() && numLevel != 0) {
+      if (i == base_level->getIndex() && level_idx != 0) {
         d_scheduler->mapDataWarehouse(Task::CoarseOldDW, coarseStartDW);
         d_scheduler->mapDataWarehouse(Task::CoarseNewDW, coarseStartDW + coarseDWStride);
-        d_sim->scheduleRefineInterface(fineLevel, d_scheduler, true, true);
+        d_sim->scheduleRefineInterface(base_level, d_scheduler, true, true);
       }
       else {
         // look in the NewDW all the way down
         d_scheduler->mapDataWarehouse(Task::CoarseOldDW, 0);
         d_scheduler->mapDataWarehouse(Task::CoarseNewDW, startDW + dwStride);
-        d_sim->scheduleRefineInterface(fineLevel->getGrid()->getLevel(i), d_scheduler, false, true);
+        d_sim->scheduleRefineInterface(base_level->getGrid()->getLevel(i), d_scheduler, false, true);
       }
     }
   }
@@ -541,113 +538,108 @@ MultiScaleSimulationController::subCycleExecute( GridP & grid,
                                                  int     levelNum,
                                                  bool    rootCycle )
 {
-  // there are 2n+1 taskgraphs, n for the basic timestep, n for intermediate 
-  // timestep work, and 1 for the errorEstimate and stableTimestep, where n
-  // is the number of levels.
+  // there are 2n+1 taskgraphs, n for the basic timestep, n for intermediate timestep work,
+  // and 1 for the errorEstimate and stableTimestep, where n is the number of levels.
   if (multiscaleout.active()) {
     multiscaleout << "Start MultiScaleSimulationController::subCycleExecute, level=" << grid->numLevels() << '\n';
   }
   // We are on (the fine) level numLevel
   int numSteps;
-  if (levelNum == 0 || d_sharedState->isLockstepAMR())
+  if (levelNum == 0 || d_sharedState->isLockstepAMR()) {
     numSteps = 1;
+  }
   else {
     numSteps = grid->getLevel(levelNum)->getRefinementRatioMaxDim();
   }
-  
-  int newDWStride = dwStride/numSteps;
 
-  DataWarehouse::ScrubMode oldScrubbing = (/*d_lb->isDynamic() ||*/ d_sim->restartableTimesteps()) ? 
-    DataWarehouse::ScrubNonPermanent : DataWarehouse::ScrubComplete;
+  int newDWStride = dwStride / numSteps;
+
+  DataWarehouse::ScrubMode oldScrubbing =
+      (/*d_lb->isDynamic() ||*/d_sim->restartableTimesteps()) ? DataWarehouse::ScrubNonPermanent : DataWarehouse::ScrubComplete;
 
   int curDW = startDW;
-  for(int step=0;step < numSteps;step++){
-  
+  for (int step = 0; step < numSteps; step++) {
+
     if (step > 0) {
-      curDW += newDWStride; // can't increment at the end, or the FINAL tg for L0 will use the wrong DWs
+      curDW += newDWStride;  // can't increment at the end, or the FINAL tg for L0 will use the wrong DWs
     }
 
     d_scheduler->clearMappings();
     d_scheduler->mapDataWarehouse(Task::OldDW, curDW);
-    d_scheduler->mapDataWarehouse(Task::NewDW, curDW+newDWStride);
+    d_scheduler->mapDataWarehouse(Task::NewDW, curDW + newDWStride);
     d_scheduler->mapDataWarehouse(Task::CoarseOldDW, startDW);
-    d_scheduler->mapDataWarehouse(Task::CoarseNewDW, startDW+dwStride);
+    d_scheduler->mapDataWarehouse(Task::CoarseNewDW, startDW + dwStride);
 
-    // we really only need to pass in whether the current DW is mapped to 0
-    // or not
+    // we really only need to pass in whether the current DW is mapped to 0 or not
     // TODO - fix inter-Taskgraph scrubbing
-    //if (Uintah::Parallel::getMaxThreads() < 1) { 
-    d_scheduler->get_dw(curDW)->setScrubbing(oldScrubbing); // OldDW
-    d_scheduler->get_dw(curDW+newDWStride)->setScrubbing(DataWarehouse::ScrubNonPermanent); // NewDW
-    d_scheduler->get_dw(startDW)->setScrubbing(oldScrubbing); // CoarseOldDW
-    d_scheduler->get_dw(startDW+dwStride)->setScrubbing(DataWarehouse::ScrubNonPermanent); // CoarseNewDW
-    //}
-    
+    d_scheduler->get_dw(curDW)->setScrubbing(oldScrubbing);  // OldDW
+    d_scheduler->get_dw(curDW + newDWStride)->setScrubbing(DataWarehouse::ScrubNonPermanent);  // NewDW
+    d_scheduler->get_dw(startDW)->setScrubbing(oldScrubbing);  // CoarseOldDW
+    d_scheduler->get_dw(startDW + dwStride)->setScrubbing(DataWarehouse::ScrubNonPermanent);  // CoarseNewDW
+
     // we need to unfinalize because execute finalizes all new DWs, and we need to write into them still
     // (even if we finalized only the NewDW in execute, we will still need to write into that DW)
-    d_scheduler->get_dw(curDW+newDWStride)->unfinalize();
+    d_scheduler->get_dw(curDW + newDWStride)->unfinalize();
 
     // iteration only matters if it's zero or greater than 0
     int iteration = curDW + (d_lastRecompileTimestep == d_sharedState->getCurrentTopLevelTimeStep() ? 0 : 1);
-    
+
     if (dbg.active()) {
-      dbg << d_myworld->myrank() << "   Executing TG on level " << levelNum << " with old DW " 
-          << curDW << "=" << d_scheduler->get_dw(curDW)->getID() << " and new " 
-          << curDW+newDWStride << "=" << d_scheduler->get_dw(curDW+newDWStride)->getID() 
-          << "CO-DW: " << startDW << " CNDW " << startDW+dwStride << " on iteration " << iteration << std::endl;
+      dbg << "Rank-" << d_myworld->myrank() << "   Executing TG on level " << levelNum << " with old DW " << curDW << "="
+          << d_scheduler->get_dw(curDW)->getID() << " and new " << curDW + newDWStride << "="
+          << d_scheduler->get_dw(curDW + newDWStride)->getID() << "CO-DW: " << startDW << " CNDW " << startDW + dwStride
+          << " on iteration " << iteration << std::endl;
     }
-    
+
     d_scheduler->execute(levelNum, iteration);
-    
-    if(levelNum+1 < grid->numLevels()){
+
+    if (levelNum + 1 < grid->numLevels()) {
       ASSERT(newDWStride > 0);
-      subCycleExecute(grid, curDW, newDWStride, levelNum+1, false);
+      subCycleExecute(grid, curDW, newDWStride, levelNum + 1, false);
     }
- 
-    if (d_doAMR && grid->numLevels() > 1 && (step < numSteps-1 || levelNum == 0)) {
-      // Since the execute of the intermediate is time-based,
-      // execute the intermediate TG relevant to this level, if we are in the 
-      // middle of the subcycle or at the end of level 0.
+
+    if (d_doAMR && grid->numLevels() > 1 && (step < numSteps - 1 || levelNum == 0)) {
+      // Since the execute of the intermediate is time-based, execute the intermediate TG relevant
+      // to this level, if we are in the middle of the subcycle or at the end of level 0.
       // the end of the cycle will be taken care of by the parent level sybcycle
       d_scheduler->clearMappings();
       d_scheduler->mapDataWarehouse(Task::OldDW, curDW);
-      d_scheduler->mapDataWarehouse(Task::NewDW, curDW+newDWStride);
+      d_scheduler->mapDataWarehouse(Task::NewDW, curDW + newDWStride);
       d_scheduler->mapDataWarehouse(Task::CoarseOldDW, startDW);
-      d_scheduler->mapDataWarehouse(Task::CoarseNewDW, startDW+dwStride);
+      d_scheduler->mapDataWarehouse(Task::CoarseNewDW, startDW + dwStride);
 
-    //if (Uintah::Parallel::getMaxThreads() < 1) { 
-      d_scheduler->get_dw(curDW)->setScrubbing(oldScrubbing); // OldDW
-      d_scheduler->get_dw(curDW+newDWStride)->setScrubbing(DataWarehouse::ScrubNonPermanent); // NewDW
-      d_scheduler->get_dw(startDW)->setScrubbing(oldScrubbing); // CoarseOldDW
-      d_scheduler->get_dw(startDW+dwStride)->setScrubbing(DataWarehouse::ScrubNonPermanent); // CoarseNewDW
-    //}
+      d_scheduler->get_dw(curDW)->setScrubbing(oldScrubbing);  // OldDW
+      d_scheduler->get_dw(curDW + newDWStride)->setScrubbing(DataWarehouse::ScrubNonPermanent);  // NewDW
+      d_scheduler->get_dw(startDW)->setScrubbing(oldScrubbing);  // CoarseOldDW
+      d_scheduler->get_dw(startDW + dwStride)->setScrubbing(DataWarehouse::ScrubNonPermanent);  // CoarseNewDW
+
       if (dbg.active()) {
-        dbg << d_myworld->myrank() << "   Executing INT TG on level " << levelNum << " with old DW " 
-            << curDW << "=" << d_scheduler->get_dw(curDW)->getID() << " and new " 
-            << curDW+newDWStride << "=" << d_scheduler->get_dw(curDW+newDWStride)->getID() 
-            << " CO-DW: " << startDW << " CNDW " << startDW+dwStride << " on iteration " << iteration << std::endl;
+        dbg << "Rank-" << d_myworld->myrank() << "   Executing INT TG on level " << levelNum << " with old DW " << curDW << "="
+            << d_scheduler->get_dw(curDW)->getID() << " and new " << curDW + newDWStride << "="
+            << d_scheduler->get_dw(curDW + newDWStride)->getID() << " CO-DW: " << startDW << " CNDW " << startDW + dwStride
+            << " on iteration " << iteration << std::endl;
       }
-      
-      d_scheduler->get_dw(curDW+newDWStride)->unfinalize();
-      d_scheduler->execute(levelNum+grid->numLevels(), iteration);
+
+      d_scheduler->get_dw(curDW + newDWStride)->unfinalize();
+      d_scheduler->execute(levelNum + grid->numLevels(), iteration);
     }
-    
+
     if (curDW % dwStride != 0) {
       //the currentDW(old datawarehouse) should no longer be needed - in the case of NonPermanent OldDW scrubbing
       d_scheduler->get_dw(curDW)->clear();
     }
-    
+
   }
   if (levelNum == 0) {
     // execute the final TG
     if (dbg.active())
-      dbg << d_myworld->myrank() << "   Executing Final TG on level " << levelNum << " with old DW " 
-          << curDW << " = " << d_scheduler->get_dw(curDW)->getID() << " and new " 
-          << curDW+newDWStride << " = " << d_scheduler->get_dw(curDW+newDWStride)->getID() << std::endl;
-    d_scheduler->get_dw(curDW+newDWStride)->unfinalize();
-    d_scheduler->execute(d_scheduler->getNumTaskGraphs()-1, 1);
+      dbg << "Rank-" << d_myworld->myrank() << "   Executing Final TG on level " << levelNum << " with old DW " << curDW << " = "
+          << d_scheduler->get_dw(curDW)->getID() << " and new " << curDW + newDWStride << " = "
+          << d_scheduler->get_dw(curDW + newDWStride)->getID() << std::endl;
+    d_scheduler->get_dw(curDW + newDWStride)->unfinalize();
+    d_scheduler->execute(d_scheduler->getNumTaskGraphs() - 1, 1);
   }
-} // end subCycleExecute()
+}  // end subCycleExecute()
 
 //______________________________________________________________________
 bool
@@ -874,6 +866,7 @@ MultiScaleSimulationController::recompile( double  t,
                                            int     totalFine )
 {
   proc0cout << "Compiling taskgraph...\n";
+
   d_lastRecompileTimestep = d_sharedState->getCurrentTopLevelTimeStep();
   double start = Time::currentSeconds();
   
@@ -885,66 +878,36 @@ MultiScaleSimulationController::recompile( double  t,
   d_scheduler->mapDataWarehouse(Task::OldDW, 0);
   d_scheduler->mapDataWarehouse(Task::NewDW, totalFine);
   d_scheduler->mapDataWarehouse(Task::CoarseOldDW, 0);
-  d_scheduler->mapDataWarehouse(Task::CoarseNewDW, totalFine);  
-  
-  if (d_doMultiTaskgraphing) {
-    for (int i = 0; i < currentGrid->numLevels(); i++) {
-      // taskgraphs 0-numlevels-1
-      if ( i > 0) {
-        // we have the first one already
-        d_scheduler->addTaskGraph(Scheduler::NormalTaskGraph);
-      }
-      dbg << d_myworld->myrank() << "   Creating level " << i << " tg " << std::endl;
-      d_sim->scheduleTimeAdvance(currentGrid->getLevel(i), d_scheduler);
-    }
-    
-    for (int i = 0; i < currentGrid->numLevels(); i++) {
-      if (d_doAMR && currentGrid->numLevels() > 1) {
-        dbg << d_myworld->myrank() << "   Doing Int TG level " << i << " tg " << std::endl;
-        // taskgraphs numlevels-2*numlevels-1
-        d_scheduler->addTaskGraph(Scheduler::IntermediateTaskGraph);
-      }
-    
-      // schedule a coarsen from the finest level to this level
-      for (int j = currentGrid->numLevels()-2; j >= i; j--) {
-        dbg << d_myworld->myrank() << "   schedule coarsen on level " << j << std::endl;
-        d_sim->scheduleCoarsen(currentGrid->getLevel(j), d_scheduler);
-      }
-    
-      d_sim->scheduleFinalizeTimestep(currentGrid->getLevel(i), d_scheduler);
-      
-      // schedule a refineInterface from this level to the finest level
-      for (int j = i; j < currentGrid->numLevels(); j++) {
-        if (j != 0) {
-          dbg << d_myworld->myrank() << "   schedule RI on level " << j << " for tg " << i << " coarseold " << (j==i) << " coarsenew " << true << std::endl;
-          d_sim->scheduleRefineInterface(currentGrid->getLevel(j), d_scheduler, j==i, true);
-        }
-      }
-    }
-    // for the final error estimate and stable timestep tasks
-    d_scheduler->addTaskGraph(Scheduler::IntermediateTaskGraph);
+  d_scheduler->mapDataWarehouse(Task::CoarseNewDW, totalFine);
+
+//  base_level = (base_level->hasFinerLevel()) ? grid->getLevel(grid->numLevels() - 1) : base_level;
+//  d_sim->scheduleTimeAdvance(base_level, d_scheduler);
+
+  if (d_sharedState->getCurrentTopLevelTimeStep() == 1) {
+    subCycleCompile(currentGrid, 0, totalFine, 0, 0);
   }
   else {
-
-    subCycleCompile(currentGrid, 0, totalFine, 0, 0);
-
-    d_scheduler->clearMappings();
-    d_scheduler->mapDataWarehouse(Task::OldDW, 0);
-    d_scheduler->mapDataWarehouse(Task::NewDW, totalFine);
+    max_vartype switch_condition;
+    d_scheduler->get_dw(0)->get(switch_condition, d_sharedState->get_switch_label(), 0);
+    int level_idx = (switch_condition == Switcher::switching) ? 1 : 0;
+    d_sim->scheduleTimeAdvance(currentGrid->getLevel(1), d_scheduler);
   }
+
+  d_scheduler->clearMappings();
+  d_scheduler->mapDataWarehouse(Task::OldDW, 0);
+  d_scheduler->mapDataWarehouse(Task::NewDW, totalFine);
     
-  for(int i = currentGrid->numLevels()-1; i >= 0; i--){
-    dbg << d_myworld->myrank() << "   final TG " << i << std::endl;
-    
+  for (int i = currentGrid->numLevels() - 1; i >= 0; i--) {
     if (d_regridder) {
       d_regridder->scheduleInitializeErrorEstimate(currentGrid->getLevel(i));
       d_sim->scheduleErrorEstimate(currentGrid->getLevel(i), d_scheduler);
-      
-      if (i < d_regridder->maxLevels()-1) { // we don't use error estimates if we don't make another level, so don't dilate
+
+      if (i < d_regridder->maxLevels() - 1) {  // we don't use error estimates if we don't make another level, so don't dilate
         d_regridder->scheduleDilation(currentGrid->getLevel(i));
       }
-    }    
+    }
   }
+
   scheduleComputeStableTimestep(currentGrid, d_scheduler);
 
   if(d_output){

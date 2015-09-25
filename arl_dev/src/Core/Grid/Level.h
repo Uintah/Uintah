@@ -43,7 +43,7 @@
 #include <Core/Geometry/Point.h>
 #include <Core/Geometry/IntVector.h>
 #include <Core/ProblemSpec/ProblemSpecP.h>
-#include <Core/Grid/fixedvector.h>
+#include <Core/Grid/FixedVector.h>
 #include <Core/Grid/Variables/ComputeSet.h>
 
 #include <vector>
@@ -224,7 +224,7 @@ public:
   Box getBox(const IntVector&, const IntVector&) const;
 
   static const int MAX_PATCH_SELECT = 32;
-  typedef fixedvector<const Patch*, MAX_PATCH_SELECT> selectType;
+  typedef FixedVector<const Patch*, MAX_PATCH_SELECT> selectType;
       
 
   void selectPatches(const IntVector&, const IntVector&,

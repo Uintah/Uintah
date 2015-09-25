@@ -567,10 +567,11 @@ void
 SerialMPM::scheduleTimeAdvance(const LevelP & level,
                                SchedulerP   & sched)
 {
-  printSchedule(level, cout_doing, "MPM::scheduleTimeAdvance");
-
-  if (!flags->doMPMOnLevel(level->getIndex(), level->getGrid()->numLevels()))
+  if (!flags->doMPMOnLevel(level->getIndex(), level->getGrid()->numLevels())) {
     return;
+  }
+
+  printSchedule(level, cout_doing, "MPM::scheduleTimeAdvance");
 
   const PatchSet* patches = level->eachPatch();
   const MaterialSet* matls = d_sharedState->allMPMMaterials();

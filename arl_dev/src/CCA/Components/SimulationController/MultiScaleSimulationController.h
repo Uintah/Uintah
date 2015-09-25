@@ -26,6 +26,7 @@
 #define UINTAH_CCA_COMPONENTS_SIMULATIONCONTROLLER_MULTISCALESIMULATIONCONTROLLER_H
 
 #include <CCA/Components/SimulationController/SimulationController.h>
+#include <CCA/Components/Parent/Switcher.h>
 #include <CCA/Ports/DataWarehouseP.h>
 #include <CCA/Ports/SchedulerP.h>
 

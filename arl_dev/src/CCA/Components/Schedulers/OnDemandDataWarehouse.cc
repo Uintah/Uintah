@@ -990,7 +990,7 @@ OnDemandDataWarehouse::printParticleSubsets()
   psetDBType::iterator iter;
   std::cout << d_myworld->myrank() << " Available psets on DW " << d_generation << ":\n";
   for (iter = d_psetDB.begin(); iter != d_psetDB.end(); iter++) {
-    std::cout << d_myworld->myrank() << " " <<*(iter->second) << std::endl;
+    std::cout << d_myworld->myrank() << " " << *(iter->second) << std::endl;
   }
   std::cout << "----------------------------------------------\n";
 }
