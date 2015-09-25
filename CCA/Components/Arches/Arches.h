@@ -118,13 +118,14 @@ namespace Uintah {
   class CQMOMSourceWrapper;
   class RadPropertyCalculator;
   class ArchesParticlesHelper;
+  class ArchesBCHelper;
 
 class Arches : public UintahParallelComponent, public SimulationInterface {
 
 public:
 
   static const int NDIM;
-  typedef std::map< int, Wasatch::BCHelper* > BCHelperMapT;
+  typedef std::map< int, ArchesBCHelper* > BCHelperMapT;
 
   enum d_eqnType { PRESSURE, MOMENTUM, SCALAR };
   enum d_dirName { NODIR, XDIR, YDIR, ZDIR };
@@ -310,8 +311,8 @@ private:
              Note that this functionality was taken from Wasatch. (credit: Tony Saad) **/
   void assign_unique_boundary_names( Uintah::ProblemSpecP bcProbSpec );
 
-  void setup_patchinfo_map( const Uintah::LevelP& level,
-                             Uintah::SchedulerP& sched );
+  // void setup_patchinfo_map( const Uintah::LevelP& level,
+  //                            Uintah::SchedulerP& sched );
 
   /** @brief convert a number to a string **/
   template <typename T>
@@ -341,9 +342,6 @@ private:
   ArchesLabel* d_lab;
 
   BCHelperMapT _bcHelperMap;
-  Wasatch::BCFunctorMap bcFunctorMap_;
-  Wasatch::GraphCategories graphCategories_;
-  Wasatch::PatchInfoMap _patchInfoMap; ///< Information about each patch
 
   //Radiation properties
   RadPropertyCalculator* d_rad_prop_calc;

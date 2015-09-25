@@ -339,7 +339,7 @@ ScalarRHS::compute_bcs( const Patch* patch, ArchesTaskInfoManager* tsk_info,
   using SpatialOps::operator *;
   using namespace std;
 
-  typedef std::map< int, Wasatch::BCHelper* > BCHelperMapTL;
+  typedef std::map< int, ArchesBCHelper* > BCHelperMapTL;
   for ( BCHelperMapTL::iterator i = _bcHelperMap->begin(); i != _bcHelperMap->end(); i++ ){
 
     const Wasatch::BndMapT& bc =  i->second->get_boundary_information();
@@ -350,7 +350,6 @@ ScalarRHS::compute_bcs( const Patch* patch, ArchesTaskInfoManager* tsk_info,
     const Wasatch::BndCondTypeEnum d = bnd->bcType;
 
   }
-
 }
 
 

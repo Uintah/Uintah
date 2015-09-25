@@ -50,13 +50,13 @@
 #include <CCA/Components/Arches/TransportEqns/DQMOMEqn.h>
 #include <CCA/Components/Arches/TransportEqns/ScalarEqn.h>
 #include <CCA/Components/Arches/ArchesParticlesHelper.h>
+#include <CCA/Components/Arches/ArchesBCHelper.h>
 #include <CCA/Components/Arches/ParticleModels/CoalHelper.h>
 #include <CCA/Components/Arches/CQMOM.h>
 #include <CCA/Components/Arches/TransportEqns/CQMOMEqnFactory.h>
 #include <CCA/Components/Arches/TransportEqns/CQMOMEqn.h>
 #include <CCA/Components/Arches/TransportEqns/CQMOM_Convection.h>
 #include <CCA/Components/Arches/ParticleModels/CQMOMSourceWrapper.h>
-#include <CCA/Components/Arches/ParticleModels/CoalHelper.h>
 
 #include <CCA/Components/Arches/PropertyModels/PropertyModelBase.h>
 #include <CCA/Components/Arches/PropertyModels/PropertyModelFactory.h>
@@ -86,7 +86,6 @@
 #include <CCA/Components/Arches/ParticleModels/ParticleModelFactory.h>
 #include <CCA/Components/Arches/LagrangianParticles/LagrangianParticleFactory.h>
 #include <CCA/Components/Arches/PropertyModelsV2/PropertyModelFactoryV2.h>
-#include <CCA/Components/Wasatch/BCHelper.h>
 //#include <CCA/Components/Arches/Task/SampleFactory.h>
 
 
@@ -224,7 +223,7 @@ Arches::~Arches()
   }
 
   for( BCHelperMapT::iterator it=_bcHelperMap.begin(); it != _bcHelperMap.end(); ++it ){
-    delete it->second;
+     delete it->second;
   }
 
   delete d_timeIntegrator;
@@ -261,7 +260,7 @@ Arches::problemSetup(const ProblemSpecP& params,
   ProblemSpecP db = params->findBlock("CFD")->findBlock("ARCHES");
   _arches_spec = db;
   d_lab->problemSetup( db );
-  
+
   //Look for coal information
   if( db->findBlock("ParticleProperties") ) {
     string particle_type;
@@ -279,10 +278,6 @@ Arches::problemSetup(const ProblemSpecP& params,
     Uintah::ProblemSpecP bcProbSpec = db->getRootNode()->findBlock("Grid")->findBlock("BoundaryConditions");
     assign_unique_boundary_names( bcProbSpec );
   }
-
-  //Look for coal information
-  CoalHelper& coal_helper = CoalHelper::self();
-  coal_helper.parse_for_coal_info( db );
 
   //==============NEW TASK STUFF
   //build the factories
@@ -896,13 +891,13 @@ Arches::scheduleInitialize(const LevelP& level,
 
   //=========== NEW TASK INTERFACE ==============================
   //Boundary Conditions:
-  setup_patchinfo_map(level, sched);
   const Uintah::PatchSet* const allPatches = sched->getLoadBalancer()->getPerProcessorPatchSet(level);
   const Uintah::PatchSubset* const localPatches = allPatches->getSubset( Uintah::Parallel::getMPIRank() );
   Uintah::PatchSet* patches = scinew Uintah::PatchSet;
   patches->addEach( localPatches->getVector() );
-  _bcHelperMap[level->getID()] = scinew Wasatch::BCHelper(patches, matls, _patchInfoMap, graphCategories_,  bcFunctorMap_);
+  _bcHelperMap[level->getID()] = scinew ArchesBCHelper( patches, matls );
   delete patches;
+
 
   typedef std::map<std::string, boost::shared_ptr<TaskFactoryBase> > BFM;
   BFM::iterator i_util_fac = _boost_factory_map.find("utility_factory");
@@ -925,7 +920,7 @@ Arches::scheduleInitialize(const LevelP& level,
   for ( TaskFactoryBase::TaskMap::iterator i = all_tasks.begin(); i != all_tasks.end(); i++) {
     i->second->schedule_init(level, sched, matls, is_restart);
   }
-  //This sets the helper to the factory and assigns it to each active task
+  //Sets the helper to the factory and assigns it to each active task
   i_trans_fac->second->set_bchelper( &_bcHelperMap );
 
   //initialize factory
@@ -2604,23 +2599,23 @@ void Arches::assign_unique_boundary_names( Uintah::ProblemSpecP bcProbSpec )
   }
 }
 //------------------------------------------------------------------
-void Arches::setup_patchinfo_map( const Uintah::LevelP& level,
-                                   Uintah::SchedulerP& sched )
-{
-  //const Uintah::PatchSet* patches = get_patchset( USE_FOR_OPERATORS, level, sched );
-  const Uintah::PatchSet* patches = level->eachPatch();
-
-  for( int ipss=0; ipss<patches->size(); ++ipss ){
-
-    const Uintah::PatchSubset* pss = patches->getSubset(ipss);
-
-    for( int ip=0; ip<pss->size(); ++ip ){
-
-      const Uintah::Patch* const patch = pss->get(ip);
-
-      Wasatch::PatchInfo& pi = _patchInfoMap[patch->getID()];
-      pi.patchID = patch->getID();
-
-    }
-  }
-}
+// void Arches::setup_patchinfo_map( const Uintah::LevelP& level,
+//                                    Uintah::SchedulerP& sched )
+// {
+//   //const Uintah::PatchSet* patches = get_patchset( USE_FOR_OPERATORS, level, sched );
+//   const Uintah::PatchSet* patches = level->eachPatch();
+//
+//   for( int ipss=0; ipss<patches->size(); ++ipss ){
+//
+//     const Uintah::PatchSubset* pss = patches->getSubset(ipss);
+//
+//     for( int ip=0; ip<pss->size(); ++ip ){
+//
+//       const Uintah::Patch* const patch = pss->get(ip);
+//
+//       Wasatch::PatchInfo& pi = _patchInfoMap[patch->getID()];
+//       pi.patchID = patch->getID();
+//
+//     }
+//   }
+// }
