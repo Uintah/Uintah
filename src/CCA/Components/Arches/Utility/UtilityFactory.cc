@@ -24,8 +24,6 @@ UtilityFactory::register_all_tasks( ProblemSpecP& db )
   TaskInterface::TaskBuilder* tsk = scinew GridInfo::Builder( tname, 0 );
   register_task( tname, tsk );
 
-  _active_tasks.push_back( tname );
-
   ProblemSpecP db_all_util = db->findBlock("Utilities");
 
   //<Utilities>
@@ -44,8 +42,6 @@ UtilityFactory::register_all_tasks( ProblemSpecP& db )
         //otherwise would need to determine or parse for the variable types
         TaskInterface::TaskBuilder* tsk = scinew TaskAlgebra<SVol,SVol,SVol>::Builder( name, 0 );
         register_task(name, tsk);
-
-        _active_tasks.push_back( name );
 
       } else {
 
@@ -69,7 +65,6 @@ UtilityFactory::build_all_tasks( ProblemSpecP& db )
   TaskInterface* tsk = retrieve_task("grid_info");
   tsk->problemSetup(db);
   tsk->create_local_labels();
-
 
   //<Utilities>
   ProblemSpecP db_all_util = db->findBlock("Utilities");

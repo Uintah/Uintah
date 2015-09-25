@@ -310,6 +310,9 @@ private:
              Note that this functionality was taken from Wasatch. (credit: Tony Saad) **/
   void assign_unique_boundary_names( Uintah::ProblemSpecP bcProbSpec );
 
+  void setup_patchinfo_map( const Uintah::LevelP& level,
+                             Uintah::SchedulerP& sched );
+
   /** @brief convert a number to a string **/
   template <typename T>
   std::string number_to_string ( T n )
@@ -340,7 +343,7 @@ private:
   BCHelperMapT _bcHelperMap;
   Wasatch::BCFunctorMap bcFunctorMap_;
   Wasatch::GraphCategories graphCategories_;
-  Wasatch::PatchInfoMap patchInfoMap_; ///< Information about each patch
+  Wasatch::PatchInfoMap _patchInfoMap; ///< Information about each patch
 
   //Radiation properties
   RadPropertyCalculator* d_rad_prop_calc;
