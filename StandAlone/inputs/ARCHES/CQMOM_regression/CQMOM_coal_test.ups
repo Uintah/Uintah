@@ -3,7 +3,8 @@
   <Meta>
     <title>CQMOM Coal Test</title>
   </Meta>
-
+  <!-- required transported moment tags and inlet moment tags/values generated using 
+   the python script StandAlone/inputs/ARCHES/CQMOM_regression/makeCQMOMCoalInlet.py -->
   <SimulationComponent type="arches"/>
 
   <Solver type="hypre"/>
