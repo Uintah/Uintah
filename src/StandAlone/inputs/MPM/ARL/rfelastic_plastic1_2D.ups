@@ -1,0 +1,165 @@
+<?xml version="1.0" encoding="iso-8859-1"?>
+<Uintah_specification>
+
+  <Meta>
+    <title>RFElasticPlastic Test 1 2D</title>
+  </Meta>
+
+  <SimulationComponent type="amrmpm" />
+
+  <Time>
+     <maxTime>4</maxTime>
+     <initTime>0.0</initTime>
+     <delt_min>1.0e-16</delt_min>
+     <delt_max>1.0e-9</delt_max>
+     <max_Timesteps>10000</max_Timesteps>
+     <timestep_multiplier>0.4</timestep_multiplier>
+  </Time>
+
+  <DataArchiver>
+    <filebase>rfelastic_plastic1_2D.uda</filebase>
+    <outputTimestepInterval>100</outputTimestepInterval>
+    <save label="p.x"/>
+    <save label="p.particleID"/>
+    <save label="p.velocity"/>
+    <save label="p.mass"/>
+    <save label="p.volume"/>
+    <save label="p.scalefactor" />
+    <save label="p.concentration" />
+    <save label="p.stress" />
+    <save label="g.mass"/>
+    <save label="g.concentration" />
+    <save label="g.velocity"/>
+    <!--<save label="maxHydroStress1" />-->
+    <!--<save label="minHydroStress1" />-->
+  </DataArchiver>
+
+  <MPM>
+      <time_integrator>explicit</time_integrator>
+      <interpolator>linear</interpolator>
+      <scalar_diffusion>explicit</scalar_diffusion>
+  </MPM>
+
+  <AMR>
+    <useLockStep> true </useLockStep>
+    <MPM>
+    </MPM>
+  </AMR>
+
+  <PhysicalConstants>
+    <gravity>[0.0, 0.0, 0.0]</gravity>
+  </PhysicalConstants>
+
+  <MaterialProperties>
+     <MPM>
+       <material name="pillar">
+         <density>   2330</density> <!-- micrograms/mm^3 -->
+         <melt_temp> 2000.0 </melt_temp>
+         <constitutive_model type="rf_elastic_plastic"> 
+           <bulk_modulus>            6.5e4    </bulk_modulus>
+           <shear_modulus>           3.0e4    </shear_modulus>
+           <volume_expansion_coeff>  0.56     </volume_expansion_coeff>
+					 <!-- Temperature is not currently used in this model, -->
+					 <!-- Keep initial material Temperature set to 298.0 -->
+					 <initial_material_temperature> 298.0 </initial_material_temperature>
+           <taylor_quinney_coeff>    0.9     </taylor_quinney_coeff>
+           <plastic_convergence_algo>radialReturn</plastic_convergence_algo>
+
+           <!-- Shear Modulus Model type added for clarity -->
+           <!-- Does not need to be added because this is the default value -->
+           <shear_modulus_model type = "constant_shear">
+           </shear_modulus_model>
+
+           <!-- Deviatoric Stress Model type added for clarity -->
+           <!-- Does not need to be added because this is the default value -->
+           <deviatoric_stress_model type="hypoElastic">
+           </deviatoric_stress_model>
+
+           <!-- Equation of State type added for clarity -->
+           <!-- Does not need to be added because this is the default value -->
+           <equation_of_state type = "default_hypo">
+           </equation_of_state>
+
+           <flow_model type = "johnson_cook">
+             <A> 90.0e2 </A>
+             <B> 0.0    </B>
+             <C> 0.0    </C>
+             <n> 0.0    </n>
+             <m> 2.0    </m>
+           </flow_model>
+
+           <yield_condition type = "vonMises">
+           </yield_condition>
+         </constitutive_model>
+<!--
+         <constitutive_model type="gao_elastic"> 
+           <bulk_modulus>            6.5e4    </bulk_modulus>
+           <shear_modulus>           3.0e4    </shear_modulus>
+           <volume_expansion_coeff>  1.00     </volume_expansion_coeff>
+         </constitutive_model>
+-->
+         <thermal_conductivity>0.0</thermal_conductivity>
+         <specific_heat>5</specific_heat>
+
+         <diffusion_model type = "jg">
+           <diffusivity>  2e-3   </diffusivity>
+         </diffusion_model>
+         <geom_object>
+           <box label = "pillar">
+             <min>[0.0,    0.0,      0.0]</min> <!-- units in mm -->
+             <max>[0.5e-3, 0.125e-3, 0.05e-3]</max> <!-- units in mm -->
+           </box>
+           <res>[2,2,2]</res>
+           <velocity>[0.0,0.0,0.0]</velocity>
+           <temperature>0</temperature>
+           <concentration> 0 </concentration>
+         </geom_object>
+       </material>
+       <contact>
+         <type>null</type>
+         <materials>[0,1] </materials>
+       </contact>
+       <diffusion_interface>
+         <type>null</type>
+       </diffusion_interface>
+     </MPM>
+   </MaterialProperties>
+
+  <Grid>
+    <BoundaryConditions>
+      <Face side = "x-">
+        <BCType id = "all" label = "Symmetric"     var = "symmetry"> </BCType>
+      </Face>
+      <Face side = "x+">
+        <BCType id = "all" label = "Symmetric"     var = "symmetry"> </BCType>
+      </Face>
+      <Face side = "y-">
+        <BCType id = "all" label = "Velocity"     var = "Dirichlet">
+                              <value> [0.,0.,0.] </value>
+        </BCType>
+        <BCType id = "all" label = "SD-Type"  var = "Dirichlet">
+                              <value> 1.0  </value>
+        </BCType>
+      </Face>                  
+      <Face side = "y+">
+        <BCType id = "all" label = "Symmetric"     var = "symmetry"> </BCType>
+      </Face>                  
+      <Face side = "z-">
+        <BCType id = "all" label = "Symmetric"     var = "symmetry"> </BCType>
+      </Face>                  
+      <Face side = "z+">
+        <BCType id = "all" label = "Symmetric"     var = "symmetry"> </BCType>
+      </Face>
+    </BoundaryConditions>
+    <Level>
+      <Box label="1">
+        <lower>[-0.25e-3, 0.0,      0.0]</lower> <!-- units in mm -->
+        <upper>[0.75e-3,  0.375e-3, 0.05e-3]</upper> <!-- units in mm -->
+        <resolution>[40, 15, 1]        </resolution>
+        <extraCells>[0, 0, 0]          </extraCells>
+        <patches>[1,1,1]               </patches>
+      </Box>
+    </Level>
+  </Grid>
+
+</Uintah_specification>

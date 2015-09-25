@@ -81,7 +81,7 @@ GaoElastic::GaoElastic(ProblemSpecP& ps,MPMFlags* Mflag)
 {
   ps->require("bulk_modulus",d_initialData.Bulk);
   ps->require("shear_modulus",d_initialData.Shear);
-  ps->require("alpha",alpha);
+  ps->require("volume_expansion_coeff", d_initialData.vol_exp_coeff);
 
   d_tol = 1.0e-10;
   ps->get("tolerance",d_tol);
@@ -98,6 +98,7 @@ GaoElastic::GaoElastic(const GaoElastic* cm) :
 {
   d_initialData.Bulk = cm->d_initialData.Bulk;
   d_initialData.Shear = cm->d_initialData.Shear;
+  d_initialData.vol_exp_coeff = cm->d_initialData.Shear;
 
   d_tol = cm->d_tol ;
   
@@ -346,6 +347,7 @@ GaoElastic::computeStressTensor(const PatchSubset* patches,
 
   double bulk  = d_initialData.Bulk;
   double shear = d_initialData.Shear;
+  double vol_coeff = d_initialData.vol_exp_coeff;
   double rho_0 = matl->getInitialDensity();
   double sqrtThreeTwo = sqrt(1.5);
   double sqrtTwoThird = 1.0/sqrtThreeTwo;
@@ -486,7 +488,7 @@ GaoElastic::computeStressTensor(const PatchSubset* patches,
       tensorD = (tensorR.Transpose())*(tensorD*tensorR);
 
       // Remove stress free concentration dependent component
-      tensorD = tensorD - one * alpha * (conc_rate/3);
+      tensorD = tensorD - one * vol_coeff * (conc_rate/3);
 
       // Calculate the deviatoric part of the non-thermal part
       // of the rate of deformation tensor

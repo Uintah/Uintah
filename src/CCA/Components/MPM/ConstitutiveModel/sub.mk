@@ -65,6 +65,7 @@ SRCS   += \
         $(SRCDIR)/Arenisca3.cc                  \
         $(SRCDIR)/Arenisca4.cc                  \
         $(SRCDIR)/GaoElastic.cc                 \
+        $(SRCDIR)/RFElasticPlastic.cc
 
 ifneq ($(NO_FORTRAN),yes)
   SRCS   += \
