@@ -10,4 +10,5 @@ SRCS += \
 				$(SRCDIR)/RandParticleLoc.cc \
 				$(SRCDIR)/InitLagrangianParticleVelocity.cc \
 				$(SRCDIR)/InitLagrangianParticleSize.cc \
+				$(SRCDIR)/SurfaceNormals.cc \
 				$(SRCDIR)/UtilityFactory.cc

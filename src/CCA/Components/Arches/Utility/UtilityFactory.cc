@@ -1,6 +1,7 @@
 #include <CCA/Components/Arches/Utility/UtilityFactory.h>
 #include <CCA/Components/Arches/Utility/GridInfo.h>
 #include <CCA/Components/Arches/Utility/TaskAlgebra.h>
+#include <CCA/Components/Arches/Utility/SurfaceNormals.h>
 #include <CCA/Components/Arches/Task/TaskInterface.h>
 
 using namespace Uintah;
@@ -22,6 +23,10 @@ UtilityFactory::register_all_tasks( ProblemSpecP& db )
   //GRID INFORMATION
   std::string tname = "grid_info";
   TaskInterface::TaskBuilder* tsk = scinew GridInfo::Builder( tname, 0 );
+  register_task( tname, tsk );
+
+  tname = "surface_normals";
+  tsk = scinew SurfaceNormals::Builder( tname, 0 );
   register_task( tname, tsk );
 
   ProblemSpecP db_all_util = db->findBlock("Utilities");
@@ -65,6 +70,10 @@ UtilityFactory::build_all_tasks( ProblemSpecP& db )
   TaskInterface* tsk = retrieve_task("grid_info");
   tsk->problemSetup(db);
   tsk->create_local_labels();
+
+  tsk = retrieve_task("surface_normals");
+  tsk->problemSetup(db);
+  tsk->create_local_labels(); 
 
   //<Utilities>
   ProblemSpecP db_all_util = db->findBlock("Utilities");
