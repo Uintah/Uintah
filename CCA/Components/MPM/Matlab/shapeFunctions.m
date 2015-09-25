@@ -65,7 +65,7 @@ function[nodes,dx]=positionToClosestNodes(xp,nRegions,Regions, nodePos)
   nodes(1) = node + offset;
   nodes(2) = nodes(1) + 1;
   nodes(3) = nodes(2) + 1;
-  %fprintf( 'xp:%g, node(1):%g, node(2):%g, node(3):%g relativePosition:%g\n',xp, nodes(1), nodes(2), nodes(3), relativePosition);
+  %fprintf( 'xp:%g, node: %g, offset: %g, node(1):%g, node(2):%g, node(3):%g relativePosition:%g\n',xp, node, offset, nodes(1), nodes(2), nodes(3), relativePosition);
 end
 
 %______________________________________________________________________

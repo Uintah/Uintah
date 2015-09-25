@@ -13,12 +13,12 @@ function k=plotShapeFunctions
   global d_doPlotShapeFunction;
   %______________________________________________________________________
   
-  PPC = 2;
-  maxpts        = int32(50);             % number of points in plot
-  interpolation = 'GIMP';              %  'linear' or 'GIMP'
-  domain        = 1;
-  dx_L          = 1;                     % dx in Left region
-  lp            = dx_L/(2 * PPC)
+  PPC = 2;                                % particles per cell
+  maxpts        = int32(100);             % number of points in plot
+  interpolation = 'GIMP';               %  'linear' or 'GIMP'
+  domain        = 1;                      % domain length 
+  dx_L          = 1;                      % dx in Left region
+  lp            = dx_L/(2 * PPC)          % particle 1/2 width
   d_smallNum    = double(1e-16);
   
   %______________________________________________________________________
@@ -70,15 +70,19 @@ function k=plotShapeFunctions
     dx_L      = R_L.dx;  
     dx_R      = R_R.dx; 
     
-    xp(1)     =  -dx_L - lp ;           % starting postition GIMP
-    delX      = ( (dx_R + lp) -(-dx_L - lp) )/double(maxpts)
+    xp(1)     =  -dx_L - lp ;             % starting postition of particle GIMP
+    xp_min    = xp(1);
+    xp_max    = dx_R + dx_R/2;            % ending position
+    delX      = ( xp_max - xp_min )/double(maxpts)    
     focusNode = 3;
     doBulletProofing = false;
     
   else
     NSFN      = 2;                        % Number of shape function nodes Linear:2, GIMP:3
     xp(1)     = R_L.min;
-    delX      = (R_R.max - R_L.min)/double(maxpts)
+    xp_min    = xp(1);
+    xp_max    = R_R.max;
+    delX      = ( xp_max - xp_min )/double(maxpts)
     focusNode = 2;
     doBulletProofing = true;
   end
@@ -138,7 +142,7 @@ function k=plotShapeFunctions
     % plot shape Function and gradient of shape function
     set(gcf,'position',[50,100,900,900]);
     subplot(2,1,1),plot(xp, Ss1, xp, Ss2)
-    tmp = sprintf('Shape Function, PPC %g: dx_R = dx_L/4',PPC);
+    tmp = sprintf('Shape Function, PPC %g: dx_R = dx_L/2',PPC);
     title(tmp);
     xlabel('xp')
     legend('Single Level','multi-level');
@@ -158,7 +162,7 @@ function k=plotShapeFunctions
     diff2 = 1.0 - SumS2;
     
     subplot(2,1,1),plot(xp,diff1, xp, diff2)
-    tmp = sprintf('1.0 - (Sum Shape Function), PPC %g: dx_R = dx_L/4',PPC);
+    tmp = sprintf('1.0 - (Sum Shape Function), PPC %g: dx_R = dx_L/2',PPC);
     title(tmp);
     xlabel('xp')
     ylim([-0.1 0.1])
@@ -176,7 +180,7 @@ function k=plotShapeFunctions
     set(gcf,'position',[50,100,900,900]);
     subplot(2,1,1)
     plot( xp, Ss1 )
-    tmp = sprintf('Linear Shape Function, PPC %g: dx_R = dx_L/4',PPC);
+    tmp = sprintf('Linear Shape Function, PPC %g: dx_R = dx_L/2',PPC);
     title(tmp);
     xlabel('xp')
     legend('multi-Level');
@@ -195,7 +199,7 @@ function k=plotShapeFunctions
     set(gcf,'position',[950,100,900,900]);
     diff1 = 1.0 - SumS1;
     subplot(2,1,1),plot(xp,diff1)
-    tmp = sprintf('1.0 - Sum(Shape Function), PPC %g: dx_R = dx_L/4',PPC);
+    tmp = sprintf('1.0 - Sum(Shape Function), PPC %g: dx_R = dx_L/2',PPC);
     title(tmp);
     ylim([-0.1 0.1])
     xlabel('xp')

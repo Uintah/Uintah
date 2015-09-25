@@ -102,7 +102,7 @@ function [IF] = initializationFunctions
       Regions       = cell(nRegions,1);      % array that holds the individual region information
       
       %  Left of focus node
-      R.refineRatio = 1;
+      R.refineRatio = 1;                     % this is always 1
       R.min         = -1;                    % physical location of left node
       R.max         = 0;                     % physical location of right node
       R.dx          = R1_dx;
@@ -111,7 +111,7 @@ function [IF] = initializationFunctions
       
       %  right of focus node.  Focus node "owned" by this region
       R.refineRatio = 2;
-      R.min         = 0;
+      R.min         = Regions{1}.max;
       R.dx          = R1_dx/R.refineRatio;
       R.max         = R.min + R.dx;               
       R.NN          = int32( (R.max - R.min)/R.dx+1); % number of nodes interior nodes
