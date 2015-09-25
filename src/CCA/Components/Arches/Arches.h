@@ -82,6 +82,7 @@ WARNING
 #include <Core/Parallel/UintahParallelComponent.h>
 #include <Core/ProblemSpec/ProblemSpecP.h>
 #include <Core/Util/Handle.h>
+#include <CCA/Components/Wasatch/BCHelper.h>
 
 #include <string>
 
@@ -123,6 +124,7 @@ class Arches : public UintahParallelComponent, public SimulationInterface {
 public:
 
   static const int NDIM;
+  typedef std::map< int, Wasatch::BCHelper* > BCHelperMapT;
 
   enum d_eqnType { PRESSURE, MOMENTUM, SCALAR };
   enum d_dirName { NODIR, XDIR, YDIR, ZDIR };
@@ -304,6 +306,19 @@ private:
   /** @brief Registers all possible Property Models by instantiating a builder in the factory */
   void registerPropertyModels( ProblemSpecP& db );
 
+  /** @brief Assign a unique name to each BC where name is not specified in the UPS.
+             Note that this functionality was taken from Wasatch. (credit: Tony Saad) **/
+  void assign_unique_boundary_names( Uintah::ProblemSpecP bcProbSpec );
+
+  /** @brief convert a number to a string **/
+  template <typename T>
+  std::string number_to_string ( T n )
+  {
+    std::stringstream ss;
+    ss << n;
+    return ss.str();
+  }
+
   std::string d_whichTurbModel;
   bool d_mixedModel;
   bool d_with_mpmarches;
@@ -321,6 +336,11 @@ private:
   SimulationStateP d_sharedState;
   // Variable labels that are used by the simulation controller
   ArchesLabel* d_lab;
+
+  BCHelperMapT _bcHelperMap;
+  Wasatch::BCFunctorMap bcFunctorMap_;
+  Wasatch::GraphCategories graphCategories_;
+  Wasatch::PatchInfoMap patchInfoMap_; ///< Information about each patch
 
   //Radiation properties
   RadPropertyCalculator* d_rad_prop_calc;

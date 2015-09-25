@@ -85,6 +85,7 @@
 #include <CCA/Components/Arches/ParticleModels/ParticleModelFactory.h>
 #include <CCA/Components/Arches/LagrangianParticles/LagrangianParticleFactory.h>
 #include <CCA/Components/Arches/PropertyModelsV2/PropertyModelFactoryV2.h>
+#include <CCA/Components/Wasatch/BCHelper.h>
 //#include <CCA/Components/Arches/Task/SampleFactory.h>
 
 
@@ -221,6 +222,10 @@ Arches::~Arches()
     }
   }
 
+  for( BCHelperMapT::iterator it=_bcHelperMap.begin(); it != _bcHelperMap.end(); ++it ){
+    delete it->second;
+  }
+
   delete d_timeIntegrator;
   delete d_rad_prop_calc;
   if (d_doDQMOM) {
@@ -267,6 +272,16 @@ Arches::problemSetup(const ProblemSpecP& params,
       throw InvalidValue("Error: Particle type not recognized. Current types supported: coal",__FILE__,__LINE__);
     }
   }
+
+  // setup names for all the boundary condition faces that do NOT have a name or that have duplicate names
+  if( db->getRootNode()->findBlock("Grid") ){
+    Uintah::ProblemSpecP bcProbSpec = db->getRootNode()->findBlock("Grid")->findBlock("BoundaryConditions");
+    assign_unique_boundary_names( bcProbSpec );
+  }
+
+  //Look for coal information
+  CoalHelper& coal_helper = CoalHelper::self();
+  coal_helper.parse_for_coal_info( db );
 
   //==============NEW TASK STUFF
   //build the factories
@@ -879,6 +894,9 @@ Arches::scheduleInitialize(const LevelP& level,
   //Particle models are initialized after DQMOM/CQMOM initialization
 
   //=========== NEW TASK INTERFACE ==============================
+  //Boundary Conditions:
+  _bcHelperMap[level->getID()] = scinew Wasatch::BCHelper(level->eachPatch(), matls, patchInfoMap_, graphCategories_,  bcFunctorMap_);
+
   typedef std::map<std::string, boost::shared_ptr<TaskFactoryBase> > BFM;
   BFM::iterator i_util_fac = _boost_factory_map.find("utility_factory");
   BFM::iterator i_trans_fac = _boost_factory_map.find("transport_factory");
@@ -900,6 +918,7 @@ Arches::scheduleInitialize(const LevelP& level,
   for ( TaskFactoryBase::TaskMap::iterator i = all_tasks.begin(); i != all_tasks.end(); i++) {
     i->second->schedule_init(level, sched, matls, is_restart);
   }
+  i_trans_fac->second->set_bchelper( &_bcHelperMap );
 
   //initialize factory
   all_tasks.clear();
@@ -2533,5 +2552,44 @@ void Arches::registerCQMOMEqns(ProblemSpecP& db)
     //register internal coordinate names in a way to know which are velocities
   }
 }
+//------------------------------------------------------------------
 
+void Arches::assign_unique_boundary_names( Uintah::ProblemSpecP bcProbSpec )
+{
+  if( !bcProbSpec ) return;
+  int i=0;
+  std::string strFaceID;
+  std::set<std::string> faceNameSet;
+  for( Uintah::ProblemSpecP faceSpec = bcProbSpec->findBlock("Face");
+       faceSpec != 0; faceSpec=faceSpec->findNextBlock("Face"), ++i ){
+
+    std::string faceName = "none";
+    faceSpec->getAttribute("name",faceName);
+
+    strFaceID = Arches::number_to_string(i);
+
+    if( faceName=="none" || faceName=="" ){
+      faceName ="Face_" + strFaceID;
+      faceSpec->setAttribute("name",faceName);
+    }
+    else{
+      if( faceNameSet.find(faceName) != faceNameSet.end() ){
+        bool fndInc = false;
+        int j = 1;
+        while( !fndInc ){
+          if( faceNameSet.find( faceName + "_" + Arches::number_to_string(j) ) != faceNameSet.end() )
+            j++;
+          else
+            fndInc = true;
+        }
+        // rename this face
+        std::cout << "WARNING: I found a duplicate face label " << faceName;
+        faceName = faceName + "_" + Arches::number_to_string(j);
+        std::cout << " in your Boundary condition specification. I will rename it to " << faceName << std::endl;
+        faceSpec->replaceAttributeValue("name", faceName);
+      }
+    }
+    faceNameSet.insert(faceName);
+  }
+}
 //------------------------------------------------------------------

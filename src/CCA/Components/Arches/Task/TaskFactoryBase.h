@@ -3,6 +3,7 @@
 
 #include <Core/Grid/SimulationState.h>
 #include <CCA/Components/Arches/Task/TaskInterface.h>
+#include <CCA/Components/Wasatch/BCHelper.h>
 #include <string>
 
 namespace Uintah{
@@ -84,7 +85,7 @@ namespace Uintah{
 
     }
 
-
+    void set_bchelper( std::map< int, Wasatch::BCHelper* >* helper ){ _bcHelperMap = helper; }
 
   protected:
 
@@ -92,6 +93,9 @@ namespace Uintah{
     std::vector<std::string> _active_tasks;       ///< Task which are active
     TypeToTaskMap _type_to_tasks;                 ///< Collects all tasks of a common type
     SimulationStateP _shared_state;               ///< Uintah SharedState
+
+    typedef std::map< int, Wasatch::BCHelper* >* BCHelperMapT;
+    BCHelperMapT _bcHelperMap;
 
   private:
 

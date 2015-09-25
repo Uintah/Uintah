@@ -4,6 +4,7 @@
 #include <CCA/Components/Wasatch/Operators/UpwindInterpolant.h>
 #include <CCA/Components/Wasatch/Operators/FluxLimiterInterpolant.h>
 #include <CCA/Components/Wasatch/ConvectiveInterpolationMethods.h>
+#include <CCA/Components/Wasatch/BCHelper.h>
 
 #include <spatialops/structured/FVStaggered.h>
 #include <spatialops/structured/MemoryWindow.h>
@@ -160,9 +161,12 @@ public:
 
     };
 
-
+    void set_bchelper( std::map< int, Wasatch::BCHelper* >* helper ){ _bcHelperMap = helper; }
 
 protected:
+
+    typedef std::map< int, Wasatch::BCHelper* >* BCHelperMapT;
+    BCHelperMapT _bcHelperMap;
 
     /** @brief Inteface to register_variable_work -- this function is overloaded. **/
     void register_variable( std::string name,
