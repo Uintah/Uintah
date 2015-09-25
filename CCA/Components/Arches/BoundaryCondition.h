@@ -562,11 +562,15 @@ struct BCInfo {
   // Common:
   //int id;
   std::string name;
+  std::string partName;
   std::string faceName;
+  bool lHasPartMassFlow;
 
   // Inlets:
   Vector velocity;
+  Vector partVelocity;
   double mass_flow_rate;
+  double partMassFlow_rate;
   std::string filename;
   std::map<IntVector, double> file_input;
   double swirl_no;
@@ -583,6 +587,7 @@ struct BCInfo {
   // State:
   double enthalpy;
   double density;
+  double partDensity;
 
   // Varlabels:
   const VarLabel* total_area_label;

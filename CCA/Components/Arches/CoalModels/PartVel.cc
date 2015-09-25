@@ -63,6 +63,20 @@ void PartVel::problemSetup(const ProblemSpecP& inputdb)
 void 
 PartVel::schedInitPartVel( const LevelP& level, SchedulerP& sched )
 {
+ 
+  string taskname = "PartVel::InitPartVel";
+  Task* tsk = scinew Task(taskname, this, &PartVel::InitPartVel);
+
+  // actual velocity we will compute
+  for (ArchesLabel::PartVelMap::iterator i = d_fieldLabels->partVel.begin(); 
+        i != d_fieldLabels->partVel.end(); i++){
+    tsk->computes( i->second );
+  }
+
+
+  sched->addTask(tsk, level->eachPatch(), d_fieldLabels->d_sharedState->allArchesMaterials());
+
+
   // Not needed since velocities are always used from new_dw
 }
 
@@ -219,5 +233,22 @@ void PartVel::InitPartVel( const ProcessorGroup* pc,
                               DataWarehouse* old_dw, 
                               DataWarehouse* new_dw )
 {
+  for (int p=0; p < patches->size(); p++){
 
+    DQMOMEqnFactory& dqmomFactory  = DQMOMEqnFactory::self(); 
+    const Patch* patch = patches->get(p);
+    int archIndex = 0;
+    int matlIndex = d_fieldLabels->d_sharedState->getArchesMaterial(archIndex)->getDWIndex(); 
+
+    int N = dqmomFactory.get_quad_nodes();
+    for ( int iqn = 0; iqn < N; iqn++){
+
+      ArchesLabel::PartVelMap::iterator iter = d_fieldLabels->partVel.find(iqn);
+
+      CCVariable<Vector> partVel;
+      new_dw->allocateAndPut( partVel, iter->second, matlIndex, patch );
+
+      partVel.initialize(Vector(0.,0.,0.));
+    }
+  }  
 } // end ComputePartVel()
