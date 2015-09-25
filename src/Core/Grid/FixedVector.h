@@ -22,11 +22,13 @@
  * IN THE SOFTWARE.
  */
 
-#ifndef UINTAH_HOMEBREW_fixedvector_H
-#define UINTAH_HOMEBREW_fixedvector_H
+#ifndef UINTAH_CORE_GRID_FIXEDVECTOR_H
+#define UINTAH_CORE_GRID_FIXEDVECTOR_H
 
 #include <Core/Malloc/Allocator.h>
+
 namespace Uintah {
+
   /**************************************
 
     CLASS
@@ -56,7 +58,7 @@ namespace Uintah {
    ****************************************/
 
   template<class T, int Len>
-    class fixedvector {
+    class FixedVector {
       public:
         typedef T value_type;
         typedef value_type* pointer;
@@ -68,12 +70,12 @@ namespace Uintah {
         typedef int size_type;
         typedef std::ptrdiff_t difference_type;
 
-        fixedvector() {
+        FixedVector() {
           curalloc=Len;
           cursize=0;
           data=&fixed[0];
         }
-        ~fixedvector() {
+        ~FixedVector() {
           if(data != &fixed[0])
             delete[] data;
         }
@@ -107,8 +109,8 @@ namespace Uintah {
         reference operator[](size_type n) { return data[n]; }
         const_reference operator[](size_type n) const {return data[n]; }
       private:
-        fixedvector(const fixedvector<T,Len>& copy);
-        fixedvector<T,Len>& operator=(const fixedvector<T,Len>& copy);
+        FixedVector(const FixedVector<T,Len>& copy);
+        FixedVector<T,Len>& operator=(const FixedVector<T,Len>& copy);
 
         T* data;
         T fixed[Len];
@@ -116,6 +118,6 @@ namespace Uintah {
         int curalloc;
     };
 
-} // End namespace Uintah
+} // end namespace Uintah
 
-#endif
+#endif // end UINTAH_CORE_GRID_FIXEDVECTOR_H

@@ -378,7 +378,7 @@ SimulationController::gridSetup( void )
   }
 
   if( !d_restarting ) {
-    grid = scinew Grid;
+    grid = scinew Grid();
     d_sim = dynamic_cast<SimulationInterface*>(getPort("sim"));
     if( !d_sim ) {
       throw InternalError("No simulation component", __FILE__, __LINE__);
