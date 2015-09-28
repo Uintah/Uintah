@@ -1090,12 +1090,6 @@
           <IC> partWVel </IC>
           <direction> z </direction>
         </model>
-         
-        <!--model label="partRho" type="constant">
-          <grid dependent_type="svol" independent_type="svol"/>
-          <IC> none </IC>
-          <constant> [2500.0, 2500.0, 2500.0, 2500.0] </constant>
-        </model-->
 
         <model label="FOWY" type="fowy_devolatilization">
           <grid dependent_type="svol" independent_type="svol"/>
@@ -1105,7 +1099,6 @@
     
         <model label="charProd" type="constant">
           <grid dependent_type="svol" independent_type="svol"/>
-          <IC> none </IC>
           <constant> [0.0, 0.0, 0.0, 0.0] </constant>
         </model>
 
@@ -1117,7 +1110,6 @@
         </model>
 
         <model label="partTemp" type="coal_temperature">
-          <IC> none </IC>
           <const_size> false </const_size>
         </model>
 
@@ -1133,13 +1125,9 @@
         </model>
 
         <model label="partRho" type="coal_density">
-          <IC> none </IC> 
           <const_size> false </const_size>
         </model>
 
-        <!--model label="number_density" type="total_number_density">
-          <IC> none </IC>
-        </model-->
       </ParticleModels>
 
      <include href="inputs/ARCHES/Coal/CoalDB/SUFCO.xml" section="ParticleProperties" />

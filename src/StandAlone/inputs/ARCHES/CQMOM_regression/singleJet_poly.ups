@@ -651,7 +651,6 @@
          
         <model label="partRho" type="constant">
           <grid dependent_type="svol" independent_type="svol"/>
-          <IC> none </IC>
           <constant> [2500.0, 2500.0, 2500.0, 2500.0] </constant>
         </model>
       </ParticleModels>
