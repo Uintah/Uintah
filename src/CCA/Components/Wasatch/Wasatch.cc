@@ -801,7 +801,7 @@ namespace Wasatch{
       particlesHelper_->schedule_initialize(level,sched);
     }
     
-    bcHelperMap_[level->getID()] = scinew WasatchBCHelper(localPatches, materials_, patchInfoMap_, graphCategories_,  bcFunctorMap_);
+    bcHelperMap_[level->getID()] = scinew WasatchBCHelper(level, sched, materials_, patchInfoMap_, graphCategories_,  bcFunctorMap_);
     
     // handle intrusion boundaries
     if( wasatchSpec_->findBlock("EmbeddedGeometry") ){
@@ -1020,7 +1020,7 @@ namespace Wasatch{
         particlesHelper_->schedule_find_boundary_particles(level,sched);
       }
 
-      bcHelperMap_[level->getID()] = scinew WasatchBCHelper(localPatches, materials_, patchInfoMap_, graphCategories_,  bcFunctorMap_);
+      bcHelperMap_[level->getID()] = scinew WasatchBCHelper(level, sched, materials_, patchInfoMap_, graphCategories_,  bcFunctorMap_);
     }
     
     if( doParticles_ ){

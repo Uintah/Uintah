@@ -891,13 +891,7 @@ Arches::scheduleInitialize(const LevelP& level,
 
   //=========== NEW TASK INTERFACE ==============================
   //Boundary Conditions:
-  const Uintah::PatchSet* const allPatches = sched->getLoadBalancer()->getPerProcessorPatchSet(level);
-  const Uintah::PatchSubset* const localPatches = allPatches->getSubset( Uintah::Parallel::getMPIRank() );
-  Uintah::PatchSet* patches = scinew Uintah::PatchSet;
-  patches->addEach( localPatches->getVector() );
-  _bcHelperMap[level->getID()] = scinew ArchesBCHelper( patches, matls );
-  delete patches;
-
+  _bcHelperMap[level->getID()] = scinew ArchesBCHelper( level, sched, matls );
 
   typedef std::map<std::string, boost::shared_ptr<TaskFactoryBase> > BFM;
   BFM::iterator i_util_fac = _boost_factory_map.find("utility_factory");

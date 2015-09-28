@@ -445,14 +445,18 @@ namespace Wasatch {
   //                          IMPLEMENTATION
   //
   //************************************************************************************************
-  
-  //------------------------------------------------------------------------------------------------
 
-  BCHelper::BCHelper( const Uintah::PatchSet* const localPatches,
-                      const Uintah::MaterialSet* const materials )
-  : localPatches_(localPatches),
-    materials_   (materials   )
+  //------------------------------------------------------------------------------------------------
+  
+  BCHelper::BCHelper( const Uintah::LevelP& level,
+                     Uintah::SchedulerP& sched,
+                     const Uintah::MaterialSet* const materials )
+  : materials_   (materials   )
   {
+    const Uintah::PatchSet* const allPatches = sched->getLoadBalancer()->getPerProcessorPatchSet(level);
+    const Uintah::PatchSubset* const localPatches = allPatches->getSubset( Uintah::Parallel::getMPIRank() );
+    localPatches_ = new Uintah::PatchSet;
+    localPatches_->addEach( localPatches->getVector() );
     parse_boundary_conditions();
   }
 
@@ -471,6 +475,7 @@ namespace Wasatch {
         delete sit->second.zvolExtraCellSpatialMask;
       }
     }
+    delete localPatches_;
   }
   
   //------------------------------------------------------------------------------------------------

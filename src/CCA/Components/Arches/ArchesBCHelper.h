@@ -51,7 +51,8 @@ namespace Uintah{
   {
   public:
 
-    ArchesBCHelper( const Uintah::PatchSet* const localPatches,
+    ArchesBCHelper( const Uintah::LevelP& level,
+                    Uintah::SchedulerP& sched,
                     const Uintah::MaterialSet* const materials );
     ~ArchesBCHelper();
 

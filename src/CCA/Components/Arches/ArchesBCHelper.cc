@@ -34,9 +34,10 @@ namespace Uintah{
 
   //==================================================================
 
-  ArchesBCHelper::ArchesBCHelper( const Uintah::PatchSet* const localPatches,
+  ArchesBCHelper::ArchesBCHelper( const Uintah::LevelP& level,
+                                  Uintah::SchedulerP& sched,
                                   const Uintah::MaterialSet* const materials ) :
-  Wasatch::BCHelper( localPatches, materials )
+  Wasatch::BCHelper( level, sched, materials )
   {}
 
   //------------------------------------------------------------------
