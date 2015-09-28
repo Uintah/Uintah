@@ -53,17 +53,10 @@ namespace Uintah {
 
     virtual void initializeSDMData(const Patch* patch, DataWarehouse* new_dw);
 
-#if 0
-    virtual void scheduleInterpolateParticlesToGrid(Task* task,
-                                                 const PatchSet* patches) const;
-
-    virtual void interpolateParticlesToGrid(const Patch* patch,
-                                            DataWarehouse* old_dw,
-                                            DataWarehouse* new_dw);
-#endif
-
     virtual void computeDivergence(const Patch* patch, DataWarehouse* old_dw,
 		                               DataWarehouse* new_dw);
+
+    virtual void outputProblemSpec(ProblemSpecP& ps,bool output_sdim_tag = true);
 
   protected:
     MPMLabel* d_lb;
