@@ -596,7 +596,7 @@ Ray::rayTrace( const ProcessorGroup* pg,
           double sumCos=0;    // used to force sumCostheta/nRays == 0.5 or  sum (d_Omega * cosTheta) == pi
 
           if (d_rayDirSampleAlgo=="LHC"){   
-            randVector(rand_i,mTwister);
+            randVector(rand_i, mTwister, origin);
           }
 
 
@@ -656,7 +656,7 @@ Ray::rayTrace( const ProcessorGroup* pg,
       IntVector origin = *iter;
 
       if (d_rayDirSampleAlgo=="LHC"){   
-        randVector(rand_i,mTwister);
+        randVector(rand_i, mTwister, origin);
       }
       double sumI = 0;
 
@@ -665,9 +665,9 @@ Ray::rayTrace( const ProcessorGroup* pg,
 
         Vector direction_vector;
         if (d_rayDirSampleAlgo=="LHC"){   
-          direction_vector =findRayDirectionHyperCube(mTwister, d_isSeedRandom, origin, iRay,rand_i[iRay],iRay );
+          direction_vector =findRayDirectionHyperCube(mTwister, origin, iRay, rand_i[iRay],iRay );
         }else{
-          direction_vector =findRayDirection(mTwister, d_isSeedRandom, origin, iRay );
+          direction_vector =findRayDirection(mTwister, origin, iRay );
         }
 
         Vector rayOrigin;
@@ -967,7 +967,7 @@ Ray::rayTrace_dataOnion( const ProcessorGroup* pg,
       IntVector origin = *iter;
 
       if (d_rayDirSampleAlgo=="LHC"){   
-        randVector(rand_i,mTwister);
+        randVector(rand_i, mTwister, origin);
       }
 /*`==========TESTING==========*/
 #if 0 
@@ -992,9 +992,9 @@ Ray::rayTrace_dataOnion( const ProcessorGroup* pg,
         //dbg2 << "===== iRay: " << iRay << endl;
         Vector direction_vector;
         if (d_rayDirSampleAlgo=="LHC"){   
-          direction_vector =findRayDirectionHyperCube(mTwister, d_isSeedRandom, origin, iRay,rand_i[iRay],iRay );
+          direction_vector =findRayDirectionHyperCube(mTwister, origin, iRay,rand_i[iRay],iRay );
         }else{
-          direction_vector =findRayDirection(mTwister, d_isSeedRandom, origin, iRay );
+          direction_vector =findRayDirection(mTwister, origin, iRay );
         }
 
         Vector rayOrigin;
@@ -1212,13 +1212,12 @@ Ray::rayDirectionHyperCube_cellFace(MTRand& mTwister,
 //______________________________________________________________________
 Vector
 Ray::findRayDirectionHyperCube(MTRand& mTwister,
-                               const bool isSeedRandom,
                                const IntVector& origin,
                                const int iRay,
                                const int bin_i,
                                const int bin_j)
 {
-  if( isSeedRandom == false ){
+  if( d_isSeedRandom == false ){
     mTwister.seed((origin.x() + origin.y() + origin.z()) * iRay +1);
   }
 
@@ -1234,7 +1233,8 @@ Ray::findRayDirectionHyperCube(MTRand& mTwister,
 
   return direction_vector;
 }
-
+//______________________________________________________________________
+//
 //  Compute the Ray location from a cell face
 void Ray::rayLocation_cellFace( MTRand& mTwister,
                                 const IntVector& origin,
