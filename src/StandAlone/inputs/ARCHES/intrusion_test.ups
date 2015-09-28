@@ -20,7 +20,6 @@
     
     <DataArchiver>
         <filebase>intrusion_test.uda</filebase>
-        <outputInitTimestep/>
         <outputTimestepInterval>1</outputTimestepInterval>
         <save label = "uVelocitySPBC"/>  
         <save label = "uvelRhoHat"/>
@@ -49,7 +48,7 @@
 
         <save label = "volFraction"/>
 
-        <checkpoint cycle = "2" interval = "0.001"/>
+        <checkpoint cycle = "2" interval = "0.0001"/>
         <compression>gzip</compression>
     </DataArchiver>
     
