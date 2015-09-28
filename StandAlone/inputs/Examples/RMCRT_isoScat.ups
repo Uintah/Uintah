@@ -132,5 +132,6 @@
     <StefanBoltzmann>   5.67051e-8 </StefanBoltzmann>
     <solveBoundaryFlux> true      </solveBoundaryFlux>
     <CCRays>            false      </CCRays>
+    <rayDirSampleAlgo>  "naive"    </rayDirSampleAlgo>
   </RMCRT>
 </Uintah_specification>
