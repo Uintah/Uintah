@@ -343,7 +343,6 @@ namespace Uintah{
       //__________________________________
       /** @brief Sample Rays for flux divergence using LHC sampling */
       Vector findRayDirectionHyperCube( MTRand& mTwister,
-                                        const bool isSeedRandom,
                                         const IntVector& = IntVector(-9,-9,-9),
                                         const int iRay = -9,
                                         const int bin_i = 0,

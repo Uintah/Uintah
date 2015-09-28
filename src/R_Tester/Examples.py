@@ -19,9 +19,17 @@ system("cd %s ; ./RMCRT_doubleToFloat  RMCRT_test_1L.ups RMCRT_FLT_test_1L.ups" 
 system("cd %s ; ./RMCRT_doubleToFloat  RMCRT_ML.ups      RMCRT_FLT_ML.ups"      % the_dir )
 system("cd %s ; ./RMCRT_doubleToFloat  RMCRT_bm1_DO.ups  RMCRT_FLT_bm1_DO.ups"  % the_dir )
 
+
+# convert CPU -> GPU tests
 system("cd %s ; ./RMCRT_gpuWorkAround  RMCRT_test_1L.ups      RMCRT_GPU_1L.ups"         % the_dir )
 system("cd %s ; ./RMCRT_gpuWorkAround  RMCRT_ML.ups           RMCRT_GPU_ML.ups"         % the_dir )
 system("cd %s ; ./RMCRT_gpuWorkAround  RMCRT_1L_reflect.ups   RMCRT_GPU_1L_reflect.ups" % the_dir )
+
+# Modify base files
+RMCRT_isoScat_LHC_ups = modUPS( the_dir, \
+                               "RMCRT_isoScat.ups", \
+                               ["<rayDirSampleAlgo>LHC</rayDirSampleAlgo>"])
+
 #______________________________________________________________________
 #  Test syntax: ( "folder name", "input file", # processors, "OS",["flags1","flag2"])
 #  flags:
@@ -52,6 +60,7 @@ NIGHTLYTESTS = [   ("poisson1",         "poisson1.ups",         1, "ALL"),
                    ("RMCRT_VR",         "RMCRT_VR.ups",         1, "ALL", ["abs_tolerance=1e-14","rel_tolerance=1e-11"]),
                    ("RMCRT_radiometer", "RMCRT_radiometer.ups", 8, "ALL", ["exactComparison"]),
                    ("RMCRT_isoScat",    "RMCRT_isoScat.ups",    1, "ALL", ["exactComparison"]),
+                   ("RMCRT_isoScat_LHC", RMCRT_isoScat_LHC_ups, 1, "ALL", ["exactComparison"]),
                    ("RMCRT_1L_reflect", "RMCRT_1L_reflect.ups", 1, "ALL", ["exactComparison"]),
                    ("RMCRT_udaInit",    "RMCRT_udaInit.ups",    1, "ALL", ["exactComparison","no_restart"]),
                    ("RMCRT_1L_perf",    "RMCRT_1L_perf.ups",    1, "ALL", ["do_performance_test"]),
