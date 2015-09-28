@@ -348,7 +348,7 @@ Grid::parseLevelFromFile( FILE * fp, vector<int> & procMapForLevel )
         //  dcell *= d_cell_scale;
         //}
 
-        level = this->addLevel( anchor, dcell, id );
+        level = this->addLevel( anchor, dcell, id ); // FIXME! File parsing needs to be fixed for AMR, MultiScale per level in a transparent way! JBH 9/2015
 
         level->setExtraCells( extraCells );
 
@@ -545,7 +545,7 @@ Grid::readLevelsFromFile( FILE * fp, vector< vector<int> > & procMap )
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 Level *
-Grid::addLevel( const Point & anchor, const Vector & dcell, int id )
+Grid::addLevel( const Point & anchor, const Vector & dcell, int id, bool isAMR, bool isMultiscale )
 {
   // Find the new level's refinement ratio.
   // This should only be called when a new grid is created, so if this level index 
@@ -729,7 +729,7 @@ Grid::getLength( Vector & length, const string & flag ) const
 }
 
 void 
-Grid::problemSetup(const ProblemSpecP& params, const ProcessorGroup *pg, bool do_amr_or_multi_scale)
+Grid::problemSetup(const ProblemSpecP& params, const ProcessorGroup *pg, bool do_AMR, bool do_MultiScale)
 {
    ProblemSpecP grid_ps = params->findBlock("Grid");
    if(!grid_ps)
@@ -1024,7 +1024,7 @@ Grid::problemSetup(const ProblemSpecP& params, const ProcessorGroup *pg, bool do
       if(!have_levelspacing && !have_patchspacing && stretch_count != 3)
         throw ProblemSetupException("Box resolution is not specified", __FILE__, __LINE__);
 
-      LevelP level = addLevel(anchor, spacing);
+      LevelP level = addLevel(anchor, spacing, -1, do_AMR, do_MultiScale);
 
       // Determine the interior cell limits.  For no extraCells, the limits
       // will be the same.  For extraCells, the interior cells will have
@@ -1128,6 +1128,8 @@ Grid::problemSetup(const ProblemSpecP& params, const ProcessorGroup *pg, bool do
           cerr << "diff_lower: " << diff_lower << "\n";
           cerr << "max_component_lower: " << max_component_lower << "\n";
 
+          cerr << setprecision(16) << "anchor=" << level->getAnchor() << std::endl;
+          cerr << setprecision(16) << "d_Cell=" << level->dCell() << std::endl;
           cerr << setprecision(16) << "lower=" << lower << '\n';
           cerr << setprecision(16) << "lowCell =" << lowCell << '\n';
           cerr << setprecision(16) << "highCell =" << highCell << '\n';
@@ -1276,7 +1278,7 @@ Grid::problemSetup(const ProblemSpecP& params, const ProcessorGroup *pg, bool do
         } // end for(int i=0;i<patches.x();i++){
       } // end for(ProblemSpecP box_ps = level_ps->findBlock("Box");
 
-      if (pg->size() > 1 && (level->numPatches() < pg->size()) && !do_amr_or_multi_scale) {
+      if (pg->size() > 1 && (level->numPatches() < pg->size()) && !(do_AMR || do_MultiScale)) {
         throw ProblemSetupException("Number of patches must >= the number of processes in an mpi run",
                                     __FILE__, __LINE__);
       }
@@ -1294,7 +1296,7 @@ Grid::problemSetup(const ProblemSpecP& params, const ProcessorGroup *pg, bool do
       levelIndex++;
    }
 
-  if (numLevels() > 1 && !do_amr_or_multi_scale) {  // bullet proofing
+  if (numLevels() > 1 && !(do_AMR || do_MultiScale)) {  // bullet proofing
     throw ProblemSetupException("Grid.cc:problemSetup: Multiple levels encountered in non-AMR or non-MultiScale grid",
     __FILE__,
                                 __LINE__);

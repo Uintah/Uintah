@@ -96,7 +96,7 @@
                 <lower>[ 0.00,            0.00,            0.00]</lower>
                 <upper>[55.9709435199820,55.9709435199820,55.9709435199820]</upper>
                 <resolution>[56,56,56]</resolution>
-                <patches>[4,4,4]</patches>
+                <patches>[1,1,1]</patches>
             </Box>
             <periodic>[1,1,1]</periodic>
         </Level>

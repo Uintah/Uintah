@@ -97,7 +97,9 @@ class Level : public RefCounted {
 public:
   Level(Grid* grid, const Point& anchor, const Vector& dcell, int index, 
         IntVector refinementRatio,
-        int id = -1);
+        int id = -1,
+        bool isAMR = false,
+        bool isMultiScale = false);
   virtual ~Level();
   
   void setPatchDistributionHint(const IntVector& patchDistribution);
@@ -209,6 +211,8 @@ public:
 
   // For stretched grids
   bool isStretched() const { return d_stretched; }
+  bool isAMR() const {return d_isAMR; }
+  bool isMultiScale() const {return d_isMultiScale; }
   void getCellWidths(Grid::Axis axis, OffsetArray1<double>& widths) const;
   void getFacePositions(Grid::Axis axis, OffsetArray1<double>& faces) const;
   void setStretched(Grid::Axis axis, const OffsetArray1<double>& faces);
@@ -301,6 +305,8 @@ private:
 
   // For stretched grids
   bool d_stretched;
+  bool d_isAMR;
+  bool d_isMultiScale;
 
   // This is three different arrays containing the x,y,z coordinate of the face position
   // be sized to d_idxSize[axis] + 1.  Used only for stretched grids
