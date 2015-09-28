@@ -39,6 +39,16 @@
         <save label = "density" table_lookup = "true"/>
         <save label = "temperature" table_lookup = "true"/>
 
+        <save label = "surf_out_normX"/>
+        <save label = "surf_out_normY"/>
+        <save label = "surf_out_normZ"/>
+
+        <save label = "surf_in_normX"/>
+        <save label = "surf_in_normY"/>
+        <save label = "surf_in_normZ"/>
+
+        <save label = "volFraction"/>
+
         <checkpoint cycle = "2" interval = "0.001"/>
         <compression>gzip</compression>
     </DataArchiver>
