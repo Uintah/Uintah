@@ -375,3 +375,8 @@ void ScalarDiffusionModel::computeDivergence_CFI(const PatchSubset* finePatches,
     delete interpolator;
   }  // End fine patch loop
 }
+
+void ScalarDiffusionModel::outputProblemSpec(ProblemSpecP& ps, bool output_rdm_tag)
+{
+   cout << "Fill this in for the model that you are using." << endl;
+}
