@@ -63,69 +63,68 @@ CQMOMSourceWrapper::problemSetup(const ProblemSpecP& inputdb)
       std::string model_name;
       std::string source_label;
       std::string ic_name;
-      m_db->get("IC",ic_name);
+      
       m_db->getAttribute("label",model_name);
-      proc0cout << "Model name: " << model_name << endl;
-      
-      if ( ic_name == "none" ) {
-        //this is for particle models that are not sources (i.e density)
-        continue;
-      }
-            
-      int m = 0;
-      for ( ProblemSpecP db_name = cqmom_db->findBlock("InternalCoordinate");
-           db_name != 0; db_name = db_name->findNextBlock("InternalCoordinate") ) {
-        std::string var_name;
-        db_name->getAttribute("name",var_name);
-        if ( var_name == ic_name) {
-          nIC.push_back(m);
-          break;
-        }
-        m++;
-        if ( m >= M ) { // occurs if IC not found
-          string err_msg = "Error: could not find internal coordinate '" + ic_name + "' in list of internal coordinates specified by CQMOM spec";
-          throw ProblemSetupException(err_msg,__FILE__,__LINE__);
-        }
-      }
-      
-      //store list of all needed node sources
-      for ( int i = 0; i < _N; i++ ) {
-        string thisNodeSource;
-        string node;
-        std::stringstream index;
-        index << i;
-        node = index.str();
-        
-        thisNodeSource = model_name + "_" + node;
-        const VarLabel * tempLabel;
-        tempLabel = VarLabel::find( thisNodeSource );
-        d_nodeSources.push_back(tempLabel);
-      }
-      
-      //create & store var labels for this source for all moment eqns
-      for ( int i = 0; i < nMoments; i ++ ) {
-        vector<int> temp_moment_index = momentIndexes[i];
-        
-        //base moment name
-        string eqn_name = "m_";
-        for (int n = 0; n < M ; n++) {
-          string node;
-          std::stringstream out;
-          out << temp_moment_index[n];
-          node = out.str();
-          eqn_name += node;
-        }
-        
-        //create varlabel
-        string source_name;
-        source_name = eqn_name + "_" + model_name + "_src";
-        const VarLabel* tempLabel;
-        proc0cout << "Creating source label: " << source_name << endl;
-        tempLabel = VarLabel::create( source_name, CCVariable<double>::getTypeDescription() );
-        d_sourceLabels.push_back(tempLabel);
-      }
+      if ( m_db->findBlock("IC") ) {
+        m_db->get("IC",ic_name);
+        proc0cout << "Model name: " << model_name << endl;
 
-      nSources++; //count total number of sources
+        int m = 0;
+        for ( ProblemSpecP db_name = cqmom_db->findBlock("InternalCoordinate");
+              db_name != 0; db_name = db_name->findNextBlock("InternalCoordinate") ) {
+          std::string var_name;
+          db_name->getAttribute("name",var_name);
+          if ( var_name == ic_name) {
+            nIC.push_back(m);
+            break;
+          }
+          m++;
+          if ( m >= M ) { // occurs if IC not found
+            string err_msg = "Error: could not find internal coordinate '" + ic_name + "' in list of internal coordinates specified by CQMOM spec";
+            throw ProblemSetupException(err_msg,__FILE__,__LINE__);
+          }
+        }
+      
+        //store list of all needed node sources
+        for ( int i = 0; i < _N; i++ ) {
+          string thisNodeSource;
+          string node;
+          std::stringstream index;
+          index << i;
+          node = index.str();
+        
+          thisNodeSource = model_name + "_" + node;
+          const VarLabel * tempLabel;
+          tempLabel = VarLabel::find( thisNodeSource );
+          d_nodeSources.push_back(tempLabel);
+        }
+      
+        //create & store var labels for this source for all moment eqns
+        for ( int i = 0; i < nMoments; i ++ ) {
+          vector<int> temp_moment_index = momentIndexes[i];
+        
+          //base moment name
+          string eqn_name = "m_";
+          for (int n = 0; n < M ; n++) {
+            string node;
+            std::stringstream out;
+            out << temp_moment_index[n];
+            node = out.str();
+            eqn_name += node;
+          }
+        
+          //create varlabel
+          string source_name;
+          source_name = eqn_name + "_" + model_name + "_src";
+          const VarLabel* tempLabel;
+          proc0cout << "Creating source label: " << source_name << endl;
+          tempLabel = VarLabel::create( source_name, CCVariable<double>::getTypeDescription() );
+          d_sourceLabels.push_back(tempLabel);
+        }
+        nSources++; //count total number of sources
+      } else {
+        proc0cout << model_name << " parsed as a particle property" << endl;
+      }
     }
   }
 }
