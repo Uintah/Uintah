@@ -340,3 +340,13 @@ void CommonIFConcDiff::computeDivergence(const Patch* patch,
     }
   }
 }
+
+void CommonIFConcDiff::outputProblemSpec(ProblemSpecP& ps, bool output_sdim_tag)
+{
+
+  ProblemSpecP sdim_ps = ps;
+  if (output_sdim_tag) {
+    sdim_ps = ps->appendChild("diffusion_interface");
+    sdim_ps->appendElement("type","common");
+  }
+}

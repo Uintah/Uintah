@@ -56,7 +56,6 @@ namespace Uintah {
 
     virtual void outputProblemSpec(ProblemSpecP& ps,bool output_rdm_tag = true);
 
-
   private:
     double init_potential;
 

@@ -72,7 +72,7 @@ SDInterfaceModel* SDInterfaceModelFactory::create(ProblemSpecP& ps,
   }else if (diff_interface_type == "paired"){
     return(scinew SDInterfaceModel(child, ss, flags));
   }else{
-    throw ProblemSetupException("Unknown Scalar Diffusion Type ("+diff_interface_type+")", __FILE__, __LINE__);
+    throw ProblemSetupException("Unknown Scalar Interface Type ("+diff_interface_type+")", __FILE__, __LINE__);
   }
 
   return 0;
