@@ -67,12 +67,15 @@ Level::Level(       Grid      * grid,
               const Vector    & dcell, 
                     int         index,
                     IntVector   refinementRatio,
-                    int         id /* = -1 */ ) :
+                    int         id /* = -1 */,
+                    bool        isAMR /* = false */,
+                    bool        isMultiScale /* = false*/) :
   d_grid(grid), d_anchor(anchor), d_dcell(dcell), 
   d_spatial_range(Point(DBL_MAX,DBL_MAX,DBL_MAX),Point(DBL_MIN,DBL_MIN,DBL_MIN)),
   d_int_spatial_range(Point(DBL_MAX,DBL_MAX,DBL_MAX),Point(DBL_MIN,DBL_MIN,DBL_MIN)),
   d_index(index),
   d_patchDistribution(-1,-1,-1), d_periodicBoundaries(0, 0, 0), d_id(id),
+  d_isAMR(isAMR), d_isMultiScale(isMultiScale),
   d_refinementRatio(refinementRatio),
   d_cachelock("Level Cache Lock")
 {

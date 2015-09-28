@@ -90,7 +90,7 @@ WARNING
     //////////
     // Adds a level to the grid.
     Level* addLevel( const SCIRun::Point  & anchor,
-                     const SCIRun::Vector & dcell, int id = -1 );
+                     const SCIRun::Vector & dcell, int id = -1, bool isAMR = false, bool isMultiscale = false);
 
     // Reads in XML data line by line to create a level...
     void readLevelsFromFile( FILE * fp, std::vector< std::vector<int> > & procMap );
@@ -117,7 +117,7 @@ WARNING
     
     //////////
     // Problem setup functions called from simulation controller
-    void problemSetup(const ProblemSpecP& params, const ProcessorGroup *pg, bool do_amr_or_multi_scale);
+    void problemSetup(const ProblemSpecP& params, const ProcessorGroup *pg, bool do_AMR, bool do_MultiScale = false);
 
     // For comparing grids - level and patch structure must be equal
     bool operator==(const Grid& othergrid) const;
