@@ -61,461 +61,462 @@
   <Grid>
 
     <BoundaryConditions>
+      <DefaultMaterial>0</DefaultMaterial>
       <Face side="x-">
-        <BCType id="all" label="mixture_fraction" var="Dirichlet">
+        <BCType label="mixture_fraction" var="Dirichlet">
           <value> 1.0 </value>
         </BCType>
       </Face>
 
       <Face side="x-">
-        <BCType id = "all" label = "inletx" var = "VelocityInlet">
+        <BCType  label = "inletx" var = "VelocityInlet">
           <value> [1,0,0] </value>
         </BCType>
-        <BCType id="all" label="mixture_fraction" var="Dirichlet">
+        <BCType label="mixture_fraction" var="Dirichlet">
           <value> 1.0 </value>
         </BCType>
         
         <!-- transported moments -->
-        <BCType id="all" label="m_000" var="Dirichlet">
+        <BCType label="m_000" var="Dirichlet">
           <value> 2.42703050813419 </value>
         </BCType>
-        <BCType id="all" label="m_100" var="Dirichlet">
+        <BCType label="m_100" var="Dirichlet">
           <value> 12.1351525406709 </value>
         </BCType>
-        <BCType id="all" label="m_200" var="Dirichlet">
+        <BCType label="m_200" var="Dirichlet">
           <value> 61.2825195958371 </value>
         </BCType>
-        <BCType id="all" label="m_300" var="Dirichlet">
+        <BCType label="m_300" var="Dirichlet">
           <value> 312.48016690401 </value>
         </BCType>
-        <BCType id="all" label="m_010" var="Dirichlet">
+        <BCType label="m_010" var="Dirichlet">
           <value> 12.1351525406709 </value>
         </BCType>
-        <BCType id="all" label="m_020" var="Dirichlet">
+        <BCType label="m_020" var="Dirichlet">
           <value> 63.1027462022061 </value>
         </BCType>
-        <BCType id="all" label="m_030" var="Dirichlet">
+        <BCType label="m_030" var="Dirichlet">
           <value> 339.783565999544 </value>
         </BCType>
-        <BCType id="all" label="m_110" var="Dirichlet">
+        <BCType label="m_110" var="Dirichlet">
           <value> 60.9791356406965 </value>
         </BCType>
-        <BCType id="all" label="m_120" var="Dirichlet">
+        <BCType label="m_120" var="Dirichlet">
           <value> 318.547460384448 </value>
         </BCType>
-        <BCType id="all" label="m_130" var="Dirichlet">
+        <BCType label="m_130" var="Dirichlet">
           <value> 1722.58077772495 </value>
         </BCType>
-        <BCType id="all" label="m_001" var="Dirichlet">
+        <BCType label="m_001" var="Dirichlet">
           <value> 12.1351525406709 </value>
         </BCType>
-        <BCType id="all" label="m_002" var="Dirichlet">
+        <BCType label="m_002" var="Dirichlet">
           <value> 61.9556420721615 </value>
         </BCType>
-        <BCType id="all" label="m_003" var="Dirichlet">
+        <BCType label="m_003" var="Dirichlet">
           <value> 322.577004048874 </value>
         </BCType>
-        <BCType id="all" label="m_101" var="Dirichlet">
+        <BCType label="m_101" var="Dirichlet">
           <value> 60.6757627033547 </value>
         </BCType>
-        <BCType id="all" label="m_102" var="Dirichlet">
+        <BCType label="m_102" var="Dirichlet">
           <value> 309.778210360807 </value>
         </BCType>
-        <BCType id="all" label="m_103" var="Dirichlet">
+        <BCType label="m_103" var="Dirichlet">
           <value> 1612.88502024437 </value>
         </BCType>
-        <BCType id="all" label="m_011" var="Dirichlet">
+        <BCType label="m_011" var="Dirichlet">
           <value> 60.6757627033547 </value>
         </BCType>
-        <BCType id="all" label="m_012" var="Dirichlet">
+        <BCType label="m_012" var="Dirichlet">
           <value> 309.778210360807 </value>
         </BCType>
-        <BCType id="all" label="m_013" var="Dirichlet">
+        <BCType label="m_013" var="Dirichlet">
           <value> 1612.88502024437 </value>
         </BCType>
-        <BCType id="all" label="m_111" var="Dirichlet">
+        <BCType label="m_111" var="Dirichlet">
           <value> 304.895678203483 </value>
         </BCType>
-        <BCType id="all" label="m_112" var="Dirichlet">
+        <BCType label="m_112" var="Dirichlet">
           <value> 1556.63535705992 </value>
         </BCType>
-        <BCType id="all" label="m_113" var="Dirichlet">
+        <BCType label="m_113" var="Dirichlet">
           <value> 8104.74644572464 </value>
         </BCType>
       </Face>
 
       <Face side="x+">
-        <BCType id = "all" label = "outletx" var = "OutletBC">
+        <BCType  label = "outletx" var = "OutletBC">
           <value> 0.0 </value>
         </BCType>
-        <BCType id="all" label="mixture_fraction" var="Neumann">
+        <BCType label="mixture_fraction" var="Neumann">
           <value> 0.0 </value>
         </BCType>
         <!-- transported moments -->
-        <BCType id="all" label="m_000" var="Neumann">
+        <BCType label="m_000" var="Neumann">
           <value> 0.0 </value>
         </BCType>
-        <BCType id="all" label="m_100" var="Neumann">
+        <BCType label="m_100" var="Neumann">
           <value> 0.0 </value>
         </BCType>
-        <BCType id="all" label="m_200" var="Neumann">
+        <BCType label="m_200" var="Neumann">
           <value> 0.0 </value>
         </BCType>
-        <BCType id="all" label="m_300" var="Neumann">
+        <BCType label="m_300" var="Neumann">
           <value> 0.0 </value>
         </BCType>
-        <BCType id="all" label="m_010" var="Neumann">
+        <BCType label="m_010" var="Neumann">
           <value> 0.0 </value>
         </BCType>
-        <BCType id="all" label="m_020" var="Neumann">
+        <BCType label="m_020" var="Neumann">
           <value> 0.0 </value>
         </BCType>
-        <BCType id="all" label="m_030" var="Neumann">
+        <BCType label="m_030" var="Neumann">
           <value> 0.0 </value>
         </BCType>
-        <BCType id="all" label="m_110" var="Neumann">
+        <BCType label="m_110" var="Neumann">
           <value> 0.0 </value>
         </BCType>
-        <BCType id="all" label="m_120" var="Neumann">
+        <BCType label="m_120" var="Neumann">
           <value> 0.0 </value>
         </BCType>
-        <BCType id="all" label="m_130" var="Neumann">
+        <BCType label="m_130" var="Neumann">
           <value> 0.0 </value>
         </BCType>
-        <BCType id="all" label="m_001" var="Neumann">
+        <BCType label="m_001" var="Neumann">
           <value> 0.0 </value>
         </BCType>
-        <BCType id="all" label="m_002" var="Neumann">
+        <BCType label="m_002" var="Neumann">
           <value> 0.0 </value>
         </BCType>
-        <BCType id="all" label="m_003" var="Neumann">
+        <BCType label="m_003" var="Neumann">
           <value> 0.0 </value>
         </BCType>
-        <BCType id="all" label="m_101" var="Neumann">
+        <BCType label="m_101" var="Neumann">
           <value> 0.0 </value>
         </BCType>
-        <BCType id="all" label="m_102" var="Neumann">
+        <BCType label="m_102" var="Neumann">
           <value> 0.0 </value>
         </BCType>
-        <BCType id="all" label="m_103" var="Neumann">
+        <BCType label="m_103" var="Neumann">
           <value> 0.0 </value>
         </BCType>
-        <BCType id="all" label="m_011" var="Neumann">
+        <BCType label="m_011" var="Neumann">
           <value> 0.0 </value>
         </BCType>
-        <BCType id="all" label="m_012" var="Neumann">
+        <BCType label="m_012" var="Neumann">
           <value> 0.0 </value>
         </BCType>
-        <BCType id="all" label="m_013" var="Neumann">
+        <BCType label="m_013" var="Neumann">
           <value> 0.0 </value>
         </BCType>
-        <BCType id="all" label="m_111" var="Neumann">
+        <BCType label="m_111" var="Neumann">
           <value> 0.0 </value>
         </BCType>
-        <BCType id="all" label="m_112" var="Neumann">
+        <BCType label="m_112" var="Neumann">
           <value> 0.0 </value>
         </BCType>
-        <BCType id="all" label="m_113" var="Neumann">
+        <BCType label="m_113" var="Neumann">
           <value> 0.0 </value>
         </BCType>
       </Face>
 
         <Face side="y-">
-        <BCType id = "all" label = "ymwall" var = "WallBC">
+        <BCType  label = "ymwall" var = "WallBC">
           <value> 0.0 </value>
         </BCType>
-        <BCType id="all" label="mixture_fraction" var="Neumann">
+        <BCType label="mixture_fraction" var="Neumann">
           <value> 0.0 </value>
         </BCType>
-        <BCType id="all" label="m_000" var="Dirichlet">
+        <BCType label="m_000" var="Dirichlet">
           <value> 0.0 </value>
         </BCType>
-        <BCType id="all" label="m_100" var="Dirichlet">
+        <BCType label="m_100" var="Dirichlet">
           <value> 0.0 </value>
         </BCType>
-        <BCType id="all" label="m_200" var="Dirichlet">
+        <BCType label="m_200" var="Dirichlet">
           <value> 0.0 </value>
         </BCType>
-        <BCType id="all" label="m_300" var="Dirichlet">
+        <BCType label="m_300" var="Dirichlet">
           <value> 0.0 </value>
         </BCType>
-        <BCType id="all" label="m_010" var="Dirichlet">
+        <BCType label="m_010" var="Dirichlet">
           <value> 0.0 </value>
         </BCType>
-        <BCType id="all" label="m_020" var="Dirichlet">
+        <BCType label="m_020" var="Dirichlet">
           <value> 0.0 </value>
         </BCType>
-        <BCType id="all" label="m_030" var="Dirichlet">
+        <BCType label="m_030" var="Dirichlet">
           <value> 0.0 </value>
         </BCType>
-        <BCType id="all" label="m_110" var="Dirichlet">
+        <BCType label="m_110" var="Dirichlet">
           <value> 0.0 </value>
         </BCType>
-        <BCType id="all" label="m_120" var="Dirichlet">
+        <BCType label="m_120" var="Dirichlet">
           <value> 0.0 </value>
         </BCType>
-        <BCType id="all" label="m_130" var="Dirichlet">
+        <BCType label="m_130" var="Dirichlet">
           <value> 0.0 </value>
         </BCType>
-        <BCType id="all" label="m_001" var="Dirichlet">
+        <BCType label="m_001" var="Dirichlet">
           <value> 0.0 </value>
         </BCType>
-        <BCType id="all" label="m_002" var="Dirichlet">
+        <BCType label="m_002" var="Dirichlet">
           <value> 0.0 </value>
         </BCType>
-        <BCType id="all" label="m_003" var="Dirichlet">
+        <BCType label="m_003" var="Dirichlet">
           <value> 0.0 </value>
         </BCType>
-        <BCType id="all" label="m_101" var="Dirichlet">
+        <BCType label="m_101" var="Dirichlet">
           <value> 0.0 </value>
         </BCType>
-        <BCType id="all" label="m_102" var="Dirichlet">
+        <BCType label="m_102" var="Dirichlet">
           <value> 0.0 </value>
         </BCType>
-        <BCType id="all" label="m_103" var="Dirichlet">
+        <BCType label="m_103" var="Dirichlet">
           <value> 0.0 </value>
         </BCType>
-        <BCType id="all" label="m_011" var="Dirichlet">
+        <BCType label="m_011" var="Dirichlet">
           <value> 0.0 </value>
         </BCType>
-        <BCType id="all" label="m_012" var="Dirichlet">
+        <BCType label="m_012" var="Dirichlet">
           <value> 0.0 </value>
         </BCType>
-        <BCType id="all" label="m_013" var="Dirichlet">
+        <BCType label="m_013" var="Dirichlet">
           <value> 0.0 </value>
         </BCType>
-        <BCType id="all" label="m_111" var="Dirichlet">
+        <BCType label="m_111" var="Dirichlet">
           <value> 0.0 </value>
         </BCType>
-        <BCType id="all" label="m_112" var="Dirichlet">
+        <BCType label="m_112" var="Dirichlet">
           <value> 0.0 </value>
         </BCType>
-        <BCType id="all" label="m_113" var="Dirichlet">
+        <BCType label="m_113" var="Dirichlet">
           <value> 0.0 </value>
         </BCType>
       </Face>
 
       <Face side="y+">
-        <BCType id = "all" label = "ypwall" var = "WallBC">
+        <BCType  label = "ypwall" var = "WallBC">
           <value> 0.0 </value>
         </BCType>
-        <BCType id="all" label="mixture_fraction" var="Neumann">
+        <BCType label="mixture_fraction" var="Neumann">
           <value> 0.0 </value>
         </BCType>
-        <BCType id="all" label="m_000" var="Dirichlet">
+        <BCType label="m_000" var="Dirichlet">
           <value> 0.0 </value>
         </BCType>
-        <BCType id="all" label="m_100" var="Dirichlet">
+        <BCType label="m_100" var="Dirichlet">
           <value> 0.0 </value>
         </BCType>
-        <BCType id="all" label="m_200" var="Dirichlet">
+        <BCType label="m_200" var="Dirichlet">
           <value> 0.0 </value>
         </BCType>
-        <BCType id="all" label="m_300" var="Dirichlet">
+        <BCType label="m_300" var="Dirichlet">
           <value> 0.0 </value>
         </BCType>
-        <BCType id="all" label="m_010" var="Dirichlet">
+        <BCType label="m_010" var="Dirichlet">
           <value> 0.0 </value>
         </BCType>
-        <BCType id="all" label="m_020" var="Dirichlet">
+        <BCType label="m_020" var="Dirichlet">
           <value> 0.0 </value>
         </BCType>
-        <BCType id="all" label="m_030" var="Dirichlet">
+        <BCType label="m_030" var="Dirichlet">
           <value> 0.0 </value>
         </BCType>
-        <BCType id="all" label="m_110" var="Dirichlet">
+        <BCType label="m_110" var="Dirichlet">
           <value> 0.0 </value>
         </BCType>
-        <BCType id="all" label="m_120" var="Dirichlet">
+        <BCType label="m_120" var="Dirichlet">
           <value> 0.0 </value>
         </BCType>
-        <BCType id="all" label="m_130" var="Dirichlet">
+        <BCType label="m_130" var="Dirichlet">
           <value> 0.0 </value>
         </BCType>
-        <BCType id="all" label="m_001" var="Dirichlet">
+        <BCType label="m_001" var="Dirichlet">
           <value> 0.0 </value>
         </BCType>
-        <BCType id="all" label="m_002" var="Dirichlet">
+        <BCType label="m_002" var="Dirichlet">
           <value> 0.0 </value>
         </BCType>
-        <BCType id="all" label="m_003" var="Dirichlet">
+        <BCType label="m_003" var="Dirichlet">
           <value> 0.0 </value>
         </BCType>
-        <BCType id="all" label="m_101" var="Dirichlet">
+        <BCType label="m_101" var="Dirichlet">
           <value> 0.0 </value>
         </BCType>
-        <BCType id="all" label="m_102" var="Dirichlet">
+        <BCType label="m_102" var="Dirichlet">
           <value> 0.0 </value>
         </BCType>
-        <BCType id="all" label="m_103" var="Dirichlet">
+        <BCType label="m_103" var="Dirichlet">
           <value> 0.0 </value>
         </BCType>
-        <BCType id="all" label="m_011" var="Dirichlet">
+        <BCType label="m_011" var="Dirichlet">
           <value> 0.0 </value>
         </BCType>
-        <BCType id="all" label="m_012" var="Dirichlet">
+        <BCType label="m_012" var="Dirichlet">
           <value> 0.0 </value>
         </BCType>
-        <BCType id="all" label="m_013" var="Dirichlet">
+        <BCType label="m_013" var="Dirichlet">
           <value> 0.0 </value>
         </BCType>
-        <BCType id="all" label="m_111" var="Dirichlet">
+        <BCType label="m_111" var="Dirichlet">
           <value> 0.0 </value>
         </BCType>
-        <BCType id="all" label="m_112" var="Dirichlet">
+        <BCType label="m_112" var="Dirichlet">
           <value> 0.0 </value>
         </BCType>
-        <BCType id="all" label="m_113" var="Dirichlet">
+        <BCType label="m_113" var="Dirichlet">
           <value> 0.0 </value>
         </BCType>
       </Face>
 
       <Face side="z-">
-        <BCType id = "all" label = "zmwall" var = "WallBC">
+        <BCType  label = "zmwall" var = "WallBC">
           <value> 0.0 </value>
         </BCType>
-        <BCType id="all" label="mixture_fraction" var="Neumann">
+        <BCType label="mixture_fraction" var="Neumann">
           <value> 0.0 </value>
         </BCType>
-        <BCType id="all" label="m_000" var="Dirichlet">
+        <BCType label="m_000" var="Dirichlet">
           <value> 0.0 </value>
         </BCType>
-        <BCType id="all" label="m_100" var="Dirichlet">
+        <BCType label="m_100" var="Dirichlet">
           <value> 0.0 </value>
         </BCType>
-        <BCType id="all" label="m_200" var="Dirichlet">
+        <BCType label="m_200" var="Dirichlet">
           <value> 0.0 </value>
         </BCType>
-        <BCType id="all" label="m_300" var="Dirichlet">
+        <BCType label="m_300" var="Dirichlet">
           <value> 0.0 </value>
         </BCType>
-        <BCType id="all" label="m_010" var="Dirichlet">
+        <BCType label="m_010" var="Dirichlet">
           <value> 0.0 </value>
         </BCType>
-        <BCType id="all" label="m_020" var="Dirichlet">
+        <BCType label="m_020" var="Dirichlet">
           <value> 0.0 </value>
         </BCType>
-        <BCType id="all" label="m_030" var="Dirichlet">
+        <BCType label="m_030" var="Dirichlet">
           <value> 0.0 </value>
         </BCType>
-        <BCType id="all" label="m_110" var="Dirichlet">
+        <BCType label="m_110" var="Dirichlet">
           <value> 0.0 </value>
         </BCType>
-        <BCType id="all" label="m_120" var="Dirichlet">
+        <BCType label="m_120" var="Dirichlet">
           <value> 0.0 </value>
         </BCType>
-        <BCType id="all" label="m_130" var="Dirichlet">
+        <BCType label="m_130" var="Dirichlet">
           <value> 0.0 </value>
         </BCType>
-        <BCType id="all" label="m_001" var="Dirichlet">
+        <BCType label="m_001" var="Dirichlet">
           <value> 0.0 </value>
         </BCType>
-        <BCType id="all" label="m_002" var="Dirichlet">
+        <BCType label="m_002" var="Dirichlet">
           <value> 0.0 </value>
         </BCType>
-        <BCType id="all" label="m_003" var="Dirichlet">
+        <BCType label="m_003" var="Dirichlet">
           <value> 0.0 </value>
         </BCType>
-        <BCType id="all" label="m_101" var="Dirichlet">
+        <BCType label="m_101" var="Dirichlet">
           <value> 0.0 </value>
         </BCType>
-        <BCType id="all" label="m_102" var="Dirichlet">
+        <BCType label="m_102" var="Dirichlet">
           <value> 0.0 </value>
         </BCType>
-        <BCType id="all" label="m_103" var="Dirichlet">
+        <BCType label="m_103" var="Dirichlet">
           <value> 0.0 </value>
         </BCType>
-        <BCType id="all" label="m_011" var="Dirichlet">
+        <BCType label="m_011" var="Dirichlet">
           <value> 0.0 </value>
         </BCType>
-        <BCType id="all" label="m_012" var="Dirichlet">
+        <BCType label="m_012" var="Dirichlet">
           <value> 0.0 </value>
         </BCType>
-        <BCType id="all" label="m_013" var="Dirichlet">
+        <BCType label="m_013" var="Dirichlet">
           <value> 0.0 </value>
         </BCType>
-        <BCType id="all" label="m_111" var="Dirichlet">
+        <BCType label="m_111" var="Dirichlet">
           <value> 0.0 </value>
         </BCType>
-        <BCType id="all" label="m_112" var="Dirichlet">
+        <BCType label="m_112" var="Dirichlet">
           <value> 0.0 </value>
         </BCType>
-        <BCType id="all" label="m_113" var="Dirichlet">
+        <BCType label="m_113" var="Dirichlet">
           <value> 0.0 </value>
         </BCType>
       </Face>
 
       <Face side="z+">
-        <BCType id = "all" label = "zpwall" var = "WallBC">
+        <BCType  label = "zpwall" var = "WallBC">
           <value> 0.0 </value>
         </BCType>
-        <BCType id="all" label="mixture_fraction" var="Neumann">
+        <BCType label="mixture_fraction" var="Neumann">
           <value> 0.0 </value>
         </BCType>
-                <BCType id="all" label="m_000" var="Dirichlet">
+                <BCType label="m_000" var="Dirichlet">
           <value> 0.0 </value>
         </BCType>
-        <BCType id="all" label="m_100" var="Dirichlet">
+        <BCType label="m_100" var="Dirichlet">
           <value> 0.0 </value>
         </BCType>
-        <BCType id="all" label="m_200" var="Dirichlet">
+        <BCType label="m_200" var="Dirichlet">
           <value> 0.0 </value>
         </BCType>
-        <BCType id="all" label="m_300" var="Dirichlet">
+        <BCType label="m_300" var="Dirichlet">
           <value> 0.0 </value>
         </BCType>
-        <BCType id="all" label="m_010" var="Dirichlet">
+        <BCType label="m_010" var="Dirichlet">
           <value> 0.0 </value>
         </BCType>
-        <BCType id="all" label="m_020" var="Dirichlet">
+        <BCType label="m_020" var="Dirichlet">
           <value> 0.0 </value>
         </BCType>
-        <BCType id="all" label="m_030" var="Dirichlet">
+        <BCType label="m_030" var="Dirichlet">
           <value> 0.0 </value>
         </BCType>
-        <BCType id="all" label="m_110" var="Dirichlet">
+        <BCType label="m_110" var="Dirichlet">
           <value> 0.0 </value>
         </BCType>
-        <BCType id="all" label="m_120" var="Dirichlet">
+        <BCType label="m_120" var="Dirichlet">
           <value> 0.0 </value>
         </BCType>
-        <BCType id="all" label="m_130" var="Dirichlet">
+        <BCType label="m_130" var="Dirichlet">
           <value> 0.0 </value>
         </BCType>
-        <BCType id="all" label="m_001" var="Dirichlet">
+        <BCType label="m_001" var="Dirichlet">
           <value> 0.0 </value>
         </BCType>
-        <BCType id="all" label="m_002" var="Dirichlet">
+        <BCType label="m_002" var="Dirichlet">
           <value> 0.0 </value>
         </BCType>
-        <BCType id="all" label="m_003" var="Dirichlet">
+        <BCType label="m_003" var="Dirichlet">
           <value> 0.0 </value>
         </BCType>
-        <BCType id="all" label="m_101" var="Dirichlet">
+        <BCType label="m_101" var="Dirichlet">
           <value> 0.0 </value>
         </BCType>
-        <BCType id="all" label="m_102" var="Dirichlet">
+        <BCType label="m_102" var="Dirichlet">
           <value> 0.0 </value>
         </BCType>
-        <BCType id="all" label="m_103" var="Dirichlet">
+        <BCType label="m_103" var="Dirichlet">
           <value> 0.0 </value>
         </BCType>
-        <BCType id="all" label="m_011" var="Dirichlet">
+        <BCType label="m_011" var="Dirichlet">
           <value> 0.0 </value>
         </BCType>
-        <BCType id="all" label="m_012" var="Dirichlet">
+        <BCType label="m_012" var="Dirichlet">
           <value> 0.0 </value>
         </BCType>
-        <BCType id="all" label="m_013" var="Dirichlet">
+        <BCType label="m_013" var="Dirichlet">
           <value> 0.0 </value>
         </BCType>
-        <BCType id="all" label="m_111" var="Dirichlet">
+        <BCType label="m_111" var="Dirichlet">
           <value> 0.0 </value>
         </BCType>
-        <BCType id="all" label="m_112" var="Dirichlet">
+        <BCType label="m_112" var="Dirichlet">
           <value> 0.0 </value>
         </BCType>
-        <BCType id="all" label="m_113" var="Dirichlet">
+        <BCType label="m_113" var="Dirichlet">
           <value> 0.0 </value>
         </BCType>
       </Face>    

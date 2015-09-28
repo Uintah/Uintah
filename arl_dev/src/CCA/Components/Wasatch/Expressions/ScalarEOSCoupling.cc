@@ -45,7 +45,7 @@ resolve_tag( const FieldSelector field,
 
 template< typename FieldT >
 ScalarEOSCoupling<FieldT>::ScalarEOSCoupling( const FieldTagInfo& fieldTags,
-                                              const Expr::TagList srcTags,
+                                              const Expr::TagList& srcTags,
                                               const Expr::Tag& rhoStarTag,
                                               const Expr::Tag& dRhoDPhiTag,
                                               const bool isStrongForm )
@@ -54,6 +54,9 @@ ScalarEOSCoupling<FieldT>::ScalarEOSCoupling( const FieldTagInfo& fieldTags,
     diffTagX_( resolve_tag( DIFFUSIVE_FLUX_X, fieldTags ) ),
     diffTagY_( resolve_tag( DIFFUSIVE_FLUX_Y, fieldTags ) ),
     diffTagZ_( resolve_tag( DIFFUSIVE_FLUX_Z, fieldTags ) ),
+
+    dRhoDPhiTag_( dRhoDPhiTag ),
+    srcTags_( srcTags ),
 
     haveDiffusion_ ( diffTagX_ != Expr::Tag() || diffTagY_ != Expr::Tag() || diffTagZ_ != Expr::Tag() ),
 
@@ -75,13 +78,8 @@ ScalarEOSCoupling<FieldT>::ScalarEOSCoupling( const FieldTagInfo& fieldTags,
     haveYAreaFrac_( yAreaFracTag_ != Expr::Tag() ),
     haveZAreaFrac_( zAreaFracTag_ != Expr::Tag() ),
 
-    dRhoDPhiTag_   ( dRhoDPhiTag      ),
-
-    srcTags_( srcTags ),
-    isStrongForm_(isStrongForm)
+    isStrongForm_( isStrongForm )
 {
-//  srcTags_.push_back( resolve_tag( SOURCE_TERM, fieldTags ) );
-
   const bool is3d = doXDir_ && doYDir_ && doZDir_;
   const bool haveAreaFrac = haveXAreaFrac_ || haveYAreaFrac_ || haveZAreaFrac_;
   if( is3d && haveAreaFrac ){

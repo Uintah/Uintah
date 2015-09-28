@@ -32,7 +32,6 @@
 #include <CCA/Ports/Output.h>
 
 #include <Core/Parallel/ProcessorGroup.h>
-#include <Core/Parallel/Vampir.h>
 #include <Core/Grid/Variables/ParticleSubset.h>
 #include <Core/Grid/Variables/ComputeSet.h>
 #include <Core/Malloc/Allocator.h>
@@ -209,13 +208,12 @@ void MPIScheduler::initiateTask( DetailedTask* task,
                                  int           abort_point,
                                  int           iteration )
 {
-  MALLOC_TRACE_TAG_SCOPE("MPIScheduler::initiateTask");
-
   postMPIRecvs(task, only_old_recvs, abort_point, iteration);
+
   if (only_old_recvs) {
     return;
   }
-}  // end initiateTask()
+}
 
 //______________________________________________________________________
 //
@@ -235,6 +233,7 @@ MPIScheduler::initiateReduction( DetailedTask* task )
   double reduceend = Time::currentSeconds();
 
   emitNode(task, reducestart, reduceend - reducestart, 0);
+
   mpi_info_.totalreduce    += reduceend - reducestart;
   mpi_info_.totalreducempi += reduceend - reducestart;
 }
@@ -246,8 +245,6 @@ MPIScheduler::runTask( DetailedTask* task,
                        int           iteration,
                        int           thread_id /*=0*/ )
 {
-  MALLOC_TRACE_TAG_SCOPE("MPIScheduler::runTask");
-
   if (waitout.active()) {
     waittimesLock.lock();
     waittimes[task->getTask()->getName()] += CurrentWaitTime;
@@ -265,30 +262,27 @@ MPIScheduler::runTask( DetailedTask* task,
     plain_old_dws[i] = dws[i].get_rep();
   }
 
-  {
-    MALLOC_TRACE_TAG_SCOPE("MPIScheduler::runTask::doit(" + task->getName() + ")");
     task->doit(d_myworld, dws, plain_old_dws);
-  }
 
   if (trackingVarsPrintLocation_ & SchedulerCommon::PRINT_AFTER_EXEC) {
     printTrackedVars(task, SchedulerCommon::PRINT_AFTER_EXEC);
   }
 
-  double dtask = Time::currentSeconds() - taskstart;
+  double total_task_time = Time::currentSeconds() - taskstart;
 
   dlbLock.lock();
   {
     if (execout.active()) {
-      exectimes[task->getTask()->getName()] += dtask;
+      exectimes[task->getTask()->getName()] += total_task_time;
     }
 
     // if I do not have a sub scheduler
     if (!task->getTask()->getHasSubScheduler()) {
       //add my task time to the total time
-      mpi_info_.totaltask += dtask;
+      mpi_info_.totaltask += total_task_time;
       if (!d_sharedState->isCopyDataTimestep() && task->getTask()->getType() != Task::Output) {
         //add contribution for patchlist
-        getLoadBalancer()->addContribution(task, dtask);
+        getLoadBalancer()->addContribution(task, total_task_time);
       }
     }
   }
@@ -296,7 +290,8 @@ MPIScheduler::runTask( DetailedTask* task,
 
   postMPISends(task, iteration, thread_id);
 
-  task->done(dws);  // should this be timed with taskstart? - BJW
+  task->done(dws);  // should this be part of task execution time? - APH 09/16/15
+
   double teststart = Time::currentSeconds();
 
   sends_[thread_id].testsome(d_myworld);
@@ -305,12 +300,12 @@ MPIScheduler::runTask( DetailedTask* task,
 
   // Add subscheduler timings to the parent scheduler and reset subscheduler timings
   if (parentScheduler_) {
-    parentScheduler_->mpi_info_.totaltask += mpi_info_.totaltask;
+    parentScheduler_->mpi_info_.totaltask    += mpi_info_.totaltask;
     parentScheduler_->mpi_info_.totaltestmpi += mpi_info_.totaltestmpi;
-    parentScheduler_->mpi_info_.totalrecv += mpi_info_.totalrecv;
-    parentScheduler_->mpi_info_.totalsend += mpi_info_.totalsend;
+    parentScheduler_->mpi_info_.totalrecv    += mpi_info_.totalrecv;
+    parentScheduler_->mpi_info_.totalsend    += mpi_info_.totalsend;
     parentScheduler_->mpi_info_.totalwaitmpi += mpi_info_.totalwaitmpi;
-    parentScheduler_->mpi_info_.totalreduce += mpi_info_.totalreduce;
+    parentScheduler_->mpi_info_.totalreduce  += mpi_info_.totalreduce;
     mpi_info_.totalreduce    = 0;
     mpi_info_.totalsend      = 0;
     mpi_info_.totalrecv      = 0;
@@ -320,7 +315,7 @@ MPIScheduler::runTask( DetailedTask* task,
     mpi_info_.totalwaitmpi   = 0;
   }
 
-  emitNode(task, taskstart, dtask, 0);
+  emitNode(task, taskstart, total_task_time, 0);
 
 }  // end runTask()
 
@@ -345,7 +340,6 @@ MPIScheduler::postMPISends( DetailedTask* task,
                             int           iteration,
                             int           thread_id  /*=0*/ )
 {
-  MALLOC_TRACE_TAG_SCOPE("MPIScheduler::postMPISends");
   double sendstart = Time::currentSeconds();
   bool dbg_active = dbg.active();
 
@@ -535,8 +529,6 @@ void MPIScheduler::postMPIRecvs( DetailedTask* task,
                                  int           abort_point,
                                  int           iteration )
 {
-  MALLOC_TRACE_TAG_SCOPE("MPIScheduler::postMPIRecvs");
-
   double recvstart = Time::currentSeconds();
   bool dbg_active = dbg.active();
 
@@ -744,8 +736,6 @@ void MPIScheduler::postMPIRecvs( DetailedTask* task,
 //
 void MPIScheduler::processMPIRecvs(int how_much)
 {
-  MALLOC_TRACE_TAG_SCOPE("MPIScheduler::processMPIRecvs");
-
   // Should only have external receives in the MixedScheduler version which
   // shouldn't use this function.
   // ASSERT(outstandingExtRecvs.empty());
@@ -806,8 +796,6 @@ void
 MPIScheduler::execute( int tgnum     /* = 0 */,
                        int iteration /* = 0 */ )
 {
-  MALLOC_TRACE_TAG_SCOPE("MPIScheduler::execute");
-
   ASSERTRANGE(tgnum, 0, (int )graphs.size());
   TaskGraph* tg = graphs[tgnum];
   tg->setIteration(iteration);

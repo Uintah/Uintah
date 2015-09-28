@@ -47,7 +47,7 @@ namespace Wasatch{
 
   class ExprDeps;  // forward declaration.
   class GraphHelper;
-  class BCHelper;
+  class WasatchBCHelper;
   /**
    *  \ingroup WasatchCore
    *  \class  EquationBase
@@ -111,7 +111,7 @@ namespace Wasatch{
      *   the user has specified any velocity BCs at that boundary. See examples
      *   in the momentum transport equation.
      */
-    virtual void setup_boundary_conditions( BCHelper& bcHelper,
+    virtual void setup_boundary_conditions( WasatchBCHelper& bcHelper,
                                             GraphCategories& graphCat) = 0;
     
     /**
@@ -123,7 +123,7 @@ namespace Wasatch{
      *  via the <code>Expression::process_after_evaluate</code> method.
      */
     virtual void apply_initial_boundary_conditions( const GraphHelper& graphHelper,
-                                                    BCHelper& bcHelper ) = 0;
+                                                    WasatchBCHelper& bcHelper ) = 0;
 
     /**
      *  \brief Set up the boundary condition evaluators for this
@@ -134,7 +134,7 @@ namespace Wasatch{
      *  via the <code>Expression::process_after_evaluate</code> method.
      */
     virtual void apply_boundary_conditions( const GraphHelper& graphHelper,
-                                            BCHelper& bcHelper ) = 0;
+                                            WasatchBCHelper& bcHelper ) = 0;
 
     /**
      *  \brief Return the ExpressionID that identifies an expression that will

@@ -153,7 +153,7 @@ DynamicMPIScheduler::createSubScheduler()
   newsched->d_sharedState = d_sharedState;
   UintahParallelPort* lbp = getPort("load balancer");
   newsched->attachPort("load balancer", lbp);
-  newsched->d_sharedState=d_sharedState;
+  newsched->d_sharedState = d_sharedState;
   return newsched;
 }
 

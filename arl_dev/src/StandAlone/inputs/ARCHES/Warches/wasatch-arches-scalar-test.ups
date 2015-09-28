@@ -38,43 +38,43 @@
       <!-- BOUNDARY CONDITIONS -->
 
       <Face side="x-">
-           <BCType id = "all" label = "wasatch_scalar" var = "Dirichlet">
+           <BCType  label = "wasatch_scalar" var = "Dirichlet">
                 <value> 0 </value>
            </BCType>
       </Face>
 
         <Face circle = "x-" origin = "0 1.5 1.5" radius = ".5">
-           <BCType id = "all" label = "wasatch_scalar" var = "Dirichlet">
+           <BCType  label = "wasatch_scalar" var = "Dirichlet">
                 <value> 10 </value>
            </BCType>
          </Face>
 
 
       <Face side="x+">
-           <BCType id = "all" label = "wasatch_scalar" var = "Neumann">
+           <BCType  label = "wasatch_scalar" var = "Neumann">
                 <value> 0.0 </value>
            </BCType>
       </Face>
 
       <!-- BOUNDARY CONDITIONS -->
       <Face side="y-">
-           <BCType id = "all" label = "wasatch_scalar" var = "Dirichlet">
+           <BCType  label = "wasatch_scalar" var = "Dirichlet">
                 <value> 10.0 </value>
            </BCType>
       </Face>
       <Face side="y+">
-           <BCType id = "all" label = "wasatch_scalar" var = "Dirichlet">
+           <BCType  label = "wasatch_scalar" var = "Dirichlet">
                 <value> 10.0 </value>
            </BCType>
       </Face>
       <!-- BOUNDARY CONDITIONS -->
       <Face side="z-">
-           <BCType id = "all" label = "wasatch_scalar" var = "Dirichlet">
+           <BCType  label = "wasatch_scalar" var = "Dirichlet">
                 <value> 0.0 </value>
            </BCType>
       </Face>
       <Face side="z+">
-           <BCType id = "all" label = "wasatch_scalar" var = "Dirichlet">
+           <BCType  label = "wasatch_scalar" var = "Dirichlet">
                 <value> 0.0 </value>
            </BCType>
       </Face>

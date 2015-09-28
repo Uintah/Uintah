@@ -37,105 +37,106 @@
   </DataArchiver>
   <Grid>
     <BoundaryConditions>
+      <DefaultMaterial>0</DefaultMaterial>
       <Face side="x-" name="x- face">
-        <BCType id="0" label="x-wall" var="VelocityInlet">
+        <BCType label="x-wall" var="VelocityInlet">
           <value>[10.0, 0.0, 0.0]</value>
         </BCType>
-        <BCType id="0" label="mixture_fraction" var="Dirichlet">
+        <BCType label="mixture_fraction" var="Dirichlet">
           <value>0.0</value>
         </BCType>
-        <BCType id="0" label="testscalar" var="Dirichlet">
+        <BCType label="testscalar" var="Dirichlet">
           <value>0.0</value>
         </BCType>
-        <BCType id="0" var="Dirichlet" label="Velocity">
+        <BCType var="Dirichlet" label="Velocity">
           <value> [0.0,0.0,0.0] </value>
         </BCType>
-        <BCType id="0" var="Dirichlet" label="Temperature">
+        <BCType var="Dirichlet" label="Temperature">
           <value> 298.0 </value>
         </BCType>
       </Face>
       <Face side="x+" name="x+ out">
-        <BCType id="0" label="x+wall" var="OutletBC">
+        <BCType label="x+wall" var="OutletBC">
           <value>0.0</value>
         </BCType>
-        <BCType id="0" label="mixture_fraction" var="Neumann">
+        <BCType label="mixture_fraction" var="Neumann">
           <value>0.0</value>
         </BCType>
-        <BCType id="0" label="testscalar" var="Neumann">
+        <BCType label="testscalar" var="Neumann">
           <value>0.0</value>
         </BCType>
-        <BCType id="0" var="Dirichlet" label="Velocity">
+        <BCType var="Dirichlet" label="Velocity">
           <value> [0.0,0.0,0.0] </value>
         </BCType>
-        <BCType id="0" var="Dirichlet" label="Temperature">
+        <BCType var="Dirichlet" label="Temperature">
           <value> 298.0 </value>
         </BCType>
       </Face>
       <Face side="y-" name="y- wall">
-        <BCType id="0" label="y-wall" var="WallBC">
+        <BCType label="y-wall" var="WallBC">
           <value>0.0</value>
         </BCType>
-        <BCType id="0" label="mixture_fraction" var="Dirichlet">
+        <BCType label="mixture_fraction" var="Dirichlet">
           <value>0.0</value>
         </BCType>
-        <BCType id="0" label="testscalar" var="Dirichlet">
+        <BCType label="testscalar" var="Dirichlet">
           <value>0.0</value>
         </BCType>
-        <BCType id="0" var="Dirichlet" label="Velocity">
+        <BCType var="Dirichlet" label="Velocity">
           <value> [0.0,0.0,0.0] </value>
         </BCType>
-        <BCType id="0" var="Dirichlet" label="Temperature">
+        <BCType var="Dirichlet" label="Temperature">
           <value> 298.0 </value>
         </BCType>
       </Face>
       <Face side="y+" name="y+ wall">
-        <BCType id="0" label="y+ wall" var="WallBC">
+        <BCType label="y+ wall" var="WallBC">
           <value>0.0</value>
         </BCType>
-        <BCType id="0" label="mixture_fraction" var="Dirichlet">
+        <BCType label="mixture_fraction" var="Dirichlet">
           <value>0.0</value>
         </BCType>
-        <BCType id="0" label="testscalar" var="Dirichlet">
+        <BCType label="testscalar" var="Dirichlet">
           <value>0.0</value>
         </BCType>
-        <BCType id="0" var="Dirichlet" label="Velocity">
+        <BCType var="Dirichlet" label="Velocity">
           <value> [0.0,0.0,0.0] </value>
         </BCType>
-        <BCType id="0" var="Dirichlet" label="Temperature">
+        <BCType var="Dirichlet" label="Temperature">
           <value> 298.0 </value>
         </BCType>
       </Face>
       <Face side="z-" name="z- wall">
-        <BCType id="0" label="z-wall" var="WallBC">
+        <BCType label="z-wall" var="WallBC">
           <value>0.0</value>
         </BCType>
-        <BCType id="0" label="mixture_fraction" var="Dirichlet">
+        <BCType label="mixture_fraction" var="Dirichlet">
           <value>0.0</value>
         </BCType>
-        <BCType id="0" label="testscalar" var="Dirichlet">
+        <BCType label="testscalar" var="Dirichlet">
           <value>0.0</value>
         </BCType>
-        <BCType id="0" var="Dirichlet" label="Velocity">
+        <BCType var="Dirichlet" label="Velocity">
           <value> [0.0,0.0,0.0] </value>
         </BCType>
-        <BCType id="0" var="Dirichlet" label="Temperature">
+        <BCType var="Dirichlet" label="Temperature">
           <value> 298.0 </value>
         </BCType>
       </Face>
       <Face side="z+" name="z+ wall">
-        <BCType id="0" label="z+wall" var="WallBC">
+        <BCType label="z+wall" var="WallBC">
           <value>0.0</value>
         </BCType>
-        <BCType id="0" label="mixture_fraction" var="Dirichlet">
+        <BCType label="mixture_fraction" var="Dirichlet">
           <value>0.0</value>
         </BCType>
-        <BCType id="0" label="testscalar" var="Dirichlet">
+        <BCType label="testscalar" var="Dirichlet">
           <value>0.0</value>
         </BCType>
-        <BCType id="0" var="Dirichlet" label="Velocity">
+        <BCType var="Dirichlet" label="Velocity">
           <value> [0.0,0.0,0.0] </value>
         </BCType>
-        <BCType id="0" var="Dirichlet" label="Temperature">
+        <BCType var="Dirichlet" label="Temperature">
           <value> 298.0 </value>
         </BCType>
       </Face>

@@ -1,6 +1,7 @@
 #include <CCA/Components/Arches/Utility/UtilityFactory.h>
 #include <CCA/Components/Arches/Utility/GridInfo.h>
 #include <CCA/Components/Arches/Utility/TaskAlgebra.h>
+#include <CCA/Components/Arches/Utility/SurfaceNormals.h>
 #include <CCA/Components/Arches/Task/TaskInterface.h>
 
 using namespace Uintah;
@@ -24,7 +25,9 @@ UtilityFactory::register_all_tasks( ProblemSpecP& db )
   TaskInterface::TaskBuilder* tsk = scinew GridInfo::Builder( tname, 0 );
   register_task( tname, tsk );
 
-  _active_tasks.push_back( tname );
+  tname = "surface_normals";
+  tsk = scinew SurfaceNormals::Builder( tname, 0 );
+  register_task( tname, tsk );
 
   ProblemSpecP db_all_util = db->findBlock("Utilities");
 
@@ -44,8 +47,6 @@ UtilityFactory::register_all_tasks( ProblemSpecP& db )
         //otherwise would need to determine or parse for the variable types
         TaskInterface::TaskBuilder* tsk = scinew TaskAlgebra<SVol,SVol,SVol>::Builder( name, 0 );
         register_task(name, tsk);
-
-        _active_tasks.push_back( name );
 
       } else {
 
@@ -70,6 +71,9 @@ UtilityFactory::build_all_tasks( ProblemSpecP& db )
   tsk->problemSetup(db);
   tsk->create_local_labels();
 
+  tsk = retrieve_task("surface_normals");
+  tsk->problemSetup(db);
+  tsk->create_local_labels(); 
 
   //<Utilities>
   ProblemSpecP db_all_util = db->findBlock("Utilities");

@@ -31,6 +31,7 @@
 //-- Wasatch includes --//
 #include <CCA/Components/Wasatch/Wasatch.h>
 #include <CCA/Components/Wasatch/BCHelper.h>
+#include <CCA/Components/Wasatch/WasatchBCHelper.h>
 #include <CCA/Components/Wasatch/TagNames.h>
 #include <CCA/Components/Wasatch/FieldTypes.h>
 #include <CCA/Components/Wasatch/ParseTools.h>
@@ -834,7 +835,7 @@ namespace Wasatch{
 
   template< typename FieldT >
   void MomentumTransportEquation<FieldT>::
-  setup_boundary_conditions( BCHelper& bcHelper, GraphCategories& graphCat )
+  setup_boundary_conditions( WasatchBCHelper& bcHelper, GraphCategories& graphCat )
   {
     Expr::ExpressionFactory& advSlnFactory = *(graphCat[ADVANCE_SOLUTION]->exprFactory);
     Expr::ExpressionFactory& initFactory = *(graphCat[INITIALIZATION]->exprFactory);
@@ -1046,7 +1047,7 @@ namespace Wasatch{
   template< typename FieldT >
   void MomentumTransportEquation<FieldT>::
   apply_initial_boundary_conditions( const GraphHelper& graphHelper,
-                                     BCHelper& bcHelper )
+                                     WasatchBCHelper& bcHelper )
   {
     const Category taskCat = INITIALIZATION;
   
@@ -1056,12 +1057,9 @@ namespace Wasatch{
     // tsaad: boundary conditions will not be applied on the initial condition of momentum. This leads
     // to tremendous complications in our graphs. Instead, specify velocity initial conditions
     // and velocity boundary conditions, and momentum bcs will appropriately propagate.
-    Expr::ExpressionFactory& icfactory = *gc_[ADVANCE_SOLUTION]->exprFactory;
-    //if ( !icfactory.have_entry(thisVelTag_) ) {
     bcHelper.apply_boundary_condition<FieldT>(initial_condition_tag(), taskCat);
-    //}
     
-    if (!isConstDensity_) {
+    if( !isConstDensity_ ){
       const TagNames& tagNames = TagNames::self();
       
       // set bcs for density
@@ -1079,7 +1077,7 @@ namespace Wasatch{
   template< typename FieldT >
   void MomentumTransportEquation<FieldT>::
   apply_boundary_conditions( const GraphHelper& graphHelper,
-                             BCHelper& bcHelper )
+                             WasatchBCHelper& bcHelper )
   {
     const Category taskCat = ADVANCE_SOLUTION;
     

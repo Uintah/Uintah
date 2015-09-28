@@ -77,6 +77,8 @@ namespace Uintah {
      /// Add the old boundary condition data -- no longer used.
      void addBC(BoundCondBase* bc);
 
+     void sudoAddBC(BoundCondBase* bc);
+
      /// Add the boundary condition geometry
      void addBCData(BCGeomBase* bc);
 

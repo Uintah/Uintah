@@ -82,6 +82,11 @@ void CircleBCData::addBC(BoundCondBase* bc)
   d_bc.setBCValues(bc);
 }
 
+void CircleBCData::sudoAddBC(BoundCondBase* bc) 
+{
+  d_bc.setBCValues(bc);
+}
+
 void CircleBCData::getBCData(BCData& bc) const 
 {
   bc = d_bc;

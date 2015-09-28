@@ -48,7 +48,7 @@ ScalarDiffusionModel* ScalarDiffusionModelFactory::create(ProblemSpecP& ps,
 {
   ProblemSpecP child = ps->findBlock("diffusion_model");
   if(!child)
-    throw ProblemSetupException("Cannot find scalar_diffuion_model tag", __FILE__, __LINE__);
+    throw ProblemSetupException("Cannot find scalar_diffusion_model tag", __FILE__, __LINE__);
   string diffusion_type;
   if(!child->getAttribute("type", diffusion_type))
     throw ProblemSetupException("No type for scalar_diffusion_model", __FILE__, __LINE__);

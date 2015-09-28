@@ -32,8 +32,6 @@ WallHFVariable::problemSetup( ProblemSpecP& db ){
 
   _area = _task_name + "_area";
 
-  db->require("emissivity",_eps);
-
 }
 
 void
@@ -259,7 +257,7 @@ WallHFVariable::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info,
 
         (*total)[c] = Q_in/(darea+SMALLNUM);
         (*area)[c] = darea;
-        (*power)[c] = _eps * ( Q_in - Q_emit );
+        (*power)[c] = Q_in - Q_emit;
 
       }
     }
@@ -323,7 +321,7 @@ WallHFVariable::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info,
 
         (*total)[c] = Q_in / (darea+SMALLNUM);
         (*area)[c]  = darea;
-        (*power)[c] = _eps * ( Q_in - Q_emit );
+        (*power)[c] = Q_in - Q_emit;
 
       }
     }

@@ -49,6 +49,7 @@
 
 #include <CCA/Components/Wasatch/Expressions/ExprAlgebra.h>
 #include <CCA/Components/Wasatch/BCHelper.h>
+#include <CCA/Components/Wasatch/WasatchBCHelper.h>
 
 //-- ExprLib includes --//
 #include <expression/ExprLib.h>
@@ -439,7 +440,7 @@ namespace Wasatch {
   template< typename FieldT >
   void MomentTransportEquation<FieldT>::
   apply_initial_boundary_conditions( const GraphHelper& graphHelper,
-                                     BCHelper& bcHelper )
+                                     WasatchBCHelper& bcHelper )
   {
     const Category taskCat = INITIALIZATION;
     Expr::ExpressionFactory& factory = *graphHelper.exprFactory;
@@ -476,7 +477,7 @@ namespace Wasatch {
   template< typename FieldT >
   void MomentTransportEquation<FieldT>::
   apply_boundary_conditions( const GraphHelper& graphHelper,
-                             BCHelper& bcHelper )
+                             WasatchBCHelper& bcHelper )
   {
     const Category taskCat = ADVANCE_SOLUTION;
     bcHelper.apply_boundary_condition<FieldT>(this->solution_variable_tag(), taskCat);

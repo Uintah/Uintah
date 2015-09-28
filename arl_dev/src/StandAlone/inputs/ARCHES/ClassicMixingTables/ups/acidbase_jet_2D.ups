@@ -54,101 +54,102 @@
       </Box>
     </Level>
     <BoundaryConditions>
+      <DefaultMaterial>0</DefaultMaterial>
       <Face side="x-">
-        <BCType id="all" label="BottomWall" var="WallBC">
+        <BCType label="BottomWall" var="WallBC">
           <value>0.0</value>
         </BCType>
-        <BCType id="all" label="mixture_fraction" var="Neumann">
+        <BCType label="mixture_fraction" var="Neumann">
           <value>0.0</value>
         </BCType>
-        <BCType id="all" label="rxn_extent" var="Neumann">
+        <BCType label="rxn_extent" var="Neumann">
           <value>0.0</value>
         </BCType>
-        <BCType id="all" label="residence_time" var="Neumann">
+        <BCType label="residence_time" var="Neumann">
           <value>0.0</value>
         </BCType>
       </Face>
       <Face circle="x-" origin="0 1.5 1.5" radius=".5">
-        <BCType id="all" label="Inlet" var="MassFlowInlet">
+        <BCType label="Inlet" var="MassFlowInlet">
           <value>40000</value>
         </BCType>
-        <BCType id="all" label="mixture_fraction" var="Dirichlet">
+        <BCType label="mixture_fraction" var="Dirichlet">
           <value>1.0</value>
         </BCType>
-        <BCType id="all" label="rxn_extent" var="Dirichlet">
+        <BCType label="rxn_extent" var="Dirichlet">
           <value>0.0</value>
         </BCType>
-        <BCType id="all" label="residence_time" var="Dirichlet">
+        <BCType label="residence_time" var="Dirichlet">
           <value>0.0</value>
         </BCType>
       </Face>
       <Face side="x+" name="x+ wall">
-        <BCType id="all" label="outlet" var="OutletBC">
+        <BCType label="outlet" var="OutletBC">
           <value>0.0</value>
         </BCType>
-        <BCType id="all" label="mixture_fraction" var="Neumann">
+        <BCType label="mixture_fraction" var="Neumann">
           <value>0.0</value>
         </BCType>
-        <BCType id="all" label="rxn_extent" var="Neumann">
+        <BCType label="rxn_extent" var="Neumann">
           <value>0.0</value>
         </BCType>
-        <BCType id="all" label="residence_time" var="Dirichlet">
+        <BCType label="residence_time" var="Dirichlet">
           <value>0.0</value>
         </BCType>
       </Face>
       <Face side="y-" name="y- wall">
-        <BCType id="all" label="Press y-" var="PressureBC">
+        <BCType label="Press y-" var="PressureBC">
           <value>0.0</value>
         </BCType>
-        <BCType id="all" label="mixture_fraction" var="Neumann">
+        <BCType label="mixture_fraction" var="Neumann">
           <value>0.0</value>
         </BCType>
-        <BCType id="all" label="rxn_extent" var="Neumann">
+        <BCType label="rxn_extent" var="Neumann">
           <value>0.0</value>
         </BCType>
-        <BCType id="all" label="residence_time" var="Dirichlet">
+        <BCType label="residence_time" var="Dirichlet">
           <value>0.0</value>
         </BCType>
       </Face>
       <Face side="y+" name="y+ wall">
-        <BCType id="all" label="Press y+" var="PressureBC">
+        <BCType label="Press y+" var="PressureBC">
           <value>0.0</value>
         </BCType>
-        <BCType id="all" label="mixture_fraction" var="Neumann">
+        <BCType label="mixture_fraction" var="Neumann">
           <value>0.0</value>
         </BCType>
-        <BCType id="all" label="rxn_extent" var="Neumann">
+        <BCType label="rxn_extent" var="Neumann">
           <value>0.0</value>
         </BCType>
-        <BCType id="all" label="residence_time" var="Dirichlet">
+        <BCType label="residence_time" var="Dirichlet">
           <value>0.0</value>
         </BCType>
       </Face>
       <Face side="z-" name="z- wall">
-        <BCType id="all" label="Press z-" var="PressureBC">
+        <BCType label="Press z-" var="PressureBC">
           <value>0.0</value>
         </BCType>
-        <BCType id="all" label="mixture_fraction" var="Neumann">
+        <BCType label="mixture_fraction" var="Neumann">
           <value>0.0</value>
         </BCType>
-        <BCType id="all" label="rxn_extent" var="Neumann">
+        <BCType label="rxn_extent" var="Neumann">
           <value>0.0</value>
         </BCType>
-        <BCType id="all" label="residence_time" var="Dirichlet">
+        <BCType label="residence_time" var="Dirichlet">
           <value>0.0</value>
         </BCType>
       </Face>
       <Face side="z+" name="z+ wall">
-        <BCType id="all" label="Press z+" var="PressureBC">
+        <BCType label="Press z+" var="PressureBC">
           <value>0.0</value>
         </BCType>
-        <BCType id="all" label="mixture_fraction" var="Neumann">
+        <BCType label="mixture_fraction" var="Neumann">
           <value>0.0</value>
         </BCType>
-        <BCType id="all" label="rxn_extent" var="Neumann">
+        <BCType label="rxn_extent" var="Neumann">
           <value>0.0</value>
         </BCType>
-        <BCType id="all" label="residence_time" var="Dirichlet">
+        <BCType label="residence_time" var="Dirichlet">
           <value>0.0</value>
         </BCType>
       </Face>

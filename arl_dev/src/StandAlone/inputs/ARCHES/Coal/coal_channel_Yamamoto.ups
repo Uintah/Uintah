@@ -104,618 +104,619 @@
   <Grid>
 
     <BoundaryConditions>
+      <DefaultMaterial>0</DefaultMaterial>
       <Face side="x-" name="velinlet">
-        <BCType id="all" label="secondaryflow" var="VelocityInlet">
+        <BCType label="secondaryflow" var="VelocityInlet">
           <value>[10.0, 0, 0]</value>
         </BCType>
-        <!--BCType id="all" label="enthalpy" var="Dirichlet">
+        <!--BCType label="enthalpy" var="Dirichlet">
           <value>-4.930e6</value>
         </BCType-->
-        <BCType id="all" label="enthalpy" var="Tabulated">
+        <BCType label="enthalpy" var="Tabulated">
           <value>adiabaticenthalpy</value>
         </BCType>
-        <BCType id="all" label="heat_loss" var="Dirichlet">
+        <BCType label="heat_loss" var="Dirichlet">
           <value>0.0</value>
         </BCType>
-        <BCType id="all" label="mixture_fraction_2" var="Dirichlet">
+        <BCType label="mixture_fraction_2" var="Dirichlet">
           <value>0.0</value>
         </BCType>
-        <BCType id="all" label="test_scalar" var="Dirichlet">
+        <BCType label="test_scalar" var="Dirichlet">
           <value>0.0</value>
         </BCType>
-        <BCType id="all" label="coal_gas_mix_frac" var="Dirichlet">
+        <BCType label="coal_gas_mix_frac" var="Dirichlet">
           <value>0.0</value>
         </BCType>
-        <BCType id="all" label="eta" var="Dirichlet">
+        <BCType label="eta" var="Dirichlet">
           <value>0.0</value>
         </BCType>
-        <BCType id = "all" label = "length_qn0" var = "Dirichlet">
+        <BCType  label = "length_qn0" var = "Dirichlet">
           <value>23.4139</value>
         </BCType>
-        <BCType id = "all" label = "w_qn0" var = "Dirichlet">
+        <BCType  label = "w_qn0" var = "Dirichlet">
           <value>5.8535</value>
         </BCType>
-        <BCType id="all" label="ux_qn0" var="Dirichlet">
+        <BCType label="ux_qn0" var="Dirichlet">
           <value>58.535</value>
         </BCType>
-        <BCType id="all" label="uy_qn0" var="Dirichlet">
+        <BCType label="uy_qn0" var="Dirichlet">
           <value>0.0</value>
         </BCType>
-        <BCType id="all" label="uz_qn0" var="Dirichlet">
+        <BCType label="uz_qn0" var="Dirichlet">
           <value>0.0</value>
         </BCType>
-        <BCType id="all" label="RCmass_qn0" var="Dirichlet">
+        <BCType label="RCmass_qn0" var="Dirichlet">
           <value>2.24</value>
         </BCType>
-        <BCType id="all" label="Charmass_qn0" var="Dirichlet">
+        <BCType label="Charmass_qn0" var="Dirichlet">
           <value>0.0</value>
         </BCType>
-        <BCType id="all" label="pE_qn0" var="Dirichlet">
+        <BCType label="pE_qn0" var="Dirichlet">
           <value>-7.605108111316770</value>
         </BCType>
-        <BCType id = "all" label = "length_qn1" var = "Dirichlet">
+        <BCType  label = "length_qn1" var = "Dirichlet">
           <value>49.3847</value>
         </BCType>
-        <BCType id = "all" label = "w_qn1" var = "Dirichlet">
+        <BCType  label = "w_qn1" var = "Dirichlet">
           <value>7.83884</value>
         </BCType>
-        <BCType id="all" label="ux_qn1" var="Dirichlet">
+        <BCType label="ux_qn1" var="Dirichlet">
           <value>78.3884</value>
         </BCType>
-        <BCType id="all" label="uy_qn1" var="Dirichlet">
+        <BCType label="uy_qn1" var="Dirichlet">
           <value>0.0</value>
         </BCType>
-        <BCType id="all" label="uz_qn1" var="Dirichlet">
+        <BCType label="uz_qn1" var="Dirichlet">
           <value>0.0</value>
         </BCType>
-        <BCType id="all" label="RCmass_qn1" var="Dirichlet">
+        <BCType label="RCmass_qn1" var="Dirichlet">
           <value>11.72</value>
         </BCType>
-        <BCType id="all" label="Charmass_qn1" var="Dirichlet">
+        <BCType label="Charmass_qn1" var="Dirichlet">
           <value>0.0</value>
         </BCType>
-        <BCType id="all" label="pE_qn1" var="Dirichlet">
+        <BCType label="pE_qn1" var="Dirichlet">
           <value>-39.790882273706707</value>
         </BCType>
-        <BCType id = "all" label = "length_qn2" var = "Dirichlet">
+        <BCType  label = "length_qn2" var = "Dirichlet">
           <value>10.10143</value>
         </BCType>
-        <BCType id = "all" label = "w_qn2" var = "Dirichlet">
+        <BCType  label = "w_qn2" var = "Dirichlet">
           <value>1.01014</value>
         </BCType>
-        <BCType id="all" label="ux_qn2" var="Dirichlet">
+        <BCType label="ux_qn2" var="Dirichlet">
           <value>10.1014</value>
         </BCType>
-        <BCType id="all" label="uy_qn2" var="Dirichlet">
+        <BCType label="uy_qn2" var="Dirichlet">
           <value>0.0</value>
         </BCType>
-        <BCType id="all" label="uz_qn2" var="Dirichlet">
+        <BCType label="uz_qn2" var="Dirichlet">
           <value>0.0</value>
         </BCType>
-        <BCType id="all" label="RCmass_qn2" var="Dirichlet">
+        <BCType label="RCmass_qn2" var="Dirichlet">
           <value>6.04</value>
         </BCType>
-        <BCType id="all" label="Charmass_qn2" var="Dirichlet">
+        <BCType label="Charmass_qn2" var="Dirichlet">
           <value>0.0</value>
         </BCType>
-        <BCType id="all" label="pE_qn2" var="Dirichlet">
+        <BCType label="pE_qn2" var="Dirichlet">
           <value>-20.506554506979398</value>
         </BCType>
-        <BCType id="all" label="radiation_temperature" var="Tabulated">
+        <BCType label="radiation_temperature" var="Tabulated">
           <value>temperature</value>
         </BCType>
-        <BCType id="0"  label= "abskg"              var="ForcedDirichlet">
+        <BCType  label= "abskg"              var="ForcedDirichlet">
                             <value> 1.0 </value>
         </BCType>
       </Face>
 
       <Face side="x+" name="x+ face">
-        <BCType id="all" label="x+outlet" var="OutletBC">
+        <BCType label="x+outlet" var="OutletBC">
           <value>0.0</value>
         </BCType>
-        <BCType id="all" label="enthalpy" var="Neumann">
+        <BCType label="enthalpy" var="Neumann">
           <value>0.0</value>
         </BCType>
-        <BCType id="all" label="heat_loss" var="Neumann">
+        <BCType label="heat_loss" var="Neumann">
           <value>0.0</value>
         </BCType>
-        <BCType id="all" label="mixture_fraction_2" var="Neumann">
+        <BCType label="mixture_fraction_2" var="Neumann">
           <value>0.0</value>
         </BCType>
-        <BCType id="all" label="test_scalar" var="Neumann">
+        <BCType label="test_scalar" var="Neumann">
           <value>0.0</value>
         </BCType>
-        <BCType id="all" label="coal_gas_mix_frac" var="Neumann">
+        <BCType label="coal_gas_mix_frac" var="Neumann">
           <value>0.0</value>
         </BCType>
-        <BCType id="all" label="eta" var="Neumann">
+        <BCType label="eta" var="Neumann">
           <value>0.0</value>
         </BCType>
-        <BCType id="all" label="length_qn0" var="Neumann">
+        <BCType label="length_qn0" var="Neumann">
           <value>0.0</value>
         </BCType>
-        <BCType id="all" label="w_qn0" var="Neumann">
+        <BCType label="w_qn0" var="Neumann">
           <value>0.0</value>
         </BCType>
-        <BCType id="all" label="ux_qn0" var="Neumann">
+        <BCType label="ux_qn0" var="Neumann">
           <value>0.0</value>
         </BCType>
-        <BCType id="all" label="uy_qn0" var="Neumann">
+        <BCType label="uy_qn0" var="Neumann">
           <value>0.0</value>
         </BCType>
-        <BCType id="all" label="uz_qn0" var="Neumann">
+        <BCType label="uz_qn0" var="Neumann">
           <value>0.0</value>
         </BCType>
-        <BCType id="all" label="RCmass_qn0" var="Neumann">
+        <BCType label="RCmass_qn0" var="Neumann">
           <value>0.0</value>
         </BCType>
-        <BCType id="all" label="Charmass_qn0" var="Neumann">
+        <BCType label="Charmass_qn0" var="Neumann">
           <value>0.0</value>
         </BCType>
-        <BCType id="all" label="pE_qn0" var="Neumann">
+        <BCType label="pE_qn0" var="Neumann">
           <value>0.0</value>
         </BCType>
-        <BCType id="all" label="length_qn1" var="Neumann">
+        <BCType label="length_qn1" var="Neumann">
           <value>0.0</value>
         </BCType>
-        <BCType id="all" label="w_qn1" var="Neumann">
+        <BCType label="w_qn1" var="Neumann">
           <value>0.0</value>
         </BCType>
-        <BCType id="all" label="ux_qn1" var="Neumann">
+        <BCType label="ux_qn1" var="Neumann">
           <value>0.0</value>
         </BCType>
-        <BCType id="all" label="uy_qn1" var="Neumann">
+        <BCType label="uy_qn1" var="Neumann">
           <value>0.0</value>
         </BCType>
-        <BCType id="all" label="uz_qn1" var="Neumann">
+        <BCType label="uz_qn1" var="Neumann">
           <value>0.0</value>
         </BCType>
-        <BCType id="all" label="RCmass_qn1" var="Neumann">
+        <BCType label="RCmass_qn1" var="Neumann">
           <value>0.0</value>
         </BCType>
-        <BCType id="all" label="Charmass_qn1" var="Neumann">
+        <BCType label="Charmass_qn1" var="Neumann">
           <value>0.0</value>
         </BCType>
-        <BCType id="all" label="pE_qn1" var="Neumann">
+        <BCType label="pE_qn1" var="Neumann">
           <value>0.0</value>
         </BCType>
-        <BCType id="all" label="length_qn2" var="Neumann">
+        <BCType label="length_qn2" var="Neumann">
           <value>0.0</value>
         </BCType>
-        <BCType id="all" label="w_qn2" var="Neumann">
+        <BCType label="w_qn2" var="Neumann">
           <value>0.0</value>
         </BCType>
-        <BCType id="all" label="ux_qn2" var="Neumann">
+        <BCType label="ux_qn2" var="Neumann">
           <value>0.0</value>
         </BCType>
-        <BCType id="all" label="uy_qn2" var="Neumann">
+        <BCType label="uy_qn2" var="Neumann">
           <value>0.0</value>
         </BCType>
-        <BCType id="all" label="uz_qn2" var="Neumann">
+        <BCType label="uz_qn2" var="Neumann">
           <value>0.0</value>
         </BCType>
-        <BCType id="all" label="RCmass_qn2" var="Neumann">
+        <BCType label="RCmass_qn2" var="Neumann">
           <value>0.0</value>
         </BCType>
-        <BCType id="all" label="Charmass_qn2" var="Neumann">
+        <BCType label="Charmass_qn2" var="Neumann">
           <value>0.0</value>
         </BCType>
-        <BCType id="all" label="pE_qn2" var="Neumann">
+        <BCType label="pE_qn2" var="Neumann">
           <value>0.0</value>
         </BCType>
-        <BCType id="all" label="radiation_temperature" var="Dirichlet">
+        <BCType label="radiation_temperature" var="Dirichlet">
           <value>298.0</value>
         </BCType>
-        <BCType id="0"  label= "abskg"              var="ForcedDirichlet">
+        <BCType  label= "abskg"              var="ForcedDirichlet">
                             <value> 1.0 </value>
         </BCType>
       </Face>
 
       <Face side="y-" name="y- wall">
-        <BCType id="all" label="y-wall" var="WallBC">
+        <BCType label="y-wall" var="WallBC">
           <value>0.0</value>
         </BCType>
-        <BCType id="all" label="enthalpy" var="Neumann">
+        <BCType label="enthalpy" var="Neumann">
           <value>0.0</value>
         </BCType>
-        <BCType id="all" label="heat_loss" var="Neumann">
+        <BCType label="heat_loss" var="Neumann">
           <value>0.0</value>
         </BCType>
-        <BCType id="all" label="mixture_fraction_2" var="Neumann">
+        <BCType label="mixture_fraction_2" var="Neumann">
           <value>0.0</value>
         </BCType>
-        <BCType id="all" label="coal_gas_mix_frac" var="Neumann">
+        <BCType label="coal_gas_mix_frac" var="Neumann">
           <value>0.0</value>
         </BCType>
-        <BCType id="all" label="test_scalar" var="Neumann">
+        <BCType label="test_scalar" var="Neumann">
           <value>0.0</value>
         </BCType>
-        <BCType id="all" label="eta" var="Neumann">
+        <BCType label="eta" var="Neumann">
           <value>0.0</value>
         </BCType>
-        <BCType id="all" label="length_qn0" var="Neumann">
+        <BCType label="length_qn0" var="Neumann">
           <value>0.0</value>
         </BCType>
-        <BCType id="all" label="w_qn0" var="Neumann">
+        <BCType label="w_qn0" var="Neumann">
           <value>0.0</value>
         </BCType>
-        <BCType id="all" label="ux_qn0" var="Dirichlet">
+        <BCType label="ux_qn0" var="Dirichlet">
           <value>0.0</value>
         </BCType>
-        <BCType id="all" label="uy_qn0" var="Dirichlet">
+        <BCType label="uy_qn0" var="Dirichlet">
           <value>0.0</value>
         </BCType>
-        <BCType id="all" label="uz_qn0" var="Dirichlet">
+        <BCType label="uz_qn0" var="Dirichlet">
           <value>0.0</value>
         </BCType>
-        <BCType id="all" label="RCmass_qn0" var="Neumann">
+        <BCType label="RCmass_qn0" var="Neumann">
           <value>0.0</value>
         </BCType>
-        <BCType id="all" label="Charmass_qn0" var="Neumann">
+        <BCType label="Charmass_qn0" var="Neumann">
           <value>0.0</value>
         </BCType>
-        <BCType id="all" label="pE_qn0" var="Neumann">
+        <BCType label="pE_qn0" var="Neumann">
           <value>0.0</value>
         </BCType>
-        <BCType id="all" label="length_qn1" var="Neumann">
+        <BCType label="length_qn1" var="Neumann">
           <value>0.0</value>
         </BCType>
-        <BCType id="all" label="w_qn1" var="Neumann">
+        <BCType label="w_qn1" var="Neumann">
           <value>0.0</value>
         </BCType>
-        <BCType id="all" label="ux_qn1" var="Dirichlet">
+        <BCType label="ux_qn1" var="Dirichlet">
           <value>0.0</value>
         </BCType>
-        <BCType id="all" label="uy_qn1" var="Dirichlet">
+        <BCType label="uy_qn1" var="Dirichlet">
           <value>0.0</value>
         </BCType>
-        <BCType id="all" label="uz_qn1" var="Dirichlet">
+        <BCType label="uz_qn1" var="Dirichlet">
           <value>0.0</value>
         </BCType>
-        <BCType id="all" label="RCmass_qn1" var="Neumann">
+        <BCType label="RCmass_qn1" var="Neumann">
           <value>0.0</value>
         </BCType>
-        <BCType id="all" label="Charmass_qn1" var="Neumann">
+        <BCType label="Charmass_qn1" var="Neumann">
           <value>0.0</value>
         </BCType>
-        <BCType id="all" label="pE_qn1" var="Neumann">
+        <BCType label="pE_qn1" var="Neumann">
           <value>0.0</value>
         </BCType>
-        <BCType id="all" label="length_qn2" var="Neumann">
+        <BCType label="length_qn2" var="Neumann">
           <value>0.0</value>
         </BCType>
-        <BCType id="all" label="w_qn2" var="Neumann">
+        <BCType label="w_qn2" var="Neumann">
           <value>0.0</value>
         </BCType>
-        <BCType id="all" label="ux_qn2" var="Dirichlet">
+        <BCType label="ux_qn2" var="Dirichlet">
           <value>0.0</value>
         </BCType>
-        <BCType id="all" label="uy_qn2" var="Dirichlet">
+        <BCType label="uy_qn2" var="Dirichlet">
           <value>0.0</value>
         </BCType>
-        <BCType id="all" label="uz_qn2" var="Dirichlet">
+        <BCType label="uz_qn2" var="Dirichlet">
           <value>0.0</value>
         </BCType>
-        <BCType id="all" label="RCmass_qn2" var="Neumann">
+        <BCType label="RCmass_qn2" var="Neumann">
           <value>0.0</value>
         </BCType>
-        <BCType id="all" label="Charmass_qn2" var="Neumann">
+        <BCType label="Charmass_qn2" var="Neumann">
           <value>0.0</value>
         </BCType>
-        <BCType id="all" label="pE_qn2" var="Neumann">
+        <BCType label="pE_qn2" var="Neumann">
           <value>0.0</value>
         </BCType>
-        <BCType id="all" label="radiation_temperature" var="Dirichlet">
+        <BCType label="radiation_temperature" var="Dirichlet">
           <value>1200.0</value>
         </BCType>
-        <BCType id="0"  label= "abskg"              var="ForcedDirichlet">
+        <BCType  label= "abskg"              var="ForcedDirichlet">
                             <value> 1.0 </value>
         </BCType>
       </Face>
 
 
       <Face side="y+" name="y+ wall">
-        <BCType id="all" label="y+ wall" var="WallBC">
+        <BCType label="y+ wall" var="WallBC">
           <value>0.0</value>
         </BCType>
-        <BCType id="all" label="radiation_temperature" var="Dirichlet">
+        <BCType label="radiation_temperature" var="Dirichlet">
           <value>1200</value>
         </BCType>
-        <BCType id="0"  label= "abskg"              var="ForcedDirichlet">
+        <BCType  label= "abskg"              var="ForcedDirichlet">
                             <value> 1.0 </value>
         </BCType>
-        <BCType id="all" label="enthalpy" var="Neumann">
+        <BCType label="enthalpy" var="Neumann">
           <value>0.0</value>
         </BCType>
-        <BCType id="all" label="heat_loss" var="Neumann">
+        <BCType label="heat_loss" var="Neumann">
           <value>0.0</value>
         </BCType>
-        <BCType id="all" label="mixture_fraction_2" var="Neumann">
+        <BCType label="mixture_fraction_2" var="Neumann">
           <value>0.0</value>
         </BCType>
-        <BCType id="all" label="test_scalar" var="Neumann">
+        <BCType label="test_scalar" var="Neumann">
           <value>0.0</value>
         </BCType>
-        <BCType id="all" label="coal_gas_mix_frac" var="Neumann">
+        <BCType label="coal_gas_mix_frac" var="Neumann">
           <value>0.0</value>
         </BCType>
-        <BCType id="all" label="eta" var="Neumann">
+        <BCType label="eta" var="Neumann">
           <value>0.0</value>
         </BCType>
-        <BCType id="all" label="length_qn0" var="Neumann">
+        <BCType label="length_qn0" var="Neumann">
           <value>0.0</value>
         </BCType>
-        <BCType id="all" label="w_qn0" var="Neumann">
+        <BCType label="w_qn0" var="Neumann">
           <value>0.0</value>
         </BCType>
-        <BCType id="all" label="ux_qn0" var="Dirichlet">
+        <BCType label="ux_qn0" var="Dirichlet">
           <value>0.0</value>
         </BCType>
-        <BCType id="all" label="uy_qn0" var="Dirichlet">
+        <BCType label="uy_qn0" var="Dirichlet">
           <value>0.0</value>
         </BCType>
-        <BCType id="all" label="uz_qn0" var="Dirichlet">
+        <BCType label="uz_qn0" var="Dirichlet">
           <value>0.0</value>
         </BCType>
-        <BCType id="all" label="RCmass_qn0" var="Neumann">
+        <BCType label="RCmass_qn0" var="Neumann">
           <value>0.0</value>
         </BCType>
-        <BCType id="all" label="Charmass_qn0" var="Neumann">
+        <BCType label="Charmass_qn0" var="Neumann">
           <value>0.0</value>
         </BCType>
-        <BCType id="all" label="pE_qn0" var="Neumann">
+        <BCType label="pE_qn0" var="Neumann">
           <value>0.0</value>
         </BCType>
-        <BCType id="all" label="length_qn1" var="Neumann">
+        <BCType label="length_qn1" var="Neumann">
           <value>0.0</value>
         </BCType>
-        <BCType id="all" label="w_qn1" var="Neumann">
+        <BCType label="w_qn1" var="Neumann">
           <value>0.0</value>
         </BCType>
-        <BCType id="all" label="ux_qn1" var="Dirichlet">
+        <BCType label="ux_qn1" var="Dirichlet">
           <value>0.0</value>
         </BCType>
-        <BCType id="all" label="uy_qn1" var="Dirichlet">
+        <BCType label="uy_qn1" var="Dirichlet">
           <value>0.0</value>
         </BCType>
-        <BCType id="all" label="uz_qn1" var="Dirichlet">
+        <BCType label="uz_qn1" var="Dirichlet">
           <value>0.0</value>
         </BCType>
-        <BCType id="all" label="RCmass_qn1" var="Neumann">
+        <BCType label="RCmass_qn1" var="Neumann">
           <value>0.0</value>
         </BCType>
-        <BCType id="all" label="Charmass_qn1" var="Neumann">
+        <BCType label="Charmass_qn1" var="Neumann">
           <value>0.0</value>
         </BCType>
-        <BCType id="all" label="pE_qn1" var="Neumann">
+        <BCType label="pE_qn1" var="Neumann">
           <value>0.0</value>
         </BCType>
-        <BCType id="all" label="length_qn2" var="Neumann">
+        <BCType label="length_qn2" var="Neumann">
           <value>0.0</value>
         </BCType>
-        <BCType id="all" label="w_qn2" var="Neumann">
+        <BCType label="w_qn2" var="Neumann">
           <value>0.0</value>
         </BCType>
-        <BCType id="all" label="ux_qn2" var="Dirichlet">
+        <BCType label="ux_qn2" var="Dirichlet">
           <value>0.0</value>
         </BCType>
-        <BCType id="all" label="uy_qn2" var="Dirichlet">
+        <BCType label="uy_qn2" var="Dirichlet">
           <value>0.0</value>
         </BCType>
-        <BCType id="all" label="uz_qn2" var="Dirichlet">
+        <BCType label="uz_qn2" var="Dirichlet">
           <value>0.0</value>
         </BCType>
-        <BCType id="all" label="RCmass_qn2" var="Neumann">
+        <BCType label="RCmass_qn2" var="Neumann">
           <value>0.0</value>
         </BCType>
-        <BCType id="all" label="Charmass_qn2" var="Neumann">
+        <BCType label="Charmass_qn2" var="Neumann">
           <value>0.0</value>
         </BCType>
-        <BCType id="all" label="pE_qn2" var="Neumann">
+        <BCType label="pE_qn2" var="Neumann">
           <value>0.0</value>
         </BCType>
       </Face>
 
       <Face side="z-" name="z- wall">
-	<BCType id="all" label="z-wall" var="WallBC">
+	<BCType label="z-wall" var="WallBC">
           <value>0.0</value>
         </BCType>
-        <BCType id="all" label="radiation_temperature" var="Dirichlet">
+        <BCType label="radiation_temperature" var="Dirichlet">
           <value>1200</value>
         </BCType>
-        <BCType id="0"  label= "abskg"              var="ForcedDirichlet">
+        <BCType  label= "abskg"              var="ForcedDirichlet">
                             <value> 1.0 </value>
         </BCType>
-        <BCType id="all" label="enthalpy" var="Neumann">
+        <BCType label="enthalpy" var="Neumann">
           <value>0.0</value>
         </BCType>
-        <BCType id="all" label="heat_loss" var="Neumann">
+        <BCType label="heat_loss" var="Neumann">
           <value>0.0</value>
         </BCType>
-        <BCType id="all" label="mixture_fraction_2" var="Neumann">
+        <BCType label="mixture_fraction_2" var="Neumann">
           <value>0.0</value>
         </BCType>
-        <BCType id="all" label="test_scalar" var="Neumann">
+        <BCType label="test_scalar" var="Neumann">
           <value>0.0</value>
         </BCType>
-        <BCType id="all" label="coal_gas_mix_frac" var="Neumann">
+        <BCType label="coal_gas_mix_frac" var="Neumann">
           <value>0.0</value>
         </BCType>
-        <BCType id="all" label="eta" var="Neumann">
+        <BCType label="eta" var="Neumann">
           <value>0.0</value>
         </BCType>
-        <BCType id="all" label="length_qn0" var="Neumann">
+        <BCType label="length_qn0" var="Neumann">
           <value>0.0</value>
         </BCType>
-        <BCType id="all" label="w_qn0" var="Neumann">
+        <BCType label="w_qn0" var="Neumann">
           <value>0.0</value>
         </BCType>
-        <BCType id="all" label="ux_qn0" var="Dirichlet">
+        <BCType label="ux_qn0" var="Dirichlet">
           <value>0.0</value>
         </BCType>
-        <BCType id="all" label="uy_qn0" var="Dirichlet">
+        <BCType label="uy_qn0" var="Dirichlet">
           <value>0.0</value>
         </BCType>
-        <BCType id="all" label="uz_qn0" var="Dirichlet">
+        <BCType label="uz_qn0" var="Dirichlet">
           <value>0.0</value>
         </BCType>
-        <BCType id="all" label="RCmass_qn0" var="Neumann">
+        <BCType label="RCmass_qn0" var="Neumann">
           <value>0.0</value>
         </BCType>
-        <BCType id="all" label="Charmass_qn0" var="Neumann">
+        <BCType label="Charmass_qn0" var="Neumann">
           <value>0.0</value>
         </BCType>
-        <BCType id="all" label="pE_qn0" var="Neumann">
+        <BCType label="pE_qn0" var="Neumann">
           <value>0.0</value>
         </BCType>
-        <BCType id="all" label="length_qn1" var="Neumann">
+        <BCType label="length_qn1" var="Neumann">
           <value>0.0</value>
         </BCType>
-        <BCType id="all" label="w_qn1" var="Neumann">
+        <BCType label="w_qn1" var="Neumann">
           <value>0.0</value>
         </BCType>
-        <BCType id="all" label="ux_qn1" var="Dirichlet">
+        <BCType label="ux_qn1" var="Dirichlet">
           <value>0.0</value>
         </BCType>
-        <BCType id="all" label="uy_qn1" var="Dirichlet">
+        <BCType label="uy_qn1" var="Dirichlet">
           <value>0.0</value>
         </BCType>
-        <BCType id="all" label="uz_qn1" var="Dirichlet">
+        <BCType label="uz_qn1" var="Dirichlet">
           <value>0.0</value>
         </BCType>
-        <BCType id="all" label="RCmass_qn1" var="Neumann">
+        <BCType label="RCmass_qn1" var="Neumann">
           <value>0.0</value>
         </BCType>
-        <BCType id="all" label="Charmass_qn1" var="Neumann">
+        <BCType label="Charmass_qn1" var="Neumann">
           <value>0.0</value>
         </BCType>
-        <BCType id="all" label="pE_qn1" var="Neumann">
+        <BCType label="pE_qn1" var="Neumann">
           <value>0.0</value>
         </BCType>
-        <BCType id="all" label="length_qn2" var="Neumann">
+        <BCType label="length_qn2" var="Neumann">
           <value>0.0</value>
         </BCType>
-        <BCType id="all" label="w_qn2" var="Neumann">
+        <BCType label="w_qn2" var="Neumann">
           <value>0.0</value>
         </BCType>
-        <BCType id="all" label="ux_qn2" var="Dirichlet">
+        <BCType label="ux_qn2" var="Dirichlet">
           <value>0.0</value>
         </BCType>
-        <BCType id="all" label="uy_qn2" var="Dirichlet">
+        <BCType label="uy_qn2" var="Dirichlet">
           <value>0.0</value>
         </BCType>
-        <BCType id="all" label="uz_qn2" var="Dirichlet">
+        <BCType label="uz_qn2" var="Dirichlet">
           <value>0.0</value>
         </BCType>
-        <BCType id="all" label="RCmass_qn2" var="Neumann">
+        <BCType label="RCmass_qn2" var="Neumann">
           <value>0.0</value>
         </BCType>
-        <BCType id="all" label="Charmass_qn2" var="Neumann">
+        <BCType label="Charmass_qn2" var="Neumann">
           <value>0.0</value>
         </BCType>
-        <BCType id="all" label="pE_qn2" var="Neumann">
+        <BCType label="pE_qn2" var="Neumann">
           <value>0.0</value>
         </BCType>
       </Face>
 
       <Face side="z+" name="z+ wall">
-	<BCType id="all" label="z+wall" var="WallBC">
+	<BCType label="z+wall" var="WallBC">
           <value>0.0</value>
         </BCType>
-        <BCType id="all" label="radiation_temperature" var="Dirichlet">
+        <BCType label="radiation_temperature" var="Dirichlet">
           <value>1200</value>
         </BCType>
-        <BCType id="0"  label= "abskg"              var="ForcedDirichlet">
+        <BCType  label= "abskg"              var="ForcedDirichlet">
                             <value> 1.0 </value>
         </BCType>
-        <BCType id="all" label="enthalpy" var="Neumann">
+        <BCType label="enthalpy" var="Neumann">
           <value>0.0</value>
         </BCType>
-        <BCType id="all" label="heat_loss" var="Neumann">
+        <BCType label="heat_loss" var="Neumann">
           <value>0.0</value>
         </BCType>
-        <BCType id="all" label="mixture_fraction_2" var="Neumann">
+        <BCType label="mixture_fraction_2" var="Neumann">
           <value>0.0</value>
         </BCType>
-        <BCType id="all" label="test_scalar" var="Neumann">
+        <BCType label="test_scalar" var="Neumann">
           <value>0.0</value>
         </BCType>
-        <BCType id="all" label="coal_gas_mix_frac" var="Neumann">
+        <BCType label="coal_gas_mix_frac" var="Neumann">
           <value>0.0</value>
         </BCType>
-        <BCType id="all" label="eta" var="Neumann">
+        <BCType label="eta" var="Neumann">
           <value>0.0</value>
         </BCType>
-        <BCType id="all" label="length_qn0" var="Neumann">
+        <BCType label="length_qn0" var="Neumann">
           <value>0.0</value>
         </BCType>
-        <BCType id="all" label="w_qn0" var="Neumann">
+        <BCType label="w_qn0" var="Neumann">
           <value>0.0</value>
         </BCType>
-        <BCType id="all" label="ux_qn0" var="Dirichlet">
+        <BCType label="ux_qn0" var="Dirichlet">
           <value>0.0</value>
         </BCType>
-        <BCType id="all" label="uy_qn0" var="Dirichlet">
+        <BCType label="uy_qn0" var="Dirichlet">
           <value>0.0</value>
         </BCType>
-        <BCType id="all" label="uz_qn0" var="Dirichlet">
+        <BCType label="uz_qn0" var="Dirichlet">
           <value>0.0</value>
         </BCType>
-        <BCType id="all" label="RCmass_qn0" var="Neumann">
+        <BCType label="RCmass_qn0" var="Neumann">
           <value>0.0</value>
         </BCType>
-        <BCType id="all" label="Charmass_qn0" var="Neumann">
+        <BCType label="Charmass_qn0" var="Neumann">
           <value>0.0</value>
         </BCType>
-        <BCType id="all" label="pE_qn0" var="Neumann">
+        <BCType label="pE_qn0" var="Neumann">
           <value>0.0</value>
         </BCType>
-        <BCType id="all" label="length_qn1" var="Neumann">
+        <BCType label="length_qn1" var="Neumann">
           <value>0.0</value>
         </BCType>
-        <BCType id="all" label="w_qn1" var="Neumann">
+        <BCType label="w_qn1" var="Neumann">
           <value>0.0</value>
         </BCType>
-        <BCType id="all" label="ux_qn1" var="Dirichlet">
+        <BCType label="ux_qn1" var="Dirichlet">
           <value>0.0</value>
         </BCType>
-        <BCType id="all" label="uy_qn1" var="Dirichlet">
+        <BCType label="uy_qn1" var="Dirichlet">
           <value>0.0</value>
         </BCType>
-        <BCType id="all" label="uz_qn1" var="Dirichlet">
+        <BCType label="uz_qn1" var="Dirichlet">
           <value>0.0</value>
         </BCType>
-        <BCType id="all" label="RCmass_qn1" var="Neumann">
+        <BCType label="RCmass_qn1" var="Neumann">
           <value>0.0</value>
         </BCType>
-        <BCType id="all" label="Charmass_qn1" var="Neumann">
+        <BCType label="Charmass_qn1" var="Neumann">
           <value>0.0</value>
         </BCType>
-        <BCType id="all" label="pE_qn1" var="Neumann">
+        <BCType label="pE_qn1" var="Neumann">
           <value>0.0</value>
         </BCType>
-        <BCType id="all" label="length_qn2" var="Neumann">
+        <BCType label="length_qn2" var="Neumann">
           <value>0.0</value>
         </BCType>
-        <BCType id="all" label="w_qn2" var="Neumann">
+        <BCType label="w_qn2" var="Neumann">
           <value>0.0</value>
         </BCType>
-        <BCType id="all" label="ux_qn2" var="Dirichlet">
+        <BCType label="ux_qn2" var="Dirichlet">
           <value>0.0</value>
         </BCType>
-        <BCType id="all" label="uy_qn2" var="Dirichlet">
+        <BCType label="uy_qn2" var="Dirichlet">
           <value>0.0</value>
         </BCType>
-        <BCType id="all" label="uz_qn2" var="Dirichlet">
+        <BCType label="uz_qn2" var="Dirichlet">
           <value>0.0</value>
         </BCType>
-        <BCType id="all" label="RCmass_qn2" var="Neumann">
+        <BCType label="RCmass_qn2" var="Neumann">
           <value>0.0</value>
         </BCType>
-        <BCType id="all" label="Charmass_qn2" var="Neumann">
+        <BCType label="Charmass_qn2" var="Neumann">
           <value>0.0</value>
         </BCType>
-        <BCType id="all" label="pE_qn2" var="Neumann">
+        <BCType label="pE_qn2" var="Neumann">
           <value>0.0</value>
         </BCType>
       </Face>

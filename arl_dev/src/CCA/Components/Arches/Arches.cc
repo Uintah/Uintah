@@ -50,7 +50,8 @@
 #include <CCA/Components/Arches/TransportEqns/DQMOMEqn.h>
 #include <CCA/Components/Arches/TransportEqns/ScalarEqn.h>
 #include <CCA/Components/Arches/ArchesParticlesHelper.h>
-//NOTE: new includes for CQMOM
+#include <CCA/Components/Arches/ArchesBCHelper.h>
+#include <CCA/Components/Arches/ParticleModels/CoalHelper.h>
 #include <CCA/Components/Arches/CQMOM.h>
 #include <CCA/Components/Arches/TransportEqns/CQMOMEqnFactory.h>
 #include <CCA/Components/Arches/TransportEqns/CQMOMEqn.h>
@@ -221,6 +222,10 @@ Arches::~Arches()
     }
   }
 
+  for( BCHelperMapT::iterator it=_bcHelperMap.begin(); it != _bcHelperMap.end(); ++it ){
+     delete it->second;
+  }
+
   delete d_timeIntegrator;
   delete d_rad_prop_calc;
   if (d_doDQMOM) {
@@ -255,6 +260,24 @@ Arches::problemSetup(const ProblemSpecP& params,
   ProblemSpecP db = params->findBlock("CFD")->findBlock("ARCHES");
   _arches_spec = db;
   d_lab->problemSetup( db );
+
+  //Look for coal information
+  if( db->findBlock("ParticleProperties") ) {
+    string particle_type;
+    db->findBlock("ParticleProperties")->getAttribute("type", particle_type);
+    if ( particle_type == "coal" ) {
+      CoalHelper& coal_helper = CoalHelper::self();
+      coal_helper.parse_for_coal_info( db );
+    } else {
+      throw InvalidValue("Error: Particle type not recognized. Current types supported: coal",__FILE__,__LINE__);
+    }
+  }
+
+  // setup names for all the boundary condition faces that do NOT have a name or that have duplicate names
+  if( db->getRootNode()->findBlock("Grid") ){
+    Uintah::ProblemSpecP bcProbSpec = db->getRootNode()->findBlock("Grid")->findBlock("BoundaryConditions");
+    assign_unique_boundary_names( bcProbSpec );
+  }
 
   //==============NEW TASK STUFF
   //build the factories
@@ -867,6 +890,15 @@ Arches::scheduleInitialize(const LevelP& level,
   //Particle models are initialized after DQMOM/CQMOM initialization
 
   //=========== NEW TASK INTERFACE ==============================
+  //Boundary Conditions:
+  const Uintah::PatchSet* const allPatches = sched->getLoadBalancer()->getPerProcessorPatchSet(level);
+  const Uintah::PatchSubset* const localPatches = allPatches->getSubset( Uintah::Parallel::getMPIRank() );
+  Uintah::PatchSet* patches = scinew Uintah::PatchSet;
+  patches->addEach( localPatches->getVector() );
+  _bcHelperMap[level->getID()] = scinew ArchesBCHelper( patches, matls );
+  delete patches;
+
+
   typedef std::map<std::string, boost::shared_ptr<TaskFactoryBase> > BFM;
   BFM::iterator i_util_fac = _boost_factory_map.find("utility_factory");
   BFM::iterator i_trans_fac = _boost_factory_map.find("transport_factory");
@@ -888,6 +920,8 @@ Arches::scheduleInitialize(const LevelP& level,
   for ( TaskFactoryBase::TaskMap::iterator i = all_tasks.begin(); i != all_tasks.end(); i++) {
     i->second->schedule_init(level, sched, matls, is_restart);
   }
+  //Sets the helper to the factory and assigns it to each active task
+  i_trans_fac->second->set_bchelper( &_bcHelperMap );
 
   //initialize factory
   all_tasks.clear();
@@ -1523,6 +1557,9 @@ Arches::scheduleTimeAdvance( const LevelP& level,
     return;
 
   printSchedule(level,dbg, "Arches::scheduleTimeAdvance");
+
+  const MaterialSet* matls = d_sharedState->allArchesMaterials();
+
 
   nofTimeSteps++;
 
@@ -2521,5 +2558,64 @@ void Arches::registerCQMOMEqns(ProblemSpecP& db)
     //register internal coordinate names in a way to know which are velocities
   }
 }
-
 //------------------------------------------------------------------
+
+void Arches::assign_unique_boundary_names( Uintah::ProblemSpecP bcProbSpec )
+{
+  if( !bcProbSpec ) return;
+  int i=0;
+  std::string strFaceID;
+  std::set<std::string> faceNameSet;
+  for( Uintah::ProblemSpecP faceSpec = bcProbSpec->findBlock("Face");
+       faceSpec != 0; faceSpec=faceSpec->findNextBlock("Face"), ++i ){
+
+    std::string faceName = "none";
+    faceSpec->getAttribute("name",faceName);
+
+    strFaceID = Arches::number_to_string(i);
+
+    if( faceName=="none" || faceName=="" ){
+      faceName ="Face_" + strFaceID;
+      faceSpec->setAttribute("name",faceName);
+    }
+    else{
+      if( faceNameSet.find(faceName) != faceNameSet.end() ){
+        bool fndInc = false;
+        int j = 1;
+        while( !fndInc ){
+          if( faceNameSet.find( faceName + "_" + Arches::number_to_string(j) ) != faceNameSet.end() )
+            j++;
+          else
+            fndInc = true;
+        }
+        // rename this face
+        std::cout << "WARNING: I found a duplicate face label " << faceName;
+        faceName = faceName + "_" + Arches::number_to_string(j);
+        std::cout << " in your Boundary condition specification. I will rename it to " << faceName << std::endl;
+        faceSpec->replaceAttributeValue("name", faceName);
+      }
+    }
+    faceNameSet.insert(faceName);
+  }
+}
+//------------------------------------------------------------------
+// void Arches::setup_patchinfo_map( const Uintah::LevelP& level,
+//                                    Uintah::SchedulerP& sched )
+// {
+//   //const Uintah::PatchSet* patches = get_patchset( USE_FOR_OPERATORS, level, sched );
+//   const Uintah::PatchSet* patches = level->eachPatch();
+//
+//   for( int ipss=0; ipss<patches->size(); ++ipss ){
+//
+//     const Uintah::PatchSubset* pss = patches->getSubset(ipss);
+//
+//     for( int ip=0; ip<pss->size(); ++ip ){
+//
+//       const Uintah::Patch* const patch = pss->get(ip);
+//
+//       Wasatch::PatchInfo& pi = _patchInfoMap[patch->getID()];
+//       pi.patchID = patch->getID();
+//
+//     }
+//   }
+// }
