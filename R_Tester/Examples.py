@@ -28,7 +28,7 @@ system("cd %s ; ./RMCRT_gpuWorkAround  RMCRT_1L_reflect.ups   RMCRT_GPU_1L_refle
 # Modify base files
 RMCRT_isoScat_LHC_ups = modUPS( the_dir, \
                                "RMCRT_isoScat.ups", \
-                               ["<rayDirSampleAlgo>LHC</rayDirSampleAlgo>"])
+                               ["<rayDirSampleAlgo>LatinHyperCube</rayDirSampleAlgo>"])
 
 #______________________________________________________________________
 #  Test syntax: ( "folder name", "input file", # processors, "OS",["flags1","flag2"])
