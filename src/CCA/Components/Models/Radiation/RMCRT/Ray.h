@@ -171,7 +171,8 @@ namespace Uintah{
       bool d_onOff_SetBCs;                  // switch for setting boundary conditions
       bool d_isDbgOn;
       bool d_applyFilter;                   // Allow for filtering of boundFlux and divQ results
-      std::string  d_rayDirSampleAlgo;       
+      int  d_rayDirSampleAlgo;
+      enum rayDirSampleAlgorithm{NAIVE, LATIN_HYPER_CUBE};   
 
       enum Algorithm{ dataOnion,            
                       coarseLevel, 
