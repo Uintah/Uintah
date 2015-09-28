@@ -302,7 +302,7 @@ namespace Wasatch {
     typedef std::map <int, BoundaryIterators            > PatchIDBndItrMapT;  // temporary typedef map that stores boundary iterators per patch id: Patch ID -> Bnd Iterators
     typedef std::map <std::string, PatchIDBndItrMapT    > MaskMapT         ;  // boundary name -> (patch ID -> Boundary iterators )
     
-    const Uintah::PatchSet*    const localPatches_;
+    Uintah::PatchSet* localPatches_;
     const Uintah::MaterialSet* const materials_   ;
     
     // This map stores the iterators associated with each boundary condition name.
@@ -339,9 +339,11 @@ namespace Wasatch {
     
   public:
     
-    BCHelper( const Uintah::PatchSet* const localPatches,
-             const Uintah::MaterialSet* const materials );
-        
+
+    BCHelper( const Uintah::LevelP& level,
+              Uintah::SchedulerP& sched,
+              const Uintah::MaterialSet* const materials );
+            
     ~BCHelper();
 
     /**
