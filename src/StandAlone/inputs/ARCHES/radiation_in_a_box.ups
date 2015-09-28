@@ -60,122 +60,122 @@
     </Level>
     <BoundaryConditions>
       <Face side="x-">
-        <BCType id="0" var="WallBC"  label="x-wall">
+        <BCType var="WallBC"  label="x-wall">
           <value>0.0</value>
         </BCType>
-        <BCType id="0" var="Neumann" label="mixture_fraction"> 
+        <BCType var="Neumann" label="mixture_fraction"> 
           <value>0.0</value>
         </BCType>
-        <BCType id="0" var="Neumann" label="heat_loss"> 
+        <BCType var="Neumann" label="heat_loss"> 
           <value>0.0</value>
         </BCType>
-        <BCType id="0" var="Neumann" label="scalar_var"> 
+        <BCType var="Neumann" label="scalar_var"> 
           <value>0.0</value>
         </BCType>
-        <BCType id="0" var="Neumann" label="enthalpy"> 
+        <BCType var="Neumann" label="enthalpy"> 
           <value>0.0</value>
         </BCType>
-        <BCType id="0" var="Dirichlet" label="SolidWallTemperature"> 
+        <BCType var="Dirichlet" label="SolidWallTemperature"> 
           <value>1800</value>
         </BCType>
       </Face>
       <Face side="x+">
-        <BCType id="0" var="WallBC"  label="x+wall">
+        <BCType var="WallBC"  label="x+wall">
           <value>0.0</value>
         </BCType>
-        <BCType id="0" var="Neumann" label="mixture_fraction"> 
+        <BCType var="Neumann" label="mixture_fraction"> 
           <value>0.0</value>
         </BCType>
-        <BCType id="0" var="Neumann" label="heat_loss"> 
+        <BCType var="Neumann" label="heat_loss"> 
           <value>0.0</value>
         </BCType>
-        <BCType id="0" var="Neumann" label="scalar_var"> 
+        <BCType var="Neumann" label="scalar_var"> 
           <value>0.0</value>
         </BCType>
-        <BCType id="0" var="Neumann" label="enthalpy"> 
+        <BCType var="Neumann" label="enthalpy"> 
           <value>0.0</value>
         </BCType>
-        <BCType id="0" var="Dirichlet" label="SolidWallTemperature"> 
+        <BCType var="Dirichlet" label="SolidWallTemperature"> 
           <value>298</value>
         </BCType>
       </Face>
       <Face side="y-">
-        <BCType id="0" var="WallBC"  label="y-wall">
+        <BCType var="WallBC"  label="y-wall">
           <value>0.0</value>
         </BCType>
-        <BCType id="0" var="Neumann" label="mixture_fraction"> 
+        <BCType var="Neumann" label="mixture_fraction"> 
           <value>0.0</value>
         </BCType>
-        <BCType id="0" var="Neumann" label="heat_loss"> 
+        <BCType var="Neumann" label="heat_loss"> 
           <value>0.0</value>
         </BCType>
-        <BCType id="0" var="Neumann" label="scalar_var"> 
+        <BCType var="Neumann" label="scalar_var"> 
           <value>0.0</value>
         </BCType>
-        <BCType id="0" var="Neumann" label="enthalpy"> 
+        <BCType var="Neumann" label="enthalpy"> 
           <value>0.0</value>
         </BCType>
-        <BCType id="0" var="Dirichlet" label="SolidWallTemperature"> 
+        <BCType var="Dirichlet" label="SolidWallTemperature"> 
           <value>298</value>
         </BCType>
       </Face>
       <Face side="y+">
-        <BCType id="0" var="WallBC"  label="y+wall">
+        <BCType var="WallBC"  label="y+wall">
           <value>0.0</value>
         </BCType>
-        <BCType id="0" var="Neumann" label="mixture_fraction"> 
+        <BCType var="Neumann" label="mixture_fraction"> 
           <value>0.0</value>
         </BCType>
-        <BCType id="0" var="Neumann" label="heat_loss"> 
+        <BCType var="Neumann" label="heat_loss"> 
           <value>0.0</value>
         </BCType>
-        <BCType id="0" var="Neumann" label="scalar_var"> 
+        <BCType var="Neumann" label="scalar_var"> 
           <value>0.0</value>
         </BCType>
-        <BCType id="0" var="Neumann" label="enthalpy"> 
+        <BCType var="Neumann" label="enthalpy"> 
           <value>0.0</value>
         </BCType>
-        <BCType id="0" var="Dirichlet" label="SolidWallTemperature"> 
+        <BCType var="Dirichlet" label="SolidWallTemperature"> 
           <value>298</value>
         </BCType>
       </Face>
       <Face side="z-">
-        <BCType id="0" var="WallBC"  label="z-wall">
+        <BCType var="WallBC"  label="z-wall">
           <value>0.0</value>
         </BCType>
-        <BCType id="0" var="Neumann" label="mixture_fraction"> 
+        <BCType var="Neumann" label="mixture_fraction"> 
           <value>0.0</value>
         </BCType>
-        <BCType id="0" var="Neumann" label="heat_loss"> 
+        <BCType var="Neumann" label="heat_loss"> 
           <value>0.0</value>
         </BCType>
-        <BCType id="0" var="Neumann" label="scalar_var"> 
+        <BCType var="Neumann" label="scalar_var"> 
           <value>0.0</value>
         </BCType>
-        <BCType id="0" var="Neumann" label="enthalpy"> 
+        <BCType var="Neumann" label="enthalpy"> 
           <value>0.0</value>
         </BCType>
-        <BCType id="0" var="Dirichlet" label="SolidWallTemperature"> 
+        <BCType var="Dirichlet" label="SolidWallTemperature"> 
           <value>298</value>
         </BCType>
       </Face>
       <Face side="z+">
-        <BCType id="0" var="WallBC"  label="z+wall">
+        <BCType var="WallBC"  label="z+wall">
           <value>0.0</value>
         </BCType>
-        <BCType id="0" var="Neumann" label="mixture_fraction"> 
+        <BCType var="Neumann" label="mixture_fraction"> 
           <value>0.0</value>
         </BCType>
-        <BCType id="0" var="Neumann" label="heat_loss"> 
+        <BCType var="Neumann" label="heat_loss"> 
           <value>0.0</value>
         </BCType>
-        <BCType id="0" var="Neumann" label="scalar_var"> 
+        <BCType var="Neumann" label="scalar_var"> 
           <value>0.0</value>
         </BCType>
-        <BCType id="0" var="Neumann" label="enthalpy"> 
+        <BCType var="Neumann" label="enthalpy"> 
           <value>0.0</value>
         </BCType>
-        <BCType id="0" var="Dirichlet" label="SolidWallTemperature"> 
+        <BCType var="Dirichlet" label="SolidWallTemperature"> 
           <value>298</value>
         </BCType>
       </Face>

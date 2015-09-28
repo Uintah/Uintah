@@ -199,7 +199,7 @@ namespace Wasatch{
       Expr::Tag drhodfTag("drhod" + fTag.name(), Expr::STATE_NONE);
       drhodfTag.name() += tagNameAppend;
       
-      const Expr::TagList theTagList( tag_list( densityTag, unconvPts,drhodfTag ));
+      const Expr::TagList theTagList( tag_list( densityTag, unconvPts, drhodfTag ) );
       
       // register placeholder for the old density
       Expr::Tag rhoOldTag = densityTag;

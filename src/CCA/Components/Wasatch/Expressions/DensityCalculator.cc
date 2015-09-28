@@ -105,9 +105,7 @@ void
 DensFromMixfrac<FieldT>::
 evaluate()
 {
-  
   typedef std::vector<FieldT*> SVolFieldVec;
-
   SVolFieldVec& results = this->get_value_vec();
   
   // jcs: can we do the linear solve in place? We probably can. If so,
@@ -170,24 +168,6 @@ calc_jacobian_and_res( const DensityCalculatorBase::DoubleVec& passThrough,
 
 //--------------------------------------------------------------------
 
-template<typename FieldT>
-double
-DensFromMixfrac<FieldT>::get_normalization_factor( const unsigned i ) const
-{
-  return 0.5; // nominal value for mixture fraction
-}
-
-//--------------------------------------------------------------------
-
-template<typename FieldT>
-const std::pair<double,double>&
-DensFromMixfrac<FieldT>::get_bounds( const unsigned i ) const
-{
-  return bounds_;
-}
-
-//--------------------------------------------------------------------
-
 template< typename FieldT >
 DensFromMixfrac<FieldT>::
 Builder::Builder( const InterpT& rhoEval,
@@ -197,22 +177,12 @@ Builder::Builder( const InterpT& rhoEval,
                  const double rtol,
                  const unsigned maxIter)
   : ExpressionBuilder( resultsTag ),
-    rhoEval_   ( rhoEval.clone() ),
-    rhoOldTag_ (rhoOldTag        ),
-    rhoFTag_   (rhoFTag          ),
-    rtol_      (rtol             ),
-    maxIter_   (maxIter          )
+    rhoEval_  (rhoEval.clone() ),
+    rhoOldTag_(rhoOldTag       ),
+    rhoFTag_  (rhoFTag         ),
+    rtol_     (rtol            ),
+    maxIter_  (maxIter         )
 {}
-
-//--------------------------------------------------------------------
-
-template< typename FieldT >
-Expr::ExpressionBase*
-DensFromMixfrac<FieldT>::
-Builder::build() const
-{
-  return new DensFromMixfrac<FieldT>( *rhoEval_, rhoOldTag_, rhoFTag_, rtol_, maxIter_ );
-}
 
 
 
@@ -328,24 +298,6 @@ calc_jacobian_and_res( const DensityCalculatorBase::DoubleVec& passThrough,
 
 //--------------------------------------------------------------------
 
-template<typename FieldT>
-double
-DensHeatLossMixfrac<FieldT>::get_normalization_factor( const unsigned i ) const
-{
-  return 0.5; // nominal value for mixture fraction and heat loss (which range [0,1] and [-1,1] respectively).
-}
-
-//--------------------------------------------------------------------
-
-template<typename FieldT>
-const std::pair<double,double>&
-DensHeatLossMixfrac<FieldT>::get_bounds( const unsigned i ) const
-{
-  return bounds_[i];
-}
-
-//--------------------------------------------------------------------
-
 template< typename FieldT >
 DensHeatLossMixfrac<FieldT>::
 Builder::Builder( const Expr::Tag& rhoOldTag,
@@ -358,20 +310,12 @@ Builder::Builder( const Expr::Tag& rhoOldTag,
                   const InterpT& enthEvaluator )
   : ExpressionBuilder( tag_list(rhoTag,gammaTag) ),
     rhoOldTag_   ( rhoOldTag             ),
-    gammaOldTag_ ( gammaOldTag_          ),
+    gammaOldTag_ ( gammaOldTag           ),
     densEval_    ( densEvaluator.clone() ),
     enthEval_    ( enthEvaluator.clone() )
 {}
 
-//--------------------------------------------------------------------
 
-template< typename FieldT >
-Expr::ExpressionBase*
-DensHeatLossMixfrac<FieldT>::
-Builder::build() const
-{
-  return new DensHeatLossMixfrac<FieldT>( rhoOldTag_, gammaOldTag_, rhofTag_,rhohTag_,*densEval_,*enthEval_ );
-}
 
 //====================================================================
 
@@ -388,8 +332,7 @@ TwoStreamMixingDensity( const Expr::Tag& rhofTag,
     rhoMax_( rho0_ > rho1_ ? rho0_ : rho1)
 {
   this->set_gpu_runnable(true);
-  
-   rhof_ = this->template create_field_request<FieldT>(rhofTag);
+  rhof_ = this->template create_field_request<FieldT>(rhofTag);
 }
 
 //--------------------------------------------------------------------
@@ -400,11 +343,9 @@ TwoStreamMixingDensity<FieldT>::
 evaluate()
 {
   using namespace SpatialOps;
-  //FieldT& result = this->value();
   typename Expr::Expression<FieldT>::ValVec& results  = this->get_value_vec();
   FieldT& rho    = *results[0];
   FieldT& drhodf = *results[1];
-
   
   const FieldT& rf = rhof_->field_ref();
   
@@ -412,7 +353,7 @@ evaluate()
   rho <<= rho0_ + (1 - rho0_/rho1_)*rf;
 
   // repair bounds
-  rho <<= max ( min(rho, rhoMax_), rhoMin_);
+  rho <<= max( min(rho, rhoMax_), rhoMin_ );
   
   drhodf <<= (1/rho0_ - 1/rho1_)*rho*rho;
 }
@@ -444,8 +385,7 @@ TwoStreamDensFromMixfr( const Expr::Tag& mixfrTag,
     rhoMax_( rho0_ > rho1_ ? rho0_ : rho1)
 {
   this->set_gpu_runnable(true);
-  
-   mixfr_ = this->template create_field_request<FieldT>(mixfrTag);
+  mixfr_ = this->template create_field_request<FieldT>(mixfrTag);
 }
 
 //--------------------------------------------------------------------

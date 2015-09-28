@@ -31,6 +31,7 @@
 #include <CCA/Components/Wasatch/Operators/Extrapolant.h>
 #include <CCA/Components/Wasatch/Operators/FluxLimiterInterpolant.h>
 #include <CCA/Components/Wasatch/BCHelper.h>
+#include <CCA/Components/Wasatch/WasatchBCHelper.h>
 #include <spatialops/particles/ParticleOperators.h>
 
 //-- Uintah includes --//

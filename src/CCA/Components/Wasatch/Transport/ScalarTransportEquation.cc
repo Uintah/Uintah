@@ -41,6 +41,7 @@
 #include <CCA/Components/Wasatch/Expressions/BoundaryConditions/BoundaryConditionBase.h>
 #include <CCA/Components/Wasatch/Expressions/BoundaryConditions/BoundaryConditions.h>
 #include <CCA/Components/Wasatch/BCHelper.h>
+#include <CCA/Components/Wasatch/WasatchBCHelper.h>
 #include <CCA/Components/Wasatch/Expressions/ScalarEOSCoupling.h>
 //-- Uintah includes --//
 #include <Core/Parallel/Parallel.h>
@@ -264,7 +265,7 @@ namespace Wasatch{
   template< typename FieldT >
   void ScalarTransportEquation<FieldT>::
   apply_initial_boundary_conditions( const GraphHelper& graphHelper,
-                                     BCHelper& bcHelper )
+                                     WasatchBCHelper& bcHelper )
   {
     const Category taskCat = INITIALIZATION;
    
@@ -299,11 +300,9 @@ namespace Wasatch{
   //------------------------------------------------------------------
   template< typename FieldT >
   void ScalarTransportEquation<FieldT>::
-  setup_boundary_conditions( BCHelper& bcHelper,
+  setup_boundary_conditions( WasatchBCHelper& bcHelper,
                              GraphCategories& graphCat )
   {
-    const TagNames& tagNames = TagNames::self();
-  
     // make logical decisions based on the specified boundary types
     BOOST_FOREACH( const BndMapT::value_type& bndPair, bcHelper.get_boundary_information() ){
       const std::string& bndName = bndPair.first;
@@ -359,7 +358,7 @@ namespace Wasatch{
   template< typename FieldT >
   void ScalarTransportEquation<FieldT>::
   apply_boundary_conditions( const GraphHelper& graphHelper,
-                             BCHelper& bcHelper )
+                             WasatchBCHelper& bcHelper )
   {            
     const Category taskCat = ADVANCE_SOLUTION;
     bcHelper.apply_boundary_condition<FieldT>( solution_variable_tag(), taskCat );

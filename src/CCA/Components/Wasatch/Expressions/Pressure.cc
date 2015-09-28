@@ -27,7 +27,6 @@
 //-- Wasatch Includes --//
 #include <CCA/Components/Wasatch/FieldAdaptor.h>
 #include <CCA/Components/Wasatch/FieldTypes.h>
-#include <CCA/Components/Wasatch/BCHelperTools.h>
 #include <CCA/Components/Wasatch/TagNames.h>
 
 //-- Uintah Includes --//
@@ -324,7 +323,6 @@ Pressure::setup_matrix( const SVolField* const rhoStar,
   // We should probably move the matrix construction to the evaluate() method.
   // need a way to get access to the patch so that we can loop over the cells.
   // p is current cell
-  double p = 0.0;
   // n: north, s: south, e: east, w: west, t: top, b: bottom coefficient
   double w = 0.0, s = 0.0, b = 0.0;
   using namespace SpatialOps;
@@ -429,7 +427,6 @@ Pressure::evaluate()
   SVolField& rhs = *results[1];
 
   const TimeField& tstep = timestep_->field_ref();
-  const TimeField& t = t_->field_ref();
   std::ostringstream strs;
   strs << "_timestep_"<< (int) tstep[0] << "_rkstage_"<< rkStage_ << "_patch";
 
@@ -486,13 +483,6 @@ void Pressure::process_embedded_boundaries( const SVolField& volfrac )
   // cell offset used to calculate local cell index with respect to patch.
   const int ng = get_n_ghost<SVolField>();
   const SCIRun::IntVector patchCellOffset = patch_->getExtraCellLowIndex(ng);
-  const Uintah::Vector spacing = patch_->dCell();
-  const double dx = spacing[0];
-  const double dy = spacing[1];
-  const double dz = spacing[2];
-  const double dx2 = dx*dx;
-  const double dy2 = dy*dy;
-  const double dz2 = dz*dz;
 
   if( !didMatrixUpdate_ || hasMovingGeometry_ ){
     
@@ -504,7 +494,7 @@ void Pressure::process_embedded_boundaries( const SVolField& volfrac )
       IntVector iCell = *iter;
       Uintah::Stencil7&  coefs = matrix_[iCell];
       
-      IntVector iCellOffset = iCell - patchCellOffset;
+      const IntVector iCellOffset = iCell - patchCellOffset;
       
       // interior
       const IntVec intCellIJK( iCellOffset[0],

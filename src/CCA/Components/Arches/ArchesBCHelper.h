@@ -1,7 +1,10 @@
-/*
+/**
+ *  \file   ArchesBCHelper.h
+ *
+ *
  * The MIT License
  *
- * Copyright (c) 1997-2015 The University of Utah
+ * Copyright (c) 2013-2015 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -22,26 +25,39 @@
  * IN THE SOFTWARE.
  */
 
+#ifndef ArchesBC_Helper_h
+#define ArchesBC_Helper_h
 
+//-- Uintah includes --//
+#include <Core/ProblemSpec/ProblemSpec.h>
+#include <CCA/Ports/Scheduler.h>
+#include <Core/Grid/Task.h>
+#include <Core/Grid/Material.h>
+#include <CCA/Components/Wasatch/BCHelper.h>
 
-#ifdef USE_VAMPIR
+// forward declarations
+namespace Uintah{
 
-extern "C" {
-#include <VT.h>
-extern void VTsetup();
-}
-#else
-#define VT_end(x)
-#define VT_begin(x)
-#endif
+  class ProcessorGroup;
+  class DataWarehouse;
+  class Arches;
 
-#define VT_SEND_PARTICLES 100
-#define VT_RECV_PARTICLES 101
-#define VT_SEND_INITDATA 110
-#define VT_RECV_INITDATA 111
-#define VT_CHECKSUM 120
-#define VT_SEND_COMPUTES 130
-#define VT_RECV_DEPENDENCIES 131
-#define VT_PERFORM_TASK 201
-#define VT_EXECUTE 200
+  /**
+   *  \class  ArchesBCHelper
+   *  \brief  This class provides support for boundary conditions.
+   */
 
+  class ArchesBCHelper: public Wasatch::BCHelper
+  {
+  public:
+
+    ArchesBCHelper( const Uintah::PatchSet* const localPatches,
+                    const Uintah::MaterialSet* const materials );
+    ~ArchesBCHelper();
+
+  private:
+
+  };
+
+} /* namespace Arches */
+#endif /* ArchesBC_Helper_H */

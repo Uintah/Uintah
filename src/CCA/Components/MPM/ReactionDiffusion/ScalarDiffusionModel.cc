@@ -94,6 +94,48 @@ void ScalarDiffusionModel::setIncludeHydroStress(bool value){
   include_hydrostress = value;
 }
 
+void ScalarDiffusionModel::addInitialComputesAndRequires(Task* task,
+                                                   const MPMMaterial* matl,
+                                                   const PatchSet* patch) const{
+  const MaterialSubset* matlset = matl->thisMaterial();
+  task->computes(d_rdlb->pConcentrationLabel, matlset);
+  task->computes(d_rdlb->pConcPreviousLabel,  matlset);
+  task->computes(d_rdlb->pConcGradientLabel,  matlset);
+}
+
+void ScalarDiffusionModel::initializeSDMData(const Patch* patch,
+                                             const MPMMaterial* matl,
+                                             DataWarehouse* new_dw)
+{
+  ParticleSubset* pset = new_dw->getParticleSubset(matl->getDWIndex(), patch);
+
+  ParticleVariable<double>  pConcentration;
+  ParticleVariable<double>  pConcPrevious;
+  ParticleVariable<Vector>  pConcGradient;
+
+  new_dw->allocateAndPut(pConcentration,  d_rdlb->pConcentrationLabel, pset);
+  new_dw->allocateAndPut(pConcPrevious,   d_rdlb->pConcPreviousLabel,  pset);
+  new_dw->allocateAndPut(pConcGradient,   d_rdlb->pConcGradientLabel,  pset);
+
+  for(ParticleSubset::iterator iter = pset->begin();iter != pset->end();iter++){
+    pConcentration[*iter] = 0.0;
+    pConcPrevious[*iter]  = 0.0;
+    pConcGradient[*iter]  = Vector(0.0,0.0,0.0);
+  }
+}
+
+void ScalarDiffusionModel::addParticleState(std::vector<const VarLabel*>& from,
+                                            std::vector<const VarLabel*>& to)
+{
+  from.push_back(d_rdlb->pConcentrationLabel);
+  from.push_back(d_rdlb->pConcPreviousLabel);
+  from.push_back(d_lb->pConcGradientLabel);
+
+  to.push_back(d_rdlb->pConcentrationLabel_preReloc);
+  to.push_back(d_rdlb->pConcPreviousLabel_preReloc);
+  to.push_back(d_lb->pConcGradientLabel_preReloc);
+}
+
 void ScalarDiffusionModel::scheduleComputeFlux(Task* task,
                                                const MPMMaterial* matl, 
 		                               const PatchSet* patch) const

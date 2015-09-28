@@ -332,7 +332,8 @@ UnifiedScheduler::runTask( DetailedTask*         task,
     waittimesLock.unlock();
   }
 
-  double taskstart = Time::currentSeconds();
+  // -------------------------< begin task execution timing >-------------------------
+  double task_start_time = Time::currentSeconds();
 
   if (trackingVarsPrintLocation_ & SchedulerCommon::PRINT_BEFORE_EXEC) {
     printTrackedVars(task, SchedulerCommon::PRINT_BEFORE_EXEC);
@@ -349,20 +350,22 @@ UnifiedScheduler::runTask( DetailedTask*         task,
     printTrackedVars(task, SchedulerCommon::PRINT_AFTER_EXEC);
   }
 
-  double dtask = Time::currentSeconds() - taskstart;
+  double total_task_time = Time::currentSeconds() - task_start_time;
+  // -------------------------< end task execution timing >-------------------------
 
   dlbLock.lock();
   {
     if (execout.active()) {
-      exectimes[task->getTask()->getName()] += dtask;
+      exectimes[task->getTask()->getName()] += total_task_time;
     }
 
     // If I do not have a sub scheduler
     if (!task->getTask()->getHasSubScheduler()) {
       //add my task time to the total time
-      mpi_info_.totaltask += dtask;
+      mpi_info_.totaltask += total_task_time;
       if (!d_sharedState->isCopyDataTimestep() && task->getTask()->getType() != Task::Output) {
-        getLoadBalancer()->addContribution(task, dtask);
+        // add contribution of task execution time to load balancer
+        getLoadBalancer()->addContribution(task, total_task_time);
       }
     }
   }
@@ -370,18 +373,23 @@ UnifiedScheduler::runTask( DetailedTask*         task,
 
   // For CPU and postGPU task runs, post MPI sends and call task->done;
   if (event == Task::CPU || event == Task::postGPU) {
+
     if (Uintah::Parallel::usingMPI()) {
       postMPISends(task, iteration, thread_id);
     }
-    task->done(dws);  // should this be timed with taskstart? - BJW
-    double teststart = Time::currentSeconds();
+
+    task->done(dws);  // should this be part of task execution time? - APH 09/16/15
+
+    // -------------------------< begin MPI test timing >-------------------------
+    double test_start_time = Time::currentSeconds();
 
     if (Uintah::Parallel::usingMPI()) {
       // This is per thread, no lock needed.
       sends_[thread_id].testsome(d_myworld);
     }
 
-    mpi_info_.totaltestmpi += Time::currentSeconds() - teststart;
+    mpi_info_.totaltestmpi += Time::currentSeconds() - test_start_time;
+    // -------------------------< end MPI test timing >-------------------------
 
     // add my timings to the parent scheduler
     if( parentScheduler_ ) {
@@ -391,6 +399,13 @@ UnifiedScheduler::runTask( DetailedTask*         task,
       parentScheduler_->mpi_info_.totalsend += mpi_info_.totalsend;
       parentScheduler_->mpi_info_.totalwaitmpi += mpi_info_.totalwaitmpi;
       parentScheduler_->mpi_info_.totalreduce += mpi_info_.totalreduce;
+      mpi_info_.totalreduce    = 0;
+      mpi_info_.totalsend      = 0;
+      mpi_info_.totalrecv      = 0;
+      mpi_info_.totaltask      = 0;
+      mpi_info_.totalreducempi = 0;
+      mpi_info_.totaltestmpi   = 0;
+      mpi_info_.totalwaitmpi   = 0;
     }
   }
 }  // end runTask()
@@ -409,8 +424,6 @@ UnifiedScheduler::execute( int tgnum     /* = 0 */,
     MPIScheduler::execute( tgnum, iteration );
     return;
   }
-
-  MALLOC_TRACE_TAG_SCOPE("UnifiedScheduler::execute");
 
   ASSERTRANGE(tgnum, 0, (int )graphs.size());
   TaskGraph* tg = graphs[tgnum];
@@ -438,16 +451,15 @@ UnifiedScheduler::execute( int tgnum     /* = 0 */,
     dts->localTask(i)->resetDependencyCounts();
   }
 
-  if (unified_timeout.active()) {
+  bool emit_timings = unified_timeout.active();
+  if (emit_timings) {
     d_labels.clear();
     d_times.clear();
   }
 
-  int me = d_myworld->myrank();
-
-  // TODO - determine if this TG output code is even working correctly (APH - 09/16/15)
-//  makeTaskGraphDoc(dts, me);
-//  if (timeout.active()) {
+//  // TODO - determine if this TG output code is even working correctly (APH - 09/16/15)
+//  makeTaskGraphDoc(dts, d_myworld->myrank());
+//  if (useInternalDeps() && emit_timings) {
 //    emitTime("taskGraph output");
 //  }
 
@@ -486,10 +498,10 @@ UnifiedScheduler::execute( int tgnum     /* = 0 */,
   }
 
   if (unified_dbg.active()) {
-    cerrLock.lock();
+    coutLock.lock();
     {
       unified_dbg << "\n"
-                  << "Rank-" << me << " Executing " << dts->numTasks() << " tasks (" << ntasks << " local)\n"
+                  << "Rank-" << d_myworld->myrank() << " Executing " << dts->numTasks() << " tasks (" << ntasks << " local)\n"
                   << "Total task phases: " << numPhases
                   << "\n";
       for (size_t phase = 0; phase < phaseTasks.size(); ++phase) {
@@ -497,16 +509,16 @@ UnifiedScheduler::execute( int tgnum     /* = 0 */,
       }
       unified_dbg << std::endl;
     }
-    cerrLock.unlock();
+    coutLock.unlock();
   }
 
   static int totaltasks;
 
   if (taskdbg.active()) {
-    cerrLock.lock();
+    coutLock.lock();
     taskdbg << myRankThread() << " starting task phase " << currphase << ", total phase " << currphase << " tasks = "
             << phaseTasks[currphase] << std::endl;
-    cerrLock.unlock();
+    coutLock.unlock();
   }
 
   // signal worker threads to begin executing tasks
@@ -562,10 +574,12 @@ UnifiedScheduler::execute( int tgnum     /* = 0 */,
   emitTime("Other excution time", totalexec - mpi_info_.totalsend - mpi_info_.totalrecv - mpi_info_.totaltask - mpi_info_.totalreduce);
 
   if (d_sharedState != 0) {
-    d_sharedState->taskExecTime += mpi_info_.totaltask - d_sharedState->outputTime;  // don't count output time...
-    d_sharedState->taskLocalCommTime += mpi_info_.totalrecv + mpi_info_.totalsend;
-    d_sharedState->taskWaitCommTime += mpi_info_.totalwaitmpi;
+
+    d_sharedState->taskExecTime       += mpi_info_.totaltask - d_sharedState->outputTime;  // don't count output time...
+    d_sharedState->taskLocalCommTime  += mpi_info_.totalrecv + mpi_info_.totalsend;
+    d_sharedState->taskWaitCommTime   += mpi_info_.totalwaitmpi;
     d_sharedState->taskGlobalCommTime += mpi_info_.totalreduce;
+
     for (int i = 0; i < numThreads_; i++) {
       d_sharedState->taskWaitThreadTime += t_worker[i]->getWaittime();
     }
@@ -589,12 +603,12 @@ UnifiedScheduler::execute( int tgnum     /* = 0 */,
   finalizeTimestep();
   log.finishTimestep();
 
-  if( unified_timeout.active() && !parentScheduler_ ) {  // only do on toplevel scheduler
+  if (emit_timings && !parentScheduler_) {  // only do on toplevel scheduler
     outputTimingStats("UnifiedScheduler");
   }
 
   if (unified_dbg.active()) {
-    unified_dbg << "Rank-" << me << " - UnifiedScheduler finished" << std::endl;
+    unified_dbg << "Rank-" << d_myworld->myrank() << " - UnifiedScheduler finished" << std::endl;
   }
 } // end execute()
 
@@ -639,20 +653,20 @@ UnifiedScheduler::runTasks( int thread_id )
         numTasksDone++;
         if (taskorder.active()) {
           if (me == d_myworld->size() / 2) {
-            cerrLock.lock();
+            coutLock.lock();
             taskorder << myRankThread()  << " Running task static order: " << readyTask->getStaticOrder()
                       << " , scheduled order: " << numTasksDone << std::endl;
-            cerrLock.unlock();
+            coutLock.unlock();
           }
         }
         phaseTasksDone[readyTask->getTask()->d_phase]++;
         while (phaseTasks[currphase] == phaseTasksDone[currphase] && currphase + 1 < numPhases) {
           currphase++;
           if (taskdbg.active()) {
-            cerrLock.lock();
+            coutLock.lock();
             taskdbg << myRankThread() << " switched to task phase " << currphase << ", total phase " << currphase << " tasks = "
                     << phaseTasks[currphase] << std::endl;
-            cerrLock.unlock();
+            coutLock.unlock();
           }
         }
         break;
@@ -693,20 +707,20 @@ UnifiedScheduler::runTasks( int thread_id )
           numTasksDone++;
           if (taskorder.active()) {
             if (d_myworld->myrank() == d_myworld->size() / 2) {
-              cerrLock.lock();
+              coutLock.lock();
               taskorder << myRankThread() << " Running task static order: " << readyTask->getStaticOrder()
                         << ", scheduled order: " << numTasksDone << std::endl;
-              cerrLock.unlock();
+              coutLock.unlock();
             }
           }
           phaseTasksDone[readyTask->getTask()->d_phase]++;
           while (phaseTasks[currphase] == phaseTasksDone[currphase] && currphase + 1 < numPhases) {
             currphase++;
             if (taskdbg.active()) {
-              cerrLock.lock();
+              coutLock.lock();
               taskdbg << myRankThread() << " switched to task phase " << currphase << ", total phase " << currphase << " tasks = "
                       << phaseTasks[currphase] << std::endl;
-              cerrLock.unlock();
+              coutLock.unlock();
             }
           }
 #ifdef HAVE_CUDA
@@ -729,9 +743,9 @@ UnifiedScheduler::runTasks( int thread_id )
         if (initTask != NULL) {
           if (initTask->getTask()->getType() == Task::Reduction || initTask->getTask()->usesMPI()) {
             if (taskdbg.active()) {
-              cerrLock.lock();
+              coutLock.lock();
               taskdbg << myRankThread() <<  " Task internal ready 1 " << *initTask << std::endl;
-              cerrLock.unlock();
+              coutLock.unlock();
             }
             phaseSyncTask[initTask->getTask()->d_phase] = initTask;
             ASSERT(initTask->getRequires().size() == 0)
@@ -788,20 +802,20 @@ UnifiedScheduler::runTasks( int thread_id )
           numTasksDone++;
           if (taskorder.active()) {
             if (d_myworld->myrank() == d_myworld->size() / 2) {
-              cerrLock.lock();
+              coutLock.lock();
               taskorder << myRankThread() << " Running task static order: " << readyTask->getStaticOrder()
                         << " , scheduled order: " << numTasksDone << std::endl;
-              cerrLock.unlock();
+              coutLock.unlock();
             }
           }
           phaseTasksDone[readyTask->getTask()->d_phase]++;
           while (phaseTasks[currphase] == phaseTasksDone[currphase] && currphase + 1 < numPhases) {
             currphase++;
             if (taskdbg.active()) {
-              cerrLock.lock();
+              coutLock.lock();
               taskdbg << myRankThread() << " switched to task phase " << currphase << ", total phase " << currphase << " tasks = "
                       << phaseTasks[currphase] << std::endl;
-              cerrLock.unlock();
+              coutLock.unlock();
             }
           }
           break;
@@ -836,19 +850,19 @@ UnifiedScheduler::runTasks( int thread_id )
     if (initTask != NULL) {
       initiateTask(initTask, abort, abort_point, currentIteration);
       if (taskdbg.active()) {
-        cerrLock.lock();
+        coutLock.lock();
         taskdbg << myRankThread() << " Task internal ready 2 " << *initTask << " deps needed: "
                 << initTask->getExternalDepCount() << std::endl;
-        cerrLock.unlock();
+        coutLock.unlock();
       }
       initTask->markInitiated();
       initTask->checkExternalDepCount();
     }
     else if (readyTask != NULL) {
       if (taskdbg.active()) {
-        cerrLock.lock();
+        coutLock.lock();
         taskdbg << myRankThread() << " Task external ready " << *readyTask << std::endl;
-        cerrLock.unlock();
+        coutLock.unlock();
       }
       if (readyTask->getTask()->getType() == Task::Reduction) {
         initiateReduction(readyTask);
@@ -961,8 +975,6 @@ UnifiedScheduler::gpuInitialize( bool reset )
 void
 UnifiedScheduler::postH2DCopies( DetailedTask* dtask ) {
 
-  MALLOC_TRACE_TAG_SCOPE("UnifiedScheduler::postH2DCopies");
-
   // set the device and CUDA context
   cudaError_t retVal;
   int device = dtask->getDeviceNum();
@@ -1019,9 +1031,9 @@ UnifiedScheduler::postH2DCopies( DetailedTask* dtask ) {
               bool alreadyCopied = ( gpuDW->existsLevelDB(reqVarName.c_str(), levelID, matlID) );
 
               if(isLevelItem && alreadyCopied) {
-                cerrLock.lock();
-      //          std::cout <<  "    " << myRankThread() << " Goiing to skip this variable " << reqVarName.c_str() << " Patch: " << patchID << std::endl; 
-                cerrLock.unlock();
+//                coutLock.lock();
+//                std::cout <<  "    " << myRankThread() << " Goiing to skip this variable " << reqVarName.c_str() << " Patch: " << patchID << std::endl;
+//                coutLock.unlock();
                 h2dRequiresLock_.writeUnlock();
                 matl_loop = false;
                 continue;
@@ -1099,11 +1111,11 @@ UnifiedScheduler::postH2DCopies( DetailedTask* dtask ) {
   //                  && device_size.x == host_size.x() && device_size.y == host_size.y() && device_size.z == host_size.z()) {
   //                // report the above fact
   //                if (gpu_stats.active()) {
-  //                  cerrLock.lock();
+  //                  coutLock.lock();
   //                  {
   //                    gpu_stats << "GridVariable (" << reqVarName << ") already exists, skipping H2D copy..." << std::endl;
   //                  }
-  //                  cerrLock.unlock();
+  //                  coutLock.unlock();
   //                }
   //                continue;
   //              } else {
@@ -1157,7 +1169,7 @@ UnifiedScheduler::postH2DCopies( DetailedTask* dtask ) {
               }
 
               if (gpu_stats.active()) {
-                cerrLock.lock();
+                coutLock.lock();
                 {
                   int3 nCells    = make_int3(device_hi.x-device_low.x, device_hi.y-device_low.y, device_hi.z-device_low.z);
                   gpu_stats << myRankThread() 
@@ -1167,7 +1179,7 @@ UnifiedScheduler::postH2DCopies( DetailedTask* dtask ) {
                             << " from " << std::hex << host_ptr << " to " << std::hex <<  device_ptr
                             << ", using stream " << std::hex << dtask->getCUDAStream()  << std::endl;
                 }
-                cerrLock.unlock();
+                coutLock.unlock();
               }
               cudaStream_t stream = *(dtask->getCUDAStream());
               CUDA_RT_SAFE_CALL(retVal = cudaMemcpyAsync(device_ptr, host_ptr, host_bytes, cudaMemcpyHostToDevice, stream));
@@ -1198,12 +1210,12 @@ UnifiedScheduler::postH2DCopies( DetailedTask* dtask ) {
               if (host_bytes == device_bytes) {
                 // report the above fact
                 if (gpu_stats.active()) {
-                  cerrLock.lock();
+                  coutLock.lock();
                   {
                     gpu_stats << myRankThread() 
                               << "ReductionVariable (" << reqVarName << ") already exists, skipping H2D copy..." << std::endl;
                   }
-                  cerrLock.unlock();
+                  coutLock.unlock();
                 }
                 continue;
               } else {
@@ -1217,7 +1229,7 @@ UnifiedScheduler::postH2DCopies( DetailedTask* dtask ) {
               gpuDW->allocateAndPut(device_var, reqVarName.c_str(), patchID, matlID, levelID);
 
               if (gpu_stats.active()) {
-                cerrLock.lock();
+                coutLock.lock();
                 {
                   gpu_stats << myRankThread()
                             << " Post H2D copy of REQUIRES (" << std::setw(26) << reqVarName <<  "), L-" << levelID << ", patch: " << patchID<< ", "
@@ -1225,7 +1237,7 @@ UnifiedScheduler::postH2DCopies( DetailedTask* dtask ) {
                             << " from " << std::hex << host_ptr << " to " << std::hex <<  device_ptr
                             << ", using stream " << std::hex << dtask->getCUDAStream() << std::endl;
                 }
-                cerrLock.unlock();
+                coutLock.unlock();
               }
               cudaStream_t stream = *(dtask->getCUDAStream());
               CUDA_RT_SAFE_CALL(retVal = cudaMemcpyAsync(device_var.getPointer(), host_ptr, host_bytes, cudaMemcpyHostToDevice, stream));
@@ -1254,12 +1266,12 @@ UnifiedScheduler::postH2DCopies( DetailedTask* dtask ) {
               if (host_bytes == device_bytes) {
                 // report the above fact
                 if (gpu_stats.active()) {
-                  cerrLock.lock();
+                  coutLock.lock();
                   {
                     gpu_stats << myRankThread() 
                               << " PerPatch (" << reqVarName << ") already exists, skipping H2D copy..." << std::endl;
                   }
-                  cerrLock.unlock();
+                  coutLock.unlock();
                 }
                 continue;
               } else {
@@ -1273,7 +1285,7 @@ UnifiedScheduler::postH2DCopies( DetailedTask* dtask ) {
               gpuDW->allocateAndPut(device_var, reqVarName.c_str(), patchID, matlID, levelID);
 
               if (gpu_stats.active()) {
-                cerrLock.lock();
+                coutLock.lock();
                 {
                   gpu_stats << myRankThread()
                             << " Post H2D copy of REQUIRES (" << std::setw(26) << reqVarName <<  "), L-" << levelID << ", patch: " << patchID<< ", "
@@ -1281,7 +1293,7 @@ UnifiedScheduler::postH2DCopies( DetailedTask* dtask ) {
                             << " from " << std::hex << host_ptr << " to " << std::hex <<  device_ptr
                             << ", using stream " << std::hex << dtask->getCUDAStream()  << std::endl;
                 }
-                cerrLock.unlock();
+                coutLock.unlock();
               }
               cudaStream_t stream = *(dtask->getCUDAStream());
               CUDA_RT_SAFE_CALL(retVal = cudaMemcpyAsync(device_var.getPointer(), host_ptr, host_bytes, cudaMemcpyHostToDevice, stream));
@@ -1315,8 +1327,6 @@ UnifiedScheduler::postH2DCopies( DetailedTask* dtask ) {
 void
 UnifiedScheduler::preallocateDeviceMemory( DetailedTask* dtask )
 {
-  MALLOC_TRACE_TAG_SCOPE("UnifiedScheduler::preallocateDeviceMemory");
-
   // NOTE: the device and CUDA context are set in the call: dw->getGPUDW()->allocateAndPut()
 
   // determine variables the specified task will compute
@@ -1418,7 +1428,7 @@ UnifiedScheduler::preallocateDeviceMemory( DetailedTask* dtask )
               }
 
               if (gpu_stats.active()) {
-                cerrLock.lock();
+                coutLock.lock();
                 {
                   gpu_stats << myRankThread()
                             << " Allocated device memory for COMPUTES (" << std::setw(15) << compVarName << "), L-" << levelID << ", patch: " << patchID << ", "
@@ -1427,7 +1437,7 @@ UnifiedScheduler::preallocateDeviceMemory( DetailedTask* dtask )
                             << " at " << std::hex << device_ptr << " on device " << std::dec << dtask->getDeviceNum() 
                             << ", using stream " << std::hex << dtask->getCUDAStream()  << std::endl;
                 }
-                cerrLock.unlock();
+                coutLock.unlock();
               }
             }
             d2hComputesLock_.writeUnlock();
@@ -1446,7 +1456,7 @@ UnifiedScheduler::preallocateDeviceMemory( DetailedTask* dtask )
               device_ptr = device_var.getPointer();
               num_bytes = device_var.getMemSize();
               if (gpu_stats.active()) {
-                cerrLock.lock();
+                coutLock.lock();
                 {
                   gpu_stats << myRankThread()
                             << " Allocated device memory for COMPUTES (" << std::setw(26) << compVarName << "), L-" << levelID << ", patch: " << patchID
@@ -1454,7 +1464,7 @@ UnifiedScheduler::preallocateDeviceMemory( DetailedTask* dtask )
                             << " at " << std::hex << device_ptr << " on device " << std::dec << dtask->getDeviceNum()
                             << ", using stream " << std::hex << dtask->getCUDAStream()  << std::endl;
                 }
-                cerrLock.unlock();
+                coutLock.unlock();
               }
             }
             d2hComputesLock_.writeUnlock();
@@ -1472,7 +1482,7 @@ UnifiedScheduler::preallocateDeviceMemory( DetailedTask* dtask )
               device_ptr = device_var.getPointer();
               num_bytes = device_var.getMemSize();
               if (gpu_stats.active()) {
-                cerrLock.lock();
+                coutLock.lock();
                 {
                   gpu_stats << myRankThread()
                             << " Allocated device memory for COMPUTES (" << std::setw(26) << compVarName << "), L-" << levelID << ", patch: " << patchID
@@ -1480,7 +1490,7 @@ UnifiedScheduler::preallocateDeviceMemory( DetailedTask* dtask )
                             << " at " << std::hex << device_ptr << " on device " << std::dec << dtask->getDeviceNum()
                             << ", using stream " << std::hex << dtask->getCUDAStream()  << std::endl;
                 }
-                cerrLock.unlock();
+                coutLock.unlock();
               }
             }
             d2hComputesLock_.writeUnlock();
@@ -1511,8 +1521,6 @@ UnifiedScheduler::preallocateDeviceMemory( DetailedTask* dtask )
 void
 UnifiedScheduler::postD2HCopies( DetailedTask* dtask )
 {
-  MALLOC_TRACE_TAG_SCOPE("UnifiedScheduler::postD2HCopies");
-
   // set the device and CUDA context
   cudaError_t retVal;
   int device = dtask->getDeviceNum();
@@ -1622,7 +1630,7 @@ UnifiedScheduler::postD2HCopies( DetailedTask* dtask )
                   && device_size.x == host_size.x() && device_size.y == host_size.y() && device_size.z == host_size.z()) {
 
                 if (gpu_stats.active()) {
-                  cerrLock.lock();
+                  coutLock.lock();
                   {
                     gpu_stats << myRankThread()
                               << " Post D2H copy of COMPUTES (" << std::setw(26) << compVarName << "), L-" << levelID << ", patch: " << patchID << ", "
@@ -1631,7 +1639,7 @@ UnifiedScheduler::postD2HCopies( DetailedTask* dtask )
                               << ", from " << std::hex << device_ptr << " to " << std::hex << host_ptr
                               << ", using stream " << std::hex << dtask->getCUDAStream() << std::endl;
                   }
-                  cerrLock.unlock();
+                  coutLock.unlock();
                 }
                 CUDA_RT_SAFE_CALL(retVal = cudaMemcpyAsync(host_ptr, device_ptr, host_bytes, cudaMemcpyDeviceToHost, *dtask->getCUDAStream()));
                 if (retVal == cudaErrorLaunchFailure) {
@@ -1667,7 +1675,7 @@ UnifiedScheduler::postD2HCopies( DetailedTask* dtask )
               if (host_bytes == device_bytes) {
 
                 if (gpu_stats.active()) {
-                  cerrLock.lock();
+                  coutLock.lock();
                   {
                     gpu_stats << myRankThread()
                               << " Post D2H copy of COMPUTES (" << std::setw(26) << compVarName << "), L-" << levelID << ", patch: " << patchID<< ", "
@@ -1675,7 +1683,7 @@ UnifiedScheduler::postD2HCopies( DetailedTask* dtask )
                               << " from " << std::hex << device_ptr << " to " << std::hex << host_ptr
                               << ", using stream " << std::hex << dtask->getCUDAStream()<< std::endl;
                   }
-                  cerrLock.unlock();
+                  coutLock.unlock();
                 }
                 CUDA_RT_SAFE_CALL(retVal = cudaMemcpyAsync(host_ptr, device_ptr, host_bytes, cudaMemcpyDeviceToHost, *dtask->getCUDAStream()));
                 if (retVal == cudaErrorLaunchFailure) {
@@ -1710,7 +1718,7 @@ UnifiedScheduler::postD2HCopies( DetailedTask* dtask )
               // if size is equal to CPU DW, directly copy back to CPU var memory;
               if (host_bytes == device_bytes) {
                 if (gpu_stats.active()) {
-                  cerrLock.lock();
+                  coutLock.lock();
                   {
                     gpu_stats << myRankThread()
                               << "Post D2H copy of COMPUTES ("<< std::setw(26) << compVarName << "), L-" << levelID << ", patch: " << patchID<< ", "
@@ -1718,7 +1726,7 @@ UnifiedScheduler::postD2HCopies( DetailedTask* dtask )
                               << " from " << std::hex << device_ptr << " to " << std::hex << host_ptr
                               << ", using stream " << std::hex << dtask->getCUDAStream() << std::endl;
                   }
-                  cerrLock.unlock();
+                  coutLock.unlock();
                 }
                 CUDA_RT_SAFE_CALL(retVal = cudaMemcpyAsync(host_ptr, device_ptr, host_bytes, cudaMemcpyDeviceToHost, *dtask->getCUDAStream()));
                 if (retVal == cudaErrorLaunchFailure) {
@@ -1770,12 +1778,12 @@ UnifiedScheduler::createCudaStreams( int device,
       idleStreams[device].push(stream);
 
       if (gpu_stats.active()) {
-        cerrLock.lock();
+        coutLock.lock();
         {
           gpu_stats << myRankThread() << " Created CUDA stream " << std::hex << stream << " on device "
                     << std::dec << device << std::endl;
         }
-        cerrLock.unlock();
+        coutLock.unlock();
       }
     }
   }
@@ -1799,22 +1807,22 @@ UnifiedScheduler::freeCudaStreams()
       for (size_t i = 0; i < numQueues; i++) {
         totalStreams += idleStreams[i].size();
       }
-      cerrLock.lock();
+      coutLock.lock();
       {
         gpu_stats << myRankThread() <<  " Deallocating " << totalStreams << " total CUDA stream(s) for " << numQueues << " device(s)"<< std::endl;
       }
-      cerrLock.unlock();
+      coutLock.unlock();
     }
 
     for (size_t i = 0; i < numQueues; i++) {
       CUDA_RT_SAFE_CALL(retVal = cudaSetDevice(i));
 
       if (gpu_stats.active()) {
-        cerrLock.lock();
+        coutLock.lock();
         {
           gpu_stats << myRankThread() << " Deallocating " << idleStreams[i].size() << " CUDA stream(s) on device " << retVal << std::endl;
         }
-        cerrLock.unlock();
+        coutLock.unlock();
       }
 
       while (!idleStreams[i].empty()) {
@@ -1842,12 +1850,12 @@ UnifiedScheduler::getCudaStream( int device )
       stream = idleStreams[device].front();
       idleStreams[device].pop();
       if (gpu_stats.active()) {
-        cerrLock.lock();
+        coutLock.lock();
         {
           gpu_stats << myRankThread()
                     << " Issued CUDA stream " << std::hex << stream
                     << " on device " << std::dec << device << std::endl;
-          cerrLock.unlock();
+          coutLock.unlock();
         }
       }
     }
@@ -1858,13 +1866,13 @@ UnifiedScheduler::getCudaStream( int device )
       CUDA_RT_SAFE_CALL(retVal = cudaStreamCreate(&(*stream)));
 
       if (gpu_stats.active()) {
-        cerrLock.lock();
+        coutLock.lock();
         {
           gpu_stats << myRankThread()
                     << " Needed to create 1 additional CUDA stream " << std::hex << stream
                     << " for device " << std::dec << device << std::endl;
         }
-        cerrLock.unlock();
+        coutLock.unlock();
       }
     }
   }
@@ -1892,12 +1900,12 @@ UnifiedScheduler::reclaimCudaStreams( DetailedTask* dtask )
   idleStreamsLock_.writeUnlock();
 
   if (gpu_stats.active()) {
-    cerrLock.lock();
+    coutLock.lock();
     {
       gpu_stats << myRankThread() 
                 << " Reclaimed CUDA stream " << std::hex << stream << " on device " << std::dec << deviceNum << std::endl;
     }
-    cerrLock.unlock();
+    coutLock.unlock();
   }
 }
 
@@ -1943,10 +1951,10 @@ UnifiedSchedulerWorker::run()
   // Set affinity
   if (unified_compactaffinity.active()) {
     if ( (unified_threaddbg.active()) && (Uintah::Parallel::getMPIRank() == 0) ) {
-      cerrLock.lock();
+      coutLock.lock();
       std::string threadType = (d_scheduler->parentScheduler_) ? " subscheduler " : " ";
       unified_threaddbg << "Binding" << threadType << "thread ID " << d_thread_id << " to core " << d_thread_id << "\n";
-      cerrLock.unlock();
+      coutLock.unlock();
     }
     Thread::self()->set_affinity(d_thread_id);
   }
@@ -1958,35 +1966,35 @@ UnifiedSchedulerWorker::run()
 
     if (d_quit) {
       if (taskdbg.active()) {
-        cerrLock.lock();
+        coutLock.lock();
         unified_threaddbg << "Worker " << d_rank << "-" << d_thread_id << " quitting" << "\n";
-        cerrLock.unlock();
+        coutLock.unlock();
       }
       return;
     }
 
     if (taskdbg.active()) {
-      cerrLock.lock();
+      coutLock.lock();
       unified_threaddbg << "Worker " << d_rank << "-" << d_thread_id << ": executing tasks \n";
-      cerrLock.unlock();
+      coutLock.unlock();
     }
 
     try {
       d_scheduler->runTasks(d_thread_id);
     }
     catch (Exception& e) {
-      cerrLock.lock();
+      coutLock.lock();
       std::cerr << "Worker " << d_rank << "-" << d_thread_id << ": Caught exception: " << e.message() << "\n";
       if (e.stackTrace()) {
         std::cerr << "Stack trace: " << e.stackTrace() << '\n';
       }
-      cerrLock.unlock();
+      coutLock.unlock();
     }
 
     if (taskdbg.active()) {
-      cerrLock.lock();
+      coutLock.lock();
       unified_threaddbg << "Worker " << d_rank << "-" << d_thread_id << ": finished executing tasks   \n";
-      cerrLock.unlock();
+      coutLock.unlock();
     }
 
     // Signal main thread for next group of tasks.

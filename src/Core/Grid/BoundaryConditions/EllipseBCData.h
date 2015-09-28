@@ -87,6 +87,9 @@ namespace Uintah {
     /// Add the old boundary condition data -- no longer used.
     void addBC(BoundCondBase* bc);
 
+    /// Add boundary condition within a scheduled task.
+    void sudoAddBC(BoundCondBase* bc);
+
     /// Get the boundary condition data
     void getBCData(BCData& bc) const;
 

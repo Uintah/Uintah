@@ -231,7 +231,7 @@ namespace Wasatch{
   
   //------------------------------------------------------------------
   
-  void apply_intrusion_boundary_conditions(BCHelper& bcHelper)
+  void apply_intrusion_boundary_conditions(WasatchBCHelper& bcHelper)
   {
     EmbeddedGeometryHelper& vNames = EmbeddedGeometryHelper::self();
     BndCondSpec svolFracSpec = {vNames.vol_frac_tag<SVolField>().name(), "none", 0, NEUMANN, DOUBLE_TYPE};

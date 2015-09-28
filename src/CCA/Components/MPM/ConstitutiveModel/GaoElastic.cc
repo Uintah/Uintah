@@ -81,7 +81,7 @@ GaoElastic::GaoElastic(ProblemSpecP& ps,MPMFlags* Mflag)
 {
   ps->require("bulk_modulus",d_initialData.Bulk);
   ps->require("shear_modulus",d_initialData.Shear);
-  ps->require("volume_expansion_coeff", d_initialData.vol_exp_coeff);
+  ps->require("volume_expansion_coeff",d_initialData.vol_exp_coeff);
 
   d_tol = 1.0e-10;
   ps->get("tolerance",d_tol);
@@ -595,7 +595,7 @@ GaoElastic::computeStressTensor(const PatchSubset* patches,
     double delT_new = WaveSpeed.minComponent();
 
     new_dw->put(delt_vartype(delT_new), lb->delTLabel, patch->getLevel());
-   }
+  }
 }
 
 //______________________________________________________________________

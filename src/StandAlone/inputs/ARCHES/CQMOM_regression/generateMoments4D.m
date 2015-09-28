@@ -44,7 +44,7 @@ fprintf('\n')
 fprintf('\nInsert into Outlet BC')
 fprintf('\n--------------------------------------')
 for ii = 1:n
-  fprintf('\n        <BCType id="all" label="m_%g%g%g%g" var="Neumann">',i(ii),j(ii),k(ii),l(ii) )
+  fprintf('\n        <BCType label="m_%g%g%g%g" var="Neumann">',i(ii),j(ii),k(ii),l(ii) )
   fprintf('\n          <value> 0.0 </value>')
   fprintf('\n        </BCType>')
 end
@@ -53,7 +53,7 @@ fprintf('\n')
 fprintf('\nInsert into Wall BC')
 fprintf('\n--------------------------------------')
 for ii = 1:n
-  fprintf('\n        <BCType id="all" label="m_%g%g%g%g" var="ForcedDirichlet">',i(ii),j(ii),k(ii),l(ii) )
+  fprintf('\n        <BCType label="m_%g%g%g%g" var="ForcedDirichlet">',i(ii),j(ii),k(ii),l(ii) )
   fprintf('\n          <value> 0.0 </value>')
   fprintf('\n        </BCType>')
 end
@@ -62,7 +62,7 @@ fprintf('\n')
 fprintf('\nInsert into Inlet BC')
 fprintf('\n--------------------------------------')
 for ii = 1:n
-  fprintf('\n        <BCType id="all" label="m_%g%g%g%g" var="ForcedDirichlet">',i(ii),j(ii),k(ii),l(ii) )
+  fprintf('\n        <BCType label="m_%g%g%g%g" var="ForcedDirichlet">',i(ii),j(ii),k(ii),l(ii) )
   fprintf('\n          <value> %.15f </value>',moments(ii))
   fprintf('\n        </BCType>')
 end

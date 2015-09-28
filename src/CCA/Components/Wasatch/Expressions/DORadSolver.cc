@@ -27,7 +27,6 @@
 //-- Wasatch Includes --//
 #include <CCA/Components/Wasatch/FieldAdaptor.h>
 #include <CCA/Components/Wasatch/FieldTypes.h>
-#include <CCA/Components/Wasatch/BCHelperTools.h>
 
 //-- Uintah Includes --//
 #include <CCA/Ports/SolverInterface.h>

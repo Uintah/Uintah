@@ -79,6 +79,11 @@ void SideBCData::addBC(BoundCondBase* bc)
   d_bc.setBCValues(bc);
 }
 
+void SideBCData::sudoAddBC(BoundCondBase* bc)
+{
+  d_bc.setBCValues(bc);
+}
+
 
 void SideBCData::getBCData(BCData& bc) const
 {

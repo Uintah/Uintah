@@ -116,6 +116,7 @@
 #include "GraphHelperTools.h"
 #include "FieldTypes.h"
 #include "BCHelper.h"
+#include "WasatchBCHelper.h"
 #include "TimeIntegratorTools.h"
 //-- ExprLib Includes --//
 #include <expression/ExpressionFactory.h>
@@ -169,7 +170,7 @@ namespace Wasatch{
   public:
 
     typedef std::vector<EqnTimestepAdaptorBase*> EquationAdaptors;
-    typedef std::map< int, BCHelper* > BCHelperMapT;
+    typedef std::map< int, WasatchBCHelper* > BCHelperMapT;
     
     Wasatch( const Uintah::ProcessorGroup* myworld );
 
@@ -289,7 +290,6 @@ namespace Wasatch{
     BCFunctorMap bcFunctorMap_;
     BCHelperMapT bcHelperMap_;
     
-    CellType* cellType_;
 
     /**
      *  a container of information for constructing ExprLib graphs.
@@ -305,6 +305,7 @@ namespace Wasatch{
     Uintah::SolverInterface* linSolver_;
 
     Uintah::Ray* rmcrt_; // RMCRT solver. needed to pass along to other tasks and expressions...
+    CellType* cellType_;
     
     EquationAdaptors adaptors_;  ///< set of transport equations to be solved
 

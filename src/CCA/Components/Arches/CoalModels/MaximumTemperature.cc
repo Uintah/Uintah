@@ -50,6 +50,9 @@ MaximumTemperature::MaximumTemperature( std::string modelName,
 {
   // Create a label for this model
   d_modelLabel = VarLabel::create( modelName, CCVariable<double>::getTypeDescription() );
+  // Create the gas phase source term associated with this model
+  std::string gasSourceName = modelName + "_gasSource";
+  d_gasLabel = VarLabel::create( gasSourceName, CCVariable<double>::getTypeDescription() );
 }
 
 MaximumTemperature::~MaximumTemperature()

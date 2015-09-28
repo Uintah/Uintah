@@ -228,17 +228,18 @@ void Patch::findCellNodes27(const Point& pos, IntVector ni[27]) const
   if (getModifiableBCDataArray(face)->checkForBoundCondData(mat_id,bcFieldName,child)  ){  // avoid adding duplicate boundary conditions 
     return;
   }
- 
   if (getModifiableBCDataArray(face)->checkForBoundCondData(mat_id,desc,child)  ){  // avoid seg fault, when there are no boundary conditions on a face 
 
     if ( getModifiableBCDataArray(face)->getBCGeom(mat_id)[child]->getBCName()  == faceName  ){
       BoundCondBase* bc;
       BoundCondFactory::customBC( bc, mat_id, faceName, bc_value,bcFieldName, bc_kind );
-      getModifiableBCDataArray(face)->getBCGeom(mat_id)[child]->addBC(bc);
+      getModifiableBCDataArray(face)->getBCGeom(mat_id)[child]->sudoAddBC(bc);
       delete bc;
     }
   }
 }
+
+
 
 /**
  * Returns the position of the node idx in domain coordinates.

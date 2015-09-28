@@ -97,7 +97,7 @@ public:
              const FieldTagInfo& fieldInfo,
              const Expr::Tag& rhoStarTag,
              const Expr::Tag& dRhoDPhiTag,
-             const bool isStrongForm=true);
+             const bool isStrongForm=true );
 
     /**
      *  \brief Constructs a builder for a ScalarEOSCoupling object. This is being
@@ -114,7 +114,7 @@ public:
              const Expr::TagList srcTags,
              const Expr::Tag& rhoStarTag,
              const Expr::Tag& dRhoDPhiTag,
-             const bool isStrongForm=true);
+             const bool isStrongForm=true );
     virtual ~Builder(){}
     virtual Expr::ExpressionBase* build() const;
   protected:
@@ -130,6 +130,7 @@ public:
 protected:
 
   const Expr::Tag diffTagX_, diffTagY_, diffTagZ_, dRhoDPhiTag_;
+  const Expr::TagList srcTags_;
 
   const bool haveDiffusion_;
   const bool doXDiff_, doYDiff_, doZDiff_;
@@ -137,39 +138,34 @@ protected:
 
   const Expr::Tag volFracTag_, xAreaFracTag_, yAreaFracTag_, zAreaFracTag_;
   const bool haveVolFrac_, haveXAreaFrac_, haveYAreaFrac_, haveZAreaFrac_;
+  const bool isStrongForm_;
 
   DECLARE_FIELDS( SVolField, rhoStar_, dRhoDPhi_, volfrac_ )
+
   DECLARE_FIELD( XVolField, xareafrac_ )
   DECLARE_FIELD( YVolField, yareafrac_ )
   DECLARE_FIELD( ZVolField, zareafrac_ )
+  DECLARE_FIELD( XFluxT, xDiffFlux_ )
+  DECLARE_FIELD( YFluxT, yDiffFlux_ )
+  DECLARE_FIELD( ZFluxT, zDiffFlux_ )
+
+  DECLARE_VECTOR_OF_FIELDS( FieldT, srcTerms_ )
 
   // Operators
   const SVolToFieldTInterpT* volFracInterpOp_;
   const XVolToXFluxInterpT* xAreaFracInterpOp_;
   const YVolToYFluxInterpT* yAreaFracInterpOp_;
   const ZVolToZFluxInterpT* zAreaFracInterpOp_;
-
-  const bool isStrongForm_;
-  const DensityInterpT* densityInterpOp_;
-
-  const Expr::Tag phiTag_, drhodtTag_;
-
-  Expr::TagList srcTags_;
-
-  const DivX* divOpX_;
-  const DivY* divOpY_;
-  const DivZ* divOpZ_;
-
-  DECLARE_FIELD( XFluxT, xDiffFlux_ )
-  DECLARE_FIELD( YFluxT, yDiffFlux_ )
-  DECLARE_FIELD( ZFluxT, zDiffFlux_ )
-  DECLARE_VECTOR_OF_FIELDS( FieldT, srcTerms_ )
+  const DensityInterpT*     densityInterpOp_;
+  const DivX*               divOpX_;
+  const DivY*               divOpY_;
+  const DivZ*               divOpZ_;
 
   ScalarEOSCoupling( const FieldTagInfo& fieldTags,
-             const Expr::TagList srcTags,
-             const Expr::Tag& rhoStarTag,
-             const Expr::Tag& dRhoDPhiTag,
-             const bool isStrongForm = true );
+                     const Expr::TagList& srcTags,
+                     const Expr::Tag& rhoStarTag,
+                     const Expr::Tag& dRhoDPhiTag,
+                     const bool isStrongForm = true );
 
   virtual ~ScalarEOSCoupling();
 };

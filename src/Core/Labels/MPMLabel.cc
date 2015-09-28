@@ -55,6 +55,9 @@ MPMLabel::MPMLabel()
   pScratchLabel  = VarLabel::create( "p.scratch",
 			ParticleVariable<double>::getTypeDescription() );
   
+  pExternalScalarFluxLabel = VarLabel::create( "p.externalscalarflux",
+			ParticleVariable<double>::getTypeDescription() );
+
   // for visualization only
   pScaleFactorLabel = VarLabel::create( "p.scalefactor",
 			ParticleVariable<Matrix3>::getTypeDescription());
@@ -774,6 +777,7 @@ MPMLabel::~MPMLabel()
   VarLabel::destroy(pConcPreviousLabel);
   VarLabel::destroy(pConcPreviousLabel_preReloc);
   VarLabel::destroy(pScratchLabel);
+  VarLabel::destroy(pExternalScalarFluxLabel);
   VarLabel::destroy(pSizeLabel);
   VarLabel::destroy(pSizeLabel_preReloc);
   VarLabel::destroy(pFiberDirLabel_preReloc);

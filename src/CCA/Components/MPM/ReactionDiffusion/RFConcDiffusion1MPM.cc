@@ -38,8 +38,7 @@ using namespace Uintah;
 
 RFConcDiffusion1MPM::RFConcDiffusion1MPM(ProblemSpecP& ps, SimulationStateP& sS, MPMFlags* Mflag, string diff_type):
   ScalarDiffusionModel(ps, sS, Mflag, diff_type) {
-	
-  ps->require("initial_chemical_potential", init_potential);
+
 }
 
 RFConcDiffusion1MPM::~RFConcDiffusion1MPM() {
@@ -57,33 +56,21 @@ void RFConcDiffusion1MPM::scheduleComputeFlux(Task* task, const MPMMaterial* mat
   task->requires(Task::OldDW, d_lb->pMassLabel,                matlset, gan, NGP);
   task->requires(Task::OldDW, d_lb->pVolumeLabel,              matlset, gan, NGP);
   task->requires(Task::OldDW, d_lb->pDeformationMeasureLabel,  matlset, gan, NGP);
-  task->requires(Task::NewDW, d_lb->gMassLabel,                matlset, gnone);
   task->requires(Task::OldDW, d_rdlb->pConcentrationLabel,     matlset, gan, NGP);
   task->requires(Task::OldDW, d_lb->pConcGradientLabel,        matlset, gan, NGP);
-  task->requires(Task::NewDW, d_rdlb->gHydrostaticStressLabel, matlset, gan, 2*NGN);
+  task->requires(Task::NewDW, d_lb->gMassLabel,                matlset, gnone);
 
-  task->computes(d_rdlb->gdCdtLabel,  matlset);
+  task->computes(d_rdlb->pFluxLabel,  matlset);
 }
 
-void RFConcDiffusion1MPM::computeFlux(const Patch* patch, const MPMMaterial* matl,
-                                      DataWarehouse* old_dw, DataWarehouse* new_dw)
+void RFConcDiffusion1MPM::computeFlux(const Patch* patch,
+                                      const MPMMaterial* matl,
+                                      DataWarehouse* old_dw,
+                                      DataWarehouse* new_dw)
 {
 
-  Ghost::GhostType  gac   = Ghost::AroundCells;
-  Ghost::GhostType  gan   = Ghost::AroundNodes;
   Ghost::GhostType  gnone = Ghost::None;
 
-
-  ParticleInterpolator* interpolator = d_Mflag->d_interpolator->clone(patch);
-  vector<IntVector> ni(interpolator->size());
-  vector<Vector> d_S(interpolator->size());
-
-  Vector dx = patch->dCell();
-  double oodx[3];
-  oodx[0] = 1.0/dx.x();
-  oodx[1] = 1.0/dx.y();
-  oodx[2] = 1.0/dx.z();
-           
   int dwi = matl->getDWIndex();
   constParticleVariable<Point>   px;
   constParticleVariable<double>  pvol,pMass;
@@ -92,73 +79,27 @@ void RFConcDiffusion1MPM::computeFlux(const Patch* patch, const MPMMaterial* mat
   constParticleVariable<Matrix3> deformationGradient;
   constParticleVariable<Vector>  pConcGrad;
   constNCVariable<double>        gConcentration,gMass;
-  constNCVariable<double>        gHydrostaticStress;
 
-  ParticleVariable<Vector>       pHydroStressGradient;
-  ParticleVariable<Vector>       pPotentialFlux;
-  NCVariable<double>             gdCdt;
+  ParticleVariable<Vector>       pFlux;
 
-  ParticleSubset* pset = old_dw->getParticleSubset(dwi, patch, gan, NGP, d_lb->pXLabel);
+  ParticleSubset* pset = old_dw->getParticleSubset(dwi, patch);
 
   old_dw->get(px,                  d_lb->pXLabel,                  pset);
   old_dw->get(pvol,                d_lb->pVolumeLabel,             pset);
   old_dw->get(pMass,               d_lb->pMassLabel,               pset);
   old_dw->get(psize,               d_lb->pSizeLabel,               pset);
-  old_dw->get(pConcentration,      d_rdlb->pConcentrationLabel,    pset);
   old_dw->get(pConcGrad,           d_lb->pConcGradientLabel,       pset);
   old_dw->get(deformationGradient, d_lb->pDeformationMeasureLabel, pset);
+  old_dw->get(pConcentration,      d_rdlb->pConcentrationLabel,    pset);
 
-  new_dw->get(gHydrostaticStress, d_rdlb->gHydrostaticStressLabel, dwi, patch, gac,2*NGN);
+  new_dw->allocateAndPut(pFlux,    d_rdlb->pFluxLabel,             pset);
+
   new_dw->get(gMass,              d_lb->gMassLabel,                dwi, patch, gnone, 0);
-  new_dw->allocateAndPut(gdCdt,   d_rdlb->gdCdtLabel,    dwi, patch);
 
-  new_dw->allocateTemporary(pHydroStressGradient,   pset);
-  new_dw->allocateTemporary(pPotentialFlux,         pset);
-  
-  gdCdt.initialize(0.);
-
-  double chem_potential;
-  double mech_potential; 
-  for (ParticleSubset::iterator iter = pset->begin(); iter != pset->end(); iter++){
+  for (ParticleSubset::iterator iter = pset->begin(); iter != pset->end();
+                                                      iter++){
     particleIndex idx = *iter;
 
-    // Get the node indices that surround the cell
-    interpolator->findCellAndShapeDerivatives(px[idx],ni,d_S,psize[idx],deformationGradient[idx]);
-
-    pHydroStressGradient[idx]   = Vector(0.0,0.0,0.0);
-    for (int k = 0; k < d_Mflag->d_8or27; k++){
-      for (int j = 0; j<3; j++) {
-          pHydroStressGradient[idx][j] += gHydrostaticStress[ni[k]] * d_S[k][j] * oodx[j];
-      }
-    }
-
-    chem_potential = -diffusivity;
-    mech_potential = diffusivity * (1 - pConcentration[idx]/max_concentration)
-                     * pConcentration[idx]*init_potential;
-
-    pPotentialFlux[idx] = chem_potential*pConcGrad[idx]
-                          + mech_potential*pHydroStressGradient[idx];
-    //cout << "id: " << idx << " CG: " << pConcentrationGradient[idx] << ", PF: " << pPotentialFlux[idx] << endl;
+    pFlux[idx] = diffusivity*pConcGrad[idx];
   } //End of Particle Loop
-
-  for(ParticleSubset::iterator iter = pset->begin(); iter != pset->end(); iter++){
-    particleIndex idx = *iter;
-  
-    // Get the node indices that surround the cell
-    interpolator->findCellAndShapeDerivatives(px[idx],ni,d_S,psize[idx],deformationGradient[idx]);
-
-    Vector dU_dx = pPotentialFlux[idx];
-    double Cdot_cond = 0.0;
-    IntVector node(0,0,0);
-
-    for (int k = 0; k < d_Mflag->d_8or27; k++){
-      node = ni[k];
-      if(patch->containsNode(node)){
-        Vector div(d_S[k].x()*oodx[0],d_S[k].y()*oodx[1],d_S[k].z()*oodx[2]);
-        Cdot_cond = Dot(div, dU_dx);
-        gdCdt[node] -= Cdot_cond;
-      }
-    }
-  } // End of Particle Loop 
-  delete interpolator;
 }

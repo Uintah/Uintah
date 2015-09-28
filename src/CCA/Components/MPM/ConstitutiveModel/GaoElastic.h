@@ -88,7 +88,7 @@ namespace Uintah {
     struct CMData {
       double Bulk;    /*< Bulk modulus */
       double Shear;   /*< Shear Modulus */
-			double vol_exp_coeff; /* Volume Expansion Coeff for concentration */
+      double vol_exp_coeff;   /*Volume Expansion Coeff for concentration */
     };   
 
     const VarLabel* pRotationLabel;  // For Hypoelastic-plasticity

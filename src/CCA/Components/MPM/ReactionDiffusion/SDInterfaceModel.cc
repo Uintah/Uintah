@@ -23,12 +23,75 @@
  */
 
 #include <CCA/Components/MPM/ReactionDiffusion/SDInterfaceModel.h>
+#include <CCA/Components/MPM/ReactionDiffusion/ScalarDiffusionModel.h>
+#include <CCA/Components/MPM/ReactionDiffusion/ReactionDiffusionLabel.h>
+#include <CCA/Components/MPM/ConstitutiveModel/MPMMaterial.h>
+#include <Core/Labels/MPMLabel.h>
+#include <Core/Grid/Task.h>
 
 using namespace Uintah;
 
-SDInterfaceModel::SDInterfaceModel(ProblemSpecP& ps, SimulationStateP& sS, MPMFlags* Mflag){
+SDInterfaceModel::SDInterfaceModel(ProblemSpecP& ps, SimulationStateP& sS, MPMFlags* Mflag) {
 
+  d_Mflag = Mflag;
+  d_sharedState = sS;
+
+  d_lb = scinew MPMLabel;
+  d_rdlb = scinew ReactionDiffusionLabel();
+
+  if(d_Mflag->d_8or27==8){
+    NGP=1;
+    NGN=1;
+  } else {
+    NGP=2;
+    NGN=2;
+  }
+
+  if(d_Mflag->d_scalarDiffusion_type == "explicit"){
+    do_explicit = true;
+  }else{
+    do_explicit = false;
+  }
+  
 }
 
-SDInterfaceModel::~SDInterfaceModel(){
+SDInterfaceModel::~SDInterfaceModel() {
+
+  delete(d_lb);
+  delete(d_rdlb);
+}
+
+void SDInterfaceModel::addInitialComputesAndRequires(Task* task,
+                                                     const PatchSet* patches) const
+{
+  int numMPM = d_sharedState->getNumMPMMatls();
+  for(int m = 0; m < numMPM; m++){
+    MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial(m);
+    ScalarDiffusionModel* sdm = mpm_matl->getScalarDiffusionModel();
+    sdm->addInitialComputesAndRequires(task, mpm_matl, patches);
+  }
+}
+
+void SDInterfaceModel::initializeSDMData(const Patch* patch,
+                                         DataWarehouse* new_dw)
+{
+  int numMPM = d_sharedState->getNumMPMMatls();
+  for(int m = 0; m < numMPM; m++){
+    MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial(m);
+    ScalarDiffusionModel* sdm = mpm_matl->getScalarDiffusionModel();
+    sdm->initializeSDMData(patch, mpm_matl, new_dw);
+  }
+}
+
+void SDInterfaceModel::computeDivergence(const Patch* patch,
+                                         DataWarehouse* old_dw,
+                                         DataWarehouse* new_dw)
+{
+  int numMatls = d_sharedState->getNumMPMMatls();
+
+  for(int m = 0; m < numMatls; m++){
+    MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial(m);
+    ScalarDiffusionModel* sdm = mpm_matl->getScalarDiffusionModel();
+    sdm->computeDivergence(patch, mpm_matl, old_dw, new_dw);
+  }
 }

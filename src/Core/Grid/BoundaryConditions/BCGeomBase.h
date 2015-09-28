@@ -142,6 +142,14 @@ namespace Uintah {
     /// For old boundary conditions
     virtual void addBC(BoundCondBase* bc)  = 0;
 
+    /// Allows a component to add a boundary condition, which already has an iterator.
+    //  This method is exactly the same as addBC, except it applies to two additional geometries,
+    //  differences and unions.  Since these geometries are not "atomic" and can consist of other
+    //  sub-geometries the function addBC intentionally will not add boundary conditions to these objects. 
+    //  Hence, this function forces the boundary conditions to be set regardless of the inherited object's
+    //  special properties. 
+    virtual void sudoAddBC(BoundCondBase* bc)  = 0;
+
     void getCellFaceIterator(Iterator& b_ptr);
 
     void getNodeFaceIterator(Iterator& b_ptr);

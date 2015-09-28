@@ -33,11 +33,11 @@
 #include <Core/Grid/GridP.h>
 #include <Core/Grid/LevelP.h>
 #include <CCA/Components/MPM/SerialMPM.h>
+
 // put here to avoid template problems
 #include <Core/Math/Matrix3.h>
 #include <Core/Math/Short27.h>
 #include <Core/Labels/MPMLabel.h>
-#include <CCA/Components/MPM/ReactionDiffusion/ReactionDiffusionLabel.h>
 #include <CCA/Components/MPM/MPMCommon.h>
 #include <Core/Geometry/Vector.h>
 #include <CCA/Components/MPM/MPMFlags.h>
@@ -48,6 +48,7 @@ namespace Uintah {
 
 class GeometryObject;
 class SDInterfaceModel;
+class ReactionDiffusionLabel;
 
 class AMRMPM : public SerialMPM {
 
@@ -96,15 +97,18 @@ public:
   void scheduleInitialErrorEstimate(const LevelP& coarseLevel, SchedulerP& sched);
 
 
-  void setMPMLabel(MPMLabel* Mlb) {
-    delete lb;
-    lb = Mlb;
-  };
+//  void setMPMLabel(MPMLabel* Mlb) {
+//    delete lb;
+//    lb = Mlb;
+//  };
 
-  enum IntegratorType {
-    Explicit,
-    Implicit,
-  };
+//  enum IntegratorType {
+//    Explicit,
+//    Implicit,
+//  };
+
+  //Inherit this from the SerialMPM base class
+  //SimulationStateP d_sharedState;
 
 protected:
   enum coarsenFlag{
@@ -129,6 +133,21 @@ protected:
                            DataWarehouse* dw,
                            int dwi, 
                            const Patch* patch);
+
+  void scheduleInitializeScalarFluxBCs(const LevelP& level, SchedulerP&);
+
+  void countMaterialPointsPerFluxLoadCurve(const ProcessorGroup*,
+                                           const PatchSubset* patches,
+                                           const MaterialSubset* matls,
+                                           DataWarehouse* old_dw,
+                                           DataWarehouse* new_dw);
+
+  void initializeScalarFluxBC(const ProcessorGroup*,
+                              const PatchSubset* patches,
+                              const MaterialSubset* matls,
+                              DataWarehouse* old_dw,
+                              DataWarehouse* new_dw);
+
 
   void actuallyComputeStableTimestep(const ProcessorGroup*,
                                      const PatchSubset* patches,
@@ -216,16 +235,6 @@ protected:
                                  const MaterialSubset* ,
                                  DataWarehouse* old_dw,
                                  DataWarehouse* new_dw);
-  //////////
-  // This task is to be used for setting particle external force
-  // and external heat rate.  I'm creating a separate task so that
-  // user defined schemes for setting these can be implemented without
-  // editing the core routines
-  void applyExternalLoads(const ProcessorGroup*,
-                          const PatchSubset* patches,
-                          const MaterialSubset* ,
-                          DataWarehouse* old_dw,
-                          DataWarehouse* new_dw);
 
   // Compute Vel. Grad and Def Grad
   void computeLAndF(const ProcessorGroup*,
@@ -357,11 +366,6 @@ protected:
   void scheduleSetGridBoundaryConditions(SchedulerP&, 
                                          const PatchSet*,
                                          const MaterialSet* matls);
-                                                 
-  void scheduleApplyExternalLoads(SchedulerP&, 
-                                  const PatchSet*,
-                                  const MaterialSet*);
-
   void scheduleComputeLAndF(SchedulerP&, const PatchSet*, const MaterialSet*);
 
   virtual void scheduleInterpolateToParticlesAndUpdate(SchedulerP&, 
@@ -414,7 +418,6 @@ protected:
   void coarseLevelCFI_Patches(const PatchSubset* patches,
                               Level::selectType& CFI_patches );
   
-  SimulationStateP d_sharedState;
   MPMLabel* lb;
   ReactionDiffusionLabel* rdlb;
   MPMFlags* flags;
@@ -424,8 +427,8 @@ protected:
   int      NGP;                     // Number of ghost particles needed.
   int      NGN;                     // Number of ghost nodes  needed.
   int      d_nPaddingCells_Coarse;  // Number of cells on the coarse level that contain particles and surround a fine patch.
-                                    // Coarse level particles are used in the task interpolateToParticlesAndUpdate_CFI.
-                                   
+                                    // Coarse level particles are used in the task interpolateToParticlesAndUpdate_CFI.                               
+
   Vector   d_acc_ans; // debugging code used to check the answers (acceleration)
   double   d_acc_tol;
   Vector   d_vel_ans; // debugging code used to check the answers (velocity)
@@ -525,10 +528,6 @@ private:
                                   const MaterialSubset* matls,
                                   DataWarehouse* old_dw,
                                   DataWarehouse* new_dw);
-
-  void scheduleSDInterfaceInterpolated(SchedulerP& sched, 
-                                       const PatchSet* patches,
-                                       const MaterialSet* matls);
 
   virtual void scheduleComputeFlux(SchedulerP&,
                                    const PatchSet*, const MaterialSet*);

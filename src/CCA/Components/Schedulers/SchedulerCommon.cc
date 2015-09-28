@@ -198,6 +198,7 @@ SchedulerCommon::makeTaskGraphDoc(const DetailedTasks* /* dt*/,
   if (!m_outPort->isOutputTimestep()){
     return;
   }
+
   // make sure to release this DOMDocument after finishing emitting the nodes
   m_graphDoc = ProblemSpec::createDocument("Uintah_TaskGraph");
   
@@ -224,8 +225,7 @@ SchedulerCommon::makeTaskGraphDoc(const DetailedTasks* /* dt*/,
 bool
 SchedulerCommon::useInternalDeps()
 {
-  // keep track of internal dependencies only if it will emit
-  // the taskgraphs (by default).
+  // keep track of internal dependencies only if it will emit the taskgraphs (by default).
   return emit_taskgraph;
 }
 

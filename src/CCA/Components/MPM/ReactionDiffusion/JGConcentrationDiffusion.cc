@@ -64,12 +64,6 @@ void JGConcentrationDiffusion::computeFlux(const Patch* patch,
   vector<IntVector> ni(interpolator->size());
   vector<Vector> d_S(interpolator->size());
 
-  Vector dx = patch->dCell();
-  double oodx[3];
-  oodx[0] = 1.0/dx.x();
-  oodx[1] = 1.0/dx.y();
-  oodx[2] = 1.0/dx.z();
-
   int dwi = matl->getDWIndex();
   constParticleVariable<Vector>  pConcGradient;
   ParticleVariable<Vector>       pFlux;
