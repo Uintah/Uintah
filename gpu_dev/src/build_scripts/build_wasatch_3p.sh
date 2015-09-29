@@ -27,7 +27,11 @@ else
 fi
 
 if test "$6" = "yes"; then
-  CUDA="-DENABLE_CUDA=ON"
+    if [[ `hostname` = titan* ]]; then
+	CUDA="-DENABLE_CUDA=ON -DDISABLE_INTROSPECTION=ON -DCUDA_ARCHITECTURE_MINIMUM=\"3.5\" "
+    else
+	CUDA="-DENABLE_CUDA=ON"
+    fi
 else
   CUDA=""
 fi
