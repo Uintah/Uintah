@@ -154,7 +154,6 @@ void ScalarDiffusionModel::scheduleComputeDivergence(Task* task,
                                                     const MPMMaterial* matl, 
                                                     const PatchSet* patch) const
 {
-  Ghost::GhostType  gnone = Ghost::None;
   Ghost::GhostType  gan   = Ghost::AroundNodes;
   const MaterialSubset* matlset = matl->thisMaterial();
   task->requires(Task::OldDW, d_sharedState->get_delt_label());
