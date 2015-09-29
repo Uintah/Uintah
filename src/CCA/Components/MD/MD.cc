@@ -380,6 +380,14 @@ void MD::scheduleInitialize(const LevelP&       level,
   LoadBalancer*         loadBal         =   sched->getLoadBalancer();
   const PatchSet*       perProcPatches  =   loadBal->getPerProcessorPatchSet(level);
 
+  const PatchSubset*    patchSubset = perProcPatches->getUnion();
+  std::cout << "Seeing a patch set of " << patchSubset->size() << " total patches." << std::endl;
+  for (int pInd = 0; pInd < patchSubset->size(); ++pInd)
+  {
+    std::cout << "Patch: " << pInd << " Level: " << patchSubset->get(pInd)->getLevelIndex() << std::endl;
+  }
+
+
   Task* task = scinew Task("MD::initialize", this, &MD::initialize);
 
   // Initialize will load position, velocity, and ID tags
@@ -1206,15 +1214,6 @@ void MD::initialize(const ProcessorGroup*   pg,
   const std::string particleLocation = location + " P ";
   printTask(perProcPatches, md_cout, location);
 
-  Matrix3   systemInverseCell = d_coordinate->getInverseCell();
-  IntVector totalSystemExtent = d_coordinate->getCellExtent();
-
-  SCIRun::Vector inverseExtentVector;
-  inverseExtentVector[0]=1.0/static_cast<double> (totalSystemExtent[0]);
-  inverseExtentVector[1]=1.0/static_cast<double> (totalSystemExtent[1]);
-  inverseExtentVector[2]=1.0/static_cast<double> (totalSystemExtent[2]);
-
-  SCIRun::Vector cellDimensions = d_coordinate->getUnitCell()*inverseExtentVector;
 
   // Loop through each patch
   size_t numPatches             =   perProcPatches->size();
@@ -1241,7 +1240,7 @@ void MD::initialize(const ProcessorGroup*   pg,
     std::vector<atomData*>* currAtomList = parsedCoordinates->getAtomList(materialLabel);
     size_t numAtoms                      = currAtomList->size();
 
-//    d_system->registerAtomCount(numAtoms,matlIndex);
+    d_system->registerAtomCount(numAtoms,matlIndex);
   }
 
   if (mdFlowDebug.active()) {
@@ -1256,18 +1255,35 @@ void MD::initialize(const ProcessorGroup*   pg,
   SCIRun::Vector  totalMomentum = MDConstants::V_ZERO;
   Uintah::Matrix3 kineticStress = MDConstants::M3_0;
 
-  for (size_t patchIndex = 0; patchIndex < numPatches; ++patchIndex) {
+
+  Matrix3   systemInverseCell = d_coordinate->getInverseCell();
+  IntVector totalSystemExtent = d_coordinate->getCellExtent();
+
+  SCIRun::Vector inverseExtentVector;
+  inverseExtentVector[0]=1.0/static_cast<double> (totalSystemExtent[0]);
+  inverseExtentVector[1]=1.0/static_cast<double> (totalSystemExtent[1]);
+  inverseExtentVector[2]=1.0/static_cast<double> (totalSystemExtent[2]);
+
+  SCIRun::Vector cellDimensions = d_coordinate->getUnitCell()*inverseExtentVector;
+
+  int prevLevelIndex = -1;
+  for (size_t patchIndex = 0; patchIndex < numPatches; ++patchIndex)
+  {
     // Loop over perProcPatches
     const Patch*        currPatch           =   perProcPatches->get(patchIndex);
+
+    int   currLevelIndex = currPatch->getLevelIndex();
+
     SCIRun::IntVector   lowCellBoundary     =   currPatch->getCellLowIndex();
     SCIRun::IntVector   highCellBoundary    =   currPatch->getCellHighIndex();
 
-    (const_cast<Patch*> (currPatch))->getLevel(true)->setdCell(cellDimensions);
+//    (const_cast<Patch*> (currPatch))->getLevel(true)->setdCell(cellDimensions);
 
     double          atomTypeVelocitySquared     = 0.0;
     SCIRun::Vector  atomTypeCumulativeVelocity  = MDConstants::V_ZERO;
     Uintah::Matrix3 atomTypeStressTensor        = MDConstants::M3_0;
-    for (size_t localType = 0; localType < numAtomTypes; ++localType) {
+    for (size_t localType = 0; localType < numAtomTypes; ++localType)
+    {
 
       // Loop over materials
       MDMaterial*   atomType    = d_sharedState->getMDMaterial(localType);
@@ -1282,7 +1298,8 @@ void MD::initialize(const ProcessorGroup*   pg,
       std::vector<SCIRun::Vector>   localAtomVelocity;
 
       double atomMass = atomType->getMass();
-      for (size_t atomIndex = 0; atomIndex < numAtomsOfType; ++atomIndex) {
+      for (size_t atomIndex = 0; atomIndex < numAtomsOfType; ++atomIndex)
+      {
 
         // Loop over all atoms of material
         atomData*   currAtom        = (*currAtomList)[atomIndex];
@@ -1347,6 +1364,8 @@ void MD::initialize(const ProcessorGroup*   pg,
       // Create this patch's particle set for atoms of current material
       size_t            numAtoms    = localAtomCoordinates.size();
       size_t            globalID    = matls->get(localType);  // Map to global material type for pset creation
+      std::cout << "MD::Creating particle set with: " << numAtoms << " on patch: " << currPatch->getID() << " on level: "
+                << currPatch->getLevelIndex() << " in DW: " << newDW->getID() << std::endl;
       ParticleSubset*   currPset    =
                         newDW->createParticleSubset(numAtoms,
                                                     globalID,

@@ -639,7 +639,7 @@ void Level::finalizeLevel(bool periodicX, bool periodicY, bool periodicZ)
   
   //  if the refinement ratio is not equal to 1, which it won't be in the usual case of AMR,
   //  then get the level 0 BBox, otherwise get your own.
-  if (d_index > 0 && d_refinementRatio != IntVector(1, 1, 1)) {
+  if (d_index > 0 && d_refinementRatio != IntVector(1, 1, 1) && isAMR() ) {
     d_grid->getLevel(0)->getInteriorSpatialRange(bbox);
   }
   else {

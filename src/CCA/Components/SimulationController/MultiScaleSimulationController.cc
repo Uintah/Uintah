@@ -722,6 +722,9 @@ MultiScaleSimulationController::doInitialTimestep( GridP  & grid,
       proc0cout << "Compiling initialization taskgraph...\n";
 
       // Initialize the per-level data
+      // FIXME:  We should probably initialize per level set; this is designed to initialize from level n backwards
+      // for every component.  At the best it's superfluous to initialize every component on every level; at worst it
+      // will cause cross-contamination.
       for (int i = grid->numLevels() - 1; i >= 0; i--) {
         d_sim->scheduleInitialize(grid->getLevel(i), d_scheduler);
 
