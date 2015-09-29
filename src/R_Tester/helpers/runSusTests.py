@@ -8,6 +8,7 @@ from modUPS import modUPS
 from commands import getoutput
 import socket
 import resource
+import subprocess
 
 #______________________________________________________________________
 # Assuming that running python with the '-u' arg doesn't fix the i/o buffering problem, this line
@@ -634,7 +635,12 @@ def runSusTest(test, susdir, inputxml, compare_root, ALGO, dbg_opt, max_parallel
   
   # Check to see if an exception was thrown.  (Use "grep -v 'cout'" to avoid false positive
   # when source code line was that prints the exception is changed.)
-  exception = system("grep -q 'Caught exception' sus.log.txt | grep -v cout");
+  # Did sus run to completion.  Prune out the header of sus.log.txt so you don't get 
+  # false positives.
+  exception   = system("grep -q 'Caught exception' sus.log.txt | grep -v cout");
+  susSuccess  = subprocess.check_output("sed -n /'timestep 0'/,//p sus.log.txt | grep -c 'Sus: going down successfully'",shell=True);
+
+  print "susSuccess %d" %(int(susSuccess))
   if exception == 0:
     print "\t*** An exception was thrown ***";
     rc = -9
@@ -657,9 +663,10 @@ def runSusTest(test, susdir, inputxml, compare_root, ALGO, dbg_opt, max_parallel
     print 
     system("echo '  :%s: %s test exceeded maximum allowable run time' >> %s/%s-short.log" % (testname,restart_text,startpath,ALGO))
     return_code = 1
-  
-  elif rc != 0:
-    print "\t*** Test %s failed with code %d" % (testname, rc)
+    return return_code
+    
+  elif rc != 0 or int(susSuccess) == 0  :
+    print "\t*** Test %s failed to run to completion, (code %d)" % (testname, rc)
     
     if startFrom == "restart":
       print "\t\tMake sure the problem makes checkpoints before finishing"
@@ -668,7 +675,7 @@ def runSusTest(test, susdir, inputxml, compare_root, ALGO, dbg_opt, max_parallel
     print 
     system("echo '  :%s: %s test did not run to completion' >> %s/%s-short.log" % (testname,restart_text,startpath,ALGO))
     return_code = 1
-
+    return return_code
   else:
     # Sus completed successfully - now run memory,compar_uda and performance tests
 
