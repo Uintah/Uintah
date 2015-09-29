@@ -53,6 +53,8 @@ namespace Uintah {
   class SimpleMaterial;
   class SPME;
 
+
+  typedef long64 MDAtomIndex;
   typedef std::complex<double> dblcomplex;
 
   /**
