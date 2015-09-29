@@ -1,0 +1,4 @@
+void profscalar(IntVector indexLow, IntVector indexHigh,
+     CCVariable<double> scalar, constCCVariable<int> pcell,
+     double sval, int pfield, bool xminus, bool xplus, bool yminus,
+     bool yplus, bool zminus, bool zplus);
