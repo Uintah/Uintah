@@ -234,6 +234,12 @@ protected:
                                  DataWarehouse* old_dw,
                                  DataWarehouse* new_dw);
 
+  void applyExternalScalarFlux(const ProcessorGroup*,
+                               const PatchSubset* patches,
+                               const MaterialSubset* ,
+                               DataWarehouse* old_dw,
+                               DataWarehouse* new_dw);
+
   // Compute Vel. Grad and Def Grad
   void computeLAndF(const ProcessorGroup*,
                     const PatchSubset* patches,
@@ -361,9 +367,12 @@ protected:
                                                        const PatchSet*,
                                                        const MaterialSet*);
 
-  void scheduleSetGridBoundaryConditions(SchedulerP&, 
-                                         const PatchSet*,
+  void scheduleSetGridBoundaryConditions(SchedulerP&, const PatchSet*,
                                          const MaterialSet* matls);
+
+  void scheduleApplyExternalScalarFlux(SchedulerP&, const PatchSet*,
+                                       const MaterialSet*);
+
   void scheduleComputeLAndF(SchedulerP&, const PatchSet*, const MaterialSet*);
 
   virtual void scheduleInterpolateToParticlesAndUpdate(SchedulerP&, 

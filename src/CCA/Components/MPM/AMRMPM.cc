@@ -33,6 +33,7 @@
 #include <CCA/Components/MPM/MPMBoundCond.h>
 #include <CCA/Components/MPM/PhysicalBC/MPMPhysicalBCFactory.h>
 #include <CCA/Components/MPM/PhysicalBC/PressureBC.h>
+#include <CCA/Components/MPM/PhysicalBC/ScalarFluxBC.h>
 #include <CCA/Components/MPM/ParticleCreator/ParticleCreator.h>
 #include <CCA/Components/Regridder/PerPatchVars.h>
 #include <CCA/Ports/DataWarehouse.h>
@@ -314,9 +315,16 @@ void AMRMPM::outputProblemSpec(ProblemSpecP& root_ps)
     ProblemSpecP cm_ps = mat->outputProblemSpec(mpm_ps);
   }
   contactModel->outputProblemSpec(mpm_ps);
-//  if (flags->d_doScalarDiffusion){
-//    sdInterfaceModel->outputProblemSpec(mpm_ps);
-//  }
+  if (flags->d_doScalarDiffusion){
+    sdInterfaceModel->outputProblemSpec(mpm_ps);
+  }
+
+  ProblemSpecP physical_bc_ps = root->appendChild("PhysicalBC");
+  ProblemSpecP mpm_ph_bc_ps = physical_bc_ps->appendChild("MPM");
+  for (int ii = 0; ii<(int)MPMPhysicalBCFactory::mpmPhysicalBCs.size(); ii++) {
+    MPMPhysicalBCFactory::mpmPhysicalBCs[ii]->outputProblemSpec(mpm_ph_bc_ps);
+  }
+
 }
 
 //______________________________________________________________________
@@ -452,6 +460,7 @@ void AMRMPM::scheduleTimeAdvance(const LevelP & level,
     schedulePartitionOfUnity(               sched, patches, matls);
     scheduleComputeZoneOfInfluence(         sched, patches, matls);
     scheduleApplyExternalLoads(             sched, patches, matls);
+    scheduleApplyExternalScalarFlux(        sched, patches, matls);
   }
 
   for (int l = 0; l < maxLevels; l++) {
@@ -697,10 +706,15 @@ void AMRMPM::scheduleInterpolateParticlesToGrid(SchedulerP& sched,
   t->computes(lb->gExternalForceLabel);
 
   if(flags->d_doScalarDiffusion){
-    t->requires(Task::OldDW, lb->pStressLabel,        gan, NGP);
-    t->requires(Task::OldDW, lb->pConcentrationLabel, gan, NGP);
+    t->requires(Task::OldDW, lb->pStressLabel,             gan, NGP);
+    t->requires(Task::OldDW, lb->pConcentrationLabel,      gan, NGP);
+    t->requires(Task::NewDW, lb->pExternalScalarFluxLabel, gan, NGP);
     t->computes(lb->gConcentrationLabel);
     t->computes(lb->gHydrostaticStressLabel);
+    t->computes(lb->gExternalScalarFluxLabel);
+    if (flags->d_useLoadCurves) {
+      t->requires(Task::OldDW, lb->pLoadCurveIDLabel,      gan, NGP);
+    }
   }
   
   sched->addTask(t, patches, matls);
@@ -752,13 +766,16 @@ void AMRMPM::scheduleInterpolateParticlesToGrid_CFI(SchedulerP& sched,
     t->modifies(lb->gExternalForceLabel);
 
     if(flags->d_doScalarDiffusion){
-     t->requires(Task::OldDW, lb->pConcentrationLabel, allPatches,
+      t->requires(Task::OldDW, lb->pConcentrationLabel,      allPatches,
                                       Task::CoarseLevel,allMatls, ND, gac, npc);
-     t->requires(Task::OldDW, lb->pStressLabel,        allPatches,
+      t->requires(Task::OldDW, lb->pStressLabel,             allPatches,
                                       Task::CoarseLevel,allMatls, ND, gac, npc);
-
-     t->modifies(lb->gConcentrationLabel);
-     t->modifies(lb->gHydrostaticStressLabel);
+      t->requires(Task::NewDW, lb->pExternalScalarFluxLabel, allPatches,
+                                      Task::CoarseLevel,allMatls, ND, gac, npc);
+ 
+      t->modifies(lb->gConcentrationLabel);
+      t->modifies(lb->gHydrostaticStressLabel);
+      t->modifies(lb->gExternalScalarFluxLabel);
     }
 
     sched->addTask(t, patches, matls);
@@ -804,8 +821,12 @@ void AMRMPM::scheduleCoarsenNodalData_CFI(SchedulerP& sched,
   t->modifies(lb->gExternalForceLabel);
 
   if(flags->d_doScalarDiffusion){
-    t->requires(Task::NewDW, lb->gConcentrationLabel, allPatches, Task::FineLevel,allMatls, ND, gn,0);
+    t->requires(Task::NewDW, lb->gConcentrationLabel,      allPatches,
+                              Task::FineLevel,allMatls, ND, gn, 0);
     t->modifies(lb->gConcentrationLabel);
+    t->requires(Task::NewDW, lb->gExternalScalarFluxLabel, allPatches,
+                              Task::FineLevel,allMatls, ND, gn, 0);
+    t->modifies(lb->gExternalScalarFluxLabel);
   }
 
   if (flag == zeroData){
@@ -1051,6 +1072,7 @@ void AMRMPM::scheduleComputeAndIntegrateAcceleration(SchedulerP& sched,
   if(flags->d_doScalarDiffusion){
     t->requires(Task::NewDW, lb->gConcentrationNoBCLabel,  Ghost::None);
     t->requires(Task::NewDW, lb->gConcentrationLabel,      Ghost::None);
+    t->requires(Task::NewDW, lb->gExternalScalarFluxLabel, Ghost::None);
     t->modifies(lb->gConcentrationRateLabel);
     t->computes(lb->gConcentrationStarLabel);
   }
@@ -1731,7 +1753,12 @@ void AMRMPM::interpolateParticlesToGrid(const ProcessorGroup*,
     vector<IntVector> ni(interpolator->size());
     vector<double> S(interpolator->size());
 
-    string interp_type = flags->d_interpolator_type;
+#if 0
+    LinearInterpolator* LPI;
+    LPI = scinew LinearInterpolator(patch);
+    vector<IntVector> ni_LPI(LPI->size());
+    vector<double> S_LPI(LPI->size());
+#endif
 
     Ghost::GhostType  gan = Ghost::AroundNodes;
     for(int m = 0; m < numMatls; m++){
@@ -1741,12 +1768,14 @@ void AMRMPM::interpolateParticlesToGrid(const ProcessorGroup*,
       // Create arrays for the particle data
       constParticleVariable<Point>  px;
       constParticleVariable<double> pmass, pvolume, pTemperature;
+      constParticleVariable<double> pConcentration;
+      constParticleVariable<double> pExternalScalarFlux;
       constParticleVariable<Vector> pvelocity, pexternalforce;
       constParticleVariable<Matrix3> psize;
       constParticleVariable<Matrix3> pDeformationMeasure;
-      constParticleVariable<double> pConcentration;
       constParticleVariable<Matrix3> pStress;
       constParticleVariable<Matrix3> pVelGrad;
+      constParticleVariable<int> pLoadCurveID;
 
       ParticleSubset* pset = old_dw->getParticleSubset(dwi, patch,
                                                        gan, NGP, lb->pXLabel);
@@ -1756,6 +1785,10 @@ void AMRMPM::interpolateParticlesToGrid(const ProcessorGroup*,
       old_dw->get(pvolume,              lb->pVolumeLabel,             pset);
       old_dw->get(pvelocity,            lb->pVelocityLabel,           pset);
       old_dw->get(pTemperature,         lb->pTemperatureLabel,        pset);
+      if (flags->d_useLoadCurves) {
+        old_dw->get(pLoadCurveID,       lb->pLoadCurveIDLabel,        pset);
+      } 
+
       new_dw->get(psize,                lb->pSizeLabel_preReloc,      pset);
       old_dw->get(pDeformationMeasure,  lb->pDeformationMeasureLabel, pset);
       new_dw->get(pexternalforce,       lb->pExtForceLabel_preReloc,  pset);
@@ -1763,6 +1796,7 @@ void AMRMPM::interpolateParticlesToGrid(const ProcessorGroup*,
         old_dw->get(pVelGrad,           lb->pVelGradLabel,            pset);
       }
       if(flags->d_doScalarDiffusion){
+        new_dw->get(pExternalScalarFlux,lb->pExternalScalarFluxLabel, pset);
         old_dw->get(pConcentration,     lb->pConcentrationLabel,      pset);
         old_dw->get(pStress,            lb->pStressLabel,             pset);
       }
@@ -1775,6 +1809,7 @@ void AMRMPM::interpolateParticlesToGrid(const ProcessorGroup*,
       NCVariable<double> gTemperature;
       NCVariable<double> gTemperatureRate;
       NCVariable<double> gconcentration;
+      NCVariable<double> gextscalarflux;
       NCVariable<double> ghydrostaticstress;
 
       new_dw->allocateAndPut(gmass,            lb->gMassLabel,           dwi,patch);
@@ -1798,8 +1833,11 @@ void AMRMPM::interpolateParticlesToGrid(const ProcessorGroup*,
                                                                 dwi,  patch);
         new_dw->allocateAndPut(ghydrostaticstress,  lb->gHydrostaticStressLabel,
                                                                 dwi,  patch);
+        new_dw->allocateAndPut(gextscalarflux,      lb->gExternalScalarFluxLabel,
+                                                                dwi,  patch);
         gconcentration.initialize(0);
         ghydrostaticstress.initialize(0);
+        gextscalarflux.initialize(0);
       }
       
       Vector pmom;
@@ -1841,11 +1879,38 @@ void AMRMPM::interpolateParticlesToGrid(const ProcessorGroup*,
             if(patch->containsNode(node)) {
               ghydrostaticstress[node] += phydrostress        * pmass[idx]*S[k];
               gconcentration[node]     += pConcentration[idx] * pmass[idx]*S[k];
+//              if(pLoadCurveID[idx]>1){
+              gextscalarflux[node]     += pExternalScalarFlux[idx]        *S[k];
+//              }
             }
           }
         }
       }  // End of particle loop
-      
+
+
+#if 0
+      Vector dx = patch->dCell();
+      for (ParticleSubset::iterator iter  = pset->begin();
+                                    iter != pset->end(); iter++){
+        particleIndex idx = *iter;
+
+        if(pLoadCurveID[idx]==1){
+          Point flux_pos=Point(px[idx].x()-0.5*psize[idx](0,0)*dx.x(),
+                               px[idx].y(),
+                               px[idx].z());
+//          cout << "px[idx] = "  << px[idx]  << endl;
+//          cout << "flux_pos = " << flux_pos << endl;
+          LPI->findCellAndWeights(flux_pos,ni_LPI,S_LPI,psize[idx],
+                                         pDeformationMeasure[idx]);
+          for(int k = 0; k < (int) ni_LPI.size(); k++) {
+            if(patch->containsNode(ni_LPI[k])) {
+              gextscalarflux[ni_LPI[k]]  += pExternalScalarFlux[idx] * S_LPI[k];
+            }
+          }
+        }
+      }
+#endif
+
       // gvelocity and gtemperature are divided by gmass in 
       // AMRMPM::NormalizeNodalVelTempConc() task
       
@@ -1917,6 +1982,7 @@ void AMRMPM::interpolateParticlesToGrid_CFI(const ProcessorGroup*,
       NCVariable<Vector> gExternalforce_fine;
       NCVariable<double> gTemperature_fine;
       NCVariable<double> gConc_fine;
+      NCVariable<double> gExtScalarFlux_fine;
       NCVariable<double> gHStress_fine;
 
       new_dw->getModifiable(gMass_fine,          lb->gMassLabel,         dwi,finePatch);
@@ -1925,8 +1991,9 @@ void AMRMPM::interpolateParticlesToGrid_CFI(const ProcessorGroup*,
       new_dw->getModifiable(gTemperature_fine,   lb->gTemperatureLabel,  dwi,finePatch);
       new_dw->getModifiable(gExternalforce_fine, lb->gExternalForceLabel,dwi,finePatch);
       if(flags->d_doScalarDiffusion){
-        new_dw->getModifiable(gConc_fine,    lb->gConcentrationLabel,    dwi,finePatch);
-        new_dw->getModifiable(gHStress_fine, lb->gHydrostaticStressLabel,dwi,finePatch);
+        new_dw->getModifiable(gConc_fine,          lb->gConcentrationLabel,    dwi,finePatch);
+        new_dw->getModifiable(gExtScalarFlux_fine, lb->gConcentrationLabel,    dwi,finePatch);
+        new_dw->getModifiable(gHStress_fine,       lb->gHydrostaticStressLabel,dwi,finePatch);
       }
 
       // loop over the coarse patches under the fine patches.
@@ -1941,6 +2008,7 @@ void AMRMPM::interpolateParticlesToGrid_CFI(const ProcessorGroup*,
         constParticleVariable<Vector> pVelocity_coarse;
         constParticleVariable<Vector> pExternalforce_coarse;
         constParticleVariable<double> pConc_coarse;
+        constParticleVariable<double> pExtScalarFlux_c;
         constParticleVariable<Matrix3> pStress_coarse;
 
         // coarseLow and coarseHigh cannot lie outside of the coarse patch
@@ -1961,10 +2029,10 @@ void AMRMPM::interpolateParticlesToGrid_CFI(const ProcessorGroup*,
         old_dw->get(pVolume_coarse,        lb->pVolumeLabel,             pset);
         old_dw->get(pVelocity_coarse,      lb->pVelocityLabel,           pset);
         old_dw->get(pTemperature_coarse,   lb->pTemperatureLabel,        pset);
-//      old_dw->get(pDefMeasure_coarse,    lb->pDeformationMeasureLabel, pset);
         new_dw->get(pExternalforce_coarse, lb->pExtForceLabel_preReloc,  pset);
         if(flags->d_doScalarDiffusion){
           old_dw->get(pConc_coarse,        lb->pConcentrationLabel,      pset);
+          new_dw->get(pExtScalarFlux_c,    lb->pExternalScalarFluxLabel, pset);
           old_dw->get(pStress_coarse,      lb->pStressLabel,             pset);
         }
 
@@ -1998,11 +2066,13 @@ void AMRMPM::interpolateParticlesToGrid_CFI(const ProcessorGroup*,
             double ConcMass         = pConc_coarse[idx]*pMass_coarse[idx];
             double phydrostressmass = one_third*pStress_coarse[idx].Trace()
                                                *pMass_coarse[idx];
+            double pESFlux_c = pExtScalarFlux_c[idx];
 
             for(int k = 0; k < (int) ni.size(); k++){
               fineNode = ni[k];
-              gConc_fine[fineNode]       += ConcMass         * S[k];
-              gHStress_fine[fineNode]    += phydrostressmass * S[k];
+              gConc_fine[fineNode]          += ConcMass         * S[k];
+              gExtScalarFlux_fine[fineNode] += pESFlux_c        * S[k];
+              gHStress_fine[fineNode]       += phydrostressmass * S[k];
             }
           }
         }  // End of particle loop
@@ -2053,6 +2123,7 @@ void AMRMPM::coarsenNodalData_CFI(const ProcessorGroup*,
       NCVariable<Vector> gExternalforce_coarse;
       NCVariable<double> gTemperature_coarse;
       NCVariable<double> gConcentration_coarse;
+      NCVariable<double> gExtScalarFlux_coarse;
 
       new_dw->getModifiable(gMass_coarse,            lb->gMassLabel,           dwi,coarsePatch);                  
       new_dw->getModifiable(gVolume_coarse,          lb->gVolumeLabel,         dwi,coarsePatch);                  
@@ -2061,6 +2132,7 @@ void AMRMPM::coarsenNodalData_CFI(const ProcessorGroup*,
       new_dw->getModifiable(gExternalforce_coarse,   lb->gExternalForceLabel,  dwi,coarsePatch);
       if(flags->d_doScalarDiffusion){
         new_dw->getModifiable(gConcentration_coarse, lb->gConcentrationLabel,  dwi,coarsePatch);
+        new_dw->getModifiable(gExtScalarFlux_coarse, lb->gConcentrationLabel,  dwi,coarsePatch);
       }
       
       if(flag == zeroData){
@@ -2088,6 +2160,7 @@ void AMRMPM::coarsenNodalData_CFI(const ProcessorGroup*,
           constNCVariable<double> gTemperature_fine;
           constNCVariable<Vector> gExternalforce_fine;
           constNCVariable<double> gConcentration_fine;
+          constNCVariable<double> gExtScalarFlux_fine;
 
           if(flag == coarsenData){
             // use getRegion() instead of get().  They should be equivalent but 
@@ -2101,6 +2174,8 @@ void AMRMPM::coarsenNodalData_CFI(const ProcessorGroup*,
             new_dw->getRegion(gExternalforce_fine, lb->gExternalForceLabel, dwi, fineLevel,fl, fh);
             if(flags->d_doScalarDiffusion){
              new_dw->getRegion(gConcentration_fine,lb->gConcentrationLabel, dwi, fineLevel,fl, fh);
+             new_dw->getRegion(gExtScalarFlux_fine,lb->gExternalScalarFluxLabel,
+                                                                            dwi, fineLevel,fl, fh);
             }
           }
 
@@ -2136,6 +2211,7 @@ void AMRMPM::coarsenNodalData_CFI(const ProcessorGroup*,
                     gExternalforce_coarse[c_node] = gExternalforce_fine[f_node];
                     if(flags->d_doScalarDiffusion){
                      gConcentration_coarse[c_node]= gConcentration_fine[f_node];
+                     gExtScalarFlux_coarse[c_node]= gExtScalarFlux_fine[f_node];
                     }
                    } // if mass
                 } // end node iterator loop
@@ -2153,6 +2229,7 @@ void AMRMPM::coarsenNodalData_CFI(const ProcessorGroup*,
                   gExternalforce_coarse[c_node] = Vector(0,0,0);
                   if(flags->d_doScalarDiffusion){
                    gConcentration_coarse[c_node]= 0;
+                   gExtScalarFlux_coarse[c_node]= 0;
                   }
                 } // end node iterator loop
                 break;
@@ -2194,9 +2271,9 @@ void AMRMPM::coarsenNodalData_CFI2(const ProcessorGroup*,
       
       // get coarse level data
       NCVariable<Vector> internalForce_coarse;                    
-      NCVariable<double> gConcRate_coarse;                    
       new_dw->getModifiable(internalForce_coarse, lb->gInternalForceLabel, 
                                                                dwi,coarsePatch);
+      NCVariable<double> gConcRate_coarse;                    
       if(flags->d_doScalarDiffusion){
         new_dw->getModifiable(gConcRate_coarse,   lb->gConcentrationRateLabel, 
                                                                dwi,coarsePatch);
@@ -2745,7 +2822,7 @@ void AMRMPM::computeAndIntegrateAcceleration(const ProcessorGroup*,
       constNCVariable<Vector> externalforce;
       constNCVariable<Vector> gvelocity;
       constNCVariable<double> gmass;
-      constNCVariable<double> gConcentration,gConcNoBC;
+      constNCVariable<double> gConcentration,gConcNoBC,gExtScalarFlux;
 
       delt_vartype delT;
       old_dw->get(delT, d_sharedState->get_delt_label(), getLevel(patches) );
@@ -2763,11 +2840,12 @@ void AMRMPM::computeAndIntegrateAcceleration(const ProcessorGroup*,
       new_dw->allocateAndPut(gacceleration,  lb->gAccelerationLabel, dwi,patch);
 
       if(flags->d_doScalarDiffusion){
-        new_dw->get(gConcentration,lb->gConcentrationLabel,  dwi,patch,gnone,0);
-        new_dw->get(gConcNoBC,     lb->gConcentrationNoBCLabel, 
-                                                             dwi,patch,gnone,0);
-        new_dw->getModifiable( gConcRate,lb->gConcentrationRateLabel,dwi,patch);
-        new_dw->allocateAndPut(gConcStar,lb->gConcentrationStarLabel,dwi,patch);
+        new_dw->get(gConcentration, lb->gConcentrationLabel,      dwi,patch,gnone,0);
+        new_dw->get(gConcNoBC,      lb->gConcentrationNoBCLabel,  dwi,patch,gnone,0);
+        new_dw->get(gExtScalarFlux, lb->gExternalScalarFluxLabel, dwi,patch,gnone,0);
+
+        new_dw->getModifiable( gConcRate,lb->gConcentrationRateLabel,  dwi,patch);
+        new_dw->allocateAndPut(gConcStar,lb->gConcentrationStarLabel,  dwi,patch);
       }
 
       gacceleration.initialize(Vector(0.,0.,0.));
@@ -2803,8 +2881,9 @@ void AMRMPM::computeAndIntegrateAcceleration(const ProcessorGroup*,
         for(NodeIterator iter=patch->getExtraNodeIterator();
                         !iter.done();iter++){
           IntVector c = *iter;
-          gConcRate[c]   /= gmass[c];
-          gConcStar[c] = gConcentration[c] + gConcRate[c] * delT;
+          gConcRate[c] /= gmass[c];
+          gConcStar[c]  =  gConcentration[c] 
+                        + (gConcRate[c]/* + gExtScalarFlux[c]*/) * delT;
         }
 
         MPMBoundCond bc;
@@ -2814,7 +2893,8 @@ void AMRMPM::computeAndIntegrateAcceleration(const ProcessorGroup*,
         for(NodeIterator iter=patch->getExtraNodeIterator();
                         !iter.done();iter++){
           IntVector c = *iter;
-          gConcRate[c] = (gConcStar[c] - gConcNoBC[c]) / delT;
+          gConcRate[c] = (gConcStar[c] - gConcNoBC[c]) / delT 
+                       + gExtScalarFlux[c];
         }
       } // if doScalarDiffusion
     }  // matls
@@ -4642,7 +4722,7 @@ void AMRMPM::scheduleInitializeScalarFluxBCs(const LevelP& level,
   int nofSFBCs = 0;
   for (int ii = 0; ii<(int)MPMPhysicalBCFactory::mpmPhysicalBCs.size(); ii++){
     string bcs_type = MPMPhysicalBCFactory::mpmPhysicalBCs[ii]->getType();
-    if (bcs_type == "Pressure"){
+    if (bcs_type == "ScalarFlux"){
       d_loadCurveIndex->add(nofSFBCs++);
     }
   }
@@ -4658,6 +4738,7 @@ void AMRMPM::scheduleInitializeScalarFluxBCs(const LevelP& level,
                 Task::OutOfDomain);
     sched->addTask(t, patches, d_sharedState->allMPMMaterials());
 
+#if 1
     // Create a task that calculates the force to be associated with
     // each particle based on the pressure BCs
     t = scinew Task("MPM::initializeScalarFluxBC",
@@ -4668,16 +4749,15 @@ void AMRMPM::scheduleInitializeScalarFluxBCs(const LevelP& level,
     t->requires(Task::NewDW, lb->pLoadCurveIDLabel,              Ghost::None);
     t->requires(Task::NewDW, lb->materialPointsPerLoadCurveLabel,
                             d_loadCurveIndex, Task::OutOfDomain, Ghost::None);
-    t->modifies(lb->pExternalForceLabel);
-#if 0
+    t->computes(lb->pExternalScalarFluxLabel);
     if (flags->d_useCBDI) {
        t->computes(             lb->pExternalForceCorner1Label);
        t->computes(             lb->pExternalForceCorner2Label);
        t->computes(             lb->pExternalForceCorner3Label);
        t->computes(             lb->pExternalForceCorner4Label);
     }
-#endif
     sched->addTask(t, patches, d_sharedState->allMPMMaterials());
+#endif
   }
   
   if(d_loadCurveIndex->removeReference())
@@ -4697,7 +4777,7 @@ void AMRMPM::countMaterialPointsPerFluxLoadCurve(const ProcessorGroup*,
   int nofSFBCs = 0;
   for (int ii = 0; ii<(int)MPMPhysicalBCFactory::mpmPhysicalBCs.size(); ii++){
     string bcs_type = MPMPhysicalBCFactory::mpmPhysicalBCs[ii]->getType();
-    if (bcs_type == "Pressure") {
+    if (bcs_type == "ScalarFlux") {
       nofSFBCs++;
 
       // Loop through the patches and count
@@ -4734,19 +4814,19 @@ void AMRMPM::initializeScalarFluxBC(const ProcessorGroup*,
 {
   // Get the current time
   double time = 0.0;
-  printTask(patches, patches->get(0),cout_doing,"Doing initializePressureBC");
+  printTask(patches,patches->get(0),cout_doing,"Doing initialize ScalarFluxBC");
   if (cout_doing.active())
-    cout_doing << "Current Time (Initialize Pressure BC) = " << time << endl;
+    cout_doing << "Current Time (Initialize ScalarFlux BC) = " << time << endl;
 
-
-  // Calculate the force vector at each particle
+  // Calculate the scalar flux at each particle
   for(int p=0;p<patches->size();p++){
-    const Patch* patch = patches->get(p);
+//    const Patch* patch = patches->get(p);
     int numMPMMatls=d_sharedState->getNumMPMMatls();
     for(int m = 0; m < numMPMMatls; m++){
-      MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial( m );
-      int dwi = mpm_matl->getDWIndex();
+//      MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial( m );
+//      int dwi = mpm_matl->getDWIndex();
 
+#if 0
       ParticleSubset* pset = new_dw->getParticleSubset(dwi, patch);
       constParticleVariable<Point> px;
       constParticleVariable<Matrix3> psize;
@@ -4756,8 +4836,8 @@ void AMRMPM::initializeScalarFluxBC(const ProcessorGroup*,
       new_dw->get(pDeformationMeasure, lb->pDeformationMeasureLabel, pset);
       constParticleVariable<int> pLoadCurveID;
       new_dw->get(pLoadCurveID, lb->pLoadCurveIDLabel, pset);
-      ParticleVariable<Vector> pExternalForce;
-      new_dw->getModifiable(pExternalForce, lb->pExternalForceLabel, pset);
+      ParticleVariable<double> pExtSF;
+      new_dw->allocateAndPut(pExtSF, lb->pExternalScalarFluxLabel, pset);
 
       ParticleVariable<Point> pExternalForceCorner1, pExternalForceCorner2,
                               pExternalForceCorner3, pExternalForceCorner4;
@@ -4771,37 +4851,38 @@ void AMRMPM::initializeScalarFluxBC(const ProcessorGroup*,
         new_dw->allocateAndPut(pExternalForceCorner4,
                                lb->pExternalForceCorner4Label, pset);
       }
+#endif
       int nofSFBCs = 0;
       for(int ii = 0; ii<(int)MPMPhysicalBCFactory::mpmPhysicalBCs.size();ii++){
         string bcs_type = MPMPhysicalBCFactory::mpmPhysicalBCs[ii]->getType();
-        if (bcs_type == "Pressure") {
+        if (bcs_type == "ScalarFlux") {
 
           // Get the material points per load curve
           sumlong_vartype numPart = 0;
-          new_dw->get(numPart, lb->materialPointsPerLoadCurveLabel,
-                      0, nofSFBCs++);
+          new_dw->get(numPart,lb->materialPointsPerLoadCurveLabel,0,nofSFBCs++);
 
-          // Save the material points per load curve in the PressureBC object
-          PressureBC* pbc =
-            dynamic_cast<PressureBC*>(MPMPhysicalBCFactory::mpmPhysicalBCs[ii]);
+          // Save the material points per load curve in the ScalarFluxBC object
+          ScalarFluxBC* pbc =
+          dynamic_cast<ScalarFluxBC*>(MPMPhysicalBCFactory::mpmPhysicalBCs[ii]);
           pbc->numMaterialPoints(numPart);
 
-          if (cout_doing.active())
-          cout_doing << "    Load Curve = "
-                   << nofSFBCs << " Num Particles = " << numPart << endl; 
+          if (cout_doing.active()){
+            cout_doing << "    Load Curve = "
+                     << nofSFBCs << " Num Particles = " << numPart << endl; 
+          }
           // Calculate the force per particle at t = 0.0
-          double forcePerPart = pbc->forcePerParticle(time);
+          //double fluxPerPart = pbc->fluxPerParticle(time);
 
           // Loop through the patches and calculate the force vector
           // at each particle
 
+#if 0
           ParticleSubset::iterator iter = pset->begin();
           for(;iter != pset->end(); iter++){
             particleIndex idx = *iter;
             if (pLoadCurveID[idx] == nofSFBCs) {
-               pExternalForce[idx] = pbc->getForceVector(px[idx],
-                                                        forcePerPart,time);
-#if 0
+//               pExternalForce[idx] = pbc->getForceVector(px[idx],
+//                                                        forcePerPart,time);
               if (flags->d_useCBDI) {
                Vector dxCell = patch->dCell();
                pExternalForce[idx] = pbc->getForceVectorCBDI(px[idx],psize[idx],
@@ -4815,11 +4896,174 @@ void AMRMPM::initializeScalarFluxBC(const ProcessorGroup*,
                pExternalForce[idx] = pbc->getForceVector(px[idx],
                                                         forcePerPart,time);
               }// if CBDI
-#endif
             } // if pLoadCurveID...
           }  // loop over particles
+#endif
         }   // if pressure loop
       }    // loop over all Physical BCs
     }     // matl loop
   }      // patch loop
+}
+
+void AMRMPM::scheduleApplyExternalScalarFlux(SchedulerP& sched,
+                                                const PatchSet* patches,
+                                                const MaterialSet* matls)
+{
+  if (!flags->doMPMOnLevel(getLevel(patches)->getIndex(),
+                           getLevel(patches)->getGrid()->numLevels()))
+    return;
+
+  printSchedule(patches,cout_doing,"MPM::scheduleApplyExternalScalarFlux");
+
+  Task* t=scinew Task("MPM::applyExternalScalarFlux",
+                    this, &AMRMPM::applyExternalScalarFlux);
+
+  t->requires(Task::OldDW, lb->pXLabel,                 Ghost::None);
+  t->requires(Task::OldDW, lb->pSizeLabel,              Ghost::None);
+  t->requires(Task::OldDW, lb->pMassLabel,              Ghost::None);
+  t->requires(Task::OldDW, lb->pDeformationMeasureLabel,Ghost::None);
+  t->computes(             lb->pExternalScalarFluxLabel);
+  if (flags->d_useLoadCurves) {
+    t->requires(Task::OldDW, lb->pLoadCurveIDLabel,     Ghost::None);
+    t->computes(             lb->pLoadCurveIDLabel_preReloc);
+/*
+    if (flags->d_useCBDI) {
+       t->computes(             lb->pExternalForceCorner1Label);
+       t->computes(             lb->pExternalForceCorner2Label);
+       t->computes(             lb->pExternalForceCorner3Label);
+       t->computes(             lb->pExternalForceCorner4Label);
+    }
+*/
+  }
+
+  sched->addTask(t, patches, matls);
+}
+
+void AMRMPM::applyExternalScalarFlux(const ProcessorGroup* ,
+                                     const PatchSubset* patches,
+                                     const MaterialSubset*,
+                                     DataWarehouse* old_dw,
+                                     DataWarehouse* new_dw)
+{
+  // Get the current time
+  double time = d_sharedState->getElapsedTime();
+
+  if (cout_doing.active())
+    cout_doing << "Current Time (applyExternalScalarFlux) = " << time << endl;
+
+  // Calculate the force vector at each particle for each pressure bc
+  std::vector<double> fluxPerPart;
+  std::vector<ScalarFluxBC*> pbcP;
+  if (flags->d_useLoadCurves) {
+    for (int ii = 0;ii < (int)MPMPhysicalBCFactory::mpmPhysicalBCs.size();ii++){
+      string bcs_type = MPMPhysicalBCFactory::mpmPhysicalBCs[ii]->getType();
+      if (bcs_type == "ScalarFlux") {
+
+        ScalarFluxBC* pbc =
+          dynamic_cast<ScalarFluxBC*>(MPMPhysicalBCFactory::mpmPhysicalBCs[ii]);
+        pbcP.push_back(pbc);
+
+        // Calculate the force per particle at current time
+        fluxPerPart.push_back(pbc->fluxPerParticle(time));
+      }
+    }
+  }
+
+  // Loop thru patches to update external force vector
+  for(int p=0;p<patches->size();p++){
+    const Patch* patch = patches->get(p);
+    printTask(patches, patch,cout_doing,"Doing applyExternalScalarFlux");
+
+    // Place for user defined loading scenarios to be defined,
+    // otherwise pExternalForce is just carried forward.
+
+    int numMPMMatls=d_sharedState->getNumMPMMatls();
+
+    for(int m = 0; m < numMPMMatls; m++){
+      MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial( m );
+      int dwi = mpm_matl->getDWIndex();
+      ParticleSubset* pset = old_dw->getParticleSubset(dwi, patch);
+
+      // Get the particle data
+      constParticleVariable<Point>   px;
+      constParticleVariable<Matrix3> psize;
+      constParticleVariable<Matrix3> pDeformationMeasure;
+      ParticleVariable<double> pExternalScalarFlux;
+
+      old_dw->get(px,    lb->pXLabel,    pset);
+      old_dw->get(psize, lb->pSizeLabel, pset);
+      old_dw->get(pDeformationMeasure, lb->pDeformationMeasureLabel, pset);
+      new_dw->allocateAndPut(pExternalScalarFlux,
+                             lb->pExternalScalarFluxLabel,  pset);
+
+      if (flags->d_useLoadCurves) {
+        bool do_FluxBCs=false;
+        for (int ii = 0;
+             ii < (int)MPMPhysicalBCFactory::mpmPhysicalBCs.size(); ii++) {
+          string bcs_type =
+            MPMPhysicalBCFactory::mpmPhysicalBCs[ii]->getType();
+          if (bcs_type == "ScalarFlux") {
+            do_FluxBCs=true;
+          }
+        }
+
+        // Get the load curve data
+        constParticleVariable<int> pLoadCurveID;
+        old_dw->get(pLoadCurveID, lb->pLoadCurveIDLabel, pset);
+        // Recycle the loadCurveIDs
+        ParticleVariable<int> pLoadCurveID_new;
+        new_dw->allocateAndPut(pLoadCurveID_new,
+                               lb->pLoadCurveIDLabel_preReloc, pset);
+        pLoadCurveID_new.copyData(pLoadCurveID);
+        if(do_FluxBCs){
+#if 0
+          ParticleVariable<Point> pExternalForceCorner1, pExternalForceCorner2,
+                                  pExternalForceCorner3, pExternalForceCorner4;
+          if (flags->d_useCBDI) {
+            new_dw->allocateAndPut(pExternalForceCorner1,
+                                  lb->pExternalForceCorner1Label, pset);
+            new_dw->allocateAndPut(pExternalForceCorner2,
+                                  lb->pExternalForceCorner2Label, pset);
+            new_dw->allocateAndPut(pExternalForceCorner3,
+                                  lb->pExternalForceCorner3Label, pset);
+            new_dw->allocateAndPut(pExternalForceCorner4,
+                                  lb->pExternalForceCorner4Label, pset);
+           }
+#endif
+          // Iterate over the particles
+          ParticleSubset::iterator iter = pset->begin();
+          for(;iter != pset->end(); iter++){
+            particleIndex idx = *iter;
+            int loadCurveID = pLoadCurveID[idx]-1;
+            if (loadCurveID < 0) {
+              pExternalScalarFlux[idx] = 0.0;
+            } else {
+              //ScalarFluxBC* pbc = pbcP[loadCurveID];
+
+              pExternalScalarFlux[idx] = fluxPerPart[loadCurveID];
+#if 0
+              if (flags->d_useCBDI) {
+               Vector dxCell = patch->dCell();
+               pExternalForce_new[idx] = pbc->getForceVectorCBDI(px[idx],
+                                 psize[idx],pDeformationMeasure[idx],force,time,
+                                    pExternalForceCorner1[idx],
+                                    pExternalForceCorner2[idx],
+                                    pExternalForceCorner3[idx],
+                                    pExternalForceCorner4[idx],
+                                    dxCell);
+              } else {
+               pExternalForce_new[idx]=pbc->getForceVector(px[idx],force,time);
+              }
+#endif
+            }
+          }
+        } else {
+          for(ParticleSubset::iterator iter = pset->begin();
+                                       iter != pset->end(); iter++){
+           pExternalScalarFlux[*iter] = 0.;
+          }
+        }
+      } // if use load curves
+    } // matl loop
+  }  // patch loop
 }
