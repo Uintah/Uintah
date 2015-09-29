@@ -163,7 +163,6 @@ void ScalarDiffusionModel::scheduleComputeDivergence(Task* task,
   task->requires(Task::OldDW, d_lb->pMassLabel,                      gan, NGP);
   task->requires(Task::OldDW, d_lb->pVolumeLabel,                    gan, NGP);
   task->requires(Task::OldDW, d_lb->pDeformationMeasureLabel,        gan, NGP);
-  task->requires(Task::NewDW, d_lb->gMassLabel,                      gnone);
 
   task->requires(Task::NewDW, d_rdlb->pFluxLabel,              gan, NGP);
 
