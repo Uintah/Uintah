@@ -382,9 +382,10 @@ void MD::scheduleInitialize(const LevelP&       level,
 
   const PatchSubset*    patchSubset = perProcPatches->getUnion();
   std::cout << "Seeing a patch set of " << patchSubset->size() << " total patches." << std::endl;
+  std::cout << "Received level " << level->getIndex() << " in MD::Initialize call." << std::endl;
   for (int pInd = 0; pInd < patchSubset->size(); ++pInd)
   {
-    std::cout << "Patch: " << pInd << " Level: " << patchSubset->get(pInd)->getLevelIndex() << std::endl;
+    std::cout << "Patch: " << patchSubset->get(pInd)->getID() << " Level: " << patchSubset->get(pInd)->getLevelIndex() << std::endl;
   }
 
 
