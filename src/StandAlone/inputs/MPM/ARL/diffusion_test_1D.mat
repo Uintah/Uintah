@@ -39,32 +39,32 @@ dt = .005;
 CMt  = [C];
 CMfd = [Cfd];
 for i = 1:max_iter
-	plot(X, C, 'r');
-	hold on;
-	plot(X, Cfd, 'b');
-	hold off;
-	axis([x0 x1 c1 c0]);
-	drawnow;
+  plot(X, C, 'r');
+  hold on;
+  plot(X, Cfd, 'b');
+  hold off;
+  axis([x0 x1 c1 c0]);
+  drawnow;
 
   time = i*dt;
 
-	% Compute Fourier solution for homogeous
-	% boundary conditions
-	C0 = zeros(size(X));
+  % Compute Fourier solution for homogeous
+  % boundary conditions
+  C0 = zeros(size(X));
   for n = 1:num_fourier_terms
     l2 = l0*n^2;
     C0 = C0 + (exp(l2*time)./n)*sin(n*b.*X);
-	end
+  end
 
-	% Adjust for non-homogeous boundary conditions
-	C = Cs - ((2*c0)/pi).*C0;
+  % Adjust for non-homogeous boundary conditions
+  C = Cs - ((2*c0)/pi).*C0;
 
-	% Compute finite difference solution
-	Cfd = Cfd + cfl*A*Cfd;
-	Cfd(1) = c0;
-	Cfd(end) = c1;
+  % Compute finite difference solution
+  Cfd = Cfd + cfl*A*Cfd;
+  Cfd(1) = c0;
+  Cfd(end) = c1;
 
-	% Used for output
+  % Used for output
   CMt  = [CMt C];
   CMfd = [CMfd Cfd];
 end

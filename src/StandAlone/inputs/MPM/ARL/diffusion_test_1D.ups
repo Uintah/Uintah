@@ -123,7 +123,7 @@
         <upper>[1.0, 0.05, 0.05]</upper>
         <resolution>[20, 1, 1]        </resolution>
         <extraCells>[0, 0, 0]          </extraCells>
-        <patches>[4,1,1]               </patches>
+        <patches>[1,1,1]               </patches>
       </Box>
     </Level>
   </Grid>
