@@ -33,7 +33,6 @@
 #include <Core/Grid/GridP.h>
 #include <Core/Grid/LevelP.h>
 #include <CCA/Components/MPM/SerialMPM.h>
-
 // put here to avoid template problems
 #include <Core/Math/Matrix3.h>
 #include <Core/Math/Short27.h>
@@ -48,7 +47,6 @@ namespace Uintah {
 
 class GeometryObject;
 class SDInterfaceModel;
-class ReactionDiffusionLabel;
 
 class AMRMPM : public SerialMPM {
 
@@ -418,16 +416,15 @@ protected:
   void coarseLevelCFI_Patches(const PatchSubset* patches,
                               Level::selectType& CFI_patches );
   
-  MPMLabel* lb;
-  ReactionDiffusionLabel* rdlb;
-  MPMFlags* flags;
-  Output* dataArchiver;
+//  MPMLabel* lb;
+//  MPMFlags* flags;
+//  Output* dataArchiver;
 
-  double   d_SMALL_NUM_MPM;
-  int      NGP;                     // Number of ghost particles needed.
-  int      NGN;                     // Number of ghost nodes  needed.
+//  double   d_SMALL_NUM_MPM;
+//  int      NGP;                     // Number of ghost particles needed.
+//  int      NGN;                     // Number of ghost nodes  needed.
   int      d_nPaddingCells_Coarse;  // Number of cells on the coarse level that contain particles and surround a fine patch.
-                                    // Coarse level particles are used in the task interpolateToParticlesAndUpdate_CFI.                               
+                                    // Coarse level particles are used in the task interpolateToParticlesAndUpdate_CFI.
 
   Vector   d_acc_ans; // debugging code used to check the answers (acceleration)
   double   d_acc_tol;
