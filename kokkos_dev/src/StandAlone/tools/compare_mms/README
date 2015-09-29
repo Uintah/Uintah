@@ -1,4 +1,0 @@
-The compare_mms program compares an Uintah Data Archive (UDA) with an
-analytical solution to a fire problem.  The analytical solution can be
-found in the MMS#.cc files.
-
