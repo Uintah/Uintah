@@ -1,0 +1,7 @@
+#!/bin/csh
+echo "Now killing regression tester"
+
+pkill -u $USER {sus\|compare_uda\|startTester\|build_and_run\|runComponentTests\|runTests\|build\|make\|g++\|cc1plus}
+
+exit
+
