@@ -2200,7 +2200,7 @@ BoundaryCondition::setupBCs( ProblemSpecP& db )
 
             if ( type1 == "PartMassFlowInlet" ) {
               db_BCType1->getAttribute("label", my_info.partName);
-              db_BCType->require("value",my_info.partMassFlow_rate);
+              db_BCType1->require("value",my_info.partMassFlow_rate);
               my_info.lHasPartMassFlow=true;
               my_info.partVelocity = Vector(0,0,0);
 
@@ -2275,8 +2275,8 @@ BoundaryCondition::setupBCs( ProblemSpecP& db )
 
                 MassParticleDensity+=weight*M_PI*diameter*diameter*diameter/6.0*density;  // (kg/ m^3)
 
-                my_info.partDensity = MassParticleDensity;
               }
+                my_info.partDensity = MassParticleDensity;
               // note that the mass flow rate is in the BCstruct value
               break; // exit bcType spec  loop 
             }
@@ -2750,14 +2750,14 @@ BoundaryCondition::setupBCInletVelocities__NEW(const ProcessorGroup*,
                 bc_iter->second.partVelocity[norm] = pm*bc_iter->second.partMassFlow_rate /
                   (area * bc_iter->second.partDensity);
               }
-              bc_kind = "Dirichlet"; // this must be specified for setting uintah BC
+              std::string Ubc_kind = "Dirichlet"; // this must be specified for setting uintah BC
 
               int qn_total =  bc_iter->second.vWeights.size();
               for (int qn=0; qn< qn_total; qn++){
 
                 for(unsigned int i = 0; i < 3; i++) {
                   double uintahVal = bc_iter->second.partVelocity[i]*bc_iter->second.vWeights[qn]*bc_iter->second.vVelScalingConst[qn][i]; // use weighted scaled boundary condition
-                  patch->possiblyAddBC(face, child, bc_iter->second.partName, matl_index,uintahVal, bc_kind,bc_iter->second.vVelLabels[qn][i],bc_iter->second.faceName );
+                  patch->possiblyAddBC(face, child, bc_iter->second.partName, matl_index,uintahVal, Ubc_kind,bc_iter->second.vVelLabels[qn][i],bc_iter->second.faceName );
                 }
               }
             }
