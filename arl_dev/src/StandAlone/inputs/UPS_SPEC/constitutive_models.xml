@@ -719,8 +719,8 @@
     <gruneisen_parameter              spec="OPTIONAL DOUBLE" need_applies_to="type Arenisca arena" />
     <subcycling_characteristic_number spec="OPTIONAL DOUBLE" need_applies_to="type Arenisca Arenisca3 Arenisca4 arena" />
     <J3_type                          spec="OPTIONAL INTEGER" need_applies_to="type Arenisca4" />
-	<J3_psi                           spec="OPTIONAL INTEGER" need_applies_to="type Arenisca4" />
-	<principal_stress_cutoff          spec="OPTIONAL INTEGER" need_applies_to="type Arenisca4" />			
+        <J3_psi                           spec="OPTIONAL INTEGER" need_applies_to="type Arenisca4" />
+        <principal_stress_cutoff          spec="OPTIONAL INTEGER" need_applies_to="type Arenisca4" />                   
 
   <!--______________________________________________________________________ -->
   <!-- The following are for the UCNH & JWLppMPM model initial stress -->

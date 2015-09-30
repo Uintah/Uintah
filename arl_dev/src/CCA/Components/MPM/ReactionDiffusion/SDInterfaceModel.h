@@ -77,6 +77,8 @@ namespace Uintah {
                                        DataWarehouse* old_dw,
                                        DataWarehouse* new_dw) = 0;
 
+    virtual void outputProblemSpec(ProblemSpecP& ps,bool output_sdim_tag = true);
+
   protected:
     MPMLabel* d_lb;
     MPMFlags* d_Mflag;

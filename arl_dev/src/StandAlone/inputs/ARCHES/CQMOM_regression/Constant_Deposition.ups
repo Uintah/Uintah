@@ -296,7 +296,6 @@
       <ParticleModels>
         <model label="fStick" type="constant">
           <grid dependent_type="svol" independent_type="svol"/>
-          <IC> none </IC>
           <constant> [0.25,0.25,0.25,0.25] </constant>
         </model>
       </ParticleModels>

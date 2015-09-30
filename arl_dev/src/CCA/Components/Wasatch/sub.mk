@@ -66,6 +66,7 @@ endif
 SRCS +=                                              \
         $(SRCDIR)/ConvectiveInterpolationMethods.cc  \
         $(SRCDIR)/FieldAdaptor.cc                    \
+        $(SRCDIR)/BCHelper.cc                        \
         $(SRCDIR)/ParticlesHelper.cc                 
 
 # All other src files for Wastach should be listed here:

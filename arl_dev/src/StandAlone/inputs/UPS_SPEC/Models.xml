@@ -23,7 +23,7 @@
       <allowReflect           spec="OPTIONAL BOOLEAN"/>
       <solveDivQ              spec="OPTIONAL BOOLEAN"/>
       <applyFilter            spec="OPTIONAL BOOLEAN"/>
-      <rayDirSampleAlgo       spec="OPTIONAL STRING"/>
+      <rayDirSampleAlgo       spec="OPTIONAL STRING 'naive, Naive LatinHyperCube'"/>
       <ignore_BC_bulletproofing spec="OPTIONAL BOOLEAN"/>
            
       <include href="RMCRT_radiometer.xml" section="Radiometer" />     

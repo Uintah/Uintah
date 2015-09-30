@@ -153,7 +153,6 @@ void ScalarDiffusionModel::scheduleComputeDivergence(Task* task,
                                                     const MPMMaterial* matl, 
                                                     const PatchSet* patch) const
 {
-  Ghost::GhostType  gnone = Ghost::None;
   Ghost::GhostType  gan   = Ghost::AroundNodes;
   const MaterialSubset* matlset = matl->thisMaterial();
   task->requires(Task::OldDW, d_sharedState->get_delt_label());
@@ -162,7 +161,6 @@ void ScalarDiffusionModel::scheduleComputeDivergence(Task* task,
   task->requires(Task::OldDW, d_lb->pMassLabel,                      gan, NGP);
   task->requires(Task::OldDW, d_lb->pVolumeLabel,                    gan, NGP);
   task->requires(Task::OldDW, d_lb->pDeformationMeasureLabel,        gan, NGP);
-  task->requires(Task::NewDW, d_lb->gMassLabel,                      gnone);
 
   task->requires(Task::NewDW, d_rdlb->pFluxLabel,              gan, NGP);
 
@@ -373,4 +371,9 @@ void ScalarDiffusionModel::computeDivergence_CFI(const PatchSubset* finePatches,
     }  // patch has CFI faces
     delete interpolator;
   }  // End fine patch loop
+}
+
+void ScalarDiffusionModel::outputProblemSpec(ProblemSpecP& ps, bool output_rdm_tag)
+{
+   cout << "Fill this in for the model that you are using." << endl;
 }

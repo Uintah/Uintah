@@ -171,7 +171,8 @@ namespace Uintah{
       bool d_onOff_SetBCs;                  // switch for setting boundary conditions
       bool d_isDbgOn;
       bool d_applyFilter;                   // Allow for filtering of boundFlux and divQ results
-      std::string  d_rayDirSampleAlgo;       
+      int  d_rayDirSampleAlgo;
+      enum rayDirSampleAlgorithm{NAIVE, LATIN_HYPER_CUBE};   
 
       enum Algorithm{ dataOnion,            
                       coarseLevel, 
@@ -343,7 +344,6 @@ namespace Uintah{
       //__________________________________
       /** @brief Sample Rays for flux divergence using LHC sampling */
       Vector findRayDirectionHyperCube( MTRand& mTwister,
-                                        const bool isSeedRandom,
                                         const IntVector& = IntVector(-9,-9,-9),
                                         const int iRay = -9,
                                         const int bin_i = 0,

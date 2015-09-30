@@ -49,16 +49,16 @@ void RFConcDiffusion1MPM::scheduleComputeFlux(Task* task, const MPMMaterial* mat
                                               const PatchSet* patch) const
 {
   const MaterialSubset* matlset = matl->thisMaterial();
-  Ghost::GhostType  gan = Ghost::AroundNodes;
+//  Ghost::GhostType  gan = Ghost::AroundNodes;
   Ghost::GhostType  gnone = Ghost::None;
-  task->requires(Task::OldDW, d_lb->pXLabel,                   matlset, gan, NGP);
-  task->requires(Task::OldDW, d_lb->pSizeLabel,                matlset, gan, NGP);
-  task->requires(Task::OldDW, d_lb->pMassLabel,                matlset, gan, NGP);
-  task->requires(Task::OldDW, d_lb->pVolumeLabel,              matlset, gan, NGP);
-  task->requires(Task::OldDW, d_lb->pDeformationMeasureLabel,  matlset, gan, NGP);
-  task->requires(Task::OldDW, d_rdlb->pConcentrationLabel,     matlset, gan, NGP);
-  task->requires(Task::OldDW, d_lb->pConcGradientLabel,        matlset, gan, NGP);
-  task->requires(Task::NewDW, d_lb->gMassLabel,                matlset, gnone);
+//  task->requires(Task::OldDW, d_lb->pXLabel,                   matlset, gan, NGP);
+//  task->requires(Task::OldDW, d_lb->pSizeLabel,                matlset, gan, NGP);
+//  task->requires(Task::OldDW, d_lb->pMassLabel,                matlset, gan, NGP);
+//  task->requires(Task::OldDW, d_lb->pVolumeLabel,              matlset, gan, NGP);
+//  task->requires(Task::OldDW, d_lb->pDeformationMeasureLabel,  matlset, gan, NGP);
+//  task->requires(Task::OldDW, d_rdlb->pConcentrationLabel,     matlset, gan, NGP);
+  task->requires(Task::OldDW, d_lb->pConcGradientLabel,        matlset, gnone);
+//  task->requires(Task::NewDW, d_lb->gMassLabel,                matlset, gnone);
 
   task->computes(d_rdlb->pFluxLabel,  matlset);
 }
@@ -69,32 +69,32 @@ void RFConcDiffusion1MPM::computeFlux(const Patch* patch,
                                       DataWarehouse* new_dw)
 {
 
-  Ghost::GhostType  gnone = Ghost::None;
+//  Ghost::GhostType  gnone = Ghost::None;
 
   int dwi = matl->getDWIndex();
-  constParticleVariable<Point>   px;
-  constParticleVariable<double>  pvol,pMass;
-  constParticleVariable<double>  pConcentration;
-  constParticleVariable<Matrix3> psize;
-  constParticleVariable<Matrix3> deformationGradient;
-  constParticleVariable<Vector>  pConcGrad;
-  constNCVariable<double>        gConcentration,gMass;
+//  constParticleVariable<Point>   px;
+//  constParticleVariable<double>  pvol,pMass;
+//  constParticleVariable<double>  pConcentration;
+//  constParticleVariable<Matrix3> psize;
+//  constParticleVariable<Matrix3> deformationGradient;
+//  constNCVariable<double>        gConcentration,gMass;
 
+  constParticleVariable<Vector>  pConcGrad;
   ParticleVariable<Vector>       pFlux;
 
   ParticleSubset* pset = old_dw->getParticleSubset(dwi, patch);
 
-  old_dw->get(px,                  d_lb->pXLabel,                  pset);
-  old_dw->get(pvol,                d_lb->pVolumeLabel,             pset);
-  old_dw->get(pMass,               d_lb->pMassLabel,               pset);
-  old_dw->get(psize,               d_lb->pSizeLabel,               pset);
-  old_dw->get(pConcGrad,           d_lb->pConcGradientLabel,       pset);
-  old_dw->get(deformationGradient, d_lb->pDeformationMeasureLabel, pset);
-  old_dw->get(pConcentration,      d_rdlb->pConcentrationLabel,    pset);
+//  old_dw->get(px,                  d_lb->pXLabel,                  pset);
+//  old_dw->get(pvol,                d_lb->pVolumeLabel,             pset);
+//  old_dw->get(pMass,               d_lb->pMassLabel,               pset);
+//  old_dw->get(psize,               d_lb->pSizeLabel,               pset);
+//  old_dw->get(deformationGradient, d_lb->pDeformationMeasureLabel, pset);
+//  old_dw->get(pConcentration,      d_rdlb->pConcentrationLabel,    pset);
 
+  old_dw->get(pConcGrad,           d_lb->pConcGradientLabel,       pset);
   new_dw->allocateAndPut(pFlux,    d_rdlb->pFluxLabel,             pset);
 
-  new_dw->get(gMass,              d_lb->gMassLabel,                dwi, patch, gnone, 0);
+//  new_dw->get(gMass,              d_lb->gMassLabel,                dwi, patch, gnone, 0);
 
   for (ParticleSubset::iterator iter = pset->begin(); iter != pset->end();
                                                       iter++){
@@ -102,4 +102,17 @@ void RFConcDiffusion1MPM::computeFlux(const Patch* patch,
 
     pFlux[idx] = diffusivity*pConcGrad[idx];
   } //End of Particle Loop
+}
+
+void RFConcDiffusion1MPM::outputProblemSpec(ProblemSpecP& ps, bool output_rdm_tag)
+{
+
+  ProblemSpecP rdm_ps = ps;
+  if (output_rdm_tag) {
+    rdm_ps = ps->appendChild("diffusion_model");
+    rdm_ps->setAttribute("type","rf1");
+  }
+
+  rdm_ps->appendElement("diffusivity",diffusivity);
+  rdm_ps->appendElement("max_concentration",max_concentration);
 }

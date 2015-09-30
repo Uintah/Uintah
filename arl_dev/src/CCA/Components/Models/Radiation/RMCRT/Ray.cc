@@ -108,6 +108,7 @@ Ray::Ray( const TypeDescription::Type FLT_DBL ) : RMCRTCommon( FLT_DBL)
   d_radiometer     = NULL;
   d_dbgCells.push_back( IntVector(36,0,0) );
   d_halo          = IntVector(-9,-9,-9);
+  d_rayDirSampleAlgo = NAIVE;
 
   //_____________________________________________
   //   Ordering for Surface Method
@@ -176,20 +177,28 @@ Ray::problemSetup( const ProblemSpecP& prob_spec,
 
   d_sharedState = sharedState;
   ProblemSpecP rmcrt_ps = rmcrtps;
-  Vector orient;
+  string rayDirSampleAlgo;
+  
   rmcrt_ps->getWithDefault( "nDivQRays" ,       d_nDivQRays ,        10 );             // Number of rays per cell used to compute divQ
   rmcrt_ps->getWithDefault( "Threshold" ,       d_threshold ,      0.01 );             // When to terminate a ray
   rmcrt_ps->getWithDefault( "randomSeed",       d_isSeedRandom,    true );             // random or deterministic seed.
   rmcrt_ps->getWithDefault( "StefanBoltzmann",  d_sigma,           5.67051e-8);        // Units are W/(m^2-K)
   rmcrt_ps->getWithDefault( "solveBoundaryFlux" , d_solveBoundaryFlux, false );
   rmcrt_ps->getWithDefault( "CCRays"    ,       d_CCRays,          false );            // if true, forces rays to always have CC origins
-  rmcrt_ps->getWithDefault( "nFluxRays" ,       d_nFluxRays,       1 );                 // number of rays per cell for computation of boundary fluxes
-  rmcrt_ps->getWithDefault( "sigmaScat"  ,      d_sigmaScat  ,      0 );                // scattering coefficient
-  rmcrt_ps->getWithDefault( "allowReflect"   ,  d_allowReflect,     true );             // Allow for ray reflections. Make false for DOM comparisons.
-  rmcrt_ps->getWithDefault( "solveDivQ"      ,  d_solveDivQ,        true );             // Allow for solving of divQ for flow cells.
-  rmcrt_ps->getWithDefault( "applyFilter"    ,  d_applyFilter,      false );            // Allow filtering of boundFlux and divQ.
-  rmcrt_ps->getWithDefault( "rayDirSampleAlgo", d_rayDirSampleAlgo,      "naive" );             // Change Monte-Carlo Sampling technique for RayDirection.
+  rmcrt_ps->getWithDefault( "nFluxRays" ,       d_nFluxRays,       1 );                // number of rays per cell for computation of boundary fluxes
+  rmcrt_ps->getWithDefault( "sigmaScat"  ,      d_sigmaScat  ,      0 );               // scattering coefficient
+  rmcrt_ps->getWithDefault( "allowReflect"   ,  d_allowReflect,     true );            // Allow for ray reflections. Make false for DOM comparisons.
+  rmcrt_ps->getWithDefault( "solveDivQ"      ,  d_solveDivQ,        true );            // Allow for solving of divQ for flow cells.
+  rmcrt_ps->getWithDefault( "applyFilter"    ,  d_applyFilter,      false );           // Allow filtering of boundFlux and divQ.
+  rmcrt_ps->getWithDefault( "rayDirSampleAlgo", rayDirSampleAlgo,   "naive" );         // Change Monte-Carlo Sampling technique for RayDirection.
 
+
+  if (rayDirSampleAlgo == "LatinHypreCube" ){
+    d_rayDirSampleAlgo = LATIN_HYPER_CUBE;
+    proc0cout << " RMCRT:  Using Latin Hyper Cube method for selecting ray directions.";
+  } else{
+    proc0cout << " RMCRT:  Using traditional Monte-Carlo method for selecting ray directions.";
+  }
 
   //__________________________________
   //  Radiometer setup
@@ -222,7 +231,7 @@ Ray::problemSetup( const ProblemSpecP& prob_spec,
     proc0cout << "If you wish to run a scattering case, please specify a positive value greater than 1e-99 for the scattering coefficient." << endl;
     proc0cout << "If you wish to run a non-scattering case, please remove --enable-ray-scatter from your configure line and re-configure and re-compile" << endl;
   }
-  proc0cout<< endl << "RAY_SCATTER IS DEFINED" << endl;
+  proc0cout<< endl << " RMCRT:  ray scattering in enabled" << endl;
 #endif
 
   if( d_nDivQRays == 1 ){
@@ -570,7 +579,7 @@ Ray::rayTrace( const ProcessorGroup* pg,
 
       //__________________________________
       //
-      vector <int> rand_i( "LHC"== d_rayDirSampleAlgo ? d_nFluxRays : 0);  // only needed for LHC scheme
+      vector <int> rand_i( d_rayDirSampleAlgo == LATIN_HYPER_CUBE ? d_nFluxRays : 0);  // only needed for LHC scheme
 
       for (CellIterator iter = patch->getCellIterator(); !iter.done(); iter++){
         IntVector origin = *iter;
@@ -595,8 +604,8 @@ Ray::rayTrace( const ProcessorGroup* pg,
           double sumI_prev= 0;
           double sumCos=0;    // used to force sumCostheta/nRays == 0.5 or  sum (d_Omega * cosTheta) == pi
 
-          if (d_rayDirSampleAlgo=="LHC"){   
-            randVector(rand_i,mTwister);
+          if (d_rayDirSampleAlgo == LATIN_HYPER_CUBE){   
+            randVector(rand_i, mTwister, origin);
           }
 
 
@@ -607,10 +616,10 @@ Ray::rayTrace( const ProcessorGroup* pg,
             Vector direction_vector, ray_location;
             double cosTheta;
 
-            if (d_rayDirSampleAlgo=="LHC"){    // Latin-Hyper-Cube sampling
+            if ( d_rayDirSampleAlgo == LATIN_HYPER_CUBE ){    // Latin-Hyper-Cube sampling
               rayDirectionHyperCube_cellFace( mTwister, origin, d_dirIndexOrder[RayFace], d_dirSignSwap[RayFace], iRay,
                                               direction_vector, cosTheta, rand_i[iRay],iRay);
-            } else{                            // Naive Monte-Carlo sampling
+            } else{                                          // Naive Monte-Carlo sampling
               rayDirection_cellFace( mTwister, origin, d_dirIndexOrder[RayFace], d_dirSignSwap[RayFace], iRay,
                                      direction_vector, cosTheta );
             }
@@ -650,13 +659,13 @@ Ray::rayTrace( const ProcessorGroup* pg,
     //______________________________________________________________________
   if( d_solveDivQ){
 
-    vector <int> rand_i( "LHC"== d_rayDirSampleAlgo ? d_nDivQRays : 0);  // only needed for LHC scheme
+    vector <int> rand_i( d_rayDirSampleAlgo == LATIN_HYPER_CUBE ? d_nDivQRays : 0);  // only needed for LHC scheme
 
     for (CellIterator iter = patch->getCellIterator(); !iter.done(); iter++){
       IntVector origin = *iter;
 
-      if (d_rayDirSampleAlgo=="LHC"){   
-        randVector(rand_i,mTwister);
+      if (d_rayDirSampleAlgo == LATIN_HYPER_CUBE){   
+        randVector(rand_i, mTwister, origin);
       }
       double sumI = 0;
 
@@ -664,10 +673,10 @@ Ray::rayTrace( const ProcessorGroup* pg,
       for (int iRay=0; iRay < d_nDivQRays; iRay++){
 
         Vector direction_vector;
-        if (d_rayDirSampleAlgo=="LHC"){   
-          direction_vector =findRayDirectionHyperCube(mTwister, d_isSeedRandom, origin, iRay,rand_i[iRay],iRay );
-        }else{
-          direction_vector =findRayDirection(mTwister, d_isSeedRandom, origin, iRay );
+        if (d_rayDirSampleAlgo == LATIN_HYPER_CUBE){        // Latin-Hyper-Cube sampling
+          direction_vector =findRayDirectionHyperCube(mTwister, origin, iRay, rand_i[iRay],iRay );
+        }else{                                              // Naive Monte-Carlo sampling
+          direction_vector =findRayDirection(mTwister, origin, iRay );
         }
 
         Vector rayOrigin;
@@ -960,14 +969,14 @@ Ray::rayTrace_dataOnion( const ProcessorGroup* pg,
     //__________________________________
     //
     
-    vector <int> rand_i( "LHC"== d_rayDirSampleAlgo ? d_nDivQRays : 0);  // only needed for LHC scheme
+    vector <int> rand_i( d_rayDirSampleAlgo == LATIN_HYPER_CUBE  ? d_nDivQRays : 0);  // only needed for LHC scheme
 
     for (CellIterator iter = finePatch->getCellIterator(); !iter.done(); iter++){
 
       IntVector origin = *iter;
 
-      if (d_rayDirSampleAlgo=="LHC"){   
-        randVector(rand_i,mTwister);
+      if (d_rayDirSampleAlgo == LATIN_HYPER_CUBE){   
+        randVector(rand_i, mTwister, origin);
       }
 /*`==========TESTING==========*/
 #if 0 
@@ -989,12 +998,11 @@ Ray::rayTrace_dataOnion( const ProcessorGroup* pg,
       //  ray loop
       for (int iRay=0; iRay < d_nDivQRays; iRay++){
 
-        //dbg2 << "===== iRay: " << iRay << endl;
         Vector direction_vector;
-        if (d_rayDirSampleAlgo=="LHC"){   
-          direction_vector =findRayDirectionHyperCube(mTwister, d_isSeedRandom, origin, iRay,rand_i[iRay],iRay );
-        }else{
-          direction_vector =findRayDirection(mTwister, d_isSeedRandom, origin, iRay );
+        if (d_rayDirSampleAlgo== LATIN_HYPER_CUBE){       // Latin-Hyper-Cube sampling
+          direction_vector =findRayDirectionHyperCube(mTwister, origin, iRay,rand_i[iRay],iRay );
+        }else{                                            // Naive Monte-Carlo sampling
+          direction_vector =findRayDirection(mTwister, origin, iRay );
         }
 
         Vector rayOrigin;
@@ -1212,13 +1220,12 @@ Ray::rayDirectionHyperCube_cellFace(MTRand& mTwister,
 //______________________________________________________________________
 Vector
 Ray::findRayDirectionHyperCube(MTRand& mTwister,
-                               const bool isSeedRandom,
                                const IntVector& origin,
                                const int iRay,
                                const int bin_i,
                                const int bin_j)
 {
-  if( isSeedRandom == false ){
+  if( d_isSeedRandom == false ){
     mTwister.seed((origin.x() + origin.y() + origin.z()) * iRay +1);
   }
 
@@ -1234,7 +1241,8 @@ Ray::findRayDirectionHyperCube(MTRand& mTwister,
 
   return direction_vector;
 }
-
+//______________________________________________________________________
+//
 //  Compute the Ray location from a cell face
 void Ray::rayLocation_cellFace( MTRand& mTwister,
                                 const IntVector& origin,
