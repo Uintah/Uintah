@@ -153,11 +153,12 @@ namespace Wasatch {
     
   public:
     
-    WasatchBCHelper( const Uintah::PatchSet* const localPatches,
-             const Uintah::MaterialSet* const materials,
-             const PatchInfoMap& patchInfoMap,
-             GraphCategories& grafCat,
-             BCFunctorMap& bcFunctorMap );
+    WasatchBCHelper( const Uintah::LevelP& level,
+                    Uintah::SchedulerP& sched,
+                    const Uintah::MaterialSet* const materials,
+                    const PatchInfoMap& patchInfoMap,
+                    GraphCategories& grafCat,
+                    BCFunctorMap& bcFunctorMap );
         
     ~WasatchBCHelper();
 

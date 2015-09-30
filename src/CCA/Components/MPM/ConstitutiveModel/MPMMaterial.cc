@@ -213,6 +213,9 @@ ProblemSpecP MPMMaterial::outputProblemSpec(ProblemSpecP& ps)
   mpm_ps->appendElement("is_rigid",d_is_rigid);
   mpm_ps->appendElement("includeFlowWork",d_includeFlowWork);
   d_cm->outputProblemSpec(mpm_ps);
+  if(getScalarDiffusionModel()){
+    d_sdm->outputProblemSpec(mpm_ps);
+  }
 
   for (vector<GeometryObject*>::const_iterator it = d_geom_objs.begin();
        it != d_geom_objs.end(); it++) {

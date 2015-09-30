@@ -143,6 +143,7 @@ namespace Uintah {
       const VarLabel* gConcentrationNoBCLabel;
       const VarLabel* gConcentrationRateLabel;
       const VarLabel* gConcentrationStarLabel;
+      const VarLabel* gExternalScalarFluxLabel;
       const VarLabel* gHydrostaticStressLabel;
       const VarLabel* gThermalContactTemperatureRateLabel;
       const VarLabel* gNormTractionLabel;

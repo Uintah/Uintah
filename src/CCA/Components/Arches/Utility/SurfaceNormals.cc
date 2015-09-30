@@ -21,7 +21,10 @@ typedef SpatialOps::SpatFldPtr<ZVolF> ZVolFP;
 typedef SpatialOps::OperatorTypeBuilder< SpatialOps::Gradient, SVolF, SpatialOps::XVolField >::type GradX;
 typedef SpatialOps::OperatorTypeBuilder< SpatialOps::Gradient, SVolF, SpatialOps::YVolField >::type GradY;
 typedef SpatialOps::OperatorTypeBuilder< SpatialOps::Gradient, SVolF, SpatialOps::ZVolField >::type GradZ;
+//helper
+typedef std::vector<ArchesFieldContainer::VariableInformation> VIVec;
 
+//--------------------------------------------------------------------------------------------------
 SurfaceNormals::SurfaceNormals( std::string task_name, int matl_index ) :
 TaskInterface( task_name, matl_index ) {
 }
@@ -29,10 +32,12 @@ TaskInterface( task_name, matl_index ) {
 SurfaceNormals::~SurfaceNormals(){
 }
 
+//--------------------------------------------------------------------------------------------------
 void
 SurfaceNormals::problemSetup( ProblemSpecP& db ){
 }
 
+//--------------------------------------------------------------------------------------------------
 void
 SurfaceNormals::create_local_labels(){
 
@@ -54,14 +59,9 @@ SurfaceNormals::create_local_labels(){
 
 }
 
-//
-//------------------------------------------------
-//-------------- INITIALIZATION ------------------
-//------------------------------------------------
-//
-
+//--------------------------------------------------------------------------------------------------
 void
-SurfaceNormals::register_initialize( std::vector<ArchesFieldContainer::VariableInformation>& variable_registry ){
+SurfaceNormals::register_initialize( VIVec& variable_registry ){
 
   register_variable( "surf_out_normX" , ArchesFieldContainer::COMPUTES , variable_registry );
   register_variable( "surf_out_normY" , ArchesFieldContainer::COMPUTES , variable_registry );
@@ -71,13 +71,14 @@ SurfaceNormals::register_initialize( std::vector<ArchesFieldContainer::VariableI
   register_variable( "surf_in_normY" , ArchesFieldContainer::COMPUTES , variable_registry );
   register_variable( "surf_in_normZ" , ArchesFieldContainer::COMPUTES , variable_registry );
 
-  register_variable( "volFraction", ArchesFieldContainer::REQUIRES, 1, ArchesFieldContainer::NEWDW, variable_registry );
+  register_variable( "volFraction", ArchesFieldContainer::REQUIRES, 1, ArchesFieldContainer::NEWDW,
+                      variable_registry );
 
 }
 
 void
 SurfaceNormals::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info,
-                      SpatialOps::OperatorDatabase& opr ){
+                            SpatialOps::OperatorDatabase& opr ){
 
   using namespace SpatialOps;
   using SpatialOps::operator *;
@@ -96,31 +97,38 @@ SurfaceNormals::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info,
   const GradY* const grady = opr.retrieve_operator<GradY>();
   const GradZ* const gradz = opr.retrieve_operator<GradZ>();
 
-  *n_in_x <<= ( *gradx )( *vol_fraction )/SpatialOps::abs((*gradx)(*vol_fraction));
-  *n_in_y <<= ( *grady )( *vol_fraction )/SpatialOps::abs((*grady)(*vol_fraction));
-  *n_in_z <<= ( *gradz )( *vol_fraction )/SpatialOps::abs((*gradz)(*vol_fraction));
+  double noise  = 1e-10;
 
-  *n_out_x <<= ( *gradx )( 1. - *vol_fraction )/SpatialOps::abs( (*gradx)( 1. - *vol_fraction ) );
-  *n_out_y <<= ( *grady )( 1. - *vol_fraction )/SpatialOps::abs( (*grady)( 1. - *vol_fraction ) );
-  *n_out_z <<= ( *gradz )( 1. - *vol_fraction )/SpatialOps::abs( (*gradz)( 1. - *vol_fraction ) );
+  *n_out_x <<= ( *gradx )( *vol_fraction )/SpatialOps::abs((*gradx)(*vol_fraction)+noise);
+  *n_out_y <<= ( *grady )( *vol_fraction )/SpatialOps::abs((*grady)(*vol_fraction)+noise);
+  *n_out_z <<= ( *gradz )( *vol_fraction )/SpatialOps::abs((*gradz)(*vol_fraction)+noise);
+
+  *n_in_x <<= ( *gradx )( 1. - *vol_fraction ) /
+    SpatialOps::abs( (*gradx)( 1. - *vol_fraction )+noise);
+  *n_in_y <<= ( *grady )( 1. - *vol_fraction ) /
+    SpatialOps::abs( (*grady)( 1. - *vol_fraction )+noise);
+  *n_in_z <<= ( *gradz )( 1. - *vol_fraction ) /
+    SpatialOps::abs( (*gradz)( 1. - *vol_fraction )+noise);
 
 }
 
-//
-//------------------------------------------------
-//------------- TIMESTEP INIT --------------------
-//------------------------------------------------
-//
+//--------------------------------------------------------------------------------------------------
 void
-SurfaceNormals::register_timestep_init( std::vector<ArchesFieldContainer::VariableInformation>& variable_registry ){
+SurfaceNormals::register_timestep_init( VIVec& variable_registry ){
 
-  register_variable( "surf_out_normX" , ArchesFieldContainer::REQUIRES , 1, ArchesFieldContainer::OLDDW, variable_registry );
-  register_variable( "surf_out_normY" , ArchesFieldContainer::REQUIRES , 1, ArchesFieldContainer::OLDDW, variable_registry );
-  register_variable( "surf_out_normZ" , ArchesFieldContainer::REQUIRES , 1, ArchesFieldContainer::OLDDW, variable_registry );
+  register_variable( "surf_out_normX" , ArchesFieldContainer::REQUIRES , 1,
+                      ArchesFieldContainer::OLDDW, variable_registry );
+  register_variable( "surf_out_normY" , ArchesFieldContainer::REQUIRES , 1,
+                      ArchesFieldContainer::OLDDW, variable_registry );
+  register_variable( "surf_out_normZ" , ArchesFieldContainer::REQUIRES , 1,
+                      ArchesFieldContainer::OLDDW, variable_registry );
 
-  register_variable( "surf_in_normX" , ArchesFieldContainer::REQUIRES, 1, ArchesFieldContainer::OLDDW , variable_registry );
-  register_variable( "surf_in_normY" , ArchesFieldContainer::REQUIRES, 1, ArchesFieldContainer::OLDDW , variable_registry );
-  register_variable( "surf_in_normZ" , ArchesFieldContainer::REQUIRES, 1, ArchesFieldContainer::OLDDW , variable_registry );
+  register_variable( "surf_in_normX" , ArchesFieldContainer::REQUIRES, 1,
+                     ArchesFieldContainer::OLDDW , variable_registry );
+  register_variable( "surf_in_normY" , ArchesFieldContainer::REQUIRES, 1,
+                     ArchesFieldContainer::OLDDW , variable_registry );
+  register_variable( "surf_in_normZ" , ArchesFieldContainer::REQUIRES, 1,
+                     ArchesFieldContainer::OLDDW , variable_registry );
 
   register_variable( "surf_out_normX" , ArchesFieldContainer::COMPUTES , variable_registry );
   register_variable( "surf_out_normY" , ArchesFieldContainer::COMPUTES , variable_registry );
@@ -162,19 +170,4 @@ SurfaceNormals::timestep_init( const Patch* patch, ArchesTaskInfoManager* tsk_in
   *n_out_y <<= *old_n_out_y;
   *n_out_z <<= *old_n_out_z;
 
-}
-//
-//------------------------------------------------
-//------------- TIMESTEP WORK --------------------
-//------------------------------------------------
-//
-
-void
-SurfaceNormals::register_timestep_eval( std::vector<ArchesFieldContainer::VariableInformation>& variable_registry, const int time_substep ){
-
-}
-
-void
-SurfaceNormals::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info,
-                SpatialOps::OperatorDatabase& opr ){
 }

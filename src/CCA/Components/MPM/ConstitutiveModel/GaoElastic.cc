@@ -130,9 +130,10 @@ void GaoElastic::outputProblemSpec(ProblemSpecP& ps,bool output_cm_tag)
     cm_ps->setAttribute("type","gao_elastic");
   }
   
-  cm_ps->appendElement("bulk_modulus",                  d_initialData.Bulk);
-  cm_ps->appendElement("shear_modulus",                 d_initialData.Shear);
-  cm_ps->appendElement("tolerance",                     d_tol);
+  cm_ps->appendElement("bulk_modulus",            d_initialData.Bulk);
+  cm_ps->appendElement("shear_modulus",           d_initialData.Shear);
+  cm_ps->appendElement("tolerance",               d_tol);
+  cm_ps->appendElement("volume_expansion_coeff",  d_initialData.vol_exp_coeff);
 }
 
 

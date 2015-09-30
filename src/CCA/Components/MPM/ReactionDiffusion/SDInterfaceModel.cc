@@ -95,3 +95,13 @@ void SDInterfaceModel::computeDivergence(const Patch* patch,
     sdm->computeDivergence(patch, mpm_matl, old_dw, new_dw);
   }
 }
+
+void SDInterfaceModel::outputProblemSpec(ProblemSpecP& ps, bool output_sdim_tag)
+{
+
+  ProblemSpecP sdim_ps = ps;
+  if (output_sdim_tag) {
+    sdim_ps = ps->appendChild("diffusion_interface");
+    sdim_ps->appendElement("type","paired");
+  }
+}

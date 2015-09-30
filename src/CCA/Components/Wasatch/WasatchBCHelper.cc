@@ -227,12 +227,13 @@ namespace Wasatch {
   
   //------------------------------------------------------------------------------------------------
 
-  WasatchBCHelper::WasatchBCHelper( const Uintah::PatchSet* const localPatches,
+  WasatchBCHelper::WasatchBCHelper( const Uintah::LevelP& level,
+                                   Uintah::SchedulerP& sched,
                       const Uintah::MaterialSet* const materials,
                       const PatchInfoMap& patchInfoMap,
                       GraphCategories& grafCat,
                       BCFunctorMap& bcFunctorMap )
-  : BCHelper(localPatches, materials),
+  : BCHelper(level, sched, materials),
     patchInfoMap_(patchInfoMap),
     bcFunctorMap_(bcFunctorMap),
     grafCat_     (grafCat)
@@ -438,13 +439,6 @@ namespace Wasatch {
                                          const Uintah::Patch* patch )
   {
     const int patchID = patch->getID();
-    const Uintah::Vector spacing = patch->dCell();
-    const double dx = spacing[0];
-    const double dy = spacing[1];
-    const double dz = spacing[2];
-    const double dx2 = dx*dx;
-    const double dy2 = dy*dy;
-    const double dz2 = dz*dz;
     
     BOOST_FOREACH( const BndMapT::value_type bndSpecPair, bndNameBndSpecMap_ )
     {

@@ -346,11 +346,10 @@ RMCRTCommon::findStepSize(int step[],
 //______________________________________________________________________
 Vector
 RMCRTCommon::findRayDirection(MTRand& mTwister,
-                             const bool isSeedRandom,
                              const IntVector& origin,
                              const int iRay )
 {
-  if( isSeedRandom == false ){
+  if( d_isSeedRandom == false ){
     mTwister.seed((origin.x() + origin.y() + origin.z()) * iRay +1);
   }
 
@@ -564,7 +563,7 @@ if( isDbgCell( origin )){
         // get new scatLength for each scattering event
         scatLength = -log(mTwister.randDblExc() ) / scatCoeff;
 
-        ray_direction     =  findRayDirection( mTwister, d_isSeedRandom, cur );
+        ray_direction     =  findRayDirection( mTwister, cur );
         inv_ray_direction = Vector(1.0)/ray_direction;
 
         // get new step and sign
@@ -726,21 +725,25 @@ RMCRTCommon::isDbgCell( const IntVector me)
 //  modern fisher-yates shuffle.
 //______________________________________________________________________
 void
-RMCRTCommon::randVector( vector <int> &int_array,MTRand& mTwister ){
-   int rand_int;
-   int temp;
-   int max= int_array.size();
+RMCRTCommon::randVector( vector <int> &int_array,
+                         MTRand& mTwister,
+                         const IntVector& cell ){
+  int max= int_array.size();
 
-   for (int i=0; i<max; i++){   // populate sequential array from 0 to max-1
-     int_array[i] = i;
-   }
+  for (int i=0; i<max; i++){   // populate sequential array from 0 to max-1
+    int_array[i] = i;
+  }
 
-   for (int i=max-1; i>0; i--){  // fisher-yates shuffle starting with max-1
-     rand_int =  mTwister.randInt(i);
-     temp = int_array[i];
-     int_array[i]=int_array[rand_int];
-     int_array[rand_int]=temp;
-   }
+  if( d_isSeedRandom == false ){
+    mTwister.seed((cell.x() + cell.y() + cell.z()));
+  }
+
+  for (int i=max-1; i>0; i--){  // fisher-yates shuffle starting with max-1
+    int rand_int =  mTwister.randInt(i);
+    int swap = int_array[i];
+    int_array[i] = int_array[rand_int];
+    int_array[rand_int] = swap;
+  }
 }
 
 //______________________________________________________________________

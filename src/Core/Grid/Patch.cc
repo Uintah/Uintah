@@ -217,11 +217,11 @@ void Patch::findCellNodes27(const Point& pos, IntVector ni[27]) const
      */
   void Patch::possiblyAddBC(const Patch::FaceType face, // face
                      const int child,   // child (each child is only applicable to one face)
-                     const std::string &desc, // field label (label) 
+                     const std::string &desc, // new field label (label) 
                      int mat_id,        // material 
                      const double bc_value,   // value of boundary condition
                      const std::string &bc_kind, // bc type, dirichlet or neumann
-                     const std::string &bcFieldName, // Field variable Name (var)
+                     const std::string &bcFieldName, // identifier field variable Name (var)
                      const std::string &faceName)  const  //  
 {
     // avoid adding duplicate boundary conditions 
