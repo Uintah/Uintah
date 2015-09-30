@@ -25,6 +25,7 @@ How to build and run a kokkos enabled example.
 
   export TPL_PATH=`pwd`/opt/TPLs
   export KOKKOS_PATH=`pwd`/opt/TPLs_src/kokkos
+  export PATH=$TPL_PATH/bin:$PATH
 
 5) Configure and build hwloc
 
@@ -58,13 +59,8 @@ How to build and run a kokkos enabled example.
   cd ../..
   ../src/configure \
     --enable-64bit \
-    --enable-optimize="-O3 -mt_mpi" \
-    --enable-assertion-level=0 \
+    --enable-optimize \
     --enable-static \
-    --without-fortran \
-    --with-mpi=/path/to/mpi \
-    CC=mpicc \
-    CXX=mpicxx \
     LDFLAGS="-L$TPL_PATH/lib -lkokkos -lhwloc"
     CXXFLAGS="-I$TPL_PATH/include"
 
