@@ -33,6 +33,8 @@
 #include <Core/Thread/ThreadGroup.h>
 #include <Core/Thread/Time.h>
 
+#include <Kokkos_Core.hpp>
+
 #include <cstring>
 
 #define USE_PACKING
@@ -93,6 +95,7 @@ ThreadedMPIScheduler::~ThreadedMPIScheduler()
       avgStats.close();
     }
   }
+  Kokkos::Threads::finalize();
 }
 
 //______________________________________________________________________
@@ -152,7 +155,8 @@ ThreadedMPIScheduler::problemSetup( const ProblemSpecP&     prob_spec,
 
   proc0cout << "   Using \"" << taskQueueAlg << "\" task queue priority algorithm" << std::endl;
 
-  numThreads_ = Uintah::Parallel::getNumThreads() - 1;
+  //numThreads_ = Uintah::Parallel::getNumThreads() - 1;
+  numThreads_ = Kokkos::Impl::num_thread_pool() -1;
   if ((numThreads_ < 1) && Uintah::Parallel::usingMPI()) {
     if (d_myworld->myrank() == 0) {
       std::cerr << "Error: no thread number specified for ThreadedMPIScheduler" << std::endl;
@@ -173,13 +177,6 @@ ThreadedMPIScheduler::problemSetup( const ProblemSpecP&     prob_spec,
               << plural + " for task execution." << std::endl;
   }
 
-  if (threadedmpi_compactaffinity.active()) {
-    if ( (threadedmpi_threaddbg.active()) && (d_myworld->myrank() == 0) ) {
-      threadedmpi_threaddbg << "   Binding main thread (ID "<<  Thread::self()->myid() << ") to core 0\n";
-    }
-    Thread::self()->set_affinity(0);   // Bind main thread to core 0
-  }
-
   // Create the TaskWorkers here (pinned to cores in TaskWorker::run())
   char name[1024];
   for (int i = 0; i < numThreads_; i++) {
@@ -188,6 +185,15 @@ ThreadedMPIScheduler::problemSetup( const ProblemSpecP&     prob_spec,
     sprintf(name, "Computing Worker %d-%d", Parallel::getRootProcessorGroup()->myrank(), i);
     Thread* t = scinew Thread(worker, name);
     t_thread[i] = t;
+  }
+
+  if (threadedmpi_compactaffinity.active()) {
+    if ( (threadedmpi_threaddbg.active()) && (d_myworld->myrank() == 0) ) {
+      threadedmpi_threaddbg << "   Binding main thread (ID "<<  Thread::self()->myid() << ") to core 0\n";
+    }
+    Kokkos::Threads::initialize(0);
+    Kokkos::Threads::print_configuration(std::cout);
+    //Thread::self()->set_affinity(0);   // Bind main thread to core 0
   }
 
   log.problemSetup(prob_spec);
@@ -625,6 +631,7 @@ TaskWorker::TaskWorker( ThreadedMPIScheduler* scheduler,
 
 TaskWorker::~TaskWorker()
 {
+  Kokkos::Threads::finalize();
   if ( (threadedmpi_threaddbg.active()) && (Uintah::Parallel::getMPIRank() == 0) ) {
     threadedmpi_threaddbg << "TaskWorker " << d_rank << "-" << d_thread_id << " executed "
                           << d_numtasks << " tasks"  << std::endl;
@@ -649,7 +656,9 @@ TaskWorker::run()
       threadedmpi_threaddbg << "Binding" << threadType << "TaskWorker thread ID " << offsetThreadID << " to core " << offsetThreadID << "\n";
       cerrLock.unlock();
     }
-    Thread::self()->set_affinity(offsetThreadID);
+    //Thread::self()->set_affinity(offsetThreadID);
+    Kokkos::Threads::initialize(offsetThreadID);
+    Kokkos::Threads::print_configuration(std::cout);
   }
 
   while (true) {
