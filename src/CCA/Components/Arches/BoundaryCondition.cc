@@ -2952,11 +2952,29 @@ BoundaryCondition::setInitProfile__NEW(const ProcessorGroup*,
 
           if ( foundIterator ) {
 
+
             bound_ptr.reset();
 
             if ( bc_iter->second.type != VELOCITY_FILE ) {
+              if ( bc_iter->second.type == SWIRL   ) {
+                if ( face == Patch::xminus || face == Patch::xplus ) {
 
-              if ( bc_iter->second.type != TURBULENT_INLET && bc_iter->second.type != STABL ) {
+                  setSwirl( patch, face, uVelocity, vVelocity, wVelocity,
+                      density, bound_ptr, bc_iter->second.velocity, bc_iter->second.swirl_no, bc_iter->second.swirl_cent );
+
+                } else if ( face == Patch::yminus || face == Patch::yplus ) {
+
+                  setSwirl( patch, face, vVelocity, wVelocity, uVelocity,
+                      density, bound_ptr, bc_iter->second.velocity, bc_iter->second.swirl_no, bc_iter->second.swirl_cent );
+
+                } else if ( face == Patch::zminus || face == Patch::zplus ) {
+
+                  setSwirl( patch, face, wVelocity, uVelocity, vVelocity,
+                      density, bound_ptr, bc_iter->second.velocity, bc_iter->second.swirl_no, bc_iter->second.swirl_cent );
+
+                }
+              }
+              else if ( bc_iter->second.type != TURBULENT_INLET && bc_iter->second.type != STABL ) {
 
                 setVel( patch, face, uVelocity, vVelocity, wVelocity, density, bound_ptr, bc_iter->second.velocity );
 
