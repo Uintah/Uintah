@@ -8,7 +8,7 @@ from modUPS import modUPS
 from commands import getoutput
 import socket
 import resource
-import subprocess
+import re         # regular expressions
 
 #______________________________________________________________________
 # Assuming that running python with the '-u' arg doesn't fix the i/o buffering problem, this line
@@ -635,12 +635,19 @@ def runSusTest(test, susdir, inputxml, compare_root, ALGO, dbg_opt, max_parallel
   
   # Check to see if an exception was thrown.  (Use "grep -v 'cout'" to avoid false positive
   # when source code line was that prints the exception is changed.)
-  # Did sus run to completion.  Prune out the header of sus.log.txt so you don't get 
-  # false positives.
+  # Did sus run to completion.
+  
   exception   = system("grep -q 'Caught exception' sus.log.txt | grep -v cout");
-  susSuccess  = subprocess.check_output("sed -n /'timestep 0'/,//p sus.log.txt | grep -c 'Sus: going down successfully'",shell=True);
+  
+  try:
+    file = open('sus.log.txt', 'r')
+    lines = file.read()
+    susSuccess = re.findall("Sus: going down successfully", lines)
+  except Exception:
+    pass
+#  susSuccess  = subprocess.check_output("sed -n /'timestep'/,//p sus.log.txt | grep -c 'Sus: going down successfully'",shell=True);
 
-  print "susSuccess %d" %(int(susSuccess))
+  print "susSuccess %d" %(len(susSuccess))
   if exception == 0:
     print "\t*** An exception was thrown ***";
     rc = -9
@@ -665,7 +672,7 @@ def runSusTest(test, susdir, inputxml, compare_root, ALGO, dbg_opt, max_parallel
     return_code = 1
     return return_code
     
-  elif rc != 0 or int(susSuccess) == 0  :
+  elif rc != 0 or len(susSuccess) == 0  :
     print "\t*** Test %s failed to run to completion, (code %d)" % (testname, rc)
     
     if startFrom == "restart":
