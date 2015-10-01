@@ -53,8 +53,11 @@
         <NameTag name="density" />
         <ModelBasedOnMixtureFraction>
           <DensityWeightedMixtureFraction>
-          <NameTag name="rhof" state="STATE_DYNAMIC"/>
+            <NameTag name="rhof" state="STATE_DYNAMIC"/>
           </DensityWeightedMixtureFraction>       
+          <MixtureFraction>
+            <NameTag name="f"/>
+          </MixtureFraction>          
         </ModelBasedOnMixtureFraction>
       </ExtractDensity>
       
