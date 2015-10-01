@@ -1994,7 +1994,7 @@ BoundaryCondition::setupBCs( ProblemSpecP& db )
       } else {
         throw InvalidValue("Error: Could not identify the boundary face direction.", __FILE__, __LINE__);
       }
-        
+
       int numberOfMomentumBCs=0;
       for ( ProblemSpecP db_BCType = db_face->findBlock("BCType"); db_BCType != 0;
             db_BCType = db_BCType->findNextBlock("BCType") ) {
@@ -2204,7 +2204,7 @@ BoundaryCondition::setupBCs( ProblemSpecP& db )
               my_info.lHasPartMassFlow=true;
               my_info.partVelocity = Vector(0,0,0);
 
-              int qn_total; 
+              int qn_total;
               qn_total=ParticleTools::get_num_env(db_face,ParticleTools::DQMOM);
 
               double MassParticleDensity=0;  // (kg/ m^3)
@@ -2216,7 +2216,7 @@ BoundaryCondition::setupBCs( ProblemSpecP& db )
               //// convert #/m^3  --->  kg/m^3, we need weight, diameter, and particle density at inlet
               for (int qn=0; qn< qn_total; qn++){
                 // get weight BC
-                double weightScalingConstant = ParticleTools::getScalingConstant(db_BCType,"weight",qn); 
+                double weightScalingConstant = ParticleTools::getScalingConstant(db_BCType,"weight",qn);
                 double weight;
                 for ( ProblemSpecP db_BCType2 = db_face->findBlock("BCType"); db_BCType2 != 0;
                     db_BCType2 = db_BCType2->findNextBlock("BCType") ) {
@@ -2240,7 +2240,7 @@ BoundaryCondition::setupBCs( ProblemSpecP& db )
                 double diameter;
                 std::string sizeLabelName =ParticleTools::parse_for_role_to_label(db_BCType,"size");
                 if (ParticleTools::getModelValue(db_BCType,sizeLabelName,qn,diameter)== false){
-                  double diameterScalingConstant = ParticleTools::getScalingConstant(db_BCType,sizeLabelName,qn); 
+                  double diameterScalingConstant = ParticleTools::getScalingConstant(db_BCType,sizeLabelName,qn);
 
                   for ( ProblemSpecP db_BCType2 = db_face->findBlock("BCType"); db_BCType2 != 0;
                       db_BCType2 = db_BCType2->findNextBlock("BCType") ) {
@@ -2263,14 +2263,14 @@ BoundaryCondition::setupBCs( ProblemSpecP& db )
                 std::string str3D = "uvw";
                 for(unsigned int i = 0; i<str3D.length(); i++) {
                   std::string velLabelName =ParticleTools::parse_for_role_to_label(db_BCType,std::string (1,str3D[i])+"vel");
-                  my_info.vVelScalingConst[qn][i] =  ParticleTools::getScalingConstant(db_BCType,velLabelName,qn); 
+                  my_info.vVelScalingConst[qn][i] =  ParticleTools::getScalingConstant(db_BCType,velLabelName,qn);
                   my_info.vVelLabels[qn][i] = ParticleTools::append_qn_env(velLabelName,qn);
                 }
 
                 // compute actual particle density (#/m^3)
                 weight=weight*weightScalingConstant;
 
-                // get particle density 
+                // get particle density
                 double density = ParticleTools::getInletParticleDensity(db_face);
 
                 MassParticleDensity+=weight*M_PI*diameter*diameter*diameter/6.0*density;  // (kg/ m^3)
@@ -2278,7 +2278,7 @@ BoundaryCondition::setupBCs( ProblemSpecP& db )
               }
                 my_info.partDensity = MassParticleDensity;
               // note that the mass flow rate is in the BCstruct value
-              break; // exit bcType spec  loop 
+              break; // exit bcType spec  loop
             }
           }
         }
@@ -2644,7 +2644,7 @@ BoundaryCondition::sched_setupBCInletVelocities__NEW(SchedulerP& sched,
 
   }
 
-  tsk->computes(d_DummyLabel); 
+  tsk->computes(d_DummyLabel);
 
   if ( doing_restart ) {
     tsk->requires( Task::OldDW, d_lab->d_volFractionLabel, Ghost::None, 0 );
@@ -2738,7 +2738,7 @@ BoundaryCondition::setupBCInletVelocities__NEW(const ProcessorGroup*,
 
 
             if (bc_iter->second.lHasPartMassFlow)
-            { 
+            {
               double pm = -1.0*insideCellDir[norm];
 
               if ( bc_iter->second.partDensity < 1e-200 &&  bc_iter->second.partMassFlow_rate > 1e-300 ) {
@@ -3003,7 +3003,68 @@ BoundaryCondition::setInitProfile__NEW(const ProcessorGroup*,
     vRhoHat.copyData( vVelocity );
     wRhoHat.copyData( wVelocity );
 
-  }
+    //delete BC information not on this patch:
+    BCInfoMap::iterator the_iter = d_bc_information.begin();
+    std::vector<BCInfoMap::iterator> delete_me;
+    while (the_iter != d_bc_information.end()){
+
+      bool i_live_on_this_patch = false;
+
+      for ( bf_iter = bf.begin(); bf_iter !=bf.end(); bf_iter++ ) {
+
+        //get the face
+        Patch::FaceType face = *bf_iter;
+        IntVector insideCellDir = patch->faceDirection(face);
+
+        //get the number of children
+        int numChildren = patch->getBCDataArray(face)->getNumberChildren(matl_index); //assumed one material
+
+        for (int child = 0; child < numChildren; child++) {
+
+          double bc_value = 0;
+          Vector bc_v_value(0,0,0);
+          std::string bc_s_value = "NA";
+
+          string bc_kind = "NotSet";
+          Iterator bound_ptr;
+          bool foundIterator = false;
+          string face_name;
+          getBCKind( patch, face, child, the_iter->second.name, matl_index, bc_kind, face_name );
+
+          if ( the_iter->second.type == VELOCITY_INLET ||
+               the_iter->second.type == TURBULENT_INLET ||
+               the_iter->second.type == STABL ) {
+            foundIterator =
+                    getIteratorBCValueBCKind<Vector>( patch, face, child, the_iter->second.name, matl_index, bc_v_value, bound_ptr, bc_kind);
+          } else if ( the_iter->second.type == VELOCITY_FILE ) {
+            foundIterator =
+                    getIteratorBCValue<std::string>( patch, face, child, the_iter->second.name, matl_index, bc_s_value, bound_ptr);
+          } else {
+            foundIterator =
+                    getIteratorBCValueBCKind<double>( patch, face, child, the_iter->second.name, matl_index, bc_value, bound_ptr, bc_kind);
+          }
+
+          if ( foundIterator ){
+            i_live_on_this_patch = true;
+          }
+
+        }
+      }
+
+      if ( !i_live_on_this_patch ){
+
+        BCInfoMap::iterator to_delete = the_iter;
+        the_iter++;
+        d_bc_information.erase(to_delete);
+
+      } else {
+
+        the_iter++;
+
+      }
+
+    } //bc_information iterator
+  } //patch iterator
 }
 
 template<class d0T, class d1T, class d2T>

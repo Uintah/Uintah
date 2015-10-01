@@ -307,6 +307,9 @@ protected:
           return _field_container->get_const_so_particle_field(name, which_dw);
         }
 
+        /** @brief Get the current patch ID **/
+        inline const int get_patch_id(){ return _patch->getID(); }
+
       private:
 
         ArchesFieldContainer* _field_container;

@@ -116,6 +116,7 @@ private:
       register_variable( rhs_name, ArchesFieldContainer::REQUIRES, 0, ArchesFieldContainer::NEWDW, variable_registry, time_substep );
     }
     register_variable( "density", ArchesFieldContainer::REQUIRES, 0, ArchesFieldContainer::LATEST, variable_registry, time_substep );
+    register_variable( "volFraction", ArchesFieldContainer::REQUIRES, 0, ArchesFieldContainer::LATEST, variable_registry, time_substep );
 
   }
 
@@ -131,8 +132,9 @@ private:
     typedef typename SpatialOps::OperatorTypeBuilder< SpatialOps::Interpolant, SVolF, T>::type I_svol_to_T;
 
     SVolFP const rho = tsk_info->get_const_so_field<SVolF>( "density" );
+    SVolFP const eps = tsk_info->get_const_so_field<SVolF>( "volFraction" );
 
-    const I_svol_to_T* const interp_rho = opr.retrieve_operator<I_svol_to_T>();
+    const I_svol_to_T* const interp = opr.retrieve_operator<I_svol_to_T>();
 
     typedef std::vector<std::string> SV;
 
@@ -144,7 +146,9 @@ private:
       //update:
       if ( _div_density ){
         //dividing out the density
-        *phi <<= *rhs / ((*interp_rho)(*rho));
+        *phi <<= cond( (*interp)(*eps) > 0.0, *rhs/(*interp)(*rho))
+                      ( 0.0 );
+
       } else {
         //solving for rho*phi
         *phi <<= *rhs;

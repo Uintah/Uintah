@@ -185,15 +185,14 @@ ScalarRHS::timestep_init( const Patch* patch, ArchesTaskInfoManager* tsk_info,
   using SpatialOps::operator *;
 
   SVolFP gamma     = tsk_info->get_so_field<SVolF>( _D_name );
-  SVolFP old_gamma = tsk_info->get_const_so_field<SVolF>( _D_name );
+  SVolFP const old_gamma = tsk_info->get_const_so_field<SVolF>( _D_name );
   SVolFP phi       = tsk_info->get_so_field<SVolF>( _task_name );
-  SVolFP old_phi   = tsk_info->get_const_so_field<SVolF>( _task_name );
+  SVolFP const old_phi   = tsk_info->get_const_so_field<SVolF>( _task_name );
 
   *gamma <<= *old_gamma;
   *phi <<= *old_phi;
 
 }
-
 
 //
 //------------------------------------------------
@@ -207,7 +206,7 @@ ScalarRHS::register_timestep_eval( std::vector<ArchesFieldContainer::VariableInf
 //  //FUNCITON CALL     STRING NAME(VL)     DEPENDENCY    GHOST DW     VR
   register_variable( _rhs_name        , ArchesFieldContainer::COMPUTES , 0 , ArchesFieldContainer::NEWDW  , variable_registry , time_substep );
   register_variable( _D_name          , ArchesFieldContainer::REQUIRES,  1 , ArchesFieldContainer::NEWDW  , variable_registry , time_substep );
-  register_variable( _task_name       , ArchesFieldContainer::REQUIRES , 1 , ArchesFieldContainer::LATEST , variable_registry , time_substep );
+  register_variable( _task_name       , ArchesFieldContainer::REQUIRES , 1 , ArchesFieldContainer::NEWDW , variable_registry , time_substep );
   register_variable( _Fconv_name      , ArchesFieldContainer::COMPUTES , 0 , ArchesFieldContainer::NEWDW  , variable_registry , time_substep );
   register_variable( _Fdiff_name      , ArchesFieldContainer::COMPUTES , 0 , ArchesFieldContainer::NEWDW  , variable_registry , time_substep );
   register_variable( "uVelocitySPBC"  , ArchesFieldContainer::REQUIRES , 1 , ArchesFieldContainer::LATEST , variable_registry , time_substep );
@@ -239,7 +238,7 @@ ScalarRHS::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info,
   SVolFP rhs   = tsk_info->get_so_field<SVolF>( _rhs_name        );
   SVolFP Fdiff = tsk_info->get_so_field<SVolF>( _Fdiff_name      );
   SVolFP Fconv = tsk_info->get_so_field<SVolF>( _Fconv_name      );
-  SVolFP phi   = tsk_info->get_const_so_field<SVolF>( _task_name       );
+  SVolFP const phi   = tsk_info->get_const_so_field<SVolF>( _task_name       );
   XVolPtr epsX = tsk_info->get_const_so_field<SpatialOps::XVolField>( "areaFractionFX" );
   YVolPtr epsY = tsk_info->get_const_so_field<SpatialOps::YVolField>( "areaFractionFY" );
   ZVolPtr epsZ = tsk_info->get_const_so_field<SpatialOps::ZVolField>( "areaFractionFZ" );
@@ -326,8 +325,12 @@ ScalarRHS::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info,
 //
 
 void
-ScalarRHS::register_compute_bcs( std::vector<ArchesFieldContainer::VariableInformation>& variable_registry, const int time_substep ){
+ScalarRHS::register_compute_bcs(
+  std::vector<ArchesFieldContainer::VariableInformation>& variable_registry,
+  const int time_substep ){
+
   //register_variable( _task_name, ArchesFieldContainer::MODIFIES, variable_registry, time_substep );
+
 }
 
 void
@@ -344,10 +347,67 @@ ScalarRHS::compute_bcs( const Patch* patch, ArchesTaskInfoManager* tsk_info,
 
     const Wasatch::BndMapT& bc =  i->second->get_boundary_information();
     map<std::string, Wasatch::BndSpec>::const_iterator test=bc.begin();
-    cout << test->first << endl;
 
     const Wasatch::BndCondSpec* bnd = test->second.find(_task_name);
-    const Wasatch::BndCondTypeEnum d = bnd->bcType;
+
+    SVolFP phi = tsk_info->get_so_field<SVolF>(_task_name);
+    CCVariable<double>* v = tsk_info->get_uintah_field<CCVariable<double> >(_task_name);
+
+    cout << " variable before: " << (*v)[IntVector(0,1,1)] << std::endl;
+    cout << " variable before (boundary): " << (*v)[IntVector(-1,1,1)] << std::endl;
+
+    SVolF::iterator iphi = phi->begin();
+    cout << " BEFORE -------------------------------------- " << endl;
+    for (;iphi != phi->end(); iphi++){
+
+      //cout << *iphi << endl;
+
+    }
+
+    if ( bnd != NULL ){
+      const Wasatch::BndCondTypeEnum d = bnd->bcType;
+
+      const int pid = tsk_info->get_patch_id();
+      //const SpatialOps::SpatialMask<SVolF>* mask = i->second->get_spatial_mask<SVolF>( test->second, pid );
+      const std::vector<SpatialOps::IntVec>* mask = i->second->get_extra_bnd_mask<SVolF>( test->second, pid );
+      //const std::vector<SpatialOps::IntVec>* mask = i->second->get_interior_bnd_mask<SVolF>( test->second, pid );
+
+      for (std::vector<SpatialOps::IntVec>::const_iterator im = mask->begin(); im != mask->end(); im++){
+        //cout << " mask = " << *im << endl;
+      }
+
+      // *phi <<= cond( mask, 33.33 )
+      //              (1.0);
+
+      cout << "hello" << endl;
+
+    }
+
+    cout << " variable after: " << (*v)[IntVector(0,1,1)] << std::endl;
+    cout << " variable after (boundary): " << (*v)[IntVector(-1,1,1)] << std::endl;
+
+    cout << " AFTER -------------------------------------- " << endl;
+    iphi = phi->begin();
+    for (;iphi != phi->end(); iphi++){
+
+    //  cout << *iphi << endl;
+
+    }
+
+
+    std::vector<SpatialOps::IntVec> maskset;
+
+    for (int i = 2; i < 31; i++){
+      for (int j = 2; j < 31; j++){
+        maskset.push_back(SpatialOps::IntVec(i,j,0));
+      }
+    }
+
+    SpatialOps::SpatialMask<SpatialOps::SVolField> mask(*phi,maskset);
+
+    *phi <<= cond( mask, 44.44 )
+                   ( *phi );
+
 
   }
 }
