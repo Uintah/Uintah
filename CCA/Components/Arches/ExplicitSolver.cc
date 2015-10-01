@@ -405,7 +405,7 @@ int ExplicitSolver::nonlinearSolve(const LevelP& level,
     //(scalars)
     for ( SVec::iterator i = scalar_rhs_builders.begin(); i != scalar_rhs_builders.end(); i++){
       TaskInterface* tsk = i_transport->second->retrieve_task(*i);
-      tsk->schedule_task(level, sched, matls, TaskInterface::BC_TASK, curr_level); 
+      tsk->schedule_task(level, sched, matls, TaskInterface::BC_TASK, curr_level);
       tsk->schedule_task(level, sched, matls, TaskInterface::STANDARD_TASK, curr_level);
     }
 
