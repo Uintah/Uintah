@@ -531,8 +531,7 @@ private:
   mutable SCIRun::CrowdMonitor *allocateLock;
   mutable SCIRun::CrowdMonitor *varLock;
   char _internalName[80];
-  //std::string        *_internalName;
-public: //TODO, make private again
+
   materialItem       d_materialDB[MAX_MATERIALSDB_ITEMS];
   dataItem           d_levelDB[MAX_LEVELDB_ITEMS];
   int                d_numVarDBItems;
