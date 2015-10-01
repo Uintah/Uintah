@@ -3242,16 +3242,19 @@ void SerialMPM::applyExternalLoads(const ProcessorGroup* ,
         string mms_type = flags->d_mms_type;
          if(!mms_type.empty()) {
            MMS MMSObject;                                                                                
-           MMSObject.computeExternalForceForMMS(old_dw,new_dw,time,pset,lb,flags,pExternalForce_new);    
+           MMSObject.computeExternalForceForMMS(old_dw,new_dw,time,pset,
+                                                lb,flags,pExternalForce_new);
          } else { 
           // Get the external force data and allocate new space for
           // external force and copy the data
           constParticleVariable<Vector> pExternalForce;
           old_dw->get(pExternalForce, lb->pExternalForceLabel, pset);
 
-          for(ParticleSubset::iterator iter = pset->begin(); iter != pset->end(); iter++){
+          for(ParticleSubset::iterator iter = pset->begin(); 
+                                       iter != pset->end(); iter++){
             particleIndex idx = *iter;
-            pExternalForce_new[idx] = pExternalForce[idx]*flags->d_forceIncrementFactor;
+            pExternalForce_new[idx] = pExternalForce[idx]
+                                    * flags->d_forceIncrementFactor;
           }
         }
       }
