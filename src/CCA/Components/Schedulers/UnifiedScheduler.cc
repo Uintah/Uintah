@@ -3979,11 +3979,11 @@ void UnifiedScheduler::initiateD2H(DetailedTask* dtask) {
             if (gpu_stats.active()) {
               cerrLock.lock();
               {
-                gpu_stats << myRankThread() << " InitiateD2H() - Task: " << dtask->getName()
-                    << ".  Checking if we should copy of \""
+                gpu_stats << myRankThread() << " InitiateD2H() -"
+                    // Task: " << dtask->getName()
+                    << " Checking if we should copy of \""
                     << dependantVar->var->getName() << "\" Patch " << patchID
-                    << " Material " << matlID << " on thread "
-                    << Thread::self()->myid() << endl;
+                    << " Material " << matlID << endl;
               }
               cerrLock.unlock();
             }
@@ -4645,9 +4645,9 @@ UnifiedScheduler::getCudaStream(int device) {
   cudaStream_t* stream;
 
   idleStreamsLock_.writeLock();
-  cerrLock.lock();
-   gpu_stats << myRankThread() << " locking getCudaStream " << std::endl;
-  cerrLock.unlock();
+  //cerrLock.lock();
+  // gpu_stats << myRankThread() << " locking getCudaStream " << std::endl;
+  //cerrLock.unlock();
   {
     if (idleStreams[device].size() > 0) {
       stream = idleStreams[device].front();
@@ -4677,9 +4677,9 @@ UnifiedScheduler::getCudaStream(int device) {
       }
     }
   }
-  cerrLock.lock();
-   gpu_stats << myRankThread() << " unlocking getCudaStream" << std::endl;
-  cerrLock.unlock();
+  //cerrLock.lock();
+  // gpu_stats << myRankThread() << " unlocking getCudaStream" << std::endl;
+  //cerrLock.unlock();
   idleStreamsLock_.writeUnlock();
 
   return stream;
@@ -4752,9 +4752,8 @@ void UnifiedScheduler::createTaskGpuDWs(DetailedTask * task,
       GPUDataWarehouse* old_taskGpuDW = (GPUDataWarehouse *) malloc(objectSizeInBytes);
       std::ostringstream out;
       out << "Old task GPU DW"
-          << " MPIRank: " << Uintah::Parallel::getMPIRank()
-          << " Thread:" << Thread::self()->myid()
-          << " Task: " << task->getName();
+          << " MPIRank: " << Uintah::Parallel::getMPIRank();
+          //<< " Task: " << task->getTask()->getName();
       old_taskGpuDW->init( currentDevice, out.str());
       old_taskGpuDW->setDebug(gpudbg.active());
       old_taskGpuDW->init_device(objectSizeInBytes, numItemsInDW);
@@ -4788,8 +4787,8 @@ void UnifiedScheduler::createTaskGpuDWs(DetailedTask * task,
       std::ostringstream out;
       out << "New task GPU DW"
           << " MPIRank: " << Uintah::Parallel::getMPIRank()
-          << " Thread:" << Thread::self()->myid()
-          << " Task: " << task->getName();
+          << " Thread:" << Thread::self()->myid();
+          //<< " Task: " << task->getName();
       new_taskGpuDW->init(currentDevice, out.str());
       new_taskGpuDW->setDebug(gpudbg.active());
       new_taskGpuDW->init_device(objectSizeInBytes, numItemsInDW);
@@ -5025,7 +5024,6 @@ void UnifiedScheduler::syncTaskGpuDWs(DetailedTask* dtask) {
   GPUDataWarehouse *taskgpudw;
   for (std::set<unsigned int>::const_iterator deviceNums_it = deviceNums.begin(); deviceNums_it != deviceNums.end(); ++deviceNums_it) {
     const unsigned int currentDevice = *deviceNums_it;
-
     taskgpudw = dtask->getTaskGpuDataWarehouse(currentDevice,Task::OldDW);
     if (taskgpudw) {
       taskgpudw->syncto_device(dtask->getCUDAStream(currentDevice));
