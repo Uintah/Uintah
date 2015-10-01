@@ -82,6 +82,7 @@ static DebugStream amr_doing("AMRMPM", false);
 //#define USE_DEBUG_TASK
 //#define DEBUG_VEL
 //#define DEBUG_ACC
+#undef CBDI_FLUXBCS
 
 //__________________________________
 //   TODO:
@@ -712,6 +713,11 @@ void AMRMPM::scheduleInterpolateParticlesToGrid(SchedulerP& sched,
     t->computes(lb->gConcentrationLabel);
     t->computes(lb->gHydrostaticStressLabel);
     t->computes(lb->gExternalScalarFluxLabel);
+#ifdef CBDI_FLUXBCS
+    if (flags->d_useLoadCurves) {
+      t->requires(Task::OldDW, lb->pLoadCurveIDLabel,      gan, NGP);
+    }
+#endif
   }
   
   sched->addTask(t, patches, matls);
@@ -1750,6 +1756,13 @@ void AMRMPM::interpolateParticlesToGrid(const ProcessorGroup*,
     vector<IntVector> ni(interpolator->size());
     vector<double> S(interpolator->size());
 
+#ifdef CBDI_FLUXBCS
+    LinearInterpolator* LPI;
+    LPI = scinew LinearInterpolator(patch);
+    vector<IntVector> ni_LPI(LPI->size());
+    vector<double> S_LPI(LPI->size());
+#endif
+
     Ghost::GhostType  gan = Ghost::AroundNodes;
     for(int m = 0; m < numMatls; m++){
       MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial( m );
@@ -1765,7 +1778,6 @@ void AMRMPM::interpolateParticlesToGrid(const ProcessorGroup*,
       constParticleVariable<Matrix3> pDeformationMeasure;
       constParticleVariable<Matrix3> pStress;
       constParticleVariable<Matrix3> pVelGrad;
-      constParticleVariable<int> pLoadCurveID;
 
       ParticleSubset* pset = old_dw->getParticleSubset(dwi, patch,
                                                        gan, NGP, lb->pXLabel);
@@ -1775,6 +1787,13 @@ void AMRMPM::interpolateParticlesToGrid(const ProcessorGroup*,
       old_dw->get(pvolume,              lb->pVolumeLabel,             pset);
       old_dw->get(pvelocity,            lb->pVelocityLabel,           pset);
       old_dw->get(pTemperature,         lb->pTemperatureLabel,        pset);
+
+#ifdef CBDI_FLUXBCS
+      constParticleVariable<int> pLoadCurveID;
+      if (flags->d_useLoadCurves) {
+        old_dw->get(pLoadCurveID,       lb->pLoadCurveIDLabel,        pset);
+      }
+#endif
 
       new_dw->get(psize,                lb->pSizeLabel_preReloc,      pset);
       old_dw->get(pDeformationMeasure,  lb->pDeformationMeasureLabel, pset);
@@ -1864,31 +1883,44 @@ void AMRMPM::interpolateParticlesToGrid(const ProcessorGroup*,
             if(patch->containsNode(node)) {
               ghydrostaticstress[node] += phydrostress        * pmass[idx]*S[k];
               gconcentration[node]     += pConcentration[idx] * pmass[idx]*S[k];
-              gextscalarflux[node]     += pExternalScalarFlux[idx]        *S[k];
+#ifndef CBDI_FLUXBCS
+              gextscalarflux[node]   += pExternalScalarFlux[idx]        *S[k];
+#endif
             }
           }
         }
       }  // End of particle loop
 
 
-#if 0
+#ifdef CBDI_FLUXBCS
       Vector dx = patch->dCell();
       for (ParticleSubset::iterator iter  = pset->begin();
                                     iter != pset->end(); iter++){
         particleIndex idx = *iter;
 
+        Point flux_pos;
         if(pLoadCurveID[idx]==1){
-          Point flux_pos=Point(px[idx].x()-0.5*psize[idx](0,0)*dx.x(),
-                               px[idx].y(),
-                               px[idx].z());
+          flux_pos=Point(px[idx].x()-0.5*psize[idx](0,0)*dx.x(),
+                         px[idx].y(),
+                         px[idx].z());
+        }
+        if(pLoadCurveID[idx]==2){
+          flux_pos=Point(px[idx].x()+0.5*psize[idx](0,0)*dx.x(),
+                         px[idx].y(),
+                         px[idx].z());
+        }
+        if(pLoadCurveID[idx]==3){
+          flux_pos=Point(px[idx].x(),
+                         px[idx].y()+0.5*psize[idx](1,1)*dx.y(),
+                         px[idx].z());
+        }
 //          cout << "px[idx] = "  << px[idx]  << endl;
 //          cout << "flux_pos = " << flux_pos << endl;
-          LPI->findCellAndWeights(flux_pos,ni_LPI,S_LPI,psize[idx],
-                                         pDeformationMeasure[idx]);
-          for(int k = 0; k < (int) ni_LPI.size(); k++) {
-            if(patch->containsNode(ni_LPI[k])) {
-              gextscalarflux[ni_LPI[k]]  += pExternalScalarFlux[idx] * S_LPI[k];
-            }
+        LPI->findCellAndWeights(flux_pos,ni_LPI,S_LPI,psize[idx],
+                                       pDeformationMeasure[idx]);
+        for(int k = 0; k < (int) ni_LPI.size(); k++) {
+          if(patch->containsNode(ni_LPI[k])) {
+            gextscalarflux[ni_LPI[k]]  += pExternalScalarFlux[idx] * S_LPI[k];
           }
         }
       }
@@ -2012,7 +2044,7 @@ void AMRMPM::interpolateParticlesToGrid_CFI(const ProcessorGroup*,
         old_dw->get(pVolume_coarse,        lb->pVolumeLabel,             pset);
         old_dw->get(pVelocity_coarse,      lb->pVelocityLabel,           pset);
         old_dw->get(pTemperature_coarse,   lb->pTemperatureLabel,        pset);
-        old_dw->get(pExternalforce_coarse, lb->pExtForceLabel_preReloc,  pset);
+        new_dw->get(pExternalforce_coarse, lb->pExtForceLabel_preReloc,  pset);
         if(flags->d_doScalarDiffusion){
           old_dw->get(pConc_coarse,        lb->pConcentrationLabel,      pset);
           new_dw->get(pExtScalarFlux_c,    lb->pExternalScalarFluxLabel, pset);
