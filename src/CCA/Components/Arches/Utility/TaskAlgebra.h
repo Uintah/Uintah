@@ -15,7 +15,8 @@ namespace Uintah{
 
 public:
 
-    enum EXPR {ADD, SUBTRACT, MULTIPLY, DIVIDE, POW, EXP};
+    enum EXPR {ADD, SUBTRACT, MULTIPLY, DIVIDE, DIVIDE_CONST_VARIABLE,
+               DIVIDE_VARIABLE_CONST, POW, EXP};
 
     TaskAlgebra<IT1, IT2, DT>( std::string task_name, int matl_index );
     ~TaskAlgebra<IT1, IT2, DT>();
@@ -157,6 +158,10 @@ private:
       } else if ( value == "MULTIPLY" ){
         new_op.expression_type = MULTIPLY;
       } else if ( value == "DIVIDE" ){
+        new_op.expression_type = DIVIDE;
+      } else if ( value == "DIVIDE_CONST_VARIABLE"){
+        new_op.expression_type = DIVIDE_CONST_VARIABLE;
+      } else if ( value == "DIVIDE_VARIABLE_CONST"){
         new_op.expression_type = DIVIDE;
       } else if ( value =="POW" ){
         new_op.expression_type = POW;
@@ -340,8 +345,12 @@ private:
           case MULTIPLY:
             *dep <<= *ind1 * op_iter->second.constant;
             break;
-          case DIVIDE:
+          case DIVIDE_VARIABLE_CONST:
             *dep <<= *ind1 / op_iter->second.constant;
+            break;
+          case DIVIDE_CONST_VARIABLE:
+            *dep <<= cond( *ind1 != 0, op_iter->second.constant / *ind1 )
+                          ( 0.0 );
             break;
           case POW:
             *dep <<= pow(*ind1, op_iter->second.constant);
@@ -368,7 +377,8 @@ private:
             *dep <<= *ind1 * *ind2;
             break;
           case DIVIDE:
-            *dep <<= *ind1 / *ind2;
+            *dep <<= cond( *ind2 != 0, *ind1 / *ind2 )
+                          ( 0.0 );
             break;
           case POW:
             *dep <<= pow(*ind1, *ind2);
