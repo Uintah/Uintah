@@ -12,7 +12,7 @@ namespace Uintah{
 
 public:
 
-    FEUpdate<T>( std::string task_name, int matl_index, std::vector<std::string> eqn_names, bool divide_out_density );
+    FEUpdate<T>( std::string task_name, int matl_index, std::vector<std::string> eqn_names );
     ~FEUpdate<T>();
 
     /** @brief Input file interface **/
@@ -25,19 +25,18 @@ public:
 
       public:
 
-      Builder( std::string task_name, int matl_index, std::vector<std::string> eqn_names, bool divide_out_density ) :
-        _task_name(task_name), _matl_index(matl_index), _eqn_names(eqn_names), _div_density(divide_out_density){}
+      Builder( std::string task_name, int matl_index, std::vector<std::string> eqn_names ) :
+        _task_name(task_name), _matl_index(matl_index), _eqn_names(eqn_names){}
       ~Builder(){}
 
       FEUpdate* build()
-      { return scinew FEUpdate<T>( _task_name, _matl_index, _eqn_names, _div_density ); }
+      { return scinew FEUpdate<T>( _task_name, _matl_index, _eqn_names ); }
 
       private:
 
       std::string _task_name;
       int _matl_index;
       std::vector<std::string> _eqn_names;
-      bool _div_density;
 
     };
 
@@ -66,19 +65,16 @@ protected:
 private:
 
     std::vector<std::string> _eqn_names;
-    bool _div_density;
-
 
   };
 
   //Function definitions:
 
   template <typename T>
-  FEUpdate<T>::FEUpdate( std::string task_name, int matl_index, std::vector<std::string> eqn_names, bool divide_out_density ) :
+  FEUpdate<T>::FEUpdate( std::string task_name, int matl_index, std::vector<std::string> eqn_names ) :
   TaskInterface( task_name, matl_index ){
 
     _eqn_names = eqn_names;
-    _div_density = divide_out_density;
 
   }
 
@@ -108,14 +104,12 @@ private:
   void FEUpdate<T>::register_timestep_eval( std::vector<ArchesFieldContainer::VariableInformation>& variable_registry, const int time_substep ){
 
     //FUNCITON CALL     STRING NAME(VL)     DEPENDENCY    GHOST DW     VR
-    //register_variable( "templated_variable", ArchesFieldContainer::COMPUTES, 0, ArchesFieldContainer::NEWDW, variable_registry, time_substep );
     typedef std::vector<std::string> SV;
     for ( SV::iterator i = _eqn_names.begin(); i != _eqn_names.end(); i++){
       register_variable( *i, ArchesFieldContainer::MODIFIES, 0, ArchesFieldContainer::NEWDW, variable_registry, time_substep );
       std::string rhs_name = *i + "_RHS";
       register_variable( rhs_name, ArchesFieldContainer::REQUIRES, 0, ArchesFieldContainer::NEWDW, variable_registry, time_substep );
     }
-    register_variable( "density", ArchesFieldContainer::REQUIRES, 0, ArchesFieldContainer::LATEST, variable_registry, time_substep );
     register_variable( "volFraction", ArchesFieldContainer::REQUIRES, 0, ArchesFieldContainer::LATEST, variable_registry, time_substep );
 
   }
@@ -131,12 +125,13 @@ private:
     typedef SpatialOps::SpatFldPtr<T> STFP;
     typedef typename SpatialOps::OperatorTypeBuilder< SpatialOps::Interpolant, SVolF, T>::type I_svol_to_T;
 
-    SVolFP const rho = tsk_info->get_const_so_field<SVolF>( "density" );
     SVolFP const eps = tsk_info->get_const_so_field<SVolF>( "volFraction" );
 
     const I_svol_to_T* const interp = opr.retrieve_operator<I_svol_to_T>();
 
     typedef std::vector<std::string> SV;
+
+    const double dt = tsk_info->get_dt();
 
     for ( SV::iterator i = _eqn_names.begin(); i != _eqn_names.end(); i++){
 
@@ -144,15 +139,10 @@ private:
       STFP rhs = tsk_info->get_const_so_field<T>( *i+"_RHS" );
 
       //update:
-      if ( _div_density ){
-        //dividing out the density
-        *phi <<= cond( (*interp)(*eps) > 0.0, *rhs/(*interp)(*rho))
-                      ( 0.0 );
-
-      } else {
-        //solving for rho*phi
-        *phi <<= *rhs;
-      }
+      //note: Phi may have rho in it.
+      //      If it does, another task will be responsible for removing it if needed.
+      *phi <<= cond( (*interp)(*eps) > 0.0, *phi + dt * (*rhs) )
+                    ( *phi );
 
     }
   }

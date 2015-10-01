@@ -913,6 +913,7 @@ Arches::scheduleInitialize(const LevelP& level,
   all_tasks = i_trans_fac->second->retrieve_all_tasks();
   for ( TaskFactoryBase::TaskMap::iterator i = all_tasks.begin(); i != all_tasks.end(); i++) {
     i->second->schedule_init(level, sched, matls, is_restart);
+    i->second->schedule_task(level, sched, matls, TaskInterface::BC_TASK, 0);
   }
   //Sets the helper to the factory and assigns it to each active task
   i_trans_fac->second->set_bchelper( &_bcHelperMap );
