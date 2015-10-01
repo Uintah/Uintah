@@ -162,7 +162,7 @@ private:
       } else if ( value == "DIVIDE_CONST_VARIABLE"){
         new_op.expression_type = DIVIDE_CONST_VARIABLE;
       } else if ( value == "DIVIDE_VARIABLE_CONST"){
-        new_op.expression_type = DIVIDE;
+        new_op.expression_type = DIVIDE_VARIABLE_CONST;
       } else if ( value =="POW" ){
         new_op.expression_type = POW;
       } else if ( value == "EXP" ){
