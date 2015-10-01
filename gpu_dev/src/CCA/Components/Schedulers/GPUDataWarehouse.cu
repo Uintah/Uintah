@@ -358,7 +358,7 @@ GPUDataWarehouse::put(GPUGridVariableBase &var, size_t sizeOfDataType, char cons
             << " matl " << matlIndx
             << " level " << levelIndx
             << " on device " << d_device_id
-            << " into GPUDW at " << this
+            << " into GPUDW at " << std::hex << this << std::dec
             << endl;
       }
       cerrLock.unlock();
@@ -427,7 +427,7 @@ GPUDataWarehouse::put(GPUGridVariableBase &var, size_t sizeOfDataType, char cons
                << " with offset (" << var_offset.x << ", " << var_offset.y << ", " << var_offset.z << ")"
                << " and size (" << var_size.x << ", " << var_size.y << ", " << var_size.z << ")"
                << " on device " << d_device_id
-               << " into GPUDW at " << this
+               << " into GPUDW at " << std::hex << this << std::dec
                << endl;
          }
          cerrLock.unlock();
@@ -461,10 +461,11 @@ GPUDataWarehouse::put(GPUGridVariableBase &var, size_t sizeOfDataType, char cons
               << " patch " << patchID
               << " matl " << matlIndx
               << " level " << levelIndx
+              << " at device address " << var_ptr
               << " with offset (" << var_offset.x << ", " << var_offset.y << ", " << var_offset.z << ")"
               << " and size (" << var_size.x << ", " << var_size.y << ", " << var_size.z << ")"
               << " on device " << d_device_id
-              << " into GPUDW at " << this
+              << " into GPUDW at " << std::hex << this << std::dec
               << endl;
         }
         cerrLock.unlock();
@@ -512,10 +513,14 @@ GPUDataWarehouse::put(GPUGridVariableBase &var, size_t sizeOfDataType, char cons
             << " patch " << patchID
             << " matl " << matlIndx
             << " level " << levelIndx
+            << " at device address " << var_ptr
             << " on device " << d_device_id
-            << " into GPUDW at " << this
+            << " into GPUDW at " << std::hex << this << std::dec
+            << " with description " << _internalName
+            << " current varPointers size is: " << varPointers->size()
             << endl;
       }
+
       cerrLock.unlock();
     }
     //if (d_debug){
@@ -560,7 +565,7 @@ GPUDataWarehouse::put(GPUGridVariableBase &var, size_t sizeOfDataType, char cons
         gpu_stats  << " into address " << d_varDB[i].var_ptr
             << " into  d_varDB index " << i
             << " on device " << d_device_id
-            << " into GPUDW at " << this
+            << " into GPUDW at " << std::hex << this << std::dec
             << " size [" << d_varDB[i].var_size.x << ", " << d_varDB[i].var_size.y << ", " << d_varDB[i].var_size.z << "]"
             << " offset [" << d_varDB[i].var_offset.x << ", " << d_varDB[i].var_offset.y << ", " << d_varDB[i].var_offset.z << "]"
             << endl;
@@ -662,12 +667,36 @@ GPUDataWarehouse::allocateAndPut(GPUGridVariableBase &var, char const* label, in
        cerrLock.unlock();
      }
 
-  if (d_debug) {
-    printf("In allocateAndPut(), cudaMalloc for %s patch %d material %d level %d staging %s, size %ld from (%d,%d,%d) to (%d,%d,%d) on thread %d ",
-            label, patchID, matlIndx, levelIndx, staging ? "true" : "false", var.getMemSize(),
-            low.x, low.y, low.z, high.x, high.y, high.z, SCIRun::Thread::self()->myid());
-    printf(" at %p on device %d\n", addr, d_device_id);
+  if (gpu_stats.active()) {
+    cerrLock.lock();
+    {
+      gpu_stats << UnifiedScheduler::myRankThread()
+          << " GPUDataWarehouse::allocateAndPut(), cudaMalloc"
+          << " for " << label
+          << " patch " << patchID
+          << " material " <<  matlIndx
+          << " level " << levelIndx;
+      if (staging) {
+        gpu_stats << " staging: true";
+      } else {
+        gpu_stats << " staging: false";
+      }
+      gpu_stats << " size " << var.getMemSize()
+          << " from (" << low.x << "," << low.y << "," << low.z << ")"
+          << " to (" << high.x << "," << high.y << "," << high.z << ")"
+          << " at " << addr
+          << " on device " << d_device_id << endl;
+    }
+    cerrLock.unlock();
   }
+
+
+  //if (d_debug) {
+  //  printf( %s patch %d material %d level %d staging %s, size %ld from (%d,%d,%d) to (%d,%d,%d) on thread %d ",
+  //          , , , , staging ? "true" : "false", ,
+  //          low.x, low.y, low.z, high.x, high.y, high.z, SCIRun::Thread::self()->myid());
+  //  printf(" at %p on device %d\n", addr, d_device_id);
+ // }
   var.setArray3(offset, size, addr);
   varLock->writeUnlock();
 
@@ -1271,14 +1300,13 @@ GPUDataWarehouse::getItem(char const* label, int patchID, int matlIndx, int leve
   // So to prevent this scenario, we have one more __syncthreads.
   __syncthreads();  //sync before get
 
-  __shared__ int index;
+
 
   int numThreads = blockDim.x * blockDim.y * blockDim.z;
   //int blockID = blockIdx.x + blockIdx.y * gridDim.x + gridDim.x * gridDim.y * blockIdx.z; //blockID on the grid
   int threadID = threadIdx.x +  blockDim.x * threadIdx.y + (blockDim.x * blockDim.y) * threadIdx.z;  //threadID in the block
 
   int i = threadID;
-  index = -1;
   __syncthreads();  //sync before get
 
 
@@ -1291,7 +1319,8 @@ GPUDataWarehouse::getItem(char const* label, int patchID, int matlIndx, int leve
   //array.  This is a clever approach so that instead of doing a simple
   //sequential search with one thread, we can let every thread search for it.  Only the
   //winning thread gets to write to shared data.
-
+  __shared__ int index;
+  index = -1;
   while(i<d_numVarDBItems){
     int strmatch=0;
     char const *s1 = label; //reset s1 and s2 back to the start
@@ -1306,8 +1335,12 @@ GPUDataWarehouse::getItem(char const* label, int patchID, int matlIndx, int leve
         && d_varDB[i].domainID == patchID
         && d_varDB[i].matlIndx == matlIndx
         && d_varDB[i].levelIndx == levelIndx
-        && d_varDB[i].varItem.staging == false) {
+        && d_varDB[i].varItem.staging == false             /* we don't support staging/foregin vars for get() */
+        && d_varDB[i].ghostItem.dest_varDB_index == -1) {  /*don't let ghost cell copy data mix in with normal variables for get() */
       index = i; //we found it.
+      //printf("I'm thread %d In DW at %p, We found it for var %s patch %d matl %d level %d.  d_varDB has it at index %d var %s patch %d at its item address %p with var pointer %p\n",
+      //              threadID, this, label, patchID, matlIndx, levelIndx, index, &(d_varDB[index].label[0]), d_varDB[index].domainID, &d_varDB[index], d_varDB[index].var_ptr);
+
     }
     i = i + numThreads; //Since every thread is involved in searching for the string, have this thread loop to the next possible item to check for.
   }
@@ -1553,9 +1586,22 @@ GPUDataWarehouse::syncto_device(void *cuda_stream)
     CUDA_RT_SAFE_CALL (cudaMemcpyAsync( d_device_copy, this, objectSizeInBytes, cudaMemcpyHostToDevice, *ptr));
 
 
-    if (d_debug) {
-      printf("sync GPUDW %p to device %d on stream %p\n", d_device_copy, d_device_id, ptr);
-    }
+    if (gpu_stats.active()) {
+       cerrLock.lock();
+       {
+         gpu_stats << UnifiedScheduler::myRankThread()
+             << " GPUDataWarehouse::syncto_device() -"
+             << " sync GPUDW at " << d_device_copy
+             << " with description " << _internalName
+             << " to device " << d_device_id
+             << " on stream " << ptr
+             << endl;
+       }
+       cerrLock.unlock();
+     }
+    //if (d_debug) {
+    //  printf("sync GPUDW %p to device %d on stream %p\n", d_device_copy, d_device_id, ptr);
+    //}
     d_dirty=false;
   }
 
@@ -1610,7 +1656,7 @@ GPUDataWarehouse::clear()
           gpu_stats << UnifiedScheduler::myRankThread()
               << " GPUDataWarehouse::uintahSetCudaDevice() -"
               << " cudaFree for non-staging var for " << varIter->first.label
-              << " at device ptr " <<  stagingIter->second.device_ptr
+              << " at device ptr " <<  varIter->second.device_ptr
               << " on device " << d_device_id
               << endl;
         }
@@ -1662,9 +1708,15 @@ GPUDataWarehouse::deleteSelfOnDevice()
 #else
   if ( d_device_copy ) {
     OnDemandDataWarehouse::uintahSetCudaDevice( d_device_id );
-    if(d_debug){
-      printf("Delete GPUDW on-device copy at %p on device %d \n",  d_device_copy, d_device_id);
+    if (gpu_stats.active()) {
+      cerrLock.lock();
+      {
+        gpu_stats << UnifiedScheduler::myRankThread() << " Delete GPUDW on-device copy at " << std::hex
+           << d_device_copy << " on device " << std::dec << d_device_id << std::endl;
+      }
+      cerrLock.unlock();
     }
+
     //cudaHostUnregister(this);
     CUDA_RT_SAFE_CALL(cudaFree( d_device_copy ));
 
@@ -1870,8 +1922,9 @@ GPUDataWarehouse::copyGpuGhostCellsToGpuVars() {
            //copy all 8 bytes of a double in one shot
            if (d_varDB[i].sizeOfDataType == sizeof(double)) {
              *((double*)(d_varDB[destIndex].var_ptr) + destOffset) = *((double*)(d_varDB[i].var_ptr) + sourceOffset);
-             //if (d_varDB[destIndex].label[3] == '0') {
-               printf("Thread %d - %s At (%d, %d, %d), real: (%d, %d, %d), copying within region between (%d, %d, %d) and (%d, %d, %d).  Source d_varDB index (%d, %d, %d) varSize (%d, %d, %d) virtualOffset(%d, %d, %d), varOffset(%d, %d, %d), sourceOffset %d actual pointer %p, value %e.   Dest d_varDB index %d ptr %p destOffset %d actual pointer. %p\n",
+
+             //Note: Every now and then I've seen this printf statement get confused, a line will print with the wrong variables/offset variables...
+             /*  printf("Thread %d - %s At (%d, %d, %d), real: (%d, %d, %d), copying within region between (%d, %d, %d) and (%d, %d, %d).  Source d_varDB index (%d, %d, %d) varSize (%d, %d, %d) virtualOffset(%d, %d, %d), varOffset(%d, %d, %d), sourceOffset %d actual pointer %p, value %e.   Dest d_varDB index %d ptr %p destOffset %d actual pointer. %p\n",
                    threadID, d_varDB[destIndex].label, x, y, z, x_source_real, y_source_real, z_source_real,
                    d_varDB[i].ghostItem.sharedLowCoordinates.x, d_varDB[i].ghostItem.sharedLowCoordinates.y, d_varDB[i].ghostItem.sharedLowCoordinates.z,
                    d_varDB[i].ghostItem.sharedHighCoordinates.x, d_varDB[i].ghostItem.sharedHighCoordinates.y, d_varDB[i].ghostItem.sharedHighCoordinates.z,
@@ -1883,7 +1936,7 @@ GPUDataWarehouse::copyGpuGhostCellsToGpuVars() {
                    d_varDB[i].var_offset.x, d_varDB[i].var_offset.y, d_varDB[i].var_offset.z,
                    sourceOffset, (double*)(d_varDB[i].var_ptr) + sourceOffset, *((double*)(d_varDB[i].var_ptr) + sourceOffset),
                    destIndex, d_varDB[destIndex].var_ptr,  destOffset, (double*)(d_varDB[destIndex].var_ptr) + destOffset);
-             //}
+             */
 
            }
            //or copy all 4 bytes of an int in one shot.
@@ -1959,7 +2012,7 @@ GPUDataWarehouse::copyGpuGhostCellsToGpuVarsInvoker(cudaStream_t* stream)
            << " GPUDataWarehouse::copyGpuGhostCellsToGpuVarsInvoker() - "
            << " Launching ghost cell copies kernel"
            << " on device " << d_device_id
-           << " at GPUDW at " << this
+           << " at GPUDW at " << std::hex << this << std::dec
            << " with description " << _internalName
            << endl;
      }
@@ -2108,7 +2161,7 @@ GPUDataWarehouse::putGhostCell(char const* label, int sourcePatchID, int destPat
          << " size (" << d_varDB[i].var_size.x << ", " << d_varDB[i].var_size.y << ", " << d_varDB[i].var_size.z << ") "
          << " virtualOffset (" << d_varDB[i].ghostItem.virtualOffset.x << ", " << d_varDB[i].ghostItem.virtualOffset.y << ", " << d_varDB[i].ghostItem.virtualOffset.z << ") "
          << " on device " << d_device_id
-         << " at GPUDW at " << this
+         << " at GPUDW at " << std::hex << this<< std::dec
          << endl;
    }
    cerrLock.unlock();

@@ -160,9 +160,7 @@ OnDemandDataWarehouse::OnDemandDataWarehouse( const ProcessorGroup* myworld,
 
       GPUDataWarehouse* gpuDW = (GPUDataWarehouse*)malloc(sizeof(GPUDataWarehouse) - sizeof(GPUDataWarehouse::dataItem) * MAX_VARDB_ITEMS);
       std::ostringstream out;
-      out << "Host-side GPU DW "
-          << "MPIRank: " << Uintah::Parallel::getMPIRank()
-          << " Thread:" << Thread::self()->myid();
+      out << "Host-side GPU DW";
 
       gpuDW->init(i, out.str());
       gpuDW->setDebug(gpudbg.active());
