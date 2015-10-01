@@ -305,7 +305,7 @@ ScalarRHS::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info,
 
   }
 
-  *rhs <<= *rho * *phi + dt * ( *Fdiff - *Fconv );
+  *rhs <<= *Fdiff - *Fconv;
 
   //add sources:
   typedef std::vector<SourceInfo> VS;
@@ -313,7 +313,7 @@ ScalarRHS::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info,
 
     SVolFP const src = tsk_info->get_const_so_field<SVolF>( i->name );
 
-    *rhs <<= *rhs + dt * i->weight * *src;
+    *rhs <<= *rhs + i->weight * *src;
 
   }
 }
@@ -371,13 +371,19 @@ ScalarRHS::compute_bcs( const Patch* patch, ArchesTaskInfoManager* tsk_info,
       //const SpatialOps::SpatialMask<SVolF>* mask = i->second->get_spatial_mask<SVolF>( test->second, pid );
       const std::vector<SpatialOps::IntVec>* mask = i->second->get_extra_bnd_mask<SVolF>( test->second, pid );
       //const std::vector<SpatialOps::IntVec>* mask = i->second->get_interior_bnd_mask<SVolF>( test->second, pid );
+      Uintah::Iterator& u_iter = i->second->get_uintah_extra_bnd_mask( test->second, pid );
+
+      // for (u_iter.reset(); !u_iter.done(); u_iter++ ){
+      //   cout << "setting cell = " << *u_iter << endl;
+      //   (*v)[*u_iter] = 123;
+      // }
 
       for (std::vector<SpatialOps::IntVec>::const_iterator im = mask->begin(); im != mask->end(); im++){
         //cout << " mask = " << *im << endl;
       }
 
-      // *phi <<= cond( mask, 33.33 )
-      //              (1.0);
+      *phi <<= cond( mask, 33.33 )
+                   (1.0);
 
       cout << "hello" << endl;
 
@@ -395,18 +401,20 @@ ScalarRHS::compute_bcs( const Patch* patch, ArchesTaskInfoManager* tsk_info,
     }
 
 
-    std::vector<SpatialOps::IntVec> maskset;
+    // std::vector<SpatialOps::IntVec> maskset;
+    //
+    // for (int i = 2; i < 31; i++){
+    //   for (int j = 2; j < 31; j++){
+    //     maskset.push_back(SpatialOps::IntVec(i,j,0));
+    //   }
+    // }
+    //
+    // SpatialOps::SpatialMask<SpatialOps::SVolField> mask(*phi,maskset);
 
-    for (int i = 2; i < 31; i++){
-      for (int j = 2; j < 31; j++){
-        maskset.push_back(SpatialOps::IntVec(i,j,0));
-      }
-    }
+    // *phi <<= cond( mask, 44.44 )
+    //                ( *phi );
 
-    SpatialOps::SpatialMask<SpatialOps::SVolField> mask(*phi,maskset);
 
-    *phi <<= cond( mask, 44.44 )
-                   ( *phi );
 
 
   }

@@ -58,7 +58,7 @@ TransportFactory::register_all_tasks( ProblemSpecP& db )
 
     typedef SpatialOps::SVolField SVol;
     std::string update_task_name = "scalar_fe_update";
-    FEUpdate<SVol>::Builder* tsk = scinew FEUpdate<SVol>::Builder( update_task_name, 0, _scalar_builders, true );
+    FEUpdate<SVol>::Builder* tsk = scinew FEUpdate<SVol>::Builder( update_task_name, 0, _scalar_builders );
     register_task( update_task_name, tsk );
 
     typedef SpatialOps::SVolField SVol;
@@ -110,21 +110,21 @@ TransportFactory::register_all_tasks( ProblemSpecP& db )
     std::string update_task_name = "umom_fe_update";
     std::vector<std::string> u_up_tsk;
     u_up_tsk.push_back("umom");
-    FEUpdate<XVol>::Builder* utsk = scinew FEUpdate<XVol>::Builder( update_task_name, 0, u_up_tsk, false );
+    FEUpdate<XVol>::Builder* utsk = scinew FEUpdate<XVol>::Builder( update_task_name, 0, u_up_tsk );
     register_task( update_task_name, utsk );
     _momentum_update.push_back( update_task_name );
 
     update_task_name = "vmom_fe_update";
     std::vector<std::string> v_up_tsk;
     v_up_tsk.push_back("vmom");
-    FEUpdate<YVol>::Builder* vtsk = scinew FEUpdate<YVol>::Builder( update_task_name, 0, v_up_tsk, false );
+    FEUpdate<YVol>::Builder* vtsk = scinew FEUpdate<YVol>::Builder( update_task_name, 0, v_up_tsk );
     register_task( update_task_name, vtsk );
     _momentum_update.push_back( update_task_name );
 
     update_task_name = "wmom_fe_update";
     std::vector<std::string> w_up_tsk;
     w_up_tsk.push_back("wmom");
-    FEUpdate<YVol>::Builder* wtsk = scinew FEUpdate<YVol>::Builder( update_task_name, 0, w_up_tsk, false );
+    FEUpdate<YVol>::Builder* wtsk = scinew FEUpdate<YVol>::Builder( update_task_name, 0, w_up_tsk );
     register_task( update_task_name, wtsk );
     //_momentum_update.push_back( update_task_name );
 
