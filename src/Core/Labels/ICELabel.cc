@@ -94,7 +94,8 @@ ICELabel::ICELabel()
   term3Label              = VarLabel::create("term3",         CC_double);
   f_theta_CCLabel         = VarLabel::create("f_theta",       CC_double);
   Tdot_CCLabel            = VarLabel::create("Tdot",          CC_double);
-  turb_viscosity_CCLabel  = VarLabel::create("turb_viscosity_CC",CC_double);
+  turb_viscosity_CCLabel  = VarLabel::create("turb_viscosity_CC", CC_double);
+  total_viscosity_CCLabel = VarLabel::create("total_viscosity_CC",CC_double);
   viscosityLabel          = VarLabel::create("viscosity",     CC_double);
   thermalCondLabel        = VarLabel::create("thermalCond",   CC_double);
   gammaLabel              = VarLabel::create("gamma",         CC_double);
@@ -301,6 +302,7 @@ ICELabel::~ICELabel()
     VarLabel::destroy(f_theta_CCLabel);
     VarLabel::destroy(Tdot_CCLabel);
     VarLabel::destroy(turb_viscosity_CCLabel);
+    VarLabel::destroy(total_viscosity_CCLabel);
     VarLabel::destroy(viscosityLabel);
     VarLabel::destroy(thermalCondLabel);
     VarLabel::destroy(gammaLabel);
