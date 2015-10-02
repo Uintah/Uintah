@@ -74,7 +74,6 @@ ifeq ($(BUILD_WASATCH_FOR_ARCHES),no)
   SRCS +=                                            \
         $(SRCDIR)/BCHelper.cc                        \
         $(SRCDIR)/WasatchBCHelper.cc                 \
-        $(SRCDIR)/BCHelperTools.cc                   \
         $(SRCDIR)/CoordinateHelper.cc                \
         $(SRCDIR)/FieldAdaptor.cc                    \
         $(SRCDIR)/GraphHelperTools.cc                \
