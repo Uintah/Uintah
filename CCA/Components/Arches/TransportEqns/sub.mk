@@ -3,7 +3,7 @@
 SRCDIR   := CCA/Components/Arches/TransportEqns
 
 SRCS += \
-  $(SRCDIR)/Convection_CQMOM.cc   \
+  $(SRCDIR)/CQMOM_Convection_OpSplit.cc   \
   $(SRCDIR)/CQMOMEqn.cc           \
   $(SRCDIR)/CQMOMEqnFactory.cc    \
   $(SRCDIR)/CQMOM_Convection.cc   \
