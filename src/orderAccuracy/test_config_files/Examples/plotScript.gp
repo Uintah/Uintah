@@ -47,7 +47,7 @@ set label 'z_Error = a * (#Rays)^b' at screen 0.2,0.2
 set label 'a = %2.3g',a3      at screen 0.3,0.175
 set label 'b = %2.3g',b3      at screen 0.3,0.15
 
-set yrange [0.001:0.1]
+set yrange [0.001:0.2]
 
 plot 'L2norm.dat' using 1:2 t 'X Error' with points, \
      'L2norm.dat' using 1:3 t 'Y Error' with points, \
