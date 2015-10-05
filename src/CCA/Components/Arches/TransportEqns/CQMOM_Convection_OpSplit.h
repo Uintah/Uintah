@@ -1,5 +1,5 @@
-#ifndef Uintah_Component_Arches_Convection_CQMOM_h
-#define Uintah_Component_Arches_Convection_CQMOM_h
+#ifndef Uintah_Component_Arches_CQMOM_Convection_OpSplit_h
+#define Uintah_Component_Arches_CQMOM_Convection_OpSplit_h
 
 #include <CCA/Ports/Scheduler.h>
 #include <Core/Grid/SimulationState.h>
@@ -19,7 +19,7 @@
 //==========================================================================
 
 /**
- * @class Convection_CQMOM
+ * @class CQMOM_Convection_OpSplit
  * @author Alex Abboud
  * @date June, 2014
  *
@@ -43,11 +43,15 @@
  *        particle-wall restituion coefficient, with default value set to 1 as an elastic wall collision
  *
  *        The first and second order convection schemes can be found in Vikas et. al. 2011
+ *
+ *        The CQMOM_Convection class runs much faster and is used in single permutation CQMOM problems.
+ *        This method still exists in case operator splitting/multiple permutations are required for other
+ *        problems, such as the hybrid CQMOM-DQMOM appraoch. If those are uneeeded these can be nuked later.
  */
 
 
 namespace Uintah{
-  class Convection_CQMOM {
+  class CQMOM_Convection_OpSplit {
     
     // ** These functions should only be used for the CQMOM transport eqns
     // and only when the internal coordinates contain the particle velocity
@@ -55,8 +59,8 @@ namespace Uintah{
     
   public:
     
-    Convection_CQMOM();
-    ~Convection_CQMOM();
+    CQMOM_Convection_OpSplit();
+    ~CQMOM_Convection_OpSplit();
     
     //---------------------------------------------------------------------------
     // Convection functions for CQMOM transport equations
@@ -380,7 +384,7 @@ namespace Uintah{
       template<class fT>
       void do_convection( const Patch* p, fT& Fconv, StaticArray<constCCVariable<double> >& weights, StaticArray<constCCVariable<double> >& abscissas,
                          const int& M, const int& nNodes, const int& velIndex, const std::vector<int>& momentIndex, const int& dim,
-                         constCCVariable<int>& cellType, const double epW, const double d_convWeightLimit, Convection_CQMOM* D)
+                         constCCVariable<int>& cellType, const double epW, const double d_convWeightLimit, CQMOM_Convection_OpSplit* D)
       {
         //set conv direction
         IntVector coord = IntVector(0,0,0);
@@ -408,10 +412,10 @@ namespace Uintah{
           
           IntVector c   = *iIter;
           
-          Convection_CQMOM::cqFaceData1D gPhi;
+          CQMOM_Convection_OpSplit::cqFaceData1D gPhi;
           double aSize = M*nNodes;
-          std::vector<Convection_CQMOM::cqFaceData1D> faceAbscissas (aSize);
-          std::vector<Convection_CQMOM::cqFaceData1D> faceWeights (nNodes);
+          std::vector<CQMOM_Convection_OpSplit::cqFaceData1D> faceAbscissas (aSize);
+          std::vector<CQMOM_Convection_OpSplit::cqFaceData1D> faceWeights (nNodes);
           bool isWeight = true; //bool to determine treatment of a weight near a wall
           bool currVel = false;
           
@@ -451,17 +455,17 @@ namespace Uintah{
           Patch::FaceType face = *bf_iter;
           IntVector inside = p->faceDirection(face);
           CellIterator c_iter = D->getInteriorBoundaryCellIterator( p, bf_iter );
-          Convection_CQMOM::cqFaceBoundaryBool faceIsBoundary;
+          CQMOM_Convection_OpSplit::cqFaceBoundaryBool faceIsBoundary;
           
           for (c_iter.begin(); !c_iter.done(); c_iter++){
             
             IntVector c = *c_iter - inside;
-            Convection_CQMOM::cqFaceData1D gPhi;
+            CQMOM_Convection_OpSplit::cqFaceData1D gPhi;
             
             faceIsBoundary = D->checkFacesForBoundaries( p, c, coord );
             double aSize = M*nNodes;
-            std::vector<Convection_CQMOM::cqFaceData1D> faceAbscissas (aSize);
-            std::vector<Convection_CQMOM::cqFaceData1D> faceWeights (nNodes);
+            std::vector<CQMOM_Convection_OpSplit::cqFaceData1D> faceAbscissas (aSize);
+            std::vector<CQMOM_Convection_OpSplit::cqFaceData1D> faceWeights (nNodes);
             
             bool isWeight = true; //bool to determien treatment at walls
             bool currVel = false;
@@ -512,7 +516,7 @@ namespace Uintah{
       cqFaceData1D no_bc( const IntVector c, const IntVector coord, constCCVariable<double>& phi, const bool isWeight,
                           const bool currVel, constCCVariable<int>& cellType, const double epW)
       {
-        Convection_CQMOM::cqFaceData1D face_values;
+        CQMOM_Convection_OpSplit::cqFaceData1D face_values;
         IntVector cxp = c + coord;
         IntVector cxm = c - coord;
         
@@ -554,7 +558,7 @@ namespace Uintah{
                                    const bool currVel, constCCVariable<int>& cellType, const double epW, cqFaceBoundaryBool isBoundary)
       {
         //For first order treat boundary cells exactly how interior cells are treated
-        Convection_CQMOM::cqFaceData1D face_values;
+        CQMOM_Convection_OpSplit::cqFaceData1D face_values;
         IntVector cxp = c + coord;
         IntVector cxm = c - coord;
         
@@ -630,7 +634,7 @@ namespace Uintah{
       
       cqFaceData1D no_bc( const IntVector c, const IntVector coord, constCCVariable<double>& phi, const bool isWeight,
                           const bool currVel, constCCVariable<int>& cellType, const double epW) {
-        Convection_CQMOM::cqFaceData1D face_values;
+        CQMOM_Convection_OpSplit::cqFaceData1D face_values;
         
         IntVector cxpp = c + coord + coord;
         IntVector cxp = c + coord;
@@ -699,7 +703,7 @@ namespace Uintah{
       cqFaceData1D inline with_bc( const IntVector c, const IntVector coord, constCCVariable<double>& phi, const bool isWeight,
                                    const bool currVel, constCCVariable<int>& cellType, const double epW, cqFaceBoundaryBool isBoundary)
       {
-        Convection_CQMOM::cqFaceData1D face_values;
+        CQMOM_Convection_OpSplit::cqFaceData1D face_values;
         
         IntVector cxpp = c + coord + coord;
         IntVector cxp = c + coord;
@@ -774,7 +778,7 @@ namespace Uintah{
       }
     };
     
-  }; // class Convection_CQMOM
+  }; // class CQMOM_Convection_OpSplit
   
   
   struct cqFaceData1D {
@@ -798,10 +802,10 @@ namespace Uintah{
 
   //x direction convection
   template<class fT > void
-  Convection_CQMOM::doConvX( const Patch* p, fT& Fconv, const std::string d_convScheme, const double d_convWeightLimit,
-                             StaticArray<constCCVariable<double> >& weights, StaticArray<constCCVariable<double> >& abscissas,
-                             const int M, const int nNodes, const int uVelIndex, const std::vector<int> momentIndex, constCCVariable<int>& cellType,
-                             const double epW)
+  CQMOM_Convection_OpSplit::doConvX( const Patch* p, fT& Fconv, const std::string d_convScheme, const double d_convWeightLimit,
+                                     StaticArray<constCCVariable<double> >& weights, StaticArray<constCCVariable<double> >& abscissas,
+                                     const int M, const int nNodes, const int uVelIndex, const std::vector<int> momentIndex, constCCVariable<int>& cellType,
+                                     const double epW)
   {
     int dim = 0;
     
@@ -837,10 +841,10 @@ namespace Uintah{
   
   //y direction convection
   template<class fT> void
-  Convection_CQMOM::doConvY( const Patch* p, fT& Fconv, const std::string d_convScheme, const double d_convWeightLimit,
-                            StaticArray<constCCVariable<double> >& weights, StaticArray<constCCVariable<double> >& abscissas,
-                            const int M, const int nNodes, const int vVelIndex, const std::vector<int> momentIndex, constCCVariable<int>& cellType,
-                            const double epW)
+  CQMOM_Convection_OpSplit::doConvY( const Patch* p, fT& Fconv, const std::string d_convScheme, const double d_convWeightLimit,
+                                     StaticArray<constCCVariable<double> >& weights, StaticArray<constCCVariable<double> >& abscissas,
+                                     const int M, const int nNodes, const int vVelIndex, const std::vector<int> momentIndex, constCCVariable<int>& cellType,
+                                     const double epW)
   {
     int dim = 1;
     
@@ -874,10 +878,10 @@ namespace Uintah{
   
   //z directino convection
   template<class fT> void
-  Convection_CQMOM::doConvZ( const Patch* p, fT& Fconv, const std::string d_convScheme, const double d_convWeightLimit,
-                            StaticArray<constCCVariable<double> >& weights, StaticArray<constCCVariable<double> >& abscissas,
-                            const int M, const int nNodes, const int wVelIndex, const std::vector<int> momentIndex, constCCVariable<int>& cellType,
-                            const double epW)
+  CQMOM_Convection_OpSplit::doConvZ( const Patch* p, fT& Fconv, const std::string d_convScheme, const double d_convWeightLimit,
+                                     StaticArray<constCCVariable<double> >& weights, StaticArray<constCCVariable<double> >& abscissas,
+                                     const int M, const int nNodes, const int wVelIndex, const std::vector<int> momentIndex, constCCVariable<int>& cellType,
+                                     const double epW)
   {
     int dim = 2;
     
