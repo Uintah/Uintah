@@ -90,7 +90,7 @@ Contact* ContactFactory::create(const ProcessorGroup* myworld,
    
    // 
    if(contact_list->size()==0) {
-     cout << "no contact - using null" << endl;
+     proc0cout << "no contact - using null" << endl;
      contact_list->add(scinew NullContact(myworld,ss,lb,flag));
    }
    
