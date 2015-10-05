@@ -684,7 +684,7 @@ void SerialMPM::scheduleApplyExternalLoads(SchedulerP& sched,
   t->requires(Task::OldDW, lb->pDeformationMeasureLabel,Ghost::None);
   t->requires(Task::OldDW, lb->pExternalForceLabel,     Ghost::None);
   t->computes(             lb->pExtForceLabel_preReloc);
-  if (flags->d_useLoadCurves) {
+  if (flags->d_useLoadCurves && !flags->d_doScalarDiffusion) {
     t->requires(Task::OldDW, lb->pLoadCurveIDLabel,     Ghost::None);
     t->computes(             lb->pLoadCurveIDLabel_preReloc);
     if (flags->d_useCBDI) {
@@ -3194,14 +3194,14 @@ void SerialMPM::applyExternalLoads(const ProcessorGroup* ,
         }
 
         // Get the load curve data
-        constParticleVariable<int> pLoadCurveID;
-        old_dw->get(pLoadCurveID, lb->pLoadCurveIDLabel, pset);
-        // Recycle the loadCurveIDs
-        ParticleVariable<int> pLoadCurveID_new;
-        new_dw->allocateAndPut(pLoadCurveID_new,
-                               lb->pLoadCurveIDLabel_preReloc, pset);
-        pLoadCurveID_new.copyData(pLoadCurveID);
         if(do_PressureBCs){
+          constParticleVariable<int> pLoadCurveID;
+          old_dw->get(pLoadCurveID, lb->pLoadCurveIDLabel, pset);
+          // Recycle the loadCurveIDs
+          ParticleVariable<int> pLoadCurveID_new;
+          new_dw->allocateAndPut(pLoadCurveID_new,
+                                 lb->pLoadCurveIDLabel_preReloc, pset);
+          pLoadCurveID_new.copyData(pLoadCurveID);
           // Get the external force data and allocate new space for
           // external force
           constParticleVariable<Vector> pExternalForce;
