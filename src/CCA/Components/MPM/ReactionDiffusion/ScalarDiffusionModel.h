@@ -47,7 +47,8 @@ namespace Uintah {
   class ScalarDiffusionModel {
   public:
     
-    ScalarDiffusionModel(ProblemSpecP& ps, SimulationStateP& sS, MPMFlags* Mflag,
+    ScalarDiffusionModel(ProblemSpecP& ps, SimulationStateP& sS,
+                         MPMFlags* Mflag,
                          std::string diff_type);
     virtual ~ScalarDiffusionModel();
 
@@ -57,7 +58,8 @@ namespace Uintah {
 
     virtual void setIncludeHydroStress(bool value);
 
-    virtual void addInitialComputesAndRequires(Task* task, const MPMMaterial* matl,
+    virtual void addInitialComputesAndRequires(Task* task, 
+                                               const MPMMaterial* matl,
                                                const PatchSet* patches) const;
 
     virtual void initializeSDMData(const Patch* patch, const MPMMaterial* matl,

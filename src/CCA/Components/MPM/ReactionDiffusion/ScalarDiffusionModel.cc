@@ -51,6 +51,7 @@ ScalarDiffusionModel::ScalarDiffusionModel(ProblemSpecP& ps, SimulationStateP& s
   d_rdlb = scinew ReactionDiffusionLabel();
 
   ps->require("diffusivity", diffusivity);
+  ps->require("max_concentration", max_concentration);
 
   if(d_Mflag->d_8or27==8){
     NGP=1;
@@ -226,7 +227,7 @@ void ScalarDiffusionModel::computeDivergence(const Patch* patch,
       node = ni[k];
       if(patch->containsNode(node)){
         Vector div(d_S[k].x()*oodx[0],d_S[k].y()*oodx[1],d_S[k].z()*oodx[2]);
-        Cdot_cond = Dot(div, J)*pMass[idx];
+        Cdot_cond = Dot(div, J)/* *pMass[idx]*/;
         gConcRate[node] -= Cdot_cond;
       }
     }
@@ -329,7 +330,7 @@ void ScalarDiffusionModel::computeDivergence_CFI(const PatchSubset* finePatches,
       for(int cp=0; cp<coarsePatches.size(); cp++){
         const Patch* coarsePatch = coarsePatches[cp];
 
-        // get coarse level particle data                                                       
+        // get coarse level particle data 
         ParticleSubset* pset_coarse;
         constParticleVariable<Point> px_coarse;
         constParticleVariable<Vector> pflux_coarse;
@@ -361,8 +362,8 @@ void ScalarDiffusionModel::computeDivergence_CFI(const PatchSubset* finePatches,
           for(int k = 0; k < (int)ni.size(); k++) {
             fineNode = ni[k];
             if( finePatch->containsNode( fineNode ) ){
-               double Cdot_cond = Dot(div[k], pflux_coarse[idx])
-                                            * pmass_coarse[idx];
+               double Cdot_cond = Dot(div[k], pflux_coarse[idx]);
+                                    /*      * pmass_coarse[idx]; */
                gConcRate[fineNode] -= Cdot_cond;
             }  // contains node
           }  // node loop
