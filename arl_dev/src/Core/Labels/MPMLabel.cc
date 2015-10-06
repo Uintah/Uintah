@@ -253,7 +253,7 @@ MPMLabel::MPMLabel()
   pConcGradientLabel_preReloc =VarLabel::create("p.concentrationGradient+",
 			ParticleVariable<Vector>::getTypeDescription() );
 
-  pFluxLabel = VarLabel::create( "p.Flux",
+  pFluxLabel = VarLabel::create( "p.flux",
 			ParticleVariable<Vector>::getTypeDescription() );
 
   // Node Centered Variables
