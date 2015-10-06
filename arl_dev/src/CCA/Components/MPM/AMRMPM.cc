@@ -417,13 +417,13 @@ void AMRMPM::scheduleInitialize(const LevelP& level, SchedulerP& sched)
 
   if (flags->d_useLoadCurves && !flags->d_doScalarDiffusion) {
     // Schedule the initialization of pressure BCs per particle
-    cout << "Pressure load curves are untested for mutliple levels" << endl;
+    cout << "Pressure load curves are untested for multiple levels" << endl;
     scheduleInitializePressureBCs(level, sched);
   }
 
   if (flags->d_useLoadCurves && flags->d_doScalarDiffusion) {
     // Schedule the initialization of scalar fluxBCs per particle
-    cout << "Scalar load curves are untested for mutliple levels" << endl;
+    cout << "Scalar load curves are untested for multiple levels" << endl;
     scheduleInitializeScalarFluxBCs(level, sched);
   }
 
