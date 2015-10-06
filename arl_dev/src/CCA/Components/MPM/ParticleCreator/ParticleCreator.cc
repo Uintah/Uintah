@@ -37,6 +37,7 @@
 #include <CCA/Components/MPM/PhysicalBC/MPMPhysicalBCFactory.h>
 #include <CCA/Components/MPM/PhysicalBC/ForceBC.h>
 #include <CCA/Components/MPM/PhysicalBC/PressureBC.h>
+#include <CCA/Components/MPM/PhysicalBC/ScalarFluxBC.h>
 #include <CCA/Components/MPM/PhysicalBC/HeatFluxBC.h>
 #include <CCA/Components/MPM/PhysicalBC/ArchesHeatFluxBC.h>
 #include <CCA/Components/MPM/ConstitutiveModel/MPMMaterial.h>
@@ -54,7 +55,7 @@ ParticleCreator::ParticleCreator(MPMMaterial* matl,
                                  MPMFlags* flags)
 :d_lock("Particle Creator lock")
 {
-  d_lb = new MPMLabel();
+  d_lb = scinew MPMLabel();
   d_useLoadCurves = flags->d_useLoadCurves;
   d_with_color = flags->d_with_color;
   d_artificial_viscosity = flags->d_artificial_viscosity;
@@ -289,6 +290,13 @@ int ParticleCreator::getLoadCurveID(const Point& pp, const Vector& dxpp)
     if (bcs_type == "Pressure") {
       PressureBC* pbc = 
         dynamic_cast<PressureBC*>(MPMPhysicalBCFactory::mpmPhysicalBCs[ii]);
+      if (pbc->flagMaterialPoint(pp, dxpp)) {
+         ret = pbc->loadCurveID(); 
+      }
+    }
+    else if (bcs_type == "ScalarFlux") {
+      ScalarFluxBC* pbc = 
+        dynamic_cast<ScalarFluxBC*>(MPMPhysicalBCFactory::mpmPhysicalBCs[ii]);
       if (pbc->flagMaterialPoint(pp, dxpp)) {
          ret = pbc->loadCurveID(); 
       }
