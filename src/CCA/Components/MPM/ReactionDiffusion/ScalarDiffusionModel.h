@@ -39,7 +39,6 @@ namespace Uintah {
   class MPMFlags;
   class MPMLabel;
   class MPMMaterial;
-  class ReactionDiffusionLabel;
   class DataWarehouse;
   class ProcessorGroup;
 
@@ -95,7 +94,6 @@ namespace Uintah {
     MPMLabel* d_lb;
     MPMFlags* d_Mflag;
     SimulationStateP d_sharedState;
-    ReactionDiffusionLabel* d_rdlb;
 
     int NGP, NGN;
     bool do_explicit;

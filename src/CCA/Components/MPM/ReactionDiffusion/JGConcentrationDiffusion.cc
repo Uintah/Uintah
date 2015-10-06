@@ -51,8 +51,8 @@ void JGConcentrationDiffusion::scheduleComputeFlux(Task* task,
   const MaterialSubset* matlset = matl->thisMaterial();
   Ghost::GhostType gnone = Ghost::None;
 
-  task->requires(Task::OldDW, d_rdlb->pConcGradientLabel, matlset, gnone);
-  task->computes(             d_rdlb->pFluxLabel,         matlset);
+  task->requires(Task::OldDW, d_lb->pConcGradientLabel, matlset, gnone);
+  task->computes(             d_lb->pFluxLabel,         matlset);
 }
 
 void JGConcentrationDiffusion::computeFlux(const Patch* patch, 
@@ -70,8 +70,8 @@ void JGConcentrationDiffusion::computeFlux(const Patch* patch,
 
   ParticleSubset* pset = old_dw->getParticleSubset(dwi, patch);
 
-  old_dw->get(pConcGradient,     d_rdlb->pConcGradientLabel, pset);
-  new_dw->allocateAndPut(pFlux,  d_rdlb->pFluxLabel,         pset);
+  old_dw->get(pConcGradient,     d_lb->pConcGradientLabel, pset);
+  new_dw->allocateAndPut(pFlux,  d_lb->pFluxLabel,         pset);
   
   for (ParticleSubset::iterator iter  = pset->begin();iter!=pset->end();iter++){
     particleIndex idx = *iter;
