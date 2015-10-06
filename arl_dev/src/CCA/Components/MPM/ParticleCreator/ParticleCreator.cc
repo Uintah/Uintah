@@ -42,7 +42,6 @@
 #include <CCA/Components/MPM/ConstitutiveModel/MPMMaterial.h>
 #include <CCA/Components/MPM/ConstitutiveModel/ConstitutiveModel.h>
 #include <CCA/Components/MPM/ReactionDiffusion/ScalarDiffusionModel.h>
-#include <CCA/Components/MPM/ReactionDiffusion/ReactionDiffusionLabel.h>
 #include <CCA/Components/MPM/MPMFlags.h>
 #include <CCA/Components/MPM/MMS/MMS.h>
 #include <fstream>
@@ -56,7 +55,6 @@ ParticleCreator::ParticleCreator(MPMMaterial* matl,
 :d_lock("Particle Creator lock")
 {
   d_lb = new MPMLabel();
-  d_rdlb = new ReactionDiffusionLabel();
   d_useLoadCurves = flags->d_useLoadCurves;
   d_with_color = flags->d_with_color;
   d_artificial_viscosity = flags->d_artificial_viscosity;
@@ -398,11 +396,11 @@ ParticleCreator::allocateVariables(particleIndex numParticles,
   }
   if(d_doScalarDiffusion){
      new_dw->allocateAndPut(pvars.pConcentration,
-                                          d_rdlb->pConcentrationLabel,  subset);
+                                          d_lb->pConcentrationLabel,  subset);
      new_dw->allocateAndPut(pvars.pConcPrevious,
-                                          d_rdlb->pConcPreviousLabel,   subset);
+                                          d_lb->pConcPreviousLabel,   subset);
      new_dw->allocateAndPut(pvars.pConcGrad,
-                                          d_rdlb->pConcGradientLabel,   subset);
+                                          d_lb->pConcGradientLabel,   subset);
   }
   if(d_artificial_viscosity){
      new_dw->allocateAndPut(pvars.p_q,        d_lb->p_qLabel,           subset);
@@ -808,14 +806,14 @@ void ParticleCreator::registerPermanentParticleState(MPMMaterial* matl)
   }
 
   if (d_doScalarDiffusion){
-    particle_state.push_back(d_rdlb->pConcentrationLabel);
-    particle_state_preReloc.push_back(d_rdlb->pConcentrationLabel_preReloc);
+    particle_state.push_back(d_lb->pConcentrationLabel);
+    particle_state_preReloc.push_back(d_lb->pConcentrationLabel_preReloc);
 
-    particle_state.push_back(d_rdlb->pConcPreviousLabel);
-    particle_state_preReloc.push_back(d_rdlb->pConcPreviousLabel_preReloc);
+    particle_state.push_back(d_lb->pConcPreviousLabel);
+    particle_state_preReloc.push_back(d_lb->pConcPreviousLabel_preReloc);
 
-    particle_state.push_back(d_rdlb->pConcGradientLabel);
-    particle_state_preReloc.push_back(d_rdlb->pConcGradientLabel_preReloc);
+    particle_state.push_back(d_lb->pConcGradientLabel);
+    particle_state_preReloc.push_back(d_lb->pConcGradientLabel_preReloc);
   }
 
   particle_state.push_back(d_lb->pSizeLabel);

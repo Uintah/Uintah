@@ -47,7 +47,6 @@ namespace Uintah {
   class MPMLabel;
   class ParticleSubset;
   class VarLabel;
-  class ReactionDiffusionLabel;
 
   class ParticleCreator {
   public:
@@ -156,7 +155,6 @@ namespace Uintah {
     
 
     MPMLabel* d_lb;
-    ReactionDiffusionLabel* d_rdlb;
     MPMFlags* d_flags;
 
     bool d_useLoadCurves;

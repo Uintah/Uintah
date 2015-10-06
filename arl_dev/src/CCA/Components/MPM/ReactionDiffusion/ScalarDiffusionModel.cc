@@ -23,7 +23,6 @@
  */
 
 #include <CCA/Components/MPM/ReactionDiffusion/ScalarDiffusionModel.h>
-#include <CCA/Components/MPM/ReactionDiffusion/ReactionDiffusionLabel.h>
 #include <CCA/Components/MPM/ConstitutiveModel/MPMMaterial.h>
 #include <CCA/Components/MPM/MPMBoundCond.h>
 #include <CCA/Components/MPM/MPMFlags.h>
@@ -48,7 +47,6 @@ ScalarDiffusionModel::ScalarDiffusionModel(ProblemSpecP& ps, SimulationStateP& s
   d_sharedState = sS;
 
   d_lb = scinew MPMLabel;
-  d_rdlb = scinew ReactionDiffusionLabel();
 
   ps->require("diffusivity", diffusivity);
   ps->require("max_concentration", max_concentration);
@@ -77,7 +75,6 @@ ScalarDiffusionModel::ScalarDiffusionModel(ProblemSpecP& ps, SimulationStateP& s
 
 ScalarDiffusionModel::~ScalarDiffusionModel() {
   delete d_lb;
-  delete d_rdlb;
 
   if (d_one_matl->removeReference())
     delete d_one_matl;
@@ -99,9 +96,9 @@ void ScalarDiffusionModel::addInitialComputesAndRequires(Task* task,
                                                    const MPMMaterial* matl,
                                                    const PatchSet* patch) const{
   const MaterialSubset* matlset = matl->thisMaterial();
-  task->computes(d_rdlb->pConcentrationLabel, matlset);
-  task->computes(d_rdlb->pConcPreviousLabel,  matlset);
-  task->computes(d_rdlb->pConcGradientLabel,  matlset);
+  task->computes(d_lb->pConcentrationLabel, matlset);
+  task->computes(d_lb->pConcPreviousLabel,  matlset);
+  task->computes(d_lb->pConcGradientLabel,  matlset);
 }
 
 void ScalarDiffusionModel::initializeSDMData(const Patch* patch,
@@ -114,9 +111,9 @@ void ScalarDiffusionModel::initializeSDMData(const Patch* patch,
   ParticleVariable<double>  pConcPrevious;
   ParticleVariable<Vector>  pConcGradient;
 
-  new_dw->allocateAndPut(pConcentration,  d_rdlb->pConcentrationLabel, pset);
-  new_dw->allocateAndPut(pConcPrevious,   d_rdlb->pConcPreviousLabel,  pset);
-  new_dw->allocateAndPut(pConcGradient,   d_rdlb->pConcGradientLabel,  pset);
+  new_dw->allocateAndPut(pConcentration,  d_lb->pConcentrationLabel, pset);
+  new_dw->allocateAndPut(pConcPrevious,   d_lb->pConcPreviousLabel,  pset);
+  new_dw->allocateAndPut(pConcGradient,   d_lb->pConcGradientLabel,  pset);
 
   for(ParticleSubset::iterator iter = pset->begin();iter != pset->end();iter++){
     pConcentration[*iter] = 0.0;
@@ -128,12 +125,12 @@ void ScalarDiffusionModel::initializeSDMData(const Patch* patch,
 void ScalarDiffusionModel::addParticleState(std::vector<const VarLabel*>& from,
                                             std::vector<const VarLabel*>& to)
 {
-  from.push_back(d_rdlb->pConcentrationLabel);
-  from.push_back(d_rdlb->pConcPreviousLabel);
+  from.push_back(d_lb->pConcentrationLabel);
+  from.push_back(d_lb->pConcPreviousLabel);
   from.push_back(d_lb->pConcGradientLabel);
 
-  to.push_back(d_rdlb->pConcentrationLabel_preReloc);
-  to.push_back(d_rdlb->pConcPreviousLabel_preReloc);
+  to.push_back(d_lb->pConcentrationLabel_preReloc);
+  to.push_back(d_lb->pConcPreviousLabel_preReloc);
   to.push_back(d_lb->pConcGradientLabel_preReloc);
 }
 
@@ -157,15 +154,15 @@ void ScalarDiffusionModel::scheduleComputeDivergence(Task* task,
   Ghost::GhostType  gan   = Ghost::AroundNodes;
   const MaterialSubset* matlset = matl->thisMaterial();
   task->requires(Task::OldDW, d_sharedState->get_delt_label());
-  task->requires(Task::OldDW, d_lb->pXLabel,                         gan, NGP);
-  task->requires(Task::OldDW, d_lb->pSizeLabel,                      gan, NGP);
-  task->requires(Task::OldDW, d_lb->pMassLabel,                      gan, NGP);
-  task->requires(Task::OldDW, d_lb->pVolumeLabel,                    gan, NGP);
-  task->requires(Task::OldDW, d_lb->pDeformationMeasureLabel,        gan, NGP);
+  task->requires(Task::OldDW, d_lb->pXLabel,                   gan, NGP);
+  task->requires(Task::OldDW, d_lb->pSizeLabel,                gan, NGP);
+  task->requires(Task::OldDW, d_lb->pMassLabel,                gan, NGP);
+  task->requires(Task::OldDW, d_lb->pVolumeLabel,              gan, NGP);
+  task->requires(Task::OldDW, d_lb->pDeformationMeasureLabel,  gan, NGP);
 
-  task->requires(Task::NewDW, d_rdlb->pFluxLabel,              gan, NGP);
+  task->requires(Task::NewDW, d_lb->pFluxLabel,                gan, NGP);
 
-  task->computes(d_rdlb->gConcentrationRateLabel, matlset);
+  task->computes(d_lb->gConcentrationRateLabel, matlset);
 }
 
 void ScalarDiffusionModel::computeDivergence(const Patch* patch,
@@ -202,9 +199,9 @@ void ScalarDiffusionModel::computeDivergence(const Patch* patch,
   old_dw->get(pMass,               d_lb->pMassLabel,               pset);
   old_dw->get(psize,               d_lb->pSizeLabel,               pset);
   old_dw->get(deformationGradient, d_lb->pDeformationMeasureLabel, pset);
-  new_dw->get(pFlux,               d_rdlb->pFluxLabel,             pset);
+  new_dw->get(pFlux,               d_lb->pFluxLabel,               pset);
 
-  new_dw->allocateAndPut(gConcRate,  d_rdlb->gConcentrationRateLabel,dwi,patch);
+  new_dw->allocateAndPut(gConcRate,  d_lb->gConcentrationRateLabel,dwi,patch);
 
   gConcRate.initialize(0.0);
 
@@ -259,7 +256,7 @@ void ScalarDiffusionModel::scheduleComputeDivergence_CFI(Task* t,
     t->requires(Task::OldDW, d_lb->pSizeLabel,    allPatches, Task::CoarseLevel,allMatls, ND, gac, npc);
     t->requires(Task::OldDW, d_lb->pMassLabel,    allPatches, Task::CoarseLevel,allMatls, ND, gac, npc);
     t->requires(Task::OldDW, d_lb->pDeformationMeasureLabel,    allPatches, Task::CoarseLevel,allMatls, ND, gac, npc);
-    t->requires(Task::NewDW, d_rdlb->pFluxLabel,  allPatches, Task::CoarseLevel,allMatls, ND, gac, npc);
+    t->requires(Task::NewDW, d_lb->pFluxLabel,    allPatches, Task::CoarseLevel,allMatls, ND, gac, npc);
 
     t->modifies(d_lb->gConcentrationRateLabel, matlset);
 }
@@ -346,7 +343,7 @@ void ScalarDiffusionModel::computeDivergence_CFI(const PatchSubset* finePatches,
         // coarse level data
         old_dw->get(px_coarse,      d_lb->pXLabel,       pset_coarse);
         old_dw->get(pmass_coarse,   d_lb->pMassLabel,    pset_coarse);
-        new_dw->get(pflux_coarse,   d_rdlb->pFluxLabel,  pset_coarse);
+        new_dw->get(pflux_coarse,   d_lb->pFluxLabel,  pset_coarse);
 
         for (ParticleSubset::iterator iter = pset_coarse->begin();
                                       iter != pset_coarse->end();  iter++){

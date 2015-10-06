@@ -23,7 +23,6 @@
  */
 
 #include <CCA/Components/MPM/ReactionDiffusion/GaoDiffusion.h>
-#include <CCA/Components/MPM/ReactionDiffusion/ReactionDiffusionLabel.h>
 #include <CCA/Components/MPM/ConstitutiveModel/MPMMaterial.h>
 #include <CCA/Components/MPM/MPMBoundCond.h>
 #include <CCA/Components/MPM/MPMFlags.h>
@@ -64,10 +63,10 @@ void GaoDiffusion::scheduleComputeFlux(Task* task, const MPMMaterial* matl,
   task->requires(Task::OldDW, d_lb->pVolumeLabel,              matlset, gan, NGP);
   task->requires(Task::OldDW, d_lb->pDeformationMeasureLabel,  matlset, gan, NGP);
   task->requires(Task::NewDW, d_lb->gMassLabel,                matlset, gnone);
-  task->requires(Task::OldDW, d_rdlb->pConcentrationLabel,     matlset, gan, NGP);
-  task->requires(Task::NewDW, d_rdlb->gHydrostaticStressLabel, matlset, gan, 2*NGN);
+  task->requires(Task::OldDW, d_lb->pConcentrationLabel,     matlset, gan, NGP);
+  task->requires(Task::NewDW, d_lb->gHydrostaticStressLabel, matlset, gan, 2*NGN);
 
-  task->computes(d_rdlb->pFluxLabel,         matlset);
+  task->computes(d_lb->pFluxLabel,         matlset);
 
 }
 
@@ -114,11 +113,11 @@ void GaoDiffusion::computeFlux(const Patch* patch, const MPMMaterial* matl,
 
   new_dw->get(gMass,              d_lb->gMassLabel,                dwi,
                                                               patch, gnone, 0);
-  new_dw->get(gHydrostaticStress, d_rdlb->gHydrostaticStressLabel, dwi,
+  new_dw->get(gHydrostaticStress, d_lb->gHydrostaticStressLabel, dwi,
                                                               patch, gac,2*NGN);
 
-  new_dw->allocateTemporary(pHydroStressGradient,   pset);
-  new_dw->allocateAndPut(pFlux,         d_rdlb->pFluxLabel,         pset);
+  new_dw->allocateTemporary(pHydroStressGradient, pset);
+  new_dw->allocateAndPut(pFlux, d_lb->pFluxLabel, pset);
 
   
   double chem_potential;

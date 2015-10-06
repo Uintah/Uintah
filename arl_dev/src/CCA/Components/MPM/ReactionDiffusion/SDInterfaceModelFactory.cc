@@ -71,6 +71,8 @@ SDInterfaceModel* SDInterfaceModelFactory::create(ProblemSpecP& ps,
     return(scinew CommonIFConcDiff(mpm_ps, ss, flags));
   }else if (diff_interface_type == "null"){
     return(scinew NullIFConcDiff(mpm_ps, ss, flags));
+  }else if (diff_interface_type == "paired"){
+    return(scinew NullIFConcDiff(mpm_ps, ss, flags));
   }else{
     throw ProblemSetupException("Unknown Scalar Interface Type ("+diff_interface_type+")", __FILE__, __LINE__);
   }
