@@ -369,7 +369,7 @@ void ICE::problemSetup(const ProblemSpecP& prob_spec,
   if (tsc_ps ) {
     tsc_ps ->require("Scheme_for_delT_calc", d_delT_scheme);
     tsc_ps ->require("knob_for_speedSound",  d_delT_knob);
-    tsc_ps ->require("knob_for_diffusion",   d_delT_diffusionKnob);
+    tsc_ps ->get("knob_for_diffusion",       d_delT_diffusionKnob);
     
     if (d_delT_scheme != "conservative" && d_delT_scheme != "aggressive") {
      string warn="ERROR:\n Scheme_for_delT_calc:  must specify either aggressive or conservative";
