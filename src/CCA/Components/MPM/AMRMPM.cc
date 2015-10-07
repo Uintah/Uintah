@@ -4946,7 +4946,6 @@ void AMRMPM::scheduleApplyExternalScalarFlux(SchedulerP& sched,
   t->computes(             lb->pExternalScalarFluxLabel);
   if (flags->d_useLoadCurves) {
     t->requires(Task::OldDW, lb->pLoadCurveIDLabel,     Ghost::None);
-    t->computes(             lb->pLoadCurveIDLabel_preReloc);
   }
 
   sched->addTask(t, patches, matls);
@@ -5010,6 +5009,8 @@ void AMRMPM::applyExternalScalarFlux(const ProcessorGroup* ,
                                       lb->pExternalScalarFluxLabel,  pset);
 
       if (flags->d_useLoadCurves) {
+        constParticleVariable<int> pLoadCurveID;
+        old_dw->get(pLoadCurveID, lb->pLoadCurveIDLabel, pset);
         bool do_FluxBCs=false;
         for (int ii = 0;
              ii < (int)MPMPhysicalBCFactory::mpmPhysicalBCs.size(); ii++) {
@@ -5022,13 +5023,6 @@ void AMRMPM::applyExternalScalarFlux(const ProcessorGroup* ,
 
         // Get the load curve data
         if(do_FluxBCs){
-          constParticleVariable<int> pLoadCurveID;
-          old_dw->get(pLoadCurveID, lb->pLoadCurveIDLabel, pset);
-          // Recycle the loadCurveIDs
-          ParticleVariable<int> pLoadCurveID_new;
-          new_dw->allocateAndPut(pLoadCurveID_new,
-                                 lb->pLoadCurveIDLabel_preReloc, pset);
-          pLoadCurveID_new.copyData(pLoadCurveID);
 #if 0
           ParticleVariable<Point> pExternalForceCorner1, pExternalForceCorner2,
                                   pExternalForceCorner3, pExternalForceCorner4;
