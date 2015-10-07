@@ -5071,6 +5071,10 @@ void AMRMPM::applyExternalScalarFlux(const ProcessorGroup* ,
           }
         }
       } // if use load curves
+      for(ParticleSubset::iterator iter = pset->begin();
+                                   iter != pset->end(); iter++){
+       pExternalScalarFlux[*iter] = 0.;
+      }
     } // matl loop
   }  // patch loop
 }
