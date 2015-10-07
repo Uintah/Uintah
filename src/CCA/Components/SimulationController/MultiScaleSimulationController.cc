@@ -193,7 +193,47 @@ MultiScaleSimulationController::run()
   while( ( time < d_timeinfo->maxTime ) &&
 	 ( iterations < d_timeinfo->maxTimestep ) && 
 	 ( d_timeinfo->max_wall_time == 0 || getWallTime() < d_timeinfo->max_wall_time )  ) {
-  
+
+
+    //----------------------------------------------------------------------------
+    // TODO - added for midstream initialization of MD for MPM-MD switcher example
+    if (d_sim->needInitialize(currentGrid)) {
+
+      proc0cout << "Compiling multi-scale initialization taskgraph...\n";
+
+      double start = Time::currentSeconds();
+
+//      d_scheduler->initialize(1, 1);
+//      d_scheduler->fillDataWarehouses(currentGrid);
+      d_scheduler->advanceDataWarehouse( currentGrid, true );
+
+      // Set up new DWs, DW mappings.
+      d_scheduler->clearMappings();
+      d_scheduler->mapDataWarehouse(Task::OldDW, 0);
+      d_scheduler->mapDataWarehouse(Task::NewDW, 1);
+      d_scheduler->mapDataWarehouse(Task::CoarseOldDW, 0);
+      d_scheduler->mapDataWarehouse(Task::CoarseNewDW, 1);
+
+      // Initialize the per-level data
+      for (int i = currentGrid->numLevels() - 1; i >= 0; i--) {
+        d_sim->scheduleInitialize(currentGrid->getLevel(1), d_scheduler);
+      }
+
+      scheduleComputeStableTimestep(currentGrid, d_scheduler);
+
+      d_scheduler->compile();
+
+      double end = Time::currentSeconds() - start;
+      proc0cout << "done multi-scale initialization taskgraph compile (" << end << " seconds)\n";
+
+      // No scrubbing for initial step
+      d_scheduler->get_dw(1)->setScrubbing(DataWarehouse::ScrubNone);
+      d_scheduler->execute();
+    }
+    // TODO - added for midstream initialization of MD for MPM-MD switcher example
+    //----------------------------------------------------------------------------
+
+
 #ifdef USE_GPERFTOOLS
     if (gheapprofile.active()){
       char heapename[512];
@@ -666,14 +706,13 @@ void
 MultiScaleSimulationController::doInitialTimestep( GridP  & grid,
                                                    double & t )
 {
-  MALLOC_TRACE_TAG_SCOPE("AMRSimulationController::doInitialTimestep()");
   double start = Time::currentSeconds();
   d_scheduler->mapDataWarehouse(Task::OldDW, 0);
   d_scheduler->mapDataWarehouse(Task::NewDW, 1);
   d_scheduler->mapDataWarehouse(Task::CoarseOldDW, 0);
   d_scheduler->mapDataWarehouse(Task::CoarseNewDW, 1);
   
-  if(d_restarting){
+  if(d_restarting) {
   
     d_lb->possiblyDynamicallyReallocate(grid, LoadBalancer::restart);
     // tsaad & bisaac: At this point, during a restart, a grid does NOT have knowledge of the boundary conditions.
@@ -883,17 +922,13 @@ MultiScaleSimulationController::recompile( double  t,
   d_scheduler->mapDataWarehouse(Task::CoarseOldDW, 0);
   d_scheduler->mapDataWarehouse(Task::CoarseNewDW, totalFine);
 
-//  base_level = (base_level->hasFinerLevel()) ? grid->getLevel(grid->numLevels() - 1) : base_level;
-//  d_sim->scheduleTimeAdvance(base_level, d_scheduler);
-
-  if (d_sharedState->getCurrentTopLevelTimeStep() == 1) {
+  if (d_doMultiScale && d_sharedState->getCurrentTopLevelTimeStep() > 1) {
+    for (int level_idx = currentGrid->numLevels() - 1; level_idx >= 0; --level_idx) {
+      const LevelP current_level = currentGrid->getLevel(level_idx);
+      d_sim->scheduleTimeAdvance(current_level, d_scheduler);
+    }
+  } else {
     subCycleCompile(currentGrid, 0, totalFine, 0, 0);
-  }
-  else {
-    max_vartype switch_condition;
-    d_scheduler->get_dw(0)->get(switch_condition, d_sharedState->get_switch_label(), 0);
-    int level_idx = (switch_condition == Switcher::switching) ? 1 : 0;
-    d_sim->scheduleTimeAdvance(currentGrid->getLevel(1), d_scheduler);
   }
 
   d_scheduler->clearMappings();

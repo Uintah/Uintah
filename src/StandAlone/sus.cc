@@ -617,7 +617,6 @@ main( int argc, char *argv[], char *env[] )
       do_AMR = false;
     }
     
-
     const ProcessorGroup* world = Uintah::Parallel::getRootProcessorGroup();
 
     SimulationController* ctl = NULL;
@@ -709,8 +708,6 @@ main( int argc, char *argv[], char *env[] )
     if (emit_graphs) {
       sched->doEmitTaskGraphDocs();
     }
-
-    MALLOC_TRACE_TAG(oldTag);
 
     //__________________________________
     // Start the simulation controller

@@ -367,16 +367,15 @@
                                                                       mpmf, mpmice, amrmpm, wasatch, md, reduce_uda,
                                                                       advectslabs, unifiedschedulertest, poissongpu1, ljpotentialtest, retrievaltest,
                                                                       poisson1, poisson2, poisson3, poisson4, benchmark, rigidmpmice, reduce_uda, 
-                                                                      rmpmice, smpm, smpmice, switcher, multiscale, wave, solvertest, RMCRT_Test particletest'" >
+                                                                      rmpmice, smpm, smpmice, switcher, multiscaleswitcher, wave, solvertest, RMCRT_Test particletest'" >
                                   <!-- The 'type' above is used in CCA/Components/Parent/ComponentFactory.cc -->
         <carry_over                 spec="MULTIPLE NO_DATA"
                                   attribute1="var   REQUIRED STRING"
                                   attribute2="matls OPTIONAL INTEGER"
                                   attribute3="level OPTIONAL STRING 'finest'" />
         <subcomponent               spec="MULTIPLE NO_DATA"
-                                  attribute1="type OPTIONAL STRING 'arches, burger, ice, impm, mpm, mpmarches, mpmf, mpmice, md,
-                                                                    poisson1, poisson2, poisson3, poisson4, benchmark, rigidmpmice, smpmice, smpm, 
-                                                                    switcher, multiscale, wave'" >
+                                  attribute1="type OPTIONAL STRING 'arches, burger, ice, impm, mpm, mpmarches, mpmf, mpmice, md, poisson1,
+                                                                    poisson2, poisson3, poisson4, benchmark, rigidmpmice, smpmice, smpm, wave'" >
                                   <!-- The 'type' above is used in CCA/Components/Parent/ComponentFactory.cc -->
           <input_file               spec="REQUIRED STRING" />
           <SwitchCriteria           spec="OPTIONAL NO_DATA" 

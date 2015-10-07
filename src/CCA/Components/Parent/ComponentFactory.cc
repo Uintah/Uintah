@@ -49,6 +49,7 @@
 #include <CCA/Components/MD/MD.h>
 #include <CCA/Components/Parent/ComponentFactory.h>
 #include <CCA/Components/Parent/Switcher.h>
+#include <CCA/Components/Parent/MultiScaleSwitcher.h>
 #include <CCA/Components/ReduceUda/UdaReducer.h>
 #include <Core/Exceptions/ProblemSetupException.h>
 #include <Core/Parallel/Parallel.h>
@@ -80,8 +81,7 @@ using namespace Uintah;
 using namespace std;
 
 UintahParallelComponent *
-ComponentFactory::create( ProblemSpecP& ps, const ProcessorGroup* world, 
-                          bool doAMR, string uda )
+ComponentFactory::create( ProblemSpecP& ps, const ProcessorGroup* world, bool doAMR, string uda )
 {
   string sim_comp;
 
@@ -255,13 +255,17 @@ ComponentFactory::create( ProblemSpecP& ps, const ProcessorGroup* world,
   } 
   if (sim_comp == "switcher" || sim_comp == "SWITCHER") {
     return scinew Switcher(world, ps, doAMR, uda);
+  }
+  if (sim_comp == "multiscaleswitcher" || sim_comp == "MULTISCALESWITCHER") {
+    return scinew MultiScaleSwitcher(world, ps, doAMR, uda);
   } 
   if (sim_comp == "reduce_uda") {
     return scinew UdaReducer(world, uda);
   }
+
   // TODO this needs to be updated
-  throw ProblemSetupException("Unknown simulationComponent ('" + sim_comp + "'). Must specify -arches, -ice, -mpm, md, "
-                              "-impm, -mpmice, -mpmarches, -burger, -wave, -poisson1, -poisson2, -poisson3 or -benchmark.\n"
+  throw ProblemSetupException("Unknown simulationComponent ('" + sim_comp + "'). Must specify -arches, -ice, -mpm, md, -impm, -mpmice, "
+                              "-mpmarches, -switcher, -multiscaleswitcher -burger, -wave, -poisson1, -poisson2, -poisson3 or -benchmark.\n"
                               "Note: the following components were turned off at configure time: " + turned_off_options + "\n"
                               "Make sure that the requested component is supported in this build.", __FILE__, __LINE__);
 }
