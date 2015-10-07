@@ -144,7 +144,7 @@ void SerialMPM::problemSetup(const ProblemSpecP& prob_spec,
                              const ProblemSpecP& restart_prob_spec,GridP& grid,
                              SimulationStateP& sharedState)
 {
-  cout_doing<<"Doing problemSetup\t\t\t\t\t MPM"<<endl;
+  cout_doing<<"Doing MPM::problemSetup\t\t\t\t\t MPM"<<endl;
   d_sharedState = sharedState;
   dynamic_cast<Scheduler*>(getPort("scheduler"))->setPositionVar(lb->pXLabel);
   
