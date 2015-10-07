@@ -153,7 +153,7 @@
     <save label="N2" table_lookup="true"/>
     <save label="mixture_molecular_weight" table_lookup="true"/>
     <!-- originalOFC -->
-    <!-- <checkpoint cycle="2" walltimeInterval="1600" walltimeStart="0"/> -->
+    <!-- The original OFC file didn't use interval instead used: walltimeInterval="1600" walltimeStart="0" -->
     <checkpoint cycle="2" interval="0.009"/>
     <outputDoubleAsFloat/>
     <compression>gzip</compression>
