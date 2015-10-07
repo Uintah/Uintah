@@ -2908,7 +2908,7 @@ void AMRMPM::computeAndIntegrateAcceleration(const ProcessorGroup*,
         for(NodeIterator iter=patch->getExtraNodeIterator();
                         !iter.done();iter++){
           IntVector c = *iter;
-          gConcRate[c] = (gConcStar[c] - gConcNoBC[c]) / delT 
+          gConcRate[c] = (gConcStar[c] - gConcNoBC[c]) / delT
                        + gExtScalarFlux[c];
         }
       } // if doScalarDiffusion
@@ -5059,6 +5059,10 @@ void AMRMPM::applyExternalScalarFlux(const ProcessorGroup* ,
           }
         }
       } // if use load curves
+      for(ParticleSubset::iterator iter = pset->begin();
+                                   iter != pset->end(); iter++){
+       pExternalScalarFlux[*iter] = 0.;
+      }
     } // matl loop
   }  // patch loop
 }
