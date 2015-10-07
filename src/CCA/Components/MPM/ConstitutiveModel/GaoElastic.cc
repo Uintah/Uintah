@@ -98,7 +98,7 @@ GaoElastic::GaoElastic(const GaoElastic* cm) :
 {
   d_initialData.Bulk = cm->d_initialData.Bulk;
   d_initialData.Shear = cm->d_initialData.Shear;
-  d_initialData.vol_exp_coeff = cm->d_initialData.Shear;
+  d_initialData.vol_exp_coeff = cm->d_initialData.vol_exp_coeff;
 
   d_tol = cm->d_tol ;
   
