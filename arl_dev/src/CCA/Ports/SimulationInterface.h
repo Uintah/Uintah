@@ -167,6 +167,14 @@ class SimulationInterface : public UintahParallelPort {
       return false;
     }
 
+    //////////
+    // ask the component if it needs to be initialized, as in multi-scale MPM-MD
+    virtual bool
+    needInitialize(const GridP& /*grid*/)
+    {
+      return false;
+    }
+
     virtual void
     scheduleSwitchTest(const LevelP& /*level*/, SchedulerP& /*sched*/)
     {

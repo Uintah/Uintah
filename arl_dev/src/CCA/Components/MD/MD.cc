@@ -385,7 +385,7 @@ void MD::scheduleInitialize(const LevelP&       level,
   std::cout << "Received level " << level->getIndex() << " in MD::Initialize call." << std::endl;
   for (int pInd = 0; pInd < patchSubset->size(); ++pInd)
   {
-    std::cout << "Patch: " << patchSubset->get(pInd)->getID() << " Level: " << patchSubset->get(pInd)->getLevelIndex() << std::endl;
+    std::cout << "\nPatch: " << patchSubset->get(pInd)->getID() << " Level: " << patchSubset->get(pInd)->getLevel()->getIndex() << "\n\n";
   }
 
 
@@ -665,7 +665,7 @@ void MD::scheduleIntegratorInitialize(          SchedulerP&  sched,
   const std::string flowLocation = "MD::scheduleIntegratorInitialize | ";
   printSchedule(patches, md_cout, flowLocation);
 
-  Task* task = scinew Task("MD::integratorInitiailize",
+  Task* task = scinew Task("MD::integratorInitialize",
                            this,
                            &MD::integratorInitialize);
 
@@ -1365,8 +1365,8 @@ void MD::initialize(const ProcessorGroup*   pg,
       // Create this patch's particle set for atoms of current material
       size_t            numAtoms    = localAtomCoordinates.size();
       size_t            globalID    = matls->get(localType);  // Map to global material type for pset creation
-      std::cout << "MD::Creating particle set with: " << numAtoms << " on patch: " << currPatch->getID() << " on level: "
-                << currPatch->getLevelIndex() << " in DW: " << newDW->getID() << std::endl;
+      std::cout << "\nMD::Creating particle set with: " << numAtoms << " on patch: " << currPatch->getID() << " on level: "
+                << currPatch->getLevel()->getIndex() << " in DW: " << newDW->getID() << "\n\n";
       ParticleSubset*   currPset    =
                         newDW->createParticleSubset(numAtoms,
                                                     globalID,

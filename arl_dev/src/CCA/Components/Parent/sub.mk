@@ -32,8 +32,9 @@ include $(SCIRUN_SCRIPTS)/smallso_prologue.mk
 SRCDIR     := CCA/Components/Parent
 COMPONENTS := CCA/Components
 
-SRCS := $(SRCDIR)/Switcher.cc \
-        $(SRCDIR)/ComponentFactory.cc
+SRCS := $(SRCDIR)/ComponentFactory.cc   \
+        $(SRCDIR)/MultiScaleSwitcher.cc \
+        $(SRCDIR)/Switcher.cc
 
 # ARCHES et. al. should have been seen by CCA/Components/sub.mk
 PSELIBS := \

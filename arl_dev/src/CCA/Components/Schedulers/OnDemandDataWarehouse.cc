@@ -940,7 +940,7 @@ OnDemandDataWarehouse::createParticleSubset(       particleIndex numParticles,
   }
 
   if (dbg.active()) {
-    dbg << d_myworld->myrank() << " DW ID " << getID() << " createParticleSubset: MI: " << matlIndex << " P: " << patch->getID()
+    dbg << "Rank-" << d_myworld->myrank() << " DW ID " << getID() << " createParticleSubset: MI: " << matlIndex << " P: " << patch->getID()
         << " (" << low << ", " << high << ") size: " << numParticles << "\n";
   }
 
@@ -971,7 +971,7 @@ OnDemandDataWarehouse::saveParticleSubset(       ParticleSubset* psubset,
   }
 
   if( dbg.active() ) {
-    dbg << d_myworld->myrank() << " DW ID " << getID() << " saveParticleSubset: MI: " << matlIndex
+    dbg << "Rank-" << d_myworld->myrank() << " DW ID " << getID() << " saveParticleSubset: MI: " << matlIndex
         << " P: " << patch->getID() << " (" << low << ", " << high << ") size: "
         << psubset->numParticles() << "\n";
   }
@@ -988,9 +988,9 @@ OnDemandDataWarehouse::printParticleSubsets()
   std::cout << "-- Particle Subsets: \n\n";
 
   psetDBType::iterator iter;
-  std::cout << d_myworld->myrank() << " Available psets on DW " << d_generation << ":\n";
+  std::cout << "Rank-" << d_myworld->myrank() << " Available psets on DW " << d_generation << ":\n";
   for (iter = d_psetDB.begin(); iter != d_psetDB.end(); iter++) {
-    std::cout << d_myworld->myrank() << " " << *(iter->second) << std::endl;
+    std::cout << "Rank-" << d_myworld->myrank() << " " << *(iter->second) << std::endl;
   }
   std::cout << "----------------------------------------------\n";
 }
@@ -1012,9 +1012,10 @@ void OnDemandDataWarehouse::insertPSetRecord(       psetDBType&     subsetDB,
   ParticleSubset *subset=queryPSetDB(subsetDB,patch,matlIndex,low,high,0,true);
   if(subset!=0) {
     if (d_myworld->myrank() == 0) {
-      std::cout << d_myworld->myrank() << "  Duplicate: " << patch->getID() << " matl " << matlIndex << " " << low << " " << high << std::endl;
+      std::cout << "Rank-" << d_myworld->myrank() << "  Duplicate PSet: patch " << patch->getID() << ", matl " << matlIndex << " " << low << " " << high << std::endl;
       printParticleSubsets();
     }
+    return;
     SCI_THROW(InternalError("tried to create a particle subset that already exists", __FILE__, __LINE__));
   }
 #endif

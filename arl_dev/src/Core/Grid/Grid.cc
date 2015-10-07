@@ -1297,9 +1297,7 @@ Grid::problemSetup(const ProblemSpecP& params, const ProcessorGroup *pg, bool do
    }
 
   if (numLevels() > 1 && !(do_AMR || do_MultiScale)) {  // bullet proofing
-    throw ProblemSetupException("Grid.cc:problemSetup: Multiple levels encountered in non-AMR or non-MultiScale grid",
-    __FILE__,
-                                __LINE__);
+    throw ProblemSetupException("Grid.cc:problemSetup: Multiple levels encountered in non-AMR or non-MultiScale grid",  __FILE__, __LINE__);
   }
 
 } // end problemSetup()

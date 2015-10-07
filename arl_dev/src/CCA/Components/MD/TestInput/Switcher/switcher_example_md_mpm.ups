@@ -9,7 +9,7 @@
     <!--____________________________________________________________________-->
     <!--         C O M P O N E N T   S W I T C H E R                        -->
     <!--____________________________________________________________________-->
-    <SimulationComponent type="switcher" >
+    <SimulationComponent type="multiscaleswitcher" >
     
         <subcomponent>
             <SimulationComponent type="mpm" />
@@ -18,7 +18,7 @@
                 <timestep> 2 </timestep>
             </SwitchCriteria>
         </subcomponent>
-          
+
         <subcomponent>
             <SimulationComponent type="md" />
             <input_file>md_lj_hcp_1Component.ups</input_file>
@@ -28,6 +28,7 @@
             <init var = "e_kin"       matls = "md_matls" levels = "1"/>
             <init var = "p.ID_MD"     matls = "md_matls" levels = "1"/>
         </subcomponent>
+            
     </SimulationComponent>  
      
     <!--____________________________________________________________________-->
