@@ -992,9 +992,10 @@ case $host in
            altivec="" 
         fi
 
-        uname -r | grep "14\." &> /dev/null
-        if test $? = 0; then
-           yosemite=yes
+        # Check to see if we are runnign on OSX version Yosemite or newer:
+        OSX_BASE_VERSION=`uname -r | cut -f1 -d"."`
+        if [[ $OSX_BASE_VERSION -ge 14 ]]; then  # Note, using double '['s (ie: '[[') because autoconf strips one of them.
+           yosemite_plus=yes
         fi
 
 	SO_OR_ARCHIVE_EXTENSION=dylib
@@ -2918,8 +2919,8 @@ if test "$HAVE_BLAS" != "yes"; then
   
   case $host in
     *-darwin*)
-       if test "$yosemite" = yes; then
-          SCI_TRY_LINK(BLAS,blas and cblas libraries-darwin-yosemite,Accelerate/Accelerate.h,
+       if test "$yosemite_plus" = yes; then
+          SCI_TRY_LINK(BLAS,blas and cblas libraries-darwin (yosemite+),Accelerate/Accelerate.h,
                        $_sci_inc,cblas blas,$_sci_lib,-framework Accelerate $F_LIB_DIR_FLAG $F_LIB_FLAG,[
                                                                                 float x[]={0.7f};
                                                                                 float y[]={0.8f};
@@ -3042,7 +3043,7 @@ if test "$HAVE_LAPACK" != "yes"; then
   case $host in
     *-darwin*)
 
-       if test "$yosemite" = yes; then
+       if test "$yosemite_plus" = yes; then
           SCI_TRY_LINK(LAPACK,Mac Accelerate lapack version of libraries and headers,
                        Accelerate/Accelerate.h,,,,-framework Accelerate,,optional)
           if test "$HAVE_LAPACK" = yes ; then
