@@ -729,7 +729,7 @@ RFElasticPlastic::computeStressTensor(const PatchSubset* patches,
   }
 
 	//*********Start - Used for testing purposes - CG *******
-	double timestep = d_sharedState->getCurrentTopLevelTimeStep();
+	// double timestep = d_sharedState->getCurrentTopLevelTimeStep();
 	//*********End   - Used for testing purposes - CG *******
 
   // General stuff
@@ -924,10 +924,10 @@ RFElasticPlastic::computeStressTensor(const PatchSubset* patches,
 
       //********** Concentration Component****************************
       // Remove concentration dependent portion of rate of deformation 
-      if(timestep < 20000)
-        conc_rate = 1.0;
-      else
-        conc_rate = -1.0;
+      // if(timestep < 20000)
+      //  conc_rate = 1.0;
+      // else
+      //   conc_rate = -1.0;
 
       tensorD = tensorD - one * vol_exp_coeff * (conc_rate);
       //********** Concentration Component****************************
@@ -1364,9 +1364,6 @@ RFElasticPlastic::computeStressTensor(const PatchSubset* patches,
       tensorF_new.polarDecompositionRMB(tensorU, tensorR);
 
       sigma = (tensorR*sigma)*(tensorR.Transpose());
-
-			// if(idx == 0)
-			//   cout << "Particle: " << idx << ", Stress: " << sigma << endl;
 
       // Rotate internal Cauchy stresses back to laboratory
       // coordinates (only for viscoelasticity)
