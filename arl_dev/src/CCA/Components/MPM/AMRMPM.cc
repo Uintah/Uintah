@@ -3414,7 +3414,7 @@ void AMRMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
       constNCVariable<double> gTemperatureRate;
       constNCVariable<double> dTdt, frictionTempRate;
       double Cp = mpm_matl->getSpecificHeat();
-      double max_conc = 0.0;
+      //double max_conc = 0.0;
 
       ParticleSubset* pset = old_dw->getParticleSubset(dwi, patch);
 
@@ -5070,10 +5070,11 @@ void AMRMPM::applyExternalScalarFlux(const ProcessorGroup* ,
            pExternalScalarFlux[*iter] = 0.;
           }
         }
-      } // if use load curves
-      for(ParticleSubset::iterator iter = pset->begin();
-                                   iter != pset->end(); iter++){
-       pExternalScalarFlux[*iter] = 0.;
+      } else { // if use load curves
+        for(ParticleSubset::iterator iter = pset->begin();
+                                     iter != pset->end(); iter++){
+         pExternalScalarFlux[*iter] = 0.;
+        }
       }
     } // matl loop
   }  // patch loop
