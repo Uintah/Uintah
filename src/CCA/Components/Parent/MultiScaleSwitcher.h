@@ -62,26 +62,10 @@ namespace Uintah {
     virtual void scheduleSwitchInitialization(  const LevelP& level, SchedulerP& sched );
     virtual void scheduleFinalizeTimestep(      const LevelP& level, SchedulerP& sched );
 
-    virtual bool needRecompile(double time, double delt, const GridP& grid);
-    virtual bool needInitialize(const GridP& grid);
-    virtual void restartInitialize();
-    virtual bool restartableTimesteps();
+    virtual bool   needRecompile(double time, double delt, const GridP& grid);
+    virtual void   restartInitialize();
+    virtual bool   restartableTimesteps();
     virtual double recomputeTimestep(double);
-
-    // AMR
-    virtual void scheduleRefineInterface( const LevelP     & fineLevel,
-                                                SchedulerP & scheduler,
-                                                bool         needCoarseOld,
-                                                bool         needCoarseNew );
-                                         
-    virtual void scheduleRefine ( const PatchSet* patches,  SchedulerP& sched );
-    
-    virtual void scheduleCoarsen( const LevelP& coarseLevel, SchedulerP& sched );
-
-    virtual void scheduleInitialErrorEstimate( const LevelP& coarseLevel,SchedulerP& sched );
-                                               
-    virtual void scheduleErrorEstimate( const LevelP& coarseLevel,SchedulerP& sched );
-
 
     enum switchState {
       idle,
@@ -91,30 +75,30 @@ namespace Uintah {
 
   private:
 
-    void switchTest( const ProcessorGroup*,
-                     const PatchSubset*    patches,
-                     const MaterialSubset* matls,
-                           DataWarehouse*  old_dw,
-                           DataWarehouse*  new_dw );
+    void switchTest( const ProcessorGroup * /*pg*/,
+                     const PatchSubset    * patches,
+                     const MaterialSubset * matls,
+                           DataWarehouse  * old_dw,
+                           DataWarehouse  * new_dw );
 
-    void initNewVars( const ProcessorGroup*,
-                      const PatchSubset*    patches,
-                      const MaterialSubset* matls,
-                            DataWarehouse*  old_dw,
-                            DataWarehouse*  new_dw );
+    void initNewVars( const ProcessorGroup * /*pg*/,
+                      const PatchSubset    *    patches,
+                      const MaterialSubset * matls,
+                            DataWarehouse  *  old_dw,
+                            DataWarehouse  *  new_dw );
 
-    void carryOverVars( const ProcessorGroup*,
-                        const PatchSubset*    patches,
-                        const MaterialSubset* matls,
-                              DataWarehouse*  old_dw,
-                             DataWarehouse*  new_dw );
+    void carryOverVars( const ProcessorGroup * /*pg*/,
+                        const PatchSubset    * patches,
+                        const MaterialSubset * matls,
+                              DataWarehouse  * old_dw,
+                              DataWarehouse  * new_dw );
                     
-    void readSwitcherState( const ProblemSpecP&,
-                                  SimulationStateP& state );
+    void readSwitcherState( const ProblemSpecP     & /*ps*/,
+                                  SimulationStateP & state );
 
     ProblemSpecP d_master_ups;
-
-    switchState d_switchState;
+    switchState  d_switchState;
+    SchedulerP   d_subScheduler;
 
     // since tasks are scheduled per-level, we can't turn the switch flag off
     // until they all are done, and since we need to turn it off during compilation,
@@ -128,7 +112,7 @@ namespace Uintah {
     unsigned int         d_numComponents;
     unsigned int         d_componentIndex;
     
-    struct initVars{
+    struct initVars {
       std::vector<std::string>        varNames;
       std::vector<std::string>        matlSetNames;
       std::vector<const MaterialSet*> matls;

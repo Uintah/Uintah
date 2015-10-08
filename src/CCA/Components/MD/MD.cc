@@ -388,7 +388,6 @@ void MD::scheduleInitialize(const LevelP&       level,
     std::cout << "\nPatch: " << patchSubset->get(pInd)->getID() << " Level: " << patchSubset->get(pInd)->getLevel()->getIndex() << "\n\n";
   }
 
-
   Task* task = scinew Task("MD::initialize", this, &MD::initialize);
 
   // Initialize will load position, velocity, and ID tags

@@ -22,11 +22,6 @@
         <subcomponent>
             <SimulationComponent type="md" />
             <input_file>md_lj_hcp_1Component.ups</input_file>
-            <init var = "e_nb"        matls = "md_matls" levels = "1"/>
-            <init var = "e_elec_inv"  matls = "md_matls" levels = "1"/>
-            <init var = "e_elec_real" matls = "md_matls" levels = "1"/>
-            <init var = "e_kin"       matls = "md_matls" levels = "1"/>
-            <init var = "p.ID_MD"     matls = "md_matls" levels = "1"/>
         </subcomponent>
             
     </SimulationComponent>  
