@@ -728,6 +728,10 @@ RFElasticPlastic::computeStressTensor(const PatchSubset* patches,
             << " patch = " << (patches->get(0))->getID();
   }
 
+	//*********Start - Used for testing purposes - CG *******
+	double timestep = d_sharedState->getCurrentTopLevelTimeStep();
+	//*********End   - Used for testing purposes - CG *******
+
   // General stuff
   Matrix3 one; one.Identity(); Matrix3 zero(0.0);
   Matrix3 tensorD(0.0);                   // Rate of deformation
@@ -920,6 +924,11 @@ RFElasticPlastic::computeStressTensor(const PatchSubset* patches,
 
       //********** Concentration Component****************************
       // Remove concentration dependent portion of rate of deformation 
+      if(timestep < 20000)
+        conc_rate = 1.0;
+      else
+        conc_rate = -1.0;
+
       tensorD = tensorD - one * vol_exp_coeff * (conc_rate);
       //********** Concentration Component****************************
 
@@ -1060,6 +1069,9 @@ RFElasticPlastic::computeStressTensor(const PatchSubset* patches,
              << " s_flow = " << flowStress << endl;
         */
 
+        //if (timestep == 10000)
+				//  cout << "Index: " << idx << ", Equiv: " << equivStress << endl;
+
         if (flow_rule < 0.0) {
           // Set the deviatoric stress to the trial stress
           tensorS = trialS;
@@ -1182,58 +1194,60 @@ RFElasticPlastic::computeStressTensor(const PatchSubset* patches,
       // Stage 3:
       //-----------------------------------------------------------------------
 
-      //********** Concentration Component****************************
-			// -- not used currently in model
       // // Compute porosity/damage/temperature change
-      // if (!plastic) {
-      //
-      //   // Save the updated data
-      //   pPlasticStrain_new[idx] = pPlasticStrain[idx];
-      //   pPlasticStrainRate_new[idx] = 0.0;
-      //   pDamage_new[idx]   = pDamage[idx];
-      //   pPorosity_new[idx] = pPorosity[idx];
-      //   
-      // } else {
-      //
-      //   // Update the plastic strain
-      //   pPlasticStrain_new[idx]     = state->plasticStrain;
-      //   pPlasticStrainRate_new[idx] = state->plasticStrainRate;
-      //
-      //   /*
-      //   if (pPlasticStrainRate_new[idx] > pStrainRate_new[idx]) {
-      //     cout << "Patch = " << patch->getID() << " particle = " << idx
-      //       //    << " edot = " << pStrainRate_new[idx] 
-      //       //    << " epdot = " << pPlasticStrainRate_new[idx] << endl;
-      //   }
-      //   */
-      //
-      //   // Update the porosity
-      //   if (d_evolvePorosity) {
-      //     pPorosity_new[idx] = updatePorosity(tensorD, delT, pPorosity[idx], 
-      //       //       //       //       //       //       //     state->plasticStrain);
-      //   } else {
-      //     pPorosity_new[idx] = pPorosity[idx];
-      //   }
-      //   
-      //   // Calculate the updated scalar damage parameter
-      //   if (d_evolveDamage) { 
-      //     pDamage_new[idx] = 
-      //       // d_damage->computeScalarDamage(state->plasticStrainRate, sigma, 
-      //       //       //       //       //       //       // temperature, delT, matl, d_tol, 
-      //       //       //       //       //       //       // pDamage[idx]);
-      //   } else {
-      //     pDamage_new[idx] = pDamage[idx];
-      //   }
-      //   // Calculate rate of temperature increase due to plastic strain
-      //   double taylorQuinney = d_initialData.Chi;
-      //   double fac = taylorQuinney/(rho_cur*state->specificHeat);
-      //
-      //   // Calculate Tdot (internal plastic heating rate)
-      //   double Tdot_PW = state->yieldStress*state->plasticStrainRate*fac;
-      //
-      //   pdTdt[idx] += Tdot_PW;
-      // }
-      //********** Concentration Component****************************
+      if (!plastic) {
+      
+        // Save the updated data
+        pPlasticStrain_new[idx] = pPlasticStrain[idx];
+        pPlasticStrainRate_new[idx] = 0.0;
+        //********** Concentration Component****************************
+			  // -- not used currently in model
+        //   pDamage_new[idx]   = pDamage[idx];
+        //   pPorosity_new[idx] = pPorosity[idx];
+        //********** Concentration Component****************************
+         
+      } else {
+ 
+        // Update the plastic strain
+        pPlasticStrain_new[idx]     = state->plasticStrain;
+        pPlasticStrainRate_new[idx] = state->plasticStrainRate;
+ 
+        /*
+        if (pPlasticStrainRate_new[idx] > pStrainRate_new[idx]) {
+          cout << "Patch = " << patch->getID() << " particle = " << idx
+            //    << " edot = " << pStrainRate_new[idx] 
+            //    << " epdot = " << pPlasticStrainRate_new[idx] << endl;
+        }
+        */
+      
+        //********** Concentration Component****************************
+        //   // Update the porosity
+        //   if (d_evolvePorosity) {
+        //     pPorosity_new[idx] = updatePorosity(tensorD, delT, pPorosity[idx], 
+        //       //       //       //       //       //       //     state->plasticStrain);
+        //   } else {
+        //     pPorosity_new[idx] = pPorosity[idx];
+        //   }
+        //   
+        //   // Calculate the updated scalar damage parameter
+        //   if (d_evolveDamage) { 
+        //     pDamage_new[idx] = 
+        //       // d_damage->computeScalarDamage(state->plasticStrainRate, sigma, 
+        //       //       //       //       //       //       // temperature, delT, matl, d_tol, 
+        //       //       //       //       //       //       // pDamage[idx]);
+        //   } else {
+        //     pDamage_new[idx] = pDamage[idx];
+        //   }
+        //   // Calculate rate of temperature increase due to plastic strain
+        //   double taylorQuinney = d_initialData.Chi;
+        //   double fac = taylorQuinney/(rho_cur*state->specificHeat);
+        //
+        //   // Calculate Tdot (internal plastic heating rate)
+        //   double Tdot_PW = state->yieldStress*state->plasticStrainRate*fac;
+        //
+        //   pdTdt[idx] += Tdot_PW;
+        //********** Concentration Component****************************
+      }
 
       /**
       //-----------------------------------------------------------------------
@@ -1350,6 +1364,9 @@ RFElasticPlastic::computeStressTensor(const PatchSubset* patches,
       tensorF_new.polarDecompositionRMB(tensorU, tensorR);
 
       sigma = (tensorR*sigma)*(tensorR.Transpose());
+
+			// if(idx == 0)
+			//   cout << "Particle: " << idx << ", Stress: " << sigma << endl;
 
       // Rotate internal Cauchy stresses back to laboratory
       // coordinates (only for viscoelasticity)

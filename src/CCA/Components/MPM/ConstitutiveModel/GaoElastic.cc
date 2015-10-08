@@ -489,7 +489,8 @@ GaoElastic::computeStressTensor(const PatchSubset* patches,
       tensorD = (tensorR.Transpose())*(tensorD*tensorR);
 
       // Remove stress free concentration dependent component
-      tensorD = tensorD - one * vol_coeff * (conc_rate/3);
+			conc_rate = 1.0;
+      tensorD = tensorD - one * vol_coeff * (conc_rate);
 
       // Calculate the deviatoric part of the non-thermal part
       // of the rate of deformation tensor
@@ -572,6 +573,11 @@ GaoElastic::computeStressTensor(const PatchSubset* patches,
       tensorF_new.polarDecompositionRMB(tensorU, tensorR);
 
       sigma = (tensorR*sigma)*(tensorR.Transpose());
+			
+			// if(idx == 1){
+			//   cout << "Pid: " << idx << ", Stress: " << sigma << endl;
+			//   cout << "Pid: " << idx << ", Volume: " << pVolume[idx] << endl;
+			// }
 
       // Update the kinematic variables
       pRotation_new[idx] = tensorR;
