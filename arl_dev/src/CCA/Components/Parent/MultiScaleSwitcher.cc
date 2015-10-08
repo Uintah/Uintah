@@ -96,7 +96,6 @@ MultiScaleSwitcher::MultiScaleSwitcher( const ProcessorGroup * myworld,
   //  loop over the subcomponents
   for (; child != 0; child = child->findNextBlock("subcomponent")) {
     
-    
     //__________________________________
     //  Read in subcomponent ups file and store the filename
     std::string input_file("");
@@ -234,6 +233,7 @@ MultiScaleSwitcher::MultiScaleSwitcher( const ProcessorGroup * myworld,
     }
 
     d_carryOverVarMatls.push_back(carry_over_matls);
+
     if (level == "finest") {
       d_carryOverFinestLevelOnly.push_back(true);
     }
@@ -279,65 +279,24 @@ MultiScaleSwitcher::problemSetup( const ProblemSpecP     & /*params*/,
   if (restart_prob_spec) {
     readSwitcherState(restart_prob_spec, sharedState);
   }
-  
 
+  d_sharedState = sharedState;
+  d_sim                         = dynamic_cast<SimulationInterface*>(     getPort("sim",d_componentIndex) );
+  UintahParallelComponent* comp = dynamic_cast<UintahParallelComponent*>( getPort("sim",d_componentIndex) );
+  Scheduler* sched              = dynamic_cast<Scheduler*>(               getPort("scheduler") );
+  Output* dataArchiver          = dynamic_cast<Output*>(                  getPort("output") );
+  ModelMaker* modelmaker        = dynamic_cast<ModelMaker*>(              getPort("modelmaker") );
+  comp->attachPort("scheduler", sched);
+  comp->attachPort("output",    dataArchiver);
+  comp->attachPort("modelmaker",modelmaker);
 
-//  d_sharedState = sharedState;
-//  d_sim                         = dynamic_cast<SimulationInterface*>(     getPort("sim",d_componentIndex) );
-//  UintahParallelComponent* comp = dynamic_cast<UintahParallelComponent*>( getPort("sim",d_componentIndex) );
-//  Scheduler* sched              = dynamic_cast<Scheduler*>(               getPort("scheduler") );
-//  Output* dataArchiver          = dynamic_cast<Output*>(                  getPort("output") );
-//  ModelMaker* modelmaker        = dynamic_cast<ModelMaker*>(              getPort("modelmaker") );
-//  comp->attachPort("scheduler", sched);
-//  comp->attachPort("output",    dataArchiver);
-//  comp->attachPort("modelmaker",modelmaker);
-//
-//  //__________________________________
-//  //Read the ups file for the first subcomponent
-//  ProblemSpecP subCompUps = ProblemSpecReader().readInputFile(d_in_file[d_componentIndex]);
-//
-//  dataArchiver->problemSetup( subCompUps, d_sharedState.get_rep() );
-//
-//  d_sim->problemSetup(subCompUps, restart_prob_spec, grid, sharedState );
+  //__________________________________
+  //Read the ups file for the first subcomponent
+  ProblemSpecP subCompUps = ProblemSpecReader().readInputFile(d_in_file[d_componentIndex]);
 
+  dataArchiver->problemSetup( subCompUps, d_sharedState.get_rep() );
 
-
-  ProblemSpecP subCompUps = NULL;
-  Scheduler* sched        = NULL;
-  Output* dataArchiver    = NULL;
-  ModelMaker* modelmaker  = NULL;
-
-  // Call problemSetup() for all subcomponents.
-  for (d_componentIndex = 0; d_componentIndex < d_numComponents; ++d_componentIndex) {
-    proc0cout << "\n------------ Switching to component: (" << d_componentIndex << ") \n";
-    proc0cout << "  Doing problemSetup for component:  (" << d_componentIndex << ") \n";
-    proc0cout << "  Reading input file: " << d_in_file[d_componentIndex] << "\n";
-
-    d_sharedState = sharedState;
-
-    d_sim                         = dynamic_cast<SimulationInterface*>(     getPort("sim",d_componentIndex) );
-    UintahParallelComponent* comp = dynamic_cast<UintahParallelComponent*>( getPort("sim",d_componentIndex) );
-    sched                         = dynamic_cast<Scheduler*>(               getPort("scheduler") );
-    dataArchiver                  = dynamic_cast<Output*>(                  getPort("output") );
-    modelmaker                    = dynamic_cast<ModelMaker*>(              getPort("modelmaker") );
-
-    comp->attachPort("scheduler", sched);
-    comp->attachPort("output",    dataArchiver);
-    comp->attachPort("modelmaker",modelmaker);
-
-    //__________________________________
-    //Read the ups file for the first subcomponent
-    subCompUps = ProblemSpecReader().readInputFile(d_in_file[d_componentIndex]);
-
-    dataArchiver->problemSetup(subCompUps, d_sharedState.get_rep());
-
-    d_sim->problemSetup(subCompUps, restart_prob_spec, grid, sharedState);
-  }
-
-  d_componentIndex = 0;
-  d_sim = dynamic_cast<SimulationInterface*>(getPort("sim", d_componentIndex));
-
-
+  d_sim->problemSetup(subCompUps, restart_prob_spec, grid, sharedState );
 
   // read in the grid adaptivity flag from the ups file
   Regridder* regridder = dynamic_cast<Regridder*>(getPort("regridder"));
@@ -406,25 +365,8 @@ MultiScaleSwitcher::problemSetup( const ProblemSpecP     & /*params*/,
 void MultiScaleSwitcher::scheduleInitialize( const LevelP & level,
                                              SchedulerP   & sched )
 {
-//  printSchedule(level, dbg, "MultiScaleSwitcher::scheduleInitialize");
-//  d_sim->scheduleInitialize(level,sched);
-
   printSchedule(level, dbg, "MultiScaleSwitcher::scheduleInitialize");
-
-  // Call scheduleInitialize() for all subcomponents.
-  proc0cout << "\n-----------------------------------\n";
-
-  for (d_componentIndex = 0; d_componentIndex < d_numComponents; ++d_componentIndex) {
-
-    proc0cout << "  Scheduling initialization for component: " << d_componentIndex << " (level: " <<  level->getIndex() << ")\n";
-
-    d_sim = dynamic_cast<SimulationInterface*>(getPort("sim", d_componentIndex));
-    d_sim->scheduleInitialize(level, sched);
-  }
-
-  proc0cout << "-----------------------------------\n\n";
-  d_componentIndex = 0;
-  d_sim = dynamic_cast<SimulationInterface*>(getPort("sim", d_componentIndex));
+  d_sim->scheduleInitialize(level,sched);
 }
 
 //______________________________________________________________________
@@ -893,49 +835,6 @@ void MultiScaleSwitcher::carryOverVars( const ProcessorGroup * /*pg*/,
   }
 }
 
-bool
-MultiScaleSwitcher::needInitialize( const GridP& grid )
-{
-  bool need_init = false;
-  if (d_switchState == switching) {
-
-    d_componentIndex++;
-    d_sharedState->d_switchState = true;
-
-    //__________________________________
-    // get the next simulation component
-    // and initialize the scheduler and dataArchiver
-    d_sim                         = dynamic_cast<SimulationInterface*>( getPort("sim",d_componentIndex) );
-    UintahParallelComponent* comp = dynamic_cast<UintahParallelComponent*>( getPort("sim",d_componentIndex) );
-    Scheduler* sched              = dynamic_cast<Scheduler*>(getPort("scheduler") );
-    Output* dataArchiver          = dynamic_cast<Output*>(   getPort("output") );
-    ModelMaker* modelmaker        = dynamic_cast<ModelMaker*>(              getPort("modelmaker") );
-
-    comp->attachPort("scheduler", sched);
-    comp->attachPort("output",    dataArchiver);
-    comp->attachPort("modelmaker",modelmaker);
-
-   // clean up old models
-    proc0cout << "\n__________________________________ Switching to component (" << d_componentIndex << ") \n";
-    proc0cout << "  Reading input file: " << d_in_file[d_componentIndex] << "\n";
-
-    // read in the problemSpec on next subcomponent
-    ProblemSpecP restart_prob_spec = 0;
-    ProblemSpecP subCompUps = ProblemSpecReader().readInputFile(d_in_file[d_componentIndex]);
-
-    // read in <Time> block from ups file
-    d_sharedState->d_simTime->problemSetup(subCompUps);
-
-    // execute the subcomponent ProblemSetup
-    d_sim->problemSetup(subCompUps, restart_prob_spec, const_cast<GridP&>(grid), d_sharedState);
-
-    need_init = true;
-  }
-
-  return need_init;
-}
-
-
 //______________________________________________________________________
 //  This is where the actual component switching takes place.
 bool
@@ -958,6 +857,8 @@ MultiScaleSwitcher::needRecompile(       double   time,
   if (d_switchState == switching) {
 
     d_switchState = idle;
+
+
     d_computedVars.clear();
     d_componentIndex++;
 
@@ -965,8 +866,7 @@ MultiScaleSwitcher::needRecompile(       double   time,
 //    d_sharedState->clearMaterials();
     d_sharedState->d_switchState = true;
 
-    // Reseting the GeometryPieceFactory only (I believe) will ever need to be done
-    // by the Switcher component...
+    // Reseting the GeometryPieceFactory only should ever need to be done by the Switcher component...
 //    GeometryPieceFactory::resetFactory();
 
     //__________________________________
@@ -1002,17 +902,62 @@ MultiScaleSwitcher::needRecompile(       double   time,
 
     // read in <DataArchiver> section
     dataArchiver->problemSetup(subCompUps, d_sharedState.get_rep());
-    //   dataArchiver->initializeOutput(subCompUps);
 
     // we need this to get the "ICE surrounding matl"
     d_sim->restartInitialize();
     d_sharedState->finalizeMaterials();
 
-    // read in the grid adaptivity flag from the ups file
-    Regridder* regridder = dynamic_cast<Regridder*>(getPort("regridder"));
-    if (regridder) {
-      regridder->switchInitialize(subCompUps);
+//    // read in the grid adaptivity flag from the ups file
+//    Regridder* regridder = dynamic_cast<Regridder*>(getPort("regridder"));
+//    if (regridder) {
+//      regridder->switchInitialize(subCompUps);
+//    }
+
+
+    // create subscheduler for MD component
+    d_subScheduler = sched->createSubScheduler();
+    d_subScheduler->initialize(1,1);
+    d_subScheduler->clearMappings();
+    d_subScheduler->mapDataWarehouse(Task::ParentOldDW, 0);
+    d_subScheduler->mapDataWarehouse(Task::ParentNewDW, 1);
+    d_subScheduler->mapDataWarehouse(Task::OldDW, 0);
+    d_subScheduler->mapDataWarehouse(Task::NewDW, 1);
+
+    // Initialize the per-level data
+    int num_levels = grid->numLevels();
+    for (int i =  num_levels - 1; i >= 0; i--) {
+      d_sim->scheduleInitialize(grid->getLevel(i), d_subScheduler);
+      d_sim->scheduleComputeStableTimestep(grid->getLevel(i), d_subScheduler);
     }
+
+    d_subScheduler->advanceDataWarehouse(grid);
+    d_subScheduler->compile();
+
+//    d_subScheduler->get_dw(0)->setScrubbing(DataWarehouse::ScrubNone);
+    d_subScheduler->execute();
+
+
+    d_subScheduler->initialize(1,1);
+    d_subScheduler->clearMappings();
+    d_subScheduler->mapDataWarehouse(Task::ParentOldDW, 0);
+    d_subScheduler->mapDataWarehouse(Task::ParentNewDW, 1);
+    d_subScheduler->mapDataWarehouse(Task::OldDW, 0);
+    d_subScheduler->mapDataWarehouse(Task::NewDW, 1);
+
+    for (int i =  num_levels - 1; i >= 0; i--) {
+      d_sim->scheduleTimeAdvance(grid->getLevel(i), d_subScheduler);
+      d_sim->scheduleComputeStableTimestep(grid->getLevel(i), d_subScheduler);
+    }
+
+    d_subScheduler->compile();
+
+    d_subScheduler->advanceDataWarehouse(grid);
+
+//    d_subScheduler->get_dw(0)->setScrubbing(DataWarehouse::ScrubNone);
+
+    d_subScheduler->execute();
+
+
 
     retval = true;
     proc0cout << "\n-----------------------------------" << std::endl;
@@ -1131,46 +1076,4 @@ bool MultiScaleSwitcher::restartableTimesteps()
 double MultiScaleSwitcher::recomputeTimestep( double dt )
 {
   return d_sim->recomputeTimestep(dt);
-}
-
-//______________________________________________________________________
-//     AMR
-void MultiScaleSwitcher::scheduleRefineInterface( const LevelP     & fineLevel,
-                                                        SchedulerP & sched,
-                                                        bool         needCoarseOld,
-                                                        bool         needCoarseNew )
-{
-  d_sim->scheduleRefineInterface(fineLevel, sched, needCoarseOld, needCoarseNew);
-}
-
-//______________________________________________________________________
-//     AMR
-void MultiScaleSwitcher::scheduleRefine ( const PatchSet   * patches,
-                                                SchedulerP & sched )
-{
-  d_sim->scheduleRefine(patches, sched);
-}
-
-//______________________________________________________________________
-//     AMR
-void MultiScaleSwitcher::scheduleCoarsen( const LevelP     & coarseLevel,
-                                                SchedulerP & sched )
-{
-  d_sim->scheduleCoarsen(coarseLevel, sched);
-}
-
-//______________________________________________________________________
-//
-void MultiScaleSwitcher::scheduleInitialErrorEstimate( const LevelP     & coarseLevel,
-                                                             SchedulerP & sched )
-{
-  d_sim->scheduleInitialErrorEstimate(coarseLevel, sched);
-}
-
-//______________________________________________________________________
-//                                          
-void MultiScaleSwitcher::scheduleErrorEstimate( const LevelP     & coarseLevel,
-                                                      SchedulerP & sched )
-{
-  d_sim->scheduleErrorEstimate(coarseLevel, sched);
 }

@@ -194,46 +194,6 @@ MultiScaleSimulationController::run()
 	 ( iterations < d_timeinfo->maxTimestep ) && 
 	 ( d_timeinfo->max_wall_time == 0 || getWallTime() < d_timeinfo->max_wall_time )  ) {
 
-
-    //----------------------------------------------------------------------------
-    // TODO - added for midstream initialization of MD for MPM-MD switcher example
-    if (d_sim->needInitialize(currentGrid)) {
-
-      proc0cout << "Compiling multi-scale initialization taskgraph...\n";
-
-      double start = Time::currentSeconds();
-
-//      d_scheduler->initialize(1, 1);
-//      d_scheduler->fillDataWarehouses(currentGrid);
-      d_scheduler->advanceDataWarehouse( currentGrid, true );
-
-      // Set up new DWs, DW mappings.
-      d_scheduler->clearMappings();
-      d_scheduler->mapDataWarehouse(Task::OldDW, 0);
-      d_scheduler->mapDataWarehouse(Task::NewDW, 1);
-      d_scheduler->mapDataWarehouse(Task::CoarseOldDW, 0);
-      d_scheduler->mapDataWarehouse(Task::CoarseNewDW, 1);
-
-      // Initialize the per-level data
-      for (int i = currentGrid->numLevels() - 1; i >= 0; i--) {
-        d_sim->scheduleInitialize(currentGrid->getLevel(1), d_scheduler);
-      }
-
-      scheduleComputeStableTimestep(currentGrid, d_scheduler);
-
-      d_scheduler->compile();
-
-      double end = Time::currentSeconds() - start;
-      proc0cout << "done multi-scale initialization taskgraph compile (" << end << " seconds)\n";
-
-      // No scrubbing for initial step
-      d_scheduler->get_dw(1)->setScrubbing(DataWarehouse::ScrubNone);
-      d_scheduler->execute();
-    }
-    // TODO - added for midstream initialization of MD for MPM-MD switcher example
-    //----------------------------------------------------------------------------
-
-
 #ifdef USE_GPERFTOOLS
     if (gheapprofile.active()){
       char heapename[512];
@@ -692,13 +652,10 @@ MultiScaleSimulationController::needRecompile(       double   time,
   
   // do it this way so everybody can have a chance to maintain their state
   recompile |= ( d_output && d_output->needRecompile(time, delt, grid));
-  recompile |= ( d_sim    && d_sim->needRecompile(time, delt, grid));
-  recompile |= ( d_lb     && d_lb->needRecompile(time, delt, grid));
+  recompile |= ( d_sim    && d_sim->needRecompile(   time, delt, grid));
+  recompile |= ( d_lb     && d_lb->needRecompile(    time, delt, grid));
   recompile |= ( d_sharedState->getRecompileTaskGraph() );
   
-  if (d_doAMR){
-    recompile |= ( d_regridder && d_regridder->needRecompile(time, delt, grid) );
-  }
   return recompile;
 }
 //______________________________________________________________________
@@ -973,7 +930,7 @@ MultiScaleSimulationController::executeTimestep( double   t,
   do {
     bool restartable = d_sim->restartableTimesteps();
     d_scheduler->setRestartable(restartable);
-    //if (Uintah::Parallel::getMaxThreads() < 1) { 
+
     if (restartable) {
       d_scheduler->get_dw(0)->setScrubbing(DataWarehouse::ScrubNonPermanent);
     }
@@ -990,70 +947,68 @@ MultiScaleSimulationController::executeTimestep( double   t,
         d_scheduler->get_dw(1)->setScrubbing(DataWarehouse::ScrubNonPermanent);
       }
     }
-    //}
-    
-    if (d_scheduler->getNumTaskGraphs() == 1){
+
+    if (d_scheduler->getNumTaskGraphs() == 1) {
       d_scheduler->execute(0, d_lastRecompileTimestep == d_sharedState->getCurrentTopLevelTimeStep() ? 0 : 1);
-    }else {
+    }
+    else {
       subCycleExecute(currentGrid, 0, totalFine, 0, true);
     }
-    
+
     //__________________________________
     //  If timestep has been restarted
-    if(d_scheduler->get_dw(totalFine)->timestepRestarted()){
+    if (d_scheduler->get_dw(totalFine)->timestepRestarted()) {
       ASSERT(restartable);
-      
+
       // Figure out new delt
       double new_delt = d_sim->recomputeTimestep(delt);
 
-      proc0cout << "Restarting timestep at " << t << ", changing delt from "
-                << delt << " to " << new_delt << '\n';
-     
+      proc0cout << "Restarting timestep at " << t << ", changing delt from " << delt << " to " << new_delt << '\n';
+
       // bulletproofing
-      if(new_delt < d_timeinfo->delt_min || new_delt <= 0 ){
+      if (new_delt < d_timeinfo->delt_min || new_delt <= 0) {
         std::ostringstream warn;
-        warn << "The new delT (" << new_delt << ") is either less than delT_min (" << d_timeinfo->delt_min
-             << ") or equal to 0";
+        warn << "The new delT (" << new_delt << ") is either less than delT_min (" << d_timeinfo->delt_min << ") or equal to 0";
         throw InternalError(warn.str(), __FILE__, __LINE__);
       }
-      
-      
+
       d_output->reEvaluateOutputTimestep(orig_delt, new_delt);
       delt = new_delt;
-      
-      d_scheduler->get_dw(0)->override(delt_vartype(new_delt),
-                                       d_sharedState->get_delt_label());
 
-      for (int i=1; i <= totalFine; i++){
+      d_scheduler->get_dw(0)->override(delt_vartype(new_delt), d_sharedState->get_delt_label());
+
+      for (int i = 1; i <= totalFine; i++) {
         d_scheduler->replaceDataWarehouse(i, currentGrid);
       }
 
       double delt_fine = delt;
-      int skip=totalFine;
-      for(int i=0;i<currentGrid->numLevels();i++){
+      int skip = totalFine;
+      for (int i = 0; i < currentGrid->numLevels(); i++) {
         const Level* level = currentGrid->getLevel(i).get_rep();
-        
-        if( i != 0 && !d_sharedState->isLockstepAMR() ) {
+
+        if (i != 0 && !d_sharedState->isLockstepAMR()) {
           int trr = level->getRefinementRatioMaxDim();
           delt_fine /= trr;
           skip /= trr;
         }
-        
-        for( int idw = 0; idw < totalFine; idw += skip ) {
+
+        for (int idw = 0; idw < totalFine; idw += skip) {
           DataWarehouse* dw = d_scheduler->get_dw(idw);
-          dw->override( delt_vartype(delt_fine), d_sharedState->get_delt_label(), level );
+          dw->override(delt_vartype(delt_fine), d_sharedState->get_delt_label(), level);
         }
       }
       success = false;
-      
-    } else {
+
+    }
+    else {
       success = true;
-      if(d_scheduler->get_dw(1)->timestepAborted()){
+      if (d_scheduler->get_dw(1)->timestepAborted()) {
         throw InternalError("Execution aborted, cannot restart timestep\n", __FILE__, __LINE__);
       }
     }
-  } while(!success);
-} // end executeTimestep()
+  }
+  while (!success);
+}  // end executeTimestep()
 
 //______________________________________________________________________
 //
