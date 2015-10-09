@@ -23,6 +23,7 @@ VERBOSE="no"
 COMMON_GROUP=""
 CHECKPOINTS=""
 MPIRUN=""
+SVN_trunk="https://gforge.sci.utah.edu/svn/uintah/trunk/src"
 
 ID=`date +%m%d%y`
 
@@ -54,17 +55,24 @@ if test "$MACHINE" = "albion" ; then
   DEFAULT_MAIL_TO="ahumphrey@sci.utah.edu,t.harman@utah.edu"
   REPLY_TO="t.harman@utah.edu"
   COMMON_GROUP="uintah"
-  BUILD_DIR=/home/rt/"$OS"
-  TEST_DATA=/home/rt/"$OS"/TestData
-  TEMP_DIR=/home/rt/"$OS"
-  SCRIPT_DIR=/home/rt/scripts
-  CHECKPOINTS=/home/rt/CheckPoints
+  BUILD_DIR=/home/${USER}/"$OS"                      # The user can be rt or arl-rt
+  TEST_DATA=/home/${USER}/"$OS"/TestData
+  TEMP_DIR=/home/${USER}/"$OS"
+  SCRIPT_DIR=/home/${USER}/scripts
+  CHECKPOINTS=/home/${USER}/CheckPoints
   MPIRUN=/usr/local/openmpi/bin/
-  export TEST_COMPONENTS="Examples"             # only run gpu tests
+  
+  if test "$USER" = "rt" ; then
+    export TEST_COMPONENTS="Examples"             # only run gpu tests
+  fi
+  if test "$USER" = "arl-rt" ; then
+    SVN_trunk="https://gforge.sci.utah.edu/svn/uintah/branches/arl_dev/src"
+  fi  
+  
   
   # Where the webpage will be, and init webpage.  (SEE above notes)
-  HTMLLOG=/home/rt/public_html/Uintah.html
-  WEBLOG=NONE
+  HTMLLOG=/home/${USER}/public_html/Uintah.html
+  WEBLOG=/home/${USER}/public_html/Uintah.html
 fi
 
 if test "$MACHINE" = "cyrus.mech.utah.edu" ; then
@@ -307,7 +315,7 @@ else
   while [[ $counter -le 10  &&  $retval -ne 0 ]]
   do
     
-    svn co https://gforge.sci.utah.edu/svn/uintah/trunk/src src  --username=anonymous --password=\"\"> "$BUILDROOT"/svn_co.log 2>&1
+    svn co "$SVN_trunk" src  --username=anonymous --password=\"\"> "$BUILDROOT"/svn_co.log 2>&1
     retval=$?
 
     if [ $VERBOSE = "yes" ]; then
