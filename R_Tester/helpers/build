@@ -65,6 +65,18 @@ if [ "$OS" = "Linux" ]; then
        F77=gfortran-4.8"   
   fi
   
+  if [ "$MACHINE" == "albion" && "$USER" == "arl-rt" ]; then
+    COMMON="      --with-mpi=/usr/local/openmpi \\
+      --with-boost=/usr/  \\
+      --enable-all-components \\
+      --enable-wasatch_3p \\
+      --enable-ray-scatter\\"
+
+    ENV="       CC=gcc \\
+       CXX=g++ \\
+       F77=gfortran"   
+  fi
+  
   if [ "$MACHINE" == "cyrus.mech.utah.edu" ]; then
     COMMON="      --with-cuda=/usr/local/cuda-6.5 \\
       --enable-gencode=35 \\
