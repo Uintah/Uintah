@@ -97,6 +97,7 @@ NIGHTLYTESTS = [
    ("angledWall"                        , "CQMOM_regression/angledWall.ups"                         , 1.1 , "Linux" , ["exactComparison"     , "no_restart"]) ,
    ("angledWall3D"                      , "CQMOM_regression/angledWall3D.ups"                       , 1.1 , "Linux" , ["exactComparison"     , "no_restart"]) ,
    ("Constant_Deposition"               , "CQMOM_regression/Constant_Deposition.ups"                , 1.1 , "Linux" , ["exactComparison"     , "no_restart"]) ,
+   ("CQMOM_coal_test"                   , "CQMOM_regression/CQMOM_coal_test.ups"                    , 1.1 , "Linux" , ["exactComparison"     , "no_restart"]) ,
    ("regridTestArches"                  , "regridTestArches"                                        , 8   , "Linux" , ["startFromCheckpoint" , "no_restart"]) , 
    ("channel_LagPart_inlet"             , "LagrangianParticles/channel_flow_x_lagrangian_inlet.ups" , 1.1 , "Linux" , ["exactComparison"     , "no_restart"]) , 
    ("OFC4"                              , "Coal/OFC4.ups"                                           , 3   , "All"  , ["exactComparison","do_performance_test"   ]) , 
@@ -167,6 +168,7 @@ LOCALTESTS = [
    ("angledWall"                        , "CQMOM_regression/angledWall.ups"                         , 1.1 , "All"  , ["exactComparison"   , "no_restart"]) ,
    ("angledWall3D"                      , "CQMOM_regression/angledWall3D.ups"                       , 1.1 , "All"  , ["exactComparison"   , "no_restart"]) ,
    ("Constant_Deposition"               , "CQMOM_regression/Constant_Deposition.ups"                , 1.1 , "All"  , ["exactComparison"   , "no_restart"]) ,
+   ("CQMOM_coal_test"                   , "CQMOM_regression/CQMOM_coal_test.ups"                    , 1.1 , "All"  , ["exactComparison"   , "no_restart"]) ,
    ("channel_LagPart_inlet"             , "LagrangianParticles/channel_flow_x_lagrangian_inlet.ups" , 1.1 , "All"  , ["exactComparison"   , "no_restart"]) , 
    ("OFC4"                              , "Coal/OFC4.ups"                                           , 3   , "All"  , ["exactComparison"   ]) , 
    ("task_math"                         , "task_math.ups"                                           , 1.1 , "All"  , ["exactComparison", "no_restart"]) , 
@@ -231,6 +233,7 @@ CQMOMTESTS = [
   ("angledWall"                  , "CQMOM_regression/angledWall.ups"              , 1.1 , "All"  , ["exactComparison", "no_restart"]),
   ("angledWall3D"                , "CQMOM_regression/angledWall3D.ups"            , 1.1 , "All"  , ["exactComparison", "no_restart"]),
   ("Constant_Deposition"         , "CQMOM_regression/Constant_Deposition.ups"     , 1.1 , "All"  , ["exactComparison", "no_restart"]),
+  ("CQMOM_coal_test"             , "CQMOM_regression/CQMOM_coal_test.ups"         , 1.1 , "All"  , ["exactComparison", "no_restart"]),
 ]
 
 # NO RMCRT due to the segfault on the MAC
