@@ -63,9 +63,9 @@ ifeq ($(BUILD_ICE),yes)
 endif
 ifeq ($(BUILD_ARCHES),yes)
   ARCHES   := $(SRCDIR)/Arches
-  ifeq ($(BUILD_MPM),yes)
-    MPMARCHES := $(SRCDIR)/MPMArches
-  endif
+#  ifeq ($(BUILD_MPM),yes)
+#    MPMARCHES := $(SRCDIR)/MPMArches
+#  endif
 endif
 
 SUBDIRS := \
@@ -73,7 +73,7 @@ SUBDIRS := \
         $(ICE)                         \
         $(MPMICE)                      \
         $(ARCHES)                      \
-        $(MPMARCHES)                   \
+#        $(MPMARCHES)                   \
         $(WASATCH)                     \
         $(SRCDIR)/DataArchiver         \
         $(SRCDIR)/Examples             \
