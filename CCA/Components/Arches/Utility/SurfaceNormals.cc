@@ -24,10 +24,6 @@ typedef OperatorTypeBuilder< SpatialOps::Gradient, SVolF, SpatialOps::XVolField 
 typedef OperatorTypeBuilder< SpatialOps::Gradient, SVolF, SpatialOps::YVolField >::type GradY;
 typedef OperatorTypeBuilder< SpatialOps::Gradient, SVolF, SpatialOps::ZVolField >::type GradZ;
 
-typedef BasicOpTypes<SVolF>::DivX DivX;
-typedef BasicOpTypes<SVolF>::DivY DivY;
-typedef BasicOpTypes<SVolF>::DivZ DivZ;
-
 typedef OperatorTypeBuilder< SpatialOps::Interpolant, XVolF, SVolF >::type InterpTX;
 typedef OperatorTypeBuilder< SpatialOps::Interpolant, YVolF, SVolF >::type InterpTY;
 typedef OperatorTypeBuilder< SpatialOps::Interpolant, ZVolF, SVolF >::type InterpTZ;
@@ -118,10 +114,6 @@ SurfaceNormals::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info,
   const GradX* const gradx = opr.retrieve_operator<GradX>();
   const GradY* const grady = opr.retrieve_operator<GradY>();
   const GradZ* const gradz = opr.retrieve_operator<GradZ>();
-
-  const DivX* const divx = opr.retrieve_operator<DivX>();
-  const DivY* const divy = opr.retrieve_operator<DivY>();
-  const DivZ* const divz = opr.retrieve_operator<DivZ>();
 
   const InterpTX* const interpx = opr.retrieve_operator<InterpTX>();
   const InterpTY* const interpy = opr.retrieve_operator<InterpTY>();
