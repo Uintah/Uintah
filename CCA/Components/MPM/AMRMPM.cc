@@ -1300,6 +1300,11 @@ void AMRMPM::scheduleAddParticles(SchedulerP& sched,
     t->modifies(lb->pDispLabel_preReloc);
     t->modifies(lb->pStressLabel_preReloc);
     t->modifies(lb->pColorLabel_preReloc);
+    if(flags->d_doScalarDiffusion){
+      t->modifies(lb->pConcentrationLabel_preReloc);
+      t->modifies(lb->pConcPreviousLabel_preReloc);
+      t->modifies(lb->pConcGradientLabel_preReloc);
+    }
     t->modifies(lb->pLocalizedMPMLabel_preReloc);
     t->modifies(lb->pExtForceLabel_preReloc);
     t->modifies(lb->pTemperatureLabel_preReloc);
@@ -3683,8 +3688,8 @@ void AMRMPM::addParticles(const ProcessorGroup*,
       ParticleVariable<Point> px;
       ParticleVariable<Matrix3> pF,pSize,pstress,pvelgrad,pscalefac;
       ParticleVariable<long64> pids;
-      ParticleVariable<double> pvolume,pmass,ptemp,ptempP,pcolor;
-      ParticleVariable<Vector> pvelocity,pextforce,pdisp;
+      ParticleVariable<double> pvolume,pmass,ptemp,ptempP,pcolor,pconc,pconcpre;
+      ParticleVariable<Vector> pvelocity,pextforce,pdisp,pconcgrad;
       ParticleVariable<int> pref,ploc,plal,prefOld;
       new_dw->getModifiable(px,       lb->pXLabel_preReloc,            pset);
       new_dw->getModifiable(pids,     lb->pParticleIDLabel_preReloc,   pset);
@@ -3704,6 +3709,11 @@ void AMRMPM::addParticles(const ProcessorGroup*,
       new_dw->getModifiable(ploc,     lb->pLocalizedMPMLabel_preReloc, pset);
       new_dw->getModifiable(pvelgrad, lb->pVelGradLabel_preReloc,      pset);
       new_dw->getModifiable(pF,  lb->pDeformationMeasureLabel_preReloc,pset);
+      if(flags->d_doScalarDiffusion){
+        new_dw->getModifiable(pconc,    lb->pConcentrationLabel_preReloc,pset);
+        new_dw->getModifiable(pconcpre, lb->pConcPreviousLabel_preReloc, pset);
+        new_dw->getModifiable(pconcgrad,lb->pConcGradientLabel_preReloc, pset);
+      }
 
       new_dw->allocateTemporary(prefOld,  pset);
 
@@ -3714,7 +3724,7 @@ void AMRMPM::addParticles(const ProcessorGroup*,
         prefOld[pp] = pref[pp];
         // Conditions to refine particle based on physical state
         // TODO:  Check below, should be < or <= in first conditional
-        if(pref[pp]<levelIndex && pstress[pp].Norm() > 1){
+        if(pref[pp]<=levelIndex && pstress[pp].Norm() > 1){
           pref[pp]++;
           numNewPartNeeded++;
         }
@@ -3768,8 +3778,9 @@ void AMRMPM::addParticles(const ProcessorGroup*,
       ParticleVariable<Point> pxtmp;
       ParticleVariable<Matrix3> pFtmp,psizetmp,pstrstmp,pvgradtmp,pSFtmp;
       ParticleVariable<long64> pidstmp;
-      ParticleVariable<double> pvoltmp, pmasstmp,ptemptmp,ptempPtmp,pcolortmp;
-      ParticleVariable<Vector> pveltmp,pextFtmp,pdisptmp;
+      ParticleVariable<double> pvoltmp, pmasstmp,ptemptmp,ptempPtmp;
+      ParticleVariable<double> pcolortmp, pconctmp, pconcpretmp;
+      ParticleVariable<Vector> pveltmp,pextFtmp,pdisptmp,pconcgradtmp;
       ParticleVariable<int> preftmp,ploctmp,plaltmp;
       new_dw->allocateTemporary(pidstmp,  pset);
       new_dw->allocateTemporary(pxtmp,    pset);
@@ -3784,6 +3795,11 @@ void AMRMPM::addParticles(const ProcessorGroup*,
       new_dw->allocateTemporary(pdisptmp, pset);
       new_dw->allocateTemporary(pstrstmp, pset);
       new_dw->allocateTemporary(pcolortmp,pset);
+      if(flags->d_doScalarDiffusion){
+        new_dw->allocateTemporary(pconctmp, pset);
+        new_dw->allocateTemporary(pconcpretmp,  pset);
+        new_dw->allocateTemporary(pconcgradtmp, pset);
+      }
       new_dw->allocateTemporary(pmasstmp, pset);
       new_dw->allocateTemporary(preftmp,  pset);
       new_dw->allocateTemporary(plaltmp,  pset);
@@ -3809,8 +3825,14 @@ void AMRMPM::addParticles(const ProcessorGroup*,
         plaltmp[pp]  = plal[pp];
         ploctmp[pp]  = ploc[pp];
         pvgradtmp[pp]= pvelgrad[pp];
+      }
 
-//        cout << "pids_orig = " << pidstmp[pp] << endl;
+      if(flags->d_doScalarDiffusion){
+       for( unsigned int pp=0; pp<oldNumPar; ++pp ){
+         pconctmp[pp] = pconc[pp];
+         pconcpretmp[pp] = pconcpre[pp];
+         pconcgradtmp[pp] = pconcgrad[pp];
+       }
       }
 
       Vector dx = patch->dCell();
@@ -3885,6 +3907,11 @@ void AMRMPM::addParticles(const ProcessorGroup*,
           pdisptmp[new_index]   = pdisp[idx];
           pstrstmp[new_index]   = pstress[idx];
           pcolortmp[new_index]  = pcolor[idx];
+          if(flags->d_doScalarDiffusion){
+            pconctmp[new_index]     = pconc[idx];
+            pconcpretmp[new_index]  = pconcpre[idx];
+            pconcgradtmp[new_index] = pconcgrad[idx];
+          }
           ptemptmp[new_index]   = ptemp[idx];
           ptempPtmp[new_index]  = ptempP[idx];
           preftmp[new_index]    = pref[idx];
@@ -3911,6 +3938,11 @@ void AMRMPM::addParticles(const ProcessorGroup*,
       new_dw->put(pdisptmp, lb->pDispLabel_preReloc,                 true);
       new_dw->put(pstrstmp, lb->pStressLabel_preReloc,               true);
       new_dw->put(pcolortmp,lb->pColorLabel_preReloc,                true);
+      if(flags->d_doScalarDiffusion){
+        new_dw->put(pconctmp,     lb->pConcentrationLabel_preReloc,  true);
+        new_dw->put(pconcpretmp,  lb->pConcPreviousLabel_preReloc,   true);
+        new_dw->put(pconcgradtmp, lb->pConcGradientLabel_preReloc,   true);
+      }
       new_dw->put(pFtmp,    lb->pDeformationMeasureLabel_preReloc,   true);
       new_dw->put(preftmp,  lb->pRefinedLabel_preReloc,              true);
       new_dw->put(plaltmp,  lb->pLastLevelLabel_preReloc,            true);
@@ -5058,10 +5090,11 @@ void AMRMPM::applyExternalScalarFlux(const ProcessorGroup* ,
            pExternalScalarFlux[*iter] = 0.;
           }
         }
-      } // if use load curves
-      for(ParticleSubset::iterator iter = pset->begin();
-                                   iter != pset->end(); iter++){
-       pExternalScalarFlux[*iter] = 0.;
+      } else {  // if use load curves
+        for(ParticleSubset::iterator iter = pset->begin();
+                                     iter != pset->end(); iter++){
+         pExternalScalarFlux[*iter] = 0.;
+        }
       }
     } // matl loop
   }  // patch loop
