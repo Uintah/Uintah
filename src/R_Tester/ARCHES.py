@@ -286,10 +286,14 @@ NORMCRT = [
    ("channel_LagPart_inlet"             , "LagrangianParticles/channel_flow_x_lagrangian_inlet.ups" , 1.1 , "All"  , ["exactComparison"   , "no_restart"]) , 
 ]
 
+DEBUG = [
+   ("methane_fire_8patch__NEW"          , "methane_fire_8patch__NEW.ups"                            , 8   , "All"  , ["exactComparison"]) , 
+]
+
 #__________________________________
 # The following list is parsed by the local RT script
 # and allows the user to select the tests to run
-#LIST: LOCALTESTS RMCRTTESTS NEWTESTS SCALARTESTS DQMOMTESTS NIGHTLYTESTS CQMOMTESTS NORMCRT
+#LIST: LOCALTESTS RMCRTTESTS NEWTESTS SCALARTESTS DQMOMTESTS NIGHTLYTESTS CQMOMTESTS NORMCRT DEBUG
 #__________________________________
 
   
@@ -311,6 +315,8 @@ def getTestList(me) :
     TESTS = CQMOMTESTS
   elif me == "NORMCRT":
     TESTS = NORMCRT
+  elif me == "DEBUG":
+    TESTS = DEBUG
   else:
     print "\nERROR:ARCHES.py  getTestList:  The test list (%s) does not exist!\n\n" % me
     exit(1)
