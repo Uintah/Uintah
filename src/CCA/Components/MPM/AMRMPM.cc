@@ -1299,7 +1299,9 @@ void AMRMPM::scheduleAddParticles(SchedulerP& sched,
     t->modifies(lb->pSizeLabel_preReloc);
     t->modifies(lb->pDispLabel_preReloc);
     t->modifies(lb->pStressLabel_preReloc);
-    t->modifies(lb->pColorLabel_preReloc);
+    if (flags->d_with_color) {
+      t->modifies(lb->pColorLabel_preReloc);
+    }
     if(flags->d_doScalarDiffusion){
       t->modifies(lb->pConcentrationLabel_preReloc);
       t->modifies(lb->pConcPreviousLabel_preReloc);
@@ -3697,7 +3699,6 @@ void AMRMPM::addParticles(const ProcessorGroup*,
       new_dw->getModifiable(pSize,    lb->pSizeLabel_preReloc,         pset);
       new_dw->getModifiable(pdisp,    lb->pDispLabel_preReloc,         pset);
       new_dw->getModifiable(pstress,  lb->pStressLabel_preReloc,       pset);
-      new_dw->getModifiable(pcolor,   lb->pColorLabel_preReloc,        pset);
       new_dw->getModifiable(pvolume,  lb->pVolumeLabel_preReloc,       pset);
       new_dw->getModifiable(pvelocity,lb->pVelocityLabel_preReloc,     pset);
       new_dw->getModifiable(pscalefac,lb->pScaleFactorLabel_preReloc,  pset);
@@ -3709,6 +3710,9 @@ void AMRMPM::addParticles(const ProcessorGroup*,
       new_dw->getModifiable(ploc,     lb->pLocalizedMPMLabel_preReloc, pset);
       new_dw->getModifiable(pvelgrad, lb->pVelGradLabel_preReloc,      pset);
       new_dw->getModifiable(pF,  lb->pDeformationMeasureLabel_preReloc,pset);
+      if (flags->d_with_color) {
+        new_dw->getModifiable(pcolor,   lb->pColorLabel_preReloc,        pset);
+      }
       if(flags->d_doScalarDiffusion){
         new_dw->getModifiable(pconc,    lb->pConcentrationLabel_preReloc,pset);
         new_dw->getModifiable(pconcpre, lb->pConcPreviousLabel_preReloc, pset);
@@ -3794,7 +3798,9 @@ void AMRMPM::addParticles(const ProcessorGroup*,
       new_dw->allocateTemporary(psizetmp, pset);
       new_dw->allocateTemporary(pdisptmp, pset);
       new_dw->allocateTemporary(pstrstmp, pset);
-      new_dw->allocateTemporary(pcolortmp,pset);
+      if (flags->d_with_color) {
+        new_dw->allocateTemporary(pcolortmp,pset);
+      }
       if(flags->d_doScalarDiffusion){
         new_dw->allocateTemporary(pconctmp, pset);
         new_dw->allocateTemporary(pconcpretmp,  pset);
@@ -3819,7 +3825,9 @@ void AMRMPM::addParticles(const ProcessorGroup*,
         psizetmp[pp] = pSize[pp];
         pdisptmp[pp] = pdisp[pp];
         pstrstmp[pp] = pstress[pp];
-        pcolortmp[pp]= pcolor[pp];
+        if (flags->d_with_color) {
+          pcolortmp[pp]= pcolor[pp];
+        }
         pmasstmp[pp] = pmass[pp];
         preftmp[pp]  = pref[pp];
         plaltmp[pp]  = plal[pp];
@@ -3906,7 +3914,9 @@ void AMRMPM::addParticles(const ProcessorGroup*,
           psizetmp[new_index]   = 0.5*pSize[idx];
           pdisptmp[new_index]   = pdisp[idx];
           pstrstmp[new_index]   = pstress[idx];
-          pcolortmp[new_index]  = pcolor[idx];
+          if (flags->d_with_color) {
+            pcolortmp[new_index]  = pcolor[idx];
+          }
           if(flags->d_doScalarDiffusion){
             pconctmp[new_index]     = pconc[idx];
             pconcpretmp[new_index]  = pconcpre[idx];
@@ -3937,7 +3947,9 @@ void AMRMPM::addParticles(const ProcessorGroup*,
       new_dw->put(psizetmp, lb->pSizeLabel_preReloc,                 true);
       new_dw->put(pdisptmp, lb->pDispLabel_preReloc,                 true);
       new_dw->put(pstrstmp, lb->pStressLabel_preReloc,               true);
-      new_dw->put(pcolortmp,lb->pColorLabel_preReloc,                true);
+      if (flags->d_with_color) {
+        new_dw->put(pcolortmp,lb->pColorLabel_preReloc,              true);
+      }
       if(flags->d_doScalarDiffusion){
         new_dw->put(pconctmp,     lb->pConcentrationLabel_preReloc,  true);
         new_dw->put(pconcpretmp,  lb->pConcPreviousLabel_preReloc,   true);
