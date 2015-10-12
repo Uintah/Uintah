@@ -298,6 +298,12 @@ ExplicitSolver::problemSetup( const ProblemSpecP & params, SimulationStateP & st
 }
 
 void
+ExplicitSolver::initialize( const LevelP& level,
+                            SchedulerP& sched )
+{
+}
+
+void
 ExplicitSolver::checkMomBCs( SchedulerP& sched,
                              const LevelP& level,
                              const MaterialSet* matls)

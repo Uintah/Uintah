@@ -355,14 +355,33 @@ ScalarRHS::compute_bcs( const Patch* patch, ArchesTaskInfoManager* tsk_info,
     for ( map<std::string, Wasatch::BndSpec>::const_iterator ibc_info = bc.begin();
           ibc_info != bc.end(); ibc_info++ ) {
 
-      const Wasatch::BndCondSpec* bc = ibc_info->second.find(_task_name);
+      const Wasatch::BndCondSpec* mybc = ibc_info->second.find(_task_name);
 
       /// @TODO: Perform this check upstream so I don't have to do it here.
-      if ( bc != NULL ) {
+      if ( mybc != NULL ) {
 
         const SpatialOps::SpatialMask<SVolF>* mask = ihelper->second->get_spatial_mask<SVolF>( ibc_info->second, pid );
 
         masked_assign(*mask, *phi, 22.22);
+
+        SpatialOps::BCSide shift;
+
+        switch (ibc_info->second.face){
+        case Patch::xminus:
+        case Patch::yminus:
+        case Patch::zminus:
+          shift = SpatialOps::PLUS_SIDE;
+          break;
+        case Patch::xplus:
+        case Patch::yplus:
+        case Patch::zplus:
+          shift = SpatialOps::MINUS_SIDE;
+        default:
+          break;
+        }
+
+        SVolF& phi_add = *phi;
+        masked_assign(SpatialOps::convert<SVolF>(*mask, shift), *phi, 33.33);
 
       }
     }

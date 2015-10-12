@@ -161,7 +161,6 @@ public:
 
   };
 
-
   ExplicitSolver(ArchesLabel* label,
                  const MPMArchesLabel* MAlb,
                  Properties* props,
@@ -189,7 +188,6 @@ public:
   virtual int nonlinearSolve( const LevelP& level,
                               SchedulerP& sched );
 
-
   /** @brief Sets the initial guess for several variables **/
   void sched_setInitialGuess(SchedulerP&,
                              const PatchSet* patches,
@@ -211,6 +209,8 @@ public:
   void sched_computeKE( SchedulerP& sched,
                         const PatchSet* patches,
                         const MaterialSet* matls );
+
+  void initialize( const LevelP& level, SchedulerP& sched ); 
 
   /** @brief Print the reduced kinetic energy values to the screen output **/
   void sched_printTotalKE( SchedulerP& sched,
@@ -270,10 +270,6 @@ public:
   inline void setNumSourceBoundaries(int numSourceBoundaries){
     d_numSourceBoundaries = numSourceBoundaries;
   }
-
-private:
-
-  ExplicitSolver();
 
   void setInitialGuess(const ProcessorGroup* pc,
                        const PatchSubset* patches,
