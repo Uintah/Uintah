@@ -83,7 +83,7 @@ public:
 
   void commonProblemSetup( ProblemSpecP db );
 
-  virtual void problemSetup( const ProblemSpecP& db, SimulationStateP& ) = 0;
+  virtual void problemSetup( const ProblemSpecP& db, SimulationStateP&, GridP& ) = 0;
 
   virtual int nonlinearSolve( const LevelP& level,
                               SchedulerP& sched ) = 0;
@@ -97,6 +97,9 @@ public:
                             const MaterialSet* matls) = 0;
 
   virtual void initialize( const LevelP& lvl, SchedulerP& sched, const bool doing_restart ) = 0;
+
+  virtual void sched_restartInitialize( const LevelP& level, SchedulerP& sched ) = 0;
+  virtual void sched_restartInitializeTimeAdvance( const LevelP& level, SchedulerP& sched ) = 0; 
 
   class NLSolverBuilder {
 

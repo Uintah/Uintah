@@ -62,7 +62,6 @@ WARNING
 #include <CCA/Ports/DataWarehouseP.h>
 #include <CCA/Ports/SolverInterface.h>
 #include <Core/Grid/Variables/VarTypes.h>
-#include <CCA/Components/Arches/ExplicitTimeInt.h>
 
 namespace Uintah {
 class TaskFactoryBase;
@@ -83,6 +82,7 @@ class CQMOMSourceWrapper;
 class EfficiencyCalculator;
 class WallModelDriver;
 class RadPropertyCalculator;
+class ExplicitTimeInt;
 class ExplicitSolver: public NonlinearSolver {
 
 public:
@@ -92,28 +92,16 @@ public:
 
   public:
 
-    Builder( ArchesLabel* label,
+    Builder( SimulationStateP& sharedState,
              const MPMArchesLabel* MAlb,
-             Properties* props,
-             BoundaryCondition* bc,
-             TurbulenceModel* turbModel,
-             ScaleSimilarityModel* scaleSimilarityModel,
              PhysicalConstants* physConst,
-             RadPropertyCalculator* rad_properties,
-             PartVel* partVel,
-             DQMOM* dqmomSolver,
-             CQMOM* cqmomSolver,
-             CQMOM_Convection* cqmomConvect,
-             CQMOMSourceWrapper* cqmomSource,
              std::map<std::string,
              boost::shared_ptr<TaskFactoryBase> >& task_factory_map,
              const ProcessorGroup* myworld,
              SolverInterface* hypreSolver ) :
-             _label(label), _MAlb(MAlb), _props(props),
-             _bc(bc), _turbModel(turbModel), _scaleSimilarityModel(scaleSimilarityModel),
-             _physConst(physConst), _rad_properties(rad_properties),
-             _partVel(partVel), _dqmomSolver(dqmomSolver),
-             _cqmomSolver(cqmomSolver), _cqmomConvect(cqmomConvect), _cqmomSource(cqmomSource),
+             _sharedState(sharedState),
+             _MAlb(MAlb),
+             _physConst(physConst),
              _task_factory_map(task_factory_map),
              _myworld(myworld), _hypreSolver(hypreSolver)
     { }
@@ -121,19 +109,9 @@ public:
     ~Builder(){}
 
     ExplicitSolver* build(){
-      return scinew ExplicitSolver( _label,
+      return scinew ExplicitSolver( _sharedState,
                                     _MAlb,
-                                    _props,
-                                    _bc,
-                                    _turbModel,
-                                    _scaleSimilarityModel,
                                     _physConst,
-                                    _rad_properties,
-                                    _partVel,
-                                    _dqmomSolver,
-                                    _cqmomSolver,
-                                    _cqmomConvect,
-                                    _cqmomSource,
                                     _task_factory_map,
                                     _myworld,
                                     _hypreSolver
@@ -142,38 +120,19 @@ public:
 
   private:
 
+    SimulationStateP& _sharedState;
     ArchesLabel* _label;
     const MPMArchesLabel* _MAlb;
-    Properties* _props;
-    BoundaryCondition* _bc;
-    TurbulenceModel* _turbModel;
-    ScaleSimilarityModel* _scaleSimilarityModel;
     PhysicalConstants* _physConst;
-    RadPropertyCalculator* _rad_properties;
-    PartVel* _partVel;
-    DQMOM* _dqmomSolver;
-    CQMOM* _cqmomSolver;
-    CQMOM_Convection* _cqmomConvect;
-    CQMOMSourceWrapper* _cqmomSource;
     std::map<std::string,boost::shared_ptr<TaskFactoryBase> >& _task_factory_map;
     const ProcessorGroup* _myworld;
     SolverInterface* _hypreSolver;
 
   };
 
-  ExplicitSolver( ArchesLabel* label,
+  ExplicitSolver( SimulationStateP& sharedState,
                   const MPMArchesLabel* MAlb,
-                  Properties* props,
-                  BoundaryCondition* bc,
-                  TurbulenceModel* turbModel,
-                  ScaleSimilarityModel* scaleSimilarityModel,
                   PhysicalConstants* physConst,
-                  RadPropertyCalculator* rad_properties,
-                  PartVel* partVel,
-                  DQMOM* dqmomSolver,
-                  CQMOM* cqmomSolver,
-                  CQMOM_Convection* cqmomConvect,
-                  CQMOMSourceWrapper* cqmomSource,
                   std::map<std::string, boost::shared_ptr<TaskFactoryBase> >& task_factory_map,
                   const ProcessorGroup* myworld,
                   SolverInterface* hypreSolver );
@@ -182,9 +141,14 @@ public:
 
   void sched_initializeVariables( const LevelP& level, SchedulerP& sched );
 
+  void sched_restartInitialize( const LevelP& level, SchedulerP& sched );
+
+  void sched_restartInitializeTimeAdvance( const LevelP& level, SchedulerP& sched );
+
   /** @brief Input file interface. **/
-  virtual void problemSetup(const ProblemSpecP& input_db,
-                            SimulationStateP& state);
+  virtual void problemSetup( const ProblemSpecP& input_db,
+                             SimulationStateP& state,
+                             GridP& grid );
 
   /** @brief Solve the nonlinear system. (also does some actual computations) **/
   virtual int nonlinearSolve( const LevelP& level,
@@ -424,6 +388,11 @@ public:
                                     const int index,
                                     const Patch* patch );
 
+  void registerModels( ProblemSpecP& db );
+  void registerTransportEqns( ProblemSpecP& db );
+  void registerPropertyModels( ProblemSpecP& db );
+  void registerCQMOMEqns( ProblemSpecP& db );
+
   // const VarLabel*
   ArchesLabel* d_lab;
   const MPMArchesLabel* d_MAlab;
@@ -444,6 +413,7 @@ public:
   MomentumSolver* d_momSolver;             ///< Momentum solver
   PhysicalConstants* d_physicalConsts;     ///< Physical constants
   WallModelDriver* d_wall_ht_models;       ///< Heat transfer models for walls
+  SimulationStateP& d_sharedState;
 
   std::vector<TimeIntegratorLabel* > d_timeIntegratorLabels;
   TimeIntegratorLabel* nosolve_timelabels;
@@ -475,6 +445,9 @@ public:
   double amp;
 
   int d_numSourceBoundaries;
+
+  ExplicitTimeInt* d_timeIntegrator;
+  int d_tOrder;
 
   //DQMOM
   bool d_doDQMOM;
