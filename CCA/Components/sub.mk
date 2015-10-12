@@ -63,9 +63,9 @@ ifeq ($(BUILD_ICE),yes)
 endif
 ifeq ($(BUILD_ARCHES),yes)
   ARCHES   := $(SRCDIR)/Arches
-#  ifeq ($(BUILD_MPM),yes)
-#    MPMARCHES := $(SRCDIR)/MPMArches
-#  endif
+	ifeq ($(BUILD_MPM),yes)
+		MPMARCHES := $(SRCDIR)/MPMArches
+	endif
 endif
 
 SUBDIRS := \
@@ -73,6 +73,7 @@ SUBDIRS := \
         $(ICE)                         \
         $(MPMICE)                      \
         $(ARCHES)                      \
+        $(MPMARCHES)                   \
         $(WASATCH)                     \
         $(SRCDIR)/DataArchiver         \
         $(SRCDIR)/Examples             \
@@ -88,7 +89,6 @@ SUBDIRS := \
         $(SRCDIR)/Solvers              \
         $(SRCDIR)/SwitchingCriteria    
 
-#        $(MPMARCHES)                   \
 
 include $(SCIRUN_SCRIPTS)/recurse.mk
 
