@@ -430,7 +430,6 @@ ExplicitSolver::problemSetup( const ProblemSpecP & params,
     proc0cout << "\n Notice: No Turbulence model found. \n" << endl;
   }
 
-  std::cout << " ONE " << std::endl;
   d_turbModel->problemSetup(db);
 
   d_turbModel->setMixedModel(d_mixedModel);
@@ -442,7 +441,6 @@ ExplicitSolver::problemSetup( const ProblemSpecP & params,
     d_scaleSimilarityModel->setMixedModel(d_mixedModel);
   }
 
-  std::cout << " TWO " << std::endl;
   d_props->setBC(d_boundaryCondition);
 
   // ----- DQMOM STUFF:
@@ -554,8 +552,6 @@ ExplicitSolver::problemSetup( const ProblemSpecP & params,
     d_dqmomSolver->problemSetup( dqmom_db );
 
   }
-  std::cout << " THREE " << std::endl;
-
 
   // ----- CQMOM STUFF:
 
@@ -617,7 +613,6 @@ ExplicitSolver::problemSetup( const ProblemSpecP & params,
   }
 
 
-  std::cout << " FOUR " << std::endl;
   // register any other source terms:
   SourceTermFactory& src_factory = SourceTermFactory::self();
   src_factory.registerSources( d_lab, d_doDQMOM, d_which_dqmom );
@@ -629,7 +624,6 @@ ExplicitSolver::problemSetup( const ProblemSpecP & params,
   // Add extra species to table lookup as required by models
   d_props->addLookupSpecies();
 
-  std::cout << " FIVE " << std::endl;
   // Add new intrusion stuff:
   // get a reference to the intrusions
   IntrusionBC* intrusion_ref = d_boundaryCondition->get_intrusion_ref();
@@ -673,7 +667,6 @@ ExplicitSolver::problemSetup( const ProblemSpecP & params,
     eqn->extraProblemSetup( db );
   }
 
-  std::cout << " SIX " << std::endl;
   //------------------------------------------------------------------------------------------------
 
   if ( db_es->findBlock( "print_total_ke" ) ){
@@ -944,10 +937,10 @@ ExplicitSolver::initialize( const LevelP& level,
   //d_boundaryCondition->printBCInfo();
 
   //Setup initial inlet velocities
-  d_boundaryCondition->sched_setupBCInletVelocities__NEW( sched, level, matls, doing_restart );
+  d_boundaryCondition->sched_setupBCInletVelocities( sched, level, matls, doing_restart );
 
   //Set the initial profiles
-  d_boundaryCondition->sched_setInitProfile__NEW( sched, level, matls );
+  d_boundaryCondition->sched_setInitProfile( sched, level, matls );
 
   //Setup the intrusions.
   d_boundaryCondition->sched_setupNewIntrusions( sched, level, matls );
@@ -1078,17 +1071,10 @@ ExplicitSolver::sched_restartInitialize( const LevelP& level, SchedulerP& sched 
     src->sched_RestartInitialize(level, sched);
   }
 
-}
-
-void
-ExplicitSolver::sched_restartInitializeTimeAdvance( const LevelP& level, SchedulerP& sched )
-{
-
-  bool doingRestart = true;
   const MaterialSet* matls = d_lab->d_sharedState->allArchesMaterials();
 
   d_boundaryCondition->sched_computeBCArea( sched, level, matls );
-  d_boundaryCondition->sched_setupBCInletVelocities__NEW( sched, level, matls, doingRestart );
+  d_boundaryCondition->sched_setupBCInletVelocities( sched, level, matls, doingRestart );
 
   EqnFactory& eqnFactory = EqnFactory::self();
   EqnFactory::EqnMap& scalar_eqns = eqnFactory.retrieve_all_eqns();
@@ -1098,9 +1084,6 @@ ExplicitSolver::sched_restartInitializeTimeAdvance( const LevelP& level, Schedul
   }
 
   checkMomBCs( sched, level, matls );
-
-  d_boundaryCondition->sched_setupNewIntrusionCellType( sched, level, matls, doingRestart );
-  d_boundaryCondition->sched_setupNewIntrusions( sched, level, matls );
 
 }
 

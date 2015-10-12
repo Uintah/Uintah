@@ -605,8 +605,6 @@ Arches::scheduleTimeAdvance( const LevelP& level,
     opr.set_my_world( d_myworld );
     opr.create_patch_operators( level, sched, matls );
 
-    d_nlSolver->sched_restartInitializeTimeAdvance( level, sched );
-
   }
 
   d_nlSolver->nonlinearSolve(level, sched);
