@@ -73,7 +73,6 @@ SUBDIRS := \
         $(ICE)                         \
         $(MPMICE)                      \
         $(ARCHES)                      \
-#        $(MPMARCHES)                   \
         $(WASATCH)                     \
         $(SRCDIR)/DataArchiver         \
         $(SRCDIR)/Examples             \
@@ -88,6 +87,8 @@ SUBDIRS := \
         $(SRCDIR)/SimulationController \
         $(SRCDIR)/Solvers              \
         $(SRCDIR)/SwitchingCriteria    
+
+#        $(MPMARCHES)                   \
 
 include $(SCIRUN_SCRIPTS)/recurse.mk
 
