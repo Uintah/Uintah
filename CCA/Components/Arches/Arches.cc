@@ -170,7 +170,6 @@ Arches::Arches(const ProcessorGroup* myworld, const bool doAMR) :
   d_doingRestart          =  false;
 
   nofTimeSteps                     =  0;
-  init_timelabel_allocated         =  false;
   DQMOMEqnFactory&  dqmomfactory   =  DQMOMEqnFactory::self();
   dqmomfactory.set_quad_nodes(0);
   d_doDQMOM                        =  false;
@@ -210,9 +209,6 @@ Arches::~Arches()
 
   Operators& opr = Operators::self();
   opr.delete_patch_set();
-
-  if (init_timelabel_allocated)
-    delete init_timelabel;
 
   if(d_analysisModules.size() != 0) {
     std::vector<AnalysisModule*>::iterator iter;
@@ -288,18 +284,18 @@ Arches::problemSetup(const ProblemSpecP& params,
   boost::shared_ptr<LagrangianParticleFactory> LagF(scinew LagrangianParticleFactory());
   boost::shared_ptr<PropertyModelFactoryV2> PropModels(scinew PropertyModelFactoryV2());
 
-  _boost_factory_map.clear();
-  _boost_factory_map.insert(std::make_pair("utility_factory",UtilF));
-  _boost_factory_map.insert(std::make_pair("transport_factory",TransF));
-  _boost_factory_map.insert(std::make_pair("initialize_factory",InitF));
-  _boost_factory_map.insert(std::make_pair("particle_model_factory",PartModF));
-  _boost_factory_map.insert(std::make_pair("lagrangian_factory",LagF));
-  _boost_factory_map.insert(std::make_pair("property_models_factory", PropModels));
+  _task_factory_map.clear();
+  _task_factory_map.insert(std::make_pair("utility_factory",UtilF));
+  _task_factory_map.insert(std::make_pair("transport_factory",TransF));
+  _task_factory_map.insert(std::make_pair("initialize_factory",InitF));
+  _task_factory_map.insert(std::make_pair("particle_model_factory",PartModF));
+  _task_factory_map.insert(std::make_pair("lagrangian_factory",LagF));
+  _task_factory_map.insert(std::make_pair("property_models_factory", PropModels));
 
   //==================== NEW STUFF ===============================
   typedef std::map<std::string, boost::shared_ptr<TaskFactoryBase> > BFM;
   proc0cout << "\n Registering Tasks For: " << std::endl;
-  for ( BFM::iterator i = _boost_factory_map.begin(); i != _boost_factory_map.end(); i++ ) {
+  for ( BFM::iterator i = _task_factory_map.begin(); i != _task_factory_map.end(); i++ ) {
 
     proc0cout << "   " << i->first << std::endl;
     i->second->set_shared_state(d_sharedState);
@@ -307,7 +303,7 @@ Arches::problemSetup(const ProblemSpecP& params,
 
   }
   proc0cout << "\n Building Tasks For: " << std::endl;
-  for ( BFM::iterator i = _boost_factory_map.begin(); i != _boost_factory_map.end(); i++ ) {
+  for ( BFM::iterator i = _task_factory_map.begin(); i != _task_factory_map.end(); i++ ) {
 
     proc0cout << "   " << i->first << std::endl;
     i->second->build_all_tasks(db);
@@ -826,7 +822,7 @@ Arches::problemSetup(const ProblemSpecP& params,
                                               d_cqmomSolver,
                                               d_cqmomConvect,
                                               d_cqmomSource,
-                                              _boost_factory_map,
+                                              _task_factory_map,
                                               d_myworld,
                                               hypreSolver );
 
@@ -858,6 +854,7 @@ Arches::scheduleInitialize(const LevelP& level,
 
   const MaterialSet* matls = d_sharedState->allArchesMaterials();
 
+  //=========== NEW TASK INTERFACE ==============================
   Operators& opr = Operators::self();
   opr.set_my_world( d_myworld );
   opr.create_patch_operators( level, sched, matls );
@@ -867,160 +864,12 @@ Arches::scheduleInitialize(const LevelP& level,
     _particlesHelper->schedule_initialize(level, sched);
   }
 
-  //Initialize several parameters
-  sched_paramInit(level, sched);
-
-  //Check for hand-off momentum BCs and perform mapping
-  d_nlSolver->checkMomBCs( sched, level, matls );
-
-  //initialize cell type
-  d_boundaryCondition->sched_cellTypeInit( sched, level, matls );
-
-  // compute the cell area fraction
-  d_boundaryCondition->sched_setAreaFraction( sched, level, matls, 0, true );
-
-  // setup intrusion cell type
-  d_boundaryCondition->sched_setupNewIntrusionCellType( sched, level, matls, false );
-
-  //AF must be called again to account for intrusions (can this be the ONLY call?)
-  d_boundaryCondition->sched_setAreaFraction( sched, level, matls, 1, true );
-
-  d_turbModel->sched_computeFilterVol( sched, level, matls );
-
-  //Particle models are initialized after DQMOM/CQMOM initialization
-
-  //=========== NEW TASK INTERFACE ==============================
-  //Boundary Conditions:
+  //=========== END NEW TASK INTERFACE ==============================
   _bcHelperMap[level->getID()] = scinew ArchesBCHelper( level, sched, matls );
 
-  typedef std::map<std::string, boost::shared_ptr<TaskFactoryBase> > BFM;
-  BFM::iterator i_util_fac = _boost_factory_map.find("utility_factory");
-  BFM::iterator i_trans_fac = _boost_factory_map.find("transport_factory");
-  BFM::iterator i_init_fac = _boost_factory_map.find("initialize_factory");
-  BFM::iterator i_partmod_fac = _boost_factory_map.find("particle_model_factory");
-  BFM::iterator i_lag_fac = _boost_factory_map.find("lagrangian_factory");
-  BFM::iterator i_property_models_fac = _boost_factory_map.find("property_models_factory");
+  d_nlSolver->set_bchelper( &_bcHelperMap );
 
-  bool is_restart = false;
-  //utility factory
-  TaskFactoryBase::TaskMap all_tasks = i_util_fac->second->retrieve_all_tasks();
-  for ( TaskFactoryBase::TaskMap::iterator i = all_tasks.begin(); i != all_tasks.end(); i++) {
-    i->second->schedule_init(level, sched, matls, is_restart);
-  }
-
-  //transport factory
-  all_tasks.clear();
-  all_tasks = i_trans_fac->second->retrieve_all_tasks();
-  for ( TaskFactoryBase::TaskMap::iterator i = all_tasks.begin(); i != all_tasks.end(); i++) {
-    i->second->schedule_init(level, sched, matls, is_restart);
-    i->second->schedule_task(level, sched, matls, TaskInterface::BC_TASK, 0);
-  }
-  //Sets the helper to the factory and assigns it to each active task
-  i_trans_fac->second->set_bchelper( &_bcHelperMap );
-
-  //initialize factory
-  all_tasks.clear();
-  all_tasks = i_init_fac->second->retrieve_all_tasks();
-  for ( TaskFactoryBase::TaskMap::iterator i = all_tasks.begin(); i != all_tasks.end(); i++) {
-    if ( i->first == "Lx" || i->first == "Lvel" || i->first == "Ld") {
-      std::cout << "Delaying particle calc..." << std::endl;
-    } else {
-      i->second->schedule_init(level, sched, matls, is_restart);
-    }
-  }
-  //have to delay and order these specific tasks...clean this up later...
-  TaskFactoryBase::TaskMap::iterator iLX = all_tasks.find("Lx");
-  if ( iLX != all_tasks.end() ) iLX->second->schedule_init(level, sched, matls, is_restart);
-  TaskFactoryBase::TaskMap::iterator iLD = all_tasks.find("Ld");
-  if ( iLD != all_tasks.end() ) iLD->second->schedule_init(level, sched, matls, is_restart);
-  TaskFactoryBase::TaskMap::iterator iLV = all_tasks.find("Lvel");
-  if ( iLV != all_tasks.end() ) iLV->second->schedule_init(level, sched, matls, is_restart);
-
-  //lagrangian particles
-  all_tasks.clear();
-  all_tasks = i_lag_fac->second->retrieve_all_tasks();
-  for ( TaskFactoryBase::TaskMap::iterator i = all_tasks.begin(); i != all_tasks.end(); i++) {
-    i->second->schedule_init(level, sched, matls, is_restart );
-  }
-
-  sched_scalarInit(level, sched);
-  //property models
-  all_tasks.clear();
-  all_tasks = i_property_models_fac->second->retrieve_all_tasks();
-  for ( TaskFactoryBase::TaskMap::iterator i = all_tasks.begin(); i != all_tasks.end(); i++) {
-    i->second->schedule_init(level, sched, matls, is_restart );
-  }
-
-  //===============================================================
-
-  // base initialization of all scalars
-  // sched_scalarInit(level, sched);
-
-  //pass some periodic stuff around.
-  IntVector periodic_vector = level->getPeriodicBoundaries();
-  bool d_3d_periodic = (periodic_vector == IntVector(1,1,1));
-  d_turbModel->set3dPeriodic(d_3d_periodic);
-  d_props->set3dPeriodic(d_3d_periodic);
-
-  init_timelabel = scinew TimeIntegratorLabel(d_lab, TimeIntegratorStepType::FE);
-  init_timelabel_allocated = true;
-
-  // Property model initialization
-  PropertyModelFactory& propFactory = PropertyModelFactory::self();
-  PropertyModelFactory::PropMap& all_prop_models = propFactory.retrieve_all_property_models();
-  for ( PropertyModelFactory::PropMap::iterator iprop = all_prop_models.begin();
-        iprop != all_prop_models.end(); iprop++) {
-
-    PropertyModelBase* prop_model = iprop->second;
-    prop_model->sched_initialize( level, sched );
-  }
-
-  // Table Lookup
-  bool initialize_it = true;
-  bool modify_ref_den = true;
-  int time_substep = 0; //no meaning here, but is required to be zero for
-                        //variables to be properly allocated.
-                        //
-  d_props->doTableMatching();
-  d_props->sched_computeProps( level, sched, initialize_it, modify_ref_den, time_substep );
-
-  for ( PropertyModelFactory::PropMap::iterator iprop = all_prop_models.begin();
-        iprop != all_prop_models.end(); iprop++) {
-    PropertyModelBase* prop_model = iprop->second;
-    if ( prop_model->initType()=="physical" )
-      prop_model->sched_computeProp( level, sched, 1 );
-  }
-
-  //Setup BC areas
-  d_boundaryCondition->sched_computeBCArea( sched, level, matls );
-
-  //For debugging
-  //d_boundaryCondition->printBCInfo();
-
-  //Setup initial inlet velocities
-  d_boundaryCondition->sched_setupBCInletVelocities__NEW( sched, level, matls, d_doingRestart );
-
-  //Set the initial profiles
-  d_boundaryCondition->sched_setInitProfile__NEW( sched, level, matls );
-
-  //Setup the intrusions.
-  d_boundaryCondition->sched_setupNewIntrusions( sched, level, matls );
-
-  //finally set the momentum (velocity) initial condition
-  d_nlSolver->sched_setInitVelCond( level, sched, matls );
-
-  sched_getCCVelocities(level, sched);
-
-  if (!d_MAlab) {
-
-    if (d_mixedModel) {
-      d_scaleSimilarityModel->sched_reComputeTurbSubmodel(sched, level, matls,
-                                                          init_timelabel);
-    }
-
-    d_turbModel->sched_reComputeTurbSubmodel(sched, level, matls, init_timelabel);
-
-  }
+  d_nlSolver->initialize( level, sched, d_doingRestart );
 
   //______________________
   //Data Analysis
@@ -1033,81 +882,10 @@ Arches::scheduleInitialize(const LevelP& level,
     }
   }
 
-  //----------------------
-  //DQMOM initialization
-  if(d_doDQMOM)
-  {
-    sched_weightInit(level, sched);
-    sched_weightedAbsInit(level, sched);
-
-    // check to make sure that all dqmom equations have BCs set.
-    DQMOMEqnFactory& dqmom_factory = DQMOMEqnFactory::self();
-    DQMOMEqnFactory::EqnMap& dqmom_eqns = dqmom_factory.retrieve_all_eqns();
-    for (DQMOMEqnFactory::EqnMap::iterator ieqn=dqmom_eqns.begin(); ieqn != dqmom_eqns.end(); ieqn++) {
-      EqnBase* eqn = ieqn->second;
-      eqn->sched_checkBCs( level, sched );
-      //as needed for the coal propery models
-      DQMOMEqn* dqmom_eqn = dynamic_cast<DQMOMEqn*>(ieqn->second);
-      dqmom_eqn->sched_getUnscaledValues( level, sched );
-    }
-    d_partVel->schedInitPartVel(level, sched);
-  }
-
-
-  //----------------------
-  //CQMOM initialization
-  if(d_doCQMOM)
-  {
-    sched_momentInit( level, sched );
-
-    // check to make sure that all cqmom equations have BCs set.
-    CQMOMEqnFactory& cqmom_factory = CQMOMEqnFactory::self();
-    CQMOMEqnFactory::EqnMap& cqmom_eqns = cqmom_factory.retrieve_all_eqns();
-    for (CQMOMEqnFactory::EqnMap::iterator ieqn=cqmom_eqns.begin(); ieqn != cqmom_eqns.end(); ieqn++) {
-      EqnBase* eqn = ieqn->second;
-      eqn->sched_checkBCs( level, sched );
-    }
-    //call the cqmom inversion so weights and abscissas are calculated at the start
-    d_cqmomSolver->sched_solveCQMOMInversion( level, sched, 0 );
-  }
-
-  //=================================================================================
-  //NEW TASK INTERFACE
-  //
-  //particle models
-  all_tasks.clear();
-  all_tasks = i_partmod_fac->second->retrieve_all_tasks();
-  for ( TaskFactoryBase::TaskMap::iterator i = all_tasks.begin(); i != all_tasks.end(); i++) {
-    i->second->schedule_init(level, sched, matls, is_restart );
-  }
-  //=================================================================================
-
-
-  // check to make sure that all the scalar variables have BCs set and set intrusions:
-  EqnFactory& eqnFactory = EqnFactory::self();
-  EqnFactory::EqnMap& scalar_eqns = eqnFactory.retrieve_all_eqns();
-  for (EqnFactory::EqnMap::iterator ieqn=scalar_eqns.begin(); ieqn != scalar_eqns.end(); ieqn++) {
-    EqnBase* eqn = ieqn->second;
-    eqn->sched_checkBCs( level, sched );
-
-    // also, do table initialization here since all scalars should be initialized by now
-    if (eqn->does_table_initialization()) {
-      eqn->sched_tableInitialization( level, sched );
-    }
-  }
-
-  d_boundaryCondition->sched_setIntrusionTemperature( sched, level, matls );
-
-  d_boundaryCondition->sched_create_radiation_temperature( sched, level, matls, false );
-
   if ( _doLagrangianParticles ) {
     _particlesHelper->schedule_sync_particle_position(level,sched,true);
   }
-
-  //d_rad_prop_calc->sched_compute_radiation_properties( level, sched, matls, 0, true );
 }
-
-
 // ****************************************************************************
 //
 // ****************************************************************************
@@ -1120,7 +898,7 @@ Arches::scheduleRestartInitialize(const LevelP& level,
   const MaterialSet* matls = d_sharedState->allArchesMaterials();
 
   typedef std::map<std::string, boost::shared_ptr<TaskFactoryBase> > BFM;
-  BFM::iterator i_property_models_fac = _boost_factory_map.find("property_models_factory");
+  BFM::iterator i_property_models_fac = _task_factory_map.find("property_models_factory");
   TaskFactoryBase::TaskMap all_tasks = i_property_models_fac->second->retrieve_all_tasks();
 
   for ( TaskFactoryBase::TaskMap::iterator i = all_tasks.begin(); i != all_tasks.end(); i++) {
@@ -1143,164 +921,6 @@ Arches::restartInitialize()
 {
   d_doingRestart = true;
   d_lab->recompile_taskgraph = true; //always recompile on restart...
-}
-
-// ****************************************************************************
-// schedule the initialization of parameters
-// ****************************************************************************
-void
-Arches::sched_paramInit(const LevelP& level,
-                        SchedulerP& sched)
-{
-  // primitive variable initialization
-  Task* tsk = scinew Task( "Arches::paramInit", this, &Arches::paramInit);
-
-  printSchedule(level,dbg,"Arches::paramInit");
-
-  tsk->computes(d_lab->d_cellInfoLabel);
-  tsk->computes(d_lab->d_uVelocitySPBCLabel);
-  tsk->computes(d_lab->d_vVelocitySPBCLabel);
-  tsk->computes(d_lab->d_wVelocitySPBCLabel);
-  tsk->computes(d_lab->d_uVelRhoHatLabel);
-  tsk->computes(d_lab->d_vVelRhoHatLabel);
-  tsk->computes(d_lab->d_wVelRhoHatLabel);
-  tsk->computes(d_lab->d_CCVelocityLabel);
-  tsk->computes(d_lab->d_CCUVelocityLabel);
-  tsk->computes(d_lab->d_CCVVelocityLabel);
-  tsk->computes(d_lab->d_CCWVelocityLabel);
-  tsk->computes(d_lab->d_pressurePSLabel);
-  tsk->computes(d_lab->d_densityGuessLabel);
-  tsk->computes(d_lab->d_totalKineticEnergyLabel);
-  tsk->computes(d_lab->d_kineticEnergyLabel);
-  if ( VarLabel::find("true_wall_temperature"))
-    tsk->computes(VarLabel::find("true_wall_temperature"));
-
-  tsk->computes(d_lab->d_pressurePredLabel);
-  tsk->computes(d_lab->d_pressureIntermLabel);
-
-  tsk->computes(d_lab->d_densityCPLabel);
-  tsk->computes(d_lab->d_viscosityCTSLabel);
-  tsk->computes(d_lab->d_turbViscosLabel);
-  tsk->computes(d_lab->d_oldDeltaTLabel);
-  // for reacting flows save temperature and co2
-  if (d_MAlab) {
-    tsk->computes(d_lab->d_pressPlusHydroLabel);
-    tsk->computes(d_lab->d_mmgasVolFracLabel);
-  }
-
-  sched->addTask(tsk, level->eachPatch(), d_sharedState->allArchesMaterials());
-}
-
-// ****************************************************************************
-// Actual initialization
-// ****************************************************************************
-void
-Arches::paramInit(const ProcessorGroup* pg,
-                  const PatchSubset* patches,
-                  const MaterialSubset* matls,
-                  DataWarehouse* old_dw,
-                  DataWarehouse* new_dw)
-{
-  double old_delta_t = 0.0;
-  new_dw->put(delt_vartype(old_delta_t), d_lab->d_oldDeltaTLabel);
-
-  for (int p = 0; p < patches->size(); p++) {
-    const Patch* patch = patches->get(p);
-    int archIndex = 0; // only one arches material
-    int indx = d_sharedState->getArchesMaterial(archIndex)->getDWIndex();
-
-    // Initialize cellInformation
-    PerPatch<CellInformationP> cellInfoP;
-    cellInfoP.setData(scinew CellInformation(patch));
-    new_dw->put(cellInfoP, d_lab->d_cellInfoLabel, indx, patch);
-
-    CCVariable<double> density_guess;
-    new_dw->allocateAndPut( density_guess, d_lab->d_densityGuessLabel, indx, patch );
-    density_guess.initialize(0.0);
-
-    SFCXVariable<double> uVelocity;
-    SFCYVariable<double> vVelocity;
-    SFCZVariable<double> wVelocity;
-    SFCXVariable<double> uVelRhoHat;
-    SFCYVariable<double> vVelRhoHat;
-    SFCZVariable<double> wVelRhoHat;
-    CCVariable<double> uVelocityCC;
-    CCVariable<double> vVelocityCC;
-    CCVariable<double> wVelocityCC;
-    CCVariable<Vector> ccVelocity;
-    CCVariable<double> pressure;
-    CCVariable<double> pressureExtraProjection;
-    CCVariable<double> pressurePred;
-    CCVariable<double> pressureInterm;
-    CCVariable<double> density;
-    CCVariable<double> viscosity;
-    CCVariable<double> turb_viscosity;
-    CCVariable<double> pPlusHydro;
-    CCVariable<double> mmgasVolFrac;
-    CCVariable<double> ccUVelocity;
-    CCVariable<double> ccVVelocity;
-    CCVariable<double> ccWVelocity;
-
-    if ( VarLabel::find("true_wall_temperature")) {
-
-      CCVariable<double> true_wall_temperature;
-      new_dw->allocateAndPut( true_wall_temperature, VarLabel::find("true_wall_temperature"), indx, patch );
-      true_wall_temperature.initialize(0.0);
-
-    }
-
-    CCVariable<double> ke;
-    new_dw->allocateAndPut( ke, d_lab->d_kineticEnergyLabel, indx, patch );
-    ke.initialize(0.0);
-    new_dw->put( sum_vartype(0.0), d_lab->d_totalKineticEnergyLabel );
-
-    new_dw->allocateAndPut(ccVelocity, d_lab->d_CCVelocityLabel, indx, patch);
-    ccVelocity.initialize(Vector(0.,0.,0.));
-
-    new_dw->allocateAndPut( ccUVelocity, d_lab->d_CCUVelocityLabel, indx, patch );
-    new_dw->allocateAndPut( ccVVelocity, d_lab->d_CCVVelocityLabel, indx, patch );
-    new_dw->allocateAndPut( ccWVelocity, d_lab->d_CCWVelocityLabel, indx, patch );
-    ccUVelocity.initialize(0.0);
-    ccVVelocity.initialize(0.0);
-    ccWVelocity.initialize(0.0);
-
-    new_dw->allocateAndPut(uVelocity, d_lab->d_uVelocitySPBCLabel, indx, patch);
-    new_dw->allocateAndPut(vVelocity, d_lab->d_vVelocitySPBCLabel, indx, patch);
-    new_dw->allocateAndPut(wVelocity, d_lab->d_wVelocitySPBCLabel, indx, patch);
-    new_dw->allocateAndPut(uVelRhoHat, d_lab->d_uVelRhoHatLabel, indx, patch);
-    new_dw->allocateAndPut(vVelRhoHat, d_lab->d_vVelRhoHatLabel, indx, patch);
-    new_dw->allocateAndPut(wVelRhoHat, d_lab->d_wVelRhoHatLabel, indx, patch);
-    uVelRhoHat.initialize(0.0);
-    vVelRhoHat.initialize(0.0);
-    wVelRhoHat.initialize(0.0);
-
-    new_dw->allocateAndPut(pressure, d_lab->d_pressurePSLabel, indx, patch);
-    new_dw->allocateAndPut(pressurePred, d_lab->d_pressurePredLabel,indx, patch);
-    pressurePred.initialize(0.0);
-    new_dw->allocateAndPut(pressureInterm, d_lab->d_pressureIntermLabel,indx, patch);
-    pressureInterm.initialize(0.0);
-
-    if (d_MAlab) {
-      new_dw->allocateAndPut(pPlusHydro, d_lab->d_pressPlusHydroLabel, indx, patch);
-      pPlusHydro.initialize(0.0);
-      new_dw->allocateAndPut(mmgasVolFrac, d_lab->d_mmgasVolFracLabel, indx, patch);
-      mmgasVolFrac.initialize(1.0);
-    }
-
-    new_dw->allocateAndPut(density,   d_lab->d_densityCPLabel,    indx, patch);
-    new_dw->allocateAndPut(viscosity, d_lab->d_viscosityCTSLabel, indx, patch);
-    new_dw->allocateAndPut(turb_viscosity,    d_lab->d_turbViscosLabel,       indx, patch);
-
-    uVelocity.initialize(0.0);
-    vVelocity.initialize(0.0);
-    wVelocity.initialize(0.0);
-    density.initialize(0.0);
-    pressure.initialize(0.0);
-    double visVal = d_physicalConsts->getMolecularViscosity();
-    viscosity.initialize(visVal);
-    turb_viscosity.initialize(0.0);
-
-  } // patches
 }
 
 // ****************************************************************************
@@ -1591,7 +1211,7 @@ Arches::scheduleTimeAdvance( const LevelP& level,
   if ( _doLagrangianParticles ) {
 
     typedef std::map<std::string, boost::shared_ptr<TaskFactoryBase> > BFM;
-    BFM::iterator i_lag_fac = _boost_factory_map.find("lagrangian_factory");
+    BFM::iterator i_lag_fac = _task_factory_map.find("lagrangian_factory");
     TaskFactoryBase::TaskMap all_tasks = i_lag_fac->second->retrieve_all_tasks();
 
     TaskFactoryBase::TaskMap::iterator i_part_size_update = all_tasks.find("update_particle_size");
@@ -1646,551 +1266,6 @@ bool Arches::needRecompile(double time, double dt,
   }
   else
     return d_lab->recompile_taskgraph;
-}
-
-//___________________________________________________________________________
-//
-void
-Arches::sched_scalarInit( const LevelP& level,
-                          SchedulerP& sched )
-{
-  Task* tsk = scinew Task( "Arches::scalarInit",
-                           this, &Arches::scalarInit);
-
-  printSchedule(level,dbg,"Arches::scalarInit");
-
-  EqnFactory& eqnFactory = EqnFactory::self();
-  EqnFactory::EqnMap& scalar_eqns = eqnFactory.retrieve_all_eqns();
-  for (EqnFactory::EqnMap::iterator ieqn=scalar_eqns.begin(); ieqn != scalar_eqns.end(); ieqn++) {
-    EqnBase* eqn = ieqn->second;
-
-    const VarLabel* tempVar = eqn->getTransportEqnLabel();
-    tsk->computes( tempVar );
-  }
-
-  tsk->requires( Task::NewDW, d_lab->d_volFractionLabel, Ghost::None );
-
-  sched->addTask(tsk, level->eachPatch(), d_sharedState->allArchesMaterials());
-
-  //__________________________________
-  //  initialize src terms
-  SourceTermFactory& srcFactory = SourceTermFactory::self();
-  SourceTermFactory::SourceMap& sources = srcFactory.retrieve_all_sources();
-  for (SourceTermFactory::SourceMap::iterator isrc=sources.begin(); isrc !=sources.end(); isrc++) {
-    SourceTermBase* src = isrc->second;
-    src->sched_initialize(level, sched);
-  }
-}
-
-//______________________________________________________________________
-//
-void
-Arches::scalarInit( const ProcessorGroup*,
-                    const PatchSubset* patches,
-                    const MaterialSubset*,
-                    DataWarehouse* old_dw,
-                    DataWarehouse* new_dw )
-{
-  coutLock.lock();
-  proc0cout << "Initializing all scalar equations and sources..." << std::endl;
-  for (int p = 0; p < patches->size(); p++) {
-    //assume only one material for now
-    int archIndex = 0;
-    int matlIndex = d_sharedState->getArchesMaterial(archIndex)->getDWIndex();
-    const Patch* patch=patches->get(p);
-
-    EqnFactory& eqnFactory = EqnFactory::self();
-    EqnFactory::EqnMap& scalar_eqns = eqnFactory.retrieve_all_eqns();
-    for (EqnFactory::EqnMap::iterator ieqn=scalar_eqns.begin(); ieqn != scalar_eqns.end(); ieqn++) {
-
-      EqnBase* eqn = ieqn->second;
-      std::string eqn_name = ieqn->first;
-      const VarLabel* phiLabel = eqn->getTransportEqnLabel();
-
-      CCVariable<double> phi;
-      CCVariable<double> oldPhi;
-      constCCVariable<double> eps_v;
-      new_dw->allocateAndPut( phi, phiLabel, matlIndex, patch );
-      new_dw->get( eps_v, d_lab->d_volFractionLabel, matlIndex, patch, Ghost::None, 0 );
-
-      phi.initialize(0.0);
-
-      // initialize to something other than zero if desired.
-      eqn->initializationFunction( patch, phi, eps_v );
-
-      //do Boundary conditions
-      eqn->computeBCsSpecial( patch, eqn_name, phi );
-
-    }
-  }
-  coutLock.unlock();
-}
-//___________________________________________________________________________
-//
-void
-Arches::sched_weightInit( const LevelP& level,
-                          SchedulerP& sched )
-{
-  Task* tsk = scinew Task( "Arches::weightInit",
-                           this, &Arches::weightInit);
-
-  printSchedule(level,dbg,"Arches::weightInit");
-
-  // DQMOM weight transport vars
-  DQMOMEqnFactory& dqmomFactory = DQMOMEqnFactory::self();
-  DQMOMEqnFactory::EqnMap& dqmom_eqns = dqmomFactory.retrieve_all_eqns();
-  for (DQMOMEqnFactory::EqnMap::iterator ieqn=dqmom_eqns.begin(); ieqn != dqmom_eqns.end(); ieqn++) {
-    EqnBase* temp_eqn = ieqn->second;
-    DQMOMEqn* eqn = dynamic_cast<DQMOMEqn*>(temp_eqn);
-
-    if (eqn->weight()) {
-      const VarLabel* tempVar = eqn->getTransportEqnLabel();
-      const VarLabel* tempVar_icv = eqn->getUnscaledLabel();
-      const VarLabel* tempSource = eqn->getSourceLabel();
-
-      tsk->computes( tempVar );
-      tsk->computes( tempVar_icv );
-      tsk->computes( tempSource );
-    }
-  }
-
-  tsk->requires( Task::NewDW, d_lab->d_volFractionLabel, Ghost::None );
-
-  sched->addTask(tsk, level->eachPatch(), d_sharedState->allArchesMaterials());
-}
-//______________________________________________________________________
-//
-void
-Arches::weightInit( const ProcessorGroup*,
-                    const PatchSubset* patches,
-                    const MaterialSubset*,
-                    DataWarehouse* old_dw,
-                    DataWarehouse* new_dw )
-{
-  // ***************************************
-  // QUESTION: WHY DOES THIS FUNCTION GET CALLED ON THE FIRST TIMESTEP RATHER THAN THE ZEROTH TIMESTEP???
-  // This causes several problems:
-  // - The RHS/unweighted variables are unavailable until the first timestep
-  //      (not available at zeroth timestep because they're initialized here, and this isn't called until the first timestep)
-  // - DQMOM & other scalars are not initialized until the first timestep, so at the first timestep (if you output it) everything is 0.0!!!
-  //      (this means that if you initialize your scalar to be a step function, you never see the scalar as the actual step function;
-  //        at the zeroth timestep the scalar is 0.0 everywhere, and at the first timestep the step function has already been convected/diffused)
-  // ***************************************
-
-  proc0cout << "Initializing all DQMOM weight equations..." << endl;
-  for (int p = 0; p < patches->size(); p++) {
-    //assume only one material for now.
-    int archIndex = 0;
-    int matlIndex = d_sharedState->getArchesMaterial(archIndex)->getDWIndex();
-    const Patch* patch=patches->get(p);
-
-    CCVariable<Vector> partVel;
-    constCCVariable<double> eps_v;
-
-    new_dw->get( eps_v, d_lab->d_volFractionLabel, matlIndex, patch, Ghost::None, 0 );
-
-    DQMOMEqnFactory& dqmomFactory = DQMOMEqnFactory::self();
-    DQMOMEqnFactory::EqnMap& dqmom_eqns = dqmomFactory.retrieve_all_eqns();
-
-    // --- DQMOM EQNS
-    // do only weights
-    for (DQMOMEqnFactory::EqnMap::iterator ieqn=dqmom_eqns.begin();
-         ieqn != dqmom_eqns.end(); ieqn++) {
-
-      DQMOMEqn* eqn = dynamic_cast<DQMOMEqn*>(ieqn->second);
-      string eqn_name = ieqn->first;
-
-      if (eqn->weight()) {
-        // This is a weight equation
-        const VarLabel* sourceLabel  = eqn->getSourceLabel();
-        const VarLabel* phiLabel     = eqn->getTransportEqnLabel();
-        const VarLabel* phiLabel_icv = eqn->getUnscaledLabel();
-
-        CCVariable<double> source;
-        CCVariable<double> phi;
-        CCVariable<double> phi_icv;
-
-        new_dw->allocateAndPut( source,  sourceLabel,  matlIndex, patch );
-        new_dw->allocateAndPut( phi,     phiLabel,     matlIndex, patch );
-        new_dw->allocateAndPut( phi_icv, phiLabel_icv, matlIndex, patch );
-
-        source.initialize(0.0);
-        phi.initialize(0.0);
-        phi_icv.initialize(0.0);
-
-        // initialize phi
-        eqn->initializationFunction( patch, phi, eps_v );
-
-        // do boundary conditions
-        eqn->computeBCs( patch, eqn_name, phi );
-      }
-    }
-    proc0cout << endl;
-  }
-}
-
-//___________________________________________________________________________
-//
-void
-Arches::sched_weightedAbsInit( const LevelP& level,
-                               SchedulerP& sched )
-{
-  Task* tsk = scinew Task( "Arches::weightedAbsInit",
-                           this, &Arches::weightedAbsInit);
-  // DQMOM transport vars
-  DQMOMEqnFactory& dqmomFactory = DQMOMEqnFactory::self();
-  DQMOMEqnFactory::EqnMap& dqmom_eqns = dqmomFactory.retrieve_all_eqns();
-  for (DQMOMEqnFactory::EqnMap::iterator ieqn=dqmom_eqns.begin(); ieqn != dqmom_eqns.end(); ieqn++) {
-
-    DQMOMEqn* eqn = dynamic_cast<DQMOMEqn*>(ieqn->second);
-
-    if (!eqn->weight()) {
-      const VarLabel* tempVar = eqn->getTransportEqnLabel();
-      const VarLabel* tempVar_icv = eqn->getUnscaledLabel();
-      const VarLabel* tempSource = eqn->getSourceLabel();
-      tsk->computes( tempVar );
-      tsk->computes( tempVar_icv );
-      tsk->computes( tempSource );
-    } else {
-      const VarLabel* tempVar = eqn->getTransportEqnLabel();
-      tsk->requires( Task::NewDW, tempVar, Ghost::None, 0 );
-    }
-  }
-
-  // Particle Velocities
-
-  // Models
-  // initialize all of the computed variables for the coal models
-  CoalModelFactory& modelFactory = CoalModelFactory::self();
-  modelFactory.sched_init_all_models( level, sched );
-
-  tsk->requires( Task::NewDW, d_lab->d_volFractionLabel, Ghost::None );
-
-  sched->addTask(tsk, level->eachPatch(), d_sharedState->allArchesMaterials());
-}
-//______________________________________________________________________
-//
-void
-Arches::weightedAbsInit( const ProcessorGroup*,
-                         const PatchSubset* patches,
-                         const MaterialSubset*,
-                         DataWarehouse* old_dw,
-                         DataWarehouse* new_dw )
-{
-
-  string msg = "Initializing all DQMOM weighted abscissa equations...";
-  proc0cout << msg << std::endl;
-
-  for (int p = 0; p < patches->size(); p++) {
-    //assume only one material for now.
-    int archIndex = 0;
-    int matlIndex = d_sharedState->getArchesMaterial(archIndex)->getDWIndex();
-    const Patch* patch=patches->get(p);
-
-    CCVariable<Vector> partVel;
-    constCCVariable<double> eps_v;
-
-    Ghost::GhostType gn = Ghost::None;
-
-    new_dw->get( eps_v, d_lab->d_volFractionLabel, matlIndex, patch, gn, 0 );
-
-    DQMOMEqnFactory& dqmomFactory = DQMOMEqnFactory::self();
-    DQMOMEqnFactory::EqnMap& dqmom_eqns = dqmomFactory.retrieve_all_eqns();
-
-    // --- DQMOM EQNS
-    // do weights first because we need them later for the weighted abscissas
-    for (DQMOMEqnFactory::EqnMap::iterator ieqn=dqmom_eqns.begin();
-         ieqn != dqmom_eqns.end(); ieqn++) {
-
-      DQMOMEqn* eqn = dynamic_cast<DQMOMEqn*>(ieqn->second);
-      string eqn_name = ieqn->first;
-      int qn = eqn->getQuadNode();
-
-      if (!eqn->weight()) {
-        // This is a weighted abscissa
-        const VarLabel* sourceLabel  = eqn->getSourceLabel();
-        const VarLabel* phiLabel     = eqn->getTransportEqnLabel();
-        const VarLabel* phiLabel_icv = eqn->getUnscaledLabel();
-        std::string weight_name;
-        std::string node;
-        std::stringstream out;
-        out << qn;
-        node = out.str();
-        weight_name = "w_qn";
-        weight_name += node;
-        EqnBase& w_eqn = dqmomFactory.retrieve_scalar_eqn(weight_name);
-        const VarLabel* weightLabel = w_eqn.getTransportEqnLabel();
-
-        CCVariable<double> source;
-        CCVariable<double> phi;
-        CCVariable<double> phi_icv;
-        constCCVariable<double> weight;
-
-        new_dw->allocateAndPut( source,  sourceLabel,  matlIndex, patch );
-        new_dw->allocateAndPut( phi,     phiLabel,     matlIndex, patch );
-        new_dw->allocateAndPut( phi_icv, phiLabel_icv, matlIndex, patch );
-        new_dw->get( weight, weightLabel, matlIndex, patch, gn, 0 );
-
-        source.initialize(0.0);
-        phi.initialize(0.0);
-        phi_icv.initialize(0.0);
-
-        // initialize phi
-        if( d_which_dqmom == "unweightedAbs" ) {
-          eqn->initializationFunction( patch, phi, eps_v);
-        } else {
-          eqn->initializationFunction( patch, phi, weight, eps_v );
-        }
-
-        // do boundary conditions
-        eqn->computeBCs( patch, eqn_name, phi );
-
-      }
-    }
-  }
-  proc0cout << endl;
-}
-//___________________________________________________________________________
-//
-void
-Arches::sched_momentInit( const LevelP& level,
-                          SchedulerP& sched )
-{
-  Task* tsk = scinew Task( "Arches::momentInit",
-                           this, &Arches::momentInit);
-
-  printSchedule(level,dbg,"Arches::momentInit");
-
-  // CQMOM moment transport vars
-  CQMOMEqnFactory& cqmomFactory = CQMOMEqnFactory::self();
-  CQMOMEqnFactory::EqnMap& cqmom_eqns = cqmomFactory.retrieve_all_eqns();
-  for (CQMOMEqnFactory::EqnMap::iterator ieqn=cqmom_eqns.begin(); ieqn != cqmom_eqns.end(); ieqn++) {
-    EqnBase* temp_eqn = ieqn->second;
-    CQMOMEqn* eqn = dynamic_cast<CQMOMEqn*>(temp_eqn);
-
-    const VarLabel* tempVar = eqn->getTransportEqnLabel();
-    const VarLabel* tempSource = eqn->getSourceLabel();
-
-    tsk->computes( tempVar );
-    tsk->computes( tempSource );
-  }
-
-  tsk->requires( Task::NewDW, d_lab->d_volFractionLabel, Ghost::None );
-
-  sched->addTask(tsk, level->eachPatch(), d_sharedState->allArchesMaterials());
-}
-//______________________________________________________________________
-//
-void
-Arches::momentInit( const ProcessorGroup*,
-                    const PatchSubset* patches,
-                    const MaterialSubset*,
-                    DataWarehouse* old_dw,
-                    DataWarehouse* new_dw )
-{
-
-  proc0cout << "Initializing all CQMOM moment equations..." << endl;
-  for (int p = 0; p < patches->size(); p++) {
-    //assume only one material for now.
-    int archIndex = 0;
-    int matlIndex = d_sharedState->getArchesMaterial(archIndex)->getDWIndex();
-    const Patch* patch=patches->get(p);
-
-    constCCVariable<double> eps_v;
-
-    new_dw->get( eps_v, d_lab->d_volFractionLabel, matlIndex, patch, Ghost::None, 0 );
-
-    CQMOMEqnFactory& cqmomFactory = CQMOMEqnFactory::self();
-    CQMOMEqnFactory::EqnMap& cqmom_eqns = cqmomFactory.retrieve_all_eqns();
-
-    // --- CQMOM EQNS
-    for (CQMOMEqnFactory::EqnMap::iterator ieqn=cqmom_eqns.begin();
-         ieqn != cqmom_eqns.end(); ieqn++) {
-
-      CQMOMEqn* eqn = dynamic_cast<CQMOMEqn*>(ieqn->second);
-      string eqn_name = ieqn->first;
-
-      const VarLabel* sourceLabel  = eqn->getSourceLabel();
-      const VarLabel* phiLabel     = eqn->getTransportEqnLabel();
-
-      CCVariable<double> source;
-      CCVariable<double> phi;
-
-      new_dw->allocateAndPut( source,  sourceLabel,  matlIndex, patch );
-      new_dw->allocateAndPut( phi,     phiLabel,     matlIndex, patch );
-
-      source.initialize(0.0);
-      phi.initialize(0.0);
-
-      // initialize phi
-      eqn->initializationFunction( patch, phi, eps_v );
-
-      // do boundary conditions
-      eqn->computeBCs( patch, eqn_name, phi );
-
-    }
-    proc0cout << endl;
-  }
-
-}
-
-// ****************************************************************************
-// Schedule Interpolate from SFCX, SFCY, SFCZ to CC
-// ****************************************************************************
-void
-Arches::sched_getCCVelocities(const LevelP& level, SchedulerP& sched)
-{
-  Task* tsk = scinew Task("Arches::getCCVelocities", this,
-                          &Arches::getCCVelocities);
-
-  printSchedule(level,dbg,"Arches::getCCVelocities");
-
-  Ghost::GhostType gaf = Ghost::AroundFaces;
-  tsk->requires(Task::NewDW, d_lab->d_uVelocitySPBCLabel, gaf, 1);
-  tsk->requires(Task::NewDW, d_lab->d_vVelocitySPBCLabel, gaf, 1);
-  tsk->requires(Task::NewDW, d_lab->d_wVelocitySPBCLabel, gaf, 1);
-  tsk->requires(Task::NewDW, d_lab->d_cellInfoLabel, Ghost::None);
-
-  tsk->modifies(d_lab->d_CCVelocityLabel);
-  tsk->modifies(d_lab->d_CCUVelocityLabel);
-  tsk->modifies(d_lab->d_CCVVelocityLabel);
-  tsk->modifies(d_lab->d_CCWVelocityLabel);
-
-  sched->addTask(tsk, level->eachPatch(), d_sharedState->allArchesMaterials());
-}
-
-// ****************************************************************************
-// interpolation from FC to CC Variable
-// ****************************************************************************
-void
-Arches::getCCVelocities(const ProcessorGroup*,
-                        const PatchSubset* patches,
-                        const MaterialSubset*,
-                        DataWarehouse*,
-                        DataWarehouse* new_dw)
-{
-  for (int p = 0; p < patches->size(); p++) {
-    const Patch* patch = patches->get(p);
-    int archIndex = 0; // only one arches material
-    int indx = d_lab->d_sharedState->getArchesMaterial(archIndex)->getDWIndex();
-
-    constSFCXVariable<double> uvel_FC;
-    constSFCYVariable<double> vvel_FC;
-    constSFCZVariable<double> wvel_FC;
-    CCVariable<Vector> vel_CC;
-    CCVariable<double> uVel_CC;
-    CCVariable<double> vVel_CC;
-    CCVariable<double> wVel_CC;
-
-    IntVector idxLo = patch->getFortranCellLowIndex();
-    IntVector idxHi = patch->getFortranCellHighIndex();
-
-    // Get the PerPatch CellInformation data
-    PerPatch<CellInformationP> cellInfoP;
-    new_dw->get(cellInfoP, d_lab->d_cellInfoLabel, indx, patch);
-
-    CellInformation* cellinfo = cellInfoP.get().get_rep();
-
-    Ghost::GhostType gaf = Ghost::AroundFaces;
-    new_dw->get(uvel_FC, d_lab->d_uVelocitySPBCLabel, indx, patch, gaf, 1);
-    new_dw->get(vvel_FC, d_lab->d_vVelocitySPBCLabel, indx, patch, gaf, 1);
-    new_dw->get(wvel_FC, d_lab->d_wVelocitySPBCLabel, indx, patch, gaf, 1);
-
-    new_dw->getModifiable(vel_CC,  d_lab->d_CCVelocityLabel, indx, patch);
-    vel_CC.initialize(Vector(0.0,0.0,0.0));
-
-    new_dw->getModifiable(uVel_CC,  d_lab->d_CCUVelocityLabel, indx, patch);
-    new_dw->getModifiable(vVel_CC,  d_lab->d_CCVVelocityLabel, indx, patch);
-    new_dw->getModifiable(wVel_CC,  d_lab->d_CCWVelocityLabel, indx, patch);
-    uVel_CC.initialize( 0.0 );
-    vVel_CC.initialize( 0.0 );
-    wVel_CC.initialize( 0.0 );
-
-    //__________________________________
-    //
-    for(CellIterator iter=patch->getCellIterator(); !iter.done(); iter++) {
-      IntVector c = *iter;
-      int i = c.x();
-      int j = c.y();
-      int k = c.z();
-
-      IntVector idxU(i+1,j,k);
-      IntVector idxV(i,j+1,k);
-      IntVector idxW(i,j,k+1);
-
-      double u,v,w;
-
-      u = cellinfo->wfac[i] * uvel_FC[c] +
-          cellinfo->efac[i] * uvel_FC[idxU];
-
-      v = cellinfo->sfac[j] * vvel_FC[c] +
-          cellinfo->nfac[j] * vvel_FC[idxV];
-
-      w = cellinfo->bfac[k] * wvel_FC[c] +
-          cellinfo->tfac[k] * wvel_FC[idxW];
-
-      vel_CC[c] = Vector(u, v, w);
-      //NOTE: this function could probably be nebo-ized with interp later
-      uVel_CC[c] = u;
-      vVel_CC[c] = v;
-      wVel_CC[c] = w;
-    }
-    //__________________________________
-    // Apply boundary conditions
-    vector<Patch::FaceType> b_face;
-    patch->getBoundaryFaces(b_face);
-    vector<Patch::FaceType>::const_iterator itr;
-
-    // Loop over boundary faces
-    for( itr = b_face.begin(); itr != b_face.end(); ++itr ) {
-      Patch::FaceType face = *itr;
-
-      IntVector f_dir = patch->getFaceDirection(face);
-
-      Patch::FaceIteratorType MEC = Patch::ExtraMinusEdgeCells;
-      CellIterator iter=patch->getFaceIterator(face, MEC);
-
-      IntVector lo = iter.begin();
-      int i = lo.x();
-      int j = lo.y();
-      int k = lo.z();
-
-      Vector one_or_zero = Vector(1,1,1) - Abs(f_dir.asVector());
-      // one_or_zero: faces x-+   (0,1,1)
-      //                    y-+   (1,0,1)
-      //                    z-+   (1,1,0)
-
-      for(; !iter.done(); iter++) {
-        IntVector c = *iter;
-
-        IntVector idxU(i+1,j,k);
-        IntVector idxV(i,j+1,k);
-        IntVector idxW(i,j,k+1);
-
-        double u,v,w;
-
-        u = one_or_zero.x() *
-            (cellinfo->wfac[i] * uvel_FC[c] +
-             cellinfo->efac[i] * uvel_FC[idxU]) +
-            (1.0 - one_or_zero.x()) * uvel_FC[idxU];
-
-        v = one_or_zero.y() *
-            (cellinfo->sfac[j] * vvel_FC[c] +
-             cellinfo->nfac[j] * vvel_FC[idxV]) +
-            (1.0 - one_or_zero.y()) * vvel_FC[idxV];
-
-        w = one_or_zero.z() *
-            (cellinfo->bfac[k] * wvel_FC[c] +
-             cellinfo->tfac[k] * wvel_FC[idxW] ) +
-            (1.0 - one_or_zero.z()) * wvel_FC[idxW];
-
-        vel_CC[c] = Vector( u, v, w );
-        uVel_CC[c] = u;
-        vVel_CC[c] = v;
-        wVel_CC[c] = w;
-      }
-    }
-  }
 }
 
 double Arches::recomputeTimestep(double current_dt) {

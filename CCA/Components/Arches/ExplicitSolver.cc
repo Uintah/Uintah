@@ -43,6 +43,7 @@
 #include <CCA/Components/Arches/TransportEqns/CQMOM_Convection.h>
 
 //NEW TASK STUFF
+#include <CCA/Components/Arches/ArchesBCHelper.h>
 #include <CCA/Components/Arches/Task/TaskInterface.h>
 #include <CCA/Components/Arches/Task/SampleTask.h>
 #include <CCA/Components/Arches/Task/TemplatedSampleTask.h>
@@ -86,6 +87,8 @@ using namespace Uintah;
 
 static DebugStream dbg("ARCHES", false);
 
+extern SCIRun::Mutex coutLock;
+
 // ****************************************************************************
 // Default constructor for ExplicitSolver
 // ****************************************************************************
@@ -103,7 +106,7 @@ ExplicitSolver(ArchesLabel* label,
                CQMOM* cqmomSolver,
                CQMOM_Convection* cqmomConvect,
                CQMOMSourceWrapper* cqmomSource,
-               std::map<std::string, boost::shared_ptr<TaskFactoryBase> >& boost_fac_map,
+               std::map<std::string, boost::shared_ptr<TaskFactoryBase> >& task_factory_map,
                const ProcessorGroup* myworld,
                SolverInterface* hypreSolver):
                NonlinearSolver(myworld),
@@ -118,13 +121,17 @@ ExplicitSolver(ArchesLabel* label,
                d_cqmomSolver(cqmomSolver),
                d_cqmomConvect(cqmomConvect),
                d_cqmomSource(cqmomSource),
-               _boost_fac_map(boost_fac_map)
+               _task_factory_map(task_factory_map)
 {
   d_pressSolver = 0;
   d_momSolver = 0;
   nosolve_timelabels_allocated = false;
   d_printTotalKE = false;
   d_wall_ht_models = 0;
+  d_doDQMOM = false;
+  d_doCQMOM = false;
+  d_init_timelabel = 0;
+
 }
 
 // ****************************************************************************
@@ -135,6 +142,8 @@ ExplicitSolver::~ExplicitSolver()
   delete d_pressSolver;
   delete d_momSolver;
   delete d_eff_calculator;
+  if ( d_init_timelabel != 0 )
+    delete d_init_timelabel;
   for (int curr_level = 0; curr_level < numTimeIntegratorLevels; curr_level ++)
     delete d_timeIntegratorLabels[curr_level];
   if (nosolve_timelabels_allocated)
@@ -153,6 +162,17 @@ ExplicitSolver::problemSetup( const ProblemSpecP & params, SimulationStateP & st
 
   ProblemSpecP db = params->findBlock("ExplicitSolver");
   ProblemSpecP db_parent = params;
+
+  ProblemSpecP dqmom_db = db_parent->findBlock("DQMOM");
+  if (dqmom_db) {
+    d_doDQMOM = true;
+    dqmom_db->getAttribute( "type", d_which_dqmom );
+  }
+
+  ProblemSpecP cqmom_db = db_parent->findBlock("CQMOM");
+  if (cqmom_db) {
+    d_doCQMOM = true;
+  }
 
   commonProblemSetup( db );
 
@@ -299,8 +319,348 @@ ExplicitSolver::problemSetup( const ProblemSpecP & params, SimulationStateP & st
 
 void
 ExplicitSolver::initialize( const LevelP& level,
-                            SchedulerP& sched )
+                            SchedulerP& sched,
+                            const bool doing_restart )
 {
+
+  const MaterialSet* matls = d_lab->d_sharedState->allArchesMaterials();
+
+  //formerly known as paramInit
+  sched_initializeVariables( level, sched );
+
+  //check the sanity of the momentum BCs
+  d_boundaryCondition->sched_checkMomBCs( sched, level, matls );
+
+  //initialize cell type
+  d_boundaryCondition->sched_cellTypeInit( sched, level, matls );
+
+  // compute the cell area fraction
+  d_boundaryCondition->sched_setAreaFraction( sched, level, matls, 0, true );
+
+  // setup intrusion cell type
+  d_boundaryCondition->sched_setupNewIntrusionCellType( sched, level, matls, false );
+
+  //AF must be called again to account for intrusions (can this be the ONLY call?)
+  d_boundaryCondition->sched_setAreaFraction( sched, level, matls, 1, true );
+
+  d_turbModel->sched_computeFilterVol( sched, level, matls );
+
+  typedef std::map<std::string, boost::shared_ptr<TaskFactoryBase> > BFM;
+  BFM::iterator i_util_fac = _task_factory_map.find("utility_factory");
+  BFM::iterator i_trans_fac = _task_factory_map.find("transport_factory");
+  BFM::iterator i_init_fac = _task_factory_map.find("initialize_factory");
+  BFM::iterator i_partmod_fac = _task_factory_map.find("particle_model_factory");
+  BFM::iterator i_lag_fac = _task_factory_map.find("lagrangian_factory");
+  BFM::iterator i_property_models_fac = _task_factory_map.find("property_models_factory");
+
+  bool is_restart = false;
+  //utility factory
+  TaskFactoryBase::TaskMap all_tasks = i_util_fac->second->retrieve_all_tasks();
+  for ( TaskFactoryBase::TaskMap::iterator i = all_tasks.begin(); i != all_tasks.end(); i++) {
+    i->second->schedule_init(level, sched, matls, is_restart);
+  }
+
+  //transport factory
+  all_tasks.clear();
+  all_tasks = i_trans_fac->second->retrieve_all_tasks();
+  for ( TaskFactoryBase::TaskMap::iterator i = all_tasks.begin(); i != all_tasks.end(); i++) {
+    i->second->schedule_init(level, sched, matls, is_restart);
+    i->second->schedule_task(level, sched, matls, TaskInterface::BC_TASK, 0);
+  }
+
+  //Sets the helper to the factory and assigns it to each active task
+  i_trans_fac->second->set_bchelper( _bcHelperMap );
+
+  //initialize factory
+  all_tasks.clear();
+  all_tasks = i_init_fac->second->retrieve_all_tasks();
+  for ( TaskFactoryBase::TaskMap::iterator i = all_tasks.begin(); i != all_tasks.end(); i++) {
+    if ( i->first == "Lx" || i->first == "Lvel" || i->first == "Ld") {
+      std::cout << "Delaying particle calc..." << std::endl;
+    } else {
+      i->second->schedule_init(level, sched, matls, is_restart);
+    }
+  }
+  //have to delay and order these specific tasks...clean this up later...
+  TaskFactoryBase::TaskMap::iterator iLX = all_tasks.find("Lx");
+  if ( iLX != all_tasks.end() ) iLX->second->schedule_init(level, sched, matls, is_restart);
+  TaskFactoryBase::TaskMap::iterator iLD = all_tasks.find("Ld");
+  if ( iLD != all_tasks.end() ) iLD->second->schedule_init(level, sched, matls, is_restart);
+  TaskFactoryBase::TaskMap::iterator iLV = all_tasks.find("Lvel");
+  if ( iLV != all_tasks.end() ) iLV->second->schedule_init(level, sched, matls, is_restart);
+
+  //lagrangian particles
+  all_tasks.clear();
+  all_tasks = i_lag_fac->second->retrieve_all_tasks();
+  for ( TaskFactoryBase::TaskMap::iterator i = all_tasks.begin(); i != all_tasks.end(); i++) {
+    i->second->schedule_init(level, sched, matls, is_restart );
+  }
+
+  sched_scalarInit(level, sched);
+
+  //property models
+  all_tasks.clear();
+  all_tasks = i_property_models_fac->second->retrieve_all_tasks();
+  for ( TaskFactoryBase::TaskMap::iterator i = all_tasks.begin(); i != all_tasks.end(); i++) {
+    i->second->schedule_init(level, sched, matls, is_restart );
+  }
+
+  // Property model initialization
+  PropertyModelFactory& propFactory = PropertyModelFactory::self();
+  PropertyModelFactory::PropMap& all_prop_models = propFactory.retrieve_all_property_models();
+  for ( PropertyModelFactory::PropMap::iterator iprop = all_prop_models.begin();
+        iprop != all_prop_models.end(); iprop++) {
+
+    PropertyModelBase* prop_model = iprop->second;
+    prop_model->sched_initialize( level, sched );
+  }
+
+  IntVector periodic_vector = level->getPeriodicBoundaries();
+  bool d_3d_periodic = (periodic_vector == IntVector(1,1,1));
+  d_turbModel->set3dPeriodic(d_3d_periodic);
+  d_props->set3dPeriodic(d_3d_periodic);
+
+  // Table Lookup
+  bool initialize_it = true;
+  bool modify_ref_den = true;
+  int time_substep = 0; //no meaning here, but is required to be zero for
+                        //variables to be properly allocated.
+                        //
+  d_props->doTableMatching();
+  d_props->sched_computeProps( level, sched, initialize_it, modify_ref_den, time_substep );
+
+  d_init_timelabel = scinew TimeIntegratorLabel(d_lab, TimeIntegratorStepType::FE);
+
+  for ( PropertyModelFactory::PropMap::iterator iprop = all_prop_models.begin();
+        iprop != all_prop_models.end(); iprop++) {
+    PropertyModelBase* prop_model = iprop->second;
+    if ( prop_model->initType()=="physical" )
+      prop_model->sched_computeProp( level, sched, 1 );
+  }
+
+  //Setup BC areas
+  d_boundaryCondition->sched_computeBCArea( sched, level, matls );
+
+  //For debugging
+  //d_boundaryCondition->printBCInfo();
+
+  //Setup initial inlet velocities
+  d_boundaryCondition->sched_setupBCInletVelocities__NEW( sched, level, matls, doing_restart );
+
+  //Set the initial profiles
+  d_boundaryCondition->sched_setInitProfile__NEW( sched, level, matls );
+
+  //Setup the intrusions.
+  d_boundaryCondition->sched_setupNewIntrusions( sched, level, matls );
+
+  sched_setInitVelCond( level, sched, matls );
+
+  sched_getCCVelocities(level, sched);
+
+  d_turbModel->sched_reComputeTurbSubmodel(sched, level, matls, d_init_timelabel);
+
+  //----------------------
+  //DQMOM initialization
+  if(d_doDQMOM)
+  {
+    sched_weightInit(level, sched);
+    sched_weightedAbsInit(level, sched);
+
+    // check to make sure that all dqmom equations have BCs set.
+    DQMOMEqnFactory& dqmom_factory = DQMOMEqnFactory::self();
+    DQMOMEqnFactory::EqnMap& dqmom_eqns = dqmom_factory.retrieve_all_eqns();
+    for (DQMOMEqnFactory::EqnMap::iterator ieqn=dqmom_eqns.begin(); ieqn != dqmom_eqns.end(); ieqn++) {
+      EqnBase* eqn = ieqn->second;
+      eqn->sched_checkBCs( level, sched );
+      //as needed for the coal propery models
+      DQMOMEqn* dqmom_eqn = dynamic_cast<DQMOMEqn*>(ieqn->second);
+      dqmom_eqn->sched_getUnscaledValues( level, sched );
+    }
+    d_partVel->schedInitPartVel(level, sched);
+  }
+
+  //----------------------
+  //CQMOM initialization
+  if(d_doCQMOM)
+  {
+    sched_momentInit( level, sched );
+
+    // check to make sure that all cqmom equations have BCs set.
+    CQMOMEqnFactory& cqmom_factory = CQMOMEqnFactory::self();
+    CQMOMEqnFactory::EqnMap& cqmom_eqns = cqmom_factory.retrieve_all_eqns();
+    for (CQMOMEqnFactory::EqnMap::iterator ieqn=cqmom_eqns.begin(); ieqn != cqmom_eqns.end(); ieqn++) {
+      EqnBase* eqn = ieqn->second;
+      eqn->sched_checkBCs( level, sched );
+    }
+    //call the cqmom inversion so weights and abscissas are calculated at the start
+    d_cqmomSolver->sched_solveCQMOMInversion( level, sched, 0 );
+  }
+
+  //=================================================================================
+  //NEW TASK INTERFACE
+  //
+  //particle models
+  all_tasks.clear();
+  all_tasks = i_partmod_fac->second->retrieve_all_tasks();
+  for ( TaskFactoryBase::TaskMap::iterator i = all_tasks.begin(); i != all_tasks.end(); i++) {
+    i->second->schedule_init(level, sched, matls, is_restart );
+  }
+  //=================================================================================
+
+  // check to make sure that all the scalar variables have BCs set and set intrusions:
+  EqnFactory& eqnFactory = EqnFactory::self();
+  EqnFactory::EqnMap& scalar_eqns = eqnFactory.retrieve_all_eqns();
+  for (EqnFactory::EqnMap::iterator ieqn=scalar_eqns.begin(); ieqn != scalar_eqns.end(); ieqn++) {
+    EqnBase* eqn = ieqn->second;
+    eqn->sched_checkBCs( level, sched );
+
+    // also, do table initialization here since all scalars should be initialized by now
+    if (eqn->does_table_initialization()) {
+      eqn->sched_tableInitialization( level, sched );
+    }
+  }
+
+  d_boundaryCondition->sched_setIntrusionTemperature( sched, level, matls );
+
+  d_boundaryCondition->sched_create_radiation_temperature( sched, level, matls, false );
+
+}
+
+void
+ExplicitSolver::sched_initializeVariables( const LevelP& level,
+                                           SchedulerP& sched )
+{
+
+  Task* tsk = scinew Task( "ExplicitSolver", this, &ExplicitSolver::initializeVariables);
+
+  tsk->computes(d_lab->d_cellInfoLabel);
+  tsk->computes(d_lab->d_uVelocitySPBCLabel);
+  tsk->computes(d_lab->d_vVelocitySPBCLabel);
+  tsk->computes(d_lab->d_wVelocitySPBCLabel);
+  tsk->computes(d_lab->d_uVelRhoHatLabel);
+  tsk->computes(d_lab->d_vVelRhoHatLabel);
+  tsk->computes(d_lab->d_wVelRhoHatLabel);
+  tsk->computes(d_lab->d_CCVelocityLabel);
+  tsk->computes(d_lab->d_CCUVelocityLabel);
+  tsk->computes(d_lab->d_CCVVelocityLabel);
+  tsk->computes(d_lab->d_CCWVelocityLabel);
+  tsk->computes(d_lab->d_pressurePSLabel);
+  tsk->computes(d_lab->d_densityGuessLabel);
+  tsk->computes(d_lab->d_totalKineticEnergyLabel);
+  tsk->computes(d_lab->d_kineticEnergyLabel);
+  tsk->computes(d_lab->d_pressurePredLabel);
+  tsk->computes(d_lab->d_pressureIntermLabel);
+  tsk->computes(d_lab->d_densityCPLabel);
+  tsk->computes(d_lab->d_viscosityCTSLabel);
+  tsk->computes(d_lab->d_turbViscosLabel);
+  tsk->computes(d_lab->d_oldDeltaTLabel);
+  if (d_MAlab) {
+    tsk->computes(d_lab->d_pressPlusHydroLabel);
+    tsk->computes(d_lab->d_mmgasVolFracLabel);
+  }
+  if ( VarLabel::find("true_wall_temperature"))
+    tsk->computes(VarLabel::find("true_wall_temperature"));
+
+  sched->addTask(tsk, level->eachPatch(), d_lab->d_sharedState->allArchesMaterials());
+
+}
+
+void
+ExplicitSolver::initializeVariables(const ProcessorGroup* ,
+                                    const PatchSubset* patches,
+                                    const MaterialSubset*,
+                                    DataWarehouse* old_dw,
+                                    DataWarehouse* new_dw)
+{
+
+  double old_delta_t = 0.0;
+  new_dw->put(delt_vartype(old_delta_t), d_lab->d_oldDeltaTLabel);
+
+  for (int p = 0; p < patches->size(); p++) {
+
+    const Patch* patch = patches->get(p);
+    int archIndex = 0; // only one arches material
+    int indx = d_lab->d_sharedState->getArchesMaterial(archIndex)->getDWIndex();
+
+    // Initialize cellInformation
+    PerPatch<CellInformationP> cellInfoP;
+    cellInfoP.setData(scinew CellInformation(patch));
+    new_dw->put(cellInfoP, d_lab->d_cellInfoLabel, indx, patch);
+
+    //total KE:
+    new_dw->put( sum_vartype(0.0), d_lab->d_totalKineticEnergyLabel );
+
+    allocateAndInitializeToZero( d_lab->d_densityGuessLabel, new_dw, indx, patch );
+    allocateAndInitializeToZero( d_lab->d_uVelRhoHatLabel, new_dw, indx, patch );
+    allocateAndInitializeToZero( d_lab->d_uVelocitySPBCLabel, new_dw, indx, patch );
+    allocateAndInitializeToZero( d_lab->d_vVelRhoHatLabel, new_dw, indx, patch );
+    allocateAndInitializeToZero( d_lab->d_vVelocitySPBCLabel, new_dw, indx, patch );
+    allocateAndInitializeToZero( d_lab->d_wVelRhoHatLabel, new_dw, indx, patch );
+    allocateAndInitializeToZero( d_lab->d_wVelocitySPBCLabel, new_dw, indx, patch );
+    allocateAndInitializeToZero( d_lab->d_CCUVelocityLabel, new_dw, indx, patch );
+    allocateAndInitializeToZero( d_lab->d_CCVVelocityLabel, new_dw, indx, patch );
+    allocateAndInitializeToZero( d_lab->d_CCWVelocityLabel, new_dw, indx, patch );
+    allocateAndInitializeToZero( d_lab->d_CCVelocityLabel, new_dw, indx, patch );
+    allocateAndInitializeToZero( d_lab->d_kineticEnergyLabel, new_dw, indx, patch );
+    allocateAndInitializeToZero( d_lab->d_pressurePSLabel, new_dw, indx, patch );
+    allocateAndInitializeToZero( d_lab->d_pressurePredLabel, new_dw, indx, patch );
+    allocateAndInitializeToZero( d_lab->d_pressureIntermLabel, new_dw, indx, patch );
+    allocateAndInitializeToZero( d_lab->d_densityCPLabel, new_dw, indx, patch );
+    allocateAndInitializeToZero( d_lab->d_viscosityCTSLabel, new_dw, indx, patch );
+    allocateAndInitializeToZero( d_lab->d_turbViscosLabel, new_dw, indx, patch );
+
+    if ( VarLabel::find("true_wall_temperature")){
+      allocateAndInitializeToZero( VarLabel::find("true_wall_temperature"), new_dw, indx, patch );
+    }
+
+    if ( d_MAlab ){
+      allocateAndInitializeToZero( d_lab->d_pressPlusHydroLabel, new_dw, indx, patch );
+      allocateAndInitializeToZero( d_lab->d_mmgasVolFracLabel, new_dw, indx, patch );
+    }
+
+    CCVariable<double> viscosity;
+    new_dw->allocateAndPut(viscosity, d_lab->d_viscosityCTSLabel, indx, patch);
+    double visVal = d_physicalConsts->getMolecularViscosity();
+    viscosity.initialize(visVal);
+
+  } // patches
+}
+
+void
+ExplicitSolver::allocateAndInitializeToZero( const VarLabel* label,
+                                             DataWarehouse* dw,
+                                             const int index,
+                                             const Patch* patch ){
+
+  const Uintah::TypeDescription* type_desc = label->typeDescription();
+
+  if ( type_desc == CCVariable<double>::getTypeDescription() ){
+    CCVariable<double> var;
+    dw->allocateAndPut( var, label, index, patch );
+    var.initialize(0.0);
+  } else if ( type_desc == CCVariable<int>::getTypeDescription() ){
+    CCVariable<int> var;
+    dw->allocateAndPut( var, label, index, patch );
+    var.initialize(0);
+  } else if ( type_desc == CCVariable<Vector>::getTypeDescription() ){
+    CCVariable<Vector> var;
+    dw->allocateAndPut( var, label, index, patch );
+    var.initialize(Vector(0.,0.,0.));
+  } else if ( type_desc == SFCXVariable<double>::getTypeDescription() ){
+    SFCXVariable<double> var;
+    dw->allocateAndPut( var, label, index, patch );
+    var.initialize(0.0);
+  } else if ( type_desc == SFCYVariable<double>::getTypeDescription() ){
+    SFCXVariable<double> var;
+    dw->allocateAndPut( var, label, index, patch );
+    var.initialize(0.0);
+  } else if ( type_desc == SFCZVariable<double>::getTypeDescription() ){
+    SFCXVariable<double> var;
+    dw->allocateAndPut( var, label, index, patch );
+    var.initialize(0.0);
+  } else {
+    throw InvalidValue("Error: Type not supported.",__FILE__,__LINE__);
+  }
 }
 
 void
@@ -366,13 +726,13 @@ int ExplicitSolver::nonlinearSolve(const LevelP& level,
   //TIMESTEP INIT:
   //UtilityFactory
   typedef std::map<std::string, boost::shared_ptr<TaskFactoryBase> > BFM;
-  BFM::iterator i_util = _boost_fac_map.find("utility_factory");
+  BFM::iterator i_util = _task_factory_map.find("utility_factory");
   TaskFactoryBase::TaskMap init_all_tasks = i_util->second->retrieve_all_tasks();
   for ( TaskFactoryBase::TaskMap::iterator i = init_all_tasks.begin(); i != init_all_tasks.end(); i++){
     i->second->schedule_timestep_init(level, sched, matls);
   }
 
-  BFM::iterator i_transport = _boost_fac_map.find("transport_factory");
+  BFM::iterator i_transport = _task_factory_map.find("transport_factory");
   SVec scalar_rhs_builders = i_transport->second->retrieve_task_subset("scalar_rhs_builders");
   for ( SVec::iterator i = scalar_rhs_builders.begin(); i != scalar_rhs_builders.end(); i++){
     TaskInterface* tsk = i_transport->second->retrieve_task(*i);
@@ -383,12 +743,12 @@ int ExplicitSolver::nonlinearSolve(const LevelP& level,
     TaskInterface* tsk = i_transport->second->retrieve_task(*i);
     tsk->schedule_timestep_init(level, sched, matls);
   }
-  BFM::iterator i_property_models = _boost_fac_map.find("property_models_factory");
+  BFM::iterator i_property_models = _task_factory_map.find("property_models_factory");
   TaskFactoryBase::TaskMap all_property_models = i_property_models->second->retrieve_all_tasks();
   for ( TaskFactoryBase::TaskMap::iterator i = all_property_models.begin(); i != all_property_models.end(); i++){
     i->second->schedule_timestep_init(level, sched, matls);
   }
-  BFM::iterator i_particle_models = _boost_fac_map.find("particle_model_factory");
+  BFM::iterator i_particle_models = _task_factory_map.find("particle_model_factory");
   TaskFactoryBase::TaskMap all_particle_models = i_particle_models->second->retrieve_all_tasks();
   for ( TaskFactoryBase::TaskMap::iterator i = all_particle_models.begin(); i != all_particle_models.end(); i++){
     i->second->schedule_timestep_init(level, sched, matls);
@@ -2299,5 +2659,534 @@ void ExplicitSolver::computeKE( const ProcessorGroup* pc,
       throw InvalidValue(msg.str(), __FILE__, __LINE__);
     }
 
+  }
+}
+
+//___________________________________________________________________________
+//
+void
+ExplicitSolver::sched_weightInit( const LevelP& level,
+                          SchedulerP& sched )
+{
+  Task* tsk = scinew Task( "ExplicitSolver::weightInit",
+                           this, &ExplicitSolver::weightInit);
+
+  // DQMOM weight transport vars
+  DQMOMEqnFactory& dqmomFactory = DQMOMEqnFactory::self();
+  DQMOMEqnFactory::EqnMap& dqmom_eqns = dqmomFactory.retrieve_all_eqns();
+  for (DQMOMEqnFactory::EqnMap::iterator ieqn=dqmom_eqns.begin(); ieqn != dqmom_eqns.end(); ieqn++) {
+    EqnBase* temp_eqn = ieqn->second;
+    DQMOMEqn* eqn = dynamic_cast<DQMOMEqn*>(temp_eqn);
+
+    if (eqn->weight()) {
+      const VarLabel* tempVar = eqn->getTransportEqnLabel();
+      const VarLabel* tempVar_icv = eqn->getUnscaledLabel();
+      const VarLabel* tempSource = eqn->getSourceLabel();
+
+      tsk->computes( tempVar );
+      tsk->computes( tempVar_icv );
+      tsk->computes( tempSource );
+    }
+  }
+
+  tsk->requires( Task::NewDW, d_lab->d_volFractionLabel, Ghost::None );
+
+  sched->addTask(tsk, level->eachPatch(), d_lab->d_sharedState->allArchesMaterials());
+}
+//______________________________________________________________________
+//
+void
+ExplicitSolver::weightInit( const ProcessorGroup*,
+                    const PatchSubset* patches,
+                    const MaterialSubset*,
+                    DataWarehouse* old_dw,
+                    DataWarehouse* new_dw )
+{
+
+  proc0cout << "Initializing all DQMOM weight equations..." << endl;
+  for (int p = 0; p < patches->size(); p++) {
+    //assume only one material for now.
+    int archIndex = 0;
+    int matlIndex = d_lab->d_sharedState->getArchesMaterial(archIndex)->getDWIndex();
+    const Patch* patch=patches->get(p);
+
+    CCVariable<Vector> partVel;
+    constCCVariable<double> eps_v;
+
+    new_dw->get( eps_v, d_lab->d_volFractionLabel, matlIndex, patch, Ghost::None, 0 );
+
+    DQMOMEqnFactory& dqmomFactory = DQMOMEqnFactory::self();
+    DQMOMEqnFactory::EqnMap& dqmom_eqns = dqmomFactory.retrieve_all_eqns();
+
+    // --- DQMOM EQNS
+    // do only weights
+    for (DQMOMEqnFactory::EqnMap::iterator ieqn=dqmom_eqns.begin();
+         ieqn != dqmom_eqns.end(); ieqn++) {
+
+      DQMOMEqn* eqn = dynamic_cast<DQMOMEqn*>(ieqn->second);
+      string eqn_name = ieqn->first;
+
+      if (eqn->weight()) {
+        // This is a weight equation
+        const VarLabel* sourceLabel  = eqn->getSourceLabel();
+        const VarLabel* phiLabel     = eqn->getTransportEqnLabel();
+        const VarLabel* phiLabel_icv = eqn->getUnscaledLabel();
+
+        CCVariable<double> source;
+        CCVariable<double> phi;
+        CCVariable<double> phi_icv;
+
+        new_dw->allocateAndPut( source,  sourceLabel,  matlIndex, patch );
+        new_dw->allocateAndPut( phi,     phiLabel,     matlIndex, patch );
+        new_dw->allocateAndPut( phi_icv, phiLabel_icv, matlIndex, patch );
+
+        source.initialize(0.0);
+        phi.initialize(0.0);
+        phi_icv.initialize(0.0);
+
+        // initialize phi
+        eqn->initializationFunction( patch, phi, eps_v );
+
+        // do boundary conditions
+        eqn->computeBCs( patch, eqn_name, phi );
+      }
+    }
+    proc0cout << endl;
+  }
+}
+
+//___________________________________________________________________________
+//
+void
+ExplicitSolver::sched_weightedAbsInit( const LevelP& level,
+                               SchedulerP& sched )
+{
+  Task* tsk = scinew Task( "ExplicitSolver::weightedAbsInit",
+                           this, &ExplicitSolver::weightedAbsInit);
+  // DQMOM transport vars
+  DQMOMEqnFactory& dqmomFactory = DQMOMEqnFactory::self();
+  DQMOMEqnFactory::EqnMap& dqmom_eqns = dqmomFactory.retrieve_all_eqns();
+  for (DQMOMEqnFactory::EqnMap::iterator ieqn=dqmom_eqns.begin(); ieqn != dqmom_eqns.end(); ieqn++) {
+
+    DQMOMEqn* eqn = dynamic_cast<DQMOMEqn*>(ieqn->second);
+
+    if (!eqn->weight()) {
+      const VarLabel* tempVar = eqn->getTransportEqnLabel();
+      const VarLabel* tempVar_icv = eqn->getUnscaledLabel();
+      const VarLabel* tempSource = eqn->getSourceLabel();
+      tsk->computes( tempVar );
+      tsk->computes( tempVar_icv );
+      tsk->computes( tempSource );
+    } else {
+      const VarLabel* tempVar = eqn->getTransportEqnLabel();
+      tsk->requires( Task::NewDW, tempVar, Ghost::None, 0 );
+    }
+  }
+
+  // Particle Velocities
+
+  // Models
+  // initialize all of the computed variables for the coal models
+  CoalModelFactory& modelFactory = CoalModelFactory::self();
+  modelFactory.sched_init_all_models( level, sched );
+
+  tsk->requires( Task::NewDW, d_lab->d_volFractionLabel, Ghost::None );
+
+  sched->addTask(tsk, level->eachPatch(), d_lab->d_sharedState->allArchesMaterials());
+}
+//______________________________________________________________________
+//
+void
+ExplicitSolver::weightedAbsInit( const ProcessorGroup*,
+                         const PatchSubset* patches,
+                         const MaterialSubset*,
+                         DataWarehouse* old_dw,
+                         DataWarehouse* new_dw )
+{
+
+  string msg = "Initializing all DQMOM weighted abscissa equations...";
+  proc0cout << msg << std::endl;
+
+  for (int p = 0; p < patches->size(); p++) {
+    //assume only one material for now.
+    int archIndex = 0;
+    int matlIndex = d_lab->d_sharedState->getArchesMaterial(archIndex)->getDWIndex();
+    const Patch* patch=patches->get(p);
+
+    CCVariable<Vector> partVel;
+    constCCVariable<double> eps_v;
+
+    Ghost::GhostType gn = Ghost::None;
+
+    new_dw->get( eps_v, d_lab->d_volFractionLabel, matlIndex, patch, gn, 0 );
+
+    DQMOMEqnFactory& dqmomFactory = DQMOMEqnFactory::self();
+    DQMOMEqnFactory::EqnMap& dqmom_eqns = dqmomFactory.retrieve_all_eqns();
+
+    // --- DQMOM EQNS
+    // do weights first because we need them later for the weighted abscissas
+    for (DQMOMEqnFactory::EqnMap::iterator ieqn=dqmom_eqns.begin();
+         ieqn != dqmom_eqns.end(); ieqn++) {
+
+      DQMOMEqn* eqn = dynamic_cast<DQMOMEqn*>(ieqn->second);
+      string eqn_name = ieqn->first;
+      int qn = eqn->getQuadNode();
+
+      if (!eqn->weight()) {
+        // This is a weighted abscissa
+        const VarLabel* sourceLabel  = eqn->getSourceLabel();
+        const VarLabel* phiLabel     = eqn->getTransportEqnLabel();
+        const VarLabel* phiLabel_icv = eqn->getUnscaledLabel();
+        std::string weight_name;
+        std::string node;
+        std::stringstream out;
+        out << qn;
+        node = out.str();
+        weight_name = "w_qn";
+        weight_name += node;
+        EqnBase& w_eqn = dqmomFactory.retrieve_scalar_eqn(weight_name);
+        const VarLabel* weightLabel = w_eqn.getTransportEqnLabel();
+
+        CCVariable<double> source;
+        CCVariable<double> phi;
+        CCVariable<double> phi_icv;
+        constCCVariable<double> weight;
+
+        new_dw->allocateAndPut( source,  sourceLabel,  matlIndex, patch );
+        new_dw->allocateAndPut( phi,     phiLabel,     matlIndex, patch );
+        new_dw->allocateAndPut( phi_icv, phiLabel_icv, matlIndex, patch );
+        new_dw->get( weight, weightLabel, matlIndex, patch, gn, 0 );
+
+        source.initialize(0.0);
+        phi.initialize(0.0);
+        phi_icv.initialize(0.0);
+
+        // initialize phi
+        if( d_which_dqmom == "unweightedAbs" ) {
+          eqn->initializationFunction( patch, phi, eps_v);
+        } else {
+          eqn->initializationFunction( patch, phi, weight, eps_v );
+        }
+
+        // do boundary conditions
+        eqn->computeBCs( patch, eqn_name, phi );
+
+      }
+    }
+  }
+  proc0cout << endl;
+}
+//___________________________________________________________________________
+//
+void
+ExplicitSolver::sched_momentInit( const LevelP& level,
+                          SchedulerP& sched )
+{
+  Task* tsk = scinew Task( "ExplicitSolver::momentInit",
+                           this, &ExplicitSolver::momentInit);
+
+  // CQMOM moment transport vars
+  CQMOMEqnFactory& cqmomFactory = CQMOMEqnFactory::self();
+  CQMOMEqnFactory::EqnMap& cqmom_eqns = cqmomFactory.retrieve_all_eqns();
+  for (CQMOMEqnFactory::EqnMap::iterator ieqn=cqmom_eqns.begin(); ieqn != cqmom_eqns.end(); ieqn++) {
+    EqnBase* temp_eqn = ieqn->second;
+    CQMOMEqn* eqn = dynamic_cast<CQMOMEqn*>(temp_eqn);
+
+    const VarLabel* tempVar = eqn->getTransportEqnLabel();
+    const VarLabel* tempSource = eqn->getSourceLabel();
+
+    tsk->computes( tempVar );
+    tsk->computes( tempSource );
+  }
+
+  tsk->requires( Task::NewDW, d_lab->d_volFractionLabel, Ghost::None );
+
+  sched->addTask(tsk, level->eachPatch(), d_lab->d_sharedState->allArchesMaterials());
+}
+//______________________________________________________________________
+//
+void
+ExplicitSolver::momentInit( const ProcessorGroup*,
+                    const PatchSubset* patches,
+                    const MaterialSubset*,
+                    DataWarehouse* old_dw,
+                    DataWarehouse* new_dw )
+{
+
+  proc0cout << "Initializing all CQMOM moment equations..." << endl;
+  for (int p = 0; p < patches->size(); p++) {
+    //assume only one material for now.
+    int archIndex = 0;
+    int matlIndex = d_lab->d_sharedState->getArchesMaterial(archIndex)->getDWIndex();
+    const Patch* patch=patches->get(p);
+
+    constCCVariable<double> eps_v;
+
+    new_dw->get( eps_v, d_lab->d_volFractionLabel, matlIndex, patch, Ghost::None, 0 );
+
+    CQMOMEqnFactory& cqmomFactory = CQMOMEqnFactory::self();
+    CQMOMEqnFactory::EqnMap& cqmom_eqns = cqmomFactory.retrieve_all_eqns();
+
+    // --- CQMOM EQNS
+    for (CQMOMEqnFactory::EqnMap::iterator ieqn=cqmom_eqns.begin();
+         ieqn != cqmom_eqns.end(); ieqn++) {
+
+      CQMOMEqn* eqn = dynamic_cast<CQMOMEqn*>(ieqn->second);
+      string eqn_name = ieqn->first;
+
+      const VarLabel* sourceLabel  = eqn->getSourceLabel();
+      const VarLabel* phiLabel     = eqn->getTransportEqnLabel();
+
+      CCVariable<double> source;
+      CCVariable<double> phi;
+
+      new_dw->allocateAndPut( source,  sourceLabel,  matlIndex, patch );
+      new_dw->allocateAndPut( phi,     phiLabel,     matlIndex, patch );
+
+      source.initialize(0.0);
+      phi.initialize(0.0);
+
+      // initialize phi
+      eqn->initializationFunction( patch, phi, eps_v );
+
+      // do boundary conditions
+      eqn->computeBCs( patch, eqn_name, phi );
+
+    }
+    proc0cout << endl;
+  }
+
+}
+
+//___________________________________________________________________________
+//
+void
+ExplicitSolver::sched_scalarInit( const LevelP& level,
+                          SchedulerP& sched )
+{
+  Task* tsk = scinew Task( "ExplicitSolver::scalarInit",
+                           this, &ExplicitSolver::scalarInit);
+
+  EqnFactory& eqnFactory = EqnFactory::self();
+  EqnFactory::EqnMap& scalar_eqns = eqnFactory.retrieve_all_eqns();
+  for (EqnFactory::EqnMap::iterator ieqn=scalar_eqns.begin(); ieqn != scalar_eqns.end(); ieqn++) {
+    EqnBase* eqn = ieqn->second;
+
+    const VarLabel* tempVar = eqn->getTransportEqnLabel();
+    tsk->computes( tempVar );
+  }
+
+  tsk->requires( Task::NewDW, d_lab->d_volFractionLabel, Ghost::None );
+
+  sched->addTask(tsk, level->eachPatch(), d_lab->d_sharedState->allArchesMaterials());
+
+  //__________________________________
+  //  initialize src terms
+  SourceTermFactory& srcFactory = SourceTermFactory::self();
+  SourceTermFactory::SourceMap& sources = srcFactory.retrieve_all_sources();
+  for (SourceTermFactory::SourceMap::iterator isrc=sources.begin(); isrc !=sources.end(); isrc++) {
+    SourceTermBase* src = isrc->second;
+    src->sched_initialize(level, sched);
+  }
+}
+
+//______________________________________________________________________
+//
+void
+ExplicitSolver::scalarInit( const ProcessorGroup*,
+                    const PatchSubset* patches,
+                    const MaterialSubset*,
+                    DataWarehouse* old_dw,
+                    DataWarehouse* new_dw )
+{
+  coutLock.lock();
+  proc0cout << "Initializing all scalar equations and sources..." << std::endl;
+  for (int p = 0; p < patches->size(); p++) {
+    //assume only one material for now
+    int archIndex = 0;
+    int matlIndex = d_lab->d_sharedState->getArchesMaterial(archIndex)->getDWIndex();
+    const Patch* patch=patches->get(p);
+
+    EqnFactory& eqnFactory = EqnFactory::self();
+    EqnFactory::EqnMap& scalar_eqns = eqnFactory.retrieve_all_eqns();
+    for (EqnFactory::EqnMap::iterator ieqn=scalar_eqns.begin(); ieqn != scalar_eqns.end(); ieqn++) {
+
+      EqnBase* eqn = ieqn->second;
+      std::string eqn_name = ieqn->first;
+      const VarLabel* phiLabel = eqn->getTransportEqnLabel();
+
+      CCVariable<double> phi;
+      CCVariable<double> oldPhi;
+      constCCVariable<double> eps_v;
+      new_dw->allocateAndPut( phi, phiLabel, matlIndex, patch );
+      new_dw->get( eps_v, d_lab->d_volFractionLabel, matlIndex, patch, Ghost::None, 0 );
+
+      phi.initialize(0.0);
+
+      // initialize to something other than zero if desired.
+      eqn->initializationFunction( patch, phi, eps_v );
+
+      //do Boundary conditions
+      eqn->computeBCsSpecial( patch, eqn_name, phi );
+
+    }
+  }
+  coutLock.unlock();
+}
+
+// ****************************************************************************
+// Schedule Interpolate from SFCX, SFCY, SFCZ to CC
+// ****************************************************************************
+void
+ExplicitSolver::sched_getCCVelocities(const LevelP& level, SchedulerP& sched)
+{
+  Task* tsk = scinew Task("ExplicitSolver::getCCVelocities", this,
+                          &ExplicitSolver::getCCVelocities);
+
+  Ghost::GhostType gaf = Ghost::AroundFaces;
+  tsk->requires(Task::NewDW, d_lab->d_uVelocitySPBCLabel, gaf, 1);
+  tsk->requires(Task::NewDW, d_lab->d_vVelocitySPBCLabel, gaf, 1);
+  tsk->requires(Task::NewDW, d_lab->d_wVelocitySPBCLabel, gaf, 1);
+  tsk->requires(Task::NewDW, d_lab->d_cellInfoLabel, Ghost::None);
+
+  tsk->modifies(d_lab->d_CCVelocityLabel);
+  tsk->modifies(d_lab->d_CCUVelocityLabel);
+  tsk->modifies(d_lab->d_CCVVelocityLabel);
+  tsk->modifies(d_lab->d_CCWVelocityLabel);
+
+  sched->addTask(tsk, level->eachPatch(), d_lab->d_sharedState->allArchesMaterials());
+}
+
+// ****************************************************************************
+// interpolation from FC to CC Variable
+// ****************************************************************************
+void
+ExplicitSolver::getCCVelocities(const ProcessorGroup*,
+                        const PatchSubset* patches,
+                        const MaterialSubset*,
+                        DataWarehouse*,
+                        DataWarehouse* new_dw)
+{
+  for (int p = 0; p < patches->size(); p++) {
+    const Patch* patch = patches->get(p);
+    int archIndex = 0; // only one arches material
+    int indx = d_lab->d_sharedState->getArchesMaterial(archIndex)->getDWIndex();
+
+    constSFCXVariable<double> uvel_FC;
+    constSFCYVariable<double> vvel_FC;
+    constSFCZVariable<double> wvel_FC;
+    CCVariable<Vector> vel_CC;
+    CCVariable<double> uVel_CC;
+    CCVariable<double> vVel_CC;
+    CCVariable<double> wVel_CC;
+
+    IntVector idxLo = patch->getFortranCellLowIndex();
+    IntVector idxHi = patch->getFortranCellHighIndex();
+
+    // Get the PerPatch CellInformation data
+    PerPatch<CellInformationP> cellInfoP;
+    new_dw->get(cellInfoP, d_lab->d_cellInfoLabel, indx, patch);
+
+    CellInformation* cellinfo = cellInfoP.get().get_rep();
+
+    Ghost::GhostType gaf = Ghost::AroundFaces;
+    new_dw->get(uvel_FC, d_lab->d_uVelocitySPBCLabel, indx, patch, gaf, 1);
+    new_dw->get(vvel_FC, d_lab->d_vVelocitySPBCLabel, indx, patch, gaf, 1);
+    new_dw->get(wvel_FC, d_lab->d_wVelocitySPBCLabel, indx, patch, gaf, 1);
+
+    new_dw->getModifiable(vel_CC,  d_lab->d_CCVelocityLabel, indx, patch);
+    vel_CC.initialize(Vector(0.0,0.0,0.0));
+
+    new_dw->getModifiable(uVel_CC,  d_lab->d_CCUVelocityLabel, indx, patch);
+    new_dw->getModifiable(vVel_CC,  d_lab->d_CCVVelocityLabel, indx, patch);
+    new_dw->getModifiable(wVel_CC,  d_lab->d_CCWVelocityLabel, indx, patch);
+    uVel_CC.initialize( 0.0 );
+    vVel_CC.initialize( 0.0 );
+    wVel_CC.initialize( 0.0 );
+
+    //__________________________________
+    //
+    for(CellIterator iter=patch->getCellIterator(); !iter.done(); iter++) {
+      IntVector c = *iter;
+      int i = c.x();
+      int j = c.y();
+      int k = c.z();
+
+      IntVector idxU(i+1,j,k);
+      IntVector idxV(i,j+1,k);
+      IntVector idxW(i,j,k+1);
+
+      double u,v,w;
+
+      u = cellinfo->wfac[i] * uvel_FC[c] +
+          cellinfo->efac[i] * uvel_FC[idxU];
+
+      v = cellinfo->sfac[j] * vvel_FC[c] +
+          cellinfo->nfac[j] * vvel_FC[idxV];
+
+      w = cellinfo->bfac[k] * wvel_FC[c] +
+          cellinfo->tfac[k] * wvel_FC[idxW];
+
+      vel_CC[c] = Vector(u, v, w);
+      //NOTE: this function could probably be nebo-ized with interp later
+      uVel_CC[c] = u;
+      vVel_CC[c] = v;
+      wVel_CC[c] = w;
+    }
+    //__________________________________
+    // Apply boundary conditions
+    vector<Patch::FaceType> b_face;
+    patch->getBoundaryFaces(b_face);
+    vector<Patch::FaceType>::const_iterator itr;
+
+    // Loop over boundary faces
+    for( itr = b_face.begin(); itr != b_face.end(); ++itr ) {
+      Patch::FaceType face = *itr;
+
+      IntVector f_dir = patch->getFaceDirection(face);
+
+      Patch::FaceIteratorType MEC = Patch::ExtraMinusEdgeCells;
+      CellIterator iter=patch->getFaceIterator(face, MEC);
+
+      IntVector lo = iter.begin();
+      int i = lo.x();
+      int j = lo.y();
+      int k = lo.z();
+
+      Vector one_or_zero = Vector(1,1,1) - Abs(f_dir.asVector());
+      // one_or_zero: faces x-+   (0,1,1)
+      //                    y-+   (1,0,1)
+      //                    z-+   (1,1,0)
+
+      for(; !iter.done(); iter++) {
+        IntVector c = *iter;
+
+        IntVector idxU(i+1,j,k);
+        IntVector idxV(i,j+1,k);
+        IntVector idxW(i,j,k+1);
+
+        double u,v,w;
+
+        u = one_or_zero.x() *
+            (cellinfo->wfac[i] * uvel_FC[c] +
+             cellinfo->efac[i] * uvel_FC[idxU]) +
+            (1.0 - one_or_zero.x()) * uvel_FC[idxU];
+
+        v = one_or_zero.y() *
+            (cellinfo->sfac[j] * vvel_FC[c] +
+             cellinfo->nfac[j] * vvel_FC[idxV]) +
+            (1.0 - one_or_zero.y()) * vvel_FC[idxV];
+
+        w = one_or_zero.z() *
+            (cellinfo->bfac[k] * wvel_FC[c] +
+             cellinfo->tfac[k] * wvel_FC[idxW] ) +
+            (1.0 - one_or_zero.z()) * wvel_FC[idxW];
+
+        vel_CC[c] = Vector( u, v, w );
+        uVel_CC[c] = u;
+        vVel_CC[c] = v;
+        wVel_CC[c] = w;
+      }
+    }
   }
 }
