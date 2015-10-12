@@ -2646,42 +2646,28 @@ BoundaryCondition::sched_setupBCInletVelocities(SchedulerP& sched,
 
   tsk->computes(d_DummyLabel);
 
-  if ( doing_restart ){
-    //This hack is needed to trick the DW into knowing that the variable
-    // is actually already allocated from the restart information.
-    Task* hack_tsk = scinew Task("BoundaryCondition::setupBCInletVelocitiesHack",
-                            this, &BoundaryCondition::setupBCInletVelocitiesHack );
-
-    hack_tsk->computes( d_lab->d_volFractionLabel );
-    hack_tsk->computes( d_lab->d_densityCPLabel );
-
-    sched->addTask( hack_tsk, level->eachPatch(), matls );
+  if ( doing_restart ) {
+    tsk->requires( Task::OldDW, d_lab->d_volFractionLabel, Ghost::None, 0 );
+  } else {
+    tsk->requires( Task::NewDW, d_lab->d_volFractionLabel, Ghost::None, 0 );
   }
 
-  tsk->requires( Task::NewDW, d_lab->d_volFractionLabel, Ghost::None, 0 );
-  tsk->requires( Task::NewDW, d_lab->d_densityCPLabel, Ghost::AroundCells, 0 );
+  if ( doing_restart ) {
+    tsk->requires( Task::OldDW, d_lab->d_densityCPLabel, Ghost::AroundCells, 0 );
+  } else {
+    tsk->requires( Task::NewDW, d_lab->d_densityCPLabel, Ghost::AroundCells, 0 );
+  }
 
   sched->addTask(tsk, level->eachPatch(), matls);
-}
-void
-BoundaryCondition::setupBCInletVelocitiesHack( const ProcessorGroup*,
-                                               const PatchSubset* patches,
-                                               const MaterialSubset*,
-                                               DataWarehouse* old_dw,
-                                               DataWarehouse* new_dw )
-{
-    //DO NOTHING
-    //This is just a trick to get the DW to know the variables are in the DW
-    // which were actually copied from the restart information.
 }
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 void
 BoundaryCondition::setupBCInletVelocities(const ProcessorGroup*,
-                                               const PatchSubset* patches,
-                                               const MaterialSubset*,
-                                               DataWarehouse* old_dw,
-                                               DataWarehouse* new_dw,
-                                               bool doing_restart )
+                                          const PatchSubset* patches,
+                                          const MaterialSubset*,
+                                          DataWarehouse* old_dw,
+                                          DataWarehouse* new_dw,
+                                          bool doing_restart )
 {
   for (int p = 0; p < patches->size(); p++) {
 
@@ -2696,8 +2682,13 @@ BoundaryCondition::setupBCInletVelocities(const ProcessorGroup*,
     constCCVariable<double> density;
     constCCVariable<double> volFraction;
 
-    new_dw->get( density, d_lab->d_densityCPLabel, matl_index, patch, Ghost::None, 0 );
-    new_dw->get( volFraction, d_lab->d_volFractionLabel, matl_index, patch, Ghost::None, 0 );
+    if ( doing_restart ) {
+      old_dw->get( density, d_lab->d_densityCPLabel, matl_index, patch, Ghost::None, 0 );
+      old_dw->get( volFraction, d_lab->d_volFractionLabel, matl_index, patch, Ghost::None, 0 );
+    } else {
+      new_dw->get( density, d_lab->d_densityCPLabel, matl_index, patch, Ghost::None, 0 );
+      new_dw->get( volFraction, d_lab->d_volFractionLabel, matl_index, patch, Ghost::None, 0 );
+    }
 
     proc0cout << "\nDomain boundary condition summary: \n";
 

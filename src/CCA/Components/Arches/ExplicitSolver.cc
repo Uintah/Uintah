@@ -1071,6 +1071,13 @@ ExplicitSolver::sched_restartInitialize( const LevelP& level, SchedulerP& sched 
     src->sched_RestartInitialize(level, sched);
   }
 
+}
+
+void
+ExplicitSolver::sched_restartInitializeTimeAdvance( const LevelP& level, SchedulerP& sched )
+{
+
+  bool doingRestart = true;
   const MaterialSet* matls = d_lab->d_sharedState->allArchesMaterials();
 
   d_boundaryCondition->sched_computeBCArea( sched, level, matls );
@@ -1084,6 +1091,9 @@ ExplicitSolver::sched_restartInitialize( const LevelP& level, SchedulerP& sched 
   }
 
   checkMomBCs( sched, level, matls );
+
+  d_boundaryCondition->sched_setupNewIntrusionCellType( sched, level, matls, doingRestart );
+  d_boundaryCondition->sched_setupNewIntrusions( sched, level, matls );
 
 }
 
