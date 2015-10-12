@@ -84,12 +84,6 @@ public:
 
   virtual void problemSetup( const ProblemSpecP& db, SimulationStateP& ) = 0;
 
-  virtual void sched_interpolateFromFCToCC( SchedulerP&,
-                                            const PatchSet* patches,
-                                            const MaterialSet* matls,
-                                            const TimeIntegratorLabel* timelabels,
-                                            const int curr_level) = 0;
-
   virtual int nonlinearSolve( const LevelP& level,
                               SchedulerP& sched ) = 0;
 
@@ -97,11 +91,14 @@ public:
 
   virtual bool restartableTimesteps() = 0;
 
-  virtual void sched_setInitVelCond( const LevelP& level, SchedulerP& sched, const MaterialSet* mats) = 0;
+  virtual void sched_setInitVelCond( const LevelP& level, SchedulerP& sched,
+                                     const MaterialSet* mats) = 0;
 
   virtual void checkMomBCs( SchedulerP& sched,
                             const LevelP& level,
                             const MaterialSet* matls) = 0;
+
+  virtual void initialize( const LevelP& lvl, SchedulerP& sched ) = 0;
 
   class NLSolverBuilder {
 
@@ -122,6 +119,7 @@ public:
   inline double get_initial_dt(){ return d_initial_dt; }
 
 protected:
+
    const ProcessorGroup * d_myworld;
    std::string            d_timeIntegratorType;
 
