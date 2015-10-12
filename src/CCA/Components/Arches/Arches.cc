@@ -1668,24 +1668,3 @@ void Arches::assign_unique_boundary_names( Uintah::ProblemSpecP bcProbSpec )
     faceNameSet.insert(faceName);
   }
 }
-//------------------------------------------------------------------
-// void Arches::setup_patchinfo_map( const Uintah::LevelP& level,
-//                                    Uintah::SchedulerP& sched )
-// {
-//   //const Uintah::PatchSet* patches = get_patchset( USE_FOR_OPERATORS, level, sched );
-//   const Uintah::PatchSet* patches = level->eachPatch();
-//
-//   for( int ipss=0; ipss<patches->size(); ++ipss ){
-//
-//     const Uintah::PatchSubset* pss = patches->getSubset(ipss);
-//
-//     for( int ip=0; ip<pss->size(); ++ip ){
-//
-//       const Uintah::Patch* const patch = pss->get(ip);
-//
-//       Wasatch::PatchInfo& pi = _patchInfoMap[patch->getID()];
-//       pi.patchID = patch->getID();
-//
-//     }
-//   }
-// }
