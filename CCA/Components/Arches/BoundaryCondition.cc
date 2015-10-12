@@ -3055,7 +3055,7 @@ BoundaryCondition::setInitProfile__NEW(const ProcessorGroup*,
 
         BCInfoMap::iterator to_delete = the_iter;
         the_iter++;
-        //potentially not thread safe. 
+        //potentially not thread safe.
         //VarLabel::destroy(to_delete->second.total_area_label);
         //d_bc_information.erase(to_delete);
 

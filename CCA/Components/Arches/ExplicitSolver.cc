@@ -23,6 +23,8 @@
  */
 
 //----- ExplicitSolver.cc ----------------------------------------------
+#include <CCA/Components/Arches/ChemMix/MixingRxnModel.h>
+#include <CCA/Components/Arches/ChemMix/ClassicTableInterface.h>
 #include <CCA/Components/Arches/Radiation/RadPropertyCalculator.h>
 #include <CCA/Components/Arches/EfficiencyCalculator.h>
 #include <CCA/Components/Arches/TransportEqns/DQMOMEqnFactory.h>
@@ -41,6 +43,48 @@
 #include <CCA/Components/Arches/TransportEqns/CQMOMEqn.h>
 #include <CCA/Components/Arches/TransportEqns/CQMOMEqnFactory.h>
 #include <CCA/Components/Arches/TransportEqns/CQMOM_Convection.h>
+#include <CCA/Components/Arches/ExplicitTimeInt.h>
+#include <CCA/Components/Arches/TurbulenceModelPlaceholder.h>
+#include <CCA/Components/Arches/ScaleSimilarityModel.h>
+#include <CCA/Components/Arches/IncDynamicProcedure.h>
+#include <CCA/Components/Arches/CompDynamicProcedure.h>
+#include <CCA/Components/Arches/SmagorinskyModel.h>
+
+#include <CCA/Components/Arches/CoalModels/PartVel.h>
+#include <CCA/Components/Arches/CoalModels/ConstantModel.h>
+#include <CCA/Components/Arches/CoalModels/Devolatilization.h>
+#include <CCA/Components/Arches/CoalModels/CharOxidation.h>
+#include <CCA/Components/Arches/CoalModels/KobayashiSarofimDevol.h>
+#include <CCA/Components/Arches/CoalModels/RichardsFletcherDevol.h>
+#include <CCA/Components/Arches/CoalModels/FOWYDevol.h>
+#include <CCA/Components/Arches/CoalModels/SimpleBirth.h>
+#include <CCA/Components/Arches/CoalModels/YamamotoDevol.h>
+#include <CCA/Components/Arches/CoalModels/HeatTransfer.h>
+#include <CCA/Components/Arches/CoalModels/EnthalpyShaddix.h>
+#include <CCA/Components/Arches/CoalModels/MaximumTemperature.h>
+#include <CCA/Components/Arches/CoalModels/CharOxidationShaddix.h>
+#include <CCA/Components/Arches/CoalModels/DragModel.h>
+#include <CCA/Components/Arches/PropertyModels/PropertyModelBase.h>
+#include <CCA/Components/Arches/PropertyModels/PropertyModelFactory.h>
+#include <CCA/Components/Arches/PropertyModels/ConstProperty.h>
+#include <CCA/Components/Arches/PropertyModels/ExtentRxn.h>
+#include <CCA/Components/Arches/PropertyModels/TabStripFactor.h>
+#include <CCA/Components/Arches/PropertyModels/fvSootFromYsoot.h>
+#include <CCA/Components/Arches/PropertyModels/EmpSoot.h>
+#include <CCA/Components/Arches/PropertyModels/AlgebraicScalarDiss.h>
+#include <CCA/Components/Arches/PropertyModels/HeatLoss.h>
+#include <CCA/Components/Arches/PropertyModels/ScalarVarianceScaleSim.h>
+#include <CCA/Components/Arches/PropertyModels/NormScalarVariance.h>
+#include <CCA/Components/Arches/PropertyModels/ScalarDissipation.h>
+#include <CCA/Components/Arches/PropertyModels/RadProperties.h>
+#include <CCA/Components/Arches/TransportEqns/EqnFactory.h>
+#include <CCA/Components/Arches/TransportEqns/DQMOMEqnFactory.h>
+#include <CCA/Components/Arches/TransportEqns/DQMOMEqn.h>
+#include <CCA/Components/Arches/TransportEqns/ScalarEqn.h>
+#include <CCA/Components/Arches/TransportEqns/CQMOMEqnFactory.h>
+#include <CCA/Components/Arches/TransportEqns/CQMOMEqn.h>
+#include <CCA/Components/Arches/TransportEqns/CQMOM_Convection.h>
+#include <CCA/Components/Arches/ParticleModels/CQMOMSourceWrapper.h>
 
 //NEW TASK STUFF
 #include <CCA/Components/Arches/ArchesBCHelper.h>
@@ -93,37 +137,27 @@ extern SCIRun::Mutex coutLock;
 // Default constructor for ExplicitSolver
 // ****************************************************************************
 ExplicitSolver::
-ExplicitSolver(ArchesLabel* label,
+ExplicitSolver(SimulationStateP& sharedState,
                const MPMArchesLabel* MAlb,
-               Properties* props,
-               BoundaryCondition* bc,
-               TurbulenceModel* turbModel,
-               ScaleSimilarityModel* scaleSimilarityModel,
                PhysicalConstants* physConst,
-               RadPropertyCalculator* rad_properties,
-               PartVel* partVel,
-               DQMOM* dqmomSolver,
-               CQMOM* cqmomSolver,
-               CQMOM_Convection* cqmomConvect,
-               CQMOMSourceWrapper* cqmomSource,
                std::map<std::string, boost::shared_ptr<TaskFactoryBase> >& task_factory_map,
                const ProcessorGroup* myworld,
                SolverInterface* hypreSolver):
+               d_sharedState(sharedState),
                NonlinearSolver(myworld),
-               d_lab(label), d_MAlab(MAlb), d_props(props),
-               d_boundaryCondition(bc), d_turbModel(turbModel),
-               d_scaleSimilarityModel(scaleSimilarityModel),
+               d_MAlab(MAlb),
                d_physicalConsts(physConst),
                d_hypreSolver(hypreSolver),
-               d_rad_prop_calc(rad_properties),
-               d_partVel(partVel),
-               d_dqmomSolver(dqmomSolver),
-               d_cqmomSolver(cqmomSolver),
-               d_cqmomConvect(cqmomConvect),
-               d_cqmomSource(cqmomSource),
                _task_factory_map(task_factory_map)
 {
+
+  d_lab  = scinew ArchesLabel();
+  d_lab->setSharedState(sharedState);
+  d_props = 0;
+  d_turbModel = 0;
   d_pressSolver = 0;
+  d_scaleSimilarityModel = 0;
+  d_boundaryCondition = 0;
   d_momSolver = 0;
   nosolve_timelabels_allocated = false;
   d_printTotalKE = false;
@@ -131,6 +165,23 @@ ExplicitSolver(ArchesLabel* label,
   d_doDQMOM = false;
   d_doCQMOM = false;
   d_init_timelabel = 0;
+  d_timeIntegrator = 0;
+  d_doDQMOM =  false;
+  d_mixedModel = false;
+
+  DQMOMEqnFactory&  dqmomfactory   =  DQMOMEqnFactory::self();
+  dqmomfactory.set_quad_nodes(0);
+
+  CQMOMEqnFactory& cqmomfactory    = CQMOMEqnFactory::self();
+  cqmomfactory.set_number_moments(0);
+  d_doCQMOM                        = false;
+
+  //eulerian particles:
+  d_partVel = 0;
+  d_dqmomSolver = 0;
+  d_cqmomSource = 0;
+  d_cqmomSolver = 0;
+  d_cqmomConvect = 0;
 
 }
 
@@ -139,9 +190,25 @@ ExplicitSolver(ArchesLabel* label,
 // ****************************************************************************
 ExplicitSolver::~ExplicitSolver()
 {
+  delete d_lab;
+  delete d_props;
+  delete d_turbModel;
+  delete d_scaleSimilarityModel;
+  delete d_boundaryCondition;
   delete d_pressSolver;
   delete d_momSolver;
   delete d_eff_calculator;
+  delete d_timeIntegrator;
+  delete d_rad_prop_calc;
+  if (d_doDQMOM) {
+    delete d_dqmomSolver;
+    delete d_partVel;
+  }
+  if (d_doCQMOM) {
+    delete d_cqmomSolver;
+    delete d_cqmomConvect;
+    delete d_cqmomSource;
+  }
   if ( d_init_timelabel != 0 )
     delete d_init_timelabel;
   for (int curr_level = 0; curr_level < numTimeIntegratorLevels; curr_level ++)
@@ -157,34 +224,467 @@ ExplicitSolver::~ExplicitSolver()
 // Problem Setup
 // ****************************************************************************
 void
-ExplicitSolver::problemSetup( const ProblemSpecP & params, SimulationStateP & state )
+ExplicitSolver::problemSetup( const ProblemSpecP & params,
+                              SimulationStateP & state,
+                              GridP& grid )
 {
 
-  ProblemSpecP db = params->findBlock("ExplicitSolver");
-  ProblemSpecP db_parent = params;
+  ProblemSpecP db_es = params->findBlock("ExplicitSolver");
+  ProblemSpecP db = params;
 
-  ProblemSpecP dqmom_db = db_parent->findBlock("DQMOM");
-  if (dqmom_db) {
-    d_doDQMOM = true;
-    dqmom_db->getAttribute( "type", d_which_dqmom );
+  commonProblemSetup( db_es );
+
+  //------------------------------------------------------------------------------------------------
+  //create a time integrator.
+  d_timeIntegrator = scinew ExplicitTimeInt(d_lab);
+  ProblemSpecP time_db = db->findBlock("TimeIntegrator");
+  if (time_db) {
+    string time_order;
+    time_db->findBlock("ExplicitIntegrator")->getAttribute("order", time_order);
+    if (time_order == "first")
+      d_tOrder = 1;
+    else if (time_order == "second")
+      d_tOrder = 2;
+    else if (time_order == "third")
+      d_tOrder = 3;
+    else
+      throw InvalidValue("Explicit time integrator must be one of: first, second, third!  Please fix input file",__FILE__,__LINE__);
+
+    d_timeIntegrator->problemSetup(time_db);
+
   }
 
-  ProblemSpecP cqmom_db = db_parent->findBlock("CQMOM");
+  //------------------------------------------------------------------------------------------------
+  //Transport Eqns:
+  ProblemSpecP transportEqn_db = db->findBlock("TransportEqns");
+  if (transportEqn_db) {
+
+    // register source terms
+    SourceTermFactory& src_factory = SourceTermFactory::self();
+    ProblemSpecP sources_db = transportEqn_db->findBlock("Sources");
+    if (sources_db)
+      src_factory.registerUDSources(sources_db, d_lab, d_boundaryCondition, d_myworld);
+
+    //register all equations
+    ExplicitSolver::registerTransportEqns(transportEqn_db);
+
+    // Go through eqns and intialize all defined eqns and call their respective
+    // problem setup
+    EqnFactory& eqn_factory = EqnFactory::self();
+    for (ProblemSpecP eqn_db = transportEqn_db->findBlock("Eqn"); eqn_db != 0; eqn_db = eqn_db->findNextBlock("Eqn")) {
+
+      std::string eqnname;
+      eqn_db->getAttribute("label", eqnname);
+      if (eqnname == "") {
+        throw InvalidValue( "Error: The label attribute must be specified for the eqns!", __FILE__, __LINE__);
+      }
+      EqnBase& an_eqn = eqn_factory.retrieve_scalar_eqn( eqnname );
+      an_eqn.problemSetup( eqn_db );
+
+    }
+
+
+    // Now go through sources and initialize all defined sources and call
+    // their respective problemSetup
+    if (sources_db) {
+
+      vector<string> used_sources;
+
+      SourceTermFactory& src_factory = SourceTermFactory::self();
+
+      for (ProblemSpecP eqn_db = transportEqn_db->findBlock("Eqn"); eqn_db != 0; eqn_db = eqn_db->findNextBlock("Eqn")) {
+
+        for (ProblemSpecP src_db = eqn_db->findBlock("src"); src_db != 0; src_db = src_db->findNextBlock("src")) {
+
+          std::string srcname;
+          src_db->getAttribute("label", srcname);
+
+          for ( ProblemSpecP found_src_db = transportEqn_db->findBlock("Sources")->findBlock("src"); found_src_db != 0;
+                found_src_db = found_src_db->findNextBlock("src")) {
+
+            string check_label;
+            found_src_db->getAttribute("label",check_label);
+
+            if ( check_label == srcname ) {
+
+              vector<string>::iterator it = find( used_sources.begin(), used_sources.end(), srcname);
+
+              if ( it == used_sources.end() ) {
+                used_sources.push_back( srcname );
+
+                SourceTermBase& a_src = src_factory.retrieve_source_term( srcname );
+                a_src.problemSetup( found_src_db );
+
+                //Add any table lookup species to the table lookup list:
+                ChemHelper::TableLookup*  tbl_lookup = a_src.get_tablelookup_species();
+                if ( tbl_lookup != NULL )
+                  d_lab->add_species_struct( tbl_lookup );
+
+              }
+            }
+          }
+        }
+      }
+    }
+
+  } else {
+
+    proc0cout << "No defined transport equations found." << endl;
+
+  }
+
+  if ( db->findBlock("PropertyModels") ) {
+
+    ProblemSpecP propmodels_db = db->findBlock("PropertyModels");
+    PropertyModelFactory& prop_factory = PropertyModelFactory::self();
+    ExplicitSolver::registerPropertyModels( propmodels_db );
+    for ( ProblemSpecP prop_db = propmodels_db->findBlock("model");
+          prop_db != 0; prop_db = prop_db->findNextBlock("model") ) {
+
+      std::string model_name;
+      prop_db->getAttribute("label", model_name);
+      if ( model_name == "" ) {
+        throw InvalidValue( "Error: The label attribute must be specified for the property models!", __FILE__, __LINE__);
+      }
+      PropertyModelBase& a_model = prop_factory.retrieve_property_model( model_name );
+      a_model.problemSetup( prop_db );
+
+    }
+  }
+
+  //Radiation Properties:
+  ProblemSpecP rad_properties_db = db->findBlock("RadiationProperties");
+  int matl_index = d_lab->d_sharedState->getArchesMaterial(0)->getDWIndex();
+  d_rad_prop_calc = scinew RadPropertyCalculator(matl_index);
+  if ( rad_properties_db ) {
+    d_rad_prop_calc->problemSetup(rad_properties_db);
+  }
+
+  // read properties
+  // d_MAlab = multimaterial arches common labels
+  d_props = scinew Properties(d_lab, d_MAlab, d_physicalConsts, d_myworld);
+
+  d_props->problemSetup(db);
+
+  //need to set bounds on heat loss as the values in the table itself
+  PropertyModelFactory& propFactory = PropertyModelFactory::self();
+  PropertyModelFactory::PropMap& all_prop_models = propFactory.retrieve_all_property_models();
+  for ( PropertyModelFactory::PropMap::iterator iprop = all_prop_models.begin();
+        iprop != all_prop_models.end(); iprop++) {
+
+    PropertyModelBase* prop_model = iprop->second;
+    if ( prop_model->getPropType() == "heat_loss" ) {
+      MixingRxnModel* mixing_table = d_props->getMixRxnModel();
+      std::map<string,double> table_constants = mixing_table->getAllConstants();
+      if (d_props->getMixingModelType() == "ClassicTable" ) {
+
+        ClassicTableInterface* classic_table = dynamic_cast<ClassicTableInterface*>(mixing_table);
+        std::vector<double> hl_bounds;
+        hl_bounds = classic_table->get_hl_bounds();
+
+        HeatLoss* hl_prop_model = dynamic_cast<HeatLoss*>(prop_model);
+        hl_prop_model->set_hl_bounds(hl_bounds);
+        hl_prop_model->set_table_ref(classic_table);
+
+      }
+    }
+  }
+
+  EqnFactory& eqn_factory = EqnFactory::self();
+  EqnFactory::EqnMap& scalar_eqns = eqn_factory.retrieve_all_eqns();
+  for (EqnFactory::EqnMap::iterator ieqn=scalar_eqns.begin();
+       ieqn != scalar_eqns.end(); ieqn++) {
+
+    EqnBase* eqn = ieqn->second;
+    eqn->assign_stage_to_sources();
+
+  }
+
+  // read boundary condition information
+  d_boundaryCondition = scinew BoundaryCondition(d_lab, d_MAlab, d_physicalConsts,
+                                                 d_props );
+
+  // send params, boundary type defined at the level of Grid
+  d_boundaryCondition->problemSetup(db);
+
+  std::string whichTurbModel = "none";
+
+  if ( db->findBlock("Turbulence") ) {
+    db->findBlock("Turbulence")->getAttribute("model",whichTurbModel);
+  }
+
+  if ( whichTurbModel == "smagorinsky") {
+    d_turbModel = scinew SmagorinskyModel(d_lab, d_MAlab, d_physicalConsts,
+                                          d_boundaryCondition);
+  }else if ( whichTurbModel == "dynamicprocedure") {
+    d_turbModel = scinew IncDynamicProcedure(d_lab, d_MAlab, d_physicalConsts,
+                                             d_boundaryCondition);
+  }else if ( whichTurbModel == "compdynamicprocedure") {
+    d_turbModel = scinew CompDynamicProcedure(d_lab, d_MAlab, d_physicalConsts,
+                                              d_boundaryCondition);
+  } else if ( whichTurbModel == "none" ) {
+    proc0cout << "\n Notice: Turbulence model specificied as: none. Running without momentum closure. \n";
+    d_turbModel = scinew TurbulenceModelPlaceholder(d_lab, d_MAlab, d_physicalConsts,
+                                                    d_boundaryCondition);
+  } else {
+    proc0cout << "\n Notice: No Turbulence model found. \n" << endl;
+  }
+
+  std::cout << " ONE " << std::endl;
+  d_turbModel->problemSetup(db);
+
+  d_turbModel->setMixedModel(d_mixedModel);
+  if (d_mixedModel) {
+    d_scaleSimilarityModel=scinew ScaleSimilarityModel(d_lab, d_MAlab, d_physicalConsts,
+                                                       d_boundaryCondition);
+    d_scaleSimilarityModel->problemSetup(db);
+
+    d_scaleSimilarityModel->setMixedModel(d_mixedModel);
+  }
+
+  std::cout << " TWO " << std::endl;
+  d_props->setBC(d_boundaryCondition);
+
+  // ----- DQMOM STUFF:
+
+
+  ProblemSpecP dqmom_db = db->findBlock("DQMOM");
+  if (dqmom_db) {
+
+    //turn on DQMOM
+    d_doDQMOM = true;
+
+    // require that we have weighted or unweighted explicitly specified as an attribute to DQMOM
+    // type = "unweightedAbs" or type = "weighedAbs"
+    dqmom_db->getAttribute( "type", d_which_dqmom );
+
+    ProblemSpecP db_linear_solver = dqmom_db->findBlock("LinearSolver");
+    if( db_linear_solver ) {
+      string d_solverType;
+      db_linear_solver->getWithDefault("type", d_solverType, "LU");
+
+      // currently, unweighted abscissas only work with the optimized solver -- remove this check when other solvers work:
+      if( d_which_dqmom == "unweightedAbs" && d_solverType != "Optimize" ) {
+        throw ProblemSetupException("Error!: The unweighted abscissas only work with the optimized solver.", __FILE__, __LINE__);
+      }
+    }
+
+    DQMOMEqnFactory& eqn_factory = DQMOMEqnFactory::self();
+
+    //register all equations.
+    eqn_factory.registerDQMOMEqns(dqmom_db, d_lab, d_timeIntegrator );
+
+    //register all models
+    CoalModelFactory& model_factory = CoalModelFactory::self();
+    model_factory.problemSetup(dqmom_db);
+
+    ExplicitSolver::registerModels(dqmom_db);
+
+    // Create a velocity model
+    d_partVel = scinew PartVel( d_lab );
+    d_partVel->problemSetup( dqmom_db );
+    // Do through and initialze all DQMOM equations and call their respective problem setups.
+    const int numQuadNodes = eqn_factory.get_quad_nodes();
+
+    model_factory.setArchesLabel( d_lab );
+
+    ProblemSpecP w_db = dqmom_db->findBlock("Weights");
+
+    // do all weights
+    for (int iqn = 0; iqn < numQuadNodes; iqn++) {
+      std::string weight_name = "w_qn";
+      std::string node;
+      std::stringstream out;
+      out << iqn;
+      node = out.str();
+      weight_name += node;
+
+      EqnBase& a_weight = eqn_factory.retrieve_scalar_eqn( weight_name );
+      eqn_factory.set_weight_eqn( weight_name, &a_weight );
+      DQMOMEqn& weight = dynamic_cast<DQMOMEqn&>(a_weight);
+      weight.setAsWeight();
+      weight.problemSetup( w_db );
+    }
+
+    // loop for all ic's
+    for (ProblemSpecP ic_db = dqmom_db->findBlock("Ic"); ic_db != 0; ic_db = ic_db->findNextBlock("Ic")) {
+      std::string ic_name;
+      ic_db->getAttribute("label", ic_name);
+      //loop for all quad nodes for this internal coordinate
+      for (int iqn = 0; iqn < numQuadNodes; iqn++) {
+
+        std::string final_name = ic_name + "_qn";
+        std::string node;
+        std::stringstream out;
+        out << iqn;
+        node = out.str();
+        final_name += node;
+
+        EqnBase& an_ic = eqn_factory.retrieve_scalar_eqn( final_name );
+        eqn_factory.set_abscissa_eqn( final_name, &an_ic );
+        an_ic.problemSetup( ic_db );
+
+      }
+    }
+
+    // Now go through models and initialize all defined models and call
+    // their respective problemSetup
+    ProblemSpecP models_db = dqmom_db->findBlock("Models");
+    if (models_db) {
+      for (ProblemSpecP m_db = models_db->findBlock("model"); m_db != 0; m_db = m_db->findNextBlock("model")) {
+        std::string model_name;
+        m_db->getAttribute("label", model_name);
+        for (int iqn = 0; iqn < numQuadNodes; iqn++) {
+          std::string temp_model_name = model_name;
+          std::string node;
+          std::stringstream out;
+          out << iqn;
+          node = out.str();
+          temp_model_name += "_qn";
+          temp_model_name += node;
+
+          ModelBase& a_model = model_factory.retrieve_model( temp_model_name );
+          a_model.problemSetup( m_db, iqn );
+        }
+      }
+    }
+
+    // set up the linear solver:
+    d_dqmomSolver = scinew DQMOM( d_lab, d_which_dqmom );
+    d_dqmomSolver->problemSetup( dqmom_db );
+
+  }
+  std::cout << " THREE " << std::endl;
+
+
+  // ----- CQMOM STUFF:
+
+  ProblemSpecP cqmom_db = db->findBlock("CQMOM");
   if (cqmom_db) {
     d_doCQMOM = true;
+    bool usePartVel = false;
+    cqmom_db->getAttribute( "partvel", usePartVel );
+
+    //set up source terms and pass to explicit solver
+    d_cqmomSource = scinew CQMOMSourceWrapper( d_lab );
+    d_cqmomSource->problemSetup( cqmom_db );
+
+    //register all equations.
+    ExplicitSolver::registerCQMOMEqns(cqmom_db);
+
+    // initialze all CQMOM equations and call their respective problem setups.
+    CQMOMEqnFactory& eqn_factory = CQMOMEqnFactory::self();
+    const int numMoments = eqn_factory.get_number_moments();
+    proc0cout << "Feeding these " << numMoments << " eqns into CQMOM Eqn Factory" << endl;
+
+    int M;
+    cqmom_db->get("NumberInternalCoordinates",M);
+    vector<int> temp_moment_index;
+    for ( ProblemSpecP db_moments = cqmom_db->findBlock("Moment");
+          db_moments != 0; db_moments = db_moments->findNextBlock("Moment") ) {
+      temp_moment_index.resize(0);
+      db_moments->get("m", temp_moment_index);
+      proc0cout << "Index " << temp_moment_index << " ";
+      int index_length = temp_moment_index.size();
+      if (index_length != M) {
+        std::cout << "Index for moment " << temp_moment_index << " does not have same number of indexes as internal coordinate #" << M << std::endl;
+      }
+
+      std::string moment_name = "m_";
+      std::string mIndex;
+      std::stringstream out;
+      for (int i = 0; i<M; i++) {
+        out << temp_moment_index[i];
+        mIndex = out.str();
+      }
+      moment_name += mIndex;
+
+      EqnBase& a_moment = eqn_factory.retrieve_scalar_eqn( moment_name );
+      eqn_factory.set_moment_eqn( moment_name, &a_moment );
+      CQMOMEqn& moment = dynamic_cast<CQMOMEqn&>(a_moment);
+      moment.problemSetup( db_moments );
+    }
+
+    // set up the linear solver:
+    d_cqmomSolver = scinew CQMOM( d_lab, usePartVel );
+    d_cqmomSolver->problemSetup( cqmom_db );
+
+    // set up convection
+    d_cqmomConvect = scinew CQMOM_Convection( d_lab );
+    if (usePartVel ) {
+      d_cqmomConvect->problemSetup( cqmom_db );
+    }
   }
 
-  commonProblemSetup( db );
 
-  if ( db->findBlock( "print_total_ke" ) ){
+  std::cout << " FOUR " << std::endl;
+  // register any other source terms:
+  SourceTermFactory& src_factory = SourceTermFactory::self();
+  src_factory.registerSources( d_lab, d_doDQMOM, d_which_dqmom );
+
+
+  // do any last setup operations on the active source terms:
+  src_factory.extraSetup( grid, d_boundaryCondition, d_props );
+
+  // Add extra species to table lookup as required by models
+  d_props->addLookupSpecies();
+
+  std::cout << " FIVE " << std::endl;
+  // Add new intrusion stuff:
+  // get a reference to the intrusions
+  IntrusionBC* intrusion_ref = d_boundaryCondition->get_intrusion_ref();
+  bool using_new_intrusions = d_boundaryCondition->is_using_new_intrusion();
+
+  if(d_doDQMOM)
+  {
+    // check to make sure that all dqmom equations have BCs set.
+    DQMOMEqnFactory& dqmom_factory = DQMOMEqnFactory::self();
+    DQMOMEqnFactory::EqnMap& dqmom_eqns = dqmom_factory.retrieve_all_eqns();
+    for (DQMOMEqnFactory::EqnMap::iterator ieqn=dqmom_eqns.begin(); ieqn != dqmom_eqns.end(); ieqn++) {
+      EqnBase* eqn = ieqn->second;
+      eqn->set_intrusion( intrusion_ref );
+      eqn->set_intrusion_bool( using_new_intrusions );
+    }
+  }
+
+  if(d_doCQMOM) //just copied from dqmom BC lock, this should work the same
+  {
+    // check to make sure that all cqmom equations have BCs set.
+    CQMOMEqnFactory& cqmom_factory = CQMOMEqnFactory::self();
+    CQMOMEqnFactory::EqnMap& cqmom_eqns = cqmom_factory.retrieve_all_eqns();
+    for (CQMOMEqnFactory::EqnMap::iterator ieqn=cqmom_eqns.begin(); ieqn != cqmom_eqns.end(); ieqn++) {
+      EqnBase* eqn = ieqn->second;
+      eqn->set_intrusion( intrusion_ref );
+      eqn->set_intrusion_bool( using_new_intrusions );
+    }
+  }
+
+  // check to make sure that all the scalar variables have BCs set and set intrusions:
+  for (EqnFactory::EqnMap::iterator ieqn=scalar_eqns.begin(); ieqn != scalar_eqns.end(); ieqn++) {
+    EqnBase* eqn = ieqn->second;
+    eqn->set_intrusion( intrusion_ref );
+    eqn->set_intrusion_bool( using_new_intrusions );
+
+    //send a reference of the mixing/rxn table to the eqn for initializiation
+    MixingRxnModel* d_mixingTable = d_props->getMixRxnModel();
+    eqn->set_table( d_mixingTable );
+
+    //look for an set any tabulated bc's
+    eqn->extraProblemSetup( db );
+  }
+
+  std::cout << " SIX " << std::endl;
+  //------------------------------------------------------------------------------------------------
+
+  if ( db_es->findBlock( "print_total_ke" ) ){
     d_printTotalKE = true;
   }
 
-  db->getWithDefault( "max_ke_allowed", d_ke_limit, 1.0e99 );
+  db_es->getWithDefault( "max_ke_allowed", d_ke_limit, 1.0e99 );
 
-  if ( db_parent->findBlock("BoundaryConditions") ){
-    if ( db_parent->findBlock("BoundaryConditions")->findBlock( "WallHT" ) ){
-      ProblemSpecP db_wall_ht = db_parent->findBlock("BoundaryConditions")->findBlock( "WallHT" );
+  if ( db_es->findBlock("BoundaryConditions") ){
+    if ( db_es->findBlock("BoundaryConditions")->findBlock( "WallHT" ) ){
+      ProblemSpecP db_wall_ht = db_es->findBlock("BoundaryConditions")->findBlock( "WallHT" );
       d_wall_ht_models = scinew WallModelDriver( d_lab->d_sharedState );
       d_wall_ht_models->problemSetup( db_wall_ht );
     }
@@ -195,19 +695,18 @@ ExplicitSolver::problemSetup( const ProblemSpecP & params, SimulationStateP & st
                                          d_boundaryCondition,
                                          d_physicalConsts, d_myworld,
                                          d_hypreSolver );
-  d_pressSolver->problemSetup( db, state );
+  d_pressSolver->problemSetup( db_es, state );
 
   d_momSolver = scinew MomentumSolver(d_lab, d_MAlab,
-                                        d_turbModel, d_boundaryCondition,
-                                        d_physicalConsts);
+                                      d_turbModel, d_boundaryCondition,
+                                      d_physicalConsts);
 
-  d_momSolver->problemSetup(db);
+  d_momSolver->problemSetup(db_es);
 
   const ProblemSpecP params_root = db->getRootNode();
   std::string t_order;
   ProblemSpecP db_time_int = params_root->findBlock("CFD")->findBlock("ARCHES")->findBlock("TimeIntegrator");
   db_time_int->findBlock("ExplicitIntegrator")->getAttribute("order", t_order);
-
 
   ProblemSpecP db_vars  = params_root->findBlock("DataArchiver");
   for (ProblemSpecP db_dv = db_vars->findBlock("save");
@@ -274,18 +773,18 @@ ExplicitSolver::problemSetup( const ProblemSpecP & params, SimulationStateP & st
                                 __FILE__, __LINE__);
   }
 
-  db->getWithDefault("turbModelCalcFreq",d_turbModelCalcFreq,1);
-  db->getWithDefault("turbModelCalcForAllRKSteps",d_turbModelRKsteps,true);
+  db_es->getWithDefault("turbModelCalcFreq",d_turbModelCalcFreq,1);
+  db_es->getWithDefault("turbModelCalcForAllRKSteps",d_turbModelRKsteps,true);
 
-  db->getWithDefault("restartOnNegativeDensityGuess",
+  db_es->getWithDefault("restartOnNegativeDensityGuess",
                      d_restart_on_negative_density_guess,false);
-  db->getWithDefault("NoisyDensityGuess",
+  db_es->getWithDefault("NoisyDensityGuess",
                      d_noisyDensityGuess, false);
-  db->getWithDefault("kineticEnergy_fromFC",d_KE_fromFC,false);
-  db->getWithDefault("maxDensityLag",d_maxDensityLag,0.0);
+  db_es->getWithDefault("kineticEnergy_fromFC",d_KE_fromFC,false);
+  db_es->getWithDefault("maxDensityLag",d_maxDensityLag,0.0);
 
   d_extra_table_lookup = false;
-  if ( db->findBlock("extra_table_lookup")) d_extra_table_lookup = true;
+  if ( db_es->findBlock("extra_table_lookup")) d_extra_table_lookup = true;
 
   d_props->setFilter(d_turbModel->getFilter());
   d_momSolver->setDiscretizationFilter(d_turbModel->getFilter());
@@ -302,8 +801,8 @@ ExplicitSolver::problemSetup( const ProblemSpecP & params, SimulationStateP & st
 
   //__________________________________
   // allow for addition of mass source terms
-  if (db->findBlock("PressureSolver")->findBlock("src")){
-    ProblemSpecP db_p = db->findBlock("PressureSolver");
+  if (db_es->findBlock("PressureSolver")->findBlock("src")){
+    ProblemSpecP db_p = db_es->findBlock("PressureSolver");
     string srcname;
     for (ProblemSpecP src_db = db_p->findBlock("src"); src_db != 0; src_db = src_db->findNextBlock("src")){
       src_db->getAttribute("label", srcname);
@@ -311,7 +810,7 @@ ExplicitSolver::problemSetup( const ProblemSpecP & params, SimulationStateP & st
     }
   }
   d_solvability = false;
-  if ( db->findBlock("PressureSolver")->findBlock("enforce_solvability")){
+  if ( db_es->findBlock("PressureSolver")->findBlock("enforce_solvability")){
     d_solvability = true;
   }
 
@@ -562,6 +1061,46 @@ ExplicitSolver::sched_initializeVariables( const LevelP& level,
     tsk->computes(VarLabel::find("true_wall_temperature"));
 
   sched->addTask(tsk, level->eachPatch(), d_lab->d_sharedState->allArchesMaterials());
+
+}
+
+void
+ExplicitSolver::sched_restartInitialize( const LevelP& level, SchedulerP& sched )
+{
+
+  bool doingRestart = true;
+  //__________________________________
+  //  initialize src terms
+  SourceTermFactory& srcFactory = SourceTermFactory::self();
+  SourceTermFactory::SourceMap& sources = srcFactory.retrieve_all_sources();
+  for (SourceTermFactory::SourceMap::iterator isrc=sources.begin(); isrc !=sources.end(); isrc++){
+    SourceTermBase* src = isrc->second;
+    src->sched_RestartInitialize(level, sched);
+  }
+
+}
+
+void
+ExplicitSolver::sched_restartInitializeTimeAdvance( const LevelP& level, SchedulerP& sched )
+{
+
+  bool doingRestart = true;
+  const MaterialSet* matls = d_lab->d_sharedState->allArchesMaterials();
+
+  d_boundaryCondition->sched_computeBCArea( sched, level, matls );
+  d_boundaryCondition->sched_setupBCInletVelocities__NEW( sched, level, matls, doingRestart );
+
+  EqnFactory& eqnFactory = EqnFactory::self();
+  EqnFactory::EqnMap& scalar_eqns = eqnFactory.retrieve_all_eqns();
+  for (EqnFactory::EqnMap::iterator ieqn=scalar_eqns.begin(); ieqn != scalar_eqns.end(); ieqn++) {
+    EqnBase* eqn = ieqn->second;
+    eqn->sched_checkBCs( level, sched );
+  }
+
+  checkMomBCs( sched, level, matls );
+
+  d_boundaryCondition->sched_setupNewIntrusionCellType( sched, level, matls, doingRestart );
+  d_boundaryCondition->sched_setupNewIntrusions( sched, level, matls );
 
 }
 
@@ -3188,5 +3727,358 @@ ExplicitSolver::getCCVelocities(const ProcessorGroup*,
         wVel_CC[c] = w;
       }
     }
+  }
+}
+
+//---------------------------------------------------------------------------
+// Method: Register Models
+//---------------------------------------------------------------------------
+void ExplicitSolver::registerModels(ProblemSpecP& db)
+{
+  //ProblemSpecP models_db = db->findBlock("DQMOM")->findBlock("Models");
+  ProblemSpecP models_db = db->findBlock("Models");
+
+  // Get reference to the model factory
+  CoalModelFactory& model_factory = CoalModelFactory::self();
+  // Get reference to the dqmom factory
+  DQMOMEqnFactory& dqmom_factory = DQMOMEqnFactory::self();
+
+  proc0cout << "\n";
+  proc0cout << "******* Model Registration ********" << endl;
+
+  // There are three kind of variables to worry about:
+  // 1) internal coordinates
+  // 2) other "extra" scalars
+  // 3) standard flow variables
+  // We want the model to have access to all three.
+  // Thus, for 1) you just set the internal coordinate name and the "_qn#" is attached.  This means the models are reproduced qn times
+  // for 2) you specify this in the <scalarVars> tag
+  // for 3) you specify this in the implementation of the model itself (ie, no user input)
+
+  // perhaps we should have an <ArchesVars> tag... for variables in Arches but
+  // not in the DQMOM or Scalar equation factory
+  // (this would probably need some kind of error-checking for minor typos,
+  //  like "tempin" instead of "tempIN"...
+  //  which would require some way of searching label names in ArchesLabel.h...
+  //  which would require some kind of map in ArchesLabel.h...)
+
+  if (models_db) {
+    for (ProblemSpecP model_db = models_db->findBlock("model"); model_db != 0; model_db = model_db->findNextBlock("model")) {
+      std::string model_name;
+      model_db->getAttribute("label", model_name);
+      std::string model_type;
+      model_db->getAttribute("type", model_type);
+
+      proc0cout << endl;
+      proc0cout << "Found  a model: " << model_name << endl;
+
+      // The model must be reproduced for each quadrature node.
+      const int numQuadNodes = dqmom_factory.get_quad_nodes();
+
+      vector<string> requiredICVarLabels;
+      ProblemSpecP icvar_db = model_db->findBlock("ICVars");
+
+      if ( icvar_db ) {
+        proc0cout << "Requires the following internal coordinates: " << endl;
+        // These variables are only those that are specifically defined from the input file
+        for (ProblemSpecP var = icvar_db->findBlock("variable");
+             var !=0; var = var->findNextBlock("variable")) {
+
+          std::string label_name;
+          var->getAttribute("label", label_name);
+
+          proc0cout << "label = " << label_name << endl;
+          // This map hold the labels that are required to compute this model term.
+          requiredICVarLabels.push_back(label_name);
+        }
+      } else {
+        proc0cout << "Model does not require any internal coordinates. " << endl;
+      }
+
+      // This is not immediately useful...
+      // However, if we use the new TransportEqn mechanism to add extra scalars,
+      //  we could potentially track flow variables (temperature, mixture frac, etc.)
+      //  using the new TransportEqn mechanism, which would make it necessary to
+      // be able to make our models depend on these scalars
+      vector<string> requiredScalarVarLabels;
+      ProblemSpecP scalarvar_db = model_db->findBlock("scalarVars");
+
+      if ( scalarvar_db ) {
+        proc0cout << "Requires the following scalar variables: " << endl;
+        for (ProblemSpecP var = scalarvar_db->findBlock("variable");
+             var != 0; var = var->findNextBlock("variable") ) {
+          std::string label_name;
+          var->getAttribute("label", label_name);
+
+          proc0cout << "label = " << label_name << endl;
+          // This map holds the scalar labels required to compute this model term
+          requiredScalarVarLabels.push_back(label_name);
+        }
+      } else {
+        proc0cout << "Model does not require any scalar variables. " << endl;
+      }
+
+      // --- looping over quadrature nodes ---
+      // This will make a model for each quadrature node.
+      for (int iqn = 0; iqn < numQuadNodes; iqn++) {
+        std::string temp_model_name = model_name;
+        std::string node;
+        std::stringstream out;
+        out << iqn;
+        node = out.str();
+        temp_model_name += "_qn";
+        temp_model_name += node;
+
+        if ( model_type == "ConstantModel" ) {
+          // Model term G = constant (G = 1)
+          ModelBuilder* modelBuilder = scinew ConstantModelBuilder(temp_model_name, requiredICVarLabels, requiredScalarVarLabels, d_lab, d_lab->d_sharedState, iqn);
+          model_factory.register_model( temp_model_name, modelBuilder );
+        } else if ( model_type == "KobayashiSarofimDevol" ) {
+          // Kobayashi Sarofim devolatilization model
+          ModelBuilder* modelBuilder = scinew KobayashiSarofimDevolBuilder(temp_model_name, requiredICVarLabels, requiredScalarVarLabels, d_lab, d_lab->d_sharedState, iqn);
+          model_factory.register_model( temp_model_name, modelBuilder );
+        } else if ( model_type == "RichardsFletcherDevol" ) {
+          // Richards Fletcher devolatilization model
+          ModelBuilder* modelBuilder = scinew RichardsFletcherDevolBuilder(temp_model_name, requiredICVarLabels, requiredScalarVarLabels, d_lab, d_lab->d_sharedState, iqn);
+          model_factory.register_model( temp_model_name, modelBuilder );
+        } else if ( model_type == "FOWYDevol" ) {
+          // Biagini Tognotti devolatilization model
+          ModelBuilder* modelBuilder = scinew FOWYDevolBuilder(temp_model_name, requiredICVarLabels, requiredScalarVarLabels, d_lab, d_lab->d_sharedState, iqn);
+          model_factory.register_model( temp_model_name, modelBuilder );
+        } else if ( model_type == "YamamotoDevol" ) {
+          ModelBuilder* modelBuilder = scinew YamamotoDevolBuilder(temp_model_name, requiredICVarLabels, requiredScalarVarLabels, d_lab, d_lab->d_sharedState, iqn);
+          model_factory.register_model( temp_model_name, modelBuilder );
+        } else if ( model_type == "CharOxidationShaddix" ) {
+          ModelBuilder* modelBuilder = scinew CharOxidationShaddixBuilder(temp_model_name, requiredICVarLabels, requiredScalarVarLabels, d_lab, d_lab->d_sharedState, iqn);
+          model_factory.register_model( temp_model_name, modelBuilder );
+        } else if ( model_type == "EnthalpyShaddix" ) {
+          ModelBuilder* modelBuilder = scinew EnthalpyShaddixBuilder(temp_model_name, requiredICVarLabels, requiredScalarVarLabels, d_lab, d_lab->d_sharedState, d_props, iqn);
+          model_factory.register_model( temp_model_name, modelBuilder );
+        } else if ( model_type == "MaximumTemperature" ) {
+          ModelBuilder* modelBuilder = scinew MaximumTemperatureBuilder(temp_model_name, requiredICVarLabels, requiredScalarVarLabels, d_lab, d_lab->d_sharedState, iqn);
+          model_factory.register_model( temp_model_name, modelBuilder );
+        } else if ( model_type == "Drag" ) {
+          ModelBuilder* modelBuilder = scinew DragModelBuilder(temp_model_name, requiredICVarLabels, requiredScalarVarLabels, d_lab, d_lab->d_sharedState, iqn);
+          model_factory.register_model( temp_model_name, modelBuilder );
+        } else if ( model_type == "SimpleBirth" ) {
+          ModelBuilder* modelBuilder = scinew SimpleBirthBuilder(temp_model_name, requiredICVarLabels, requiredScalarVarLabels, d_lab, d_lab->d_sharedState, iqn);
+          model_factory.register_model( temp_model_name, modelBuilder );
+        } else {
+          proc0cout << "For model named: " << temp_model_name << endl;
+          proc0cout << "with type: " << model_type << endl;
+          std::string errmsg;
+          errmsg = model_type + ": This model type not recognized or not supported.";
+          throw InvalidValue(errmsg, __FILE__, __LINE__);
+        }
+      }
+    }
+  }
+}
+
+//---------------------------------------------------------------------------
+// Method: Register Eqns
+//---------------------------------------------------------------------------
+void ExplicitSolver::registerTransportEqns(ProblemSpecP& db)
+{
+  ProblemSpecP eqns_db = db;
+
+  // Get reference to the source factory
+  EqnFactory& eqnFactory = EqnFactory::self();
+
+  if (eqns_db) {
+
+    proc0cout << "\n";
+    proc0cout << "******* Equation Registration ********" << endl;
+
+    for (ProblemSpecP eqn_db = eqns_db->findBlock("Eqn"); eqn_db != 0; eqn_db = eqn_db->findNextBlock("Eqn")) {
+      std::string eqn_name;
+      eqn_db->getAttribute("label", eqn_name);
+      std::string eqn_type;
+      eqn_db->getAttribute("type", eqn_type);
+
+      proc0cout << "Found  an equation: " << eqn_name << endl;
+
+      // Here we actually register the equations based on their types.
+      // This is only done once and so the "if" statement is ok.
+      // Equations are then retrieved from the factory when needed.
+      // The keys are currently strings which might be something we want to change if this becomes inefficient
+      if ( eqn_type == "CCscalar" ) {
+
+        EqnBuilder* scalarBuilder = scinew CCScalarEqnBuilder( d_lab, d_timeIntegrator, eqn_name );
+        eqnFactory.register_scalar_eqn( eqn_name, scalarBuilder );
+
+        // ADD OTHER OPTIONS HERE if ( eqn_type == ....
+
+      } else {
+        proc0cout << "For equation named: " << eqn_name << endl;
+        proc0cout << "with type: " << eqn_type << endl;
+        throw InvalidValue("This equation type not recognized or not supported! ", __FILE__, __LINE__);
+      }
+    }
+  }
+}
+//---------------------------------------------------------------------------
+// Method: Register Property Models
+//---------------------------------------------------------------------------
+void ExplicitSolver::registerPropertyModels(ProblemSpecP& db)
+{
+  ProblemSpecP propmodels_db = db;
+  PropertyModelFactory& prop_factory = PropertyModelFactory::self();
+
+  if ( propmodels_db ) {
+
+    proc0cout << "\n";
+    proc0cout << "******* Property Model Registration *******" << endl;
+
+    for ( ProblemSpecP prop_db = propmodels_db->findBlock("model");
+          prop_db != 0; prop_db = prop_db->findNextBlock("model") ) {
+
+      std::string prop_name;
+      prop_db->getAttribute("label", prop_name);
+      std::string prop_type;
+      prop_db->getAttribute("type", prop_type);
+
+      proc0cout << "Found a property model: " << prop_name << endl;
+
+      if ( prop_type == "cc_constant" ) {
+
+        // An example of a constant CC variable property
+        PropertyModelBase::Builder* the_builder = new ConstProperty<CCVariable<double>, constCCVariable<double> >::Builder( prop_name, d_lab->d_sharedState );
+        prop_factory.register_property_model( prop_name, the_builder );
+
+      }  else if ( prop_type == "extent_rxn" ) {
+
+        // Scalar dissipation rate calculation
+        PropertyModelBase::Builder* the_builder = new ExtentRxn::Builder( prop_name, d_lab->d_sharedState );
+        prop_factory.register_property_model( prop_name, the_builder );
+
+      } else if ( prop_type == "tab_strip_factor" ) {
+
+        // Scalar dissipation rate calculation
+        PropertyModelBase::Builder* the_builder = new TabStripFactor::Builder( prop_name, d_lab->d_sharedState );
+        prop_factory.register_property_model( prop_name, the_builder );
+
+      } else if ( prop_type == "fx_constant" ) {
+
+        // An example of a constant FCX variable property
+        PropertyModelBase::Builder* the_builder = new ConstProperty<SFCXVariable<double>, constCCVariable<double> >::Builder( prop_name, d_lab->d_sharedState );
+        prop_factory.register_property_model( prop_name, the_builder );
+
+      } else if ( prop_type == "empirical_soot" ) {
+
+        // emperical soot model (computes soot volume fraction and abskp)
+        PropertyModelBase::Builder* the_builder = new EmpSoot::Builder( prop_name, d_lab->d_sharedState );
+        prop_factory.register_property_model( prop_name, the_builder );
+
+      } else if ( prop_type == "fv_soot" ) {
+
+        // Computes the soot volume fraction from the soot mass fraction (which is assumed transported)
+        PropertyModelBase::Builder* the_builder = new fvSootFromYsoot::Builder( prop_name, d_lab->d_sharedState );
+        prop_factory.register_property_model( prop_name, the_builder );
+
+      } else if ( prop_type == "algebraic_scalar_diss" ) {
+
+        // Algebraic scalar dissipation rate
+        PropertyModelBase::Builder* the_builder = new AlgebraicScalarDiss::Builder( prop_name, d_lab->d_sharedState );
+        prop_factory.register_property_model( prop_name, the_builder );
+
+      } else if ( prop_type == "heat_loss" ) {
+
+        // Heat loss
+        PropertyModelBase::Builder* the_builder = new HeatLoss::Builder( prop_name, d_lab->d_sharedState );
+        prop_factory.register_property_model( prop_name, the_builder );
+
+      } else if ( prop_type == "scalsim_variance" ) {
+
+        //Scalar variance using a scale similarity concept
+        PropertyModelBase::Builder* the_builder = new ScalarVarianceScaleSim::Builder( prop_name, d_lab->d_sharedState );
+        prop_factory.register_property_model( prop_name, the_builder );
+
+      } else if ( prop_type == "norm_scalar_var") {
+
+        //Normalized scalar variance based on second mixfrac moment
+        PropertyModelBase::Builder* the_builder = new NormScalarVariance::Builder( prop_name, d_lab->d_sharedState );
+        prop_factory.register_property_model( prop_name, the_builder );
+
+      } else if ( prop_type == "scalar_diss") {
+
+        //Scalar dissipation based on the transported squared gradient of mixture fraction for 2-eqn scalar var model
+        PropertyModelBase::Builder* the_builder = new ScalarDissipation::Builder( prop_name, d_lab->d_sharedState );
+        prop_factory.register_property_model( prop_name, the_builder );
+
+      } else if ( prop_type == "radiation_properties" ) {
+
+        //Radiation properties as computed through the RadPropertyCalculator
+        PropertyModelBase::Builder* the_builder = new RadProperties::Builder( prop_name, d_lab->d_sharedState, d_lab );
+        prop_factory.register_property_model( prop_name, the_builder );
+
+      } else {
+
+        proc0cout << endl;
+        proc0cout << "For property model named: " << prop_name << endl;
+        proc0cout << "with type: " << prop_type << endl;
+        throw InvalidValue("This property model is not recognized or supported! ", __FILE__, __LINE__);
+
+      }
+    }
+  }
+}
+
+//---------------------------------------------------------------------------
+// Method: Register CQMOM Eqns
+//---------------------------------------------------------------------------
+void ExplicitSolver::registerCQMOMEqns(ProblemSpecP& db)
+{
+  // Now do the same for CQMOM equations.
+  ProblemSpecP cqmom_db = db;
+
+  // Get reference to the cqmom eqn factory
+  CQMOMEqnFactory& cqmom_eqnFactory = CQMOMEqnFactory::self();
+
+  if (cqmom_db) {
+
+    int nMoments = 0;
+    int M;
+    cqmom_db->require("NumberInternalCoordinates",M);
+    cqmom_db->get("NumberInternalCoordinates",M);
+
+    proc0cout << "# IC = " << M << endl;
+    proc0cout << "******* CQMOM Equation Registration ********" << endl;
+    // Make the moment transport equations
+    vector<int> temp_moment_index;
+    for ( ProblemSpecP db_moments = cqmom_db->findBlock("Moment");
+          db_moments != 0; db_moments = db_moments->findNextBlock("Moment") ) {
+      temp_moment_index.resize(0);
+      db_moments->get("m", temp_moment_index);
+
+      proc0cout << "creating a moment equation for: " << temp_moment_index << " as ";
+      // put moment index into vector of moment indices:
+      //     momentIndexes.push_back(temp_moment_index);
+
+      int index_length = temp_moment_index.size();
+      if (index_length != M) {
+        proc0cout << "\nIndex for moment " << temp_moment_index << " does not have same number of indexes as internal coordinate #" << M << endl;
+        throw InvalidValue("All specified moment must have same number of internal coordinates", __FILE__, __LINE__);
+      }
+
+      //register eqns - this should make varLabel for each moment eqn
+      std::string moment_name = "m_";
+      std::string mIndex;
+      std::stringstream out;
+      for (int i = 0; i<M; i++) {
+        out << temp_moment_index[i];
+        mIndex = out.str();
+      }
+      moment_name += mIndex;
+      proc0cout << moment_name << endl;
+
+      CQMOMEqnBuilderBase* eqnBuilder = scinew CQMOMEqnBuilder( d_lab, d_timeIntegrator, moment_name );
+      cqmom_eqnFactory.register_scalar_eqn( moment_name, eqnBuilder );
+      nMoments++;
+    }
+
+    cqmom_eqnFactory.set_number_moments( nMoments );
+
+    //register internal coordinate names in a way to know which are velocities
   }
 }
