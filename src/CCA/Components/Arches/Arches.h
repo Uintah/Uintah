@@ -150,9 +150,6 @@ public:
 
   virtual void restartInitialize();
 
-  virtual void sched_paramInit(const LevelP& level,
-                               SchedulerP&);
-
   virtual void scheduleComputeStableTimestep(const LevelP& level,
                                              SchedulerP&);
   void
@@ -164,18 +161,6 @@ public:
 
   virtual bool needRecompile(double time, double dt,
                              const GridP& grid);
-
-  virtual void sched_getCCVelocities(const LevelP& level,
-                                     SchedulerP&);
-  virtual void sched_weightInit( const LevelP& level,
-                                SchedulerP& );
-  virtual void sched_weightedAbsInit( const LevelP& level,
-                                      SchedulerP& );
-
-  virtual void sched_scalarInit( const LevelP& level,
-                                 SchedulerP& sched );
-  virtual void sched_momentInit( const LevelP& level,
-                                 SchedulerP& sched );
 
   //__________________________________
   //  Multi-level/AMR
@@ -228,8 +213,6 @@ public:
                                DataWarehouse* new_dw);
 
 
-protected:
-
 private:
 
   Arches();
@@ -237,13 +220,6 @@ private:
   Arches(const Arches&);
 
   Arches& operator=(const Arches&);
-
-
-  void paramInit(const ProcessorGroup*,
-                 const PatchSubset* patches,
-                 const MaterialSubset*,
-                 DataWarehouse* ,
-                 DataWarehouse* new_dw );
 
   void computeStableTimeStep(const ProcessorGroup* ,
                              const PatchSubset* patches,
@@ -256,36 +232,6 @@ private:
                               const MaterialSubset*,
                               DataWarehouse* ,
                               DataWarehouse* new_dw);
-
-  void getCCVelocities(const ProcessorGroup*,
-                       const PatchSubset* patches,
-                       const MaterialSubset*,
-                       DataWarehouse* ,
-                       DataWarehouse* new_dw);
-
-  void weightInit( const ProcessorGroup*,
-                  const PatchSubset* patches,
-                  const MaterialSubset*,
-                  DataWarehouse* old_dw,
-                  DataWarehouse* new_dw);
-  void weightedAbsInit( const ProcessorGroup*,
-                  const PatchSubset* patches,
-                  const MaterialSubset*,
-                  DataWarehouse* old_dw,
-                  DataWarehouse* new_dw);
-
-  void scalarInit( const ProcessorGroup* ,
-                   const PatchSubset* patches,
-                   const MaterialSubset*,
-                   DataWarehouse* old_dw,
-                   DataWarehouse* new_dw );
-
-  void momentInit( const ProcessorGroup* ,
-                   const PatchSubset* patches,
-                   const MaterialSubset*,
-                   DataWarehouse* old_dw,
-                   DataWarehouse* new_dw );
-
 
   const Uintah::ProblemSpecP get_arches_spec(){ return _arches_spec; }
 
@@ -352,8 +298,6 @@ private:
 
   std::string d_init_inputfile;
 
-  TimeIntegratorLabel* init_timelabel;
-  bool init_timelabel_allocated;
   bool d_dynScalarModel;
   bool d_underflow;
 
@@ -389,7 +333,7 @@ private:
   ArchesParticlesHelper* _particlesHelper;
   bool _doLagrangianParticles;
 
-  std::map<std::string, boost::shared_ptr<TaskFactoryBase> > _boost_factory_map;
+  std::map<std::string, boost::shared_ptr<TaskFactoryBase> > _task_factory_map;
 
 }; // end class Arches
 

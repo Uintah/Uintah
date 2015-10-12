@@ -72,6 +72,7 @@ class DQMOM;
 class CQMOM;
 class CQMOM_Convection;
 class CQMOMSourceWrapper;
+class ArchesBCHelper;
 class NonlinearSolver {
 
 public:
@@ -91,14 +92,11 @@ public:
 
   virtual bool restartableTimesteps() = 0;
 
-  virtual void sched_setInitVelCond( const LevelP& level, SchedulerP& sched,
-                                     const MaterialSet* mats) = 0;
-
   virtual void checkMomBCs( SchedulerP& sched,
                             const LevelP& level,
                             const MaterialSet* matls) = 0;
 
-  virtual void initialize( const LevelP& lvl, SchedulerP& sched ) = 0;
+  virtual void initialize( const LevelP& lvl, SchedulerP& sched, const bool doing_restart ) = 0;
 
   class NLSolverBuilder {
 
@@ -118,6 +116,9 @@ public:
   /** @brief Return the initial dt **/
   inline double get_initial_dt(){ return d_initial_dt; }
 
+  /** @brief Set the helper **/
+  void set_bchelper( std::map< int, ArchesBCHelper* >* helper ){ _bcHelperMap = helper; }
+
 protected:
 
    const ProcessorGroup * d_myworld;
@@ -125,6 +126,9 @@ protected:
 
    double                 d_initial_dt;
    bool                   d_underflow;
+
+   typedef std::map< int, ArchesBCHelper* >* BCHelperMapT;
+   BCHelperMapT _bcHelperMap;
 
 private:
 
