@@ -242,7 +242,7 @@ BoundaryCondition::problemSetup(const ProblemSpecP& params)
             db_BCType->require("relative_xyz", rel_xyz);
 
             BoundaryCondition::FFInfo u_info;
-            readInputFile__NEW( file_name, u_info, 0 );
+            readInputFile( file_name, u_info, 0 );
             u_info.relative_xyz = rel_xyz;
             u_info.default_type = default_type;
             u_info.default_value = default_value[0];
@@ -260,7 +260,7 @@ BoundaryCondition::problemSetup(const ProblemSpecP& params)
             }
 
             BoundaryCondition::FFInfo v_info;
-            readInputFile__NEW( file_name, v_info, 1 );
+            readInputFile( file_name, v_info, 1 );
             v_info.relative_xyz = rel_xyz;
             v_info.default_type = default_type;
             v_info.default_value = default_value[1];
@@ -278,7 +278,7 @@ BoundaryCondition::problemSetup(const ProblemSpecP& params)
             }
 
             BoundaryCondition::FFInfo w_info;
-            readInputFile__NEW( file_name, w_info, 2 );
+            readInputFile( file_name, w_info, 2 );
             w_info.relative_xyz = rel_xyz;
             w_info.default_type = default_type;
             w_info.default_value = default_value[2];
@@ -956,7 +956,7 @@ BoundaryCondition::velRhoHatInletBC(const Patch* patch,
 
           } else if ( bc_iter->second.type == VELOCITY_FILE ) {
 
-            setVelFromExtraValue__NEW( patch, face, vars->uVelRhoHat, vars->vVelRhoHat, vars->wVelRhoHat, constvars->new_density, bound_ptr, bc_iter->second.velocity );
+            setVelFromExtraValue( patch, face, vars->uVelRhoHat, vars->vVelRhoHat, vars->wVelRhoHat, constvars->new_density, bound_ptr, bc_iter->second.velocity );
 
           }
         }
@@ -2627,14 +2627,14 @@ BoundaryCondition::computeBCArea( const ProcessorGroup*,
 // Compute velocities from mass flow rates for bc's
 //
 void
-BoundaryCondition::sched_setupBCInletVelocities__NEW(SchedulerP& sched,
+BoundaryCondition::sched_setupBCInletVelocities(SchedulerP& sched,
                                                      const LevelP& level,
                                                      const MaterialSet* matls,
                                                      bool doing_restart )
 {
   // cell type initialization
-  Task* tsk = scinew Task("BoundaryCondition::setupBCInletVelocities__NEW",
-                          this, &BoundaryCondition::setupBCInletVelocities__NEW, doing_restart );
+  Task* tsk = scinew Task("BoundaryCondition::setupBCInletVelocities",
+                          this, &BoundaryCondition::setupBCInletVelocities, doing_restart );
 
   for ( BCInfoMap::iterator bc_iter = d_bc_information.begin();
         bc_iter != d_bc_information.end(); bc_iter++) {
@@ -2646,23 +2646,37 @@ BoundaryCondition::sched_setupBCInletVelocities__NEW(SchedulerP& sched,
 
   tsk->computes(d_DummyLabel);
 
-  if ( doing_restart ) {
-    tsk->requires( Task::OldDW, d_lab->d_volFractionLabel, Ghost::None, 0 );
-  } else {
-    tsk->requires( Task::NewDW, d_lab->d_volFractionLabel, Ghost::None, 0 );
+  if ( doing_restart ){
+    //This hack is needed to trick the DW into knowing that the variable
+    // is actually already allocated from the restart information.
+    Task* hack_tsk = scinew Task("BoundaryCondition::setupBCInletVelocitiesHack",
+                            this, &BoundaryCondition::setupBCInletVelocitiesHack );
+
+    hack_tsk->computes( d_lab->d_volFractionLabel );
+    hack_tsk->computes( d_lab->d_densityCPLabel );
+
+    sched->addTask( hack_tsk, level->eachPatch(), matls );
   }
 
-  if ( doing_restart ) {
-    tsk->requires( Task::OldDW, d_lab->d_densityCPLabel, Ghost::AroundCells, 0 );
-  } else {
-    tsk->requires( Task::NewDW, d_lab->d_densityCPLabel, Ghost::AroundCells, 0 );
-  }
+  tsk->requires( Task::NewDW, d_lab->d_volFractionLabel, Ghost::None, 0 );
+  tsk->requires( Task::NewDW, d_lab->d_densityCPLabel, Ghost::AroundCells, 0 );
 
   sched->addTask(tsk, level->eachPatch(), matls);
 }
+void
+BoundaryCondition::setupBCInletVelocitiesHack( const ProcessorGroup*,
+                                               const PatchSubset* patches,
+                                               const MaterialSubset*,
+                                               DataWarehouse* old_dw,
+                                               DataWarehouse* new_dw )
+{
+    //DO NOTHING
+    //This is just a trick to get the DW to know the variables are in the DW
+    // which were actually copied from the restart information.
+}
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 void
-BoundaryCondition::setupBCInletVelocities__NEW(const ProcessorGroup*,
+BoundaryCondition::setupBCInletVelocities(const ProcessorGroup*,
                                                const PatchSubset* patches,
                                                const MaterialSubset*,
                                                DataWarehouse* old_dw,
@@ -2682,13 +2696,8 @@ BoundaryCondition::setupBCInletVelocities__NEW(const ProcessorGroup*,
     constCCVariable<double> density;
     constCCVariable<double> volFraction;
 
-    if ( doing_restart ) {
-      old_dw->get( density, d_lab->d_densityCPLabel, matl_index, patch, Ghost::None, 0 );
-      old_dw->get( volFraction, d_lab->d_volFractionLabel, matl_index, patch, Ghost::None, 0 );
-    } else {
-      new_dw->get( density, d_lab->d_densityCPLabel, matl_index, patch, Ghost::None, 0 );
-      new_dw->get( volFraction, d_lab->d_volFractionLabel, matl_index, patch, Ghost::None, 0 );
-    }
+    new_dw->get( density, d_lab->d_densityCPLabel, matl_index, patch, Ghost::None, 0 );
+    new_dw->get( volFraction, d_lab->d_volFractionLabel, matl_index, patch, Ghost::None, 0 );
 
     proc0cout << "\nDomain boundary condition summary: \n";
 
@@ -2833,13 +2842,13 @@ BoundaryCondition::setupBCInletVelocities__NEW(const ProcessorGroup*,
 // Apply the boundary conditions
 //
 void
-BoundaryCondition::sched_setInitProfile__NEW(SchedulerP& sched,
+BoundaryCondition::sched_setInitProfile(SchedulerP& sched,
                                              const LevelP& level,
                                              const MaterialSet* matls)
 {
   // cell type initialization
-  Task* tsk = scinew Task("BoundaryCondition::setInitProfile__NEW",
-                          this, &BoundaryCondition::setInitProfile__NEW);
+  Task* tsk = scinew Task("BoundaryCondition::setInitProfile",
+                          this, &BoundaryCondition::setInitProfile);
 
   tsk->modifies(d_lab->d_uVelocitySPBCLabel);
   tsk->modifies(d_lab->d_vVelocitySPBCLabel);
@@ -2866,7 +2875,7 @@ BoundaryCondition::sched_setInitProfile__NEW(SchedulerP& sched,
 }
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 void
-BoundaryCondition::setInitProfile__NEW(const ProcessorGroup*,
+BoundaryCondition::setInitProfile(const ProcessorGroup*,
                                        const PatchSubset* patches,
                                        const MaterialSubset*,
                                        DataWarehouse*,
@@ -2991,7 +3000,7 @@ BoundaryCondition::setInitProfile__NEW(const ProcessorGroup*,
             } else {
 
               //---- set velocities
-              setVelFromInput__NEW( patch, face, face_name, uVelocity, vVelocity, wVelocity, bound_ptr, bc_iter->second.filename );
+              setVelFromInput( patch, face, face_name, uVelocity, vVelocity, wVelocity, bound_ptr, bc_iter->second.filename );
 
             }
           }
@@ -3528,7 +3537,7 @@ void BoundaryCondition::setVel( const Patch* patch, const Patch::FaceType& face,
   }
 }
 
-void BoundaryCondition::setVelFromExtraValue__NEW( const Patch* patch, const Patch::FaceType& face,
+void BoundaryCondition::setVelFromExtraValue( const Patch* patch, const Patch::FaceType& face,
                                                    SFCXVariable<double>& uVel, SFCYVariable<double>& vVel, SFCZVariable<double>& wVel,
                                                    constCCVariable<double>& density,
                                                    Iterator bound_ptr, Vector value )
@@ -3613,7 +3622,7 @@ void BoundaryCondition::setVelFromExtraValue__NEW( const Patch* patch, const Pat
   }
 }
 
-void BoundaryCondition::setVelFromInput__NEW( const Patch* patch, const Patch::FaceType& face,
+void BoundaryCondition::setVelFromInput( const Patch* patch, const Patch::FaceType& face,
                                               string face_name,
                                               SFCXVariable<double>& uVel, SFCYVariable<double>& vVel,
                                               SFCZVariable<double>& wVel,
@@ -3711,7 +3720,7 @@ void BoundaryCondition::setVelFromInput__NEW( const Patch* patch, const Patch::F
 }
 
 void
-BoundaryCondition::readInputFile__NEW( std::string file_name, BoundaryCondition::FFInfo& struct_result, const int index )
+BoundaryCondition::readInputFile( std::string file_name, BoundaryCondition::FFInfo& struct_result, const int index )
 {
 
   gzFile file = gzopen( file_name.c_str(), "r" );
@@ -3751,7 +3760,7 @@ BoundaryCondition::readInputFile__NEW( std::string file_name, BoundaryCondition:
 }
 
 void
-BoundaryCondition::velocityOutletPressureBC__NEW( const Patch* patch,
+BoundaryCondition::velocityOutletPressureBC( const Patch* patch,
                                                   int matl_index,
                                                   SFCXVariable<double>& uvel,
                                                   SFCYVariable<double>& vvel,

@@ -308,7 +308,7 @@ protected:
         }
 
         /** @brief Get the current patch ID **/
-        inline const int get_patch_id(){ return _patch->getID(); }
+        inline int get_patch_id(){ return _patch->getID(); }
 
       private:
 
