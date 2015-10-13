@@ -4621,6 +4621,8 @@ void AMRMPM::scheduleComputeFlux(SchedulerP& sched,
       sdm->scheduleComputeFlux(t, mpm_matl, patches);
     }
 
+    //t->computes(d_sharedState->get_delt_label(),getLevel(patches));
+
     sched->addTask(t, patches, matls);
 }
 

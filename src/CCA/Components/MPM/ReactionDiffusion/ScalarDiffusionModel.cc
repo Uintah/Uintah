@@ -375,3 +375,13 @@ void ScalarDiffusionModel::outputProblemSpec(ProblemSpecP& ps, bool output_rdm_t
 {
    cout << "Fill this in for the model that you are using." << endl;
 }
+
+double ScalarDiffusionModel::computeStableTimeStep(double Dif, Vector dx)
+{
+	// For a Forward Eular timestep the limiting factor is
+	// dt < dx^2 / 2*D. A safety factor of 2.0 is used.
+	// Further work needs to be done to refine the safety factor
+  Vector timeStep(dx.x()*dx.x(), dx.y()*dx.y(), dx.z()*dx.z());
+	timeStep = timeStep/(Dif*4);
+	return timeStep.minComponent();
+}
