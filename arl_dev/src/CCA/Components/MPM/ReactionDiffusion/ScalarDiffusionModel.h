@@ -89,6 +89,7 @@ namespace Uintah {
                                        DataWarehouse* new_dw);
 
     virtual void outputProblemSpec(ProblemSpecP& ps,bool output_rdm_tag = true);
+    virtual double computeStableTimeStep(double Dif, Vector dx);
 
   protected:
     MPMLabel* d_lb;

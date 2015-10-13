@@ -64,6 +64,7 @@ void JGConcentrationDiffusion::computeFlux(const Patch* patch,
   vector<IntVector> ni(interpolator->size());
   vector<Vector> d_S(interpolator->size());
 
+  Vector dx = patch->dCell();
   int dwi = matl->getDWIndex();
   constParticleVariable<Vector>  pConcGradient;
   ParticleVariable<Vector>       pFlux;
@@ -73,10 +74,16 @@ void JGConcentrationDiffusion::computeFlux(const Patch* patch,
   old_dw->get(pConcGradient,     d_lb->pConcGradientLabel, pset);
   new_dw->allocateAndPut(pFlux,  d_lb->pFluxLabel,         pset);
   
+	double timestep = 10000.0;
   for (ParticleSubset::iterator iter  = pset->begin();iter!=pset->end();iter++){
     particleIndex idx = *iter;
     pFlux[idx] = diffusivity*pConcGradient[idx];
+
+		timestep = min(timestep, computeStableTimeStep(diffusivity, dx));
   } //End of Particle Loop
 
+	cout << "Time Step: " << timestep << endl;
+
+  //new_dw->put(delt_vartype(timestep), d_lb->delTLabel, patch->getLevel());
   delete interpolator;
 }

@@ -309,6 +309,7 @@ void RFElasticPlastic::outputProblemSpec(ProblemSpecP& ps,bool output_cm_tag)
   
   cm_ps->appendElement("bulk_modulus",                  d_initialData.Bulk);
   cm_ps->appendElement("shear_modulus",                 d_initialData.Shear);
+  cm_ps->appendElement("volume_expansion_coeff",        d_initialData.vol_exp_coeff);
   cm_ps->appendElement("coeff_thermal_expansion",       d_initialData.alpha);
   cm_ps->appendElement("taylor_quinney_coeff",          d_initialData.Chi);
   cm_ps->appendElement("critical_stress",               d_initialData.sigma_crit);
@@ -925,14 +926,14 @@ RFElasticPlastic::computeStressTensor(const PatchSubset* patches,
       //********** Concentration Component****************************
       // Remove concentration dependent portion of rate of deformation 
       // if(timestep < 20000)
-      //  conc_rate = 1.0;
+      //   conc_rate = 1.0;
       // else
       //   conc_rate = -1.0;
 
-      tensorD = tensorD - one * vol_exp_coeff * (conc_rate);
+      //tensorD = tensorD - one * vol_exp_coeff * (conc_rate);
       //********** Concentration Component****************************
 
-      // Calculate the deviatoric part of the non-thermal part
+      // Calculate the deviatoric part of the non-concentration part
       // of the rate of deformation tensor
       tensorEta = tensorD - one*(tensorD.Trace()/3.0);
       
