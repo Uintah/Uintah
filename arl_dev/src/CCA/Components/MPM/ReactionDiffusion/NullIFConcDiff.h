@@ -63,7 +63,7 @@ namespace Uintah {
 
     int NGP, NGN;
     int numMPMmatls;
-    bool do_explicit;
+    //bool do_explicit;
 
     NullIFConcDiff(const NullIFConcDiff&);
     NullIFConcDiff& operator=(const NullIFConcDiff&);

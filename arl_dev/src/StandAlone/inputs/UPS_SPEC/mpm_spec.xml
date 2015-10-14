@@ -73,6 +73,7 @@
       <do_crack_propagation               spec="OPTIONAL BOOLEAN" />
       <RunMMSProblem                           spec="OPTIONAL STRING 'AxisAligned, GeneralizedVortex , ExpandingRing, AxisAligned3L'" /> <!-- MMS runtime option -->
       <scalar_diffusion                   spec="OPTIONAL STRING 'explicit, implicit'" />
+      <do_scalar_diffusion                spec="OPTIONAL BOOLEAN" />
     </MPM>
     <PhysicalBC                   spec="OPTIONAL NO_DATA" >
       <MPM                        spec="REQUIRED NO_DATA" >
