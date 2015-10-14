@@ -111,7 +111,7 @@ MPMFlags::MPMFlags(const ProcessorGroup* myworld)
 
   //******* Reactive Flow Component
   d_doScalarDiffusion = false; //for diffusion component found in ReactiveFlow
-  d_scalarDiffusion_type = Explicit;
+  //d_scalarDiffusion_type = Explicit;
 
 // MMS
 if(d_mms_type=="AxisAligned"){
@@ -255,9 +255,7 @@ MPMFlags::readMPMFlags(ProblemSpecP& ps, Output* dataArchive)
   mpm_flag_ps->get("delete_rogue_particles",  d_deleteRogueParticles);
 
   // Setting Scalar Diffusion
-  if(mpm_flag_ps->get("scalar_diffusion", d_scalarDiffusion_type)){
-    d_doScalarDiffusion = true;
-  }
+  mpm_flag_ps->get("do_scalar_diffusion", d_doScalarDiffusion);
   
   // d_doComputeHeatFlux:
   // set to true if the label g.HeatFlux is saved or 
@@ -446,9 +444,7 @@ MPMFlags::outputProblemSpec(ProblemSpecP& ps)
   ps->appendElement("boundary_traction_faces", d_bndy_face_txt_list);
   ps->appendElement("UseMomentumForm", d_use_momentum_form);
   ps->appendElement("UseMomentumForm", d_use_momentum_form);
-  if(d_doScalarDiffusion){
-    ps->appendElement("scalar_diffusion", d_scalarDiffusion_type);
-  }
+  ps->appendElement("do_scalar_diffusion", d_doScalarDiffusion);
 }
 
 

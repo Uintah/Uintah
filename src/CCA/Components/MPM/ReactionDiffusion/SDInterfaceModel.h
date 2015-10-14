@@ -87,7 +87,7 @@ namespace Uintah {
 
     int NGP, NGN;
     int numMPMmatls;
-    bool do_explicit;
+    //bool do_explicit;
 
     SDInterfaceModel(const SDInterfaceModel&);
     SDInterfaceModel& operator=(const SDInterfaceModel&);

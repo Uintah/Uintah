@@ -59,11 +59,12 @@ ScalarDiffusionModel::ScalarDiffusionModel(ProblemSpecP& ps, SimulationStateP& s
     NGN=2;
   }
 
-  if(d_Mflag->d_scalarDiffusion_type == "explicit"){
-    do_explicit = true;
-  }else{
-    do_explicit = false;
-  }
+  //**** Currently only explicit is used, no need to test for integrator type
+  // if(d_Mflag->d_scalarDiffusion_type == "explicit"){
+  //   do_explicit = true;
+  // }else{
+  //   do_explicit = false;
+  // }
 
   diffusion_type = diff_type;
   include_hydrostress = false;
