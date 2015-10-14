@@ -1,4 +1,4 @@
-#include <CCA/Components/Arches/TransportEqns/Convection_CQMOM.h>
+#include <CCA/Components/Arches/TransportEqns/CQMOM_Convection_OpSplit.h>
 #include <CCA/Ports/Scheduler.h>
 #include <Core/Grid/SimulationState.h>
 #include <Core/Grid/Variables/VarTypes.h>
@@ -7,11 +7,11 @@
 using namespace std;
 using namespace Uintah;
 
-Convection_CQMOM::Convection_CQMOM()
+CQMOM_Convection_OpSplit::CQMOM_Convection_OpSplit()
 {
 }
 
-Convection_CQMOM::~Convection_CQMOM()
+CQMOM_Convection_OpSplit::~CQMOM_Convection_OpSplit()
 {
 }
 

@@ -407,10 +407,13 @@ void TaskInterface::do_bcs( const ProcessorGroup* pc,
 
     SchedToTaskInfo info;
 
+    //These lines don't work because we are applying the BC in scheduleInitialize.
+    // During that phase, there is no valid DT. Need to work on this?
+    /// @TODO: Work on getting DT to the BC task. 
     //get the current dt
-    delt_vartype DT;
-    old_dw->get(DT, VarLabel::find("delT"));
-    info.dt = DT;
+    // delt_vartype DT;
+    // old_dw->get(DT, VarLabel::find("delT"));
+    // info.dt = DT;
     info.time_substep = time_substep;
 
     ArchesTaskInfoManager* tsk_info_mngr = scinew ArchesTaskInfoManager(variable_registry, patch, info);

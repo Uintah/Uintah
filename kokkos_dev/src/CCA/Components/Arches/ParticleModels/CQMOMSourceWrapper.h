@@ -8,7 +8,6 @@
 #include <Core/Grid/Variables/CCVariable.h>
 
 #include <CCA/Components/Arches/Directives.h>
-#include <CCA/Components/Arches/TransportEqns/Convection_CQMOM.h>
 #include <CCA/Components/Arches/TransportEqns/CQMOMEqn.h>
 #include <CCA/Components/Arches/ArchesLabel.h>
 
