@@ -65,7 +65,7 @@ EqnBase( fieldLabels, timeIntegrator, eqnName )
   d_FconvZLabel = VarLabel::create(varname, CCVariable<double>::getTypeDescription());
 
   uVelIndex = -1; vVelIndex = -1; wVelIndex = -1;
-  d_cqmomConv = scinew Convection_CQMOM();
+  d_cqmomConv = scinew CQMOM_Convection_OpSplit();
 
 }
 
