@@ -60,6 +60,7 @@ ParticleCreator::ParticleCreator(MPMMaterial* matl,
   d_with_color = flags->d_with_color;
   d_artificial_viscosity = flags->d_artificial_viscosity;
   d_computeScaleFactor = flags->d_computeScaleFactor;
+  d_doScalarDiffusion = flags->d_doScalarDiffusion;
   d_useCPTI = flags->d_useCPTI;
 
   d_flags = flags;
@@ -107,14 +108,14 @@ ParticleCreator::createParticles(MPMMaterial* matl,
 
     // Special case exception for SmoothGeomPieces and FileGeometryPieces
     SmoothGeomPiece *sgp = dynamic_cast<SmoothGeomPiece*>(piece.get_rep());
-    vector<double>* volumes       = 0;
-    vector<double>* temperatures  = 0;
-    vector<double>* colors        = 0;
-//  vector<double>* concentrations= 0;
-    vector<Vector>* pforces       = 0;
-    vector<Vector>* pfiberdirs    = 0;
-    vector<Vector>* pvelocities   = 0;    // gcd adds and new change name
-    vector<Matrix3>* psizes       = 0;
+    vector<double>* volumes        = 0;
+    vector<double>* temperatures   = 0;
+    vector<double>* colors         = 0;
+    vector<double>* concentrations = 0;
+    vector<Vector>* pforces        = 0;
+    vector<Vector>* pfiberdirs     = 0;
+    vector<Vector>* pvelocities    = 0;    // gcd adds and new change name
+    vector<Matrix3>* psizes        = 0;
 
     if (sgp){
       volumes      = sgp->getVolume();
@@ -126,6 +127,10 @@ ParticleCreator::createParticles(MPMMaterial* matl,
 
       if(d_with_color){
         colors      = sgp->getColors();
+      }
+
+      if(d_doScalarDiffusion){
+        concentrations = sgp->getConcentration();
       }
     }
 
@@ -176,6 +181,13 @@ ParticleCreator::createParticles(MPMMaterial* matl,
       if (!colors->empty()) coloriter = vars.d_object_colors[*obj].begin();
     }
 
+    // For getting particles concentrations (if they exist)
+    vector<double>::const_iterator concentrationiter;
+    if (concentrations) {
+      if (!concentrations->empty()) concentrationiter =
+              vars.d_object_concentration[*obj].begin();
+    }
+
     vector<Point>::const_iterator itr;
     for(itr=vars.d_object_points[*obj].begin();
         itr!=vars.d_object_points[*obj].end(); ++itr){
@@ -185,7 +197,7 @@ ParticleCreator::createParticles(MPMMaterial* matl,
       if (!patch->containsPoint(*itr)) continue;
       
       particleIndex pidx = start+count;      
- 
+
       initializeParticle(patch,obj,matl,*itr,cell_idx,pidx,cellNAPID, pvars);
       
 
@@ -237,6 +249,13 @@ ParticleCreator::createParticles(MPMMaterial* matl,
         if (!colors->empty()) {
           pvars.pcolor[pidx] = *coloriter;
           ++coloriter;
+        }
+      }
+
+      if (concentrations) {
+        if (!concentrations->empty()) {
+          pvars.pConcentration[pidx] = *concentrationiter;
+          ++concentrationiter;
         }
       }
 
@@ -360,7 +379,7 @@ ParticleCreator::allocateVariables(particleIndex numParticles,
   ParticleSubset* subset = new_dw->createParticleSubset(numParticles,dwi,
                                                         patch);
   new_dw->allocateAndPut(pvars.position,      d_lb->pXLabel,            subset);
-  new_dw->allocateAndPut(pvars.pvelocity,     d_lb->pVelocityLabel,     subset); 
+  new_dw->allocateAndPut(pvars.pvelocity,     d_lb->pVelocityLabel,     subset);
   new_dw->allocateAndPut(pvars.pexternalforce,d_lb->pExternalForceLabel,subset);
   new_dw->allocateAndPut(pvars.pmass,         d_lb->pMassLabel,         subset);
   new_dw->allocateAndPut(pvars.pvolume,       d_lb->pVolumeLabel,       subset);
@@ -382,6 +401,14 @@ ParticleCreator::allocateVariables(particleIndex numParticles,
   }
   if(d_with_color){
      new_dw->allocateAndPut(pvars.pcolor,     d_lb->pColorLabel,        subset);
+  }
+  if(d_doScalarDiffusion){
+     new_dw->allocateAndPut(pvars.pConcentration,
+                                          d_lb->pConcentrationLabel,  subset);
+     new_dw->allocateAndPut(pvars.pConcPrevious,
+                                          d_lb->pConcPreviousLabel,   subset);
+     new_dw->allocateAndPut(pvars.pConcGrad,
+                                          d_lb->pConcGradientLabel,   subset);
   }
   if(d_artificial_viscosity){
      new_dw->allocateAndPut(pvars.p_q,        d_lb->p_qLabel,           subset);
@@ -594,6 +621,11 @@ ParticleCreator::initializeParticle(const Patch* patch,
   if(d_with_color){
     pvars.pcolor[i] = (*obj)->getInitialData_double("color");
   }
+  if(d_doScalarDiffusion){
+    pvars.pConcentration[i] = (*obj)->getInitialData_double("concentration");
+    pvars.pConcPrevious[i]  = pvars.pConcentration[i];
+    pvars.pConcGrad[i]  = Vector(0.0);
+  }
   if(d_artificial_viscosity){
     pvars.p_q[i] = 0.;
   }
@@ -653,14 +685,15 @@ ParticleCreator::countAndCreateParticles(const Patch* patch,
       sgp->setParticleSpacing(dx);
       numPts = sgp->createPoints();
     }
-    vector<Point>* points      = sgp->getPoints();
-    vector<double>* vols       = sgp->getVolume();
-    vector<double>* temps      = sgp->getTemperature();
-    vector<double>* colors     = sgp->getColors();
-    vector<Vector>* pforces    = sgp->getForces();
-    vector<Vector>* pfiberdirs = sgp->getFiberDirs();
-    vector<Vector>* pvelocities= sgp->getVelocity();
-    vector<Matrix3>* psizes    = sgp->getSize();
+    vector<Point>* points          = sgp->getPoints();
+    vector<double>* vols           = sgp->getVolume();
+    vector<double>* temps          = sgp->getTemperature();
+    vector<double>* colors         = sgp->getColors();
+    vector<double>* concentrations = sgp->getConcentration();
+    vector<Vector>* pforces        = sgp->getForces();
+    vector<Vector>* pfiberdirs     = sgp->getFiberDirs();
+    vector<Vector>* pvelocities    = sgp->getVelocity();
+    vector<Matrix3>* psizes        = sgp->getSize();
     Point p;
     IntVector cell_idx;
     
@@ -720,6 +753,10 @@ ParticleCreator::countAndCreateParticles(const Patch* patch,
             double color = colors->at(ii); 
             vars.d_object_colors[obj].push_back(color);
           }
+          if (!concentrations->empty()) {
+            double concentration = concentrations->at(ii); 
+            vars.d_object_concentration[obj].push_back(concentration);
+          }
         } 
       }  // patch contains cell
     }
@@ -766,7 +803,7 @@ void ParticleCreator::registerPermanentParticleState(MPMMaterial* matl)
   // for thermal stress
   particle_state.push_back(d_lb->pTempPreviousLabel);
   particle_state_preReloc.push_back(d_lb->pTempPreviousLabel_preReloc);
-  
+
   particle_state.push_back(d_lb->pParticleIDLabel);
   particle_state_preReloc.push_back(d_lb->pParticleIDLabel_preReloc);
   
@@ -774,6 +811,17 @@ void ParticleCreator::registerPermanentParticleState(MPMMaterial* matl)
   if (d_with_color){
     particle_state.push_back(d_lb->pColorLabel);
     particle_state_preReloc.push_back(d_lb->pColorLabel_preReloc);
+  }
+
+  if (d_doScalarDiffusion){
+    particle_state.push_back(d_lb->pConcentrationLabel);
+    particle_state_preReloc.push_back(d_lb->pConcentrationLabel_preReloc);
+
+    particle_state.push_back(d_lb->pConcPreviousLabel);
+    particle_state_preReloc.push_back(d_lb->pConcPreviousLabel_preReloc);
+
+    particle_state.push_back(d_lb->pConcGradientLabel);
+    particle_state_preReloc.push_back(d_lb->pConcGradientLabel_preReloc);
   }
 
   particle_state.push_back(d_lb->pSizeLabel);
@@ -825,10 +873,6 @@ void ParticleCreator::registerPermanentParticleState(MPMMaterial* matl)
 
   matl->getConstitutiveModel()->addParticleState(particle_state,
                                                  particle_state_preReloc);
-  if(d_flags->d_doScalarDiffusion){
-    matl->getScalarDiffusionModel()->addParticleState(particle_state,
-                                                      particle_state_preReloc);
-  }
 }
 
 int

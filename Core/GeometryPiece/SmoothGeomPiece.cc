@@ -70,6 +70,16 @@ SmoothGeomPiece::getTemperature()
 {
   return &d_temperature;
 }
+
+//////////////////////////////////////////////////////////////////////
+/* Returns the vector containing the set of particle concentrations */
+//////////////////////////////////////////////////////////////////////
+vector<double>*
+SmoothGeomPiece::getConcentration()
+{
+  return &d_concentration;
+}
+
 //////////////////////////////////////////////////////////////////////
 /* Returns the vector containing the set of particle color          */
 //////////////////////////////////////////////////////////////////////
@@ -170,6 +180,14 @@ SmoothGeomPiece::deleteTemperature()
   d_temperature.clear();
 }
 
+//////////////////////////////////////////////////////////////////////
+/* Deletes the vector containing the set of particle concentrations */
+//////////////////////////////////////////////////////////////////////
+void
+SmoothGeomPiece::deleteConcentration()
+{
+  d_concentration.clear();
+}
 void 
 SmoothGeomPiece::writePoints(const string& f_name, const string& var)
 {
