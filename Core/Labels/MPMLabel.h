@@ -51,6 +51,7 @@ namespace Uintah {
       const VarLabel* pScratchVecLabel;
       const VarLabel* pScratchLabel;
       const VarLabel* pExternalScalarFluxLabel;
+      const VarLabel* pFluxLabel;
       const VarLabel* pVolumeDeformedLabel;
       const VarLabel* TotalVolumeDeformedLabel;
       const VarLabel* pXXLabel;
