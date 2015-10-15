@@ -48,7 +48,7 @@
       <time_integrator>explicit</time_integrator>
       <interpolator>linear</interpolator>
       <use_load_curves> true </use_load_curves>
-      <scalar_diffusion>explicit</scalar_diffusion>
+      <do_scalar_diffusion>true</do_scalar_diffusion>
   </MPM>
   <AMR>
       <useLockStep> true </useLockStep>
