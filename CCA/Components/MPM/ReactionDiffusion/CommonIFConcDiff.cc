@@ -42,13 +42,11 @@ using namespace std;
 CommonIFConcDiff::CommonIFConcDiff(ProblemSpecP& ps, SimulationStateP& sS, MPMFlags* Mflag)
                  : SDInterfaceModel(ps, sS, Mflag){
 
-  string diffusion_type;
 
   d_Mflag = Mflag;
   d_sharedState = sS;
 
   d_lb = scinew MPMLabel;
-  d_rdlb = scinew ReactionDiffusionLabel();
 
   if(d_Mflag->d_8or27==8){
     NGP=1;
@@ -94,37 +92,9 @@ CommonIFConcDiff::CommonIFConcDiff(ProblemSpecP& ps, SimulationStateP& sS, MPMFl
 
 CommonIFConcDiff::~CommonIFConcDiff(){
   delete(d_lb);
-  delete(d_rdlb);
 }
 
-void CommonIFConcDiff::addInitialComputesAndRequires(Task* task,
-                                                     const PatchSet* patches) const
-{
-  int numMPM = d_sharedState->getNumMPMMatls();
-  for(int m = 0; m < numMPM; m++){
-    MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial(m);
-    ScalarDiffusionModel* sdm = mpm_matl->getScalarDiffusionModel();
-    sdm->addInitialComputesAndRequires(task, mpm_matl, patches);
-    if(include_hydrostress){
-      if(mpm_matl->getDWIndex() == 0){
-        task->computes(d_rdlb->maxHydroStressLabel0);
-        task->computes(d_rdlb->minHydroStressLabel0);
-      }else if(mpm_matl->getDWIndex() == 1){
-        task->computes(d_rdlb->maxHydroStressLabel1);
-        task->computes(d_rdlb->minHydroStressLabel1);
-      }else if(mpm_matl->getDWIndex() == 2){
-        task->computes(d_rdlb->maxHydroStressLabel2);
-        task->computes(d_rdlb->minHydroStressLabel2);
-      }else if(mpm_matl->getDWIndex() == 3){
-        task->computes(d_rdlb->maxHydroStressLabel3);
-        task->computes(d_rdlb->minHydroStressLabel3);
-      }else{
-        throw ProblemSetupException("Need more HydroStressLabels in",__FILE__, __LINE__);
-      }
-    }
-  }
-}
-
+#if 0
 void CommonIFConcDiff::initializeSDMData(const Patch* patch, DataWarehouse* new_dw)
 {
   int numMPM = d_sharedState->getNumMPMMatls();
@@ -132,23 +102,9 @@ void CommonIFConcDiff::initializeSDMData(const Patch* patch, DataWarehouse* new_
     MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial(m);
     ScalarDiffusionModel* sdm = mpm_matl->getScalarDiffusionModel();
     sdm->initializeSDMData(patch, mpm_matl, new_dw);
-    if(include_hydrostress){
-      if(mpm_matl->getDWIndex() == 0){
-        new_dw->put(max_vartype(0), d_rdlb->maxHydroStressLabel0);
-        new_dw->put(min_vartype(0), d_rdlb->minHydroStressLabel0);
-      }else if(mpm_matl->getDWIndex() == 1){
-        new_dw->put(max_vartype(0), d_rdlb->maxHydroStressLabel1);
-        new_dw->put(min_vartype(0), d_rdlb->minHydroStressLabel1);
-      }else if(mpm_matl->getDWIndex() == 2){
-        new_dw->put(max_vartype(0), d_rdlb->maxHydroStressLabel2);
-        new_dw->put(min_vartype(0), d_rdlb->minHydroStressLabel2);
-      }else if(mpm_matl->getDWIndex() == 3){
-        new_dw->put(max_vartype(0), d_rdlb->maxHydroStressLabel3);
-        new_dw->put(min_vartype(0), d_rdlb->minHydroStressLabel3);
-      }
-    }
   }
 }
+#endif
 
 void CommonIFConcDiff::computeDivergence(const Patch* patch,
                                          DataWarehouse* old_dw,
@@ -177,7 +133,7 @@ void CommonIFConcDiff::computeDivergence(const Patch* patch,
     int dwi = d_sharedState->getMPMMaterial(m)->getDWIndex();
 
     new_dw->get(gmass,     d_lb->gMassLabel,               dwi, patch, gnone,0);
-    new_dw->get(gConcRate, d_rdlb->gConcentrationRateLabel,dwi, patch, gnone,0);
+    new_dw->get(gConcRate, d_lb->gConcentrationRateLabel,dwi, patch, gnone,0);
 
     for(NodeIterator iter=patch->getExtraNodeIterator();
                      !iter.done();iter++){
@@ -191,7 +147,7 @@ void CommonIFConcDiff::computeDivergence(const Patch* patch,
     int dwi = d_sharedState->getMPMMaterial(m)->getDWIndex();
 	  NCVariable<double> gConcRate;
 
-    new_dw->getModifiable(gConcRate, d_rdlb->gConcentrationRateLabel, dwi, patch, gnone, 0);
+    new_dw->getModifiable(gConcRate, d_lb->gConcentrationRateLabel, dwi, patch, gnone, 0);
     for(NodeIterator iter=patch->getExtraNodeIterator();
                      !iter.done();iter++){
       IntVector c = *iter; 

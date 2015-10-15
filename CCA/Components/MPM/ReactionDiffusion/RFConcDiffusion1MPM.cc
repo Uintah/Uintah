@@ -52,7 +52,7 @@ void RFConcDiffusion1MPM::scheduleComputeFlux(Task* task, const MPMMaterial* mat
   Ghost::GhostType  gnone = Ghost::None;
   task->requires(Task::OldDW, d_lb->pConcGradientLabel,        matlset, gnone);
 
-  task->computes(d_rdlb->pFluxLabel,  matlset);
+  task->computes(d_lb->pFluxLabel,  matlset);
 }
 
 void RFConcDiffusion1MPM::computeFlux(const Patch* patch,
@@ -69,7 +69,7 @@ void RFConcDiffusion1MPM::computeFlux(const Patch* patch,
   ParticleSubset* pset = old_dw->getParticleSubset(dwi, patch);
 
   old_dw->get(pConcGrad,           d_lb->pConcGradientLabel,       pset);
-  new_dw->allocateAndPut(pFlux,    d_rdlb->pFluxLabel,             pset);
+  new_dw->allocateAndPut(pFlux,    d_lb->pFluxLabel,             pset);
 
   for (ParticleSubset::iterator iter = pset->begin(); iter != pset->end();
                                                       iter++){

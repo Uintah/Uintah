@@ -27,7 +27,6 @@
 
 #include <Core/Grid/SimulationStateP.h>
 #include <Core/Grid/SimulationState.h>
-#include <CCA/Components/MPM/MPMFlags.h>
 #include <Core/ProblemSpec/ProblemSpecP.h>
 
 namespace Uintah {
@@ -46,21 +45,26 @@ namespace Uintah {
     
     SDInterfaceModel(ProblemSpecP& ps, SimulationStateP& sS, MPMFlags* Mflag);
     virtual ~SDInterfaceModel();
-    virtual void addInitialComputesAndRequires(Task* task,
-                                               const PatchSet* patch) const;
 
-    virtual void initializeSDMData(const Patch* patch, DataWarehouse* new_dw);
+#if 0
+    void addInitialComputesAndRequires(Task* task,
+                                       const PatchSet* patches) const;
 
-    virtual void computeDivergence(const Patch* patch, DataWarehouse* old_dw,
-		                               DataWarehouse* new_dw);
+    void initializeSDMData(const Patch* patch,
+                           DataWarehouse* new_dw);
+#endif
 
-    virtual void outputProblemSpec(ProblemSpecP& ps,bool output_sdim_tag = true);
+    void computeDivergence(const Patch* patch,
+                           DataWarehouse* old_dw,
+                           DataWarehouse* new_dw);
+
+    virtual void outputProblemSpec(ProblemSpecP& ps,
+                                   bool output_sdim_tag = true);
 
   protected:
     MPMLabel* d_lb;
     MPMFlags* d_Mflag;
     SimulationStateP d_sharedState;
-    ReactionDiffusionLabel* d_rdlb;
 
     int NGP, NGN;
     int numMPMmatls;

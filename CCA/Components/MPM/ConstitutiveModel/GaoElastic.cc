@@ -90,7 +90,6 @@ GaoElastic::GaoElastic(ProblemSpecP& ps,MPMFlags* Mflag)
   ps->get("useModifiedEOS",d_useModifiedEOS);
 
   initializeLocalMPMLabels();
-  d_rdlb = scinew ReactionDiffusionLabel();
 }
 
 GaoElastic::GaoElastic(const GaoElastic* cm) :
@@ -102,7 +101,6 @@ GaoElastic::GaoElastic(const GaoElastic* cm) :
   d_tol = cm->d_tol ;
   
   initializeLocalMPMLabels();
-  d_rdlb = scinew ReactionDiffusionLabel();
 }
 
 GaoElastic::~GaoElastic()
@@ -314,8 +312,8 @@ GaoElastic::addComputesAndRequires(Task* task,
 
   task->requires(Task::OldDW, lb->pTempPreviousLabel, matlset, gnone); 
 
-  task->requires(Task::OldDW, d_rdlb->pConcPreviousLabel, matlset, gnone); 
-  task->requires(Task::OldDW, d_rdlb->pConcentrationLabel, matlset, gnone); 
+  task->requires(Task::OldDW, lb->pConcPreviousLabel, matlset, gnone); 
+  task->requires(Task::OldDW, lb->pConcentrationLabel, matlset, gnone); 
 
   task->computes(pRotationLabel_preReloc,       matlset);
   task->computes(pStrainRateLabel_preReloc,     matlset);
@@ -384,8 +382,8 @@ GaoElastic::computeStressTensor(const PatchSubset* patches,
     old_dw->get(pStress,        lb->pStressLabel,             pset);
     old_dw->get(pDeformGrad,    lb->pDeformationMeasureLabel, pset);
 
-    old_dw->get(pConcentration, d_rdlb->pConcentrationLabel,      pset);
-    old_dw->get(pConc_prenew,   d_rdlb->pConcPreviousLabel,       pset);
+    old_dw->get(pConcentration, lb->pConcentrationLabel,      pset);
+    old_dw->get(pConc_prenew,   lb->pConcPreviousLabel,       pset);
 
     constParticleVariable<double> pStrainRate, pPlasticStrainRate, pEnergy;
     constParticleVariable<int> pLocalized;

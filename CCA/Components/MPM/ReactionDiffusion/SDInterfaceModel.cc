@@ -24,7 +24,6 @@
 
 #include <CCA/Components/MPM/ReactionDiffusion/SDInterfaceModel.h>
 #include <CCA/Components/MPM/ReactionDiffusion/ScalarDiffusionModel.h>
-#include <CCA/Components/MPM/ReactionDiffusion/ReactionDiffusionLabel.h>
 #include <CCA/Components/MPM/ConstitutiveModel/MPMMaterial.h>
 #include <Core/Labels/MPMLabel.h>
 #include <Core/Grid/Task.h>
@@ -37,7 +36,6 @@ SDInterfaceModel::SDInterfaceModel(ProblemSpecP& ps, SimulationStateP& sS, MPMFl
   d_sharedState = sS;
 
   d_lb = scinew MPMLabel;
-  d_rdlb = scinew ReactionDiffusionLabel();
 
   if(d_Mflag->d_8or27==8){
     NGP=1;
@@ -50,9 +48,9 @@ SDInterfaceModel::SDInterfaceModel(ProblemSpecP& ps, SimulationStateP& sS, MPMFl
 
 SDInterfaceModel::~SDInterfaceModel(){
   delete(d_lb);
-  delete(d_rdlb);
 }
 
+#if 0
 void SDInterfaceModel::addInitialComputesAndRequires(Task* task,
                                                      const PatchSet* patches) const
 {
@@ -74,6 +72,7 @@ void SDInterfaceModel::initializeSDMData(const Patch* patch,
     sdm->initializeSDMData(patch, mpm_matl, new_dw);
   }
 }
+#endif
 
 void SDInterfaceModel::computeDivergence(const Patch* patch,
                                          DataWarehouse* old_dw,
