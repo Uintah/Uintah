@@ -98,7 +98,6 @@ namespace Uintah {
     ReactionDiffusionLabel* d_rdlb;
 
     int NGP, NGN;
-    bool do_explicit;
     std::string diffusion_type;
     bool include_hydrostress;
 

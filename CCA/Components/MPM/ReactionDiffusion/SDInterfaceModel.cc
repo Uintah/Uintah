@@ -46,13 +46,6 @@ SDInterfaceModel::SDInterfaceModel(ProblemSpecP& ps, SimulationStateP& sS, MPMFl
     NGP=2;
     NGN=2;
   }
-
-  if(d_Mflag->d_scalarDiffusion_type == "explicit"){
-    do_explicit = true;
-  }else{
-    do_explicit = false;
-  }
-
 }
 
 SDInterfaceModel::~SDInterfaceModel(){
