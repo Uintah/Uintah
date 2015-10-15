@@ -425,13 +425,6 @@ protected:
   void coarseLevelCFI_Patches(const PatchSubset* patches,
                               Level::selectType& CFI_patches );
   
-//  MPMLabel* lb;
-//  MPMFlags* flags;
-//  Output* dataArchiver;
-
-//  double   d_SMALL_NUM_MPM;
-//  int      NGP;                     // Number of ghost particles needed.
-//  int      NGN;                     // Number of ghost nodes  needed.
   int      d_nPaddingCells_Coarse;  // Number of cells on the coarse level that contain particles and surround a fine patch.
                                     // Coarse level particles are used in the task interpolateToParticlesAndUpdate_CFI.
 
