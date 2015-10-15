@@ -66,7 +66,6 @@ namespace Uintah {
 
     int NGP, NGN;
     int numMPMmatls;
-    bool do_explicit;
     bool include_hydrostress;
 
     CommonIFConcDiff(const CommonIFConcDiff&);

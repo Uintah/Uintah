@@ -58,12 +58,6 @@ CommonIFConcDiff::CommonIFConcDiff(ProblemSpecP& ps, SimulationStateP& sS, MPMFl
     NGN=2;
   }
 
-  if(d_Mflag->d_scalarDiffusion_type == "explicit"){
-    do_explicit = true;
-  }else{
-    do_explicit = false;
-  }
-
   include_hydrostress = false;
 
   for (ProblemSpecP mat_ps = ps->findBlock("material"); mat_ps != 0;

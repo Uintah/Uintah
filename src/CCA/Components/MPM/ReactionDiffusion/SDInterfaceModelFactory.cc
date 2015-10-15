@@ -56,12 +56,6 @@ SDInterfaceModel* SDInterfaceModelFactory::create(ProblemSpecP& ps,
   if(!child->getWithDefault("type",diff_interface_type, "null"))
     throw ProblemSetupException("No type for diffusion_interface", __FILE__, __LINE__);
 
-  if (flags->d_integrator_type != "implicit" &&
-      flags->d_integrator_type != "explicit"){
-    string txt="MPM: time integrator [explicit or implicit] hasn't been set.";
-    throw ProblemSetupException(txt, __FILE__, __LINE__);
-  }
-
   if(flags->d_integrator_type == "implicit"){
     string txt="MPM:  Implicit Scalar Diffusion is not working yet!";
     throw ProblemSetupException(txt, __FILE__, __LINE__);
