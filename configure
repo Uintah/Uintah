@@ -14135,7 +14135,7 @@ case $host in
 ##
 ## arg 1 : STD_HDRS
 ## arg 2 : standard headers-2
-## arg 3 : unistd.h dirent.h sys/time.h sys/param.h netdb.h sys/select.h sys/socket.h sys/mman.h sys/ioctl.h sys/resource.h sys/wait.h sys/utsname.h rpc/types.h netinet/in.h
+## arg 3 : unistd.h dirent.h sys/time.h sys/param.h netdb.h sys/select.h sys/socket.h sys/mman.h sys/ioctl.h sys/resource.h sys/wait.h sys/utsname.h netinet/in.h
 ## arg 4 :
 ## arg 5 :
 ## arg 6 :
@@ -14328,7 +14328,7 @@ LIBS="$_sci_libs  $LIBS"
 __extern_c="no"
 __sci_pound_includes=""
 
-for inc in "" unistd.h dirent.h sys/time.h sys/param.h netdb.h sys/select.h sys/socket.h sys/mman.h sys/ioctl.h sys/resource.h sys/wait.h sys/utsname.h rpc/types.h netinet/in.h; do
+for inc in "" unistd.h dirent.h sys/time.h sys/param.h netdb.h sys/select.h sys/socket.h sys/mman.h sys/ioctl.h sys/resource.h sys/wait.h sys/utsname.h netinet/in.h; do
     if test "$inc" = "extern_C"; then
        __sci_pound_includes="extern \"C\" {"
        __extern_c=yes
@@ -14467,7 +14467,7 @@ rm -f core conftest.err conftest.$ac_objext \
 if test "required" = "specific"; then
   #echo specific
   # Make sure the exact includes were found
-  for i in "" unistd.h dirent.h sys/time.h sys/param.h netdb.h sys/select.h sys/socket.h sys/mman.h sys/ioctl.h sys/resource.h sys/wait.h sys/utsname.h rpc/types.h netinet/in.h; do
+  for i in "" unistd.h dirent.h sys/time.h sys/param.h netdb.h sys/select.h sys/socket.h sys/mman.h sys/ioctl.h sys/resource.h sys/wait.h sys/utsname.h netinet/in.h; do
     #echo looking for /$i
     if test ! -e /$i; then
      as_fn_error $? "Specifically requested STD_HDRS include file '/$i' was not found" "$LINENO" 5
@@ -14541,7 +14541,7 @@ _sci_includes=''
 ##
 ## arg 1 : STD_HDRS
 ## arg 2 : standard headers-2
-## arg 3 : unistd.h dirent.h sys/time.h sys/param.h values.h malloc.h netdb.h sys/select.h sys/socket.h sys/mman.h sys/ioctl.h sys/resource.h sys/wait.h sys/utsname.h rpc/types.h netinet/in.h
+## arg 3 : unistd.h dirent.h sys/time.h sys/param.h values.h malloc.h netdb.h sys/select.h sys/socket.h sys/mman.h sys/ioctl.h sys/resource.h sys/wait.h sys/utsname.h netinet/in.h
 ## arg 4 :
 ## arg 5 :
 ## arg 6 :
@@ -14734,7 +14734,7 @@ LIBS="$_sci_libs  $LIBS"
 __extern_c="no"
 __sci_pound_includes=""
 
-for inc in "" unistd.h dirent.h sys/time.h sys/param.h values.h malloc.h netdb.h sys/select.h sys/socket.h sys/mman.h sys/ioctl.h sys/resource.h sys/wait.h sys/utsname.h rpc/types.h netinet/in.h; do
+for inc in "" unistd.h dirent.h sys/time.h sys/param.h values.h malloc.h netdb.h sys/select.h sys/socket.h sys/mman.h sys/ioctl.h sys/resource.h sys/wait.h sys/utsname.h netinet/in.h; do
     if test "$inc" = "extern_C"; then
        __sci_pound_includes="extern \"C\" {"
        __extern_c=yes
@@ -14873,7 +14873,7 @@ rm -f core conftest.err conftest.$ac_objext \
 if test "required" = "specific"; then
   #echo specific
   # Make sure the exact includes were found
-  for i in "" unistd.h dirent.h sys/time.h sys/param.h values.h malloc.h netdb.h sys/select.h sys/socket.h sys/mman.h sys/ioctl.h sys/resource.h sys/wait.h sys/utsname.h rpc/types.h netinet/in.h; do
+  for i in "" unistd.h dirent.h sys/time.h sys/param.h values.h malloc.h netdb.h sys/select.h sys/socket.h sys/mman.h sys/ioctl.h sys/resource.h sys/wait.h sys/utsname.h netinet/in.h; do
     #echo looking for /$i
     if test ! -e /$i; then
      as_fn_error $? "Specifically requested STD_HDRS include file '/$i' was not found" "$LINENO" 5
