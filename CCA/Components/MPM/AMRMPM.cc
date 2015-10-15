@@ -391,17 +391,18 @@ void AMRMPM::scheduleInitialize(const LevelP& level, SchedulerP& sched)
     t->computes(lb->p_qLabel);
   }
 
+  if (flags->d_doScalarDiffusion){
+    t->computes(lb->pConcentrationLabel);
+    t->computes(lb->pConcPreviousLabel);
+    t->computes(lb->pConcGradientLabel);
+  }
+
   int numMPM = d_sharedState->getNumMPMMatls();
   const PatchSet* patches = level->eachPatch();
   for(int m = 0; m < numMPM; m++){
     MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial(m);
     ConstitutiveModel* cm = mpm_matl->getConstitutiveModel();
     cm->addInitialComputesAndRequires(t, mpm_matl, patches);
-  }
-
-  // Adding initial computes and requires for scalar diffusion models.
-  if (flags->d_doScalarDiffusion){
-    sdInterfaceModel->addInitialComputesAndRequires(t, patches);
   }
 
   sched->addTask(t, level->eachPatch(), d_sharedState->allMPMMaterials());
@@ -439,7 +440,7 @@ void AMRMPM::scheduleComputeStableTimestep(const LevelP&,
                                               SchedulerP&)
 {
   // Nothing to do here - delt is computed as a by-product of the
-  // consitutive model
+  // constitutive model
 }
 
 //______________________________________________________________________
@@ -627,7 +628,7 @@ void AMRMPM::schedulePartitionOfUnity(SchedulerP& sched,
                                       const PatchSet* patches,
                                       const MaterialSet* matls)
 {
-  printSchedule(patches,cout_doing,"AMRMPM::partitionOfUnity");
+  printSchedule(patches,cout_doing,"AMRMPM::schedulePartitionOfUnity");
   Task* t = scinew Task("AMRMPM::partitionOfUnity",
                   this, &AMRMPM::partitionOfUnity);
                   
@@ -1632,12 +1633,6 @@ void AMRMPM::actuallyInitialize(const ProcessorGroup*,
         }
       }
     }  // matl loop
-
-    // This comment from Chris makes no sense to me - JG
-    // to work on move initialization for from createParticles to here
-    if(flags->d_doScalarDiffusion){
-      sdInterfaceModel->initializeSDMData(patch, new_dw);
-    }
   }
 
   if (flags->d_reductionVars->accStrainEnergy) {
@@ -3418,7 +3413,6 @@ void AMRMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
       constNCVariable<double> gTemperatureRate;
       constNCVariable<double> dTdt, frictionTempRate;
       double Cp = mpm_matl->getSpecificHeat();
-      double max_conc = 0.0;
 
       ParticleSubset* pset = old_dw->getParticleSubset(dwi, patch);
 
@@ -3447,8 +3441,6 @@ void AMRMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
                                         lb->pConcentrationLabel_preReloc, pset);
         new_dw->allocateAndPut(pConcPreviousNew,
                                         lb->pConcPreviousLabel_preReloc,  pset);
-        ScalarDiffusionModel* sdm = mpm_matl->getScalarDiffusionModel();
-        max_conc = sdm->getMaxConcentration();
       }
 
       ParticleSubset* delset = scinew ParticleSubset(0, dwi, patch);
@@ -3523,7 +3515,6 @@ void AMRMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
           }
 
           pConcentrationNew[idx]= pConcentration[idx] + concRate*delT;
-          pConcentrationNew[idx]= min(pConcentrationNew[idx],max_conc);
           pConcPreviousNew[idx] = pConcentration[idx];
         }
 /*`==========TESTING==========*/
@@ -4749,7 +4740,13 @@ void AMRMPM::computeDivergence(const ProcessorGroup*,
     printTask(patches,patch,cout_doing,
              "Doing AMRMPM::computeDivergence");
 
-    sdInterfaceModel->computeDivergence(patch, old_dw, new_dw);
+    int numMatls = d_sharedState->getNumMPMMatls();
+
+    for(int m = 0; m < numMatls; m++){
+      MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial(m);
+      ScalarDiffusionModel* sdm = mpm_matl->getScalarDiffusionModel();
+      sdm->computeDivergence(patch, mpm_matl, old_dw, new_dw);
+    }
   }
 }
 
@@ -5131,7 +5128,7 @@ void AMRMPM::applyExternalScalarFlux(const ProcessorGroup* ,
            pExternalScalarFlux[*iter] = 0.;
           }
         }
-      } else {  // if use load curves
+      } else { // if use load curves
         for(ParticleSubset::iterator iter = pset->begin();
                                      iter != pset->end(); iter++){
          pExternalScalarFlux[*iter] = 0.;
