@@ -42,7 +42,6 @@
 #include <CCA/Components/MPM/ConstitutiveModel/PlasticityModels/PlasticityState.h>
 #include <CCA/Components/MPM/ConstitutiveModel/PlasticityModels/DeformationState.h>
 
-#include <CCA/Components/MPM/ReactionDiffusion/ReactionDiffusionLabel.h>
 
 #include <CCA/Components/MPM/ConstitutiveModel/MPMMaterial.h>
 #include <Core/Grid/Patch.h>
@@ -200,9 +199,6 @@ RFElasticPlastic::RFElasticPlastic(ProblemSpecP& ps,MPMFlags* Mflag)
   getInitialDamageData(ps);
   //getSpecificHeatData(ps);
   initializeLocalMPMLabels();
-
-  // For use in reaction diffusion models
-  d_rdlb = scinew ReactionDiffusionLabel();
 }
 
 RFElasticPlastic::RFElasticPlastic(const RFElasticPlastic* cm) :
@@ -694,8 +690,8 @@ RFElasticPlastic::addComputesAndRequires(Task* task,
   task->requires(Task::OldDW, pEnergyLabel,           matlset, gnone);
 
   //********** Concentration Component****************************
-  task->requires(Task::OldDW, d_rdlb->pConcPreviousLabel, matlset, gnone); 
-  task->requires(Task::OldDW, d_rdlb->pConcentrationLabel, matlset, gnone); 
+  task->requires(Task::OldDW, lb->pConcPreviousLabel, matlset, gnone); 
+  task->requires(Task::OldDW, lb->pConcentrationLabel, matlset, gnone); 
   //********** Concentration Component****************************
 
   task->computes(pRotationLabel_preReloc,       matlset);
@@ -796,8 +792,8 @@ RFElasticPlastic::computeStressTensor(const PatchSubset* patches,
     old_dw->get(pDeformGrad,  lb->pDeformationMeasureLabel, pset);
 
     //********** Concentration Component****************************
-    old_dw->get(pConcentration, d_rdlb->pConcentrationLabel, pset);
-    old_dw->get(pConc_prenew,   d_rdlb->pConcPreviousLabel,  pset);
+    old_dw->get(pConcentration, lb->pConcentrationLabel, pset);
+    old_dw->get(pConc_prenew,   lb->pConcPreviousLabel,  pset);
     //********** Concentration Component****************************
 
     constParticleVariable<double> pPlasticStrain, pDamage, pPorosity;

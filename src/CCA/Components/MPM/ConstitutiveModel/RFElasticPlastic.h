@@ -160,10 +160,6 @@ class RFElasticPlastic : public ConstitutiveModel, public ImplicitCM {
     bool   d_doMelting;
     bool   d_checkStressTriax;
 
-    //********** Concentration Component****************************
-    ReactionDiffusionLabel* d_rdlb;
-    //********** Concentration Component****************************
-
     std::string  d_plasticConvergenceAlgo;
     // Erosion algorithms
     bool   d_setStressToZero;

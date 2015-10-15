@@ -124,7 +124,6 @@ namespace Uintah {
     // Prevent copying of this class
     // copy constructor
     GaoElastic& operator=(const GaoElastic &cm);
-    ReactionDiffusionLabel* d_rdlb;
 
   public:
 
