@@ -4826,8 +4826,8 @@ void AMRMPM::scheduleInitializeScalarFluxBCs(const LevelP& level,
 //    t->requires(Task::NewDW, lb->pSizeLabel,                     Ghost::None);
 //    t->requires(Task::NewDW, lb->pDeformationMeasureLabel,       Ghost::None);
 //    t->requires(Task::NewDW, lb->pLoadCurveIDLabel,              Ghost::None);
-//    t->requires(Task::NewDW, lb->materialPointsPerLoadCurveLabel,
-//                            d_loadCurveIndex, Task::OutOfDomain, Ghost::None);
+    t->requires(Task::NewDW, lb->materialPointsPerLoadCurveLabel,
+                            d_loadCurveIndex, Task::OutOfDomain, Ghost::None);
 //    t->modifies(lb->pExternalScalarFluxLabel);
 //    if (flags->d_useCBDI) {
 //       t->computes(             lb->pExternalForceCorner1Label);
