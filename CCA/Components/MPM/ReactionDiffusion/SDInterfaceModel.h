@@ -35,7 +35,6 @@ namespace Uintah {
   class MPMFlags;
   class MPMLabel;
   class MPMMaterial;
-  class ReactionDiffusionLabel;
   class DataWarehouse;
   class ProcessorGroup;
 
