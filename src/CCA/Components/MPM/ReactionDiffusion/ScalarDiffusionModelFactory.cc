@@ -53,11 +53,6 @@ ScalarDiffusionModel* ScalarDiffusionModelFactory::create(ProblemSpecP& ps,
   if(!child->getAttribute("type", diffusion_type))
     throw ProblemSetupException("No type for scalar_diffusion_model", __FILE__, __LINE__);
 
-  if(flags->d_integrator_type == "implicit"){
-    string txt="MPM:  Implicit Scalar Diffusion is not working yet!";
-    throw ProblemSetupException(txt, __FILE__, __LINE__);
-  }
-
   if (diffusion_type == "linear")
     return(scinew ScalarDiffusionModel(child, ss, flags, diffusion_type));
   if (diffusion_type == "jg")

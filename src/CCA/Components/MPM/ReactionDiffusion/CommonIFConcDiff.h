@@ -48,10 +48,7 @@ namespace Uintah {
     CommonIFConcDiff(ProblemSpecP& ps, SimulationStateP& sS, MPMFlags* Mflag);
     ~CommonIFConcDiff();
 
-    virtual void addInitialComputesAndRequires(Task* task,
-                                               const PatchSet* patch) const;
-
-    virtual void initializeSDMData(const Patch* patch, DataWarehouse* new_dw);
+//    virtual void initializeSDMData(const Patch* patch, DataWarehouse* new_dw);
 
     virtual void computeDivergence(const Patch* patch, DataWarehouse* old_dw,
 		                               DataWarehouse* new_dw);
@@ -62,9 +59,9 @@ namespace Uintah {
     MPMLabel* d_lb;
     MPMFlags* d_Mflag;
     SimulationStateP d_sharedState;
-    ReactionDiffusionLabel* d_rdlb;
 
     int NGP, NGN;
+    std::string diffusion_type;
     int numMPMmatls;
     bool include_hydrostress;
 
