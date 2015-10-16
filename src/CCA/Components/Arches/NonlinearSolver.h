@@ -29,6 +29,7 @@
 #include <Core/Grid/Variables/SFCXVariable.h>
 #include <Core/Grid/Variables/SFCYVariable.h>
 #include <Core/Grid/Variables/SFCZVariable.h>
+#include <Core/Parallel/ProcessorGroup.h>
 
 //--------------------------------------------------------------------------------------------------
 /**
@@ -80,7 +81,7 @@ public:
   virtual void initialize( const LevelP& lvl, SchedulerP& sched, const bool doing_restart ) = 0;
 
   virtual void sched_restartInitialize( const LevelP& level, SchedulerP& sched ) = 0;
-  virtual void sched_restartInitializeTimeAdvance( const LevelP& level, SchedulerP& sched ) = 0; 
+  virtual void sched_restartInitializeTimeAdvance( const LevelP& level, SchedulerP& sched ) = 0;
 
   class NLSolverBuilder {
 

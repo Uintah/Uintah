@@ -43,6 +43,7 @@ SRCS += $(SRCDIR)/Arches.cc                    \
         $(SRCDIR)/Discretization.cc            \
         $(SRCDIR)/DQMOM.cc                     \
         $(SRCDIR)/ExplicitSolver.cc            \
+				$(SRCDIR)/KokkosSandboxSolver.cc       \
         $(SRCDIR)/ExplicitTimeInt.cc           \
         $(SRCDIR)/IncDynamicProcedure.cc       \
         $(SRCDIR)/IntrusionBC.cc               \
