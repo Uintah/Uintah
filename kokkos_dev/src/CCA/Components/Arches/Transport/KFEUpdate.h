@@ -11,7 +11,7 @@ namespace Uintah{
 
 public:
 
-    KFEUpdate( std::string task_name, int matl_index, std::vector<std::string> eqn_names, bool divide_out_density );
+    KFEUpdate( std::string task_name, int matl_index, std::vector<std::string> eqn_names );
     ~KFEUpdate();
 
     /** @brief Input file interface **/
@@ -24,19 +24,18 @@ public:
 
       public:
 
-      Builder( std::string task_name, int matl_index, std::vector<std::string> eqn_names, bool divide_out_density ) :
-        _task_name(task_name), _matl_index(matl_index), _eqn_names(eqn_names), _div_density(divide_out_density){}
+      Builder( std::string task_name, int matl_index, std::vector<std::string> eqn_names ) :
+        _task_name(task_name), _matl_index(matl_index), _eqn_names(eqn_names){}
       ~Builder(){}
 
       KFEUpdate* build()
-      { return scinew KFEUpdate( _task_name, _matl_index, _eqn_names, _div_density ); }
+      { return scinew KFEUpdate( _task_name, _matl_index, _eqn_names ); }
 
       private:
 
       std::string _task_name;
       int _matl_index;
       std::vector<std::string> _eqn_names;
-      bool _div_density;
 
     };
 
@@ -65,18 +64,16 @@ protected:
 private:
 
     std::vector<std::string> _eqn_names;
-    bool _div_density;
 
 
   };
 
   //Function definitions:
 
-  KFEUpdate::KFEUpdate( std::string task_name, int matl_index, std::vector<std::string> eqn_names, bool divide_out_density ) :
+  KFEUpdate::KFEUpdate( std::string task_name, int matl_index, std::vector<std::string> eqn_names ) :
   TaskInterface( task_name, matl_index ){
 
     _eqn_names = eqn_names;
-    _div_density = divide_out_density;
 
   }
 
