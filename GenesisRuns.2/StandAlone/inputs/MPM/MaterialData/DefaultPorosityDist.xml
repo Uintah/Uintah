@@ -1,0 +1,11 @@
+<?xml version='1.0' encoding='ISO-8859-1' ?>
+<!-- Default high porosity + gaussian distribution -->
+<Uintah_Include>
+  <initial_mean_porosity>    0.05  </initial_mean_porosity>
+  <initial_std_porosity>     0.01  </initial_std_porosity>
+  <critical_porosity>        0.1   </critical_porosity>
+  <frac_nucleation>          0.1   </frac_nucleation>
+  <meanstrain_nucleation>    0.1   </meanstrain_nucleation>
+  <stddevstrain_nucleation>  0.05  </stddevstrain_nucleation>
+  <initial_porosity_distrib> gauss </initial_porosity_distrib>
+</Uintah_Include>

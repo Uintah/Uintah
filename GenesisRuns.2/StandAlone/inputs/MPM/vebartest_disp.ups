@@ -1,0 +1,141 @@
+<?xml version="1.0" encoding="iso-8859-1"?>
+<!-- <!DOCTYPE Uintah_specification SYSTEM "input.dtd"> -->
+
+<!-- @version: -->
+
+<Uintah_specification>
+
+   <Meta>
+       <title>ve in a bar under tension</title>
+   </Meta>
+
+   <SimulationComponent type="mpm" />
+
+   <Time>
+       <maxTime>5.0</maxTime>
+       <initTime>0.0</initTime>
+       <delt_min>0.00001</delt_min>
+       <delt_max>0.001</delt_max>
+       <timestep_multiplier>0.8</timestep_multiplier>
+   </Time>
+
+   <DataArchiver>
+        <filebase>vebar.uda</filebase>
+        <outputInterval>.5</outputInterval>
+        <save label="KineticEnergy"/>
+        <save label="TotalMass"/>
+        <save label="StrainEnergy"/>
+        <save label="CenterOfMassPosition"/>
+        <save label="TotalMomentum"/>
+        <save label="p.x"/>
+        <save label="p.volume"/>
+        <save label="p.stress"/>
+        <save label="p.mass"/>
+        <save label="g.stressFS"/>
+   </DataArchiver>
+
+   <MPM>
+       <time_integrator>explicit</time_integrator>
+   </MPM>
+
+
+    <PhysicalConstants>
+       <gravity>[0,0,0]</gravity>
+    </PhysicalConstants>
+
+    <MaterialProperties>
+       <MPM>
+           <material>
+              <density>1.e9</density>
+              <constitutive_model type="hypo_elastic">
+                 <G>12.e6</G>
+                 <K>32.e6</K>
+               </constitutive_model>
+              <thermal_conductivity>1.0</thermal_conductivity>
+              <specific_heat>5</specific_heat>
+              <geom_object>
+                  <box label = "top rigid">
+                     <min>[.0,-0.2,1.0]</min>
+                     <max>[0.1,0.2,1.2]</max>
+                  </box>
+                  <res>[2,2,2]</res>
+                  <velocity>[0.0,0.0,0.005]</velocity>
+                  <temperature>300</temperature>
+               </geom_object>
+              <geom_object>
+                  <box label = "bottom rigid">
+                     <min>[.0,-0.2,-1.2]</min>
+                     <max>[0.1,0.2,-1.0]</max>
+                  </box>
+                  <res>[2,2,2]</res>
+                  <velocity>[0.0,0.0,-0.005]</velocity>
+                  <temperature>300</temperature>
+               </geom_object>
+           </material>
+           
+           <material>
+              <density>1.0e3</density>
+              <constitutive_model type = "mw_visco_elastic">
+                 <e_shear_modulus>6.e3</e_shear_modulus>
+                 <e_bulk_modulus>16.e3</e_bulk_modulus>
+                 <ve_shear_modulus>1.0e7</ve_shear_modulus>
+                 <ve_bulk_modulus>1.0e7</ve_bulk_modulus>
+                 <ve_volumetric_viscosity>1.0e15</ve_volumetric_viscosity>
+                 <ve_deviatoric_viscosity>1000000</ve_deviatoric_viscosity>
+              </constitutive_model>
+              <thermal_conductivity>1.0</thermal_conductivity>
+              <specific_heat>5</specific_heat>
+              <geom_object>
+                  <box label="gp1">
+                     <min>[ 0.0, -0.2,  -1.0  ]</min>
+                     <max>[ 0.1,  0.2,   1.0  ]</max>
+                  </box>
+                  <res>[2,2,2]</res>
+                  <velocity>[0.,0.,0.]</velocity>
+                  <temperature>300.</temperature>
+               </geom_object>
+
+           </material>
+
+           <contact>
+             <type>rigid</type>
+             <materials>[0,1]</materials>
+              <stop_time>1.0 </stop_time>
+           </contact>
+       </MPM>
+
+    </MaterialProperties>
+       
+    <Grid>
+       <Level>
+           <Box label="1">
+              <lower>[  0.0, -0.4, -1.5 ]</lower>
+              <upper>[  0.1, 0.4,  1.5 ]</upper>
+               <resolution>[1,8,30]</resolution>
+              <patches>[1,1,2]</patches>
+           </Box>
+       </Level>
+        <BoundaryConditions>
+        <Face side = "x-">
+           <BCType id = "all" var = "symmetry" label = "Symmetric"> </BCType>
+        </Face>
+        <Face side = "x+">
+           <BCType id = "all" var = "symmetry" label = "Symmetric"> </BCType>
+        </Face>
+        <Face side = "y-">
+           <BCType id = "all" var = "symmetry" label = "Symmetric"> </BCType>
+        </Face>
+        <Face side = "y+">
+           <BCType id = "all" var = "symmetry" label = "Symmetric"> </BCType>
+        </Face>
+        <Face side = "z-">
+           <BCType id = "all" var = "symmetry" label = "Symmetric"> </BCType>
+        </Face>
+        <Face side = "z+">
+           <BCType id = "all" var = "symmetry" label = "Symmetric"> </BCType>
+        </Face>
+        </BoundaryConditions>
+    </Grid>
+
+
+</Uintah_specification>
