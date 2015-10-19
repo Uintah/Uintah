@@ -105,7 +105,7 @@ TransportFactory::register_all_tasks( ProblemSpecP& db )
     }
 
     std::string update_task_name = "scalar_fe_update";
-    KFEUpdate::Builder* tsk = scinew KFEUpdate::Builder( update_task_name, 0, _scalar_builders );
+    KFEUpdate<CCVariable<double> >::Builder* tsk = scinew KFEUpdate<CCVariable<double> >::Builder( update_task_name, 0, _scalar_builders );
     register_task( update_task_name, tsk );
 
     // std::string ssp_task_name = "scalar_ssp_update";

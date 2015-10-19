@@ -2,17 +2,17 @@
 #define Uintah_Component_Arches_KFEUpdate_h
 
 #include <CCA/Components/Arches/Task/TaskInterface.h>
-#include <CCA/Components/Arches/Operators/Operators.h>
-#include <spatialops/structured/FVStaggered.h>
+#include <CCA/Components/Arches/DiscretizationTools.h>
 
 namespace Uintah{
 
+  template <typename T>
   class KFEUpdate : public TaskInterface {
 
 public:
 
-    KFEUpdate( std::string task_name, int matl_index, std::vector<std::string> eqn_names );
-    ~KFEUpdate();
+    KFEUpdate<T>( std::string task_name, int matl_index, std::vector<std::string> eqn_names );
+    ~KFEUpdate<T>();
 
     /** @brief Input file interface **/
     void problemSetup( ProblemSpecP& db );
@@ -69,33 +69,36 @@ private:
   };
 
   //Function definitions:
-
-  KFEUpdate::KFEUpdate( std::string task_name, int matl_index, std::vector<std::string> eqn_names ) :
+  template <typename T>
+  KFEUpdate<T>::KFEUpdate( std::string task_name, int matl_index, std::vector<std::string> eqn_names ) :
   TaskInterface( task_name, matl_index ){
 
     _eqn_names = eqn_names;
 
   }
 
-  KFEUpdate::~KFEUpdate()
+  template <typename T>
+  KFEUpdate<T>::~KFEUpdate()
   {
   }
 
-  void KFEUpdate::problemSetup( ProblemSpecP& db ){
+  template <typename T>
+  void KFEUpdate<T>::problemSetup( ProblemSpecP& db ){
 
   }
 
-
-  void KFEUpdate::register_initialize( std::vector<ArchesFieldContainer::VariableInformation>& variable_registry ){
+  template <typename T>
+  void KFEUpdate<T>::register_initialize( std::vector<ArchesFieldContainer::VariableInformation>& variable_registry ){
   }
 
   //This is the work for the task.  First, get the variables. Second, do the work!
-  void KFEUpdate::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info,
+  template <typename T>
+  void KFEUpdate<T>::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info,
                                 SpatialOps::OperatorDatabase& opr ){
   }
 
-
-  void KFEUpdate::register_timestep_eval( std::vector<ArchesFieldContainer::VariableInformation>& variable_registry, const int time_substep ){
+  template <typename T>
+  void KFEUpdate<T>::register_timestep_eval( std::vector<ArchesFieldContainer::VariableInformation>& variable_registry, const int time_substep ){
 
     //FUNCITON CALL     STRING NAME(VL)     DEPENDENCY    GHOST DW     VR
     //register_variable( "templated_variable", ArchesFieldContainer::COMPUTES, 0, ArchesFieldContainer::NEWDW, variable_registry, time_substep );
@@ -105,54 +108,53 @@ private:
       std::string rhs_name = *i + "_RHS";
       register_variable( rhs_name, ArchesFieldContainer::REQUIRES, 0, ArchesFieldContainer::NEWDW, variable_registry, time_substep );
     }
-    register_variable( "density", ArchesFieldContainer::REQUIRES, 0, ArchesFieldContainer::LATEST, variable_registry, time_substep );
 
   }
 
   namespace {
 
+    template <typename T>
     struct TimeUpdateFunctor{
 
-      CCVariable<double>& phi;
-      constCCVariable<double>& rho;
-      constCCVariable<double>& rhs;
+      typedef typename VariableHelper<T>::ConstType CT;
+      T& phi;
+      CT& rhs;
       const double dt;
       const double V;
 
-      TimeUpdateFunctor( CCVariable<double>& phi, constCCVariable<double>& rho,
-        constCCVariable<double>& rhs, const double dt, const double V )
-        : phi(phi), rho(rho), rhs(rhs), dt(dt), V(V){ }
+      TimeUpdateFunctor( T& phi,
+        CT& rhs, const double dt, const double V )
+        : phi(phi), rhs(rhs), dt(dt), V(V){ }
 
       void
-      operator()(int i, int j, int k){
-        IntVector c(i,j,k);
+      operator()(int i, int j, int k) const{
 
-        phi[c] = phi[c] + dt * rhs[c] / ( rho[c] * V );
+        IntVector c(i,j,k);
+        phi[c] = phi[c] + dt/V * rhs[c];
 
       }
     };
 
   }
 
-  void KFEUpdate::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info,
+  template <typename T>
+  void KFEUpdate<T>::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info,
                           SpatialOps::OperatorDatabase& opr ){
-
-    constCCVariable<double>& rho =
-      *(tsk_info->get_const_uintah_field<constCCVariable<double> >("density"));
 
     const double dt = tsk_info->get_dt();
     Vector DX = patch->dCell();
     const double V = DX.x()*DX.y()*DX.z();
 
     typedef std::vector<std::string> SV;
+    typedef typename VariableHelper<T>::ConstType CT;
 
     for ( SV::iterator i = _eqn_names.begin(); i != _eqn_names.end(); i++){
 
-      CCVariable<double>& phi = *(tsk_info->get_uintah_field<CCVariable<double> >(*i));
-      constCCVariable<double>& rhs =
-        *(tsk_info->get_const_uintah_field<constCCVariable<double> >(*i+"_RHS"));
+      T& phi = *(tsk_info->get_uintah_field<T>(*i));
+      CT& rhs =
+        *(tsk_info->get_const_uintah_field<CT>(*i+"_RHS"));
 
-      TimeUpdateFunctor time_update(phi, rho, rhs, dt, V);
+      TimeUpdateFunctor<T> time_update(phi, rhs, dt, V);
 
     }
   }
