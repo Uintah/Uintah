@@ -389,17 +389,18 @@ Relocate::scheduleParticleRelocation(       Scheduler                        * s
     patches = scinew PatchSet();
     patches->createEmptySubsets(pg->size());
 
-//    for (int i = level->getIndex(); i < grid->numLevels(); i++) {
-
-      const PatchSet* p = lb->getPerProcessorPatchSet(grid->getLevel(level->getIndex()));
-
+    // TODO FIXME:  This is not the way to determine the maximum number of grid levels over which to search for particles to relocate for the multicomponent simulation.
+    for (int i = level->getIndex(); i < grid->numLevels(); i++) {
+//      const PatchSet* p = lb->getPerProcessorPatchSet(grid->getLevel(level->getIndex()));
+      const PatchSet* p = lb->getPerProcessorPatchSet(grid->getLevel(i));
+      std::cout << " Relocate::relocateParticles --> Adding patch set for level: " << i << ": " << *p << std::endl;
       for (int proc = 0; proc < pg->size(); proc++) {
         for (int j = 0; j < p->getSubset(proc)->size(); j++) {
           const Patch* patch = p->getSubset(proc)->get(j);
           patches->getSubset(lb->getPatchwiseProcessorAssignment(patch))->add(patch);
         }
       }
-//    }
+    }
   }
 
   printSchedule(patches, coutdbg, "Relocate::scheduleRelocateParticles");
@@ -1486,7 +1487,7 @@ Relocate::relocateParticles(const ProcessorGroup* pg,
           else {
             //__________________________________
             //  Did the particle move to the same patch as the previous particle?
-            //  (optimization)
+            //  (optimization for cohesive particle motion i.e. MPM)
             if (PP_ToPatch && PP_ToPatch->containsPointInExtraCells(px[idx])) {
               toPatch = PP_ToPatch;
             }
@@ -1537,7 +1538,14 @@ Relocate::relocateParticles(const ProcessorGroup* pg,
         keep_pset->addReference();
         keep_psets(p, m) = keep_pset;
       } // matls loop
+      // All particles on patch accounted for in one way or another (beware the auto-delete above under ASSRT)
+
+      // Insertion point for component->processParticlesToBeRelocated() -- JBH
+      // get sim component
+      // iterate through ScatterRecords and pull psets
+      // component->processParticlesToBeRelocated(patch->getID(), matl, patch->getLevel(),
     }  // patches loop
+
 
     //__________________________________
     if (pg->size() > 1) {

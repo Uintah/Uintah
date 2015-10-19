@@ -1239,7 +1239,8 @@ Grid::problemSetup(const ProblemSpecP& params, const ProcessorGroup *pg, bool do
           cout << "********************\n\n";
         }
   
-        proc0cout << "Patch layout: \t\t(" << patches.x() << ","
+        proc0cout << "Level: " << levelIndex << " --> "
+                  << "Patch layout: \t\t(" << patches.x() << ","
                   << patches.y() << "," << patches.z() << ")\n";
 
         IntVector refineRatio = level->getRefinementRatio();
@@ -1296,9 +1297,10 @@ Grid::problemSetup(const ProblemSpecP& params, const ProcessorGroup *pg, bool do
       levelIndex++;
    }
 
-  if (numLevels() > 1 && !(do_AMR || do_MultiScale)) {  // bullet proofing
-    throw ProblemSetupException("Grid.cc:problemSetup: Multiple levels encountered in non-AMR or non-MultiScale grid",  __FILE__, __LINE__);
-  }
+//  if (numLevels() > 1 && (!do_AMR && !do_MultiScale)) {  // bullet proofing
+//    throw ProblemSetupException("Grid.cc:problemSetup: Multiple levels encountered in non-AMR or non-MultiScale grid",
+//    __FILE__, __LINE__);
+//  }
 
 } // end problemSetup()
 
