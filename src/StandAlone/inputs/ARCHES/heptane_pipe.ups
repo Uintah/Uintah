@@ -42,6 +42,16 @@
     <save label="sensibleenthalpy" table_lookup="true"/>
     <save label="adiabaticenthalpy" table_lookup="true"/>
 
+    <save label="surf_out_normX"/>
+    <save label="surf_out_normY"/>
+    <save label="surf_out_normZ"/>
+
+    <save label="surf_in_normX"/>
+    <save label="surf_in_normY"/>
+    <save label="surf_in_normZ"/>
+
+    <save label="gas_solid_interface"/>
+
     <checkpoint cycle="2" interval="0.02"/>
     <compression>gzip</compression>
   </DataArchiver>

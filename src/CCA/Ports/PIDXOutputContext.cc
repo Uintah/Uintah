@@ -42,6 +42,9 @@ namespace Uintah
     PIDX_set_current_time_step(this->file, timeStep);
     PIDX_set_block_size(this->file, 16);
     PIDX_set_block_count(this->file, 128);
+    
+    PIDX_set_compression_type(this->file, PIDX_CHUNKING_ZFP);
+    PIDX_set_lossy_compression_bit_rate(this->file, 8);
 
   }
 

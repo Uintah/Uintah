@@ -47,6 +47,7 @@ namespace Uintah{
     TaskMap   _tasks;             ///< Task map
     TaskMap& retrieve_all_tasks(){ return _tasks; };
 
+    /** @brief Retrieve the map of types -> tasks. **/
     const TypeToTaskMap& retrieve_type_to_tasks(){ return _type_to_tasks; }
 
     /** @brief Retrieve a set of tasks by their type **/
@@ -91,6 +92,11 @@ namespace Uintah{
       for ( TaskMap::iterator itsk = _tasks.begin(); itsk != _tasks.end(); itsk++ ){
         itsk->second->set_bchelper( _bcHelperMap );
       }
+    }
+
+    virtual void add_task( ProblemSpecP& db ){
+      //The derived class must do this for each specific factory.
+      throw InvalidValue("Error: This factory currently cannot add tasks on the fly.", __FILE__,__LINE__);
     }
 
   protected:

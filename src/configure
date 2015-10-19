@@ -6497,9 +6497,10 @@ case $host in
            altivec=""
         fi
 
-        uname -r | grep "14\." &> /dev/null
-        if test $? = 0; then
-           yosemite=yes
+        # Check to see if we are runnign on OSX version Yosemite or newer:
+        OSX_BASE_VERSION=`uname -r | cut -f1 -d"."`
+        if [ $OSX_BASE_VERSION -ge 14 ]; then  # Note, using double '['s (ie: '[[') because autoconf strips one of them.
+           yosemite_plus=yes
         fi
 
 	SO_OR_ARCHIVE_EXTENSION=dylib
@@ -14197,7 +14198,7 @@ case $host in
 ##
 ## arg 1 : STD_HDRS
 ## arg 2 : standard headers-2
-## arg 3 : unistd.h dirent.h sys/time.h sys/param.h netdb.h sys/select.h sys/socket.h sys/mman.h sys/ioctl.h sys/resource.h sys/wait.h sys/utsname.h rpc/types.h netinet/in.h
+## arg 3 : unistd.h dirent.h sys/time.h sys/param.h netdb.h sys/select.h sys/socket.h sys/mman.h sys/ioctl.h sys/resource.h sys/wait.h sys/utsname.h netinet/in.h
 ## arg 4 :
 ## arg 5 :
 ## arg 6 :
@@ -14390,7 +14391,7 @@ LIBS="$_sci_libs  $LIBS"
 __extern_c="no"
 __sci_pound_includes=""
 
-for inc in "" unistd.h dirent.h sys/time.h sys/param.h netdb.h sys/select.h sys/socket.h sys/mman.h sys/ioctl.h sys/resource.h sys/wait.h sys/utsname.h rpc/types.h netinet/in.h; do
+for inc in "" unistd.h dirent.h sys/time.h sys/param.h netdb.h sys/select.h sys/socket.h sys/mman.h sys/ioctl.h sys/resource.h sys/wait.h sys/utsname.h netinet/in.h; do
     if test "$inc" = "extern_C"; then
        __sci_pound_includes="extern \"C\" {"
        __extern_c=yes
@@ -14529,7 +14530,7 @@ rm -f core conftest.err conftest.$ac_objext \
 if test "required" = "specific"; then
   #echo specific
   # Make sure the exact includes were found
-  for i in "" unistd.h dirent.h sys/time.h sys/param.h netdb.h sys/select.h sys/socket.h sys/mman.h sys/ioctl.h sys/resource.h sys/wait.h sys/utsname.h rpc/types.h netinet/in.h; do
+  for i in "" unistd.h dirent.h sys/time.h sys/param.h netdb.h sys/select.h sys/socket.h sys/mman.h sys/ioctl.h sys/resource.h sys/wait.h sys/utsname.h netinet/in.h; do
     #echo looking for /$i
     if test ! -e /$i; then
      as_fn_error $? "Specifically requested STD_HDRS include file '/$i' was not found" "$LINENO" 5
@@ -14603,7 +14604,7 @@ _sci_includes=''
 ##
 ## arg 1 : STD_HDRS
 ## arg 2 : standard headers-2
-## arg 3 : unistd.h dirent.h sys/time.h sys/param.h values.h malloc.h netdb.h sys/select.h sys/socket.h sys/mman.h sys/ioctl.h sys/resource.h sys/wait.h sys/utsname.h rpc/types.h netinet/in.h
+## arg 3 : unistd.h dirent.h sys/time.h sys/param.h values.h malloc.h netdb.h sys/select.h sys/socket.h sys/mman.h sys/ioctl.h sys/resource.h sys/wait.h sys/utsname.h netinet/in.h
 ## arg 4 :
 ## arg 5 :
 ## arg 6 :
@@ -14796,7 +14797,7 @@ LIBS="$_sci_libs  $LIBS"
 __extern_c="no"
 __sci_pound_includes=""
 
-for inc in "" unistd.h dirent.h sys/time.h sys/param.h values.h malloc.h netdb.h sys/select.h sys/socket.h sys/mman.h sys/ioctl.h sys/resource.h sys/wait.h sys/utsname.h rpc/types.h netinet/in.h; do
+for inc in "" unistd.h dirent.h sys/time.h sys/param.h values.h malloc.h netdb.h sys/select.h sys/socket.h sys/mman.h sys/ioctl.h sys/resource.h sys/wait.h sys/utsname.h netinet/in.h; do
     if test "$inc" = "extern_C"; then
        __sci_pound_includes="extern \"C\" {"
        __extern_c=yes
@@ -14935,7 +14936,7 @@ rm -f core conftest.err conftest.$ac_objext \
 if test "required" = "specific"; then
   #echo specific
   # Make sure the exact includes were found
-  for i in "" unistd.h dirent.h sys/time.h sys/param.h values.h malloc.h netdb.h sys/select.h sys/socket.h sys/mman.h sys/ioctl.h sys/resource.h sys/wait.h sys/utsname.h rpc/types.h netinet/in.h; do
+  for i in "" unistd.h dirent.h sys/time.h sys/param.h values.h malloc.h netdb.h sys/select.h sys/socket.h sys/mman.h sys/ioctl.h sys/resource.h sys/wait.h sys/utsname.h netinet/in.h; do
     #echo looking for /$i
     if test ! -e /$i; then
      as_fn_error $? "Specifically requested STD_HDRS include file '/$i' was not found" "$LINENO" 5
@@ -26268,10 +26269,10 @@ if test "$HAVE_BLAS" != "yes"; then
 
   case $host in
     *-darwin*)
-       if test "$yosemite" = yes; then
+       if test "$yosemite_plus" = yes; then
 
 ##
-## SCI_TRY_LINK (BLAS):  blas and cblas libraries-darwin-yosemite
+## SCI_TRY_LINK (BLAS):  blas and cblas libraries-darwin (yosemite+)
 ##
 ## arguments mean:
 ## arg 1 : variable base name (e.g., MATH)
@@ -26303,7 +26304,7 @@ if test "$HAVE_BLAS" != "yes"; then
 ## Here are the specific values for this invocation:
 ##
 ## arg 1 : BLAS
-## arg 2 : blas and cblas libraries-darwin-yosemite
+## arg 2 : blas and cblas libraries-darwin (yosemite+)
 ## arg 3 : Accelerate/Accelerate.h
 ## arg 4 : $_sci_inc
 ## arg 5 : cblas blas
@@ -26323,12 +26324,12 @@ if test "$HAVE_BLAS" != "yes"; then
 ##      HAVE_BLAS_H         => yes or no
 
 if test 9 != 9; then
-     as_fn_error $? "Wrong number of parameters (9) for SCI-TRY-LINK for blas and cblas libraries-darwin-yosemite.  This is an internal SCIRun configure error and should be reported to scirun-develop@sci.utah.edu." "$LINENO" 5
+     as_fn_error $? "Wrong number of parameters (9) for SCI-TRY-LINK for blas and cblas libraries-darwin (yosemite+).  This is an internal SCIRun configure error and should be reported to scirun-develop@sci.utah.edu." "$LINENO" 5
 fi
 
 
-{ $as_echo "$as_me:${as_lineno-$LINENO}: checking for blas and cblas libraries-darwin-yosemite (optional)" >&5
-$as_echo_n "checking for blas and cblas libraries-darwin-yosemite (optional)... " >&6; }
+{ $as_echo "$as_me:${as_lineno-$LINENO}: checking for blas and cblas libraries-darwin (yosemite+) (optional)" >&5
+$as_echo_n "checking for blas and cblas libraries-darwin (yosemite+) (optional)... " >&6; }
 _sci_savelibs=$LIBS
 _sci_saveldflags=$LDFLAGS
 _sci_savecflags=$CFLAGS
@@ -26338,7 +26339,7 @@ _sci_includes=
 
 if test "optional" != "optional" -a "optional" != "required" -a "optional" != "specific"; then
      echo
-     as_fn_error $? "Last parameter of SCI-TRY-LINK for blas and cblas libraries-darwin-yosemite must be: optional or required or specific.  (You had optional.)  This is an internal SCIRun configure error and should be reported to scirun-develop@sci.utah.edu." "$LINENO" 5
+     as_fn_error $? "Last parameter of SCI-TRY-LINK for blas and cblas libraries-darwin (yosemite+) must be: optional or required or specific.  (You had optional.)  This is an internal SCIRun configure error and should be reported to scirun-develop@sci.utah.edu." "$LINENO" 5
 fi
 
 # If $_sci_inc (the -I paths) is blank, do nothing, else do the for statement.
@@ -26713,7 +26714,7 @@ _sci_libs=''
 _sci_includes=''
 
 ##
-## END of SCI_TRY_LINK (BLAS):  blas and cblas libraries-darwin-yosemite
+## END of SCI_TRY_LINK (BLAS):  blas and cblas libraries-darwin (yosemite+)
 ##
 
 
@@ -30208,7 +30209,7 @@ if test "$HAVE_LAPACK" != "yes"; then
   case $host in
     *-darwin*)
 
-       if test "$yosemite" = yes; then
+       if test "$yosemite_plus" = yes; then
 
 ##
 ## SCI_TRY_LINK (LAPACK):  Mac Accelerate lapack version of libraries and headers

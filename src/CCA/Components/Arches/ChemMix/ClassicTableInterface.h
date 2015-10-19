@@ -28,7 +28,7 @@
 #define Uintah_Component_Arches_ClassicTableInterface_h
 
 #include <CCA/Components/Arches/ArchesMaterial.h>
-#include <CCA/Components/Arches/TimeIntegratorLabel.h>
+//#include <CCA/Components/Arches/TimeIntegratorLabel.h>
 #include <Core/Thread/ConditionVariable.h>
 #include <Core/Util/DebugStream.h>
 #include <Core/IO/UintahZlibUtil.h>
@@ -40,15 +40,15 @@
  * @author Jeremy Thornock
  * @date   Jan 2011
  *
- * @brief Table interface for those created with the Classic Arches Format 
+ * @brief Table interface for those created with the Classic Arches Format
  *
  * @todo
  *
  * @details
- * This class provides and interface to classic Arches formatted tables.  
- * Any variable that is saved to the UDA in the dataarchiver block is automatically given a VarLabel.  
+ * This class provides and interface to classic Arches formatted tables.
+ * Any variable that is saved to the UDA in the dataarchiver block is automatically given a VarLabel.
  *
- * If you have trouble reading your table, you can "setenv SCI_DEBUG TABLE_DEBUG:+" to get a 
+ * If you have trouble reading your table, you can "setenv SCI_DEBUG TABLE_DEBUG:+" to get a
  * report of what is going on in the table reader.
  *
  *
@@ -57,10 +57,10 @@
 
 namespace Uintah {
 
-class ArchesLabel; 
-class MPMArchesLabel; 
-class TimeIntegratorLabel; 
-class BoundaryCondition_new; 
+class ArchesLabel;
+class MPMArchesLabel;
+class TimeIntegratorLabel;
+class BoundaryCondition_new;
 class MixingRxnModel;
 
 class ClassicTableInterface : public MixingRxnModel {
@@ -72,60 +72,60 @@ public:
   ~ClassicTableInterface();
 
   void problemSetup( const ProblemSpecP& params );
-  
-  /** @brief Gets the thermochemical state for a patch 
-      @param initialize         Tells the method to allocateAndPut 
-      @param modify_ref_den     Tells the method to modify the reference density */
-  void sched_getState( const LevelP& level, 
-                       SchedulerP& sched, 
-                       const int time_substep, 
-                       const bool initialize,
-                       const bool modify_ref_den ); 
 
-  /** @brief Gets the thermochemical state for a patch 
-      @param initialize         Tells the method to allocateAndPut 
+  /** @brief Gets the thermochemical state for a patch
+      @param initialize         Tells the method to allocateAndPut
       @param modify_ref_den     Tells the method to modify the reference density */
-  void getState( const ProcessorGroup* pc, 
-                 const PatchSubset* patches, 
-                 const MaterialSubset* matls, 
-                 DataWarehouse* old_dw, 
-                 DataWarehouse* new_dw, 
-                 const int time_substep, 
-                 const bool initialize, 
+  void sched_getState( const LevelP& level,
+                       SchedulerP& sched,
+                       const int time_substep,
+                       const bool initialize,
+                       const bool modify_ref_den );
+
+  /** @brief Gets the thermochemical state for a patch
+      @param initialize         Tells the method to allocateAndPut
+      @param modify_ref_den     Tells the method to modify the reference density */
+  void getState( const ProcessorGroup* pc,
+                 const PatchSubset* patches,
+                 const MaterialSubset* matls,
+                 DataWarehouse* old_dw,
+                 DataWarehouse* new_dw,
+                 const int time_substep,
+                 const bool initialize,
                  const bool modify_ref_den );
 
-  /** @brief Load table into memory */ 
+  /** @brief Load table into memory */
   void loadMixingTable(gzFile &fp, const std::string & inputfile );
-  void loadMixingTable(std::stringstream& table_stream, 
+  void loadMixingTable(std::stringstream& table_stream,
                        const std::string & inputfile );
 
   enum BoundaryType { DIRICHLET, NEUMANN, FROMFILE };
 
   struct DepVarCont {
 
-    CCVariable<double>* var; 
-    int index; 
+    CCVariable<double>* var;
+    int index;
 
-  }; 
+  };
 
   /** @brief returns the heat loss bounds from the table **/
-  inline std::vector<double> get_hl_bounds(){ 
+  inline std::vector<double> get_hl_bounds(){
     std::vector<double> bounds;
-    bounds.push_back(d_hl_lower_bound); 
-    bounds.push_back(d_hl_upper_bound); 
+    bounds.push_back(d_hl_lower_bound);
+    bounds.push_back(d_hl_upper_bound);
     return bounds; };
-  
+
 
   /*********interp derived classes*****************************************/
-  
+
   /** @brief A base class for Interpolation */
   class Interp_class {
 
   public:
 
-    Interp_class( const std::vector<std::vector<double> > & table, const std::vector<int>& IndepVarNo, 
-                  const std::vector<std::vector<double> > & indepin, const std::vector<std::vector<double> >& ind_1in ) 
-      : table2(table), d_allIndepVarNo(IndepVarNo), indep(indepin), ind_1(ind_1in) 
+    Interp_class( const std::vector<std::vector<double> > & table, const std::vector<int>& IndepVarNo,
+                  const std::vector<std::vector<double> > & indepin, const std::vector<std::vector<double> >& ind_1in )
+      : table2(table), d_allIndepVarNo(IndepVarNo), indep(indepin), ind_1(ind_1in)
 //       ,d_interpLock("ClassicTable Interp_class lock")
     {}
 
@@ -145,18 +145,18 @@ public:
   };
 
   class Interp1 : public Interp_class {
-    
+
   public:
 
-    Interp1( const std::vector<int>& indepVarNo, const std::vector<std::vector<double> >& table, 
-             const std::vector< std::vector <double> >& i1) 
+    Interp1( const std::vector<int>& indepVarNo, const std::vector<std::vector<double> >& table,
+             const std::vector< std::vector <double> >& i1)
       : Interp_class(table, indepVarNo, i1, i1 ) {
     }
 
     ~Interp1() {};
-    
+
     inline std::vector<double> find_val( const std::vector <double>& iv, const std::vector<int>& var_index) {
-      
+
       std::vector<double> table_vals = std::vector<double>(2);
       std::vector<int> lo_index = std::vector<int>(1);
       std::vector<int> hi_index = std::vector<int>(1);
@@ -207,7 +207,7 @@ public:
           var_val = (table_vals[1]-table_vals[0])/(ind_1[i1dep_ind][lo_index[0]+1]-ind_1[0][lo_index[0]])*(iv[0]-ind_1[0][lo_index[0]])+ table_vals[0];
           var_values[i] = var_val;
         }
-        
+
       }
       //d_interpLock.unlock();
 
@@ -215,19 +215,19 @@ public:
 
     };
   };
-  
+
   class Interp2 : public Interp_class {
-  
+
   public:
 
     Interp2( const std::vector<int>& indepVarNo, const std::vector<std::vector<double> > & table,
-             const std::vector< std::vector <double> >& indep_headers, const std::vector< std::vector <double > >& i1) 
+             const std::vector< std::vector <double> >& indep_headers, const std::vector< std::vector <double > >& i1)
       : Interp_class( table, indepVarNo, indep_headers, i1 ){}
 
     ~Interp2() {}
-    
+
     inline std::vector<double> find_val( const std::vector<double>& iv, const std::vector<int>& var_index) {
-      
+
       std::vector<double> table_vals = std::vector<double>(4);
       std::vector<int> lo_index = std::vector<int>(2);
       std::vector<int> hi_index = std::vector<int>(2);
@@ -321,25 +321,25 @@ public:
           var_val = (table_vals[1]-table_vals[0])/(ind_1[i1dep_ind][lo_index[0]+1]-ind_1[i1dep_ind][lo_index[0]])*(iv[0]-ind_1[i1dep_ind][lo_index[0]])+ table_vals[0];
           var_values[i] = var_val;
         }
-        
+
       }
       //d_interpLock.unlock();
 
       return var_values;
-      
+
     };
   };
-  
+
   class Interp3 : public Interp_class {
-    
+
   public:
 
     Interp3( const std::vector<int>& indepVarNo, const std::vector<std::vector<double> > & table,
-             const std::vector< std::vector <double> >& indep_headers, const std::vector< std::vector <double > >& i1) 
+             const std::vector< std::vector <double> >& indep_headers, const std::vector< std::vector <double > >& i1)
       : Interp_class( table, indepVarNo, indep_headers, i1 ) {}
 
     ~Interp3() {}
-    
+
     inline std::vector<double> find_val( const std::vector<double>& iv, const std::vector<int>& var_index) {
 
       std::vector<double> table_vals = std::vector<double>(8,0.0);
@@ -391,7 +391,7 @@ public:
 
         int i1dep_ind1 = 0;
         // binary search for i1 low
-        i1dep_ind1 = lo_index[3];  
+        i1dep_ind1 = lo_index[3];
         lo_ind = 0;
         hi_ind = d_allIndepVarNo[0] - 1;
         iv_val = iv[0];
@@ -452,7 +452,7 @@ public:
         }
 
         for ( unsigned int i = 0; i < var_index.size(); i++ ) {
-        
+
           table_vals[0] = table2[var_index[i]][d_allIndepVarNo[1]*d_allIndepVarNo[0]*lo_index[3] + d_allIndepVarNo[0] * lo_index[2] + lo_index[0]];
           table_vals[1] = table2[var_index[i]][d_allIndepVarNo[1]*d_allIndepVarNo[0]*lo_index[3] + d_allIndepVarNo[0] * lo_index[2] + hi_index[0]];
           table_vals[2] = table2[var_index[i]][d_allIndepVarNo[1]*d_allIndepVarNo[0]*lo_index[3] + d_allIndepVarNo[0] * hi_index[2] + lo_index[0]];
@@ -461,7 +461,7 @@ public:
           table_vals[5] = table2[var_index[i]][d_allIndepVarNo[1]*d_allIndepVarNo[0]*hi_index[3] + d_allIndepVarNo[0] * lo_index[2] + hi_index[1]];
           table_vals[6] = table2[var_index[i]][d_allIndepVarNo[1]*d_allIndepVarNo[0]*hi_index[3] + d_allIndepVarNo[0] * hi_index[2] + lo_index[1]];
           table_vals[7] = table2[var_index[i]][d_allIndepVarNo[1]*d_allIndepVarNo[0]*hi_index[3] + d_allIndepVarNo[0] * hi_index[2] + hi_index[1]];
-        
+
           if (ind_1[i1dep_ind1][hi_index[0]]!=ind_1[i1dep_ind1][lo_index[0]]){
             dist_vals[0]=(iv[0]-ind_1[i1dep_ind1][lo_index[0]])/(ind_1[i1dep_ind1][hi_index[0]]-ind_1[i1dep_ind1][lo_index[0]]);
           }
@@ -474,7 +474,7 @@ public:
           if (indep[1][hi_index[3]]!=indep[1][lo_index[3]]){
             dist_vals[3]=(iv[2]-indep[1][lo_index[3]])/(indep[1][hi_index[3]]-indep[1][lo_index[3]]);
           }
- 
+
           // First, we make the 2d plane in indep_1 space
           table_vals[0] = table_vals[0]*(1 - dist_vals[0]) + table_vals[1]*dist_vals[0];
           table_vals[1] = table_vals[4]*(1 - dist_vals[1]) + table_vals[5]*dist_vals[1];
@@ -488,24 +488,24 @@ public:
           var_values[i] = var_val;
 
         }
-        
+
       }
       //d_interpLock.unlock();
       return var_values;
 
     };
   };
-  
+
   class Interp4 : public Interp_class {
 
   public:
 
     Interp4( const std::vector<int>& indepVarNo, const std::vector<std::vector<double> >& table,
-             const std::vector< std::vector <double> >& indep_headers, const std::vector< std::vector <double > >& i1) 
+             const std::vector< std::vector <double> >& indep_headers, const std::vector< std::vector <double > >& i1)
       : Interp_class(table, indepVarNo, indep_headers, i1 ){}
 
     ~Interp4(){}
-    
+
     inline std::vector<double> find_val( const std::vector<double>& iv, const std::vector<int>& var_index) {
 
       int mid = 0;
@@ -608,7 +608,7 @@ public:
           table_vals[13] = table2[var_index[ii]][d_allIndepVarNo[2]*d_allIndepVarNo[1]*d_allIndepVarNo[0]*hi_index[3]+d_allIndepVarNo[1]*d_allIndepVarNo[0]*hi_index[2] + d_allIndepVarNo[0] * lo_index[1] + hi_index[0]];
           table_vals[14] = table2[var_index[ii]][d_allIndepVarNo[2]*d_allIndepVarNo[1]*d_allIndepVarNo[0]*hi_index[3]+d_allIndepVarNo[1]*d_allIndepVarNo[0]*hi_index[2] + d_allIndepVarNo[0] * hi_index[1] + lo_index[0]];
           table_vals[15] = table2[var_index[ii]][d_allIndepVarNo[2]*d_allIndepVarNo[1]*d_allIndepVarNo[0]*hi_index[3]+d_allIndepVarNo[1]*d_allIndepVarNo[0]*hi_index[2] + d_allIndepVarNo[0] * hi_index[1] + hi_index[0]];
-          
+
           int npts =0;
           for (int i = 3; i > 0; i--) {
             npts = (int)pow(2.0,i);
@@ -626,16 +626,16 @@ public:
       //d_interpLock.unlock();
 
       return var_values;
-      
+
     };
   };
-  
+
   class InterpN : public Interp_class {
 
     public:
 
     InterpN( const std::vector<int>& indepVarNo, const std::vector<std::vector<double> >& table,
-             const std::vector< std::vector <double> >& indep_headers, const std::vector< std::vector <double > >& i1, int d_indepvarscount) 
+             const std::vector< std::vector <double> >& indep_headers, const std::vector< std::vector <double > >& i1, int d_indepvarscount)
       : Interp_class( table, indepVarNo, indep_headers, i1 ){
 
       multiples = std::vector<int>(d_indepvarscount);
@@ -647,14 +647,14 @@ public:
         }
         multiples[i] = multtemp;
       }
-    
+
       int npts = (int)pow(2.0,d_indepvarscount);
       value_pop = std::vector< std::vector <bool> > (npts);
-    
+
       for (int i =0; i < npts; i++) {
         value_pop[i] = std::vector<bool>(d_indepvarscount );
       }
-    
+
       //bool matrix for use in lookup
       int temp_pts;
       double temp_pts_d;
@@ -669,13 +669,13 @@ public:
           }
         }
       }
-      
+
       ivcount = d_indepvarscount;
       vals_size = npts;
     }
 
     ~InterpN(){}
-    
+
     inline std::vector<double> find_val( const std::vector<double>& iv, const std::vector<int>& var_index) {
 
       int mid = 0;
@@ -794,9 +794,9 @@ public:
       //d_interpLock.unlock();
 
       return var_values;
-      
+
     }
-    
+
     protected:
 
     int ivcount;
@@ -805,72 +805,72 @@ public:
     int multtemp;
     int vals_size;
   };
-  
+
   //*******************************************end interp classes//
-  
+
   typedef std::map<std::string, DepVarCont >       DepVarMap;
   typedef std::map<std::string, int >               IndexMap;
 
-  /** @brief Return a table lookup for a variable given the independent variable space. **/ 
-  double getTableValue( std::vector<double>, std::string ); 
+  /** @brief Return a table lookup for a variable given the independent variable space. **/
+  double getTableValue( std::vector<double>, std::string );
 
-  /** @brief Match the requested dependent variable with their table index. **/ 
-  void tableMatching(); 
+  /** @brief Match the requested dependent variable with their table index. **/
+  void tableMatching();
 
   /** @brief Return a table lookup for a variable given the independent variables and set of inerts (may be an empty set) - Grid wise **/
-  double getTableValue( std::vector<double> iv, std::string depend_varname, StringToCCVar inert_mixture_fractions, IntVector c); 
+  double getTableValue( std::vector<double> iv, std::string depend_varname, StringToCCVar inert_mixture_fractions, IntVector c);
 
   /** @brief Return a table lookup for a variable given the independent variables and set of inerts (may be an empty set) - single point wise**/
   double getTableValue( std::vector<double> iv, std::string depend_varname, doubleMap inert_mixture_fractions );
 
-  /** @brief Return a reference to the inert map for scheduling purposes in other classes.**/ 
+  /** @brief Return a reference to the inert map for scheduling purposes in other classes.**/
   InertMasterMap& getInertMap(){
-    return d_inertMap; 
+    return d_inertMap;
   };
 
   /** @brief Method to find the index for any dependent variable.  **/
-  int inline findIndex( std::string name ){ 
+  int inline findIndex( std::string name ){
 
-    int index = -1; 
+    int index = -1;
 
-    for ( int i = 0; i < d_varscount; i++ ) { 
+    for ( int i = 0; i < d_varscount; i++ ) {
 
       if ( name.compare( d_allDepVarNames[i] ) == 0 ) {
-        index = i; 
-        break; 
+        index = i;
+        break;
       }
     }
 
     if ( index == -1 ) {
       std::ostringstream exception;
-      exception << "Error: The variable " << name << " was not found in the table." << "\n" << 
+      exception << "Error: The variable " << name << " was not found in the table." << "\n" <<
         "Please check your input file and try again. " << std::endl;
       throw InternalError(exception.str(),__FILE__,__LINE__);
     }
 
-    return index; 
+    return index;
   }
 
 private:
 
   Interp_class * ND_interp;
-  
+
   bool d_table_isloaded;    ///< Boolean: has the table been loaded?
 
-  // Specifically for the classic table: 
-  double d_f_stoich;        ///< Stoichiometric mixture fraction 
+  // Specifically for the classic table:
+  double d_f_stoich;        ///< Stoichiometric mixture fraction
   double d_H_fuel;          ///< Fuel Enthalpy
   double d_H_air;           ///< Oxidizer Enthalpy
   double d_hl_lower_bound;  ///< Heat loss lower bound
   double d_hl_upper_bound;  ///< Heat loss upper bound
-  double d_wall_temp;       ///< Temperature at a domain wall 
+  double d_wall_temp;       ///< Temperature at a domain wall
 
-  
+
   int d_indepvarscount;     ///< Number of independent variables
   int d_varscount;          ///< Total dependent variables
 
   std::string d_enthalpy_name;
-  const VarLabel* d_enthalpy_label; 
+  const VarLabel* d_enthalpy_label;
 
   IndexMap d_depVarIndexMap;                      ///< Reference to the integer location of the variable
   IndexMap d_enthalpyVarIndexMap;                 ///< Reference to the integer location of variables for heat loss calculation
@@ -881,13 +881,13 @@ private:
   std::vector<std::string> d_allDepVarUnits;         ///< Units for the dependent variables
   std::vector<std::string> d_allUserDepVarNames;     ///< Vector storing all independent variable names requested in input file
 
-  BoundaryCondition_new* _boundary_condition; 
+  BoundaryCondition_new* _boundary_condition;
 
   void checkForConstants(gzFile &fp, const std::string & inputfile );
-  void checkForConstants(std::stringstream& table_stream, 
+  void checkForConstants(std::stringstream& table_stream,
                          const std::string & inputfile );
 
-  //previous Arches specific variables: 
+  //previous Arches specific variables:
   std::vector<std::vector<double> > i1;
   std::vector<std::vector<double> > table;
   std::vector<std::vector<double> > indep_headers;
@@ -895,12 +895,12 @@ private:
   /// A dependent variable wrapper
   struct ADepVar {
     std::string name;
-    CCVariable<double> data; 
+    CCVariable<double> data;
   };
 
 
-  void getIndexInfo(); 
-  void getEnthalpyIndexInfo(); 
+  void getIndexInfo();
+  void getEnthalpyIndexInfo();
 
 }; // end class ClassicTableInterface
 } // end namespace Uintah

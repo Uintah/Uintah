@@ -152,8 +152,8 @@
     <save label="adiabaticenthalpy" table_lookup="true"/>
     <save label="N2" table_lookup="true"/>
     <save label="mixture_molecular_weight" table_lookup="true"/>
-    <!--originalOFC-->
-    <!--<checkpoint cycle="2" walltimeInterval="1600" walltimeStart="0"/>-->
+    <!-- originalOFC -->
+    <!-- The original OFC file didn't use interval instead used: walltimeInterval="1600" walltimeStart="0" -->
     <checkpoint cycle="2" interval="0.009"/>
     <outputDoubleAsFloat/>
     <compression>gzip</compression>
@@ -767,8 +767,8 @@
           <value>0.0</value>
         </BCType>
       </Face>
-      <!--originalOFC-->
-      <!--<Face circle="x-" name="primary_air" origin="0.0 0.3 0.3" radius="0.008"><BCType label="mass_inlet_primary_air" var="MassFlowInlet">-->
+      <!-- originalOFC -->
+      <!-- <Face circle="x-" name="primary_air" origin="0.0 0.3 0.3" radius="0.008"><BCType label="mass_inlet_primary_air" var="MassFlowInlet"> -->
       <Face circle="x-" name="primary_air" origin="0.0 0.3 0.3" radius="0.2">
         <BCType label="mass_inlet_primary_air" var="MassFlowInlet">
           <value>0.001828154</value>
@@ -870,8 +870,8 @@
           <value>1.0</value>
         </BCType>
       </Face>
-      <!--originalOFC-->
-      <!--<Face annulus="x-" inner_radius="0.012" name="secondary_air" origin="0.0 0.3 0.3" outer_radius="0.018"><BCType label="mass_inlet_secondary_air" var="MassFlowInlet">-->
+      <!-- originalOFC -->
+      <!-- <Face annulus="x-" inner_radius="0.012" name="secondary_air" origin="0.0 0.3 0.3" outer_radius="0.018"><BCType label="mass_inlet_secondary_air" var="MassFlowInlet"> -->
       <Face annulus="x-" inner_radius="0.2" name="secondary_air" origin="0.0 0.3 0.3" outer_radius="0.6">
         <BCType label="mass_inlet_secondary_air" var="MassFlowInlet">
           <value>0.002078968</value>
@@ -973,8 +973,8 @@
           <value>1e-15</value>
         </BCType>
       </Face>
-      <!--originalOFC-->
-      <!--<Face circle="y-" name="purge_C1" origin="0.174 0.0 0.3" radius="0.009"><BCType label="mass_inlet_purge_C1" var="MassFlowInlet">-->
+      <!-- originalOFC -->
+      <!-- <Face circle="y-" name="purge_C1" origin="0.174 0.0 0.3" radius="0.009"><BCType label="mass_inlet_purge_C1" var="MassFlowInlet"> -->
       <Face circle="y-" name="purge_C1" origin="0.174 0.0 0.3" radius="0.1">
         <BCType label="mass_inlet_purge_C1" var="MassFlowInlet">
           <value>0.000293021</value>
@@ -1076,8 +1076,8 @@
           <value>1e-15</value>
         </BCType>
       </Face>
-      <!--originalOFC-->
-      <!--<Face circle="y-" name="purge_C2" origin="0.555 0.0 0.3" radius="0.009"><BCType label="mass_inlet_purge_C2" var="MassFlowInlet">-->
+      <!-- originalOFC -->
+      <!-- <Face circle="y-" name="purge_C2" origin="0.555 0.0 0.3" radius="0.009"><BCType label="mass_inlet_purge_C2" var="MassFlowInlet"> -->
       <Face circle="y-" name="purge_C2" origin="0.555 0.0 0.3" radius="0.1">
         <BCType label="mass_inlet_purge_C2" var="MassFlowInlet">
           <value>0.000293021</value>
@@ -1179,8 +1179,8 @@
           <value>1e-15</value>
         </BCType>
       </Face>
-      <!--originalOFC-->
-      <!--<Face circle="y-" name="purge_C3" origin="0.939 0.0 0.3" radius="0.009"><BCType label="mass_inlet_purge_C3" var="MassFlowInlet">-->
+      <!-- originalOFC -->
+      <!-- <Face circle="y-" name="purge_C3" origin="0.939 0.0 0.3" radius="0.009"><BCType label="mass_inlet_purge_C3" var="MassFlowInlet"> -->
       <Face circle="y-" name="purge_C3" origin="0.939 0.0 0.3" radius="0.1">
         <BCType label="mass_inlet_purge_C3" var="MassFlowInlet">
           <value>0.000293021</value>
@@ -1389,11 +1389,11 @@
         <lower>[0.0,0,0]</lower>
         <upper>[1.7,0.6,0.6]</upper>
         <extraCells>[1,1,1]</extraCells>
-        <!--originalOFC-->
-        <!--<resolution>[425,150,150]</resolution>-->
+        <!-- originalOFC -->
+        <!-- <resolution>[425,150,150]<resolution> -->
         <resolution>[60,20,20]</resolution>
-        <!--originalOFC-->
-        <!--<patches>[21,8,8]</patches>-->
+        <!-- originalOFC -->
+        <!-- <patches>[21,8,8]<patches> -->
         <patches>[3,1,1]</patches>
       </Box>
     </Level>
@@ -1618,13 +1618,13 @@
           <!--</RMCRT>-->
           <!--</src>-->
           <src label="divQ" type="do_radiation">
-            <!--originalOFC-->
-            <!--<calc_frequency>20</calc_frequency>-->
+            <!-- originalOFC -->
+            <!-- <calc_frequency>20<calc_frequency> -->
             <calc_frequency>3</calc_frequency>
             <abskg label="abskg"/>
             <DORadiationModel>
-              <!--originalOFC-->
-              <!--<ordinates>8</ordinates>-->
+              <!-- originalOFC -->
+              <!-- <ordinates>8<ordinates> -->
               <ordinates>2</ordinates>
               <LinearSolver type="hypre">
                 <res_tol>1.0e-8</res_tol>

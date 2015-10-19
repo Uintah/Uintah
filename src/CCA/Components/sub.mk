@@ -65,9 +65,9 @@ endif
 
 ifeq ($(BUILD_ARCHES),yes)
   ARCHES   := $(SRCDIR)/Arches
-  ifeq ($(BUILD_MPM),yes)
-    MPMARCHES := $(SRCDIR)/MPMArches
-  endif
+	ifeq ($(BUILD_MPM),yes)
+		MPMARCHES := $(SRCDIR)/MPMArches
+	endif
 endif
 
 ifeq ($(BUILD_MD),yes)
@@ -95,6 +95,7 @@ SUBDIRS := \
         $(SRCDIR)/SimulationController \
         $(SRCDIR)/Solvers              \
         $(SRCDIR)/SwitchingCriteria    
+
 
 include $(SCIRUN_SCRIPTS)/recurse.mk
 
