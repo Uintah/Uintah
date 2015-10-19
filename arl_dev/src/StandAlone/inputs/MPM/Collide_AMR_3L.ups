@@ -44,6 +44,7 @@
      <checkpoint cycle = "2" timestepInterval = "10"/>
   </DataArchiver>
    <!--__________________________________-->
+  <doAMR>true</doAMR>
   <AMR>
      <useLockStep> true </useLockStep>
      <MPM>

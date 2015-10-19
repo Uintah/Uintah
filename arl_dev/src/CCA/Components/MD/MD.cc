@@ -360,6 +360,16 @@ void MD::problemSetup(const ProblemSpecP&   params,
 void MD::scheduleInitialize(const LevelP&       level,
                                   SchedulerP&   sched)
 {
+  int currDW = 0;
+  DataWarehouse* dwAddress = sched->get_dw(currDW);
+  while (dwAddress)
+  {
+    std::cout << " Data Warehouse: " << currDW << " Address: " << std::showbase
+              << std::internal << std::setfill('0') << std::hex << dwAddress << std::endl;
+    ++currDW;
+    dwAddress = sched->get_dw(currDW);
+  }
+
   if (!doMDOnLevel(level->getIndex(), level->getGrid()->numLevels())) {
     return;
   }
@@ -1054,6 +1064,8 @@ void MD::outputStatistics(const ProcessorGroup* pg,
                                 DataWarehouse*  oldDW,
                                 DataWarehouse*/*newDW*/)
 {
+
+
   sum_vartype nonbondedEnergy;
   sum_vartype kineticEnergy;
   sum_vartype electrostaticInverseEnergy;
@@ -1215,6 +1227,8 @@ void MD::initialize(const ProcessorGroup*   pg,
   printTask(perProcPatches, md_cout, location);
 
 
+
+
   // Loop through each patch
   size_t numPatches             =   perProcPatches->size();
   size_t numAtomTypes           =   matls->size();
@@ -1272,7 +1286,7 @@ void MD::initialize(const ProcessorGroup*   pg,
     // Loop over perProcPatches
     const Patch*        currPatch           =   perProcPatches->get(patchIndex);
 
-    int   currLevelIndex = currPatch->getLevelIndex();
+  //  int   currLevelIndex = currPatch->getLevelIndex();
 
     SCIRun::IntVector   lowCellBoundary     =   currPatch->getCellLowIndex();
     SCIRun::IntVector   highCellBoundary    =   currPatch->getCellHighIndex();
@@ -1364,8 +1378,8 @@ void MD::initialize(const ProcessorGroup*   pg,
       // Create this patch's particle set for atoms of current material
       size_t            numAtoms    = localAtomCoordinates.size();
       size_t            globalID    = matls->get(localType);  // Map to global material type for pset creation
-      std::cout << "\nMD::Creating particle set with: " << numAtoms << " on patch: " << currPatch->getID() << " on level: "
-                << currPatch->getLevel()->getIndex() << " in DW: " << newDW->getID() << "\n\n";
+      std::cout << "MD::Creating particle set with: " << numAtoms << " on patch: " << currPatch->getID() << " on level: "
+                << currPatch->getLevel()->getIndex() << " in DW: " << newDW->getID() << std::endl;
       ParticleSubset*   currPset    =
                         newDW->createParticleSubset(numAtoms,
                                                     globalID,
