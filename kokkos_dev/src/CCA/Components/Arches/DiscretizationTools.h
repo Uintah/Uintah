@@ -12,23 +12,28 @@ namespace Uintah{
   template <>
   struct VariableHelper<CCVariable<double> >{
     typedef constCCVariable<double> ConstType;
+    typedef CCVariable<double> Type;
   };
 
   template <>
   struct VariableHelper<SFCXVariable<double> >{
     typedef constSFCXVariable<double> ConstType;
+    typedef SFCXVariable<double> Type;
   };
 
   template <>
   struct VariableHelper<SFCYVariable<double> >{
     typedef constSFCYVariable<double> ConstType;
+    typedef SFCYVariable<double> Type;
   };
 
   template <>
   struct VariableHelper<SFCZVariable<double> >{
     typedef constSFCZVariable<double> ConstType;
+    typedef SFCZVariable<double> Type;
   };
 
+  //------------------------------------------------------------------------------------------------
   //intialization
   template <typename T>
   struct VariableInitializeFunctor{
@@ -38,7 +43,7 @@ namespace Uintah{
 
     VariableInitializeFunctor( T& var, double value ) : var(var), value(value){}
 
-    void operator()(int i, int j, int k) const {
+    void operator()(int i, int j, int k) const{
 
       const IntVector c(i,j,k);
 
@@ -47,8 +52,9 @@ namespace Uintah{
     }
   };
 
+  //------------------------------------------------------------------------------------------------
   //convection
-  template<typename FT, typename UT>
+  template<typename PT, typename UT>
   struct ComputeConvection{
   };
 
@@ -68,21 +74,13 @@ namespace Uintah{
       : phi(phi), rhs(rhs), rho(rho), u(u), dir(dir), A(A){}
 
     void
-    operator()(int i, int j, int k ){
+    operator()(int i, int j, int k ) const {
 
       IntVector c(i,j,k);
-      IntVector cm(i,j,k);
-      IntVector cp(i,j,k);
-      IntVector cmm(i,j,k);
-      IntVector cpp(i,j,k);
-      cm -= dir;
-      cp -= dir;
-      for (int i = 0; i < 3; i++){
-        cmm[i] = cmm[i] - 2.*dir[i];
-      }
-      for (int i = 0; i < 3; i++){
-        cpp[i] = cpp[i] + 2.*dir[i];
-      }
+      IntVector cm(i-dir[0],j-dir[1],k-dir[2]);
+      IntVector cp(i+dir[0],j+dir[1],k+dir[2]);
+      IntVector cmm(i-2*dir[0],j-2*dir[1],k-2*dir[2]);
+      IntVector cpp(i+2*dir[0],j+2*dir[1],k+2*dir[2]);
 
       double Sup_up = phi[cm];
       double Sdn_up = phi[c];
@@ -132,53 +130,163 @@ namespace Uintah{
   template<typename UT>
   struct ComputeConvection<SFCXVariable<double>, UT>{
 
-    constSFCXVariable<double>& phi;
-    constCCVariable<double>& rho;
-    SFCXVariable<double>& rhs;
+    typedef typename VariableHelper<SFCXVariable<double> >::ConstType ConstPT;
+    typedef typename VariableHelper<SFCXVariable<double> >::Type PT;
+
+    ConstPT& phi;
+    PT& rhs;
     UT& u;
+    constCCVariable<double>& rho;
     IntVector dir;
     double A;
 
-    ComputeConvection( constSFCXVariable<double>& phi, SFCXVariable<double>& rhs,
+    ComputeConvection( ConstPT& phi, PT& rhs,
       constCCVariable<double>& rho, UT& u, IntVector dir, double A)
       : phi(phi), rhs(rhs), rho(rho), u(u), dir(dir), A(A){}
 
     void
-    operator()(int i, int j, int k ){}
+    operator()(int i, int j, int k ) const{
+
+      IntVector c(i,j,k);
+      IntVector cm(i-dir[0],j-dir[1],k-dir[2]);
+      IntVector cp(i+dir[0],j+dir[1],k+dir[2]);
+
+      IntVector cu_w(i,j,k);
+      IntVector cu_w2(i-1,j,k);
+
+      IntVector cu_e(i,j+dir[1],k+dir[2]);
+      IntVector cu_e2(i-1+dir[0]*2,j+dir[1],k+dir[2]);
+
+
+      double phi_e = ( phi[c] + phi[cp] )/ 2.;
+      double phi_w = ( phi[c] + phi[cm] )/ 2.;
+
+      double u_e = ( u[cu_e] + u[cu_e2] ) / 2.;
+      double u_w = ( u[cu_w] + u[cu_w2] ) / 2.;
+
+      rhs[c] += A * ( phi_e * u_e - phi_w * u_w );
+
+    }
   };
 
   template<typename UT>
   struct ComputeConvection<SFCYVariable<double>, UT>{
-    constSFCYVariable<double>& phi;
-    constCCVariable<double>& rho;
-    SFCYVariable<double>& rhs;
+
+    typedef typename VariableHelper<SFCYVariable<double> >::ConstType ConstPT;
+    typedef typename VariableHelper<SFCYVariable<double> >::Type PT;
+
+    ConstPT& phi;
+    PT& rhs;
     UT& u;
+    constCCVariable<double>& rho;
     IntVector dir;
     double A;
 
-    ComputeConvection( constSFCYVariable<double>& phi, SFCYVariable<double>& rhs,
+    ComputeConvection( ConstPT& phi, PT& rhs,
       constCCVariable<double>& rho, UT& u, IntVector dir, double A)
       : phi(phi), rhs(rhs), rho(rho), u(u), dir(dir), A(A){}
 
     void
-    operator()(int i, int j, int k ){}
+    operator()(int i, int j, int k ) const{
+
+      IntVector c(i,j,k);
+      IntVector cm(i-dir[0],j-dir[1],k-dir[2]);
+      IntVector cp(i+dir[0],j+dir[1],k+dir[2]);
+
+      IntVector cu_w(i,j,k);
+      IntVector cu_w2(i,j-1,k);
+
+      IntVector cu_e(i+dir[0],j,k+dir[2]);
+      IntVector cu_e2(i+dir[0],j-1+dir[1]*2,k+dir[2]);
+
+
+      double phi_e = ( phi[c] + phi[cp] )/ 2.;
+      double phi_w = ( phi[c] + phi[cm] )/ 2.;
+
+      double u_e = ( u[cu_e] + u[cu_e2] ) / 2.;
+      double u_w = ( u[cu_w] + u[cu_w2] ) / 2.;
+
+      rhs[c] += A * ( phi_e * u_e - phi_w * u_w );
+
+    }
   };
 
   template<typename UT>
   struct ComputeConvection<SFCZVariable<double>, UT>{
-    constSFCZVariable<double>& phi;
-    constCCVariable<double>& rho;
-    SFCZVariable<double>& rhs;
+
+    typedef typename VariableHelper<SFCZVariable<double> >::ConstType ConstPT;
+    typedef typename VariableHelper<SFCZVariable<double> >::Type PT;
+
+    ConstPT& phi;
+    PT& rhs;
     UT& u;
+    constCCVariable<double>& rho;
     IntVector dir;
     double A;
 
-    ComputeConvection( constSFCZVariable<double>& phi, SFCZVariable<double>& rhs,
+    ComputeConvection( ConstPT& phi, PT& rhs,
       constCCVariable<double>& rho, UT& u, IntVector dir, double A)
       : phi(phi), rhs(rhs), rho(rho), u(u), dir(dir), A(A){}
 
     void
-    operator()(int i, int j, int k ){}
+    operator()(int i, int j, int k ) const{
+
+      IntVector c(i,j,k);
+      IntVector cm(i-dir[0],j-dir[1],k-dir[2]);
+      IntVector cp(i+dir[0],j+dir[1],k+dir[2]);
+
+      IntVector cu_w(i,j,k);
+      IntVector cu_w2(i,j,k-1);
+
+      IntVector cu_e(i+dir[0],j+dir[1],k);
+      IntVector cu_e2(i+dir[0],j+dir[1],k-1+dir[2]*2);
+
+
+      double phi_e = ( phi[c] + phi[cp] )/ 2.;
+      double phi_w = ( phi[c] + phi[cm] )/ 2.;
+
+      double u_e = ( u[cu_e] + u[cu_e2] ) / 2.;
+      double u_w = ( u[cu_w] + u[cu_w2] ) / 2.;
+
+      rhs[c] += A * ( phi_e * u_e - phi_w * u_w );
+
+    }
+  };
+
+  //------------------------------------------------------------------------------------------------
+  //diffusion
+  template <typename T>
+  struct ComputeDiffusion{
+
+    //for now assuming that this will only be used for CC variables:
+    typedef typename VariableHelper<T>::ConstType ConstPT;
+    typedef typename VariableHelper<T>::Type PT;
+
+    ConstPT& phi;
+    constCCVariable<double>& gamma; //!!!!!!!!
+    PT& rhs;
+    IntVector dir;
+    double A;
+    double dx;
+
+    ComputeDiffusion( ConstPT& phi, constCCVariable<double>& gamma, PT& rhs, IntVector dir, double A, double dx ) :
+      phi(phi), gamma(gamma), rhs(rhs), dir(dir), A(A), dx(dx) { }
+
+    void operator()(int i, int j, int k) const {
+
+      IntVector c(i,j,k);
+      IntVector cm(i-dir[0],j-dir[1],k-dir[2]);
+      IntVector cp(i+dir[0],j+dir[1],k+dir[2]);
+
+      double face_gamma_e = (gamma[c] + gamma[cp])/ 2.0;
+      double face_gamma_w = (gamma[c] + gamma[cm])/ 2.0;
+
+      double grad_e = (phi[cp]-phi[c])/dx;
+      double grad_w = (phi[c]-phi[cm])/dx;
+
+      rhs[c] += A * ( face_gamma_e * grad_e - face_gamma_w * grad_w );
+
+    }
   };
 
   //discretization

@@ -105,7 +105,7 @@ private:
 
     _do_conv = false;
     if ( db->findBlock("convection")){
-      db->findBlock("convection")->getAttribute("scheme", _conv_scheme);
+      //db->findBlock("convection")->getAttribute("scheme", _conv_scheme);
       _do_conv = true;
     }
 
@@ -252,6 +252,7 @@ private:
     typedef typename VariableHelper<T>::ConstType CONST_TYPE;
     CONST_TYPE& phi = *(tsk_info->get_const_uintah_field<CONST_TYPE>(_task_name));
     constCCVariable<double>& rho = *(tsk_info->get_const_uintah_field<constCCVariable<double> >("density"));
+    constCCVariable<double>& gamma = *(tsk_info->get_const_uintah_field<constCCVariable<double> >(_D_name));
     constSFCXVariable<double>& u = *(tsk_info->get_const_uintah_field<constSFCXVariable<double> >("uVelocitySPBC"));
     constSFCYVariable<double>& v = *(tsk_info->get_const_uintah_field<constSFCYVariable<double> >("vVelocitySPBC"));
     constSFCZVariable<double>& w = *(tsk_info->get_const_uintah_field<constSFCZVariable<double> >("wVelocitySPBC"));
@@ -268,34 +269,25 @@ private:
                    patch->getBCType(Patch::yplus)  == Patch::Neighbor?0:1,
                    patch->getBCType(Patch::zplus)  == Patch::Neighbor?0:1);
 
+    //better to combine all directions into a single grid loop?
     IntVector dir(1,0,0);
-    ComputeConvection<T, constSFCXVariable<double> > XConv( phi, rhs, rho, u, dir, A);
+    ComputeConvection<T, constSFCXVariable<double> > x_conv( phi, rhs, rho, u, dir, A);
+    ComputeDiffusion<T> x_diff( phi, gamma, rhs, dir, A, DX.x() );
 
-    //------------a test --------------------------
-    // struct test_fun{
-    // public:
-    //   int& sum;
-    //
-    //   test_fun(int& sum): sum(sum){}
-    //
-    //   void operator()(int i, int j, int k){
-    //     sum = 1+3;
-    //   }
-    // };
-
-    // int sum = 0;
-    // test_fun test(sum);
-    // test(1,2,3);
-    // std::cout << sum << std::endl;
-    // Kokkos::parallel_for( Kokkos::Range3Policy<int>(l[0],l[1],l[2], h[0],h[1],h[2])
-    //                       , test );
-    //---------- end test ---------------------------
+    if ( _do_conv )
+      Kokkos::parallel_for( Kokkos::Range3Policy<int>(l[0],l[1],l[2], h[0],h[1],h[2]), x_conv );
+    if ( _do_diff )
+      Kokkos::parallel_for( Kokkos::Range3Policy<int>(l[0],l[1],l[2], h[0],h[1],h[2]), x_diff );
 
     dir = IntVector(0,1,0);
-    ComputeConvection<T, constSFCYVariable<double> > YConv( phi, rhs, rho, v, dir, A);
+    ComputeConvection<T, constSFCYVariable<double> > y_conv( phi, rhs, rho, v, dir, A);
+    ComputeDiffusion<T> y_diff( phi, gamma, rhs, dir, A, DX.y() );
 
     dir = IntVector(0,0,1);
-    ComputeConvection<T, constSFCZVariable<double> > ZConv( phi, rhs, rho, w, dir, A);
+    ComputeConvection<T, constSFCZVariable<double> > z_conv( phi, rhs, rho, w, dir, A);
+    ComputeDiffusion<T> z_diff( phi, gamma, rhs, dir, A, DX.z() );
+
+
 
   }
   template <typename T> void
