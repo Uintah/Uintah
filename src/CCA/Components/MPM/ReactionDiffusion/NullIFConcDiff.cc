@@ -33,7 +33,6 @@ NullIFConcDiff::NullIFConcDiff(ProblemSpecP& ps, SimulationStateP& sS, MPMFlags*
   d_sharedState = sS;
 
   d_lb = scinew MPMLabel;
-  d_rdlb = scinew ReactionDiffusionLabel();
 
   if(d_Mflag->d_8or27==8){
     NGP=1;
@@ -54,7 +53,6 @@ NullIFConcDiff::NullIFConcDiff(ProblemSpecP& ps, SimulationStateP& sS, MPMFlags*
 
 NullIFConcDiff::~NullIFConcDiff(){
   delete(d_lb);
-  delete(d_rdlb);
 }
 
 void NullIFConcDiff::addComputesAndRequiresInterpolated(SchedulerP & sched,

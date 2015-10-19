@@ -36,7 +36,6 @@
 #include <CCA/Ports/SchedulerP.h>
 #include <CCA/Ports/DataWarehouse.h>
 #include <CCA/Components/MPM/MPMFlags.h>
-#include <CCA/Components/MPM/ReactionDiffusion/ReactionDiffusionLabel.h>
 #include <CCA/Components/MPM/ConstitutiveModel/MPMMaterial.h>
 
 namespace Uintah {
@@ -83,7 +82,6 @@ namespace Uintah {
     MPMLabel* d_lb;
     MPMFlags* d_Mflag;
     SimulationStateP d_sharedState;
-    ReactionDiffusionLabel* d_rdlb;
 
     int NGP, NGN;
     int numMPMmatls;

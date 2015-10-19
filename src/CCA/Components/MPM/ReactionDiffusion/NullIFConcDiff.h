@@ -59,7 +59,6 @@ namespace Uintah {
     MPMLabel* d_lb;
     MPMFlags* d_Mflag;
     SimulationStateP d_sharedState;
-    ReactionDiffusionLabel* d_rdlb;
 
     int NGP, NGN;
     int numMPMmatls;

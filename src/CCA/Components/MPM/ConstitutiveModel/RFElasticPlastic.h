@@ -49,7 +49,6 @@ namespace Uintah {
 
   class MPMLabel;
   class MPMFlags;
-  class ReactionDiffusionLabel;
 
   /////////////////////////////////////////////////////////////////////////////
   /*!
