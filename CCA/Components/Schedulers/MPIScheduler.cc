@@ -975,7 +975,7 @@ MPIScheduler::execute( int tgnum     /* = 0 */,
   finalizeTimestep();
   log.finishTimestep();
 
-  if (timeout.active() && !parentScheduler_) {  // only do on toplevel scheduler
+  if ( !parentScheduler_ && (execout.active() || timeout.active() || waitout.active()) ) {  // only do on toplevel scheduler
     outputTimingStats("MPIScheduler");
   }
 
