@@ -81,7 +81,11 @@ RFElasticPlastic::RFElasticPlastic(ProblemSpecP& ps,MPMFlags* Mflag)
   ps->require("bulk_modulus",d_initialData.Bulk);
   ps->require("shear_modulus",d_initialData.Shear);
   //********** Concentration Component****************************
-  ps->require("volume_expansion_coeff",d_initialData.vol_exp_coeff);
+  if(flag->d_doScalarDiffusion){
+    ps->require("volume_expansion_coeff",d_initialData.vol_exp_coeff);
+  }else{
+    d_initialData.vol_exp_coeff = 0.0;
+  }
   //********** Concentration Component****************************
 
   d_initialData.alpha = 0.0; // default is per K.  Only used in implicit code
@@ -305,7 +309,11 @@ void RFElasticPlastic::outputProblemSpec(ProblemSpecP& ps,bool output_cm_tag)
   
   cm_ps->appendElement("bulk_modulus",                  d_initialData.Bulk);
   cm_ps->appendElement("shear_modulus",                 d_initialData.Shear);
-  cm_ps->appendElement("volume_expansion_coeff",        d_initialData.vol_exp_coeff);
+  //********** Concentration Component****************************
+  if(flag->d_doScalarDiffusion){
+    cm_ps->appendElement("volume_expansion_coeff",      d_initialData.vol_exp_coeff);
+  }
+  //********** Concentration Component****************************
   cm_ps->appendElement("coeff_thermal_expansion",       d_initialData.alpha);
   cm_ps->appendElement("taylor_quinney_coeff",          d_initialData.Chi);
   cm_ps->appendElement("critical_stress",               d_initialData.sigma_crit);
@@ -690,8 +698,10 @@ RFElasticPlastic::addComputesAndRequires(Task* task,
   task->requires(Task::OldDW, pEnergyLabel,           matlset, gnone);
 
   //********** Concentration Component****************************
-  task->requires(Task::OldDW, lb->pConcPreviousLabel, matlset, gnone); 
-  task->requires(Task::OldDW, lb->pConcentrationLabel, matlset, gnone); 
+  if(flag->d_doScalarDiffusion){
+    task->requires(Task::OldDW, lb->pConcPreviousLabel, matlset, gnone); 
+    task->requires(Task::OldDW, lb->pConcentrationLabel, matlset, gnone); 
+  }
   //********** Concentration Component****************************
 
   task->computes(pRotationLabel_preReloc,       matlset);
@@ -725,9 +735,9 @@ RFElasticPlastic::computeStressTensor(const PatchSubset* patches,
             << " patch = " << (patches->get(0))->getID();
   }
 
-	//*********Start - Used for testing purposes - CG *******
-	// double timestep = d_sharedState->getCurrentTopLevelTimeStep();
-	//*********End   - Used for testing purposes - CG *******
+  //*********Start - Used for testing purposes - CG *******
+  // double timestep = d_sharedState->getCurrentTopLevelTimeStep();
+  //*********End   - Used for testing purposes - CG *******
 
   // General stuff
   Matrix3 one; one.Identity(); Matrix3 zero(0.0);
@@ -752,6 +762,9 @@ RFElasticPlastic::computeStressTensor(const PatchSubset* patches,
 
   //********** Concentration Component****************************
   double vol_exp_coeff = d_initialData.vol_exp_coeff;
+  double concentration = 0.0;
+  double concentration_pn = 0.0;
+  double conc_rate = 0.0;
   //********** Concentration Component****************************
   
   double totalStrainEnergy = 0.0;
@@ -792,8 +805,10 @@ RFElasticPlastic::computeStressTensor(const PatchSubset* patches,
     old_dw->get(pDeformGrad,  lb->pDeformationMeasureLabel, pset);
 
     //********** Concentration Component****************************
-    old_dw->get(pConcentration, lb->pConcentrationLabel, pset);
-    old_dw->get(pConc_prenew,   lb->pConcPreviousLabel,  pset);
+    if(flag->d_doScalarDiffusion){
+      old_dw->get(pConcentration, lb->pConcentrationLabel, pset);
+      old_dw->get(pConc_prenew,   lb->pConcPreviousLabel,  pset);
+    }
     //********** Concentration Component****************************
 
     constParticleVariable<double> pPlasticStrain, pDamage, pPorosity;
@@ -904,9 +919,11 @@ RFElasticPlastic::computeStressTensor(const PatchSubset* patches,
 
       //********** Concentration Component****************************
       // Compute rate of concentration
-      double concentration = pConcentration[idx];
-      double concentration_pn = pConc_prenew[idx];
-      double conc_rate = (concentration - concentration_pn)/delT;
+      if(flag->d_doScalarDiffusion){
+        concentration = pConcentration[idx];
+        concentration_pn = pConc_prenew[idx];
+        conc_rate = (concentration - concentration_pn)/delT;
+      }
       //********** Concentration Component****************************
 
       // Calculate rate of deformation tensor (D)
@@ -926,7 +943,9 @@ RFElasticPlastic::computeStressTensor(const PatchSubset* patches,
       // else
       //   conc_rate = -1.0;
 
-      //tensorD = tensorD - one * vol_exp_coeff * (conc_rate);
+      if(flag->d_doScalarDiffusion){
+        tensorD = tensorD - one * vol_exp_coeff * (conc_rate);
+      }
       //********** Concentration Component****************************
 
       // Calculate the deviatoric part of the non-concentration part
