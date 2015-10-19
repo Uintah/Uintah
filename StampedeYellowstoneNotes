@@ -1,0 +1,52 @@
+
+10/19/15
+Currently Loaded Modules:
+  1) TACC   2) gcc/4.9.1   3) mvapich2/2.
+
+  * note the xalt module may cause problems at large scale
+  
+______________________________________________________________________
+
+You want to use the ibrun_TODD in my home directory if you're 
+running above 512 nodes.  There's an issue with the size of the environmental variables
+that is being passed in by the default ibrun.  You will see errors 
+
+"Badly placed ()'s
+blah blah process with pid XXX exeited with status 1
+Badly placed ()'s
+<repeat>"
+
+Try submitting large jobs from a bash shell
+
+
+
+
+
+opt_gcc
+______________________________________________________________________
+#!/bin/csh
+../src/configure \
+   --with-mpi=$MPICH_HOME\
+   --with-hypre=/home1/00975/tg802226/hypreInstall/2.8.0b//gcc4.9.1-mvapich2_2.1\
+   --enable-optimize=' -g -O2 ' \
+   --enable-ice \
+   --enable-mpm \
+ \
+    CC=gcc \
+    CXX=g++ \
+    F77=gfortran
+    
+    
+dbg_gcc
+______________________________________________________________________
+#!/bin/csh
+../src/configure \
+   --with-mpi=$MPICH_HOME\
+   --with-hypre=/home1/00975/tg802226/hypreInstall/2.8.0b//gcc4.9.1-mvapich2_2.1\
+   --enable-debug \
+   --enable-ice \
+   --enable-mpm \
+ \
+    CC=gcc \
+    CXX=g++ \
+    F77=gfortran
