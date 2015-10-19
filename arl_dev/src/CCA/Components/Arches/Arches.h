@@ -38,44 +38,11 @@
  *
  */
 
-/* ----- Arches.h -----------------------------------------------
-
-CLASS
-   Arches
-
-   Short description...
-
-GENERAL INFORMATION
-
-   Arches.h
-
-   Author: Rajesh Rawat (rawat@crsim.utah.edu)
-   Department of Chemical Engineering
-   University of Utah
-
-   All major modifications since 01.01.2004 done by:
-   Stanislav Borodai(borodai@crsim.utah.edu)
-
-   Center for the Simulation of Accidental Fires and Explosions (C-SAFE)
-
-
-KEYWORDS
-   Arches
-
-DESCRIPTION
-   Long description...
-
-WARNING
-
-****************************************/
-
 #include <sci_defs/petsc_defs.h>
 #include <sci_defs/uintah_defs.h>
-
 #include <CCA/Components/OnTheFlyAnalysis/AnalysisModule.h>
 #include <CCA/Components/OnTheFlyAnalysis/AnalysisModuleFactory.h>
 #include <CCA/Ports/SimulationInterface.h>
-
 #include <Core/Grid/GridP.h>
 #include <Core/Grid/LevelP.h>
 #include <Core/Grid/SimulationStateP.h>
@@ -83,9 +50,7 @@ WARNING
 #include <Core/ProblemSpec/ProblemSpecP.h>
 #include <Core/Util/Handle.h>
 #include <CCA/Components/Wasatch/BCHelper.h>
-
 #include <string>
-
 #include <boost/shared_ptr.hpp>
 
 // Divergence constraint instead of drhodt in pressure equation
@@ -103,20 +68,8 @@ namespace Uintah {
   class VarLabel;
   class PhysicalConstants;
   class NonlinearSolver;
-  class Properties;
-  class TurbulenceModel;
-  class ScaleSimilarityModel;
-  class BoundaryCondition;
   class MPMArchesLabel;
   class ArchesLabel;
-  class TimeIntegratorLabel;
-  class ExplicitTimeInt;
-  class PartVel;
-  class DQMOM;
-  class CQMOM;
-  class CQMOM_Convection;
-  class CQMOMSourceWrapper;
-  class RadPropertyCalculator;
   class ArchesParticlesHelper;
   class ArchesBCHelper;
 
@@ -124,15 +77,12 @@ class Arches : public UintahParallelComponent, public SimulationInterface {
 
 public:
 
-  static const int NDIM;
   typedef std::map< int, ArchesBCHelper* > BCHelperMapT;
 
-  enum d_eqnType { PRESSURE, MOMENTUM, SCALAR };
-  enum d_dirName { NODIR, XDIR, YDIR, ZDIR };
-  enum d_stencilName { AP, AE, AW, AN, AS, AT, AB };
-  enum d_numGhostCells {ZEROGHOSTCELLS , ONEGHOSTCELL, TWOGHOSTCELLS,
-                        THREEGHOSTCELLS, FOURGHOSTCELLS, FIVEGHOSTCELLS };
-  int nofTimeSteps;
+  enum DIRNAME { NODIR, XDIR, YDIR, ZDIR };
+  enum STENCILNAME { AP, AE, AW, AN, AS, AT, AB };
+  enum NUMGHOSTS {ZEROGHOSTCELLS , ONEGHOSTCELL, TWOGHOSTCELLS,
+                  THREEGHOSTCELLS, FOURGHOSTCELLS, FIVEGHOSTCELLS };
 
   Arches(const ProcessorGroup* myworld, const bool doAMR);
 
@@ -150,9 +100,6 @@ public:
 
   virtual void restartInitialize();
 
-  virtual void sched_paramInit(const LevelP& level,
-                               SchedulerP&);
-
   virtual void scheduleComputeStableTimestep(const LevelP& level,
                                              SchedulerP&);
   void
@@ -165,19 +112,24 @@ public:
   virtual bool needRecompile(double time, double dt,
                              const GridP& grid);
 
-  virtual void sched_getCCVelocities(const LevelP& level,
-                                     SchedulerP&);
-  virtual void sched_weightInit( const LevelP& level,
-                                SchedulerP& );
-  virtual void sched_weightedAbsInit( const LevelP& level,
-                                      SchedulerP& );
+  void setMPMArchesLabel(const MPMArchesLabel* MAlb){
+    d_MAlab = MAlb;
+  }
 
-  virtual void sched_scalarInit( const LevelP& level,
-                                 SchedulerP& sched );
-  virtual void sched_momentInit( const LevelP& level,
-                                 SchedulerP& sched );
+  virtual double recomputeTimestep(double current_dt);
 
-  //__________________________________
+  virtual bool restartableTimesteps();
+
+  void setWithMPMARCHES() {
+    d_with_mpmarches = true;
+  };
+
+  void sched_create_patch_operators( const LevelP& level, SchedulerP& sched );
+
+  int nofTimeSteps;
+  static const int NDIM;
+
+  //________________________________________________________________________________________________
   //  Multi-level/AMR
   // stub functions.  Needed for multi-level RMCRT and
   // if you want to change the coarse level patch configuration
@@ -192,43 +144,7 @@ public:
                                              SchedulerP&  ){/* do Nothing */};
   virtual void scheduleErrorEstimate( const LevelP& ,
                                       SchedulerP&  ){/* do Nothing */};
-
-  // for multimaterial
-  void setMPMArchesLabel(const MPMArchesLabel* MAlb){
-    d_MAlab = MAlb;
-  }
-
-  const ArchesLabel* getArchesLabel(){
-    return d_lab;
-  }
-  NonlinearSolver* getNonlinearSolver(){
-    return d_nlSolver;
-  }
-
-  BoundaryCondition* getBoundaryCondition(){
-    return d_boundaryCondition;
-  }
-
-  TurbulenceModel* getTurbulenceModel(){
-    return d_turbModel;
-  }
-  virtual double recomputeTimestep(double current_dt);
-
-  virtual bool restartableTimesteps();
-
-  void setWithMPMARCHES() {
-    d_with_mpmarches = true;
-  };
-
-  void sched_create_patch_operators( const LevelP& level, SchedulerP& sched );
-  void create_patch_operators( const ProcessorGroup* pg,
-                               const PatchSubset* patches,
-                               const MaterialSubset* matls,
-                               DataWarehouse* old_dw,
-                               DataWarehouse* new_dw);
-
-
-protected:
+  //________ end stub functions ____________________________________________________________________
 
 private:
 
@@ -238,81 +154,24 @@ private:
 
   Arches& operator=(const Arches&);
 
-
-  void paramInit(const ProcessorGroup*,
-                 const PatchSubset* patches,
-                 const MaterialSubset*,
-                 DataWarehouse* ,
-                 DataWarehouse* new_dw );
-
   void computeStableTimeStep(const ProcessorGroup* ,
                              const PatchSubset* patches,
                              const MaterialSubset* matls,
                              DataWarehouse* ,
                              DataWarehouse* new_dw);
 
-  void readUVWInitialCondition(const ProcessorGroup*,
-                              const PatchSubset* patches,
-                              const MaterialSubset*,
-                              DataWarehouse* ,
-                              DataWarehouse* new_dw);
-
-  void getCCVelocities(const ProcessorGroup*,
-                       const PatchSubset* patches,
-                       const MaterialSubset*,
-                       DataWarehouse* ,
-                       DataWarehouse* new_dw);
-
-  void weightInit( const ProcessorGroup*,
-                  const PatchSubset* patches,
-                  const MaterialSubset*,
-                  DataWarehouse* old_dw,
-                  DataWarehouse* new_dw);
-  void weightedAbsInit( const ProcessorGroup*,
-                  const PatchSubset* patches,
-                  const MaterialSubset*,
-                  DataWarehouse* old_dw,
-                  DataWarehouse* new_dw);
-
-  void scalarInit( const ProcessorGroup* ,
-                   const PatchSubset* patches,
-                   const MaterialSubset*,
-                   DataWarehouse* old_dw,
-                   DataWarehouse* new_dw );
-
-  void momentInit( const ProcessorGroup* ,
-                   const PatchSubset* patches,
-                   const MaterialSubset*,
-                   DataWarehouse* old_dw,
-                   DataWarehouse* new_dw );
+  void create_patch_operators( const ProcessorGroup* pg,
+                               const PatchSubset* patches,
+                               const MaterialSubset* matls,
+                               DataWarehouse* old_dw,
+                               DataWarehouse* new_dw);
 
 
   const Uintah::ProblemSpecP get_arches_spec(){ return _arches_spec; }
 
-  /** @brief Registers all possible user defined source terms by instantiating a builder in the factory */
-  void registerUDSources(ProblemSpecP& db);
-
-  /** @brief Registers developer specific sources that may not have an input file specification */
-  void registerSources();
-
-  /** @brief Registers all possible models for DQMOM */
-  void registerModels( ProblemSpecP& db );
-
-  /** @brief Registers all possible equations by instantiating a builder in the factory */
-  void registerTransportEqns(ProblemSpecP& db);
-
-  /** @brief Registers all possible CQMOM equations by instantiating a builder in the factory */
-  void registerCQMOMEqns(ProblemSpecP& db);
-
-  /** @brief Registers all possible Property Models by instantiating a builder in the factory */
-  void registerPropertyModels( ProblemSpecP& db );
-
   /** @brief Assign a unique name to each BC where name is not specified in the UPS.
              Note that this functionality was taken from Wasatch. (credit: Tony Saad) **/
   void assign_unique_boundary_names( Uintah::ProblemSpecP bcProbSpec );
-
-  // void setup_patchinfo_map( const Uintah::LevelP& level,
-  //                            Uintah::SchedulerP& sched );
 
   /** @brief convert a number to a string **/
   template <typename T>
@@ -323,73 +182,37 @@ private:
     return ss.str();
   }
 
-  std::string d_whichTurbModel;
-  bool d_mixedModel;
-  bool d_with_mpmarches;
-  double d_initial_dt;
 
-  ScaleSimilarityModel* d_scaleSimilarityModel;
+
   PhysicalConstants* d_physicalConsts;
   NonlinearSolver* d_nlSolver;
-  // properties...solves density, temperature and species concentrations
-  Properties* d_props;
-  // Turbulence Model
-  TurbulenceModel* d_turbModel;
-  // Boundary conditions
-  BoundaryCondition* d_boundaryCondition;
   SimulationStateP d_sharedState;
-  // Variable labels that are used by the simulation controller
-  ArchesLabel* d_lab;
-
-  BCHelperMapT _bcHelperMap;
-
-  //Radiation properties
-  RadPropertyCalculator* d_rad_prop_calc;
-
   const MPMArchesLabel* d_MAlab;
-
+  BCHelperMapT _bcHelperMap;
   std::vector<AnalysisModule*> d_analysisModules;
-
-  std::string d_init_inputfile;
-
-  TimeIntegratorLabel* init_timelabel;
-  bool init_timelabel_allocated;
-  bool d_dynScalarModel;
-  bool d_underflow;
-
-  // Variables----
-  std::vector<std::string> d_scalarEqnNames;
-  bool d_doDQMOM; // do we need this as a private member?
-  std::string d_which_dqmom;
-  int d_tOrder;
-  ExplicitTimeInt* d_timeIntegrator;
-  PartVel* d_partVel;
-  DQMOM* d_dqmomSolver;
-
-  bool d_doCQMOM;
-  bool d_usePartVel;
-  CQMOM* d_cqmomSolver;
-  CQMOM_Convection* d_cqmomConvect;
-  CQMOMSourceWrapper* d_cqmomSource;
+  //NEW TASK INTERFACE STUFF:
+  std::map<std::string, TaskFactoryBase*> _factory_map;
+  Uintah::ProblemSpecP _arches_spec;
+  ArchesParticlesHelper* _particlesHelper;
+  std::map<std::string, boost::shared_ptr<TaskFactoryBase> > _task_factory_map;
 
   bool d_doingRestart;
   bool d_newBC_on_Restart;
-  bool d_do_dummy_solve;
-
-  //__________________________________
-  //  Multi-level related
-  int d_archesLevelIndex;
-  bool d_doAMR;
-
-  //NEW TASK INTERFACE STUFF:
-  std::map<std::string, TaskFactoryBase*> _factory_map;
-
-  Uintah::ProblemSpecP _arches_spec;
-
-  ArchesParticlesHelper* _particlesHelper;
+  bool d_with_mpmarches;
+  bool d_doAMR;             //<<< Multilevel related
   bool _doLagrangianParticles;
+  bool d_recompile_taskgraph;
 
-  std::map<std::string, boost::shared_ptr<TaskFactoryBase> > _boost_factory_map;
+  int d_archesLevelIndex;   //<<< Multilevel related
+
+  double d_initial_dt;
+
+  const VarLabel* d_x_vel_label;
+  const VarLabel* d_y_vel_label;
+  const VarLabel* d_z_vel_label;
+  const VarLabel* d_viscos_label;
+  const VarLabel* d_rho_label;
+  const VarLabel* d_celltype_label;
 
 }; // end class Arches
 

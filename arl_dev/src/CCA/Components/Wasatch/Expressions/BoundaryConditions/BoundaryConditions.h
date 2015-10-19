@@ -286,6 +286,7 @@ class BCCopier : public BoundaryConditionBase<FieldT>
 {
   BCCopier( const Expr::Tag& srcTag )
   {
+    this->set_gpu_runnable(true);
      src_ = this->template create_field_request<FieldT>(srcTag);
   }
 public:

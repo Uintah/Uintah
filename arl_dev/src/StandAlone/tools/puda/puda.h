@@ -99,6 +99,7 @@ namespace Uintah {
       do_PIC        = false;
       do_POL        = false;
       do_monica1    = false;
+      do_monica2    = false;
       do_pressure   = false;
       do_jacquie    = false;
       do_partvar    = false;

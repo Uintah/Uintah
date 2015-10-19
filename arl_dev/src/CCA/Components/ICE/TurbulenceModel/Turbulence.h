@@ -40,14 +40,14 @@ namespace Uintah {
   class ICELabel;
   class Material;
   class Patch;
-  
+
 
   class Turbulence {
 
   public:
     Turbulence();
     Turbulence(ProblemSpecP& ps, SimulationStateP& sharedState);
-    virtual ~Turbulence(); 
+    virtual ~Turbulence();
 
     virtual void computeTurbViscosity(DataWarehouse* new_dw,
                                       const Patch* patch,
@@ -61,14 +61,15 @@ namespace Uintah {
                                       SimulationStateP&  d_sharedState,
                                       CCVariable<double>& turb_viscosity) = 0;
 
-    virtual void scheduleComputeVariance(SchedulerP& sched, 
+    virtual void scheduleComputeVariance(SchedulerP& sched,
                                          const PatchSet* patches,
                                          const MaterialSet* matls) = 0;
-   
+
     void callTurb(DataWarehouse* new_dw,
                  const Patch* patch,
                  constCCVariable<Vector>& vel_CC,
                  constCCVariable<double>& rho_CC,
+                 constCCVariable<double>& vol_frac_CC,
                  const int indx,
                  ICELabel* lb,
                  SimulationStateP&  d_sharedState,
@@ -82,7 +83,7 @@ namespace Uintah {
   protected:
     SimulationStateP d_sharedState;
     double d_filter_width;
-    
+
     struct FilterScalar {
       std::string name;
       double scale;
@@ -92,7 +93,7 @@ namespace Uintah {
       MaterialSet* matl_set;
     };
     std::vector<FilterScalar*> filterScalars;
-    
+
   };// End class Turbulence
 
 }// End namespace Uintah

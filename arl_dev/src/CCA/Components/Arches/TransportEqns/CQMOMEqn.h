@@ -10,7 +10,7 @@
 #include <Core/Grid/Variables/SFCYVariable.h>
 #include <Core/Grid/Variables/SFCZVariable.h>
 #include <CCA/Components/Arches/Directives.h>
-#include <CCA/Components/Arches/TransportEqns/Convection_CQMOM.h>
+#include <CCA/Components/Arches/TransportEqns/CQMOM_Convection_OpSplit.h>
 #include <CCA/Components/Arches/ParticleModels/CQMOMSourceWrapper.h>
 
 //==========================================================================
@@ -21,8 +21,12 @@
  * @date May 2014
  *
  * @brief Transport equation class for a CQMOM moment
+ *        The sched_evalTransportEqn, sched_buildTransportEqn, buildTransportEqn all the primary
+ *        functions for the one CQMOM permuatation formulation used thoughout the RTs and other
+ *        results.
  *
- *
+ *        The sched_buildXConvection, buildXConvection +Y/Z, sched_buildSplitRHS, buildSplitRHS
+ *        are built specifically for the multiple permutation CQMOM approach that uses operator splitting
  */
 
 namespace Uintah{
@@ -217,7 +221,7 @@ namespace Uintah{
     double epW;                    //particle-wall restituion coefficient
     double d_convWeightLimit;      //the minimum value for a calculated weight to be to actually compute convection, this helps limit bad abscissa
     
-    Convection_CQMOM * d_cqmomConv; //class for cqmom-specific convection
+    CQMOM_Convection_OpSplit * d_cqmomConv; //class for cqmom-specific convection
         
     std::vector<const VarLabel *> d_sourceLabels; //list of needed source labels
   }; // class CQMOMEqn

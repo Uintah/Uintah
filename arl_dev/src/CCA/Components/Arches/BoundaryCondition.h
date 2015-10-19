@@ -209,27 +209,33 @@ void computeBCArea( const ProcessorGroup*,
                     const IntVector lo,
                     const IntVector hi);
 
-void sched_setupBCInletVelocities__NEW( SchedulerP& sched,
-                                        const LevelP& level,
-                                        const MaterialSet* matls,
-                                        bool doing_restart );
+void sched_setupBCInletVelocities( SchedulerP& sched,
+                                   const LevelP& level,
+                                   const MaterialSet* matls,
+                                   bool doing_restart );
 
-void setupBCInletVelocities__NEW(const ProcessorGroup*,
+void setupBCInletVelocities( const ProcessorGroup*,
+                             const PatchSubset* patches,
+                             const MaterialSubset*,
+                             DataWarehouse*,
+                             DataWarehouse* new_dw,
+                             bool doing_restart );
+
+void setupBCInletVelocitiesHack( const ProcessorGroup*,
                                  const PatchSubset* patches,
                                  const MaterialSubset*,
                                  DataWarehouse*,
-                                 DataWarehouse* new_dw,
-                                 bool doing_restart );
+                                 DataWarehouse* new_dw );
 
-void sched_setInitProfile__NEW(SchedulerP& sched,
-                               const LevelP& level,
-                               const MaterialSet* matls);
+void sched_setInitProfile( SchedulerP& sched,
+                           const LevelP& level,
+                           const MaterialSet* matls);
 
-void setInitProfile__NEW(const ProcessorGroup*,
-                         const PatchSubset* patches,
-                         const MaterialSubset*,
-                         DataWarehouse*,
-                         DataWarehouse* new_dw);
+void setInitProfile( const ProcessorGroup*,
+                     const PatchSubset* patches,
+                     const MaterialSubset*,
+                     DataWarehouse*,
+                     DataWarehouse* new_dw );
 
 void sched_checkMomBCs( SchedulerP& sched,
                         const LevelP& level,
@@ -241,10 +247,10 @@ void checkMomBCs( const ProcessorGroup* pc,
                   DataWarehouse* old_dw,
                   DataWarehouse* new_dw );
 
-void setVelFromExtraValue__NEW( const Patch* patch, const Patch::FaceType& face,
-                                SFCXVariable<double>& uVel, SFCYVariable<double>& vVel, SFCZVariable<double>& wVel,
-                                constCCVariable<double>& density,
-                                Iterator bound_ptr, Vector value );
+void setVelFromExtraValue( const Patch* patch, const Patch::FaceType& face,
+                           SFCXVariable<double>& uVel, SFCYVariable<double>& vVel, SFCZVariable<double>& wVel,
+                           constCCVariable<double>& density,
+                           Iterator bound_ptr, Vector value );
 
 void setVel( const Patch* patch, const Patch::FaceType& face,
              SFCXVariable<double>& uVel, SFCYVariable<double>& vVel, SFCZVariable<double>& wVel,
@@ -264,11 +270,11 @@ void setSwirl( const Patch* patch, const Patch::FaceType& face,
                Iterator bound_ptr, Vector value,
                double swirl_no, Vector swirl_cent );
 
-void setVelFromInput__NEW( const Patch* patch, const Patch::FaceType& face, std::string face_name,
+void setVelFromInput( const Patch* patch, const Patch::FaceType& face, std::string face_name,
                            SFCXVariable<double>& uVel, SFCYVariable<double>& vVel, SFCZVariable<double>& wVel,
                            Iterator bound_iter, std::string file_name );
 
-void velocityOutletPressureBC__NEW( const Patch* patch,
+void velocityOutletPressureBC( const Patch* patch,
                                     int matl_index,
                                     SFCXVariable<double>& uvel,
                                     SFCYVariable<double>& vvel,
@@ -278,7 +284,7 @@ void velocityOutletPressureBC__NEW( const Patch* patch,
                                     constSFCZVariable<double>& old_wvel );
 
 template <class velType>
-void delPForOutletPressure__NEW( const Patch* patch,
+void delPForOutletPressure( const Patch* patch,
                                  int matl_index,
                                  double dt,
                                  Patch::FaceType mface,
@@ -830,7 +836,7 @@ FaceToInput _u_input;
 FaceToInput _v_input;
 FaceToInput _w_input;
 
-void readInputFile__NEW( std::string, BoundaryCondition::FFInfo& info, const int index );
+void readInputFile( std::string, BoundaryCondition::FFInfo& info, const int index );
 std::vector<std::string> d_all_v_inlet_names;
 
 // const VarLabel* inputs
@@ -1130,7 +1136,7 @@ BoundaryCondition::zeroStencilDirection( const Patch* patch,
 
 /** @brief Adds grad(P) to velocity on outlet or pressure boundaries */
 template <class velType> void
-BoundaryCondition::delPForOutletPressure__NEW( const Patch* patch,
+BoundaryCondition::delPForOutletPressure( const Patch* patch,
                                                int matl_index,
                                                double dt,
                                                Patch::FaceType mface,
