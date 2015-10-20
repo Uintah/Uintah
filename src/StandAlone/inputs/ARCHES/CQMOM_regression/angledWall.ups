@@ -17,7 +17,6 @@
   </Time>
 
   <DataArchiver>
-    <outputInitTimestep/>
     <filebase> angledWall.uda</filebase>
     <outputTimestepInterval>1</outputTimestepInterval>
 
