@@ -421,6 +421,7 @@
           <particle_weights             spec="OPTIONAL MULTIPLE_DOUBLES" />    <!-- This is not used (it is for python script) -->
           <small_weights                spec="OPTIONAL MULTIPLE_DOUBLES" />    <!-- small value for each scaled weight (used in temperature calculation -->
           <density                      spec="REQUIRED DOUBLE" />              <!-- Initial coal density -->
+          <particle_thermal_conductivity       spec="OPTIONAL DOUBLE" />              <!-- Initial coal density -->
           <temperature                  spec="REQUIRED DOUBLE" />              <!-- Initial coal temperature -->
 
 
@@ -1551,6 +1552,7 @@
                                                                           ShaddixHeatTransfer,
                                                                           EnthalpyShaddix,
                                                                           MaximumTemperature,
+                                                                          Thermophoresis,
                                                                           CharOxidationShaddix,
                                                                           SimpleBirth'">
 
@@ -1578,6 +1580,10 @@
             <!-- Drag -->
             <direction                  spec="REQUIRED STRING 'x,X,y,Y,z,Z'"
                                         need_applies_to="type Drag"/>
+            <!-- Thermophoresis -->
+            <direction                  spec="REQUIRED STRING 'x,X,y,Y,z,Z'"
+                                        need_applies_to="type Thermophoresis"/>
+
 
             <!-- Simple Birth -->
             <small_weight               spec="REQUIRED DOUBLE"
