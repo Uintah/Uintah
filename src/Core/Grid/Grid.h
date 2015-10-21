@@ -27,6 +27,7 @@
 
 #include <CCA/Ports/LoadBalancer.h>
 
+#include <Core/Containers/OffsetArray1.h>
 #include <Core/Geometry/BBox.h>
 #include <Core/Geometry/IntVector.h>
 #include <Core/Geometry/Point.h>
@@ -73,6 +74,17 @@ DESCRIPTION
 WARNING
   
 ****************************************/
+
+  struct StretchSpec {
+    std::string shape;
+    double from;
+    double to;
+    double fromSpacing;
+    double toSpacing;
+
+    int countCells() const;
+    void fillCells(int& start, int lowCells, int highCells, SCIRun::OffsetArray1<double>& faces) const;
+  };
 
   class Grid : public RefCounted {
   public:
@@ -157,6 +169,12 @@ WARNING
     bool      parseLevelFromFile( FILE * fp, std::vector<int> & procMapForLevel );                // returns true if "</Level>" found.
     bool      parsePatchFromFile( FILE * fp, LevelP level, std::vector<int> & procMapForLevel );  // returns true if "</Patch>" found.
 
+    void      parseStretches(std::vector<StretchSpec> (&stretch)[3], const ProblemSpecP& stretch_ps);
+    int       checkStretches(       std::vector<StretchSpec>   (&stretch)[3],
+                                    SCIRun::Vector&             spacing,
+                             const  Uintah::Point&              levelAnchor,
+                             const  Uintah::Point&              levelHighPoint,
+                                    int                         procRank);
     // The current (final) values of a,b,c, and norm for the partition function.
     // Used to hold data between recursive calls.
     int    af_;
