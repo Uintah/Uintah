@@ -1365,6 +1365,7 @@
               <solveDivQ                 spec="OPTIONAL BOOLEAN"/>
               <applyFilter               spec="OPTIONAL BOOLEAN"/>
               <rayDirSampleAlgo          spec="OPTIONAL STRING 'naive Naive LatinHyperCube'"/>
+              <cellTypeCoarsenLogic      spec="OPTIONAL STRING 'ROUNDDOWN ROUNDUP"/>
               <ignore_BC_bulletproofing  spec="OPTIONAL BOOLEAN"/>
 
               <algorithm                spec="OPTIONAL NO_DATA" attribute1="type REQUIRED STRING 'dataOnion RMCRT_coarseLevel singleLevel'">

@@ -72,6 +72,14 @@ namespace Uintah{
       Ray( TypeDescription::Type FLT_DBL );         // This class can  Float or Double
       ~Ray();
 
+
+      //__________________________________
+      //  public variables
+      bool d_solveBoundaryFlux;              // 
+      
+      enum modifiesComputes{ modifiesVar, 
+                             computesVar};
+                             
       //__________________________________
       //  TASKS
       /** @brief Interface to input file information */
@@ -144,7 +152,7 @@ namespace Uintah{
 
       void sched_computeCellType ( const LevelP& coarseLevel,
                                    SchedulerP& sched,
-                                   const int value);
+                                   const Ray::modifiesComputes which);
 
       void sched_ROI_Extents ( const LevelP& level,
                                SchedulerP& scheduler );
@@ -153,9 +161,7 @@ namespace Uintah{
         return d_radiometer;
       }
       
-      //__________________________________
-      //  public variables
-      bool d_solveBoundaryFlux;              // 
+
 
     //______________________________________________________________________
     private:
@@ -182,6 +188,8 @@ namespace Uintah{
                       dynamic,              // user specifies thresholds that are used to dynamically determine ROI
                       patch_based,          // The patch extents + halo are the ROI
                     };
+      int d_cellTypeCoarsenLogic;           // how to coarsen a cell type
+      enum cellTypeCoarsenLogic{ ROUNDUP, ROUNDDOWN};
                     
       ROI_algo  d_whichROI_algo;
       Point d_ROI_minPt;
@@ -402,7 +410,7 @@ namespace Uintah{
                           const MaterialSubset* matls,
                           DataWarehouse* old_dw,
                           DataWarehouse* new_dw,
-                          const int value );
+                          const Ray::modifiesComputes which );
 
     template< class T >
     void ROI_Extents ( const ProcessorGroup*,
