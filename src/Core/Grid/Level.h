@@ -102,6 +102,15 @@ public:
         bool isMultiScale = false);
   virtual ~Level();
   
+  class Compare {
+    public:
+      inline bool operator()(const Level* l1, const Level* l2) const {
+        return (l1 != 0 && l2 !=0) ? (l1->getIndex() < l2->getIndex()) :
+               ((l2 !=0) ? true : false);
+      }
+    private:
+  };
+
   void setPatchDistributionHint(const IntVector& patchDistribution);
   void setBCTypes();
      

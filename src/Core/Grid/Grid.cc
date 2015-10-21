@@ -1023,7 +1023,7 @@ Grid::problemSetup(const ProblemSpecP& params, const ProcessorGroup *pg, bool do
 
       if(!have_levelspacing && !have_patchspacing && stretch_count != 3)
         throw ProblemSetupException("Box resolution is not specified", __FILE__, __LINE__);
-
+// LevelP level = addLevel(anchor, spacing);
       LevelP level = addLevel(anchor, spacing, -1, do_AMR, do_MultiScale);
 
       // Determine the interior cell limits.  For no extraCells, the limits
