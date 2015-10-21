@@ -675,9 +675,9 @@ ExplicitSolver::problemSetup( const ProblemSpecP & params,
 
   db_es->getWithDefault( "max_ke_allowed", d_ke_limit, 1.0e99 );
 
-  if ( db_es->findBlock("BoundaryConditions") ){
-    if ( db_es->findBlock("BoundaryConditions")->findBlock( "WallHT" ) ){
-      ProblemSpecP db_wall_ht = db_es->findBlock("BoundaryConditions")->findBlock( "WallHT" );
+  if ( db->findBlock("BoundaryConditions") ){
+    if ( db->findBlock("BoundaryConditions")->findBlock( "WallHT" ) ){
+      ProblemSpecP db_wall_ht = db->findBlock("BoundaryConditions")->findBlock( "WallHT" );
       d_wall_ht_models = scinew WallModelDriver( d_lab->d_sharedState );
       d_wall_ht_models->problemSetup( db_wall_ht );
     }
