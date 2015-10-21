@@ -1577,14 +1577,9 @@
             <!-- Constant Model -->
             <constant                   spec="OPTIONAL DOUBLE"/>
 
-            <!-- Drag -->
+            <!-- Drag, Thermophoresis -->
             <direction                  spec="REQUIRED STRING 'x,X,y,Y,z,Z'"
-                                        need_applies_to="type Drag"/>
-            <!-- Thermophoresis -->
-            <direction                  spec="REQUIRED STRING 'x,X,y,Y,z,Z'"
-                                        need_applies_to="type Thermophoresis"/>
-
-
+                                        need_applies_to="type Drag,Thermophoresis"/>
             <!-- Simple Birth -->
             <small_weight               spec="REQUIRED DOUBLE"
                                         need_applies_to="type SimpleBirth"/> <!-- The smallest weight value allowed -->
