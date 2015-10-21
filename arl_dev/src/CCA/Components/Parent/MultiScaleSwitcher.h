@@ -44,6 +44,10 @@ namespace Uintah {
 
     virtual ~MultiScaleSwitcher();
 
+    virtual void preGridProblemSetup(const ProblemSpecP&        params,
+                                           GridP&               grid,
+                                           SimulationStateP&    state);
+
     virtual void problemSetup( const ProblemSpecP     & params,
                                const ProblemSpecP     & restart_prob_spec,
                                      GridP            & grid,

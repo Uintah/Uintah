@@ -264,6 +264,16 @@ MultiScaleSwitcher::~MultiScaleSwitcher()
   }
   d_carryOverVarMatls.clear();
 }
+//_____________________________________________________________________
+// Do pre-grid setup related stuff
+void
+MultiScaleSwitcher::preGridProblemSetup(const ProblemSpecP&     params,
+                                              GridP&            grid,
+                                              SimulationStateP& state)
+{
+  // Do nothing (for now)
+}
+
 //______________________________________________________________________
 // Setup the first component 
 void

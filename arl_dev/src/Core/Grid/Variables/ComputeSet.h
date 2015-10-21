@@ -72,14 +72,19 @@ namespace Uintah {
 
    ****************************************/
   class Patch;
+  class Level;
+
   template<class T> class ComputeSubset;
   template<class T> class ComputeSet;
 
   typedef ComputeSet<const Patch*>    PatchSet;
-  typedef ComputeSet<int>             MaterialSet;
   typedef ComputeSubset<const Patch*> PatchSubset;
+
+  typedef ComputeSet<int>             MaterialSet;
   typedef ComputeSubset<int>          MaterialSubset;
 
+  typedef ComputeSet<const Level*>    LevelSet;
+  typedef ComputeSubset<const Level*> LevelSubset;
 
   template<class T>
     class ComputeSubset : public RefCounted {
