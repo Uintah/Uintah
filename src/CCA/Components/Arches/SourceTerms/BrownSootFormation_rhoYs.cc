@@ -148,27 +148,38 @@ BrownSootFormation_rhoYs::computeSource( const ProcessorGroup* pc,
     which_dw->get( temperature    , temperature_label    , matlIndex , patch , gn, 0 );
     which_dw->get( rho            , rho_label            , matlIndex , patch , gn, 0 );
 
+    /// Obtaining time step length
+    delt_vartype DT;
+    old_dw->get(DT, _shared_state->get_delt_label());
+
     for (CellIterator iter=patch->getCellIterator(); !iter.done(); iter++){
         
       IntVector c = *iter;
-   
+
+      double delta_t = DT;
+      double XO2 = 0.0;
+      double XCO2 = 0.0;
+      if (mix_mol_weight[c] > 1e-10){
+        XO2 = O2[c] * 1.0 / (mix_mol_weight[c] * 32.0);
+	XCO2 = CO2[c] * 1.0 / (mix_mol_weight[c] * 44.0);
+      }
       double rhoYsoot = rho[c] * Ysoot[c];
       double nd = Ns[c] * rho[c];
       double rhoTar = Tar[c] * rho[c];
-      
+ 
       double sys_pressure = 101325; //Pa
       coalSootRR(sys_pressure,
                  temperature[c],
-		 CO2[c],
-		 O2[c],
-		 mix_mol_weight[c],
+		 XCO2,
+                 XO2,
                  rhoTar,
                  rhoYsoot,
                  nd,
+		 delta_t,
                  rate[c]
                 );
        if (c==IntVector(75,75,75)){
-         cout << "Ys: " << temperature[c] << " " << rho[c] <<" " << " " << rhoTar << " " << rhoYsoot << " " << nd << " " << rate[c] << endl; 
+         cout << "Ys: " << temperature[c] << " " << rho[c] <<" " << XO2 << " " << rhoTar << " " << rhoYsoot << " " << nd << " " << rate[c] << endl; 
        }
 
     }
@@ -195,20 +206,19 @@ BrownSootFormation_rhoYs::computeSource( const ProcessorGroup* pc,
 * @param rhoYt       \input Tar mass fraction * rho
 * @param rhoYs       \input Soot mass fraction * rho
 * @param nd          \input Soot number density (#/m3)
-* @param S_N         \output Soot number density (#/m3*s)
 * @param S_Ys        \output Soot number density (kg/m3*s)
 */
                                                                                 
 void BrownSootFormation_rhoYs::coalSootRR(const double P, 
                                           const double T,
-					  const double CO2,
-                                          const double O2,
-					  const double mix_weight,
+					  const double XCO2,
+                                          const double XO2,
                                           const double rhoYt,
                                           const double rhoYs,
-                                          const double nd, 
+                                          const double nd,
+					  const double dt, 
                                                 double &Ysoot_source
-                                         ) {
+					  ) {
     
 double Afs = 5.02E8;          ///< preexponential: soot formation (1/s)
 double Efs = 198.9E6;         ///< Ea: soot formation, J/kmol
@@ -223,14 +233,6 @@ double Rgas = 8314.46;        ///< Gas constant: J/kmol*K
 double rhos = 1950.;          ///< soot density kg/m3
                                                                                                                                                                      
 //-------------------------------------
-double XO2 = 0.0;
-double XCO2 = 0.0;
-if (mix_weight > 1e-10){
-	XO2 = O2 * 1.0 / (mix_weight * 32.0);
-        XCO2 = CO2 * 1.0 / (mix_weight * 44.0);
-}
-
-//-------------------------------------
 
 double SA   = M_PI*pow( abs(6./M_PI*rhoYs/rhos), 2./3. )*pow(abs(nd),1./3.);  ///< m2/m3: pi*pow() = SA/part; pi*pow()*nd = SA/part*part/m3 = SA/Vol
                                                                                            
@@ -243,6 +245,9 @@ double rfs = abs(rhoYt)*Afs*exp(-Efs/Rgas/T);                 ///< soot formatio
 //-------------------------------------
                                                                                            
 Ysoot_source = rfs - ros - rgs;                                      ///< kg/m3*s
+
+/// Check if the rate is consuming all the soot in the system, and clip it if it is so the soot never goes negative in the system.
+Ysoot_source = std::min( rhoYs/dt , Ysoot_source );
                                                                                            
 return;
     
