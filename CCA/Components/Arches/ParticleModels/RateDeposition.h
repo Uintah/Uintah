@@ -67,6 +67,7 @@ private:
     int _Nenv;
     double _Tmelt;
     std::string _ParticleTemperature_base_name;
+    std::string _MaxParticleTemperature_base_name;
     std::string _ProbParticleX_base_name;    
     std::string _ProbParticleY_base_name;    
     std::string _ProbParticleZ_base_name;    
@@ -102,6 +103,7 @@ private:
                                        const SpatialOps::SpatFldPtr<velT> normal,
                                        const SpatialOps::SpatFldPtr<velT> areaFraction,
                                        SpatialOps::SpatFldPtr<SpatialOps::SVolField> Tvol, 
+                                       SpatialOps::SpatFldPtr<SpatialOps::SVolField> MaxTvol, 
                                        SpatialOps::SpatFldPtr<velT> ProbStick );
 
    template <class faceT, class velT> void
@@ -121,6 +123,7 @@ private:
                                        const SpatialOps::SpatFldPtr<velT> normal,
                                        const SpatialOps::SpatFldPtr<velT> areaFraction,
                                        SpatialOps::SpatFldPtr<SpatialOps::SVolField> Tvol, 
+                                       SpatialOps::SpatFldPtr<SpatialOps::SVolField> MaxTvol, 
                                        SpatialOps::SpatFldPtr<velT> ProbStick)
   { 
      const double Aprepontional= 2.1*pow(10,-13);  const double Bactivational= 47800;
@@ -141,6 +144,7 @@ private:
 
     //create some temp variables modeled on ufx
     SpatialOps::SpatFldPtr<faceT> Tvol_temp = SpatialOps::SpatialFieldStore::get<faceT>( *normal_face );
+    SpatialOps::SpatFldPtr<faceT> MaxTvol_temp = SpatialOps::SpatialFieldStore::get<faceT>( *normal_face );
     SpatialOps::SpatFldPtr<faceT> Fmelt_temp = SpatialOps::SpatialFieldStore::get<faceT>( *normal_face );
     SpatialOps::SpatFldPtr<faceT> ProbMelt_temp = SpatialOps::SpatialFieldStore::get<faceT>( *normal_face );
     SpatialOps::SpatFldPtr<faceT> ProbVisc_temp = SpatialOps::SpatialFieldStore::get<faceT>( *normal_face );
@@ -151,6 +155,9 @@ private:
  
     //compute the upwind differenced term
     upwind->set_advective_velocity( *normal_face );
+    upwind->apply_to_field( *MaxTvol, *MaxTvol_temp );
+   
+     upwind->set_advective_velocity( *normal_face );
     upwind->apply_to_field( *Tvol, *Tvol_temp );
     //interp the XSurf to XVol
     typedef typename SpatialOps::OperatorTypeBuilder< SpatialOps::Interpolant, faceT,velT>::type InterpSFtoVF;
@@ -158,7 +165,7 @@ private:
     
    //-----------------------Actual work here----------------------
    // Compute the melting probability
-     *ProbMelt_temp <<= cond(*Tvol_temp >= _Tmelt, 1)
+     *ProbMelt_temp <<= cond(*MaxTvol_temp >= _Tmelt, 1)
                             (0 );
    
    //compute the viscosity probability
@@ -207,7 +214,6 @@ private:
 
     upwind->set_advective_velocity( *normal_face );
     upwind->apply_to_field( *rho, *rho_temp );
-    
     upwind->set_advective_velocity( *normal_face );
     upwind->apply_to_field( *u, *u_temp );
 
