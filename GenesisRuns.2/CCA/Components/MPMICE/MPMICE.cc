@@ -634,12 +634,20 @@ MPMICE::scheduleFinalizeTimestep( const LevelP& level, SchedulerP& sched)
   }
                                                               
   // only do on finest level until we get AMR MPM
-  if (level->getIndex() == level->getGrid()->numLevels()-1)
+  if (level->getIndex() == level->getGrid()->numLevels()-1){
+   
+    int whichVersion = 1;
+    if( d_mpm->flags->d_stationaryParticles ){          // this is really bad 
+      whichVersion  = 0;
+      proc0cout << "__________________________________Particles are stationary: " << d_mpm->flags->d_stationaryParticles << endl;
+    }
+    
     sched->scheduleParticleRelocation(level,
                                   Mlb->pXLabel_preReloc, 
                                   d_sharedState->d_particleState_preReloc,
                                   Mlb->pXLabel, d_sharedState->d_particleState,
-                                  Mlb->pParticleIDLabel, mpm_matls);
+                                  Mlb->pParticleIDLabel, mpm_matls, whichVersion);
+  }
   
   //__________________________________
   //  on the fly analysis

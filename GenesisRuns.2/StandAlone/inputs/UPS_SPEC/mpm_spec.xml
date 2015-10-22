@@ -3,6 +3,7 @@
 
   <Uintah_specification> 
     <MPM                                  spec="OPTIONAL NO_DATA" >
+      <stationaryParticles                spec="OPTIONAL BOOLEAN" />
       <artificial_damping_coeff           spec="OPTIONAL DOUBLE 'positive'"/>
       <artificial_viscosity               spec="OPTIONAL BOOLEAN" />
       <artificial_viscosity_heating       spec="OPTIONAL BOOLEAN" />

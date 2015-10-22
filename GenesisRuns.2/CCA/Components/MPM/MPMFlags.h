@@ -58,6 +58,8 @@ namespace Uintah {
     std::string d_interpolator_type; // Type of particle-grid interaction
     double      d_cpdi_lcrit;        // for cpdi interpolator maximum fractional cell size for
                                      // a particle
+
+    bool        d_stationaryParticles;   // are particles stationary
     bool        d_AMR;  // Do AMR?
     bool        d_axisymmetric;  // Use axisymmetric?
     std::string d_integrator_type; // Explicit or implicit time integration

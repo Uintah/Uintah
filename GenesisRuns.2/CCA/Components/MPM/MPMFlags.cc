@@ -46,6 +46,7 @@ static DebugStream dbg("MPMFlags", false);
 
 MPMFlags::MPMFlags(const ProcessorGroup* myworld)
 {
+  d_stationaryParticles = false;
   d_gravity = Vector(0.,0.,0.);
   d_interpolator_type = "linear";
   d_integrator_type = "explicit";
@@ -180,6 +181,7 @@ MPMFlags::readMPMFlags(ProblemSpecP& ps, Output* dataArchive)
     exit(1);
   }
 
+  mpm_flag_ps->get("stationaryParticles",  d_stationaryParticles);
   mpm_flag_ps->get("interpolator", d_interpolator_type);
   mpm_flag_ps->getWithDefault("cpdi_lcrit", d_cpdi_lcrit, 1.e10);
   mpm_flag_ps->get("AMR", d_AMR);
