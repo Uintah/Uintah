@@ -40,8 +40,9 @@ RateDeposition::problemSetup( ProblemSpecP& db ){
      const ProblemSpecP db_root = db->getRootNode();
      db->require("Melting_Temperature",_Tmelt);
   
-     _ParticleTemperature_base_name = ParticleTools::parse_for_role_to_label(db,"max_temperature");
-                  
+     _ParticleTemperature_base_name  = ParticleTools::parse_for_role_to_label(db,"temperature");
+     _MaxParticleTemperature_base_name= ParticleTools::parse_for_role_to_label(db,"max_temperature");
+                   
      _ProbParticleX_base_name = "ProbParticleX";    
      _ProbParticleY_base_name = "ProbParticleY";    
      _ProbParticleZ_base_name = "ProbParticleZ";    
@@ -256,6 +257,7 @@ void
 RateDeposition::register_timestep_eval( std::vector<ArchesFieldContainer::VariableInformation>& variable_registry, const int time_substep ){
 
    for(int i= 0; i< _Nenv; i++){
+      const std::string MaxParticleTemperature_name = ParticleTools::append_env(_MaxParticleTemperature_base_name ,i);
       const std::string ParticleTemperature_name = ParticleTools::append_env(_ParticleTemperature_base_name ,i);
       const std::string weight_name = ParticleTools::append_env(_weight_base_name ,i);
       const std::string rho_name = ParticleTools::append_env(_rho_base_name ,i);
@@ -285,6 +287,7 @@ RateDeposition::register_timestep_eval( std::vector<ArchesFieldContainer::Variab
       register_variable( RateDepositionY_name      , ArchesFieldContainer::COMPUTES , variable_registry );
       register_variable( RateDepositionZ_name      , ArchesFieldContainer::COMPUTES , variable_registry );
  
+      register_variable( MaxParticleTemperature_name   , ArchesFieldContainer::REQUIRES , 0 , ArchesFieldContainer::LATEST , variable_registry );
       register_variable( ParticleTemperature_name   , ArchesFieldContainer::REQUIRES , 0 , ArchesFieldContainer::LATEST , variable_registry );
       register_variable( weight_name   ,              ArchesFieldContainer::REQUIRES , 0 , ArchesFieldContainer::LATEST , variable_registry );
       register_variable( rho_name   ,                 ArchesFieldContainer::REQUIRES , 0 , ArchesFieldContainer::LATEST , variable_registry );
@@ -353,12 +356,13 @@ RateDeposition::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info,
   SVolFP WallTemperature = tsk_info->get_const_so_field<SVolF>("temperature");
   
   //Compute the probability of sticking for each face using the wall temperature.
-  compute_prob_stick<SpatialOps::SSurfXField, SpatialOps::XVolField>( opr,Norm_out_X,areaFractionX,WallTemperature, ProbSurfaceX );
-  compute_prob_stick<SpatialOps::SSurfYField, SpatialOps::YVolField>( opr,Norm_out_Y,areaFractionY,WallTemperature, ProbSurfaceY );
-  compute_prob_stick<SpatialOps::SSurfZField, SpatialOps::ZVolField>( opr,Norm_out_Z,areaFractionZ,WallTemperature, ProbSurfaceZ );
+  compute_prob_stick<SpatialOps::SSurfXField, SpatialOps::XVolField>( opr,Norm_out_X,areaFractionX,WallTemperature,WallTemperature, ProbSurfaceX );
+  compute_prob_stick<SpatialOps::SSurfYField, SpatialOps::YVolField>( opr,Norm_out_Y,areaFractionY,WallTemperature,WallTemperature, ProbSurfaceY );
+  compute_prob_stick<SpatialOps::SSurfZField, SpatialOps::ZVolField>( opr,Norm_out_Z,areaFractionZ,WallTemperature,WallTemperature, ProbSurfaceZ );
 
   for(int i=0; i<_Nenv; i++){
-    const std::string ParticleTemperature_name = ParticleTools::append_env(_ParticleTemperature_base_name ,i);
+     const std::string ParticleTemperature_name = ParticleTools::append_env(_ParticleTemperature_base_name ,i);
+    const std::string  MaxParticleTemperature_name = ParticleTools::append_env(_MaxParticleTemperature_base_name ,i);
     const std::string weight_name = ParticleTools::append_env(_weight_base_name ,i);
     const std::string rho_name = ParticleTools::append_env(_rho_base_name ,i);
     const std::string diameter_name = ParticleTools::append_env(_diameter_base_name ,i);
@@ -387,6 +391,7 @@ RateDeposition::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info,
     YVolFP RateDepositionY   = tsk_info->get_so_field<YVolF>( RateDepositionY_name   );
     ZVolFP RateDepositionZ   = tsk_info->get_so_field<ZVolF>( RateDepositionZ_name   );
  
+    SVolFP MaxParticleTemperature = tsk_info->get_const_so_field<SVolF>(MaxParticleTemperature_name);
     SVolFP ParticleTemperature = tsk_info->get_const_so_field<SVolF>(ParticleTemperature_name);
     SVolFP weight = tsk_info->get_const_so_field<SVolF>(weight_name);
     SVolFP rho = tsk_info->get_const_so_field<SVolF>(rho_name);
@@ -410,19 +415,19 @@ RateDeposition::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info,
     ZVolFP ProbDepositionZ   =  tsk_info->get_so_field<ZVolF>(ProbDepositionZ_name);
 
     //Compute the probability of sticking for each particle using particle temperature.
-    compute_prob_stick<SpatialOps::SSurfXField, SpatialOps::XVolField>( opr,Norm_in_X,areaFractionX,ParticleTemperature, ProbParticleX );
+    compute_prob_stick<SpatialOps::SSurfXField, SpatialOps::XVolField>( opr,Norm_in_X,areaFractionX,ParticleTemperature,MaxParticleTemperature, ProbParticleX );
     *ProbDepositionX <<= 0.5* (*ProbParticleX +(*ProbParticleX * *ProbParticleX + 4*(1-*ProbParticleX) * *ProbSurfaceX ));
     flux_compute<SpatialOps::SSurfXField, SpatialOps::XVolField>( opr,Norm_in_X,rho,xvel,weight,diameter,FluxPx );
     *RateDepositionX <<= cond( *FluxPx * *Norm_out_X > 0.0, 0.0 )
                          ( *FluxPx* *ProbDepositionX );
     
-    compute_prob_stick<SpatialOps::SSurfYField, SpatialOps::YVolField>( opr,Norm_in_Y,areaFractionY,ParticleTemperature, ProbParticleY );
+    compute_prob_stick<SpatialOps::SSurfYField, SpatialOps::YVolField>( opr,Norm_in_Y,areaFractionY,ParticleTemperature, MaxParticleTemperature, ProbParticleY );
     *ProbDepositionY <<= 0.5* (*ProbParticleY +(*ProbParticleY * *ProbParticleY + 4*(1-*ProbParticleY) * *ProbSurfaceY ));
     flux_compute<SpatialOps::SSurfYField, SpatialOps::YVolField>( opr,Norm_in_Y,rho,yvel,weight,diameter,FluxPy );
     *RateDepositionY <<= cond( *FluxPy * *Norm_out_Y > 0.0, 0.0 )
                          ( *FluxPy* *ProbDepositionY );
     //Z
-    compute_prob_stick<SpatialOps::SSurfZField, SpatialOps::ZVolField>( opr,Norm_in_Z,areaFractionZ,ParticleTemperature, ProbParticleZ );
+    compute_prob_stick<SpatialOps::SSurfZField, SpatialOps::ZVolField>( opr,Norm_in_Z,areaFractionZ,ParticleTemperature, MaxParticleTemperature, ProbParticleZ );
     *ProbDepositionZ <<= 0.5* (*ProbParticleZ +(*ProbParticleZ * *ProbParticleZ + 4*(1-*ProbParticleZ) * *ProbSurfaceZ ));
     flux_compute<SpatialOps::SSurfZField, SpatialOps::ZVolField>( opr,Norm_in_Z,rho,zvel,weight,diameter,FluxPz );
     *RateDepositionZ <<= cond( *FluxPz * *Norm_out_Z > 0.0, 0.0 )
