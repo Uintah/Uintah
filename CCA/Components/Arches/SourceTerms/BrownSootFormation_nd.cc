@@ -146,10 +146,17 @@ BrownSootFormation_nd::computeSource( const ProcessorGroup* pc,
     which_dw->get( CO2		  , co2_label		 , matlIndex , patch , gn, 0 );
     which_dw->get( temperature    , temperature_label    , matlIndex , patch , gn, 0 );
     which_dw->get( rho            , rho_label            , matlIndex , patch , gn, 0 );
-
+      
+    /// Obtaining time step length
+    delt_vartype DT;
+    old_dw->get(DT, _shared_state->get_delt_label());
+    
     for (CellIterator iter=patch->getCellIterator(); !iter.done(); iter++){
         
+      
       IntVector c = *iter;
+
+      double delta_t = DT;
       double XO2 = 0.0;
       double XCO2 = 0.0;
       if (mix_mol_weight[c] > 1e-10){
@@ -168,8 +175,10 @@ BrownSootFormation_nd::computeSource( const ProcessorGroup* pc,
                  rhoTar,
                  rhoYsoot,
                  nd,
+		 delta_t,
                  rate[c]
                 );
+
        if (c==IntVector(75,75,75)){
          cout << "Ns: " << Ns[c] << " " << rho[c]  << " " << nd << endl; 
          cout << "nd: " << temperature[c] << " " << XO2 << " " << rhoTar << " " << rhoYsoot << " " << nd << " " << rate[c] << endl; 
@@ -210,6 +219,7 @@ void BrownSootFormation_nd::coalSootRR(const double P,
                                           const double rhoYt,
                                           const double rhoYs,
                                           const double nd,
+					  const double dt,
                                                 double &Ns_source
                                          ) {
     
@@ -239,7 +249,10 @@ double ran = 2.0*Ca*pow(6.0*MWc/M_PI/rhos, 1.0/6.0) *         ///< Aggregation r
 //-------------------------------------
                                                                                            
 Ns_source  = rfn - ran;                                      ///< #/m3*s
-                                                                                           
+
+/// Check if the rate is consuming all the soot in the system, and clip it if it is so the soot never goes negative in the system.                                                                                            
+Ns_source = std::min( nd/dt, Ns_source );
+
 return;
     
 }

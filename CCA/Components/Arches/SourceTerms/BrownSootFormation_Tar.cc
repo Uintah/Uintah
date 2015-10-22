@@ -132,17 +132,22 @@ BrownSootFormation_Tar::computeSource( const ProcessorGroup* pc,
     }
                                                                                        
     which_dw->get( mix_mol_weight , mix_mol_weight_label , matlIndex , patch , gn, 0 );
-    which_dw->get( Tar         , tar_label            , matlIndex , patch , gn, 0 );
+    which_dw->get( Tar            , tar_label            , matlIndex , patch , gn, 0 );
     which_dw->get( Ysoot          , Ysoot_label          , matlIndex , patch , gn, 0 );
     which_dw->get( Ns             , Ns_label             , matlIndex , patch , gn, 0 );
     which_dw->get( O2             , o2_label             , matlIndex , patch , gn, 0 );
     which_dw->get( temperature    , temperature_label    , matlIndex , patch , gn, 0 );
     which_dw->get( rho            , rho_label            , matlIndex , patch , gn, 0 );
 
+    /// Obtain time-step length
+    delt_vartype DT;
+    old_dw->get( DT, _shared_state->get_delt_label());
+    
     for (CellIterator iter=patch->getCellIterator(); !iter.done(); iter++){
-        
+      
       IntVector c = *iter;
 
+      double delta_t = DT;
       double rhoYO2 = O2[c] * rho[c];
       double rhoTar = Tar[c] * rho[c];
 
@@ -151,6 +156,7 @@ BrownSootFormation_Tar::computeSource( const ProcessorGroup* pc,
                  temperature[c],
                  rhoYO2,
                  rhoTar,
+		 delta_t,
                  rate[c]
                 );
        if (c==IntVector(75,75,75)){
@@ -186,6 +192,7 @@ void BrownSootFormation_Tar::coalSootRR(const double P,
                                           const double T,
                                           const double rhoYO2,
                                           const double rhoYt,
+					  const double dt,
                                                 double &Ytar_source
                                          ) {
     
@@ -209,7 +216,10 @@ double rot = -abs(rhoYt*rhoYO2)*Aot*exp(-Eot/Rgas/T);             ///< tar oxida
 //-------------------------------------
                                                                                            
 Ytar_source = rfs + rgt + rot;                                      ///< kg/m3*s
-                                                                                           
+   
+/// Check if the rate is consuming all the soot in the system, and clip it if it is so the tar never goes negative in the system.
+Ytar_source = std::min( rhoYt/dt , Ytar_source);
+                                                                                        
 return;
     
 }
