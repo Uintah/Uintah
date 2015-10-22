@@ -1838,6 +1838,27 @@ SchedulerCommon::scheduleParticleRelocation( const LevelP&                      
                                              const MaterialSet*                      matls,
                                                    int                               which )
 {
+
+  bool staticParticles = false;
+  
+  //__________________________________
+  //  Static particles
+  if (which == 0) {
+    if (reloc_new_posLabel_) {
+      ASSERTEQ(reloc_new_posLabel_, new_posLabel);
+    }
+    reloc_new_posLabel_ = new_posLabel;
+    UintahParallelPort* lbp = getPort("load balancer");
+    LoadBalancer* lb = dynamic_cast<LoadBalancer*>(lbp);
+    staticParticles = true;
+    
+    reloc1_.scheduleParticleRelocation(this, d_myworld, lb, level, old_posLabel, old_labels, new_posLabel, new_labels,
+                                       particleIDLabel, matls, staticParticles);
+
+    releasePort("load balancer");
+  }
+  //__________________________________
+  //  Traditional relocation
   if (which == 1) {
     if (reloc_new_posLabel_) {
       ASSERTEQ(reloc_new_posLabel_, new_posLabel);
@@ -1845,11 +1866,13 @@ SchedulerCommon::scheduleParticleRelocation( const LevelP&                      
     reloc_new_posLabel_ = new_posLabel;
     UintahParallelPort* lbp = getPort("load balancer");
     LoadBalancer* lb = dynamic_cast<LoadBalancer*>(lbp);
+    
     reloc1_.scheduleParticleRelocation(this, d_myworld, lb, level, old_posLabel, old_labels, new_posLabel, new_labels,
-                                       particleIDLabel, matls);
+                                       particleIDLabel, matls, staticParticles);
     releasePort("load balancer");
   }
-
+  //__________________________________
+  //  Cohesive Zones
   if (which == 2) {
     if (reloc_new_posLabel_) {
       ASSERTEQ(reloc_new_posLabel_, new_posLabel);
@@ -1857,8 +1880,9 @@ SchedulerCommon::scheduleParticleRelocation( const LevelP&                      
     reloc_new_posLabel_ = new_posLabel;
     UintahParallelPort* lbp = getPort("load balancer");
     LoadBalancer* lb = dynamic_cast<LoadBalancer*>(lbp);
+    
     reloc2_.scheduleParticleRelocation(this, d_myworld, lb, level, old_posLabel, old_labels, new_posLabel, new_labels,
-                                       particleIDLabel, matls);
+                                       particleIDLabel, matls, staticParticles);
     releasePort("load balancer");
   }
 }
@@ -1878,11 +1902,13 @@ SchedulerCommon::scheduleParticleRelocation( const LevelP&                      
     ASSERTEQ(reloc_new_posLabel_, new_posLabel);
   }
 
+  bool staticParticles = false;
   reloc_new_posLabel_ = new_posLabel;
   UintahParallelPort* lbp = getPort("load balancer");
   LoadBalancer* lb = dynamic_cast<LoadBalancer*>(lbp);
+  
   reloc1_.scheduleParticleRelocation(this, d_myworld, lb, coarsestLevelwithParticles, old_posLabel, old_labels, new_posLabel,
-                                     new_labels, particleIDLabel, matls);
+                                     new_labels, particleIDLabel, matls, staticParticles);
   releasePort("load balancer");
 }
 

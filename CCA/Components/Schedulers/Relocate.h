@@ -85,7 +85,8 @@ WARNING
                                     const VarLabel* new_posLabel,
                                     const std::vector<std::vector<const VarLabel*> >& new_labels,
                                     const VarLabel* particleIDLabel,
-                                    const MaterialSet* matls);
+                                    const MaterialSet* matls,
+                                    const bool staticParticles);
     //////////
     // Schedule particle relocation without the need to provide pre-relocation labels. Warning: This
     // is experimental and has not been fully tested yet. Use with caution (tsaad).
@@ -113,12 +114,22 @@ WARNING
                                    DataWarehouse* new_dw,
                                    const Level* coarsestLevelwithParticles);
 
+    //__________________________________
+    //  particles don't move
+    void relocateStationaryParticles(const ProcessorGroup*,
+                                     const PatchSubset* patches,
+                                     const MaterialSubset* matls,
+                                     DataWarehouse* old_dw,
+                                     DataWarehouse* new_dw,
+                                     const Level* coarsestLevelwithParticles);
+
     void relocateParticles(const ProcessorGroup*,
                            const PatchSubset* patches,
                            const MaterialSubset* matls,
                            DataWarehouse* old_dw,
                            DataWarehouse* new_dw,
                            const Level* coarsestLevelwithParticles);
+                           
     void exchangeParticles(const ProcessorGroup*, 
                            const PatchSubset* patches,
                            const MaterialSubset* matls,

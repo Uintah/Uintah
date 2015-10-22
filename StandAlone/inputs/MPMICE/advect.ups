@@ -7,7 +7,8 @@
        <title>Advection test for a MPM and ICE material</title>
    </Meta>
 
-   <SimulationComponent type="mpmice" />
+   <SimulationComponent type="rmpmice" />
+   <Scheduler type="DynamicMPI"/>
     
     <!--____________________________________________________________________-->
     <!--      T  I  M  E     V  A  R  I  A  B  L  E  S                      -->
@@ -19,6 +20,7 @@
        <delt_max>           1.0         </delt_max>
        <delt_init>          1.0e-4      </delt_init>
        <timestep_multiplier>0.8         </timestep_multiplier>
+       <max_Timesteps>       20        </max_Timesteps>
    </Time>
    
     <!--____________________________________________________________________-->
@@ -134,9 +136,9 @@
               <lower>        [0,0,0]          </lower>
               <upper>        [2.5,2.5,2.5]    </upper>
               <extraCells> [1,1,1]            </extraCells>
-              <patches>    [1,1,1]            </patches>
+              <patches>    [2,2,2]            </patches>
+              <resolution> [20,20,20]      </resolution>
            </Box>
-           <spacing>        [0.5,0.5,0.5]     </spacing>
        </Level>
     </Grid>
    
@@ -145,7 +147,7 @@
     <!--____________________________________________________________________-->
    <DataArchiver>
       <filebase>advect_mpmice.uda</filebase>
-      <outputTimestepInterval>1</outputTimestepInterval>
+      <outputTimestepInterval>20</outputTimestepInterval>
       <save label="press_equil_CC"/>
       <save label="uvel_FC"/>
       <save label="vvel_FC"/>
@@ -176,6 +178,7 @@
     </CFD>
     <MPM>
         <time_integrator>explicit</time_integrator>
+        <stationaryParticles> true </stationaryParticles>
     </MPM>
 
     <!--____________________________________________________________________-->
@@ -212,7 +215,7 @@
                         <max>           [1.5,1.5,1.5]   </max>
                     </box>
                     <res>               [2,2,2]         </res>
-                    <velocity>          [10.0,10.0,10.0]   </velocity>
+                    <velocity>          [0.0,0.0,0.0]   </velocity>
                     <temperature>       300             </temperature>
                 </geom_object>
          </material>
@@ -241,7 +244,7 @@
                 </box>
               </difference>
                <res>                      [2,2,2]        </res>
-               <velocity>           [10.0,10.0,10.0]     </velocity>
+               <velocity>           [0.0,0.0,0.0]     </velocity>
                <temperature>        300.0               </temperature>
                <density>    1.1792946927374306000e+00   </density>
                <pressure>           101325.0            </pressure>

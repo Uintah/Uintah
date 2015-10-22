@@ -48,10 +48,9 @@ namespace Uintah {
 
   class MPMLabel;
   class MPMFlags;
-  class ReactionDiffusionLabel;
 
   //*********************************************************
-	// Reactive Flow is a major refactor of the below model
+  // Reactive Flow is a major refactor of the below model
   /////////////////////////////////////////////////////////////////////////////
   /*!
     \class ElasticPlasticHP
@@ -124,7 +123,6 @@ namespace Uintah {
     // Prevent copying of this class
     // copy constructor
     GaoElastic& operator=(const GaoElastic &cm);
-    ReactionDiffusionLabel* d_rdlb;
 
   public:
 

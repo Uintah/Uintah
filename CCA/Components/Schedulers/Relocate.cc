@@ -305,7 +305,8 @@ Relocate::scheduleParticleRelocation(Scheduler* sched,
                                      const VarLabel* new_posLabel,
                                      const vector<vector<const VarLabel*> >& new_labels,
                                      const VarLabel* particleIDLabel,
-                                     const MaterialSet* matls)
+                                     const MaterialSet* matls,
+                                     const bool staticParticles)
 {
 // Only allow particles at the finest level for now
 //  if(level->getIndex() != level->getGrid()->numLevels()-1)
@@ -335,8 +336,20 @@ Relocate::scheduleParticleRelocation(Scheduler* sched,
   for (int m = 0; m< numMatls; m++){
     ASSERTEQ(reloc_old_labels[m].size(), reloc_new_labels[m].size());
   }
-  Task* t = scinew Task("Relocate::relocateParticles",
+  
+  Task* t;
+  string taskName = "none";
+  if (staticParticles){
+    t = scinew Task("Relocate::stationaryParticles",
+                  this, &Relocate::relocateStationaryParticles, coarsestLevelwithParticles.get_rep());
+    taskName = "Relocate::stationaryParticles";
+  } else {
+    t = scinew Task("Relocate::relocateParticles",
                   this, &Relocate::relocateParticles, coarsestLevelwithParticles.get_rep());
+    taskName = "Relocate::scheduleRelocateParticles";
+
+  }
+
   if(lb){
     t->usesMPI(true);
   }
@@ -379,8 +392,8 @@ Relocate::scheduleParticleRelocation(Scheduler* sched,
     }
   }
   
-  
-  printSchedule(patches,coutdbg,"Relocate::scheduleRelocateParticles");
+ printSchedule(patches,coutdbg,"Relocate::scheduleRelocateParticles"); 
+
   
   t->setType(Task::OncePerProc);
   sched->addTask(t, patches, matls);
@@ -1760,6 +1773,78 @@ Relocate::relocateParticles(const ProcessorGroup* pg,
       cerrLock.unlock();
     }
   }  // patch size !-= 0
+  
+  
+#if SCI_ASSERTION_LEVEL >= 3
+  if(!mixedDebug.active()){
+    // this is bad for the MixedScheduler... I think it is ok to
+    // just remove it... at least for now... as it is only for info
+    // and debug purposes...
+    // Communicate the number of particles to processor zero, and
+    // print them out
+    int alltotal[3] = {total_reloc[0], total_reloc[1], total_reloc[2] };
+
+    // don't reduce if number of patches on this level is < num procs.  Will wait forever in reduce.
+    //if (!lb->isDynamic() && level->getGrid()->numLevels() == 1 && level->numPatches() >= pg->size() && pg->size() > 1) {
+    if (pg->size() > 1) {
+      mpidbg << pg->myrank() << " Relocate reduce\n";
+      MPI_Reduce(total_reloc, &alltotal, 3, MPI_INT, MPI_SUM, 0, pg->getComm());
+      mpidbg << pg->myrank() << " Done Relocate reduce\n";
+    }
+    if(pg->myrank() == 0){
+      ASSERTEQ(alltotal[1], alltotal[2]);
+      if(alltotal[0] != 0){
+        cerr << "Particles crossing patch boundaries: " << alltotal[0] << ", crossing processor boundaries: " << alltotal[1] << '\n';
+      }
+    }
+  }
+#endif
+
+  if (pg->size() > 1){
+    finalizeCommunication();
+  }
+
+} // end relocateParticles()
+
+
+
+//______________________________________________________________________
+//  Particles don't move  This is a cut-down version of relocate
+void
+Relocate::relocateStationaryParticles(const ProcessorGroup* pg,
+                                      const PatchSubset* patches,
+                                      const MaterialSubset* matls,
+                                      DataWarehouse* old_dw,
+                                      DataWarehouse* new_dw,
+                                      const Level* coarsestLevelwithParticles)
+{
+  //__________________________________
+  // Now go through each of our patches, and do the merge.
+  // Also handle the local case
+  for(int p=0;p<patches->size();p++){
+    const Patch* toPatch = patches->get(p);
+    printTask(patches, toPatch ,coutdbg,"Relocate::relocateStatinonaryParticles");
+
+    for(int m = 0; m < matls->size(); m++){
+      int matl = matls->get(m);
+
+      int numVars = (int)reloc_old_labels[m].size();
+      ParticleSubset* orig_pset = old_dw->getParticleSubset(matl, toPatch);
+
+      // carry forward old data
+      new_dw->saveParticleSubset(orig_pset, matl, toPatch);
+
+      // particle position
+      ParticleVariableBase* posvar = new_dw->getParticleVariable(reloc_old_posLabel, orig_pset);
+      new_dw->put(*posvar, reloc_new_posLabel);
+
+      // all other variables
+      for(int v=0;v<numVars;v++){
+        ParticleVariableBase* var =  new_dw->getParticleVariable(reloc_old_labels[m][v], orig_pset);
+        new_dw->put(*var, reloc_new_labels[m][v]);
+      }
+    }  // matls loop
+  }  // patches loop
   
   
 #if SCI_ASSERTION_LEVEL >= 3
