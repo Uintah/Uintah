@@ -1050,6 +1050,7 @@
                                                                         gravity,
                                                                         constant,
                                                                         coal_density,
+                                                                        rate_deposition,
                                                                         coal_temperature_nebo,
                                                                         coal_temperature,
                                                                         coal_mass_clip,
@@ -1067,6 +1068,9 @@
             <IC                         spec="OPTIONAL STRING" />      <!-- base label for which internal coordiante this model affects -->
 
 
+            <!-- deposition model -->
+            <Melting_Temperature        spec="REQUIRED DOUBLE 'positive'"
+                                        need_applies_to="type rate_deposition"/>       <!-- temperature where probability of melting is 1 -->
             <!-- Simple rate expression -->
             <A                          spec="REQUIRED DOUBLE 'positive'"
                                         need_applies_to="type simple_rate"/>       <!-- Pre-exponential factor -->

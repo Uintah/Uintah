@@ -6,6 +6,7 @@
 #include <CCA/Components/Arches/ParticleModels/DragModel.h>
 #include <CCA/Components/Arches/ParticleModels/BodyForce.h>
 #include <CCA/Components/Arches/ParticleModels/Constant.h>
+#include <CCA/Components/Arches/ParticleModels/RateDeposition.h>
 #include <CCA/Components/Arches/ParticleModels/CoalTemperature.h>
 #include <CCA/Components/Arches/ParticleModels/CoalTemperatureNebo.h>
 #include <CCA/Components/Arches/ParticleModels/CoalDensity.h>
@@ -204,7 +205,13 @@ ParticleModelFactory::register_all_tasks( ProblemSpecP& db )
         register_task( task_name, tsk );
 
         _post_update_coal_tasks.push_back(task_name);
+      } else if ( type == "rate_deposition" ) {
 
+        TaskInterface::TaskBuilder* tsk = scinew RateDeposition::Builder(task_name,0,N);
+        register_task( task_name, tsk );
+
+        _coal_models.push_back(task_name);
+        _pre_update_particle_tasks.push_back(task_name);
       } else if ( type == "total_number_density" ) {
 
         TaskInterface::TaskBuilder* tsk = scinew TotNumDensity::Builder(task_name, 0);
