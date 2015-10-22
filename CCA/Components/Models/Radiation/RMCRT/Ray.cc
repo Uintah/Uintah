@@ -1879,7 +1879,8 @@ void Ray::sched_computeCellType ( const LevelP& level,
                            &Ray::computeCellType, which );
 
   if ( which == Ray::modifiesVar ){
-      tsk->modifies( d_cellTypeLabel );
+    tsk->requires(Task::NewDW, d_cellTypeLabel, 0, Task::FineLevel, 0, Task::NormalDomain, d_gn, 0);
+    tsk->modifies( d_cellTypeLabel );
   }else if ( which == Ray::computesVar ){
     tsk->computes( d_cellTypeLabel );
   }
