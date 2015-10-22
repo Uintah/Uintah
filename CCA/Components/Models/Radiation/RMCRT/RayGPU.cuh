@@ -493,6 +493,7 @@ struct RMCRT_flags {
     int nFluxRays;            // number of boundary flux rays
     int nRaySteps;            // number of ray steps taken
     int whichROI_algo;        // which Region of Interest algorithm
+    int rayDirSampleAlgo;     // which ray direction sampling algorithm (Monte-Carlo or Latin-Hyper_Cube)
 };
 
 //__________________________________
@@ -529,17 +530,30 @@ struct BoundaryFaces {
 
 };
 
-
+enum rayDirSampleAlgorithm{NAIVE, LATIN_HYPER_CUBE};
+//
 enum DIR {X=0, Y=1, Z=2, NONE=-9};
 //           -x      +x       -y       +y     -z     +z
 enum FACE {EAST=0, WEST=1, NORTH=2, SOUTH=3, TOP=4, BOT=5, nFACES=6};
 //
 enum ROI_algo{fixed, dynamic, patch_based};
+//
 
 //______________________________________________________________________
 //
 __device__ GPUVector findRayDirectionDevice(curandState* randNumStates);
 
+//______________________________________________________________________
+//
+__device__ GPUVector findRayDirectionHyperCubeDevice(curandState* randNumStates,
+                                                     const int nDivQRays,
+                                                     const int bin_i,
+                                                     const int bin_j);
+//______________________________________________________________________
+//
+__device__ void randVectorDevice( int int_array[],
+                                  const int size,
+                                  curandState* randNumStates );
 //______________________________________________________________________
 //
 __device__ void rayDirection_cellFaceDevice(curandState* randNumStates,
@@ -637,7 +651,12 @@ __device__ double randDblExcDevice(curandState* randNumStates);
 
 //______________________________________________________________________
 //
-__device__ double randDevice(curandState* randNumStates);
+__device__ double randDblDevice(curandState* randNumStates);
+
+//______________________________________________________________________
+//
+__device__ int randIntDevice(curandState* randNumStates,
+                             const int B);
 
 //______________________________________________________________________
 //
