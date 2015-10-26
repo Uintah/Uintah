@@ -3727,7 +3727,7 @@ void AMRMPM::addParticles(const ProcessorGroup*,
         prefOld[pp] = pref[pp];
         // Conditions to refine particle based on physical state
         // TODO:  Check below, should be < or <= in first conditional
-        if(pref[pp]<levelIndex && pstress[pp].Norm() > 1){
+        if(pref[pp]<=levelIndex && pstress[pp].Norm() > 1){
           pref[pp]++;
           numNewPartNeeded++;
         }

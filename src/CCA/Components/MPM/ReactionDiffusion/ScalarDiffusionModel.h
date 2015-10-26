@@ -97,7 +97,6 @@ namespace Uintah {
     SimulationStateP d_sharedState;
 
     int NGP, NGN;
-    //bool do_explicit;
     std::string diffusion_type;
     bool include_hydrostress;
 

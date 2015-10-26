@@ -30,7 +30,7 @@
 
 using namespace Uintah;
 
-SDInterfaceModel::SDInterfaceModel(ProblemSpecP& ps, SimulationStateP& sS, MPMFlags* Mflag) {
+SDInterfaceModel::SDInterfaceModel(ProblemSpecP& ps, SimulationStateP& sS, MPMFlags* Mflag){
 
   d_Mflag = Mflag;
   d_sharedState = sS;
@@ -44,18 +44,9 @@ SDInterfaceModel::SDInterfaceModel(ProblemSpecP& ps, SimulationStateP& sS, MPMFl
     NGP=2;
     NGN=2;
   }
-
-  //**** Currently only explicit is used, no need to test for integrator type
-  // if(d_Mflag->d_scalarDiffusion_type == "explicit"){
-  //   do_explicit = true;
-  // }else{
-  //   do_explicit = false;
-  // }
-  
 }
 
-SDInterfaceModel::~SDInterfaceModel() {
-
+SDInterfaceModel::~SDInterfaceModel(){
   delete(d_lb);
 }
 

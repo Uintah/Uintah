@@ -56,27 +56,8 @@ namespace Uintah {
                            DataWarehouse* old_dw,
                            DataWarehouse* new_dw);
 
-    virtual void addComputesAndRequiresInterpolated(SchedulerP & sched,
-                                      const PatchSet* patches,
-                                      const MaterialSet* matls) = 0;
-
-    virtual void sdInterfaceInterpolated(const ProcessorGroup*,
-                                         const PatchSubset* patches,
-                                         const MaterialSubset* matls,
-                                         DataWarehouse* old_dw,
-                                         DataWarehouse* new_dw) = 0;
-
-    virtual void addComputesAndRequiresDivergence(SchedulerP & sched,
-                                      const PatchSet* patches,
-                                      const MaterialSet* matls) = 0;
-
-    virtual void sdInterfaceDivergence(const ProcessorGroup*,
-                                       const PatchSubset* patches,
-                                       const MaterialSubset* matls,
-                                       DataWarehouse* old_dw,
-                                       DataWarehouse* new_dw) = 0;
-
-    virtual void outputProblemSpec(ProblemSpecP& ps,bool output_sdim_tag = true);
+    virtual void outputProblemSpec(ProblemSpecP& ps,
+                                   bool output_sdim_tag = true);
 
   protected:
     MPMLabel* d_lb;
@@ -85,7 +66,6 @@ namespace Uintah {
 
     int NGP, NGN;
     int numMPMmatls;
-    //bool do_explicit;
 
     SDInterfaceModel(const SDInterfaceModel&);
     SDInterfaceModel& operator=(const SDInterfaceModel&);
