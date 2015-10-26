@@ -52,6 +52,7 @@ void JGConcentrationDiffusion::scheduleComputeFlux(Task* task,
 
   task->requires(Task::OldDW, d_lb->pConcGradientLabel, matlset, gnone);
   task->computes(             d_lb->pFluxLabel,         matlset);
+  task->computes(d_sharedState->get_delt_label(),getLevel(patch));
 }
 
 void JGConcentrationDiffusion::computeFlux(const Patch* patch, 
@@ -59,10 +60,6 @@ void JGConcentrationDiffusion::computeFlux(const Patch* patch,
                                            DataWarehouse* old_dw,
                                            DataWarehouse* new_dw)
 {
-  ParticleInterpolator* interpolator = d_Mflag->d_interpolator->clone(patch);
-  vector<IntVector> ni(interpolator->size());
-  vector<Vector> d_S(interpolator->size());
-
   Vector dx = patch->dCell();
   int dwi = matl->getDWIndex();
   constParticleVariable<Vector>  pConcGradient;
@@ -73,7 +70,7 @@ void JGConcentrationDiffusion::computeFlux(const Patch* patch,
   old_dw->get(pConcGradient,     d_lb->pConcGradientLabel, pset);
   new_dw->allocateAndPut(pFlux,  d_lb->pFluxLabel,         pset);
   
-  double timestep = 10000.0;
+  double timestep = 1.0e99;
   for (ParticleSubset::iterator iter  = pset->begin();iter!=pset->end();iter++){
     particleIndex idx = *iter;
     pFlux[idx] = diffusivity*pConcGradient[idx];
@@ -83,6 +80,5 @@ void JGConcentrationDiffusion::computeFlux(const Patch* patch,
 
   //cout << "Time Step: " << timestep << endl;
 
-  //new_dw->put(delt_vartype(timestep), d_lb->delTLabel, patch->getLevel());
-  delete interpolator;
+  new_dw->put(delt_vartype(timestep), d_lb->delTLabel, patch->getLevel());
 }
