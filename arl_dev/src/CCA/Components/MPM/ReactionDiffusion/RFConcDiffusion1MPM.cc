@@ -49,9 +49,10 @@ void RFConcDiffusion1MPM::scheduleComputeFlux(Task* task, const MPMMaterial* mat
 {
   const MaterialSubset* matlset = matl->thisMaterial();
   Ghost::GhostType  gnone = Ghost::None;
-  task->requires(Task::OldDW, d_lb->pConcGradientLabel,        matlset, gnone);
 
+  task->requires(Task::OldDW, d_lb->pConcGradientLabel,        matlset, gnone);
   task->computes(d_lb->pFluxLabel,  matlset);
+  task->computes(d_sharedState->get_delt_label(),getLevel(patch));
 }
 
 void RFConcDiffusion1MPM::computeFlux(const Patch* patch,
@@ -59,7 +60,7 @@ void RFConcDiffusion1MPM::computeFlux(const Patch* patch,
                                       DataWarehouse* old_dw,
                                       DataWarehouse* new_dw)
 {
-
+  Vector dx = patch->dCell();
   int dwi = matl->getDWIndex();
 
   constParticleVariable<Vector>  pConcGrad;
@@ -70,12 +71,17 @@ void RFConcDiffusion1MPM::computeFlux(const Patch* patch,
   old_dw->get(pConcGrad,           d_lb->pConcGradientLabel,       pset);
   new_dw->allocateAndPut(pFlux,    d_lb->pFluxLabel,             pset);
 
+  double timestep = 1.0e99;
   for (ParticleSubset::iterator iter = pset->begin(); iter != pset->end();
                                                       iter++){
     particleIndex idx = *iter;
 
     pFlux[idx] = diffusivity*pConcGrad[idx];
+
+    timestep = min(timestep, computeStableTimeStep(diffusivity, dx));
   } //End of Particle Loop
+
+  new_dw->put(delt_vartype(timestep), d_lb->delTLabel, patch->getLevel());
 }
 
 void RFConcDiffusion1MPM::outputProblemSpec(ProblemSpecP& ps, bool output_rdm_tag)
