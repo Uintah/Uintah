@@ -97,6 +97,7 @@ private:
     std::string _FluxPz_base_name;
  
    std::string  _WallTemperature_name;
+    double _pi_div_six;
 
    template <class faceT, class velT> void
    compute_prob_stick(  SpatialOps::OperatorDatabase& opr, 
@@ -148,6 +149,12 @@ private:
     SpatialOps::SpatFldPtr<faceT> Fmelt_temp = SpatialOps::SpatialFieldStore::get<faceT>( *normal_face );
     SpatialOps::SpatFldPtr<faceT> ProbMelt_temp = SpatialOps::SpatialFieldStore::get<faceT>( *normal_face );
     SpatialOps::SpatFldPtr<faceT> ProbVisc_temp = SpatialOps::SpatialFieldStore::get<faceT>( *normal_face );
+    /// @TODO We should remove these later and simply update BC's for computed variables, so that the extra cell values are zero.
+    *Tvol_temp <<= 0.0;
+    *MaxTvol_temp <<= 0.0;
+    *Fmelt_temp <<= 0.0;
+    *ProbMelt_temp <<= 0.0;
+    *ProbVisc_temp <<= 0.0;
 
     //get upwind (low) interpolant and the flux limiter operator
     typedef UpwindInterpolant<SpatialOps::SVolField, faceT> Upwind; 
@@ -157,7 +164,7 @@ private:
     upwind->set_advective_velocity( *normal_face );
     upwind->apply_to_field( *MaxTvol, *MaxTvol_temp );
    
-     upwind->set_advective_velocity( *normal_face );
+    upwind->set_advective_velocity( *normal_face );
     upwind->apply_to_field( *Tvol, *Tvol_temp );
     //interp the XSurf to XVol
     typedef typename SpatialOps::OperatorTypeBuilder< SpatialOps::Interpolant, faceT,velT>::type InterpSFtoVF;
@@ -169,7 +176,7 @@ private:
                             (0 );
    
    //compute the viscosity probability
-    *ProbVisc_temp <<= Aprepontional* (*Tvol_temp)* exp(Bactivational /(*Tvol_temp) );
+    *ProbVisc_temp <<= Aprepontional* max(*Tvol_temp,273.0) * exp(Bactivational /(max(*Tvol_temp,273.0)) );
     *ProbVisc_temp <<= cond( ReferVisc/(*ProbVisc_temp) > 1, 1  )
                            ( ReferVisc/(*ProbVisc_temp));
     *ProbStick <<= (*interp_xf_to_xv)((1-*areaFraction_face) * *ProbVisc_temp * *ProbMelt_temp); 
@@ -202,7 +209,11 @@ private:
     SpatialOps::SpatFldPtr<faceT> u_temp = SpatialOps::SpatialFieldStore::get<faceT>( *normal_face );
     SpatialOps::SpatFldPtr<faceT> weg_temp = SpatialOps::SpatialFieldStore::get<faceT>( *normal_face );
     SpatialOps::SpatFldPtr<faceT> dia_temp = SpatialOps::SpatialFieldStore::get<faceT>( *normal_face );
-
+    /// @TODO We should remove these later and simply update BC's for computed variables, so that the extra cell values are zero.
+    *rho_temp <<= 0.0;
+    *u_temp <<= 0.0;
+    *weg_temp <<= 0.0;
+    *dia_temp <<= 0.0;
 
     //get upwind (low) interpolant and the flux limiter operator
     typedef UpwindInterpolant<SpatialOps::SVolField, faceT> Upwind; 
@@ -211,21 +222,18 @@ private:
     //compute the upwind differenced term
     upwind->set_advective_velocity( *normal_face );
     upwind->apply_to_field( *rho, *rho_temp );
-
     upwind->set_advective_velocity( *normal_face );
     upwind->apply_to_field( *rho, *rho_temp );
     upwind->set_advective_velocity( *normal_face );
     upwind->apply_to_field( *u, *u_temp );
-
     upwind->set_advective_velocity( *normal_face );
     upwind->apply_to_field( *weg, *weg_temp );
-  
     upwind->set_advective_velocity( *normal_face );
     upwind->apply_to_field( *dia, *dia_temp );
    //interp the XSurf to XVol
     typedef typename SpatialOps::OperatorTypeBuilder< SpatialOps::Interpolant, faceT,velT>::type InterpSFtoVF;
     const InterpSFtoVF* const interp_xf_to_xv = opr.retrieve_operator<InterpSFtoVF>();
-    *flux <<= (*interp_xf_to_xv)( *rho_temp * *u_temp * *weg_temp * 0.52 * pow(*dia_temp,3) );
+    *flux <<= (*interp_xf_to_xv)( *rho_temp * *u_temp * *weg_temp * _pi_div_six * pow(*dia_temp,3) );
    
    }
 }
