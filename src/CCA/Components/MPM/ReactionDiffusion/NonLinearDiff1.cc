@@ -54,6 +54,7 @@ void NonLinearDiff1::scheduleComputeFlux(Task* task, const MPMMaterial* matl,
   Ghost::GhostType  gnone = Ghost::None;
   task->requires(Task::OldDW, d_lb->pConcGradientLabel,   matlset, gnone);
   task->requires(Task::OldDW, d_lb->pConcentrationLabel,  matlset, gnone);
+  task->computes(d_sharedState->get_delt_label(),getLevel(patch));
 
   task->computes(d_lb->pFluxLabel,  matlset);
 }
@@ -65,6 +66,7 @@ void NonLinearDiff1::computeFlux(const Patch* patch,
 {
 
   int dwi = matl->getDWIndex();
+  Vector dx = patch->dCell();
 
   constParticleVariable<Vector>  pConcGrad;
   constParticleVariable<double>  pConcentration;
@@ -78,11 +80,14 @@ void NonLinearDiff1::computeFlux(const Patch* patch,
 
   double non_lin_comp;
   double D;
+  double timestep = 1.0e99;
   for (ParticleSubset::iterator iter = pset->begin(); iter != pset->end();
                                                       iter++){
     particleIndex idx = *iter;
 
     non_lin_comp = 1/(1-pConcentration[idx]) - 2 * tuning1 * pConcentration[idx];
+
+		cout << "nlc: " << non_lin_comp << ", concentration: " << pConcentration[idx] << endl;
 
     if(non_lin_comp < tuning2){
       D = diffusivity * non_lin_comp;
@@ -91,7 +96,10 @@ void NonLinearDiff1::computeFlux(const Patch* patch,
     }
 
     pFlux[idx] = D*pConcGrad[idx];
+    timestep = min(timestep, computeStableTimeStep(D, dx));
   } //End of Particle Loop
+	cout << "timestep: " << timestep << endl;
+  new_dw->put(delt_vartype(timestep), d_lb->delTLabel, patch->getLevel());
 }
 
 void NonLinearDiff1::outputProblemSpec(ProblemSpecP& ps, bool output_rdm_tag)
@@ -106,5 +114,5 @@ void NonLinearDiff1::outputProblemSpec(ProblemSpecP& ps, bool output_rdm_tag)
   rdm_ps->appendElement("diffusivity",diffusivity);
   rdm_ps->appendElement("max_concentration",max_concentration);
   rdm_ps->appendElement("tuning1",tuning1);
-  rdm_ps->appendElement("tuning2",tuning1);
+  rdm_ps->appendElement("tuning2",tuning2);
 }
