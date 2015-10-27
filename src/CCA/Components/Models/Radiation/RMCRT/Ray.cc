@@ -41,7 +41,7 @@
 #include <include/sci_defs/uintah_testdefs.h.in>
 
 // TURN ON debug flag in src/Core/Math/MersenneTwister.h to compare with Ray:CPU
-#define DEBUG -9      // 1: divQ, 2: boundFlux, 3: scattering
+#define DEBUG -9     // 1: divQ, 2: boundFlux, 3: scattering
 #define CUDA_PRINTF   // increase the printf buffer
 
 /*______________________________________________________________________
@@ -194,7 +194,7 @@ Ray::problemSetup( const ProblemSpecP& prob_spec,
   rmcrt_ps->getWithDefault( "rayDirSampleAlgo", rayDirSampleAlgo,   "naive" );         // Change Monte-Carlo Sampling technique for RayDirection.
 
   proc0cout << "__________________________________ " << endl;
-  if (rayDirSampleAlgo == "LatinHypreCube" ){
+  if (rayDirSampleAlgo == "LatinHyperCube" ){
     d_rayDirSampleAlgo = LATIN_HYPER_CUBE;
     proc0cout << "  RMCRT:  Using Latin Hyper Cube method for selecting ray directions.";
   } else{
