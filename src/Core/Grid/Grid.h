@@ -86,6 +86,35 @@ WARNING
     void fillCells(int& start, int lowCells, int highCells, SCIRun::OffsetArray1<double>& faces) const;
   };
 
+  class LevelBox {
+    public:
+      LevelBox(SCIRun::BBox         _extents,
+               SCIRun::IntVector    _extraCells,
+               SCIRun::Vector       _boxSpacing)
+              :boxExtents(_extents), extraCells(_extraCells), boxSpacing(_boxSpacing) {};
+     ~LevelBox() {};
+      SCIRun::BBox getBoxExtents() const
+      {
+        return boxExtents;
+      }
+      SCIRun::IntVector getExtraCells() const
+      {
+        return extraCells;
+      }
+      SCIRun::Vector    getSpacing() const
+      {
+        return boxSpacing;
+      }
+      bool              hasPatchSpacing() const
+      {
+        return (boxSpacing[0] == -1.0 ? false : true); // Flag by first value being negative
+      }
+    private:
+      SCIRun::BBox      boxExtents;
+      SCIRun::IntVector extraCells;
+      SCIRun::Vector    boxSpacing;
+  };
+
   class Grid : public RefCounted {
   public:
     Grid();
@@ -175,6 +204,20 @@ WARNING
                              const  Uintah::Point&              levelAnchor,
                              const  Uintah::Point&              levelHighPoint,
                                     int                         procRank);
+    LevelBox  parseBox(      ProblemSpecP       box_ps,
+                       const bool               haveLevelSpacing,
+                       const bool               havePatchSpacing,
+                       const SCIRun::Vector    &currentSpacing);
+
+    Level*    parseLevel(      ProblemSpecP    &level_ps,
+                         const int              levelIndex,
+                         const int              myProcRank);
+
+    void      newProblemSetup(const ProblemSpecP   &params,
+                              const ProcessorGroup *pg,
+                                    bool            do_AMR,
+                                    bool            do_MultiScale);
+
     // The current (final) values of a,b,c, and norm for the partition function.
     // Used to hold data between recursive calls.
     int    af_;
