@@ -559,7 +559,7 @@ Grid::addLevel( const Point & anchor, const Vector & dcell, int id, bool isAMR, 
     ratio = IntVector(1,1,1);
 
 
-  Level* level = scinew Level(this, anchor, dcell, (int)d_levels.size(), ratio, id);  
+  Level* level = scinew Level(this, anchor, dcell, (int)d_levels.size(), ratio, id, isAMR, isMultiscale);
 
   d_levels.push_back( level );
   return level;
@@ -926,6 +926,154 @@ Grid::checkStretches(       std::vector<StretchSpec> (&stretch)[3],
   return(stretch_count);
 }
 
+LevelBox
+Grid::parseBox(      ProblemSpecP         box_ps,
+               const bool                 haveLevelSpacing,
+               const bool                 havePatchSpacing,
+               const SCIRun::Vector      &currentSpacing)
+{
+  SCIRun::Point lower, upper;
+  box_ps->require("lower", lower);
+  box_ps->require("upper", upper);
+
+  SCIRun::BBox boxExtents(lower,upper);
+
+  SCIRun::IntVector boxResolution;
+  SCIRun::Vector    boxSpacing(-1.0, -1.0, -1.0);
+  if (box_ps->get("resolution", boxResolution))
+  {
+    if (haveLevelSpacing)
+    {
+      throw ProblemSetupException("Cannot specify level spacing and patch resolution",
+                                  __FILE__, __LINE__);
+    }
+    else
+    {
+      SCIRun::Vector newSpacing = (upper-lower)/boxResolution;
+      if (havePatchSpacing)
+      {
+        SCIRun::Vector diff = currentSpacing - newSpacing;
+        if (diff.length() > 1.e-14)
+        {
+          throw ProblemSetupException("Using patch resolution, and the patch spacings are inconsistent", __FILE__, __LINE__);
+        }
+      }
+      else
+      {
+        boxSpacing = newSpacing;
+      }
+    }
+  } // Resolution subsection parsed
+  SCIRun::IntVector boxExtraCells;
+  box_ps->getWithDefault("extraCells", boxExtraCells, SCIRun::IntVector(0,0,0));
+  return LevelBox(boxExtents, boxExtraCells, boxSpacing);
+}
+
+Level*
+Grid::parseLevel(ProblemSpecP& level_ps, const int levelIndex, const int myProcRank)
+{
+  SCIRun::IntVector extraCells(0, 0, 0);
+  bool haveLevelSpacing = false;
+  bool havePatchSpacing = false;
+  SCIRun::Vector currentSpacing = SCIRun::Vector(0.0, 0.0, 0.0);
+  SCIRun::IntVector levelExtraCells = SCIRun::IntVector(0, 0, 0);
+
+  // Create an intentionally inverted bounding box so that the first real bounding box from
+  // a parse gets assigned properly.
+  SCIRun::BBox levelExtents(SCIRun::Point(DBL_MAX,DBL_MAX,DBL_MAX),
+                            SCIRun::Point(DBL_MIN,DBL_MIN,DBL_MIN));
+  if (level_ps->get("spacing",currentSpacing))
+  {
+    haveLevelSpacing = true;
+  }
+  ProblemSpecP box_ps = level_ps->findBlock("Box");
+  while (box_ps) // Loop through all boxes
+  {
+    LevelBox currentBox=parseBox(box_ps, haveLevelSpacing, havePatchSpacing, currentSpacing);
+    levelExtents.extend(currentBox.getBoxExtents()); // Extend the level to reflect the box
+
+    // We can't get here without exception unless haveLevelSpacing is false, meaning we
+    // either have spacing set at the patch level, or not at all.
+    if ( currentBox.hasPatchSpacing() )
+    {
+      havePatchSpacing = true;
+      currentSpacing = currentBox.getSpacing();
+    }
+    // bulletproofing
+    if (haveLevelSpacing || havePatchSpacing) {
+      SCIRun::Point upper = currentBox.getBoxExtents().max();
+      SCIRun::Point lower = currentBox.getBoxExtents().min();
+      for(int dir = 0; dir < 3; dir ++)
+      {
+        if (upper(dir) - lower(dir) <= 0.0)
+        {
+          std::ostringstream msg;
+          msg << "\nComputational Domain Input Error: Level("<< levelIndex << ")"
+              << " \n The computational domain " << lower<<", " << upper
+              << " must have a positive distance in each coordinate direction  " << upper-lower << std::endl;
+          throw ProblemSetupException(msg.str(), __FILE__, __LINE__);
+        }
+        if (currentSpacing[dir] > (upper(dir)-lower(dir)) || currentSpacing[dir] < 0)
+        {
+          std::ostringstream msg;
+          msg << "\nComputational Domain Input Error: Level("<< levelIndex << ")"
+              << " \n The spacing " << currentSpacing
+              << " must be less than the upper - lower corner and positive " << upper << std::endl;
+          throw ProblemSetupException(msg.str(), __FILE__, __LINE__);
+        }
+      }
+    }
+    extraCells = Max(levelExtraCells,currentBox.getExtraCells());
+    // Done with all processing for this box, get the next one.
+    box_ps = box_ps->findNextBlock("Box");
+  } // Loop through all boxes
+
+  std::vector<StretchSpec> stretch[3];
+  for (ProblemSpecP stretch_ps = level_ps->findBlock("Stretch");
+                    stretch_ps != 0; stretch_ps = stretch_ps->findNextBlock("Stretch"))
+  {
+    parseStretches(stretch, stretch_ps);
+  }
+  int stretch_count = checkStretches(stretch, currentSpacing,
+                                     levelExtents.min(), levelExtents.max(), myProcRank);
+
+  if (!haveLevelSpacing && !havePatchSpacing && stretch_count != 3)
+  {
+    throw ProblemSetupException("Box resolution is not specified", __FILE__, __LINE__);
+  }
+
+
+}
+
+void
+Grid::newProblemSetup(const ProblemSpecP&   params,
+                      const ProcessorGroup* pg,
+                            bool            do_AMR,
+                            bool            do_MultiScale)
+{
+  ProblemSpecP grid_ps = params->findBlock("Grid");
+  if (!grid_ps)
+  {
+    // FIXME - Per spec, a grid section is required.  Shouldn't we throw an error here? - JBH / 10.2015
+    return;
+  }
+
+  Point         gridAnchor(DBL_MAX, DBL_MAX, DBL_MAX); // Minimum point in grid
+  ProblemSpecP  level_ps = grid_ps->findBlock("Level");
+  int           levelIndex = 0;
+
+  // FIXME - Should we throw an error if we can't find one initial level?
+  while (level_ps) // Loop through all levels
+  {
+    SCIRun::Vector levelSpacing;
+    Level* parsedLevel = parseLevel(level_ps, levelIndex, pg->myrank());
+    LevelP level = addLevel(gridAnchor, levelSpacing, -1, do_AMR, do_MultiScale);
+
+    // Done with all processing for this level, get the next one.
+    level_ps = level_ps->findNextBlock("Level");
+  }
+}
+
 void 
 Grid::problemSetup(const ProblemSpecP& params, const ProcessorGroup *pg, bool do_AMR, bool do_MultiScale)
 {
@@ -1026,7 +1174,8 @@ Grid::problemSetup(const ProblemSpecP& params, const ProcessorGroup *pg, bool do
       // Look for stretched grid info
       std::vector<StretchSpec> stretch[3];
       for(ProblemSpecP stretch_ps = level_ps->findBlock("Stretch");
-          stretch_ps != 0; stretch_ps = stretch_ps->findNextBlock("Stretch")){
+          stretch_ps != 0; stretch_ps = stretch_ps->findNextBlock("Stretch"))
+      {
         parseStretches(stretch, stretch_ps);
 //
 //
