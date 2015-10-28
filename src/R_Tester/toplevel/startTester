@@ -55,24 +55,24 @@ if test "$MACHINE" = "albion" ; then
   DEFAULT_MAIL_TO="ahumphrey@sci.utah.edu,t.harman@utah.edu"
   REPLY_TO="t.harman@utah.edu"
   COMMON_GROUP="uintah"
-  BUILD_DIR=/home/${USER}/"$OS"                      # The user can be rt or arl-rt
-  TEST_DATA=/home/${USER}/"$OS"/TestData
-  TEMP_DIR=/home/${USER}/"$OS"
-  SCRIPT_DIR=/home/${USER}/scripts
-  CHECKPOINTS=/home/${USER}/CheckPoints
+  BUILD_DIR=/home/${LOGNAME}/"$OS"                      # The user can be rt or arl-rt
+  TEST_DATA=/home/${LOGNAME}/"$OS"/TestData
+  TEMP_DIR=/home/${LOGNAME}/"$OS"
+  SCRIPT_DIR=/home/${LOGNAME}/scripts
+  CHECKPOINTS=/home/${LOGNAME}/CheckPoints
   MPIRUN=/usr/local/openmpi/bin/
   
-  if test "$USER" = "rt" ; then
+  if test "$LOGNAME" = "rt" ; then
     export TEST_COMPONENTS="Examples"             # only run gpu tests
   fi
-  if test "$USER" = "arl-rt" ; then
+  if test "$LOGNAME" = "arl-rt" ; then
     SVN_trunk="https://gforge.sci.utah.edu/svn/uintah/branches/arl_dev/src"
   fi  
   
   
   # Where the webpage will be, and init webpage.  (SEE above notes)
-  HTMLLOG=/home/${USER}/public_html/Uintah.html
-  WEBLOG=/home/${USER}/public_html/Uintah.html
+  HTMLLOG=/home/${LOGNAME}/public_html/Uintah.html
+  WEBLOG=/home/${LOGNAME}/public_html/Uintah.html
 fi
 
 if test "$MACHINE" = "cyrus.mech.utah.edu" ; then

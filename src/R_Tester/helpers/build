@@ -65,7 +65,7 @@ if [ "$OS" = "Linux" ]; then
        F77=gfortran-4.8"   
   fi
   
-  if [ "$MACHINE" == "albion" ] && [ "$USER" == "arl-rt" ]; then
+  if [ "$MACHINE" == "albion" ] && [ "$LOGNAME" == "arl-rt" ]; then
     COMMON="      --with-mpi=/usr/local/openmpi \\
       --with-fftw=/usr/local/fftw \\
       --with-boost=/usr/  \\
