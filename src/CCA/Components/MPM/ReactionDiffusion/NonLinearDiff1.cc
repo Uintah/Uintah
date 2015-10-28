@@ -56,7 +56,8 @@ void NonLinearDiff1::scheduleComputeFlux(Task* task, const MPMMaterial* matl,
   task->requires(Task::OldDW, d_lb->pConcentrationLabel,  matlset, gnone);
   task->computes(d_sharedState->get_delt_label(),getLevel(patch));
 
-  task->computes(d_lb->pFluxLabel,  matlset);
+  task->computes(d_lb->pFluxLabel,        matlset);
+  task->computes(d_lb->pDiffusivityLabel, matlset);
 }
 
 void NonLinearDiff1::computeFlux(const Patch* patch,
@@ -71,23 +72,27 @@ void NonLinearDiff1::computeFlux(const Patch* patch,
   constParticleVariable<Vector>  pConcGrad;
   constParticleVariable<double>  pConcentration;
   ParticleVariable<Vector>       pFlux;
+  ParticleVariable<double>       pDiffusivity;
 
   ParticleSubset* pset = old_dw->getParticleSubset(dwi, patch);
 
   old_dw->get(pConcGrad,        d_lb->pConcGradientLabel,  pset);
   old_dw->get(pConcentration,   d_lb->pConcentrationLabel, pset);
-  new_dw->allocateAndPut(pFlux, d_lb->pFluxLabel,          pset);
+  new_dw->allocateAndPut(pFlux,        d_lb->pFluxLabel,        pset);
+  new_dw->allocateAndPut(pDiffusivity, d_lb->pDiffusivityLabel, pset);
 
   double non_lin_comp;
   double D;
   double timestep = 1.0e99;
+  double minD = 1.0e99;
+  double maxD = 0;
   for (ParticleSubset::iterator iter = pset->begin(); iter != pset->end();
                                                       iter++){
     particleIndex idx = *iter;
 
     non_lin_comp = 1/(1-pConcentration[idx]) - 2 * tuning1 * pConcentration[idx];
 
-		cout << "nlc: " << non_lin_comp << ", concentration: " << pConcentration[idx] << endl;
+    //cout << "nlc: " << non_lin_comp << ", concentration: " << pConcentration[idx] << endl;
 
     if(non_lin_comp < tuning2){
       D = diffusivity * non_lin_comp;
@@ -96,9 +101,12 @@ void NonLinearDiff1::computeFlux(const Patch* patch,
     }
 
     pFlux[idx] = D*pConcGrad[idx];
+    pDiffusivity[idx] = D;
     timestep = min(timestep, computeStableTimeStep(D, dx));
+    //minD = min(minD, D);
+    //maxD = max(maxD, D);
   } //End of Particle Loop
-	cout << "timestep: " << timestep << endl;
+  //cout << "timestep: " << timestep << ", minD: " << minD << ", maxD: " << maxD << endl;
   new_dw->put(delt_vartype(timestep), d_lb->delTLabel, patch->getLevel());
 }
 

@@ -117,6 +117,7 @@ namespace Uintah {
       const VarLabel* pConcGradientLabel; //for scalar diffusion
       const VarLabel* pConcGradientLabel_preReloc; //for scalar diffusion
       const VarLabel* pFluxLabel; //for scalar diffusion
+      const VarLabel* pDiffusivityLabel; //for scalar diffusion
       
       const VarLabel* gLambdaDotLabel;
       const VarLabel* gColorLabel;

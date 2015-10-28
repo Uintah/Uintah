@@ -42,7 +42,6 @@
 #include <CCA/Components/MPM/ConstitutiveModel/PlasticityModels/PlasticityState.h>
 #include <CCA/Components/MPM/ConstitutiveModel/PlasticityModels/DeformationState.h>
 
-
 #include <CCA/Components/MPM/ConstitutiveModel/MPMMaterial.h>
 #include <Core/Grid/Patch.h>
 #include <CCA/Ports/DataWarehouse.h>
@@ -84,6 +83,10 @@ GaoElastic::GaoElastic(ProblemSpecP& ps,MPMFlags* Mflag)
     ps->require("volume_expansion_coeff",d_initialData.vol_exp_coeff);
   }else{
     d_initialData.vol_exp_coeff = 0.0;
+    ostringstream warn;
+    warn << "RFElasticPlastic:: This Constitutive Model requires the use "
+         << "of scalar diffusion." << endl;
+    throw ProblemSetupException(warn.str(), __FILE__, __LINE__);
   }
 
   d_tol = 1.0e-10;
@@ -504,7 +507,7 @@ GaoElastic::computeStressTensor(const PatchSubset* patches,
 
       // Remove stress free concentration dependent component
       if(flag->d_doScalarDiffusion){
-        tensorD = tensorD - one * vol_coeff * (conc_rate);
+        tensorD = tensorD - one * vol_coeff * conc_rate;
       }
 
       // Calculate the deviatoric part of the non-thermal part
@@ -588,11 +591,11 @@ GaoElastic::computeStressTensor(const PatchSubset* patches,
       tensorF_new.polarDecompositionRMB(tensorU, tensorR);
 
       sigma = (tensorR*sigma)*(tensorR.Transpose());
-			
-			// if(idx == 1){
-			//   cout << "Pid: " << idx << ", Stress: " << sigma << endl;
-			//   cout << "Pid: " << idx << ", Volume: " << pVolume[idx] << endl;
-			// }
+      
+      // if(idx == 1){
+      //   cout << "Pid: " << idx << ", Stress: " << sigma << endl;
+      //   cout << "Pid: " << idx << ", Volume: " << pVolume[idx] << endl;
+      // }
 
       // Update the kinematic variables
       pRotation_new[idx] = tensorR;

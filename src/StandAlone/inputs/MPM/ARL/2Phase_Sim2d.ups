@@ -48,20 +48,20 @@
   *                 of lithium ions in nano-Si, Solid State Ionics, Volume 180,
   *                 Issues 2–3, 9 March 2009, Pages 222-225
   *                 The value for diffusivity is 10e-16 m^2/2
-	*
-	*  Volume Expansion Coefficient -> One paper uses .6 and the other .56
-	*
+  *
+  *  Volume Expansion Coefficient -> One paper uses .6 and the other .56
+  *
 
   Units used for this simulation,
-  *  density  -> micrograms/mm^3
-  *  pressure -> microgram / (microsecond^2 * mm)
+  *  density  -> picogram/micrometer^3
+  *  pressure -> picogram / (nanosecond^2 * micrometer)
   *  temperature -> K, kelvin
-  *  diffusivity -> mm^2 / microsecond
+  *  diffusivity -> micrometer^2 / nanosecond
 
   Conversions
-  *  density  -> 1 kg/m^3 = 1 microgram/mm^3
-  *  pressure -> 1 GPa = 1e3 microgram / (microsecond^2 * mm)
-  *  diffusivity -> 1 m^2/s = 1 mm^2/microsecond
+  *  density  -> 1 kg/m^3 = 1e-3 picogram/micrometer^3
+  *  pressure -> 1 GPa = 1 picogram / (nanosecond^2 * micrometer)
+  *  diffusivity -> 1 m^2/s = 1e3 micrometer^2/nanosecond
 -->
 
 <Uintah_specification>
@@ -73,19 +73,21 @@
   <SimulationComponent type="amrmpm" />
 
   <Time>
-     <maxTime>1e-3</maxTime>
+     <maxTime>1e3</maxTime>
      <initTime>0.0</initTime>
-     <delt_min>1.0e-11</delt_min>
-     <delt_max>1.0e-11</delt_max>
-     <max_Timesteps>10</max_Timesteps>
+     <delt_min>1.0e-5</delt_min>
+     <delt_max>1.0e-5</delt_max>
+     <max_Timesteps>30000</max_Timesteps>
+<!--
+-->
      <timestep_multiplier>0.4</timestep_multiplier>
   </Time>
 
   <DataArchiver>
     <filebase>2Phase_Sim2d.uda</filebase>
-    <outputTimestepInterval>1</outputTimestepInterval>
+    <outputTimestepInterval>100</outputTimestepInterval>
 <!--
-    <outputInterval>5.e-6</outputInterval>
+    <outputInterval>5.e1</outputInterval>
 -->
     <save label="p.x"/>
     <save label="p.particleID"/>
@@ -96,9 +98,10 @@
     <save label="p.scalefactor"/>
     <save label="p.concentration"/>
     <save label="p.stress"/>
-		<!--
     <save label="p.loadCurveID"/>
-		-->
+    <save label="p.diffusivity"/>
+    <!--
+    -->
     <save label="g.mass"/>
     <save label="g.acceleration"/>
     <save label="g.concentration"/>
@@ -114,9 +117,9 @@
   <MPM>
       <time_integrator>explicit</time_integrator>
       <interpolator>linear</interpolator>
-		<!--
       <use_load_curves> true </use_load_curves>
-		-->
+    <!--
+    -->
       <do_scalar_diffusion>true</do_scalar_diffusion>
   </MPM>
   <AMR>
@@ -131,11 +134,11 @@
   <MaterialProperties>
      <MPM>
     <material name="pillar1">
-         <density>   2330</density>
+         <density>   2.330</density>
          <melt_temp> 2000.0 </melt_temp>
          <constitutive_model type="rf_elastic_plastic"> 
-           <bulk_modulus>            4.8e4    </bulk_modulus>
-           <shear_modulus>           3.3e4    </shear_modulus>
+           <bulk_modulus>            48    </bulk_modulus>
+           <shear_modulus>           33    </shear_modulus>
            <volume_expansion_coeff>  0.56     </volume_expansion_coeff>
            <!-- Temperature is not currently used in this model, -->
            <!-- Keep initial material Temperature set to 298.0 -->
@@ -159,7 +162,7 @@
            </equation_of_state>
 
            <flow_model type = "johnson_cook">
-             <A> 2.4e3 </A>
+             <A> 2.4 </A>
              <B> 0.0    </B>
              <C> 0.0    </C>
              <n> 0.0    </n>
@@ -173,15 +176,15 @@
          <specific_heat>5</specific_heat>
 
          <diffusion_model type = "non_linear1">
-           <diffusivity>  1.0e-3   </diffusivity>
+           <diffusivity>  1.0e-9   </diffusivity>
            <max_concentration> 1.0 </max_concentration>
            <tuning1> 1.95 </tuning1>
-           <tuning2> 1.0 </tuning2>
+           <tuning2> 1000.0 </tuning2>
          </diffusion_model>
          <geom_object>
            <box label = "pillar1">
-             <min>[0.0,    0.0,    0.0]</min> <!-- units in mm -->
-             <max>[0.5e-5, 2.0e-5, 0.05e-5]</max> <!-- units in mm -->
+             <min>[0.0,    0.0,     0.0]</min>
+             <max>[0.5e-2, 0.25e-2, 0.05e-2]</max>
            </box>
            <res>[2,2,1]</res>
            <velocity>[0.0,0.0,0.0]</velocity>
@@ -204,19 +207,19 @@
        <scalar_flux>
          <geom_object>
            <box label = "y+">
-             <min>[0.0,    1.995e-5, 0.0]</min>
-             <max>[0.5e-5, 2.000e-5, 0.05e-5]</max>
+             <min>[0.0,    0.249e-2, 0.0]</min>
+             <max>[0.5e-2, 0.250e-2, 0.05e-2]</max>
            </box>
          </geom_object>
          <load_curve>
            <id>1</id>
            <time_point>
              <time> 0 </time>
-             <load> 1.e3 </load>
+             <load> 1.e-6 </load>
            </time_point>
            <time_point>
              <time> 1.e12 </time>
-             <load> 1.e3 </load>
+             <load> 1.e-6 </load>
            </time_point>
          </load_curve>
        </scalar_flux>
@@ -254,8 +257,8 @@
     <Level>
       <Box label="1">
         <lower>[0.0,    0.0,    0.0]    </lower> 
-        <upper>[0.5e-5, 3.0e-5, 0.05e-5]</upper>
-        <resolution>[1, 6, 1]        </resolution>
+        <upper>[0.25e-2, 0.5e-2, 0.05e-2]</upper>
+        <resolution>[20, 40, 1]        </resolution>
         <extraCells>[0, 0, 0]          </extraCells>
         <patches>[1,1,1]               </patches>
       </Box>
