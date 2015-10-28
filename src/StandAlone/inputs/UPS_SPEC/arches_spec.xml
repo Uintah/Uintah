@@ -1051,6 +1051,7 @@
                                                                         constant,
                                                                         coal_density,
                                                                         rate_deposition,
+                                                                        deposition_velocity,
                                                                         coal_temperature_nebo,
                                                                         coal_temperature,
                                                                         coal_mass_clip,
@@ -1071,6 +1072,9 @@
             <!-- deposition model -->
             <Melting_Temperature        spec="REQUIRED DOUBLE 'positive'"
                                         need_applies_to="type rate_deposition"/>       <!-- temperature where probability of melting is 1 -->
+            <!-- deposition model -->
+            <t_start                    spec="REQUIRED DOUBLE 'positive'"
+                                        need_applies_to="type deposition_velocity"/>       <!-- simulation time to start time-averaging -->
             <!-- Simple rate expression -->
             <A                          spec="REQUIRED DOUBLE 'positive'"
                                         need_applies_to="type simple_rate"/>       <!-- Pre-exponential factor -->
