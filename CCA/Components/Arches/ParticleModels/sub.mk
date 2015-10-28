@@ -13,6 +13,7 @@ SRCS += \
 				$(SRCDIR)/CoalTemperatureNebo.cc \
 				$(SRCDIR)/CoalMassClip.cc \
 				$(SRCDIR)/RateDeposition.cc \
+				$(SRCDIR)/DepositionVelocity.cc \
         $(SRCDIR)/TotNumDensity.cc \
         $(SRCDIR)/ParticleModelFactory.cc \
         $(SRCDIR)/FOWYDevol.cc \
