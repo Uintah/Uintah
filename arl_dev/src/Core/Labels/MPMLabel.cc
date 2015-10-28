@@ -256,6 +256,9 @@ MPMLabel::MPMLabel()
   pFluxLabel = VarLabel::create( "p.flux",
 			ParticleVariable<Vector>::getTypeDescription() );
 
+  pDiffusivityLabel = VarLabel::create( "p.diffusivity",
+			ParticleVariable<double>::getTypeDescription() );
+
   // Node Centered Variables
   
   gAccelerationLabel = VarLabel::create( "g.acceleration",
@@ -795,6 +798,7 @@ MPMLabel::~MPMLabel()
   VarLabel::destroy(pConcGradientLabel);
   VarLabel::destroy(pConcGradientLabel_preReloc);
   VarLabel::destroy(pFluxLabel);
+  VarLabel::destroy(pDiffusivityLabel);
   VarLabel::destroy(pPartitionUnityLabel);
 
   VarLabel::destroy(gAccelerationLabel);

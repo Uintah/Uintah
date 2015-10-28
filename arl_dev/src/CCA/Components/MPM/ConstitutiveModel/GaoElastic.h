@@ -50,7 +50,7 @@ namespace Uintah {
   class MPMFlags;
 
   //*********************************************************
-	// Reactive Flow is a major refactor of the below model
+  // Reactive Flow is a major refactor of the below model
   /////////////////////////////////////////////////////////////////////////////
   /*!
     \class ElasticPlasticHP

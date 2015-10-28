@@ -61,6 +61,7 @@ PSELIBS := \
         $(COMPONENTS)/ProblemSpecification \
         $(COMPONENTS)/Solvers              \
         $(COMPONENTS)/SwitchingCriteria    \
+        $(COMPONENTS)/Schedulers           \
         $(WASATCH)                         \
         $(MORE_LIBS)
 
