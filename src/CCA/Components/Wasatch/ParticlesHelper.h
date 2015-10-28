@@ -268,6 +268,9 @@ namespace Uintah {
     virtual void sync_particle_position( const Uintah::ProcessorGroup*,
                                          const Uintah::PatchSubset* patches, const Uintah::MaterialSubset* matls,
                                          Uintah::DataWarehouse* old_dw, Uintah::DataWarehouse* new_dw, const bool initialization);
+    virtual void sync_particle_position_periodic( const Uintah::ProcessorGroup*,
+                                        const Uintah::PatchSubset* patches, const Uintah::MaterialSubset* matls,
+                                        Uintah::DataWarehouse* old_dw, Uintah::DataWarehouse* new_dw);
 
     virtual void add_particles( const Uintah::ProcessorGroup*,
                                 const Uintah::PatchSubset* patches, const Uintah::MaterialSubset* matls,
