@@ -421,6 +421,7 @@
           <particle_weights             spec="OPTIONAL MULTIPLE_DOUBLES" />    <!-- This is not used (it is for python script) -->
           <small_weights                spec="OPTIONAL MULTIPLE_DOUBLES" />    <!-- small value for each scaled weight (used in temperature calculation -->
           <density                      spec="REQUIRED DOUBLE" />              <!-- Initial coal density -->
+          <particle_thermal_conductivity       spec="OPTIONAL DOUBLE" />              <!-- Initial coal density -->
           <temperature                  spec="REQUIRED DOUBLE" />              <!-- Initial coal temperature -->
 
 
@@ -1049,6 +1050,8 @@
                                                                         gravity,
                                                                         constant,
                                                                         coal_density,
+                                                                        rate_deposition,
+                                                                        deposition_velocity,
                                                                         coal_temperature_nebo,
                                                                         coal_temperature,
                                                                         coal_mass_clip,
@@ -1066,6 +1069,12 @@
             <IC                         spec="OPTIONAL STRING" />      <!-- base label for which internal coordiante this model affects -->
 
 
+            <!-- deposition model -->
+            <Melting_Temperature        spec="REQUIRED DOUBLE 'positive'"
+                                        need_applies_to="type rate_deposition"/>       <!-- temperature where probability of melting is 1 -->
+            <!-- deposition model -->
+            <t_start                    spec="REQUIRED DOUBLE 'positive'"
+                                        need_applies_to="type deposition_velocity"/>       <!-- simulation time to start time-averaging -->
             <!-- Simple rate expression -->
             <A                          spec="REQUIRED DOUBLE 'positive'"
                                         need_applies_to="type simple_rate"/>       <!-- Pre-exponential factor -->
@@ -1240,6 +1249,7 @@
                                                                            BrownSootFormation_rhoYs,
                                                                            BrownSootFormation_nd,
                                                                            BrownSootFormation_Tar,
+                                                                           SootMassBalance,
                                                                            do_radiation,
                                                                            rmcrt_radiation,
                                                                            bowman_nox,
@@ -1254,9 +1264,10 @@
             <!-- Specs for BrownSootFormation model -->
             <!-- mixture_fraction_label, and temperature_label are also required
                  but are listed below as they span other sources -->
-            <tar_label                  spec="OPTIONAL STRING" need_applies_to="type BrownSootFormation_rhoYs, BrownSootFormation_nd, BrownSootFormation_Tar" />
-            <Ysoot_label                spec="OPTIONAL STRING" need_applies_to="type BrownSootFormation_rhoYs, BrownSootFormation_nd, BrownSootFormation_Tar" />
-            <Ns_label                   spec="OPTIONAL STRING" need_applies_to="type BrownSootFormation_rhoYs, BrownSootFormation_nd, BrownSootFormation_Tar" />
+            <tar_label                  spec="OPTIONAL STRING" need_applies_to="type BrownSootFormation_rhoYs, BrownSootFormation_nd, BrownSootFormation_Tar, SootMassBalance" />
+            <Ysoot_label                spec="OPTIONAL STRING" need_applies_to="type BrownSootFormation_rhoYs, BrownSootFormation_nd, BrownSootFormation_Tar, SootMassBalance" />
+            <Ns_label                   spec="OPTIONAL STRING" need_applies_to="type BrownSootFormation_rhoYs, BrownSootFormation_nd, BrownSootFormation_Tar, SootMassBalance" />
+            <soot_off_gas_label   	spec="OPTIONAL STRING" need_applies_to="type SootMassBalance" />
 
             <!-- Specs for coal gas devol model -->
             <devol_model_name           spec="REQUIRED STRING" need_applies_to="type coal_gas_devol" />
@@ -1288,7 +1299,8 @@
             <mixture_fraction_label     spec="REQUIRED STRING" need_applies_to="type dissipation_src,
                                                                                      BrownSootFormation_rhoYs,
                                                                                      BrownSootFormation_nd,
-                                                                                     BrownSootFormation_Tar"/> <!-- mixture fraction label -->
+                                                                                     BrownSootFormation_Tar,
+                                                                                     SootMassBalance"/> <!-- mixture fraction label -->
             <gradmixfrac_label          spec="REQUIRED STRING" need_applies_to="type dissipation_src"/> <!-- label for the gradient of the mixture fraction -->
             <D                          spec="REQUIRED DOUBLE" need_applies_to="type dissipation_src"/> <!-- Molecular diffusivity (?) -->
             <turb_visc_label            spec="OPTIONAL STRING" need_applies_to="type dissipation_src"/> <!-- label for the turbulent viscosity. Default = turb_viscosity -->
@@ -1364,6 +1376,7 @@
               <solveDivQ                 spec="OPTIONAL BOOLEAN"/>
               <applyFilter               spec="OPTIONAL BOOLEAN"/>
               <rayDirSampleAlgo          spec="OPTIONAL STRING 'naive Naive LatinHyperCube'"/>
+              <cellTypeCoarsenLogic      spec="OPTIONAL STRING 'ROUNDDOWN ROUNDUP"/>
               <ignore_BC_bulletproofing  spec="OPTIONAL BOOLEAN"/>
 
               <algorithm                spec="OPTIONAL NO_DATA" attribute1="type REQUIRED STRING 'dataOnion RMCRT_coarseLevel singleLevel'">
@@ -1429,7 +1442,8 @@
                                                                                      bowman_nox,
                                                                                      BrownSootFormation_rhoYs,
                                                                                      BrownSootFormation_nd,
-                                                                                     BrownSootFormation_Tar"/> <!-- temperature label (default = temperature) -->
+                                                                                     BrownSootFormation_Tar,
+                                                                                     SootMassBalance"/> <!-- temperature label (default = temperature) -->
             <density_label              spec="OPTIONAL STRING" need_applies_to="type moment2_mixture_fraction_src,
                                                                                      dissipation_src,
                                                                                      westbrook_dryer,
@@ -1551,7 +1565,9 @@
                                                                           ShaddixHeatTransfer,
                                                                           EnthalpyShaddix,
                                                                           MaximumTemperature,
+                                                                          Thermophoresis,
                                                                           CharOxidationShaddix,
+                                                                          Deposition,
                                                                           SimpleBirth'">
 
             <ICVars                     spec="OPTIONAL NO_DATA"> <!-- block containing list of internal coordinates the DQMOM model depends on -->
@@ -1575,18 +1591,17 @@
             <!-- Constant Model -->
             <constant                   spec="OPTIONAL DOUBLE"/>
 
-            <!-- Drag -->
+            <!-- Drag, Thermophoresis -->
             <direction                  spec="REQUIRED STRING 'x,X,y,Y,z,Z'"
-                                        need_applies_to="type Drag"/>
-
+                                        need_applies_to="type Drag,Thermophoresis"/>
             <!-- Simple Birth -->
             <small_weight               spec="REQUIRED DOUBLE"
                                         need_applies_to="type SimpleBirth"/> <!-- The smallest weight value allowed -->
             <is_weight                  spec="OPTIONAL NO_DATA"
-                                        need_applies_to="type SimpleBirth"/> <!-- Model birth term for the weight -->
+                                        need_applies_to="type SimpleBirth,Deposition"/> <!-- Model birth term for the weight -->
             <abscissa                   spec="OPTIONAL NO_DATA"
                                         attribute1="label REQUIRED STRING"
-                                        need_applies_to="type SimpleBirth"/> <!-- If not a weight, then the root of the abscissa name -->
+                                        need_applies_to="type SimpleBirth,Deposition"/> <!-- If not a weight, then the root of the abscissa name -->
 
 
           </model>

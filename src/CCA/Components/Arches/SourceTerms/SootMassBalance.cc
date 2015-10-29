@@ -147,9 +147,13 @@ SootMassBalance::computeSource( const ProcessorGroup* pc,
     which_dw->get( temperature    , temperature_label    , matlIndex , patch , gn, 0 );
     which_dw->get( rho            , rho_label            , matlIndex , patch , gn, 0 );
 
+    delt_vartype DT;
+    old_dw->get(DT, _shared_state->get_delt_label());
+
     for (CellIterator iter=patch->getCellIterator(); !iter.done(); iter++){
         
       IntVector c = *iter;
+      double delta_t = DT;
       double XO2 = 0.0;
       double XCO2 = 0.0;
       if (mix_mol_weight[c] > 1e-10){
@@ -170,6 +174,7 @@ SootMassBalance::computeSource( const ProcessorGroup* pc,
                  rhoYsoot,
                  nd,
 		 rhoYO2,
+		 delta_t,
                  rate[c]
                 );
        if (c==IntVector(75,75,75)){
@@ -213,6 +218,7 @@ void SootMassBalance::coalSootRR(const double P,
                                           const double rhoYs,
                                           const double nd,
                                           const double rhoYO2,
+					  const double dt,
 				            double &Off_Gas
                                          ) {
     
@@ -246,7 +252,10 @@ double rot = abs(rhoYt*rhoYO2)*Aot*exp(-Eot/Rgas/T);             ///< tar oxidat
 //-------------------------------------
                                                                                           
 Off_Gas = rgs + ros + rgt + rot ;                                      ///< #/m3*s
-                                                                
+    
+/// Check if the rate is consuming all the soot and tar in the system, and clip it if it is so the soot/tar never go negative.
+Off_Gas = std::min( rhoYs/dt + rhoYt/dt , Off_Gas);
+                                                            
 return;
     
 }

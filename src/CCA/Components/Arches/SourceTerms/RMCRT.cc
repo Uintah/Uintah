@@ -409,11 +409,15 @@ RMCRT_Radiation::sched_initialize( const LevelP& level,
   for (int l = 0; l < maxLevels; l++) {
     const LevelP& level = grid->getLevel(l);
     if( level->getIndex() != _archesLevelIndex ){
+      // Set the BC on the coarse level
       _boundaryCondition->sched_cellTypeInit( sched, level, _sharedState->allArchesMaterials() );
+      
+      // Coarsen the interior cells
+       _RMCRT->sched_computeCellType ( level, sched, Ray::modifiesVar);
     }
   }
 
-    sched_fluxInit( level, sched );
+  sched_fluxInit( level, sched );
 }
 
 //______________________________________________________________________
@@ -738,7 +742,8 @@ RMCRT_Radiation::sched_fluxInit( const LevelP& level,
     sched->addTask( tsk, level->eachPatch(), _sharedState->allArchesMaterials() );
   }
 }
-
+//______________________________________________________________________
+//
 void
 RMCRT_Radiation::fluxInit( const ProcessorGroup*,
                              const PatchSubset* patches,

@@ -97,7 +97,7 @@ __global__ void rayTraceKernel( dim3 dimGrid,
   GPUGridVariable<double> radiationVolQ;
 
 //  sigmaT4_gdw->print();
-  
+
   sigmaT4_gdw->getLevel( sigmaT4OverPi, "sigmaT4",  matl, levelIndx);
   cellType_gdw->getLevel( cellType,     "cellType", matl, levelIndx);
 
@@ -127,12 +127,12 @@ __global__ void rayTraceKernel( dim3 dimGrid,
       }
     }
   }
-  
-  //__________________________________  
-  //  Sanity checks                     
+
+  //__________________________________
+  //  Sanity checks
 #if 0
   if (isThread0()) {
-   printf("  GPUVariable Sanity check level: %i, patch: %i \n",levelIndx, patch.ID); 
+   printf("  GPUVariable Sanity check level: %i, patch: %i \n",levelIndx, patch.ID);
   }
 #endif
   GPUVariableSanityCK(abskg,         patch.loEC, patch.hiEC);
@@ -141,6 +141,8 @@ __global__ void rayTraceKernel( dim3 dimGrid,
 
   double DyDx = patch.dx.y/patch.dx.x;
   double DzDx = patch.dx.z/patch.dx.x;
+
+  bool doLatinHyperCube = (RT_flags.rayDirSampleAlgo == LATIN_HYPER_CUBE);
 
   //______________________________________________________________________
   //           R A D I O M E T E R
@@ -262,20 +264,36 @@ __global__ void rayTraceKernel( dim3 dimGrid,
   //         S O L V E   D I V Q
   //______________________________________________________________________
   if( RT_flags.solveDivQ ){
+    const int nDivQRays = RT_flags.nDivQRays;               // for readability
+
+    //int rand_i[ doLatinHyperCube ? nDivQRays : 0 ];                                        // only needed for LHC scheme
+    const int size = 1000;                                         // FIX ME Todd
+    int rand_i[ size ];                                      // FIX ME TODD
+
     // GPU equivalent of GridIterator loop - calculate sets of rays per thread
     if ( (tidX >= patch.lo.x) && (tidY >= patch.lo.y) && (tidX < patch.hi.x) && (tidY < patch.hi.y) ) { // patch boundary check
       #pragma unroll
-      for (int z = patch.lo.z; z < patch.hi.z; z++) { // loop through z slices
+      for (int z = patch.lo.z; z < patch.hi.z; z++) {       // loop through z slices
 
-        GPUIntVector origin = make_int3(tidX, tidY, z);  // for each thread
+        GPUIntVector origin = make_int3(tidX, tidY, z);     // for each thread
         double sumI = 0;
+
+        if (doLatinHyperCube){
+          randVectorDevice(rand_i, size,randNumStates);
+        }
 
         //__________________________________
         // ray loop
         #pragma unroll
-        for (int iRay = 0; iRay < RT_flags.nDivQRays; iRay++) {
 
-          GPUVector direction_vector = findRayDirectionDevice( randNumStates );
+        for (int iRay = 0; iRay < nDivQRays; iRay++) {
+
+          GPUVector direction_vector;
+          if ( doLatinHyperCube ){                          // Latin-Hyper-Cube sampling
+            direction_vector = findRayDirectionHyperCubeDevice(randNumStates, nDivQRays, rand_i[iRay], iRay );
+          }else{                                            // Naive Monte-Carlo sampling
+            direction_vector = findRayDirectionDevice( randNumStates );
+          }
 
           GPUVector rayOrigin = rayOriginDevice( randNumStates, origin, DyDx,  DzDx, RT_flags.CCRays );
 
@@ -374,7 +392,7 @@ __global__ void rayTraceDataOnionKernel( dim3 dimGrid,
 
   //__________________________________
   //  fine level data for the region of interest.
-  //  ToDo:  replace get with getRegion() calls so 
+  //  ToDo:  replace get with getRegion() calls so
   //  so the halo can be > 0
   if ( RT_flags.whichROI_algo == patch_based ) {
 
@@ -462,7 +480,7 @@ __global__ void rayTraceDataOnionKernel( dim3 dimGrid,
 
           GPUVector rayOrigin = rayOriginDevice( randNumStates, origin, d_levels[fineL].DyDx, d_levels[fineL].DzDx , RT_flags.CCRays );
 
-          updateSumI_MLDevice<T>(ray_direction, rayOrigin, origin, gridP, 
+          updateSumI_MLDevice<T>(ray_direction, rayOrigin, origin, gridP,
                                  fineLevel_ROI_Lo, fineLevel_ROI_Hi,
                                  regionLo, regionHi,
                                  sigmaT4OverPi, abskg, cellType, sumI, randNumStates, RT_flags);
@@ -511,6 +529,51 @@ __device__ GPUVector findRayDirectionDevice( curandState* randNumStates )
   return dirVector;
 }
 
+
+//______________________________________________________________________
+//
+__device__ GPUVector findRayDirectionHyperCubeDevice(curandState* randNumStates,
+                                                     const int nDivQRays,
+                                                     const int bin_i,
+                                                     const int bin_j)
+{
+  // Random Points On Sphere
+  double plusMinus_one = 2.0 *(randDblExcDevice( randNumStates ) + (double) bin_i)/nDivQRays - 1.0;
+
+  // Radius of circle at z
+  double r = sqrt(1.0 - plusMinus_one * plusMinus_one);
+
+  // Uniform betwen 0-2Pi
+  double phi = 2.0 * M_PI * (randDblExcDevice( randNumStates ) + (double) bin_j)/nDivQRays;
+
+  GPUVector dirVector;
+  dirVector[0] = r*cos(phi);                       // Convert to cartesian
+  dirVector[1] = r*sin(phi);
+  dirVector[2] = plusMinus_one;
+
+  return dirVector;
+}
+//______________________________________________________________________
+//  Populate vector with integers which have been randomly shuffled.
+//  This is sampling without replacement and can be used to in a
+//  Latin-Hyper-Cube sampling scheme.  The algorithm used is the
+//  modern Fisher-Yates shuffle.
+//______________________________________________________________________
+__device__ void randVectorDevice( int int_array[],
+                                  const int size,
+                                  curandState* randNumStates ){
+
+  for (int i=0; i<size; i++){   // populate sequential array from 0 to size-1
+    int_array[i] = i;
+  }
+
+  for (int i=size-1; i>0; i--){  // fisher-yates shuffle starting with size-1
+    int rand_int =  randIntDevice(randNumStates, i);    // Random number between 0 & i
+    int swap = int_array[i];
+    int_array[i] = int_array[rand_int];
+    int_array[rand_int] = swap;
+  }
+}
 //______________________________________________________________________
 // Compute the Ray direction from a cell face
 __device__ void rayDirection_cellFaceDevice( curandState* randNumStates,
@@ -522,8 +585,8 @@ __device__ void rayDirection_cellFaceDevice( curandState* randNumStates,
                                              double& cosTheta )
 {
   // Surface Way to generate a ray direction from the positive z face
-  double phi = 2 * M_PI * randDevice(randNumStates);  // azimuthal angle.  Range of 0 to 2pi
-  double theta = acos(randDevice(randNumStates));     // polar angle for the hemisphere
+  double phi = 2 * M_PI * randDblDevice(randNumStates);  // azimuthal angle.  Range of 0 to 2pi
+  double theta = acos(randDblDevice(randNumStates));     // polar angle for the hemisphere
   cosTheta = cos(theta);
   double sinTheta = sin(theta);
 
@@ -543,16 +606,16 @@ __device__ void rayDirection_cellFaceDevice( curandState* randNumStates,
 //______________________________________________________________________
 //
 __device__ GPUVector rayOriginDevice( curandState* randNumStates,
-                                        const GPUIntVector origin,
-                                        const double DyDx,
-                                        const double DzDx,
-                                        const bool useCCRays )
+                                      const GPUIntVector origin,
+                                      const double DyDx,
+                                      const double DzDx,
+                                      const bool useCCRays )
 {
   GPUVector rayOrigin;
   if (useCCRays == false) {
-    rayOrigin.x = (double)origin.x + randDevice(randNumStates);
-    rayOrigin.y = (double)origin.y + randDevice(randNumStates) * DyDx;
-    rayOrigin.z = (double)origin.z + randDevice(randNumStates) * DzDx;
+    rayOrigin.x = (double)origin.x + randDblDevice(randNumStates);
+    rayOrigin.y = (double)origin.y + randDblDevice(randNumStates) * DyDx;
+    rayOrigin.z = (double)origin.z + randDblDevice(randNumStates) * DzDx;
   }
   else {
     rayOrigin.x = origin.x + 0.5;
@@ -573,9 +636,9 @@ __device__ void rayLocation_cellFaceDevice( curandState* randNumStates,
                                             GPUVector& location )
 {
   GPUVector tmp;
-  tmp[0] = randDevice(randNumStates);
+  tmp[0] = randDblDevice(randNumStates);
   tmp[1] = 0;
-  tmp[2] = randDevice(randNumStates) * DzDx;
+  tmp[2] = randDblDevice(randNumStates) * DzDx;
 
   // Put point on correct face
   location[0] = tmp[indexOrder[0]] + (double)shift[0];
@@ -1016,15 +1079,15 @@ __syncthreads();
       // Logic for moving between levels
       //  - Currently you can only move from fine to coarse level
       //  - Don't jump levels if ray is at edge of domain
-      
+
       GPUPoint pos = d_levels[L].getCellPosition(cur);         // position could be outside of domain
       in_domain = gridP.domain_BB.inside(pos);
 
-      //in_domain = (cellType[L][cur] == d_flowCell);    // use this when direct comparison with 1L resullts      
-      
+      //in_domain = (cellType[L][cur] == d_flowCell);    // use this when direct comparison with 1L resullts
+
       bool ray_outside_ROI    = ( containsCellDevice(fineLevel_ROI_Lo, fineLevel_ROI_Hi, cur, dir) == false );
       bool ray_outside_Region = ( containsCellDevice(regionLo[L], regionHi[L], cur, dir) == false );
-      
+
       bool jumpFinetoCoarserLevel   = ( onFineLevel &&  ray_outside_ROI && in_domain );
       bool jumpCoarsetoCoarserLevel = ( (onFineLevel == false) && ray_outside_Region && (L > 0) && in_domain );
 
@@ -1033,7 +1096,7 @@ __syncthreads();
         printf( "        Ray: [%i,%i,%i] **jumpFinetoCoarserLevel %i jumpCoarsetoCoarserLevel %i containsCell: %i ", cur.x, cur.y, cur.z, jumpFinetoCoarserLevel, jumpCoarsetoCoarserLevel,
             containsCellDevice(fineLevel_ROI_Lo, fineLevel_ROI_Hi, cur, dir));
         printf( " onFineLevel: %i ray_outside_ROI: %i ray_outside_Region: %i in_domain: %i\n", onFineLevel, ray_outside_ROI, ray_outside_Region,in_domain );
-        printf( " L: %i regionLo: [%i,%i,%i], regionHi: [%i,%i,%i]\n",L,regionLo[L].x,regionLo[L].y,regionLo[L].z, regionHi[L].x,regionHi[L].y,regionHi[L].z); 
+        printf( " L: %i regionLo: [%i,%i,%i], regionHi: [%i,%i,%i]\n",L,regionLo[L].x,regionLo[L].y,regionLo[L].z, regionHi[L].x,regionHi[L].y,regionHi[L].z);
       }
 #endif
 
@@ -1152,11 +1215,11 @@ __syncthreads();
   }  // threshold while loop.
 }  // end of updateSumI function
 
-//---------------------------------------------------------------------------
+//______________________________________________________________________
 // Returns random number between 0 & 1.0 including 0 & 1.0
 // See src/Core/Math/MersenneTwister.h for equation
-//---------------------------------------------------------------------------
-__device__ double randDevice(curandState* globalState)
+//______________________________________________________________________
+__device__ double randDblDevice(curandState* globalState)
 {
   int tid = threadIdx.x +  blockDim.x * threadIdx.y + (blockDim.x * blockDim.y) * threadIdx.z;
   curandState localState = globalState[tid];
@@ -1171,10 +1234,10 @@ __device__ double randDevice(curandState* globalState)
 
 }
 
-//---------------------------------------------------------------------------
+//______________________________________________________________________
 // Returns random number between 0 & 1.0 excluding 0 & 1.0
 // See src/Core/Math/MersenneTwister.h for equation
-//---------------------------------------------------------------------------
+//______________________________________________________________________
 __device__ double randDblExcDevice(curandState* globalState)
 {
   int tid = threadIdx.x +  blockDim.x * threadIdx.y + (blockDim.x * blockDim.y) * threadIdx.z;
@@ -1191,6 +1254,18 @@ __device__ double randDblExcDevice(curandState* globalState)
 }
 
 //______________________________________________________________________
+// Returns random integer in [0,n]
+// rnd_integer_from_A_to_B = A + curand() * (B-A);
+//  A = 0
+//______________________________________________________________________
+__device__ int randIntDevice(curandState* globalState,
+                             const int B )
+{
+  double val = randDblDevice( globalState );
+  return val * B;
+}
+
+//______________________________________________________________________
 //  Each thread gets same seed, a different sequence number, no offset
 //  This will create repeatable results.
 __global__ void setupRandNumKernel(curandState* randNumStates)
@@ -1203,12 +1278,12 @@ __global__ void setupRandNumKernel(curandState* randNumStates)
 //  is cell a debug cell
 __device__ bool isDbgCellDevice( GPUIntVector me )
 {
-  int size = 1;  
+  int size = 1;
   GPUIntVector dbgCell[1];
   dbgCell[0] = make_int3(10,10,10);
-  
- 
-  
+
+
+
   for (int i = 0; i < size; i++) {
     if( me == dbgCell[i]){
       return true;
@@ -1227,7 +1302,7 @@ __device__ void GPUVariableSanityCK(const GPUGridVariable<T>& Q,
   if (isThread0()) {
     GPUIntVector varLo = Q.getLowIndex();
     GPUIntVector varHi = Q.getHighIndex();
-    
+
     if( Lo < varLo || varHi < Hi){
       printf ( "ERROR: GPUVariableSanityCK \n");
       printf("  Variable:          varLo:[%i,%i,%i], varHi[%i,%i,%i]\n", varLo.x, varLo.y, varLo.z, varHi.x, varHi.y, varHi.z);
@@ -1248,7 +1323,7 @@ __device__ void GPUVariableSanityCK(const GPUGridVariable<T>& Q,
             __threadfence();
             asm("trap;");
           }
-          
+
         }  // k loop
       }  // j loop
     }  // i loop
@@ -1323,26 +1398,26 @@ __host__ void launchRayTraceDataOnionKernel( dim3 dimGrid,
                                              GPUDataWarehouse* cellType_gdw,
                                              GPUDataWarehouse* old_gdw,
                                              GPUDataWarehouse* new_gdw )
-{  
+{
   // copy regionLo & regionHi to device memory
   int maxLevels = gridP.maxLevels;
-  
+
   int3* dev_regionLo;
   int3* dev_regionHi;
   size_t size = d_MAXLEVELS *  sizeof(int3);
   CUDA_RT_SAFE_CALL( cudaMalloc( (void**)& dev_regionLo, size) );
   CUDA_RT_SAFE_CALL( cudaMalloc( (void**)& dev_regionHi, size) );
-  
+
   int3 myLo[d_MAXLEVELS];
   int3 myHi[d_MAXLEVELS];
   for (int l = 0; l < maxLevels; ++l) {
     myLo[l] = levelP[l].regionLo;        // never use levelP regionLo or hi in the kernel.
     myHi[l] = levelP[l].regionHi;        // They are different on each patch
   }
-  
+
   CUDA_RT_SAFE_CALL( cudaMemcpy( dev_regionLo, myLo, size, cudaMemcpyHostToDevice) );
-  CUDA_RT_SAFE_CALL( cudaMemcpy( dev_regionHi, myHi, size, cudaMemcpyHostToDevice) );  
-  
+  CUDA_RT_SAFE_CALL( cudaMemcpy( dev_regionHi, myHi, size, cudaMemcpyHostToDevice) );
+
 
   //__________________________________
   // copy levelParams array to constant memory on device

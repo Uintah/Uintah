@@ -194,6 +194,9 @@ template void coarsenDriver_massWeighted<double>( const IntVector & cl, const In
 template void coarsenDriver_massWeighted<Vector>( const IntVector & cl, const IntVector & ch, const IntVector & fl, const IntVector & fh, const IntVector & refinementRatio,
                                                   const Level* coarseLevel, constCCVariable<double>& cMass, constCCVariable<Vector>& fine_q_CC, CCVariable<Vector>& coarse_q_CC );
                                                   
+template void fineToCoarseOperator<int>(CCVariable<int>& q_CC, const bool computesAve, const VarLabel* varLabel, const int indx, DataWarehouse* new_dw,
+                                   const Patch* coarsePatch, const Level* coarseLevel, const Level* fineLevel);
+                                                  
 template void fineToCoarseOperator<double>(CCVariable<double>& q_CC, const bool computesAve, const VarLabel* varLabel, const int indx, DataWarehouse* new_dw,
                                    const Patch* coarsePatch, const Level* coarseLevel, const Level* fineLevel);
                                    

@@ -12,7 +12,9 @@ SRCS += \
 				$(SRCDIR)/CoalTemperature.cc \
 				$(SRCDIR)/CoalTemperatureNebo.cc \
 				$(SRCDIR)/CoalMassClip.cc \
-				$(SRCDIR)/TotNumDensity.cc \
+				$(SRCDIR)/RateDeposition.cc \
+				$(SRCDIR)/DepositionVelocity.cc \
+        $(SRCDIR)/TotNumDensity.cc \
         $(SRCDIR)/ParticleModelFactory.cc \
         $(SRCDIR)/FOWYDevol.cc \
         $(SRCDIR)/ShaddixOxidation

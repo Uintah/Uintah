@@ -41,7 +41,7 @@
 #include <include/sci_defs/uintah_testdefs.h.in>
 
 // TURN ON debug flag in src/Core/Math/MersenneTwister.h to compare with Ray:CPU
-#define DEBUG -9      // 1: divQ, 2: boundFlux, 3: scattering
+#define DEBUG -9     // 1: divQ, 2: boundFlux, 3: scattering
 #define CUDA_PRINTF   // increase the printf buffer
 
 /*______________________________________________________________________
@@ -58,12 +58,12 @@ Critical:
 Optimizations:
   - Spatial scheduling, used by radiometer.  Only need to execute & communicate
     variables on a subset of patches.
-  - Temporal scheduling:  To reduce task graph recompilations create two task graphs 
+  - Temporal scheduling:  To reduce task graph recompilations create two task graphs
     that can be swapped while runninng.
   - Create a LevelDB.  Push an pull the communicated variables
   - DO: Reconstruct the fine level using interpolation and coarse level values
   - Investigate why floats are slow.
-  -  
+  -
 ______________________________________________________________________*/
 
 
@@ -109,6 +109,7 @@ Ray::Ray( const TypeDescription::Type FLT_DBL ) : RMCRTCommon( FLT_DBL)
   d_dbgCells.push_back( IntVector(36,0,0) );
   d_halo          = IntVector(-9,-9,-9);
   d_rayDirSampleAlgo = NAIVE;
+  d_cellTypeCoarsenLogic = ROUNDUP;
 
   //_____________________________________________
   //   Ordering for Surface Method
@@ -178,7 +179,7 @@ Ray::problemSetup( const ProblemSpecP& prob_spec,
   d_sharedState = sharedState;
   ProblemSpecP rmcrt_ps = rmcrtps;
   string rayDirSampleAlgo;
-  
+
   rmcrt_ps->getWithDefault( "nDivQRays" ,       d_nDivQRays ,        10 );             // Number of rays per cell used to compute divQ
   rmcrt_ps->getWithDefault( "Threshold" ,       d_threshold ,      0.01 );             // When to terminate a ray
   rmcrt_ps->getWithDefault( "randomSeed",       d_isSeedRandom,    true );             // random or deterministic seed.
@@ -192,12 +193,12 @@ Ray::problemSetup( const ProblemSpecP& prob_spec,
   rmcrt_ps->getWithDefault( "applyFilter"    ,  d_applyFilter,      false );           // Allow filtering of boundFlux and divQ.
   rmcrt_ps->getWithDefault( "rayDirSampleAlgo", rayDirSampleAlgo,   "naive" );         // Change Monte-Carlo Sampling technique for RayDirection.
 
-
-  if (rayDirSampleAlgo == "LatinHypreCube" ){
+  proc0cout << "__________________________________ " << endl;
+  if (rayDirSampleAlgo == "LatinHyperCube" ){
     d_rayDirSampleAlgo = LATIN_HYPER_CUBE;
-    proc0cout << " RMCRT:  Using Latin Hyper Cube method for selecting ray directions.";
+    proc0cout << "  RMCRT:  Using Latin Hyper Cube method for selecting ray directions.";
   } else{
-    proc0cout << " RMCRT:  Using traditional Monte-Carlo method for selecting ray directions.";
+    proc0cout << "  RMCRT:  Using traditional Monte-Carlo method for selecting ray directions.";
   }
 
   //__________________________________
@@ -215,33 +216,30 @@ Ray::problemSetup( const ProblemSpecP& prob_spec,
   proc0cout<< "sigmaScat: " << d_sigmaScat << endl;
   if(d_sigmaScat>0){
     ostringstream warn;
-    warn << "ERROR:  In order to run a scattering case, you must use the following in your configure line..." << endl;
-    warn << "--enable-ray-scatter" << endl;
-    warn << "If you wish to run a scattering case, please modify your configure line and re-configure and re-compile." << endl;
-    warn << "If you wish to run a non-scattering case, please remove the line containing <sigmaScat> from your input file." << endl;
+    warn << " ERROR:  To run a scattering case, you must use the following in your configure line..." << endl;
+    warn << "                 --enable-ray-scatter" << endl;
+    warn << "         To run a non-scattering case, please remove the line containing <sigmaScat> from your input file." << endl;
     throw ProblemSetupException(warn.str(), __FILE__, __LINE__);
   }
 #endif
 
 #ifdef RAY_SCATTER
+  proc0cout<< endl << "  RMCRT:  ray scattering in enabled" << endl;
   if(d_sigmaScat<1e-99){
-    proc0cout << "WARNING:  You are running a non-scattering case, yet you have the following in your configure line..." << endl;
-    proc0cout << "--enable-ray-scatter" << endl;
-    proc0cout << "As such, this task will run slower than is necessary." << endl;
-    proc0cout << "If you wish to run a scattering case, please specify a positive value greater than 1e-99 for the scattering coefficient." << endl;
-    proc0cout << "If you wish to run a non-scattering case, please remove --enable-ray-scatter from your configure line and re-configure and re-compile" << endl;
+    proc0cout << "  WARNING:  You are running a non-scattering case, and you have the following in your configure line..." << endl;
+    proc0cout << "                    --enable-ray-scatter" << endl;
+    proc0cout << "            This will run slower than necessary." << endl;
+    proc0cout << "            You can remove --enable-ray-scatter from your configure line and re-configure and re-compile" << endl;
   }
-  proc0cout<< endl << " RMCRT:  ray scattering in enabled" << endl;
 #endif
 
   if( d_nDivQRays == 1 ){
-    proc0cout << "RMCRT: WARNING: You have specified only 1 ray to compute the radiative flux divergence." << endl;
-    proc0cout << "For better accuracy and stability, specify nDivQRays greater than 2." << endl;
+    proc0cout << "  RMCRT: WARNING: You have specified only 1 ray to compute the radiative flux divergence." << endl;
+    proc0cout << "                  For better accuracy and stability, specify nDivQRays greater than 2." << endl;
   }
 
   if( d_nFluxRays == 1 ){
-    proc0cout << "RMCRT: WARNING: You have specified only 1 ray to compute radiative fluxes." << endl;
-    proc0cout << "For better accuracy and stability, specify nFluxRays greater than 2." << endl;
+    proc0cout << "  RMCRT: WARNING: You have specified only 1 ray to compute radiative fluxes." << endl;
   }
 
 
@@ -249,7 +247,7 @@ Ray::problemSetup( const ProblemSpecP& prob_spec,
   //  Read in the algorithm section
   bool isMultilevel   = false;
   Algorithm algorithm = singleLevel;
-  
+
   ProblemSpecP alg_ps = rmcrt_ps->findBlock("algorithm");
 
   if (alg_ps){
@@ -296,10 +294,26 @@ Ray::problemSetup( const ProblemSpecP& prob_spec,
       alg_ps->require( "orderOfInterpolation", d_orderOfInterpolation);
     }
   }
+  
+  //__________________________________
+  //  Logic for coarsening of cellType
+  if (isMultilevel){
+    string tmp = "NULL";
+    rmcrt_ps->get("cellTypeCoarsenLogic", tmp );
+    if (tmp == "ROUNDDOWN"){
+      d_cellTypeCoarsenLogic = ROUNDDOWN;
+      proc0cout << "  RMCRT: When coarsening cellType any partial cell is ROUNDEDDOWN to a FLOW cell" << endl;
+    }
+    
+    if (tmp == "ROUNDUP") {
+      d_cellTypeCoarsenLogic = ROUNDUP;
+      proc0cout << "  RMCRT: When coarsening cellType any partial cell is rounded UP to a INTRUSION cell" << endl;
+    }
+  }
 
   //__________________________________
   //  bulletproofing
-  
+
   if( Parallel::usingDevice() ){              // GPU
     if( (algorithm == dataOnion && d_whichROI_algo != patch_based ) ){
       ostringstream warn;
@@ -308,7 +322,7 @@ Ray::problemSetup( const ProblemSpecP& prob_spec,
       throw ProblemSetupException(warn.str(), __FILE__, __LINE__);
     }
   }
-  
+
   // special conditions when using floats and multi-level
   if ( d_FLT_DBL == TypeDescription::float_type && isMultilevel) {
 
@@ -324,10 +338,10 @@ Ray::problemSetup( const ProblemSpecP& prob_spec,
     }
   }
   d_sigma_over_pi = d_sigma/M_PI;
-  
+
 
 //__________________________________
-// Increase the printf buffer size only once!  
+// Increase the printf buffer size only once!
 #ifdef HAVE_CUDA
   #ifdef CUDA_PRINTF
   if( Parallel::usingDevice() && Parallel::getMPIRank() == 0){
@@ -338,8 +352,8 @@ Ray::problemSetup( const ProblemSpecP& prob_spec,
   }
   #endif
 #endif
-  
-  
+  proc0cout << "__________________________________ " << endl;
+
 }
 
 //______________________________________________________________________
@@ -404,13 +418,13 @@ Ray::sched_rayTrace( const LevelP& level,
   Task *tsk = NULL;
 
   if (Parallel::usingDevice()) {          // G P U
-  
-    if(radCalc_freq != 1){                // FIXME    
+
+    if(radCalc_freq != 1){                // FIXME
        ostringstream warn;
        warn << "RMCRT:GPU  A radiation calculation frequency > 1 is not supported\n";
       throw ProblemSetupException(warn.str(), __FILE__, __LINE__);
     }
-  
+
     if ( RMCRTCommon::d_FLT_DBL == TypeDescription::double_type ) {
       tsk = scinew Task( taskname, this, &Ray::rayTraceGPU< double >,
                            modifies_divQ, abskg_dw, sigma_dw, celltype_dw, radCalc_freq );
@@ -604,7 +618,7 @@ Ray::rayTrace( const ProcessorGroup* pg,
           double sumI_prev= 0;
           double sumCos=0;    // used to force sumCostheta/nRays == 0.5 or  sum (d_Omega * cosTheta) == pi
 
-          if (d_rayDirSampleAlgo == LATIN_HYPER_CUBE){   
+          if (d_rayDirSampleAlgo == LATIN_HYPER_CUBE){
             randVector(rand_i, mTwister, origin);
           }
 
@@ -630,12 +644,12 @@ Ray::rayTrace( const ProcessorGroup* pg,
             updateSumI<T>( direction_vector, ray_location, origin, Dx, sigmaT4OverPi, abskg, celltype, size, sumI, mTwister);
 
             sumProjI += cosTheta * (sumI - sumI_prev);   // must subtract sumI_prev, since sumI accumulates intensity
-            sumCos += cosTheta;   
+            sumCos += cosTheta;
 
             sumI_prev = sumI;
 
           } // end of flux ray loop
-          
+
           sumProjI = sumProjI * d_nFluxRays/sumCos/2.0; // This operation corrects for error in the first moment over a half range of the solid angle (Modest Radiative Heat Transfer page 545 1rst edition)
 
           //__________________________________
@@ -664,7 +678,7 @@ Ray::rayTrace( const ProcessorGroup* pg,
     for (CellIterator iter = patch->getCellIterator(); !iter.done(); iter++){
       IntVector origin = *iter;
 
-      if (d_rayDirSampleAlgo == LATIN_HYPER_CUBE){   
+      if (d_rayDirSampleAlgo == LATIN_HYPER_CUBE){
         randVector(rand_i, mTwister, origin);
       }
       double sumI = 0;
@@ -742,14 +756,14 @@ Ray::sched_rayTrace_dataOnion( const LevelP& level,
 
   if (Parallel::usingDevice()) {          // G P U
     taskname = "Ray::rayTraceDataOnionGPU";
-    
-    if(radCalc_freq != 1){                // FIXME    
+
+    if(radCalc_freq != 1){                // FIXME
        ostringstream warn;
        warn << "RMCRT:GPU  A radiation calculation frequency > 1 is not supported\n";
       throw ProblemSetupException(warn.str(), __FILE__, __LINE__);
     }
-    
-    
+
+
     if ( RMCRTCommon::d_FLT_DBL == TypeDescription::double_type ){
       tsk = scinew Task( taskname, this, &Ray::rayTraceDataOnionGPU< double >,
                          modifies_divQ, abskg_dw, sigma_dw, celltype_dw, radCalc_freq );
@@ -789,7 +803,7 @@ Ray::sched_rayTrace_dataOnion( const LevelP& level,
     tsk->requires( sigma_dw,      d_sigmaT4Label,   gac, SHRT_MAX);
     tsk->requires( celltype_dw ,  d_cellTypeLabel , gac, SHRT_MAX);
   }
-  
+
   // TODO This is a temporary fix until we can generalize GPU/CPU carry forward functionality.
   if (!(Uintah::Parallel::usingDevice())) {
     // needed for carry Forward
@@ -809,7 +823,7 @@ Ray::sched_rayTrace_dataOnion( const LevelP& level,
     tsk->requires(abskg_dw,    d_abskgLabel,    allPatches, Task::CoarseLevel,l,allMatls, ND, gac, SHRT_MAX);
     tsk->requires(sigma_dw,    d_sigmaT4Label,  allPatches, Task::CoarseLevel,l,allMatls, ND, gac, SHRT_MAX);
     tsk->requires(celltype_dw, d_cellTypeLabel, allPatches, Task::CoarseLevel,l,allMatls, ND, gac, SHRT_MAX);
-    proc0cout << "WARNING: RMCRT High communication costs on level:" << l 
+    proc0cout << "WARNING: RMCRT High communication costs on level:" << l
               << ".  Variables from every patch on this level are communicated to every patch on the finest level."<< endl;
   }
 
@@ -968,24 +982,24 @@ Ray::rayTrace_dataOnion( const ProcessorGroup* pg,
 
     //__________________________________
     //
-    
+
     vector <int> rand_i( d_rayDirSampleAlgo == LATIN_HYPER_CUBE  ? d_nDivQRays : 0);  // only needed for LHC scheme
 
     for (CellIterator iter = finePatch->getCellIterator(); !iter.done(); iter++){
 
       IntVector origin = *iter;
 
-      if (d_rayDirSampleAlgo == LATIN_HYPER_CUBE){   
+      if (d_rayDirSampleAlgo == LATIN_HYPER_CUBE){
         randVector(rand_i, mTwister, origin);
       }
 /*`==========TESTING==========*/
-#if 0 
+#if 0
       if( isDbgCell(origin) && d_isDbgOn ){
         dbg2.setActive(true);
       }else{
         dbg2.setActive(false);
       }
-      
+
 //      if( origin != d_dbgCell ){
 //        return;
 //     }
@@ -1172,9 +1186,9 @@ void Ray::rayDirection_cellFace( MTRand& mTwister,
   directionVector[2] = tmp[indexOrder[2]] * signOrder[2];
 }
 
- 
+
 //______________________________________________________________________
-//  Uses stochastically selected regions in polar and azimuthal space to  
+//  Uses stochastically selected regions in polar and azimuthal space to
 //  generate the Monte-Carlo directions. Samples Uniformly on a hemisphere
 //  and as hence does not include the cosine in the sample.
 //______________________________________________________________________
@@ -1211,11 +1225,11 @@ Ray::rayDirectionHyperCube_cellFace(MTRand& mTwister,
   directionVector[0] = tmp[indexOrder[0]] * signOrder[0];
   directionVector[1] = tmp[indexOrder[1]] * signOrder[1];
   directionVector[2] = tmp[indexOrder[2]] * signOrder[2];
-  
+
 }
 
 //______________________________________________________________________
-//  Uses stochastically selected regions in polar and azimuthal space to  
+//  Uses stochastically selected regions in polar and azimuthal space to
 //  generate the Monte-Carlo directions.  Samples uniformly on a sphere.
 //______________________________________________________________________
 Vector
@@ -1859,12 +1873,18 @@ void Ray::coarsen_Q ( const ProcessorGroup*,
 //
 void Ray::sched_computeCellType ( const LevelP& level,
                                   SchedulerP& sched,
-                                  const int value)
+                                  modifiesComputes which)
 {
-    Task* tsk = scinew Task( "Ray::computeCellType", this,
-                             &Ray::computeCellType, value );
+  Task* tsk = scinew Task( "Ray::computeCellType", this,
+                           &Ray::computeCellType, which );
+
+  if ( which == Ray::modifiesVar ){
+    tsk->requires(Task::NewDW, d_cellTypeLabel, 0, Task::FineLevel, 0, Task::NormalDomain, d_gn, 0);
+    tsk->modifies( d_cellTypeLabel );
+  }else if ( which == Ray::computesVar ){
     tsk->computes( d_cellTypeLabel );
-    sched->addTask( tsk, level->eachPatch(), d_matlSet );
+  }
+  sched->addTask( tsk, level->eachPatch(), d_matlSet );
 }
 
 //______________________________________________________________________
@@ -1874,17 +1894,74 @@ void Ray::computeCellType( const ProcessorGroup*,
                            const MaterialSubset* matls,
                            DataWarehouse* old_dw,
                            DataWarehouse* new_dw,
-                           const int value )
+                           const modifiesComputes which )
 {
-  for (int p=0; p < patches->size(); p++){
+  const Level* coarseLevel = getLevel(patches);
+  const Level* fineLevel = coarseLevel->getFinerLevel().get_rep();
+  IntVector r_Ratio = fineLevel->getRefinementRatio();
 
-    const Patch* patch = patches->get(p);
-    printTask(patches,patch,dbg,"Doing Ray::computeCellType "+ d_cellTypeLabel->getName());
+  double inv_RR = 1.0/( (double)(r_Ratio.x() * r_Ratio.y() * r_Ratio.z()) );
 
-    CCVariable< int > cellType;
-    new_dw->allocateAndPut( cellType, d_cellTypeLabel, d_matl, patch );
-    cellType.initialize( value );
-  }
+  int FLOWCELL = -1;             // HARDWIRED to match Arches definitiion.  This
+  int INTRUSION = 10;            // is temporary and will change when moving to
+                                 // volFraction
+  //__________________________________
+  //  For each coarse level patch coarsen the fine level data
+  for(int p=0;p<patches->size();p++){
+    const Patch* coarsePatch = patches->get(p);
+
+    printTask(patches, coarsePatch,dbg,"Doing computeCellType: " + d_cellTypeLabel->getName());
+
+    // Find the overlapping regions...
+    Level::selectType finePatches;
+    coarsePatch->getFineLevelPatches(finePatches);
+
+    CCVariable< int > cellType_coarse;
+
+    if ( which == Ray::modifiesVar ){
+      new_dw->getModifiable(  cellType_coarse, d_cellTypeLabel, d_matl, coarsePatch);
+    }else if ( which == Ray::computesVar ){
+      new_dw->allocateAndPut( cellType_coarse, d_cellTypeLabel, d_matl, coarsePatch);
+    }
+
+    //__________________________________
+    // coarsen
+    bool computesAve = false;
+    fineToCoarseOperator(cellType_coarse,   computesAve,
+                         d_cellTypeLabel,   d_matl, new_dw,
+                         coarsePatch, coarseLevel, fineLevel);
+
+
+    for (CellIterator iter = coarsePatch->getCellIterator(); !iter.done(); iter++){
+      IntVector c = *iter;
+
+      double tmp = (double) cellType_coarse[c] * inv_RR;
+      // Default 
+      cellType_coarse[c] = (int) tmp;
+      
+      if (tmp != FLOWCELL){
+        //__________________________________
+        // ROUND DOWN
+        if ( d_cellTypeCoarsenLogic == ROUNDDOWN ) {
+          if( fabs(tmp)/(double)INTRUSION <= (1 - inv_RR) ) {
+            cellType_coarse[c] = FLOWCELL;
+          } else {
+            cellType_coarse[c] = INTRUSION;
+          }
+        }
+        //__________________________________
+        // ROUND UP
+        if ( d_cellTypeCoarsenLogic == ROUNDUP ) {
+          if( fabs(tmp)/(double)INTRUSION >= inv_RR  ){
+            cellType_coarse[c] = INTRUSION;
+          } else {
+            cellType_coarse[c] = FLOWCELL;
+          }
+        }
+      }
+    }
+
+  }  // coarse patch loop
 }
 
 //______________________________________________________________________
@@ -1996,14 +2073,14 @@ void Ray::computeCellType( const ProcessorGroup*,
       // Logic for moving between levels
       // - Currently you can only move from fine to coarse level
       // - Don't jump levels if ray is at edge of domain
-      
+
       Point pos = level->getCellPosition(cur);           // position could be outside of domain
       in_domain = domain_BB.inside(pos);
       //in_domain = (cellType[L][cur] == d_flowCell);    // use this when direct comparison with 1L resullts
 
       bool ray_outside_ROI    = ( containsCell( fineLevel_ROI_Lo, fineLevel_ROI_Hi, cur, dir ) == false );
       bool ray_outside_Region = ( containsCell( regionLo[L], regionHi[L], cur, dir ) == false );
-    
+
       bool jumpFinetoCoarserLevel   = ( onFineLevel &&  ray_outside_ROI && in_domain );
       bool jumpCoarsetoCoarserLevel = ( (onFineLevel == false) && ray_outside_Region && (L > 0) && in_domain );
 

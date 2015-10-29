@@ -153,13 +153,13 @@ private:
                         DataWarehouse* new_dw );
 
     void sched_fluxInit( const LevelP& level,
-                                  SchedulerP& sched );
+                         SchedulerP& sched );
 
     void fluxInit( const ProcessorGroup* pc,
-                            const PatchSubset* patches,
-                            const MaterialSubset* matls,
-                            DataWarehouse* old_dw,
-                            DataWarehouse* new_dw );
+                   const PatchSubset* patches,          
+                   const MaterialSubset* matls,         
+                   DataWarehouse* old_dw,               
+                   DataWarehouse* new_dw );             
                         
     //__________________________________
     //  move  6 CCVariable<double> -> CCVariable<stencil7>
