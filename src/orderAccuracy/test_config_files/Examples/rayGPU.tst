@@ -2,8 +2,8 @@
 <start>
 <upsFile>RMCRT_test_1L.ups</upsFile>
 <gnuplot>
-  <script>plotScript.gp</script>s
-  <title>GPU::RMCRT order-of-accuracy \\n 1 timestep (41^3)</title>
+  <script>plotScript.gp</script>
+  <title>GPU::RMCRT \\n Burns and Christon Benchmark \\n41^3, Ray Dir Sampling: Latin Hype Cube</title>
   <ylabel>Error</ylabel>
   <xlabel># of Rays</xlabel>
 </gnuplot>
@@ -13,6 +13,7 @@
     <max_Timesteps>1</max_Timesteps>
     <randomSeed> true </randomSeed>
     <resolution> [41,41,41]  </resolution>
+    <rayDirSampleAlgo>  LatinHyperCube      </rayDirSampleAlgo>
   </replace_lines>
 </AllTests>
 
@@ -79,7 +80,7 @@
 <Test>
     <Title>128</Title>
     <sus_cmd> sus -gpu -nthreads 2  </sus_cmd>
-    <postProcess_cmd>RMCRT_wrapper -bm 1 -L 0 -plot true</postProcess_cmd>
+    <postProcess_cmd>RMCRT_wrapper -bm 1 -L 0 </postProcess_cmd>
     <x>128</x>
     <replace_lines>
       <nDivQRays>          128        </nDivQRays>
@@ -99,7 +100,7 @@
 <Test>
     <Title>512</Title>
     <sus_cmd> sus -gpu -nthreads 2  </sus_cmd>
-    <postProcess_cmd>RMCRT_wrapper -bm 1 -L 0 -plot true</postProcess_cmd>
+    <postProcess_cmd>RMCRT_wrapper -bm 1 -L 0 </postProcess_cmd>
     <x>512</x>
     <replace_lines>
       <nDivQRays>          512        </nDivQRays>
