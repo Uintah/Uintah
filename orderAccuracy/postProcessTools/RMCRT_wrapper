@@ -96,7 +96,7 @@ paste $out_x $out_y $out_z > $out
 # __________________________________
 #  combine plots
 
-if ($plot == "true") then
+if ($plot == "true" &&  -e divQ.X.jpg && -e divQ.Y.jpg && -e divQ.Z.jpg ) then
   mogrify -trim divQ.X.jpg
   mogrify -trim divQ.Y.jpg
   mogrify -trim divQ.Z.jpg

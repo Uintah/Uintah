@@ -3,7 +3,7 @@
 <upsFile>RMCRT_test_1L.ups</upsFile>
 <gnuplot>
   <script>plotScript.gp</script>s
-  <title>Double:CPU:RMCRT Order-Of-Accuracy \\n Burns and Christon Benchmark \\n 1  41^3, Random Seed</title>
+  <title>Double:CPU:RMCRT \\n Burns and Christon Benchmark \\n41^3, Ray Dir Sampling: Latin Hyper Cube </title>
   <ylabel>Error</ylabel>
   <xlabel># of Rays</xlabel>
 </gnuplot>
@@ -12,7 +12,8 @@
   <replace_lines>
     <max_Timesteps>1</max_Timesteps>
     <randomSeed> true </randomSeed>
-    <resolution> [40,40,40]  </resolution>
+    <resolution> [41,41,41]  </resolution>
+    <rayDirSampleAlgo>  LatinHyperCube      </rayDirSampleAlgo>
   </replace_lines>
 </AllTests>
 
