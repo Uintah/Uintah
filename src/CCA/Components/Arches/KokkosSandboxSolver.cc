@@ -59,6 +59,10 @@ KokkosSandboxSolver::nonlinearSolve( const LevelP& level,
 {
 
   const MaterialSet* matls = _shared_state->allArchesMaterials();
+  BFM::iterator i_util_fac = _task_factory_map.find("utility_factory");
+  TaskInterface* tsk = i_util_fac->second->retrieve_task("grid_info");
+  tsk->schedule_timestep_init( level, sched, matls ); 
+  
 
   BFM::iterator i_transport = _task_factory_map.find("transport_factory");
   TaskFactoryBase::TaskMap all_tasks = i_transport->second->retrieve_all_tasks();
@@ -80,6 +84,12 @@ KokkosSandboxSolver::nonlinearSolve( const LevelP& level,
     tsk->schedule_task(level, sched, matls, TaskInterface::STANDARD_TASK, 0);
   }
 
+  //now update them
+  SVec scalar_fe_up = i_transport->second->retrieve_task_subset("scalar_fe_update");
+  for ( SVec::iterator i = scalar_fe_up.begin(); i != scalar_fe_up.end(); i++){
+    TaskInterface* tsk = i_transport->second->retrieve_task(*i);
+    tsk->schedule_task(level, sched, matls, TaskInterface::STANDARD_TASK, 0);
+  }
 
   return 0;
 }
@@ -94,10 +104,18 @@ void
 KokkosSandboxSolver::initialize( const LevelP& level, SchedulerP& sched, const bool doing_restart )
 {
   const MaterialSet* matls = _shared_state->allArchesMaterials();
+  bool is_restart = false;
 
+  //utility factory
+  BFM::iterator i_util_fac = _task_factory_map.find("utility_factory");
+  TaskInterface* tsk = i_util_fac->second->retrieve_task("grid_info");
+  tsk->schedule_init( level, sched, matls, is_restart ); 
+
+  //transport factory
   BFM::iterator i_trans_fac = _task_factory_map.find("transport_factory");
   TaskFactoryBase::TaskMap all_tasks = i_trans_fac->second->retrieve_all_tasks();
   for ( TaskFactoryBase::TaskMap::iterator i = all_tasks.begin(); i != all_tasks.end(); i++) {
     i->second->schedule_init(level, sched, matls, doing_restart);
   }
+
 }

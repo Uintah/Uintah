@@ -39,15 +39,20 @@ namespace Uintah{
   struct VariableInitializeFunctor{
 
     T& var;
+    constCCVariable<double>& gridX;
     double value;
 
-    VariableInitializeFunctor( T& var, double value ) : var(var), value(value){}
+    VariableInitializeFunctor( T& var, constCCVariable<double>& gridX, double value ) 
+      : var(var), gridX(gridX), value(value){}
 
     void operator()(int i, int j, int k) const{
 
       const IntVector c(i,j,k);
+      double start = 0.5; 
 
-      var[c] = value;
+      double value_assign = (gridX[c] > start) ? 0.0 : value; 
+
+      var[c] = value_assign;
 
     }
   };
@@ -63,15 +68,16 @@ namespace Uintah{
 
   public:
     constCCVariable<double>& phi;
-    constCCVariable<double>& rho;
     CCVariable<double>& rhs;
+    constCCVariable<double>& rho;
     UT& u;
     IntVector dir;
     double A;
+    const double huge; 
 
     ComputeConvection( constCCVariable<double>& phi, CCVariable<double>& rhs,
       constCCVariable<double>& rho, UT& u, IntVector dir, double A)
-      : phi(phi), rhs(rhs), rho(rho), u(u), dir(dir), A(A){}
+      : phi(phi), rhs(rhs), rho(rho), u(u), dir(dir), A(A), huge(1e10){}
 
     void
     operator()(int i, int j, int k ) const {
@@ -84,16 +90,16 @@ namespace Uintah{
 
       double Sup_up = phi[cm];
       double Sdn_up = phi[c];
-      double r = ( phi[cm] - phi[cmm] ) / ( phi[c] - phi[cm] );
+      double r = (phi[cm] - phi[cmm] ) / ( phi[c] - phi[cm] );
 
-      double psi_up = std::max( std::min( 2.*r, 1.0), std::min(r, 2.0 ) );
+      double psi_up = ( r < huge ) ? std::max( std::min( 2.*r, 1.0), std::min(r, 2.0 ) ) : 2.0;
       psi_up = std::max( 0.0, psi_up );
 
       double Sup_dn = phi[c];
       double Sdn_dn = phi[cm];
-      r = ( phi[cp] - phi[c] ) / ( phi[c] - phi[cm] );
+      double r2 = ( phi[cp] - phi[c] ) / ( phi[c] - phi[cm] );
 
-      double psi_dn = std::max( std::min( 2.*r, 1.0), std::min(r, 2.0 ) );
+      double psi_dn = ( r2 < huge ) ? std::max( std::min( 2.*r2, 1.0), std::min(r2, 2.0 ) ) : 2.0;
       psi_dn = std::max( 0.0, psi_dn );
 
       double face_up = Sup_up + 0.5 * psi_up * ( Sdn_up - Sup_up );
@@ -103,16 +109,16 @@ namespace Uintah{
 
       Sup_up = phi[c];
       Sdn_up = phi[cp];
-      r = ( phi[c] - phi[cm] ) / ( phi[cp] - phi[c] );
+      double r3 = ( phi[c] - phi[cm] ) / ( phi[cp] - phi[c] );
 
-      psi_up = std::max( std::min( 2.*r, 1.0), std::min(r, 2.0 ) );
+      psi_up = ( r3 < huge ) ? std::max( std::min( 2.*r3, 1.0), std::min(r3, 2.0 ) ) : 2.0;
       psi_up = std::max( 0.0, psi_up );
 
       Sup_dn = phi[cp];
       Sdn_dn = phi[c];
-      r = ( phi[cpp] - phi[cp] ) / ( phi[cp] - phi[c] );
+      double r4 =  ( phi[cpp] - phi[cp] ) / ( phi[cp] - phi[c] );
 
-      psi_dn = std::max( std::min( 2.*r, 1.0), std::min(r, 2.0 ) );
+      psi_dn = ( r4 < huge ) ? std::max( std::min( 2.*r4, 1.0), std::min(r4, 2.0 ) ) : 2.0;
       psi_dn = std::max( 0.0, psi_dn );
 
       face_up = Sup_up + 0.5 * psi_up * ( Sdn_up - Sup_up );
@@ -121,8 +127,7 @@ namespace Uintah{
       double face_value_p = ( u[cp] > 0.0 ) ? face_up : face_dn;
 
       //Done with interpolation, now compute conv and add to RHS:
-      rhs[c] += A * ( 0.5 * ( rho[c] + rho[cp] ) * face_value_p * u[cp] -
-                0.5 * ( rho[c] + rho[cm] ) * face_value_m * u[c] );
+      rhs[c] += -A * ( face_value_p * u[cp] - face_value_m * u[c] );
 
     }
   };
@@ -135,8 +140,8 @@ namespace Uintah{
 
     ConstPT& phi;
     PT& rhs;
-    UT& u;
     constCCVariable<double>& rho;
+    UT& u;
     IntVector dir;
     double A;
 
@@ -164,7 +169,7 @@ namespace Uintah{
       double u_e = ( u[cu_e] + u[cu_e2] ) / 2.;
       double u_w = ( u[cu_w] + u[cu_w2] ) / 2.;
 
-      rhs[c] += A * ( phi_e * u_e - phi_w * u_w );
+      rhs[c] += -A * ( phi_e * u_e - phi_w * u_w );
 
     }
   };
@@ -177,8 +182,8 @@ namespace Uintah{
 
     ConstPT& phi;
     PT& rhs;
-    UT& u;
     constCCVariable<double>& rho;
+    UT& u;
     IntVector dir;
     double A;
 
@@ -206,7 +211,7 @@ namespace Uintah{
       double u_e = ( u[cu_e] + u[cu_e2] ) / 2.;
       double u_w = ( u[cu_w] + u[cu_w2] ) / 2.;
 
-      rhs[c] += A * ( phi_e * u_e - phi_w * u_w );
+      rhs[c] += -A * ( phi_e * u_e - phi_w * u_w );
 
     }
   };
@@ -219,8 +224,8 @@ namespace Uintah{
 
     ConstPT& phi;
     PT& rhs;
-    UT& u;
     constCCVariable<double>& rho;
+    UT& u;
     IntVector dir;
     double A;
 
@@ -248,7 +253,7 @@ namespace Uintah{
       double u_e = ( u[cu_e] + u[cu_e2] ) / 2.;
       double u_w = ( u[cu_w] + u[cu_w2] ) / 2.;
 
-      rhs[c] += A * ( phi_e * u_e - phi_w * u_w );
+      rhs[c] += -A * ( phi_e * u_e - phi_w * u_w );
 
     }
   };
