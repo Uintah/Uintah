@@ -339,7 +339,8 @@ Grid::parseLevelFromFile( FILE * fp, std::vector<int> & procMapForLevel )
         //  dcell *= d_cell_scale;
         //}
 
-        level = this->addLevel( anchor, dcell, id ); // FIXME! File parsing needs to be fixed for AMR, MultiScale per level in a transparent way! JBH 9/2015
+        level = this->addLevel( anchor, dcell, id );
+        // FIXME! File parsing needs to be fixed for AMR, MultiScale per level in a transparent way! JBH 9/2015
 
         level->setExtraCells( extraCells );
 
