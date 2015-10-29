@@ -107,14 +107,14 @@ private:
 
 void coalSootRR(const double P,
                 const double T,
-                const double o2,
-		const double co2,
-		const double mix_weight,
+                const double co2,
+		const double o2,
                 const double rhoYt,
                 const double rhoYs,
-                const double nd, 
+                const double nd,
+		const double dt, 
                       double &Ysoot_source
-               );
+		);
     
     
 }; // end BrownSootFormation_rhoYs

@@ -62,6 +62,8 @@
 #include <CCA/Components/Arches/CoalModels/HeatTransfer.h>
 #include <CCA/Components/Arches/CoalModels/EnthalpyShaddix.h>
 #include <CCA/Components/Arches/CoalModels/MaximumTemperature.h>
+#include <CCA/Components/Arches/CoalModels/Thermophoresis.h>
+#include <CCA/Components/Arches/CoalModels/Deposition.h>
 #include <CCA/Components/Arches/CoalModels/CharOxidationShaddix.h>
 #include <CCA/Components/Arches/CoalModels/DragModel.h>
 #include <CCA/Components/Arches/PropertyModels/PropertyModelBase.h>
@@ -675,9 +677,9 @@ ExplicitSolver::problemSetup( const ProblemSpecP & params,
 
   db_es->getWithDefault( "max_ke_allowed", d_ke_limit, 1.0e99 );
 
-  if ( db_es->findBlock("BoundaryConditions") ){
-    if ( db_es->findBlock("BoundaryConditions")->findBlock( "WallHT" ) ){
-      ProblemSpecP db_wall_ht = db_es->findBlock("BoundaryConditions")->findBlock( "WallHT" );
+  if ( db->findBlock("BoundaryConditions") ){
+    if ( db->findBlock("BoundaryConditions")->findBlock( "WallHT" ) ){
+      ProblemSpecP db_wall_ht = db->findBlock("BoundaryConditions")->findBlock( "WallHT" );
       d_wall_ht_models = scinew WallModelDriver( d_lab->d_sharedState );
       d_wall_ht_models->problemSetup( db_wall_ht );
     }
@@ -3850,11 +3852,17 @@ void ExplicitSolver::registerModels(ProblemSpecP& db)
         } else if ( model_type == "MaximumTemperature" ) {
           ModelBuilder* modelBuilder = scinew MaximumTemperatureBuilder(temp_model_name, requiredICVarLabels, requiredScalarVarLabels, d_lab, d_lab->d_sharedState, iqn);
           model_factory.register_model( temp_model_name, modelBuilder );
+        } else if ( model_type == "Thermophoresis" ) {
+          ModelBuilder* modelBuilder = scinew ThermophoresisBuilder(temp_model_name, requiredICVarLabels, requiredScalarVarLabels, d_lab, d_lab->d_sharedState, iqn);
+          model_factory.register_model( temp_model_name, modelBuilder );
         } else if ( model_type == "Drag" ) {
           ModelBuilder* modelBuilder = scinew DragModelBuilder(temp_model_name, requiredICVarLabels, requiredScalarVarLabels, d_lab, d_lab->d_sharedState, iqn);
           model_factory.register_model( temp_model_name, modelBuilder );
         } else if ( model_type == "SimpleBirth" ) {
           ModelBuilder* modelBuilder = scinew SimpleBirthBuilder(temp_model_name, requiredICVarLabels, requiredScalarVarLabels, d_lab, d_lab->d_sharedState, iqn);
+          model_factory.register_model( temp_model_name, modelBuilder );
+        } else if ( model_type == "Deposition" ) {
+          ModelBuilder* modelBuilder = scinew DepositionBuilder(temp_model_name, requiredICVarLabels, requiredScalarVarLabels, d_lab, d_lab->d_sharedState, iqn);
           model_factory.register_model( temp_model_name, modelBuilder );
         } else {
           proc0cout << "For model named: " << temp_model_name << endl;

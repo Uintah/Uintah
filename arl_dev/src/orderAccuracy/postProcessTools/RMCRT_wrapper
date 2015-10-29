@@ -1,5 +1,13 @@
 #!/bin/csh -f
 
+set usage = "\
+  Usage:  RMCRT_wrapper\
+                -bm     Benchmark test \
+                -o      output file name\
+                -L      Level index to do comparison on\
+                -plot   true/false to enable intermediate plots\
+                -uda    name of uda to investigate"
+
 #__________________________________
 # This wrapper scripts just calls the RMCRT 
 # 3 times for each direction
@@ -18,11 +26,21 @@ setenv TOOLSPATH $rootPath      # this path is used inside of RMCRT.m
 
 # defaults
 set plot = false
+set out  = out
+set bm   = -9
+set uda  = -9
+set L    = 0
+
 
 # parse the input arguments and extract $out and $uda
-
 while (1)
   switch($1:q)  # $1 is first argument
+  
+  case -h:
+    shift
+    echo $usage:q
+    exit
+    breaksw;
   case -o:
     shift
     set out = $1
@@ -42,15 +60,26 @@ while (1)
   case -uda:
     shift
     set uda = $1
-    break
+    breaksw;
+  default:
+    break;
   endsw
   shift
 end
 
+
+
+#__________________________________
+#  bulletproofing
+if ( $bm == -9 || $uda == -9 ) then 
+  echo "Error:  either (-bm) or (-uda) options were not set"
+  echo $usage:q
+  exit
+endif
+
 set out_x = `echo $out`_x
 set out_y = `echo $out`_y
 set out_z = `echo $out`_z
-
 
 echo "Now running RMCRT scripts in each direction ($out, $uda)"
 echo "X-dir"

@@ -108,6 +108,7 @@ SurfaceNormals::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info,
   ZVolFP n_out_z = tsk_info->get_so_field<ZVolF>("surf_out_normZ");
 
   SpatialOps::SpatFldPtr<SVolF> ccnormal = SpatialFieldStore::get<SVolF>(*vol_fraction);
+  *ccnormal <<= 0.0;
 
   SVolFP gas_solid_interface = tsk_info->get_so_field<SVolF>("gas_solid_interface");
 

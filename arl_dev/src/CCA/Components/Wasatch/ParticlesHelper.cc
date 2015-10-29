@@ -401,7 +401,7 @@ namespace Uintah {
     using namespace Uintah;
     
     // first go through the list of particle expressions and check whether Uintah manages those
-    // or note. We need this for particle relocation.
+    // or not. We need this for particle relocation.
     vector<const VarLabel*> otherParticleVarLabels;
     const vector<string>& otherParticleVarNames = ParticlesHelper::get_relocatable_particle_varnames();
     vector<string>::const_iterator varNameIter = otherParticleVarNames.begin();
@@ -428,6 +428,18 @@ namespace Uintah {
     // clean the delete set
     Task* task = scinew Task("cleanup deleteset", this, &ParticlesHelper::clear_deleteset);
     sched->addTask(task, level->eachPatch(), materials_);
+    
+    // after particle relocation, one must sync the Uintah particle position back
+    // with the component particle positions. This is important in periodic
+    // problems so that one recovers the correct particle positions as particles
+    // go through the periodic boundaries
+    using namespace Uintah;
+    Uintah::Task* periodictask = scinew Uintah::Task("sync particles for periodic boundaries", this, &ParticlesHelper::sync_particle_position_periodic );
+    periodictask->requires(Task::NewDW, pPosLabel_, Uintah::Ghost::None, 0);
+    periodictask->modifies(pXLabel_);
+    periodictask->modifies(pYLabel_);
+    periodictask->modifies(pZLabel_);
+    sched->addTask(periodictask, level->eachPatch(), materials_);
   }
   
   //--------------------------------------------------------------------
@@ -490,6 +502,46 @@ namespace Uintah {
       }
     }
   }
+  
+  //--------------------------------------------------------------------
+  
+  void ParticlesHelper::sync_particle_position_periodic(const Uintah::ProcessorGroup*,
+                                               const Uintah::PatchSubset* patches, const Uintah::MaterialSubset* matls,
+                                               Uintah::DataWarehouse* old_dw, Uintah::DataWarehouse* new_dw)
+  {
+    using namespace Uintah;
+    for(int m = 0; m<matls->size(); m++){
+      const int matl = matls->get(m);
+      std::map<int,ParticleSubset*>& thisMatDelSet = deleteSets_[m];
+      for(int p=0;p<patches->size();p++){
+        const Patch* patch = patches->get(p);
+        ParticleSubset* pset = new_dw->getParticleSubset(matl, patch);
+        const int numParticles =pset->numParticles();
+        
+        //new_dw->deleteParticles(thisMatDelSet[patch->getID()]);
+        
+        constParticleVariable<Point> ppos; // Uintah particle position
+        
+        // component particle positions
+        ParticleVariable<double> px;
+        ParticleVariable<double> py;
+        ParticleVariable<double> pz;
+        
+        new_dw->getModifiable(px,    pXLabel_,                  pset);
+        new_dw->getModifiable(py,    pYLabel_,                  pset);
+        new_dw->getModifiable(pz,    pZLabel_,                  pset);
+        new_dw->get          (ppos,  pPosLabel_,                pset);
+        
+        for (int i = 0; i < numParticles; i++) {
+          px[i] = ppos[i].x();
+          py[i] = ppos[i].y();
+          pz[i] = ppos[i].z();
+        }
+      }
+    }
+  }
+
+  
   
   //--------------------------------------------------------------------
 
