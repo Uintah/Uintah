@@ -3,6 +3,7 @@
 
 #include <CCA/Components/Arches/Task/TaskInterface.h>
 #include <CCA/Components/Arches/DiscretizationTools.h>
+#include <Kokkos_Core.hpp>
 
 namespace Uintah{
 
@@ -107,8 +108,8 @@ private:
       register_variable( *i, ArchesFieldContainer::MODIFIES, 0, ArchesFieldContainer::NEWDW, variable_registry, time_substep );
       std::string rhs_name = *i + "_RHS";
       register_variable( rhs_name, ArchesFieldContainer::REQUIRES, 0, ArchesFieldContainer::NEWDW, variable_registry, time_substep );
+      register_variable( *i, ArchesFieldContainer::REQUIRES, 0, ArchesFieldContainer::NEWDW, variable_registry, time_substep );
     }
-
   }
 
   namespace {
@@ -118,19 +119,20 @@ private:
 
       typedef typename VariableHelper<T>::ConstType CT;
       T& phi;
+      CT& old_phi;
       CT& rhs;
       const double dt;
       const double V;
 
-      TimeUpdateFunctor( T& phi,
+      TimeUpdateFunctor( T& phi, CT& old_phi, 
         CT& rhs, const double dt, const double V )
-        : phi(phi), rhs(rhs), dt(dt), V(V){ }
+        : phi(phi), old_phi(old_phi), rhs(rhs), dt(dt), V(V){ }
 
       void
       operator()(int i, int j, int k) const{
 
         IntVector c(i,j,k);
-        phi[c] = phi[c] + dt/V * rhs[c];
+        phi[c] = old_phi[c] + dt/V * rhs[c];
 
       }
     };
@@ -148,13 +150,26 @@ private:
     typedef std::vector<std::string> SV;
     typedef typename VariableHelper<T>::ConstType CT;
 
+    IntVector l = patch->getNodeLowIndex();
+    IntVector h = patch->getNodeHighIndex();
+    l += IntVector(patch->getBCType(Patch::xminus) == Patch::Neighbor?0:1,
+                   patch->getBCType(Patch::yminus) == Patch::Neighbor?0:1,
+                   patch->getBCType(Patch::zminus) == Patch::Neighbor?0:1);
+    h -= IntVector(patch->getBCType(Patch::xplus)  == Patch::Neighbor?0:1,
+                   patch->getBCType(Patch::yplus)  == Patch::Neighbor?0:1,
+                   patch->getBCType(Patch::zplus)  == Patch::Neighbor?0:1);
+
+
     for ( SV::iterator i = _eqn_names.begin(); i != _eqn_names.end(); i++){
 
       T& phi = *(tsk_info->get_uintah_field<T>(*i));
+      CT& old_phi = *(tsk_info->get_const_uintah_field<CT>(*i)); 
       CT& rhs =
         *(tsk_info->get_const_uintah_field<CT>(*i+"_RHS"));
 
-      TimeUpdateFunctor<T> time_update(phi, rhs, dt, V);
+      TimeUpdateFunctor<T> time_update(phi, old_phi, rhs, dt, V);
+      
+      Kokkos::parallel_for( Kokkos::Range3Policy<int>(l[0],l[1],l[2], h[0],h[1],h[2]), time_update );
 
     }
   }

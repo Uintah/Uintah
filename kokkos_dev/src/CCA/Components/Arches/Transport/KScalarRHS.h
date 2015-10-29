@@ -105,7 +105,7 @@ private:
 
     _do_conv = false;
     if ( db->findBlock("convection")){
-      //db->findBlock("convection")->getAttribute("scheme", _conv_scheme);
+      db->findBlock("convection")->getAttribute("scheme", _conv_scheme);
       _do_conv = true;
     }
 
@@ -163,12 +163,12 @@ private:
   KScalarRHS<T>::register_initialize(
     std::vector<ArchesFieldContainer::VariableInformation>& variable_registry ){
 
-    //FUNCITON CALL     STRING NAME(VL)     TYPE       DEPENDENCY    GHOST DW     VR
     register_variable(  _rhs_name   , ArchesFieldContainer::COMPUTES , variable_registry );
     register_variable(  _task_name  , ArchesFieldContainer::COMPUTES , variable_registry );
     register_variable(  _D_name     , ArchesFieldContainer::COMPUTES , variable_registry );
     register_variable(  _Fconv_name , ArchesFieldContainer::COMPUTES , variable_registry );
     register_variable(  _Fdiff_name , ArchesFieldContainer::COMPUTES , variable_registry );
+    register_variable( "gridX", ArchesFieldContainer::REQUIRES, 0, ArchesFieldContainer::NEWDW, variable_registry ); 
 
   }
 
@@ -181,14 +181,28 @@ private:
     CCVariable<double>& gamma = *(tsk_info->get_uintah_field<CCVariable<double> >(_D_name));
     T& Fdiff = *(tsk_info->get_uintah_field<T>(_Fdiff_name));
     T& Fconv = *(tsk_info->get_uintah_field<T>(_Fconv_name));
+    constCCVariable<double>& x = *(tsk_info->get_const_uintah_field<constCCVariable<double> >("gridX"));
 
     rhs.initialize(0.0);
     phi.initialize(_init_value);
     gamma.initialize(.0001);
     Fdiff.initialize(0.0);
     Fconv.initialize(0.0);
-    //VariableInitializeFunctor my_functor(rhs,0.0);
-    VariableInitializeFunctor<T> my_functor(phi,_init_value);
+
+    VariableInitializeFunctor<T> init_variable(phi,x,_init_value);
+
+    IntVector l = patch->getNodeLowIndex();
+    IntVector h = patch->getNodeHighIndex();
+    l += IntVector(patch->getBCType(Patch::xminus) == Patch::Neighbor?0:1,
+                   patch->getBCType(Patch::yminus) == Patch::Neighbor?0:1,
+                   patch->getBCType(Patch::zminus) == Patch::Neighbor?0:1);
+    h -= IntVector(patch->getBCType(Patch::xplus)  == Patch::Neighbor?0:1,
+                   patch->getBCType(Patch::yplus)  == Patch::Neighbor?0:1,
+                   patch->getBCType(Patch::zplus)  == Patch::Neighbor?0:1);
+
+    if ( _task_name == "phi" )
+      Kokkos::parallel_for( Kokkos::Range3Policy<int>(l[0],l[1],l[2], h[0],h[1],h[2]), init_variable );
+
 
   }
 
@@ -199,6 +213,7 @@ private:
     register_variable( _D_name     , ArchesFieldContainer::REQUIRES , 0 , ArchesFieldContainer::OLDDW , variable_registry );
     register_variable( _task_name  , ArchesFieldContainer::COMPUTES , variable_registry  );
     register_variable( _task_name  , ArchesFieldContainer::REQUIRES , 0 , ArchesFieldContainer::OLDDW , variable_registry  );
+    register_variable( _Fconv_name  , ArchesFieldContainer::COMPUTES , variable_registry  );
   }
 
   template <typename T> void
@@ -211,6 +226,9 @@ private:
     typedef typename VariableHelper<T>::ConstType CONST_TYPE;
     CONST_TYPE& old_phi = *(tsk_info->get_const_uintah_field<CONST_TYPE>( _task_name ));
 
+    CCVariable<double>& Fconv = *(tsk_info->get_uintah_field<CCVariable<double> >(_Fconv_name));
+    Fconv.initialize(0.0);
+
     gamma.copyData(old_gamma);
     phi.copyData(old_phi);
 
@@ -222,10 +240,10 @@ private:
 
   //  //FUNCITON CALL     STRING NAME(VL)     DEPENDENCY    GHOST DW     VR
     register_variable( _rhs_name        , ArchesFieldContainer::COMPUTES , variable_registry , time_substep );
-    register_variable( _Fconv_name      , ArchesFieldContainer::COMPUTES , variable_registry , time_substep );
+    register_variable( _Fconv_name      , ArchesFieldContainer::MODIFIES , variable_registry , time_substep );
     register_variable( _Fdiff_name      , ArchesFieldContainer::COMPUTES , variable_registry , time_substep );
     register_variable( _D_name          , ArchesFieldContainer::REQUIRES,  1 , ArchesFieldContainer::NEWDW  , variable_registry , time_substep );
-    register_variable( _task_name       , ArchesFieldContainer::REQUIRES , 1 , ArchesFieldContainer::LATEST , variable_registry , time_substep );
+    register_variable( _task_name       , ArchesFieldContainer::REQUIRES , 2 , ArchesFieldContainer::LATEST , variable_registry , time_substep );
     register_variable( "uVelocitySPBC"  , ArchesFieldContainer::REQUIRES , 1 , ArchesFieldContainer::LATEST , variable_registry , time_substep );
     register_variable( "vVelocitySPBC"  , ArchesFieldContainer::REQUIRES , 1 , ArchesFieldContainer::LATEST , variable_registry , time_substep );
     register_variable( "wVelocitySPBC"  , ArchesFieldContainer::REQUIRES , 1 , ArchesFieldContainer::LATEST , variable_registry , time_substep );
@@ -257,6 +275,8 @@ private:
     constSFCYVariable<double>& v = *(tsk_info->get_const_uintah_field<constSFCYVariable<double> >("vVelocitySPBC"));
     constSFCZVariable<double>& w = *(tsk_info->get_const_uintah_field<constSFCZVariable<double> >("wVelocitySPBC"));
 
+    rhs.initialize(0.0);
+
     Vector DX = patch->dCell();
     double A = DX.y() * DX.z();
 
@@ -280,14 +300,16 @@ private:
       Kokkos::parallel_for( Kokkos::Range3Policy<int>(l[0],l[1],l[2], h[0],h[1],h[2]), x_diff );
 
     dir = IntVector(0,1,0);
-    ComputeConvection<T, constSFCYVariable<double> > y_conv( phi, rhs, rho, v, dir, A);
-    ComputeDiffusion<T> y_diff( phi, gamma, rhs, dir, A, DX.y() );
+    if ( _do_conv )
+      ComputeConvection<T, constSFCYVariable<double> > y_conv( phi, rhs, rho, v, dir, A);
+    if ( _do_diff )
+      ComputeDiffusion<T> y_diff( phi, gamma, rhs, dir, A, DX.y() );
 
     dir = IntVector(0,0,1);
-    ComputeConvection<T, constSFCZVariable<double> > z_conv( phi, rhs, rho, w, dir, A);
-    ComputeDiffusion<T> z_diff( phi, gamma, rhs, dir, A, DX.z() );
-
-
+    if ( _do_conv )
+      ComputeConvection<T, constSFCZVariable<double> > z_conv( phi, rhs, rho, w, dir, A);
+    if ( _do_diff )
+      ComputeDiffusion<T> z_diff( phi, gamma, rhs, dir, A, DX.z() );
 
   }
   template <typename T> void
