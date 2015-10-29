@@ -1,5 +1,5 @@
-#LyX 2.0 created this file. For more info see http://www.lyx.org/
-\lyxformat 413
+#LyX 2.1 created this file. For more info see http://www.lyx.org/
+\lyxformat 474
 \begin_document
 \begin_header
 \textclass report
@@ -57,13 +57,13 @@
 \font_roman times
 \font_sans default
 \font_typewriter default
+\font_math auto
 \font_default_family rmdefault
 \use_non_tex_fonts false
 \font_sc false
 \font_osf false
 \font_sf_scale 100
 \font_tt_scale 100
-
 \graphics default
 \default_output_format default
 \output_sync 0
@@ -88,15 +88,24 @@
 \pdf_quoted_options "linkcolor=blue,citecolor=red,urlcolor=blue,filecolor=blue"
 \papersize default
 \use_geometry true
-\use_amsmath 0
-\use_esint 0
-\use_mhchem 0
-\use_mathdots 0
-\cite_engine natbib_authoryear
+\use_package amsmath 0
+\use_package amssymb 0
+\use_package cancel 1
+\use_package esint 0
+\use_package mathdots 0
+\use_package mathtools 1
+\use_package mhchem 0
+\use_package stackrel 1
+\use_package stmaryrd 1
+\use_package undertilde 1
+\cite_engine natbib
+\cite_engine_type authoryear
+\biblio_style plainnat
 \use_bibtopic false
 \use_indices false
 \paperorientation portrait
 \suppress_date false
+\justification true
 \use_refstyle 0
 \index Index
 \shortcut idx
@@ -317,7 +326,7 @@ status open
 \end_inset
 
 
-\begin_inset Caption
+\begin_inset Caption Standard
 
 \begin_layout Plain Layout
 Expression graph for a two dimensional fluid flow problem using the Poisson
@@ -1019,7 +1028,7 @@ status open
 \end_inset
 
 
-\begin_inset Caption
+\begin_inset Caption Standard
 
 \begin_layout Plain Layout
 Behavior of the mixing length in the modified Smagorinsky model used in
@@ -2949,7 +2958,7 @@ sideways false
 status open
 
 \begin_layout Plain Layout
-\begin_inset Caption
+\begin_inset Caption Standard
 
 \begin_layout Plain Layout
 Observed temporal order of accuracy using 
@@ -2974,12 +2983,12 @@ Observed temporal order of accuracy using
 \align center
 \begin_inset Tabular
 <lyxtabular version="3" rows="8" columns="5">
-<features tabularvalignment="middle">
-<column alignment="left" valignment="top" width="0">
-<column alignment="center" valignment="top" width="0">
-<column alignment="center" valignment="top" width="0">
-<column alignment="center" valignment="top" width="0">
-<column alignment="center" valignment="top" width="0">
+<features rotate="0" tabularvalignment="middle">
+<column alignment="left" valignment="top">
+<column alignment="center" valignment="top">
+<column alignment="center" valignment="top">
+<column alignment="center" valignment="top">
+<column alignment="center" valignment="top">
 <row>
 <cell alignment="left" valignment="top" topline="true" bottomline="true" rightline="true" usebox="none">
 \begin_inset Text
@@ -3500,7 +3509,7 @@ sideways false
 status open
 
 \begin_layout Plain Layout
-\begin_inset Caption
+\begin_inset Caption Standard
 
 \begin_layout Plain Layout
 Observed temporal order of accuracy using 
@@ -3525,12 +3534,12 @@ Observed temporal order of accuracy using
 \align center
 \begin_inset Tabular
 <lyxtabular version="3" rows="9" columns="5">
-<features tabularvalignment="middle">
-<column alignment="left" valignment="top" width="0">
-<column alignment="center" valignment="top" width="0">
-<column alignment="center" valignment="top" width="0">
-<column alignment="center" valignment="top" width="0">
-<column alignment="center" valignment="top" width="0">
+<features rotate="0" tabularvalignment="middle">
+<column alignment="left" valignment="top">
+<column alignment="center" valignment="top">
+<column alignment="center" valignment="top">
+<column alignment="center" valignment="top">
+<column alignment="center" valignment="top">
 <row>
 <cell alignment="left" valignment="top" topline="true" bottomline="true" usebox="none">
 \begin_inset Text
@@ -4127,7 +4136,7 @@ sideways false
 status open
 
 \begin_layout Plain Layout
-\begin_inset Caption
+\begin_inset Caption Standard
 
 \begin_layout Plain Layout
 Observed spatial order of accuracy using Taylor-Vortex.
@@ -4148,12 +4157,12 @@ Observed spatial order of accuracy using Taylor-Vortex.
 \align center
 \begin_inset Tabular
 <lyxtabular version="3" rows="6" columns="5">
-<features tabularvalignment="middle">
-<column alignment="center" valignment="top" width="0">
-<column alignment="center" valignment="top" width="0">
-<column alignment="center" valignment="top" width="0">
-<column alignment="center" valignment="top" width="0">
-<column alignment="center" valignment="top" width="0">
+<features rotate="0" tabularvalignment="middle">
+<column alignment="center" valignment="top">
+<column alignment="center" valignment="top">
+<column alignment="center" valignment="top">
+<column alignment="center" valignment="top">
+<column alignment="center" valignment="top">
 <row>
 <cell alignment="center" valignment="top" topline="true" bottomline="true" leftline="true" usebox="none">
 \begin_inset Text
@@ -4568,7 +4577,7 @@ status collapsed
 \end_inset
 
 
-\begin_inset Caption
+\begin_inset Caption Standard
 
 \begin_layout Plain Layout
 Boundary condition specification in Wasatch.
@@ -4653,10 +4662,10 @@ status open
 \align center
 \begin_inset Tabular
 <lyxtabular version="3" rows="3" columns="3">
-<features tabularvalignment="middle">
-<column alignment="center" valignment="top" width="0">
-<column alignment="center" valignment="top" width="0">
-<column alignment="center" valignment="top" width="0">
+<features rotate="0" tabularvalignment="middle">
+<column alignment="center" valignment="top">
+<column alignment="center" valignment="top">
+<column alignment="center" valignment="top">
 <row>
 <cell alignment="center" valignment="top" topline="true" bottomline="true" leftline="true" usebox="none">
 \begin_inset Text
@@ -4761,7 +4770,7 @@ Neumann
 \end_layout
 
 \begin_layout Plain Layout
-\begin_inset Caption
+\begin_inset Caption Standard
 
 \begin_layout Plain Layout
 Summary of coefficients for setting values at ghost cells to reproduce a
@@ -4832,7 +4841,7 @@ status open
 \end_inset
 
 
-\begin_inset Caption
+\begin_inset Caption Standard
 
 \begin_layout Plain Layout
 Derivation of pressure boundary conditions.
@@ -5319,7 +5328,7 @@ status collapsed
 \end_layout
 
 \begin_layout Plain Layout
-\begin_inset Caption
+\begin_inset Caption Standard
 
 \begin_layout Plain Layout
 Embedded cylinder using cut-cells.
@@ -5346,7 +5355,7 @@ status collapsed
 \end_inset
 
 
-\begin_inset Caption
+\begin_inset Caption Standard
 
 \begin_layout Plain Layout
 Embedded cylinder using stairstepping.
@@ -5360,7 +5369,7 @@ Embedded cylinder using stairstepping.
 \end_inset
 
 
-\begin_inset Caption
+\begin_inset Caption Standard
 
 \begin_layout Plain Layout
 Comparison of cut-cells and stairstepping for embedded geometries.
@@ -5425,7 +5434,7 @@ status open
 \end_inset
 
 
-\begin_inset Caption
+\begin_inset Caption Standard
 
 \begin_layout Plain Layout
 Cell-centered and staggered volume fractions associated with a solid intrusion.
@@ -5534,7 +5543,7 @@ status open
 
 \begin_layout Plain Layout
 \align center
-\begin_inset Caption
+\begin_inset Caption Standard
 
 \begin_layout Plain Layout
 Pressure matrix coefficients near embedded boundaries.
@@ -5675,7 +5684,7 @@ status open
 
 \begin_layout Plain Layout
 
-\begin_inset Caption
+\begin_inset Caption Standard
 
 \begin_layout Plain Layout
 Specification of embedded geometry in Wasatch.
@@ -5843,7 +5852,7 @@ status open
 
 \begin_layout Plain Layout
 
-\begin_inset Caption
+\begin_inset Caption Standard
 
 \begin_layout Plain Layout
 Example of embedding multiple geometrical objects in Wasatch.
@@ -5911,7 +5920,7 @@ status open
 \end_layout
 
 \begin_layout Plain Layout
-\begin_inset Caption
+\begin_inset Caption Standard
 
 \begin_layout Plain Layout
 Illustration of the embedded geometry shown in 
@@ -5954,7 +5963,7 @@ status open
 \end_inset
 
 
-\begin_inset Caption
+\begin_inset Caption Standard
 
 \begin_layout Plain Layout
 Flow over multiple intrusions showing scalar mixing in the wake region of
@@ -5973,7 +5982,7 @@ Flow over multiple intrusions showing scalar mixing in the wake region of
 \end_inset
 
 
-\begin_inset Caption
+\begin_inset Caption Standard
 
 \begin_layout Plain Layout
 Embedded geometry example in Wasatch.
@@ -6613,6 +6622,204 @@ where
  This formulation should only be used for low volume fractions of particles.
 \end_layout
 
+\begin_layout Section
+Particle Transport
+\end_layout
+
+\begin_layout Standard
+Wasatch uses a Lagrangian frame of reference to model particle transport.
+ The current implementation assumes that particles posess a spherical geometry.
+\end_layout
+
+\begin_layout Subsection
+Governing Equations
+\end_layout
+
+\begin_layout Standard
+The momentum of a single particle is described by the following expression:
+\end_layout
+
+\begin_layout Standard
+\begin_inset Formula 
+\begin{equation}
+\frac{\mathrm{d}\mathbf{u}_{\mathrm{p}}}{\mathrm{d}t}=\frac{\mathrm{\mathrm{C}_{d}}}{\mathrm{\tau_{p}}}\left(\mathbf{u}-\mathbf{u}_{\mathrm{p}}\right)+\frac{\mathbf{g}(\rho_{\mathrm{p}}-\rho)}{\rho_{\mathrm{p}}},
+\end{equation}
+
+\end_inset
+
+where 
+\begin_inset Formula $\mathbf{u}$
+\end_inset
+
+ and 
+\begin_inset Formula $\rho$
+\end_inset
+
+ are the fluid velocity and density, 
+\begin_inset Formula $\mathbf{u}_{\mathrm{p}}$
+\end_inset
+
+, 
+\begin_inset Formula $\mathrm{{\rho_{p}}}$
+\end_inset
+
+, 
+\begin_inset Formula $\mathrm{\tau}_{\mathrm{p}}$
+\end_inset
+
+, and 
+\begin_inset Formula $\mathrm{C_{d}}$
+\end_inset
+
+ are the particle velocity, density, response time, and drag coefficient,
+ and 
+\begin_inset Formula $\mathbf{g}$
+\end_inset
+
+ is the acceleration due to gravity.
+ The particle drag coefficient is expressed as 
+\end_layout
+
+\begin_layout Standard
+\begin_inset Formula 
+\begin{equation}
+\mathrm{C_{d}}=\begin{cases}
+1 & \mathrm{Re_{p}}\leq1\\
+1+0.15\mathrm{Re_{p}^{0.687}} & 1<\mathrm{Re_{p}}\leq1000\\
+0.0183\mathrm{Re_{p}} & \mathrm{Re_{p}}>1000,
+\end{cases}
+\end{equation}
+
+\end_inset
+
+with 
+\begin_inset Formula $\mathrm{Re_{p}}$
+\end_inset
+
+ representing the particle Reynolds number
+\end_layout
+
+\begin_layout Standard
+\begin_inset Formula 
+\begin{equation}
+\mathrm{Re_{p}}=\frac{\rho D_{\mathrm{p}}\left\Vert \mathbf{u}-\mathbf{u}_{p}\right\Vert }{\mathrm{\mu}},
+\end{equation}
+
+\end_inset
+
+where 
+\begin_inset Formula $\mathrm{\mu}$
+\end_inset
+
+ is the kinematic viscosity of the fluid, and 
+\begin_inset Formula $D_{\mathrm{p}}$
+\end_inset
+
+ is the particle diameter.
+ The response time of the particle is 
+\end_layout
+
+\begin_layout Standard
+\begin_inset Formula 
+\begin{equation}
+\mathrm{\tau_{p}}=\frac{\rho_{\mathrm{p}}D_{\mathrm{p}}^{2}}{18\mathrm{\mu}}.
+\end{equation}
+
+\end_inset
+
+Particle position is determined by solving
+\end_layout
+
+\begin_layout Standard
+\begin_inset Formula 
+\begin{equation}
+\frac{\mathrm{d}\mathbf{x}_{\mathrm{p}}}{\mathrm{d}t}=\mathbf{u}_{\mathrm{p}},
+\end{equation}
+
+\end_inset
+
+where 
+\begin_inset Formula $\mathbf{x}_{p}$
+\end_inset
+
+ is the particle position.
+ Particle mass is given by 
+\end_layout
+
+\begin_layout Standard
+\begin_inset Formula 
+\begin{equation}
+\frac{\mathrm{d}m_{\mathrm{p}}}{\mathrm{d}t}=-S_{m}.\label{eq:wasatch-particle-mass}
+\end{equation}
+
+\end_inset
+
+Here, 
+\begin_inset Formula $S_{m}$
+\end_inset
+
+ is the sum of mass sources from the particle to the fluid.
+ 
+\end_layout
+
+\begin_layout Subsection
+Interphase Coupling
+\end_layout
+
+\begin_layout Standard
+Coupling between the particle phase and Eulerian fluid phase is accomplished
+ through the use of interphase source terms.
+ Mass coupling is described by the following expression
+\end_layout
+
+\begin_layout Standard
+\begin_inset Formula 
+\begin{equation}
+\frac{\partial\rho}{\partial t}+\nabla\cdot\rho\mathbf{u}=\frac{S_{m}}{\mathrm{V_{cell}}},\label{eq:wasatch-particle-fluid-mass-coupling}
+\end{equation}
+
+\end_inset
+
+where 
+\begin_inset Formula $\mathrm{{V_{cell}}}=\Delta x\Delta y\Delta z$
+\end_inset
+
+ is the cell volume and 
+\begin_inset Formula $S_{m}$
+\end_inset
+
+ is the same mass source term as in 
+\begin_inset CommandInset ref
+LatexCommand eqref
+reference "eq:wasatch-particle-mass"
+
+\end_inset
+
+.
+ Coupling of particle and fluid momentum is achieved using using the following
+ equation:
+\begin_inset Formula 
+\begin{equation}
+\frac{\partial\rho\mathbf{u}}{\partial t}=-\nabla\cdot\rho\mathbf{u}\mathbf{u}-\nabla\cdot\boldsymbol{\tau}_{ij}-\nabla p+\rho\mathbf{g}+\frac{\mathbf{S}_{\rho\mathbf{u}}}{\mathrm{V_{cell}}},
+\end{equation}
+
+\end_inset
+
+where 
+\begin_inset Formula $\mathbf{S_{\rho\mathbf{u}}}$
+\end_inset
+
+ is the momentum source term calculated as 
+\begin_inset Formula 
+\begin{equation}
+\mathbf{S_{\rho\mathbf{u}}=}-m_{\mathrm{p}}\frac{\mathrm{\mathrm{C}_{d}}}{\mathrm{\tau_{p}}}\left(\mathbf{u}-\mathbf{u}_{\mathrm{p}}\right).
+\end{equation}
+
+\end_inset
+
+
+\end_layout
+
 \begin_layout Chapter
 Verification and Benchmark Studies
 \end_layout
@@ -6636,7 +6843,7 @@ status open
 \end_inset
 
 
-\begin_inset Caption
+\begin_inset Caption Standard
 
 \begin_layout Plain Layout
 Lid-Driven-Cavity geometry.
@@ -6751,7 +6958,7 @@ sideways false
 status open
 
 \begin_layout Plain Layout
-\begin_inset Caption
+\begin_inset Caption Standard
 
 \begin_layout Plain Layout
 Summary of parameters used for the various cases.
@@ -6767,11 +6974,11 @@ Summary of parameters used for the various cases.
 \align center
 \begin_inset Tabular
 <lyxtabular version="3" rows="8" columns="4">
-<features tabularvalignment="middle">
-<column alignment="left" valignment="top" width="0">
-<column alignment="center" valignment="top" width="0">
-<column alignment="center" valignment="top" width="0">
-<column alignment="center" valignment="top" width="0">
+<features rotate="0" tabularvalignment="middle">
+<column alignment="left" valignment="top">
+<column alignment="center" valignment="top">
+<column alignment="center" valignment="top">
+<column alignment="center" valignment="top">
 <row>
 <cell alignment="left" valignment="top" topline="true" bottomline="true" rightline="true" usebox="none">
 \begin_inset Text
@@ -7134,7 +7341,7 @@ status open
 \end_layout
 
 \begin_layout Plain Layout
-\begin_inset Caption
+\begin_inset Caption Standard
 
 \begin_layout Plain Layout
 Normalized 
@@ -7168,7 +7375,7 @@ status open
 \end_inset
 
 
-\begin_inset Caption
+\begin_inset Caption Standard
 
 \begin_layout Plain Layout
 Normalized 
@@ -7190,7 +7397,7 @@ Normalized
 \end_inset
 
 
-\begin_inset Caption
+\begin_inset Caption Standard
 
 \begin_layout Plain Layout
 Comparison of Wasatch results with those presented in 
@@ -7235,7 +7442,7 @@ status open
 \end_layout
 
 \begin_layout Plain Layout
-\begin_inset Caption
+\begin_inset Caption Standard
 
 \begin_layout Plain Layout
 Normalized 
@@ -7265,7 +7472,7 @@ status collapsed
 \end_inset
 
 
-\begin_inset Caption
+\begin_inset Caption Standard
 
 \begin_layout Plain Layout
 Normalized 
@@ -7283,7 +7490,7 @@ Normalized
 \end_inset
 
 
-\begin_inset Caption
+\begin_inset Caption Standard
 
 \begin_layout Plain Layout
 Comparison of Wasatch results with those presented in 
@@ -7328,7 +7535,7 @@ status open
 \end_layout
 
 \begin_layout Plain Layout
-\begin_inset Caption
+\begin_inset Caption Standard
 
 \begin_layout Plain Layout
 Normalized 
@@ -7358,7 +7565,7 @@ status open
 \end_inset
 
 
-\begin_inset Caption
+\begin_inset Caption Standard
 
 \begin_layout Plain Layout
 Normalized 
@@ -7376,7 +7583,7 @@ Normalized
 \end_inset
 
 
-\begin_inset Caption
+\begin_inset Caption Standard
 
 \begin_layout Plain Layout
 Comparison of Wasatch results with those presented in 
@@ -7421,7 +7628,7 @@ status open
 \end_layout
 
 \begin_layout Plain Layout
-\begin_inset Caption
+\begin_inset Caption Standard
 
 \begin_layout Plain Layout
 Normalized 
@@ -7451,7 +7658,7 @@ status open
 \end_inset
 
 
-\begin_inset Caption
+\begin_inset Caption Standard
 
 \begin_layout Plain Layout
 Normalized 
@@ -7469,7 +7676,7 @@ Normalized
 \end_inset
 
 
-\begin_inset Caption
+\begin_inset Caption Standard
 
 \begin_layout Plain Layout
 Comparison of Wasatch results with those presented in 
@@ -7541,7 +7748,7 @@ status open
 \end_layout
 
 \begin_layout Plain Layout
-\begin_inset Caption
+\begin_inset Caption Standard
 
 \begin_layout Plain Layout
 \begin_inset Formula $t=0$
@@ -7571,7 +7778,7 @@ status open
 \end_inset
 
 
-\begin_inset Caption
+\begin_inset Caption Standard
 
 \begin_layout Plain Layout
 \begin_inset Formula $t=0.67$
@@ -7588,7 +7795,7 @@ status open
 \end_inset
 
 
-\begin_inset Caption
+\begin_inset Caption Standard
 
 \begin_layout Plain Layout
 Contours of velocity magnitude for the decay of isotropic turbulence in
@@ -7637,7 +7844,7 @@ status open
 \end_layout
 
 \begin_layout Plain Layout
-\begin_inset Caption
+\begin_inset Caption Standard
 
 \begin_layout Plain Layout
 
@@ -7664,7 +7871,7 @@ status open
 \end_inset
 
 
-\begin_inset Caption
+\begin_inset Caption Standard
 
 \begin_layout Plain Layout
 
@@ -7678,7 +7885,7 @@ status open
 \end_inset
 
 
-\begin_inset Caption
+\begin_inset Caption Standard
 
 \begin_layout Plain Layout
 Turbulent kinetic energy spectrum for the constant Smagorinsky model with
@@ -7722,7 +7929,7 @@ status open
 \end_layout
 
 \begin_layout Plain Layout
-\begin_inset Caption
+\begin_inset Caption Standard
 
 \begin_layout Plain Layout
 
@@ -7749,7 +7956,7 @@ status open
 \end_inset
 
 
-\begin_inset Caption
+\begin_inset Caption Standard
 
 \begin_layout Plain Layout
 
@@ -7763,7 +7970,7 @@ status open
 \end_inset
 
 
-\begin_inset Caption
+\begin_inset Caption Standard
 
 \begin_layout Plain Layout
 Turbulent kinetic energy spectrum for the WALE model with 
@@ -7806,7 +8013,7 @@ status open
 \end_layout
 
 \begin_layout Plain Layout
-\begin_inset Caption
+\begin_inset Caption Standard
 
 \begin_layout Plain Layout
 
@@ -7833,7 +8040,7 @@ status open
 \end_inset
 
 
-\begin_inset Caption
+\begin_inset Caption Standard
 
 \begin_layout Plain Layout
 
@@ -7847,7 +8054,7 @@ status open
 \end_inset
 
 
-\begin_inset Caption
+\begin_inset Caption Standard
 
 \begin_layout Plain Layout
 Turbulent kinetic energy spectrum for the Vreman model with 
@@ -7894,7 +8101,7 @@ status open
 \end_layout
 
 \begin_layout Plain Layout
-\begin_inset Caption
+\begin_inset Caption Standard
 
 \begin_layout Plain Layout
 
@@ -7921,7 +8128,7 @@ status open
 \end_inset
 
 
-\begin_inset Caption
+\begin_inset Caption Standard
 
 \begin_layout Plain Layout
 
@@ -7935,7 +8142,7 @@ status open
 \end_inset
 
 
-\begin_inset Caption
+\begin_inset Caption Standard
 
 \begin_layout Plain Layout
 Turbulent kinetic energy spectrum for the dynamic Smagorinsky model for
@@ -8740,7 +8947,7 @@ status collapsed
 \end_layout
 
 \begin_layout Plain Layout
-\begin_inset Caption
+\begin_inset Caption Standard
 
 \begin_layout Plain Layout
 \begin_inset Formula $x$
@@ -8763,7 +8970,7 @@ sideways false
 status collapsed
 
 \begin_layout Plain Layout
-\begin_inset Caption
+\begin_inset Caption Standard
 
 \begin_layout Plain Layout
 \begin_inset Formula $y$
@@ -8790,7 +8997,7 @@ status collapsed
 \end_inset
 
 
-\begin_inset Caption
+\begin_inset Caption Standard
 
 \begin_layout Plain Layout
 Momentum field resulting from ExponentialVortex initialization.
@@ -9337,7 +9544,7 @@ status open
 \end_layout
 
 \begin_layout Plain Layout
-\begin_inset Caption
+\begin_inset Caption Standard
 
 \begin_layout Plain Layout
 \begin_inset Formula $x$
@@ -9360,7 +9567,7 @@ sideways false
 status open
 
 \begin_layout Plain Layout
-\begin_inset Caption
+\begin_inset Caption Standard
 
 \begin_layout Plain Layout
 \begin_inset Formula $y$
@@ -9407,7 +9614,7 @@ status open
 \end_layout
 
 \begin_layout Plain Layout
-\begin_inset Caption
+\begin_inset Caption Standard
 
 \begin_layout Plain Layout
 vorticity field wih vectors
@@ -9427,7 +9634,7 @@ sideways false
 status open
 
 \begin_layout Plain Layout
-\begin_inset Caption
+\begin_inset Caption Standard
 
 \begin_layout Plain Layout
 vorticity field with streamlines
@@ -9451,7 +9658,7 @@ vorticity field with streamlines
 \end_inset
 
 
-\begin_inset Caption
+\begin_inset Caption Standard
 
 \begin_layout Plain Layout
 Momentum and vorticity fields resulting from LambsDipole initialization.
@@ -9852,7 +10059,7 @@ sideways false
 status collapsed
 
 \begin_layout Plain Layout
-\begin_inset Caption
+\begin_inset Caption Standard
 
 \begin_layout Plain Layout
 \begin_inset CommandInset label
@@ -9873,7 +10080,7 @@ Synopsis of Wasatch development.
 \align center
 \begin_inset Tabular
 <lyxtabular version="3" rows="15" columns="2">
-<features booktabs="true" tabularvalignment="middle">
+<features rotate="0" booktabs="true" tabularvalignment="middle">
 <column alignment="left" valignment="top" width="4in">
 <column alignment="left" valignment="top" width="0pt">
 <row>
