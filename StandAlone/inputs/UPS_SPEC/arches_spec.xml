@@ -770,7 +770,7 @@
       <WallHT                           spec="OPTIONAL NO_DATA">
         <temperature_label              spec="OPTIONAL STRING"/> <!-- tabluated name for temperature.  Default: temperature -->
         <model                          spec="MULTIPLE NO_DATA"
-                                        attribute1="type REQUIRED STRING 'simple_ht, region_ht'">
+                                        attribute1="type REQUIRED STRING 'simple_ht, region_ht, coal_region_ht'">
           <!-- simple heat transfer
                   Solves for the gas side wall temperature by solving the discrete form of:
                   q = - k dT/dy
@@ -806,6 +806,24 @@
 
             <geom_object/>
           </region>
+          <deposit_velocity_name             spec="REQUIRED STRING" need_applies_to="type coal_region_ht"/>  
+          <coal_region                       spec="MULTIPLE NO_DATA" need_applies_to="type coal_region_ht">
+            <t_sb                       spec="REQUIRED DOUBLE"/>  <!-- time since the last soot blow, [s] -->
+            <k                          spec="REQUIRED DOUBLE"/>  <!-- thermal conductivity, [W/(m K)] -->
+            <k_deposit                  spec="REQUIRED DOUBLE"/>  <!-- thermal conductivity of deposit, [W/(m K)] -->
+            <wall_thickness             spec="REQUIRED DOUBLE"/>  <!-- thickness of the wall in meters, [meters] -->
+            <initial_deposit_thickness     spec="REQUIRED DOUBLE"/>  <!-- thickness of wall deposit that depents on time averaged deposition flux in meters, [meters] -->
+            <permanent_deposit_thickness   spec="REQUIRED DOUBLE"/>  <!-- thickness of permanent wall deposit in meters, [meters] -->
+            <wall_emissivity            spec="OPTIONAL DOUBLE 'positive'"/>  <!-- emissivity of the wall with default of 1.0 -->
+            <tube_side_T                spec="REQUIRED DOUBLE"/>  <!-- temperature of the fluid on the tube side (constant), [K] -->
+            <relaxation_coef              spec="OPTIONAL DOUBLE 'positive'"/> <!-- relaxation to help with wildy varying wall temperatures
+                                                                                   because we have assumed (with this model) that the wall comes to
+                                                                                   instant equilibrium with the gas heat flux. Range 0 < relax < 1. Default = 1 no relaxation.
+                                                                                   for wall with large thermal resistance, recommend relaxation_coef=0.1,
+                                                                                   for small thermal resisitance, recommend relaxation_coef=1.0 -->
+
+            <geom_object/>
+          </coal_region>
 
         </model>
       </WallHT>
