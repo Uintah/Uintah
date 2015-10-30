@@ -54,9 +54,9 @@ class TimeIntegratorLabel;
 class PressureSolver {
 
 public:
-  
+
   //______________________________________________________________________/
-  // Construct an instance of the Pressure solver.  
+  // Construct an instance of the Pressure solver.
   PressureSolver(ArchesLabel* label,
                  const MPMArchesLabel* MAlb,
                  BoundaryCondition* bndry_cond,
@@ -74,10 +74,10 @@ public:
 
 
   //______________________________________________________________________
-  //  Task that is called by Arches and constains scheduling of other tasks  
+  //  Task that is called by Arches and constains scheduling of other tasks
   void sched_solve( const LevelP& level, SchedulerP&,
                     const TimeIntegratorLabel* timelabels,
-                    bool extraProjection, 
+                    bool extraProjection,
                     const int rk_stage );
 
   //______________________________________________________________________
@@ -95,17 +95,17 @@ public:
                                     DataWarehouse* new_dw,
                                     const TimeIntegratorLabel* timelabels);
 
-  inline std::vector<std::string> get_pressure_source_ref(){ 
+  inline std::vector<std::string> get_pressure_source_ref(){
     return d_new_sources;
-  } 
+  }
 
 private:
-  
+
   //______________________________________________________________________
   //  buildLinearMatrix:
   //  Compute the matrix coefficients & RHS and place them in either
   //  Hypre or Petsc data structures
-  void sched_buildLinearMatrix(SchedulerP&, 
+  void sched_buildLinearMatrix(SchedulerP&,
                                const PatchSet* patches,
                                const MaterialSet* matls,
                                const TimeIntegratorLabel* timelabels,
@@ -119,18 +119,18 @@ private:
                          const PatchSet* patchSet,
                          const TimeIntegratorLabel* timelabels,
                          bool extraProjection);
-                         
+
   //______________________________________________________________________
   //  setGuessForX:
-  //  This either sets the initial guess for X to 0.0 or moves the 
+  //  This either sets the initial guess for X to 0.0 or moves the
   //  timelabel->pressureGuess to the new_dw.
-  
+
   void sched_setGuessForX(SchedulerP& sched,
                           const PatchSet* patches,
                           const MaterialSet* matls,
                           const TimeIntegratorLabel* timelabels,
                           bool extraProjection);
-                          
+
   void setGuessForX ( const ProcessorGroup* pg,
                       const PatchSubset* patches,
                       const MaterialSubset* matls,
@@ -138,15 +138,15 @@ private:
                       DataWarehouse* new_dw,
                       const TimeIntegratorLabel* timelabels,
                       const bool extraProjection);
-                       
+
   //______________________________________________________________________
   // SolveSystem:
-  // This task calls UCF:Hypre to solve the system 
+  // This task calls UCF:Hypre to solve the system
   void sched_SolveSystem(SchedulerP& sched,
                          const PatchSet* patches,
                          const MaterialSet* matls,
                          const TimeIntegratorLabel* timelabels,
-                         bool extraProjection, 
+                         bool extraProjection,
                          const int rk_stage);
 
   //______________________________________________________________________
@@ -176,7 +176,7 @@ private:
                             const MaterialSet* matls,
                             const std::string& pressLabel,
                             const TimeIntegratorLabel* timelabels);
-                            
+
   void normalizePress ( const ProcessorGroup* pg,
                         const PatchSubset* patches,
                         const MaterialSubset* matls,
@@ -189,7 +189,7 @@ private:
   // Set stencil weights
   void calculatePressureCoeff(const Patch* patch,
                               ArchesVariables* vars,
-                              ArchesConstVariables* constvars); 
+                              ArchesConstVariables* constvars);
 
   //__________________________________
   // Modify stencil weights to account for voidage due
@@ -200,34 +200,33 @@ private:
 
   ArchesLabel* d_lab;
   const MPMArchesLabel* d_MAlab;
-  IntVector d_periodic_vector; 
+  IntVector d_periodic_vector;
 
   Source*             d_source;
   BoundaryCondition*  d_boundaryCondition;
   PhysicalConstants*  d_physicalConsts;
-  
+
   int d_indx;             // Arches matl index.
   int d_iteration;
   int nExtraSources;
   IntVector d_pressRef;   // cell index for reference pressure
 
   const ProcessorGroup* d_myworld;
-  double d_ref_value; 
+  double d_ref_value;
 
   bool d_norm_press;
   bool d_do_only_last_projection;
-  bool d_enforceSolvability; 
-  
+  bool d_enforceSolvability;
+
   SolverInterface* d_hypreSolver;
   SolverParameters* d_hypreSolver_parameters;
 
   std::vector<std::string> d_new_sources;
+  std::map<std::string, double> d_source_weights;
   std::vector<const VarLabel *> extraSourceLabels;
-  
-  
+
 }; // End class PressureSolver
 
 } // End namespace Uintah
 
 #endif
-
