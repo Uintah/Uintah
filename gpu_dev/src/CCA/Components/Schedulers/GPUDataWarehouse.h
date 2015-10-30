@@ -111,8 +111,6 @@ public:
     GhostType       gtype;
     unsigned int    numGhostCells;
     bool            staging;
-    bool            validOnGPU; //true if the GPU copy is the "live" copy and not an old version of the data. //TODO: Remove me
-    bool            validOnCPU; //true if the CPU copy is the current "live" copy. (It's possible to be both.)  //TODO: Remove me
   };
 
   struct GhostItem {
@@ -176,6 +174,34 @@ public:
     }
   };
 
+  enum status { NOT_ALLOCATED = 0x0000000,
+                ALLOCATED = 0x00000001,
+                VALID = 0x00000002,
+                COPYING_IN = 0x00000004,
+                UNKNOWN = 0x80000000}; //TODO: REMOVE THIS WHEN YOU CAN, IT'S NOT OPTIMAL DESIGN.
+  //copying_out can be the other 29 bits.  See below.
+
+  struct atomicDataStatus {
+
+    //    0                   1                   2                   3
+    //    0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
+    //   +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+    //   |                                                           | | |
+    //   +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+
+    //Not allocated/Invalid = If the value is 0x00000000
+    //Allocated             = bit 31 - 0x00000001
+    //Valid                 = bit 30 - 0x00000002
+    //Copying in            = bit 29 - 0x00000004
+    //Copying out           = bits 0 through 28, allowing for 29 copy out sources.
+
+    int atomic_varStatus;  //with 00000000 00000000 00000000 00000000
+
+    //With this approach we can allow for multiple copy outs, but only one copy in.
+    //We should never attempt to copy unless the status is odd (allocated)
+    //We should never copy out if the status isn't valid.
+
+  };
 
   struct stagingVar {
 
@@ -220,12 +246,17 @@ public:
     void*           device_ptr;   //Where it is on the device
     void*           host_contiguousArrayPtr;  //Use this address only if partOfContiguousArray is set to true.
     int             varDB_index;
-    //bool            validOnGPU; //true if the GPU copy is the "live" copy and not an old version of the data.
-    //bool            validOnCPU; //true if the CPU copy is the current "live" copy. (It's possible to be both.)
+    atomicDataStatus      varInHostMemory;
+    atomicDataStatus      varInGpuMemory;
 
   };
 
   struct allVarPointersInfo {
+    allVarPointersInfo() {
+      __sync_fetch_and_and(&varInHostMemory.atomic_varStatus, NOT_ALLOCATED);
+      __sync_fetch_and_and(&varInGpuMemory.atomic_varStatus, NOT_ALLOCATED);
+      varDB_index = -1;
+    }
     void*           device_ptr;   //Where it is on the device
     void*           host_contiguousArrayPtr;  //Use this address only if partOfContiguousArray is set to true.
     int3            device_offset;
@@ -237,9 +268,10 @@ public:
 
     int             varDB_index;     //Where this also shows up in the varDB.  We can use this to
                                 //get the rest of the information we need.
-
-    bool            validOnGPU; //true if the GPU copy is the "live" copy and not an old version of the data.
-    bool            validOnCPU; //true if the CPU copy is the current "live" copy. (It's possible to be both.)
+    atomicDataStatus      varInHostMemory;
+    atomicDataStatus      varInGpuMemory;
+    //bool            validOnGPU; //true if the GPU copy is the "live" copy and not an old version of the data.
+    //bool            validOnCPU; //true if the CPU copy is the current "live" copy. (It's possible to be both.)
 
     std::map<stagingVar, stagingVarInfo> stagingVars;  //When ghost cells in the GPU need to go to another memory space
                                                        //we will be creating temporary contiguous arrays to hold that
@@ -386,116 +418,11 @@ public:
   HOST_DEVICE bool getValidOnCPU(char const* label, int patchID, int matlIndx, int levelIndx);
   HOST_DEVICE void setValidOnCPU(char const* label, int patchID, int matlIndx, int levelIndx);
 
-  //Regarding ghost cells...
-  //Scenario 1: ghost cell on CPU -> var on same CPU:  Managed by getGridVar().
-  //Scenario 2: ghost cell on CPU -> var on different CPU:  Managed by sendMPI()
-  //Scenario 3: ghost cell on different CPU -> var on CPU:  Managed by recvMPI() and then getGridVar().
-
-  //Scenario 4: ghost cell on GPU -> var on different host's CPU:  Immediately after a task runs (send_old_data only?),
-  // prepareGPUDependencies is invoked, and it discovers all external dependencies.  It then calls
-  // the correct GPU DW's prepareGpuGhostCellIntoGpuArray which stages the ghost cell into an array on
-  // that GPU.  Then sendMPI() is called, which calls copyTempGhostCellsToHostVar(), which finds the
-  // correct array previously made and copies it to a host grid var.  From there the MPI engine
-  // can manage it normally.
-
-  //Scenario 5: ghost cell on GPU -> var on different host's GPU:  Immediately after a task runs (send_old_data only?),
-  // prepareGPUDependencies is invoked, and it discovers all external dependencies.  It then calls
-  // the correct GPU DW's prepareGpuGhostCellIntoGpuArray which stages the ghost cell into an array on
-  // that GPU.  Then sendMPI() is called, which calls copyTempGhostCellsToHostVar(), which finds the
-  // correct array previously made and copies it to a host grid var.  From there the receiving host
-  // moves onto scenario #6.
-
-  //Scenario 6: ghost cell different GPU -> var on current host's GPU: recvMPI() is called and processes
-  // data from other nodes.  These are added to the CPU DW. Then it follows the steps listed in the prior
-  // scenario. The UnifiedScheduler sees that the destination is
-  // valid on the GPU but the ghost cell is not, it is instead on the CPU.  So it puts the CPU ghost cell
-  // in the GPU DW.  It also adds the copying information and task ID information to correct GPU DW's d_varDB.
-  // Once d_varDB is on the GPU then a GPU kernel is called via copyGpuGhostCellsToGpuVarsInvoker
-  // which process all entries owned by the same task ID listed earlier.  All data is then copied into the
-  // correct destination GPU var.
-
-  //Scenario 7: ghost cell different CPU -> var on current host's GPU: Same as scenario 5.
-
-  //Scenario 8: ghost cell on CPU -> var on current host's GPU: The UnifiedScheduler sees that the destination is
-  // valid on the GPU but the ghost cell is not, it is instead on the CPU.  So it puts the CPU ghost cell
-  // in the GPU DW.  It also adds the copying information and task ID information to correct GPU DW's d_varDB.
-  // Once d_varDB is on the GPU then a GPU kernel is called via copyGpuGhostCellsToGpuVarsInvoker
-  // which process all entries owned by the same task ID listed earlier.  All data is then copied into the
-  // correct destination GPU var.
-
-  //Scenario 9: ghost cell on GPU -> var on same GPU:  initiateH2D recognizes the destination var is valid
-  // and so it adds the copying information and task ID information to correct GPU DW's d_varDB.
-  // Once d_varDB is on the GPU then a GPU kernel is called via copyGpuGhostCellsToGpuVarsInvoker
-  // which process all entries owned by the same task ID listed earlier.  All data is then copied into the
-  // correct destination GPU var.
-
-  //Scenario 10: var and ghost cell on CPU -> var on GPU: initiateH2D recognizes the data is on the CPU but not on the GPU.
-  // It calls the CPU's getGridVar indicating how many ghost cells, resulting in a CPU grid var with ghost cells in it.
-  // It is added to the GPU DW by adding it to the host's varPointers collection and d_varDB collection.  The
-  // d_varDB is copied to the GPU.
-
-  //Scenario 11: var and ghost cell on GPU -> var on CPU: The schedule recognizes the task is on the CPU, so initiateD2H
-  // checks if any data is valid on the GPU (see TODO).  If the GPU var has larger dimensions, then resize the CPU var to match
-  // (any task not needing ghost cells will just ignore it anyway).  Copy the data to the CPU.  Then mark CPU data
-  // as valid.
-
-  //Scenario 12: ghost cells and vars are on both CPU and a GPU -> var on different GPU: This happens after an data output
-  //task runs.  Instead of doing a GPU->different GPU copy, instead treat it like Scenario 9.
-
-  //Scenario 13: Ghost cells on one GPU -> var on different GPU but same host:  Immediately after a task runs,
-  // prepareGPUDependencies is invoked, and it discovers all internal dependencies.  It then calls
-  // the correct GPU DW's prepareGpuGhostCellIntoGpuArray which stages the ghost cell into an array on
-  // that GPU.  postMPISends() is invoked.  Then copyGPUInternalDependencies() is invoked.  It gets a collection
-  // of all tempGhostCells items belonging to that task.  For each ghost cell it then calls
-  // prepareGpuToGpuGhostCellDestination(), which creates a same sized array on the destination GPU.  This info
-  // is added into that GPU DW tempGhostCells.  Then a cudaMemcpyPeer() is called copying data between devices.
-  //
-  //
-
-  //Scenario X: ghost cell only on GPU -> var on CPU.  I honestly can't think of a scenario where this would occur.
-
-  //Useful for sendMPI.  Processes the tempGhostCells collection for the exact var and size that sendMPI requested.
-  //It pulls data out of the GPU into a host array variable.  From there it's managed like any other CPU variable.
-  /*HOST_DEVICE void  copyTempGhostCellsToHostVar(void* hostVarPointer,
-                                                int3 ghostCellLow,
-                                                int3 ghostCellHigh,
-                                                char const* label,
-                                                int patchID,
-                                                int matlIndx,
-                                                int levelIndx);
-
-  //Called by prepareGPUDependencies, handles the GPU->anywhere else but the same GPU
-  //It does this by staging the ghost cell data into an array for something else to pick up and copy.
-  //These arrays are tracked by the tempGhostCells collection.
-  HOST_DEVICE void prepareGpuGhostCellIntoGpuArray(void* cpuDetailedTaskOwner,
-                                                   int3 ghostCellLow, int3 ghostCellHigh,
-                                                   int sizeOfDataType,
-                                                   char const* label, int matlIndx, int levelIndx,
-                                                   int fromPatchID, int toPatchID,
-                                                   int fromDeviceIndex, int toDeviceIndex,
-                                                   int fromresource, int toresource);
-
-  //Called by prepareGpuGhostCellIntoGpuArray, this is a method for a kernel which
-  //goes through everything listed in the d_varDB and copies them to a specified array.
-  HOST_DEVICE void copyGhostCellsToArray(void* d_ghostCellData, int index, int3 ghostCellLow, int3 ghostCellHigh);
-*/
 
   //This and the function below go through the d_ghostCellData array and copies data into
   //the correct destination GPU var.  This would be the final step of a GPU ghost cell transfer.
   HOST_DEVICE void copyGpuGhostCellsToGpuVarsInvoker(cudaStream_t* stream);
   HOST_DEVICE void copyGpuGhostCellsToGpuVars();
-/*
-  //Called by copyGPUGhostCellsBetweenDevices().  If the destination is another GPU on the same physical node
-  //then this creates room on the destination GPU and stores that information in d_varDB to
-  //later process.
-  HOST_DEVICE void prepareGpuToGpuGhostCellDestination(void* cpuDetailedTaskOwner,
-                                                       int3 ghostCellLow, int3 ghostCellHigh,
-                                                       int sizeOfDataType,
-                                                       char const* label, int matlIndx, int levelIndx,
-                                                       int fromPatchID, int toPatchID,
-                                                       int fromDeviceIndex, int toDeviceIndex,
-                                                       void * &data_ptr);
-*/
 
   HOST_DEVICE bool ghostCellCopiesNeeded();
   HOST_DEVICE void getSizes(int3& low, int3& high, int3& siz, GhostType& gtype, int& numGhostCells, char const* label, int patchID, int matlIndx, int levelIndx = 0);

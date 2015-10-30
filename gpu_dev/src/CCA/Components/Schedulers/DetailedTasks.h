@@ -406,8 +406,81 @@ namespace Uintah {
     std::map <unsigned int, cudaStream_t*> d_cudaStreams;
 #endif
 
+
   }; // end class DetailedTask
   
+#ifdef HAVE_CUDA
+
+  struct varTuple {
+     std::string          label;
+     int             matlIndx;
+     int             levelIndx;
+     int             patch;
+     int             dataWarehouse;
+     IntVector       sharedLowCoordinates;
+     IntVector       sharedHighCoordinates;
+
+     varTuple(std::string label, int matlIndx, int levelIndx, int patch, int dataWarehouse, IntVector sharedLowCoordinates, IntVector sharedHighCoordinates) {
+       this->label = label;
+       this->matlIndx = matlIndx;
+       this->levelIndx = levelIndx;
+       this->patch = patch;
+       this->dataWarehouse = dataWarehouse;
+       this->sharedLowCoordinates = sharedLowCoordinates;
+       this->sharedHighCoordinates = sharedHighCoordinates;
+     }
+     //This is so it can be used in an STL map
+     bool operator<(const varTuple& right) const {
+       if (this->label < right.label) {
+         return true;
+       } else if (this->label == right.label && (this->matlIndx < right.matlIndx)) {
+         return true;
+       } else if (this->label == right.label && (this->matlIndx == right.matlIndx)
+                  && (this->levelIndx < right.levelIndx)) {
+         return true;
+       } else if (this->label == right.label && (this->matlIndx == right.matlIndx)
+                  && (this->levelIndx == right.levelIndx) && (this->patch < right.patch)) {
+         return true;
+       } else if (this->label == right.label && (this->matlIndx == right.matlIndx)
+                  && (this->levelIndx == right.levelIndx)
+                  && (this->patch == right.patch)
+                  && (this->dataWarehouse < right.dataWarehouse)) {
+         return true;
+       } else if (this->label == right.label && (this->matlIndx == right.matlIndx)
+           && (this->levelIndx == right.levelIndx)
+           && (this->patch == right.patch)
+           && (this->dataWarehouse == right.dataWarehouse)
+           && (this->sharedLowCoordinates < right.sharedLowCoordinates)) {
+         return true;
+       } else if (this->label == right.label && (this->matlIndx == right.matlIndx)
+           && (this->levelIndx == right.levelIndx)
+           && (this->patch == right.patch)
+           && (this->dataWarehouse == right.dataWarehouse)
+           && (this->sharedLowCoordinates == right.sharedLowCoordinates)
+           && (this->sharedHighCoordinates < right.sharedHighCoordinates)) {
+         return true;
+       } else {
+         return false;
+       }
+     }
+   };
+
+  class CopyDependenciesGpu
+  {
+    public:
+      void addVar(std::string label, int matlIndx, int levelIndx, int patch, int dataWarehouse, IntVector sharedLowCoordinates, IntVector sharedHighCoordinates){
+        varTuple temp(label, matlIndx, levelIndx, patch, dataWarehouse, sharedLowCoordinates, sharedHighCoordinates);
+        varsBeingCopied.push_back(temp);
+      }
+    private:
+      //uniquely identify a variable by a tuple of label/patch/material/level/dw/low/high
+      cudaStream_t* stream;
+      unsigned int device;
+      std::vector<varTuple> varsBeingCopied;
+  }; // end class CopyDependencies
+
+#endif
+
   class DetailedTaskPriorityComparison
   {
     public:
