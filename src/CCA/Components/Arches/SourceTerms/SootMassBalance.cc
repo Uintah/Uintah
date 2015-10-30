@@ -177,10 +177,10 @@ SootMassBalance::computeSource( const ProcessorGroup* pc,
 		 delta_t,
                  rate[c]
                 );
-       if (c==IntVector(75,75,75)){
-         cout << "Ns: " << Ns[c] << " " << rho[c]  << " " << nd << endl; 
-         cout << "nd: " << temperature[c] << " " << XO2 << " " << rhoTar << " " << rhoYsoot << " " << nd << " " << rate[c] << endl; 
-       }
+       //if (c==IntVector(75,75,75)){
+       //  cout << "Ns: " << Ns[c] << " " << rho[c]  << " " << nd << endl; 
+       //  cout << "nd: " << temperature[c] << " " << XO2 << " " << rhoTar << " " << rhoYsoot << " " << nd << " " << rate[c] << endl; 
+       //}
 
     }
   }
