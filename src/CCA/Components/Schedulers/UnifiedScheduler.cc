@@ -2845,6 +2845,7 @@ void UnifiedScheduler::initiateH2DCopies(DetailedTask* dtask) {
                             << " and the neighbor variable has a virtual offset (" << virtualOffset.x()
                             << ", " << virtualOffset.y()
                             << ", " << virtualOffset.z() << ")"
+                            << " and is at host address " << iter->validNeighbor->getBasePointer()
                             << endl;
                       }
                       cerrLock.unlock();
@@ -2852,6 +2853,35 @@ void UnifiedScheduler::initiateH2DCopies(DetailedTask* dtask) {
 
                     //If they came in via MPI, then these neighbors are foreign.
                     if (iter->validNeighbor->isForeign()) {
+
+
+                      double * phi_data = new double[iter->validNeighbor->getDataSize()/sizeof(double)];
+                       iter->validNeighbor->copyOut(phi_data);
+                       int zlow = iter->low.z();
+                       int ylow = iter->low.y();
+                       int xlow = iter->low.x();
+                       int zhigh = iter->high.z();
+                       int yhigh = iter->high.y();
+                       int xhigh = iter->high.x();
+                       int ystride = ghost_host_size.y();
+                       int xstride = ghost_host_size.x();
+
+                       printf(" - initiateH2D Going to copy data between (%d, %d, %d) and (%d, %d, %d)\n", xlow, ylow, zlow, xhigh, yhigh, zhigh);
+                       for (int k = zlow; k < zhigh; k++) {
+                         for (int j = ylow; j < yhigh; j++) {
+                           for (int i = xlow; i < xhigh; i++) {
+                             //cout << "(x,y,z): " << k << "," << j << "," << i << endl;
+                             // For an array of [ A ][ B ][ C ], we can index it thus:
+                             // (a * B * C) + (b * C) + (c * 1)
+                             int idx = ((i-xlow) + ((j-ylow) * xstride) + ((k-zlow) * xstride * ystride));
+                             printf(" -  initiateH2D phi(%d, %d, %d) is %1.6lf ptr %p base pointer %p idx %d\n", i, j, k, phi_data[idx], phi_data + idx, phi_data, idx);
+                           }
+                         }
+                       }
+                       delete[] phi_data;
+
+
+
                       //Prepare to tell the host-side GPU DW to allocated space for this variable.
                       deviceVars.add(sourcePatch, matlID, levelID, true,
                           ghost_host_size, srcvar->getDataSize(),
@@ -3328,9 +3358,13 @@ void UnifiedScheduler::prepareDeviceVars(DetailedTask* dtask,
       for (multimap<GpuUtilities::LabelPatchMatlLevelDw,
           DeviceGridVariableInfo>::iterator it = varMap.begin();
           it != varMap.end(); ++it) {
+        int whichGPU = it->second.whichGPU;
+        int dwIndex = it->second.dep->mapDataWarehouse();
+        GPUDataWarehouse* gpudw = dws[dwIndex]->getGPUDW(whichGPU);
+
         if (it->second.staging == isStaging) {
-          int dwIndex = it->second.dep->mapDataWarehouse();
-          if (deviceVars.getTotalVars(it->second.whichGPU, dwIndex) >= 0) {
+
+          if (deviceVars.getTotalVars(whichGPU, dwIndex) >= 0) {
             //No contiguous arrays section
 
             void* device_ptr = NULL;  // device base pointer to raw data
@@ -3346,7 +3380,7 @@ void UnifiedScheduler::prepareDeviceVars(DetailedTask* dtask,
             switch (it->second.dep->var->typeDescription()->getType()) {
             case TypeDescription::PerPatch: {
               GPUPerPatchBase* patchVar = OnDemandDataWarehouse::createGPUPerPatch(it->second.sizeOfDataType);
-              dws[dwIndex]->getGPUDW(it->second.whichGPU)->allocateAndPut(*patchVar,
+              gpudw->allocateAndPut(*patchVar,
                   it->second.dep->var->getName().c_str(), it->first.patchID,
                   it->first.matlIndx, it->first.levelIndx, it->second.staging,
                   it->second.sizeOfDataType);
@@ -3365,7 +3399,7 @@ void UnifiedScheduler::prepareDeviceVars(DetailedTask* dtask,
               delete tempGhostvar;
 
               GPUGridVariableBase* device_var = OnDemandDataWarehouse::createGPUGridVariable(it->second.sizeOfDataType);
-              GPUDataWarehouse* gpudw = dws[dwIndex]->getGPUDW(it->second.whichGPU);
+
               if (gpudw) {
                 gpudw->allocateAndPut(
                     *device_var, it->second.dep->var->getName().c_str(),
@@ -3398,9 +3432,9 @@ void UnifiedScheduler::prepareDeviceVars(DetailedTask* dtask,
 
             //If it's a requires, copy the data on over.  If it's a computes, leave it as allocated but unused space.
             if (it->second.dep->deptype == Task::Requires) {
-              cudaStream_t* stream = dtask->getCUDAStream(it->second.whichGPU);
+              cudaStream_t* stream = dtask->getCUDAStream(whichGPU);
               //cudaStream_t stream = *(dtask->getCUDAStream(it->second.whichGPU));
-              OnDemandDataWarehouse::uintahSetCudaDevice(it->second.whichGPU);
+              OnDemandDataWarehouse::uintahSetCudaDevice(whichGPU);
               switch (it->second.dep->var->typeDescription()->getType()) {
               case TypeDescription::PerPatch: {
                 if (it->second.dest == GpuUtilities::sameDeviceSameMpiRank) {
@@ -3422,15 +3456,22 @@ void UnifiedScheduler::prepareDeviceVars(DetailedTask* dtask,
                   if (gpu_stats.active()) {
                     cerrLock.lock();
                     gpu_stats << myRankThread()
-                        << " prepareDeviceVars() - Copying into GPU #" << it->second.whichGPU
+                        << " prepareDeviceVars() - Copying into GPU #" << whichGPU
                         << " data for variable " << it->first.label
                         << " patch: " << it->first.patchID
                         << " material: " << it->first.matlIndx
                         << " level: " << it->first.levelIndx
+                        << " from host address " << dynamic_cast<GridVariableBase*>(it->second.var)->getBasePointer()
+                        << " to device address " << device_ptr
                         << " into REQUIRES GPUDW " << endl;
                     cerrLock.unlock();
                   }
-
+                  //gpudw->copyToGpuAndLoadDependency(device_ptr,
+                  //    dynamic_cast<GridVariableBase*>(it->second.var)->getBasePointer(),
+                  //    it->second.varMemSize,
+                  //    stream,
+                  //    dtask->getDependencyCollection());
+                  //If it's in progress, don't recopy.  Otherwise, copy.
                   CUDA_RT_SAFE_CALL(
                       cudaMemcpyAsync(device_ptr,
                           dynamic_cast<GridVariableBase*>(it->second.var)->getBasePointer(),
@@ -3617,7 +3658,7 @@ void UnifiedScheduler::prepareTaskVarsIntoTaskDW(DetailedTask* dtask,
   multimap<GpuUtilities::LabelPatchMatlLevelDw, DeviceGridVariableInfo> & taskVarMap = taskVars.getMap();
 
   //Because maps are unordered, it is possible a staging var could be inserted before the regular
-  //var exists.  So  just loop twice, once when all staging is false, then loop again when all
+  //var exists.  So just loop twice, once when all staging is false, then loop again when all
   //staging is true
   bool isStaging = false;
 
@@ -5380,28 +5421,34 @@ void UnifiedScheduler::copyAllExtGpuDependenciesToHost(const DetailedTask* dtask
 
         //If there's ever a need to manually verify what was copied host-to-host, use this code below.
         //if (/*it->second.sourcePatchPointer->getID() == 1 && */ item.dep->var->d_name == "phi") {
-        //  double * phi_data = new double[gridVar->getDataSize()/sizeof(double)];
-        //  tempGhostVar->copyOut(phi_data);
-        //  IntVector l = ghostLow;
-        //  IntVector h = ghostHigh;
-        //  int zhigh = h.z();
-        //  int yhigh = h.y();
-        //  int xhigh = h.x();
-        //  int ghostLayers = 1;
-        //  int ystride = yhigh + ghostLayers;
-        //  int xstride = xhigh + ghostLayers;
-        //  printf(" - Going to copy data between (%d, %d, %d) and (%d, %d, %d)\n", l.x(), l.y(), l.z(), h.x(), h.y(), h.z());
-        //  for (int k = l.z(); k < zhigh; k++) {
-        //    for (int j = l.y(); j < yhigh; j++) {
-        //      for (int i = l.x(); i < xhigh; i++) {
-        //        //cout << "(x,y,z): " << k << "," << j << "," << i << endl;
-        //        // For an array of [ A ][ B ][ C ], we can index it thus:
-        //        // (a * B * C) + (b * C) + (c * 1)
-        //        int idx = i + (j * xstride) + (k * xstride * ystride);
-        //        printf(" - phi(%d, %d, %d) is %1.6lf ptr %p\n", i, j, k, phi_data[idx], phi_data + idx);
-        //      }
-        //    }
-        //  }
+          double * phi_data = new double[gridVar->getDataSize()/sizeof(double)];
+          tempGhostVar->copyOut(phi_data);
+          IntVector l = ghostLow;
+          IntVector h = ghostHigh;
+          int zlow = l.z();
+          int ylow = l.y();
+          int xlow = l.x();
+          int zhigh = h.z();
+          int yhigh = h.y();
+          int xhigh = h.x();
+          //int ghostLayers = 0;
+          //int ystride = yhigh + ghostLayers;
+          //int xstride = xhigh + ghostLayers;
+          int ystride = h.y() - l.y();
+          int xstride = h.x() - l.x();
+
+          printf(" - Going to copy data between (%d, %d, %d) and (%d, %d, %d)\n", l.x(), l.y(), l.z(), h.x(), h.y(), h.z());
+          for (int k = l.z(); k < zhigh; k++) {
+            for (int j = l.y(); j < yhigh; j++) {
+              for (int i = l.x(); i < xhigh; i++) {
+                //cout << "(x,y,z): " << k << "," << j << "," << i << endl;
+                // For an array of [ A ][ B ][ C ], we can index it thus:
+                // (a * B * C) + (b * C) + (c * 1)
+                int idx = ((i-xlow) + ((j-ylow) * xstride) + ((k-zlow) * xstride * ystride));
+                printf(" - phi(%d, %d, %d) is %1.6lf ptr %p base pointer %p idx %d\n", i, j, k, phi_data[idx], phi_data + idx, phi_data, idx);
+              }
+            }
+          }
         //}
 
         //let go of our reference counters.
