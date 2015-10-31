@@ -496,6 +496,19 @@ void ParticleCreator::createPoints(const Patch* patch, GeometryObject* obj,
   Vector dxpp = patch->dCell()/ppc;
   Vector dcorner = dxpp*0.5;
 
+  // Affine transformation for making conforming particle distributions
+  // to be used in the conforming CPDI simulations. The input vectors are
+  // optional and if you do not wish to use the affine transformation, just do
+  // not define them in the input file.
+  Vector affineTrans_A0=obj->getInitialData_Vector("affineTransformation_A0");
+  Vector affineTrans_A1=obj->getInitialData_Vector("affineTransformation_A1");
+  Vector affineTrans_A2=obj->getInitialData_Vector("affineTransformation_A2");
+  Vector affineTrans_b= obj->getInitialData_Vector("affineTransformation_b");
+  Matrix3 affineTrans_A(
+          affineTrans_A0[0],affineTrans_A0[1],affineTrans_A0[2],
+          affineTrans_A1[0],affineTrans_A1[1],affineTrans_A1[2],
+          affineTrans_A2[0],affineTrans_A2[1],affineTrans_A2[2]);
+
   // AMR stuff
   const Level* curLevel = patch->getLevel();
   bool hasFiner = curLevel->hasFinerLevel();
@@ -516,19 +529,6 @@ void ParticleCreator::createPoints(const Patch* patch, GeometryObject* obj,
        continue;
       }
     }
-
-    // Affine transformation for making conforming particle distributions
-    // to be used in the conforming CPDI simulations. The input vectors are
-    // optional and if you do not wish to use the affine transformation, just do
-    // not define them in the input file.
-    Vector affineTrans_A0=obj->getInitialData_Vector("affineTransformation_A0");
-    Vector affineTrans_A1=obj->getInitialData_Vector("affineTransformation_A1");
-    Vector affineTrans_A2=obj->getInitialData_Vector("affineTransformation_A2");
-    Vector affineTrans_b= obj->getInitialData_Vector("affineTransformation_b");
-    Matrix3 affineTrans_A(
-            affineTrans_A0[0],affineTrans_A0[1],affineTrans_A0[2],
-            affineTrans_A1[0],affineTrans_A1[1],affineTrans_A1[2],
-            affineTrans_A2[0],affineTrans_A2[1],affineTrans_A2[2]);
 
     for(int ix=0;ix < ppc.x(); ix++){
       for(int iy=0;iy < ppc.y(); iy++){
