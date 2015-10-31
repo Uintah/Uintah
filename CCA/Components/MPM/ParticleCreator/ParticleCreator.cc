@@ -567,12 +567,7 @@ ParticleCreator::initializeParticle(const Patch* patch,
   pvars.ptemperature[i] = (*obj)->getInitialData_double("temperature");
   pvars.plocalized[i]   = 0;
 
-  // AMR stuff
-  // I don't like putting this here, a conditional around each particle.
-  // A better solution would be to pass in the value for prefined.  Make
-  // prefined = 1 on the finest level (unless there is only 1 level),
-  // so that particles don't get refined
-  // to smaller than they start in that region initially.
+  // For AMR
   const Level* curLevel = patch->getLevel();
   pvars.prefined[i]     = curLevel->getIndex();
 
