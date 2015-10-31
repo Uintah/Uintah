@@ -681,19 +681,12 @@ namespace Wasatch{
       factory.cleave_from_children( psrcID  );
     }
     
-<<<<<<< .working
-    if( !factory.have_entry( tagNames.pressuresrc ) ){
-      const Expr::Tag densStarTag  = tagNames.make_star(densTag, Expr::STATE_NONE);
-      const Expr::Tag dens2StarTag = tagNames.make_double_star(densTag, Expr::STATE_NONE);
-      Expr::TagList velStarTags = Expr::TagList();
-=======
     
     //__________________
     // continuity residual
     const bool computeContinuityResidual = params->findBlock("ComputeMassResidual");
     if( computeContinuityResidual ) {
       const Expr::Tag contTag = tagNames.continuityresidual;
->>>>>>> .merge-right.r54249
       
       if( !factory.have_entry( contTag ) ){
         typedef typename ContinuityResidual<SVolField,XVolField,YVolField,ZVolField>::Builder ContResT;
@@ -868,8 +861,6 @@ namespace Wasatch{
         bcHelper.create_dummy_dependency<FieldT, FieldT>(momTimeAdvanceTag, tag_list(thisVelTag_),INITIALIZATION);
       }
 
-<<<<<<< .working
-=======
       if( !isConstDensity_ ){
         const Expr::Tag rhoTagInit(densityTag_.name(), Expr::STATE_NONE);
         const Expr::Tag rhoStarTag = tagNames.make_star(densityTag_); // get the tagname of rho*
@@ -877,7 +868,6 @@ namespace Wasatch{
         const Expr::Tag rhoTagAdv(densityTag_.name(), Expr::STATE_NONE);
         bcHelper.create_dummy_dependency<SVolField, SVolField>(rhoStarTag, tag_list(rhoTagAdv), ADVANCE_SOLUTION);
       }
->>>>>>> .merge-right.r54249
     }
     //
     // END DUMMY MODIFIER SETUP
@@ -891,8 +881,6 @@ namespace Wasatch{
 
       const bool isNormal = is_normal_to_boundary(this->staggered_location(), myBndSpec.face);
       
-<<<<<<< .working
-=======
       // variable density: add bcopiers on all boundaries
       if( !isConstDensity_ ){
         // if we are solving a variable density problem, then set bcs on density estimate rho*
@@ -915,7 +903,6 @@ namespace Wasatch{
         }
       }
       
->>>>>>> .merge-right.r54249
       switch (myBndSpec.type) {
         case WALL:
         {
@@ -1111,14 +1098,7 @@ namespace Wasatch{
       bcHelper.apply_boundary_condition<SVolField>(densTag, taskCat);
       
       // set bcs for density_*
-<<<<<<< .working
       bcHelper.apply_boundary_condition<SVolField>( tagNames.make_star(densityTag_,Expr::STATE_NONE), taskCat );
-
-      // set bcs for divmom*
-      bcHelper.apply_boundary_condition<SVolField>(tagNames.divmomstar, taskCat);
-=======
-      bcHelper.apply_boundary_condition<SVolField>( tagNames.make_star(densityTag_,Expr::STATE_NONE), taskCat );
->>>>>>> .merge-right.r54249
     }
   }
 
