@@ -24,7 +24,6 @@
 
 //----- IncDynamicProcedure.cc --------------------------------------------------
 
-#include <TauProfilerForSCIRun.h>
 #include <CCA/Components/Arches/IncDynamicProcedure.h>
 #include <CCA/Components/Arches/PhysicalConstants.h>
 #include <CCA/Components/Arches/BoundaryCondition.h>
@@ -685,10 +684,6 @@ IncDynamicProcedure::reComputeFilterValues(const ProcessorGroup* pc,
                                            const TimeIntegratorLabel* timelabels)
 {
   for (int p = 0; p < patches->size(); p++) {
-    TAU_PROFILE_TIMER(compute1, "Compute1", "[reComputeFilterValues::compute1]" , TAU_USER);
-    TAU_PROFILE_TIMER(compute2, "Compute2", "[reComputeFilterValues::compute2]" , TAU_USER);
-    TAU_PROFILE_TIMER(compute3, "Compute3", "[reComputeFilterValues::compute3]" , TAU_USER);
-    TAU_PROFILE_TIMER(compute4, "Compute4", "[reComputeFilterValues::compute4]" , TAU_USER);
     const Patch* patch = patches->get(p);
     int archIndex = 0; // only one arches material
     int indx = d_lab->d_sharedState->getArchesMaterial(archIndex)->getDWIndex(); 
@@ -803,7 +798,6 @@ IncDynamicProcedure::reComputeFilterValues(const ProcessorGroup* pc,
     int endX = idxHi.x();
     if (xplus) endX--;
 
-  TAU_PROFILE_START(compute1);
     for (int colZ = startZ; colZ < endZ; colZ ++) {
       for (int colY = startY; colY < endY; colY ++) {
         for (int colX = startX; colX < endX; colX ++) {
@@ -842,7 +836,7 @@ IncDynamicProcedure::reComputeFilterValues(const ProcessorGroup* pc,
         }
       }
     }
-  TAU_PROFILE_STOP(compute1);
+
     Array3<double> filterUU(patch->getExtraCellLowIndex(), patch->getExtraCellHighIndex());
     filterUU.initialize(0.0);
     Array3<double> filterUV(patch->getExtraCellLowIndex(), patch->getExtraCellHighIndex());
@@ -882,8 +876,6 @@ IncDynamicProcedure::reComputeFilterValues(const ProcessorGroup* pc,
 
     string msg = "Time for the Filter operation in Turbulence Model: ";
     proc0cerr << msg << Time::currentSeconds() - start_turbTime << " seconds\n";
-
-    TAU_PROFILE_START( compute2 );
 
     for (int colZ = indexLow.z(); colZ <= indexHigh.z(); colZ ++) {
       for (int colY = indexLow.y(); colY <= indexHigh.y(); colY ++) {
@@ -985,8 +977,6 @@ IncDynamicProcedure::reComputeFilterValues(const ProcessorGroup* pc,
         }
       }
     }
-  TAU_PROFILE_STOP(compute2);
-  TAU_PROFILE_START(compute3);
     startZ = indexLow.z();
     endZ = indexHigh.z()+1;
     startY = indexLow.y();
@@ -1206,9 +1196,6 @@ IncDynamicProcedure::reComputeFilterValues(const ProcessorGroup* pc,
           MMI[currCell] = MMI[prevCell];
       }
     }        
-
-  TAU_PROFILE_STOP(compute3);
-
   }
 }
 

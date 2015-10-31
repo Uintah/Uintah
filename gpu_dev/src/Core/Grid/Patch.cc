@@ -33,8 +33,8 @@
 #include <Core/Grid/BoundaryConditions/BCData.h>
 #include <Core/Grid/BoundaryConditions/BCDataArray.h>
 #include <Core/Grid/BoundaryConditions/BoundCond.h>
+#include <Core/Grid/BoundaryConditions/BoundCondFactory.h>
 #include <Core/Containers/StaticArray.h>
-#include <TauProfilerForSCIRun.h>
 #include <Core/Thread/AtomicCounter.h>
 #include <Core/Thread/Mutex.h>
 #include <Core/Math/MiscMath.h>
@@ -210,6 +210,37 @@ void Patch::findCellNodes27(const Point& pos, IntVector ni[27]) const
 }
 
 
+    /**
+     *  \author  Derek Harris
+     *  \date    September, 2015
+     *  Allows a component to add a boundary condition, if it doesn't already exist.
+     */
+  void Patch::possiblyAddBC(const Patch::FaceType face, // face
+                     const int child,   // child (each child is only applicable to one face)
+                     const std::string &desc, // new field label (label) 
+                     int mat_id,        // material 
+                     const double bc_value,   // value of boundary condition
+                     const std::string &bc_kind, // bc type, dirichlet or neumann
+                     const std::string &bcFieldName, // identifier field variable Name (var)
+                     const std::string &faceName)  const  //  
+{
+    // avoid adding duplicate boundary conditions 
+  if (getModifiableBCDataArray(face)->checkForBoundCondData(mat_id,bcFieldName,child)  ){  // avoid adding duplicate boundary conditions 
+    return;
+  }
+  if (getModifiableBCDataArray(face)->checkForBoundCondData(mat_id,desc,child)  ){  // avoid seg fault, when there are no boundary conditions on a face 
+
+    if ( getModifiableBCDataArray(face)->getBCGeom(mat_id)[child]->getBCName()  == faceName  ){
+      BoundCondBase* bc;
+      BoundCondFactory::customBC( bc, mat_id, faceName, bc_value,bcFieldName, bc_kind );
+      getModifiableBCDataArray(face)->getBCGeom(mat_id)[child]->sudoAddBC(bc);
+      delete bc;
+    }
+  }
+}
+
+
+
 /**
  * Returns the position of the node idx in domain coordinates.
  */
@@ -360,6 +391,29 @@ Patch::setInteriorBndArrayBCValues(Patch::FaceType face, BCDataArray* bc)
 //-----------------------------------------------------------------------------------------------
 
 const BCDataArray* Patch::getBCDataArray(Patch::FaceType face) const
+{
+  if (d_arrayBCS) {
+    if ((*d_arrayBCS)[face]) {
+      return (*d_arrayBCS)[face];
+    } else {
+      ostringstream msg;
+      msg << "face = " << face << endl;
+      SCI_THROW(InternalError("d_arrayBCS[face] has not been allocated",
+                              __FILE__, __LINE__));
+    }
+  } else {
+    SCI_THROW(InternalError("Error: d_arrayBCs not allocated. This means that no boundary conditions were found. If you are solving a periodic problem, please add a <periodic> tag to your input file to avoid this error. Otherwise, add a <BoundaryConditions> block.",
+                            __FILE__, __LINE__));
+  }
+
+}
+
+    /**
+     *  \author  Derek Harris
+     *  \date    September, 2015
+     *  Allows a component to alter or add a boundary condition.  
+     */
+BCDataArray* Patch::getModifiableBCDataArray(Patch::FaceType face) const
 {
   if (d_arrayBCS) {
     if ((*d_arrayBCS)[face]) {
@@ -1136,7 +1190,6 @@ IntVector Patch::getSFCZFORTHighIndex__Old() const
 void Patch::cullIntersection(VariableBasis basis, IntVector bl, const Patch* neighbor,
                              IntVector& region_low, IntVector& region_high) const
 {
-  TAU_PROFILE("Patch::cullIntersection", " ", TAU_USER); 
   // on certain AMR grid configurations, with extra cells, patches can overlap
   // such that the extra cell of one patch overlaps a normal cell of another
   // in such conditions, we shall exclude that extra cell from MPI communication
@@ -1682,7 +1735,6 @@ IntVector Patch::getHighIndexWithDomainLayer(VariableBasis basis) const
 
 void Patch::finalizePatch()
 {
-  TAU_PROFILE("Patch::finalizePatch()", " ", TAU_USER);
  
 }
 

@@ -609,9 +609,9 @@ void VariableStats::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info,
       SpatialOps::SpatFldPtr<XVolF> flux = SpatialOps::SpatialFieldStore::get<XVolF>(*u);
       *flux <<= 0.0;
 
-      SVolFP const phi = tsk_info->get_const_so_field<SVolF>( _flux_sum_info[i].phi );
-
       if ( _flux_sum_info[i].do_phi ){
+
+        SVolFP const phi = tsk_info->get_const_so_field<SVolF>( _flux_sum_info[i].phi );
 
         *flux <<= ( (*u) * (*ix)(*rho * *phi) );
         *sum <<= *old_sum + dt * ( *flux );
@@ -632,8 +632,6 @@ void VariableStats::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info,
     //Y FLUX
     N = _ave_y_flux_sum_names.size();
     for ( int i = 0; i < N; i++ ){
-
-      SVolFP const phi = tsk_info->get_const_so_field<SVolF>( _flux_sum_info[i].phi );
 
       YVolFP sum            = tsk_info->get_so_field<YVolF>( _ave_y_flux_sum_names[i] );
       YVolFP const old_sum  = tsk_info->get_const_so_field<YVolF>( _ave_y_flux_sum_names[i] );
@@ -667,8 +665,6 @@ void VariableStats::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info,
     //Z FLUX
     N = _ave_z_flux_sum_names.size();
     for ( int i = 0; i < N; i++ ){
-
-      SVolFP const phi = tsk_info->get_const_so_field<SVolF>( _flux_sum_info[i].phi );
 
       ZVolFP sum            = tsk_info->get_so_field<ZVolF>( _ave_z_flux_sum_names[i] );
       ZVolFP const old_sum  = tsk_info->get_const_so_field<ZVolF>( _ave_z_flux_sum_names[i] );

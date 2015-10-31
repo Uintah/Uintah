@@ -50,6 +50,9 @@ MaximumTemperature::MaximumTemperature( std::string modelName,
 {
   // Create a label for this model
   d_modelLabel = VarLabel::create( modelName, CCVariable<double>::getTypeDescription() );
+  // Create the gas phase source term associated with this model
+  std::string gasSourceName = modelName + "_gasSource";
+  d_gasLabel = VarLabel::create( gasSourceName, CCVariable<double>::getTypeDescription() );
 }
 
 MaximumTemperature::~MaximumTemperature()
@@ -68,7 +71,7 @@ MaximumTemperature::problemSetup(const ProblemSpecP& params, int qn)
 
   DQMOMEqnFactory& dqmom_eqn_factory = DQMOMEqnFactory::self();
   
-  ProblemSpecP db_coal_props = params_root->findBlock("CFD")->findBlock("ARCHES")->findBlock("Coal")->findBlock("Properties");
+  ProblemSpecP db_coal_props = params_root->findBlock("CFD")->findBlock("ARCHES")->findBlock("ParticleProperties");
   
   // create max T var label and get scaling constant
   std::string max_pT_root = ParticleTools::parse_for_role_to_label(db, "max_temperature"); 

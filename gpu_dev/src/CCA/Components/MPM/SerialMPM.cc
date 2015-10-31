@@ -138,15 +138,13 @@ SerialMPM::~SerialMPM()
   if(d_switchCriteria) {
     delete d_switchCriteria;
   }
-  
-  
 }
 
 void SerialMPM::problemSetup(const ProblemSpecP& prob_spec, 
                              const ProblemSpecP& restart_prob_spec,GridP& grid,
                              SimulationStateP& sharedState)
 {
-  cout_doing<<"Doing problemSetup\t\t\t\t\t MPM"<<endl;
+  cout_doing<<"Doing MPM::problemSetup\t\t\t\t\t MPM"<<endl;
   d_sharedState = sharedState;
   dynamic_cast<Scheduler*>(getPort("scheduler"))->setPositionVar(lb->pXLabel);
   
@@ -478,13 +476,11 @@ void SerialMPM::totalParticleCount(const ProcessorGroup*,
   }
 }
 
-
 void SerialMPM::scheduleInitializePressureBCs(const LevelP& level,
                                               SchedulerP& sched)
 {
   const PatchSet* patches = level->eachPatch();
-  
-  
+
   d_loadCurveIndex = scinew MaterialSubset();
   d_loadCurveIndex->add(0);
   d_loadCurveIndex->addReference();
@@ -671,7 +667,6 @@ void SerialMPM::scheduleApplyExternalLoads(SchedulerP& sched,
   t->requires(Task::OldDW, lb->pXLabel,                 Ghost::None);
   t->requires(Task::OldDW, lb->pSizeLabel,              Ghost::None);
   t->requires(Task::OldDW, lb->pMassLabel,              Ghost::None);
-  t->requires(Task::OldDW, lb->pDispLabel,              Ghost::None);
   t->requires(Task::OldDW, lb->pDeformationMeasureLabel,Ghost::None);
   t->requires(Task::OldDW, lb->pExternalForceLabel,     Ghost::None);
   t->computes(             lb->pExtForceLabel_preReloc);
@@ -1163,7 +1158,7 @@ void SerialMPM::scheduleInterpolateToParticlesAndUpdate(SchedulerP& sched,
   t->requires(Task::NewDW, lb->gAccelerationLabel,              gac,NGN);
   t->requires(Task::NewDW, lb->gVelocityStarLabel,              gac,NGN);
   t->requires(Task::NewDW, lb->gTemperatureRateLabel,           gac,NGN);
-  if (flags->d_GEVelProj && flags->d_doExplicitHeatConduction){
+  if (flags->d_doExplicitHeatConduction){
     t->requires(Task::NewDW, lb->gTemperatureStarLabel,         gac,NGN);
   }
   t->requires(Task::NewDW, lb->frictionalWorkLabel,             gac,NGN);
@@ -2714,7 +2709,7 @@ void SerialMPM::computeInternalForce(const ProcessorGroup*,
             if(patch->containsNode(ni[k])){
               Vector div(d_S[k].x()*oodx[0],d_S[k].y()*oodx[1],
                          d_S[k].z()*oodx[2]);
-              internalforce[ni[k]] -= (div * stresspress)  * pvol[idx];
+              internalforce[ni[k]] -= (div * stresspress) * pvol[idx];
               gstress[ni[k]]       += stressvol * S[k];
             }
           }
@@ -2844,7 +2839,7 @@ void SerialMPM::computeAndIntegrateAcceleration(const ProcessorGroup*,
 {
   for(int p=0;p<patches->size();p++){
     const Patch* patch = patches->get(p);
-    printTask(patches, patch,cout_doing,"Doing computeAndIntegrateAcceleration");
+    printTask(patches,patch,cout_doing,"Doing computeAndIntegrateAcceleration");
 
     Ghost::GhostType  gnone = Ghost::None;
     Vector gravity = flags->d_gravity;
@@ -3122,7 +3117,7 @@ void SerialMPM::applyExternalLoads(const ProcessorGroup* ,
 {
   // Get the current time
   double time = d_sharedState->getElapsedTime();
-  
+
   if (cout_doing.active())
     cout_doing << "Current Time (applyExternalLoads) = " << time << endl;
 
@@ -3166,7 +3161,6 @@ void SerialMPM::applyExternalLoads(const ProcessorGroup* ,
       constParticleVariable<Matrix3> pDeformationMeasure;
       ParticleVariable<Vector> pExternalForce_new;
 
-
       old_dw->get(px,    lb->pXLabel,    pset);
       old_dw->get(psize, lb->pSizeLabel, pset);
       old_dw->get(pDeformationMeasure, lb->pDeformationMeasureLabel, pset);
@@ -3186,9 +3180,9 @@ void SerialMPM::applyExternalLoads(const ProcessorGroup* ,
 
         // Get the load curve data
         constParticleVariable<int> pLoadCurveID;
-        old_dw->get(pLoadCurveID, lb->pLoadCurveIDLabel, pset);
-        // Recycle the loadCurveIDs
         ParticleVariable<int> pLoadCurveID_new;
+        // Recycle the loadCurveIDs
+        old_dw->get(pLoadCurveID, lb->pLoadCurveIDLabel, pset);
         new_dw->allocateAndPut(pLoadCurveID_new, 
                                lb->pLoadCurveIDLabel_preReloc, pset);
         pLoadCurveID_new.copyData(pLoadCurveID);
@@ -3247,16 +3241,19 @@ void SerialMPM::applyExternalLoads(const ProcessorGroup* ,
         string mms_type = flags->d_mms_type;
          if(!mms_type.empty()) {
            MMS MMSObject;                                                                                
-           MMSObject.computeExternalForceForMMS(old_dw,new_dw,time,pset,lb,flags,pExternalForce_new);    
+           MMSObject.computeExternalForceForMMS(old_dw,new_dw,time,pset,
+                                                lb,flags,pExternalForce_new);
          } else { 
           // Get the external force data and allocate new space for
           // external force and copy the data
           constParticleVariable<Vector> pExternalForce;
           old_dw->get(pExternalForce, lb->pExternalForceLabel, pset);
 
-          for(ParticleSubset::iterator iter = pset->begin(); iter != pset->end(); iter++){
+          for(ParticleSubset::iterator iter = pset->begin(); 
+                                       iter != pset->end(); iter++){
             particleIndex idx = *iter;
-            pExternalForce_new[idx] = pExternalForce[idx]*flags->d_forceIncrementFactor;
+            pExternalForce_new[idx] = pExternalForce[idx]
+                                    * flags->d_forceIncrementFactor;
           }
         }
       }
@@ -3363,7 +3360,7 @@ void SerialMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
       new_dw->allocateAndPut(pmassNew,    lb->pMassLabel_preReloc,        pset);
       new_dw->allocateAndPut(pvolume,     lb->pVolumeLabel_preReloc,      pset);
       new_dw->allocateAndPut(pVelGrad,    lb->pVelGradLabel_preReloc,     pset);
-      new_dw->allocateAndPut(pTempGrad,  lb->pTemperatureGradientLabel_preReloc,
+      new_dw->allocateAndPut(pTempGrad,   lb->pTemperatureGradientLabel_preReloc,
                                                                           pset);
       new_dw->allocateAndPut(pFNew,       lb->pDeformationMeasureLabel_preReloc,
                                                                           pset);
@@ -3398,7 +3395,7 @@ void SerialMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
       new_dw->get(gvelocity_star,  lb->gVelocityStarLabel,   dwi,patch,gac,NGP);
       new_dw->get(gacceleration,   lb->gAccelerationLabel,   dwi,patch,gac,NGP);
       new_dw->get(gTemperatureRate,lb->gTemperatureRateLabel,dwi,patch,gac,NGP);
-      if (flags->d_GEVelProj && flags->d_doExplicitHeatConduction){
+      if (flags->d_doExplicitHeatConduction){
         new_dw->get(gTempStar,     lb->gTemperatureStarLabel,dwi,patch,gac,NGP);
       }
       new_dw->get(frictionTempRate,lb->frictionalWorkLabel,  dwi,patch,gac,NGP);
@@ -3495,7 +3492,7 @@ void SerialMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
         }
         pVelGrad[idx]=tensorL;
         pTempGrad[idx] = Vector(0.0,0.0,0.0);
-        if (flags->d_GEVelProj && flags->d_doExplicitHeatConduction){
+        if (flags->d_doExplicitHeatConduction){
          if(flags->d_axisymmetric){
            cout << "Fix the pTempGradient calc for axisymmetry" << endl;
          }

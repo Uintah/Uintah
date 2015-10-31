@@ -28,10 +28,11 @@
 # Epilogue fragment for subdirectories.  This is included from
 # either smallso_epilogue.mk or largeso_epilogue.mk
 
-OBJS := $(patsubst %.cu,%.$(OBJEXT),$(filter %.cu,$(SRCS)))   \
-        $(patsubst %.c,%.$(OBJEXT),$(filter %.c,$(SRCS)))     \
+OBJS := $(patsubst %.cu,%.$(OBJEXT),$(filter %.cu,$(SRCS))) \
         $(patsubst %.cc,%.$(OBJEXT),$(filter %.cc,$(SRCS)))   \
+        $(patsubst %.cpp,%.$(OBJEXT),$(filter %.cpp,$(SRCS))) \
         $(patsubst %.cxx,%.$(OBJEXT),$(filter %.cxx,$(SRCS))) \
+        $(patsubst %.c,%.$(OBJEXT),$(filter %.c,$(SRCS)))     \
         $(patsubst %.s,%.$(OBJEXT),$(filter %.s,$(SRCS)))     \
         $(patsubst %.F,%.$(OBJEXT),$(filter %.F,$(SRCS)))     \
         $(patsubst %.f,%.$(OBJEXT),$(filter %.f,$(SRCS)))     \
@@ -84,7 +85,7 @@ TMP_CORE_PSELIBS = $(patsubst SCIRUN%,lib%,$(TMPLIBS))
 CORE_PSELIBS = $(patsubst PACKAGE%,,$(TMP_CORE_PSELIBS))
 TMP_PACK_PSELIBS = $(patsubst PACKAGE%,libPackages_%,$(TMPLIBS))
 PACK_PSELIBS = $(patsubst SCIRUN%,,$(TMP_PACK_PSELIBS))
-COMMON_LIBS = $(TAU_MPI_LIBS) $(TAU_SHLIBS)  #${MALLOC_TRACE_LIB_DIR_FLAG} ${MALLOC_TRACE_LIB_FLAG} 
+COMMON_LIBS = ${MALLOC_TRACE_LIB_DIR_FLAG} ${MALLOC_TRACE_LIB_FLAG} 
 
 $(LIBNAME): $(OBJS) $(patsubst %,$(SCIRUN_LIBDIR)/%,$(CORE_PSELIBS)) $(patsubst %,$(LIBDIR)/%,$(PACK_PSELIBS))
   ifeq ($(SCI_MAKE_BE_QUIET),true)

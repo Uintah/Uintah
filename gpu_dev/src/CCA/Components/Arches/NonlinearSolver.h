@@ -22,8 +22,6 @@
  * IN THE SOFTWARE.
  */
 
-//----- PicardNonlinearSolver.h -----------------------------------------------
-
 #ifndef Uintah_Component_Arches_NonlinearSolver_h
 #define Uintah_Component_Arches_NonlinearSolver_h
 
@@ -32,38 +30,25 @@
 #include <Core/Grid/Variables/SFCYVariable.h>
 #include <Core/Grid/Variables/SFCZVariable.h>
 
-/**************************************
-CLASS
-   NonlinearSolver
+//--------------------------------------------------------------------------------------------------
+/**
+  \class NonlinearSolver
+  \author Originally Rajesh Rawat but with major modifications by Jeremy Thornock
+  \date October 8, 2015
 
-   Class NonlinearSolver is an abstract base class
-   which defines the operations needed to implement
-   a nonlinear solver for the ImplicitTimeIntegrator.
-
-GENERAL INFORMATION
-   NonlinearSolver.h - declaration of the class
-
-   Author: Rajesh Rawat (rawat@crsim.utah.edu)
-
-   All major modifications since 01.01.2004 done by:
-   Stanislav Borodai(borodai@crsim.utah.edu)
-
-   Creation Date:   Mar 1, 2000
-
-   C-SAFE
-
-
-KEYWORDS
-
-
-DESCRIPTION
-   Class NonlinearSolver is an abstract type defining the interface
-   for operations necessary for solving the nonlinear systems that
-   arise during an implicit integration.
-
-WARNING
-   none
-****************************************/
+  This class provides the basic abstraction for an algorithm written in Arches. At this time, only
+  one algorithm can be executed per timestep. There are 5 major pieces to the algorithm:
+  <ul>
+    <li> ProblemSetup to interface with the input file
+    <li> Initialize to initialize variables
+    <li> RestartInitialize to perform any needed work upon restarting
+    <li> nonlinearSolve to perform timestep work
+    <li> some other odds and ends that should be obvious
+  </ul>
+  Any number of algorithms can be derived performing whatever work is needed for the intended
+  application.
+**/
+//--------------------------------------------------------------------------------------------------
 
 namespace Uintah {
 class TimeIntegratorLabel;
@@ -72,6 +57,7 @@ class DQMOM;
 class CQMOM;
 class CQMOM_Convection;
 class CQMOMSourceWrapper;
+class ArchesBCHelper;
 class NonlinearSolver {
 
 public:
@@ -80,41 +66,21 @@ public:
 
   virtual ~NonlinearSolver();
 
-  virtual void problemSetup( const ProblemSpecP& db, SimulationStateP& ) = 0;
+  void commonProblemSetup( ProblemSpecP db );
 
-  virtual void sched_interpolateFromFCToCC( SchedulerP&,
-                                            const PatchSet* patches,
-                                            const MaterialSet* matls,
-                                            const TimeIntegratorLabel* timelabels,
-                                            const int curr_level) = 0;
+  virtual void problemSetup( const ProblemSpecP& db, SimulationStateP&, GridP& ) = 0;
 
   virtual int nonlinearSolve( const LevelP& level,
                               SchedulerP& sched ) = 0;
-
-  const std::string& getTimeIntegratorType() const
-  {
-    return d_timeIntegratorType;
-  }
 
   virtual double recomputeTimestep(double current_dt) = 0;
 
   virtual bool restartableTimesteps() = 0;
 
-  virtual void setPartVel(PartVel* partVel) = 0;
+  virtual void initialize( const LevelP& lvl, SchedulerP& sched, const bool doing_restart ) = 0;
 
-  virtual void setDQMOMSolver(DQMOM* dqmomSolver) = 0;
-
-  virtual void setCQMOMSolver(CQMOM* cqmomSolver) = 0;
-
-  virtual void setCQMOMConvect(CQMOM_Convection* cqmomConvect) = 0;
-
-  virtual void setCQMOMSource(CQMOMSourceWrapper* cqmomSource) = 0;
-
-  virtual void sched_setInitVelCond( const LevelP& level, SchedulerP& sched, const MaterialSet* mats) = 0;
-
-  virtual void checkMomBCs( SchedulerP& sched,
-                            const LevelP& level,
-                            const MaterialSet* matls) = 0;
+  virtual void sched_restartInitialize( const LevelP& level, SchedulerP& sched ) = 0;
+  virtual void sched_restartInitializeTimeAdvance( const LevelP& level, SchedulerP& sched ) = 0; 
 
   class NLSolverBuilder {
 
@@ -128,9 +94,25 @@ public:
 
   };
 
+  /** @brief specialized CFL condition **/
+  inline bool get_underflow(){ return d_underflow; }
+
+  /** @brief Return the initial dt **/
+  inline double get_initial_dt(){ return d_initial_dt; }
+
+  /** @brief Set the helper **/
+  void set_bchelper( std::map< int, ArchesBCHelper* >* helper ){ _bcHelperMap = helper; }
+
 protected:
+
    const ProcessorGroup * d_myworld;
    std::string            d_timeIntegratorType;
+
+   double                 d_initial_dt;
+   bool                   d_underflow;
+
+   typedef std::map< int, ArchesBCHelper* >* BCHelperMapT;
+   BCHelperMapT _bcHelperMap;
 
 private:
 

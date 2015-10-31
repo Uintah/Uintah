@@ -125,6 +125,7 @@ class MPIScheduler : public SchedulerCommon {
         unsigned int max_messages;
         double max_volume;
 
+        // do SUM and MAX reduction for numMessages and messageVolume
         MPI_Reduce(&numMessages_,&total_messages,1,MPI_UNSIGNED,MPI_SUM,0,d_myworld->getComm());
         MPI_Reduce(&messageVolume_,&total_volume,1,MPI_DOUBLE,MPI_SUM,0,d_myworld->getComm());
         MPI_Reduce(&numMessages_,&max_messages,1,MPI_UNSIGNED,MPI_MAX,0,d_myworld->getComm());
@@ -140,10 +141,14 @@ class MPIScheduler : public SchedulerCommon {
     mpi_timing_info_s   mpi_info_;
     MPIScheduler*       parentScheduler_;
 
-    // Performs the reduction task. (In Mixed, gives the task to a thread.)    
+    // Performs the reduction task. (In threaded schdeulers, a single worker thread will execute this.)
     virtual void initiateReduction( DetailedTask* task );
 
-    enum { TEST, WAIT_ONCE, WAIT_ALL };
+    enum {
+      TEST,
+      WAIT_ONCE,
+      WAIT_ALL
+    };
 
   protected:
 
@@ -155,6 +160,8 @@ class MPIScheduler : public SchedulerCommon {
 
     void emitTime( const char* label, double time );
 
+    void outputTimingStats( const char* label );
+
     MessageLog                  log;
     const Output*               oport_;
     CommRecMPI                  sends_[MAX_THREADS];
@@ -163,14 +170,17 @@ class MPIScheduler : public SchedulerCommon {
     double                      d_lasttime;
     std::vector<const char*>    d_labels;
     std::vector<double>         d_times;
-    std::ofstream               timingStats, maxStats, avgStats;
+
+    std::ofstream               timingStats;
+    std::ofstream               maxStats;
+    std::ofstream               avgStats;
 
     unsigned int                numMessages_;
     double                      messageVolume_;
 
     //-------------------------------------------------------------------------
     // The following locks are for multi-threaded schedulers that derive from MPIScheduler
-    //   This eliminates miles of unnecessarily redundant code
+    //   This eliminates miles of unnecessarily redundant code in threaded schedulers
     //-------------------------------------------------------------------------
     // multiple reader, single writer lock (pthread_rwlock_t wrapper)
     mutable CrowdMonitor        recvLock;               // CommRecMPI recvs lock

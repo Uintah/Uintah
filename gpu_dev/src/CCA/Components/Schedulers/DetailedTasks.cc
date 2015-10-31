@@ -22,8 +22,6 @@
  * IN THE SOFTWARE.
  */
 #include <Core/Thread/Time.h>
-#include <TauProfilerForSCIRun.h>
-
 #include <CCA/Components/Schedulers/DetailedTasks.h>
 #include <CCA/Components/Schedulers/CommRecMPI.h>
 #include <CCA/Components/Schedulers/MemoryLog.h>
@@ -313,7 +311,6 @@ DetailedTask::doit( const ProcessorGroup*                 pg,
                           vector<DataWarehouseP>&         dws,
                           Task::CallBackEvent             event /* = Task::CPU */ )
 {
-  TAU_PROFILE("DetailedTask::doit", " ", TAU_USER);
   if (mixedDebug.active()) {
     cerrLock.lock();
     mixedDebug << "DetailedTask " << this << " begin doit()\n";
@@ -860,8 +857,6 @@ DetailedTasks::possiblyCreateDependency(       DetailedTask*              from,
                                          const IntVector&                 high,
                                                DetailedDep::CommCondition cond )
 {
-  TAU_PROFILE("DetailedTasks::possiblyCreateDependency", " ", TAU_USER);
-
   ASSERTRANGE(from->getAssignedResourceIndex(), 0, d_myworld->size());
   ASSERTRANGE(to->getAssignedResourceIndex(),   0, d_myworld->size());
 

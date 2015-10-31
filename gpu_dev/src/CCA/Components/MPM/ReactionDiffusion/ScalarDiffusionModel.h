@@ -39,7 +39,6 @@ namespace Uintah {
   class MPMFlags;
   class MPMLabel;
   class MPMMaterial;
-  class ReactionDiffusionLabel;
   class DataWarehouse;
   class ProcessorGroup;
 
@@ -47,7 +46,8 @@ namespace Uintah {
   class ScalarDiffusionModel {
   public:
     
-    ScalarDiffusionModel(ProblemSpecP& ps, SimulationStateP& sS, MPMFlags* Mflag,
+    ScalarDiffusionModel(ProblemSpecP& ps, SimulationStateP& sS,
+                         MPMFlags* Mflag,
                          std::string diff_type);
     virtual ~ScalarDiffusionModel();
 
@@ -57,14 +57,12 @@ namespace Uintah {
 
     virtual void setIncludeHydroStress(bool value);
 
-    virtual void addInitialComputesAndRequires(Task* task, const MPMMaterial* matl,
-                                               const PatchSet* patches) const;
+//    virtual void addInitialComputesAndRequires(Task* task, 
+//                                               const MPMMaterial* matl,
+//                                               const PatchSet* patches) const;
 
-    virtual void initializeSDMData(const Patch* patch, const MPMMaterial* matl,
-                                   DataWarehouse* new_dw);
-
-    virtual void addParticleState(std::vector<const VarLabel*>& from,
-                                  std::vector<const VarLabel*>& to);
+//    virtual void initializeSDMData(const Patch* patch, const MPMMaterial* matl,
+//                                   DataWarehouse* new_dw);
 
     virtual void scheduleComputeFlux(Task* task, const MPMMaterial* matl, 
 		                                 const PatchSet* patch) const;
@@ -87,14 +85,15 @@ namespace Uintah {
                                        DataWarehouse* old_dw,
                                        DataWarehouse* new_dw);
 
+    virtual void outputProblemSpec(ProblemSpecP& ps,bool output_rdm_tag = true);
+    virtual double computeStableTimeStep(double Dif, Vector dx);
+
   protected:
     MPMLabel* d_lb;
     MPMFlags* d_Mflag;
     SimulationStateP d_sharedState;
-    ReactionDiffusionLabel* d_rdlb;
 
     int NGP, NGN;
-    bool do_explicit;
     std::string diffusion_type;
     bool include_hydrostress;
 

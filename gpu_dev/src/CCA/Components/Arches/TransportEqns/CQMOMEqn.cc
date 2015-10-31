@@ -65,7 +65,7 @@ EqnBase( fieldLabels, timeIntegrator, eqnName )
   d_FconvZLabel = VarLabel::create(varname, CCVariable<double>::getTypeDescription());
 
   uVelIndex = -1; vVelIndex = -1; wVelIndex = -1;
-  d_cqmomConv = scinew Convection_CQMOM();
+  d_cqmomConv = scinew CQMOM_Convection_OpSplit();
 
 }
 
@@ -166,36 +166,33 @@ CQMOMEqn::problemSetup(const ProblemSpecP& inputdb)
       std::string source_label;
       //int nIC = 0;
       std::string ic_name;
-      m_db->get("IC",ic_name);
-      m = 0;
+      
+      if ( m_db->findBlock("IC") ) {
+        m_db->get("IC",ic_name);
+        m = 0;
 
-      if ( ic_name == "none" ) {
-        //this is for particle models that are not sources (i.e density)
-        continue;
-      }
-
-      for ( ProblemSpecP db_name = cqmom_db->findBlock("InternalCoordinate");
-           db_name != 0; db_name = db_name->findNextBlock("InternalCoordinate") ) {
-        std::string var_name;
-        db_name->getAttribute("name",var_name);
-        if ( var_name == ic_name) {
-          //nIC = m;
-          break;
+        for ( ProblemSpecP db_name = cqmom_db->findBlock("InternalCoordinate");
+             db_name != 0; db_name = db_name->findNextBlock("InternalCoordinate") ) {
+          std::string var_name;
+          db_name->getAttribute("name",var_name);
+          if ( var_name == ic_name) {
+            //nIC = m;
+            break;
+          }
+          m++;
+          if ( m >= M ) { // occurs if ic not found
+            string err_msg = "Error: could not find internal coordiante '" + ic_name + "' in list of internal coordinates specified by CQMOM spec";
+            throw ProblemSetupException(err_msg,__FILE__,__LINE__);
+          }
         }
-        m++;
-        if ( m >= M ) { // occurs if ic not found
-          string err_msg = "Error: could not find internal coordiante '" + ic_name + "' in list of internal coordinates specified by CQMOM spec";
-          throw ProblemSetupException(err_msg,__FILE__,__LINE__);
-        }
+
+        m_db->getAttribute("label",model_name);
+        source_label = d_eqnName + "_" + model_name + "_src";
+
+        const VarLabel * tempLabel;
+        tempLabel = VarLabel::find( source_label );
+        d_sourceLabels.push_back( tempLabel );
       }
-
-      m_db->getAttribute("label",model_name);
-      source_label = d_eqnName + "_" + model_name + "_src";
-//      proc0cout << "Finding source label: " << source_label;
-
-      const VarLabel * tempLabel;
-      tempLabel = VarLabel::find( source_label );
-      d_sourceLabels.push_back( tempLabel );
     }
   }
 

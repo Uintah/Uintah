@@ -15,9 +15,9 @@ if($#argv != 6) then
   echo " Manditory inputs:"
   echo "   --np           < number of processors >"
   echo "   --nthreads     < number of threads    >"
-  echo "   --test        < (1) = 1L, "
-  echo "                   (2) = 2L, "
-  echo "                   (>"
+  echo "   --test        < (1) = Benchmark 1, 1L, "
+  echo "                   (2) = Benchmark 1, 2L, "
+  echo "                   (3) = Benchmark 1, DataOnion"
   exit 1
 endif
 #______________________________________________________________________
@@ -65,7 +65,7 @@ set descArray = ( "1L" "ML" "DO" )
 # Titan
 #set MPIRUN = "aprun -n $np -N 1 -d 16"
 
-set MPIRUN = "mpirun -n $np 
+set MPIRUN = "mpirun -n $np" 
 
 
 if ( $test == 4 ) then
@@ -82,15 +82,15 @@ while ( $x < $max)
   set uda  = $udaArray[$x]
   set desc = $descArray[$x]
   echo " " 
-  echo "working on test:$x $ups $uda $desc"
+  echo "working on test:$x UPS: $ups UDA: $uda Description:$desc"
   
   rm -rf $uda.00* out.$desc.gpu out.$desc.cpu >& /dev/null
-  echo "GPU"
+  echo "Running GPU"
   $MPIRUN sus -do_not_validate -nthreads $threads -gpu  inputs/Examples/$ups >& out.$desc.gpu
-  echo "CPU"
+  echo "Running CPU"
   $MPIRUN sus -do_not_validate -nthreads $threads       inputs/Examples/$ups >& out.$desc.cpu
 
-  echo "compare"
+  echo "compare_uda -abs_tolerance 1e-14 -rel_tolerance 1e-14 -as_warnings $uda.000 $uda.001 >& out.$desc.compare"
   compare_uda -abs_tolerance 1e-14 -rel_tolerance 1e-14 -as_warnings $uda.000 $uda.001 >& out.$desc.compare
   more out.$desc.compare
   @ x = $x + 1

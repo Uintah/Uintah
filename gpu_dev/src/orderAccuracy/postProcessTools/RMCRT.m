@@ -256,6 +256,33 @@ function [divQ_exact] = benchMark7(x_CC,pDir)
 endfunction
 %______________________________________________________________________
 %______________________________________________________________________
+%   B E N C H M A R K   8 -> hot and cold clouds with 0K walls
+
+function [divQ_exact] = benchMark8(x_CC,pDir)
+  printf("BenchMark 8\n");
+  
+  [rc, TOOLSPATH] = unix ('printenv --null TOOLSPATH');
+  
+  if pDir ==1 
+    data = sprintf('%s/cloudsDivQx.dat',TOOLSPATH)
+    divQ = load(data);    
+  elseif pDir ==2 
+    data = sprintf('%s/cloudsDivQy.dat',TOOLSPATH)
+    divQ = load(data);
+  elseif pDir ==3 
+    data = sprintf('%s/cloudsDivQy.dat',TOOLSPATH)
+    divQ = load(data);
+  end
+
+  ExactSol = divQ(:,2);
+  x_exact  = divQ(:,1);
+
+  %Do a pchip interpolation to any resolution
+  divQ_exact = interp1(x_exact, ExactSol, x_CC, 'pchip');
+  
+endfunction
+%______________________________________________________________________
+%______________________________________________________________________
 
 function Usage
   printf('RMCRT.m <options>\n') 
@@ -413,10 +440,14 @@ unix('/bin/rm divQ.dat tmp tmp.clean');
 % Plot the results
 if (strcmp(makePlot,"true"))
   h = figure();
+  %subplot(2,1,1),plot(x_CC, divQ_sim(:,4), 'b:o;computed;',"markersize",4,"linewidth",10, x_CC, divQ_exact, 'r:+;exact;',"markersize",4,"linewidth",10);
+  
   subplot(2,1,1),plot(x_CC, divQ_sim(:,4), 'b:o;computed;', x_CC, divQ_exact, 'r:+;exact;');
+  
   ylabel('divQ');
   xlabel(dir);
-  title('divQ versus Exact Solution');
+  this = sprintf('divQ versus Exact Solutions %s-dir',dir);
+  title(this);
   grid on;
 
   subplot(2,1,2),plot(x_CC,d, 'b:+');
@@ -424,22 +455,16 @@ if (strcmp(makePlot,"true"))
   ylabel('|divQ - divQ_{exact}|'); 
   xlabel(dir);
   grid on;
-pause
-
+  pause
 
   unix('/bin/rm divQ.ps > /dev/null 2>&1');
-  %print('divQ.ps','-dps', '-FTimes-Roman:14');
-  %pause
+
   FN = findall(h,'-property','FontName');
   set(FN,'FontName','Times');
-  
-  %FS = findall(h, '-property','FontSize');
-  %set(FS,'FontSize',12);
   
   orient('portrait');
   fname = sprintf( 'divQ.%s.jpg',dir);
   saveas( h, fname, "jpg");
-  pause;
 end
 
 

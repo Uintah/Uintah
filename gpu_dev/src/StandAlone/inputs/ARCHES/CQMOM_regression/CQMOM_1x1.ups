@@ -45,119 +45,120 @@
   <Grid>
 
     <BoundaryConditions>
+      <DefaultMaterial>0</DefaultMaterial>
       <Face side="x-">
-        <BCType id="all" label="mixture_fraction" var="Dirichlet">
+        <BCType label="mixture_fraction" var="Dirichlet">
           <value> 1.0 </value>
         </BCType>
       </Face>
 
       <Face side="x-">
-        <BCType id = "all" label = "inletx" var = "VelocityInlet">
+        <BCType  label = "inletx" var = "VelocityInlet">
           <value> [1,0,0] </value>
         </BCType>
-        <BCType id="all" label="mixture_fraction" var="Dirichlet">
+        <BCType label="mixture_fraction" var="Dirichlet">
           <value> 1.0 </value>
         </BCType>
         
         <!-- transported moments -->
-        <BCType id="all" label="m_00" var="Dirichlet">
+        <BCType label="m_00" var="Dirichlet">
           <value> 0.999999414103061 </value>
         </BCType>
-        <BCType id="all" label="m_10" var="Dirichlet">
+        <BCType label="m_10" var="Dirichlet">
           <value> 4.999997070515308 </value>
         </BCType>
-        <BCType id="all" label="m_01" var="Dirichlet">
+        <BCType label="m_01" var="Dirichlet">
           <value> 5.999997070515307 </value>
         </BCType>
       </Face>
 
       <Face side="x+">
-        <BCType id = "all" label = "outletx" var = "OutletBC">
+        <BCType  label = "outletx" var = "OutletBC">
           <value> 0.0 </value>
         </BCType>
-        <BCType id="all" label="mixture_fraction" var="Neumann">
+        <BCType label="mixture_fraction" var="Neumann">
           <value> 0.0 </value>
         </BCType>
         <!-- transported moments -->
-        <BCType id="all" label="m_00" var="Neumann">
+        <BCType label="m_00" var="Neumann">
           <value> 0.0 </value>
         </BCType>
-        <BCType id="all" label="m_10" var="Neumann">
+        <BCType label="m_10" var="Neumann">
           <value> 0.0 </value>
         </BCType>
-        <BCType id="all" label="m_01" var="Neumann">
+        <BCType label="m_01" var="Neumann">
           <value> 0.0 </value>
         </BCType>
       </Face>
 
         <Face side="y-">
-        <BCType id = "all" label = "ymwall" var = "WallBC">
+        <BCType  label = "ymwall" var = "WallBC">
           <value> 0.0 </value>
         </BCType>
-        <BCType id="all" label="mixture_fraction" var="Neumann">
+        <BCType label="mixture_fraction" var="Neumann">
           <value> 0.0 </value>
         </BCType>
-        <BCType id="all" label="m_00" var="Dirichlet">
+        <BCType label="m_00" var="Dirichlet">
           <value> 0.0 </value>
         </BCType>
-        <BCType id="all" label="m_10" var="Dirichlet">
+        <BCType label="m_10" var="Dirichlet">
           <value> 0.0 </value>
         </BCType>
-        <BCType id="all" label="m_01" var="Dirichlet">
+        <BCType label="m_01" var="Dirichlet">
           <value> 0.0 </value>
         </BCType>
       </Face>
 
       <Face side="y+">
-        <BCType id = "all" label = "ypwall" var = "WallBC">
+        <BCType  label = "ypwall" var = "WallBC">
           <value> 0.0 </value>
         </BCType>
-        <BCType id="all" label="mixture_fraction" var="Neumann">
+        <BCType label="mixture_fraction" var="Neumann">
           <value> 0.0 </value>
         </BCType>
-        <BCType id="all" label="m_00" var="Dirichlet">
+        <BCType label="m_00" var="Dirichlet">
           <value> 0.0 </value>
         </BCType>
-        <BCType id="all" label="m_10" var="Dirichlet">
+        <BCType label="m_10" var="Dirichlet">
           <value> 0.0 </value>
         </BCType>
-        <BCType id="all" label="m_01" var="Dirichlet">
+        <BCType label="m_01" var="Dirichlet">
           <value> 0.0 </value>
         </BCType>
       </Face>
 
       <Face side="z-">
-        <BCType id = "all" label = "zmwall" var = "WallBC">
+        <BCType  label = "zmwall" var = "WallBC">
           <value> 0.0 </value>
         </BCType>
-        <BCType id="all" label="mixture_fraction" var="Neumann">
+        <BCType label="mixture_fraction" var="Neumann">
           <value> 0.0 </value>
         </BCType>
-        <BCType id="all" label="m_00" var="Dirichlet">
+        <BCType label="m_00" var="Dirichlet">
           <value> 0.0 </value>
         </BCType>
-        <BCType id="all" label="m_10" var="Dirichlet">
+        <BCType label="m_10" var="Dirichlet">
           <value> 0.0 </value>
         </BCType>
-        <BCType id="all" label="m_01" var="Dirichlet">
+        <BCType label="m_01" var="Dirichlet">
           <value> 0.0 </value>
         </BCType>
       </Face>
 
       <Face side="z+">
-        <BCType id = "all" label = "zpwall" var = "WallBC">
+        <BCType  label = "zpwall" var = "WallBC">
           <value> 0.0 </value>
         </BCType>
-        <BCType id="all" label="mixture_fraction" var="Neumann">
+        <BCType label="mixture_fraction" var="Neumann">
           <value> 0.0 </value>
         </BCType>
-        <BCType id="all" label="m_00" var="Dirichlet">
+        <BCType label="m_00" var="Dirichlet">
           <value> 0.0 </value>
         </BCType>
-        <BCType id="all" label="m_10" var="Dirichlet">
+        <BCType label="m_10" var="Dirichlet">
           <value> 0.0 </value>
         </BCType>
-        <BCType id="all" label="m_01" var="Dirichlet">
+        <BCType label="m_01" var="Dirichlet">
           <value> 0.0 </value>
         </BCType>
       </Face>    

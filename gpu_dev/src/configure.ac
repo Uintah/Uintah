@@ -992,9 +992,10 @@ case $host in
            altivec="" 
         fi
 
-        uname -r | grep "14\." &> /dev/null
-        if test $? = 0; then
-           yosemite=yes
+        # Check to see if we are runnign on OSX version Yosemite or newer:
+        OSX_BASE_VERSION=`uname -r | cut -f1 -d"."`
+        if [[ $OSX_BASE_VERSION -ge 14 ]]; then  # Note, using double '['s (ie: '[[') because autoconf strips one of them.
+           yosemite_plus=yes
         fi
 
 	SO_OR_ARCHIVE_EXTENSION=dylib
@@ -2254,11 +2255,11 @@ SCI_TRY_LINK(STD_HDRS,standard headers,stdio.h stdlib.h stddef.h stdarg.h string
 # don't test for malloc.h or values.h on darwin
 case $host in
   *-darwin*)
-    SCI_TRY_LINK(STD_HDRS, standard headers-2,unistd.h dirent.h sys/time.h sys/param.h netdb.h sys/select.h sys/socket.h sys/mman.h sys/ioctl.h sys/resource.h sys/wait.h sys/utsname.h rpc/types.h netinet/in.h,,,,,,required)
+    SCI_TRY_LINK(STD_HDRS, standard headers-2,unistd.h dirent.h sys/time.h sys/param.h netdb.h sys/select.h sys/socket.h sys/mman.h sys/ioctl.h sys/resource.h sys/wait.h sys/utsname.h netinet/in.h,,,,,,required)
     ;;
   *)
     # default system headers that cannot be tested on all systems
-    SCI_TRY_LINK(STD_HDRS,standard headers-2,unistd.h dirent.h sys/time.h sys/param.h values.h malloc.h netdb.h sys/select.h sys/socket.h sys/mman.h sys/ioctl.h sys/resource.h sys/wait.h sys/utsname.h rpc/types.h netinet/in.h,,,,,,required)
+    SCI_TRY_LINK(STD_HDRS,standard headers-2,unistd.h dirent.h sys/time.h sys/param.h values.h malloc.h netdb.h sys/select.h sys/socket.h sys/mman.h sys/ioctl.h sys/resource.h sys/wait.h sys/utsname.h netinet/in.h,,,,,,required)
     ;;
 esac
 
@@ -2918,8 +2919,8 @@ if test "$HAVE_BLAS" != "yes"; then
   
   case $host in
     *-darwin*)
-       if test "$yosemite" = yes; then
-          SCI_TRY_LINK(BLAS,blas and cblas libraries-darwin-yosemite,Accelerate/Accelerate.h,
+       if test "$yosemite_plus" = yes; then
+          SCI_TRY_LINK(BLAS,blas and cblas libraries-darwin (yosemite+),Accelerate/Accelerate.h,
                        $_sci_inc,cblas blas,$_sci_lib,-framework Accelerate $F_LIB_DIR_FLAG $F_LIB_FLAG,[
                                                                                 float x[]={0.7f};
                                                                                 float y[]={0.8f};
@@ -3042,7 +3043,7 @@ if test "$HAVE_LAPACK" != "yes"; then
   case $host in
     *-darwin*)
 
-       if test "$yosemite" = yes; then
+       if test "$yosemite_plus" = yes; then
           SCI_TRY_LINK(LAPACK,Mac Accelerate lapack version of libraries and headers,
                        Accelerate/Accelerate.h,,,,-framework Accelerate,,optional)
           if test "$HAVE_LAPACK" = yes ; then
@@ -3527,45 +3528,6 @@ fi
 
 AC_SUBST(XALAN_PATH)
 
-##  --  if building uintah, search for TAU makefile  ---------------------
-
-if test "$sci_required_tau" = "yes"; then
-  if test ! -f "$with_tau" ; then
-    SCI_MSG_ERROR($with_tau does not exist.  Bye!)
-  fi
-
-  AC_MSG_RESULT(Using TAU makefile: $with_tau)
-
-  cat > conftest-tau.cc <<EOF
-
-  #include <Profile/Profiler.h>
-
-  int main(int argc, char **argv)
-  {
-    TAU_PROFILE("main", "int (int, char **)", TAU_DEFAULT);
-    TAU_PROFILE_INIT(argc, argv);
-    return 0;
-  }
-EOF
-
-  cat > conftest-tau-makefile <<EOF
-include $with_tau
-all:
-	\$(TAU_CXX) -o conftest-tau-a.out \$(TAU_DEFS) \$(TAU_INCLUDE) conftest-tau.cc \$(TAU_SHLIBS) \$(TAU_MPI_LIBS)
-EOF
-
-  ac_try="$MAKE TAU_MAKEFILE=$with_tau -f conftest-tau-makefile > conftestout1 2> conftesterr1"
-  (eval $ac_try) 2>&5
-  ac_status=$?
-  rm -f conftest-tau.cc conftest-tau-makefile conftest-tau-a.out conftestout1 conftesterr1
-  if test "$ac_status" != 0; then
-    SCI_MSG_ERROR(TAU libraries not working. Bye!)
-  fi
-
-  TAU_MAKEFILE="$with_tau"
-fi
-
-AC_SUBST(TAU_MAKEFILE)
 
 ##  --  search for papi stuff  -------------------------------------------
 _sci_lib=

@@ -30,9 +30,9 @@
 double
 get_patch_low(const Uintah::Patch* const patch, const std::string& coord)
 {
-  if     ( coord == "X" ) return patch->getBox().lower().x() + patch->dCell().x()/2.0;
-  else if( coord == "Y" ) return patch->getBox().lower().y() + patch->dCell().y()/2.0;
-  else if( coord == "Z" ) return patch->getBox().lower().z() + patch->dCell().z()/2.0;
+  if     ( coord == "X" ) return patch->getBox().lower().x();
+  else if( coord == "Y" ) return patch->getBox().lower().y();
+  else if( coord == "Z" ) return patch->getBox().lower().z();
   assert( false ); // should never get here.
   return 0.0;
 }
@@ -50,9 +50,9 @@ get_patch_low(const Uintah::Patch* const patch, const std::string& coord)
 double
 get_patch_high(const Uintah::Patch* const patch, const std::string& coord)
 {
-  if     ( coord == "X" ) return patch->getBox().upper().x() - patch->dCell().x()/2.0;
-  else if( coord == "Y" ) return patch->getBox().upper().y() - patch->dCell().y()/2.0;
-  else if( coord == "Z" ) return patch->getBox().upper().z() - patch->dCell().z()/2.0;
+  if     ( coord == "X" ) return patch->getBox().upper().x();
+  else if( coord == "Y" ) return patch->getBox().upper().y();
+  else if( coord == "Z" ) return patch->getBox().upper().z();
   assert( false ); // should never get here
   return 0.0;
 }

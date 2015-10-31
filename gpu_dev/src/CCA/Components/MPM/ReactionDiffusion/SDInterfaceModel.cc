@@ -24,7 +24,6 @@
 
 #include <CCA/Components/MPM/ReactionDiffusion/SDInterfaceModel.h>
 #include <CCA/Components/MPM/ReactionDiffusion/ScalarDiffusionModel.h>
-#include <CCA/Components/MPM/ReactionDiffusion/ReactionDiffusionLabel.h>
 #include <CCA/Components/MPM/ConstitutiveModel/MPMMaterial.h>
 #include <Core/Labels/MPMLabel.h>
 #include <Core/Grid/Task.h>
@@ -37,7 +36,6 @@ SDInterfaceModel::SDInterfaceModel(ProblemSpecP& ps, SimulationStateP& sS, MPMFl
   d_sharedState = sS;
 
   d_lb = scinew MPMLabel;
-  d_rdlb = scinew ReactionDiffusionLabel();
 
   if(d_Mflag->d_8or27==8){
     NGP=1;
@@ -46,20 +44,13 @@ SDInterfaceModel::SDInterfaceModel(ProblemSpecP& ps, SimulationStateP& sS, MPMFl
     NGP=2;
     NGN=2;
   }
-
-  if(d_Mflag->d_scalarDiffusion_type == "explicit"){
-    do_explicit = true;
-  }else{
-    do_explicit = false;
-  }
-
 }
 
 SDInterfaceModel::~SDInterfaceModel(){
   delete(d_lb);
-  delete(d_rdlb);
 }
 
+#if 0
 void SDInterfaceModel::addInitialComputesAndRequires(Task* task,
                                                      const PatchSet* patches) const
 {
@@ -81,6 +72,7 @@ void SDInterfaceModel::initializeSDMData(const Patch* patch,
     sdm->initializeSDMData(patch, mpm_matl, new_dw);
   }
 }
+#endif
 
 void SDInterfaceModel::computeDivergence(const Patch* patch,
                                          DataWarehouse* old_dw,
@@ -91,7 +83,16 @@ void SDInterfaceModel::computeDivergence(const Patch* patch,
   for(int m = 0; m < numMatls; m++){
     MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial(m);
     ScalarDiffusionModel* sdm = mpm_matl->getScalarDiffusionModel();
-    std::cout << "Material = " << m << std::endl;
     sdm->computeDivergence(patch, mpm_matl, old_dw, new_dw);
+  }
+}
+
+void SDInterfaceModel::outputProblemSpec(ProblemSpecP& ps, bool output_sdim_tag)
+{
+
+  ProblemSpecP sdim_ps = ps;
+  if (output_sdim_tag) {
+    sdim_ps = ps->appendChild("diffusion_interface");
+    sdim_ps->appendElement("type","paired");
   }
 }

@@ -49,7 +49,7 @@
       <use_volume_integral                spec="OPTIONAL BOOLEAN" /> 
       <UsePrescribedDeformation           spec="OPTIONAL BOOLEAN" /> 
       <PrescribedDeformationFile          spec="OPTIONAL STRING" />
-      <exactDeformation			  spec="OPTIONAL BOOLEAN" /> 
+      <exactDeformation                   spec="OPTIONAL BOOLEAN" /> 
       <InsertParticles                    spec="OPTIONAL BOOLEAN" /> 
       <InsertParticlesFile                spec="OPTIONAL STRING" /> 
       <withColor                          spec="OPTIONAL BOOLEAN" />
@@ -72,7 +72,7 @@
       <calculate_fracture_parameters      spec="OPTIONAL BOOLEAN" />  <!-- FIXME: default is? -->
       <do_crack_propagation               spec="OPTIONAL BOOLEAN" />
       <RunMMSProblem                           spec="OPTIONAL STRING 'AxisAligned, GeneralizedVortex , ExpandingRing, AxisAligned3L'" /> <!-- MMS runtime option -->
-      <scalar_diffusion                   spec="OPTIONAL STRING 'explicit, implicit'" />
+      <do_scalar_diffusion                spec="OPTIONAL BOOLEAN" />
     </MPM>
     <PhysicalBC                   spec="OPTIONAL NO_DATA" >
       <MPM                        spec="REQUIRED NO_DATA" >
@@ -106,6 +106,18 @@
           </load_curve>
           <res                    spec="OPTIONAL VECTOR" />
         </pressure>
+        <scalar_flux                 spec="MULTIPLE NO_DATA" >
+          <geom_object />
+          <outward_normal         spec="OPTIONAL BOOLEAN" />
+          <load_curve             spec="REQUIRED NO_DATA" >
+            <id                   spec="REQUIRED INTEGER" />
+            <time_point           spec="MULTIPLE NO_DATA" >
+              <time               spec="REQUIRED INTEGER" />
+              <load               spec="REQUIRED INTEGER" />
+            </time_point>
+          </load_curve>
+          <res                    spec="OPTIONAL VECTOR" />
+        </scalar_flux>
         <heat_flux                spec="MULTIPLE NO_DATA" >
           <geom_object />
           <load_curve             spec="REQUIRED NO_DATA" >

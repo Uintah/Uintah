@@ -80,6 +80,7 @@ namespace Uintah {
     const VarLabel* f_theta_CCLabel;
     const VarLabel* Tdot_CCLabel;
     const VarLabel* turb_viscosity_CCLabel;
+    const VarLabel* total_viscosity_CCLabel;
     const VarLabel* viscosityLabel;
     const VarLabel* thermalCondLabel;
     const VarLabel* gammaLabel;

@@ -116,6 +116,7 @@
 #include "GraphHelperTools.h"
 #include "FieldTypes.h"
 #include "BCHelper.h"
+#include "WasatchBCHelper.h"
 #include "TimeIntegratorTools.h"
 //-- ExprLib Includes --//
 #include <expression/ExpressionFactory.h>
@@ -169,7 +170,7 @@ namespace Wasatch{
   public:
 
     typedef std::vector<EqnTimestepAdaptorBase*> EquationAdaptors;
-    typedef std::map< int, BCHelper* > BCHelperMapT;
+    typedef std::map< int, WasatchBCHelper* > BCHelperMapT;
     
     Wasatch( const Uintah::ProcessorGroup* myworld );
 
@@ -259,11 +260,11 @@ namespace Wasatch{
     void disable_wasatch_material(){ buildWasatchMaterial_ = false; }
     const PatchInfoMap& patch_info_map() const{ return patchInfoMap_; }
     std::list< const TaskInterface* >& task_interface_list(){ return taskInterfaceList_; }
-    const std::set<std::string>& locked_fields() const{ return lockedFields_; }
-    std::set<std::string>& locked_fields(){ return lockedFields_; }
+    const std::set<std::string>& persistent_fields() const{ return persistentFields_; }
+    std::set<std::string>& persistent_fields(){ return persistentFields_; }
     
-    void lock_field( const std::string& fieldName ){
-      if( lockedFields_.find(fieldName) == lockedFields_.end() ) lockedFields_.insert(fieldName);
+    void make_field_persistent( const std::string& fieldName ){
+      if( persistentFields_.find(fieldName) == persistentFields_.end() ) persistentFields_.insert(fieldName);
     }
     
     void set_wasatch_materials( const Uintah::MaterialSet* const materials ) { materials_ = materials; }
@@ -279,7 +280,7 @@ namespace Wasatch{
     bool doRadiation_;
     bool doParticles_;
     TimeIntegrator timeIntegrator_;
-    std::set<std::string> lockedFields_;   ///< prevent the ExpressionTree from reclaiming memory on these fields.
+    std::set<std::string> persistentFields_;   ///< prevent the ExpressionTree from reclaiming memory on these fields.
     Uintah::SimulationStateP sharedState_; ///< access to some common things like the current timestep.
     const Uintah::MaterialSet* materials_;
     Uintah::ProblemSpecP wasatchSpec_;
@@ -289,7 +290,6 @@ namespace Wasatch{
     BCFunctorMap bcFunctorMap_;
     BCHelperMapT bcHelperMap_;
     
-    CellType* cellType_;
 
     /**
      *  a container of information for constructing ExprLib graphs.
@@ -305,6 +305,7 @@ namespace Wasatch{
     Uintah::SolverInterface* linSolver_;
 
     Uintah::Ray* rmcrt_; // RMCRT solver. needed to pass along to other tasks and expressions...
+    CellType* cellType_;
     
     EquationAdaptors adaptors_;  ///< set of transport equations to be solved
 

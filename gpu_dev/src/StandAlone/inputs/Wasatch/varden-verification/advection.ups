@@ -9,9 +9,9 @@
   <Wasatch>
     <TimeIntegrator> FE </TimeIntegrator>    
     
-		<VariableDensity model="IMPULSE" coefficient="0.1"/>
+		
     <Density>
-      <NameTag name="density" state="CARRY_FORWARD"/>
+      <NameTag name="density" />
     </Density>
     
     <!-- Set the initial condition expression for mixture fraction -->
@@ -24,7 +24,7 @@
     </BasicExpression>
     
     <TwoStreamMixing rho1="1.29985" rho0="0.081889">
-      <Density><NameTag name="density" state="CARRY_FORWARD"/></Density>
+      <Density><NameTag name="density" /></Density>
       <MixtureFraction> <NameTag name="f"/> </MixtureFraction>
       <DensityWeightedMixtureFraction> <NameTag name="rhof" state="STATE_DYNAMIC"/> </DensityWeightedMixtureFraction>
     </TwoStreamMixing>  
@@ -113,10 +113,10 @@
     <save label="x-mom"/>
     <save label="x-mom_rhs_partial"/>
     <save label="u"/>
-    <save label="u*"/>
+    
     <save label="f"/>
     <save label="rhof"/>
-    <save label="varden_alpha"/>
+    
     <save label="pressure"/>
     <save label="pressure_old"/>
     <save label="pressure_src"/>

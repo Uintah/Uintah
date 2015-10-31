@@ -90,7 +90,7 @@
 <!-- ARCHES specification -->
     <ARCHES>
 
-      <include href="inputs/ARCHES/Coal/CoalDB/example_coal.xml" section="Coal" />
+      <include href="inputs/ARCHES/Coal/CoalDB/example_coal.xml" section="ParticleProperties" />
 
       <EulerianParticles>
         <ParticleVariables>

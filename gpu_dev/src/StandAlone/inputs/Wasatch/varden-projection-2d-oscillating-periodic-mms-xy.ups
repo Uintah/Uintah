@@ -8,10 +8,8 @@
    <Solver type="hypre"/>
   <Wasatch>
     <TimeIntegrator> FE </TimeIntegrator>    
-
-		<VariableDensity model="IMPULSE" coefficient="0.1"/>
     <Density>
-      <NameTag name="density" state="CARRY_FORWARD"/>
+      <NameTag name="density" />
     </Density>
 
     <!-- Setup the parameters for variable density MMS -->
@@ -24,7 +22,7 @@
     </VarDenOscillatingMMS>
 
     <TwoStreamMixing rho0="5.0" rho1="1.0">
-      <Density><NameTag name="density" state="CARRY_FORWARD"/></Density>
+      <Density><NameTag name="density" /></Density>
       <MixtureFraction> <NameTag name="f"/> </MixtureFraction>
       <DensityWeightedMixtureFraction> <NameTag name="rhof" state="STATE_DYNAMIC"/> </DensityWeightedMixtureFraction>
     </TwoStreamMixing>  
@@ -33,14 +31,14 @@
     <BasicExpression type="XVOL">
        <TaskList>initialization</TaskList>
        <NameTag name="u"/>
-       <Constant>0.0</Constant>
+       <Constant>0.5</Constant>
     </BasicExpression>
     
     <!-- Set the initial condition expression for x-velocity -->
     <BasicExpression type="YVOL">
        <TaskList>initialization</TaskList>
        <NameTag name="v"/>
-       <Constant>0.0</Constant>
+       <Constant>0.5</Constant>
     </BasicExpression>
 
     <!-- Build a scalar transport equation for mixture fraction -->
@@ -49,11 +47,7 @@
       <SolutionVariable>rhof</SolutionVariable>
       <PrimitiveVariable>f</PrimitiveVariable>
 
-      <DiffusiveFlux direction="XY">
-        <DiffusionCoefficient>
-          <NameTag name="diffcoef"/>
-        </DiffusionCoefficient>
-      </DiffusiveFlux>
+      <DiffusiveFlux direction="XY" isvelocity="true" coefficient="0.001"/>
 
       <ConvectiveFlux direction="X" method="UPWIND">
         <AdvectiveVelocity>
@@ -127,32 +121,15 @@
     <outputInitTimestep/>
     <checkpoint cycle="2" interval="0.0005"/>
     <save label="density"/>
-    <!-- save label="u*"/>
-    <save label="v*"/>
-    <save label="density*"/>
-    <save label="density**"/>
-    <save label="varden_alpha"/>    
-    <save label="divmom*"/ -->
     <save label="x-mom"/>
     <save label="y-mom"/>
-    <!-- save label="x-mom_rhs_partial"/ -->
     <save label="u"/>
     <save label="v"/>
-    <save label="diffcoef"/>    
     <save label="tau_xy"/>
     <save label="tau_yx"/>
-    <!-- save label="mms_mixture_fraction_src"/>
-    <save label="mms_continuity_src"/>
-    <save label="mms_pressure_continuity_src"/ -->
     <save label="f"/>
     <save label="rhof"/>
     <save label="pressure"/>
-<!--     <save label="pressure_src"/> -->
-    <!-- save label="pressure_rhs"/>
-    <save label="f_diffFlux_X"/>
-    <save label="f_diffFlux_Y"/>
-    <save label="f*_diffFlux_X"/>
-    <save label="f*_diffFlux_Y"/ -->
   </DataArchiver> 
 
   <Grid>

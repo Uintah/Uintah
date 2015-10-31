@@ -1,7 +1,11 @@
-/*
+/**
+ *  \file   ArchesBCHelper.cc
+ *  \author "J. Thornock"
+ *
+ *
  * The MIT License
  *
- * Copyright (c) 1997-2015 The University of Utah
+ * Copyright (c) 2013-2015 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -22,30 +26,24 @@
  * IN THE SOFTWARE.
  */
 
-#ifndef __FRACTURE_PARTICLE_CREATOR_H__
-#define __FRACTURE_PARTICLE_CREATOR_H__
+#include "ArchesBCHelper.h"
 
-#include "ParticleCreator.h"
+//-- Uintah Includes --//
 
-namespace Uintah {
+namespace Uintah{
 
-  class FractureParticleCreator : public ParticleCreator {
-  public:
-    
-    FractureParticleCreator(MPMMaterial* matl, MPMFlags* flags);
-    virtual ~FractureParticleCreator();
+  //==================================================================
 
-    virtual void registerPermanentParticleState(MPMMaterial* matl);
+  ArchesBCHelper::ArchesBCHelper( const Uintah::LevelP& level,
+                                  Uintah::SchedulerP& sched,
+                                  const Uintah::MaterialSet* const materials ) :
+  Wasatch::BCHelper( level, sched, materials )
+  {}
 
-    virtual void applyForceBC(const Vector& dxpp, const Point& pp,
-                              const double& pMass, Vector& pExtForce);
-    
+  //------------------------------------------------------------------
 
-    
-  };
+  ArchesBCHelper::~ArchesBCHelper()
+  {}
 
-
-
-} // End of namespace Uintah
-
-#endif // __FRACTURE_PARTICLE_CREATOR_H__
+  //--------------------------------------------------------------------
+} /* namespace Uintah */

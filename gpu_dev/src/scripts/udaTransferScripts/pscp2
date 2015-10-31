@@ -240,7 +240,7 @@ DATA_TRANSFER_RECORD=$localDir/data_transfer_record
 touch $DATA_TRANSFER_RECORD
 
 if test ! -f $DATA_TRANSFER_RECORD; then
-  # Can't write to that directory... just place it in tmp for now.
+  echo  "  Can't write to that directory... just place it in tmp for now."
   DATA_TRANSFER_RECORD=/tmp/data_transfer_record_`whoami`
 fi
 

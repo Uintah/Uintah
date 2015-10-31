@@ -49,8 +49,6 @@
  *  </ul>
  */
 
-#include <TauProfilerForSCIRun.h>
-
 #include <CCA/Components/DataArchiver/DataArchiver.h>
 #include <CCA/Components/LoadBalancers/LoadBalancerFactory.h>
 #include <CCA/Components/Models/ModelFactory.h>
@@ -93,10 +91,6 @@
 #include <sci_defs/cuda_defs.h>
 
 #include <svn_info.h>
-
-#ifdef USE_VAMPIR
-#  include <Core/Parallel/Vampir.h>
-#endif
 
 #ifdef HAVE_VISIT
 #  include <VisIt/libsim/visit_libsim.h>
@@ -250,21 +244,6 @@ main( int argc, char *argv[], char *env[] )
   // Can override this behavior with the environment variable SCI_SIGNALMODE
   Thread::setDefaultAbortMode("exit");
   Thread::self()->setCleanupFunction( &abortCleanupFunc );
-
-#ifdef USE_TAU_PROFILING
-
-  // WARNING:
-  //cout << "about to call tau_profile... if it dies now, it is in "
-  //       << "sus.cc at the TAU_PROFILE() call.  This has only been "
-  //       << "happening in 32 bit tau use.";  
-  //
-  // Got rid of this print as it appears 100s of times when 100s of procs.
-#endif
-  // Causes buserr for some reason in 32 bit mode... may be fixed now:
-  TAU_PROFILE("main()", "void (int, char **)", TAU_DEFAULT);
-
-  // This seems to be causing a problem when using LAM, disabling for now.
-  //   TAU_PROFILE_INIT(argc,argv);
   
 #if HAVE_IEEEFP_H
   fpsetmask(FP_X_OFL|FP_X_DZ|FP_X_INV);
@@ -496,14 +475,6 @@ main( int argc, char *argv[], char *env[] )
       Thread::exitAll( 1 );
     }
   }
-
-  if (!Uintah::Parallel::usingMPI()) {
-    TAU_PROFILE_SET_NODE(0);
-  }
-
-  #ifdef USE_VAMPIR
-  VTsetup();
-  #endif
 
   char * start_addr = (char*)sbrk(0);
 

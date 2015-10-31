@@ -5,13 +5,14 @@
 #include <Core/Containers/StaticArray.h>
 #include <CCA/Components/Arches/ParticleModels/CoalHelper.h>
 #include <CCA/Components/Arches/ParticleModels/ParticleTools.h>
+#include <CCA/Components/Arches/ArchesLabel.h>
 
 using namespace Uintah; 
 
 //---------------------------------------------------------------------------
 //Method: Constructor
 //---------------------------------------------------------------------------
-RadProperties::RadProperties( std::string prop_name, SimulationStateP& shared_state ) : PropertyModelBase( prop_name, shared_state )
+RadProperties::RadProperties( std::string prop_name, SimulationStateP& shared_state, ArchesLabel * fieldLabels  ) : PropertyModelBase( prop_name, shared_state )
 {
   _prop_label = VarLabel::create( prop_name, CCVariable<double>::getTypeDescription() ); 
 
@@ -21,7 +22,7 @@ RadProperties::RadProperties( std::string prop_name, SimulationStateP& shared_st
   int matlIndex = _shared_state->getArchesMaterial(0)->getDWIndex(); 
   _boundaryCond = scinew BoundaryCondition_new( matlIndex );
 
-
+  _fieldLabels  = fieldLabels;
 
 }
 
@@ -69,12 +70,19 @@ void RadProperties::problemSetup( const ProblemSpecP& inputdb )
     _calc = scinew RadPropertyCalculator::BurnsChriston(); 
   } else if ( calculator_type == "hottel_sarofim"){
     _calc = scinew RadPropertyCalculator::HottelSarofim(); 
+    _fieldLabels->add_species("CO2"); // This forces arches to pull these values from the table (we don't have the correct arches object pointer)
+    _fieldLabels->add_species("H2O");
   } else if ( calculator_type == "radprops" ){
 #ifdef HAVE_RADPROPS
     _calc = scinew RadPropertyCalculator::RadPropsInterface(); 
 #else
     throw InvalidValue("Error: You haven't configured with the RadProps library (try configuring with --enable-wasatch_3p and --with-boost=DIR.)",__FILE__,__LINE__);
 #endif
+  } else if ( calculator_type == "GauthamWSGG"){
+    _calc = scinew RadPropertyCalculator::GauthamWSGG(); 
+    _fieldLabels->add_species("CO2"); 
+    _fieldLabels->add_species("H2O");
+    _fieldLabels->add_species("mixture_molecular_weight");
   } else { 
     throw InvalidValue("Error: Property calculator not recognized.",__FILE__, __LINE__); 
   } 
@@ -370,8 +378,8 @@ void RadProperties::computeProp(const ProcessorGroup* pc,
     //actually compute the properties
     _calc->compute_abskg( patch, vol_fraction, species, temperature, abskg ); 
 
-    // update absk_tot at the walls
-    _boundaryCond->setScalarValueBC( pc, patch, abskg, _prop_name );
+    // update absk_tot at the walls  // removed to prevent users from thinking they can set boundary conditions
+    //_boundaryCond->setScalarValueBC( pc, patch, abskg, _prop_name );
 
     //copy the gas portion to the total: 
     absk_tot.copyData(abskg); 

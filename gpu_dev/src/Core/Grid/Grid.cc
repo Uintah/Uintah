@@ -40,8 +40,6 @@
 #include <Core/Util/FancyAssert.h>
 #include <Core/Util/XMLUtils.h>
 
-#include <TauProfilerForSCIRun.h>
-
 #include <iomanip>
 #include <iostream>
 #include <sci_values.h>
@@ -595,10 +593,11 @@ void
 Grid::performConsistencyCheck() const
 {
 #if SCI_ASSERTION_LEVEL > 0
-  TAU_PROFILE("Grid::performConsistencyCheck()", " ", TAU_USER);
+
   // Verify that patches on a single level do not overlap
-  for(int i=0;i<(int)d_levels.size();i++)
+  for (int i = 0; i < (int)d_levels.size(); i++) {
     d_levels[i]->performConsistencyCheck();
+  }
 
   // Check overlap between levels
   // See if patches on level 0 form a connected set (warning)
@@ -1510,7 +1509,6 @@ Grid::getPatchByID( int patchid, int startingLevel ) const
 void
 Grid::assignBCS( const ProblemSpecP & grid_ps, LoadBalancer * lb )
 {
-  TAU_PROFILE("Grid::assignBCS()", " ", TAU_USER);
   for( int l = 0; l < numLevels(); l++ )
   {
     LevelP level = getLevel( l );

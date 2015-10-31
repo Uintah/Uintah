@@ -61,171 +61,172 @@
       </Box>
     </Level>
     <BoundaryConditions>
+      <DefaultMaterial>0</DefaultMaterial>
       <Face side="x-">
-        <BCType id="all" var="WallBC"  label="x-wall">
+        <BCType var="WallBC"  label="x-wall">
           <value>0.0</value>
         </BCType>
-        <BCType id="all" var="Neumann" label="eta"> 
+        <BCType var="Neumann" label="eta"> 
           <value>0.0</value>
         </BCType>
-        <BCType id="all" var="Neumann" label="heat_loss"> 
+        <BCType var="Neumann" label="heat_loss"> 
           <value>0.0</value>
         </BCType>
-        <BCType id="all" var="Neumann" label="fp"> 
+        <BCType var="Neumann" label="fp"> 
           <value>0.0</value>
         </BCType>
-        <BCType id="all" var="Neumann" label="enthalpy"> 
+        <BCType var="Neumann" label="enthalpy"> 
           <value>0.0</value>
         </BCType>
-        <BCType id="all"  label = "radiation_temperature" var="Dirichlet">
+        <BCType  label = "radiation_temperature" var="Dirichlet">
           <value> 298.0 </value>
         </BCType>
       </Face>
       <Face side="x+">
-        <BCType id="all" var="WallBC"  label="x+wall">
+        <BCType var="WallBC"  label="x+wall">
           <value>0.0</value>
         </BCType>
-        <BCType id="all" var="Neumann" label="eta"> 
+        <BCType var="Neumann" label="eta"> 
           <value>0.0</value>
         </BCType>
-        <BCType id="all" var="Neumann" label="heat_loss"> 
+        <BCType var="Neumann" label="heat_loss"> 
           <value>0.0</value>
         </BCType>
-        <BCType id="all" var="Neumann" label="fp"> 
+        <BCType var="Neumann" label="fp"> 
           <value>0.0</value>
         </BCType>
-        <BCType id="all" var="Neumann" label="enthalpy"> 
+        <BCType var="Neumann" label="enthalpy"> 
           <value>0.0</value>
         </BCType>
-        <BCType id="all"  label = "radiation_temperature" var="Dirichlet">
+        <BCType  label = "radiation_temperature" var="Dirichlet">
           <value> 298.0 </value>
         </BCType>
       </Face>
       <Face side="y-">
-        <BCType id="all" var="WallBC"  label="y-wall">
+        <BCType var="WallBC"  label="y-wall">
           <value>0.0</value>
         </BCType>
-        <BCType id="all" var="Neumann" label="eta"> 
+        <BCType var="Neumann" label="eta"> 
           <value>0.0</value>
         </BCType>
-        <BCType id="all" var="Neumann" label="heat_loss"> 
+        <BCType var="Neumann" label="heat_loss"> 
           <value>0.0</value>
         </BCType>
-        <BCType id="all" var="Neumann" label="fp"> 
+        <BCType var="Neumann" label="fp"> 
           <value>0.0</value>
         </BCType>
-        <BCType id="all" var="Neumann" label="enthalpy"> 
+        <BCType var="Neumann" label="enthalpy"> 
           <value>0.0</value>
         </BCType>
-        <BCType id="all"  label = "radiation_temperature" var="Dirichlet">
+        <BCType  label = "radiation_temperature" var="Dirichlet">
           <value> 298.0 </value>
         </BCType>
       </Face>
       <Face circle="y-" origin="0 0 0" radius="0.23625" name="burner">
-        <BCType id="all" label="burner_inlet" var="VelocityFileInput">
+        <BCType label="burner_inlet" var="VelocityFileInput">
           <value>inputs/ARCHES/handoff/input/ifrf_sources/velocity_0.dat</value>
           <relative_xyz>[0,0,0]</relative_xyz>
           <default type="Dirichlet" velvalue="[1.0, 0, 0]"/>
         </BCType>
-        <BCType id="all" label="enthalpy" var="FromFile">
+        <BCType label="enthalpy" var="FromFile">
           <value>inputs/ARCHES/handoff/input/ifrf_sources/enthalpy_0.dat</value>
           <relative_xyz>[0,0,0]</relative_xyz>
           <default type="Neumann" value="0.0"/>
         </BCType>
-        <BCType id="all" label="fp" var="FromFile">
+        <BCType label="fp" var="FromFile">
           <value>inputs/ARCHES/handoff/input/ifrf_sources/fp_0.dat</value>
           <relative_xyz>[0,0,0]</relative_xyz>
           <default type="Neumann" value="0.0"/>
         </BCType>
-        <BCType id="all" label="eta" var="FromFile">
+        <BCType label="eta" var="FromFile">
           <value>inputs/ARCHES/handoff/input/ifrf_sources/eta_0.dat</value>
           <relative_xyz>[0,0,0]</relative_xyz>
           <default type="Neumann" value="0.0"/>
         </BCType>
-        <BCType id="all" label="heat_loss" var="Dirichlet">
+        <BCType label="heat_loss" var="Dirichlet">
           <value>0.000000</value>
         </BCType>
-        <BCType id="all"  label = "radiation_temperature" var="Dirichlet">
+        <BCType  label = "radiation_temperature" var="Dirichlet">
           <value>400</value>
         </BCType>
       </Face>
       <Face side="y+">
-        <BCType id="all" var="WallBC"  label="y+wall">
+        <BCType var="WallBC"  label="y+wall">
           <value>0.0</value>
         </BCType>
-        <BCType id="all" var="Neumann" label="eta"> 
+        <BCType var="Neumann" label="eta"> 
           <value>0.0</value>
         </BCType>
-        <BCType id="all" var="Neumann" label="heat_loss"> 
+        <BCType var="Neumann" label="heat_loss"> 
           <value>0.0</value>
         </BCType>
-        <BCType id="all" var="Neumann" label="fp"> 
+        <BCType var="Neumann" label="fp"> 
           <value>0.0</value>
         </BCType>
-        <BCType id="all" var="Neumann" label="enthalpy"> 
+        <BCType var="Neumann" label="enthalpy"> 
           <value>0.0</value>
         </BCType>
-        <BCType id="all"  label = "radiation_temperature" var="Dirichlet">
+        <BCType  label = "radiation_temperature" var="Dirichlet">
           <value> 298.0 </value>
         </BCType>
       </Face>
       <Face circle="y+" origin="0 0.05 0" radius=".304" name="y+ outlet">
-        <BCType id="all" label="outlet" var="OutletBC">
+        <BCType label="outlet" var="OutletBC">
           <value>0.0</value>
         </BCType>
-        <BCType id="all" label="fp" var="Neumann">
+        <BCType label="fp" var="Neumann">
           <value>0.0</value>
         </BCType>
-        <BCType id="all" label="eta" var="Neumann">
+        <BCType label="eta" var="Neumann">
           <value>0.0</value>
         </BCType>
-        <BCType id="all" label="heat_loss" var="Neumann">
+        <BCType label="heat_loss" var="Neumann">
           <value>0.0</value>
         </BCType>
-        <BCType id="all" label="enthalpy" var="Neumann">
+        <BCType label="enthalpy" var="Neumann">
           <value>0.0</value>
         </BCType>
-        <BCType id="all"  label = "radiation_temperature" var="Dirichlet">
+        <BCType  label = "radiation_temperature" var="Dirichlet">
           <value> 298.0 </value>
         </BCType>
       </Face>
       <Face side="z-">
-        <BCType id="all" var="WallBC"  label="z-wall">
+        <BCType var="WallBC"  label="z-wall">
           <value>0.0</value>
         </BCType>
-        <BCType id="all" var="Neumann" label="eta"> 
+        <BCType var="Neumann" label="eta"> 
           <value>0.0</value>
         </BCType>
-        <BCType id="all" var="Neumann" label="heat_loss"> 
+        <BCType var="Neumann" label="heat_loss"> 
           <value>0.0</value>
         </BCType>
-        <BCType id="all" var="Neumann" label="fp"> 
+        <BCType var="Neumann" label="fp"> 
           <value>0.0</value>
         </BCType>
-        <BCType id="all" var="Neumann" label="enthalpy"> 
+        <BCType var="Neumann" label="enthalpy"> 
           <value>0.0</value>
         </BCType>
-        <BCType id="all"  label = "radiation_temperature" var="Dirichlet">
+        <BCType  label = "radiation_temperature" var="Dirichlet">
           <value> 298.0 </value>
         </BCType>
       </Face>
       <Face side="z+">
-        <BCType id="all" var="WallBC"  label="z+wall">
+        <BCType var="WallBC"  label="z+wall">
           <value>0.0</value>
         </BCType>
-        <BCType id="all" var="Neumann" label="eta"> 
+        <BCType var="Neumann" label="eta"> 
           <value>0.0</value>
         </BCType>
-        <BCType id="all" var="Neumann" label="heat_loss"> 
+        <BCType var="Neumann" label="heat_loss"> 
           <value>0.0</value>
         </BCType>
-        <BCType id="all" var="Neumann" label="fp"> 
+        <BCType var="Neumann" label="fp"> 
           <value>0.0</value>
         </BCType>
-        <BCType id="all" var="Neumann" label="enthalpy"> 
+        <BCType var="Neumann" label="enthalpy"> 
           <value>0.0</value>
         </BCType>
-        <BCType id="all"  label = "radiation_temperature" var="Dirichlet">
+        <BCType  label = "radiation_temperature" var="Dirichlet">
           <value> 298.0 </value>
         </BCType>
       </Face>

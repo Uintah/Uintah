@@ -31,7 +31,6 @@
 SRCDIR   := CCA/Components/MPM/ReactionDiffusion
 
 SRCS     += \
-	$(SRCDIR)/ReactionDiffusionLabel.cc \
 	$(SRCDIR)/ScalarDiffusionModel.cc \
 	$(SRCDIR)/JGConcentrationDiffusion.cc \
 	$(SRCDIR)/SDInterfaceModel.cc \

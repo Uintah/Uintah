@@ -112,6 +112,12 @@ void UnionBCData::addBC(BoundCondBase* bc)
 {
 }
 
+void UnionBCData::sudoAddBC(BoundCondBase* bc)
+{
+  for (unsigned int i=0 ; i < child.size(); i++)
+    child[i]->sudoAddBC(bc);  // or add to zero element only?
+}
+
 void UnionBCData::addBCData(BCGeomBase* bc)
 {
   child.push_back(bc);

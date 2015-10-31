@@ -27,7 +27,6 @@
 //-- Wasatch Includes --//
 #include <CCA/Components/Wasatch/FieldAdaptor.h>
 #include <CCA/Components/Wasatch/FieldTypes.h>
-#include <CCA/Components/Wasatch/BCHelperTools.h>
 #include <CCA/Components/Wasatch/TagNames.h>
 
 //-- Uintah Includes --//
@@ -246,7 +245,7 @@ namespace Wasatch {
                                     const Expr::Tag& celltypeTag,
                                     Uintah::Ray* rmcrt,
                                     Uintah::ProblemSpecP& radiationSpec,
-                                    Uintah::SimulationStateP& sharedState,
+                                    Uintah::SimulationStateP sharedState,
                                     Uintah::GridP& grid)
   : ExpressionBuilder  ( results        ),
   temperatureTag_    ( temperatureTag ),

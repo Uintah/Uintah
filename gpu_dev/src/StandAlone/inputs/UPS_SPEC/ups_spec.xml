@@ -411,9 +411,9 @@
   <Unit                   spec="OPTIONAL NO_DATA"
                             attribute1="name REQUIRED STRING 'KG^2'" />  <!-- FIXME: is this a good idea?  If so, how to specify?  Make required! -->
 
-	<ParticlePosition spec="OPTIONAL NO_DATA"
-										attribute1="label REQUIRED STRING"/>
-										
+        <ParticlePosition spec="OPTIONAL NO_DATA"
+                                                                                attribute1="label REQUIRED STRING"/>
+                                                                                
   <Time                   spec="REQUIRED NO_DATA">
     <maxTime              spec="REQUIRED DOUBLE  'positive'" />
     <max_Timesteps        spec="OPTIONAL INTEGER 'positive'" />
@@ -506,7 +506,7 @@
                               attribute13="angle        OPTIONAL DOUBLE"                                                                                          
                               attribute14="name         OPTIONAL STRING"
                               attribute15="type         OPTIONAL STRING 'Wall, Velocity, Outflow, Open, User'">                              
-				
+                                
         <BCType             spec="MULTIPLE NO_DATA"
                               attribute1="id        OPTIONAL STRING '0,1,2,3,4,5,6,all'"
                               attribute2="var       REQUIRED STRING 'Neumann, Dirichlet'"
@@ -537,24 +537,24 @@
                               attribute14="angle        OPTIONAL DOUBLE"                                                                                          
                               attribute15="name         OPTIONAL STRING"
                               attribute16="type         OPTIONAL STRING 'Wall, Velocity, Outflow, Open, User'">
-				
-				<ParticleBC spec="OPTIONAL NO_DATA"
-				            children1="ONE_OF(CHILD Wall, Inlet)">
-					<!-- spec for particle wall boundary -->				
-					<Wall	spec="OPTIONAL NO_DATA"
-								attribute1="walltype REQUIRED STRING 'Elastic, Inelastic, PartiallyElastic'">
-						<Restitution spec="OPTIONAL DOUBLE ' positive'" need_applies_to="walltype PartiallyElastic"/>
-					</Wall>
-					<!-- spec for adding particles - Designates that this face injects particles into the domain -->
-					<Inlet			spec="OPTIONAL NO_DATA">
-						<ParticlesPerSecond spec="OPTIONAL DOUBLE"/>
-					</Inlet>                              					
-				</ParticleBC>
+                                
+                                <ParticleBC spec="OPTIONAL NO_DATA"
+                                            children1="ONE_OF(CHILD Wall, Inlet)">
+                                        <!-- spec for particle wall boundary -->                                
+                                        <Wall   spec="OPTIONAL NO_DATA"
+                                                                attribute1="walltype REQUIRED STRING 'Elastic, Inelastic, PartiallyElastic'">
+                                                <Restitution spec="OPTIONAL DOUBLE ' positive'" need_applies_to="walltype PartiallyElastic"/>
+                                        </Wall>
+                                        <!-- spec for adding particles - Designates that this face injects particles into the domain -->
+                                        <Inlet                  spec="OPTIONAL NO_DATA">
+                                                <ParticlesPerSecond spec="OPTIONAL DOUBLE"/>
+                                        </Inlet>                                                                
+                                </ParticleBC>
 
         <BCType             spec="MULTIPLE NO_DATA"
                               attribute1="id        OPTIONAL STRING '0,1,2,3,4,5,6,all'"
                               attribute2="var       REQUIRED STRING 'Neumann, Dirichlet, symmetry, LODI, computeFromDensity, Sine, creep, slip Custom, 
-                                                                     VelocityInlet, StABL, PressureBC, WallBC, OutletBC, NOutletBC, VelocityFileInput, MassFlowInlet, Swirl, FromFile, ForcedDirichlet,
+                                                                     VelocityInlet, StABL, PressureBC, WallBC, OutletBC, NOutletBC, VelocityFileInput, MassFlowInlet, PartMassFlowInlet , Swirl, FromFile, ForcedDirichlet,
                                                                      TurbulentInlet, Tabulated powerLawProfile logWindProfile'"
                               attribute3="label     REQUIRED STRING "
                               attribute4="type      OPTIONAL STRING 'int'" 

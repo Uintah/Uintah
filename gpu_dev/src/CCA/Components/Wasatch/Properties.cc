@@ -139,8 +139,7 @@ namespace Wasatch{
   enum DensityEvaluationLevel
   {
     NORMAL,
-    STAR,
-    STARSTAR
+    STAR
   };
 
   Expr::ExpressionID
@@ -149,13 +148,18 @@ namespace Wasatch{
                         Expr::Tag densityTag,
                         const DensityEvaluationLevel densLevel,
                         GraphHelper& gh,
-                        std::set<std::string>& lockedFields )
+                        const Category& cat,
+                        std::set<std::string>& persistentFields )
   {
+    if (cat == INITIALIZATION) {
+      throw Uintah::ProblemSetupException( "You cannot currently use a density calculator for Initialization of the density. Please use ExtractVariable rather than ExtractDensity in your initial condition for TabProps.", __FILE__, __LINE__ );
+    }
+
     Expr::ExpressionID densCalcID;  // BE SURE TO POPULATE THIS BELOW!
 
     // Lock the density because on initialization this may be an intermediate
     // quantity, but is always needed as a guess for the solver here.
-    lockedFields.insert( densityTag.name() );
+    persistentFields.insert( densityTag.name() );
 
     const std::string densTableName = "Density";
     if( !table.has_depvar(densTableName) ){
@@ -169,15 +173,21 @@ namespace Wasatch{
     switch (densLevel){
       case NORMAL    : tagNameAppend=scalarTagNameAppend="";                          break;
       case STAR      : tagNameAppend=TagNames::self().star; scalarTagNameAppend = ""; break;
-      case STARSTAR  : tagNameAppend=scalarTagNameAppend=TagNames::self().doubleStar; break;
     }
 
     densityTag.name() += tagNameAppend;
 
+    double rtol = 1e-6;
+    int maxIter = 5;
+    
+
+    if (params->findAttribute("tolerance")) params->getAttribute("tolerance",rtol);
+    if (params->findAttribute("maxiter")) params->getAttribute("maxiter",maxIter);
     if( params->findBlock("ModelBasedOnMixtureFraction") ){
 
       const Uintah::ProblemSpecP modelParams = params->findBlock("ModelBasedOnMixtureFraction");
       Expr::Tag rhofTag = parse_nametag( modelParams->findBlock("DensityWeightedMixtureFraction")->findBlock("NameTag") );
+      Expr::Tag fTag = parse_nametag(modelParams->findBlock("MixtureFraction")->findBlock("NameTag"));
       if( densLevel != NORMAL   ) rhofTag.context() = Expr::STATE_NONE;
       rhofTag.name() += scalarTagNameAppend;
 
@@ -186,8 +196,18 @@ namespace Wasatch{
       Expr::Tag unconvPts = TagNames::self().unconvergedpts;
       unconvPts.name() += tagNameAppend;
       
-      const Expr::TagList theTagList( tag_list( densityTag, unconvPts));
-      densCalcID = factory.register_expression( scinew DensCalc( *densInterp, theTagList, rhofTag ) );
+      Expr::Tag drhodfTag("drhod" + fTag.name(), Expr::STATE_NONE);
+      drhodfTag.name() += tagNameAppend;
+      
+      const Expr::TagList theTagList( tag_list( densityTag, unconvPts, drhodfTag ) );
+      
+      // register placeholder for the old density
+      Expr::Tag rhoOldTag = densityTag;
+      rhoOldTag.context() = Expr::STATE_N;
+      typedef Expr::PlaceHolder<SVolField>  PlcHolder;
+      factory.register_expression( new PlcHolder::Builder(rhoOldTag), true );
+
+      densCalcID = factory.register_expression( scinew DensCalc( *densInterp, theTagList, rhoOldTag, rhofTag, rtol, (size_t) maxIter) );
 
     }
     else if( params->findBlock("ModelBasedOnMixtureFractionAndHeatLoss") ){
@@ -202,7 +222,7 @@ namespace Wasatch{
       Expr::Tag rhohTag    = parse_nametag( modelParams->findBlock("DensityWeightedEnthalpy")->findBlock("NameTag") );
       Expr::Tag heatLossTag= parse_nametag( modelParams->findBlock("HeatLoss")->findBlock("NameTag") );
 
-      lockedFields.insert( heatLossTag.name() ); // ensure that Uintah knows about this field
+      persistentFields.insert( heatLossTag.name() ); // ensure that Uintah knows about this field
 
       // modify name & context when we are calculating density at newer time
       // levels since this will be using STATE_NONE information as opposed to
@@ -215,8 +235,16 @@ namespace Wasatch{
         heatLossTag.name()    += scalarTagNameAppend;
       }
 
+      typedef Expr::PlaceHolder<SVolField>  PlcHolder;
+      Expr::Tag rhoOldTag = densityTag;
+      rhoOldTag.context() = Expr::STATE_N;
+      Expr::Tag heatLossOldTag = heatLossTag;
+      heatLossOldTag.context() = Expr::STATE_N;
+      factory.register_expression( new PlcHolder::Builder(rhoOldTag), true );
+      factory.register_expression( new PlcHolder::Builder(heatLossOldTag), true );
+
       typedef DensHeatLossMixfrac<SVolField>::Builder DensCalc;
-      densCalcID = factory.register_expression( scinew DensCalc( densityTag, heatLossTag, rhofTag, rhohTag, *densInterp, *enthInterp ) );
+      densCalcID = factory.register_expression( scinew DensCalc( rhoOldTag, densityTag, heatLossOldTag, heatLossTag, rhofTag, rhohTag, *densInterp, *enthInterp ) );
 
     }
     return densCalcID;
@@ -233,14 +261,14 @@ namespace Wasatch{
    *         instance of TabProps.
    *  \param doDenstPlus - the boolean showing whether we have a variable
    *         density case and we want to do pressure projection or not
-   *  \param [inout] lockedFields the set of fields that should be controlled by
+   *  \param [inout] persistentFields the set of fields that should be controlled by
    *         Uintah and not allowed to be scratch/temporary fields.
    */
   void parse_tabprops( Uintah::ProblemSpecP& params,
                        GraphHelper& gh,
                        const Category cat,
                        const bool doDenstPlus,
-                       std::set<std::string>& lockedFields )
+                       std::set<std::string>& persistentFields )
   {
     std::string fileName;
     params->get("FileNamePrefix",fileName);
@@ -332,9 +360,7 @@ namespace Wasatch{
         gh.exprFactory->register_expression( scinew PropEvaluator( dvarTag, *interp, ivarNames ) );
         if( doDenstPlus && dvarTableName=="Density" ){
           const Expr::Tag densStarTag ( dvarTag.name()+TagNames::self().star,       dvarTag.context() );
-          const Expr::Tag densStar2Tag( dvarTag.name()+TagNames::self().doubleStar, dvarTag.context() );
           gh.rootIDs.insert( gh.exprFactory->register_expression( scinew PropEvaluator( densStarTag,  *interp, ivarNames ) ) );
-          gh.rootIDs.insert( gh.exprFactory->register_expression( scinew PropEvaluator( densStar2Tag, *interp, ivarNames ) ) );
         }
         break;
       }
@@ -397,12 +423,10 @@ namespace Wasatch{
     const Uintah::ProblemSpecP densityParams = params->findBlock("ExtractDensity");
     if( densityParams ){
       const Expr::Tag densityTag = parse_nametag( densityParams->findBlock("NameTag") );
-      parse_density_solver( densityParams, table, densityTag, NORMAL, gh, lockedFields );
+      parse_density_solver( densityParams, table, densityTag, NORMAL, gh, cat, persistentFields );
       if( doDenstPlus ){
-        const Expr::ExpressionID id1 = parse_density_solver( densityParams, table, densityTag, STAR,     gh, lockedFields );
-        const Expr::ExpressionID id2 = parse_density_solver( densityParams, table, densityTag, STARSTAR, gh, lockedFields );
+        const Expr::ExpressionID id1 = parse_density_solver( densityParams, table, densityTag, STAR, gh, cat, persistentFields );
         gh.exprFactory->cleave_from_children( id1 );
-        gh.exprFactory->cleave_from_children( id2 );
       }
     }
 
@@ -412,11 +436,17 @@ namespace Wasatch{
   void
   parse_twostream_mixing( Uintah::ProblemSpecP params,
                           const bool doDenstPlus,
-                          GraphCategories& gc )
+                          GraphCategories& gc,
+                          std::set<std::string>& persistentFields)
   {
     const Expr::Tag fTag    = parse_nametag( params->findBlock("MixtureFraction")->findBlock("NameTag") );
     const Expr::Tag rhofTag = parse_nametag( params->findBlock("DensityWeightedMixtureFraction")->findBlock("NameTag") );
     const Expr::Tag rhoTag  = parse_nametag( params->findBlock("Density")->findBlock("NameTag") );
+
+    // Lock the density because on initialization this may be an intermediate
+    // quantity, but is always needed as a guess for the solver here.
+    //persistentFields.insert( rhoTag.name() );
+
     double rho0, rho1;
     params->getAttribute("rho0",rho0);
     params->getAttribute("rho1",rho1);
@@ -430,27 +460,25 @@ namespace Wasatch{
 
       if( doDenstPlus ){
         const Expr::Tag icRhoStarTag ( rhoTag.name()+TagNames::self().star,       Expr::STATE_NONE );
-        const Expr::Tag icRhoStar2Tag( rhoTag.name()+TagNames::self().doubleStar, Expr::STATE_NONE );
         gh.rootIDs.insert( gh.exprFactory->register_expression( scinew ICDensExpr(icRhoStarTag, fTag,rho0,rho1) ) );
-        gh.rootIDs.insert( gh.exprFactory->register_expression( scinew ICDensExpr(icRhoStar2Tag,fTag,rho0,rho1) ) );
       }
     }
 
     typedef TwoStreamMixingDensity<SVolField>::Builder DensExpr;
-    gc[ADVANCE_SOLUTION]->exprFactory->register_expression( scinew DensExpr(rhoTag,rhofTag,rho0,rho1) );
+    const Expr::Tag drhodfTag("drhod" + fTag.name(), Expr::STATE_NONE);
+    const Expr::TagList theTagList( tag_list( rhoTag, drhodfTag ));
+    gc[ADVANCE_SOLUTION]->exprFactory->register_expression( scinew DensExpr(theTagList,rhofTag,rho0,rho1) );
 
     if( doDenstPlus ){
       const TagNames& names = TagNames::self();
 
       Expr::Tag rhoStar ( rhoTag .name()+names.star, rhoTag.context() );
       Expr::Tag rhofStar( rhofTag.name(), Expr::STATE_NONE );
-      const Expr::ExpressionID id1 = gc[ADVANCE_SOLUTION]->exprFactory->register_expression( scinew DensExpr(rhoStar,rhofStar,rho0,rho1) );
 
-      rhoStar .name() = rhoTag.name()  + names.doubleStar;
-      rhofStar.name() = rhofTag.name() + names.doubleStar;
-      const Expr::ExpressionID id2 = gc[ADVANCE_SOLUTION]->exprFactory->register_expression( scinew DensExpr(rhoStar,rhofStar,rho0,rho1) );
+      const Expr::Tag drhodfStarTag("drhod" + fTag.name() + "*", Expr::STATE_NONE);
+      const Expr::TagList theTagList( tag_list( rhoStar, drhodfStarTag ));
+      const Expr::ExpressionID id1 = gc[ADVANCE_SOLUTION]->exprFactory->register_expression( scinew DensExpr(theTagList,rhofStar,rho0,rho1) );
       gc[ADVANCE_SOLUTION]->exprFactory->cleave_from_children(id1);
-      gc[ADVANCE_SOLUTION]->exprFactory->cleave_from_children(id2);
     }
   }
 
@@ -475,14 +503,6 @@ namespace Wasatch{
 
       // Here we get the variables needed for calculations at the stage "*"
       const Expr::Tag solnVarTagNp1  ( solnVarName,                 Expr::STATE_NONE ); // tag for rhof_{n+1}
-
-      // Here we get the variables needed for calculations at the stage "**"
-      const Expr::Tag solnVarRHSStarTag = tagNames.make_star_rhs(solnVarName);;
-      const Expr::Tag solnVar2StarTag   = tagNames.make_double_star(solnVarName);
-
-      if( !solnGraphHelper.exprFactory->have_entry( solnVar2StarTag ) ){
-        solnGraphHelper.exprFactory->register_expression( scinew SolnVarEst<SVolField>::Builder( solnVar2StarTag, solnVarTagNp1, solnVarRHSStarTag, tagNames.dt ));
-      }
     }
   }
 
@@ -491,7 +511,7 @@ namespace Wasatch{
   void
   setup_property_evaluation( Uintah::ProblemSpecP& params,
                              GraphCategories& gc,
-                             std::set<std::string>& lockedFields )
+                             std::set<std::string>& persistentFields )
   {
     //__________________________________________________________________________
     // extract the density tag in the cases that it is needed
@@ -518,7 +538,7 @@ namespace Wasatch{
                            && params->findBlock("TransportEquation");
 
     if( twoStreamParams ){
-      parse_twostream_mixing( twoStreamParams, doDenstPlus, gc );
+      parse_twostream_mixing( twoStreamParams, doDenstPlus, gc, persistentFields );
     }
 
     // TabProps
@@ -527,10 +547,8 @@ namespace Wasatch{
          tabPropsParams = tabPropsParams->findNextBlock("TabProps") )
     {
       const Category cat = parse_tasklist( tabPropsParams,false);
-      parse_tabprops( tabPropsParams, *gc[cat], cat, doDenstPlus, lockedFields );
+      parse_tabprops( tabPropsParams, *gc[cat], cat, doDenstPlus, persistentFields );
     }
-
-    if( doDenstPlus ) setup_scalar_predictors( params, *gc[ADVANCE_SOLUTION] );
   }
 
   //====================================================================

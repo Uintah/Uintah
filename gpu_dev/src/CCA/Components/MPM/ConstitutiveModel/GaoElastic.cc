@@ -42,8 +42,6 @@
 #include <CCA/Components/MPM/ConstitutiveModel/PlasticityModels/PlasticityState.h>
 #include <CCA/Components/MPM/ConstitutiveModel/PlasticityModels/DeformationState.h>
 
-#include <CCA/Components/MPM/ReactionDiffusion/ReactionDiffusionLabel.h>
-
 #include <CCA/Components/MPM/ConstitutiveModel/MPMMaterial.h>
 #include <Core/Grid/Patch.h>
 #include <CCA/Ports/DataWarehouse.h>
@@ -81,7 +79,11 @@ GaoElastic::GaoElastic(ProblemSpecP& ps,MPMFlags* Mflag)
 {
   ps->require("bulk_modulus",d_initialData.Bulk);
   ps->require("shear_modulus",d_initialData.Shear);
-  ps->require("alpha",alpha);
+  if(flag->d_doScalarDiffusion){
+    ps->require("volume_expansion_coeff",d_initialData.vol_exp_coeff);
+  }else{
+    d_initialData.vol_exp_coeff = 0.0;
+  }
 
   d_tol = 1.0e-10;
   ps->get("tolerance",d_tol);
@@ -90,7 +92,6 @@ GaoElastic::GaoElastic(ProblemSpecP& ps,MPMFlags* Mflag)
   ps->get("useModifiedEOS",d_useModifiedEOS);
 
   initializeLocalMPMLabels();
-  d_rdlb = scinew ReactionDiffusionLabel();
 }
 
 GaoElastic::GaoElastic(const GaoElastic* cm) :
@@ -98,11 +99,11 @@ GaoElastic::GaoElastic(const GaoElastic* cm) :
 {
   d_initialData.Bulk = cm->d_initialData.Bulk;
   d_initialData.Shear = cm->d_initialData.Shear;
+  d_initialData.vol_exp_coeff = cm->d_initialData.vol_exp_coeff;
 
   d_tol = cm->d_tol ;
   
   initializeLocalMPMLabels();
-  d_rdlb = scinew ReactionDiffusionLabel();
 }
 
 GaoElastic::~GaoElastic()
@@ -129,9 +130,12 @@ void GaoElastic::outputProblemSpec(ProblemSpecP& ps,bool output_cm_tag)
     cm_ps->setAttribute("type","gao_elastic");
   }
   
-  cm_ps->appendElement("bulk_modulus",                  d_initialData.Bulk);
-  cm_ps->appendElement("shear_modulus",                 d_initialData.Shear);
-  cm_ps->appendElement("tolerance",                     d_tol);
+  cm_ps->appendElement("bulk_modulus",            d_initialData.Bulk);
+  cm_ps->appendElement("shear_modulus",           d_initialData.Shear);
+  cm_ps->appendElement("tolerance",               d_tol);
+  if(flag->d_doScalarDiffusion){
+    cm_ps->appendElement("volume_expansion_coeff",  d_initialData.vol_exp_coeff);
+  }
 }
 
 
@@ -313,8 +317,10 @@ GaoElastic::addComputesAndRequires(Task* task,
 
   task->requires(Task::OldDW, lb->pTempPreviousLabel, matlset, gnone); 
 
-  task->requires(Task::OldDW, d_rdlb->pConcPreviousLabel, matlset, gnone); 
-  task->requires(Task::OldDW, d_rdlb->pConcentrationLabel, matlset, gnone); 
+  if(flag->d_doScalarDiffusion){
+    task->requires(Task::OldDW, lb->pConcPreviousLabel, matlset, gnone); 
+    task->requires(Task::OldDW, lb->pConcentrationLabel, matlset, gnone); 
+  }
 
   task->computes(pRotationLabel_preReloc,       matlset);
   task->computes(pStrainRateLabel_preReloc,     matlset);
@@ -346,9 +352,15 @@ GaoElastic::computeStressTensor(const PatchSubset* patches,
 
   double bulk  = d_initialData.Bulk;
   double shear = d_initialData.Shear;
+  double vol_coeff = d_initialData.vol_exp_coeff;
   double rho_0 = matl->getInitialDensity();
   double sqrtThreeTwo = sqrt(1.5);
   double sqrtTwoThird = 1.0/sqrtThreeTwo;
+
+  //**** Used for reaction diffusion *******
+  double concentration;
+  double concentration_pn;
+  double conc_rate;
   
 //  double totalStrainEnergy = 0.0;
 
@@ -382,8 +394,10 @@ GaoElastic::computeStressTensor(const PatchSubset* patches,
     old_dw->get(pStress,        lb->pStressLabel,             pset);
     old_dw->get(pDeformGrad,    lb->pDeformationMeasureLabel, pset);
 
-    old_dw->get(pConcentration, d_rdlb->pConcentrationLabel,      pset);
-    old_dw->get(pConc_prenew,   d_rdlb->pConcPreviousLabel,       pset);
+    if(flag->d_doScalarDiffusion){
+      old_dw->get(pConcentration, lb->pConcentrationLabel,      pset);
+      old_dw->get(pConc_prenew,   lb->pConcPreviousLabel,       pset);
+    }
 
     constParticleVariable<double> pStrainRate, pPlasticStrainRate, pEnergy;
     constParticleVariable<int> pLocalized;
@@ -470,10 +484,12 @@ GaoElastic::computeStressTensor(const PatchSubset* patches,
       double rho_cur = rho_0/J;
 
       // Get concentrations
-//      double temperature = pTemperature[idx];
-      double concentration = pConcentration[idx];
-      double concentration_pn = pConc_prenew[idx];
-      double conc_rate = (concentration - concentration_pn)/delT;
+      // double temperature = pTemperature[idx];
+      if(flag->d_doScalarDiffusion){
+        concentration = pConcentration[idx];
+        concentration_pn = pConc_prenew[idx];
+        conc_rate = (concentration - concentration_pn)/delT;
+      }
 
       // Calculate rate of deformation tensor (D)
       tensorD = (tensorL + tensorL.Transpose())*0.5;
@@ -486,7 +502,9 @@ GaoElastic::computeStressTensor(const PatchSubset* patches,
       tensorD = (tensorR.Transpose())*(tensorD*tensorR);
 
       // Remove stress free concentration dependent component
-      tensorD = tensorD - one * alpha * (conc_rate/3);
+      if(flag->d_doScalarDiffusion){
+        tensorD = tensorD - one * vol_coeff * conc_rate;
+      }
 
       // Calculate the deviatoric part of the non-thermal part
       // of the rate of deformation tensor
@@ -593,7 +611,7 @@ GaoElastic::computeStressTensor(const PatchSubset* patches,
     double delT_new = WaveSpeed.minComponent();
 
     new_dw->put(delt_vartype(delT_new), lb->delTLabel, patch->getLevel());
-   }
+  }
 }
 
 //______________________________________________________________________

@@ -249,6 +249,7 @@ void RigidMPM::scheduleInterpolateToParticlesAndUpdate(SchedulerP& sched,
   t->computes(lb->pSizeLabel_preReloc);
   t->computes(lb->pVelGradLabel_preReloc);
   t->computes(lb->pDeformationMeasureLabel_preReloc);
+  t->computes(lb->pTemperatureGradientLabel_preReloc);
   t->computes(lb->pXXLabel);
 
   t->computes(lb->KineticEnergyLabel);
@@ -327,7 +328,7 @@ void RigidMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
       constParticleVariable<long64> pids;
       ParticleVariable<long64> pids_new;
       constParticleVariable<Vector> pdisp;
-      ParticleVariable<Vector> pdispnew;
+      ParticleVariable<Vector> pdispnew,pTempGrad;
       constParticleVariable<Matrix3> pFOld;
       ParticleVariable<Matrix3> pFNew,pVelGrad;
 
@@ -362,7 +363,9 @@ void RigidMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
       new_dw->allocateAndPut(pVelGrad,    lb->pVelGradLabel_preReloc,     pset);
       new_dw->allocateAndPut(pFNew,       lb->pDeformationMeasureLabel_preReloc,
                                                                           pset);
-     
+      new_dw->allocateAndPut(pTempGrad,   lb->pTemperatureGradientLabel_preReloc,
+                                                                          pset);
+
       pids_new.copyData(pids);
       old_dw->get(psize,               lb->pSizeLabel,                 pset);
       new_dw->allocateAndPut(psizeNew, lb->pSizeLabel_preReloc,        pset);
@@ -411,6 +414,7 @@ void RigidMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
 
         double tempRate = 0.0;
         Vector acc(0.0,0.0,0.0);
+        pTempGrad[idx] = Vector(0.0,0.0,0.0);
 
         // Accumulate the contribution from each surrounding vertex
         // All we care about is the temperature field, everything else

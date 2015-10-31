@@ -81,6 +81,10 @@ namespace Uintah {
                                            const std::string type,
                                            int ichild) const;
 
+     bool checkForBoundCondData(int &mat_id,
+                                const std::string type,
+                                int ichild) ;
+
      /// Determine the iterator limits for domain boundaries.
      void determineIteratorLimits(Patch::FaceType face, const Patch* patch);
      
@@ -113,6 +117,10 @@ namespace Uintah {
      /// Print out the various boundary condition geometry types.
      void print() const;
      
+     std::vector <BCGeomBase*>   getBCGeom( int matl_index){
+       return d_BCDataArray[matl_index];
+     }
+
      /// The map is for the mat_id.  -1 is for mat_id = "all", 0, for 
      /// mat_id = "0", etc.
      typedef std::map<int,std::vector<BCGeomBase*> > bcDataArrayType;

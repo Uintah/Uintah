@@ -9,11 +9,8 @@
   <Wasatch>
     <TimeIntegrator> FE </TimeIntegrator>    
 
-		<VariableDensity model="CONSTANT" coefficient="0.1">
-		  <UseOnePredictor/>
-		</VariableDensity>
     <Density>
-      <NameTag name="density" state="CARRY_FORWARD"/>
+      <NameTag name="density" />
     </Density>
 
 
@@ -54,11 +51,14 @@
       </IndependentVariable>
       
       <ExtractDensity>
-        <NameTag name="density" state="CARRY_FORWARD"/>
+        <NameTag name="density" />
         <ModelBasedOnMixtureFraction>
           <DensityWeightedMixtureFraction>
-          <NameTag name="rhof" state="STATE_DYNAMIC"/>
+            <NameTag name="rhof" state="STATE_DYNAMIC"/>
           </DensityWeightedMixtureFraction>       
+          <MixtureFraction>
+            <NameTag name="f"/>
+          </MixtureFraction>                           
         </ModelBasedOnMixtureFraction>
       </ExtractDensity>
       
@@ -166,17 +166,17 @@
     <save label="density"/>
     <save label="density*"/>
     <!-- save label="u*"/>
-    <save label="v*"/>
+    
     <save label="density*"/>
-    <save label="density**"/>
-    <save label="varden_alpha"/>    
+    
+        
     <save label="divmom*"/ -->
     <save label="x-mom"/>
     <save label="y-mom"/>
     <!-- save label="x-mom_rhs_partial"/ -->
     <save label="u"/>
     <save label="v"/>
-    <save label="diffcoef"/>    
+        
     <save label="tau_xy"/>
     <save label="tau_yx"/>
     <!-- save label="mms_mixture_fraction_src"/>
@@ -189,7 +189,7 @@
     <!-- save label="pressure_rhs"/>
     <save label="f_diffFlux_X"/>
     <save label="f_diffFlux_Y"/>
-    <save label="f*_diffFlux_X"/>
+    
     <save label="f*_diffFlux_Y"/ -->
   </DataArchiver> 
 
