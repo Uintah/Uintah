@@ -33,11 +33,11 @@
 #include <CCA/Components/Wasatch/Operators/Operators.h>
 #include <CCA/Components/Wasatch/Operators/OperatorTypes.h>
 #include <CCA/Components/Wasatch/BCHelper.h>
+#include <CCA/Components/Wasatch/WasatchBCHelper.h>
 
 //-- Uintah Includes --//
 #include <Core/Grid/Variables/VarLabel.h>
 #include <Core/Grid/Variables/Stencil7.h>
-#include <Core/Grid/Variables/Stencil4.h>
 #include <Core/Grid/Variables/CCVariable.h>
 
 namespace Uintah{
@@ -79,7 +79,7 @@ class Pressure
 {
   typedef SpatialOps::SingleValueField TimeField;
 
-  const Expr::Tag volFracTag_;
+  const Expr::Tag volFracTag_, rhoStarTag_;
   const bool doX_, doY_, doZ_, hasIntrusion_;
   bool didAllocateMatrix_;
   bool didMatrixUpdate_;
@@ -91,6 +91,7 @@ class Pressure
   const SCIRun::IntVector refPressureLocation_;
   const bool use3DLaplacian_;
   const bool enforceSolvability_;
+  const bool isConstDensity_;
   
   Uintah::SolverParameters& solverParams_;
   Uintah::SolverInterface& solver_;
@@ -99,7 +100,7 @@ class Pressure
   const Uintah::VarLabel* prhsLabel_;
   
   DECLARE_FIELDS(TimeField, timestep_, t_)
-  DECLARE_FIELDS(SVolField, pSource_, volfrac_)
+  DECLARE_FIELDS(SVolField, pSource_, volfrac_, rhoStar_)
   DECLARE_FIELD(XVolField, fx_)
   DECLARE_FIELD(YVolField, fy_)
   DECLARE_FIELD(ZVolField, fz_)
@@ -112,6 +113,14 @@ class Pressure
   const FyInterp* interpY_;
   const FzInterp* interpZ_;
 
+  
+  typedef OperatorTypeBuilder< Interpolant, SVolField, XVolField >::type  S2XInterpT;
+  typedef OperatorTypeBuilder< Interpolant, SVolField, YVolField >::type  S2YInterpT;
+  typedef OperatorTypeBuilder< Interpolant, SVolField, ZVolField >::type  S2ZInterpT;
+  const S2XInterpT* s2XInterOp_;
+  const S2YInterpT* s2YInterOp_;
+  const S2ZInterpT* s2ZInterOp_;
+
   // divergence operators
   typedef SpatialOps::BasicOpTypes<SVolField>::DivX  DivX;
   typedef SpatialOps::BasicOpTypes<SVolField>::DivY  DivY;
@@ -119,11 +128,11 @@ class Pressure
   const DivX* divXOp_;
   const DivY* divYOp_;
   const DivZ* divZOp_;
-
-  typedef Uintah::CCVariable<Uintah::Stencil4> MatType;
+  
+  typedef Uintah::CCVariable<Uintah::Stencil7> MatType;
   MatType matrix_;
   const Uintah::Patch* patch_;
-  BCHelper* bcHelper_;
+  WasatchBCHelper* bcHelper_;
 
   Pressure( const std::string& pressureName,
             const std::string& pressureRHSName,
@@ -133,19 +142,21 @@ class Pressure
             const Expr::Tag& pSourceTag,
             const Expr::Tag& timesteptag,
             const Expr::Tag& volfractag,
+            const Expr::Tag& rhoStarTag,
             const bool hasMovingGeometry,
             const bool       userefpressure,
             const double     refPressureValue,
             const SCIRun::IntVector refPressureLocation,
             const bool       use3dlaplacian,
             const bool       enforceSolvability,
+            const bool       isConstDensity,
             Uintah::SolverParameters& solverParams,
             Uintah::SolverInterface& solver );
 
 public:
   class Builder : public Expr::ExpressionBuilder
   {
-    const Expr::Tag fxt_, fyt_, fzt_, psrct_, dtt_, volfract_;
+    const Expr::Tag fxt_, fyt_, fzt_, psrct_, dtt_, volfract_, rhoStarTag_;
     
     const bool hasMovingGeometry_;
     const bool userefpressure_;
@@ -153,6 +164,7 @@ public:
     const SCIRun::IntVector refpressurelocation_;
     const bool use3dlaplacian_;
     const bool enforceSolvability_;
+    const bool isConstDensity_;
     
     Uintah::SolverParameters& sparams_;
     Uintah::SolverInterface& solver_;
@@ -164,12 +176,14 @@ public:
              const Expr::Tag& pSourceTag,
              const Expr::Tag& timesteptag,
              const Expr::Tag& volfractag,
+             const Expr::Tag& rhoStarTag,
              const bool hasMovingGeometry,
              const bool       useRefPressure,
              const double     refPressureValue,
              const SCIRun::IntVector refPressureLocation,
              const bool       use3DLaplacian,
              const bool       enforceSolvability,
+             const bool       isConstDensity,
              Uintah::SolverParameters& sparams,
              Uintah::SolverInterface& solver );
     ~Builder(){}
@@ -208,7 +222,7 @@ public:
                             const Uintah::MaterialSubset* const materials,
                             const int RKStage );
   
-  void set_bchelper( BCHelper* bcHelper ) { bcHelper_ = bcHelper;}
+  void set_bchelper( WasatchBCHelper* bcHelper ) { bcHelper_ = bcHelper;}
 
   /**
    *  \brief allows Wasatch::TaskInterface to reach in and provide
@@ -227,10 +241,16 @@ public:
                          const int material,
                          const int RKStage );
   /**
-   * \brief Calculates pressure coefficient matrix.
+   * \brief Calculates pressure coefficient matrix for variable density flows.
+   */
+  void setup_matrix( const SVolField* const rhoStar,
+                     const SVolField* const volfrac );
+  
+  /**
+   * \brief Calculates pressure coefficient matrix for constant density flows.
    */
   void setup_matrix( const SVolField* const volfrac );
-  
+
   void process_embedded_boundaries( const SVolField& volfrac );
 
   /**

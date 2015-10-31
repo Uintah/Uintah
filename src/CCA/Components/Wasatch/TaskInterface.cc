@@ -255,7 +255,7 @@ namespace Wasatch{
                                     const int rkStage,
                                     Uintah::SimulationStateP state,
                                     const std::set<std::string>& ioFieldSet,
-                                    const bool lockAllFields)
+                                    const bool lockAllFields )
     : scheduler_( sched ),
       patches_( patches ),
       materials_( materials ),
@@ -326,8 +326,6 @@ namespace Wasatch{
       }
 #     endif
 
-      tree->register_fields( *fml_ );
-
       PatchInfoMap::const_iterator ipim = patchInfoMap.find(patchID);
       assert( ipim != patchInfoMap.end() );
       Info info;
@@ -368,7 +366,7 @@ namespace Wasatch{
    */
   void
   add_fields_to_task( Uintah::Task& task,
-                      const Expr::ExpressionTree& tree,
+                      Expr::ExpressionTree& tree,
                       Expr::FieldManagerList& fml,
                       const Uintah::PatchSubset* const patches,
                       const Uintah::MaterialSubset* const materials,

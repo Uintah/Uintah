@@ -200,15 +200,15 @@ void TaskInterface::schedule_task( const LevelP& level,
 
   VariableRegistry variable_registry;
 
-  register_timestep_eval( variable_registry, time_substep );
-
   Task* tsk;
 
-  if ( task_type == STANDARD_TASK )
+  if ( task_type == STANDARD_TASK ){
+    register_timestep_eval( variable_registry, time_substep );
     tsk = scinew Task( _task_name, this, &TaskInterface::do_task, variable_registry, time_substep );
-  else if ( task_type == BC_TASK )
+  } else if ( task_type == BC_TASK ) {
+    register_compute_bcs( variable_registry, time_substep );
     tsk = scinew Task( _task_name+"_bc_task", this, &TaskInterface::do_bcs, variable_registry, time_substep );
-  else
+  } else
     throw InvalidValue("Error: Task type not recognized.",__FILE__,__LINE__);
 
   int counter = 0;
@@ -407,10 +407,13 @@ void TaskInterface::do_bcs( const ProcessorGroup* pc,
 
     SchedToTaskInfo info;
 
+    //These lines don't work because we are applying the BC in scheduleInitialize.
+    // During that phase, there is no valid DT. Need to work on this?
+    /// @TODO: Work on getting DT to the BC task. 
     //get the current dt
-    delt_vartype DT;
-    old_dw->get(DT, VarLabel::find("delT"));
-    info.dt = DT;
+    // delt_vartype DT;
+    // old_dw->get(DT, VarLabel::find("delT"));
+    // info.dt = DT;
     info.time_substep = time_substep;
 
     ArchesTaskInfoManager* tsk_info_mngr = scinew ArchesTaskInfoManager(variable_registry, patch, info);
@@ -422,7 +425,7 @@ void TaskInterface::do_bcs( const ProcessorGroup* pc,
     Operators& opr = Operators::self();
     Operators::PatchInfoMap::iterator i_opr = opr.patch_info_map.find(patch->getID());
 
-    eval( patch, tsk_info_mngr, i_opr->second._sodb );
+    compute_bcs( patch, tsk_info_mngr, i_opr->second._sodb );
 
     //clean up
     delete tsk_info_mngr;

@@ -212,8 +212,13 @@ EnthalpyShaddix::problemSetup(const ProblemSpecP& params, int qn)
   }
 
   // get coal properties
-  if (params_root->findBlock("CFD")->findBlock("ARCHES")->findBlock("Coal")->findBlock("Properties")) {
-    ProblemSpecP db_coal = params_root->findBlock("CFD")->findBlock("ARCHES")->findBlock("Coal")->findBlock("Properties");
+  if (params_root->findBlock("CFD")->findBlock("ARCHES")->findBlock("ParticleProperties")) {
+    ProblemSpecP db_coal = params_root->findBlock("CFD")->findBlock("ARCHES")->findBlock("ParticleProperties");
+    std::string particleType;  
+    db_coal->getAttribute("type",particleType);
+    if (particleType != "coal"){
+      throw InvalidValue("ERROR: EnthalpyShaddix: Can't transport enthalpy of particles of type: "+particleType,__FILE__,__LINE__);
+    }
     db_coal->require("raw_coal_enthalpy", _Hc0);
     db_coal->require("char_enthalpy", _Hh0);
     db_coal->require("density",_rhop_o);

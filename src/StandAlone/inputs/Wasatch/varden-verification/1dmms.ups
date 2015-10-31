@@ -8,12 +8,9 @@
    <Solver type="hypre"/>
   <Wasatch>
     <TimeIntegrator> FE </TimeIntegrator>    
-
-		<VariableDensity model="IMPULSE" coefficient="0.1">
-		<UseOnePredictor/>
-		</VariableDensity>
+		
     <Density>
-      <NameTag name="density" state="CARRY_FORWARD"/>
+      <NameTag name="density" />
     </Density>
     
     <!-- Setup the parameters for variable density MMS -->
@@ -31,7 +28,7 @@
     </BasicExpression>
         
     <TwoStreamMixing rho0="1.29985" rho1="0.081889">
-      <Density><NameTag name="density" state="CARRY_FORWARD"/></Density>
+      <Density><NameTag name="density" /></Density>
       <MixtureFraction> <NameTag name="f"/> </MixtureFraction>
       <DensityWeightedMixtureFraction> <NameTag name="rhof" state="STATE_DYNAMIC"/> </DensityWeightedMixtureFraction>
     </TwoStreamMixing>  
@@ -174,17 +171,14 @@
     <outputTimestepInterval>1000</outputTimestepInterval>
     <outputInitTimestep/>
     <checkpoint cycle="0" interval="0"/>
-    <save label="density"/>
-    <save label="u*"/>
+    <save label="density"/>    
     <save label="density*"/>
-
     <save label="x-mom"/>
     <save label="x-mom_rhs_partial"/>
     <save label="u"/>
     <save label="mms_mixture_fraction_src"/>
     <save label="f"/>
-    <save label="rhof"/>
-    <save label="varden_alpha"/>
+    <save label="rhof"/>    
     <save label="pressure"/>
     <save label="pressure_src"/>
   </DataArchiver> 

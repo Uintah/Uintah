@@ -22,9 +22,9 @@ CoalDensity::problemSetup( ProblemSpecP& db ){
   db->getWithDefault("const_size",_const_size,true);
   
   const ProblemSpecP db_root = db->getRootNode();
-  if ( db_root->findBlock("CFD")->findBlock("ARCHES")->findBlock("Coal")->findBlock("Properties") ){
+  if ( db_root->findBlock("CFD")->findBlock("ARCHES")->findBlock("ParticleProperties") ){
 
-    ProblemSpecP db_coal_props = db_root->findBlock("CFD")->findBlock("ARCHES")->findBlock("Coal")->findBlock("Properties");
+    ProblemSpecP db_coal_props = db_root->findBlock("CFD")->findBlock("ARCHES")->findBlock("ParticleProperties");
 
     db_coal_props->require("density",_rhop_o);
     db_coal_props->require("diameter_distribution", _sizes);
@@ -162,7 +162,8 @@ CoalDensity::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info,
       *initAsh <<= _ash_mf * *massDry;
       *denom <<= *initAsh + _char_mf * *massDry + _raw_coal_mf * *massDry;
       
-      *ratio <<= ( *cchar + *rc + *initAsh) / *denom;
+      *ratio <<= cond( *denom > 0.0, ( *cchar + *rc + *initAsh) / *denom )
+                     (1.01);
       
       *rho <<= cond( *ratio > 1.0, _rhop_o )
                    ( *ratio < *initAsh/ *denom, *initAsh / *denom * _rhop_o )
@@ -255,7 +256,8 @@ CoalDensity::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info,
       *initAsh <<= _ash_mf * *massDry;
       *denom <<= *initAsh + _char_mf * *massDry + _raw_coal_mf * *massDry;
       
-      *ratio <<= ( *cchar + *rc + *initAsh) / *denom;
+      *ratio <<= cond( *denom > 0.0, ( *cchar + *rc + *initAsh) / *denom )
+                     (1.01);
       
       *rho <<= cond( *ratio > 1.0, _rhop_o )
                    ( *ratio < *initAsh/ *denom, *initAsh / *denom * _rhop_o )

@@ -34,7 +34,7 @@
 #include <CCA/Components/Wasatch/Transport/ParseEquation.h>
 #include <CCA/Components/Wasatch/Expressions/MonolithicRHS.h>
 #include <CCA/Components/Wasatch/BCHelper.h>
-
+#include <CCA/Components/Wasatch/WasatchBCHelper.h>
 //-- ExprLib includes --//
 #include <expression/ExprLib.h>
 
@@ -206,7 +206,7 @@ namespace Wasatch{
         
         std::string basePhiName;
         params_->get( "SolutionVariable", basePhiName );
-        const Expr::Tag basePhiTag ( basePhiName, Expr::STATE_DYNAMIC );
+        const Expr::Tag basePhiTag ( basePhiName, Expr::STATE_DYNAMIC );        
         typedef typename ScalabilityTestSrc<FieldT>::Builder coupledSrcTerm;
         factory.register_expression( scinew coupledSrcTerm( srcTag, basePhiTag, nEqs) );
       } else {
@@ -258,7 +258,7 @@ namespace Wasatch{
   template< typename FieldT >
   void ScalabilityTestTransportEquation<FieldT>::
   apply_initial_boundary_conditions( const GraphHelper& graphHelper,
-                                    BCHelper& bcHelper )
+                                    WasatchBCHelper& bcHelper )
   {}
   
   //------------------------------------------------------------------
@@ -266,7 +266,7 @@ namespace Wasatch{
   template< typename FieldT >
   void ScalabilityTestTransportEquation<FieldT>::
   apply_boundary_conditions( const GraphHelper& graphHelper,
-                             BCHelper& bcHelper )
+                             WasatchBCHelper& bcHelper )
   {}
 
   //------------------------------------------------------------------

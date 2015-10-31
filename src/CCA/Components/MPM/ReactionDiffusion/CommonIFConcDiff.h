@@ -37,7 +37,6 @@ namespace Uintah {
   class MPMFlags;
   class MPMLabel;
   class MPMMaterial;
-  class ReactionDiffusionLabel;
   class DataWarehouse;
   class ProcessorGroup;
 
@@ -48,32 +47,21 @@ namespace Uintah {
     CommonIFConcDiff(ProblemSpecP& ps, SimulationStateP& sS, MPMFlags* Mflag);
     ~CommonIFConcDiff();
 
-    virtual void addInitialComputesAndRequires(Task* task,
-                                               const PatchSet* patch) const;
-
-    virtual void initializeSDMData(const Patch* patch, DataWarehouse* new_dw);
-
-#if 0
-    virtual void scheduleInterpolateParticlesToGrid(Task* task,
-                                                 const PatchSet* patches) const;
-
-    virtual void interpolateParticlesToGrid(const Patch* patch,
-                                            DataWarehouse* old_dw,
-                                            DataWarehouse* new_dw);
-#endif
+//    virtual void initializeSDMData(const Patch* patch, DataWarehouse* new_dw);
 
     virtual void computeDivergence(const Patch* patch, DataWarehouse* old_dw,
 		                               DataWarehouse* new_dw);
+
+    virtual void outputProblemSpec(ProblemSpecP& ps,bool output_sdim_tag = true);
 
   protected:
     MPMLabel* d_lb;
     MPMFlags* d_Mflag;
     SimulationStateP d_sharedState;
-    ReactionDiffusionLabel* d_rdlb;
 
     int NGP, NGN;
+    std::string diffusion_type;
     int numMPMmatls;
-    bool do_explicit;
     bool include_hydrostress;
 
     CommonIFConcDiff(const CommonIFConcDiff&);

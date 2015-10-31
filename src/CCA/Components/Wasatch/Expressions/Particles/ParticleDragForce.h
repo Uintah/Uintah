@@ -110,9 +110,7 @@ ParticleDragForce( const Expr::Tag& gasVelTag,
    pfd_ = this->template create_field_request<ParticleField>(ParticleDragForceCoefTag);
    ptau_ = this->template create_field_request<ParticleField>(particleTauTag);
    pvel_ = this->template create_field_request<ParticleField>(particleVelTag);
-   psize_ = this->template create_field_request<ParticleField>(particleSizeTag);
-
-  
+   psize_ = this->template create_field_request<ParticleField>(particleSizeTag);  
 }
 
 //------------------------------------------------------------------

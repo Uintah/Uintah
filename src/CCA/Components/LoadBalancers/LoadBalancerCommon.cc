@@ -40,8 +40,6 @@
 #include <Core/Util/FancyAssert.h>
 #include <Core/Util/NotFinished.h>
 
-#include <TauProfilerForSCIRun.h>
-
 #include <sci_values.h>
 #include <sstream>
 
@@ -73,7 +71,6 @@ LoadBalancerCommon::~LoadBalancerCommon()
 void
 LoadBalancerCommon::assignResources( DetailedTasks & graph )
 {
-  TAU_PROFILE("LoadBalancerCommon::assignResources()", " ", TAU_USER);
   int nTasks = graph.numTasks();
 
   if( lbDebug.active() ) {

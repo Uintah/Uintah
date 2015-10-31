@@ -725,7 +725,6 @@ PAPI_LIB_DIR_FLAG
 INC_PAPI_H
 DEF_PAPI
 HAVE_PAPI
-TAU_MAKEFILE
 XALAN_PATH
 INC_PETSC_H
 DEF_PETSC
@@ -6446,9 +6445,10 @@ case $host in
            altivec=""
         fi
 
-        uname -r | grep "14\." &> /dev/null
-        if test $? = 0; then
-           yosemite=yes
+        # Check to see if we are runnign on OSX version Yosemite or newer:
+        OSX_BASE_VERSION=`uname -r | cut -f1 -d"."`
+        if [ $OSX_BASE_VERSION -ge 14 ]; then  # Note, using double '['s (ie: '[[') because autoconf strips one of them.
+           yosemite_plus=yes
         fi
 
 	SO_OR_ARCHIVE_EXTENSION=dylib
@@ -8697,7 +8697,7 @@ $as_echo "$M_LIB" >&6; }
 
 
 ##
-## SCI_TRY_LINK (M):  Verifying math library and header
+## SCI_TRY_LINK (M):  math library and header
 ##
 ## arguments mean:
 ## arg 1 : variable base name (e.g., MATH)
@@ -8729,7 +8729,7 @@ $as_echo "$M_LIB" >&6; }
 ## Here are the specific values for this invocation:
 ##
 ## arg 1 : M
-## arg 2 : Verifying math library and header
+## arg 2 : math library and header
 ## arg 3 : math.h
 ## arg 4 :
 ## arg 5 : $M_LIB
@@ -8749,12 +8749,12 @@ $as_echo "$M_LIB" >&6; }
 ##      HAVE_M_H         => yes or no
 
 if test 9 != 9; then
-     as_fn_error $? "Wrong number of parameters (9) for SCI-TRY-LINK for Verifying math library and header.  This is an internal SCIRun configure error and should be reported to scirun-develop@sci.utah.edu." "$LINENO" 5
+     as_fn_error $? "Wrong number of parameters (9) for SCI-TRY-LINK for math library and header.  This is an internal SCIRun configure error and should be reported to scirun-develop@sci.utah.edu." "$LINENO" 5
 fi
 
 
-{ $as_echo "$as_me:${as_lineno-$LINENO}: checking for math library and header (required) $CXXFLAGS ----  $CFLAGS" >&5
-$as_echo_n "checking for Verifying math library and header (required)... " >&6; }
+{ $as_echo "$as_me:${as_lineno-$LINENO}: checking for math library and header (required)" >&5
+$as_echo_n "checking for math library and header (required)... " >&6; }
 _sci_savelibs=$LIBS
 _sci_saveldflags=$LDFLAGS
 _sci_savecflags=$CFLAGS
@@ -8764,7 +8764,7 @@ _sci_includes=
 
 if test "required" != "optional" -a "required" != "required" -a "required" != "specific"; then
      echo
-     as_fn_error $? "Last parameter of SCI-TRY-LINK for Verifying math library and header must be: optional or required or specific.  (You had required.)  This is an internal SCIRun configure error and should be reported to scirun-develop@sci.utah.edu." "$LINENO" 5
+     as_fn_error $? "Last parameter of SCI-TRY-LINK for math library and header must be: optional or required or specific.  (You had required.)  This is an internal SCIRun configure error and should be reported to scirun-develop@sci.utah.edu." "$LINENO" 5
 fi
 
 # If  (the -I paths) is blank, do nothing, else do the for statement.
@@ -9096,7 +9096,7 @@ _sci_libs=''
 _sci_includes=''
 
 ##
-## END of SCI_TRY_LINK (M):  Verifying math library and header
+## END of SCI_TRY_LINK (M):  math library and header
 ##
 
 
@@ -14135,7 +14135,7 @@ case $host in
 ##
 ## arg 1 : STD_HDRS
 ## arg 2 : standard headers-2
-## arg 3 : unistd.h dirent.h sys/time.h sys/param.h netdb.h sys/select.h sys/socket.h sys/mman.h sys/ioctl.h sys/resource.h sys/wait.h sys/utsname.h rpc/types.h netinet/in.h
+## arg 3 : unistd.h dirent.h sys/time.h sys/param.h netdb.h sys/select.h sys/socket.h sys/mman.h sys/ioctl.h sys/resource.h sys/wait.h sys/utsname.h netinet/in.h
 ## arg 4 :
 ## arg 5 :
 ## arg 6 :
@@ -14328,7 +14328,7 @@ LIBS="$_sci_libs  $LIBS"
 __extern_c="no"
 __sci_pound_includes=""
 
-for inc in "" unistd.h dirent.h sys/time.h sys/param.h netdb.h sys/select.h sys/socket.h sys/mman.h sys/ioctl.h sys/resource.h sys/wait.h sys/utsname.h rpc/types.h netinet/in.h; do
+for inc in "" unistd.h dirent.h sys/time.h sys/param.h netdb.h sys/select.h sys/socket.h sys/mman.h sys/ioctl.h sys/resource.h sys/wait.h sys/utsname.h netinet/in.h; do
     if test "$inc" = "extern_C"; then
        __sci_pound_includes="extern \"C\" {"
        __extern_c=yes
@@ -14467,7 +14467,7 @@ rm -f core conftest.err conftest.$ac_objext \
 if test "required" = "specific"; then
   #echo specific
   # Make sure the exact includes were found
-  for i in "" unistd.h dirent.h sys/time.h sys/param.h netdb.h sys/select.h sys/socket.h sys/mman.h sys/ioctl.h sys/resource.h sys/wait.h sys/utsname.h rpc/types.h netinet/in.h; do
+  for i in "" unistd.h dirent.h sys/time.h sys/param.h netdb.h sys/select.h sys/socket.h sys/mman.h sys/ioctl.h sys/resource.h sys/wait.h sys/utsname.h netinet/in.h; do
     #echo looking for /$i
     if test ! -e /$i; then
      as_fn_error $? "Specifically requested STD_HDRS include file '/$i' was not found" "$LINENO" 5
@@ -14541,7 +14541,7 @@ _sci_includes=''
 ##
 ## arg 1 : STD_HDRS
 ## arg 2 : standard headers-2
-## arg 3 : unistd.h dirent.h sys/time.h sys/param.h values.h malloc.h netdb.h sys/select.h sys/socket.h sys/mman.h sys/ioctl.h sys/resource.h sys/wait.h sys/utsname.h rpc/types.h netinet/in.h
+## arg 3 : unistd.h dirent.h sys/time.h sys/param.h values.h malloc.h netdb.h sys/select.h sys/socket.h sys/mman.h sys/ioctl.h sys/resource.h sys/wait.h sys/utsname.h netinet/in.h
 ## arg 4 :
 ## arg 5 :
 ## arg 6 :
@@ -14734,7 +14734,7 @@ LIBS="$_sci_libs  $LIBS"
 __extern_c="no"
 __sci_pound_includes=""
 
-for inc in "" unistd.h dirent.h sys/time.h sys/param.h values.h malloc.h netdb.h sys/select.h sys/socket.h sys/mman.h sys/ioctl.h sys/resource.h sys/wait.h sys/utsname.h rpc/types.h netinet/in.h; do
+for inc in "" unistd.h dirent.h sys/time.h sys/param.h values.h malloc.h netdb.h sys/select.h sys/socket.h sys/mman.h sys/ioctl.h sys/resource.h sys/wait.h sys/utsname.h netinet/in.h; do
     if test "$inc" = "extern_C"; then
        __sci_pound_includes="extern \"C\" {"
        __extern_c=yes
@@ -14873,7 +14873,7 @@ rm -f core conftest.err conftest.$ac_objext \
 if test "required" = "specific"; then
   #echo specific
   # Make sure the exact includes were found
-  for i in "" unistd.h dirent.h sys/time.h sys/param.h values.h malloc.h netdb.h sys/select.h sys/socket.h sys/mman.h sys/ioctl.h sys/resource.h sys/wait.h sys/utsname.h rpc/types.h netinet/in.h; do
+  for i in "" unistd.h dirent.h sys/time.h sys/param.h values.h malloc.h netdb.h sys/select.h sys/socket.h sys/mman.h sys/ioctl.h sys/resource.h sys/wait.h sys/utsname.h netinet/in.h; do
     #echo looking for /$i
     if test ! -e /$i; then
      as_fn_error $? "Specifically requested STD_HDRS include file '/$i' was not found" "$LINENO" 5
@@ -26206,10 +26206,10 @@ if test "$HAVE_BLAS" != "yes"; then
 
   case $host in
     *-darwin*)
-       if test "$yosemite" = yes; then
+       if test "$yosemite_plus" = yes; then
 
 ##
-## SCI_TRY_LINK (BLAS):  blas and cblas libraries-darwin-yosemite
+## SCI_TRY_LINK (BLAS):  blas and cblas libraries-darwin (yosemite+)
 ##
 ## arguments mean:
 ## arg 1 : variable base name (e.g., MATH)
@@ -26241,7 +26241,7 @@ if test "$HAVE_BLAS" != "yes"; then
 ## Here are the specific values for this invocation:
 ##
 ## arg 1 : BLAS
-## arg 2 : blas and cblas libraries-darwin-yosemite
+## arg 2 : blas and cblas libraries-darwin (yosemite+)
 ## arg 3 : Accelerate/Accelerate.h
 ## arg 4 : $_sci_inc
 ## arg 5 : cblas blas
@@ -26261,12 +26261,12 @@ if test "$HAVE_BLAS" != "yes"; then
 ##      HAVE_BLAS_H         => yes or no
 
 if test 9 != 9; then
-     as_fn_error $? "Wrong number of parameters (9) for SCI-TRY-LINK for blas and cblas libraries-darwin-yosemite.  This is an internal SCIRun configure error and should be reported to scirun-develop@sci.utah.edu." "$LINENO" 5
+     as_fn_error $? "Wrong number of parameters (9) for SCI-TRY-LINK for blas and cblas libraries-darwin (yosemite+).  This is an internal SCIRun configure error and should be reported to scirun-develop@sci.utah.edu." "$LINENO" 5
 fi
 
 
-{ $as_echo "$as_me:${as_lineno-$LINENO}: checking for blas and cblas libraries-darwin-yosemite (optional)" >&5
-$as_echo_n "checking for blas and cblas libraries-darwin-yosemite (optional)... " >&6; }
+{ $as_echo "$as_me:${as_lineno-$LINENO}: checking for blas and cblas libraries-darwin (yosemite+) (optional)" >&5
+$as_echo_n "checking for blas and cblas libraries-darwin (yosemite+) (optional)... " >&6; }
 _sci_savelibs=$LIBS
 _sci_saveldflags=$LDFLAGS
 _sci_savecflags=$CFLAGS
@@ -26276,7 +26276,7 @@ _sci_includes=
 
 if test "optional" != "optional" -a "optional" != "required" -a "optional" != "specific"; then
      echo
-     as_fn_error $? "Last parameter of SCI-TRY-LINK for blas and cblas libraries-darwin-yosemite must be: optional or required or specific.  (You had optional.)  This is an internal SCIRun configure error and should be reported to scirun-develop@sci.utah.edu." "$LINENO" 5
+     as_fn_error $? "Last parameter of SCI-TRY-LINK for blas and cblas libraries-darwin (yosemite+) must be: optional or required or specific.  (You had optional.)  This is an internal SCIRun configure error and should be reported to scirun-develop@sci.utah.edu." "$LINENO" 5
 fi
 
 # If $_sci_inc (the -I paths) is blank, do nothing, else do the for statement.
@@ -26651,7 +26651,7 @@ _sci_libs=''
 _sci_includes=''
 
 ##
-## END of SCI_TRY_LINK (BLAS):  blas and cblas libraries-darwin-yosemite
+## END of SCI_TRY_LINK (BLAS):  blas and cblas libraries-darwin (yosemite+)
 ##
 
 
@@ -30146,7 +30146,7 @@ if test "$HAVE_LAPACK" != "yes"; then
   case $host in
     *-darwin*)
 
-       if test "$yosemite" = yes; then
+       if test "$yosemite_plus" = yes; then
 
 ##
 ## SCI_TRY_LINK (LAPACK):  Mac Accelerate lapack version of libraries and headers
@@ -34933,102 +34933,6 @@ fi
 
 
 
-##  --  if building uintah, search for TAU makefile  ---------------------
-
-if test "$sci_required_tau" = "yes"; then
-  if test ! -f "$with_tau" ; then
-
-## SCI_MSG_ERROR
-if test -z "$verbose"; then
-  { $as_echo "$as_me:${as_lineno-$LINENO}: WARNING:
-    Adding '--enable-verbosity' to configure line
-    _may_ give more information about what is breaking.
-    IF YOU KNOW WHAT YOU ARE DOING - TRY THIS:
-    Digging through the config.log file is your best option
-    for determining what went wrong.  Search for the specific lib/file
-    that configured failed to find.  There should be a compile line
-    and source code near that check.  If you cut the source code into
-    a test.cc and then use the compile line to compile it - the true
-    error most likely will show up.
-  " >&5
-$as_echo "$as_me: WARNING:
-    Adding '--enable-verbosity' to configure line
-    _may_ give more information about what is breaking.
-    IF YOU KNOW WHAT YOU ARE DOING - TRY THIS:
-    Digging through the config.log file is your best option
-    for determining what went wrong.  Search for the specific lib/file
-    that configured failed to find.  There should be a compile line
-    and source code near that check.  If you cut the source code into
-    a test.cc and then use the compile line to compile it - the true
-    error most likely will show up.
-  " >&2;}
-fi
-
-as_fn_error $? "$with_tau does not exist.  Bye!" "$LINENO" 5
-
-  fi
-
-  { $as_echo "$as_me:${as_lineno-$LINENO}: result: Using TAU makefile: $with_tau" >&5
-$as_echo "Using TAU makefile: $with_tau" >&6; }
-
-  cat > conftest-tau.cc <<EOF
-
-  #include <Profile/Profiler.h>
-
-  int main(int argc, char **argv)
-  {
-    TAU_PROFILE("main", "int (int, char **)", TAU_DEFAULT);
-    TAU_PROFILE_INIT(argc, argv);
-    return 0;
-  }
-EOF
-
-  cat > conftest-tau-makefile <<EOF
-include $with_tau
-all:
-	\$(TAU_CXX) -o conftest-tau-a.out \$(TAU_DEFS) \$(TAU_INCLUDE) conftest-tau.cc \$(TAU_SHLIBS) \$(TAU_MPI_LIBS)
-EOF
-
-  ac_try="$MAKE TAU_MAKEFILE=$with_tau -f conftest-tau-makefile > conftestout1 2> conftesterr1"
-  (eval $ac_try) 2>&5
-  ac_status=$?
-  rm -f conftest-tau.cc conftest-tau-makefile conftest-tau-a.out conftestout1 conftesterr1
-  if test "$ac_status" != 0; then
-
-## SCI_MSG_ERROR
-if test -z "$verbose"; then
-  { $as_echo "$as_me:${as_lineno-$LINENO}: WARNING:
-    Adding '--enable-verbosity' to configure line
-    _may_ give more information about what is breaking.
-    IF YOU KNOW WHAT YOU ARE DOING - TRY THIS:
-    Digging through the config.log file is your best option
-    for determining what went wrong.  Search for the specific lib/file
-    that configured failed to find.  There should be a compile line
-    and source code near that check.  If you cut the source code into
-    a test.cc and then use the compile line to compile it - the true
-    error most likely will show up.
-  " >&5
-$as_echo "$as_me: WARNING:
-    Adding '--enable-verbosity' to configure line
-    _may_ give more information about what is breaking.
-    IF YOU KNOW WHAT YOU ARE DOING - TRY THIS:
-    Digging through the config.log file is your best option
-    for determining what went wrong.  Search for the specific lib/file
-    that configured failed to find.  There should be a compile line
-    and source code near that check.  If you cut the source code into
-    a test.cc and then use the compile line to compile it - the true
-    error most likely will show up.
-  " >&2;}
-fi
-
-as_fn_error $? "TAU libraries not working. Bye!" "$LINENO" 5
-
-  fi
-
-  TAU_MAKEFILE="$with_tau"
-fi
-
-
 
 ##  --  search for papi stuff  -------------------------------------------
 _sci_lib=
@@ -36719,7 +36623,6 @@ EOF
 
 # for a static build, use the static CUDA runtime lib
 if test "$static" != "no" -o "$SO_OR_ARCHIVE_EXTENSION" = "a"; then
-   echo "using static cuda"
    _cudart_lib="cudart_static dl pthread rt"
 else
    _cudart_lib="cudart"

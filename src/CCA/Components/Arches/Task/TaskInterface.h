@@ -4,6 +4,7 @@
 #include <CCA/Components/Wasatch/Operators/UpwindInterpolant.h>
 #include <CCA/Components/Wasatch/Operators/FluxLimiterInterpolant.h>
 #include <CCA/Components/Wasatch/ConvectiveInterpolationMethods.h>
+#include <CCA/Components/Arches/ArchesBCHelper.h>
 
 #include <spatialops/structured/FVStaggered.h>
 #include <spatialops/structured/MemoryWindow.h>
@@ -160,9 +161,12 @@ public:
 
     };
 
-
+    void set_bchelper( std::map< int, ArchesBCHelper* >* helper ){ _bcHelperMap = helper; }
 
 protected:
+
+    typedef std::map< int, ArchesBCHelper* >* BCHelperMapT;
+    BCHelperMapT _bcHelperMap;
 
     /** @brief Inteface to register_variable_work -- this function is overloaded. **/
     void register_variable( std::string name,
@@ -251,57 +255,60 @@ protected:
         //====================================================================================
         /** @brief Return a CONST UINTAH field **/
         template <typename T>
-        T* get_const_uintah_field( const std::string name ){
+        inline T* get_const_uintah_field( const std::string name ){
           return _field_container->get_const_field<T>(name);
         }
 
         /** @brief Return a CONST UINTAH field specifying the DW **/
         template <typename T>
-        T* get_const_uintah_field( const std::string name,
+        inline T* get_const_uintah_field( const std::string name,
           ArchesFieldContainer::WHICH_DW which_dw ){
           return _field_container->get_const_field<T>(name, which_dw);
         }
 
         /** @brief Return a UINTAH field **/
         template <typename T>
-        T* get_uintah_field( const std::string name ){
+        inline T* get_uintah_field( const std::string name ){
           return _field_container->get_field<T>(name);
         }
 
         /** @brief Return a SPATIAL field **/
         template <typename T>
-        SpatialOps::SpatFldPtr<T> get_so_field( const std::string name ){
+        inline SpatialOps::SpatFldPtr<T> get_so_field( const std::string name ){
           return _field_container->get_so_field<T>(name);
         }
 
         /** @brief Return a CONST SPATIAL field **/
         template <typename T>
-        SpatialOps::SpatFldPtr<T> get_const_so_field( const std::string name ){
+        inline SpatialOps::SpatFldPtr<T> get_const_so_field( const std::string name ){
           return _field_container->get_const_so_field<T>(name);
         }
 
         /** @brief Return a CONST SPATIAL field specifying the DW **/
         template <typename T>
-        SpatialOps::SpatFldPtr<T> get_const_so_field( const std::string name,
+        inline SpatialOps::SpatFldPtr<T> get_const_so_field( const std::string name,
           ArchesFieldContainer::WHICH_DW which_dw ){
           return _field_container->get_const_so_field<T>(name, which_dw);
         }
 
         /** @brief Return a SPATIAL OPS PARTICLE FIELD **/
-        SpatialOps::SpatFldPtr<ParticleField> get_particle_field( const std::string name ){
+        inline SpatialOps::SpatFldPtr<ParticleField> get_particle_field( const std::string name ){
           return _field_container->get_so_particle_field(name);
         }
 
         /** @brief Return a CONST SPATIAL OPS PARTICLE FIELD **/
-        SpatialOps::SpatFldPtr<ParticleField> get_const_particle_field( const std::string name ){
+        inline SpatialOps::SpatFldPtr<ParticleField> get_const_particle_field( const std::string name ){
           return _field_container->get_const_so_particle_field(name);
         }
 
         /** @brief Return a CONST SPATIAL OPS PARTICLE FIELD specifying the DW **/
-        SpatialOps::SpatFldPtr<ParticleField> get_const_particle_field( const std::string name,
+        inline SpatialOps::SpatFldPtr<ParticleField> get_const_particle_field( const std::string name,
           ArchesFieldContainer::WHICH_DW which_dw ){
           return _field_container->get_const_so_particle_field(name, which_dw);
         }
+
+        /** @brief Get the current patch ID **/
+        inline int get_patch_id(){ return _patch->getID(); }
 
       private:
 

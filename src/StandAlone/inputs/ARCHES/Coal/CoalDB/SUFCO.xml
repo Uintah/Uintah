@@ -1,7 +1,6 @@
 <?xml version="1.0" encoding="ISO-8859-1"?>
 <Uintah_Include>
-  <Coal>
-    <Properties>
+   <ParticleProperties type="coal">
       <diameter_distribution>[15e-6,50e-6,150e-6]</diameter_distribution><!-- [m] -->
       <!--particle_weights>[0.574,0.263,0.163]</particle_weights--><!-- [mass fractions of each particle size] -->
       <density>1300.0</density><!-- [kg/m^3] -->
@@ -39,11 +38,12 @@
         <e>-1.23</e>
         <sigma>8.258e2</sigma>
       </FOWYDevol>
-      <Shaddix_char_coefficients>[0.153e-4,0.24e-4,0.219e-4,293,344.0,45.5e3,0.18,-393509.0,-110525.0]</Shaddix_char_coefficients>
-      <!-- Shaddix char oxidation coefficients in the following order:  -->
-      <!-- D1[O2/CO2 m2/s], D2[O2/H2O m2/s], D3[O2/CO2 m2/s], T0[K], As[mol/s.m^2.atm^n], Es[J/mol] n[], HF_CO2[J/mol], HF_CO[J/mol]  -->
-    </Properties>
-  </Coal>
+      <ShaddixChar>
+        <As> 344.0 </As>
+        <Es> 45.5e3 </Es>
+        <n> 0.18 </n>
+      </ShaddixChar>
+  </ParticleProperties>
 </Uintah_Include>
 
 

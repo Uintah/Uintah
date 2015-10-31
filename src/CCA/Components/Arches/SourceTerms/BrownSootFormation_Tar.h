@@ -107,6 +107,7 @@ void coalSootRR(const double P,
                 const double T,
                 const double rhoYO2,
                 const double rhoYt,
+		const double DT,
                       double &Ytar_source
                );
     

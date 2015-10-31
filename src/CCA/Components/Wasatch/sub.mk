@@ -66,13 +66,14 @@ endif
 SRCS +=                                              \
         $(SRCDIR)/ConvectiveInterpolationMethods.cc  \
         $(SRCDIR)/FieldAdaptor.cc                    \
+        $(SRCDIR)/BCHelper.cc                        \
         $(SRCDIR)/ParticlesHelper.cc                 
 
 # All other src files for Wastach should be listed here:
 ifeq ($(BUILD_WASATCH_FOR_ARCHES),no)
   SRCS +=                                            \
         $(SRCDIR)/BCHelper.cc                        \
-        $(SRCDIR)/BCHelperTools.cc                   \
+        $(SRCDIR)/WasatchBCHelper.cc                 \
         $(SRCDIR)/CoordinateHelper.cc                \
         $(SRCDIR)/FieldAdaptor.cc                    \
         $(SRCDIR)/GraphHelperTools.cc                \
@@ -83,7 +84,6 @@ ifeq ($(BUILD_WASATCH_FOR_ARCHES),no)
         $(SRCDIR)/ReductionHelper.cc                 \
         $(SRCDIR)/TagNames.cc                        \
         $(SRCDIR)/TaskInterface.cc                   \
-        $(SRCDIR)/VardenParameters.cc                \
         $(SRCDIR)/WasatchParticlesHelper.cc          
 endif
 

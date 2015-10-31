@@ -7,7 +7,7 @@ function [IF] = initializationFunctions
   IF.initialize_xp          = @initialize_xp;
  
   %______________________________________________________________________
-  function[nodePos]  = initialize_NodePos(NN, R1_dx, Regions, nRegions, interpolation)
+  function[nodePos]  = initialize_NodePos(NN, Regions, nRegions, interpolation)
     nodePos = zeros(NN,1);              % node Position
     nodeNum = int32(1);
 
@@ -29,9 +29,10 @@ function [IF] = initializationFunctions
   end
   
   %______________________________________________________________________
+  %   Compute the zone of influence
   function[Lx]  = initialize_Lx(NN, nodePos)
     Lx      = zeros(NN,2);
-    % compute the zone of influence
+
     Lx(1,1)  = 0.0;
     Lx(1,2)  = nodePos(2) - nodePos(1);
     Lx(NN,1) = nodePos(NN) - nodePos(NN-1);
@@ -44,9 +45,9 @@ function [IF] = initializationFunctions
   end
 
   %______________________________________________________________________
+  % Create the particles
   function[xp, NP] = initialize_xp(NN, nodePos, interpolation, PPC, bar_min, bar_max)
-     %__________________________________
-     % create particles
+ 
      fprintf('Particle Position\n');
      ip = 1;
 
@@ -87,37 +88,50 @@ function [IF] = initializationFunctions
      xp = reshape(xp, NP,1);  
   end
   %______________________________________________________________________
+  %   Initialize the regions
+  %
   function [Regions, nRegions,NN, dx_min] = initialize_Regions(domain,PPC,R1_dx,interpolation,d_smallNum)
+    global d_doPlotShapeFunction;
+    
     %__________________________________
-    % region structure 
-    %
-    if(0)
-    fprintf('USING plotShapeFunction regions\n');
+    %  PLOT SHAPE FUNCTION
+    if(d_doPlotShapeFunction)
+      fprintf('USING plotShapeFunction regions\n');
 
-    nRegions      = int32(1);              % partition the domain into numRegions
-    Regions       = cell(nRegions,1);      % array that holds the individual region information
-    R.refineRatio = 1;
-
-    R.min         = -1;                     % location of left node
-    R.max         = 1;                     % location of right node
-    R.dx          = 1;
-    R.NN          = int32( (R.max - R.min)/R.dx +1 ); % number of nodes interior nodes
-    R.lp          = R.dx/(2 * PPC);
-    Regions{1}    = R;
+      nRegions      = int32(2);              % partition the domain into numRegions
+      Regions       = cell(nRegions,1);      % array that holds the individual region information
+      
+      %  Left of focus node
+      R.refineRatio = 1;                     % this is always 1
+      R.min         = -1;                    % physical location of left node
+      R.max         = 0;                     % physical location of right node
+      R.dx          = R1_dx;
+      R.NN          = int32( (R.max - R.min)/R.dx); % number of nodes interior nodes
+      Regions{1}    = R;
+      
+      %  right of focus node.  Focus node "owned" by this region
+      R.refineRatio = 2;
+      R.min         = Regions{1}.max;
+      R.dx          = R1_dx/R.refineRatio;
+      R.max         = R.min + R.dx;               
+      R.NN          = int32( (R.max - R.min)/R.dx+1); % number of nodes interior nodes
+      Regions{2}    = R;
     end
 
-
-    if(0)
-    %____________
+    %__________________________________
+    %  AMRMPM REGIONS
+    
+if(0)
+    %__________________________________
     % single level
     nRegions    = int32(2);               % partition the domain into nRegions
     Regions       = cell(nRegions,1);     % array that holds the individual region information
-    R.min         = 0;                    % location of left point
-    R.max         = domain/2;             % location of right point
+    R.min         = 0;                    % physical location of left point  Region 1
+    R.max         = domain/2;             % physical location of right point Region 1 
     R.refineRatio = 1;
     R.dx          = R1_dx;
     R.volP        = R.dx/PPC;
-    R.NN          = int32( (R.max - R.min)/R.dx +1 );
+    R.NN          = int32( (R.max - R.min)/R.dx +1);
     R.lp          = R.dx/(2 * PPC);
     Regions{1}    = R;
 
@@ -129,10 +143,11 @@ function [IF] = initializationFunctions
     R.NN          = int32( (R.max - R.min)/R.dx );
     R.lp          = R.dx/(2 * PPC);
     Regions{2}    = R;
-    end
-    %____________
+end
+
+    %__________________________________
     % 2 level
-    if(1)
+if(0)
     nRegions    = int32(3);               % partition the domain into nRegions
     Regions       = cell(nRegions,1);     % array that holds the individual region information
 
@@ -163,11 +178,11 @@ function [IF] = initializationFunctions
     R.lp          = R.dx/(2 * PPC);
     Regions{3}    = R;
 
-    end
+end
 
-    %____________
+    %__________________________________
     % 3 levels
-    if(0)
+if(0)
 
     nRegions    = int32(5);               % partition the domain into nRegions
     Regions       = cell(nRegions,1);     % array that holds the individual region information
@@ -217,7 +232,7 @@ function [IF] = initializationFunctions
     R.lp          = R.dx/(2 * PPC);
     Regions{5}    = R;
 
-    end
+end
 
     % increase the number of nodes in the first and last region if using gimp.
     if(strcmp(interpolation,'GIMP'))

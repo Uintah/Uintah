@@ -56,8 +56,16 @@ CharOxidationShaddix::CharOxidationShaddix( std::string modelName,
   _WH2O = 18.0; //g/mol
   _WN2 = 28.0; //g/mol
   _small = 1e-30;
-
-  _char_birth_label = NULL; 
+  // Enthalpy of formation (J/mol)
+  _HF_CO2 = -393509.0;
+  _HF_CO  = -110525.0;
+  //binary diffsuion at 293 K
+  _D1 = 0.153e-4; //O2-CO2 m^2/s
+  _D2 = 0.240e-4; //O2-H2O
+  _D3 = 0.219e-4; //O2-N2
+  _T0 = 293.0;
+  
+  _char_birth_label = NULL;
   _rawcoal_birth_label = NULL; 
 
 }
@@ -77,7 +85,12 @@ CharOxidationShaddix::problemSetup(const ProblemSpecP& params, int qn)
   const ProblemSpecP params_root = db->getRootNode();
 
   DQMOMEqnFactory& dqmom_eqn_factory = DQMOMEqnFactory::self();
-  ProblemSpecP db_coal_props = params_root->findBlock("CFD")->findBlock("ARCHES")->findBlock("Coal")->findBlock("Properties");
+  ProblemSpecP db_coal_props = params_root->findBlock("CFD")->findBlock("ARCHES")->findBlock("ParticleProperties");
+    std::string particleType;  
+    db_coal_props->getAttribute("type",particleType);
+    if (particleType != "coal"){
+      throw InvalidValue("ERROR: CharOxidationShaddix: Can't use particles of type: "+particleType,__FILE__,__LINE__);
+    }
   
   // create raw coal mass var label 
   std::string rcmass_root = ParticleTools::parse_for_role_to_label(db, "raw_coal");
@@ -138,24 +151,15 @@ CharOxidationShaddix::problemSetup(const ProblemSpecP& params, int qn)
     _length_varlabel.push_back(  VarLabel::find(length_name));
   }
   
-  // get model coefficients  
-  if (db_coal_props->findBlock("Shaddix_char_coefficients")) {
-    db_coal_props->require("Shaddix_char_coefficients", Shaddix_char_coefficients);
-   
-    _D1 = Shaddix_char_coefficients[0]; // Binary diffusion coef. O2/CO2
-    _D2 = Shaddix_char_coefficients[1];  // Binary diffusion coef. O2/H2O
-    _D3 = Shaddix_char_coefficients[2]; // Binary diffusion coef. O2/N2
-    _T0 = Shaddix_char_coefficients[3];
-    // Eastern bituminous coal, non-linear regression
-    _As = Shaddix_char_coefficients[4];  // mol/s.m^2.atm^n
-    _Es = Shaddix_char_coefficients[5]; // J/mol
-    _n = Shaddix_char_coefficients[6];
-    // Enthalpy of formation (J/mol)
-    _HF_CO2 = Shaddix_char_coefficients[7];
-    _HF_CO  = Shaddix_char_coefficients[8];
-  
-  } else { 
-    throw ProblemSetupException("Error: Shaddix_char_coefficients missing in <CoalProperties>.", __FILE__, __LINE__); 
+  // get model coefficients
+  if (db_coal_props->findBlock("ShaddixChar")) {
+    ProblemSpecP db_Shad = db_coal_props->findBlock("ShaddixChar");
+    //get reaction rate params
+    db_Shad->require("As",_As);
+    db_Shad->require("Es",_Es);
+    db_Shad->require("n",_n);
+  } else {
+    throw ProblemSetupException("Error: ShaddixChar oxidation coefficients missing in <ParticleProperties>.", __FILE__, __LINE__);
   }
 
   // get weight scaling constant

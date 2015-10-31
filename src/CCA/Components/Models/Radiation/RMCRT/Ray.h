@@ -72,6 +72,14 @@ namespace Uintah{
       Ray( TypeDescription::Type FLT_DBL );         // This class can  Float or Double
       ~Ray();
 
+
+      //__________________________________
+      //  public variables
+      bool d_solveBoundaryFlux;              // 
+      
+      enum modifiesComputes{ modifiesVar, 
+                             computesVar};
+                             
       //__________________________________
       //  TASKS
       /** @brief Interface to input file information */
@@ -144,7 +152,7 @@ namespace Uintah{
 
       void sched_computeCellType ( const LevelP& coarseLevel,
                                    SchedulerP& sched,
-                                   const int value);
+                                   const Ray::modifiesComputes which);
 
       void sched_ROI_Extents ( const LevelP& level,
                                SchedulerP& scheduler );
@@ -153,9 +161,7 @@ namespace Uintah{
         return d_radiometer;
       }
       
-      //__________________________________
-      //  public variables
-      bool d_solveBoundaryFlux;              // 
+
 
     //______________________________________________________________________
     private:
@@ -171,7 +177,8 @@ namespace Uintah{
       bool d_onOff_SetBCs;                  // switch for setting boundary conditions
       bool d_isDbgOn;
       bool d_applyFilter;                   // Allow for filtering of boundFlux and divQ results
-      std::string  d_rayDirSampleAlgo;       
+      int  d_rayDirSampleAlgo;
+      enum rayDirSampleAlgorithm{NAIVE, LATIN_HYPER_CUBE};   
 
       enum Algorithm{ dataOnion,            
                       coarseLevel, 
@@ -181,6 +188,8 @@ namespace Uintah{
                       dynamic,              // user specifies thresholds that are used to dynamically determine ROI
                       patch_based,          // The patch extents + halo are the ROI
                     };
+      int d_cellTypeCoarsenLogic;           // how to coarsen a cell type
+      enum cellTypeCoarsenLogic{ ROUNDUP, ROUNDDOWN};
                     
       ROI_algo  d_whichROI_algo;
       Point d_ROI_minPt;
@@ -347,7 +356,6 @@ namespace Uintah{
       //__________________________________
       /** @brief Sample Rays for flux divergence using LHC sampling */
       Vector findRayDirectionHyperCube( MTRand& mTwister,
-                                        const bool isSeedRandom,
                                         const IntVector& = IntVector(-9,-9,-9),
                                         const int iRay = -9,
                                         const int bin_i = 0,
@@ -406,7 +414,7 @@ namespace Uintah{
                           const MaterialSubset* matls,
                           DataWarehouse* old_dw,
                           DataWarehouse* new_dw,
-                          const int value );
+                          const Ray::modifiesComputes which );
 
     template< class T >
     void ROI_Extents ( const ProcessorGroup*,

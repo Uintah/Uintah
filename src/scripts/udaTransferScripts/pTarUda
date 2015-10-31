@@ -1,0 +1,202 @@
+#! /bin/bash
+#
+#______________________________________________________________________
+#  This script tars, in parallel, each timestep in the uda and inside of the checkpoints 
+#  directory.
+#
+#  Usage:
+#   pTarUda < number of Processors> <tar all timesteps in the uda (y/n) >  < uda> 
+#
+#
+#  It does not delete the original timestep directories. 
+#
+#______________________________________________________________________
+
+#echo $argv
+#
+#------------------
+# unalias commands
+unalias -a rm
+unalias -a cd
+
+#------------------
+# error checking
+if test "$#" -ne 3; then
+  echo ""
+  echo "Usage: pTarUda < number of Processors> <tar all timesteps in the uda (y/n) >  < uda> "
+  echo ""
+  exit 1
+fi
+
+
+# Need /usr/bin/which as the shell which doesn't give us the full path...
+if test ! -x /usr/bin/which; then
+  echo ""
+  echo "Error:  Can't find /usr/bin/which...  Goodbye."
+  echo ""
+  exit 1
+fi
+
+#pTarfulldir=`/usr/bin/which $0`
+pTarfulldir=`readlink -f $0`
+pTardir=`dirname $pTarfulldir`
+
+nproc=$1
+tarWholeUda=$2
+localDir=$3
+
+if test `echo $localDir | cut -c1` != "/"; then
+  # Not absolute path... fix it.
+  localDir=`pwd`/$localDir
+fi
+
+
+export PTAR_FILES=/tmp/ptar_files_`basename $localDir`_`whoami`
+
+
+echo "_____________________________________"
+echo "Inputs:"
+echo "	login:                 $LOGIN"
+echo "	# processors:          $nproc"
+echo "	tar whole uda:         $tarWholeUda"
+echo "	localDir:              $localDir"
+echo "	PTAR_FILES:            $PTAR_FILES"
+echo "	pTardir:               $pTardir"
+echo "_____________________________________"
+echo ""
+#______________________________________________________________________
+# Bulletproofing
+echo "Bullet proof tests:"
+
+validateTarredFilesDir()
+{
+  if test -d "$STAMP_DIR"; then
+    echo ""
+    echo "  WARNING: It appears that these directories were in the process of being tarred"
+    echo "           but were interrupted.  The list of directories already tarred can"
+    echo "           be found in the $STAMP_DIR/stamp directory."
+    echo ""
+    echo "  MORE WARNING: It is possible, though unlikely, that some of the directories listed"
+    echo "                as tarred did not complete successfully."
+    echo ""
+    echo "  Do you wish to continue tarring the remaining directories? (y/n)"
+    echo "     (If not, manually remove the following directory and run this script again:"
+    echo "           $STAMP_DIR)"
+    echo ""
+    echo -n " Please answer y/n: "
+    read answer
+    echo ""
+    if test "$answer" != "y"; then
+      echo "Goodbye."
+      echo ""
+      exit 1
+    fi
+  else
+    mkdir $STAMP_DIR
+  fi
+}
+
+export STAMP_DIR=$localDir/.tarred_files
+validateTarredFilesDir
+
+if test ! -d "$STAMP_DIR"; then
+  # Didn't have permissions to make the directory... so place it in tmp
+  echo ""
+  echo "  WARNING: Was not able to create $STAMP_DIR directory (bad permissions?)."
+  export STAMP_DIR=/tmp/.tarred_files_`basename $localDir`_`whoami`
+  echo "           Placing it in $STAMP_DIR instead."
+  echo ""
+  validateTarredFilesDir
+fi
+
+if test ! -d "$STAMP_DIR"; then
+  echo ""
+  echo "  ERROR: Did not have permissions to create $STAMP_DIR directory.  Goodbye."
+  echo ""
+fi
+
+if test "$localDir" == "."; then
+  echo ""
+  echo "  ERROR: You can't set the local dir to '.'"
+  echo ""
+  exit 1
+fi
+
+echo -n "  Testing: does the local folder ($localDir) exist... "
+if test ! -e $localDir; then
+  echo ""
+  echo ""
+  echo "  ERROR: Local directory '$localDir' does not exist"
+  echo ""
+  exit 1
+fi
+echo "yes."
+
+#__________________________________
+#  hard wired for now
+MAKE=make
+OS="Linux"
+
+echo "_____________________________________"
+
+#______________________________________________________________________
+# Now do the work
+#______________________________________________________________________
+# record some info for posterity
+
+PTAR_RECORD=$localDir/ptar_record
+
+touch $PTAR_RECORD
+
+if test ! -f $PTAR_RECORD; then
+  # Can't write to that directory... just place it in tmp for now.
+  PTAR_RECORD=/tmp/ptar_record_`whoami`
+fi
+
+echo "--------------------------------" >> $PTAR_RECORD
+echo "Started on `date`."               >> $PTAR_RECORD
+echo "Uda:  $localDir"                  >> $PTAR_RECORD
+echo ""                                 >> $PTAR_RECORD
+
+cd $localDir
+
+#-------------------------------
+# make a sorted list of potential files to tar
+# let the user edit that file with vi
+/bin/rm -f $PTAR_FILES
+
+FIND=find
+$FIND .                -maxdepth 1 -type d  -exec basename {} \; | grep -v "\.\|t[0-9]\|checkpoints\|.tarred_files" >$PTAR_FILES
+$FIND ./t*             -maxdepth 0 -type d  -exec basename {} \; >>$PTAR_FILES
+$FIND ./checkpoints    -maxdepth 1 -type d  >>$PTAR_FILES
+
+#remove "./checkpoints" from PTAR_FILES
+sed -i /".\/checkpoints$"/d $PTAR_FILES
+
+#more $PTAR_FILES
+
+if test "$tarWholeUda" == "n" -o "$tarWholeUda" == "N"; then
+  echo "Now starting an editor:  Remove the files you don't want transferred"
+
+  if test ! $?EDITOR || test "$EDITOR" == ""; then
+    echo
+    echo WARNING: \$EDITOR is not defined... defaulting to 'vi'
+    echo "And 'vi' sometimes doesn't work well..."
+    export EDITOR=vi
+  fi
+  $EDITOR $PTAR_FILES
+fi
+
+chmod ug+rw $PTAR_FILES 
+ 
+echo
+echo -n "Starting at: " | tee -a $PTAR_RECORD
+date | tee -a $PTAR_RECORD
+echo | tee -a $PTAR_RECORD
+
+/usr/bin/time -p $MAKE TAR=tar -s -f $pTardir/pTarUda_driver_$OS -j $nproc | tee -a $PTAR_RECORD
+
+echo | tee -a $PTAR_RECORD
+echo -n "Ending at: " | tee -a $PTAR_RECORD
+date |tee -a $PTAR_RECORD
+echo

@@ -108,7 +108,6 @@ private:
   const VarLabel* _rawcoal_birth_label; 
   const VarLabel* _char_birth_label; 
   
-  std::vector<double>  Shaddix_char_coefficients;
   int _nQn_part;
   double _As;
   double _Es;

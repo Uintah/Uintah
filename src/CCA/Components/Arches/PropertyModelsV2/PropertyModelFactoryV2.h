@@ -39,6 +39,8 @@ namespace Uintah{
 
     }
 
+    void add_task( ProblemSpecP& db );
+
   protected:
 
   private:

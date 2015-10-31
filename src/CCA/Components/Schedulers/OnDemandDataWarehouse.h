@@ -406,7 +406,7 @@ class OnDemandDataWarehouse : public DataWarehouse {
 
 #if HAVE_PIDX
     virtual void emit(PIDXOutputContext&, const VarLabel* label, int matlIndex,
-		      const Patch* patch, double *patch_buffer);
+		      const Patch* patch, unsigned char *patch_buffer);
 #endif
 
 

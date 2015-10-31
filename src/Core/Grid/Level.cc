@@ -21,11 +21,6 @@
  * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
  * IN THE SOFTWARE.
  */
-//Allgatherv currently performs poorly on Kraken.  
-//This hack changes the Allgatherv to an allgather 
-//by padding the digits
-//#define AG_HACK  
-
 
 #include <Core/Exceptions/InvalidGrid.h>
 #include <Core/Exceptions/ProblemSetupException.h>
@@ -50,8 +45,6 @@
 #include <Core/Util/FancyAssert.h>
 #include <Core/Util/Handle.h>
 #include <Core/Util/ProgressiveWarning.h>
-
-#include <TauProfilerForSCIRun.h>
 
 #include <algorithm>
 #include <cmath>
@@ -483,8 +476,6 @@ Level::positionToIndex( const Point & p ) const
 void Level::selectPatches(const IntVector& low, const IntVector& high,
                           selectType& neighbors, bool withExtraCells, bool cache) const
 {
- TAU_PROFILE("Level::selectPatches", " ", TAU_USER);
-    
  if(cache){
    // look it up in the cache first
    d_cachelock.readLock();
@@ -574,7 +565,6 @@ bool Level::containsCell(const IntVector& idx) const
 void Level::finalizeLevel()
 {
   MALLOC_TRACE_TAG_SCOPE("Level::finalizeLevel");
-  TAU_PROFILE("Level::finalizeLevel()", " ", TAU_USER);
   
   d_each_patch = scinew PatchSet();
   d_each_patch->addReference();
@@ -597,7 +587,7 @@ void Level::finalizeLevel()
   //determines and sets the boundary conditions for the patches
   setBCTypes();
 
-  //finalize the patches
+  // finalize the patches - Currently, finalizePatch() does nothing... empty method - APH 09/10/15
   for(patchIterator iter=d_virtualAndRealPatches.begin();iter!=d_virtualAndRealPatches.end();iter++){
     (*iter)->finalizePatch();
   }
@@ -622,7 +612,6 @@ void Level::finalizeLevel()
 void Level::finalizeLevel(bool periodicX, bool periodicY, bool periodicZ)
 {
   MALLOC_TRACE_TAG_SCOPE("Level::finalizeLevel(periodic)");
-  TAU_PROFILE("Level::finalizeLevel(periodic)", " ", TAU_USER);
 
   // set each_patch and all_patches before creating virtual patches
   d_each_patch = scinew PatchSet();
@@ -714,7 +703,7 @@ void Level::setBCTypes()
   double start=Time::currentSeconds();
 
   MALLOC_TRACE_TAG_SCOPE("Level::setBCTypes");
-  TAU_PROFILE("Level::setBCTypes", " ", TAU_USER);
+
   if (d_bvh != NULL){
     delete d_bvh;
   }
@@ -743,12 +732,13 @@ void Level::setBCTypes()
   int div=d_virtualAndRealPatches.size()/numProcs;
   int mod=d_virtualAndRealPatches.size()%numProcs;
   
-  for(int p=0;p<numProcs;p++){
-    if(p<mod) {
-      recvcounts[p]=div+1;
-    } else {
-      recvcounts[p]=div;
-  }
+  for (int p = 0; p < numProcs; p++) {
+    if (p < mod) {
+      recvcounts[p] = div + 1;
+    }
+    else {
+      recvcounts[p] = div;
+    }
   }
 
   displacements[0]=0;
@@ -824,43 +814,12 @@ void Level::setBCTypes()
   }
   
   if(numProcs>1){
-#ifdef AG_HACK
-    int max_size=div;
-    
-    if(mod!=0){
-      max_size++;
-    }
-    
-    //make temporary vectors
-    vector<unsigned int> bctypes2(max_size*myworld->size());
-    vector<unsigned int> mybctypes2(mybctypes);
-    mybctypes2.resize(max_size);
-
-    //gather bctypes
-    MPI_Allgather(&mybctypes2[0],max_size,MPI_UNSIGNED,&bctypes2[0],max_size,MPI_UNSIGNED,myworld->getComm());
-   
-    //displacements[p]=displacements[p-1]+recvcounts[p-1];
-    //write bctypes2 back into bctypes
-    int j=0;
-    for(int p=0; p<myworld->size();p++){
-      int start=max_size*p;
-      int end=start+recvcounts[p];
-      
-      for(int i=start;i<end;i++){
-        bctypes[j++]=bctypes2[i];
-    }
-    }
-
-    mybctypes2.clear();
-    bctypes2.clear();
-#else
     //allgather bctypes
     if(mybctypes.size()==0){
       MPI_Allgatherv(0,0,MPI_UNSIGNED,&bctypes[0],&recvcounts[0],&displacements[0],MPI_UNSIGNED,myworld->getComm());
     } else {
       MPI_Allgatherv(&mybctypes[0],mybctypes.size(),MPI_UNSIGNED,&bctypes[0],&recvcounts[0],&displacements[0],MPI_UNSIGNED,myworld->getComm());
     }
-#endif
   }else{
      bctypes.swap(mybctypes);
   }
@@ -962,8 +921,6 @@ void Level::setBCTypes()
 void
 Level::assignBCS( const ProblemSpecP & grid_ps, LoadBalancer * lb )
 {
-  TAU_PROFILE("Level::assignBCS()", " ", TAU_USER);
-  
   ProblemSpecP bc_ps = grid_ps->findBlock( "BoundaryConditions" );
   if( bc_ps == 0 ) {
     if ( Parallel::getMPIRank() == 0 ){

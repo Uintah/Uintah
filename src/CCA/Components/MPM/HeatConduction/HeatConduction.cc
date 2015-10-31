@@ -232,6 +232,8 @@ void HeatConduction::computeInternalHeatRate(const ProcessorGroup*,
         double Tdot_cond = 0.0;
         IntVector node(0,0,0);
 
+        // TODO:  get this division by mass OUT OF HERE!  This is
+        // creating a lot more divisions than are necessary
         for (int k = 0; k < d_flag->d_8or27; k++){
           node = ni[k];
           if(patch->containsNode(node)){

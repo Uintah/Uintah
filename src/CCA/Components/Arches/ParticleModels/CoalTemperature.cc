@@ -2,7 +2,6 @@
 #include <CCA/Components/Arches/ParticleModels/ParticleTools.h>
 #include <CCA/Components/Arches/Operators/Operators.h>
 #include <Core/Exceptions/ProblemSetupException.h>
-#include <CCA/Components/Arches/TransportEqns/DQMOMEqn.h>
 
 #include <spatialops/structured/FVStaggered.h>
 
@@ -23,12 +22,11 @@ void
 CoalTemperature::problemSetup( ProblemSpecP& db ){
 
   const ProblemSpecP db_root = db->getRootNode();
-  _scale_flag = false;
   db->getWithDefault("const_size",_const_size,true);
   
-  if ( db_root->findBlock("CFD")->findBlock("ARCHES")->findBlock("Coal")->findBlock("Properties") ){
+  if ( db_root->findBlock("CFD")->findBlock("ARCHES")->findBlock("ParticleProperties") ){
 
-    ProblemSpecP db_coal_props = db_root->findBlock("CFD")->findBlock("ARCHES")->findBlock("Coal")->findBlock("Properties");
+    ProblemSpecP db_coal_props = db_root->findBlock("CFD")->findBlock("ARCHES")->findBlock("ParticleProperties");
 
     db_coal_props->require("density",_rhop_o);
     db_coal_props->require("diameter_distribution", _sizes);
@@ -36,12 +34,6 @@ CoalTemperature::problemSetup( ProblemSpecP& db ){
     db_coal_props->require("ash_enthalpy", _Ha0);
     db_coal_props->require("char_enthalpy", _Hh0);
     db_coal_props->require("raw_coal_enthalpy", _Hc0);
-    if (db_coal_props->findBlock("small_weights")){
-      db_coal_props->require("small_weights", _weight_small);
-      _scale_flag = true;
-    } else {
-      _scale_flag = false;
-    }
 
     if ( db_coal_props->findBlock("ultimate_analysis")){
 
@@ -94,14 +86,9 @@ CoalTemperature::problemSetup( ProblemSpecP& db ){
     _rawcoal_base_name = ParticleTools::parse_for_role_to_label(db, "raw_coal");
     _char_base_name = ParticleTools::parse_for_role_to_label(db, "char");
     _enthalpy_base_name = ParticleTools::parse_for_role_to_label(db, "enthalpy");
-    _weight_base_name = "w";
     _dTdt_base_name = ParticleTools::parse_for_role_to_label(db, "dTdt");
     _gas_temperature_name = "temperature";
-
-    for ( unsigned int i = 0; i < _sizes.size(); i++ ){
-      std::string temp_name = ParticleTools::append_qn_env("w", i);
-      _weightqn_name.push_back(temp_name);
-    }
+    _vol_fraction_name = "volFraction";
 
   } else {
     throw ProblemSetupException("Error: <Coal> is missing the <Properties> section.", __FILE__, __LINE__);
@@ -138,13 +125,10 @@ CoalTemperature::register_initialize( std::vector<ArchesFieldContainer::Variable
     const std::string dTdt_name  = get_env_name( i, _dTdt_base_name );
     const std::string char_name = get_env_name( i, _char_base_name );
     const std::string enthalpy_name = get_env_name( i, _enthalpy_base_name );
-    const std::string weight_name = get_qn_env_name( i, _weight_base_name );
     const std::string rc_name   = get_env_name( i, _rawcoal_base_name );
-
 
     register_variable( char_name , ArchesFieldContainer::REQUIRES , 0 , ArchesFieldContainer::NEWDW , variable_registry );
     register_variable( enthalpy_name , ArchesFieldContainer::REQUIRES , 0 , ArchesFieldContainer::NEWDW , variable_registry );
-    register_variable( weight_name , ArchesFieldContainer::REQUIRES , 0 , ArchesFieldContainer::NEWDW , variable_registry );
     register_variable( rc_name   , ArchesFieldContainer::REQUIRES , 0 , ArchesFieldContainer::NEWDW , variable_registry );
     register_variable( temperature_name  , ArchesFieldContainer::COMPUTES , variable_registry );
     register_variable( dTdt_name  , ArchesFieldContainer::COMPUTES , variable_registry );
@@ -233,27 +217,16 @@ void
 CoalTemperature::register_timestep_eval( std::vector<ArchesFieldContainer::VariableInformation>& variable_registry, const int time_substep ){
 
   for ( int i = 0; i < _Nenv; i++ ){
-    if (!_scale_flag){
-      // Here we are getting the small weight from the DQMOM factory. Currently this isn't in
-      // problem setup because ParticleModels is setup before DQMOM
-      DQMOMEqnFactory& dqmom_eqn_factory = DQMOMEqnFactory::self();
-      EqnBase& temp_weight_eqn = dqmom_eqn_factory.retrieve_scalar_eqn(_weightqn_name[i]);
-      DQMOMEqn& weight_eqn = dynamic_cast<DQMOMEqn&>(temp_weight_eqn);
-      double weight_small = weight_eqn.getSmallClipPlusTol();
-      _weight_small.push_back(weight_small);
-    }
 
     const std::string dTdt_name  = get_env_name( i, _dTdt_base_name );
     const std::string temperature_name  = get_env_name( i, _task_name );
     const std::string char_name = get_env_name( i, _char_base_name );
     const std::string enthalpy_name = get_env_name( i, _enthalpy_base_name );
-    const std::string weight_name = get_qn_env_name( i, _weight_base_name );
     const std::string rc_name   = get_env_name( i, _rawcoal_base_name );
 
     register_variable( char_name, ArchesFieldContainer::REQUIRES, 0, ArchesFieldContainer::LATEST, variable_registry );
     register_variable( temperature_name, ArchesFieldContainer::REQUIRES, 0, ArchesFieldContainer::OLDDW, variable_registry );
     register_variable( enthalpy_name, ArchesFieldContainer::REQUIRES, 0, ArchesFieldContainer::LATEST, variable_registry );
-    register_variable( weight_name, ArchesFieldContainer::REQUIRES, 0, ArchesFieldContainer::LATEST, variable_registry );
     register_variable( rc_name  , ArchesFieldContainer::REQUIRES, 0, ArchesFieldContainer::LATEST, variable_registry );
     register_variable( temperature_name , ArchesFieldContainer::MODIFIES, variable_registry );
     register_variable( dTdt_name , ArchesFieldContainer::COMPUTES, variable_registry );
@@ -266,7 +239,7 @@ CoalTemperature::register_timestep_eval( std::vector<ArchesFieldContainer::Varia
   }
   const std::string gas_temperature_name   = _gas_temperature_name;
   register_variable( gas_temperature_name   , ArchesFieldContainer::REQUIRES , 0 , ArchesFieldContainer::LATEST , variable_registry );
-
+  register_variable( _vol_fraction_name, ArchesFieldContainer::REQUIRES , 0 , ArchesFieldContainer::LATEST, variable_registry );
 }
 
 void
@@ -275,12 +248,13 @@ CoalTemperature::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info,
   const std::string gas_temperature_name   = _gas_temperature_name;
   constCCVariable<double>* vgas_temperature = tsk_info->get_const_uintah_field<constCCVariable<double> >(gas_temperature_name);
   constCCVariable<double>& gas_temperature = *vgas_temperature;
+  constCCVariable<double>* vvol_frac = tsk_info->get_const_uintah_field<constCCVariable<double> >(_vol_fraction_name);
+  constCCVariable<double>& vol_frac = *vvol_frac;
   for ( int i = 0; i < _Nenv; i++ ){
     const std::string temperature_name  = get_env_name( i, _task_name );
     const std::string dTdt_name  = get_env_name( i, _dTdt_base_name );
     const std::string char_name = get_env_name( i, _char_base_name );
     const std::string enthalpy_name = get_env_name( i, _enthalpy_base_name );
-    const std::string weight_name = get_qn_env_name( i, _weight_base_name );
     const std::string rc_name   = get_env_name( i, _rawcoal_base_name );
     const double dt = tsk_info->get_dt(); // this is from the old dw.. so we have [T^t-T^(t-1)]/[t-(t-1)]
 
@@ -289,7 +263,6 @@ CoalTemperature::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info,
     constCCVariable<double>* vrcmass = tsk_info->get_const_uintah_field<constCCVariable<double> >(rc_name);
     constCCVariable<double>* vchar = tsk_info->get_const_uintah_field<constCCVariable<double> >(char_name);
     constCCVariable<double>* venthalpy = tsk_info->get_const_uintah_field<constCCVariable<double> >(enthalpy_name);
-    constCCVariable<double>* vweight = tsk_info->get_const_uintah_field<constCCVariable<double> >(weight_name);
     constCCVariable<double>* vtemperatureold = tsk_info->get_const_uintah_field<constCCVariable<double> >(temperature_name);
     CCVariable<double>& temperature = *vtemperature;
     CCVariable<double>& dTdt = *vdTdt;
@@ -297,7 +270,6 @@ CoalTemperature::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info,
     constCCVariable<double>& rcmass = *vrcmass;
     constCCVariable<double>& charmass = *vchar;
     constCCVariable<double>& enthalpy = *venthalpy;
-    constCCVariable<double>& weight = *vweight;
 
     constCCVariable<double>* vdiameter;
     if ( !_const_size ) {
@@ -330,13 +302,13 @@ CoalTemperature::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info,
       double RC = rcmass[c];
       double CH = charmass[c];
       double pE = enthalpy[c];
-      double wt = weight[c];
+      double vf = vol_frac[c];
 
       double massDry;
       double initAsh;
       double dp;
       
-      if (wt < _weight_small[i]){
+      if (vf < 1.0e-10 ){
         temperature[c]=gT; // gas temperature
         dTdt[c]=(pT-pT_olddw)/dt;
       } else {
@@ -351,48 +323,53 @@ CoalTemperature::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info,
           initAsh = _init_ash[i];
         }
         
-        for ( ; iter < max_iter; iter++) {
-          icount++;
-          oldpT = pT;
-          // compute enthalpy given Tguess
-          hint = -156.076 + 380/(-1 + exp(380 / pT)) + 3600/(-1 + exp(1800 / pT));
-          Ha = -202849.0 + _Ha0 + pT * (593. + pT * 0.293);
-          Hc = _Hc0 + hint * _RdMW;
-          H = Hc * (RC + CH) + Ha * initAsh;
-          f1 = pE - H;
-          // compute enthalpy given Tguess + delta
-          pT = pT + delta;
-          hint = -156.076 + 380/(-1 + exp(380 / pT)) + 3600/(-1 + exp(1800 / pT));
-          Ha = -202849.0 + _Ha0 + pT * (593. + pT * 0.293);
-          Hc = _Hc0 + hint * _RdMW;
-          H = Hc * (RC + CH) + Ha * initAsh;
-          f2 = pE - H;
-          // correct temperature
-          dT = f1 * delta / (f2-f1) + delta;
-          pT = pT - dT;    //to add an coefficient for steadness
-          // check to see if tolernace has been met
-          tol = abs(oldpT - pT);
+        if ( initAsh > 0.0 ) {
+          for ( ; iter < max_iter; iter++) {
+            icount++;
+            oldpT = pT;
+            // compute enthalpy given Tguess
+            hint = -156.076 + 380/(-1 + exp(380 / pT)) + 3600/(-1 + exp(1800 / pT));
+            Ha = -202849.0 + _Ha0 + pT * (593. + pT * 0.293);
+            Hc = _Hc0 + hint * _RdMW;
+            H = Hc * (RC + CH) + Ha * initAsh;
+            f1 = pE - H;
+            // compute enthalpy given Tguess + delta
+            pT = pT + delta;
+            hint = -156.076 + 380/(-1 + exp(380 / pT)) + 3600/(-1 + exp(1800 / pT));
+            Ha = -202849.0 + _Ha0 + pT * (593. + pT * 0.293);
+            Hc = _Hc0 + hint * _RdMW;
+            H = Hc * (RC + CH) + Ha * initAsh;
+            f2 = pE - H;
+            // correct temperature
+            dT = f1 * delta / (f2-f1) + delta;
+            pT = pT - dT;    //to add an coefficient for steadness
+            // check to see if tolernace has been met
+            tol = abs(oldpT - pT);
 
-          if (tol < 0.01 )
-           break;
-        }
-        if (iter ==max_iter-1 || pT <273.0 || pT > 3500.0 ){
-          double pT_low=273;
-          hint = -156.076 + 380/(-1 + exp(380 / pT_low)) + 3600/(-1 + exp(1800 / pT_low));
-          Ha = -202849.0 + _Ha0 + pT_low * (593. + pT_low * 0.293);
-          Hc = _Hc0 + hint * _RdMW;
-          double H_low = Hc * (RC + CH) + Ha * initAsh;
-          double pT_high=3500;
-          hint = -156.076 + 380/(-1 + exp(380 / pT_high)) + 3600/(-1 + exp(1800 / pT_high));
-          Ha = -202849.0 + _Ha0 + pT_high * (593. + pT_high * 0.293);
-          Hc = _Hc0 + hint * _RdMW;
-          double H_high = Hc * (RC + CH) + Ha * initAsh;
-          if (pE < H_low){
-            pT = 273.0;
-          } else if (pE > H_high) {
-            pT = 3500.0;
+            if (tol < 0.01 )
+             break;
           }
+          if (iter ==max_iter-1 || pT <273.0 || pT > 3500.0 ){
+            double pT_low=273;
+            hint = -156.076 + 380/(-1 + exp(380 / pT_low)) + 3600/(-1 + exp(1800 / pT_low));
+            Ha = -202849.0 + _Ha0 + pT_low * (593. + pT_low * 0.293);
+            Hc = _Hc0 + hint * _RdMW;
+            double H_low = Hc * (RC + CH) + Ha * initAsh;
+            double pT_high=3500;
+            hint = -156.076 + 380/(-1 + exp(380 / pT_high)) + 3600/(-1 + exp(1800 / pT_high));
+            Ha = -202849.0 + _Ha0 + pT_high * (593. + pT_high * 0.293);
+            Hc = _Hc0 + hint * _RdMW;
+            double H_high = Hc * (RC + CH) + Ha * initAsh;
+            if (pE < H_low){
+              pT = 273.0;
+            } else if (pE > H_high) {
+              pT = 3500.0;
+            }
+          }
+        } else {
+          pT = _initial_temperature; //prevent nans when dp & ash = 0.0 in cqmom
         }
+        
         temperature[c]=pT;
         dTdt[c]=(pT-pT_olddw)/dt;
       }

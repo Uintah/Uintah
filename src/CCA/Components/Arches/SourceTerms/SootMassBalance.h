@@ -98,6 +98,7 @@ void coalSootRR(const double P,
                 const double rhoYs,
                 const double nd,
 		const double rhoYO2,
+		const double dt,
                       double &Off_Gas
                );
     

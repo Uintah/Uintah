@@ -311,6 +311,7 @@ void Ray::rayTraceDataOnionGPU( Task::CallBackEvent event,
     RT_flags.nDivQRays         = d_nDivQRays;
     RT_flags.nFluxRays         = d_nFluxRays;
     RT_flags.whichROI_algo     = d_whichROI_algo;
+    RT_flags.rayDirSampleAlgo  = d_rayDirSampleAlgo;
 
     double start = clock();
         

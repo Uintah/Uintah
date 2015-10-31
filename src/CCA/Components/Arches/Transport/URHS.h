@@ -293,7 +293,7 @@ private:
 
     //MomentumHelper<UT> mom_helper;
 
-    const double dt = tsk_info->get_dt();
+    //const double dt = tsk_info->get_dt();
 
     //fields
     UFieldTP rhs   = tsk_info->get_so_field<UT>( _rhs_name );
@@ -331,12 +331,12 @@ private:
                (*divy)( (*uinterpy)(*rhou) * (*vinterpy)(*v) ) +
                (*divz)( (*uinterpz)(*rhou) * (*winterpz)(*w) );
 
-    //need to move viscosity into div.
+    /// @TODO: need to move viscosity into div.
     *Tauij <<= 1.0e-4 * (*divx)( (*svol_to_facex)(*rho) * 2.0 * (*ugradx)(*u) ) +
                         (*divy)( (*svol_to_facey)(*rho) * ((*ugrady)(*u) + (*vgradx)(*v)) ) +
                         (*divz)( (*svol_to_facez)(*rho) * ((*ugradz)(*u) + (*wgradx)(*w)) );
 
-    *rhs <<= *rhou + dt * ( *Tauij - *Fconv );
+    *rhs <<= *Tauij - *Fconv;
 
   }
 

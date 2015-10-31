@@ -86,7 +86,7 @@ namespace Wasatch{
      *  \param bcHelper
      *  \param graphCat
      */
-    void setup_boundary_conditions( BCHelper& bcHelper,
+    void setup_boundary_conditions( WasatchBCHelper& bcHelper,
                                     GraphCategories& graphCat)
     {}
     
@@ -97,7 +97,7 @@ namespace Wasatch{
      *  \param bcHelper
      */
     void apply_initial_boundary_conditions( const GraphHelper& graphHelper,
-                                            BCHelper& bcHelper )
+                                            WasatchBCHelper& bcHelper )
     {}
     
     /**
@@ -107,7 +107,7 @@ namespace Wasatch{
      *  \param bcHelper
      */
     void apply_boundary_conditions( const GraphHelper& graphHelper,
-                                    BCHelper& bcHelper )
+                                    WasatchBCHelper& bcHelper )
     {}
 
   private:

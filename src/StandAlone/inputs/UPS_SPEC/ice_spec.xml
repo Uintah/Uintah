@@ -104,6 +104,7 @@
       <TimeStepControl                  spec="OPTIONAL NO_DATA" >
         <Scheme_for_delT_calc           spec="REQUIRED STRING 'aggressive, conservative'" />
         <knob_for_speedSound            spec="REQUIRED DOUBLE '0,1'" />
+        <knob_for_diffusion             spec="OPTIONAL DOUBLE '0,1'" />
       </TimeStepControl>
     </ICE>        
   </CFD>

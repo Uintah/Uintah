@@ -336,6 +336,17 @@ DQMOMEqn::problemSetup( const ProblemSpecP& inputdb )
     // ------------ Other initialization function --------------------
     }
   }
+
+  // need particle info for partMassFlowInlet
+  d_partVelNames = std::vector<std::string>(3,"NotSet");   
+  if (ParticleTools::check_for_particle_method(db, ParticleTools::DQMOM )){
+    std::string str3D = "uvw";
+    for(unsigned int i = 0; i<str3D.length(); i++) {
+      std::string velLabelName =ParticleTools::parse_for_role_to_label(db,std::string (1,str3D[i])+"vel");
+      d_partVelNames[i]=velLabelName+"_qn";
+
+    }
+  }
 }
 
 //---------------------------------------------------------------------------
@@ -849,6 +860,30 @@ DQMOMEqn::getUnscaledValues( const ProcessorGroup* pc,
          
           ic[c] = wa[c]*d_scalingConstant[d_quadNode];
         }
+
+        // Set BCS - account for using facecentered variable in cell center.
+        // low weighted regions are set to zero on boundaries;
+        vector<Patch::FaceType> bf;
+        patch->getBoundaryFaces(bf);
+        Patch::FaceIteratorType PEC = Patch::ExtraPlusEdgeCells;
+
+        for( vector<Patch::FaceType>::const_iterator itr = bf.begin(); itr != bf.end(); ++itr ){
+          Patch::FaceType face = *itr;
+
+          IntVector insideCellDir = patch->faceDirection(face);
+          for(CellIterator iter=patch->getFaceIterator(face, PEC); !iter.done(); iter++) {
+
+            IntVector c=*iter;
+
+            IntVector bp1(c - insideCellDir); 
+
+            if ( ( (w[c]+w[bp1]) / 2.0) > d_w_small){
+              ic[c] = wa[c]*2.0*d_scalingConstant[d_quadNode]-ic[bp1];
+            }else{
+              ic[c] =-ic[bp1];
+            }
+          }
+        }
       } else {
         for (CellIterator iter=patch->getCellIterator(0); !iter.done(); iter++){
   
@@ -858,6 +893,30 @@ DQMOMEqn::getUnscaledValues( const ProcessorGroup* pc,
             ic[c] = (wa[c]/w[c])*d_scalingConstant[d_quadNode];
           }  else {
             ic[c] = d_nominal[d_quadNode];
+          }
+        }
+
+        // Set BCS - account for using facecentered variable in cell center.
+        // low weighted regions are set to zero on boundaries;
+        vector<Patch::FaceType> bf;
+        patch->getBoundaryFaces(bf);
+        Patch::FaceIteratorType PEC = Patch::ExtraPlusEdgeCells;
+
+        for( vector<Patch::FaceType>::const_iterator itr = bf.begin(); itr != bf.end(); ++itr ){
+          Patch::FaceType face = *itr;
+
+          IntVector insideCellDir = patch->faceDirection(face);
+          for(CellIterator iter=patch->getFaceIterator(face, PEC); !iter.done(); iter++) {
+
+            IntVector c=*iter;
+
+            IntVector bp1(c - insideCellDir); 
+
+            if ( ( (w[c]+w[bp1]) / 2.0) > d_w_small){
+              ic[c] = ((wa[c]+wa[bp1])/(w[c]+w[bp1]))*d_scalingConstant[d_quadNode]*2.0-ic[bp1];
+            }else{
+              ic[c] =-ic[bp1];
+            }
           }
         }
       }

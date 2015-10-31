@@ -146,3 +146,19 @@ void BoundCondFactory::create(ProblemSpecP& child,BoundCondBase* &bc,
   }
 }
 
+
+
+void BoundCondFactory::customBC(BoundCondBase* &bc, 
+    int mat_id, const std::string face_label, double value ,const std::string label,const std::string var){
+      bc = scinew BoundCond<double>( label, var, value, face_label, BoundCondBase::DOUBLE_TYPE );
+}
+
+void BoundCondFactory::customBC(BoundCondBase* &bc, 
+    int mat_id, const std::string face_label,const Vector value ,const std::string label,const std::string var){
+      bc = scinew BoundCond<Vector>( label, var, value, face_label, BoundCondBase::VECTOR_TYPE );
+}
+
+void BoundCondFactory::customBC(BoundCondBase* &bc, 
+    int mat_id, const std::string face_label,const std::string value ,const std::string label,const std::string var){
+      bc = scinew BoundCond<std::string>( label, var, value, face_label, BoundCondBase::STRING_TYPE );
+}

@@ -292,7 +292,8 @@ protected:
   // Other:
   double d_turbPrNo;                ///< Turbulent Prandtl number (used for scalar diffusion)
   int _stage;                       ///< At which algorithmic stage should this be computed. 
-  std::vector<double> d_scalingConstant;         ///< Value by which to scale values 
+  std::vector<double> d_scalingConstant;    ///< Value by which to scale values 
+  std::vector<std::string> d_partVelNames;  ///< weighted, scaled particle velocity base names 
 
   std::vector<SourceContainer> d_sources;  ///< List of source terms for this eqn
   double d_mol_diff;                  ///< Molecular Diffusivity

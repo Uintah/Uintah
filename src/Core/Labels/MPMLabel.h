@@ -50,6 +50,8 @@ namespace Uintah {
       const VarLabel* pPressureLabel;
       const VarLabel* pScratchVecLabel;
       const VarLabel* pScratchLabel;
+      const VarLabel* pExternalScalarFluxLabel;
+      const VarLabel* pFluxLabel;
       const VarLabel* pVolumeDeformedLabel;
       const VarLabel* TotalVolumeDeformedLabel;
       const VarLabel* pXXLabel;
@@ -113,6 +115,8 @@ namespace Uintah {
       const VarLabel* pScaleFactorLabel_preReloc;
       const VarLabel* pTemperatureGradientLabel; //for heat conduction
       const VarLabel* pTemperatureGradientLabel_preReloc; //for heat conduction
+      const VarLabel* pConcGradientLabel; //for scalar diffusion
+      const VarLabel* pConcGradientLabel_preReloc; //for scalar diffusion
       
       const VarLabel* gLambdaDotLabel;
       const VarLabel* gColorLabel;
@@ -140,6 +144,7 @@ namespace Uintah {
       const VarLabel* gConcentrationNoBCLabel;
       const VarLabel* gConcentrationRateLabel;
       const VarLabel* gConcentrationStarLabel;
+      const VarLabel* gExternalScalarFluxLabel;
       const VarLabel* gHydrostaticStressLabel;
       const VarLabel* gThermalContactTemperatureRateLabel;
       const VarLabel* gNormTractionLabel;

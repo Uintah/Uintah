@@ -409,9 +409,15 @@ RMCRT_Radiation::sched_initialize( const LevelP& level,
   for (int l = 0; l < maxLevels; l++) {
     const LevelP& level = grid->getLevel(l);
     if( level->getIndex() != _archesLevelIndex ){
+      // Set the BC on the coarse level
       _boundaryCondition->sched_cellTypeInit( sched, level, _sharedState->allArchesMaterials() );
+      
+      // Coarsen the interior cells
+       _RMCRT->sched_computeCellType ( level, sched, Ray::modifiesVar);
     }
   }
+
+  sched_fluxInit( level, sched );
 }
 
 //______________________________________________________________________
@@ -711,6 +717,63 @@ RMCRT_Radiation::sched_stencilToDBLs( const LevelP& level,
   }
 }
 
+//______________________________________________________________________
+//
+void
+RMCRT_Radiation::sched_fluxInit( const LevelP& level,
+                                      SchedulerP& sched )
+{
+  if( level->getID() != _archesLevelIndex){
+    throw InternalError("RMCRT_Radiation::sched_stencilToDBLs.  You cannot schedule this task on a non-arches level", __FILE__, __LINE__);
+  }
+
+  if(_RMCRT->d_solveBoundaryFlux) {
+    Task* tsk = scinew Task( "RMCRT_Radiation::fluxInit", this, 
+                             &RMCRT_Radiation::fluxInit );
+                             
+    printSchedule( level, dbg, "RMCRT_Radiation::sched_stencilToDBLs" );
+
+    tsk->computes( _radFluxE_Label );
+    tsk->computes( _radFluxW_Label );
+    tsk->computes( _radFluxN_Label );
+    tsk->computes( _radFluxS_Label );
+    tsk->computes( _radFluxT_Label );
+    tsk->computes( _radFluxB_Label );
+    sched->addTask( tsk, level->eachPatch(), _sharedState->allArchesMaterials() );
+  }
+}
+//______________________________________________________________________
+//
+void
+RMCRT_Radiation::fluxInit( const ProcessorGroup*,
+                             const PatchSubset* patches,
+                             const MaterialSubset*,
+                             DataWarehouse* ,
+                             DataWarehouse* new_dw )
+{
+  for (int p=0; p < patches->size(); p++){
+
+    const Patch* patch = patches->get(p);
+    printTask(patches,patch,dbg,"Doing RMCRT_Radiation::stencilToDBLs");
+
+    CCVariable<double> East, West;
+    CCVariable<double> North, South;
+    CCVariable<double> Top, Bot;
+    new_dw->allocateAndPut( East,  _radFluxE_Label, _matl, patch );
+    new_dw->allocateAndPut( West,  _radFluxW_Label, _matl, patch );
+    new_dw->allocateAndPut( North, _radFluxN_Label, _matl, patch );
+    new_dw->allocateAndPut( South, _radFluxS_Label, _matl, patch );
+    new_dw->allocateAndPut( Top,   _radFluxT_Label, _matl, patch );
+    new_dw->allocateAndPut( Bot,   _radFluxB_Label, _matl, patch );
+
+      East.initialize(0);  
+      West.initialize(0);  
+      North.initialize(0);          // THIS MAPPING MUST BE VERIFIED
+      South.initialize(0); 
+      Top.initialize(0);   
+      Bot.initialize(0);   
+  }
+}
 //______________________________________________________________________
 //
 void

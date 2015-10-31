@@ -177,6 +177,93 @@ namespace Uintah{
         return "NULL"; 
       }
 
+      inline static double getScalingConstant(ProblemSpecP& db, const std::string labelName, const int qn){ 
+
+        const ProblemSpecP params_root = db->getRootNode();
+        if ( params_root->findBlock("CFD")->findBlock("ARCHES")->findBlock("DQMOM") ){ 
+
+          if ( labelName == "w" ||  labelName == "weights" || labelName == "weight"){
+
+            if ( params_root->findBlock("CFD")->findBlock("ARCHES")->findBlock("DQMOM")->findBlock("Weights") ){ 
+
+              std::vector<double> scaling_const;
+              params_root->findBlock("CFD")->findBlock("ARCHES")->findBlock("DQMOM")->findBlock("Weights")->require("scaling_const",scaling_const);
+              return scaling_const[qn];
+
+
+            } else { 
+
+              throw ProblemSetupException("Error: cannot find <weights> block in inupt file.",__FILE__,__LINE__);      
+
+            }
+          } else {
+            for ( ProblemSpecP IcBlock =params_root->findBlock("CFD")->findBlock("ARCHES")->findBlock("DQMOM")->findBlock("Ic"); IcBlock != 0;
+                IcBlock = IcBlock->findNextBlock("Ic") ) {
+
+              std::string tempLabelname;
+              IcBlock->getAttribute("label",tempLabelname);
+              if (tempLabelname == labelName){
+                std::vector<double> scaling_const;
+                IcBlock->require("scaling_const",scaling_const);
+                return scaling_const[qn];
+              }
+            }
+
+            throw ProblemSetupException("Error: couldn't find internal coordinate or weight with name: "+labelName , __FILE__, __LINE__); 
+          } 
+
+        }else { 
+
+          throw ProblemSetupException("Error: DQMOM section not found in input file.",__FILE__,__LINE__);      
+
+        }
+      }
+
+
+      inline static bool getModelValue(ProblemSpecP& db, const std::string labelName, const int qn, double &value){ 
+
+        const ProblemSpecP params_root = db->getRootNode();
+        if(params_root->findBlock("CFD")->findBlock("ARCHES")->findBlock("ParticleModels") ){
+          const ProblemSpecP params_particleModels = params_root->findBlock("CFD")->findBlock("ARCHES")->findBlock("ParticleModels");
+          for ( ProblemSpecP modelBlock =params_particleModels->findBlock("model"); modelBlock != 0;
+              modelBlock = modelBlock->findNextBlock("model") ) {
+
+            std::string tempLabelName;
+            modelBlock->getAttribute("label",tempLabelName);
+            if (tempLabelName == labelName){
+              // -- expand this as different internal coordinate models are added--//
+              std::string tempTypeName;
+              modelBlock->getAttribute("type",tempTypeName);
+
+              if( tempTypeName== "constant"){
+                std::vector<double> internalCoordinateValue;
+                modelBlock->require("constant", internalCoordinateValue);
+                value= internalCoordinateValue[qn];
+                return true;
+              }
+            }
+          }
+        }
+        return false;
+      }
+
+      // This function is useful when specifying mass flow inlet of particles
+      inline static double getInletParticleDensity(ProblemSpecP& db){ 
+
+        const ProblemSpecP params_root = db->getRootNode();
+        if(params_root->findBlock("CFD")->findBlock("ARCHES")->findBlock("ParticleProperties")){
+        double density;
+        params_root->findBlock("CFD")->findBlock("ARCHES")->findBlock("ParticleProperties")->require("density",density);
+        return density;
+        } else{
+          throw ProblemSetupException("Error: cannot find <ParticleProperties> in arches block.",__FILE__,__LINE__);      
+        }
+
+        return false;
+      }
+
+
+
     private: 
 
   

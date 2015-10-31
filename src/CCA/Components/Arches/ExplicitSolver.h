@@ -62,7 +62,6 @@ WARNING
 #include <CCA/Ports/DataWarehouseP.h>
 #include <CCA/Ports/SolverInterface.h>
 #include <Core/Grid/Variables/VarTypes.h>
-#include <CCA/Components/Arches/ExplicitTimeInt.h>
 
 namespace Uintah {
 class TaskFactoryBase;
@@ -83,32 +82,77 @@ class CQMOMSourceWrapper;
 class EfficiencyCalculator;
 class WallModelDriver;
 class RadPropertyCalculator;
+class ExplicitTimeInt;
 class ExplicitSolver: public NonlinearSolver {
 
 public:
 
-  ExplicitSolver(ArchesLabel* label,
-                 const MPMArchesLabel* MAlb,
-                 Properties* props,
-                 BoundaryCondition* bc,
-                 TurbulenceModel* turbModel,
-                 ScaleSimilarityModel* scaleSimilarityModel,
-                 PhysicalConstants* physConst,
-                 RadPropertyCalculator* rad_properties,
-                 std::map<std::string, boost::shared_ptr<TaskFactoryBase> >& boost_fac_map,
-                 const ProcessorGroup* myworld,
-                 SolverInterface* hypreSolver);
+  //Builder::
+  class Builder : public  NonlinearSolver::NLSolverBuilder {
+
+  public:
+
+    Builder( SimulationStateP& sharedState,
+             const MPMArchesLabel* MAlb,
+             PhysicalConstants* physConst,
+             std::map<std::string,
+             boost::shared_ptr<TaskFactoryBase> >& task_factory_map,
+             const ProcessorGroup* myworld,
+             SolverInterface* hypreSolver ) :
+             _sharedState(sharedState),
+             _MAlb(MAlb),
+             _physConst(physConst),
+             _task_factory_map(task_factory_map),
+             _myworld(myworld), _hypreSolver(hypreSolver)
+    { }
+
+    ~Builder(){}
+
+    ExplicitSolver* build(){
+      return scinew ExplicitSolver( _sharedState,
+                                    _MAlb,
+                                    _physConst,
+                                    _task_factory_map,
+                                    _myworld,
+                                    _hypreSolver
+                                  );
+    }
+
+  private:
+
+    SimulationStateP& _sharedState;
+    ArchesLabel* _label;
+    const MPMArchesLabel* _MAlb;
+    PhysicalConstants* _physConst;
+    std::map<std::string,boost::shared_ptr<TaskFactoryBase> >& _task_factory_map;
+    const ProcessorGroup* _myworld;
+    SolverInterface* _hypreSolver;
+
+  };
+
+  ExplicitSolver( SimulationStateP& sharedState,
+                  const MPMArchesLabel* MAlb,
+                  PhysicalConstants* physConst,
+                  std::map<std::string, boost::shared_ptr<TaskFactoryBase> >& task_factory_map,
+                  const ProcessorGroup* myworld,
+                  SolverInterface* hypreSolver );
 
   virtual ~ExplicitSolver();
 
+  void sched_initializeVariables( const LevelP& level, SchedulerP& sched );
+
+  void sched_restartInitialize( const LevelP& level, SchedulerP& sched );
+
+  void sched_restartInitializeTimeAdvance( const LevelP& level, SchedulerP& sched );
+
   /** @brief Input file interface. **/
-  virtual void problemSetup(const ProblemSpecP& input_db,
-                            SimulationStateP& state);
+  virtual void problemSetup( const ProblemSpecP& input_db,
+                             SimulationStateP& state,
+                             GridP& grid );
 
   /** @brief Solve the nonlinear system. (also does some actual computations) **/
   virtual int nonlinearSolve( const LevelP& level,
                               SchedulerP& sched );
-
 
   /** @brief Sets the initial guess for several variables **/
   void sched_setInitialGuess(SchedulerP&,
@@ -132,10 +176,49 @@ public:
                         const PatchSet* patches,
                         const MaterialSet* matls );
 
+  void initialize( const LevelP& level, SchedulerP& sched, const bool doing_restart );
+
   /** @brief Print the reduced kinetic energy values to the screen output **/
   void sched_printTotalKE( SchedulerP& sched,
                            const PatchSet* patches,
                            const MaterialSet* matls );
+
+
+  virtual void sched_weightInit( const LevelP& level,
+                                SchedulerP& );
+
+  virtual void sched_scalarInit( const LevelP& level,
+                                 SchedulerP& sched );
+
+  virtual void sched_weightedAbsInit( const LevelP& level,
+                                      SchedulerP& );
+
+  virtual void sched_momentInit( const LevelP& level,
+                                 SchedulerP& sched );
+
+  void weightInit( const ProcessorGroup*,
+                  const PatchSubset* patches,
+                  const MaterialSubset*,
+                  DataWarehouse* old_dw,
+                  DataWarehouse* new_dw);
+
+  void scalarInit( const ProcessorGroup* ,
+                   const PatchSubset* patches,
+                   const MaterialSubset*,
+                   DataWarehouse* old_dw,
+                   DataWarehouse* new_dw );
+
+  void weightedAbsInit( const ProcessorGroup*,
+                  const PatchSubset* patches,
+                  const MaterialSubset*,
+                  DataWarehouse* old_dw,
+                  DataWarehouse* new_dw);
+
+  void momentInit( const ProcessorGroup* ,
+                   const PatchSubset* patches,
+                   const MaterialSubset*,
+                   DataWarehouse* old_dw,
+                   DataWarehouse* new_dw );
 
   void sched_updatePressure(SchedulerP& sched,
                           const PatchSet* patches,
@@ -179,6 +262,9 @@ public:
                              SchedulerP& sched,
                              const MaterialSet* matls );
 
+  virtual void sched_getCCVelocities(const LevelP& level,
+                                     SchedulerP&);
+
   inline double recomputeTimestep(double current_dt) {
     return current_dt/2;
   }
@@ -191,9 +277,11 @@ public:
     d_numSourceBoundaries = numSourceBoundaries;
   }
 
-private:
-
-  ExplicitSolver();
+  void initializeVariables( const ProcessorGroup* pc,
+                            const PatchSubset* patches,
+                            const MaterialSubset* matls,
+                            DataWarehouse* old_dw,
+                            DataWarehouse* new_dw );
 
   void setInitialGuess(const ProcessorGroup* pc,
                        const PatchSubset* patches,
@@ -217,6 +305,12 @@ private:
                              DataWarehouse* new_dw,
                              const TimeIntegratorLabel* timelabels,
                              const int curr_level);
+
+  void getCCVelocities(const ProcessorGroup*,
+                       const PatchSubset* patches,
+                       const MaterialSubset*,
+                       DataWarehouse* ,
+                       DataWarehouse* new_dw);
 
   void computeVorticity(const ProcessorGroup* pc,
                         const PatchSubset* patches,
@@ -289,26 +383,19 @@ private:
                       DataWarehouse* new_dw,
                       const TimeIntegratorLabel* timelabels);
 
+  void allocateAndInitializeToZero( const VarLabel* label,
+                                    DataWarehouse* dw,
+                                    const int index,
+                                    const Patch* patch );
 
-  void setPartVel( PartVel* partVel ) {
-    d_partVel = partVel; };
-
-  void setDQMOMSolver( DQMOM* dqmomSolver ) {
-    d_dqmomSolver = dqmomSolver; };
-
-  void setCQMOMSolver( CQMOM* cqmomSolver ) {
-    d_cqmomSolver = cqmomSolver; };
-
-  void setCQMOMConvect( CQMOM_Convection* cqmomConvect ) {
-    d_cqmomConvect = cqmomConvect; };
-
-  void setCQMOMSource( CQMOMSourceWrapper* cqmomSource ) {
-    d_cqmomSource = cqmomSource; };
+  void registerModels( ProblemSpecP& db );
+  void registerTransportEqns( ProblemSpecP& db );
+  void registerPropertyModels( ProblemSpecP& db );
+  void registerCQMOMEqns( ProblemSpecP& db );
 
   // const VarLabel*
   ArchesLabel* d_lab;
   const MPMArchesLabel* d_MAlab;
-  // generation variable for DataWarehouse creation
 
   // Total number of nonlinear iterates
   int d_nonlinear_its;
@@ -320,11 +407,13 @@ private:
   // Turbulence Model
   TurbulenceModel* d_turbModel;
   ScaleSimilarityModel* d_scaleSimilarityModel;
+  TimeIntegratorLabel* d_init_timelabel;
   bool d_mixedModel;
 
   MomentumSolver* d_momSolver;             ///< Momentum solver
   PhysicalConstants* d_physicalConsts;     ///< Physical constants
   WallModelDriver* d_wall_ht_models;       ///< Heat transfer models for walls
+  SimulationStateP& d_sharedState;
 
   std::vector<TimeIntegratorLabel* > d_timeIntegratorLabels;
   TimeIntegratorLabel* nosolve_timelabels;
@@ -357,10 +446,14 @@ private:
 
   int d_numSourceBoundaries;
 
+  ExplicitTimeInt* d_timeIntegrator;
+  int d_tOrder;
+
   //DQMOM
   bool d_doDQMOM;
   PartVel* d_partVel;
   DQMOM* d_dqmomSolver;
+  std::string d_which_dqmom;
 
   //CQMOM
   bool d_doCQMOM;
@@ -380,7 +473,7 @@ private:
   double d_ke_limit;
 
   //NEW TASK INTERFACE STUFF:
-  std::map<std::string, boost::shared_ptr<TaskFactoryBase> >& _boost_fac_map;
+  std::map<std::string, boost::shared_ptr<TaskFactoryBase> >& _task_factory_map;
 
 }; // End class ExplicitSolver
 } // End namespace Uintah

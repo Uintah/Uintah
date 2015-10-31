@@ -50,13 +50,7 @@
 #  include <hash_map>
    using std::hash_map;
    using std::hash_multimap;
-#  ifndef _MSC_VER
-   // msvc hash map is a little different
-     using std::hash;
-#  else
-     using std::hash_compare; // MS VC 7
-#  endif
-
+   using std::hash;
 #elif defined(HAVE_EXT_HASHMAP)
 
 #  include <ext/hash_map>

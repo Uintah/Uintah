@@ -210,7 +210,7 @@ namespace Wasatch{
   //------------------------------------------------------------------
   
   void
-  ParticleMomentumEquation::setup_boundary_conditions( BCHelper& bcHelper,
+  ParticleMomentumEquation::setup_boundary_conditions( WasatchBCHelper& bcHelper,
                                                        GraphCategories& graphCat )
   {
     Expr::ExpressionFactory& advSlnFactory = *(graphCat[ADVANCE_SOLUTION]->exprFactory);
@@ -259,7 +259,7 @@ namespace Wasatch{
   
   void ParticleMomentumEquation::
   apply_boundary_conditions( const GraphHelper& graphHelper,
-                             BCHelper& bcHelper )
+                             WasatchBCHelper& bcHelper )
   {
     const Category taskCat = ADVANCE_SOLUTION;
     // set bcs for particle momentum

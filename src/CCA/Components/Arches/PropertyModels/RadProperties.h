@@ -5,6 +5,7 @@
 #include <CCA/Components/Arches/Radiation/RadPropertyCalculator.h>
 #include <Core/Grid/SimulationStateP.h>
 #include <Core/Grid/SimulationState.h>
+#include <CCA/Components/Arches/ArchesLabel.h>
 
 // SEE PROPTEMPLATE.CC FOR INSTRUCTIONS
 
@@ -34,7 +35,7 @@ namespace Uintah{
 
     public: 
 
-      RadProperties( std::string prop_name, SimulationStateP& shared_state );
+      RadProperties( std::string prop_name, SimulationStateP& shared_state, ArchesLabel  * d_fieldLabel );
       ~RadProperties(); 
 
 
@@ -61,16 +62,17 @@ namespace Uintah{
 
         public: 
 
-          Builder( std::string name, SimulationStateP& shared_state ) : _name(name), _shared_state(shared_state){};
+          Builder( std::string name, SimulationStateP& shared_state,ArchesLabel * fieldLabels) : _name(name), _shared_state(shared_state),_fieldLabels(fieldLabels) {};
           ~Builder(){}; 
 
           RadProperties* build()
-          { return scinew RadProperties( _name, _shared_state ); };
+          { return scinew RadProperties( _name, _shared_state, _fieldLabels ); };
 
         private: 
 
           std::string _name; 
           SimulationStateP& _shared_state; 
+          ArchesLabel* _fieldLabels;
 
       }; // class Builder 
 
@@ -80,6 +82,7 @@ namespace Uintah{
       std::string  _base_temperature_label_name;          // DQMOM Temperature name
       std::string  _base_size_label_name;                 // DQMOM size_name
 
+      ArchesLabel * _fieldLabels;
       bool  _particlesOn ;
       bool  _scatteringOn ;
       RadPropertyCalculator::PropertyCalculatorBase* _calc; 

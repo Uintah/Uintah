@@ -43,6 +43,8 @@
 #include <CCA/Components/Arches/PhysicalConstants.h>
 #include <CCA/Components/Arches/Properties.h>
 #include <CCA/Components/Arches/ArchesMaterial.h>
+#include <CCA/Components/Arches/ParticleModels/ParticleTools.h>
+
 #include <CCA/Ports/Scheduler.h>
 #include <CCA/Ports/DataWarehouse.h>
 
@@ -112,6 +114,10 @@ BoundaryCondition::BoundaryCondition(const ArchesLabel* label,
 
   d_radiation_temperature_label = VarLabel::create("radiation_temperature", CCVariable<double>::getTypeDescription());
 
+  // Since this task may alter a member of patch, we need to force it to happen in a certain order.
+  // To achive this, a computes/requires combination to achieve this.  See EqnBase.cc for requires portion.
+  d_DummyLabel = VarLabel::create("ForceTaskExecutionOrder", CCVariable<double>::getTypeDescription());
+
 }
 
 
@@ -136,6 +142,7 @@ BoundaryCondition::~BoundaryCondition()
   }
 
   VarLabel::destroy(d_radiation_temperature_label);
+  VarLabel::destroy(d_DummyLabel);
 }
 
 //****************************************************************************
@@ -235,7 +242,7 @@ BoundaryCondition::problemSetup(const ProblemSpecP& params)
             db_BCType->require("relative_xyz", rel_xyz);
 
             BoundaryCondition::FFInfo u_info;
-            readInputFile__NEW( file_name, u_info, 0 );
+            readInputFile( file_name, u_info, 0 );
             u_info.relative_xyz = rel_xyz;
             u_info.default_type = default_type;
             u_info.default_value = default_value[0];
@@ -253,7 +260,7 @@ BoundaryCondition::problemSetup(const ProblemSpecP& params)
             }
 
             BoundaryCondition::FFInfo v_info;
-            readInputFile__NEW( file_name, v_info, 1 );
+            readInputFile( file_name, v_info, 1 );
             v_info.relative_xyz = rel_xyz;
             v_info.default_type = default_type;
             v_info.default_value = default_value[1];
@@ -271,7 +278,7 @@ BoundaryCondition::problemSetup(const ProblemSpecP& params)
             }
 
             BoundaryCondition::FFInfo w_info;
-            readInputFile__NEW( file_name, w_info, 2 );
+            readInputFile( file_name, w_info, 2 );
             w_info.relative_xyz = rel_xyz;
             w_info.default_type = default_type;
             w_info.default_value = default_value[2];
@@ -375,6 +382,7 @@ BoundaryCondition::pressureBC(const Patch* patch,
   sub_types.push_back( WALL );
   sub_types.push_back( INTRUSION );
   sub_types.push_back( MASSFLOW_INLET );
+  sub_types.push_back( PARTMASSFLOW_INLET );
   sub_types.push_back( VELOCITY_INLET );
   sub_types.push_back( VELOCITY_FILE );
   sub_types.push_back( MASSFLOW_FILE );
@@ -948,10 +956,9 @@ BoundaryCondition::velRhoHatInletBC(const Patch* patch,
 
           } else if ( bc_iter->second.type == VELOCITY_FILE ) {
 
-            setVelFromExtraValue__NEW( patch, face, vars->uVelRhoHat, vars->vVelRhoHat, vars->wVelRhoHat, constvars->new_density, bound_ptr, bc_iter->second.velocity );
+            setVelFromExtraValue( patch, face, vars->uVelRhoHat, vars->vVelRhoHat, vars->wVelRhoHat, constvars->new_density, bound_ptr, bc_iter->second.velocity );
 
           }
-
         }
       }
     }
@@ -1939,6 +1946,7 @@ BoundaryCondition::setupBCs( ProblemSpecP& db )
   d_bc_type_to_string.insert( std::make_pair( TURBULENT_INLET, "TurbulentInlet" ) );
   d_bc_type_to_string.insert( std::make_pair( VELOCITY_INLET, "VelocityInlet" ) );
   d_bc_type_to_string.insert( std::make_pair( MASSFLOW_INLET, "MassFlowInlet" ) );
+  d_bc_type_to_string.insert( std::make_pair( PARTMASSFLOW_INLET, "PartMassFlowInlet" ) );
   d_bc_type_to_string.insert( std::make_pair( VELOCITY_FILE, "VelocityFileInput" ) );
   d_bc_type_to_string.insert( std::make_pair( PRESSURE, "PressureBC" ) );
   d_bc_type_to_string.insert( std::make_pair( OUTLET, "OutletBC" ) );
@@ -1966,6 +1974,9 @@ BoundaryCondition::setupBCs( ProblemSpecP& db )
         db_face->getAttribute("ellipse",which_face);
       }
 
+      std::string faceName;
+      db_face->getAttribute("name",faceName);
+
       //avoid the "or" in case I want to add more logic
       //re: the face normal.
       if ( which_face =="x-") {
@@ -1984,6 +1995,7 @@ BoundaryCondition::setupBCs( ProblemSpecP& db )
         throw InvalidValue("Error: Could not identify the boundary face direction.", __FILE__, __LINE__);
       }
 
+      int numberOfMomentumBCs=0;
       for ( ProblemSpecP db_BCType = db_face->findBlock("BCType"); db_BCType != 0;
             db_BCType = db_BCType->findNextBlock("BCType") ) {
 
@@ -1994,6 +2006,8 @@ BoundaryCondition::setupBCs( ProblemSpecP& db )
         db_BCType->getAttribute("label", name);
         db_BCType->getAttribute("var", type);
         my_info.name = name;
+        my_info.faceName=faceName;
+        my_info.lHasPartMassFlow=false;
         std::stringstream color;
         color << bc_type_index;
 
@@ -2175,11 +2189,108 @@ BoundaryCondition::setupBCs( ProblemSpecP& db )
 
         }
 
+
+        if (found_bc) {
+          for ( ProblemSpecP db_BCType1 = db_face->findBlock("BCType"); db_BCType1 != 0;
+              db_BCType1 = db_BCType1->findNextBlock("BCType") ) {
+
+            std::string type1;
+            db_BCType1->getAttribute("var", type1);
+
+
+            if ( type1 == "PartMassFlowInlet" ) {
+              db_BCType1->getAttribute("label", my_info.partName);
+              db_BCType1->require("value",my_info.partMassFlow_rate);
+              my_info.lHasPartMassFlow=true;
+              my_info.partVelocity = Vector(0,0,0);
+
+              int qn_total;
+              qn_total=ParticleTools::get_num_env(db_face,ParticleTools::DQMOM);
+
+              double MassParticleDensity=0;  // (kg/ m^3)
+              my_info.vWeights = std::vector<double>(qn_total) ;
+              my_info.vVelScalingConst = std::vector<std::vector<double > > (qn_total,std::vector<double> (3,0.0));
+              my_info.vVelLabels = std::vector<std::vector<std::string > > (qn_total,std::vector<std::string> (3));
+
+
+              //// convert #/m^3  --->  kg/m^3, we need weight, diameter, and particle density at inlet
+              for (int qn=0; qn< qn_total; qn++){
+                // get weight BC
+                double weightScalingConstant = ParticleTools::getScalingConstant(db_BCType,"weight",qn);
+                double weight;
+                for ( ProblemSpecP db_BCType2 = db_face->findBlock("BCType"); db_BCType2 != 0;
+                    db_BCType2 = db_BCType2->findNextBlock("BCType") ) {
+                  std::string tempLabelName;
+                  db_BCType2->getAttribute("label",tempLabelName);
+
+                  std::string weightNode=ParticleTools::append_qn_env ("w",qn);
+                  if (tempLabelName == weightNode){
+                    db_BCType2->require("value",weight);  // read in bc for weights
+                    break;
+                  }
+
+                  if(db_BCType2 == 0  ){
+                    throw ProblemSetupException("Arches was unable to find weight boundary condition", __FILE__, __LINE__);
+                  }
+                }
+
+                my_info.vWeights[qn]=weight;
+
+                // get radius BC (radius particle model will dominate BC specification)
+                double diameter;
+                std::string sizeLabelName =ParticleTools::parse_for_role_to_label(db_BCType,"size");
+                if (ParticleTools::getModelValue(db_BCType,sizeLabelName,qn,diameter)== false){
+                  double diameterScalingConstant = ParticleTools::getScalingConstant(db_BCType,sizeLabelName,qn);
+
+                  for ( ProblemSpecP db_BCType2 = db_face->findBlock("BCType"); db_BCType2 != 0;
+                      db_BCType2 = db_BCType2->findNextBlock("BCType") ) {
+                    std::string tempLabelName;
+                    db_BCType2->getAttribute("label",tempLabelName);
+
+                    std::string sizeNode=ParticleTools::append_qn_env(sizeLabelName,qn);
+                    if (tempLabelName == sizeNode){
+                      db_BCType2->require("value",diameter);
+                      break;
+                    }
+                    if(db_BCType2 == 0  ){
+                      throw ProblemSetupException("Arches was unable to find length model or boundary condition", __FILE__, __LINE__);
+                    }
+                  }
+
+                  diameter = diameter/weight*diameterScalingConstant;
+                }
+
+                std::string str3D = "uvw";
+                for(unsigned int i = 0; i<str3D.length(); i++) {
+                  std::string velLabelName =ParticleTools::parse_for_role_to_label(db_BCType,std::string (1,str3D[i])+"vel");
+                  my_info.vVelScalingConst[qn][i] =  ParticleTools::getScalingConstant(db_BCType,velLabelName,qn);
+                  my_info.vVelLabels[qn][i] = ParticleTools::append_qn_env(velLabelName,qn);
+                }
+
+                // compute actual particle density (#/m^3)
+                weight=weight*weightScalingConstant;
+
+                // get particle density
+                double density = ParticleTools::getInletParticleDensity(db_face);
+
+                MassParticleDensity+=weight*M_PI*diameter*diameter*diameter/6.0*density;  // (kg/ m^3)
+
+              }
+                my_info.partDensity = MassParticleDensity;
+              // note that the mass flow rate is in the BCstruct value
+              break; // exit bcType spec  loop
+            }
+          }
+        }
+
         if ( found_bc ) {
+          numberOfMomentumBCs++;
+          if (numberOfMomentumBCs > 1){
+            throw ProblemSetupException("Arches found multiple gas-momentum boundary conditions.  I don't know which one to apply.", __FILE__, __LINE__);
+          }
           d_bc_information.insert( std::make_pair(bc_type_index, my_info));
           bc_type_index++;
         }
-
       }
     }
   }
@@ -2516,14 +2627,14 @@ BoundaryCondition::computeBCArea( const ProcessorGroup*,
 // Compute velocities from mass flow rates for bc's
 //
 void
-BoundaryCondition::sched_setupBCInletVelocities__NEW(SchedulerP& sched,
+BoundaryCondition::sched_setupBCInletVelocities(SchedulerP& sched,
                                                      const LevelP& level,
                                                      const MaterialSet* matls,
                                                      bool doing_restart )
 {
   // cell type initialization
-  Task* tsk = scinew Task("BoundaryCondition::setupBCInletVelocities__NEW",
-                          this, &BoundaryCondition::setupBCInletVelocities__NEW, doing_restart );
+  Task* tsk = scinew Task("BoundaryCondition::setupBCInletVelocities",
+                          this, &BoundaryCondition::setupBCInletVelocities, doing_restart );
 
   for ( BCInfoMap::iterator bc_iter = d_bc_information.begin();
         bc_iter != d_bc_information.end(); bc_iter++) {
@@ -2532,6 +2643,8 @@ BoundaryCondition::sched_setupBCInletVelocities__NEW(SchedulerP& sched,
     tsk->requires( Task::NewDW, the_info.total_area_label );
 
   }
+
+  tsk->computes(d_DummyLabel);
 
   if ( doing_restart ) {
     tsk->requires( Task::OldDW, d_lab->d_volFractionLabel, Ghost::None, 0 );
@@ -2549,12 +2662,12 @@ BoundaryCondition::sched_setupBCInletVelocities__NEW(SchedulerP& sched,
 }
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 void
-BoundaryCondition::setupBCInletVelocities__NEW(const ProcessorGroup*,
-                                               const PatchSubset* patches,
-                                               const MaterialSubset*,
-                                               DataWarehouse* old_dw,
-                                               DataWarehouse* new_dw,
-                                               bool doing_restart )
+BoundaryCondition::setupBCInletVelocities(const ProcessorGroup*,
+                                          const PatchSubset* patches,
+                                          const MaterialSubset*,
+                                          DataWarehouse* old_dw,
+                                          DataWarehouse* new_dw,
+                                          bool doing_restart )
 {
   for (int p = 0; p < patches->size(); p++) {
 
@@ -2623,6 +2736,32 @@ BoundaryCondition::setupBCInletVelocities__NEW(const ProcessorGroup*,
 
           if ( foundIterator ) {
 
+
+            if (bc_iter->second.lHasPartMassFlow)
+            {
+              double pm = -1.0*insideCellDir[norm];
+
+              if ( bc_iter->second.partDensity < 1e-200 &&  bc_iter->second.partMassFlow_rate > 1e-300 ) {
+                throw ProblemSetupException("Arches was unable to satisfy the specified mass flow inlet of particles.  Did you specify reasonable particle density and weights? ", __FILE__, __LINE__);
+              }
+              if(bc_iter->second.partMassFlow_rate <= 1e-300){
+                bc_iter->second.partVelocity[norm]=0.0;
+              }else{
+                bc_iter->second.partVelocity[norm] = pm*bc_iter->second.partMassFlow_rate /
+                  (area * bc_iter->second.partDensity);
+              }
+              std::string Ubc_kind = "Dirichlet"; // this must be specified for setting uintah BC
+
+              int qn_total =  bc_iter->second.vWeights.size();
+              for (int qn=0; qn< qn_total; qn++){
+
+                for(unsigned int i = 0; i < 3; i++) {
+                  double uintahVal = bc_iter->second.partVelocity[i]*bc_iter->second.vWeights[qn]*bc_iter->second.vVelScalingConst[qn][i]; // use weighted scaled boundary condition
+                  patch->possiblyAddBC(face, child, bc_iter->second.partName, matl_index,uintahVal, Ubc_kind,bc_iter->second.vVelLabels[qn][i],bc_iter->second.faceName );
+                }
+              }
+            }
+
             // Notice:
             // In the case of mass flow inlets, we are going to assume the density is constant across the inlet
             // so as to compute the average velocity.  As a result, we will just use the first iterator:
@@ -2684,6 +2823,7 @@ BoundaryCondition::setupBCInletVelocities__NEW(const ProcessorGroup*,
       proc0cout << "            area: " << area << std::endl;
       proc0cout << "           m_dot: " << bc_iter->second.mass_flow_rate << std::endl;
       proc0cout << "               U: " << bc_iter->second.velocity[0] << ", " << bc_iter->second.velocity[1] << ", " << bc_iter->second.velocity[2] << std::endl;
+      proc0cout << "   Particle_vel : " << bc_iter->second.partVelocity[0]<< ", " <<bc_iter->second.partVelocity[1]<< ", " <<bc_iter->second.partVelocity[2]<< std::endl;
 
     }
     proc0cout << std::endl;
@@ -2693,13 +2833,13 @@ BoundaryCondition::setupBCInletVelocities__NEW(const ProcessorGroup*,
 // Apply the boundary conditions
 //
 void
-BoundaryCondition::sched_setInitProfile__NEW(SchedulerP& sched,
+BoundaryCondition::sched_setInitProfile(SchedulerP& sched,
                                              const LevelP& level,
                                              const MaterialSet* matls)
 {
   // cell type initialization
-  Task* tsk = scinew Task("BoundaryCondition::setInitProfile__NEW",
-                          this, &BoundaryCondition::setInitProfile__NEW);
+  Task* tsk = scinew Task("BoundaryCondition::setInitProfile",
+                          this, &BoundaryCondition::setInitProfile);
 
   tsk->modifies(d_lab->d_uVelocitySPBCLabel);
   tsk->modifies(d_lab->d_vVelocitySPBCLabel);
@@ -2726,7 +2866,7 @@ BoundaryCondition::sched_setInitProfile__NEW(SchedulerP& sched,
 }
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 void
-BoundaryCondition::setInitProfile__NEW(const ProcessorGroup*,
+BoundaryCondition::setInitProfile(const ProcessorGroup*,
                                        const PatchSubset* patches,
                                        const MaterialSubset*,
                                        DataWarehouse*,
@@ -2812,11 +2952,29 @@ BoundaryCondition::setInitProfile__NEW(const ProcessorGroup*,
 
           if ( foundIterator ) {
 
+
             bound_ptr.reset();
 
             if ( bc_iter->second.type != VELOCITY_FILE ) {
+              if ( bc_iter->second.type == SWIRL   ) {
+                if ( face == Patch::xminus || face == Patch::xplus ) {
 
-              if ( bc_iter->second.type != TURBULENT_INLET && bc_iter->second.type != STABL ) {
+                  setSwirl( patch, face, uVelocity, vVelocity, wVelocity,
+                      density, bound_ptr, bc_iter->second.velocity, bc_iter->second.swirl_no, bc_iter->second.swirl_cent );
+
+                } else if ( face == Patch::yminus || face == Patch::yplus ) {
+
+                  setSwirl( patch, face, vVelocity, wVelocity, uVelocity,
+                      density, bound_ptr, bc_iter->second.velocity, bc_iter->second.swirl_no, bc_iter->second.swirl_cent );
+
+                } else if ( face == Patch::zminus || face == Patch::zplus ) {
+
+                  setSwirl( patch, face, wVelocity, uVelocity, vVelocity,
+                      density, bound_ptr, bc_iter->second.velocity, bc_iter->second.swirl_no, bc_iter->second.swirl_cent );
+
+                }
+              }
+              else if ( bc_iter->second.type != TURBULENT_INLET && bc_iter->second.type != STABL ) {
 
                 setVel( patch, face, uVelocity, vVelocity, wVelocity, density, bound_ptr, bc_iter->second.velocity );
 
@@ -2833,7 +2991,7 @@ BoundaryCondition::setInitProfile__NEW(const ProcessorGroup*,
             } else {
 
               //---- set velocities
-              setVelFromInput__NEW( patch, face, face_name, uVelocity, vVelocity, wVelocity, bound_ptr, bc_iter->second.filename );
+              setVelFromInput( patch, face, face_name, uVelocity, vVelocity, wVelocity, bound_ptr, bc_iter->second.filename );
 
             }
           }
@@ -2845,7 +3003,70 @@ BoundaryCondition::setInitProfile__NEW(const ProcessorGroup*,
     vRhoHat.copyData( vVelocity );
     wRhoHat.copyData( wVelocity );
 
-  }
+    //delete BC information not on this patch:
+    BCInfoMap::iterator the_iter = d_bc_information.begin();
+    std::vector<BCInfoMap::iterator> delete_me;
+    while (the_iter != d_bc_information.end()){
+
+      bool i_live_on_this_patch = false;
+
+      for ( bf_iter = bf.begin(); bf_iter !=bf.end(); bf_iter++ ) {
+
+        //get the face
+        Patch::FaceType face = *bf_iter;
+        IntVector insideCellDir = patch->faceDirection(face);
+
+        //get the number of children
+        int numChildren = patch->getBCDataArray(face)->getNumberChildren(matl_index); //assumed one material
+
+        for (int child = 0; child < numChildren; child++) {
+
+          double bc_value = 0;
+          Vector bc_v_value(0,0,0);
+          std::string bc_s_value = "NA";
+
+          string bc_kind = "NotSet";
+          Iterator bound_ptr;
+          bool foundIterator = false;
+          string face_name;
+          getBCKind( patch, face, child, the_iter->second.name, matl_index, bc_kind, face_name );
+
+          if ( the_iter->second.type == VELOCITY_INLET ||
+               the_iter->second.type == TURBULENT_INLET ||
+               the_iter->second.type == STABL ) {
+            foundIterator =
+                    getIteratorBCValueBCKind<Vector>( patch, face, child, the_iter->second.name, matl_index, bc_v_value, bound_ptr, bc_kind);
+          } else if ( the_iter->second.type == VELOCITY_FILE ) {
+            foundIterator =
+                    getIteratorBCValue<std::string>( patch, face, child, the_iter->second.name, matl_index, bc_s_value, bound_ptr);
+          } else {
+            foundIterator =
+                    getIteratorBCValueBCKind<double>( patch, face, child, the_iter->second.name, matl_index, bc_value, bound_ptr, bc_kind);
+          }
+
+          if ( foundIterator ){
+            i_live_on_this_patch = true;
+          }
+
+        }
+      }
+
+      if ( !i_live_on_this_patch ){
+
+        BCInfoMap::iterator to_delete = the_iter;
+        the_iter++;
+        //potentially not thread safe.
+        //VarLabel::destroy(to_delete->second.total_area_label);
+        //d_bc_information.erase(to_delete);
+
+      } else {
+
+        the_iter++;
+
+      }
+
+    } //bc_information iterator
+  } //patch iterator
 }
 
 template<class d0T, class d1T, class d2T>
@@ -3307,7 +3528,7 @@ void BoundaryCondition::setVel( const Patch* patch, const Patch::FaceType& face,
   }
 }
 
-void BoundaryCondition::setVelFromExtraValue__NEW( const Patch* patch, const Patch::FaceType& face,
+void BoundaryCondition::setVelFromExtraValue( const Patch* patch, const Patch::FaceType& face,
                                                    SFCXVariable<double>& uVel, SFCYVariable<double>& vVel, SFCZVariable<double>& wVel,
                                                    constCCVariable<double>& density,
                                                    Iterator bound_ptr, Vector value )
@@ -3392,7 +3613,7 @@ void BoundaryCondition::setVelFromExtraValue__NEW( const Patch* patch, const Pat
   }
 }
 
-void BoundaryCondition::setVelFromInput__NEW( const Patch* patch, const Patch::FaceType& face,
+void BoundaryCondition::setVelFromInput( const Patch* patch, const Patch::FaceType& face,
                                               string face_name,
                                               SFCXVariable<double>& uVel, SFCYVariable<double>& vVel,
                                               SFCZVariable<double>& wVel,
@@ -3490,7 +3711,7 @@ void BoundaryCondition::setVelFromInput__NEW( const Patch* patch, const Patch::F
 }
 
 void
-BoundaryCondition::readInputFile__NEW( std::string file_name, BoundaryCondition::FFInfo& struct_result, const int index )
+BoundaryCondition::readInputFile( std::string file_name, BoundaryCondition::FFInfo& struct_result, const int index )
 {
 
   gzFile file = gzopen( file_name.c_str(), "r" );
@@ -3530,7 +3751,7 @@ BoundaryCondition::readInputFile__NEW( std::string file_name, BoundaryCondition:
 }
 
 void
-BoundaryCondition::velocityOutletPressureBC__NEW( const Patch* patch,
+BoundaryCondition::velocityOutletPressureBC( const Patch* patch,
                                                   int matl_index,
                                                   SFCXVariable<double>& uvel,
                                                   SFCYVariable<double>& vvel,

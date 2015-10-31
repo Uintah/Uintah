@@ -83,6 +83,7 @@ void Turbulence::callTurb(DataWarehouse* new_dw,
                           const Patch* patch,
                           constCCVariable<Vector>& vel_CC,
                           constCCVariable<double>& rho_CC,
+                          constCCVariable<double>& vol_frac_CC,
                           const int indx,
                           ICELabel* lb,
                           SimulationStateP&  d_sharedState,
@@ -96,10 +97,14 @@ void Turbulence::callTurb(DataWarehouse* new_dw,
   constSFCZVariable<double> wvel_FC;
   
   CCVariable<double> turb_viscosity, turb_viscosity_copy;    
-  new_dw->allocateTemporary(turb_viscosity, patch, gac, 1); 
-  new_dw->allocateAndPut(turb_viscosity_copy,lb->turb_viscosity_CCLabel,indx, patch);
+  CCVariable<double> tot_viscosity_copy;
+  new_dw->allocateTemporary(turb_viscosity, patch, gac, 1);
+  
+  new_dw->allocateAndPut(turb_viscosity_copy, lb->turb_viscosity_CCLabel,  indx, patch);
+  new_dw->allocateAndPut(tot_viscosity_copy , lb->total_viscosity_CCLabel, indx, patch);
    
-  turb_viscosity.initialize(0.0); 
+  turb_viscosity.initialize(0.0);
+  tot_viscosity.initialize(0.0);
     
   new_dw->get(uvel_FC,     lb->uvel_FCMELabel,            indx,patch,gac,3);  
   new_dw->get(vvel_FC,     lb->vvel_FCMELabel,            indx,patch,gac,3);  
@@ -143,18 +148,25 @@ void Turbulence::callTurb(DataWarehouse* new_dw,
   //__________________________________
   //  At patch boundaries you need to extend
   // the computational footprint by one cell in ghostCells
+  // near interfaces use molecularVis
 
   int NGC =1;  // number of ghostCells
   for(CellIterator iter = patch->getCellIterator(NGC); !iter.done(); iter++) { 
     IntVector c = *iter; 
-    tot_viscosity[c] = molecularVis[c] + turb_viscosity[c];  
+    
+    if( vol_frac_CC[c] > 0.9 ){            
+      tot_viscosity[c] = molecularVis[c] + turb_viscosity[c]; 
+    }else{                        // near interface 
+      tot_viscosity[c] = molecularVis[c];
+    } 
   } 
   
   // make copy for visualization.
   for(CellIterator iter = patch->getExtraCellIterator(); !iter.done();iter++){
     IntVector c = *iter;    
-    turb_viscosity_copy[c] = turb_viscosity[c];         
-  }
+    turb_viscosity_copy[c] = turb_viscosity[c];
+    tot_viscosity_copy[c]  = tot_viscosity[c];     
+  }  
 }
 
 

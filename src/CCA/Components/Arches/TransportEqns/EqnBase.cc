@@ -10,6 +10,7 @@
 #include <CCA/Components/Arches/BoundaryCond_new.h>
 #include <ostream>
 #include <fstream>
+#include <stdlib.h>
 
 using namespace std;
 using namespace Uintah;
@@ -229,7 +230,6 @@ EqnBase::commonProblemSetup( ProblemSpecP& db ){
     string err_msg = "ERROR: For transport equation: "+d_eqnName+" \n Molecular diffusivity is over specified. \n";
     throw ProblemSetupException(err_msg, __FILE__, __LINE__); 
   } 
-
 }
 
 void 
@@ -237,7 +237,11 @@ EqnBase::sched_checkBCs( const LevelP& level, SchedulerP& sched )
 {
   string taskname = "EqnBase::checkBCs"; 
   Task* tsk = scinew Task(taskname, this, &EqnBase::checkBCs); 
-
+  
+   // We want tasks in boundarycondition.cc to run before this task. We use the following dummy label to achieve this.
+   const VarLabel* DummyLabel = VarLabel::find("ForceTaskExecutionOrder");
+   tsk->requires(Task::NewDW, DummyLabel, Ghost::None,0 ); 
+    
   sched->addTask( tsk, level->eachPatch(), d_fieldLabels->d_sharedState->allArchesMaterials() ); 
 }
 
@@ -275,6 +279,8 @@ EqnBase::checkBCs( const ProcessorGroup* pc,
         Iterator bound_ptr;
         string bc_kind = "NotSet"; 
         string face_name; 
+        
+        
         getBCKind( patch, face, child, d_eqnName, matlIndex, bc_kind, face_name ); 
 
         std::ofstream outputfile; 

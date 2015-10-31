@@ -323,11 +323,6 @@ SCIRun::find_and_parse_scirunrc( bool beSilent /* = false */ )
 void
 SCIRun::copy_and_parse_scirunrc()
 {
-#ifdef _MSC_VER
-  // native windows doesn't have "HOME"
-  // point to OBJTOP instead
-  sci_putenv("HOME", sci_getenv("SCIRUN_OBJDIR"));
-#endif
   const char* home = sci_getenv("HOME");
   const char* srcdir = sci_getenv("SCIRUN_SRCDIR");
   ASSERT(home && srcdir);  

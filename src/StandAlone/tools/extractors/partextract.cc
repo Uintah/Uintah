@@ -71,13 +71,17 @@ using namespace Uintah;
 // declarations
 void usage(const std::string& badarg, const std::string& progname);
 void getParticleStrains(DataArchive* da, int mat, long64 particleID, 
-		        string flag);
+		        string flag, unsigned long time_step_lower,
+                                     unsigned long time_step_upper);
 void getParticleStresses(DataArchive* da, int mat, long64 particleID, 
-		         string flag);
+		         string flag, unsigned long time_step_lower,
+                                      unsigned long time_step_upper,
+                                      bool include_position_output);
 void printParticleVariable(DataArchive* da, int mat, string particleVariable,
                            long64 particleID, unsigned long time_step_lower,
                            unsigned long time_step_upper,
-                           unsigned long time_step_inc);
+                           unsigned long time_step_inc,
+                           bool include_position_output);
 void computeEquivStress(const Matrix3& sig, double& sigeqv);
 void computeEquivStrain(const Matrix3& F, double& epseqv);
 void computeTrueStrain(const Matrix3& F, Vector& strain);
@@ -107,6 +111,7 @@ main( int argc, char** argv )
   bool do_true_part_strain = false;
   bool do_lagrange_part_strain = false;
   bool do_euler_part_strain = false;
+  bool include_position_output = false;
   unsigned long time_step_lower = 0;
   unsigned long time_step_upper = 1;
   unsigned long time_step_inc = 1;
@@ -162,6 +167,11 @@ main( int argc, char** argv )
           usage("-part_strain [avg / true / all / lagrangian / eulerian]", 
                 argv[0]);
       }
+    } else if (s == "-timestep") {
+      time_step_lower = strtoul(argv[++i],(char**)NULL,10);
+      time_step_upper = time_step_lower;
+      tslow_set = true;
+      tsup_set = true;
     } else if (s == "-timesteplow") {
       time_step_lower = strtoul(argv[++i],(char**)NULL,10);
       tslow_set = true;
@@ -170,7 +180,8 @@ main( int argc, char** argv )
       tsup_set = true;
     } else if (s == "-timestepinc") {
       time_step_inc = strtoul(argv[++i],(char**)NULL,10);
-//      tsinc_set = true;
+    } else if (s == "-include_position_output") {
+      include_position_output = true;
     } 
   }
   filebase = argv[argc-1];
@@ -182,16 +193,37 @@ main( int argc, char** argv )
 
   try {
     DataArchive* da = scinew DataArchive(filebase);
-    
+ 
+    // Recover time data
+    vector<int> index;
+    vector<double> times;
+    da->queryTimesteps(index, times);
+    ASSERTEQ(index.size(), times.size());
+    if (!tslow_set)
+      time_step_lower =0;
+    else if (time_step_lower >= times.size()) {
+      cerr << "timesteplow must be between 0 and " << times.size()-1 << endl;
+      abort();
+    }
+    if (!tsup_set)
+      time_step_upper = times.size()-1;
+    else if (time_step_upper >= times.size()) {
+      cerr << "timestephigh must be between 0 and " << times.size()-1 <<endl;
+      abort();
+    }
+
     // Get the particle stresses
     if (do_part_stress) {
       if (do_av_part_stress) {
         cout << "\t Volume average stress = " << endl;
-        getParticleStresses(da, mat, particleID, "avg");
+        getParticleStresses(da, mat, particleID,"avg",  time_step_lower, time_step_upper,
+                            include_position_output);
       } else if (do_equiv_part_stress) {
-        getParticleStresses(da, mat, particleID, "equiv");
+        getParticleStresses(da, mat, particleID,"equiv",time_step_lower, time_step_upper,
+                            include_position_output);
       } else {
-        getParticleStresses(da, mat, particleID, "all");
+        getParticleStresses(da, mat, particleID,"all",  time_step_lower, time_step_upper,
+                            include_position_output);
       }
     } 
 
@@ -199,40 +231,25 @@ main( int argc, char** argv )
     if (do_part_strain) {
       if (do_av_part_strain) {
         cout << "\t Volume average strain = " << endl;
-        getParticleStrains(da, mat, particleID, "avg");
+        getParticleStrains(da,mat, particleID,"avg",     time_step_lower,time_step_upper);
       } else if (do_true_part_strain) {
-        getParticleStrains(da, mat, particleID, "true");
+        getParticleStrains(da,mat, particleID,"true",    time_step_lower,time_step_upper);
       } else if (do_equiv_part_strain) {
-        getParticleStrains(da, mat, particleID, "equiv");
+        getParticleStrains(da,mat, particleID,"equiv",   time_step_lower,time_step_upper);
       } else if (do_lagrange_part_strain) {
-        getParticleStrains(da, mat, particleID, "lagrange");
+        getParticleStrains(da,mat, particleID,"lagrange",time_step_lower,time_step_upper);
       } else if (do_euler_part_strain) {
-        getParticleStrains(da, mat, particleID, "euler");
+        getParticleStrains(da,mat, particleID,"euler",   time_step_lower,time_step_upper);
       } else {
-        getParticleStrains(da, mat, particleID, "all");
+        getParticleStrains(da,mat, particleID,"all",     time_step_lower,time_step_upper);
       }
     } 
 
     // Print a particular particle variable
     if (do_partvar) {
-      vector<int> index;
-      vector<double> times;
-      da->queryTimesteps(index, times);
-      ASSERTEQ(index.size(), times.size());
-      if (!tslow_set)
-        time_step_lower =0;
-      else if (time_step_lower >= times.size()) {
-        cerr << "timesteplow must be between 0 and " << times.size()-1 << endl;
-        abort();
-      }
-      if (!tsup_set)
-        time_step_upper = times.size()-1;
-      else if (time_step_upper >= times.size()) {
-        cerr << "timestephigh must be between 0 and " << times.size()-1 <<endl;
-        abort();
-      }
       printParticleVariable(da, mat, particleVariable, particleID, 
-                            time_step_lower, time_step_upper, time_step_inc);
+                            time_step_lower, time_step_upper, time_step_inc,
+                            include_position_output);
     }
   } catch (Exception& e) {
     cerr << "Caught exception: " << e.message() << endl;
@@ -254,8 +271,10 @@ void usage(const std::string& badarg, const std::string& progname)
   cerr << "  -partid <particleid>\n";
   cerr << "  -part_stress [avg or equiv or all]\n";
   cerr << "  -part_strain [avg/true/equiv/all/lagrangian/eulerian]\n", 
+  cerr << "  -timestep [int] (only outputs data for timestep int)\n";
   cerr << "  -timesteplow [int] (only outputs timestep from int)\n";
   cerr << "  -timestephigh [int] (only outputs timesteps upto int)\n";
+  cerr << "  -include_position_output (add particle position before other data output)\n";
   cerr << "USAGE IS NOT FINISHED\n\n";
   exit(1);
 }
@@ -266,7 +285,8 @@ void usage(const std::string& badarg, const std::string& progname)
 //
 ////////////////////////////////////////////////////////////////////////////
 void 
-getParticleStrains(DataArchive* da, int mat, long64 particleID, string flag) {
+getParticleStrains(DataArchive* da, int mat, long64 particleID, string flag,
+                   unsigned long time_step_lower, unsigned long time_step_upper) {
 
   // Parse the flag and check which option is needed
   bool doAverage = false;
@@ -314,9 +334,6 @@ getParticleStrains(DataArchive* da, int mat, long64 particleID, string flag) {
   da->queryTimesteps(index, times);
   ASSERTEQ(index.size(), times.size());
 //  cerr << "There are " << index.size() << " timesteps:\n";
-      
-  unsigned long time_step_lower = 0;
-  unsigned long time_step_upper = times.size() - 1 ;
       
   // Loop thru all time steps and store the volume and variable (stress/strain)
   for(unsigned long t=time_step_lower;t<=time_step_upper;t++){
@@ -523,7 +540,9 @@ getParticleStrains(DataArchive* da, int mat, long64 particleID, string flag) {
 //
 ////////////////////////////////////////////////////////////////////////////
 void 
-getParticleStresses(DataArchive* da, int mat, long64 particleID, string flag) {
+getParticleStresses(DataArchive* da, int mat, long64 particleID, string flag,
+                    unsigned long time_step_lower, unsigned long time_step_upper,
+                    bool include_position_output) {
 
   // Parse the flag and check which option is needed
   bool doAverage = false;
@@ -566,9 +585,6 @@ getParticleStresses(DataArchive* da, int mat, long64 particleID, string flag) {
   ASSERTEQ(index.size(), times.size());
   //cout << "There are " << index.size() << " timesteps:\n";
       
-  unsigned long time_step_lower = 0;
-  unsigned long time_step_upper = times.size() - 1 ;
-      
   // Loop thru all time steps and store the volume and variable (stress/strain)
   for(unsigned long t=time_step_lower;t<=time_step_upper;t++){
     double time = times[t];
@@ -577,6 +593,7 @@ getParticleStresses(DataArchive* da, int mat, long64 particleID, string flag) {
 
     vector<double> volumeVector;
     vector<Matrix3> stressVector;
+    vector<Point> posVector;
     double totVol = 0.0;
 
     // Loop thru all the levels
@@ -664,6 +681,11 @@ getParticleStresses(DataArchive* da, int mat, long64 particleID, string flag) {
                 ParticleVariable<long64> pid;
                 da->query(pid, "p.particleID", matl, patch, t);
                 ParticleSubset* pset = value.getParticleSubset();
+
+
+                ParticleVariable<Point> value_pos;
+                da->query(value_pos, "p.x", matl, patch, t);
+
                 if(pset->numParticles() > 0){
                   ParticleSubset::iterator iter = pset->begin();
                   for(;iter != pset->end(); iter++){
@@ -675,6 +697,11 @@ getParticleStresses(DataArchive* da, int mat, long64 particleID, string flag) {
 
                       cout << time << " " << pid[*iter] << " " << patchIndex 
                            << " " << matl ;
+                      if(include_position_output){
+                        cout << " " << value_pos[*iter].x()
+                             << " " << value_pos[*iter].y()
+                             << " " << value_pos[*iter].z() ;
+                      }
 
                       if (doEquiv) {
                         double sigeff = 0.0;
@@ -692,6 +719,11 @@ getParticleStresses(DataArchive* da, int mat, long64 particleID, string flag) {
 
                       cout << time << " " << pid[*iter] << " " << patchIndex 
                            << " " << matl ;
+                      if(include_position_output){
+                        cout << " " << value_pos[*iter].x()
+                             << " " << value_pos[*iter].y()
+                             << " " << value_pos[*iter].z() ;
+                      }
 
                       if (doEquiv) {
                         double sigeff = 0.0;
@@ -739,7 +771,8 @@ void printParticleVariable(DataArchive* da,
                            long64 particleID,
                            unsigned long time_step_lower,
                            unsigned long time_step_upper,
-                           unsigned long time_step_inc){
+                           unsigned long time_step_inc,
+                           bool include_position_output){
 
   // Check if the particle variable is available
   vector<string> vars;
@@ -800,6 +833,8 @@ void printParticleVariable(DataArchive* da,
 
               // Find the name of the variable
               if (var == particleVariable) {
+                ParticleVariable<Point> pos;
+                da->query(pos, "p.x", matl, patch, t);
                 //cout << "Material: " << matl << endl;
                 switch(subtype->getType()){
                 case Uintah::TypeDescription::double_type:
@@ -815,6 +850,11 @@ void printParticleVariable(DataArchive* da,
                         for(;iter != pset->end(); iter++){
                           cout << time << " " << patchIndex << " " << matl; 
                           cout << " " << pid[*iter];
+                          if(include_position_output){
+                            cout << " " << pos[*iter].x()
+                                 << " " << pos[*iter].y()
+                                 << " " << pos[*iter].z() ;
+                          }
                           cout << " " << value[*iter] << endl;
                         }
                       } else {
@@ -822,6 +862,11 @@ void printParticleVariable(DataArchive* da,
                           if (particleID != pid[*iter]) continue;
                           cout << time << " " << patchIndex << " " << matl; 
                           cout << " " << pid[*iter];
+                          if(include_position_output){
+                            cout << " " << pos[*iter].x()
+                                 << " " << pos[*iter].y()
+                                 << " " << pos[*iter].z() ;
+                          }
                           cout << " " << value[*iter] << endl;
                         }
                       }
@@ -841,6 +886,11 @@ void printParticleVariable(DataArchive* da,
                         for(;iter != pset->end(); iter++){
                           cout << time << " " << patchIndex << " " << matl ;
                           cout << " " << pid[*iter];
+                          if(include_position_output){
+                            cout << " " << pos[*iter].x()
+                                 << " " << pos[*iter].y()
+                                 << " " << pos[*iter].z() ;
+                          }
                           cout << " " << value[*iter] << endl;
                         }
                       } else {
@@ -848,6 +898,11 @@ void printParticleVariable(DataArchive* da,
                           if (particleID != pid[*iter]) continue;
                           cout << time << " " << patchIndex << " " << matl ;
                           cout << " " << pid[*iter];
+                          if(include_position_output){
+                            cout << " " << pos[*iter].x()
+                                 << " " << pos[*iter].y()
+                                 << " " << pos[*iter].z() ;
+                          }
                           cout << " " << value[*iter] << endl;
                         }
                       }
@@ -867,6 +922,11 @@ void printParticleVariable(DataArchive* da,
                         for(;iter != pset->end(); iter++){
                           cout << time << " " << patchIndex << " " << matl;
                           cout << " " << pid[*iter];
+                          if(include_position_output){
+                            cout << " " << pos[*iter].x()
+                                 << " " << pos[*iter].y()
+                                 << " " << pos[*iter].z() ;
+                          }
                           cout << " " << value[*iter] << endl;
                         }
                       } else {
@@ -874,6 +934,11 @@ void printParticleVariable(DataArchive* da,
                           if (particleID != pid[*iter]) continue;
                           cout << time << " " << patchIndex << " " << matl;
                           cout << " " << pid[*iter];
+                          if(include_position_output){
+                            cout << " " << pos[*iter].x()
+                                 << " " << pos[*iter].y()
+                                 << " " << pos[*iter].z() ;
+                          }
                           cout << " " << value[*iter] << endl;
                         }
                       }
@@ -893,6 +958,11 @@ void printParticleVariable(DataArchive* da,
                         for(;iter != pset->end(); iter++){
                           cout << time << " " << patchIndex << " " << matl ;
                           cout << " " << pid[*iter];
+                          if(include_position_output){
+                            cout << " " << pos[*iter].x()
+                                 << " " << pos[*iter].y()
+                                 << " " << pos[*iter].z() ;
+                          }
                           cout << " " << value[*iter](0) 
                                << " " << value[*iter](1)
                                << " " << value[*iter](2) << endl;
@@ -902,6 +972,11 @@ void printParticleVariable(DataArchive* da,
                           if (particleID != pid[*iter]) continue;
                           cout << time << " " << patchIndex << " " << matl ;
                           cout << " " << pid[*iter];
+                          if(include_position_output){
+                            cout << " " << pos[*iter].x()
+                                 << " " << pos[*iter].y()
+                                 << " " << pos[*iter].z() ;
+                          }
                           cout << " " << value[*iter](0) 
                                << " " << value[*iter](1)
                                << " " << value[*iter](2) << endl;
@@ -923,6 +998,11 @@ void printParticleVariable(DataArchive* da,
                         for(;iter != pset->end(); iter++){
                           cout << time << " " << patchIndex << " " << matl ;
                           cout << " " << pid[*iter];
+                          if(include_position_output){
+                            cout << " " << pos[*iter].x()
+                                 << " " << pos[*iter].y()
+                                 << " " << pos[*iter].z() ;
+                          }
                           cout << " " << value[*iter][0] 
                                << " " << value[*iter][1]
                                << " " << value[*iter][2] << endl;
@@ -932,6 +1012,11 @@ void printParticleVariable(DataArchive* da,
                           if (particleID != pid[*iter]) continue;
                           cout << time << " " << patchIndex << " " << matl ;
                           cout << " " << pid[*iter];
+                          if(include_position_output){
+                            cout << " " << pos[*iter].x()
+                                 << " " << pos[*iter].y()
+                                 << " " << pos[*iter].z() ;
+                          }
                           cout << " " << value[*iter][0] 
                                << " " << value[*iter][1]
                                << " " << value[*iter][2] << endl;
@@ -953,6 +1038,11 @@ void printParticleVariable(DataArchive* da,
                         for(;iter != pset->end(); iter++){
                           cout << time << " " << patchIndex << " " << matl ;
                           cout << " " << pid[*iter];
+                          if(include_position_output){
+                            cout << " " << pos[*iter].x()
+                                 << " " << pos[*iter].y()
+                                 << " " << pos[*iter].z() ;
+                          }
                           for (int ii = 0; ii < 3; ++ii) {
                             for (int jj = 0; jj < 3; ++jj) {
                               cout << " " << value[*iter](ii,jj) ;
@@ -965,6 +1055,11 @@ void printParticleVariable(DataArchive* da,
                           if (particleID != pid[*iter]) continue;
                           cout << time << " " << patchIndex << " " << matl ;
                           cout << " " << pid[*iter];
+                          if(include_position_output){
+                            cout << " " << pos[*iter].x()
+                                 << " " << pos[*iter].y()
+                                 << " " << pos[*iter].z() ;
+                          }
                           for (int ii = 0; ii < 3; ++ii) {
                             for (int jj = 0; jj < 3; ++jj) {
                               cout << " " << value[*iter](ii,jj) ;

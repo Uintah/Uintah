@@ -111,8 +111,9 @@ void coalSootRR(const double P,
                 const double rhoYt,
                 const double rhoYs,
                 const double nd,
+		const double dt,
                       double &Ns_source
-               );
+      );
     
     
 }; // end BrownSootFormation_nd

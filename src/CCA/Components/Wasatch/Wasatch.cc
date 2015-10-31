@@ -81,7 +81,6 @@
 #include <CCA/Components/Wasatch/Transport/TransportEquation.h>
 #include <CCA/Components/Wasatch/Transport/EquationBase.h>
 
-#include <CCA/Components/Wasatch/BCHelperTools.h>
 #include <CCA/Components/Wasatch/ParseTools.h>
 #include <CCA/Components/Wasatch/FieldClippingTools.h>
 #include <CCA/Components/Wasatch/OldVariable.h>
@@ -89,6 +88,7 @@
 #include <CCA/Components/Wasatch/ParticlesHelper.h>
 #include <CCA/Components/Wasatch/WasatchParticlesHelper.h>
 #include <CCA/Components/Wasatch/BCHelper.h>
+#include <CCA/Components/Wasatch/WasatchBCHelper.h>
 #include <CCA/Components/Wasatch/Expressions/CellType.h>
 using std::endl;
 
@@ -122,9 +122,6 @@ namespace Wasatch{
     timeStepper_ = NULL;
     linSolver_   = NULL;
 
-    cellType_ = scinew CellType();
-    rmcrt_ = scinew Uintah::Ray( Uintah::TypeDescription::double_type );
-    
     isRestarting_ = false;
 
     // disable memory windowing on variables.  This will ensure that
@@ -140,8 +137,6 @@ namespace Wasatch{
 
     OldVariable::self().sync_with_wasatch( this );
     ReductionHelper::self().sync_with_wasatch( this );
-    particlesHelper_ = scinew WasatchParticlesHelper();
-    particlesHelper_->sync_with_wasatch(this);
   }
 
   //--------------------------------------------------------------------
@@ -174,9 +169,11 @@ namespace Wasatch{
     for( BCHelperMapT::iterator it=bcHelperMap_.begin(); it != bcHelperMap_.end(); ++it ){
       delete it->second;
     }
-    delete cellType_;
-    delete rmcrt_;
-    delete particlesHelper_;
+    if( doRadiation_ ){
+      delete rmcrt_;
+      delete cellType_;
+    }
+    if( doParticles_ ) delete particlesHelper_;
   }
 
   //--------------------------------------------------------------------
@@ -354,7 +351,9 @@ namespace Wasatch{
     //
     doParticles_ = wasatchSpec_->findBlock("ParticleTransportEquations");
     if( doParticles_ ){
-      particlesHelper_->problem_setup(params, wasatchSpec_->findBlock("ParticleTransportEquations"), sharedState);
+      particlesHelper_ = scinew WasatchParticlesHelper();
+      particlesHelper_->sync_with_wasatch(this);
+      particlesHelper_->problem_setup( params, wasatchSpec_->findBlock("ParticleTransportEquations"), sharedState );
     }
 
     // setup names for all the boundary condition faces that do NOT have a name or that have duplicate names
@@ -481,9 +480,9 @@ namespace Wasatch{
          saveLabelParams != 0;
          saveLabelParams=saveLabelParams->findNextBlock("save") )
     {
-      std::string saveTheLabel;
-      saveLabelParams->getAttribute("label",saveTheLabel);
-      lockedFields_.insert(saveTheLabel);
+      std::string iof;
+      saveLabelParams->getAttribute("label",iof);
+      make_field_persistent(iof);
     }
 
     //
@@ -531,7 +530,7 @@ namespace Wasatch{
     //
     // setup property evaluations
     //
-    setup_property_evaluation( wasatchSpec_, graphCategories_, lockedFields_ );
+    setup_property_evaluation( wasatchSpec_, graphCategories_, persistentFields_ );
 
     //
     // get the turbulence params, if any, and parse them.
@@ -539,13 +538,6 @@ namespace Wasatch{
     Uintah::ProblemSpecP turbulenceModelParams = wasatchSpec_->findBlock("Turbulence");
     TurbulenceParameters turbParams;
     parse_turbulence_input(turbulenceModelParams, turbParams);
-
-    //
-    // get the variable density model params, if any, and parse them.
-    //
-    Uintah::ProblemSpecP varDenModelParams = wasatchSpec_->findBlock("VariableDensity");
-    VarDenParameters varDenParams;
-    parse_varden_input(varDenModelParams, varDenParams);
 
     //
     // Build transport equations.  This registers all expressions as
@@ -591,7 +583,6 @@ namespace Wasatch{
           // note - parse_momentum_equations returns a vector of equation adaptors
           const EquationAdaptors adaptors = parse_momentum_equations( momEqnParams,
                                                                       turbParams,
-                                                                      varDenParams,
                                                                       useAdaptiveDt,
                                                                       isConstDensity,
                                                                       densityTag,
@@ -665,7 +656,7 @@ namespace Wasatch{
     if( wasatchSpec_->findBlock("Radiation") ){
       parse_radiation_solver( wasatchSpec_->findBlock("Radiation"),
                               *graphCategories_[ADVANCE_SOLUTION],
-                              *linSolver_, sharedState, locked_fields() );
+                              *linSolver_, sharedState, persistent_fields() );
     }
 
     if( buildTimeIntegrator_ ){
@@ -701,6 +692,9 @@ namespace Wasatch{
     // radiation
     if( params->findBlock("RMCRT") ){
       doRadiation_ = true;
+      cellType_ = scinew CellType();
+      rmcrt_ = scinew Uintah::Ray( Uintah::TypeDescription::double_type );
+
       Uintah::ProblemSpecP radSpec = params->findBlock("RMCRT");
       Uintah::ProblemSpecP radPropsSpec=wasatchSpec_->findBlock("RadProps");
       Uintah::ProblemSpecP RMCRTBenchSpec=wasatchSpec_->findBlock("RMCRTBench");
@@ -807,7 +801,7 @@ namespace Wasatch{
       particlesHelper_->schedule_initialize(level,sched);
     }
     
-    bcHelperMap_[level->getID()] = scinew BCHelper(localPatches, materials_, patchInfoMap_, graphCategories_,  bcFunctorMap_);
+    bcHelperMap_[level->getID()] = scinew WasatchBCHelper(level, sched, materials_, patchInfoMap_, graphCategories_,  bcFunctorMap_);
     
     // handle intrusion boundaries
     if( wasatchSpec_->findBlock("EmbeddedGeometry") ){
@@ -855,6 +849,7 @@ namespace Wasatch{
       }
       proc0cout << "------------------------------------------------\n";
 
+      process_field_clipping( wasatchSpec_, graphCategories_, allPatches );
       // -----------------------------------------------------------------------
       try{
         TaskInterface* const task = scinew TaskInterface( icGraphHelper->rootIDs,
@@ -866,7 +861,7 @@ namespace Wasatch{
                                                           patchInfoMap_,
                                                           1,
                                                           sharedState_,
-                                                          lockedFields_ );
+                                                          persistentFields_ );
         //_______________________________________________________
         // create the TaskInterface and schedule this task for
         // execution.  Note that field dependencies are assigned
@@ -885,7 +880,7 @@ namespace Wasatch{
     // Compute the cell type only when radiation is present. This may change in the future.
     if( doRadiation_ ) cellType_->schedule_compute_celltype( rmcrt_, allPatches, materials_, sched );
 
-    if(doParticles_ ) particlesHelper_->schedule_sync_particle_position( level, sched, true );
+    if( doParticles_ ) particlesHelper_->schedule_sync_particle_position( level, sched, true );
     
     proc0cout << "Wasatch: done creating initialization task(s)" << std::endl;
   }
@@ -973,7 +968,7 @@ namespace Wasatch{
                                                         localPatches,
                                                         materials_,
                                                         patchInfoMap_,
-                                                        1, sharedState_, lockedFields_ );
+                                                        1, sharedState_, persistentFields_ );
       task->schedule(1);
       taskInterfaceList_.push_back( task );
     }
@@ -1025,7 +1020,7 @@ namespace Wasatch{
         particlesHelper_->schedule_find_boundary_particles(level,sched);
       }
 
-      bcHelperMap_[level->getID()] = scinew BCHelper(localPatches, materials_, patchInfoMap_, graphCategories_,  bcFunctorMap_);
+      bcHelperMap_[level->getID()] = scinew WasatchBCHelper(level, sched, materials_, patchInfoMap_, graphCategories_,  bcFunctorMap_);
     }
     
     if( doParticles_ ){
@@ -1114,7 +1109,7 @@ namespace Wasatch{
                                                        patchInfoMap_,
                                                        1,
                                                        sharedState_,
-                                                       lockedFields_ );
+                                                       persistentFields_ );
       task->schedule(1);
       taskInterfaceList_.push_back( task );
     }
@@ -1132,7 +1127,7 @@ namespace Wasatch{
       particlesHelper_->schedule_add_particles(level,sched);
     }
     
-    if (isRestarting_) isRestarting_ = false;
+    if( isRestarting_ ) isRestarting_ = false;
   }
 
   //--------------------------------------------------------------------
@@ -1191,7 +1186,7 @@ namespace Wasatch{
     // the task that updates the variables from time "n" to "n+1"
     timeStepper_->create_tasks( timeID, patchInfoMap_, localPatches,
                                 materials, level, sched,
-                                rkStage, lockedFields_ );
+                                rkStage, persistentFields_ );
   }
 
   //--------------------------------------------------------------------

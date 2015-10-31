@@ -65,10 +65,11 @@ protected:
 
   virtual const std::pair<double,double>& get_bounds( const unsigned i ) const =0;
 
-private:
-  const int neq_;        ///< number of equations to solve
   const double rtol_;    ///< relative error tolerance
   const unsigned maxIter_; ///< maximum number of iterations
+
+private:
+  const int neq_;        ///< number of equations to solve
   DoubleVec jac_, res_;
   std::vector<int> ipiv_;  ///< integer work array for linear solver
 };
@@ -90,17 +91,26 @@ class DensFromMixfrac : public Expr::Expression<FieldT>, protected DensityCalcul
 {
   const InterpT& rhoEval_;
   const std::pair<double,double> bounds_;
-  DECLARE_FIELD(FieldT, rhoF_)
+  DECLARE_FIELDS(FieldT, rhoOld_, rhoF_)
   
   DensFromMixfrac( const InterpT& rhoEval,
-                   const Expr::Tag& rhoFTag );
+                   const Expr::Tag& rhoOldTag,
+                   const Expr::Tag& rhoFTag,
+                   const double rtol,
+                   const unsigned maxIter);
 
   void calc_jacobian_and_res( const DoubleVec& passThrough,
                               const DoubleVec& soln,
                               DoubleVec& jac,
                               DoubleVec& res );
-  double get_normalization_factor( const unsigned i ) const;
-  const std::pair<double,double>& get_bounds( const unsigned i ) const;
+  inline double get_normalization_factor( const unsigned i ) const{
+    return 0.5; // nominal value for mixture fraction
+  }
+
+  inline const std::pair<double,double>& get_bounds( const unsigned i ) const{
+    return bounds_;
+  }
+
 
 public:
   /**
@@ -117,13 +127,21 @@ public:
      */
     Builder( const InterpT& rhoEval,
              const Expr::TagList& resultsTag,
-             const Expr::Tag& rhoFTag );
+             const Expr::Tag& rhoOldTag,
+             const Expr::Tag& rhoFTag,
+             const double rtol,
+             const unsigned maxIter);
+    
     ~Builder(){ delete rhoEval_; }
-    Expr::ExpressionBase* build() const;
+    Expr::ExpressionBase* build() const{
+      return new DensFromMixfrac<FieldT>( *rhoEval_, rhoOldTag_, rhoFTag_, rtol_, maxIter_ );
+    }
 
   private:
     const InterpT* const rhoEval_;
-    const Expr::Tag rhoFTag_;
+    const Expr::Tag rhoOldTag_, rhoFTag_;
+    const double rtol_;    ///< relative error tolerance
+    const unsigned maxIter_; ///< maximum number of iterations    
   };
 
   ~DensFromMixfrac();
@@ -169,11 +187,13 @@ template< typename FieldT >
 class DensHeatLossMixfrac
  : public Expr::Expression<FieldT>, protected DensityCalculatorBase
 {
-  DECLARE_FIELDS(FieldT, rhof_, rhoh_)
+  DECLARE_FIELDS(FieldT, rhoOld_, gammaOld_, rhof_, rhoh_)
   const InterpT &densEval_, &enthEval_;
   const std::vector< std::pair<double,double> > bounds_;
 
-  DensHeatLossMixfrac( const Expr::Tag& rhofTag,
+  DensHeatLossMixfrac( const Expr::Tag& rhoOldTag,
+                       const Expr::Tag& gammaOldTag,
+                       const Expr::Tag& rhofTag,
                        const Expr::Tag& rhohTag,
                        const InterpT& densEvaluator,
                        const InterpT& enthEvaluator );
@@ -182,8 +202,14 @@ class DensHeatLossMixfrac
                               const DoubleVec& soln,
                               DoubleVec& jac,
                               DoubleVec& res );
-  double get_normalization_factor( const unsigned i ) const;
-  const std::pair<double,double>& get_bounds( const unsigned i ) const;
+  double get_normalization_factor( const unsigned i ) const{
+    return 0.5; // nominal value for mixture fraction and heat loss (which range [0,1] and [-1,1] respectively).
+  }
+
+  const std::pair<double,double>& get_bounds( const unsigned i ) const{
+    return bounds_[i];
+  }
+
 
 public:
     /**
@@ -202,17 +228,22 @@ public:
      *  @param densEvaluator The function to evaluate density from mixture fraction and heat loss
      *  @param enthEvaluator The function to evaluate enthalpy from mixture fraction and heat loss
      */
-    Builder( const Expr::Tag& rhoTag,
+    Builder( const Expr::Tag& rhoOldTag,
+             const Expr::Tag& rhoTag,
+             const Expr::Tag& gammaOldTag,
              const Expr::Tag& gammaTag,
              const Expr::Tag& rhofTag,
              const Expr::Tag& rhohTag,
              const InterpT& densEvaluator,
              const InterpT& enthEvaluator );
     ~Builder(){ delete densEval_; delete enthEval_; }
-    Expr::ExpressionBase* build() const;
+    Expr::ExpressionBase* build() const{
+      return new DensHeatLossMixfrac<FieldT>( rhoOldTag_, gammaOldTag_, rhofTag_,rhohTag_,*densEval_,*enthEval_ );
+    }
+
 
   private:
-    const Expr::Tag rhofTag_, rhohTag_;
+    const Expr::Tag rhoOldTag_, gammaOldTag_, rhofTag_, rhohTag_;
     const InterpT * const densEval_, * const enthEval_;
   };
 
@@ -222,7 +253,7 @@ public:
 
 /**
  *  \class TwoStreamMixingDensity
- *  \author James C. Sutherland
+ *  \author James C. Sutherland, Tony Saad
  *  \date   November, 2013
  *
  *  \brief Computes the density from the density-weighted mixture fraction.
@@ -261,7 +292,7 @@ public:
      *  @brief Build a TwoStreamMixingDensity expression
      *  @param resultTag the tag for the value that this expression computes
      */
-    Builder( const Expr::Tag& resultTag,
+    Builder( const Expr::TagList& resultsTagList,
              const Expr::Tag& rhofTag,
              const double rho0,
              const double rho1 );

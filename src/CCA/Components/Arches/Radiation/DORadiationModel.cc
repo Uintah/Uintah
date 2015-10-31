@@ -112,7 +112,7 @@ DORadiationModel::problemSetup( ProblemSpecP& params )
 
   ProblemSpecP db = params->findBlock("DORadiationModel");
 
-  db->getWithDefault("ReflectOn",reflectionsTurnedOn,false);  //  reflections are off by default.
+  //db->getWithDefault("ReflectOn",reflectionsTurnedOn,false);  //  reflections are off by default.
 
   //db->getRootNode()->findBlock("Grid")->findBlock("BoundaryConditions") 
   std::string initialGuessType;

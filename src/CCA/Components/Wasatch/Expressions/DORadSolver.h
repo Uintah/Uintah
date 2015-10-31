@@ -36,7 +36,6 @@
 //-- Uintah Includes --//
 #include <Core/Grid/Variables/VarLabel.h>
 #include <Core/Grid/Variables/Stencil7.h>
-#include <Core/Grid/Variables/Stencil4.h>
 #include <Core/Grid/Variables/CCVariable.h>
 
 namespace Uintah{

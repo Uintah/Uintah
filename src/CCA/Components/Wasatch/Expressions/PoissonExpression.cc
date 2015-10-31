@@ -27,7 +27,6 @@
 //-- Wasatch Includes --//
 #include <CCA/Components/Wasatch/FieldAdaptor.h>
 #include <CCA/Components/Wasatch/FieldTypes.h>
-#include <CCA/Components/Wasatch/BCHelperTools.h>
 
 //-- Uintah Includes --//
 #include <CCA/Ports/SolverInterface.h>
@@ -79,7 +78,7 @@ namespace Wasatch {
 
     // note that this does not provide any ghost entries in the matrix...
     matrixLabel_( Uintah::VarLabel::create( phit_.name() + "_matrix",
-                                            Uintah::CCVariable<Uintah::Stencil4>::getTypeDescription() ) ),
+                                            Uintah::CCVariable<Uintah::Stencil7>::getTypeDescription() ) ),
     phiLabel_   ( Uintah::VarLabel::create( phit_.name(),
                                             Wasatch::get_uintah_field_type_descriptor<SVolField>() ) ),
     phirhsLabel_( Uintah::VarLabel::create( phirhslocalt_.name(),
@@ -203,18 +202,18 @@ namespace Wasatch {
       // to the Laplacian operator is not positive definite - but "- A" is. Hence,
       // we multiply all coefficients by -1.
       IntVector iCell = *iter;
-      Uintah::Stencil4&  coefs = matrix_[iCell];
+      Uintah::Stencil7&  coefs = matrix_[iCell];
       coefs.w = -w;
+      coefs.e = -w;
       coefs.s = -s;
+      coefs.n = -s;
       coefs.b = -b;
+      coefs.t = -b;
       coefs.p = -p;
     }
 
     // When boundary conditions are present, modify the coefficient matrix coefficients at the boundary
-    if ( patch_->hasBoundaryFaces() ) update_poisson_matrix((this->get_tags())[0], matrix_, patch_, materialID_);
-
-    // if the user specified a reference value, then modify the appropriate matrix coefficients
-    if ( useRefPhi_ ) set_ref_poisson_coefs(matrix_, patch_, refPhiLocation_ );
+    if ( patch_->hasBoundaryFaces() && bcHelper_) bcHelper_->update_pressure_matrix( matrix_, NULL, patch_ );
   }
 
   //--------------------------------------------------------------------
@@ -234,10 +233,7 @@ namespace Wasatch {
     rhs <<= 0.0;
     rhs <<= - phiRhs_->field_ref();
 
-    // update poisson rhs for reference value
-    if (useRefPhi_) set_ref_poisson_rhs( rhs, patch_, refPhiValue_, refPhiLocation_ );
-
-    if(patch_->hasBoundaryFaces()) update_poisson_rhs(phit_, matrix_, phi, rhs, patch_, materialID_);
+    if(patch_->hasBoundaryFaces() && bcHelper_) bcHelper_->update_pressure_rhs( rhs, patch_ );
   }
 
   //--------------------------------------------------------------------
@@ -271,7 +267,7 @@ namespace Wasatch {
           const SpatialOps::GhostData gd( get_n_ghost<SVolField>() );
           newDW->get( poissonField_, phiLabel_, material, patch, gt, ng);
           SVolFieldPtr phi = wrap_uintah_field_as_spatialops<SVolField>(poissonField_,ainfo,gd);
-          process_poisson_bcs( phit_, *phi, patch, material );
+          bcHelper_->apply_pressure_bc(*phi,patch);
         }
       }
     }

@@ -31,9 +31,6 @@
 #include <Core/Parallel/UintahParallelComponent.h>
 #include <Core/ProblemSpec/ProblemSpecP.h>
 #include <sci_defs/uintah_defs.h>
-#if defined( HAVE_ZOLTAN )
-#  include <zoltan_cpp.h>
-#endif
 
 #include <set>
 #include <string>
@@ -112,7 +109,7 @@ namespace Uintah {
     };
 
     std::vector<IntVector> d_minPatchSize;
-    enum { static_lb, cyclic_lb, random_lb, patch_factor_lb, zoltan_sfc_lb };
+    enum { static_lb, cyclic_lb, random_lb, patch_factor_lb };
 
     ParticleLoadBalancer(const ParticleLoadBalancer&);
     ParticleLoadBalancer& operator=(const ParticleLoadBalancer&);

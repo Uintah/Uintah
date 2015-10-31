@@ -1,7 +1,10 @@
-/*
+/**
+ *  \file   ArchesBCHelper.h
+ *
+ *
  * The MIT License
  *
- * Copyright (c) 2012-2015 The University of Utah
+ * Copyright (c) 2013-2015 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -22,45 +25,40 @@
  * IN THE SOFTWARE.
  */
 
-#ifndef Wasatch_VarDenParameters_h
-#define Wasatch_VarDenParameters_h
+#ifndef ArchesBC_Helper_h
+#define ArchesBC_Helper_h
 
+//-- Uintah includes --//
 #include <Core/ProblemSpec/ProblemSpec.h>
+#include <CCA/Ports/Scheduler.h>
+#include <Core/Grid/Task.h>
+#include <Core/Grid/Material.h>
+#include <CCA/Components/Wasatch/BCHelper.h>
 
-namespace Wasatch{
-  
+// forward declarations
+namespace Uintah{
+
+  class ProcessorGroup;
+  class DataWarehouse;
+  class Arches;
+
   /**
-   *  \ingroup WasatchCore
-   *  \struct VarDenParameters
-   *  \author Tony Saad, Amir Biglari
-   *  \date   June, 2012
-   *
-   *  \brief Holds some key parameters for supported variable density models.
+   *  \class  ArchesBCHelper
+   *  \brief  This class provides support for boundary conditions.
    */
-  struct VarDenParameters {
-    VarDenParameters();
 
-    /**
-     *  \ingroup WasatchCore
-     *  \enum VariableDensityModels
-     *  \brief An enum listing the supported variable density models.
-     */
-    enum VariableDensityModels {
-      CONSTANT,
-      IMPULSE,
-      SMOOTHIMPULSE,
-      DYNAMIC
-    };
+  class ArchesBCHelper: public Wasatch::BCHelper
+  {
+  public:
 
-    double alpha0;
-    double gaussWidth;
-    VariableDensityModels model;
-    bool onePredictor;
+    ArchesBCHelper( const Uintah::LevelP& level,
+                    Uintah::SchedulerP& sched,
+                    const Uintah::MaterialSet* const materials );
+    ~ArchesBCHelper();
+
+  private:
+
   };
-  
-  void parse_varden_input( Uintah::ProblemSpecP varDenSpec,
-                               VarDenParameters& varDenParams );
-  
-}
 
-#endif // Wasatch_VarDenParameters_h
+} /* namespace Arches */
+#endif /* ArchesBC_Helper_H */
