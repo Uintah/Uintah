@@ -62,9 +62,9 @@ unifiedSchedulerTestKernel( int                patchID,
   old_gpudw->get(phi, "phi", patchID, 0);
 
   new_gpudw->getModifiable(newphi, "phi", patchID, 0);
-  if (blockIdx.x == 0 && blockIdx.y == 0 && blockIdx.z == 0 && threadIdx.x == 0 && threadIdx.y == 0) {
-    printf("*****For patch %d old phi %p and new phi %p*****\n", patchID, phi.getVoidPointer(), newphi.getVoidPointer());
-  }
+  //if (blockIdx.x == 0 && blockIdx.y == 0 && blockIdx.z == 0 && threadIdx.x == 0 && threadIdx.y == 0) {
+  //  printf("*****For patch %d old phi %p and new phi %p*****\n", patchID, phi.getVoidPointer(), newphi.getVoidPointer());
+  //}
   // calculate the thread indices
   int i = blockDim.x * blockIdx.x + threadIdx.x + patchNodeLowIndex.x;
   int j = blockDim.y * blockIdx.y + threadIdx.y + patchNodeLowIndex.y;
@@ -119,10 +119,10 @@ unifiedSchedulerTestKernel( int                patchID,
                    + phi(i, j, k-1)
                    + phi(i, j, k+1));
       //if (i == 1 && j == 1 && k == 1) {
-              printf("gpu - newphi(%d, %d, %d) is %1.6lf ptr %p from %1.6lf %1.6lf %1.6lf %1.6lf %1.6lf %1.6lf addresses %p %p %p %p %p %p\n",
-                  i, j, k, newphi(i, j, k), &newphi(i,j,k),
-                  phi(i-1, j, k), phi(i+1, j, k), phi(i, j-1, k), phi(i, j+1, k), phi(i, j, k-1), phi(i, j, k+1),
-                  &phi(i-1, j, k), &phi(i+1, j, k), &phi(i, j-1, k), &phi(i, j+1, k), &phi(i, j, k-1), &phi(i, j, k+1));
+      //        printf("gpu - newphi(%d, %d, %d) is %1.6lf ptr %p from %1.6lf %1.6lf %1.6lf %1.6lf %1.6lf %1.6lf addresses %p %p %p %p %p %p\n",
+      //            i, j, k, newphi(i, j, k), &newphi(i,j,k),
+      //            phi(i-1, j, k), phi(i+1, j, k), phi(i, j-1, k), phi(i, j+1, k), phi(i, j, k-1), phi(i, j, k+1),
+      //            &phi(i-1, j, k), &phi(i+1, j, k), &phi(i, j-1, k), &phi(i, j+1, k), &phi(i, j, k-1), &phi(i, j, k+1));
       //}
       //if (i == 1 && j == 1 && k == domainLow.z) {
       //        printf("gpu - newphi(%d, %d, %d) is %1.6lf from %1.6lf %1.6lf %1.6lf %1.6lf %1.6lf %1.6lf\n", i, j, k, newphi(i, j, k), phi(i-1, j, k), phi(i+1, j, k), phi(i, j-1, k), phi(i, j+1, k), phi(i, j, k-1), phi(i, j, k+1));

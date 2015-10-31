@@ -559,10 +559,18 @@ UnifiedScheduler::execute( int tgnum     /* = 0 */,
     dts->localTask(i)->resetDependencyCounts();
   }
 
+  bool emit_timings = unified_timeout.active();
+  if (emit_timings) {
+    d_labels.clear();
+    d_times.clear();
+  }
 
-  MALLOC_TRACE_TAG_SCOPE("UnifiedScheduler::execute");
+  //  // TODO - determine if this TG output code is even working correctly (APH - 09/16/15)
+  //  makeTaskGraphDoc(dts, d_myworld->myrank());
+  //  if (useInternalDeps() && emit_timings) {
+  //    emitTime("taskGraph output");
+  //  }
 
-  TAU_PROFILE("UnifiedScheduler::execute()", " ", TAU_USER); TAU_PROFILE_TIMER(reducetimer, "Reductions", "[UnifiedScheduler::execute()] " , TAU_USER); TAU_PROFILE_TIMER(sendtimer, "Send Dependency", "[UnifiedScheduler::execute()] " , TAU_USER); TAU_PROFILE_TIMER(recvtimer, "Recv Dependency", "[UnifiedScheduler::execute()] " , TAU_USER); TAU_PROFILE_TIMER(outputtimer, "Task Graph Output", "[UnifiedScheduler::execute()] ", TAU_USER); TAU_PROFILE_TIMER(testsometimer, "Test Some", "[UnifiedScheduler::execute()] ", TAU_USER); TAU_PROFILE_TIMER(finalwaittimer, "Final Wait", "[UnifiedScheduler::execute()] ", TAU_USER); TAU_PROFILE_TIMER(sorttimer, "Topological Sort", "[UnifiedScheduler::execute()] ", TAU_USER); TAU_PROFILE_TIMER(sendrecvtimer, "Initial Send Recv", "[UnifiedScheduler::execute()] ", TAU_USER);
   mpi_info_.totalreduce    = 0;
   mpi_info_.totalsend      = 0;
   mpi_info_.totalrecv      = 0;
@@ -701,11 +709,6 @@ UnifiedScheduler::execute( int tgnum     /* = 0 */,
   }
 
   finalizeTimestep();
-
-//#ifdef HAVE_CUDA
-//  // clear all registered, page-locked host memory
-//  unregisterPageLockedHostMem();
-//#endif
 
   log.finishTimestep();
 
@@ -2320,7 +2323,6 @@ void UnifiedScheduler::postD2HCopies(DetailedTask* dtask) {
 }
 
 void UnifiedScheduler::initiateH2DCopies(DetailedTask* dtask) {
-  MALLOC_TRACE_TAG_SCOPE("UnifiedScheduler::initiateH2DCopies"); TAU_PROFILE("UnifiedScheduler::initiateH2DCopies()", " ", TAU_USER);
 
   const Task* task = dtask->getTask();
 
@@ -2679,7 +2681,7 @@ void UnifiedScheduler::initiateH2DCopies(DetailedTask* dtask) {
                     if (iter->validNeighbor->isForeign()) {
 
 
-                      double * phi_data = new double[iter->validNeighbor->getDataSize()/sizeof(double)];
+                      /*double * phi_data = new double[iter->validNeighbor->getDataSize()/sizeof(double)];
                        iter->validNeighbor->copyOut(phi_data);
                        int zlow = iter->low.z();
                        int ylow = iter->low.y();
@@ -2703,7 +2705,7 @@ void UnifiedScheduler::initiateH2DCopies(DetailedTask* dtask) {
                          }
                        }
                        delete[] phi_data;
-
+                       */
 
 
                       //Prepare to tell the host-side GPU DW to allocated space for this variable.
@@ -3632,8 +3634,6 @@ void UnifiedScheduler::markDeviceRequiresDataAsValid(DetailedTask* dtask) {
   //Go through device requires vars and mark them as valid on the device.  They are either already
   //valid because they were there previously.  Or they just got copied in and the stream completed.
 
-  MALLOC_TRACE_TAG_SCOPE("UnifiedScheduler::markDeviceRequiresDataAsValid"); TAU_PROFILE("UnifiedScheduler::markDeviceRequiresDataAsValid()", " ", TAU_USER);
-
   //The only thing we need to process is the requires.
   const Task* task = dtask->getTask();
   for (const Task::Dependency* dependantVar = task->getRequires();
@@ -3674,8 +3674,6 @@ void UnifiedScheduler::markDeviceRequiresDataAsValid(DetailedTask* dtask) {
 void UnifiedScheduler::markDeviceComputesDataAsValid(DetailedTask* dtask) {
   //Go through device computes vars and mark them as valid on the device.
 
-  MALLOC_TRACE_TAG_SCOPE("UnifiedScheduler::markDeviceComputesDataAsValid"); TAU_PROFILE("UnifiedScheduler::markDeviceComputesDataAsValid()", " ", TAU_USER);
-
   //The only thing we need to process is the requires.
   const Task* task = dtask->getTask();
   for (const Task::Dependency* comp = task->getComputes(); comp != 0; comp =
@@ -3714,8 +3712,6 @@ void UnifiedScheduler::markDeviceComputesDataAsValid(DetailedTask* dtask) {
 void UnifiedScheduler::markHostRequiresDataAsValid(DetailedTask* dtask) {
   //Data has been copied from the device to the host.  The stream has completed.
   //Go through all variables that this CPU task depends on and mark them as valid on the CPU
-
-  MALLOC_TRACE_TAG_SCOPE("UnifiedScheduler::markHostRequiresDataAsValid"); TAU_PROFILE("UnifiedScheduler::markHostRequiresDataAsValid()", " ", TAU_USER);
 
   //The only thing we need to process is the requires.
   const Task* task = dtask->getTask();
@@ -3760,8 +3756,6 @@ void UnifiedScheduler::initiateD2H(DetailedTask* dtask) {
   //potentially even die on the device
 
   //Returns true if no device data is required, thus allowing a CPU task to immediately proceed.
-
-  MALLOC_TRACE_TAG_SCOPE("UnifiedScheduler::initiateD2H"); TAU_PROFILE("UnifiedScheduler::initiateD2H()", " ", TAU_USER);
 
   void* host_ptr = NULL;    // host base pointer to raw data
   void* device_ptr = NULL;    // host base pointer to raw data
@@ -4111,7 +4105,7 @@ void UnifiedScheduler::copyAllDataD2H(DetailedTask* dtask) {
   //Request that all contiguous device arrays from the device be sent to their contiguous host array counterparts.
   //We only copy back the computes data, the requires data doesn't need to be copied
   //back to the host.
-  MALLOC_TRACE_TAG_SCOPE("UnifiedScheduler::copyAllDataD2H"); TAU_PROFILE("UnifiedScheduler::copyAllDataD2H()", " ", TAU_USER);
+
   void* host_ptr = NULL;    // host base pointer to raw data
   void* device_ptr = NULL;    // host base pointer to raw data
   size_t host_bytes = 0;    // raw byte count to copy to the device
@@ -4286,7 +4280,7 @@ void UnifiedScheduler::copyAllDataD2H(DetailedTask* dtask) {
         }
         default: {
           cerrLock.lock();
-    cerr << "Variable " << comp->var->getName() << " is of a type that is not supported on GPUs yet." << endl;
+          cerr << "Variable " << comp->var->getName() << " is of a type that is not supported on GPUs yet." << endl;
           cerrLock.unlock();
         }
         }
@@ -4320,7 +4314,6 @@ void UnifiedScheduler::processD2HCopies(DetailedTask* dtask) {
   //individual host grid vars.
 
   //Request that all contiguous device arrays form the device be sent to their contiguous host array counterparts.
-  MALLOC_TRACE_TAG_SCOPE("UnifiedScheduler::processD2HCopies"); TAU_PROFILE("UnifiedScheduler::processD2HCopies()", " ", TAU_USER);
 
   //The only thing we need to process  is the computes.
   const Task* task = dtask->getTask();
@@ -5245,7 +5238,7 @@ void UnifiedScheduler::copyAllExtGpuDependenciesToHost(const DetailedTask* dtask
 
         //If there's ever a need to manually verify what was copied host-to-host, use this code below.
         //if (/*it->second.sourcePatchPointer->getID() == 1 && */ item.dep->var->d_name == "phi") {
-          double * phi_data = new double[gridVar->getDataSize()/sizeof(double)];
+        /*  double * phi_data = new double[gridVar->getDataSize()/sizeof(double)];
           tempGhostVar->copyOut(phi_data);
           IntVector l = ghostLow;
           IntVector h = ghostHigh;
@@ -5272,7 +5265,7 @@ void UnifiedScheduler::copyAllExtGpuDependenciesToHost(const DetailedTask* dtask
                 printf(" - phi(%d, %d, %d) is %1.6lf ptr %p base pointer %p idx %d\n", i, j, k, phi_data[idx], phi_data + idx, phi_data, idx);
               }
             }
-          }
+          } */
         //}
 
         //let go of our reference counters.
