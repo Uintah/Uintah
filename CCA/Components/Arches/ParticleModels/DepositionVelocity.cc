@@ -266,19 +266,19 @@ DepositionVelocity::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info,
           total_area_face = 0;
           d_velocity = 0;
           for ( int pp = 0; pp < total_flux_ind; pp++ ){
-            if (pp==0) {
+            if (container_flux_ind[pp]==0) {
               flux = std::abs(dep_x[c+_fd[container_flux_ind[pp]]]);
               rhoi = rhop[c+_d[container_flux_ind[pp]]];
-            } else if (pp==1) {
+            } else if (container_flux_ind[pp]==1) {
               flux = std::abs(dep_x[c+_fd[container_flux_ind[pp]]]);
               rhoi = rhop[c+_d[container_flux_ind[pp]]];
-            } else if (pp==2) {
+            } else if (container_flux_ind[pp]==2) {
               flux = std::abs(dep_y[c+_fd[container_flux_ind[pp]]]);
               rhoi = rhop[c+_d[container_flux_ind[pp]]];
-            } else if (pp==3) {
+            } else if (container_flux_ind[pp]==3) {
               flux = std::abs(dep_y[c+_fd[container_flux_ind[pp]]]);
               rhoi = rhop[c+_d[container_flux_ind[pp]]];
-            } else if (pp==4) {
+            } else if (container_flux_ind[pp]==4) {
               flux = std::abs(dep_z[c+_fd[container_flux_ind[pp]]]);
               rhoi = rhop[c+_d[container_flux_ind[pp]]];
             } else {
