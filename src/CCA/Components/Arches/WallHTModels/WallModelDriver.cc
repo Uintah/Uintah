@@ -951,13 +951,8 @@ WallModelDriver::CoalRegionHT::computeHT( const Patch* patch, HTVariables& vars,
                
               R_wall = wi.dy / wi.k; 
               R_dp = wi.dy_dep / wi.k_deposit; 
-              if (vars.time - vars.t_start > 0.0) {
-                dep_thickness = vars.ave_deposit_velocity[c] * wi.t_sb;
-                vars.deposit_thickness[c] = ( 1 - wi.relax ) * vars.deposit_thickness_old[c] + wi.relax * dep_thickness;
-              } else {
-                vars.deposit_thickness[c] = wi.dy_dep_init;
-                //R_d = wi.dy_dep_init / wi.k_deposit; 
-              }
+              dep_thickness = vars.ave_deposit_velocity[c] * wi.t_sb;
+              vars.deposit_thickness[c] = ( 1 - wi.relax ) * vars.deposit_thickness_old[c] + wi.relax * dep_thickness;
               R_d = vars.deposit_thickness[c] / wi.k_deposit; 
               R_tot = R_wall + R_dp + R_d;
               double d_tol    = 1e-15;
