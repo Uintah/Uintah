@@ -154,6 +154,7 @@ launchUnifiedSchedulerTestKernel( dim3               dimGrid,
                                                                   old_gpudw,
                                                                   new_gpudw,
                                                                   stream );
+  cudaDeviceSynchronize();
 }
 
 } //end namespace Uintah

@@ -1604,9 +1604,7 @@ bool DetailedTask::checkCUDAStreamDone() const
       continue;
     } else if (retVal == cudaErrorNotReady ) {
 
-      for (int i = 0; i < 200; i++) {
-        retVal = cudaStreamQuery(*(it->second));
-      }
+      retVal = cudaStreamQuery(*(it->second));
       return false;
     }
     else if (retVal ==  cudaErrorLaunchFailure) {

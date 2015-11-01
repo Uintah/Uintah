@@ -2721,7 +2721,7 @@ void UnifiedScheduler::initiateH2DCopies(DetailedTask* dtask) {
 
                       //See NOTE: above.  Scenarios occur in which the same source region is listed to send to two different patches.
                       //This task doesn't need to know about the same source twice.
-                      if (!(taskVars.varAlreadyExists(curDependency->var, sourcePatch, matlID, levelID, curDependency->mapDataWarehouse()))) {
+                      /*if (!(taskVars.varAlreadyExists(curDependency->var, sourcePatch, matlID, levelID, curDependency->mapDataWarehouse()))) {
                         //let this Task GPU DW know about the source location.
                         taskVars.addTaskGpuDWVar(sourcePatch, matlID, levelID, ghost_host_strides.x(), curDependency, sourceDeviceNum);
                       } else {
@@ -2736,7 +2736,7 @@ void UnifiedScheduler::initiateH2DCopies(DetailedTask* dtask) {
 
                           cerrLock.unlock();
                         }
-                      }
+                      }*/
 
                       ghostVars.add(curDependency->var,
                                      sourcePatch, patches->get(i), matlID, levelID,
@@ -2758,7 +2758,7 @@ void UnifiedScheduler::initiateH2DCopies(DetailedTask* dtask) {
                       //TODO: Instead of copying the entire patch for a ghost cell, we should just create a foreign var, copy
                       //a contiguous array of ghost cell data into that foreign var, then copy in that foreign var.
                       if (!deviceVars.varAlreadyExists(curDependency->var, sourcePatch, matlID, levelID, curDependency->mapDataWarehouse())) {
-                        /*
+
                         if (gpu_stats.active()) {
                            cerrLock.lock();
                            {
@@ -2772,7 +2772,7 @@ void UnifiedScheduler::initiateH2DCopies(DetailedTask* dtask) {
                                  << ") with offset (" << ghost_host_offset.x()
                                  << ", " << ghost_host_offset.y()
                                  << ", " << ghost_host_offset.z() << ")"
-                                 << ".  ZZZ The iter low is (" << iter->low.x()
+                                 << ".  The iter low is (" << iter->low.x()
                                  << ", " << iter->low.y()
                                  << ", " << iter->low.z()
                                  << ") and iter high is (" << iter->high.x()
@@ -2785,7 +2785,7 @@ void UnifiedScheduler::initiateH2DCopies(DetailedTask* dtask) {
                                  << endl;
                            }
                            cerrLock.unlock();
-                         }*/
+                         }
                         //Prepare to tell the host-side GPU DW to allocated space for this variable.
                         deviceVars.add(sourcePatch, matlID, levelID, false,
                             ghost_host_size, srcvar->getDataSize(),
@@ -2800,7 +2800,7 @@ void UnifiedScheduler::initiateH2DCopies(DetailedTask* dtask) {
 
                         ghostVars.add(curDependency->var,
                                        sourcePatch, patches->get(i), matlID, levelID,
-                                       iter->validNeighbor->isForeign(), false,
+                                       false, false,
                                        ghost_host_offset, ghost_host_size,
                                        iter->low, iter->high,
                                        elementDataSize, virtualOffset,
@@ -2861,8 +2861,13 @@ void UnifiedScheduler::initiateH2DCopies(DetailedTask* dtask) {
                     //already exists in the GPU.  So queue up to load the neighbor patch metadata into the
                     //task datawarehouse.
                     if (!patches->contains(sourcePatch)) {
-                      taskVars.addTaskGpuDWVar(sourcePatch, matlID, levelID,
-                          ghost_host_strides.x(), curDependency, destDeviceNum);
+                      if (iter->validNeighbor->isForeign()) {
+                        taskVars.addTaskGpuDWStagingVar(sourcePatch, matlID, levelID,  ghost_host_offset, ghost_host_size, ghost_host_strides.x(),
+                                                  curDependency, sourceDeviceNum);
+                      } else {
+                        taskVars.addTaskGpuDWVar(sourcePatch, matlID, levelID,
+                          ghost_host_strides.x(), curDependency, sourceDeviceNum);
+                      }
                     }
 
                     //Store the source and destination patch, and the range of the ghost cells
