@@ -1550,22 +1550,24 @@ GPUDataWarehouse::syncto_device(void *cuda_stream)
     //unsigned int sizeToCopy = sizeof(GPUDataWarehouse);
     cudaStream_t* ptr = (cudaStream_t*)(cuda_stream);
 
-    CUDA_RT_SAFE_CALL (cudaMemcpyAsync( d_device_copy, this, objectSizeInBytes, cudaMemcpyHostToDevice, *ptr));
-
-
     if (gpu_stats.active()) {
-       cerrLock.lock();
-       {
-         gpu_stats << UnifiedScheduler::myRankThread()
-             << " GPUDataWarehouse::syncto_device() -"
-             << " sync GPUDW at " << d_device_copy
-             << " with description " << _internalName
-             << " to device " << d_device_id
-             << " on stream " << ptr
-             << endl;
-       }
-       cerrLock.unlock();
-     }
+      cerrLock.lock();
+      {
+        gpu_stats << UnifiedScheduler::myRankThread()
+            << " GPUDataWarehouse::syncto_device() -"
+            << " sync GPUDW at " << d_device_copy
+            << " with description " << _internalName
+            << " to device " << d_device_id
+            << " on stream " << ptr
+            << endl;
+      }
+      cerrLock.unlock();
+    }
+
+    CUDA_RT_SAFE_CALL (cudaMemcpyAsync( d_device_copy, this, objectSizeInBytes, cudaMemcpyHostToDevice, *ptr));
+    //CUDA_RT_SAFE_CALL (cudaMemcpy( d_device_copy, this, objectSizeInBytes, cudaMemcpyHostToDevice));
+
+
     //if (d_debug) {
     //  printf("sync GPUDW %p to device %d on stream %p\n", d_device_copy, d_device_id, ptr);
     //}
@@ -1873,7 +1875,7 @@ GPUDataWarehouse::copyGpuGhostCellsToGpuVars() {
            int destOffset = x_dest_real + d_varDB[destIndex].var_size.x * (y_dest_real + z_dest_real * d_varDB[destIndex].var_size.y);
 
            //if (threadID == 0) {
-            /*  printf("Going to copy, between (%d, %d, %d) from offset %d to offset %d.  From starts at (%d, %d, %d) with size (%d, %d, %d) pointer %p.  To starts at (%d, %d, %d) with size (%d, %d, %d).  Value is %e\n",
+           /*   printf("Going to copy, between (%d, %d, %d) from offset %d to offset %d.  From starts at (%d, %d, %d) with size (%d, %d, %d) at index %d pointer %p.  To starts at (%d, %d, %d) with size (%d, %d, %d).\n",
                   d_varDB[i].ghostItem.sharedLowCoordinates.x,
                   d_varDB[i].ghostItem.sharedLowCoordinates.y,
                   d_varDB[i].ghostItem.sharedLowCoordinates.z,
@@ -1881,10 +1883,10 @@ GPUDataWarehouse::copyGpuGhostCellsToGpuVars() {
                   destOffset,
                   d_varDB[i].var_offset.x, d_varDB[i].var_offset.y, d_varDB[i].var_offset.z,
                   d_varDB[i].var_size.x, d_varDB[i].var_size.y, d_varDB[i].var_size.z,
+                  i,
                   d_varDB[i].var_ptr,
                   d_varDB[destIndex].var_offset.x, d_varDB[destIndex].var_offset.y, d_varDB[destIndex].var_offset.z,
-                  d_varDB[destIndex].var_size.x, d_varDB[destIndex].var_size.y, d_varDB[destIndex].var_size.z,
-                  *((double*)(d_varDB[i].var_ptr) + sourceOffset);
+                  d_varDB[destIndex].var_size.x, d_varDB[destIndex].var_size.y, d_varDB[destIndex].var_size.z);
             */
             //}
 
@@ -2084,7 +2086,7 @@ GPUDataWarehouse::putGhostCell(char const* label, int sourcePatchID, int destPat
       index = staging_it->second.varDB_index;
 
     } else {
-      printf("ERROR: GPUDataWarehouse::putGhostCell( %s ). Size %d, No staging variable found label %s patch %d matl %d level %d offset (%d, %d, %d) size (%d, %d, %d) on DW at %p.\n",
+      printf("ERROR: GPUDataWarehouse::putGhostCell( %s ). Number of staging vars for this var: %d, No staging variable found label %s patch %d matl %d level %d offset (%d, %d, %d) size (%d, %d, %d) on DW at %p.\n",
                     label, varPointers->operator[](lpml_source).stagingVars.size(), label, sourcePatchID, matlIndx, levelIndx,
                     sv.device_offset.x, sv.device_offset.y, sv.device_offset.z,
                     sv.device_size.x, sv.device_size.y, sv.device_size.z,
