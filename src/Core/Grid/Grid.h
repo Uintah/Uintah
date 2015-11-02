@@ -145,7 +145,7 @@ WARNING
           {} ;
          ~stretchDescription()
           {};
-          void addRegion(const int &axis, const stretchRegion &region)
+          void addRegion(const int axis, stretchRegion region)
           {
             axialStretches[axis].push_back(region);
           }
@@ -397,6 +397,9 @@ WARNING
     // static const double PATCH_TOLERANCE_ = 3;  
     
     IntVector d_extraCells;
+
+    // Holds the level subsets for portions of the grid.
+    LevelSet  d_levelSet;
 
   };
 

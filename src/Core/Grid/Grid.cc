@@ -758,21 +758,21 @@ Grid::parseStretches(const ProblemSpecP& curr_ps)
       throw ProblemSetupException("Error, stretch axis already specified: "+axisName, __FILE__, __LINE__);
     }
 
-    double begin = -DBL_MAX;
+    double globalUpperBound = -DBL_MAX;
     for(ProblemSpecP region_ps = stretch_ps->findBlock(); region_ps != 0; region_ps = region_ps->findNextBlock())
     {
-      std::string shape;
-      double to, from;
-      double toSpacing, fromSpacing;
-      shape = region_ps->getNodeName();
-      if (shape != "uniform" && shape != "linear")
+      std::string spacingType;
+      double regionUpper, regionLower;
+      double spacingAtUpper, spacingAtLower;
+      spacingType = region_ps->getNodeName();
+      if (spacingType != "uniform" && spacingType != "linear")
       {
         throw ProblemSetupException("Error, invalid region shape in stretched grid: " + region_ps->getNodeName(),
                                     __FILE__, __LINE__);
       }
-      if(region_ps->getAttribute("from",from))
+      if(region_ps->getAttribute("from",regionLower))
       {
-        if(from < begin)
+        if(regionLower < globalUpperBound)
         {
           throw ProblemSetupException("Error, stretched grid regions must be specified in ascending order.",
                                       __FILE__, __LINE__);
@@ -780,39 +780,39 @@ Grid::parseStretches(const ProblemSpecP& curr_ps)
       }
       else
       {
-        from = DBL_MAX;
+        regionLower = DBL_MAX;
       }
-      if (region_ps->getAttribute("to", to))
+      if (region_ps->getAttribute("to", regionUpper))
       {
-        begin = to;
+        globalUpperBound = regionUpper;
       }
       else
       {
-        to = DBL_MAX;
+        regionUpper = DBL_MAX;
       }
-      if (shape == "uniform")
+      if (spacingType == "uniform")
       {
-        if (!region_ps->getAttribute("spacing",fromSpacing))
+        if (!region_ps->getAttribute("spacing",spacingAtLower))
         {
-          fromSpacing = DBL_MAX;
+          spacingAtLower = DBL_MAX;
         }
-        toSpacing = fromSpacing;
+        spacingAtUpper = spacingAtLower;
       }
-      else if (shape == "linear") // SHouldn't need the if per above error check
+      else if (spacingType == "linear") // SHouldn't need the if per above error check
       {
-        if (!region_ps->getAttribute("fromSpacing",fromSpacing))
+        if (!region_ps->getAttribute("fromSpacing",spacingAtLower))
         {
-          fromSpacing = DBL_MAX;
+          spacingAtLower = DBL_MAX;
         }
-        if(!region_ps->getAttribute("toSpacing",toSpacing))
+        if(!region_ps->getAttribute("toSpacing",spacingAtUpper))
         {
-          toSpacing = DBL_MAX;
+          spacingAtUpper = DBL_MAX;
         }
       }
 
-      Grid::stretchRegion currRegion(shape,to,from,toSpacing,fromSpacing);
+      Grid::stretchRegion currRegion(spacingType,regionUpper,regionLower,spacingAtUpper,spacingAtLower);
       levelStretch.addRegion(axis,currRegion);
-      begin=to;
+      globalUpperBound=regionUpper;
     }
   }
   return levelStretch;
@@ -913,7 +913,7 @@ Grid::stretchDescription::checkStretches(const SCIRun::BBox &extents, const int&
         spacing[axis] = getNan();
     }
 
-    for (int region=0; region > numRegions; ++region)
+    for (int region=0; region < numRegions; ++region)
     {
       stretchRegion* prevRegion = NULL;
       stretchRegion* nextRegion = NULL;
@@ -1094,9 +1094,10 @@ Grid::stretchDescription::checkStretches(const SCIRun::BBox &extents, const int&
       for (int region = 0; region < numRegions; ++region)
       {
         stretchRegion* currRegion = getRegion(axis,region);
-        std::cerr << currRegion->getShape() << ": from " << currRegion->getFrom() << "(" << currRegion->getFromSpacing()
-                  << ") to " << currRegion->getTo() << "(" << currRegion->getToSpacing()<< "), "
-                  << currRegion->countCells() << " cells. ";
+        std::cerr << "\t" << currRegion->getShape()
+                  << ": from " << currRegion->getFrom() << "(" << currRegion->getFromSpacing()
+                  << ") to "   << currRegion->getTo()   << "(" << currRegion->getToSpacing()
+                  << "), " << currRegion->countCells() << " cells. " << std::endl;
       }
     }
     std::cerr << std::endl;
@@ -1634,6 +1635,41 @@ Grid::newProblemSetup(const ProblemSpecP&   params,
   Point         gridAnchor; // Minimum point in grid
   int           levelIndex = 0;
 
+
+//  int currentLevelSubset = 0;
+//  bool fileIsAMR = false;
+//  ProblemSpecP  levelset_ps = grid_ps->findBlock("LevelSet");
+//  while (levelset_ps) // Only looking for file based levelsets here
+//  {
+//    ProblemSpecP level_ps;
+//    std::string filename;
+//    if (levelset_ps->get("file",filename)) // Filename argument found, parse it
+//    {
+//      ProblemSpecP newFile_ps = getFileBasedProblemSpec(filename);
+//      if (newFile_ps->get("doAMR",fileIsAMR))
+//      {
+//        // We are parsing an AMR file, so get implicit level range from that
+//
+//      }
+//      else
+//      {
+//        level_ps = newFile_ps->findblock("Grid")->findblock("Level");
+//      }
+//    }
+//    else
+//    {
+//      level_ps = grid_ps->findBlock("Level");
+//    }
+//
+//    // while (level_ps && !fileIsAMR)
+//    //{
+//
+//    //}
+//
+//    // Find next level set
+//    ++currentLevelSubset;
+//    levelset_ps->findNextBlock("LevelSet");
+//  }
   // FIXME - Should we throw an error if we can't find one initial level?
   ProblemSpecP  level_ps = grid_ps->findBlock("Level");
   while (level_ps) // Loop through all levels
@@ -1643,6 +1679,7 @@ Grid::newProblemSetup(const ProblemSpecP&   params,
     {
       throw ProblemSetupException("Level resolution is not specified", __FILE__, __LINE__);
     }
+//    if (levelIndex == curreLevelSubset->getMinLevelIndex())
     if (levelIndex == 0)
     {
       gridAnchor = levelInfo.getAnchor().asPoint();
@@ -1983,13 +2020,15 @@ Grid::problemSetup(const ProblemSpecP& params, const ProcessorGroup *pg, bool do
             std::cerr << "y";
           else
             std::cerr << "z";
-          std::cerr << " axis\n";
+          std::cerr << " axis" << std::endl;
           for(int i=0;i<(int)stretch[axis].size();i++){
             StretchSpec& spec = stretch[axis][i];
-            std::cerr << spec.shape << ": from " << spec.from << "(" << spec.fromSpacing << ") to " << spec.to << "(" << spec.toSpacing << "), " << spec.countCells() << " cells\n";
+            std::cerr << "\t" << spec.shape << ": from " << spec.from << "(" << spec.fromSpacing
+                      << ") to " << spec.to << "(" << spec.toSpacing << "), "
+                      << spec.countCells() << " cells" << std::endl;
           }
         }
-        std::cerr << "\n";
+        std::cerr << std::endl;
       }
 
       if(!have_levelspacing && !have_patchspacing && stretch_count != 3)
