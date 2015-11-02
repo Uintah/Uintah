@@ -52,7 +52,7 @@ if [ "$MACHINE" == "rt" ]; then
 fi
 
 if test "$MACHINE" = "albion" ; then
-  DEFAULT_MAIL_TO="ahumphrey@sci.utah.edu,t.harman@utah.edu"
+  DEFAULT_MAIL_TO="ahumphrey@sci.utah.edu,t.harman@utah.edu,J.B.Hooper@utah.edu"
   REPLY_TO="t.harman@utah.edu"
   COMMON_GROUP="uintah"
   BUILD_DIR=/home/${LOGNAME}/"$OS"                      # The user can be rt or arl-rt
