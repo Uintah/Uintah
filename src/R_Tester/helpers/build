@@ -70,7 +70,7 @@ if [ "$OS" = "Linux" ]; then
       --with-fftw=/usr/local/fftw \\
       --with-boost=/usr/local/boost  \\
       --with-hypre=/usr/local/hypre  \\
-      --with-hypre=/usr/local/petsc  \\
+      --with-petsc=/usr/local/petsc  \\
       --enable-ice \\
       --enable-mpm \\
       --enable-md \\
