@@ -346,6 +346,7 @@ namespace Uintah{
           int _max_it;                       ///< maximum iterations allowed 
 
           struct WallInfo { 
+              double T_slag; 
               double t_sb; 
               double k; 
               double k_deposit; 
