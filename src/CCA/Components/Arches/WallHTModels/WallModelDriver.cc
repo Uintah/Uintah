@@ -838,6 +838,7 @@ WallModelDriver::CoalRegionHT::problemSetup( const ProblemSpecP& input_db ){
     WallInfo info;
     ProblemSpecP geometry_db = r_db->findBlock("geom_object");
     GeometryPieceFactory::create( geometry_db, info.geometry );
+    r_db->require("T_slag", info.T_slag);
     r_db->require("t_sb", info.t_sb);
     r_db->require("k", info.k);
     r_db->require("k_deposit", info.k_deposit);
@@ -1011,7 +1012,12 @@ WallModelDriver::CoalRegionHT::computeHT( const Patch* patch, HTVariables& vars,
               vars.T_real[c] = (1 - wi.relax) * vars.T_real_old[c] + wi.relax * TW_new;
 
               TW = pow( (rad_q-net_q) / _sigma_constant, 0.25);
-
+              if (TW > wi.T_slag){
+                TW=wi.T_slag;
+                net_q = rad_q - _sigma_constant * pow( TW, 4 );
+                vars.deposit_thickness[c]=max(0.0 , wi.k_deposit*((TW-wi.T_inner)/net_q - R_wall - R_dp));
+                std::cout << "c: " << c << "net_q: " << net_q << " TW: " << TW << " Tin: " << wi.T_inner << " d: " << vars.deposit_thickness[c] << std::endl;
+              }
               T[c] = ( 1 - wi.relax ) * vars.T_old[c] + wi.relax * TW;
 
             }
