@@ -293,7 +293,7 @@ private:
 
     //MomentumHelper<UT> mom_helper;
 
-    const double dt = tsk_info->get_dt();
+    //const double dt = tsk_info->get_dt();
 
     //fields
     UFieldTP rhs   = tsk_info->get_so_field<UT>( _rhs_name );

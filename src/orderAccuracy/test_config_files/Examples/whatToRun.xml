@@ -4,17 +4,16 @@
 <!-- You need this link for the restart uda -->
 <symbolicLinks>/home/todd/builds/Developing/092513SCIRun/src/StandAlone/inputs</symbolicLinks>
 
-<!-- Ray convergence test using Burns & Christon benchmark
+<!-- Ray convergence test using Burns & Christon benchmark -->
 
 <test>
-  <name>DoubleRMCRT_OA_Ray_1L</name>
+  <name>DoubleRMCRT_OA_Ray_1L_LHC</name>
   <ups>RMCRT_test_1L.ups</ups>
   <tst>ray.tst</tst>
 </test>
--->
 <!--
 <test>
-  <name>GPU_RMCRT_OA_Ray_1L</name>
+  <name>GPU_RMCRT_OA_Ray_1L_LHC</name>
   <ups>RMCRT_test_1L.ups</ups>
   <tst>rayGPU.tst</tst>
 </test>
@@ -27,13 +26,13 @@
 </test> 
 -->
 
-<!-- Patch layout test using Burns & Christon benchmark and Data Onion -->
+<!-- Patch layout test using Burns & Christon benchmark and Data Onion
 <test>
   <name>DO_patchLayout.GPU</name>
   <ups>RMCRT_bm1_DO.ups</ups>
   <tst>DO_patchLayout_noCompare.tst</tst>
 </test> 
-
+-->
 <!-- Patch layout test using Burns & Christon benchmark and Data Onion
 <test>
   <name>RMCRT_DO_finePatches</name>

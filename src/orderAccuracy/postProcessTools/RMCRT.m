@@ -440,10 +440,14 @@ unix('/bin/rm divQ.dat tmp tmp.clean');
 % Plot the results
 if (strcmp(makePlot,"true"))
   h = figure();
-  subplot(2,1,1),plot(x_CC, divQ_sim(:,4), 'b:o;computed;',"markersize",4,"linewidth",10, x_CC, divQ_exact, 'r:+;exact;',"markersize",4,"linewidth",10);
+  %subplot(2,1,1),plot(x_CC, divQ_sim(:,4), 'b:o;computed;',"markersize",4,"linewidth",10, x_CC, divQ_exact, 'r:+;exact;',"markersize",4,"linewidth",10);
+  
+  subplot(2,1,1),plot(x_CC, divQ_sim(:,4), 'b:o;computed;', x_CC, divQ_exact, 'r:+;exact;');
+  
   ylabel('divQ');
   xlabel(dir);
-  title('divQ versus Exact Solution');
+  this = sprintf('divQ versus Exact Solutions %s-dir',dir);
+  title(this);
   grid on;
 
   subplot(2,1,2),plot(x_CC,d, 'b:+');
@@ -451,22 +455,16 @@ if (strcmp(makePlot,"true"))
   ylabel('|divQ - divQ_{exact}|'); 
   xlabel(dir);
   grid on;
-pause
-
+  pause
 
   unix('/bin/rm divQ.ps > /dev/null 2>&1');
-  %print('divQ.ps','-dps', '-FTimes-Roman:14');
-  %pause
+
   FN = findall(h,'-property','FontName');
   set(FN,'FontName','Times');
-  
-  %FS = findall(h, '-property','FontSize');
-  %set(FS,'FontSize',12);
   
   orient('portrait');
   fname = sprintf( 'divQ.%s.jpg',dir);
   saveas( h, fname, "jpg");
-  pause;
 end
 
 
