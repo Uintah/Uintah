@@ -32,6 +32,7 @@
 #include <CCA/Components/OnTheFlyAnalysis/particleExtract.h>
 #include <CCA/Components/OnTheFlyAnalysis/planeExtract.h>
 #include <CCA/Components/OnTheFlyAnalysis/radiometer.h>
+#include <CCA/Components/OnTheFlyAnalysis/statistics.h>
 #include <CCA/Components/OnTheFlyAnalysis/vorticity.h>
 #include <Core/Exceptions/ProblemSetupException.h>
 #include <Core/Grid/SimulationState.h>
@@ -89,6 +90,8 @@ AnalysisModuleFactory::create(const ProblemSpecP& prob_spec,
         modules.push_back ( scinew MinMax(              module_ps, sharedState, dataArchiver) );
       } else if ( module == "radiometer" ) {
         modules.push_back ( scinew OnTheFly_radiometer( module_ps, sharedState, dataArchiver) );
+      } else if ( module == "statistics" ) {
+        modules.push_back ( scinew statistics(          module_ps, sharedState, dataArchiver) );
       }else {
         throw ProblemSetupException("\nERROR:<DataAnalysis> Unknown analysis module.  "+module,__FILE__, __LINE__);
       }
