@@ -266,19 +266,19 @@ DepositionVelocity::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info,
           total_area_face = 0;
           d_velocity = 0;
           for ( int pp = 0; pp < total_flux_ind; pp++ ){
-            if (pp==0) {
+            if (container_flux_ind[pp]==0) {
               flux = std::abs(dep_x[c+_fd[container_flux_ind[pp]]]);
               rhoi = rhop[c+_d[container_flux_ind[pp]]];
-            } else if (pp==1) {
+            } else if (container_flux_ind[pp]==1) {
               flux = std::abs(dep_x[c+_fd[container_flux_ind[pp]]]);
               rhoi = rhop[c+_d[container_flux_ind[pp]]];
-            } else if (pp==2) {
+            } else if (container_flux_ind[pp]==2) {
               flux = std::abs(dep_y[c+_fd[container_flux_ind[pp]]]);
               rhoi = rhop[c+_d[container_flux_ind[pp]]];
-            } else if (pp==3) {
+            } else if (container_flux_ind[pp]==3) {
               flux = std::abs(dep_y[c+_fd[container_flux_ind[pp]]]);
               rhoi = rhop[c+_d[container_flux_ind[pp]]];
-            } else if (pp==4) {
+            } else if (container_flux_ind[pp]==4) {
               flux = std::abs(dep_z[c+_fd[container_flux_ind[pp]]]);
               rhoi = rhop[c+_d[container_flux_ind[pp]]];
             } else {
@@ -295,13 +295,14 @@ DepositionVelocity::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info,
           // update the running-sum for time-averaging the deposit velocity for particle i.
           d_velocity_rs[c]=d_velocity_rs[c] + d_velocity*delta_t; // during timestep init d_velocity_rs[c] is set to the old values..
           // update the starting point for running-sum for particle i.
+          if (current_time - _t_start < - 0.1)
+            d_velocity_rs_start[c]=d_velocity_rs[c]; // update d_velocity_rs_start until time is _t_start - 0.1. 0.1 is buffer to make sure we have enough averaging to not divide by zero.
           // compute the time-averaged deposit velocity for each environment
-          if (current_time - _t_start > 0.01 ){ // Added 0.01 here to avoid divide by zero in (current_time - _t_start)
+          if (current_time - _t_start > 0.0 ){ 
             // during timestep init d_velocity_rs_start[c] is set to the old values..
             vel_i_ave = (d_velocity_rs[c] - d_velocity_rs_start[c] )/(current_time - _t_start);
           } else {
-            d_velocity_rs_start[c]=d_velocity_rs[c]; // update d_velocity_rs_start until _t_start is reached.
-            vel_i_ave = 0.0;  
+            vel_i_ave = d_velocity_rs[c]/current_time;  
           }
           // get the total time-averaged deposit velocity to the cell. 
           deposit_velocity[c] = deposit_velocity[c] + vel_i_ave; // add the contribution per particle.

@@ -167,6 +167,11 @@ main( int argc, char** argv )
           usage("-part_strain [avg / true / all / lagrangian / eulerian]", 
                 argv[0]);
       }
+    } else if (s == "-timestep") {
+      time_step_lower = strtoul(argv[++i],(char**)NULL,10);
+      time_step_upper = time_step_lower;
+      tslow_set = true;
+      tsup_set = true;
     } else if (s == "-timesteplow") {
       time_step_lower = strtoul(argv[++i],(char**)NULL,10);
       tslow_set = true;
@@ -266,6 +271,7 @@ void usage(const std::string& badarg, const std::string& progname)
   cerr << "  -partid <particleid>\n";
   cerr << "  -part_stress [avg or equiv or all]\n";
   cerr << "  -part_strain [avg/true/equiv/all/lagrangian/eulerian]\n", 
+  cerr << "  -timestep [int] (only outputs data for timestep int)\n";
   cerr << "  -timesteplow [int] (only outputs timestep from int)\n";
   cerr << "  -timestephigh [int] (only outputs timesteps upto int)\n";
   cerr << "  -include_position_output (add particle position before other data output)\n";

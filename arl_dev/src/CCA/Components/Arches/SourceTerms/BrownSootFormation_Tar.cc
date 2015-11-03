@@ -159,9 +159,9 @@ BrownSootFormation_Tar::computeSource( const ProcessorGroup* pc,
 		 delta_t,
                  rate[c]
                 );
-       if (c==IntVector(75,75,75)){
-         cout << "Tar: " << temperature[c] << " " << rhoYO2 << " " << rhoTar << " " << " " << rate[c] << endl; 
-       }
+       //if (c==IntVector(75,75,75)){
+       //  cout << "Tar: " << temperature[c] << " " << rhoYO2 << " " << rhoTar << " " << " " << rate[c] << endl; 
+       //}
 
     }
   }

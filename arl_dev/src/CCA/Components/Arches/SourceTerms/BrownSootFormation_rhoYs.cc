@@ -178,9 +178,9 @@ BrownSootFormation_rhoYs::computeSource( const ProcessorGroup* pc,
 		 delta_t,
                  rate[c]
                 );
-       if (c==IntVector(75,75,75)){
-         cout << "Ys: " << temperature[c] << " " << rho[c] <<" " << XO2 << " " << rhoTar << " " << rhoYsoot << " " << nd << " " << rate[c] << endl; 
-       }
+       //if (c==IntVector(75,75,75)){
+       //  cout << "Ys: " << temperature[c] << " " << rho[c] <<" " << XO2 << " " << rhoTar << " " << rhoYsoot << " " << nd << " " << rate[c] << endl; 
+       //}
 
     }
   }

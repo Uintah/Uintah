@@ -223,36 +223,6 @@ Arches::problemSetup(const ProblemSpecP& params,
     throw InternalError("ARCHES:couldn't get hypreSolver port", __FILE__, __LINE__);
   }
 
-  //__________________
-  //This is not the proper way to get our DA.  Scheduler should
-  //pass us a DW pointer on every function call.  I don't think
-  //AnalysisModule should retain the pointer in a field, IMHO.
-  if(!d_with_mpmarches) {
-    Output* dataArchiver = dynamic_cast<Output*>(getPort("output"));
-    if(!dataArchiver) {
-      throw InternalError("ARCHES:couldn't get output port", __FILE__, __LINE__);
-    }
-
-    d_analysisModules = AnalysisModuleFactory::create(params, sharedState, dataArchiver);
-
-    if(d_analysisModules.size() != 0) {
-      vector<AnalysisModule*>::iterator iter;
-      for( iter  = d_analysisModules.begin();
-           iter != d_analysisModules.end(); iter++) {
-        AnalysisModule* am = *iter;
-        am->problemSetup(params, materials_ps, grid, sharedState);
-      }
-    }
-  }
-
-  if(d_doAMR && !sharedState->isLockstepAMR()) {
-    ostringstream msg;
-    msg << "\n ERROR: You must add \n"
-        << " <useLockStep> true </useLockStep> \n"
-        << " inside of the <AMR> section for multi-level ARCHES & MPMARCHES. \n";
-    throw ProblemSetupException(msg.str(),__FILE__, __LINE__);
-  }
-
   //--- Create the solver/algorithm ---
   NonlinearSolver::NLSolverBuilder* builder;
   if ( db->findBlock("ExplicitSolver") ) {
@@ -275,7 +245,38 @@ Arches::problemSetup(const ProblemSpecP& params,
   delete builder;
 
   d_nlSolver->problemSetup( db, d_sharedState, grid );
+  
+  
+  //__________________________________
+  // On the Fly Analysis. The belongs at bottom
+  // of task after all of the problemSetups have been called.
+  if(!d_with_mpmarches) {
+    Output* dataArchiver = dynamic_cast<Output*>(getPort("output"));
+    if(!dataArchiver) {
+      throw InternalError("ARCHES:couldn't get output port", __FILE__, __LINE__);
+    }
 
+    d_analysisModules = AnalysisModuleFactory::create(params, sharedState, dataArchiver);
+
+    if(d_analysisModules.size() != 0) {
+      vector<AnalysisModule*>::iterator iter;
+      for( iter  = d_analysisModules.begin();
+           iter != d_analysisModules.end(); iter++) {
+        AnalysisModule* am = *iter;
+        am->problemSetup(params, materials_ps, grid, sharedState);
+      }
+    }
+  }
+  //__________________________________
+  // Bulletproofing needed for multi-level RMCRT 
+  if(d_doAMR && !sharedState->isLockstepAMR()) {
+    ostringstream msg;
+    msg << "\n ERROR: You must add \n"
+        << " <useLockStep> true </useLockStep> \n"
+        << " inside of the <AMR> section for multi-level ARCHES & MPMARCHES. \n";
+    throw ProblemSetupException(msg.str(),__FILE__, __LINE__);
+  }
+  
 }
 
 //--------------------------------------------------------------------------------------------------
