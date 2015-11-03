@@ -46,11 +46,11 @@
 #include <sci_defs/config_defs.h>
 #include <sci_algorithm.h>
 
-#include <cstring>
 #include <fstream>
 #include <iostream>
 #include <map>
 #include <set>
+#include <cstring>
 #include <sstream>
 #include <unistd.h>
 
@@ -67,12 +67,7 @@ static DebugStream compdbg(     "FindComp",          false);
 //______________________________________________________________________
 //
 TaskGraph::TaskGraph( SchedulerCommon*  sc, const ProcessorGroup*   pg, Scheduler::tgType type )
-    : sc(sc),
-      d_myworld(pg),
-      type_(type),
-      dts_(NULL),
-      currentIteration(0),
-      d_numtaskphases(0)
+    : sc(sc), d_myworld(pg), type_(type), dts_(0), currentIteration(0), d_numtaskphases(0)
 {
   lb = dynamic_cast<LoadBalancer*>(sc->getPort("load balancer"));
 }
@@ -257,7 +252,7 @@ TaskGraph::setupTaskConnections( GraphSortInfoMap& sortinfo )
               newtask->modifies(comp->var, level, ms->getSubset(m), Task::OutOfDomain);
             }
           }
-          reductionTasks[key] = newtask;
+          reductionTasks[key]=newtask;
           it = reductionTasks.find(key);
         }
       }
@@ -345,12 +340,12 @@ TaskGraph::setupTaskConnections( GraphSortInfoMap& sortinfo )
 //______________________________________________________________________
 //
 void
-TaskGraph::addDependencyEdges( Task              *  task,
-                               GraphSortInfoMap  &  sortinfo,
-                               Task::Dependency  *  req,
-                               CompMap           &  comps,
-                               ReductionTasksMap & reductionTasks,
-                               bool                modifies )
+TaskGraph::addDependencyEdges( Task*              task,
+                               GraphSortInfoMap&  sortinfo,
+                               Task::Dependency*  req,
+                               CompMap&           comps,
+                               ReductionTasksMap& reductionTasks,
+                               bool               modifies )
 {
   for(; req != 0; req=req->next){
     if (detaileddbg.active()) {
@@ -580,6 +575,7 @@ TaskGraph::processDependencies( Task*              task,
           catch (InternalError& e) {
             cout << d_myworld->myrank() << "   Task " << task->getName() << " requires " << req->var->getName() << " from "
                  << vtask->getName() << "\n";
+
             throw;
           }
         }
@@ -600,7 +596,6 @@ TaskGraph::nullSort( vector<Task*>& tasks )
   // of calling the tasks when all dependencies are satisfied.
   // Sorting the tasks causes problem because now tasks (actually task
   // groups) run in different orders on different MPI processes.
-
   int n = 0;
   for (iter = d_tasks.begin(); iter != d_tasks.end(); iter++) {
     // For all reduction tasks filtering out the one that is not in ReductionTasksMap 
@@ -911,23 +906,23 @@ CompTable::remembercomp( Data* newData, const ProcessorGroup* pg )
   }
 
   // can't have two computes for the same variable (need modifies)
-//  if (newData->comp->deptype != Task::Modifies && !newData->comp->var->typeDescription()->isReductionVariable()) {
-//    if (data.lookup(newData)) {
-//      cout << "Multiple compute found:\n";
-//      cout << "  matl: " << newData->matl << "\n";
-//      if (newData->patch) {
-//        cout << "  patch: " << *newData->patch << "\n";
-//      }
-//      cout << "  " << *newData->comp << "\n";
-//      cout << "  " << *newData->task << "\n\n";
-//      cout << "  It was originally computed by the following task(s):\n";
-//      for (Data* old = data.lookup(newData); old != 0; old = data.nextMatch(newData, old)) {
-//        cout << "  " << *old->task << endl;
-//        //old->comp->task->displayAll(cout);
-//      }
-//      SCI_THROW(InternalError("Multiple computes for variable: "+newData->comp->var->getName(), __FILE__, __LINE__));
-//    }
-//  }
+  if (newData->comp->deptype != Task::Modifies && !newData->comp->var->typeDescription()->isReductionVariable()) {
+    if (data.lookup(newData)) {
+      cout << "Multiple compute found:\n";
+      cout << "  matl: " << newData->matl << "\n";
+      if (newData->patch) {
+        cout << "  patch: " << *newData->patch << "\n";
+      }
+      cout << "  " << *newData->comp << "\n";
+      cout << "  " << *newData->task << "\n\n";
+      cout << "  It was originally computed by the following task(s):\n";
+      for (Data* old = data.lookup(newData); old != 0; old = data.nextMatch(newData, old)) {
+        cout << "  " << *old->task << endl;
+        //old->comp->task->displayAll(cout);
+      }
+      SCI_THROW(InternalError("Multiple computes for variable: "+newData->comp->var->getName(), __FILE__, __LINE__));
+    }
+  }
   data.insert(newData);
 }
 
@@ -1631,7 +1626,8 @@ TaskGraph::findVariableLocation(       Task::Dependency* req,
   // restart from checkpoint.
   int proc;
   if( ( req->task->mapDataWarehouse(Task::ParentNewDW) != -1 && req->whichdw != Task::ParentOldDW ) ||
-         iteration > 0 || ( req->lookInOldTG && type_ == Scheduler::IntermediateTaskGraph ) ) {
+      iteration > 0 ||
+      ( req->lookInOldTG && type_ == Scheduler::IntermediateTaskGraph ) ) {
     // Provide some accommodation for Dynamic load balancers and sub schedulers.  We need to
     // treat the requirement like a "old" dw req but it needs to be found on the current processor.
     // Same goes for successive executions of the same TG.

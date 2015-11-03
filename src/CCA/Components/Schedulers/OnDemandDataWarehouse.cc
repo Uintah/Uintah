@@ -164,37 +164,34 @@ void
 OnDemandDataWarehouse::clear()
 {
   d_plock.writeLock();
-  {
-    for (psetDBType::const_iterator iter = d_psetDB.begin(); iter != d_psetDB.end(); iter++) {
-      if (iter->second->removeReference()) {
-        delete iter->second;
-      }
-    }
-
-    for (psetDBType::const_iterator iter = d_delsetDB.begin(); iter != d_delsetDB.end(); iter++) {
-      if (iter->second->removeReference()) {
-        delete iter->second;
-      }
-    }
-
-    for (psetAddDBType::const_iterator iter = d_addsetDB.begin(); iter != d_addsetDB.end(); iter++) {
-      std::map<const VarLabel*, ParticleVariableBase*>::const_iterator pvar_itr;
-      for (pvar_itr = iter->second->begin(); pvar_itr != iter->second->end(); pvar_itr++) {
-        delete pvar_itr->second;
-      }
+  for( psetDBType::const_iterator iter = d_psetDB.begin(); iter != d_psetDB.end(); iter++ ) {
+    if( iter->second->removeReference() ) {
       delete iter->second;
     }
+  }
+
+  for( psetDBType::const_iterator iter = d_delsetDB.begin(); iter != d_delsetDB.end(); iter++ ) {
+    if( iter->second->removeReference() ) {
+      delete iter->second;
+    }
+  }
+
+  for( psetAddDBType::const_iterator iter = d_addsetDB.begin(); iter != d_addsetDB.end(); iter++ ) {
+    std::map<const VarLabel*, ParticleVariableBase*>::const_iterator pvar_itr;
+    for( pvar_itr = iter->second->begin(); pvar_itr != iter->second->end(); pvar_itr++ ) {
+      delete pvar_itr->second;
+    }
+    delete iter->second;
   }
   d_plock.writeUnlock();
 
   d_lock.writeLock();
-  {
-    for (dataLocationDBtype::const_iterator iter = d_dataLocation.begin(); iter != d_dataLocation.end(); iter++) {
-      for (size_t i = 0; i < iter->second->size(); i++) {
-        delete &(iter->second[i]);
-      }
-      delete iter->second;
+  for( dataLocationDBtype::const_iterator iter = d_dataLocation.begin();
+      iter != d_dataLocation.end(); iter++ ) {
+    for( size_t i = 0; i < iter->second->size(); i++ ) {
+      delete &(iter->second[i]);
     }
+    delete iter->second;
   }
   d_lock.writeUnlock();
 
@@ -940,7 +937,7 @@ OnDemandDataWarehouse::createParticleSubset(       particleIndex numParticles,
   }
 
   if (dbg.active()) {
-    dbg << "Rank-" << d_myworld->myrank() << " DW ID " << getID() << " createParticleSubset: MI: " << matlIndex << " P: " << patch->getID()
+    dbg << d_myworld->myrank() << " DW ID " << getID() << " createParticleSubset: MI: " << matlIndex << " P: " << patch->getID()
         << " (" << low << ", " << high << ") size: " << numParticles << "\n";
   }
 
@@ -971,7 +968,7 @@ OnDemandDataWarehouse::saveParticleSubset(       ParticleSubset* psubset,
   }
 
   if( dbg.active() ) {
-    dbg << "Rank-" << d_myworld->myrank() << " DW ID " << getID() << " saveParticleSubset: MI: " << matlIndex
+    dbg << d_myworld->myrank() << " DW ID " << getID() << " saveParticleSubset: MI: " << matlIndex
         << " P: " << patch->getID() << " (" << low << ", " << high << ") size: "
         << psubset->numParticles() << "\n";
   }
@@ -988,9 +985,9 @@ OnDemandDataWarehouse::printParticleSubsets()
   std::cout << "-- Particle Subsets: \n\n";
 
   psetDBType::iterator iter;
-  std::cout << "Rank-" << d_myworld->myrank() << " Available psets on DW " << d_generation << ":\n";
+  std::cout << d_myworld->myrank() << " Available psets on DW " << d_generation << ":\n";
   for (iter = d_psetDB.begin(); iter != d_psetDB.end(); iter++) {
-    std::cout << "Rank-" << d_myworld->myrank() << " " << *(iter->second) << std::endl;
+    std::cout << d_myworld->myrank() << " " <<*(iter->second) << std::endl;
   }
   std::cout << "----------------------------------------------\n";
 }
@@ -1012,10 +1009,9 @@ void OnDemandDataWarehouse::insertPSetRecord(       psetDBType&     subsetDB,
   ParticleSubset *subset=queryPSetDB(subsetDB,patch,matlIndex,low,high,0,true);
   if(subset!=0) {
     if (d_myworld->myrank() == 0) {
-      std::cout << "Rank-" << d_myworld->myrank() << "  Duplicate PSet: patch " << patch->getID() << ", matl " << matlIndex << " " << low << " " << high << std::endl;
+      std::cout << d_myworld->myrank() << "  Duplicate: " << patch->getID() << " matl " << matlIndex << " " << low << " " << high << std::endl;
       printParticleSubsets();
     }
-    return;
     SCI_THROW(InternalError("tried to create a particle subset that already exists", __FILE__, __LINE__));
   }
 #endif
@@ -1306,14 +1302,11 @@ OnDemandDataWarehouse::getNewParticleState( int matlIndex, const Patch* patch )
   const Patch* realPatch = (patch != 0) ? patch->getRealPatch() : 0;
   psetAddDBType::key_type key( matlIndex, realPatch );
   psetAddDBType::iterator iter = d_addsetDB.find( key );
-
   if( iter == d_addsetDB.end() ) {
     d_pslock.readUnlock();
     return 0;
   }
-
   d_pslock.readUnlock();
-
   return iter->second;
 }
 
@@ -2902,12 +2895,12 @@ OnDemandDataWarehouse::transferFrom(       DataWarehouse*  from,
           }
 
           ParticleSubset* subset;
-          if (!haveParticleSubset(matl, copyPatch)) {
-            ParticleSubset* oldsubset = fromDW->getParticleSubset(matl, patch);
-            subset = createParticleSubset(oldsubset->numParticles(), matl, copyPatch);
+          if( !haveParticleSubset( matl, copyPatch ) ) {
+            ParticleSubset* oldsubset = fromDW->getParticleSubset( matl, patch );
+            subset = createParticleSubset( oldsubset->numParticles(), matl, copyPatch );
           }
           else {
-            subset = getParticleSubset(matl, copyPatch);
+            subset = getParticleSubset( matl, copyPatch );
           }
 
           ParticleVariableBase* v = dynamic_cast<ParticleVariableBase*>( fromDW->d_varDB.get( var, matl, patch ) );
@@ -3522,10 +3515,9 @@ OnDemandDataWarehouse::getVarLabelMatlLevelTriples( std::vector<VarLabelMatl<Lev
 void
 OnDemandDataWarehouse::print()
 {
-  std::cout << "----------------------------\n"
-            << "Rank-" << d_myworld->myrank() << " VARIABLES in DW: " << getID() << "\n"
-            << "Rank-" << d_myworld->myrank() << " Variable Patch Material\n"
-            << "----------------------------" << std::endl;
+  std::cout << d_myworld->myrank() << " VARIABLES in DW " << getID()
+       << "\n" << d_myworld->myrank() << " Variable Patch Material\n"
+       << "  -----------------------\n";
 
   d_varDB.print(std::cout, d_myworld->myrank());
   d_levelDB.print(std::cout, d_myworld->myrank());

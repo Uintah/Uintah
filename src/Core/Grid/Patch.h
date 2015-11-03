@@ -1314,11 +1314,6 @@ namespace Uintah {
       return d_grid->getLevel(d_patchState.levelIndex).get_rep();
     }
     
-    inline Level* getLevel(bool stat)
-    {
-      return (Level*)d_grid->getLevel(d_patchState.levelIndex).get_rep();
-    }
-
     inline const LevelP& getLevelP() const
     {
       return d_grid->getLevel(d_patchState.levelIndex);

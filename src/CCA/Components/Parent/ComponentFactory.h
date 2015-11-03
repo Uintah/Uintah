@@ -27,7 +27,6 @@
 
 #include <Core/ProblemSpec/ProblemSpec.h>
 #include <Core/ProblemSpec/ProblemSpecP.h>
-
 #include <string>
 
 
@@ -39,10 +38,10 @@ namespace Uintah {
   class ComponentFactory  {
   
   public:
-
     // this function has a switch for all known components
-    static UintahParallelComponent*
-    create(ProblemSpecP& ps, const ProcessorGroup* world, bool doAMR, std::string uda);
+    
+    static UintahParallelComponent* create(ProblemSpecP& ps, const ProcessorGroup* world, 
+                                           bool doAMR, std::string uda);
 
 
   };
