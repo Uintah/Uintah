@@ -27,7 +27,6 @@
 
 #include <CCA/Ports/LoadBalancer.h>
 
-#include <Core/Containers/OffsetArray1.h>
 #include <Core/Geometry/BBox.h>
 #include <Core/Geometry/IntVector.h>
 #include <Core/Geometry/Point.h>
@@ -37,7 +36,6 @@
 #include <Core/ProblemSpec/ProblemSpec.h>
 #include <Core/Util/Handle.h>
 #include <Core/Util/RefCounted.h>
-#include <Core/Util/FancyAssert.h>
 
 #include <list>
 #include <string>
@@ -76,190 +74,7 @@ WARNING
   
 ****************************************/
 
-
-  class Grid : public RefCounted
-  {
-    private:
-      class stretchRegion
-      {
-        public:
-          stretchRegion(std::string& _shape, double& _to, double& _from, double& _toSpacing, double& _fromSpacing)
-                       :shape(_shape), to(_to), from(_from), toSpacing(_toSpacing), fromSpacing(_fromSpacing)
-          { };
-         ~stretchRegion()
-          { };
-          double getFrom() const
-          {
-            return from;
-          }
-          void setFrom(const double& value)
-          {
-            from = value;
-          }
-          double getTo() const
-          {
-            return to;
-          }
-          void setTo(const double& value)
-          {
-            to = value;
-          }
-          double getToSpacing() const
-          {
-            return toSpacing;
-          }
-          void setToSpacing(const double& value)
-          {
-            toSpacing = value;
-          }
-          double getFromSpacing() const
-          {
-            return fromSpacing;
-          }
-          void setFromSpacing(const double& value)
-          {
-            fromSpacing = value;
-          }
-          std::string getShape() const
-          {
-            return shape;
-          }
-          void setShape(const std::string& value)
-          {
-            shape = value;
-          }
-          int  countCells() const;
-          void fillCells(int &start, int lowCells, int highCells, SCIRun::OffsetArray1<double>& faces) const;
-        private:
-          std::string   shape;
-          double        to;
-          double        from;
-          double        toSpacing;
-          double        fromSpacing;
-      };
-
-      class stretchDescription
-      {
-        public:
-          stretchDescription()
-          {} ;
-         ~stretchDescription()
-          {};
-          void addRegion(const int axis, stretchRegion region)
-          {
-            axialStretches[axis].push_back(region);
-          }
-
-          SCIRun::Vector checkStretches(const SCIRun::BBox &extents, const int& procRank);
-          int getRegionsPerAxis(const int& axis) const
-          {
-            return static_cast<int> (axialStretches[axis].size());
-          }
-
-          stretchRegion* getRegion(const int& axis, const int& region)
-          {
-            int numRegions = getRegionsPerAxis(axis);
-            ASSERTRANGE( region, 0, numRegions);
-            return (&axialStretches[axis][region]);
-          }
-
-          int stretchCount() const
-          {
-            int count = 0;
-            for (int axis = 0; axis < 3; ++axis)
-            {
-              if (axialStretches[axis].size())
-              {
-                ++count;
-              }
-            }
-            return count;
-          }
-
-          bool checkForPrevious(const int& axis) const
-          {
-            if (axialStretches[axis].size() !=0)
-            {
-              return true;
-            }
-            return false;
-          }
-        private:
-          std::vector<stretchRegion>  axialStretches[3];
-      };
-
-      class StretchSpec {
-        public:
-          StretchSpec() {
-            shape = "";
-            from = 0.0;
-            to = 0.0;
-            fromSpacing = 0.0;
-            toSpacing = 0.0;
-          }
-         ~StretchSpec() {};
-          int           countCells() const;
-          void          fillCells(int& start, int lowCells, int highCells, SCIRun::OffsetArray1<double>& faces) const;
-          std::string   shape;
-          double        from;
-          double        to;
-          double        fromSpacing;
-          double        toSpacing;
-
-      };
-
-      class LevelBox {
-        public:
-          LevelBox(SCIRun::BBox         _extents,
-                   SCIRun::IntVector    _extraCells,
-                   SCIRun::Vector       _boxSpacing,
-                   stretchDescription   _stretches)
-                  :boxExtents(_extents), extraCells(_extraCells), boxSpacing(_boxSpacing), stretches(_stretches)
-        {
-        };
-         ~LevelBox() {};
-          SCIRun::BBox getBoxExtents() const
-          {
-            return boxExtents;
-          }
-          SCIRun::IntVector getExtraCells() const
-          {
-            return extraCells;
-          }
-          SCIRun::Vector    getSpacing() const
-          {
-            return boxSpacing;
-          }
-          SCIRun::Vector    getAnchor() const
-          {
-            return boxExtents.min().asVector();
-          }
-          SCIRun::Vector    getHighPoint() const
-          {
-            return boxExtents.max().asVector();
-          }
-          bool              hasSpacing() const
-          {
-            return (boxSpacing[0] == -1.0 ? false : true); // Flag by first value being negative
-          }
-
-          int               stretchCount() const
-          {
-            return stretches.stretchCount();
-          }
-
-          stretchDescription* getStretchDescription()
-          {
-            return &stretches;
-          }
-
-        private:
-          SCIRun::BBox          boxExtents;
-          SCIRun::IntVector     extraCells;
-          SCIRun::Vector        boxSpacing;
-          stretchDescription    stretches;
-      };
-
+  class Grid : public RefCounted {
   public:
     Grid();
     virtual ~Grid();
@@ -275,7 +90,7 @@ WARNING
     //////////
     // Adds a level to the grid.
     Level* addLevel( const SCIRun::Point  & anchor,
-                     const SCIRun::Vector & dcell, int id = -1, bool isAMR = false, bool isMultiscale = false);
+                     const SCIRun::Vector & dcell, int id = -1 );
 
     // Reads in XML data line by line to create a level...
     void readLevelsFromFile( FILE * fp, std::vector< std::vector<int> > & procMap );
@@ -302,7 +117,7 @@ WARNING
     
     //////////
     // Problem setup functions called from simulation controller
-    void problemSetup(const ProblemSpecP& params, const ProcessorGroup *pg, bool do_AMR, bool do_MultiScale = false);
+    void problemSetup(const ProblemSpecP& params, const ProcessorGroup *pg, bool do_amr); 
 
     // For comparing grids - level and patch structure must be equal
     bool operator==(const Grid& othergrid) const;
@@ -321,10 +136,6 @@ WARNING
     enum Axis {
       XAxis, YAxis, ZAxis
     };
-    void      newProblemSetup(const ProblemSpecP   &params,
-                              const ProcessorGroup *pg,
-                                    bool            do_AMR,
-                                    bool            do_MultiScale);
 
 
   private:
@@ -346,37 +157,7 @@ WARNING
     bool      parseLevelFromFile( FILE * fp, std::vector<int> & procMapForLevel );                // returns true if "</Level>" found.
     bool      parsePatchFromFile( FILE * fp, LevelP level, std::vector<int> & procMapForLevel );  // returns true if "</Patch>" found.
 
-    SCIRun::OffsetArray1<double> assignStretchedFaces(      stretchDescription* stretches,
-                                                      const LevelBox*           levelInfo,
-                                                      const SCIRun::IntVector&  extraCells,
-                                                      const int&                axis);
-    stretchDescription      parseStretches(const ProblemSpecP& stretch_ps);
-//    int       checkStretches(       newStretchSpec              stretches,
-//                                    SCIRun::Vector&             spacing,
-//                             const  Uintah::Point&              levelAnchor,
-//                             const  Uintah::Point&              levelHighPoint,
-//                                    int                         procRank);
-
-
-    void parsePatches(const ProblemSpecP&      level_ps,
-                            LevelP&            level,
-                      const SCIRun::IntVector& levelAnchorCell,
-                      const SCIRun::IntVector& levelHighPointCell,
-                      const SCIRun::IntVector& levelExtraCells,
-                      const int                numProcs,
-                      const int                myRank);
-
-    LevelBox  parseBox(      ProblemSpecP       box_ps,
-                       const bool               haveLevelSpacing,
-                       const bool               havePatchSpacing,
-                       const SCIRun::Vector    &currentSpacing);
-
-    LevelBox  parseLevel(      ProblemSpecP    &level_ps,
-                         const int              levelIndex,
-                         const int              myProcRank);
-
-
-    // The current (final) values of a,b,c, and norm for the partition function.
+    // The current (final) values of a,b,c, and norm for the partitian function.
     // Used to hold data between recursive calls.
     int    af_;
     int    bf_;
@@ -397,9 +178,6 @@ WARNING
     // static const double PATCH_TOLERANCE_ = 3;  
     
     IntVector d_extraCells;
-
-    // Holds the level subsets for portions of the grid.
-    LevelSet  d_levelSet;
 
   };
 
