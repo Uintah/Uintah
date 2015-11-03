@@ -1016,7 +1016,6 @@ WallModelDriver::CoalRegionHT::computeHT( const Patch* patch, HTVariables& vars,
                 TW=wi.T_slag;
                 net_q = rad_q - _sigma_constant * pow( TW, 4 );
                 vars.deposit_thickness[c]=max(0.0 , wi.k_deposit*((TW-wi.T_inner)/net_q - R_wall - R_dp));
-                std::cout << "c: " << c << "net_q: " << net_q << " TW: " << TW << " Tin: " << wi.T_inner << " d: " << vars.deposit_thickness[c] << std::endl;
               }
               T[c] = ( 1 - wi.relax ) * vars.T_old[c] + wi.relax * TW;
 
