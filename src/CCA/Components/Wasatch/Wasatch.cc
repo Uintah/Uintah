@@ -581,9 +581,10 @@ namespace Wasatch{
     {
       try{
           // note - parse_momentum_equations returns a vector of equation adaptors
-          const EquationAdaptors adaptors = parse_momentum_equations( momEqnParams,
+          const EquationAdaptors adaptors = parse_momentum_equations( wasatchSpec_,
                                                                       turbParams,
                                                                       useAdaptiveDt,
+                                                                      doParticles_,
                                                                       isConstDensity,
                                                                       densityTag,
                                                                       graphCategories_,
@@ -750,7 +751,7 @@ namespace Wasatch{
     // note - parse_particle_transport_equations returns a vector of equation adaptors
     if( particleEqnSpec ){
       try{
-        const EquationAdaptors adaptors = parse_particle_transport_equations( particleEqnSpec, wasatchSpec_, graphCategories_);
+        const EquationAdaptors adaptors = parse_particle_transport_equations( particleEqnSpec, wasatchSpec_, useAdaptiveDt, graphCategories_);
         adaptors_.insert( adaptors_.end(), adaptors.begin(), adaptors.end() );
       }
       catch( std::runtime_error& err ){
