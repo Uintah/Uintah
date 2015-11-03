@@ -22,9 +22,10 @@ class StableTimestep
   DECLARE_FIELD(XVolField, u_)
   DECLARE_FIELD(YVolField, v_)
   DECLARE_FIELD(ZVolField, w_)
+  DECLARE_FIELDS(ParticleField, pu_, pv_, pw_)
 
   double invDx_, invDy_, invDz_; // 1/dx, 1/dy, 1/dz
-  const bool doX_, doY_, doZ_, isViscous_;
+  const bool doX_, doY_, doZ_, isViscous_, doParticles_;
   const bool is3dconvdiff_;
   
   
@@ -47,7 +48,10 @@ class StableTimestep
               const Expr::Tag& viscTag,
               const Expr::Tag& uTag,
               const Expr::Tag& vTag,
-              const Expr::Tag& wTag );
+              const Expr::Tag& wTag,
+              const Expr::Tag& puTag,
+              const Expr::Tag& pvTag,
+              const Expr::Tag& pwTag);
 public:
   class Builder : public Expr::ExpressionBuilder
   {
@@ -61,12 +65,15 @@ public:
              const Expr::Tag& viscTag,
              const Expr::Tag& uTag,
              const Expr::Tag& vTag,
-             const Expr::Tag& wTag );
+             const Expr::Tag& wTag,
+             const Expr::Tag& puTag,
+             const Expr::Tag& pvTag,
+             const Expr::Tag& pwTag);
 
     Expr::ExpressionBase* build() const;
 
   private:
-    const Expr::Tag rhoTag_, viscTag_, uTag_, vTag_, wTag_;
+    const Expr::Tag rhoTag_, viscTag_, uTag_, vTag_, wTag_, puTag_, pvTag_, pwTag_;
   };
 
   ~StableTimestep();

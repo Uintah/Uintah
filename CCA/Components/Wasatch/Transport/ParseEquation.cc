@@ -511,9 +511,10 @@ namespace Wasatch{
   //==================================================================
   
   std::vector<EqnTimestepAdaptorBase*>
-  parse_momentum_equations( Uintah::ProblemSpecP momentumSpec,
+  parse_momentum_equations( Uintah::ProblemSpecP wasatchSpec,
                             const TurbulenceParameters turbParams,
                             const bool useAdaptiveDt,
+                            const bool doParticles,
                             const bool isConstDensity,
                             const Expr::Tag densityTag,
                             GraphCategories& gc,
@@ -522,6 +523,7 @@ namespace Wasatch{
     typedef std::vector<EqnTimestepAdaptorBase*> EquationAdaptors;
     EquationAdaptors adaptors;
 
+    Uintah::ProblemSpecP momentumSpec = wasatchSpec->findBlock("MomentumEquations");
     std::string xvelname, yvelname, zvelname;
     const Uintah::ProblemSpecP doxvel = momentumSpec->get( "X-Velocity", xvelname );
     const Uintah::ProblemSpecP doyvel = momentumSpec->get( "Y-Velocity", yvelname );
@@ -628,10 +630,23 @@ namespace Wasatch{
       const Expr::Tag yVelTag = doyvel ? Expr::Tag(yvelname, Expr::STATE_NONE) : Expr::Tag();
       const Expr::Tag zVelTag = dozvel ? Expr::Tag(zvelname, Expr::STATE_NONE) : Expr::Tag();
       const Expr::Tag viscTag = (momentumSpec->findBlock("Viscosity")) ? parse_nametag( momentumSpec->findBlock("Viscosity")->findBlock("NameTag") ) : Expr::Tag();
+
+      Expr::Tag puTag, pvTag, pwTag;
+      if (doParticles) {
+        Uintah::ProblemSpecP particleSpec = wasatchSpec->findBlock("ParticleTransportEquations");
+        Uintah::ProblemSpecP particleMomSpec = particleSpec->findBlock("ParticleMomentum");
+        std::string puname, pvname,pwname;
+        particleMomSpec->getAttribute("x",puname);
+        particleMomSpec->getAttribute("y",pvname);
+        particleMomSpec->getAttribute("z",pwname);
+        puTag = Expr::Tag(puname,Expr::STATE_DYNAMIC);
+        pvTag = Expr::Tag(pvname,Expr::STATE_DYNAMIC);
+        pwTag = Expr::Tag(pwname,Expr::STATE_DYNAMIC);
+      }
       const Expr::ExpressionID stabDtID = solnGraphHelper->exprFactory->register_expression(scinew StableTimestep::Builder( TagNames::self().stableTimestep,
                                                                                                                            densityTag,
                                                                                                                            viscTag,
-                                                                                                                           xVelTag,yVelTag,zVelTag ), true);
+                                                                                                                           xVelTag,yVelTag,zVelTag, puTag, pvTag, pwTag ), true);
       // force this onto the graph.
       solnGraphHelper->rootIDs.insert( stabDtID );
     }
@@ -689,6 +704,7 @@ namespace Wasatch{
   std::vector<EqnTimestepAdaptorBase*>
   parse_particle_transport_equations( Uintah::ProblemSpecP particleSpec,
                                       Uintah::ProblemSpecP wasatchSpec,
+                                      const bool useAdaptiveDt,
                                       GraphCategories& gc)
   {
     typedef std::vector<EqnTimestepAdaptorBase*> EquationAdaptors;
@@ -869,6 +885,41 @@ namespace Wasatch{
     }
     
     proc0cout << "------------------------------------------------" << std::endl;
+
+    //
+    // ADD ADAPTIVE TIMESTEPPING in case it was not parsed in the momentum equations
+    if( useAdaptiveDt ){
+      // if no stabletimestep expression has been registered, then register one. otherwise return.
+      if (!factory.have_entry(TagNames::self().stableTimestep)) {
+        
+        std::string gasViscosityName, gasDensityName;
+        Uintah::ProblemSpecP gasSpec = particleSpec->findBlock("ParticleMomentum")->findBlock("GasProperties");
+        gasSpec->findBlock("GasViscosity")->getAttribute( "name", gasViscosityName );
+        gasSpec->findBlock("GasDensity")->getAttribute( "name", gasDensityName );
+        Uintah::ProblemSpecP gasVelSpec = gasSpec->findBlock("GasVelocity");
+        std::string uVelName, vVelName, wVelName;
+        gasVelSpec->findBlock("XVel")->getAttribute("name",uVelName);
+        gasVelSpec->findBlock("YVel")->getAttribute("name",vVelName);
+        gasVelSpec->findBlock("ZVel")->getAttribute("name",wVelName);
+        const Expr::Tag xVelTag = Expr::Tag(uVelName, Expr::STATE_NONE);
+        const Expr::Tag yVelTag = Expr::Tag(vVelName, Expr::STATE_NONE);
+        const Expr::Tag zVelTag = Expr::Tag(wVelName, Expr::STATE_NONE);
+        const Expr::Tag viscTag = Expr::Tag(gasViscosityName, Expr::STATE_NONE);
+        const Expr::Tag densityTag = Expr::Tag(gasDensityName, Expr::STATE_NONE);
+        
+        const Expr::Tag puTag = Expr::Tag(puname, Expr::STATE_DYNAMIC);
+        const Expr::Tag pvTag = Expr::Tag(pvname, Expr::STATE_DYNAMIC);
+        const Expr::Tag pwTag = Expr::Tag(pwname, Expr::STATE_DYNAMIC);
+        
+        const Expr::ExpressionID stabDtID = factory.register_expression(scinew StableTimestep::Builder( TagNames::self().stableTimestep,
+                                                                                                                             densityTag,
+                                                                                                                             viscTag,
+                                                                                                                             xVelTag,yVelTag,zVelTag, puTag, pvTag, pwTag ), true);
+        // force this onto the graph.
+        gc[ADVANCE_SOLUTION]->rootIDs.insert( stabDtID );
+      }
+    }
+
     //
     return adaptors;
   }

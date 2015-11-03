@@ -128,9 +128,10 @@ namespace Wasatch{
    *          plug this transport equation into a TimeStepper.
    */
   std::vector<EqnTimestepAdaptorBase*>
-  parse_momentum_equations( Uintah::ProblemSpecP momentumSpec,
+  parse_momentum_equations( Uintah::ProblemSpecP wasatchSpec,
                             const TurbulenceParameters turbParams,
                             const bool useAdaptiveDt,
+                            const bool doParticles,
                             const bool isConstDensity,
                             const Expr::Tag densityTag,
                             GraphCategories& gc,
@@ -212,6 +213,7 @@ namespace Wasatch{
   std::vector<EqnTimestepAdaptorBase*>
   parse_particle_transport_equations( Uintah::ProblemSpecP particleSpec,
                                       Uintah::ProblemSpecP wasatchSpec,
+                                      const bool useAdaptiveDt,
                                       GraphCategories& gc);
 
 
