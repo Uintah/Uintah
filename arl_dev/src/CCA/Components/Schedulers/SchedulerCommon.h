@@ -109,7 +109,7 @@ class SchedulerCommon : public Scheduler, public UintahParallelComponent {
 
     void compile();
 
-    /// For more complicated models
+    /// For more complicated models 
     virtual void addTaskGraph(tgType type);
 
     virtual int getNumTaskGraphs() { return graphs.size(); }
@@ -151,7 +151,7 @@ class SchedulerCommon : public Scheduler, public UintahParallelComponent {
     // for the given label and patch and find the largest extents encompassing
     // the expected ghost cells (requiredLow, requiredHigh) and the requested
     // ghost cells as well (requestedLow, requestedHigh) for each of the
-    // patches.  Required and requested will be the same if requestedNumGCells = 0.
+    // patches.  Required and requested will besame if requestedNumGCells = 0.
     virtual const std::vector<const Patch*>*
     getSuperPatchExtents(const VarLabel* label,
                                int matlIndex,
@@ -266,11 +266,7 @@ class SchedulerCommon : public Scheduler, public UintahParallelComponent {
 
     void finalizeNodes( int process=0 );
 
-    enum {
-      PRINT_BEFORE_COMM = 1,
-      PRINT_BEFORE_EXEC = 2,
-      PRINT_AFTER_EXEC  = 4
-    };
+    enum { PRINT_BEFORE_COMM = 1, PRINT_BEFORE_EXEC = 2, PRINT_AFTER_EXEC = 4 };
 
     void printTrackedVars(DetailedTask* dt, int when);
     

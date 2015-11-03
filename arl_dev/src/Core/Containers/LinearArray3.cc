@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2013 The University of Utah
+ * Copyright (c) 1997-2015 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -39,19 +39,19 @@ LinearArray3<T>::LinearArray3()
 }
 
 template<class T>
-LinearArray3<T>::LinearArray3(int dm1,
-                              int dm2,
-                              int dm3) :
+LinearArray3<T>::LinearArray3( int dm1,
+                               int dm2,
+                               int dm3 ) :
     dm1(dm1), dm2(dm2), dm3(dm3)
 {
   allocate();
 }
 
 template<class T>
-LinearArray3<T>::LinearArray3(int dim1,
-                              int dim2,
-                              int dim3,
-                              T value) :
+LinearArray3<T>::LinearArray3( int dim1,
+                               int dim2,
+                               int dim3,
+                               T   value ) :
     dm1(dim1), dm2(dim2), dm3(dim3)
 {
   allocate();
@@ -59,7 +59,7 @@ LinearArray3<T>::LinearArray3(int dim1,
 }
 
 template<class T>
-LinearArray3<T>::LinearArray3(const LinearArray3& copy)
+LinearArray3<T>::LinearArray3( const LinearArray3& copy )
 {
   resize(copy.dim1(), copy.dim2(), copy.dim3());
 
@@ -88,9 +88,9 @@ void LinearArray3<T>::allocate()
 }
 
 template<class T>
-void LinearArray3<T>::resize(int d1,
-                             int d2,
-                             int d3)
+void LinearArray3<T>::resize( int d1,
+                              int d2,
+                              int d3 )
 {
   if (objs && (dm1 == d1) && (dm2 == d2) && (dm3 == d3)) {
     return;
@@ -108,7 +108,7 @@ void LinearArray3<T>::resize(int d1,
 }
 
 template<class T>
-void LinearArray3<T>::copyData(const LinearArray3<T>& copy)
+void LinearArray3<T>::copyData( const LinearArray3<T>& copy )
 {
   long int size = getSize();
   ASSERTEQ(size, copy.getSize());
@@ -119,7 +119,7 @@ void LinearArray3<T>::copyData(const LinearArray3<T>& copy)
 }
 
 template<class T>
-void LinearArray3<T>::initialize(const T& t)
+void LinearArray3<T>::initialize( const T& t )
 {
   long int size = getSize();
   for (long int idx = 0; idx < size; idx++) {

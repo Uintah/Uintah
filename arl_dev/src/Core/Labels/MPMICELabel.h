@@ -38,7 +38,6 @@ namespace Uintah {
       const VarLabel* cMassLabel;
       const VarLabel* vel_CCLabel;
       const VarLabel* temp_CCLabel;
-      const VarLabel* conc_CCLabel;
       const VarLabel* press_NCLabel;
       const VarLabel* burnedMassCCLabel;
       const VarLabel* onSurfaceLabel;

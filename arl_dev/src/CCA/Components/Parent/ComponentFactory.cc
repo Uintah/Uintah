@@ -81,7 +81,8 @@ using namespace Uintah;
 using namespace std;
 
 UintahParallelComponent *
-ComponentFactory::create( ProblemSpecP& ps, const ProcessorGroup* world, bool doAMR, string uda )
+ComponentFactory::create( ProblemSpecP& ps, const ProcessorGroup* world, 
+                          bool doAMR, string uda )
 {
   string sim_comp;
 
@@ -121,7 +122,6 @@ ComponentFactory::create( ProblemSpecP& ps, const ProcessorGroup* world, bool do
 #else
   turned_off_options += "MPM ";
 #endif
-
 #ifndef NO_ICE
   if (sim_comp == "ice" || sim_comp == "ICE") {
     ProblemSpecP cfd_ps = ps->findBlock("CFD");
@@ -142,7 +142,6 @@ ComponentFactory::create( ProblemSpecP& ps, const ProcessorGroup* world, bool do
 #else
   turned_off_options += "ICE ";
 #endif
-
 #if !defined(NO_MPM) && !defined(NO_ICE)
   if (sim_comp == "mpmice" || sim_comp == "MPMICE") {
     return scinew MPMICE(world,STAND_MPMICE, doAMR);
@@ -156,7 +155,6 @@ ComponentFactory::create( ProblemSpecP& ps, const ProcessorGroup* world, bool do
 #else
   turned_off_options += "MPMICE ";
 #endif
-
 #ifndef NO_ARCHES
   if (sim_comp == "arches" || sim_comp == "ARCHES") {
     if( !Uintah::Parallel::usingMPI() ) {
@@ -167,7 +165,6 @@ ComponentFactory::create( ProblemSpecP& ps, const ProcessorGroup* world, bool do
 #else
   turned_off_options += "ARCHES ";
 #endif
-
 #if !defined(NO_MPM) && !defined(NO_ARCHES)
   if (sim_comp == "mpmarches" || sim_comp == "MPMARCHES") {
     return scinew MPMArches(world, doAMR);
@@ -197,7 +194,6 @@ ComponentFactory::create( ProblemSpecP& ps, const ProcessorGroup* world, bool do
     else
       return scinew Wave(world);
   }
-
 #ifndef NO_WASATCH
   if (sim_comp == "wasatch") {
     return scinew Wasatch::Wasatch(world);
@@ -238,7 +234,6 @@ ComponentFactory::create( ProblemSpecP& ps, const ProcessorGroup* world, bool do
   {
     return scinew RetrievalTest(world);
   }
-
 #ifndef NO_MODELS_RADIATION
   if (sim_comp == "RMCRT_Test") {
     return scinew RMCRT_Test(world);
@@ -246,7 +241,6 @@ ComponentFactory::create( ProblemSpecP& ps, const ProcessorGroup* world, bool do
 #else
   turned_off_options += "RMCRT_Test ";
 #endif
-
   if (sim_comp == "particletest" || sim_comp == "PARTICLETEST") {
     return scinew ParticleTest1(world);
   } 
@@ -255,14 +249,11 @@ ComponentFactory::create( ProblemSpecP& ps, const ProcessorGroup* world, bool do
   } 
   if (sim_comp == "switcher" || sim_comp == "SWITCHER") {
     return scinew Switcher(world, ps, doAMR, uda);
-  }
-  if (sim_comp == "multiscaleswitcher" || sim_comp == "MULTISCALESWITCHER") {
-    return scinew MultiScaleSwitcher(world, ps, doAMR, uda);
   } 
   if (sim_comp == "reduce_uda") {
     return scinew UdaReducer(world, uda);
   }
-
+  
   // TODO this needs to be updated
   throw ProblemSetupException("Unknown simulationComponent ('" + sim_comp + "'). Must specify -arches, -ice, -mpm, md, -impm, -mpmice, "
                               "-mpmarches, -switcher, -multiscaleswitcher -burger, -wave, -poisson1, -poisson2, -poisson3 or -benchmark.\n"

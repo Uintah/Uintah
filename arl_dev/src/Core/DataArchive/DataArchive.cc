@@ -302,9 +302,6 @@ DataArchive::queryGrid( int index, const ProblemSpecP & ups /* = NULL */, bool a
 
   vector< vector<int> > procMap; // One vector<int> per level.
 
-  // FIXME:  JBH - 10/28/2015
-  // Pass isAMR flag into this and carry it down to fix AMR restart on new AMR implementation.
-  // Will also need to figure out how to deal with levelSets in parsed files.
   grid->readLevelsFromFile( fp, procMap );
 
   fclose( fp );

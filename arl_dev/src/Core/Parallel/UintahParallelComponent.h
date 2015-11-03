@@ -62,37 +62,28 @@ WARNING
   
 ****************************************/
 
-class UintahParallelComponent {
+   class UintahParallelComponent {
+      struct PortRecord {
+	 PortRecord(UintahParallelPort* conn);
+	 std::vector<UintahParallelPort*> connections;
+      };
+      std::map<std::string, PortRecord*> portmap;
+   public:
+      UintahParallelComponent(const ProcessorGroup* myworld);
+      virtual ~UintahParallelComponent();
       
-    struct PortRecord {
-        PortRecord(UintahParallelPort* conn);
-        std::vector<UintahParallelPort*> connections;
-    };
-
-    std::map<std::string, PortRecord*> portmap;
-
-
-  public:
-
-    UintahParallelComponent(const ProcessorGroup* myworld);
-
-    virtual ~UintahParallelComponent();
-
-    void attachPort(const std::string& name, UintahParallelPort* port);
-
-    UintahParallelPort* getPort(const std::string& name);
-
-    UintahParallelPort* getPort(const std::string& name, unsigned int i);
-
-    void releasePort(const std::string& name);
-
-    unsigned int numConnections(const std::string& name);
-
-
-  protected:
-
-    const ProcessorGroup* d_myworld;
-};
-}  // End namespace Uintah
+      //////////
+      // Insert Documentation Here:
+      void attachPort(const std::string& name, UintahParallelPort* port);
+      
+      UintahParallelPort* getPort(const std::string& name);
+      UintahParallelPort* getPort(const std::string& name, unsigned int i);
+      void releasePort(const std::string& name);
+      unsigned int numConnections(const std::string& name);
+      
+   protected:
+      const ProcessorGroup* d_myworld;
+   };
+} // End namespace Uintah
    
 #endif

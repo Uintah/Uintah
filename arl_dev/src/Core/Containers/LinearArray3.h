@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2013 The University of Utah
+ * Copyright (c) 1997-2015 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -25,28 +25,24 @@
 /**************************************
 
  CLASS
- LinearArray3
+   LinearArray3
 
  GENERAL INFORMATION
+   LinearArray3.h
 
- LinearArray3.h
-
- Alan Humphrey, after Steven G. Parker
- Department of Computer Science
+ Alan Humphrey
  University of Utah
 
  KEYWORDS
- LinearArray3
+   LinearArray3
 
  DESCRIPTION
- Interface to streamlined dynamic linearized 3D array class.
-
- WARNING
+   Interface to streamlined dynamic, linearized 3D array class.
 
  ****************************************/
 
-#ifndef SCI_CONTAINERS_LINEARARRAY3_h
-#define SCI_CONTAINERS_LINEARARRAY3_h
+#ifndef CORE_CONTAINERS_LINEARARRAY3_h
+#define CORE_CONTAINERS_LINEARARRAY3_h
 
 #include <Core/Util/FancyAssert.h>
 #include <Core/Util/Assert.h>
@@ -234,7 +230,7 @@ namespace SCIRun {
 
   }; // end class LinearArray3
 
-} // End namespace SCIRun
+} // end namespace SCIRun
 
-#endif
+#endif // end #ifndef CORE_CONTAINERS_LINEARARRAY3_h
 
