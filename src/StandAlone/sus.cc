@@ -58,7 +58,6 @@
 #include <CCA/Components/Regridder/RegridderFactory.h>
 #include <CCA/Components/Schedulers/SchedulerFactory.h>
 #include <CCA/Components/SimulationController/AMRSimulationController.h>
-#include <CCA/Components/SimulationController/MultiScaleSimulationController.h>
 #include <CCA/Components/Solvers/CGSolver.h>
 #include <CCA/Components/Solvers/DirectSolve.h>
 #ifdef HAVE_HYPRE
@@ -175,7 +174,6 @@ usage(const std::string& message, const std::string& badarg, const std::string& 
     cerr << "Valid options are:\n";
     cerr << "-h[elp]              : This usage information.\n";
     cerr << "-AMR                 : use AMR simulation controller\n";
-    cerr << "-multi_scale         : use MultiScale simulation controller\n";
 #ifdef HAVE_CUDA
     cerr << "-gpu                 : use available GPU devices, requires multi-threaded Unified scheduler \n";
 #endif
@@ -258,7 +256,6 @@ main( int argc, char *argv[], char *env[] )
    * Default values
    */
   bool   do_AMR              = false;
-  bool   do_multi_scale      = false;
   bool   emit_graphs         = false;
   bool   restart             = false;
   bool   reduce_uda          = false;
@@ -291,12 +288,12 @@ main( int argc, char *argv[], char *env[] )
     * Initialize MPI
     */
   //
-  // When using old version of MPICH, initializeManager() uses the arg list to
+  // When using old verison of MPICH, initializeManager() uses the arg list to
   // determine whether sus is running with MPI before calling MPI_Init())
   //
   // NOTE: The main problem with calling initializeManager() before
   // parsing the args is that we don't know if thread MPI is going to
-  // However, MPICH version 1 does not support Thread safety, so we will just dis-allow that.
+  // However, MPICH veriosn 1 does not support Thread safety, so we will just dis-allow that.
   
   Uintah::Parallel::initializeManager( argc, argv );
 #endif
@@ -310,9 +307,6 @@ main( int argc, char *argv[], char *env[] )
     }
     else if (arg == "-AMR" || arg == "-amr") {
       do_AMR = true;
-    }
-    else if (arg == "-MULTI_SCALE" || arg == "-multi_scale") {
-      do_multi_scale = true;
     }
     else if (arg == "-nthreads") {
 #ifdef HAVE_MPICH_OLD
@@ -603,36 +597,30 @@ main( int argc, char *argv[], char *env[] )
       Thread::exitAll( 0 );
     }
 
-    // if -amr wasn't found on the command line and the AMR block exists, set do_AMR with the value found
-    if (!do_AMR && (bool)ups->findBlock("AMR")) {
-      ups->get("doAMR", do_AMR);
+    //if the AMR block is defined default to turning amr on
+    if (!do_AMR) {
+      do_AMR = (bool) ups->findBlock("AMR");
     }
 
-    // if -multi_scale wasn't found on the command line and the MultiScale block exists, set do_multi_scale with the value found
-    if (!do_multi_scale && (bool)ups->findBlock("MultiScale")) {
-      ups->get("doMultiScale", do_multi_scale);
+    //if doAMR is defined set do_AMR.
+    if(do_AMR) {
+      ups->get("doAMR",do_AMR);
     }
 
-    if (reduce_uda) {
+    if(reduce_uda){
       do_AMR = false;
     }
     
+
     const ProcessorGroup* world = Uintah::Parallel::getRootProcessorGroup();
 
-    SimulationController* ctl = NULL;
-    if (do_multi_scale) {
-      ctl = scinew MultiScaleSimulationController( world, do_AMR, do_multi_scale, ups );
-    } else {
-      ctl = scinew AMRSimulationController( world, do_AMR, do_multi_scale, ups );
-    }
-
-
+    SimulationController* ctl = scinew AMRSimulationController( world, do_AMR, ups );
 
 #ifdef HAVE_VISIT
     ((AMRSimulationController*) ctl)->SetVisIt( do_VisIt );
 #endif
 
-    RegridderCommon* reg = NULL;
+    RegridderCommon* reg = 0;
     if(do_AMR) {
       reg = RegridderFactory::create(ups, world);
       if (reg) {
@@ -708,6 +696,8 @@ main( int argc, char *argv[], char *env[] )
     if (emit_graphs) {
       sched->doEmitTaskGraphDocs();
     }
+
+    MALLOC_TRACE_TAG(oldTag);
 
     //__________________________________
     // Start the simulation controller

@@ -282,80 +282,31 @@ Grid* TiledRegridder::CreateGrid(Grid* oldGrid, vector<vector<IntVector> > &tile
   Point anchor =   oldGrid->getLevel(0)->getAnchor();
   IntVector extraCells = oldGrid->getLevel(0)->getExtraCells();
 
-  int numOldLevels = oldGrid->numLevels();
-  // For now, assume the AMR section begins at level 0 for multiscale
-  // For each level Coarse -> Fine except the last
+  //For each level Coarse -> Fine
+  for(int l=0; l < oldGrid->numLevels()+1 && l < d_maxLevels;l++) {
+    // if level is not needed, don't create any more levels
+    if(tiles[l].size()==0) {
+       break;
+    }
 
-  if (tiles[0].size() != 0)
-  {
-    bool isAMR = oldGrid->getLevel(0)->isAMR();
-    bool isMultiScale = oldGrid->getLevel(0)->isMultiScale();
-    LevelP level = newGrid->addLevel(anchor, spacing, -1, isAMR, isMultiScale);
+    LevelP level = newGrid->addLevel(anchor, spacing);
     level->setExtraCells(extraCells);
 
-    for (unsigned int p=0; p < tiles[0].size(); p++)
-    {
-      IntVector low  = computeCellLowIndex( tiles[0][p],d_numCells[0],d_tileSize[0]);
-      IntVector high = computeCellHighIndex(tiles[0][p],d_numCells[0],d_tileSize[0]);
-      level->addPatch(low, high, low, high, newGrid);
-    }
-    // parameters based on next-fine level.
-    spacing = spacing/d_cellRefinementRatio[0];
-  }
-
-  for (int l = 1; l < numOldLevels + 1 && l < d_maxLevels; l++)
-  {
-    if (tiles[l].size() == 0)
-    {
-      break;
-    }
-    // If we're adding levels and the previous grid was AMR, then we're expanding the current
-    // grids to add in a new AMR level.  Otherwise, we're shuffling levels down to accomodate
-    // multiscale.  (Note:  This only works for 1 AMR section in multiscale as written, but
-    // the assumption that we only need oldGrid->numLevels()+1 implies that anyway.
-    bool isAMR = oldGrid->getLevel(l-1)->isAMR();
-    bool isMultiScale = oldGrid->getLevel(l-1)->isMultiScale();
-    LevelP level = newGrid->addLevel(anchor, spacing, -1, isAMR, isMultiScale);
-    level->setExtraCells(extraCells);
-
-    for (unsigned int p=0; p < tiles[l].size(); p++)
-    {
-      IntVector low  = computeCellLowIndex( tiles[l][p],d_numCells[l],d_tileSize[l]);
+    //cout << "New level " << l << " num patches " << patch_sets[l-1].size() << endl;
+    //for each patch
+    for(unsigned int p=0;p<tiles[l].size();p++) {
+      IntVector low = computeCellLowIndex(  tiles[l][p],d_numCells[l],d_tileSize[l]);
       IntVector high = computeCellHighIndex(tiles[l][p],d_numCells[l],d_tileSize[l]);
-      level->addPatch(low, high, low, high, newGrid);
+      //cout << "level: " << l << " Creating patch from tile " << tiles[l][p] << " at " << low << ", " << high << endl;
+      //cout << "     numCells: " << d_numCells[l] << " tileSize: " << d_tileSize[l] << endl;
+
+      //create patch
+      level->addPatch(low, high, low, high,newGrid);
     }
     // parameters based on next-fine level.
-    spacing = spacing/d_cellRefinementRatio[l];
-
+    spacing = spacing / d_cellRefinementRatio[l];
   }
-
   
-// Previous implementation
-//  //For each level Coarse -> Fine
-//  for(int l=0; l < oldGrid->numLevels()+1 && l < d_maxLevels;l++) {
-//    // if level is not needed, don't create any more levels
-//    if(tiles[l].size()==0) {
-//       break;
-//    }
-//
-//    LevelP level = newGrid->addLevel(anchor, spacing);
-//    level->setExtraCells(extraCells);
-//
-//    //cout << "New level " << l << " num patches " << patch_sets[l-1].size() << endl;
-//    //for each patch
-//    for(unsigned int p=0;p<tiles[l].size();p++) {
-//      IntVector low = computeCellLowIndex(  tiles[l][p],d_numCells[l],d_tileSize[l]);
-//      IntVector high = computeCellHighIndex(tiles[l][p],d_numCells[l],d_tileSize[l]);
-//      //cout << "level: " << l << " Creating patch from tile " << tiles[l][p] << " at " << low << ", " << high << endl;
-//      //cout << "     numCells: " << d_numCells[l] << " tileSize: " << d_tileSize[l] << endl;
-//
-//      //create patch
-//      level->addPatch(low, high, low, high,newGrid);
-//    }
-//    // parameters based on next-fine level.
-//    spacing = spacing / d_cellRefinementRatio[l];
-//  }
-
   return newGrid;
 }
 

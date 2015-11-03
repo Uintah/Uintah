@@ -78,7 +78,7 @@ class Regridder;
    //! Controls the execution of an AMR Simulation
    class AMRSimulationController : public SimulationController {
    public:
-      AMRSimulationController(const ProcessorGroup* myworld, bool doAMR, bool doMultiScale, ProblemSpecP pspec);
+      AMRSimulationController(const ProcessorGroup* myworld, bool doAMR, ProblemSpecP pspec);
       virtual ~AMRSimulationController();
 
       virtual void run();

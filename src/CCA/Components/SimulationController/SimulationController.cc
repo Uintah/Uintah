@@ -94,12 +94,8 @@ stdDeviation( double sum_of_x, double sum_of_x_squares, int n )
 
 SimulationController::SimulationController( const ProcessorGroup * myworld,
                                                   bool             doAMR,
-                                                  bool             doMultiScale,
-                                                  ProblemSpecP     pspec )
-  : UintahParallelComponent( myworld ),
-    d_ups( pspec ),
-    d_doAMR( doAMR ),
-    d_doMultiScale(doMultiScale)
+                                                  ProblemSpecP     pspec ) :
+  UintahParallelComponent( myworld ), d_ups( pspec ), d_doAMR( doAMR )
 {
   d_n                      = 0;
   d_wallTime               = 0;
@@ -378,27 +374,25 @@ SimulationController::gridSetup( void )
   }
 
   if( !d_restarting ) {
-    grid = scinew Grid();
+    grid = scinew Grid;
     d_sim = dynamic_cast<SimulationInterface*>(getPort("sim"));
     if( !d_sim ) {
       throw InternalError("No simulation component", __FILE__, __LINE__);
     }
     d_sim->preGridProblemSetup(d_ups, grid, d_sharedState);
-//    grid->problemSetup(d_ups, d_myworld, d_doAMR, d_doMultiScale);
-    grid->newProblemSetup(d_ups, d_myworld, d_doAMR, d_doMultiScale);
+    grid->problemSetup(d_ups, d_myworld, d_doAMR);
   }
   else {
-    // tsaad & bisaac: At this point, and during a restart, there's not a legitimate load balancer. This
-    // means that the grid obtained from the data archiver will have global domain BCs on every MPI Rank -
+    // tsaad & bisaac: At this point, and during a restart, there not legitimate load balancer. This means
+    // that the grid obtained from the data archiver will global domain BCs on every MPI Rank -
     // i.e. every rank will have knowledge of ALL OTHER patches and their boundary conditions.
     // This leads to a noticeable and unacceptable increase in memory usage especially when
     // hundreds of boundaries (and boundary conditions) are present. That being said, we
     // query the grid WITHOUT requiring boundary conditions. Once that is done, a legitimate load balancer
-    // will be created later on, after which we use said load balancer and assign BCs to the grid.
+    // will be created later on - after which we use said balancer and assign BCs to the grid.
     // NOTE the "false" argument below.
     grid = d_archive->queryGrid( d_restartIndex, d_ups, false );
   }
-
   if(grid->numLevels() == 0){
     throw InternalError("No problem (no levels in grid) specified.", __FILE__, __LINE__);
   }

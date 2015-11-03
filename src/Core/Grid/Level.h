@@ -97,20 +97,9 @@ class Level : public RefCounted {
 public:
   Level(Grid* grid, const Point& anchor, const Vector& dcell, int index, 
         IntVector refinementRatio,
-        int id = -1,
-        bool isAMR = false,
-        bool isMultiScale = false);
+        int id = -1);
   virtual ~Level();
   
-  class Compare {
-    public:
-      inline bool operator()(const Level* l1, const Level* l2) const {
-        return (l1 != 0 && l2 !=0) ? (l1->getIndex() < l2->getIndex()) :
-               ((l2 !=0) ? true : false);
-      }
-    private:
-  };
-
   void setPatchDistributionHint(const IntVector& patchDistribution);
   void setBCTypes();
      
@@ -190,10 +179,6 @@ public:
 
   // Grid spacing
   Vector dCell() const { return d_dcell; }
-  
-  void setdCell(Vector spacing) {
-    d_dcell = spacing;
-  }
 
   /**
    * Returns the cell volume dx*dy*dz. This will not work for stretched grids.
@@ -220,8 +205,6 @@ public:
 
   // For stretched grids
   bool isStretched() const { return d_stretched; }
-  bool isAMR() const {return d_isAMR; }
-  bool isMultiScale() const {return d_isMultiScale; }
   void getCellWidths(Grid::Axis axis, OffsetArray1<double>& widths) const;
   void getFacePositions(Grid::Axis axis, OffsetArray1<double>& faces) const;
   void setStretched(Grid::Axis axis, const OffsetArray1<double>& faces);
@@ -314,8 +297,6 @@ private:
 
   // For stretched grids
   bool d_stretched;
-  bool d_isAMR;
-  bool d_isMultiScale;
 
   // This is three different arrays containing the x,y,z coordinate of the face position
   // be sized to d_idxSize[axis] + 1.  Used only for stretched grids

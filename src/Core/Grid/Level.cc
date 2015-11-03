@@ -67,15 +67,12 @@ Level::Level(       Grid      * grid,
               const Vector    & dcell, 
                     int         index,
                     IntVector   refinementRatio,
-                    int         id /* = -1 */,
-                    bool        isAMR /* = false */,
-                    bool        isMultiScale /* = false*/) :
+                    int         id /* = -1 */ ) :
   d_grid(grid), d_anchor(anchor), d_dcell(dcell), 
   d_spatial_range(Point(DBL_MAX,DBL_MAX,DBL_MAX),Point(DBL_MIN,DBL_MIN,DBL_MIN)),
   d_int_spatial_range(Point(DBL_MAX,DBL_MAX,DBL_MAX),Point(DBL_MIN,DBL_MIN,DBL_MIN)),
   d_index(index),
   d_patchDistribution(-1,-1,-1), d_periodicBoundaries(0, 0, 0), d_id(id),
-  d_isAMR(isAMR), d_isMultiScale(isMultiScale),
   d_refinementRatio(refinementRatio),
   d_cachelock("Level Cache Lock")
 {
@@ -479,31 +476,30 @@ Level::positionToIndex( const Point & p ) const
 void Level::selectPatches(const IntVector& low, const IntVector& high,
                           selectType& neighbors, bool withExtraCells, bool cache) const
 {
-  if (cache) {
-    // look it up in the cache first
-    d_cachelock.readLock();
-    {
-      selectCache::const_iterator iter = d_selectCache.find(make_pair(low, high));
+ if(cache){
+   // look it up in the cache first
+   d_cachelock.readLock();
+   selectCache::const_iterator iter = d_selectCache.find(make_pair(low, high));
 
-      if (iter != d_selectCache.end()) {
-        const vector<const Patch*>& cache = iter->second;
-        for (unsigned i = 0; i < cache.size(); i++) {
-          neighbors.push_back(cache[i]);
-        }
-        d_cachelock.readUnlock();
-        return;
-      }
-    }
-    d_cachelock.readUnlock();
-    ASSERT(neighbors.size() == 0);
-  }
+   if (iter != d_selectCache.end()) {
+     const vector<const Patch*>& cache = iter->second;
+     for (unsigned i = 0; i < cache.size(); i++) {
+       neighbors.push_back(cache[i]);
+     }
+     d_cachelock.readUnlock();
+     return;
+   }
+   d_cachelock.readUnlock();
+   ASSERT(neighbors.size() == 0);
+ }
 
-   //cout << Parallel::getMPIRank() << " Level Query: " << low << " " << high << endl;
+   //cout << Parallel::getMPIRank() << " Level Quesy: " << low << " " << high << endl;
    d_bvh->query(low, high, neighbors, withExtraCells);
    sort(neighbors.begin(), neighbors.end(), Patch::Compare());
 
 #ifdef CHECK_SELECT
-   // Double-check the more advanced selection algorithms against the slow (exhaustive) one.
+   // Double-check the more advanced selection algorithms against the
+   // slow (exhaustive) one.
    vector<const Patch*> tneighbors;
    for(const_patchIterator iter=d_virtualAndRealPatches.begin();
        iter != d_virtualAndRealPatches.end(); iter++){
@@ -525,18 +521,17 @@ void Level::selectPatches(const IntVector& low, const IntVector& high,
   }
 #endif
 
-  if (cache) {
-    // put it in the cache - start at orig_size in case there was something in neighbors before this query
-    d_cachelock.writeLock();
-    {
-      vector<const Patch*>& cache = d_selectCache[make_pair(low, high)];
-      cache.reserve(6);  // don't reserve too much to save memory, not too little to avoid too much reallocation
-      for (int i = 0; i < neighbors.size(); i++) {
-        cache.push_back(neighbors[i]);
-      }
-    }
-    d_cachelock.writeUnlock();
-  }
+   if(cache){
+     // put it in the cache - start at orig_size in case there was something in
+     // neighbors before this query
+     d_cachelock.writeLock();
+     vector<const Patch*>& cache = d_selectCache[make_pair(low,high)];
+     cache.reserve(6);  // don't reserve too much to save memory, not too little to avoid too much reallocation
+     for (int i = 0; i < neighbors.size(); i++) {
+       cache.push_back(neighbors[i]);
+     }
+     d_cachelock.writeUnlock();
+   }
 }
 
 //______________________________________________________________________
@@ -637,9 +632,7 @@ void Level::finalizeLevel(bool periodicX, bool periodicY, bool periodicZ)
 
   BBox bbox;
   
-  //  if the refinement ratio is not equal to 1, which it won't be in the usual case of AMR,
-  //  then get the level 0 BBox, otherwise get your own.
-  if (d_index > 0 && d_refinementRatio != IntVector(1, 1, 1) && isAMR() ) {
+  if (d_index > 0){
     d_grid->getLevel(0)->getInteriorSpatialRange(bbox);
   }
   else {
