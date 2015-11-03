@@ -8,15 +8,15 @@
 
      Author:       Brian Leavy  (Brian.Leavy@utah.edu)
 
-     Description:  Two cylinders moving at +/-2 m/s in the x-direction impact each other and rebound.  
+     Description:  Two cylinders moving at +/-2 m/s in the x-direction, impact each other and rebound.  
                    The convected particle tetrahedral domain integration (CPTI) technique is used to 
-                   more accurately describe the geometry.  The particle domain centroids and corresponding
-                   domain description are input using abaqus mesh files that were converted to particles (*.pts) 
-                   files and then imported using the file geometry import option in Uintah. Visualization
-                   tools are available which visualize the resultant particle domains from Uintah simulations..
+                   more accurately describe geometries with the particle domains.  The particle centroids and 
+                   corresponding domain description were created using abaqus mesh files that were converted 
+                   to particles (*.pts) and then imported using the file geometry import option in Uintah. 
+                   Mesh conversion and visualization tools are available upon request for Uintah simulations.
 
-                   Before running, the Uintah particle file splitter (PFS) routine should be run on the input
-                   deck to partition the particle files properly.
+                   Before running, the Uintah particle file splitter (PFS) is run on this file to partition 
+                   the particles properly.
 -->
 <Uintah_specification>
    <Meta>
