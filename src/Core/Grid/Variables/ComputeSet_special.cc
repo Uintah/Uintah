@@ -28,16 +28,34 @@
 //
 // ComputeSet_special.cc
 //
-//    Note, ComputeSet_special.cc is #include'd direclty in
-// ComputeSet.h when using the PGI compilers...
+// Note, ComputeSet_special.cc is #include'd directly in ComputeSet.h when using the PGI compilers.
 //
 
 #include <Core/Grid/Variables/ComputeSet.h>
+#include <Core/Grid/Level.h>
 #include <Core/Grid/Patch.h>
+
 #include <algorithm>
 
 namespace Uintah {
-  
+
+//_____________________________________________________________________
+// Level sort and compareElems
+template<>
+void ComputeSubset<const Level*>::sort()
+{
+  std::sort(items.begin(), items.end(), Level::Compare());
+}
+
+template<>
+bool ComputeSubset<const Level*>::compareElems( const Level* e1,
+                                                const Level* e2 )
+{
+  return Level::Compare()(e1, e2);
+}
+
+//_____________________________________________________________________
+// Patch sort and compareElems
 template<>
 void ComputeSubset<const Patch*>::sort()
 {
@@ -48,10 +66,11 @@ template<>
 bool ComputeSubset<const Patch*>::compareElems( const Patch* e1,
                                                 const Patch* e2 )
 {
-  return Patch::Compare()(e1, e2); }
+  return Patch::Compare()(e1, e2);
 }
 
+}  // end namespace Uintah
+
 #endif // #ifdef Uintah_Core_Grid_ComputeSet_special_cc
-       // this file needs to be included to instantiate the templates
-       // for some compilers
+       // this file needs to be included to instantiate the templates for some compilers
 

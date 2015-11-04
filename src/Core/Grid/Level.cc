@@ -63,7 +63,7 @@ static DebugStream   rgtimes("RGTimes",false);
 
 //______________________________________________________________________
 //
-Level::Level(        Grid      * grid
+Level::Level(        Grid       * grid
               , const Point     & anchor
               , const Vector    & dcell
               ,       int         index

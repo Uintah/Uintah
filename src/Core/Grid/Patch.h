@@ -22,8 +22,8 @@
  * IN THE SOFTWARE.
  */
 
-#ifndef UINTAH_HOMEBREW_Patch_H
-#define UINTAH_HOMEBREW_Patch_H
+#ifndef UINTAH_CORE_GRID_PATCH_H
+#define UINTAH_CORE_GRID_PATCH_H
 
 #include <Core/Grid/Grid.h>
 #include <Core/Grid/Ghost.h>
@@ -96,6 +96,7 @@ namespace Uintah {
   
   
   class Patch {
+
   public:
     
     friend std::ostream& operator<<(std::ostream& out, const Uintah::Patch & r);
@@ -119,6 +120,7 @@ namespace Uintah {
       numFaces, // 6
       invalidFace
     };
+
     friend std::ostream& operator<<(std::ostream& out, const FaceType& face);
     
     enum VariableBasis {
@@ -137,7 +139,7 @@ namespace Uintah {
       SFCVars,                        //Includes SFC vars on the face           (without extra cells)
       InteriorFaceCells               //Includes cells on the interior of the face
     };
-    
+
     enum EdgeIteratorType {
       ExtraCells,                     //Extra cells on the edge
       ExtraCellsMinusCorner,          //Extra cells on the edge without the corners
@@ -150,8 +152,7 @@ namespace Uintah {
     class Compare {
     public:
       inline bool operator()(const Patch* p1, const Patch* p2) const {
-        return (p1 != 0 && p2 != 0) ? (p1->getID() < p2->getID()) :
-        ((p2 != 0) ? true : false);
+        return (p1 != 0 && p2 != 0) ? (p1->getID() < p2->getID()) : ((p2 != 0) ? true : false);
       }
     private:
     };
@@ -2119,4 +2120,4 @@ namespace Uintah {
   
 } // End namespace Uintah
 
-#endif
+#endif  // include guard UINTAH_CORE_GRID_PATCH_H

@@ -129,15 +129,15 @@ namespace Uintah {
         }
 
         bool
-      contains(T elem) const
-      {
-        for (int i = 0; i < static_cast<int>(items.size()); i++) {
-          if (items[i] == elem) {
-            return true;
+        contains(T elem) const
+        {
+          for (int i = 0; i < static_cast<int>(items.size()); i++) {
+            if (items[i] == elem) {
+              return true;
+            }
           }
+          return false;
         }
-        return false;
-      }
 
         void sort();
         bool is_sorted() const;
@@ -147,7 +147,7 @@ namespace Uintah {
 
         bool equals(const ComputeSubset<T>* s2) const
         {
-          //check that the sets are equvalent
+          // check that the sets are equivalent
           if(items.size() != s2->items.size()) {
             return false;
           }
@@ -267,15 +267,21 @@ namespace Uintah {
         ComputeSet(const ComputeSet&);
         ComputeSet& operator=(const ComputeSet&);
 
+        friend std::ostream& operator<<(std::ostream& out, const Uintah::LevelSet&);
         friend std::ostream& operator<<(std::ostream& out, const Uintah::PatchSet&);
         friend std::ostream& operator<<(std::ostream& out, const Uintah::MaterialSet&);
+
+        friend std::ostream& operator<<(std::ostream& out, const Uintah::LevelSubset&);
         friend std::ostream& operator<<(std::ostream& out, const Uintah::PatchSubset&);
         friend std::ostream& operator<<(std::ostream& out, const Uintah::MaterialSubset&);
 
     };  // end class ComputeSet
 
+   std::ostream& operator<<(std::ostream& out, const Uintah::LevelSet&);
    std::ostream& operator<<(std::ostream& out, const Uintah::PatchSet&);
    std::ostream& operator<<(std::ostream& out, const Uintah::MaterialSet&);
+
+   std::ostream& operator<<(std::ostream& out, const Uintah::LevelSubset&);
    std::ostream& operator<<(std::ostream& out, const Uintah::PatchSubset&);
    std::ostream& operator<<(std::ostream& out, const Uintah::MaterialSubset&);
 
@@ -400,7 +406,10 @@ namespace Uintah {
       return total;
     }
 
-  // Note: sort is specialized in ComputeSet_special for const Patch*'s to use Patch::Compare.
+  // Note: sort is specialized in ComputeSet_special for const Level* and Patch* to use Level/Patch::Compare.
+  template<>
+     void ComputeSubset<const Level*>::sort();
+
   template<>
      void ComputeSubset<const Patch*>::sort();
 
@@ -409,7 +418,10 @@ namespace Uintah {
       std::sort(items.begin(), items.end());
     }
 
-  // specialized for patch in ComputeSet_special.cc
+  // specialized for Level and Patch in ComputeSet_special.cc
+  template<>
+     bool ComputeSubset<const Level*>::compareElems(const Level* e1, const Level* e2);
+
   template<>  
      bool ComputeSubset<const Patch*>::compareElems(const Patch* e1, const Patch* e2);
 

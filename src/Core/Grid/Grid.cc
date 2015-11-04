@@ -121,16 +121,16 @@ void Grid::StretchSpec::fillCells(int& start, int lowExtra, int highExtra, Offse
 }
 
 Grid::Grid()
+  :  af_(0)
+   , bf_(0)
+   , cf_(0)
+   , nf_(-1)
+   , ares_(0)
+   , bres_(0)
+   , cres_(0)
+   , d_extraCells(IntVector(0,0,0))
 {
-  // Initialize values that may be uses for the autoPatching calculations
-  af_   =  0;
-  bf_   =  0;
-  cf_   =  0;
-  nf_   = -1;
-  ares_ =  0;
-  bres_ =  0;
-  cres_ =  0;
-  d_extraCells = IntVector(0,0,0);
+  // initialized values may be used for the autoPatching calculations
 }
 
 Grid::~Grid()
