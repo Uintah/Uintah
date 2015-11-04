@@ -46,78 +46,12 @@
 
 using namespace Uintah;
 
-int Grid::StretchSpec::countCells() const
-{
-  if (shape == "uniform") {
-    return SCIRun::Round((to - from) / fromSpacing);
-  }
-  else {
-    double a = SCIRun::Min(fromSpacing, toSpacing);
-    double b = SCIRun::Max(fromSpacing, toSpacing);
-    double totalDistance = to - from;
-    double nn = log(b / a) / log((totalDistance + b) / (totalDistance + a)) - 1;
-    int n = (int)(nn + 0.5);
-    return n;
-  }
-}
-
 static double xk(double a, double r, int k)
 {
   if (r == 1) {
     return a * k;
   }
   return a * r * (1 - pow(r, k)) / (1 - r);
-}
-
-void Grid::StretchSpec::fillCells(int& start, int lowExtra, int highExtra, OffsetArray1<double>& faces) const
-{
-  if (shape == "uniform") {
-    int n = SCIRun::Round((to - from) / fromSpacing);
-    for (int i = -lowExtra; i < n + highExtra; i++) {
-      faces[i + start] = from + i * fromSpacing;
-    }
-    start += n;
-  }
-  else {
-    int n = countCells();
-    double totalDistance = to - from;
-    double a = fromSpacing;
-    double b = toSpacing;
-    bool switched = false;
-    if (a > b) {
-      double tmp = a;
-      a = b;
-      b = tmp;
-      switched = true;
-    }
-
-    double r = pow(b / a, 1. / (n + 1));
-
-    // Now adjust the rate to ensure that there are an integer number of cells
-    // We use a binary search because a newton solve doesn't alway converge very well,
-    // and this is not performance critical
-    double r1 = 1;
-    double r2 = r * r * 2;
-    for (int i = 0; i < 1000; i++) {
-      double newr = (r1 + r2) / 2;
-      if (r == newr)
-        break;
-      r = newr;
-      double residual = xk(a, r, n) - totalDistance;
-      if (residual > 0)
-        r2 = r;
-      else
-        r1 = r;
-    }
-    if (switched) {
-      a = a * pow(r, n + 1);
-      r = 1. / r;
-    }
-    for (int i = -lowExtra; i < n + highExtra; i++) {
-      faces[i + start] = from + xk(a, r, i);
-    }
-    start += n;
-  }
 }
 
 Grid::Grid()
@@ -143,6 +77,9 @@ Grid::getLevel( int l ) const
   ASSERTRANGE( l, 0, numLevels() );
   return d_levels[ l ];
 }
+
+//FIXME: TODO:  Need to fix parse*FromFile to account for parsing in old .xml files yet still work with the
+// new isAMR/isMultiscale level structure.  JBH - 11-4-2015
 
 //
 // Parse in the <Patch> from the input file (most likely 'timestep.xml').  We should only need to parse
@@ -259,7 +196,6 @@ Grid::parsePatchFromFile( FILE * fp, LevelP level, std::vector<int> & procMapFor
   return doneWithPatch;
 
 } // end parsePatchFromFile()
-
 
 //
 // Parse in the <Level> from the input file (most likely 'timestep.xml').  We should only need to parse
@@ -1099,146 +1035,6 @@ Grid::stretchDescription::checkStretches(const SCIRun::BBox &extents, const int&
   return (spacing);
 }
 
-//int
-//Grid::checkStretches(       std::vector<StretchSpec> (&stretch)[3],
-//                            SCIRun::Vector&             spacing,
-//                     const  Uintah::Point&              levelAnchor,
-//                     const  Uintah::Point&              levelHighPoint,
-//                            int                         procRank)
-//{
-//  int stretch_count = 0;
-//  for(int axis=0;axis<3;axis++) {
-//    if(stretch[axis].size()) {
-//      stretch_count++;
-//      spacing[axis] = getNan();
-//    }
-//    for(int i=0;i<(int)stretch[axis].size();i++){
-//      StretchSpec& spec = stretch[axis][i];
-//      if(spec.from == DBL_MAX){
-//        if(i > 0 && stretch[axis][i-1].to != DBL_MAX){
-//          spec.from = stretch[axis][i-1].to;
-//        } else if(i == 0){
-//          spec.from = levelAnchor(axis);
-//        } else {
-//          std::ostringstream msg;
-//          msg << "Stretch region from point not specified for region " << i << '\n';
-//          throw ProblemSetupException(msg.str(), __FILE__, __LINE__);
-//        }
-//      }
-//      if(spec.to == DBL_MAX){
-//        if(i < (int)stretch[axis].size()-1 && stretch[axis][i+1].from != DBL_MAX){
-//          spec.to = stretch[axis][i+1].from;
-//        } else if(i == (int)stretch[axis].size()-1){
-//          spec.to = levelHighPoint(axis);
-//        } else {
-//          std::ostringstream msg;
-//          msg << "Stretch region to point not specified for region " << i << '\n';
-//          throw ProblemSetupException(msg.str(), __FILE__, __LINE__);
-//        }
-//      }
-//      if(spec.fromSpacing <= 0 || spec.toSpacing <= 0){
-//        std::ostringstream msg;
-//        msg << "Grid spacing must be >= 0 (" << spec.fromSpacing << ", " << spec.toSpacing << ")";
-//        throw ProblemSetupException(msg.str(), __FILE__, __LINE__);
-//      }
-//
-//      if(spec.shape == "linear"){
-//        if(spec.fromSpacing == DBL_MAX){
-//          if(i > 0 && stretch[axis][i-1].toSpacing != DBL_MAX){
-//            spec.fromSpacing = stretch[axis][i-1].toSpacing;
-//          } else {
-//            std::ostringstream msg;
-//            msg << "Stretch region from spacing not specified for region " << i << '\n';
-//            throw ProblemSetupException(msg.str(), __FILE__, __LINE__);
-//          }
-//        }
-//        if(spec.toSpacing == DBL_MAX){
-//          if(i < (int)stretch[axis].size()-1 && stretch[axis][i+1].fromSpacing != DBL_MAX){
-//            spec.toSpacing = stretch[axis][i+1].toSpacing;
-//          } else {
-//            std::ostringstream msg;
-//            msg << "Stretch region to spacing not specified";
-//            throw ProblemSetupException(msg.str(), __FILE__, __LINE__);
-//          }
-//        }
-//      } else if(spec.shape == "uniform"){
-//        if(spec.fromSpacing == DBL_MAX){
-//          if(i > 0 && stretch[axis][i-1].toSpacing != DBL_MAX){
-//            spec.fromSpacing = spec.toSpacing = stretch[axis][i-1].toSpacing;
-//          } else {
-//            std::ostringstream msg;
-//            msg << "Stretch region uniform spacing not specified for region " << i << '\n';
-//            throw ProblemSetupException(msg.str(), __FILE__, __LINE__);
-//          }
-//        }
-//      }
-//      if(i > 0 && stretch[axis][i-1].toSpacing != spec.fromSpacing){
-//        if(procRank == 0){
-//          std::cerr << "WARNING: specifying two uniform sections with a different spacing can cause erroneous grid (" << stretch[axis][i-1].toSpacing << ", " << spec.fromSpacing << "\n";
-//        }
-//      }
-//      if(i > 0 && stretch[axis][i-1].to != spec.from){
-//        std::ostringstream msg;
-//        msg << "Gap in strech region from: " << stretch[axis][i-1].to << " to " << spec.from;
-//        throw ProblemSetupException(msg.str(), __FILE__, __LINE__);
-//      }
-//      if(spec.to < spec.from) {
-//        std::ostringstream msg;
-//        msg << "Error, stretched grid to must be larger then from";
-//        throw ProblemSetupException(msg.str(), __FILE__, __LINE__);
-//      }
-//      if(spec.shape == "linear"){
-//        // If toSpacing == fromSpacing, then convert this into a uniform section, since
-//        // the grid generation numerics have a singularity at that point
-//        if(spec.fromSpacing == spec.toSpacing){
-//          spec.shape = "uniform";
-//        }
-//      }
-//      if(spec.shape == "uniform"){
-//        // Check that dx goes nicely into the range
-//        double ncells = (spec.to - spec.from)/spec.fromSpacing;
-//        if(SCIRun::Fraction(ncells) > 1e-4 && SCIRun::Fraction(ncells) < 1-1e-4){
-//          std::ostringstream msg;
-//          msg << "Error, uniform region not an integer multiple of the cell spacing";
-//          throw ProblemSetupException(msg.str(), __FILE__, __LINE__);
-//        }
-//        int n = SCIRun::Round(ncells);
-//        // Recompute newdx to avoid roundoff issues
-//        double newdx = (spec.to - spec.from)/n;
-//        spec.toSpacing = spec.fromSpacing = newdx;
-//      }
-//    }
-//
-//    if(stretch[axis].size() > 0){
-//      if(stretch[axis][0].from > levelAnchor(axis) || stretch[axis][stretch[axis].size()-1].to < levelHighPoint(axis)){
-//        std::ostringstream msg;
-//        msg << "Error, stretched grid specification does not cover entire axis";
-//        throw ProblemSetupException(msg.str(), __FILE__, __LINE__);
-//      }
-//    }
-//  }
-//
-//  if(procRank == 0 && stretch_count != 0){
-//    std::cerr << "Stretched grid information:\n";
-//    for(int axis=0;axis<3;axis++){
-//      if(axis == 0)
-//        std::cerr << "x";
-//      else if(axis == 1)
-//        std::cerr << "y";
-//      else
-//        std::cerr << "z";
-//      std::cerr << " axis\n";
-//      for(int i=0;i<(int)stretch[axis].size();i++){
-//        StretchSpec& spec = stretch[axis][i];
-//        std::cerr << spec.shape << ": from " << spec.from << "(" << spec.fromSpacing << ") to " << spec.to << "(" << spec.toSpacing << "), " << spec.countCells() << " cells\n";
-//      }
-//    }
-//    std::cerr << "\n";
-//  }
-//
-//  return(stretch_count);
-//}
-
 Grid::LevelBox
 Grid::parseBox(      ProblemSpecP         box_ps,
                const bool                 haveLevelSpacing,
@@ -1794,7 +1590,6 @@ bool Grid::isSimilar(const Grid& othergrid) const
   if(numLevels() != othergrid.numLevels())
      return false;
 
- 
   for(int i=numLevels()-1;i>=0;i--)
   {
     std::vector<Region> r1, r2, difference;
