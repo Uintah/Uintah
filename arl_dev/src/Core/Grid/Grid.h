@@ -221,8 +221,7 @@ WARNING
           stretchRegion* getRegion(  const int & axis
                                    , const int & region )
           {
-            int numRegions = getRegionsPerAxis(axis);
-            ASSERTRANGE( region, 0, numRegions);
+            ASSERTRANGE( region, 0, getRegionsPerAxis(axis));
             return (&axialStretches[axis][region]);
           }
 
