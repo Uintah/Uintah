@@ -53,15 +53,15 @@ statistics::statistics(ProblemSpecP& module_spec,
   d_sharedState  = sharedState;
   d_prob_spec    = module_spec;
   d_dataArchiver = dataArchiver;
-  d_matl_set     = 0;
+  d_matlSet     = 0;
 }
 
 //__________________________________
 statistics::~statistics()
 {
   cout_doing << " Doing: destorying statistics " << endl;
-  if(d_matl_set && d_matl_set->removeReference()) {
-    delete d_matl_set;
+  if(d_matlSet && d_matlSet->removeReference()) {
+    delete d_matlSet;
   }
 
   // delete each Qstats label
@@ -78,9 +78,9 @@ statistics::~statistics()
 //______________________________________________________________________
 //     P R O B L E M   S E T U P
 void statistics::problemSetup(const ProblemSpecP& prob_spec,
-                             const ProblemSpecP& ,
-                             GridP& grid,
-                             SimulationStateP& sharedState)
+                              const ProblemSpecP& ,
+                              GridP& grid,
+                              SimulationStateP& sharedState)
 {
   cout_doing << "Doing problemSetup \t\t\t\tstatistics" << endl;
   
@@ -146,8 +146,7 @@ void statistics::problemSetup(const ProblemSpecP& prob_spec,
     string name = attribute["label"];
     VarLabel* label = VarLabel::find(name);
     if(label == NULL){
-      throw ProblemSetupException("statistics label not found: "
-                           + name , __FILE__, __LINE__);
+      throw ProblemSetupException("statistics label not found: " + name , __FILE__, __LINE__);
     }
     
     //__________________________________
@@ -155,9 +154,9 @@ void statistics::problemSetup(const ProblemSpecP& prob_spec,
     const Uintah::TypeDescription* td = label->typeDescription();
     const Uintah::TypeDescription* subtype = td->getSubType();
     
-    if(td->getType() != TypeDescription::CCVariable  &&
-       subtype->getType() != TypeDescription::double_type &&
-       subtype->getType() != TypeDescription::Vector  ) {
+    if(td->getType() != TypeDescription::CCVariable  ||
+       ( subtype->getType() != TypeDescription::double_type &&
+         subtype->getType() != TypeDescription::Vector)  ) {
       ostringstream warn;
       warn << "ERROR:AnalysisModule:statisticst: ("<<label->getName() << " " 
            << td->getName() << " ) has not been implemented" << endl;
@@ -167,12 +166,15 @@ void statistics::problemSetup(const ProblemSpecP& prob_spec,
     //__________________________________
     // create the labels for this variable
     Qstats* Q = scinew Qstats;
+    Q->matl  = matl;
+    Q->Q_Label = label;
     Q->Qsum_Label      = VarLabel::create( "sum_" + name,      td);
     Q->QsumSqr_Label   = VarLabel::create( "sumSqr_" + name,   td);
     Q->Qmean_Label     = VarLabel::create( "mean_" + name,     td);
     Q->QmeanSqr_Label  = VarLabel::create( "meanSqr_" + name,  td);
     Q->Qvariance_Label = VarLabel::create( "variance_" + name, td);
 
+    d_Qstats.push_back( Q );
     std::string variance = "variance_"+ name;
     //__________________________________
     //  bulletproofing
@@ -192,25 +194,82 @@ void statistics::problemSetup(const ProblemSpecP& prob_spec,
   it = unique(m.begin(), m.end());
   m.erase(it, m.end());
   
-  d_matl_set = scinew MaterialSet();
-  d_matl_set->addAll(m);
-  d_matl_set->addReference();
-  d_matl_sub = d_matl_set->getUnion();
+  d_matlSet = scinew MaterialSet();
+  d_matlSet->addAll(m);
+  d_matlSet->addReference();
+  d_matSubSet = d_matlSet->getUnion();
 }
 
 //______________________________________________________________________
 void statistics::scheduleInitialize(SchedulerP& sched,
                                    const LevelP& level)
 {
-  return;  // do nothing
+  printSchedule( level,cout_doing,"statistics::scheduleInitialize" );
+
+  Task* t = scinew Task("statistics::initialize", 
+                   this,&statistics::initialize);
+                   
+  for ( unsigned int i =0 ; i < d_Qstats.size(); i++ ) {
+    t->computes ( d_Qstats[i]->Qsum_Label );
+    t->computes ( d_Qstats[i]->QsumSqr_Label );
+  }
+  sched->addTask(t, level->eachPatch(), d_matlSet);
 }
 
+//______________________________________________________________________
+//
 void statistics::initialize(const ProcessorGroup*, 
                            const PatchSubset* patches,
                            const MaterialSubset*,
                            DataWarehouse*,
                            DataWarehouse* new_dw)
-{  
+{ 
+  for(int p=0;p<patches->size();p++){
+    const Patch* patch = patches->get(p);
+    printTask(patches, patch,cout_doing,"Doing statistics::initialize");
+    
+    for ( unsigned int i =0 ; i < d_Qstats.size(); i++ ) {
+      VarLabel* label = d_Qstats[i]->Q_Label;
+      Qstats* Q = d_Qstats[i];
+      int matl = Q->matl;
+      
+      const TypeDescription* td = label->typeDescription();
+      const TypeDescription* subtype = td->getSubType();
+      
+      cout << " initialize " << label->getName() << " matl: " << matl << " subtype: " << subtype->getName() << endl;
+      switch(subtype->getType()) {
+            
+        case TypeDescription::double_type:{         // CC double
+          CCVariable<double> Qsum;
+          CCVariable<double> QsumSqr;
+          
+          new_dw->allocateAndPut( Qsum,    Q->Qsum_Label,    matl, patch );
+          new_dw->allocateAndPut( QsumSqr, Q->QsumSqr_Label, matl, patch );
+          
+          Qsum.initialize(0.0);
+          QsumSqr.initialize(0.0);
+          break;
+        }
+        case TypeDescription::Vector: {             // CC Vector
+          CCVariable<Vector> Qsum;
+          CCVariable<Vector> QsumSqr;
+          
+          new_dw->allocateAndPut( Qsum,    Q->Qsum_Label,    matl, patch );
+          new_dw->allocateAndPut( QsumSqr, Q->QsumSqr_Label, matl, patch );
+          
+          Vector zero = Vector(0,0,0);
+          Qsum.initialize( zero );
+          QsumSqr.initialize( zero );         
+
+          break;
+        }
+        default: {
+          throw InternalError("MinMax: invalid data type", __FILE__, __LINE__); 
+        }
+      }
+    }  // loop over Qstat
+  } 
+
 }
 
 void statistics::restartInitialize()
@@ -222,25 +281,38 @@ void statistics::scheduleDoAnalysis(SchedulerP& sched,
                                    const LevelP& level)
 {
   printSchedule( level,cout_doing,"statistics::scheduleDoAnalysis" );
-#if 0  
+
   Task* t = scinew Task("statistics::doAnalysis", 
                    this,&statistics::doAnalysis);
-
+                   
   Ghost::GhostType  gn  = Ghost::None;
+                   
+  for ( unsigned int i =0 ; i < d_Qstats.size(); i++ ) {
+    Qstats* Q = d_Qstats[i];
+    
+    t->requires( Task::NewDW, Q->Q_Label,       d_matSubSet, gn, 0 );
+    t->requires( Task::OldDW, Q->Qsum_Label,    d_matSubSet, gn, 0 );
+    t->requires( Task::OldDW, Q->QsumSqr_Label, d_matSubSet, gn, 0 );
   
-  t->computes(lb->statisticsLabel, d_matl_sub);
+    t->computes ( Q->Qsum_Label );
+    t->computes ( Q->QsumSqr_Label );
+    
+    t->computes ( Q->Qmean_Label );
+    t->computes ( Q->QmeanSqr_Label );
+    t->computes ( Q->Qvariance_Label );
+  }
+
   
-  sched->addTask(t, level->eachPatch(), d_matl_set);
-#endif
+  sched->addTask(t, level->eachPatch(), d_matlSet);
 }
 
 //______________________________________________________________________
-// Compute the statistics field.
+// Compute the statistics for each variable the user requested
 void statistics::doAnalysis(const ProcessorGroup* pg,
-                           const PatchSubset* patches,
-                           const MaterialSubset* matl_sub ,
-                           DataWarehouse* old_dw,
-                           DataWarehouse* new_dw)
+                            const PatchSubset* patches,
+                            const MaterialSubset* matl_sub ,
+                            DataWarehouse* old_dw,
+                            DataWarehouse* new_dw)
 {       
   const Level* level = getLevel(patches);
 #if 0  
@@ -266,3 +338,11 @@ void statistics::doAnalysis(const ProcessorGroup* pg,
   }  // patches
 #endif
 }
+
+
+
+
+
+
+
+

@@ -103,22 +103,11 @@ WARNING
                     const MaterialSubset*,
                     DataWarehouse*,
                     DataWarehouse* new_dw);
-                    
-    
-    // general labels
-    class statisticsLabel {
-    public:
-      VarLabel* sumVel_Label;
-      VarLabel* sumVelSqr_Label;
-      VarLabel* meanVel_Label;
-      VarLabel* meanVelSqr_Label;
-      VarLabel* variance_Label;
-    };
-    
-    statisticsLabel* lb;
     
     struct Qstats{
       std::string  name;
+      int matl;
+      VarLabel* Q_Label;
       VarLabel* Qsum_Label;
       VarLabel* QsumSqr_Label;
       VarLabel* Qmean_Label;
@@ -136,8 +125,8 @@ WARNING
     Output* d_dataArchiver;
     ProblemSpecP d_prob_spec;
     const Material* d_matl;
-    MaterialSet* d_matl_set;
-    const MaterialSubset* d_matl_sub;
+    MaterialSet* d_matlSet;
+    const MaterialSubset* d_matSubSet;
   };
 }
 
