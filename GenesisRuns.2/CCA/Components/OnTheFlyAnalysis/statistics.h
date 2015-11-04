@@ -33,17 +33,16 @@
 #include <Core/Grid/GridP.h>
 #include <Core/Grid/LevelP.h>
 
-#include <map>
 #include <vector>
 
 namespace Uintah {
-  
+
 
 /**************************************
 
 CLASS
    statistics
-   
+
 GENERAL INFORMATION
 
    statistics.h
@@ -51,59 +50,48 @@ GENERAL INFORMATION
    Todd Harman
    Department of Mechanical Engineering
    University of Utah
- 
+
 
 KEYWORDS
    statistics
 
 DESCRIPTION
    This computes turbulence related statistical quantities
-   
-  
+
+
 WARNING
-  
+
 ****************************************/
   class statistics : public AnalysisModule {
   public:
     statistics(ProblemSpecP& prob_spec,
               SimulationStateP& sharedState,
 		Output* dataArchiver);
-              
+
     statistics();
-                    
+
     virtual ~statistics();
-   
+
     virtual void problemSetup(const ProblemSpecP& prob_spec,
                               const ProblemSpecP& restart_prob_spec,
                               GridP& grid,
                               SimulationStateP& sharedState);
-   
-                              
+
+
     virtual void scheduleInitialize(SchedulerP& sched,
                                     const LevelP& level);
-                                    
+
     virtual void restartInitialize();
-                                    
+
     virtual void scheduleDoAnalysis(SchedulerP& sched,
                                     const LevelP& level);
-   
-    void scheduleDoAnalysis_preReloc(SchedulerP& sched,
-                                    const LevelP& level) {};
-                                      
-  private:
 
-    void initialize(const ProcessorGroup*, 
-                    const PatchSubset* patches,
-                    const MaterialSubset*,
-                    DataWarehouse*,
-                    DataWarehouse* new_dw);
-                    
-    void doAnalysis(const ProcessorGroup* pg,
-                    const PatchSubset* patches,
-                    const MaterialSubset*,
-                    DataWarehouse*,
-                    DataWarehouse* new_dw);
-    
+    void scheduleDoAnalysis_preReloc(SchedulerP& sched,
+                                     const LevelP& level) {};
+
+  private:
+    //__________________________________
+    //  container to hold
     struct Qstats{
       std::string  name;
       int matl;
@@ -113,14 +101,43 @@ WARNING
       VarLabel* Qmean_Label;
       VarLabel* QmeanSqr_Label;
       VarLabel* Qvariance_Label;
-      
+      const Uintah::TypeDescription* subtype;
+
+      void print(){
+        std::cout << name << " matl: " << matl << " subtype: " << subtype->getName() << "\n";
+      };
     };
-       
+
+    //__________________________________
+    //
+    void initialize(const ProcessorGroup*,
+                    const PatchSubset* patches,
+                    const MaterialSubset*,
+                    DataWarehouse*,
+                    DataWarehouse* new_dw);
+
+    void doAnalysis(const ProcessorGroup* pg,
+                    const PatchSubset* patches,
+                    const MaterialSubset*,
+                    DataWarehouse*,
+                    DataWarehouse* new_dw);
+
+    template <class T>
+    void allocateAndZero( DataWarehouse* new_dw,
+                          const Patch*    patch,
+                          Qstats Q);
+
+    template <class T>
+    void computeStats( DataWarehouse* old_dw,
+                       DataWarehouse* new_dw,
+                       const Patch*   patch,
+                       Qstats Q);
+
     //__________________________________
     // global constants
-    std::vector<Qstats*>  d_Qstats;
-    
-    
+    std::vector< Qstats >  d_Qstats;
+
+
     SimulationStateP d_sharedState;
     Output* d_dataArchiver;
     ProblemSpecP d_prob_spec;
@@ -128,6 +145,8 @@ WARNING
     MaterialSet* d_matlSet;
     const MaterialSubset* d_matSubSet;
   };
+
+
 }
 
 #endif
