@@ -257,39 +257,6 @@ WARNING
           std::vector<stretchRegion>  axialStretches[3];
       };
 
-      class StretchSpec {
-
-        public:
-
-          StretchSpec()
-          :  shape("")
-           , from(0.0)
-           , to(0.0)
-           , fromSpacing(0.0)
-           , toSpacing(0.0)
-          { }
-
-         ~StretchSpec() {};
-
-          //////////
-          //
-          int           countCells() const;
-
-          //////////
-          //
-          void          fillCells(  int                          & start
-                                  , int                            lowCells
-                                  , int                            highCells
-                                  , SCIRun::OffsetArray1<double> & faces ) const;
-
-          std::string   shape;
-          double        from;
-          double        to;
-          double        fromSpacing;
-          double        toSpacing;
-
-      };
-
       class LevelBox {
 
         public:
