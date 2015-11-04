@@ -77,12 +77,15 @@ def runSusTests(argv, TESTS, ALGO, callback = nullCallback):
   svn_revision = svn_revision.split(" ")[1]
   
   
-                    # 1 for GPU RT machine (albion, aurora), 0 otherwise.
-                    #   need to make this generic, perhaps pycuda?
-  has_gpu         = 0 
-  if socket.gethostname() == "albion" or socket.gethostname() == "aurora" or socket.gethostname() == "prism.crsim.utah.edu" or socket.gethostname() == "cyrus.mech.utah.edu": 
-    has_gpu = 1
+  # old logic
+  #if socket.gethostname() == "albion" or socket.gethostname() == "aurora" or socket.gethostname() == "prism.crsim.utah.edu" or socket.gethostname() == "cyrus.mech.utah.edu": 
+  #  has_gpu = 1
 
+  has_gpu  = 0
+  test =int( getoutput(('ldd %s/sus | grep --count libcudart') % (susdir) ) )
+  if test > 0 :
+    has_gpu = 1 
+  
   
   #__________________________________
   # set environmental variables
@@ -417,7 +420,7 @@ def runSusTests(argv, TESTS, ALGO, callback = nullCallback):
     if rc > 0:
       print "Failed %i user %s" %(failcode,user)
     
-    if failcode == 0 and (user == "csafe-tester" or user == "root"):
+    if failcode == 0 and (user == "csafe-tester" or user == "root" or user == "arl-rt" or user == "rt"):       # This sucks -Todd
       print "Updating the svn revision file %s" %svn_revision
       svn_file = "%s/%s/%s/svn_revision" % (gold_standard,ALGO,testname)
       system( "echo 'This test last passed with Revision: %s'> %s" %(svn_revision, svn_file))  
