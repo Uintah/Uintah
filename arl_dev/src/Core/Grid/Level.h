@@ -47,8 +47,9 @@
 #include <Core/Grid/FixedVector.h>
 #include <Core/Grid/Variables/ComputeSet.h>
 
-#include <vector>
+#include <bitset>
 #include <map>
+#include <vector>
 
 namespace Uintah {
 
@@ -64,7 +65,44 @@ class BoundCondBase;
 class Box;
 class Patch;
 class Task;
-   
+
+class LevelFlags {
+    public:
+
+      LevelFlags() {
+        states.reset();
+      }
+
+      enum FlagState {
+        isAMR,
+        isMultiScale,
+        isInterface,
+        isPeriodicX,
+        isPeriodicY,
+        isPeriodicZ,
+        num_flags
+      };
+
+      void set(FlagState flag, bool value) {
+        states.set(flag, value);
+      }
+
+      void clear(FlagState state) {
+        states.reset(state);
+      }
+
+      bool test(FlagState state) const {
+        return states.test(state);
+      }
+
+      bool none() const {
+        return states.none();
+      }
+
+    private:
+      std::bitset<num_flags> states;
+  };
+
 /**************************************
 
 CLASS
@@ -96,14 +134,13 @@ class Level : public RefCounted {
 
 public:
 
-  Level(        Grid    * grid
-        , const Point   & anchor
-        , const Vector  & dcell
-        ,       int       index
-        ,       IntVector refinementRatio
-        ,       int       id = -1
-        ,       bool      isAMR = false
-        ,       bool      isMultiScale = false);
+  Level(        Grid       * grid
+        , const Point      & anchor
+        , const Vector     & dcell
+        ,       int          index
+        ,       IntVector    refinementRatio
+        ,       LevelFlags & flags
+        ,       int          id = -1 );
 
   virtual ~Level();
   
@@ -235,9 +272,15 @@ public:
   Point getAnchor() const { return d_anchor; }
 
   // For stretched grids
-  bool isStretched() const { return d_stretched; }
-  bool isAMR() const {return d_isAMR; }
-  bool isMultiScale() const {return d_isMultiScale; }
+  bool isStretched() const
+  { return d_stretched; }
+
+  bool isAMR() const
+  { return d_flags.test(LevelFlags::isAMR); }
+
+  bool isMultiScale() const
+  {return d_flags.test(LevelFlags::isMultiScale); }
+
   void getCellWidths(Grid::Axis axis, OffsetArray1<double>& widths) const;
   void getFacePositions(Grid::Axis axis, OffsetArray1<double>& faces) const;
   void setStretched(Grid::Axis axis, const OffsetArray1<double>& faces);
@@ -293,6 +336,7 @@ public:
 
 private:
 
+  // disable copy and assignment
   Level(const Level&);
   Level& operator=(const Level&);
       
@@ -323,8 +367,7 @@ private:
   int       d_id;
   IntVector d_refinementRatio;
 
-  // vars for select_grid - don't ifdef them here, so if we change it
-  // we don't have to compile everything
+  // vars for select_grid - don't ifdef them here, so if we change it we don't have to compile everything
   IntVector d_idxLow;
   IntVector d_idxHigh;
   IntVector d_idxSize;
@@ -334,8 +377,9 @@ private:
 
   // For stretched grids
   bool d_stretched;
-  bool d_isAMR;
-  bool d_isMultiScale;
+
+  // for various level-related flags, e.g. isAMR, isMultiScale, etc
+  LevelFlags d_flags;
 
   // This is three different arrays containing the x,y,z coordinate of the face position
   // be sized to d_idxSize[axis] + 1.  Used only for stretched grids

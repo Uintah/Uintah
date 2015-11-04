@@ -29,6 +29,7 @@
 #include <Core/Grid/PatchRangeTree.h>
 #include <Core/Grid/Grid.h>
 #include <Core/Grid/LevelP.h>
+#include <Core/Grid/Level.h>
 
 #include <iostream>
 
@@ -70,7 +71,8 @@ int main()
   Uintah::Vector dcell(1,1,1);
   Uintah::Grid grid;
 
-  grid.addLevel(anchor,dcell);
+  Uintah::LevelFlags flags;
+  grid.addLevel(anchor,dcell,flags);
   std::vector<const Uintah::Patch*> patches;
 
   int i=0; 

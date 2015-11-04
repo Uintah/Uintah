@@ -289,7 +289,8 @@ Grid* TiledRegridder::CreateGrid(Grid* oldGrid, vector<vector<IntVector> > &tile
        break;
     }
 
-    LevelP level = newGrid->addLevel(anchor, spacing);
+    LevelFlags flags;
+    LevelP level = newGrid->addLevel(anchor, spacing, flags);
     level->setExtraCells(extraCells);
 
     //cout << "New level " << l << " num patches " << patch_sets[l-1].size() << endl;
