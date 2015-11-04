@@ -23,18 +23,18 @@
  */
 
 
-#ifndef Uintah_Core_Grid_ComputeSet_h
-#define Uintah_Core_Grid_ComputeSet_h
+#ifndef UINTAH_CORE_GRID_COMPUTESET_H
+#define UINTAH_CORE_GRID_COMPUTESET_H
 
-#include <Core/Util/Assert.h>
-#include <Core/Malloc/Allocator.h>
 #include <Core/Exceptions/InternalError.h>
+#include <Core/Malloc/Allocator.h>
+#include <Core/Util/Assert.h>
 #include <Core/Util/RefCounted.h>
 #include <Core/Util/constHandle.h>
 
-#include   <vector>
-#include   <algorithm>
-#include   <sstream>
+#include <vector>
+#include <algorithm>
+#include <sstream>
 
 namespace Uintah {
 
@@ -66,65 +66,78 @@ namespace Uintah {
     Level
 
     DESCRIPTION
-    Long description...
 
     WARNING
 
    ****************************************/
+
   class Patch;
+  class Level;
+
   template<class T> class ComputeSubset;
   template<class T> class ComputeSet;
 
+
+  typedef ComputeSet<const Level*>    LevelSet;
+  typedef ComputeSubset<const Level*> LevelSubset;
+
   typedef ComputeSet<const Patch*>    PatchSet;
-  typedef ComputeSet<int>             MaterialSet;
   typedef ComputeSubset<const Patch*> PatchSubset;
+
+  typedef ComputeSet<int>             MaterialSet;
   typedef ComputeSubset<int>          MaterialSubset;
 
 
   template<class T>
     class ComputeSubset : public RefCounted {
+
       public:
         ComputeSubset(int size = 0)
           : items(size)
-          {
-          }
+          { }
+
         ComputeSubset(const std::vector<T>& items)
           : items(items)
-          {
-          }
+          { }
 
         template <class InputIterator>
           ComputeSubset(InputIterator begin, InputIterator end)
           : items(begin, end)
-          {
-          }
+          { }
 
         int size() const {
-          return (int)items.size();
+          return static_cast<int>(items.size());
         }
 
         T& operator[](int i) {
           return items[i];
         }
+
         const T& operator[](int i) const {
           return items[i];
         }
         const T& get(int i) const {
           return items[i];
         }
+
         void add(const T& i) {
           items.push_back(i);
         }
+
         bool empty() const {
           return items.size() == 0;
         }
-        bool contains(T elem) const {
-          for(int i=0;i<(int)items.size();i++){
-            if(items[i] == elem)
-              return true;
+
+        bool
+      contains(T elem) const
+      {
+        for (int i = 0; i < static_cast<int>(items.size()); i++) {
+          if (items[i] == elem) {
+            return true;
           }
-          return false;
         }
+        return false;
+      }
 
         void sort();
         bool is_sorted() const;
@@ -135,12 +148,15 @@ namespace Uintah {
         bool equals(const ComputeSubset<T>* s2) const
         {
           //check that the sets are equvalent
-          if(items.size() != s2->items.size())
+          if(items.size() != s2->items.size()) {
             return false;
+          }
 
-          for(unsigned int i=0;i<items.size();i++)
-            if(items[i]!=s2->items[i])
+          for(unsigned int i=0;i<items.size();i++) {
+            if(items[i]!=s2->items[i]) {
               return false;
+            }
+          }
           
           return true;
         };
@@ -151,56 +167,58 @@ namespace Uintah {
 
         // May return the same Handle as one that came in.
         static constHandle< ComputeSubset<T> >
-          intersection(const constHandle< ComputeSubset<T> >& s1,
-              const constHandle< ComputeSubset<T> >& s2);
+          intersection(  const constHandle< ComputeSubset<T> > & s1
+                       , const constHandle< ComputeSubset<T> > & s2 );
 
         // May pass back Handles to same sets that came in.    
         static void
-          intersectionAndDifferences(const constHandle< ComputeSubset<T> >& A,
-              const constHandle< ComputeSubset<T> >& B,
-              constHandle< ComputeSubset<T> >& intersection,
-              constHandle< ComputeSubset<T> >& AminusB,
-              constHandle< ComputeSubset<T> >& BminusA)
-          {
-            intersection =
-              intersectionAndMaybeDifferences<true>(A, B, AminusB, BminusA);
-          }
+        intersectionAndDifferences(  const constHandle< ComputeSubset<T> > & A
+                                   , const constHandle< ComputeSubset<T> > & B
+                                   , constHandle< ComputeSubset<T> >       & intersection
+                                   , constHandle< ComputeSubset<T> >       & AminusB
+                                   , constHandle< ComputeSubset<T> >       & BminusA )
+        {
+          intersection = intersectionAndMaybeDifferences<true>(A, B, AminusB, BminusA);
+        }
         
         static void 
-          difference(const constHandle< ComputeSubset<T> >& A,
-              const constHandle< ComputeSubset<T> >& B,
-              constHandle< ComputeSubset<T> >& diff)
-          {
-            diff=difference(A,B);
-          }
+        difference(  const constHandle< ComputeSubset<T> > & A
+                   , const constHandle< ComputeSubset<T> > & B
+                   ,       constHandle< ComputeSubset<T> > & diff )
+        {
+          diff = difference(A, B);
+        }
 
         
-        static bool overlaps(const ComputeSubset<T>* s1,
-            const ComputeSubset<T>* s2);
+        static bool overlaps(const ComputeSubset<T>* s1, const ComputeSubset<T>* s2);
 
         static bool compareElems(const T e1, const T e2);
+
+
       private:
         
         // May pass back Handles to same sets that came in.
         template <bool passBackDifferences>
           static constHandle< ComputeSubset<T> >
-          intersectionAndMaybeDifferences(const constHandle< ComputeSubset<T> >& s1,
-              const constHandle< ComputeSubset<T> >& s2,
-              constHandle< ComputeSubset<T> >& setDifference1,
-              constHandle< ComputeSubset<T> >& setDifference2);
+          intersectionAndMaybeDifferences(  const constHandle< ComputeSubset<T> > & s1
+                                          , const constHandle< ComputeSubset<T> > & s2
+                                          ,       constHandle< ComputeSubset<T> > & setDifference1
+                                          ,       constHandle< ComputeSubset<T> > & setDifference2 );
         
         static constHandle< ComputeSubset<T> >
-          difference(const constHandle< ComputeSubset<T> >& A,
-              const constHandle< ComputeSubset<T> >& B);
+          difference(const constHandle< ComputeSubset<T> >& A, const constHandle< ComputeSubset<T> >& B);
         
         std::vector<T> items;
 
+        // disable copy and assignment
         ComputeSubset(const ComputeSubset&);
         ComputeSubset& operator=(const ComputeSubset&);
+
     };  // end class ComputeSubset
 
   template<class T>
     class ComputeSet : public RefCounted {
+
       public:
         ComputeSet();
         ~ComputeSet();
@@ -227,16 +245,21 @@ namespace Uintah {
           return set[idx];
         }
       
-      /// Returns the vector of subsets managed by this set
+        /// Returns the vector of subsets managed by this set
         const std::vector<ComputeSubset<T>*>& getVector() const
         { return set; }
       
         const ComputeSubset<T>* getSubset(int idx) const {
           return set[idx];
         }
+
         const ComputeSubset<T>* getUnion() const;
+
         void createEmptySubsets(int size);
+
         int totalsize() const;
+
+
       private:
         std::vector<ComputeSubset<T>*> set;
         mutable ComputeSubset<T>* un;
@@ -265,11 +288,14 @@ namespace Uintah {
   template<class T>
     ComputeSet<T>::~ComputeSet()
     {
-      for(int i=0;i<(int)set.size();i++)
-        if(set[i]->removeReference())
+      for(int i=0;i<(int)set.size();i++) {
+        if(set[i]->removeReference()) {
           delete set[i];
-      if(un && un->removeReference())
+        }
+      }
+      if(un && un->removeReference()) {
         delete un;
+      }
     }
 
   template<class T>
@@ -289,8 +315,8 @@ namespace Uintah {
       std::vector<T> sub_unique;
       sub_unique.push_back(sub[0]);
 
-      for(int i=1;i<(int)sub.size();i++){
-        if( find(sub_unique.begin(), sub_unique.end(), sub[i] ) == sub_unique.end()){
+      for(int i=1;i<(int)sub.size();i++) {
+        if( find(sub_unique.begin(), sub_unique.end(), sub[i] ) == sub_unique.end()) {
           sub_unique.push_back(sub[i]);
         }
       }
@@ -306,10 +332,10 @@ namespace Uintah {
     void ComputeSet<T>::addEach(const std::vector<T>& sub)
     {
       ASSERT(!un);
-      for(int i=0;i<(int)sub.size();i++){
+      for (int i = 0; i < static_cast<int>(sub.size()); i++) {
         ComputeSubset<T>* subset = scinew ComputeSubset<T>(1);
         subset->addReference();
-        (*subset)[0]=sub[i];
+        (*subset)[0] = sub[i];
         set.push_back(subset);
       }
     }
@@ -327,7 +353,7 @@ namespace Uintah {
   template<class T>
     void ComputeSet<T>::sortSubsets()
     {
-      for(int i=0;i<(int)set.size();i++){
+      for(int i = 0; i < static_cast<int>(set.size()); i++){
         ComputeSubset<T>* ss = set[i];
         ss->sort();
       }
@@ -349,9 +375,10 @@ namespace Uintah {
       if(!un){
         un = scinew ComputeSubset<T>;
         un->addReference();
-        for(int i=0;i<(int)set.size();i++){
+        for(int i = 0; i < static_cast<int>(set.size()); i++) {
           ComputeSubset<T>* ss = set[i];
-          for(int j=0;j<ss->size();j++){
+          int subset_size = ss->size();
+          for(int j = 0; j < subset_size; j++) {
             un->add(ss->get(j));
           }
         }
@@ -362,16 +389,18 @@ namespace Uintah {
 
   template<class T>
     int ComputeSet<T>::totalsize() const {
-      if(un)
+      if(un) {
         return un->size();
+      }
       int total=0;
-      for(int i=0;i<(int)set.size();i++)
-        total+=set[i]->size();
+      int set_size = static_cast<int>(set.size());
+      for (int i = 0; i < set_size; i++) {
+        total += set[i]->size();
+    }
       return total;
     }
 
-  // Note: sort is specialized in ComputeSet_special for const Patch*'s
-  // to use Patch::Compare.
+  // Note: sort is specialized in ComputeSet_special for const Patch*'s to use Patch::Compare.
   template<>
      void ComputeSubset<const Patch*>::sort();
 
@@ -382,14 +411,13 @@ namespace Uintah {
 
   // specialized for patch in ComputeSet_special.cc
   template<>  
-     bool ComputeSubset<const Patch*>::compareElems(const Patch* e1,
-        const Patch* e2);
+     bool ComputeSubset<const Patch*>::compareElems(const Patch* e1, const Patch* e2);
 
   template<class T>
     bool ComputeSubset<T>::compareElems(const T e1, const T e2)
     { return e1 < e2; }
 
-  //compute the interesection between s1 and s2
+  // compute the intersection between s1 and s2
   template<class T>
     constHandle< ComputeSubset<T> > ComputeSubset<T>::
     intersection(const constHandle< ComputeSubset<T> >& s1,
@@ -403,14 +431,18 @@ namespace Uintah {
       if (!s1) {
         return s2; // treat null as everything -- intersecting with it gives all
       }
+
       if (!s2) {
         return s1; // treat null as everything -- intersecting with it gives all
       }
 
-      if (s1->size() == 0)
+      if (s1->size() == 0) {
         return s1; // return an empty set
-      if (s2->size() == 0)
+      }
+
+      if (s2->size() == 0) {
         return s2; // return an empty set
+      }
 
       Handle< ComputeSubset<T> > intersection = scinew ComputeSubset<T>;
 
@@ -436,18 +468,19 @@ namespace Uintah {
       int i1=0;
       int i2=0;
       for(;;){
-        if(s1->get(i1) == s2->get(i2)){
+        if(s1->get(i1) == s2->get(i2)) {
           intersection->add(s1->get(i1));
-          i1++; i2++;
-        } else if(compareElems(s1->get(i1), s2->get(i2))){
+          i1++;
+          i2++;
+        } else if(compareElems(s1->get(i1), s2->get(i2))) {
           i1++;
         } else {
           i2++;
         }
-        if(i1 == s1->size() || i2 == s2->size())
+        if(i1 == s1->size() || i2 == s2->size()) {
           break;
+        }
       }
-
       return intersection;
     }
 
@@ -501,19 +534,19 @@ namespace Uintah {
       }
 
       T el2 = s2->get(0);
-      for(int i=1;i<s2->size();i++){
+      for(int i=1;i<s2->size();i++) {
         T el = s2->get(i);
         if(!compareElems(el2, el)) {
           std::ostringstream msgstr;
           msgstr << "Set not sorted: " << el2 << ", " << el;
           SCI_THROW(InternalError(msgstr.str(), __FILE__, __LINE__)); 
         }
-        el2=el;
+        el2 = el;
       }
 #endif
       int i1=0;
       int i2=0;
-      for(;;){
+      for(;;) {
         if(s1->get(i1) == s2->get(i2)){
           intersection->add(s1->get(i1));
           i1++; i2++;
@@ -528,8 +561,10 @@ namespace Uintah {
           }  
           i2++;
         }
-        if(i1 == s1->size() || i2 == s2->size())
+
+        if(i1 == s1->size() || i2 == s2->size()) {
           break;
+        }
       }
 
       if (passBackDifferences) {
@@ -571,8 +606,7 @@ namespace Uintah {
         return Handle< ComputeSubset<T> >(scinew ComputeSubset<T>);
       }
 
-      if (s1->size() == 0 || s1->size()==0 || s2->size()==0) 
-      {
+      if (s1->size() == 0 || s1->size()==0 || s2->size()==0) {
         return s1;  // return s1
       }
 
@@ -585,14 +619,14 @@ namespace Uintah {
       }
 
       T el2 = s2->get(0);
-      for(int i=1;i<s2->size();i++){
+      for(int i=1;i<s2->size();i++) {
         T el = s2->get(i);
         if(!compareElems(el2, el)) {
           std::ostringstream msgstr;
           msgstr << "Set not sorted: " << el2 << ", " << el;
           SCI_THROW(InternalError(msgstr.str(), __FILE__, __LINE__)); 
         }
-        el2=el;
+        el2 = el;
       }
 #endif
       
@@ -600,11 +634,11 @@ namespace Uintah {
 
       int i1=0;
       int i2=0;
-      for(;;){
-        if(s1->get(i1) == s2->get(i2)){
+      for(;;) {
+        if(s1->get(i1) == s2->get(i2) ){
           //in both s1 and s2
           i1++; i2++;
-        } else if(compareElems(s1->get(i1), s2->get(i2))){
+        } else if(compareElems(s1->get(i1), s2->get(i2))) {
           //in s1 but not s2
           diff->add(s1->get(i1)); // alters setDifference1
           i1++;
@@ -612,8 +646,9 @@ namespace Uintah {
           //in s2 but not s1
           i2++;
         }
-        if(i1 == s1->size() || i2 == s2->size())
+        if(i1 == s1->size() || i2 == s2->size()) {
           break;
+        }
       }
 
       // get the rest of s1 that wasn't finished (if any)
@@ -641,17 +676,19 @@ namespace Uintah {
       if (!s2->is_sorted()) {
         SCI_THROW(InternalError("ComputeSubset s2 not sorted in ComputeSubset<T>::overlaps", __FILE__, __LINE__));
       }
+
       int i1=0;
       int i2=0;
-      for(;;){
+      for(;;) {
         if(s1->get(i1) == s2->get(i2)){
           return true;
         } else if(compareElems(s1->get(i1), s2->get(i2))){
           if (++i1 == s1->size())
             break;
         } else {
-          if (++i2 == s2->size())
+          if (++i2 == s2->size()) {
             break;
+          }
         }
       }
       return false;
@@ -671,4 +708,4 @@ namespace Uintah {
 } // end namespace Uintah
 
 
-#endif
+#endif // include guard UINTAH_CORE_GRID_COMPUTESET_H
