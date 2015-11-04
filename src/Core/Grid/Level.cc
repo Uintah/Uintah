@@ -63,14 +63,13 @@ static DebugStream   rgtimes("RGTimes",false);
 
 //______________________________________________________________________
 //
-Level::Level(        Grid       * grid
-              , const Point     & anchor
-              , const Vector    & dcell
-              ,       int         index
-              ,       IntVector   refinementRatio
-              ,       int         id           /* = -1    */
-              ,       bool        isAMR        /* = false */
-              ,       bool        isMultiScale /* = false */ )
+Level::Level(        Grid        * grid
+              , const Point      & anchor
+              , const Vector     & dcell
+              ,       int          index
+              ,       IntVector    refinementRatio
+              ,       LevelFlags & flags
+              ,       int          id     /* = -1   */ )
     :  d_grid(grid)
      , d_anchor(anchor)
      , d_dcell(dcell)
@@ -85,10 +84,9 @@ Level::Level(        Grid       * grid
      , d_totalCells(0)
      , d_extraCells(IntVector(0,0,0))
      , d_id(id)
+     , d_flags(flags)
      , d_refinementRatio(refinementRatio)
      , d_stretched(false)
-     , d_isAMR(isAMR)
-     , d_isMultiScale(isMultiScale)
      , d_bvh(NULL)
      , d_cachelock("Level Cache Lock")
 {

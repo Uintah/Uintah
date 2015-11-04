@@ -47,6 +47,7 @@ namespace Uintah {
 
 class ProcessorGroup;
 class Patch;
+class LevelFlags;
 
 /**************************************
 
@@ -353,8 +354,10 @@ WARNING
     
     //////////
     // Adds a level to the grid.
-    Level* addLevel( const SCIRun::Point  & anchor,
-                     const SCIRun::Vector & dcell, int id = -1, bool isAMR = false, bool isMultiscale = false);
+    Level* addLevel(  const SCIRun::Point  & anchor
+                    , const SCIRun::Vector & dcell
+                    , LevelFlags           & flags
+                    , int                    id = -1 );
 
     // Reads in XML data line by line to create a level...
     void readLevelsFromFile( FILE * fp, std::vector< std::vector<int> > & procMap );

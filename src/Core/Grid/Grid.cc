@@ -274,7 +274,8 @@ Grid::parseLevelFromFile( FILE * fp, std::vector<int> & procMapForLevel )
         //  dcell *= d_cell_scale;
         //}
 
-        level = this->addLevel( anchor, dcell, id );
+        LevelFlags flags;
+        level = this->addLevel( anchor, dcell, flags, id );
         // FIXME! File parsing needs to be fixed for AMR, MultiScale per level in a transparent way! JBH 9/2015
 
         level->setExtraCells( extraCells );
@@ -472,7 +473,7 @@ Grid::readLevelsFromFile( FILE * fp, std::vector< std::vector<int> > & procMap )
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 Level *
-Grid::addLevel( const Point & anchor, const Vector & dcell, int id, bool isAMR, bool isMultiscale )
+Grid::addLevel( const Point& anchor, const Vector& dcell, LevelFlags& flags, int id )
 {
   // Find the new level's refinement ratio.
   // This should only be called when a new grid is created, so if this level index 
@@ -495,7 +496,7 @@ Grid::addLevel( const Point & anchor, const Vector & dcell, int id, bool isAMR, 
     ratio = IntVector(1,1,1);
 
 
-  Level* level = scinew Level(this, anchor, dcell, (int)d_levels.size(), ratio, id, isAMR, isMultiscale);
+  Level* level = scinew Level(this, anchor, dcell, (int)d_levels.size(), ratio, flags, id);
 
   d_levels.push_back( level );
   return level;
@@ -1411,10 +1412,10 @@ Grid::parsePatches(const ProblemSpecP&      level_ps,
 }
 
 void
-Grid::problemSetup(const ProblemSpecP&   params,
-                      const ProcessorGroup* pg,
-                            bool            do_AMR,
-                            bool            do_MultiScale)
+Grid::problemSetup(const ProblemSpecP      & params,
+                      const ProcessorGroup * pg,
+                            bool             do_AMR,
+                            bool             do_MultiScale)
 {
   ProblemSpecP grid_ps = params->findBlock("Grid");
   if (!grid_ps)
@@ -1481,7 +1482,10 @@ Grid::problemSetup(const ProblemSpecP&   params,
       proc0cout << "Warning:  Input file overrides extraCells specification via level " << levelIndex << "." << std::endl
                 << "\tCurrent extraCell: " << levelInfo.getExtraCells() << "." << std::endl;
     }
-    LevelP level = addLevel(gridAnchor, levelInfo.getSpacing(), -1, do_AMR, do_MultiScale);
+    LevelFlags flags;
+    flags.set(LevelFlags::isAMR, do_AMR);
+    flags.set(LevelFlags::isMultiScale, do_MultiScale);
+    LevelP level = addLevel(gridAnchor, levelInfo.getSpacing(), flags, -1);
     level->setExtraCells(extraCells);
 
     if(levelInfo.stretchCount() != 0)
