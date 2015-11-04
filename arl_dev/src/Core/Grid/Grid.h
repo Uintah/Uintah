@@ -81,9 +81,11 @@ WARNING
   class Grid : public RefCounted
   {
     private:
+
       class stretchRegion
       {
         public:
+
           stretchRegion(  std::string & _shape
                         , double      & _to
                         , double      & _from
@@ -515,8 +517,8 @@ WARNING
     
     IntVector d_extraCells;
 
-//    // Holds the level subsets for portions of the grid.
-//    LevelSet  d_levelSet;
+    // Holds the level subsets for portions of the grid.
+    LevelSet  d_levelSet;
 
   };
 
