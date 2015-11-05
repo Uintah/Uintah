@@ -100,7 +100,6 @@ Grid::getLevel( int l ) const
 //        <totalCells>2048</totalCells>
 //      </Patch>
 //
-
 bool
 Grid::parsePatchFromFile( FILE * fp, LevelP level, std::vector<int> & procMapForLevel )
 {
@@ -383,12 +382,13 @@ Grid::parseLevelFromFile( FILE * fp, std::vector<int> & procMapForLevel )
 //    </Grid>
 //
 bool
-Grid::parseGridFromFile( FILE * fp, std::vector< std::vector<int> > & procMap )
+Grid::parseGridFromFile( FILE * fp, std::vector< std::vector<int> > & procMap, const bool& doAMR )
 {
   int  numLevelsRead  = 0;
   int  numLevels      = 0;
   bool doneWithGrid   = false;
   bool foundLevelTag  = false;
+  bool hasLevelSet    = false;
 
   while( !doneWithGrid ) { 
 
@@ -445,7 +445,7 @@ Grid::parseGridFromFile( FILE * fp, std::vector< std::vector<int> > & procMap )
 // we are concerned about the highwater mark (max memory per node), which the XML structure may push us over.
 //
 void
-Grid::readLevelsFromFile( FILE * fp, std::vector< std::vector<int> > & procMap )
+Grid::readLevelsFromFile( FILE * fp, std::vector< std::vector<int> > & procMap, const bool &do_AMR )
 {
   bool done      = false;
   bool foundGrid = false;
@@ -455,7 +455,7 @@ Grid::readLevelsFromFile( FILE * fp, std::vector< std::vector<int> > & procMap )
     std::string line = UintahXML::getLine( fp );
 
     if( line == "<Grid>" ) {
-      foundGrid = parseGridFromFile( fp, procMap );
+      foundGrid = parseGridFromFile( fp, procMap, do_AMR );
       done = true;
     }
     else if( line == "" ) { // End of file reached.

@@ -359,7 +359,7 @@ WARNING
                     , int                    id = -1 );
 
     // Reads in XML data line by line to create a level...
-    void readLevelsFromFile( FILE * fp, std::vector< std::vector<int> > & procMap );
+    void readLevelsFromFile( FILE * fp, std::vector< std::vector<int> > & procMap, const bool &do_AMR );
    
     //////////
     //
@@ -433,7 +433,7 @@ WARNING
     void      partition2D(std::list<int> primes, int a, int b);
 
     // Helper function for reading in xml specification of the grid from timestep.xml.
-    bool      parseGridFromFile(  FILE * fp, std::vector< std::vector<int> > & procMap );         // returns true if "</Grid>" found.
+    bool      parseGridFromFile(  FILE * fp, std::vector< std::vector<int> > & procMap, const bool& doAMR );         // returns true if "</Grid>" found.
 
     bool      parseLevelFromFile( FILE * fp, std::vector<int> & procMapForLevel );                // returns true if "</Level>" found.
 
