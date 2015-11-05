@@ -302,7 +302,32 @@ DataArchive::queryGrid( int index, const ProblemSpecP & ups /* = NULL */, bool a
 
   vector< vector<int> > procMap; // One vector<int> per level.
 
-  grid->readLevelsFromFile( fp, procMap );
+  // To support LevelSet on pre-LevelSet files, we need to know if the run was AMR, since that's the
+  // only LevelSet capable run type that existed before they were implemented.
+  // Note that this will still require <doAMR>true</doAMR> in the .ups, but we can enforce that
+  // via the spec if need be.  JBH 11-4-2015
+
+  ProblemSpecP amr_ps = NULL;
+  bool         do_AMR = false;
+  if (ups) {
+    // If we have a "doAMR" block then parse it directly
+    amr_ps = ups->findBlock("doAMR");
+    if (amr_ps) {
+      // We have a "doAMR" block, so parse it directly.
+      amr_ps->get("doAMR", do_AMR);
+    }
+    else {
+      amr_ps = ups->findBlock("AMR");
+      if (amr_ps) {
+        // We don't have a <doAMR> block, but we DO have an <AMR> block:
+        // Assume the presence of an isolated <AMR> block with no <doAMR> in an old file denotes an intent
+        // to have an AMR system.
+        do_AMR = true;
+      }
+    }
+  }
+
+  grid->readLevelsFromFile( fp, procMap, do_AMR );
 
   fclose( fp );
 
