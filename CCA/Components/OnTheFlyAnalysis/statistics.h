@@ -97,10 +97,20 @@ WARNING
       int matl;
       VarLabel* Q_Label;
       VarLabel* Qsum_Label;
-      VarLabel* QsumSqr_Label;
       VarLabel* Qmean_Label;
-      VarLabel* QmeanSqr_Label;
+      
+      VarLabel* Qsum2_Label;
+      VarLabel* Qmean2_Label;
       VarLabel* Qvariance_Label;
+      
+      VarLabel* Qsum3_Label;
+      VarLabel* Qmean3_Label;
+      VarLabel* Qskewness_Label;
+      
+      VarLabel* Qsum4_Label;
+      VarLabel* Qmean4_Label;   
+      VarLabel* Qkurtosis_Label; 
+      
       const Uintah::TypeDescription* subtype;
 
       void print(){
@@ -135,6 +145,8 @@ WARNING
 
     //__________________________________
     // global constants
+    
+    bool d_doHigherOrderStats;
     std::vector< Qstats >  d_Qstats;
 
 

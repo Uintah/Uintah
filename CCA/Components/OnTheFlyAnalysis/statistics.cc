@@ -51,6 +51,7 @@ statistics::statistics(ProblemSpecP& module_spec,
   d_prob_spec    = module_spec;
   d_dataArchiver = dataArchiver;
   d_matlSet     = 0;
+  d_doHigherOrderStats = false;
 }
 
 //__________________________________
@@ -65,10 +66,17 @@ statistics::~statistics()
   for (unsigned int i =0 ; i < d_Qstats.size(); i++) {
     Qstats Q = d_Qstats[i];
     VarLabel::destroy( Q.Qsum_Label );
-    VarLabel::destroy( Q.QsumSqr_Label );
+    VarLabel::destroy( Q.Qsum2_Label );
     VarLabel::destroy( Q.Qmean_Label );
     VarLabel::destroy( Q.Qmean_Label );
     VarLabel::destroy( Q.Qvariance_Label );
+
+    if( d_doHigherOrderStats ){
+      VarLabel::destroy( Q.Qsum3_Label );
+      VarLabel::destroy( Q.Qmean3_Label );
+      VarLabel::destroy( Q.Qsum4_Label );
+      VarLabel::destroy( Q.Qmean4_Label );
+    }
   }
 }
 
@@ -109,6 +117,14 @@ void statistics::problemSetup(const ProblemSpecP& prob_spec,
   vector<int> m;
   m.push_back( defaultMatl );
 
+  proc0cout << "__________________________________ Data Analysis module: statistics" << endl;
+  d_prob_spec->get("computeHigherOrderStats", d_doHigherOrderStats );
+  if (d_doHigherOrderStats){
+
+    proc0cout << "         Computing 2nd, 3rd and 4th order statistics for all of the variables listed\n"<< endl;
+  } else {
+    proc0cout << "         Computing 2nd order statistics for all of the variables listed\n"<< endl;
+  }
 
   //__________________________________
   //  Read in variables label names
@@ -168,19 +184,44 @@ void statistics::problemSetup(const ProblemSpecP& prob_spec,
     Q.Q_Label = label;
     Q.subtype = subtype;
     Q.Qsum_Label      = VarLabel::create( "sum_" + name,      td);
-    Q.QsumSqr_Label   = VarLabel::create( "sumSqr_" + name,   td);
+    Q.Qsum2_Label     = VarLabel::create( "sum2_" + name,     td);
     Q.Qmean_Label     = VarLabel::create( "mean_" + name,     td);
-    Q.QmeanSqr_Label  = VarLabel::create( "meanSqr_" + name,  td);
+    Q.Qmean2_Label    = VarLabel::create( "mean2_" + name,    td);
     Q.Qvariance_Label = VarLabel::create( "variance_" + name, td);
 
+    if( d_doHigherOrderStats ){
+      Q.Qsum3_Label     = VarLabel::create( "sum3_" + name,      td);
+      Q.Qmean3_Label    = VarLabel::create( "mean3_" + name,     td);
+      Q.Qskewness_Label = VarLabel::create( "skewness_" + name,  td);
+
+      Q.Qsum4_Label     = VarLabel::create( "sum4_" + name,      td);
+      Q.Qmean4_Label    = VarLabel::create( "mean4_" + name,     td);
+      Q.Qkurtosis_Label = VarLabel::create( "kurtosis_" + name,  td);
+    }
+
     d_Qstats.push_back( Q );
-    std::string variance = "variance_"+ name;
+
     //__________________________________
     //  bulletproofing
-    if(!d_dataArchiver->isLabelSaved( variance ) ){
+    std::string variance = "variance_"+ name;
+    std::string skew     = "skewness_"+ name;
+    std::string kurtosis = "kurtosis_"+ name;
+    ostringstream mesg;
+    mesg << "";
+    if( !d_dataArchiver->isLabelSaved( variance ) ){
+      mesg << variance;
+    }
+    if( !d_dataArchiver->isLabelSaved( skew )  && d_doHigherOrderStats){
+      mesg << " " << skew;
+    }
+    if( !d_dataArchiver->isLabelSaved( kurtosis ) && d_doHigherOrderStats){
+      mesg << " " << kurtosis;
+    }
+
+    if( mesg.str() != "" ){
       ostringstream warn;
-      warn << "\nERROR:  You've activated the DataAnalysis:statistics module but your not saving the variable ("
-           << variance << ")\n";
+      warn << "\nERROR:  You've activated the DataAnalysis:statistics module but your not saving the variable(s) ("
+           << mesg.str() << ")\n";
       throw ProblemSetupException( warn.str(),__FILE__, __LINE__ );
     }
   }
@@ -209,8 +250,15 @@ void statistics::scheduleInitialize(SchedulerP& sched,
                    this,&statistics::initialize);
 
   for ( unsigned int i =0 ; i < d_Qstats.size(); i++ ) {
-    t->computes ( d_Qstats[i].Qsum_Label );
-    t->computes ( d_Qstats[i].QsumSqr_Label );
+    Qstats Q = d_Qstats[i];
+
+    t->computes ( Q.Qsum_Label );
+    t->computes ( Q.Qsum2_Label );
+
+    if( d_doHigherOrderStats ){
+      t->computes ( Q.Qsum3_Label );
+      t->computes ( Q.Qsum4_Label );
+    }
   }
   sched->addTask(t, level->eachPatch(), d_matlSet);
 }
@@ -272,15 +320,32 @@ void statistics::scheduleDoAnalysis(SchedulerP& sched,
     matSubSet->add( Q.matl );
     matSubSet->addReference();
 
-    t->requires( Task::NewDW, Q.Q_Label,       matSubSet, gn, 0 );
-    t->requires( Task::OldDW, Q.Qsum_Label,    matSubSet, gn, 0 );
-    t->requires( Task::OldDW, Q.QsumSqr_Label, matSubSet, gn, 0 );
+    //__________________________________
+    //  Lower order statistics
+    t->requires( Task::NewDW, Q.Q_Label,     matSubSet, gn, 0 );
+    t->requires( Task::OldDW, Q.Qsum_Label,  matSubSet, gn, 0 );
+    t->requires( Task::OldDW, Q.Qsum2_Label, matSubSet, gn, 0 );
 
     t->computes ( Q.Qsum_Label,       matSubSet );
-    t->computes ( Q.QsumSqr_Label,    matSubSet );
+    t->computes ( Q.Qsum2_Label,      matSubSet );
     t->computes ( Q.Qmean_Label,      matSubSet );
-    t->computes ( Q.QmeanSqr_Label,   matSubSet );
+    t->computes ( Q.Qmean2_Label,     matSubSet );
     t->computes ( Q.Qvariance_Label,  matSubSet );
+    
+    //__________________________________
+    // Higher order statistics
+    if( d_doHigherOrderStats ){
+    
+      t->requires( Task::OldDW, Q.Qsum3_Label, matSubSet, gn, 0 );
+      t->requires( Task::OldDW, Q.Qsum4_Label, matSubSet, gn, 0 );
+
+      t->computes ( Q.Qsum3_Label,     matSubSet );
+      t->computes ( Q.Qsum4_Label,     matSubSet );
+      t->computes ( Q.Qmean3_Label,    matSubSet );
+      t->computes ( Q.Qmean4_Label,    matSubSet );
+      t->computes ( Q.Qskewness_Label, matSubSet );      
+      t->computes ( Q.Qkurtosis_Label, matSubSet );      
+    }
 
     if(matSubSet && matSubSet->removeReference()){
       delete matSubSet;
@@ -321,7 +386,7 @@ void statistics::doAnalysis(const ProcessorGroup* pg,
           throw InternalError("statistics: invalid data type", __FILE__, __LINE__);
         }
       }
-    }
+    }  // qstats loop
   }  // patches
 }
 
@@ -337,27 +402,30 @@ void statistics::computeStats( DataWarehouse* old_dw,
 
   constCCVariable<T> Qvar;
   constCCVariable<T> Qsum_old;
-  constCCVariable<T> QsumSqr_old;
+  constCCVariable<T> Qsum2_old;
 
   Ghost::GhostType  gn  = Ghost::None;
-  new_dw->get ( Qvar,        Q.Q_Label,       matl, patch, gn, 0 );
-  old_dw->get ( Qsum_old,    Q.Qsum_Label,    matl, patch, gn, 0 );
-  old_dw->get ( QsumSqr_old, Q.QsumSqr_Label, matl, patch, gn, 0 );
+  new_dw->get ( Qvar,      Q.Q_Label,      matl, patch, gn, 0 );
+  old_dw->get ( Qsum_old,  Q.Qsum_Label,   matl, patch, gn, 0 );
+  old_dw->get ( Qsum2_old, Q.Qsum2_Label,  matl, patch, gn, 0 );
 
   CCVariable< T > Qsum;
-  CCVariable< T > QsumSqr;
+  CCVariable< T > Qsum2;
   CCVariable< T > Qmean;
-  CCVariable< T > QmeanSqr;
+  CCVariable< T > Qmean2;
   CCVariable< T > Qvariance;
+  
   new_dw->allocateAndPut( Qsum,      Q.Qsum_Label,      matl, patch );
-  new_dw->allocateAndPut( QsumSqr,   Q.QsumSqr_Label,   matl, patch );
+  new_dw->allocateAndPut( Qsum2,     Q.Qsum2_Label,     matl, patch );
   new_dw->allocateAndPut( Qmean,     Q.Qmean_Label,     matl, patch );
-  new_dw->allocateAndPut( QmeanSqr,  Q.QmeanSqr_Label,  matl, patch );
+  new_dw->allocateAndPut( Qmean2,    Q.Qmean2_Label,    matl, patch );
   new_dw->allocateAndPut( Qvariance, Q.Qvariance_Label, matl, patch );
   int timestep = d_sharedState->getCurrentTopLevelTimeStep();
 
   T nTimesteps(timestep);
 
+  //__________________________________
+  //  Lower order stats  1st and 2nd
   for (CellIterator iter=patch->getExtraCellIterator();!iter.done();iter++){
     IntVector c = *iter;
 
@@ -365,10 +433,60 @@ void statistics::computeStats( DataWarehouse* old_dw,
     Qsum[c]    = me + Qsum_old[c];
     Qmean[c]   = Qsum[c]/nTimesteps;
 
-    QsumSqr[c]  = me * me + QsumSqr_old[c];
-    QmeanSqr[c] = QsumSqr[c]/nTimesteps;
+    Qsum2[c]  = me * me + Qsum2_old[c];
+    Qmean2[c] = Qsum2[c]/nTimesteps;
 
-    Qvariance[c] = QmeanSqr[c] - Qmean[c] * Qmean[c];
+    Qvariance[c] = Qmean2[c] - Qmean[c] * Qmean[c];
+  }
+
+  //__________________________________
+  //  Higher order stats  3rd and 4th
+  if( d_doHigherOrderStats ){
+
+    constCCVariable<T> Qsum3_old;
+    constCCVariable<T> Qsum4_old;
+
+    old_dw->get ( Qsum3_old, Q.Qsum3_Label, matl, patch, gn, 0 );
+    old_dw->get ( Qsum4_old, Q.Qsum4_Label, matl, patch, gn, 0 );
+
+    CCVariable< T > Qsum3;
+    CCVariable< T > Qsum4;
+    CCVariable< T > Qmean3;
+    CCVariable< T > Qmean4;
+
+    CCVariable< T > Qskewness;
+    CCVariable< T > Qkurtosis;
+    new_dw->allocateAndPut( Qsum3,     Q.Qsum3_Label,     matl, patch );
+    new_dw->allocateAndPut( Qsum4,     Q.Qsum4_Label,     matl, patch );
+    new_dw->allocateAndPut( Qmean3,    Q.Qmean3_Label,    matl, patch );
+    new_dw->allocateAndPut( Qmean4,    Q.Qmean4_Label,    matl, patch );
+    new_dw->allocateAndPut( Qskewness, Q.Qskewness_Label, matl, patch );
+    new_dw->allocateAndPut( Qkurtosis, Q.Qkurtosis_Label, matl, patch );
+
+    for (CellIterator iter=patch->getExtraCellIterator();!iter.done();iter++){
+      IntVector c = *iter;
+
+      T me = Qvar[c];     // for readability
+      T me2 = me * me;
+      T Qbar = Qmean[c];
+      T Qbar2 = Qbar * Qbar;
+      T Qbar3 = Qbar * Qbar * Qbar;
+      T Qbar4 = Qbar * Qbar * Qbar * Qbar;
+      
+      // skewness 
+      Qsum3[c]  = me * me2 + Qsum3_old[c];
+      Qmean3[c] = Qsum3[c]/nTimesteps;
+
+      Qskewness[c] = Qmean3[c] - Qbar3 - 3 * Qvariance[c] * Qbar;
+
+      // kurtosis
+      Qsum4[c]  = me2 * me2 + Qsum4_old[c];
+      Qmean4[c] = Qsum4[c]/nTimesteps;
+      
+      Qkurtosis[c] = Qmean4[c] - Qbar4 
+                   - 6 * Qvariance[c] * Qbar2
+                   - 4 * Qskewness[c] * Qbar;
+    }
   }
 }
 
@@ -381,12 +499,25 @@ void statistics::allocateAndZero( DataWarehouse* new_dw,
 {
   int matl = Q.matl;
   CCVariable<T> Qsum;
-  CCVariable<T> QsumSqr;
+  CCVariable<T> Qsum2;
 
   new_dw->allocateAndPut( Qsum,    Q.Qsum_Label,    matl, patch );
-  new_dw->allocateAndPut( QsumSqr, Q.QsumSqr_Label, matl, patch );
+  new_dw->allocateAndPut( Qsum2, Q.Qsum2_Label, matl, patch );
 
   T zero(0.0);
   Qsum.initialize( zero );
-  QsumSqr.initialize( zero );
+  Qsum2.initialize( zero );
+
+  if( d_doHigherOrderStats ){
+    CCVariable<T> Qsum3;
+    CCVariable<T> Qsum4;
+    new_dw->allocateAndPut( Qsum3, Q.Qsum3_Label, matl, patch );
+    new_dw->allocateAndPut( Qsum4, Q.Qsum4_Label, matl, patch );
+
+    T zero(0.0);
+    Qsum3.initialize( zero );
+    Qsum4.initialize( zero );
+  }
+
+
 }
