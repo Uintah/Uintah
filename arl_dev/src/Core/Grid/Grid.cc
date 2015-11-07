@@ -40,8 +40,6 @@
 #include <Core/Util/FancyAssert.h>
 #include <Core/Util/XMLUtils.h>
 
-#include <CCA/Components/ProblemSpecification/ProblemSpecReader.h>
-
 #include <iomanip>
 #include <ostream>
 #include <sci_values.h>
@@ -1530,7 +1528,8 @@ Grid::problemSetup(  const ProblemSpecP   & params
     // Parse this levelset from a file
     std::string filename;
     levelset_ps->get("file", filename);
-    ProblemSpecP file_ps = ProblemSpecReader().readInputFile(filename, true);
+    ProblemSpecP file_ps = ProblemSpecReader().readInputFile(filename);
+
     if (!file_ps) {
       std::ostringstream msg;
       msg << "Failed to parse requested LevelSet file: \"" << filename << "\"." << std::endl;
@@ -1569,12 +1568,14 @@ Grid::problemSetup(  const ProblemSpecP   & params
                 fileIsAMR, do_MultiScale);
 
   // Determine size of newly parsed subset and create an empty subset to house it
-    int numLevelsInSubset = d_levels.size() - levelIndex;
-    d_levelSet.createEmptySubsets(numLevelsInSubset);
+    d_levelSet.createEmptySubsets(1);
     LevelSubset* currLevelSubset = d_levelSet.getSubset(currentSubsetIndex);
-    for (int currIndex = levelIndex; currIndex < d_levels.size(); ++currIndex) {
+    int numLevels = static_cast <int> (d_levels.size());
+    for (int currIndex = levelIndex; currIndex < numLevels; ++currIndex) {
       // Grab rep of the level and add it to the subset
       currLevelSubset->add(d_levels[currIndex].get_rep());
+      // Place a pointer to the level subset in the level for easy retrieval
+      d_levels[currIndex]->setSubset(currLevelSubset);
       // Store a pointer to the subset to which this level is assigned
       d_levelSubsetMap.push_back(currLevelSubset);
     }
@@ -1582,66 +1583,8 @@ Grid::problemSetup(  const ProblemSpecP   & params
     // Reset AMR state of file after parsing
     fileIsAMR = false;
 
-//  level_ps = grid_ps->findBlock("Level");
-//  while (level_ps) // Loop through all levels
-//  {
-//    Grid::LevelBox levelInfo = parseLevel(level_ps, levelIndex, pg->myrank());
-//    if (!levelInfo.hasSpacing() && levelInfo.stretchCount() != 3)
-//    {
-//      throw ProblemSetupException("Level resolution is not specified", __FILE__, __LINE__);
-//    }
-////    if (levelIndex == curreLevelSubset->getMinLevelIndex())
-//    if (levelIndex == 0)
-//    {
-//      gridAnchor = levelInfo.getAnchor().asPoint();
-//    }
-//
-//    SCIRun::IntVector extraCells = levelInfo.getExtraCells();
-//    if (extraCells != d_extraCells && d_extraCells != IntVector(0,0,0))
-//    {
-//      proc0cout << "Warning:  Input file overrides extraCells specification via level " << levelIndex << "." << std::endl
-//                << "\tCurrent extraCell: " << levelInfo.getExtraCells() << "." << std::endl;
-//    }
-//    LevelFlags flags;
-//    flags.set(LevelFlags::isAMR, do_AMR);
-//    flags.set(LevelFlags::isMultiScale, do_MultiScale);
-//    LevelP level = addLevel(gridAnchor, levelInfo.getSpacing(), flags);
-//    level->setExtraCells(extraCells);
-//
-//    if(levelInfo.stretchCount() != 0)
-//    {
-//      stretchDescription *stretches = levelInfo.getStretchDescription();
-//      for (int axis = 0; axis < 3; ++axis)
-//      {
-//        SCIRun::OffsetArray1<double> faces = assignStretchedFaces(stretches,&levelInfo,extraCells,axis);
-//        level->setStretched(static_cast<Grid::Axis> (axis), faces);
-//      }
-//    }
-//
-//    // Second pass - set up patches and cells
-//    IntVector anchorCell(level->getCellIndex((levelInfo.getAnchor() + Vector(1.e-14,1.e-14,1.e-14)).asPoint()));
-//    IntVector highPointCell(level->getCellIndex((levelInfo.getHighPoint() + Vector(1.e-14,1.e-14,1.e-14)).asPoint()));
-//    parsePatches(level_ps, level, anchorCell, highPointCell, extraCells, pg->size(), pg->myrank() );
-//
-//    if (pg->size() > 1 && (level->numPatches() < pg->size()) && !(do_AMR || do_MultiScale) )
-//    {
-//      throw ProblemSetupException("Number of patches must be >= the number of processes in an mpi run.", __FILE__, __LINE__);
-//    }
-//    SCIRun::IntVector periodicBoundaries;
-//    if (level_ps->get("periodic",periodicBoundaries))
-//    {
-//      level->finalizeLevel(periodicBoundaries.x() != 0,
-//                           periodicBoundaries.y() != 0,
-//                           periodicBoundaries.z() != 0);
-//    }
-//    else
-//    {
-//      level->finalizeLevel();
-//    }
-//    ++levelIndex;
-//    // Done with all processing for this level, get the next one.
-//    level_ps = level_ps->findNextBlock("Level");
-//  }
+    proc0cout << "Level Set: " << std::endl << "\t\t" << d_levelSet << std::endl;
+
 }
 
 namespace Uintah

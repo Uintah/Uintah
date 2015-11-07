@@ -33,6 +33,36 @@ using std::ostream;
 
 namespace Uintah {
 
+  ostream& operator<<(ostream& out, const Uintah::LevelSet& ls)
+  {
+    if (&ls == 0)
+      out << "(null LevelSet)";
+    else {
+      out << "Levels: {";
+      for (int i=0; i < ls.size(); ++i) {
+        const LevelSubset* lss = ls.getSubset(i);
+        if (i != 0)
+          out << ", ";
+        out << *lss;
+      }
+      out << "}";
+    }
+    return out;
+  }
+
+  ostream& operator<<(ostream& out, const Uintah::LevelSubset& lss)
+  {
+    out << "{";
+    for(int j=0; j < lss.size(); ++j) {
+      if (j != 0)
+        out << ",";
+      const Level* level = lss.get(j);
+      out << level->getIndex();
+    }
+    out << "}";
+    return out;
+  }
+
   ostream& operator<<(ostream& out, const Uintah::PatchSet& ps)
   {
     if(&ps == 0)

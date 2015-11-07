@@ -248,6 +248,13 @@ public:
     d_dcell = spacing;
   }
 
+  LevelSubset* getSubset() const {
+    return d_subset;
+  }
+
+  void setSubset(LevelSubset* subset) {
+    d_subset = subset;
+  }
   /**
    * Returns the cell volume dx*dy*dz. This will not work for stretched grids.
    */
@@ -342,9 +349,10 @@ private:
       
   std::vector<Patch*> d_patches;
 
-  Grid    * d_grid;
-  Point     d_anchor;
-  Vector    d_dcell;
+  Grid        * d_grid;
+  Point         d_anchor;
+  Vector        d_dcell;
+  LevelSubset * d_subset;
 
   // The spatial range of the level.
   BBox      d_spatial_range;
