@@ -101,71 +101,61 @@ WARNING
 
          ~stretchRegion() {};
 
-          double getFrom() const
-          {
+          double getFrom() const {
             return from;
           }
 
           //////////
           //
-          void setFrom( const double& value )
-          {
+          void setFrom( const double& value ) {
             from = value;
           }
 
           //////////
           //
-          double getTo() const
-          {
+          double getTo() const {
             return to;
           }
 
           //////////
           //
-          void setTo( const double& value )
-          {
+          void setTo( const double& value ) {
             to = value;
           }
 
           //////////
           //
-          double getToSpacing() const
-          {
+          double getToSpacing() const {
             return toSpacing;
           }
 
           //////////
           //
-          void setToSpacing( const double& value )
-          {
+          void setToSpacing( const double& value ) {
             toSpacing = value;
           }
 
           //////////
           //
-          double getFromSpacing() const
-          {
+          double getFromSpacing() const {
             return fromSpacing;
           }
 
           //////////
           //
-          void setFromSpacing( const double& value )
-          {
+          void setFromSpacing( const double& value ) {
             fromSpacing = value;
           }
 
           //////////
           //
-          std::string getShape() const
-          {
+          std::string getShape() const {
             return shape;
           }
 
           //////////
           //
-          void setShape( const std::string& value )
-          {
+          void setShape( const std::string& value ) {
             shape = value;
           }
 
@@ -201,8 +191,7 @@ WARNING
           //////////
           //
           void addRegion(  const int           axis
-                         ,       stretchRegion region )
-          {
+                         ,       stretchRegion region ) {
             axialStretches[axis].push_back(region);
           }
 
@@ -213,27 +202,22 @@ WARNING
 
           //////////
           //
-          int getRegionsPerAxis(const int& axis) const
-          {
+          int getRegionsPerAxis(const int& axis) const {
             return static_cast<int> (axialStretches[axis].size());
           }
 
           stretchRegion* getRegion(  const int & axis
-                                   , const int & region )
-          {
+                                   , const int & region ) {
             ASSERTRANGE( region, 0, getRegionsPerAxis(axis));
             return (&axialStretches[axis][region]);
           }
 
           //////////
           //
-          int stretchCount() const
-          {
+          int stretchCount() const {
             int count = 0;
-            for (int axis = 0; axis < 3; ++axis)
-            {
-              if (axialStretches[axis].size())
-              {
+            for (int axis = 0; axis < 3; ++axis) {
+              if (axialStretches[axis].size()) {
                 ++count;
               }
             }
@@ -242,10 +226,8 @@ WARNING
 
           //////////
           //
-          bool checkForPrevious( const int& axis ) const
-          {
-            if (axialStretches[axis].size() !=0)
-            {
+          bool checkForPrevious( const int& axis ) const {
+            if (axialStretches[axis].size() !=0){
               return true;
             }
             return false;
@@ -275,57 +257,49 @@ WARNING
 
           //////////
           //
-          SCIRun::BBox getBoxExtents() const
-          {
+          SCIRun::BBox getBoxExtents() const {
             return boxExtents;
           }
 
           //////////
           //
-          SCIRun::IntVector getExtraCells() const
-          {
+          SCIRun::IntVector getExtraCells() const {
             return extraCells;
           }
 
           //////////
           //
-          SCIRun::Vector    getSpacing() const
-          {
+          SCIRun::Vector    getSpacing() const {
             return boxSpacing;
           }
 
           //////////
           //
-          SCIRun::Vector    getAnchor() const
-          {
+          SCIRun::Vector    getAnchor() const {
             return boxExtents.min().asVector();
           }
 
           //////////
           //
-          SCIRun::Vector    getHighPoint() const
-          {
+          SCIRun::Vector    getHighPoint() const {
             return boxExtents.max().asVector();
           }
 
           //////////
           //
-          bool hasSpacing() const
-          {
+          bool hasSpacing() const {
             return (boxSpacing[0] == -1.0 ? false : true); // Flag by first value being negative
           }
 
           //////////
           //
-          int stretchCount() const
-          {
+          int stretchCount() const {
             return stretches.stretchCount();
           }
 
           //////////
           //
-          stretchDescription* getStretchDescription()
-          {
+          stretchDescription* getStretchDescription() {
             return &stretches;
           }
 
@@ -463,6 +437,16 @@ WARNING
                          , const int            levelIndex
                          , const int            myProcRank);
 
+    bool      specIsAMR(  const ProblemSpecP & ps) const;
+
+    void parseLevelSet(   const ProblemSpecP & level_ps
+                        , const int            numProcs
+                        , const int            myProcRank
+                        , const int            globalIndexOffset
+                        , const int            levelSetIndex
+                        , const bool           do_AMR
+                        , const bool           do_MultiScale
+                      );
 
     // The current (final) values of a,b,c, and norm for the partition function.
     // Used to hold data between recursive calls.
@@ -488,6 +472,7 @@ WARNING
 
     // Holds the level subsets for portions of the grid.
     LevelSet  d_levelSet;
+    std::vector<const LevelSubset*> d_levelSubsetMap;
 
   };
 
