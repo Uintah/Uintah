@@ -26,6 +26,7 @@
 #define UINTAH_CORE_GRID_GRID_H
 
 #include <CCA/Ports/LoadBalancer.h>
+#include <CCA/Components/ProblemSpecification/ProblemSpecReader.h>
 
 #include <Core/Containers/OffsetArray1.h>
 #include <Core/Geometry/BBox.h>
