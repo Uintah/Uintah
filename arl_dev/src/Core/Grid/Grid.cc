@@ -40,6 +40,8 @@
 #include <Core/Util/FancyAssert.h>
 #include <Core/Util/XMLUtils.h>
 
+#include <CCA/Components/ProblemSpecification/ProblemSpecReader.h>
+
 #include <iomanip>
 #include <ostream>
 #include <sci_values.h>
@@ -1411,81 +1413,59 @@ Grid::parsePatches(const ProblemSpecP&      level_ps,
   return;
 }
 
-void
-Grid::problemSetup(const ProblemSpecP      & params,
-                      const ProcessorGroup * pg,
-                            bool             do_AMR,
-                            bool             do_MultiScale)
+bool
+Grid::specIsAMR(const ProblemSpecP &ps) const
 {
-  ProblemSpecP grid_ps = params->findBlock("Grid");
-  if (!grid_ps)
+  bool isAMR = false;
+  ProblemSpecP tmp_ps = ps->findBlock("doAMR");
+  if (tmp_ps)
   {
-    // FIXME - Per spec, a grid section is required.  Shouldn't we throw an error here? - JBH / 10.2015
-    return;
+    tmp_ps->get("doAMR", isAMR);
   }
-  Point         gridAnchor; // Minimum point in grid
-  int           levelIndex = 0;
+  else if (ps->findBlock("AMR")) {
+      isAMR = true;
+  }
+  return isAMR;
+}
 
-
-//  int currentLevelSubset = 0;
-//  bool fileIsAMR = false;
-//  ProblemSpecP  levelset_ps = grid_ps->findBlock("LevelSet");
-//  while (levelset_ps) // Only looking for file based levelsets here
-//  {
-//    ProblemSpecP level_ps;
-//    std::string filename;
-//    if (levelset_ps->get("file",filename)) // Filename argument found, parse it
-//    {
-//      ProblemSpecP newFile_ps = getFileBasedProblemSpec(filename);
-//      if (newFile_ps->get("doAMR",fileIsAMR))
-//      {
-//        // We are parsing an AMR file, so get implicit level range from that
-//
-//      }
-//      else
-//      {
-//        level_ps = newFile_ps->findblock("Grid")->findblock("Level");
-//      }
-//    }
-//    else
-//    {
-//      level_ps = grid_ps->findBlock("Level");
-//    }
-//
-//    // while (level_ps && !fileIsAMR)
-//    //{
-//
-//    //}
-//
-//    // Find next level set
-//    ++currentLevelSubset;
-//    levelset_ps->findNextBlock("LevelSet");
-//  }
-  // FIXME - Should we throw an error if we can't find one initial level?
-  ProblemSpecP  level_ps = grid_ps->findBlock("Level");
+void
+Grid::parseLevelSet(  const ProblemSpecP&   grid_ps
+                    , const int             numProcs
+                    , const int             myProcRank
+                    , const int             globalIndexOffset
+                    , const int             levelSetIndex
+                    , const bool            do_AMR
+                    , const bool            do_MultiScale
+                   )
+{
+  ProblemSpecP level_ps = grid_ps->findBlock("Level");
+  int localIndexOffset = 0;
+  SCIRun::Point setAnchor(DBL_MAX, DBL_MAX, DBL_MAX);
   while (level_ps) // Loop through all levels
   {
-    Grid::LevelBox levelInfo = parseLevel(level_ps, levelIndex, pg->myrank());
+    int levelIndex = localIndexOffset + globalIndexOffset;
+    Grid::LevelBox levelInfo = parseLevel(level_ps, levelIndex, myProcRank);
     if (!levelInfo.hasSpacing() && levelInfo.stretchCount() != 3)
     {
       throw ProblemSetupException("Level resolution is not specified", __FILE__, __LINE__);
     }
 //    if (levelIndex == curreLevelSubset->getMinLevelIndex())
-    if (levelIndex == 0)
+    if (localIndexOffset == 0)
     {
-      gridAnchor = levelInfo.getAnchor().asPoint();
+      setAnchor = levelInfo.getAnchor().asPoint();
     }
 
     SCIRun::IntVector extraCells = levelInfo.getExtraCells();
     if (extraCells != d_extraCells && d_extraCells != IntVector(0,0,0))
     {
-      proc0cout << "Warning:  Input file overrides extraCells specification via level " << levelIndex << "." << std::endl
+      proc0cout << "Warning:  Input file overrides extraCells specification via level Set "
+                << levelSetIndex << ", level " << localIndexOffset <<"." << std::endl
                 << "\tCurrent extraCell: " << levelInfo.getExtraCells() << "." << std::endl;
     }
     LevelFlags flags;
     flags.set(LevelFlags::isAMR, do_AMR);
     flags.set(LevelFlags::isMultiScale, do_MultiScale);
-    LevelP level = addLevel(gridAnchor, levelInfo.getSpacing(), flags, -1);
+    LevelP level = addLevel(setAnchor, levelInfo.getSpacing(), flags);
     level->setExtraCells(extraCells);
 
     if(levelInfo.stretchCount() != 0)
@@ -1501,9 +1481,9 @@ Grid::problemSetup(const ProblemSpecP      & params,
     // Second pass - set up patches and cells
     IntVector anchorCell(level->getCellIndex((levelInfo.getAnchor() + Vector(1.e-14,1.e-14,1.e-14)).asPoint()));
     IntVector highPointCell(level->getCellIndex((levelInfo.getHighPoint() + Vector(1.e-14,1.e-14,1.e-14)).asPoint()));
-    parsePatches(level_ps, level, anchorCell, highPointCell, extraCells, pg->size(), pg->myrank() );
+    parsePatches(level_ps, level, anchorCell, highPointCell, extraCells, numProcs, myProcRank );
 
-    if (pg->size() > 1 && (level->numPatches() < pg->size()) && !(do_AMR || do_MultiScale) )
+    if (numProcs > 1 && (level->numPatches() < numProcs) && !(do_AMR || do_MultiScale) )
     {
       throw ProblemSetupException("Number of patches must be >= the number of processes in an mpi run.", __FILE__, __LINE__);
     }
@@ -1518,10 +1498,150 @@ Grid::problemSetup(const ProblemSpecP      & params,
     {
       level->finalizeLevel();
     }
-    ++levelIndex;
+    ++localIndexOffset;
     // Done with all processing for this level, get the next one.
     level_ps = level_ps->findNextBlock("Level");
   }
+}
+
+void
+Grid::problemSetup(  const ProblemSpecP   & params
+                   , const ProcessorGroup * pg
+                   ,       bool             do_AMR
+                   ,       bool             do_MultiScale
+                  )
+{
+
+  ProblemSpecP grid_ps = params->findBlock("Grid");
+  if (!grid_ps) {
+    throw ProblemSetupException("Error:  Grid description not found in .ups file!",
+                                __FILE__, __LINE__);
+  }
+
+  Point         gridAnchor; // Minimum point in grid
+  int           levelIndex = 0;
+  int           currentSubsetIndex = 0;
+  bool          fileIsAMR = false;
+
+  ProblemSpecP  levelset_ps = params->findBlock("Grid")->findBlock("Level");
+  ProblemSpecP  level_ps;
+
+  if (levelset_ps && levelset_ps->findBlock("file")) {
+    // Parse this levelset from a file
+    std::string filename;
+    levelset_ps->get("file", filename);
+    ProblemSpecP file_ps = ProblemSpecReader().readInputFile(filename, true);
+    if (!file_ps) {
+      std::ostringstream msg;
+      msg << "Failed to parse requested LevelSet file: \"" << filename << "\"." << std::endl;
+      throw ProblemSetupException(msg.str(), __FILE__, __LINE__);
+    }
+    if (file_ps->findBlock("LevelSet")) {
+      std::ostringstream msg;
+      msg << "Error in file: \"" << filename << "\"!" << std::endl
+          << "   A levelSet parsed from a file may not contain a levelSet within the file to be"
+          << " parsed." << std::endl;
+      throw ProblemSetupException(msg.str(), __FILE__, __LINE__);
+    }
+    if (!file_ps->findBlock("Grid")) {
+      std::ostringstream msg;
+      msg << "Indicated file: \"" << filename << "\" does not have a <Grid> section!" << std::endl;
+      throw ProblemSetupException(msg.str(), __FILE__, __LINE__);
+    }
+    proc0cout << "Parsing level information from file: \"" << filename << "\"." << std::endl;
+
+//    if (!file_ps->findBlock("Level")) {
+//      std::ostringstream msg;
+//      msg << "Indicated file: \"" << filename << "\" has no <Level> section in its <Grid>!"
+//          << std::endl;
+//      throw ProblemSetupException(msg.str(), __FILE__, __LINE__);
+//    }
+    fileIsAMR = specIsAMR(file_ps); // determine if the filespec is AMR
+    level_ps = file_ps->findBlock("Grid");
+  } // We have attached the new file ps to the level_ps
+  else {
+    // We're parsing levels from our current file
+    level_ps = grid_ps;
+    fileIsAMR = specIsAMR(params);
+  }
+
+  parseLevelSet(level_ps, pg->size(), pg->myrank(), levelIndex, currentSubsetIndex,
+                fileIsAMR, do_MultiScale);
+
+  // Determine size of newly parsed subset and create an empty subset to house it
+    int numLevelsInSubset = d_levels.size() - levelIndex;
+    d_levelSet.createEmptySubsets(numLevelsInSubset);
+    LevelSubset* currLevelSubset = d_levelSet.getSubset(currentSubsetIndex);
+    for (int currIndex = levelIndex; currIndex < d_levels.size(); ++currIndex) {
+      // Grab rep of the level and add it to the subset
+      currLevelSubset->add(d_levels[currIndex].get_rep());
+      // Store a pointer to the subset to which this level is assigned
+      d_levelSubsetMap.push_back(currLevelSubset);
+    }
+
+    // Reset AMR state of file after parsing
+    fileIsAMR = false;
+
+//  level_ps = grid_ps->findBlock("Level");
+//  while (level_ps) // Loop through all levels
+//  {
+//    Grid::LevelBox levelInfo = parseLevel(level_ps, levelIndex, pg->myrank());
+//    if (!levelInfo.hasSpacing() && levelInfo.stretchCount() != 3)
+//    {
+//      throw ProblemSetupException("Level resolution is not specified", __FILE__, __LINE__);
+//    }
+////    if (levelIndex == curreLevelSubset->getMinLevelIndex())
+//    if (levelIndex == 0)
+//    {
+//      gridAnchor = levelInfo.getAnchor().asPoint();
+//    }
+//
+//    SCIRun::IntVector extraCells = levelInfo.getExtraCells();
+//    if (extraCells != d_extraCells && d_extraCells != IntVector(0,0,0))
+//    {
+//      proc0cout << "Warning:  Input file overrides extraCells specification via level " << levelIndex << "." << std::endl
+//                << "\tCurrent extraCell: " << levelInfo.getExtraCells() << "." << std::endl;
+//    }
+//    LevelFlags flags;
+//    flags.set(LevelFlags::isAMR, do_AMR);
+//    flags.set(LevelFlags::isMultiScale, do_MultiScale);
+//    LevelP level = addLevel(gridAnchor, levelInfo.getSpacing(), flags);
+//    level->setExtraCells(extraCells);
+//
+//    if(levelInfo.stretchCount() != 0)
+//    {
+//      stretchDescription *stretches = levelInfo.getStretchDescription();
+//      for (int axis = 0; axis < 3; ++axis)
+//      {
+//        SCIRun::OffsetArray1<double> faces = assignStretchedFaces(stretches,&levelInfo,extraCells,axis);
+//        level->setStretched(static_cast<Grid::Axis> (axis), faces);
+//      }
+//    }
+//
+//    // Second pass - set up patches and cells
+//    IntVector anchorCell(level->getCellIndex((levelInfo.getAnchor() + Vector(1.e-14,1.e-14,1.e-14)).asPoint()));
+//    IntVector highPointCell(level->getCellIndex((levelInfo.getHighPoint() + Vector(1.e-14,1.e-14,1.e-14)).asPoint()));
+//    parsePatches(level_ps, level, anchorCell, highPointCell, extraCells, pg->size(), pg->myrank() );
+//
+//    if (pg->size() > 1 && (level->numPatches() < pg->size()) && !(do_AMR || do_MultiScale) )
+//    {
+//      throw ProblemSetupException("Number of patches must be >= the number of processes in an mpi run.", __FILE__, __LINE__);
+//    }
+//    SCIRun::IntVector periodicBoundaries;
+//    if (level_ps->get("periodic",periodicBoundaries))
+//    {
+//      level->finalizeLevel(periodicBoundaries.x() != 0,
+//                           periodicBoundaries.y() != 0,
+//                           periodicBoundaries.z() != 0);
+//    }
+//    else
+//    {
+//      level->finalizeLevel();
+//    }
+//    ++levelIndex;
+//    // Done with all processing for this level, get the next one.
+//    level_ps = level_ps->findNextBlock("Level");
+//  }
 }
 
 namespace Uintah
