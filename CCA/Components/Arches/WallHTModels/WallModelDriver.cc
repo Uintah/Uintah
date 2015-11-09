@@ -838,6 +838,7 @@ WallModelDriver::CoalRegionHT::problemSetup( const ProblemSpecP& input_db ){
     WallInfo info;
     ProblemSpecP geometry_db = r_db->findBlock("geom_object");
     GeometryPieceFactory::create( geometry_db, info.geometry );
+    r_db->require("erosion_thickness", info.dy_erosion);
     r_db->require("T_slag", info.T_slag);
     r_db->require("t_sb", info.t_sb);
     r_db->require("k", info.k);
@@ -953,6 +954,9 @@ WallModelDriver::CoalRegionHT::computeHT( const Patch* patch, HTVariables& vars,
               R_wall = wi.dy / wi.k; 
               R_dp = wi.dy_dep / wi.k_deposit; 
               dep_thickness = vars.ave_deposit_velocity[c] * wi.t_sb;
+              if (dep_thickness > wi.dy_erosion){ // Here is our crude erosion model. If the deposit wants to grow above a certain size it will erode.
+                dep_thickness = wi.dy_erosion;
+              }
               vars.deposit_thickness[c] = ( 1 - wi.relax ) * vars.deposit_thickness_old[c] + wi.relax * dep_thickness;
               R_d = vars.deposit_thickness[c] / wi.k_deposit; 
               R_tot = R_wall + R_dp + R_d;
@@ -1009,14 +1013,63 @@ WallModelDriver::CoalRegionHT::computeHT( const Patch* patch, HTVariables& vars,
               // q_radiation - 1 * sigma Tw' ^ 4 = emissivity * ( q_radiation - sigma Tw ^ 4 )
               // q_radiation - sigma Tw' ^ 4 = net_q
 
-              vars.T_real[c] = (1 - wi.relax) * vars.T_real_old[c] + wi.relax * TW_new;
 
               TW = pow( (rad_q-net_q) / _sigma_constant, 0.25);
-              if (TW > wi.T_slag){
+
+              if (TW > wi.T_slag){ // if we are slagging fix TW to the slag temperature and back calculate deposit thickness with everything else held constant.
                 TW=wi.T_slag;
                 net_q = rad_q - _sigma_constant * pow( TW, 4 );
-                vars.deposit_thickness[c]=max(0.0 , wi.k_deposit*((TW-wi.T_inner)/net_q - R_wall - R_dp));
-              }
+                vars.deposit_thickness[c]=wi.k_deposit*((TW-wi.T_inner)/net_q - R_wall - R_dp);
+                
+                if (vars.deposit_thickness[c]<0){ // if the deposit is negative then set it to zero and recompute the wall temperature.
+                  vars.deposit_thickness[c]=0;
+                  R_d = 0.0; 
+                  R_tot = R_wall + R_dp + R_d;
+                  d_tol    = 1e-15;
+                  delta    = 1;
+                  NIter       = 15;
+                  f0       = 0.0;
+                  f1       = 0.0;
+                  TW       = vars.T_old[c];
+                  T_max    = pow( rad_q/_sigma_constant, 0.25); // if k = 0.0;
+                  TW_guess = TW;
+                  TW_old = TW_guess-delta;
+                  net_q = rad_q - _sigma_constant * pow( TW_old, 4 );
+                  net_q = net_q > 0 ? net_q : 0;
+                  net_q *= wi.emissivity;
+                  f0 = - TW_old + wi.T_inner + net_q * R_tot;
+                  TW_new = TW_guess+delta;
+                  net_q = rad_q - _sigma_constant * pow( TW_new, 4 );
+                  net_q = net_q>0 ? net_q : 0;
+                  net_q *= wi.emissivity;
+                  f1 = - TW_new + wi.T_inner + net_q * R_tot;
+                  for ( int iterT=0; iterT < NIter; iterT++) {
+
+                    TW_tmp = TW_old;
+                    TW_old = TW_new;
+                    TW_new = TW_tmp - ( TW_new - TW_tmp )/( f1 - f0 ) * f0;
+                    TW_new = max( wi.T_inner , min( T_max, TW_new ) );
+
+                    if (std::abs(TW_new-TW_old) < d_tol){
+                      TW    =  TW_new;
+                      net_q =  rad_q - _sigma_constant * pow( TW_new, 4 );
+                      net_q =  net_q > 0 ? net_q : 0;
+                      net_q *= wi.emissivity;
+                      break;
+
+                    }
+
+                    f0    =  f1;
+                    net_q =  rad_q - _sigma_constant * pow( TW_new, 4 );
+                    net_q =  net_q>0 ? net_q : 0;
+                    net_q *= wi.emissivity;
+                    f1    = - TW_new + wi.T_inner + net_q * R_tot;
+
+                  }
+                  TW = pow( (rad_q-net_q) / _sigma_constant, 0.25);
+                } // negative deposit if statement
+              } // slagging temperature if statement
+              vars.T_real[c] = (1 - wi.relax) * vars.T_real_old[c] + wi.relax * TW;
               T[c] = ( 1 - wi.relax ) * vars.T_old[c] + wi.relax * TW;
 
             }
