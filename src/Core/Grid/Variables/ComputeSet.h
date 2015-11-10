@@ -131,7 +131,7 @@ namespace Uintah {
         bool
         contains(T elem) const
         {
-          for (int i = 0; i < static_cast<int>(items.size()); i++) {
+          for (size_t i = 0; i < items.size(); ++i) {
             if (items[i] == elem) {
               return true;
             }
@@ -148,7 +148,7 @@ namespace Uintah {
         bool equals(const ComputeSubset<T>* s2) const
         {
           // check that the sets are equivalent
-          if(items.size() != s2->items.size()) {
+          if (items.size() != s2->items.size()) {
             return false;
           }
 
@@ -220,7 +220,9 @@ namespace Uintah {
     class ComputeSet : public RefCounted {
 
       public:
+
         ComputeSet();
+
         ~ComputeSet();
 
         // adds all unique elements of vector in one subset

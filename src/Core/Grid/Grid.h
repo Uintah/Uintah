@@ -72,8 +72,8 @@ KEYWORDS
    Grid, Level
 
 DESCRIPTION
-   This class basicly manages the pointers to the levels that make
-   up the grid.  
+   This class basically manages the pointers to the levels that make
+   up the grid.
   
 WARNING
   
@@ -379,7 +379,17 @@ WARNING
     //////////
     //
     void setExtraCells( const IntVector & ex );
-           
+
+    //////////
+    //
+    inline int numLevelSets() { return d_levelSet.size(); };
+
+    //////////
+    //
+    const LevelSubset* getLevelSubset(int index) { return d_levelSet.getSubset(index); };
+
+    LevelSubset* createEmptyLevelSubset();
+
     friend std::ostream& operator<<(std::ostream& out, const Uintah::Grid& grid);
 
     //////////
@@ -404,7 +414,8 @@ WARNING
     //
     void      partition3D(std::list<int> primes, int a, int b, int c);
     
-    IntVector run_partition2D(std::list<int> primes);
+    SCIRun::IntVector run_partition2D(std::list<int> primes);
+
     void      partition2D(std::list<int> primes, int a, int b);
 
     // Helper function for reading in xml specification of the grid from timestep.xml.
@@ -464,15 +475,16 @@ WARNING
     int bres_;
     int cres_;
 
-    // Arbitrary desired maxium value for the norm.  If the norm of the best possible
+    // Arbitrary desired maximum value for the norm.  If the norm of the best possible
     // patch layout exceeds this number, a warning message will be printed suggestion
     // the user run on a different number of processors.
     // static const double PATCH_TOLERANCE_ = 3;  
     
-    IntVector d_extraCells;
+    SCIRun::IntVector d_extraCells;
 
     // Holds the level subsets for portions of the grid.
     LevelSet  d_levelSet;
+
     std::vector<const LevelSubset*> d_levelSubsetMap;
 
   };

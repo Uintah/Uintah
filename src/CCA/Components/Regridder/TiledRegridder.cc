@@ -274,19 +274,55 @@ Grid* TiledRegridder::regrid(Grid* oldGrid)
 //
 Grid* TiledRegridder::CreateGrid(Grid* oldGrid, vector<vector<IntVector> > &tiles )
 {
+//  Grid* newGrid = scinew Grid();
+//  IntVector extraCells = oldGrid->getLevel(0)->getExtraCells();
+//
+//  int num_level_sets = oldGrid->numLevelSets();
+//  for (int i = 0; i < num_level_sets; ++i) {
+//    const LevelSubset* subset = oldGrid->getLevelSubset(i);
+//    LevelSubset* new_subset = newGrid->createEmptyLevelSubset();
+//    int subset_size = subset->size();
+//    for (int j = 0; j < subset_size; ++j) {
+//      const Level* level = subset->get(j);
+//      const SCIRun::Point new_anchor = level->getAnchor();
+//      const SCIRun::Vector new_spacing = level->dCell();
+//      int new_id = level->getID();
+//      new_subset->add(level);
+//
+//      LevelFlags flags;
+//      flags.set(LevelFlags::isAMR, level->testFlag(LevelFlags::isAMR));
+//      flags.set(LevelFlags::isMultiScale, level->testFlag(LevelFlags::isMultiScale));
+//      LevelP newLevel = newGrid->addLevel(new_anchor, new_spacing, flags, new_id);
+//      newLevel->setExtraCells(extraCells);
+//
+//      // if level is not needed, don't create any more levels
+//      if (tiles[j].size() == 0) {
+//        break;
+//      }
+//
+//      for (unsigned int p = 0; p < tiles[j].size(); p++) {
+//        IntVector low = computeCellLowIndex(tiles[j][p], d_numCells[j], d_tileSize[j]);
+//        IntVector high = computeCellHighIndex(tiles[j][p], d_numCells[j], d_tileSize[j]);
+//        //cout << "level: " << l << " Creating patch from tile " << tiles[l][p] << " at " << low << ", " << high << endl;
+//        //cout << "     numCells: " << d_numCells[l] << " tileSize: " << d_tileSize[l] << endl;
+//
+//        //create patch
+//        newLevel->addPatch(low, high, low, high, newGrid);
+//      }
+//    }
+//  }
 
-  MALLOC_TRACE_TAG_SCOPE("TiledRegridd::CreateGrid");
 
   Grid* newGrid = scinew Grid();
   Vector spacing = oldGrid->getLevel(0)->dCell();
-  Point anchor =   oldGrid->getLevel(0)->getAnchor();
+  Point anchor = oldGrid->getLevel(0)->getAnchor();
   IntVector extraCells = oldGrid->getLevel(0)->getExtraCells();
 
   //For each level Coarse -> Fine
-  for(int l=0; l < oldGrid->numLevels()+1 && l < d_maxLevels;l++) {
+  for (int l = 0; l < oldGrid->numLevels() + 1 && l < d_maxLevels; l++) {
     // if level is not needed, don't create any more levels
-    if(tiles[l].size()==0) {
-       break;
+    if (tiles[l].size() == 0) {
+      break;
     }
 
     LevelFlags flags;
@@ -295,19 +331,21 @@ Grid* TiledRegridder::CreateGrid(Grid* oldGrid, vector<vector<IntVector> > &tile
 
     //cout << "New level " << l << " num patches " << patch_sets[l-1].size() << endl;
     //for each patch
-    for(unsigned int p=0;p<tiles[l].size();p++) {
-      IntVector low = computeCellLowIndex(  tiles[l][p],d_numCells[l],d_tileSize[l]);
-      IntVector high = computeCellHighIndex(tiles[l][p],d_numCells[l],d_tileSize[l]);
+    for (unsigned int p = 0; p < tiles[l].size(); p++) {
+      IntVector low = computeCellLowIndex(tiles[l][p], d_numCells[l], d_tileSize[l]);
+      IntVector high = computeCellHighIndex(tiles[l][p], d_numCells[l], d_tileSize[l]);
       //cout << "level: " << l << " Creating patch from tile " << tiles[l][p] << " at " << low << ", " << high << endl;
       //cout << "     numCells: " << d_numCells[l] << " tileSize: " << d_tileSize[l] << endl;
 
       //create patch
-      level->addPatch(low, high, low, high,newGrid);
+      level->addPatch(low, high, low, high, newGrid);
     }
     // parameters based on next-fine level.
     spacing = spacing / d_cellRefinementRatio[l];
   }
-  
+
+
+
   return newGrid;
 }
 

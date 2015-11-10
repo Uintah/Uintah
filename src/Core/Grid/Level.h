@@ -152,7 +152,7 @@ public:
     private:
   };
 
-  void setPatchDistributionHint(const IntVector& patchDistribution);
+  void setPatchDistributionHint( const IntVector& patchDistribution );
 
   void setBCTypes();
      
@@ -184,15 +184,15 @@ public:
                   ,       int         ID );
 
   // Move up and down the hierarchy
-  const LevelP& getCoarserLevel() const;
-  const LevelP& getFinerLevel()   const;
-  bool          hasCoarserLevel() const;
-  bool          hasFinerLevel()   const;
+  const LevelP & getCoarserLevel() const;
+  const LevelP & getFinerLevel()   const;
+  bool           hasCoarserLevel() const;
+  bool           hasFinerLevel()   const;
 
-  IntVector     mapNodeToCoarser( const IntVector& idx ) const;
-  IntVector     mapNodeToFiner( const IntVector& idx ) const;
-  IntVector     mapCellToCoarser( const IntVector& idx, int level_offset = 1 ) const;
-  IntVector     mapCellToFiner( const IntVector& idx ) const;
+  IntVector      mapNodeToCoarser( const IntVector& idx ) const;
+  IntVector      mapNodeToFiner( const IntVector& idx ) const;
+  IntVector      mapCellToCoarser( const IntVector& idx, int level_offset = 1 ) const;
+  IntVector      mapCellToFiner( const IntVector& idx ) const;
 
   //////////
   // Find a patch containing the point, return 0 if non exists
@@ -218,11 +218,11 @@ public:
 
   void findIndexRange( IntVector& lowIndex, IntVector& highIndex ) const { findNodeIndexRange(lowIndex, highIndex); }
 
-  void findNodeIndexRange(IntVector& lowIndex, IntVector& highIndex) const;
+  void findNodeIndexRange( IntVector& lowIndex, IntVector& highIndex ) const;
 
-  void findCellIndexRange(IntVector& lowIndex, IntVector& highIndex) const;
+  void findCellIndexRange( IntVector& lowIndex, IntVector& highIndex ) const;
 
-  void findInteriorIndexRange(IntVector& lowIndex, IntVector& highIndex) const { findInteriorNodeIndexRange(lowIndex, highIndex); }
+  void findInteriorIndexRange( IntVector& lowIndex, IntVector& highIndex ) const { findInteriorNodeIndexRange(lowIndex, highIndex); }
 
   void findInteriorNodeIndexRange(  IntVector & lowIndex
                                   , IntVector & highIndex ) const;
@@ -233,28 +233,18 @@ public:
   void performConsistencyCheck() const;
 
   GridP getGrid() const;
-
- /* const LevelP& getFineLevel() const
-  { return getRelativeLevel(1); }
-  const LevelP& getCoarseLevel() const
-  { return getRelativeLevel(-1); }*/
      
   const LevelP& getRelativeLevel( int offset ) const;
 
   // Grid spacing
-  Vector dCell() const { return d_dcell; }
+  inline Vector dCell() const { return d_dcell; }
   
-  void setdCell( Vector spacing ) {
-    d_dcell = spacing;
-  }
+  inline void setdCell( Vector spacing ) { d_dcell = spacing; }
 
-  LevelSubset* getSubset() const {
-    return d_subset;
-  }
+  inline const LevelSubset* getSubset() const { return d_subset; }
 
-  void setSubset(LevelSubset* subset) {
-    d_subset = subset;
-  }
+  LevelSubset* setSubset( LevelSubset* subset );
+
   /**
    * Returns the cell volume dx*dy*dz. This will not work for stretched grids.
    */
@@ -276,29 +266,27 @@ public:
     return Dot(areas, unitNormal);
   }
 
-  Point getAnchor() const { return d_anchor; }
+  inline Point getAnchor() const { return d_anchor; }
 
   // For stretched grids
-  bool isStretched() const
-  { return d_stretched; }
+  inline bool isStretched() const { return d_stretched; }
 
-  bool isAMR() const
-  { return d_flags.test(LevelFlags::isAMR); }
+  inline bool isAMR() const { return d_flags.test(LevelFlags::isAMR); }
 
-  bool isMultiScale() const
-  {return d_flags.test(LevelFlags::isMultiScale); }
+  inline bool isMultiScale() const {return d_flags.test(LevelFlags::isMultiScale); }
 
   void getCellWidths(Grid::Axis axis, OffsetArray1<double>& widths) const;
   void getFacePositions(Grid::Axis axis, OffsetArray1<double>& faces) const;
   void setStretched(Grid::Axis axis, const OffsetArray1<double>& faces);
 
-  void      setExtraCells(const IntVector& ec);
-  IntVector getExtraCells() const { return d_extraCells; }
+  void      setExtraCells( const IntVector& ec );
 
-  Point     getNodePosition(const IntVector&) const;
-  Point     getCellPosition(const IntVector&) const;
-  IntVector getCellIndex(const Point&) const;
-  Point     positionToIndex(const Point&) const;
+  inline IntVector getExtraCells() const { return d_extraCells; }
+
+  Point     getNodePosition( const IntVector& ) const;
+  Point     getCellPosition( const IntVector& ) const;
+  IntVector getCellIndex(    const Point& ) const;
+  Point     positionToIndex( const Point& ) const;
 
   Box getBox(const IntVector&, const IntVector&) const;
 
@@ -318,7 +306,7 @@ public:
 
   // IntVector whose elements are each 1 or 0 specifying whether there
   // are periodic boundaries in each dimension (1 means periodic).
-  IntVector getPeriodicBoundaries() const { return d_periodicBoundaries; }
+  inline IntVector getPeriodicBoundaries() const { return d_periodicBoundaries; }
 
   // The eachPatch() function returns a PatchSet containing patches on
   // this level with one patch per PatchSubSet.  Eg: { {1}, {2}, {3} }
@@ -328,31 +316,32 @@ public:
   const Patch* selectPatchForCellIndex( const IntVector& idx) const;
   const Patch* selectPatchForNodeIndex( const IntVector& idx) const;
   
-  //getID() returns a unique identifier so if the grid is rebuilt the new 
-  //levels will have different id numbers (like a  serial number).  
+  // getID() returns a unique identifier so if the grid is rebuilt the new
+  // levels will have different id numbers (like a  serial number).
   inline int getID() const { return d_id; }
 
- //getIndex() returns the relative position of the level - 0 is coarsest, 1 is  
- //next and so forth.  
+ // getIndex() returns the relative position of the level - 0 is coarsest, 1 is next and so forth.
   inline int getIndex() const { return d_index; }
+
   inline IntVector getRefinementRatio() const { return d_refinementRatio; }
+
   int getRefinementRatioMaxDim() const;
 
+  inline bool testFlag( LevelFlags::FlagState flag_state ) const { return d_flags.test(flag_state); };
 
   friend std::ostream& operator<<(std::ostream& out, const Uintah::Level& level);
 
 private:
 
   // disable copy and assignment
-  Level(const Level&);
-  Level& operator=(const Level&);
+  Level( const Level& );
+  Level& operator=( const Level& );
       
   std::vector<Patch*> d_patches;
 
   Grid        * d_grid;
   Point         d_anchor;
   Vector        d_dcell;
-  LevelSubset * d_subset;
 
   // The spatial range of the level.
   BBox      d_spatial_range;
@@ -363,8 +352,9 @@ private:
   IntVector d_patchDistribution;
   IntVector d_periodicBoundaries;
 
-  PatchSet* d_each_patch;
-  PatchSet* d_all_patches;
+  PatchSet    * d_each_patch;
+  PatchSet    * d_all_patches;
+  LevelSubset * d_subset;
 
   long      d_totalCells;
   IntVector d_extraCells;
@@ -380,6 +370,7 @@ private:
   IntVector d_idxHigh;
   IntVector d_idxSize;
   IntVector d_gridSize;
+
   std::vector<int>    d_gridStarts;
   std::vector<Patch*> d_gridPatches;
 
@@ -405,9 +396,9 @@ private:
   };
 
   typedef std::map<std::pair<IntVector, IntVector>, std::vector<const Patch*>, IntVectorCompare> selectCache;
-  mutable selectCache d_selectCache; // we like const Levels in most places :) 
-  PatchBVH* d_bvh;
-  mutable CrowdMonitor    d_cachelock;
+  mutable selectCache   d_selectCache; // we like const Levels in most places :)
+  PatchBVH*             d_bvh;
+  mutable CrowdMonitor  d_cachelock;
 };
 
 const Level* getLevel( const PatchSubset* subset );
@@ -416,4 +407,4 @@ const LevelP& getLevelP( const PatchSubset* subset );
 
 } // End namespace Uintah
 
-#endif // end #ifnedef UINTAH_CORE_GRID_LEVEL_H
+#endif // end #ifndef UINTAH_CORE_GRID_LEVEL_H

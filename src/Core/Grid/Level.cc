@@ -51,9 +51,7 @@
 #include <iostream>
 #include <map>
 
-using namespace std;
 using namespace Uintah;
-using namespace SCIRun;
 
 static AtomicCounter ids("Level ID counter",0);
 static Mutex         ids_init("ID init");
@@ -81,12 +79,13 @@ Level::Level(         Grid       * grid
      , d_periodicBoundaries(0, 0, 0)
      , d_each_patch(NULL)
      , d_all_patches(NULL)
+     , d_subset(NULL)
      , d_totalCells(0)
      , d_extraCells(IntVector(0,0,0))
      , d_id(id)
-     , d_flags(flags)
      , d_refinementRatio(refinementRatio)
      , d_stretched(false)
+     , d_flags(flags)
      , d_bvh(NULL)
      , d_cachelock("Level Cache Lock")
 {
@@ -285,8 +284,8 @@ Level::performConsistencyCheck() const
       Box b2 = getBox(r2->getCellLowIndex(), r2->getCellHighIndex());
 
       if(b1.overlaps(b2)){
-        cerr << "r1: " << *r1 << '\n';
-        cerr << "r2: " << *r2 << '\n';
+        std::cerr << "r1: " << *r1 << '\n';
+        std::cerr << "r2: " << *r2 << '\n';
         SCI_THROW(InvalidGrid("Two patches overlap",__FILE__,__LINE__));
       }
     }
@@ -377,7 +376,22 @@ Level::getRelativeLevel( int offset ) const
 
 //______________________________________________________________________
 //
-Point
+
+LevelSubset*
+Level::setSubset( LevelSubset* subset )
+{
+  if (!d_subset) {
+    d_subset = subset;
+  }
+  else {
+    // Throw an error for reassigning a subset?
+  }
+  return d_subset; // In case you want to check against some pointer and don't throw an error?
+}
+
+//______________________________________________________________________
+//
+SCIRun::Point
 Level::getNodePosition( const IntVector & v ) const
 {
   if( d_stretched ) {
@@ -391,7 +405,7 @@ Level::getNodePosition( const IntVector & v ) const
 //______________________________________________________________________
 //
 
-Point
+SCIRun::Point
 Level::getCellPosition( const IntVector & v ) const
 {
   if( d_stretched ) {
@@ -409,13 +423,13 @@ Level::getCellPosition( const IntVector & v ) const
 
 static
 int
-binary_search( double x, const OffsetArray1<double>& faces, int low, int high )
+binary_search(double x, const OffsetArray1<double>& faces, int low, int high)
 {
-  while(high-low > 1) {
-    int m = (low + high)/2;
-    if(x < faces[m]){
+  while (high - low > 1) {
+    int m = (low + high) / 2;
+    if (x < faces[m]) {
       high = m;
-     }
+    }
     else {
       low = m;
     }
@@ -444,7 +458,7 @@ Level::getCellIndex( const Point & p ) const
 //______________________________________________________________________
 //
 
-Point
+SCIRun::Point
 Level::positionToIndex( const Point & p ) const
 {
   if(d_stretched){
@@ -464,9 +478,9 @@ Level::positionToIndex( const Point & p ) const
     // d_facePosition[0], then the binary_search returns the "high()"
     // value... and the interpolation below segfaults due to trying to
     // go to x+1.  The following check prevents this from happening.
-    x = min( x, d_facePosition[0].high()-2 );
-    y = min( y, d_facePosition[1].high()-2 );
-    z = min( z, d_facePosition[2].high()-2 );
+    x = std::min( x, d_facePosition[0].high()-2 );
+    y = std::min( y, d_facePosition[1].high()-2 );
+    z = std::min( z, d_facePosition[2].high()-2 );
 
     double xfrac = (p.x() - d_facePosition[0][x]) / (d_facePosition[0][x+1] - d_facePosition[0][x]);
     double yfrac = (p.y() - d_facePosition[1][y]) / (d_facePosition[1][y+1] - d_facePosition[1][y]);
@@ -486,10 +500,10 @@ void Level::selectPatches(const IntVector& low, const IntVector& high,
     // look it up in the cache first
     d_cachelock.readLock();
     {
-      selectCache::const_iterator iter = d_selectCache.find(make_pair(low, high));
+      selectCache::const_iterator iter = d_selectCache.find(std::make_pair(low, high));
 
       if (iter != d_selectCache.end()) {
-        const vector<const Patch*>& cache = iter->second;
+        const std::vector<const Patch*>& cache = iter->second;
         for (unsigned i = 0; i < cache.size(); i++) {
           neighbors.push_back(cache[i]);
         }
@@ -503,11 +517,11 @@ void Level::selectPatches(const IntVector& low, const IntVector& high,
 
    //cout << Parallel::getMPIRank() << " Level Query: " << low << " " << high << endl;
    d_bvh->query(low, high, neighbors, withExtraCells);
-   sort(neighbors.begin(), neighbors.end(), Patch::Compare());
+   std::sort(neighbors.begin(), neighbors.end(), Patch::Compare());
 
 #ifdef CHECK_SELECT
    // Double-check the more advanced selection algorithms against the slow (exhaustive) one.
-   vector<const Patch*> tneighbors;
+   std::vector<const Patch*> tneighbors;
    for(const_patchIterator iter=d_virtualAndRealPatches.begin();
        iter != d_virtualAndRealPatches.end(); iter++){
       const Patch* patch = *iter;
@@ -522,7 +536,7 @@ void Level::selectPatches(const IntVector& low, const IntVector& high,
 
    ASSERTEQ(neighbors.size(), tneighbors.size());
 
-   sort(tneighbors.begin(), tneighbors.end(), Patch::Compare());
+   std::sort(tneighbors.begin(), tneighbors.end(), Patch::Compare());
   for(int i=0;i<(int)neighbors.size();i++) {
       ASSERT(neighbors[i] == tneighbors[i]);
   }
@@ -532,7 +546,7 @@ void Level::selectPatches(const IntVector& low, const IntVector& high,
     // put it in the cache - start at orig_size in case there was something in neighbors before this query
     d_cachelock.writeLock();
     {
-      vector<const Patch*>& cache = d_selectCache[make_pair(low, high)];
+      std::vector<const Patch*>& cache = d_selectCache[std::make_pair(low, high)];
       cache.reserve(6);  // don't reserve too much to save memory, not too little to avoid too much reallocation
       for (int i = 0; i < neighbors.size(); i++) {
         cache.push_back(neighbors[i]);
@@ -573,43 +587,43 @@ bool Level::containsCell(const IntVector& idx) const
 void Level::finalizeLevel()
 {
   MALLOC_TRACE_TAG_SCOPE("Level::finalizeLevel");
-  
+
   d_each_patch = scinew PatchSet();
   d_each_patch->addReference();
 
   // The compute set requires an array const Patch*, we must copy d_realPatches
-  vector<const Patch*> tmp_patches(d_realPatches.size());
-  for(int i=0;i<(int)d_realPatches.size();i++){
-    tmp_patches[i]=d_realPatches[i];
+  std::vector<const Patch*> tmp_patches(d_realPatches.size());
+  for (int i = 0; i < (int)d_realPatches.size(); i++) {
+    tmp_patches[i] = d_realPatches[i];
   }
-  
+
   d_each_patch->addEach(tmp_patches);
-  
+
   d_all_patches = scinew PatchSet();
   d_all_patches->addReference();
   d_all_patches->addAll(tmp_patches);
 
   d_all_patches->sortSubsets();
   std::sort(d_realPatches.begin(), d_realPatches.end(), Patch::Compare());
-  
+
   //determines and sets the boundary conditions for the patches
   setBCTypes();
 
   // finalize the patches - Currently, finalizePatch() does nothing... empty method - APH 09/10/15
-  for(patchIterator iter=d_virtualAndRealPatches.begin();iter!=d_virtualAndRealPatches.end();iter++){
+  for (patchIterator iter = d_virtualAndRealPatches.begin(); iter != d_virtualAndRealPatches.end(); iter++) {
     (*iter)->finalizePatch();
   }
 
   //compute the number of cells in the level
-  d_totalCells=0;
-  for(int i=0;i<(int)d_realPatches.size();i++){
-    d_totalCells+=d_realPatches[i]->getNumExtraCells();
+  d_totalCells = 0;
+  for (int i = 0; i < (int)d_realPatches.size(); i++) {
+    d_totalCells += d_realPatches[i]->getNumExtraCells();
   }
-  
+
   //compute and store the spatial ranges now that BCTypes are set
-  for(int i=0;i<(int)d_realPatches.size();i++){
+  for (int i = 0; i < (int)d_realPatches.size(); i++) {
     Patch* r = d_realPatches[i];
-    
+
     d_spatial_range.extend(r->getExtraBox().lower());
     d_spatial_range.extend(r->getExtraBox().upper());
   }
@@ -626,7 +640,7 @@ void Level::finalizeLevel(bool periodicX, bool periodicY, bool periodicZ)
   d_each_patch->addReference();
   
   // The compute set requires an array const Patch*, we must copy d_realPatches
-  vector<const Patch*> tmp_patches(d_realPatches.size());
+  std::vector<const Patch*> tmp_patches(d_realPatches.size());
 
   for(int i=0;i<(int)d_realPatches.size();i++){
     tmp_patches[i]=d_realPatches[i];
@@ -735,8 +749,8 @@ void Level::setBCTypes()
     rank=myworld->myrank();
   }
 
-  vector<int> displacements(numProcs,0);
-  vector<int> recvcounts(numProcs,0);
+  std::vector<int> displacements(numProcs,0);
+  std::vector<int> recvcounts(numProcs,0);
 
   //create recvcounts and displacement arrays
   int div=d_virtualAndRealPatches.size()/numProcs;
@@ -751,13 +765,13 @@ void Level::setBCTypes()
     }
   }
 
-  displacements[0]=0;
-  for(int p=1;p<numProcs;p++) {
-    displacements[p]=displacements[p-1]+recvcounts[p-1];
+  displacements[0] = 0;
+  for (int p = 1; p < numProcs; p++) {
+    displacements[p] = displacements[p - 1] + recvcounts[p - 1];
   }
    
-  vector<unsigned int> bctypes(d_virtualAndRealPatches.size());
-  vector<unsigned int> mybctypes(recvcounts[rank]);
+  std::vector<unsigned int> bctypes(d_virtualAndRealPatches.size());
+  std::vector<unsigned int> mybctypes(recvcounts[rank]);
 
   int idx;
   
@@ -771,25 +785,25 @@ void Level::setBCTypes()
     // See if there are any neighbors on the 6 faces
     int bitfield=0;
 
-    for(Patch::FaceType face = Patch::startFace; face <= Patch::endFace; face=Patch::nextFace(face)){
-      bitfield<<=2;
-      IntVector l,h;
-      
-      patch->getFace(face, IntVector(0,0,0), IntVector(1,1,1), l, h);
-      
+    for (Patch::FaceType face = Patch::startFace; face <= Patch::endFace; face = Patch::nextFace(face)) {
+      bitfield <<= 2;
+      IntVector l, h;
+
+      patch->getFace(face, IntVector(0, 0, 0), IntVector(1, 1, 1), l, h);
+
       Patch::selectType neighbors;
       selectPatches(l, h, neighbors);
-      
-      if(neighbors.size() == 0){
-        if(d_index != 0){
+
+      if (neighbors.size() == 0) {
+        if (d_index != 0) {
           // See if there are any patches on the coarse level at that face
           IntVector fineLow, fineHigh;
-          patch->getFace(face, IntVector(0,0,0), d_refinementRatio, fineLow, fineHigh);
-          
+          patch->getFace(face, IntVector(0, 0, 0), d_refinementRatio, fineLow, fineHigh);
+
           IntVector coarseLow = mapCellToCoarser(fineLow);
           IntVector coarseHigh = mapCellToCoarser(fineHigh);
           const LevelP& coarseLevel = getCoarserLevel();
-          
+
 #if 0
           // add 1 to the corresponding index on the plus edges 
           // because the upper corners are sort of one cell off (don't know why)
@@ -807,20 +821,23 @@ void Level::setBCTypes()
           }
 #endif
           coarseLevel->selectPatches(coarseLow, coarseHigh, neighbors);
-          
-          if(neighbors.size() == 0){
-            bitfield|=Patch::None;
-          } else {
-            bitfield|=Patch::Coarse;
+
+          if (neighbors.size() == 0) {
+            bitfield |= Patch::None;
           }
-        } else {
-          bitfield|=Patch::None;
+          else {
+            bitfield |= Patch::Coarse;
+          }
         }
-      } else {
-        bitfield|=Patch::Neighbor;
+        else {
+          bitfield |= Patch::None;
+        }
+      }
+      else {
+        bitfield |= Patch::Neighbor;
       }
     }
-    mybctypes[idx]=bitfield;
+    mybctypes[idx] = bitfield;
   }
   
   if(numProcs>1){
@@ -848,30 +865,29 @@ void Level::setBCTypes()
       patch->setLevelIndex(idx++);
     }
     
-    int bitfield=bctypes[i];
+    int bitfield = bctypes[i];
     int mask=3;
   
     //loop through faces
-    for(int j=5;j>=0;j--){
+    for (int j = 5; j >= 0; j--) {
 
-      int bc_type=bitfield&mask;
+      int bc_type = bitfield & mask;
 
-      if( rank == 0 ){
-        switch(bc_type)
-        {
-          case Patch::None:
-            bcout << "  Setting Patch " << patch->getID() << " face " << j << " to None\n";      
+      if (rank == 0) {
+        switch ( bc_type ) {
+          case Patch::None :
+            bcout << "  Setting Patch " << patch->getID() << " face " << j << " to None\n";
             break;
-          case Patch::Coarse:
+          case Patch::Coarse :
             bcout << "  Setting Patch " << patch->getID() << " face " << j << " to Coarse\n";
             break;
-          case Patch::Neighbor:
+          case Patch::Neighbor :
             bcout << "  Setting Patch " << patch->getID() << " face " << j << " to Neighbor\n";
             break;
         }
       }
-      patch->setBCType(Patch::FaceType(j),Patch::BCType(bc_type));
-      bitfield>>=2;
+      patch->setBCType(Patch::FaceType(j), Patch::BCType(bc_type));
+      bitfield >>= 2;
     }
   }
   
@@ -879,7 +895,7 @@ void Level::setBCTypes()
   //  bullet proofing
   for (int dir=0; dir<3; dir++){
     if(d_periodicBoundaries[dir] == 1 && d_extraCells[dir] !=0) {
-      ostringstream warn;
+      std::ostringstream warn;
       warn<< "\n \n INPUT FILE ERROR: \n You've specified a periodic boundary condition on a face with extra cells specified\n"
           <<" Please set the extra cells on that face to 0";
       throw ProblemSetupException(warn.str(),__FILE__,__LINE__);
@@ -892,29 +908,29 @@ void Level::setBCTypes()
   rtimes[2]+=Time::currentSeconds()-start;
   start=Time::currentSeconds();
   
-  if(rgtimes.active()){
-    double avg[3]={0};
-    MPI_Reduce(&rtimes,&avg,3,MPI_DOUBLE,MPI_SUM,0,myworld->getComm());
-    
-    if(myworld->myrank()==0) {
+  if (rgtimes.active()) {
+    double avg[3] = { 0 };
+    MPI_Reduce(&rtimes, &avg, 3, MPI_DOUBLE, MPI_SUM, 0, myworld->getComm());
 
-      cout << "SetBCType Avg Times: ";
-      for(int i=0;i<3;i++){
-        avg[i]/=myworld->size();
-        cout << avg[i] << " ";
+    if (myworld->myrank() == 0) {
+
+      std::cout << "SetBCType Avg Times: ";
+      for (int i = 0; i < 3; i++) {
+        avg[i] /= myworld->size();
+        std::cout << avg[i] << " ";
       }
-      cout << endl;
+      std::cout << std::endl;
     }
 
-    double max[3]={0};
-    MPI_Reduce(&rtimes,&max,3,MPI_DOUBLE,MPI_MAX,0,myworld->getComm());
+    double max[3] = { 0 };
+    MPI_Reduce(&rtimes, &max, 3, MPI_DOUBLE, MPI_MAX, 0, myworld->getComm());
 
-    if(myworld->myrank()==0) {
-      cout << "SetBCType Max Times: ";
-      for(int i=0;i<3;i++){
-        cout << max[i] << " ";
+    if (myworld->myrank() == 0) {
+      std::cout << "SetBCType Max Times: ";
+      for (int i = 0; i < 3; i++) {
+        std::cout << max[i] << " ";
       }
-      cout << endl;
+      std::cout << std::endl;
     }
   }
 
@@ -1244,7 +1260,7 @@ namespace Uintah {
   
 //______________________________________________________________________
 //    We may need to put coutLocks around this?
-  ostream& operator<<(ostream& out, const Level& level)
+  std::ostream& operator<<(std::ostream& out, const Level& level)
   {
     IntVector lo, hi;
     level.findCellIndexRange(lo,hi);
