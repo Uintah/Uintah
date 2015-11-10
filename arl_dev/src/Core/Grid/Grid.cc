@@ -479,12 +479,11 @@ Grid::addLevel( const Point& anchor, const Vector& dcell, LevelFlags& flags, int
   // This should only be called when a new grid is created, so if this level index 
   // is > 0, then there is a coarse-fine relationship between this level and the 
   // previous one.
-
-  IntVector ratio;
+  SCIRun::IntVector ratio;
   if (d_levels.size() > 0) {
-    Vector r = (d_levels[d_levels.size()-1]->dCell() / dcell) + Vector(1e-6, 1e-6, 1e-6);
-    ratio = IntVector((int)r.x(), (int)r.y(), (int)r.z());
-    Vector diff = r - ratio.asVector();
+    SCIRun::Vector r = (d_levels[d_levels.size()-1]->dCell() / dcell) + Vector(1e-6, 1e-6, 1e-6);
+    ratio = SCIRun::IntVector((int)r.x(), (int)r.y(), (int)r.z());
+    SCIRun::Vector diff = r - ratio.asVector();
     if (diff.x() > 1e-5 || diff.y() > 1e-5 || diff.z() > 1e-5) {
       // non-integral refinement ratio
       std::ostringstream out;
@@ -493,7 +492,7 @@ Grid::addLevel( const Point& anchor, const Vector& dcell, LevelFlags& flags, int
     }
   }
   else
-    ratio = IntVector(1,1,1);
+    ratio = SCIRun::IntVector(1,1,1);
 
 
   Level* level = scinew Level(this, anchor, dcell, (int)d_levels.size(), ratio, flags, id);
@@ -1427,18 +1426,19 @@ Grid::specIsAMR(const ProblemSpecP &ps) const
 }
 
 void
-Grid::parseLevelSet(  const ProblemSpecP&   grid_ps
-                    , const int             numProcs
-                    , const int             myProcRank
-                    , const int             globalIndexOffset
-                    , const int             levelSetIndex
-                    , const bool            do_AMR
-                    , const bool            do_MultiScale
+Grid::parseLevelSet(  const ProblemSpecP & grid_ps
+                    , const int            numProcs
+                    , const int            myProcRank
+                    , const int            globalIndexOffset
+                    , const int            levelSetIndex
+                    , const bool           do_AMR
+                    , const bool           do_MultiScale
                    )
 {
-  ProblemSpecP level_ps = grid_ps->findBlock("Level");
   int localIndexOffset = 0;
   SCIRun::Point setAnchor(DBL_MAX, DBL_MAX, DBL_MAX);
+
+  ProblemSpecP level_ps = grid_ps->findBlock("Level");
   while (level_ps) // Loop through all levels
   {
     int levelIndex = localIndexOffset + globalIndexOffset;
@@ -1497,6 +1497,7 @@ Grid::parseLevelSet(  const ProblemSpecP&   grid_ps
       level->finalizeLevel();
     }
     ++localIndexOffset;
+
     // Done with all processing for this level, get the next one.
     level_ps = level_ps->findNextBlock("Level");
   }
@@ -1517,8 +1518,6 @@ Grid::problemSetup(  const ProblemSpecP   & params
   }
 
   Point         gridAnchor; // Minimum point in grid
-  int           levelIndex = 0;
-  int           currentSubsetIndex = 0;
   bool          fileIsAMR = false;
 
   ProblemSpecP  levelset_ps = params->findBlock("Grid")->findBlock("Level");
@@ -1538,8 +1537,7 @@ Grid::problemSetup(  const ProblemSpecP   & params
     if (file_ps->findBlock("LevelSet")) {
       std::ostringstream msg;
       msg << "Error in file: \"" << filename << "\"!" << std::endl
-          << "   A levelSet parsed from a file may not contain a levelSet within the file to be"
-          << " parsed." << std::endl;
+          << "   A levelSet parsed from a file may not contain a levelSet within the file to be parsed." << std::endl;
       throw ProblemSetupException(msg.str(), __FILE__, __LINE__);
     }
     if (!file_ps->findBlock("Grid")) {
@@ -1564,27 +1562,28 @@ Grid::problemSetup(  const ProblemSpecP   & params
     fileIsAMR = specIsAMR(params);
   }
 
-  parseLevelSet(level_ps, pg->size(), pg->myrank(), levelIndex, currentSubsetIndex,
-                fileIsAMR, do_MultiScale);
+  int levelIndex         = 0;
+  int currentSubsetIndex = 0;
+  parseLevelSet(level_ps, pg->size(), pg->myrank(), levelIndex, currentSubsetIndex, fileIsAMR, do_MultiScale);
 
   // Determine size of newly parsed subset and create an empty subset to house it
-    d_levelSet.createEmptySubsets(1);
-    LevelSubset* currLevelSubset = d_levelSet.getSubset(currentSubsetIndex);
-    int numLevels = static_cast <int> (d_levels.size());
-    for (int currIndex = levelIndex; currIndex < numLevels; ++currIndex) {
-      // Grab rep of the level and add it to the subset
-      currLevelSubset->add(d_levels[currIndex].get_rep());
-      // Place a pointer to the level subset in the level for easy retrieval
-      d_levels[currIndex]->setSubset(currLevelSubset);
-      // Store a pointer to the subset to which this level is assigned
-      d_levelSubsetMap.push_back(currLevelSubset);
-    }
+  d_levelSet.createEmptySubsets(1);
+  LevelSubset* currLevelSubset = d_levelSet.getSubset(currentSubsetIndex);
 
-    // Reset AMR state of file after parsing
-    fileIsAMR = false;
+  size_t numLevels = d_levels.size();
+  for (size_t currIndex = levelIndex; currIndex < numLevels; ++currIndex) {
+    // Grab rep of the level and add it to the subset
+    currLevelSubset->add(d_levels[currIndex].get_rep());
+    // Place a pointer to the level subset in the level for easy retrieval
+    d_levels[currIndex]->setSubset(currLevelSubset);
+    // Store a pointer to the subset to which this level is assigned
+    d_levelSubsetMap.push_back(currLevelSubset);
+  }
 
-    proc0cout << "Level Set: " << std::endl << "\t\t" << d_levelSet << std::endl;
+  // Reset AMR state of file after parsing
+  fileIsAMR = false;
 
+  proc0cout << "Level Set: " << std::endl << "\t\t" << d_levelSet << std::endl;
 }
 
 namespace Uintah
@@ -1818,4 +1817,11 @@ Grid::setExtraCells( const IntVector & ex )
      return;
   }
   d_extraCells = ex;
+}
+
+LevelSubset*
+Grid::createEmptyLevelSubset()
+{
+  d_levelSet.createEmptySubsets(1);
+  return d_levelSet.getSubset(d_levelSet.size()-1);
 }

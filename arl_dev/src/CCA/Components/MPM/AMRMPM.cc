@@ -3887,7 +3887,7 @@ void AMRMPM::addParticles(const ProcessorGroup*,
         new_part_pos.push_back(px[idx]-r[2]);
         new_part_pos.push_back(px[idx]-r[3]);
 
-        cout << "OPP = " << px[idx] << endl;
+//        cout << "OPP = " << px[idx] << endl;
         for(int i = 0;i<8;i++){
 //        cout << "NPP = " << new_part_pos[i] << endl;
           if(!level->containsPoint(new_part_pos[i])){
