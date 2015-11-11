@@ -36,10 +36,6 @@
 
 #include <map>
 
-#ifdef HAVE_MPICH
-#include <mpi.h>
-#endif
-
 class TimeStepInfo;
 
 namespace Uintah {
