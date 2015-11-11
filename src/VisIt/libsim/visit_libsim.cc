@@ -509,10 +509,10 @@ visit_handle visit_ReadMetaData(void *cbdata)
   bool &useExtraCells = sim->useExtraCells;
 
   sim->forceMeshReload = true;
-  bool &forceMeshReload = sim->forceMeshReload;
+  // bool &forceMeshReload = sim->forceMeshReload;
 
   sim->nodeCentered = false;
-  bool &nodeCentered = sim->nodeCentered;
+  // bool &nodeCentered = sim->nodeCentered;
 
   sim->stepInfo = getTimeStepInfo2(schedulerP,
 				   gridP,
@@ -533,8 +533,6 @@ visit_handle visit_ReadMetaData(void *cbdata)
       VisIt_SimulationMetaData_setMode(md, VISIT_SIMMODE_RUNNING);
 
     VisIt_SimulationMetaData_setCycleTime(md, sim->cycle, sim->time);
-
-    bool forceMeshReload = true;
 
     int numLevels = stepInfo->levelInfo.size();
     
@@ -614,7 +612,7 @@ visit_handle visit_ReadMetaData(void *cbdata)
       {
 	std::string varname = stepInfo->varInfo[i].name;
 	std::string vartype = stepInfo->varInfo[i].type;
-	int matsize         = stepInfo->varInfo[i].materials.size();
+//	int matsize         = stepInfo->varInfo[i].materials.size();
 
 	std::string mesh_for_this_var;
 	VisIt_VarCentering cent = VISIT_VARCENTERING_ZONE;
@@ -1395,7 +1393,7 @@ visit_handle visit_SimGetMesh(int domain, const char *meshname, void *cbdata)
   SchedulerP schedulerP = sim->schedulerP;
   GridP      gridP      = sim->gridP;
 
-  bool &useExtraCells   = sim->useExtraCells;
+  // bool &useExtraCells   = sim->useExtraCells;
   bool &forceMeshReload = sim->forceMeshReload;
   bool &nodeCentered    = sim->nodeCentered;
 
@@ -1693,8 +1691,8 @@ visit_handle visit_SimGetVariable(int domain, const char *varname, void *cbdata)
   SchedulerP schedulerP = sim->schedulerP;
   GridP      gridP      = sim->gridP;
 
-  bool &useExtraCells   = sim->useExtraCells;
-  bool &forceMeshReload = sim->forceMeshReload;
+  // bool &useExtraCells   = sim->useExtraCells;
+  // bool &forceMeshReload = sim->forceMeshReload;
   bool &nodeCentered    = sim->nodeCentered;
 
   TimeStepInfo* &stepInfo = sim->stepInfo;
