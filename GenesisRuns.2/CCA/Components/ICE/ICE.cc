@@ -79,6 +79,8 @@
 
 #define SET_CFI_BC 0
 
+//#define SCALAR_F_SINEWAVE
+
 using namespace std;
 using namespace Uintah;
 
@@ -5481,6 +5483,17 @@ void ICE::conservedtoPrimitive_Vars(const ProcessorGroup* /*pg*/,
             for(CellIterator iter = patch->getCellIterator(); !iter.done(); iter++) {
               IntVector c = *iter;
               q_CC[c] = q_adv[c]/mass_adv[c];
+              
+/*`==========TESTING==========*/
+#ifdef SCALAR_F_SINEWAVE
+              double A     = 10;
+              double omega = 100;
+              double time = d_sharedState->getElapsedTime();
+              
+              q_CC[c] = A * sin(omega * time);
+#endif 
+/*===========TESTING==========`*/
+              
             }
                   
             //  Set Boundary Conditions
