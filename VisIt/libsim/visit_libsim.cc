@@ -579,10 +579,10 @@ visit_handle visit_ReadMetaData(void *cbdata)
     //     << box_max[0] << "," << box_max[1] << ","
     //     << box_max[2] << "]" << std::endl;
 
-    int logical[3];
+    // int logical[3];
 
-    for (int i=0; i<3; ++i)
-      logical[i] = high[i] - low[i];
+    // for (int i=0; i<3; ++i)
+    //   logical[i] = high[i] - low[i];
 
     // debug5 << "logical: " << logical[0] << ", " << logical[1] << ", "
     //     << logical[2] << std::endl;
@@ -1890,7 +1890,6 @@ visit_handle visit_SimGetVariable(int domain, const char *varname, void *cbdata)
 // visit_SimGetDomainList
 //     Callback for processing a domain list
 //---------------------------------------------------------------------
-#ifdef HAVE_MPICH
 visit_handle visit_SimGetDomainList(const char *name, void *cbdata)
 {
   if( Parallel::usingMPI() )
@@ -1961,6 +1960,5 @@ visit_handle visit_SimGetDomainList(const char *name, void *cbdata)
   else
     return VISIT_INVALID_HANDLE;
 }
-#endif
 
 } // End namespace Uintah
