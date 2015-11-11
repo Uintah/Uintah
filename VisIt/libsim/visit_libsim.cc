@@ -495,15 +495,6 @@ visit_handle visit_ReadMetaData(void *cbdata)
 {
   visit_simulation_data *sim = (visit_simulation_data *)cbdata;
 
-  int par_size, par_rank;
-  MPI_Comm_rank(MPI_COMM_WORLD, &par_rank);
-  MPI_Comm_size(MPI_COMM_WORLD, &par_size);
-
-// #ifdef HAVE_MPICH
-//   if(!sim->isProc0)
-//     return VISIT_INVALID_HANDLE;
-// #endif
-
   SchedulerP schedulerP = sim->schedulerP;
   GridP      gridP      = sim->gridP;
 
@@ -1914,71 +1905,78 @@ visit_handle visit_SimGetVariable(int domain, const char *varname, void *cbdata)
 // visit_SimGetDomainList
 //     Callback for processing a domain list
 //---------------------------------------------------------------------
+#ifdef HAVE_MPICH
 visit_handle visit_SimGetDomainList(const char *name, void *cbdata)
 {
-  int par_rank;
-  MPI_Comm_rank(MPI_COMM_WORLD, &par_rank);
-
-  visit_simulation_data *sim = (visit_simulation_data *)cbdata;
-
-  SchedulerP schedulerP = sim->schedulerP;
-  GridP      gridP      = sim->gridP;
-
-  TimeStepInfo* &stepInfo = sim->stepInfo;
-
-  LoadBalancer* lb = schedulerP->getLoadBalancer();
-
-  int cc = 0;
-  int totalPatches = 0;
-
-  int numLevels = stepInfo->levelInfo.size();
-
-  // Storage for the patch ids that belong to this processs.
-  std::vector<int> localPatches;
-
-  // Get level info
-  for (int l=0; l<numLevels; ++l)
+  if( Parallel::usingMPI() )
   {
-    LevelInfo &levelInfo = stepInfo->levelInfo[l];
-    LevelP level = gridP->getLevel(l);
+    int par_rank;
+    MPI_Comm_rank(MPI_COMM_WORLD, &par_rank);
 
-    int numPatches = level->numPatches();
+    visit_simulation_data *sim = (visit_simulation_data *)cbdata;
 
-    // Resize to fit the total number of patches found so far.
-    totalPatches += numPatches;
-    localPatches.resize( totalPatches );
+    SchedulerP schedulerP = sim->schedulerP;
+    GridP      gridP      = sim->gridP;
+    
+    TimeStepInfo* &stepInfo = sim->stepInfo;
+    
+    LoadBalancer* lb = schedulerP->getLoadBalancer();
+    
+    int cc = 0;
+    int totalPatches = 0;
 
-    // Get the patch info
-    for (int p=0; p<numPatches; ++p)
+    int numLevels = stepInfo->levelInfo.size();
+
+    // Storage for the patch ids that belong to this processs.
+    std::vector<int> localPatches;
+    
+    // Get level info
+    for (int l=0; l<numLevels; ++l)
     {
-      const Patch* patch = level->getPatch(p);
-
-      // Record the patch id if it belongs to this process.
-      if( par_rank == lb->getPatchwiseProcessorAssignment(patch) )
-        localPatches[cc++] = GetGlobalDomainNumber(stepInfo, l, p);
+      LevelInfo &levelInfo = stepInfo->levelInfo[l];
+      LevelP level = gridP->getLevel(l);
+      
+      int numPatches = level->numPatches();
+      
+      // Resize to fit the total number of patches found so far.
+      totalPatches += numPatches;
+      localPatches.resize( totalPatches );
+      
+      // Get the patch info
+      for (int p=0; p<numPatches; ++p)
+      {
+	const Patch* patch = level->getPatch(p);
+	
+	// Record the patch id if it belongs to this process.
+	if( par_rank == lb->getPatchwiseProcessorAssignment(patch) )
+	  localPatches[cc++] = GetGlobalDomainNumber(stepInfo, l, p);
+      }
     }
-  }
-
-  // Resize to fit the actual number of patch ids stored.
-  localPatches.resize( cc );
-
-  // Set the patch ids for this process.
-  visit_handle domainH = VISIT_INVALID_HANDLE;
-
-  if(VisIt_DomainList_alloc(&domainH) == VISIT_OKAY)
-  {
-    visit_handle varH = VISIT_INVALID_HANDLE;
-
-    if(VisIt_VariableData_alloc(&varH) == VISIT_OKAY)
+    
+    // Resize to fit the actual number of patch ids stored.
+    localPatches.resize( cc );
+    
+    // Set the patch ids for this process.
+    visit_handle domainH = VISIT_INVALID_HANDLE;
+    
+    if(VisIt_DomainList_alloc(&domainH) == VISIT_OKAY)
     {
-      VisIt_VariableData_setDataI(varH, VISIT_OWNER_COPY, 1,
-				  localPatches.size(), localPatches.data());
-
-      VisIt_DomainList_setDomains(domainH, totalPatches, varH);
+      visit_handle varH = VISIT_INVALID_HANDLE;
+      
+      if(VisIt_VariableData_alloc(&varH) == VISIT_OKAY)
+      {
+	VisIt_VariableData_setDataI(varH, VISIT_OWNER_COPY, 1,
+				    localPatches.size(), localPatches.data());
+	
+	VisIt_DomainList_setDomains(domainH, totalPatches, varH);
+      }
     }
+    
+    return domainH;
   }
-
-  return domainH;
+  else
+    return VISIT_INVALID_HANDLE;
 }
+#endif
 
 } // End namespace Uintah
