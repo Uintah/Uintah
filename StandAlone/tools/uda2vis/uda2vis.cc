@@ -649,13 +649,13 @@ TimeStepInfo* getTimeStepInfo2(SchedulerP schedulerP,
   Scheduler::VarLabelMaterialMap* pLabelMatlMap =
     schedulerP->makeVarLabelMaterialMap();
 
-  unsigned int i = 0;
-  std::set<const VarLabel*, VarLabel::Compare>::iterator varIter;
-
   stepInfo->varInfo.resize(varLabels.size());
 
   // loop through all of the variables
-  for (varIter = varLabels.begin(); varIter != varLabels.end(); ++varIter )
+  unsigned int i = 0;
+  std::set<const VarLabel*, VarLabel::Compare>::iterator varIter;
+
+  for (varIter = varLabels.begin(); varIter != varLabels.end(); ++varIter, ++i )
   {
     VariableInfo &varInfo = stepInfo->varInfo[i];
       
@@ -668,46 +668,47 @@ TimeStepInfo* getTimeStepInfo2(SchedulerP schedulerP,
     
     std::list< int > &materials = matMapIter->second;
     std::list< int >::iterator matIter;
-    
+
     for (matIter = materials.begin(); matIter != materials.end(); ++matIter)
-    {
-      bool exists;
+      varInfo.materials.push_back( *matIter );
 
-      // Check to make sure the variable exists on all patches and on
-      // all levels.
-      for (int l=0; l<numLevels; ++l)
-      {
-	LevelP level = gridP->getLevel(l);
+  //   for (matIter = materials.begin(); matIter != materials.end(); ++matIter)
+  //   {
+  //     bool exists = false;
+
+  //     // Check to make sure the variable exists on all patches for at
+  //     // least one level.
+  //     for (int l=0; l<numLevels; ++l)
+  //     {
+  //     	LevelP level = gridP->getLevel(l);
     
-	// Assume the variable exists for this level.
-	exists = true;
+  //     	// Assume the variable exists for this level.
+  //     	exists = true;
 
-	// patch info
-	int numPatches = level->numPatches();
+  //     	// patch info
+  //     	int numPatches = level->numPatches();
 
-	for (int p=0; p<numPatches; ++p)
-	{
-	  const Patch* patch = level->getPatch(p);
+  //     	for (int p=0; p<numPatches; ++p)
+  //     	{
+  //     	  const Patch* patch = level->getPatch(p);
 
-	  if( !dw->exists( *varIter, *matIter, patch) )
-	  {
-	    // The variable does exists on this patch for this level.
-	    exists = false;
-	    break;
-	  }
-	}
+  //     	  if( !dw->exists( *varIter, *matIter, patch) )
+  //     	  {
+  //     	    // The variable does not exist on this patch for this level.
+  //     	    exists = false;
+  //     	    break;
+  //     	  }
+  //     	}
 
-	// If the variable exists on all patches for this level then
-	// display to the user.
-	if( exists == true )
-	  break;
-      }
+  //     	// If the variable exists on all patches for this level then
+  //     	// display to the user.
+  //     	if( exists == true )
+  //     	  break;
+  //     }
 
-      if( exists )
-	varInfo.materials.push_back( *matIter );
-    }
-
-    ++i;
+  //     if( exists )
+  // 	varInfo.materials.push_back( *matIter );
+  //   }
   }
 
   // get level information
@@ -760,9 +761,7 @@ TimeStepInfo* getTimeStepInfo2(SchedulerP schedulerP,
       }
 
       //set processor id
-      // ARS - FIX ME
       patchInfo.setProcId( lb->getPatchwiseProcessorAssignment(patch) );
-//    patchInfo.setProcId(archive->queryPatchwiseProcessor(patch, timestep));
     }
   }
 
@@ -1067,21 +1066,6 @@ GridDataRaw* getGridData2(SchedulerP schedulerP,
     }
   }
 
-  // // figure out what the type of the variable we're querying is
-  // std::vector<std::string> vars;
-  // std::vector<const Uintah::TypeDescription*> types;
-  // schedulerP->queryVariables(vars, types);
-
-  // const Uintah::TypeDescription* maintype = NULL;
-  // const Uintah::TypeDescription* subtype = NULL;
-
-  // for (unsigned int i=0; i<vars.size(); i++) {
-  //   if (vars[i] == variable_name) {
-  //     maintype = types[i];
-  //     subtype = maintype->getSubType();
-  //   }
-  // }
-
   if (!maintype || !subtype) {
     std::cerr << "Uintah/VisIt Libsim Error: couldn't find variable "
 	      << variable_name <<  std::endl;
@@ -1287,27 +1271,11 @@ ParticleDataRaw* getParticleData2(SchedulerP schedulerP,
     }
   }
 
-  // figure out what the type of the variable we're querying is
-  // std::vector<std::string> vars;
-  // std::vector<const Uintah::TypeDescription*> types;
-  // archive->queryVariables(vars, types);
-
-  // const Uintah::TypeDescription* maintype = NULL;
-  // const Uintah::TypeDescription* subtype = NULL;
-
-  // for (unsigned int i=0; i<vars.size(); i++) {
-  //   if (vars[i] == variable_name) {
-  //     maintype = types[i];
-  //     subtype = maintype->getSubType();
-  //   }
-  // }
-
   if (!maintype || !subtype) {
     std::cerr << "Uintah/VisIt Libsim Error: couldn't find variable "
 	      << variable_name << std::endl;
     return NULL;
   }
-
 
   switch (subtype->getType()) {
   case Uintah::TypeDescription::double_type:
