@@ -1112,7 +1112,9 @@ visit_handle visit_ReadMetaData(void *cbdata)
     /* Add some commands. */
     const char *cmd_names[] = {"Stop", "Step", "Run", "Exit", "Finish"};
 
-    for (int i=0; i<sizeof(cmd_names)/sizeof(const char *); ++i)
+    int numNames = sizeof(cmd_names) / sizeof(const char *);
+
+    for (int i=0; i<numNames; ++i)
     {
       visit_handle cmd = VISIT_INVALID_HANDLE;
 
@@ -1931,7 +1933,6 @@ visit_handle visit_SimGetDomainList(const char *name, void *cbdata)
     // Get level info
     for (int l=0; l<numLevels; ++l)
     {
-      LevelInfo &levelInfo = stepInfo->levelInfo[l];
       LevelP level = gridP->getLevel(l);
       
       int numPatches = level->numPatches();
