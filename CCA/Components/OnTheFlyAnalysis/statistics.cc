@@ -51,6 +51,8 @@ statistics::statistics(ProblemSpecP& module_spec,
   d_prob_spec    = module_spec;
   d_dataArchiver = dataArchiver;
   d_matlSet     = 0;
+  d_startTime   = 0;
+  d_stopTime    = DBL_MAX;
   d_doHigherOrderStats = false;
 }
 
@@ -92,6 +94,16 @@ void statistics::problemSetup(const ProblemSpecP& prob_spec,
   int numMatls  = d_sharedState->getNumMatls();
   if(!d_dataArchiver){
     throw InternalError("statistics:couldn't get output port", __FILE__, __LINE__);
+  }
+
+  //__________________________________
+  //  Read in timing information
+  d_prob_spec->require("timeStart",  d_startTime);
+  d_prob_spec->require("timeStop",   d_stopTime);
+
+  // Start time < stop time
+  if(d_startTime > d_stopTime ){
+    throw ProblemSetupException("\n ERROR:statistics: startTime > stopTime. \n", __FILE__, __LINE__);
   }
 
   //__________________________________
@@ -281,11 +293,11 @@ void statistics::initialize(const ProcessorGroup*,
       switch(Q.subtype->getType()) {
 
         case TypeDescription::double_type:{         // double
-          allocateAndZero<double>( new_dw, patch, Q);
+          allocateAndZeroSums<double>( new_dw, patch, Q);
           break;
         }
         case TypeDescription::Vector: {             // Vector
-          allocateAndZero<Vector>( new_dw, patch, Q);
+          allocateAndZeroSums<Vector>( new_dw, patch, Q);
           break;
         }
         default: {
@@ -331,11 +343,11 @@ void statistics::scheduleDoAnalysis(SchedulerP& sched,
     t->computes ( Q.Qmean_Label,      matSubSet );
     t->computes ( Q.Qmean2_Label,     matSubSet );
     t->computes ( Q.Qvariance_Label,  matSubSet );
-    
+
     //__________________________________
     // Higher order statistics
     if( d_doHigherOrderStats ){
-    
+
       t->requires( Task::OldDW, Q.Qsum3_Label, matSubSet, gn, 0 );
       t->requires( Task::OldDW, Q.Qsum4_Label, matSubSet, gn, 0 );
 
@@ -343,8 +355,8 @@ void statistics::scheduleDoAnalysis(SchedulerP& sched,
       t->computes ( Q.Qsum4_Label,     matSubSet );
       t->computes ( Q.Qmean3_Label,    matSubSet );
       t->computes ( Q.Qmean4_Label,    matSubSet );
-      t->computes ( Q.Qskewness_Label, matSubSet );      
-      t->computes ( Q.Qkurtosis_Label, matSubSet );      
+      t->computes ( Q.Qskewness_Label, matSubSet );
+      t->computes ( Q.Qkurtosis_Label, matSubSet );
     }
 
     if(matSubSet && matSubSet->removeReference()){
@@ -374,11 +386,11 @@ void statistics::doAnalysis(const ProcessorGroup* pg,
       switch(Q.subtype->getType()) {
 
         case TypeDescription::double_type:{         // double
-          computeStats< double >(old_dw, new_dw, patch, Q);
+          computeStatsWrapper< double >(old_dw, new_dw, patches, matl_sub, patch, Q);
           break;
         }
         case TypeDescription::Vector: {             // Vector
-          computeStats< Vector >(old_dw, new_dw, patch, Q);
+          computeStatsWrapper< Vector >(old_dw, new_dw, patches, matl_sub,  patch, Q);
 
           break;
         }
@@ -388,6 +400,33 @@ void statistics::doAnalysis(const ProcessorGroup* pg,
       }
     }  // qstats loop
   }  // patches
+}
+
+
+
+
+//______________________________________________________________________
+//  computeStatsWrapper:  
+template <class T>
+void statistics::computeStatsWrapper( DataWarehouse* old_dw,
+                                      DataWarehouse* new_dw,
+                                      const PatchSubset* patches,
+                                      const MaterialSubset* matl_sub ,
+                                      const Patch*    patch,
+                                      Qstats Q)
+{
+  double now = d_dataArchiver->getCurrentTime();
+  
+  if(now < d_startTime || now > d_stopTime){
+    
+    proc0cout << " IGNORING------------DataAnalysis: Statistics" << endl;
+    allocateAndZeroStats<T>( new_dw, patch, Q);
+    carryForwardSums( old_dw, new_dw, patches, matl_sub, Q );
+    
+  }else {
+    proc0cout << " Computing------------DataAnalysis: Statistics" << endl;
+    computeStats< T >(old_dw, new_dw, patch, Q);
+  }
 }
 
 //______________________________________________________________________
@@ -414,7 +453,7 @@ void statistics::computeStats( DataWarehouse* old_dw,
   CCVariable< T > Qmean;
   CCVariable< T > Qmean2;
   CCVariable< T > Qvariance;
-  
+
   new_dw->allocateAndPut( Qsum,      Q.Qsum_Label,      matl, patch );
   new_dw->allocateAndPut( Qsum2,     Q.Qsum2_Label,     matl, patch );
   new_dw->allocateAndPut( Qmean,     Q.Qmean_Label,     matl, patch );
@@ -472,8 +511,8 @@ void statistics::computeStats( DataWarehouse* old_dw,
       T Qbar2 = Qbar * Qbar;
       T Qbar3 = Qbar * Qbar * Qbar;
       T Qbar4 = Qbar * Qbar * Qbar * Qbar;
-      
-      // skewness 
+
+      // skewness
       Qsum3[c]  = me * me2 + Qsum3_old[c];
       Qmean3[c] = Qsum3[c]/nTimesteps;
 
@@ -482,11 +521,46 @@ void statistics::computeStats( DataWarehouse* old_dw,
       // kurtosis
       Qsum4[c]  = me2 * me2 + Qsum4_old[c];
       Qmean4[c] = Qsum4[c]/nTimesteps;
-      
-      Qkurtosis[c] = Qmean4[c] - Qbar4 
+
+      Qkurtosis[c] = Qmean4[c] - Qbar4
                    - 6 * Qvariance[c] * Qbar2
                    - 4 * Qskewness[c] * Qbar;
     }
+  }
+}
+
+
+//______________________________________________________________________
+//  allocateAndZero  statistics variables
+template <class T>
+void statistics::allocateAndZeroStats( DataWarehouse* new_dw,
+                                      const Patch* patch,
+                                      Qstats Q )
+{
+  int matl = Q.matl;
+  allocateAndZero<T>( new_dw, Q.Qvariance_Label,  matl, patch );
+
+  if( d_doHigherOrderStats ){
+    allocateAndZero<T>( new_dw, Q.Qskewness_Label, matl, patch );
+    allocateAndZero<T>( new_dw, Q.Qkurtosis_Label, matl, patch );
+  }
+
+}
+
+//______________________________________________________________________
+//  allocateAndZero  summation variables
+template <class T>
+void statistics::allocateAndZeroSums( DataWarehouse* new_dw,
+                                      const Patch* patch,
+                                      Qstats Q )
+{
+  int matl = Q.matl;
+  allocateAndZero<T>( new_dw, Q.Qsum_Label,  matl, patch );
+  allocateAndZero<T>( new_dw, Q.Qsum2_Label, matl, patch );
+
+  if( d_doHigherOrderStats ){
+    allocateAndZero<T>( new_dw, Q.Qsum3_Label, matl, patch );
+    allocateAndZero<T>( new_dw, Q.Qsum4_Label, matl, patch );
   }
 }
 
@@ -494,30 +568,31 @@ void statistics::computeStats( DataWarehouse* old_dw,
 //  allocateAndZero
 template <class T>
 void statistics::allocateAndZero( DataWarehouse* new_dw,
-                                  const Patch*    patch,
-                                  Qstats Q )
+                                  const VarLabel* label,
+                                  const int       matl,
+                                  const Patch*    patch )
+{
+  CCVariable<T> Q;
+  new_dw->allocateAndPut( Q, label, matl, patch );
+  T zero(0.0);
+  Q.initialize( zero );
+}
+
+
+//______________________________________________________________________
+//  carryForward  summation variables
+void statistics::carryForwardSums( DataWarehouse* old_dw,
+                                   DataWarehouse* new_dw,
+                                   const PatchSubset* patches,
+                                   const MaterialSubset* matl_sub ,
+                                   Qstats Q )
 {
   int matl = Q.matl;
-  CCVariable<T> Qsum;
-  CCVariable<T> Qsum2;
-
-  new_dw->allocateAndPut( Qsum,    Q.Qsum_Label,    matl, patch );
-  new_dw->allocateAndPut( Qsum2, Q.Qsum2_Label, matl, patch );
-
-  T zero(0.0);
-  Qsum.initialize( zero );
-  Qsum2.initialize( zero );
+  new_dw->transferFrom(old_dw, Q.Qsum_Label,  patches, matl_sub  );
+  new_dw->transferFrom(old_dw, Q.Qsum2_Label, patches, matl_sub );
 
   if( d_doHigherOrderStats ){
-    CCVariable<T> Qsum3;
-    CCVariable<T> Qsum4;
-    new_dw->allocateAndPut( Qsum3, Q.Qsum3_Label, matl, patch );
-    new_dw->allocateAndPut( Qsum4, Q.Qsum4_Label, matl, patch );
-
-    T zero(0.0);
-    Qsum3.initialize( zero );
-    Qsum4.initialize( zero );
+    new_dw->transferFrom(old_dw, Q.Qsum3_Label, patches, matl_sub );
+    new_dw->transferFrom(old_dw, Q.Qsum4_Label, patches, matl_sub );
   }
-
-
 }

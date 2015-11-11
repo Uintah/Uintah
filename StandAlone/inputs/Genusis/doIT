@@ -1,0 +1,35 @@
+#!/bin/csh -f
+#______________________________________________________________________
+#  This script runs a small ICE problem and then extracts variables at the center of the 
+#  domain.  Those data are then used in a gunplot script and a matlab script "stats_verification.m"
+#  You must enable 
+#   ICE: define SCALAR-F-SINEWAVE
+#  for this to work.  This script is designed to verify the 
+
+
+if (1) then
+/bin/rm -rf advectScalar.uda.*
+mpirun -np 1 sus inputs/ICE/advectScalar.ups
+
+set uda = "advectScalar.uda"
+
+endif
+
+#set uda = "masterUda"
+
+timeextract -v scalar-f          -i 10 10 1 -uda $uda > & out-f
+timeextract -v variance_scalar-f -i 10 10 1 -uda $uda > & out-variance
+timeextract -v skewness_scalar-f -i 10 10 1 -uda $uda > & out-skewness
+timeextract -v kurtosis_scalar-f -i 10 10 1 -uda $uda > & out-kurtosis
+
+sed -i '1,3d' out-f
+sed -i '1,3d' out-variance
+sed -i '1,3d' out-skewness
+sed -i '1,3d' out-kurtosis
+
+echo "_______________________Variance"
+tail -n 3 out-variance
+echo "_______________________skewness"
+tail -n 3 out-skewness
+echo "_______________________kurtosis"
+tail -n 3 out-kurtosis

@@ -32,7 +32,6 @@
 #include <Core/Grid/Variables/CCVariable.h>
 #include <Core/Grid/GridP.h>
 #include <Core/Grid/LevelP.h>
-
 #include <vector>
 
 namespace Uintah {
@@ -98,19 +97,19 @@ WARNING
       VarLabel* Q_Label;
       VarLabel* Qsum_Label;
       VarLabel* Qmean_Label;
-      
+
       VarLabel* Qsum2_Label;
       VarLabel* Qmean2_Label;
       VarLabel* Qvariance_Label;
-      
+
       VarLabel* Qsum3_Label;
       VarLabel* Qmean3_Label;
       VarLabel* Qskewness_Label;
-      
+
       VarLabel* Qsum4_Label;
-      VarLabel* Qmean4_Label;   
-      VarLabel* Qkurtosis_Label; 
-      
+      VarLabel* Qmean4_Label;
+      VarLabel* Qkurtosis_Label;
+
       const Uintah::TypeDescription* subtype;
 
       void print(){
@@ -133,19 +132,45 @@ WARNING
                     DataWarehouse* new_dw);
 
     template <class T>
-    void allocateAndZero( DataWarehouse* new_dw,
-                          const Patch*    patch,
-                          Qstats Q);
-
+    void computeStatsWrapper( DataWarehouse* old_dw,
+                              DataWarehouse* new_dw,
+                              const PatchSubset* patches,
+                              const MaterialSubset* matl_sub ,
+                              const Patch*   patch,
+                              Qstats Q);
     template <class T>
     void computeStats( DataWarehouse* old_dw,
                        DataWarehouse* new_dw,
                        const Patch*   patch,
                        Qstats Q);
 
+    template <class T>
+    void allocateAndZero( DataWarehouse* new_dw,
+                          const VarLabel* label,
+                          const int       matl,
+                          const Patch*    patch );
+    template <class T>
+    void allocateAndZeroSums( DataWarehouse* new_dw,
+                              const Patch*   patch,
+                              Qstats Q);
+
+    template <class T>
+    void allocateAndZeroStats( DataWarehouse* new_dw,
+                               const Patch*   patch,
+                               Qstats Q);
+
+    void carryForwardSums( DataWarehouse* old_dw,
+                           DataWarehouse* new_dw,
+                           const PatchSubset* patches,
+                           const MaterialSubset* matl_sub ,
+                           Qstats Q );
+
     //__________________________________
     // global constants
-    
+
+    double d_startTime;
+    double d_stopTime;
+
     bool d_doHigherOrderStats;
     std::vector< Qstats >  d_Qstats;
 

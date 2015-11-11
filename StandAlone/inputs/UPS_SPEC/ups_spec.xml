@@ -682,8 +682,8 @@
       <material                         spec="OPTIONAL STRING" />
       <materialIndex                    spec="OPTIONAL INTEGER" />
       <samplingFrequency                spec="REQUIRED DOUBLE"  need_applies_to="name lineExtract, planeExtract, containerExtract, particleExtract, firstLawThermo, minMax"/>
-      <timeStart                        spec="REQUIRED DOUBLE"  need_applies_to="name lineExtract, planeExtract, containerExtract, particleExtract, firstLawThermo, minMax"/>
-      <timeStop                         spec="REQUIRED DOUBLE"  need_applies_to="name lineExtract, planeExtract, containerExtract, particleExtract, firstLawThermo, minMax"/>
+      <timeStart                        spec="REQUIRED DOUBLE"  need_applies_to="name lineExtract, planeExtract, containerExtract, particleExtract, firstLawThermo, minMax, statistics"/>
+      <timeStop                         spec="REQUIRED DOUBLE"  need_applies_to="name lineExtract, planeExtract, containerExtract, particleExtract, firstLawThermo, minMax, statistics"/>
       <colorThreshold                   spec="REQUIRED DOUBLE"  need_applies_to="name particleExtract"/>
        
       <Variables                        spec="OPTIONAL NO_DATA" need_applies_to="name lineExtract planeExtract particleExtract minMax statistics">

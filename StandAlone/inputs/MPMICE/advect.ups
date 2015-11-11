@@ -163,6 +163,18 @@
       <save label="p.x"/>
       <save label="p.volume"/>
       <save label="p.velocity"/>
+
+      <save label="variance_press_CC"/>
+      <save label="skewness_press_CC"/>
+      <save label="kurtosis_press_CC"/>
+
+      <save label="variance_temp_CC"/>
+      <save label="skewness_temp_CC"/>
+      <save label="kurtosis_temp_CC"/>
+      
+      <save label="variance_vel_CC"/>
+      <save label="skewness_vel_CC"/>
+      <save label="kurtosis_vel_CC"/>
       <checkpoint interval="0.005" cycle="2"/>
    </DataArchiver>
 
@@ -178,7 +190,7 @@
     </CFD>
     <MPM>
         <time_integrator>explicit</time_integrator>
-        <stationaryParticles> true </stationaryParticles>
+        <stationaryParticles> false </stationaryParticles>
     </MPM>
 
     <!--____________________________________________________________________-->
@@ -226,7 +238,7 @@
             </contact>
       </MPM>
        <ICE>
-         <material>
+         <material   name = "Air">
            <EOS type = "ideal_gas">                     </EOS>
            <dynamic_viscosity>          0.0             </dynamic_viscosity>
            <thermal_conductivity>       0.0             </thermal_conductivity>
@@ -276,7 +288,17 @@
           <analyze label="wvel_FCME" matl="1"/>
           <analyze label="g.velocity" matl="0"/>
         </Variables>
-      </Module>            
+      </Module>    
+      
+      <Module name = "statistics">
+        <material>Air</material>
+        <computeHigherOrderStats> true </computeHigherOrderStats>
+        <Variables>
+          <analyze label="press_CC"  matl="0"/>
+          <analyze label="temp_CC"   matl="1"/>
+          <analyze label="vel_CC"    matl="1"/>
+        </Variables>
+      </Module>         
     </DataAnalysis>
        
 </Uintah_specification>
