@@ -55,7 +55,7 @@ void visit_LibSimArguments(int argc, char **argv)
 {
   bool setVisItDir = false;
 
-  for( int i=1; i<argc; ++i )
+  for (int i=1; i<argc; ++i)
   {
     if( strcmp( argv[i], "-visit_dir" ) == 0 )
     {
@@ -275,6 +275,10 @@ void visit_CheckState( visit_simulation_data *sim )
  	VisItSetGetMesh(visit_SimGetMesh, (void*)sim);
 
 	VisItSetGetVariable(visit_SimGetVariable, (void*)sim);
+
+#ifdef HAVE_MPICH
+	VisItSetGetDomainList(visit_SimGetDomainList, (void*)sim);
+#endif
       }
       else
       {
@@ -454,7 +458,6 @@ int visit_ProcessVisItCommand( visit_simulation_data *sim )
 visit_handle visit_SimGetMetaData(void *cbdata)
 {
 #ifdef SERIALIZED_READS
-
   int numProcs, rank;
   int msg = 128, tag = 256;
   MPI_Status status;
@@ -492,15 +495,24 @@ visit_handle visit_ReadMetaData(void *cbdata)
 {
   visit_simulation_data *sim = (visit_simulation_data *)cbdata;
 
-#ifdef HAVE_MPICH
-  if(!sim->isProc0)
-    return VISIT_INVALID_HANDLE;
-#endif
+  int par_size, par_rank;
+  MPI_Comm_rank(MPI_COMM_WORLD, &par_rank);
+  MPI_Comm_size(MPI_COMM_WORLD, &par_size);
+
+// #ifdef HAVE_MPICH
+//   if(!sim->isProc0)
+//     return VISIT_INVALID_HANDLE;
+// #endif
 
   SchedulerP schedulerP = sim->schedulerP;
   GridP      gridP      = sim->gridP;
 
-  int timestep = sim->cycle;
+  if( !schedulerP.get_rep() || !gridP.get_rep() )
+  {
+    return VISIT_INVALID_HANDLE;
+  }
+
+  int timestate = sim->cycle;
 
   sim->useExtraCells = true;
   bool &useExtraCells = sim->useExtraCells;
@@ -511,15 +523,9 @@ visit_handle visit_ReadMetaData(void *cbdata)
   sim->nodeCentered = false;
   bool &nodeCentered = sim->nodeCentered;
 
-
-  if( !schedulerP.get_rep() || !gridP.get_rep() )
-  {
-    return VISIT_INVALID_HANDLE;
-  }
-
   sim->stepInfo = getTimeStepInfo2(schedulerP,
 				   gridP,
-				   timestep,
+				   timestate,
 				   useExtraCells);
   TimeStepInfo* &stepInfo = sim->stepInfo;
 
@@ -542,20 +548,22 @@ visit_handle visit_ReadMetaData(void *cbdata)
     int numLevels = stepInfo->levelInfo.size();
     
     int totalPatches = 0;
-    for (int i = 0; i < numLevels; i++)
-      totalPatches +=  stepInfo->levelInfo[i].patchInfo.size();
+    for (int i=0; i<numLevels; ++i)
+      totalPatches += stepInfo->levelInfo[i].patchInfo.size();
+
   //debug5 << "avtUintahFileFormat::ReadMetaData: Levels: " << numLevels << " Patches: " << totalPatches << std::endl;
 
     std::vector<int> groupIds(totalPatches);
     std::vector<std::string> pieceNames(totalPatches);
 
-    for (int i = 0; i < totalPatches; i++) {
+    for (int i=0; i<totalPatches; ++i)
+    {
       char tmpName[64];
       int level, local_patch;
       
       GetLevelAndLocalPatchNumber(stepInfo, i, level, local_patch);
       sprintf(tmpName,"level%d, patch%d", level, local_patch);
-      
+
       groupIds[i] = level;
       pieceNames[i] = tmpName;
     }
@@ -599,23 +607,27 @@ visit_handle visit_ReadMetaData(void *cbdata)
     // 	   << box_max[2] << "]" << std::endl;
 
     int logical[3];
-    for (int i=0; i<3; i++)
+
+    for (int i=0; i<3; ++i)
       logical[i] = high[i] - low[i];
 
     // debug5 << "logical: " << logical[0] << ", " << logical[1] << ", "
     // 	   << logical[2] << std::endl;
 
-    for (int i=0; i<(int)stepInfo->varInfo.size(); i++)
+    int numVars = stepInfo->varInfo.size();
+	
+    for (int i=0; i<numVars; ++i)
     {
       if (stepInfo->varInfo[i].type.find("ParticleVariable") ==
 	  std::string::npos)
       {
 	std::string varname = stepInfo->varInfo[i].name;
 	std::string vartype = stepInfo->varInfo[i].type;
-	
+	int matsize         = stepInfo->varInfo[i].materials.size();
+
 	std::string mesh_for_this_var;
 	VisIt_VarCentering cent = VISIT_VARCENTERING_ZONE;
-	//    avtCentering cent = AVT_ZONECENT;
+//      avtCentering cent = AVT_ZONECENT;
 
 	if (vartype.find("NC") != std::string::npos)
 	{
@@ -630,7 +642,7 @@ visit_handle visit_ReadMetaData(void *cbdata)
 //        cent = AVT_ZONECENT;
 	  mesh_for_this_var.assign("CC_Mesh");
 	  addProcId = true;
-	  mesh_for_procid=mesh_for_this_var;
+	  mesh_for_procid = mesh_for_this_var;
 	}
 	else if (vartype.find("SFC") != std::string::npos)
         { 
@@ -647,16 +659,26 @@ visit_handle visit_ReadMetaData(void *cbdata)
 	else
 	{
 	  visitdbg << "Visit libsim : "
-		   << "Uintah variable (" << varname << ")  "
-		   << "has an unknown variable type ("
-		   << vartype << ")" << std::endl;
+		   << "Uintah variable \"" << varname << "\"  "
+		   << "has an unknown variable type \""
+		   << vartype << "\"" << std::endl;
 	  visitdbg.flush();
 
 	  continue;
 	}
 
+	// visitdbg << "Visit libsim : "
+	// 	 << "Uintah variable \"" << varname << "\"  "
+	// 	 << "has type \"" << vartype << "\"  "
+	// 	 << "has mesh \"" << mesh_for_this_var << "\"  "
+	// 	 << "has materials \"" << matsize << "\"  " << std::endl;
+	// visitdbg.flush();
+
 	if (meshes_added.find(mesh_for_this_var) == meshes_added.end())
 	{
+	  std::string varname = stepInfo->varInfo[i].name;
+	  std::string vartype = stepInfo->varInfo[i].type;
+	  
 	  // Mesh meta data
 	  visit_handle mmd = VISIT_INVALID_HANDLE;
 	  
@@ -676,7 +698,7 @@ visit_handle visit_ReadMetaData(void *cbdata)
 	    VisIt_MeshMetaData_setGroupTitle(mmd, "levels");
 	    VisIt_MeshMetaData_setGroupPieceName(mmd, "level");
 
-	    for(unsigned int k = 0; k < totalPatches; ++k)
+	    for (int k=0; k<totalPatches; ++k)
 	      VisIt_MeshMetaData_addGroupId(mmd, groupIds[k]);
 
 	  // ARS - FIXME
@@ -732,7 +754,9 @@ visit_handle visit_ReadMetaData(void *cbdata)
 	}
 
 	// Add mesh vars
-	for (int j=0; j<(int)stepInfo->varInfo[i].materials.size(); j++)
+	int numMaterials = stepInfo->varInfo[i].materials.size();
+
+	for (int j=0; j<numMaterials; ++j)
 	{
 	  char buffer[128];
 	  std::string newVarname = varname;
@@ -827,7 +851,7 @@ visit_handle visit_ReadMetaData(void *cbdata)
 
     // Nothing needs to be modifed for particle data, as they exist only
     // on a single level
-    for (int i=0; i<(int)stepInfo->varInfo.size(); i++)
+    for (int i=0; i<numVars; ++i)
     {
       if (stepInfo->varInfo[i].type.find("ParticleVariable") != std::string::npos)
       {
@@ -835,7 +859,9 @@ visit_handle visit_ReadMetaData(void *cbdata)
 	std::string vartype = stepInfo->varInfo[i].type;
 	
 	// j=-1 -> all materials (*)
-	for (int j=-1; j<(int)stepInfo->varInfo[i].materials.size(); j++)
+	int numMaterials = stepInfo->varInfo[i].materials.size();
+
+	for (int j=-1; j<numMaterials; ++j)
 	{
 	  std::string mesh_for_this_var = std::string("Particle_Mesh/");
 	  std::string newVarname = varname+"/";
@@ -873,7 +899,8 @@ visit_handle visit_ReadMetaData(void *cbdata)
 	      VisIt_MeshMetaData_setNumGroups(mmd, numLevels);
 	      VisIt_MeshMetaData_setGroupTitle(mmd, "levels");
 	      VisIt_MeshMetaData_setGroupPieceName(mmd, "level");
-	      for(unsigned int k = 0; k < totalPatches; ++k)
+
+	      for (int k=0; k<totalPatches; ++k)
 		VisIt_MeshMetaData_addGroupId(mmd, groupIds[k]);
 
 	      // ARS - FIXME
@@ -999,7 +1026,7 @@ visit_handle visit_ReadMetaData(void *cbdata)
 
     // cycles.resize( cycleTimes.size() );
 
-    // for(int i=0; i<(int)cycleTimes.size(); ++i )
+    // for (int i=0; i<(int)cycleTimes.size(); ++i)
     //   cycles[i] = i;
 
     // md->SetCycles( cycles );
@@ -1096,7 +1123,7 @@ visit_handle visit_ReadMetaData(void *cbdata)
     /* Add some commands. */
     const char *cmd_names[] = {"Stop", "Step", "Run", "Exit", "Finish"};
 
-    for(int i = 0; i < sizeof(cmd_names)/sizeof(const char *); ++i)
+    for (int i=0; i<sizeof(cmd_names)/sizeof(const char *); ++i)
     {
       visit_handle cmd = VISIT_INVALID_HANDLE;
 
@@ -1144,9 +1171,10 @@ void visit_CalculateDomainNesting(TimeStepInfo* stepInfo,
     //
     // Calculate some info we will need in the rest of the routine.
     //
-    int num_levels = stepInfo->levelInfo.size();
+    int numLevels = stepInfo->levelInfo.size();
     int totalPatches = 0;
-    for (int level = 0 ; level < num_levels ; level++)
+
+    for (int level=0; level<numLevels; ++level)
       totalPatches += stepInfo->levelInfo[level].patchInfo.size();
 
     //
@@ -1167,7 +1195,7 @@ void visit_CalculateDomainNesting(TimeStepInfo* stepInfo,
       // 	new avtRectilinearDomainBoundaries(true);
       // rdb->SetNumDomains(totalPatches);
 
-      for (int patch = 0 ; patch < totalPatches ; patch++)
+      for (int patch=0; patch<totalPatches; ++patch)
       {
 	int my_level, local_patch;
 	GetLevelAndLocalPatchNumber(stepInfo, patch, my_level, local_patch);
@@ -1205,10 +1233,10 @@ void visit_CalculateDomainNesting(TimeStepInfo* stepInfo,
     
     if(VisIt_DomainNesting_alloc(&dn) == VISIT_OKAY)
     {
-      VisIt_DomainNesting_set_dimensions(dn, totalPatches, num_levels, 3);
+      VisIt_DomainNesting_set_dimensions(dn, totalPatches, numLevels, 3);
 
       // avtStructuredDomainNesting *dn =
-      // 	new avtStructuredDomainNesting(totalPatches, num_levels);
+      // 	new avtStructuredDomainNesting(totalPatches, numLevels);
       // dn->SetNumDimensions(3);
 
       //debug5 << "Calculating avtStructuredDomainNesting for "
@@ -1217,11 +1245,12 @@ void visit_CalculateDomainNesting(TimeStepInfo* stepInfo,
       //
       // Calculate what the refinement ratio is from one level to the next.
       //
-      for (int level = 0 ; level < num_levels ; level++) {
+      for (int level=0; level<numLevels; ++level)
+      {
 	// SetLevelRefinementRatios requires data as a vector<int>
 	int rr[3];
-	//vector<int> rr(3);
-	for (int i=0; i<3; i++)
+
+	for (int i=0; i<3; ++i)
 	  rr[i] = stepInfo->levelInfo[level].refinementRatio[i];
 	
 	// debug5 << "\tdn->SetLevelRefinementRatios(" << level << ", <"
@@ -1240,27 +1269,28 @@ void visit_CalculateDomainNesting(TimeStepInfo* stepInfo,
       //
       std::vector< std::vector<int> > childPatches(totalPatches);
       
-      for (int level = num_levels-1 ; level > 0 ; level--)
+      for (int level = numLevels-1 ; level > 0 ; level--)
       {
 	int prev_level = level-1;
 	LevelInfo &levelInfoParent = stepInfo->levelInfo[prev_level];
 	LevelInfo &levelInfoChild = stepInfo->levelInfo[level];
 	
-	for (int child=0; child<(int)levelInfoChild.patchInfo.size(); child++)
+	for (int child=0; child<(int)levelInfoChild.patchInfo.size(); ++child)
 	{
 	  PatchInfo &childPatchInfo = levelInfoChild.patchInfo[child];
 	  int child_low[3],child_high[3];
 	  childPatchInfo.getBounds(child_low,child_high,meshname);
 	  
 	  for (int parent = 0;
-	       parent<(int)levelInfoParent.patchInfo.size(); parent++)
+	       parent<(int)levelInfoParent.patchInfo.size(); ++parent)
 	  {
 	    PatchInfo &parentPatchInfo = levelInfoParent.patchInfo[parent];
 	    int parent_low[3],parent_high[3];
 	    parentPatchInfo.getBounds(parent_low,parent_high,meshname);
 	    
 	    int mins[3], maxs[3];
-	    for (int i=0; i<3; i++)
+
+	    for (int i=0; i<3; ++i)
 	    {
 	      mins[i] = std::max(child_low[i],
 				 parent_low[i]*levelInfoChild.refinementRatio[i]);
@@ -1286,7 +1316,7 @@ void visit_CalculateDomainNesting(TimeStepInfo* stepInfo,
       // Now that we know the extents for each patch and what its children are,
       // tell the structured domain boundary that information.
       //
-      for (int p=0; p<totalPatches ; p++)
+      for (int p=0; p<totalPatches ; ++p)
       {
 	int my_level, local_patch;
 	GetLevelAndLocalPatchNumber(stepInfo, p, my_level, local_patch);
@@ -1297,7 +1327,9 @@ void visit_CalculateDomainNesting(TimeStepInfo* stepInfo,
 	patchInfo.getBounds(low,high,meshname);
 	
 	int e[6];
-	for (int i=0; i<3; i++) {
+
+	for (int i=0; i<3; ++i)
+	{
 	  e[i+0] = low[i];
 	  e[i+3] = high[i]-1;
 	}
@@ -1311,7 +1343,8 @@ void visit_CalculateDomainNesting(TimeStepInfo* stepInfo,
 	{
 	  int *cp = new int[childPatches[p].size()];
 	  
-	  for (int i=0; i<3; i++) {
+	  for (int i=0; i<3; ++i)
+	  {
 	    cp[i] = childPatches[p][i];
 	    
 	    VisIt_DomainNesting_set_nestingForPatch(dn, p, my_level,
@@ -1432,7 +1465,8 @@ visit_handle visit_SimGetMesh(int domain, const char *meshname, void *cbdata)
     // ugrid->Allocate(pd->num); 
     // vtkIdType onevertex; 
 
-    // for(int i = 0; i < pd->num; ++i) {
+    // for(int i = 0; i < pd->num; ++i)
+    // {
     //   onevertex = i; 
     //   ugrid->InsertNextCell(VTK_VERTEX, 1, &onevertex); 
     // } 
@@ -1542,7 +1576,8 @@ visit_handle visit_SimGetMesh(int domain, const char *meshname, void *cbdata)
       nodeCentered = true;
 
     int dims[3], base[3] = {0,0,0};
-    for (int i=0; i<3; i++) 
+
+    for (int i=0; i<3; ++i) 
     {
       int offset = 1; // always one for non-node-centered
 
@@ -1569,7 +1604,7 @@ visit_handle visit_SimGetMesh(int domain, const char *meshname, void *cbdata)
 			      VISIT_INVALID_HANDLE };
 
     // Set the coordinates of the grid points in each direction.
-    for (int c=0; c<3; c++)
+    for (int c=0; c<3; ++c)
     {
       // vtkFloatArray *coords = vtkFloatArray::New(); 
       // coords->SetNumberOfTuples(dims[c]); 
@@ -1579,7 +1614,7 @@ visit_handle visit_SimGetMesh(int domain, const char *meshname, void *cbdata)
 
       if(VisIt_VariableData_alloc(&cordH[c]) == VISIT_OKAY)
       {
-	for (int i=0; i<dims[c]; i++)
+	for (int i=0; i<dims[c]; ++i)
 	{
 	  // Face centered data gets shifted towards -inf by half a cell.
 	  // Boundary patches are special shifted to preserve global domain.
@@ -1690,10 +1725,14 @@ visit_handle visit_SimGetVariable(int domain, const char *varname, void *cbdata)
     
     std::string varType="CC_Mesh";
     if (strcmp(varname, "proc_id")!=0) {
-      for (int k=0; k<(int)stepInfo->varInfo.size(); k++) {
-	if (stepInfo->varInfo[k].name == varName) {
+      for (int k=0; k<(int)stepInfo->varInfo.size(); ++k)
+      {
+	if (stepInfo->varInfo[k].name == varName)
+	{
 	  varType = stepInfo->varInfo[k].type;
-	  if (stepInfo->varInfo[k].type.find("ParticleVariable") != std::string::npos) {
+	  if (stepInfo->varInfo[k].type.find("ParticleVariable") !=
+	      std::string::npos)
+	  {
 	    isParticleVar = true;
 	    break;
 	  }
@@ -1722,12 +1761,13 @@ visit_handle visit_SimGetVariable(int domain, const char *varname, void *cbdata)
       MPI_Comm_rank(VISIT_MPI_COMM, &rank);
       
       int totalPatches = 0;
-      for (int i = 0; i < stepInfo->levelInfo.size(); i++)
+
+      for (int i=0; i<stepInfo->levelInfo.size(); ++i)
 	totalPatches += stepInfo->levelInfo[i].patchInfo.size();
 
       // calculate which process we should wait for a message from
       // if we're processing doiman 0 don't wait for anyone else
-      int prev = (rank+numProcs-1)%numProcs;
+      int prev = (rank+numProcs-1) % numProcs;
       int next = (rank+1)%numProcs;
       
       // domain 0 always reads right away
@@ -1778,17 +1818,19 @@ visit_handle visit_SimGetVariable(int domain, const char *varname, void *cbdata)
       if (strcmp(varname, "proc_id")==0)
       {
 	gd = new GridDataRaw;
-	for (int i=0; i<3; i++)
+
+	for (int i=0; i<3; ++i)
 	{
 	  gd->low[i ] = qlow[i];
 	  gd->high[i] = qhigh[i];
 	}
+
 	gd->components = 1;
 
 	int ncells = (qhigh[0]-qlow[0])*(qhigh[1]-qlow[1])*(qhigh[2]-qlow[2]);
 	gd->data = new double[ncells];
 
-	for (int i=0; i<ncells; i++) 
+	for (int i=0; i<ncells; ++i) 
 	  gd->data[i] = patchInfo.getProcId();
       }
       else
@@ -1799,7 +1841,7 @@ visit_handle visit_SimGetVariable(int domain, const char *varname, void *cbdata)
 	  getBounds(glow,ghigh,varType, levelInfo);
 	  patchInfo.getBounds(qlow,qhigh,varType);
 	  
-	  for (int j=0; j<3; j++)
+	  for (int j=0; j<3; ++j)
 	  {
 	    if (qhigh[j] != ghigh[j]) // patch is on low boundary
 	      qhigh[j] = qhigh[j]+1;
@@ -1817,7 +1859,7 @@ visit_handle visit_SimGetVariable(int domain, const char *varname, void *cbdata)
 	MPI_Comm_rank(VISIT_MPI_COMM, &rank);
 	
 	int totalPatches = 0;
-	for (int i = 0; i < stepInfo->levelInfo.size(); i++)
+	for (int i=0; i<stepInfo->levelInfo.size(); ++i)
 	  totalPatches += stepInfo->levelInfo[i].patchInfo.size();
 	
 	// calculate which process we should wait for a message from
@@ -1865,9 +1907,78 @@ visit_handle visit_SimGetVariable(int domain, const char *varname, void *cbdata)
       }
     }
   }
-
   return varH;
 }
 
-} // End namespace Uintah
+//---------------------------------------------------------------------
+// visit_SimGetDomainList
+//     Callback for processing a domain list
+//---------------------------------------------------------------------
+visit_handle visit_SimGetDomainList(const char *name, void *cbdata)
+{
+  int par_rank;
+  MPI_Comm_rank(MPI_COMM_WORLD, &par_rank);
 
+  visit_simulation_data *sim = (visit_simulation_data *)cbdata;
+
+  SchedulerP schedulerP = sim->schedulerP;
+  GridP      gridP      = sim->gridP;
+
+  TimeStepInfo* &stepInfo = sim->stepInfo;
+
+  LoadBalancer* lb = schedulerP->getLoadBalancer();
+
+  int cc = 0;
+  int totalPatches = 0;
+
+  int numLevels = stepInfo->levelInfo.size();
+
+  // Storage for the patch ids that belong to this processs.
+  std::vector<int> localPatches;
+
+  // Get level info
+  for (int l=0; l<numLevels; ++l)
+  {
+    LevelInfo &levelInfo = stepInfo->levelInfo[l];
+    LevelP level = gridP->getLevel(l);
+
+    int numPatches = level->numPatches();
+
+    // Resize to fit the total number of patches found so far.
+    totalPatches += numPatches;
+    localPatches.resize( totalPatches );
+
+    // Get the patch info
+    for (int p=0; p<numPatches; ++p)
+    {
+      const Patch* patch = level->getPatch(p);
+
+      // Record the patch id if it belongs to this process.
+      if( par_rank == lb->getPatchwiseProcessorAssignment(patch) )
+        localPatches[cc++] = GetGlobalDomainNumber(stepInfo, l, p);
+    }
+  }
+
+  // Resize to fit the actual number of patch ids stored.
+  localPatches.resize( cc );
+
+  // Set the patch ids for this process.
+  visit_handle domainH = VISIT_INVALID_HANDLE;
+
+  if(VisIt_DomainList_alloc(&domainH) == VISIT_OKAY)
+  {
+    visit_handle varH = VISIT_INVALID_HANDLE;
+
+    if(VisIt_VariableData_alloc(&varH) == VISIT_OKAY)
+    {
+      VisIt_VariableData_setDataI(varH, VISIT_OWNER_COPY, 1,
+				  localPatches.size(), localPatches.data());
+
+      VisIt_DomainList_setDomains(domainH, totalPatches, varH);
+    }
+  }
+
+  return domainH;
+}
+
+} // End namespace Uintah
