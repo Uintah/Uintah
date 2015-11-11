@@ -53,28 +53,28 @@ namespace Uintah {
 #define VISIT_SIMMODE_FINISHED   4
 
 /**************************************
-	
+        
 CLASS
    visit_init
-	
+        
    Short description...
-	
+        
 GENERAL INFORMATION
-	
+        
    visit_init
-	
+        
    Allen R. Sanderson
    Scientific Computing and Imaging Institute
    University of Utah
-	
+        
 KEYWORDS
    VisIt, libsim, in-situ
-	
+        
 DESCRIPTION
    Long description...
-	
+        
 WARNING
-	
+        
 ****************************************/
 typedef struct
 {
@@ -97,20 +97,16 @@ typedef struct
   int  runMode;
   int  simMode;
 
-#ifdef HAVE_MPICH
   bool isProc0;
-#endif
 
 } visit_simulation_data;
 
 
-#ifdef HAVE_MPICH
 static int visit_BroadcastStringCallback(char *str, int len, int sender);
 static int visit_BroadcastIntCallback(int *value, int sender);
 static void visit_BroadcastSlaveCommand(int *command);
 void visit_SlaveProcessCallback();
 int visit_ProcessVisItCommand( visit_simulation_data *sim );
-#endif
 
 void
 visit_ControlCommandCallback(const char *cmd, const char *args, void *cbdata);
@@ -122,8 +118,8 @@ void visit_CheckState(visit_simulation_data *sim);
 
 
 void visit_CalculateDomainNesting(TimeStepInfo* stepInfo,
-				  bool &forceMeshReload,
-				  int timestate, const std::string &meshname);
+                                  bool &forceMeshReload,
+                                  int timestate, const std::string &meshname);
 
 visit_handle visit_ReadMetaData(void *cbdata);
 
@@ -131,9 +127,7 @@ visit_handle visit_SimGetMetaData(void *cbdata);
 visit_handle visit_SimGetMesh(int domain, const char *name, void *cbdata);
 visit_handle visit_SimGetVariable(int domain, const char *name, void *cbdata);
 
-#ifdef HAVE_MPICH
 visit_handle visit_SimGetDomainList(const char *name, void *cbdata);
-#endif
 } // End namespace Uintah
 
 #endif
