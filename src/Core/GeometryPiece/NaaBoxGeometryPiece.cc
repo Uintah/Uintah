@@ -55,13 +55,14 @@ NaaBoxGeometryPiece::NaaBoxGeometryPiece(ProblemSpecP& ps)
 
   Point p1, p2, p3, p4;
   ps->require("p1", p1);
-  ps->require("p2", p2); 
+  ps->require("p2", p2);
   ps->require("p3", p3);
-  ps->require("p4", p4); 
-  
+  ps->require("p4", p4);
+
   init( p1, p2, p3, p4 );
 }
-
+//______________________________________________________________________
+//
 NaaBoxGeometryPiece::NaaBoxGeometryPiece( const Point& p1,
                                           const Point& p2,
                                           const Point& p3,
@@ -70,7 +71,8 @@ NaaBoxGeometryPiece::NaaBoxGeometryPiece( const Point& p1,
   name_ = "Unnamed " + TYPE_NAME + " from points";
   init( p1, p2, p3, p4 );
 }
-  
+//______________________________________________________________________
+//
 void
 NaaBoxGeometryPiece::init( const Point& p1,
                            const Point& p2,
@@ -94,6 +96,7 @@ NaaBoxGeometryPiece::init( const Point& p1,
   double lowX = min(min(min(p1.x(),p2.x()),min(p2.x(),p3.x())),p4.x());
   double lowY = min(min(min(p1.y(),p2.y()),min(p2.y(),p3.y())),p4.y());
   double lowZ = min(min(min(p1.z(),p2.z()),min(p2.z(),p3.z())),p4.z());
+
   double highX = max(max(max(p1.x(),p2.x()),max(p2.x(),p3.x())),p4.x());
   double highY = max(max(max(p1.y(),p2.y()),max(p2.y(),p3.y())),p4.y());
   double highZ = max(max(max(p1.z(),p2.z()),max(p2.z(),p3.z())),p4.z());
@@ -119,18 +122,20 @@ NaaBoxGeometryPiece::init( const Point& p1,
 
   dbg << "Creating NaaBoxx with BBox of: " << boundingBox_ << "\n";
 
-  // Map the arbitrary box to a unit cube... 
-  Matrix3 mat( p2minusP1.x(), p3minusP1.x(),  p4minusP1.x(), 
-               p2minusP1.y(), p3minusP1.y(),  p4minusP1.y(), 
+  // Map the arbitrary box to a unit cube...
+  Matrix3 mat( p2minusP1.x(), p3minusP1.x(),  p4minusP1.x(),
+               p2minusP1.y(), p3minusP1.y(),  p4minusP1.y(),
                p2minusP1.z(), p3minusP1.z(),  p4minusP1.z() );
 
   toUnitCube_ = mat.Inverse();
 }
-
+//______________________________________________________________________
+//
 NaaBoxGeometryPiece::~NaaBoxGeometryPiece()
 {
 }
-
+//______________________________________________________________________
+//
 void
 NaaBoxGeometryPiece::outputHelper( ProblemSpecP & ps ) const {
   ps->appendElement( "p1", p1_ );
@@ -138,26 +143,30 @@ NaaBoxGeometryPiece::outputHelper( ProblemSpecP & ps ) const {
   ps->appendElement( "p3", p3_ );
   ps->appendElement( "p4", p4_ );
 }
-
+//______________________________________________________________________
+//
 GeometryPieceP
 NaaBoxGeometryPiece::clone() const
 {
   return scinew NaaBoxGeometryPiece(*this);
 }
 
+//______________________________________________________________________
+//
 //********************************************
 //                                          //
-//             *-------------*              //
-//            / .           / \             //
-//           /   .         /   \            //
-//          P4-------------*    \           //
-//           \    .         \    \          //
-//            \   P2.........\....*         //
-//             \ .            \  /          //
-//             P1--------------P3           //
+//                                          //
+//       *------------------*               //
+//      / \                / \              //
+//    P3...\..............*   \             //
+//      \   \             .    \            //
+//      (z)  P2-----------------*           //
+//        \  /             .   /            //
+//         \/               . /             //
+//         P1-------(x)-----P4              //
+//                                          //
 //
 //  Returns true if the point is inside (or on) the parallelepiped.
-//  (The order of p2, p3, and p4 don't really matter.)
 //
 //  The arbitrary box has been transformed into a unit cube... we take
 //  the Point to check and transform it the same way, then just check
@@ -173,7 +182,8 @@ NaaBoxGeometryPiece::inside( const Point& pt ) const
   else
     return false;
 }
-
+//______________________________________________________________________
+//
 Box
 NaaBoxGeometryPiece::getBoundingBox() const
 {

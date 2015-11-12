@@ -34,59 +34,80 @@
 namespace Uintah {
 
 /**************************************
-	
+
 CLASS
    NaaBoxGeometryPiece
-	
+
    Creates a NON-ACCESS-ALIGNED box from the xml input file description.
-	
+
 GENERAL INFORMATION
-	
+
    NaaBoxGeometryPiece.h
-	
+
    J. Davison de St. Germain
    SCI Institute
    University of Utah
-	
+
    Center for the Simulation of Accidental Fires and Explosions (C-SAFE)
-	
+
 KEYWORDS
    Non-Access-Aligned NaaBoxGeometryPiece BoundingBox inside Parallelepiped
-	
+
 DESCRIPTION
 
-	
+
 ****************************************/
 
 class NaaBoxGeometryPiece : public GeometryPiece {
-	 
+
 public:
   //////////
   // Construct a box from four points.  //
   //                                    //
   //       *------------------*         //
   //      / \                / \        //
-  //    P4...\..............*   \       //
+  //    P3...\..............*   \       //
   //      \   \             .    \      //
-  //       \   P2-----------------*     //
+  //      (z)  P2-----------------*     //
   //        \  /             .   /      //
   //         \/               . /       //
-  //         P1---------------P3        //
-  //                                    //
-  // (The order of p2, p3, and p4 don't really matter.)
-  NaaBoxGeometryPiece( const Point& p1, const Point& p2, 
+  //         P1-------(x)-----P4        //
+  //
+  NaaBoxGeometryPiece( const Point& p1, const Point& p2,
                        const Point& p3, const Point& p4 );
 
   //////////
-  // Constructor that takes a ProblemSpecP argument.   It reads the xml 
+  // Constructor that takes a ProblemSpecP argument.   It reads the xml
   // input specification and builds a generalized box.  UPS file should
   // use:
-  //      <parallelepiped label = "cube">
-  //          <p1>           [1.0, 1.0, 1.0]   </p1>
-  //          <p2>           [1.0, 1.5, 1.0]   </p2>
-  //          <p3>           [1.5, 1.0, 1.0]   </p3>
-  //          <p4>           [1.0, 1.0, 1.5]   </p4>
-  //      </parallelepiped>
+  //        Axis Aligned building
+  //        <parallelepiped label="building1">
+  //            <p1>           [ -0.3,  -0.5,  -0.3]  </p1>         
+  //            <p2>           [ -0.3,   0.5,  -0.3]  </p2>         
+  //            <p3>           [ -0.3,  -0.5,  0.3]   </p3>         
+  //            <p4>           [  0.3,  -0.5, -0.3]   </p4>         
+  //        </parallelepiped>   
+  //        
+  //        Building rotated 125 degrees clockwise about the Y axis
+  //        Edges are not quite aligned with Z & X axis when looking down Y axis
+  //        <parallelepiped label="building1">
+  //            <p1>           [-0.1,  -0.5, -0.3]   </p1>          
+  //            <p2>           [-0.1,   0.5, -0.3]   </p2>          
+  //            <p3>           [ 0.3,  -0.5, -0.1]   </p3>          
+  //            <p4>           [-0.3,  -0.5, +0.1]   </p4>     
+  //        </parallelepiped> 
+  //        
+  //        Building rotated 135 degrees clockwise about the Y axis  
+  //        edges are aligned with Z & X axis when looking down Y axis
+  //               
+  //        <parallelepiped label="building">
+  //            <p1>           [ 0.0,  -0.5,  0.3]   </p1>          
+  //            <p2>           [ 0.0,   0.5,  0.3]   </p2>          
+  //            <p3>           [ 0.3,  -0.5,  0.0]   </p3>          
+  //            <p4>           [-0.3,  -0.5, +0.0]   </p4>       
+  //        </parallelepiped> 
+          
+          
   NaaBoxGeometryPiece(ProblemSpecP&);
 
   //////////
@@ -102,24 +123,24 @@ public:
   //////////
   // Determines whether a point is inside the box.
   virtual bool inside( const Point & pt ) const;
-	 
+
   //////////
   //  Returns the bounding box surrounding the NaaBox
   virtual Box getBoundingBox() const;
-	 
+
 private:
 
   virtual void outputHelper( ProblemSpecP & ps ) const;
 
   // Called by the different constructors to create the NaaBox
-  void init( const Point& p1, const Point& p2, 
+  void init( const Point& p1, const Point& p2,
              const Point& p3, const Point& p4 );
 
   Point   p1_, p2_, p3_, p4_;
   Matrix3 toUnitCube_;
 
   Box boundingBox_;
-	 
+
 }; // end class NaaBoxGeometryPiece
 
 } // End namespace Uintah

@@ -389,23 +389,25 @@ to within 1e-12 after dot product or the simulation will throw an exception.
 Note, if both vector quantities and floating point tags are used,
 the vector quantity inputs will take precedence.
 
-\tt parallelepiped \normalfont requires that four points be specified as
+\tt parallelpiped \normalfont requires that four points be specified as
 illustrated by the ASCII art snippet taken from the source code:
 
 \begin{Verbatim}[fontsize=\footnotesize]
 //********************************************
 //                                          //
-//             *-------------*              //
-//            / .           / \             //
-//           /   .         /   \            //
-//          P4-------------*    \           //
-//           \    .         \    \          //
-//            \   P2.........\....*         //
-//             \ .            \  /          //
-//             P1--------------P3           //
+//                                          //
+//       *------------------*               //
+//      / \                / \              //
+//    P3...\..............*   \             //
+//      \   \             .    \            //
+//      (z)  P2-----------------*           //
+//        \  /             .   /            //
+//         \/               . /             //
+//         P1-------(x)-----P4              //
+//                                          //
 //
 //  Returns true if the point is inside (or on) the parallelepiped.
-//  (The order of p2, p3, and p4 doesn't really matter.)
+
 \end{Verbatim}
 
 \tt tri \normalfont is a tag for describing a triangulated surface.
