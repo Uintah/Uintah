@@ -1525,7 +1525,7 @@ Grid::problemSetup(  const ProblemSpecP   & params
   if (!levelset_ps) { // Only one level set parsed from the level section of the current block.
     level_ps = grid_ps;
     int levelIndex         = 0;
-    int currentSubsetIndex = 0;
+//    int currentSubsetIndex = 0;
     parseLevelSet(level_ps, pg->size(), pg->myrank(), levelIndex, 0, fileIsAMR, do_MultiScale);
 
     // Determine size of newly parsed subset and create an empty subset to house it
@@ -1541,14 +1541,52 @@ Grid::problemSetup(  const ProblemSpecP   & params
       // Store a pointer to the subset to which this level is assigned
       d_levelSubsetMap.push_back(currLevelSubset);
     }
+    d_levelSetNames.push_back("Solo Level Set");
+
   }
   else // parse LevelSets
   {
+    int levelIndex = 0;
+    int currentSubsetIndex = 0;
+    while (levelset_ps) {  // iterate through each level set tag
+      // Set default levelSet name
+      std::ostringstream setNameStream;
+      setNameStream << "Level Set " << std::left << levelIndex;
+      std::string setName = setNameStream.str();
 
+      // And override if present
+      bool hasLabel = levelset_ps->getAttribute("label",setName);
+      d_levelSetNames.push_back(setName);
+      parseLevelSet(levelset_ps, pg->size(), pg->myrank(), levelIndex, currentSubsetIndex,
+                    fileIsAMR, do_MultiScale);
+
+      // Determine size of newly parsed subset and create an empty subset to house it
+      d_levelSet.createEmptySubsets(1);
+      LevelSubset* currLevelSubset = d_levelSet.getSubset(currentSubsetIndex);
+
+      size_t numLevels = d_levels.size();
+      for (size_t currIndex = levelIndex; currIndex < numLevels; ++currIndex) {
+        // Grab rep of the level and add it to the subset
+        currLevelSubset->add(d_levels[currIndex].get_rep());
+        // Place a pointer to the level subset in the level for easy retrieval
+        d_levels[currIndex]->setLevelSubset(currLevelSubset);
+        // Store a pointer to the subset to which this level is assigned
+        d_levelSubsetMap.push_back(currLevelSubset);
+      }
+      levelIndex += numLevels;
+      ++currentSubsetIndex;
+      // Find next Levelset block
+      levelset_ps = levelset_ps->findNextBlock("LevelSet");
+    }
   }
 
-
-  proc0cout << "Level Set: " << std::endl << "\t\t" << d_levelSet << std::endl;
+  proc0cout << "Level Sets: " << std::endl;
+  for (int i=0; i < d_levelSet.size(); ++i)
+  {
+    proc0cout << "  Set # " << std::left << i << " (" << d_levelSetNames[i] << ") :"
+              << *(d_levelSet.getSubset(i)) << std::endl;
+  }
+//  proc0cout << "Level Set: " << std::endl << "\t\t" << d_levelSet << std::endl;
 }
 
 namespace Uintah

@@ -9,7 +9,7 @@
     <!--____________________________________________________________________-->
     <!--         C O M P O N E N T   S W I T C H E R                        -->
     <!--____________________________________________________________________-->
-    <SimulationComponent type="multiscaleswitcher" >
+    <SimulationComponent type="switcher" >
     
         <subcomponent>
             <SimulationComponent type="mpm" />
@@ -78,24 +78,29 @@
             </Face>
         </BoundaryConditions>
        
-        <Level>
-            <Box label = "0">
-                <lower>[  0.00,            0.00,            0.00]</lower>
-                <upper>[559.709435199820,559.709435199820,559.709435199820]</upper>
-                <resolution>[80,80,80]</resolution>
-                <patches>[1,1,1]</patches>
-            </Box>
-        </Level>
+        <LevelSet label = "MPM">
+          <Level>
+              <Box label = "0">
+                  <lower>[  0.00,            0.00,            0.00]</lower>
+                  <upper>[559.709435199820,559.709435199820,559.709435199820]</upper>
+                  <resolution>[80,80,80]</resolution>
+                  <patches>[1,1,1]</patches>
+              </Box>
+          </Level>
+        </LevelSet>
        
-        <Level>
-            <Box label = "1">
-                <lower>[ 0.00,            0.00,            0.00]</lower>
-                <upper>[55.9709435199820,55.9709435199820,55.9709435199820]</upper>
-                <resolution>[56,56,56]</resolution>
-                <patches>[1,1,1]</patches>
-            </Box>
-            <periodic>[1,1,1]</periodic>
-        </Level>
+        <LevelSet label = "MD">
+          <Level>
+              <Box label = "1">
+                  <lower>[ 0.00,            0.00,            0.00]</lower>
+                  <upper>[55.9709435199820,55.9709435199820,55.9709435199820]</upper>
+                  <resolution>[56,56,56]</resolution>
+                  <patches>[1,1,1]</patches>
+              </Box>
+              <periodic>[1,1,1]</periodic>
+          </Level>
+        </LevelSet>
+        
     </Grid>
     
     <!--____________________________________________________________________-->
