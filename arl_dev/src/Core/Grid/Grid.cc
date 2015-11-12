@@ -1517,70 +1517,36 @@ Grid::problemSetup(  const ProblemSpecP   & params
   }
 
   SCIRun::Point  gridAnchor; // Minimum point in grid
-  bool           fileIsAMR = false;
+//  bool           fileIsAMR = false;
+  bool           fileIsAMR = specIsAMR(params);
+  ProblemSpecP   level_ps;
 
-  ProblemSpecP  levelset_ps = params->findBlock("Grid")->findBlock("Level");
-  ProblemSpecP  level_ps;
-//
-//  if (levelset_ps && levelset_ps->findBlock("file")) {
-//    // Parse this levelset from a file
-//    std::string filename;
-//    levelset_ps->get("file", filename);
-//    ProblemSpecP file_ps = ProblemSpecReader().readInputFile(filename);
-//
-//    if (!file_ps) {
-//      std::ostringstream msg;
-//      msg << "Failed to parse requested LevelSet file: \"" << filename << "\"." << std::endl;
-//      throw ProblemSetupException(msg.str(), __FILE__, __LINE__);
-//    }
-//    if (file_ps->findBlock("LevelSet")) {
-//      std::ostringstream msg;
-//      msg << "Error in file: \"" << filename << "\"!" << std::endl
-//          << "   A levelSet parsed from a file may not contain a levelSet within the file to be parsed." << std::endl;
-//      throw ProblemSetupException(msg.str(), __FILE__, __LINE__);
-//    }
-//    if (!file_ps->findBlock("Grid")) {
-//      std::ostringstream msg;
-//      msg << "Indicated file: \"" << filename << "\" does not have a <Grid> section!" << std::endl;
-//      throw ProblemSetupException(msg.str(), __FILE__, __LINE__);
-//    }
-//    proc0cout << "Parsing level information from file: \"" << filename << "\"." << std::endl;
-//
-////    if (!file_ps->findBlock("Level")) {
-////      std::ostringstream msg;
-////      msg << "Indicated file: \"" << filename << "\" has no <Level> section in its <Grid>!"
-////          << std::endl;
-////      throw ProblemSetupException(msg.str(), __FILE__, __LINE__);
-////    }
-//    fileIsAMR = specIsAMR(file_ps); // determine if the filespec is AMR
-//    level_ps = file_ps->findBlock("Grid");
-//  } // We have attached the new file ps to the level_ps
-//  else {
-    // We're parsing levels from our current file
+  ProblemSpecP    levelset_ps = params->findBlock("Grid")->findBlock("LevelSet");
+  if (!levelset_ps) { // Only one level set parsed from the level section of the current block.
     level_ps = grid_ps;
-    fileIsAMR = specIsAMR(params);
-//  }
+    int levelIndex         = 0;
+    int currentSubsetIndex = 0;
+    parseLevelSet(level_ps, pg->size(), pg->myrank(), levelIndex, 0, fileIsAMR, do_MultiScale);
 
-  int levelIndex         = 0;
-  int currentSubsetIndex = 0;
-  parseLevelSet(level_ps, pg->size(), pg->myrank(), levelIndex, currentSubsetIndex, fileIsAMR, do_MultiScale);
+    // Determine size of newly parsed subset and create an empty subset to house it
+    d_levelSet.createEmptySubsets(1);
+    LevelSubset* currLevelSubset = d_levelSet.getSubset(0);
 
-  // Determine size of newly parsed subset and create an empty subset to house it
-  d_levelSet.createEmptySubsets(1);
-  LevelSubset* currLevelSubset = d_levelSet.getSubset(currentSubsetIndex);
+    size_t numLevels = d_levels.size();
+    for (size_t currIndex = levelIndex; currIndex < numLevels; ++currIndex) {
+      // Grab rep of the level and add it to the subset
+      currLevelSubset->add(d_levels[currIndex].get_rep());
+      // Place a pointer to the level subset in the level for easy retrieval
+      d_levels[currIndex]->setLevelSubset(currLevelSubset);
+      // Store a pointer to the subset to which this level is assigned
+      d_levelSubsetMap.push_back(currLevelSubset);
+    }
+  }
+  else // parse LevelSets
+  {
 
-  size_t numLevels = d_levels.size();
-  for (size_t currIndex = levelIndex; currIndex < numLevels; ++currIndex) {
-    // Grab rep of the level and add it to the subset
-    currLevelSubset->add(d_levels[currIndex].get_rep());
-    // Place a pointer to the level subset in the level for easy retrieval
-    d_levels[currIndex]->setLevelSubset(currLevelSubset);
-    // Store a pointer to the subset to which this level is assigned
-    d_levelSubsetMap.push_back(currLevelSubset);
   }
 
-  // Reset AMR state of file after parsing
-  fileIsAMR = false;
 
   proc0cout << "Level Set: " << std::endl << "\t\t" << d_levelSet << std::endl;
 }
