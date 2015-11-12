@@ -388,14 +388,24 @@ WARNING
     // The 0th LevelSubset will be the set of Levels AMR is occurring on
     const LevelSubset* getAMRLevelSubset() { return d_levelSet.getSubset(0); };
 
+    //////////
+    //
+    const LevelSet* getLevelSet() const { return &d_levelSet; };
+
+    //////////
+    //
     void createLevelSubsets( int num_sets );
 
+    //////////
+    //
     friend std::ostream& operator<<(std::ostream& out, const Uintah::Grid& grid);
 
     //////////
     // Used in Level and Patch for stretched grids
     enum Axis {
-      XAxis, YAxis, ZAxis
+        XAxis
+      , YAxis
+      , ZAxis
     };
 
 

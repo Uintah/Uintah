@@ -347,6 +347,7 @@ namespace Uintah{
 
           struct WallInfo { 
               double T_slag; 
+              double dy_erosion; 
               double t_sb; 
               double k; 
               double k_deposit; 

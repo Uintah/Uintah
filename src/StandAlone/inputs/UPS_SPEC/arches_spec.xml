@@ -809,6 +809,7 @@
           <deposit_velocity_name             spec="REQUIRED STRING" need_applies_to="type coal_region_ht"/>  
           <coal_region                       spec="MULTIPLE NO_DATA" need_applies_to="type coal_region_ht">
             <T_slag                     spec="REQUIRED DOUBLE"/>  <!-- Slagging Temperature, [K] -->
+            <erosion_thickness          spec="REQUIRED DOUBLE"/>  <!-- maximum deposit thickness, [m] -->
             <t_sb                       spec="REQUIRED DOUBLE"/>  <!-- time since the last soot blow, [s] -->
             <k                          spec="REQUIRED DOUBLE"/>  <!-- thermal conductivity, [W/(m K)] -->
             <k_deposit                  spec="REQUIRED DOUBLE"/>  <!-- thermal conductivity of deposit, [W/(m K)] -->
