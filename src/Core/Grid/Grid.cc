@@ -527,18 +527,18 @@ Grid::performConsistencyCheck() const
       LevelP fineLevel = level->getFinerLevel();
       //Vector dx_level     = level->dCell();
       Vector dx_fineLevel = fineLevel->dCell();
-      
+
       //__________________________________
       // finer level can't lay outside of the coarser level
       BBox C_box,F_box;
       level->getSpatialRange(C_box);
       fineLevel->getSpatialRange(F_box);
-      
+
       Point Cbox_min = C_box.min();
-      Point Cbox_max = C_box.max(); 
+      Point Cbox_max = C_box.max();
       Point Fbox_min = F_box.min();
       Point Fbox_max = F_box.max();
-      
+
       if(Fbox_min.x() < Cbox_min.x() ||
          Fbox_min.y() < Cbox_min.y() ||
          Fbox_min.z() < Cbox_min.z() ||
@@ -555,31 +555,31 @@ Grid::performConsistencyCheck() const
       //__________________________________
       //  finer level must have a box width that is
       //  an integer of the cell spacing
-      Vector integerTest_min(remainder(Fbox_min.x(),dx_fineLevel.x() ), 
+      Vector integerTest_min(remainder(Fbox_min.x(),dx_fineLevel.x() ),
                              remainder(Fbox_min.y(),dx_fineLevel.y() ),
                              remainder(Fbox_min.z(),dx_fineLevel.z() ) );
-                             
-      Vector integerTest_max(remainder(Fbox_max.x(),dx_fineLevel.x() ), 
+
+      Vector integerTest_max(remainder(Fbox_max.x(),dx_fineLevel.x() ),
                              remainder(Fbox_max.y(),dx_fineLevel.y() ),
                              remainder(Fbox_max.z(),dx_fineLevel.z() ) );
-      
+
       Vector distance = Fbox_max.asVector() - Fbox_min.asVector();
-      
+
       Vector integerTest_distance(remainder(distance.x(), dx_fineLevel.x() ),
                                   remainder(distance.y(), dx_fineLevel.y() ),
                                   remainder(distance.z(), dx_fineLevel.z() ) );
       Vector smallNum(1e-14,1e-14,1e-14);
-      
-      if( (integerTest_min >smallNum || integerTest_max > smallNum) && 
+
+      if( (integerTest_min >smallNum || integerTest_max > smallNum) &&
            integerTest_distance > smallNum){
         std::ostringstream desc;
         desc << " The finer Level " << fineLevel->getIndex()
              << " "<< Fbox_min << " "<< Fbox_max
              << " upper or lower limits are not divisible by the cell spacing "
-             << dx_fineLevel << " \n Remainder of level box/dx: lower" 
+             << dx_fineLevel << " \n Remainder of level box/dx: lower"
              << integerTest_min << " upper " << integerTest_max<< std::endl;
         throw InvalidGrid(desc.str(),__FILE__,__LINE__);
-      } 
+      }
     }
   }
 #endif
@@ -1513,12 +1513,11 @@ Grid::problemSetup(  const ProblemSpecP   & params
 
   ProblemSpecP grid_ps = params->findBlock("Grid");
   if (!grid_ps) {
-    throw ProblemSetupException("Error:  Grid description not found in .ups file!",
-                                __FILE__, __LINE__);
+    throw ProblemSetupException("Error:  Grid description not found in .ups file!", __FILE__, __LINE__);
   }
 
-  Point         gridAnchor; // Minimum point in grid
-  bool          fileIsAMR = false;
+  SCIRun::Point  gridAnchor; // Minimum point in grid
+  bool           fileIsAMR = false;
 
   ProblemSpecP  levelset_ps = params->findBlock("Grid")->findBlock("Level");
   ProblemSpecP  level_ps;
@@ -1575,7 +1574,7 @@ Grid::problemSetup(  const ProblemSpecP   & params
     // Grab rep of the level and add it to the subset
     currLevelSubset->add(d_levels[currIndex].get_rep());
     // Place a pointer to the level subset in the level for easy retrieval
-    d_levels[currIndex]->setSubset(currLevelSubset);
+    d_levels[currIndex]->setLevelSubset(currLevelSubset);
     // Store a pointer to the subset to which this level is assigned
     d_levelSubsetMap.push_back(currLevelSubset);
   }
@@ -1813,15 +1812,16 @@ Grid::setExtraCells( const IntVector & ex )
 {
   if( numLevels() > 0 ) {
      throw ProblemSetupException("Cannot set extraCells after grid setup",
-                                __FILE__, __LINE__);
+                                 __FILE__, __LINE__);
      return;
   }
   d_extraCells = ex;
 }
 
-LevelSubset*
-Grid::createEmptyLevelSubset()
+void
+Grid::createLevelSubsets(int num_sets)
 {
-  d_levelSet.createEmptySubsets(1);
-  return d_levelSet.getSubset(d_levelSet.size()-1);
+  d_levelSet.createEmptySubsets(num_sets);
+  ASSERTEQ(num_sets, d_levelSet.size());
 }
+

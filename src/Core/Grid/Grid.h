@@ -385,10 +385,10 @@ WARNING
     inline int numLevelSets() { return d_levelSet.size(); };
 
     //////////
-    //
-    const LevelSubset* getLevelSubset(int index) { return d_levelSet.getSubset(index); };
+    // The 0th LevelSubset will be the set of Levels AMR is occurring on
+    const LevelSubset* getAMRLevelSubset() { return d_levelSet.getSubset(0); };
 
-    LevelSubset* createEmptyLevelSubset();
+    void createLevelSubsets( int num_sets );
 
     friend std::ostream& operator<<(std::ostream& out, const Uintah::Grid& grid);
 
