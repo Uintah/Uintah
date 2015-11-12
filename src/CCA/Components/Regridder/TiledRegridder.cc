@@ -308,15 +308,28 @@ Grid* TiledRegridder::CreateGrid(Grid* old_grid, vector<vector<IntVector> > &til
       for (unsigned int j = 0; j < tiles[i].size(); j++) {
         IntVector low = computeCellLowIndex(tiles[i][j], d_numCells[i], d_tileSize[i]);
         IntVector high = computeCellHighIndex(tiles[i][j], d_numCells[i], d_tileSize[i]);
-  //        std::cout << "level: " << j << " Creating patch from tile " << tiles[j][p] << " at " << low << ", " << high << std::endl;
-  //        std::cout << "     numCells: " << d_numCells[j] << " tileSize: " << d_tileSize[j] << std::endl;
-
-        //create patch
-        new_level->addPatch(low, high, low, high, new_grid);
+        new_level->addPatch(low, high, low, high, new_grid);  // create patch
+//        std::cout << "level: " << i << " Creating patch from tile " << tiles[i][j] << " at " << low << ", " << high << std::endl;
+//        std::cout << "     numCells: " << d_numCells[i] << " tileSize: " << d_tileSize[i] << std::endl;
       }
       // parameters based on next-fine level.
       spacing = spacing / d_cellRefinementRatio[i];
     }
+
+    // Now rebuild the existing (and static) multi-scale LevelSets if they exist
+    int num_subsets = old_grid->getLevelSet()->size();
+    for (int i = 1; i < num_subsets; ++i) {  // start at the first multi-scale set, excluding the AMR set from above
+      const LevelSubset* old_multiscale_subset = old_grid->getLevelSet()->getSubset(i);
+      const LevelSubset* new_multiscale_subset =  new_grid->getLevelSet()->getSubset(i);
+      for (int j = 0; j < old_multiscale_subset->size(); ++j) {
+        LevelFlags flags;
+        flags.set(LevelFlags::isMultiScale, true);
+        LevelP new_level = new_grid->addLevel(anchor, spacing, flags);
+        const Level* level = new_level.get_rep();
+        const_cast<LevelSubset*>(new_multiscale_subset)->add(level);
+      }
+    }
+
     return new_grid;
 }
 
