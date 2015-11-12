@@ -241,9 +241,9 @@ public:
   
   inline void setdCell( Vector spacing ) { d_dcell = spacing; }
 
-  inline const LevelSubset* getSubset() const { return d_subset; }
+  inline const LevelSubset* getLevelSubset() const { return d_subset; }
 
-  LevelSubset* setSubset( LevelSubset* subset );
+  LevelSubset* setLevelSubset( LevelSubset* subset );
 
   /**
    * Returns the cell volume dx*dy*dz. This will not work for stretched grids.

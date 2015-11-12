@@ -452,12 +452,12 @@ void AMRMPM::scheduleTimeAdvance(const LevelP & level,
     return;
 
   const MaterialSet* matls = d_sharedState->allMPMMaterials();
-  int maxLevels = level->getGrid()->numLevels();
-  GridP grid = level->getGrid();
+  const LevelSubset* amr_levelset = level->getLevelSubset();
+  int maxLevels = amr_levelset->size();
 
 
   for (int l = 0; l < maxLevels; l++) {
-    const LevelP& level = grid->getLevel(l);
+    const Level* level = amr_levelset->get(l);
     const PatchSet* patches = level->eachPatch();
     schedulePartitionOfUnity(               sched, patches, matls);
     scheduleComputeZoneOfInfluence(         sched, patches, matls);
@@ -466,74 +466,74 @@ void AMRMPM::scheduleTimeAdvance(const LevelP & level,
   }
 
   for (int l = 0; l < maxLevels; l++) {
-    const LevelP& level = grid->getLevel(l);
+    const Level* level = amr_levelset->get(l);
     const PatchSet* patches = level->eachPatch();
     scheduleInterpolateParticlesToGrid(     sched, patches, matls);
     // Need to add a task to do the reductions on the max hydro stress - JG ???
   }
 
   for (int l = 0; l < maxLevels; l++) {
-    const LevelP& level = grid->getLevel(l);
+    const Level* level = amr_levelset->get(l);
     const PatchSet* patches = level->eachPatch();
     scheduleInterpolateParticlesToGrid_CFI( sched, patches, matls);
   }
 
 #ifdef USE_DEBUG_TASK
   for (int l = 0; l < maxLevels; l++) {
-    const LevelP& level = grid->getLevel(l);
+    const Level* level = amr_levelset->get(l);
     const PatchSet* patches = level->eachPatch();
     scheduleDebug_CFI( sched, patches, matls);
   }
 #endif
 
   for (int l = 0; l < maxLevels-1; l++) {
-    const LevelP& level = grid->getLevel(l);
+    const Level* level = amr_levelset->get(l);
     const PatchSet* patches = level->eachPatch();
     scheduleCoarsenNodalData_CFI(      sched, patches, matls, coarsenData);
   }
 
   for (int l = 0; l < maxLevels; l++) {
-    const LevelP& level = grid->getLevel(l);
+    const Level* level = amr_levelset->get(l);
     const PatchSet* patches = level->eachPatch();
     scheduleNormalizeNodalVelTempConc(sched, patches, matls);
     scheduleExMomInterpolated(        sched, patches, matls);
   }
 
   for (int l = 0; l < maxLevels; l++) {
-    const LevelP& level = grid->getLevel(l);
+    const Level* level = amr_levelset->get(l);
     const PatchSet* patches = level->eachPatch();
     scheduleComputeInternalForce(           sched, patches, matls);
   }
 
   for (int l = 0; l < maxLevels; l++) {
-    const LevelP& level = grid->getLevel(l);
+    const Level* level = amr_levelset->get(l);
     const PatchSet* patches = level->eachPatch();
     scheduleComputeInternalForce_CFI(       sched, patches, matls);
   }
 
   if(flags->d_doScalarDiffusion){
     for (int l = 0; l < maxLevels; l++) {
-      const LevelP& level = grid->getLevel(l);
+      const Level* level = amr_levelset->get(l);
       const PatchSet* patches = level->eachPatch();
       scheduleComputeFlux(              sched, patches, matls);
       scheduleComputeDivergence(        sched, patches, matls);
     }
 
     for (int l = 0; l < maxLevels; l++) {
-      const LevelP& level = grid->getLevel(l);
+      const Level* level = amr_levelset->get(l);
       const PatchSet* patches = level->eachPatch();
       scheduleComputeDivergence_CFI(    sched, patches, matls);
     }
   }
 
   for (int l = 0; l < maxLevels-1; l++) {
-    const LevelP& level = grid->getLevel(l);
+    const Level* level = amr_levelset->get(l);
     const PatchSet* patches = level->eachPatch();
     scheduleCoarsenNodalData_CFI2( sched, patches, matls);
   }
 
   for (int l = 0; l < maxLevels; l++) {
-    const LevelP& level = grid->getLevel(l);
+    const Level* level = amr_levelset->get(l);
     const PatchSet* patches = level->eachPatch();
     scheduleComputeAndIntegrateAcceleration(sched, patches, matls);
     scheduleExMomIntegrated(                sched, patches, matls);
@@ -541,7 +541,7 @@ void AMRMPM::scheduleTimeAdvance(const LevelP & level,
   }
 
   for (int l = 0; l < maxLevels; l++) {
-    const LevelP& level = grid->getLevel(l);
+    const Level* level = amr_levelset->get(l);
     const PatchSet* patches = level->eachPatch();
     scheduleComputeLAndF(            sched, patches, matls);
   }
@@ -549,48 +549,48 @@ void AMRMPM::scheduleTimeAdvance(const LevelP & level,
 #if 0
   // zero the nodal data at the CFI on the coarse level 
   for (int l = 0; l < maxLevels-1; l++) {
-    const LevelP& level = grid->getLevel(l);
+    const Level* level = amr_levelset->get(l);
     const PatchSet* patches = level->eachPatch();
     scheduleCoarsenNodalData_CFI( sched, patches, matls, zeroData);
   }
 #endif
 
   for (int l = 0; l < maxLevels; l++) {
-    const LevelP& level = grid->getLevel(l);
+    const Level* level = amr_levelset->get(l);
     const PatchSet* patches = level->eachPatch();
     scheduleInterpolateToParticlesAndUpdate(sched, patches, matls);
   }
 
 #if 0
   for (int l = 0; l < maxLevels; l++) {
-    const LevelP& level = grid->getLevel(l);
+    const Level* level = amr_levelset->get(l);
     const PatchSet* patches = level->eachPatch();
     scheduleInterpolateToParticlesAndUpdate_CFI(sched, patches, matls);
   }
 #endif
 
   for (int l = 0; l < maxLevels; l++) {
-    const LevelP& level = grid->getLevel(l);
+    const Level* level = amr_levelset->get(l);
     const PatchSet* patches = level->eachPatch();
     scheduleComputeStressTensor(            sched, patches, matls);
   }
 
   if(flags->d_computeScaleFactor){
     for (int l = 0; l < maxLevels; l++) {
-      const LevelP& level = grid->getLevel(l);
+      const Level* level = amr_levelset->get(l);
       const PatchSet* patches = level->eachPatch();
       scheduleComputeParticleScaleFactor(       sched, patches, matls);
     }
   }
 
   for (int l = 0; l < maxLevels; l++) {
-    const LevelP& level = grid->getLevel(l);
+    const Level* level = amr_levelset->get(l);
     const PatchSet* patches = level->eachPatch();
     scheduleFinalParticleUpdate(            sched, patches, matls);
   }
 
   for (int l = 0; l < maxLevels; l++) {
-    const LevelP& level = grid->getLevel(l);
+    const Level* level = amr_levelset->get(l);
     const PatchSet* patches = level->eachPatch();
     if(flags->d_refineParticles){
       scheduleAddParticles(                 sched, patches, matls);
@@ -598,7 +598,7 @@ void AMRMPM::scheduleTimeAdvance(const LevelP & level,
   }
 
   for (int l = 0; l < maxLevels; l++) {
-    const LevelP& level = grid->getLevel(l);
+    const Level* level = amr_levelset->get(l);
     const PatchSet* patches = level->eachPatch();
     scheduleReduceFlagsExtents(             sched, patches, matls);
   }

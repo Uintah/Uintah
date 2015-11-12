@@ -378,7 +378,7 @@ Level::getRelativeLevel( int offset ) const
 //
 
 LevelSubset*
-Level::setSubset( LevelSubset* subset )
+Level::setLevelSubset( LevelSubset* subset )
 {
   if (!d_subset) {
     d_subset = subset;
