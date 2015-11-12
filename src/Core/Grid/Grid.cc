@@ -1074,7 +1074,7 @@ Grid::parseBox(      ProblemSpecP         box_ps,
     }
   } // Resolution subsection parsed
   SCIRun::IntVector boxExtraCells;
-  box_ps->getWithDefault("extraCells", boxExtraCells, SCIRun::IntVector(0,0,0));
+  box_ps->getWithDefault("extraCells", boxExtraCells, d_extraCells);
   stretchDescription nullStretch;
   return LevelBox(boxExtents, boxExtraCells, boxSpacing, nullStretch);
 }
@@ -1521,45 +1521,45 @@ Grid::problemSetup(  const ProblemSpecP   & params
 
   ProblemSpecP  levelset_ps = params->findBlock("Grid")->findBlock("Level");
   ProblemSpecP  level_ps;
-
-  if (levelset_ps && levelset_ps->findBlock("file")) {
-    // Parse this levelset from a file
-    std::string filename;
-    levelset_ps->get("file", filename);
-    ProblemSpecP file_ps = ProblemSpecReader().readInputFile(filename);
-
-    if (!file_ps) {
-      std::ostringstream msg;
-      msg << "Failed to parse requested LevelSet file: \"" << filename << "\"." << std::endl;
-      throw ProblemSetupException(msg.str(), __FILE__, __LINE__);
-    }
-    if (file_ps->findBlock("LevelSet")) {
-      std::ostringstream msg;
-      msg << "Error in file: \"" << filename << "\"!" << std::endl
-          << "   A levelSet parsed from a file may not contain a levelSet within the file to be parsed." << std::endl;
-      throw ProblemSetupException(msg.str(), __FILE__, __LINE__);
-    }
-    if (!file_ps->findBlock("Grid")) {
-      std::ostringstream msg;
-      msg << "Indicated file: \"" << filename << "\" does not have a <Grid> section!" << std::endl;
-      throw ProblemSetupException(msg.str(), __FILE__, __LINE__);
-    }
-    proc0cout << "Parsing level information from file: \"" << filename << "\"." << std::endl;
-
-//    if (!file_ps->findBlock("Level")) {
+//
+//  if (levelset_ps && levelset_ps->findBlock("file")) {
+//    // Parse this levelset from a file
+//    std::string filename;
+//    levelset_ps->get("file", filename);
+//    ProblemSpecP file_ps = ProblemSpecReader().readInputFile(filename);
+//
+//    if (!file_ps) {
 //      std::ostringstream msg;
-//      msg << "Indicated file: \"" << filename << "\" has no <Level> section in its <Grid>!"
-//          << std::endl;
+//      msg << "Failed to parse requested LevelSet file: \"" << filename << "\"." << std::endl;
 //      throw ProblemSetupException(msg.str(), __FILE__, __LINE__);
 //    }
-    fileIsAMR = specIsAMR(file_ps); // determine if the filespec is AMR
-    level_ps = file_ps->findBlock("Grid");
-  } // We have attached the new file ps to the level_ps
-  else {
+//    if (file_ps->findBlock("LevelSet")) {
+//      std::ostringstream msg;
+//      msg << "Error in file: \"" << filename << "\"!" << std::endl
+//          << "   A levelSet parsed from a file may not contain a levelSet within the file to be parsed." << std::endl;
+//      throw ProblemSetupException(msg.str(), __FILE__, __LINE__);
+//    }
+//    if (!file_ps->findBlock("Grid")) {
+//      std::ostringstream msg;
+//      msg << "Indicated file: \"" << filename << "\" does not have a <Grid> section!" << std::endl;
+//      throw ProblemSetupException(msg.str(), __FILE__, __LINE__);
+//    }
+//    proc0cout << "Parsing level information from file: \"" << filename << "\"." << std::endl;
+//
+////    if (!file_ps->findBlock("Level")) {
+////      std::ostringstream msg;
+////      msg << "Indicated file: \"" << filename << "\" has no <Level> section in its <Grid>!"
+////          << std::endl;
+////      throw ProblemSetupException(msg.str(), __FILE__, __LINE__);
+////    }
+//    fileIsAMR = specIsAMR(file_ps); // determine if the filespec is AMR
+//    level_ps = file_ps->findBlock("Grid");
+//  } // We have attached the new file ps to the level_ps
+//  else {
     // We're parsing levels from our current file
     level_ps = grid_ps;
     fileIsAMR = specIsAMR(params);
-  }
+//  }
 
   int levelIndex         = 0;
   int currentSubsetIndex = 0;
