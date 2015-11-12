@@ -653,27 +653,31 @@
     <!--Level sets for multicomponent or nested simulations -->
        
     <LevelSet			spec="MULTIPLE NO_DATA"
-                          attribute1="label    OPTIONAL STRING"
-                          children1="ONE_OF(CHILD list,range,isolated,file)">
-
-      <!-- Explicitly list the level indices to be included in the set. -->
-      <list				spec="OPTIONAL MULTIPLE_INTEGERS"/>
-      
-      <!-- Levels in the range [from,to] will be included in the level set. -->
-      <range            spec="OPTIONAL NO_DATA"
-                          attribute1 = "from REQUIRED INTEGER"
-                          attribute2 = "to REQUIRED INTEGER" />
-                          
-      <!-- Every level in the range [from,to] will be in its own level set. -->                    
-      <isolated         spec="OPTIONAL NO_DATA"
-                          attribute1 = "from REQUIRED INTEGER"
-                          attribute2 = "to REQUIRED INTEGER" />
-                          
-      <!-- All levels parsed from the grid section of the included file will --> 
-      <!--   be placed in a single level set. -->
-      <!-- For now, nesting is not allowed. -->                    
-      <file             spec="OPTIONAL STRING"/>
-                              
+                          attribute1="label    OPTIONAL STRING">
+      <Level              spec="MULTIPLE NO_DATA">
+        <Box              spec="MULTIPLE NO_DATA"
+                            attribute1="label     OPTIONAL STRING" 
+                            children1="ONE_OF(CHILD autoPatch,patches)">
+          <autoPatch      spec="OPTIONAL INTEGER 'positive'" />
+          <lower          spec="REQUIRED VECTOR" />
+          <upper          spec="REQUIRED VECTOR" />
+          <resolution     spec="OPTIONAL VECTOR" />
+          <patches        spec="OPTIONAL VECTOR" />
+          <extraCells     spec="OPTIONAL VECTOR" />  <!-- FIXME: is this optional?  Arches doesn't need it?  or should everyone say 0,0,0? -->
+        </Box>
+        <spacing          spec="OPTIONAL VECTOR" /> <!-- ????????? -->
+        <periodic         spec="OPTIONAL VECTOR 'positive'"/>
+        <Stretch          spec="MULTIPLE NO_DATA" 
+                            attribute1="axis OPTIONAL STRING" >
+          <linear         spec="MULTIPLE NO_DATA"
+                            attribute1="to OPTIONAL STRING"
+                            attribute2="fromSpacing OPTIONAL STRING"
+                            attribute3="toSpacing OPTIONAL STRING" />
+          <uniform        spec="MULTIPLE NO_DATA"
+                            attribute1="to OPTIONAL STRING"
+                            attribute2="spacing OPTIONAL STRING" />
+        </Stretch>
+      </Level> 
     </LevelSet>
 
   </Grid>

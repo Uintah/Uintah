@@ -26,7 +26,6 @@
 #define UINTAH_CORE_GRID_GRID_H
 
 #include <CCA/Ports/LoadBalancer.h>
-#include <CCA/Components/ProblemSpecification/ProblemSpecReader.h>
 
 #include <Core/Containers/OffsetArray1.h>
 #include <Core/Geometry/BBox.h>
@@ -470,6 +469,7 @@ WARNING
                         , const bool           do_MultiScale
                       );
 
+
     // The current (final) values of a,b,c, and norm for the partition function.
     // Used to hold data between recursive calls.
     int    af_;
@@ -492,10 +492,12 @@ WARNING
     
     SCIRun::IntVector d_extraCells;
 
-    // Holds the level subsets for portions of the grid.
+
+    // level set related storage
     LevelSet  d_levelSet;
 
     std::vector<const LevelSubset*> d_levelSubsetMap;
+    std::vector<std::string> d_levelSetNames;
 
   };
 
