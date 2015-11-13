@@ -419,12 +419,12 @@ void statistics::computeStatsWrapper( DataWarehouse* old_dw,
   
   if(now < d_startTime || now > d_stopTime){
     
-    proc0cout << " IGNORING------------DataAnalysis: Statistics" << endl;
+//    proc0cout << " IGNORING------------DataAnalysis: Statistics" << endl;
     allocateAndZeroStats<T>( new_dw, patch, Q);
     carryForwardSums( old_dw, new_dw, patches, matl_sub, Q );
     
   }else {
-    proc0cout << " Computing------------DataAnalysis: Statistics" << endl;
+//    proc0cout << " Computing------------DataAnalysis: Statistics" << endl;
     computeStats< T >(old_dw, new_dw, patch, Q);
   }
 }
