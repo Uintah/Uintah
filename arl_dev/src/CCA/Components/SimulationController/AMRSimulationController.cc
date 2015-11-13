@@ -69,17 +69,21 @@ using namespace std;
 using namespace SCIRun;
 using namespace Uintah;
 
-DebugStream amrout("AMR", false);
-static DebugStream dbg("AMRSimulationController", false);
-static DebugStream dbg_barrier("MPIBarriers",false);
-static DebugStream dbg_dwmem("LogDWMemory",false);
-static DebugStream gprofile("CPUProfiler",false);
-static DebugStream gheapprofile("HeapProfiler",false);
-static DebugStream gheapchecker("HeapChecker",false);
+DebugStream amrout(             "AMR",                     false);
+static DebugStream dbg(         "AMRSimulationController", false);
+static DebugStream dbg_barrier( "MPIBarriers",             false);
+static DebugStream dbg_dwmem(   "LogDWMemory",             false);
+static DebugStream gprofile(    "CPUProfiler",             false);
+static DebugStream gheapprofile("HeapProfiler",            false);
+static DebugStream gheapchecker("HeapChecker",             false);
 
-AMRSimulationController::AMRSimulationController(const ProcessorGroup* myworld,
-                                                 bool doAMR, ProblemSpecP pspec) :
-  SimulationController(myworld, doAMR, pspec)
+double amr_barrier_times[5]={0};
+
+AMRSimulationController::AMRSimulationController( const ProcessorGroup * myworld,
+                                                        bool             doAMR,
+                                                        bool             doMultiScale,
+                                                        ProblemSpecP     pspec)
+  : SimulationController(myworld, doAMR, doMultiScale, pspec)
 {
 #ifdef HAVE_VISIT
   do_visit = true;
@@ -91,8 +95,6 @@ AMRSimulationController::~AMRSimulationController()
 {
 }
 
-double barrier_times[5]={0};
-
 //______________________________________________________________________
 //
 void
@@ -101,36 +103,36 @@ AMRSimulationController::run()
   MALLOC_TRACE_TAG_SCOPE("AMRSimulationController::run()");
 
 #ifdef USE_GPERFTOOLS
-  if (gprofile.active()){
+
+  // CPU profiler
+  if (gprofile.active()) {
     char gprofname[512];
     sprintf(gprofname, "cpuprof-rank%d", d_myworld->myrank());
     ProfilerStart(gprofname);
   }
-  if (gheapprofile.active()){
+
+  // Heap profiler
+  if (gheapprofile.active()) {
     char gheapprofname[512];
     sprintf(gheapprofname, "heapprof-rank%d", d_myworld->myrank());
     HeapProfilerStart(gheapprofname);
   }
 
-  HeapLeakChecker * heap_checker=NULL;
-  if (gheapchecker.active()){
-    if (!gheapprofile.active()){
+  // Heap checker
+  HeapLeakChecker* heap_checker=NULL;
+  if (gheapchecker.active()) {
+    if (!gheapprofile.active()) {
       char gheapchkname[512];
       sprintf(gheapchkname, "heapchk-rank%d", d_myworld->myrank());
       heap_checker= new HeapLeakChecker(gheapchkname);
     } else {
-      cout<< "HEAPCHECKER: Cannot start with heapprofiler" <<endl;
+      std::cout << "HEAPCHECKER: Cannot start with heapprofiler" << std::endl;
     }
   }
+
 #endif
 
-  bool log_dw_mem=false;
-
-  if( dbg_dwmem.active() ) {
-    log_dw_mem = true;
-  }
-
-  // Sets up sharedState, timeinfo, output, scheduler, lb.
+  // Sets up SimulationState (d_sharedState), output, scheduler, and timeinfo - also runs problemSetup for scheduler and output
   preGridSetup();
 
   // Create grid:
@@ -221,7 +223,7 @@ AMRSimulationController::run()
     MALLOC_TRACE_TAG_SCOPE("AMRSimulationController::run()::control loop");
     if(dbg_barrier.active()) {
       for(int i=0;i<5;i++) {
-	barrier_times[i]=0;
+        amr_barrier_times[i]=0;
       }
     }
      
@@ -264,7 +266,7 @@ AMRSimulationController::run()
 
     // printSimulationStats( d_sharedState, delt, time );
 
-    if(log_dw_mem){
+    if(dbg_dwmem.active()){
       // Remember, this isn't logged if DISABLE_SCI_MALLOC is set
       // (So usually in optimized mode this will not be run.)
       d_scheduler->logMemoryUse();
@@ -279,7 +281,7 @@ AMRSimulationController::run()
     if(dbg_barrier.active()) {
       start=Time::currentSeconds();
       MPI_Barrier(d_myworld->getComm());
-      barrier_times[2]+=Time::currentSeconds()-start;
+      amr_barrier_times[2]+=Time::currentSeconds()-start;
     }
 
     // Yes, I know this is kind of hacky, but this is the only way to
@@ -339,7 +341,7 @@ AMRSimulationController::run()
     if(dbg_barrier.active()) {
       start=Time::currentSeconds();
       MPI_Barrier(d_myworld->getComm());
-      barrier_times[3]+=Time::currentSeconds()-start;
+      amr_barrier_times[3]+=Time::currentSeconds()-start;
     }
 
     // adjust the delt for each level and store it in all applicable dws.
@@ -409,9 +411,9 @@ AMRSimulationController::run()
     if(dbg_barrier.active()) {
       start = Time::currentSeconds();
       MPI_Barrier( d_myworld->getComm() );
-      barrier_times[4]+=Time::currentSeconds()-start;
+      amr_barrier_times[4]+=Time::currentSeconds()-start;
       double avg[5];
-      MPI_Reduce( &barrier_times, &avg, 5, MPI_DOUBLE, MPI_SUM, 0, d_myworld->getComm() );
+      MPI_Reduce( &amr_barrier_times, &avg, 5, MPI_DOUBLE, MPI_SUM, 0, d_myworld->getComm() );
        
       if(d_myworld->myrank()==0) {
 	cout << "Barrier Times: "; 
@@ -811,7 +813,7 @@ AMRSimulationController::doRegridding( GridP & currentGrid, bool initialTimestep
     double start;
     start=Time::currentSeconds();
     MPI_Barrier(d_myworld->getComm());
-    barrier_times[0]+=Time::currentSeconds()-start;
+    amr_barrier_times[0]+=Time::currentSeconds()-start;
   }
   
   double regridTime = Time::currentSeconds() - start;
@@ -828,7 +830,7 @@ AMRSimulationController::doRegridding( GridP & currentGrid, bool initialTimestep
       double start;
       start=Time::currentSeconds();
       MPI_Barrier(d_myworld->getComm());
-      barrier_times[1]+=Time::currentSeconds()-start;
+      amr_barrier_times[1]+=Time::currentSeconds()-start;
     }
     
     currentGrid->assignBCS( d_grid_ps, d_lb );
@@ -955,7 +957,7 @@ AMRSimulationController::recompile(double t, double delt, GridP& currentGrid, in
   }
     
   for(int i = currentGrid->numLevels()-1; i >= 0; i--){
-    dbg << d_myworld->myrank() << "   final TG " << i << endl;
+    dbg << d_myworld->myrank() << "   final level: " << i << endl;
     
     if (d_regridder) {
       d_regridder->scheduleInitializeErrorEstimate(currentGrid->getLevel(i));

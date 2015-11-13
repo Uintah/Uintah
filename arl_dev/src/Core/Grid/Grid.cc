@@ -119,17 +119,8 @@ Grid::parsePatchFromFile( FILE * fp, LevelP level, std::vector<int> & procMapFor
   bool      foundInteriorLowIndex = false;
   bool      foundInteriorHighIndex = false;
 
-  // int       nnodes           = -1;
-  // bool      foundNNodes      = false;
-
-  // Vector    lower, upper;
-  // bool      foundLower       = false;
-  // bool      foundUpper       = false;
-
-
   while( !doneWithPatch ) {
     std::string line = UintahXML::getLine( fp );
-    //    proc0cout << "4) parsing: " << line << "\n";
     
     if( line == "</Patch>" ) {
       doneWithPatch = true;
@@ -246,7 +237,6 @@ Grid::parseLevelFromFile( FILE * fp, std::vector<int> & procMapForLevel )
 
   while( !done_with_level ) {
     std::string line = UintahXML::getLine( fp );
-    //proc0cout << "3) parsing: " << line << "\n";
     
     if( line == "</Level>" ) {
       done_with_level = true;
@@ -396,7 +386,6 @@ Grid::parseGridFromFile( FILE * fp, std::vector< std::vector<int> > & procMap, c
     // we can use "done" for both while loops.
 
     std::string line = UintahXML::getLine( fp );
-    //proc0cout << "2) parsing: " << line << "\n";
 
     if( line == "</Grid>" ) {
       doneWithGrid = true;
@@ -820,7 +809,7 @@ Grid::stretchRegion::countCells() const
     double b = SCIRun::Max(fromSpacing, toSpacing);
     double totalDistance = to-from;
     double nn = log(b/a) / log((totalDistance+b)/(totalDistance+a)) -1;
-    int n = (int)(nn+0.5);
+    int n = static_cast<int>(nn+0.5);
     return n;
   }
 }
@@ -834,7 +823,6 @@ Grid::stretchDescription::checkStretches(const SCIRun::BBox &extents, const int&
 
   SCIRun::Vector spacing;
 
-//  int stretch_count = 0;
   for (int axis = 0; axis < 3; ++axis)
   {
     int numRegions = getRegionsPerAxis(axis);
@@ -1147,6 +1135,7 @@ Grid::parseLevel(ProblemSpecP& level_ps, const int levelIndex, const int myProcR
       }
     }
     levelExtraCells = Max(levelExtraCells,currentBox.getExtraCells());
+
     // Done with all processing for this box, get the next one.
     box_ps = box_ps->findNextBlock("Box");
   } // Loop through all boxes
@@ -1481,10 +1470,6 @@ Grid::parseLevelSet(  const ProblemSpecP & grid_ps
     IntVector highPointCell(level->getCellIndex((levelInfo.getHighPoint() + Vector(1.e-14,1.e-14,1.e-14)).asPoint()));
     parsePatches(level_ps, level, anchorCell, highPointCell, extraCells, numProcs, myProcRank );
 
-    if (numProcs > 1 && (level->numPatches() < numProcs) && !(do_AMR || do_MultiScale) )
-    {
-      throw ProblemSetupException("Number of patches must be >= the number of processes in an mpi run.", __FILE__, __LINE__);
-    }
     SCIRun::IntVector periodicBoundaries;
     if (level_ps->get("periodic",periodicBoundaries))
     {
@@ -1517,7 +1502,6 @@ Grid::problemSetup(  const ProblemSpecP   & params
   }
 
   SCIRun::Point  gridAnchor; // Minimum point in grid
-//  bool           fileIsAMR = false;
   bool           fileIsAMR = specIsAMR(params);
   ProblemSpecP   level_ps;
 
@@ -1525,7 +1509,6 @@ Grid::problemSetup(  const ProblemSpecP   & params
   if (!levelset_ps) { // Only one level set parsed from the level section of the current block.
     level_ps = grid_ps;
     int levelIndex         = 0;
-//    int currentSubsetIndex = 0;
     parseLevelSet(level_ps, pg->size(), pg->myrank(), levelIndex, 0, fileIsAMR, do_MultiScale);
 
     // Determine size of newly parsed subset and create an empty subset to house it
@@ -1549,6 +1532,7 @@ Grid::problemSetup(  const ProblemSpecP   & params
     int levelIndex = 0;
     int currentSubsetIndex = 0;
     while (levelset_ps) {  // iterate through each level set tag
+
       // Set default levelSet name
       std::ostringstream setNameStream;
       setNameStream << "Level Set " << std::left << levelIndex;
@@ -1557,8 +1541,7 @@ Grid::problemSetup(  const ProblemSpecP   & params
       // And override if present
       bool hasLabel = levelset_ps->getAttribute("label",setName);
       d_levelSetNames.push_back(setName);
-      parseLevelSet(levelset_ps, pg->size(), pg->myrank(), levelIndex, currentSubsetIndex,
-                    fileIsAMR, do_MultiScale);
+      parseLevelSet(levelset_ps, pg->size(), pg->myrank(), levelIndex, currentSubsetIndex, fileIsAMR, do_MultiScale);
 
       // Determine size of newly parsed subset and create an empty subset to house it
       d_levelSet.createEmptySubsets(1);
@@ -1566,27 +1549,43 @@ Grid::problemSetup(  const ProblemSpecP   & params
 
       size_t numLevels = d_levels.size();
       for (size_t currIndex = levelIndex; currIndex < numLevels; ++currIndex) {
+
         // Grab rep of the level and add it to the subset
         currLevelSubset->add(d_levels[currIndex].get_rep());
+
         // Place a pointer to the level subset in the level for easy retrieval
         d_levels[currIndex]->setLevelSubset(currLevelSubset);
+
         // Store a pointer to the subset to which this level is assigned
         d_levelSubsetMap.push_back(currLevelSubset);
       }
       levelIndex += numLevels;
       ++currentSubsetIndex;
-      // Find next Levelset block
-      levelset_ps = levelset_ps->findNextBlock("LevelSet");
+      levelset_ps = levelset_ps->findNextBlock("LevelSet"); // Find next Levelset block
     }
   }
 
+  int num_patches = 0;
+  for (int i = 0; i < numLevels(); ++i) {
+    num_patches += d_levels[i]->numPatches();
+  }
+
+  int num_threads = Uintah::Parallel::getNumThreads();
+  int num_procs = pg->size();
+  bool using_threads = (num_threads > 0) ? true : false;
+  bool undersubscribed_procs   = (!using_threads) && (num_patches < num_procs);
+  bool undersubscribed_threads = (using_threads)  && (num_patches < (num_procs * num_threads));
+
+  // if not doing AMR and number of patches is less than available resources (threads or procs) - throw
+  if (!do_AMR && (undersubscribed_threads  || undersubscribed_procs)) {
+    throw ProblemSetupException("Number of patches must be >= the number of processes in an mpi run.", __FILE__, __LINE__);
+  }
+
   proc0cout << "Level Sets: " << std::endl;
-  for (int i=0; i < d_levelSet.size(); ++i)
-  {
+  for (int i=0; i < d_levelSet.size(); ++i) {
     proc0cout << "  Set # " << std::left << i << " (" << d_levelSetNames[i] << ") :"
               << *(d_levelSet.getSubset(i)) << std::endl;
   }
-//  proc0cout << "Level Set: " << std::endl << "\t\t" << d_levelSet << std::endl;
 }
 
 namespace Uintah
