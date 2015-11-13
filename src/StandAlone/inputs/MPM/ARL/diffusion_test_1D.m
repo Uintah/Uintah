@@ -1,5 +1,4 @@
 % 1d solution for the diffusion equation
-% This solution is for c(x,0) = 0
 
 x0 = 0.0; x1 = 1.0;
 D = .1;
