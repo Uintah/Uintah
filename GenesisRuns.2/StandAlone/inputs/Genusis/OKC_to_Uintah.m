@@ -1,4 +1,4 @@
-#! /usr/bin/octave -qf
+#! /usr/bin/env octaveWrap
 %_________________________________
 % This octave file generates the parallelpiped geometry object used by uintah.  
 %
@@ -104,5 +104,5 @@ fprintf(fid, "              </union>\n");
 fprintf(fid, "</Uintah_Include>");
 fclose(fid);
 unix("more  OKC_ice.xml","-echo");
-
+unix('/bin/rm OKC_clean');
 exit
