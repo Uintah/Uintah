@@ -72,7 +72,7 @@ struct SimulationTime;
   DESCRIPTION
        Abstract baseclass for the SimulationControllers.
        Introduced to make the "old" SimulationController
-       and the new AMRSimulationController interchangeable.
+       and the AMR/MultiScale SimulationControllers interchangeable.
      
   WARNING
       
@@ -83,7 +83,8 @@ struct SimulationTime;
 class SimulationController : public UintahParallelComponent {
 
 public:
-  SimulationController( const ProcessorGroup* myworld, bool doAMR, ProblemSpecP pspec );
+  SimulationController( const ProcessorGroup* myworld, bool doAMR, bool doMultiScale, ProblemSpecP pspec );
+
   virtual ~SimulationController();
 
   //! Notifies (before calling run) the SimulationController
@@ -130,6 +131,7 @@ protected:
   DataArchive*         d_archive;
 
   bool d_doAMR;
+  bool d_doMultiScale;
   bool d_doMultiTaskgraphing;
 
   /* For restarting */

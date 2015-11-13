@@ -31,27 +31,27 @@ include $(SCIRUN_SCRIPTS)/smallso_prologue.mk
 
 SRCDIR   := CCA/Components/SimulationController
 
-SRCS     += $(SRCDIR)/SimulationController.cc \
-            $(SRCDIR)/AMRSimulationController.cc 
+SRCS     += $(SRCDIR)/SimulationController.cc            \
+            $(SRCDIR)/AMRSimulationController.cc         \
+            $(SRCDIR)/MultiScaleSimulationController.cc 
 
-PSELIBS := \
-	Core/DataArchive \
-	Core/Disclosure  \
-	Core/Exceptions  \
-	Core/Grid        \
-	Core/Parallel    \
-	Core/ProblemSpec \
-	Core/Util        \
+PSELIBS :=                         \
+	Core/DataArchive               \
+	Core/Disclosure                \
+	Core/Exceptions                \
+	Core/Grid                      \
+	Core/Parallel                  \
+	Core/ProblemSpec               \
+	Core/Util                      \
 	CCA/Components/DataArchiver    \
 	CCA/Components/ReduceUda       \
 	CCA/Components/Regridder       \
-	CCA/Ports        \
-	Core/OS       \
-	Core/Geometry \
-	Core/Thread   \
-	Core/Util     \
-	Core/Exceptions \
-	\
+	CCA/Ports                      \
+	Core/OS                        \
+	Core/Geometry                  \
+	Core/Thread                    \
+	Core/Util                      \
+	Core/Exceptions                \
 	Core/Math
 
 LIBS := $(XML2_LIBRARY) $(MPI_LIBRARY) $(M_LIBRARY) $(GPERFTOOLS_LIBRARY)
