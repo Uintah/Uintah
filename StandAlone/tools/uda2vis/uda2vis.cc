@@ -634,8 +634,8 @@ TimeStepInfo* getTimeStepInfo2(SchedulerP schedulerP,
   LoadBalancer* lb = schedulerP->getLoadBalancer();
 
   // probably index is just 0 or 1
-  int index = 1;
-  DataWarehouse *dw = schedulerP->get_dw( index );
+  // int index = 1;
+  // DataWarehouse *dw = schedulerP->get_dw( index );
 
   int numLevels = gridP->numLevels();
   TimeStepInfo *stepInfo = new TimeStepInfo();
