@@ -33,6 +33,7 @@ SRCDIR     := CCA/Components/Parent
 COMPONENTS := CCA/Components
 
 SRCS := $(SRCDIR)/Switcher.cc \
+        $(SRCDIR)/MultiScaleSwitcher.cc \
         $(SRCDIR)/ComponentFactory.cc
 
 # ARCHES et. al. should have been seen by CCA/Components/sub.mk
