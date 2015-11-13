@@ -250,6 +250,9 @@ ComponentFactory::create( ProblemSpecP& ps, const ProcessorGroup* world,
   if (sim_comp == "switcher" || sim_comp == "SWITCHER") {
     return scinew Switcher(world, ps, doAMR, uda);
   } 
+  if (sim_comp == "multiscaleswitcher" || sim_comp == "MULTISCALESWITCHER") {
+    return scinew MultiScaleSwitcher(world, ps, doAMR, uda);
+  }
   if (sim_comp == "reduce_uda") {
     return scinew UdaReducer(world, uda);
   }
