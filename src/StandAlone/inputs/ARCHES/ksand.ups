@@ -10,12 +10,12 @@
 
   <Solver type="hypre"/>
   <Time>
-    <maxTime>0.1</maxTime>
+    <maxTime>1.</maxTime>
     <initTime>0.0</initTime>
     <delt_min>0.00001</delt_min>
-    <delt_max>5</delt_max>
+    <delt_max>1</delt_max>
     <timestep_multiplier>0.5</timestep_multiplier>
-    <max_Timesteps>1</max_Timesteps>
+    <max_Timesteps>10</max_Timesteps>
   </Time>
 
   <DataArchiver>
@@ -32,7 +32,7 @@
       <Box label="1">
         <lower>[0,0,0]</lower>
         <upper>[1.0,1.0,3.0]</upper>
-        <resolution>[8,8,8]</resolution>
+        <resolution>[80,4,2]</resolution>
         <extraCells>[0,0,0]</extraCells>
         <patches>[1,1,1]</patches>
       </Box>
@@ -52,10 +52,13 @@
 
       <KScalarTransport>
         <eqn label="phi" type="CC">
-          <!--<convection scheme="test" />-->
+          <convection scheme="superbee" />
           <diffusion/>
+          <initialize value="1.0"/>
         </eqn>
-        <eqn label="uVelocitySPBC" type="SX"/>
+        <eqn label="uVelocitySPBC" type="SX">
+          <initialize value=".1"/>
+        </eqn>
         <eqn label="vVelocitySPBC" type="SY"/>
         <eqn label="wVelocitySPBC" type="SZ"/>
         <eqn label="density" type="CC"/> 

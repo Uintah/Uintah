@@ -60,11 +60,13 @@ public:
 
 private:
 
+    enum CONV_SCHEME {CENTRAL, SUPERBEE, ROE};
+
     std::string _rhs_name;
     std::string _D_name;
     std::string _Fconv_name;
     std::string _Fdiff_name;
-    std::string _conv_scheme;
+    CONV_SCHEME _conv_scheme;
 
     bool _do_conv;
     bool _do_diff;
@@ -105,7 +107,17 @@ private:
 
     _do_conv = false;
     if ( db->findBlock("convection")){
-      db->findBlock("convection")->getAttribute("scheme", _conv_scheme);
+      std::string conv_scheme; 
+      db->findBlock("convection")->getAttribute("scheme", conv_scheme);
+      if ( conv_scheme == "central" ){ 
+        _conv_scheme = CENTRAL; 
+      } else if ( conv_scheme == "superbee"){ 
+        _conv_scheme = SUPERBEE; 
+      } else if ( conv_scheme == "roe_minmod"){ 
+        _conv_scheme = ROE; 
+      } else { 
+        throw InvalidValue("Error: Convection scheme not recognized: "+conv_scheme,__FILE__,__LINE__);
+      } 
       _do_conv = true;
     }
 
@@ -251,7 +263,7 @@ private:
     // register_variable( "areaFractionFY" , ArchesFieldContainer::REQUIRES , 1 , ArchesFieldContainer::OLDDW  , variable_registry , time_substep );
     // register_variable( "areaFractionFZ" , ArchesFieldContainer::REQUIRES , 1 , ArchesFieldContainer::OLDDW  , variable_registry , time_substep );
     // register_variable( "volFraction"    , ArchesFieldContainer::REQUIRES , 1 , ArchesFieldContainer::OLDDW  , variable_registry , time_substep );
-    register_variable( "density"        , ArchesFieldContainer::REQUIRES , 1 , ArchesFieldContainer::LATEST , variable_registry , time_substep );
+    //register_variable( "density"        , ArchesFieldContainer::REQUIRES , 1 , ArchesFieldContainer::LATEST , variable_registry , time_substep );
   //  //register_variable( "areaFraction"   , ArchesFieldContainer::REQUIRES , 2 , ArchesFieldContainer::LATEST , variable_registry , time_substep );
   //
   //  typedef std::vector<SourceInfo> VS;
@@ -269,7 +281,6 @@ private:
     T& rhs = *(tsk_info->get_uintah_field<T>(_rhs_name));
     typedef typename VariableHelper<T>::ConstType CONST_TYPE;
     CONST_TYPE& phi = *(tsk_info->get_const_uintah_field<CONST_TYPE>(_task_name));
-    constCCVariable<double>& rho = *(tsk_info->get_const_uintah_field<constCCVariable<double> >("density"));
     constCCVariable<double>& gamma = *(tsk_info->get_const_uintah_field<constCCVariable<double> >(_D_name));
     constSFCXVariable<double>& u = *(tsk_info->get_const_uintah_field<constSFCXVariable<double> >("uVelocitySPBC"));
     constSFCYVariable<double>& v = *(tsk_info->get_const_uintah_field<constSFCYVariable<double> >("vVelocitySPBC"));
@@ -290,28 +301,61 @@ private:
                    patch->getBCType(Patch::zplus)  == Patch::Neighbor?0:1);
 
     //better to combine all directions into a single grid loop?
-    IntVector dir(1,0,0);
-    ComputeConvection<T, constSFCXVariable<double> > x_conv( phi, rhs, rho, u, dir, A);
-    ComputeDiffusion<T> x_diff( phi, gamma, rhs, dir, A, DX.x() );
+    //Convection: 
+    if ( _do_conv ){ 
+      if ( _conv_scheme == CENTRAL ){ 
 
-    if ( _do_conv )
-      Kokkos::parallel_for( Kokkos::Range3Policy<int>(l[0],l[1],l[2], h[0],h[1],h[2]), x_conv );
-    if ( _do_diff )
+        // x
+        ComputeConvectionCentral<T, constSFCXVariable<double>, XDIR > x_conv( phi, rhs, u, A);
+        Kokkos::parallel_for( Kokkos::Range3Policy<int>(l[0],l[1],l[2], h[0],h[1],h[2]), x_conv );
+        // y
+        ComputeConvectionCentral<T, constSFCYVariable<double>, YDIR > y_conv( phi, rhs, v, A);
+        Kokkos::parallel_for( Kokkos::Range3Policy<int>(l[0],l[1],l[2], h[0],h[1],h[2]), y_conv );
+        // z
+        ComputeConvectionCentral<T, constSFCZVariable<double>, ZDIR > z_conv( phi, rhs, w, A);
+        Kokkos::parallel_for( Kokkos::Range3Policy<int>(l[0],l[1],l[2], h[0],h[1],h[2]), z_conv );
+
+      } else if ( _conv_scheme == SUPERBEE ){ 
+        //x
+        ComputeConvection<T, constSFCXVariable<double>, XDIR, SUPERBEE> x_conv(phi, rhs, u, A); 
+        Kokkos::parallel_for( Kokkos::Range3Policy<int>(l[0],l[1],l[2], h[0],h[1],h[2]), x_conv );
+        //y
+        ComputeConvection<T, constSFCYVariable<double>, YDIR, SUPERBEE> y_conv(phi, rhs, v, A); 
+        Kokkos::parallel_for( Kokkos::Range3Policy<int>(l[0],l[1],l[2], h[0],h[1],h[2]), y_conv );
+        //x
+        ComputeConvection<T, constSFCZVariable<double>, ZDIR, SUPERBEE> z_conv(phi, rhs, w, A); 
+        Kokkos::parallel_for( Kokkos::Range3Policy<int>(l[0],l[1],l[2], h[0],h[1],h[2]), z_conv );
+
+      } else if ( _conv_scheme == ROE ){ 
+        //x
+        ComputeConvection<T, constSFCXVariable<double>, XDIR, ROE> x_conv(phi, rhs, u, A); 
+        Kokkos::parallel_for( Kokkos::Range3Policy<int>(l[0],l[1],l[2], h[0],h[1],h[2]), x_conv );
+        //y
+        ComputeConvection<T, constSFCYVariable<double>, YDIR, ROE> y_conv(phi, rhs, v, A); 
+        Kokkos::parallel_for( Kokkos::Range3Policy<int>(l[0],l[1],l[2], h[0],h[1],h[2]), y_conv );
+        //x
+        ComputeConvection<T, constSFCZVariable<double>, ZDIR, ROE> z_conv(phi, rhs, w, A); 
+        Kokkos::parallel_for( Kokkos::Range3Policy<int>(l[0],l[1],l[2], h[0],h[1],h[2]), z_conv );
+
+      }
+    }
+
+    if ( _do_diff ) {
+      // x
+      IntVector dir(1,0,0);
+      ComputeDiffusion<T> x_diff( phi, gamma, rhs, dir, A, DX.x() );
       Kokkos::parallel_for( Kokkos::Range3Policy<int>(l[0],l[1],l[2], h[0],h[1],h[2]), x_diff );
-
-    dir = IntVector(0,1,0);
-    if ( _do_conv )
-      ComputeConvection<T, constSFCYVariable<double> > y_conv( phi, rhs, rho, v, dir, A);
-    if ( _do_diff )
+      // y
+      dir = IntVector(0,1,0);
       ComputeDiffusion<T> y_diff( phi, gamma, rhs, dir, A, DX.y() );
-
-    dir = IntVector(0,0,1);
-    if ( _do_conv )
-      ComputeConvection<T, constSFCZVariable<double> > z_conv( phi, rhs, rho, w, dir, A);
-    if ( _do_diff )
+      Kokkos::parallel_for( Kokkos::Range3Policy<int>(l[0],l[1],l[2], h[0],h[1],h[2]), y_diff );
+      // z
+      dir = IntVector(0,0,1);
       ComputeDiffusion<T> z_diff( phi, gamma, rhs, dir, A, DX.z() );
-
+      Kokkos::parallel_for( Kokkos::Range3Policy<int>(l[0],l[1],l[2], h[0],h[1],h[2]), z_diff );
+    }
   }
+
   template <typename T> void
   KScalarRHS<T>::register_compute_bcs( std::vector<ArchesFieldContainer::VariableInformation>& variable_registry, const int time_substep ){
     //register_variable( _task_name, ArchesFieldContainer::MODIFIES, variable_registry, time_substep );
