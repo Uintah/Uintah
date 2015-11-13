@@ -257,28 +257,29 @@ namespace Wasatch {
     BCFunctorMap::iterator iter = bcFunctorMap_.find(phiName);
     size_t nMods = 0;
 
-    Expr::Tag dummyTag(phiName + "_dummy_dependency", Expr::STATE_NONE );
+    Expr::Tag dummyTag( phiName + "_dummy_dependency", Expr::STATE_NONE );
     
-    if ( iter != bcFunctorMap_.end() ) {
+    if( iter != bcFunctorMap_.end() ){
       (*iter).second.insert(dummyTag.name());
-    } else {
+    }
+    else {
       BCFunctorMap::mapped_type functorSet;
       nMods = (*iter).second.size();
       std::ostringstream msg;
       msg << nMods;
-      dummyTag.name() = phiName + "_dummy_dependency_" + msg.str();
+      dummyTag.reset_name( phiName + "_dummy_dependency_" + msg.str() );
       functorSet.insert( dummyTag.name() );
       bcFunctorMap_.insert( BCFunctorMap::value_type(phiName,functorSet) );
     }
 
     // if the dependency was already added then return
-    if (factory.have_entry(dummyTag)) {
+    if( factory.have_entry(dummyTag) ){
       return;
     }
     
     // register the null dependency
     typedef typename NullExpression<SrcT, TargetT>::Builder NullExpr;
-    factory.register_expression(scinew NullExpr(dummyTag, dependencies), true);
+    factory.register_expression( scinew NullExpr(dummyTag, dependencies), true );
   }
   
   //------------------------------------------------------------------------------------------------
@@ -290,7 +291,7 @@ namespace Wasatch {
 
   {            
     using namespace std;
-    string fieldName = varTag.name();
+    const string& fieldName = varTag.name();
     Expr::ExpressionFactory& factory = *(grafCat_[taskCat]->exprFactory);
     
     //_____________________________________________________________________________________
