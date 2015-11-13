@@ -1894,7 +1894,7 @@ void AMRMPM::interpolateParticlesToGrid(const ProcessorGroup*,
               ghydrostaticstress[node] += phydrostress        * pmass[idx]*S[k];
               gconcentration[node]     += pConcentration[idx] * pmass[idx]*S[k];
 #ifndef CBDI_FLUXBCS
-              gextscalarflux[node]     += pExternalScalarFlux[idx]        *S[k];
+              gextscalarflux[node]+= (pExternalScalarFlux[idx]*pmass[idx])*S[k];
 #endif
             }
           }
@@ -2089,7 +2089,7 @@ void AMRMPM::interpolateParticlesToGrid_CFI(const ProcessorGroup*,
             double ConcMass         = pConc_coarse[idx]*pMass_coarse[idx];
             double phydrostressmass = one_third*pStress_coarse[idx].Trace()
                                                *pMass_coarse[idx];
-            double pESFlux_c = pExtScalarFlux_c[idx];
+            double pESFlux_c = pExtScalarFlux_c[idx]*pMass_coarse[idx];
 
             for(int k = 0; k < (int) ni.size(); k++){
               fineNode = ni[k];
@@ -2908,7 +2908,7 @@ void AMRMPM::computeAndIntegrateAcceleration(const ProcessorGroup*,
         for(NodeIterator iter=patch->getExtraNodeIterator();
                         !iter.done();iter++){
           IntVector c = *iter;
-//          gConcRate[c] /= gmass[c];
+          gConcRate[c] /= gmass[c];
           gConcStar[c]  =  gConcentration[c] + gConcRate[c] * delT;
         }
 
@@ -2920,7 +2920,7 @@ void AMRMPM::computeAndIntegrateAcceleration(const ProcessorGroup*,
                         !iter.done();iter++){
           IntVector c = *iter;
           gConcRate[c] = (gConcStar[c] - gConcNoBC[c]) / delT
-                       + gExtScalarFlux[c];
+                       + gExtScalarFlux[c]/gmass[c];
         }
       } // if doScalarDiffusion
     }  // matls

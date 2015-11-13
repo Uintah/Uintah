@@ -225,7 +225,8 @@ void ScalarDiffusionModel::computeDivergence(const Patch* patch,
       node = ni[k];
       if(patch->containsNode(node)){
         Vector div(d_S[k].x()*oodx[0],d_S[k].y()*oodx[1],d_S[k].z()*oodx[2]);
-        Cdot_cond = Dot(div, J)/* *pMass[idx]*/;
+        Cdot_cond = Dot(div, J)*pMass[idx];
+//        Cdot_cond = Dot(div, J)/* *pMass[idx]*/;
         gConcRate[node] -= Cdot_cond;
       }
     }
@@ -360,8 +361,10 @@ void ScalarDiffusionModel::computeDivergence_CFI(const PatchSubset* finePatches,
           for(int k = 0; k < (int)ni.size(); k++) {
             fineNode = ni[k];
             if( finePatch->containsNode( fineNode ) ){
-               double Cdot_cond = Dot(div[k], pflux_coarse[idx]);
-                                    /*      * pmass_coarse[idx]; */
+               double Cdot_cond = Dot(div[k], pflux_coarse[idx])
+                                            * pmass_coarse[idx];
+//               double Cdot_cond = Dot(div[k], pflux_coarse[idx]);
+//                                    /*      * pmass_coarse[idx]; */
                gConcRate[fineNode] -= Cdot_cond;
             }  // contains node
           }  // node loop
