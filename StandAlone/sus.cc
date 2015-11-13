@@ -172,26 +172,32 @@ usage(const std::string& message, const std::string& badarg, const std::string& 
     cerr << "\n";
     cerr << "Usage: " << progname << " [options] <input_file_name>\n\n";
     cerr << "Valid options are:\n";
-    cerr << "-h[elp]              : This usage information.\n";
+    cerr << "-h[elp]              : This usage information\n";
     cerr << "-AMR                 : use AMR simulation controller\n";
 #ifdef HAVE_CUDA
     cerr << "-gpu                 : use available GPU devices, requires multi-threaded Unified scheduler \n";
 #endif
     cerr << "-nthreads <#>        : number of threads per MPI process, requires multi-threaded Unified scheduler\n";
-    cerr << "-layout NxMxO        : Eg: 2x1x1.  MxNxO must equal number\n";
-    cerr << "                           of boxes you are using.\n";
+    cerr << "-layout NxMxO        : Eg: 2x1x1.  MxNxO must equal number tof boxes you are using.\n";
     cerr << "-emit_taskgraphs     : Output taskgraph information\n";
     cerr << "-restart             : Give the checkpointed uda directory as the input file\n";
     cerr << "-reduce_uda          : Reads <uda-dir>/input.xml file and removes unwanted labels (see FAQ).\n";
     cerr << "-uda_suffix <number> : Make a new uda dir with <number> as the default suffix\n";
-    cerr << "-t <timestep>        : Restart timestep (last checkpoint is default,\n\t\t\tyou can use -t 0 for the first checkpoint)\n";
+    cerr << "-t <timestep>        : Restart timestep (last checkpoint is default, you can use -t 0 for the first checkpoint)\n";
     cerr << "-svnDiff             : runs svn diff <src/...../Packages/Uintah \n";
     cerr << "-svnStat             : runs svn stat -u & svn info <src/...../Packages/Uintah \n";
     cerr << "-copy                : Copy from old uda when restarting\n";
     cerr << "-move                : Move from old uda when restarting\n";
-    cerr << "-nocopy              : Default: Don't copy or move old uda timestep when\n\t\t\trestarting\n";
+    cerr << "-nocopy              : Default: Don't copy or move old uda timestep when restarting\n";
     cerr << "-validate            : Verifies the .ups file is valid and quits!\n";
     cerr << "-do_not_validate     : Skips .ups file validation! Please avoid this flag if at all possible.\n";
+#ifdef HAVE_VISIT
+    cerr << "\n";
+    cerr << "-no_visit              : Do not perform VisIt in-situ checks\n";
+    cerr << "-visit_dir <directory> : Top level directory for the VisIt installation\n";
+    cerr << "-visit_option <string> : Optional args for the VisIt launch script\n";
+    cerr << "-visit_trace <file>    : Trace file for VisIt's Sim V2 function calls\n";
+#endif
     cerr << "\n\n";
   }
   quit();
@@ -417,7 +423,7 @@ main( int argc, char *argv[], char *env[] )
     }
     else if (arg == "-visit_dir" ) {
       if (++i == argc) {
-        usage("You must provide a file name for -visit_dir", arg, argv[0]);
+        usage("You must provide a directory for -visit_dir", arg, argv[0]);
       }
     }
     else if (arg == "-visit_option" ) {
