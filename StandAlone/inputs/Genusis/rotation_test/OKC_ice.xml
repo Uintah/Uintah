@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='ISO-8859-1' ?>
+<Uintah_Include>
+              <union>
+                <parallelepiped label = "0">     </parallelepiped>
+                <parallelepiped label = "1">     </parallelepiped>
+              </union>
+</Uintah_Include>
