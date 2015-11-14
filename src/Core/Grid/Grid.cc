@@ -358,7 +358,7 @@ Grid::parseLevelFromFile( FILE * fp, std::vector<int> & procMapForLevel )
   return done_with_level;
 
 } // end parseLevelFromFile()
-            
+
 //
 // Parse in the <Grid> from the input file (most likely 'timestep.xml').  We should only need to parse
 // three tags: <numLevels>, <Level>, and </Grid> as the XML should look like this (and we've already
@@ -1068,7 +1068,7 @@ Grid::parseBox(      ProblemSpecP         box_ps,
 }
 
 Grid::LevelBox
-Grid::parseLevel(ProblemSpecP& level_ps, const int levelIndex, const int myProcRank)
+Grid::parseLevel(ProblemSpecP& level_ps, const size_t levelIndex, const int myProcRank)
 {
 
   // Create an intentionally inverted bounding box so that the first real bounding box from
@@ -1418,19 +1418,19 @@ void
 Grid::parseLevelSet(  const ProblemSpecP & grid_ps
                     , const int            numProcs
                     , const int            myProcRank
-                    , const int            globalIndexOffset
-                    , const int            levelSetIndex
+                    , const size_t         globalIndexOffset
+                    , const size_t         levelSetIndex
                     , const bool           do_AMR
                     , const bool           do_MultiScale
                    )
 {
-  int localIndexOffset = 0;
+  size_t localIndexOffset = 0;
   SCIRun::Point setAnchor(DBL_MAX, DBL_MAX, DBL_MAX);
 
   ProblemSpecP level_ps = grid_ps->findBlock("Level");
   while (level_ps) // Loop through all levels
   {
-    int levelIndex = localIndexOffset + globalIndexOffset;
+    size_t levelIndex = localIndexOffset + globalIndexOffset;
     Grid::LevelBox levelInfo = parseLevel(level_ps, levelIndex, myProcRank);
     if (!levelInfo.hasSpacing() && levelInfo.stretchCount() != 3)
     {
@@ -1516,30 +1516,40 @@ Grid::problemSetup(  const ProblemSpecP   & params
     LevelSubset* currLevelSubset = d_levelSet.getSubset(0);
 
     size_t numLevels = d_levels.size();
+    std::string componentName = "";
+    ProblemSpecP simCompSpec = params->findBlock("SimulationComponent");
+    simCompSpec->getAttribute("type",componentName);
+    if (componentName == "") {
+      throw ProblemSetupException("Error:  SimulationComponent not found.", __FILE__, __LINE__);
+    }
     for (size_t currIndex = levelIndex; currIndex < numLevels; ++currIndex) {
       // Grab rep of the level and add it to the subset
       currLevelSubset->add(d_levels[currIndex].get_rep());
       // Place a pointer to the level subset in the level for easy retrieval
       d_levels[currIndex]->setLevelSubset(currLevelSubset);
       // Store a pointer to the subset to which this level is assigned
-      d_levelSubsetMap.push_back(currLevelSubset);
+      d_levelSubsetMap.push_back(0);
     }
     d_levelSetNames.push_back("Solo Level Set");
+    d_levelSubsetComponentNames.push_back(componentName);
+
 
   }
   else // parse LevelSets
   {
-    int levelIndex = 0;
-    int currentSubsetIndex = 0;
+    size_t levelIndex = 0;
+    size_t currentSubsetIndex = 0;
     while (levelset_ps) {  // iterate through each level set tag
 
       // Set default levelSet name
+      std::string componentName="NULL";
+      levelset_ps->require("Component",componentName);
       std::ostringstream setNameStream;
       setNameStream << "Level Set " << std::left << levelIndex;
       std::string setName = setNameStream.str();
+      levelset_ps->getAttribute("label",setName);
 
       // And override if present
-      bool hasLabel = levelset_ps->getAttribute("label",setName);
       d_levelSetNames.push_back(setName);
       parseLevelSet(levelset_ps, pg->size(), pg->myrank(), levelIndex, currentSubsetIndex, fileIsAMR, do_MultiScale);
 
@@ -1557,7 +1567,9 @@ Grid::problemSetup(  const ProblemSpecP   & params
         d_levels[currIndex]->setLevelSubset(currLevelSubset);
 
         // Store a pointer to the subset to which this level is assigned
-        d_levelSubsetMap.push_back(currLevelSubset);
+        d_levelSubsetMap.push_back(currentSubsetIndex);
+        d_levelSubsetComponentNames.push_back(componentName);
+
       }
       levelIndex += numLevels;
       ++currentSubsetIndex;
@@ -1583,8 +1595,10 @@ Grid::problemSetup(  const ProblemSpecP   & params
 
   proc0cout << "Level Sets: " << std::endl;
   for (int i=0; i < d_levelSet.size(); ++i) {
-    proc0cout << "  Set # " << std::left << i << " (" << d_levelSetNames[i] << ") :"
-              << *(d_levelSet.getSubset(i)) << std::endl;
+    proc0cout << "  Set # " << std::left << i << " (" << d_levelSubsetComponentNames[i]
+              << ") :" << *(d_levelSet.getSubset(i))
+              << "  \"" << d_levelSetNames[i] << "\""
+              << std::endl;
   }
 }
 
