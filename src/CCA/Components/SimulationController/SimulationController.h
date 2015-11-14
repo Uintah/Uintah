@@ -109,7 +109,7 @@ protected:
   void   calcStartTime   ( void );
   void   setStartSimTime ( double t );
 
-  void preGridSetup();
+  virtual void preGridSetup();
   GridP gridSetup();
   void postGridSetup( GridP& grid, double& t);
 

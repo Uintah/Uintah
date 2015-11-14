@@ -428,6 +428,12 @@
   
   <doMultiScale         spec="OPTIONAL BOOLEAN" />
 
+  <MultiScale             spec="OPTIONAL NO_DATA" >
+    <TotalComponents      spec="REQUIRED INTEGER"/>
+    <RunType              spec="REQUIRED STRING"/>
+    <NumberOfSteps        spec="REQUIRED INTEGER"/>
+  </MultiScale>
+
   <!-- NOTE: while the DataArchiver section is required, if no 'save' tags are specified,
              then no data will be saved (and no .uda dir will be created). -->
   <DataArchiver         spec="REQUIRED NO_DATA"
@@ -654,6 +660,7 @@
        
     <LevelSet			spec="MULTIPLE NO_DATA"
                           attribute1="label    OPTIONAL STRING">
+      <Component          spec="REQUIRED STRING"/>
       <Level              spec="MULTIPLE NO_DATA">
         <Box              spec="MULTIPLE NO_DATA"
                             attribute1="label     OPTIONAL STRING" 
@@ -825,9 +832,6 @@
     </Regridder>
   </AMR>
   
-  <MultiScale                           spec="OPTIONAL NO_DATA" >
-    <include href="mpm_spec.xml"        section="MultiScale/MPM" />
-  </MultiScale>
   
   <!-- Scheduler Options -->
   

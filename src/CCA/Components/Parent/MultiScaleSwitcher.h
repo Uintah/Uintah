@@ -79,6 +79,9 @@ namespace Uintah {
 
   private:
 
+    SimulationInterface*
+    matchComponentToLevelset(const LevelP& level);
+
     void switchTest( const ProcessorGroup * /*pg*/,
                      const PatchSubset    * patches,
                      const MaterialSubset * matls,
@@ -135,6 +138,8 @@ namespace Uintah {
     std::vector<bool>                 d_carryOverFinestLevelOnly; // either all levels or finest only
     std::vector<std::vector<bool> >   d_doCarryOverVarPerLevel;   // size to numlevels
 
+    std::map<std::string, int>        d_componentNameIndexMap;    // Maps a component name string ("mpm","md",etc)
+                                                                  // to the local index from which it is referenced
     // disable copy and assignment
     MultiScaleSwitcher(const MultiScaleSwitcher&);
     MultiScaleSwitcher& operator=(const MultiScaleSwitcher&);
