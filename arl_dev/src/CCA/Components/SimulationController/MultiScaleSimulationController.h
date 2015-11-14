@@ -73,6 +73,7 @@ class MultiScaleSimulationController : public SimulationController {
 
     virtual void run();
 
+    virtual void preGridSetup();
 
   private:
 
@@ -108,6 +109,12 @@ class MultiScaleSimulationController : public SimulationController {
                        const MaterialSubset * /*matls*/,
                              DataWarehouse  * /*old_dw*/,
                              DataWarehouse  * new_dw);
+
+    std::string d_multiscaleRunType;
+    int         d_totalComponents;
+    std::string d_runType;
+    int         d_totalSteps;
+//    ProblemSpecP                    d_problemSpec;
 };
 
 }  // end namespace Uintah

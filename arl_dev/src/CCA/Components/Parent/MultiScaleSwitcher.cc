@@ -114,6 +114,7 @@ MultiScaleSwitcher::MultiScaleSwitcher( const ProcessorGroup * myworld,
     ProblemSpecP sim_ps = subCompUps->findBlock("SimulationComponent");
     sim_ps->getAttribute("type", sim_comp);
     simComponents.insert(sim_comp);
+    d_componentNameIndexMap.insert( std::pair<std::string, int>(sim_comp,num_components));
 
     //__________________________________
     // create simulation port and attach it switcher component    
@@ -163,6 +164,7 @@ MultiScaleSwitcher::MultiScaleSwitcher( const ProcessorGroup * myworld,
     d_initVars[num_components] = initVar;
 
     num_components++;
+
 
     proc0cout << "\n";
   }  // loop over subcomponents
@@ -370,13 +372,24 @@ MultiScaleSwitcher::problemSetup( const ProblemSpecP     & /*params*/,
   proc0cout << "-----------------------------------\n" << std::endl;
 }
 
+SimulationInterface* MultiScaleSwitcher::matchComponentToLevelset(const LevelP&     level)
+{
+  GridP grid = level->getGrid();
+  std::string levelSetComponent = grid->getSubsetComponentName(level->getIndex());
+  int         componentIndex = d_componentNameIndexMap.find(levelSetComponent)->second;
+
+  SimulationInterface* component = dynamic_cast<SimulationInterface*> (getPort("sim", componentIndex));
+  return component;
+}
+
 //______________________________________________________________________
 // 
 void MultiScaleSwitcher::scheduleInitialize( const LevelP & level,
                                              SchedulerP   & sched )
 {
   printSchedule(level, dbg, "MultiScaleSwitcher::scheduleInitialize");
-  d_sim->scheduleInitialize(level,sched);
+  SimulationInterface* component = matchComponentToLevelset(level);
+  component->scheduleInitialize(level,sched);
 }
 
 //______________________________________________________________________
@@ -385,7 +398,8 @@ void MultiScaleSwitcher::scheduleRestartInitialize( const LevelP     & level,
                                                           SchedulerP & sched )
 {
   printSchedule(level, dbg, "MultiScaleSwitcher::scheduleRestartInitialize");
-  d_sim->scheduleRestartInitialize(level, sched);
+  SimulationInterface* component = matchComponentToLevelset(level);
+  component->scheduleRestartInitialize(level,sched);
 }
 //______________________________________________________________________
 //
@@ -393,7 +407,8 @@ void MultiScaleSwitcher::scheduleComputeStableTimestep( const LevelP     & level
                                                               SchedulerP & sched )
 {
   printSchedule(level, dbg, "MultiScaleSwitcher::scheduleComputeStableTimestep");
-  d_sim->scheduleComputeStableTimestep(level,sched);
+  SimulationInterface* component = matchComponentToLevelset(level);
+  component->scheduleComputeStableTimestep(level,sched);
 }
 
 //______________________________________________________________________
@@ -403,7 +418,11 @@ MultiScaleSwitcher::scheduleTimeAdvance( const LevelP     & level,
                                                SchedulerP & sched )
 {
   printSchedule(level, dbg, "MultiScaleSwitcher::scheduleTimeAdvance");
-  d_sim->scheduleTimeAdvance(level,sched);
+  SimulationInterface* component = matchComponentToLevelset(level);
+  proc0cout << " Scheduling Time Advance on Level: " << level->getIndex()
+            << " Component: " << level->getGrid()->getSubsetComponentName(level->getIndex())
+            << std::endl;
+  component->scheduleTimeAdvance(level,sched);
 }
 
 //______________________________________________________________________
@@ -413,8 +432,8 @@ MultiScaleSwitcher::scheduleFinalizeTimestep( const LevelP     & level,
                                                     SchedulerP & sched )
 {
   printSchedule(level, dbg, "MultiScaleSwitcher::scheduleFinalizeTimestep");
-
-  d_sim->scheduleFinalizeTimestep(level, sched);
+  SimulationInterface* component = matchComponentToLevelset(level);
+  component->scheduleFinalizeTimestep(level,sched);
 
   scheduleSwitchTest(level, sched);
 
@@ -435,7 +454,9 @@ void MultiScaleSwitcher::scheduleSwitchInitialization( const LevelP     & level,
 {
   if (d_doSwitching[level->getIndex()]) {
     printSchedule(level, dbg, "MultiScaleSwitcher::scheduleSwitchInitialization");
-    d_sim->switchInitialize(level, sched);
+    SimulationInterface* component = matchComponentToLevelset(level);
+    component->switchInitialize(level,sched);
+//    d_sim->switchInitialize(level, sched);
   }
 }
 
@@ -445,8 +466,8 @@ void MultiScaleSwitcher::scheduleSwitchTest( const LevelP     & level,
                                                    SchedulerP & sched )
 {
   printSchedule(level, dbg, "MultiScaleSwitcher::scheduleSwitchTest");
-
-  d_sim->scheduleSwitchTest(level, sched);  // generates switch test data;
+  SimulationInterface* component = matchComponentToLevelset(level);
+  component->scheduleSwitchTest(level, sched);  // generates switch test data;
 
   Task* t = scinew Task("MultiScaleSwitcher::switchTest", this, &MultiScaleSwitcher::switchTest);
 

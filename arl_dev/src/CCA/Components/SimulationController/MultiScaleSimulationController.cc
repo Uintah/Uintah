@@ -82,11 +82,33 @@ MultiScaleSimulationController::MultiScaleSimulationController( const ProcessorG
                                                                       bool             doMultiScale,
                                                                       ProblemSpecP     pspec)
   : SimulationController(myworld, doAMR, doMultiScale, pspec)
+  , d_multiscaleRunType("serial")
+  , d_totalComponents(-1)
+  , d_runType("")
+  , d_totalSteps(-1)
 {
+
 }
 
 MultiScaleSimulationController::~MultiScaleSimulationController()
 {
+
+}
+
+void
+MultiScaleSimulationController::preGridSetup()
+{
+  ProblemSpecP multiScaleSpec = d_ups->findBlock("MultiScale");
+  multiScaleSpec->require("TotalComponents",d_totalComponents);
+  multiScaleSpec->require("RunType",d_runType);
+  multiScaleSpec->require("NumberOfSteps",d_totalSteps);
+
+  proc0cout << " Multiscale: " << std::endl << "\t"
+            << d_totalComponents << " total components expected." << std::endl
+            << d_runType << " run type. "
+            << " (" << d_totalSteps << " steps.)" << std::endl;
+
+  SimulationController::preGridSetup();
 }
 
 //______________________________________________________________________
@@ -716,11 +738,68 @@ MultiScaleSimulationController::doInitialTimestep( GridP  & grid,
       }
 
       proc0cout << "Compiling initialization taskgraph...\n";
-
       // Initialize the per-level data
       // FIXME:  We should probably initialize per level set; this is designed to initialize from level n backwards
       // for every component.  At the best it's superfluous to initialize every component on every level; at worst it
       // will cause cross-contamination.
+
+      // JBH APH FIXME Set things up to pass grid levels by level set
+//      if (d_doMultiScale) {
+//        size_t numSubsets = grid->numLevelSets();
+//        size_t numSteps = 0;
+//        // FIXME:  Should probably throw a warning here if numSteps doesn't evenly divide
+//        //         the number of subsets
+//
+//        size_t levelSubsetIndex = 0;
+//        if (d_multiscaleRunType == "serial") {
+//          while (numSteps < d_totalSteps) {
+//            // Step through the level sets one at a time.
+//            LevelSubset* currLevelSubset = grid->getLevelSubset(levelSubsetIndex);
+//            size_t numLevels = currLevelSubset->size();
+//            for (size_t currLevel = numLevels -1; currLevel >= 0; --currLevel) {
+//              int gridIndex = currLevelSubset->get(currLevel)->getIndex();
+//              const LevelP levelHandle = grid->getLevel(gridIndex);
+//              d_sim->scheduleInitialize(levelHandle, d_scheduler);
+//
+//              if (d_regridder) {
+//                // so we can initially regrid
+//                d_regridder->scheduleInitializeErrorEstimate(levelHandle);
+//                d_sim->scheduleInitialErrorEstimate(levelHandle, d_scheduler);
+//
+//                if (currLevel < d_regridder->maxLevels() - 1) {
+//                  // FIXME:  This likely isn't right for level sets! JBH, 11-13-2015
+//                  // We don't use error estimates if we don't dilate
+//                  d_regridder->scheduleDilation(levelHandle);
+//                }
+//              }
+//            }
+//
+//            scheduleComputeStableTimestep(grid, d_scheduler);
+//
+//            if (d_output) {
+//              double delT = 0;
+//              bool   recompile = true;
+//              d_output->finalizeTimestep(t, delT, grid, d_scheduler, recompile);
+//              d_output->sched_allOutputTasks(delT, grid, d_scheduler, recompile);
+//            }
+//
+//            d_scheduler->compile();
+//            double end = Time::currentSeconds() - start;
+//            proc0cout << "done taskgraph compile (" << end << " seconds)" << std::endl;
+//
+//
+//            // Increment to the next subset
+//            ++levelSubsetIndex;
+//            ++numSteps;
+//          }
+//        }
+//        else if (d_multiscaleRunType == "oscillatory") {
+//
+//        }
+//        else {
+//          throw ProblemSetupException("MultiScale run type not recognized.", __FILE__, __LINE__);
+//        }
+//      }
       for (int i = grid->numLevels() - 1; i >= 0; i--) {
         d_sim->scheduleInitialize(grid->getLevel(i), d_scheduler);
 

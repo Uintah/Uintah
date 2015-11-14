@@ -9,7 +9,7 @@
     <!--____________________________________________________________________-->
     <!--         C O M P O N E N T   S W I T C H E R                        -->
     <!--____________________________________________________________________-->
-    <SimulationComponent type="switcher" >
+    <SimulationComponent type="multiscaleswitcher" >
     
         <subcomponent>
             <SimulationComponent type="mpm" />
@@ -79,6 +79,7 @@
         </BoundaryConditions>
        
         <LevelSet label = "MPM">
+          <Component>mpm</Component>
           <Level>
               <Box label = "0">
                   <lower>[  0.00,            0.00,            0.00]</lower>
@@ -90,6 +91,7 @@
         </LevelSet>
        
         <LevelSet label = "MD">
+          <Component>md</Component>
           <Level>
               <Box label = "1">
                   <lower>[ 0.00,            0.00,            0.00]</lower>
@@ -110,10 +112,8 @@
     <doMultiScale>true</doMultiScale>
     
     <MultiScale>
-        <MPM>
-            <min_grid_level>0</min_grid_level>
-            <max_grid_level>0</max_grid_level>
-        </MPM>
+      <TotalComponents>2</TotalComponents>
+      <RunType>serial</RunType>
     </MultiScale>
   
 </Uintah_specification>

@@ -393,7 +393,22 @@ WARNING
 
     //////////
     //
+    const LevelSubset* getLevelSubset(int index) const { return d_levelSet.getSubset(index); };
+
+    //////////
+    //
     void createLevelSubsets( int num_sets );
+
+    //////////
+    //
+    int  getSubsetIndex(const int levelIndex) {
+      return (d_levelSubsetMap[levelIndex]);
+    }
+
+    std::string getSubsetComponentName(int levelIndex) {
+      return d_levelSubsetComponentNames[levelIndex];
+    }
+
 
     //////////
     //
@@ -455,7 +470,7 @@ WARNING
                        , const SCIRun::Vector & currentSpacing );
 
     LevelBox  parseLevel(        ProblemSpecP & level_ps
-                         , const int            levelIndex
+                         , const size_t         levelIndex
                          , const int            myProcRank);
 
     bool      specIsAMR(  const ProblemSpecP & ps) const;
@@ -463,8 +478,8 @@ WARNING
     void parseLevelSet(   const ProblemSpecP & level_ps
                         , const int            numProcs
                         , const int            myProcRank
-                        , const int            globalIndexOffset
-                        , const int            levelSetIndex
+                        , const size_t         globalIndexOffset
+                        , const size_t         levelSetIndex
                         , const bool           do_AMR
                         , const bool           do_MultiScale
                       );
@@ -496,9 +511,9 @@ WARNING
     // level set related storage
     LevelSet  d_levelSet;
 
-    std::vector<const LevelSubset*> d_levelSubsetMap;
+    std::vector<unsigned int> d_levelSubsetMap;
     std::vector<std::string> d_levelSetNames;
-
+    std::vector<std::string> d_levelSubsetComponentNames;
   };
 
 } // End namespace Uintah

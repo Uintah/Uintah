@@ -619,11 +619,11 @@ main( int argc, char *argv[], char *env[] )
     
     const ProcessorGroup* world = Uintah::Parallel::getRootProcessorGroup();
 
-    SimulationController* ctl = NULL;
+    SimulationController* simController = NULL;
     if (do_multi_scale) {
-      ctl = scinew MultiScaleSimulationController( world, do_AMR, do_multi_scale, ups );
+      simController = scinew MultiScaleSimulationController( world, do_AMR, do_multi_scale, ups );
     } else {
-      ctl = scinew AMRSimulationController( world, do_AMR, do_multi_scale, ups );
+      simController = scinew AMRSimulationController( world, do_AMR, do_multi_scale, ups );
     }
 
 
@@ -636,7 +636,7 @@ main( int argc, char *argv[], char *env[] )
     if(do_AMR) {
       reg = RegridderFactory::create(ups, world);
       if (reg) {
-        ctl->attachPort("regridder", reg);
+        simController->attachPort("regridder", reg);
       }
     }
 
@@ -658,10 +658,10 @@ main( int argc, char *argv[], char *env[] )
 
     // set sim. controller flags for reduce uda
     if ( reduce_uda ) {
-      ctl->setReduceUdaFlags( udaDir );
+      simController->setReduceUdaFlags( udaDir );
     }
 
-    ctl->attachPort("sim", sim);
+    simController->attachPort("sim", sim);
     comp->attachPort("solver", solve);
     comp->attachPort("regridder", reg);
     
@@ -685,7 +685,7 @@ main( int argc, char *argv[], char *env[] )
     // Output
     DataArchiver* dataarchiver = scinew DataArchiver(world, udaSuffix);
     Output* output = dataarchiver;
-    ctl->attachPort("output", dataarchiver);
+    simController->attachPort("output", dataarchiver);
     dataarchiver->attachPort("load balancer", lbc);
     comp->attachPort("output", dataarchiver);
     dataarchiver->attachPort("sim", sim);
@@ -694,7 +694,7 @@ main( int argc, char *argv[], char *env[] )
     // Scheduler
     SchedulerCommon* sched = SchedulerFactory::create(ups, world, output);
     sched->attachPort("load balancer", lbc);
-    ctl->attachPort("scheduler", sched);
+    simController->attachPort("scheduler", sched);
     lbc->attachPort("scheduler", sched);
     comp->attachPort("scheduler", sched);
 
@@ -712,15 +712,15 @@ main( int argc, char *argv[], char *env[] )
     //__________________________________
     // Start the simulation controller
     if (restart) {
-      ctl->doRestart(udaDir, restartTimestep, restartFromScratch, restartRemoveOldDir);
+      simController->doRestart(udaDir, restartTimestep, restartFromScratch, restartRemoveOldDir);
     }
     
     // This gives memory held by the 'ups' back before the simulation starts... Assuming
     // no one else is holding on to it...
     ups = 0;
 
-    ctl->run();
-    delete ctl;
+    simController->run();
+    delete simController;
 
     sched->removeReference();
     delete sched;
