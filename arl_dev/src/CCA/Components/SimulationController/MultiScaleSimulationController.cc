@@ -786,7 +786,7 @@ MultiScaleSimulationController::doLevelSetBasedInitialTimestep(  const LevelSet 
         d_output->sched_allOutputTasks(delT, grid, d_scheduler, recompile);
       }
 
-      d_scheduler->compile();
+      d_scheduler->compile(&initializationSets);
       double end = Time::currentSeconds() - start;
 
       proc0cout << "Done initialization taskgraph based on levelSets (" << end << " seconds)" << std::endl;
