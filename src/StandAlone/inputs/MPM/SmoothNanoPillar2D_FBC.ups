@@ -1,0 +1,153 @@
+<?xml version='1.0' encoding='ISO-8859-1' ?>
+<!-- @version: -->
+<Uintah_specification>
+
+   <Meta>
+       <title>smooth cylinder representation of nano-pillar</title>
+   </Meta>    
+
+   <SimulationComponent type="amrmpm" />
+
+   <Time>
+     <maxTime>1e-2</maxTime>
+     <initTime>0.0</initTime>
+     <delt_min>1.0e-16</delt_min>
+     <delt_max>1.0e-8</delt_max>
+     <max_Timesteps>1000000000</max_Timesteps>
+     <timestep_multiplier>0.4</timestep_multiplier>
+   </Time>    
+
+   <DataArchiver>
+      <filebase>smoothNanoPillar2D_FBC.uda</filebase>
+      <outputInterval>1.e-6</outputInterval>
+      <save label = "p.x"/>
+      <save label = "p.mass"/>
+      <save label = "p.volume"/>
+      <save label = "p.temperature"/>
+      <save label = "p.stress"/>
+      <save label = "p.concentration"/>
+      <save label = "p.scalefactor"/>
+      <save label = "p.deformationMeasure"/>
+      <save label = "p.velocity"/>
+      <save label = "p.loadCurveID"/>
+      <save label = "p.externalscalarflux"/>
+      <save label = "g.mass"/>
+      <checkpoint cycle = "2" interval = "1.0e-4"/>
+   </DataArchiver>
+
+   <MPM>
+     <interpolator>cpdi</interpolator>
+     <use_load_curves> true </use_load_curves>
+     <do_scalar_diffusion>true</do_scalar_diffusion>
+   </MPM>
+  <AMR>
+      <useLockStep> true </useLockStep>
+      <MPM> </MPM>
+  </AMR>
+
+   <PhysicalConstants>
+      <gravity>            [0,0,0]   </gravity>
+   </PhysicalConstants>
+
+   <MaterialProperties>
+     <MPM>
+       <material name="T91">
+         <density>2330</density> <!-- micrograms/mm^3 -->
+         <constitutive_model type="gao_elastic"> 
+           <bulk_modulus>            6.5e4    </bulk_modulus>
+           <shear_modulus>           3.0e4    </shear_modulus>
+           <volume_expansion_coeff>  10.56     </volume_expansion_coeff>
+         </constitutive_model>
+         <thermal_conductivity>0.0</thermal_conductivity>
+         <specific_heat>5</specific_heat>
+
+         <diffusion_model type = "rf1">
+           <diffusivity>        2.0e-4   </diffusivity>
+           <max_concentration>  1.0      </max_concentration>
+         </diffusion_model>
+         <geom_object>
+	   <smoothcyl label = "cylinder">
+	     <discretization_scheme> pie_slices </discretization_scheme>
+	     <bottom>[0.0,0.0,0.0]    </bottom>
+	     <top>   [0.0,0.0,0.01e-3]</top>
+	     <outer_radius> 0.25e-3   </outer_radius>
+	     <inner_radius> 0.0       </inner_radius>
+	     <num_radial> 80 </num_radial>
+	     <num_axial> 1 </num_axial>
+	     <num_angular> 314 </num_angular>
+	     <arc_start_angle> 0 </arc_start_angle>
+	     <arc_angle> 360 </arc_angle>
+	   </smoothcyl>
+           <res>                 [1,1,1]         </res>
+           <velocity>            [0.0,0.0,0.0]   </velocity>
+           <temperature>         0             </temperature>
+           <concentration> 0 </concentration>
+         </geom_object>
+       </material>
+       <contact>
+         <type>null</type>
+         <materials>              [0,1]         </materials>
+       </contact>
+       <diffusion_interface>
+         <type>paired</type>
+       </diffusion_interface>
+     </MPM>
+   </MaterialProperties>
+
+   <PhysicalBC>
+     <MPM>
+       <scalar_flux>
+         <geom_object>
+           <cylinder label = "side">
+             <bottom>           [0.0,0.0,0.0]      </bottom>
+             <top>              [0.0,0.0,.01e-3]   </top>
+             <radius>           0.255e-3           </radius>
+           </cylinder>
+         </geom_object>
+         <load_curve>
+           <id>1</id>
+           <time_point>
+             <time> 0 </time>
+             <load> 1.e12 </load>
+           </time_point>
+           <time_point>
+             <time> 1.e12 </time>
+             <load> 1.e12 </load>
+           </time_point>
+         </load_curve>
+       </scalar_flux>
+     </MPM>
+   </PhysicalBC>
+
+   <Grid>
+     <Level>
+       <Box label = "1">
+         <lower>        [-.3e-3,-.3e-3,0.0]       </lower>
+         <upper>        [0.3e-3,0.3e-3,0.01e-3]   </upper>
+         <resolution>   [60, 60, 1]        </resolution>
+         <patches>      [4,4,1]            </patches>
+         <extraCells>   [1,1,1]            </extraCells>
+       </Box>
+     </Level>
+     <BoundaryConditions>
+      <Face side = "x-">
+        <BCType id = "all" label = "Symmetric" var = "symmetry"> </BCType>
+      </Face>
+      <Face side = "x+">
+        <BCType id = "all" label = "Symmetric" var = "symmetry"> </BCType>
+      </Face>
+      <Face side = "y-">
+        <BCType id = "all" label = "Symmetric" var = "symmetry"> </BCType>
+      </Face>                  
+      <Face side = "y+">
+        <BCType id = "all" label = "Symmetric" var = "symmetry"> </BCType>
+      </Face>
+      <Face side = "z-">
+        <BCType id = "all" label = "Symmetric" var = "symmetry"> </BCType>
+      </Face>                  
+      <Face side = "z+">
+        <BCType id = "all" label = "Symmetric" var = "symmetry"> </BCType>
+      </Face>
+     </BoundaryConditions>
+   </Grid>
+</Uintah_specification>
