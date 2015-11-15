@@ -432,7 +432,7 @@ LoadBalancerCommon::restartInitialize(       DataArchive  * archive,
 } // end restartInitialize()
 
 bool
-LoadBalancerCommon::possiblyDynamicallyReallocate(  const LevelSet* currentLevelSet
+LoadBalancerCommon::possiblyDynamicallyReallocate(  const LevelSet& currentLevelSet
                                                   ,       int       state
                                                  )
 {
@@ -448,11 +448,11 @@ LoadBalancerCommon::possiblyDynamicallyReallocate(  const LevelSet* currentLevel
     d_levelSetPerProcPatchSet = createPerProcessorPatchSet(currentLevelSet);
     // Indirectly grab the grid reference.  Note that effecitvely a currentLevelSet and the grid
     // should be roughly equivalent in terms of patch sets currently active.
-    GridP grid = currentLevelSet->getSubset(0)->get(0)->getGrid();
+    GridP grid = currentLevelSet.getSubset(0)->get(0)->getGrid();
     d_gridPerProcPatchSet = createPerProcessorPatchSet( grid );
-    size_t numSubsets = currentLevelSet->size();
+    size_t numSubsets = currentLevelSet.size();
     for (size_t subsetIndex = 0; subsetIndex < numSubsets; ++subsetIndex) {
-      const LevelSubset* currentSubset = currentLevelSet->getSubset(subsetIndex);
+      const LevelSubset* currentSubset = currentLevelSet.getSubset(subsetIndex);
       size_t levelsInSubset = currentSubset->size();
       d_levelSubsetPerProcPatchSets.push_back(createPerProcessorPatchSet(currentSubset));
       for (size_t indexInSubset = 0; indexInSubset < levelsInSubset; ++indexInSubset) {
@@ -523,15 +523,15 @@ LoadBalancerCommon::createPerProcessorPatchSet( const LevelP & level )
 }
 
 const PatchSet*
-LoadBalancerCommon::createPerProcessorPatchSet(const LevelSet * currLevelSet) {
+LoadBalancerCommon::createPerProcessorPatchSet(const LevelSet & currLevelSet) {
 
   PatchSet* patches = scinew PatchSet();
   patches->createEmptySubsets(d_myworld->size());
-  GridP grid = currLevelSet->getSubset(0)->get(0)->getGrid();
+  GridP grid = currLevelSet.getSubset(0)->get(0)->getGrid();
 
-  size_t subsetsInSet = currLevelSet->size();
+  size_t subsetsInSet = currLevelSet.size();
   for (size_t indexInSet = 0; indexInSet < subsetsInSet; ++indexInSet) {
-    const LevelSubset* currLevelSubset = currLevelSet->getSubset(indexInSet);
+    const LevelSubset* currLevelSubset = currLevelSet.getSubset(indexInSet);
     size_t levelsInSubset = currLevelSubset->size();
     for (size_t indexInSubset = 0; indexInSubset < levelsInSubset; ++indexInSubset) {
       const LevelP levelHandle = grid->getLevel(currLevelSubset->get(indexInSubset)->getIndex());

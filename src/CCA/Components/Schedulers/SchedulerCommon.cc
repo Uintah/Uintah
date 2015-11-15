@@ -1162,7 +1162,7 @@ SchedulerCommon::doEmitTaskGraphDocs()
 //______________________________________________________________________
 //
 void
-SchedulerCommon::compile()
+SchedulerCommon::compile(const LevelSet* levelSet)
 {
   GridP grid = const_cast<Grid*>(getLastDW()->getGrid());
   GridP oldGrid;
@@ -1201,13 +1201,36 @@ SchedulerCommon::compile()
   m_locallyComputedPatchVarMap->reset();
 
 #if 1
-  for (int i = 0; i < grid->numLevels(); i++) {
-    const PatchSubset* patches = getLoadBalancer()->getPerProcessorPatchSet(grid->getLevel(i))->getSubset(d_myworld->myrank());
+  if (levelSet == NULL) {
+    //Get patches directly from the grid because we're not compiling in a levelSet utilizing system
+    for (int i = 0; i < grid->numLevels(); i++) {
+      const PatchSubset* patches = getLoadBalancer()->getPerProcessorPatchSet(grid->getLevel(i))->getSubset(d_myworld->myrank());
 
-    if (patches->size() > 0) {
-      m_locallyComputedPatchVarMap->addComputedPatchSet( patches );
+      if (patches->size() > 0) {
+        m_locallyComputedPatchVarMap->addComputedPatchSet( patches );
+      }
     }
   }
+  else {
+    // Grab patches only from the active levelSet
+    int numSubsets = levelSet->size();
+    for (int subsetIndex = 0; subsetIndex < numSubsets; ++subsetIndex) {
+      const LevelSubset* currSubset = levelSet->getSubset(subsetIndex);
+      int levelsInSubset = currSubset->size();
+      for (int indexInSubset = 0; indexInSubset < levelsInSubset; ++indexInSubset) {
+        const LevelP levelHandle = grid->getLevel(currSubset->get(indexInSubset)->getIndex());
+        const PatchSubset* patches = getLoadBalancer()->getPerProcessorPatchSet(levelHandle)->getSubset(d_myworld->myrank());
+
+        // Build a per-level map of patch sets operating on that level.
+        if (patches->size() > 0) {
+          m_locallyComputedPatchVarMap->addComputedPatchSet( patches );
+        }
+      }
+    }
+
+  }
+  // TODO FIXME The below code is #ifdef'd out at the moment, but if it ever gets re-enabled it needs to be updated
+  // to support levelSets.  JBH APH 11-15-2015
 #else
   for (unsigned i = 0; i < graphs.size(); i++) { 
     DetailedTasks* dts = graphs[i]->getDetailedTasks();

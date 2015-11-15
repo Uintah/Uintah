@@ -109,7 +109,7 @@ class Scheduler : public UintahParallelPort {
 
     virtual void doEmitTaskGraphDocs() = 0;
     
-    virtual void compile() = 0;
+    virtual void compile(const LevelSet* = 0) = 0;
 
     virtual void execute( int tgnum = 0, int iteration = 0 ) = 0;
 
