@@ -97,6 +97,14 @@ namespace SCIRun {
 
     inline bool inside(const Point &p) const {return (is_valid && p.x()>=cmin.x() && p.y()>=cmin.y() && p.z()>=cmin.z() && p.x()<=cmax.x() && p.y()<=cmax.y() && p.z()<=cmax.z());}
 
+    // This box contains box b if box b is completely inside this box.
+    inline bool contains(const BBox &b) const {
+      return (is_valid && b.is_valid
+              && this->inside(b.cmin)
+              && this->inside(b.cmax)
+             );
+    }
+
     bool overlaps( const BBox& bb );
     bool overlaps2( const BBox& bb );
 

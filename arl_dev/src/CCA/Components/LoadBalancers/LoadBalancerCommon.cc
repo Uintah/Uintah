@@ -430,11 +430,50 @@ LoadBalancerCommon::restartInitialize(       DataArchive  * archive,
 #endif
   }
 } // end restartInitialize()
+
+bool
+LoadBalancerCommon::possiblyDynamicallyReallocate(  const LevelSet* currentLevelSet
+                                                  ,       int       state
+                                                 )
+{
+  if ( state != check ) {
+    // Have it create a new patch set, and have the DLB version call this.
+    // This is a good place to do it, as it is automatically called when the
+    // grid changes.
+    // Note that this version has been specialized to only balance patches under the
+    // current active levelSet.  11-14-2015 JBH APH TODO FIXME
+    d_levelPerProcPatchSets.clear();
+    d_outputPatchSets.clear();
+    d_levelSubsetPerProcPatchSets.clear();
+    d_levelSetPerProcPatchSet = createPerProcessorPatchSet(currentLevelSet);
+    // Indirectly grab the grid reference.  Note that effecitvely a currentLevelSet and the grid
+    // should be roughly equivalent in terms of patch sets currently active.
+    GridP grid = currentLevelSet->getSubset(0)->get(0)->getGrid();
+    d_gridPerProcPatchSet = createPerProcessorPatchSet( grid );
+    size_t numSubsets = currentLevelSet->size();
+    for (size_t subsetIndex = 0; subsetIndex < numSubsets; ++subsetIndex) {
+      const LevelSubset* currentSubset = currentLevelSet->getSubset(subsetIndex);
+      size_t levelsInSubset = currentSubset->size();
+      d_levelSubsetPerProcPatchSets.push_back(createPerProcessorPatchSet(currentSubset));
+      for (size_t indexInSubset = 0; indexInSubset < levelsInSubset; ++indexInSubset) {
+        LevelP levelHandle = grid->getLevel(currentSubset->get(indexInSubset)->getIndex());
+        d_levelPerProcPatchSets.push_back(createPerProcessorPatchSet(levelHandle));
+        d_outputPatchSets.push_back(createOutputPatchSet(levelHandle));
+      }
+    }
+  }
+  return false;
+}
+
 //______________________________________________________________________
 //
 bool
 LoadBalancerCommon::possiblyDynamicallyReallocate( const GridP & grid, int state )
 {
+
+  // FIXME TODO When all code works through level set, this should go away because we should not
+  // be iterating over the bare grid, since there might be sublevels on the grid which would not be
+  // active at any given time.
   if( state != check ) {
     // Have it create a new patch set, and have the DLB version call this.
     // This is a good place to do it, as it is automatically called when the
@@ -442,6 +481,18 @@ LoadBalancerCommon::possiblyDynamicallyReallocate( const GridP & grid, int state
     d_levelPerProcPatchSets.clear();
     d_outputPatchSets.clear();
     d_gridPerProcPatchSet = createPerProcessorPatchSet( grid );
+
+//    int numSubsets = grid->numLevelSets();
+//    for (size_t subsetIndex = 0; subsetIndex < numSubsets; ++subsetIndex) {
+//      const LevelSubset* currentSubset = grid->getLevelSubset(subsetIndex);
+//      int levelsInSubset = currentSubset->size();
+//      d_subsetPerProcPatchSet = createPerProcessorPatchSet(levelSubset);
+//      for (size_t indexInSubset = 0; indexInSubset < levelsInSubset; ++indexInSubset) {
+//        LevelP levelHandle = grid->getLevel(currentSubset->get(indexInSubset)->getIndex());
+//        d_levelPerProcPatchSets.push_back(createPerProcessorPatchSet(levelHandle));
+//        d_outputPatchSets.push_back(createOutputPatchSet(levelHandle));
+//      }
+//    }
 
     for( int i = 0; i < grid->numLevels(); i++ ) {
       d_levelPerProcPatchSets.push_back( createPerProcessorPatchSet( grid->getLevel(i) ) );
@@ -471,6 +522,52 @@ LoadBalancerCommon::createPerProcessorPatchSet( const LevelP & level )
   return patches;
 }
 
+const PatchSet*
+LoadBalancerCommon::createPerProcessorPatchSet(const LevelSet * currLevelSet) {
+
+  PatchSet* patches = scinew PatchSet();
+  patches->createEmptySubsets(d_myworld->size());
+  GridP grid = currLevelSet->getSubset(0)->get(0)->getGrid();
+
+  size_t subsetsInSet = currLevelSet->size();
+  for (size_t indexInSet = 0; indexInSet < subsetsInSet; ++indexInSet) {
+    const LevelSubset* currLevelSubset = currLevelSet->getSubset(indexInSet);
+    size_t levelsInSubset = currLevelSubset->size();
+    for (size_t indexInSubset = 0; indexInSubset < levelsInSubset; ++indexInSubset) {
+      const LevelP levelHandle = grid->getLevel(currLevelSubset->get(indexInSubset)->getIndex());
+      for ( Level::const_patchIterator iter = levelHandle->patchesBegin(); iter != levelHandle->patchesEnd(); ++iter) {
+        const Patch* patch = *iter;
+        int proc = getPatchwiseProcessorAssignment(patch);
+        ASSERTRANGE(proc, 0, d_myworld->size());
+        PatchSubset* subset = patches->getSubset(proc);
+        subset->add(patch);
+      }
+    }
+  }
+  patches->sortSubsets();
+  return patches;
+}
+
+const PatchSet*
+LoadBalancerCommon::createPerProcessorPatchSet(const LevelSubset * currLevelSubset){
+  PatchSet* patches = scinew PatchSet();
+  patches->createEmptySubsets(d_myworld->size());
+  GridP grid = currLevelSubset->get(0)->getGrid();
+
+  size_t levelsInSubset = currLevelSubset->size();
+  for (size_t indexInSubset = 0; indexInSubset < levelsInSubset; ++indexInSubset) {
+    const LevelP levelHandle = grid->getLevel(currLevelSubset->get(indexInSubset)->getIndex());
+    for ( Level::const_patchIterator iter = levelHandle->patchesBegin(); iter != levelHandle->patchesEnd(); ++iter) {
+      const Patch* patch = *iter;
+      int proc = getPatchwiseProcessorAssignment(patch);
+      ASSERTRANGE(proc, 0, d_myworld->size());
+      PatchSubset* subset = patches->getSubset(proc);
+      subset->add(patch);
+    }
+  }
+  patches->sortSubsets();
+  return patches;
+}
 //______________________________________________________________________
 //
 // Creates a PatchSet containing PatchSubsets for each processor for an

@@ -63,6 +63,11 @@ class Output;
 
  ****************************************/
 
+enum multiScaleRunType {
+  serial,
+  oscillatory
+};
+
 class MultiScaleSimulationController : public SimulationController {
 
   public:
@@ -79,6 +84,9 @@ class MultiScaleSimulationController : public SimulationController {
 
     //! Set up, compile, and execute initial timestep
     void doInitialTimestep(GridP& grid, double& t);
+
+    void doLevelSetBasedInitialTimestep(const LevelSet & initLevelSet, double & time);
+
 
     bool doRegridding(GridP& grid, bool initialTimestep);
 
@@ -104,13 +112,24 @@ class MultiScaleSimulationController : public SimulationController {
 
     void scheduleComputeStableTimestep(const GridP& grid, SchedulerP&);
 
+    void scheduleComputeStableTimestep( const LevelSet     & operatingLevels
+                                       ,      SchedulerP   & sched
+                                      );
+
     void reduceSysVar( const ProcessorGroup * /*pg*/,
                        const PatchSubset    * patches,
                        const MaterialSubset * /*matls*/,
                              DataWarehouse  * /*old_dw*/,
                              DataWarehouse  * new_dw);
+    void
+    reduceSysVarLevelSet(  const ProcessorGroup * /*pg*/
+                         , const PatchSubset    *   patches
+                         , const MaterialSubset * /*matls*/
+                         ,       DataWarehouse  * /*oldDW*/
+                         ,       DataWarehouse  *   newDW
+                        );
 
-    std::string d_multiscaleRunType;
+    multiScaleRunType d_multiscaleRunType;
     int         d_totalComponents;
     std::string d_runType;
     int         d_totalSteps;

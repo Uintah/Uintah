@@ -126,6 +126,7 @@ public:
   // for DynamicLoadBalancer mostly, but if we're called then it also means the 
   // grid might have changed and need to create a new perProcessorPatchSet
   virtual bool possiblyDynamicallyReallocate(const GridP&, int state);
+  virtual bool possiblyDynamicallyReallocate(const LevelSet*, int state);
 
   // Cost profiling functions
   // Update the contribution for this patch.
@@ -147,6 +148,9 @@ public:
   //! if outputNthProc is set)
   virtual int getOutputProc(const Patch* patch) { return (getPatchwiseProcessorAssignment(patch)/d_outputNthProc)*d_outputNthProc; }
 
+  virtual const PatchSet* getPerProcessorPatchSet(const LevelSet& levelSet) {
+    return d_levelSetPerProcPatchSet.get_rep();
+  }
   //! Returns the patchset of all patches that have work done on this processor.
   virtual const PatchSet* getPerProcessorPatchSet(const LevelP& level) { 
     return d_levelPerProcPatchSets[level->getIndex()].get_rep(); 
@@ -204,6 +208,8 @@ protected:
   //      - Version 2 (for all levels) will create {{1,2,3},{4,5,6}}
   virtual const PatchSet* createPerProcessorPatchSet( const LevelP & level );
   virtual const PatchSet* createPerProcessorPatchSet( const GridP  & grid );
+  virtual const PatchSet* createPerProcessorPatchSet( const LevelSubset * levelsInSubset);
+  virtual const PatchSet* createPerProcessorPatchSet( const LevelSet    * levelsInSet);
   virtual const PatchSet* createOutputPatchSet(       const LevelP & level );
 
   SimulationStateP d_sharedState;     ///< to keep track of timesteps
@@ -216,8 +222,11 @@ protected:
   //! needs it to assign the processor resource.
   int d_outputNthProc;
 
-  std::vector< Handle<const PatchSet> > d_levelPerProcPatchSets;
+  Handle<const PatchSet>                d_levelSetPerProcPatchSet;
   Handle< const PatchSet >              d_gridPerProcPatchSet;
+
+  std::vector< Handle<const PatchSet> > d_levelPerProcPatchSets;
+  std::vector< Handle<const PatchSet> > d_levelSubsetPerProcPatchSets;
   std::vector< Handle<const PatchSet> > d_outputPatchSets;
 
 };
