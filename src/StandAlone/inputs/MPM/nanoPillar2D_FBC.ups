@@ -8,11 +8,11 @@
   <SimulationComponent type="amrmpm" />
 
   <Time>
-     <maxTime>1e-3</maxTime>
+     <maxTime>1e-2</maxTime>
      <initTime>0.0</initTime>
      <delt_min>1.0e-16</delt_min>
      <delt_max>1.0e-8</delt_max>
-     <max_Timesteps>10000000</max_Timesteps>
+     <max_Timesteps>1000000000</max_Timesteps>
      <timestep_multiplier>0.4</timestep_multiplier>
   </Time>
 
@@ -21,7 +21,7 @@
 <!--
     <outputTimestepInterval>1</outputTimestepInterval>
 -->
-    <outputInterval>5.e-6</outputInterval>
+    <outputInterval>5.e-4</outputInterval>
     <save label="p.x"/>
     <save label="p.particleID"/>
     <save label="p.velocity"/>
@@ -46,7 +46,7 @@
 
   <MPM>
       <time_integrator>explicit</time_integrator>
-      <interpolator>linear</interpolator>
+      <interpolator>cpdi</interpolator>
       <use_load_curves> true </use_load_curves>
       <do_scalar_diffusion>true</do_scalar_diffusion>
   </MPM>
@@ -193,11 +193,11 @@
     </BoundaryConditions>
     <Level>
       <Box label="1">
-        <lower>[-0.1e-3, 0.0,    0.0]    </lower> <!-- units in mm -->
-        <upper>[ 0.6e-3, 0.2e-3, 0.01e-3]</upper> <!-- units in mm -->
-        <resolution>[70, 20, 1]        </resolution>
-        <extraCells>[0, 0, 0]          </extraCells>
-        <patches>[2,1,1]               </patches>
+        <lower>[-0.2e-3, 0.0,    0.0]    </lower> <!-- units in mm -->
+        <upper>[ 0.7e-3, 0.3e-3, 0.01e-3]</upper> <!-- units in mm -->
+        <resolution>[90, 30, 1]        </resolution>
+        <extraCells>[1, 1, 1]          </extraCells>
+        <patches>[4,1,1]               </patches>
       </Box>
     </Level>
   </Grid>
