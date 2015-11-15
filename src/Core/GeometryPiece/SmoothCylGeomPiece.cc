@@ -360,6 +360,8 @@ SmoothCylGeomPiece::createCylPoints()
   double length = axis.length();
   axis = axis/length;
 
+  double cell_vol = d_DX.x()*d_DX.y()*d_DX.z();
+
   // Angle of rotation
   Vector n0(0.0, 0.0, 1.0); // The normal to the xy-plane
   double phi = acos(Dot(n0, axis));
@@ -399,7 +401,28 @@ SmoothCylGeomPiece::createCylPoints()
 	numAngular = max(numAngular,1);
       }
       double angularInc = (d_angle - d_arcStart)/(double) numAngular;
-      double area = 0.5*angularInc*(nextRadius*nextRadius-prevRadius*prevRadius);
+      // area = r*dr*dtheta
+      double area = (0.5*(nextRadius+prevRadius))*radInc*angularInc;
+
+#if 1 
+      bool tooMany=true;
+      double redNumAng=1.;
+      while(tooMany){
+        numAngular = (int) d_numAngular*redNumAng;
+        angularInc = (d_angle - d_arcStart)/(double) numAngular;
+
+        // area = r*dr*dtheta
+        area = (0.5*(nextRadius+prevRadius))*radInc*angularInc;
+        double pvol = area*axisInc;
+        
+        if(pvol/cell_vol < .05){
+          redNumAng*=0.9;
+          tooMany=true;
+        } else {
+          tooMany=false;
+        }
+      }
+#endif
 
       for (int jj = 0; jj < numAngular; ++jj) {
 	double phi = d_arcStart + (jj+0.5)*angularInc; 
