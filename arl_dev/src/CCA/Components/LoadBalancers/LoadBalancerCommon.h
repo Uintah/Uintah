@@ -126,7 +126,7 @@ public:
   // for DynamicLoadBalancer mostly, but if we're called then it also means the 
   // grid might have changed and need to create a new perProcessorPatchSet
   virtual bool possiblyDynamicallyReallocate(const GridP&, int state);
-  virtual bool possiblyDynamicallyReallocate(const LevelSet*, int state);
+  virtual bool possiblyDynamicallyReallocate(const LevelSet&, int state);
 
   // Cost profiling functions
   // Update the contribution for this patch.
@@ -209,7 +209,7 @@ protected:
   virtual const PatchSet* createPerProcessorPatchSet( const LevelP & level );
   virtual const PatchSet* createPerProcessorPatchSet( const GridP  & grid );
   virtual const PatchSet* createPerProcessorPatchSet( const LevelSubset * levelsInSubset);
-  virtual const PatchSet* createPerProcessorPatchSet( const LevelSet    * levelsInSet);
+  virtual const PatchSet* createPerProcessorPatchSet( const LevelSet    & levelsInSet);
   virtual const PatchSet* createOutputPatchSet(       const LevelP & level );
 
   SimulationStateP d_sharedState;     ///< to keep track of timesteps

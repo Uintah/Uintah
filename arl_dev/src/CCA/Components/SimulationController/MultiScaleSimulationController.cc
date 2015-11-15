@@ -217,7 +217,7 @@ MultiScaleSimulationController::run()
   // Run the first timestep initialization only for the proscribed level sets
   doLevelSetBasedInitialTimestep(initializationLevelSet, time);
 
-  doInitialTimestep( currentGrid, time );
+//  doInitialTimestep( currentGrid, time );
 
   setStartSimTime( time );
   initSimulationStatsVars();
@@ -734,7 +734,7 @@ MultiScaleSimulationController::doLevelSetBasedInitialTimestep(  const LevelSet 
     //   This means that EVERYTHING in a load balancer which eats a grid and then does stuff like loop over the
     //   levels of the grid ought to -actually- parse levelSets and loop over only the levels of the level set.
     // For right now we'll just assume the load balancer is null and not call the reallocate
-    // d_lb->possiblyDynamicallyReallocate(grid, LoadBalancer::init);
+    d_lb->possiblyDynamicallyReallocate(initializationSets, LoadBalancer::init);
     GridP grid = initializationSets.getSubset(0)->get(0)->getGrid();
     grid->assignBCS( initializationSets, d_grid_ps, d_lb);
     grid->performConsistencyCheck(initializationSets);
@@ -753,8 +753,10 @@ MultiScaleSimulationController::doLevelSetBasedInitialTimestep(  const LevelSet 
         // Verify that patches on a single level do not overlap
         const LevelSubset* currLevelSubset = initializationSets.getSubset(subsetIndex);
         size_t numLevels = currLevelSubset->size();
-        for (size_t indexInSubset = numLevels - 1; indexInSubset >= 0; --indexInSubset) {
-          LevelP levelHandle = grid->getLevel(currLevelSubset->get(indexInSubset)->getIndex());
+        proc0cout << "Seeing " << numLevels << " levels in subset " << subsetIndex << std::endl;
+        for (size_t indexInSubset = numLevels; indexInSubset > 0; --indexInSubset) {
+          proc0cout << " Current level index: " << indexInSubset-1 << " numLevels: " << numLevels << std::endl;
+          LevelP levelHandle = grid->getLevel(currLevelSubset->get(indexInSubset-1)->getIndex());
           if (d_regridder) {
             // so we can initially regrid
             d_regridder->scheduleInitializeErrorEstimate(levelHandle);
@@ -762,7 +764,7 @@ MultiScaleSimulationController::doLevelSetBasedInitialTimestep(  const LevelSet 
 
             // Dilate only within a single level subset for now; will worry about dilating to accomodate
             // interface layers at a later time.  TODO FIXME JBH APH 11-14-2015
-            if (indexInSubset < d_regridder->maxLevels() - 1) {
+            if (indexInSubset < d_regridder->maxLevels()) {
               d_regridder->scheduleDilation(levelHandle);
             }
           }

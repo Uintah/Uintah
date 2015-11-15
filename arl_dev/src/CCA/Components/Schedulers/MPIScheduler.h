@@ -111,10 +111,10 @@ class MPIScheduler : public SchedulerCommon {
     // get the processor group this scheduler is executing with (only valid during execute())
     const ProcessorGroup* getProcessorGroup() { return d_myworld; }
     
-    void compile() {
+    void compile(const LevelSet* levelSet = NULL) {
       numMessages_   = 0;
       messageVolume_ = 0;
-      SchedulerCommon::compile();
+      SchedulerCommon::compile(levelSet);
     }
 
     void printMPIStats() {

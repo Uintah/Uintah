@@ -151,6 +151,7 @@ LocallyComputedPatchVarMap::addComputedPatchSet( const PatchSubset* patches )
   }
 #endif
 
+  // If we don't have a dataset for this level, resize the dataset vector to contain one.
   if ((int)sets_.size() <= level->getIndex()) {
     sets_.resize(level->getIndex() + 1);
   }
