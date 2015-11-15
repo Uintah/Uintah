@@ -214,6 +214,11 @@ public:
 
   void getSpatialRange( BBox& b) const {b.extend(d_spatial_range );};
 
+  BBox getSpatialRange() const {
+    BBox returnBox = d_spatial_range;
+    return(returnBox);
+  }
+
   void getInteriorSpatialRange(BBox& b) const {b.extend(d_int_spatial_range);};
 
   void findIndexRange( IntVector& lowIndex, IntVector& highIndex ) const { findNodeIndexRange(lowIndex, highIndex); }

@@ -126,6 +126,7 @@ WARNING
     virtual bool inNeighborhood(const Patch*) = 0;
 
     //! Returns the patchset of all patches that have work done on this processor.
+    virtual const PatchSet* getPerProcessorPatchSet(const LevelSet& levelSet) = 0;
     virtual const PatchSet* getPerProcessorPatchSet(const LevelP& level) = 0;
     virtual const PatchSet* getPerProcessorPatchSet(const GridP& grid) = 0;
     virtual const PatchSet* getOutputPerProcessorPatchSet(const LevelP& level) = 0;

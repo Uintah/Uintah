@@ -490,6 +490,87 @@ Grid::addLevel( const Point& anchor, const Vector& dcell, LevelFlags& flags, int
   return level;
 }
 
+
+void
+Grid::performConsistencyCheck(const LevelSet & currentSet) const {
+
+#if SCI_ASSERTION_LEVEL > 0
+  size_t numSubsets = currentSet.size();
+  for (size_t subsetIndex = 0; subsetIndex < numSubsets; ++subsetIndex) {
+
+    // Verify that patches on a single level do not overlap
+    const LevelSubset* currLevelSubset = currentSet.getSubset(subsetIndex);
+    size_t numLevels = currLevelSubset->size();
+    for (size_t levelIndex = 0; levelIndex < numLevels; ++levelIndex) {
+      const Level* currLevel = currLevelSubset->get(levelIndex);
+      currLevel->performConsistencyCheck();
+    }
+    // Check overlap between levels
+    // See if patches on level 0 form a connected set (warning)
+    // Compute total volume - compare if not first time
+    //
+    // FIXME TODO JBH APH 11-14-2015
+    // For now, we only expect consistency within a single levelSubset since that is representative of
+    // previous "grids".  At some point we need to add consistency checks for two subsets interacting with
+    // each other.
+    // Also this consistency check is only reasonable for AMR.
+    if (numLevels > 0) {
+      for (size_t levelIndex = 0; levelIndex < numLevels - 1; ++levelIndex) {
+        // Current grid structure has coarser/finer as -/+1 level offsets
+        // In a levelSet implementation, coarser is always before finer
+        const Level* coarseLevel = currLevelSubset->get(levelIndex);
+        const Level* fineLevel   = currLevelSubset->get(levelIndex + 1);
+
+        SCIRun::Vector dx_fineLevel = fineLevel->dCell();
+
+        // Finer level can't lay outside of the coarser level
+        SCIRun::BBox C_box = coarseLevel->getSpatialRange();
+        SCIRun::BBox F_box = fineLevel->getSpatialRange();
+        if (!C_box.contains(F_box)) {
+          std::ostringstream desc;
+          desc << " The finer Level " << fineLevel->getIndex()
+               << " "<< F_box.min() << " "<< F_box.max()
+               << " can't lay outside of coarser level " << coarseLevel->getIndex()
+               << " "<< C_box.min() << " "<< C_box.max() << std::endl;
+          throw InvalidGrid(desc.str(),__FILE__,__LINE__);
+        }
+        //__________________________________
+        //  finer level must have a box width that is
+        //  an integer of the cell spacing
+        SCIRun::Vector integerTest_min( remainder(F_box.min().x(),dx_fineLevel.x())
+                                       ,remainder(F_box.min().y(),dx_fineLevel.y())
+                                       ,remainder(F_box.min().z(),dx_fineLevel.z()));
+        SCIRun::Vector integerTest_max( remainder(F_box.max().x(),dx_fineLevel.x())
+                                       ,remainder(F_box.max().y(),dx_fineLevel.y())
+                                       ,remainder(F_box.max().z(),dx_fineLevel.z()));
+
+        SCIRun::Vector distance = F_box.max() - F_box.min();
+        SCIRun::Vector integerTest_distance( remainder(distance.x(), dx_fineLevel.x())
+                                            ,remainder(distance.y(), dx_fineLevel.y())
+                                            ,remainder(distance.z(), dx_fineLevel.z())
+                                           );
+
+        SCIRun::Vector smallNum(1e-14,1e-14,1e-14);
+
+        if( (integerTest_min > smallNum || integerTest_max > smallNum) && integerTest_distance > smallNum) {
+          std::ostringstream desc;
+          desc << " The finer Level " << fineLevel->getIndex()
+               << " "<< F_box.min() << " "<< F_box.max()
+               << " upper or lower limits are not divisible by the cell spacing "
+               << dx_fineLevel << " \n Remainder of level box/dx: lower"
+               << integerTest_min << " upper " << integerTest_max<< std::endl;
+          throw InvalidGrid(desc.str(),__FILE__,__LINE__);
+        }
+
+      }
+    }
+
+  }
+
+
+
+#endif
+}
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 void
@@ -1821,6 +1902,21 @@ Grid::assignBCS( const ProblemSpecP & grid_ps, LoadBalancer * lb )
   {
     LevelP level = getLevel( l );
     level->assignBCS( grid_ps, lb );
+  }
+}
+
+void
+Grid::assignBCS( const LevelSet &currLevelSet, const ProblemSpecP & grid_ps, LoadBalancer * lb)
+{
+  size_t numSubsets = currLevelSet.size();
+  for (size_t setIndex = 0; setIndex < numSubsets; ++setIndex) {
+    const LevelSubset* currLevelSubset=currLevelSet.getSubset(setIndex);
+    size_t levelsInSubset = currLevelSubset->size();
+    for (size_t indexInSubset = 0; indexInSubset < levelsInSubset; ++indexInSubset)
+    {
+      LevelP level = getLevel(currLevelSubset->get(indexInSubset)->getIndex());
+      level->assignBCS(grid_ps, lb);
+    }
   }
 }
 

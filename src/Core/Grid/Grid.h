@@ -341,6 +341,10 @@ WARNING
 
     //////////
     //
+    void performConsistencyCheck(const LevelSet& currLevelSet) const;
+
+    //////////
+    //
     void printStatistics() const;
 
     //////////
@@ -373,15 +377,16 @@ WARNING
     bool isSimilar(const Grid& othergrid) const;
 
     //Assigns the boundary conditions to the grid
-    void assignBCS( const ProblemSpecP &grid_ps, Uintah::LoadBalancer *lb );
+    void assignBCS( const ProblemSpecP & grid_ps, Uintah::LoadBalancer *lb );
 
+    void assignBCS( const LevelSet     & level_set, const ProblemSpecP & grid_ps, Uintah::LoadBalancer *lb);
     //////////
     //
     void setExtraCells( const IntVector & ex );
 
     //////////
     //
-    inline int numLevelSets() { return d_levelSet.size(); };
+    inline int numLevelSets() const { return d_levelSet.size(); };
 
     //////////
     // The 0th LevelSubset will be the set of Levels AMR is occurring on
@@ -401,7 +406,7 @@ WARNING
 
     //////////
     //
-    int  getSubsetIndex(const int levelIndex) {
+    int  getSubsetIndex(const int levelIndex) const {
       return (d_levelSubsetMap[levelIndex]);
     }
 
