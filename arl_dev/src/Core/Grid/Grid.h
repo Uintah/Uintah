@@ -407,14 +407,20 @@ WARNING
     //////////
     //
     int  getSubsetIndex(const int levelIndex) const {
-      return (d_levelSubsetMap[levelIndex]);
+      return (d_subsetOfLevel[levelIndex]);
     }
 
-    std::string getSubsetComponentName(int levelIndex) {
-      return d_levelSubsetComponentNames[levelIndex];
+    std::string getSubsetComponentName(const int levelIndex) const {
+      return d_levelSubsetComponentNames[d_subsetOfLevel[levelIndex]];
+//      return d_levelSubsetComponentNames[levelIndex];
     }
 
+    std::string getSubsetLabel(const int levelIndex) const {
+      return d_levelSubsetLabels[d_subsetOfLevel[levelIndex]];
+    }
+    void copySubsetData(const GridP& copyFrom);
 
+    void assignSubsetToLevels();
     //////////
     //
     friend std::ostream& operator<<(std::ostream& out, const Uintah::Grid& grid);
@@ -516,8 +522,9 @@ WARNING
     // level set related storage
     LevelSet  d_levelSet;
 
-    std::vector<unsigned int> d_levelSubsetMap;
-    std::vector<std::string> d_levelSetNames;
+    std::vector<int> d_subsetOfLevel;
+
+    std::vector<std::string> d_levelSubsetLabels;
     std::vector<std::string> d_levelSubsetComponentNames;
   };
 

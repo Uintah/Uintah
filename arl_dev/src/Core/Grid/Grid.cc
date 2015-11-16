@@ -1609,9 +1609,9 @@ Grid::problemSetup(  const ProblemSpecP   & params
       // Place a pointer to the level subset in the level for easy retrieval
       d_levels[currIndex]->setLevelSubset(currLevelSubset);
       // Store a pointer to the subset to which this level is assigned
-      d_levelSubsetMap.push_back(0);
+      d_subsetOfLevel.push_back(0);
     }
-    d_levelSetNames.push_back("Solo Level Set");
+    d_levelSubsetLabels.push_back("Solo Level Set");
     d_levelSubsetComponentNames.push_back(componentName);
 
 
@@ -1631,7 +1631,8 @@ Grid::problemSetup(  const ProblemSpecP   & params
       levelset_ps->getAttribute("label",setName);
 
       // And override if present
-      d_levelSetNames.push_back(setName);
+      d_levelSubsetLabels.push_back(setName);
+      d_levelSubsetComponentNames.push_back(componentName);
       parseLevelSet(levelset_ps, pg->size(), pg->myrank(), levelIndex, currentSubsetIndex, fileIsAMR, do_MultiScale);
 
       // Determine size of newly parsed subset and create an empty subset to house it
@@ -1646,17 +1647,13 @@ Grid::problemSetup(  const ProblemSpecP   & params
 
         // Place a pointer to the level subset in the level for easy retrieval
         d_levels[currIndex]->setLevelSubset(currLevelSubset);
-
-        // Store a pointer to the subset to which this level is assigned
-        d_levelSubsetMap.push_back(currentSubsetIndex);
-        d_levelSubsetComponentNames.push_back(componentName);
-
       }
       levelIndex += numLevels;
       ++currentSubsetIndex;
       levelset_ps = levelset_ps->findNextBlock("LevelSet"); // Find next Levelset block
     }
   }
+  assignSubsetToLevels();
 
   int num_patches = 0;
   for (int i = 0; i < numLevels(); ++i) {
@@ -1678,7 +1675,7 @@ Grid::problemSetup(  const ProblemSpecP   & params
   for (int i=0; i < d_levelSet.size(); ++i) {
     proc0cout << "  Set # " << std::left << i << " (" << d_levelSubsetComponentNames[i]
               << ") :" << *(d_levelSet.getSubset(i))
-              << "  \"" << d_levelSetNames[i] << "\""
+              << "  \"" << d_levelSubsetLabels[i] << "\""
               << std::endl;
   }
 }
@@ -1938,3 +1935,34 @@ Grid::createLevelSubsets(int num_sets)
   ASSERTEQ(num_sets, d_levelSet.size());
 }
 
+void
+Grid::assignSubsetToLevels()
+{
+  int numSubsets = d_levelSet.size();
+  d_subsetOfLevel.clear();
+  d_subsetOfLevel.resize(d_levels.size());
+
+  for (int subsetIndex = 0; subsetIndex < numSubsets; ++subsetIndex) {
+    const LevelSubset* currSubset = d_levelSet.getSubset(subsetIndex);
+    int levelsInSubset = currSubset->size();
+    for (int indexInSubset = 0; indexInSubset < levelsInSubset; ++indexInSubset) {
+      int levelIndex = currSubset->get(indexInSubset)->getIndex();
+      d_subsetOfLevel[levelIndex] = subsetIndex;
+    }
+  }
+}
+
+void
+Grid::copySubsetData(const GridP& copyFrom) {
+  int destinationSubsetCount = copyFrom->numLevelSets();
+  ASSERTEQ(this->numLevelSets(), destinationSubsetCount);
+  d_levelSubsetLabels.clear();
+  d_levelSubsetComponentNames.clear();
+  d_levelSubsetLabels.resize(destinationSubsetCount);
+  d_levelSubsetComponentNames.resize(destinationSubsetCount);
+  for (int subsetIndex = 0; subsetIndex < destinationSubsetCount; ++subsetIndex) {
+    int levelIndex = copyFrom->getLevelSubset(subsetIndex)->get(0)->getIndex();
+    d_levelSubsetLabels[subsetIndex] = copyFrom->getSubsetLabel(levelIndex);
+    d_levelSubsetComponentNames[subsetIndex] = copyFrom->getSubsetComponentName(levelIndex);
+  }
+}

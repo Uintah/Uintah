@@ -207,15 +207,15 @@ MultiScaleSimulationController::run()
     default:
       throw ProblemSetupException("ERROR:  Multiscale Run Type not recognized", __FILE__, __LINE__);
   }
-  LevelSet initializationLevelSet;
+  LevelSet runningLevelSet;
   size_t numComponentsInitialized = initializationComponentIndices.size();
   for (size_t componentIndex = 0; componentIndex < numComponentsInitialized; ++componentIndex)
   {
-    initializationLevelSet.addAll(currentGrid->getLevelSubset(componentIndex)->getVector());
+    runningLevelSet.addAll(currentGrid->getLevelSubset(componentIndex)->getVector());
   }
 
   // Run the first timestep initialization only for the proscribed level sets
-  doLevelSetBasedInitialTimestep(initializationLevelSet, time);
+  doLevelSetBasedInitialTimestep(runningLevelSet, time);
 
 //  doInitialTimestep( currentGrid, time );
 
@@ -274,6 +274,7 @@ MultiScaleSimulationController::run()
     }
 
     // Compute number of dataWarehouses - multiplies by the time refinement ratio for each level you increase
+    // TODO FIXME JBH APH This logic needs to be fixed for AMR multicomponent.  11-15-2015
     int totalFine = 1;
     if (!d_doMultiScale && !d_sharedState->isLockstepAMR()) {
       for (int i = 1; i < currentGrid->numLevels(); i++) {
@@ -359,7 +360,8 @@ MultiScaleSimulationController::run()
         // writes to the DW in the next section below
         delt = new_init_delt;
       }
-      recompile(time, delt, currentGrid, totalFine);
+      recompileLevelSet(time, delt, runningLevelSet, totalFine);
+//      recompile(time, delt, currentGrid, totalFine);
     }
     else {
       if (d_output) {
@@ -377,6 +379,12 @@ MultiScaleSimulationController::run()
     }
 
     // adjust the delt for each level and store it in all applicable dws.
+
+    // delT rectification is a potential mess for multiscale (concurrent simulations should rectify del_t across
+    // multiple level sets.
+
+    // TODO FIXME For now, this needs to be fixed to simply work with non-concurrent simulations, which means the
+    // loop below shouldn't operate on bare grid levels, but on the current level set.
     double delt_fine = delt;
     int skip = totalFine;
     for (int i = 0; i < currentGrid->numLevels(); i++) {
@@ -492,6 +500,106 @@ MultiScaleSimulationController::run()
 
 } // end run()
 
+void
+MultiScaleSimulationController::subCycleCompileLevelSet(  GridP   & grid
+                                                        , int       startDW
+                                                        , int       dwStride
+                                                        , int       step
+                                                        , int       levelIndex)
+{
+  LevelP base_level = grid->getLevel(levelIndex);
+
+  const LevelSubset* currSubset = grid->getLevelSubset(grid->getSubsetIndex(levelIndex));
+  int numLevelsInSubset = currSubset->size();
+  int relativeIndexInSubset = -1;
+  for (int indexInSubset = 0; indexInSubset < numLevelsInSubset; ++indexInSubset) {
+    const Level* currLevel = currSubset->get(indexInSubset);
+    if (levelIndex == currLevel->getIndex()) { // This is our level
+      relativeIndexInSubset = indexInSubset;
+    }
+  }
+
+  LevelP coarseLevel;
+  int coarseStartDW;
+  int coarseDWStride;
+  int numCoarseSteps;  // how many steps between this level and the coarser
+  int numFineSteps;    // how many steps between this level and the finer
+
+  if (relativeIndexInSubset > 0) { // Not starting from the coarsest level of the subset, so we're recursing
+    numCoarseSteps = d_sharedState->isLockstepAMR() ? 1 : base_level->getRefinementRatioMaxDim();
+    coarseLevel = grid->getLevel(currSubset->get(relativeIndexInSubset-1)->getIndex());
+    coarseDWStride = dwStride * numCoarseSteps;
+    coarseStartDW = (startDW/coarseDWStride) * coarseDWStride;
+  }
+  else {  // We're currently on the coarsest level
+    coarseDWStride = dwStride;
+    coarseStartDW = startDW;
+    numCoarseSteps = 0;
+  }
+  
+  ASSERT(dwStride > 0 && relativeIndexInSubset < numLevelsInSubset)
+//  ASSERT(dwStride > 0 && level_idx < grid->numLevels())
+  d_scheduler->clearMappings();
+  d_scheduler->mapDataWarehouse(Task::OldDW, startDW);
+  d_scheduler->mapDataWarehouse(Task::NewDW, startDW+dwStride);
+  d_scheduler->mapDataWarehouse(Task::CoarseOldDW, coarseStartDW);
+  d_scheduler->mapDataWarehouse(Task::CoarseNewDW, coarseStartDW+coarseDWStride);
+  
+  d_sim->scheduleTimeAdvance(base_level, d_scheduler);
+
+  if (d_doAMR) {
+    if (relativeIndexInSubset + 1 < numLevelsInSubset) {
+      const Level* finerLevel = currSubset->get(relativeIndexInSubset + 1);
+      numFineSteps = d_sharedState->isLockstepAMR() ? 1 : finerLevel->getRefinementRatioMaxDim();
+      int newStride = dwStride/numFineSteps;
+
+      for (int substep=0; substep < numFineSteps; substep++) {
+        subCycleCompile(grid, startDW+substep*newStride, newStride, substep, finerLevel->getIndex());
+      }
+    }
+    // Coarsen and then refine CFI at the end of the W-cycle
+    d_scheduler->clearMappings();
+    d_scheduler->mapDataWarehouse(Task::OldDW, 0);
+    d_scheduler->mapDataWarehouse(Task::NewDW, startDW+dwStride);
+    d_scheduler->mapDataWarehouse(Task::CoarseOldDW, startDW);
+    d_scheduler->mapDataWarehouse(Task::CoarseNewDW, startDW+dwStride);
+    d_sim->scheduleCoarsen(base_level, d_scheduler);
+  }
+
+
+  d_scheduler->clearMappings();
+  d_scheduler->mapDataWarehouse(Task::OldDW, startDW);
+  d_scheduler->mapDataWarehouse(Task::NewDW, startDW+dwStride);
+  d_scheduler->mapDataWarehouse(Task::CoarseOldDW, coarseStartDW);
+  d_scheduler->mapDataWarehouse(Task::CoarseNewDW, coarseStartDW+coarseDWStride);
+
+  d_sim->scheduleFinalizeTimestep(base_level, d_scheduler);
+
+  // do refineInterface after the freshest data we can get; after the finer
+  // level's coarsen completes do all the levels at this point in time as well,
+  // so all the coarsens go in order, and then the refineInterfaces
+  if (d_doAMR && (step < numCoarseSteps -1 || relativeIndexInSubset == 0)) {
+    for (int indexInSubset = relativeIndexInSubset; indexInSubset < numLevelsInSubset; ++indexInSubset) {
+      if (indexInSubset == 0) {
+        continue;
+      }
+
+      if (indexInSubset == relativeIndexInSubset && relativeIndexInSubset != 0) {
+        d_scheduler->mapDataWarehouse(Task::CoarseOldDW, coarseStartDW);
+        d_scheduler->mapDataWarehouse(Task::CoarseNewDW, coarseStartDW + coarseDWStride);
+        d_sim->scheduleRefineInterface(base_level, d_scheduler, true, true);
+      }
+      else {
+        // look in the NewDW all the way down
+        d_scheduler->mapDataWarehouse(Task::CoarseOldDW, 0);
+        d_scheduler->mapDataWarehouse(Task::CoarseNewDW, startDW + dwStride);
+        d_sim->scheduleRefineInterface(grid->getLevel(currSubset->get(indexInSubset)->getIndex()), d_scheduler,
+                                                      false, true);
+      }
+    }
+  }
+}
+
 //______________________________________________________________________
 void
 MultiScaleSimulationController::subCycleCompile( GridP & grid,
@@ -501,6 +609,7 @@ MultiScaleSimulationController::subCycleCompile( GridP & grid,
                                                  int     level_idx)
 {
   LevelP base_level = grid->getLevel(level_idx);
+
   LevelP coarseLevel;
   int coarseStartDW;
   int coarseDWStride;
@@ -518,14 +627,14 @@ MultiScaleSimulationController::subCycleCompile( GridP & grid,
     coarseStartDW = startDW;
     numCoarseSteps = 0;
   }
-  
+
   ASSERT(dwStride > 0 && level_idx < grid->numLevels())
   d_scheduler->clearMappings();
   d_scheduler->mapDataWarehouse(Task::OldDW, startDW);
   d_scheduler->mapDataWarehouse(Task::NewDW, startDW+dwStride);
   d_scheduler->mapDataWarehouse(Task::CoarseOldDW, coarseStartDW);
   d_scheduler->mapDataWarehouse(Task::CoarseNewDW, coarseStartDW+coarseDWStride);
-  
+
   d_sim->scheduleTimeAdvance(base_level, d_scheduler);
 
   if (d_doAMR) {
@@ -1012,6 +1121,101 @@ MultiScaleSimulationController::doRegridding( GridP & currentGrid,
   }  // grid != oldGrid
   return false;
 }
+
+void
+MultiScaleSimulationController::recompileLevelSet(        double    time
+                                                  ,       double    del_t
+                                                  , const LevelSet& currentLevelSet
+                                                  ,       int       totalFine
+                                                 )
+{
+  proc0cout << "Recompiling taskgraph with level sets ..." << std::endl;
+
+  d_lastRecompileTimestep = d_sharedState->getCurrentTopLevelTimeStep();
+  double start = Time::currentSeconds();
+
+  d_scheduler->initialize(1, totalFine);
+  // FIXME TODO JBH APH We may need to look at fillDataWarehouses to levelSet-ize it.  11-15-2015
+  GridP currentGrid = currentLevelSet.getSubset(0)->get(0)->getGrid();
+  d_scheduler->fillDataWarehouses(currentGrid);
+
+  // Set up new DWs, DW mappings.
+  d_scheduler->clearMappings();
+  d_scheduler->mapDataWarehouse(Task::OldDW, 0);
+  d_scheduler->mapDataWarehouse(Task::NewDW, totalFine);
+  d_scheduler->mapDataWarehouse(Task::CoarseOldDW, 0);
+  d_scheduler->mapDataWarehouse(Task::CoarseNewDW, totalFine);
+
+  // FIXME TODO JBH APH What are we doing here?  SchedulteTimeAdvance if the component is not AMR?  If so the logic
+  // should actually check to see if the current levelSet has an AMR level, and if so it should probably
+  // call subcycle compile on the AMR level subset(s), and call scheduleTimeAdvance on any non-amr subsets in the levelSet
+
+  // Not sure if the check against d_doMultiScale && d_sharedState->getCurrentTopLevelTimeStep() > 1 is still necessary.
+  // Feels like this was a hack to get around trying to scheduleTimeAdvance on the initial recompile because we'd have the
+  // multiscale subgrid processes scheduling when they hadn't been initialized, but this should now be handled by proper
+  // passing in of the current levelSet in the first place for the process being run.  We'll leave it in for now, see what
+  // breaks.  11-15-2015 JBH APH FIXME TODO FIXME TODO FIXME
+  if (d_doMultiScale && d_sharedState->getCurrentTopLevelTimeStep() > 1) {
+    int numSubsets = currentLevelSet.size();
+    for (int subsetIndex = 0; subsetIndex < numSubsets; ++subsetIndex) {
+      const LevelSubset* currentSubset = currentLevelSet.getSubset(subsetIndex);
+      int levelsInSubset = currentSubset->size();
+      if (!currentSubset->get(0)->isAMR()) {
+        // FIXME TODO JBH APH We should explicitly make sure an entire subset has levels which are/are not AMR.
+        // Presumably if the first level in a subset is not AMR, the subset itself is not AMR.
+        for (int indexInSubset = 0; indexInSubset < levelsInSubset; ++indexInSubset) {
+          const LevelP levelHandle=currentGrid->getLevel(currentSubset->get(indexInSubset)->getIndex());
+          d_sim->scheduleTimeAdvance(levelHandle, d_scheduler);
+        }
+      }
+      else {
+        // subset IS AMR; we need to schedule via subCycleCompile
+        subCycleCompileLevelSet(currentGrid, 0, totalFine, 0, currentSubset->get(0)->getIndex());
+      }
+    }
+  }
+
+  d_scheduler->clearMappings();
+  d_scheduler->mapDataWarehouse(Task::OldDW, 0);
+  d_scheduler->mapDataWarehouse(Task::NewDW, totalFine);
+
+  size_t numSubsets = currentLevelSet.size();
+  for (size_t subsetIndex = 0; subsetIndex < numSubsets; ++subsetIndex) {
+    // Verify that patches on a single level do not overlap
+    const LevelSubset* currLevelSubset = currentLevelSet.getSubset(subsetIndex);
+    size_t numLevels = currLevelSubset->size();
+    proc0cout << "Seeing " << numLevels << " levels in subset " << subsetIndex << std::endl;
+    for (size_t indexInSubset = numLevels; indexInSubset > 0; --indexInSubset) {
+      proc0cout << " Current level index: " << indexInSubset-1 << " numLevels: " << numLevels << std::endl;
+      LevelP levelHandle = currentGrid->getLevel(currLevelSubset->get(indexInSubset-1)->getIndex());
+      if (d_regridder) {
+        // so we can initially regrid
+        d_regridder->scheduleInitializeErrorEstimate(levelHandle);
+        d_sim->scheduleInitialErrorEstimate(levelHandle, d_scheduler);
+
+        // Dilate only within a single level subset for now; will worry about dilating to accomodate
+        // interface layers at a later time.  TODO FIXME JBH APH 11-14-2015
+        if (indexInSubset < d_regridder->maxLevels()) {
+          d_regridder->scheduleDilation(levelHandle);
+        }
+      }
+    }
+  }
+
+  scheduleComputeStableTimestep(currentLevelSet, d_scheduler);
+
+  if(d_output){
+    d_output->finalizeTimestep(time, del_t, currentGrid, d_scheduler, true);
+    d_output->sched_allOutputTasks( del_t, currentGrid, d_scheduler, true );
+  }
+
+  d_scheduler->compile(&currentLevelSet);
+
+  double dt=Time::currentSeconds() - start;
+
+  proc0cout << "DONE TASKGRAPH RE-COMPILE (" << dt << " seconds)\n";
+  d_sharedState->compilationTime += dt;
+} // end routine
 
 //______________________________________________________________________
 void

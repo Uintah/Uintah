@@ -91,6 +91,7 @@ class MultiScaleSimulationController : public SimulationController {
     bool doRegridding(GridP& grid, bool initialTimestep);
 
     void recompile(double t, double delt, GridP& currentGrid, int totalFine);
+    void recompileLevelSet(double time, double del_t, const LevelSet& currentLevelSet, int totalFine);
 
     void executeTimestep(double t, double& delt, GridP& currentGrid, int totalFine);
 
@@ -104,6 +105,7 @@ class MultiScaleSimulationController : public SimulationController {
     //! recursively schedule refinement, coarsening, and time advances for
     //! finer levels - compensating for time refinement.  Builds one taskgraph
     void subCycleCompile(GridP& grid, int startDW, int dwStride, int step, int numLevel);
+    void subCycleCompileLevelSet(GridP& grid, int startDW, int dwStride, int step, int numLevel);
 
     //! recursively executes taskgraphs, as several were executed.  Similar to subCycleCompile,
     //! except that this executes the recursive taskgraphs, and compile builds one taskgraph
