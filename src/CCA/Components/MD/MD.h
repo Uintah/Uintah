@@ -508,13 +508,6 @@ namespace Uintah {
                 (p.z() >= l.z() && p.z() < h.z()));
       }
 
-      /**
-       * @brief
-       * @param
-       * @return
-       */
-      bool doMDOnLevel(int level, int numLevels) const;
-
 
     private:
 

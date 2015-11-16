@@ -173,9 +173,6 @@ void MD::problemSetup(const ProblemSpecP&   params,
       warn<<"ERROR:MD:\n missing MD section in the MultiScale section of the input file\n";
       throw ProblemSetupException(warn.str(), __FILE__, __LINE__);
     }
-
-    md_multi_scale_ps->getWithDefault("min_grid_level", d_minGridLevel, 0);
-    md_multi_scale_ps->getWithDefault("max_grid_level", d_maxGridLevel, 1000);
   }
 
   // Initialize base scheduler and attach the position variable
@@ -370,10 +367,6 @@ void MD::scheduleInitialize(const LevelP&       level,
     dwAddress = sched->get_dw(currDW);
   }
 
-  if (!doMDOnLevel(level->getIndex(), level->getGrid()->numLevels())) {
-    return;
-  }
-
   const std::string flowLocation = "MD::scheduleInitialize | ";
   printSchedule(level->eachPatch(), md_cout, flowLocation);
 
@@ -388,9 +381,11 @@ void MD::scheduleInitialize(const LevelP&       level,
   // Get list of MD materials for scheduling
   const MaterialSet*    materials       =   d_sharedState->allMDMaterials();
   LoadBalancer*         loadBal         =   sched->getLoadBalancer();
-  const PatchSet*       perProcPatches  =   loadBal->getPerProcessorPatchSet(level);
+//  const PatchSet*       perProcPatches  =   loadBal->getPerProcessorPatchSet(level);
+  const PatchSet*       perProcPatches  =   level->eachPatch();
 
-  const PatchSubset*    patchSubset = perProcPatches->getUnion();
+  const PatchSubset* patchSubset = perProcPatches->getUnion();
+
   std::cout << "Seeing a patch set of " << patchSubset->size() << " total patches." << std::endl;
   std::cout << "Received level " << level->getIndex() << " in MD::Initialize call." << std::endl;
   for (int pInd = 0; pInd < patchSubset->size(); ++pInd)
@@ -475,10 +470,6 @@ void MD::scheduleComputeStableTimestep(const LevelP&     level,
 void MD::scheduleTimeAdvance(const LevelP&      level,
                                    SchedulerP&  sched)
 {
-  if (!doMDOnLevel(level->getIndex(), level->getGrid()->numLevels())) {
-    return;
-  }
-
   const std::string flowLocation = "MD::scheduleTimeAdvance | ";
   printSchedule(level, md_cout, flowLocation);
 
@@ -1226,9 +1217,6 @@ void MD::initialize(const ProcessorGroup*   pg,
   const std::string particleLocation = location + " P ";
   printTask(perProcPatches, md_cout, location);
 
-
-
-
   // Loop through each patch
   size_t numPatches             =   perProcPatches->size();
   size_t numAtomTypes           =   matls->size();
@@ -1280,7 +1268,6 @@ void MD::initialize(const ProcessorGroup*   pg,
 
   SCIRun::Vector cellDimensions = d_coordinate->getUnitCell()*inverseExtentVector;
 
-  int prevLevelIndex = -1;
   for (size_t patchIndex = 0; patchIndex < numPatches; ++patchIndex)
   {
     // Loop over perProcPatches
@@ -1545,9 +1532,4 @@ void MD::createBasePermanentParticleState() {
                 << "END"
                 << std::endl;
   }
-}
-
-bool MD::doMDOnLevel(int level, int numLevels) const
-{
-  return (level >= d_minGridLevel && level <= d_maxGridLevel) || (d_minGridLevel < 0 && level == numLevels + d_minGridLevel);
 }
