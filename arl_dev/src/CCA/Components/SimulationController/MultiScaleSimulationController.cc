@@ -200,12 +200,14 @@ MultiScaleSimulationController::run()
     // Here we simply build the index of the components which will be initialized when the overall
     // program is initialized, rather than being initialized later after a previous component has run.
     case serial:
-    case oscillatory:
+    case oscillatory: {
       // Sequential component runs, so only the first gets passed to doInitialTimestep
       initializationComponentIndices.push_back(0);
       break;
-    default:
+    }
+    default: {
       throw ProblemSetupException("ERROR:  Multiscale Run Type not recognized", __FILE__, __LINE__);
+    }
   }
   LevelSet runningLevelSet;
   size_t numComponentsInitialized = initializationComponentIndices.size();
@@ -214,7 +216,7 @@ MultiScaleSimulationController::run()
     runningLevelSet.addAll(currentGrid->getLevelSubset(componentIndex)->getVector());
   }
 
-  // Run the first timestep initialization only for the proscribed level sets
+  // Run the first timestep initialization only for the prescribed level sets
   doLevelSetBasedInitialTimestep(runningLevelSet, time);
 
 //  doInitialTimestep( currentGrid, time );
@@ -862,16 +864,17 @@ MultiScaleSimulationController::doLevelSetBasedInitialTimestep(  const LevelSet 
         // Verify that patches on a single level do not overlap
         const LevelSubset* currLevelSubset = initializationSets.getSubset(subsetIndex);
         size_t numLevels = currLevelSubset->size();
-        proc0cout << "Seeing " << numLevels << " levels in subset " << subsetIndex << std::endl;
+        proc0cout << "Seeing " << numLevels << " level(s) in subset " << subsetIndex << std::endl;
         for (size_t indexInSubset = numLevels; indexInSubset > 0; --indexInSubset) {
           proc0cout << " Current level index: " << indexInSubset-1 << " numLevels: " << numLevels << std::endl;
           LevelP levelHandle = grid->getLevel(currLevelSubset->get(indexInSubset-1)->getIndex());
+          d_sim->scheduleInitialize(levelHandle, d_scheduler);
           if (d_regridder) {
             // so we can initially regrid
             d_regridder->scheduleInitializeErrorEstimate(levelHandle);
             d_sim->scheduleInitialErrorEstimate(levelHandle, d_scheduler);
 
-            // Dilate only within a single level subset for now; will worry about dilating to accomodate
+            // Dilate only within a single level subset for now; will worry about dilating to accommodate
             // interface layers at a later time.  TODO FIXME JBH APH 11-14-2015
             if (indexInSubset < d_regridder->maxLevels()) {
               d_regridder->scheduleDilation(levelHandle);
