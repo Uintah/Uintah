@@ -91,7 +91,7 @@ WARNING
     virtual void setAdaptivity(const bool ans) =0;
     
     //! Ask if regridding only once.
-    virtual bool doRegridOnce() =0;
+    virtual bool doRegridOnce() = 0;
 
     //! Schedules task to initialize the error flags to 0
     virtual void scheduleInitializeErrorEstimate(const LevelP& level) = 0;
