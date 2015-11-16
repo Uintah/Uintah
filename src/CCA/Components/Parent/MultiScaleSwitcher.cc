@@ -888,8 +888,6 @@ MultiScaleSwitcher::needRecompile(       double   time,
   if (d_switchState == switching) {
 
     d_switchState = idle;
-
-
     d_computedVars.clear();
     d_componentIndex++;
 
