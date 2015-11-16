@@ -1149,40 +1149,28 @@ MultiScaleSimulationController::recompileLevelSet(        double    time
   d_scheduler->mapDataWarehouse(Task::CoarseOldDW, 0);
   d_scheduler->mapDataWarehouse(Task::CoarseNewDW, totalFine);
 
-  // FIXME TODO JBH APH What are we doing here?  SchedulteTimeAdvance if the component is not AMR?  If so the logic
-  // should actually check to see if the current levelSet has an AMR level, and if so it should probably
-  // call subcycle compile on the AMR level subset(s), and call scheduleTimeAdvance on any non-amr subsets in the levelSet
-
-  // Not sure if the check against d_doMultiScale && d_sharedState->getCurrentTopLevelTimeStep() > 1 is still necessary.
-  // Feels like this was a hack to get around trying to scheduleTimeAdvance on the initial recompile because we'd have the
-  // multiscale subgrid processes scheduling when they hadn't been initialized, but this should now be handled by proper
-  // passing in of the current levelSet in the first place for the process being run.  We'll leave it in for now, see what
-  // breaks.  11-15-2015 JBH APH FIXME TODO FIXME TODO FIXME
-  if (d_doMultiScale && d_sharedState->getCurrentTopLevelTimeStep() > 1) {
-    int numSubsets = currentLevelSet.size();
-    for (int subsetIndex = 0; subsetIndex < numSubsets; ++subsetIndex) {
-      const LevelSubset* currentSubset = currentLevelSet.getSubset(subsetIndex);
-      int levelsInSubset = currentSubset->size();
-      if (!currentSubset->get(0)->isAMR()) {
-        // FIXME TODO JBH APH We should explicitly make sure an entire subset has levels which are/are not AMR.
-        // Presumably if the first level in a subset is not AMR, the subset itself is not AMR.
-        for (int indexInSubset = 0; indexInSubset < levelsInSubset; ++indexInSubset) {
-          const LevelP levelHandle=currentGrid->getLevel(currentSubset->get(indexInSubset)->getIndex());
+  // If a level is an AMR level, then call subCycleCompileLevelSet, which in turn calls scheduleTimeAdvance.
+  //  Otherwise only call scheduleTimeAdvance, e.g. any non-AMR case
+  size_t numSubsets = currentLevelSet.size();
+  for (size_t subsetIndex = 0; subsetIndex < numSubsets; ++subsetIndex) {
+    const LevelSubset* currentSubset = currentLevelSet.getSubset(subsetIndex);
+    int levelsInSubset = currentSubset->size();
+      for (int indexInSubset = 0; indexInSubset < levelsInSubset; ++indexInSubset) {
+        // If the first level in a subset is AMR, the subset itself should be AMR.
+        const LevelP levelHandle = currentGrid->getLevel(currentSubset->get(indexInSubset)->getIndex());
+        if (levelHandle.get_rep()->isAMR()) {
+          subCycleCompileLevelSet(currentGrid, 0, totalFine, 0, currentSubset->get(0)->getIndex());
+        } else {
           d_sim->scheduleTimeAdvance(levelHandle, d_scheduler);
         }
       }
-      else {
-        // subset IS AMR; we need to schedule via subCycleCompile
-        subCycleCompileLevelSet(currentGrid, 0, totalFine, 0, currentSubset->get(0)->getIndex());
-      }
-    }
   }
 
   d_scheduler->clearMappings();
   d_scheduler->mapDataWarehouse(Task::OldDW, 0);
   d_scheduler->mapDataWarehouse(Task::NewDW, totalFine);
 
-  size_t numSubsets = currentLevelSet.size();
+  numSubsets = currentLevelSet.size();
   for (size_t subsetIndex = 0; subsetIndex < numSubsets; ++subsetIndex) {
     // Verify that patches on a single level do not overlap
     const LevelSubset* currLevelSubset = currentLevelSet.getSubset(subsetIndex);
