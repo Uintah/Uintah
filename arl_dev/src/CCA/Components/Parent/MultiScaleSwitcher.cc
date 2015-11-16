@@ -114,7 +114,7 @@ MultiScaleSwitcher::MultiScaleSwitcher( const ProcessorGroup * myworld,
     ProblemSpecP sim_ps = subCompUps->findBlock("SimulationComponent");
     sim_ps->getAttribute("type", sim_comp);
     simComponents.insert(sim_comp);
-    d_componentNameIndexMap.insert( std::pair<std::string, int>(sim_comp,num_components));
+    d_componentNameIndexMap.insert( std::pair<std::string, int>(sim_comp, num_components));
 
     //__________________________________
     // create simulation port and attach it switcher component    
@@ -910,8 +910,8 @@ MultiScaleSwitcher::needRecompile(       double   time,
     comp->attachPort("scheduler", sched);
     comp->attachPort("output",    dataArchiver);
     comp->attachPort("modelmaker",modelmaker);
-  
-   // clean up old models
+
+    // clean up old models
     if (modelmaker) {
       modelmaker->clearModels();
     }
@@ -936,12 +936,11 @@ MultiScaleSwitcher::needRecompile(       double   time,
     d_sim->restartInitialize();
     d_sharedState->finalizeMaterials();
 
-//    // read in the grid adaptivity flag from the ups file
-//    Regridder* regridder = dynamic_cast<Regridder*>(getPort("regridder"));
-//    if (regridder) {
-//      regridder->switchInitialize(subCompUps);
-//    }
-
+    // read in the grid adaptivity flag from the ups file
+    Regridder* regridder = dynamic_cast<Regridder*>(getPort("regridder"));
+    if (regridder) {
+      regridder->switchInitialize(subCompUps);
+    }
 
     // create subscheduler for MD component
     d_subScheduler = sched->createSubScheduler();
@@ -952,19 +951,23 @@ MultiScaleSwitcher::needRecompile(       double   time,
     d_subScheduler->mapDataWarehouse(Task::OldDW, 0);
     d_subScheduler->mapDataWarehouse(Task::NewDW, 1);
 
-    // Initialize the per-level data
-    int num_levels = grid->numLevels();
-    for (int i =  num_levels - 1; i >= 0; i--) {
-      d_sim->scheduleInitialize(grid->getLevel(i), d_subScheduler);
-      d_sim->scheduleComputeStableTimestep(grid->getLevel(i), d_subScheduler);
+    // Initialize the per-levelset data
+    const LevelSubset* level_subset = grid->getLevelSubset(d_componentIndex);
+    int num_levels = level_subset->size();
+    for (int i =  0; i < num_levels; ++i) {
+      LevelP level_handle = grid->getLevel(level_subset->get(i)->getIndex());
+      d_sim->scheduleInitialize(level_handle, d_subScheduler);
+      d_sim->scheduleComputeStableTimestep(level_handle, d_subScheduler);
     }
 
     d_subScheduler->advanceDataWarehouse(grid);
-    d_subScheduler->compile();
+
+    LevelSet level_set;
+    level_set.addAll(grid->getLevelSubset(d_componentIndex)->getVector());
+    d_subScheduler->compile(&level_set);
 
 //    d_subScheduler->get_dw(0)->setScrubbing(DataWarehouse::ScrubNone);
     d_subScheduler->execute();
-
 
     d_subScheduler->initialize(1,1);
     d_subScheduler->clearMappings();
@@ -978,15 +981,10 @@ MultiScaleSwitcher::needRecompile(       double   time,
       d_sim->scheduleComputeStableTimestep(grid->getLevel(i), d_subScheduler);
     }
 
-    d_subScheduler->compile();
-
+    d_subScheduler->compile(&level_set);
     d_subScheduler->advanceDataWarehouse(grid);
-
 //    d_subScheduler->get_dw(0)->setScrubbing(DataWarehouse::ScrubNone);
-
     d_subScheduler->execute();
-
-
 
     retval = true;
     proc0cout << "\n-----------------------------------" << std::endl;

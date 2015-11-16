@@ -64,25 +64,28 @@ void TimestepNumber::scheduleSwitchTest(const LevelP& level, SchedulerP& sched)
   sched->addTask(t, level->eachPatch(),d_sharedState->allMaterials());
 }
 
-void TimestepNumber::switchTest(const ProcessorGroup* group,
-                                const PatchSubset* patches,
-                                const MaterialSubset* matls,
-                                DataWarehouse* old_dw,
-                                DataWarehouse* new_dw)
+void TimestepNumber::switchTest( const ProcessorGroup * group,
+                                 const PatchSubset    * patches,
+                                 const MaterialSubset * matls,
+                                       DataWarehouse  * old_dw,
+                                       DataWarehouse  * new_dw)
 {
-  dbg << "Doing Switch Criteria:TimestepNumber";
+  if (dbg.active()) {
+    dbg << "Doing Switch Criteria:TimestepNumber";
+  }
+
   double sw = 0;
 
   unsigned int time_step = d_sharedState->getCurrentTopLevelTimeStep();
-  if (time_step == d_timestep)
-    sw = 1;
-  else
-    sw = 0;
-  
-  dbg  << " is it time to switch components: " << sw << endl;
 
+  if (dbg.active()) {
+    std::string answer = (time_step == d_timestep) ? "yes" : "no";
+    dbg << " is it time to switch components: " << answer << std::endl;
+  }
+
+  sw = (time_step == d_timestep) ? 1 : 0;
   max_vartype switch_condition(sw);
-  
+
   const Level* allLevels = 0;
-  new_dw->put(switch_condition,d_sharedState->get_switch_label(),allLevels);
+  new_dw->put(switch_condition, d_sharedState->get_switch_label(), allLevels);
 }

@@ -13,7 +13,7 @@
    <!--____________________________________________________________________-->
 
    <Time>
-   
+
    <!--
         <maxTime>25000.0</maxTime>
         <initTime>0.0</initTime>
@@ -23,25 +23,25 @@
         <max_Timesteps>100</max_Timesteps>
         <timestep_multiplier>1</timestep_multiplier>
    -->
-        
+
         <maxTime>1.e-6</maxTime>
         <initTime>0.0</initTime>
         <delt_min>1e-10</delt_min>
         <delt_max>5.e-8</delt_max>
         <timestep_multiplier>0.1</timestep_multiplier>
-        
+
     </Time>
-    
-    
+
+
     <!--____________________________________________________________________-->
     <!--   O  U  P  U  T     V  A  R  I  A  B  L  E  S                      -->
     <!--____________________________________________________________________-->
-    
+
     <DataArchiver>
         <filebase>lj_hcp_1component.uda</filebase>
         <outputInterval> 0.0 </outputInterval> <!-- (Explicitly) don't save any data... -->
         <checkpoint cycle = "0" interval = "0"/>
-        
+
     <!--
         <save label = "p.x_MD"/>
         <save label = "p.ID_MD"/>
@@ -49,30 +49,30 @@
         <checkpoint cycle = "2" interval = "1"/>
     -->
     </DataArchiver>
-    
-    
+
+
     <!--____________________________________________________________________-->
     <!--   M D    S I M U L A T I O N     O P T I O N S                     -->
     <!--____________________________________________________________________-->
-    
+
     <MD>
         <Forcefield type="Lucretius">
             <coordinateFile>LJ_HCP_1Component.coords</coordinateFile>
             <forcefieldFile>LJ_HCP_1Component.ff</forcefieldFile>
         </Forcefield>
-        
+
         <System ensemble="NVE">
             <unitCell format="Isotropic">
                 <boxSize>55.9709435199820</boxSize>
             </unitCell>
             <cutoffRadius>9.0</cutoffRadius>
         </System>
-        
+
         <Integrator type="velocity">
             <timestep>0.25</timestep>
             <numberSteps>10</numberSteps>
         </Integrator>
-        
+
         <Electrostatics type="none">
             <ewaldBeta>0.25</ewaldBeta>
             <kGrids>[64,64,64]</kGrids>
@@ -84,13 +84,6 @@
             </polarizable>
         </Electrostatics>
     </MD>
-    
-    <MultiScale>
-        <MD>
-            <min_grid_level>1</min_grid_level>
-            <max_grid_level>1</max_grid_level>
-        </MD>
-    </MultiScale>    
 
 </Uintah_specification>
 
