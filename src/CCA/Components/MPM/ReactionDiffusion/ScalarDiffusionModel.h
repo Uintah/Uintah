@@ -90,6 +90,7 @@ namespace Uintah {
 
     virtual void outputProblemSpec(ProblemSpecP& ps,bool output_rdm_tag = true);
     virtual double computeStableTimeStep(double Dif, Vector dx);
+    virtual double computeDiffusivityTerm(double concentration, double pressure);
 
   protected:
     MPMLabel* d_lb;

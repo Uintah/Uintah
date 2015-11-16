@@ -54,6 +54,7 @@ void NonLinearDiff1::scheduleComputeFlux(Task* task, const MPMMaterial* matl,
   Ghost::GhostType  gnone = Ghost::None;
   task->requires(Task::OldDW, d_lb->pConcGradientLabel,   matlset, gnone);
   task->requires(Task::OldDW, d_lb->pConcentrationLabel,  matlset, gnone);
+  task->requires(Task::OldDW, d_lb->pStressLabel,         matlset, gnone);
   task->computes(d_sharedState->get_delt_label(),getLevel(patch));
 
   task->computes(d_lb->pFluxLabel,        matlset);
@@ -68,16 +69,19 @@ void NonLinearDiff1::computeFlux(const Patch* patch,
 
   int dwi = matl->getDWIndex();
   Vector dx = patch->dCell();
+  double comp_diffusivity;
 
   constParticleVariable<Vector>  pConcGrad;
   constParticleVariable<double>  pConcentration;
+  constParticleVariable<Matrix3> pStress;
   ParticleVariable<Vector>       pFlux;
   ParticleVariable<double>       pDiffusivity;
 
   ParticleSubset* pset = old_dw->getParticleSubset(dwi, patch);
 
-  old_dw->get(pConcGrad,        d_lb->pConcGradientLabel,  pset);
-  old_dw->get(pConcentration,   d_lb->pConcentrationLabel, pset);
+  old_dw->get(pConcGrad,       d_lb->pConcGradientLabel,  pset);
+  old_dw->get(pConcentration,  d_lb->pConcentrationLabel, pset);
+  old_dw->get(pStress,         d_lb->pStressLabel, pset);
   new_dw->allocateAndPut(pFlux,        d_lb->pFluxLabel,        pset);
   new_dw->allocateAndPut(pDiffusivity, d_lb->pDiffusivityLabel, pset);
 
@@ -86,18 +90,25 @@ void NonLinearDiff1::computeFlux(const Patch* patch,
   double timestep = 1.0e99;
   double minD = 1.0e99;
   double maxD = 0;
+  double pressure;
+  double concentration;
   for (ParticleSubset::iterator iter = pset->begin(); iter != pset->end();
                                                       iter++){
     particleIndex idx = *iter;
 
-    non_lin_comp = 1/(1-pConcentration[idx]) - 2 * tuning1 * pConcentration[idx];
+    concentration = pConcentration[idx];
+    pressure = pStress[idx].Trace()/3.0; 
+
+    non_lin_comp = 1/(1-concentration) - 2 * tuning1 * concentration;
 
     //cout << "nlc: " << non_lin_comp << ", concentration: " << pConcentration[idx] << endl;
 
+    comp_diffusivity = computeDiffusivityTerm(concentration, pressure);
+
     if(non_lin_comp < tuning2){
-      D = diffusivity * non_lin_comp;
+      D = comp_diffusivity * non_lin_comp;
     } else {
-      D = diffusivity * tuning2;
+      D = comp_diffusivity * tuning2;
     }
 
     pFlux[idx] = D*pConcGrad[idx];
