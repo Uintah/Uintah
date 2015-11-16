@@ -389,3 +389,11 @@ double ScalarDiffusionModel::computeStableTimeStep(double Dif, Vector dx)
   timeStep = timeStep/(Dif*4);
   return timeStep.minComponent();
 }
+
+double ScalarDiffusionModel::computeDiffusivityTerm(double concentration, double pressure)
+{
+  // This is just a function stub to be tied into the multiscale
+  // component. JH, AH, CG
+
+  return diffusivity;
+}
