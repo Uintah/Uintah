@@ -330,6 +330,10 @@ Grid* TiledRegridder::CreateGrid(Grid* old_grid, vector<vector<IntVector> > &til
       }
     }
 
+    // Finally, rebuild the subsetMaps and name maps.
+    new_grid->assignSubsetToLevels();
+    new_grid->copySubsetData(old_grid);
+
     return new_grid;
 }
 

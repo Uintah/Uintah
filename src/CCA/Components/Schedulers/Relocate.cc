@@ -365,18 +365,47 @@ Relocate::scheduleParticleRelocation(Scheduler* sched,
     // make per-proc patch set of each level >= level
     patches = scinew PatchSet();
     patches->createEmptySubsets(pg->size());
-   
-    for (int i = coarsestLevelwithParticles->getIndex(); i < grid->numLevels(); i++) {
-      
-      const PatchSet* p = lb->getPerProcessorPatchSet(grid->getLevel(i));
-      
+
+//  FIXME TODO JBH APH 11-15-2015  The commented section below is the way to do relocation based on levelSets
+//  However, the AMRSimulationController is not currently set up to regrid and preserve the grid structure properly.
+
+    // Iterate only through levelSet, not through entire grid.
+    const LevelSubset* currSubset = grid->getLevelSubset(grid->getSubsetIndex(coarsestLevelwithParticles->getIndex()));
+    size_t numLevelsInSubset = currSubset->size();
+
+    // Find relative offset of the coarse level within its subset
+    int offsetInSubset = -1;
+    for (int indexInSubset = 0; indexInSubset < numLevelsInSubset; ++indexInSubset) {
+      if (coarsestLevelwithParticles.get_rep() == currSubset->get(indexInSubset)) {
+        offsetInSubset = indexInSubset;
+      }
+    }
+
+    // Iterate from the coarse level to the end of the subset
+    for (int indexInSubset = offsetInSubset; indexInSubset < numLevelsInSubset; ++indexInSubset) {
+      LevelP levelHandle = grid->getLevel(currSubset->get(indexInSubset)->getIndex());
+      const PatchSet* p = lb->getPerProcessorPatchSet(levelHandle);
+
       for (int proc = 0; proc < pg->size(); proc++) {
         for (int j = 0; j < p->getSubset(proc)->size(); j++) {
           const Patch* patch = p->getSubset(proc)->get(j);
           patches->getSubset(lb->getPatchwiseProcessorAssignment(patch))->add(patch);
         }
       }
+
     }
+
+//    for (int i = coarsestLevelwithParticles->getIndex(); i < grid->numLevels(); i++) {
+//
+//      const PatchSet* p = lb->getPerProcessorPatchSet(grid->getLevel(i));
+//
+//      for (int proc = 0; proc < pg->size(); proc++) {
+//        for (int j = 0; j < p->getSubset(proc)->size(); j++) {
+//          const Patch* patch = p->getSubset(proc)->get(j);
+//          patches->getSubset(lb->getPatchwiseProcessorAssignment(patch))->add(patch);
+//        }
+//      }
+//    }
   }
   
   
