@@ -113,7 +113,7 @@ for i in range(tstart,tend):
 print "done!"
 
 final = [time,runningave]
-pickle.dump( final, open("sliding_ave.pkl","wb") )
+pickle.dump( final, open("mean_conv_ave.pkl","wb") )
 
 print "Output file written as sliding_ave.pkl"
 print "read/plot file like (in python):"
