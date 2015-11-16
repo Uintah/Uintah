@@ -1157,11 +1157,13 @@ MultiScaleSimulationController::recompileLevelSet(        double    time
     int levelsInSubset = currentSubset->size();
       for (int indexInSubset = 0; indexInSubset < levelsInSubset; ++indexInSubset) {
         // If the first level in a subset is AMR, the subset itself should be AMR.
+        // FIXME TODO JBH APH - This logic will not work for MPMICE - Think about a way to fix this.  11-16-15
         const LevelP levelHandle = currentGrid->getLevel(currentSubset->get(indexInSubset)->getIndex());
         if (levelHandle.get_rep()->isAMR()) {
           subCycleCompileLevelSet(currentGrid, 0, totalFine, 0, currentSubset->get(0)->getIndex());
         } else {
           d_sim->scheduleTimeAdvance(levelHandle, d_scheduler);
+          d_sim->scheduleFinalizeTimestep(levelHandle, d_scheduler);
         }
       }
   }
