@@ -5,12 +5,12 @@
     <Meta>
         <title>none</title>
     </Meta>
-    
+
     <!--____________________________________________________________________-->
     <!--         C O M P O N E N T   S W I T C H E R                        -->
     <!--____________________________________________________________________-->
     <SimulationComponent type="multiscaleswitcher" >
-    
+
         <subcomponent>
             <SimulationComponent type="mpm" />
             <input_file>mpm_cyl_3d_1mat.ups</input_file>
@@ -23,9 +23,9 @@
             <SimulationComponent type="md" />
             <input_file>md_lj_hcp_1Component.ups</input_file>
         </subcomponent>
-            
-    </SimulationComponent>  
-     
+
+    </SimulationComponent>
+
     <!--____________________________________________________________________-->
     <!--      T  I  M  E     V  A  R  I  A  B  L  E  S                      -->
     <!--____________________________________________________________________-->
@@ -36,16 +36,16 @@
         <delt_max>0</delt_max>        <!-- ignored -->
         <timestep_multiplier>0.0</timestep_multiplier>
     </Time>
-    
+
     <!--____________________________________________________________________-->
     <!--   O  U  P  U  T     V  A  R  I  A  B  L  E  S                      -->
     <!--____________________________________________________________________-->
-    <DataArchiver>  
+    <DataArchiver>
         <filebase>md_mpm_switch.uda</filebase>
         <outputInterval> 0.0 </outputInterval> <!-- (Explicitly) don't save any data... -->
         <checkpoint cycle = "0" interval = "0"/>
     </DataArchiver>
-    
+
     <!--____________________________________________________________________-->
     <!--      G  R  I  D     V  A  R  I  A  B  L  E  S                      -->
     <!--  This is the grid used by the first sub-component                  -->
@@ -63,7 +63,7 @@
             <Face side = "y-">
                 <BCType id = "all" var = "symmetry" label = "Symmetric">
                 </BCType>
-            </Face>                  
+            </Face>
             <Face side = "y+">
                 <BCType id = "all" var = "symmetry" label = "Symmetric">
                 </BCType>
@@ -77,7 +77,7 @@
                 </BCType>
             </Face>
         </BoundaryConditions>
-       
+
         <LevelSet label = "MPM">
           <Component>mpm</Component>
           <Level>
@@ -89,7 +89,7 @@
               </Box>
           </Level>
         </LevelSet>
-       
+
         <LevelSet label = "MD">
           <Component>md</Component>
           <Level>
@@ -102,18 +102,19 @@
               <periodic>[1,1,1]</periodic>
           </Level>
         </LevelSet>
-        
+
     </Grid>
-    
+
     <!--____________________________________________________________________-->
     <!--    M U L T I - S C A L E     G R I D                               -->
     <!--____________________________________________________________________-->
-    
+
     <doMultiScale>true</doMultiScale>
-    
+
     <MultiScale>
       <TotalComponents>2</TotalComponents>
       <RunType>serial</RunType>
+      <NumberOfSteps>1</NumberOfSteps>
     </MultiScale>
-  
+
 </Uintah_specification>
