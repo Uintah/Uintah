@@ -22,26 +22,29 @@
  * IN THE SOFTWARE.
  */
 
-/* Convected Particle Domain (Triangular/Tetrahedral) Interpolator
+/* Convected Particle Tetrahedral Domain (CPTI) Integrator
 
-Based on the CPDI interpolator in the paper by Sadeghirad, Burghardt and Brannon
-"A convected particle domain interpolation technique to extend applicability of the material point method for problems involving massive deformations"
+Based on the CPDI integrator in the paper by Sadeghirad, Burghardt and Brannon
+"A convected particle domain interpolation technique to extend applicability of 
+the material point method for problems involving massive deformations"
 International Journal for Numerical Methods in Engineering
 Volume 86, Issue 12, pages 1435–1456, 24 June 2011
 
-CPTI is an extension to allow for other polygons, in this case a triangular/tetrahedral particle domain description.
+CPTI is an extension to allow for conforming particle domain polygons,
+in this case a triangular/tetrahedral particle domain description.
 
 An additional feature of this implementation, not described above, is the
 ability to restrict the particle domains from exceeding a user specified
-length, defined here as "lcrit".  An algorithm, developed by Michael Homel and
-Rebecca Brannon, is used to scale the deformed particle such that no corners
-of that particle will fall outside of a sphere with radius lcrit, co-centered
+length, defined here as "lcrit".  An algorithm developed by Michael Homel and adapted by
+Rebecca Brannon and Brian Leavy for tetrahedron, is used to scale the deformed particle
+such that no corners of that particle will fall outside of a sphere with radius lcrit
 with the particle.  This feature was added to avoid particles from getting
 so large that they have influence with nodes that lie beyond the ghost nodes
 of neighboring patches, or outside of the computational domain, as they approach
 node boundaries.  Note that lcrit is a dimension relative to the cell size.
 Thus, lcrit=1 implies that a particle can have no length as measured from the
 center to any corner that exceeds the side length of a computational cell.
+
 */
 
 #ifndef CPTI_INTERPOLATOR_H
