@@ -54,7 +54,7 @@ namespace Uintah{
       struct HTVariables {
 
         double time; 
-        double t_start; 
+        double t_interval; // time to reach steady thermal profile
         CCVariable<double> T; 
         CCVariable<double> T_copy; 
         CCVariable<double> T_real; 
@@ -77,8 +77,7 @@ namespace Uintah{
       };
 
     private: 
-      
-      double _t_start; 
+      double _t_interval; 
       std::string _dep_vel_name;
       bool do_coal_region; 
       int _calc_freq;                    ///< Wall heat transfer model calculation frequency

@@ -140,7 +140,7 @@ WallModelDriver::problemSetup( const ProblemSpecP& input_db )
       std::string type;
       db_model->getAttribute("type", type);
       if ( type == "deposition_velocity" ){ 
-        db_model->require("t_start",_t_start);
+        db_model->require("t_interval",_t_interval);
         missing_tstart = false; 
       }
     } 
@@ -242,7 +242,7 @@ WallModelDriver::doWallHT( const ProcessorGroup* my_world,
     const Patch* patch = patches->get(p);
     HTVariables vars;
     vars.time = _shared_state->getElapsedTime();  
-    vars.t_start = _t_start;  
+    vars.t_interval = _t_interval;  
 
     // Note: The local T_copy is necessary because boundary conditions are being applied
     // in the table lookup to T based on the conditions for the independent variables. These
@@ -290,7 +290,7 @@ WallModelDriver::doWallHT( const ProcessorGroup* my_world,
       //but that creates a danger of a developer forgeting to perform the operation. For now, do it
       //here for saftey and simplicity. Maybe rethink this if efficiency becomes an issue.
       vars.T_copy.copyData( vars.T );
-
+             
     } else if ( time_subset == 0 && timestep % _calc_freq != 0 ) {
 
       // no ht solve this step:
@@ -345,7 +345,7 @@ WallModelDriver::doWallHT( const ProcessorGroup* my_world,
         new_dw->allocateAndPut( deposit_thickness, _deposit_thickness_label, _matl_index , patch );
         CellIterator c = patch->getExtraCellIterator();
         for (; !c.done(); c++ ){
-          if ( cell_type[*c] == BoundaryCondition_new::WALL || cell_type[*c] == BoundaryCondition_new::INTRUSION ){
+          if ( cell_type[*c] > 7 && cell_type[*c] < 11 ){
             deposit_thickness[*c] = deposit_thickness_old[*c];
           } else {
             deposit_thickness[*c] = 0.0;
@@ -840,7 +840,7 @@ WallModelDriver::CoalRegionHT::problemSetup( const ProblemSpecP& input_db ){
     GeometryPieceFactory::create( geometry_db, info.geometry );
     r_db->require("erosion_thickness", info.dy_erosion);
     r_db->require("T_slag", info.T_slag);
-    r_db->require("t_sb", info.t_sb);
+    r_db->require("tscale_dep", info.t_sb);
     r_db->require("k", info.k);
     r_db->require("k_deposit", info.k_deposit);
     r_db->require("wall_thickness", info.dy);
@@ -952,11 +952,14 @@ WallModelDriver::CoalRegionHT::computeHT( const Patch* patch, HTVariables& vars,
               rad_q /= total_area_face; // representative radiative flux to the cell.
                
               R_wall = wi.dy / wi.k; 
-              R_dp = wi.dy_dep / wi.k_deposit; 
-              dep_thickness = vars.ave_deposit_velocity[c] * wi.t_sb;
-              if (dep_thickness > wi.dy_erosion){ // Here is our crude erosion model. If the deposit wants to grow above a certain size it will erode.
-                dep_thickness = wi.dy_erosion;
+              R_dp = wi.dy_dep / wi.k_deposit;
+              if (vars.time < vars.t_interval) {
+                dep_thickness = wi.dy_dep_init;
+              } else {
+                dep_thickness = vars.ave_deposit_velocity[c] * wi.t_sb;
               }
+              dep_thickness = min(dep_thickness,wi.dy_erosion);// Here is our crude erosion model. If the deposit wants to grow above a certain size it will erode.
+              
               vars.deposit_thickness[c] = ( 1 - wi.relax ) * vars.deposit_thickness_old[c] + wi.relax * dep_thickness;
               R_d = vars.deposit_thickness[c] / wi.k_deposit; 
               R_tot = R_wall + R_dp + R_d;
