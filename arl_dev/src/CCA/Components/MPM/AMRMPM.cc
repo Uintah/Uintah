@@ -362,6 +362,7 @@ void AMRMPM::scheduleInitialize(const LevelP& level, SchedulerP& sched)
   t->computes(lb->pVelGradLabel);
   t->computes(lb->pTemperatureGradientLabel);
   t->computes(lb->pSizeLabel);
+  t->computes(lb->pAreaLabel);
   t->computes(lb->pRefinedLabel);
   t->computes(lb->pLastLevelLabel);
   t->computes(lb->pLocalizedMPMLabel);
@@ -636,9 +637,11 @@ void AMRMPM::schedulePartitionOfUnity(SchedulerP& sched,
 
   // Carry forward and update pSize if particles change levels
   t->requires(Task::OldDW, lb->pSizeLabel, Ghost::None);
+  t->requires(Task::OldDW, lb->pAreaLabel, Ghost::None);
   t->requires(Task::OldDW, lb->pLastLevelLabel, Ghost::None);
 
   t->computes(lb->pSizeLabel_preReloc);
+  t->computes(lb->pAreaLabel_preReloc);
   t->computes(lb->pLastLevelLabel_preReloc);
   t->computes(lb->pPartitionUnityLabel);
   t->computes(lb->MPMRefineCellLabel, d_one_matl);
@@ -1189,7 +1192,7 @@ void AMRMPM::scheduleInterpolateToParticlesAndUpdate(SchedulerP& sched,
   t->requires(Task::NewDW, lb->pSizeLabel_preReloc,                gnone);
   t->requires(Task::OldDW, lb->pVolumeLabel,                       gnone);
   t->requires(Task::OldDW, lb->pDeformationMeasureLabel,           gnone);
-  t->requires(Task::OldDW, lb->pLocalizedMPMLabel,              gnone);
+  t->requires(Task::OldDW, lb->pLocalizedMPMLabel,                 gnone);
 
   t->computes(lb->pDispLabel_preReloc);
   t->computes(lb->pVelocityLabel_preReloc);
@@ -1701,15 +1704,19 @@ void AMRMPM::partitionOfUnity(const ProcessorGroup*,
       ParticleSubset* pset = old_dw->getParticleSubset(dwi, patch);
       constParticleVariable<Point> px;
       constParticleVariable<Matrix3> psize;
+      constParticleVariable<Vector> parea;
       constParticleVariable<int>plastlevel;
       ParticleVariable<Matrix3> psizenew;
+      ParticleVariable<Vector> pareanew;
       ParticleVariable<int>plastlevelnew;
       ParticleVariable<double>partitionUnity;
     
       old_dw->get(px,                lb->pXLabel,          pset);
       old_dw->get(psize,             lb->pSizeLabel,       pset);
+      old_dw->get(parea,             lb->pAreaLabel,       pset);
       old_dw->get(plastlevel,        lb->pLastLevelLabel,  pset);
       new_dw->allocateAndPut(psizenew,       lb->pSizeLabel_preReloc,     pset);
+      new_dw->allocateAndPut(pareanew,       lb->pAreaLabel_preReloc,     pset);
       new_dw->allocateAndPut(plastlevelnew,  lb->pLastLevelLabel_preReloc,pset);
       new_dw->allocateAndPut(partitionUnity, lb->pPartitionUnityLabel,    pset);
       
@@ -1732,6 +1739,7 @@ void AMRMPM::partitionOfUnity(const ProcessorGroup*,
         } else {
           psizenew[idx]  = psize[idx];
         }
+        pareanew[idx]  = parea[idx];
 
         plastlevelnew[idx]= curLevelIndex;
 
@@ -4999,6 +5007,7 @@ void AMRMPM::scheduleApplyExternalScalarFlux(SchedulerP& sched,
 
   t->requires(Task::OldDW, lb->pXLabel,                 Ghost::None);
   t->requires(Task::OldDW, lb->pSizeLabel,              Ghost::None);
+  t->requires(Task::OldDW, lb->pAreaLabel,              Ghost::None);
   t->requires(Task::OldDW, lb->pMassLabel,              Ghost::None);
   t->requires(Task::OldDW, lb->pDeformationMeasureLabel,Ghost::None);
   t->computes(             lb->pExternalScalarFluxLabel);
@@ -5021,7 +5030,7 @@ void AMRMPM::applyExternalScalarFlux(const ProcessorGroup* ,
   if (cout_doing.active())
     cout_doing << "Current Time (applyExternalScalarFlux) = " << time << endl;
 
-  // Calculate the force vector at each particle for each pressure bc
+  // Calculate the flux at each particle for each flux bc
   std::vector<double> fluxPerPart;
   std::vector<ScalarFluxBC*> pbcP;
   if (flags->d_useLoadCurves) {
@@ -5056,11 +5065,13 @@ void AMRMPM::applyExternalScalarFlux(const ProcessorGroup* ,
 
       // Get the particle data
       constParticleVariable<Point>   px;
+      constParticleVariable<Vector>  parea;
       constParticleVariable<Matrix3> psize;
       constParticleVariable<Matrix3> pDeformationMeasure;
       ParticleVariable<double> pExternalScalarFlux;
 
       old_dw->get(px,    lb->pXLabel,    pset);
+      old_dw->get(parea, lb->pAreaLabel, pset);
       old_dw->get(psize, lb->pSizeLabel, pset);
       old_dw->get(pDeformationMeasure, lb->pDeformationMeasureLabel, pset);
       new_dw->allocateAndPut(pExternalScalarFlux,
@@ -5081,44 +5092,20 @@ void AMRMPM::applyExternalScalarFlux(const ProcessorGroup* ,
 
         // Get the load curve data
         if(do_FluxBCs){
-#if 0
-          ParticleVariable<Point> pExternalForceCorner1, pExternalForceCorner2,
-                                  pExternalForceCorner3, pExternalForceCorner4;
-          if (flags->d_useCBDI) {
-            new_dw->allocateAndPut(pExternalForceCorner1,
-                                  lb->pExternalForceCorner1Label, pset);
-            new_dw->allocateAndPut(pExternalForceCorner2,
-                                  lb->pExternalForceCorner2Label, pset);
-            new_dw->allocateAndPut(pExternalForceCorner3,
-                                  lb->pExternalForceCorner3Label, pset);
-            new_dw->allocateAndPut(pExternalForceCorner4,
-                                  lb->pExternalForceCorner4Label, pset);
-           }
-#endif
           // Iterate over the particles
-          ParticleSubset::iterator iter = pset->begin();
-          for(;iter != pset->end(); iter++){
+          for(ParticleSubset::iterator iter = pset->begin(); 
+                                       iter != pset->end(); iter++){
             particleIndex idx = *iter;
             int loadCurveID = pLoadCurveID[idx]-1;
             if (loadCurveID < 0) {
               pExternalScalarFlux[idx] = 0.0;
             } else {
-              //ScalarFluxBC* pbc = pbcP[loadCurveID];
-
-              pExternalScalarFlux[idx] = fluxPerPart[loadCurveID];
 #if 0
-              if (flags->d_useCBDI) {
-               Vector dxCell = patch->dCell();
-               pExternalForce_new[idx] = pbc->getForceVectorCBDI(px[idx],
-                                 psize[idx],pDeformationMeasure[idx],force,time,
-                                    pExternalForceCorner1[idx],
-                                    pExternalForceCorner2[idx],
-                                    pExternalForceCorner3[idx],
-                                    pExternalForceCorner4[idx],
-                                    dxCell);
-              } else {
-               pExternalForce_new[idx]=pbc->getForceVector(px[idx],force,time);
-              }
+              pExternalScalarFlux[idx] = fluxPerPart[loadCurveID];
+#else
+              ScalarFluxBC* pbc = pbcP[loadCurveID];
+              double area = parea[idx].x();
+              pExternalScalarFlux[idx] = pbc->fluxPerParticle(time, area);
 #endif
             }
           }

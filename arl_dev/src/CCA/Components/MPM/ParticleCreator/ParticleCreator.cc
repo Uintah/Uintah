@@ -171,6 +171,7 @@ ParticleCreator::createParticles(MPMMaterial* matl,
     vector<Vector>* pfiberdirs     = 0;
     vector<Vector>* pvelocities    = 0;    // gcd adds and new change name
     vector<Matrix3>* psizes        = 0;
+    vector<Vector>*  pareas        = 0;
 
     if (sgp){
       volumes      = sgp->getVolume();
@@ -179,6 +180,7 @@ ParticleCreator::createParticles(MPMMaterial* matl,
       pfiberdirs   = sgp->getFiberDirs();
       pvelocities  = sgp->getVelocity();  // gcd adds and new change name
       psizes       = sgp->getSize();
+      pareas       = sgp->getArea();
 
       if(d_with_color){
         colors      = sgp->getColors();
@@ -232,6 +234,12 @@ ParticleCreator::createParticles(MPMMaterial* matl,
         cerr << "WARNING:  The particle size when using smooth or file\n"; 
         cerr << "geom pieces needs some work when used with AMR" << endl;
       }
+    }
+
+    // For getting particle areas (if they exist)
+    vector<Vector>::const_iterator areaiter;
+    if (pareas) {
+      if (!pareas->empty()) areaiter = vars.d_object_area[*obj].begin();
     }
 
     // For getting particles colors (if they exist)
@@ -312,6 +320,14 @@ ParticleCreator::createParticles(MPMMaterial* matl,
         }
       }
 
+      if (pareas) {
+        // Read parea from file or get from a smooth geometry piece
+        if (!pareas->empty()) {
+          pvars.parea[pidx] = *areaiter;
+          ++areaiter;
+        }
+      }
+
       if (colors) {
         if (!colors->empty()) {
           pvars.pcolor[pidx] = *coloriter;
@@ -331,9 +347,20 @@ ParticleCreator::createParticles(MPMMaterial* matl,
       // physical BC pointer
       if (d_useLoadCurves) {
         if (checkForSurface(piece,*itr,dxpp)) {
-          pvars.pLoadCurveID[pidx] = getLoadCurveID(*itr, dxpp);
+          int areacomp;
+          pvars.pLoadCurveID[pidx] = getLoadCurveID(*itr, dxpp,areacomp);
+          if(areacomp==0){
+            pvars.parea[pidx]=Vector(pvars.parea[pidx].x(),0.,0.);
+          } else if(areacomp==1){
+            pvars.parea[pidx]=Vector(pvars.parea[pidx].y(),0.,0.);
+          } else if(areacomp==2){
+            pvars.parea[pidx]=Vector(pvars.parea[pidx].z(),0.,0.);
+          }
         } else {
           pvars.pLoadCurveID[pidx] = 0;
+        }
+        if(pvars.pLoadCurveID[pidx]==0){
+          pvars.parea[pidx]=Vector(0.);
         }
       }
       count++;
@@ -347,7 +374,8 @@ ParticleCreator::createParticles(MPMMaterial* matl,
 // Get the LoadCurveID applicable for this material point
 // WARNING : Should be called only once per particle during a simulation 
 // because it updates the number of particles to which a BC is applied.
-int ParticleCreator::getLoadCurveID(const Point& pp, const Vector& dxpp)
+int ParticleCreator::getLoadCurveID(const Point& pp, const Vector& dxpp,
+                                    int& areacomp)
 {
   int ret=0;
   for (int ii = 0; ii<(int)MPMPhysicalBCFactory::mpmPhysicalBCs.size(); ii++){
@@ -364,7 +392,7 @@ int ParticleCreator::getLoadCurveID(const Point& pp, const Vector& dxpp)
     else if (bcs_type == "ScalarFlux") {
       ScalarFluxBC* pbc = 
         dynamic_cast<ScalarFluxBC*>(MPMPhysicalBCFactory::mpmPhysicalBCs[ii]);
-      if (pbc->flagMaterialPoint(pp, dxpp)) {
+      if (pbc->flagMaterialPoint(pp, dxpp, areacomp)) {
          ret = pbc->loadCurveID(); 
       }
     }
@@ -453,6 +481,7 @@ ParticleCreator::allocateVariables(particleIndex numParticles,
   new_dw->allocateAndPut(pvars.ptemperature,  d_lb->pTemperatureLabel,  subset);
   new_dw->allocateAndPut(pvars.pparticleID,   d_lb->pParticleIDLabel,   subset);
   new_dw->allocateAndPut(pvars.psize,         d_lb->pSizeLabel,         subset);
+  new_dw->allocateAndPut(pvars.parea,         d_lb->pAreaLabel,         subset);
   new_dw->allocateAndPut(pvars.plocalized,    d_lb->pLocalizedMPMLabel, subset);
   new_dw->allocateAndPut(pvars.prefined,      d_lb->pRefinedLabel,      subset);
   new_dw->allocateAndPut(pvars.pfiberdir,     d_lb->pFiberDirLabel,     subset);
@@ -612,6 +641,9 @@ ParticleCreator::initializeParticle(const Patch* patch,
                0.,1./((double) ppc.y()),0.,
                0.,0.,1./((double) ppc.z()));
   size=affineTrans_A*size;
+  Vector area(dxpp.y()*dxpp.z(),dxpp.x()*dxpp.z(),dxpp.x()*dxpp.z());
+  area=affineTrans_A*area;
+
 /*
 // This part is associated with CBDI_CompressiveCylinder.ups input file.
 // It determines particle domain sizes for the conforming particle distribution,
@@ -657,6 +689,7 @@ ParticleCreator::initializeParticle(const Patch* patch,
     }
 
     pvars.psize[i]      = size;  // Normalized by grid spacing
+    pvars.parea[i]      = area;  // Normalized by grid spacing
    
     pvars.pvelocity[i]  = (*obj)->getInitialData_Vector("velocity");
     if(d_flags->d_integrator_type=="explicit"){
@@ -757,6 +790,7 @@ ParticleCreator::countAndCreateParticles(const Patch* patch,
     vector<Vector>* pfiberdirs     = sgp->getFiberDirs();
     vector<Vector>* pvelocities    = sgp->getVelocity();
     vector<Matrix3>* psizes        = sgp->getSize();
+    vector<Vector>*  pareas        = sgp->getArea();
     Point p;
     IntVector cell_idx;
     
@@ -811,6 +845,10 @@ ParticleCreator::countAndCreateParticles(const Patch* patch,
           if (!psizes->empty()) {
             Matrix3 psz = psizes->at(ii); 
             vars.d_object_size[obj].push_back(psz);
+          }
+          if (!pareas->empty()) {
+            Vector psz = pareas->at(ii); 
+            vars.d_object_area[obj].push_back(psz);
           }
           if (!colors->empty()) {
             double color = colors->at(ii); 
@@ -889,6 +927,9 @@ void ParticleCreator::registerPermanentParticleState(MPMMaterial* matl)
 
   particle_state.push_back(d_lb->pSizeLabel);
   particle_state_preReloc.push_back(d_lb->pSizeLabel_preReloc);
+
+  particle_state.push_back(d_lb->pAreaLabel);
+  particle_state_preReloc.push_back(d_lb->pAreaLabel_preReloc);
 
   if (d_useLoadCurves) {
     particle_state.push_back(d_lb->pLoadCurveIDLabel);

@@ -24,8 +24,6 @@
 
 #include <CCA/Components/MPM/ParticleCreator/ParticleCreatorFactory.h>
 #include <CCA/Components/MPM/ParticleCreator/ImplicitParticleCreator.h>
-#include <CCA/Components/MPM/ParticleCreator/MembraneParticleCreator.h>
-#include <CCA/Components/MPM/ParticleCreator/ShellParticleCreator.h>
 #include <Core/Exceptions/ProblemSetupException.h>
 #include <CCA/Components/MPM/MPMFlags.h>
 #include <Core/ProblemSpec/ProblemSpec.h>
@@ -42,7 +40,6 @@ ParticleCreator* ParticleCreatorFactory::create(ProblemSpecP& ps,
                                                 MPMMaterial* mat,
                                                 MPMFlags* flags)
 {
-
   ProblemSpecP cm_ps = ps->findBlock("constitutive_model");
   string mat_type;
   cm_ps->getAttribute("type",mat_type);
@@ -50,15 +47,6 @@ ParticleCreator* ParticleCreatorFactory::create(ProblemSpecP& ps,
   if (flags->d_integrator_type == "implicit") 
     return scinew ImplicitParticleCreator(mat,flags);
 
-  else if (mat_type == "membrane")
-    return scinew MembraneParticleCreator(mat,flags);
-
-  else if (mat_type == "shell_CNH")
-    return scinew ShellParticleCreator(mat,flags);
-  
   else
     return scinew ParticleCreator(mat,flags);
-
 }
-
-

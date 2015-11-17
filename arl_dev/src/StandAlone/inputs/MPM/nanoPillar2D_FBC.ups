@@ -21,8 +21,9 @@
 <!--
     <outputTimestepInterval>1</outputTimestepInterval>
 -->
-    <outputInterval>5.e-4</outputInterval>
+    <outputInterval>1.e-6</outputInterval>
     <save label="p.x"/>
+    <save label="p.area"/>
     <save label="p.particleID"/>
     <save label="p.velocity"/>
     <save label="p.mass"/>
