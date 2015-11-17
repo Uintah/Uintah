@@ -101,10 +101,10 @@ void visit_InitLibSim( visit_simulation_data *sim )
   // Has better scaling, but has not been release for fortran.
   VisItSetupEnvironment();
 
-  visitdbg << "****************************  "
-            << "usingMPI " << (Parallel::usingMPI() ? "Yes" : "No")
-            << std::endl;
-  visitdbg.flush();
+  // visitdbg << "****************************  "
+  //           << "usingMPI " << (Parallel::usingMPI() ? "Yes" : "No")
+  //           << std::endl;
+  // visitdbg.flush();
       
   if( Parallel::usingMPI() )
   {
@@ -116,17 +116,9 @@ void visit_InitLibSim( visit_simulation_data *sim )
     MPI_Comm_rank (MPI_COMM_WORLD, &par_rank);
     MPI_Comm_size (MPI_COMM_WORLD, &par_size);
     
-    // Tell libsim whether the simulation is parallel.
+    // Tell libsim if the simulation is running in parallel.
     VisItSetParallel( par_size > 1 );
     VisItSetParallelRank( par_rank );
-
-    visitdbg << "****************************  "
-             << " isProc0 " << isProc0_macro << "  "
-             << "par_size " << par_size << "  " 
-             << "par_rank " << par_rank << "  " 
-             << std::endl;
-
-    visitdbg.flush();
 
     // Install callback functions for global communication.
     VisItSetBroadcastIntFunction( visit_BroadcastIntCallback );
@@ -258,7 +250,19 @@ void visit_CheckState( visit_simulation_data *sim )
         /* Register command callback */
         VisItSetCommandCallback(visit_ControlCommandCallback, (void*) sim);
 
-        visitdbg << "Visit libsim : Connected" << std::endl;
+	if( Parallel::usingMPI() )
+	{
+	  int par_rank;
+	  MPI_Comm_rank (MPI_COMM_WORLD, &par_rank);
+
+	  visitdbg << "Visit libsim : Processor " << par_rank
+		   << " Connected" << std::endl;
+	}
+	else
+	{
+	  visitdbg << "Visit libsim : Connected" << std::endl;
+	}
+
         visitdbg.flush();
 
         /* Register data access callbacks */
