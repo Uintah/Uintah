@@ -9,7 +9,7 @@
 using namespace Uintah;
 
 DepositionVelocity::DepositionVelocity( std::string task_name, int matl_index, const int N, SimulationStateP shared_state  ) :
-TaskInterface( task_name, matl_index ), _Nenv(N),_shared_state(shared_state) {
+TaskInterface( task_name, matl_index ), _Nenv(N),_shared_state(shared_state),d_mylock("locked time variable") {
 
 }
 
@@ -28,8 +28,8 @@ DepositionVelocity::problemSetup( ProblemSpecP& db ){
   _rhoP_name  = ParticleTools::parse_for_role_to_label(db,"density");
   _dep_vel_rs_name= "DepositVelRunningSum";
   _dep_vel_rs_start_name= "DepositVelRunningSumStart";
-  if ( db->findBlock("t_start")){
-  db->require("t_start",_t_start);
+  if ( db->findBlock("t_interval")){
+  db->require("t_interval",_t_interval);
   } else {
     throw ProblemSetupException("Error: DepositionVelocity.cc time-averaging start time not specified.", __FILE__, __LINE__);
   }
@@ -104,6 +104,9 @@ DepositionVelocity::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_i
       d_velocity_rs_start[c]=0.0;
     }
   }
+  d_mylock.lock();
+  _new_time = 0.0;
+  d_mylock.unlock();
 }
 
 //
@@ -115,6 +118,7 @@ void
 DepositionVelocity::register_timestep_init( std::vector<ArchesFieldContainer::VariableInformation>& variable_registry ){
 
   register_variable( _task_name, ArchesFieldContainer::COMPUTES, variable_registry );
+  register_variable( _task_name, ArchesFieldContainer::REQUIRES, 1, ArchesFieldContainer::OLDDW, variable_registry  ); 
   for ( int i = 0; i < _Nenv; i++ ){
     const std::string dep_vel_rs = get_env_name(i, _dep_vel_rs_name);
     const std::string dep_vel_rs_start = get_env_name(i, _dep_vel_rs_start_name);
@@ -132,10 +136,28 @@ DepositionVelocity::timestep_init( const Patch* patch, ArchesTaskInfoManager* ts
 
   CCVariable<double>* vdeposit_velocity = tsk_info->get_uintah_field<CCVariable<double> >(_task_name);
   CCVariable<double>& deposit_velocity = *vdeposit_velocity;
-  for (CellIterator iter=patch->getExtraCellIterator(); !iter.done(); iter++){
-    IntVector c = *iter;
-    deposit_velocity[c]=0.0;
-  }
+
+  const double delta_t = tsk_info->get_dt();
+  d_mylock.lock();
+  _new_time += delta_t; // this is required for determining when to reset running sums for time-averaging.
+  if (_new_time > _t_interval){
+    _new_time = 0.0; // this is required for determining when to reset running sums for time-averaging.
+  } 
+  d_mylock.unlock();
+  if (_new_time == 0.0){ // on this timestep we are going to compute the new deposit thickness.
+    for (CellIterator iter=patch->getExtraCellIterator(); !iter.done(); iter++){
+      IntVector c = *iter;
+      deposit_velocity[c]=0.0;
+    }
+  } else {
+    constCCVariable<double>* vdeposit_velocity_old = tsk_info->get_const_uintah_field<constCCVariable<double> >(_task_name);
+    constCCVariable<double>& deposit_velocity_old = *vdeposit_velocity_old;
+    for (CellIterator iter=patch->getExtraCellIterator(); !iter.done(); iter++){
+      IntVector c = *iter;
+      deposit_velocity[c]=deposit_velocity_old[c];
+    }
+  }  
+  
   for ( int i = 0; i < _Nenv; i++ ){
     const std::string dep_vel_rs = get_env_name(i, _dep_vel_rs_name);
     const std::string dep_vel_rs_start = get_env_name(i, _dep_vel_rs_start_name);
@@ -294,18 +316,11 @@ DepositionVelocity::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info,
           d_velocity /= total_area_face; // area weighted incoming velocity to the cell for particle i.
           // update the running-sum for time-averaging the deposit velocity for particle i.
           d_velocity_rs[c]=d_velocity_rs[c] + d_velocity*delta_t; // during timestep init d_velocity_rs[c] is set to the old values..
-          // update the starting point for running-sum for particle i.
-          if (current_time - _t_start < - 0.1)
-            d_velocity_rs_start[c]=d_velocity_rs[c]; // update d_velocity_rs_start until time is _t_start - 0.1. 0.1 is buffer to make sure we have enough averaging to not divide by zero.
-          // compute the time-averaged deposit velocity for each environment
-          if (current_time - _t_start > 0.0 ){ 
-            // during timestep init d_velocity_rs_start[c] is set to the old values..
-            vel_i_ave = (d_velocity_rs[c] - d_velocity_rs_start[c] )/(current_time - _t_start);
-          } else {
-            vel_i_ave = d_velocity_rs[c]/current_time;  
+          if (_new_time == 0.0){
+            vel_i_ave = (d_velocity_rs[c] - d_velocity_rs_start[c] ) / _t_interval;
+            deposit_velocity[c] = deposit_velocity[c] + vel_i_ave; // add the contribution per particle.
+            d_velocity_rs_start[c]=d_velocity_rs[c];
           }
-          // get the total time-averaged deposit velocity to the cell. 
-          deposit_velocity[c] = deposit_velocity[c] + vel_i_ave; // add the contribution per particle.
         }// if there is a deposition flux 
       } // wall or intrusion cell-type
     } // cell loop
