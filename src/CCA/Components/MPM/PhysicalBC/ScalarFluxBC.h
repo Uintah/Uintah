@@ -82,7 +82,7 @@ WARNING
 
       // Locate and flag the material points to which this scalar flux BC is
       // to be applied. 
-      bool flagMaterialPoint(const Point& p, const Vector& dxpp);
+      bool flagMaterialPoint(const Point& p, const Vector& dxpp, int& areacomp);
       
       // Get the load curve number for this scalar flux BC
       inline int loadCurveID() const {return d_loadCurve->getID();}
@@ -108,25 +108,12 @@ WARNING
       // Get the applied scalar flux at time t
       inline double ScalarFlux(double t) const {return d_loadCurve->getLoad(t);}
 
-      // Get the force per particle at time t
+      // Get the flux per particle at time t
       double fluxPerParticle(double time) const;
 
-#if 0
-      // Get the force vector to be applied at a point 
-      Vector getForceVector(const Point& px, double forcePerParticle,
-                            const double time) const;
+      // Get the flux for a particle at time t, given its area
+      double fluxPerParticle(double time, double area) const;
 
-      // Get the force vector to be applied at 4 corners of the point 
-      Vector getForceVectorCBDI(const Point& px, const Matrix3& psize,
-                              const Matrix3& pDeformationMeasure,
-                              double forcePerParticle, const double time,
-                              Point& pExternalForceCorner1,
-                              Point& pExternalForceCorner2,
-                              Point& pExternalForceCorner3,
-                              Point& pExternalForceCorner4,
-                              const Vector& dxCell) const;
-
-#endif
    private:
 
       // Prevent empty constructor

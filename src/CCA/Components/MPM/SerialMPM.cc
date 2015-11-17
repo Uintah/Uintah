@@ -3293,7 +3293,6 @@ void SerialMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
     Vector dx = patch->dCell();
     double oodx[3] = {1./dx.x(), 1./dx.y(), 1./dx.z()};
 
-
     // Performs the interpolation from the cell vertices of the grid
     // acceleration and velocity to the particles to update their
     // velocity and position respectively

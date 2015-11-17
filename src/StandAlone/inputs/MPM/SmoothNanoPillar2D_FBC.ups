@@ -22,6 +22,7 @@
       <outputInterval>1.e-6</outputInterval>
       <save label = "p.x"/>
       <save label = "p.mass"/>
+      <save label = "p.area"/>
       <save label = "p.volume"/>
       <save label = "p.temperature"/>
       <save label = "p.stress"/>
