@@ -299,7 +299,7 @@ void
 Relocate::scheduleParticleRelocation(Scheduler* sched,
                                      const ProcessorGroup* pg,
                                      LoadBalancer* lb,
-                                     const LevelP& coarsestLevelwithParticles,
+                                     const LevelP& level,
                                      const VarLabel* old_posLabel,
                                      const vector<vector<const VarLabel*> >& old_labels,
                                      const VarLabel* new_posLabel,
@@ -336,32 +336,33 @@ Relocate::scheduleParticleRelocation(Scheduler* sched,
     ASSERTEQ(reloc_old_labels[m].size(), reloc_new_labels[m].size());
   }
   Task* t = scinew Task("Relocate::relocateParticles",
-                  this, &Relocate::relocateParticles, coarsestLevelwithParticles.get_rep());
-  if(lb){
+                  this, &Relocate::relocateParticles, level.get_rep());
+  if (lb) {
     t->usesMPI(true);
   }
-  t->requires( Task::NewDW, old_posLabel, Ghost::None);
   
-  for(int m=0;m < numMatls;m++){
+  t->requires(Task::NewDW, old_posLabel, Ghost::None);
+
+  for (int m = 0; m < numMatls; m++) {
     MaterialSubset* thismatl = scinew MaterialSubset();
     thismatl->add(matlsub->get(m));
-    
-    for(int i=0;i<(int)old_labels[m].size();i++){
-      t->requires( Task::NewDW, old_labels[m][i], thismatl, Ghost::None);
+
+    for (int i = 0; i < (int)old_labels[m].size(); i++) {
+      t->requires(Task::NewDW, old_labels[m][i], thismatl, Ghost::None);
     }
-    
-    t->computes( new_posLabel, thismatl);
-    for(int i=0;i<(int)new_labels[m].size();i++){
+
+    t->computes(new_posLabel, thismatl);
+    for (int i = 0; i < (int)new_labels[m].size(); i++) {
       t->computes(new_labels[m][i], thismatl);
     }
   }
   
   PatchSet* patches;
-  if(!coarsestLevelwithParticles->hasFinerLevel()){
+  if (!level->hasFinerLevel()) {
     // only case since the below version isn't const
-    patches = const_cast<PatchSet*>(lb->getPerProcessorPatchSet(coarsestLevelwithParticles)); 
-  }else {
-    GridP grid = coarsestLevelwithParticles->getGrid();
+    patches = const_cast<PatchSet*>(lb->getPerProcessorPatchSet(level->getSubsetIndex()));
+  } else {
+    GridP grid = level->getGrid();
     // make per-proc patch set of each level >= level
     patches = scinew PatchSet();
     patches->createEmptySubsets(pg->size());
@@ -370,19 +371,19 @@ Relocate::scheduleParticleRelocation(Scheduler* sched,
 //  However, the AMRSimulationController is not currently set up to regrid and preserve the grid structure properly.
 
     // Iterate only through levelSet, not through entire grid.
-    const LevelSubset* currSubset = grid->getLevelSubset(grid->getSubsetIndex(coarsestLevelwithParticles->getIndex()));
+    const LevelSubset* currSubset = grid->getLevelSubset(grid->getSubsetIndex(level->getIndex()));
     size_t numLevelsInSubset = currSubset->size();
 
     // Find relative offset of the coarse level within its subset
     int offsetInSubset = -1;
-    for (int indexInSubset = 0; indexInSubset < numLevelsInSubset; ++indexInSubset) {
-      if (coarsestLevelwithParticles.get_rep() == currSubset->get(indexInSubset)) {
+    for (size_t indexInSubset = 0; indexInSubset < numLevelsInSubset; ++indexInSubset) {
+      if (level.get_rep() == currSubset->get(indexInSubset)) {
         offsetInSubset = indexInSubset;
       }
     }
 
     // Iterate from the coarse level to the end of the subset
-    for (int indexInSubset = offsetInSubset; indexInSubset < numLevelsInSubset; ++indexInSubset) {
+    for (size_t indexInSubset = offsetInSubset; indexInSubset < numLevelsInSubset; ++indexInSubset) {
       LevelP levelHandle = grid->getLevel(currSubset->get(indexInSubset)->getIndex());
       const PatchSet* p = lb->getPerProcessorPatchSet(levelHandle);
 
