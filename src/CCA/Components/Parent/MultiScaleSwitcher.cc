@@ -992,9 +992,11 @@ MultiScaleSwitcher::needRecompile(       double   time,
     d_subScheduler->mapDataWarehouse(Task::OldDW, 0);
     d_subScheduler->mapDataWarehouse(Task::NewDW, 1);
 
-    for (int i =  num_levels - 1; i >= 0; i--) {
-      d_sim->scheduleTimeAdvance(grid->getLevel(i), d_subScheduler);
-      d_sim->scheduleComputeStableTimestep(grid->getLevel(i), d_subScheduler);
+
+    for (int i =  0; i < num_levels; ++i) {
+      LevelP level_handle = grid->getLevel(level_subset->get(i)->getIndex());
+      d_sim->scheduleTimeAdvance(level_handle, d_subScheduler);
+      d_sim->scheduleComputeStableTimestep(level_handle, d_subScheduler);
     }
 
     d_subScheduler->compile(&running_level_set);
