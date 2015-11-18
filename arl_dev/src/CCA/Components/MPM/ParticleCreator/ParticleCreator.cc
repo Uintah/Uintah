@@ -928,9 +928,6 @@ void ParticleCreator::registerPermanentParticleState(MPMMaterial* matl)
   particle_state.push_back(d_lb->pSizeLabel);
   particle_state_preReloc.push_back(d_lb->pSizeLabel_preReloc);
 
-  particle_state.push_back(d_lb->pAreaLabel);
-  particle_state_preReloc.push_back(d_lb->pAreaLabel_preReloc);
-
   if (d_useLoadCurves) {
     particle_state.push_back(d_lb->pLoadCurveIDLabel);
     particle_state_preReloc.push_back(d_lb->pLoadCurveIDLabel_preReloc);
@@ -968,6 +965,9 @@ void ParticleCreator::registerPermanentParticleState(MPMMaterial* matl)
   if (d_flags->d_AMR) {
     particle_state.push_back(d_lb->pLastLevelLabel);
     particle_state_preReloc.push_back(d_lb->pLastLevelLabel_preReloc);
+
+    particle_state.push_back(d_lb->pAreaLabel);
+    particle_state_preReloc.push_back(d_lb->pAreaLabel_preReloc);
   }
 
   if (d_computeScaleFactor) {
