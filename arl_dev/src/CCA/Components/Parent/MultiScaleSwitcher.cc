@@ -947,6 +947,16 @@ MultiScaleSwitcher::needRecompile(       double   time,
     LevelSet running_level_set;
     running_level_set.addAll(grid->getLevelSubset(d_componentIndex)->getVector());
 
+    int numSubsets = running_level_set.size();
+    for (int subsetIndex = 0; subsetIndex < numSubsets; ++subsetIndex) {
+      LevelSubset* currSubset = running_level_set.getSubset(subsetIndex);
+      int numInSubset = currSubset->size();
+      for (int indexInSubset = 0; indexInSubset < numInSubset; ++indexInSubset) {
+        LevelP levelHandle = grid->getLevel(currSubset->get(indexInSubset)->getIndex());
+        levelHandle->setSubsetIndex(indexInSubset);
+      }
+    }
+
     LoadBalancer* lb = sched->getLoadBalancer();
     lb->possiblyDynamicallyReallocate(running_level_set, LoadBalancer::init);
 
