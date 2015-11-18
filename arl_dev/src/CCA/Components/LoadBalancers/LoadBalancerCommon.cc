@@ -446,7 +446,7 @@ LoadBalancerCommon::possiblyDynamicallyReallocate(  const LevelSet& currentLevel
     d_outputPatchSets.clear();
     d_levelSubsetPerProcPatchSets.clear();
     d_levelSetPerProcPatchSet = createPerProcessorPatchSet(currentLevelSet);
-    // Indirectly grab the grid reference.  Note that effecitvely a currentLevelSet and the grid
+    // Indirectly grab the grid reference.  Note that effectively a currentLevelSet and the grid
     // should be roughly equivalent in terms of patch sets currently active.
     GridP grid = currentLevelSet.getSubset(0)->get(0)->getGrid();
     d_gridPerProcPatchSet = createPerProcessorPatchSet( grid );
