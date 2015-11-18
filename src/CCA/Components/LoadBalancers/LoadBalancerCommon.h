@@ -152,9 +152,14 @@ public:
     return d_levelSetPerProcPatchSet.get_rep();
   }
   //! Returns the patchset of all patches that have work done on this processor.
-  virtual const PatchSet* getPerProcessorPatchSet(const LevelP& level) { 
-    return d_levelPerProcPatchSets[level->getIndex()].get_rep(); 
+  virtual const PatchSet* getPerProcessorPatchSet(const LevelP& level) {
+    return d_levelPerProcPatchSets[level->getIndex()].get_rep();
   }
+
+  virtual const PatchSet* getPerProcessorPatchSet(int subIndex) {
+    return d_levelPerProcPatchSets[subIndex].get_rep();
+  }
+
   virtual const PatchSet* getPerProcessorPatchSet(const GridP& grid) { 
     return d_gridPerProcPatchSet.get_rep(); 
   }

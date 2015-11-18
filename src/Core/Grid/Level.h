@@ -241,6 +241,14 @@ public:
      
   const LevelP& getRelativeLevel( int offset ) const;
 
+  int getSubsetIndex() const {
+    return d_subsetIndex;
+  }
+
+  void setSubsetIndex(int inputIndex) {
+    d_subsetIndex = inputIndex;
+  }
+
   // Grid spacing
   inline Vector dCell() const { return d_dcell; }
   
@@ -354,6 +362,8 @@ private:
   
   bool      d_finalized;
   int       d_index; // number of the level
+  int       d_subsetIndex; // index within the level subset
+
   IntVector d_patchDistribution;
   IntVector d_periodicBoundaries;
 
