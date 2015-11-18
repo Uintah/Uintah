@@ -341,6 +341,7 @@ void SerialMPM::scheduleInitialize(const LevelP& level,
   t->computes(lb->pVelGradLabel);
   t->computes(lb->pTemperatureGradientLabel);
   t->computes(lb->pSizeLabel);
+  t->computes(lb->pAreaLabel);
   t->computes(lb->pLocalizedMPMLabel);
   t->computes(lb->pRefinedLabel);
   t->computes(d_sharedState->get_delt_label(),level.get_rep());
