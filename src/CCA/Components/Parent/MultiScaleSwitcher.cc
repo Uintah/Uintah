@@ -901,11 +901,11 @@ MultiScaleSwitcher::needRecompile(       double   time,
     //__________________________________
     // get the next simulation component
     // and initialize the scheduler and dataArchiver
-    d_sim                         = dynamic_cast<SimulationInterface*>( getPort("sim",d_componentIndex) );
-    UintahParallelComponent* comp = dynamic_cast<UintahParallelComponent*>( getPort("sim",d_componentIndex) );
-    Scheduler* sched              = dynamic_cast<Scheduler*>(getPort("scheduler") );
-    Output* dataArchiver          = dynamic_cast<Output*>(   getPort("output") );
-    ModelMaker* modelmaker        = dynamic_cast<ModelMaker*>(              getPort("modelmaker") );
+    d_sim                                  = dynamic_cast<SimulationInterface*>( getPort("sim",d_componentIndex) );
+    UintahParallelComponent * comp         = dynamic_cast<UintahParallelComponent*>( getPort("sim",d_componentIndex) );
+    Scheduler               * sched        = dynamic_cast<Scheduler*>( getPort("scheduler") );
+    Output                  * dataArchiver = dynamic_cast<Output*>( getPort("output") );
+    ModelMaker              * modelmaker   = dynamic_cast<ModelMaker*>( getPort("modelmaker") );
     
     comp->attachPort("scheduler", sched);
     comp->attachPort("output",    dataArchiver);
@@ -942,6 +942,12 @@ MultiScaleSwitcher::needRecompile(       double   time,
       regridder->switchInitialize(subCompUps);
     }
 
+    LevelSet running_level_set;
+    running_level_set.addAll(grid->getLevelSubset(d_componentIndex)->getVector());
+
+    LoadBalancer* lb = sched->getLoadBalancer();
+    lb->possiblyDynamicallyReallocate(running_level_set, LoadBalancer::init);
+
     // create subscheduler for MD component
     d_subScheduler = sched->createSubScheduler();
     d_subScheduler->initialize(1,1);
@@ -962,9 +968,7 @@ MultiScaleSwitcher::needRecompile(       double   time,
 
     d_subScheduler->advanceDataWarehouse(grid);
 
-    LevelSet level_set;
-    level_set.addAll(grid->getLevelSubset(d_componentIndex)->getVector());
-    d_subScheduler->compile(&level_set);
+    d_subScheduler->compile(&running_level_set);
 
 //    d_subScheduler->get_dw(0)->setScrubbing(DataWarehouse::ScrubNone);
     d_subScheduler->execute();
@@ -981,7 +985,7 @@ MultiScaleSwitcher::needRecompile(       double   time,
       d_sim->scheduleComputeStableTimestep(grid->getLevel(i), d_subScheduler);
     }
 
-    d_subScheduler->compile(&level_set);
+    d_subScheduler->compile(&running_level_set);
     d_subScheduler->advanceDataWarehouse(grid);
 //    d_subScheduler->get_dw(0)->setScrubbing(DataWarehouse::ScrubNone);
     d_subScheduler->execute();

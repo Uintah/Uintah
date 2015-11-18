@@ -367,8 +367,13 @@ void MD::scheduleInitialize(const LevelP&       level,
     dwAddress = sched->get_dw(currDW);
   }
 
+  // Get list of MD materials for scheduling
+  const MaterialSet*    materials       =   d_sharedState->allMDMaterials();
+  LoadBalancer*         loadBal         =   sched->getLoadBalancer();
+  const PatchSet*       perProcPatches  =   loadBal->getPerProcessorPatchSet(level);
+
   const std::string flowLocation = "MD::scheduleInitialize | ";
-  printSchedule(level->eachPatch(), md_cout, flowLocation);
+  printSchedule(perProcPatches, md_cout, flowLocation);
 
   /*
    * Note there are multiple tasks scheduled here. All three need only ever happen once.
@@ -377,12 +382,6 @@ void MD::scheduleInitialize(const LevelP&       level,
    * 2.) Nonbonded::initialize
    * 3.) SPME::initialize
    */
-
-  // Get list of MD materials for scheduling
-  const MaterialSet*    materials       =   d_sharedState->allMDMaterials();
-  LoadBalancer*         loadBal         =   sched->getLoadBalancer();
-//  const PatchSet*       perProcPatches  =   loadBal->getPerProcessorPatchSet(level);
-  const PatchSet*       perProcPatches  =   level->eachPatch();
 
   const PatchSubset* patchSubset = perProcPatches->getUnion();
 
