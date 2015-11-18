@@ -1299,6 +1299,7 @@ void AMRMPM::scheduleAddParticles(SchedulerP& sched,
     t->modifies(lb->pVelocityLabel_preReloc);
     t->modifies(lb->pMassLabel_preReloc);
     t->modifies(lb->pSizeLabel_preReloc);
+    t->modifies(lb->pAreaLabel_preReloc);
     t->modifies(lb->pDispLabel_preReloc);
     t->modifies(lb->pStressLabel_preReloc);
     if (flags->d_with_color) {
@@ -1386,6 +1387,7 @@ void AMRMPM::scheduleRefine(const PatchSet* patches, SchedulerP& sched)
   t->computes(lb->pLocalizedMPMLabel);
   t->computes(lb->pRefinedLabel);
   t->computes(lb->pSizeLabel);
+  t->computes(lb->pAreaLabel);
   t->computes(lb->pVelGradLabel);
   t->computes(lb->pCellNAPIDLabel, d_one_matl);
 
@@ -3694,12 +3696,13 @@ void AMRMPM::addParticles(const ProcessorGroup*,
       ParticleVariable<long64> pids;
       ParticleVariable<double> pvolume,pmass,ptemp,ptempP,pcolor,pconc,pconcpre;
       ParticleVariable<double> pESF;
-      ParticleVariable<Vector> pvelocity,pextforce,pdisp,pconcgrad;
+      ParticleVariable<Vector> pvelocity,pextforce,pdisp,pconcgrad,pArea;
       ParticleVariable<int> pref,ploc,plal,prefOld,pLoadCID;
       new_dw->getModifiable(px,       lb->pXLabel_preReloc,            pset);
       new_dw->getModifiable(pids,     lb->pParticleIDLabel_preReloc,   pset);
       new_dw->getModifiable(pmass,    lb->pMassLabel_preReloc,         pset);
       new_dw->getModifiable(pSize,    lb->pSizeLabel_preReloc,         pset);
+      new_dw->getModifiable(pArea,    lb->pAreaLabel_preReloc,         pset);
       new_dw->getModifiable(pdisp,    lb->pDispLabel_preReloc,         pset);
       new_dw->getModifiable(pstress,  lb->pStressLabel_preReloc,       pset);
       new_dw->getModifiable(pvolume,  lb->pVolumeLabel_preReloc,       pset);
@@ -3791,7 +3794,7 @@ void AMRMPM::addParticles(const ProcessorGroup*,
       ParticleVariable<long64> pidstmp;
       ParticleVariable<double> pvoltmp, pmasstmp,ptemptmp,ptempPtmp,pESFtmp;
       ParticleVariable<double> pcolortmp, pconctmp, pconcpretmp;
-      ParticleVariable<Vector> pveltmp,pextFtmp,pdisptmp,pconcgradtmp;
+      ParticleVariable<Vector> pveltmp,pextFtmp,pdisptmp,pconcgradtmp,pareatmp;
       ParticleVariable<int> preftmp,ploctmp,plaltmp,pLoadCIDtmp;
       new_dw->allocateTemporary(pidstmp,  pset);
       new_dw->allocateTemporary(pxtmp,    pset);
@@ -3803,6 +3806,7 @@ void AMRMPM::addParticles(const ProcessorGroup*,
       new_dw->allocateTemporary(ptempPtmp,pset);
       new_dw->allocateTemporary(pFtmp,    pset);
       new_dw->allocateTemporary(psizetmp, pset);
+      new_dw->allocateTemporary(pareatmp, pset);
       new_dw->allocateTemporary(pdisptmp, pset);
       new_dw->allocateTemporary(pstrstmp, pset);
       if (flags->d_with_color) {
@@ -3834,6 +3838,7 @@ void AMRMPM::addParticles(const ProcessorGroup*,
         ptempPtmp[pp]= ptempP[pp];
         pFtmp[pp]    = pF[pp];
         psizetmp[pp] = pSize[pp];
+        pareatmp[pp] = pArea[pp];
         pdisptmp[pp] = pdisp[pp];
         pstrstmp[pp] = pstress[pp];
         if (flags->d_with_color) {
@@ -3927,6 +3932,7 @@ void AMRMPM::addParticles(const ProcessorGroup*,
           pextFtmp[new_index]   = pextforce[idx];
           pFtmp[new_index]      = pF[idx];
           psizetmp[new_index]   = 0.5*pSize[idx];
+          pareatmp[new_index]   = 0.25*pArea[idx];
           pdisptmp[new_index]   = pdisp[idx];
           pstrstmp[new_index]   = pstress[idx];
           if (flags->d_with_color) {
@@ -3964,6 +3970,7 @@ void AMRMPM::addParticles(const ProcessorGroup*,
       new_dw->put(ptemptmp, lb->pTemperatureLabel_preReloc,          true);
       new_dw->put(ptempPtmp,lb->pTempPreviousLabel_preReloc,         true);
       new_dw->put(psizetmp, lb->pSizeLabel_preReloc,                 true);
+      new_dw->put(pareatmp, lb->pAreaLabel_preReloc,                 true);
       new_dw->put(pdisptmp, lb->pDispLabel_preReloc,                 true);
       new_dw->put(pstrstmp, lb->pStressLabel_preReloc,               true);
       if (flags->d_with_color) {
@@ -4244,6 +4251,7 @@ void AMRMPM::refineGrid(const ProcessorGroup*,
         ParticleVariable<double> pmass, pvolume, pTemperature;
         ParticleVariable<Vector> pvelocity, pexternalforce, pdisp,pConcGrad;
         ParticleVariable<Matrix3> psize;
+        ParticleVariable<Vector>  parea;
         ParticleVariable<double> pTempPrev,pColor,pConc,pConcPrev,pExtScalFlux;
         ParticleVariable<int>    pLoadCurve,pLastLevel,pLocalized,pRefined;
         ParticleVariable<long64> pID;
@@ -4276,6 +4284,7 @@ void AMRMPM::refineGrid(const ProcessorGroup*,
           new_dw->allocateAndPut(pConcGrad,    lb->pConcGradientLabel,  pset);
         }
         new_dw->allocateAndPut(psize,          lb->pSizeLabel,          pset);
+        new_dw->allocateAndPut(parea,          lb->pAreaLabel,          pset);
 
         mpm_matl->getConstitutiveModel()->initializeCMData(patch,
                                                            mpm_matl,new_dw);
@@ -4830,19 +4839,8 @@ void AMRMPM::scheduleInitializeScalarFluxBCs(const LevelP& level,
     // each particle based on the pressure BCs
     t = scinew Task("MPM::initializeScalarFluxBC",
                     this, &AMRMPM::initializeScalarFluxBC);
-//    t->requires(Task::NewDW, lb->pXLabel,                        Ghost::None);
-//    t->requires(Task::NewDW, lb->pSizeLabel,                     Ghost::None);
-//    t->requires(Task::NewDW, lb->pDeformationMeasureLabel,       Ghost::None);
-//    t->requires(Task::NewDW, lb->pLoadCurveIDLabel,              Ghost::None);
     t->requires(Task::NewDW, lb->materialPointsPerLoadCurveLabel,
                             d_loadCurveIndex, Task::OutOfDomain, Ghost::None);
-//    t->modifies(lb->pExternalScalarFluxLabel);
-//    if (flags->d_useCBDI) {
-//       t->computes(             lb->pExternalForceCorner1Label);
-//       t->computes(             lb->pExternalForceCorner2Label);
-//       t->computes(             lb->pExternalForceCorner3Label);
-//       t->computes(             lb->pExternalForceCorner4Label);
-//    }
     sched->addTask(t, patches, d_sharedState->allMPMMaterials());
 #endif
   }
@@ -4907,38 +4905,9 @@ void AMRMPM::initializeScalarFluxBC(const ProcessorGroup*,
 
   // Calculate the scalar flux at each particle
   for(int p=0;p<patches->size();p++){
-//    const Patch* patch = patches->get(p);
     int numMPMMatls=d_sharedState->getNumMPMMatls();
     for(int m = 0; m < numMPMMatls; m++){
-//      MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial( m );
-//      int dwi = mpm_matl->getDWIndex();
-//      ParticleSubset* pset = new_dw->getParticleSubset(dwi, patch);
-//      ParticleVariable<double> pExtSF;
-//      new_dw->getModifiable(pExtSF, lb->pExternalScalarFluxLabel, pset);
 
-#if 0
-      constParticleVariable<Point> px;
-      constParticleVariable<Matrix3> psize;
-      constParticleVariable<Matrix3> pDeformationMeasure;
-      new_dw->get(px, lb->pXLabel, pset);
-      new_dw->get(psize, lb->pSizeLabel, pset);
-      new_dw->get(pDeformationMeasure, lb->pDeformationMeasureLabel, pset);
-      constParticleVariable<int> pLoadCurveID;
-      new_dw->get(pLoadCurveID, lb->pLoadCurveIDLabel, pset);
-
-      ParticleVariable<Point> pExternalForceCorner1, pExternalForceCorner2,
-                              pExternalForceCorner3, pExternalForceCorner4;
-      if (flags->d_useCBDI) {
-        new_dw->allocateAndPut(pExternalForceCorner1,
-                               lb->pExternalForceCorner1Label, pset);
-        new_dw->allocateAndPut(pExternalForceCorner2,
-                               lb->pExternalForceCorner2Label, pset);
-        new_dw->allocateAndPut(pExternalForceCorner3,
-                               lb->pExternalForceCorner3Label, pset);
-        new_dw->allocateAndPut(pExternalForceCorner4,
-                               lb->pExternalForceCorner4Label, pset);
-      }
-#endif
       int nofSFBCs = 0;
       for(int ii = 0; ii<(int)MPMPhysicalBCFactory::mpmPhysicalBCs.size();ii++){
         string bcs_type = MPMPhysicalBCFactory::mpmPhysicalBCs[ii]->getType();
@@ -4957,35 +4926,6 @@ void AMRMPM::initializeScalarFluxBC(const ProcessorGroup*,
             cout_doing << "    Load Curve = "
                      << nofSFBCs << " Num Particles = " << numPart << endl; 
           }
-          // Calculate the force per particle at t = 0.0
-          //double fluxPerPart = pbc->fluxPerParticle(time);
-
-          // Loop through the patches and calculate the force vector
-          // at each particle
-
-#if 0
-          ParticleSubset::iterator iter = pset->begin();
-          for(;iter != pset->end(); iter++){
-            particleIndex idx = *iter;
-            if (pLoadCurveID[idx] == nofSFBCs) {
-//               pExternalForce[idx] = pbc->getForceVector(px[idx],
-//                                                        forcePerPart,time);
-              if (flags->d_useCBDI) {
-               Vector dxCell = patch->dCell();
-               pExternalForce[idx] = pbc->getForceVectorCBDI(px[idx],psize[idx],
-                                    pDeformationMeasure[idx],forcePerPart,time,
-                                    pExternalForceCorner1[idx],
-                                    pExternalForceCorner2[idx],
-                                    pExternalForceCorner3[idx],
-                                    pExternalForceCorner4[idx],
-                                    dxCell);
-              } else {
-               pExternalForce[idx] = pbc->getForceVector(px[idx],
-                                                        forcePerPart,time);
-              }// if CBDI
-            } // if pLoadCurveID...
-          }  // loop over particles
-#endif
         }   // if pressure loop
       }    // loop over all Physical BCs
     }     // matl loop
