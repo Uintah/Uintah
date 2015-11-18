@@ -29,6 +29,7 @@
 #include <CCA/Ports/DataWarehouseP.h>
 #include <CCA/Ports/Output.h>
 #include <CCA/Ports/SimulationInterface.h>
+#include <CCA/Ports/SwitchingCriteria.h>
 #include <Core/ProblemSpec/ProblemSpecP.h>
 #include <Core/Grid/GridP.h>
 #include <Core/Grid/LevelP.h>
@@ -425,6 +426,8 @@ protected:
   void coarseLevelCFI_Patches(const PatchSubset* patches,
                               Level::selectType& CFI_patches );
   
+  virtual void scheduleSwitchTest(const LevelP& level, SchedulerP& sched);
+
   int      d_nPaddingCells_Coarse;  // Number of cells on the coarse level that contain particles and surround a fine patch.
                                     // Coarse level particles are used in the task interpolateToParticlesAndUpdate_CFI.
 
@@ -448,6 +451,7 @@ protected:
   std::vector<MPMPhysicalBC*> d_physicalBCs;
   IntegratorType d_integrator;
 
+  SwitchingCriteria* d_switchCriteria;
 private:
 
   MaterialSubset* d_one_matl;         // matlsubset for zone of influence

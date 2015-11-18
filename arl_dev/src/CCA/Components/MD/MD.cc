@@ -370,7 +370,7 @@ void MD::scheduleInitialize(const LevelP&       level,
   // Get list of MD materials for scheduling
   const MaterialSet*    materials       =   d_sharedState->allMDMaterials();
   LoadBalancer*         loadBal         =   sched->getLoadBalancer();
-  const PatchSet*       perProcPatches  =   loadBal->getPerProcessorPatchSet(level);
+  const PatchSet*       perProcPatches  =   loadBal->getPerProcessorPatchSet(level->getSubsetIndex());
 
   const std::string flowLocation = "MD::scheduleInitialize | ";
   printSchedule(perProcPatches, md_cout, flowLocation);
@@ -454,7 +454,7 @@ void MD::scheduleComputeStableTimestep(const LevelP&     level,
   task->setType(Task::OncePerProc);
 
   LoadBalancer* loadBal = sched->getLoadBalancer();
-  const PatchSet* perProcPatches = loadBal->getPerProcessorPatchSet(level);
+  const PatchSet* perProcPatches = loadBal->getPerProcessorPatchSet(level->getSubsetIndex());
 
   sched->addTask(task, perProcPatches, d_sharedState->allMaterials());
 
@@ -475,7 +475,7 @@ void MD::scheduleTimeAdvance(const LevelP&      level,
   // Get list of MD materials for scheduling
   const MaterialSet* atomTypes = d_sharedState->allMDMaterials();
   LoadBalancer* loadBal = sched->getLoadBalancer();
-  const PatchSet* perProcPatches = loadBal->getPerProcessorPatchSet(level);
+  const PatchSet* perProcPatches = loadBal->getPerProcessorPatchSet(level->getSubsetIndex());
   const PatchSet* patches = level->eachPatch();
 
   scheduleOutputStatistics(sched, perProcPatches, atomTypes, level);
@@ -852,7 +852,7 @@ void MD::scheduleElectrostaticsCalculate(SchedulerP& sched,
   task->setType(Task::OncePerProc);
 
   LoadBalancer* loadBal = sched->getLoadBalancer();
-  const PatchSet* perProcPatches = loadBal->getPerProcessorPatchSet(level);
+  const PatchSet* perProcPatches = loadBal->getPerProcessorPatchSet(level->getSubsetIndex());
 
   sched->addTask(task, perProcPatches, matls);
 

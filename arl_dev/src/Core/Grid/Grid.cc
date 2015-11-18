@@ -1948,6 +1948,7 @@ Grid::assignSubsetToLevels()
     for (int indexInSubset = 0; indexInSubset < levelsInSubset; ++indexInSubset) {
       int levelIndex = currSubset->get(indexInSubset)->getIndex();
       d_subsetOfLevel[levelIndex] = subsetIndex;
+      d_levels[levelIndex]->setSubsetIndex(subsetIndex);
     }
   }
 }

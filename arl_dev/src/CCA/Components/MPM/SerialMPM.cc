@@ -268,6 +268,9 @@ void SerialMPM::problemSetup(const ProblemSpecP& prob_spec,
 
   //__________________________________
   //  create the switching criteria port
+  // FIXME TODO JBH APH This should probably be moved to the MPMCommon level,
+  // or even to a common level of a component in general for multiscale support.
+  // 11-18-2015
   d_switchCriteria = dynamic_cast<SwitchingCriteria*>(getPort("switch_criteria"));
 
   if (d_switchCriteria) {
@@ -446,7 +449,7 @@ void SerialMPM::schedulePrintParticleCount(const LevelP& level,
                         this, &SerialMPM::printParticleCount);
   t->requires(Task::NewDW, lb->partCountLabel);
   t->setType(Task::OncePerProc);
-  sched->addTask(t, sched->getLoadBalancer()->getPerProcessorPatchSet(level),
+  sched->addTask(t, sched->getLoadBalancer()->getPerProcessorPatchSet(level->getSubsetIndex()),
                  d_sharedState->allMPMMaterials());
 }
 //__________________________________

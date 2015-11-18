@@ -143,6 +143,8 @@ AMRMPM::AMRMPM(const ProcessorGroup* myworld) :SerialMPM(myworld)
   d_one_matl = scinew MaterialSubset();
   d_one_matl->add(0);
   d_one_matl->addReference();
+
+  d_switchCriteria = 0;
 }
 
 AMRMPM::~AMRMPM()
@@ -167,6 +169,10 @@ AMRMPM::~AMRMPM()
   
   for (int i = 0; i< (int)d_refine_geom_objs.size(); i++) {
     delete d_refine_geom_objs[i];
+  }
+
+  if (d_switchCriteria) {
+    delete d_switchCriteria;
   }
 }
 
@@ -292,6 +298,17 @@ void AMRMPM::problemSetup(const ProblemSpecP& prob_spec,
 
   if(flags->d_doScalarDiffusion){
     sdInterfaceModel=SDInterfaceModelFactory::create(mat_ps, sharedState,flags);
+  }
+
+  //__________________________________
+  //  create the switching criteria port
+  // FIXME TODO JBH APH This should probably be moved to the MPMCommon level,
+  // or even to a common level of a component in general for multiscale support.
+  // 11-18-2015
+  d_switchCriteria = dynamic_cast<SwitchingCriteria*>(getPort("switch_criteria"));
+
+  if (d_switchCriteria) {
+     d_switchCriteria->problemSetup(mat_ps,restart_prob_spec,d_sharedState);
   }
 }
 
@@ -433,7 +450,7 @@ void AMRMPM::schedulePrintParticleCount(const LevelP& level,
   t->requires(Task::NewDW, lb->partCountLabel);
   t->setType(Task::OncePerProc);
 
-  sched->addTask(t, sched->getLoadBalancer()->getPerProcessorPatchSet(level), d_sharedState->allMPMMaterials());
+  sched->addTask(t, sched->getLoadBalancer()->getPerProcessorPatchSet(level->getSubsetIndex()), d_sharedState->allMPMMaterials());
 }
 //______________________________________________________________________
 //
@@ -1114,6 +1131,15 @@ void AMRMPM::scheduleSetGridBoundaryConditions(SchedulerP& sched,
   }
 
   sched->addTask(t, patches, matls);
+}
+
+void AMRMPM::scheduleSwitchTest(  const LevelP     & level
+                                ,       SchedulerP & sched
+                                )
+{
+  if (d_switchCriteria) {
+    d_switchCriteria->scheduleSwitchTest(level,sched);
+  }
 }
 //______________________________________________________________________
 //

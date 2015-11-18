@@ -378,6 +378,8 @@ SimulationInterface* MultiScaleSwitcher::matchComponentToLevelset(const LevelP& 
   std::string levelSetComponent = grid->getSubsetComponentName(level->getIndex());
   int         componentIndex = d_componentNameIndexMap.find(levelSetComponent)->second;
 
+  proc0cout << "Matching: " << levelSetComponent << " level: " << level->getIndex()
+            << " to level set: " << componentIndex << std::endl;
   SimulationInterface* component = dynamic_cast<SimulationInterface*> (getPort("sim", componentIndex));
   return component;
 }
@@ -475,7 +477,7 @@ void MultiScaleSwitcher::scheduleSwitchTest( const LevelP     & level,
 
   // the component is responsible for determining when it is to switch.
   t->requires(Task::NewDW, d_sharedState->get_switch_label());
-  sched->addTask(t, sched->getLoadBalancer()->getPerProcessorPatchSet(level), d_sharedState->allMaterials());
+  sched->addTask(t, sched->getLoadBalancer()->getPerProcessorPatchSet(level->getSubsetIndex()), d_sharedState->allMaterials());
 }
 
 //______________________________________________________________________
