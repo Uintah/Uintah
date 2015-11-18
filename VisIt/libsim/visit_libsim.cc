@@ -35,12 +35,16 @@
 #include <iostream>
 #include <string>
 #include <stdio.h>
+#include <dlfcn.h>
 
 static SCIRun::DebugStream visitdbg( "VisItLibSim", true );
 
 namespace Uintah {
 
-static  std::string simFileName;
+static std::string simFileName( "Uintah" );
+static std::string simExecName;
+static std::string simArgs;
+static std::string simComment("Uintah Simulation");
 
 #define VISIT_COMMAND_PROCESS 0
 #define VISIT_COMMAND_SUCCESS 1
@@ -57,15 +61,22 @@ void visit_LibSimArguments(int argc, char **argv)
 {
   bool setVisItDir = false;
 
+  simExecName = std::string( argv[0] );
+
   for (int i=1; i<argc; ++i)
   {
     if( strcmp( argv[i], "-visit" ) == 0 )
     {
-      simFileName = std::string( argv[++i] ) + ".Uintah";
+      simFileName += std::string( "." ) + std::string( argv[++i] );
+    }
+    else if( strcmp( argv[i], "-visit_comment" ) == 0 )
+    {
+      simComment = std::string( argv[++i] );
     }
     else if( strcmp( argv[i], "-visit_dir" ) == 0 )
     {
       VisItSetDirectory(argv[++i]);
+
       setVisItDir = true;
     }
     else if( strcmp( argv[i], "-visit_options" ) == 0 )
@@ -76,8 +87,13 @@ void visit_LibSimArguments(int argc, char **argv)
     {
       VisItOpenTraceFile(argv[++i]);
     }
+    // Save off the Uintah args.
+    else
+      simArgs += std::string( argv[i] ) + std::string( " " );
   }
 
+  // Set the VisIt path as defined in sci_defs/visit_defs.h. This path
+  // is slurped up from the --with-visit configure argument.
   if( !setVisItDir )
   {
       VisItSetDirectory( VISIT_PATH );
@@ -107,11 +123,6 @@ void visit_InitLibSim( visit_simulation_data *sim )
   // Has better scaling, but has not been release for fortran.
   VisItSetupEnvironment();
 
-  // visitdbg << "****************************  "
-  //           << "usingMPI " << (Parallel::usingMPI() ? "Yes" : "No")
-  //           << std::endl;
-  // visitdbg.flush();
-      
   if( Parallel::usingMPI() )
   {
     sim->isProc0 = isProc0_macro;
@@ -137,10 +148,48 @@ void visit_InitLibSim( visit_simulation_data *sim )
 
   // Have the rank 0 process create the sim file.
   if(sim->isProc0)
+  {
+    std::string exeCommand;
+
+    if( simExecName.find( "/" ) != 0 )
+    {
+      char *path = NULL;
+      
+      Dl_info info;
+      if (dladdr(__builtin_return_address(0), &info))
+      {
+	// The last slash removes the library
+	const char *lastslash = strrchr(info.dli_fname,'/');
+	
+	if( lastslash )
+	{
+	  // Remove the library and library directory.
+	  int pathLen = strlen(info.dli_fname) - strlen(lastslash) - 3;
+	  
+	  if( pathLen > 0 )
+	  {
+	    path = (char *) malloc( pathLen + 2 );
+	    
+	    strncpy( path, info.dli_fname, pathLen );
+	    path[pathLen] = '\0';
+
+	    exeCommand = std::string( path ) + simExecName;
+
+	    free( path );
+	  }
+	}
+      }
+    }
+    else 
+      exeCommand = simExecName;
+
+    exeCommand += std::string( " " ) + simArgs;
+
     VisItInitializeSocketAndDumpSimFile(simFileName.c_str(),
-                                        "Uintah Simulation",
-                                        "/no/useful/path",
+                                        simComment.c_str(),
+                                        exeCommand.c_str(),
                                         NULL, NULL, NULL);
+  }
 }
 
 
@@ -160,7 +209,7 @@ void visit_EndLibSim( visit_simulation_data *sim )
     sim->simMode = VISIT_SIMMODE_FINISHED;
 
     visitdbg << "Visit libsim : "
-             << "The simulation has finished, at the last time step."
+             << "The simulation has finished, stopping at the last time step."
              << std::endl;
     visitdbg.flush();
 
@@ -1105,7 +1154,7 @@ visit_handle visit_ReadMetaData(void *cbdata)
 
     /* Add some commands. */
     const char *cmd_names[] = {"Stop", "Step", "Run",
-			       "Finish", "Terminate", "Beer"};
+			       "Finish", "Terminate"};
 
     int numNames = sizeof(cmd_names) / sizeof(const char *);
 
