@@ -193,7 +193,7 @@ usage(const std::string& message, const std::string& badarg, const std::string& 
     cerr << "-do_not_validate     : Skips .ups file validation! Please avoid this flag if at all possible.\n";
 #ifdef HAVE_VISIT
     cerr << "\n";
-    cerr << "-visit                 : Create a VisIt .sim2 file and perform VisIt in-situ checks\n";
+    cerr << "-visit <filename>      : Create a VisIt .sim2 file and perform VisIt in-situ checks\n";
     cerr << "-visit_dir <directory> : Top level directory for the VisIt installation\n";
     cerr << "-visit_option <string> : Optional args for the VisIt launch script\n";
     cerr << "-visit_trace <file>    : Trace file for VisIt's Sim V2 function calls\n";
