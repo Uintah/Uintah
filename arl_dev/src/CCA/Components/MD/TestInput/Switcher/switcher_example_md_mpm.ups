@@ -12,7 +12,7 @@
     <SimulationComponent type="multiscaleswitcher" >
 
         <subcomponent>
-            <SimulationComponent type="mpm" />
+            <SimulationComponent type="amrmpm" />
             <input_file>mpm_cyl_3d_1mat.ups</input_file>
             <SwitchCriteria type = "Timestep">
                 <timestep> 2 </timestep>
