@@ -1219,7 +1219,7 @@ SchedulerCommon::compile(const LevelSet* levelSet)
       int levelsInSubset = currSubset->size();
       for (int indexInSubset = 0; indexInSubset < levelsInSubset; ++indexInSubset) {
         const LevelP levelHandle = grid->getLevel(currSubset->get(indexInSubset)->getIndex());
-        const PatchSubset* patches = getLoadBalancer()->getPerProcessorPatchSet(levelHandle)->getSubset(d_myworld->myrank());
+        const PatchSubset* patches = getLoadBalancer()->getPerProcessorPatchSet(levelHandle.get_rep()->getSubsetIndex())->getSubset(d_myworld->myrank());
 
         // Build a per-level map of patch sets operating on that level.
         if (patches->size() > 0) {
