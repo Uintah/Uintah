@@ -193,10 +193,11 @@ usage(const std::string& message, const std::string& badarg, const std::string& 
     cerr << "-do_not_validate     : Skips .ups file validation! Please avoid this flag if at all possible.\n";
 #ifdef HAVE_VISIT
     cerr << "\n";
-    cerr << "-visit <filename>      : Create a VisIt .sim2 file and perform VisIt in-situ checks\n";
-    cerr << "-visit_dir <directory> : Top level directory for the VisIt installation\n";
-    cerr << "-visit_option <string> : Optional args for the VisIt launch script\n";
-    cerr << "-visit_trace <file>    : Trace file for VisIt's Sim V2 function calls\n";
+    cerr << "-visit <filename>        : Create a VisIt .sim2 file and perform VisIt in-situ checks\n";
+    cerr << "-visit_comment <comment> : A comment about the simulation\n";
+    cerr << "-visit_dir <directory>   : Top level directory for the VisIt installation\n";
+    cerr << "-visit_option <string>   : Optional args for the VisIt launch script\n";
+    cerr << "-visit_trace <file>      : Trace file for VisIt's Sim V2 function calls\n";
 #endif
     cerr << "\n\n";
   }
@@ -425,20 +426,33 @@ main( int argc, char *argv[], char *env[] )
       else
 	do_VisIt = true;
     }
+    else if (arg == "-visit_comment" ) {
+      if (++i == argc) {
+        usage("You must provide a string for -visit_comment", arg, argv[0]);
+      }
+      else
+	do_VisIt = true;
+    }
     else if (arg == "-visit_dir" ) {
       if (++i == argc) {
         usage("You must provide a directory for -visit_dir", arg, argv[0]);
       }
+      else
+	do_VisIt = true;
     }
     else if (arg == "-visit_option" ) {
       if (++i == argc) {
         usage("You must provide a string for -visit_option", arg, argv[0]);
       }
+      else
+	do_VisIt = true;
     }
     else if (arg == "-visit_trace" ) {
       if (++i == argc) {
         usage("You must provide a file name for -visit_trace", arg, argv[0]);
       }
+      else
+	do_VisIt = true;
     }
 #endif
     else {
