@@ -392,7 +392,7 @@ void velocityVerlet::finalize(  const ProcessorGroup*       pg,
 }
 
 void velocityVerlet::integratePatch(const Patch*            workPatch,
-                                    const int               atomType,
+                                    const int               localMDMaterialIndex,
                                           DataWarehouse*    oldDW,
                                           DataWarehouse*    newDW,
                                     const SimulationStateP* simState,
@@ -407,10 +407,11 @@ void velocityVerlet::integratePatch(const Patch*            workPatch,
   double velocNorm = 1.0e-5;
 
   SCIRun::Vector F_nPlus1;
-  double atomMass = (*simState)->getMDMaterial(atomType)->getMass();
+  double atomMass = (*simState)->getMDMaterial(localMDMaterialIndex)->getMass();
+  int    globalMDMaterialIndex = (*simState)->getMDMaterial(localMDMaterialIndex)->getDWIndex();
   double massInv  = 1.0/atomMass;
 
-  ParticleSubset* atomSet = oldDW->getParticleSubset(atomType, workPatch);
+  ParticleSubset* atomSet = oldDW->getParticleSubset(globalMDMaterialIndex, workPatch);
   constParticleVariable<long64> pID_n;
        ParticleVariable<long64> pID_nPlus1;
   constParticleVariable<Point>  pX_n;
@@ -478,7 +479,7 @@ void velocityVerlet::integratePatch(const Patch*            workPatch,
 }
 
 void velocityVerlet::firstIntegratePatch(const Patch*           workPatch,
-                                         const int              atomType,
+                                         const int              localMDMaterialIndex,
                                           DataWarehouse*        oldDW,
                                           DataWarehouse*        newDW,
                                     const SimulationStateP*     simState,
@@ -494,11 +495,13 @@ void velocityVerlet::firstIntegratePatch(const Patch*           workPatch,
   double velocNorm = 1.0e-5;
 
   SCIRun::Vector F_nPlus1;
-  double atomMass = (*simState)->getMDMaterial(atomType)->getMass();
+  double atomMass = (*simState)->getMDMaterial(localMDMaterialIndex)->getMass();
+  double globalAtomIndex = (*simState)->getMDMaterial(localMDMaterialIndex)->getDWIndex();
+
   double massInv  = 1.0/atomMass;
 
 
-  ParticleSubset* atomSet = oldDW->getParticleSubset(atomType, workPatch);
+  ParticleSubset* atomSet = oldDW->getParticleSubset(globalAtomIndex, workPatch);
   constParticleVariable<long64> pID_n;
        ParticleVariable<long64> pID_nPlus1;
   constParticleVariable<Point>  pX_n;
@@ -563,7 +566,7 @@ void velocityVerlet::firstIntegratePatch(const Patch*           workPatch,
 //  forceFileLock.unlock();
 }
 void velocityVerlet::firstIntegrate(const PatchSubset*          patches,
-                                    const MaterialSubset*       atomTypes,
+                                    const MaterialSubset*       localMDMaterialIndex,
                                           DataWarehouse*        oldDW,
                                           DataWarehouse*        newDW,
                                     const SimulationStateP*     simState,
@@ -584,14 +587,14 @@ void velocityVerlet::firstIntegrate(const PatchSubset*          patches,
   // Temporary vectors to avoid inner loop temp creation
   SCIRun::Vector F_nPlus1;
   int numPatches = patches->size();
-  int numTypes   = atomTypes->size();
+  int numTypes   = localMDMaterialIndex->size();
 
   for (int patchIndex = 0; patchIndex < numPatches; ++patchIndex)
   {
     const Patch* currPatch = patches->get(patchIndex);
     for (int typeIndex = 0; typeIndex < numTypes; ++typeIndex)
     {
-      int       atomType    =   atomTypes->get(typeIndex);
+      int       atomType    =   localMDMaterialIndex->get(typeIndex);
       double    atomMass    =   (*simState)->getMDMaterial(typeIndex)->getMass();
       double    massInv     =   1.0/atomMass;
 
