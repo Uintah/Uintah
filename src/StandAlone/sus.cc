@@ -193,7 +193,7 @@ usage(const std::string& message, const std::string& badarg, const std::string& 
     cerr << "-do_not_validate     : Skips .ups file validation! Please avoid this flag if at all possible.\n";
 #ifdef HAVE_VISIT
     cerr << "\n";
-    cerr << "-no_visit              : Do not perform VisIt in-situ checks\n";
+    cerr << "-visit                 : Create a VisIt .sim2 file and perform VisIt in-situ checks\n";
     cerr << "-visit_dir <directory> : Top level directory for the VisIt installation\n";
     cerr << "-visit_option <string> : Optional args for the VisIt launch script\n";
     cerr << "-visit_trace <file>    : Trace file for VisIt's Sim V2 function calls\n";
@@ -279,7 +279,7 @@ main( int argc, char *argv[], char *env[] )
   bool   onlyValidateUps     = false;
 
 #ifdef HAVE_VISIT
-  bool   do_VisIt            = true;  // Assume if VisIt is compiled
+  bool   do_VisIt            = false; // Assume if VisIt is compiled
 				      // in that the user may want to
 				      // connect with VisIt.
 #endif
@@ -418,8 +418,12 @@ main( int argc, char *argv[], char *env[] )
     // VisIt. The most important is the directory path to where VisIt
     // is located.
 #ifdef HAVE_VISIT
-    else if (arg == "-no_visit") {
-      do_VisIt = false;
+    else if (arg == "-visit") {
+      if (++i == argc) {
+        usage("You must provide file name for -visit", arg, argv[0]);
+      }
+      else
+	do_VisIt = true;
     }
     else if (arg == "-visit_dir" ) {
       if (++i == argc) {

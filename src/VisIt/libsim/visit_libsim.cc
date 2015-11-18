@@ -40,6 +40,8 @@ static SCIRun::DebugStream visitdbg( "VisItLibSim", true );
 
 namespace Uintah {
 
+static  std::string simFileName;
+
 #define VISIT_COMMAND_PROCESS 0
 #define VISIT_COMMAND_SUCCESS 1
 #define VISIT_COMMAND_FAILURE 2
@@ -57,7 +59,11 @@ void visit_LibSimArguments(int argc, char **argv)
 
   for (int i=1; i<argc; ++i)
   {
-    if( strcmp( argv[i], "-visit_dir" ) == 0 )
+    if( strcmp( argv[i], "-visit" ) == 0 )
+    {
+      simFileName = std::string( argv[++i] ) + ".Uintah";
+    }
+    else if( strcmp( argv[i], "-visit_dir" ) == 0 )
     {
       VisItSetDirectory(argv[++i]);
       setVisItDir = true;
@@ -131,7 +137,7 @@ void visit_InitLibSim( visit_simulation_data *sim )
 
   // Have the rank 0 process create the sim file.
   if(sim->isProc0)
-    VisItInitializeSocketAndDumpSimFile("Uintah",
+    VisItInitializeSocketAndDumpSimFile(simFileName.c_str(),
                                         "Uintah Simulation",
                                         "/no/useful/path",
                                         NULL, NULL, NULL);
@@ -369,8 +375,6 @@ visit_ControlCommandCallback(const char *cmd, const char *args, void *cbdata)
     sim->runMode = VISIT_SIMMODE_STEP;
   else if(strcmp(cmd, "Run") == 0)
     sim->runMode = VISIT_SIMMODE_RUNNING;
-  else if(strcmp(cmd, "Exit") == 0)
-    exit( 0 );
   // Only allow the runMode to finish if the simulation is finished.
   else if(strcmp(cmd, "Finish") == 0 )
   {
@@ -379,6 +383,8 @@ visit_ControlCommandCallback(const char *cmd, const char *args, void *cbdata)
     else
       sim->runMode = VISIT_SIMMODE_RUNNING;
   }
+  else if(strcmp(cmd, "Terminate") == 0)
+    exit( 0 );
 }
 
 
@@ -1098,7 +1104,8 @@ visit_handle visit_ReadMetaData(void *cbdata)
 #endif
 
     /* Add some commands. */
-    const char *cmd_names[] = {"Stop", "Step", "Run", "Exit", "Finish"};
+    const char *cmd_names[] = {"Stop", "Step", "Run",
+			       "Finish", "Terminate", "Beer"};
 
     int numNames = sizeof(cmd_names) / sizeof(const char *);
 
