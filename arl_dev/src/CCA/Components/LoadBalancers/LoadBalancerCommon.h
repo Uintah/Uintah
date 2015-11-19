@@ -157,14 +157,6 @@ public:
   }
 
   virtual const PatchSet* getPerProcessorPatchSet(int subIndex) {
-    std::cerr << " Asking for processor set for level at subindex:" << subIndex
-              << " out of a total of: " << d_levelPerProcPatchSets.size() << std::endl;
-    std::cerr << " Size of each: " << std::endl;
-    for (int i = 0; i < d_levelPerProcPatchSets.size(); ++i) {
-      std::cerr << "   subIndex: " << i << " number of patches: "
-                << d_levelPerProcPatchSets[subIndex].get_rep()->size() << std::endl;
-    }
-    std::cerr << "-------------------------------------" << std::endl;
     return d_levelPerProcPatchSets[subIndex].get_rep();
   }
 
