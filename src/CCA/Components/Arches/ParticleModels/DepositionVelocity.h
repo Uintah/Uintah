@@ -3,7 +3,6 @@
 
 #include <CCA/Components/Arches/Task/TaskInterface.h>
 #include <Core/Grid/SimulationState.h>
-#include <Core/Thread/Mutex.h>
 
 namespace Uintah{ 
   
@@ -81,9 +80,9 @@ private:
       std::string _rhoP_name;
       std::string _dep_vel_rs_name;
       std::string _dep_vel_rs_start_name;
+      std::string _new_time_name;
       double _t_interval; // the time interval required for a steady-state thermal profile.
       double _new_time;
-      SCIRun::Mutex d_mylock;
 
   };
 }
