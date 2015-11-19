@@ -1649,6 +1649,9 @@ void AMRMPM::actuallyInitialize(const ProcessorGroup*,
       totalParticles+=numParticles;
       mpm_matl->getConstitutiveModel()->initializeCMData(patch,mpm_matl,new_dw);
       
+      if(flags->d_doScalarDiffusion){
+    	  mpm_matl->getScalarDiffusionModel()->initializeTimeStep(patch,mpm_matl,new_dw);
+      }
       
       //__________________________________
       // color particles according to what level they're on

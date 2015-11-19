@@ -50,47 +50,35 @@ SDInterfaceModel::~SDInterfaceModel(){
   delete(d_lb);
 }
 
-void SDInterfaceModel::addInitialComputesAndRequires(Task* task,
-                                                     const PatchSet* patches) const
+void SDInterfaceModel::addComputesAndRequiresInterpolated(SchedulerP & sched,
+                                                   const PatchSet* patches,
+                                                   const MaterialSet* matls)
 {
-  int numMPM = d_sharedState->getNumMPMMatls();
-  for(int m = 0; m < numMPM; m++){
-    MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial(m);
-    ScalarDiffusionModel* sdm = mpm_matl->getScalarDiffusionModel();
-    sdm->addInitialComputesAndRequires(task, mpm_matl, patches);
-  }
 }
 
-void SDInterfaceModel::initializeSDMData(const Patch* patch,
-                                         DataWarehouse* new_dw)
+void SDInterfaceModel::sdInterfaceInterpolated(const ProcessorGroup*,
+                                             const PatchSubset* patches,
+                                             const MaterialSubset* matls,
+                                             DataWarehouse* old_dw,
+                                             DataWarehouse* new_dw)
 {
-  int numMPM = d_sharedState->getNumMPMMatls();
-  for(int m = 0; m < numMPM; m++){
-    MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial(m);
-    ScalarDiffusionModel* sdm = mpm_matl->getScalarDiffusionModel();
-    sdm->initializeSDMData(patch, mpm_matl, new_dw);
-  }
 }
 
-void SDInterfaceModel::computeDivergence(const Patch* patch,
-                                         DataWarehouse* old_dw,
-                                         DataWarehouse* new_dw)
+void SDInterfaceModel::addComputesAndRequiresDivergence(SchedulerP & sched,
+                                                 const PatchSet* patches,
+                                                 const MaterialSet* matls)
 {
-  int numMatls = d_sharedState->getNumMPMMatls();
-
-  for(int m = 0; m < numMatls; m++){
-    MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial(m);
-    ScalarDiffusionModel* sdm = mpm_matl->getScalarDiffusionModel();
-    sdm->computeDivergence(patch, mpm_matl, old_dw, new_dw);
-  }
 }
 
-void SDInterfaceModel::outputProblemSpec(ProblemSpecP& ps, bool output_sdim_tag)
+void SDInterfaceModel::sdInterfaceDivergence(const ProcessorGroup*,
+                                           const PatchSubset* patches,
+                                           const MaterialSubset* matls,
+                                           DataWarehouse* old_dw,
+                                           DataWarehouse* new_dw)
 {
+}
 
-  ProblemSpecP sdim_ps = ps;
-  if (output_sdim_tag) {
-    sdim_ps = ps->appendChild("diffusion_interface");
-    sdim_ps->appendElement("type","paired");
-  }
+void SDInterfaceModel::outputProblemSpec(ProblemSpecP& ps)
+{
+  // To be filled out in interface model
 }

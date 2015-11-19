@@ -46,18 +46,27 @@ namespace Uintah {
     SDInterfaceModel(ProblemSpecP& ps, SimulationStateP& sS, MPMFlags* Mflag);
     virtual ~SDInterfaceModel();
 
-    void addInitialComputesAndRequires(Task* task,
-                                       const PatchSet* patches) const;
+    virtual void addComputesAndRequiresInterpolated(SchedulerP & sched,
+                                          const PatchSet* patches,
+                                          const MaterialSet* matls);
 
-    void initializeSDMData(const Patch* patch,
-                           DataWarehouse* new_dw);
+    virtual void sdInterfaceInterpolated(const ProcessorGroup*,
+                                         const PatchSubset* patches,
+                                         const MaterialSubset* matls,
+                                         DataWarehouse* old_dw,
+                                         DataWarehouse* new_dw);
 
-    void computeDivergence(const Patch* patch,
-                           DataWarehouse* old_dw,
-                           DataWarehouse* new_dw);
+    virtual void addComputesAndRequiresDivergence(SchedulerP & sched,
+                                                  const PatchSet* patches,
+                                                  const MaterialSet* matls);
 
-    virtual void outputProblemSpec(ProblemSpecP& ps,
-                                   bool output_sdim_tag = true);
+    virtual void sdInterfaceDivergence(const ProcessorGroup*,
+                                       const PatchSubset* patches,
+                                       const MaterialSubset* matls,
+                                       DataWarehouse* old_dw,
+                                       DataWarehouse* new_dw);
+
+    virtual void outputProblemSpec(ProblemSpecP& ps);
 
   protected:
     MPMLabel* d_lb;

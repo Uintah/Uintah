@@ -55,6 +55,8 @@ namespace Uintah {
                                        DataWarehouse* old_dw,
                                        DataWarehouse* new_dw);
 
+    virtual void outputProblemSpec(ProblemSpecP& ps);
+
   protected:
     MPMLabel* d_lb;
     MPMFlags* d_Mflag;

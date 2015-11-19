@@ -90,3 +90,11 @@ void NullIFConcDiff::sdInterfaceDivergence(const ProcessorGroup*,
                                            DataWarehouse* new_dw)
 {
 }
+
+void NullIFConcDiff::outputProblemSpec(ProblemSpecP& ps)
+{
+
+  ProblemSpecP sdim_ps = ps;
+  sdim_ps = ps->appendChild("diffusion_interface");
+  sdim_ps->appendElement("type","null");
+}
