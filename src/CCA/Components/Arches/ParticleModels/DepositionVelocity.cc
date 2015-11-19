@@ -45,6 +45,7 @@ DepositionVelocity::problemSetup( ProblemSpecP& db ){
   _fd.push_back(IntVector(0,0,0)); // -y face
   _fd.push_back(IntVector(0,0,1)); // +z face
   _fd.push_back(IntVector(0,0,0)); // -z face
+  db->getWithDefault("current_time_in_interval",_new_time,0.0);
 }
 
 void
@@ -104,9 +105,6 @@ DepositionVelocity::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_i
       d_velocity_rs_start[c]=0.0;
     }
   }
-  d_mylock.lock();
-  _new_time = 0.0;
-  d_mylock.unlock();
 }
 
 //
@@ -142,7 +140,7 @@ DepositionVelocity::timestep_init( const Patch* patch, ArchesTaskInfoManager* ts
   _new_time += delta_t; // this is required for determining when to reset running sums for time-averaging.
   if (_new_time > _t_interval){
     _new_time = 0.0; // this is required for determining when to reset running sums for time-averaging.
-  } 
+  }
   d_mylock.unlock();
   if (_new_time == 0.0){ // on this timestep we are going to compute the new deposit thickness.
     for (CellIterator iter=patch->getExtraCellIterator(); !iter.done(); iter++){
