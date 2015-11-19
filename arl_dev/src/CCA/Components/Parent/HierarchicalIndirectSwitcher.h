@@ -29,18 +29,25 @@
  *      Author: jbhooper
  */
 
-#ifndef HEIRARCHICALINDIRECTSWITCHER_H_
-#define HEIRARCHICALINDIRECTSWITCHER_H_
+#ifndef HIERARCHICALINDIRECTSWITCHER_H_
+#define HIERARCHICALINDIRECTSWITCHER_H_
 
 #include <CCA/Ports/SimulationInterface.h>
 
 #include <Core/Parallel/UintahParallelComponent.h>
+#include <Core/Parallel/Parallel.h>
+
+#include <string>
 
 namespace Uintah {
-  class HeirarchicalIndirectSwitcher : public UintahParallelComponent, public SimulationInterface {
+  class HierarchicalIndirectSwitcher : public UintahParallelComponent, public SimulationInterface {
     public:
-               HeirarchicalIndirectSwitcher(  const ProcessorGroup * myWorld);
-      virtual ~HeirarchicalIndirectSwitcher();
+               HierarchicalIndirectSwitcher(  const ProcessorGroup * myWorld
+                                            , const ProblemSpecP   & switcher_ups
+                                            ,       bool             doAMR
+                                            , const std::string    & udaName
+                                            );
+      virtual ~HierarchicalIndirectSwitcher();
 
       virtual void problemSetup(  const ProblemSpecP      & params
                                 , const ProblemSpecP      & restart_spec
@@ -89,19 +96,29 @@ namespace Uintah {
 
       SimulationStateP              d_switcherState;
 
-      size_t                        d_numComponents;
-
       SimulationStateP                  d_headComponentState;
       std::string                       d_headComponentName;
+      UintahParallelComponent*          d_headComponent;
       SimulationInterface*              d_headComponentInterface;
+      DataWarehouse*                    d_headComponenentOldDW;
+      DataWarehouse*                    d_headComponentNewDW;
 
-      std::vector<SimulationStateP>     d_subcomponentState;
-      std::vector<std::string>          d_subcomponentName;
-      std::vector<SimulationInterface*> d_subComponentInterface;
+      int                                   d_numSubComponents;
+      std::vector<SimulationStateP>         d_subComponentState;
+      std::vector<std::string>              d_subComponentNames;
+      std::vector<std::string>              d_subComponentLabels;
+      std::vector<UintahParallelComponent*> d_subComponents;
+      std::vector<SimulationInterface*>     d_subComponentInterfaces;
 
-      std::vector<SchedulerP>           d_subSchedulers;
-      std::vector<DataWarehouse*>       d_subComponentOldDW;
-      std::vector<DataWarehouse*>       d_subComponentNewDW;
+      std::vector<SchedulerP>               d_subSchedulers;
+      std::vector<DataWarehouse*>           d_subComponentOldDW;
+      std::vector<DataWarehouse*>           d_subComponentNewDW;
+
+      typedef std::pair<std::string, std::string> subComponentKey;
+      // Maps a pair of strings (component name and component label) to an int
+      // representing the array index of the subcomponent in question.
+      std::map<std::pair<subComponentKey,  int>   d_subComponentIndexMap;
+
 
       enum heirarchyState {
         head,
@@ -109,10 +126,10 @@ namespace Uintah {
       };
 
       // disable copy and assignment
-      HeirarchicalIndirectSwitcher(const HeirarchicalIndirectSwitcher&);
-      HeirarchicalIndirectSwitcher& operator=(const HeirarchicalIndirectSwitcher&);
+      HierarchicalIndirectSwitcher(const HierarchicalIndirectSwitcher&);
+      HierarchicalIndirectSwitcher& operator=(const HierarchicalIndirectSwitcher&);
 
   };
 }
 
-#endif /* HEIRARCHICALINDIRECTSWITCHER_H_ */
+#endif /* HIERARCHICALINDIRECTSWITCHER_H_ */
