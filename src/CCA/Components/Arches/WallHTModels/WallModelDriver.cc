@@ -47,6 +47,7 @@ WallModelDriver::~WallModelDriver()
   VarLabel::destroy( _True_T_Label );
   if (do_coal_region){
     VarLabel::destroy( _deposit_thickness_label );
+    VarLabel::destroy( _deposit_velocity_label );
   }
 }
 
@@ -134,6 +135,7 @@ WallModelDriver::problemSetup( const ProblemSpecP& input_db )
   if (do_coal_region){
     const TypeDescription* CC_double = CCVariable<double>::getTypeDescription();
     _deposit_thickness_label = VarLabel::create( "deposit_thickness", CC_double );
+    _deposit_velocity_label = VarLabel::create( "real_deposit_velocity", CC_double );
     bool missing_tstart=true; 
     ProblemSpecP PM_db = db->getRootNode()->findBlock("CFD")->findBlock("ARCHES")->findBlock("ParticleModels");
     for ( ProblemSpecP db_model = PM_db->findBlock("model"); db_model != 0; db_model = db_model->findNextBlock("model")){ 
@@ -193,8 +195,10 @@ WallModelDriver::sched_doWallHT( const LevelP& level, SchedulerP& sched, const i
     task->requires( Task::OldDW, VarLabel::find("temperature"), Ghost::None, 0 );
     if (do_coal_region){
       task->computes( _deposit_thickness_label );
+      task->computes( _deposit_velocity_label );
       task->requires( Task::OldDW, _deposit_thickness_label, Ghost::None, 0 );
       task->requires( Task::OldDW, _ave_dep_vel_label, Ghost::None, 0 );
+      task->requires( Task::OldDW, _deposit_velocity_label, Ghost::None, 0 );
     }
     //task->requires( Task::OldDW , _True_T_Label   , Ghost::None , 0 );
 
@@ -211,9 +215,6 @@ WallModelDriver::sched_doWallHT( const LevelP& level, SchedulerP& sched, const i
   } else {
 
 
-    if (do_coal_region){
-      task->requires( Task::NewDW, _deposit_thickness_label, Ghost::None, 0 );
-    }
     task->requires( Task::NewDW, _True_T_Label, Ghost::None, 0 );
     task->requires( Task::NewDW, _T_copy_label, Ghost::None, 0 );
     task->requires( Task::NewDW , _cellType_label , Ghost::AroundCells , 1 );
@@ -272,10 +273,21 @@ WallModelDriver::doWallHT( const ProcessorGroup* my_world,
         old_dw->get(   vars.incident_hf_b     , _HF_B_label     , _matl_index , patch, Ghost::AroundCells, 1 );
     
       if (do_coal_region){
-        old_dw->get( vars.ave_deposit_velocity , _ave_dep_vel_label, _matl_index, patch, Ghost::None, 0 );
+        old_dw->get( vars.ave_deposit_velocity , _ave_dep_vel_label, _matl_index, patch, Ghost::None, 0 ); // from particle model
+        old_dw->get( vars.deposit_velocity_old , _deposit_velocity_label, _matl_index, patch, Ghost::None, 0 ); // computed here (olddw)
+        new_dw->allocateAndPut( vars.deposit_velocity, _deposit_velocity_label , _matl_index, patch ); // computed here (modified)
         old_dw->get( vars.deposit_thickness_old , _deposit_thickness_label, _matl_index, patch, Ghost::None, 0 );
-        new_dw->allocateAndPut( vars.deposit_thickness, _deposit_thickness_label , _matl_index, patch );
-        vars.deposit_thickness.initialize(0.0);
+        new_dw->allocateAndPut( vars.deposit_thickness, _deposit_thickness_label , _matl_index, patch ); // this isn't getModifiable because it hasn't been computed in DepositionVelocity yet.
+        CellIterator c = patch->getExtraCellIterator();
+        for (; !c.done(); c++ ){
+          if ( vars.celltype[*c] > 7 && vars.celltype[*c] < 11 ){
+            vars.deposit_thickness[*c] = vars.deposit_thickness_old[*c];
+            vars.deposit_velocity[*c] = vars.deposit_velocity_old[*c];
+          } else {
+            vars.deposit_thickness[*c] = 0.0;
+            vars.deposit_velocity[*c] = 0.0;
+          }
+        }
       }
 
       std::vector<WallModelDriver::HTModelBase*>::iterator iter;
@@ -341,14 +353,20 @@ WallModelDriver::doWallHT( const ProcessorGroup* my_world,
       if (do_coal_region){
         CCVariable<double> deposit_thickness;
         constCCVariable<double> deposit_thickness_old;
+        CCVariable<double> deposit_velocity;
+        constCCVariable<double> deposit_velocity_old;
         old_dw->get( deposit_thickness_old , _deposit_thickness_label, _matl_index, patch, Ghost::None, 0 );
         new_dw->allocateAndPut( deposit_thickness, _deposit_thickness_label, _matl_index , patch );
+        old_dw->get( deposit_velocity_old , _deposit_velocity_label, _matl_index, patch, Ghost::None, 0 ); // computed here (olddw)
+        new_dw->allocateAndPut( deposit_velocity, _deposit_velocity_label , _matl_index, patch ); // computed here (modified)
         CellIterator c = patch->getExtraCellIterator();
         for (; !c.done(); c++ ){
           if ( cell_type[*c] > 7 && cell_type[*c] < 11 ){
             deposit_thickness[*c] = deposit_thickness_old[*c];
+            deposit_velocity[*c] = deposit_velocity_old[*c];
           } else {
             deposit_thickness[*c] = 0.0;
+            deposit_velocity[*c] = 0.0;
           }
         }
       }
@@ -953,14 +971,27 @@ WallModelDriver::CoalRegionHT::computeHT( const Patch* patch, HTVariables& vars,
                
               R_wall = wi.dy / wi.k; 
               R_dp = wi.dy_dep / wi.k_deposit;
-              if (vars.time < vars.t_interval) {
-                dep_thickness = wi.dy_dep_init;
-              } else {
-                dep_thickness = vars.ave_deposit_velocity[c] * wi.t_sb;
-              }
-              dep_thickness = min(dep_thickness,wi.dy_erosion);// Here is our crude erosion model. If the deposit wants to grow above a certain size it will erode.
               
-              vars.deposit_thickness[c] = ( 1 - wi.relax ) * vars.deposit_thickness_old[c] + wi.relax * dep_thickness;
+              // for the deposit thickness there are three scenarios:
+              // (1) current time is less than t_interval -> use initial deposit thickness
+              // (2) the deposition velocity has been updated (in this case we update the deposit thickness, and the wallHT version of deposit velocity)
+              // (3) the current time step is not a deposition time update so the deposit thickness remains constant
+              
+              // (1)
+              if (vars.time < vars.t_interval) {
+                vars.deposit_thickness[c] = wi.dy_dep_init;
+              }
+              // (2)
+              if (vars.ave_deposit_velocity[c] != vars.deposit_velocity[c]){
+                vars.deposit_velocity[c] = vars.ave_deposit_velocity[c]; // this is updating the real deposit velocity computed in the wallHT to be consistent with the one computed in the particle models.
+                // here is the explicit update in the deposit thickness
+                vars.deposit_thickness[c] = vars.deposit_thickness_old[c] + vars.ave_deposit_velocity[c] * wi.t_sb;
+              }
+              // (3)
+              // vars.deposit_thickness and vars.deposit_velocity are already intialized with the old values so nothing needs to be done here.
+
+              vars.deposit_thickness[c] = min(vars.deposit_thickness[c],wi.dy_erosion);// Here is our crude erosion model. If the deposit wants to grow above a certain size it will erode.
+              
               R_d = vars.deposit_thickness[c] / wi.k_deposit; 
               R_tot = R_wall + R_dp + R_d;
               double d_tol    = 1e-15;
