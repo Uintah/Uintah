@@ -79,7 +79,7 @@
         </BoundaryConditions>
 
         <LevelSet label = "MPM">
-          <Component>mpm</Component>
+          <Component>amrmpm</Component>
           <Level>
               <Box label = "0">
                   <lower>[  0.00,            0.00,            0.00]</lower>
@@ -109,12 +109,17 @@
     <!--    M U L T I - S C A L E     G R I D                               -->
     <!--____________________________________________________________________-->
 
-    <doMultiScale>true</doMultiScale>
+    <doAMR>false</doAMR>
+    <AMR>
+      <useLockStep>true</useLockStep>
+      <MPM> </MPM>
+    </AMR>
 
+    <doMultiScale>true</doMultiScale>
     <MultiScale>
       <TotalComponents>2</TotalComponents>
       <RunType>serial</RunType>
-      <NumberOfSteps>1</NumberOfSteps>
+      <NumberOfSteps>2</NumberOfSteps>
     </MultiScale>
 
 </Uintah_specification>
