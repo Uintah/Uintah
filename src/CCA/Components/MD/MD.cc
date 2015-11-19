@@ -164,7 +164,7 @@ void MD::problemSetup(const ProblemSpecP&   params,
     throw InternalError("MD: couldn't get output port", __FILE__, __LINE__);
   }
 
-  // read in AMR flags from the main ups file
+  // read in MultiScale flags from the main ups file
   ProblemSpecP multi_scale_ps = params->findBlock("MultiScale");
   if (multi_scale_ps) {
     ProblemSpecP md_multi_scale_ps = multi_scale_ps->findBlock("MD");

@@ -56,7 +56,7 @@ void TimestepNumber::problemSetup(const ProblemSpecP& ps,
 
 void TimestepNumber::scheduleSwitchTest(const LevelP& level, SchedulerP& sched)
 {
-  printSchedule(level,dbg,"Switchinng Criteria:TimestepNumber::scheduleSwitchTest");
+  printSchedule(level,dbg,"Switching Criteria::TimestepNumber::scheduleSwitchTest ");
   
   Task* t = scinew Task("switchTest", this, &TimestepNumber::switchTest);
 
@@ -79,11 +79,11 @@ void TimestepNumber::switchTest( const ProcessorGroup * group,
   unsigned int time_step = d_sharedState->getCurrentTopLevelTimeStep();
 
   if (dbg.active()) {
-    std::string answer = (time_step == d_timestep) ? "yes" : "no";
+    std::string answer = (time_step % d_timestep) ? "yes" : "no";
     dbg << " is it time to switch components: " << answer << std::endl;
   }
 
-  sw = (time_step == d_timestep) ? 1 : 0;
+  sw = ( (time_step % d_timestep) == 0) ? 1 : 0;
   max_vartype switch_condition(sw);
 
   const Level* allLevels = 0;

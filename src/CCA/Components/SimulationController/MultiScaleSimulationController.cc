@@ -1177,7 +1177,9 @@ MultiScaleSimulationController::recompileLevelSet(        double    time
     // Verify that patches on a single level do not overlap
     const LevelSubset* currLevelSubset = currentLevelSet.getSubset(subsetIndex);
     size_t numLevels = currLevelSubset->size();
-    proc0cout << "Seeing " << numLevels << " levels in subset " << subsetIndex << std::endl;
+    proc0cout << "\n--------------------------------------------------------------\n"
+              << "Seeing " << numLevels << " level(s) in subset " << subsetIndex << std::endl
+              << "--------------------------------------------------------------\n" << std::endl;
     for (size_t indexInSubset = numLevels; indexInSubset > 0; --indexInSubset) {
       proc0cout << " Current level index: " << indexInSubset-1 << " numLevels: " << numLevels << std::endl;
       LevelP levelHandle = currentGrid->getLevel(currLevelSubset->get(indexInSubset-1)->getIndex());
