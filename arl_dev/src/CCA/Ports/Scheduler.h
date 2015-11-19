@@ -113,7 +113,7 @@ class Scheduler : public UintahParallelPort {
 
     virtual void execute( int tgnum = 0, int iteration = 0 ) = 0;
 
-    virtual SchedulerP createSubScheduler() = 0;
+    virtual SchedulerP createSubScheduler(const SimulationStateP state = 0) = 0;
        
     enum tgType { NormalTaskGraph, IntermediateTaskGraph };
 

@@ -133,12 +133,12 @@ MPIScheduler::~MPIScheduler()
 //______________________________________________________________________
 //
 SchedulerP
-MPIScheduler::createSubScheduler()
+MPIScheduler::createSubScheduler(const SimulationStateP state)
 {
   MPIScheduler* newsched = scinew MPIScheduler(d_myworld, m_outPort, this);
   UintahParallelPort* lbp = getPort("load balancer");
   newsched->attachPort("load balancer", lbp);
-  newsched->d_sharedState=d_sharedState;
+  newsched->d_sharedState = (state) ? state : d_sharedState;
   return newsched;
 }
 
