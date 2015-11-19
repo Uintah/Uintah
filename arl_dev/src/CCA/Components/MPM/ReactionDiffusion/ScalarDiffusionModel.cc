@@ -102,25 +102,15 @@ void ScalarDiffusionModel::addInitialComputesAndRequires(Task* task,
   task->computes(d_lb->pConcGradientLabel,  matlset);
 }
 
-void ScalarDiffusionModel::initializeSDMData(const Patch* patch,
-                                             const MPMMaterial* matl,
-                                             DataWarehouse* new_dw)
+void ScalarDiffusionModel::initializeTimeStep(const Patch* patch,
+		                                      const MPMMaterial* matl,
+                                              DataWarehouse* new_dw)
 {
-  ParticleSubset* pset = new_dw->getParticleSubset(matl->getDWIndex(), patch);
+  Vector dx = patch->dCell();
+  double timestep = 1.0e99;
+  timestep = min(timestep, computeStableTimeStep(diffusivity, dx));
 
-  ParticleVariable<double>  pConcentration;
-  ParticleVariable<double>  pConcPrevious;
-  ParticleVariable<Vector>  pConcGradient;
-
-  new_dw->allocateAndPut(pConcentration,  d_lb->pConcentrationLabel, pset);
-  new_dw->allocateAndPut(pConcPrevious,   d_lb->pConcPreviousLabel,  pset);
-  new_dw->allocateAndPut(pConcGradient,   d_lb->pConcGradientLabel,  pset);
-
-  for(ParticleSubset::iterator iter = pset->begin();iter != pset->end();iter++){
-    pConcentration[*iter] = 0.0;
-    pConcPrevious[*iter]  = 0.0;
-    pConcGradient[*iter]  = Vector(0.0,0.0,0.0);
-  }
+  new_dw->put(delt_vartype(timestep), d_lb->delTLabel, patch->getLevel());
 }
 
 void ScalarDiffusionModel::addParticleState(std::vector<const VarLabel*>& from,

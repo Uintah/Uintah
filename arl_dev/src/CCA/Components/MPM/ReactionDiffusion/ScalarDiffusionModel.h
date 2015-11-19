@@ -61,8 +61,8 @@ namespace Uintah {
                                                const MPMMaterial* matl,
                                                const PatchSet* patches) const;
 
-    virtual void initializeSDMData(const Patch* patch, const MPMMaterial* matl,
-                                   DataWarehouse* new_dw);
+    virtual void initializeTimeStep(const Patch* patch, const MPMMaterial* matl,
+                                    DataWarehouse* new_dw);
 
     virtual void addParticleState(std::vector<const VarLabel*>& from,
                                   std::vector<const VarLabel*>& to);
