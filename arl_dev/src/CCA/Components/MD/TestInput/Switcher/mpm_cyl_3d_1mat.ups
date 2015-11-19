@@ -7,7 +7,7 @@
         <title>Compaction of cylinders</title>
     </Meta>
 
-    <SimulationComponent type ="mpm" /> 
+    <SimulationComponent type ="amrmpm" /> 
         <Time>
             <maxTime>1.e-6</maxTime>
             <initTime>0.0</initTime>
@@ -45,12 +45,11 @@
         <DoImplicitHeatConduction>true</DoImplicitHeatConduction>
     </MPM>
 
-    <MultiScale>
-        <MPM>
-            <min_grid_level>0</min_grid_level>
-            <max_grid_level>0</max_grid_level>
-        </MPM>
-    </MultiScale>
+    <doAMR>false</doAMR>
+    <AMR>
+      <useLockStep>true</useLockStep>
+      <MPM> </MPM>
+    </AMR>
 
     <PhysicalConstants>
         <gravity>[0,0,0]</gravity>
