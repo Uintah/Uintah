@@ -96,7 +96,7 @@ class MPIScheduler : public SchedulerCommon {
 
     virtual void execute( int tgnum = 0, int iteration = 0 );
 
-    virtual SchedulerP createSubScheduler();
+    virtual SchedulerP createSubScheduler(const SimulationStateP state);
 
     virtual void processMPIRecvs( int how_much );
 

@@ -107,7 +107,9 @@ class SchedulerCommon : public Scheduler, public UintahParallelComponent {
 
     virtual void mapDataWarehouse( Task::WhichDW, int dwTag );
 
-    void compile(const LevelSet* = NULL);
+    virtual void compile(const LevelSet* = NULL);
+
+    virtual SchedulerP createSubScheduler(const SimulationStateP state = NULL);
 
     /// For more complicated models 
     virtual void addTaskGraph(tgType type);

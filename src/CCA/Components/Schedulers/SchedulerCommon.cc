@@ -1265,6 +1265,19 @@ SchedulerCommon::compile(const LevelSet* levelSet)
 
 //______________________________________________________________________
 //
+SchedulerP
+SchedulerCommon::createSubScheduler(const SimulationStateP state)
+{
+  static bool warned = false;
+  if( !warned ) {
+    proc0cout << "Warning: createSubScheduler(const SimulationState* state) not implemented for SchedulerCommon." << std::endl;
+    warned = true;
+  }
+  return NULL;
+}
+
+//______________________________________________________________________
+//
 bool
 SchedulerCommon::isOldDW( int idx ) const
 {

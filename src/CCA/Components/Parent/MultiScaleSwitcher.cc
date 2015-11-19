@@ -963,14 +963,18 @@ MultiScaleSwitcher::needRecompile(       double   time,
     LoadBalancer* lb = sched->getLoadBalancer();
     lb->possiblyDynamicallyReallocate(running_level_set, LoadBalancer::init);
 
-    // create subscheduler for MD component
-    d_subScheduler = sched->createSubScheduler();
-    d_subScheduler->initialize(1,1);
+    // create subscheduler for MD component(s)
+    d_subScheduler = sched->createSubScheduler(subcomp_sharedstate);
+
+    d_subScheduler->initialize(1, 1);
     d_subScheduler->clearMappings();
     d_subScheduler->mapDataWarehouse(Task::ParentOldDW, 0);
     d_subScheduler->mapDataWarehouse(Task::ParentNewDW, 1);
     d_subScheduler->mapDataWarehouse(Task::OldDW, 0);
     d_subScheduler->mapDataWarehouse(Task::NewDW, 1);
+
+    d_subScheduler->advanceDataWarehouse(grid);
+//    d_subScheduler->get_dw(0)->setScrubbing(DataWarehouse::ScrubNone);
 
     // Initialize the per-levelset data
     const LevelSubset* level_subset = grid->getLevelSubset(d_componentIndex);
@@ -981,20 +985,19 @@ MultiScaleSwitcher::needRecompile(       double   time,
       d_sim->scheduleComputeStableTimestep(level_handle, d_subScheduler);
     }
 
-    d_subScheduler->advanceDataWarehouse(grid);
-
+    // compile and execute the initialization task-graph
     d_subScheduler->compile(&running_level_set);
-
-//    d_subScheduler->get_dw(0)->setScrubbing(DataWarehouse::ScrubNone);
     d_subScheduler->execute();
 
-    d_subScheduler->initialize(1,1);
+    d_subScheduler->initialize(1, 1);
     d_subScheduler->clearMappings();
     d_subScheduler->mapDataWarehouse(Task::ParentOldDW, 0);
     d_subScheduler->mapDataWarehouse(Task::ParentNewDW, 1);
     d_subScheduler->mapDataWarehouse(Task::OldDW, 0);
     d_subScheduler->mapDataWarehouse(Task::NewDW, 1);
 
+    d_subScheduler->advanceDataWarehouse(grid);
+//    d_subScheduler->get_dw(0)->setScrubbing(DataWarehouse::ScrubNone);
 
     for (int i =  0; i < num_levels; ++i) {
       LevelP level_handle = grid->getLevel(level_subset->get(i)->getIndex());
@@ -1002,10 +1005,8 @@ MultiScaleSwitcher::needRecompile(       double   time,
       d_sim->scheduleComputeStableTimestep(level_handle, d_subScheduler);
     }
 
+    // compile and execute the timestep task-graph
     d_subScheduler->compile(&running_level_set);
-    d_subScheduler->advanceDataWarehouse(grid);
-//    d_subScheduler->get_dw(0)->setScrubbing(DataWarehouse::ScrubNone);
-
     d_subScheduler->execute();
 
     retval = false;
@@ -1015,6 +1016,9 @@ MultiScaleSwitcher::needRecompile(       double   time,
     d_componentIndex %= d_numComponents;
 
     d_sharedState->d_switchState = false;
+
+    d_subScheduler.get_rep()->removeReference();
+
   } 
   else {
     d_sharedState->d_switchState = false;
