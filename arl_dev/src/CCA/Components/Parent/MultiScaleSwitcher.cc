@@ -881,8 +881,8 @@ MultiScaleSwitcher::needRecompile(       double   time,
 
   bool retval = false;
   d_restarting = true;
-  d_doSwitching.resize(grid->numLevels());
 
+  d_doSwitching.resize(grid->numLevels());
   for (int i = 0; i < grid->numLevels(); i++) {
     d_doSwitching[i] = (d_switchState == switching);
   }
@@ -892,6 +892,7 @@ MultiScaleSwitcher::needRecompile(       double   time,
     d_switchState = idle;
     d_computedVars.clear();
     d_componentIndex++;
+    d_componentIndex %= d_numComponents;
 
     // For multi-scale, we don't want to clear materials, need to keep them around
 //    d_sharedState->clearMaterials();
@@ -913,30 +914,32 @@ MultiScaleSwitcher::needRecompile(       double   time,
     comp->attachPort("output",    dataArchiver);
     comp->attachPort("modelmaker",modelmaker);
 
-    // clean up old models
-    if (modelmaker) {
-      modelmaker->clearModels();
-    }
+//    // clean up old models
+//    if (modelmaker) {
+//      modelmaker->clearModels();
+//    }
 
     proc0cout << "\n__________________________________ Switching to component (" << d_componentIndex << ") \n";
     proc0cout << "  Reading input file: " << d_in_file[d_componentIndex] << "\n";
 
     // read in the problemSpec on next subcomponent
-    ProblemSpecP restart_prob_spec = 0;
+    ProblemSpecP prob_spec = 0;
     ProblemSpecP subCompUps = ProblemSpecReader().readInputFile(d_in_file[d_componentIndex]);
+    SimulationStateP subcomp_sharedstate = scinew SimulationState(subCompUps);
 
-    // read in <Time> block from ups file
-    d_sharedState->d_simTime->problemSetup(subCompUps);
+    // TODO APH JBH - We'll probably want to create a new SimulationTime for MD instances and read in from teh md input file
+    // For now - assign original SimulationTime object to new shared state
+    subcomp_sharedstate->d_simTime = d_sharedState->d_simTime;
 
     // execute the subcomponent ProblemSetup
-    d_sim->problemSetup(subCompUps, restart_prob_spec, const_cast<GridP&>(grid), d_sharedState);
+    d_sim->problemSetup(subCompUps, prob_spec, const_cast<GridP&>(grid), subcomp_sharedstate);
 
     // read in <DataArchiver> section
-    dataArchiver->problemSetup(subCompUps, d_sharedState.get_rep());
+    dataArchiver->problemSetup(subCompUps, subcomp_sharedstate.get_rep());
 
-    // we need this to get the "ICE surrounding matl"
-    d_sim->restartInitialize();
-    d_sharedState->finalizeMaterials();
+//    // we need this to get the "ICE surrounding matl"
+//    d_sim->restartInitialize();
+    subcomp_sharedstate->finalizeMaterials();
 
     // read in the grid adaptivity flag from the ups file
     Regridder* regridder = dynamic_cast<Regridder*>(getPort("regridder"));
@@ -1002,14 +1005,21 @@ MultiScaleSwitcher::needRecompile(       double   time,
     d_subScheduler->compile(&running_level_set);
     d_subScheduler->advanceDataWarehouse(grid);
 //    d_subScheduler->get_dw(0)->setScrubbing(DataWarehouse::ScrubNone);
+
     d_subScheduler->execute();
 
-    retval = true;
+    retval = false;
     proc0cout << "\n-----------------------------------" << std::endl;
+
+    d_componentIndex++;
+    d_componentIndex %= d_numComponents;
+
+    d_sharedState->d_switchState = false;
   } 
   else {
     d_sharedState->d_switchState = false;
   }
+
   retval |= d_sim->needRecompile(time, delt, grid);
 
   return retval;
