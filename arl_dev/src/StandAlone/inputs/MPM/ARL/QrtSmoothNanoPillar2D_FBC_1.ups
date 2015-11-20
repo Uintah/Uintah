@@ -207,7 +207,7 @@
            <cylinder label = "side">
              <bottom>          [0.0,0.0,0.0]     </bottom>
              <top>             [0.0,0.0,.02]     </top>
-             <radius>          0.265              </radius>
+             <radius>          0.25              </radius>
            </cylinder>
          </geom_object>
          <load_curve>
