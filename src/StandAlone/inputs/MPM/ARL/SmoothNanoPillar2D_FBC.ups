@@ -75,7 +75,7 @@
      <maxTime>2e8</maxTime>
      <initTime>0.0</initTime>
      <delt_min>1.0e-16</delt_min>
-     <delt_max>1.0e4</delt_max>
+     <delt_max>1.0e8</delt_max>
 <!--
      <max_Timesteps>100</max_Timesteps>
 -->
@@ -122,7 +122,7 @@
    <MaterialProperties>
      <MPM>
        <material name="T91">
-         <density>2.33e16</density>
+         <density>2.33e24</density>
          <melt_temp> 2000.0 </melt_temp>
          <constitutive_model type="rf_elastic_plastic"> 
            <bulk_modulus>            48e6    </bulk_modulus>
@@ -163,7 +163,7 @@
          <thermal_conductivity>0.0</thermal_conductivity>
          <specific_heat>5</specific_heat>
          <diffusion_model type = "non_linear1">
-           <diffusivity>  1.0e-6   </diffusivity>
+           <diffusivity>  1.0e-10   </diffusivity>
            <max_concentration> 1.0 </max_concentration>
            <tuning1> 1.95 </tuning1>
            <tuning2> 1000.0 </tuning2>
