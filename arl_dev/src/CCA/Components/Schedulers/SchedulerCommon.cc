@@ -859,19 +859,24 @@ SchedulerCommon::initialize( int numOldDW /* = 1 */,
   // doesn't really do anything except initialize/clear the taskgraph
   //   if the default parameter values are used
   int numDW = numOldDW + numNewDW;
-  int oldnum = (int)dws.size();
+  int oldnum = static_cast<int> (dws.size());
 
-  // in AMR cases we will often need to move from many new DWs to one.  In those cases, move the last NewDW to be the next new one.
+  // in AMR cases we will often need to move from many new DWs to one.
+  // In those cases, move the last NewDW to be the next new one.
   if (oldnum - numOldDWs > 1) {
     dws[numDW - 1] = dws[oldnum - 1];
   }
 
-  // Clear out the data warehouse so that memory will be freed
+  // Clear out any DWs mapped past the new total number
+  // FIXME TODO This looks like a memory leak!
   for (int i = numDW; i < oldnum; i++) {
     dws[i] = 0;
   }
 
   dws.resize(numDW);
+
+  // Zero out address for any new DWs just added
+  // FIXME TODO This looks like a memory leak!
   for (; oldnum < numDW; oldnum++) {
     dws[oldnum] = 0;
   }
