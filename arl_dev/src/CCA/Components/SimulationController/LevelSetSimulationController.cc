@@ -200,10 +200,12 @@ LevelSetSimulationController::run()
 
   // Create grid:
   GridP currentGrid = gridSetup();
-  d_scheduler->initialize( 3, 1 );
+  d_scheduler->initialize(1,1);
   d_scheduler->advanceDataWarehouse( currentGrid, true );
   d_scheduler->setInitTimestep( true );
   
+
+
   bool first = true;
   if (d_restarting) {
     d_scheduler->setRestartInitTimestep(first);
