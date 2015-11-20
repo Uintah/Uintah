@@ -400,7 +400,7 @@ SmoothCylGeomPiece::createCylPoints()
 	numAngular = (int) ((d_angle - d_arcStart)*r/radInc);
 	numAngular = max(numAngular,1);
       }
-      double angularInc = (d_angle - d_arcStart)/(double) numAngular;
+      double angularInc = (d_angle)/(double) numAngular;
       // area = r*dr*dtheta
       double area = (0.5*(nextRadius+prevRadius))*radInc*angularInc;
 
@@ -409,7 +409,7 @@ SmoothCylGeomPiece::createCylPoints()
       double redNumAng=1.;
       while(tooMany){
         numAngular = (int) d_numAngular*redNumAng;
-        angularInc = (d_angle - d_arcStart)/(double) numAngular;
+        angularInc = (d_angle)/(double) numAngular;
 
         // area = r*dr*dtheta
         area = (0.5*(nextRadius+prevRadius))*radInc*angularInc;
@@ -433,8 +433,8 @@ SmoothCylGeomPiece::createCylPoints()
 	double x = r*cosphi;
 	double y = r*sinphi;
 	double z = 0;
-	Matrix3 size((d_angle - d_arcStart)*y/(numAngular*d_DX.x()),  thickness*x/(d_numRadial*r*d_DX.y()), 0.0,
-		     -(d_angle - d_arcStart)*x/(numAngular*d_DX.x()), thickness*y/(d_numRadial*r*d_DX.y()), 0.0,
+	Matrix3 size((d_angle)*y/(numAngular*d_DX.x()),  thickness*x/(d_numRadial*r*d_DX.y()), 0.0,
+		     -(d_angle)*x/(numAngular*d_DX.x()), thickness*y/(d_numRadial*r*d_DX.y()), 0.0,
 		     0.0                                            , 0.0                                   , length/(d_numAxial*d_DX.z()));
 
 	// Rotate points to correct orientation and
