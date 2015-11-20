@@ -510,16 +510,6 @@ main( int argc, char *argv[], char *env[] )
 
   try {
 
-    // If VisIt is included then the user may be attching into Visit's
-    // libsim for in-situ analysis and visualization. This call pass
-    // optional arguments that VisIt will interpert.
-#ifdef HAVE_VISIT
-    if( do_VisIt )
-    {
-      visit_LibSimArguments( argc, argv );
-    }
-#endif
-
 #ifndef HAVE_MPICH_OLD
     // If regular MPI, then initialize after parsing the args...
     Uintah::Parallel::initializeManager( argc, argv );
@@ -621,6 +611,62 @@ main( int argc, char *argv[], char *env[] )
       Thread::exitAll( 0 );
     }
 
+    // If VisIt is included then the user may be attching into Visit's
+    // libsim for in-situ analysis and visualization. This call pass
+    // optional arguments that VisIt will interpert.
+#ifdef HAVE_VISIT
+    if( do_VisIt )
+    {
+
+      bool have_comment = false;
+
+      for (int i = 1; i < argc; i++)
+      {
+	string arg = argv[i];
+
+	if (arg == "-visit_comment" ) {
+	  have_comment = true;
+	  break;
+	}
+      }
+
+      // No user defined comment so use the ups sim meta data title.
+      if( !have_comment )
+      {
+	// Find the meta data and the title. 
+	std::string title;
+	
+	if( ups->findBlock( "Meta" ) )
+	  ups->findBlock( "Meta" )->require( "title", title );
+	
+	if( title.size() )
+	{
+	  // Have the title so pass that into the libsim 
+	  char **new_argv = (char **) malloc((argc + 2) * sizeof(*new_argv));
+	  
+	  if (new_argv != NULL)
+	  {
+	    memmove(new_argv, argv, sizeof(*new_argv) * argc);
+	    
+	    argv = new_argv;
+	    
+	    argv[argc] =
+	      (char*) malloc( (strlen("-visit_comment")+1) * sizeof(char) );
+	    strcpy( argv[argc], "-visit_comment" );
+	    ++argc;
+	    
+	    argv[argc] =
+	      (char*) malloc( (title.size()+1) * sizeof(char) );
+	    strcpy( argv[argc], title.c_str() );
+	    ++argc;
+	  }
+	}
+      }
+
+      visit_LibSimArguments( argc, argv );      
+    }
+#endif
+
     //if the AMR block is defined default to turning amr on
     if (!do_AMR) {
       do_AMR = (bool) ups->findBlock("AMR");
@@ -635,7 +681,6 @@ main( int argc, char *argv[], char *env[] )
       do_AMR = false;
     }
     
-
     const ProcessorGroup* world = Uintah::Parallel::getRootProcessorGroup();
 
     SimulationController* ctl = scinew AMRSimulationController( world, do_AMR, ups );
