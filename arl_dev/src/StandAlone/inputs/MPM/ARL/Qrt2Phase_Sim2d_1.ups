@@ -222,7 +222,7 @@
          <lower>        [0.0,  0.0, 0.0]   </lower> 
          <upper>        [0.3, 0.3, 0.02]  </upper>
          <resolution>   [15, 15, 1]        </resolution>
-         <patches>      [1,1,1]            </patches>
+         <patches>      [3,3,1]            </patches>
          <extraCells>   [0,0,0]            </extraCells>
        </Box>
      </Level>
@@ -234,7 +234,7 @@
         <BCType id = "all" label = "Symmetric" var = "symmetry"> </BCType>
       </Face>
       <Face side = "y-">
-        <BCType id = "all" label = "Symmetric" var = "symmetry"> </BCType> </BCType>
+        <BCType id = "all" label = "Symmetric" var = "symmetry"> </BCType>
       </Face>                  
       <Face side = "y+">
         <BCType id = "all" label = "Symmetric" var = "symmetry"> </BCType>
