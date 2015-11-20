@@ -49,8 +49,6 @@
   *                 Issues 2–3, 9 March 2009, Pages 222-225
   *                 The value for diffusivity is 10e-16 m^2/s
   *
-  *                 For this simulation the Diffusivity is 10e-12m^2/s
-  *
   *  Volume Expansion Coefficient -> One paper uses .6 and the other .56
   *
 
@@ -65,7 +63,6 @@
   *  pressure -> 1 GPa = 1e6 picogram / (microsecond^2 * micrometer)
   *  diffusivity -> 1 m^2/s = 1e6 micrometer^2/microsecond
 -->
-
 <Uintah_specification>
 
   <Meta>
@@ -86,7 +83,7 @@
   </Time>
 
   <DataArchiver>
-    <filebase>2Phase_Sim1d_1.uda</filebase>
+    <filebase>2Phase_Sim1d.uda</filebase>
 <!--
     <outputTimestepInterval>10</outputTimestepInterval>
 -->
