@@ -49,7 +49,7 @@
   *                 Issues 2–3, 9 March 2009, Pages 222-225
   *                 The value for diffusivity is 10e-16 m^2/s
   *
-  *                 For this simulation the Diffusivity is 10e-12m^2/s
+  *                 For this simulation the Diffusivity is 10e-14m^2/s
   *
   *  Volume Expansion Coefficient -> One paper uses .6 and the other .56
   *
@@ -181,7 +181,7 @@
          <specific_heat>5</specific_heat>
 
          <diffusion_model type = "non_linear1">
-           <diffusivity>  1.0e-6   </diffusivity>
+           <diffusivity>  1.0e-8   </diffusivity>
            <max_concentration> 1.0 </max_concentration>
            <tuning1> 1.95 </tuning1>
            <tuning2> 1000.0 </tuning2>

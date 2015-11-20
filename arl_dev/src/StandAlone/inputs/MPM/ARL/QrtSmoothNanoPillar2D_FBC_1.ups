@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="iso-8859-1"?>
+<?xml version='1.0' encoding='ISO-8859-1' ?>
 <!--
   This input script based off the experimental and numerical results
   found in the following papers,
@@ -49,8 +49,6 @@
   *                 Issues 2–3, 9 March 2009, Pages 222-225
   *                 The value for diffusivity is 10e-16 m^2/s
   *
-  *                 For this simulation the Diffusivity is 10e-12m^2/s
-  *
   *  Volume Expansion Coefficient -> One paper uses .6 and the other .56
   *
 
@@ -65,81 +63,69 @@
   *  pressure -> 1 GPa = 1e6 picogram / (microsecond^2 * micrometer)
   *  diffusivity -> 1 m^2/s = 1e6 micrometer^2/microsecond
 -->
-
 <Uintah_specification>
 
-  <Meta>
-    <title>2 Phase Simulation 1D</title>
-  </Meta>
+   <Meta>
+       <title>smooth cylinder representation of nano-pillar</title>
+   </Meta>
 
-  <SimulationComponent type="amrmpm" />
+   <SimulationComponent type="amrmpm" />
 
-  <Time>
-     <maxTime>1.0e9</maxTime>
+   <Time>
+     <maxTime>2e8</maxTime>
      <initTime>0.0</initTime>
-     <delt_min>1.0e-8</delt_min>
-     <delt_max>1.0e5</delt_max>
+     <delt_min>1.0e-16</delt_min>
+     <delt_max>1.0e4</delt_max>
 <!--
      <max_Timesteps>100</max_Timesteps>
 -->
      <timestep_multiplier>0.5</timestep_multiplier>
-  </Time>
+   </Time>
 
-  <DataArchiver>
-    <filebase>2Phase_Sim1d_1.uda</filebase>
-<!--
-    <outputTimestepInterval>10</outputTimestepInterval>
--->
-    <outputInterval>1.0e6</outputInterval>
-    <save label="p.x"/>
-    <save label="p.particleID"/>
-    <save label="p.velocity"/>
-    <save label="p.mass"/>
-    <save label="p.flux"/>
-    <save label="p.volume"/>
-    <save label="p.scalefactor"/>
-    <save label="p.concentration"/>
-    <save label="p.stress"/>
-    <save label="p.loadCurveID"/>
-    <save label="p.diffusivity"/>
-    <save label="p.displacement"/>
-    <!--
-    -->
-    <save label="g.mass"/>
-    <save label="g.acceleration"/>
-    <save label="g.concentration"/>
-    <save label="g.concentrationRate"/>
-    <save label="g.concentrationStar"/>
-    <save label="g.externalscalarflux"/>
-    <save label="p.externalscalarflux"/>
-    <save label="g.velocity"/>
-    <checkpoint cycle = "2" interval = "1.0e5"/>
-<!--
--->
-  </DataArchiver>
+   <DataArchiver>
+      <filebase>QrtSmoothNanoPillar2D_FBC_1.uda</filebase>
+      <!--
+      <outputTimestepInterval>100</outputTimestepInterval>
+      -->
+      <outputInterval>2.e6</outputInterval>
+      <save label = "p.x"/>
+      <save label = "p.mass"/>
+      <save label = "p.area"/>
+      <save label = "p.volume"/>
+      <save label = "p.temperature"/>
+      <save label = "p.stress"/>
+      <save label = "p.concentration"/>
+      <save label = "p.displacement"/>
+      <save label = "p.scalefactor"/>
+      <save label = "p.deformationMeasure"/>
+      <save label = "p.velocity"/>
+      <save label = "p.loadCurveID"/>
+      <save label = "p.diffusivity"/>
+      <save label = "p.externalscalarflux"/>
+      <save label = "g.mass"/>
+      <checkpoint cycle = "2" interval = "1.0e6"/>
+   </DataArchiver>
 
-  <MPM>
-      <time_integrator>explicit</time_integrator>
-      <interpolator>linear</interpolator>
-      <use_load_curves> true </use_load_curves>
-			<DoPressureStabilization> true </DoPressureStabilization>
-    <!--
-    -->
-      <do_scalar_diffusion>true</do_scalar_diffusion>
-  </MPM>
-  <AMR>
+   <MPM>
+     <time_integrator>explicit</time_integrator>
+     <interpolator>cpdi</interpolator>
+     <use_load_curves> true </use_load_curves>
+     <do_scalar_diffusion>true</do_scalar_diffusion>
+     <DoPressureStabilization> true </DoPressureStabilization>
+   </MPM>
+   <AMR>
       <useLockStep> true </useLockStep>
       <MPM> </MPM>
-  </AMR>
+   </AMR>
 
-  <PhysicalConstants>
-    <gravity>[0.0, 0.0, 0.0]</gravity>
-  </PhysicalConstants>
+   <PhysicalConstants>
+     <gravity>[0.0, 0.0, 0.0]</gravity>
+   </PhysicalConstants>
 
-  <MaterialProperties>
+   <MaterialProperties>
      <MPM>
-    <material name="pillar1">
-         <density>   2.33e16</density>
+       <material name="T91">
+         <density>2.33e16</density>
          <melt_temp> 2000.0 </melt_temp>
          <constitutive_model type="rf_elastic_plastic"> 
            <bulk_modulus>            48e6    </bulk_modulus>
@@ -179,7 +165,6 @@
          </constitutive_model>
          <thermal_conductivity>0.0</thermal_conductivity>
          <specific_heat>5</specific_heat>
-
          <diffusion_model type = "non_linear1">
            <diffusivity>  1.0e-6   </diffusivity>
            <max_concentration> 1.0 </max_concentration>
@@ -187,13 +172,21 @@
            <tuning2> 1000.0 </tuning2>
          </diffusion_model>
          <geom_object>
-           <box label = "pillar1">
-             <min>[0.0,  0.0, 0.0]</min>
-             <max>[0.05, 0.4, 0.05]</max>
-           </box>
-           <res>[1,2,1]</res>
-           <velocity>[0.0,0.0,0.0]</velocity>
-           <temperature>0</temperature>
+           <smoothcyl label = "cylinder">
+             <discretization_scheme> pie_slices </discretization_scheme>
+             <bottom>[0.0,0.0,0.0] </bottom>
+             <top>   [0.0,0.0,0.02]</top>
+             <outer_radius> 0.25   </outer_radius>
+             <inner_radius> 0.0    </inner_radius>
+             <num_radial> 60 </num_radial>
+             <num_axial> 1 </num_axial>
+             <num_angular> 200 </num_angular>
+             <arc_start_angle> 0 </arc_start_angle>
+             <arc_angle> 90 </arc_angle>
+           </smoothcyl>
+           <res>                 [1,1,1]         </res>
+           <velocity>            [0.0,0.0,0.0]   </velocity>
+           <temperature>         0             </temperature>
            <concentration> 0 </concentration>
          </geom_object>
        </material>
@@ -211,10 +204,11 @@
      <MPM>
        <scalar_flux>
          <geom_object>
-           <box label = "y+">
-             <min>[0.0,  0.399, 0.00]</min>
-             <max>[0.05, 0.400, 0.05]</max>
-           </box>
+           <cylinder label = "side">
+             <bottom>          [0.0,0.0,0.0]     </bottom>
+             <top>             [0.0,0.0,.02]     </top>
+             <radius>          0.265              </radius>
+           </cylinder>
          </geom_object>
          <load_curve>
            <id>1</id>
@@ -230,39 +224,36 @@
        </scalar_flux>
      </MPM>
    </PhysicalBC>
-<!--
--->
 
-  <Grid>
-    <BoundaryConditions>
+   <Grid>
+     <Level>
+       <Box label = "1">
+         <lower>        [0.0, 0.0, 0.0]      </lower>
+         <upper>        [0.3, 0.3, 0.02]     </upper>
+         <resolution>   [15, 15, 1]        </resolution>
+         <patches>      [2,2,1]            </patches>
+         <extraCells>   [1,1,1]            </extraCells>
+       </Box>
+     </Level>
+     <BoundaryConditions>
       <Face side = "x-">
-        <BCType id = "all" label = "Symmetric"     var = "symmetry"> </BCType>
+        <BCType id = "all" label = "Symmetric" var = "symmetry"> </BCType>
       </Face>
       <Face side = "x+">
-        <BCType id = "all" label = "Symmetric"     var = "symmetry"> </BCType>
+        <BCType id = "all" label = "Symmetric" var = "symmetry"> </BCType>
       </Face>
       <Face side = "y-">
-        <BCType id = "all" label = "Symmetric"     var = "symmetry"> </BCType>
+        <BCType id = "all" label = "Symmetric" var = "symmetry"> </BCType>
       </Face>                  
       <Face side = "y+">
-        <BCType id = "all" label = "Symmetric"     var = "symmetry"> </BCType>
-      </Face>                  
+        <BCType id = "all" label = "Symmetric" var = "symmetry"> </BCType>
+      </Face>
       <Face side = "z-">
-        <BCType id = "all" label = "Symmetric"     var = "symmetry"> </BCType>
+        <BCType id = "all" label = "Symmetric" var = "symmetry"> </BCType>
       </Face>                  
       <Face side = "z+">
-        <BCType id = "all" label = "Symmetric"     var = "symmetry"> </BCType>
+        <BCType id = "all" label = "Symmetric" var = "symmetry"> </BCType>
       </Face>
-    </BoundaryConditions>
-    <Level>
-      <Box label="1">
-        <lower>[0.0,  0.0, 0.00]    </lower> 
-        <upper>[0.05, 0.5, 0.05]</upper>
-        <resolution>[1, 20, 1]        </resolution>
-        <extraCells>[0, 0, 0]          </extraCells>
-        <patches>[1,1,1]               </patches>
-      </Box>
-    </Level>
-  </Grid>
-
+     </BoundaryConditions>
+   </Grid>
 </Uintah_specification>
