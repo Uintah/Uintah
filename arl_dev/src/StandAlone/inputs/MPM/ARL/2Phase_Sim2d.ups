@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="iso-8859-1"?>
+<?xml version='1.0' encoding='ISO-8859-1' ?>
 <!--
   This input script based off the experimental and numerical results
   found in the following papers,
@@ -47,98 +47,89 @@
   *                 I. Lieberwirth, Determination of the diffusion coefficient
   *                 of lithium ions in nano-Si, Solid State Ionics, Volume 180,
   *                 Issues 2–3, 9 March 2009, Pages 222-225
-  *                 The value for diffusivity is 10e-16 m^2/2
+  *                 The value for diffusivity is 10e-16 m^2/s
   *
   *  Volume Expansion Coefficient -> One paper uses .6 and the other .56
   *
 
   Units used for this simulation,
   *  density  -> picogram/micrometer^3
-  *  pressure -> picogram / (nanosecond^2 * micrometer)
+  *  pressure -> picogram / (microsecond^2 * micrometer)
   *  temperature -> K, kelvin
-  *  diffusivity -> micrometer^2 / nanosecond
+  *  diffusivity -> micrometer^2 / microsecond
 
   Conversions
   *  density  -> 1 kg/m^3 = 1e-3 picogram/micrometer^3
-  *  pressure -> 1 GPa = 1 picogram / (nanosecond^2 * micrometer)
-  *  diffusivity -> 1 m^2/s = 1e3 micrometer^2/nanosecond
+  *  pressure -> 1 GPa = 1e6 picogram / (microsecond^2 * micrometer)
+  *  diffusivity -> 1 m^2/s = 1e6 micrometer^2/microsecond
 -->
-
 <Uintah_specification>
 
-  <Meta>
-    <title>2 Phase Simulation 2D</title>
-  </Meta>
+   <Meta>
+       <title>2 Phase Simulation 2D</title>
+   </Meta>
 
-  <SimulationComponent type="amrmpm" />
+   <SimulationComponent type="amrmpm" />
 
-  <Time>
-     <maxTime>1e3</maxTime>
+   <Time>
+     <maxTime>2e8</maxTime>
      <initTime>0.0</initTime>
-     <delt_min>1.0e-5</delt_min>
-     <delt_max>1.0e-5</delt_max>
-     <max_Timesteps>30000</max_Timesteps>
+     <delt_min>1.0e-16</delt_min>
+     <delt_max>1.0e4</delt_max>
 <!--
+     <max_Timesteps>100</max_Timesteps>
 -->
      <timestep_multiplier>0.4</timestep_multiplier>
-  </Time>
+   </Time>
 
-  <DataArchiver>
-    <filebase>2Phase_Sim2d.uda</filebase>
-    <outputTimestepInterval>100</outputTimestepInterval>
-<!--
-    <outputInterval>5.e1</outputInterval>
--->
-    <save label="p.x"/>
-    <save label="p.particleID"/>
-    <save label="p.velocity"/>
-    <save label="p.mass"/>
-    <save label="p.flux"/>
-    <save label="p.volume"/>
-    <save label="p.scalefactor"/>
-    <save label="p.concentration"/>
-    <save label="p.stress"/>
-    <save label="p.loadCurveID"/>
-    <save label="p.diffusivity"/>
-    <!--
-    -->
-    <save label="g.mass"/>
-    <save label="g.acceleration"/>
-    <save label="g.concentration"/>
-    <save label="g.concentrationRate"/>
-    <save label="g.concentrationStar"/>
-    <save label="g.externalscalarflux"/>
-    <save label="p.externalscalarflux"/>
-    <save label="g.velocity"/>
+   <DataArchiver>
+      <filebase>2Phase_Sim2d_1.uda</filebase>
+      <!--
+      <outputTimestepInterval>100</outputTimestepInterval>
+      -->
+      <outputInterval>2.e6</outputInterval>
+      <save label = "p.x"/>
+      <save label = "p.mass"/>
+      <save label = "p.area"/>
+      <save label = "p.volume"/>
+      <save label = "p.temperature"/>
+      <save label = "p.stress"/>
+      <save label = "p.concentration"/>
+      <save label = "p.displacement"/>
+      <save label = "p.scalefactor"/>
+      <save label = "p.deformationMeasure"/>
+      <save label = "p.velocity"/>
+      <save label = "p.loadCurveID"/>
+      <save label = "p.diffusivity"/>
+      <save label = "p.externalscalarflux"/>
+      <save label = "g.mass"/>
+      <checkpoint cycle = "2" interval = "1.0e6"/>
+   </DataArchiver>
 
-    <checkpoint cycle = "2" interval = "5.e-6"/>
-  </DataArchiver>
-
-  <MPM>
-      <time_integrator>explicit</time_integrator>
-      <interpolator>linear</interpolator>
-      <use_load_curves> true </use_load_curves>
-    <!--
-    -->
-      <do_scalar_diffusion>true</do_scalar_diffusion>
-  </MPM>
-  <AMR>
+   <MPM>
+     <time_integrator>explicit</time_integrator>
+     <interpolator>linear</interpolator>
+     <use_load_curves> true </use_load_curves>
+     <do_scalar_diffusion>true</do_scalar_diffusion>
+     <DoPressureStabilization> true </DoPressureStabilization>
+   </MPM>
+   <AMR>
       <useLockStep> true </useLockStep>
       <MPM> </MPM>
-  </AMR>
+   </AMR>
 
-  <PhysicalConstants>
-    <gravity>[0.0, 0.0, 0.0]</gravity>
-  </PhysicalConstants>
+   <PhysicalConstants>
+     <gravity>[0.0, 0.0, 0.0]</gravity>
+   </PhysicalConstants>
 
-  <MaterialProperties>
+   <MaterialProperties>
      <MPM>
-    <material name="pillar1">
-         <density>   2.330</density>
+       <material name="pillar1">
+         <density>2.33e16</density>
          <melt_temp> 2000.0 </melt_temp>
          <constitutive_model type="rf_elastic_plastic"> 
-           <bulk_modulus>            48    </bulk_modulus>
-           <shear_modulus>           33    </shear_modulus>
+           <bulk_modulus>            48e6    </bulk_modulus>
+           <shear_modulus>           33e6    </shear_modulus>
            <volume_expansion_coeff>  0.56     </volume_expansion_coeff>
            <!-- Temperature is not currently used in this model, -->
            <!-- Keep initial material Temperature set to 298.0 -->
@@ -162,11 +153,11 @@
            </equation_of_state>
 
            <flow_model type = "johnson_cook">
-             <A> 2.4 </A>
-             <B> 0.0    </B>
-             <C> 0.0    </C>
-             <n> 0.0    </n>
-             <m> 2.0    </m>
+             <A> 2.4e6 </A>
+             <B> 0.0   </B>
+             <C> 0.0   </C>
+             <n> 0.0   </n>
+             <m> 2.0   </m>
            </flow_model>
 
            <yield_condition type = "vonMises">
@@ -174,17 +165,16 @@
          </constitutive_model>
          <thermal_conductivity>0.0</thermal_conductivity>
          <specific_heat>5</specific_heat>
-
          <diffusion_model type = "non_linear1">
-           <diffusivity>  1.0e-9   </diffusivity>
+           <diffusivity>  1.0e-6   </diffusivity>
            <max_concentration> 1.0 </max_concentration>
            <tuning1> 1.95 </tuning1>
            <tuning2> 1000.0 </tuning2>
          </diffusion_model>
          <geom_object>
            <box label = "pillar1">
-             <min>[0.0,    0.0,     0.0]</min>
-             <max>[0.5e-2, 0.25e-2, 0.05e-2]</max>
+             <min>[0.0,  0.0,  0.0]</min>
+             <max>[0.25, 0.25, 0.05]</max>
            </box>
            <res>[2,2,1]</res>
            <velocity>[0.0,0.0,0.0]</velocity>
@@ -207,62 +197,73 @@
        <scalar_flux>
          <geom_object>
            <box label = "y+">
-             <min>[0.0,    0.249e-2, 0.0]</min>
-             <max>[0.5e-2, 0.250e-2, 0.05e-2]</max>
+             <min>[0.0, 0.249, 0.0]</min>
+             <max>[0.25, 0.250, 0.05]</max>
            </box>
          </geom_object>
          <load_curve>
            <id>1</id>
            <time_point>
              <time> 0 </time>
-             <load> 1.e-6 </load>
+             <load> 1.e-5 </load>
            </time_point>
            <time_point>
              <time> 1.e12 </time>
-             <load> 1.e-6 </load>
+             <load> 1.e-5 </load>
+           </time_point>
+         </load_curve>
+       </scalar_flux>
+       <scalar_flux>
+         <geom_object>
+           <box label = "x+">
+             <min>[0.249, 0.00, 0.0]</min>
+             <max>[0.25,  0.25, 0.05]</max>
+           </box>
+         </geom_object>
+         <load_curve>
+           <id>2</id>
+           <time_point>
+             <time> 0 </time>
+             <load> 1.e-5 </load>
+           </time_point>
+           <time_point>
+             <time> 1.e12 </time>
+             <load> 1.e-5 </load>
            </time_point>
          </load_curve>
        </scalar_flux>
      </MPM>
    </PhysicalBC>
-<!--
--->
 
-  <Grid>
-    <BoundaryConditions>
+   <Grid>
+     <Level>
+       <Box label = "1">
+         <lower>        [0.0,  0.0, 0.0]   </lower> 
+         <upper>        [0.3, 0.3, 0.02]  </upper>
+         <resolution>   [15, 15, 1]        </resolution>
+         <patches>      [3,3,1]            </patches>
+         <extraCells>   [0,0,0]            </extraCells>
+       </Box>
+     </Level>
+     <BoundaryConditions>
       <Face side = "x-">
-        <BCType id = "all" label = "Symmetric"     var = "symmetry"> </BCType>
+        <BCType id = "all" label = "Symmetric" var = "symmetry"> </BCType>
       </Face>
       <Face side = "x+">
-        <BCType id = "all" label = "Symmetric"     var = "symmetry"> </BCType>
+        <BCType id = "all" label = "Symmetric" var = "symmetry"> </BCType>
       </Face>
       <Face side = "y-">
-        <BCType id = "all" label = "Velocity"     var = "Dirichlet">
-                              <value> [0.,0.,0.] </value>
-        </BCType>
-        <BCType id = "all" label = "SD-Type"  var = "Neumann">
-                              <value> 0.0  </value>
-        </BCType>
+        <BCType id = "all" label = "Symmetric" var = "symmetry"> </BCType>
       </Face>                  
       <Face side = "y+">
-        <BCType id = "all" label = "Symmetric"     var = "symmetry"> </BCType>
-      </Face>                  
+        <BCType id = "all" label = "Symmetric" var = "symmetry"> </BCType>
+      </Face>
       <Face side = "z-">
-        <BCType id = "all" label = "Symmetric"     var = "symmetry"> </BCType>
+        <BCType id = "all" label = "Symmetric" var = "symmetry"> </BCType>
       </Face>                  
       <Face side = "z+">
-        <BCType id = "all" label = "Symmetric"     var = "symmetry"> </BCType>
+        <BCType id = "all" label = "Symmetric" var = "symmetry"> </BCType>
       </Face>
-    </BoundaryConditions>
-    <Level>
-      <Box label="1">
-        <lower>[0.0,    0.0,    0.0]    </lower> 
-        <upper>[0.25e-2, 0.5e-2, 0.05e-2]</upper>
-        <resolution>[20, 40, 1]        </resolution>
-        <extraCells>[0, 0, 0]          </extraCells>
-        <patches>[1,1,1]               </patches>
-      </Box>
-    </Level>
-  </Grid>
-
+     </BoundaryConditions>
+   </Grid>
 </Uintah_specification>
