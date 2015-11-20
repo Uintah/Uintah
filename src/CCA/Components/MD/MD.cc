@@ -506,8 +506,7 @@ void MD::scheduleTimeAdvance(const LevelP&      level,
                                     d_label->global->pX,
                                     d_sharedState->d_cohesiveZoneState,
                                     d_label->global->pID,
-                                    atomTypes,
-                                    2);
+                                    atomTypes);
 
   if (mdFlowDebug.active()) {
     mdFlowDebug << flowLocation

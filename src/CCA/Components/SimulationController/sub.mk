@@ -33,7 +33,8 @@ SRCDIR   := CCA/Components/SimulationController
 
 SRCS     += $(SRCDIR)/SimulationController.cc            \
             $(SRCDIR)/AMRSimulationController.cc         \
-            $(SRCDIR)/MultiScaleSimulationController.cc 
+            $(SRCDIR)/MultiScaleSimulationController.cc  \
+            $(SRCDIR)/LevelSetSimulationController.cc
 
 PSELIBS :=                         \
 	Core/DataArchive               \

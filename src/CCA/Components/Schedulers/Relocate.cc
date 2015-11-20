@@ -373,15 +373,7 @@ Relocate::scheduleParticleRelocation(Scheduler* sched,
     // Iterate only through levelSet, not through entire grid.
     const LevelSubset* currSubset = grid->getLevelSubset(grid->getSubsetIndex(level->getIndex()));
     size_t numLevelsInSubset = currSubset->size();
-
-    // Find relative offset of the coarse level within its subset
-    int offsetInSubset = -1;
-    for (size_t indexInSubset = 0; indexInSubset < numLevelsInSubset; ++indexInSubset) {
-      if (level.get_rep() == currSubset->get(indexInSubset)) {
-        offsetInSubset = indexInSubset;
-      }
-    }
-
+    size_t offsetInSubset = level->getSubsetIndex();
     // Iterate from the coarse level to the end of the subset
     for (size_t indexInSubset = offsetInSubset; indexInSubset < numLevelsInSubset; ++indexInSubset) {
       LevelP levelHandle = grid->getLevel(currSubset->get(indexInSubset)->getIndex());
