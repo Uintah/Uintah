@@ -173,8 +173,8 @@
          </diffusion_model>
          <geom_object>
            <box label = "pillar1">
-             <min>[0.0,    0.0,     0.0]</min>
-             <max>[0.5e-2, 0.25e-2, 0.05e-2]</max>
+             <min>[0.0,  0.0,  0.0]</min>
+             <max>[0.25, 0.25, 0.05]</max>
            </box>
            <res>[2,2,1]</res>
            <velocity>[0.0,0.0,0.0]</velocity>
@@ -197,12 +197,31 @@
        <scalar_flux>
          <geom_object>
            <box label = "y+">
-             <min>[0.0,    0.249e-2, 0.0]</min>
-             <max>[0.5e-2, 0.250e-2, 0.05e-2]</max>
+             <min>[0.0, 0.249, 0.0]</min>
+             <max>[0.25, 0.250, 0.05]</max>
            </box>
          </geom_object>
          <load_curve>
            <id>1</id>
+           <time_point>
+             <time> 0 </time>
+             <load> 1.e-5 </load>
+           </time_point>
+           <time_point>
+             <time> 1.e12 </time>
+             <load> 1.e-5 </load>
+           </time_point>
+         </load_curve>
+       </scalar_flux>
+       <scalar_flux>
+         <geom_object>
+           <box label = "x+">
+             <min>[0.249, 0.00, 0.0]</min>
+             <max>[0.25,  0.25, 0.05]</max>
+           </box>
+         </geom_object>
+         <load_curve>
+           <id>2</id>
            <time_point>
              <time> 0 </time>
              <load> 1.e-5 </load>
