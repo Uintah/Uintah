@@ -32,6 +32,8 @@
 
 #include <sci_defs/visit_defs.h>
 
+// #include "SimHelperFunc.h"
+
 #include <iostream>
 #include <string>
 #include <stdio.h>
@@ -158,26 +160,26 @@ void visit_InitLibSim( visit_simulation_data *sim )
       Dl_info info;
       if (dladdr(__builtin_return_address(0), &info))
       {
-	// The last slash removes the library
-	const char *lastslash = strrchr(info.dli_fname,'/');
-	
-	if( lastslash )
-	{
-	  // Remove the library and library directory.
-	  int pathLen = strlen(info.dli_fname) - strlen(lastslash) - 3;
-	  
-	  if( pathLen > 0 )
-	  {
-	    path = (char *) malloc( pathLen + 2 );
-	    
-	    strncpy( path, info.dli_fname, pathLen );
-	    path[pathLen] = '\0';
+        // The last slash removes the library
+        const char *lastslash = strrchr(info.dli_fname,'/');
+        
+        if( lastslash )
+        {
+          // Remove the library and library directory.
+          int pathLen = strlen(info.dli_fname) - strlen(lastslash) - 3;
+          
+          if( pathLen > 0 )
+          {
+            path = (char *) malloc( pathLen + 2 );
+            
+            strncpy( path, info.dli_fname, pathLen );
+            path[pathLen] = '\0';
 
-	    exeCommand = std::string( path ) + simExecName;
+            exeCommand = std::string( path ) + simExecName;
 
-	    free( path );
-	  }
-	}
+            free( path );
+          }
+        }
       }
     }
     else 
@@ -199,7 +201,7 @@ void visit_InitLibSim( visit_simulation_data *sim )
 //---------------------------------------------------------------------
 void visit_EndLibSim( visit_simulation_data *sim )
 {
-  if( VisItIsConnected() )
+  if( VisItIsConnected() && sim->simMode != VISIT_SIMMODE_TERMINATED )
   {
     // The simulation is finished but the user may want to stay
     // conntected to analyze the last time step. So stop the run mode
@@ -218,7 +220,8 @@ void visit_EndLibSim( visit_simulation_data *sim )
     {
       visit_CheckState(sim);
     }
-    while( sim->runMode != VISIT_SIMMODE_FINISHED );
+    while( sim->runMode != VISIT_SIMMODE_FINISHED &&
+           sim->simMode != VISIT_SIMMODE_TERMINATED );
   }
 }
 
@@ -305,18 +308,18 @@ void visit_CheckState( visit_simulation_data *sim )
         /* Register command callback */
         VisItSetCommandCallback(visit_ControlCommandCallback, (void*) sim);
 
-	if( Parallel::usingMPI() )
-	{
-	  int par_rank;
-	  MPI_Comm_rank (MPI_COMM_WORLD, &par_rank);
+        if( Parallel::usingMPI() )
+        {
+          int par_rank;
+          MPI_Comm_rank (MPI_COMM_WORLD, &par_rank);
 
-	  visitdbg << "Visit libsim : Processor " << par_rank
-		   << " Connected" << std::endl;
-	}
-	else
-	{
-	  visitdbg << "Visit libsim : Connected" << std::endl;
-	}
+          visitdbg << "Visit libsim : Processor " << par_rank
+                   << " Connected" << std::endl;
+        }
+        else
+        {
+          visitdbg << "Visit libsim : Connected" << std::endl;
+        }
 
         visitdbg.flush();
 
@@ -418,14 +421,27 @@ visit_ControlCommandCallback(const char *cmd, const char *args, void *cbdata)
 {
   visit_simulation_data *sim = (visit_simulation_data *)cbdata;
 
-  if(strcmp(cmd, "Stop") == 0)
+  if(strcmp(cmd, "Stop") == 0 && sim->simMode != VISIT_SIMMODE_FINISHED)
     sim->runMode = VISIT_SIMMODE_STOPPED;
-  else if(strcmp(cmd, "Step") == 0)
+  else if(strcmp(cmd, "Step") == 0 && sim->simMode != VISIT_SIMMODE_FINISHED)
     sim->runMode = VISIT_SIMMODE_STEP;
-  else if(strcmp(cmd, "Run") == 0)
+  else if(strcmp(cmd, "Run") == 0 && sim->simMode != VISIT_SIMMODE_FINISHED)
     sim->runMode = VISIT_SIMMODE_RUNNING;
+  else if(strcmp(cmd, "Save") == 0)
+  {
+    if (sim->output)
+    {
+      // This is not correct if we have switched to a different
+      // component, since the delt will be wrong 
+      sim->output->finalizeTimestep( sim->time, sim->delt, sim->gridP, sim->schedulerP, 0 );
+      sim->output->sched_allOutputTasks( sim->delt, sim->gridP, sim->schedulerP, 0 );
+
+      sim->output->findNext_OutputCheckPoint_Timestep( sim->delt, sim->gridP );
+      sim->output->writeto_xml_files( sim->delt, sim->gridP );
+    }
+  }
   // Only allow the runMode to finish if the simulation is finished.
-  else if(strcmp(cmd, "Finish") == 0 )
+  else if(strcmp(cmd, "Finish") == 0)
   {
     if(sim->simMode == VISIT_SIMMODE_FINISHED)
       sim->runMode = VISIT_SIMMODE_FINISHED;
@@ -433,7 +449,14 @@ visit_ControlCommandCallback(const char *cmd, const char *args, void *cbdata)
       sim->runMode = VISIT_SIMMODE_RUNNING;
   }
   else if(strcmp(cmd, "Terminate") == 0)
+  {
+    sim->runMode = VISIT_SIMMODE_RUNNING;
+    sim->simMode = VISIT_SIMMODE_TERMINATED;
+  }
+  else if(strcmp(cmd, "Abort") == 0)
+  {
     exit( 0 );
+  }
 }
 
 
@@ -690,11 +713,19 @@ visit_handle visit_ReadMetaData(void *cbdata)
         }
         else
         {
-          visitdbg << "Visit libsim : "
-                   << "Uintah variable \"" << varname << "\"  "
-                   << "has an unknown variable type \""
-                   << vartype << "\"" << std::endl;
+          std::stringstream msg;
+
+          msg << "Visit libsim : "
+              << "Uintah variable \"" << varname << "\"  "
+              << "has an unknown variable type \""
+              << vartype << "\"";
+
+          visitdbg << msg.str() << std::endl;
           visitdbg.flush();
+
+          // VisItSetStatusMessage( *md,"My Error Message","red");
+          // VisItSetStatusMessage( *md,"My Warning Message","yellow");
+          // VisItSetStatusMessage( *md,"My Sim Message","black")
 
           continue;
         }
@@ -1154,7 +1185,8 @@ visit_handle visit_ReadMetaData(void *cbdata)
 
     /* Add some commands. */
     const char *cmd_names[] = {"Stop", "Step", "Run",
-			       "Finish", "Terminate"};
+                               "Stats", "Regrid", "Save",
+                               "Finish", "Terminate", "Abort"};
 
     int numNames = sizeof(cmd_names) / sizeof(const char *);
 
@@ -1168,6 +1200,14 @@ visit_handle visit_ReadMetaData(void *cbdata)
         VisIt_SimulationMetaData_addGenericCommand(md, cmd);
       }
     }
+
+    // visit_handle msg = VISIT_INVALID_HANDLE;
+
+    // if(VisIt_MessageMetaData_alloc(&msg) == VISIT_OKAY)
+    // {
+    //   VisIt_MessageMetaData_setName(msg, "Test Message");
+    //   VisIt_SimulationMetaData_addMessage(md, msg);
+    // }
   }
 
   return md;

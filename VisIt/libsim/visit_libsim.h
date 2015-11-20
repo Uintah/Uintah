@@ -30,6 +30,7 @@
 
 #include <CCA/Components/Schedulers/SchedulerCommon.h>
 #include <CCA/Ports/SchedulerP.h>
+#include <CCA/Ports/Output.h>
 #include <Core/Grid/GridP.h>
 
 #include <sci_defs/mpi_defs.h>
@@ -47,6 +48,7 @@ namespace Uintah {
 
 #define VISIT_SIMMODE_STEP       3
 #define VISIT_SIMMODE_FINISHED   4
+#define VISIT_SIMMODE_TERMINATED 5
 
 /**************************************
         
@@ -77,11 +79,13 @@ typedef struct
   // Uintah data members
   SchedulerP schedulerP;
   GridP gridP;
+  Output*    output;
 
   TimeStepInfo* stepInfo;
 
   int cycle;
   double time;
+  double delt;
 
   int blocking;
 
