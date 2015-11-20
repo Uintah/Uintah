@@ -79,7 +79,7 @@
 <!--
      <max_Timesteps>100</max_Timesteps>
 -->
-     <timestep_multiplier>0.5</timestep_multiplier>
+     <timestep_multiplier>0.4</timestep_multiplier>
    </Time>
 
    <DataArchiver>
@@ -178,9 +178,9 @@
              <top>   [0.0,0.0,0.02]</top>
              <outer_radius> 0.25   </outer_radius>
              <inner_radius> 0.0    </inner_radius>
-             <num_radial> 60 </num_radial>
+             <num_radial> 25 </num_radial>
              <num_axial> 1 </num_axial>
-             <num_angular> 200 </num_angular>
+             <num_angular> 30 </num_angular>
              <arc_start_angle> 0 </arc_start_angle>
              <arc_angle> 90 </arc_angle>
            </smoothcyl>

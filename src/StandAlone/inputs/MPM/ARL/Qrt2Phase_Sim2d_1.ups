@@ -79,7 +79,7 @@
 <!--
      <max_Timesteps>100</max_Timesteps>
 -->
-     <timestep_multiplier>0.5</timestep_multiplier>
+     <timestep_multiplier>0.4</timestep_multiplier>
    </Time>
 
    <DataArchiver>
