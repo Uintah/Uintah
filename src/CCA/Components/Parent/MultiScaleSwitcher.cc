@@ -963,18 +963,30 @@ MultiScaleSwitcher::needRecompile(       double   time,
     LoadBalancer* lb = sched->getLoadBalancer();
     lb->possiblyDynamicallyReallocate(running_level_set, LoadBalancer::init);
 
-    // create subscheduler for MD component(s)
+    // create subscheduler and do initialization and mapping of all DWs, parent and sub
     d_subScheduler = sched->createSubScheduler(subcomp_sharedstate);
-
-    d_subScheduler->initialize(1, 1);
+    d_subScheduler->initialize(3,1);
     d_subScheduler->clearMappings();
     d_subScheduler->mapDataWarehouse(Task::ParentOldDW, 0);
     d_subScheduler->mapDataWarehouse(Task::ParentNewDW, 1);
-    d_subScheduler->mapDataWarehouse(Task::OldDW, 0);
-    d_subScheduler->mapDataWarehouse(Task::NewDW, 1);
+    d_subScheduler->mapDataWarehouse(Task::OldDW, 2);
+    d_subScheduler->mapDataWarehouse(Task::NewDW, 3);
 
-    d_subScheduler->advanceDataWarehouse(grid);
-//    d_subScheduler->get_dw(0)->setScrubbing(DataWarehouse::ScrubNone);
+    DataWarehouse* parent_old_dw = sched->get_dw(0);
+    DataWarehouse* parent_new_dw = sched->get_dw(1);
+    d_subScheduler->setParentDWs(parent_old_dw, parent_new_dw);
+
+    // turn off scrubbing for parent DWs
+    DataWarehouse::ScrubMode parent_old_dw_scrubmode = parent_old_dw->setScrubbing(DataWarehouse::ScrubNone);
+    DataWarehouse::ScrubMode parent_new_dw_scrubmode = parent_new_dw->setScrubbing(DataWarehouse::ScrubNone);
+    parent_old_dw->setScrubbing(parent_old_dw_scrubmode);
+    parent_new_dw->setScrubbing(parent_new_dw_scrubmode);
+
+    d_subScheduler->advanceDataWarehouse(grid, true); // Generates the first subNewDW
+    d_subScheduler->setInitTimestep(true);      // Necessary to populate the subNewDW
+
+    DataWarehouse* sub_old_dw = d_subScheduler->get_dw(2);
+    DataWarehouse* sub_new_dw = d_subScheduler->get_dw(3);
 
     // Initialize the per-levelset data
     const LevelSubset* level_subset = grid->getLevelSubset(d_componentIndex);
@@ -987,17 +999,14 @@ MultiScaleSwitcher::needRecompile(       double   time,
 
     // compile and execute the initialization task-graph
     d_subScheduler->compile(&running_level_set);
+    sub_new_dw->setScrubbing(DataWarehouse::ScrubNone);
     d_subScheduler->execute();
 
-    d_subScheduler->initialize(1, 1);
-    d_subScheduler->clearMappings();
-    d_subScheduler->mapDataWarehouse(Task::ParentOldDW, 0);
-    d_subScheduler->mapDataWarehouse(Task::ParentNewDW, 1);
-    d_subScheduler->mapDataWarehouse(Task::OldDW, 0);
-    d_subScheduler->mapDataWarehouse(Task::NewDW, 1);
+    d_subScheduler->setInitTimestep(false);
 
+    // now do what would be timesteps
     d_subScheduler->advanceDataWarehouse(grid);
-//    d_subScheduler->get_dw(0)->setScrubbing(DataWarehouse::ScrubNone);
+    d_subScheduler->initialize(3,1);
 
     for (int i =  0; i < num_levels; ++i) {
       LevelP level_handle = grid->getLevel(level_subset->get(i)->getIndex());
@@ -1007,6 +1016,7 @@ MultiScaleSwitcher::needRecompile(       double   time,
 
     // compile and execute the timestep task-graph
     d_subScheduler->compile(&running_level_set);
+    sub_new_dw->setScrubbing(DataWarehouse::ScrubComplete);
     d_subScheduler->execute();
 
     retval = false;
@@ -1016,8 +1026,6 @@ MultiScaleSwitcher::needRecompile(       double   time,
     d_componentIndex %= d_numComponents;
 
     d_sharedState->d_switchState = false;
-
-    d_subScheduler.get_rep()->removeReference();
 
   } 
   else {
