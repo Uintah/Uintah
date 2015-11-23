@@ -146,8 +146,8 @@
     <!-- save label="u*"/>
     
     <save label="w*"/ -->
-    <save label="tau_xy"/>
-    <save label="tau_yx"/>
+    <save label="strain_xy"/>
+    <save label="strain_yx"/>
     <!-- save label="ContinuityResidual"/ -->
     
     <save label="pressure"/>

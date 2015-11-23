@@ -125,8 +125,8 @@
     <save label="y-mom"/>
     <save label="u"/>
     <save label="v"/>
-    <save label="tau_xy"/>
-    <save label="tau_yx"/>
+    <save label="strain_xy"/>
+    <save label="strain_yx"/>
     <save label="f"/>
     <save label="rhof"/>
     <save label="pressure"/>

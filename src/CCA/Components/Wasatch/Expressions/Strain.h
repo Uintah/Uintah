@@ -37,7 +37,7 @@
  *  \brief Calculates a component of the Strain tensor.
  *
  *  The Strain tensor is given as
- *  \f[ \tau_{ij} = - \left( \frac{\partial u_i}{\partial x_j} + \frac{\partial u_j}{\partial x_i} \right) + \frac{2}{3} \delta_{ij} \frac{\partial u_k}{\partial x_k} \f]
+ *  \f[ S_{ij} = - \left( \frac{\partial u_i}{\partial x_j} + \frac{\partial u_j}{\partial x_i} \right) + \frac{2}{3} \delta_{ij} \frac{\partial u_k}{\partial x_k} \f]
  *
  *  \tparam StrainT The type of field for this Strain component.
  *  \tparam Vel1T   The type of field for the first velocity component.
@@ -98,8 +98,7 @@ public:
 
 
 /**
- *  specialized version of the Strain tensor for normal Strain.
- *
+ *  \brief specialized version of the Strain tensor for normal Strain.
  */
 template< typename StrainT,
 typename VelT >
@@ -125,7 +124,6 @@ public:
   public:
     /**
      *  \param result the Strain component calculated here
-     *  \param viscTag the viscosity
      *  \param vel1Tag the first velocity component
      *  \param vel2Tag the second velocity component
      *

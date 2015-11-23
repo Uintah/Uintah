@@ -105,10 +105,10 @@
     <compression>gzip</compression>
     <save label="x-mom"/>
     <save label="y-mom"/>
-    <save label="tau_xx"/>
-    <save label="tau_yy"/>    
-    <save label="tau_xy"/>
-    <save label="tau_yx"/>
+    <save label="strain_xx"/>
+    <save label="strain_yy"/>    
+    <save label="strain_xy"/>
+    <save label="strain_yx"/>
     <save label="x-mom_rhs_partial"/>
     <save label="y-mom_rhs_partial"/>        
     <save label="x-mom_rhs"/>
