@@ -128,8 +128,8 @@
     <save label="z-mom"/>
     <save label="u"/>
     <save label="w"/>
-    <save label="tau_xz"/>
-    <save label="tau_zx"/>
+    <save label="strain_xz"/>
+    <save label="strain_zx"/>
     <save label="f"/>
     <save label="rhof"/>
     <save label="pressure"/>

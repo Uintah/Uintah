@@ -35,9 +35,9 @@ MomRHSPart( const Expr::Tag& convFluxX,
             const Expr::Tag& convFluxY,
             const Expr::Tag& convFluxZ,
             const Expr::Tag& viscTag,
-            const Expr::Tag& tauX,
-            const Expr::Tag& tauY,
-            const Expr::Tag& tauZ,
+            const Expr::Tag& strainX,
+            const Expr::Tag& strainY,
+            const Expr::Tag& strainZ,
             const Expr::Tag& densityTag,
             const Expr::Tag& bodyForceTag,
             const Expr::Tag& srcTermTag,
@@ -47,9 +47,9 @@ MomRHSPart( const Expr::Tag& convFluxX,
     doYConv_( convFluxY != Expr::Tag()),
     doZConv_( convFluxZ != Expr::Tag()),
 
-    doXTau_( tauX != Expr::Tag()),
-    doYTau_( tauY != Expr::Tag()),
-    doZTau_( tauZ != Expr::Tag()),
+    doXTau_( strainX != Expr::Tag()),
+    doYTau_( strainY != Expr::Tag()),
+    doZTau_( strainZ != Expr::Tag()),
 
     is3dconvdiff_( doXConv_ && doYConv_ && doZConv_ && doXTau_ && doYTau_ && doZTau_ ),
 
@@ -59,21 +59,21 @@ MomRHSPart( const Expr::Tag& convFluxX,
 {
   this->set_gpu_runnable( true );
   
-  if( doXConv_ )   cFluxX_ = this->template create_field_request<XFluxT>(convFluxX);
-  if( doYConv_ )   cFluxY_ = this->template create_field_request<YFluxT>(convFluxY);
-  if( doZConv_ )   cFluxZ_ = this->template create_field_request<ZFluxT>(convFluxZ);
+  if( doXConv_ ) cFluxX_ = this->template create_field_request<XFluxT>(convFluxX);
+  if( doYConv_ ) cFluxY_ = this->template create_field_request<YFluxT>(convFluxY);
+  if( doZConv_ ) cFluxZ_ = this->template create_field_request<ZFluxT>(convFluxZ);
   
-  if( doXTau_ )   tauX_ = this->template create_field_request<XFluxT>(tauX);
-  if( doYTau_ )   tauY_ = this->template create_field_request<YFluxT>(tauY);
-  if( doZTau_ )   tauZ_ = this->template create_field_request<ZFluxT>(tauZ);
+  if( doXTau_  ) strainX_ = this->template create_field_request<XFluxT>(strainX);
+  if( doYTau_  ) strainY_ = this->template create_field_request<YFluxT>(strainY);
+  if( doZTau_  ) strainZ_ = this->template create_field_request<ZFluxT>(strainZ);
 
-  if(doXTau_ || doYTau_ || doZTau_)  visc_ = this->template create_field_request<SVolField>(viscTag);
+  if( doXTau_ || doYTau_ || doZTau_ ) visc_ = this->template create_field_request<SVolField>(viscTag);
   
-  if( hasBodyF_ )     {
-    density_ = this->template create_field_request<SVolField>(densityTag);
-    bodyForce_ = this->template create_field_request<FieldT>(bodyForceTag);
+  if( hasBodyF_ ){
+    density_   = this->template create_field_request<SVolField>(densityTag  );
+    bodyForce_ = this->template create_field_request<FieldT   >(bodyForceTag);
   }
-  if( hasSrcTerm_ )   srcTerm_ = this->template create_field_request<FieldT>(srcTermTag);
+  if( hasSrcTerm_   ) srcTerm_ = this->template create_field_request<FieldT>(srcTermTag);
   if( hasIntrusion_ ) volfrac_ = this->template create_field_request<FieldT>(volFracTag);
 }
 
@@ -117,22 +117,22 @@ evaluate()
     const YFluxT& cfy = cFluxY_->field_ref();
     const ZFluxT& cfz = cFluxZ_->field_ref();
     
-    const XFluxT& tx = tauX_->field_ref();
-    const YFluxT& ty = tauY_->field_ref();
-    const ZFluxT& tz = tauZ_->field_ref();
+    const XFluxT& strainX = strainX_->field_ref();
+    const YFluxT& strainY = strainY_->field_ref();
+    const ZFluxT& strainZ = strainZ_->field_ref();
 
     const SVolField& mu = visc_->field_ref();
     // note: this does not diff, but is slower:
     result <<= (*divXOp_)(-cfx)
               +(*divYOp_)(-cfy)
               +(*divZOp_)(-cfz)
-              + 2.0 * (*divXOp_)((*sVol2XFluxInterpOp_)(mu) * tx )
-              + 2.0 * (*divYOp_)((*sVol2YFluxInterpOp_)(mu) * ty )
-              + 2.0 * (*divZOp_)((*sVol2ZFluxInterpOp_)(mu) * tz );
+              + 2.0 * (*divXOp_)((*sVol2XFluxInterpOp_)(mu) * strainX )
+              + 2.0 * (*divYOp_)((*sVol2YFluxInterpOp_)(mu) * strainY )
+              + 2.0 * (*divZOp_)((*sVol2ZFluxInterpOp_)(mu) * strainZ );
 //    // this is the fully inlined version, which causes diffs on ~9 tests.
-//    result <<= (*divXOp_)( -cfx + 2.0 * (*sVol2XFluxInterpOp_)(mu) * tx ) +
-//               (*divYOp_)( -cfy + 2.0 * (*sVol2YFluxInterpOp_)(mu) * ty ) +
-//               (*divZOp_)( -cfz + 2.0 * (*sVol2ZFluxInterpOp_)(mu) * tz );
+//    result <<= (*divXOp_)( -cfx + 2.0 * (*sVol2XFluxInterpOp_)(mu) * strainX ) +
+//               (*divYOp_)( -cfy + 2.0 * (*sVol2YFluxInterpOp_)(mu) * strainY ) +
+//               (*divZOp_)( -cfz + 2.0 * (*sVol2ZFluxInterpOp_)(mu) * strainZ );
   }
   else{ // 1D and 2D cases, or cases with only convection or diffusion - not optimized for these...
 
@@ -142,9 +142,9 @@ evaluate()
     if( doYConv_ ) result <<= result - (*divYOp_)(cFluxY_->field_ref());
     if( doZConv_ ) result <<= result - (*divZOp_)(cFluxZ_->field_ref());
 
-    if( doXTau_ ) result <<= result + 2.0 * (*divXOp_)( (*sVol2XFluxInterpOp_)(visc_->field_ref()) * tauX_->field_ref()); // + 2*div(mu*S_xi)
-    if( doYTau_ ) result <<= result + 2.0 * (*divYOp_)( (*sVol2YFluxInterpOp_)(visc_->field_ref()) * tauY_->field_ref()); // + 2*div(mu*S_yi)
-    if( doZTau_ ) result <<= result + 2.0 * (*divZOp_)( (*sVol2ZFluxInterpOp_)(visc_->field_ref()) * tauZ_->field_ref()); // + 2*div(mu*S_zi)
+    if( doXTau_ ) result <<= result + 2.0 * (*divXOp_)( (*sVol2XFluxInterpOp_)(visc_->field_ref()) * strainX_->field_ref()); // + 2*div(mu*S_xi)
+    if( doYTau_ ) result <<= result + 2.0 * (*divYOp_)( (*sVol2YFluxInterpOp_)(visc_->field_ref()) * strainY_->field_ref()); // + 2*div(mu*S_yi)
+    if( doZTau_ ) result <<= result + 2.0 * (*divZOp_)( (*sVol2ZFluxInterpOp_)(visc_->field_ref()) * strainZ_->field_ref()); // + 2*div(mu*S_zi)
   }
   
   // sum in other terms as required
@@ -162,9 +162,9 @@ Builder::Builder( const Expr::Tag& result,
                   const Expr::Tag& convFluxY,
                   const Expr::Tag& convFluxZ,
                   const Expr::Tag& viscTag,
-                  const Expr::Tag& tauX,
-                  const Expr::Tag& tauY,
-                  const Expr::Tag& tauZ,
+                  const Expr::Tag& strainX,
+                  const Expr::Tag& strainY,
+                  const Expr::Tag& strainZ,
                   const Expr::Tag& densityTag,
                   const Expr::Tag& bodyForceTag,
                   const Expr::Tag& srcTermTag,
@@ -174,9 +174,9 @@ Builder::Builder( const Expr::Tag& result,
     cfluxYt_   ( convFluxY    ),
     cfluxZt_   ( convFluxZ    ),
     viscTag_   ( viscTag      ),
-    tauXt_     ( tauX         ),
-    tauYt_     ( tauY         ),
-    tauZt_     ( tauZ         ),
+    strainXt_  ( strainX      ),
+    strainYt_  ( strainY      ),
+    strainZt_  ( strainZ      ),
     densityt_  ( densityTag   ),
     bodyForcet_( bodyForceTag ),
     srcTermt_  ( srcTermTag   ),
@@ -190,7 +190,7 @@ Expr::ExpressionBase*
 MomRHSPart<FieldT>::Builder::build() const
 {
   return new MomRHSPart<FieldT>( cfluxXt_, cfluxYt_, cfluxZt_,
-                                 viscTag_, tauXt_, tauYt_, tauZt_,
+                                 viscTag_, strainXt_, strainYt_, strainZt_,
                                  densityt_, bodyForcet_, srcTermt_,
                                  volfract_ );
 }

@@ -105,7 +105,7 @@ Strain( const Expr::Tag& velTag,
 {
   this->set_gpu_runnable( true );
   
-   u_ = this->template create_field_request<VelT>(velTag);
+   u_   = this->template create_field_request<VelT     >(velTag);
    dil_ = this->template create_field_request<SVolField>(dilTag);
 }
 
@@ -124,7 +124,7 @@ Strain<StrainT,VelT,VelT>::
 bind_operators( const SpatialOps::OperatorDatabase& opDB )
 {
   svolInterpOp_ = opDB.retrieve_operator<SVol2StrainInterpT>();
-  velGradOp_    = opDB.retrieve_operator<VelGradT   >();
+  velGradOp_    = opDB.retrieve_operator<VelGradT          >();
 }
 
 //--------------------------------------------------------------------

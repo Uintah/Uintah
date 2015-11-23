@@ -379,7 +379,7 @@ namespace Wasatch{
   register_strain_tensor( const bool* const doMom,
                           const bool isViscous,
                           const Expr::TagList& velTags,
-                          Expr::TagList& tauTags,
+                          Expr::TagList& strainTags,
                           const Expr::Tag& dilTag,
                           Expr::ExpressionFactory& factory )
   {
@@ -389,10 +389,10 @@ namespace Wasatch{
     typedef typename SpatialOps::FaceTypes<FieldT>::YFace YFace;
     typedef typename SpatialOps::FaceTypes<FieldT>::ZFace ZFace;
 
-    set_tau_tags<FieldT>( doMom, isViscous, tauTags );
-    const Expr::Tag& tauxt = tauTags[0];
-    const Expr::Tag& tauyt = tauTags[1];
-    const Expr::Tag& tauzt = tauTags[2];
+    set_strain_tags<FieldT>( doMom, isViscous, strainTags );
+    const Expr::Tag& strainXt = strainTags[0];
+    const Expr::Tag& strainYt = strainTags[1];
+    const Expr::Tag& strainZt = strainTags[2];
     
     Expr::ExpressionID normalStrainID;
     
@@ -402,19 +402,19 @@ namespace Wasatch{
     // register necessary strain expression when the flow is viscous
     if( isViscous ) {
       if( doMom[0] ){
-        const Expr::ExpressionID strainID = setup_strain< XFace >( tauxt, thisVelTag, velTags[0], dilTag, factory );
-        if( stagLoc == XDIR )  normalStrainID = strainID;
+        const Expr::ExpressionID strainID = setup_strain< XFace >( strainXt, thisVelTag, velTags[0], dilTag, factory );
+        if( stagLoc == XDIR ) normalStrainID = strainID;
       }
       if( doMom[1] ){
-        const Expr::ExpressionID strainID = setup_strain< YFace >( tauyt, thisVelTag, velTags[1], dilTag, factory );
-        if( stagLoc == YDIR )  normalStrainID = strainID;
+        const Expr::ExpressionID strainID = setup_strain< YFace >( strainYt, thisVelTag, velTags[1], dilTag, factory );
+        if( stagLoc == YDIR ) normalStrainID = strainID;
       }
       if( doMom[2] ){
-        const Expr::ExpressionID strainID = setup_strain< ZFace >( tauzt, thisVelTag, velTags[2], dilTag, factory );
-        if( stagLoc == ZDIR )  normalStrainID = strainID;
+        const Expr::ExpressionID strainID = setup_strain< ZFace >( strainZt, thisVelTag, velTags[2], dilTag, factory );
+        if( stagLoc == ZDIR ) normalStrainID = strainID;
       }
       factory.cleave_from_children( normalStrainID );
-      factory.cleave_from_parents( normalStrainID  );
+      factory.cleave_from_parents ( normalStrainID );
     }
     return normalStrainID;
   }
@@ -620,8 +620,8 @@ namespace Wasatch{
 
     //___________________________________
     // diffusive flux (strain components)
-    Expr::TagList tauTags;
-    normalStrainID_ = register_strain_tensor<FieldT>(doMom, isViscous_, velTags_, tauTags, dilTag, factory);
+    Expr::TagList strainTags;
+    normalStrainID_ = register_strain_tensor<FieldT>(doMom, isViscous_, velTags_, strainTags, dilTag, factory);
     
     //--------------------------------------
     // TURBULENCE
@@ -644,9 +644,10 @@ namespace Wasatch{
     // pressure gradient) for use in the projection
     const Expr::ExpressionID momRHSPartID = factory.register_expression(
         new typename MomRHSPart<FieldT>::Builder( rhs_part_tag( solnVarTag_ ),
-                                                  cfTags[0] , cfTags[1] , cfTags[2] , viscTag,
-                                                  tauTags[0], tauTags[1], tauTags[2], densityTag_,
-                                                  bodyForceTag, srcTermTag,
+                                                  cfTags[0] , cfTags[1] , cfTags[2] ,
+                                                  viscTag,
+                                                  strainTags[0], strainTags[1], strainTags[2],
+                                                  densityTag_, bodyForceTag, srcTermTag,
                                                   thisVolFracTag_) );
     factory.cleave_from_parents ( momRHSPartID );
     
