@@ -59,7 +59,6 @@
 #include <CCA/Components/Wasatch/Expressions/EmbeddedGeometry/EmbeddedGeometryHelper.h>
 #include <CCA/Components/Wasatch/Expressions/PrimVar.h>
 #include <CCA/Components/Wasatch/Expressions/PressureSource.h>
-#include <CCA/Components/Wasatch/Expressions/VelEst.h>
 #include <CCA/Components/Wasatch/Expressions/ExprAlgebra.h>
 #include <CCA/Components/Wasatch/Expressions/PostProcessing/InterpolateExpression.h>
 #include <CCA/Components/Wasatch/Expressions/PostProcessing/ContinuityResidual.h>
@@ -103,13 +102,13 @@ namespace Wasatch{
         
         // ---------------------------------------------------------------------
       case TurbulenceParameters::SMAGORINSKY: {
-        strTsrMagTag = tagNames.straintensormag;//( "StrainTensorMagnitude", Expr::STATE_NONE );
+        strTsrMagTag = tagNames.straintensormag;
         if( !factory.have_entry( strTsrMagTag ) ){
           typedef StrainTensorSquare::Builder StrTsrMagT;
           factory.register_expression( scinew StrTsrMagT(strTsrMagTag,
-                                                         tagNames.tauxx,tagNames.tauyx,tagNames.tauzx,
-                                                         tagNames.tauyy,tagNames.tauzy,
-                                                         tagNames.tauzz) );
+                                                         tagNames.strainxx,tagNames.strainyx,tagNames.strainzx,
+                                                         tagNames.strainyy,tagNames.strainzy,
+                                                         tagNames.strainzz) );
         }
       }
         break;
@@ -130,9 +129,9 @@ namespace Wasatch{
         if( !factory.have_entry( strTsrMagTag ) ){
           typedef StrainTensorSquare::Builder StrTsrMagT;
           factory.register_expression( scinew StrTsrMagT(strTsrMagTag,
-                                                         tagNames.tauxx,tagNames.tauyx,tagNames.tauzx,
-                                                         tagNames.tauyy,tagNames.tauzy,
-                                                         tagNames.tauzz) );
+                                                         tagNames.strainxx,tagNames.strainyx,tagNames.strainzx,
+                                                         tagNames.strainyy,tagNames.strainzy,
+                                                         tagNames.strainzz) );
         }
         
         // if WALE model is turned on, then create an expression for the square velocity gradient tensor
@@ -320,23 +319,23 @@ namespace Wasatch{
                    const bool isViscous,
                    Expr::TagList& strainTags )
   {
+    const TagNames& tagNames = TagNames::self();
     strainTags.clear();
-    const Direction stagLoc = get_staggered_location<FieldT>();
-    std::string thisMomDirName;
-    switch (stagLoc) {
-      case XDIR : thisMomDirName = "x";  break;
-      case YDIR : thisMomDirName = "y";  break;
-      case ZDIR : thisMomDirName = "z";  break;
+    Expr::Tag xTag, yTag, zTag;
+    switch( get_staggered_location<FieldT>() ){
+      case XDIR : xTag=tagNames.strainxx; yTag=tagNames.strainyx; zTag=tagNames.strainzx; break;
+      case YDIR : xTag=tagNames.strainxy; yTag=tagNames.strainyy; zTag=tagNames.strainzy; break;
+      case ZDIR : xTag=tagNames.strainxz; yTag=tagNames.strainyz; zTag=tagNames.strainzz; break;
       case NODIR:
-      default   : thisMomDirName = "";   break;
+      default   : break;
     }
-
-    if( doMom[0] && isViscous ) strainTags.push_back( Expr::Tag("strain_x" + thisMomDirName , Expr::STATE_NONE) );
-    else                        strainTags.push_back( Expr::Tag() );
-    if( doMom[1] && isViscous ) strainTags.push_back( Expr::Tag("strain_y" + thisMomDirName , Expr::STATE_NONE) );
-    else                        strainTags.push_back( Expr::Tag() );
-    if( doMom[2] && isViscous ) strainTags.push_back( Expr::Tag("strain_z" + thisMomDirName , Expr::STATE_NONE) );
-    else                        strainTags.push_back( Expr::Tag() );
+    Expr::Tag empty;
+    if( doMom[0] && isViscous ) strainTags.push_back( xTag  );
+    else                        strainTags.push_back( empty );
+    if( doMom[1] && isViscous ) strainTags.push_back( yTag  );
+    else                        strainTags.push_back( empty );
+    if( doMom[2] && isViscous ) strainTags.push_back( zTag  );
+    else                        strainTags.push_back( empty );
   }
   
   //==================================================================
@@ -347,11 +346,11 @@ namespace Wasatch{
   {
     const TagNames& tagNames = TagNames::self();
     if( doMom[0] ) cfTags.push_back( Expr::Tag(thisMomTag.name() + tagNames.convectiveflux + "x", Expr::STATE_NONE) );
-    else         cfTags.push_back( Expr::Tag() );
+    else           cfTags.push_back( Expr::Tag() );
     if( doMom[1] ) cfTags.push_back( Expr::Tag(thisMomTag.name() + tagNames.convectiveflux + "y", Expr::STATE_NONE) );
-    else         cfTags.push_back( Expr::Tag() );
+    else           cfTags.push_back( Expr::Tag() );
     if( doMom[2] ) cfTags.push_back( Expr::Tag(thisMomTag.name() + tagNames.convectiveflux + "z", Expr::STATE_NONE) );
-    else         cfTags.push_back( Expr::Tag() );
+    else           cfTags.push_back( Expr::Tag() );
   }
 
   //==================================================================
