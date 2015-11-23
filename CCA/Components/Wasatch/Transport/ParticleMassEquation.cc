@@ -33,72 +33,73 @@
 #  define PI 3.1415926535897932384626433832795
 #endif
 
-// ###################################################################
-//
-//                          Implementation
-//
-// ###################################################################
-
-ParticleMassIC::
-ParticleMassIC( const Expr::Tag& pRhoTag,
-               const Expr::Tag& pDiameterTag )
-: Expr::Expression<ParticleField>()
-{
-   pRho_ = create_field_request<ParticleField>(pRhoTag);
-   pDiameter_ = create_field_request<ParticleField>(pDiameterTag);
-}
-
-//--------------------------------------------------------------------
-
-void
-ParticleMassIC::
-evaluate()
-{
-  using namespace SpatialOps;
-  ParticleField& result = this->value();
-  const ParticleField& pRho = pRho_->field_ref();
-  const ParticleField& pDiameter = pDiameter_->field_ref();
-  result <<= (PI/6.0) * pRho * pow(pDiameter,3);
-}
-
-//--------------------------------------------------------------------
-
-ParticleMassIC::
-Builder::Builder( const Expr::Tag& resultTag,
-                 const Expr::Tag& pRhoTag,
-                 const Expr::Tag& pDiameterTag )
-: ExpressionBuilder( resultTag ),
-pRhoTag_( pRhoTag ),
-pDiameterTag_( pDiameterTag )
-{}
-
-//--------------------------------------------------------------------
-
-Expr::ExpressionBase*
-ParticleMassIC::
-Builder::build() const
-{
-  return new ParticleMassIC( pRhoTag_,pDiameterTag_ );
-}
 
 namespace Wasatch{
 
 
-  // #################################################################
-  //
-  //                          Implementation
-  //
-  // #################################################################
+  /**
+   *  \class ParticleMassIC
+   *  \ingroup WasatchParticles
+   *  \brief Initial condition for particle mass
+   */
+  class ParticleMassIC : public Expr::Expression<ParticleField>
+  {
+    DECLARE_FIELDS(ParticleField, pRho_, pDiameter_)
+
+      ParticleMassIC( const Expr::Tag& pRhoTag,
+                      const Expr::Tag& pDiameterTag )
+        : Expr::Expression<ParticleField>()
+      {
+        pRho_ = create_field_request<ParticleField>(pRhoTag);
+        pDiameter_ = create_field_request<ParticleField>(pDiameterTag);
+      }
+
+  public:
+    class Builder : public Expr::ExpressionBuilder
+    {
+    public:
+      /**
+       *  @brief Build a ParticleMassIC expression
+       *  @param resultTag the tag for the value that this expression computes
+       */
+      Builder( const Expr::Tag& resultTag,
+               const Expr::Tag& pRhoTag,
+               const Expr::Tag& pDiameterTag )
+      : ExpressionBuilder( resultTag ),
+        pRhoTag_( pRhoTag ),
+        pDiameterTag_( pDiameterTag )
+      {}
+
+      Expr::ExpressionBase* build() const{
+        return new ParticleMassIC( pRhoTag_,pDiameterTag_ );
+      }
+
+    private:
+      const Expr::Tag pRhoTag_, pDiameterTag_;
+    };
+
+    void evaluate()
+    {
+      using namespace SpatialOps;
+      ParticleField& result = this->value();
+      const ParticleField& pRho = pRho_->field_ref();
+      const ParticleField& pDiameter = pDiameter_->field_ref();
+      result <<= (PI/6.0) * pRho * pow(pDiameter,3);
+    }
+  };
+
+
+  //============================================================================
 
 
   ParticleMassEquation::
   ParticleMassEquation( const std::string& solnVarName,
-                            const Direction pdir,
-                            const Expr::TagList& particlePositionTags,
-                           const Expr::Tag& particleSizeTag,
-                           Uintah::ProblemSpecP particleEqsSpec,
-                           GraphCategories& gc )
-  : ParticleEquationBase( solnVarName, pdir, particlePositionTags, particleSizeTag, particleEqsSpec, gc ),
+                        const Direction pdir,
+                        const Expr::TagList& particlePositionTags,
+                        const Expr::Tag& particleSizeTag,
+                        Uintah::ProblemSpecP particleEqsSpec,
+                        GraphCategories& gc )
+  : ParticleEquationBase( solnVarName, pdir, particlePositionTags, particleSizeTag, gc ),
     pSrcTag_( parse_nametag(particleEqsSpec->findBlock("ParticleMass")->findBlock("SourceTerm")) ),
     pRhoTag_( parse_nametag(particleEqsSpec->findBlock("ParticleDensity")) )
   {
@@ -144,4 +145,4 @@ namespace Wasatch{
 
   //==================================================================
 
-} // namespace Particle
+} // namespace Wasatch

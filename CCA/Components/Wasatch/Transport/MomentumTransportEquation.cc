@@ -539,9 +539,9 @@ namespace Wasatch{
                              Uintah::SimulationStateP sharedState)
     : TransportEquation( gc,
                          momName,
-                         params,
                          get_staggered_location<FieldT>(),
                          isConstDensity ),
+      params_( params ),
       isViscous_       ( params->findBlock("Viscosity") ? true : false ),
       isTurbulent_     ( turbulenceParams.turbModelName != TurbulenceParameters::NOTURBULENCE ),
       thisVelTag_      ( Expr::Tag(velName, Expr::STATE_NONE) ),

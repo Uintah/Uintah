@@ -137,7 +137,7 @@ namespace Wasatch{
                                   const Expr::TagList& srcTags  );
 
   private:
-
+    Uintah::ProblemSpecP params_;
     const bool isViscous_, isTurbulent_;
     const Expr::Tag thisVelTag_, densityTag_;
     Uintah::SolverParameters* solverParams_;
