@@ -317,9 +317,10 @@ namespace Wasatch{
   template< typename FieldT >
   void
   set_strain_tags( const bool* doMom,
-                const bool isViscous,
-                Expr::TagList& tauTags )
+                   const bool isViscous,
+                   Expr::TagList& strainTags )
   {
+    strainTags.clear();
     const Direction stagLoc = get_staggered_location<FieldT>();
     std::string thisMomDirName;
     switch (stagLoc) {
@@ -330,12 +331,12 @@ namespace Wasatch{
       default   : thisMomDirName = "";   break;
     }
 
-    if( doMom[0] && isViscous ) tauTags.push_back( Expr::Tag("tau_x" + thisMomDirName , Expr::STATE_NONE) );
-    else                        tauTags.push_back( Expr::Tag() );
-    if( doMom[1] && isViscous ) tauTags.push_back( Expr::Tag("tau_y" + thisMomDirName , Expr::STATE_NONE) );
-    else                        tauTags.push_back( Expr::Tag() );
-    if( doMom[2] && isViscous ) tauTags.push_back( Expr::Tag("tau_z" + thisMomDirName , Expr::STATE_NONE) );
-    else                        tauTags.push_back( Expr::Tag() );
+    if( doMom[0] && isViscous ) strainTags.push_back( Expr::Tag("strain_x" + thisMomDirName , Expr::STATE_NONE) );
+    else                        strainTags.push_back( Expr::Tag() );
+    if( doMom[1] && isViscous ) strainTags.push_back( Expr::Tag("strain_y" + thisMomDirName , Expr::STATE_NONE) );
+    else                        strainTags.push_back( Expr::Tag() );
+    if( doMom[2] && isViscous ) strainTags.push_back( Expr::Tag("strain_z" + thisMomDirName , Expr::STATE_NONE) );
+    else                        strainTags.push_back( Expr::Tag() );
   }
   
   //==================================================================
