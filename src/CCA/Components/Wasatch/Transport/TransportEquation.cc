@@ -40,14 +40,11 @@ namespace Wasatch{
   TransportEquation::
   TransportEquation( GraphCategories& gc,
                      const std::string& solnVarName,
-                     Uintah::ProblemSpecP params,
                      const Direction stagLoc,
                      const bool isConstDensity )
-  : EquationBase::EquationBase(gc, solnVarName, stagLoc, params),
+  : EquationBase::EquationBase( gc, solnVarName, stagLoc ),
     isConstDensity_ ( isConstDensity )
-  {
-//    setup();  // build all expressions required for this TransportEquation
-  }
+  {}
 
   //---------------------------------------------------------------------------
 

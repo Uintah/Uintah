@@ -40,14 +40,12 @@ namespace Wasatch{
   EquationBase::
   EquationBase( GraphCategories& gc,
                 const std::string solnVarName,
-                const Direction direction,
-                Uintah::ProblemSpecP params )
-  : direction_          ( direction ),
-    params_             ( params ),
-    gc_                 ( gc ),
-    solnVarName_        ( solnVarName ),
-    solnVarTag_         ( solnVarName, Expr::STATE_DYNAMIC ),
-    rhsTag_             ( solnVarName + "_rhs", Expr::STATE_NONE )
+                const Direction direction )
+  : direction_  ( direction ),
+    gc_         ( gc ),
+    solnVarName_( solnVarName ),
+    solnVarTag_ ( solnVarName, Expr::STATE_DYNAMIC ),
+    rhsTag_     ( solnVarName + "_rhs", Expr::STATE_NONE )
   {}
 
 

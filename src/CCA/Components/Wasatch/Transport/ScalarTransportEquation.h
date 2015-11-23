@@ -189,6 +189,7 @@ namespace Wasatch{
     virtual Expr::ExpressionID setup_rhs( FieldTagInfo&,
                                           const Expr::TagList& srcTags  );
 
+    Uintah::ProblemSpecP params_;
     const bool hasConvection_;
     const Expr::Tag densityTag_;
     const bool enableTurbulence_;

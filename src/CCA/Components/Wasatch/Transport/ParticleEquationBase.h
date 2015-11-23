@@ -73,16 +73,13 @@ namespace Wasatch{
      *
      * \param particleSizeTag Particle size tag. May be needed by some expressions.
      *
-     * \param particleEqsSpec the Uintah parser information for this Particle equation
-     *
      * \param gc The GraphCategories object from Wasatch
      */
     ParticleEquationBase( const std::string& solnVarName,
-                         const Direction pdir,
-                         const Expr::TagList& particlePositionTags,
-                         const Expr::Tag& particleSizeTag,
-                         Uintah::ProblemSpecP particleEqsSpec,
-                         GraphCategories& gc );
+                          const Direction pdir,
+                          const Expr::TagList& particlePositionTags,
+                          const Expr::Tag& particleSizeTag,
+                          GraphCategories& gc );
 
     virtual ~ParticleEquationBase(){}
     
