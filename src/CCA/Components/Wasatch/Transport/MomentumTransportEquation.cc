@@ -316,7 +316,7 @@ namespace Wasatch{
   
   template< typename FieldT >
   void
-  set_tau_tags( const bool* doMom,
+  set_strain_tags( const bool* doMom,
                 const bool isViscous,
                 Expr::TagList& tauTags )
   {
