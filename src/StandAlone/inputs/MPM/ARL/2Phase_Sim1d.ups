@@ -72,14 +72,14 @@
   <SimulationComponent type="amrmpm" />
 
   <Time>
-     <maxTime>1.0e9</maxTime>
+     <maxTime>2e9</maxTime>
      <initTime>0.0</initTime>
-     <delt_min>1.0e-8</delt_min>
-     <delt_max>1.0e5</delt_max>
+     <delt_min>1.0e-16</delt_min>
+     <delt_max>1.0e8</delt_max>
 <!--
      <max_Timesteps>100</max_Timesteps>
 -->
-     <timestep_multiplier>0.5</timestep_multiplier>
+     <timestep_multiplier>0.4</timestep_multiplier>
   </Time>
 
   <DataArchiver>
@@ -87,21 +87,18 @@
 <!--
     <outputTimestepInterval>10</outputTimestepInterval>
 -->
-    <outputInterval>1.0e6</outputInterval>
+    <outputInterval>2.0e6</outputInterval>
     <save label="p.x"/>
-    <save label="p.particleID"/>
-    <save label="p.velocity"/>
     <save label="p.mass"/>
-    <save label="p.flux"/>
+    <save label="p.area"/>
     <save label="p.volume"/>
-    <save label="p.scalefactor"/>
-    <save label="p.concentration"/>
     <save label="p.stress"/>
+    <save label="p.particleID"/>
+    <save label="p.concentration"/>
+    <save label="p.scalefactor"/>
     <save label="p.loadCurveID"/>
     <save label="p.diffusivity"/>
     <save label="p.displacement"/>
-    <!--
-    -->
     <save label="g.mass"/>
     <save label="g.acceleration"/>
     <save label="g.concentration"/>
@@ -110,18 +107,13 @@
     <save label="g.externalscalarflux"/>
     <save label="p.externalscalarflux"/>
     <save label="g.velocity"/>
-    <checkpoint cycle = "2" interval = "1.0e5"/>
-<!--
--->
+    <checkpoint cycle = "2" interval = "2.0e8"/>
   </DataArchiver>
 
   <MPM>
       <time_integrator>explicit</time_integrator>
-      <interpolator>linear</interpolator>
+      <interpolator>cpdi</interpolator>
       <use_load_curves> true </use_load_curves>
-    <!--
-			<DoPressureStabilization> true </DoPressureStabilization>
-    -->
       <do_scalar_diffusion>true</do_scalar_diffusion>
   </MPM>
   <AMR>
@@ -136,7 +128,7 @@
   <MaterialProperties>
      <MPM>
     <material name="pillar1">
-         <density>   2.33e16</density>
+         <density>   2.33e23</density>
          <melt_temp> 2000.0 </melt_temp>
          <constitutive_model type="rf_elastic_plastic"> 
            <bulk_modulus>            48e6    </bulk_modulus>
@@ -176,14 +168,8 @@
          </constitutive_model>
          <thermal_conductivity>0.0</thermal_conductivity>
          <specific_heat>5</specific_heat>
-
          <diffusion_model type = "non_linear1">
-           <diffusivity>  1.0e-6   </diffusivity>
-           <!--
-           <diffusivity>  1.0e-7   </diffusivity>
-           <diffusivity>  1.0e-8   </diffusivity>
-           <diffusivity>  1.0e-9   </diffusivity>
-           -->
+           <diffusivity>  1.0e-10   </diffusivity>
            <max_concentration> 1.0 </max_concentration>
            <tuning1> 1.95 </tuning1>
            <tuning2> 1000.0 </tuning2>
@@ -214,8 +200,8 @@
        <scalar_flux>
          <geom_object>
            <box label = "y+">
-             <min>[0.0,  0.399, 0.00]</min>
-             <max>[0.05, 0.400, 0.05]</max>
+             <min>[0.0,   0.399, 0.00] </min>
+             <max>[0.025, 0.400, 0.025]</max>
            </box>
          </geom_object>
          <load_curve>
@@ -232,10 +218,17 @@
        </scalar_flux>
      </MPM>
    </PhysicalBC>
-<!--
--->
 
   <Grid>
+    <Level>
+      <Box label="1">
+        <lower>[0.0,   0.0, 0.00]    </lower> 
+        <upper>[0.025, 1.0, 0.025]   </upper>
+        <resolution>[1, 40, 1]      </resolution>
+        <patches>   [1, 1, 1]       </patches>
+        <extraCells>[1, 1, 1]       </extraCells>
+      </Box>
+    </Level>
     <BoundaryConditions>
       <Face side = "x-">
         <BCType id = "all" label = "Symmetric"     var = "symmetry"> </BCType>
@@ -256,15 +249,5 @@
         <BCType id = "all" label = "Symmetric"     var = "symmetry"> </BCType>
       </Face>
     </BoundaryConditions>
-    <Level>
-      <Box label="1">
-        <lower>[0.0,  0.0, 0.00]    </lower> 
-        <upper>[0.05, 0.5, 0.05]</upper>
-        <resolution>[1, 20, 1]        </resolution>
-        <extraCells>[0, 0, 0]          </extraCells>
-        <patches>[1,1,1]               </patches>
-      </Box>
-    </Level>
   </Grid>
-
 </Uintah_specification>
