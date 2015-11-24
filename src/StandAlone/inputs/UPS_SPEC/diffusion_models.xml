@@ -17,6 +17,7 @@
     <tuning4                     spec="OPTIONAL DOUBLE" />
     <tuning5                     spec="OPTIONAL DOUBLE" />
     <ramp_time                   spec="OPTIONAL DOUBLE" />
+    <use_pressure                spec="OPTIONAL BOOLEAN" />
   
   </diffusion_model>
 

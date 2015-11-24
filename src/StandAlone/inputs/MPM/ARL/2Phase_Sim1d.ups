@@ -72,12 +72,12 @@
   <SimulationComponent type="amrmpm" />
 
   <Time>
-     <maxTime>2e9</maxTime>
+     <maxTime>4.2e8</maxTime>
      <initTime>0.0</initTime>
      <delt_min>1.0e-16</delt_min>
      <delt_max>1.0e8</delt_max>
 <!--
-     <max_Timesteps>100</max_Timesteps>
+     <max_Timesteps>10</max_Timesteps>
 -->
      <timestep_multiplier>0.4</timestep_multiplier>
   </Time>
@@ -85,7 +85,7 @@
   <DataArchiver>
     <filebase>2Phase_Sim1d.uda</filebase>
 <!--
-    <outputTimestepInterval>10</outputTimestepInterval>
+    <outputTimestepInterval>1</outputTimestepInterval>
 -->
     <outputInterval>2.0e6</outputInterval>
     <save label="p.x"/>
@@ -99,6 +99,8 @@
     <save label="p.loadCurveID"/>
     <save label="p.diffusivity"/>
     <save label="p.displacement"/>
+    <save label="p.pressure_t1"/>
+    <save label="p.pressure_t2"/>
     <save label="g.mass"/>
     <save label="g.acceleration"/>
     <save label="g.concentration"/>
@@ -171,8 +173,12 @@
          <diffusion_model type = "non_linear1">
            <diffusivity>  1.0e-10   </diffusivity>
            <max_concentration> 1.0 </max_concentration>
-           <tuning1> 1.95 </tuning1>
-           <tuning2> 1000.0 </tuning2>
+           <use_pressure>true</use_pressure>
+           <tuning1> 6.90  </tuning1>
+           <tuning2> 3.07  </tuning2>
+           <tuning3> 0.0   </tuning3>
+           <tuning4> 3.0   </tuning4>
+           <tuning5> 1e-6  </tuning5>
          </diffusion_model>
          <geom_object>
            <box label = "pillar1">
