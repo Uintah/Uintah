@@ -24,6 +24,11 @@
 
 #include "visit_libsim.h"
 
+#include <CCA/Components/SimulationController/AMRSimulationController.h>
+#include <CCA/Ports/SchedulerP.h>
+#include <CCA/Ports/Output.h>
+#include <CCA/Ports/Regridder.h>
+
 #include <Core/Util/DebugStream.h>
 #include <Core/Parallel/Parallel.h>
 #include <Core/Grid/Variables/VarLabel.h>
@@ -31,6 +36,7 @@
 #include "StandAlone/tools/uda2vis/uda2vis.h"
 
 #include <sci_defs/visit_defs.h>
+
 
 // #include "SimHelperFunc.h"
 
@@ -429,17 +435,34 @@ visit_ControlCommandCallback(const char *cmd, const char *args, void *cbdata)
     sim->runMode = VISIT_SIMMODE_RUNNING;
   else if(strcmp(cmd, "Save") == 0)
   {
-    if (sim->output)
+    GridP gridP = sim->gridP;
+    Output *output = sim->AMRSimController->getOutput();
+    SchedulerP schedulerP = sim->AMRSimController->getSchedulerP();
+
+    if (output)
     {
       // This is not correct if we have switched to a different
       // component, since the delt will be wrong 
-      sim->output->finalizeTimestep( sim->time, sim->delt, sim->gridP, sim->schedulerP, 0 );
-      sim->output->sched_allOutputTasks( sim->delt, sim->gridP, sim->schedulerP, 0 );
+      output->finalizeTimestep( sim->time, sim->delt, gridP, schedulerP, 0 );
+      output->sched_allOutputTasks( sim->delt, gridP, schedulerP, 0 );
 
-      sim->output->findNext_OutputCheckPoint_Timestep( sim->delt, sim->gridP );
-      sim->output->writeto_xml_files( sim->delt, sim->gridP );
+      output->findNext_OutputCheckPoint_Timestep( sim->delt, gridP );
+      output->writeto_xml_files( sim->delt, gridP );
     }
   }
+
+  else if(strcmp(cmd, "Stats") == 0)
+  {
+  }
+  else if(strcmp(cmd, "Regrid") == 0 && sim->simMode != VISIT_SIMMODE_FINISHED)
+  {
+    sim->AMRSimController->getRegridder()->setForceRegridding(true);
+    sim->runMode = VISIT_SIMMODE_STEP;
+  }
+  else if(strcmp(cmd, "Save") == 0)
+  {
+  }
+
   // Only allow the runMode to finish if the simulation is finished.
   else if(strcmp(cmd, "Finish") == 0)
   {
@@ -561,7 +584,7 @@ visit_handle visit_ReadMetaData(void *cbdata)
 {
   visit_simulation_data *sim = (visit_simulation_data *)cbdata;
 
-  SchedulerP schedulerP = sim->schedulerP;
+  SchedulerP schedulerP = sim->AMRSimController->getSchedulerP();
   GridP      gridP      = sim->gridP;
 
   if( !schedulerP.get_rep() || !gridP.get_rep() )
@@ -1476,7 +1499,7 @@ visit_handle visit_SimGetMesh(int domain, const char *meshname, void *cbdata)
 {
   visit_simulation_data *sim = (visit_simulation_data *)cbdata;
 
-  SchedulerP schedulerP = sim->schedulerP;
+  SchedulerP schedulerP = sim->AMRSimController->getSchedulerP();
   GridP      gridP      = sim->gridP;
 
   // bool &useExtraCells   = sim->useExtraCells;
@@ -1774,7 +1797,7 @@ visit_handle visit_SimGetVariable(int domain, const char *varname, void *cbdata)
 {
   visit_simulation_data *sim = (visit_simulation_data *)cbdata;
 
-  SchedulerP schedulerP = sim->schedulerP;
+  SchedulerP schedulerP = sim->AMRSimController->getSchedulerP();
   GridP      gridP      = sim->gridP;
 
   // bool &useExtraCells   = sim->useExtraCells;
@@ -1999,7 +2022,7 @@ visit_handle visit_SimGetDomainList(const char *name, void *cbdata)
 
     visit_simulation_data *sim = (visit_simulation_data *)cbdata;
 
-    SchedulerP schedulerP = sim->schedulerP;
+    SchedulerP schedulerP = sim->AMRSimController->getSchedulerP();
     GridP      gridP      = sim->gridP;
     
     TimeStepInfo* &stepInfo = sim->stepInfo;

@@ -28,18 +28,17 @@
 #include "VisItControlInterface_V2.h"
 #include "VisItDataInterface_V2.h"
 
-#include <CCA/Components/Schedulers/SchedulerCommon.h>
-#include <CCA/Ports/SchedulerP.h>
-#include <CCA/Ports/Output.h>
-#include <Core/Grid/GridP.h>
+#include <Core/Grid/Grid.h>
 
 #include <sci_defs/mpi_defs.h>
 
-#include <map>
+#include <string>
 
 class TimeStepInfo;
 
 namespace Uintah {
+
+class AMRSimulationController;
 
 /* Simulation Mode */
 //#define VISIT_SIMMODE_UNKNOWN  0
@@ -77,10 +76,9 @@ WARNING
 typedef struct
 {
   // Uintah data members
-  SchedulerP schedulerP;
+  AMRSimulationController *AMRSimController;
   GridP gridP;
-  Output*    output;
-
+  
   TimeStepInfo* stepInfo;
 
   int cycle;
