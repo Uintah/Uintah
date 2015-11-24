@@ -1481,7 +1481,7 @@ Grid::parsePatches(const ProblemSpecP&      level_ps,
 }
 
 bool
-Grid::specIsAMR(const ProblemSpecP &ps) const
+Grid::specIsAMR(const ProblemSpecP &ps)
 {
   bool isAMR = false;
   ProblemSpecP tmp_ps = ps->findBlock("doAMR");

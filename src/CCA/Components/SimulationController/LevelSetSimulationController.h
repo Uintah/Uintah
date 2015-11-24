@@ -84,6 +84,39 @@ class LevelSetSimulationController : public SimulationController {
     virtual void preGridSetup();
 
   private:
+    // We'll be calling this a lot so let's compact it slightly.
+    void initializeScheduler(
+                                      SchedulerP    scheduler
+                             ,        GridP         grid
+                             ,        int           numOldDW = 1
+                             ,        int           numNewDW = 1
+                            )
+    {
+      scheduler->initialize(numOldDW, numNewDW);
+      scheduler->advanceDataWarehouse(grid, true);
+      scheduler->setInitTimestep(true);
+    }
+
+    void basePreGridSetup();
+    GridP
+
+    UintahParallelComponent* instantiateNewComponent(
+                                                       const ProcessorGroup * myWorld
+                                                     ,       ProblemSpecP   & componentSpec
+                                                    );
+
+    SimulationStateP subcomponentPreGridSetup(
+                                                      UintahParallelComponent * component
+                                              , const ProblemSpecP            & componentSpec
+                                             );
+
+    void subcomponentLevelSetSetup(
+                                     const LevelSet                 & currentLevelSet
+                                   , const ProblemSpecP             & componentSpec
+                                   ,       UintahParallelComponent  * currentComponent
+                                   ,       SimulationStateP         & currentState
+                                   ,       bool                       isRestarting
+                                  );
 
     int calculateTemporaryDataWarehouses(ProblemSpecP & multiSpec);
     int calculatePermanentDataWarehouses();
@@ -135,6 +168,28 @@ class LevelSetSimulationController : public SimulationController {
     int         d_totalComponents;
     std::string d_runType;
     int         d_totalSteps;
+
+    // Stuff for new runtype setup
+    SchedulerP            d_firstComponentScheduler;
+    SimulationInterface*  d_firstComponentInterface;
+    SimulationTime*       d_firstComponentTime;
+    SimulationStateP      d_firstComponentState;
+    double                d_firstStartTime;
+    double                d_firstWallTime;
+
+    typedef std::pair<std::string, SimulationInterface*> interfaceKey;
+    typedef std::pair<std::string, SimulationTime*>      timeKey;
+    typedef std::pair<std::string, SimulationStateP>     stateKey;
+    typedef std::pair<std::string, SchedulerP>           schedulerKey;
+
+    std::map<std::string, SchedulerP>           d_schedulerMap;
+    std::map<std::string, SimulationInterface*> d_interfaceMap;
+    std::map<std::string, SimulationTime*>      d_timeMap;
+    std::map<std::string, SimulationStateP>     d_stateMap;
+    std::map<std::string, double>               d_startTimeMap;
+    std::map<std::string, double>               d_wallTimeMap;
+
+
 //    ProblemSpecP                    d_problemSpec;
 };
 

@@ -484,7 +484,7 @@ WARNING
                          , const size_t         levelIndex
                          , const int            myProcRank);
 
-    bool      specIsAMR(  const ProblemSpecP & ps) const;
+    static bool      specIsAMR(  const ProblemSpecP & ps);
 
     void parseLevelSet(   const ProblemSpecP & level_ps
                         , const int            numProcs
