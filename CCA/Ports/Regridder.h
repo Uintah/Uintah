@@ -73,13 +73,13 @@ WARNING
 
     //! Initialize with regridding parameters from ups file
     virtual void problemSetup(const ProblemSpecP& params, const GridP&,
-			      const SimulationStateP& state) = 0;
+                              const SimulationStateP& state) = 0;
 
     virtual void switchInitialize(const ProblemSpecP& params) = 0;
 
     //! Asks if we need to recompile the task graph.
     virtual bool needRecompile(double time, double delt,
-			       const GridP& grid) = 0;
+                               const GridP& grid) = 0;
 
     //! Do we need to regrid this timestep?
     virtual bool needsToReGrid(const GridP&) = 0;
@@ -88,11 +88,17 @@ WARNING
     virtual bool isAdaptive() = 0;
     
     //! switch for setting adaptivity
-    virtual void setAdaptivity(const bool ans) =0;
+    virtual void setAdaptivity(const bool ans) = 0;
     
     //! Ask if regridding only once.
-    virtual bool doRegridOnce() =0;
+    virtual bool doRegridOnce() = 0;
 
+    //! Asks if we are going to do regridding
+    virtual bool forceRegridding() = 0;
+    
+    //! force regridding to happen.
+    virtual void setForceRegridding(const bool val) = 0;
+    
     //! Schedules task to initialize the error flags to 0
     virtual void scheduleInitializeErrorEstimate(const LevelP& level) = 0;
 
