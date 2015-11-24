@@ -40,6 +40,8 @@ NonLinearDiff1::NonLinearDiff1(ProblemSpecP& ps, SimulationStateP& sS, MPMFlags*
 
   ps->require("tuning1", tuning1);
   ps->require("tuning2", tuning2);
+  ps->require("tuning3", tuning3);
+  ps->require("tuning4", tuning4);
 
 }
 
@@ -105,6 +107,15 @@ void NonLinearDiff1::computeFlux(const Patch* patch,
 
     comp_diffusivity = computeDiffusivityTerm(concentration, pressure);
 
+    // pressure = pressure/tuning5;
+    // D = exp(tuning1*concentration)*exp(tuning2*concentration);
+    // if (D > tuning3){
+    //   D = tuning3;
+    // }
+    // if (D < tuning4){
+    //   D = tuning4;
+    // }
+ 
     if(non_lin_comp < tuning2){
       D = comp_diffusivity * non_lin_comp;
     } else {
