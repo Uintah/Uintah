@@ -74,6 +74,9 @@ namespace Uintah {
   private:
     double tuning1;
     double tuning2;
+    double tuning3;
+    double tuning4;
+    double tuning5;
 
     NonLinearDiff1(const NonLinearDiff1&);
     NonLinearDiff1& operator=(const NonLinearDiff1&);
