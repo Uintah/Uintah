@@ -464,9 +464,9 @@ namespace Wasatch{
                               Expr::ExpressionFactory& factory )
   {
     set_convflux_tags( doMom, cfTags, momTag );
-    const Expr::Tag cfxt = cfTags[0];
-    const Expr::Tag cfyt = cfTags[1];
-    const Expr::Tag cfzt = cfTags[2];
+    const Expr::Tag& cfxt = cfTags[0];
+    const Expr::Tag& cfyt = cfTags[1];
+    const Expr::Tag& cfzt = cfTags[2];
 
     typedef typename SpatialOps::FaceTypes<FieldT>::XFace XFace;
     typedef typename SpatialOps::FaceTypes<FieldT>::YFace YFace;
@@ -541,14 +541,15 @@ namespace Wasatch{
                          momName,
                          get_staggered_location<FieldT>(),
                          isConstDensity ),
-      params_( params ),
+      params_          ( params ),
       isViscous_       ( params->findBlock("Viscosity") ? true : false ),
       isTurbulent_     ( turbulenceParams.turbModelName != TurbulenceParameters::NOTURBULENCE ),
       thisVelTag_      ( Expr::Tag(velName, Expr::STATE_NONE) ),
       densityTag_      ( densTag                              ),
       normalStrainID_  ( Expr::ExpressionID::null_id()        ),
       normalConvFluxID_( Expr::ExpressionID::null_id()        ),
-      pressureID_      ( Expr::ExpressionID::null_id()        )
+      pressureID_      ( Expr::ExpressionID::null_id()        ),
+      pressureTag_     ( TagNames::self().pressure )
   {
     solverParams_ = NULL;
     set_vel_tags( params, velTags_ );
@@ -709,7 +710,7 @@ namespace Wasatch{
     //__________________
     // pressure
     if( enablePressureSolve ){
-      if( !factory.have_entry( pressure_tag() ) ){
+      if( !factory.have_entry( pressureTag_ ) ){
         Uintah::ProblemSpecP pressureParams = params->findBlock( "Pressure" );
         
         bool usePressureRefPoint = false;
@@ -756,8 +757,8 @@ namespace Wasatch{
         if( doMom[2] )  fzt = rhs_part_tag( zmomname );
 
         Expr::TagList ptags;
-        ptags.push_back( pressure_tag() );
-        ptags.push_back( Expr::Tag( pressure_tag().name() + "_rhs", pressure_tag().context() ) );
+        ptags.push_back( pressureTag_ );
+        ptags.push_back( Expr::Tag( pressureTag_.name() + "_rhs", pressureTag_.context() ) );
         const Expr::Tag rhoStarTag = isConstDensity ? densityTag_ : tagNames.make_star(densityTag_, densityTag_.context()); // get the tagname of rho*
         
         Expr::ExpressionBuilder* pbuilder = new typename Pressure::Builder( ptags, fxt, fyt, fzt,
@@ -770,18 +771,18 @@ namespace Wasatch{
         factory.cleave_from_children( pressureID_ );
         factory.cleave_from_parents ( pressureID_ );
       }
-      else {
-        pressureID_ = factory.get_id( pressure_tag() );
+      else{
+        pressureID_ = factory.get_id( pressureTag_ );
       }
     }
     
     // Kinetic energy calculation, if necessary
-    if ( params->findBlock("ComputeKE") ) {
+    if( params->findBlock("ComputeKE") ){
       Uintah::ProblemSpecP keSpec = params->findBlock("ComputeKE");
       bool isTotalKE = true;
       keSpec->getAttribute("total", isTotalKE);
-      if (isTotalKE) { // calculate total kinetic energy. then follow that with a reduction variable
-        if (!factory.have_entry( TagNames::self().totalKineticEnergy )) {
+      if( isTotalKE ){ // calculate total kinetic energy. then follow that with a reduction variable
+        if( !factory.have_entry( TagNames::self().totalKineticEnergy )){
           bool outputKE = true;
           keSpec->getAttribute("output", outputKE);
           
@@ -792,7 +793,8 @@ namespace Wasatch{
           
           ReductionHelper::self().add_variable<SpatialOps::SingleValueField, ReductionSumOpT>(ADVANCE_SOLUTION, TagNames::self().totalKineticEnergy, tkeTempTag, outputKE, false);
         }
-      } else if (!factory.have_entry( TagNames::self().kineticEnergy )) { // calculate local, pointwise kinetic energy
+      }
+      else if( !factory.have_entry( TagNames::self().kineticEnergy ) ){ // calculate local, pointwise kinetic energy
         const Expr::ExpressionID keID = factory.register_expression(
             scinew typename KineticEnergy<SVolField,XVolField,YVolField,ZVolField>::Builder(
                 TagNames::self().kineticEnergy, velTags_[0],velTags_[1],velTags_[2] ), true);
@@ -827,7 +829,7 @@ namespace Wasatch{
     Expr::ExpressionFactory& factory = *gc_[ADVANCE_SOLUTION]->exprFactory;
     typedef typename MomRHS<FieldT>::Builder RHS;
     return factory.register_expression( scinew RHS( rhsTag_,
-                                                    (enablePressureSolve ? pressure_tag() : Expr::Tag()),
+                                                    (enablePressureSolve ? pressureTag_ : Expr::Tag()),
                                                     rhs_part_tag(solnVarTag_),
                                                     volFracTag ) );
   }
@@ -856,7 +858,7 @@ namespace Wasatch{
       const Expr::Tag momTimeAdvanceTag(solnVarName_,Expr::STATE_NONE);
       bcHelper.create_dummy_dependency<SVolField, FieldT>(momTimeAdvanceTag, tag_list(densityTag_),ADVANCE_SOLUTION);
       bcHelper.create_dummy_dependency<FieldT, FieldT>(momTimeAdvanceTag, tag_list(thisVelTag_),ADVANCE_SOLUTION);
-      if (initFactory.have_entry(thisVelTag_)) {
+      if( initFactory.have_entry(thisVelTag_) ){
         const Expr::Tag densityStateNone(densityTag_.name(), Expr::STATE_NONE);
         bcHelper.create_dummy_dependency<SVolField, FieldT>(momTimeAdvanceTag, tag_list(densityStateNone),INITIALIZATION);
         bcHelper.create_dummy_dependency<FieldT, FieldT>(momTimeAdvanceTag, tag_list(thisVelTag_),INITIALIZATION);
@@ -887,16 +889,16 @@ namespace Wasatch{
         // if we are solving a variable density problem, then set bcs on density estimate rho*
         const Expr::Tag rhoStarTag = tagNames.make_star(densityTag_); // get the tagname of rho*
         // check if this boundary applies a bc on the density
-        if (myBndSpec.has_field(densityTag_.name())) {
+        if( myBndSpec.has_field(densityTag_.name()) ){
           // create a bc copier for the density estimate
           const Expr::Tag rhoStarBCTag( rhoStarTag.name() + "_" + bndName +"_bccopier", Expr::STATE_NONE);
           BndCondSpec rhoStarBCSpec = {rhoStarTag.name(), rhoStarBCTag.name(), 0.0, DIRICHLET, FUNCTOR_TYPE};
-          if (!initFactory.have_entry(rhoStarBCTag)){
+          if( !initFactory.have_entry(rhoStarBCTag) ){
             const Expr::Tag rhoTag(densityTag_.name(), Expr::STATE_NONE);
             initFactory.register_expression ( new typename BCCopier<SVolField>::Builder(rhoStarBCTag, rhoTag) );
             bcHelper.add_boundary_condition(bndName, rhoStarBCSpec);
           }
-          if (!advSlnFactory.have_entry(rhoStarBCTag)){
+          if( !advSlnFactory.have_entry(rhoStarBCTag) ){
             const Expr::Tag rhoTag(densityTag_.name(), Expr::STATE_NONE);
             advSlnFactory.register_expression ( new typename BCCopier<SVolField>::Builder(rhoStarBCTag, rhoTag) );
             bcHelper.add_boundary_condition(bndName, rhoStarBCSpec);
@@ -923,7 +925,7 @@ namespace Wasatch{
           BndCondSpec velBCSpec = {thisVelTag_.name(),"none" ,0.0,DIRICHLET,DOUBLE_TYPE};
           bcHelper.add_boundary_condition(bndName, velBCSpec);          
 
-          if (isNormal) {
+          if( isNormal ){
             BndCondSpec rhsPartBCSpec = {(rhs_part_tag(mom_tag(solnVarName_))).name(),"none" ,0.0,DIRICHLET,DOUBLE_TYPE};
             bcHelper.add_boundary_condition(bndName, rhsPartBCSpec);
             
@@ -955,7 +957,7 @@ namespace Wasatch{
             const Expr::Tag momBCTag( solnVarName_ + "_bc_primvar_" + bndName, Expr::STATE_NONE);
             advSlnFactory.register_expression ( new typename BCPrimVar<FieldT>::Builder(momBCTag, thisVelTag_, densityTag_) );
             
-            if (initFactory.have_entry(thisVelTag_)) {
+            if( initFactory.have_entry(thisVelTag_) ){
               const Expr::Tag densityStateNone(densityTag_.name(), Expr::STATE_NONE);
               initFactory.register_expression ( new typename BCPrimVar<FieldT>::Builder(momBCTag, thisVelTag_, densityStateNone) );
             }
@@ -964,7 +966,7 @@ namespace Wasatch{
             bcHelper.add_boundary_condition(bndName, momBCSPec);            
           }
 
-          if (isNormal) {
+          if( isNormal ){
             BndCondSpec rhsPartBCSpec = {(rhs_part_tag(mom_tag(solnVarName_))).name(),"none" ,0.0,DIRICHLET,DOUBLE_TYPE};
             bcHelper.add_boundary_condition(bndName, rhsPartBCSpec);
             
@@ -972,7 +974,7 @@ namespace Wasatch{
             bcHelper.add_boundary_condition(bndName, rhsFullBCSpec);
           }
           
-          BndCondSpec pressureBCSpec = {pressure_tag().name(), "none", 0.0, NEUMANN, DOUBLE_TYPE};
+          BndCondSpec pressureBCSpec = {pressureTag_.name(), "none", 0.0, NEUMANN, DOUBLE_TYPE};
           bcHelper.add_boundary_condition(bndName, pressureBCSpec);
           
           break;
@@ -1001,7 +1003,7 @@ namespace Wasatch{
           bcHelper.add_boundary_condition(bndName, velBCSpec);
 
           // Set the pressure to Dirichlet 0 (atmospheric conditions)
-          BndCondSpec pressureBCSpec = {pressure_tag().name(), "none", 0.0, DIRICHLET, DOUBLE_TYPE};
+          BndCondSpec pressureBCSpec = {pressureTag_.name(), "none", 0.0, DIRICHLET, DOUBLE_TYPE};
           bcHelper.add_boundary_condition(bndName, pressureBCSpec);
           break;
         }
@@ -1027,7 +1029,7 @@ namespace Wasatch{
           bcHelper.add_boundary_condition(bndName, velBCSpec);
 
           // Set the pressure to Dirichlet 0 (atmospheric conditions)
-          BndCondSpec pressureBCSpec = {pressure_tag().name(), "none", 0.0, DIRICHLET, DOUBLE_TYPE};
+          BndCondSpec pressureBCSpec = {pressureTag_.name(), "none", 0.0, DIRICHLET, DOUBLE_TYPE};
           bcHelper.add_boundary_condition(bndName, pressureBCSpec);
           break;
         }
@@ -1111,8 +1113,8 @@ namespace Wasatch{
   initial_condition( Expr::ExpressionFactory& icFactory )
   {
     // register an initial condition for da pressure
-    if( !icFactory.have_entry( pressure_tag() ) ) {
-      icFactory.register_expression( new typename Expr::ConstantExpr<SVolField>::Builder(pressure_tag(), 0.0 ) );
+    if( !icFactory.have_entry( pressureTag_ ) ) {
+      icFactory.register_expression( new typename Expr::ConstantExpr<SVolField>::Builder( TagNames::self().pressure, 0.0 ) );
     }
     
     if( icFactory.have_entry( thisVelTag_ ) ) {
