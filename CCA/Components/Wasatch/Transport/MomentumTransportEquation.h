@@ -136,10 +136,13 @@ namespace Wasatch{
     Expr::ExpressionID setup_rhs( FieldTagInfo&,
                                   const Expr::TagList& srcTags  );
 
-  private:
-    Uintah::ProblemSpecP params_;
     const bool isViscous_, isTurbulent_;
     const Expr::Tag thisVelTag_, densityTag_;
+    const Expr::Tag& pressureTag_;
+
+  private:
+
+    Uintah::ProblemSpecP params_;
     Uintah::SolverParameters* solverParams_;
     
     Expr::ExpressionID normalStrainID_, normalConvFluxID_, pressureID_, convTermWeakID_;
