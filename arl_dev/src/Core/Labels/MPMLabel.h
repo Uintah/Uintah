@@ -56,6 +56,11 @@ namespace Uintah {
       const VarLabel* pXXLabel;
       const VarLabel* pPartitionUnityLabel;
 
+      // ******* start - for temporary use only, CG
+      const VarLabel* pPressureLabel_t1;
+      const VarLabel* pPressureLabel_t2; 
+      // ******* end - for temporary use only, CG
+
       //PermanentParticleState
       const VarLabel* pDeformationMeasureLabel;
       const VarLabel* pVelGradLabel;
