@@ -37,7 +37,7 @@ SRCDIR   := CCA/Components/Wasatch/Transport
 # corresponding rule at the end of this file!
 #
 CUDA_ENABLED_SRCS =            				\
-	 CompressibleMomentumTransportEquation 	\
+     CompressibleMomentumTransportEquation 	\
      MomentTransportEquation   				\
      MomentumTransportEquation 				\
      TotalInternalEnergyTransportEquation
@@ -90,6 +90,8 @@ ifeq ($(HAVE_CUDA),yes)
   $(OBJTOP_ABS)/$(SRCDIR)/MomentumTransportEquation.cu : $(SRCTOP_ABS)/$(SRCDIR)/MomentumTransportEquation.cc
 	cp $< $@
 
+  $(OBJTOP_ABS)/$(SRCDIR)/CompressibleMomentumTransportEquation.cu : $(SRCTOP_ABS)/$(SRCDIR)/CompressibleMomentumTransportEquation.cc
+	cp $< $@
   $(OBJTOP_ABS)/$(SRCDIR)/TotalInternalEnergyTransportEquation.cu : $(SRCTOP_ABS)/$(SRCDIR)/TotalInternalEnergyTransportEquation.cc
 	cp $< $@
 
