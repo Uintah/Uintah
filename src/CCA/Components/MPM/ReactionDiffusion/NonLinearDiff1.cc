@@ -135,6 +135,7 @@ void NonLinearDiff1::computeFlux(const Patch* patch,
   //double minD = 1.0e99;
   //double maxD = 0;
   double pressure;
+  //double pressure1, pressure2;
   double concentration;
   for (ParticleSubset::iterator iter = pset->begin(); iter != pset->end();
                                                       iter++){
@@ -143,11 +144,13 @@ void NonLinearDiff1::computeFlux(const Patch* patch,
     interpolator->findCellAndWeights(px[idx],ni,S,psize[idx],pFOld[idx]);
     
 #if defined USE_PARTICLE_VALUES
+    //pressure1 = neg_one_third * pStress[idx].Trace(); 
     concentration = pConcentration[idx];
     pressure = neg_one_third * pStress[idx].Trace(); 
 #else
     concentration = 0.0;
     pressure      = 0.0;
+    //pressure2      = 0.0;
     for(int k = 0; k < d_Mflag->d_8or27; k++) {
       IntVector node = ni[k];
       concentration += gConcentration[node] * S[k];
@@ -155,6 +158,8 @@ void NonLinearDiff1::computeFlux(const Patch* patch,
     }
 #endif
 
+    //pressure = pressure1;
+    //pressure = pressure2;
     comp_diffusivity = computeDiffusivityTerm(concentration, pressure);
     if(use_pressure){
       // normalize pressure to on order of 1
@@ -185,7 +190,7 @@ void NonLinearDiff1::computeFlux(const Patch* patch,
       }
     }
 
-    pFlux[idx] = D*pConcGrad[idx];
+    pFlux[idx] = D * pConcGrad[idx];
     pDiffusivity[idx] = D;
     //pPressure1[idx] = pressure1;
     //pPressure2[idx] = pressure2;
