@@ -34,6 +34,7 @@
 using namespace std;
 using namespace Uintah;
 
+#undef USE_PARTICLE_VALUES
 
 NonLinearDiff1::NonLinearDiff1(ProblemSpecP& ps, SimulationStateP& sS, MPMFlags* Mflag, string diff_type):
   ScalarDiffusionModel(ps, sS, Mflag, diff_type) {
@@ -75,8 +76,8 @@ void NonLinearDiff1::scheduleComputeFlux(Task* task, const MPMMaterial* matl,
 
   task->computes(d_lb->pFluxLabel,        matlset);
   task->computes(d_lb->pDiffusivityLabel, matlset);
-  task->computes(d_lb->pPressureLabel_t1, matlset);
-  task->computes(d_lb->pPressureLabel_t2, matlset);
+  //task->computes(d_lb->pPressureLabel_t1, matlset);
+  //task->computes(d_lb->pPressureLabel_t2, matlset);
 }
 
 void NonLinearDiff1::computeFlux(const Patch* patch,
@@ -93,6 +94,7 @@ void NonLinearDiff1::computeFlux(const Patch* patch,
   int dwi = matl->getDWIndex();
   Vector dx = patch->dCell();
   double comp_diffusivity;
+  double neg_one_third = -1.0/3.0;
 
   constParticleVariable<Vector>  pConcGrad;
   constParticleVariable<double>  pConcentration;
@@ -106,8 +108,8 @@ void NonLinearDiff1::computeFlux(const Patch* patch,
 
   ParticleVariable<Vector>       pFlux;
   ParticleVariable<double>       pDiffusivity;
-  ParticleVariable<double>       pPressure1;
-  ParticleVariable<double>       pPressure2;
+  //ParticleVariable<double>       pPressure1;
+  //ParticleVariable<double>       pPressure2;
 
   ParticleSubset* pset = old_dw->getParticleSubset(dwi, patch);
 
@@ -124,8 +126,8 @@ void NonLinearDiff1::computeFlux(const Patch* patch,
 
   new_dw->allocateAndPut(pFlux,        d_lb->pFluxLabel,        pset);
   new_dw->allocateAndPut(pDiffusivity, d_lb->pDiffusivityLabel, pset);
-  new_dw->allocateAndPut(pPressure1,   d_lb->pPressureLabel_t1, pset);
-  new_dw->allocateAndPut(pPressure2,   d_lb->pPressureLabel_t2, pset);
+  //new_dw->allocateAndPut(pPressure1,   d_lb->pPressureLabel_t1, pset);
+  //new_dw->allocateAndPut(pPressure2,   d_lb->pPressureLabel_t2, pset);
 
   double non_lin_comp;
   double D;
@@ -133,7 +135,6 @@ void NonLinearDiff1::computeFlux(const Patch* patch,
   //double minD = 1.0e99;
   //double maxD = 0;
   double pressure;
-  double pressure1, pressure2;
   double concentration;
   for (ParticleSubset::iterator iter = pset->begin(); iter != pset->end();
                                                       iter++){
@@ -141,29 +142,37 @@ void NonLinearDiff1::computeFlux(const Patch* patch,
 
     interpolator->findCellAndWeights(px[idx],ni,S,psize[idx],pFOld[idx]);
     
+#if defined USE_PARTICLE_VALUES
+    concentration = pConcentration[idx];
+    pressure = neg_one_third * pStress[idx].Trace(); 
+#else
     concentration = 0.0;
-    pressure1     = 0.0;
+    pressure      = 0.0;
     for(int k = 0; k < d_Mflag->d_8or27; k++) {
       IntVector node = ni[k];
       concentration += gConcentration[node] * S[k];
-      pressure1     -= gHydroStress[node]   * S[k];
+      pressure      -= gHydroStress[node]   * S[k];
     }
+#endif
 
-    //concentration = pConcentration[idx];
-    pressure2 = pStress[idx].Trace()/-3.0; 
     comp_diffusivity = computeDiffusivityTerm(concentration, pressure);
-
-    pressure = pressure2;
     if(use_pressure){
+      // normalize pressure to on order of 1
       pressure = pressure*tuning5;
+      // set a floor for the minimum pressure
+      // to be used in the calculation
       if(pressure < tuning3){
         pressure = tuning3;
       }
+      // set a cap for the maximum pressure
+      // to be used in the calculation
       if(pressure > tuning4){
         pressure = tuning4;
       }
       D = comp_diffusivity*exp(tuning1*concentration)*exp(-tuning2*pressure);
       //cout << "Pressure: " << pressure << ", Concentration: " << concentration << ", Diffusivity: " << D << endl;
+      //cout << "Pressure1: " << pressure1 << ", Pressure2: " << pressure2;
+      //cout << ", Conc1: " << conc1 << ", Conc2: " << conc2 << endl;
     }else{
       non_lin_comp = 1/(1-concentration) - 2 * tuning1 * concentration;
 
@@ -178,8 +187,8 @@ void NonLinearDiff1::computeFlux(const Patch* patch,
 
     pFlux[idx] = D*pConcGrad[idx];
     pDiffusivity[idx] = D;
-    pPressure1[idx] = pressure1;
-    pPressure2[idx] = pressure2;
+    //pPressure1[idx] = pressure1;
+    //pPressure2[idx] = pressure2;
     timestep = min(timestep, computeStableTimeStep(D, dx));
   } //End of Particle Loop
   //cout << "timestep: " << timestep << endl;

@@ -26,7 +26,9 @@
 #define UINTAH_RD_NONLINEARDIFF1_H
 
 /*
- * This Non-Linear Diffusivity model based on the following papers:
+ * This Non-Linear Diffusivity model contains two different models for
+ * computing the diffusion coefficient. The first uses only concentration
+ * as the input variable and is based on the following papers:
  *
  * Two-Phase Electrochemical Lithiation in Amorphous Silicon
  * Jiang Wei Wang, Yu He, Feifei Fan, Xiao Hua Liu, Shuman Xia, Yang Liu,
@@ -39,6 +41,9 @@
  *
  * Also note the supplementary information associated with each paper
  * for more details.
+ *
+ * The second model uses both concentration and pressure as inputs for the 
+ * calculation of the diffusion coefficient.
  */
 
 #include <CCA/Components/MPM/ReactionDiffusion/ScalarDiffusionModel.h>
