@@ -83,6 +83,7 @@ static DebugStream amr_doing("AMRMPM", false);
 //#define DEBUG_VEL
 //#define DEBUG_ACC
 #undef CBDI_FLUXBCS
+#define USE_FLUX_RESTRICTION
 
 //__________________________________
 //   TODO:
@@ -4979,6 +4980,9 @@ void AMRMPM::scheduleApplyExternalScalarFlux(SchedulerP& sched,
   t->requires(Task::OldDW, lb->pAreaLabel,              Ghost::None);
   t->requires(Task::OldDW, lb->pMassLabel,              Ghost::None);
   t->requires(Task::OldDW, lb->pDeformationMeasureLabel,Ghost::None);
+#if defined USE_FLUX_RESTRICTION
+  t->requires(Task::OldDW, lb->pConcentrationLabel,     Ghost::None);
+#endif
   t->computes(             lb->pExternalScalarFluxLabel);
   if (flags->d_useLoadCurves) {
     t->requires(Task::OldDW, lb->pLoadCurveIDLabel,     Ghost::None);
@@ -5039,12 +5043,18 @@ void AMRMPM::applyExternalScalarFlux(const ProcessorGroup* ,
       constParticleVariable<Matrix3> pDeformationMeasure;
       ParticleVariable<double> pExternalScalarFlux;
 
+
       old_dw->get(px,    lb->pXLabel,    pset);
       old_dw->get(parea, lb->pAreaLabel, pset);
       old_dw->get(psize, lb->pSizeLabel, pset);
       old_dw->get(pDeformationMeasure, lb->pDeformationMeasureLabel, pset);
       new_dw->allocateAndPut(pExternalScalarFlux,
                                       lb->pExternalScalarFluxLabel,  pset);
+
+#if defined USE_FLUX_RESTRICTION
+      constParticleVariable<double> pConcentration;
+      old_dw->get(pConcentration, lb->pConcentrationLabel, pset);
+#endif
 
       if (flags->d_useLoadCurves) {
         constParticleVariable<int> pLoadCurveID;
@@ -5075,6 +5085,13 @@ void AMRMPM::applyExternalScalarFlux(const ProcessorGroup* ,
               ScalarFluxBC* pbc = pbcP[loadCurveID];
               double area = parea[idx].x();
               pExternalScalarFlux[idx] = pbc->fluxPerParticle(time, area);
+#endif
+#if defined USE_FLUX_RESTRICTION
+              double flux_restriction = (100 + log(1-pConcentration[idx]))/100;
+              if (flux_restriction < 0.0){
+                flux_restriction = 0.0;
+              }
+              pExternalScalarFlux[idx] *= flux_restriction;
 #endif
             }
           }
