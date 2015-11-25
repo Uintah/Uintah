@@ -27,6 +27,7 @@
 
 #include <CCA/Components/SimulationController/SimulationController.h>
 #include <CCA/Components/Parent/Switcher.h>
+#include <CCA/Components/Parent/ComponentManager.h>
 #include <CCA/Ports/DataWarehouseP.h>
 #include <CCA/Ports/SchedulerP.h>
 
@@ -98,7 +99,7 @@ class LevelSetSimulationController : public SimulationController {
     }
 
     void basePreGridSetup();
-    GridP
+    GridP parseGridFromRestart();
 
     UintahParallelComponent* instantiateNewComponent(
                                                        const ProcessorGroup * myWorld
@@ -161,6 +162,8 @@ class LevelSetSimulationController : public SimulationController {
                          ,       DataWarehouse  * /*oldDW*/
                          ,       DataWarehouse  *   newDW
                         );
+
+    ComponentManager* d_manager;
 
     LevelSetRunType d_levelSetRunType;
     size_t          d_numPermDW;
