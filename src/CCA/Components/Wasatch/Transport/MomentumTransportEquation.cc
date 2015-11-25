@@ -648,6 +648,7 @@ namespace Wasatch{
                                                   cfTags[0] , cfTags[1] , cfTags[2] ,
                                                   viscTag,
                                                   strainTags[0], strainTags[1], strainTags[2],
+                                                  dilTag,
                                                   densityTag_, bodyForceTag, srcTermTag,
                                                   thisVolFracTag_) );
     factory.cleave_from_parents ( momRHSPartID );

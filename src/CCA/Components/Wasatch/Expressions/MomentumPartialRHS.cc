@@ -38,6 +38,7 @@ MomRHSPart( const Expr::Tag& convFluxX,
             const Expr::Tag& strainX,
             const Expr::Tag& strainY,
             const Expr::Tag& strainZ,
+            const Expr::Tag& dilataionTag,
             const Expr::Tag& densityTag,
             const Expr::Tag& bodyForceTag,
             const Expr::Tag& srcTermTag,
@@ -58,6 +59,8 @@ MomRHSPart( const Expr::Tag& convFluxX,
     hasIntrusion_(volFracTag != Expr::Tag())
 {
   this->set_gpu_runnable( true );
+  
+  divu_ = this->template create_field_request<SVolField>(dilataionTag);
   
   if( doXConv_ ) cFluxX_ = this->template create_field_request<XFluxT>(convFluxX);
   if( doYConv_ ) cFluxY_ = this->template create_field_request<YFluxT>(convFluxY);
@@ -112,6 +115,8 @@ evaluate()
   using namespace SpatialOps;
   FieldT& result = this->value();
 
+  const Wasatch::Direction stagLoc = Wasatch::get_staggered_location<FieldT>();
+  
   if( is3dconvdiff_ ){ // inline all convective and diffusive contributions
     const XFluxT& cfx = cFluxX_->field_ref();
     const YFluxT& cfy = cFluxY_->field_ref();
@@ -120,19 +125,42 @@ evaluate()
     const XFluxT& strainX = strainX_->field_ref();
     const YFluxT& strainY = strainY_->field_ref();
     const ZFluxT& strainZ = strainZ_->field_ref();
+    
+    SpatialOps::SpatFldPtr<XFluxT> strainXDil = SpatialOps::SpatialFieldStore::get<XFluxT>( result );
+    *strainXDil <<= strainX;
+    SpatialOps::SpatFldPtr<YFluxT> strainYDil = SpatialOps::SpatialFieldStore::get<YFluxT>( result );
+    *strainYDil <<= strainY;
+    SpatialOps::SpatFldPtr<ZFluxT> strainZDil = SpatialOps::SpatialFieldStore::get<ZFluxT>( result );
+    *strainZDil <<= strainZ;
+  
+    switch (stagLoc) {
+      case Wasatch::XDIR:
+        *strainXDil <<= *strainXDil - 1.0/3.0 * (*sVol2XFluxInterpOp_)(divu_->field_ref());
+        break;
+      case Wasatch::YDIR:
+        *strainYDil <<= *strainYDil - 1.0/3.0 * (*sVol2YFluxInterpOp_)(divu_->field_ref());
+        break;
+      case Wasatch::ZDIR:
+        *strainZDil <<= *strainZDil - 1.0/3.0 * (*sVol2ZFluxInterpOp_)(divu_->field_ref());
+        break;
+      default:
+        break;
+    }
 
     const SVolField& mu = visc_->field_ref();
     // note: this does not diff, but is slower:
     result <<= (*divXOp_)(-cfx)
               +(*divYOp_)(-cfy)
               +(*divZOp_)(-cfz)
-              + 2.0 * (*divXOp_)((*sVol2XFluxInterpOp_)(mu) * strainX )
-              + 2.0 * (*divYOp_)((*sVol2YFluxInterpOp_)(mu) * strainY )
-              + 2.0 * (*divZOp_)((*sVol2ZFluxInterpOp_)(mu) * strainZ );
+              + 2.0 * (*divXOp_)((*sVol2XFluxInterpOp_)(mu) * *strainXDil )
+              + 2.0 * (*divYOp_)((*sVol2YFluxInterpOp_)(mu) * *strainYDil )
+              + 2.0 * (*divZOp_)((*sVol2ZFluxInterpOp_)(mu) * *strainZDil );
 //    // this is the fully inlined version, which causes diffs on ~9 tests.
 //    result <<= (*divXOp_)( -cfx + 2.0 * (*sVol2XFluxInterpOp_)(mu) * strainX ) +
 //               (*divYOp_)( -cfy + 2.0 * (*sVol2YFluxInterpOp_)(mu) * strainY ) +
 //               (*divZOp_)( -cfz + 2.0 * (*sVol2ZFluxInterpOp_)(mu) * strainZ );
+    
+
   }
   else{ // 1D and 2D cases, or cases with only convection or diffusion - not optimized for these...
 
@@ -142,9 +170,24 @@ evaluate()
     if( doYConv_ ) result <<= result - (*divYOp_)(cFluxY_->field_ref());
     if( doZConv_ ) result <<= result - (*divZOp_)(cFluxZ_->field_ref());
 
-    if( doXTau_ ) result <<= result + 2.0 * (*divXOp_)( (*sVol2XFluxInterpOp_)(visc_->field_ref()) * strainX_->field_ref()); // + 2*div(mu*S_xi)
-    if( doYTau_ ) result <<= result + 2.0 * (*divYOp_)( (*sVol2YFluxInterpOp_)(visc_->field_ref()) * strainY_->field_ref()); // + 2*div(mu*S_yi)
-    if( doZTau_ ) result <<= result + 2.0 * (*divZOp_)( (*sVol2ZFluxInterpOp_)(visc_->field_ref()) * strainZ_->field_ref()); // + 2*div(mu*S_zi)
+    if( doXTau_ ) {
+      SpatialOps::SpatFldPtr<XFluxT> strainXDil = SpatialOps::SpatialFieldStore::get<XFluxT>( result );
+      *strainXDil <<= strainX_->field_ref();
+      if (stagLoc == Wasatch::XDIR) *strainXDil <<= *strainXDil - 1.0/3.0 * (*sVol2XFluxInterpOp_)(divu_->field_ref());
+      result <<= result + 2.0 * (*divXOp_)( (*sVol2XFluxInterpOp_)(visc_->field_ref()) * *strainXDil); // + 2*div(mu*S_xi)
+    }
+    if( doYTau_ ) {
+      SpatialOps::SpatFldPtr<YFluxT> strainYDil = SpatialOps::SpatialFieldStore::get<YFluxT>( result );
+      *strainYDil <<= strainY_->field_ref();
+      if (stagLoc == Wasatch::YDIR) *strainYDil <<= *strainYDil - 1.0/3.0 * (*sVol2YFluxInterpOp_)(divu_->field_ref());
+      result <<= result + 2.0 * (*divYOp_)( (*sVol2YFluxInterpOp_)(visc_->field_ref()) * *strainYDil); // + 2*div(mu*S_yi)
+    }
+    if( doZTau_ ) {
+      SpatialOps::SpatFldPtr<ZFluxT> strainZDil = SpatialOps::SpatialFieldStore::get<ZFluxT>( result );
+      *strainZDil <<= strainZ_->field_ref();
+      if (stagLoc == Wasatch::ZDIR) *strainZDil <<= *strainZDil - 1.0/3.0 * (*sVol2ZFluxInterpOp_)(divu_->field_ref());
+      result <<= result + 2.0 * (*divZOp_)( (*sVol2ZFluxInterpOp_)(visc_->field_ref()) * *strainZDil); // + 2*div(mu*S_zi)
+    }
   }
   
   // sum in other terms as required
@@ -165,6 +208,7 @@ Builder::Builder( const Expr::Tag& result,
                   const Expr::Tag& strainX,
                   const Expr::Tag& strainY,
                   const Expr::Tag& strainZ,
+                  const Expr::Tag& dilataionTag,
                   const Expr::Tag& densityTag,
                   const Expr::Tag& bodyForceTag,
                   const Expr::Tag& srcTermTag,
@@ -177,6 +221,7 @@ Builder::Builder( const Expr::Tag& result,
     strainXt_  ( strainX      ),
     strainYt_  ( strainY      ),
     strainZt_  ( strainZ      ),
+    dilataiont_( dilataionTag ),
     densityt_  ( densityTag   ),
     bodyForcet_( bodyForceTag ),
     srcTermt_  ( srcTermTag   ),
@@ -191,7 +236,7 @@ MomRHSPart<FieldT>::Builder::build() const
 {
   return new MomRHSPart<FieldT>( cfluxXt_, cfluxYt_, cfluxZt_,
                                  viscTag_, strainXt_, strainYt_, strainZt_,
-                                 densityt_, bodyForcet_, srcTermt_,
+                                 densityt_, dilataiont_, bodyForcet_, srcTermt_,
                                  volfract_ );
 }
 

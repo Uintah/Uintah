@@ -136,7 +136,7 @@ evaluate()
 {
   using namespace SpatialOps;
   StrainT& strain = this->value();
-  strain <<= (*velGradOp_)(u_->field_ref()) - 1.0/3.0*((*svolInterpOp_)(dil_->field_ref()));
+  strain <<= (*velGradOp_)(u_->field_ref());
 }
 
 //--------------------------------------------------------------------
