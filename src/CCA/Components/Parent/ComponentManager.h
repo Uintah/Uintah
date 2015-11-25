@@ -41,12 +41,44 @@
 namespace Uintah {
   class ComponentManager : public UintahParallelComponent, public SimulationInterface {
     public:
+
+      enum ComponentListType {
+        all,
+        manager,
+        principle,
+        subcomponent,
+        principleandsub
+      };
              ComponentManager(  const ProcessorGroup    * myWorld
                               ,       ProblemSpecP      & problemSpec
                               ,       bool                doAMR
                               , const std::string       & uda
                              );
     virtual ~ComponentManager();
+
+    // Pure virtual interface for a component manager.
+    int
+    getNumActiveComponents(ComponentListType)               = 0;
+
+    UintahParallelComponent*
+    getComponent(int index, ComponentListType fromList)     = 0;
+
+    LevelSet*
+    getLevelSet(int index, ComponentListType fromList)      = 0;
+
+    ProblemSpecP
+    getProblemSpec(int index, ComponentListType fromList)   = 0;
+
+    SimulationStateP
+    getState(int index, ComponentListType fromList)         = 0;
+
+    int
+    numNewDWNeeded(int index, ComponentListType fromList) = 0;
+
+    int
+    numOldDWNeeded(int index, ComponentListType fromList) = 0;
+
+
   };
 }
 
