@@ -189,74 +189,6 @@ namespace Wasatch{
   
   //==================================================================
 
-  // note that the ordering of Vel1T and Vel2T are very important, and
-  // must be consistent with the order of the velocity tags passed
-  // into the Strain constructor.
-  template< typename FaceT > struct StrainHelper;
-  // nomenclature: XSurfXField - first letter is volume type: S, X, Y, Z
-  // then it is followed by the field type
-  template<> struct StrainHelper<SpatialOps::XSurfXField>
-  {
-    // XSurfXField - XVol-XSurf
-    // tau_xx
-    typedef XVolField Vel1T;
-    typedef XVolField Vel2T;
-  };
-  template<> struct StrainHelper<SpatialOps::XSurfYField>
-  {
-    // XSurfYField - XVol-YSurf
-    // tau_yx (tau on a y face in the x direction)
-    typedef XVolField Vel1T;
-    typedef YVolField Vel2T;
-  };
-  template<> struct StrainHelper<SpatialOps::XSurfZField>
-  {
-    // XSurfZField - XVol-ZSurf
-    // tau_zx (tau on a z face in the x direction)
-    typedef XVolField Vel1T;
-    typedef ZVolField Vel2T;
-  };
-
-  template<> struct StrainHelper<SpatialOps::YSurfXField>
-  {
-    // tau_xy
-    typedef YVolField Vel1T;
-    typedef XVolField Vel2T;
-  };
-  template<> struct StrainHelper<SpatialOps::YSurfYField>
-  {
-    // tau_yy
-    typedef YVolField Vel1T;
-    typedef YVolField Vel2T;
-  };
-  template<> struct StrainHelper<SpatialOps::YSurfZField>
-  {
-    // tau_zy
-    typedef YVolField Vel1T;
-    typedef ZVolField Vel2T;
-  };
-
-  template<> struct StrainHelper<SpatialOps::ZSurfXField>
-  {
-    // tau_xz
-    typedef ZVolField Vel1T;
-    typedef XVolField Vel2T;
-  };
-  template<> struct StrainHelper<SpatialOps::ZSurfYField>
-  {
-    // tau_yz
-    typedef ZVolField Vel1T;
-    typedef YVolField Vel2T;
-  };
-  template<> struct StrainHelper<SpatialOps::ZSurfZField>
-  {
-    // tau_zz
-    typedef ZVolField Vel1T;
-    typedef ZVolField Vel2T;
-  };
-
-  //==================================================================
-
   Expr::Tag mom_tag( const std::string& momName, const bool old = false )
   {
     if (old) return Expr::Tag( momName, Expr::STATE_N );
@@ -363,13 +295,12 @@ namespace Wasatch{
   setup_strain( const Expr::Tag& strainTag,
                 const Expr::Tag& vel1Tag,
                 const Expr::Tag& vel2Tag,
-                const Expr::Tag& dilTag,
                 Expr::ExpressionFactory& factory )
   {
     typedef typename StrainHelper<FaceFieldT>::Vel1T Vel1T;  // type of velocity component 1
     typedef typename StrainHelper<FaceFieldT>::Vel2T Vel2T;  // type of velocity component 2
     typedef typename Strain< FaceFieldT, Vel1T, Vel2T >::Builder StrainT;
-    return factory.register_expression( scinew StrainT( strainTag, vel1Tag, vel2Tag, dilTag ) );
+    return factory.register_expression( scinew StrainT( strainTag, vel1Tag, vel2Tag ) );
   }
 
   //==================================================================
@@ -402,15 +333,15 @@ namespace Wasatch{
     // register necessary strain expression when the flow is viscous
     if( isViscous ) {
       if( doMom[0] ){
-        const Expr::ExpressionID strainID = setup_strain< XFace >( strainXt, thisVelTag, velTags[0], dilTag, factory );
+        const Expr::ExpressionID strainID = setup_strain< XFace >( strainXt, thisVelTag, velTags[0], factory );
         if( stagLoc == XDIR ) normalStrainID = strainID;
       }
       if( doMom[1] ){
-        const Expr::ExpressionID strainID = setup_strain< YFace >( strainYt, thisVelTag, velTags[1], dilTag, factory );
+        const Expr::ExpressionID strainID = setup_strain< YFace >( strainYt, thisVelTag, velTags[1], factory );
         if( stagLoc == YDIR ) normalStrainID = strainID;
       }
       if( doMom[2] ){
-        const Expr::ExpressionID strainID = setup_strain< ZFace >( strainZt, thisVelTag, velTags[2], dilTag, factory );
+        const Expr::ExpressionID strainID = setup_strain< ZFace >( strainZt, thisVelTag, velTags[2], factory );
         if( stagLoc == ZDIR ) normalStrainID = strainID;
       }
       factory.cleave_from_children( normalStrainID );
