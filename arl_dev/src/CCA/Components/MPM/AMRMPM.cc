@@ -83,7 +83,7 @@ static DebugStream amr_doing("AMRMPM", false);
 //#define DEBUG_VEL
 //#define DEBUG_ACC
 #undef CBDI_FLUXBCS
-#define USE_FLUX_RESTRICTION
+#undef USE_FLUX_RESTRICTION
 
 //__________________________________
 //   TODO:
