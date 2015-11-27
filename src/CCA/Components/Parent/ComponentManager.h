@@ -58,25 +58,28 @@ namespace Uintah {
 
     // Pure virtual interface for a component manager.
     int
-    getNumActiveComponents(ComponentListType)               = 0;
+    getNumActiveComponents(ComponentListType)                       = 0;
 
     UintahParallelComponent*
-    getComponent(int index, ComponentListType fromList)     = 0;
+    getComponent(int index, ComponentListType fromList)             = 0;
 
     LevelSet*
-    getLevelSet(int index, ComponentListType fromList)      = 0;
+    getLevelSet(int index, ComponentListType fromList)              = 0;
 
     ProblemSpecP
-    getProblemSpec(int index, ComponentListType fromList)   = 0;
+    getProblemSpec(int index, ComponentListType fromList)           = 0;
 
     SimulationStateP
-    getState(int index, ComponentListType fromList)         = 0;
+    getState(int index, ComponentListType fromList)                 = 0;
+
+    SimulationTime*
+    getTimeInfo(int index,  ComponentListType fromList)             = 0;
 
     int
-    numNewDWNeeded(int index, ComponentListType fromList) = 0;
+    getRequestedNewDWCount(int index, ComponentListType fromList)   = 0;
 
     int
-    numOldDWNeeded(int index, ComponentListType fromList) = 0;
+    getRequestedOldDWCount(int index, ComponentListType fromList)   = 0;
 
 
   };

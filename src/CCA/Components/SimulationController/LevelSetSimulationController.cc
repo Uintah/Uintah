@@ -78,36 +78,43 @@ static DebugStream gheapchecker( "HeapChecker",                    false);
 
 double level_set_barrier_times[5]={0};
 
+void
 LevelSetSimulationController::subcomponentPostGridSetup(
-                                                                SimulationInterface * subcomponent
-                                                        ,       SchedulerP            subcomponentScheduler
-                                                        ,       SimulationTime      * subcomponentTimer
-                                                        ,       GridP                 grid
-                                                        ,       LevelSet            * subcomponentLevelSet
-                                                        ,       bool                  isRestarting
-                                                        , const ProblemSpecP          subcomponentSpec
-                                                        ,       SimulationStateP      subcomponentState
-                                                        ,       int                   subcomponentTimestep
+                                                                UintahParallelComponent * subcomponent
+                                                        ,       SimulationTime          * subcomponentTimer
+                                                        ,       LevelSet                * subcomponentLevelSet
+                                                        ,       bool                      isRestarting
+
+                                                        , const ProblemSpecP              subcomponentSpec
+                                                        ,       SimulationStateP          subcomponentState
+                                                        ,       int                       subcomponentTimestep
                                                        )
 {
-  ProblemSpecP restartProblemSpec;
+  ProblemSpecP         restartProblemSpec;
+  SimulationInterface* subInterface = dynamic_cast<SimulationInterface*>    (subcomponent);
+  Scheduler*           subScheduler = dynamic_cast<Scheduler*>              (subcomponent->getPort("scheduler"));
+
+  GridP                grid = subcomponentLevelSet->getSubset(0)->get(0)->getGrid();
+
   if (isRestarting) {
+    // Throw internal error for now.
+    throw InternalError("ERROR: Restart is not currently supported in multiscale simulations.", __FILE__, __LINE__);
     restartProblemSpec = d_archive->getTimestepDocForComponent(d_restartIndex);
   }
-  subcomponent->problemSetup(subcomponentSpec, restartProblemSpec, grid, subcomponentState);
+  subInterface->problemSetup(subcomponentSpec, restartProblemSpec, grid, subcomponentState);
 
   if (isRestarting) {
     //  The following code is to get this code in the correct place.  However, right now we don't
     // support restarting.
     // FIXME TODO JBH APH 11-23-2015 Verify the restart code below once we have implementation
     // for restarting multiple levelset, multiple component simulations.
-    throw IllegalValue("ERROR:  Restarting is not yet implemented!", __FILE__, __LINE__);
+    throw InternalError("ERROR: Restart is not currently supported in multiscale simulations.", __FILE__, __LINE__);
 
     // If necessary, set this component's timestep.
     subcomponentState->setCurrentTopLevelTimeStep(subcomponentTimestep);
     // Tell the subcomponent scheduler the generation of the re-started simulation.
     // (Add +1 because the scheduler will be starting on the next timestep.)
-    subcomponentScheduler->setGeneration(subcomponentTimestep + 1);
+    subScheduler->setGeneration(subcomponentTimestep + 1);
 
     // If the user wishes to change del_t for the subcomponent on a restart...
     // FIXME TODO JBH APH 11-23-2015 |  The following code is probably not right.
@@ -119,7 +126,7 @@ LevelSetSimulationController::subcomponentPostGridSetup(
     if (subcomponentTimer->override_restart_delt != 0) {
       double newdelt = d_timeinfo->override_restart_delt;
       proc0cout << "Overriding restart delt with " << newdelt << "\n";
-      subcomponentScheduler->get_dw(1)->override(delt_vartype(newdelt), subcomponentState->get_delt_label());
+      subScheduler->get_dw(1)->override(delt_vartype(newdelt), subcomponentState->get_delt_label());
       int numSubsets = subcomponentLevelSet->size();
       for (int subsetIndex = 0; subsetIndex < numSubsets; ++subsetIndex) {
         double delt_fine = newdelt;
@@ -286,16 +293,30 @@ LevelSetSimulationController::postGridSetup(
 
   ComponentManager::ComponentListType  compList = ComponentManager::ComponentListType::principleandsub;
   // Loop through each subcomponent and set them up
-  int activeSubcomponents = d_sim->getNumActiveComponents(compList);
+  int activeSubcomponents = d_manager->getNumActiveComponents(compList);
   for (int subComponentIndex = 0; subComponentIndex < activeSubcomponents; ++subComponentIndex) {
     UintahParallelComponent * subComponent       = d_manager->getComponent(subComponentIndex, compList);
     LevelSet*                 subLevelSet        = d_manager->getLevelSet(subComponentIndex, compList);
     ProblemSpecP              subProblemSpec     = d_manager->getProblemSpec(subComponentIndex, compList);
     SimulationStateP          subSimulationState = d_manager->getState(subComponentIndex, compList);
+    SimulationTime*           subTimeInfo        = d_manager->getTimeInfo(subComponentIndex, compList);
+
 
     SimulationInterface     * subInterface       = dynamic_cast<SimulationInterface*> (subComponent);
 
-    subcomponentPostGridSetup(subInterface, subProblemSpec, subSimulationState, grid, d_restarting);
+    int subRestartTimestep = 0;
+    if (d_restarting) {
+      throw InternalError("ERROR:  Restarting is currently not supported for multiscale simulation",
+                          __FILE__, __LINE__);
+      // Find the proper subcomponent timestep index for the Nth subcomponent
+      subRestartTimestep = parseSubcomponentOldTimestep(subComponentIndex);
+    }
+
+    // TImestep is set in gridSetup.. we will eventually need to parse the subtimestep differently from the
+    // top level timestep.
+    // FIXME TODO JBH 11-25-2015 Why am I passing in a timestep here?  I don't see where it gets set/passed back currently.
+    subcomponentPostGridSetup(subComponent, subTimeInfo, subLevelSet, d_restarting,
+                              subProblemSpec, subSimulationState, subRestartTimestep);
   }
 
   d_sharedState->finalizeMaterials();
@@ -308,30 +329,6 @@ LevelSetSimulationController::postGridSetup(
     d_output->restartSetup(dir, 0, d_restartTimestep, time, d_restartFromScratch, d_restartRemoveOldDir);
   }
 
-
-}
-
-void LevelSetSimulationController::subcomponentPostGridSetup(
-                                                                     SimulationInterface*    currentInterface
-                                                             ,       ProblemSpecP          & currentSpec
-                                                             ,       SimulationStateP      & currentState
-                                                             ,       GridP                 & grid
-                                                             ,       bool                    isRestarting
-                                                            )
-{
-  ProblemSpecP restartProblemSpec = 0;
-  if (isRestarting) {
-    // TODO FIXME Need to double check this for restarting properly.
-    // restartProblemSpec = d_archive->getTimestepDocForComponent(d_restartIndex);
-    throw InternalError("ERROR:  Restart not currently supported.", __FILE__, __LINE__);
-  }
-
-  currentInterface->problemSetup(currentSpec, restartProblemSpec, grid, d_sharedState);
-  if (isRestarting) {
-    //simdbg << "Restarting... loading component data\n";
-  }
-
-  currentState->finalizeMaterials();
 
 }
 
@@ -465,7 +462,7 @@ LevelSetSimulationController::newRun()
   ComponentManager::ComponentListType principleList = ComponentManager::ComponentListType::principle;
 
   int activeSubcomponents = d_manager->getNumActiveComponents(subList);
-  int princpleComponents  = d_manager->getNumActiveComponents(principleList);
+  int principleComponents  = d_manager->getNumActiveComponents(principleList);
   // Do setup of the base component before grid creation
   basePreGridSetup();
 
@@ -495,6 +492,7 @@ LevelSetSimulationController::newRun()
   }
   else
   {
+    throw InternalError("ERROR:  Restarts not currently supported in multiscale controller.", __FILE__, __LINE__);
     baseSimulationGrid = parseGridFromRestart();
   }
   // Do the base component portions of the grid setup
@@ -507,10 +505,9 @@ LevelSetSimulationController::newRun()
     // This will set up schedulers and time trackers for each subcomponent independently.
     UintahParallelComponent*  subComponent = d_manager->getComponent(subComponentIndex, subList);
     SchedulerP subScheduler = subComponent->getPort("scheduler");
-    int requestedNewDW = d_manager->getRequestedNewDWCount(subComponentIndex);
-    int requestedOldDW = d_manager->getRequestedOldDWCount(subComponentIndex);
+    int requestedNewDW = d_manager->getRequestedNewDWCount(subComponentIndex, subList);
+    int requestedOldDW = d_manager->getRequestedOldDWCount(subComponentIndex, subList);
     initializeScheduler(subScheduler, baseSimulationGrid, requestedOldDW, requestedNewDW);
-    initializeSubcomponents(/*arguments here*/);
   }
 
   bool firstTimestep = true;
@@ -520,26 +517,37 @@ LevelSetSimulationController::newRun()
   }
 
   double baseSimulationTime;
-  basePostGridSetup(baseSimulationGrid, baseSimulationTime);
-  for (int subComponentIndex = 0; subComponentIndex < activeSubcomponents; ++subComponentIndex) {
-    subcomponentPostGridSetup(/*arguments here*/);
+  postGridSetup(baseSimulationGrid, baseSimulationTime);
+  // Save actual current start time for time tracking in main and subcomponents
+  d_startTime = Time::currentSeconds();
+
+  // FIXME TODO JBH APH 11-26-2015 I'm not entirely sure what d_reduceUda even does!
+  // However, fixing it to work across multiple components of a simulation is likely to be super
+  // fussy!
+  if (d_reduceUda) {
+    throw InternalError("ERROR:  Uda reduction not yet implemented for multiscale controller", __FILE__, __LINE__);
+
+    Dir fromDir(d_fromDir);
+    d_output->reduceUdaSetup(fromDir);
+
+    d_timeinfo->delt_factor         = 1;
+    d_timeinfo->delt_min            = 0;
+    d_timeinfo->delt_max            = 1e99;
+    d_timeinfo->initTime            = static_cast<UdaReducer*>(d_sim)->getInitialTime();
+    d_timeinfo->maxTime             = static_cast<UdaReducer*>(d_sim)->getMaxTime();
+    d_timeinfo->max_delt_increase   = 1e99;
+    d_timeinfo->max_initial_delt    = 1e99;
   }
+  // For now assume that we can treat the component lists independently.. we may need to look at
+  // getting lists of principle components each of which contains a list of subcomponents attached to that principle
+  // component eventually, but for the demonstrator we will have one principle component with multiple subcomponents
+  // so are assuming that this is implicit.
+  runInitialTimestepOnList(principleList);
+  runInitialTimestepOnList(subList);
 
-
-  // Here we use function calls that are new to the componentManager component and will only work with this scheduler
-  LevelSet*                   baseLevelSet = getComponentLevelSet(Component::base);
-  UintahParallelComponent   * baseComponent = getComponent(Component::base);
-  SimulationInterface       * baseInterface = dynamic_cast<SimulationInterface*> (baseComponent);
-  doGenericInitialTimestep(baseLevelSet, baseComponent, baseInterface);
-
-
-  for (int subComponentIndex = 0; subComponentIndex < activeSubcomponents; ++subComponentIndex) {
-    LevelSet*                 currentLevelSet = getComponentLevelSet(Component::next);
-    UintahParallelComponent * currentComponent= getComponent(Component::next);
-    SimulationInterface     * baseInterface   = dynamic_cast<SimulationInterface*> (currentComponent);
-    doGenericInitialTimestep(currentLevelSet, currentComponent, currentInterface);
-  }
-
+  setStartSimTime(baseSimulationTime);
+  // We will need to initialize subcomponent simulation stat variables somewhere too.
+  initSimulationStatsVars();
 
   int numBaseIterations = d_sharedState->getCurrentTopLevelTimeStep();
   double del_t   = 0;
@@ -578,105 +586,130 @@ LevelSetSimulationController::newRun()
       doRegridding(baseSimulationGrid, false);
     }
 
+    doGenericMainTimestep();
     d_sharedState->d_prev_delt = del_t;
-    ++numBaseIterations;
 
+    // Update number of time steps and simulation time
+    ++numBaseIterations;
+    baseSimulationTime += del_t;
 
   } // End main simulation loop
+
+  d_wallTime = finalizeRunLoop(d_scheduler, d_sharedState, baseSimulationTime);
+//  delt_vartype delt_var;
+//  d_scheduler->getLastDW()->get(delt_var, d_sharedState->get_delt_label());
+//  del_t = delt_var;
+//  adjustDelT(del_t, d_sharedState->d_prev_delt, d_sharedState->getCurrentTopLevelTimeStep(), baseSimulationTime);
+//  calcWallTime();
+  printSimulationStats( d_sharedState->getCurrentTopLevelTimeStep(), del_t, baseSimulationTime);
 }
 
-LevelSetSimulationController::runMainLoop(
-                                                  GridP          simulationGrid
-                                          ,       double         currentBaseTime
-                                          , const int            currentBaseIterations
-                                         )
+void
+LevelSetSimulationController::doGenericMainTimeStep(
+                                                      const bool        firstTimestep
+                                                    ,       GridP       grid
+                                                   )
 {
 
-  while ( ( currentBaseTime < d_timeinfo->maxTime) &&
-          ( currentBaseIterations < d_timeinfo->maxTimestep) &&
-          (d_timeinfo->max_wall_time == 0 || getWallTime() < d_timeinfo->max_wall_time) )
-  {
+  // By necessity regridding works on the global grid.  So if we have per-level-set flags which
+  // signal regridding, we should clear them ALL after regridding has been done.
+  if ( d_regridder && d_regridder->doRegridOnce() && d_regridder->isAdaptive() ) {
+    proc0cout << "______________________________________________________________________\n";
+     proc0cout << " Regridding once.\n";
+     doRegridding(grid, false);
+     d_regridder->setAdaptivity(false);
+     proc0cout << "______________________________________________________________________\n";
+   }
 
-#ifdef USE_GPERFTOOLS
+   if (d_regridder && d_regridder->needsToReGrid(grid) && (!firstTimestep || (!d_restarting))) {
+     doRegridding(grid, false);
+   }
 
-    if (gheapprofile.active())) {
-      char hepename[512];
-      sprintf(heapename, "Timestep %d", iterations);
-      HeapProfilerDump(heapename);
-    }
-#endif
+}
 
-    if (dbg_barrier.active()) {
-      for (int i = 0; i < 5; i++) {
-        level_set_barrier_times[i] = 0;
+double
+LevelSetSimulationController::runMainTimestepOnList(
+                                                     const ComponentManager::ComponentListType componentList
+                                                   )
+{
+  int listSize = d_manager->getNumActiveComponents(componentList);
+  for (int listIndex = 0; listIndex < listSize; ++listIndex) {
+    UintahParallelComponent * currComponent = d_manager->getComponent(listIndex, componentList);
+    LevelSet                * currLevelSet  = d_manager->getLevelSet(listIndex, componentList);
+    SimulationStateP        * currState     = d_manager->getState(listIndex, componentList);
+
+    SimulationInterface     * currInterface = dynamic_cast<SimulationInterface*> (currComponent);
+
+    doGenericMainTimestep(currLevelSet, currComponent, currState);
+  }
+}
+
+void
+LevelSetSimulationController::doGenericMainTimestep(
+                                                      const LevelSet                * levels
+                                                    ,       UintahParallelComponent * component
+                                                    ,       SimulationStateP          state
+                                                   )
+{
+  Scheduler* currentScheduler = component->getPort("scheduler");
+
+  int maxTotalFineDW = 1;
+  int numLevelSubsets = levels->size();
+  for (int subsetIndex = 0; subsetIndex < numLevelSubsets; ++subsetIndex) {
+    // Check to see if subset is AMR and is not Lockstep.  If so calculate the number of fine
+    // DW levels needed for the AMR.  Since we may theoretically have multiple AMR subsets in a
+    // single set, store only the max number of fine DW's needed, as this should be more than
+    // sufficient for other subsets which request less.
+    LevelSubset* currentSubset = levels->getSubset(0);
+    if (currentSubset->get(0)->isAMR() && !state->isLockstepAMR()) {
+      int numLevelsInSubset = currentSubset->size();
+      int subsetFineDW= 1;
+      for (int levelInSubset = 0; levelInSubset < numLevelsInSubset; ++levelInSubset) {
+        subsetFineDW *= currentSubset->get(levelInSubset)->getRefinementRatioMaxDim();
       }
+      maxTotalFineDW = Max(maxTotalFineDW, subsetFineDW);
     }
+  }
 
-    // Run the base level processes
-    if (d_regridder && d_regridder->doRegridOnce() && d_regridder->isAdaptive() ) {
-      proc0cout << "______________________________________________________________________\n";
-      proc0cout << " Regridding once.\n";
-      doRegridding(simulationGrid, false);
-      d_regridder->setAdaptivity(false);
-      proc0cout << "______________________________________________________________________\n";
-    }
+  state->d_prev_delt = del_t;
 
-  } // End iteration while loop
+  delt_vartype del_t_var;
+  DataWarehouse* newDW = currentScheduler->getLastDW();
+  newDW->get(del_t_var, state->get_delt_label());
 
+  del_t = del_t_var;
 }
 
-SimulationStateP
-LevelSetSimulationController::runInitialIndependent(
-                                                     UintahParallelComponent    * currentComponent
-                                             ,       GridP                      & currentGrid
-                                             , const LevelSet                   * currentLevelSet
-                                             , const ProblemSpecP               & currentSpec
-                                            )
+void
+LevelSetSimulationController::runInitialTimestepOnList(
+                                                       const ComponentManager::ComponentListType componentList
+                                                      )
 {
-  SimulationStateP currentSimState = subcomponentPreGridSetup(currentComponent, currentSpec);
+  int listSize = d_manager->getNumActiveComponents(componentList);
+  for (int listIndex = 0; listIndex < listSize; ++listIndex) {
+    UintahParallelComponent   * currComponent = d_manager->getComponent(listIndex, componentList);
+    LevelSet                  * currLevelSet  = d_manager->getLevelSet(listIndex, componentList);
+    SimulationInterface       * currInterface = dynamic_cast<SimulationInterface*> (currComponent);
 
-  // The following call replaces gridSetup();
-  subcomponentLevelSetSetup( currentLevelSet, currentSpec, currentComponent, currentSimState, d_restarting);
-
-  bool isInitTimestep;
-  Scheduler* currentScheduler = dynamic_cast<Scheduler*> (currentComponent->getPort("scheduler"));
-
-  currentScheduler->initialize(1,1);
-  currentScheduler->advanceDataWarehouse(currentGrid, (isInitTimestep = true));
-  currentScheduler->setInitTimestep(true);
-
-  bool firstTimestep = true;
-  if (d_restarting) {
-    currentScheduler->setRestartInitTimestep(firstTimestep);
+    doGenericInitialTimestep(currLevelSet, currComponent, currInterface);
   }
+}
 
-  basecomponentPostGridSetup(currentGrid, time);
-  subcomponentPostGridSetup(currentLevelSet, currentGrid, time);
 
-  // A couplt of small bits from the end of the base component PostGridSetup since we had to split out the
-  // subcomponent setups.  These used to be in PostGridSetup.
-  d_output->initializeOutput(d_ups);
-  if (d_restarting) {
-    // FIXME TODO Restarts are complex because each subcomponent has it's own timeline
-    //Dir dir(d_fromDir);
-    //d_output->restartSetup(dir, 0, d_restartTimestep, t, d_restartFromScratch, d_restartRemoveOldDir );
-  }
-  // Equivalent of AMRSimulationController::calcStartTime();
-  componentStartTime = Time::currentSeconds();
-
-  double localTime = componentStartTime;
-  doLevelSetBasedInitialTimestep(runningLevelSet, localTime);
-  setStartSimTime(time);
-  component_n = 0;
-  component_wallTime = 0;
-  component_prevWallTime = Time::currentSeconds();
-
-#ifndef DISABLE_SCI_MALLOC
-  AllocatorSetDefaultTagLineNumber(currentSimState->getCurrentTopLevelTimeStep());
-#endif
-
-  return currentSimState;
-} // End of first timestep related settings
+double
+LevelSetSimulationController::finalizeRunLoop(
+                                                      SchedulerP        workingScheduler
+                                              ,       SimulationStateP  workingState
+                                              ,       double            workingTime
+                                             )
+{
+  delt_vartype del_t_var;
+  workingScheduler->getLastDW()->get(del_t_var, workingState->get_delt_label());
+  double del_time = del_t_var;
+  adjustDelT(del_time, workingState->d_prev_delt, workingState->getCurrentTopLevelTimeStep(), workingTime);
+  double localWallTime = Time::currentSeconds();
+  return localWallTime;
+}
 
 UintahParallelComponent*
 LevelSetSimulationController::instantiateNewComponent(
