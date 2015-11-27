@@ -101,6 +101,17 @@ class LevelSetSimulationController : public SimulationController {
     void basePreGridSetup();
     GridP parseGridFromRestart();
 
+    virtual void postGridSetup(GridP& grid, double& time);
+    void subcomponentPostGridSetup(
+                                           UintahParallelComponent  * subComponent
+                                   ,       SimulationTime           * subComponentTime
+                                   ,       LevelSet                 * subcomponentLevelSet
+                                   ,       bool                       isRestarting
+                                   , const ProblemSpecP               subcomponentSpec
+                                   ,       SimulationStateP           subcomponentState
+                                   ,       int                        subcomponentTimestep
+                                  );
+
     UintahParallelComponent* instantiateNewComponent(
                                                        const ProcessorGroup * myWorld
                                                      ,       ProblemSpecP   & componentSpec
@@ -110,6 +121,21 @@ class LevelSetSimulationController : public SimulationController {
                                                       UintahParallelComponent * component
                                               , const ProblemSpecP            & componentSpec
                                              );
+
+    int parseSubcomponentOldTimestep(
+                                            int subcomponentIndex
+                                    )
+    {
+      throw InternalError("ERROR:  Restarting is not yet supported in the multiscale controller.", __FILE__, __LINE__);
+    }
+
+    void   runInitialTimestepOnList(ComponentManager::ComponentListType list);
+
+    double finalizeRunLoop(
+                                  SchedulerP        workingScheduler
+                           ,      SimulationStateP  workingState
+                           ,      double            workintTime
+                          );
 
     void subcomponentLevelSetSetup(
                                      const LevelSet                 & currentLevelSet
