@@ -40,9 +40,9 @@ NonLinearDiff1::NonLinearDiff1(ProblemSpecP& ps, SimulationStateP& sS, MPMFlags*
   ScalarDiffusionModel(ps, sS, Mflag, diff_type) {
 
   use_pressure = false;
+  ps->require("use_pressure", use_pressure);
   ps->require("tuning1", tuning1);
   ps->require("tuning2", tuning2);
-  ps->require("use_pressure", use_pressure);
 
   if(use_pressure){
     ps->require("tuning3", tuning3);
@@ -211,6 +211,13 @@ void NonLinearDiff1::outputProblemSpec(ProblemSpecP& ps, bool output_rdm_tag)
 
   rdm_ps->appendElement("diffusivity",diffusivity);
   rdm_ps->appendElement("max_concentration",max_concentration);
+  rdm_ps->appendElement("use_pressure", use_pressure);
   rdm_ps->appendElement("tuning1",tuning1);
   rdm_ps->appendElement("tuning2",tuning2);
+
+  if(use_pressure){
+    rdm_ps->appendElement("tuning3", tuning3);
+    rdm_ps->appendElement("tuning4", tuning4);
+    rdm_ps->appendElement("tuning5", tuning5);
+  }
 }

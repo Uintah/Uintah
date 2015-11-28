@@ -83,7 +83,7 @@ static DebugStream amr_doing("AMRMPM", false);
 //#define DEBUG_VEL
 //#define DEBUG_ACC
 #undef CBDI_FLUXBCS
-#undef USE_FLUX_RESTRICTION
+#define USE_FLUX_RESTRICTION
 
 //__________________________________
 //   TODO:
@@ -5087,7 +5087,7 @@ void AMRMPM::applyExternalScalarFlux(const ProcessorGroup* ,
               pExternalScalarFlux[idx] = pbc->fluxPerParticle(time, area);
 #endif
 #if defined USE_FLUX_RESTRICTION
-              double flux_restriction = (100 + log(1-pConcentration[idx]))/100;
+              double flux_restriction = (10 + log(1-pConcentration[idx]))/10;
               if (flux_restriction < 0.0){
                 flux_restriction = 0.0;
               }
