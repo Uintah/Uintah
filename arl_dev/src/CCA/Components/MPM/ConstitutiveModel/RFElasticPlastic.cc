@@ -308,7 +308,7 @@ void RFElasticPlastic::outputProblemSpec(ProblemSpecP& ps,bool output_cm_tag)
   ProblemSpecP cm_ps = ps;
   if (output_cm_tag) {
     cm_ps = ps->appendChild("constitutive_model");
-    cm_ps->setAttribute("type","elastic_plastic_hp");
+    cm_ps->setAttribute("type","rf_elastic_plastic");
   }
   
   cm_ps->appendElement("bulk_modulus",                  d_initialData.Bulk);
