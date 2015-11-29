@@ -72,10 +72,10 @@
    <SimulationComponent type="amrmpm" />
 
    <Time>
-     <maxTime>2e8</maxTime>
+     <maxTime>8.0e8</maxTime>
      <initTime>0.0</initTime>
      <delt_min>1.0e-16</delt_min>
-     <delt_max>1.0e4</delt_max>
+     <delt_max>1.0e8</delt_max>
 <!--
      <max_Timesteps>100</max_Timesteps>
 -->
@@ -83,49 +83,56 @@
    </Time>
 
    <DataArchiver>
-      <filebase>2Phase_Sim2d_1.uda</filebase>
-      <!--
-      <outputTimestepInterval>100</outputTimestepInterval>
-      -->
-      <outputInterval>2.e6</outputInterval>
-      <save label = "p.x"/>
-      <save label = "p.mass"/>
-      <save label = "p.area"/>
-      <save label = "p.volume"/>
-      <save label = "p.temperature"/>
-      <save label = "p.stress"/>
-      <save label = "p.concentration"/>
-      <save label = "p.displacement"/>
-      <save label = "p.scalefactor"/>
-      <save label = "p.deformationMeasure"/>
-      <save label = "p.velocity"/>
-      <save label = "p.loadCurveID"/>
-      <save label = "p.diffusivity"/>
-      <save label = "p.externalscalarflux"/>
-      <save label = "g.mass"/>
-      <checkpoint cycle = "2" interval = "1.0e6"/>
-   </DataArchiver>
+      <filebase>2Phase_Sim2d.uda</filebase>
+<!--
+    <outputTimestepInterval>1</outputTimestepInterval>
+-->
+    <outputInterval>4.0e6</outputInterval>
+    <save label="p.x"/>
+    <save label="p.mass"/>
+    <save label="p.area"/>
+    <save label="p.volume"/>
+    <save label="p.stress"/>
+    <save label="p.particleID"/>
+    <save label="p.concentration"/>
+    <save label="p.scalefactor"/>
+    <save label="p.loadCurveID"/>
+    <save label="p.diffusivity"/>
+    <save label="p.displacement"/>
+    <save label="p.pressure_t1"/>
+    <save label="p.pressure_t2"/>
+<!--
+-->
+    <save label="g.mass"/>
+    <save label="g.acceleration"/>
+    <save label="g.concentration"/>
+    <save label="g.concentrationRate"/>
+    <save label="g.concentrationStar"/>
+    <save label="g.externalscalarflux"/>
+    <save label="p.externalscalarflux"/>
+    <save label="g.velocity"/>
+    <checkpoint cycle = "2" interval = "1.2e8"/>
+  </DataArchiver>
 
-   <MPM>
-     <time_integrator>explicit</time_integrator>
-     <interpolator>linear</interpolator>
-     <use_load_curves> true </use_load_curves>
-     <do_scalar_diffusion>true</do_scalar_diffusion>
-     <DoPressureStabilization> true </DoPressureStabilization>
-   </MPM>
-   <AMR>
+  <MPM>
+      <time_integrator>explicit</time_integrator>
+      <interpolator>cpdi</interpolator>
+      <use_load_curves> true </use_load_curves>
+      <do_scalar_diffusion>true</do_scalar_diffusion>
+  </MPM>
+  <AMR>
       <useLockStep> true </useLockStep>
       <MPM> </MPM>
-   </AMR>
+  </AMR>
 
-   <PhysicalConstants>
-     <gravity>[0.0, 0.0, 0.0]</gravity>
-   </PhysicalConstants>
+  <PhysicalConstants>
+    <gravity>[0.0, 0.0, 0.0]</gravity>
+  </PhysicalConstants>
 
-   <MaterialProperties>
+  <MaterialProperties>
      <MPM>
        <material name="pillar1">
-         <density>2.33e16</density>
+         <density>2.33e23</density>
          <melt_temp> 2000.0 </melt_temp>
          <constitutive_model type="rf_elastic_plastic"> 
            <bulk_modulus>            48e6    </bulk_modulus>
@@ -166,15 +173,24 @@
          <thermal_conductivity>0.0</thermal_conductivity>
          <specific_heat>5</specific_heat>
          <diffusion_model type = "non_linear1">
-           <diffusivity>  1.0e-6   </diffusivity>
+           <diffusivity>  1.0e-10   </diffusivity>
            <max_concentration> 1.0 </max_concentration>
-           <tuning1> 1.95 </tuning1>
-           <tuning2> 1000.0 </tuning2>
+           <!--
+           <use_pressure>false</use_pressure>
+           <tuning1> 1.95  </tuning1>
+           <tuning2> 1e4  </tuning2>
+           -->
+           <use_pressure>true</use_pressure>
+           <tuning1> 6.90  </tuning1>
+           <tuning2> 2.07  </tuning2>
+           <tuning3> 0.0   </tuning3>
+           <tuning4> 3.0   </tuning4>
+           <tuning5> 1e-6  </tuning5>
          </diffusion_model>
          <geom_object>
            <box label = "pillar1">
-             <min>[0.0,  0.0,  0.0]</min>
-             <max>[0.25, 0.25, 0.05]</max>
+             <min>[0.1, 0.0, 0.0]</min>
+             <max>[0.7, 0.1, 0.01]</max>
            </box>
            <res>[2,2,1]</res>
            <velocity>[0.0,0.0,0.0]</velocity>
@@ -197,55 +213,74 @@
        <scalar_flux>
          <geom_object>
            <box label = "y+">
-             <min>[0.0, 0.249, 0.0]</min>
-             <max>[0.25, 0.250, 0.05]</max>
+             <min>[0.1, 0.099, 0.0  ]</min>
+             <max>[0.7, 0.100, 0.01]</max>
            </box>
          </geom_object>
          <load_curve>
            <id>1</id>
            <time_point>
              <time> 0 </time>
-             <load> 1.e-5 </load>
+             <load> 6.e-5 </load>
            </time_point>
            <time_point>
              <time> 1.e12 </time>
-             <load> 1.e-5 </load>
+             <load> 6.e-5 </load>
            </time_point>
          </load_curve>
        </scalar_flux>
        <scalar_flux>
          <geom_object>
-           <box label = "x+">
-             <min>[0.249, 0.00, 0.0]</min>
-             <max>[0.25,  0.25, 0.05]</max>
+           <box label = "x-">
+             <min>[0.099, 0.00, 0.0]</min>
+             <max>[0.1,   0.10, 0.01]</max>
            </box>
          </geom_object>
          <load_curve>
            <id>2</id>
            <time_point>
              <time> 0 </time>
-             <load> 1.e-5 </load>
+             <load> 6.e-5 </load>
            </time_point>
            <time_point>
              <time> 1.e12 </time>
-             <load> 1.e-5 </load>
+             <load> 6.e-5 </load>
+           </time_point>
+         </load_curve>
+       </scalar_flux>
+       <scalar_flux>
+         <geom_object>
+           <box label = "x+">
+             <min>[0.699, 0.00, 0.0]</min>
+             <max>[0.7,   0.10, 0.01]</max>
+           </box>
+         </geom_object>
+         <load_curve>
+           <id>3</id>
+           <time_point>
+             <time> 0 </time>
+             <load> 6.e-5 </load>
+           </time_point>
+           <time_point>
+             <time> 1.e12 </time>
+             <load> 6.e-5 </load>
            </time_point>
          </load_curve>
        </scalar_flux>
      </MPM>
    </PhysicalBC>
 
-   <Grid>
-     <Level>
-       <Box label = "1">
-         <lower>        [0.0,  0.0, 0.0]   </lower> 
-         <upper>        [0.3, 0.3, 0.02]  </upper>
-         <resolution>   [15, 15, 1]        </resolution>
-         <patches>      [3,3,1]            </patches>
-         <extraCells>   [0,0,0]            </extraCells>
-       </Box>
-     </Level>
-     <BoundaryConditions>
+  <Grid>
+    <Level>
+      <Box label = "1">
+        <lower>        [0.0, 0.0, 0.0]   </lower> 
+        <upper>        [0.8, 0.2, 0.01]  </upper>
+        <resolution>   [80, 20, 1]        </resolution>
+        <patches>      [2,2,1]            </patches>
+        <extraCells>   [1,1,1]            </extraCells>
+      </Box>
+    </Level>
+    <BoundaryConditions>
       <Face side = "x-">
         <BCType id = "all" label = "Symmetric" var = "symmetry"> </BCType>
       </Face>
@@ -254,6 +289,9 @@
       </Face>
       <Face side = "y-">
         <BCType id = "all" label = "Symmetric" var = "symmetry"> </BCType>
+        <BCType id = "all" label = "Velocity"     var = "Dirichlet">
+                              <value> [0.,0.,0.] </value>
+        </BCType>
       </Face>                  
       <Face side = "y+">
         <BCType id = "all" label = "Symmetric" var = "symmetry"> </BCType>
@@ -264,6 +302,6 @@
       <Face side = "z+">
         <BCType id = "all" label = "Symmetric" var = "symmetry"> </BCType>
       </Face>
-     </BoundaryConditions>
-   </Grid>
+    </BoundaryConditions>
+  </Grid>
 </Uintah_specification>
