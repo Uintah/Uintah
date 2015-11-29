@@ -1055,11 +1055,6 @@ UnifiedScheduler::runTasks( int thread_id )
         //Ghost cells from GPU other device to variable already on GPU -> new MPI code, then initiateH2DCopies(), and copied with performInternalGhostCellCopies()
         //Ghost cells from GPU same device to variable not yet on GPU -> managed in initiateH2DCopies(), and copied with performInternalGhostCellCopies()
         //Ghost cells from GPU same device to variable already on GPU -> Managed in initiateH2DCopies()?
-
-        // initiate all asynchronous H2D memory copies for this task's requires
-        //printf("%s task %s is going to run on device %d\n", myRankThread().c_str(), readyTask->getTask()->getName().c_str(), readyTask->getDeviceNum());
-        //Set all streams
-
         initiateH2DCopies(readyTask);
         syncTaskGpuDWs(readyTask);
 
@@ -2481,15 +2476,11 @@ void UnifiedScheduler::initiateH2DCopies(DetailedTask* dtask) {
                   make_int3(host_size.x(), host_size.y(), host_size.z()),
                   make_int3(low.x(), low.y(), low.z()));
             }
-            const bool validOnGpu = gpudw->getValidOnGPU(
-                curDependency->var->getName().c_str(), patchID, matlID,
-                levelID);
+            const bool validOnGpu = gpudw->getValidOnGPU(curDependency->var->getName().c_str(), patchID, matlID, levelID);
 
             if (exists && existsCorrectSize && validOnGpu) {
-              //This requires variable already exists on the GPU.  Queue it to be added
-              //to this tasks's TaskDW.
-              taskVars.addTaskGpuDWVar(patches->get(i), matlID, levelID,
-                  elementDataSize, curDependency,
+              //This requires variable already exists on the GPU.  Queue it to be added to this tasks's TaskDW.
+              taskVars.addTaskGpuDWVar(patches->get(i), matlID, levelID, elementDataSize, curDependency,
                   GpuUtilities::getGpuIndexForPatch(patches->get(i)));
 
               if (gpu_stats.active()) {
@@ -2509,12 +2500,8 @@ void UnifiedScheduler::initiateH2DCopies(DetailedTask* dtask) {
               //Get all valid adjacent neighbors, and see if ghost cells are needed.
               //If so, queue them to be set up in the GPU.
               vector<OnDemandDataWarehouse::ValidNeighbors> validNeighbors;
-              dw->getValidNeighbors(curDependency->var, matlID, patches->get(i),
-                  curDependency->gtype, curDependency->numGhostCells,
-                  validNeighbors);
-              for (vector<OnDemandDataWarehouse::ValidNeighbors>::iterator iter =
-                  validNeighbors.begin(); iter != validNeighbors.end();
-                  ++iter) {
+              dw->getValidNeighbors(curDependency->var, matlID, patches->get(i), curDependency->gtype, curDependency->numGhostCells, validNeighbors);
+              for (vector<OnDemandDataWarehouse::ValidNeighbors>::iterator iter = validNeighbors.begin(); iter != validNeighbors.end(); ++iter) {
 
                 const Patch* sourcePatch = NULL;
                 if (iter->neighborPatch->getID() >= 0) {
@@ -2527,19 +2514,13 @@ void UnifiedScheduler::initiateH2DCopies(DetailedTask* dtask) {
                 }
 
 
-                int sourceDeviceNum = GpuUtilities::getGpuIndexForPatch(
-                    sourcePatch);
-                int destDeviceNum = GpuUtilities::getGpuIndexForPatch(
-                    patches->get(i));
+                int sourceDeviceNum = GpuUtilities::getGpuIndexForPatch(sourcePatch);
+                int destDeviceNum = GpuUtilities::getGpuIndexForPatch(patches->get(i));
 
-                IntVector ghost_host_low, ghost_host_high,
-                    ghost_host_offset, ghost_host_size, ghost_host_strides;
-                iter->validNeighbor->getSizes(ghost_host_low,
-                    ghost_host_high, ghost_host_offset, ghost_host_size,
-                    ghost_host_strides);
+                IntVector ghost_host_low, ghost_host_high, ghost_host_offset, ghost_host_size, ghost_host_strides;
+                iter->validNeighbor->getSizes(ghost_host_low, ghost_host_high, ghost_host_offset, ghost_host_size, ghost_host_strides);
 
                 IntVector virtualOffset = iter->neighborPatch->getVirtualOffset();
-
 
                 bool useCpuGhostCells = false;
                 bool useGpuGhostCells = false;
@@ -2585,9 +2566,7 @@ void UnifiedScheduler::initiateH2DCopies(DetailedTask* dtask) {
 
                 if (useGpuStaging
                     || (sourceDeviceNum == destDeviceNum)
-                    || (dw->getGPUDW(sourceDeviceNum)->getValidOnCPU(
-                        curDependency->var->getName().c_str(),
-                        sourcePatch->getID(), matlID, levelID))){
+                    || (dw->getGPUDW(sourceDeviceNum)->getValidOnCPU(curDependency->var->getName().c_str(), sourcePatch->getID(), matlID, levelID))) {
 
                   //See if we need to push into the device ghost cell data from the CPU.
                   //This will happen one for one of two reasons.
@@ -3213,7 +3192,7 @@ void UnifiedScheduler::prepareDeviceVars(DetailedTask* dtask,
               GPUPerPatchBase* patchVar = OnDemandDataWarehouse::createGPUPerPatch(it->second.sizeOfDataType);
               gpudw->allocateAndPut(*patchVar,
                   it->second.dep->var->getName().c_str(), it->first.patchID,
-                  it->first.matlIndx, it->first.levelIndx, it->second.staging,
+                  it->first.matlIndx, it->first.levelIndx,
                   it->second.sizeOfDataType);
               device_ptr = patchVar->getVoidPointer();
               delete patchVar;
@@ -3269,6 +3248,7 @@ void UnifiedScheduler::prepareDeviceVars(DetailedTask* dtask,
               switch (it->second.dep->var->typeDescription()->getType()) {
               case TypeDescription::PerPatch: {
                 if (it->second.dest == GpuUtilities::sameDeviceSameMpiRank) {
+
                   CUDA_RT_SAFE_CALL(
                       cudaMemcpyAsync(device_ptr,
                           dynamic_cast<PerPatchBase*>(it->second.var)->getBasePointer(),
@@ -3866,16 +3846,9 @@ void UnifiedScheduler::initiateD2H(DetailedTask* dtask) {
             OnDemandDataWarehouseP dw = dws[dwIndex];
 
             //TODO: Add check to make sure the data isn't valid on the CPU.
-            //if (gpudw->exist(dependantVar->var->getName().c_str(),
-            //    patchID,
-            //    matlID,
-            //    make_int3(host_high.x() - host_low.x(), host_high.y() - host_low.y(), host_high.z() - host_low.z()),
-            //    make_int3(host_low.x(), host_low.y(), host_low.z()),
-            //    true) &&
             //See if it exists on the GPU
-            if (true) {
-            //if (gpudw->getValidOnGPU(dependantVar->var->getName().c_str(),
-            //    patchID, matlID, levelID)) {
+            //if (true) {
+            if (gpudw->getValidOnGPU(dependantVar->var->getName().c_str(),patchID, matlID, levelID)) {
 
               //It's possible the computes data may contain ghost cells.  But a task needing to get the data
               //out of the GPU may not know this.  It may just want the var data.
@@ -3892,21 +3865,12 @@ void UnifiedScheduler::initiateD2H(DetailedTask* dtask) {
               GPUDataWarehouse::GhostType tempgtype;
               Ghost::GhostType gtype;
               int numGhostCells;
-              gpudw->getSizes(low, high, size, tempgtype, numGhostCells,
-                  dependantVar->var->getName().c_str(), patchID, matlID,
-                  levelID);
+              gpudw->getSizes(low, high, size, tempgtype, numGhostCells, dependantVar->var->getName().c_str(), patchID, matlID, levelID);
+
               gtype = (Ghost::GhostType) tempgtype;
-              //gpudw->getSizes(low, high, size)
-              //IntVector templow(low.x, low.y, low.z);
-              //IntVector temphigh(high.x, high.y, high.z);
-              GridVariableBase* gridVar =
-                  dynamic_cast<GridVariableBase*>(dependantVar->var->typeDescription()->createInstance());
-              //gridVar->rewindow(templow, temphigh);
-              //dw->put(*gridVar, dependantVar->var, matlID, patches->get(i), true);
-              dw->allocateAndPut(*gridVar, dependantVar->var, matlID,
-                  patches->get(i), gtype, numGhostCells);
-              gridVar->getSizes(host_low, host_high, host_offset, host_size,
-                  host_strides);
+              GridVariableBase* gridVar = dynamic_cast<GridVariableBase*>(dependantVar->var->typeDescription()->createInstance());
+              dw->allocateAndPut(*gridVar, dependantVar->var, matlID, patches->get(i), gtype, numGhostCells);
+              gridVar->getSizes(host_low, host_high, host_offset, host_size, host_strides);
               host_ptr = gridVar->getBasePointer();
               host_bytes = gridVar->getDataSize();
 
@@ -3916,11 +3880,6 @@ void UnifiedScheduler::initiateD2H(DetailedTask* dtask) {
 
                 int3 device_offset;
                 int3 device_size;
-                //GPUGridVariableBase* device_var = OnDemandDataWarehouse::createGPUGridVariable(host_strides.x());
-                //gpudw->get(device_var, dependantVar->var->getName().c_str(), patchID, matlID);
-                //device_var->getArray3(device_offset, device_size, device_ptr);
-                //let go of this reference counter
-                //delete device_var;
 
                 switch (host_strides.x()) {
                 case sizeof(int): {
@@ -3958,18 +3917,6 @@ void UnifiedScheduler::initiateD2H(DetailedTask* dtask) {
                     && device_size.y == host_size.y()
                     && device_size.z == host_size.z()) {
 
-                  // The following is only efficient for large single copies. With multiple smaller copies
-                  // the faster PCIe transfers never outweigh the CUDA API latencies. We can revive this idea
-                  // once we're doing large, single, aggregated cuda memcopies. [APH]
-                  //                const bool pinned = (*(pinnedHostPtrs.find(host_ptr)) == host_ptr);
-                  //                if (!pinned) {
-                  //                  // pin/page-lock host memory for H2D cudaMemcpyAsync
-                  //                  // memory returned using cudaHostRegisterPortable flag will be considered pinned by all CUDA contexts
-                  //                  CUDA_RT_SAFE_CALL(retVal = cudaHostRegister(host_ptr, host_bytes, cudaHostRegisterPortable));
-                  //                  if (retVal == cudaSuccess) {
-                  //                    pinnedHostPtrs.insert(host_ptr);
-                  //                  }
-                  //                }
 
                   if (gpu_stats.active()) {
                     cerrLock.lock();
@@ -3985,9 +3932,7 @@ void UnifiedScheduler::initiateD2H(DetailedTask* dtask) {
                   }
                   cudaError_t retVal;
                   //printf("***InitiateD2H invoked***\n");
-                  CUDA_RT_SAFE_CALL(
-                      retVal = cudaMemcpyAsync(host_ptr, device_ptr, host_bytes,
-                          cudaMemcpyDeviceToHost, *stream));
+                  CUDA_RT_SAFE_CALL(retVal = cudaMemcpyAsync(host_ptr, device_ptr, host_bytes, cudaMemcpyDeviceToHost, *stream));
 
                   if (retVal == cudaErrorLaunchFailure) {
                     SCI_THROW(
@@ -4030,29 +3975,31 @@ void UnifiedScheduler::initiateD2H(DetailedTask* dtask) {
             break;
           }
           case TypeDescription::PerPatch: {
-            if (gpudw->getValidOnGPU(dependantVar->var->getName().c_str(),
-                patchID, matlID, levelID)) {
-              PerPatchBase* hostPerPatchVar =
-                  dynamic_cast<PerPatchBase*>(dependantVar->var->typeDescription()->createInstance());
-              dw->put(*hostPerPatchVar, dependantVar->var, matlID,
-                  patches->get(i));
+            if (gpudw->getValidOnGPU(dependantVar->var->getName().c_str(), patchID, matlID, levelID)) {
+              PerPatchBase* hostPerPatchVar = dynamic_cast<PerPatchBase*>(dependantVar->var->typeDescription()->createInstance());
+              dw->put(*hostPerPatchVar, dependantVar->var, matlID, patches->get(i));
 
               //gridVar->getSizes(host_low, host_high, host_offset, host_size, host_strides);
               host_ptr = hostPerPatchVar->getBasePointer();
+
               host_bytes = hostPerPatchVar->getDataSize();
 
               // copy the computes data back to the host
               d2hComputesLock_.writeLock();
 
-              GPUPerPatchBase* gpuPerPatchVar =
-                  OnDemandDataWarehouse::createGPUPerPatch(host_bytes);
+              GPUPerPatchBase* gpuPerPatchVar = OnDemandDataWarehouse::createGPUPerPatch(host_bytes);
+              gpudw->get(*gpuPerPatchVar, dependantVar->var->getName().c_str(), patchID, matlID);
+              //gpuPerPatchVar->getArray3(device_offset, device_size, device_ptr);
+
+              //dw->allocateAndPut(*gpuPerPatchVar, dependantVar->var, matlID, patches->get(i), GhostCells::None, 0);
+
               device_ptr = gpuPerPatchVar->getVoidPointer();
 
 
               if (gpu_stats.active()) {
                 cerrLock.lock();
                 {
-                  gpu_stats << myRankThread() << "Post D2H copy of \""
+                  gpu_stats << myRankThread() << "initiateD2H copy of \""
                       << dependantVar->var->getName() << "\", size = "
                       << std::dec << host_bytes << " to " << std::hex
                       << host_ptr << " from " << std::hex << device_ptr
@@ -4062,12 +4009,9 @@ void UnifiedScheduler::initiateD2H(DetailedTask* dtask) {
                 cerrLock.unlock();
               }
               cudaError_t retVal;
+              //TODO: Verify no memory leaks
 
-
-
-              CUDA_RT_SAFE_CALL(
-                  retVal = cudaMemcpyAsync(host_ptr, device_ptr, host_bytes,
-                      cudaMemcpyDeviceToHost, *stream));
+              CUDA_RT_SAFE_CALL(retVal = cudaMemcpyAsync(host_ptr, device_ptr, host_bytes, cudaMemcpyDeviceToHost, *stream));
               if (retVal == cudaErrorLaunchFailure) {
                 SCI_THROW(
                     InternalError("Detected CUDA kernel execution failure on Task: "+ dtask->getName(), __FILE__, __LINE__));

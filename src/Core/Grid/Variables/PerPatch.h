@@ -30,7 +30,7 @@
 #include <Core/Disclosure/TypeDescription.h>
 #include <Core/Disclosure/TypeUtils.h>
 #include <Core/Malloc/Allocator.h>
-
+#include <stdio.h>
 #include <cstring>
 
 namespace Uintah {
@@ -135,11 +135,14 @@ WARNING
        return scinew PerPatch<T>();
      }
 
+
    template<class T>
       const TypeDescription*
       PerPatch<T>::getTypeDescription()
       {
+       printf("In T's getTypeDescription().\n");
         if(!td){
+
           // this is a hack to get a non-null perpatch
           // var for some functions the perpatches are used in (i.e., task->computes).
           // Since they're not fully-qualified variables, maker
@@ -150,7 +153,51 @@ WARNING
         }
         return td;
       }
+
+
+   //Manually list the double basic data type.  If others are needed, list them here too.
+   //For everything else, a hacky solution is
+   //used which defaults their internal type as if it were int
+   template<>
+    inline const TypeDescription*
+      PerPatch<int>::getTypeDescription()
+      {
+        printf("In int's getTypeDescription() and td is %p\n", td);
+        if(!td){
+          TypeDescription* sub_td;
+          sub_td = scinew TypeDescription(TypeDescription::int_type, "int", true, MPI_INT);
+          td = scinew TypeDescription(TypeDescription::PerPatch, "PerPatch", &maker, sub_td);
+        }
+        return td;
+      }
    
+   template<>
+    inline const TypeDescription*
+      PerPatch<double>::getTypeDescription()
+      {
+        printf("In double's getTypeDescription() and td is %p\n", td);
+        if(!td){
+          TypeDescription* sub_td;
+          sub_td = scinew TypeDescription(TypeDescription::double_type, "double", true, MPI_DOUBLE);
+          td = scinew TypeDescription(TypeDescription::PerPatch, "PerPatch", &maker, sub_td);
+        }
+        return td;
+      }
+
+
+   template<>
+    inline const TypeDescription*
+      PerPatch<double*>::getTypeDescription()
+      {
+        printf("In double*'s getTypeDescription() and td is %p\n", td);
+        if(!td){
+          TypeDescription* sub_td;
+          sub_td = scinew TypeDescription(TypeDescription::Other, "double*", true, MPI_DOUBLE);
+          td = scinew TypeDescription(TypeDescription::PerPatch, "PerPatch", &maker, sub_td);
+        }
+        return td;
+      }
+
    template<class T>
       PerPatch<T>::~PerPatch()
       {
@@ -181,6 +228,25 @@ WARNING
          *this = *c;
       }
 
+   template<>
+      inline void
+      PerPatch<double>::copyPointer(Variable& copy)
+      {
+         const PerPatch<double>* c = dynamic_cast<const PerPatch<double>* >(&copy);
+         if(!c)
+           SCI_THROW(TypeMismatchException("Type mismatch in PerPatch variable", __FILE__, __LINE__));
+         *this = *c;
+      }
+
+   template<>
+      inline void
+      PerPatch<double*>::copyPointer(Variable& copy)
+      {
+         const PerPatch<double*>* c = dynamic_cast<const PerPatch<double*>* >(&copy);
+         if(!c)
+           SCI_THROW(TypeMismatchException("Type mismatch in PerPatch variable", __FILE__, __LINE__));
+         *this = *c;
+      }
 
    template<class T>
       void

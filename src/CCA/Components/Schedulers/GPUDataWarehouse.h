@@ -174,34 +174,36 @@ public:
     }
   };
 
-  enum status { NOT_ALLOCATED = 0x0000000,
-                ALLOCATED = 0x00000001,
-                VALID = 0x00000002,
-                COPYING_IN = 0x00000004,
-                UNKNOWN = 0x80000000}; //TODO: REMOVE THIS WHEN YOU CAN, IT'S NOT OPTIMAL DESIGN.
+  enum status { NOT_ALLOCATED = 0x00000000,
+                ALLOCATING    = 0x00000001,
+                ALLOCATED     = 0x00000002,
+                COPYING_IN    = 0x00000004,
+                VALID         = 0x00000008,
+                UNKNOWN       = 0x80000000}; //TODO: REMOVE THIS WHEN YOU CAN, IT'S NOT OPTIMAL DESIGN.
   //copying_out can be the other 29 bits.  See below.
 
-  struct atomicDataStatus {
 
-    //    0                   1                   2                   3
-    //    0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
-    //   +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-    //   |                                                           | | |
-    //   +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+  typedef int atomicDataStatus;
 
-    //Not allocated/Invalid = If the value is 0x00000000
-    //Allocated             = bit 31 - 0x00000001
-    //Valid                 = bit 30 - 0x00000002
-    //Copying in            = bit 29 - 0x00000004
-    //Copying out           = bits 0 through 28, allowing for 29 copy out sources.
+  //    0                   1                   2                   3
+  //    0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
+  //   +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+  //   |                                                       | | | | |
+  //   +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
 
-    int atomic_varStatus;  //with 00000000 00000000 00000000 00000000
+  //Not allocated/Invalid = If the value is 0x00000000
 
-    //With this approach we can allow for multiple copy outs, but only one copy in.
-    //We should never attempt to copy unless the status is odd (allocated)
-    //We should never copy out if the status isn't valid.
+  //Allocating            = bit 31 - 0x00000001
+  //Allocated             = bit 30 - 0x00000002
+  //Valid                 = bit 29 - 0x00000004
+  //Copying in            = bit 28 - 0x00000008
+  //Copying out           = bits 1 through 27, allowing for 27 copy out sources.
 
-  };
+  //With this approach we can allow for multiple copy outs, but only one copy in.
+  //We should never attempt to copy unless the status is odd (allocated)
+  //We should never copy out if the status isn't valid.
+
+
 
   struct stagingVar {
 
@@ -246,15 +248,15 @@ public:
     void*           device_ptr;   //Where it is on the device
     void*           host_contiguousArrayPtr;  //Use this address only if partOfContiguousArray is set to true.
     int             varDB_index;
-    atomicDataStatus      varInHostMemory;
-    atomicDataStatus      varInGpuMemory;
+    atomicDataStatus      atomicStatusInHostMemory;
+    atomicDataStatus      atomicStatusInGpuMemory;
 
   };
 
   struct allVarPointersInfo {
     allVarPointersInfo() {
-      __sync_fetch_and_and(&varInHostMemory.atomic_varStatus, NOT_ALLOCATED);
-      __sync_fetch_and_and(&varInGpuMemory.atomic_varStatus, NOT_ALLOCATED);
+      __sync_fetch_and_and(&atomicStatusInHostMemory, NOT_ALLOCATED);
+      __sync_fetch_and_and(&atomicStatusInGpuMemory, NOT_ALLOCATED);
       varDB_index = -1;
     }
     void*           device_ptr;   //Where it is on the device
@@ -268,8 +270,8 @@ public:
 
     int             varDB_index;     //Where this also shows up in the varDB.  We can use this to
                                 //get the rest of the information we need.
-    atomicDataStatus      varInHostMemory;
-    atomicDataStatus      varInGpuMemory;
+    atomicDataStatus      atomicStatusInHostMemory;
+    atomicDataStatus      atomicStatusInGpuMemory;
     //bool            validOnGPU; //true if the GPU copy is the "live" copy and not an old version of the data.
     //bool            validOnCPU; //true if the CPU copy is the current "live" copy. (It's possible to be both.)
 
@@ -378,8 +380,8 @@ public:
   HOST_DEVICE void put(GPUPerPatchBase& var, size_t sizeOfDataType, char const* label, int patchID, int matlIndx, int levelIndx = 0, void* hostPtr = NULL);
 
   HOST_DEVICE void allocateAndPut(GPUGridVariableBase& var, char const* label, int patchID, int matlIndx, int levelIndx, bool staging, int3 low, int3 high, size_t sizeOfDataType, GhostType gtype = None, int numGhostCells = 0);
-  HOST_DEVICE void allocateAndPut(GPUReductionVariableBase& var, char const* label, int patchID, int matlIndx, int levelIndx, bool staging, size_t sizeOfDataType);
-  HOST_DEVICE void allocateAndPut(GPUPerPatchBase& var, char const* label, int patchID, int matlIndx, int levelIndx, bool staging, size_t sizeOfDataType);
+  HOST_DEVICE void allocateAndPut(GPUReductionVariableBase& var, char const* label, int patchID, int matlIndx, int levelIndx, size_t sizeOfDataType);
+  HOST_DEVICE void allocateAndPut(GPUPerPatchBase& var, char const* label, int patchID, int matlIndx, int levelIndx, size_t sizeOfDataType);
 
   //HOST_DEVICE void* getPointer(char const* label, int patchID, int matlIndex);
   HOST_DEVICE void putContiguous(GPUGridVariableBase &var, char const* indexID, char const* label, int patchID, int matlIndx, int levelIndx, bool staging, int3 low, int3 high, size_t sizeOfDataType, GridVariableBase* gridVar, bool stageOnHost);
@@ -413,10 +415,20 @@ public:
                                 bool sourceStaging, bool deststaging,
                                 int3 varOffset, int3 varSize,
                                 int3 sharedLowCoordinates, int3 sharedHighCoordinates, int3 virtualOffset);
-  HOST_DEVICE bool getValidOnGPU(char const* label, int patchID, int matlIndx, int levelIndx);
-  HOST_DEVICE void setValidOnGPU(char const* label, int patchID, int matlIndx, int levelInd);
-  HOST_DEVICE bool getValidOnCPU(char const* label, int patchID, int matlIndx, int levelIndx);
-  HOST_DEVICE void setValidOnCPU(char const* label, int patchID, int matlIndx, int levelIndx);
+
+
+
+
+  //returns false if something else already allocated space and we don't have to.
+  //returns true if we are the ones to allocate the space.
+  //performs operations with atomic compare and swaps
+  __host__ bool testAndSetAllocating(atomicDataStatus& status);
+  __host__ bool testAndSetAllocate(atomicDataStatus& status);
+  __host__ bool checkAllocated(atomicDataStatus& status);
+  __host__ bool getValidOnGPU(char const* label, int patchID, int matlIndx, int levelIndx);
+  __host__ void setValidOnGPU(char const* label, int patchID, int matlIndx, int levelInd);
+  __host__ bool getValidOnCPU(char const* label, int patchID, int matlIndx, int levelIndx);
+  __host__ void setValidOnCPU(char const* label, int patchID, int matlIndx, int levelIndx);
 
 
   //This and the function below go through the d_ghostCellData array and copies data into
