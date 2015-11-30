@@ -142,22 +142,23 @@ class LevelSetSimulationController : public SimulationController {
                                    ,       bool                       isRestarting
                                   );
 
-    void doComponentMainTimestep(
-                                         LevelSet                   * levels
-                                 ,       UintahParallelComponent    * component
-                                 ,       SimulationStateP             state
-                                 ,       SimulationTime             * timeInfo
-                                 ,       double                       del_t
-                                 ,       double                       runTime
-                                );
+    double doComponentMainTimestep(
+                                          LevelSet                   * levels
+                                  ,       UintahParallelComponent    * component
+                                  ,       SimulationStateP             state
+                                  ,       SimulationTime             * timeInfo
+                                  ,       double                       del_t
+                                  ,       double                       runTime
+                                  ,       bool                         firstTimestep
+                                 );
     int calculateTemporaryDataWarehouses(ProblemSpecP & multiSpec);
     int calculatePermanentDataWarehouses();
     //! Set up, compile, and execute initial timestep
     double doInitialTimestep(
                                const LevelSet                 & levels
-                             ,       UintahParallelComponent  * component         = NULL
-                             ,       SimulationStateP           state             = NULL
-                             ,       SimulationTime           * timeInfo          = NULL
+                             ,       UintahParallelComponent  * component         = 0
+                             ,       SimulationState          * state             = 0
+                             ,       SimulationTime           * timeInfo          = 0
                             );
 
 
@@ -165,16 +166,24 @@ class LevelSetSimulationController : public SimulationController {
 
     void
     recompile(
-                      double                      time
-              ,       double                      del_t
-              , const LevelSet                  & currentLevelSet
-              ,       int                         totalFineDW
-              ,       UintahParallelComponent   * component
-              ,       SimulationStateP          & state
-              ,       SchedulerP                & sched
+                      double                              time
+              ,       double                              del_t
+              , const LevelSet                          & currentLevelSet
+              , const std::vector<std::vector<int> >    & totalFineDW
+              ,       UintahParallelComponent           * component
+              ,       SimulationStateP                  & state
+              ,       SchedulerP                        & sched
              );
 
-    void executeTimestep(double t, double& delt, GridP& currentGrid, int totalFine);
+    void executeTimestep(
+                                 double                               runTime
+                         ,       double                             & delt
+                         , const LevelSet                           & levels
+                         , const std::vector<std::vector<int> >    & totalFineDW
+                         ,       UintahParallelComponent            * component
+                         ,       SimulationStateP                   & state
+                         ,       SchedulerP                         & sched
+                        );
 
     //! Asks a variety of components if one of them needs the taskgraph to recompile.
     bool needRecompile(double t, double delt, const GridP& level);
@@ -187,11 +196,11 @@ class LevelSetSimulationController : public SimulationController {
     //! finer levels - compensating for time refinement.  Builds one taskgraph
 //    void subCycleCompile(GridP& grid, int startDW, int dwStride, int step, int numLevel);
     void subCycleCompile(
-                                 LevelP                     & currLevel
+                           const LevelP                     & currLevel
                          ,       int                          startDW
                          ,       int                          dwStride
                          ,       int                          step
-                         ,       SimulationInterface*         interface
+                         ,       SimulationInterface        * interface
                          ,       SchedulerP                 & sched
                          ,       SimulationStateP           & state
                         );
@@ -220,8 +229,9 @@ class LevelSetSimulationController : public SimulationController {
     void
     scheduleComputeStableTimestep(
                                     const LevelSet              & levels
-                                  ,       SchedulerP              sched
-                                  ,       SimulationInterface*    interface
+                                  ,       SimulationInterface   * interface
+                                  ,       SchedulerP            & sched
+                                  ,       SimulationStateP      & state
                                  );
     void
     reduceSysVar(  const ProcessorGroup * /*pg*/
@@ -239,6 +249,8 @@ class LevelSetSimulationController : public SimulationController {
     int         d_totalComponents;
     std::string d_runType;
     int         d_totalSteps;
+
+    bool        d_printSubTimesteps;
 
     // Stuff for new runtype setup
     SchedulerP            d_firstComponentScheduler;
