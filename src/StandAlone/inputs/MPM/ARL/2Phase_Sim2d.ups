@@ -72,14 +72,14 @@
    <SimulationComponent type="amrmpm" />
 
    <Time>
-     <maxTime>8.0e8</maxTime>
+     <maxTime>4.4e8</maxTime>
      <initTime>0.0</initTime>
      <delt_min>1.0e-16</delt_min>
      <delt_max>1.0e8</delt_max>
 <!--
      <max_Timesteps>100</max_Timesteps>
 -->
-     <timestep_multiplier>0.4</timestep_multiplier>
+     <timestep_multiplier>0.0125</timestep_multiplier>
    </Time>
 
    <DataArchiver>
@@ -87,7 +87,7 @@
 <!--
     <outputTimestepInterval>1</outputTimestepInterval>
 -->
-    <outputInterval>4.0e6</outputInterval>
+    <outputInterval>1.0e7</outputInterval>
     <save label="p.x"/>
     <save label="p.mass"/>
     <save label="p.area"/>
@@ -100,9 +100,10 @@
     <save label="p.diffusivity"/>
     <save label="p.displacement"/>
     <save label="p.pressure_t1"/>
-    <save label="p.pressure_t2"/>
 <!--
+    <save label="p.pressure_t2"/>
 -->
+    <save label="p.equivalentStress_t1"/>
     <save label="g.mass"/>
     <save label="g.acceleration"/>
     <save label="g.concentration"/>
@@ -111,7 +112,7 @@
     <save label="g.externalscalarflux"/>
     <save label="p.externalscalarflux"/>
     <save label="g.velocity"/>
-    <checkpoint cycle = "2" interval = "1.2e8"/>
+    <checkpoint cycle = "2" interval = "1.0e8"/>
   </DataArchiver>
 
   <MPM>
@@ -182,15 +183,19 @@
            -->
            <use_pressure>true</use_pressure>
            <tuning1> 6.90  </tuning1>
-           <tuning2> 2.07  </tuning2>
+           <tuning2> 4.07  </tuning2>
            <tuning3> 0.0   </tuning3>
            <tuning4> 3.0   </tuning4>
            <tuning5> 1e-6  </tuning5>
          </diffusion_model>
          <geom_object>
            <box label = "pillar1">
+             <!--
              <min>[0.1, 0.0, 0.0]</min>
              <max>[0.7, 0.1, 0.01]</max>
+             -->
+             <min>[0.0, 0.0, 0.0]</min>
+             <max>[0.3, 0.1, 0.01]</max>
            </box>
            <res>[2,2,1]</res>
            <velocity>[0.0,0.0,0.0]</velocity>
@@ -213,8 +218,12 @@
        <scalar_flux>
          <geom_object>
            <box label = "y+">
+             <!--
              <min>[0.1, 0.099, 0.0  ]</min>
              <max>[0.7, 0.100, 0.01]</max>
+             -->
+             <min>[0.0, 0.099, 0.0  ]</min>
+             <max>[0.3, 0.100, 0.01]</max>
            </box>
          </geom_object>
          <load_curve>
@@ -229,6 +238,7 @@
            </time_point>
          </load_curve>
        </scalar_flux>
+       <!--
        <scalar_flux>
          <geom_object>
            <box label = "x-">
@@ -248,15 +258,20 @@
            </time_point>
          </load_curve>
        </scalar_flux>
+       -->
        <scalar_flux>
          <geom_object>
            <box label = "x+">
+             <!--
              <min>[0.699, 0.00, 0.0]</min>
              <max>[0.7,   0.10, 0.01]</max>
+             -->
+             <min>[0.299, 0.00, 0.0]</min>
+             <max>[0.3,   0.10, 0.01]</max>
            </box>
          </geom_object>
          <load_curve>
-           <id>3</id>
+           <id>2</id>
            <time_point>
              <time> 0 </time>
              <load> 6.e-5 </load>
@@ -274,10 +289,17 @@
     <Level>
       <Box label = "1">
         <lower>        [0.0, 0.0, 0.0]   </lower> 
+        <upper>        [0.4, 0.2, 0.01]  </upper>
+        <resolution>   [40, 20, 1]        </resolution>
+        <patches>      [1,1,1]            </patches>
+        <extraCells>   [1,1,1]            </extraCells>
+        <!--
+        <lower>        [0.0, 0.0, 0.0]   </lower> 
         <upper>        [0.8, 0.2, 0.01]  </upper>
         <resolution>   [80, 20, 1]        </resolution>
-        <patches>      [2,2,1]            </patches>
+        <patches>      [1,1,1]            </patches>
         <extraCells>   [1,1,1]            </extraCells>
+        -->
       </Box>
     </Level>
     <BoundaryConditions>
