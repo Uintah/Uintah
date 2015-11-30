@@ -39,16 +39,17 @@
 #include <map>
 
 namespace Uintah {
-  class ComponentManager : public UintahParallelComponent, public SimulationInterface {
+  enum ComponentListType {
+    all,
+    manager,
+    principle,
+    subcomponent,
+    principleandsub
+  };
+
+  class ComponentManager {
     public:
 
-      enum ComponentListType {
-        all,
-        manager,
-        principle,
-        subcomponent,
-        principleandsub
-      };
              ComponentManager(  const ProcessorGroup    * myWorld
                               ,       ProblemSpecP      & problemSpec
                               ,       bool                doAMR
@@ -57,29 +58,44 @@ namespace Uintah {
     virtual ~ComponentManager();
 
     // Pure virtual interface for a component manager.
-    int
-    getNumActiveComponents(ComponentListType)                       = 0;
+    virtual int
+    getNumActiveComponents(ComponentListType)                               = 0;
 
-    UintahParallelComponent*
-    getComponent(int index, ComponentListType fromList)             = 0;
+    virtual UintahParallelComponent*
+    getComponent(int index, ComponentListType fromList)                     = 0;
 
-    LevelSet*
-    getLevelSet(int index, ComponentListType fromList)              = 0;
+    virtual LevelSet*
+    getLevelSet(int index, ComponentListType fromList)                      = 0;
 
-    ProblemSpecP
-    getProblemSpec(int index, ComponentListType fromList)           = 0;
+    virtual ProblemSpecP
+    getProblemSpec(int index, ComponentListType fromList)                   = 0;
 
-    SimulationStateP
-    getState(int index, ComponentListType fromList)                 = 0;
+    virtual SimulationStateP
+    getState(int index, ComponentListType fromList)                         = 0;
 
-    SimulationTime*
-    getTimeInfo(int index,  ComponentListType fromList)             = 0;
+    virtual SimulationTime*
+    getTimeInfo(int index,  ComponentListType fromList)                     = 0;
 
-    int
-    getRequestedNewDWCount(int index, ComponentListType fromList)   = 0;
+    virtual Output*
+    getOutput(int index, ComponentListType fromList)                        = 0;
 
-    int
-    getRequestedOldDWCount(int index, ComponentListType fromList)   = 0;
+    virtual int
+    getRequestedNewDWCount(int index, ComponentListType fromList)           = 0;
+
+    virtual int
+    getRequestedOldDWCount(int index, ComponentListType fromList)           = 0;
+
+    virtual double
+    getRunTime(int index, ComponentListType fromList)                       = 0;
+
+    virtual void
+    setStartTime(int index, ComponentListType fromList, double time)        = 0;
+
+    virtual int
+    getTimestep(int index, ComponentListType fromList)                      = 0;
+
+    virtual void
+    setTimestep(int index, ComponentListType fromList, int step)            = 0;
 
 
   };

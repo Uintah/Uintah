@@ -63,13 +63,16 @@ WARNING
 ****************************************/
 
    class UintahParallelComponent {
+
       struct PortRecord {
-	 PortRecord(UintahParallelPort* conn);
-	 std::vector<UintahParallelPort*> connections;
+          PortRecord(UintahParallelPort* conn);
+          std::vector<UintahParallelPort*> connections;
       };
+
       std::map<std::string, PortRecord*> portmap;
+
    public:
-      UintahParallelComponent(const ProcessorGroup* myworld);
+               UintahParallelComponent(const ProcessorGroup* myworld);
       virtual ~UintahParallelComponent();
       
       //////////

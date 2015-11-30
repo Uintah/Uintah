@@ -1130,6 +1130,7 @@ MultiScaleSimulationController::recompileLevelSet(        double    time
                                                   ,       double    del_t
                                                   , const LevelSet& currentLevelSet
                                                   ,       int       totalFine
+
                                                  )
 {
   proc0cout << "Recompiling taskgraph with level sets ..." << std::endl;

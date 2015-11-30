@@ -115,7 +115,7 @@ protected:
 
   //! adjust delt based on timeinfo and other parameters
   //    'first' is whether this is the first time adjustDelT is called.
-  void adjustDelT( double& delt, double prev_delt, bool first, double t );
+  void adjustDelT( double& delt, double prev_delt, bool first, double t, SimulationTime* simTime = 0 );
   void initSimulationStatsVars ( void );
   void printSimulationStats    ( int timestep, double delt, double time );
 

@@ -425,6 +425,8 @@ WARNING
     //
     friend std::ostream& operator<<(std::ostream& out, const Uintah::Grid& grid);
 
+    static bool      specIsAMR(  const ProblemSpecP & ps);
+
     //////////
     // Used in Level and Patch for stretched grids
     enum Axis {
@@ -484,7 +486,6 @@ WARNING
                          , const size_t         levelIndex
                          , const int            myProcRank);
 
-    static bool      specIsAMR(  const ProblemSpecP & ps);
 
     void parseLevelSet(   const ProblemSpecP & level_ps
                         , const int            numProcs

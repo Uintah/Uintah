@@ -90,6 +90,7 @@ WARNING
     inline bool operator == (const Handle<T>& a) const {
       return a.d_rep == d_rep;
     }
+
     inline bool operator != (const Handle<T>& a) const {
       return a.d_rep != d_rep;
     }
@@ -99,10 +100,17 @@ WARNING
     inline bool operator != (const T* a) const {
       return a != d_rep;
     }
+
     inline bool operator == (int a) const {
       ASSERT(a == 0);
       return d_rep == 0;
     }
+
+    inline bool operator == (long int a) const {
+      ASSERT(a == 0);
+      return d_rep == 0;
+    }
+
     inline bool operator != (int a) const {
       ASSERT(a == 0);
       return d_rep != 0;
