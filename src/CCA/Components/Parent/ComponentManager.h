@@ -33,8 +33,11 @@
 #define COMPONENTMANAGER_H_
 
 #include <CCA/Ports/SimulationInterface.h>
+#include <CCA/Ports/Output.h>
 
 #include <Core/Parallel/UintahParallelComponent.h>
+
+#include <Core/Grid/SimulationTime.h>
 
 #include <map>
 
@@ -97,6 +100,14 @@ namespace Uintah {
     virtual void
     setTimestep(int index, ComponentListType fromList, int step)            = 0;
 
+    virtual bool
+    isFirstTimestep(int index, ComponentListType fromList)                  = 0;
+
+    virtual void
+    setFirstTimestep(int index, ComponentListType, bool toggle)             = 0;
+
+    virtual void
+    setRunTime(int index, ComponentListType, double newTime)                = 0;
 
   };
 }

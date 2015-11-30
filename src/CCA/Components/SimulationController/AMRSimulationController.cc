@@ -347,18 +347,16 @@ AMRSimulationController::run()
     // adjust the delt for each level and store it in all applicable dws.
     double delt_fine = delt;
     int skip=totalFine;
-    for(int i=0;i<currentGrid->numLevels();i++){
+    for(int i=0;i<currentGrid->numLevels();i++) {
       const Level* level = currentGrid->getLevel(i).get_rep();
-      
       if( d_doAMR && i != 0 && !d_sharedState->isLockstepAMR() ) {
-	int rr = level->getRefinementRatioMaxDim();
+	    int rr = level->getRefinementRatioMaxDim();
         delt_fine /= rr;
-	skip      /= rr;
+	    skip      /= rr;
       }
-       
-      for( int idw = 0; idw < totalFine; idw += skip ){
-	DataWarehouse* dw = d_scheduler->get_dw( idw );
-	dw->override( delt_vartype( delt_fine ), d_sharedState->get_delt_label(), level );
+      for( int idw = 0; idw < totalFine; idw += skip ) {
+        DataWarehouse* dw = d_scheduler->get_dw( idw );
+        dw->override( delt_vartype( delt_fine ), d_sharedState->get_delt_label(), level );
       }
     }
      
