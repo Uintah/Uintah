@@ -34,6 +34,7 @@
 #include <CCA/Components/Wasatch/TagNames.h>
 #include <CCA/Components/Wasatch/Expressions/DiffusiveVelocity.h>
 #include <CCA/Components/Wasatch/Expressions/ExprAlgebra.h>
+#include <CCA/Components/Wasatch/Expressions/PostProcessing/KineticEnergy.h>
 
 namespace Wasatch {
 
@@ -200,89 +201,6 @@ namespace Wasatch {
         if( doZ_ ){
           const FieldT& zvel = zvel_->field_ref();
           result <<= result + 0.5 * zvel * zvel;
-        }
-      }
-    }
-  };
-
-
-  //============================================================================
-
-  /**
-   *  \class KineticEnergy
-   *  \author James C. Sutherland
-   *  \date November, 2015
-   *  \brief Calculate the kinetic energy, \f$k = \frac{1}{2} \mathbf{u}\cdot\mathbf{u}\f$, for a colocated variable arrangement.
-   */
-  template< typename FieldT >
-  class KineticEnergy
-   : public Expr::Expression<FieldT>
-  {
-    DECLARE_FIELDS( FieldT, xvel_, yvel_, zvel_ )
-    const bool doX_, doY_, doZ_;
-
-    KineticEnergy( const Expr::TagList& velTags )
-      : Expr::Expression<FieldT>(),
-        doX_( velTags[0] != Expr::Tag() ),
-        doY_( velTags[1] != Expr::Tag() ),
-        doZ_( velTags[2] != Expr::Tag() )
-    {
-      this->set_gpu_runnable( true );
-
-      if( doX_ ) xvel_ = this->template create_field_request<FieldT>( velTags[0] );
-      if( doY_ ) yvel_ = this->template create_field_request<FieldT>( velTags[1] );
-      if( doZ_ ) zvel_ = this->template create_field_request<FieldT>( velTags[2] );
-    }
-
-  public:
-
-    class Builder : public Expr::ExpressionBuilder
-    {
-      const Expr::TagList velTags_;
-    public:
-      /**
-       *  @brief Build a KineticEnergy expression
-       *  @param resultTag the tag for the value that this expression computes
-       */
-      Builder( const Expr::Tag& resultTag,
-               const Expr::TagList& velTags,
-               const int nghost = DEFAULT_NUMBER_OF_GHOSTS )
-        : ExpressionBuilder( resultTag, nghost ),
-          velTags_( velTags )
-      {
-        assert( velTags.size() == 3 );
-      }
-
-      Expr::ExpressionBase* build() const{
-        return new KineticEnergy<FieldT>( velTags_ );
-      }
-    };  /* end of Builder class */
-
-    ~KineticEnergy(){}
-
-    void evaluate()
-    {
-      FieldT& result = this->value();
-      if( doX_ && doY_ && doZ_ ){
-        const FieldT& xvel = xvel_->field_ref();
-        const FieldT& yvel = yvel_->field_ref();
-        const FieldT& zvel = zvel_->field_ref();
-        result <<= 0.5 * ( xvel*xvel + yvel*yvel + zvel*zvel );
-      }
-      else{
-        // 1D and 2D assembled piece-wise (slower)
-        result <<= 0.0;
-        if( doX_ ){
-          const FieldT& xvel = xvel_->field_ref();
-          result <<= result + 0.5*(xvel*xvel);
-        }
-        if( doY_ ){
-          const FieldT& yvel = yvel_->field_ref();
-          result <<= result + 0.5*(yvel*yvel);
-        }
-        if( doZ_ ){
-          const FieldT& zvel = zvel_->field_ref();
-          result <<= result + 0.5*(zvel*zvel);
         }
       }
     }
@@ -520,7 +438,7 @@ namespace Wasatch {
     Expr::ExpressionFactory& solnFactory = *gc[ADVANCE_SOLUTION]->exprFactory;
 
     // kinetic energy
-    solnFactory.register_expression( scinew KineticEnergy<MyFieldT>::Builder( kineticEnergyTag_, velTags ) );
+    solnFactory.register_expression( scinew KineticEnergy<MyFieldT,MyFieldT,MyFieldT,MyFieldT>::Builder( kineticEnergyTag_, velTags[0], velTags[1], velTags[2] ) );
 
     // temperature calculation
     typedef TemperaturePurePerfectGas<MyFieldT>::Builder SimpleTemperature;
