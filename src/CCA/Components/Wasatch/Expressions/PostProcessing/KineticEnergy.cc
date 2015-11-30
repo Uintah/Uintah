@@ -73,11 +73,10 @@ evaluate()
   }
   else{ // 1D and 2D are assembled in pieces (slower):
     SpatialOps::SpatFldPtr<FieldT> tmp = SpatialOps::SpatialFieldStore::get<FieldT>( kE );
-    if( this->doX_ ) kE <<=      (*this->interpVel1T2FieldTOp_)(this->u_->field_ref()) * (*this->interpVel1T2FieldTOp_)(this->u_->field_ref());
-    else                              kE <<= 0.0;
-    if( this->doY_ ) kE <<= kE + (*this->interpVel2T2FieldTOp_)(this->v_->field_ref()) * (*this->interpVel2T2FieldTOp_)(this->v_->field_ref());
-    if( this->doZ_ ) kE <<= kE + (*this->interpVel3T2FieldTOp_)(this->w_->field_ref()) * (*this->interpVel3T2FieldTOp_)(this->w_->field_ref());
-    kE <<= 0.5 * kE;
+    if( this->doX_ ) kE <<=      0.5 * (*this->interpVel1T2FieldTOp_)(this->u_->field_ref()) * (*this->interpVel1T2FieldTOp_)(this->u_->field_ref());
+    else             kE <<= 0.0;
+    if( this->doY_ ) kE <<= kE + 0.5 * (*this->interpVel2T2FieldTOp_)(this->v_->field_ref()) * (*this->interpVel2T2FieldTOp_)(this->v_->field_ref());
+    if( this->doZ_ ) kE <<= kE + 0.5 * (*this->interpVel3T2FieldTOp_)(this->w_->field_ref()) * (*this->interpVel3T2FieldTOp_)(this->w_->field_ref());
   }
 }
 
@@ -100,11 +99,10 @@ evaluate()
   }
   else{ // 1D and 2D are assembled in pieces (slower):
     SpatialOps::SpatFldPtr<FieldT> tmp = SpatialOps::SpatialFieldStore::get<FieldT>( kE );
-    if( this->doX_ ) kE <<= this->u_->field_ref() * this->u_->field_ref();
+    if( this->doX_ ) kE <<= 0.5 * ( this->u_->field_ref() * this->u_->field_ref() );
     else             kE <<= 0.0;
-    if( this->doY_ ) kE <<= kE + this->v_->field_ref() * this->v_->field_ref();
-    if( this->doZ_ ) kE <<= kE + this->w_->field_ref() * this->w_->field_ref();
-    kE <<= 0.5 * kE;
+    if( this->doY_ ) kE <<= kE + 0.5 * ( this->v_->field_ref() * this->v_->field_ref() );
+    if( this->doZ_ ) kE <<= kE + 0.5 * ( this->w_->field_ref() * this->w_->field_ref() );
   }
 }
 
