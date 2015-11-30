@@ -25,7 +25,6 @@
 #ifndef UINTAH_CCA_COMPONENTS_SIMULATIONCONTROLLER_LEVELSETSIMULATIONCONTROLLER_H
 #define UINTAH_CCA_COMPONENTS_SIMULATIONCONTROLLER_LEVELSETSIMULATIONCONTROLLER_H
 
-#include <CCA/Components/SimulationController/SimulationController.h>
 #include <CCA/Components/Parent/Switcher.h>
 #include <CCA/Components/Parent/ComponentManager.h>
 #include <CCA/Ports/DataWarehouseP.h>
@@ -41,6 +40,8 @@
 #include <Core/ProblemSpec/ProblemSpecP.h>
 
 #include <sci_defs/visit_defs.h>
+
+#include "SimulationController.h"
 
 
 namespace Uintah {
@@ -112,11 +113,6 @@ class LevelSetSimulationController : public SimulationController {
                                    ,       int                        subcomponentTimestep
                                   );
 
-    UintahParallelComponent* instantiateNewComponent(
-                                                       const ProcessorGroup * myWorld
-                                                     ,       ProblemSpecP   & componentSpec
-                                                    );
-
     SimulationStateP subcomponentPreGridSetup(
                                                       UintahParallelComponent * component
                                               , const ProblemSpecP            & componentSpec
@@ -129,7 +125,8 @@ class LevelSetSimulationController : public SimulationController {
       throw InternalError("ERROR:  Restarting is not yet supported in the multiscale controller.", __FILE__, __LINE__);
     }
 
-    void   runInitialTimestepOnList(ComponentManager::ComponentListType list);
+    double   runInitialTimestepOnList(ComponentListType list);
+    double   runMainTimestepOnList(ComponentListType list);
 
     double finalizeRunLoop(
                                   SchedulerP        workingScheduler
@@ -145,15 +142,37 @@ class LevelSetSimulationController : public SimulationController {
                                    ,       bool                       isRestarting
                                   );
 
+    void doComponentMainTimestep(
+                                         LevelSet                   * levels
+                                 ,       UintahParallelComponent    * component
+                                 ,       SimulationStateP             state
+                                 ,       SimulationTime             * timeInfo
+                                 ,       double                       del_t
+                                 ,       double                       runTime
+                                );
     int calculateTemporaryDataWarehouses(ProblemSpecP & multiSpec);
     int calculatePermanentDataWarehouses();
     //! Set up, compile, and execute initial timestep
-    void doInitialTimestep(const LevelSet & initLevelSet, double & time);
+    double doInitialTimestep(
+                               const LevelSet                 & levels
+                             ,       UintahParallelComponent  * component         = NULL
+                             ,       SimulationStateP           state             = NULL
+                             ,       SimulationTime           * timeInfo          = NULL
+                            );
 
 
     bool doRegridding(GridP& grid, bool initialTimestep);
 
-    void recompile(double time, double del_t, const LevelSet& currentLevelSet, int totalFine);
+    void
+    recompile(
+                      double                      time
+              ,       double                      del_t
+              , const LevelSet                  & currentLevelSet
+              ,       int                         totalFineDW
+              ,       UintahParallelComponent   * component
+              ,       SimulationStateP          & state
+              ,       SchedulerP                & sched
+             );
 
     void executeTimestep(double t, double& delt, GridP& currentGrid, int totalFine);
 
@@ -166,21 +185,44 @@ class LevelSetSimulationController : public SimulationController {
 
     //! recursively schedule refinement, coarsening, and time advances for
     //! finer levels - compensating for time refinement.  Builds one taskgraph
-    void subCycleCompile(GridP& grid, int startDW, int dwStride, int step, int numLevel);
-    void subCycleCompileLevelSet(GridP& grid, int startDW, int dwStride, int step, int numLevel);
+//    void subCycleCompile(GridP& grid, int startDW, int dwStride, int step, int numLevel);
+    void subCycleCompile(
+                                 LevelP                     & currLevel
+                         ,       int                          startDW
+                         ,       int                          dwStride
+                         ,       int                          step
+                         ,       SimulationInterface*         interface
+                         ,       SchedulerP                 & sched
+                         ,       SimulationStateP           & state
+                        );
 
     //! recursively executes taskgraphs, as several were executed.  Similar to subCycleCompile,
     //! except that this executes the recursive taskgraphs, and compile builds one taskgraph
     //! (to exsecute once) recursively.
-    void subCycleExecute(GridP& grid, int startDW, int dwStride, int numLevel, bool rootCycle);
+    void subCycleExecute(
+                           const GridP                      & grid
+                         ,       int                          startDW
+                         ,       int                          dwStride
+                         ,       int                          numLevel
+                         ,       bool                         rootCycle
+                         ,       UintahParallelComponent    * component
+                         ,       SimulationStateP             state
+                         ,       SchedulerP                   sched
+                        );
 
-    void scheduleComputeStableTimestep(const GridP& grid, SchedulerP&);
+//    void scheduleComputeStableTimestep(
+//                                         const LevelSet                 & levels
+//                                       ,       UintahParallelComponent  * component
+//                                       ,       SimulationStateP           state
+//                                       ,       SimulationTime           * timeInfo
+//                                      );
 
-    void scheduleComputeStableTimestep( const LevelSet     & operatingLevels
-                                       ,      SchedulerP   & sched
-                                      );
-
-
+    void
+    scheduleComputeStableTimestep(
+                                    const LevelSet              & levels
+                                  ,       SchedulerP              sched
+                                  ,       SimulationInterface*    interface
+                                 );
     void
     reduceSysVar(  const ProcessorGroup * /*pg*/
                          , const PatchSubset    *   patches

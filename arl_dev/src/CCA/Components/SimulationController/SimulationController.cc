@@ -25,8 +25,6 @@
 #include <sci_defs/malloc_defs.h>
 #include <sci_defs/papi_defs.h> // for PAPI performance counters
 
-#include <CCA/Components/SimulationController/SimulationController.h>
-
 #include <Core/Exceptions/InternalError.h>
 #include <Core/Exceptions/PapiInitializationError.h>
 #include <Core/DataArchive/DataArchive.h>
@@ -57,6 +55,8 @@
 #include <map>
 #include <sys/param.h>
 #include <vector>
+
+#include "SimulationController.h"
 
 #define SECONDS_PER_MINUTE        60.0
 #define SECONDS_PER_HOUR        3600.0
@@ -509,8 +509,15 @@ SimulationController::postGridSetup( GridP& grid, double& t )
 //
 
 void
-SimulationController::adjustDelT( double& delt, double prev_delt, bool first, double t ) 
+SimulationController::adjustDelT( double& delt, double prev_delt, bool first, double t, SimulationTime* timeInfo /*=0*/)
 {
+if (timeInfo == 0) {
+
+  // Default to the simulation controller's default timeinfo storage if we didn't pass in a
+  // different pointer.  (For subcomponent hijacking of the already in place machinery.)
+  timeInfo = d_timeinfo;
+}
+
 #if 0
   cout << "maxTime = " << d_timeinfo->maxTime << "\n";
   cout << "initTime = " << d_timeinfo->initTime << "\n";
@@ -525,33 +532,33 @@ SimulationController::adjustDelT( double& delt, double prev_delt, bool first, do
   cout << "prev_delt = " << prev_delt << "\n";
 #endif
 
-  delt *= d_timeinfo->delt_factor;
+  delt *= timeInfo->delt_factor;
       
-  if( delt < d_timeinfo->delt_min ) {
-    proc0cout << "WARNING: raising delt from " << delt << " to minimum: " << d_timeinfo->delt_min << '\n';
-    delt = d_timeinfo->delt_min;
+  if( delt < timeInfo->delt_min ) {
+    proc0cout << "WARNING: raising delt from " << delt << " to minimum: " << timeInfo->delt_min << '\n';
+    delt = timeInfo->delt_min;
   }
   if( !first && 
-      d_timeinfo->max_delt_increase < 1.e90 &&
-      delt > (1+d_timeinfo->max_delt_increase)*prev_delt) {
+      timeInfo->max_delt_increase < 1.e90 &&
+      delt > (1+timeInfo->max_delt_increase)*prev_delt) {
     proc0cout << "WARNING (a): lowering delt from " << delt 
-              << " to maxmimum: " << (1+d_timeinfo->max_delt_increase)*prev_delt
-              << " (maximum increase of " << d_timeinfo->max_delt_increase
+              << " to maxmimum: " << (1+timeInfo->max_delt_increase)*prev_delt
+              << " (maximum increase of " << timeInfo->max_delt_increase
               << ")\n";
-    delt = (1+d_timeinfo->max_delt_increase)*prev_delt;
+    delt = (1+timeInfo->max_delt_increase)*prev_delt;
   }
-  if( t <= d_timeinfo->initial_delt_range && delt > d_timeinfo->max_initial_delt ) {
+  if( t <= timeInfo->initial_delt_range && delt > timeInfo->max_initial_delt ) {
     proc0cout << "WARNING (b): lowering delt from " << delt 
-              << " to maximum: " << d_timeinfo->max_initial_delt
+              << " to maximum: " << timeInfo->max_initial_delt
               << " (for initial timesteps)\n";
-    delt = d_timeinfo->max_initial_delt;
+    delt = timeInfo->max_initial_delt;
   }
-  if( delt > d_timeinfo->delt_max ) {
-    proc0cout << "WARNING (c): lowering delt from " << delt << " to maximum: " << d_timeinfo->delt_max << '\n';
-    delt = d_timeinfo->delt_max;
+  if( delt > timeInfo->delt_max ) {
+    proc0cout << "WARNING (c): lowering delt from " << delt << " to maximum: " << timeInfo->delt_max << '\n';
+    delt = timeInfo->delt_max;
   }
   // Clamp timestep to output/checkpoint.
-  if( d_timeinfo->timestep_clamping && d_output ) {
+  if( timeInfo->timestep_clamping && d_output ) {
     double orig_delt = delt;
     double nextOutput = d_output->getNextOutputTime();
     double nextCheckpoint = d_output->getNextCheckpointTime();
@@ -567,8 +574,8 @@ SimulationController::adjustDelT( double& delt, double prev_delt, bool first, do
                 << " to line up with output/checkpoint time\n";
     }
   }
-  if (d_timeinfo->end_on_max_time && t + delt > d_timeinfo->maxTime){
-    delt = d_timeinfo->maxTime - t;
+  if (timeInfo->end_on_max_time && t + delt > timeInfo->maxTime){
+    delt = timeInfo->maxTime - t;
   }
 }
 
