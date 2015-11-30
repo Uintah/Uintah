@@ -83,6 +83,33 @@ evaluate()
 
 //--------------------------------------------------------------------
 
+template<>
+void
+KineticEnergy<SVolField,SVolField,SVolField,SVolField>::
+evaluate()
+{
+  using namespace SpatialOps;
+  typedef SVolField FieldT;
+  FieldT& kE = this->value();
+  
+  if( this->is3d_ ){ // inline the 3D calculation for better performance:
+    const SVolField& u = this->u_->field_ref();
+    const SVolField& v = this->v_->field_ref();
+    const SVolField& w = this->w_->field_ref();
+    kE <<= 0.5 * (u * u + v * v + w * w);
+  }
+  else{ // 1D and 2D are assembled in pieces (slower):
+    SpatialOps::SpatFldPtr<FieldT> tmp = SpatialOps::SpatialFieldStore::get<FieldT>( kE );
+    if( this->doX_ ) kE <<= this->u_->field_ref() * this->u_->field_ref();
+    else             kE <<= 0.0;
+    if( this->doY_ ) kE <<= kE + this->v_->field_ref() * this->v_->field_ref();
+    if( this->doZ_ ) kE <<= kE + this->w_->field_ref() * this->w_->field_ref();
+    kE <<= 0.5 * kE;
+  }
+}
+
+//--------------------------------------------------------------------
+
 template< typename FieldT, typename Vel1T, typename Vel2T, typename Vel3T >
 KineticEnergy<FieldT,Vel1T,Vel2T,Vel3T>::
 Builder::Builder( const Expr::Tag& result,
@@ -199,7 +226,17 @@ template class KineticEnergy< SpatialOps::SVolField,
                               SpatialOps::YVolField,
                               SpatialOps::ZVolField >;
 
+template class KineticEnergy< SpatialOps::SVolField,
+                              SpatialOps::SVolField,
+                              SpatialOps::SVolField,
+                              SpatialOps::SVolField >;
+
 template class TotalKineticEnergy< SpatialOps::XVolField,
                                    SpatialOps::YVolField,
                                    SpatialOps::ZVolField >;
+
+template class TotalKineticEnergy< SpatialOps::SVolField,
+                                   SpatialOps::SVolField,
+                                   SpatialOps::SVolField >;
+
 //==========================================================================
