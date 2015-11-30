@@ -4981,7 +4981,9 @@ void AMRMPM::scheduleApplyExternalScalarFlux(SchedulerP& sched,
   t->requires(Task::OldDW, lb->pMassLabel,              Ghost::None);
   t->requires(Task::OldDW, lb->pDeformationMeasureLabel,Ghost::None);
 #if defined USE_FLUX_RESTRICTION
-  t->requires(Task::OldDW, lb->pConcentrationLabel,     Ghost::None);
+  if(flags->d_doScalarDiffusion){
+    t->requires(Task::OldDW, lb->pConcentrationLabel,     Ghost::None);
+  }
 #endif
   t->computes(             lb->pExternalScalarFluxLabel);
   if (flags->d_useLoadCurves) {
@@ -5053,7 +5055,9 @@ void AMRMPM::applyExternalScalarFlux(const ProcessorGroup* ,
 
 #if defined USE_FLUX_RESTRICTION
       constParticleVariable<double> pConcentration;
-      old_dw->get(pConcentration, lb->pConcentrationLabel, pset);
+      if(flags->d_doScalarDiffusion){
+        old_dw->get(pConcentration, lb->pConcentrationLabel, pset);
+      }
 #endif
 
       if (flags->d_useLoadCurves) {
@@ -5087,11 +5091,13 @@ void AMRMPM::applyExternalScalarFlux(const ProcessorGroup* ,
               pExternalScalarFlux[idx] = pbc->fluxPerParticle(time, area);
 #endif
 #if defined USE_FLUX_RESTRICTION
-              double flux_restriction = (10 + log(1-pConcentration[idx]))/10;
-              if (flux_restriction < 0.0){
-                flux_restriction = 0.0;
+              if(flags->d_doScalarDiffusion){
+                double flux_restriction = (10 + log(1-pConcentration[idx]))/10;
+                if (flux_restriction < 0.0){
+                  flux_restriction = 0.0;
+                }
+                pExternalScalarFlux[idx] *= flux_restriction;
               }
-              pExternalScalarFlux[idx] *= flux_restriction;
 #endif
             }
           }
