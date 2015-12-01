@@ -2993,17 +2993,12 @@ void UnifiedScheduler::initiateH2DCopies(DetailedTask* dtask) {
                 if (uses_SHRT_MAX) {
                   IntVector domainLo_EC, domainHi_EC;
                   level->findCellIndexRange(domainLo_EC, domainHi_EC); // including extraCells
-                  dw->getRegion(*gridVar, curDependency->var, matlID, level,
-                      domainLo_EC, domainHi_EC, true);
+                  dw->getRegion(*gridVar, curDependency->var, matlID, level, domainLo_EC, domainHi_EC, true);
                 } else {
-                  dw->getGridVar(*gridVar, curDependency->var, matlID,
-                      patches->get(i), curDependency->gtype,
-                      curDependency->numGhostCells);
+                  dw->getGridVar(*gridVar, curDependency->var, matlID, patches->get(i), curDependency->gtype, curDependency->numGhostCells);
                 }
-                IntVector host_low, host_high, host_offset, host_size,
-                    host_strides;
-                gridVar->getSizes(host_low, host_high, host_offset, host_size,
-                    host_strides);
+                IntVector host_low, host_high, host_offset, host_size, host_strides;
+                gridVar->getSizes(host_low, host_high, host_offset, host_size, host_strides);
 
                 //Queue this CPU var to go into the host-side GPU DW.
                 //Also queue that this GPU DW var should also be found in this tasks's Task DW.

@@ -435,7 +435,8 @@ GPUDataWarehouse::put(GPUGridVariableBase &var, size_t sizeOfDataType, char cons
     svi.device_ptr = var_ptr;
     svi.host_contiguousArrayPtr = host_ptr;
     svi.varDB_index = d_varDB_index;
-
+    svi.atomicStatusInHostMemory = UNKNOWN;
+    svi.atomicStatusInGpuMemory = ALLOCATED;
 
     if (gpu_stats.active()) {
       cerrLock.lock();
@@ -558,6 +559,9 @@ GPUDataWarehouse::allocateAndPut(GPUGridVariableBase &var, char const* label, in
     staging_it = it->second.stagingVars.find(sv);
   } //Note: If no regular var exists and a staging var is needed, the put() method will properly take care of that.
 
+  varLock->writeUnlock();
+  //Locking not needed here on out in this method.  STL maps ensure that iterators point to correct values
+  //even if other threads add nodes.  We just can't remove values, but that shouldn't ever happen.
 
   //This prepares the var with the offset and size.  Any possible allocation will come later.
   //If it needs to go into the database, that will also come later
@@ -655,6 +659,7 @@ GPUDataWarehouse::allocateAndPut(GPUGridVariableBase &var, char const* label, in
     }
   }
 
+
   //Now allocate it
   if (allocationNeeded) {
 
@@ -688,9 +693,6 @@ GPUDataWarehouse::allocateAndPut(GPUGridVariableBase &var, char const* label, in
     //We have the pointer!  Add it in.
     var.setArray3(offset, size, addr);
 
-    varLock->writeUnlock();
-
-
     if (putNeeded) {
       //put() performs its own locking
       //Create a brand new var entry into the database. This also sets the proper atomicDataStatus flags.
@@ -698,16 +700,12 @@ GPUDataWarehouse::allocateAndPut(GPUGridVariableBase &var, char const* label, in
     } else {
       //The variables were already in the database.  But we allocated memory for it.
       //So set the proper atomicDataStatus flags.
-      //Locking not needed here.  STL maps ensure that iterators point to correct values
-      //even if other threads add nodes.
       if (!staging) {
         testAndSetAllocate(it->second.atomicStatusInGpuMemory);
       } else {
         testAndSetAllocate(staging_it->second.atomicStatusInGpuMemory);
       }
     }
-  } else {
-    varLock->writeUnlock();
   }
 
 
@@ -2420,13 +2418,14 @@ GPUDataWarehouse::testAndSetAllocating(atomicDataStatus& status)
     //get the value
     atomicDataStatus oldVarStatus  = __sync_or_and_fetch(&(status), 0);
     //if it's allocated, return true
-    if ((oldVarStatus & ALLOCATING == ALLOCATING) || (oldVarStatus & ALLOCATED == ALLOCATED)) {
+    if (((oldVarStatus & ALLOCATING) == ALLOCATING) || ((oldVarStatus & ALLOCATED) == ALLOCATED)) {
       //Something else already allocated or is allocating it.  So this thread won't do do any allocation.
       return false;
     } else {
-      //attempt to claim we'll allocate it
+      //Attempt to claim we'll allocate it.  If not go back into our loop and recheck
       atomicDataStatus newVarStatus = oldVarStatus | ALLOCATING;
       allocating = __sync_val_compare_and_swap(&status, oldVarStatus, newVarStatus);
+
     }
   }
   return true;
@@ -2442,15 +2441,18 @@ GPUDataWarehouse::testAndSetAllocate(atomicDataStatus& status)
   //get the value
   atomicDataStatus oldVarStatus = __sync_or_and_fetch(&(status), 0);
   //if it's allocated, return true
-  if (oldVarStatus & ALLOCATED == ALLOCATED) {
+  if ((oldVarStatus & ALLOCATED) == ALLOCATED) {
     //already allocated, use it.
-    printf("ERROR:\nGPUDataWarehouse::testAndSetAllocate(  )  Can't allocate a status it if it's already allocated\n");
+    printf("ERROR:\nGPUDataWarehouse::testAndSetAllocate( )  Can't allocate a status if it's already allocated\n");
     exit(-1);
   } else {
-    //attempt to claim we'll allocate it
-    atomicDataStatus newVarStatus = oldVarStatus | ALLOCATED;
-    //turn off any allocating flag if it existed
-    newVarStatus = newVarStatus & ~ALLOCATING;
+    //Attempt to claim we'll allocate it.  Create what we want the status to look like
+    //by turning off allocating and turning on allocated.
+    atomicDataStatus newVarStatus = newVarStatus & ~ALLOCATING;
+    newVarStatus = oldVarStatus | ALLOCATED;
+
+    //If we succeeded in our attempt to claim to allocate, this returns true.
+    //If we failed, thats a real problem, and we crash the problem below.
     allocated = __sync_val_compare_and_swap(&status, oldVarStatus, newVarStatus);
   }
   if (!allocated) {
@@ -2465,7 +2467,7 @@ __host__ bool
 GPUDataWarehouse::checkAllocated(atomicDataStatus& status)
 {
 
-  return (__sync_or_and_fetch(&(status), 0) & ALLOCATED == ALLOCATED);
+  return ((__sync_or_and_fetch(&(status), 0) & ALLOCATED) == ALLOCATED);
 }
 
 
@@ -2475,7 +2477,7 @@ GPUDataWarehouse::getValidOnGPU(char const* label, int patchID, int matlIndx, in
   varLock->readLock();
   labelPatchMatlLevel lpml(label, patchID, matlIndx, levelIndx);
   if (varPointers->find(lpml) != varPointers->end()) {
-    bool retVal = (__sync_or_and_fetch(&(varPointers->operator[](lpml).atomicStatusInGpuMemory), 0) & VALID == VALID);
+    bool retVal = ((__sync_or_and_fetch(&(varPointers->operator[](lpml).atomicStatusInGpuMemory), 0) & VALID) == VALID);
       //varPointers->operator[](lpml).validOnGPU;
     //allVarPointersInfo info = varPointers[lpm];
     //int i = info.varDB_index;
@@ -2519,7 +2521,7 @@ GPUDataWarehouse::getValidOnCPU(char const* label, int patchID, int matlIndx, in
   if (varPointers->find(lpml) != varPointers->end()) {
 
 
-    bool retVal = (__sync_or_and_fetch(&(varPointers->operator[](lpml).atomicStatusInHostMemory), 0) & VALID == VALID);
+    bool retVal = ((__sync_or_and_fetch(&(varPointers->operator[](lpml).atomicStatusInHostMemory), 0) & VALID) == VALID);
     //varPointers->operator[](lpml).validOnGPU;
     //allVarPointersInfo info = varPointers[lpm];
     //int i = info.varDB_index;
