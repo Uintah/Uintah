@@ -66,7 +66,7 @@
 #include <CCA/Components/Wasatch/Expressions/Pressure.h>
 #include <CCA/Components/Wasatch/ConvectiveInterpolationMethods.h>
 #include <CCA/Components/Wasatch/Expressions/PostProcessing/KineticEnergy.h>
-#include "MomentumTransportEquationBase.h"
+#include <CCA/Components/Wasatch/Transport/MomentumTransportEquationBase.h>
 //-- ExprLib Includes --//
 #include <expression/ExprLib.h>
 
