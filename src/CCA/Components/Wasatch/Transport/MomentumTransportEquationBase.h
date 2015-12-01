@@ -169,9 +169,8 @@ namespace Wasatch{
     /**
      *  \brief setup the initial conditions for this momentum equation.
      */
-    Expr::ExpressionID initial_condition( Expr::ExpressionFactory& icFactory )
-    {}
-
+    virtual Expr::ExpressionID initial_condition( Expr::ExpressionFactory& exprFactory ) = 0;
+    
     /**
      *  \brief Parse the input file to get the name of this MomentumTransportEquationBase
      *
@@ -184,17 +183,11 @@ namespace Wasatch{
 
     void setup_diffusive_flux( FieldTagInfo& ){}
     void setup_convective_flux( FieldTagInfo& ){}
-    void setup_source_terms( FieldTagInfo&, Expr::TagList& ){}
+    void setup_source_terms( FieldTagInfo&, Expr::TagList& ){}                        
     
+    virtual Expr::ExpressionID setup_rhs( FieldTagInfo& info,
+                                         const Expr::TagList& srcTags ) = 0;
     
-    
-    
-    
-    
-    
-    Expr::ExpressionID setup_rhs( FieldTagInfo&,
-                                  const Expr::TagList& srcTags  );
-
     const bool isViscous_, isTurbulent_;
     const Expr::Tag thisVelTag_, densityTag_;
     const Expr::Tag& pressureTag_;

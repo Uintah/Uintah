@@ -24,7 +24,8 @@
 
 #include "StrainTensorBase.h"
 
-StrainTensorBase::
+template<typename ResultT, typename Vel1T, typename Vel2T, typename Vel3T>
+StrainTensorBase<ResultT, Vel1T,  Vel2T, Vel3T>::
 StrainTensorBase( const Expr::TagList& velTags )
 : Expr::Expression<SVolField>(),
   doX_  ( velTags[0] != Expr::Tag() ),
@@ -37,21 +38,23 @@ StrainTensorBase( const Expr::TagList& velTags )
     std::cout << msg.str() << std::endl;
     throw std::runtime_error(msg.str());
   }
-   u_ = create_field_request<XVolField>(velTags[0]);
-   v_ = create_field_request<YVolField>(velTags[1]);
-   w_ = create_field_request<ZVolField>(velTags[2]);
+   u_ = this->template create_field_request<Vel1T>(velTags[0]);
+   v_ = this->template create_field_request<Vel2T>(velTags[1]);
+   w_ = this->template create_field_request<Vel3T>(velTags[2]);
 }
 
 //--------------------------------------------------------------------
 
-StrainTensorBase::
+template<typename ResultT, typename Vel1T, typename Vel2T, typename Vel3T>
+StrainTensorBase<ResultT, Vel1T,  Vel2T, Vel3T>::
 ~StrainTensorBase()
 {}
 
 //--------------------------------------------------------------------
 
+template<typename ResultT, typename Vel1T, typename Vel2T, typename Vel3T>
 void
-StrainTensorBase::
+StrainTensorBase<ResultT, Vel1T,  Vel2T, Vel3T>::
 bind_operators( const SpatialOps::OperatorDatabase& opDB )
 {
   dudxOp_ = opDB.retrieve_operator<dudxT>();
@@ -78,25 +81,27 @@ bind_operators( const SpatialOps::OperatorDatabase& opDB )
 
 //--------------------------------------------------------------------
 
+template<typename ResultT, typename Vel1T, typename Vel2T, typename Vel3T>
 void
-StrainTensorBase::
+StrainTensorBase<ResultT, Vel1T,  Vel2T, Vel3T>::
 evaluate()
 {}
 
 //--------------------------------------------------------------------
 
+template<typename ResultT, typename Vel1T, typename Vel2T, typename Vel3T>
 void
-StrainTensorBase::
-calculate_strain_tensor_components(SVolField& strTsrMag,
-                                   const XVolField& u,
-                                   const YVolField& v,
-                                   const ZVolField& w,
-                                   SVolField& S11,
-                                   SVolField& S12,
-                                   SVolField& S13,
-                                   SVolField& S22,
-                                   SVolField& S23,
-                                   SVolField& S33)
+StrainTensorBase<ResultT, Vel1T,  Vel2T, Vel3T>::
+calculate_strain_tensor_components(ResultT& strTsrMag,
+                                   const Vel1T& u,
+                                   const Vel2T& v,
+                                   const Vel3T& w,
+                                   ResultT& S11,
+                                   ResultT& S12,
+                                   ResultT& S13,
+                                   ResultT& S22,
+                                   ResultT& S23,
+                                   ResultT& S33)
 {
   using namespace SpatialOps;
 
@@ -116,3 +121,17 @@ calculate_strain_tensor_components(SVolField& strTsrMag,
 }
 
 //------------------------------------------------------
+//==========================================================================
+// Explicit template instantiation for supported versions of this expression
+#include <spatialops/structured/FVStaggered.h>
+
+template class StrainTensorBase< SpatialOps::SVolField,
+                                 SpatialOps::XVolField,
+                                 SpatialOps::YVolField,
+                                 SpatialOps::ZVolField >;
+
+template class StrainTensorBase< SpatialOps::SVolField,
+                                 SpatialOps::SVolField,
+                                 SpatialOps::SVolField,
+                                 SpatialOps::SVolField >;
+

@@ -64,12 +64,12 @@ void
 StrainTensorSquare::
 bind_operators( const SpatialOps::OperatorDatabase& opDB )
 {
-  xxInterpOp_ = opDB.retrieve_operator<XXInterpT>();
-  yyInterpOp_ = opDB.retrieve_operator<YYInterpT>();
-  zzInterpOp_ = opDB.retrieve_operator<ZZInterpT>();
-  xyInterpOp_ = opDB.retrieve_operator<XYInterpT>();
-  xzInterpOp_ = opDB.retrieve_operator<XZInterpT>();
-  yzInterpOp_ = opDB.retrieve_operator<YZInterpT>();  
+  this->xxInterpOp_ = opDB.retrieve_operator<XXInterpT>();
+  this->yyInterpOp_ = opDB.retrieve_operator<YYInterpT>();
+  this->zzInterpOp_ = opDB.retrieve_operator<ZZInterpT>();
+  this->xyInterpOp_ = opDB.retrieve_operator<XYInterpT>();
+  this->xzInterpOp_ = opDB.retrieve_operator<XZInterpT>();
+  this->yzInterpOp_ = opDB.retrieve_operator<YZInterpT>();  
 }
 
 //--------------------------------------------------------------------
@@ -91,12 +91,12 @@ evaluate()
   const S33T& S33 = S33_->field_ref();
   
   strTsrMag <<= 0.0;
-  strTsrMag <<= (*xxInterpOp_)(S11) * (*xxInterpOp_)(S11) // S11*S11
-              + (*yyInterpOp_)(S22) * (*yyInterpOp_)(S22) // S22*S22
-              + (*zzInterpOp_)(S33) * (*zzInterpOp_)(S33) // S33*S33
-              + 2.0 * (*xyInterpOp_)(S21) * (*xyInterpOp_)(S21) // S12*S12 + S21*S21 = 2.0*S21*S21
-              + 2.0 * (*xzInterpOp_)(S31) * (*xzInterpOp_)(S31) // S13*S13 + S31*S31 = 2.0*S31*S31
-              + 2.0 * (*yzInterpOp_)(S32) * (*yzInterpOp_)(S32);// S23*S23 + S32*S32 = 2.0*S32*S32 */
+  strTsrMag <<= (*this->xxInterpOp_)(S11) * (*this->xxInterpOp_)(S11) // S11*S11
+              + (*this->yyInterpOp_)(S22) * (*this->yyInterpOp_)(S22) // S22*S22
+              + (*this->zzInterpOp_)(S33) * (*this->zzInterpOp_)(S33) // S33*S33
+              + 2.0 * (*this->xyInterpOp_)(S21) * (*this->xyInterpOp_)(S21) // S12*S12 + S21*S21 = 2.0*S21*S21
+              + 2.0 * (*this->xzInterpOp_)(S31) * (*this->xzInterpOp_)(S31) // S13*S13 + S31*S31 = 2.0*S31*S31
+              + 2.0 * (*this->yzInterpOp_)(S32) * (*this->yzInterpOp_)(S32);// S23*S23 + S32*S32 = 2.0*S32*S32 */
 }
 
 //--------------------------------------------------------------------
@@ -132,31 +132,34 @@ StrainTensorSquare::Builder::build() const
 // WALE MODEL
 //********************************************************************
 
-WaleTensorMagnitude::
+template<typename ResultT, typename Vel1T, typename Vel2T, typename Vel3T>
+WaleTensorMagnitude<ResultT, Vel1T, Vel2T, Vel3T>::
 WaleTensorMagnitude( const Expr::TagList& velTags )
-: StrainTensorBase( velTags )
+: StrainTensorBase<ResultT, Vel1T, Vel2T, Vel3T>( velTags )
 {
   this->set_gpu_runnable( true );
 }
 
 //--------------------------------------------------------------------
 
-WaleTensorMagnitude::
+template<typename ResultT, typename Vel1T, typename Vel2T, typename Vel3T>
+WaleTensorMagnitude<ResultT, Vel1T, Vel2T, Vel3T>::
 ~WaleTensorMagnitude()
 {}
 
 //--------------------------------------------------------------------
 
+template<typename ResultT, typename Vel1T, typename Vel2T, typename Vel3T>
 void
-WaleTensorMagnitude::
+WaleTensorMagnitude<ResultT, Vel1T, Vel2T, Vel3T>::
 evaluate()
 {
   using namespace SpatialOps;
   SVolField& waleTsrMag = this->value();
 
-  const XVolField& u = u_->field_ref();
-  const YVolField& v = v_->field_ref();
-  const ZVolField& w = w_->field_ref();
+  const Vel1T& u = this->u_->field_ref();
+  const Vel2T& v = this->v_->field_ref();
+  const Vel3T& w = this->w_->field_ref();
   
   // gij = dui/dxj is the velocity gradient tensor
   SpatFldPtr<SVolField> g11 = SpatialFieldStore::get<SVolField>( waleTsrMag );
@@ -170,19 +173,19 @@ evaluate()
   SpatFldPtr<SVolField> g33 = SpatialFieldStore::get<SVolField>( waleTsrMag );
 
   // dui/dxi fields
-  *g11 <<= (*dudxOp_)(u); // dudx
-  *g22 <<= (*dvdyOp_)(v); // dvdy
-  *g33 <<= (*dwdzOp_)(w); // dwdz
+  *g11 <<= (*this->dudxOp_)(u); // dudx
+  *g22 <<= (*this->dvdyOp_)(v); // dvdy
+  *g33 <<= (*this->dwdzOp_)(w); // dwdz
 
   // cell centered dui/dxj fields
-  *g12 <<= (*xyInterpOp_)( (*dudyOp_)(u) ); // cell centered dudy
-  *g21 <<= (*yxInterpOp_)( (*dvdxOp_)(v) ); // cell centered dvdx
+  *g12 <<= (*this->xyInterpOp_)( (*this->dudyOp_)(u) ); // cell centered dudy
+  *g21 <<= (*this->yxInterpOp_)( (*this->dvdxOp_)(v) ); // cell centered dvdx
   
-  *g13 <<= (*xzInterpOp_)( (*dudzOp_)(u) ); // cell centered dudz
-  *g31 <<= (*zxInterpOp_)( (*dwdxOp_)(w) ); // cell centered dwdx
+  *g13 <<= (*this->xzInterpOp_)( (*this->dudzOp_)(u) ); // cell centered dudz
+  *g31 <<= (*this->zxInterpOp_)( (*this->dwdxOp_)(w) ); // cell centered dwdx
   
-  *g23 <<= (*yzInterpOp_)( (*dvdzOp_)(v) ); // cell centered dvdz
-  *g32 <<= (*zyInterpOp_)( (*dwdyOp_)(w) ); // cell centered dwdy
+  *g23 <<= (*this->yzInterpOp_)( (*this->dvdzOp_)(v) ); // cell centered dvdz
+  *g32 <<= (*this->zyInterpOp_)( (*this->dwdyOp_)(w) ); // cell centered dwdy
 
   // NOTE: the gd_ij tensor corresponds to the \bar(g^2)_ij tensor in the 
   // Nicoud and Ducros original paper.
@@ -222,7 +225,8 @@ evaluate()
 
 //--------------------------------------------------------------------
 
-WaleTensorMagnitude::
+template<typename ResultT, typename Vel1T, typename Vel2T, typename Vel3T>
+WaleTensorMagnitude<ResultT, Vel1T, Vel2T, Vel3T>::
 Builder::Builder( const Expr::Tag& result,
                   const Expr::TagList& velTags )
 : ExpressionBuilder(result),
@@ -231,8 +235,9 @@ Builder::Builder( const Expr::Tag& result,
 
 //--------------------------------------------------------------------
 
+template<typename ResultT, typename Vel1T, typename Vel2T, typename Vel3T>
 Expr::ExpressionBase*
-WaleTensorMagnitude::Builder::build() const
+WaleTensorMagnitude<ResultT, Vel1T, Vel2T, Vel3T>::Builder::build() const
 {
   return new WaleTensorMagnitude( velTags_ );
 }
@@ -241,31 +246,34 @@ WaleTensorMagnitude::Builder::build() const
 // VREMAN MODEL
 //********************************************************************
 
-VremanTensorMagnitude::
+template<typename ResultT, typename Vel1T, typename Vel2T, typename Vel3T>
+VremanTensorMagnitude<ResultT, Vel1T, Vel2T, Vel3T>::
 VremanTensorMagnitude( const Expr::TagList& velTags )
-: StrainTensorBase( velTags )
+: StrainTensorBase<ResultT, Vel1T, Vel2T, Vel3T>( velTags )
 {
   this->set_gpu_runnable( true );
 }
 
 //--------------------------------------------------------------------
 
-VremanTensorMagnitude::
+template<typename ResultT, typename Vel1T, typename Vel2T, typename Vel3T>
+VremanTensorMagnitude<ResultT, Vel1T, Vel2T, Vel3T>::
 ~VremanTensorMagnitude()
 {}
 
 //--------------------------------------------------------------------
 
+template<typename ResultT, typename Vel1T, typename Vel2T, typename Vel3T>
 void
-VremanTensorMagnitude::
+VremanTensorMagnitude<ResultT, Vel1T, Vel2T, Vel3T>::
 evaluate()
 {
   using namespace SpatialOps;
   SVolField& vremanTsrMag = this->value();
   
-  const XVolField& u = u_->field_ref();
-  const YVolField& v = v_->field_ref();
-  const ZVolField& w = w_->field_ref();
+  const Vel1T& u = this->u_->field_ref();
+  const Vel2T& v = this->v_->field_ref();
+  const Vel3T& w = this->w_->field_ref();
 
   // aij corresponds to alpha_ij in the Vreman paper (eq. 6)
   SpatFldPtr<SVolField> a11 = SpatialFieldStore::get<SVolField>( vremanTsrMag );
@@ -279,19 +287,19 @@ evaluate()
   SpatFldPtr<SVolField> a33 = SpatialFieldStore::get<SVolField>( vremanTsrMag );
   
   // dui/dxi fields
-  *a11 <<= (*dudxOp_)(u); // dudx
-  *a22 <<= (*dvdyOp_)(v); // dvdy
-  *a33 <<= (*dwdzOp_)(w); // dwdz
+  *a11 <<= (*this->dudxOp_)(u); // dudx
+  *a22 <<= (*this->dvdyOp_)(v); // dvdy
+  *a33 <<= (*this->dwdzOp_)(w); // dwdz
   
   // cell centered duj/dxi fields
-  *a21 <<= (*xyInterpOp_)( (*dudyOp_)(u) ); // cell centered dudy
-  *a12 <<= (*yxInterpOp_)( (*dvdxOp_)(v) ); // cell centered dvdx
+  *a21 <<= (*this->xyInterpOp_)( (*this->dudyOp_)(u) ); // cell centered dudy
+  *a12 <<= (*this->yxInterpOp_)( (*this->dvdxOp_)(v) ); // cell centered dvdx
   
-  *a31 <<= (*xzInterpOp_)( (*dudzOp_)(u) ); // cell centered dudz
-  *a13 <<= (*zxInterpOp_)( (*dwdxOp_)(w) ); // cell centered dwdx
+  *a31 <<= (*this->xzInterpOp_)( (*this->dudzOp_)(u) ); // cell centered dudz
+  *a13 <<= (*this->zxInterpOp_)( (*this->dwdxOp_)(w) ); // cell centered dwdx
 
-  *a32 <<= (*yzInterpOp_)( (*dvdzOp_)(v) ); // cell centered dvdz
-  *a23 <<= (*zyInterpOp_)( (*dwdyOp_)(w) ); // cell centered dwdy
+  *a32 <<= (*this->yzInterpOp_)( (*this->dvdzOp_)(v) ); // cell centered dvdz
+  *a23 <<= (*this->zyInterpOp_)( (*this->dwdyOp_)(w) ); // cell centered dwdy
   
   // bij corresponds to beta_ij in the Vreman paper (eq. 7)
   SpatFldPtr<SVolField> b11 = SpatialFieldStore::get<SVolField>( vremanTsrMag );
@@ -342,7 +350,8 @@ evaluate()
 
 //--------------------------------------------------------------------
 
-VremanTensorMagnitude::
+template<typename ResultT, typename Vel1T, typename Vel2T, typename Vel3T>
+VremanTensorMagnitude<ResultT, Vel1T, Vel2T, Vel3T>::
 Builder::Builder( const Expr::Tag& result,
                   const Expr::TagList& velTags )
 : ExpressionBuilder(result),
@@ -351,10 +360,32 @@ Builder::Builder( const Expr::Tag& result,
 
 //--------------------------------------------------------------------
 
+template<typename ResultT, typename Vel1T, typename Vel2T, typename Vel3T>
 Expr::ExpressionBase*
-VremanTensorMagnitude::Builder::build() const
+VremanTensorMagnitude<ResultT, Vel1T, Vel2T, Vel3T>::Builder::build() const
 {
   return new VremanTensorMagnitude( velTags_ );
 }
 
 //--------------------------------------------------------------------
+
+template class WaleTensorMagnitude< SpatialOps::SVolField,
+                                 SpatialOps::XVolField,
+                                 SpatialOps::YVolField,
+                                 SpatialOps::ZVolField >;
+
+template class WaleTensorMagnitude< SpatialOps::SVolField,
+                                 SpatialOps::SVolField,
+                                 SpatialOps::SVolField,
+                                 SpatialOps::SVolField >;
+
+template class VremanTensorMagnitude< SpatialOps::SVolField,
+                                 SpatialOps::XVolField,
+                                 SpatialOps::YVolField,
+                                 SpatialOps::ZVolField >;
+
+template class VremanTensorMagnitude< SpatialOps::SVolField,
+                                 SpatialOps::SVolField,
+                                 SpatialOps::SVolField,
+                                 SpatialOps::SVolField >;
+

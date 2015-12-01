@@ -116,7 +116,7 @@ namespace Wasatch{
       case TurbulenceParameters::VREMAN: {
         vremanTsrMagTag = tagNames.vremantensormag;
         if( !factory.have_entry( vremanTsrMagTag ) ){
-          typedef VremanTensorMagnitude::Builder VremanTsrMagT;
+          typedef VremanTensorMagnitude<SVolField,XVolField,YVolField,ZVolField>::Builder VremanTsrMagT;
           factory.register_expression( scinew VremanTsrMagT(vremanTsrMagTag, velTags ) );
         }
       }
@@ -136,7 +136,7 @@ namespace Wasatch{
         // if WALE model is turned on, then create an expression for the square velocity gradient tensor
         waleTsrMagTag = tagNames.waletensormag;
         if( !factory.have_entry( waleTsrMagTag ) ){
-          typedef WaleTensorMagnitude::Builder waleStrTsrMagT;
+          typedef WaleTensorMagnitude<SVolField,XVolField,YVolField,ZVolField>::Builder waleStrTsrMagT;
           factory.register_expression( scinew waleStrTsrMagT(waleTsrMagTag, velTags ) );
         }
       }
@@ -155,7 +155,7 @@ namespace Wasatch{
         
         if( !factory.have_entry( dynSmagCoefTag )&&
             !factory.have_entry( strTsrMagTag )     ){
-          typedef DynamicSmagorinskyCoefficient::Builder dynSmagConstT;
+          typedef DynamicSmagorinskyCoefficient<SVolField,XVolField,YVolField,ZVolField>::Builder dynSmagConstT;
           factory.register_expression( scinew dynSmagConstT(dynamicSmagTagList,
                                                             velTags,
                                                             densTag,
@@ -487,14 +487,6 @@ namespace Wasatch{
   template< typename FieldT >
   MomentumTransportEquationBase<FieldT>::
   ~MomentumTransportEquationBase()
-  {}
-
-  //-----------------------------------------------------------------
-
-  template< typename FieldT >
-  Expr::ExpressionID  MomentumTransportEquationBase<FieldT>::
-  setup_rhs( FieldTagInfo&,
-             const Expr::TagList& srcTags )
   {}
   
   //==================================================================
