@@ -77,7 +77,7 @@ void NonLinearDiff1::scheduleComputeFlux(Task* task, const MPMMaterial* matl,
   task->computes(d_lb->pFluxLabel,        matlset);
   task->computes(d_lb->pDiffusivityLabel, matlset);
   task->computes(d_lb->pPressureLabel_t1, matlset);
-  task->computes(d_lb->pPressureLabel_t2, matlset);
+  //task->computes(d_lb->pPressureLabel_t2, matlset);
 }
 
 void NonLinearDiff1::computeFlux(const Patch* patch,
@@ -90,9 +90,14 @@ void NonLinearDiff1::computeFlux(const Patch* patch,
   ParticleInterpolator* interpolator = d_Mflag->d_interpolator->clone(patch);
   vector<IntVector> ni(interpolator->size());
   vector<double> S(interpolator->size());
+  vector<Vector> d_S(interpolator->size());
 
   int dwi = matl->getDWIndex();
   Vector dx = patch->dCell();
+  double oodx[3];
+  oodx[0] = 1.0/dx.x();
+  oodx[1] = 1.0/dx.y();
+  oodx[2] = 1.0/dx.z();
   double comp_diffusivity;
   double neg_one_third = -1.0/3.0;
 
@@ -109,7 +114,7 @@ void NonLinearDiff1::computeFlux(const Patch* patch,
   ParticleVariable<Vector>       pFlux;
   ParticleVariable<double>       pDiffusivity;
   ParticleVariable<double>       pPressure1;
-  ParticleVariable<double>       pPressure2;
+  //ParticleVariable<double>       pPressure2;
 
   ParticleSubset* pset = old_dw->getParticleSubset(dwi, patch);
 
@@ -127,7 +132,7 @@ void NonLinearDiff1::computeFlux(const Patch* patch,
   new_dw->allocateAndPut(pFlux,        d_lb->pFluxLabel,        pset);
   new_dw->allocateAndPut(pDiffusivity, d_lb->pDiffusivityLabel, pset);
   new_dw->allocateAndPut(pPressure1,   d_lb->pPressureLabel_t1, pset);
-  new_dw->allocateAndPut(pPressure2,   d_lb->pPressureLabel_t2, pset);
+  //new_dw->allocateAndPut(pPressure2,   d_lb->pPressureLabel_t2, pset);
 
   double non_lin_comp;
   double D;
@@ -137,11 +142,13 @@ void NonLinearDiff1::computeFlux(const Patch* patch,
   double pressure;
   //double pressure1, pressure2;
   double concentration;
+  Vector pressure_grad;
   for (ParticleSubset::iterator iter = pset->begin(); iter != pset->end();
                                                       iter++){
     particleIndex idx = *iter;
 
-    interpolator->findCellAndWeights(px[idx],ni,S,psize[idx],pFOld[idx]);
+    //interpolator->findCellAndWeights(px[idx],ni,S,psize[idx],pFOld[idx]);
+    interpolator->findCellAndWeightsAndShapeDerivatives(px[idx],ni,S,d_S,psize[idx], pFOld[idx]);
     
 #if defined USE_PARTICLE_VALUES
     //pressure1 = neg_one_third * pStress[idx].Trace(); 
@@ -150,11 +157,16 @@ void NonLinearDiff1::computeFlux(const Patch* patch,
 #else
     concentration = 0.0;
     pressure      = 0.0;
+    pressure_grad = Vector(0.0,0.0,0.0);
     //pressure2      = 0.0;
     for(int k = 0; k < d_Mflag->d_8or27; k++) {
       IntVector node = ni[k];
       concentration += gConcentration[node] * S[k];
       pressure      -= gHydroStress[node]   * S[k];
+      // testing to see how pressure gradients might affect concentration profile
+      //for (int j = 0; j<3; j++) {
+      //    pressure_grad[j] -= (gHydroStress[node]*tuning5) * d_S[k][j] * oodx[j];
+      //}
     }
 #endif
 
@@ -174,12 +186,14 @@ void NonLinearDiff1::computeFlux(const Patch* patch,
       if(pressure > tuning4){
         pressure = tuning4;
       }
+      //D = comp_diffusivity*exp(tuning1*concentration);
       D = comp_diffusivity*exp(tuning1*concentration)*exp(-tuning2*pressure);
       //cout << "Pressure: " << pressure << ", Concentration: " << concentration << ", Diffusivity: " << D << endl;
       //cout << "Pressure1: " << pressure1 << ", Pressure2: " << pressure2;
       //cout << ", Conc1: " << conc1 << ", Conc2: " << conc2 << endl;
     }else{
-      non_lin_comp = 1/(1-concentration) - 2 * tuning1 * concentration;
+      //non_lin_comp = 1/(1-concentration) - 2 * tuning1 * concentration;
+      non_lin_comp = exp(tuning1 * pow(concentration,3));
 
       //cout << "nlc: " << non_lin_comp << ", concentration: " << pConcentration[idx] << endl;
 
@@ -191,9 +205,11 @@ void NonLinearDiff1::computeFlux(const Patch* patch,
     }
 
     pFlux[idx] = D * pConcGrad[idx];
+    // testing to see how pressure gradients might affect concentration profile
+    //pFlux[idx] = D * (pConcGrad[idx] + (1-concentration)*concentration*tuning2*pressure_grad);
     pDiffusivity[idx] = D;
     pPressure1[idx] = pressure;
-    pPressure2[idx] = concentration;
+    //pPressure2[idx] = pressure2;
     timestep = min(timestep, computeStableTimeStep(D, dx));
   } //End of Particle Loop
   //cout << "timestep: " << timestep << endl;

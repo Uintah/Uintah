@@ -54,6 +54,8 @@ MPMLabel::MPMLabel()
 			ParticleVariable<double>::getTypeDescription() );
   pPressureLabel_t2  = VarLabel::create( "p.pressure_t2",
 			ParticleVariable<double>::getTypeDescription() );
+  pEquivalentStress_t1  = VarLabel::create( "p.equivalentStress_t1",
+			ParticleVariable<double>::getTypeDescription() );
   // ******* end - for temporary use only, CG
   
   pScratchVecLabel  = VarLabel::create( "p.scratchvec",
@@ -750,6 +752,7 @@ MPMLabel::~MPMLabel()
   // ******* start - for temporary use, CG
   VarLabel::destroy(pPressureLabel_t1);
   VarLabel::destroy(pPressureLabel_t2); 
+  VarLabel::destroy(pEquivalentStress_t1);
   // ******* end - for temporary use, CG
  
   //PermanentParticleState

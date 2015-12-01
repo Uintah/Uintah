@@ -722,6 +722,10 @@ RFElasticPlastic::addComputesAndRequires(Task* task,
   
   // Deviatoric stress model
   d_devStress->addComputesAndRequires(task, matl);
+
+  //******* start - temporary use, CG
+  task->computes(lb->pEquivalentStress_t1,  matlset);
+  //******* end   - temporary use, CG
 }
 //______________________________________________________________________
 //
@@ -827,7 +831,7 @@ RFElasticPlastic::computeStressTensor(const PatchSubset* patches,
     old_dw->get(pPorosity,          pPorosityLabel,          pset);
     old_dw->get(pEnergy,            pEnergyLabel,            pset);
     old_dw->get(pLocalized,         pLocalizedLabel,         pset);
-    old_dw->get(pRotation,    pRotationLabel,               pset);
+    old_dw->get(pRotation,          pRotationLabel,          pset);
 
     // Get the particle IDs, useful in case a simulation goes belly up
     constParticleVariable<long64> pParticleID; 
@@ -850,7 +854,7 @@ RFElasticPlastic::computeStressTensor(const PatchSubset* patches,
     ParticleVariable<int>     pLocalized_new;
     ParticleVariable<double>  pdTdt, p_q, pEnergy_new;
     ParticleVariable<Matrix3> pStress_new;
-    
+
     new_dw->allocateAndPut(pRotation_new,    
                            pRotationLabel_preReloc,               pset);
     new_dw->allocateAndPut(pStrainRate_new,      
@@ -872,6 +876,10 @@ RFElasticPlastic::computeStressTensor(const PatchSubset* patches,
     new_dw->allocateAndPut(p_q,   lb->p_qLabel_preReloc,          pset);
     new_dw->allocateAndPut(pEnergy_new, pEnergyLabel_preReloc,    pset);
 
+    //******* start - temporary use, CG
+    ParticleVariable<double>  pEquStress;
+    new_dw->allocateAndPut(pEquStress, lb->pEquivalentStress_t1,  pset);
+    //******* end   - temporary use, CG
     
     d_flow     ->getInternalVars(pset, old_dw);
     d_devStress->getInternalVars(pset, old_dw);
@@ -1045,6 +1053,7 @@ RFElasticPlastic::computeStressTensor(const PatchSubset* patches,
       // the flow stress routines should be passed
       //  the entire stress (not just deviatoric)
       double equivStress = sqrtThreeTwo*trialS.Norm();
+      pEquStress[idx] = equivStress;
 
       // Calculate flow stress
       double flowStress = d_flow->computeFlowStress(state, delT, d_tol, 
