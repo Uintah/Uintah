@@ -257,12 +257,14 @@
         <material>BackgroundGas</material>
         <scalar name="f">
         <test_conservation>         true    </test_conservation>
+        
         <constants>
           <diffusivity>              0.0    </diffusivity>                      
           <initialize_diffusion_knob>  0    </initialize_diffusion_knob>         
-          <AMR_Refinement_Criteria>    1    </AMR_Refinement_Criteria>          
-              
+          <AMR_Refinement_Criteria>    1    </AMR_Refinement_Criteria>                
         </constants>
+        
+        <initialization>
          <geom_object>
             <difference>
             <box label="wholeDomain">     </box>
@@ -281,6 +283,8 @@
             <sinusoidalInitialize> true   </sinusoidalInitialize>
             <freq>            [1,0,0]     </freq>
          </geom_object>
+        </initialization>
+       
        </scalar>
       </Model>
     </Models>      
