@@ -33,7 +33,8 @@
 #include "TransportEquation.h"
 #include "ScalarTransportEquation.h"
 #include "ScalabilityTestTransportEquation.h"
-#include "MomentumTransportEquation.h"
+#include "MomentumTransportEquationBase.h"
+#include "LowMachMomentumTransportEquation.h"
 #include "EquationBase.h"
 
 #include "MomentTransportEquation.h"
@@ -577,7 +578,7 @@ namespace Wasatch{
 
     if( doxvel && doxmom ){
       proc0cout << "Setting up X momentum transport equation" << std::endl;
-      typedef MomentumTransportEquation< XVolField > MomTransEq;
+      typedef LowMachMomentumTransportEquation< XVolField > MomTransEq;
       EquationBase* momtranseq = scinew MomTransEq( xvelname,
                                                          xmomname,
                                                          densityTag,
@@ -593,7 +594,7 @@ namespace Wasatch{
 
     if( doyvel && doymom ){
       proc0cout << "Setting up Y momentum transport equation" << std::endl;
-      typedef MomentumTransportEquation< YVolField > MomTransEq;
+      typedef LowMachMomentumTransportEquation< YVolField > MomTransEq;
       EquationBase* momtranseq = scinew MomTransEq( yvelname,
                                                          ymomname,
                                                          densityTag,
@@ -609,7 +610,7 @@ namespace Wasatch{
 
     if( dozvel && dozmom ){
       proc0cout << "Setting up Z momentum transport equation" << std::endl;
-      typedef MomentumTransportEquation< ZVolField > MomTransEq;
+      typedef LowMachMomentumTransportEquation< ZVolField > MomTransEq;
       EquationBase* momtranseq = scinew MomTransEq( zvelname,
                                                          zmomname,
                                                          densityTag,
