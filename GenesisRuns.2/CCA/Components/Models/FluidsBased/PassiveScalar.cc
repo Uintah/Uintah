@@ -79,23 +79,33 @@ PassiveScalar::~PassiveScalar()
     delete d_matl_set;
   }
   
-  VarLabel::destroy(d_scalar->scalar_CCLabel);
-  VarLabel::destroy(d_scalar->scalar_source_CCLabel);
-  VarLabel::destroy(d_scalar->diffusionCoefLabel);
-  VarLabel::destroy(d_scalar->mag_grad_scalarLabel);
-  VarLabel::destroy(Slb->sum_scalar_fLabel);
+  VarLabel::destroy( d_scalar->scalar_CCLabel );
+  VarLabel::destroy( d_scalar->scalar_source_CCLabel );
+  VarLabel::destroy( d_scalar->diffusionCoefLabel );
+  VarLabel::destroy( d_scalar->mag_grad_scalarLabel );
+  VarLabel::destroy( Slb->sum_scalar_fLabel );
 
   delete lb;
   delete Slb;
   
+  // regions used during initialization
   for(vector<Region*>::iterator iter = d_scalar->regions.begin();
                                 iter != d_scalar->regions.end(); iter++){
     Region* region = *iter;
     delete region;
   }
+  
+  // Interior regions
+  for(vector<interiorRegion*>::iterator iter = d_scalar->interiorRegions.begin();
+                                        iter != d_scalar->interiorRegions.end(); iter++){
+    interiorRegion* region = *iter;
+    delete region;
+  }
+  
 }
 
-//__________________________________
+//______________________________________________________________________
+//
 PassiveScalar::Region::Region(GeometryPieceP piece, ProblemSpecP& ps)
   : piece(piece)
 {
@@ -126,6 +136,16 @@ PassiveScalar::Region::Region(GeometryPieceP piece, ProblemSpecP& ps)
     uniformInitialize = false;
   }
 }
+
+//______________________________________________________________________
+//
+PassiveScalar::interiorRegion::interiorRegion(GeometryPieceP piece, ProblemSpecP& ps)
+  : piece(piece)
+{
+  ps->require("scalar", value);
+}
+
+
 //______________________________________________________________________
 //     P R O B L E M   S E T U P
 void PassiveScalar::problemSetup(GridP&, SimulationStateP& in_state,
@@ -152,15 +172,12 @@ void PassiveScalar::problemSetup(GridP&, SimulationStateP& in_state,
   const TypeDescription* td_CCdouble = CCVariable<double>::getTypeDescription();
   //const TypeDescription* td_CCVector = CCVariable<Vector>::getTypeDescription();
     
-  d_scalar->scalar_CCLabel =     VarLabel::create("scalar-f",       td_CCdouble);
-  d_scalar->diffusionCoefLabel = VarLabel::create("scalar-diffCoef",td_CCdouble);
-  d_scalar->scalar_source_CCLabel = 
-                                 VarLabel::create("scalar-f_src",   td_CCdouble);
-  d_scalar->mag_grad_scalarLabel = 
-                                 VarLabel::create("mag_grad_scalar-f",td_CCdouble);                                 
+  d_scalar->scalar_CCLabel =        VarLabel::create("scalar-f",         td_CCdouble);
+  d_scalar->diffusionCoefLabel =    VarLabel::create("scalar-diffCoef",  td_CCdouble);
+  d_scalar->scalar_source_CCLabel = VarLabel::create("scalar-f_src",     td_CCdouble);
+  d_scalar->mag_grad_scalarLabel =  VarLabel::create("mag_grad_scalar-f",td_CCdouble);                                 
   
-  Slb->sum_scalar_fLabel      =  VarLabel::create("sum_scalar_f", 
-                                            sum_vartype::getTypeDescription());
+  Slb->sum_scalar_fLabel      =     VarLabel::create("sum_scalar_f",    sum_vartype::getTypeDescription());
   
   d_modelComputesThermoTransportProps = true;
   
@@ -176,50 +193,68 @@ void PassiveScalar::problemSetup(GridP&, SimulationStateP& in_state,
   }
   //__________________________________
   // Read in the constants for the scalar
-   ProblemSpecP child = params->findBlock("scalar");
-   if (!child){
-     throw ProblemSetupException("PassiveScalar: Couldn't find scalar tag", __FILE__, __LINE__);    
-   }
+  ProblemSpecP child = params->findBlock("scalar");
+  if (!child){
+    throw ProblemSetupException("PassiveScalar: Couldn't find scalar tag", __FILE__, __LINE__);    
+  }
 
-   child->getWithDefault("test_conservation", d_test_conservation, false);
+  child->getWithDefault("test_conservation", d_test_conservation, false);
 
-   ProblemSpecP const_ps = child->findBlock("constants");
-   if(!const_ps) {
-     throw ProblemSetupException("PassiveScalar: Couldn't find constants tag", __FILE__, __LINE__);
-   }
-       
-   const_ps->getWithDefault("initialize_diffusion_knob",       
-                            d_scalar->initialize_diffusion_knob,   0);
-                            
-   const_ps->getWithDefault("diffusivity",  d_scalar->diff_coeff, 0.0);
-   
-   const_ps->getWithDefault("AMR_Refinement_Criteria", d_scalar->refineCriteria,1e100);
+  ProblemSpecP const_ps = child->findBlock("constants");
+  if(!const_ps) {
+    throw ProblemSetupException("PassiveScalar: Couldn't find constants tag", __FILE__, __LINE__);
+  }
+
+  const_ps->getWithDefault("initialize_diffusion_knob",  d_scalar->initialize_diffusion_knob,   0);
+  const_ps->getWithDefault("diffusivity",                d_scalar->diff_coeff, 0.0);
+  const_ps->getWithDefault("AMR_Refinement_Criteria",    d_scalar->refineCriteria,1e100);
 
   //__________________________________
-  //  Read in the geometry objects for the scalar
-  for (ProblemSpecP geom_obj_ps = child->findBlock("geom_object");
-    geom_obj_ps != 0;
-    geom_obj_ps = geom_obj_ps->findNextBlock("geom_object") ) {
+  //  Initialization: Read in the geometry objects for the scalar
+  ProblemSpecP init_ps = child->findBlock("initialization");
+  for (ProblemSpecP geom_obj_ps = init_ps->findBlock("geom_object"); geom_obj_ps != 0; geom_obj_ps = geom_obj_ps->findNextBlock("geom_object") ) {
     vector<GeometryPieceP> pieces;
     GeometryPieceFactory::create(geom_obj_ps, pieces);
 
     GeometryPieceP mainpiece;
     if(pieces.size() == 0){
-     throw ParameterNotFound("No piece specified in geom_object", __FILE__, __LINE__);
+      throw ParameterNotFound("No piece specified in geom_object", __FILE__, __LINE__);
     } else if(pieces.size() > 1){
-     mainpiece = scinew UnionGeometryPiece(pieces);
+      mainpiece = scinew UnionGeometryPiece(pieces);
     } else {
-     mainpiece = pieces[0];
+      mainpiece = pieces[0];
     }
 
     d_scalar->regions.push_back(scinew Region(mainpiece, geom_obj_ps));
   }
+  
   if(d_scalar->regions.size() == 0) {
-    throw ProblemSetupException("Variable: scalar-f does not have any initial value regions",
-                                __FILE__, __LINE__);
-  } 
+    throw ProblemSetupException("Variable: scalar-f does not have any initial value regions", __FILE__, __LINE__);
+  }
+  
+  //__________________________________
+  //  Read in interior geometry objects for injecting a scalar in the domain
+  ProblemSpecP srcs_ps = child->findBlock("interiorSources");
+  if( srcs_ps ) {
+    for (ProblemSpecP geom_obj_ps = srcs_ps->findBlock("geom_object"); geom_obj_ps != 0; geom_obj_ps = geom_obj_ps->findNextBlock("geom_object") ) {
+      vector<GeometryPieceP> pieces;
+      GeometryPieceFactory::create(geom_obj_ps, pieces);
+
+      GeometryPieceP mainpiece;
+      if(pieces.size() == 0){
+        throw ParameterNotFound("No piece specified in geom_object", __FILE__, __LINE__);
+      } else if(pieces.size() > 1){
+        mainpiece = scinew UnionGeometryPiece(pieces);
+      } else {
+        mainpiece = pieces[0];
+      }
+
+      d_scalar->interiorRegions.push_back(scinew interiorRegion(mainpiece, geom_obj_ps));
+    }
+  }
 }
-//__________________________________
+
+//______________________________________________________________________
 //
 void PassiveScalar::outputProblemSpec(ProblemSpecP& ps)
 {
@@ -233,16 +268,33 @@ void PassiveScalar::outputProblemSpec(ProblemSpecP& ps)
 
 
   ProblemSpecP const_ps = scalar_ps->appendChild("constants");
-  const_ps->appendElement("initialize_diffusion_knob",
-                          d_scalar->initialize_diffusion_knob);
-  const_ps->appendElement("diffusivity",d_scalar->diff_coeff);
-  const_ps->appendElement("AMR_Refinement_Criteria",d_scalar->refineCriteria);
+  const_ps->appendElement("initialize_diffusion_knob",d_scalar->initialize_diffusion_knob);
+  const_ps->appendElement("diffusivity",              d_scalar->diff_coeff);
+  const_ps->appendElement("AMR_Refinement_Criteria",  d_scalar->refineCriteria);
 
+  //__________________________________
+  //  initialization regions
+  ProblemSpecP init_ps = scalar_ps->appendChild("initialization");
+  
   vector<Region*>::const_iterator iter;
   for ( iter = d_scalar->regions.begin(); iter != d_scalar->regions.end(); iter++) {
-    ProblemSpecP geom_ps = scalar_ps->appendChild("geom_object");
+    ProblemSpecP geom_ps = init_ps->appendChild("geom_object");
     (*iter)->piece->outputProblemSpec(geom_ps);
     geom_ps->appendElement("scalar",(*iter)->initialScalar);
+  }
+  
+
+  //__________________________________
+  //  regions inside the domain
+  if( d_scalar->interiorRegions.size() > 0 ){
+    ProblemSpecP int_ps = scalar_ps->appendChild("interiorSources");
+    
+    vector<interiorRegion*>::const_iterator itr;
+    for ( itr = d_scalar->interiorRegions.begin(); itr != d_scalar->interiorRegions.end(); itr++) {
+      ProblemSpecP geom_ps = int_ps->appendChild("geom_object");
+      (*itr)->piece->outputProblemSpec(geom_ps);
+      geom_ps->appendElement("scalar",(*itr)->value);
+    }
   }
 }
 
@@ -423,10 +475,10 @@ void PassiveScalar::scheduleModifyThermoTransportProperties(SchedulerP& sched,
 }
 //______________________________________________________________________
 void PassiveScalar::modifyThermoTransportProperties(const ProcessorGroup*, 
-                                                const PatchSubset* patches,
-                                                const MaterialSubset*,
-                                                DataWarehouse* /*old_dw*/,
-                                                DataWarehouse* new_dw)
+                                                    const PatchSubset* patches,
+                                                    const MaterialSubset*,
+                                                    DataWarehouse* /*old_dw*/,
+                                                    DataWarehouse* new_dw)
 { 
   for(int p=0;p<patches->size();p++){
     const Patch* patch = patches->get(p);
@@ -507,7 +559,23 @@ void PassiveScalar::computeModelSources(const ProcessorGroup*,
       scalarDiffusionOperator(new_dw, patch, use_vol_frac, f_old,
                               placeHolder, f_src, diff_coeff, delT);
     }  
-  }
+    
+    //__________________________________
+    //  interior source regions
+    for(vector<interiorRegion*>::iterator iter = d_scalar->interiorRegions.begin();
+                                          iter != d_scalar->interiorRegions.end(); iter++){
+      interiorRegion* region = *iter;
+            
+      for(CellIterator iter = patch->getExtraCellIterator(); !iter.done(); iter++){
+        IntVector c = *iter;
+        Point p = patch->cellPosition(c);            
+        if(region->piece->inside(p)) {
+          f_src[c] = region->value;
+          cout << c << " setting: " << f_src[c] << endl;
+        }
+      } // Over cells
+    }  //interiorRegions
+  }  // patches
 }
 //__________________________________      
 void PassiveScalar::scheduleComputeStableTimestep(SchedulerP&,
@@ -569,11 +637,13 @@ void PassiveScalar::testConservation(const ProcessorGroup*,
     constSFCYVariable<double> vvel_FC;
     constSFCZVariable<double> wvel_FC;
     int indx = d_matl->getDWIndex();
+    
     new_dw->get(f,       d_scalar->scalar_CCLabel,indx,patch,gn,0);
     new_dw->get(rho_CC,  mi->rho_CCLabel,         indx,patch,gn,0); 
     new_dw->get(uvel_FC, lb->uvel_FCMELabel,      indx,patch,gn,0); 
     new_dw->get(vvel_FC, lb->vvel_FCMELabel,      indx,patch,gn,0); 
     new_dw->get(wvel_FC, lb->wvel_FCMELabel,      indx,patch,gn,0); 
+    
     Vector dx = patch->dCell();
     double cellVol = dx.x()*dx.y()*dx.z();
 
@@ -586,8 +656,7 @@ void PassiveScalar::testConservation(const ProcessorGroup*,
     }
 
     double sum_mass_f;
-    conservationTest<double>(patch, delT, q_CC, uvel_FC, vvel_FC, wvel_FC, 
-                             sum_mass_f);
+    conservationTest<double>(patch, delT, q_CC, uvel_FC, vvel_FC, wvel_FC, sum_mass_f);
 
     new_dw->put(sum_vartype(sum_mass_f), Slb->sum_scalar_fLabel);
   }

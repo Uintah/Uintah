@@ -291,6 +291,8 @@
       </Module>    
       
       <Module name = "statistics">
+         <timeStart>   0.0  </timeStart>
+         <timeStop>   100  </timeStop>
         <material>Air</material>
         <computeHigherOrderStats> true </computeHigherOrderStats>
         <Variables>
