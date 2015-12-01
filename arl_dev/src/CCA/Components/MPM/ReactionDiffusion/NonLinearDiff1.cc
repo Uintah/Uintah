@@ -76,8 +76,8 @@ void NonLinearDiff1::scheduleComputeFlux(Task* task, const MPMMaterial* matl,
 
   task->computes(d_lb->pFluxLabel,        matlset);
   task->computes(d_lb->pDiffusivityLabel, matlset);
-  //task->computes(d_lb->pPressureLabel_t1, matlset);
-  //task->computes(d_lb->pPressureLabel_t2, matlset);
+  task->computes(d_lb->pPressureLabel_t1, matlset);
+  task->computes(d_lb->pPressureLabel_t2, matlset);
 }
 
 void NonLinearDiff1::computeFlux(const Patch* patch,
@@ -108,8 +108,8 @@ void NonLinearDiff1::computeFlux(const Patch* patch,
 
   ParticleVariable<Vector>       pFlux;
   ParticleVariable<double>       pDiffusivity;
-  //ParticleVariable<double>       pPressure1;
-  //ParticleVariable<double>       pPressure2;
+  ParticleVariable<double>       pPressure1;
+  ParticleVariable<double>       pPressure2;
 
   ParticleSubset* pset = old_dw->getParticleSubset(dwi, patch);
 
@@ -126,8 +126,8 @@ void NonLinearDiff1::computeFlux(const Patch* patch,
 
   new_dw->allocateAndPut(pFlux,        d_lb->pFluxLabel,        pset);
   new_dw->allocateAndPut(pDiffusivity, d_lb->pDiffusivityLabel, pset);
-  //new_dw->allocateAndPut(pPressure1,   d_lb->pPressureLabel_t1, pset);
-  //new_dw->allocateAndPut(pPressure2,   d_lb->pPressureLabel_t2, pset);
+  new_dw->allocateAndPut(pPressure1,   d_lb->pPressureLabel_t1, pset);
+  new_dw->allocateAndPut(pPressure2,   d_lb->pPressureLabel_t2, pset);
 
   double non_lin_comp;
   double D;
@@ -192,8 +192,8 @@ void NonLinearDiff1::computeFlux(const Patch* patch,
 
     pFlux[idx] = D * pConcGrad[idx];
     pDiffusivity[idx] = D;
-    //pPressure1[idx] = pressure1;
-    //pPressure2[idx] = pressure2;
+    pPressure1[idx] = pressure;
+    pPressure2[idx] = concentration;
     timestep = min(timestep, computeStableTimeStep(D, dx));
   } //End of Particle Loop
   //cout << "timestep: " << timestep << endl;
