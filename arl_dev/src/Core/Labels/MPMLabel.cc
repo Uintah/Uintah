@@ -52,7 +52,7 @@ MPMLabel::MPMLabel()
   // ******* start - for temporary use only, CG
   pPressureLabel_t1  = VarLabel::create( "p.pressure_t1",
 			ParticleVariable<double>::getTypeDescription() );
-  pPressureLabel_t2  = VarLabel::create( "p.pressure_t2",
+  pConcInterpLabel  = VarLabel::create( "p.concentrationInterp",
 			ParticleVariable<double>::getTypeDescription() );
   pEquivalentStress_t1  = VarLabel::create( "p.equivalentStress_t1",
 			ParticleVariable<double>::getTypeDescription() );
@@ -751,7 +751,7 @@ MPMLabel::~MPMLabel()
 
   // ******* start - for temporary use, CG
   VarLabel::destroy(pPressureLabel_t1);
-  VarLabel::destroy(pPressureLabel_t2); 
+  VarLabel::destroy(pConcInterpLabel); 
   VarLabel::destroy(pEquivalentStress_t1);
   // ******* end - for temporary use, CG
  

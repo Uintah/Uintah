@@ -979,7 +979,7 @@ RFElasticPlastic::computeStressTensor(const PatchSubset* patches,
 
       d_devStress->rotateInternalStresses(idx, tensorR);
 
-      double temperature = pTemperature[idx];
+      //double temperature = pTemperature[idx];
 
       // Set up the PlasticityState (for t_n+1)
       PlasticityState* state = scinew PlasticityState();
