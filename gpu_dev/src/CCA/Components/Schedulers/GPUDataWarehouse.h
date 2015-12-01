@@ -195,8 +195,8 @@ public:
 
   //Allocating            = bit 31 - 0x00000001
   //Allocated             = bit 30 - 0x00000002
-  //Valid                 = bit 29 - 0x00000004
-  //Copying in            = bit 28 - 0x00000008
+  //Copying in            = bit 28 - 0x00000004
+  //Valid                 = bit 29 - 0x00000008
   //Copying out           = bits 1 through 27, allowing for 27 copy out sources.
 
   //With this approach we can allow for multiple copy outs, but only one copy in.
