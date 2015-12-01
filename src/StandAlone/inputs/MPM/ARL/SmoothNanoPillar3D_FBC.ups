@@ -72,22 +72,22 @@
    <SimulationComponent type="amrmpm" />
 
    <Time>
-     <maxTime>2e10</maxTime>
+     <maxTime>8e9</maxTime>
      <initTime>0.0</initTime>
-     <delt_min>1.0e-16</delt_min>
+     <delt_min>1.0e4</delt_min>
      <delt_max>1.0e8</delt_max>
 <!--
-     <max_Timesteps>2</max_Timesteps>
+     <max_Timesteps>43</max_Timesteps>
 -->
      <timestep_multiplier>0.4</timestep_multiplier>
    </Time>    
 
    <DataArchiver>
       <filebase>SmoothNanoPillar3D_FBC.uda</filebase>
-      <outputInterval>2.e8</outputInterval>
       <!--
-      <outputInterval>2.e8</outputInterval>
+      <outputTimestepInterval>1</outputTimestepInterval>
       -->
+      <outputInterval>8.e7</outputInterval>
       <save label = "p.x"/>
       <save label = "p.mass"/>
       <save label = "p.area"/>
@@ -129,7 +129,7 @@
          <constitutive_model type="rf_elastic_plastic"> 
            <bulk_modulus>            48e6    </bulk_modulus>
            <shear_modulus>           33e6    </shear_modulus>
-           <volume_expansion_coeff>  0.56     </volume_expansion_coeff>
+           <volume_expansion_coeff>  0.36     </volume_expansion_coeff>
            <!-- Temperature is not currently used in this model, -->
            <!-- Keep initial material Temperature set to 298.0 -->
            <initial_material_temperature> 298.0 </initial_material_temperature>
@@ -165,18 +165,19 @@
          <thermal_conductivity>0.0</thermal_conductivity>
          <specific_heat>5</specific_heat>
          <diffusion_model type = "non_linear1">
-           <diffusivity>  1.0e-10   </diffusivity>
+           <diffusivity>  1.0e-11   </diffusivity>
            <max_concentration> 1.0 </max_concentration>
-           <use_pressure>true</use_pressure>
+           <use_pressure>false</use_pressure>
+           <tuning1> 1.98 </tuning1>
+           <tuning2> 1.0e4 </tuning2>
            <!--
-           <tuning1> 1.95 </tuning1>
-           <tuning2> 1000.0 </tuning2>
-           -->
+           <use_pressure>true</use_pressure>
            <tuning1> 6.90  </tuning1>
            <tuning2> 3.07  </tuning2>
            <tuning3> 0.0   </tuning3>
            <tuning4> 3.0   </tuning4>
            <tuning5> 1e-6  </tuning5>
+           -->
          </diffusion_model>
          <geom_object>
 	         <smoothcyl label = "cylinder">
@@ -189,7 +190,7 @@
              <outer_radius> 0.25   </outer_radius>
              <inner_radius> 0.0    </inner_radius>
              <num_radial> 60 </num_radial>
-             <num_axial> 10 </num_axial>
+             <num_axial> 20 </num_axial>
              <!--
              <num_axial> 25 </num_axial>
              -->
@@ -230,11 +231,11 @@
            <id>1</id>
            <time_point>
              <time> 0 </time>
-             <load> 1.e-5 </load>
+             <load> 8.e-5 </load>
            </time_point>
            <time_point>
              <time> 1.e12 </time>
-             <load> 1.e-5 </load>
+             <load> 8.e-5 </load>
            </time_point>
          </load_curve>
        </scalar_flux>
@@ -255,11 +256,11 @@
            <id>2</id>
            <time_point>
              <time> 0 </time>
-             <load> 1.e-5 </load>
+             <load> 8.e-5 </load>
            </time_point>
            <time_point>
              <time> 1.e12 </time>
-             <load> 1.e-5 </load>
+             <load> 8.e-5 </load>
            </time_point>
          </load_curve>
        </scalar_flux>
@@ -274,7 +275,7 @@
          <!--
          <upper>        [0.5,0.5,0.5]    </upper>
          -->
-         <resolution>   [50, 50, 10 ]    </resolution>
+         <resolution>   [100, 100, 20 ]    </resolution>
          <patches>      [2,2,1]          </patches>
          <extraCells>   [1,1,1]          </extraCells>
        </Box>
