@@ -39,36 +39,6 @@
       </LODI>
 -->
 
-      <!--  pseudo dye injection jet -->
-      <Face circle = "x-" origin = "-0.1 0.0 0.0" radius = ".001">
-        <BCType id = "all" label = "scalar-f"            var = "Dirichlet">
-                              <value> 1.0</value>
-        </BCType>
-        <BCType id = "0"    label = "Pressure"          var = "Neumann">
-                              <value> 0.0   </value>
-        </BCType>
-        <BCType id = "all"    label = "Velocity"        var = "Dirichlet">
-                              <value> [0.03,0.0,0.0] </value>
-        </BCType>
-        <BCType id = "all"    label = "Temperature"     var = "Dirichlet">
-                              <value> 300.0  </value>
-        </BCType>
-        <BCType id = "0"    label = "Density"           var = "Neumann">
-                              <value> 0.0  </value>
-        </BCType>
-        <BCType id = "1"    label = "Density"           var = "Dirichlet">
-                              <value> 1.1792946927374306  </value>
-        </BCType>
-<!--
-        <BCType id = "all"  label = "SpecificVol"       var = "computeFromDensity">
-                              <value> 0.0  </value>
-        </BCType>
--->
-        <BCType id = "1"    label = "scalar-f"          var = "Dirichlet">
-                              <value> 0.0</value>
-        </BCType>
-      </Face>
-
       <Face side = "x-">
         <BCType id = "0"    label = "Pressure"          var = "Neumann">
                               <value> 0.0   </value>
@@ -85,11 +55,6 @@
         <BCType id = "1"    label = "Density"           var = "Dirichlet">
                               <value> 1.1792946927374306  </value>
         </BCType>
-<!--
-        <BCType id = "all"  label = "SpecificVol"       var = "computeFromDensity">
-                              <value> 0.0  </value>
-        </BCType>
--->
         <BCType id = "1"    label = "scalar-f"          var = "Dirichlet">
                               <value> 0.0</value>
         </BCType>
@@ -107,35 +72,10 @@
         <BCType id = "all"  label = "Density"           var = "Neumann">
                               <value> 0.0  </value>
         </BCType>
-<!--
-        <BCType id = "1"  label = "SpecificVol"       var = "computeFromDensity">
-                              <value> 0.0  </value>
-        </BCType>
--->
         <BCType id = "1"    label = "scalar-f"        var = "Neumann">
                               <value> 0.0</value>
         </BCType>
       </Face>
-
-<!--
-      <Face side = "x+">
-        <BCType id = "0"  label = "Velocity"          var = "Neumann">
-                              <value> [0.,0.,0.] </value>
-        </BCType>
-        <BCType id = "0"  label = "Temperature"       var = "Neumann">
-                              <value> 0.0  </value>
-        </BCType>
-        <BCType id = "0"  label = "Density"           var = "Neumann">
-                              <value> 0.0  </value>
-        </BCType>
-        <BCType id = "0"  label = "SpecificVol"       var = "computeFromDensity">
-                              <value> 0.0  </value>
-        </BCType>
-        <BCType id = "0"    label = "scalar-f"        var = "Dirichlet">
-                              <value> 0.0</value>
-        </BCType>
-      </Face>
--->
       
       <Face side = "y-">
         <BCType id = "0"    label = "Pressure"        var = "Neumann">
@@ -150,11 +90,6 @@
         <BCType id = "all" label = "Density"          var = "Neumann">
                               <value> 0.0  </value>
         </BCType>
-<!--
-        <BCType id = "all" label = "SpecificVol"      var = "computeFromDensity">
-                              <value> 0.0  </value>
-        </BCType>
--->
         <BCType id = "1"    label = "scalar-f"           var = "Dirichlet">
                               <value> 0.0</value>
         </BCType>
@@ -361,17 +296,37 @@
 <!--
 -->
     <Models>
-       <Model type="PassiveScalar">
+      <Model type="PassiveScalar">
         <material>atmosphere</material>
         <scalar name="f">
-        <constants>
-          <diffusivity>  0.0   </diffusivity>
-         </constants>
-         <geom_object>
-          <box label="the whole computational domain"> </box>
-          <scalar>    0.00   </scalar>
-         </geom_object>
-       </scalar>
+          <constants>
+            <diffusivity>  0.0   </diffusivity>
+          </constants>
+
+          <initialization>
+            <geom_object>
+              <box label="the whole computational domain"> </box>
+              <scalar>    0.00   </scalar>
+            </geom_object>
+          </initialization>
+
+          <interiorSources>
+            <geom_object>
+              <union>
+                <sphere label = "1">
+                  <origin>[-0.05,0.01,0.0  ]</origin>
+                  <radius>0.005 </radius>
+                </sphere>
+
+                <sphere label = "2">
+                  <origin>[-0.05,-0.01,0.0  ]</origin>
+                  <radius>0.005 </radius>
+                </sphere>
+              </union>
+              <scalar>  0.1 </scalar>
+            </geom_object>
+          </interiorSources>
+        </scalar>
       </Model>
     </Models>            
 </Uintah_specification>

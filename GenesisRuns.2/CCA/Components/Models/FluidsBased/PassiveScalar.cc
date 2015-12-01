@@ -571,7 +571,6 @@ void PassiveScalar::computeModelSources(const ProcessorGroup*,
         Point p = patch->cellPosition(c);            
         if(region->piece->inside(p)) {
           f_src[c] = region->value;
-          cout << c << " setting: " << f_src[c] << endl;
         }
       } // Over cells
     }  //interiorRegions
