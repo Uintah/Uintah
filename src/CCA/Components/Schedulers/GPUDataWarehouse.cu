@@ -522,25 +522,11 @@ GPUDataWarehouse::allocateAndPut(GPUGridVariableBase &var, char const* label, in
 #ifdef __CUDA_ARCH__  // need to limit output
   printf("ERROR:\nGPUDataWarehouse::allocateAndPut( %s )  You cannot use this on the device.  All memory should be allocated on the CPU with cudaMalloc\n",label);
 #else
-  //__________________________________
-  //  cpu code
-  //check if it exists prior to allocating memory for it.
-  //One scenario in which we need to handle is when two patches need ghost cells from the
-  //same neighbor patch.  Suppose thread A's GPU patch 1 needs data from CPU patch 0, and
-  //thread B's GPU patch 2 needs data from CPU patch 0.  This is a messy scenario, but the cleanest
-  //is to have the first arriver between A and B to allocate memory on the GPU,
-  //then the second arriver will use the same memory. The simplest approach is to have
-  //threads A and B both copy the entire patch 0 into this GPU memory.  This should be ok as ghost cell
-  //data cannot be modified, so in case of a race condition, nothing will be modified
-  //if a memory chunk is being both read and written to simultaneously.
-  //So allow duplicates if the data is read only, otherwise don't allow duplicates.
 
-  //BUG: A race condition exists through the following:
-  //Thread A for Patch A allocates space for a region X, writes into shared GPUDW
-  //Thread B for Patch B sees this has already been allocated for region X at memory address for A.
-  //Thread B launches a task for Patch B, using the memory address for A, using garbage data.
-  //Thread A copies its border region X data host to device
-
+  //Check if it exists prior to allocating memory for it.
+  //If it has already been allocated, just use that.
+  //If it hasn't, this is lock free and the first thread to request allocating gets to allocate
+  //If another thread sees that allocating is in process, it loops and waits until the allocation complete.
 
   bool putNeeded = true;
   int3 size = make_int3(high.x-low.x, high.y-low.y, high.z-low.z);
@@ -579,7 +565,8 @@ GPUDataWarehouse::allocateAndPut(GPUGridVariableBase &var, char const* label, in
       allocationNeeded = testAndSetAllocating(it->second.atomicStatusInGpuMemory);
 
       if (!allocationNeeded) {
-        if (it->second.device_offset.y == low.y
+        if (it->second.device_offset.x == low.x
+            && it->second.device_offset.y == low.y
             && it->second.device_offset.z == low.z
             && it->second.device_size.x == size.x
             && it->second.device_size.y == size.y
@@ -603,7 +590,7 @@ GPUDataWarehouse::allocateAndPut(GPUGridVariableBase &var, char const* label, in
              }
              cerrLock.unlock();
            }
-           //We need the pointer.
+           //We need the pointer.  We can't move on until we get the pointer.
            //Ensure that it has been allocated.  Another thread may have been assigned to allocate it
            //but not completed that action.  If that's the case, wait until it's done so we can get the pointer.
            bool allocated = false;
@@ -854,6 +841,155 @@ GPUDataWarehouse::allocate(const char* indexID, size_t size)
 
   allocateLock->writeUnlock();
 #endif
+}
+
+__host__ void
+GPUDataWarehouse::copyToGpuIfNeeded(void * host_ptr, char const* label, int patchID, int matlIndx, int levelIndx, bool staging, int3 low, int3 high, void *cuda_stream) {
+  //Is it valid?  Don't copy.  Is it copying in?  Don't copy.
+  //Is it only allocated?  Copy.
+  //*Only* copy in if the allocated flag is set to true.
+  //Do not copy if the unallocated, allocating, copying in, or valid flags are set to true.
+
+  //This function was written for this targeted goal in mind:
+  //Thread A for Patch A allocates space for a region X, writes into shared GPUDW
+  //Thread B for Patch B sees this has already been allocated for region X at memory address for A.
+  //Thread B launches a task for Patch B, using the memory address for A, using garbage data.
+  //Thread A copies its border region X data host to device
+
+  //To prevent the above race condition, a lock free status is checked to ensure that only one thread copies the data.  Later in the engine it
+  //must check all variables to make sure their status is correct.
+
+  //First get the var in the internal variable database.
+  int3 size = make_int3(high.x-low.x, high.y-low.y, high.z-low.z);
+  int3 offset = low;
+  varLock->writeLock();
+  //First check if this variable is in the database already (it may not be allocated, but we have a database slot for it)
+  labelPatchMatlLevel lpml(label, patchID, matlIndx, levelIndx);
+  std::map<labelPatchMatlLevel, allVarPointersInfo>::iterator it = varPointers->find(lpml);
+  std::map<stagingVar, stagingVarInfo>::iterator staging_it;
+  if (it != varPointers->end() && staging) {
+    stagingVar sv;
+    sv.device_offset = offset;
+    sv.device_size = size;
+    staging_it = it->second.stagingVars.find(sv);
+  } //Note: If no regular var exists and a staging var is needed, the put() method will properly take care of that.
+
+  varLock->writeUnlock();
+  //Locking not needed here on out in this method.  STL maps ensure that iterators point to correct values
+  //even if other threads add nodes.  We just can't remove values, but that shouldn't ever happen.
+
+
+  //Now see if we need to copy the variable.  Or if another thread already did it or is doing it.
+  bool copyToNeeded = false;
+  void * device_ptr = NULL;
+  size_t varMemSize = 0;
+  if (it != varPointers->end()) {
+    if (staging == false) {
+      if (it->second.device_offset.x == low.x
+          && it->second.device_offset.y == low.y
+          && it->second.device_offset.z == low.z
+          && it->second.device_size.x == size.x
+          && it->second.device_size.y == size.y
+          && it->second.device_size.z == size.z) {
+
+        //See if we need to copy it.  If so this sets the copying flag.
+        copyToNeeded = testAndSetCopying(it->second.atomicStatusInGpuMemory);
+
+        if (!copyToNeeded) {
+           if (gpu_stats.active()) {
+             cerrLock.lock();
+             {
+               gpu_stats << UnifiedScheduler::myRankThread()
+                  << " GPUDataWarehouse::copyToGpuIfNeeded( " << label << " ) - "
+                  << " This non-staging/regular variable is being copied or been copied to the GPU.  No need to copy it again.  For label " << label
+                  << " patch " << patchID
+                  << " matl " << matlIndx
+                  << " level " << levelIndx
+                  << " with offset (" << offset.x << ", " << offset.y << ", " << offset.z << ")"
+                  << " and size (" << size.x << ", " << size.y << ", " << size.z << ")"
+                  << " on device " << d_device_id
+                  << " in GPUDW at " << std::hex << this << std::dec
+                  << endl;
+             }
+             cerrLock.unlock();
+           }
+        } else {
+          //Get information to perform a copy.
+          device_ptr = it->second.device_ptr;
+          varMemSize = it->second.device_size.x * it->second.device_size.y * it->second.device_size.z * it->second.sizeOfDataType;
+        }
+      } else {
+        printf("ERROR:\nGPUDataWarehouse::copyToGpuIfNeeded( %s )  Variable in database but of the wrong size.  This shouldn't ever happen.\n",label);
+        exit(-1);
+      }
+    } else {
+       //it's a staging variable
+       if (staging_it != it->second.stagingVars.end()) {
+         //See if we need to copy it.  If so this sets the copying flag.
+         copyToNeeded = testAndSetCopying(staging_it->second.atomicStatusInGpuMemory);
+
+         if (!copyToNeeded) {
+            if (gpu_stats.active()) {
+              cerrLock.lock();
+              {
+                gpu_stats << UnifiedScheduler::myRankThread()
+                   << " GPUDataWarehouse::copyToGpuIfNeeded( " << label << " ) - "
+                   << " This staging variable is being copied or been copied to the GPU.  No need to copy it again.  For label " << label
+                   << " patch " << patchID
+                   << " matl " << matlIndx
+                   << " level " << levelIndx
+                   << " with offset (" << offset.x << ", " << offset.y << ", " << offset.z << ")"
+                   << " and size (" << size.x << ", " << size.y << ", " << size.z << ")"
+                   << " on device " << d_device_id
+                   << " in GPUDW at " << std::hex << this << std::dec
+                   << endl;
+              }
+              cerrLock.unlock();
+            }
+         } else {
+           //Get information to perform a copy.
+           device_ptr = staging_it->second.device_ptr;
+           varMemSize = staging_it->first.device_size.x * staging_it->first.device_size.y * staging_it->first.device_size.z
+                        * it->second.sizeOfDataType;
+         }
+       }
+    }
+  } else {
+    printf("ERROR:\nGPUDataWarehouse::copyToGpuIfNeeded( %s )  Variable not found in the database.\n",label);
+    exit(-1);
+  }
+
+  //Now allocate it
+  if (copyToNeeded) {
+
+    OnDemandDataWarehouse::uintahSetCudaDevice(d_device_id);
+
+    CUDA_RT_SAFE_CALL(cudaMemcpyAsync(device_ptr, host_ptr, varMemSize, cudaMemcpyHostToDevice, *((cudaStream_t*)cuda_stream)));
+
+    if (gpu_stats.active()) {
+      cerrLock.lock();
+      {
+        gpu_stats << UnifiedScheduler::myRankThread()
+            << " GPUDataWarehouse::copyToGpuIfNeeded(), cudaMemcpyAsync"
+            << " for " << label
+            << " patch " << patchID
+            << " material " <<  matlIndx
+            << " level " << levelIndx;
+        if (staging) {
+          gpu_stats << " staging: true";
+        } else {
+          gpu_stats << " staging: false";
+        }
+        gpu_stats << " size " << varMemSize
+            << " from (" << low.x << "," << low.y << "," << low.z << ")"
+            << " to (" << high.x << "," << high.y << "," << high.z << ")"
+            << " from host address " << host_ptr
+            << " to device address " << device_ptr
+            << " on device " << d_device_id << endl;
+      }
+      cerrLock.unlock();
+    }
+  }
 }
 
 HOST_DEVICE cudaError_t
@@ -1319,12 +1455,6 @@ GPUDataWarehouse::allocateAndPut(GPUPerPatchBase& var, char const* label, int pa
   std::map<labelPatchMatlLevel, allVarPointersInfo>::iterator it = varPointers->find(lpml);
 
   if (it != varPointers->end()) {
-
-     //BUG: A race condition exists through the following:
-     //Thread A for Patch A allocates space for a region X, writes into shared GPUDW
-     //Thread B for Patch B sees this has already been allocated for region X at memory address for A.
-     //Thread B launches a task for Patch B, using the memory address for A, using garbage data.
-     //Thread A copies its border region X data host to device
 
     //Space for this var already exists.  Use that and return.
     if (gpu_stats.active()) {
@@ -2432,6 +2562,7 @@ GPUDataWarehouse::testAndSetAllocating(atomicDataStatus& status)
 }
 
 //Sets the allocate flag on a variables atomicDataStatus
+//This is called after an allocation completes.
 __host__ bool
 GPUDataWarehouse::testAndSetAllocate(atomicDataStatus& status)
 {
@@ -2442,25 +2573,28 @@ GPUDataWarehouse::testAndSetAllocate(atomicDataStatus& status)
   atomicDataStatus oldVarStatus = __sync_or_and_fetch(&(status), 0);
   //if it's allocated, return true
   if ((oldVarStatus & ALLOCATED) == ALLOCATED) {
-    //already allocated, use it.
+    //A sanity check
     printf("ERROR:\nGPUDataWarehouse::testAndSetAllocate( )  Can't allocate a status if it's already allocated\n");
     exit(-1);
   } else {
     //Attempt to claim we'll allocate it.  Create what we want the status to look like
     //by turning off allocating and turning on allocated.
-    atomicDataStatus newVarStatus = newVarStatus & ~ALLOCATING;
-    newVarStatus = oldVarStatus | ALLOCATED;
+    atomicDataStatus newVarStatus = oldVarStatus & ~ALLOCATING;
+    newVarStatus = newVarStatus | ALLOCATED;
 
     //If we succeeded in our attempt to claim to allocate, this returns true.
     //If we failed, thats a real problem, and we crash the problem below.
     allocated = __sync_val_compare_and_swap(&status, oldVarStatus, newVarStatus);
   }
   if (!allocated) {
+    //Another sanity check
     printf("ERROR:\nGPUDataWarehouse::testAndSetAllocate( )  Something wrongly modified the atomic status while setting the allocated flag\n");
     exit(-1);
   }
   return allocated;
 }
+
+
 
 //Simply determines if a variable has been marked as allocated.
 __host__ bool
@@ -2470,6 +2604,36 @@ GPUDataWarehouse::checkAllocated(atomicDataStatus& status)
   return ((__sync_or_and_fetch(&(status), 0) & ALLOCATED) == ALLOCATED);
 }
 
+//returns false if something else already allocated space and we don't have to.
+//returns true if we are the ones to allocate the space.
+//performs operations with atomic compare and swaps
+__host__ bool
+GPUDataWarehouse::testAndSetCopying(atomicDataStatus& status)
+{
+
+  bool allocating = false;
+
+  while (!allocating) {
+
+    //get the value
+    atomicDataStatus oldVarStatus  = __sync_or_and_fetch(&(status), 0);
+    if (oldVarStatus != ALLOCATED) {
+      //Sanity check.  Nobody should attempt a copy if any flag other than just ALLOCATEd is set.
+      printf("ERROR:\nGPUDataWarehouse::testAndSetCopying( )  Attempting to copy with a variable whose status is set to something other than just allocated.\n");
+        exit(-1);
+    }
+    //if it's allocated, return true
+    if (((oldVarStatus & COPYING_IN) == COPYING_IN) || ((oldVarStatus & VALID) == VALID)) {
+      //Something else already copied or is copying it.  So this thread won't launch any copies.
+      return false;
+    } else {
+      //Attempt to claim we'll copy it.  If the claim fails go back into our loop and recheck
+      atomicDataStatus newVarStatus = oldVarStatus | COPYING_IN;
+      allocating = __sync_val_compare_and_swap(&status, oldVarStatus, newVarStatus);
+    }
+  }
+  return true;
+}
 
 __host__ bool
 GPUDataWarehouse::getValidOnGPU(char const* label, int patchID, int matlIndx, int levelIndx)

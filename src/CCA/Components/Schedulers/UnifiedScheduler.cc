@@ -3272,16 +3272,19 @@ void UnifiedScheduler::prepareDeviceVars(DetailedTask* dtask,
                         << " into REQUIRES GPUDW " << endl;
                     cerrLock.unlock();
                   }
-                  //gpudw->copyToGpuAndLoadDependency(device_ptr,
-                  //    dynamic_cast<GridVariableBase*>(it->second.var)->getBasePointer(),
-                  //    it->second.varMemSize,
-                  //    stream,
-                  //    dtask->getDependencyCollection());
+
                   //If it's in progress, don't recopy.  Otherwise, copy.
-                  CUDA_RT_SAFE_CALL(
-                      cudaMemcpyAsync(device_ptr,
-                          dynamic_cast<GridVariableBase*>(it->second.var)->getBasePointer(),
-                          it->second.varMemSize, cudaMemcpyHostToDevice, *stream));
+                  gpudw->copyToGpuIfNeeded(dynamic_cast<GridVariableBase*>(it->second.var)->getBasePointer(),
+                      it->second.dep->var->getName().c_str(),
+                      it->first.patchID, it->first.matlIndx, it->first.levelIndx, it->second.staging,
+                      make_int3(low.x(), low.y(), low.z()),
+                      make_int3(high.x(), high.y(), high.z()),
+                      stream);
+
+                  //CUDA_RT_SAFE_CALL(
+                  //    cudaMemcpyAsync(device_ptr,
+                  //        dynamic_cast<GridVariableBase*>(it->second.var)->getBasePointer(),
+                  //        it->second.varMemSize, cudaMemcpyHostToDevice, *stream));
                   //Now that this requires grid variable is copied onto the device,
                   //we no longer need to hold onto this particular reference of the host side
                   //version of it.  So go ahead and remove our reference to it.

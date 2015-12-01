@@ -35,6 +35,7 @@
 #include <Core/Grid/Variables/GPUPerPatch.h>
 #include <Core/Thread/CrowdMonitor.h>
 
+
 #include <map> //for host code only.
 #include <string>
 #include <vector>
@@ -64,6 +65,8 @@ enum materialType {
   KNAUSS_SEA_WATER_EOS = 10,
   KUMARI_DASS_EOS = 11 */
 };
+class OnDemandDataWarehouse;
+
 class GPUDataWarehouse;
 
 class GPUDataWarehouse {
@@ -402,6 +405,7 @@ public:
   HOST_DEVICE void deleteSelfOnDevice();
   HOST_DEVICE GPUDataWarehouse* getdevice_ptr(){return d_device_copy;};
   HOST_DEVICE void setDebug(bool s){d_debug=s;}
+  __host__ void copyToGpuIfNeeded(void * host_ptr, char const* label, int patchID, int matlIndx, int levelIndx, bool staging, int3 low, int3 high, void *cuda_stream);
   HOST_DEVICE cudaError_t copyDataHostToDevice(char const* indexID, void *cuda_stream);
   HOST_DEVICE cudaError_t copyDataDeviceToHost(char const* indexID, void *cuda_stream);
   HOST_DEVICE void copyHostContiguousToHost(GPUGridVariableBase& device_var, GridVariableBase* host_var, char const* label, int patchID, int matlIndx, int levelIndx);
@@ -425,6 +429,8 @@ public:
   __host__ bool testAndSetAllocating(atomicDataStatus& status);
   __host__ bool testAndSetAllocate(atomicDataStatus& status);
   __host__ bool checkAllocated(atomicDataStatus& status);
+  __host__ bool testAndSetCopying(atomicDataStatus& status);
+
   __host__ bool getValidOnGPU(char const* label, int patchID, int matlIndx, int levelIndx);
   __host__ void setValidOnGPU(char const* label, int patchID, int matlIndx, int levelInd);
   __host__ bool getValidOnCPU(char const* label, int patchID, int matlIndx, int levelIndx);
