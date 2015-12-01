@@ -91,7 +91,7 @@ ifeq ($(HAVE_CUDA),yes)
   $(OBJTOP_ABS)/$(SRCDIR)/MomentumTransportEquationBase.cu : $(SRCTOP_ABS)/$(SRCDIR)/MomentumTransportEquationBase.cc
 	cp $< $@
 
-  $(OBJTOP_ABS)/$(SRCDIR)/LowMacMomentumTransportEquation.cu : $(SRCTOP_ABS)/$(SRCDIR)/LowMacMomentumTransportEquation.cc
+  $(OBJTOP_ABS)/$(SRCDIR)/LowMachMomentumTransportEquation.cu : $(SRCTOP_ABS)/$(SRCDIR)/LowMachMomentumTransportEquation.cc
 	cp $< $@
 
   $(OBJTOP_ABS)/$(SRCDIR)/CompressibleMomentumTransportEquation.cu : $(SRCTOP_ABS)/$(SRCDIR)/CompressibleMomentumTransportEquation.cc
