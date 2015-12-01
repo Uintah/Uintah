@@ -192,8 +192,8 @@ void NonLinearDiff1::computeFlux(const Patch* patch,
       //cout << "Pressure1: " << pressure1 << ", Pressure2: " << pressure2;
       //cout << ", Conc1: " << conc1 << ", Conc2: " << conc2 << endl;
     }else{
-      //non_lin_comp = 1/(1-concentration) - 2 * tuning1 * concentration;
-      non_lin_comp = exp(tuning1 * pow(concentration,3));
+      non_lin_comp = 1/(1-concentration) - 2 * tuning1 * concentration;
+      //non_lin_comp = exp(tuning1 * pow(concentration,3));
 
       //cout << "nlc: " << non_lin_comp << ", concentration: " << pConcentration[idx] << endl;
 
