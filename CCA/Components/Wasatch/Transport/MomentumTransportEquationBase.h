@@ -22,8 +22,8 @@
  * IN THE SOFTWARE.
  */
 
-#ifndef Wasatch_MomentumTransportEquation_h
-#define Wasatch_MomentumTransportEquation_h
+#ifndef Wasatch_MomentumTransportEquationBase_h
+#define Wasatch_MomentumTransportEquationBase_h
 
 //-- ExprLib includes --//
 #include <expression/ExpressionFactory.h>
@@ -32,6 +32,7 @@
 #include <CCA/Components/Wasatch/FieldTypes.h>
 #include <CCA/Components/Wasatch/Expressions/Turbulence/TurbulenceParameters.h>
 #include <CCA/Components/Wasatch/Transport/TransportEquation.h>
+#include <CCA/Components/Wasatch/ConvectiveInterpolationMethods.h>
 
 //-- Uintah includes --//
 #include <Core/ProblemSpec/ProblemSpecP.h>
@@ -39,6 +40,17 @@
 #include <CCA/Ports/SolverInterface.h>
 
 namespace Wasatch{
+  
+  
+  template< typename FieldT >
+  Expr::ExpressionID
+  register_strain_tensor( const bool* const doMom,
+                         const bool isViscous,
+                         const Expr::TagList& velTags,
+                         Expr::TagList& strainTags,
+                         const Expr::Tag& dilTag,
+                         Expr::ExpressionFactory& factory );
+
 
   template< typename FaceFieldT >
   Expr::ExpressionID
@@ -53,18 +65,53 @@ namespace Wasatch{
                                         const Expr::TagList& velTags,
                                         const Expr::Tag densTag,
                                         const bool isConstDensity );
+  
+  template< typename FluxT, typename AdvelT >
+  Expr::ExpressionID
+  setup_momentum_convective_flux( const Expr::Tag& fluxTag,
+                        const Expr::Tag& momTag,
+                        const Expr::Tag& advelTag,
+                        ConvInterpMethods convInterpMethod,
+                        const Expr::Tag& volFracTag,
+                        Expr::ExpressionFactory& factory );
+
+  template< typename FieldT >
+  Expr::ExpressionID
+  register_momentum_convective_fluxes( const bool* const doMom,
+                                      const Expr::TagList& velTags,
+                                      Expr::TagList& cfTags,
+                                      ConvInterpMethods convInterpMethod,
+                                      const Expr::Tag& momTag,
+                                      const Expr::Tag& volFracTag,
+                                      Expr::ExpressionFactory& factory );
+  
+  Expr::Tag mom_tag( const std::string& momName, const bool old=false );
+
+  Expr::Tag rhs_part_tag( const Expr::Tag& momTag );
+  
+  Expr::Tag rhs_part_tag( const std::string& momName );
+  
+  void set_vel_tags( Uintah::ProblemSpecP params,
+                    Expr::TagList& velTags );
+  
+  void set_mom_tags( Uintah::ProblemSpecP params,
+                    Expr::TagList& momTags,
+                    const bool old=false);
+
+  bool is_normal_to_boundary(const Direction stagLoc,
+                             const Uintah::Patch::FaceType face);
   /**
    *  \ingroup WasatchCore
-   *  \class MomentumTransportEquation
+   *  \class MomentumTransportEquationBase
    *  \authors James C. Sutherland, Tony Saad
    *  \date January, 2011
    *
-   *  \brief Creates a momentum transport equation
+   *  \brief Creates a momentum transport equation base class
    *
    *  \todo Allow more flexibility in specifying initial and boundary conditions for momentum.
    */
   template< typename FieldT >
-  class MomentumTransportEquation : public Wasatch::TransportEquation
+  class MomentumTransportEquationBase : public Wasatch::TransportEquation
   {
   public:
 
@@ -73,9 +120,9 @@ namespace Wasatch{
     typedef typename FaceTypes<FieldT>::ZFace  ZFace; ///< The type of field on the z-faces of the volume.
 
     /**
-     *  \brief Construct a MomentumTransportEquation
-     *  \param velName the name of the velocity component solved by this MomentumTransportEquation
-     *  \param momName the name of the momentum component solved by this MomentumTransportEquation
+     *  \brief Construct a MomentumTransportEquationBase
+     *  \param velName the name of the velocity component solved by this MomentumTransportEquationBase
+     *  \param momName the name of the momentum component solved by this MomentumTransportEquationBase
      *  \param densTag the tag for the mixture mass density
      *  \param isConstDensity
      *  \param bodyForceTag tag for body force
@@ -86,7 +133,7 @@ namespace Wasatch{
      *  \param linSolver the linear solver object for the pressure solve
      *  \param sharedState contains useful stuff like the value of timestep, etc.
      */
-    MomentumTransportEquation( const std::string velName,
+    MomentumTransportEquationBase( const std::string velName,
                                const std::string momName,
                                const Expr::Tag densTag,
                                const bool isConstDensity,
@@ -98,30 +145,35 @@ namespace Wasatch{
                                Uintah::SolverInterface& linSolver,
                                Uintah::SimulationStateP sharedState );
 
-    ~MomentumTransportEquation();
+    ~MomentumTransportEquationBase();
 
     void setup_boundary_conditions(WasatchBCHelper& bcHelper,
-                                    GraphCategories& graphCat);
+                                    GraphCategories& graphCat)
+    {}
     
     /**
      *  \brief apply the boundary conditions on the initial condition
      *         associated with this transport equation
      */
     void apply_initial_boundary_conditions( const GraphHelper& graphHelper,
-                                           WasatchBCHelper& bcHelper );
+                                           WasatchBCHelper& bcHelper )
+    {}
 
     /**
      *  \brief setup the boundary conditions associated with this momentum equation
      */
     void apply_boundary_conditions( const GraphHelper& graphHelper,
-                                   WasatchBCHelper& bcHelper );
+                                   WasatchBCHelper& bcHelper )
+    {}
+    
     /**
      *  \brief setup the initial conditions for this momentum equation.
      */
-    Expr::ExpressionID initial_condition( Expr::ExpressionFactory& icFactory );
+    Expr::ExpressionID initial_condition( Expr::ExpressionFactory& icFactory )
+    {}
 
     /**
-     *  \brief Parse the input file to get the name of this MomentumTransportEquation
+     *  \brief Parse the input file to get the name of this MomentumTransportEquationBase
      *
      *  \param params the Uintah::ProblemSpec XML description for this
      *         equation. Scope should be within the TransportEquation tag.
@@ -133,6 +185,13 @@ namespace Wasatch{
     void setup_diffusive_flux( FieldTagInfo& ){}
     void setup_convective_flux( FieldTagInfo& ){}
     void setup_source_terms( FieldTagInfo&, Expr::TagList& ){}
+    
+    
+    
+    
+    
+    
+    
     Expr::ExpressionID setup_rhs( FieldTagInfo&,
                                   const Expr::TagList& srcTags  );
 
@@ -140,18 +199,17 @@ namespace Wasatch{
     const Expr::Tag thisVelTag_, densityTag_;
     const Expr::Tag& pressureTag_;
 
-  private:
-
     Uintah::ProblemSpecP params_;
-    Uintah::SolverParameters* solverParams_;
     
     Expr::ExpressionID normalStrainID_, normalConvFluxID_, pressureID_, convTermWeakID_;
     Expr::TagList velTags_;  ///< TagList for the velocity expressions
     Expr::TagList momTags_, oldMomTags_;  ///< TagList for the momentum expressions
     Expr::Tag     thisVolFracTag_;
 
+  private:
+
   };
 
 } // namespace Wasatch
 
-#endif // Wasatch_MomentumTransportEquation_h
+#endif // Wasatch_MomentumTransportEquationBase_h
