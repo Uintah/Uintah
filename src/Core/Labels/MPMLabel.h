@@ -58,7 +58,7 @@ namespace Uintah {
 
       // ******* start - for temporary use only, CG
       const VarLabel* pPressureLabel_t1;
-      const VarLabel* pPressureLabel_t2; 
+      const VarLabel* pConcInterpLabel; 
       const VarLabel* pEquivalentStress_t1; 
       // ******* end - for temporary use only, CG
 

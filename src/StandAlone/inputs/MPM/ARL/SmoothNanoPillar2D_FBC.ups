@@ -79,26 +79,27 @@
 <!--
      <max_Timesteps>100</max_Timesteps>
 -->
-     <timestep_multiplier>0.4</timestep_multiplier>
+     <timestep_multiplier>0.2</timestep_multiplier>
    </Time>    
 
    <DataArchiver>
       <filebase>SmoothNanoPillar2D_FBC.uda</filebase>
-      <outputInterval>2.e8</outputInterval>
+      <outputInterval>2.e5</outputInterval>
       <save label = "p.x"/>
       <save label = "p.mass"/>
       <save label = "p.area"/>
       <save label = "p.volume"/>
       <save label = "p.stress"/>
       <save label = "p.concentration"/>
+      <save label = "p.concentrationInterp"/>
+      <save label = "p.pressure_t1"/>
       <save label = "p.displacement"/>
       <save label = "p.scalefactor"/>
       <save label = "p.deformationMeasure"/>
       <save label = "p.velocity"/>
-      <save label = "p.loadCurveID"/>
       <save label = "p.diffusivity"/>
       <save label = "p.externalscalarflux"/>
-      <save label = "g.mass"/>
+      <save label = "g.concentration"/>
       <checkpoint cycle = "2" interval = "2.0e8"/>
    </DataArchiver>
 
@@ -121,7 +122,7 @@
    <MaterialProperties>
      <MPM>
        <material name="T91">
-         <density>2.33e23</density>
+         <density>2.33e21</density>
          <melt_temp> 2000.0 </melt_temp>
          <constitutive_model type="rf_elastic_plastic"> 
            <bulk_modulus>            48e6    </bulk_modulus>
@@ -164,19 +165,15 @@
          <diffusion_model type = "non_linear1">
            <diffusivity>  1.0e-10   </diffusivity>
            <max_concentration> 1.0 </max_concentration>
-           <use_pressure>true</use_pressure>
-           <!--
-           <tuning1> 1.95 </tuning1>
-           <tuning2> 1000.0 </tuning2>
-           -->
-           <tuning1> 6.90  </tuning1>
+           <use_pressure>false</use_pressure>
+           <tuning1> 5.00  </tuning1>
            <tuning2> 3.07  </tuning2>
            <tuning3> 0.0   </tuning3>
            <tuning4> 3.0   </tuning4>
            <tuning5> 1e-6  </tuning5>
          </diffusion_model>
          <geom_object>
-	         <smoothcyl label = "cylinder">
+           <smoothcyl label = "cylinder">
              <discretization_scheme> pie_slices </discretization_scheme>
              <bottom>[0.0,0.0,0.0] </bottom>
              <top>   [0.0,0.0,0.02]</top>
@@ -218,11 +215,11 @@
            <id>1</id>
            <time_point>
              <time> 0 </time>
-             <load> 1.e-5 </load>
+             <load> 2.e-2 </load>
            </time_point>
            <time_point>
              <time> 1.e12 </time>
-             <load> 1.e-5 </load>
+             <load> 2.e-2 </load>
            </time_point>
          </load_curve>
        </scalar_flux>

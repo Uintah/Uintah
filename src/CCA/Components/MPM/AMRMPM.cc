@@ -4978,7 +4978,6 @@ void AMRMPM::scheduleApplyExternalScalarFlux(SchedulerP& sched,
   t->requires(Task::OldDW, lb->pXLabel,                 Ghost::None);
   t->requires(Task::OldDW, lb->pSizeLabel,              Ghost::None);
   t->requires(Task::OldDW, lb->pAreaLabel,              Ghost::None);
-  t->requires(Task::OldDW, lb->pMassLabel,              Ghost::None);
   t->requires(Task::OldDW, lb->pDeformationMeasureLabel,Ghost::None);
 #if defined USE_FLUX_RESTRICTION
   if(flags->d_doScalarDiffusion){
@@ -5092,7 +5091,7 @@ void AMRMPM::applyExternalScalarFlux(const ProcessorGroup* ,
 #endif
 #if defined USE_FLUX_RESTRICTION
               if(flags->d_doScalarDiffusion){
-                double flux_restriction = (10 + log(1-pConcentration[idx]))/10;
+                double flux_restriction = (4 + log(1-pConcentration[idx]))/4;
                 if (flux_restriction < 0.0){
                   flux_restriction = 0.0;
                 }
