@@ -64,7 +64,7 @@ Integrator* IntegratorFactory::create(const ProblemSpecP&   ps,
   if (integratorType == "velocity") {
     double timestep;
     integrator_ps->require("timestep",timestep);
-    long64 numSteps;
+    long numSteps;
     integrator_ps->require("numberSteps",numSteps);
     integrator = scinew velocityVerlet(dt_label);
   }

@@ -52,9 +52,7 @@
 #include <Core/OS/Dir.h>
 #include <Core/Parallel/Parallel.h>
 
-
 #include <iomanip>
-#include <CCA/Components/Schedulers/OnDemandDataWarehouse.h>
 
 using namespace Uintah;
 
@@ -619,15 +617,15 @@ void MultiScaleSwitcher::switchTest( const ProcessorGroup * /*pg*/,
   max_vartype switch_condition;
   new_dw->get(switch_condition, d_sharedState->get_switch_label(), 0);
 
-  // ParticleSubset debugging output --------------------------------------------
-  std::cout << std::endl << " Old Data Warehouse: " << std::endl;
-  OnDemandDataWarehouse* odOldDW = static_cast<OnDemandDataWarehouse*> (old_dw);
-  odOldDW->printParticleSubsets();
-  std::cout << std::endl << " New Data Warehouse: " << std::endl;
-  OnDemandDataWarehouse* odNewDW = static_cast<OnDemandDataWarehouse*> (new_dw);
-  odNewDW->printParticleSubsets();
-  std::cout << std::endl;
-  // ParticleSubset debugging output --------------------------------------------
+//  // ParticleSubset debugging output --------------------------------------------
+//  std::cout << std::endl << " Old Data Warehouse: " << std::endl;
+//  OnDemandDataWarehouse* odOldDW = static_cast<OnDemandDataWarehouse*> (old_dw);
+//  odOldDW->printParticleSubsets();
+//  std::cout << std::endl << " New Data Warehouse: " << std::endl;
+//  OnDemandDataWarehouse* odNewDW = static_cast<OnDemandDataWarehouse*> (new_dw);
+//  odNewDW->printParticleSubsets();
+//  std::cout << std::endl;
+//  // ParticleSubset debugging output --------------------------------------------
 
   if (switch_condition) {
     // actually PERFORM the switch during the next needRecompile; set back to idle then
