@@ -1,0 +1,66 @@
+multicomponent_example.ups is a prototype input file working toward getting
+multicomponent, heirarchical simulations working.
+
+This idea is vaguely based off of the switcher idea, but in working with the switcher
+it became apparent that we would basically keep having to re-implement a simulation
+controller within the switcher component for every simulation instance we wanted to
+run.  This quickly becomes unwieldy and challenging to manage the necessary 
+scheduler/datawarehouse/etc mappings.  So rather than implement it multiple times in
+potential multiple different switchers, it was decided that we needed to address the
+issue from the simulation controller side of things.
+
+This essentially requires abstracting out most of the AMRSimulation controller to
+accomplish the following:
+
+1)  Allow arbitrary sets of levels (levelSubsets) which represent an AMR capable
+	simulation space.  This was done under the auspices of the switcher project for
+	the most part, although some constructs were not changed until the clean-up for
+	the higher level abstracion here.
+	
+2)  Allow multiple level subsets with DIFFERENT components to inhabit the same level 
+	set/scheduler/shared state.  This isn't too difficult since the architecture
+    was forward facing enough to separate materials by component type.  However, 
+    much unspooling of baked in level traversals and encapsulation into level subset
+    traversals are required for this.  Most of this should be done, but there may
+    still be outliers.  Essentially, any routine that takes a grid as input should
+    be checked to make sure it's not then just iterating over all the levels in the
+    grid, because that is no longer correct.  Instead of iterating over all the levels
+    in the grid, iteration should be done over all the levels in a subset, since a 
+    single component instance is localized to a single subset.
+    
+3)  Allow multiple components across multiple different level sets/schedulers/shared
+    states.  This is tricky and is currently mostly implemented.  The major factor
+    here is that all sorts of the infrastructure assumes you only have one of the 
+    normal port in operation at a time:  For instance, one scheduler, one output
+    stream, one shared state, etc.  The old switcher architecture got around this by
+    basically throwing out these quantities at will, and force-saving specific data
+    sets.  This approach was becoming unworkable for even a simple problem of switching
+    back AND FORTH between two components.  (It worked fine if you switched from one
+    component to another without looking back, at most needing to carry information 
+    over to the next component.)  As a result, this implementation manages multiple
+    schedulers/data warehouse sets (attached to the scheduler)/timelines, etc.
+    
+    Since much of this stuff is handled at a layer higher than the component, it was
+    impossible to really implement this in the component layer.  As mentioned above,
+    we were basically writing a simulation controller in the component again.  Instead
+    the simulation controller and base component have been designed to communicate
+    here, with the ComponentManager component providing a base interface for passing
+    the active scheduler/component/time info/etc to the simulation controller for
+    running.  This should allow for arbitrary switching and instantiation of components
+    based on arbitrary criteria (which exist within the ComponentManager's methods)
+    without needing to rewrite the SimulationController for each one.
+    
+    In order to do this, not only was it necessary to rewrite the specific simulation
+    controllers, but also some common methods.  In order to maintain backwards 
+    compatibility, where methods are called that need to be able to generically work
+    on arbitrary ports and/or data structures (e.g. SimulationTime), the methods have
+    been stripped of references to the SimulationController.h defined d_scheduler,
+    d_sim, d_output, d_timeinfo references, and these references have been replaced by
+    generic objects of the same type which are passed into these methods.  To 
+    maintain backwards compability, these passed in objects are passed as pointers 
+    (even when they should be references to a handle) and default to NULL.  Thus,
+    if the call is an old-style call, we can check for NULL pointers, assign the 
+    default object (d_sim, d_scheduler, etc..) to the object, and proceed.  And if the
+    pointers are non-null we're clearly trying to run on an arbitrary example of that
+    type of object (and hence, running from a managed component being passed in)
+    
