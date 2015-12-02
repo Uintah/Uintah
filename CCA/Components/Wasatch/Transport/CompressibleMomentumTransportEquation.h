@@ -30,6 +30,7 @@
 
 #include <CCA/Components/Wasatch/TagNames.h>
 #include <CCA/Components/Wasatch/Transport/TransportEquation.h>
+#include <CCA/Components/Wasatch/Transport/MomentumTransportEquationBase.h>
 #include <CCA/Components/Wasatch/Expressions/Turbulence/TurbulenceParameters.h>
 
 namespace Wasatch{
@@ -43,7 +44,7 @@ namespace Wasatch{
    * \notes:
    *   - there are many tools in the low-mach momentum equation that should be shared between them.
    */
-  class CompressibleMomentumTransportEquation : public TransportEquation
+  class CompressibleMomentumTransportEquation : public Wasatch::MomentumTransportEquationBase<SVolField>
   {
     typedef SpatialOps::SVolField FieldT;
 

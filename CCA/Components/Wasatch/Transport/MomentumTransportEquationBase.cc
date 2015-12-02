@@ -461,12 +461,9 @@ namespace Wasatch{
                              const Expr::Tag densTag,
                              const bool isConstDensity,
                              const Expr::Tag bodyForceTag,
-                             const Expr::Tag srcTermTag,
                              GraphCategories& gc,
                              Uintah::ProblemSpecP params,
-                             TurbulenceParameters turbulenceParams,
-                             Uintah::SolverInterface& linSolver,
-                             Uintah::SimulationStateP sharedState)
+                             TurbulenceParameters turbulenceParams)
     : TransportEquation( gc,
                          momName,
                          get_staggered_location<FieldT>(),

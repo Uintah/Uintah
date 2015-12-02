@@ -257,7 +257,14 @@ namespace Wasatch{
                                          GraphCategories& gc,
                                          Uintah::ProblemSpecP params,
                                          TurbulenceParameters turbParams )
-    : TransportEquation( gc, momName, NODIR, false )
+  : MomentumTransportEquationBase<FieldT>( velName,
+                                          momName,
+                                          densityTag,
+                                          false,
+                                          bodyForceTag,
+                                          gc,
+                                          params,
+                                          turbParams)
   {
     // todo:
     //  - strain tensor

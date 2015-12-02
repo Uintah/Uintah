@@ -126,24 +126,18 @@ namespace Wasatch{
      *  \param densTag the tag for the mixture mass density
      *  \param isConstDensity
      *  \param bodyForceTag tag for body force
-     *  \param srcTermTag tag for any source terms present
      *  \param gc
      *  \param params Parser information for this momentum equation
      *  \param turbulenceParams
-     *  \param linSolver the linear solver object for the pressure solve
-     *  \param sharedState contains useful stuff like the value of timestep, etc.
      */
     MomentumTransportEquationBase( const std::string velName,
-                               const std::string momName,
-                               const Expr::Tag densTag,
-                               const bool isConstDensity,
-                               const Expr::Tag bodyForceTag,                              
-                               const Expr::Tag srcTermTag,
-                               GraphCategories& gc,
-                               Uintah::ProblemSpecP params,
-                               TurbulenceParameters turbulenceParams,
-                               Uintah::SolverInterface& linSolver,
-                               Uintah::SimulationStateP sharedState );
+                                   const std::string momName,
+                                   const Expr::Tag densTag,
+                                   const bool isConstDensity,
+                                   const Expr::Tag bodyForceTag,
+                                   GraphCategories& gc,
+                                   Uintah::ProblemSpecP params,
+                                   TurbulenceParameters turbulenceParams );
 
     ~MomentumTransportEquationBase();
 
