@@ -9,7 +9,7 @@
 
   <Wasatch>
 
-    <Density>
+    <Density method="CONSTANT">
       <Constant value="1.0" name="rho"/>
     </Density>
          

@@ -6,7 +6,7 @@
   <Solver type="hypre"/>
   <Wasatch>
     <TimeIntegrator> FE </TimeIntegrator>
-    <Density>
+    <Density method="LOWMACH">
       <NameTag name="density"/>
     </Density>
     <!-- Setup the parameters for variable density MMS -->

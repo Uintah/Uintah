@@ -4,7 +4,7 @@
   </Meta>
   <SimulationComponent type="wasatch"/>
   <Wasatch>
-    <Density>
+    <Density method="CONSTANT">
       <Constant value="1.0" name="density"/>
     </Density>
     <!-- Set the initial condition for non-staggered scalar -->

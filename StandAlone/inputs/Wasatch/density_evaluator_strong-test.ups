@@ -8,8 +8,8 @@
 
   <Wasatch>
     
-    <Density>
-      <NameTag name="rho" /> 
+    <Density method="LOWMACH">
+      <NameTag name="rho"/> 
     </Density>
     
     <!-- Set the initial condition expression for mixture fraction -->
@@ -75,7 +75,7 @@
       
       <ExtractDensity>
         <NameInTable>Density</NameInTable>
-        <NameTag name="rho" />
+        <NameTag name="rho"/>
         <DensityWeightedIVar>
           <NameTag name="rhof" state="STATE_DYNAMIC"/>
           <RelatedIVar>

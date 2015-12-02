@@ -722,11 +722,12 @@
     <!-- in the case of variable density we should also define a tag for density.    -->
     <!-- =========================================================================== -->
     <Density    spec="REQUIRED NO_DATA"
+                attribute1="method REQUIRED STRING 'CONSTANT, LOWMACH, COMPRESSIBLE'"
                 children1="ONE_OF(CHILD Constant, NameTag)">
       <Constant spec="OPTIONAL NO_DATA"
                 attribute1="value REQUIRED DOUBLE"
                 attribute2="name REQUIRED STRING" />          
-      <NameTag  spec="OPTIONAL" />
+      <NameTag  spec="OPTIONAL" need_applies_to="method LOWMACH COMPRESSIBLE" />
     </Density>   
         
     <!-- ============================ -->

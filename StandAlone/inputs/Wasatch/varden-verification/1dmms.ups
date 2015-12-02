@@ -9,8 +9,8 @@
   <Wasatch>
     <TimeIntegrator> FE </TimeIntegrator>    
 		
-    <Density>
-      <NameTag name="density" />
+    <Density method="LOWMACH">
+      <NameTag name="density"/>
     </Density>
     
     <!-- Setup the parameters for variable density MMS -->
@@ -28,7 +28,7 @@
     </BasicExpression>
         
     <TwoStreamMixing rho0="1.29985" rho1="0.081889">
-      <Density><NameTag name="density" /></Density>
+      <Density><NameTag name="density"/></Density>
       <MixtureFraction> <NameTag name="f"/> </MixtureFraction>
       <DensityWeightedMixtureFraction> <NameTag name="rhof" state="STATE_DYNAMIC"/> </DensityWeightedMixtureFraction>
     </TwoStreamMixing>  

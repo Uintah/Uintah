@@ -8,7 +8,7 @@
    <Solver type="hypre"/>
   <Wasatch>
 
-    <Density>
+    <Density method="CONSTANT">
       <Constant value="1.0" name="density"/>
     </Density>
     <PostProcessingExpression type="SVOL">
