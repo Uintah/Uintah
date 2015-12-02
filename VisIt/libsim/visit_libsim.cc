@@ -216,10 +216,17 @@ void visit_EndLibSim( visit_simulation_data *sim )
     sim->runMode = VISIT_SIMMODE_STOPPED;
     sim->simMode = VISIT_SIMMODE_FINISHED;
 
-    visitdbg << "Visit libsim : "
-             << "The simulation has finished, stopping at the last time step."
-             << std::endl;
-    visitdbg.flush();
+    if(sim->isProc0)
+    {
+      std::stringstream msg;      
+      msg << "Visit libsim - "
+	  << "The simulation has finished, stopping at the last time step.";
+      
+      visitdbg << msg.str().c_str() << std::endl;
+      visitdbg.flush();
+      
+      VisItUI_setValueS("SIMULATION_STATUS", msg.str().c_str(), 1);
+    }
 
     // Now check for the user to have finished.
     do
@@ -246,6 +253,18 @@ void visit_CheckState( visit_simulation_data *sim )
     // Check if we are connected to VisIt
     if( VisItIsConnected() )
     {
+      if(sim->isProc0)
+      {
+	std::stringstream msg;
+	msg << "Visit libsim - Completed simulation "
+	    << "timestep " << sim->cycle << ",  "
+	    << "Time = "   << sim->time;
+	
+//      visitdbg << msg.str().c_str() << std::endl;
+//      visitdbg.flush();
+	VisItUI_setValueS("SIMULATION_STATUS", msg.str().c_str(), 1);
+      }
+
       // Tell VisIt that the timestep changed
       VisItTimeStepChanged();
       // Tell VisIt to update its plots
@@ -258,8 +277,6 @@ void visit_CheckState( visit_simulation_data *sim )
     /* If running do not block */
     int blocking = (sim->runMode == VISIT_SIMMODE_RUNNING) ? 0 : 1;
 
-    std::ostringstream message;
-    
     if(sim->isProc0)
     {
       if( sim->blocking != blocking )
@@ -268,13 +285,17 @@ void visit_CheckState( visit_simulation_data *sim )
         
         if( VisItIsConnected() )
         {
-          message << "Visit libsim : Stopped the execution at  "
-                  << "Time="        << sim->time
-                  << " (timestep "  << sim->cycle 
-                  << ")";
-          
-          visitdbg << message.str() << std::endl;
-          visitdbg.flush();
+	  if( blocking )
+	  {
+	    std::stringstream msg;	  
+	    msg << "Visit libsim - Stopped the simulation at "
+		<< "timestep " << sim->cycle << ",  "
+		<< "Time = " << sim->time;
+	    
+	    visitdbg << msg.str().c_str() << std::endl;
+	    visitdbg.flush();
+	    VisItUI_setValueS("SIMULATION_STATUS", msg.str().c_str(), 1);
+	  }
         }
       }
     }
@@ -291,17 +312,20 @@ void visit_CheckState( visit_simulation_data *sim )
     /* Do different things depending on the output from VisItDetectInput. */
     if(visitstate <= -1 || 5 <= visitstate)
     {
-      visitdbg << "Visit libsim : CheckState cannot recover from error ("
-               << visitstate << ") !!"
-               << std::endl;
+      std::stringstream msg;      
+      msg << "Visit libsim - CheckState cannot recover from error ("
+	  << visitstate << ") !!";
+          
+      visitdbg << msg.str().c_str() << std::endl;
       visitdbg.flush();
+      VisItUI_setValueS("SIMULATION_STATUS_ERROR", msg.str().c_str(), 1);
 
       err = 1;
     }
     else if(visitstate == 0)
     {
       /* There was no input from VisIt, return control to sim. */
-      return;
+      break;
     }
     else if(visitstate == 1)
     {
@@ -314,20 +338,28 @@ void visit_CheckState( visit_simulation_data *sim )
         /* Register command callback */
         VisItSetCommandCallback(visit_ControlCommandCallback, (void*) sim);
 
+	std::stringstream msg;
+      
         if( Parallel::usingMPI() )
         {
           int par_rank;
           MPI_Comm_rank (MPI_COMM_WORLD, &par_rank);
 
-          visitdbg << "Visit libsim : Processor " << par_rank
-                   << " Connected" << std::endl;
+          msg << "Visit libsim - Processor " << par_rank << " connected";
         }
         else
         {
-          visitdbg << "Visit libsim : Connected" << std::endl;
+          msg << "Visit libsim - Connected";
         }
 
-        visitdbg.flush();
+	if(sim->isProc0)
+	{
+	  VisItUI_setValueS("SIMULATION_STATUS_CLEAR", "NoOp", 1);
+
+	  visitdbg << msg.str().c_str() << std::endl;
+	  visitdbg.flush();
+	  VisItUI_setValueS("SIMULATION_STATUS", msg.str().c_str(), 1);
+	}
 
         /* Register data access callbacks */
         VisItSetGetMetaData(visit_SimGetMetaData, (void*) sim);
@@ -341,8 +373,12 @@ void visit_CheckState( visit_simulation_data *sim )
       }
       else
       {
-        visitdbg << "Visit libsim : Can not connect." << std::endl;
-        visitdbg.flush();
+	std::stringstream msg;
+	msg << "Visit libsim - Can not connect.";
+
+	visitdbg << msg.str().c_str() << std::endl;
+	visitdbg.flush();
+	VisItUI_setValueS("SIMULATION_STATUS_ERROR", msg.str().c_str(), 1);
       }
     }
     else if(visitstate == 2)
@@ -356,14 +392,37 @@ void visit_CheckState( visit_simulation_data *sim )
         sim->runMode = VISIT_SIMMODE_RUNNING;
       }
 
-      /* If in step mode or have finished return control back to the
-         simulation. */
-      if( sim->runMode == VISIT_SIMMODE_STEP ||
-          sim->runMode == VISIT_SIMMODE_FINISHED )
+      /* If in step mode return control back to the simulation. */
+      if( sim->runMode == VISIT_SIMMODE_STEP )
       {
-        sim->blocking = 0;
+	if(sim->isProc0)
+	{
+	  std::stringstream msg;	  
+	  msg << "Visit libsim - Continuing the simulation for one time step";
+	  // visitdbg << msg.str().c_str() << std::endl;
+	  // visitdbg.flush();
+	  VisItUI_setValueS("SIMULATION_STATUS", msg.str().c_str(), 1);
+	}
 
-        return;
+        sim->blocking = 0;
+        break;
+      }
+
+      /* If finished return control back to the simulation. */
+      else if( sim->runMode == VISIT_SIMMODE_FINISHED )
+      {
+	if(sim->isProc0)
+	{
+	  std::stringstream msg;	  
+	  msg << "Visit libsim - Finished the simulation ";
+	  // visitdbg << msg.str().c_str() << std::endl;
+	  // visitdbg.flush();
+	  VisItUI_setValueS("SIMULATION_STATUS", msg.str().c_str(), 1);
+	  VisItUI_setValueS("SIMULATION_STATUS", " ", 1);
+	}
+
+        sim->blocking = 0;
+        break;
       }
     }
   } while(err == 0);
@@ -428,29 +487,17 @@ visit_ControlCommandCallback(const char *cmd, const char *args, void *cbdata)
   visit_simulation_data *sim = (visit_simulation_data *)cbdata;
 
   if(strcmp(cmd, "Stop") == 0 && sim->simMode != VISIT_SIMMODE_FINISHED)
-    sim->runMode = VISIT_SIMMODE_STOPPED;
-  else if(strcmp(cmd, "Step") == 0 && sim->simMode != VISIT_SIMMODE_FINISHED)
-    sim->runMode = VISIT_SIMMODE_STEP;
-  else if(strcmp(cmd, "Run") == 0 && sim->simMode != VISIT_SIMMODE_FINISHED)
-    sim->runMode = VISIT_SIMMODE_RUNNING;
-  else if(strcmp(cmd, "Save") == 0)
   {
-    GridP gridP = sim->gridP;
-    Output *output = sim->AMRSimController->getOutput();
-    SchedulerP schedulerP = sim->AMRSimController->getSchedulerP();
-
-    if (output)
-    {
-      // This is not correct if we have switched to a different
-      // component, since the delt will be wrong 
-      output->finalizeTimestep( sim->time, sim->delt, gridP, schedulerP, 0 );
-      output->sched_allOutputTasks( sim->delt, gridP, schedulerP, 0 );
-
-      output->findNext_OutputCheckPoint_Timestep( sim->delt, gridP );
-      output->writeto_xml_files( sim->delt, gridP );
-    }
+    sim->runMode = VISIT_SIMMODE_STOPPED;
   }
-
+  else if(strcmp(cmd, "Step") == 0 && sim->simMode != VISIT_SIMMODE_FINISHED)
+  {
+    sim->runMode = VISIT_SIMMODE_STEP;
+  }
+  else if(strcmp(cmd, "Run") == 0 && sim->simMode != VISIT_SIMMODE_FINISHED)
+  {
+    sim->runMode = VISIT_SIMMODE_RUNNING;
+  }
   else if(strcmp(cmd, "Stats") == 0)
   {
   }
@@ -461,6 +508,18 @@ visit_ControlCommandCallback(const char *cmd, const char *args, void *cbdata)
   }
   else if(strcmp(cmd, "Save") == 0)
   {
+    GridP gridP = sim->gridP;
+    Output *output = sim->AMRSimController->getOutput();
+    SchedulerP schedulerP = sim->AMRSimController->getSchedulerP();
+
+    if (output)
+    {
+      output->finalizeTimestep( sim->time, sim->delt, gridP, schedulerP, 0 );
+      output->sched_allOutputTasks( sim->delt, gridP, schedulerP, true );
+
+      output->findNext_OutputCheckPoint_Timestep( sim->delt, gridP );
+      output->writeto_xml_files( sim->delt, gridP );
+    }
   }
 
   // Only allow the runMode to finish if the simulation is finished.
@@ -475,10 +534,43 @@ visit_ControlCommandCallback(const char *cmd, const char *args, void *cbdata)
   {
     sim->runMode = VISIT_SIMMODE_RUNNING;
     sim->simMode = VISIT_SIMMODE_TERMINATED;
+
+    if(sim->isProc0)
+    {
+      std::stringstream msg;	  
+      msg << "Visit libsim - Terminating the simulation";
+      // visitdbg << msg.str().c_str() << std::endl;
+      // visitdbg.flush();
+      VisItUI_setValueS("SIMULATION_STATUS", msg.str().c_str(), 1);
+      VisItUI_setValueS("SIMULATION_STATUS", " ", 1);
+    }
   }
   else if(strcmp(cmd, "Abort") == 0)
   {
+    if(sim->isProc0)
+    {
+      std::stringstream msg;	  
+      msg << "Visit libsim - Aborting the simulation";
+      // visitdbg << msg.str().c_str() << std::endl;
+      // visitdbg.flush();
+      VisItUI_setValueS("SIMULATION_STATUS", msg.str().c_str(), 1);
+      VisItUI_setValueS("SIMULATION_STATUS", " ", 1);
+    }
+
     exit( 0 );
+  }
+
+  if( sim->runMode == VISIT_SIMMODE_RUNNING &&
+      sim->simMode == VISIT_SIMMODE_RUNNING )
+  {
+    if(sim->isProc0)
+    {
+      std::stringstream msg;	  
+      msg << "Visit libsim - Continuing the simulation";
+      // visitdbg << msg.str().c_str() << std::endl;
+      // visitdbg.flush();
+      VisItUI_setValueS("SIMULATION_STATUS", msg.str().c_str(), 1);
+    }
   }
 }
 
@@ -736,24 +828,24 @@ visit_handle visit_ReadMetaData(void *cbdata)
         }
         else
         {
-          std::stringstream msg;
-
-          msg << "Visit libsim : "
-              << "Uintah variable \"" << varname << "\"  "
-              << "has an unknown variable type \""
-              << vartype << "\"";
-
-          visitdbg << msg.str() << std::endl;
-          visitdbg.flush();
-
-          // VisItSetStatusMessage( *md,"My Error Message","red");
-          // VisItSetStatusMessage( *md,"My Warning Message","yellow");
-          // VisItSetStatusMessage( *md,"My Sim Message","black")
+	  if(sim->isProc0)
+	  {
+	    std::stringstream msg;
+	    msg << "Visit libsim - "
+		<< "Uintah variable \"" << varname << "\"  "
+		<< "has an unknown variable type \""
+		<< vartype << "\"";
+	    
+	    visitdbg << msg.str().c_str() << std::endl;
+	    visitdbg.flush();
+	    
+	    VisItUI_setValueS("SIMULATION_STATUS_WARNING", msg.str().c_str(), 1);
+	  }
 
           continue;
         }
 
-        // visitdbg << "Visit libsim : "
+        // visitdbg << "Visit libsim - "
         //       << "Uintah variable \"" << varname << "\"  "
         //       << "has type \"" << vartype << "\"  "
         //       << "has mesh \"" << mesh_for_this_var << "\"  "
@@ -1224,12 +1316,15 @@ visit_handle visit_ReadMetaData(void *cbdata)
       }
     }
 
-    // visit_handle msg = VISIT_INVALID_HANDLE;
-
-    // if(VisIt_MessageMetaData_alloc(&msg) == VISIT_OKAY)
+    // if( sim->message.size() )
     // {
-    //   VisIt_MessageMetaData_setName(msg, "Test Message");
-    //   VisIt_SimulationMetaData_addMessage(md, msg);
+    //   visit_handle msg = VISIT_INVALID_HANDLE;
+      
+    //   if(VisIt_MessageMetaData_alloc(&msg) == VISIT_OKAY)
+    //   {
+    // 	VisIt_MessageMetaData_setName(msg, sim->message.c_str());
+    // 	VisIt_SimulationMetaData_addMessage(md, msg);
+    //   }
     // }
   }
 
