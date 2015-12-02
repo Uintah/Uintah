@@ -100,10 +100,10 @@
     <save label="z-mom_convFlux_y"/>    
     <save label="y-mom_convFlux_z"/>
     <save label="y-mom_convFlux_y"/>        
-    <save label="tau_zz"/>
-    <save label="tau_zy"/>    
-    <save label="tau_yz"/>
-    <save label="tau_yy"/>            
+    <save label="strain_zz"/>
+    <save label="strain_zy"/>    
+    <save label="strain_yz"/>
+    <save label="strain_yy"/>            
     <save label="z-mom"/>    
     <save label="y-mom"/>        
     <save label="w"/>

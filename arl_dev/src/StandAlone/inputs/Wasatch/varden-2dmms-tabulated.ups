@@ -177,8 +177,8 @@
     <save label="u"/>
     <save label="v"/>
         
-    <save label="tau_xy"/>
-    <save label="tau_yx"/>
+    <save label="strain_xy"/>
+    <save label="strain_yx"/>
     <!-- save label="mms_mixture_fraction_src"/>
     <save label="mms_continuity_src"/>
     <save label="mms_pressure_continuity_src"/ -->

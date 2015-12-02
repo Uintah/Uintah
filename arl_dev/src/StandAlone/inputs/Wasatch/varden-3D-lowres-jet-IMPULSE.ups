@@ -171,12 +171,12 @@
     <!-- save label="u*"/>
     
     <save label="w*"/ -->
-    <save label="tau_xy"/>
-    <save label="tau_yx"/>
-    <save label="tau_zy"/>
-    <save label="tau_yz"/>
-    <save label="tau_xz"/>
-    <save label="tau_zx"/>
+    <save label="strain_xy"/>
+    <save label="strain_yx"/>
+    <save label="strain_zy"/>
+    <save label="strain_yz"/>
+    <save label="strain_xz"/>
+    <save label="strain_zx"/>
     <!-- save label="ContinuityResidual"/>
     <save label="varden_alpha"/ -->
     <save label="pressure"/>
