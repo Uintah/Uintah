@@ -676,21 +676,22 @@
 
   <DataAnalysis                         spec="OPTIONAL NO_DATA" >
     <Module                             spec="MULTIPLE NO_DATA"
-                                          attribute1="name REQUIRED STRING 'lineExtract, planeExtract, containerExtract, particleExtract flatPlate_heatFlux firstLawThermo minMax vorticity radiometer momentumAnalysis'" >
+                                          attribute1="name REQUIRED STRING 'lineExtract, planeExtract, containerExtract, particleExtract flatPlate_heatFlux firstLawThermo minMax vorticity radiometer momentumAnalysis statistics'" >
       
       <!--  Common __________________________________-->
       <material                         spec="OPTIONAL STRING" />
       <materialIndex                    spec="OPTIONAL INTEGER" />
       <samplingFrequency                spec="REQUIRED DOUBLE"  need_applies_to="name lineExtract, planeExtract, containerExtract, particleExtract, firstLawThermo, minMax"/>
-      <timeStart                        spec="REQUIRED DOUBLE"  need_applies_to="name lineExtract, planeExtract, containerExtract, particleExtract, firstLawThermo, minMax"/>
-      <timeStop                         spec="REQUIRED DOUBLE"  need_applies_to="name lineExtract, planeExtract, containerExtract, particleExtract, firstLawThermo, minMax"/>
+      <timeStart                        spec="REQUIRED DOUBLE"  need_applies_to="name lineExtract, planeExtract, containerExtract, particleExtract, firstLawThermo, minMax, statistics"/>
+      <timeStop                         spec="REQUIRED DOUBLE"  need_applies_to="name lineExtract, planeExtract, containerExtract, particleExtract, firstLawThermo, minMax, statistics"/>
       <colorThreshold                   spec="REQUIRED DOUBLE"  need_applies_to="name particleExtract"/>
        
-      <Variables                        spec="OPTIONAL NO_DATA" need_applies_to="name lineExtract planeExtract particleExtract minMax">
+      <Variables                        spec="OPTIONAL NO_DATA" need_applies_to="name lineExtract planeExtract particleExtract minMax statistics">
         <analyze                        spec="MULTIPLE NO_DATA"
                                           attribute1="label REQUIRED STRING" 
                                           attribute2="matl  OPTIONAL STRING"
-                                          attribute3="level OPTIONAL STRING" />
+                                          attribute3="level OPTIONAL STRING"
+                                          attribute4="computeReynoldsStress OPTIONAL STRING" />
       </Variables>
       
       <!--  lineExtract __________________________________-->
@@ -749,7 +750,10 @@
       <!--Radiometer ____________________________________--> 
       <radiometerCalc_freq                spec="REQUIRED DOUBLE"  need_applies_to="name radiometer" />
       <include href="RMCRT_radiometer.xml" section="Radiometer" />
-      
+ 
+      <!--statistics ____________________________________--> 
+      <computeHigherOrderStats         spec="OPTIONAL BOOLEAN"  need_applies_to="name statistics" />
+            
     </Module>
   </DataAnalysis>
   
