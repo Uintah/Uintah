@@ -45,7 +45,7 @@ namespace Wasatch{
                            const Expr::Tag& particleSizeTag,
                            Uintah::ProblemSpecP particleEqsSpec,
                            GraphCategories& gc )
-  : ParticleEquationBase( solnVarName, pdir, particlePositionTags, particleSizeTag, particleEqsSpec, gc )
+  : ParticleEquationBase( solnVarName, pdir, particlePositionTags, particleSizeTag, gc )
   {
     Uintah::ProblemSpecP pPosSpec = particleEqsSpec->findBlock("ParticlePosition");
     // get the particle velocities

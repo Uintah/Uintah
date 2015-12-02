@@ -206,6 +206,7 @@ link_tools:
 	       ln -sf $(OBJTOP_ABS)/StandAlone/tools/puda/puda $(OBJTOP_ABS)/StandAlone/puda; \
               ln -sf $(OBJTOP_ABS)/StandAlone/tools/extractors/lineextract $(OBJTOP_ABS)/StandAlone/lineextract; \
               ln -sf $(OBJTOP_ABS)/StandAlone/tools/extractors/timeextract $(OBJTOP_ABS)/StandAlone/timeextract; \
+              ln -sf $(OBJTOP_ABS)/StandAlone/tools/extractors/partextract $(OBJTOP_ABS)/StandAlone/partextract; \
 	   fi )
 link_localRT:
 	@( if ! test -L StandAlone/localRT; then \

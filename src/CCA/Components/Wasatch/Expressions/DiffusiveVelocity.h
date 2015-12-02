@@ -60,11 +60,11 @@ class DiffusiveVelocity : public Expr::Expression<VelT>
   const double coefVal_;  ///< the value of the diffusion coefficient if constant
 
   DiffusiveVelocity( const Expr::Tag& turbDiffTag,
-                      const Expr::Tag& phiTag,
-                      const Expr::Tag& coefTag );
+                     const Expr::Tag& phiTag,
+                     const Expr::Tag& coefTag );
   DiffusiveVelocity( const Expr::Tag& turbDiffTag,
-                      const Expr::Tag& phiTag,
-                      const double coefVal );
+                     const Expr::Tag& phiTag,
+                     const double coefVal );
 
 public:
   /**

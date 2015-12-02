@@ -31,14 +31,13 @@ namespace Wasatch{
 
   ParticleEquationBase::
   ParticleEquationBase( const std::string& solnVarName,
-                       const Direction pDir,
-                       const Expr::TagList& particlePositionTags,
-                       const Expr::Tag& particleSizeTag,
-                       Uintah::ProblemSpecP particleEqsSpec,
-                       GraphCategories& gc )
-  : EquationBase::EquationBase(gc, solnVarName, pDir, particleEqsSpec),
-    pPosTags_(particlePositionTags),
-    pSizeTag_(particleSizeTag)
+                        const Direction pDir,
+                        const Expr::TagList& particlePositionTags,
+                        const Expr::Tag& particleSizeTag,
+                        GraphCategories& gc )
+  : EquationBase::EquationBase( gc, solnVarName, pDir ),
+    pPosTags_( particlePositionTags ),
+    pSizeTag_( particleSizeTag      )
   {
     Uintah::ParticlesHelper::needs_boundary_condition(solnVarName);
   }

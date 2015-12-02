@@ -8,7 +8,7 @@
                                                                         trans_iso_hyper, visco_plastic, soil_foam, gao_elastic,
                                                                         visco_scram, visco_trans_iso_hyper, water, TH_water, kayenta, hypo_elastic_fortran, diamm, cnh_mms,
                                                                         cnh_damage, cnhp_damage, UCNH, program_burn,jwlpp_mpm, p_alpha, nonlocal_drucker_prager,
-                                                                        Arenisca, Arenisca3, Arenisca4, arena, camclay'">
+                                                                        Arenisca, Arenisca3, Arenisca4, arena, camclay, TongeRameshPTR'">
     <A                             spec="OPTIONAL DOUBLE" />
     <allow_no_tension              spec="OPTIONAL BOOLEAN" />
     <alpha                         spec="OPTIONAL DOUBLE" />
@@ -820,6 +820,85 @@
       <arena_p3 spec="REQUIRED DOUBLE" need_applies_to="type arena_kappa" />
       <arena_p4 spec="REQUIRED DOUBLE" need_applies_to="type arena_kappa" />
     </internal_variable_model>
+
+    <!-- The following are for the TongeRamesh model -->
+    <PTR_useDamage spec="OPTIONAL DOUBLE" need_applies_to="type TongeRameshPTR"/>
+    <PTR_usePlasticity spec="OPTIONAL DOUBLE" need_applies_to="type TongeRameshPTR"/>
+    <PTR_useGranularPlasticity spec="OPTIONAL DOUBLE" need_applies_to="type TongeRameshPTR"/>
+    <PTR_useOldStress spec="OPTIONAL DOUBLE" need_applies_to="type TongeRameshPTR"/>
+    <PTR_artificialViscosity spec="OPTIONAL DOUBLE" need_applies_to="type TongeRameshPTR"/>
+    <PTR_artificialViscousHeating spec="OPTIONAL DOUBLE" need_applies_to="type TongeRameshPTR"/>
+    <PTR_BulkModulus spec="OPTIONAL DOUBLE" need_applies_to="type TongeRameshPTR"/>
+    <PTR_ShearModulus spec="OPTIONAL DOUBLE" need_applies_to="type TongeRameshPTR"/>
+    <PTR_rho_orig spec="OPTIONAL DOUBLE" need_applies_to="type TongeRameshPTR"/>
+    <PTR_FlowStress spec="OPTIONAL DOUBLE" need_applies_to="type TongeRameshPTR"/>
+    <PTR_HardeningModulus spec="OPTIONAL DOUBLE" need_applies_to="type TongeRameshPTR"/>
+    <PTR_InitialPlasticStrain spec="OPTIONAL DOUBLE" need_applies_to="type TongeRameshPTR"/>
+    <PTR_J2RelaxationTime spec="OPTIONAL DOUBLE" need_applies_to="type TongeRameshPTR"/>
+    <PTR_NumCrackFamilies spec="OPTIONAL DOUBLE" need_applies_to="type TongeRameshPTR"/>
+    <PTR_MeanFlawSize spec="OPTIONAL DOUBLE" need_applies_to="type TongeRameshPTR"/>
+    <PTR_FlawDensity spec="OPTIONAL DOUBLE" need_applies_to="type TongeRameshPTR"/>
+    <PTR_StdFlawSize spec="OPTIONAL DOUBLE" need_applies_to="type TongeRameshPTR"/>
+    <PTR_FlawDistType spec="OPTIONAL DOUBLE" need_applies_to="type TongeRameshPTR"/>
+    <PTR_MinFlawSize spec="OPTIONAL DOUBLE" need_applies_to="type TongeRameshPTR"/>
+    <PTR_MaxFlawSize spec="OPTIONAL DOUBLE" need_applies_to="type TongeRameshPTR"/>
+    <PTR_FlawDistExponent spec="OPTIONAL DOUBLE" need_applies_to="type TongeRameshPTR"/>
+    <PTR_RandomizeFlawDist spec="OPTIONAL DOUBLE" need_applies_to="type TongeRameshPTR"/>
+    <PTR_RandomSeed spec="OPTIONAL DOUBLE" need_applies_to="type TongeRameshPTR"/>
+    <PTR_RandomizeMethod spec="OPTIONAL DOUBLE" need_applies_to="type TongeRameshPTR"/>
+    <PTR_BinBias spec="OPTIONAL DOUBLE" need_applies_to="type TongeRameshPTR"/>
+    <PTR_KIc spec="OPTIONAL DOUBLE" need_applies_to="type TongeRameshPTR"/>
+    <PTR_FlawFriction spec="OPTIONAL DOUBLE" need_applies_to="type TongeRameshPTR"/>
+    <PTR_FlawAngle spec="OPTIONAL DOUBLE" need_applies_to="type TongeRameshPTR"/>
+    <PTR_FlawGrowthExponent spec="OPTIONAL DOUBLE" need_applies_to="type TongeRameshPTR"/>
+    <PTR_FlawGrowthAlpha spec="OPTIONAL DOUBLE" need_applies_to="type TongeRameshPTR"/>
+    <PTR_CriticalDamage spec="OPTIONAL DOUBLE" need_applies_to="type TongeRameshPTR"/>
+    <PTR_MaxDamage spec="OPTIONAL DOUBLE" need_applies_to="type TongeRameshPTR"/>
+    <PTR_MicroMechPlaneStrain spec="OPTIONAL DOUBLE" need_applies_to="type TongeRameshPTR"/>
+    <PTR_MaxDamageInc spec="OPTIONAL DOUBLE" need_applies_to="type TongeRameshPTR"/>
+    <PTR_UseDamageTimestep spec="OPTIONAL DOUBLE" need_applies_to="type TongeRameshPTR"/>
+    <PTR_dt_increaseFactor spec="OPTIONAL DOUBLE" need_applies_to="type TongeRameshPTR"/>
+    <PTR_IncInitDamage spec="OPTIONAL DOUBLE" need_applies_to="type TongeRameshPTR"/>
+    <PTR_DoFlawInteraction spec="OPTIONAL DOUBLE" need_applies_to="type TongeRameshPTR"/>
+    <PTR_GPTimeConst spec="OPTIONAL DOUBLE" need_applies_to="type TongeRameshPTR"/>
+    <PTR_JLoc spec="OPTIONAL DOUBLE" need_applies_to="type TongeRameshPTR"/>
+    <PTR_GPGranularSlope spec="OPTIONAL DOUBLE" need_applies_to="type TongeRameshPTR"/>
+    <PTR_GPCohesion spec="OPTIONAL DOUBLE" need_applies_to="type TongeRameshPTR"/>
+    <PTR_GPYieldSurfType spec="OPTIONAL DOUBLE" need_applies_to="type TongeRameshPTR"/>
+    <PTR_GPPc spec="OPTIONAL DOUBLE" need_applies_to="type TongeRameshPTR"/>
+    <PTR_GPJref spec="OPTIONAL DOUBLE" need_applies_to="type TongeRameshPTR"/>
+    <PTR_GPPref spec="OPTIONAL DOUBLE" need_applies_to="type TongeRameshPTR"/>
+    <PTR_GPSurfaceType spec="OPTIONAL DOUBLE" need_applies_to="type TongeRameshPTR"/>
+    <PTR_AbsToll spec="OPTIONAL DOUBLE" need_applies_to="type TongeRameshPTR"/>
+    <PTR_RelToll spec="OPTIONAL DOUBLE" need_applies_to="type TongeRameshPTR"/>
+    <PTR_MaxIter spec="OPTIONAL DOUBLE" need_applies_to="type TongeRameshPTR"/>
+    <PTR_MaxLevels spec="OPTIONAL DOUBLE" need_applies_to="type TongeRameshPTR"/>
+    <PTR_GFMSm0 spec="OPTIONAL DOUBLE" need_applies_to="type TongeRameshPTR"/>
+    <PTR_GFMSm1 spec="OPTIONAL DOUBLE" need_applies_to="type TongeRameshPTR"/>
+    <PTR_GFMSm2 spec="OPTIONAL DOUBLE" need_applies_to="type TongeRameshPTR"/>
+    <PTR_GFMSp0 spec="OPTIONAL DOUBLE" need_applies_to="type TongeRameshPTR"/>
+    <PTR_GFMSp1 spec="OPTIONAL DOUBLE" need_applies_to="type TongeRameshPTR"/>
+    <PTR_GFMSp2 spec="OPTIONAL DOUBLE" need_applies_to="type TongeRameshPTR"/>
+    <PTR_GFMSp3 spec="OPTIONAL DOUBLE" need_applies_to="type TongeRameshPTR"/>
+    <PTR_GFMSp4 spec="OPTIONAL DOUBLE" need_applies_to="type TongeRameshPTR"/>
+    <PTR_GFMSa1 spec="OPTIONAL DOUBLE" need_applies_to="type TongeRameshPTR"/>
+    <PTR_GFMSa2 spec="OPTIONAL DOUBLE" need_applies_to="type TongeRameshPTR"/>
+    <PTR_GFMSa3 spec="OPTIONAL DOUBLE" need_applies_to="type TongeRameshPTR"/>
+    <PTR_GFMSBeta spec="OPTIONAL DOUBLE" need_applies_to="type TongeRameshPTR"/>
+    <PTR_GFMSPsi spec="OPTIONAL DOUBLE" need_applies_to="type TongeRameshPTR"/>
+    <PTR_GFMSJ3Type spec="OPTIONAL DOUBLE" need_applies_to="type TongeRameshPTR"/>
+    <PTR_ArtVisc1 spec="OPTIONAL DOUBLE" need_applies_to="type TongeRameshPTR"/>
+    <PTR_ArtVisc2 spec="OPTIONAL DOUBLE" need_applies_to="type TongeRameshPTR"/>
+    <PTR_MGC0 spec="OPTIONAL DOUBLE" need_applies_to="type TongeRameshPTR"/>
+    <PTR_MGGamma0 spec="OPTIONAL DOUBLE" need_applies_to="type TongeRameshPTR"/>
+    <PTR_MGS1 spec="OPTIONAL DOUBLE" need_applies_to="type TongeRameshPTR"/>
+    <PTR_MGS2 spec="OPTIONAL DOUBLE" need_applies_to="type TongeRameshPTR"/>
+    <PTR_MGS3 spec="OPTIONAL DOUBLE" need_applies_to="type TongeRameshPTR"/>
+    <PTR_MGCv spec="OPTIONAL DOUBLE" need_applies_to="type TongeRameshPTR"/>
+    <PTR_MGTheta_0 spec="OPTIONAL DOUBLE" need_applies_to="type TongeRameshPTR"/>
+    <PTR_JMin spec="OPTIONAL DOUBLE" need_applies_to="type TongeRameshPTR"/>
+    <PTR_MGNPts spec="OPTIONAL DOUBLE" need_applies_to="type TongeRameshPTR"/>
+
 
   </constitutive_model>
 

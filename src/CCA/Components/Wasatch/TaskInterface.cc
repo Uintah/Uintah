@@ -292,7 +292,7 @@ namespace Wasatch{
 #     endif
 
       if( !hasPressureExpression_ ){
-        if( tree->computes_field( pressure_tag() ) && taskName != "initialization" ){
+        if( tree->computes_field( TagNames::self().pressure ) && taskName != "initialization" ){
           hasPressureExpression_ = true;
         }
       }
@@ -547,7 +547,7 @@ namespace Wasatch{
     scheduler_->addTask( task, patches_, materials_ );
 
     if( hasPressureExpression_ ){
-      Pressure& pexpr = dynamic_cast<Pressure&>( factory.retrieve_expression( pressure_tag(), patchID, true ) );
+      Pressure& pexpr = dynamic_cast<Pressure&>( factory.retrieve_expression( TagNames::self().pressure, patchID, true ) );
       pexpr.declare_uintah_vars( *task, pss, mss, rkStage );
       pexpr.schedule_solver( Uintah::getLevelP(pss), scheduler_, materials_, rkStage );
       pexpr.schedule_set_pressure_bcs( Uintah::getLevelP(pss), scheduler_, materials_, rkStage );
@@ -658,7 +658,7 @@ namespace Wasatch{
           fml_->allocate_fields( ainfo );
 
           if( hasPressureExpression_ ){
-            Pressure& pexpr = dynamic_cast<Pressure&>( factory.retrieve_expression( pressure_tag(), patchID, true ) );
+            Pressure& pexpr = dynamic_cast<Pressure&>( factory.retrieve_expression( TagNames::self().pressure, patchID, true ) );
             pexpr.bind_uintah_vars( newDW, patch, material, rkStage );
           }
 

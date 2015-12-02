@@ -8,8 +8,8 @@
    <Solver type="hypre"/>
   <Wasatch>
     <TimeIntegrator> FE </TimeIntegrator>    
-    <Density>
-      <NameTag name="density" />
+    <Density method="LOWMACH">
+      <NameTag name="density"/>
     </Density>
 
     <!-- Setup the parameters for variable density MMS -->
@@ -22,7 +22,7 @@
     </VarDenOscillatingMMS>
 
     <TwoStreamMixing rho0="5.0" rho1="1.0">
-      <Density><NameTag name="density" /></Density>
+      <Density><NameTag name="density"/></Density>
       <MixtureFraction> <NameTag name="f"/> </MixtureFraction>
       <DensityWeightedMixtureFraction> <NameTag name="rhof" state="STATE_DYNAMIC"/> </DensityWeightedMixtureFraction>
     </TwoStreamMixing>  
@@ -125,8 +125,8 @@
     <save label="y-mom"/>
     <save label="u"/>
     <save label="v"/>
-    <save label="tau_xy"/>
-    <save label="tau_yx"/>
+    <save label="strain_xy"/>
+    <save label="strain_yx"/>
     <save label="f"/>
     <save label="rhof"/>
     <save label="pressure"/>

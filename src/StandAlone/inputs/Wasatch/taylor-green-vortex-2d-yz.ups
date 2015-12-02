@@ -8,7 +8,7 @@
    <Solver type="hypre"/>
   <Wasatch>
 
-    <Density>
+    <Density method="CONSTANT">
       <Constant value="1.0" name="density"/>
     </Density>
 
@@ -98,10 +98,10 @@
     <save label="z-mom_convFlux_z"/>
     <save label="dilatation"/>
     <save label="density"/>
-    <save label="tau_yy"/>
-    <save label="tau_yz"/>
-    <save label="tau_zy"/>
-    <save label="tau_zz"/>
+    <save label="strain_yy"/>
+    <save label="strain_yz"/>
+    <save label="strain_zy"/>
+    <save label="strain_zz"/>
     <save label="y-mom_rhs_partial"/>
     <save label="z-mom_rhs_partial"/>
     <save label="y-mom_rhs"/>

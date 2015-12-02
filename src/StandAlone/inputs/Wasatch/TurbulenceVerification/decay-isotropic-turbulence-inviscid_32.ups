@@ -9,7 +9,7 @@
   <Wasatch>
 
     <TimeIntegrator>RK3SSP</TimeIntegrator>
-    <Density>
+    <Density method="CONSTANT">
       <Constant value="1" name="density"/>
     </Density>
     

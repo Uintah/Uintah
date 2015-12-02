@@ -82,11 +82,11 @@ class MomRHSPart
   typedef typename SpatialOps::OperatorTypeBuilder<SpatialOps::Interpolant,SVolField,YFluxT>::type  SVol2YFluxInterpT;
   typedef typename SpatialOps::OperatorTypeBuilder<SpatialOps::Interpolant,SVolField,ZFluxT>::type  SVol2ZFluxInterpT;
 
-  DECLARE_FIELDS(XFluxT, cFluxX_, tauX_ )
-  DECLARE_FIELDS(YFluxT, cFluxY_, tauY_ )
-  DECLARE_FIELDS(ZFluxT, cFluxZ_, tauZ_ )
-  DECLARE_FIELDS(SVolField, density_, visc_ )
-  DECLARE_FIELDS(FieldT, bodyForce_, srcTerm_, volfrac_ )
+  DECLARE_FIELDS( XFluxT, cFluxX_, strainX_ )
+  DECLARE_FIELDS( YFluxT, cFluxY_, strainY_ )
+  DECLARE_FIELDS( ZFluxT, cFluxZ_, strainZ_ )
+  DECLARE_FIELDS( SVolField, density_, visc_, divu_ )
+  DECLARE_FIELDS( FieldT, bodyForce_, srcTerm_, volfrac_ )
   
   const DivX* divXOp_;
   const DivY* divYOp_;
@@ -99,14 +99,15 @@ class MomRHSPart
   const DensityInterpT* densityInterpOp_;
   
   const bool doXConv_, doYConv_, doZConv_, doXTau_, doYTau_, doZTau_, is3dconvdiff_, hasBodyF_, hasSrcTerm_, hasIntrusion_;
-
+  
   MomRHSPart( const Expr::Tag& convFluxX,
               const Expr::Tag& convFluxY,
               const Expr::Tag& convFluxZ,
               const Expr::Tag& viscTag,
-              const Expr::Tag& tauX,
-              const Expr::Tag& tauY,
-              const Expr::Tag& tauZ,
+              const Expr::Tag& strainX,
+              const Expr::Tag& strainY,
+              const Expr::Tag& strainZ,
+              const Expr::Tag& dilataionTag,
               const Expr::Tag& densityTag,
               const Expr::Tag& bodyForceTag,
               const Expr::Tag& srcTermTag,
@@ -115,7 +116,7 @@ class MomRHSPart
 public:
   class Builder : public Expr::ExpressionBuilder
   {
-    const Expr::Tag cfluxXt_, cfluxYt_, cfluxZt_, viscTag_, tauXt_, tauYt_, tauZt_, densityt_, bodyForcet_, srcTermt_;
+    const Expr::Tag cfluxXt_, cfluxYt_, cfluxZt_, viscTag_, strainXt_, strainYt_, strainZt_, dilataiont_, densityt_, bodyForcet_, srcTermt_;
     const Expr::Tag volfract_;
     
   public:
@@ -124,9 +125,10 @@ public:
              const Expr::Tag& convFluxY,
              const Expr::Tag& convFluxZ,
              const Expr::Tag& viscTag,
-             const Expr::Tag& tauX,
-             const Expr::Tag& tauY,
-             const Expr::Tag& tauZ,
+             const Expr::Tag& strainX,
+             const Expr::Tag& strainY,
+             const Expr::Tag& strainZ,
+             const Expr::Tag& dilataionTag,
              const Expr::Tag& densityTag,
              const Expr::Tag& bodyForceTag,
              const Expr::Tag& srcTermTag,

@@ -48,6 +48,61 @@
 #include <fstream>
 #include <iostream>
 
+/*  This code is a bit tough to follow.  Here's the basic order of operations.
+
+First, MPM::actuallyInitialize calls MPMMaterial::createParticles, which in
+turn calls ParticleCreator::createParticles for the appropriate ParticleCreator
+(MPMMaterial calls the ParticleCreatorFactory::create, which is kind of stupid
+since every material will use the same type ParticleCreator. Whatever..)
+
+Next,  createParticles, below, first loops over all of the geom_objects and
+calls countAndCreateParticles.  countAndCreateParticles returns the number of
+particles on a given patch associated with each geom_object and accumulates
+that into a variable called num_particles.  countAndCreateParticles gets
+the number of particles by either querying the functions for smooth geometry 
+piece types, or by calling createPoints, also below.  When createPoints is
+called, as each particle is determined to be inside of the object, it is pushed
+back into the object_points entry of the ObjectVars struct.  ObjectVars
+consists of several maps which are indexed on the GeometryObject and a vector
+containing whatever data that entry is responsible for carrying.  A map is used
+because even after particles are created, their initial data is still tied
+back to the GeometryObject.  These might include velocity, temperature, color,
+etc.
+
+createPoints, for the non-smooth geometry, essentially visits each cell,
+and then depending on how many points are prescribed in the <res> tag in the
+input file, loops over each of the candidate locations in that cell, and
+determines if that point is inside or outside of the cell.  Points that are
+inside the object are pushed back into the struct, as described above.  The
+actual particle count comes from an operation in countAndCreateParticles
+to determine the size of the object_points entry in the ObjectVars struct.
+
+Now that we know how many particles we have for this material on this patch,
+we are ready to allocateVariables, which calls allocateAndPut for all of the
+variables needed in SerialMPM or AMRMPM.  At this point, storage for the
+particles has been created, but the arrays allocated are still empty.
+
+Now back in createParticles, the next step is to loop over all of the 
+GeometryObjects.  If the GeometryObject is a SmoothGeometryPiece, those
+type of objects MAY have their own methods for populating the data within the
+if(sgp) conditional.  Either way, loop over all of the particles in
+object points and initialize the remaining particle data.  This is done for
+non-Smooth/File pieces by calling initializeParticle.  For the Smooth/File
+pieces, if arrays exist that contain other data, use that data to populate the
+other entries.
+
+initializeParticle, which is what is usually used, populates the particle data
+based on either what is specified in the <geometry_object> section of the
+input file, or by geometric considerations (such as size, from which we get
+volume, from which we get mass (volume*density).  There is also an option to
+call initializeParticlesForMMS, which is needed for running Method of
+Manufactured Solutions, where special particle initialization is needed.)
+
+At that point, other than assigning particles to loadCurves, if called for,
+we are done!
+
+*/
+
 using namespace Uintah;
 using namespace std;
 
@@ -86,7 +141,7 @@ ParticleCreator::createParticles(MPMMaterial* matl,
   for (geom=d_geom_objs.begin(); geom != d_geom_objs.end(); ++geom){ 
     numParticles += countAndCreateParticles(patch,*geom, vars);
   }
-  
+
   int dwi = matl->getDWIndex();
   allocateVariables(numParticles,dwi,patch,new_dw, pvars);
 
@@ -132,7 +187,11 @@ ParticleCreator::createParticles(MPMMaterial* matl,
       if(d_doScalarDiffusion){
         concentrations = sgp->getConcentration();
       }
-    }
+    } // if smooth geometry piece
+
+
+    // The following is for FileGeometryPiece, I'm not sure why this
+    // isn't in a conditional.  JG
 
     // For getting particle volumes (if they exist)
     vector<double>::const_iterator voliter;
@@ -188,6 +247,8 @@ ParticleCreator::createParticles(MPMMaterial* matl,
               vars.d_object_concentration[*obj].begin();
     }
 
+    // Loop over all of the particles whose positions we know from
+    // countAndCreateParticles, initialize the remaining variables
     vector<Point>::const_iterator itr;
     for(itr=vars.d_object_points[*obj].begin();
         itr!=vars.d_object_points[*obj].end(); ++itr){
@@ -198,8 +259,14 @@ ParticleCreator::createParticles(MPMMaterial* matl,
       
       particleIndex pidx = start+count;      
 
+      // This initializes the particle values for objects that are not
+      // FileGeometry or SmoothGeometry
       initializeParticle(patch,obj,matl,*itr,cell_idx,pidx,cellNAPID, pvars);
-      
+
+      // Again, everything below exists for FileGeometryPiece only, where
+      // a user can describe the geometry as a series of points in a file.
+      // One can also describe any of the fields below in the file as well.
+      // See FileGeometryPiece for usage.
 
       if (temperatures) {
         if (!temperatures->empty()) {
@@ -429,6 +496,19 @@ void ParticleCreator::createPoints(const Patch* patch, GeometryObject* obj,
   Vector dxpp = patch->dCell()/ppc;
   Vector dcorner = dxpp*0.5;
 
+  // Affine transformation for making conforming particle distributions
+  // to be used in the conforming CPDI simulations. The input vectors are
+  // optional and if you do not wish to use the affine transformation, just do
+  // not define them in the input file.
+  Vector affineTrans_A0=obj->getInitialData_Vector("affineTransformation_A0");
+  Vector affineTrans_A1=obj->getInitialData_Vector("affineTransformation_A1");
+  Vector affineTrans_A2=obj->getInitialData_Vector("affineTransformation_A2");
+  Vector affineTrans_b= obj->getInitialData_Vector("affineTransformation_b");
+  Matrix3 affineTrans_A(
+          affineTrans_A0[0],affineTrans_A0[1],affineTrans_A0[2],
+          affineTrans_A1[0],affineTrans_A1[1],affineTrans_A1[2],
+          affineTrans_A2[0],affineTrans_A2[1],affineTrans_A2[2]);
+
   // AMR stuff
   const Level* curLevel = patch->getLevel();
   bool hasFiner = curLevel->hasFinerLevel();
@@ -449,19 +529,6 @@ void ParticleCreator::createPoints(const Patch* patch, GeometryObject* obj,
        continue;
       }
     }
-
-    // Affine transformation for making conforming particle distributions
-    // to be used in the conforming CPDI simulations. The input vectors are
-    // optional and if you do not wish to use the affine transformation, just do
-    // not define them in the input file.
-    Vector affineTrans_A0=obj->getInitialData_Vector("affineTransformation_A0");
-    Vector affineTrans_A1=obj->getInitialData_Vector("affineTransformation_A1");
-    Vector affineTrans_A2=obj->getInitialData_Vector("affineTransformation_A2");
-    Vector affineTrans_b= obj->getInitialData_Vector("affineTransformation_b");
-    Matrix3 affineTrans_A(
-            affineTrans_A0[0],affineTrans_A0[1],affineTrans_A0[2],
-            affineTrans_A1[0],affineTrans_A1[1],affineTrans_A1[2],
-            affineTrans_A2[0],affineTrans_A2[1],affineTrans_A2[2]);
 
     for(int ix=0;ix < ppc.x(); ix++){
       for(int iy=0;iy < ppc.y(); iy++){
@@ -484,7 +551,7 @@ void ParticleCreator::createPoints(const Patch* patch, GeometryObject* obj,
         }  // z
       }  // y
     }  // x
-  }  // iterator
+  }  // CellIterator
 
 /*
 //  This part is associated with CBDI_CompressiveCylinder.ups input file.
@@ -567,12 +634,7 @@ ParticleCreator::initializeParticle(const Patch* patch,
   pvars.ptemperature[i] = (*obj)->getInitialData_double("temperature");
   pvars.plocalized[i]   = 0;
 
-  // AMR stuff
-  // I don't like putting this here, a conditional around each particle.
-  // A better solution would be to pass in the value for prefined.  Make
-  // prefined = 1 on the finest level (unless there is only 1 level),
-  // so that particles don't get refined
-  // to smaller than they start in that region initially.
+  // For AMR
   const Level* curLevel = patch->getLevel();
   pvars.prefined[i]     = curLevel->getIndex();
 
@@ -655,7 +717,6 @@ ParticleCreator::initializeParticle(const Patch* patch,
   myCellNAPID++;
 }
 
-
 particleIndex 
 ParticleCreator::countAndCreateParticles(const Patch* patch, 
                                          GeometryObject* obj,
@@ -680,9 +741,11 @@ ParticleCreator::countAndCreateParticles(const Patch* patch,
       fgp->readPoints(patch->getID());
       numPts = fgp->returnPointCount();
     } else {
-      Vector dxpp = patch->dCell()/obj->getInitialData_IntVector("res");    
-      double dx   = Min(Min(dxpp.x(),dxpp.y()), dxpp.z());
-      sgp->setParticleSpacing(dx);
+      // setParticleSpacing seems to only be used by GUVSphereShell
+      // which is commented out in the sub.mk and probably badly deprecated
+      // Vector dxpp = patch->dCell()/obj->getInitialData_IntVector("res");
+      // double dx   = Min(Min(dxpp.x(), dxpp.y()), dxpp.z());
+      // sgp->setParticleSpacing(dx);
       numPts = sgp->createPoints();
     }
     vector<Point>* points          = sgp->getPoints();

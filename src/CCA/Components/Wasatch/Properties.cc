@@ -175,7 +175,7 @@ namespace Wasatch{
       case STAR      : tagNameAppend=TagNames::self().star; scalarTagNameAppend = ""; break;
     }
 
-    densityTag.name() += tagNameAppend;
+    densityTag.reset_name( densityTag.name() + tagNameAppend );
 
     double rtol = 1e-6;
     int maxIter = 5;
@@ -188,22 +188,17 @@ namespace Wasatch{
       const Uintah::ProblemSpecP modelParams = params->findBlock("ModelBasedOnMixtureFraction");
       Expr::Tag rhofTag = parse_nametag( modelParams->findBlock("DensityWeightedMixtureFraction")->findBlock("NameTag") );
       Expr::Tag fTag = parse_nametag(modelParams->findBlock("MixtureFraction")->findBlock("NameTag"));
-      if( densLevel != NORMAL   ) rhofTag.context() = Expr::STATE_NONE;
-      rhofTag.name() += scalarTagNameAppend;
+      if( densLevel != NORMAL ) rhofTag.reset_context( Expr::STATE_NONE );
+      rhofTag.reset_name( rhofTag.name() + scalarTagNameAppend );
 
       typedef DensFromMixfrac<SVolField>::Builder DensCalc;
       
-      Expr::Tag unconvPts = TagNames::self().unconvergedpts;
-      unconvPts.name() += tagNameAppend;
-      
-      Expr::Tag drhodfTag("drhod" + fTag.name(), Expr::STATE_NONE);
-      drhodfTag.name() += tagNameAppend;
-      
+      const Expr::Tag unconvPts( TagNames::self().unconvergedpts.name() + tagNameAppend, TagNames::self().unconvergedpts.context() );
+      const Expr::Tag drhodfTag( "drhod" + fTag.name() + tagNameAppend, Expr::STATE_NONE);
       const Expr::TagList theTagList( tag_list( densityTag, unconvPts, drhodfTag ) );
       
       // register placeholder for the old density
-      Expr::Tag rhoOldTag = densityTag;
-      rhoOldTag.context() = Expr::STATE_N;
+      const Expr::Tag rhoOldTag( densityTag.name(), Expr::STATE_N );
       typedef Expr::PlaceHolder<SVolField>  PlcHolder;
       factory.register_expression( new PlcHolder::Builder(rhoOldTag), true );
 
@@ -228,24 +223,19 @@ namespace Wasatch{
       // levels since this will be using STATE_NONE information as opposed to
       // potentially STATE_N information.
       if( densLevel != NORMAL ){
-        rhofTag.context()     = Expr::STATE_NONE;
-        rhohTag.context()     = Expr::STATE_NONE;
-        rhofTag.name()        += scalarTagNameAppend;
-        rhohTag.name()        += scalarTagNameAppend;
-        heatLossTag.name()    += scalarTagNameAppend;
+        rhofTag.reset( rhofTag.name() + scalarTagNameAppend, Expr::STATE_NONE );
+        rhohTag.reset( rhohTag.name() + scalarTagNameAppend, Expr::STATE_NONE );
+        heatLossTag.reset_name( heatLossTag.name() + scalarTagNameAppend );
       }
 
       typedef Expr::PlaceHolder<SVolField>  PlcHolder;
-      Expr::Tag rhoOldTag = densityTag;
-      rhoOldTag.context() = Expr::STATE_N;
-      Expr::Tag heatLossOldTag = heatLossTag;
-      heatLossOldTag.context() = Expr::STATE_N;
+      const Expr::Tag rhoOldTag( densityTag.name(), Expr::STATE_N );
+      const Expr::Tag heatLossOldTag( heatLossTag.name(), Expr::STATE_N );
       factory.register_expression( new PlcHolder::Builder(rhoOldTag), true );
       factory.register_expression( new PlcHolder::Builder(heatLossOldTag), true );
 
       typedef DensHeatLossMixfrac<SVolField>::Builder DensCalc;
       densCalcID = factory.register_expression( scinew DensCalc( rhoOldTag, densityTag, heatLossOldTag, heatLossTag, rhofTag, rhohTag, *densInterp, *enthInterp ) );
-
     }
     return densCalcID;
   }

@@ -471,8 +471,8 @@ namespace Wasatch{
   template<>
   inline
   SpatialOps::SpatFldPtr<SpatialOps::SingleValueField>
-  wrap_uintah_field_as_spatialops<SpatialOps::SingleValueField,Uintah::PerPatch<double*> >(
-      Uintah::PerPatch<double*>& uintahVar,
+  wrap_uintah_field_as_spatialops<SpatialOps::SingleValueField,Uintah::PerPatch<double> >(
+      Uintah::PerPatch<double>& uintahVar,
       const AllocInfo& ainfo,
       const SpatialOps::GhostData ghostData,
       const short int deviceIndex,
@@ -484,7 +484,7 @@ namespace Wasatch{
         new FieldT( so::MemoryWindow( so::IntVec(1,1,1), so::IntVec(0,0,0), so::IntVec(1,1,1) ),
                     so::BoundaryCellInfo::build<FieldT>(false,false,false),    // bc doesn't matter for single value fields
                     ghostData,
-                    uintahVar.get(),
+                    &uintahVar.get(),
                     so::ExternalStorage,
                     deviceIndex ) );
   }

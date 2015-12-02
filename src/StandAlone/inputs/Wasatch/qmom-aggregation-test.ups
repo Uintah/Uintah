@@ -8,31 +8,31 @@
 
   <Wasatch>    
   
-    <Density>
+    <Density method="CONSTANT">
       <Constant value="1" name="rho"/>
     </Density>
 
     <BasicExpression type="SVOL"> 
       <TaskList> advance_solution </TaskList>
-      <NameTag name="dissipation" />
+      <NameTag name="dissipation"/>
       <Constant> 0.05 </Constant>
     </BasicExpression>
 
     <BasicExpression type="SVOL"> 
       <TaskList> advance_solution </TaskList>
-      <NameTag name="kinviscos" />
+      <NameTag name="kinviscos"/>
       <Constant> 0.1 </Constant>
     </BasicExpression> 
 
     <BasicExpression type="SVOL">
       <TaskList> advance_solution </TaskList>
-      <NameTag name="density" />
+      <NameTag name="density"/>
       <Constant> 1.0 </Constant>
     </BasicExpression>
 
     <BasicExpression type="SVOL"> 
       <TaskList> advance_solution </TaskList>
-      <NameTag name="growthCoef" />
+      <NameTag name="growthCoef"/>
       <Constant> 1500.0 </Constant>
     </BasicExpression> 
 
@@ -41,10 +41,10 @@
       <NameTag name="Turb_agg"/>
       <TurbulentAggregationCoefficient>
         <KinematicViscosity>
-          <NameTag name="kinviscos" />
+          <NameTag name="kinviscos"/>
         </KinematicViscosity>
         <EnergyDissipation>
-          <NameTag name="dissipation" />
+          <NameTag name="dissipation"/>
         </EnergyDissipation>
       </TurbulentAggregationCoefficient>
     </PrecipitationBasicExpression>    
@@ -82,13 +82,13 @@
             <GrowthModel> BULK_DIFFUSION </GrowthModel>
             <LengthParam> 1.5 </LengthParam>
             <Density>
-              <NameTag name="density" />
+              <NameTag name="density"/>
             </Density>
             <EnergyDissipation>
-              <NameTag name="dissipation" />
+              <NameTag name="dissipation"/>
             </EnergyDissipation>
             <GrowthCoefficientExpression>
-              <NameTag name="growthCoef" />
+              <NameTag name="growthCoef"/>
             </GrowthCoefficientExpression>      
           </SizeDependentEfficiency>
 

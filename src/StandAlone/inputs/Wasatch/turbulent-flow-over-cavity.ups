@@ -15,7 +15,7 @@
 
 	<TimeIntegrator>RK2SSP</TimeIntegrator>
 	<Turbulence model="DYNAMIC"/>
-    <Density>
+    <Density method="CONSTANT">
       <Constant value="1.0" name="density"/>
     </Density>
 

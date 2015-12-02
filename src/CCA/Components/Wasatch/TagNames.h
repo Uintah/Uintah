@@ -90,9 +90,9 @@ namespace Wasatch{
     xvel, yvel, zvel,
     xmom, ymom, zmom,
     pressure, dilatation,
-    tauxx, tauxy, tauxz,
-    tauyx, tauyy, tauyz,
-    tauzx, tauzy, tauzz;
+    strainxx, strainxy, strainxz,
+    strainyx, strainyy, strainyz,
+    strainzx, strainzy, strainzz;
     
     // turbulence related variables
     const Expr::Tag

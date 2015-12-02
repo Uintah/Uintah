@@ -8,7 +8,7 @@
 
   <Wasatch>    
 
-    <Density>
+    <Density method="CONSTANT">
       <Constant value="1" name="rho"/>
     </Density>
   
@@ -38,55 +38,55 @@
 
     <BasicExpression type="SVOL">
       <TaskList>initialization</TaskList>
-      <NameTag name="S" />
+      <NameTag name="S"/>
       <Constant>7</Constant>
     </BasicExpression>
     <BasicExpression type="SVOL">
       <TaskList>advance_solution</TaskList>
-      <NameTag name="S" />
+      <NameTag name="S"/>
       <Constant>7</Constant>
     </BasicExpression>
     
     <BasicExpression type="SVOL">
       <TaskList>initialization</TaskList>
-      <NameTag name="ceq" />
+      <NameTag name="ceq"/>
       <Constant>.1</Constant>
     </BasicExpression>
     <BasicExpression type="SVOL">
       <TaskList>advance_solution</TaskList>
-      <NameTag name="ceq" />
+      <NameTag name="ceq"/>
       <Constant>.1</Constant>
     </BasicExpression>
 
    <PrecipitationBasicExpression type="SVOL">
      <TaskList> advance_solution </TaskList>
-     <NameTag name="RStarExpr" />
+     <NameTag name="RStarExpr"/>
      <PrecipitationClassicRStarValue Surf_Eng="0.04" Molec_Vol="3.693e-5" Temperature="298" Conversion_Fac="1e9">
        <Supersaturation>
-         <NameTag name="S" />
+         <NameTag name="S"/>
        </Supersaturation>
     </PrecipitationClassicRStarValue>
   </PrecipitationBasicExpression>
   
     <PrecipitationBasicExpression type="SVOL">
       <TaskList> advance_solution </TaskList>
-      <NameTag name="ClassicBirth" />
+      <NameTag name="ClassicBirth"/>
       <PrecipitationClassicNucleationCoefficient Molec_Vol="3.693e-5" Surf_Eng="0.04" Temperature="298">
         <Supersaturation>
-          <NameTag name="S" />  
+          <NameTag name="S"/>  
         </Supersaturation> 
      </PrecipitationClassicNucleationCoefficient>
     </PrecipitationBasicExpression>
 
     <PrecipitationBasicExpression type="SVOL">
       <TaskList> advance_solution </TaskList>
-      <NameTag name="NewBirth" />
+      <NameTag name="NewBirth"/>
       <HomogeneousNucleationCoefficient Molar_Vol="3.693e-5" Surf_Eng="0.04" Temperature="298" Diff_Coef="1.0e-9" S_Ratio="1">
         <Supersaturation>
-          <NameTag name="S" />  
+          <NameTag name="S"/>  
         </Supersaturation> 
         <EquilibriumConcentration>
-          <NameTag name="ceq" />
+          <NameTag name="ceq"/>
         </EquilibriumConcentration>  
      </HomogeneousNucleationCoefficient>
     </PrecipitationBasicExpression>
@@ -104,10 +104,10 @@
 
         <PreBirthCoefficient> 1.0e30 </PreBirthCoefficient>
         <BirthCoefficientExpression>
-          <NameTag name="ClassicBirth" />
+          <NameTag name="ClassicBirth"/>
         </BirthCoefficientExpression> 
         <RStarExpression>
-          <NameTag name="RStarExpr" />
+          <NameTag name="RStarExpr"/>
         </RStarExpression> 
 
         </BirthExpression>
@@ -133,10 +133,10 @@
 
         <!--PreBirthCoefficient> 1.0e30 </PreBirthCoefficient-->
         <BirthCoefficientExpression>
-          <NameTag name="NewBirth" />
+          <NameTag name="NewBirth"/>
         </BirthCoefficientExpression> 
         <RStarExpression>
-          <NameTag name="RStarExpr" />
+          <NameTag name="RStarExpr"/>
         </RStarExpression> 
 
         </BirthExpression>

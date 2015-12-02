@@ -54,11 +54,14 @@ namespace Uintah{
       struct HTVariables {
 
         double time; 
-        double t_start; 
+        double t_interval; // time to reach steady thermal profile
         CCVariable<double> T; 
         CCVariable<double> T_copy; 
         CCVariable<double> T_real; 
         CCVariable<double> deposit_thickness; 
+        CCVariable<double> deposit_velocity; 
+        constCCVariable<double> deposit_velocity_old; 
+        constCCVariable<double> ave_deposit_velocity; 
         constCCVariable<double> T_real_old; 
         constCCVariable<double> T_old;
         constCCVariable<int> celltype; 
@@ -68,7 +71,6 @@ namespace Uintah{
         constCCVariable<double> incident_hf_s; 
         constCCVariable<double> incident_hf_t; 
         constCCVariable<double> incident_hf_b; 
-        constCCVariable<double> ave_deposit_velocity; 
         constCCVariable<double> deposit_thickness_old; 
         CCVariable<Stencil7> total_hf; 
         constCCVariable<Vector > cc_vel; 
@@ -77,8 +79,7 @@ namespace Uintah{
       };
 
     private: 
-      
-      double _t_start; 
+      double _t_interval; 
       std::string _dep_vel_name;
       bool do_coal_region; 
       int _calc_freq;                    ///< Wall heat transfer model calculation frequency
@@ -102,6 +103,7 @@ namespace Uintah{
       const VarLabel* _Total_HF_label; 
       const VarLabel* _True_T_Label; 
       const VarLabel* _ave_dep_vel_label; 
+      const VarLabel* _deposit_velocity_label; 
       const VarLabel* _deposit_thickness_label; 
 
       void doWallHT( const ProcessorGroup* my_world,
@@ -346,6 +348,8 @@ namespace Uintah{
           int _max_it;                       ///< maximum iterations allowed 
 
           struct WallInfo { 
+              double T_slag; 
+              double dy_erosion; 
               double t_sb; 
               double k; 
               double k_deposit; 

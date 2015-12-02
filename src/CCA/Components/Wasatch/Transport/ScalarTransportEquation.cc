@@ -65,9 +65,9 @@ namespace Wasatch{
                            const bool callSetup )
     : Wasatch::TransportEquation( gc,
                                   solnVarName,
-                                  params,
                                   get_staggered_location<FieldT>(),
                                   isConstDensity ),
+      params_( params ),
       hasConvection_( params_->findBlock("ConvectiveFlux") ),
       densityTag_( densityTag ),
       enableTurbulence_( !params->findBlock("DisableTurbulenceModel") && (turbulenceParams.turbModelName != TurbulenceParameters::NOTURBULENCE) )

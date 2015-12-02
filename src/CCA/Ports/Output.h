@@ -89,23 +89,23 @@ class SimulationState;
     // Call this when restarting from a checkpoint after calling
     // problemSetup.
     virtual void restartSetup(Dir& restartFromDir, int startTimestep,
-			      int timestep, double time, bool fromScratch,
-			      bool removeOldDir) = 0;
+                              int timestep, double time, bool fromScratch,
+                              bool removeOldDir) = 0;
     //////////
     // set timeinfoFlags and 
     virtual void reduceUdaSetup(Dir& fromDir) = 0;
 
     virtual bool needRecompile(double time, double delt,
-			       const GridP& grid) = 0;
+                               const GridP& grid) = 0;
 
     //////////
     // Call this after all other tasks have been added to the scheduler
     virtual void finalizeTimestep(double t, double delt, const GridP&,
-				      SchedulerP&, bool recompile = false ) = 0;
+                                  SchedulerP&, bool recompile = false ) = 0;
 
     // schedule all output tasks
     virtual void sched_allOutputTasks(double delt, const GridP&,
-				          SchedulerP&, bool recompile = false ) = 0;
+                                      SchedulerP&, bool recompile = false ) = 0;
 
     //////////
     // Call this after a timestep restart to make sure we still
