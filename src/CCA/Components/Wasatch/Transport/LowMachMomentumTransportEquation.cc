@@ -94,13 +94,10 @@ namespace Wasatch{
                          momName,
                          densTag,
                          isConstDensity,
-                          bodyForceTag,
-                          srcTermTag,
-                          gc,
-                          params,
-                          turbulenceParams,
-                          linSolver,
-                          sharedState)
+                         bodyForceTag,
+                         gc,
+                         params,
+                         turbulenceParams)
   {
     solverParams_ = NULL;
     set_vel_tags( params, this->velTags_ );
