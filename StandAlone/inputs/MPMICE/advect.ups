@@ -147,7 +147,7 @@
     <!--____________________________________________________________________-->
    <DataArchiver>
       <filebase>advect_mpmice.uda</filebase>
-      <outputTimestepInterval>20</outputTimestepInterval>
+      <outputTimestepInterval>5</outputTimestepInterval>
       <save label="press_equil_CC"/>
       <save label="uvel_FC"/>
       <save label="vvel_FC"/>
@@ -175,6 +175,11 @@
       <save label="variance_vel_CC"/>
       <save label="skewness_vel_CC"/>
       <save label="kurtosis_vel_CC"/>
+      
+      <save label="uv_prime"/>
+      <save label="uw_prime"/>
+      <save label="vw_prime"/>
+      
       <checkpoint interval="0.005" cycle="2"/>
    </DataArchiver>
 
@@ -291,15 +296,16 @@
       </Module>    
       
       <Module name = "statistics">
-         <timeStart>   0.0  </timeStart>
-         <timeStop>   100  </timeStop>
-        <material>Air</material>
+         <timeStart>   0.001  </timeStart>
+         <timeStop>   100     </timeStop>
+        <material>    Air     </material>
         <computeHigherOrderStats> true </computeHigherOrderStats>
         <Variables>
           <analyze label="press_CC"  matl="0"/>
           <analyze label="temp_CC"   matl="1"/>
-          <analyze label="vel_CC"    matl="1"/>
+          <analyze label="vel_CC"    matl="1" computeReynoldsStress="true" />
         </Variables>
+        
       </Module>         
     </DataAnalysis>
        

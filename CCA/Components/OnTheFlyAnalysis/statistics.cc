@@ -79,6 +79,12 @@ statistics::~statistics()
       VarLabel::destroy( Q.Qsum4_Label );
       VarLabel::destroy( Q.Qmean4_Label );
     }
+
+    if ( Q.isVelocityLabel ){
+      VarLabel::destroy( d_uv_primeLabel );
+      VarLabel::destroy( d_uw_primeLabel );
+      VarLabel::destroy( d_vw_primeLabel );
+    }
   }
 }
 
@@ -133,9 +139,9 @@ void statistics::problemSetup(const ProblemSpecP& prob_spec,
   d_prob_spec->get("computeHigherOrderStats", d_doHigherOrderStats );
   if (d_doHigherOrderStats){
 
-    proc0cout << "         Computing 2nd, 3rd and 4th order statistics for all of the variables listed\n"<< endl;
+    proc0cout << "         Computing 2nd, 3rd and 4th order statistics for all of the variables listed"<< endl;
   } else {
-    proc0cout << "         Computing 2nd order statistics for all of the variables listed\n"<< endl;
+    proc0cout << "         Computing 2nd order statistics for all of the variables listed"<< endl;
   }
 
   //__________________________________
@@ -195,6 +201,8 @@ void statistics::problemSetup(const ProblemSpecP& prob_spec,
     Q.matl    = matl;
     Q.Q_Label = label;
     Q.subtype = subtype;
+    Q.isVelocityLabel = false;
+
     Q.Qsum_Label      = VarLabel::create( "sum_" + name,      td);
     Q.Qsum2_Label     = VarLabel::create( "sum2_" + name,     td);
     Q.Qmean_Label     = VarLabel::create( "mean_" + name,     td);
@@ -209,6 +217,16 @@ void statistics::problemSetup(const ProblemSpecP& prob_spec,
       Q.Qsum4_Label     = VarLabel::create( "sum4_" + name,      td);
       Q.Qmean4_Label    = VarLabel::create( "mean4_" + name,     td);
       Q.Qkurtosis_Label = VarLabel::create( "kurtosis_" + name,  td);
+    }
+
+    //__________________________________
+    //  computeReynoldsStress with this Var?
+    if (attribute["computeReynoldsStress"].empty() == false){
+      Q.isVelocityLabel    = true;
+      d_uv_primeLabel = VarLabel::create( "uv_prime",  CCVariable<double>::getTypeDescription());
+      d_uw_primeLabel = VarLabel::create( "uw_prime",  CCVariable<double>::getTypeDescription());
+      d_vw_primeLabel = VarLabel::create( "vw_prime",  CCVariable<double>::getTypeDescription());
+      proc0cout << "         Computing uv_prime, uw_prime, vw_prime using ("<< name << ")" << endl;
     }
 
     d_Qstats.push_back( Q );
@@ -325,7 +343,6 @@ void statistics::scheduleDoAnalysis(SchedulerP& sched,
 
   for ( unsigned int i =0 ; i < d_Qstats.size(); i++ ) {
     Qstats Q = d_Qstats[i];
-    //Q.print();
 
     // define the matl subset for this variable
     MaterialSubset* matSubSet = scinew MaterialSubset();
@@ -359,9 +376,18 @@ void statistics::scheduleDoAnalysis(SchedulerP& sched,
       t->computes ( Q.Qkurtosis_Label, matSubSet );
     }
 
+    //__________________________________
+    //  Reynolds Stress Terms
+    if ( Q.isVelocityLabel ){
+      t->computes ( d_uv_primeLabel, matSubSet );
+      t->computes ( d_uw_primeLabel, matSubSet );
+      t->computes ( d_vw_primeLabel, matSubSet );
+    }
+
     if(matSubSet && matSubSet->removeReference()){
       delete matSubSet;
     }
+//    Q.print();
   }
 
   sched->addTask(t, level->eachPatch(), d_matlSet);
@@ -371,7 +397,7 @@ void statistics::scheduleDoAnalysis(SchedulerP& sched,
 // Compute the statistics for each variable the user requested
 void statistics::doAnalysis(const ProcessorGroup* pg,
                             const PatchSubset* patches,
-                            const MaterialSubset* matl_sub ,
+                            const MaterialSubset* ,
                             DataWarehouse* old_dw,
                             DataWarehouse* new_dw)
 {
@@ -386,11 +412,13 @@ void statistics::doAnalysis(const ProcessorGroup* pg,
       switch(Q.subtype->getType()) {
 
         case TypeDescription::double_type:{         // double
-          computeStatsWrapper< double >(old_dw, new_dw, patches, matl_sub, patch, Q);
+          computeStatsWrapper< double >(old_dw, new_dw, patches, patch, Q);
           break;
         }
         case TypeDescription::Vector: {             // Vector
-          computeStatsWrapper< Vector >(old_dw, new_dw, patches, matl_sub,  patch, Q);
+          computeStatsWrapper< Vector >(old_dw, new_dw, patches,  patch, Q);
+
+          computeReynoldsStress( new_dw,patch, Q);
 
           break;
         }
@@ -406,23 +434,22 @@ void statistics::doAnalysis(const ProcessorGroup* pg,
 
 
 //______________________________________________________________________
-//  computeStatsWrapper:  
+//  computeStatsWrapper:
 template <class T>
 void statistics::computeStatsWrapper( DataWarehouse* old_dw,
                                       DataWarehouse* new_dw,
                                       const PatchSubset* patches,
-                                      const MaterialSubset* matl_sub ,
                                       const Patch*    patch,
                                       Qstats Q)
 {
   double now = d_dataArchiver->getCurrentTime();
-  
+
   if(now < d_startTime || now > d_stopTime){
-    
+
 //    proc0cout << " IGNORING------------DataAnalysis: Statistics" << endl;
     allocateAndZeroStats<T>( new_dw, patch, Q);
-    carryForwardSums( old_dw, new_dw, patches, matl_sub, Q );
-    
+    carryForwardSums( old_dw, new_dw, patches, Q );
+
   }else {
 //    proc0cout << " Computing------------DataAnalysis: Statistics" << endl;
     computeStats< T >(old_dw, new_dw, patch, Q);
@@ -528,7 +555,48 @@ void statistics::computeStats( DataWarehouse* old_dw,
     }
   }
 }
+//______________________________________________________________________
+//  Computes u'v', u'w', v'w'
+void statistics::computeReynoldsStress( DataWarehouse* new_dw,
+                                        const Patch* patch,
+                                        Qstats Q)
+{
+  if ( Q.isVelocityLabel == false ){
+    return;
+  }
 
+  const int matl = Q.matl;
+
+  constCCVariable<Vector> vel_CC;
+
+  Ghost::GhostType  gn  = Ghost::None;
+  new_dw->get ( vel_CC, Q.Q_Label, matl, patch, gn, 0 );
+
+  CCVariable< double > uv_prime;
+  CCVariable< double > uw_prime;
+  CCVariable< double > vw_prime;
+
+  new_dw->allocateAndPut( uv_prime, d_uv_primeLabel,  matl, patch );
+  new_dw->allocateAndPut( uw_prime, d_uw_primeLabel,  matl, patch );
+  new_dw->allocateAndPut( vw_prime, d_vw_primeLabel,  matl, patch );
+
+  // is it time to compute?
+  double oneZero = 1.0;
+
+  double now = d_dataArchiver->getCurrentTime();
+  if(now < d_startTime || now > d_stopTime){
+    oneZero = 0.0;
+  }
+
+  // do it
+  for (CellIterator iter=patch->getExtraCellIterator();!iter.done();iter++){
+    IntVector c = *iter;
+    Vector vel = vel_CC[c];  // for readability
+    uv_prime[c] = vel.x() * vel.y() * oneZero;
+    uw_prime[c] = vel.x() * vel.z() * oneZero;
+    vw_prime[c] = vel.y() * vel.z() * oneZero;
+  }
+}
 
 //______________________________________________________________________
 //  allocateAndZero  statistics variables
@@ -584,15 +652,22 @@ void statistics::allocateAndZero( DataWarehouse* new_dw,
 void statistics::carryForwardSums( DataWarehouse* old_dw,
                                    DataWarehouse* new_dw,
                                    const PatchSubset* patches,
-                                   const MaterialSubset* matl_sub ,
                                    Qstats Q )
 {
-  int matl = Q.matl;
-  new_dw->transferFrom(old_dw, Q.Qsum_Label,  patches, matl_sub  );
-  new_dw->transferFrom(old_dw, Q.Qsum2_Label, patches, matl_sub );
+    // define the matl subset for this variable
+  MaterialSubset* matSubSet = scinew MaterialSubset();
+  matSubSet->add( Q.matl );
+  matSubSet->addReference();
+
+  new_dw->transferFrom(old_dw, Q.Qsum_Label,  patches, matSubSet  );
+  new_dw->transferFrom(old_dw, Q.Qsum2_Label, patches, matSubSet );
 
   if( d_doHigherOrderStats ){
-    new_dw->transferFrom(old_dw, Q.Qsum3_Label, patches, matl_sub );
-    new_dw->transferFrom(old_dw, Q.Qsum4_Label, patches, matl_sub );
+    new_dw->transferFrom(old_dw, Q.Qsum3_Label, patches, matSubSet );
+    new_dw->transferFrom(old_dw, Q.Qsum4_Label, patches, matSubSet );
+  }
+
+  if(matSubSet && matSubSet->removeReference()){
+    delete matSubSet;
   }
 }
