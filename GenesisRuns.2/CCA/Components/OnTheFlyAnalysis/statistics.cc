@@ -252,7 +252,7 @@ void statistics::problemSetup(const ProblemSpecP& prob_spec,
       ostringstream warn;
       warn << "\nERROR:  You've activated the DataAnalysis:statistics module but your not saving the variable(s) ("
            << mesg.str() << ")\n";
-      throw ProblemSetupException( warn.str(),__FILE__, __LINE__ );
+      proc0cout << warn.str() << endl;
     }
   }
 
