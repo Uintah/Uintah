@@ -1613,8 +1613,6 @@ Grid::problemSetup(  const ProblemSpecP   & params
     }
     d_levelSubsetLabels.push_back("Solo Level Set");
     d_levelSubsetComponentNames.push_back(componentName);
-
-
   }
   else // parse LevelSets
   {

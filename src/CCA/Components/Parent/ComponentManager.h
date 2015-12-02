@@ -36,7 +36,6 @@
 #include <CCA/Ports/Output.h>
 
 #include <Core/Parallel/UintahParallelComponent.h>
-
 #include <Core/Grid/SimulationTime.h>
 
 #include <map>
@@ -45,9 +44,9 @@ namespace Uintah {
   enum ComponentListType {
     all,
     manager,
-    principle,
+    principal,
     subcomponent,
-    principleandsub
+    principalandsub
   };
 
   class ComponentManager {
@@ -58,6 +57,7 @@ namespace Uintah {
                               ,       bool                doAMR
                               , const std::string       & uda
                              );
+
     virtual ~ComponentManager();
 
     // Pure virtual interface for a component manager.
