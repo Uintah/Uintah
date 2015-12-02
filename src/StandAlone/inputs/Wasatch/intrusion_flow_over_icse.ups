@@ -31,7 +31,7 @@
       <DiffusiveFlux direction="X" coefficient="0.0001"/>
       <DiffusiveFlux direction="Y" coefficient="0.0001"/>
     </TransportEquation>
-    <Density>
+    <Density method="CONSTANT">
       <Constant value="1.0" name="density"/>
     </Density>
     

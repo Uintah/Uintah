@@ -9,8 +9,8 @@
   <Wasatch>
     <TimeIntegrator> FE </TimeIntegrator>    
 
-    <Density>
-      <NameTag name="density" />
+    <Density method="LOWMACH">
+      <NameTag name="density"/>
     </Density>
 
 
@@ -51,7 +51,7 @@
       </IndependentVariable>
       
       <ExtractDensity>
-        <NameTag name="density" />
+        <NameTag name="density"/>
         <ModelBasedOnMixtureFraction>
           <DensityWeightedMixtureFraction>
             <NameTag name="rhof" state="STATE_DYNAMIC"/>

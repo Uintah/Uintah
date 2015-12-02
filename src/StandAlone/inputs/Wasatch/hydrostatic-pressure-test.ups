@@ -15,7 +15,7 @@
        <Constant>-9.81</Constant>
     </BasicExpression>
 
-    <Density>
+    <Density method="CONSTANT">
       <Constant value="1.0" name="density"/>
     </Density>
 

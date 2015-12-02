@@ -8,8 +8,8 @@
   
   <Wasatch>
 
-    <Density>
-      <NameTag name="density" />
+    <Density method="LOWMACH">
+      <NameTag name="density"/>
     </Density>
 
     <BasicExpression type="SVOL">
@@ -56,7 +56,7 @@
         <NameInTable>MixtureFraction</NameInTable>
       </IndependentVariable>
       <IndependentVariable>
-        <NameTag name="HeatLoss" />
+        <NameTag name="HeatLoss"/>
         <NameInTable>HeatLoss</NameInTable>
       </IndependentVariable>
       <ExtractVariable>
@@ -79,7 +79,7 @@
       </ExtractVariable>
       
       <ExtractDensity>
-        <NameTag name="density" />
+        <NameTag name="density"/>
         <ModelBasedOnMixtureFractionAndHeatLoss>
           <DensityWeightedMixtureFraction>
             <NameTag name="rhof" state="STATE_DYNAMIC"/>
@@ -87,7 +87,7 @@
           <DensityWeightedEnthalpy>
             <NameTag name="rhoh" state="STATE_DYNAMIC"/>
           </DensityWeightedEnthalpy>
-          <HeatLoss><NameTag name="HeatLoss" /></HeatLoss>
+          <HeatLoss><NameTag name="HeatLoss"/></HeatLoss>
         </ModelBasedOnMixtureFractionAndHeatLoss>
       </ExtractDensity>
     </TabProps>

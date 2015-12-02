@@ -9,7 +9,7 @@
   <Wasatch>
     <TimeIntegrator> FE </TimeIntegrator>    
 
-    <Density>
+    <Density method="LOWMACH">
       <NameTag name="density"/>
     </Density>
     

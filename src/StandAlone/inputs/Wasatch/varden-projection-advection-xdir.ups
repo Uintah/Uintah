@@ -9,8 +9,8 @@
   <Wasatch>
     <TimeIntegrator> FE </TimeIntegrator>    
     
-    <Density>
-      <NameTag name="density" />
+    <Density method="LOWMACH">
+      <NameTag name="density"/>
     </Density>
     
     <!-- Set the initial condition expression for mixture fraction -->
@@ -50,7 +50,7 @@
       </IndependentVariable>
       
       <ExtractDensity>
-        <NameTag name="density" />
+        <NameTag name="density"/>
         <ModelBasedOnMixtureFraction>
           <DensityWeightedMixtureFraction>
             <NameTag name="rhof" state="STATE_DYNAMIC"/>
