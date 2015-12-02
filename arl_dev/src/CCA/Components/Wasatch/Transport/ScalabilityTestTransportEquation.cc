@@ -102,9 +102,9 @@ namespace Wasatch{
                                     Uintah::ProblemSpecP params )
   : Wasatch::TransportEquation( gc,
                                 thisPhiName,
-                                params,
                                 get_staggered_location<FieldT>(),
-                                true)   // always constant density
+                                true),   // always constant density
+    params_( params )
   {
     setup();
   }

@@ -49,6 +49,7 @@
 #include <CCA/Components/Wasatch/FieldTypes.h>
 #include <CCA/Components/Wasatch/ParseTools.h>
 #include <CCA/Components/Wasatch/ParticlesHelper.h>
+#include <CCA/Components/Wasatch/TagNames.h>
 #include <CCA/Components/Wasatch/Expressions/BoundaryConditions/BoundaryConditions.h>
 #include <CCA/Components/Wasatch/Expressions/BoundaryConditions/BoundaryConditionBase.h>
 
@@ -257,28 +258,29 @@ namespace Wasatch {
     BCFunctorMap::iterator iter = bcFunctorMap_.find(phiName);
     size_t nMods = 0;
 
-    Expr::Tag dummyTag(phiName + "_dummy_dependency", Expr::STATE_NONE );
+    Expr::Tag dummyTag( phiName + "_dummy_dependency", Expr::STATE_NONE );
     
-    if ( iter != bcFunctorMap_.end() ) {
+    if( iter != bcFunctorMap_.end() ){
       (*iter).second.insert(dummyTag.name());
-    } else {
+    }
+    else {
       BCFunctorMap::mapped_type functorSet;
       nMods = (*iter).second.size();
       std::ostringstream msg;
       msg << nMods;
-      dummyTag.name() = phiName + "_dummy_dependency_" + msg.str();
+      dummyTag.reset_name( phiName + "_dummy_dependency_" + msg.str() );
       functorSet.insert( dummyTag.name() );
       bcFunctorMap_.insert( BCFunctorMap::value_type(phiName,functorSet) );
     }
 
     // if the dependency was already added then return
-    if (factory.have_entry(dummyTag)) {
+    if( factory.have_entry(dummyTag) ){
       return;
     }
     
     // register the null dependency
     typedef typename NullExpression<SrcT, TargetT>::Builder NullExpr;
-    factory.register_expression(scinew NullExpr(dummyTag, dependencies), true);
+    factory.register_expression( scinew NullExpr(dummyTag, dependencies), true );
   }
   
   //------------------------------------------------------------------------------------------------
@@ -290,7 +292,7 @@ namespace Wasatch {
 
   {            
     using namespace std;
-    string fieldName = varTag.name();
+    const string& fieldName = varTag.name();
     Expr::ExpressionFactory& factory = *(grafCat_[taskCat]->exprFactory);
     
     //_____________________________________________________________________________________
@@ -420,13 +422,14 @@ namespace Wasatch {
   void WasatchBCHelper::synchronize_pressure_expression()
   {
     Expr::ExpressionFactory& factory = *(grafCat_[ADVANCE_SOLUTION]->exprFactory);
-    if (!factory.have_entry( pressure_tag() )) return;
+    const Expr::Tag& pTag = TagNames::self().pressure;
+    if (!factory.have_entry( pTag )) return;
     BOOST_FOREACH( const Uintah::PatchSubset* const patches, localPatches_->getVector() ) {
       // loop over every patch in the patch subset
       BOOST_FOREACH( const Uintah::Patch* const patch, patches->getVector() ) {
         const int patchID = patch->getID();
         // go through the patch ids and pass the WasatchBCHelper to the pressure expression
-        Pressure& pexpr = dynamic_cast<Pressure&>( factory.retrieve_expression( pressure_tag(), patchID, true ) );
+        Pressure& pexpr = dynamic_cast<Pressure&>( factory.retrieve_expression( pTag, patchID, true ) );
         pexpr.set_bchelper(this); // add the bchelper class to the pressure expression on ALL patches
       }
     }
@@ -439,11 +442,12 @@ namespace Wasatch {
                                          const Uintah::Patch* patch )
   {
     const int patchID = patch->getID();
-    
+    const Expr::Tag& pTag = TagNames::self().pressure;
+
     BOOST_FOREACH( const BndMapT::value_type bndSpecPair, bndNameBndSpecMap_ )
     {
       const BndSpec& myBndSpec = bndSpecPair.second; // get the boundary specification
-      const BndCondSpec* myBndCondSpec = bndSpecPair.second.find(pressure_tag().name()); // get the bc spec - we will check if the user specified anything for pressure here
+      const BndCondSpec* myBndCondSpec = bndSpecPair.second.find(pTag.name()); // get the bc spec - we will check if the user specified anything for pressure here
       const Uintah::IntVector unitNormal = patch->getFaceDirection(myBndSpec.face);
       //_____________________________________________________________________________________
       // check if we have this patchID in the list of patchIDs
@@ -497,6 +501,7 @@ namespace Wasatch {
     typedef std::vector<SpatialOps::IntVec> MaskT;
     
     const int patchID = patch->getID();
+    const Expr::Tag& pTag = TagNames::self().pressure;
 
     const Uintah::Vector res = patch->dCell();
     const double dx = res[0];
@@ -506,7 +511,7 @@ namespace Wasatch {
     BOOST_FOREACH( const BndMapT::value_type bndSpecPair, bndNameBndSpecMap_ )
     {
       const BndSpec& myBndSpec = bndSpecPair.second;
-      const BndCondSpec* myBndCondSpec = bndSpecPair.second.find(pressure_tag().name());
+      const BndCondSpec* myBndCondSpec = bndSpecPair.second.find(pTag.name());
       
       double spacing = 1.0;
       switch( myBndSpec.face ){
@@ -559,7 +564,8 @@ namespace Wasatch {
     typedef std::vector<SpatialOps::IntVec> MaskT;
     
     const int patchID = patch->getID();
-    
+    const Expr::Tag& pTag = TagNames::self().pressure;
+
     const Uintah::Vector res = patch->dCell();
     const double dx = res[0];
     const double dy = res[1];
@@ -568,7 +574,7 @@ namespace Wasatch {
     BOOST_FOREACH( const BndMapT::value_type bndSpecPair, bndNameBndSpecMap_ )
     {
       const BndSpec& myBndSpec = bndSpecPair.second;
-      const BndCondSpec* myBndCondSpec = bndSpecPair.second.find(pressure_tag().name());
+      const BndCondSpec* myBndCondSpec = bndSpecPair.second.find(pTag.name());
       
       double spacing = 1.0;
       switch( myBndSpec.face ){

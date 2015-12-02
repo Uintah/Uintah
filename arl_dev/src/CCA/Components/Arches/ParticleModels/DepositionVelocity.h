@@ -5,7 +5,7 @@
 #include <Core/Grid/SimulationState.h>
 
 namespace Uintah{ 
-
+  
   class Operators; 
   class DepositionVelocity : public TaskInterface { 
 
@@ -80,8 +80,10 @@ private:
       std::string _rhoP_name;
       std::string _dep_vel_rs_name;
       std::string _dep_vel_rs_start_name;
-      double _t_start;
-  
+      std::string _new_time_name;
+      double _t_interval; // the time interval required for a steady-state thermal profile.
+      double _new_time;
+
   };
 }
 #endif 

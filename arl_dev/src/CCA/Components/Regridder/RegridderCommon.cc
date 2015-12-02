@@ -64,6 +64,7 @@ RegridderCommon::RegridderCommon(const ProcessorGroup* pg)
   d_dilationTimestep = 3;
   d_newGrid = true;
   d_regridOnce = false;
+  d_forceRegridding = false;
 
   d_dilatedCellsStabilityLabel = VarLabel::create("DilatedCellsStability", CCVariable<int>::getTypeDescription());
   d_dilatedCellsRegridLabel = VarLabel::create("DilatedCellsRegrid", CCVariable<int>::getTypeDescription());
@@ -164,9 +165,13 @@ RegridderCommon::needsToReGrid(const GridP &oldGrid)
   rdbg << "RegridderCommon::needsToReGrid() BGN" << std::endl;
 
   int timeStepsSinceRegrid = d_sharedState->getCurrentTopLevelTimeStep() - d_lastRegridTimestep;
+
   int retval = false;
 
-  if (!d_isAdaptive || timeStepsSinceRegrid < d_minTimestepsBetweenRegrids) {
+  if( d_forceRegridding )
+    retval = true;
+
+  else if (!d_isAdaptive || timeStepsSinceRegrid < d_minTimestepsBetweenRegrids) {
     retval = false;
     if (d_myworld->myrank() == 0)
       rreason << "Not regridding because timesteps since regrid is less than min timesteps between regrid\n";

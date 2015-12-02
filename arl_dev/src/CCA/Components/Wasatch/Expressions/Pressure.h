@@ -48,11 +48,6 @@ namespace Uintah{
 namespace Wasatch{
 
 /**
- *  \brief obtain the tag for the pressure
- */
-Expr::Tag pressure_tag();
-
-/**
  *  \class 	  Pressure
  *  \ingroup 	Expressions
  *  \ingroup	 WasatchCore

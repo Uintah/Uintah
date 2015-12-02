@@ -66,7 +66,7 @@ DiffusiveVelocity( const Expr::Tag& turbDiffTag,
 {
   this->set_gpu_runnable( true );
   
-   phi_ = this->template create_field_request<ScalarT>(phiTag);
+  phi_ = this->template create_field_request<ScalarT>(phiTag);
   if( isTurbulent_ )  turbDiff_ = this->template create_field_request<ScalarT>(turbDiffTag);
 }
 
@@ -98,11 +98,11 @@ evaluate()
   using namespace SpatialOps;
   VelT& result = this->value();
   if( isTurbulent_ ){
-    if( isConstCoef_ ) result <<= - (*interpOp_)( coefVal_ + turbDiff_->field_ref() ) * (*gradOp_)(phi_->field_ref());
+    if( isConstCoef_ ) result <<= - (*interpOp_)( coefVal_             + turbDiff_->field_ref() ) * (*gradOp_)(phi_->field_ref());
     else               result <<= - (*interpOp_)( coef_->field_ref()   + turbDiff_->field_ref() ) * (*gradOp_)(phi_->field_ref());
   }
   else{
-    if( isConstCoef_ ) result <<= - coefVal_             * (*gradOp_)(phi_->field_ref());
+    if( isConstCoef_ ) result <<= - coefVal_                         * (*gradOp_)(phi_->field_ref());
     else               result <<= - (*interpOp_)(coef_->field_ref()) * (*gradOp_)(phi_->field_ref());
   }
 }

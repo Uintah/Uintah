@@ -73,6 +73,15 @@ bind_operators( const SpatialOps::OperatorDatabase& opDB )
 
 //--------------------------------------------------------------------
 
+template<>
+void
+VelocityMagnitude<SVolField,SVolField,SVolField,SVolField>::
+bind_operators( const SpatialOps::OperatorDatabase& opDB )
+{}
+
+
+//--------------------------------------------------------------------
+
 template< typename FieldT, typename Vel1T, typename Vel2T, typename Vel3T >
 void
 VelocityMagnitude<FieldT,Vel1T,Vel2T,Vel3T>::
@@ -97,6 +106,33 @@ evaluate()
     else                        velMag <<= 0.0;
     if( doY_ ) velMag <<= velMag + (*interpVel2T2FieldTOp_)(v_->field_ref()) * (*interpVel2T2FieldTOp_)(v_->field_ref());
     if( doZ_ ) velMag <<= velMag + (*interpVel3T2FieldTOp_)(w_->field_ref()) * (*interpVel3T2FieldTOp_)(w_->field_ref());
+    velMag <<= sqrt(velMag);
+  }
+}
+
+//--------------------------------------------------------------------
+
+template<>
+void
+VelocityMagnitude<SVolField,SVolField,SVolField,SVolField>::
+evaluate()
+{
+  using namespace SpatialOps;
+  typedef SVolField FieldT;
+  FieldT& velMag = this->value();
+  
+  if( is3d_ ){ // inline the 3D calculation for better performance:
+    const FieldT& u = u_->field_ref();
+    const FieldT& v = v_->field_ref();
+    const FieldT& w = w_->field_ref();
+    velMag <<= sqrt(u*u + v*v + w*w);
+  }
+  else{ // 1D and 2D are assembled in pieces (slower):
+    SpatialOps::SpatFldPtr<FieldT> tmp = SpatialOps::SpatialFieldStore::get<FieldT>( velMag );
+    if( doX_ ) velMag <<= u_->field_ref() * u_->field_ref();
+    else       velMag <<= 0.0;
+    if( doY_ ) velMag <<= velMag + v_->field_ref() * v_->field_ref();;
+    if( doZ_ ) velMag <<= velMag + w_->field_ref() * w_->field_ref();;
     velMag <<= sqrt(velMag);
   }
 }
@@ -132,4 +168,10 @@ template class VelocityMagnitude< SpatialOps::SVolField,
                                   SpatialOps::XVolField,
                                   SpatialOps::YVolField,
                                   SpatialOps::ZVolField >;
+
+template class VelocityMagnitude< SpatialOps::SVolField,
+                                  SpatialOps::SVolField,
+                                  SpatialOps::SVolField,
+                                  SpatialOps::SVolField >;
+
 //==========================================================================

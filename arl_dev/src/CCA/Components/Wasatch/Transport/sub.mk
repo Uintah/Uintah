@@ -36,9 +36,12 @@ SRCDIR   := CCA/Components/Wasatch/Transport
 # WARNING: If you add a file to the list of CUDA_ENABLED_SRCS, you must add a
 # corresponding rule at the end of this file!
 #
-CUDA_ENABLED_SRCS =            \
-     MomentTransportEquation   \
-     MomentumTransportEquation
+CUDA_ENABLED_SRCS =                         \
+     CompressibleMomentumTransportEquation 	\
+     MomentTransportEquation                \
+     MomentumTransportEquationBase          \
+     LowMachMomentumTransportEquation       \
+     TotalInternalEnergyTransportEquation
 
 ifeq ($(HAVE_CUDA),yes)
 
@@ -63,15 +66,15 @@ endif
 SRCS +=                                                \
         $(SRCDIR)/ParseEquation.cc                     \
         $(SRCDIR)/EquationBase.cc                      \
-        $(SRCDIR)/ParticleEquationBase.cc            \
-        $(SRCDIR)/ParticlePositionEquation.cc         \
-        $(SRCDIR)/ParticleMomentumEquation.cc         \
-        $(SRCDIR)/ParticleMassEquation.cc         \
-        $(SRCDIR)/ParticleSizeEquation.cc         \
+        $(SRCDIR)/ParticleEquationBase.cc              \
+        $(SRCDIR)/ParticlePositionEquation.cc          \
+        $(SRCDIR)/ParticleMomentumEquation.cc          \
+        $(SRCDIR)/ParticleMassEquation.cc              \
+        $(SRCDIR)/ParticleSizeEquation.cc              \
         $(SRCDIR)/EnthalpyTransportEquation.cc         \
         $(SRCDIR)/ScalabilityTestTransportEquation.cc  \
         $(SRCDIR)/ScalarTransportEquation.cc           \
-        $(SRCDIR)/TransportEquation.cc
+        $(SRCDIR)/TransportEquation.cc                 
 
 ########################################################################
 #
@@ -85,7 +88,15 @@ ifeq ($(HAVE_CUDA),yes)
   $(OBJTOP_ABS)/$(SRCDIR)/MomentTransportEquation.cu : $(SRCTOP_ABS)/$(SRCDIR)/MomentTransportEquation.cc
 	cp $< $@
 
-  $(OBJTOP_ABS)/$(SRCDIR)/MomentumTransportEquation.cu : $(SRCTOP_ABS)/$(SRCDIR)/MomentumTransportEquation.cc
+  $(OBJTOP_ABS)/$(SRCDIR)/MomentumTransportEquationBase.cu : $(SRCTOP_ABS)/$(SRCDIR)/MomentumTransportEquationBase.cc
+	cp $< $@
+
+  $(OBJTOP_ABS)/$(SRCDIR)/LowMachMomentumTransportEquation.cu : $(SRCTOP_ABS)/$(SRCDIR)/LowMachMomentumTransportEquation.cc
+	cp $< $@
+
+  $(OBJTOP_ABS)/$(SRCDIR)/CompressibleMomentumTransportEquation.cu : $(SRCTOP_ABS)/$(SRCDIR)/CompressibleMomentumTransportEquation.cc
+	cp $< $@
+  $(OBJTOP_ABS)/$(SRCDIR)/TotalInternalEnergyTransportEquation.cu : $(SRCTOP_ABS)/$(SRCDIR)/TotalInternalEnergyTransportEquation.cc
 	cp $< $@
 
 endif
