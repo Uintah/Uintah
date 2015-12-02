@@ -72,12 +72,16 @@ class LevelSetSimulationController : public SimulationController {
 
   public:
     enum LevelSetRunType {
-      serial,
-      oscillatory,
-      hierarchical
+        serial
+      , oscillatory
+      , hierarchical
     };
 
-    LevelSetSimulationController(const ProcessorGroup* myworld, bool doAMR, bool doMultiScale, ProblemSpecP pspec);
+    LevelSetSimulationController(  const ProcessorGroup * myworld
+    		                     ,       bool             doAMR
+								 ,       bool             doMultiScale
+								 ,       ProblemSpecP pspec
+								);
 
     virtual ~LevelSetSimulationController();
 
@@ -85,24 +89,23 @@ class LevelSetSimulationController : public SimulationController {
 
     virtual void preGridSetup();
 
+
   private:
+
     // We'll be calling this a lot so let's compact it slightly.
     void initializeScheduler(
                                       SchedulerP    scheduler
                              ,        GridP         grid
                              ,        int           numOldDW = 1
                              ,        int           numNewDW = 1
-                            )
-    {
-      scheduler->initialize(numOldDW, numNewDW);
-      scheduler->advanceDataWarehouse(grid, true);
-      scheduler->setInitTimestep(true);
-    }
+                            );
 
     void basePreGridSetup();
+
     GridP parseGridFromRestart();
 
     virtual void postGridSetup(GridP& grid, double& time);
+
     void subcomponentPostGridSetup(
                                            UintahParallelComponent  * subComponent
                                    ,       SimulationTime           * subComponentTime
@@ -118,15 +121,14 @@ class LevelSetSimulationController : public SimulationController {
                                               , const ProblemSpecP            & componentSpec
                                              );
 
-    int parseSubcomponentOldTimestep(
-                                            int subcomponentIndex
-                                    )
+    int parseSubcomponentOldTimestep( int subcomponentIndex )
     {
       throw InternalError("ERROR:  Restarting is not yet supported in the multiscale controller.", __FILE__, __LINE__);
     }
 
-    double   runInitialTimestepOnList(ComponentListType list);
-    double   runMainTimestepOnList(ComponentListType list);
+    double   runInitialTimestepOnList( ComponentListType list );
+
+    double   runMainTimestepOnList( ComponentListType list );
 
     double finalizeRunLoop(
                                   SchedulerP        workingScheduler
@@ -143,16 +145,19 @@ class LevelSetSimulationController : public SimulationController {
                                   );
 
     double doComponentMainTimestep(
-                                          LevelSet                   * levels
-                                  ,       UintahParallelComponent    * component
-                                  ,       SimulationStateP             state
-                                  ,       SimulationTime             * timeInfo
-                                  ,       double                       del_t
-                                  ,       double                       runTime
-                                  ,       bool                         firstTimestep
+                                          LevelSet                * levels
+                                  ,       UintahParallelComponent * component
+                                  ,       SimulationStateP          state
+                                  ,       SimulationTime          * timeInfo
+                                  ,       double                    del_t
+                                  ,       double                    runTime
+                                  ,       bool                      firstTimestep
                                  );
-    int calculateTemporaryDataWarehouses(ProblemSpecP & multiSpec);
+
+    int calculateTemporaryDataWarehouses( ProblemSpecP & multiSpec );
+
     int calculatePermanentDataWarehouses();
+
     //! Set up, compile, and execute initial timestep
     double doInitialTimestep(
                                const LevelSet                 & levels
@@ -162,35 +167,36 @@ class LevelSetSimulationController : public SimulationController {
                             );
 
 
-    bool doRegridding(GridP& grid, bool initialTimestep);
+    bool doRegridding(  GridP & grid
+    		          , bool    initialTimestep
+					 );
 
-    void
-    recompile(
-                      double                              time
-              ,       double                              del_t
-              , const LevelSet                          & currentLevelSet
-              , const std::vector<std::vector<int> >    & totalFineDW
-              ,       UintahParallelComponent           * component
-              ,       SimulationStateP                  & state
-              ,       SchedulerP                        & sched
-             );
+    void recompile(
+                           double                           time
+                   ,       double                           del_t
+                   , const LevelSet                       & currentLevelSet
+                   , const std::vector<std::vector<int> > & totalFineDW
+                   ,       UintahParallelComponent        * component
+                   ,       SimulationStateP               & state
+                   ,       SchedulerP                     & sched
+                  );
 
     void executeTimestep(
-                                 double                               runTime
-                         ,       double                             & delt
-                         , const LevelSet                           & levels
-                         , const std::vector<std::vector<int> >    & totalFineDW
-                         ,       UintahParallelComponent            * component
-                         ,       SimulationStateP                   & state
-                         ,       SchedulerP                         & sched
+                                 double                    runTime
+                         ,       double                  & delt
+                         , const LevelSet                & levels
+                         , const std::vector<int>        & totalFineDW
+                         ,       UintahParallelComponent * component
+                         ,       SimulationStateP        & state
+                         ,       SchedulerP              & sched
                         );
 
     //! Asks a variety of components if one of them needs the taskgraph to recompile.
-    bool needRecompile(double t, double delt, const GridP& level);
+    bool needRecompile( double t , double delt, const GridP& level );
 
-    LevelSetSimulationController(const LevelSetSimulationController&);
+    LevelSetSimulationController( const LevelSetSimulationController& );
 
-    LevelSetSimulationController& operator=(const LevelSetSimulationController&);
+    LevelSetSimulationController& operator=( const LevelSetSimulationController& );
 
     //! recursively schedule refinement, coarsening, and time advances for
     //! finer levels - compensating for time refinement.  Builds one taskgraph
@@ -209,13 +215,13 @@ class LevelSetSimulationController : public SimulationController {
     //! except that this executes the recursive taskgraphs, and compile builds one taskgraph
     //! (to exsecute once) recursively.
     void subCycleExecute(
-                           const GridP                      & grid
-                         ,       int                          startDW
-                         ,       int                          dwStride
-                         ,       int                          numLevel
-                         ,       bool                         rootCycle
-                         ,       UintahParallelComponent    * component
-                         ,       SimulationStateP             state
+                           const GridP                   & grid
+                         ,       int                       startDW
+                         ,       int                       dwStride
+                         ,       int                       numLevel
+                         ,       bool                      rootCycle
+                         ,       UintahParallelComponent * component
+                         ,       SimulationStateP          state
                          ,       SchedulerP                   sched
                         );
 
@@ -235,22 +241,21 @@ class LevelSetSimulationController : public SimulationController {
                                  );
     void
     reduceSysVar(  const ProcessorGroup * /*pg*/
-                         , const PatchSubset    *   patches
-                         , const MaterialSubset * /*matls*/
-                         ,       DataWarehouse  * /*oldDW*/
-                         ,       DataWarehouse  *   newDW
-                        );
+                 , const PatchSubset    *   patches
+                 , const MaterialSubset * /*matls*/
+                 ,       DataWarehouse  * /*oldDW*/
+                 ,       DataWarehouse  *   newDW
+                );
 
     ComponentManager* d_manager;
 
     LevelSetRunType d_levelSetRunType;
+    std::string     d_runType;
     size_t          d_numPermDW;
     size_t          d_numTempDW;
-    int         d_totalComponents;
-    std::string d_runType;
-    int         d_totalSteps;
-
-    bool        d_printSubTimesteps;
+    int             d_totalComponents;
+    int             d_totalSteps;
+    bool            d_printSubTimesteps;
 
     // Stuff for new runtype setup
     SchedulerP            d_firstComponentScheduler;
@@ -272,8 +277,6 @@ class LevelSetSimulationController : public SimulationController {
     std::map<std::string, double>               d_startTimeMap;
     std::map<std::string, double>               d_wallTimeMap;
 
-
-//    ProblemSpecP                    d_problemSpec;
 };
 
 }  // end namespace Uintah
