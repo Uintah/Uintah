@@ -35,9 +35,9 @@ using namespace std;
     
 cptiInterpolator::cptiInterpolator()
 {
-  d_size = 32; //number of grid nodes that might be affected by a particle corner
+  d_size = 32;                                                       // number of grid nodes that might be affected by a particle corner
   d_patch = 0; 
-  d_lcrit = 1.e10;  //set large value for critical particle size beyond which cpdi domain freezes
+  d_lcrit = 1.e10;                                                   // set large value for critical particle size beyond which cpti domain freezes
 }
 
 cptiInterpolator::cptiInterpolator(const Patch* patch)
@@ -63,21 +63,21 @@ cptiInterpolator* cptiInterpolator::clone(const Patch* patch)
   return scinew cptiInterpolator(patch, d_lcrit);
 }
     
-void cptiInterpolator::findCellAndWeights(const Point& pos,           //input: physical coordinates of a particle
-                                            vector<IntVector>& ni,    //output: logic locations of corners
-                                            vector<double>& S,        //output: weighted node shape function value at corners (where weight = 1/ num particle corners)
-                                            const Matrix3& size,      //input: reference size r-vectors of the particle
-                                            const Matrix3& defgrad)   //input: deformation gradient tensor
+void cptiInterpolator::findCellAndWeights(const Point& pos,          // input: physical coordinates of a particle
+                                            vector<IntVector>& ni,   // output: logic locations of corners
+                                            vector<double>& S,       // output: weighted node shape function value at corners (where weight = 1/ num particle corners)
+                                            const Matrix3& size,     // input: reference size r-vectors of the particle
+                                            const Matrix3& defgrad)  // input: deformation gradient tensor
 {
-  Point cellpos = d_patch->getLevel()->positionToIndex(Point(pos));   //Point(pos) is particle center location
+  Point cellpos = d_patch->getLevel()->positionToIndex(Point(pos));  // Point(pos) is particle center location
 
-  Matrix3 dsize=defgrad*size;//dsize is matrix of r-vectors, created by F dotted into initial r0 vectors from size matrix
+  Matrix3 dsize=defgrad*size;                                        // dsize matrix of r-vectors, created by F dotted into initial r0 vectors from size matrix
   Vector relative_node_location[4];
 
 
   relative_node_location[0]=Vector(-dsize(0,0)-dsize(0,1)-dsize(0,2),
-                                    -dsize(1,0)-dsize(1,1)-dsize(1,2),
-                                    -dsize(2,0)-dsize(2,1)-dsize(2,2))*0.25;
+                                   -dsize(1,0)-dsize(1,1)-dsize(1,2),
+                                   -dsize(2,0)-dsize(2,1)-dsize(2,2))*0.25;
   relative_node_location[1]=relative_node_location[0]+Vector(dsize(0,0),dsize(1,0),dsize(2,0));
   relative_node_location[2]=relative_node_location[0]+Vector(dsize(0,1),dsize(1,1),dsize(2,1));
   relative_node_location[3]=relative_node_location[0]+Vector(dsize(0,2),dsize(1,2),dsize(2,2));
@@ -107,26 +107,27 @@ void cptiInterpolator::findCellAndWeights(const Point& pos,           //input: p
     ld = ld*(lcrit/ld.length()); freezeit=true;
   }
 
-  // Solve a pseudo-inverse to determine the radius vectors corresponding to the new relative corner vectors (that might have changed if their lengths exceeded lcrit)
+  // Solve a pseudo-inverse to determine the radius vectors corresponding to the new relative corner vectors if their lengths exceeded lcrit
   if(freezeit){
-  dsize(0,0)=-la.x()+lb.x();
-  dsize(1,0)=-la.y()+lb.y();
-  dsize(2,0)=-la.z()+lb.z();
+    dsize(0,0)=-la.x()+lb.x();
+    dsize(1,0)=-la.y()+lb.y();
+    dsize(2,0)=-la.z()+lb.z();
+  
+    dsize(0,1)=-la.x()+lc.x();
+    dsize(1,1)=-la.y()+lc.y();
+    dsize(2,1)=-la.z()+lc.z();
+  
+    dsize(0,2)=-la.x()+ld.x();
+    dsize(1,2)=-la.y()+ld.y();
+    dsize(2,2)=-la.z()+ld.z();
 
-  dsize(0,0)=-la.x()+lc.x();
-  dsize(1,0)=-la.y()+lc.y();
-  dsize(2,0)=-la.z()+lc.z();
-
-  dsize(0,0)=-la.x()+ld.x();
-  dsize(1,0)=-la.y()+ld.y();
-  dsize(2,0)=-la.z()+ld.z();
-
-  relative_node_location[0]=Vector(-dsize(0,0)-dsize(0,1)-dsize(0,2),
-                                   -dsize(1,0)-dsize(1,1)-dsize(1,2),
-                                   -dsize(2,0)-dsize(2,1)-dsize(2,2))*0.25;
-  relative_node_location[1]=relative_node_location[0]+Vector(dsize(0,0),dsize(1,0),dsize(2,0));
-  relative_node_location[2]=relative_node_location[0]+Vector(dsize(0,1),dsize(1,1),dsize(2,1));
-  relative_node_location[3]=relative_node_location[0]+Vector(dsize(0,2),dsize(1,2),dsize(2,2));
+    relative_node_location[0]=Vector(-dsize(0,0)-dsize(0,1)-dsize(0,2),
+                                     -dsize(1,0)-dsize(1,1)-dsize(1,2),
+                                     -dsize(2,0)-dsize(2,1)-dsize(2,2))*0.25;
+    relative_node_location[1]=relative_node_location[0]+Vector(dsize(0,0),dsize(1,0),dsize(2,0));
+    relative_node_location[2]=relative_node_location[0]+Vector(dsize(0,1),dsize(1,1),dsize(2,1));
+    relative_node_location[3]=relative_node_location[0]+Vector(dsize(0,2),dsize(1,2),dsize(2,2));
+    
   }
 
 
@@ -144,7 +145,7 @@ void cptiInterpolator::findCellAndWeights(const Point& pos,           //input: p
 
   // loop over each of these corners and use the deformation gradient to find the current location
   for(int i=0;i<4;i++){
-    int i8  = i*8;  // array integer cell number for 0th corner
+    int i8  = i*8;                                                   // array integer cell number for 0th corner
     int i81 = i*8+1; 
     int i82 = i*8+2;
     int i83 = i*8+3;
@@ -154,19 +155,19 @@ void cptiInterpolator::findCellAndWeights(const Point& pos,           //input: p
     int i87 = i*8+7;
     // position vector of the ith corner of the particle with respect to the particle center
     current_corner_pos = Vector(cellpos) + relative_node_location[i];
-    ix = Floor(current_corner_pos.x());  // grid id in x direction for nearest grid cell boundary in -x direction
+    ix = Floor(current_corner_pos.x());                              // grid id in x direction for nearest grid cell boundary in -x direction
     iy = Floor(current_corner_pos.y());  
     iz = Floor(current_corner_pos.z());
 
     // Find logical grid coordinates that might be affected by corners
-    ni[i8]  = IntVector(ix  , iy  , iz  ); // x1    , y1    , z1
-    ni[i81] = IntVector(ix+1, iy  , iz  ); // x1+r1x, y1    , z1
-    ni[i82] = IntVector(ix+1, iy+1, iz  ); // x1+r1x, y1+r2y, z1
-    ni[i83] = IntVector(ix  , iy+1, iz  ); // x1    , y1+r2y, z1
-    ni[i84] = IntVector(ix  , iy  , iz+1); // x1    , y1    , z1+r3z
-    ni[i85] = IntVector(ix+1, iy  , iz+1); // x1+r1x, y1    , z1+r3z
-    ni[i86] = IntVector(ix+1, iy+1, iz+1); // x1+r1x, y1+r2y, z1+r3z
-    ni[i87] = IntVector(ix  , iy+1, iz+1); // x1    , y1+r2y, z1+r3z
+    ni[i8]  = IntVector(ix  , iy  , iz  );                           // x1    , y1    , z1
+    ni[i81] = IntVector(ix+1, iy  , iz  );                           // x1+r1x, y1    , z1
+    ni[i82] = IntVector(ix+1, iy+1, iz  );                           // x1+r1x, y1+r2y, z1
+    ni[i83] = IntVector(ix  , iy+1, iz  );                           // x1    , y1+r2y, z1
+    ni[i84] = IntVector(ix  , iy  , iz+1);                           // x1    , y1    , z1+r3z
+    ni[i85] = IntVector(ix+1, iy  , iz+1);                           // x1+r1x, y1    , z1+r3z
+    ni[i86] = IntVector(ix+1, iy+1, iz+1);                           // x1+r1x, y1+r2y, z1+r3z
+    ni[i87] = IntVector(ix  , iy+1, iz+1);                           // x1    , y1+r2y, z1+r3z
 
     fx = current_corner_pos.x()-ix;
     fy = current_corner_pos.y()-iy;
@@ -175,14 +176,14 @@ void cptiInterpolator::findCellAndWeights(const Point& pos,           //input: p
     fy1 = 1-fy;
     fz1 = 1-fz;
 
-    phi[0] = fx1*fy1*fz1; // x1    , y1    , z1
-    phi[1] = fx *fy1*fz1; // x1+r1x, y1    , z1
-    phi[2] = fx *fy *fz1; // x1+r1x, y1+r2y, z1
-    phi[3] = fx1*fy *fz1; // x1    , y1+r2y, z1
-    phi[4] = fx1*fy1*fz;  // x1    , y1    , z1+r3z
-    phi[5] = fx *fy1*fz;  // x1+r1x, y1    , z1+r3z
-    phi[6] = fx *fy *fz;  // x1+r1x, y1+r2y, z1+r3z
-    phi[7] = fx1*fy *fz;  // x1    , y1+r2y, z1+r3z
+    phi[0] = fx1*fy1*fz1;                                            // x1    , y1    , z1
+    phi[1] = fx *fy1*fz1;                                            // x1+r1x, y1    , z1
+    phi[2] = fx *fy *fz1;                                            // x1+r1x, y1+r2y, z1
+    phi[3] = fx1*fy *fz1;                                            // x1    , y1+r2y, z1
+    phi[4] = fx1*fy1*fz;                                             // x1    , y1    , z1+r3z
+    phi[5] = fx *fy1*fz;                                             // x1+r1x, y1    , z1+r3z
+    phi[6] = fx *fy *fz;                                             // x1+r1x, y1+r2y, z1+r3z
+    phi[7] = fx1*fy *fz;                                             // x1    , y1+r2y, z1+r3z
 
     S[i8]  = one_fourth*phi[0];
     S[i81] = one_fourth*phi[1];
@@ -220,8 +221,7 @@ void cptiInterpolator::findCellAndShapeDerivatives(const Point& pos,
   Vector lb = relative_node_location[1];
   Vector lc = relative_node_location[2];
   Vector ld = relative_node_location[3];
-
-  //If any these are longer than lcrit, then reset their length to lcrit
+  //If any of these are longer than lcrit, then reset their length to lcrit
 
   bool freezeit;
   freezeit=false;
@@ -238,26 +238,27 @@ void cptiInterpolator::findCellAndShapeDerivatives(const Point& pos,
     ld = ld*(lcrit/ld.length()); freezeit=true;
   }
 
-  // Solve a pseudo-inverse to determine the radius vectors corresponding to the new relative corner vectors (that might have changed if their lengths exceeded lcrit)
+  // Solve a pseudo-inverse to determine the radius vectors corresponding to the new relative corner vectors if their lengths exceeded lcrit
   if(freezeit){
-  dsize(0,0)=-la.x()+lb.x();
-  dsize(1,0)=-la.y()+lb.y();
-  dsize(2,0)=-la.z()+lb.z();
+    dsize(0,0)=-la.x()+lb.x();
+    dsize(1,0)=-la.y()+lb.y();
+    dsize(2,0)=-la.z()+lb.z();
 
-  dsize(0,0)=-la.x()+lc.x();
-  dsize(1,0)=-la.y()+lc.y();
-  dsize(2,0)=-la.z()+lc.z();
+    dsize(0,1)=-la.x()+lc.x();
+    dsize(1,1)=-la.y()+lc.y();
+    dsize(2,1)=-la.z()+lc.z();
 
-  dsize(0,0)=-la.x()+ld.x();
-  dsize(1,0)=-la.y()+ld.y();
-  dsize(2,0)=-la.z()+ld.z();
+    dsize(0,2)=-la.x()+ld.x();
+    dsize(1,2)=-la.y()+ld.y();
+    dsize(2,2)=-la.z()+ld.z();
 
-  relative_node_location[0]=Vector(-dsize(0,0)-dsize(0,1)-dsize(0,2),
-                                   -dsize(1,0)-dsize(1,1)-dsize(1,2),
-                                   -dsize(2,0)-dsize(2,1)-dsize(2,2))*0.25;
-  relative_node_location[1]=relative_node_location[0]+Vector(dsize(0,0),dsize(1,0),dsize(2,0));
-  relative_node_location[2]=relative_node_location[0]+Vector(dsize(0,1),dsize(1,1),dsize(2,1));
-  relative_node_location[3]=relative_node_location[0]+Vector(dsize(0,2),dsize(1,2),dsize(2,2));
+    relative_node_location[0]=Vector(-dsize(0,0)-dsize(0,1)-dsize(0,2),
+                                     -dsize(1,0)-dsize(1,1)-dsize(1,2),
+                                     -dsize(2,0)-dsize(2,1)-dsize(2,2))*0.25;
+    relative_node_location[1]=relative_node_location[0]+Vector(dsize(0,0),dsize(1,0),dsize(2,0));
+    relative_node_location[2]=relative_node_location[0]+Vector(dsize(0,1),dsize(1,1),dsize(2,1));
+    relative_node_location[3]=relative_node_location[0]+Vector(dsize(0,2),dsize(1,2),dsize(2,2));
+      
   }
 
 
@@ -275,7 +276,7 @@ void cptiInterpolator::findCellAndShapeDerivatives(const Point& pos,
   Vector r2=Vector(dsize(0,1),dsize(1,1),dsize(2,1));
   Vector r3=Vector(dsize(0,2),dsize(1,2),dsize(2,2));
 
-  double volume = dsize.Determinant()/6.0; // previously normalized by grid spacing
+  double volume = dsize.Determinant()/6.0;                           // previously normalized by grid spacing
 
   double one_over_6V = 1.0/(6.0*volume);
   Vector alpha[4];
@@ -314,14 +315,14 @@ void cptiInterpolator::findCellAndShapeDerivatives(const Point& pos,
     iy = Floor(current_corner_pos.y());
     iz = Floor(current_corner_pos.z());
 
-    ni[i8]  = IntVector(ix  , iy  , iz  ); // x1    , y1    , z1
-    ni[i81] = IntVector(ix+1, iy  , iz  ); // x1+r1x, y1    , z1
-    ni[i82] = IntVector(ix+1, iy+1, iz  ); // x1+r1x, y1+r2y, z1
-    ni[i83] = IntVector(ix  , iy+1, iz  ); // x1    , y1+r2y, z1
-    ni[i84] = IntVector(ix  , iy  , iz+1); // x1    , y1    , z1+r3z
-    ni[i85] = IntVector(ix+1, iy  , iz+1); // x1+r1x, y1    , z1+r3z
-    ni[i86] = IntVector(ix+1, iy+1, iz+1); // x1+r1x, y1+r2y, z1+r3z
-    ni[i87] = IntVector(ix  , iy+1, iz+1); // x1    , y1+r2y, z1+r3z
+    ni[i8]  = IntVector(ix  , iy  , iz  );                           // x1    , y1    , z1
+    ni[i81] = IntVector(ix+1, iy  , iz  );                           // x1+r1x, y1    , z1
+    ni[i82] = IntVector(ix+1, iy+1, iz  );                           // x1+r1x, y1+r2y, z1
+    ni[i83] = IntVector(ix  , iy+1, iz  );                           // x1    , y1+r2y, z1
+    ni[i84] = IntVector(ix  , iy  , iz+1);                           // x1    , y1    , z1+r3z
+    ni[i85] = IntVector(ix+1, iy  , iz+1);                           // x1+r1x, y1    , z1+r3z
+    ni[i86] = IntVector(ix+1, iy+1, iz+1);                           // x1+r1x, y1+r2y, z1+r3z
+    ni[i87] = IntVector(ix  , iy+1, iz+1);                           // x1    , y1+r2y, z1+r3z
 
     fx = current_corner_pos.x()-ix;
     fy = current_corner_pos.y()-iy;
@@ -330,14 +331,14 @@ void cptiInterpolator::findCellAndShapeDerivatives(const Point& pos,
     fy1 = 1-fy;
     fz1 = 1-fz;
 
-    phi[0] = fx1*fy1*fz1; // x1    , y1    , z1
-    phi[1] = fx *fy1*fz1; // x1+r1x, y1    , z1
-    phi[2] = fx *fy *fz1; // x1+r1x, y1+r2y, z1
-    phi[3] = fx1*fy *fz1; // x1    , y1+r2y, z1
-    phi[4] = fx1*fy1*fz;  // x1    , y1    , z1+r3z
-    phi[5] = fx *fy1*fz;  // x1+r1x, y1    , z1+r3z
-    phi[6] = fx *fy *fz;  // x1+r1x, y1+r2y, z1+r3z
-    phi[7] = fx1*fy *fz;  // x1    , y1+r2y, z1+r3z
+    phi[0] = fx1*fy1*fz1;                                            // x1    , y1    , z1
+    phi[1] = fx *fy1*fz1;                                            // x1+r1x, y1    , z1
+    phi[2] = fx *fy *fz1;                                            // x1+r1x, y1+r2y, z1
+    phi[3] = fx1*fy *fz1;                                            // x1    , y1+r2y, z1
+    phi[4] = fx1*fy1*fz;                                             // x1    , y1    , z1+r3z
+    phi[5] = fx *fy1*fz;                                             // x1+r1x, y1    , z1+r3z
+    phi[6] = fx *fy *fz;                                             // x1+r1x, y1+r2y, z1+r3z
+    phi[7] = fx1*fy *fz;                                             // x1    , y1+r2y, z1+r3z
 
     d_S[i8][0]  = alpha[i][0]*phi[0];
     d_S[i8][1]  = alpha[i][1]*phi[0];
@@ -373,7 +374,7 @@ void cptiInterpolator::findCellAndShapeDerivatives(const Point& pos,
   }
 }
 
-void cptiInterpolator::findCellAndWeightsAndShapeDerivatives(const Point& pos, //input: positions of particles
+void cptiInterpolator::findCellAndWeightsAndShapeDerivatives(const Point& pos, 
                                                           vector<IntVector>& ni,
                                                           vector<double>& S,
                                                           vector<Vector>& d_S,
@@ -417,26 +418,27 @@ void cptiInterpolator::findCellAndWeightsAndShapeDerivatives(const Point& pos, /
     ld = ld*(lcrit/ld.length()); freezeit=true;
   }
 
-  // Solve a pseudo-inverse to determine the radius vectors corresponding to the new relative corner vectors (that might have changed if their lengths exceeded lcrit)
+  // Solve a pseudo-inverse to determine the radius vectors corresponding to the new relative corner vectors if their lengths exceeded lcrit
   if(freezeit){
-  dsize(0,0)=-la.x()+lb.x();
-  dsize(1,0)=-la.y()+lb.y();
-  dsize(2,0)=-la.z()+lb.z();
+    dsize(0,0)=-la.x()+lb.x();
+    dsize(1,0)=-la.y()+lb.y();
+    dsize(2,0)=-la.z()+lb.z();
 
-  dsize(0,0)=-la.x()+lc.x();
-  dsize(1,0)=-la.y()+lc.y();
-  dsize(2,0)=-la.z()+lc.z();
+    dsize(0,1)=-la.x()+lc.x();
+    dsize(1,1)=-la.y()+lc.y();
+    dsize(2,1)=-la.z()+lc.z();
 
-  dsize(0,0)=-la.x()+ld.x();
-  dsize(1,0)=-la.y()+ld.y();
-  dsize(2,0)=-la.z()+ld.z();
+    dsize(0,2)=-la.x()+ld.x();
+    dsize(1,2)=-la.y()+ld.y();
+    dsize(2,2)=-la.z()+ld.z();
 
-  relative_node_location[0]=Vector(-dsize(0,0)-dsize(0,1)-dsize(0,2),
-                                   -dsize(1,0)-dsize(1,1)-dsize(1,2),
-                                   -dsize(2,0)-dsize(2,1)-dsize(2,2))*0.25;
-  relative_node_location[1]=relative_node_location[0]+Vector(dsize(0,0),dsize(1,0),dsize(2,0));
-  relative_node_location[2]=relative_node_location[0]+Vector(dsize(0,1),dsize(1,1),dsize(2,1));
-  relative_node_location[3]=relative_node_location[0]+Vector(dsize(0,2),dsize(1,2),dsize(2,2));
+    relative_node_location[0]=Vector(-dsize(0,0)-dsize(0,1)-dsize(0,2),
+                                     -dsize(1,0)-dsize(1,1)-dsize(1,2),
+                                     -dsize(2,0)-dsize(2,1)-dsize(2,2))*0.25;
+    relative_node_location[1]=relative_node_location[0]+Vector(dsize(0,0),dsize(1,0),dsize(2,0));
+    relative_node_location[2]=relative_node_location[0]+Vector(dsize(0,1),dsize(1,1),dsize(2,1));
+    relative_node_location[3]=relative_node_location[0]+Vector(dsize(0,2),dsize(1,2),dsize(2,2));
+      
   }
 
   Vector current_corner_pos;
@@ -490,14 +492,14 @@ void cptiInterpolator::findCellAndWeightsAndShapeDerivatives(const Point& pos, /
     iy = Floor(current_corner_pos.y());
     iz = Floor(current_corner_pos.z());
 
-    ni[i8] = IntVector(ix    , iy  , iz  ); // x1    , y1    , z1
-    ni[i81] = IntVector(ix+1, iy  , iz  ); // x1+r1x, y1    , z1
-    ni[i82] = IntVector(ix+1, iy+1, iz  ); // x1+r1x, y1+r2y, z1
-    ni[i83] = IntVector(ix  , iy+1, iz  ); // x1    , y1+r2y, z1
-    ni[i84] = IntVector(ix  , iy  , iz+1); // x1    , y1    , z1+r3z
-    ni[i85] = IntVector(ix+1, iy  , iz+1); // x1+r1x, y1    , z1+r3z
-    ni[i86] = IntVector(ix+1, iy+1, iz+1); // x1+r1x, y1+r2y, z1+r3z
-    ni[i87] = IntVector(ix  , iy+1, iz+1); // x1    , y1+r2y, z1+r3z
+    ni[i8]  = IntVector(ix  , iy  , iz  );                           // x1    , y1    , z1
+    ni[i81] = IntVector(ix+1, iy  , iz  );                           // x1+r1x, y1    , z1
+    ni[i82] = IntVector(ix+1, iy+1, iz  );                           // x1+r1x, y1+r2y, z1
+    ni[i83] = IntVector(ix  , iy+1, iz  );                           // x1    , y1+r2y, z1
+    ni[i84] = IntVector(ix  , iy  , iz+1);                           // x1    , y1    , z1+r3z
+    ni[i85] = IntVector(ix+1, iy  , iz+1);                           // x1+r1x, y1    , z1+r3z
+    ni[i86] = IntVector(ix+1, iy+1, iz+1);                           // x1+r1x, y1+r2y, z1+r3z
+    ni[i87] = IntVector(ix  , iy+1, iz+1);                           // x1    , y1+r2y, z1+r3z
 
     fx = current_corner_pos.x()-ix;
     fy = current_corner_pos.y()-iy;
@@ -506,14 +508,14 @@ void cptiInterpolator::findCellAndWeightsAndShapeDerivatives(const Point& pos, /
     fy1 = 1-fy;
     fz1 = 1-fz;
 
-    phi[0] = fx1*fy1*fz1; // x1    , y1    , z1
-    phi[1] = fx *fy1*fz1; // x1+r1x, y1    , z1
-    phi[2] = fx *fy *fz1; // x1+r1x, y1+r2y, z1
-    phi[3] = fx1*fy *fz1; // x1    , y1+r2y, z1
-    phi[4] = fx1*fy1*fz;  // x1    , y1    , z1+r3z
-    phi[5] = fx *fy1*fz;  // x1+r1x, y1    , z1+r3z
-    phi[6] = fx *fy *fz;  // x1+r1x, y1+r2y, z1+r3z
-    phi[7] = fx1*fy *fz;  // x1    , y1+r2y, z1+r3z
+    phi[0] = fx1*fy1*fz1;                                            // x1    , y1    , z1
+    phi[1] = fx *fy1*fz1;                                            // x1+r1x, y1    , z1
+    phi[2] = fx *fy *fz1;                                            // x1+r1x, y1+r2y, z1
+    phi[3] = fx1*fy *fz1;                                            // x1    , y1+r2y, z1
+    phi[4] = fx1*fy1*fz;                                             // x1    , y1    , z1+r3z
+    phi[5] = fx *fy1*fz;                                             // x1+r1x, y1    , z1+r3z
+    phi[6] = fx *fy *fz;                                             // x1+r1x, y1+r2y, z1+r3z
+    phi[7] = fx1*fy *fz;                                             // x1    , y1+r2y, z1+r3z
 
     S[i8]  = one_fourth*phi[0];
     S[i81] = one_fourth*phi[1];

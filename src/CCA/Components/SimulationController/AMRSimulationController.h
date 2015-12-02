@@ -86,8 +86,9 @@ class Regridder;
    private:
       //! Set up, compile, and execute initial timestep
       void doInitialTimestep(GridP& grid, double& t);
-
+   public:
       bool doRegridding(GridP& grid, bool initialTimestep);
+   private:
 
       void recompile(double t, double delt, GridP& currentGrid, int totalFine);
 

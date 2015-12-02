@@ -24,6 +24,11 @@
 
 #include "visit_libsim.h"
 
+#include <CCA/Components/SimulationController/AMRSimulationController.h>
+#include <CCA/Ports/SchedulerP.h>
+#include <CCA/Ports/Output.h>
+#include <CCA/Ports/Regridder.h>
+
 #include <Core/Util/DebugStream.h>
 #include <Core/Parallel/Parallel.h>
 #include <Core/Grid/Variables/VarLabel.h>
@@ -32,13 +37,22 @@
 
 #include <sci_defs/visit_defs.h>
 
+
+// #include "SimHelperFunc.h"
+
 #include <iostream>
 #include <string>
 #include <stdio.h>
+#include <dlfcn.h>
 
 static SCIRun::DebugStream visitdbg( "VisItLibSim", true );
 
 namespace Uintah {
+
+static std::string simFileName( "Uintah" );
+static std::string simExecName;
+static std::string simArgs;
+static std::string simComment("Uintah Simulation");
 
 #define VISIT_COMMAND_PROCESS 0
 #define VISIT_COMMAND_SUCCESS 1
@@ -55,11 +69,22 @@ void visit_LibSimArguments(int argc, char **argv)
 {
   bool setVisItDir = false;
 
+  simExecName = std::string( argv[0] );
+
   for (int i=1; i<argc; ++i)
   {
-    if( strcmp( argv[i], "-visit_dir" ) == 0 )
+    if( strcmp( argv[i], "-visit" ) == 0 )
+    {
+      simFileName += std::string( "." ) + std::string( argv[++i] );
+    }
+    else if( strcmp( argv[i], "-visit_comment" ) == 0 )
+    {
+      simComment = std::string( argv[++i] );
+    }
+    else if( strcmp( argv[i], "-visit_dir" ) == 0 )
     {
       VisItSetDirectory(argv[++i]);
+
       setVisItDir = true;
     }
     else if( strcmp( argv[i], "-visit_options" ) == 0 )
@@ -70,8 +95,13 @@ void visit_LibSimArguments(int argc, char **argv)
     {
       VisItOpenTraceFile(argv[++i]);
     }
+    // Save off the Uintah args.
+    else
+      simArgs += std::string( argv[i] ) + std::string( " " );
   }
 
+  // Set the VisIt path as defined in sci_defs/visit_defs.h. This path
+  // is slurped up from the --with-visit configure argument.
   if( !setVisItDir )
   {
       VisItSetDirectory( VISIT_PATH );
@@ -101,11 +131,6 @@ void visit_InitLibSim( visit_simulation_data *sim )
   // Has better scaling, but has not been release for fortran.
   VisItSetupEnvironment();
 
-  visitdbg << "****************************  "
-            << "usingMPI " << (Parallel::usingMPI() ? "Yes" : "No")
-            << std::endl;
-  visitdbg.flush();
-      
   if( Parallel::usingMPI() )
   {
     sim->isProc0 = isProc0_macro;
@@ -116,17 +141,9 @@ void visit_InitLibSim( visit_simulation_data *sim )
     MPI_Comm_rank (MPI_COMM_WORLD, &par_rank);
     MPI_Comm_size (MPI_COMM_WORLD, &par_size);
     
-    // Tell libsim whether the simulation is parallel.
+    // Tell libsim if the simulation is running in parallel.
     VisItSetParallel( par_size > 1 );
     VisItSetParallelRank( par_rank );
-
-    visitdbg << "****************************  "
-             << " isProc0 " << isProc0_macro << "  "
-             << "par_size " << par_size << "  " 
-             << "par_rank " << par_rank << "  " 
-             << std::endl;
-
-    visitdbg.flush();
 
     // Install callback functions for global communication.
     VisItSetBroadcastIntFunction( visit_BroadcastIntCallback );
@@ -139,10 +156,48 @@ void visit_InitLibSim( visit_simulation_data *sim )
 
   // Have the rank 0 process create the sim file.
   if(sim->isProc0)
-    VisItInitializeSocketAndDumpSimFile("Uintah",
-                                        "Uintah Simulation",
-                                        "/no/useful/path",
+  {
+    std::string exeCommand;
+
+    if( simExecName.find( "/" ) != 0 )
+    {
+      char *path = NULL;
+      
+      Dl_info info;
+      if (dladdr(__builtin_return_address(0), &info))
+      {
+        // The last slash removes the library
+        const char *lastslash = strrchr(info.dli_fname,'/');
+        
+        if( lastslash )
+        {
+          // Remove the library and library directory.
+          int pathLen = strlen(info.dli_fname) - strlen(lastslash) - 3;
+          
+          if( pathLen > 0 )
+          {
+            path = (char *) malloc( pathLen + 2 );
+            
+            strncpy( path, info.dli_fname, pathLen );
+            path[pathLen] = '\0';
+
+            exeCommand = std::string( path ) + simExecName;
+
+            free( path );
+          }
+        }
+      }
+    }
+    else 
+      exeCommand = simExecName;
+
+    exeCommand += std::string( " " ) + simArgs;
+
+    VisItInitializeSocketAndDumpSimFile(simFileName.c_str(),
+                                        simComment.c_str(),
+                                        exeCommand.c_str(),
                                         NULL, NULL, NULL);
+  }
 }
 
 
@@ -152,7 +207,7 @@ void visit_InitLibSim( visit_simulation_data *sim )
 //---------------------------------------------------------------------
 void visit_EndLibSim( visit_simulation_data *sim )
 {
-  if( VisItIsConnected() )
+  if( VisItIsConnected() && sim->simMode != VISIT_SIMMODE_TERMINATED )
   {
     // The simulation is finished but the user may want to stay
     // conntected to analyze the last time step. So stop the run mode
@@ -162,7 +217,7 @@ void visit_EndLibSim( visit_simulation_data *sim )
     sim->simMode = VISIT_SIMMODE_FINISHED;
 
     visitdbg << "Visit libsim : "
-             << "The simulation has finished, at the last time step."
+             << "The simulation has finished, stopping at the last time step."
              << std::endl;
     visitdbg.flush();
 
@@ -171,7 +226,8 @@ void visit_EndLibSim( visit_simulation_data *sim )
     {
       visit_CheckState(sim);
     }
-    while( sim->runMode != VISIT_SIMMODE_FINISHED );
+    while( sim->runMode != VISIT_SIMMODE_FINISHED &&
+           sim->simMode != VISIT_SIMMODE_TERMINATED );
   }
 }
 
@@ -258,7 +314,19 @@ void visit_CheckState( visit_simulation_data *sim )
         /* Register command callback */
         VisItSetCommandCallback(visit_ControlCommandCallback, (void*) sim);
 
-        visitdbg << "Visit libsim : Connected" << std::endl;
+        if( Parallel::usingMPI() )
+        {
+          int par_rank;
+          MPI_Comm_rank (MPI_COMM_WORLD, &par_rank);
+
+          visitdbg << "Visit libsim : Processor " << par_rank
+                   << " Connected" << std::endl;
+        }
+        else
+        {
+          visitdbg << "Visit libsim : Connected" << std::endl;
+        }
+
         visitdbg.flush();
 
         /* Register data access callbacks */
@@ -359,21 +427,58 @@ visit_ControlCommandCallback(const char *cmd, const char *args, void *cbdata)
 {
   visit_simulation_data *sim = (visit_simulation_data *)cbdata;
 
-  if(strcmp(cmd, "Stop") == 0)
+  if(strcmp(cmd, "Stop") == 0 && sim->simMode != VISIT_SIMMODE_FINISHED)
     sim->runMode = VISIT_SIMMODE_STOPPED;
-  else if(strcmp(cmd, "Step") == 0)
+  else if(strcmp(cmd, "Step") == 0 && sim->simMode != VISIT_SIMMODE_FINISHED)
     sim->runMode = VISIT_SIMMODE_STEP;
-  else if(strcmp(cmd, "Run") == 0)
+  else if(strcmp(cmd, "Run") == 0 && sim->simMode != VISIT_SIMMODE_FINISHED)
     sim->runMode = VISIT_SIMMODE_RUNNING;
-  else if(strcmp(cmd, "Exit") == 0)
-    exit( 0 );
+  else if(strcmp(cmd, "Save") == 0)
+  {
+    GridP gridP = sim->gridP;
+    Output *output = sim->AMRSimController->getOutput();
+    SchedulerP schedulerP = sim->AMRSimController->getSchedulerP();
+
+    if (output)
+    {
+      // This is not correct if we have switched to a different
+      // component, since the delt will be wrong 
+      output->finalizeTimestep( sim->time, sim->delt, gridP, schedulerP, 0 );
+      output->sched_allOutputTasks( sim->delt, gridP, schedulerP, 0 );
+
+      output->findNext_OutputCheckPoint_Timestep( sim->delt, gridP );
+      output->writeto_xml_files( sim->delt, gridP );
+    }
+  }
+
+  else if(strcmp(cmd, "Stats") == 0)
+  {
+  }
+  else if(strcmp(cmd, "Regrid") == 0 && sim->simMode != VISIT_SIMMODE_FINISHED)
+  {
+    sim->AMRSimController->getRegridder()->setForceRegridding(true);
+    sim->runMode = VISIT_SIMMODE_STEP;
+  }
+  else if(strcmp(cmd, "Save") == 0)
+  {
+  }
+
   // Only allow the runMode to finish if the simulation is finished.
-  else if(strcmp(cmd, "Finish") == 0 )
+  else if(strcmp(cmd, "Finish") == 0)
   {
     if(sim->simMode == VISIT_SIMMODE_FINISHED)
       sim->runMode = VISIT_SIMMODE_FINISHED;
     else
       sim->runMode = VISIT_SIMMODE_RUNNING;
+  }
+  else if(strcmp(cmd, "Terminate") == 0)
+  {
+    sim->runMode = VISIT_SIMMODE_RUNNING;
+    sim->simMode = VISIT_SIMMODE_TERMINATED;
+  }
+  else if(strcmp(cmd, "Abort") == 0)
+  {
+    exit( 0 );
   }
 }
 
@@ -479,7 +584,7 @@ visit_handle visit_ReadMetaData(void *cbdata)
 {
   visit_simulation_data *sim = (visit_simulation_data *)cbdata;
 
-  SchedulerP schedulerP = sim->schedulerP;
+  SchedulerP schedulerP = sim->AMRSimController->getSchedulerP();
   GridP      gridP      = sim->gridP;
 
   if( !schedulerP.get_rep() || !gridP.get_rep() )
@@ -631,11 +736,19 @@ visit_handle visit_ReadMetaData(void *cbdata)
         }
         else
         {
-          visitdbg << "Visit libsim : "
-                   << "Uintah variable \"" << varname << "\"  "
-                   << "has an unknown variable type \""
-                   << vartype << "\"" << std::endl;
+          std::stringstream msg;
+
+          msg << "Visit libsim : "
+              << "Uintah variable \"" << varname << "\"  "
+              << "has an unknown variable type \""
+              << vartype << "\"";
+
+          visitdbg << msg.str() << std::endl;
           visitdbg.flush();
+
+          // VisItSetStatusMessage( *md,"My Error Message","red");
+          // VisItSetStatusMessage( *md,"My Warning Message","yellow");
+          // VisItSetStatusMessage( *md,"My Sim Message","black")
 
           continue;
         }
@@ -1094,7 +1207,9 @@ visit_handle visit_ReadMetaData(void *cbdata)
 #endif
 
     /* Add some commands. */
-    const char *cmd_names[] = {"Stop", "Step", "Run", "Exit", "Finish"};
+    const char *cmd_names[] = {"Stop", "Step", "Run",
+                               "Stats", "Regrid", "Save",
+                               "Finish", "Terminate", "Abort"};
 
     int numNames = sizeof(cmd_names) / sizeof(const char *);
 
@@ -1108,6 +1223,14 @@ visit_handle visit_ReadMetaData(void *cbdata)
         VisIt_SimulationMetaData_addGenericCommand(md, cmd);
       }
     }
+
+    // visit_handle msg = VISIT_INVALID_HANDLE;
+
+    // if(VisIt_MessageMetaData_alloc(&msg) == VISIT_OKAY)
+    // {
+    //   VisIt_MessageMetaData_setName(msg, "Test Message");
+    //   VisIt_SimulationMetaData_addMessage(md, msg);
+    // }
   }
 
   return md;
@@ -1376,7 +1499,7 @@ visit_handle visit_SimGetMesh(int domain, const char *meshname, void *cbdata)
 {
   visit_simulation_data *sim = (visit_simulation_data *)cbdata;
 
-  SchedulerP schedulerP = sim->schedulerP;
+  SchedulerP schedulerP = sim->AMRSimController->getSchedulerP();
   GridP      gridP      = sim->gridP;
 
   // bool &useExtraCells   = sim->useExtraCells;
@@ -1674,7 +1797,7 @@ visit_handle visit_SimGetVariable(int domain, const char *varname, void *cbdata)
 {
   visit_simulation_data *sim = (visit_simulation_data *)cbdata;
 
-  SchedulerP schedulerP = sim->schedulerP;
+  SchedulerP schedulerP = sim->AMRSimController->getSchedulerP();
   GridP      gridP      = sim->gridP;
 
   // bool &useExtraCells   = sim->useExtraCells;
@@ -1899,7 +2022,7 @@ visit_handle visit_SimGetDomainList(const char *name, void *cbdata)
 
     visit_simulation_data *sim = (visit_simulation_data *)cbdata;
 
-    SchedulerP schedulerP = sim->schedulerP;
+    SchedulerP schedulerP = sim->AMRSimController->getSchedulerP();
     GridP      gridP      = sim->gridP;
     
     TimeStepInfo* &stepInfo = sim->stepInfo;

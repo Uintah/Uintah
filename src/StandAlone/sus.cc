@@ -173,27 +173,34 @@ usage(const std::string& message, const std::string& badarg, const std::string& 
     cerr << "\n";
     cerr << "Usage: " << progname << " [options] <input_file_name>\n\n";
     cerr << "Valid options are:\n";
-    cerr << "-h[elp]              : This usage information.\n";
+    cerr << "-h[elp]              : This usage information\n";
     cerr << "-AMR                 : use AMR simulation controller\n";
     cerr << "-multi_scale         : use MultiScale simulation controller\n";
 #ifdef HAVE_CUDA
     cerr << "-gpu                 : use available GPU devices, requires multi-threaded Unified scheduler \n";
 #endif
     cerr << "-nthreads <#>        : number of threads per MPI process, requires multi-threaded Unified scheduler\n";
-    cerr << "-layout NxMxO        : Eg: 2x1x1.  MxNxO must equal number\n";
-    cerr << "                           of boxes you are using.\n";
+    cerr << "-layout NxMxO        : Eg: 2x1x1.  MxNxO must equal number tof boxes you are using.\n";
     cerr << "-emit_taskgraphs     : Output taskgraph information\n";
     cerr << "-restart             : Give the checkpointed uda directory as the input file\n";
     cerr << "-reduce_uda          : Reads <uda-dir>/input.xml file and removes unwanted labels (see FAQ).\n";
     cerr << "-uda_suffix <number> : Make a new uda dir with <number> as the default suffix\n";
-    cerr << "-t <timestep>        : Restart timestep (last checkpoint is default,\n\t\t\tyou can use -t 0 for the first checkpoint)\n";
+    cerr << "-t <timestep>        : Restart timestep (last checkpoint is default, you can use -t 0 for the first checkpoint)\n";
     cerr << "-svnDiff             : runs svn diff <src/...../Packages/Uintah \n";
     cerr << "-svnStat             : runs svn stat -u & svn info <src/...../Packages/Uintah \n";
     cerr << "-copy                : Copy from old uda when restarting\n";
     cerr << "-move                : Move from old uda when restarting\n";
-    cerr << "-nocopy              : Default: Don't copy or move old uda timestep when\n\t\t\trestarting\n";
+    cerr << "-nocopy              : Default: Don't copy or move old uda timestep when restarting\n";
     cerr << "-validate            : Verifies the .ups file is valid and quits!\n";
     cerr << "-do_not_validate     : Skips .ups file validation! Please avoid this flag if at all possible.\n";
+#ifdef HAVE_VISIT
+    cerr << "\n";
+    cerr << "-visit <filename>        : Create a VisIt .sim2 file and perform VisIt in-situ checks\n";
+    cerr << "-visit_comment <comment> : A comment about the simulation\n";
+    cerr << "-visit_dir <directory>   : Top level directory for the VisIt installation\n";
+    cerr << "-visit_option <string>   : Optional args for the VisIt launch script\n";
+    cerr << "-visit_trace <file>      : Trace file for VisIt's Sim V2 function calls\n";
+#endif
     cerr << "\n\n";
   }
   quit();
@@ -276,7 +283,7 @@ main( int argc, char *argv[], char *env[] )
   bool   onlyValidateUps     = false;
 
 #ifdef HAVE_VISIT
-  bool   do_VisIt            = true;  // Assume if VisIt is compiled
+  bool   do_VisIt            = false; // Assume if VisIt is compiled
 				      // in that the user may want to
 				      // connect with VisIt.
 #endif
@@ -418,23 +425,40 @@ main( int argc, char *argv[], char *env[] )
     // VisIt. The most important is the directory path to where VisIt
     // is located.
 #ifdef HAVE_VISIT
-    else if (arg == "-no_visit") {
-      do_VisIt = false;
+    else if (arg == "-visit") {
+      if (++i == argc) {
+        usage("You must provide file name for -visit", arg, argv[0]);
+      }
+      else
+	do_VisIt = true;
+    }
+    else if (arg == "-visit_comment" ) {
+      if (++i == argc) {
+        usage("You must provide a string for -visit_comment", arg, argv[0]);
+      }
+      else
+	do_VisIt = true;
     }
     else if (arg == "-visit_dir" ) {
       if (++i == argc) {
-        usage("You must provide a file name for -visit_dir", arg, argv[0]);
+        usage("You must provide a directory for -visit_dir", arg, argv[0]);
       }
+      else
+	do_VisIt = true;
     }
     else if (arg == "-visit_option" ) {
       if (++i == argc) {
         usage("You must provide a string for -visit_option", arg, argv[0]);
       }
+      else
+	do_VisIt = true;
     }
     else if (arg == "-visit_trace" ) {
       if (++i == argc) {
         usage("You must provide a file name for -visit_trace", arg, argv[0]);
       }
+      else
+	do_VisIt = true;
     }
 #endif
     else {
@@ -491,16 +515,6 @@ main( int argc, char *argv[], char *env[] )
   bool thrownException = false;
 
   try {
-
-    // If VisIt is included then the user may be attching into Visit's
-    // libsim for in-situ analysis and visualization. This call pass
-    // optional arguments that VisIt will interpert.
-#ifdef HAVE_VISIT
-    if( do_VisIt )
-    {
-      visit_LibSimArguments( argc, argv );
-    }
-#endif
 
 #ifndef HAVE_MPICH_OLD
     // If regular MPI, then initialize after parsing the args...
@@ -603,6 +617,62 @@ main( int argc, char *argv[], char *env[] )
       Thread::exitAll( 0 );
     }
 
+    // If VisIt is included then the user may be attching into Visit's
+    // libsim for in-situ analysis and visualization. This call pass
+    // optional arguments that VisIt will interpert.
+#ifdef HAVE_VISIT
+    if( do_VisIt )
+    {
+
+      bool have_comment = false;
+
+      for (int i = 1; i < argc; i++)
+      {
+	string arg = argv[i];
+
+	if (arg == "-visit_comment" ) {
+	  have_comment = true;
+	  break;
+	}
+      }
+
+      // No user defined comment so use the ups sim meta data title.
+      if( !have_comment )
+      {
+	// Find the meta data and the title. 
+	std::string title;
+	
+	if( ups->findBlock( "Meta" ) )
+	  ups->findBlock( "Meta" )->require( "title", title );
+	
+	if( title.size() )
+	{
+	  // Have the title so pass that into the libsim 
+	  char **new_argv = (char **) malloc((argc + 2) * sizeof(*new_argv));
+	  
+	  if (new_argv != NULL)
+	  {
+	    memmove(new_argv, argv, sizeof(*new_argv) * argc);
+	    
+	    argv = new_argv;
+	    
+	    argv[argc] =
+	      (char*) malloc( (strlen("-visit_comment")+1) * sizeof(char) );
+	    strcpy( argv[argc], "-visit_comment" );
+	    ++argc;
+	    
+	    argv[argc] =
+	      (char*) malloc( (title.size()+1) * sizeof(char) );
+	    strcpy( argv[argc], title.c_str() );
+	    ++argc;
+	  }
+	}
+      }
+
+      visit_LibSimArguments( argc, argv );      
+    }
+#endif
+
     // if -amr wasn't found on the command line and the AMR block exists, set do_AMR with the value found
     if (!do_AMR && (bool)ups->findBlock("AMR")) {
       ups->get("doAMR", do_AMR);
@@ -625,7 +695,6 @@ main( int argc, char *argv[], char *env[] )
     } else {
       simController = scinew AMRSimulationController( world, do_AMR, do_multi_scale, ups );
     }
-
 
 
 #ifdef HAVE_VISIT
