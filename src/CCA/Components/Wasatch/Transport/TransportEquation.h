@@ -101,13 +101,11 @@ namespace Wasatch{
      * @brief Construct a TransportEquation
      * @param gc the GraphCategories object from Wasatch
      * @param solnVarName the name of the solution variable for this equation
-     * @param params the parser information for this TransportEquation
      * @param stagLoc the direction that this equation is staggered
      * @param isConstDensity flag for constant density
      */
     TransportEquation( GraphCategories& gc,
                        const std::string& solnVarName,
-                       Uintah::ProblemSpecP params,
                        const Direction stagLoc,
                        const bool isConstDensity );
 

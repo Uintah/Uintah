@@ -31,7 +31,7 @@
 
 /**
  *  \class   StrainTensorSquare
- *  \authors Amir Biglari, Tony Saad
+ *  \authors Tony Saad
  *  \date    Jan, 2012. (Originally created: June, 2012).
  *  \ingroup Expressions
  *
@@ -135,7 +135,8 @@ public:
            Square of the Velocity Gradient Tensor
  *
  */
-class WaleTensorMagnitude : public StrainTensorBase {
+template<typename ResultT, typename Vel1T, typename Vel2T, typename Vel3T>
+class WaleTensorMagnitude : public StrainTensorBase<ResultT, Vel1T, Vel2T, Vel3T> {
 
   WaleTensorMagnitude( const Expr::TagList& velTags );  
   public:
@@ -173,7 +174,8 @@ class WaleTensorMagnitude : public StrainTensorBase {
  Vreman 2004, An eddy-viscosity subgrid-scale model for turbulent shear flow:
  Algebraic theory and applications
  */
-class VremanTensorMagnitude : public StrainTensorBase {
+template<typename ResultT, typename Vel1T, typename Vel2T, typename Vel3T>
+class VremanTensorMagnitude : public StrainTensorBase<ResultT, Vel1T, Vel2T, Vel3T> {
   
   VremanTensorMagnitude( const Expr::TagList& velTags );  
 public:

@@ -33,7 +33,8 @@
 #include "TransportEquation.h"
 #include "ScalarTransportEquation.h"
 #include "ScalabilityTestTransportEquation.h"
-#include "MomentumTransportEquation.h"
+#include "MomentumTransportEquationBase.h"
+#include "LowMachMomentumTransportEquation.h"
 #include "EquationBase.h"
 
 #include "MomentTransportEquation.h"
@@ -245,7 +246,7 @@ namespace Wasatch{
     std::string slnVariableName;
     poissonEqParams->get("SolutionVariable", slnVariableName);
     const Expr::Tag poissonVariableTag(slnVariableName, Expr::STATE_N);
-    const Expr::TagList poissontags( tag_list( poissonVariableTag, Expr::Tag( poissonVariableTag.name() + "_rhs_poisson_expr", pressure_tag().context() ) ) );
+    const Expr::TagList poissontags( tag_list( poissonVariableTag, Expr::Tag( poissonVariableTag.name() + "_rhs_poisson_expr", TagNames::self().pressure.context() ) ) );
     const Expr::Tag rhsTag = parse_nametag( poissonEqParams->findBlock("PoissonRHS")->findBlock("NameTag"));    
     bool useRefPoint = false;
     double refValue = 0.0;
@@ -577,7 +578,7 @@ namespace Wasatch{
 
     if( doxvel && doxmom ){
       proc0cout << "Setting up X momentum transport equation" << std::endl;
-      typedef MomentumTransportEquation< XVolField > MomTransEq;
+      typedef LowMachMomentumTransportEquation< XVolField > MomTransEq;
       EquationBase* momtranseq = scinew MomTransEq( xvelname,
                                                          xmomname,
                                                          densityTag,
@@ -593,7 +594,7 @@ namespace Wasatch{
 
     if( doyvel && doymom ){
       proc0cout << "Setting up Y momentum transport equation" << std::endl;
-      typedef MomentumTransportEquation< YVolField > MomTransEq;
+      typedef LowMachMomentumTransportEquation< YVolField > MomTransEq;
       EquationBase* momtranseq = scinew MomTransEq( yvelname,
                                                          ymomname,
                                                          densityTag,
@@ -609,7 +610,7 @@ namespace Wasatch{
 
     if( dozvel && dozmom ){
       proc0cout << "Setting up Z momentum transport equation" << std::endl;
-      typedef MomentumTransportEquation< ZVolField > MomTransEq;
+      typedef LowMachMomentumTransportEquation< ZVolField > MomTransEq;
       EquationBase* momtranseq = scinew MomTransEq( zvelname,
                                                          zmomname,
                                                          densityTag,
@@ -679,16 +680,16 @@ namespace Wasatch{
     // set up initial conditions on the pressure
     try{
       proc0cout << "Setting initial conditions for pressure: "
-      << pressure_tag().name()
+      << TagNames::self().pressure.name()
       << std::endl;
-      icGraphHelper->rootIDs.insert( (*icGraphHelper->exprFactory).get_id( pressure_tag() ) );
+      icGraphHelper->rootIDs.insert( (*icGraphHelper->exprFactory).get_id( TagNames::self().pressure ) );
     }
     catch( std::runtime_error& e ){
       std::ostringstream msg;
       msg << e.what()
       << std::endl
       << "ERORR while setting initial conditions on pressure. "
-      << pressure_tag().name()
+      << TagNames::self().pressure.name()
       << std::endl;
       throw Uintah::ProblemSetupException( msg.str(), __FILE__, __LINE__ );
     }
@@ -1205,8 +1206,8 @@ namespace Wasatch{
     // see if we have an expression set for the diffusive flux.
     Uintah::ProblemSpecP nameTagParam = diffFluxParams->findBlock("NameTag");
     if( nameTagParam ){
-      if (singleDirection) diffFluxTag = parse_nametag( nameTagParam );
-      else {
+      if( singleDirection ) diffFluxTag = parse_nametag( nameTagParam );
+      else{
         std::ostringstream msg;
         msg << "You cannot build a diffusive flux expression with a specified nametag for '" << primVarName << "' in multiple directions" << std::endl;
         throw Uintah::ProblemSetupException( msg.str(), __FILE__, __LINE__ );
@@ -1314,7 +1315,7 @@ namespace Wasatch{
     // see if we have an expression set for the diffusive velocity.
     Uintah::ProblemSpecP nameTagParam = diffVelParams->findBlock("NameTag");
     if( nameTagParam ){
-      if (singleDirection) diffVelTag = parse_nametag( nameTagParam );
+      if( singleDirection ) diffVelTag = parse_nametag( nameTagParam );
       else {
         std::ostringstream msg;
         msg << "You cannot build a diffusive velocity expression with a specified nametag for '" << primVarName << "' in multiple directions" << std::endl;
@@ -1332,10 +1333,10 @@ namespace Wasatch{
       }
       info[ fs ] = diffVelTag;
 
-    } else { // build an expression for the diffusive velocity.
+    }
+    else { // build an expression for the diffusive velocity.
 
-      for (std::string::iterator it = direction.begin(); it != direction.end(); ++it)
-      {
+      for( std::string::iterator it = direction.begin(); it != direction.end(); ++it ){
         std::string dir(1,*it);
         diffVelTag = Expr::Tag( primVarName+"_diffVelocity_"+dir, Expr::STATE_NONE );
         
@@ -1364,7 +1365,6 @@ namespace Wasatch{
         info[ fs ] = diffVelTag;
       }
     }
-
   }
 
   //------------------------------------------------------------------

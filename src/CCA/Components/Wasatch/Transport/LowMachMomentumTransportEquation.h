@@ -22,8 +22,8 @@
  * IN THE SOFTWARE.
  */
 
-#ifndef Wasatch_MomentumTransportEquation_h
-#define Wasatch_MomentumTransportEquation_h
+#ifndef Wasatch_LowMachMomentumTransportEquation_h
+#define Wasatch_LowMachMomentumTransportEquation_h
 
 //-- ExprLib includes --//
 #include <expression/ExpressionFactory.h>
@@ -31,8 +31,9 @@
 //-- Wasatch includes --//
 #include <CCA/Components/Wasatch/FieldTypes.h>
 #include <CCA/Components/Wasatch/Expressions/Turbulence/TurbulenceParameters.h>
+#include <CCA/Components/Wasatch/Transport/MomentumTransportEquationBase.h>
 #include <CCA/Components/Wasatch/Transport/TransportEquation.h>
-
+#include <CCA/Components/Wasatch/Transport/EquationBase.h>
 //-- Uintah includes --//
 #include <Core/ProblemSpec/ProblemSpecP.h>
 #include <Core/Parallel/UintahParallelComponent.h>
@@ -40,31 +41,17 @@
 
 namespace Wasatch{
 
-  template< typename FaceFieldT >
-  Expr::ExpressionID
-  setup_strain( const Expr::Tag& strainTag,
-                const Expr::Tag& vel1Tag,
-                const Expr::Tag& vel2Tag,
-                const Expr::Tag& dilTag,
-                Expr::ExpressionFactory& factory );
-
-  void register_turbulence_expressions( const TurbulenceParameters& turbParams,
-                                        Expr::ExpressionFactory& factory,
-                                        const Expr::TagList& velTags,
-                                        const Expr::Tag densTag,
-                                        const bool isConstDensity );
   /**
    *  \ingroup WasatchCore
-   *  \class MomentumTransportEquation
+   *  \class LowMachMomentumTransportEquation
    *  \authors James C. Sutherland, Tony Saad
    *  \date January, 2011
    *
-   *  \brief Creates a momentum transport equation
+   *  \brief Creates a momentum transport equation for solving low-Mach problems on staggered grids
    *
-   *  \todo Allow more flexibility in specifying initial and boundary conditions for momentum.
    */
   template< typename FieldT >
-  class MomentumTransportEquation : public Wasatch::TransportEquation
+  class LowMachMomentumTransportEquation : public Wasatch::MomentumTransportEquationBase<FieldT>
   {
   public:
 
@@ -73,9 +60,9 @@ namespace Wasatch{
     typedef typename FaceTypes<FieldT>::ZFace  ZFace; ///< The type of field on the z-faces of the volume.
 
     /**
-     *  \brief Construct a MomentumTransportEquation
-     *  \param velName the name of the velocity component solved by this MomentumTransportEquation
-     *  \param momName the name of the momentum component solved by this MomentumTransportEquation
+     *  \brief Construct a LowMachMomentumTransportEquation
+     *  \param velName the name of the velocity component solved by this LowMachMomentumTransportEquation
+     *  \param momName the name of the momentum component solved by this LowMachMomentumTransportEquation
      *  \param densTag the tag for the mixture mass density
      *  \param isConstDensity
      *  \param bodyForceTag tag for body force
@@ -86,7 +73,7 @@ namespace Wasatch{
      *  \param linSolver the linear solver object for the pressure solve
      *  \param sharedState contains useful stuff like the value of timestep, etc.
      */
-    MomentumTransportEquation( const std::string velName,
+    LowMachMomentumTransportEquation( const std::string velName,
                                const std::string momName,
                                const Expr::Tag densTag,
                                const bool isConstDensity,
@@ -98,7 +85,7 @@ namespace Wasatch{
                                Uintah::SolverInterface& linSolver,
                                Uintah::SimulationStateP sharedState );
 
-    ~MomentumTransportEquation();
+    ~LowMachMomentumTransportEquation();
 
     void setup_boundary_conditions(WasatchBCHelper& bcHelper,
                                     GraphCategories& graphCat);
@@ -121,7 +108,7 @@ namespace Wasatch{
     Expr::ExpressionID initial_condition( Expr::ExpressionFactory& icFactory );
 
     /**
-     *  \brief Parse the input file to get the name of this MomentumTransportEquation
+     *  \brief Parse the input file to get the name of this LowMachMomentumTransportEquation
      *
      *  \param params the Uintah::ProblemSpec XML description for this
      *         equation. Scope should be within the TransportEquation tag.
@@ -137,18 +124,11 @@ namespace Wasatch{
                                   const Expr::TagList& srcTags  );
 
   private:
-
-    const bool isViscous_, isTurbulent_;
-    const Expr::Tag thisVelTag_, densityTag_;
     Uintah::SolverParameters* solverParams_;
     
-    Expr::ExpressionID normalStrainID_, normalConvFluxID_, pressureID_, convTermWeakID_;
-    Expr::TagList velTags_;  ///< TagList for the velocity expressions
-    Expr::TagList momTags_, oldMomTags_;  ///< TagList for the momentum expressions
-    Expr::Tag     thisVolFracTag_;
 
   };
 
 } // namespace Wasatch
 
-#endif // Wasatch_MomentumTransportEquation_h
+#endif // Wasatch_LowMachMomentumTransportEquation_h

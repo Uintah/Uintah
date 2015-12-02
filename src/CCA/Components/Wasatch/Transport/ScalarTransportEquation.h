@@ -106,6 +106,8 @@ namespace Wasatch{
     typedef typename FaceTypes<FieldT>::YFace  YFaceT; ///< The type of field on the y-faces of the volume.
     typedef typename FaceTypes<FieldT>::ZFace  ZFaceT; ///< The type of field on the z-faces of the volume.
 
+    typedef FieldT MyFieldT; ///< The type of field for this transported variable
+
     /**
      *  \brief Construct a ScalarTransportEquation
      *  \param solnVarName the name of the solution variable for this ScalarTransportEquation
@@ -189,6 +191,7 @@ namespace Wasatch{
     virtual Expr::ExpressionID setup_rhs( FieldTagInfo&,
                                           const Expr::TagList& srcTags  );
 
+    Uintah::ProblemSpecP params_;
     const bool hasConvection_;
     const Expr::Tag densityTag_;
     const bool enableTurbulence_;

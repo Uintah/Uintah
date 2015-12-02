@@ -370,9 +370,9 @@ namespace Wasatch {
                            const double initialMoment )
   : Wasatch::TransportEquation( gc,
                                 get_soln_var_name(params,momentOrder),
-                                params,
                                 get_staggered_location<FieldT>(),
                                 isConstDensity ),
+   params_( params ),
    populationName_ ( get_population_name(params) ),
    baseSolnVarName_( "m_" + populationName_ ),
    momentOrder_    ( momentOrder ),

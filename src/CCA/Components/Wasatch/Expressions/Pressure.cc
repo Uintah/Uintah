@@ -48,13 +48,6 @@ namespace Wasatch {
 
 //==================================================================
 
-Expr::Tag pressure_tag()
-{
-  return Expr::Tag( "pressure", Expr::STATE_NONE );
-}
-
-//==================================================================
-
 Pressure::Pressure( const std::string& pressureName,
                     const std::string& pressureRHSName,
                     const Expr::Tag& fxtag,

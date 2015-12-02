@@ -64,12 +64,10 @@ namespace Wasatch{
      * @param solnVarName the name of the solution variable for this equation
      * @param direction for staggered equations (e.g., momentum), this provides
      *        the direction that the equation is staggered.
-     * @param params the parser information for this EquationBase
      */
     EquationBase( GraphCategories& gc,
                   const std::string solnVarName,
-                  const Direction direction,
-                  Uintah::ProblemSpecP params );
+                  const Direction direction );
 
     virtual ~EquationBase(){}
 

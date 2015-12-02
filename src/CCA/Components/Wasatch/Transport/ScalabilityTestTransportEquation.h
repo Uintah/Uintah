@@ -133,7 +133,7 @@ namespace Wasatch{
     Expr::ExpressionID setup_rhs( FieldTagInfo&,
                                   const Expr::TagList& srcTags  );
   private:
-
+    Uintah::ProblemSpecP params_;
   };
 
   template< typename FieldT >
