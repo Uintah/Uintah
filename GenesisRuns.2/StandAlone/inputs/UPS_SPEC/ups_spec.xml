@@ -690,7 +690,8 @@
         <analyze                        spec="MULTIPLE NO_DATA"
                                           attribute1="label REQUIRED STRING" 
                                           attribute2="matl  OPTIONAL STRING"
-                                          attribute3="level OPTIONAL STRING" />
+                                          attribute3="level OPTIONAL STRING"
+                                          attribute4="computeReynoldsStress OPTIONAL STRING" />
       </Variables>
       
       <!--  lineExtract __________________________________-->

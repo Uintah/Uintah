@@ -93,6 +93,7 @@ WARNING
     //  container to hold
     struct Qstats{
       std::string  name;
+      bool isVelocityLabel;
       int matl;
       VarLabel* Q_Label;
       VarLabel* Qsum_Label;
@@ -116,6 +117,11 @@ WARNING
         std::cout << name << " matl: " << matl << " subtype: " << subtype->getName() << "\n";
       };
     };
+    
+    // For Reynolds Shear Stress
+    VarLabel* d_uv_primeLabel;
+    VarLabel* d_uw_primeLabel;
+    VarLabel* d_vw_primeLabel;
 
     //__________________________________
     //
@@ -135,7 +141,6 @@ WARNING
     void computeStatsWrapper( DataWarehouse* old_dw,
                               DataWarehouse* new_dw,
                               const PatchSubset* patches,
-                              const MaterialSubset* matl_sub ,
                               const Patch*   patch,
                               Qstats Q);
     template <class T>
@@ -143,6 +148,10 @@ WARNING
                        DataWarehouse* new_dw,
                        const Patch*   patch,
                        Qstats Q);
+                       
+    void computeReynoldsStress( DataWarehouse* new_dw,
+                                const Patch*    patch,
+                                Qstats Q);
 
     template <class T>
     void allocateAndZero( DataWarehouse* new_dw,
@@ -162,18 +171,15 @@ WARNING
     void carryForwardSums( DataWarehouse* old_dw,
                            DataWarehouse* new_dw,
                            const PatchSubset* patches,
-                           const MaterialSubset* matl_sub ,
                            Qstats Q );
 
     //__________________________________
     // global constants
-
     double d_startTime;
     double d_stopTime;
 
     bool d_doHigherOrderStats;
     std::vector< Qstats >  d_Qstats;
-
 
     SimulationStateP d_sharedState;
     Output* d_dataArchiver;
