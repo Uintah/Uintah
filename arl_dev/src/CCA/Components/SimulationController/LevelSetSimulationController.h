@@ -172,13 +172,13 @@ class LevelSetSimulationController : public SimulationController {
 					 );
 
     void recompile(
-                           double                           time
-                   ,       double                           del_t
-                   , const LevelSet                       & currentLevelSet
-                   , const std::vector<std::vector<int> > & totalFineDW
-                   ,       UintahParallelComponent        * component
-                   ,       SimulationStateP               & state
-                   ,       SchedulerP                     & sched
+                           double                    time
+                   ,       double                    del_t
+                   , const LevelSet                & currentLevelSet
+                   , const std::vector<int>        & totalFineDW
+                   ,       UintahParallelComponent * component
+                   ,       SimulationStateP        & state
+                   ,       SchedulerP              & sched
                   );
 
     void executeTimestep(
