@@ -670,7 +670,6 @@ LevelSetSimulationController::run()
   printSimulationStats( d_sharedState->getCurrentTopLevelTimeStep(), del_t, baseSimulationTime);
 }
 
-// FIXME TODO JBH APH 12-01-2015 Figure out return value here
 double
 LevelSetSimulationController::runMainTimestepOnList( const ComponentListType componentList )
 {
@@ -680,12 +679,10 @@ LevelSetSimulationController::runMainTimestepOnList( const ComponentListType com
     UintahParallelComponent * component         = d_manager->getComponent(listIndex, componentList);
     LevelSet                * componentLevelSet = d_manager->getLevelSet(listIndex, componentList);
     SimulationStateP          componentState    = d_manager->getState(listIndex, componentList);
-
     double                    componentRunTime  = d_manager->getRunTime(listIndex, componentList);
     int                       componentTimeStep = d_manager->getTimestep(listIndex, componentList);
     SimulationTime          * componentTimeInfo = d_manager->getTimeInfo(listIndex, componentList);
-
-    double                    del_t;
+    double del_t = 0.0;
 
     double newRunTime = doComponentMainTimestep(componentLevelSet, component, componentState, componentTimeInfo,
                                                 del_t, componentRunTime,
@@ -710,62 +707,60 @@ LevelSetSimulationController::doComponentMainTimestep(
                                                       ,       bool                      firstTimestep
                                                      )
 {
-  SchedulerP currentScheduler(dynamic_cast<Scheduler*> (component->getPort("scheduler")));
+  SchedulerP currentScheduler(dynamic_cast<Scheduler*>(component->getPort("scheduler")));
   ASSERT(currentScheduler != 0);
 
   if (component == 0) {
     // default call on levelSet only.. operate on the stored info such as d_sharedState, d_timeInfo, etc..
     // Use the default call to operate on single component only systems
-    state       = d_sharedState;
-    timeInfo    = d_timeinfo;
+    state    = d_sharedState;
+    timeInfo = d_timeinfo;
   }
 
-  Output*    outputContainer = dynamic_cast<Output*> (component->getPort("output"));
+  Output* outputContainer = dynamic_cast<Output*>(component->getPort("output"));
+  GridP currentGrid = levels->getSubset(0)->get(0)->getGrid();
 
-  GridP      currentGrid      = levels->getSubset(0)->get(0)->getGrid();
+  std::vector<int> fineDataWarehouseCounts;
 
-  std::vector<std::vector<int> > numberFineDW;
-//  int maxTotalFineDW = 1;
+  // loop through level subsets
+  int numFineDW = 1;
   int numLevelSubsets = levels->size();
   for (int subsetIndex = 0; subsetIndex < numLevelSubsets; ++subsetIndex) {
     // Check to see if subset is AMR and is not Lockstep.  If so calculate the number of fine
     // DW levels needed for the AMR.  Since we may theoretically have multiple AMR subsets in a
     // single set, store only the max number of fine DW's needed, as this should be more than
     // sufficient for other subsets which request less.
-    std::vector<int> subsetFineDW;
     LevelSubset* currentSubset = levels->getSubset(subsetIndex);
     if (currentSubset->get(0)->isAMR() && !state->isLockstepAMR()) {
       int numLevelsInSubset = currentSubset->size();
-      int levelFineDW= 1;
+      // loop through levels within each level subset
       for (int levelInSubset = 0; levelInSubset < numLevelsInSubset; ++levelInSubset) {
-        levelFineDW *= currentSubset->get(levelInSubset)->getRefinementRatioMaxDim();
+        // Compute number of fine DWs - multiplies by the max refinement ratio (x,y,z) of each level
+        numFineDW *= currentSubset->get(levelInSubset)->getRefinementRatioMaxDim();
       }
-      subsetFineDW.push_back(levelFineDW);
     }
-    numberFineDW.push_back(subsetFineDW);
+    fineDataWarehouseCounts.push_back(numFineDW);
   }
 
   state->d_prev_delt = del_t;
 
+  // get delt and adjust it
   delt_vartype del_t_var;
   DataWarehouse* newDW = currentScheduler->getLastDW();
   newDW->get(del_t_var, state->get_delt_label());
 
   del_t = del_t_var;
+
+  // delt adjusted based on timeinfo parameters
   adjustDelT(del_t, state->d_prev_delt, firstTimestep, runTime, timeInfo);
   newDW->override(delt_vartype(del_t),state->get_delt_label());
 
-  // FIXME TODO JBH APH 11-28-2015 The original has the following call:
-//  if (d_reduceUda) {
-//    currentGrid = static_cast<UdaReducer*> (d_sim)->getGrid();
-//  }
-  // Need to understand what this call does and what it should do in this case.
   currentScheduler->advanceDataWarehouse(currentGrid);
   state->setElapsedTime(runTime);
   state->incrementCurrentTopLevelTimeStep();
 
   double old_init_del_t = timeInfo->max_initial_delt;
-  double new_init_del_t  = 0.0;
+  double new_init_del_t = 0.0;
 
   bool componentNeedsRecompile = needRecompile(runTime, del_t, currentGrid);
   if ((componentNeedsRecompile || firstTimestep)) {
@@ -780,7 +775,7 @@ LevelSetSimulationController::doComponentMainTimestep(
     if (new_init_del_t != old_init_del_t) {
       del_t = new_init_del_t;
     }
-    recompile(runTime, del_t, *levels, numberFineDW, component, state, currentScheduler);
+    recompile(runTime, del_t, *levels, fineDataWarehouseCounts, component, state, currentScheduler);
   } // If we need recompile
   else {
     if (outputContainer) {
@@ -793,23 +788,21 @@ LevelSetSimulationController::doComponentMainTimestep(
   } // else do output
 
 
-  // FIXME TODO JBH APH 11-28-2015 The loop above figures out the maximum RR amongst a set
-  // of level subsets.  However, this should probably be the proper RR for this level subset.
-
+  // FIXME TODO JBH APH 12-02-2015 This will need to be debugged to ensure the inner loop
+  //   doesn't count off the end of the DW array (see: dwIndex += skip)
   for (int subsetIndex = 0; subsetIndex < numLevelSubsets; ++subsetIndex) {
     double del_t_fine = del_t;
-    int    skip       = numberFineDW[subsetIndex];
+    int skip = fineDataWarehouseCounts[subsetIndex];
     LevelSubset* currentSubset = levels->getSubset(subsetIndex);
-    int numLevelsInSubset = currentSubset->size();
     if (currentSubset->get(0)->isAMR() && !state->isLockstepAMR() && d_doAMR) {
+      int numLevelsInSubset = currentSubset->size();
       for (int levelInSubset = 1; levelInSubset < numLevelsInSubset; ++levelInSubset) {
         const Level* level = currentSubset->get(levelInSubset);
         int refinementRatio = level->getRefinementRatioMaxDim();
         del_t_fine /= refinementRatio;
-        skip       /= refinementRatio;
-
-        for (int indexOfDW = 0; indexOfDW < numberFineDW[subsetIndex][levelInSubset]; indexOfDW += skip ) {
-          DataWarehouse* dw = currentScheduler->get_dw(indexOfDW);
+        skip     /= refinementRatio;
+        for (int dwIndex = 0; dwIndex < fineDataWarehouseCounts[subsetIndex]; dwIndex += skip ) {
+          DataWarehouse* dw = currentScheduler->get_dw(dwIndex);
           dw->override(delt_vartype(del_t_fine), state->get_delt_label() );
         }
       }
@@ -862,7 +855,7 @@ LevelSetSimulationController::doComponentMainTimestep(
 
   state->d_current_delt = del_t;
 
-  executeTimestep(runTime, del_t, *levels, numberFineDW, component, state, currentScheduler);
+  executeTimestep(runTime, del_t, *levels, fineDataWarehouseCounts, component, state, currentScheduler);
 
   currentScheduler->printMPIStats();
   currentScheduler->setRestartInitTimestep(false);
@@ -895,18 +888,18 @@ LevelSetSimulationController::doComponentMainTimestep(
 
 void
 LevelSetSimulationController::recompile(
-                                                double                            time
-                                        ,       double                            del_t
-                                        , const LevelSet                        & currentLevelSet
-                                        , const std::vector< std::vector<int> > & totalFineDW
-                                        ,       UintahParallelComponent         * component
-                                        ,       SimulationStateP                & state
-                                        ,       SchedulerP                      & sched
+                                                double                    time
+                                        ,       double                    del_t
+                                        , const LevelSet                & currentLevelSet
+                                        , const std::vector<int>        & totalFineDW
+                                        ,       UintahParallelComponent * component
+                                        ,       SimulationStateP        & state
+                                        ,       SchedulerP              & sched
                                        )
 {
 
   // Choose the appropriate interface depending on how we were called.
-  SimulationInterface* interface;
+  SimulationInterface* interface = NULL;
   if (component == 0) {
     interface = d_sim;
   }
@@ -1664,7 +1657,7 @@ LevelSetSimulationController::executeTimestep(
       }
 
       d_output->reEvaluateOutputTimestep(orig_delt, new_del_t);
-      delt = new_del_t;
+      del_t = new_del_t;
 
       sched->get_dw(0)->override(delt_vartype(new_del_t), state->get_delt_label());
 
