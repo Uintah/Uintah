@@ -234,15 +234,13 @@
           <diffusivity               spec="OPTIONAL DOUBLE" />
           <initialize_diffusion_knob spec="OPTIONAL DOUBLE" />
         </constants>
-        <reaction_constants          spec="OPTIONAL NO_DATA" >
-          <f_stoichometric           spec="REQUIRED DOUBLE" />
-          <delta_H_combustion        spec="REQUIRED DOUBLE" />
-          <oxidizer_temp_infinity    spec="REQUIRED DOUBLE" />
-          <initial_fuel_temp         spec="REQUIRED DOUBLE" />
-          <diffusivity               spec="REQUIRED DOUBLE" />
-        </reaction_constants>
+        <initialization              spec="REQUIRED NO_DATA" >
+          <geom_object               spec="MULTIPLE" />
+        </initialization>
         
-        <geom_object                 spec="MULTIPLE" />
+        <interiorSources              spec="OPTIONAL NO_DATA" >
+          <geom_object                spec="MULTIPLE" />
+        </interiorSources>
       </scalar>
       
       <!--__________________________________-->
