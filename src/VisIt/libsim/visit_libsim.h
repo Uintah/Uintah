@@ -85,6 +85,8 @@ typedef struct
   double time;
   double delt;
 
+  std::string message;
+
   int blocking;
 
   bool useExtraCells;
