@@ -27,40 +27,6 @@
 
 #include "ParticleEquationBase.h"
 #include <expression/ExprLib.h>
-/**
- *  \class ParticleMassIC
- *  \ingroup WasatchParticles
- *  \brief Initial condition for particle mass
- */
-class ParticleMassIC
-: public Expr::Expression<ParticleField>
-{
-  DECLARE_FIELDS(ParticleField, pRho_, pDiameter_)
-  
-  /* declare operators associated with this expression here */
-  
-  ParticleMassIC( const Expr::Tag& pRhoTag,
-                 const Expr::Tag& pDiameterTag );
-public:
-  class Builder : public Expr::ExpressionBuilder
-  {
-  public:
-    /**
-     *  @brief Build a ParticleMassIC expression
-     *  @param resultTag the tag for the value that this expression computes
-     */
-    Builder( const Expr::Tag& resultTag,
-            const Expr::Tag& pRhoTag,
-            const Expr::Tag& pDiameterTag );
-    
-    Expr::ExpressionBase* build() const;
-    
-  private:
-    const Expr::Tag pRhoTag_, pDiameterTag_;
-  };
-  
-  void evaluate();
-};
 
 
 namespace Wasatch{
@@ -73,8 +39,7 @@ namespace Wasatch{
    *  @date   June 2014
    *  @brief Solves for particle mass.
    */
-  class ParticleMassEquation
-    : public ParticleEquationBase
+  class ParticleMassEquation : public ParticleEquationBase
   {
   public:
 
@@ -119,14 +84,14 @@ namespace Wasatch{
      *   in the momentum transport equation.
      */
     void setup_boundary_conditions( WasatchBCHelper& bcHelper,
-                                           GraphCategories& graphCat)
+                                    GraphCategories& graphCat)
     {}
     
     /**
      *  \brief Set up the boundary condition on initial conditions equation.
      */
     void apply_initial_boundary_conditions( const GraphHelper& graphHelper,
-                                                   WasatchBCHelper& bcHelper )
+                                            WasatchBCHelper& bcHelper )
     {}
     
     /**
@@ -134,7 +99,7 @@ namespace Wasatch{
      *  Equation.
      */
     void apply_boundary_conditions( const GraphHelper& graphHelper,
-                                           WasatchBCHelper& bcHelper )
+                                    WasatchBCHelper& bcHelper )
     {}
 
   private:

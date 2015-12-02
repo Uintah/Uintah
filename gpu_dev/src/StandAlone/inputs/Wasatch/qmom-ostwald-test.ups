@@ -8,7 +8,7 @@
 
   <Wasatch>  
 
-    <Density>
+    <Density method="CONSTANT">
       <Constant value="1" name="rho"/>
     </Density>
 
@@ -28,33 +28,33 @@
 
     <BasicExpression type="SVOL">
       <TaskList>initialization</TaskList>
-      <NameTag name="S" />
+      <NameTag name="S"/>
       <Constant>5</Constant>
     </BasicExpression>
     <BasicExpression type="SVOL">
       <TaskList>advance_solution</TaskList>
-      <NameTag name="S" />
+      <NameTag name="S"/>
       <Constant>5</Constant>
     </BasicExpression>
 
     <BasicExpression type="SVOL">
       <TaskList> advance_solution </TaskList>
-      <NameTag name="ceq" />
+      <NameTag name="ceq"/>
       <Constant> 1.0 </Constant>
     </BasicExpression>
 
     <PrecipitationBasicExpression type="SVOL">
       <TaskList> advance_solution </TaskList>
-      <NameTag name="GrowthCoefficient" />
+      <NameTag name="GrowthCoefficient"/>
       <PrecipitationBulkDiffusionCoefficient Diff_Coef="1" Molec_Vol="1">
         <Supersaturation>
-          <NameTag name="S" />
+          <NameTag name="S"/>
         </Supersaturation>
         <EquilibriumConcentration>
-          <NameTag name="ceq" />
+          <NameTag name="ceq"/>
         </EquilibriumConcentration>
         <SBar>
-          <NameTag name="SBar_CACO3" />
+          <NameTag name="SBar_CACO3"/>
         </SBar>
        </PrecipitationBulkDiffusionCoefficient>
     </PrecipitationBasicExpression>        
@@ -62,7 +62,7 @@
     <BasicExpression type="SVOL">
       <TaskList> initialization </TaskList>
       <Constant> 0.0 </Constant>
-      <NameTag name="SBar_CACO3" />
+      <NameTag name="SBar_CACO3"/>
     </BasicExpression>
 
     <MomentTransportEquation>
@@ -71,7 +71,7 @@
       <GrowthExpression>
         <GrowthModel> BULK_DIFFUSION </GrowthModel>
         <GrowthCoefficientExpression>
-          <NameTag name="GrowthCoefficient" />
+          <NameTag name="GrowthCoefficient"/>
         </GrowthCoefficientExpression>  
       </GrowthExpression>
       

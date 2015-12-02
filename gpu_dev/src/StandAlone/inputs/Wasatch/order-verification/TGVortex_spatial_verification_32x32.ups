@@ -9,7 +9,7 @@
   <Wasatch>
 
     <TimeIntegrator>FE</TimeIntegrator>
-    <Density>
+    <Density method="CONSTANT">
       <Constant value="1.0" name="density"/>
     </Density>
     <ForceOnGraph tasklist="advance_solution">
@@ -104,10 +104,10 @@
     <compression>gzip</compression>
     <save label="x-mom"/>
     <save label="y-mom"/>
-    <save label="tau_xx"/>
-    <save label="tau_yy"/>    
-    <save label="tau_xy"/>
-    <save label="tau_yx"/>
+    <save label="strain_xx"/>
+    <save label="strain_yy"/>    
+    <save label="strain_xy"/>
+    <save label="strain_yx"/>
     <save label="x-mom_convFlux_x"/>
     <save label="x-mom_convFlux_y"/>
     <save label="y-mom_convFlux_x"/>        

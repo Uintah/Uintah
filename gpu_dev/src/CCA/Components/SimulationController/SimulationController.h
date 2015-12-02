@@ -99,6 +99,17 @@ public:
   //  sets simulationController flags
   void setReduceUdaFlags( const std::string& fromDir );
      
+  ProblemSpecP         getProblemSpecP() { return d_ups; }
+  ProblemSpecP         getGridProblemSpecP() { return d_grid_ps; }
+  SimulationStateP     getSimulationStateP() { return d_sharedState; }
+  SchedulerP           getSchedulerP() { return d_scheduler; }
+  LoadBalancer*        getLoadBalancer() { return d_lb; }
+  Output*              getOutput() { return d_output; }
+  SimulationTime*      getSimulationTime() { return d_timeinfo; }
+  SimulationInterface* getSimulationInterface() { return d_sim; }
+  Regridder*           getRegridder() { return d_regridder; }
+  DataArchive*         getDataArchive() { return d_archive; }
+
 protected:
 
   double getWallTime     ( void );

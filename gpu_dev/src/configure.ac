@@ -2607,9 +2607,18 @@ if test "$with_fortran" != "no"; then
       if test "$F77" = "xlf"; then
         SCI_TRY_LINK(F,Mac fortran library (xlf) - xlf90,,$_sci_inc,xlf90,$_sci_lib,,,$_sci_optional)
       else
-        SCI_TRY_LINK(F,2 - Mac fortran library (other) - gfortran,,$_sci_inc,gfortran,$_sci_lib,,,optional)
+        SCI_TRY_LINK(F,2 - Mac fortran library (gfortran) - gfortran,,$_sci_inc,gfortran,$_sci_lib,,,optional)
         if test "$HAVE_F" = "no"; then
-             SCI_TRY_LINK(F,3 - Mac fortran library - g2c,,$_sci_inc,g2c,$_sci_lib,,,$_sci_optional)
+           if test "$_sci_lib" == ""; then
+              # At least on Jeremy's new desktop Mac, the gcc compiler does not (apparently) look in /usr/local/lib by default
+              # any more.  So if the user has not specified a directory, and the above gfortran test fails, then set sci_lib
+              # to /usr/local/lib, and test again.
+              _sci_lib="/usr/local/lib"
+              SCI_TRY_LINK(F,3 - Mac fortran library (gfortran in /usr/local/lib) - gfortran,,$_sci_inc,gfortran,$_sci_lib,,,optional)
+           fi
+        fi
+        if test "$HAVE_F" = "no"; then
+           SCI_TRY_LINK(F,4 - Mac fortran library (g2c) - g2c,,$_sci_inc,g2c,$_sci_lib,,,$_sci_optional)
         fi
       fi
       ;;

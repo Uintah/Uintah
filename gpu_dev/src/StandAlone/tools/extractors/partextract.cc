@@ -83,6 +83,7 @@ void printParticleVariable(DataArchive* da, int mat, string particleVariable,
                            unsigned long time_step_inc,
                            bool include_position_output);
 void computeEquivStress(const Matrix3& sig, double& sigeqv);
+void computePressure(const Matrix3& sig, double& press);
 void computeEquivStrain(const Matrix3& F, double& epseqv);
 void computeTrueStrain(const Matrix3& F, Vector& strain);
 void computeGreenLagrangeStrain(const Matrix3& F, Matrix3& E);
@@ -103,6 +104,7 @@ main( int argc, char** argv )
   bool do_partvar=false;
 //  bool do_partid=false;
   bool do_part_stress = false;
+  bool do_part_pressure = false;
   bool do_part_strain = false;
   bool do_av_part_stress = false;
   bool do_av_part_strain = false;
@@ -150,8 +152,9 @@ main( int argc, char** argv )
         if (s == "avg") do_av_part_stress=true;
         else if (s == "equiv") do_equiv_part_stress=true;
         else if (s == "all") do_part_stress=true;
+        else if (s == "pressure") do_part_pressure=true;
         else
-          usage("-part_stress [avg or equiv or all]", argv[0]);
+          usage("-part_stress [avg or equiv or pressure or all]", argv[0]);
       }
     } else if(s == "-part_strain"){
       do_part_strain = true;
@@ -221,6 +224,9 @@ main( int argc, char** argv )
       } else if (do_equiv_part_stress) {
         getParticleStresses(da, mat, particleID,"equiv",time_step_lower, time_step_upper,
                             include_position_output);
+      } else if (do_part_pressure) {
+        getParticleStresses(da, mat, particleID,"pressure",time_step_lower, time_step_upper,
+                            include_position_output);
       } else {
         getParticleStresses(da, mat, particleID,"all",  time_step_lower, time_step_upper,
                             include_position_output);
@@ -269,7 +275,7 @@ void usage(const std::string& badarg, const std::string& progname)
   cerr << "  -mat <material id>\n";
   cerr << "  -partvar <variable name>\n";
   cerr << "  -partid <particleid>\n";
-  cerr << "  -part_stress [avg or equiv or all]\n";
+  cerr << "  -part_stress [avg or equiv or pressure or all]\n";
   cerr << "  -part_strain [avg/true/equiv/all/lagrangian/eulerian]\n", 
   cerr << "  -timestep [int] (only outputs data for timestep int)\n";
   cerr << "  -timesteplow [int] (only outputs timestep from int)\n";
@@ -547,9 +553,15 @@ getParticleStresses(DataArchive* da, int mat, long64 particleID, string flag,
   // Parse the flag and check which option is needed
   bool doAverage = false;
   bool doEquiv = false;
+  bool doPress = false;
   //   bool doAll = false;
-  if (flag == "avg") doAverage = true;
-  else if (flag == "equiv") doEquiv = true;
+  if (flag == "avg"){
+    doAverage = true;
+  } else if (flag == "equiv"){
+    doEquiv = true;
+  } else if (flag == "pressure"){
+    doPress = true;
+  }
   //   else doAll = true;
 
   // Check if all the required variables are there .. for all cases
@@ -706,6 +718,9 @@ getParticleStresses(DataArchive* da, int mat, long64 particleID, string flag,
                       if (doEquiv) {
                         double sigeff = 0.0;
                         computeEquivStress(stress, sigeff);
+                      } else if(doPress) {
+                        double press = 0.0;
+                        computePressure(stress, press);
                       } else {
                         printCauchyStress(stress);
                       }
@@ -728,6 +743,9 @@ getParticleStresses(DataArchive* da, int mat, long64 particleID, string flag,
                       if (doEquiv) {
                         double sigeff = 0.0;
                         computeEquivStress(stress, sigeff);
+                      } else if(doPress) {
+                        double press = 0.0;
+                        computePressure(stress, press);
                       } else {
                         printCauchyStress(stress);
                       }
@@ -1109,6 +1127,16 @@ void computeEquivStress(const Matrix3& stress, double& sigeff)
   cout.precision(6);
 
   cout << " " << sigeff << endl;
+}
+
+void computePressure(const Matrix3& stress, double& press)
+{
+  press = (-1./3.)*stress.Trace();
+
+  cout.setf(ios::scientific,ios::floatfield);
+  cout.precision(6);
+
+  cout << " " << press << endl;
 }
 
 void computeEquivStrain(const Matrix3& F, double& equiv_strain)

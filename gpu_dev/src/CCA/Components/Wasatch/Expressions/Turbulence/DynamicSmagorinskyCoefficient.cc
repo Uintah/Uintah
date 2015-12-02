@@ -52,31 +52,34 @@
 // DYNAMIC SMAGORINSKY COEFFICIENT
 //********************************************************************
 
-DynamicSmagorinskyCoefficient::
+template<typename ResultT, typename Vel1T, typename Vel2T, typename Vel3T>
+DynamicSmagorinskyCoefficient<ResultT, Vel1T, Vel2T, Vel3T>::
 DynamicSmagorinskyCoefficient( const Expr::TagList& velTags,
                                const Expr::Tag& rhoTag,
                                const bool isConstDensity )
-: StrainTensorBase( velTags     ),
+: StrainTensorBase<ResultT, Vel1T, Vel2T, Vel3T>( velTags     ),
   isConstDensity_ (isConstDensity),
   doExtraFiltering_(false)
 {
   this->set_gpu_runnable(true);
-  if (!isConstDensity_)  rho_ = create_field_request<SVolField>(rhoTag);
+  if (!isConstDensity_)  rho_ = this->template create_field_request<SVolField>(rhoTag);
 }
 
 //--------------------------------------------------------------------
 
-DynamicSmagorinskyCoefficient::
+template<typename ResultT, typename Vel1T, typename Vel2T, typename Vel3T>
+DynamicSmagorinskyCoefficient<ResultT, Vel1T, Vel2T, Vel3T>::
 ~DynamicSmagorinskyCoefficient()
 {}
 
 //--------------------------------------------------------------------
 
+template<typename ResultT, typename Vel1T, typename Vel2T, typename Vel3T>
 void
-DynamicSmagorinskyCoefficient::
+DynamicSmagorinskyCoefficient<ResultT, Vel1T, Vel2T, Vel3T>::
 bind_operators( const SpatialOps::OperatorDatabase& opDB )
 {
-  StrainTensorBase::bind_operators(opDB);
+  StrainTensorBase<ResultT, Vel1T, Vel2T, Vel3T>::bind_operators(opDB);
   exOp_  = opDB.retrieve_operator<ExOpT>();
   xexOp_ = opDB.retrieve_operator<XExOpT>();
   yexOp_ = opDB.retrieve_operator<YExOpT>();
@@ -93,8 +96,9 @@ bind_operators( const SpatialOps::OperatorDatabase& opDB )
 
 //--------------------------------------------------------------------
 
+template<typename ResultT, typename Vel1T, typename Vel2T, typename Vel3T>
 void
-DynamicSmagorinskyCoefficient::
+DynamicSmagorinskyCoefficient<ResultT, Vel1T, Vel2T, Vel3T>::
 evaluate()
 {
   using namespace SpatialOps;
@@ -127,13 +131,13 @@ evaluate()
   //----------------------------------------------------------------------------
   // CALCULATE test filtered staggered velocities. Filter(ui)
   //----------------------------------------------------------------------------
-  const XVolField& u = u_->field_ref();
-  const YVolField& v = v_->field_ref();
-  const ZVolField& w = w_->field_ref();
+  const Vel1T& u = this->u_->field_ref();
+  const Vel2T& v = this->v_->field_ref();
+  const Vel3T& w = this->w_->field_ref();
 
-  SpatFldPtr<XVolField> uhat = SpatialFieldStore::get<XVolField>( dynSmagConst );
-  SpatFldPtr<YVolField> vhat = SpatialFieldStore::get<YVolField>( dynSmagConst );
-  SpatFldPtr<ZVolField> what = SpatialFieldStore::get<ZVolField>( dynSmagConst );
+  SpatFldPtr<Vel1T> uhat = SpatialFieldStore::get<Vel1T>( dynSmagConst );
+  SpatFldPtr<Vel2T> vhat = SpatialFieldStore::get<Vel2T>( dynSmagConst );
+  SpatFldPtr<Vel3T> what = SpatialFieldStore::get<Vel3T>( dynSmagConst );
   *uhat <<= (*xBoxFilterOp_)( u );
   *vhat <<= (*yBoxFilterOp_)( v );
   *what <<= (*zBoxFilterOp_)( w );
@@ -232,7 +236,7 @@ evaluate()
   // Shat11 = Shatij[0][0], Shat12 = Shatij[0][1], S13 = Shatij[0][2]
   // Shat22 = Shatij[1][0], Shat23 = Shatij[1][1]
   // Shat33 = Shatij[2][0]
-  calculate_strain_tensor_components(strTsrMag,*uhat,*vhat,*what,*Shatij[0][0],*Shatij[0][1],*Shatij[0][2],*Shatij[1][0],*Shatij[1][1],*Shatij[2][0]);
+  this->calculate_strain_tensor_components(strTsrMag,*uhat,*vhat,*what,*Shatij[0][0],*Shatij[0][1],*Shatij[0][2],*Shatij[1][0],*Shatij[1][1],*Shatij[2][0]);
   
   // release some temporary fields
   uhat.detach(); vhat.detach(); what.detach();
@@ -262,7 +266,7 @@ evaluate()
   // S22 = Sij[1][0], S23 = Sij[1][1]
   // S33 = Sij[2][0]
   ALLOCATE_TENSOR_FIELD(Sij);
-  calculate_strain_tensor_components(strTsrMag,u,v,w,*Sij[0][0],*Sij[0][1],*Sij[0][2],*Sij[1][0],*Sij[1][1],*Sij[2][0]);
+  this->calculate_strain_tensor_components(strTsrMag,u,v,w,*Sij[0][0],*Sij[0][1],*Sij[0][2],*Sij[1][0],*Sij[1][1],*Sij[2][0]);
   exOp_->apply_to_field(strTsrMag, 0.0);
   
   jmin=0;
@@ -380,3 +384,18 @@ evaluate()
   dynSmagConst <<= cond( *LM < 0.0 || *MM <= 2.0*eps , 0.0 )
                        ( 0.5 * *LM / *MM );
 }
+
+//------------------------------------------------------
+//==========================================================================
+// Explicit template instantiation for supported versions of this expression
+#include <spatialops/structured/FVStaggered.h>
+
+template class DynamicSmagorinskyCoefficient< SpatialOps::SVolField,
+                                               SpatialOps::XVolField,
+                                               SpatialOps::YVolField,
+                                               SpatialOps::ZVolField>;
+
+template class DynamicSmagorinskyCoefficient< SpatialOps::SVolField,
+                                               SpatialOps::SVolField,
+                                               SpatialOps::SVolField,
+                                               SpatialOps::SVolField >;

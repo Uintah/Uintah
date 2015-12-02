@@ -138,12 +138,12 @@
       <theta                  spec="OPTIONAL DOUBLE" />
     </torus>
 
-    <parallelepiped                 spec="OPTIONAL NO_DATA"
+    <parallelepiped           spec="OPTIONAL NO_DATA"
                                 attribute1="label    OPTIONAL STRING" >
-      <p1                     spec="REQUIRED VECTOR" />
-      <p2                     spec="REQUIRED VECTOR" />
-      <p3                     spec="REQUIRED VECTOR" />
-      <p4                     spec="REQUIRED VECTOR" />
+      <p1                     spec="OPTIONAL VECTOR" />
+      <p2                     spec="OPTIONAL VECTOR" />
+      <p3                     spec="OPTIONAL VECTOR" />
+      <p4                     spec="OPTIONAL VECTOR" />
     </parallelepiped>
     
     <sphere                   spec="OPTIONAL NO_DATA"

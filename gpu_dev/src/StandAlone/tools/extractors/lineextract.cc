@@ -74,6 +74,7 @@ bool quiet   = false;
 bool pad     = false;
 
 bool d_printCell_coords = false;
+bool d_printNode_coords = false;
   
 void
 usage( const std::string & badarg, const std::string & progname )
@@ -102,6 +103,7 @@ usage( const std::string & badarg, const std::string & progname )
   cerr << "  -q,        --quiet:         (only print data values)\n";
   cerr << "  -pad,        --pad:         (print zero values for cell locations not currently in the specified level)\n";
   cerr << "  -cellCoords:                (prints the cell centered coordinates on that level)\n";
+  cerr << "  -nodeCoords:                (prints the node centered coordinates on that level)\n";
   cerr << "  --cellIndexFile:            <filename> (file that contains a list of cell indices)\n";
   cerr << "                                   [int 100, 43, 0]\n";
   cerr << "                                   [int 101, 43, 0]\n";
@@ -318,6 +320,10 @@ printData(       DataArchive             * archive,
               Point point = level->getCellPosition(c);
               Vector here = point.asVector() + shift;
               out << here.x() << " "<< here.y() << " " << here.z() << " "<<val << endl;;
+           } else  if(d_printNode_coords){
+              Point point = level->getNodePosition(c);
+              Vector here = point.asVector() + shift;
+              out << here.x() << " "<< here.y() << " " << here.z() << " "<<val << endl;;
            } else if (printValueOnly) {
              out << val << endl;
            } else{
@@ -328,6 +334,10 @@ printData(       DataArchive             * archive,
           if(pad){
            if(d_printCell_coords){
               Point point = level->getCellPosition(c);
+              Vector here = point.asVector() + shift;
+              out << here.x() << " "<< here.y() << " " << here.z() << " "<< val << endl;;
+           }else if(d_printNode_coords){
+              Point point = level->getNodePosition(c);
               Vector here = point.asVector() + shift;
               out << here.x() << " "<< here.y() << " " << here.z() << " "<< val << endl;;
            } else if (printValueOnly) {
@@ -357,6 +367,9 @@ printData(       DataArchive             * archive,
             exit(1);
           }
           if(d_printCell_coords){
+            Point p = level->getCellPosition(c);
+            out << p.x() << " "<< p.y() << " " << p.z() << " "<< values[0] << endl;
+          }else if(d_printCell_coords){
             Point p = level->getCellPosition(c);
             out << p.x() << " "<< p.y() << " " << p.z() << " "<< values[0] << endl;
           }else{
@@ -550,6 +563,9 @@ printData_PV(       DataArchive             * archive,
          if(d_printCell_coords){
             Point point = level->getCellPosition(c);
             out << point.x() << " "<< point.y() << " " << point.z() << " "<<val << endl;;
+         } else if(d_printNode_coords){
+            Point point = level->getNodePosition(c);
+            out << point.x() << " "<< point.y() << " " << point.z() << " "<<val << endl;;
           }else{
             out << c.x() << " "<< c.y() << " " << c.z() << " "<< val << endl;;
           }
@@ -582,6 +598,9 @@ printData_PV(       DataArchive             * archive,
           if(d_printCell_coords){
             Point point = level->getCellPosition(c);
             out << point.x() << " "<< point.y() << " " << point.z() << " "<< val << endl;
+          } else if(d_printNode_coords){
+            Point point = level->getNodePosition(c);
+            out << point.x() << " "<< point.y() << " " << point.z() << " "<< val << endl;
           }else{
             out << c.x() << " "<< c.y() << " " << c.z() << " "<< val << endl;
           }
@@ -599,7 +618,7 @@ printData_PV(       DataArchive             * archive,
 _______________________________________________________________________ */
 void
 readCellIndicies( const string& filename, vector<IntVector>& cells )
-{ 
+{
   // open the file
   ifstream fp(filename.c_str());
   if (!fp){
@@ -761,6 +780,8 @@ main( int argc, char** argv )
       input_file_cellIndices = string(argv[++i]);
     } else if (s == "--cellCoords" || s == "-cellCoords" ) {
       d_printCell_coords = true;
+    } else if (s == "--nodeCoords" || s == "-nodeCoords" ) {
+      d_printNode_coords = true;
     }else {
       usage( s, argv[0] );
     }

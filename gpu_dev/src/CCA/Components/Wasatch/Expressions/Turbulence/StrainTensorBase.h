@@ -31,6 +31,22 @@
 //-- ExprLib Includes --//
 #include <expression/Expression.h>
 
+template< typename SrcT, typename DesT > struct GradOperatorSelector
+{
+  typedef typename SpatialOps::Gradient GradientX;
+  typedef typename SpatialOps::Gradient GradientY;
+  typedef typename SpatialOps::Gradient GradientZ;
+};
+
+
+template<>
+struct GradOperatorSelector<SVolField,SVolField>
+{
+  typedef typename SpatialOps::GradientX GradientX;
+  typedef typename SpatialOps::GradientX GradientY;
+  typedef typename SpatialOps::GradientX GradientZ;
+};
+
 /**
  *  \class StrainTensorBase
  *  \authors Tony Saad
@@ -45,40 +61,40 @@ models. Typical eddy-viscosity models are the Constant Smagorinsky, the Vreman, 
 Furthermore, all operators defined here will be used in the Dynamic Smagorinsky Coefficient expression.
  *
  */
-class StrainTensorBase : public Expr::Expression<SVolField>
+template<typename ResultT, typename Vel1T, typename Vel2T, typename Vel3T>
+class StrainTensorBase : public Expr::Expression<ResultT>
 {
 protected:
+    
+  typedef typename SpatialOps::FaceTypes<Vel1T> UFaceTypes;
+  typedef typename SpatialOps::FaceTypes<Vel2T> VFaceTypes;
+  typedef typename SpatialOps::FaceTypes<Vel3T> WFaceTypes;
   
-  //A_SURF_B_Field = A vol, B surface
-  typedef SpatialOps::SpatFldPtr<SVolField> SVolPtr;
-  typedef std::vector< SVolPtr  > SVolVecT;
-  typedef std::vector< SVolVecT > SVolTensorT;
+  typedef typename SpatialOps::OperatorTypeBuilder< SpatialOps::Gradient, Vel1T, typename UFaceTypes::YFace >::type dudyT;
+  typedef typename SpatialOps::OperatorTypeBuilder< SpatialOps::Gradient, Vel2T, typename VFaceTypes::XFace >::type dvdxT;
   
-  typedef SpatialOps::OperatorTypeBuilder< SpatialOps::Gradient, XVolField, SpatialOps::XSurfYField >::type dudyT;
-  typedef SpatialOps::OperatorTypeBuilder< SpatialOps::Gradient, YVolField, SpatialOps::YSurfXField >::type dvdxT;
+  typedef typename SpatialOps::OperatorTypeBuilder< SpatialOps::Gradient, Vel1T, typename UFaceTypes::ZFace >::type dudzT;
+  typedef typename SpatialOps::OperatorTypeBuilder< SpatialOps::Gradient, Vel3T, typename WFaceTypes::XFace >::type dwdxT;
   
-  typedef SpatialOps::OperatorTypeBuilder< SpatialOps::Gradient, XVolField, SpatialOps::XSurfZField >::type dudzT;
-  typedef SpatialOps::OperatorTypeBuilder< SpatialOps::Gradient, ZVolField, SpatialOps::ZSurfXField >::type dwdxT;
+  typedef typename SpatialOps::OperatorTypeBuilder< SpatialOps::Gradient, Vel2T, typename VFaceTypes::ZFace >::type dvdzT;
+  typedef typename SpatialOps::OperatorTypeBuilder< SpatialOps::Gradient, Vel3T, typename WFaceTypes::YFace >::type dwdyT;
   
-  typedef SpatialOps::OperatorTypeBuilder< SpatialOps::Gradient, YVolField, SpatialOps::YSurfZField >::type dvdzT;
-  typedef SpatialOps::OperatorTypeBuilder< SpatialOps::Gradient, ZVolField, SpatialOps::ZSurfYField >::type dwdyT;
+  typedef typename SpatialOps::OperatorTypeBuilder< typename GradOperatorSelector<ResultT,Vel1T>::GradientX, Vel1T, ResultT >::type dudxT;
+  typedef typename SpatialOps::OperatorTypeBuilder< typename GradOperatorSelector<ResultT,Vel2T>::GradientY, Vel2T, ResultT >::type dvdyT;
+  typedef typename SpatialOps::OperatorTypeBuilder< typename GradOperatorSelector<ResultT,Vel3T>::GradientZ, Vel3T, ResultT >::type dwdzT;
   
-  typedef SpatialOps::OperatorTypeBuilder< SpatialOps::Gradient, XVolField, SVolField >::type dudxT;
-  typedef SpatialOps::OperatorTypeBuilder< SpatialOps::Gradient, YVolField, SVolField >::type dvdyT;
-  typedef SpatialOps::OperatorTypeBuilder< SpatialOps::Gradient, ZVolField, SVolField >::type dwdzT;
+  typedef typename SpatialOps::OperatorTypeBuilder< SpatialOps::Interpolant, typename UFaceTypes::YFace, ResultT >::type XYInterpT;
+  typedef typename SpatialOps::OperatorTypeBuilder< SpatialOps::Interpolant, typename VFaceTypes::XFace, ResultT >::type YXInterpT;
   
-  typedef SpatialOps::OperatorTypeBuilder< SpatialOps::Interpolant, SpatialOps::XSurfYField, SVolField >::type XYInterpT;
-  typedef SpatialOps::OperatorTypeBuilder< SpatialOps::Interpolant, SpatialOps::YSurfXField, SVolField >::type YXInterpT;
+  typedef typename SpatialOps::OperatorTypeBuilder< SpatialOps::Interpolant, typename UFaceTypes::ZFace, ResultT >::type XZInterpT;
+  typedef typename SpatialOps::OperatorTypeBuilder< SpatialOps::Interpolant, typename WFaceTypes::XFace, ResultT >::type ZXInterpT;
   
-  typedef SpatialOps::OperatorTypeBuilder< SpatialOps::Interpolant, SpatialOps::XSurfZField, SVolField >::type XZInterpT;
-  typedef SpatialOps::OperatorTypeBuilder< SpatialOps::Interpolant, SpatialOps::ZSurfXField, SVolField >::type ZXInterpT;
+  typedef typename SpatialOps::OperatorTypeBuilder< SpatialOps::Interpolant, typename VFaceTypes::ZFace, ResultT >::type YZInterpT;
+  typedef typename SpatialOps::OperatorTypeBuilder< SpatialOps::Interpolant, typename WFaceTypes::YFace, ResultT >::type ZYInterpT;
   
-  typedef SpatialOps::OperatorTypeBuilder< SpatialOps::Interpolant, SpatialOps::YSurfZField, SVolField >::type YZInterpT;
-  typedef SpatialOps::OperatorTypeBuilder< SpatialOps::Interpolant, SpatialOps::ZSurfYField, SVolField >::type ZYInterpT;
-  
-  DECLARE_FIELD(XVolField, u_)
-  DECLARE_FIELD(YVolField, v_)
-  DECLARE_FIELD(ZVolField, w_)
+  DECLARE_FIELD(Vel1T, u_)
+  DECLARE_FIELD(Vel2T, v_)
+  DECLARE_FIELD(Vel3T, w_)
   
   const bool doX_, doY_, doZ_;
   
@@ -103,16 +119,17 @@ protected:
   
   StrainTensorBase( const Expr::TagList& velTags );
   
-  void calculate_strain_tensor_components(SVolField& strTsrMag,
-                                          const XVolField& u,
-                                          const YVolField& v,
-                                          const ZVolField& w,
-                                          SVolField& S11,
-                                          SVolField& S12,
-                                          SVolField& S13,
-                                          SVolField& S22,
-                                          SVolField& S23,
-                                          SVolField& S33);
+  // for symmetric strain tensor on structured staggered grids
+  void calculate_strain_tensor_components(ResultT& strTsrMag,
+                                          const Vel1T& u,
+                                          const Vel2T& v,
+                                          const Vel3T& w,
+                                          ResultT& S11,
+                                          ResultT& S12,
+                                          ResultT& S13,
+                                          ResultT& S22,
+                                          ResultT& S23,
+                                          ResultT& S33);
   
 public:  
   ~StrainTensorBase();

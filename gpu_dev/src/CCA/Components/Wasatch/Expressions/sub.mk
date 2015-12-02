@@ -56,7 +56,6 @@ CUDA_ENABLED_SRCS =       \
      SolnVarEst           \
      Strain               \
      ScalabilityTestSrc   \
-     VelEst        \
      ExprAlgebra   \
      TimeAdvance
 

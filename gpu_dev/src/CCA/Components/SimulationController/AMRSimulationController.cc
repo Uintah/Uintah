@@ -86,7 +86,7 @@ AMRSimulationController::AMRSimulationController(const ProcessorGroup* myworld,
   SimulationController(myworld, doAMR, pspec)
 {
 #ifdef HAVE_VISIT
-  do_visit = true;
+  do_visit = false;
 #endif
 
 }
@@ -189,12 +189,15 @@ AMRSimulationController::run()
   // so that a user can connect to the simulation via VisIt.
 #ifdef HAVE_VISIT
 
+  if( do_visit )
+  {
+    d_visit_simulation_data.AMRSimController = this;
+    d_visit_simulation_data.gridP = currentGrid;
+
 #ifdef HAVE_MPICH
   d_visit_simulation_data.isProc0 = isProc0_macro;
 #endif
 
-  if( do_visit )
-  {
     visit_InitLibSim( &d_visit_simulation_data );
   }
 #endif
@@ -214,8 +217,8 @@ AMRSimulationController::run()
 
 
   while( ( time < d_timeinfo->maxTime ) &&
-	 ( iterations < d_timeinfo->maxTimestep ) && 
-	 ( d_timeinfo->max_wall_time == 0 || getWallTime() < d_timeinfo->max_wall_time )  ) {
+         ( iterations < d_timeinfo->maxTimestep ) && 
+         ( d_timeinfo->max_wall_time == 0 || getWallTime() < d_timeinfo->max_wall_time )  ) {
   
 #ifdef USE_GPERFTOOLS
     if (gheapprofile.active()){
@@ -228,22 +231,34 @@ AMRSimulationController::run()
     MALLOC_TRACE_TAG_SCOPE("AMRSimulationController::run()::control loop");
     if(dbg_barrier.active()) {
       for(int i=0;i<5;i++) {
-	barrier_times[i]=0;
+        barrier_times[i]=0;
       }
     }
      
     //__________________________________
     //    Regridding
-    if( d_regridder && d_regridder->doRegridOnce() && d_regridder->isAdaptive() ){
-      proc0cout << "______________________________________________________________________\n";
-      proc0cout << " Regridding once.\n";
-      doRegridding(currentGrid, false);
-      d_regridder->setAdaptivity(false);
-      proc0cout << "______________________________________________________________________\n";
-    }
-
-    if (d_regridder && d_regridder->needsToReGrid(currentGrid) && (!first || (!d_restarting))) {
-      doRegridding(currentGrid, false);
+    if (d_regridder )
+    {
+      if (d_regridder->doRegridOnce() && d_regridder->isAdaptive()) {
+        proc0cout << "______________________________________________________________________\n";
+        proc0cout << " Regridding once.\n";
+        doRegridding(currentGrid, false);
+        d_regridder->setAdaptivity(false);
+#ifdef HAVE_VISIT
+        d_regridder->setForceRegridding(false);
+#endif
+        proc0cout << "______________________________________________________________________\n";
+      }
+      
+      if (d_regridder->needsToReGrid(currentGrid) && (!first || !d_restarting)) {
+        proc0cout << "______________________________________________________________________\n";
+        proc0cout << " Need to regrid.\n";
+        doRegridding(currentGrid, false);
+#ifdef HAVE_VISIT
+        d_regridder->setForceRegridding(false);
+#endif
+        proc0cout << "______________________________________________________________________\n";
+      }
     }
 
     // Compute number of dataWarehouses - multiplies by the time refinement
@@ -251,7 +266,7 @@ AMRSimulationController::run()
     int totalFine=1;
     if (!d_sharedState->isLockstepAMR()) {
       for(int i=1;i<currentGrid->numLevels();i++) {
-	totalFine *= currentGrid->getLevel(i)->getRefinementRatioMaxDim();
+        totalFine *= currentGrid->getLevel(i)->getRefinementRatioMaxDim();
       }
     }
      
@@ -290,7 +305,8 @@ AMRSimulationController::run()
     }
 
     // Yes, I know this is kind of hacky, but this is the only way to
-    // get a new grid from UdaReducer. Needs to be done before advanceDataWarehouse.
+    // get a new grid from UdaReducer. Needs to be done before
+    // advanceDataWarehouse.
     if (d_reduceUda){
       currentGrid = static_cast<UdaReducer*>(d_sim)->getGrid();
     }
@@ -321,25 +337,25 @@ AMRSimulationController::run()
     if( (nr=needRecompile( time, delt, currentGrid )) || first ){
         
       if(nr){ // Recompile taskgraph, re-assign BCs, reset recompile flag.
-	currentGrid->assignBCS( d_grid_ps, d_lb );
-	currentGrid->performConsistencyCheck();
-	d_sharedState->setRecompileTaskGraph( false );
+        currentGrid->assignBCS( d_grid_ps, d_lb );
+        currentGrid->performConsistencyCheck();
+        d_sharedState->setRecompileTaskGraph( false );
       }
        
       new_init_delt = d_timeinfo->max_initial_delt;
        
       if (new_init_delt != old_init_delt) {
-	// writes to the DW in the next section below
-	delt = new_init_delt;
+        // writes to the DW in the next section below
+        delt = new_init_delt;
       }
       recompile( time, delt, currentGrid, totalFine );
     }
     else {
       if (d_output){
-	// This is not correct if we have switched to a different
-	// component, since the delt will be wrong 
-	d_output->finalizeTimestep( time, delt, currentGrid, d_scheduler, 0 );
-	d_output->sched_allOutputTasks( delt, currentGrid, d_scheduler, 0 );
+        // This is not correct if we have switched to a different
+        // component, since the delt will be wrong 
+        d_output->finalizeTimestep( time, delt, currentGrid, d_scheduler, 0 );
+        d_output->sched_allOutputTasks( delt, currentGrid, d_scheduler, 0 );
       }
     }
 
@@ -356,14 +372,14 @@ AMRSimulationController::run()
       const Level* level = currentGrid->getLevel(i).get_rep();
       
       if( d_doAMR && i != 0 && !d_sharedState->isLockstepAMR() ) {
-	int rr = level->getRefinementRatioMaxDim();
+        int rr = level->getRefinementRatioMaxDim();
         delt_fine /= rr;
-	skip      /= rr;
+        skip      /= rr;
       }
        
       for( int idw = 0; idw < totalFine; idw += skip ){
-	DataWarehouse* dw = d_scheduler->get_dw( idw );
-	dw->override( delt_vartype( delt_fine ), d_sharedState->get_delt_label(), level );
+        DataWarehouse* dw = d_scheduler->get_dw( idw );
+        dw->override( delt_vartype( delt_fine ), d_sharedState->get_delt_label(), level );
       }
     }
      
@@ -371,14 +387,15 @@ AMRSimulationController::run()
     DataWarehouse* oldDW = d_scheduler->get_dw(0);
     oldDW->override( delt_vartype(delt), d_sharedState->get_delt_label() );
 
-    // a component may update the output interval or the checkpoint interval
-    // during a simulation.  For example in deflagration -> detonation simulations
+    // a component may update the output interval or the checkpoint
+    // interval during a simulation.  For example in deflagration ->
+    // detonation simulations
     if (d_output && d_sharedState->updateOutputInterval() && !first ) {
       min_vartype outputInv_var;
       oldDW->get( outputInv_var, d_sharedState->get_outputInterval_label() );
        
       if ( !outputInv_var.isBenignValue() ){
-	d_output->updateOutputInterval( outputInv_var );
+        d_output->updateOutputInterval( outputInv_var );
       }
     }
 
@@ -387,14 +404,10 @@ AMRSimulationController::run()
       oldDW->get( checkInv_var, d_sharedState->get_checkpointInterval_label() );
        
       if ( !checkInv_var.isBenignValue() ){
-	d_output->updateCheckpointInterval( checkInv_var );
+        d_output->updateCheckpointInterval( checkInv_var );
       }
     }
  
-    if ( first ) {
-      first = false;
-    }
-     
     calcWallTime();
     printSimulationStats( d_sharedState->getCurrentTopLevelTimeStep()-1, delt, time );
 
@@ -405,10 +418,6 @@ AMRSimulationController::run()
      
     // Print MPI statistics
     d_scheduler->printMPIStats();
-
-    if (!first) {
-      d_scheduler->setRestartInitTimestep(false);
-    }
 
     // Update the profiler weights
     d_lb->finalizeContributions(currentGrid);
@@ -421,12 +430,12 @@ AMRSimulationController::run()
       MPI_Reduce( &barrier_times, &avg, 5, MPI_DOUBLE, MPI_SUM, 0, d_myworld->getComm() );
        
       if(d_myworld->myrank()==0) {
-	cout << "Barrier Times: "; 
-	for(int i=0;i<5;i++){
-	  avg[i]/=d_myworld->size();
-	  cout << avg[i] << " ";
-	}
-	cout << "\n";
+        cout << "Barrier Times: "; 
+        for(int i=0;i<5;i++){
+          avg[i]/=d_myworld->size();
+          cout << avg[i] << " ";
+        }
+        cout << "\n";
       }
     }
 
@@ -443,14 +452,23 @@ AMRSimulationController::run()
 #ifdef HAVE_VISIT
 
      if( do_visit ) {
-       d_visit_simulation_data.schedulerP = d_scheduler;
-       d_visit_simulation_data.gridP = currentGrid;
        d_visit_simulation_data.time  = time;
+       d_visit_simulation_data.delt  = delt;
        d_visit_simulation_data.cycle = d_sharedState->getCurrentTopLevelTimeStep();
 
        visit_CheckState( &d_visit_simulation_data );
+
+       // User issued a termination.
+       if( d_visit_simulation_data.simMode == VISIT_SIMMODE_TERMINATED )
+         break;
      }
 #endif
+
+    if ( first ) {
+      d_scheduler->setRestartInitTimestep(false);
+      first = false;
+    }
+     
   } // end while ( time is not up, etc )
 
   // If VisIt has been included into the build, stop here so the

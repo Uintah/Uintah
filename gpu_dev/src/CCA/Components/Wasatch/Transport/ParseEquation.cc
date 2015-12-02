@@ -33,7 +33,8 @@
 #include "TransportEquation.h"
 #include "ScalarTransportEquation.h"
 #include "ScalabilityTestTransportEquation.h"
-#include "MomentumTransportEquation.h"
+#include "MomentumTransportEquationBase.h"
+#include "LowMachMomentumTransportEquation.h"
 #include "EquationBase.h"
 
 #include "MomentTransportEquation.h"
@@ -245,7 +246,7 @@ namespace Wasatch{
     std::string slnVariableName;
     poissonEqParams->get("SolutionVariable", slnVariableName);
     const Expr::Tag poissonVariableTag(slnVariableName, Expr::STATE_N);
-    const Expr::TagList poissontags( tag_list( poissonVariableTag, Expr::Tag( poissonVariableTag.name() + "_rhs_poisson_expr", pressure_tag().context() ) ) );
+    const Expr::TagList poissontags( tag_list( poissonVariableTag, Expr::Tag( poissonVariableTag.name() + "_rhs_poisson_expr", TagNames::self().pressure.context() ) ) );
     const Expr::Tag rhsTag = parse_nametag( poissonEqParams->findBlock("PoissonRHS")->findBlock("NameTag"));    
     bool useRefPoint = false;
     double refValue = 0.0;
@@ -511,9 +512,10 @@ namespace Wasatch{
   //==================================================================
   
   std::vector<EqnTimestepAdaptorBase*>
-  parse_momentum_equations( Uintah::ProblemSpecP momentumSpec,
+  parse_momentum_equations( Uintah::ProblemSpecP wasatchSpec,
                             const TurbulenceParameters turbParams,
                             const bool useAdaptiveDt,
+                            const bool doParticles,
                             const bool isConstDensity,
                             const Expr::Tag densityTag,
                             GraphCategories& gc,
@@ -522,6 +524,7 @@ namespace Wasatch{
     typedef std::vector<EqnTimestepAdaptorBase*> EquationAdaptors;
     EquationAdaptors adaptors;
 
+    Uintah::ProblemSpecP momentumSpec = wasatchSpec->findBlock("MomentumEquations");
     std::string xvelname, yvelname, zvelname;
     const Uintah::ProblemSpecP doxvel = momentumSpec->get( "X-Velocity", xvelname );
     const Uintah::ProblemSpecP doyvel = momentumSpec->get( "Y-Velocity", yvelname );
@@ -575,7 +578,7 @@ namespace Wasatch{
 
     if( doxvel && doxmom ){
       proc0cout << "Setting up X momentum transport equation" << std::endl;
-      typedef MomentumTransportEquation< XVolField > MomTransEq;
+      typedef LowMachMomentumTransportEquation< XVolField > MomTransEq;
       EquationBase* momtranseq = scinew MomTransEq( xvelname,
                                                          xmomname,
                                                          densityTag,
@@ -591,7 +594,7 @@ namespace Wasatch{
 
     if( doyvel && doymom ){
       proc0cout << "Setting up Y momentum transport equation" << std::endl;
-      typedef MomentumTransportEquation< YVolField > MomTransEq;
+      typedef LowMachMomentumTransportEquation< YVolField > MomTransEq;
       EquationBase* momtranseq = scinew MomTransEq( yvelname,
                                                          ymomname,
                                                          densityTag,
@@ -607,7 +610,7 @@ namespace Wasatch{
 
     if( dozvel && dozmom ){
       proc0cout << "Setting up Z momentum transport equation" << std::endl;
-      typedef MomentumTransportEquation< ZVolField > MomTransEq;
+      typedef LowMachMomentumTransportEquation< ZVolField > MomTransEq;
       EquationBase* momtranseq = scinew MomTransEq( zvelname,
                                                          zmomname,
                                                          densityTag,
@@ -628,10 +631,23 @@ namespace Wasatch{
       const Expr::Tag yVelTag = doyvel ? Expr::Tag(yvelname, Expr::STATE_NONE) : Expr::Tag();
       const Expr::Tag zVelTag = dozvel ? Expr::Tag(zvelname, Expr::STATE_NONE) : Expr::Tag();
       const Expr::Tag viscTag = (momentumSpec->findBlock("Viscosity")) ? parse_nametag( momentumSpec->findBlock("Viscosity")->findBlock("NameTag") ) : Expr::Tag();
+
+      Expr::Tag puTag, pvTag, pwTag;
+      if (doParticles) {
+        Uintah::ProblemSpecP particleSpec = wasatchSpec->findBlock("ParticleTransportEquations");
+        Uintah::ProblemSpecP particleMomSpec = particleSpec->findBlock("ParticleMomentum");
+        std::string puname, pvname,pwname;
+        particleMomSpec->getAttribute("x",puname);
+        particleMomSpec->getAttribute("y",pvname);
+        particleMomSpec->getAttribute("z",pwname);
+        puTag = Expr::Tag(puname,Expr::STATE_DYNAMIC);
+        pvTag = Expr::Tag(pvname,Expr::STATE_DYNAMIC);
+        pwTag = Expr::Tag(pwname,Expr::STATE_DYNAMIC);
+      }
       const Expr::ExpressionID stabDtID = solnGraphHelper->exprFactory->register_expression(scinew StableTimestep::Builder( TagNames::self().stableTimestep,
                                                                                                                            densityTag,
                                                                                                                            viscTag,
-                                                                                                                           xVelTag,yVelTag,zVelTag ), true);
+                                                                                                                           xVelTag,yVelTag,zVelTag, puTag, pvTag, pwTag ), true);
       // force this onto the graph.
       solnGraphHelper->rootIDs.insert( stabDtID );
     }
@@ -664,16 +680,16 @@ namespace Wasatch{
     // set up initial conditions on the pressure
     try{
       proc0cout << "Setting initial conditions for pressure: "
-      << pressure_tag().name()
+      << TagNames::self().pressure.name()
       << std::endl;
-      icGraphHelper->rootIDs.insert( (*icGraphHelper->exprFactory).get_id( pressure_tag() ) );
+      icGraphHelper->rootIDs.insert( (*icGraphHelper->exprFactory).get_id( TagNames::self().pressure ) );
     }
     catch( std::runtime_error& e ){
       std::ostringstream msg;
       msg << e.what()
       << std::endl
       << "ERORR while setting initial conditions on pressure. "
-      << pressure_tag().name()
+      << TagNames::self().pressure.name()
       << std::endl;
       throw Uintah::ProblemSetupException( msg.str(), __FILE__, __LINE__ );
     }
@@ -689,6 +705,7 @@ namespace Wasatch{
   std::vector<EqnTimestepAdaptorBase*>
   parse_particle_transport_equations( Uintah::ProblemSpecP particleSpec,
                                       Uintah::ProblemSpecP wasatchSpec,
+                                      const bool useAdaptiveDt,
                                       GraphCategories& gc)
   {
     typedef std::vector<EqnTimestepAdaptorBase*> EquationAdaptors;
@@ -869,6 +886,41 @@ namespace Wasatch{
     }
     
     proc0cout << "------------------------------------------------" << std::endl;
+
+    //
+    // ADD ADAPTIVE TIMESTEPPING in case it was not parsed in the momentum equations
+    if( useAdaptiveDt ){
+      // if no stabletimestep expression has been registered, then register one. otherwise return.
+      if (!factory.have_entry(TagNames::self().stableTimestep)) {
+        
+        std::string gasViscosityName, gasDensityName;
+        Uintah::ProblemSpecP gasSpec = particleSpec->findBlock("ParticleMomentum")->findBlock("GasProperties");
+        gasSpec->findBlock("GasViscosity")->getAttribute( "name", gasViscosityName );
+        gasSpec->findBlock("GasDensity")->getAttribute( "name", gasDensityName );
+        Uintah::ProblemSpecP gasVelSpec = gasSpec->findBlock("GasVelocity");
+        std::string uVelName, vVelName, wVelName;
+        gasVelSpec->findBlock("XVel")->getAttribute("name",uVelName);
+        gasVelSpec->findBlock("YVel")->getAttribute("name",vVelName);
+        gasVelSpec->findBlock("ZVel")->getAttribute("name",wVelName);
+        const Expr::Tag xVelTag = Expr::Tag(uVelName, Expr::STATE_NONE);
+        const Expr::Tag yVelTag = Expr::Tag(vVelName, Expr::STATE_NONE);
+        const Expr::Tag zVelTag = Expr::Tag(wVelName, Expr::STATE_NONE);
+        const Expr::Tag viscTag = Expr::Tag(gasViscosityName, Expr::STATE_NONE);
+        const Expr::Tag densityTag = Expr::Tag(gasDensityName, Expr::STATE_NONE);
+        
+        const Expr::Tag puTag = Expr::Tag(puname, Expr::STATE_DYNAMIC);
+        const Expr::Tag pvTag = Expr::Tag(pvname, Expr::STATE_DYNAMIC);
+        const Expr::Tag pwTag = Expr::Tag(pwname, Expr::STATE_DYNAMIC);
+        
+        const Expr::ExpressionID stabDtID = factory.register_expression(scinew StableTimestep::Builder( TagNames::self().stableTimestep,
+                                                                                                                             densityTag,
+                                                                                                                             viscTag,
+                                                                                                                             xVelTag,yVelTag,zVelTag, puTag, pvTag, pwTag ), true);
+        // force this onto the graph.
+        gc[ADVANCE_SOLUTION]->rootIDs.insert( stabDtID );
+      }
+    }
+
     //
     return adaptors;
   }
@@ -1154,8 +1206,8 @@ namespace Wasatch{
     // see if we have an expression set for the diffusive flux.
     Uintah::ProblemSpecP nameTagParam = diffFluxParams->findBlock("NameTag");
     if( nameTagParam ){
-      if (singleDirection) diffFluxTag = parse_nametag( nameTagParam );
-      else {
+      if( singleDirection ) diffFluxTag = parse_nametag( nameTagParam );
+      else{
         std::ostringstream msg;
         msg << "You cannot build a diffusive flux expression with a specified nametag for '" << primVarName << "' in multiple directions" << std::endl;
         throw Uintah::ProblemSetupException( msg.str(), __FILE__, __LINE__ );
@@ -1263,7 +1315,7 @@ namespace Wasatch{
     // see if we have an expression set for the diffusive velocity.
     Uintah::ProblemSpecP nameTagParam = diffVelParams->findBlock("NameTag");
     if( nameTagParam ){
-      if (singleDirection) diffVelTag = parse_nametag( nameTagParam );
+      if( singleDirection ) diffVelTag = parse_nametag( nameTagParam );
       else {
         std::ostringstream msg;
         msg << "You cannot build a diffusive velocity expression with a specified nametag for '" << primVarName << "' in multiple directions" << std::endl;
@@ -1281,10 +1333,10 @@ namespace Wasatch{
       }
       info[ fs ] = diffVelTag;
 
-    } else { // build an expression for the diffusive velocity.
+    }
+    else { // build an expression for the diffusive velocity.
 
-      for (std::string::iterator it = direction.begin(); it != direction.end(); ++it)
-      {
+      for( std::string::iterator it = direction.begin(); it != direction.end(); ++it ){
         std::string dir(1,*it);
         diffVelTag = Expr::Tag( primVarName+"_diffVelocity_"+dir, Expr::STATE_NONE );
         
@@ -1313,7 +1365,6 @@ namespace Wasatch{
         info[ fs ] = diffVelTag;
       }
     }
-
   }
 
   //------------------------------------------------------------------

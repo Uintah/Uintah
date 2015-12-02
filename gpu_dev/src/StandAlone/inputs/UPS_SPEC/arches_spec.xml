@@ -808,7 +808,9 @@
           </region>
           <deposit_velocity_name             spec="REQUIRED STRING" need_applies_to="type coal_region_ht"/>  
           <coal_region                       spec="MULTIPLE NO_DATA" need_applies_to="type coal_region_ht">
-            <t_sb                       spec="REQUIRED DOUBLE"/>  <!-- time since the last soot blow, [s] -->
+            <T_slag                     spec="REQUIRED DOUBLE"/>  <!-- Slagging Temperature, [K] -->
+            <erosion_thickness          spec="REQUIRED DOUBLE"/>  <!-- maximum deposit thickness, [m] -->
+            <tscale_dep                 spec="REQUIRED DOUBLE"/>  <!-- time scale of deposition, [s] -->
             <k                          spec="REQUIRED DOUBLE"/>  <!-- thermal conductivity, [W/(m K)] -->
             <k_deposit                  spec="REQUIRED DOUBLE"/>  <!-- thermal conductivity of deposit, [W/(m K)] -->
             <wall_thickness             spec="REQUIRED DOUBLE"/>  <!-- thickness of the wall in meters, [meters] -->
@@ -1093,8 +1095,10 @@
             <Melting_Temperature        spec="REQUIRED DOUBLE 'positive'"
                                         need_applies_to="type rate_deposition"/>       <!-- temperature where probability of melting is 1 -->
             <!-- deposition model -->
-            <t_start                    spec="REQUIRED DOUBLE 'positive'"
-                                        need_applies_to="type deposition_velocity"/>       <!-- simulation time to start time-averaging -->
+            <t_interval                 spec="REQUIRED DOUBLE 'positive'"
+                                        need_applies_to="type deposition_velocity"/>       <!-- simulation time interval required for a steady-state thermal profile -->
+            <current_time_in_interval   spec="OPTIONAL DOUBLE 'positive'"
+                                        need_applies_to="type deposition_velocity"/>       <!-- current time within simulation time interval required for a steady-state thermal profile -->
             <!-- Simple rate expression -->
             <A                          spec="REQUIRED DOUBLE 'positive'"
                                         need_applies_to="type simple_rate"/>       <!-- Pre-exponential factor -->

@@ -56,7 +56,7 @@ namespace Wasatch{
                             const Expr::Tag& particleSizeTag,
                             Uintah::ProblemSpecP particleEqsSpec,
                             GraphCategories& gc )
-  : ParticleEquationBase( solnVarName, pdir, particlePositionTags, particleSizeTag, particleEqsSpec, gc ),
+  : ParticleEquationBase( solnVarName, pdir, particlePositionTags, particleSizeTag, gc ),
     pMassTag_( parse_nametag(particleEqsSpec->findBlock("ParticleMass"    )) ),
     pRhoTag_ ( parse_nametag(particleEqsSpec->findBlock("ParticleDensity" )) ),
     gViscTag_( parse_nametag(particleEqsSpec->findBlock("ParticleMomentum")->findBlock("GasProperties")->findBlock("GasViscosity")) ),

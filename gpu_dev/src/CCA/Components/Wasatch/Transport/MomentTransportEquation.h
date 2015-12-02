@@ -99,20 +99,20 @@ namespace Wasatch{
     ~MomentTransportEquation();
 
     void setup_boundary_conditions(WasatchBCHelper& bcHelper,
-                                    GraphCategories& graphCat){}
+                                   GraphCategories& graphCat){}
     
     /**
      *  \brief apply the boundary conditions on the initial condition
      *         associated with this transport equation
      */
     void apply_initial_boundary_conditions( const GraphHelper& graphHelper,
-                                           WasatchBCHelper& bcHelper );
+                                            WasatchBCHelper& bcHelper );
 
     /**
      *  \brief setup the boundary conditions associated with this transport equation
      */
     void apply_boundary_conditions( const GraphHelper& graphHelper,
-                                   WasatchBCHelper& bcHelper );
+                                    WasatchBCHelper& bcHelper );
     /**
      *  \brief setup the initial conditions for this transport equation.
      */
@@ -127,6 +127,7 @@ namespace Wasatch{
                                   const Expr::TagList& srcTags  );
 
   private:
+    Uintah::ProblemSpecP params_;
     const std::string populationName_, baseSolnVarName_;
     const unsigned momentOrder_;
     const double initialMoment_;

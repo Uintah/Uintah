@@ -10,7 +10,7 @@
 
 
   <TimeIntegrator>FE</TimeIntegrator>
-    <Density>
+    <Density method="CONSTANT">
       <Constant value="1.0" name="density"/>
     </Density>
 
@@ -357,15 +357,15 @@
     <save label="z-mom_rhs_partial"/>         
         
 		<save label="pressure_rhs"/>         
-		<save label="tau_xx"/>         		
-		<save label="tau_xy"/>         				
-		<save label="tau_xz"/>         		
-		<save label="tau_yx"/>         				
-		<save label="tau_yy"/>         						
-		<save label="tau_yz"/>         								
-		<save label="tau_zx"/>         				
-		<save label="tau_zy"/>         						
-		<save label="tau_zz"/>         								
+		<save label="strain_xx"/>         		
+		<save label="strain_xy"/>         				
+		<save label="strain_xz"/>         		
+		<save label="strain_yx"/>         				
+		<save label="strain_yy"/>         						
+		<save label="strain_yz"/>         								
+		<save label="strain_zx"/>         				
+		<save label="strain_zy"/>         						
+		<save label="strain_zz"/>         								
 
 		<save label="x-mom_convFlux_x"/>         				
 		<save label="x-mom_convFlux_y"/>         				
@@ -379,8 +379,8 @@
 		<save label="z-mom_convFlux_y"/>         				
 		<save label="z-mom_convFlux_z"/>         								
 		
-		<save label="tau_yy"/>         						
-		<save label="tau_yz"/>         								
+		<save label="strain_yy"/>         						
+		<save label="strain_yz"/>         								
 		
     <save label="u"/>
     <save label="v"/>    

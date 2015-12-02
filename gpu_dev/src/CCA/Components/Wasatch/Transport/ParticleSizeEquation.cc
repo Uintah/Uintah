@@ -21,7 +21,7 @@ namespace Wasatch{
                            const Expr::Tag& particleSizeTag,
                            Uintah::ProblemSpecP particleEqsSpec,
                            GraphCategories& gc )
-  : ParticleEquationBase(solnVarName, pdir, particlePositionTags, particleSizeTag, particleEqsSpec, gc),
+  : ParticleEquationBase(solnVarName, pdir, particlePositionTags, particleSizeTag, gc),
     pSrcTag_( parse_nametag(particleEqsSpec->findBlock("ParticleSize")->findBlock("SourceTerm")) )
   {
     setup();

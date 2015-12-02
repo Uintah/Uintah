@@ -338,6 +338,9 @@ void TaskInterface::schedule_timestep_init( const LevelP& level,
     }
   }
 
+  //other variables:
+  tsk->requires(Task::OldDW, VarLabel::find("delT"));
+
   if ( counter > 0 )
     sched->addTask( tsk, level->eachPatch(), matls );
   else
@@ -409,7 +412,7 @@ void TaskInterface::do_bcs( const ProcessorGroup* pc,
 
     //These lines don't work because we are applying the BC in scheduleInitialize.
     // During that phase, there is no valid DT. Need to work on this?
-    /// @TODO: Work on getting DT to the BC task. 
+    /// @TODO: Work on getting DT to the BC task.
     //get the current dt
     // delt_vartype DT;
     // old_dw->get(DT, VarLabel::find("delT"));
@@ -527,7 +530,9 @@ void TaskInterface::do_timestep_init( const ProcessorGroup* pc,
     SchedToTaskInfo info;
 
     //get the current dt
-    info.dt = 0;
+    delt_vartype DT;
+    old_dw->get(DT, VarLabel::find("delT"));
+    info.dt = DT;
     info.time_substep = 0;
 
     ArchesTaskInfoManager* tsk_info_mngr = scinew ArchesTaskInfoManager(variable_registry, patch, info);
