@@ -55,13 +55,16 @@
    
       <!--__________________________________-->
       <!-- mass momentum and energy source model -->
-      <energy_src             spec="REQUIRED DOUBLE" need_applies_to="type mass_momentum_energy_src"/>
-      <mass_src               spec="REQUIRED DOUBLE" need_applies_to="type mass_momentum_energy_src"/>
-      <momentum_src           spec="REQUIRED VECTOR" need_applies_to="type mass_momentum_energy_src"/>
-      
-      <mme_src_t_start        spec="OPTIONAL DOUBLE" need_applies_to="type mass_momentum_energy_src"/>
-      <mme_src_t_final        spec="OPTIONAL DOUBLE" need_applies_to="type mass_momentum_energy_src"/>  
-      <rate                   spec="OPTIONAL DOUBLE 'positive'"/> 
+      <MassMomEng_src         spec="OPTIONAL NO_DATA">
+        <material             spec="REQUIRED STRING" />             
+        <energy_src           spec="REQUIRED DOUBLE"/>              
+        <mass_src             spec="REQUIRED DOUBLE"/>              
+        <momentum_src         spec="REQUIRED VECTOR"/>              
+
+        <mme_src_t_start      spec="OPTIONAL DOUBLE"/>              
+        <mme_src_t_final      spec="OPTIONAL DOUBLE"/>              
+        <rate                 spec="OPTIONAL DOUBLE 'positive'"/>   
+      </MassMomEng_src>
 
       <!--__________________________________-->
       <!-- Test -->
@@ -74,12 +77,15 @@
       
       <!--__________________________________-->
       <!-- LightTime -->
-        <D                    spec="REQUIRED DOUBLE 'positive'" need_applies_to="type LightTime"/> 
-        <E0                   spec="REQUIRED DOUBLE 'positive'" need_applies_to="type LightTime"/>
-        <starting_location    spec="REQUIRED VECTOR"            need_applies_to="type LightTime"/>          
-        <react_mixed_cells    spec="REQUIRED BOOLEAN"           need_applies_to="type LightTime"/>             
-        <direction_if_plane   spec="REQUIRED VECTOR"            need_applies_to="type LightTime"/>           
-      
+      <LightTime              spec="OPTIONAL NO_DATA">
+        <fromMaterial         spec="OPTIONAL STRING" />           
+        <toMaterial           spec="OPTIONAL STRING" />
+        <D                    spec="REQUIRED DOUBLE 'positive'" /> 
+        <E0                   spec="REQUIRED DOUBLE 'positive'" />
+        <starting_location    spec="REQUIRED VECTOR"  />          
+        <react_mixed_cells    spec="REQUIRED BOOLEAN" />             
+        <direction_if_plane   spec="REQUIRED VECTOR" />          
+      </LightTime>
       <!--__________________________________-->
       <!--  SimpleRxn -->
       <SimpleRxn              spec="OPTIONAL NO_DATA">
@@ -132,9 +138,10 @@
       
       <!--______________________________________________________________________-->
       <!--  COMMON VARIABLES FOR BURN MODELS -->
+      <!--  -->
       <rho0                   spec="REQUIRED DOUBLE"            need_applies_to="type Gruneisen JWL JWLC JWLpp Murnaghan Tillotson" />
-      <toMaterial             spec="OPTIONAL STRING"            need_applies_to="type DDT0 DDT1 JWLpp Simple_Burn SolidReactionModel Steady_Burn Unsteady_Burn ZeroOrder LightTime"/>
-      <fromMaterial           spec="OPTIONAL STRING"            need_applies_to="type DDT0 DDT1 JWLpp Simple_Burn SolidReactionModel Steady_Burn Unsteady_Burn ZeroOrder LightTime"/>
+      <toMaterial             spec="OPTIONAL STRING"            need_applies_to="type DDT0 JWLpp Simple_Burn SolidReactionModel Steady_Burn Unsteady_Burn ZeroOrder "/>
+      <fromMaterial           spec="OPTIONAL STRING"            need_applies_to="type DDT0 JWLpp Simple_Burn SolidReactionModel Steady_Burn Unsteady_Burn ZeroOrder "/>
       <refPressure            spec="OPTIONAL DOUBLE 'positive'" need_applies_to="type DDT0 Simple_Burn" />
       <SpecificHeatBoth       spec="OPTIONAL DOUBLE 'positive'" need_applies_to="type DDT1 Steady_Burn Unsteady_Burn"/>
       <ThresholdPressure      spec="OPTIONAL DOUBLE 'positive'" need_applies_to="type DDT1 JWLpp Simple_Burn Steady_Burn Unsteady_Burn ZeroOrder"/>
@@ -148,11 +155,11 @@
       <E0                     spec="REQUIRED DOUBLE"  need_applies_to="type JWLpp ZeroOrder Tillotson" />
       <G                      spec="REQUIRED DOUBLE"  need_applies_to="type JWLpp ZeroOrder" />
       
-      <AfterMelting           spec="OPTIONAL BOOLEAN" />     <!-- These variables need to be filled in Todd -->
+      <AfterMelting           spec="OPTIONAL BOOLEAN" /> 
       <ActEnergyCondPh        spec="OPTIONAL DOUBLE" />
       <BoundaryParticles      spec="OPTIONAL INTEGER" />
       <BurnCoeff              spec="OPTIONAL DOUBLE" />
-      <burnMaterial           spec="OPTIONAL STRING" /> <!-- FIXME: really optional?  default? [P,p]roduct? -->
+      <burnMaterial           spec="OPTIONAL STRING" /> 
       <BurnrateModCoef        spec="OPTIONAL DOUBLE" />
       <CondPhaseHeat          spec="OPTIONAL DOUBLE" />
       <CondUnsteadyCoef       spec="OPTIONAL DOUBLE" />
@@ -177,25 +184,60 @@
 
       <!--__________________________________-->
       <!-- DDT1  -->
-      <useCrackModel          spec="OPTIONAL BOOLEAN"            need_applies_to="type DDT1"/>  
-      <useInductionTime        spec="OPTIONAL BOOLEAN"           need_applies_to="type DDT1"/>
-      <IgnitionConst           spec="OPTIONAL DOUBLE 'positive'" need_applies_to="type DDT1"/>
-      <PressureShift           spec="OPTIONAL DOUBLE 'positive'" need_applies_to="type DDT1"/>
-      <ExponentialConst        spec="OPTIONAL DOUBLE 'positive'" need_applies_to="type DDT1"/>
-      <PreexpoConst            spec="OPTIONAL DOUBLE 'positive'" need_applies_to="type DDT1"/>
-     
-      <adjust_IO_intervals       spec="OPTIONAL NO_DATA">
-        <PressureSwitch          spec="OPTIONAL NO_DATA">
-          <PressureThreshold     spec="REQUIRED DOUBLE 'positive'"/>
-          <newOutputInterval     spec="REQUIRED DOUBLE 'positive'"/>
-          <newCheckPointInterval spec="REQUIRED DOUBLE 'positive'"/>
-        </PressureSwitch>
-        <DetonationDetected      spec="OPTIONAL NO_DATA">
-          <remainingTimesteps    spec="REQUIRED INTEGER 'positive'"/>
-          <newOutputInterval     spec="REQUIRED DOUBLE 'positive'"/>
-          <newCheckPointInterval spec="REQUIRED DOUBLE 'positive'"/>
-        </DetonationDetected>
-      </adjust_IO_intervals>
+      <DDT1                      spec="OPTIONAL NO_DATA">
+        <fromMaterial            spec="REQUIRED STRING" />
+        <toMaterial              spec="REQUIRED STRING" />
+        <burnMaterial            spec="OPTIONAL STRING" />
+        
+        <b                       spec="REQUIRED DOUBLE"  />
+        <E0                      spec="REQUIRED DOUBLE"  />
+        <G                       spec="REQUIRED DOUBLE"  />
+        
+        <useCrackModel           spec="OPTIONAL BOOLEAN" /> 
+        <Gcrack                  spec="OPTIONAL DOUBLE" />
+        <CrackVolThreshold       spec="OPTIONAL DOUBLE" />
+        <nCrack                  spec="OPTIONAL DOUBLE" />
+        
+        <SpecificHeatBoth        spec="REQUIRED DOUBLE 'positive'"/>
+        <ThresholdPressureJWL    spec="REQUIRED DOUBLE 'positive'" />
+        <ThresholdPressureSB     spec="REQUIRED DOUBLE 'positive'" />
+        <ThresholdVolFrac        spec="OPTIONAL DOUBLE 'positive'" />
+        <IdealGasConst           spec="REQUIRED DOUBLE" />
+        
+        <PreExpCondPh            spec="REQUIRED DOUBLE" />
+        <PreExpGasPh             spec="REQUIRED DOUBLE" />
+        <ActEnergyCondPh         spec="REQUIRED DOUBLE" />
+        
+        <CondPhaseHeat           spec="REQUIRED DOUBLE" />
+        <GasPhaseHeat            spec="REQUIRED DOUBLE" />
+
+        <HeatConductGasPh        spec="REQUIRED DOUBLE" />
+        <HeatConductCondPh       spec="REQUIRED DOUBLE" />
+
+        <MoleWeightGasPh         spec="REQUIRED DOUBLE" />
+        <BoundaryParticles       spec="REQUIRED INTEGER" />
+        <IgnitionTemp            spec="REQUIRED DOUBLE 'positive'" />
+
+         
+        <useInductionTime        spec="OPTIONAL BOOLEAN" />
+        <IgnitionConst           spec="OPTIONAL DOUBLE 'positive'" />
+        <PressureShift           spec="OPTIONAL DOUBLE 'positive'" />
+        <PreexpoConst            spec="OPTIONAL DOUBLE 'positive'" />
+        <ExponentialConst        spec="OPTIONAL DOUBLE 'positive'" />
+        
+        <adjust_IO_intervals       spec="OPTIONAL NO_DATA">
+          <PressureSwitch          spec="OPTIONAL NO_DATA">
+            <PressureThreshold     spec="REQUIRED DOUBLE 'positive'"/>
+            <newOutputInterval     spec="REQUIRED DOUBLE 'positive'"/>
+            <newCheckPointInterval spec="REQUIRED DOUBLE 'positive'"/>
+          </PressureSwitch>
+          <DetonationDetected      spec="OPTIONAL NO_DATA">
+            <remainingTimesteps    spec="REQUIRED INTEGER 'positive'"/>
+            <newOutputInterval     spec="REQUIRED DOUBLE 'positive'"/>
+            <newCheckPointInterval spec="REQUIRED DOUBLE 'positive'"/>
+          </DetonationDetected>
+        </adjust_IO_intervals>
+      </DDT1>
       
      <!--__________________________________-->
      <!-- Ignition and growth -->

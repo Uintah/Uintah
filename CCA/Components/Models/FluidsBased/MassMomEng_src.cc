@@ -69,16 +69,16 @@ MassMomEng_src::~MassMomEng_src()
 
 //______________________________________________________________________
 void MassMomEng_src::problemSetup(GridP&, SimulationStateP& sharedState,
-                             ModelSetup* )
+                                  ModelSetup* )
 {
   d_sharedState = sharedState;
-
-  d_matl = sharedState->parseAndLookupMaterial(params, "material");
-  params->require("momentum_src", d_src->mom_src_rate);
-  params->require("mass_src",     d_src->mass_src_rate);
-  params->require("energy_src",   d_src->eng_src_rate);
-  params->getWithDefault("mme_src_t_start",d_src->d_mme_src_t_start,0.0);
-  params->getWithDefault("mme_src_t_final",d_src->d_mme_src_t_final,9.e99);
+  ProblemSpecP src_ps = params->findBlock("MassMomEng_src");
+  d_matl = sharedState->parseAndLookupMaterial(src_ps, "material");
+  src_ps->require("momentum_src", d_src->mom_src_rate);
+  src_ps->require("mass_src",     d_src->mass_src_rate);
+  src_ps->require("energy_src",   d_src->eng_src_rate);
+  src_ps->getWithDefault("mme_src_t_start",d_src->d_mme_src_t_start,0.0);
+  src_ps->getWithDefault("mme_src_t_final",d_src->d_mme_src_t_final,9.e99);
 
 
   vector<int> m(1);
@@ -100,10 +100,11 @@ void MassMomEng_src::outputProblemSpec(ProblemSpecP& ps)
 {
   ProblemSpecP model_ps = ps->appendChild("Model");
   model_ps->setAttribute("type","mass_momentum_energy_src");
-  model_ps->appendElement("material",d_matl->getName());
-  model_ps->appendElement("momentum_src", d_src->mom_src_rate);
-  model_ps->appendElement("mass_src",     d_src->mass_src_rate);
-  model_ps->appendElement("energy_src",   d_src->eng_src_rate);
+  ProblemSpecP src_ps = model_ps->appendChild("MassMomEng_src");
+  src_ps->appendElement("material",     d_matl->getName());
+  src_ps->appendElement("momentum_src", d_src->mom_src_rate);
+  src_ps->appendElement("mass_src",     d_src->mass_src_rate);
+  src_ps->appendElement("energy_src",   d_src->eng_src_rate);
 }
  
 //______________________________________________________________________
