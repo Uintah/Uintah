@@ -244,6 +244,7 @@ MomRHSPart<FieldT>::Builder::build() const
 
 //==================================================================
 // Explicit template instantiation
+template class MomRHSPart< SpatialOps::SVolField >;
 template class MomRHSPart< SpatialOps::XVolField >;
 template class MomRHSPart< SpatialOps::YVolField >;
 template class MomRHSPart< SpatialOps::ZVolField >;

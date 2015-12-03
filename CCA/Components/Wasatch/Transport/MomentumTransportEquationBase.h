@@ -130,11 +130,13 @@ namespace Wasatch{
      *  \param params Parser information for this momentum equation
      *  \param turbulenceParams
      */
-    MomentumTransportEquationBase( const std::string velName,
+    MomentumTransportEquationBase( const Direction momComponent,
+                                   const std::string velName,
                                    const std::string momName,
                                    const Expr::Tag densTag,
                                    const bool isConstDensity,
                                    const Expr::Tag bodyForceTag,
+                                   const Expr::Tag srcTermTag,
                                    GraphCategories& gc,
                                    Uintah::ProblemSpecP params,
                                    TurbulenceParameters turbulenceParams );
@@ -182,6 +184,7 @@ namespace Wasatch{
     virtual Expr::ExpressionID setup_rhs( FieldTagInfo& info,
                                          const Expr::TagList& srcTags ) = 0;
     
+    const Direction momComponent_;
     const bool isViscous_, isTurbulent_;
     const Expr::Tag thisVelTag_, densityTag_;
     const Expr::Tag& pressureTag_;
