@@ -72,37 +72,35 @@
    <SimulationComponent type="amrmpm" />
 
    <Time>
-     <maxTime>8e9</maxTime>
+     <maxTime>3e7</maxTime>
      <initTime>0.0</initTime>
-     <delt_min>1.0e4</delt_min>
+     <delt_min>1.0e-16</delt_min>
      <delt_max>1.0e8</delt_max>
 <!--
-     <max_Timesteps>43</max_Timesteps>
+     <max_Timesteps>100</max_Timesteps>
 -->
-     <timestep_multiplier>0.4</timestep_multiplier>
+     <timestep_multiplier>0.2</timestep_multiplier>
    </Time>    
 
    <DataArchiver>
       <filebase>SmoothNanoPillar3D_FBC.uda</filebase>
-      <!--
-      <outputTimestepInterval>1</outputTimestepInterval>
-      -->
-      <outputInterval>8.e7</outputInterval>
+      <outputInterval>2.e5</outputInterval>
       <save label = "p.x"/>
       <save label = "p.mass"/>
       <save label = "p.area"/>
       <save label = "p.volume"/>
       <save label = "p.stress"/>
       <save label = "p.concentration"/>
+      <save label = "p.concentrationInterp"/>
+      <save label = "p.pressure_t1"/>
       <save label = "p.displacement"/>
       <save label = "p.scalefactor"/>
       <save label = "p.deformationMeasure"/>
       <save label = "p.velocity"/>
-      <save label = "p.loadCurveID"/>
       <save label = "p.diffusivity"/>
       <save label = "p.externalscalarflux"/>
-      <save label = "g.mass"/>
-      <checkpoint cycle = "2" interval = "2.0e8"/>
+      <save label = "g.concentration"/>
+      <checkpoint cycle = "2" interval = "2.0e5"/>
    </DataArchiver>
 
    <MPM>
@@ -124,12 +122,12 @@
    <MaterialProperties>
      <MPM>
        <material name="T91">
-         <density>2.33e23</density>
+         <density>2.33e21</density>
          <melt_temp> 2000.0 </melt_temp>
          <constitutive_model type="rf_elastic_plastic"> 
            <bulk_modulus>            48e6    </bulk_modulus>
            <shear_modulus>           33e6    </shear_modulus>
-           <volume_expansion_coeff>  0.36     </volume_expansion_coeff>
+           <volume_expansion_coeff>  0.56     </volume_expansion_coeff>
            <!-- Temperature is not currently used in this model, -->
            <!-- Keep initial material Temperature set to 298.0 -->
            <initial_material_temperature> 298.0 </initial_material_temperature>
@@ -165,36 +163,25 @@
          <thermal_conductivity>0.0</thermal_conductivity>
          <specific_heat>5</specific_heat>
          <diffusion_model type = "non_linear1">
-           <diffusivity>  1.0e-11   </diffusivity>
+           <diffusivity>  1.0e-10   </diffusivity>
            <max_concentration> 1.0 </max_concentration>
            <use_pressure>false</use_pressure>
-           <tuning1> 1.98 </tuning1>
-           <tuning2> 1.0e4 </tuning2>
-           <!--
-           <use_pressure>true</use_pressure>
-           <tuning1> 6.90  </tuning1>
+           <tuning1> 5.00  </tuning1>
            <tuning2> 3.07  </tuning2>
            <tuning3> 0.0   </tuning3>
            <tuning4> 3.0   </tuning4>
            <tuning5> 1e-6  </tuning5>
-           -->
          </diffusion_model>
          <geom_object>
-	         <smoothcyl label = "cylinder">
+           <smoothcyl label = "cylinder">
              <discretization_scheme> pie_slices </discretization_scheme>
              <bottom>[0.0,0.0,0.0] </bottom>
              <top>   [0.0,0.0,0.1]</top>
-             <!--
-             <top>   [0.0,0.0,0.25]</top>
-             -->
              <outer_radius> 0.25   </outer_radius>
              <inner_radius> 0.0    </inner_radius>
-             <num_radial> 60 </num_radial>
-             <num_axial> 20 </num_axial>
-             <!--
-             <num_axial> 25 </num_axial>
-             -->
-             <num_angular> 200 </num_angular>
+             <num_radial> 120 </num_radial>
+             <num_axial> 40 </num_axial>
+             <num_angular> 400 </num_angular>
              <arc_start_angle> 0.4 </arc_start_angle>
              <arc_angle> 360 </arc_angle>
            </smoothcyl>
@@ -221,34 +208,27 @@
            <cylinder label = "side">
              <bottom>          [0.0,0.0,0.0]     </bottom>
              <top>             [0.0,0.0,.1]     </top>
-             <!--
-             <top>             [0.0,0.0,.25]     </top>
-             -->
-             <radius>          0.265             </radius>
+             <radius>          0.252              </radius>
            </cylinder>
          </geom_object>
          <load_curve>
            <id>1</id>
            <time_point>
              <time> 0 </time>
-             <load> 8.e-5 </load>
+             <load> 2.e-2 </load>
            </time_point>
            <time_point>
              <time> 1.e12 </time>
-             <load> 8.e-5 </load>
+             <load> 2.e-2 </load>
            </time_point>
          </load_curve>
        </scalar_flux>
        <scalar_flux>
          <geom_object>
            <cylinder label = "top">
-             <bottom>           [0.0,0.0,.105]  </bottom>
-             <top>              [0.0,0.0,.106]  </top>
-             <!--
-             <bottom>           [0.0,0.0,.255]  </bottom>
-             <top>              [0.0,0.0,.256]  </top>
-             -->
-             <radius>           0.25               </radius>
+             <bottom>           [0.0,0.0,.102]  </bottom>
+             <top>              [0.0,0.0,.103]  </top>
+             <radius>           0.25              </radius>
              <cylinder_end>true</cylinder_end>
            </cylinder>
          </geom_object>
@@ -256,11 +236,11 @@
            <id>2</id>
            <time_point>
              <time> 0 </time>
-             <load> 8.e-5 </load>
+             <load> 2.e-2 </load>
            </time_point>
            <time_point>
              <time> 1.e12 </time>
-             <load> 8.e-5 </load>
+             <load> 2.e-2 </load>
            </time_point>
          </load_curve>
        </scalar_flux>
@@ -270,14 +250,11 @@
    <Grid>
      <Level>
        <Box label = "1">
-         <lower>        [-.5,-.5,0.0]    </lower>
-         <upper>        [0.5,0.5,0.2]    </upper>
-         <!--
-         <upper>        [0.5,0.5,0.5]    </upper>
-         -->
-         <resolution>   [100, 100, 20 ]    </resolution>
-         <patches>      [2,2,1]          </patches>
-         <extraCells>   [1,1,1]          </extraCells>
+         <lower>        [-.5,-.5,0.0]      </lower>
+         <upper>        [0.5,0.5,0.2]      </upper>
+         <resolution>   [100, 100, 40 ]      </resolution>
+         <patches>      [4,4,1]            </patches>
+         <extraCells>   [1,1,1]            </extraCells>
        </Box>
      </Level>
      <BoundaryConditions>
