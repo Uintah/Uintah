@@ -35,18 +35,31 @@
 #include <CCA/Ports/SimulationInterface.h>
 #include <CCA/Ports/Output.h>
 
+#include <Core/Parallel/Parallel.h>
+
 #include <Core/Parallel/UintahParallelComponent.h>
 #include <Core/Grid/SimulationTime.h>
 
 #include <map>
 
 namespace Uintah {
+
   enum ComponentListType {
     all,
     manager,
     principal,
     subcomponent,
     principalandsub
+  };
+
+  class ComponentDataBlob {
+    public:
+    private:
+      UintahParallelComponent  * d_Component;
+      SimulationTime           * d_TimeInfo;
+      Output                   * d_Output;
+      ProblemSpecP               d_PS;
+      SimulationStateP           d_State;
   };
 
   class ComponentManager {
@@ -61,53 +74,26 @@ namespace Uintah {
     virtual ~ComponentManager();
 
     // Pure virtual interface for a component manager.
-    virtual int
-    getNumActiveComponents(ComponentListType)                               = 0;
+    virtual int getNumActiveComponents(ComponentListType fromList);
 
-    virtual UintahParallelComponent*
-    getComponent(int index, ComponentListType fromList)                     = 0;
+    virtual UintahParallelComponent   * getComponent          (int index, ComponentListType fromList) const = 0;
+    virtual LevelSet                  * getLevelSet           (int index, ComponentListType fromList) const = 0;
+    virtual SimulationTime            * getTimInfo            (int index, ComponentListType fromList) const = 0;
+    virtual Output                    * getOutput             (int index, ComponentListType fromList) const = 0;
 
-    virtual LevelSet*
-    getLevelSet(int index, ComponentListType fromList)                      = 0;
+    virtual ProblemSpecP                getProblemSpec        (int index, ComponentListType fromList) const = 0;
+    virtual SimulationStateP            getState              (int index, ComponentListType fromList) const = 0;
 
-    virtual ProblemSpecP
-    getProblemSpec(int index, ComponentListType fromList)                   = 0;
+    virtual double                      getRunTime            (int index, ComponentListType fromList) const = 0;
+    virtual int                         getRequestedNewDWCount(int index, ComponentListType fromList) const = 0;
+    virtual int                         getRequestedOldDWCount(int index, ComponentListType fromList) const = 0;
+    virtual int                         getTimestep           (int index, ComponentListType fromList) const = 0;
+    virtual bool                        isFirstTimestep       (int index, ComponentListType fromList) const = 0;
 
-    virtual SimulationStateP
-    getState(int index, ComponentListType fromList)                         = 0;
-
-    virtual SimulationTime*
-    getTimeInfo(int index,  ComponentListType fromList)                     = 0;
-
-    virtual Output*
-    getOutput(int index, ComponentListType fromList)                        = 0;
-
-    virtual int
-    getRequestedNewDWCount(int index, ComponentListType fromList)           = 0;
-
-    virtual int
-    getRequestedOldDWCount(int index, ComponentListType fromList)           = 0;
-
-    virtual double
-    getRunTime(int index, ComponentListType fromList)                       = 0;
-
-    virtual void
-    setStartTime(int index, ComponentListType fromList, double time)        = 0;
-
-    virtual int
-    getTimestep(int index, ComponentListType fromList)                      = 0;
-
-    virtual void
-    setTimestep(int index, ComponentListType fromList, int step)            = 0;
-
-    virtual bool
-    isFirstTimestep(int index, ComponentListType fromList)                  = 0;
-
-    virtual void
-    setFirstTimestep(int index, ComponentListType, bool toggle)             = 0;
-
-    virtual void
-    setRunTime(int index, ComponentListType, double newTime)                = 0;
+    virtual void                        setTimestep           (int index, ComponentListType fromList, int step) = 0;
+    virtual void                        setStartTime          (int index, ComponentListType fromList, double time) = 0;
+    virtual void                        setFirstTimestep      (int index, ComponentListType fromList, bool Toggle) = 0;
+    virtual void                        setRunTime            (int index, ComponentListType fromList, double time) = 0;
 
   };
 }

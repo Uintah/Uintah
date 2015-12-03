@@ -14,14 +14,14 @@
     <SimulationComponent type="multiComponent" >
       <manager>SerialLinear</manager>
     
-      <principle>
+      <principal>
         <Component type = "amrmpm" />
         <inputFile>mpm_cyl_3d_1mat.ups</input_file>
         <!-- SwitchCriteria type = "DatabaseManaged" -->
         <SwitchCriteria type = "Timestep">
           <timestep> 2 </timestep>
         </SwitchCriteria>
-      </principle>
+      </principal>
 
       <subcomponent>
         <component type = "md" />
