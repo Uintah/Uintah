@@ -31,7 +31,7 @@ namespace Uintah {
       virtual LevelSet                  * getLevelSet           (int index, ComponentListType fromList) const;
       virtual ProblemSpecP                getProblemSpec        (int index, ComponentListType fromList) const;
       virtual SimulationStateP            getState              (int index, ComponentListType fromList) const;
-      virtual SimulationTime            * getTimInfo            (int index, ComponentListType fromList) const;
+      virtual SimulationTime            * getTimeInfo           (int index, ComponentListType fromList) const;
       virtual Output                    * getOutput             (int index, ComponentListType fromList) const;
       virtual int                         getRequestedNewDWCount(int index, ComponentListType fromList) const;
       virtual int                         getRequestedOldDWCount(int index, ComponentListType fromList) const;
