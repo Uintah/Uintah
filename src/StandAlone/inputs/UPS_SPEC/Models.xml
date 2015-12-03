@@ -287,22 +287,38 @@
       
       <!--__________________________________-->
       <!--  Gas Phase reaction model -->
-      <table                  spec="OPTIONAL NO_DATA" 
-                                  attribute1="name REQUIRED STRING 'adiabatic'"
-                                  attribute2="type REQUIRED STRING 'Arches'" >
+      <AdiabaticTable           spec="OPTIONAL NO_DATA">
+        <material               spec="REQUIRED STRING"/>
+        <table                  spec="OPTIONAL NO_DATA" 
+                                    attribute1="name REQUIRED STRING 'adiabatic'"
+                                    attribute2="type REQUIRED STRING 'Arches'" >
 
-        <defaultValue         spec="MULTIPLE DOUBLE"
-                                  attribute1="name REQUIRED STRING 'heat_loss, mixture_fraction_variance'" />
-        <derivedValue         spec="MULTIPLE STRING"
-                                  attribute1="name REQUIRED STRING 'heat_capac_Cv, gamma, reference_heat_capac_Cp, 
-                                                                  reference_mixture_molecular_weight, reference_heat_capac_Cv, reference_gamma'" />
-        <constantValue        spec="MULTIPLE DOUBLE"
-                                  attribute1="name REQUIRED STRING 'viscosity, thermal_conductivity, reference_Temp'" />
-        <filename             spec="REQUIRED STRING" />
-      </table>
-      <varianceMax            spec="OPTIONAL DOUBLE" /> <!-- FIXME: double? -->
-      <varianceScale          spec="OPTIONAL DOUBLE" /> <!-- FIXME: double? -->
-      <tableValue             spec="MULTIPLE STRING 'CO2, H2O, Temp, density'" />      
+          <defaultValue         spec="MULTIPLE DOUBLE"
+                                    attribute1="name REQUIRED STRING 'heat_loss, mixture_fraction_variance'" />
+          <derivedValue         spec="MULTIPLE STRING"
+                                    attribute1="name REQUIRED STRING 'heat_capac_Cv, gamma, reference_heat_capac_Cp, 
+                                                                    reference_mixture_molecular_weight, reference_heat_capac_Cv, reference_gamma'" />
+          <constantValue        spec="MULTIPLE DOUBLE"
+                                    attribute1="name REQUIRED STRING 'viscosity, thermal_conductivity, reference_Temp'" />
+          <filename             spec="REQUIRED STRING" />
+        </table>
+        <varianceMax            spec="OPTIONAL DOUBLE" />
+        <varianceScale          spec="OPTIONAL DOUBLE" />
+        <tableValue             spec="MULTIPLE STRING 'CO2, H2O, Temp, density'" /> 
+        
+        <scalar                        spec="OPTIONAL NO_DATA" 
+                                          attribute1="name REQUIRED STRING" >
+          <material                    spec="OPTIONAL STRING"/>
+          <test_conservation           spec="OPTIONAL BOOLEAN"/>
+          <doTableTest                 spec="OPTIONAL BOOLEAN" />
+          <constants                   spec="OPTIONAL NO_DATA" >
+            <AMR_Refinement_Criteria   spec="OPTIONAL DOUBLE" />
+            <diffusivity               spec="OPTIONAL DOUBLE" />
+          </constants>
+          <geom_object                 spec="MULTIPLE" />
+        </scalar>
+        
+      </AdiabaticTable>
       
       <!--__________________________________-->
       <!--  Radiation  -->

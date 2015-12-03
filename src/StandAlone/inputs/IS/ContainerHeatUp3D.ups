@@ -552,31 +552,33 @@
         <refPressure>      101325.0 </refPressure>
       </Model>
        <Model type="AdiabaticTable">
-        <table name="adiabatic" type="Arches">
-          <include href="inputs/Models/JP8.xml"/>
-        </table>
+        <AdiabaticTable>
+          <table name="adiabatic" type="Arches">
+            <include href="inputs/Models/JP8.xml"/>
+          </table>
 
 
-        <material>Atmosphere</material>
-        <scalar name="f">
-          <constants>
-            <diffusivity>0</diffusivity>
-          </constants>
-          <geom_object>
-            <difference>
-             <box label="domain">
-                 <min>           [-1.1,-1.1,-1.1]    </min>
-                 <max>           [ 1.1, 1.1, 1.1]    </max>
-             </box>
-             <cylinder label = "container">
-                <bottom>       [0.0,0.0,-.06985]     </bottom>
-                <top>          [0.0,0.0, .06985]     </top>
-                <radius>       0.05715               </radius>
-              </cylinder>
-            </difference>
-            <scalar>  0.0 </scalar>
-          </geom_object>
-        </scalar>
+          <material>Atmosphere</material>
+          <scalar name="f">
+            <constants>
+              <diffusivity>0</diffusivity>
+            </constants>
+            <geom_object>
+              <difference>
+               <box label="domain">
+                   <min>           [-1.1,-1.1,-1.1]    </min>
+                   <max>           [ 1.1, 1.1, 1.1]    </max>
+               </box>
+               <cylinder label = "container">
+                  <bottom>       [0.0,0.0,-.06985]     </bottom>
+                  <top>          [0.0,0.0, .06985]     </top>
+                  <radius>       0.05715               </radius>
+                </cylinder>
+              </difference>
+              <scalar>  0.0 </scalar>
+            </geom_object>
+          </scalar>
+        </AdiabaticTable>
       </Model>
      
     </Models>            

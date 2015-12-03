@@ -627,31 +627,33 @@
         <refPressure>      101325.0 </refPressure>
       </Model>
  -->
-       <Model type="AdiabaticTable">
+      <Model type="AdiabaticTable">
         <!--_______________________________________________________________-->
         <!--_______________________________________________________________-->
         <!-- Arches JP8 Table.  Note - if you use this, you must also      -->
         <!-- use the corresponding density AND temperature at the inlet    -->
         <!-- Also, if you use a co-flow, you must set the coflow           -->
         <!-- temperature and density                                       -->
-        <table name="adiabatic" type="Arches">
-          <include href="inputs/Models/JP8.xml"/>
-        </table>
+        <AdiabaticTable>
+          <table name="adiabatic" type="Arches">
+            <include href="inputs/Models/JP8.xml"/>
+          </table>
 
 
-        <material>Atmosphere</material>
-        <scalar name="f">
-          <constants>
-            <diffusivity>0</diffusivity>
-          </constants>
-          <geom_object>
-            <difference>
-             <box label="domain">                   </box>
-             <cylinder label = "outer cylinder">    </cylinder>
-            </difference>
-            <scalar>  0.0 </scalar>
-          </geom_object>
-       </scalar>
+          <material>Atmosphere</material>
+          <scalar name="f">
+            <constants>
+              <diffusivity>0</diffusivity>
+            </constants>
+            <geom_object>
+              <difference>
+                <box label="domain">                   </box>
+                <cylinder label = "outer cylinder">    </cylinder>
+              </difference>
+              <scalar>  0.0 </scalar>
+            </geom_object>
+          </scalar>
+       </AdiabaticTable>
       </Model>
      
     </Models>            
