@@ -78,7 +78,7 @@ namespace Uintah {
 
     virtual UintahParallelComponent   * getComponent          (int index, ComponentListType fromList) const = 0;
     virtual LevelSet                  * getLevelSet           (int index, ComponentListType fromList) const = 0;
-    virtual SimulationTime            * getTimInfo            (int index, ComponentListType fromList) const = 0;
+    virtual SimulationTime            * getTimeInfo           (int index, ComponentListType fromList) const = 0;
     virtual Output                    * getOutput             (int index, ComponentListType fromList) const = 0;
 
     virtual ProblemSpecP                getProblemSpec        (int index, ComponentListType fromList) const = 0;
