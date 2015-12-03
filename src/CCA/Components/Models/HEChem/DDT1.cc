@@ -164,48 +164,49 @@ void DDT1::problemSetup(GridP&, SimulationStateP& sharedState, ModelSetup*)
 {
   d_sharedState = sharedState;
   
+  ProblemSpecP ddt_ps = d_params->findBlock("DDT1");
   // Required for JWL++
-  d_params->require("ThresholdPressureJWL",   d_threshold_press_JWL);
-  d_params->require("fromMaterial",fromMaterial);
-  d_params->require("toMaterial",  toMaterial);
-  d_params->getWithDefault("burnMaterial",  burnMaterial, toMaterial);
-  d_params->require("G",    d_G);
-  d_params->require("b",    d_b);
-  d_params->require("E0",   d_E0);
-  d_params->getWithDefault("ThresholdVolFrac",d_threshold_volFrac, 0.01);
+  ddt_ps->require("ThresholdPressureJWL",   d_threshold_press_JWL);
+  ddt_ps->require("fromMaterial",fromMaterial);
+  ddt_ps->require("toMaterial",  toMaterial);
+  ddt_ps->getWithDefault("burnMaterial",  burnMaterial, toMaterial);
+  ddt_ps->require("G",    d_G);
+  ddt_ps->require("b",    d_b);
+  ddt_ps->require("E0",   d_E0);
+  ddt_ps->getWithDefault("ThresholdVolFrac",d_threshold_volFrac, 0.01);
 
   // Required for Simple Burn
-  d_matl0 = sharedState->parseAndLookupMaterial(d_params, "fromMaterial");
-  d_matl1 = sharedState->parseAndLookupMaterial(d_params, "toMaterial");
-  d_matl2 = sharedState->parseAndLookupMaterial(d_params, "burnMaterial");
-  d_params->require("IdealGasConst",     d_R );
-  d_params->require("PreExpCondPh",      d_Ac);
-  d_params->require("ActEnergyCondPh",   d_Ec);
-  d_params->require("PreExpGasPh",       d_Bg);
-  d_params->require("CondPhaseHeat",     d_Qc);
-  d_params->require("GasPhaseHeat",      d_Qg);
-  d_params->require("HeatConductGasPh",  d_Kg);
-  d_params->require("HeatConductCondPh", d_Kc);
-  d_params->require("SpecificHeatBoth",  d_Cp);
-  d_params->require("MoleWeightGasPh",   d_MW);
-  d_params->require("BoundaryParticles", d_BP);
-  d_params->require("IgnitionTemp",      d_ignitionTemp);
-  d_params->require("ThresholdPressureSB",d_thresholdPress_SB);
-  d_params->getWithDefault("useCrackModel",    d_useCrackModel, false); 
-  d_params->getWithDefault("useInductionTime", d_useInductionTime, false);
+  d_matl0 = sharedState->parseAndLookupMaterial(ddt_ps, "fromMaterial");
+  d_matl1 = sharedState->parseAndLookupMaterial(ddt_ps, "toMaterial");
+  d_matl2 = sharedState->parseAndLookupMaterial(ddt_ps, "burnMaterial");
+  ddt_ps->require("IdealGasConst",     d_R );
+  ddt_ps->require("PreExpCondPh",      d_Ac);
+  ddt_ps->require("ActEnergyCondPh",   d_Ec);
+  ddt_ps->require("PreExpGasPh",       d_Bg);
+  ddt_ps->require("CondPhaseHeat",     d_Qc);
+  ddt_ps->require("GasPhaseHeat",      d_Qg);
+  ddt_ps->require("HeatConductGasPh",  d_Kg);
+  ddt_ps->require("HeatConductCondPh", d_Kc);
+  ddt_ps->require("SpecificHeatBoth",  d_Cp);
+  ddt_ps->require("MoleWeightGasPh",   d_MW);
+  ddt_ps->require("BoundaryParticles", d_BP);
+  ddt_ps->require("IgnitionTemp",      d_ignitionTemp);
+  ddt_ps->require("ThresholdPressureSB",d_thresholdPress_SB);
+  ddt_ps->getWithDefault("useCrackModel",    d_useCrackModel, false); 
+  ddt_ps->getWithDefault("useInductionTime", d_useInductionTime, false);
   
 // Required for ignition time delay for burning propagation
   if(d_useInductionTime){
-    d_params->require("IgnitionConst",     d_IC);
-    d_params->require("PressureShift",     d_PS);
-    d_params->require("PreexpoConst",      d_Fb);
-    d_params->require("ExponentialConst",  d_Fc); 
+    ddt_ps->require("IgnitionConst",     d_IC);
+    ddt_ps->require("PressureShift",     d_PS);
+    ddt_ps->require("PreexpoConst",      d_Fb);
+    ddt_ps->require("ExponentialConst",  d_Fc); 
   }
   
   if(d_useCrackModel){
-    d_params->require("Gcrack",           d_Gcrack);
-    d_params->getWithDefault("CrackVolThreshold",     d_crackVolThreshold, 1e-14 );
-    d_params->require("nCrack",           d_nCrack);
+    ddt_ps->require("Gcrack",           d_Gcrack);
+    ddt_ps->getWithDefault("CrackVolThreshold",     d_crackVolThreshold, 1e-14 );
+    ddt_ps->require("nCrack",           d_nCrack);
       
     pCrackRadiusLabel = VarLabel::find("p.crackRad");
     if(!pCrackRadiusLabel){
@@ -218,7 +219,7 @@ void DDT1::problemSetup(GridP&, SimulationStateP& sharedState, ModelSetup*)
   
   //__________________________________
   //  Adjust the I/O intervals
-  ProblemSpecP adj_ps = d_params->findBlockWithOutAttribute( "adjust_IO_intervals" );
+  ProblemSpecP adj_ps = ddt_ps->findBlockWithOutAttribute( "adjust_IO_intervals" );
   
   if(adj_ps){
     ProblemSpecP PS_ps = adj_ps->findBlockWithOutAttribute( "PressureSwitch" );
@@ -358,39 +359,40 @@ void DDT1::outputProblemSpec(ProblemSpecP& ps)
 {
   ProblemSpecP model_ps = ps->appendChild("Model");
   model_ps->setAttribute("type","DDT1");
+  ProblemSpecP ddt_ps = model_ps->appendChild("DDT1");
 
-  model_ps->appendElement("ThresholdPressureJWL",d_threshold_press_JWL);
-  model_ps->appendElement("fromMaterial",fromMaterial);
-  model_ps->appendElement("toMaterial",  toMaterial);
-  model_ps->appendElement("burnMaterial",burnMaterial);
-  model_ps->appendElement("G",    d_G);
-  model_ps->appendElement("b",    d_b);
-  model_ps->appendElement("E0",   d_E0);
+  ddt_ps->appendElement("ThresholdPressureJWL",d_threshold_press_JWL);
+  ddt_ps->appendElement("fromMaterial",fromMaterial);
+  ddt_ps->appendElement("toMaterial",  toMaterial);
+  ddt_ps->appendElement("burnMaterial",burnMaterial);
+  ddt_ps->appendElement("G",    d_G);
+  ddt_ps->appendElement("b",    d_b);
+  ddt_ps->appendElement("E0",   d_E0);
 
-  model_ps->appendElement("IdealGasConst",     d_R );
-  model_ps->appendElement("PreExpCondPh",      d_Ac);
-  model_ps->appendElement("ActEnergyCondPh",   d_Ec);
-  model_ps->appendElement("PreExpGasPh",       d_Bg);
-  model_ps->appendElement("CondPhaseHeat",     d_Qc);
-  model_ps->appendElement("GasPhaseHeat",      d_Qg);
-  model_ps->appendElement("HeatConductGasPh",  d_Kg);
-  model_ps->appendElement("HeatConductCondPh", d_Kc);
-  model_ps->appendElement("SpecificHeatBoth",  d_Cp);
-  model_ps->appendElement("MoleWeightGasPh",   d_MW);
-  model_ps->appendElement("BoundaryParticles", d_BP);
-  model_ps->appendElement("ThresholdPressureSB", d_thresholdPress_SB);
-  model_ps->appendElement("IgnitionTemp",      d_ignitionTemp);
+  ddt_ps->appendElement("IdealGasConst",     d_R );
+  ddt_ps->appendElement("PreExpCondPh",      d_Ac);
+  ddt_ps->appendElement("ActEnergyCondPh",   d_Ec);
+  ddt_ps->appendElement("PreExpGasPh",       d_Bg);
+  ddt_ps->appendElement("CondPhaseHeat",     d_Qc);
+  ddt_ps->appendElement("GasPhaseHeat",      d_Qg);
+  ddt_ps->appendElement("HeatConductGasPh",  d_Kg);
+  ddt_ps->appendElement("HeatConductCondPh", d_Kc);
+  ddt_ps->appendElement("SpecificHeatBoth",  d_Cp);
+  ddt_ps->appendElement("MoleWeightGasPh",   d_MW);
+  ddt_ps->appendElement("BoundaryParticles", d_BP);
+  ddt_ps->appendElement("ThresholdPressureSB", d_thresholdPress_SB);
+  ddt_ps->appendElement("IgnitionTemp",      d_ignitionTemp);
  
-  model_ps->appendElement("IgnitionConst",     d_IC );
-  model_ps->appendElement("PressureShift",     d_PS );
-  model_ps->appendElement("ExponentialConst",  d_Fc );
-  model_ps->appendElement("PreexpoConst",      d_Fb );
-  model_ps->appendElement("useInductionTime",  d_useInductionTime);
+  ddt_ps->appendElement("IgnitionConst",     d_IC );
+  ddt_ps->appendElement("PressureShift",     d_PS );
+  ddt_ps->appendElement("ExponentialConst",  d_Fc );
+  ddt_ps->appendElement("PreexpoConst",      d_Fb );
+  ddt_ps->appendElement("useInductionTime",  d_useInductionTime);
   
   //__________________________________
   // adjust output intervals
   if( d_adj_IO_Press->onOff || d_adj_IO_Det->onOff ){
-    ProblemSpecP adj_ps = model_ps->appendChild( "adjust_IO_intervals" );
+    ProblemSpecP adj_ps = ddt_ps->appendChild( "adjust_IO_intervals" );
 
     if( d_adj_IO_Press->onOff ){
       ProblemSpecP PS_ps = adj_ps->appendChild( "PressureSwitch" );
@@ -410,10 +412,10 @@ void DDT1::outputProblemSpec(ProblemSpecP& ps)
   }
  
   if(d_useCrackModel){
-    model_ps->appendElement("useCrackModel",     d_useCrackModel);
-    model_ps->appendElement("Gcrack",            d_Gcrack);
-    model_ps->appendElement("nCrack",            d_nCrack);
-    model_ps->appendElement("CrackVolThreshold", d_crackVolThreshold);
+    ddt_ps->appendElement("useCrackModel",     d_useCrackModel);
+    ddt_ps->appendElement("Gcrack",            d_Gcrack);
+    ddt_ps->appendElement("nCrack",            d_nCrack);
+    ddt_ps->appendElement("CrackVolThreshold", d_crackVolThreshold);
   }
 }
 
