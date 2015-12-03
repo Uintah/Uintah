@@ -48,26 +48,10 @@ PrimVar( const Expr::Tag& rhoPhiTag,
   if (hasIntrusion_)  volfrac_ = this->template create_field_request<FieldT>(volFracTag);
 }
 
-template< typename FieldT >
-PrimVar<FieldT,FieldT>::
-PrimVar( const Expr::Tag& rhoPhiTag,
-         const Expr::Tag& rhoTag )
-  : Expr::Expression<FieldT>()
-{
-  this->set_gpu_runnable( true );
-   rhophi_ = this->template create_field_request<FieldT>(rhoPhiTag);
-   rho_ = this->template create_field_request<FieldT>(rhoTag);
-}
-
 //--------------------------------------------------------------------
 
 template< typename FieldT, typename DensT >
 PrimVar<FieldT,DensT>::
-~PrimVar()
-{}
-
-template< typename FieldT >
-PrimVar<FieldT,FieldT>::
 ~PrimVar()
 {}
 
@@ -100,16 +84,18 @@ evaluate()
   else                        phi <<= rhophi / *tmp;
 }
 
-template< typename FieldT >
+template<>
 void
-PrimVar<FieldT,FieldT>::
+PrimVar<SpatialOps::SVolField,SpatialOps::SVolField>::
 evaluate()
 {
   using namespace SpatialOps;
+  typedef typename SpatialOps::SVolField FieldT;
   FieldT& phi = this->value();
   const FieldT& rho = rho_->field_ref();
   const FieldT& rhophi = rhophi_->field_ref();
-  phi <<= rhophi / rho;
+  if( hasIntrusion_ ) phi <<= volfrac_->field_ref() * rhophi / rho;
+  else                        phi <<= rhophi / rho;
 }
 
 //--------------------------------------------------------------------
@@ -126,16 +112,6 @@ Builder::Builder( const Expr::Tag& result,
     volfract_( volFracTag )
 {}
 
-template< typename FieldT >
-PrimVar<FieldT,FieldT>::
-Builder::Builder( const Expr::Tag& result,
-                  const Expr::Tag& rhoPhiTag,
-                  const Expr::Tag& rhoTag )
-  : ExpressionBuilder(result),
-    rhophit_( rhoPhiTag ),
-    rhot_   ( rhoTag    )
-{}
-
 //--------------------------------------------------------------------
 
 template< typename FieldT, typename DensT >
@@ -143,13 +119,6 @@ Expr::ExpressionBase*
 PrimVar<FieldT,DensT>::Builder::build() const
 {
   return new PrimVar<FieldT,DensT>( rhophit_, rhot_, volfract_ );
-}
-
-template< typename FieldT >
-Expr::ExpressionBase*
-PrimVar<FieldT,FieldT>::Builder::build() const
-{
-  return new PrimVar<FieldT,FieldT>( rhophit_, rhot_ );
 }
 
 //====================================================================

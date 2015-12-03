@@ -49,13 +49,15 @@ namespace Wasatch{
     typedef SpatialOps::SVolField FieldT;
 
   public:
-    CompressibleMomentumTransportEquation( const std::string velName,
+    CompressibleMomentumTransportEquation( const Direction momComponent,
+                                           const std::string velName,
                                            const std::string momName,
                                            const Expr::Tag densityTag,
                                            const Expr::Tag temperatureTag,
                                            const Expr::Tag mixMWTag,
                                            const double gasConstant,
                                            const Expr::Tag bodyForceTag,
+                                           const Expr::Tag srcTermTag,
                                            GraphCategories& gc,
                                            Uintah::ProblemSpecP params,
                                            TurbulenceParameters turbParams );
