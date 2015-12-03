@@ -127,14 +127,16 @@ AdiabaticTable::Region::Region(GeometryPieceP piece, ProblemSpecP& ps)
 {
   ps->require("scalar", initialScalar);
 }
-
+//______________________________________________________________________
+//
 void AdiabaticTable::Region::outputProblemSpec(ProblemSpecP& ps)
 {
   ProblemSpecP geom_obj_ps = ps->appendChild("geom_object");
   piece->outputProblemSpec(geom_obj_ps);
   geom_obj_ps->appendElement("scalar", initialScalar);
 }
-
+//______________________________________________________________________
+//
 void AdiabaticTable::Scalar::outputProblemSpec(ProblemSpecP& ps)
 {
   ProblemSpecP scalar_ps = ps->appendChild("scalar");
@@ -155,27 +157,27 @@ void AdiabaticTable::Scalar::outputProblemSpec(ProblemSpecP& ps)
 
 }
 
-
+//______________________________________________________________________
+//
 void AdiabaticTable::outputProblemSpec(ProblemSpecP& ps)
 {
   ProblemSpecP model_ps = ps->appendChild("Model");
   model_ps->setAttribute("type","AdiabaticTable");
+  ProblemSpecP AT_ps = model_ps->appendChild("AdiabaticTable");
 
   for (vector<TableValue*>::const_iterator it = tablevalues.begin();
-       it != tablevalues.end(); ++it)
-    (*it)->outputProblemSpec(model_ps);
+       it != tablevalues.end(); ++it){
+    (*it)->outputProblemSpec(AT_ps);
+  }
 
-  model_ps->appendElement("material",d_matl->getName());
+  AT_ps->appendElement("material",d_matl->getName());
+  AT_ps->appendElement("varianceScale",d_varianceScale);
+  AT_ps->appendElement("varianceMax",  d_varianceMax);
 
-  model_ps->appendElement("varianceScale",d_varianceScale);
-  model_ps->appendElement("varianceMax",  d_varianceMax);
-
-#if 1
-  ProblemSpecP table_ps = model_ps->appendChild("table");
+  ProblemSpecP table_ps = AT_ps->appendChild("table");
   table_ps->setAttribute("name","adiabatic");
   table->outputProblemSpec(table_ps);
-#endif
-  d_scalar->outputProblemSpec(model_ps);
+  d_scalar->outputProblemSpec(AT_ps);
   
 }
 
@@ -187,6 +189,8 @@ void AdiabaticTable::problemSetup(GridP&, SimulationStateP& in_state,
 {
   cout_doing << "Doing problemSetup \t\t\t\tADIABATIC_TABLE" << endl;
   d_sharedState = in_state;
+  
+  ProblemSpecP base_ps = params->findBlock("AdiabaticTable");
   d_matl = d_sharedState->parseAndLookupMaterial(params, "material");
 
   vector<int> m(1);
@@ -195,20 +199,21 @@ void AdiabaticTable::problemSetup(GridP&, SimulationStateP& in_state,
   d_matl_set->addAll(m);
   d_matl_set->addReference();
 
+  
   // Get parameters
-  params->getWithDefault("varianceScale", d_varianceScale, 0.0);
-  params->getWithDefault("varianceMax",   d_varianceMax, 1.0);
+  base_ps->getWithDefault("varianceScale", d_varianceScale, 0.0);
+  base_ps->getWithDefault("varianceMax",   d_varianceMax, 1.0);
   d_useVariance = (d_varianceScale != 0.0);
 
   //__________________________________
   //setup the table
   string tablename = "adiabatic";
-  table = TableFactory::readTable(params, tablename);
+  table = TableFactory::readTable(base_ps, tablename);
   table->addIndependentVariable("mixture_fraction");
   if(d_useVariance)
     table->addIndependentVariable("mixture_fraction_variance");
   
-  for (ProblemSpecP child = params->findBlock("tableValue"); child != 0;
+  for (ProblemSpecP child = base_ps->findBlock("tableValue"); child != 0;
        child = child->findNextBlock("tableValue")) {
     TableValue* tv = scinew TableValue;
     child->get(tv->name);
@@ -259,7 +264,7 @@ void AdiabaticTable::problemSetup(GridP&, SimulationStateP& in_state,
   
   //__________________________________
   // Read in the constants for the scalar
-  ProblemSpecP child = params->findBlock("scalar");
+  ProblemSpecP child = base_ps->findBlock("scalar");
   if (!child){
     throw ProblemSetupException("AdiabaticTable: Couldn't find scalar tag", __FILE__, __LINE__);    
   }
