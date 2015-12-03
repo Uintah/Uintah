@@ -266,24 +266,27 @@
       
       <!--__________________________________-->
       <!--  Passive Scalar -->
-      <scalar                        spec="OPTIONAL NO_DATA" 
-                                       attribute1="name REQUIRED STRING" >
-        <material                    spec="OPTIONAL STRING"/>
-        <test_conservation           spec="OPTIONAL BOOLEAN"/>
-        <doTableTest                 spec="OPTIONAL BOOLEAN" />
-        <constants                   spec="OPTIONAL NO_DATA" >
-          <AMR_Refinement_Criteria   spec="OPTIONAL DOUBLE" />
-          <diffusivity               spec="OPTIONAL DOUBLE" />
-          <initialize_diffusion_knob spec="OPTIONAL DOUBLE" />
-        </constants>
-        <initialization              spec="REQUIRED NO_DATA" >
-          <geom_object               spec="MULTIPLE" />
-        </initialization>
-        
-        <interiorSources              spec="OPTIONAL NO_DATA" >
-          <geom_object                spec="MULTIPLE" />
-        </interiorSources>
-      </scalar>
+      <PassiveScalar                  spec="OPTIONAL NO_DATA">
+        <material                     spec="OPTIONAL STRING"/>
+        <scalar                       spec="OPTIONAL NO_DATA" 
+                                         attribute1="name REQUIRED STRING" >
+         
+          <test_conservation           spec="OPTIONAL BOOLEAN"/>
+          <doTableTest                 spec="OPTIONAL BOOLEAN" />
+          <constants                   spec="OPTIONAL NO_DATA" >
+            <AMR_Refinement_Criteria   spec="OPTIONAL DOUBLE" />
+            <diffusivity               spec="OPTIONAL DOUBLE" />
+            <initialize_diffusion_knob spec="OPTIONAL DOUBLE" />
+          </constants>
+          <initialization              spec="REQUIRED NO_DATA" >
+            <geom_object               spec="MULTIPLE" />
+          </initialization>
+
+          <interiorSources              spec="OPTIONAL NO_DATA" >
+            <geom_object                spec="MULTIPLE" />
+          </interiorSources>
+        </scalar>
+      </PassiveScalar>
       
       <!--__________________________________-->
       <!--  Gas Phase reaction model -->

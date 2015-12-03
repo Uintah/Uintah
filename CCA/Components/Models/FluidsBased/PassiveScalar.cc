@@ -153,7 +153,9 @@ void PassiveScalar::problemSetup(GridP&, SimulationStateP& in_state,
 {
   cout_doing << "Doing problemSetup \t\t\t\tPASSIVE_SCALAR" << endl;
   d_sharedState = in_state;
-  d_matl = d_sharedState->parseAndLookupMaterial(params, "material");
+  
+  ProblemSpecP PS_ps = params->findBlock("PassiveScalar");
+  d_matl = d_sharedState->parseAndLookupMaterial(PS_ps, "material");
 
   vector<int> m(1);
   m[0] = d_matl->getDWIndex();
@@ -193,7 +195,7 @@ void PassiveScalar::problemSetup(GridP&, SimulationStateP& in_state,
   }
   //__________________________________
   // Read in the constants for the scalar
-  ProblemSpecP child = params->findBlock("scalar");
+  ProblemSpecP child = PS_ps->findBlock("scalar");
   if (!child){
     throw ProblemSetupException("PassiveScalar: Couldn't find scalar tag", __FILE__, __LINE__);    
   }
@@ -260,9 +262,10 @@ void PassiveScalar::outputProblemSpec(ProblemSpecP& ps)
 {
   ProblemSpecP model_ps = ps->appendChild("Model");
   model_ps->setAttribute("type","PassiveScalar");
+  ProblemSpecP PS_ps = model_ps->appendChild("PassiveScalar");
 
-  model_ps->appendElement("material",d_matl->getName());
-  ProblemSpecP scalar_ps = model_ps->appendChild("scalar");
+  PS_ps->appendElement("material",d_matl->getName());
+  ProblemSpecP scalar_ps = PS_ps->appendChild("scalar");
   scalar_ps->setAttribute("name","f");
   scalar_ps->appendElement("test_conservation",d_test_conservation);
 

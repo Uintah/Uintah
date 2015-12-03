@@ -313,21 +313,23 @@
     <!--_________________________________-->
     <Models>
        <Model type="PassiveScalar">
-        <material>BackgroundGas</material>
-        <scalar name="f">
-          <test_conservation> false </test_conservation>
-          <constants>
-            <diffusivity>              0.0    </diffusivity>                      
-            <initialize_diffusion_knob>  0    </initialize_diffusion_knob>         
-            <AMR_Refinement_Criteria>    2    </AMR_Refinement_Criteria>          
-          </constants>       
-          <initialization>
-            <geom_object>
-               <box label = "world">  </box>
-               <scalar>    0.00       </scalar>
-            </geom_object>
-          </initialization>
-        </scalar>
+        <PassiveScalar>
+          <material>BackgroundGas</material>
+          <scalar name="f">
+            <test_conservation> false </test_conservation>
+            <constants>
+              <diffusivity>              0.0    </diffusivity>                      
+              <initialize_diffusion_knob>  0    </initialize_diffusion_knob>         
+              <AMR_Refinement_Criteria>    2    </AMR_Refinement_Criteria>          
+            </constants>       
+            <initialization>
+              <geom_object>
+                 <box label = "world">  </box>
+                 <scalar>    0.00       </scalar>
+              </geom_object>
+            </initialization>
+          </scalar>
+        <PassiveScalar>    
       </Model>
     </Models>
 
