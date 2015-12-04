@@ -478,6 +478,31 @@ GridDataRaw* getGridData(DataArchive *archive,
 
 
 /////////////////////////////////////////////////////////////////////
+// Check to see if a variable exists.
+extern "C"
+bool variableExists(DataArchive *archive,
+		    std::string variable_name)
+{
+  // figure out what the type of the variable we're querying is
+  std::vector<std::string> vars;
+  std::vector<const Uintah::TypeDescription*> types;
+  archive->queryVariables(vars, types);
+
+  const Uintah::TypeDescription* maintype = NULL;
+  const Uintah::TypeDescription* subtype = NULL;
+
+  for (unsigned int i=0; i<vars.size(); i++) {
+    if (vars[i] == variable_name) {
+      maintype = types[i];
+      subtype = maintype->getSubType();
+    }
+  }
+
+  return (maintype && subtype);
+}
+
+
+/////////////////////////////////////////////////////////////////////
 // Read all the particle data for a given patch.
 template<typename T>
 ParticleDataRaw* readParticleData(DataArchive *archive,
