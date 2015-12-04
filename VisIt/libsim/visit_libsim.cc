@@ -25,15 +25,15 @@
 #include "VisItControlInterface_V2.h"
 #include "VisItDataInterface_V2.h"
 
-#include "visit_libsim.h"
-#include "visit_libsim_callbacks.h"
-#include "visit_libsim_database.h"
+#include <visit_libsim.h>
+#include <visit_libsim_callbacks.h>
+#include <visit_libsim_database.h>
 
-#include "sci_defs/mpi_defs.h"
-#include "sci_defs/visit_defs.h"
+#include <sci_defs/mpi_defs.h>
+#include <sci_defs/visit_defs.h>
 
-#include "Core/Util/DebugStream.h"
-#include "Core/Parallel/Parallel.h"
+#include <Core/Util/DebugStream.h>
+#include <Core/Parallel/Parallel.h>
 
 #include "StandAlone/tools/uda2vis/uda2vis.h"
 

@@ -41,6 +41,8 @@
 #include "StandAlone/tools/uda2vis/udaData.h"
 #include "StandAlone/tools/uda2vis/uda2vis.h"
 
+#include <stdio.h>
+
 namespace Uintah {
 
 static int numProcLabels = 16;
