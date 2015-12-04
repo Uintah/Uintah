@@ -50,27 +50,6 @@ static std::string simComment("Uintah Simulation");
 #define VISIT_COMMAND_SUCCESS 1
 #define VISIT_COMMAND_FAILURE 2
 
-// Processor based varibles
-static int numProcLabels = 16;
-static std::string procLabels[16] = { "processor/id",
-
-				      "processor/memory/Base",
-				      "processor/memory/Max",
-				      "processor/memory/Used",
-				      "processor/memory/Resident",
-
-				      "processor/time/Recompile",
-				      "processor/time/Regridding",
-				      "processor/time/Regrid-schedule",
-				      "processor/time/Regrid-copydata",
-				      "processor/time/LoadBalance",
-				      "processor/time/TaskExec",
-				      "processor/time/TaskGlobalComm",
-				      "processor/time/TaskLocalComm",
-				      "processor/time/TaskWaitCommTime",
-				      "processor/time/Output",
-				      "processor/time/TaskWaitThreadTime" };
-
 namespace Uintah {
 
 //---------------------------------------------------------------------
