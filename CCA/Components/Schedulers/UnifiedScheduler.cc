@@ -603,7 +603,7 @@ UnifiedScheduler::execute( int tgnum     /* = 0 */,
   finalizeTimestep();
   log.finishTimestep();
 
-  if (emit_timings && !parentScheduler_) {  // only do on toplevel scheduler
+  if ( (execout.active() || emit_timings) && !parentScheduler_) {  // only do on toplevel scheduler
     outputTimingStats("UnifiedScheduler");
   }
 

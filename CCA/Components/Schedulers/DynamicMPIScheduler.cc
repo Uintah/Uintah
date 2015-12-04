@@ -41,6 +41,7 @@ extern SCIRun::Mutex      cerrLock;
 
 extern DebugStream        taskdbg;
 extern DebugStream        taskorder;
+extern DebugStream        execout;
 
 static DebugStream dynamicmpi_dbg(        "DynamicMPI_DBG",         false);
 static DebugStream dynamicmpi_timeout(    "DynamicMPI_TimingsOut",  false);
@@ -468,7 +469,7 @@ DynamicMPIScheduler::execute( int tgnum     /*=0*/,
   log.finishTimestep();
   
 
-  if( dynamicmpi_timeout.active() && !parentScheduler_ ) {  // only do on toplevel scheduler
+  if( ( execout.active() || dynamicmpi_timeout.active() ) && !parentScheduler_ ) {  // only do on toplevel scheduler
     outputTimingStats("DynamicMPIScheduler");
   }
 
