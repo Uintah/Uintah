@@ -47,7 +47,7 @@ SerialComponentManager::SerialComponentManager(
 {
 
   if (serialManagerDbg.active()) {
-    serialManagerDbg << "Constructing SerialComponentManager object.\n"
+    serialManagerDbg << "Constructing SerialComponentManager object.\n";
   }
   ProblemSpecP sim_block = managerPS->findBlock("SimulationCompnent");
   ProblemSpecP principalSpec = sim_block->findBlock("principal");
@@ -88,15 +88,23 @@ SerialComponentManager::SerialComponentManager(
       throw ProblemSetupException(msg.str(), __FILE__, __LINE__);
     }
 
+    // Build the key we'll use to map the individual components.
+    componentKey currentKey = std::pair<label,componentType>;
+
     // We probably should instantiate components elsewhere, but just to get up and going...
     bool componentIsAMR = Grid::specIsAMR(componentPS);
     UintahParallelComponent *comp           = ComponentFactory::create(componentPS, myWorld, componentIsAMR, "");
     SolverInterface         *solver         = SolverFactory::create(componentPS, myWorld);
     SwitchingCriteria       *switchCriteria = SwitchingCriteriaFactory::create(principalComponent, myWorld);
+
     comp->attachPort("solver", solver);
     if (switchCriteria) {
       comp->attachPort("switchCriteria", switchCriteria);
     }
+
+    SimulationTime          *timeInfo       = scinew SimulationTime(componentPS);
+
+
 
     d_principalComponentArray.push_back(comp);
     // TODO If we're going to map things, we should do it here.  This is also where interfaces should be attached.
@@ -164,7 +172,26 @@ SerialComponentManager::SerialComponentManager(
 
 SerialComponentManager::PostGridProblemSetup()
 {
-  // Delete problem specs we don't need here
+  // Delete problem specs we don't need here.
+}
+
+void SerialComponentManager::completeComponents(const std::vector<ComponentDataBlob> componentArray)
+{
+  int numComponentsInArray = componentArray.size();
+  for (int compIndex = 0; compIndex < numComponentsInArray; ++compIndex) {
+    ComponentDataBlob* comp = componentArray[compIndex];
+    // First off, grab an output pointer from the base or the individual component...
+    if (!comp->getPort("output")) {
+      // Grab the component manager's output if we don't already have one.
+      Output* managerOutput = dynamic_cast<Output*> (getPort("output"));
+      comp->attachPort("output", managerOutput);
+    }
+    if (!comp->getPort("scheduler")) { // Check to make sure this component doesn't already have a scheduler
+      SchedulerCommon* sched = SchedulerFactory::create(comp->getProblemSpec(), d_totalWorld,
+                                                        dynamic_cast<Output*> (comp->getPort("output")));
+    }
+
+  }
 }
 
 void SerialComponentManager::problemSetup(
@@ -183,6 +210,33 @@ void SerialComponentManager::problemSetup(
   }
 
   d_managerState = managerState;
+
+  // We have components, but they have neither schedulers, nor states nor output.  We should give
+  // them these.
+
+  for (int compIndex = 0; compIndex < d_principalComponentArray.size(); ++compIndex) {
+    ComponentDataBlob* comp = d_principalComponentArray[compIndex];
+    // First off, we need output pointers..
+    if (!comp->getPort("output")) {
+      Output* managerOutput = dynamic_cast<Output*> (getPort("output"));
+      comp->attachPort("output", managerOutput);
+    }
+
+    ProblemSpecP probSpec = comp->getProblemSpec();
+    if (!comp->getPort("scheduler")) { // This component doesn't currently have a scheduler
+      SchedulerCommon* compScheduler = SchedulerFactory::create(probSpec, d_totalWorld,
+                                                                dynamic_cast<Output*> (comp->getPort("output")));
+      comp->attachPort("scheduler", compScheduler);
+      // If we don't have a scheduler, then we also need new timeinfo for this component.
+      // Note:  Each component has it's own timeinfo, even if it shares a scheduler/DW (Multiple
+      // components running independently but simultaneously will share a scheduler/DW, but each
+      // should have it's own timeline.
+      SimulationTime* componentTimeInfo = scinew SimulationTime(probSpec);
+      comp->attachTimer(componentTimeInfo);
+    }
+
+
+  }
 
 }
 

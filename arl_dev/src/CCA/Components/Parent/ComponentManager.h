@@ -52,17 +52,67 @@ namespace Uintah {
     principalandsub
   };
 
-  class ComponentDataBlob {
-    public:
-    private:
-      UintahParallelComponent  * d_Component;
-      SimulationTime           * d_TimeInfo;
-      Output                   * d_Output;
-      ProblemSpecP               d_PS;
-      SimulationStateP           d_State;
-  };
+
 
   class ComponentManager {
+
+      typedef std::pair<std::string, std::string> componentKey;
+
+      class componentDataMap {
+        public:
+               componentDataMap(
+                                  componentKey inputKey
+                                , ProblemSpecP input_problemSpec
+                                , bool         principalComponent
+                                , bool         ownOutput = false
+                               );
+
+          bool hasIndependentOutput() const {
+            return d_independentOutput;
+
+          }
+
+          bool isPrincipal() const {
+            return d_principal;
+          }
+
+          void attachPort(
+                             const std::string            portName
+                          ,        UintahParallelPort   * portPointer
+                         )
+          {
+            d_Component->attachPort(portName, portPointer);
+          }
+
+          UintahParallelPort* getPort(
+                                        const std::string   portName
+                                     ) const
+          {
+            return d_Component->getPort(portName);
+          }
+
+          UintahParallelPort* getPort(
+                                        const std::string   portName
+                                      ,       int           index
+                                     ) const
+          {
+            return d_Component->getPort(portName,index);
+          }
+
+          ProblemSpecP getProblemSpec() const { return d_PS; }
+
+        private:
+          const componentKey               d_key;  // This is a unique identifier, should be const
+                bool                       d_independentOutput;
+                bool                       d_principal;
+
+          UintahParallelComponent  * d_Component;
+          SimulationTime           * d_TimeInfo;
+          Output                   * d_Output;
+          ProblemSpecP               d_PS;
+          SimulationStateP           d_State;
+      };
+
     public:
 
              ComponentManager(  const ProcessorGroup    * myWorld
@@ -94,6 +144,15 @@ namespace Uintah {
     virtual void                        setStartTime          (int index, ComponentListType fromList, double time) = 0;
     virtual void                        setFirstTimestep      (int index, ComponentListType fromList, bool Toggle) = 0;
     virtual void                        setRunTime            (int index, ComponentListType fromList, double time) = 0;
+
+    private:
+      // Maps to appropriately map the individual components to their underlying data and port
+      // reptresentations.  We will try to access into the map directly as little as possible.
+      std::map<componentKey, UintahParallelComponent*> d_componentMap;
+      std::map<componentKey, SimulationTime*> d_timeMap;
+      std::map<componentKey, Output*> d_outputMap;
+      std::map<componentKey, ProblemSpecP> d_specMap;
+      std::map<componentKey, SimulationStateP> d_stateMap;
 
   };
 }
