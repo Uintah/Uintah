@@ -363,6 +363,7 @@ void MD::scheduleInitialize(const LevelP&       level,
   {
     std::cout << " Data Warehouse: " << currDW << " Address: " << std::showbase
               << std::internal << std::setfill('0') << std::hex << dwAddress << std::endl;
+    std::cout.unsetf(std::ios::hex);
     ++currDW;
     dwAddress = sched->get_dw(currDW);
   }
