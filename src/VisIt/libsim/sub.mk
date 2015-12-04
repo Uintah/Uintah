@@ -29,7 +29,10 @@
 
 SRCDIR   := VisIt/libsim
 
-SRCS     := $(SRCDIR)/visit_libsim.cc
+SRCS     := $(SRCDIR)/visit_libsim.cc \
+	    $(SRCDIR)/visit_libsim_callbacks.cc \
+	    $(SRCDIR)/visit_libsim_database.cc
+
 
 INCLUDES += $(VISIT_INCLUDE)
 
@@ -52,6 +55,7 @@ else
       Core/ProblemSpec  \
       Core/Thread       \
       Core/Util         \
+      Core/OS           \
       StandAlone/tools/uda2vis
 endif
 
