@@ -74,7 +74,11 @@ namespace Uintah {
                                                             )
     private:
 
+      // Store the PG here in case we need to instantiate things that need the PG mid-run
+      const ProcessorGroup * d_totalWorld;
+
       bool d_restarting;
+
 
       SimulationStateP d_managerState;
 
@@ -82,12 +86,11 @@ namespace Uintah {
       int d_numSubcomponents;
 
 
-      std::vector<ProblemSpecP> d_PSArray;
-      std::vector<UintahParallelComponent*> d_principalComponentArray;
-      std::vector<UintahParallelComponent*> d_subcomponentArray;
+      std::vector<UintahParallelComponent*> d_componentList;
+      std::vector<SchedulerP> d_schedulerList;
+      std::vector<ProblemSpecP> d_problemSpecList;
+      std::vector<SimulationStateP> d_stateList;
 
-      // Store the PG here in case we need to instantiate things that need the PG mid-run
-      const ProcessorGroup * d_totalWorld;
   };
 
 }
