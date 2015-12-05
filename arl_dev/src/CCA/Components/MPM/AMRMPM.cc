@@ -4978,6 +4978,7 @@ void AMRMPM::scheduleApplyExternalScalarFlux(SchedulerP& sched,
   t->requires(Task::OldDW, lb->pXLabel,                 Ghost::None);
   t->requires(Task::OldDW, lb->pSizeLabel,              Ghost::None);
   t->requires(Task::OldDW, lb->pAreaLabel,              Ghost::None);
+  t->requires(Task::OldDW, lb->pVolumeLabel,            Ghost::None);
   t->requires(Task::OldDW, lb->pDeformationMeasureLabel,Ghost::None);
 #if defined USE_FLUX_RESTRICTION
   if(flags->d_doScalarDiffusion){
@@ -5040,6 +5041,7 @@ void AMRMPM::applyExternalScalarFlux(const ProcessorGroup* ,
       // Get the particle data
       constParticleVariable<Point>   px;
       constParticleVariable<Vector>  parea;
+      constParticleVariable<double>  pvol;
       constParticleVariable<Matrix3> psize;
       constParticleVariable<Matrix3> pDeformationMeasure;
       ParticleVariable<double> pExternalScalarFlux;
@@ -5047,6 +5049,7 @@ void AMRMPM::applyExternalScalarFlux(const ProcessorGroup* ,
 
       old_dw->get(px,    lb->pXLabel,    pset);
       old_dw->get(parea, lb->pAreaLabel, pset);
+      old_dw->get(pvol,  lb->pVolumeLabel, pset);
       old_dw->get(psize, lb->pSizeLabel, pset);
       old_dw->get(pDeformationMeasure, lb->pDeformationMeasureLabel, pset);
       new_dw->allocateAndPut(pExternalScalarFlux,
@@ -5087,7 +5090,8 @@ void AMRMPM::applyExternalScalarFlux(const ProcessorGroup* ,
 #else
               ScalarFluxBC* pbc = pbcP[loadCurveID];
               double area = parea[idx].x();
-              pExternalScalarFlux[idx] = pbc->fluxPerParticle(time, area);
+              pExternalScalarFlux[idx] = pbc->fluxPerParticle(time, area)
+                                       / pvol[idx];
 #endif
 #if defined USE_FLUX_RESTRICTION
               if(flags->d_doScalarDiffusion){
