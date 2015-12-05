@@ -72,14 +72,14 @@
    <SimulationComponent type="amrmpm" />
 
    <Time>
-     <maxTime>8.0e9</maxTime>
+     <maxTime>2.6e7</maxTime>
      <initTime>0.0</initTime>
      <delt_min>1.0e-16</delt_min>
      <delt_max>1.0e8</delt_max>
 <!--
-     <max_Timesteps>100</max_Timesteps>
+     <max_Timesteps>140</max_Timesteps>
 -->
-     <timestep_multiplier>0.4</timestep_multiplier>
+     <timestep_multiplier>0.2</timestep_multiplier>
    </Time>
 
    <DataArchiver>
@@ -87,7 +87,7 @@
 <!--
     <outputTimestepInterval>1</outputTimestepInterval>
 -->
-    <outputInterval>1.0e8</outputInterval>
+    <outputInterval>1.0e5</outputInterval>
     <save label="p.x"/>
     <save label="p.mass"/>
     <save label="p.area"/>
@@ -96,10 +96,10 @@
     <save label="p.particleID"/>
     <save label="p.concentration"/>
     <save label="p.scalefactor"/>
-    <save label="p.loadCurveID"/>
     <save label="p.diffusivity"/>
     <save label="p.displacement"/>
     <save label="p.pressure_t1"/>
+    <save label="p.loadCurveID"/>
 <!--
     <save label="p.pressure_t2"/>
 -->
@@ -119,6 +119,8 @@
       <time_integrator>explicit</time_integrator>
       <interpolator>cpdi</interpolator>
       <use_load_curves> true </use_load_curves>
+			<!--
+			-->
       <do_scalar_diffusion>true</do_scalar_diffusion>
   </MPM>
   <AMR>
@@ -133,12 +135,12 @@
   <MaterialProperties>
      <MPM>
        <material name="pillar1">
-         <density>2.33e23</density>
+         <density>2.33e21</density>
          <melt_temp> 2000.0 </melt_temp>
          <constitutive_model type="rf_elastic_plastic"> 
            <bulk_modulus>            48e6    </bulk_modulus>
            <shear_modulus>           33e6    </shear_modulus>
-           <volume_expansion_coeff>  0.36     </volume_expansion_coeff>
+           <volume_expansion_coeff>  0.16     </volume_expansion_coeff>
            <!--
            <volume_expansion_coeff>  0.56     </volume_expansion_coeff>
            -->
@@ -177,28 +179,29 @@
          <thermal_conductivity>0.0</thermal_conductivity>
          <specific_heat>5</specific_heat>
          <diffusion_model type = "non_linear1">
-           <diffusivity>  1.0e-11   </diffusivity>
+           <diffusivity>  1.0e-10   </diffusivity>
            <max_concentration> 1.0 </max_concentration>
+           <!--
            <use_pressure>false</use_pressure>
-           <tuning1> 1.98  </tuning1>
-           <!--
-           <tuning1> 18.  </tuning1>
-           -->
+           <tuning1> 5.00  </tuning1>
            <tuning2> 1e4  </tuning2>
-           <!--
+           -->
            <use_pressure>true</use_pressure>
            <tuning1> 6.90  </tuning1>
-           <tuning2> 4.07  </tuning2>
+           <tuning2> 1.07  </tuning2>
            <tuning3> 0.0   </tuning3>
            <tuning4> 3.0   </tuning4>
            <tuning5> 1e-6  </tuning5>
-           -->
          </diffusion_model>
          <geom_object>
            <box label = "pillar1">
              <!--
              <min>[0.1, 0.0, 0.0]</min>
              <max>[0.7, 0.1, 0.01]</max>
+             <min>[0.0, 0.0, 0.0]</min>
+             <max>[0.1, 0.1, 0.01]</max>
+             <min>[0.0, 0.0, 0.0]</min>
+             <max>[0.2, 0.1, 0.01]</max>
              -->
              <min>[0.0, 0.0, 0.0]</min>
              <max>[0.25, 0.1, 0.01]</max>
@@ -227,6 +230,10 @@
              <!--
              <min>[0.1, 0.099, 0.0  ]</min>
              <max>[0.7, 0.100, 0.01]</max>
+             <min>[0.0, 0.099, 0.0  ]</min>
+             <max>[0.1, 0.100, 0.01]</max>
+             <min>[0.0, 0.099, 0.0  ]</min>
+             <max>[0.2, 0.100, 0.01]</max>
              -->
              <min>[0.0, 0.099, 0.0  ]</min>
              <max>[0.25, 0.100, 0.01]</max>
@@ -236,11 +243,11 @@
            <id>1</id>
            <time_point>
              <time> 0 </time>
-             <load> 8.e-5 </load>
+             <load> 2.e-2 </load>
            </time_point>
            <time_point>
              <time> 1.e12 </time>
-             <load> 8.e-5 </load>
+             <load> 2.e-2 </load>
            </time_point>
          </load_curve>
        </scalar_flux>
@@ -268,10 +275,12 @@
        <scalar_flux>
          <geom_object>
            <box label = "x+">
-             <!--
+       <!--
              <min>[0.699, 0.00, 0.0]</min>
              <max>[0.7,   0.10, 0.01]</max>
-             -->
+             <min>[0.099, 0.00, 0.0]</min>
+             <max>[0.10,   0.10, 0.01]</max>
+       -->
              <min>[0.249, 0.00, 0.0]</min>
              <max>[0.25,   0.10, 0.01]</max>
            </box>
@@ -280,11 +289,11 @@
            <id>2</id>
            <time_point>
              <time> 0 </time>
-             <load> 8.e-5 </load>
+             <load> 2.e-2 </load>
            </time_point>
            <time_point>
              <time> 1.e12 </time>
-             <load> 8.e-5 </load>
+             <load> 2.e-2 </load>
            </time_point>
          </load_curve>
        </scalar_flux>
@@ -294,9 +303,14 @@
   <Grid>
     <Level>
       <Box label = "1">
+        <!--
         <lower>        [0.0, 0.0, 0.0]   </lower> 
-        <upper>        [0.4, 0.2, 0.01]  </upper>
-        <resolution>   [40, 20, 1]        </resolution>
+        <upper>        [0.2, 0.2, 0.01]  </upper>
+        <resolution>   [40, 40, 1]        </resolution>
+        -->
+        <lower>        [0.0, 0.0, 0.0]   </lower> 
+        <upper>        [0.3, 0.2, 0.01]  </upper>
+        <resolution>   [30, 20, 1]        </resolution>
         <patches>      [1,1,1]            </patches>
         <extraCells>   [1,1,1]            </extraCells>
         <!--
@@ -317,6 +331,11 @@
       </Face>
       <Face side = "y-">
         <BCType id = "all" label = "Symmetric" var = "symmetry"> </BCType>
+        <!--
+        <BCType id = "all" label = "SD-Type"     var = "Dirichlet">
+                              <value> 1.0 </value>
+        </BCType>
+        -->
         <BCType id = "all" label = "Velocity"     var = "Dirichlet">
                               <value> [0.,0.,0.] </value>
         </BCType>
