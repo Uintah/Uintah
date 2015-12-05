@@ -122,10 +122,10 @@ CoalTemperature::problemSetup( ProblemSpecP& db ){
     Hc = _Hc0 + hint * _RdMW;
     Ha = -202849.0 + _Ha0 + pT * (593. + pT * 0.293);
 
-   //               c          +             b*x               +         a*x^2
-    (*AA)[0][0] += 1.0;        (*AA)[0][1] += pT;         (*AA)[0][2] += pT*pT;
-    (*AA)[1][0] += pT;         (*AA)[1][1] += pT*pT;      (*AA)[1][2] += pT*pT*pT;
-    (*AA)[2][0] += pT*pT;      (*AA)[2][1] += pT*pT*pT;   (*AA)[2][2] += pT*pT*pT*pT;
+   //     H  =     ax^2          +                b*x               +         c
+    (*AA)[0][0] += pT*pT;            (*AA)[0][1] += pT;         (*AA)[0][2] += 1.0;     
+    (*AA)[1][0] += pT*pT*pT;         (*AA)[1][1] += pT*pT;      (*AA)[1][2] += pT;      
+    (*AA)[2][0] += pT*pT*pT*pT;      (*AA)[2][1] += pT*pT*pT;   (*AA)[2][2] += pT*pT;   
 
     (*BBa)[0] += Ha;        
     (*BBa)[1] += Ha*pT;         
@@ -143,7 +143,7 @@ CoalTemperature::problemSetup( ProblemSpecP& db ){
   Mult( (*XXa), (*AA), (*BBa) );
   Mult( (*XXc), (*AA), (*BBc) );
 
-// coefficients for ash and coal, equation a + bx + cx^2   
+// coefficients for ash and coal, equation H=ax^2 + bx + c   
   _aa = (*XXa)[0];
   _ba = (*XXa)[1];
   _ca = (*XXa)[2];
