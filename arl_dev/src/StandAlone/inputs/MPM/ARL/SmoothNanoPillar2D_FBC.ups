@@ -72,7 +72,7 @@
    <SimulationComponent type="amrmpm" />
 
    <Time>
-     <maxTime>2e10</maxTime>
+     <maxTime>3e7</maxTime>
      <initTime>0.0</initTime>
      <delt_min>1.0e-16</delt_min>
      <delt_max>1.0e8</delt_max>
@@ -179,9 +179,9 @@
              <top>   [0.0,0.0,0.02]</top>
              <outer_radius> 0.25   </outer_radius>
              <inner_radius> 0.0    </inner_radius>
-             <num_radial> 60 </num_radial>
+             <num_radial> 120 </num_radial>
              <num_axial> 1 </num_axial>
-             <num_angular> 200 </num_angular>
+             <num_angular> 400 </num_angular>
              <arc_start_angle> 0.4 </arc_start_angle>
              <arc_angle> 360 </arc_angle>
            </smoothcyl>
@@ -208,18 +208,18 @@
            <cylinder label = "side">
              <bottom>          [0.0,0.0,0.0]     </bottom>
              <top>             [0.0,0.0,.02]     </top>
-             <radius>          0.265              </radius>
+             <radius>          0.255              </radius>
            </cylinder>
          </geom_object>
          <load_curve>
            <id>1</id>
            <time_point>
              <time> 0 </time>
-             <load> 2.e-2 </load>
+             <load> 2.e-8 </load>
            </time_point>
            <time_point>
              <time> 1.e12 </time>
-             <load> 2.e-2 </load>
+             <load> 2.e-8 </load>
            </time_point>
          </load_curve>
        </scalar_flux>
@@ -231,7 +231,7 @@
        <Box label = "1">
          <lower>        [-.5,-.5,0.0]      </lower>
          <upper>        [0.5,0.5,0.02]     </upper>
-         <resolution>   [50, 50, 1]        </resolution>
+         <resolution>   [100, 100, 1]        </resolution>
          <patches>      [2,2,1]            </patches>
          <extraCells>   [1,1,1]            </extraCells>
        </Box>
