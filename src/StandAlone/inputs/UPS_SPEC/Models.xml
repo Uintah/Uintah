@@ -86,6 +86,20 @@
         <react_mixed_cells    spec="REQUIRED BOOLEAN" />             
         <direction_if_plane   spec="REQUIRED VECTOR" />          
       </LightTime>
+      
+      <!--__________________________________-->
+      <!-- JWLpp -->
+      <JWLpp              spec="OPTIONAL NO_DATA">
+        <fromMaterial         spec="REQUIRED STRING" />           
+        <toMaterial           spec="REQUIRED STRING" />
+        <ThresholdPressure    spec="REQUIRED DOUBLE 'positive'" />
+        <ThresholdVolFrac     spec="OPTIONAL DOUBLE 'positive'" />
+        <rho0                 spec="REQUIRED DOUBLE 'positive'" />
+        <G                    spec="REQUIRED DOUBLE 'positive'" />
+        <b                    spec="REQUIRED DOUBLE 'positive'" />         
+        <E0                   spec="REQUIRED DOUBLE 'positive'" /> 
+      </JWLpp>
+      
       <!--__________________________________-->
       <!--  SimpleRxn -->
       <SimpleRxn              spec="OPTIONAL NO_DATA">
@@ -139,18 +153,18 @@
       <!--______________________________________________________________________-->
       <!--  COMMON VARIABLES FOR BURN MODELS -->
       <!--  -->
-      <rho0                   spec="REQUIRED DOUBLE"            need_applies_to="type Gruneisen JWL JWLC JWLpp Murnaghan Tillotson" />
+      <rho0                   spec="REQUIRED DOUBLE"            need_applies_to="type Gruneisen JWL Murnaghan Tillotson" />
       <toMaterial             spec="OPTIONAL STRING"            need_applies_to="type DDT0 JWLpp Simple_Burn SolidReactionModel   ZeroOrder "/>
       <fromMaterial           spec="OPTIONAL STRING"            need_applies_to="type DDT0 JWLpp Simple_Burn SolidReactionModel   ZeroOrder "/>
       <refPressure            spec="OPTIONAL DOUBLE 'positive'" need_applies_to="type DDT0 Simple_Burn" />
       <ThresholdPressure      spec="OPTIONAL DOUBLE 'positive'" need_applies_to="type JWLpp Simple_Burn  ZeroOrder"/>
       <ThresholdTemp          spec="OPTIONAL DOUBLE 'positive'" need_applies_to="type DDT0 Simple_Burn"/>
-      <ThresholdVolFrac       spec="OPTIONAL DOUBLE 'positive'" need_applies_to="type DDT0 JWLpp ZeroOrder"/>
+      <ThresholdVolFrac       spec="OPTIONAL DOUBLE 'positive'" need_applies_to="type DDT0 ZeroOrder"/>
 
       <Active                 spec="OPTIONAL BOOLEAN" need_applies_to="type JWLpp ZeroOrder Simple_Burn DDT0 SolidReactionModel" />
-      <b                      spec="REQUIRED DOUBLE"  need_applies_to="type hard_sphere_gas JWLpp ZeroOrder Thomsen_Hartka_water Tillotson" />
-      <E0                     spec="REQUIRED DOUBLE"  need_applies_to="type JWLpp ZeroOrder Tillotson" />
-      <G                      spec="REQUIRED DOUBLE"  need_applies_to="type JWLpp ZeroOrder" />
+      <b                      spec="REQUIRED DOUBLE"  need_applies_to="type hard_sphere_gas  ZeroOrder Thomsen_Hartka_water Tillotson" />
+      <E0                     spec="REQUIRED DOUBLE"  need_applies_to="type ZeroOrder Tillotson" />
+      <G                      spec="REQUIRED DOUBLE"  need_applies_to="type  ZeroOrder" />
       
       <AfterMelting           spec="OPTIONAL BOOLEAN" /> 
       <ActEnergyCondPh        spec="OPTIONAL DOUBLE" />
