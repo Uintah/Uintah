@@ -300,6 +300,8 @@ void MD::problemSetup(const ProblemSpecP&   params,
 //  MDSubcomponent* d_valenceInterface       = dynamic_cast<MDSubcomponent*> (d_valence);
 
 // Register the general labels that all MD simulations will use
+   d_particleState.clear();
+   d_particleState_preReloc.clear();
    createBasePermanentParticleState();
    // And then add the labels that each created subcomponent will require
    d_integratorInterface->registerRequiredParticleStates(d_particleState,
@@ -357,16 +359,18 @@ void MD::problemSetup(const ProblemSpecP&   params,
 void MD::scheduleInitialize(const LevelP&       level,
                                   SchedulerP&   sched)
 {
-  int currDW = 0;
-  DataWarehouse* dwAddress = sched->get_dw(currDW);
-  while (dwAddress)
-  {
-    std::cout << " Data Warehouse: " << currDW << " Address: " << std::showbase
-              << std::internal << std::setfill('0') << std::hex << dwAddress << std::endl;
-    std::cout.unsetf(std::ios::hex);
-    ++currDW;
-    dwAddress = sched->get_dw(currDW);
-  }
+//  int currDW = 0;
+//  DataWarehouse* dwAddress = sched->get_dw(currDW);
+//  while (dwAddress)
+//  {
+//    char fill = std::cout.fill();
+//    std::cout << " Data Warehouse: " << currDW << " Address: " << std::showbase
+//              << std::internal << std::setfill('0') << std::hex << dwAddress << std::endl;
+//    std::cout.unsetf(std::ios::hex);
+//    std::setfill(fill);
+//    ++currDW;
+//    dwAddress = sched->get_dw(currDW);
+//  }
 
   // Get list of MD materials for scheduling
   const MaterialSet*    materials       =   d_sharedState->allMDMaterials();
