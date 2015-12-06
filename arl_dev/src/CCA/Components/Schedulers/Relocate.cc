@@ -1371,12 +1371,13 @@ Relocate::relocateParticlesModifies(const ProcessorGroup* pg,
 //______________________________________________________________________
 //
 void
-Relocate::relocateParticles(const ProcessorGroup* pg,
-                            const PatchSubset* patches,
-                            const MaterialSubset* matls,
-                            DataWarehouse* old_dw,
-                            DataWarehouse* new_dw,
-                            const Level* coarsestLevelwithParticles)
+Relocate::relocateParticles(
+                              const ProcessorGroup  * pg,
+                              const PatchSubset     * patches,
+                              const MaterialSubset  * matls,
+                                    DataWarehouse   * old_dw,
+                                    DataWarehouse   * new_dw,
+                              const Level           * coarsestLevelwithParticles)
 {
   int total_reloc[3] = {0,0,0};
   if (patches->size() != 0) {
