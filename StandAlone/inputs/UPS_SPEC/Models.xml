@@ -156,17 +156,11 @@
       <!--  COMMON VARIABLES FOR BURN MODELS -->
       <!--  -->
       <rho0                   spec="REQUIRED DOUBLE"            need_applies_to="type Gruneisen JWL Murnaghan Tillotson" />
-      <toMaterial             spec="OPTIONAL STRING"            need_applies_to="type DDT0     ZeroOrder "/>
-      <fromMaterial           spec="OPTIONAL STRING"            need_applies_to="type DDT0     ZeroOrder "/>
-      <refPressure            spec="OPTIONAL DOUBLE 'positive'" need_applies_to="type DDT0" />
-      <ThresholdPressure      spec="OPTIONAL DOUBLE 'positive'" need_applies_to="type    ZeroOrder"/>
-      <ThresholdTemp          spec="OPTIONAL DOUBLE 'positive'" need_applies_to="type DDT0 "/>
-      <ThresholdVolFrac       spec="OPTIONAL DOUBLE 'positive'" need_applies_to="type DDT0 ZeroOrder"/>
+       <refPressure            spec="OPTIONAL DOUBLE 'positive'" need_applies_to="type " />
+      <ThresholdTemp          spec="OPTIONAL DOUBLE 'positive'" need_applies_to="type  "/>
 
-      <Active                 spec="OPTIONAL BOOLEAN" need_applies_to="type JWLpp ZeroOrder  DDT0 SolidReactionModel" />
-      <b                      spec="REQUIRED DOUBLE"  need_applies_to="type hard_sphere_gas  ZeroOrder Thomsen_Hartka_water Tillotson" />
-      <E0                     spec="REQUIRED DOUBLE"  need_applies_to="type ZeroOrder Tillotson" />
-      <G                      spec="REQUIRED DOUBLE"  need_applies_to="type  ZeroOrder" />
+      <b                      spec="REQUIRED DOUBLE"  need_applies_to="type hard_sphere_gas   Thomsen_Hartka_water Tillotson" />
+      <E0                     spec="REQUIRED DOUBLE"  need_applies_to="type  Tillotson" />
       
       <AfterMelting           spec="OPTIONAL BOOLEAN" /> 
       <ActEnergyCondPh        spec="OPTIONAL DOUBLE" />
@@ -195,6 +189,19 @@
       <PreExpCondPh           spec="OPTIONAL DOUBLE" />
       <PreExpGasPh            spec="OPTIONAL DOUBLE" />
 
+
+      <!--__________________________________-->
+      <!-- ZeroOrder  -->
+      <ZeroOrder             spec="OPTIONAL NO_DATA">
+        <fromMaterial        spec="REQUIRED STRING" />            
+        <toMaterial          spec="REQUIRED STRING" />            
+        <ThresholdPressure   spec="REQUIRED DOUBLE 'positive'"/>  
+        <ThresholdVolFrac    spec="OPTIONAL DOUBLE 'positive'"/>  
+        <b                   spec="REQUIRED DOUBLE 'positive'"/>  
+        <E0                  spec="REQUIRED DOUBLE 'positive'"/>  
+        <G                   spec="REQUIRED DOUBLE 'positive'"/>  
+        <rho0                spec="REQUIRED DOUBLE 'positive'"/>
+      </ZeroOrder>
 
       <!--__________________________________-->
       <!-- SIMPLE BURN  -->
@@ -270,12 +277,12 @@
         <ThresholdPressureJWL    spec="REQUIRED DOUBLE 'positive'" />
         <ThresholdPressureSB     spec="REQUIRED DOUBLE 'positive'" />
         <ThresholdVolFrac        spec="OPTIONAL DOUBLE 'positive'" />
-        <ThresholdTemp         spec="REQUIRED DOUBLE 'positive'"/>
-        <Enthalpy              spec="REQUIRED DOUBLE 'positive'"/>
-        <BurnCoeff             spec="REQUIRED DOUBLE 'positive'"/>
-        <refPressure           spec="REQUIRED DOUBLE 'positive'"/>        
+        <ThresholdTemp           spec="REQUIRED DOUBLE 'positive'"/>
+        <Enthalpy                spec="REQUIRED DOUBLE 'positive'"/>
+        <BurnCoeff               spec="REQUIRED DOUBLE 'positive'"/>
+        <refPressure             spec="REQUIRED DOUBLE 'positive'"/>        
         
-      </DDT1>
+      </DDT0>
 
 
       <!--__________________________________-->
