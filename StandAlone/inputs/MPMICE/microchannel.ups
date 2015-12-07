@@ -500,13 +500,15 @@
     
  <!--     
       <Model type="Simple_Burn">
-        <fromMaterial> PBX9501    </fromMaterial>
-        <toMaterial>  product       </toMaterial>
-        <ThresholdTemp>       450.0 </ThresholdTemp>
-        <ThresholdPressure>   5.0e4 </ThresholdPressure>
-        <Enthalpy>        2000000.0 </Enthalpy>
-        <BurnCoeff>            75.3 </BurnCoeff>
-        <refPressure>      101325.0 </refPressure>
+        <Simple_Burn>
+          <fromMaterial> PBX9501      </fromMaterial>
+          <toMaterial>  product       </toMaterial>
+          <ThresholdTemp>       450.0 </ThresholdTemp>
+          <ThresholdPressure>   5.0e4 </ThresholdPressure>
+          <Enthalpy>        2000000.0 </Enthalpy>
+          <BurnCoeff>            75.3 </BurnCoeff>
+          <refPressure>      101325.0 </refPressure>
+        </Simple_Burn>
       </Model>      
 -->  
     </Models>
