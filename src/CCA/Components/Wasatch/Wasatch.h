@@ -83,7 +83,7 @@
       destroys portability of the code.
 
     - Task creation.  Uintah tasks are typically created by wrapping
-      Expression tree objects using the Wasatch::TaskInterface class.
+      Expression tree objects using the WasatchCore::TaskInterface class.
       If you find yourself writing a Uintah::Task directly in Wasatch,
       you are probably doing something wrong.
 
@@ -131,7 +131,7 @@ namespace Uintah {
 
   class CellType;
 
-namespace Wasatch{
+namespace WasatchCore{
   void force_expressions_on_graph( Expr::TagList& exprTagList,
                                    GraphHelper* const graphHelper );
   
@@ -293,7 +293,7 @@ namespace Wasatch{
 
     /**
      *  a container of information for constructing ExprLib graphs.
-     *  These are then wrapped as Wasatch::TaskInterface objects and
+     *  These are then wrapped as WasatchCore::TaskInterface objects and
      *  plugged into Uintah.
      */
     GraphCategories graphCategories_;
@@ -344,6 +344,6 @@ namespace Wasatch{
                                           Uintah::SchedulerP& sched );
   };
 
-} // namespace Wasatch
+} // namespace WasatchCore
 
 #endif

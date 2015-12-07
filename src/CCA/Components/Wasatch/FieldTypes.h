@@ -44,7 +44,7 @@ using SpatialOps::Particle::ParticleField; ///< lagrangian particles
 
 using SpatialOps::FaceTypes;   ///< allows deducing face types from volume types
 
-namespace Wasatch{
+namespace WasatchCore{
 
   /** \addtogroup WasatchFields
    *  @{
@@ -76,6 +76,6 @@ namespace Wasatch{
   }
   /** @} */
 
-} // namespace Wasatch
+} // namespace WasatchCore
 
 #endif // Wasatch_FieldTypes_h

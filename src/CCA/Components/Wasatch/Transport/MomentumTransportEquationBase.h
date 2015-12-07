@@ -39,7 +39,7 @@
 #include <Core/Parallel/UintahParallelComponent.h>
 #include <CCA/Ports/SolverInterface.h>
 
-namespace Wasatch{
+namespace WasatchCore{
   
   
   template< typename FieldT >
@@ -111,7 +111,7 @@ namespace Wasatch{
    *  \todo Allow more flexibility in specifying initial and boundary conditions for momentum.
    */
   template< typename FieldT >
-  class MomentumTransportEquationBase : public Wasatch::TransportEquation
+  class MomentumTransportEquationBase : public WasatchCore::TransportEquation
   {
   public:
 
@@ -200,6 +200,6 @@ namespace Wasatch{
 
   };
 
-} // namespace Wasatch
+} // namespace WasatchCore
 
 #endif // Wasatch_MomentumTransportEquationBase_h

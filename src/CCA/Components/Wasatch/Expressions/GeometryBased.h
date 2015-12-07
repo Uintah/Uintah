@@ -90,7 +90,7 @@ GeometryBased( GeomValueMapT geomObjects,
   geomObjects_(geomObjects),
   outsideValue_(outsideValue)
 {
-  const Wasatch::TagNames& tags = Wasatch::TagNames::self();
+  const WasatchCore::TagNames& tags = WasatchCore::TagNames::self();
    x_ = this->template create_field_request<SVolField>(tags.xsvolcoord);
    y_ = this->template create_field_request<SVolField>(tags.ysvolcoord);
    z_ = this->template create_field_request<SVolField>(tags.zsvolcoord);

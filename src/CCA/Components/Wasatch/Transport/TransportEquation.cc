@@ -33,7 +33,7 @@
 #include <CCA/Components/Wasatch/Transport/TransportEquation.h>
 #include <CCA/Components/Wasatch/Expressions/EmbeddedGeometry/EmbeddedGeometryHelper.h>
 
-namespace Wasatch{
+namespace WasatchCore{
 
   //---------------------------------------------------------------------------
 
@@ -74,4 +74,4 @@ namespace Wasatch{
 
   //---------------------------------------------------------------------------
 
-} // namespace Wasatch
+} // namespace WasatchCore

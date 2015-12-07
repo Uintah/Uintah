@@ -92,7 +92,7 @@
 #include <CCA/Components/Wasatch/Expressions/CellType.h>
 using std::endl;
 
-namespace Wasatch{
+namespace WasatchCore{
 
   //--------------------------------------------------------------------
 
@@ -1293,4 +1293,4 @@ namespace Wasatch{
  }
 //------------------------------------------------------------------
 
-} // namespace Wasatch
+} // namespace WasatchCore

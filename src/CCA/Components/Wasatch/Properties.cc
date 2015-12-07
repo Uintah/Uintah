@@ -60,7 +60,7 @@ Interp2D i2d;
 Interp3D i3d;
 
 
-namespace Wasatch{
+namespace WasatchCore{
 
   //====================================================================
 
@@ -543,4 +543,4 @@ namespace Wasatch{
 
   //====================================================================
 
-} // namespace Wasatch
+} // namespace WasatchCore

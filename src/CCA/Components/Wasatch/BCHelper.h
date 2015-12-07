@@ -58,7 +58,7 @@
  * \file BCHelper.h
  */
 
-namespace Wasatch {
+namespace WasatchCore {
   
   // !!! ACHTUNG !!!
   // !!! READ THE NOMENCLATURE ASSUMPTIONS BEFORE PROCEEDING WITH THIS CLASS !!!
@@ -442,6 +442,6 @@ namespace Wasatch {
     
   }; // class BCHelper
   
-} // namespace Wasatch
+} // namespace WasatchCore
 
 #endif /* defined(WASATCH_BC_HELPER) */

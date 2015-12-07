@@ -40,7 +40,7 @@
 #include <CCA/Components/Wasatch/Expressions/Coordinate.h>
 #include <CCA/Components/Wasatch/OldVariable.h>
 
-namespace Wasatch{
+namespace WasatchCore{
   
   CoordinateNames::CoordinateNames()
   {
@@ -120,4 +120,4 @@ namespace Wasatch{
       slngh.exprFactory->cleave_from_parents(coordID);
     }
   }
-} // namespace Wasatch
+} // namespace WasatchCore

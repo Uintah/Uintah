@@ -2,7 +2,7 @@
 
 using namespace Uintah;
 
-ArchesFieldContainer::ArchesFieldContainer( const Wasatch::AllocInfo& alloc_info,
+ArchesFieldContainer::ArchesFieldContainer( const WasatchCore::AllocInfo& alloc_info,
                                             const Patch* patch,
                                             const int matl_index,
                                             const VariableRegistry variable_reg,

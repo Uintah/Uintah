@@ -40,7 +40,7 @@
 #include "FieldTypes.h"
 #include <CCA/Components/Wasatch/TimeIntegratorTools.h>
 
-namespace Wasatch{
+namespace WasatchCore{
 
   class TaskInterface;
   /**
@@ -193,6 +193,6 @@ namespace Wasatch{
 
   //==================================================================
 
-} // namespace Wasatch
+} // namespace WasatchCore
 
 #endif // Wasatch_TimeStepper_h

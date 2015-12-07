@@ -41,7 +41,7 @@ namespace Expr{
 
 
 
-namespace Wasatch{
+namespace WasatchCore{
 
 
   /**
@@ -57,7 +57,7 @@ namespace Wasatch{
   create_expressions_from_input( Uintah::ProblemSpecP parser,
                                  GraphCategories& gc );
 
-} // namespace Wasatch
+} // namespace WasatchCore
 
 
 #endif // Wasatch_BasicExprBuilder_h

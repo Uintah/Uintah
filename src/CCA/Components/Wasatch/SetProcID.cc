@@ -32,7 +32,7 @@
 #include <Core/Grid/Task.h>
 #include <Core/Parallel/ProcessorGroup.h>
 
-namespace Wasatch{
+namespace WasatchCore{
 
   typedef Uintah::CCVariable<double> FieldT;
 
@@ -91,4 +91,4 @@ namespace Wasatch{
 
   //------------------------------------------------------------------
 
-} // namespace Wasatch
+} // namespace WasatchCore

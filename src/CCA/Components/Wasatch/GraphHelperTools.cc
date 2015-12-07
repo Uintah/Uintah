@@ -28,10 +28,10 @@
 //-- ExprLib includes --//
 #include <expression/ExpressionFactory.h>
 
-namespace Wasatch{
+namespace WasatchCore{
 
   GraphHelper::GraphHelper( Expr::ExpressionFactory* ef )
     : exprFactory(ef)
   {}
 
-} // namespace Wasatch
+} // namespace WasatchCore

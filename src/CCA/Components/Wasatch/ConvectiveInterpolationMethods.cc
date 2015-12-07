@@ -29,7 +29,7 @@
 #include <stdexcept>
 #include <sstream>
 
-namespace Wasatch {
+namespace WasatchCore {
 
   typedef boost::bimap<std::string,ConvInterpMethods> ConvInterpStringMap;
   static ConvInterpStringMap validConvInterpStrings;
@@ -73,4 +73,4 @@ namespace Wasatch {
     return validConvInterpStrings.right.find(key)->second;
   }
 
-} // namespace Wasatch
+} // namespace WasatchCore

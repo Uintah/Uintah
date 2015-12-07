@@ -92,12 +92,12 @@ typename PhiInterpHiT, typename VelInterpT >
 ConvectiveFluxLimiter<LimiterInterpT, PhiInterpLowT, PhiInterpHiT, VelInterpT>::
 ConvectiveFluxLimiter( const Expr::Tag& phiTag,
                       const Expr::Tag& velTag,
-                      const Wasatch::ConvInterpMethods limiterType,
+                      const WasatchCore::ConvInterpMethods limiterType,
                       const Expr::Tag& volFracTag )
 : Expr::Expression<PhiFaceT>(),
   limiterType_        ( limiterType ),
-  isUpwind_           ( limiterType_ == Wasatch::UPWIND  ),
-  isCentral_          ( limiterType_ == Wasatch::CENTRAL ),
+  isUpwind_           ( limiterType_ == WasatchCore::UPWIND  ),
+  isCentral_          ( limiterType_ == WasatchCore::CENTRAL ),
   hasEmbeddedBoundary_( volFracTag != Expr::Tag() )
 {
   this->set_gpu_runnable( true );
@@ -191,7 +191,7 @@ evaluate()
 #include <CCA/Components/Wasatch/Operators/UpwindInterpolant.h>
 #include <CCA/Components/Wasatch/Operators/FluxLimiterInterpolant.h>
 
-using Wasatch::OpTypes;
+using WasatchCore::OpTypes;
 
 #define CONV_FLUX_DECLARE( VOL )                                        \
 template class ConvectiveFlux< OpTypes<VOL>::InterpC2FX, OperatorTypeBuilder<Interpolant,XVolField,FaceTypes<VOL>::XFace>::type >; \

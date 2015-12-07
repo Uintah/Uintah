@@ -57,7 +57,7 @@ public:
   inline void bind_operators( const SpatialOps::OperatorDatabase& opdb )
   {
     // operators
-    typedef Wasatch::BCOpTypeSelector<FieldT> OpT;
+    typedef WasatchCore::BCOpTypeSelector<FieldT> OpT;
 
     switch (faceTypeEnum_) {
       case Uintah::Patch::xminus:
@@ -91,7 +91,7 @@ public:
     }
     
     switch (bcTypeEnum_) {
-      case Wasatch::DIRICHLET:
+      case WasatchCore::DIRICHLET:
       {
         switch (faceTypeEnum_) {
           case Uintah::Patch::xminus:
@@ -122,7 +122,7 @@ public:
         break; // DIRICHLET
       }
         
-      case Wasatch::NEUMANN:
+      case WasatchCore::NEUMANN:
       {
         switch (faceTypeEnum_) {
           case Uintah::Patch::xminus:
@@ -269,7 +269,7 @@ public:
    *  \brief Set the type of this bc: Dirichlet or Neumann.
    *
    */
-  inline void set_bc_type ( Wasatch::BndCondTypeEnum bcTypeEnum)
+  inline void set_bc_type ( WasatchCore::BndCondTypeEnum bcTypeEnum)
   {
     bcTypeEnum_ = bcTypeEnum;
   }
@@ -336,7 +336,7 @@ public:
     cg_ = 0.0;
     patchCellOffset_ = SpatialOps::IntVec(0,0,0);
     bndNormal_       = SpatialOps::IntVec(0,0,0);
-    bcTypeEnum_      = Wasatch::UNSUPPORTED;
+    bcTypeEnum_      = WasatchCore::UNSUPPORTED;
     faceTypeEnum_    = Uintah::Patch::xminus;
 
     diriXOp_ = NULL;
@@ -360,12 +360,12 @@ protected:
   SpatialOps::IntVec patchCellOffset_;
   SpatialOps::IntVec bndNormal_;
   
-  Wasatch::BndCondTypeEnum bcTypeEnum_; // DIRICHLET, NEUMANN, UNSUPPORTED
+  WasatchCore::BndCondTypeEnum bcTypeEnum_; // DIRICHLET, NEUMANN, UNSUPPORTED
   Uintah::Patch::FaceType faceTypeEnum_;    // xminus, xplus...
   SpatialOps::BCSide bcSide_, shiftSide_;
   
   // operators
-  typedef Wasatch::BCOpTypeSelector<FieldT> OpT;
+  typedef WasatchCore::BCOpTypeSelector<FieldT> OpT;
   
   typedef SpatialOps::NeboBoundaryConditionBuilder<typename OpT::DirichletX> DiriXOpT;
   typedef SpatialOps::NeboBoundaryConditionBuilder<typename OpT::DirichletY> DiriYOpT;

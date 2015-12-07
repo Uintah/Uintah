@@ -27,7 +27,7 @@
 
 #include <Core/ProblemSpec/ProblemSpec.h>
 
-namespace Wasatch{
+namespace WasatchCore{
   /**
    *  \ingroup WasatchCore
    *  \struct TurbulenceParameters

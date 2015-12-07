@@ -105,7 +105,7 @@ static SCIRun::DebugStream dbgf("WASATCH_FIELDS", false); // field diagnostics
 #define dbg_tasks  if( dbg_tasks_on  ) dbgt
 #define dbg_fields if( dbg_fields_on ) dbgf
 
-namespace Wasatch{
+namespace WasatchCore{
 
   /**
    *  \class TreeTaskExecute
@@ -815,4 +815,4 @@ namespace Wasatch{
 
   //------------------------------------------------------------------
 
-} // namespace Wasatch
+} // namespace WasatchCore

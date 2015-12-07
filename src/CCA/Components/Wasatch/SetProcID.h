@@ -37,7 +37,7 @@ namespace Uintah{
   class VarLabel;
 }
 
-namespace Wasatch{
+namespace WasatchCore{
 
   /**
    *  \class SetProcID

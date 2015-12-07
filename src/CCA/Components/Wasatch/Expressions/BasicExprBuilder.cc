@@ -85,7 +85,7 @@
 
 using std::endl;
 
-namespace Wasatch{
+namespace WasatchCore{
   
   //------------------------------------------------------------------
   // Special parser for particle expressions

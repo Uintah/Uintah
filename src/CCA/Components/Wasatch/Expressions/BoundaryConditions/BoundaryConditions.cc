@@ -63,9 +63,9 @@
     {                                                                                           \
       masked_assign( *(this->spatialMask_), f, BCVALUE);                                        \
     } else {                                                                                    \
-      typedef Wasatch::BCOpTypeSelector<FieldT> OpT;                                            \
+      typedef WasatchCore::BCOpTypeSelector<FieldT> OpT;                                            \
       switch (this->bcTypeEnum_) {                                                              \
-        case Wasatch::DIRICHLET:                                                                \
+        case WasatchCore::DIRICHLET:                                                                \
         {                                                                                       \
           switch (this->faceTypeEnum_) {                                                        \
             case Uintah::Patch::xminus:                                                         \
@@ -96,7 +96,7 @@
           }                                                                                     \
           break;                                                                                \
         }                                                                                       \
-        case Wasatch::NEUMANN:                                                                  \
+        case WasatchCore::NEUMANN:                                                                  \
         {                                                                                       \
           switch (this->faceTypeEnum_) {                                                        \
             case Uintah::Patch::xminus:                                                         \
@@ -182,16 +182,16 @@
  */
 #define APPLY_CONSTANT_BC(f, BCVALUE)                                                              \
 {                                                                                               \
-  if( this->isStaggeredNormal_ && this->bcTypeEnum_ != Wasatch::NEUMANN ){                            \
+  if( this->isStaggeredNormal_ && this->bcTypeEnum_ != WasatchCore::NEUMANN ){                            \
     masked_assign ( STAGGERED_MASK, f, bcValue_ );                                              \
   } else {                                                                                      \
     if (this->setInExtraCellsOnly_)                                                             \
     {                                                                                           \
       masked_assign( *(this->spatialMask_), f, BCVALUE);                                        \
     } else {                                                                                    \
-      typedef Wasatch::BCOpTypeSelector<FieldT> OpT;                                            \
+      typedef WasatchCore::BCOpTypeSelector<FieldT> OpT;                                            \
       switch (this->bcTypeEnum_) {                                                              \
-        case Wasatch::DIRICHLET:                                                                \
+        case WasatchCore::DIRICHLET:                                                                \
         {                                                                                       \
           switch (this->faceTypeEnum_) {                                                        \
             case Uintah::Patch::xminus:                                                         \
@@ -222,7 +222,7 @@
           }                                                                                     \
           break;                                                                                \
         }                                                                                       \
-        case Wasatch::NEUMANN:                                                                  \
+        case WasatchCore::NEUMANN:                                                                  \
         {                                                                                       \
           switch (this->faceTypeEnum_) {                                                        \
             case Uintah::Patch::xminus:                                                         \

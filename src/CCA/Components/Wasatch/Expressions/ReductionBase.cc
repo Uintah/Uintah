@@ -61,7 +61,7 @@ schedule_set_reduction_vars( const Uintah::LevelP& level,
   Uintah::Task* reductionVarTask = scinew Uintah::Task( "set reduction variables", this, &ReductionBase::populate_reduction_variable, RKStage );
   // we require this perpatch variable
   reductionVarTask->requires( Uintah::Task::NewDW, thisVarLabel_,
-                              Wasatch::get_uintah_ghost_type<so::SingleValueField>() );
+                              WasatchCore::get_uintah_ghost_type<so::SingleValueField>() );
   // we compute the reduction on this per patch variable
   reductionVarTask->computes( rkRedVarLbls_[RKStage - 1] ); // RKStage starts at 1
   sched->addTask( reductionVarTask,

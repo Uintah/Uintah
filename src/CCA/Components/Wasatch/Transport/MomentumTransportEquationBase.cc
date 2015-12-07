@@ -71,7 +71,7 @@
 
 using std::string;
 
-namespace Wasatch{
+namespace WasatchCore{
 
   //==================================================================
   
@@ -760,4 +760,4 @@ namespace Wasatch{
 
   //==================================================================
 
-} // namespace Wasatch
+} // namespace WasatchCore

@@ -26,7 +26,7 @@
 #include <CCA/Components/Wasatch/Expressions/Particles/ParticlePositionRHS.h>
 #include <Core/Exceptions/ProblemSetupException.h>
 
-namespace Wasatch{
+namespace WasatchCore{
 
 
   // #################################################################

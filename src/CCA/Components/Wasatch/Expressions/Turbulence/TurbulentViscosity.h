@@ -30,14 +30,14 @@ class TurbulentViscosity
 {
   
   const bool isConstSmag_;
-  const Wasatch::TurbulenceParameters turbParams_;
+  const WasatchCore::TurbulenceParameters turbParams_;
 
   // gradient operators are only here to extract spacing information out of them
   typedef SpatialOps::OperatorTypeBuilder< SpatialOps::Gradient, XVolField, SVolField >::type GradXT;
   typedef SpatialOps::OperatorTypeBuilder< SpatialOps::Gradient, YVolField, SVolField >::type GradYT;
   typedef SpatialOps::OperatorTypeBuilder< SpatialOps::Gradient, ZVolField, SVolField >::type GradZT;
   
-  typedef Wasatch::OpTypes<SVolField>::BoundaryExtrapolant ExOpT;
+  typedef WasatchCore::OpTypes<SVolField>::BoundaryExtrapolant ExOpT;
   
   const GradXT*  gradXOp_;            ///< x-component of the gradient operator
   const GradYT*  gradYOp_;            ///< y-component of the gradient operator  
@@ -51,7 +51,7 @@ class TurbulentViscosity
                       const Expr::Tag waleTsrMagTag,
                       const Expr::Tag vremanTsrMagTag,
                       const Expr::Tag dynamicSmagCoefTag,
-                      const Wasatch::TurbulenceParameters& turbParams);
+                      const WasatchCore::TurbulenceParameters& turbParams);
   
 public:
   class Builder : public Expr::ExpressionBuilder
@@ -81,7 +81,7 @@ public:
              const Expr::Tag waleTsrMagTag,
              const Expr::Tag vremanTsrMagTag,
              const Expr::Tag dynamicSmagCoefTag,
-             const Wasatch::TurbulenceParameters& turbParams )
+             const WasatchCore::TurbulenceParameters& turbParams )
       : ExpressionBuilder(result),
         isConstSmag_   ( true                ),
         turbParams_    ( turbParams          ),
@@ -98,7 +98,7 @@ public:
     }    
   private:
     const bool isConstSmag_;
-    const Wasatch::TurbulenceParameters turbParams_;
+    const WasatchCore::TurbulenceParameters turbParams_;
     const Expr::Tag rhot_, strTsrSqt_, waleTsrMagt_, vremanTsrMagt_, dynCoeft_;
   };
 
