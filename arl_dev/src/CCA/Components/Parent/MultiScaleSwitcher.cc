@@ -22,8 +22,9 @@
  * IN THE SOFTWARE.
  */
 
-#include <CCA/Components/Parent/ComponentFactory.h>
 #include <CCA/Components/Parent/MultiScaleSwitcher.h>
+
+#include <CCA/Components/Parent/ComponentFactory.h>
 #include <CCA/Components/ProblemSpecification/ProblemSpecReader.h>
 #include <CCA/Components/Solvers/SolverFactory.h>
 #include <CCA/Components/SwitchingCriteria/None.h>
@@ -78,7 +79,7 @@ MultiScaleSwitcher::MultiScaleSwitcher( const ProcessorGroup * myworld,
                                         const std::string    & uda )
   : UintahParallelComponent(myworld)
 {
-  proc0cout << "-----------------------------MultiScaleSwitcher::MultiScaleSwitcher top"<< std::endl;
+  proc0cout << "----------------------------- MultiScaleSwitcher::MultiScaleSwitcher top"<< std::endl;
 
   int num_components = 0;
   d_componentIndex   = 0;
@@ -116,8 +117,8 @@ MultiScaleSwitcher::MultiScaleSwitcher( const ProcessorGroup * myworld,
 
     //__________________________________
     // create simulation port and attach it switcher component    
-    UintahParallelComponent* comp = ComponentFactory::create(subCompUps, myworld, doAMR, "");
-    SimulationInterface* sim = dynamic_cast<SimulationInterface*>(comp);
+    UintahParallelComponent * comp = ComponentFactory::create(subCompUps, myworld, doAMR, "");
+    SimulationInterface     * sim  = dynamic_cast<SimulationInterface*>(comp);
     attachPort("sim", sim);
 
     //__________________________________
@@ -246,7 +247,7 @@ MultiScaleSwitcher::MultiScaleSwitcher( const ProcessorGroup * myworld,
   d_computedVars.clear();
 
   proc0cout << "Number of components " << d_numComponents << std::endl;
-  proc0cout << "-----------------------------MultiScaleSwitcher::MultiScaleSwitcher bottom" << std::endl;
+  proc0cout << "----------------------------- MultiScaleSwitcher::MultiScaleSwitcher bottom" << std::endl;
 }
 //______________________________________________________________________
 //
@@ -322,7 +323,6 @@ MultiScaleSwitcher::problemSetup( const ProblemSpecP     & /*params*/,
   //   - determine the label from the string names
   //   - determine the MaterialSet from the string matlSetName
   //   - store this info to be used later
-  proc0cout << "\n-----------------------------------\n";
   std::map<int, initVars*>::iterator it;
   for (it = d_initVars.begin(); it != d_initVars.end(); it++) {
 
@@ -367,7 +367,6 @@ MultiScaleSwitcher::problemSetup( const ProblemSpecP     & /*params*/,
       throw ProblemSetupException(error, __FILE__, __LINE__);
     }
   }
-  proc0cout << "-----------------------------------\n" << std::endl;
 }
 
 SimulationInterface* MultiScaleSwitcher::matchComponentToLevelset(const LevelP&     level)
@@ -651,8 +650,6 @@ void MultiScaleSwitcher::initNewVars( const ProcessorGroup * /*pg*/,
     return;
   }
 
-  proc0cout << "\n-----------------------------------\n";
-  proc0cout << "initNewVars \t\t\t\tSwitcher" << std::endl;
   //__________________________________
   // loop over the init vars, initialize them and put them in the new_dw
   initVars* initVar = d_initVars.find(d_componentIndex + 1)->second;
@@ -821,7 +818,6 @@ void MultiScaleSwitcher::initNewVars( const ProcessorGroup * /*pg*/,
       }  // patch loop
     }  // matl loop
   }  // varlabel loop
-  proc0cout << "\n-----------------------------------" << std::endl;
 }
 
 //______________________________________________________________________
@@ -917,8 +913,10 @@ MultiScaleSwitcher::needRecompile(       double   time,
 //      modelmaker->clearModels();
 //    }
 
-    proc0cout << "\n__________________________________ Switching to component (" << d_componentIndex << ") \n";
-    proc0cout << "  Reading input file: " << d_in_file[d_componentIndex] << "\n";
+    proc0cout << "\n-----------------------------------\n";
+    proc0cout << "  Switching to component (" << d_componentIndex << ") \n";
+    proc0cout << "    Reading input file: " << d_in_file[d_componentIndex] << "\n";
+    proc0cout << "-----------------------------------\n" << std::endl;
 
     // read in the problemSpec on next subcomponent
     ProblemSpecP prob_spec = 0;
@@ -981,7 +979,7 @@ MultiScaleSwitcher::needRecompile(       double   time,
     parent_new_dw->setScrubbing(parent_new_dw_scrubmode);
 
     d_subScheduler->advanceDataWarehouse(grid, true); // Generates the first subNewDW
-    d_subScheduler->setInitTimestep(true);      // Necessary to populate the subNewDW
+    d_subScheduler->setInitTimestep(true);            // Necessary to populate the subNewDW
 
     DataWarehouse* sub_old_dw = d_subScheduler->get_dw(2);
     DataWarehouse* sub_new_dw = d_subScheduler->get_dw(3);
@@ -1018,12 +1016,15 @@ MultiScaleSwitcher::needRecompile(       double   time,
     d_subScheduler->execute();
 
     retval = false;
-    proc0cout << "\n-----------------------------------" << std::endl;
 
     d_componentIndex++;
     d_componentIndex %= d_numComponents;
 
     d_sharedState->d_switchState = false;
+
+    proc0cout << "\n-----------------------------------\n";
+    proc0cout << "  Switching to component (" << d_componentIndex << ") \n";
+    proc0cout << "-----------------------------------\n" << std::endl;
 
   } 
   else {
