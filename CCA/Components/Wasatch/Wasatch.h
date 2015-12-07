@@ -145,6 +145,12 @@ namespace WasatchCore{
   class WasatchParticlesHelper;
   struct TimeIntegrator;
 
+  enum FlowTreatment
+  {
+    INCOMPRESSIBLE,
+    LOWMACH,
+    COMPRESSIBLE
+  };
   /**
    *  \ingroup WasatchCore
    *  \class  Wasatch
@@ -270,6 +276,9 @@ namespace WasatchCore{
     void set_wasatch_materials( const Uintah::MaterialSet* const materials ) { materials_ = materials; }
     const Uintah::MaterialSet* get_wasatch_materials() const{ return materials_; }
     const Uintah::ProblemSpecP get_wasatch_spec(){return wasatchSpec_;}
+    static void set_flow_treatment(FlowTreatment treat) { flowTreatment_ = treat;}
+    static void set_flow_treatment(std::string treat) { flowTreatment_ = INCOMPRESSIBLE;}
+    static FlowTreatment flow_treatment(){return flowTreatment_;}
     
   private:
     bool buildTimeIntegrator_;   ///< used for Wasatch-Arches coupling
@@ -312,6 +321,8 @@ namespace WasatchCore{
     std::list< const TaskInterface*  > taskInterfaceList_;
     std::map< int, const Uintah::PatchSet* > patchesForOperators_;
 
+    static FlowTreatment flowTreatment_;
+    
     Wasatch( const Wasatch& );            // disallow copying
     Wasatch& operator=( const Wasatch& ); // disallow assignment
 
