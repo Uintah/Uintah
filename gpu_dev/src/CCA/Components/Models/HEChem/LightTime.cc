@@ -98,11 +98,11 @@ void LightTime::problemSetup(GridP&,
                              ModelSetup*)
 {
   d_sharedState = sharedState;
-  
-  ProblemSpecP lt_ps = params;
+  ProblemSpecP lt_ps = params->findBlock("LightTime");
   if (!lt_ps){
-    throw ProblemSetupException("LightTime: Couldn't find (Models) tag", __FILE__, __LINE__);    
+    throw ProblemSetupException("LightTime: Couldn't find <LightTime> tag", __FILE__, __LINE__);    
   }
+  
   matl0 = sharedState->parseAndLookupMaterial(lt_ps, "fromMaterial");
   matl1 = sharedState->parseAndLookupMaterial(lt_ps, "toMaterial");
   

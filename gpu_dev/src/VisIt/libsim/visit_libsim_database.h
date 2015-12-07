@@ -22,13 +22,13 @@
  * IN THE SOFTWARE.
  */
 
-#ifndef UINTAH_VISIT_LIBSIM_H
-#define UINTAH_VISIT_LIBSIM_H
+#ifndef UINTAH_VISIT_LIBSIM_DATABASE_H
+#define UINTAH_VISIT_LIBSIM_DATABASE_H
 
 /**************************************
         
 CLASS
-   visit_init
+   visit_libsim_database
         
    Short description...
         
@@ -51,58 +51,13 @@ WARNING
 
 ****************************************/
 
-#include "Core/Grid/Grid.h"
-
-#include <string>
-
-class TimeStepInfo;
-
 namespace Uintah {
 
-class AMRSimulationController;
+visit_handle visit_SimGetMetaData(void *cbdata);
+visit_handle visit_SimGetMesh(int domain, const char *name, void *cbdata);
+visit_handle visit_SimGetVariable(int domain, const char *name, void *cbdata);
 
-/* Simulation Mode */
-//#define VISIT_SIMMODE_UNKNOWN  0
-//#define VISIT_SIMMODE_RUNNING  1
-//#define VISIT_SIMMODE_STOPPED  2
-
-#define VISIT_SIMMODE_STEP       3
-#define VISIT_SIMMODE_FINISHED   4
-#define VISIT_SIMMODE_TERMINATED 5
-
-typedef struct
-{
-  // Uintah data members
-  AMRSimulationController *AMRSimController;
-  GridP gridP;
-  
-  TimeStepInfo* stepInfo;
-
-  int cycle;
-  double time;
-  double delt;
-
-  std::string message;
-
-  int blocking;
-
-  bool useExtraCells;
-  bool nodeCentered;
-  bool forceMeshReload;
-
-  // Simulation control members
-  int  runMode;
-  int  simMode;
-
-  bool isProc0;
-
-} visit_simulation_data;
-
-
-void visit_LibSimArguments(int argc, char **argv);
-void visit_InitLibSim(visit_simulation_data *sim);
-void visit_EndLibSim(visit_simulation_data *sim);
-void visit_CheckState(visit_simulation_data *sim);
+visit_handle visit_SimGetDomainList(const char *name, void *cbdata);
 
 } // End namespace Uintah
 

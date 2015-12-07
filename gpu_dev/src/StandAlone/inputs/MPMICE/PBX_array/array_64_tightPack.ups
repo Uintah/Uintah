@@ -179,7 +179,7 @@
              <R2> 1.41         </R2>
              <om> 0.8867        </om>
              <rho0> 1840      </rho0>
-	      <randomize_parameters>          false </randomize_parameters>
+              <randomize_parameters>          false </randomize_parameters>
              <use_time_temperature_equation> false </use_time_temperature_equation>
              <useObjectiveRate>              false </useObjectiveRate>
              <useModifiedEOS>               true </useModifiedEOS>
@@ -674,33 +674,35 @@
 
 
     <Models>
-	<Model type="DDT1">
-        <fromMaterial> PBX9501   </fromMaterial> 
-        <toMaterial>   product   </toMaterial>
-        
-        <G>       2.33e-6 </G>
-        <b>       1.2     </b>
-        <rho0>    1840.0  </rho0>
-        <E0>      5.0e6   </E0>
-        <useCrackModel>      true  </useCrackModel>
-        <Gcrack>             3.7e-18 </Gcrack>
-        <CrackVolThreshold>  1e-14   </CrackVolThreshold>
-        <nCrack>             1.84    </nCrack>
+      <Model type="DDT1">
+        <DDT1>
+          <fromMaterial> PBX9501   </fromMaterial> 
+          <toMaterial>   product   </toMaterial>
 
-        <ThresholdPressureJWL> 5.3e9        </ThresholdPressureJWL>
-        <IdealGasConst>        8.314        </IdealGasConst>
-        <PreExpCondPh>         1.637e15     </PreExpCondPh>
-        <ActEnergyCondPh>      1.76e5       </ActEnergyCondPh>
-        <PreExpGasPh>          1.6e-3       </PreExpGasPh>
-        <CondPhaseHeat>        4.0e5        </CondPhaseHeat>
-        <GasPhaseHeat>         3.018e6      </GasPhaseHeat>
-        <HeatConductGasPh>     0.07         </HeatConductGasPh>
-        <HeatConductCondPh>    0.2          </HeatConductCondPh>
-        <SpecificHeatBoth>     1.4e3        </SpecificHeatBoth>
-        <MoleWeightGasPh>      0.0342       </MoleWeightGasPh>
-        <BoundaryParticles>    3            </BoundaryParticles>
-        <IgnitionTemp>         550          </IgnitionTemp> 
-        <ThresholdPressureSB>  50000.       </ThresholdPressureSB>
+          <G>       2.33e-6 </G>
+          <b>       1.2     </b>
+          <rho0>    1840.0  </rho0>
+          <E0>      5.0e6   </E0>
+          <useCrackModel>      true  </useCrackModel>
+          <Gcrack>             3.7e-18 </Gcrack>
+          <CrackVolThreshold>  1e-14   </CrackVolThreshold>
+          <nCrack>             1.84    </nCrack>
+
+          <ThresholdPressureJWL> 5.3e9        </ThresholdPressureJWL>
+          <IdealGasConst>        8.314        </IdealGasConst>
+          <PreExpCondPh>         1.637e15     </PreExpCondPh>
+          <ActEnergyCondPh>      1.76e5       </ActEnergyCondPh>
+          <PreExpGasPh>          1.6e-3       </PreExpGasPh>
+          <CondPhaseHeat>        4.0e5        </CondPhaseHeat>
+          <GasPhaseHeat>         3.018e6      </GasPhaseHeat>
+          <HeatConductGasPh>     0.07         </HeatConductGasPh>
+          <HeatConductCondPh>    0.2          </HeatConductCondPh>
+          <SpecificHeatBoth>     1.4e3        </SpecificHeatBoth>
+          <MoleWeightGasPh>      0.0342       </MoleWeightGasPh>
+          <BoundaryParticles>    3            </BoundaryParticles>
+          <IgnitionTemp>         550          </IgnitionTemp> 
+          <ThresholdPressureSB>  50000.       </ThresholdPressureSB>
+        </DDT1>
       </Model>  
     </Models>
 

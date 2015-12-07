@@ -8,12 +8,14 @@
            CJ Pressure = 29.75 GPa
       -->
       <Model type="JWLpp">
-        <fromMaterial> reactant    </fromMaterial>
-        <toMaterial>   product     </toMaterial>
-        <G>        4.66e-4          </G>
-        <b>        1.0             </b>
-        <rho0>     1896.0          </rho0>
-        <E0>       5.484247e6      </E0>
-        <ThresholdPressure>  8.2e9 </ThresholdPressure>
+        <JWLpp>
+          <fromMaterial> reactant    </fromMaterial>
+          <toMaterial>   product     </toMaterial>
+          <G>        4.66e-4          </G>
+          <b>        1.0             </b>
+          <rho0>     1896.0          </rho0>
+          <E0>       5.484247e6      </E0>
+          <ThresholdPressure>  8.2e9 </ThresholdPressure>
+        </JWLpp>
       </Model>
 </Uintah_Include>

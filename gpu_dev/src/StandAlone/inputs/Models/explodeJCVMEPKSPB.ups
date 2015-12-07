@@ -369,13 +369,15 @@
 
   <Models>
     <Model type = "JWLpp">
-      <fromMaterial>       reactant    </fromMaterial>
-      <toMaterial>         product     </toMaterial>
-      <G>                  9.1e-5      </G>
-      <b>                  1.0         </b>
-      <rho0>               1260.0      </rho0>
-      <E0>                 2.913e6     </E0>
-      <ThresholdPressure>  200000000.0 </ThresholdPressure>
+      <JWLpp>
+        <fromMaterial>       reactant    </fromMaterial>
+        <toMaterial>         product     </toMaterial>
+        <G>                  9.1e-5      </G>
+        <b>                  1.0         </b>
+        <rho0>               1260.0      </rho0>
+        <E0>                 2.913e6     </E0>
+        <ThresholdPressure>  200000000.0 </ThresholdPressure>
+      </JWLpp>
     </Model>
   </Models>
 

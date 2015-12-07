@@ -247,37 +247,40 @@ namespace Wasatch{
   //============================================================================
 
   CompressibleMomentumTransportEquation::
-  CompressibleMomentumTransportEquation( const std::string velName,
+  CompressibleMomentumTransportEquation( const Direction momComponent,
+                                         const std::string velName,
                                          const std::string momName,
                                          const Expr::Tag densityTag,
                                          const Expr::Tag temperatureTag,
                                          const Expr::Tag mixMWTag,
                                          const double gasConstant,
                                          const Expr::Tag bodyForceTag,
+                                         const Expr::Tag srcTermTag,
                                          GraphCategories& gc,
                                          Uintah::ProblemSpecP params,
                                          TurbulenceParameters turbParams )
-  : MomentumTransportEquationBase<FieldT>( velName,
+  : MomentumTransportEquationBase<FieldT>(momComponent,
+                                          velName,
                                           momName,
                                           densityTag,
                                           false,
                                           bodyForceTag,
+                                          srcTermTag,
                                           gc,
                                           params,
                                           turbParams)
   {
     // todo:
-    //  - strain tensor
-    //  - convective flux
-    //  - turbulent viscosity
-    //  - diffusive flux
-    //  - buoyancy?
+    //  - strain tensor       // registered by MomentumTransportEquationBase
+    //  - convective flux     // registered by the MomentumTransportEquationBase
+    //  - turbulent viscosity // SHOULD be registered by the MomentumTransportEquationBase. NOT READY YET
+    //  - buoyancy? //
 
     Expr::ExpressionFactory& factory = *gc[ADVANCE_SOLUTION]->exprFactory;
 
     typedef IdealGasPressure<FieldT>::Builder Pressure;
-    factory.register_expression( scinew Pressure(initial_condition_tag(),
-                                                 TagNames::self().pressure,
+    factory.register_expression( scinew Pressure(TagNames::self().pressure,
+                                                 densityTag,
                                                  temperatureTag,
                                                  mixMWTag,
                                                  gasConstant) );

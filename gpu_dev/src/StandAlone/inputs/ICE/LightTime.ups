@@ -100,6 +100,7 @@
       <save label="mom_L_CC"/>
       <save label="int_eng_L_CC"/>
 -->
+      <checkpoint interval="4e-7" cycle="2"/>
    </DataArchiver>
     <!--____________________________________________________________________-->
     <!--    I  C  E     P  A  R  A  M  E  T  E  R  S                        -->
@@ -180,7 +181,8 @@
         </exchange_coefficients>
         </exchange_properties> 
     </MaterialProperties>  
-
+    
+    <!--____________________________________________________________________-->
     <Models>
       <Model type = "LightTime">
         <LightTime>

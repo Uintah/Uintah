@@ -251,15 +251,19 @@
           <startTime>    0.2         </startTime>
         </Test>
       </Model>
+
 <!--
       <Model type="mass_momentum_energy_src">
-        <material> reactant   </material>
-        <momentum_src>  [0,0,0]   </momentum_src>
-        <mass_src>      1         </mass_src>
-         To maintain constant temperature, eng_src must be:
-                mass_src * specific_heat * initial_temperature
-        <energy_src>    195870.    </energy_src>
-      </Model>  -->
+        <MassMomEng_src>
+          <material> reactant   </material>
+          <momentum_src>  [0,0,0]   </momentum_src>
+          <mass_src>      1         </mass_src>
+          To maintain constant temperature, eng_src must be:
+                  mass_src * specific_heat * initial_temperature
+          <energy_src>    195870.    </energy_src>
+        </MassMomEng_src>
+      </Model>
+-->
     </Models>       
 </Uintah_specification>
 

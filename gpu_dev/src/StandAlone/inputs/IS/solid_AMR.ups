@@ -389,6 +389,7 @@
 
     <Models>
       <Model type="Steady_Burn">
+        <Steady_Burn>
         <fromMaterial>         reactant     </fromMaterial>
         <toMaterial>   PBXproductGases      </toMaterial>
         <IdealGasConst>        8.314        </IdealGasConst>
@@ -404,6 +405,7 @@
         <BoundaryParticles>    3            </BoundaryParticles>
         <ThresholdPressure>    50000        </ThresholdPressure>
         <IgnitionTemp>         500.0        </IgnitionTemp>
+        </Steady_Burn>
       </Model> 
     </Models>
 

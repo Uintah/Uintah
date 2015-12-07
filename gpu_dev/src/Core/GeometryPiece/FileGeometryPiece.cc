@@ -287,28 +287,28 @@ FileGeometryPiece::read_line(std::istream & is, Point & xmin, Point & xmax)
       } else if(*vit=="p.fiberdir") {
         if(is >> v1 >> v2 >> v3){
           d_fiberdirs.push_back(Vector(v1,v2,v3));
-	      }  
+        }  
       } else if(*vit=="p.rvec1") {
         if(is >> v1 >> v2 >> v3){
           d_rvec1.push_back(Vector(v1,v2,v3));
           size(0,0)=v1;
           size(1,0)=v2;
           size(2,0)=v3;
-	      }  
+        }  
       } else if(*vit=="p.rvec2") {
         if(is >> v1 >> v2 >> v3){
           d_rvec2.push_back(Vector(v1,v2,v3));
           size(0,1)=v1;
           size(1,1)=v2;
           size(2,1)=v3;
-	      }  
+        }  
       } else if(*vit=="p.rvec3") {
         if(is >> v1 >> v2 >> v3){
           d_rvec3.push_back(Vector(v1,v2,v3));
           size(0,2)=v1;
           size(1,2)=v2;
           size(2,2)=v3;
-	      }  
+        }  
       } else if(*vit=="p.velocity") {
         if(is >> v1 >> v2 >> v3){
           d_velocity.push_back(Vector(v1,v2,v3));
@@ -390,7 +390,7 @@ FileGeometryPiece::read_line(std::istream & is, Point & xmin, Point & xmax)
             swapbytes(v[2]);
           }
           d_fiberdirs.push_back(Vector(v[0],v[1],v[2]));
-	      }
+        }
       } else if(*vit=="p.rvec1") {
         if(is.read((char*)&v[0], sizeof(double)*3)) {
           if(needflip) {
@@ -402,7 +402,7 @@ FileGeometryPiece::read_line(std::istream & is, Point & xmin, Point & xmax)
           size(0,0)=v[0];
           size(1,0)=v[1];
           size(2,0)=v[2];
-	      }
+        }
       } else if(*vit=="p.rvec2") {
         if(is.read((char*)&v[0], sizeof(double)*3)) {
           if(needflip) {
@@ -414,7 +414,7 @@ FileGeometryPiece::read_line(std::istream & is, Point & xmin, Point & xmax)
           size(0,1)=v[0];
           size(1,1)=v[1];
           size(2,1)=v[2];
-	      }
+        }
       } else if(*vit=="p.rvec3") {
         if(is.read((char*)&v[0], sizeof(double)*3)) {
           if(needflip) {
@@ -426,16 +426,16 @@ FileGeometryPiece::read_line(std::istream & is, Point & xmin, Point & xmax)
           size(0,2)=v[0];
           size(1,2)=v[1];
           size(2,2)=v[2];
-	      }
+        }
       } else if(*vit=="p.velocity") {
-	      if(is.read((char*)&v[0], sizeof(double)*3)) {
-	        if(needflip) {
-	          swapbytes(v[0]);
-	          swapbytes(v[1]);
-	          swapbytes(v[2]);
+        if(is.read((char*)&v[0], sizeof(double)*3)) {
+          if(needflip) {
+            swapbytes(v[0]);
+            swapbytes(v[1]);
+            swapbytes(v[2]);
           }
           d_velocity.push_back(Vector(v[0],v[1],v[2]));
-	      }  
+        }  
       }          
       if(!is){
         std::ostringstream warn;

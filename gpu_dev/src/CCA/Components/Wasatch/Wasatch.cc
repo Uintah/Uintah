@@ -932,7 +932,7 @@ namespace Wasatch{
         SpatialOps::OperatorDatabase* const opdb = scinew SpatialOps::OperatorDatabase();
         const Uintah::Patch* const patch = pss->get(ip);
 
-        //tsaad: register an patch container as an operator for easy access to the Uintah patch
+        //tsaad: register a patch container as an operator for easy access to the Uintah patch
         // inside of an expression.
         opdb->register_new_operator<UintahPatchContainer>(scinew UintahPatchContainer(patch) );
         

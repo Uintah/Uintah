@@ -33,7 +33,12 @@
 // note that the ordering of Vel1T and Vel2T are very important, and
 // must be consistent with the order of the velocity tags passed
 // into the Strain constructor.
-template< typename FaceT > struct StrainHelper;
+template< typename FaceT > struct StrainHelper
+{
+  // Default to collocated velocity field
+  typedef SVolField Vel1T;
+  typedef SVolField Vel2T;
+};
 // nomenclature: XSurfXField - first letter is volume type: S, X, Y, Z
 // then it is followed by the field type
 template<> struct StrainHelper<SpatialOps::XSurfXField>

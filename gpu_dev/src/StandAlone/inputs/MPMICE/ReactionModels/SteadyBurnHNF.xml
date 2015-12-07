@@ -11,22 +11,24 @@
                 Eg      = 167 kJ/mol
       -->
     <Model type="Steady_Burn">
-      <fromMaterial>         Reactant     </fromMaterial>
-      <toMaterial>           Product      </toMaterial>
+      <Steady_Burn>
+        <fromMaterial>         Reactant     </fromMaterial>
+        <toMaterial>           Product      </toMaterial>
 
-      <IdealGasConst>        8.314        </IdealGasConst> 
-      <PreExpCondPh>         3.30e8       </PreExpCondPh>     
-      <ActEnergyCondPh>      7.5e4        </ActEnergyCondPh>   <!-- J/mol -->
-      <PreExpGasPh>          5.71e-2      </PreExpGasPh>      
-      <CondPhaseHeat>        3.0e5        </CondPhaseHeat>     
-      <GasPhaseHeat>         2.589e6      </GasPhaseHeat>      
-      <HeatConductGasPh>     0.07         </HeatConductGasPh>  
-      <HeatConductCondPh>    0.32         </HeatConductCondPh> 
-      <SpecificHeatBoth>     9.7e2        </SpecificHeatBoth>  
-      <MoleWeightGasPh>      0.0256       </MoleWeightGasPh>   
-      <BoundaryParticles>    3            </BoundaryParticles>
-      <ThresholdPressure>    50000        </ThresholdPressure>
-      <IgnitionTemp>         410.0        </IgnitionTemp>
+        <IdealGasConst>        8.314        </IdealGasConst> 
+        <PreExpCondPh>         3.30e8       </PreExpCondPh>     
+        <ActEnergyCondPh>      7.5e4        </ActEnergyCondPh>   <!-- J/mol -->
+        <PreExpGasPh>          5.71e-2      </PreExpGasPh>      
+        <CondPhaseHeat>        3.0e5        </CondPhaseHeat>     
+        <GasPhaseHeat>         2.589e6      </GasPhaseHeat>      
+        <HeatConductGasPh>     0.07         </HeatConductGasPh>  
+        <HeatConductCondPh>    0.32         </HeatConductCondPh> 
+        <SpecificHeatBoth>     9.7e2        </SpecificHeatBoth>  
+        <MoleWeightGasPh>      0.0256       </MoleWeightGasPh>   
+        <BoundaryParticles>    3            </BoundaryParticles>
+        <ThresholdPressure>    50000        </ThresholdPressure>
+        <IgnitionTemp>         410.0        </IgnitionTemp>
+      </Steady_Burn>
     </Model>
 
 </Uintah_Include>
