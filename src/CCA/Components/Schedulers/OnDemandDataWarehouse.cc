@@ -59,10 +59,11 @@
 #include <Core/Util/FancyAssert.h>
 #include <Core/Util/ProgressiveWarning.h>
 #include <CCA/Components/Schedulers/SchedulerCommon.h>
-#include <Core/Grid/Variables/GPUStencil7.h>
+
 #ifdef HAVE_CUDA
 //#include <CCA/Components/Schedulers/GPUUtilities.h>
 #include <CCA/Components/Schedulers/GPUGridVariableInfo.h>
+#include <Core/Grid/Variables/GPUStencil7.h>
 #endif
 
 #include <cstdio>
@@ -70,6 +71,7 @@
 #include <iostream>
 #include <string>
 #include <sstream>
+#include <vector>
 
 using namespace SCIRun;
 using namespace Uintah;
@@ -2841,7 +2843,7 @@ void OnDemandDataWarehouse::getValidNeighbors(const VarLabel* label,
                             const Patch* patch,
                             Ghost::GhostType gtype,
                             int numGhostCells,
-                            vector<ValidNeighbors>& validNeighbors){
+                            std::vector<ValidNeighbors>& validNeighbors){
 
   Patch::VariableBasis basis = Patch::translateTypeToBasis(label->typeDescription()->getType(), false);
 
@@ -2876,11 +2878,11 @@ void OnDemandDataWarehouse::getValidNeighbors(const VarLabel* label,
         SCI_THROW(UnknownVariable(label->getName(), getID(), neighbor, matlIndex, neighbor == patch? "on patch":"on neighbor", __FILE__, __LINE__) );
       }
 
-      vector<Variable*> varlist;
+      std::vector<Variable*> varlist;
       d_varDB.getlist( label, matlIndex, neighbor, varlist );
       GridVariableBase* v = NULL;
 
-      for( vector<Variable*>::iterator rit = varlist.begin();; ++rit ) {
+      for( std::vector<Variable*>::iterator rit = varlist.begin();; ++rit ) {
         if( rit == varlist.end() ) {
           v = NULL;
           break;
@@ -3015,9 +3017,9 @@ OnDemandDataWarehouse::getGridVar(       GridVariableBase& var,
       }
     }
 
-    vector<ValidNeighbors> validNeighbors;
+    std::vector<ValidNeighbors> validNeighbors;
     getValidNeighbors(label, matlIndex, patch, gtype, numGhostCells, validNeighbors);
-    for(vector<ValidNeighbors>::iterator iter = validNeighbors.begin(); iter != validNeighbors.end(); ++iter) {
+    for(std::vector<ValidNeighbors>::iterator iter = validNeighbors.begin(); iter != validNeighbors.end(); ++iter) {
 
       GridVariableBase* srcvar = var.cloneType();
       GridVariableBase* tmp = iter->validNeighbor;
@@ -3030,8 +3032,8 @@ OnDemandDataWarehouse::getGridVar(       GridVariableBase& var,
         var.copyPatch(srcvar, iter->low, iter->high);
 
       } catch (InternalError& e) {
-        cout << " Bad range: " << iter->low << " " << iter->high
-        << " source var range: "  << iter->validNeighbor->getLow() << " " << iter->validNeighbor->getHigh() << endl;
+        std::cout << " Bad range: " << iter->low << " " << iter->high
+        << " source var range: "  << iter->validNeighbor->getLow() << " " << iter->validNeighbor->getHigh() << std::endl;
         throw e;
       }
       delete srcvar;
