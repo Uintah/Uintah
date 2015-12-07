@@ -22,6 +22,7 @@
  * IN THE SOFTWARE.
  */
 #include <CCA/Components/Schedulers/GPUGridVariableGhosts.h>
+#include <stdio.h>
 
 DeviceGhostCellsInfo::DeviceGhostCellsInfo(const VarLabel* label,
     const Patch* sourcePatchPointer,

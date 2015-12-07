@@ -33,8 +33,6 @@ SRCS += \
         $(SRCDIR)/DependencyException.cc      \
         $(SRCDIR)/DetailedTasks.cc            \
         $(SRCDIR)/DynamicMPIScheduler.cc      \
-        $(SRCDIR)/GPUGridVariableInfo.cc      \
-        $(SRCDIR)/GPUGridVariableGhosts.cc    \
         $(SRCDIR)/IncorrectAllocation.cc      \
         $(SRCDIR)/MemoryLog.cc                \
         $(SRCDIR)/MessageLog.cc               \
@@ -53,7 +51,9 @@ SRCS += \
         $(SRCDIR)/templates.cc
         
 ifeq ($(HAVE_CUDA),yes)
-  SRCS += $(SRCDIR)/GPUDataWarehouse.cu
+  SRCS += $(SRCDIR)/GPUDataWarehouse.cu         \
+          $(SRCDIR)/GPUGridVariableInfo.cc      \
+          $(SRCDIR)/GPUGridVariableGhosts.cc    
   DLINK_FILES += CCA/Components/Schedulers/GPUDataWarehouse.o
 endif
 
