@@ -233,9 +233,6 @@ class Scheduler : public UintahParallelPort {
 
     virtual void setRestartInitTimestep(bool) = 0;
 
-//#ifdef HAVE_CUDA
-//    virtual void assignPatchesToGpus(const GridP& grid) = 0;
-//#endif
   private:
 
     Scheduler(const Scheduler&);

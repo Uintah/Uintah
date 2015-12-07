@@ -108,8 +108,6 @@ UnifiedScheduler::UnifiedScheduler(const ProcessorGroup* myworld,
     // precluding memory blocks being defined across multiple patches.
     Uintah::OnDemandDataWarehouse::d_combineMemory = false;
 
-    //assignPatchesToGpus(currentGrid);
-
   }
 
   int numThreads = Uintah::Parallel::getNumThreads();
