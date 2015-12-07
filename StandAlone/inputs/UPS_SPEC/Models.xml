@@ -156,8 +156,8 @@
       <!--  COMMON VARIABLES FOR BURN MODELS -->
       <!--  -->
       <rho0                   spec="REQUIRED DOUBLE"            need_applies_to="type Gruneisen JWL Murnaghan Tillotson" />
-       <refPressure            spec="OPTIONAL DOUBLE 'positive'" need_applies_to="type " />
-      <ThresholdTemp          spec="OPTIONAL DOUBLE 'positive'" need_applies_to="type  "/>
+      <refPressure            spec="OPTIONAL DOUBLE 'positive'" need_applies_to="type DDT0" />
+      <ThresholdTemp          spec="OPTIONAL DOUBLE 'positive'" need_applies_to="type  DDT0"/>
 
       <b                      spec="REQUIRED DOUBLE"  need_applies_to="type hard_sphere_gas   Thomsen_Hartka_water Tillotson" />
       <E0                     spec="REQUIRED DOUBLE"  need_applies_to="type  Tillotson" />
