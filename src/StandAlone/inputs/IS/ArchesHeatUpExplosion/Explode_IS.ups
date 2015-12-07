@@ -168,14 +168,15 @@
       <!--  Don't forget to change switching criteria section -->
       <!--
       <Model type="Simple_Burn">
-        <Active>       true         </Active>
-        <fromMaterial> reactant     </fromMaterial>
-        <toMaterial>  productGases  </toMaterial>
-        <ThresholdTemp>       450.0 </ThresholdTemp>
-        <ThresholdPressure> 50000.0 </ThresholdPressure>
-        <Enthalpy>        2000000.0 </Enthalpy>
-        <BurnCoeff>            7.53 </BurnCoeff>
-        <refPressure>      101325.0 </refPressure>
+        <Simple_Burn>
+          <fromMaterial> reactant     </fromMaterial>
+          <toMaterial>  productGases  </toMaterial>
+          <ThresholdTemp>       450.0 </ThresholdTemp>
+          <ThresholdPressure> 50000.0 </ThresholdPressure>
+          <Enthalpy>        2000000.0 </Enthalpy>
+          <BurnCoeff>            7.53 </BurnCoeff>
+          <refPressure>      101325.0 </refPressure>
+        </Simple_Burn>
       </Model>
       -->
   </Models>            

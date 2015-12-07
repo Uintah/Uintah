@@ -79,7 +79,8 @@ Simple_Burn::Simple_Burn(const ProcessorGroup* myworld,
                      sum_vartype::getTypeDescription() );
                 
 }
-
+//______________________________________________________________________
+//
 Simple_Burn::~Simple_Burn()
 {
   delete Ilb;
@@ -95,20 +96,23 @@ Simple_Burn::~Simple_Burn()
   if(mymatls && mymatls->removeReference())
     delete mymatls;
 }
-
+//______________________________________________________________________
+//
 void Simple_Burn::problemSetup(GridP&, SimulationStateP& sharedState,
-                             ModelSetup*)
+                               ModelSetup*)
 {
   d_sharedState = sharedState;
-  d_params->require("ThresholdTemp",    d_thresholdTemp);
-  d_params->require("ThresholdPressure",d_thresholdPress);
   
-  matl0 = sharedState->parseAndLookupMaterial(d_params, "fromMaterial");
-  matl1 = sharedState->parseAndLookupMaterial(d_params, "toMaterial");
+  ProblemSpecP SB_ps = d_params->findBlock("Simple_Burn");
+  SB_ps->require("ThresholdTemp",    d_thresholdTemp);
+  SB_ps->require("ThresholdPressure",d_thresholdPress);
   
-  d_params->require("Enthalpy",         d_Enthalpy);
-  d_params->require("BurnCoeff",        d_BurnCoeff);
-  d_params->require("refPressure",      d_refPress);
+  matl0 = sharedState->parseAndLookupMaterial(SB_ps, "fromMaterial");
+  matl1 = sharedState->parseAndLookupMaterial(SB_ps, "toMaterial");
+  
+  SB_ps->require("Enthalpy",         d_Enthalpy);
+  SB_ps->require("BurnCoeff",        d_BurnCoeff);
+  SB_ps->require("refPressure",      d_refPress);
 
   //__________________________________
   //  define the materialSet
@@ -143,13 +147,15 @@ void Simple_Burn::outputProblemSpec(ProblemSpecP& ps)
 {
   ProblemSpecP model_ps = ps->appendChild("Model");
   model_ps->setAttribute("type","Simple_Burn");
-  model_ps->appendElement("ThresholdTemp",     d_thresholdTemp);
-  model_ps->appendElement("ThresholdPressure", d_thresholdPress);
-  model_ps->appendElement("fromMaterial",      matl0->getName());
-  model_ps->appendElement("toMaterial",        matl1->getName());
-  model_ps->appendElement("Enthalpy",          d_Enthalpy);
-  model_ps->appendElement("BurnCoeff",         d_BurnCoeff);
-  model_ps->appendElement("refPressure",       d_refPress);
+  ProblemSpecP SB_ps = model_ps->appendChild("Simple_Burn");
+  
+  SB_ps->appendElement("ThresholdTemp",     d_thresholdTemp);
+  SB_ps->appendElement("ThresholdPressure", d_thresholdPress);
+  SB_ps->appendElement("fromMaterial",      matl0->getName());
+  SB_ps->appendElement("toMaterial",        matl1->getName());
+  SB_ps->appendElement("Enthalpy",          d_Enthalpy);
+  SB_ps->appendElement("BurnCoeff",         d_BurnCoeff);
+  SB_ps->appendElement("refPressure",       d_refPress);
 }
 
 //______________________________________________________________________
