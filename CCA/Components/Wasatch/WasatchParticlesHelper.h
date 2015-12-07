@@ -47,7 +47,7 @@ namespace Uintah{
   class ParticlesHelper;
 }
 
-namespace Wasatch {
+namespace WasatchCore {
 
   class Wasatch;  // forward declaration
 
@@ -82,6 +82,6 @@ namespace Wasatch {
     bool wasatchSync_;
   };
 
-} /* namespace Wasatch */
+} /* namespace WasatchCore */
 
 #endif /* wasatchparticles_helper_h */

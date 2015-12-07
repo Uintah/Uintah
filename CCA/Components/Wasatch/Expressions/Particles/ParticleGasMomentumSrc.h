@@ -55,7 +55,7 @@ private:
   typedef typename SpatialOps::Particle::ParticleToCell<GasVelT> P2GVelT;
   P2GVelT* p2gvOp_; // particle to gas velocity operator
   
-  Wasatch::UintahPatchContainer* patchContainer_;
+  WasatchCore::UintahPatchContainer* patchContainer_;
 };
 
 // ###################################################################
@@ -98,7 +98,7 @@ ParticleGasMomentumSrc<GasVelT>::
 bind_operators( const SpatialOps::OperatorDatabase& opDB )
 {
   p2gvOp_ = opDB.retrieve_operator<P2GVelT>();
-  patchContainer_  = opDB.retrieve_operator<Wasatch::UintahPatchContainer>();
+  patchContainer_  = opDB.retrieve_operator<WasatchCore::UintahPatchContainer>();
   vol_ = patchContainer_->get_uintah_patch()->cellVolume();
 }
 

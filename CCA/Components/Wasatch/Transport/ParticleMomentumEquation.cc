@@ -38,7 +38,7 @@
 #include <CCA/Components/Wasatch/Expressions/Particles/ParticleDragCoefficient.h>
 #include <CCA/Components/Wasatch/Expressions/BoundaryConditions/ParticleWallBC.h>
 
-namespace Wasatch{
+namespace WasatchCore{
 
   extern bool is_normal_to_boundary( const Direction stagLoc,
                                      const Uintah::Patch::FaceType face );

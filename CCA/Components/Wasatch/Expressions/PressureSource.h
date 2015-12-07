@@ -65,7 +65,7 @@ class PressureSource : public Expr::Expression<SVolField>
   
   const bool isConstDensity_, doX_, doY_, doZ_, is3d_;
   
-  const Wasatch::TimeIntegrator* timeIntInfo_;
+  const WasatchCore::TimeIntegrator* timeIntInfo_;
   
   const GradXT* gradXOp_;
   const GradYT* gradYOp_;

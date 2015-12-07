@@ -44,7 +44,7 @@
 #include <CCA/Components/Wasatch/Expressions/RHSTerms.h>
 #include <CCA/Components/Wasatch/Transport/EquationBase.h>
 
-namespace Wasatch{
+namespace WasatchCore{
 
   class ExprDeps;  // forward declaration.
   class GraphHelper;
@@ -117,6 +117,6 @@ namespace Wasatch{
     const bool isConstDensity_;
   };
 
-} // namespace Wasatch
+} // namespace WasatchCore
 
 #endif // Wasatch_TransportEquation_h

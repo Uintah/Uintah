@@ -151,7 +151,7 @@ class ConvectiveFluxLimiter
   typedef typename VelInterpT::SrcFieldType  VelVolT;  ///< source field is always a staggered volume field.
   typedef typename VelInterpT::DestFieldType VelFaceT;
 
-  const Wasatch::ConvInterpMethods limiterType_;
+  const WasatchCore::ConvInterpMethods limiterType_;
 
   DECLARE_FIELDS(PhiVolT, phi_, volFrac_)
   DECLARE_FIELD(VelVolT, vel_)
@@ -167,14 +167,14 @@ class ConvectiveFluxLimiter
 
   ConvectiveFluxLimiter( const Expr::Tag& phiTag,
                          const Expr::Tag& velTag,
-                         Wasatch::ConvInterpMethods limiterType,
+                         WasatchCore::ConvInterpMethods limiterType,
                          const Expr::Tag& volFracTag );
 
 public:
   class Builder : public Expr::ExpressionBuilder
   {
     const Expr::Tag phiT_, velT_, volFracT_;
-    Wasatch::ConvInterpMethods limiterType_;
+    WasatchCore::ConvInterpMethods limiterType_;
   public:
     /**
      *  \brief Construct an convective flux limiter given an expression
@@ -191,7 +191,7 @@ public:
     Builder( const Expr::Tag& result,
              const Expr::Tag& phiTag,
              const Expr::Tag& velTag,
-             Wasatch::ConvInterpMethods limiterType,
+             WasatchCore::ConvInterpMethods limiterType,
              const Expr::Tag volFracTag = Expr::Tag() )
       : ExpressionBuilder(result),
         phiT_( phiTag ), velT_( velTag ), volFracT_ ( volFracTag ),

@@ -42,7 +42,7 @@
 #include <Core/Grid/Material.h>
 #include <Core/Exceptions/ProblemSetupException.h>
 
-namespace Wasatch {
+namespace WasatchCore {
 
   //==================================================================
 
@@ -265,7 +265,7 @@ namespace Wasatch {
 
   //==================================================================
 
-} /* namespace Wasatch */
+} /* namespace WasatchCore */
 
 
 
@@ -275,8 +275,8 @@ namespace Wasatch {
 #include "FieldTypes.h"
 
 #define INSTANTIATE( T )                 \
-  template class Wasatch::VarHelper<T>;  \
-  template void Wasatch::OldVariable::add_variable<T>(const Category, const Expr::Tag&, const bool retainName);
+  template class WasatchCore::VarHelper<T>;  \
+  template void WasatchCore::OldVariable::add_variable<T>(const Category, const Expr::Tag&, const bool retainName);
 
 #define INSTANTIATE_VARIANTS( VOL )                            \
   INSTANTIATE( VOL )

@@ -36,16 +36,16 @@ PressureSource::PressureSource( const Expr::TagList& momTags,
     rhoStar_ = create_field_request<SVolField>(rhoStarTag);
     divu_ = create_field_request<SVolField>(divuTag);
   } else {
-    const Expr::Tag dilt = Wasatch::TagNames::self().dilatation;
+    const Expr::Tag dilt = WasatchCore::TagNames::self().dilatation;
     dil_ = create_field_request<SVolField>(dilt);
   }
   
   rho_ = create_field_request<SVolField>(rhoTag);
   
-  const Expr::Tag dtt = Wasatch::TagNames::self().dt;
+  const Expr::Tag dtt = WasatchCore::TagNames::self().dt;
   dt_ = create_field_request<TimeField>(dtt);
   
-  const Expr::Tag rkst = Wasatch::TagNames::self().rkstage;
+  const Expr::Tag rkst = WasatchCore::TagNames::self().rkstage;
   rkStage_ = create_field_request<TimeField>(rkst);
 }
 
@@ -62,7 +62,7 @@ void PressureSource::bind_operators( const SpatialOps::OperatorDatabase& opDB )
   if( doY_ ) gradYOp_     = opDB.retrieve_operator<GradYT>();
   if( doZ_ ) gradZOp_     = opDB.retrieve_operator<GradZT>();
   
-  timeIntInfo_ = opDB.retrieve_operator<Wasatch::TimeIntegrator>();
+  timeIntInfo_ = opDB.retrieve_operator<WasatchCore::TimeIntegrator>();
   
   if (!isConstDensity_) {
     if( doX_ ){
@@ -97,7 +97,7 @@ void PressureSource::evaluate()
   
   SVolField& psrc = *results[0];
   
-  const Wasatch::TimeIntegrator& timeIntInfo = *timeIntInfo_;
+  const WasatchCore::TimeIntegrator& timeIntInfo = *timeIntInfo_;
   const double a2 = timeIntInfo.alpha[1];
   const double a3 = timeIntInfo.alpha[2];
   

@@ -24,6 +24,7 @@
 
 //-- Wasatch Includes --//
 #include "ParseEquation.h"
+#include <CCA/Components/Wasatch/Wasatch.h>
 #include <CCA/Components/Wasatch/TimeStepper.h>
 #include <CCA/Components/Wasatch/TagNames.h>
 #include <CCA/Components/Wasatch/ParseTools.h>
@@ -72,7 +73,7 @@
 
 #include <iostream>
 
-namespace Wasatch{
+namespace WasatchCore{
 
 
   /**
@@ -542,7 +543,7 @@ namespace Wasatch{
           << "Please revise your input file" << std::endl;
       throw Uintah::InvalidValue( msg.str(), __FILE__, __LINE__ );
     }
-
+    
     // parse body force expression
     std::string bodyForceDir;
     Expr::Tag xBodyForceTag, yBodyForceTag, zBodyForceTag;
@@ -579,7 +580,7 @@ namespace Wasatch{
     if( doxvel && doxmom ){
       proc0cout << "Setting up X momentum transport equation" << std::endl;
       typedef LowMachMomentumTransportEquation< XVolField > MomTransEq;
-      EquationBase* momtranseq = scinew MomTransEq( Wasatch::XDIR, xvelname,
+      EquationBase* momtranseq = scinew MomTransEq( WasatchCore::XDIR, xvelname,
                                                          xmomname,
                                                          densityTag,
                                                          isConstDensity,
@@ -595,7 +596,7 @@ namespace Wasatch{
     if( doyvel && doymom ){
       proc0cout << "Setting up Y momentum transport equation" << std::endl;
       typedef LowMachMomentumTransportEquation< YVolField > MomTransEq;
-      EquationBase* momtranseq = scinew MomTransEq( Wasatch::YDIR, yvelname,
+      EquationBase* momtranseq = scinew MomTransEq( WasatchCore::YDIR, yvelname,
                                                          ymomname,
                                                          densityTag,
                                                          isConstDensity,
@@ -611,7 +612,7 @@ namespace Wasatch{
     if( dozvel && dozmom ){
       proc0cout << "Setting up Z momentum transport equation" << std::endl;
       typedef LowMachMomentumTransportEquation< ZVolField > MomTransEq;
-      EquationBase* momtranseq = scinew MomTransEq( Wasatch::ZDIR, zvelname,
+      EquationBase* momtranseq = scinew MomTransEq( WasatchCore::ZDIR, zvelname,
                                                          zmomname,
                                                          densityTag,
                                                          isConstDensity,
@@ -1415,4 +1416,4 @@ namespace Wasatch{
 
   //-----------------------------------------------------------------
 
-} // namespace Wasatch
+} // namespace WasatchCore

@@ -183,7 +183,7 @@ ComponentFactory::create( ProblemSpecP& ps, const ProcessorGroup* world,
   }
 #ifndef NO_WASATCH
   if (sim_comp == "wasatch") {
-    return scinew Wasatch::Wasatch(world);
+    return scinew WasatchCore::Wasatch(world);
   } 
 #endif
   if (sim_comp == "poisson1" || sim_comp == "POISSON1") {

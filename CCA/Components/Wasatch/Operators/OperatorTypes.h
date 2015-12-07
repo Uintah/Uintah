@@ -43,7 +43,7 @@ using SpatialOps::Interpolant;
 
 using SpatialOps::OperatorTypeBuilder;
 
-namespace Wasatch{
+namespace WasatchCore{
 
   /**
    *  \ingroup WasatchOperators

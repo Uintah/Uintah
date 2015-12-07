@@ -29,7 +29,7 @@
 #include <expression/Expression.h>
 #include "ParseTools.h"
 
-namespace Wasatch{      
+namespace WasatchCore{      
   
   /**
    *  @class  MinMaxClip
@@ -223,7 +223,7 @@ namespace Wasatch{
       }              
     }        
   }  
-} // namespace Wasatch
+} // namespace WasatchCore
 
 
 #endif  // FieldClippingTools_h

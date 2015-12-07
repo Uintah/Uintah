@@ -46,7 +46,7 @@ namespace Uintah{
   class Patch;
 }
 
-namespace Wasatch{
+namespace WasatchCore{
 
   class TreeTaskExecute;
 
@@ -173,6 +173,6 @@ namespace Wasatch{
     ExecList execList_;
   };
 
-} // namespace Wasatch
+} // namespace WasatchCore
 
 #endif // Wasatch_TaskInterface_h

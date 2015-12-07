@@ -285,7 +285,7 @@ build() const
 
 // Explicit template instantiation for supported versions of this expression
 #include <CCA/Components/Wasatch/FieldTypes.h>
-using namespace Wasatch;
+using namespace WasatchCore;
 
 #define DECLARE_TAYLOR_MMS( VOL ) 	\
   template class VelocityX< VOL >;	\

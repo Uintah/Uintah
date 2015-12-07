@@ -102,7 +102,7 @@ TurbulentInletBC( const std::string inputFileName,
     period_(period),
     timePeriod_(timePeriod)
 {
-  const Wasatch::TagNames& tagNames = Wasatch::TagNames::self();
+  const WasatchCore::TagNames& tagNames = WasatchCore::TagNames::self();
    t_ = this->template create_field_request<TimeField>(tagNames.time);
    dt_ = this->template create_field_request<TimeField>(tagNames.timestep);
   

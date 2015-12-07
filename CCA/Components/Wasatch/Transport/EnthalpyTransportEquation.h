@@ -32,10 +32,10 @@
 
 #include <CCA/Components/Wasatch/Transport/ScalarTransportEquation.h>
 
-namespace Wasatch {
+namespace WasatchCore {
 
   /**
-   *  \class  Wasatch::EnthalpyTransportEquation
+   *  \class  WasatchCore::EnthalpyTransportEquation
    *  \date   November, 2013
    *  \author "James C. Sutherland"
    *
@@ -104,6 +104,6 @@ namespace Wasatch {
 
   };
 
-} /* namespace Wasatch */
+} /* namespace WasatchCore */
 
 #endif /* ENTHALPYTRANSPORTEQUATION_H_ */

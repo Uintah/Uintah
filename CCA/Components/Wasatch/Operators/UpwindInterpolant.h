@@ -111,7 +111,7 @@ public:
    *   \brief Sets the flux limiter type to be used by this interpolant.
    *   \param limiterType: An enum that holds the limiter name.
    */
-  void set_flux_limiter_type( Wasatch::ConvInterpMethods limiterType ){}
+  void set_flux_limiter_type( WasatchCore::ConvInterpMethods limiterType ){}
 
   /**
    *  \brief Applies the Upwind interpolation to the source field.

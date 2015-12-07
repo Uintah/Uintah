@@ -52,7 +52,7 @@
 
 namespace so = SpatialOps;
 
-namespace Wasatch {
+namespace WasatchCore {
 
   //==================================================================
 
@@ -299,16 +299,16 @@ namespace Wasatch {
     }    
   }
 
-} /* namespace Wasatch */
+} /* namespace WasatchCore */
 
 //==========================================================================
 // Explicit template instantiation for supported versions of this expression
 #include <spatialops/structured/FVStaggered.h>
 
 #define DECLARE_REDUCTION_VARIANTS(T) \
-template void Wasatch::ReductionHelper::add_variable<T,ReductionMinOpT>( const Category, const Expr::Tag&, const Expr::Tag&, const bool, const bool ); \
-template void Wasatch::ReductionHelper::add_variable<T,ReductionMaxOpT>( const Category, const Expr::Tag&, const Expr::Tag&, const bool, const bool ); \
-template void Wasatch::ReductionHelper::add_variable<T,ReductionSumOpT>( const Category, const Expr::Tag&, const Expr::Tag&, const bool, const bool );
+template void WasatchCore::ReductionHelper::add_variable<T,ReductionMinOpT>( const Category, const Expr::Tag&, const Expr::Tag&, const bool, const bool ); \
+template void WasatchCore::ReductionHelper::add_variable<T,ReductionMaxOpT>( const Category, const Expr::Tag&, const Expr::Tag&, const bool, const bool ); \
+template void WasatchCore::ReductionHelper::add_variable<T,ReductionSumOpT>( const Category, const Expr::Tag&, const Expr::Tag&, const bool, const bool );
 
 DECLARE_REDUCTION_VARIANTS(so::SingleValueField)
 DECLARE_REDUCTION_VARIANTS(SVolField)

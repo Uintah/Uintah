@@ -35,7 +35,7 @@
 #include <Core/ProblemSpec/ProblemSpecP.h>
 
 
-namespace Wasatch{
+namespace WasatchCore{
 
   /**
    *  \ingroup WasatchCore
@@ -74,7 +74,7 @@ namespace Wasatch{
    *
    */
   template<typename FieldT>
-  class MomentTransportEquation : public Wasatch::TransportEquation
+  class MomentTransportEquation : public WasatchCore::TransportEquation
   {
   public:
     /**
@@ -135,7 +135,7 @@ namespace Wasatch{
     Expr::TagList weightsTags_, abscissaeTags_;
   };
 
-} // namespace Wasatch
+} // namespace WasatchCore
 #endif // Wasatch_MomentTransportEquation_h
 
 

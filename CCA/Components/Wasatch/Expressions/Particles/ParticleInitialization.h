@@ -152,7 +152,7 @@ private:
   ParticleGeometryBased( const std::string& coord, const int seed, GeomValueMapT geomObjects );
 
   GeomValueMapT geomObjects_;
-  Wasatch::UintahPatchContainer* patchContainer_;
+  WasatchCore::UintahPatchContainer* patchContainer_;
 
 };
 
@@ -172,7 +172,7 @@ void
 ParticleGeometryBased::
 bind_operators( const SpatialOps::OperatorDatabase& opDB )
 {
-  patchContainer_ = opDB.retrieve_operator<Wasatch::UintahPatchContainer>();
+  patchContainer_ = opDB.retrieve_operator<WasatchCore::UintahPatchContainer>();
 }
 
 //--------------------------------------------------------------------
@@ -304,7 +304,7 @@ private:
   const int seed_;
   const bool usePatchBounds_;
   const bool isCoordExpr_; // is this expression evaluating a coordinate or not? for non coordinates, we use the user provided lo and hi
-  Wasatch::UintahPatchContainer* patchContainer_;
+  WasatchCore::UintahPatchContainer* patchContainer_;
   
   ParticleRandomIC( const std::string& coord,
                    const double lo,
@@ -337,7 +337,7 @@ ParticleRandomIC( const std::string& coord,
 void
 ParticleRandomIC::bind_operators( const SpatialOps::OperatorDatabase& opDB )
 {
-  patchContainer_ = opDB.retrieve_operator<Wasatch::UintahPatchContainer>();
+  patchContainer_ = opDB.retrieve_operator<WasatchCore::UintahPatchContainer>();
 }
 
 //--------------------------------------------------------------------
@@ -473,7 +473,7 @@ private:
   const bool transverse_;
   const std::string coord_;
   const bool usePatchBounds_;
-  Wasatch::UintahPatchContainer* patchContainer_;
+  WasatchCore::UintahPatchContainer* patchContainer_;
   
   ParticleUniformIC( const double lo,
                      const double hi,
@@ -505,7 +505,7 @@ ParticleUniformIC( const double lo,
 void
 ParticleUniformIC::bind_operators( const SpatialOps::OperatorDatabase& opDB )
 {
-  patchContainer_ = opDB.retrieve_operator<Wasatch::UintahPatchContainer>();
+  patchContainer_ = opDB.retrieve_operator<WasatchCore::UintahPatchContainer>();
 }
 
 //--------------------------------------------------------------------

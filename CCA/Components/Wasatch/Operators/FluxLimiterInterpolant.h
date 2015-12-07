@@ -83,7 +83,7 @@ private:
   const PhiFaceT* advectiveVelocity_;
   
   // holds the limiter type to be used, i.e. SUPERBEE, VANLEER, etc...
-  Wasatch::ConvInterpMethods limiterType_;
+  WasatchCore::ConvInterpMethods limiterType_;
   
   SpatialOps::IntVec unitNormal_;
 
@@ -133,7 +133,7 @@ public:
    *   \brief Sets the flux limiter type to be used by this interpolant.
    *   \param limiterType: An enum that holds the limiter name.
    */
-  void set_flux_limiter_type (Wasatch::ConvInterpMethods limiterType);
+  void set_flux_limiter_type (WasatchCore::ConvInterpMethods limiterType);
   
   /**
    *  \brief Applies the flux limiter interpolation to the source field.

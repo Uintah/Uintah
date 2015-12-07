@@ -35,7 +35,7 @@
  *  \brief Parser handling for property specification.
  */
 
-namespace Wasatch{
+namespace WasatchCore{
 
 
   /**
@@ -51,6 +51,6 @@ namespace Wasatch{
                                   GraphCategories& gc,
                                   std::set<std::string>& persistentFields );
 
-} // namespace Wasatch
+} // namespace WasatchCore
 
 #endif // Wasatch_Properties_h

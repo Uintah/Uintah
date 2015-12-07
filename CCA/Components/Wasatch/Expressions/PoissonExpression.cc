@@ -43,7 +43,7 @@
 //-- SpatialOps Includes --//
 #include <spatialops/OperatorDatabase.h>
 
-namespace Wasatch {
+namespace WasatchCore {
 
   PoissonExpression::PoissonExpression( const Expr::Tag& phiTag,
                                         const Expr::Tag& phiRHSLocalTag,
@@ -80,9 +80,9 @@ namespace Wasatch {
     matrixLabel_( Uintah::VarLabel::create( phit_.name() + "_matrix",
                                             Uintah::CCVariable<Uintah::Stencil7>::getTypeDescription() ) ),
     phiLabel_   ( Uintah::VarLabel::create( phit_.name(),
-                                            Wasatch::get_uintah_field_type_descriptor<SVolField>() ) ),
+                                            WasatchCore::get_uintah_field_type_descriptor<SVolField>() ) ),
     phirhsLabel_( Uintah::VarLabel::create( phirhslocalt_.name(),
-                                            Wasatch::get_uintah_field_type_descriptor<SVolField>() ) )
+                                            WasatchCore::get_uintah_field_type_descriptor<SVolField>() ) )
   {
      phiRhs_ = create_field_request<SVolField>(phiRHSTag);
   }
@@ -307,4 +307,4 @@ namespace Wasatch {
 
   Expr::TagList PoissonExpression::poissonTagList = Expr::TagList();
 
-} // namespace Wasatch
+} // namespace WasatchCore

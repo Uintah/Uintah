@@ -32,7 +32,7 @@
 
 namespace so = SpatialOps;
 
-namespace Wasatch{
+namespace WasatchCore{
 
   typedef std::map<std::string,FieldTypes> StringMap;
   static StringMap validStrings;
@@ -206,4 +206,4 @@ namespace Wasatch{
 
   //------------------------------------------------------------------
 
-} // namespace Wasatch
+} // namespace WasatchCore

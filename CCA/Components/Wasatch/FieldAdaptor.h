@@ -58,7 +58,7 @@
 
 namespace Uintah{ class Patch; class ProcessorGroup; }
 
-namespace Wasatch{
+namespace WasatchCore{
 
   /**
    *  \ingroup WasatchParser

@@ -77,7 +77,7 @@ GeometryPieceWrapper( std::vector<Uintah::GeometryPieceP> geomObjects,
 geomObjects_(geomObjects),
 inverted_(inverted)
 {
-  const Wasatch::TagNames& tagNames = Wasatch::TagNames::self();
+  const WasatchCore::TagNames& tagNames = WasatchCore::TagNames::self();
    x_ = create_field_request<SVolField>(tagNames.xsvolcoord);
    y_ = create_field_request<SVolField>(tagNames.ysvolcoord);
    z_ = create_field_request<SVolField>(tagNames.zsvolcoord);
