@@ -340,25 +340,28 @@
     </MaterialProperties>
     <!--__________________________________-->
     <Models>
-       <Model type="AdiabaticTable">
-        <table name="adiabatic" type="Arches">
-         <defaultValue name="heat_loss">0.0</defaultValue>
-          <derivedValue name="reference_heat_capac_Cv">[heat_capac_Cv]</derivedValue>
-          <derivedValue name="reference_gamma">[gamma]</derivedValue>
-          <constantValue name="reference_Temp">298</constantValue>
-         <filename>inputs/Models/he.rxn</filename>
-       </table>
-        <material>BackgroundGas</material>
-        <scalar name="f">
-        <test_conservation>  true  </test_conservation>
-        <constants>
-        </constants>       
-        
-          <geom_object>
-             <box label = "world">  </box>
-             <scalar>    0.00       </scalar>
-          </geom_object>
-       </scalar>
+      <Model type="AdiabaticTable">
+        <AdiabaticTable>
+          <material>BackgroundGas</material>
+          
+          <table name="adiabatic" type="Arches">
+            <defaultValue name="heat_loss">     0.0     </defaultValue>
+            <derivedValue name="reference_heat_capac_Cv"> [heat_capac_Cv] </derivedValue>
+            <derivedValue name="reference_gamma">         [gamma]         </derivedValue>
+            <constantValue name="reference_Temp">   298 </constantValue>
+            <filename>inputs/Models/he.rxn</filename>
+          </table>
+
+          <scalar name="f">
+          <test_conservation>  true  </test_conservation>
+          <constants>
+          </constants>       
+            <geom_object>
+               <box label = "world">  </box>
+               <scalar>    0.00       </scalar>
+            </geom_object>
+          </scalar>
+        </AdiabaticTable>
       </Model>
     </Models>
 

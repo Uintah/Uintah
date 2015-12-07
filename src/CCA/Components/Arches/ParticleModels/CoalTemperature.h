@@ -2,6 +2,8 @@
 #define Uintah_Component_Arches_CoalTemperature_h
 
 #include <CCA/Components/Arches/Task/TaskInterface.h>
+#include <Core/Grid/SimulationState.h>
+
 
 namespace Uintah{ 
 
@@ -88,6 +90,18 @@ private:
     double _RdMW; 
     double _MW_avg;
     double _ash_mf;
+
+ 
+    bool _useCurveFit;
+
+    double _ca;  // coefficients for polynomial fit of enthalpy equation
+    double _ba;
+    double _aa;
+
+    double _cc;
+    double _bc;
+    double _ac;
+
 
     std::vector<double> _init_ash;
     std::vector<double> _init_rawcoal;

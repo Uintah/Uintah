@@ -73,7 +73,8 @@ namespace Wasatch{
      *  \param linSolver the linear solver object for the pressure solve
      *  \param sharedState contains useful stuff like the value of timestep, etc.
      */
-    LowMachMomentumTransportEquation( const std::string velName,
+    LowMachMomentumTransportEquation(const Direction momComponent,
+                                     const std::string velName,
                                const std::string momName,
                                const Expr::Tag densTag,
                                const bool isConstDensity,

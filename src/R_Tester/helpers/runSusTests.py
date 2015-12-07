@@ -215,7 +215,7 @@ def runSusTests(argv, TESTS, ALGO, callback = nullCallback):
     sus_options     = ""
     startFrom = "inputFile"
     
-    unsetenv('SCI_DEBUG')   # reset it for each test
+    environ['SCI_DEBUG'] = ''   # reset it for each test
     
     #__________________________________
     # override defaults if the flags has been specified

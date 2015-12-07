@@ -579,7 +579,7 @@ namespace Wasatch{
     if( doxvel && doxmom ){
       proc0cout << "Setting up X momentum transport equation" << std::endl;
       typedef LowMachMomentumTransportEquation< XVolField > MomTransEq;
-      EquationBase* momtranseq = scinew MomTransEq( xvelname,
+      EquationBase* momtranseq = scinew MomTransEq( Wasatch::XDIR, xvelname,
                                                          xmomname,
                                                          densityTag,
                                                          isConstDensity,
@@ -595,7 +595,7 @@ namespace Wasatch{
     if( doyvel && doymom ){
       proc0cout << "Setting up Y momentum transport equation" << std::endl;
       typedef LowMachMomentumTransportEquation< YVolField > MomTransEq;
-      EquationBase* momtranseq = scinew MomTransEq( yvelname,
+      EquationBase* momtranseq = scinew MomTransEq( Wasatch::YDIR, yvelname,
                                                          ymomname,
                                                          densityTag,
                                                          isConstDensity,
@@ -611,7 +611,7 @@ namespace Wasatch{
     if( dozvel && dozmom ){
       proc0cout << "Setting up Z momentum transport equation" << std::endl;
       typedef LowMachMomentumTransportEquation< ZVolField > MomTransEq;
-      EquationBase* momtranseq = scinew MomTransEq( zvelname,
+      EquationBase* momtranseq = scinew MomTransEq( Wasatch::ZDIR, zvelname,
                                                          zmomname,
                                                          densityTag,
                                                          isConstDensity,

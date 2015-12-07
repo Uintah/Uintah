@@ -22,13 +22,13 @@
  * IN THE SOFTWARE.
  */
 
-#ifndef UINTAH_VISIT_LIBSIM_H
-#define UINTAH_VISIT_LIBSIM_H
+#ifndef UINTAH_VISIT_LIBSIM_CALLBACKS_H
+#define UINTAH_VISIT_LIBSIM_CALLBACKS_H
 
 /**************************************
         
 CLASS
-   visit_init
+   visit_libsim_callbacks
         
    Short description...
         
@@ -51,58 +51,15 @@ WARNING
 
 ****************************************/
 
-#include "Core/Grid/Grid.h"
-
-#include <string>
-
-class TimeStepInfo;
-
 namespace Uintah {
 
-class AMRSimulationController;
+int visit_BroadcastIntCallback(int *value, int sender);
+int visit_BroadcastStringCallback(char *str, int len, int sender);
+void visit_SlaveProcessCallback();
 
-/* Simulation Mode */
-//#define VISIT_SIMMODE_UNKNOWN  0
-//#define VISIT_SIMMODE_RUNNING  1
-//#define VISIT_SIMMODE_STOPPED  2
+void visit_ControlCommandCallback(const char *cmd, const char *args, void *cbdata);
 
-#define VISIT_SIMMODE_STEP       3
-#define VISIT_SIMMODE_FINISHED   4
-#define VISIT_SIMMODE_TERMINATED 5
-
-typedef struct
-{
-  // Uintah data members
-  AMRSimulationController *AMRSimController;
-  GridP gridP;
-  
-  TimeStepInfo* stepInfo;
-
-  int cycle;
-  double time;
-  double delt;
-
-  std::string message;
-
-  int blocking;
-
-  bool useExtraCells;
-  bool nodeCentered;
-  bool forceMeshReload;
-
-  // Simulation control members
-  int  runMode;
-  int  simMode;
-
-  bool isProc0;
-
-} visit_simulation_data;
-
-
-void visit_LibSimArguments(int argc, char **argv);
-void visit_InitLibSim(visit_simulation_data *sim);
-void visit_EndLibSim(visit_simulation_data *sim);
-void visit_CheckState(visit_simulation_data *sim);
+int visit_ProcessVisItCommand( visit_simulation_data *sim );
 
 } // End namespace Uintah
 
