@@ -253,6 +253,32 @@
       </Unsteady_Burn>
 
       <!--__________________________________-->
+      <!-- DDT0  -->
+      <DDT0                      spec="OPTIONAL NO_DATA">
+        <fromMaterial            spec="REQUIRED STRING" />
+        <toMaterial              spec="REQUIRED STRING" />
+         
+        <b                       spec="REQUIRED DOUBLE"  />
+        <E0                      spec="REQUIRED DOUBLE"  />
+        <G                       spec="REQUIRED DOUBLE"  />
+        
+        <useCrackModel           spec="OPTIONAL BOOLEAN" /> 
+        <Gcrack                  spec="OPTIONAL DOUBLE" />
+        <CrackVolThreshold       spec="OPTIONAL DOUBLE" />
+        <nCrack                  spec="OPTIONAL DOUBLE" />
+        
+        <ThresholdPressureJWL    spec="REQUIRED DOUBLE 'positive'" />
+        <ThresholdPressureSB     spec="REQUIRED DOUBLE 'positive'" />
+        <ThresholdVolFrac        spec="OPTIONAL DOUBLE 'positive'" />
+        <ThresholdTemp         spec="REQUIRED DOUBLE 'positive'"/>
+        <Enthalpy              spec="REQUIRED DOUBLE 'positive'"/>
+        <BurnCoeff             spec="REQUIRED DOUBLE 'positive'"/>
+        <refPressure           spec="REQUIRED DOUBLE 'positive'"/>        
+        
+      </DDT1>
+
+
+      <!--__________________________________-->
       <!-- DDT1  -->
       <DDT1                      spec="OPTIONAL NO_DATA">
         <fromMaterial            spec="REQUIRED STRING" />
