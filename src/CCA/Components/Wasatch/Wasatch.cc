@@ -91,6 +91,7 @@
 #include <CCA/Components/Wasatch/WasatchBCHelper.h>
 #include <CCA/Components/Wasatch/Expressions/CellType.h>
 using std::endl;
+WasatchCore::FlowTreatment WasatchCore::Wasatch::flowTreatment_;
 
 namespace WasatchCore{
 
@@ -419,6 +420,11 @@ namespace WasatchCore{
           msg << "ERROR: You must include a 'Density' block in your input file when solving transport equations" << endl;
           throw Uintah::ProblemSetupException( msg.str(), __FILE__, __LINE__ );
         }
+        
+        std::string flowTreatment;
+        densityParams->getAttribute("method",flowTreatment);
+        Wasatch::set_flow_treatment(flowTreatment);
+        
         if( densityParams->findBlock("NameTag") ){
           densityTag = parse_nametag( densityParams->findBlock("NameTag") );
           isConstDensity = false;
