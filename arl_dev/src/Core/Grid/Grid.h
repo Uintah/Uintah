@@ -380,6 +380,7 @@ WARNING
     void assignBCS( const ProblemSpecP & grid_ps, Uintah::LoadBalancer *lb );
 
     void assignBCS( const LevelSet     & level_set, const ProblemSpecP & grid_ps, Uintah::LoadBalancer *lb);
+
     //////////
     //
     void setExtraCells( const IntVector & ex );
@@ -406,6 +407,10 @@ WARNING
 
     //////////
     //
+    std::vector<int> getComponentLevelIndices(std::string componentName, bool needSubsets = false) const;
+
+    //////////
+    //
     int  getSubsetIndex(const int levelIndex) const {
       return (d_subsetOfLevel[levelIndex]);
     }
@@ -418,9 +423,11 @@ WARNING
     std::string getSubsetLabel(const int levelIndex) const {
       return d_levelSubsetLabels[d_subsetOfLevel[levelIndex]];
     }
+
     void copySubsetData(const GridP& copyFrom);
 
     void assignSubsetToLevels();
+
     //////////
     //
     friend std::ostream& operator<<(std::ostream& out, const Uintah::Grid& grid);
@@ -523,10 +530,12 @@ WARNING
     // level set related storage
     LevelSet  d_levelSet;
 
-    std::vector<int> d_subsetOfLevel;
+    // each element holds the subset index of each global level
+    std::vector<int>         d_subsetOfLevel;
 
     std::vector<std::string> d_levelSubsetLabels;
     std::vector<std::string> d_levelSubsetComponentNames;
+
   };
 
 } // End namespace Uintah

@@ -1621,12 +1621,12 @@ Grid::problemSetup(  const ProblemSpecP   & params
     while (levelset_ps) {  // iterate through each level set tag
 
       // Set default levelSet name
-      std::string componentName="NULL";
-      levelset_ps->require("Component",componentName);
+      std::string componentName = "NULL";
+      levelset_ps->require("Component", componentName);
       std::ostringstream setNameStream;
       setNameStream << "Level Set " << std::left << levelIndex;
       std::string setName = setNameStream.str();
-      levelset_ps->getAttribute("label",setName);
+      levelset_ps->getAttribute("label", setName);
 
       // And override if present
       d_levelSubsetLabels.push_back(setName);
@@ -1933,13 +1933,26 @@ Grid::createLevelSubsets(int num_sets)
   ASSERTEQ(num_sets, d_levelSet.size());
 }
 
+std::vector<int>
+Grid::getComponentLevelIndices(std::string componentName, bool needSubsets) const
+{
+  std::vector<int> indices;
+  size_t numLabels = d_levelSubsetComponentNames.size();
+  for (size_t i = 0; i < numLabels; ++i) {
+    if (d_levelSubsetComponentNames[i] == componentName) {
+      indices.push_back(needSubsets ? d_subsetOfLevel[i] : i);
+    }
+  }
+  return indices;
+}
+
 void
 Grid::assignSubsetToLevels()
 {
-  int numSubsets = d_levelSet.size();
   d_subsetOfLevel.clear();
   d_subsetOfLevel.resize(d_levels.size());
 
+  int numSubsets = d_levelSet.size();
   for (int subsetIndex = 0; subsetIndex < numSubsets; ++subsetIndex) {
     const LevelSubset* currSubset = d_levelSet.getSubset(subsetIndex);
     int levelsInSubset = currSubset->size();

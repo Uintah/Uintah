@@ -369,7 +369,7 @@ MultiScaleSwitcher::problemSetup( const ProblemSpecP     & /*params*/,
   }
 }
 
-SimulationInterface* MultiScaleSwitcher::matchComponentToLevelset(const LevelP&     level)
+SimulationInterface* MultiScaleSwitcher::matchComponentToLevelset(const LevelP& level)
 {
   GridP grid = level->getGrid();
   std::string levelSetComponent = grid->getSubsetComponentName(level->getIndex());
@@ -887,7 +887,6 @@ MultiScaleSwitcher::needRecompile(       double   time,
     d_computedVars.clear();
     d_componentIndex++;
     d_componentIndex %= d_numComponents;
-
     d_sharedState->d_switchState = true;
 
     //__________________________________
@@ -913,7 +912,7 @@ MultiScaleSwitcher::needRecompile(       double   time,
     ProblemSpecP subCompUps = ProblemSpecReader().readInputFile(d_in_file[d_componentIndex]);
     SimulationStateP subcomp_sharedstate = scinew SimulationState(subCompUps);
 
-    // TODO APH JBH - We'll probably want to create a new SimulationTime for MD instances and read in from teh md input file
+    // TODO APH JBH - We'll probably want to create a new SimulationTime for MD instances and read in from the MD input file
     // For now - assign original SimulationTime object to new shared state
     subcomp_sharedstate->d_simTime = d_sharedState->d_simTime;
 
@@ -923,19 +922,21 @@ MultiScaleSwitcher::needRecompile(       double   time,
     // read in <DataArchiver> section
     dataArchiver->problemSetup(subCompUps, subcomp_sharedstate.get_rep());
 
-//    // we need this to get the "ICE surrounding matl"
-//    d_sim->restartInitialize();
     subcomp_sharedstate->finalizeMaterials();
 
-    // read in the grid adaptivity flag from the ups file
-    Regridder* regridder = dynamic_cast<Regridder*>(getPort("regridder"));
-    if (regridder) {
-      regridder->switchInitialize(subCompUps);
-    }
+    // build the working LevelSet based of the LevelSubset indices of levels owned by the current component
+    std::string componentName = "";
+    ProblemSpecP simCompSpec = subCompUps->findBlock("SimulationComponent");
+    simCompSpec->getAttribute("type",componentName);
+    std::vector<int> componentSubsetIndices = grid->getComponentLevelIndices(componentName, true);
 
     LevelSet running_level_set;
-    running_level_set.addAll(grid->getLevelSubset(d_componentIndex)->getVector());
+    size_t numIndices = componentSubsetIndices.size();
+    for (size_t subsetIndex = 0; subsetIndex < numIndices; ++subsetIndex) {
+      running_level_set.addAll(grid->getLevelSubset(subsetIndex)->getVector());
+    }
 
+    // re-map each level to the subset it belongs to
     int numSubsets = running_level_set.size();
     for (int subsetIndex = 0; subsetIndex < numSubsets; ++subsetIndex) {
       LevelSubset* currSubset = running_level_set.getSubset(subsetIndex);
@@ -971,10 +972,10 @@ MultiScaleSwitcher::needRecompile(       double   time,
     d_subScheduler->advanceDataWarehouse(grid, true); // Generates the first subNewDW
 
     // Schedule tasks for MD initialization task-graph
-    const LevelSubset* level_subset = grid->getLevelSubset(d_componentIndex);
-    int num_levels = level_subset->size();
-    for (int i =  0; i < num_levels; ++i) {
-      LevelP level_handle = grid->getLevel(level_subset->get(i)->getIndex());
+    std::vector<int> componentLevelIndices = grid->getComponentLevelIndices(componentName);
+    std::vector<int>::iterator iter = componentLevelIndices.begin();
+    for (; iter != componentLevelIndices.end(); ++iter) {
+      const LevelP level_handle = grid->getLevel(*iter);
       d_sim->scheduleInitialize(level_handle, d_subScheduler);
       d_sim->scheduleComputeStableTimestep(level_handle, d_subScheduler);
     }
@@ -985,8 +986,9 @@ MultiScaleSwitcher::needRecompile(       double   time,
 
     d_subScheduler->initialize(3,1);
 
-    for (int i =  0; i < num_levels; ++i) {
-      LevelP level_handle = grid->getLevel(level_subset->get(i)->getIndex());
+    iter = componentLevelIndices.begin();
+    for (; iter != componentLevelIndices.end(); ++iter) {
+      const LevelP level_handle = grid->getLevel(*iter);
       d_sim->scheduleTimeAdvance(level_handle, d_subScheduler);
       d_sim->scheduleComputeStableTimestep(level_handle, d_subScheduler);
     }

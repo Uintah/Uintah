@@ -90,10 +90,23 @@
           </Level>
         </LevelSet>
 
-        <LevelSet label = "MD">
+        <LevelSet label = "MD1">
           <Component>md</Component>
           <Level>
               <Box label = "1">
+                  <lower>[ 0.00,            0.00,            0.00]</lower>
+                  <upper>[55.9709435199820,55.9709435199820,55.9709435199820]</upper>
+                  <resolution>[56,56,56]</resolution>
+                  <patches>[1,1,1]</patches>
+              </Box>
+              <periodic>[1,1,1]</periodic>
+          </Level>
+        </LevelSet>
+
+        <LevelSet label = "MD2">
+          <Component>md</Component>
+          <Level>
+              <Box label = "2">
                   <lower>[ 0.00,            0.00,            0.00]</lower>
                   <upper>[55.9709435199820,55.9709435199820,55.9709435199820]</upper>
                   <resolution>[56,56,56]</resolution>
