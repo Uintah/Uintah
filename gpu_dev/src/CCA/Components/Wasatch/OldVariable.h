@@ -46,7 +46,7 @@ namespace Uintah{
   class DataWarehouse;
 }
 
-namespace Wasatch {
+namespace WasatchCore {
 
   class Wasatch;  // forward declaration
 
@@ -144,5 +144,5 @@ namespace Wasatch {
     bool hasDoneSetup_;
   };
 
-} /* namespace Wasatch */
+} /* namespace WasatchCore */
 #endif /* OLDVARIABLE_H_ */

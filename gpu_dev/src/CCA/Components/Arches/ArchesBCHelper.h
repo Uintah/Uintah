@@ -47,7 +47,7 @@ namespace Uintah{
    *  \brief  This class provides support for boundary conditions.
    */
 
-  class ArchesBCHelper: public Wasatch::BCHelper
+  class ArchesBCHelper: public WasatchCore::BCHelper
   {
   public:
 

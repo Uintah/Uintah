@@ -41,7 +41,7 @@
 
 namespace Expr{ class ExpressionFactory; }
 
-namespace Wasatch{
+namespace WasatchCore{
   
   class CoordinateNames
   {
@@ -63,6 +63,6 @@ namespace Wasatch{
   void register_coordinate_expressions( GraphCategories& gc,
                                         const bool isPeriodic );
 
-} // namespace Wasatch
+} // namespace WasatchCore
 
 #endif // Wasatch_CoordHelper_h

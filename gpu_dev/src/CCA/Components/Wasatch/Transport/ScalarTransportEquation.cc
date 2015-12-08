@@ -50,7 +50,7 @@
 
 using std::endl;
 
-namespace Wasatch{
+namespace WasatchCore{
 
   //------------------------------------------------------------------
 
@@ -63,7 +63,7 @@ namespace Wasatch{
                            const bool isConstDensity,
                            const TurbulenceParameters& turbulenceParams,
                            const bool callSetup )
-    : Wasatch::TransportEquation( gc,
+    : WasatchCore::TransportEquation( gc,
                                   solnVarName,
                                   get_staggered_location<FieldT>(),
                                   isConstDensity ),
@@ -420,4 +420,4 @@ namespace Wasatch{
   // explicit template instantiation
   template class ScalarTransportEquation< SVolField >;
 
-} // namespace Wasatch
+} // namespace WasatchCore

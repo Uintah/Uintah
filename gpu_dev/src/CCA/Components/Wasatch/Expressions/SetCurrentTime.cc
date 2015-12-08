@@ -26,7 +26,7 @@
 
 #include <CCA/Components/Wasatch/Expressions/SetCurrentTime.h>
 
-namespace Wasatch{
+namespace WasatchCore{
 
   SetCurrentTime::SetCurrentTime()
     : Expr::Expression<SpatialOps::SingleValueField>(),
@@ -77,4 +77,4 @@ namespace Wasatch{
     return new SetCurrentTime();
   }
 
-} // namespace Wasatch
+} // namespace WasatchCore

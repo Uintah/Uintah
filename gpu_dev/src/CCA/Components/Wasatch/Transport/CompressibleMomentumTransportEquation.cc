@@ -33,7 +33,7 @@
 #include <CCA/Components/Wasatch/Transport/CompressibleMomentumTransportEquation.h>
 #include <CCA/Components/Wasatch/Transport/ParseEquation.h>
 
-namespace Wasatch{
+namespace WasatchCore{
 
 
   /**
@@ -296,7 +296,7 @@ namespace Wasatch{
 
   //============================================================================
 
-} // namespace Wasatch
+} // namespace WasatchCore
 
 
 

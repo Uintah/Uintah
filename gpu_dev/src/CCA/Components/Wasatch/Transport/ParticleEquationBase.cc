@@ -25,7 +25,7 @@
 #include <CCA/Components/Wasatch/Transport/ParticleEquationBase.h>
 #include <CCA/Components/Wasatch/Expressions/EmbeddedGeometry/EmbeddedGeometryHelper.h>
 
-namespace Wasatch{
+namespace WasatchCore{
 
   //---------------------------------------------------------------------------
 
@@ -42,4 +42,4 @@ namespace Wasatch{
     Uintah::ParticlesHelper::needs_boundary_condition(solnVarName);
   }
 
-} // namespace Wasatch
+} // namespace WasatchCore

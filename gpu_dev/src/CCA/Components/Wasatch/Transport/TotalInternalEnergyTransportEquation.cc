@@ -36,7 +36,7 @@
 #include <CCA/Components/Wasatch/Expressions/ExprAlgebra.h>
 #include <CCA/Components/Wasatch/Expressions/PostProcessing/KineticEnergy.h>
 
-namespace Wasatch {
+namespace WasatchCore {
 
 
   /**
@@ -544,4 +544,4 @@ namespace Wasatch {
 
   //---------------------------------------------------------------------------
 
-} /* namespace Wasatch */
+} /* namespace WasatchCore */

@@ -59,7 +59,7 @@
 #include <Core/ProblemSpec/ProblemSpec.h>
 #include <Core/Exceptions/ProblemSetupException.h>
 
-namespace Wasatch {
+namespace WasatchCore {
 
   //------------------------------------------------------------------
   template< typename FieldT >
@@ -368,7 +368,7 @@ namespace Wasatch {
                            const bool isConstDensity,
                            Uintah::ProblemSpecP params,
                            const double initialMoment )
-  : Wasatch::TransportEquation( gc,
+  : WasatchCore::TransportEquation( gc,
                                 get_soln_var_name(params,momentOrder),
                                 get_staggered_location<FieldT>(),
                                 isConstDensity ),
@@ -627,5 +627,5 @@ namespace Wasatch {
   template class MomentTransportEquation< SVolField >;
   //==================================================================
 
-} // namespace Wasatch
+} // namespace WasatchCore
 

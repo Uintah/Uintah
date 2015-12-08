@@ -394,7 +394,7 @@ private:
 
       if ( test == NULL ){
 
-        const VarLabel* label = VarLabel::create( name, Wasatch::get_uintah_field_type_descriptor<
+        const VarLabel* label = VarLabel::create( name, WasatchCore::get_uintah_field_type_descriptor<
                                                  SpatialOps::SpatialField<SpatialOps::SVol, double> >() );
         local_labels.push_back(label);
 
@@ -417,7 +417,7 @@ private:
 
       if ( test == NULL ){
 
-        const VarLabel* label = VarLabel::create( name, Wasatch::get_uintah_field_type_descriptor<
+        const VarLabel* label = VarLabel::create( name, WasatchCore::get_uintah_field_type_descriptor<
                                                  SpatialOps::SpatialField<SpatialOps::XVol, double> >() );
         local_labels.push_back(label);
 
@@ -440,7 +440,7 @@ private:
 
       if ( test == NULL ){
 
-        const VarLabel* label = VarLabel::create( name, Wasatch::get_uintah_field_type_descriptor<
+        const VarLabel* label = VarLabel::create( name, WasatchCore::get_uintah_field_type_descriptor<
                                                  SpatialOps::SpatialField<SpatialOps::YVol, double> >() );
         local_labels.push_back(label);
 
@@ -463,7 +463,7 @@ private:
 
       if ( test == NULL ){
 
-        const VarLabel* label = VarLabel::create( name, Wasatch::get_uintah_field_type_descriptor<
+        const VarLabel* label = VarLabel::create( name, WasatchCore::get_uintah_field_type_descriptor<
                                                  SpatialOps::SpatialField<SpatialOps::ZVol, double> >() );
         local_labels.push_back(label);
 
@@ -486,7 +486,7 @@ private:
 
       if ( test == NULL ){
 
-        const VarLabel* label = VarLabel::create( name, Wasatch::get_uintah_field_type_descriptor<
+        const VarLabel* label = VarLabel::create( name, WasatchCore::get_uintah_field_type_descriptor<
                                                  SpatialOps::Particle::ParticleField>() );
         local_labels.push_back(label);
 

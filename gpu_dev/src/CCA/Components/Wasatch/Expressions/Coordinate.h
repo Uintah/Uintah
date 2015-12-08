@@ -34,7 +34,7 @@
 #include <CCA/Components/Wasatch/Operators/Operators.h>
 #include <CCA/Components/Wasatch/Operators/OperatorTypes.h>
 
-namespace Wasatch{
+namespace WasatchCore{
   
   /**
    *  \class 	 Coordinates
@@ -83,6 +83,6 @@ namespace Wasatch{
     void evaluate();
     
   };
-} // namespace Wasatch
+} // namespace WasatchCore
 
 #endif // Coordinates_h

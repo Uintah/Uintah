@@ -37,7 +37,7 @@ class OutflowBC
   {
     this->set_gpu_runnable(false);
     u_  = this->template create_field_request<FieldT>(momTag);
-    dt_ = this->template create_field_request<SpatialOps::SingleValueField>(Wasatch::TagNames::self().dt);
+    dt_ = this->template create_field_request<SpatialOps::SingleValueField>(WasatchCore::TagNames::self().dt);
   }
 public:
   class Builder : public Expr::ExpressionBuilder

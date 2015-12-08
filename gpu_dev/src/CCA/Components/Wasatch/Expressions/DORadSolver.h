@@ -94,7 +94,7 @@ private:
 
 //==============================================================================
 
-namespace Wasatch{
+namespace WasatchCore{
   
   /**
    *  \class   DORadSolver
@@ -181,7 +181,7 @@ namespace Wasatch{
     ~DORadSolver();
     
     /**
-     *  \brief Allows Wasatch::TaskInterface to reach in and give this
+     *  \brief Allows WasatchCore::TaskInterface to reach in and give this
      *         expression the information required to schedule the
      *         linear solver.
      */
@@ -192,7 +192,7 @@ namespace Wasatch{
                           const bool isDoingInitialization );
     
     /**
-     *  \brief Allows Wasatch::TaskInterface to reach in and provide
+     *  \brief Allows WasatchCore::TaskInterface to reach in and provide
      *         this expression with a way to set the variables that it
      *         needs to.
      */
@@ -202,7 +202,7 @@ namespace Wasatch{
                               const int rkStage );
     
     /**
-     *  \brief allows Wasatch::TaskInterface to reach in and provide
+     *  \brief allows WasatchCore::TaskInterface to reach in and provide
      *         this expression with a way to retrieve Uintah-specific
      *         variables from the data warehouse.
      *
@@ -274,6 +274,6 @@ namespace Wasatch{
     void evaluate();
   };
 
-} // namespace Wasatch
+} // namespace WasatchCore
 
 #endif // Wasatch_Discrete_Ordinates_h

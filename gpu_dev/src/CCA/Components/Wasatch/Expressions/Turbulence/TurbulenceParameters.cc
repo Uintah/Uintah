@@ -24,7 +24,7 @@
 
 #include "TurbulenceParameters.h"
 
-namespace Wasatch {
+namespace WasatchCore {
 
 
   TurbulenceParameters::TurbulenceParameters()

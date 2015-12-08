@@ -38,7 +38,7 @@
 //-- SpatialOps Includes --//
 #include <spatialops/OperatorDatabase.h>
 
-namespace Wasatch {
+namespace WasatchCore {
   template < typename FieldT >
   Coordinates<FieldT>::Coordinates(const int idir)
   : Expr::Expression<FieldT>(),
@@ -144,4 +144,4 @@ namespace Wasatch {
   template class Coordinates<XVolField>;
   template class Coordinates<YVolField>;
   template class Coordinates<ZVolField>;
-} // namespace Wasatch
+} // namespace WasatchCore

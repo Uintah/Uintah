@@ -39,7 +39,7 @@
 
 using namespace SpatialOps;
 
-namespace Wasatch{
+namespace WasatchCore{
   
   template<typename FieldT>
   const SCIRun::Point get_low_position(const Uintah::Patch& patch);
@@ -173,4 +173,4 @@ namespace Wasatch{
     BUILD_PARTICLE_OPS( ZVolField );
   }
   
-} // namespace Wasatch
+} // namespace WasatchCore

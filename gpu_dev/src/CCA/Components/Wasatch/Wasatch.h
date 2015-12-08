@@ -83,7 +83,7 @@
       destroys portability of the code.
 
     - Task creation.  Uintah tasks are typically created by wrapping
-      Expression tree objects using the Wasatch::TaskInterface class.
+      Expression tree objects using the WasatchCore::TaskInterface class.
       If you find yourself writing a Uintah::Task directly in Wasatch,
       you are probably doing something wrong.
 
@@ -131,7 +131,7 @@ namespace Uintah {
 
   class CellType;
 
-namespace Wasatch{
+namespace WasatchCore{
   void force_expressions_on_graph( Expr::TagList& exprTagList,
                                    GraphHelper* const graphHelper );
   
@@ -145,6 +145,12 @@ namespace Wasatch{
   class WasatchParticlesHelper;
   struct TimeIntegrator;
 
+  enum FlowTreatment
+  {
+    INCOMPRESSIBLE,
+    LOWMACH,
+    COMPRESSIBLE
+  };
   /**
    *  \ingroup WasatchCore
    *  \class  Wasatch
@@ -270,6 +276,9 @@ namespace Wasatch{
     void set_wasatch_materials( const Uintah::MaterialSet* const materials ) { materials_ = materials; }
     const Uintah::MaterialSet* get_wasatch_materials() const{ return materials_; }
     const Uintah::ProblemSpecP get_wasatch_spec(){return wasatchSpec_;}
+    static void set_flow_treatment(FlowTreatment treat) { flowTreatment_ = treat;}
+    static void set_flow_treatment(std::string treat) { flowTreatment_ = INCOMPRESSIBLE;}
+    static FlowTreatment flow_treatment(){return flowTreatment_;}
     
   private:
     bool buildTimeIntegrator_;   ///< used for Wasatch-Arches coupling
@@ -293,7 +302,7 @@ namespace Wasatch{
 
     /**
      *  a container of information for constructing ExprLib graphs.
-     *  These are then wrapped as Wasatch::TaskInterface objects and
+     *  These are then wrapped as WasatchCore::TaskInterface objects and
      *  plugged into Uintah.
      */
     GraphCategories graphCategories_;
@@ -312,6 +321,8 @@ namespace Wasatch{
     std::list< const TaskInterface*  > taskInterfaceList_;
     std::map< int, const Uintah::PatchSet* > patchesForOperators_;
 
+    static FlowTreatment flowTreatment_;
+    
     Wasatch( const Wasatch& );            // disallow copying
     Wasatch& operator=( const Wasatch& ); // disallow assignment
 
@@ -344,6 +355,6 @@ namespace Wasatch{
                                           Uintah::SchedulerP& sched );
   };
 
-} // namespace Wasatch
+} // namespace WasatchCore
 
 #endif

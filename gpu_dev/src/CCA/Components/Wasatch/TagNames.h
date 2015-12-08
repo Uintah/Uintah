@@ -28,7 +28,7 @@
 #include <string>
 #include <expression/Expression.h>
 
-namespace Wasatch{
+namespace WasatchCore{
   
   /**
    *  \ingroup WasatchFields
@@ -138,6 +138,6 @@ namespace Wasatch{
     TagNames();
   };
   
-} // namespace Wasatch
+} // namespace WasatchCore
 
 #endif // Wasatch_TagNames_h

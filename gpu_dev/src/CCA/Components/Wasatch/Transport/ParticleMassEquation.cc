@@ -34,7 +34,7 @@
 #endif
 
 
-namespace Wasatch{
+namespace WasatchCore{
 
 
   /**
@@ -145,4 +145,4 @@ namespace Wasatch{
 
   //==================================================================
 
-} // namespace Wasatch
+} // namespace WasatchCore

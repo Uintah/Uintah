@@ -43,7 +43,7 @@ enum CellTypeEnum {
 
 CellType::CellType()
 {
-  cellTypeVarLabel_ = Uintah::VarLabel::create( Wasatch::TagNames::self().celltype.name(),
+  cellTypeVarLabel_ = Uintah::VarLabel::create( WasatchCore::TagNames::self().celltype.name(),
                                                 Uintah::CCVariable<int>::getTypeDescription() );
 }
 
@@ -63,7 +63,7 @@ CellType::schedule_compute_celltype (Uintah::Ray* rmcrt,
                                      Uintah::SchedulerP& sched)
 {
   // create the Uintah task to accomplish this.
-  Uintah::Task* computeCellTypeTask = scinew Uintah::Task( "WASATCH::compute_celltype", this, &CellType::compute_celltype, rmcrt );
+  Uintah::Task* computeCellTypeTask = scinew Uintah::Task( "WasatchCore::compute_celltype", this, &CellType::compute_celltype, rmcrt );
   computeCellTypeTask->computes(cellTypeVarLabel_);
   sched->addTask( computeCellTypeTask, patches, materials );
 }
@@ -95,7 +95,7 @@ void CellType::schedule_carry_forward(const Uintah::PatchSet* const patches,
                                       const Uintah::MaterialSet* const materials,
                                       Uintah::SchedulerP& sched)
 {
-  Uintah::Task* tsk = scinew Uintah::Task( "WASATCH::CellType::carry_forward", this, &CellType::carry_forward );
+  Uintah::Task* tsk = scinew Uintah::Task( "WasatchCore::CellType::carry_forward", this, &CellType::carry_forward );
   tsk->requires(Uintah::Task::OldDW, cellTypeVarLabel_, Uintah::Ghost::None, 0);
   tsk->computes(cellTypeVarLabel_);
   sched->addTask( tsk, patches, materials );

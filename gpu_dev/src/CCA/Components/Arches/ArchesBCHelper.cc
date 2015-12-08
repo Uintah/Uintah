@@ -37,7 +37,7 @@ namespace Uintah{
   ArchesBCHelper::ArchesBCHelper( const Uintah::LevelP& level,
                                   Uintah::SchedulerP& sched,
                                   const Uintah::MaterialSet* const materials ) :
-  Wasatch::BCHelper( level, sched, materials )
+  WasatchCore::BCHelper( level, sched, materials )
   {}
 
   //------------------------------------------------------------------

@@ -45,7 +45,7 @@ namespace Uintah{
   class SolverParameters;
 }
 
-namespace Wasatch{
+namespace WasatchCore{
 
 /**
  *  \class 	  Pressure
@@ -188,7 +188,7 @@ public:
   ~Pressure();
 
   /**
-   *  \brief allows Wasatch::TaskInterface to reach in and give this
+   *  \brief allows WasatchCore::TaskInterface to reach in and give this
    *         expression the information requried to schedule the
    *         linear solver.
    */
@@ -198,7 +198,7 @@ public:
                         const int RKStage );
 
   /**
-   *  \brief Allows Wasatch::TaskInterface to reach in set the boundary conditions
+   *  \brief Allows WasatchCore::TaskInterface to reach in set the boundary conditions
              on pressure at the appropriate time - namely after the linear solve. 
    */  
   // NOTE: Maybe we should not expose this to the outside?
@@ -208,7 +208,7 @@ public:
                                   const int RKStage );
   
   /**
-   *  \brief allows Wasatch::TaskInterface to reach in and provide
+   *  \brief allows WasatchCore::TaskInterface to reach in and provide
    *         this expression with a way to set the variables that it
    *         needs to.
    */
@@ -220,7 +220,7 @@ public:
   void set_bchelper( WasatchBCHelper* bcHelper ) { bcHelper_ = bcHelper;}
 
   /**
-   *  \brief allows Wasatch::TaskInterface to reach in and provide
+   *  \brief allows WasatchCore::TaskInterface to reach in and provide
    *         this expression with a way to retrieve Uintah-specific
    *         variables from the data warehouse.
    *
@@ -265,6 +265,6 @@ public:
 
 };
 
-} // namespace Wasatch
+} // namespace WasatchCore
 
 #endif // Pressure_Expr_h

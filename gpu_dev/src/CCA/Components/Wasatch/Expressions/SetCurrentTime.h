@@ -27,7 +27,7 @@
 
 #include <expression/Expression.h>
 
-namespace Wasatch{
+namespace WasatchCore{
 
 /**
  *  \class 	SetCurrentTime
@@ -64,6 +64,6 @@ public:
   void set_time  ( const double t ){ simTime_ = t; }
 };
 
-} // namespace Wasatch
+} // namespace WasatchCore
 
 #endif // SetCurrentTime_Expr_h

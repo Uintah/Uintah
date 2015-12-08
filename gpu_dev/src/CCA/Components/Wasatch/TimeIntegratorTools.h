@@ -25,7 +25,7 @@
 #ifndef Wasatch_TimeIntegratorTools_h
 #define Wasatch_TimeIntegratorTools_h
 
-namespace Wasatch{
+namespace WasatchCore{
 
   /**
    *  \ingroup WasatchCore
@@ -96,6 +96,6 @@ namespace Wasatch{
     }
   };
 
-} // namespace Wasatch
+} // namespace WasatchCore
 
 #endif // Wasatch_TimeIntegratorTools_h

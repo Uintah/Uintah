@@ -43,7 +43,7 @@
 #include <CCA/Components/Wasatch/ParseTools.h>
 #include <CCA/Components/Wasatch/Expressions/RHSTerms.h>
 
-namespace Wasatch{
+namespace WasatchCore{
 
   class ExprDeps;  // forward declaration.
   class GraphHelper;
@@ -169,6 +169,6 @@ namespace Wasatch{
     Expr::ExpressionID rhsExprID_;   ///< The label for the rhs expression for this EquationBase.
   };
 
-} // namespace Wasatch
+} // namespace WasatchCore
 
 #endif // Wasatch_EquationBase_h

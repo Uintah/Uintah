@@ -79,7 +79,7 @@ private:
     };
     std::vector<SourceInfo> _source_info;
 
-    Wasatch::ConvInterpMethods _limiter_type;
+    WasatchCore::ConvInterpMethods _limiter_type;
 
     template <class faceT, class velT, class divT>
     void compute_convective_flux( SpatialOps::OperatorDatabase& opr,

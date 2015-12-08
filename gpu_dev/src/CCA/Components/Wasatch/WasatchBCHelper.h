@@ -43,7 +43,7 @@
  * \file WasatchBCHelper.h
  */
 
-namespace Wasatch {
+namespace WasatchCore {
   
   //****************************************************************************
   /**
@@ -229,6 +229,6 @@ namespace Wasatch {
     
   }; // class WasatchBCHelper
   
-} // namespace Wasatch
+} // namespace WasatchCore
 
 #endif /* defined(WASATCH_BC_HELPER) */

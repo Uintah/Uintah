@@ -36,7 +36,7 @@
 #include <Core/ProblemSpec/ProblemSpecP.h>
 
 
-namespace Wasatch{
+namespace WasatchCore{
 
   /**
    *  \ingroup WasatchCore
@@ -76,7 +76,7 @@ namespace Wasatch{
    *  \todo Need to hook in parser support for boundary and initial conditions.
    */
   template<typename FieldT>
-  class ScalabilityTestTransportEquation : public Wasatch::TransportEquation
+  class ScalabilityTestTransportEquation : public WasatchCore::TransportEquation
   {
   public:
 
@@ -148,5 +148,5 @@ namespace Wasatch{
                                          Expr::ExpressionFactory& factory,
                                          FieldTagInfo& info );
 
-} // namespace Wasatch
+} // namespace WasatchCore
 #endif // Wasatch_ScalabilityTestTransportEquation_h

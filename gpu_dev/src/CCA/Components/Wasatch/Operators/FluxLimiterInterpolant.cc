@@ -32,7 +32,7 @@
 
 #define LIMITER_TO_MACRO(limiterType) \
 switch (limiterType) { \
-  case Wasatch::SUPERBEE: \
+  case WasatchCore::SUPERBEE: \
     SUPERBEE \
   break;\
 }
@@ -161,7 +161,7 @@ set_advective_velocity( const PhiFaceT &theAdvectiveVelocity )
 template< typename PhiVolT, typename PhiFaceT >
 void
 FluxLimiterInterpolant<PhiVolT,PhiFaceT>::
-set_flux_limiter_type( Wasatch::ConvInterpMethods limiterType )
+set_flux_limiter_type( WasatchCore::ConvInterpMethods limiterType )
 {
   limiterType_ = limiterType;
 }
@@ -308,17 +308,17 @@ apply_to_field( const PhiVolT &src, PhiFaceT &dest )
     const bool isBoundaryFace = (hasMinusBoundary_ && direc==0) || (hasPlusBoundary_ && direc==1);    
 
     switch (limiterType_) {
-    case Wasatch::UPWIND  : d <<= CALCULATE_BOUNDARY_LIMITER(*fdir, *r, UPWIND   ); break;
-    case Wasatch::SUPERBEE: d <<= CALCULATE_BOUNDARY_LIMITER(*fdir, *r, SUPERBEE ); break;
-    case Wasatch::CHARM   : d <<= CALCULATE_BOUNDARY_LIMITER(*fdir, *r, CHARM    ); break;
-    case Wasatch::KOREN   : d <<= CALCULATE_BOUNDARY_LIMITER(*fdir, *r, KOREN    ); break;
-    case Wasatch::MC      : d <<= CALCULATE_BOUNDARY_LIMITER(*fdir, *r, MC       ); break;
-    case Wasatch::OSPRE   : d <<= CALCULATE_BOUNDARY_LIMITER(*fdir, *r, OSPRE    ); break;
-    case Wasatch::SMART   : d <<= CALCULATE_BOUNDARY_LIMITER(*fdir, *r, SMART    ); break;
-    case Wasatch::VANLEER : d <<= CALCULATE_BOUNDARY_LIMITER(*fdir, *r, VANLEER  ); break;
-    case Wasatch::HCUS    : d <<= CALCULATE_BOUNDARY_LIMITER(*fdir, *r, HCUS     ); break;
-    case Wasatch::MINMOD  : d <<= CALCULATE_BOUNDARY_LIMITER(*fdir, *r, MINMOD   ); break;
-    case Wasatch::HQUICK  : d <<= CALCULATE_BOUNDARY_LIMITER(*fdir, *r, HQUICK   ); break;
+    case WasatchCore::UPWIND  : d <<= CALCULATE_BOUNDARY_LIMITER(*fdir, *r, UPWIND   ); break;
+    case WasatchCore::SUPERBEE: d <<= CALCULATE_BOUNDARY_LIMITER(*fdir, *r, SUPERBEE ); break;
+    case WasatchCore::CHARM   : d <<= CALCULATE_BOUNDARY_LIMITER(*fdir, *r, CHARM    ); break;
+    case WasatchCore::KOREN   : d <<= CALCULATE_BOUNDARY_LIMITER(*fdir, *r, KOREN    ); break;
+    case WasatchCore::MC      : d <<= CALCULATE_BOUNDARY_LIMITER(*fdir, *r, MC       ); break;
+    case WasatchCore::OSPRE   : d <<= CALCULATE_BOUNDARY_LIMITER(*fdir, *r, OSPRE    ); break;
+    case WasatchCore::SMART   : d <<= CALCULATE_BOUNDARY_LIMITER(*fdir, *r, SMART    ); break;
+    case WasatchCore::VANLEER : d <<= CALCULATE_BOUNDARY_LIMITER(*fdir, *r, VANLEER  ); break;
+    case WasatchCore::HCUS    : d <<= CALCULATE_BOUNDARY_LIMITER(*fdir, *r, HCUS     ); break;
+    case WasatchCore::MINMOD  : d <<= CALCULATE_BOUNDARY_LIMITER(*fdir, *r, MINMOD   ); break;
+    case WasatchCore::HQUICK  : d <<= CALCULATE_BOUNDARY_LIMITER(*fdir, *r, HQUICK   ); break;
     default               : d <<= 0.0;                                              break;
     }            
   }
@@ -348,17 +348,17 @@ apply_to_field( const PhiVolT &src, PhiFaceT &dest )
   *rp <<= (spp-sp)/(sp-sm);
       
   switch (limiterType_) {
-  case Wasatch::UPWIND  : d <<= 0.0;                                                   break;
-  case Wasatch::SUPERBEE: d <<= CALCULATE_INTERIOR_LIMITER(aVel, *rm, *rp, SUPERBEE ); break;
-  case Wasatch::CHARM   : d <<= CALCULATE_INTERIOR_LIMITER(aVel, *rm, *rp, CHARM    ); break;
-  case Wasatch::KOREN   : d <<= CALCULATE_INTERIOR_LIMITER(aVel, *rm, *rp, KOREN    ); break;
-  case Wasatch::MC      : d <<= CALCULATE_INTERIOR_LIMITER(aVel, *rm, *rp, MC       ); break;
-  case Wasatch::OSPRE   : d <<= CALCULATE_INTERIOR_LIMITER(aVel, *rm, *rp, OSPRE    ); break;
-  case Wasatch::SMART   : d <<= CALCULATE_INTERIOR_LIMITER(aVel, *rm, *rp, SMART    ); break;
-  case Wasatch::VANLEER : d <<= CALCULATE_INTERIOR_LIMITER(aVel, *rm, *rp, VANLEER  ); break;
-  case Wasatch::HCUS    : d <<= CALCULATE_INTERIOR_LIMITER(aVel, *rm, *rp, HCUS     ); break;
-  case Wasatch::MINMOD  : d <<= CALCULATE_INTERIOR_LIMITER(aVel, *rm, *rp, MINMOD   ); break;
-  case Wasatch::HQUICK  : d <<= CALCULATE_INTERIOR_LIMITER(aVel, *rm, *rp, HQUICK   ); break;
+  case WasatchCore::UPWIND  : d <<= 0.0;                                                   break;
+  case WasatchCore::SUPERBEE: d <<= CALCULATE_INTERIOR_LIMITER(aVel, *rm, *rp, SUPERBEE ); break;
+  case WasatchCore::CHARM   : d <<= CALCULATE_INTERIOR_LIMITER(aVel, *rm, *rp, CHARM    ); break;
+  case WasatchCore::KOREN   : d <<= CALCULATE_INTERIOR_LIMITER(aVel, *rm, *rp, KOREN    ); break;
+  case WasatchCore::MC      : d <<= CALCULATE_INTERIOR_LIMITER(aVel, *rm, *rp, MC       ); break;
+  case WasatchCore::OSPRE   : d <<= CALCULATE_INTERIOR_LIMITER(aVel, *rm, *rp, OSPRE    ); break;
+  case WasatchCore::SMART   : d <<= CALCULATE_INTERIOR_LIMITER(aVel, *rm, *rp, SMART    ); break;
+  case WasatchCore::VANLEER : d <<= CALCULATE_INTERIOR_LIMITER(aVel, *rm, *rp, VANLEER  ); break;
+  case WasatchCore::HCUS    : d <<= CALCULATE_INTERIOR_LIMITER(aVel, *rm, *rp, HCUS     ); break;
+  case WasatchCore::MINMOD  : d <<= CALCULATE_INTERIOR_LIMITER(aVel, *rm, *rp, MINMOD   ); break;
+  case WasatchCore::HQUICK  : d <<= CALCULATE_INTERIOR_LIMITER(aVel, *rm, *rp, HQUICK   ); break;
   default               : d <<= 0.0;                                                   break;
   }
 
