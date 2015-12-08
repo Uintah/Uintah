@@ -53,13 +53,23 @@ static AtomicCounter ids("Patch ID counter",0);
 static Mutex ids_init("ID init");
 extern SCIRun::Mutex coutLock; // Used to sync (when output by multiple threads)
 
-Patch::Patch(const Level* level,
-             const IntVector& lowIndex, const IntVector& highIndex,
-             const IntVector& inLowIndex, const IntVector& inHighIndex, 
-             unsigned int levelIndex,  int id)
-  : d_lowIndex(inLowIndex), d_highIndex(inHighIndex), 
-    d_grid(0), d_id(id) , d_realPatch(0), d_level_index(-1),
-    d_arrayBCS(0), d_interiorBndArrayBCS(0)
+Patch::Patch(
+               const Level          * level
+             , const IntVector      & lowIndex
+             , const IntVector      & highIndex
+             , const IntVector      & inLowIndex
+             , const IntVector      & inHighIndex
+             ,       unsigned int     levelIndex
+             ,       int              id
+            )
+  : d_lowIndex(inLowIndex)
+  , d_highIndex(inHighIndex)
+  , d_grid(0)
+  , d_id(id)
+  , d_realPatch(0)
+  , d_level_index(-1)
+  , d_arrayBCS(0)
+  , d_interiorBndArrayBCS(0)
 {
   
   if(d_id == -1){

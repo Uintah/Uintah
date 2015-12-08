@@ -68,7 +68,9 @@ Level::Level(         Grid       * grid
               ,       IntVector    refinementRatio
               ,       LevelFlags & flags
               ,       int          id     /* = -1   */ )
-    :  d_grid(grid)
+    :
+       d_levelSubsetPerProcPatchSetIndex(-1)
+     , d_grid(grid)
      , d_anchor(anchor)
      , d_dcell(dcell)
      , d_spatial_range(Point(DBL_MAX,DBL_MAX,DBL_MAX),Point(DBL_MIN,DBL_MIN,DBL_MIN))
@@ -88,6 +90,7 @@ Level::Level(         Grid       * grid
      , d_flags(flags)
      , d_bvh(NULL)
      , d_cachelock("Level Cache Lock")
+
 {
   if( d_id == -1 ) {
     d_id = ids++;  //
@@ -178,6 +181,8 @@ Level::addPatch( const IntVector & lowIndex,
                  const IntVector & inHighIndex,
                        Grid      * grid )
 {
+//  proc0cout << "Adding patch: " << lowIndex << " to " << highIndex << " on level: " << getIndex()
+//            << std::endl;
   Patch* r = scinew Patch( this, lowIndex,highIndex,inLowIndex, inHighIndex, getIndex() );
   r->setGrid(grid);
   d_realPatches.push_back(r);

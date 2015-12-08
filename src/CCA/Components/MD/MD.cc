@@ -375,7 +375,7 @@ void MD::scheduleInitialize(const LevelP&       level,
   // Get list of MD materials for scheduling
   const MaterialSet*    materials       =   d_sharedState->allMDMaterials();
   LoadBalancer*         loadBal         =   sched->getLoadBalancer();
-  const PatchSet*       perProcPatches  =   loadBal->getPerProcessorPatchSet(level->getSubsetIndex());
+  const PatchSet*       perProcPatches  =   loadBal->getPerProcessorPatchSet(level->getPerProcSubsetPatchSetIndex() );
 
   const std::string flowLocation = "MD::scheduleInitialize | ";
   printSchedule(perProcPatches, md_cout, flowLocation);
