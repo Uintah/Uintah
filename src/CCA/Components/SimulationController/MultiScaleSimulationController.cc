@@ -211,8 +211,7 @@ MultiScaleSimulationController::run()
   }
   LevelSet runningLevelSet;
   size_t numComponentsInitialized = initializationComponentIndices.size();
-  for (size_t componentIndex = 0; componentIndex < numComponentsInitialized; ++componentIndex)
-  {
+  for (size_t componentIndex = 0; componentIndex < numComponentsInitialized; ++componentIndex) {
     runningLevelSet.addAll(currentGrid->getLevelSubset(componentIndex)->getVector());
   }
 
