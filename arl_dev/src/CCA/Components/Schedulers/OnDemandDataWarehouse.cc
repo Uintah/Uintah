@@ -103,7 +103,7 @@ struct ParticleSend : public RefCounted {
 #define  BULLETPROOFING_FOR_CUBIC_DOMAINS  // comment out when running on non-cubic domains.
                                            // The getRegion() exceptions don't apply.
 
-bool OnDemandDataWarehouse::d_combineMemory=true;
+bool OnDemandDataWarehouse::d_combineMemory = false;
 
 
 //______________________________________________________________________
