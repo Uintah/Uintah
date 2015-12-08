@@ -249,6 +249,14 @@ public:
     d_subsetIndex = inputIndex;
   }
 
+  void setPerProcSubsetPatchSetIndex( const int &index) {
+    d_levelSubsetPerProcPatchSetIndex = index;
+  }
+
+  int getPerProcSubsetPatchSetIndex() const {
+    return d_levelSubsetPerProcPatchSetIndex;
+  }
+
   // Grid spacing
   inline Vector dCell() const { return d_dcell; }
   
@@ -350,6 +358,10 @@ private:
   Level( const Level& );
   Level& operator=( const Level& );
       
+
+  // Quick and dirty to handle indirection of perSubset, perProcessorLevelBasedPatchSets
+  int d_levelSubsetPerProcPatchSetIndex;
+
   std::vector<Patch*> d_patches;
 
   Grid        * d_grid;
