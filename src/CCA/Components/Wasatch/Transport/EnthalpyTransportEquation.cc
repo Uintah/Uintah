@@ -33,7 +33,7 @@
 #include <CCA/Components/Wasatch/TagNames.h>
 #include <CCA/Components/Wasatch/Expressions/DiffusiveVelocity.h>
 
-namespace Wasatch {
+namespace WasatchCore {
 
   class EnthDiffCoeff
    : public Expr::Expression<SVolField>
@@ -181,4 +181,4 @@ namespace Wasatch {
 
   //---------------------------------------------------------------------------
 
-} /* namespace Wasatch */
+} /* namespace WasatchCore */

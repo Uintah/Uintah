@@ -2,7 +2,7 @@
 #include <CCA/Components/Wasatch/Transport/ParticleSizeEquation.h>
 #include <Core/Exceptions/ProblemSetupException.h>
 #include <expression/ExprLib.h>
-namespace Wasatch{
+namespace WasatchCore{
 
 
   // #################################################################

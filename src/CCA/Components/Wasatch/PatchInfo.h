@@ -33,7 +33,7 @@
 
 namespace SpatialOps{ class OperatorDatabase; }
 
-namespace Wasatch{
+namespace WasatchCore{
 
   /**
    *  \ingroup WasatchCore

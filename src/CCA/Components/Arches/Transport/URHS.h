@@ -115,7 +115,7 @@ private:
 
     bool _do_conv;
 
-    Wasatch::ConvInterpMethods _limiter_type;
+    WasatchCore::ConvInterpMethods _limiter_type;
 
   }; //class URHS
 
@@ -160,29 +160,29 @@ private:
       _do_conv = true;
 
       if ( _conv_scheme == "superbee"){
-        _limiter_type = Wasatch::SUPERBEE;
+        _limiter_type = WasatchCore::SUPERBEE;
       } else if ( _conv_scheme == "central"){
-        _limiter_type = Wasatch::CENTRAL;
+        _limiter_type = WasatchCore::CENTRAL;
       } else if ( _conv_scheme == "upwind"){
-        _limiter_type = Wasatch::UPWIND;
+        _limiter_type = WasatchCore::UPWIND;
       } else if ( _conv_scheme == "charm"){
-        _limiter_type = Wasatch::CHARM;
+        _limiter_type = WasatchCore::CHARM;
       } else if ( _conv_scheme == "koren"){
-        _limiter_type = Wasatch::KOREN;
+        _limiter_type = WasatchCore::KOREN;
       } else if ( _conv_scheme == "mc"){
-        _limiter_type = Wasatch::MC;
+        _limiter_type = WasatchCore::MC;
       } else if ( _conv_scheme == "ospre"){
-        _limiter_type = Wasatch::OSPRE;
+        _limiter_type = WasatchCore::OSPRE;
       } else if ( _conv_scheme == "smart"){
-        _limiter_type = Wasatch::SMART;
+        _limiter_type = WasatchCore::SMART;
       } else if ( _conv_scheme == "vanleer"){
-        _limiter_type = Wasatch::VANLEER;
+        _limiter_type = WasatchCore::VANLEER;
       } else if ( _conv_scheme == "hcus"){
-        _limiter_type = Wasatch::HCUS;
+        _limiter_type = WasatchCore::HCUS;
       } else if ( _conv_scheme == "minmod"){
-        _limiter_type = Wasatch::MINMOD;
+        _limiter_type = WasatchCore::MINMOD;
       } else if ( _conv_scheme == "hquick"){
-        _limiter_type = Wasatch::HQUICK;
+        _limiter_type = WasatchCore::HQUICK;
       } else {
         throw InvalidValue("Error: Convection scheme not supported for scalar.",__FILE__,__LINE__);
       }

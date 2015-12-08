@@ -42,7 +42,7 @@
  *  \brief Parser tools for transport equations.
  */
 
-namespace Wasatch{
+namespace WasatchCore{
 
   class TimeStepper;
   class EquationBase;
@@ -285,6 +285,6 @@ namespace Wasatch{
 
   /** @} */
 
-}// namespace Wasatch
+}// namespace WasatchCore
 
 #endif // Wasatch_ParseEquations_h

@@ -29,7 +29,7 @@
 #include <expression/ExprLib.h>
 
 
-namespace Wasatch{
+namespace WasatchCore{
 
 
   /**

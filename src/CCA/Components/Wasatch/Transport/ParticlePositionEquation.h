@@ -27,7 +27,7 @@
 
 #include "ParticleEquationBase.h"
 
-namespace Wasatch{
+namespace WasatchCore{
 
 
   /**

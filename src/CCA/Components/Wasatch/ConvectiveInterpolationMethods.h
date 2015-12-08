@@ -34,7 +34,7 @@
  * \file ConvectiveInterpolationMethods.h
  */
 
-namespace Wasatch {
+namespace WasatchCore {
 
   /**
    *  \enum ConvInterpMethods
@@ -70,6 +70,6 @@ namespace Wasatch {
    */
   std::string get_conv_interp_method( const ConvInterpMethods method );
 
-} // namespace Wasatch
+} // namespace WasatchCore
 
 #endif

@@ -53,7 +53,7 @@ namespace Uintah{
   class DataWarehouse;
 }
 
-namespace Wasatch {
+namespace WasatchCore {
 
   class Wasatch;  // forward declaration
 
@@ -137,5 +137,5 @@ namespace Wasatch {
     bool reduceOnAllRKStages_;
   };
 
-} /* namespace Wasatch */
+} /* namespace WasatchCore */
 #endif /* Reduction_Helper_h */

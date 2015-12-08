@@ -41,7 +41,7 @@
 //-- ExprLib includes --//
 #include <expression/ExprLib.h>
 
-namespace Wasatch{
+namespace WasatchCore{
   
   EmbeddedGeometryHelper::EmbeddedGeometryHelper() :
     svolfrac_(""),

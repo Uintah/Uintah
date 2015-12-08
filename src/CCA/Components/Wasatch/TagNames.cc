@@ -25,7 +25,7 @@
 //-- Wasatch includes --//
 #include "TagNames.h"
 
-namespace Wasatch{
+namespace WasatchCore{
   
   //------------------------------------------------------------------
   
@@ -162,4 +162,4 @@ namespace Wasatch{
   
   //------------------------------------------------------------------
   
-} // namespace Wasatch
+} // namespace WasatchCore

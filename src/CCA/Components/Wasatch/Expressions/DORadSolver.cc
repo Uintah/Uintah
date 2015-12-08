@@ -131,7 +131,7 @@ OrdinateDirections::~OrdinateDirections()
 
 //==============================================================================
 
-namespace Wasatch {
+namespace WasatchCore {
 
   Expr::TagList DORadSolver::intensityTags = Expr::TagList();
 
@@ -164,9 +164,9 @@ namespace Wasatch {
     matrixLabel_   ( Uintah::VarLabel::create( intensityName + "_matrix",
                                                Uintah::CCVariable<Uintah::Stencil7>::getTypeDescription() ) ),
     intensityLabel_( Uintah::VarLabel::create( intensityName,
-                                               Wasatch::get_uintah_field_type_descriptor<SVolField>() ) ),
+                                               WasatchCore::get_uintah_field_type_descriptor<SVolField>() ) ),
     rhsLabel_      ( Uintah::VarLabel::create( intensityRHSName,
-                                               Wasatch::get_uintah_field_type_descriptor<SVolField>() ) )
+                                               WasatchCore::get_uintah_field_type_descriptor<SVolField>() ) )
   {
     this->set_gpu_runnable( false );
     
@@ -472,4 +472,4 @@ namespace Wasatch {
 
   //============================================================================
 
-} // namespace Wasatch
+} // namespace WasatchCore

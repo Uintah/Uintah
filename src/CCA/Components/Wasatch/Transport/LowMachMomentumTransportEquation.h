@@ -39,7 +39,7 @@
 #include <Core/Parallel/UintahParallelComponent.h>
 #include <CCA/Ports/SolverInterface.h>
 
-namespace Wasatch{
+namespace WasatchCore{
 
   /**
    *  \ingroup WasatchCore
@@ -51,7 +51,7 @@ namespace Wasatch{
    *
    */
   template< typename FieldT >
-  class LowMachMomentumTransportEquation : public Wasatch::MomentumTransportEquationBase<FieldT>
+  class LowMachMomentumTransportEquation : public WasatchCore::MomentumTransportEquationBase<FieldT>
   {
   public:
 
@@ -130,6 +130,6 @@ namespace Wasatch{
 
   };
 
-} // namespace Wasatch
+} // namespace WasatchCore
 
 #endif // Wasatch_LowMachMomentumTransportEquation_h

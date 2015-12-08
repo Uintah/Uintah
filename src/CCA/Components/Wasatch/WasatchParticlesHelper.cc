@@ -40,7 +40,7 @@
 #include <Core/GeometryPiece/GeometryPiece.h>
 #include <Core/GeometryPiece/GeometryPieceFactory.h>
 
-namespace Wasatch {
+namespace WasatchCore {
   
   //==================================================================
   
@@ -244,4 +244,4 @@ namespace Wasatch {
   
   //--------------------------------------------------------------------
   
-} /* namespace Wasatch */
+} /* namespace WasatchCore */

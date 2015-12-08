@@ -58,7 +58,7 @@
  * \author  Tony Saad
  */
 
-namespace Wasatch {
+namespace WasatchCore {
 
   // This function returns true if the boundary condition is applied in the same direction
   // as the staggered field. For example, xminus/xplus on a XVOL field.

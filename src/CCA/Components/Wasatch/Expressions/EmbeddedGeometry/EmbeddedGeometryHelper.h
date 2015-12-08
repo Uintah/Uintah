@@ -41,7 +41,7 @@ namespace Expr{
   class ExpressionBuilder;
 }
 
-namespace Wasatch{
+namespace WasatchCore{
   
   class EmbeddedGeometryHelper
   {
@@ -102,7 +102,7 @@ namespace Wasatch{
   void
   apply_intrusion_boundary_conditions(WasatchBCHelper& bcHelper);
 
-} // namespace Wasatch
+} // namespace WasatchCore
 
 
 #endif // Wasatch_EmbeddedGeometryHelper_h

@@ -32,7 +32,7 @@
 namespace SpatialOps{ class OperatorDatabase; }  // forward declaration
 namespace Uintah{ class Patch; }
 
-namespace Wasatch{
+namespace WasatchCore{
 
   /**
    *  \ingroup WasatchOperators
@@ -52,6 +52,6 @@ namespace Wasatch{
                         SpatialOps::OperatorDatabase& opDB );
 
 
-} // namespace Wasatch
+} // namespace WasatchCore
 
 #endif // Wasatch_Operators_h

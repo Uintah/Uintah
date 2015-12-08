@@ -45,7 +45,7 @@
 
 using std::endl;
 
-namespace Wasatch{
+namespace WasatchCore{
 
   //------------------------------------------------------------------
 
@@ -100,7 +100,7 @@ namespace Wasatch{
   ScalabilityTestTransportEquation( GraphCategories& gc,
                                     const std::string thisPhiName,
                                     Uintah::ProblemSpecP params )
-  : Wasatch::TransportEquation( gc,
+  : WasatchCore::TransportEquation( gc,
                                 thisPhiName,
                                 get_staggered_location<FieldT>(),
                                 true),   // always constant density
@@ -287,4 +287,4 @@ namespace Wasatch{
   //==================================================================
 
 
-} // namespace Wasatch
+} // namespace WasatchCore

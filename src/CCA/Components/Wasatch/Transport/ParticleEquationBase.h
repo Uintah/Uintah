@@ -44,7 +44,7 @@
 #include <CCA/Components/Wasatch/Expressions/RHSTerms.h>
 #include <CCA/Components/Wasatch/Transport/EquationBase.h>
 
-namespace Wasatch{
+namespace WasatchCore{
 
   class ExprDeps;  // forward declaration.
   class GraphHelper;
@@ -91,6 +91,6 @@ namespace Wasatch{
 //  // helper functions
 //  ParticleEquationBase::ParticleDirection string_to_particle_direction(const std::string& dirname);
 //  std::string particle_direction_to_string(const ParticleEquationBase::ParticleDirection dir);
-} // namespace Wasatch
+} // namespace WasatchCore
 
 #endif // Wasatch_ParticleEquationBase_h

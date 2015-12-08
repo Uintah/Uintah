@@ -54,7 +54,7 @@ using std::endl;
 namespace so=SpatialOps;
 
 
-namespace Wasatch{
+namespace WasatchCore{
 
   //==================================================================
   
@@ -268,4 +268,4 @@ namespace Wasatch{
   template void TimeStepper::add_equation<so::YVolField              >( const std::string&, const Expr::ExpressionID& );
   template void TimeStepper::add_equation<so::ZVolField              >( const std::string&, const Expr::ExpressionID& );
   template void TimeStepper::add_equation<so::Particle::ParticleField>( const std::string&, const Expr::ExpressionID& );
-} // namespace Wasatch
+} // namespace WasatchCore

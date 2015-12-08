@@ -37,7 +37,7 @@
 // forward declaration
 namespace Expr{ class Tag; }
 
-namespace Wasatch{
+namespace WasatchCore{
 
   /**
    *  \ingroup WasatchParser
@@ -89,7 +89,7 @@ namespace Wasatch{
   template <typename T>
   std::string number_to_string ( T n );
   
-} // namespace Wasatch
+} // namespace WasatchCore
 
 
 #endif // Wasatch_ParseTools_h

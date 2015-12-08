@@ -51,10 +51,10 @@ private:
   
   
   // extrapolant operators
-  typedef typename Wasatch::OpTypes<SVolField>::BoundaryExtrapolant ExOpT;
-  typedef typename Wasatch::OpTypes<Vel1T>::BoundaryExtrapolant XExOpT;
-  typedef typename Wasatch::OpTypes<Vel2T>::BoundaryExtrapolant YExOpT;
-  typedef typename Wasatch::OpTypes<Vel3T>::BoundaryExtrapolant ZExOpT;
+  typedef typename WasatchCore::OpTypes<SVolField>::BoundaryExtrapolant ExOpT;
+  typedef typename WasatchCore::OpTypes<Vel1T>::BoundaryExtrapolant XExOpT;
+  typedef typename WasatchCore::OpTypes<Vel2T>::BoundaryExtrapolant YExOpT;
+  typedef typename WasatchCore::OpTypes<Vel3T>::BoundaryExtrapolant ZExOpT;
   
   ExOpT*   exOp_;
   XExOpT*  xexOp_;

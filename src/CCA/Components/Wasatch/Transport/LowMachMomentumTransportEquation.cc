@@ -71,7 +71,7 @@
 
 using std::string;
 
-namespace Wasatch{
+namespace WasatchCore{
 
 
   //==================================================================
@@ -570,4 +570,4 @@ namespace Wasatch{
   template class LowMachMomentumTransportEquation< ZVolField >;
   //==================================================================
 
-} // namespace Wasatch
+} // namespace WasatchCore

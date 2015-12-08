@@ -36,7 +36,7 @@
 #include <string>
 #include <sstream>
 
-namespace Wasatch{
+namespace WasatchCore{
 
   Expr::Tag
   parse_nametag( Uintah::ProblemSpecP param )
@@ -155,4 +155,4 @@ namespace Wasatch{
 
   //============================================================================
   
-} // namespace Wasatch
+} // namespace WasatchCore

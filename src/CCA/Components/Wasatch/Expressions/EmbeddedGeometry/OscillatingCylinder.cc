@@ -45,7 +45,7 @@ OscillatingCylinder( const std::string& axis,
   amplitude_(amplitude)
 {
   Expr::Tag tag1, tag2;
-  const Wasatch::TagNames& tagNames = Wasatch::TagNames::self();
+  const WasatchCore::TagNames& tagNames = WasatchCore::TagNames::self();
   if ( axis == "X" ) {
     tag1 = tagNames.ysvolcoord;
     tag2 = tagNames.zsvolcoord;

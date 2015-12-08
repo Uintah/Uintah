@@ -53,29 +53,29 @@ ScalarRHS::problemSetup( ProblemSpecP& db ){
     _do_conv = true;
 
     if ( _conv_scheme == "superbee") {
-      _limiter_type = Wasatch::SUPERBEE;
+      _limiter_type = WasatchCore::SUPERBEE;
     } else if ( _conv_scheme == "central") {
-      _limiter_type = Wasatch::CENTRAL;
+      _limiter_type = WasatchCore::CENTRAL;
     } else if ( _conv_scheme == "upwind") {
-      _limiter_type = Wasatch::UPWIND;
+      _limiter_type = WasatchCore::UPWIND;
     } else if ( _conv_scheme == "charm") {
-      _limiter_type = Wasatch::CHARM;
+      _limiter_type = WasatchCore::CHARM;
     } else if ( _conv_scheme == "koren") {
-      _limiter_type = Wasatch::KOREN;
+      _limiter_type = WasatchCore::KOREN;
     } else if ( _conv_scheme == "mc") {
-      _limiter_type = Wasatch::MC;
+      _limiter_type = WasatchCore::MC;
     } else if ( _conv_scheme == "ospre") {
-      _limiter_type = Wasatch::OSPRE;
+      _limiter_type = WasatchCore::OSPRE;
     } else if ( _conv_scheme == "smart") {
-      _limiter_type = Wasatch::SMART;
+      _limiter_type = WasatchCore::SMART;
     } else if ( _conv_scheme == "vanleer") {
-      _limiter_type = Wasatch::VANLEER;
+      _limiter_type = WasatchCore::VANLEER;
     } else if ( _conv_scheme == "hcus") {
-      _limiter_type = Wasatch::HCUS;
+      _limiter_type = WasatchCore::HCUS;
     } else if ( _conv_scheme == "minmod") {
-      _limiter_type = Wasatch::MINMOD;
+      _limiter_type = WasatchCore::MINMOD;
     } else if ( _conv_scheme == "hquick") {
-      _limiter_type = Wasatch::HQUICK;
+      _limiter_type = WasatchCore::HQUICK;
     } else {
       throw InvalidValue("Error: Convection scheme not supported for scalar.",__FILE__,__LINE__);
     }
@@ -350,12 +350,12 @@ ScalarRHS::compute_bcs( const Patch* patch, ArchesTaskInfoManager* tsk_info,
   for ( BCHelperMapTL::iterator ihelper = _bcHelperMap->begin();
         ihelper != _bcHelperMap->end(); ihelper++ ) {
 
-    const Wasatch::BndMapT& bc =  ihelper->second->get_boundary_information(); //boundary name, boundary spec
+    const WasatchCore::BndMapT& bc =  ihelper->second->get_boundary_information(); //boundary name, boundary spec
 
-    for ( map<std::string, Wasatch::BndSpec>::const_iterator ibc_info = bc.begin();
+    for ( map<std::string, WasatchCore::BndSpec>::const_iterator ibc_info = bc.begin();
           ibc_info != bc.end(); ibc_info++ ) {
 
-      const Wasatch::BndCondSpec* mybc = ibc_info->second.find(_task_name);
+      const WasatchCore::BndCondSpec* mybc = ibc_info->second.find(_task_name);
 
       /// @TODO: Perform this check upstream so I don't have to do it here.
       if ( mybc != NULL ) {
