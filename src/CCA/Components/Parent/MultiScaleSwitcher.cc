@@ -933,7 +933,7 @@ MultiScaleSwitcher::needRecompile(       double   time,
     LevelSet running_level_set;
     size_t numIndices = componentSubsetIndices.size();
     for (size_t subsetIndex = 0; subsetIndex < numIndices; ++subsetIndex) {
-      running_level_set.addAll(grid->getLevelSubset(subsetIndex)->getVector());
+      running_level_set.addAll(grid->getLevelSubset(componentSubsetIndices[subsetIndex])->getVector());
     }
 
     // re-map each level to the subset it belongs to

@@ -1646,7 +1646,7 @@ Grid::problemSetup(  const ProblemSpecP   & params
         // Place a pointer to the level subset in the level for easy retrieval
         d_levels[currIndex]->setLevelSubset(currLevelSubset);
       }
-      levelIndex += numLevels;
+      levelIndex += currLevelSubset->size();
       ++currentSubsetIndex;
       levelset_ps = levelset_ps->findNextBlock("LevelSet"); // Find next Levelset block
     }
