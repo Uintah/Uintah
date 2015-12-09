@@ -1028,7 +1028,6 @@ namespace WasatchCore{
                                          Expr::Tag convFluxTag,
                                          const ConvInterpMethods convMethod,
                                          const Expr::Tag& advVelocityTag,
-                                         const std::string& suffix,
                                          Expr::ExpressionFactory& factory,
                                          FieldTagInfo& info )
   {
@@ -1045,11 +1044,11 @@ namespace WasatchCore{
 
     if( convFluxTag == Expr::Tag() ){
       const TagNames& tagNames = TagNames::self();
-      convFluxTag = Expr::Tag( solnVarTag.name() + suffix + tagNames.convectiveflux + dir, Expr::STATE_NONE );
+      convFluxTag = Expr::Tag( solnVarTag.name() + tagNames.convectiveflux + dir, Expr::STATE_NONE );
       // make new Tag for solnVar by adding the appropriate suffix ( "_*" or nothing ). This
       // is because we need the ScalarRHS at time step n+1 for our pressure projection method
-      Expr::Tag solnVarCorrectedTag;
-      solnVarCorrectedTag = Expr::Tag(solnVarTag.name(),   suffix=="" ? Expr::STATE_DYNAMIC : Expr::STATE_NONE );
+//      Expr::Tag solnVarCorrectedTag;
+//      solnVarCorrectedTag = Expr::Tag(solnVarTag.name(),   suffix=="" ? Expr::STATE_DYNAMIC : Expr::STATE_NONE );
 
       Expr::ExpressionBuilder* builder = NULL;
 
@@ -1062,7 +1061,7 @@ namespace WasatchCore{
             typename OperatorTypeBuilder<Interpolant,FieldT,   XFace>::type, // scalar interp type
             typename OperatorTypeBuilder<Interpolant,XVolField,XFace>::type  // velocity interp type
             >::Builder ConvFluxLim;
-        builder = scinew ConvFluxLim( convFluxTag, solnVarCorrectedTag, advVelocityTag, convMethod, info[VOLUME_FRAC] );
+        builder = scinew ConvFluxLim( convFluxTag, solnVarTag, advVelocityTag, convMethod, info[VOLUME_FRAC] );
       }
       else if( dir=="Y" ){
         proc0cout << "SETTING UP CONVECTIVE FLUX EXPRESSION IN Y DIRECTION USING " << interpMethod << std::endl;
@@ -1072,7 +1071,7 @@ namespace WasatchCore{
             typename OperatorTypeBuilder<Interpolant,FieldT,   YFace>::type, // scalar interp type
             typename OperatorTypeBuilder<Interpolant,YVolField,YFace>::type  // velocity interp type
             >::Builder ConvFluxLim;
-        builder = scinew ConvFluxLim( convFluxTag, solnVarCorrectedTag, advVelocityTag, convMethod, info[VOLUME_FRAC] );
+        builder = scinew ConvFluxLim( convFluxTag, solnVarTag, advVelocityTag, convMethod, info[VOLUME_FRAC] );
       }
       else if( dir=="Z") {
         proc0cout << "SETTING UP CONVECTIVE FLUX EXPRESSION IN Z DIRECTION USING " << interpMethod << std::endl;
@@ -1082,7 +1081,7 @@ namespace WasatchCore{
             typename OperatorTypeBuilder<Interpolant,FieldT,   ZFace>::type, // scalar interp type
             typename OperatorTypeBuilder<Interpolant,ZVolField,ZFace>::type  // velocity interp type
             >::Builder ConvFluxLim;
-        builder = scinew ConvFluxLim( convFluxTag, solnVarCorrectedTag, advVelocityTag, convMethod, info[VOLUME_FRAC] );
+        builder = scinew ConvFluxLim( convFluxTag, solnVarTag, advVelocityTag, convMethod, info[VOLUME_FRAC] );
       }
 
       if( builder == NULL ){
@@ -1109,7 +1108,6 @@ namespace WasatchCore{
   template< typename FieldT >
   void setup_convective_flux_expression( Uintah::ProblemSpecP convFluxParams,
                                          const Expr::Tag& solnVarTag,
-                                         const std::string& suffix,
                                          Expr::ExpressionFactory& factory,
                                          FieldTagInfo& info )
   {
@@ -1123,9 +1121,6 @@ namespace WasatchCore{
     Uintah::ProblemSpecP advVelocityTagParam = convFluxParams->findBlock( "AdvectiveVelocity" );
     if( advVelocityTagParam ){
       advVelocityTag = parse_nametag( advVelocityTagParam->findBlock( "NameTag" ) );
-      // make new Tag for advective velocity by adding the appropriate suffix ( "_*" or nothing ). This
-      // is because we need the ScalarRHS at time step n+1 for our pressure projection method
-      advVelocityCorrectedTag = Expr::Tag(advVelocityTag.name() + suffix, advVelocityTag.context());
     }
 
     // see if we have an expression set for the advective flux.
@@ -1135,8 +1130,7 @@ namespace WasatchCore{
     setup_convective_flux_expression<FieldT>( dir,
                                               solnVarTag, convFluxTag,
                                               get_conv_interp_method(interpMethod),
-                                              advVelocityCorrectedTag,
-                                              suffix,
+                                              advVelocityTag,
                                               factory,
                                               info );
   }
@@ -1397,14 +1391,12 @@ namespace WasatchCore{
         Expr::Tag convFluxTag,                                  \
         const ConvInterpMethods convMethod,                     \
         const Expr::Tag& advVelocityTag,                        \
-        const std::string& suffix,                              \
         Expr::ExpressionFactory& factory,                       \
         FieldTagInfo& info );                                   \
                                                                 \
     template void setup_convective_flux_expression<FIELDT>(     \
         Uintah::ProblemSpecP convFluxParams,                    \
         const Expr::Tag& solnVarName,                           \
-        const std::string& suffix,                              \
         Expr::ExpressionFactory& factory,                       \
         FieldTagInfo& info );
 

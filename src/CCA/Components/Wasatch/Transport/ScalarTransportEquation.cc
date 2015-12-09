@@ -187,7 +187,7 @@ namespace WasatchCore{
         convFluxParams != 0;
         convFluxParams=convFluxParams->findNextBlock("ConvectiveFlux") )
     {
-      setup_convective_flux_expression<FieldT>( convFluxParams, solnVarTag, "", factory, info );
+      setup_convective_flux_expression<FieldT>( convFluxParams, solnVarTag, factory, info );
     }
   }
 
