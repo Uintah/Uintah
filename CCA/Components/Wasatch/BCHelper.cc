@@ -323,7 +323,7 @@ namespace WasatchCore {
     Uintah::IntVector bcPointIJK;
     
     Uintah::IntVector edgePoint;
-    const Uintah::IntVector idxHi = patch->getCellHighIndex() - IntVector(1,1,1);// - patchCellOffset;
+    const Uintah::IntVector idxHi = patch->getCellHighIndex() - Uintah::IntVector(1,1,1);// - patchCellOffset;
     const Uintah::IntVector idxLo = patch->getCellLowIndex();
 
     for( bndIter.reset(); !bndIter.done(); ++bndIter ){

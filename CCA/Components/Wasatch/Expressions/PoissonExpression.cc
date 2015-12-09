@@ -201,7 +201,7 @@ namespace WasatchCore {
       // definite matrix. For the Laplacian on a structured grid, the matrix A corresponding
       // to the Laplacian operator is not positive definite - but "- A" is. Hence,
       // we multiply all coefficients by -1.
-      IntVector iCell = *iter;
+      SCIRun::IntVector iCell = *iter;
       Uintah::Stencil7&  coefs = matrix_[iCell];
       coefs.w = -w;
       coefs.e = -w;
