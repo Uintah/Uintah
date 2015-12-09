@@ -212,7 +212,6 @@ namespace WasatchCore{
                                                   Expr::Tag(), /* default tag name for conv. flux */
                                                   CENTRAL,
                                                   xVelTag_,
-                                                  "",
                                                   *gc_[ADVANCE_SOLUTION]->exprFactory,
                                                   rhsInfo );
       if( yVelTag_ != Expr::Tag() )
@@ -220,7 +219,6 @@ namespace WasatchCore{
                                                   Expr::Tag(), /* default tag name for conv. flux */
                                                   CENTRAL,
                                                   yVelTag_,
-                                                  "",
                                                   *gc_[ADVANCE_SOLUTION]->exprFactory,
                                                   rhsInfo );
       if( zVelTag_ != Expr::Tag() )
@@ -228,7 +226,6 @@ namespace WasatchCore{
                                                   Expr::Tag(), /* default tag name for conv. flux */
                                                   CENTRAL,
                                                   zVelTag_,
-                                                  "",
                                                   *gc_[ADVANCE_SOLUTION]->exprFactory,
                                                   rhsInfo );
     }

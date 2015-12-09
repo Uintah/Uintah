@@ -263,7 +263,6 @@ namespace WasatchCore{
                                          Expr::Tag convFluxTag,
                                          const ConvInterpMethods convMethod,
                                          const Expr::Tag& advVelocityTag,
-                                         const std::string& suffix,
                                          Expr::ExpressionFactory& factory,
                                          FieldTagInfo& info );
 
@@ -279,7 +278,6 @@ namespace WasatchCore{
   template< typename FieldT >
   void setup_convective_flux_expression( Uintah::ProblemSpecP convFluxParams,
                                          const Expr::Tag& solnVarTag,
-                                         const std::string& suffix,
                                          Expr::ExpressionFactory& factory,
                                          FieldTagInfo& info );
 
