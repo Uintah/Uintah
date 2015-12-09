@@ -41,6 +41,7 @@ ifeq ($(LARGESOS),yes)
 else
   PSELIBS := \
       CCA/Ports         \
+      CCA/Components/Schedulers \
       CCA/Components/ProblemSpecification \
       Core/Containers   \
       Core/DataArchive  \
