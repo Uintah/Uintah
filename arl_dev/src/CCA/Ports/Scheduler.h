@@ -161,7 +161,7 @@ class Scheduler : public UintahParallelPort {
 
     virtual void setPositionVar(const VarLabel* posLabel) = 0;
     
-    virtual void scheduleParticleRelocation( const LevelP& coarsestLevelwithParticles,
+    virtual void scheduleParticleRelocation( const LevelP& level,
                                              const VarLabel* posLabel,
                                              const std::vector<std::vector<const VarLabel*> >& labels,
                                              const VarLabel* new_posLabel,
@@ -180,7 +180,7 @@ class Scheduler : public UintahParallelPort {
     //////////
     // Schedule particle relocation without the need to provide pre-relocation labels. Warning: This
     // is experimental and has not been fully tested yet. Use with caution (tsaad).
-    virtual void scheduleParticleRelocation( const LevelP& coarsestLevelwithParticles,
+    virtual void scheduleParticleRelocation( const LevelP& level,
                                              const VarLabel* posLabel,
                                              const std::vector<std::vector<const VarLabel*> >& otherLabels,
                                              const MaterialSet* matls ) = 0;

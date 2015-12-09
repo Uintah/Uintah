@@ -299,22 +299,18 @@ void MD::problemSetup(const ProblemSpecP&   params,
 //  MDSubcomponent* d_integratorInterface    = dynamic_cast<MDSubcomponent*> (d_integrator);
 //  MDSubcomponent* d_valenceInterface       = dynamic_cast<MDSubcomponent*> (d_valence);
 
-// Register the general labels that all MD simulations will use
-   d_particleState.clear();
-   d_particleState_preReloc.clear();
-   createBasePermanentParticleState();
-   // And then add the labels that each created subcomponent will require
-   d_integratorInterface->registerRequiredParticleStates(d_particleState,
-                                                         d_particleState_preReloc,
-                                                         d_label);
+  // Register the general labels that all MD simulations will use
+  d_particleState.clear();
+  d_particleState_preReloc.clear();
 
-   d_electrostaticInterface->registerRequiredParticleStates(d_particleState,
-                                                            d_particleState_preReloc,
-                                                            d_label);
+//  createBasePermanentParticleState();
 
-   d_nonbondedInterface->registerRequiredParticleStates(d_particleState,
-                                                        d_particleState_preReloc,
-                                                        d_label);
+  // And then add the labels that each created subcomponent will require
+  d_integratorInterface->registerRequiredParticleStates(d_particleState, d_particleState_preReloc, d_label);
+
+  d_electrostaticInterface->registerRequiredParticleStates(d_particleState, d_particleState_preReloc, d_label);
+
+  d_nonbondedInterface->registerRequiredParticleStates(d_particleState, d_particleState_preReloc, d_label);
 
    // We must wait to register our atom (material) types until the
    // subcomponents have provided the per-particle labels
@@ -375,7 +371,7 @@ void MD::scheduleInitialize(const LevelP&       level,
   // Get list of MD materials for scheduling
   const MaterialSet*    materials       =   d_sharedState->allMDMaterials();
   LoadBalancer*         loadBal         =   sched->getLoadBalancer();
-  const PatchSet*       perProcPatches  =   loadBal->getPerProcessorPatchSet(level->getPerProcSubsetPatchSetIndex() );
+  const PatchSet*       perProcPatches  =   loadBal->getPerProcessorPatchSet(level->getPerProcSubsetPatchSetIndex());
 
   const std::string flowLocation = "MD::scheduleInitialize | ";
   printSchedule(perProcPatches, md_cout, flowLocation);
