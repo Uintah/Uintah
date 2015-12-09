@@ -110,6 +110,8 @@ public:
   Regridder*           getRegridder() { return d_regridder; }
   DataArchive*         getDataArchive() { return d_archive; }
 
+  bool                 doAMR() { return d_doAMR; }
+
 protected:
 
   double getWallTime     ( void );
