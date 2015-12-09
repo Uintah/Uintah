@@ -424,6 +424,8 @@ void visit_CheckState( visit_simulation_data *sim )
 	  VisItUI_setValueS("SIMULATION_STATUS", msg.str().c_str(), 1);
 	}
 
+	sim->runMode = VISIT_SIMMODE_STOPPED;
+
         sim->blocking = 0;
         break;
       }
