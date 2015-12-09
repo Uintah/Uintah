@@ -73,14 +73,14 @@ Relocate:
                                              const MaterialSubset*                             matls
                                                    DataWarehouse*                              old_dw
                                                    DataWarehouse*                              new_dw
-                                             const Level*                                      coarsestLevelwithParticles)
+                                             const Level*                                      level)
    
    void  relocateParticles                  (const ProcessorGroup*                           /*null*/
                                              const PatchSubset*                                patches
                                              const MaterialSubset*                             matls
                                                    DataWarehouse*                              old_dw
                                                    DataWarehouse*                              new_dw
-                                             const Level*                                      coarsestLevelwithParticles)
+                                             const Level*                                      level)
                  
    void  exchangeParticles                  (const ProcessorGroup*                           /*null*/
                                              const PatchSubset*                                patches

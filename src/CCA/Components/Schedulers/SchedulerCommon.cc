@@ -1907,7 +1907,7 @@ SchedulerCommon::scheduleParticleRelocation( const LevelP&                      
 //______________________________________________________________________
 //
 void
-SchedulerCommon::scheduleParticleRelocation( const LevelP&                           coarsestLevelwithParticles,
+SchedulerCommon::scheduleParticleRelocation( const LevelP&                           level,
                                              const VarLabel*                         old_posLabel,
                                              const vector<vector<const VarLabel*> >& old_labels,
                                              const VarLabel*                         new_posLabel,
@@ -1922,7 +1922,7 @@ SchedulerCommon::scheduleParticleRelocation( const LevelP&                      
   reloc_new_posLabel_ = new_posLabel;
   UintahParallelPort* lbp = getPort("load balancer");
   LoadBalancer* lb = dynamic_cast<LoadBalancer*>(lbp);
-  reloc1_.scheduleParticleRelocation(this, d_myworld, lb, coarsestLevelwithParticles, old_posLabel, old_labels, new_posLabel,
+  reloc1_.scheduleParticleRelocation(this, d_myworld, lb, level, old_posLabel, old_labels, new_posLabel,
                                      new_labels, particleIDLabel, matls);
   releasePort("load balancer");
 }
@@ -1930,7 +1930,7 @@ SchedulerCommon::scheduleParticleRelocation( const LevelP&                      
 //______________________________________________________________________
 //
 void
-SchedulerCommon::scheduleParticleRelocation( const LevelP&                           coarsestLevelwithParticles,
+SchedulerCommon::scheduleParticleRelocation( const LevelP&                           level,
                                              const VarLabel*                         posLabel,
                                              const vector<vector<const VarLabel*> >& otherLabels,
                                              const MaterialSet*                      matls )
@@ -1938,7 +1938,7 @@ SchedulerCommon::scheduleParticleRelocation( const LevelP&                      
   reloc_new_posLabel_ = posLabel;
   UintahParallelPort* lbp = getPort("load balancer");
   LoadBalancer* lb = dynamic_cast<LoadBalancer*>(lbp);
-  reloc1_.scheduleParticleRelocation(this, d_myworld, lb, coarsestLevelwithParticles, posLabel, otherLabels, matls);
+  reloc1_.scheduleParticleRelocation(this, d_myworld, lb, level, posLabel, otherLabels, matls);
   releasePort("load balancer");
 }
 

@@ -208,7 +208,7 @@ class SchedulerCommon : public Scheduler, public UintahParallelComponent {
                                             const MaterialSet* matls,
                                                   int which);
 
-    virtual void scheduleParticleRelocation(const LevelP& coarsestLevelwithParticles,
+    virtual void scheduleParticleRelocation(const LevelP& level,
                                             const VarLabel* old_posLabel,
                                             const std::vector<std::vector<const VarLabel*> >& old_labels,
                                             const VarLabel* new_posLabel,

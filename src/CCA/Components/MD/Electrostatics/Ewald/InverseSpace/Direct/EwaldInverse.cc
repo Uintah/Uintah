@@ -125,12 +125,10 @@ void Ewald::registerRequiredParticleStates(varLabelArray& particleState,
 
    // We -probably- don't need relocatable Force information, however it may be
    // the easiest way to implement the required per-particle Force information.
-   particleState.push_back(label->electrostatic->pF_electroInverse);
-   particleState_preReloc.push_back(
-                         label->electrostatic->pF_electroInverse_preReloc);
-   particleState.push_back(label->electrostatic->pF_electroReal);
-   particleState_preReloc.push_back(
-                         label->electrostatic->pF_electroReal_preReloc);
+  particleState.push_back(label->electrostatic->pF_electroInverse);
+  particleState_preReloc.push_back(label->electrostatic->pF_electroInverse_preReloc);
+  particleState.push_back(label->electrostatic->pF_electroReal);
+  particleState_preReloc.push_back(label->electrostatic->pF_electroReal_preReloc);
 
    // Note:  Per particle charges may be required in some FF implementations
    //        (i.e. ReaxFF), however we will let the FF themselves register these
