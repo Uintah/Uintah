@@ -144,7 +144,8 @@ AMRMPM::AMRMPM(const ProcessorGroup* myworld) :SerialMPM(myworld)
   d_one_matl->add(0);
   d_one_matl->addReference();
 }
-
+//______________________________________________________________________
+//
 AMRMPM::~AMRMPM()
 {
 //  delete lb;
@@ -1230,7 +1231,8 @@ void AMRMPM::scheduleInterpolateToParticlesAndUpdate(SchedulerP& sched,
 #endif  
   sched->addTask(t, patches, matls);
 }
-
+//______________________________________________________________________
+//
 void AMRMPM::scheduleComputeParticleScaleFactor(SchedulerP& sched,
                                                 const PatchSet* patches,
                                                 const MaterialSet* matls)
@@ -1252,7 +1254,8 @@ void AMRMPM::scheduleComputeParticleScaleFactor(SchedulerP& sched,
 
   sched->addTask(t, patches, matls);
 }
-
+//______________________________________________________________________
+//
 void AMRMPM::scheduleFinalParticleUpdate(SchedulerP& sched,
                                          const PatchSet* patches,
                                          const MaterialSet* matls)
@@ -1276,7 +1279,8 @@ void AMRMPM::scheduleFinalParticleUpdate(SchedulerP& sched,
 
   sched->addTask(t, patches, matls);
 }
-
+//______________________________________________________________________
+//
 void AMRMPM::scheduleAddParticles(SchedulerP& sched,
                                   const PatchSet* patches,
                                   const MaterialSet* matls)
@@ -1327,7 +1331,8 @@ void AMRMPM::scheduleAddParticles(SchedulerP& sched,
     sched->addTask(t, patches, matls);
 }
 
-
+//______________________________________________________________________
+//
 void AMRMPM::scheduleReduceFlagsExtents(SchedulerP& sched,
                                        const PatchSet* patches,
                                        const MaterialSet* matls)
@@ -1456,7 +1461,8 @@ void AMRMPM::scheduleCoarsen(const LevelP& coarseLevel,
 
   sched->addTask(task, patch_set, all_matls);
 }
-
+//______________________________________________________________________
+//
 void AMRMPM::coarsen(const ProcessorGroup*,
                      const PatchSubset* patches,
                      const MaterialSubset* matls,
@@ -3597,7 +3603,8 @@ void AMRMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
     delete interpolator;
   }
 }
-
+//______________________________________________________________________
+//
 void AMRMPM::finalParticleUpdate(const ProcessorGroup*,
                                  const PatchSubset* patches,
                                  const MaterialSubset* ,
@@ -3645,7 +3652,8 @@ void AMRMPM::finalParticleUpdate(const ProcessorGroup*,
     } // materials
   } // patches
 }
-
+//______________________________________________________________________
+//
 void AMRMPM::addParticles(const ProcessorGroup*,
                           const PatchSubset* patches,
                           const MaterialSubset* ,
@@ -3979,7 +3987,8 @@ void AMRMPM::addParticles(const ProcessorGroup*,
     }  // for matls
   }    // for patches
 }
-
+//______________________________________________________________________
+//
 void AMRMPM::reduceFlagsExtents(const ProcessorGroup*,
                                 const PatchSubset* patches,
                                 const MaterialSubset* ,
@@ -4336,7 +4345,7 @@ void AMRMPM::scheduleDebug_CFI(SchedulerP& sched,
                    
    Ghost::GhostType  gn = Ghost::None;
   t->requires(Task::OldDW, lb->pXLabel,                  gn,0);
-  t->requires(Task::NewDW, lb->pSizeLabel,               gn,0);
+  t->requires(Task::OldDW, lb->pSizeLabel,               gn,0);
   t->requires(Task::OldDW, lb->pDeformationMeasureLabel, gn,0);
   
   if(level->hasFinerLevel()){ 
@@ -4376,7 +4385,7 @@ void AMRMPM::debug_CFI(const ProcessorGroup*,
     ParticleVariable<double>  pColor;
     
     old_dw->get(px,                   lb->pXLabel,                  pset);
-    new_dw->get(psize,                lb->pSizeLabel,               pset);
+    old_dw->get(psize,                lb->pSizeLabel,               pset);
     old_dw->get(pDeformationMeasure,  lb->pDeformationMeasureLabel, pset);
     new_dw->allocateAndPut(pColor,    lb->pColorLabel_preReloc,     pset);
     
@@ -4660,7 +4669,8 @@ void AMRMPM::interpolateToParticlesAndUpdate_CFI(const ProcessorGroup*,
   }  // End loop over patches
 }
 #endif
-
+//______________________________________________________________________
+//
 void AMRMPM::scheduleComputeFlux(SchedulerP& sched, 
                                  const PatchSet* patches,
                                  const MaterialSet* matls)
@@ -4683,7 +4693,8 @@ void AMRMPM::scheduleComputeFlux(SchedulerP& sched,
 
     sched->addTask(t, patches, matls);
 }
-
+//______________________________________________________________________
+//
 void AMRMPM::computeFlux(const ProcessorGroup*,
                          const PatchSubset* patches,
                          const MaterialSubset* matls,
@@ -4703,7 +4714,8 @@ void AMRMPM::computeFlux(const ProcessorGroup*,
     }
   }
 }
-
+//______________________________________________________________________
+//
 void AMRMPM::scheduleComputeDivergence(SchedulerP& sched,
                                        const PatchSet* patches,
                                        const MaterialSet* matls)
@@ -4728,7 +4740,8 @@ void AMRMPM::scheduleComputeDivergence(SchedulerP& sched,
 
   sched->addTask(t, patches, matls);
 }
-
+//______________________________________________________________________
+//
 void AMRMPM::computeDivergence(const ProcessorGroup*,
                                const PatchSubset* patches,
                                const MaterialSubset* matls,
@@ -4749,7 +4762,8 @@ void AMRMPM::computeDivergence(const ProcessorGroup*,
     }
   }
 }
-
+//______________________________________________________________________
+//
 void AMRMPM::scheduleComputeDivergence_CFI(SchedulerP& sched,
                                            const PatchSet* patches,
                                            const MaterialSet* matls)
@@ -4773,7 +4787,8 @@ void AMRMPM::scheduleComputeDivergence_CFI(SchedulerP& sched,
     sched->addTask(t, patches, matls);
   }
 }
-
+//______________________________________________________________________
+//
 void AMRMPM::computeDivergence_CFI(const ProcessorGroup*,
                                    const PatchSubset* patches,
                                    const MaterialSubset* matls,
@@ -4788,7 +4803,8 @@ void AMRMPM::computeDivergence_CFI(const ProcessorGroup*,
     sdm->computeDivergence_CFI(patches, mpm_matl, old_dw, new_dw);
   }
 }
-
+//______________________________________________________________________
+//
 void AMRMPM::scheduleInitializeScalarFluxBCs(const LevelP& level,
                                              SchedulerP& sched)
 {
@@ -4842,7 +4858,8 @@ void AMRMPM::scheduleInitializeScalarFluxBCs(const LevelP& level,
   if(d_loadCurveIndex->removeReference())
     delete d_loadCurveIndex;
 }
-
+//______________________________________________________________________
+//
 // Calculate the number of material points per load curve
 void AMRMPM::countMaterialPointsPerFluxLoadCurve(const ProcessorGroup*,
                                                  const PatchSubset* patches,
@@ -4884,7 +4901,8 @@ void AMRMPM::countMaterialPointsPerFluxLoadCurve(const ProcessorGroup*,
     }
   }
 }
-
+//______________________________________________________________________
+//
 void AMRMPM::initializeScalarFluxBC(const ProcessorGroup*,
                                     const PatchSubset* patches,
                                     const MaterialSubset*,
@@ -4983,7 +5001,8 @@ void AMRMPM::initializeScalarFluxBC(const ProcessorGroup*,
     }     // matl loop
   }      // patch loop
 }
-
+//______________________________________________________________________
+//
 void AMRMPM::scheduleApplyExternalScalarFlux(SchedulerP& sched,
                                                 const PatchSet* patches,
                                                 const MaterialSet* matls)
@@ -5008,7 +5027,8 @@ void AMRMPM::scheduleApplyExternalScalarFlux(SchedulerP& sched,
 
   sched->addTask(t, patches, matls);
 }
-
+//______________________________________________________________________
+//
 void AMRMPM::applyExternalScalarFlux(const ProcessorGroup* ,
                                      const PatchSubset* patches,
                                      const MaterialSubset*,
