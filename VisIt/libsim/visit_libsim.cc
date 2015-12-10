@@ -253,6 +253,8 @@ void visit_CheckState( visit_simulation_data *sim )
     {
       if(sim->isProc0)
       {
+	VisItUI_setValueS("SIMULATION_STATUS", sim->message.c_str(), 1);
+
 	std::stringstream msg;
 	msg << "Visit libsim - Completed simulation "
 	    << "timestep " << sim->cycle << ",  "
