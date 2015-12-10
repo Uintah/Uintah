@@ -1159,7 +1159,17 @@ class Task {
                   bool oldTG = false);
 
     //////////
-    // Requires for reduction variables or perpatch veriables
+    // Requires for level-specific simulation variables
+    void requires(WhichDW,
+                  const VarLabel*,
+                  const Level*,
+                  const MaterialSubset*,
+                  MaterialDomainSpec matls_dom,
+                  Ghost::GhostType gtype,
+                  int numGhostCells = 0);
+
+    //////////
+    // Requires for reduction variables or perpatch variables
     void requires(WhichDW,
                   const VarLabel*,
                   const MaterialSubset* matls,
@@ -1343,6 +1353,7 @@ class Task {
         // var will be constructed by the old TG
         int numGhostCells;
         int level_offset;
+
         int mapDataWarehouse() const
         {
           return task->mapDataWarehouse(whichdw);
@@ -1363,13 +1374,25 @@ class Task {
 
         Dependency(DepType deptype,
                    Task* task,
+                   WhichDW whichdw,
+                   const VarLabel* var,
+                   const Level* reductionLevel,
+                   const MaterialSubset* matls,
+                   MaterialDomainSpec matls_dom,
+                   Ghost::GhostType gtype,
+                   int numGhostCells);
+
+        Dependency(DepType deptype,
+                   Task* task,
                    WhichDW dw,
                    const VarLabel* var,
                    bool oldtg,
                    const Level* reductionLevel,
                    const MaterialSubset* matls,
                    MaterialDomainSpec matls_dom = NormalDomain);
+
         ~Dependency();
+
         inline void addComp(Edge* edge);
         inline void addReq(Edge* edge);
 

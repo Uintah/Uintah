@@ -8,8 +8,8 @@
 #ifndef DEFINEDELECTROSTATICSTYPES_H_
 #define DEFINEDELECTROSTATICSTYPES_H_
 
-#include<CCA/Components/MD/Electrostatics/SPME/SPME.h>
 #include<CCA/Components/MD/Electrostatics/Null/Null.h>
+#include <CCA/Components/MD/Electrostatics/Ewald/InverseSpace/SPME/SPME.h>
 
 
 

@@ -193,7 +193,7 @@ class SchedulerCommon : public Scheduler, public UintahParallelComponent {
     //////////
     // Schedule particle relocation without the need to supply pre_relocation variables. Use with
     // caution until as this requires further testing (tsaad).
-    virtual void scheduleParticleRelocation(const LevelP& coarsestLevelwithParticles,
+    virtual void scheduleParticleRelocation(const LevelP& level,
                                             const VarLabel* posLabel,
                                             const std::vector<std::vector<const VarLabel*> >& otherLabels,
                                             const MaterialSet* matls);

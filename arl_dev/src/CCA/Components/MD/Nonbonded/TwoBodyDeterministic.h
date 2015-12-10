@@ -88,8 +88,8 @@ namespace Uintah {
       virtual void addSetupRequirements(Task*, MDLabel*) const;
       virtual void addSetupComputes(Task*, MDLabel*) const;
 
-      virtual void addCalculateRequirements(Task*, MDLabel*) const;
-      virtual void addCalculateComputes(Task*, MDLabel*) const;
+      virtual void addCalculateRequirements(Task*, MDLabel*, const PatchSet*, const MaterialSet*, const LevelP&) const;
+      virtual void addCalculateComputes(Task*, MDLabel*, const PatchSet*, const MaterialSet*, const LevelP&) const;
 
       virtual void addFinalizeRequirements(Task*, MDLabel*) const;
       virtual void addFinalizeComputes(Task*, MDLabel*) const;

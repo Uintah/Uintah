@@ -181,10 +181,16 @@ namespace Uintah {
       * @brief Registers the required and provided variable labels for the
       *        Calculate method
       */
-      virtual void addCalculateRequirements(    Task*  task,
-                                                MDLabel*  labels) const;
-      virtual void addCalculateComputes(        Task*  task,
-                                                MDLabel*  labels) const;
+      virtual void addCalculateRequirements(       Task        * task
+                                           ,       MDLabel     * labels
+                                           , const PatchSet    * patches
+                                           , const MaterialSet * matls
+                                           , const LevelP      & level ) const;
+      virtual void addCalculateComputes(       Task        * task
+                                       ,       MDLabel     * labels
+                                       , const PatchSet    * patches
+                                       , const MaterialSet * matls
+                                       , const LevelP      & level ) const;
 
      /*
       * @brief Registers the required and provided variable labels for the

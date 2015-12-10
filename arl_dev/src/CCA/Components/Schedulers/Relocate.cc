@@ -359,6 +359,7 @@ Relocate::scheduleParticleRelocation(Scheduler* sched,
     }
 
     task->computes(new_posLabel, thismatl);
+
     for (int i = 0; i < (int)new_labels[m].size(); i++) {
       task->computes(new_labels[m][i], thismatl);
     }

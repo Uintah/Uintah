@@ -92,19 +92,28 @@ namespace Uintah{
                                          MDLabel*    labels) const;
 
       virtual void addInitializeRequirements(Task*       task,
-                                            MDLabel*    labels) const;
+                                             MDLabel*    labels) const;
       virtual void addInitializeComputes(    Task*       task,
-                                            MDLabel*    labels) const;
+                                             MDLabel*    labels) const;
 
       virtual void addSetupRequirements(     Task*       task,
-                                            MDLabel*    labels) const;
+                                             MDLabel*    labels) const;
       virtual void addSetupComputes(         Task*       task,
-                                            MDLabel*    labels) const;
+                                             MDLabel*    labels) const;
 
-      virtual void addCalculateRequirements( Task*       task,
-                                            MDLabel*    labels) const;
-      virtual void addCalculateComputes(     Task*       task,
-                                            MDLabel*    labels) const;
+      virtual void addCalculateRequirements(       Task        * task
+                                           ,       MDLabel     * labels
+                                           , const PatchSet    * patches
+                                           , const MaterialSet * matls
+                                           , const LevelP      & level
+                                           ) const;
+
+      virtual void addCalculateComputes(       Task        * task
+                                       ,       MDLabel     * labels
+                                       , const PatchSet    * patches
+                                       , const MaterialSet * matls
+                                       , const LevelP      & level
+                                       ) const;
 
       virtual void addFinalizeRequirements(  Task*       task,
                                             MDLabel*    labels) const;
