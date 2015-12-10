@@ -37,27 +37,23 @@ namespace Uintah{ class Patch; }
 
 namespace WasatchCore{
 
-  template< typename SrcT, typename DirT > struct GradOpSelector
-  {
-    typedef typename SpatialOps::Gradient Gradient;
+  template< typename SrcT, typename DirT > struct GradOpSelector{
+    typedef SpatialOps::Gradient Gradient;
   };
   
   template<>
-  struct GradOpSelector<SpatialOps::SVolField, SpatialOps::XDIR>
-  {
-    typedef typename SpatialOps::GradientX Gradient;
+  struct GradOpSelector<SpatialOps::SVolField, SpatialOps::XDIR>{
+    typedef SpatialOps::GradientX Gradient;
   };
   
   template<>
-  struct GradOpSelector<SpatialOps::SVolField, SpatialOps::YDIR>
-  {
-    typedef typename SpatialOps::GradientY Gradient;
+  struct GradOpSelector<SpatialOps::SVolField, SpatialOps::YDIR>{
+    typedef SpatialOps::GradientY Gradient;
   };
   
   template<>
-  struct GradOpSelector<SpatialOps::SVolField, SpatialOps::ZDIR>
-  {
-    typedef typename SpatialOps::GradientZ Gradient;
+  struct GradOpSelector<SpatialOps::SVolField, SpatialOps::ZDIR>{
+    typedef SpatialOps::GradientZ Gradient;
   };
 
   /**
