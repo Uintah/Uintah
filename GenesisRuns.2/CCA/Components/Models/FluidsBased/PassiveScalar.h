@@ -181,6 +181,7 @@ WARNING
       interiorRegion(GeometryPieceP piece, ProblemSpecP&);
       GeometryPieceP piece;
       double value;
+      double clampValue;
     };
 
     //__________________________________
