@@ -26,26 +26,11 @@
 #define StrainTensorBase_Expr_h
 
 //-- Wasatch Includes --//
+#include <CCA/Components/Wasatch/Operators/Operators.h> // contains the gradop selector
 #include <CCA/Components/Wasatch/Operators/OperatorTypes.h>
 
 //-- ExprLib Includes --//
 #include <expression/Expression.h>
-
-template< typename SrcT, typename DesT > struct GradOperatorSelector
-{
-  typedef typename SpatialOps::Gradient GradientX;
-  typedef typename SpatialOps::Gradient GradientY;
-  typedef typename SpatialOps::Gradient GradientZ;
-};
-
-
-template<>
-struct GradOperatorSelector<SVolField,SVolField>
-{
-  typedef typename SpatialOps::GradientX GradientX;
-  typedef typename SpatialOps::GradientX GradientY;
-  typedef typename SpatialOps::GradientX GradientZ;
-};
 
 /**
  *  \class StrainTensorBase
@@ -79,9 +64,9 @@ protected:
   typedef typename SpatialOps::OperatorTypeBuilder< SpatialOps::Gradient, Vel2T, typename VFaceTypes::ZFace >::type dvdzT;
   typedef typename SpatialOps::OperatorTypeBuilder< SpatialOps::Gradient, Vel3T, typename WFaceTypes::YFace >::type dwdyT;
   
-  typedef typename SpatialOps::OperatorTypeBuilder< typename GradOperatorSelector<ResultT,Vel1T>::GradientX, Vel1T, ResultT >::type dudxT;
-  typedef typename SpatialOps::OperatorTypeBuilder< typename GradOperatorSelector<ResultT,Vel2T>::GradientY, Vel2T, ResultT >::type dvdyT;
-  typedef typename SpatialOps::OperatorTypeBuilder< typename GradOperatorSelector<ResultT,Vel3T>::GradientZ, Vel3T, ResultT >::type dwdzT;
+  typedef typename SpatialOps::OperatorTypeBuilder< typename WasatchCore::GradOpSelector<Vel1T, SpatialOps::XDIR>::Gradient, Vel1T, ResultT >::type dudxT;
+  typedef typename SpatialOps::OperatorTypeBuilder< typename WasatchCore::GradOpSelector<Vel2T, SpatialOps::YDIR>::Gradient, Vel2T, ResultT >::type dvdyT;
+  typedef typename SpatialOps::OperatorTypeBuilder< typename WasatchCore::GradOpSelector<Vel3T, SpatialOps::ZDIR>::Gradient, Vel3T, ResultT >::type dwdzT;
   
   typedef typename SpatialOps::OperatorTypeBuilder< SpatialOps::Interpolant, typename UFaceTypes::YFace, ResultT >::type XYInterpT;
   typedef typename SpatialOps::OperatorTypeBuilder< SpatialOps::Interpolant, typename VFaceTypes::XFace, ResultT >::type YXInterpT;

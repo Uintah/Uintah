@@ -44,7 +44,8 @@ namespace WasatchCore{
   
   template< typename FieldT >
   Expr::ExpressionID
-  register_strain_tensor( const bool* const doMom,
+  register_strain_tensor(const Direction momComponent,
+                         const bool* const doMom,
                          const bool isViscous,
                          const Expr::TagList& velTags,
                          Expr::TagList& strainTags,
@@ -77,7 +78,8 @@ namespace WasatchCore{
 
   template< typename FieldT >
   Expr::ExpressionID
-  register_momentum_convective_fluxes( const bool* const doMom,
+  register_momentum_convective_fluxes(const Direction momComponent,
+                                      const bool* const doMom,
                                       const Expr::TagList& velTags,
                                       Expr::TagList& cfTags,
                                       ConvInterpMethods convInterpMethod,

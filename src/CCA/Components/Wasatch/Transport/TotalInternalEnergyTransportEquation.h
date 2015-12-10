@@ -35,9 +35,9 @@
 namespace WasatchCore {
 
   /**
-   *  \class  WasatchCore::EnthalpyTransportEquation
+   *  \class  WasatchCore::TotalInternalEnergyTransportEquation
    *  \date   November, 2013
-   *  \author "James C. Sutherland"
+   *  \author James C. Sutherland, Tony Saad
    *
    *  The total internal energy transport equation has the form:
    *  \f[
