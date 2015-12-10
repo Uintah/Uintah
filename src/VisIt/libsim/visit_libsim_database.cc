@@ -48,34 +48,47 @@
 namespace Uintah {
 
 static int numProcLabels = 25;
-static std::string procLabels[25] = { "processor/id",
+static std::string procLabels[2][25] = { { "processor/id",
 
-                                      "processor/memory/Base",
-                                      "processor/memory/Max",
-                                      "processor/memory/Used",
-                                      "processor/memory/Resident",
+					   "processor/memory/Base",
+					   "processor/memory/Max",
+					   "processor/memory/Used",
+					   "processor/memory/Resident",
 
-                                      "processor/time/Recompile",
-                                      "processor/time/Regridding",
-                                      "processor/time/Regrid-schedule",
-                                      "processor/time/Regrid-copydata",
-                                      "processor/time/LoadBalance",
-                                      "processor/time/TaskExec",
-                                      "processor/time/TaskGlobalComm",
-                                      "processor/time/TaskLocalComm",
-                                      "processor/time/TaskWaitCommTime",
-                                      "processor/time/Output",
-                                      "processor/time/TaskWaitThreadTime",
-                                      
-                                      "processor/mpi/TotalReduce",
-                                      "processor/mpi/TotalSend",
-                                      "processor/mpi/TotalRecv",
-                                      "processor/mpi/TotalTask",
-                                      "processor/mpi/TotalReduceMPI",
-                                      "processor/mpi/TotalSendMPI",
-                                      "processor/mpi/TotalRecvMPI",
-                                      "processor/mpi/TotalTestMPI",
-                                      "processor/mpi/TotalWaitMPI" };
+					   "processor/time/Recompile",
+					   "processor/time/Regridding",
+					   "processor/time/Regrid-schedule",
+					   "processor/time/Regrid-copydata",
+					   "processor/time/LoadBalance",
+					   "processor/time/TaskExec",
+					   "processor/time/TaskGlobalComm",
+					   "processor/time/TaskLocalComm",
+					   "processor/time/TaskWaitCommTime",
+					   "processor/time/Output",
+					   "processor/time/TaskWaitThreadTime",
+
+					   "processor/mpi/TotalReduce",
+					   "processor/mpi/TotalSend",
+					   "processor/mpi/TotalRecv",
+					   "processor/mpi/TotalTask",
+					   "processor/mpi/TotalReduceMPI",
+					   "processor/mpi/TotalSendMPI",
+					   "processor/mpi/TotalRecvMPI",
+					   "processor/mpi/TotalTestMPI",
+					   "processor/mpi/TotalWaitMPI" },
+
+					 { "",
+					   "bytes", "bytes", "bytes", "bytes",
+
+					   "seconds", "seconds",
+					   "seconds", "seconds", "seconds",
+					   "seconds", "seconds", "seconds",
+					   "seconds", "seconds", "seconds",
+
+					   "seconds", "seconds", "seconds",
+					   "seconds", "seconds", "seconds",
+					   "seconds", "seconds", "seconds" } };
+
 
 
 // ****************************************************************************
@@ -380,34 +393,18 @@ visit_handle visit_ReadMetaData(void *cbdata)
           
           if(VisIt_VariableMetaData_alloc(&vmd) == VISIT_OKAY)
           {
-            VisIt_VariableMetaData_setName(vmd, procLabels[i].c_str());
+            VisIt_VariableMetaData_setName(vmd, procLabels[0][i].c_str());
             VisIt_VariableMetaData_setMeshName(vmd, mesh_for_procid.c_str());
             VisIt_VariableMetaData_setCentering(vmd, VISIT_VARCENTERING_ZONE);
             VisIt_VariableMetaData_setType(vmd, VISIT_VARTYPE_SCALAR);
             VisIt_VariableMetaData_setNumComponents(vmd, 1);
-            if( i == 0 )
-              VisIt_VariableMetaData_setUnits(vmd, "");
-            else if( 1 <= i && i <= 4 )
-              VisIt_VariableMetaData_setUnits(vmd, "bytes");
-            else if( 5 <= i && i <= 15 )
-              VisIt_VariableMetaData_setUnits(vmd, "seconds");
-            else if( 16 <= i && i <= 24 )
-              VisIt_VariableMetaData_setUnits(vmd, "seconds");
+	    VisIt_VariableMetaData_setUnits(vmd, procLabels[1][i].c_str());
 
             // ARS - FIXME
             //      VisIt_VariableMetaData_setHasDataExtents(vmd, false);
             VisIt_VariableMetaData_setTreatAsASCII(vmd, false);
             VisIt_SimulationMetaData_addVariable(md, vmd);
           }
-
-          // avtScalarMetaData *scalar = new avtScalarMetaData();
-          
-          // scalar->name = procLabels[i];
-          // scalar->meshName = mesh_for_procid;
-          // scalar->centering = AVT_ZONECENT;
-          // scalar->hasDataExtents = false;
-          // scalar->treatAsASCII = false;
-          // md->Add(scalar);
         }
       }
     }
@@ -1304,7 +1301,7 @@ visit_handle visit_SimGetVariable(int domain, const char *varname, void *cbdata)
     bool haveProcVar;
 
     for( int i=0; i<numProcLabels; ++i)
-      if((haveProcVar = (std::string(varname) == procLabels[i])))
+      if((haveProcVar = (std::string(varname) == procLabels[0][i])))
         break;
 
     if( haveProcVar )
@@ -1325,12 +1322,12 @@ visit_handle visit_SimGetVariable(int domain, const char *varname, void *cbdata)
       double val;
 
       // Processor Id
-      if (std::string(varname) == procLabels[0] )
+      if (std::string(varname) == procLabels[0][0] )
       {
           val = patchInfo.getProcId();
       }
       // Processor memory usage
-      else if( std::string(varname) == procLabels[1] )
+      else if( std::string(varname) == procLabels[0][1] )
       {
         unsigned long memuse, highwater, maxMemUse;
         
@@ -1339,7 +1336,7 @@ visit_handle visit_SimGetVariable(int domain, const char *varname, void *cbdata)
         val = memuse;
       }
       // Processor maximum memory usage
-      else if( std::string(varname) == procLabels[2] )
+      else if( std::string(varname) == procLabels[0][2] )
       {
         unsigned long memuse, highwater, maxMemUse;
         
@@ -1348,75 +1345,75 @@ visit_handle visit_SimGetVariable(int domain, const char *varname, void *cbdata)
         val = maxMemUse;
       }
       // Processor memory usage
-      else if( std::string(varname) == procLabels[3] )
+      else if( std::string(varname) == procLabels[0][3] )
       {
         val = ProcessInfo::getMemoryUsed();
               }
       // Processor memory resident
-      else if( std::string(varname) == procLabels[4] )
+      else if( std::string(varname) == procLabels[0][4] )
       {
         val = ProcessInfo::getMemoryResident();
       }
       // State compilationTime
-      else if( std::string(varname) == procLabels[5] )
+      else if( std::string(varname) == procLabels[0][5] )
       {
         val = sim->AMRSimController->getSimulationStateP()->compilationTime;
       }
       // State regriddingTime
-      else if( std::string(varname) == procLabels[6] )
+      else if( std::string(varname) == procLabels[0][6] )
       {
         val = sim->AMRSimController->getSimulationStateP()->regriddingTime;
       }
       // State regriddingCompilationTime;
-      else if( std::string(varname) == procLabels[7] )
+      else if( std::string(varname) == procLabels[0][7] )
       {
         val =
           sim->AMRSimController->getSimulationStateP()->regriddingCompilationTime;
       }
       // State regriddingCopyDataTime
-      else if( std::string(varname) == procLabels[8] )
+      else if( std::string(varname) == procLabels[0][8] )
       {
         val =
           sim->AMRSimController->getSimulationStateP()->regriddingCopyDataTime;
       }
       // State loadbalancerTime
-      else if( std::string(varname) == procLabels[9] )
+      else if( std::string(varname) == procLabels[0][9] )
       {
         val = sim->AMRSimController->getSimulationStateP()->loadbalancerTime;
       }
       // State taskExecTime
-      else if( std::string(varname) == procLabels[10] )
+      else if( std::string(varname) == procLabels[0][10] )
       {
         val = sim->AMRSimController->getSimulationStateP()->taskExecTime;
       }
       // State taskLocalCommTime;
-      else if( std::string(varname) == procLabels[11] )
+      else if( std::string(varname) == procLabels[0][11] )
       {
         val = sim->AMRSimController->getSimulationStateP()->taskLocalCommTime;
       }
       // State taskGlobalCommTime
-      else if( std::string(varname) == procLabels[12] )
+      else if( std::string(varname) == procLabels[0][12] )
       {
         val = sim->AMRSimController->getSimulationStateP()->taskGlobalCommTime;
       }
       // State taskWaitCommTime
-      else if( std::string(varname) == procLabels[13] )
+      else if( std::string(varname) == procLabels[0][13] )
       {
         val = sim->AMRSimController->getSimulationStateP()->taskWaitCommTime;
       }
       // State outputTime
-      else if( std::string(varname) == procLabels[14] )
+      else if( std::string(varname) == procLabels[0][14] )
       {
         val = sim->AMRSimController->getSimulationStateP()->outputTime;
       }
       // State taskWaitThreadTime
-      else if( std::string(varname) == procLabels[15] )
+      else if( std::string(varname) == procLabels[0][15] )
       {
         val = sim->AMRSimController->getSimulationStateP()->taskWaitThreadTime;
       }
 
       // State MPI TotalReduce
-      else if( std::string(varname) == procLabels[16] )
+      else if( std::string(varname) == procLabels[0][16] )
       {
         MPIScheduler *scheduler = dynamic_cast<MPIScheduler*>
           (sim->AMRSimController->getSchedulerP().get_rep());
@@ -1425,7 +1422,7 @@ visit_handle visit_SimGetVariable(int domain, const char *varname, void *cbdata)
       }
 
       // State MPI TotalSend
-      else if( std::string(varname) == procLabels[17] )
+      else if( std::string(varname) == procLabels[0][17] )
       {
         MPIScheduler *scheduler = dynamic_cast<MPIScheduler*>
           (sim->AMRSimController->getSchedulerP().get_rep());
@@ -1434,7 +1431,7 @@ visit_handle visit_SimGetVariable(int domain, const char *varname, void *cbdata)
       }
       
       // State MPI TotalRecv
-      else if( std::string(varname) == procLabels[18] )
+      else if( std::string(varname) == procLabels[0][18] )
       {
         MPIScheduler *scheduler = dynamic_cast<MPIScheduler*>
           (sim->AMRSimController->getSchedulerP().get_rep());
@@ -1443,7 +1440,7 @@ visit_handle visit_SimGetVariable(int domain, const char *varname, void *cbdata)
       }
       
       // State MPI TotalTask
-      else if( std::string(varname) == procLabels[19] )
+      else if( std::string(varname) == procLabels[0][19] )
       {
         MPIScheduler *scheduler = dynamic_cast<MPIScheduler*>
           (sim->AMRSimController->getSchedulerP().get_rep());
@@ -1452,7 +1449,7 @@ visit_handle visit_SimGetVariable(int domain, const char *varname, void *cbdata)
       }
       
       // State MPI TotalReduceMPI
-      else if( std::string(varname) == procLabels[20] )
+      else if( std::string(varname) == procLabels[0][20] )
       {
         MPIScheduler *scheduler = dynamic_cast<MPIScheduler*>
           (sim->AMRSimController->getSchedulerP().get_rep());
@@ -1461,7 +1458,7 @@ visit_handle visit_SimGetVariable(int domain, const char *varname, void *cbdata)
       }
 
       // State MPI TotalsendMPI
-      else if( std::string(varname) == procLabels[20] )
+      else if( std::string(varname) == procLabels[0][21] )
       {
         MPIScheduler *scheduler = dynamic_cast<MPIScheduler*>
           (sim->AMRSimController->getSchedulerP().get_rep());
@@ -1470,7 +1467,7 @@ visit_handle visit_SimGetVariable(int domain, const char *varname, void *cbdata)
       }
       
       // State MPI TotalRecvMPI
-      else if( std::string(varname) == procLabels[20] )
+      else if( std::string(varname) == procLabels[0][22] )
       {
         MPIScheduler *scheduler = dynamic_cast<MPIScheduler*>
           (sim->AMRSimController->getSchedulerP().get_rep());
@@ -1479,7 +1476,7 @@ visit_handle visit_SimGetVariable(int domain, const char *varname, void *cbdata)
       }
       
       // State MPI TotalTestMPI
-      else if( std::string(varname) == procLabels[20] )
+      else if( std::string(varname) == procLabels[0][23] )
       {
         MPIScheduler *scheduler = dynamic_cast<MPIScheduler*>
           (sim->AMRSimController->getSchedulerP().get_rep());
@@ -1488,7 +1485,7 @@ visit_handle visit_SimGetVariable(int domain, const char *varname, void *cbdata)
       }
 
       // State MPI TotalWaitMPI
-      else if( std::string(varname) == procLabels[20] )
+      else if( std::string(varname) == procLabels[0][24] )
       {
         MPIScheduler *scheduler = dynamic_cast<MPIScheduler*>
           (sim->AMRSimController->getSchedulerP().get_rep());

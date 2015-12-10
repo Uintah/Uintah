@@ -115,6 +115,13 @@ visit_ControlCommandCallback(const char *cmd, const char *args, void *cbdata)
   }
   else if(strcmp(cmd, "Stats") == 0)
   {
+    int timestep = sim->cycle;
+    double delt  = sim->delt;
+    double time  = sim->time;
+
+    std::string message;
+
+    VisItUI_setValueS("SIMULATION_STATUS", message.c_str(), 1);
   }
   else if(strcmp(cmd, "Regrid") == 0 && sim->simMode != VISIT_SIMMODE_FINISHED)
   {
