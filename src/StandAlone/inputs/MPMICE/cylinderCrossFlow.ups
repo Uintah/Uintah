@@ -355,6 +355,7 @@
                   </sphere>
                 </union>
                 <scalar>  0.1 </scalar>
+                <maxScalar> 1.0 </maxScalar>
               </geom_object>
             </interiorSources>
           </scalar>
