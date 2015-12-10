@@ -200,12 +200,12 @@ PressureSource::Builder::Builder( const Expr::TagList& results,
                                   const Expr::Tag& rhoStarTag)
 : ExpressionBuilder(results),
   isConstDens_( isConstDensity ),
-  momTs_      ( rhoStarTag==Expr::Tag() ? Expr::TagList() : momTags     ),
-  oldMomTags_ ( oldMomTags     ),
-  velTs_      ( rhoStarTag==Expr::Tag() ? Expr::TagList() : velTags     ),
-  divuTag_    ( divuTag),
-  rhot_      ( rhoTag       ),
-  rhoStart_  ( rhoStarTag   )
+  momTs_      ( rhoStarTag==Expr::Tag() ? Expr::TagList() : momTags ),
+  oldMomTags_ ( oldMomTags ),
+  velTs_      ( rhoStarTag==Expr::Tag() ? Expr::TagList() : velTags ),
+  rhot_       ( rhoTag     ),
+  rhoStart_   ( rhoStarTag ),
+  divuTag_    ( divuTag    )
 {}
 
 //------------------------------------------------------------------

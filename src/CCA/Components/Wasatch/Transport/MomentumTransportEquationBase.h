@@ -187,13 +187,12 @@ namespace WasatchCore{
                                          const Expr::TagList& srcTags ) = 0;
     
     const Direction momComponent_;
+    Uintah::ProblemSpecP params_;
     const bool isViscous_, isTurbulent_;
     const Expr::Tag thisVelTag_, densityTag_;
     const Expr::Tag& pressureTag_;
-
-    Uintah::ProblemSpecP params_;
     
-    Expr::ExpressionID normalStrainID_, normalConvFluxID_, pressureID_, convTermWeakID_;
+    Expr::ExpressionID normalStrainID_, normalConvFluxID_, pressureID_;
     Expr::TagList velTags_;  ///< TagList for the velocity expressions
     Expr::TagList momTags_, oldMomTags_;  ///< TagList for the momentum expressions
     Expr::Tag     thisVolFracTag_;

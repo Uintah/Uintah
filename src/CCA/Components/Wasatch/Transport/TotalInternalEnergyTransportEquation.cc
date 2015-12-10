@@ -431,21 +431,19 @@ namespace WasatchCore {
       velTags_( velTags )
   {
     const TagNames& tags = TagNames::self();
-
-    Expr::ExpressionFactory&   icFactory = *gc[INITIALIZATION  ]->exprFactory;
     Expr::ExpressionFactory& solnFactory = *gc[ADVANCE_SOLUTION]->exprFactory;
 
-    // kinetic energy
     //----------------------------------------------------------
+    // kinetic energy
     solnFactory.register_expression( scinew KineticEnergy<MyFieldT,MyFieldT,MyFieldT,MyFieldT>::Builder( kineticEnergyTag_, velTags[0], velTags[1], velTags[2] ) );
 
-    // temperature calculation
     //----------------------------------------------------------
+    // temperature calculation
     typedef TemperaturePurePerfectGas<MyFieldT>::Builder SimpleTemperature;
     solnFactory.register_expression( scinew SimpleTemperature( temperatureTag, primVarTag_, kineticEnergyTag_ ) );
 
-    // viscous dissipation
     //----------------------------------------------------------
+    // viscous dissipation
     typedef ViscousDissipation<MyFieldT>::Builder ViscDissip;
     const Expr::Tag visDisTag("viscous_dissipation",Expr::STATE_NONE);
     solnFactory.register_expression( scinew ViscDissip( visDisTag,
