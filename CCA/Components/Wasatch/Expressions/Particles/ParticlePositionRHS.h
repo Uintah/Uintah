@@ -18,7 +18,12 @@ public Expr::Expression<ParticleField>
 {
   DECLARE_FIELD(ParticleField, pvel_)
   
-  ParticlePositionRHS( const Expr::Tag& particleVelocity );
+  ParticlePositionRHS( const Expr::Tag& particleVelocity )
+    : Expr::Expression<ParticleField>()
+  {
+    this->set_gpu_runnable( true );
+    pvel_ = create_field_request<ParticleField>(particleVelocity);
+  }
   
 public:
   /**
@@ -34,7 +39,11 @@ public:
      *  \param particleVelocity the advecting velocity for the particle
      */
     Builder( const Expr::Tag& positionRHSTag,
-             const Expr::Tag& particleVelocity );
+             const Expr::Tag& particleVelocity )
+      : ExpressionBuilder( positionRHSTag ),
+        pvel_( particleVelocity )
+    {}
+
     ~Builder(){}
     Expr::ExpressionBase* build() const{ return new ParticlePositionRHS( pvel_ ); }
     
@@ -42,54 +51,17 @@ public:
     const Expr::Tag pvel_;
   };
   
-  ~ParticlePositionRHS();
+  ~ParticlePositionRHS(){}
   
-  void bind_operators( const SpatialOps::OperatorDatabase& opDB );
-  void evaluate();
+  void evaluate()
+  {
+    using SpatialOps::operator<<=;
+    ParticleField& rhs = this->value();
+    rhs <<= pvel_->field_ref();
+  }
   
 };
 
 //==================================================================
-
-ParticlePositionRHS::
-ParticlePositionRHS( const Expr::Tag& particleVelocityTag )
-: Expr::Expression<ParticleField>()
-{
-  this->set_gpu_runnable( true );
-   pvel_ = create_field_request<ParticleField>(particleVelocityTag);
-}
-
-//------------------------------------------------------------------
-
-ParticlePositionRHS::~ParticlePositionRHS(){}
-
-//------------------------------------------------------------------
-
-void
-ParticlePositionRHS::bind_operators( const SpatialOps::OperatorDatabase& opDB ){}
-
-//------------------------------------------------------------------
-
-void
-ParticlePositionRHS::evaluate()
-{
-  using SpatialOps::operator<<=;
-  ParticleField& rhs = this->value();
-  rhs <<= pvel_->field_ref();
-}
-
-//------------------------------------------------------------------
-
-ParticlePositionRHS::
-Builder::Builder( const Expr::Tag& positionRHSTag,
-                  const Expr::Tag& particleVelocity )
-: ExpressionBuilder( positionRHSTag ),
-  pvel_( particleVelocity )
-{}
-
-
-//==================================================================
-
-
 
 #endif // ParticlePositionEquation_h
