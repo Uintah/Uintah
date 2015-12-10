@@ -144,13 +144,14 @@ namespace WasatchCore{
   class TaskInterface;
   class WasatchParticlesHelper;
   struct TimeIntegrator;
-
+  
   enum FlowTreatment
   {
     INCOMPRESSIBLE,
     LOWMACH,
     COMPRESSIBLE
   };
+
   /**
    *  \ingroup WasatchCore
    *  \class  Wasatch
@@ -276,10 +277,16 @@ namespace WasatchCore{
     void set_wasatch_materials( const Uintah::MaterialSet* const materials ) { materials_ = materials; }
     const Uintah::MaterialSet* get_wasatch_materials() const{ return materials_; }
     const Uintah::ProblemSpecP get_wasatch_spec(){return wasatchSpec_;}
+
     static void set_flow_treatment(FlowTreatment treat) { flowTreatment_ = treat;}
-    static void set_flow_treatment(std::string treat) { flowTreatment_ = INCOMPRESSIBLE;}
+    static void set_flow_treatment(std::string treat)
+    {
+      flowTreatment_ = INCOMPRESSIBLE;
+      if (treat == "LOWMACH") flowTreatment_ = LOWMACH;
+      else if (treat == "COMPRESSIBLE") flowTreatment_ = COMPRESSIBLE;
+    }
     static FlowTreatment flow_treatment(){return flowTreatment_;}
-    
+        
   private:
     bool buildTimeIntegrator_;   ///< used for Wasatch-Arches coupling
     bool buildWasatchMaterial_;  ///< used for Wasatch-Arches coupling
@@ -298,7 +305,8 @@ namespace WasatchCore{
     
     BCFunctorMap bcFunctorMap_;
     BCHelperMapT bcHelperMap_;
-    
+
+
 
     /**
      *  a container of information for constructing ExprLib graphs.
@@ -325,7 +333,7 @@ namespace WasatchCore{
     
     Wasatch( const Wasatch& );            // disallow copying
     Wasatch& operator=( const Wasatch& ); // disallow assignment
-
+    
     /** \brief a convenience function */
     void create_timestepper_on_patches( const Uintah::PatchSet* const localPatches,
                                         const Uintah::MaterialSet* const materials,

@@ -246,14 +246,15 @@ namespace WasatchCore{
   
   template< typename FieldT >
   void
-  set_strain_tags( const bool* doMom,
+  set_strain_tags( const Direction momComponent,
+                   const bool* doMom,
                    const bool isViscous,
                    Expr::TagList& strainTags )
   {
     const TagNames& tagNames = TagNames::self();
     strainTags.clear();
     Expr::Tag xTag, yTag, zTag;
-    switch( get_staggered_location<FieldT>() ){
+    switch( momComponent ){
       case XDIR : xTag=tagNames.strainxx; yTag=tagNames.strainyx; zTag=tagNames.strainzx; break;
       case YDIR : xTag=tagNames.strainxy; yTag=tagNames.strainyy; zTag=tagNames.strainzy; break;
       case ZDIR : xTag=tagNames.strainxz; yTag=tagNames.strainyz; zTag=tagNames.strainzz; break;
@@ -330,7 +331,7 @@ namespace WasatchCore{
     typedef typename SpatialOps::FaceTypes<FieldT>::YFace YFace;
     typedef typename SpatialOps::FaceTypes<FieldT>::ZFace ZFace;
 
-    set_strain_tags<FieldT>( doMom, isViscous, strainTags );
+    set_strain_tags<FieldT>( momComponent, doMom, isViscous, strainTags );
     const Expr::Tag& strainXt = strainTags[0];
     const Expr::Tag& strainYt = strainTags[1];
     const Expr::Tag& strainZt = strainTags[2];
@@ -377,7 +378,7 @@ namespace WasatchCore{
     typedef typename SpatialOps::FaceTypes<FieldT>::YFace YFace;
     typedef typename SpatialOps::FaceTypes<FieldT>::ZFace ZFace;
     
-    set_strain_tags<FieldT>( doMom, isViscous, strainTags );
+    set_strain_tags<FieldT>(momComponent, doMom, isViscous, strainTags );
     const Expr::Tag& strainXt = strainTags[0];
     const Expr::Tag& strainYt = strainTags[1];
     const Expr::Tag& strainZt = strainTags[2];
@@ -428,19 +429,14 @@ namespace WasatchCore{
       return factory.register_expression( scinew ConvFlux( fluxTag, momTag, advelTag ) );
     }
     else{
-      std::ostringstream msg;
-      msg << "ERROR: Flux limiters are not currently supported for Momentum Equations." << std::endl;
-      throw Uintah::ProblemSetupException( msg.str(), __FILE__, __LINE__ );
-
-      
-//      typedef typename SpatialOps::VolType<FluxT>::VolField  MomT;
-//      typedef typename ConvectiveFluxLimiter<
-//      FluxLimiterInterpolant< MomT, FluxT >,
-//      UpwindInterpolant< MomT, FluxT >,
-//      typename OperatorTypeBuilder<Interpolant,MomT,FluxT>::type, // scalar interp type
-//      typename OperatorTypeBuilder<Interpolant,AdvelT,FluxT>::type  // velocity interp type
-//      >::Builder ConvFluxLim;
-//      return factory.register_expression( scinew ConvFluxLim( fluxTag, momTag, advelTag, convInterpMethod, volFracTag ) );
+      typedef typename SpatialOps::VolType<FluxT>::VolField  MomT;
+      typedef typename ConvectiveFluxLimiter<
+                                            FluxLimiterInterpolant< MomT, FluxT >,
+                                            UpwindInterpolant< MomT, FluxT >,
+                                            typename OperatorTypeBuilder<Interpolant,MomT,FluxT>::type, // scalar interp type
+                                            typename OperatorTypeBuilder<Interpolant,AdvelT,FluxT>::type  // velocity interp type
+                                            >::Builder ConvFluxLim;
+      return factory.register_expression( scinew ConvFluxLim( fluxTag, momTag, advelTag, convInterpMethod, volFracTag ) );
     }
   }
 
@@ -448,13 +444,14 @@ namespace WasatchCore{
   
   template< typename FieldT >
   Expr::ExpressionID
-  register_momentum_convective_fluxes( const bool* const doMom,
-                              const Expr::TagList& velTags,
-                              Expr::TagList& cfTags,
-                              ConvInterpMethods convInterpMethod,
-                              const Expr::Tag& momTag,
-                              const Expr::Tag& volFracTag,
-                              Expr::ExpressionFactory& factory )
+  register_momentum_convective_fluxes(const Direction momComponent,
+                                      const bool* const doMom,
+                                      const Expr::TagList& velTags,
+                                      Expr::TagList& cfTags,
+                                      ConvInterpMethods convInterpMethod,
+                                      const Expr::Tag& momTag,
+                                      const Expr::Tag& volFracTag,
+                                      Expr::ExpressionFactory& factory )
   {
     set_convflux_tags( doMom, cfTags, momTag );
     const Expr::Tag& cfxt = cfTags[0];
@@ -491,7 +488,8 @@ namespace WasatchCore{
   
   template<>
   Expr::ExpressionID
-  register_momentum_convective_fluxes<SVolField>( const bool* const doMom,
+  register_momentum_convective_fluxes<SVolField>(const Direction momComponent,
+                                                 const bool* const doMom,
                                       const Expr::TagList& velTags,
                                       Expr::TagList& cfTags,
                                       ConvInterpMethods convInterpMethod,
@@ -510,19 +508,18 @@ namespace WasatchCore{
     typedef typename SpatialOps::FaceTypes<FieldT>::ZFace ZFace;
     
     Expr::ExpressionID normalConvFluxID;
-    Direction stagLoc = get_staggered_location<FieldT>();
     
     if( doMom[0] ){
       const Expr::ExpressionID id = setup_momentum_convective_flux< XFace, SVolField >( cfxt, momTag, velTags[0],convInterpMethod, volFracTag, factory );
-      if( stagLoc == XDIR )  normalConvFluxID = id;
+      if( momComponent == XDIR )  normalConvFluxID = id;
     }
     if( doMom[1] ){
       const Expr::ExpressionID id = setup_momentum_convective_flux< YFace, SVolField >( cfyt, momTag, velTags[1], convInterpMethod, volFracTag, factory );
-      if( stagLoc == YDIR )  normalConvFluxID = id;
+      if( momComponent == YDIR )  normalConvFluxID = id;
     }
     if( doMom[2] ){
       const Expr::ExpressionID id = setup_momentum_convective_flux< ZFace, SVolField >( cfzt, momTag, velTags[2], convInterpMethod, volFracTag, factory );
-      if( stagLoc == ZDIR )  normalConvFluxID = id;
+      if( momComponent == ZDIR )  normalConvFluxID = id;
     }
     // convective fluxes require ghost updates after they are calculated
     // jcs note that we need to set BCs on these quantities as well.
@@ -617,7 +614,7 @@ namespace WasatchCore{
       this->params_->findBlock("ConvectiveInterpMethod")->getAttribute("method",convInterpMethod);
     }
     
-    this->normalConvFluxID_ = register_momentum_convective_fluxes<FieldT>(doMom, this->velTags_, cfTags, get_conv_interp_method(convInterpMethod), this->solnVarTag_, this->thisVolFracTag_, factory );
+    this->normalConvFluxID_ = register_momentum_convective_fluxes<FieldT>(momComponent, doMom, this->velTags_, cfTags, get_conv_interp_method(convInterpMethod), this->solnVarTag_, this->thisVolFracTag_, factory );
     
     //__________________
     // dilatation - needed by pressure source term and strain tensor
@@ -745,7 +742,8 @@ namespace WasatchCore{
 
 #define REGISTER_CONVECTIVE_FLUXES(VOL) \
   template Expr::ExpressionID \
-  register_momentum_convective_fluxes<VOL> ( const bool* const doMom,\
+  register_momentum_convective_fluxes<VOL> ( const Direction momComponent,\
+                                             const bool* const doMom,\
                                              const Expr::TagList& velTags,\
                                              Expr::TagList& cfTags,\
                                              ConvInterpMethods convInterpMethod,\

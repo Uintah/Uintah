@@ -22,17 +22,14 @@
  * IN THE SOFTWARE.
  */
 
-//-- SpatialOps includes --//
-#include <spatialops/structured/FVStaggered.h>
-
 //-- Wasatch includes --//
 #include "Operators.h"
-#include <CCA/Components/Wasatch/Operators/UpwindInterpolant.h>
-#include <CCA/Components/Wasatch/Operators/Extrapolant.h>
-#include <CCA/Components/Wasatch/Operators/FluxLimiterInterpolant.h>
 #include <CCA/Components/Wasatch/BCHelper.h>
 #include <CCA/Components/Wasatch/WasatchBCHelper.h>
 #include <spatialops/particles/ParticleOperators.h>
+#include <CCA/Components/Wasatch/Operators/Extrapolant.h>
+#include <CCA/Components/Wasatch/Operators/UpwindInterpolant.h>
+#include <CCA/Components/Wasatch/Operators/FluxLimiterInterpolant.h>
 
 //-- Uintah includes --//
 #include <Core/Grid/Patch.h>

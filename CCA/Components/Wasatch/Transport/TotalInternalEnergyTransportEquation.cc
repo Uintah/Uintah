@@ -358,8 +358,6 @@ namespace WasatchCore {
 
         if( doX_ ){ // 1D x or 2D xy or 2D xz
           const XFace& strainxx = strainxx_->field_ref();
-          const XFace& strainxy = strainxy_->field_ref();
-          const XFace& strainxz = strainxz_->field_ref();
 
           SpatialOps::SpatFldPtr<XFace> xvelFacePtr = SpatialOps::SpatialFieldStore::get<XFace>( strainxx );
           XFace& xvel = *xvelFacePtr;
@@ -438,15 +436,19 @@ namespace WasatchCore {
     Expr::ExpressionFactory& solnFactory = *gc[ADVANCE_SOLUTION]->exprFactory;
 
     // kinetic energy
+    //----------------------------------------------------------
     solnFactory.register_expression( scinew KineticEnergy<MyFieldT,MyFieldT,MyFieldT,MyFieldT>::Builder( kineticEnergyTag_, velTags[0], velTags[1], velTags[2] ) );
 
     // temperature calculation
+    //----------------------------------------------------------
     typedef TemperaturePurePerfectGas<MyFieldT>::Builder SimpleTemperature;
     solnFactory.register_expression( scinew SimpleTemperature( temperatureTag, primVarTag_, kineticEnergyTag_ ) );
 
     // viscous dissipation
+    //----------------------------------------------------------
     typedef ViscousDissipation<MyFieldT>::Builder ViscDissip;
-    solnFactory.register_expression( scinew ViscDissip( Expr::Tag("viscous_dissipation",Expr::STATE_NONE),
+    const Expr::Tag visDisTag("viscous_dissipation",Expr::STATE_NONE);
+    solnFactory.register_expression( scinew ViscDissip( visDisTag,
                                                         velTags, viscTag,
                                                         tags.strainxx, tags.strainyx, tags.strainzx,
                                                         tags.strainxy, tags.strainyy, tags.strainzy,
@@ -455,6 +457,7 @@ namespace WasatchCore {
     setup();  // base setup stuff (register RHS, etc.)
 
     // attach viscous dissipation expression to the RHS as a source
+    solnFactory.attach_dependency_to_expression(visDisTag, this->rhsTag_, Expr::SUBTRACT_SOURCE_EXPRESSION);
   }
 
   //---------------------------------------------------------------------------
@@ -468,9 +471,20 @@ namespace WasatchCore {
   TotalInternalEnergyTransportEquation::
   initial_condition( Expr::ExpressionFactory& icFactory )
   {
+    
     // initial condition for total internal energy
     typedef TotalInternalEnergy_PurePerfectGas_IC<SVolField>::Builder SimpleEnergyIC;
-    return icFactory.register_expression( scinew SimpleEnergyIC( primVarTag_, temperatureTag_, velTags_ ) );
+    icFactory.register_expression( scinew SimpleEnergyIC( primVarTag_, temperatureTag_, velTags_ ) );
+    
+    // register expression to calculate the momentum initial condition from the initial conditions on
+    // velocity and density in the cases that we are initializing velocity in the input file
+    typedef ExprAlgebra<SVolField> ExprAlgbr;
+    const Expr::Tag rhoTag(this->densityTag_.name(), Expr::STATE_NONE);
+    const Expr::TagList theTagList( tag_list( primVarTag_, rhoTag ) );
+    return icFactory.register_expression( new ExprAlgbr::Builder( this->initial_condition_tag(),
+                                                          theTagList,
+                                                          ExprAlgbr::PRODUCT ) );
+
   }
 
   //---------------------------------------------------------------------------
@@ -480,27 +494,20 @@ namespace WasatchCore {
   setup_diffusive_flux( FieldTagInfo& info )
   {
     Expr::ExpressionFactory& factory = *gc_[ADVANCE_SOLUTION]->exprFactory;
-
-    typedef DiffusiveVelocity< SpatialOps::SSurfXField >::Builder XFlux;
-    typedef DiffusiveVelocity< SpatialOps::SSurfYField >::Builder YFlux;
-    typedef DiffusiveVelocity< SpatialOps::SSurfZField >::Builder ZFlux;
-
-    // jcs how will we determine if we have each direction on???
-    const bool doX=true, doY=true, doZ=true;
-
-    // jcs for now we will only include the Fourier heat flux (q = -\lambda \nabla T)
-    // and we will neglect the species energy diffusive flux until we get species transport in
-
-    const TagNames& tagNames = TagNames::self();
-    const Expr::Tag xDiffFluxTag( solnVarName_ + tagNames.diffusiveflux + "_x", Expr::STATE_NONE );
-    const Expr::Tag yDiffFluxTag( solnVarName_ + tagNames.diffusiveflux + "_y", Expr::STATE_NONE );
-    const Expr::Tag zDiffFluxTag( solnVarName_ + tagNames.diffusiveflux + "_z", Expr::STATE_NONE );
-
-    Uintah::ProblemSpecP tcond = parserParams_->findBlock( "ThermalConductivity" );
-    const Expr::Tag thermCondTag = parse_nametag( tcond->findBlock("NameTag") );
-    if( doX ){ info[DIFFUSIVE_FLUX_X]=xDiffFluxTag; factory.register_expression( scinew XFlux( xDiffFluxTag, temperatureTag_, thermCondTag, turbDiffTag_ ) ); }
-    if( doY ){ info[DIFFUSIVE_FLUX_Y]=yDiffFluxTag; factory.register_expression( scinew YFlux( yDiffFluxTag, temperatureTag_, thermCondTag, turbDiffTag_ ) ); }
-    if( doZ ){ info[DIFFUSIVE_FLUX_Z]=zDiffFluxTag; factory.register_expression( scinew ZFlux( zDiffFluxTag, temperatureTag_, thermCondTag, turbDiffTag_ ) ); }
+    
+    for( Uintah::ProblemSpecP diffFluxParams=params_->findBlock("DiffusiveFlux");
+        diffFluxParams != 0;
+        diffFluxParams=diffFluxParams->findNextBlock("DiffusiveFlux") )
+    {
+      setup_diffusive_flux_expression<MyFieldT>( diffFluxParams,
+                                              densityTag_,
+                                              primVarTag_,
+                                              turbDiffTag_,
+                                              "",
+                                              factory,
+                                              info );
+      
+    }
   }
 
   //------------------------------------------------------------------

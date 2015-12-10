@@ -117,7 +117,10 @@ namespace WasatchCore{
   mms_continuitysrc("mms_continuity_src", Expr::STATE_NONE),
   mms_pressurecontsrc("mms_pressure_continuity_src", Expr::STATE_NONE),
   // postprocessing
-  continuityresidual( "ContinuityResidual", Expr::STATE_NONE )
+  continuityresidual( "ContinuityResidual", Expr::STATE_NONE ),
+
+  //compressible flow
+  totalinternalenergy("rhoet",Expr::STATE_NONE)
   
   {}
   

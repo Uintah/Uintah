@@ -25,6 +25,9 @@
 #ifndef Wasatch_Operators_h
 #define Wasatch_Operators_h
 
+//-- SpatialOps includes --//
+#include <spatialops/structured/FVStaggered.h>
+
 /**
  *  \file Operators.h
  */
@@ -33,6 +36,29 @@ namespace SpatialOps{ class OperatorDatabase; }  // forward declaration
 namespace Uintah{ class Patch; }
 
 namespace WasatchCore{
+
+  template< typename SrcT, typename DirT > struct GradOpSelector
+  {
+    typedef typename SpatialOps::Gradient Gradient;
+  };
+  
+  template<>
+  struct GradOpSelector<SpatialOps::SVolField, SpatialOps::XDIR>
+  {
+    typedef typename SpatialOps::GradientX Gradient;
+  };
+  
+  template<>
+  struct GradOpSelector<SpatialOps::SVolField, SpatialOps::YDIR>
+  {
+    typedef typename SpatialOps::GradientY Gradient;
+  };
+  
+  template<>
+  struct GradOpSelector<SpatialOps::SVolField, SpatialOps::ZDIR>
+  {
+    typedef typename SpatialOps::GradientZ Gradient;
+  };
 
   /**
    *  \ingroup WasatchOperators
