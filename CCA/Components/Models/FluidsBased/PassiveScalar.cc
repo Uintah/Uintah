@@ -143,6 +143,7 @@ PassiveScalar::interiorRegion::interiorRegion(GeometryPieceP piece, ProblemSpecP
   : piece(piece)
 {
   ps->require("scalar", value);
+  ps->getWithDefault( "maxScalar" , clampValue, DBL_MAX );
 }
 
 
@@ -571,6 +572,13 @@ void PassiveScalar::computeModelSources(const ProcessorGroup*,
         Point p = patch->cellPosition(c);            
         if(region->piece->inside(p)) {
           f_src[c] = region->value;
+          
+          double f_test = f_old[c] + f_src[c];
+          double clamp = region->clampValue;
+          
+          if (f_test > clamp ){
+            f_src[c] = clamp - f_old[c];
+          }
         }
       } // Over cells
     }  //interiorRegions

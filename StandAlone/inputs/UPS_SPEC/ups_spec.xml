@@ -352,6 +352,7 @@
       <freq                      spec="OPTIONAL VECTOR"/>
       <linearInitialize          spec="OPTIONAL BOOLEAN"/>
       <scalar                    spec="OPTIONAL DOUBLE"/>
+      <maxScalar                 spec="OPTIONAL DOUBLE"/>
       <sinusoidalInitialize      spec="OPTIONAL BOOLEAN"/>
       <slope                     spec="OPTIONAL VECTOR"/>
       <triangularInitialize      spec="OPTIONAL BOOLEAN"/>
