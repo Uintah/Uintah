@@ -49,14 +49,15 @@ namespace Uintah {
       virtual void registerRequiredParticleStates(varLabelArray&,
                                                   varLabelArray&,
                                                   MDLabel*) const = 0;
+
       virtual void addInitializeRequirements(Task*, MDLabel*) const = 0;
       virtual void addInitializeComputes(Task*, MDLabel*) const = 0;
 
       virtual void addSetupRequirements(Task*, MDLabel*) const = 0;
       virtual void addSetupComputes(Task*, MDLabel*) const = 0;
 
-      virtual void addCalculateRequirements(Task*, MDLabel*) const = 0;
-      virtual void addCalculateComputes(Task*, MDLabel*) const = 0;
+      virtual void addCalculateRequirements(Task*, MDLabel*, const PatchSet*, const MaterialSet*, const LevelP&) const = 0;
+      virtual void addCalculateComputes(    Task*, MDLabel*, const PatchSet*, const MaterialSet*, const LevelP&) const = 0;
 
       virtual void addFinalizeRequirements(Task*, MDLabel*) const = 0;
       virtual void addFinalizeComputes(Task*, MDLabel*) const = 0;

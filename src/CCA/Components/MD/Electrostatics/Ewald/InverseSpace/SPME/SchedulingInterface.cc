@@ -82,42 +82,53 @@ void SPME::addSetupComputes(Task* task, MDLabel* d_label) const
   task->computes(d_label->electrostatic->dElectrostaticDependency);
 }
 
-void SPME::addCalculateRequirements(Task* task, MDLabel* d_label) const {
+void SPME::addCalculateRequirements(       Task        * task
+                                   ,       MDLabel     * labels
+                                   , const PatchSet    * patches
+                                   , const MaterialSet * matls
+                                   , const LevelP      & level ) const
+{
 
-  task->requires(Task::OldDW, d_label->global->pX, Ghost::None, 0);
-  task->requires(Task::OldDW, d_label->global->pID, Ghost::None, 0);
+  task->requires(Task::OldDW, labels->global->pX, Ghost::None, 0);
+  task->requires(Task::OldDW, labels->global->pID, Ghost::None, 0);
   // Ensures that SPME::Setup runs first
-  task->requires(Task::NewDW, d_label->electrostatic->dElectrostaticDependency);
+  task->requires(Task::NewDW, labels->electrostatic->dElectrostaticDependency);
 
   if (f_polarizable) {
-    task->requires(Task::OldDW, d_label->electrostatic->pMu, Ghost::None, 0);
+    task->requires(Task::OldDW, labels->electrostatic->pMu, Ghost::None, 0);
   }
 }
 
-void SPME::addCalculateComputes(Task* task, MDLabel* d_label) const
+void SPME::addCalculateComputes(       Task        * task
+                               ,       MDLabel     * labels
+                               , const PatchSet    * patches
+                               , const MaterialSet * matls
+                               , const LevelP      & level ) const
 {
 // These are the variables provided at the end of the entire SPME routine,
 // and have nothing to do with computes/requires from the subscheduler.
 
 // Universal reduction variables
-  task->computes(d_label->electrostatic->rElectrostaticInverseEnergy);
-  task->computes(d_label->electrostatic->rElectrostaticRealEnergy);
-  task->computes(d_label->electrostatic->rElectrostaticInverseStress);
-  task->computes(d_label->electrostatic->rElectrostaticRealStress);
+  const MaterialSubset* matl_subset = matls->getUnion();
+
+  task->computes(labels->electrostatic->rElectrostaticInverseEnergy, level.get_rep(), matl_subset, Task::NormalDomain);
+  task->computes(labels->electrostatic->rElectrostaticRealEnergy, level.get_rep(), matl_subset, Task::NormalDomain);
+  task->computes(labels->electrostatic->rElectrostaticInverseStress, level.get_rep(), matl_subset, Task::NormalDomain);
+  task->computes(labels->electrostatic->rElectrostaticRealStress, level.get_rep(), matl_subset, Task::NormalDomain);
 // We should probably actually concatenate the forces into a single
 // pF_electrostatic for gating to the integrator.
 // Universal
 
 
 
-  task->computes(d_label->electrostatic->pF_electroInverse_preReloc);
-  task->computes(d_label->electrostatic->pF_electroReal_preReloc);
+  task->computes(labels->electrostatic->pF_electroInverse_preReloc, level.get_rep(), matl_subset, Task::NormalDomain);
+  task->computes(labels->electrostatic->pF_electroReal_preReloc, level.get_rep(), matl_subset, Task::NormalDomain);
 
   if (f_polarizable) {
-    task->computes(d_label->electrostatic->pMu_preReloc);
-    task->computes(d_label->electrostatic->rElectrostaticInverseStressDipole);
-//    task->computes(d_label->electrostatic->pE_electroInverse_preReloc);
-//    task->computes(d_label->electrostatic->pE_electroReal_preReloc);
+    task->computes(labels->electrostatic->pMu_preReloc, level.get_rep(), matl_subset, Task::NormalDomain);
+    task->computes(labels->electrostatic->rElectrostaticInverseStressDipole, level.get_rep(), matl_subset, Task::NormalDomain);
+//    task->computes(labels->electrostatic->pE_electroInverse_preReloc, level.get_rep(), matl_subset, Task::NormalDomain);
+//    task->computes(labels->electrostatic->pE_electroReal_preReloc, level.get_rep(), matl_subset, Task::NormalDomain);
   }
 
 

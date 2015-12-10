@@ -47,7 +47,7 @@
 #include <CCA/Components/MD/MD.h>
 
 #include <CCA/Components/MD/Electrostatics/ElectrostaticsFactory.h>
-#include <CCA/Components/MD/Electrostatics/SPME/SPME.h>
+#include <CCA/Components/MD/Electrostatics/Ewald/InverseSpace/SPME/SPME.h>
 
 #include <CCA/Components/MD/CoordinateSystems/CoordinateSystemFactory.h>
 
@@ -617,8 +617,8 @@ void MD::scheduleNonbondedCalculate(SchedulerP&         sched,
   MDSubcomponent* d_nonbondedInterface =
                       dynamic_cast<MDSubcomponent*> (d_nonbonded);
 
-  d_nonbondedInterface->addCalculateRequirements(task,d_label);
-  d_nonbondedInterface->addCalculateComputes(task,d_label);
+  d_nonbondedInterface->addCalculateRequirements(task, d_label, patches, matls, level);
+  d_nonbondedInterface->addCalculateComputes(task, d_label, patches, matls, level);
 
   sched->addTask(task, patches, matls);
   if (mdFlowDebug.active()) {
@@ -725,8 +725,8 @@ void MD::scheduleIntegratorCalculate(           SchedulerP&  sched,
   MDSubcomponent* d_integratorInterface =
                       dynamic_cast<MDSubcomponent*> (d_integrator);
 
-  d_integratorInterface->addCalculateRequirements(task, d_label);
-  d_integratorInterface->addCalculateComputes(task, d_label);
+  d_integratorInterface->addCalculateRequirements(task, d_label, patches, atomTypes, level);
+  d_integratorInterface->addCalculateComputes(task, d_label, patches, atomTypes, level);
 
   sched->addTask(task, patches, atomTypes);
 
@@ -845,8 +845,8 @@ void MD::scheduleElectrostaticsCalculate(SchedulerP& sched,
   MDSubcomponent* d_electroInterface =
                         dynamic_cast<MDSubcomponent*> (d_electrostatics);
 
-  d_electroInterface->addCalculateRequirements(task, d_label);
-  d_electroInterface->addCalculateComputes(task, d_label);
+  d_electroInterface->addCalculateRequirements(task, d_label, patches, matls, level);
+  d_electroInterface->addCalculateComputes(task, d_label, patches, matls, level);
 
   task->hasSubScheduler(true);
   task->setType(Task::OncePerProc);

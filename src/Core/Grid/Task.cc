@@ -346,12 +346,12 @@ Task::requires(WhichDW dw,
 
 //__________________________________
 void
-Task::requires(WhichDW dw, 
+Task::requires(WhichDW dw,
                const VarLabel* var,
-		 const Level* level,
-		 const MaterialSubset * matls,
-		 MaterialDomainSpec matls_dom,
-		 bool oldTG)
+               const Level* level,
+               const MaterialSubset * matls,
+               MaterialDomainSpec matls_dom,
+               bool oldTG)
 {
   TypeDescription::Type vartype = var->typeDescription()->getType();
   if(!(vartype == TypeDescription::ReductionVariable ||
@@ -380,6 +380,39 @@ Task::requires(WhichDW dw,
   if (dw == OldDW) {
     d_requiresOldDW.insert(make_pair(var, dep));
   }else{
+    d_requires.insert(make_pair(var, dep));
+  }
+}
+
+//__________________________________
+void
+Task::requires(WhichDW dw,
+               const VarLabel* var,
+               const Level* level,
+               const MaterialSubset* matls,
+               MaterialDomainSpec matls_dom,
+               Ghost::GhostType gtype,
+               int numGhostCells)
+{
+  TypeDescription::Type vartype = var->typeDescription()->getType();
+  if ((vartype == TypeDescription::ReductionVariable || vartype == TypeDescription::SoleVariable)) {
+    SCI_THROW(InternalError("Should not use this requires for ReductionVariable and SoleVariable", __FILE__, __LINE__));
+  }
+
+  Dependency* dep = scinew Dependency(Requires, this, dw, var, level, matls, matls_dom, gtype, numGhostCells);
+
+  dep->next = 0;
+
+  if (req_tail) {
+    req_tail->next = dep;
+  } else {
+    req_head = dep;
+  }
+  req_tail = dep;
+
+  if (dw == OldDW) {
+    d_requiresOldDW.insert(make_pair(var, dep));
+  } else {
     d_requires.insert(make_pair(var, dep));
   }
 }
@@ -455,16 +488,16 @@ Task::computes(const VarLabel* var, const PatchSubset* patches,
 
 //__________________________________
 void
-Task::computes(const VarLabel* var,
-		const Level* level,
-		const MaterialSubset * matls,
-		MaterialDomainSpec matls_dom)
+Task::computes(const VarLabel         * var,
+               const Level            * level,
+               const MaterialSubset   * matls,
+                     MaterialDomainSpec matls_dom)
 {
-  TypeDescription::Type vartype = var->typeDescription()->getType();
-  if (!(vartype == TypeDescription::ReductionVariable ||
-      vartype == TypeDescription::SoleVariable)){
-    SCI_THROW(InternalError("Computes should only be used for reduction variable", __FILE__, __LINE__));
-  }
+//  TypeDescription::Type vartype = var->typeDescription()->getType();
+//  if (!(vartype == TypeDescription::ReductionVariable ||
+//      vartype == TypeDescription::SoleVariable)){
+//    SCI_THROW(InternalError("Computes should only be used for reduction variable", __FILE__, __LINE__));
+//  }
   
   if (matls == 0) {
     // default material for a reduction variable is the global material (-1)
@@ -780,6 +813,41 @@ Task::Dependency::Dependency(DepType deptype,
 }
 
 //__________________________________
+Task::Dependency::Dependency(DepType deptype,
+                             Task* task,
+                             WhichDW whichdw,
+                             const VarLabel* var,
+                             const Level* level,
+                             const MaterialSubset* matls,
+                             MaterialDomainSpec matls_dom,
+                             Ghost::GhostType gtype,
+                             int numGhostCells)
+
+  : deptype(deptype)
+  , task(task)
+  , var(var)
+  , lookInOldTG(false)
+  , patches(0)
+  , matls(matls)
+  , reductionLevel(reductionLevel)
+  , patches_dom(ThisLevel)
+  , matls_dom(matls_dom)
+  , gtype(gtype)
+  , whichdw(whichdw)
+  , numGhostCells(numGhostCells)
+  , level_offset(0)
+{
+  if (var){
+    var->addReference();
+  }
+  req_head=req_tail=comp_head=comp_tail=0;
+
+  if(matls){
+    matls->addReference();
+  }
+}
+
+//__________________________________
 Task::Dependency::Dependency(DepType deptype, 
                              Task* task, 
                              WhichDW whichdw,
@@ -802,6 +870,7 @@ Task::Dependency::Dependency(DepType deptype,
     matls->addReference();
   }
 }
+
 //__________________________________
 Task::Dependency::~Dependency()
 {

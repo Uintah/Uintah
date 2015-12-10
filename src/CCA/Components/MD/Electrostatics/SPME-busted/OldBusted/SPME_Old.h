@@ -39,9 +39,9 @@
 #include <CCA/Components/MD/MDSubcomponent.h>
 
 #include <CCA/Components/MD/Electrostatics/Electrostatics.h>
-#include <CCA/Components/MD/Electrostatics/SPME/ShiftedCardinalBSpline.h>
-#include <CCA/Components/MD/Electrostatics/SPME/SPMEPatch.h>
 #include <CCA/Components/MD/CoordinateSystems/CoordinateSystem.h>
+#include <CCA/Components/MD/Electrostatics/SPME-busted/ShiftedCardinalBSpline.h>
+#include <CCA/Components/MD/Electrostatics/SPME-busted/SPMEPatch.h>
 
 
 namespace OldSPME {

@@ -149,10 +149,14 @@ void velocityVerlet::setup(     const ProcessorGroup*       pg,
   // No code
 }
 
-void velocityVerlet::addCalculateRequirements( Task*    task,
-                                               MDLabel* labels
-                                             ) const
+void velocityVerlet::addCalculateRequirements(       Task        * task
+                                             ,       MDLabel     * labels
+                                             , const PatchSet    * patches
+                                             , const MaterialSet * matls
+                                             , const LevelP      & level ) const
 {
+  const MaterialSubset* matl_subset = matls->getUnion();
+
   task->requires(Task::OldDW, labels->global->pX,  Ghost::None, 0);
   task->requires(Task::OldDW, labels->global->pV,  Ghost::None, 0);
   task->requires(Task::OldDW, labels->global->pID, Ghost::None, 0);
@@ -174,16 +178,31 @@ void velocityVerlet::addCalculateRequirements( Task*    task,
   //                labels->global->pF_preReloc,
   //                Ghost::None,
   //                0);
-  task->requires(Task::NewDW,
-                 labels->nonbonded->pF_nonbonded_preReloc,
-                 Ghost::None,
-                 0);
+
+  // pF_elec_inv+
   task->requires(Task::NewDW,
                  labels->electrostatic->pF_electroInverse_preReloc,
+                 level.get_rep(),
+                 matl_subset,
+                 Task::NormalDomain,
                  Ghost::None,
                  0);
+
+  // pF_nb_MD+
+  task->requires(Task::NewDW,
+                 labels->nonbonded->pF_nonbonded_preReloc,
+                 level.get_rep(),
+                 matl_subset,
+                 Task::NormalDomain,
+                 Ghost::None,
+                 0);
+
+
   task->requires(Task::NewDW,
                  labels->electrostatic->pF_electroReal_preReloc,
+                 level.get_rep(),
+                 matl_subset,
+                 Task::NormalDomain,
                  Ghost::None,
                  0);
 
@@ -191,20 +210,24 @@ void velocityVerlet::addCalculateRequirements( Task*    task,
   task->requires(Task::OldDW, dt_label);
 }
 
-void velocityVerlet::addCalculateComputes(     Task*    task,
-                                               MDLabel* labels
-                                         ) const
+void velocityVerlet::addCalculateComputes(       Task        * task
+                                         ,       MDLabel     * labels
+                                         , const PatchSet    * patches
+                                         , const MaterialSet * matls
+                                         , const LevelP      & level ) const
 {
-  task->computes(labels->global->pX_preReloc);
-  task->computes(labels->global->pV_preReloc);
-  task->computes(labels->global->pID_preReloc);
+  const MaterialSubset* matl_subset = matls->getUnion();
 
-  task->computes(labels->global->rKineticEnergy);
-  task->computes(labels->global->rKineticStress);
-  task->computes(labels->global->rTotalMomentum);
-  task->computes(labels->global->rTotalMass);
+  task->computes(labels->global->pX_preReloc, level.get_rep(), matl_subset, Task::NormalDomain);
+  task->computes(labels->global->pV_preReloc, level.get_rep(), matl_subset, Task::NormalDomain);
+  task->computes(labels->global->pID_preReloc, level.get_rep(), matl_subset, Task::NormalDomain);
 
-  task->computes(labels->integrator->fPatchFirstIntegration);
+  task->computes(labels->global->rKineticEnergy, level.get_rep(), matl_subset, Task::NormalDomain);
+  task->computes(labels->global->rKineticStress, level.get_rep(), matl_subset, Task::NormalDomain);
+  task->computes(labels->global->rTotalMomentum, level.get_rep(), matl_subset, Task::NormalDomain);
+  task->computes(labels->global->rTotalMass, level.get_rep(), matl_subset, Task::NormalDomain);
+
+  task->computes(labels->integrator->fPatchFirstIntegration, level.get_rep(), matl_subset, Task::NormalDomain);
 
 }
 
@@ -401,7 +424,7 @@ void velocityVerlet::integratePatch(const Patch*            workPatch,
                                           double&           totalMass,
                                           SCIRun::Vector&   totalMomentum)
 {
-  SCIRun::Vector momentumFraction = d_previousMomentum/d_previousMass;
+//  SCIRun::Vector momentumFraction = d_previousMomentum/d_previousMass;
   // Normalization constants
   double forceNorm = 41.84;
   double velocNorm = 1.0e-5;
@@ -435,7 +458,7 @@ void velocityVerlet::integratePatch(const Patch*            workPatch,
   newDW->get(pF_eReal_nPlus1, label->electrostatic->pF_electroReal_preReloc,    atomSet);
   newDW->get(pF_eInv_nPlus1,  label->electrostatic->pF_electroInverse_preReloc, atomSet);
 
-  int timestep = (*simState)->getCurrentTopLevelTimeStep();
+//  int timestep = (*simState)->getCurrentTopLevelTimeStep();
 //  std::ostringstream forceOutName;
 //  std::fstream forceOutFile;
 //  forceOutName << "forceOutput.txt_" << std::left << Uintah::Parallel::getMPIRank();
@@ -487,9 +510,8 @@ void velocityVerlet::firstIntegratePatch(const Patch*           workPatch,
                                           double&               kineticEnergy,
                                           double&               totalMass,
                                           SCIRun::Vector&       totalMomentum)
-
 {
-  SCIRun::Vector momentumFraction = d_previousMomentum/d_previousMass;
+//  SCIRun::Vector momentumFraction = d_previousMomentum/d_previousMass;
   // Normalization constants
   double forceNorm = 41.84;
   double velocNorm = 1.0e-5;
@@ -526,7 +548,7 @@ void velocityVerlet::firstIntegratePatch(const Patch*           workPatch,
   newDW->get(pF_eInv_nPlus1,  label->electrostatic->pF_electroInverse_preReloc, atomSet);
 
   // Loop to spit out the total integrated quantities before reloc:  TODO delete this
-  int timestep = (*simState)->getCurrentTopLevelTimeStep();
+//  int timestep = (*simState)->getCurrentTopLevelTimeStep();
 //  forceFileLock.lock();
 //  std::ostringstream forceOutName;
 //  std::fstream forceOutFile;

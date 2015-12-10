@@ -22,6 +22,9 @@
  * IN THE SOFTWARE.
  */
 
+#include <CCA/Components/MD/Electrostatics/SPME-busted/ShiftedCardinalBSpline.h>
+#include <CCA/Components/MD/Electrostatics/SPME-busted/SPME.h>
+#include <CCA/Components/MD/Electrostatics/SPME-busted/SPMEMapPoint.h>
 #include <CCA/Ports/Scheduler.h>
 #include <Core/Grid/Patch.h>
 #include <Core/Parallel/Parallel.h>
@@ -50,9 +53,6 @@
 #include <CCA/Components/MD/MDSystem.h>
 #include <CCA/Components/MD/MDLabel.h>
 #include <CCA/Components/MD/SimpleGrid.h>
-#include <CCA/Components/MD/Electrostatics/SPME/SPME.h>
-#include <CCA/Components/MD/Electrostatics/SPME/ShiftedCardinalBSpline.h>
-#include <CCA/Components/MD/Electrostatics/SPME/SPMEMapPoint.h>
 
 #ifdef DEBUG
 #include <Core/Util/FancyAssert.h>

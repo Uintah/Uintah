@@ -135,32 +135,44 @@ void TwoBodyDeterministic::setup(const ProcessorGroup*  pg,
 
 }
 
-void TwoBodyDeterministic::addCalculateRequirements(Task* task,
-                                                    MDLabel* label) const {
+void TwoBodyDeterministic::addCalculateRequirements(       Task        * task
+                                                   ,       MDLabel     * labels
+                                                   , const PatchSet    * patches
+                                                   , const MaterialSet * matls
+                                                   , const LevelP      & level
+                                                   ) const
+{
 
   proc0cout << "Registering for " << d_nonbondedGhostCells
             << " ghost cells required." << std::endl;
   task->requires(Task::OldDW,
-                 label->global->pX,
+                 labels->global->pX,
                  Ghost::AroundCells,
                  d_nonbondedGhostCells);
 
   task->requires(Task::OldDW,
-                 label->global->pID,
+                 labels->global->pID,
                  Ghost::AroundCells,
                  d_nonbondedGhostCells);
 
 }
 
-void TwoBodyDeterministic::addCalculateComputes(Task* task,
-                                                MDLabel* label) const {
+void TwoBodyDeterministic::addCalculateComputes(       Task        * task
+                                               ,       MDLabel     * label
+                                               , const PatchSet    * patches
+                                               , const MaterialSet * matls
+                                               , const LevelP      & level) const
+{
+
+  const MaterialSubset* matl_subset = matls->getUnion();
+
   // Provide per particle force
-  task->computes(label->nonbonded->pF_nonbonded_preReloc);
-  task->computes(label->nonbonded->pNumPairsInCalc_preReloc);
+  task->computes(label->nonbonded->pF_nonbonded_preReloc, level.get_rep(), matl_subset, Task::NormalDomain);
+  task->computes(label->nonbonded->pNumPairsInCalc_preReloc, level.get_rep(), matl_subset, Task::NormalDomain);
 
   // Provide per patch contribution to energy and stress tensor
-  task->computes(label->nonbonded->rNonbondedEnergy);
-  task->computes(label->nonbonded->rNonbondedStress);
+  task->computes(label->nonbonded->rNonbondedEnergy, level.get_rep(), matl_subset, Task::NormalDomain);
+  task->computes(label->nonbonded->rNonbondedStress, level.get_rep(), matl_subset, Task::NormalDomain);
 
 }
 
