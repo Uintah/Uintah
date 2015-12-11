@@ -241,11 +241,11 @@ public:
      
   const LevelP& getRelativeLevel( int offset ) const;
 
-  int getSubsetIndex() const {
+  int getIndexWithinSubset() const {
     return d_subsetIndex;
   }
 
-  void setSubsetIndex(int inputIndex) {
+  void setIndexWithinSubset(int inputIndex) {
     d_subsetIndex = inputIndex;
   }
 

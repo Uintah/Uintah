@@ -1102,7 +1102,7 @@ LevelSetSimulationController::subCycleCompile(  const LevelP                    
   const LevelSubset * currSubset                = currLevel->getLevelSubset();
         int           numLevelsInSubset         = currSubset->size();
 
-        int           relativeIndexInSubset     = currLevel->getSubsetIndex();
+        int           relativeIndexInSubset     = currLevel->getIndexWithinSubset();
 
   if (relativeIndexInSubset > 0) {
     // Not starting from the coarsest level of the subset, so we're recursing
@@ -1219,7 +1219,7 @@ LevelSetSimulationController::subCycleExecute(
   // zeroth level in the subset.  AMR is confined to a single subset by definition, though
   // multiple subsets can have different AMR instantiations.
   int numSteps;
-  if (grid->getLevel(levelIndex)->getSubsetIndex() == 0 || state->isLockstepAMR()) {
+  if (grid->getLevel(levelIndex)->getIndexWithinSubset() == 0 || state->isLockstepAMR()) {
     numSteps = 1;
   }
   else {
