@@ -56,100 +56,51 @@ class TabPropsEvaluator
                      const Expr::TagList& ivarNames,
                      const Expr::Tag derVarName=Expr::Tag() );
 
-  class Functor1D{
+  class Functor{
     const InterpT& eval_;
   public:
-    Functor1D( const InterpT& interp ) : eval_(interp){}
+    Functor( const InterpT& interp ) : eval_(interp){}
     double operator()( const double x ) const{
       return eval_.value(&x);
     }
-  };
-
-  class DerFunctor1D{
-    const InterpT& eval_;
-    const int dim_;
-  public:
-    DerFunctor1D( const InterpT& interp, const int dim ) : eval_( interp ), dim_(dim){}
-    double operator()( const double x ) const{
-      return eval_.derivative(&x,dim_);
-    }
-  };
-
-  class Functor2D{
-    const InterpT& eval_;
-  public:
-    Functor2D( const InterpT& interp ) : eval_( interp ) {}
     double operator()( const double x1, const double x2 ) const{
       double vals[2] = {x1,x2};
-      return eval_.value( vals );
+      return eval_.value(vals);
     }
-  };
-  class DerFunctor2D{
-    const InterpT& eval_;
-    const int dim_;
-  public:
-    DerFunctor2D( const InterpT& interp, const int dim ) : eval_( interp ), dim_( dim ){}
-    double operator()( const double x1, const double x2 ) const{
-      double vals[2] = {x1,x2};
-      return eval_.derivative( vals, dim_ );
-    }
-  };
-
-  class Functor3D{
-    const InterpT& eval_;
-  public:
-    Functor3D( const InterpT& interp ) : eval_( interp ) {}
-
     double operator()( const double x1, const double x2, const double x3 ) const{
       double vals[3] = {x1,x2,x3};
-      return eval_.value( vals );
+      return eval_.value(vals);
     }
-  };
-  class DerFunctor3D{
-    const InterpT& eval_;
-    const int dim_;
-  public:
-    DerFunctor3D( const InterpT& interp, const int dim ) : eval_( interp ), dim_( dim ){}
-    double operator()( const double x1, const double x2, const double x3 ) const{
-      double vals[3] = {x1,x2,x3};
-      return eval_.derivative( vals, dim_ );
-    }
-  };
-
-  class Functor4D{
-    const InterpT& eval_;
-  public:
-    Functor4D( const InterpT& interp ) : eval_( interp ) {}
     double operator()( const double x1, const double x2, const double x3, const double x4 ) const{
       double vals[4] = {x1,x2,x3,x4};
       return eval_.value( vals );
     }
-  };
-  class DerFunctor4D{
-    const InterpT& eval_;
-    const int dim_;
-  public:
-    DerFunctor4D( const InterpT& interp, const int dim ) : eval_( interp ), dim_( dim ){}
-    double operator()( const double x1, const double x2, const double x3, const double x4 ) const{
-      double vals[4] = {x1,x2,x3,x4};
-      return eval_.derivative( vals, dim_ );
-    }
-  };
-
-  class Functor5D{
-    const InterpT& eval_;
-  public:
-    Functor5D( const InterpT& interp ) : eval_( interp ) {}
     double operator()( const double x1, const double x2, const double x3, const double x4, const double x5 ) const{
       double vals[5] = {x1,x2,x3,x4,x5};
       return eval_.value( vals );
     }
   };
-  class DerFunctor5D{
+
+  class DerFunctor{
     const InterpT& eval_;
     const int dim_;
   public:
-    DerFunctor5D( const InterpT& interp, const int dim ) : eval_( interp ), dim_( dim ){}
+    DerFunctor( const InterpT& interp, const int dim ) : eval_( interp ), dim_(dim){}
+    double operator()( const double x ) const{
+      return eval_.derivative(&x,dim_);
+    }
+   double operator()( const double x1, const double x2 ) const{
+      double vals[2] = {x1,x2};
+      return eval_.derivative( vals, dim_ );
+    }
+    double operator()( const double x1, const double x2, const double x3 ) const{
+      double vals[3] = {x1,x2,x3};
+      return eval_.derivative( vals, dim_ );
+    }
+    double operator()( const double x1, const double x2, const double x3, const double x4 ) const{
+      double vals[4] = {x1,x2,x3,x4};
+      return eval_.derivative( vals, dim_ );
+    }
     double operator()( const double x1, const double x2, const double x3, const double x4, const double x5 ) const{
       double vals[5] = {x1,x2,x3,x4,x5};
       return eval_.derivative( vals, dim_ );
@@ -263,75 +214,75 @@ evaluate()
   switch( indepVars_.size() ){
     case 1:{
       if( doDerivative_ ){
-        result <<= SpatialOps::apply_pointwise( factory<DerFunctor1D>(evaluator_,derIndex_),
-                                                indepVars_[0]->field_ref() );
+        result <<= apply_pointwise( factory<DerFunctor>(evaluator_,derIndex_),
+                                    indepVars_[0]->field_ref() );
       }
       else{
-        result <<= SpatialOps::apply_pointwise( factory<Functor1D>(evaluator_),
-                                                indepVars_[0]->field_ref() );
+        result <<= apply_pointwise( factory<Functor>(evaluator_),
+                                    indepVars_[0]->field_ref() );
       }
       break;
     }
     case 2:{
       if( doDerivative_ ){
-        result <<= SpatialOps::apply_pointwise( factory<DerFunctor2D>(evaluator_,derIndex_),
-                                                indepVars_[0]->field_ref(), indepVars_[1]->field_ref() );
+        result <<= apply_pointwise( factory<DerFunctor>(evaluator_,derIndex_),
+                                    indepVars_[0]->field_ref(), indepVars_[1]->field_ref() );
       }
       else{
-        result <<= SpatialOps::apply_pointwise( factory<Functor2D>(evaluator_),
-                                                indepVars_[0]->field_ref(),
-                                                indepVars_[1]->field_ref() );
+        result <<= apply_pointwise( factory<Functor>(evaluator_),
+                                    indepVars_[0]->field_ref(),
+                                    indepVars_[1]->field_ref() );
       }
       break;
     }
     case 3:{
       if( doDerivative_ ){
-        result <<= SpatialOps::apply_pointwise( factory<DerFunctor3D>(evaluator_,derIndex_),
-                                                indepVars_[0]->field_ref(),
-                                                indepVars_[1]->field_ref(),
-                                                indepVars_[2]->field_ref() );
+        result <<= apply_pointwise( factory<DerFunctor>(evaluator_,derIndex_),
+                                    indepVars_[0]->field_ref(),
+                                    indepVars_[1]->field_ref(),
+                                    indepVars_[2]->field_ref() );
       }
       else{
-        result <<= SpatialOps::apply_pointwise( factory<Functor3D>(evaluator_),
-                                                indepVars_[0]->field_ref(),
-                                                indepVars_[1]->field_ref(),
-                                                indepVars_[2]->field_ref() );
+        result <<= apply_pointwise( factory<Functor>(evaluator_),
+                                    indepVars_[0]->field_ref(),
+                                    indepVars_[1]->field_ref(),
+                                    indepVars_[2]->field_ref() );
       }
       break;
     }
     case 4:{
       if( doDerivative_ ){
-        result <<= SpatialOps::apply_pointwise( factory<DerFunctor4D>(evaluator_,derIndex_),
-                                                indepVars_[0]->field_ref(),
-                                                indepVars_[1]->field_ref(),
-                                                indepVars_[2]->field_ref(),
-                                                indepVars_[3]->field_ref() );
+        result <<= apply_pointwise( factory<DerFunctor>(evaluator_,derIndex_),
+                                    indepVars_[0]->field_ref(),
+                                    indepVars_[1]->field_ref(),
+                                    indepVars_[2]->field_ref(),
+                                    indepVars_[3]->field_ref() );
       }
       else{
-        result <<= SpatialOps::apply_pointwise( factory<Functor4D>(evaluator_),
-                                                indepVars_[0]->field_ref(),
-                                                indepVars_[1]->field_ref(),
-                                                indepVars_[2]->field_ref(),
-                                                indepVars_[3]->field_ref() );
+        result <<= apply_pointwise( factory<Functor>(evaluator_),
+                                    indepVars_[0]->field_ref(),
+                                    indepVars_[1]->field_ref(),
+                                    indepVars_[2]->field_ref(),
+                                    indepVars_[3]->field_ref() );
       }
       break;
     }
     case 5:{
       if( doDerivative_ ){
-        result <<= SpatialOps::apply_pointwise( factory<DerFunctor5D>(evaluator_,derIndex_),
-                                                indepVars_[0]->field_ref(),
-                                                indepVars_[1]->field_ref(),
-                                                indepVars_[2]->field_ref(),
-                                                indepVars_[3]->field_ref(),
-                                                indepVars_[4]->field_ref() );
+        result <<= apply_pointwise( factory<DerFunctor>(evaluator_,derIndex_),
+                                    indepVars_[0]->field_ref(),
+                                    indepVars_[1]->field_ref(),
+                                    indepVars_[2]->field_ref(),
+                                    indepVars_[3]->field_ref(),
+                                    indepVars_[4]->field_ref() );
       }
       else{
-        result <<= SpatialOps::apply_pointwise( factory<Functor5D>(evaluator_),
-                                                indepVars_[0]->field_ref(),
-                                                indepVars_[1]->field_ref(),
-                                                indepVars_[2]->field_ref(),
-                                                indepVars_[3]->field_ref(),
-                                                indepVars_[4]->field_ref() );
+        result <<= apply_pointwise( factory<Functor>(evaluator_),
+                                    indepVars_[0]->field_ref(),
+                                    indepVars_[1]->field_ref(),
+                                    indepVars_[2]->field_ref(),
+                                    indepVars_[3]->field_ref(),
+                                    indepVars_[4]->field_ref() );
       }
       break;
     }
