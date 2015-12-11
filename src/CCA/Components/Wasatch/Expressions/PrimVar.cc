@@ -43,9 +43,10 @@ PrimVar( const Expr::Tag& rhoPhiTag,
 {
   this->set_gpu_runnable( true );
   
-   rhophi_ = this->template create_field_request<FieldT>(rhoPhiTag);
-   rho_ = this->template create_field_request<DensT>(rhoTag);
-  if (hasIntrusion_)  volfrac_ = this->template create_field_request<FieldT>(volFracTag);
+  rhophi_ = this->template create_field_request<FieldT>(rhoPhiTag);
+  rho_    = this->template create_field_request<DensT >(rhoTag   );
+
+  if( hasIntrusion_ ) volfrac_ = this->template create_field_request<FieldT>(volFracTag);
 }
 
 //--------------------------------------------------------------------
@@ -67,6 +68,14 @@ bind_operators( const SpatialOps::OperatorDatabase& opDB )
 
 //--------------------------------------------------------------------
 
+template<>
+void
+PrimVar<SpatialOps::SVolField,SpatialOps::SVolField>::
+bind_operators( const SpatialOps::OperatorDatabase& opDB )
+{}
+
+//--------------------------------------------------------------------
+
 template< typename FieldT, typename DensT >
 void
 PrimVar<FieldT,DensT>::
@@ -80,9 +89,12 @@ evaluate()
   SpatialOps::SpatFldPtr<FieldT> tmp = SpatialOps::SpatialFieldStore::get<FieldT>( phi );
   *tmp <<= 1.0; // we need to set this to 1.0 so that we don't get random values in out-of-domain faces
   *tmp <<= (*interpOp_)( rho );
+
   if( hasIntrusion_ ) phi <<= volfrac_->field_ref() * rhophi / *tmp;
-  else                        phi <<= rhophi / *tmp;
+  else                phi <<= rhophi / *tmp;
 }
+
+//--------------------------------------------------------------------
 
 template<>
 void
@@ -92,10 +104,10 @@ evaluate()
   using namespace SpatialOps;
   typedef SpatialOps::SVolField FieldT;
   FieldT& phi = this->value();
-  const FieldT& rho = rho_->field_ref();
+  const FieldT& rho    = rho_   ->field_ref();
   const FieldT& rhophi = rhophi_->field_ref();
   if( hasIntrusion_ ) phi <<= volfrac_->field_ref() * rhophi / rho;
-  else                        phi <<= rhophi / rho;
+  else                phi <<= rhophi / rho;
 }
 
 //--------------------------------------------------------------------
@@ -129,6 +141,5 @@ template class PrimVar< SpatialOps::XVolField, SpatialOps::SVolField >;
 template class PrimVar< SpatialOps::YVolField, SpatialOps::SVolField >;
 template class PrimVar< SpatialOps::ZVolField, SpatialOps::SVolField >;
 //====================================================================
-
 
 #endif // PrimVar_h
