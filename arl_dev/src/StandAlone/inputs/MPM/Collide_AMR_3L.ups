@@ -10,10 +10,10 @@
   <SimulationComponent type="amrmpm" />
 
   <Time>
-      <maxTime>         0.1     </maxTime>     
-      <initTime>        0.0     </initTime>    
-      <delt_min>        1e-10   </delt_min>    
-      <delt_max>        0.001   </delt_max>    
+      <maxTime>         0.1     </maxTime>
+      <initTime>        0.0     </initTime>
+      <delt_min>        1e-10   </delt_min>
+      <delt_max>        0.001   </delt_max>
       <max_Timesteps>   350     </max_Timesteps>
       <timestep_multiplier> 0.1 </timestep_multiplier>
   </Time>
@@ -44,6 +44,7 @@
      <checkpoint cycle = "2" timestepInterval = "10"/>
   </DataArchiver>
    <!--__________________________________-->
+  <doAMR>true</doAMR>
   <AMR>
      <useLockStep> true </useLockStep>
      <MPM>
@@ -78,7 +79,7 @@
      <MPM>
        <material name="disks">
          <density>1000.0</density>
-         <constitutive_model type="comp_mooney_rivlin"> 
+         <constitutive_model type="comp_mooney_rivlin">
             <he_constant_1>       100000.0  </he_constant_1>
             <he_constant_2>       20000.0   </he_constant_2>
             <he_PR>               .49       </he_PR>
@@ -94,7 +95,7 @@
             <velocity>    [100,0,0]   </velocity>
             <temperature>     12        </temperature>
             <color>            0        </color>
-         </geom_object>              
+         </geom_object>
          <geom_object>
             <box label="gp2">
                  <min>[ 0.25, 0.0, -.05 ]</min>
@@ -104,7 +105,7 @@
             <velocity>    [-100,0,0]   </velocity>
             <temperature>     12        </temperature>
             <color>            0        </color>
-         </geom_object>              
+         </geom_object>
        </material>
        <contact>
          <type>null</type>
@@ -132,7 +133,7 @@
           <patches>     [2,1,1]              </patches>
           <extraCells>  [0,0,0]              </extraCells>
         </Box>
-      </Level>   
+      </Level>
       <Level>
         <Box label = "2">
            <lower>       [ -.25, 0.,  -0.05]   </lower>
@@ -168,8 +169,8 @@
       <Face side = "z+">
           <BCType id = "all"    label = "Symmetric" var = "symmetry"> </BCType>
       </Face>
-      
+
       </BoundaryConditions>
    </Grid>
-   
+
 </Uintah_specification>
