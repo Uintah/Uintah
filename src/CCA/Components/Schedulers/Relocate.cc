@@ -366,34 +366,66 @@ Relocate::scheduleParticleRelocation(Scheduler* sched,
   }
   
   PatchSet* patches;
-  if (!level->hasFinerLevel()) {
-    // only case since the below version isn't const
-    patches = const_cast<PatchSet*>(lb->getPerProcessorPatchSet(level->getSubsetIndex()));
-  } else {
-    GridP grid = level->getGrid();
-    // make per-proc patch set of each level >= level
+  GridP grid = level->getGrid();
+  int subsetIndexInGrid = grid->getSubsetIndex(level->getIndex());
+  const LevelSubset* currSubset = grid->getLevelSubset(subsetIndexInGrid);
+  int levelIndexInSubset = level->getIndexWithinSubset();
+  int numLevelsInSubset = currSubset->size();
+  if (level->isAMR() && (levelIndexInSubset < (numLevelsInSubset - 1))) {
+    // We are in an AMR level, and there ARE finer levels remaining.
     patches = scinew PatchSet();
     patches->createEmptySubsets(pg->size());
 
-//  FIXME TODO JBH APH 11-15-2015  The commented section below is the way to do relocation based on levelSets
-//  However, the AMRSimulationController is not currently set up to regrid and preserve the grid structure properly.
-
-    // Iterate only through levelSet, not through entire grid.
-    const LevelSubset* currSubset = grid->getLevelSubset(grid->getSubsetIndex(level->getIndex()));
-    size_t numLevelsInSubset = currSubset->size();
-    size_t offsetInSubset = level->getSubsetIndex();
-    // Iterate from the coarse level to the end of the subset
-    for (size_t indexInSubset = offsetInSubset; indexInSubset < numLevelsInSubset; ++indexInSubset) {
+    for (int indexInSubset = levelIndexInSubset; indexInSubset < numLevelsInSubset; ++indexInSubset) {
       LevelP levelHandle = grid->getLevel(currSubset->get(indexInSubset)->getIndex());
       const PatchSet* p = lb->getPerProcessorPatchSet(levelHandle);
 
-      for (int proc = 0; proc < pg->size(); proc++) {
-        for (int j = 0; j < p->getSubset(proc)->size(); j++) {
-          const Patch* patch = p->getSubset(proc)->get(j);
+      for (int proc = 0; proc < pg->size(); ++proc) {
+        for (int index = 0; index < p->getSubset(proc)->size(); ++index) {
+          const Patch* patch = p->getSubset(proc)->get(index);
           patches->getSubset(lb->getPatchwiseProcessorAssignment(patch))->add(patch);
         }
       }
     }
+  }
+  else {
+    if (level->isMultiScale()) {
+      patches = const_cast<PatchSet*> (lb->getPerProcessorPatchSet(level->getPerProcSubsetPatchSetIndex()));
+    }
+    else {
+      patches = const_cast<PatchSet*> (lb->getPerProcessorPatchSet(level->getIndexWithinSubset()));
+    }
+
+  }
+
+//  if (!level->hasFinerLevel()) {
+//    // only case since the below version isn't const
+//    patches = const_cast<PatchSet*>(lb->getPerProcessorPatchSet(level->getIndexWithinSubset()));
+//  } else {
+//    GridP grid = level->getGrid();
+//    // make per-proc patch set of each level >= level
+//    patches = scinew PatchSet();
+//    patches->createEmptySubsets(pg->size());
+//
+////  FIXME TODO JBH APH 11-15-2015  The commented section below is the way to do relocation based on levelSets
+////  However, the AMRSimulationController is not currently set up to regrid and preserve the grid structure properly.
+//
+//    // Iterate only through levelSet, not through entire grid.
+//    const LevelSubset* currSubset = grid->getLevelSubset(grid->getSubsetIndex(level->getIndex()));
+//    size_t numLevelsInSubset = currSubset->size();
+//    size_t offsetInSubset = level->getIndexWithinSubset();
+//    // Iterate from the coarse level to the end of the subset
+//    for (size_t indexInSubset = offsetInSubset; indexInSubset < numLevelsInSubset; ++indexInSubset) {
+//      LevelP levelHandle = grid->getLevel(currSubset->get(indexInSubset)->getIndex());
+//      const PatchSet* p = lb->getPerProcessorPatchSet(levelHandle);
+//
+//      for (int proc = 0; proc < pg->size(); proc++) {
+//        for (int j = 0; j < p->getSubset(proc)->size(); j++) {
+//          const Patch* patch = p->getSubset(proc)->get(j);
+//          patches->getSubset(lb->getPatchwiseProcessorAssignment(patch))->add(patch);
+//        }
+//      }
+//    }
 
 //    for (int i = level->getIndex(); i < grid->numLevels(); i++) {
 //
@@ -406,7 +438,7 @@ Relocate::scheduleParticleRelocation(Scheduler* sched,
 //        }
 //      }
 //    }
-  }
+//  }
 
   printSchedule(patches, coutdbg, "Relocate::scheduleRelocateParticles");
   

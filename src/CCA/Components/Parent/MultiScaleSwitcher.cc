@@ -474,7 +474,7 @@ void MultiScaleSwitcher::scheduleSwitchTest( const LevelP     & level,
 
   // the component is responsible for determining when it is to switch.
   t->requires(Task::NewDW, d_sharedState->get_switch_label());
-  sched->addTask(t, sched->getLoadBalancer()->getPerProcessorPatchSet(level->getSubsetIndex()), d_sharedState->allMaterials());
+  sched->addTask(t, sched->getLoadBalancer()->getPerProcessorPatchSet(level->getIndexWithinSubset()), d_sharedState->allMaterials());
 }
 
 //______________________________________________________________________
@@ -943,7 +943,7 @@ MultiScaleSwitcher::needRecompile(       double   time,
       int numInSubset = currSubset->size();
       for (int indexInSubset = 0; indexInSubset < numInSubset; ++indexInSubset) {
         LevelP levelHandle = grid->getLevel(currSubset->get(indexInSubset)->getIndex());
-        levelHandle->setSubsetIndex(indexInSubset);
+        levelHandle->setIndexWithinSubset(indexInSubset);
       }
     }
 
