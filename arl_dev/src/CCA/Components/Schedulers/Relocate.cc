@@ -366,9 +366,9 @@ Relocate::scheduleParticleRelocation(Scheduler* sched,
   }
   
   PatchSet* patches;
-  if (level->isMultiScale()) {
+  if (!level->hasFinerLevel()) {
     // only case since the below version isn't const
-    patches = const_cast<PatchSet*>(lb->getPerProcessorPatchSet(level->getPerProcSubsetPatchSetIndex()));
+    patches = const_cast<PatchSet*>(lb->getPerProcessorPatchSet(level->getSubsetIndex()));
   } else {
     GridP grid = level->getGrid();
     // make per-proc patch set of each level >= level
@@ -938,7 +938,7 @@ Relocate::relocateParticlesModifies(const ProcessorGroup* pg,
                             const MaterialSubset* matls,
                             DataWarehouse* old_dw,
                             DataWarehouse* new_dw,
-                            const Level* level)
+                            const Level* levelIn)
 {
   int total_reloc[3] = {0,0,0};
   if (patches->size() != 0)
@@ -956,12 +956,12 @@ Relocate::relocateParticlesModifies(const ProcessorGroup* pg,
     
     for(int p=0;p<patches->size();p++){
       const Patch* patch = patches->get(p);
-      const Level* level = patch->getLevel();
+ //     const Level* level = patch->getLevel();
       
       // AMR
       const Level* curLevel = patch->getLevel();
       bool findFiner   = curLevel->hasFinerLevel();
-      bool findCoarser = curLevel->hasCoarserLevel() && curLevel->getIndex() > level->getIndex();
+      bool findCoarser = curLevel->hasCoarserLevel() && curLevel->getIndex() > levelIn->getIndex();
       Level* fineLevel=0;
       Level* coarseLevel=0;
       
@@ -973,7 +973,7 @@ Relocate::relocateParticlesModifies(const ProcessorGroup* pg,
       }
       
       Patch::selectType neighborPatches;
-      findNeighboringPatches(patch, level, findFiner, findCoarser, neighborPatches);
+      findNeighboringPatches(patch, curLevel, findFiner, findCoarser, neighborPatches);
       
       // Find all of the neighborPatches, and add them to a set
       for(int i=0; i<neighborPatches.size(); i++){
@@ -1051,7 +1051,7 @@ Relocate::relocateParticlesModifies(const ProcessorGroup* pg,
               //__________________________________
               //  Search for the new patch that the particle belongs to on this level.
               bool includeExtraCells = false;
-              toPatch = level->getPatchFromPoint(px[idx], includeExtraCells);
+              toPatch = curLevel->getPatchFromPoint(px[idx], includeExtraCells);
               PP_ToPatch = toPatch;
               
               //__________________________________
@@ -1062,7 +1062,7 @@ Relocate::relocateParticlesModifies(const ProcessorGroup* pg,
                 
                 PP_ToPatch_CL = toPatch;
 #if SCI_ASSERTION_LEVEL >= 1
-                if(!toPatch && level->containsPoint(px[idx])){
+                if(!toPatch && curLevel->containsPoint(px[idx])){
                   // Make sure that the particle really left the world
                   static ProgressiveWarning warn("A particle just travelled from one patch to another non-adjacent patch.  It has been deleted and we're moving on.",10);
                   warn.invoke();
@@ -1111,7 +1111,7 @@ Relocate::relocateParticlesModifies(const ProcessorGroup* pg,
       const Level* curLevel = toPatch->getLevel();
       int curLevelIndex     = curLevel->getIndex();
       bool findFiner   = curLevel->hasFinerLevel();
-      bool findCoarser = curLevel->hasCoarserLevel() && curLevel->getIndex() > level->getIndex();
+      bool findCoarser = curLevel->hasCoarserLevel() && curLevel->getIndex() > levelIn->getIndex();
       
       Patch::selectType neighborPatches;
       findNeighboringPatches(toPatch, level, findFiner, findCoarser, neighborPatches);
@@ -1383,7 +1383,7 @@ Relocate::relocateParticles(
                               const MaterialSubset  * matls,
                                     DataWarehouse   * old_dw,
                                     DataWarehouse   * new_dw,
-                              const Level           * level)
+                              const Level           * levelIn)
 {
   int total_reloc[3] = {0,0,0};
   if (patches->size() != 0) {
@@ -1400,12 +1400,12 @@ Relocate::relocateParticles(
     
     for(int p=0;p<patches->size();p++){
       const Patch* patch = patches->get(p);
-      const Level* level = patch->getLevel();
+//      const Level* level = patch->getLevel();
 
       // AMR
       const Level* curLevel = patch->getLevel();
       bool findFiner   = curLevel->hasFinerLevel();
-      bool findCoarser = curLevel->hasCoarserLevel() && curLevel->getIndex() > level->getIndex();
+      bool findCoarser = curLevel->hasCoarserLevel() && curLevel->getIndex() > levelIn->getIndex();
       Level* fineLevel=0;
       Level* coarseLevel=0;
 
@@ -1417,7 +1417,7 @@ Relocate::relocateParticles(
       }
       
       Patch::selectType neighborPatches;
-      findNeighboringPatches(patch, level, findFiner, 
+      findNeighboringPatches(patch, curLevel, findFiner,
                                            findCoarser, neighborPatches);
 
       // Find all of the neighborPatches, and add them to a set
@@ -1495,7 +1495,7 @@ Relocate::relocateParticles(
               //__________________________________
               //  Search for the new patch that the particle belongs to on this level.
               bool includeExtraCells = false;
-              toPatch = level->getPatchFromPoint(px[idx], includeExtraCells);
+              toPatch = curLevel->getPatchFromPoint(px[idx], includeExtraCells);
               PP_ToPatch = toPatch;
               
               //__________________________________
@@ -1506,7 +1506,7 @@ Relocate::relocateParticles(
 
                   PP_ToPatch_CL = toPatch;
 #if SCI_ASSERTION_LEVEL >= 1
-                if(!toPatch && level->containsPoint(px[idx])){
+                if(!toPatch && curLevel->containsPoint(px[idx])){
                   // Make sure that the particle really left the world
                   static ProgressiveWarning warn("A particle just travelled from one patch to another non-adjacent patch.  It has been deleted and we're moving on.",10);
                   warn.invoke();
@@ -1558,7 +1558,7 @@ Relocate::relocateParticles(
       int curLevelIndex     = curLevel->getIndex();
       bool findFiner   = curLevel->hasFinerLevel();
       bool findCoarser = curLevel->hasCoarserLevel() &&
-                  curLevel->getIndex() > level->getIndex();
+                  curLevel->getIndex() > levelIn->getIndex();
       
       Patch::selectType neighborPatches;
       findNeighboringPatches(toPatch, level, findFiner,

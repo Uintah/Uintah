@@ -1484,9 +1484,10 @@ bool
 Grid::specIsAMR(const ProblemSpecP &ps)
 {
   bool isAMR = false;
-  ProblemSpecP tmp_ps = ps->findBlock("doAMR");
-  if (tmp_ps)
+  if (ps->findBlock("doAMR"))
   {
+    ProblemSpecP tmp_ps;
+    tmp_ps = ps;
     tmp_ps->get("doAMR", isAMR);
   }
   else if (ps->findBlock("AMR")) {
