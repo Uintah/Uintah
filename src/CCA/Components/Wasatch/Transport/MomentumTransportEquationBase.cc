@@ -374,9 +374,9 @@ namespace WasatchCore{
                          Expr::ExpressionFactory& factory )
   {
     typedef SVolField FieldT;
-    typedef typename SpatialOps::FaceTypes<FieldT>::XFace XFace;
-    typedef typename SpatialOps::FaceTypes<FieldT>::YFace YFace;
-    typedef typename SpatialOps::FaceTypes<FieldT>::ZFace ZFace;
+    typedef SpatialOps::FaceTypes<FieldT>::XFace XFace;
+    typedef SpatialOps::FaceTypes<FieldT>::YFace YFace;
+    typedef SpatialOps::FaceTypes<FieldT>::ZFace ZFace;
     
     set_strain_tags<FieldT>(momComponent, doMom, isViscous, strainTags );
     const Expr::Tag& strainXt = strainTags[0];
@@ -503,9 +503,9 @@ namespace WasatchCore{
     const Expr::Tag& cfzt = cfTags[2];
     
     typedef SVolField FieldT;
-    typedef typename SpatialOps::FaceTypes<FieldT>::XFace XFace;
-    typedef typename SpatialOps::FaceTypes<FieldT>::YFace YFace;
-    typedef typename SpatialOps::FaceTypes<FieldT>::ZFace ZFace;
+    typedef SpatialOps::FaceTypes<FieldT>::XFace XFace;
+    typedef SpatialOps::FaceTypes<FieldT>::YFace YFace;
+    typedef SpatialOps::FaceTypes<FieldT>::ZFace ZFace;
     
     Expr::ExpressionID normalConvFluxID;
     
