@@ -399,7 +399,6 @@ void planeExtract::scheduleDoAnalysis(SchedulerP& sched,
                    this,&planeExtract::doAnalysis);
                         
   t->requires(Task::OldDW, ps_lb->lastWriteTimeLabel);
-  Ghost::GhostType gac = Ghost::AroundCells;
   
   for (unsigned int i =0 ; i < d_varLabels.size(); i++) {
     // bulletproofing
@@ -413,7 +412,7 @@ void planeExtract::scheduleDoAnalysis(SchedulerP& sched,
     matSubSet->add(d_varMatl[i]);
     matSubSet->addReference();
     
-    t->requires(Task::NewDW,d_varLabels[i], matSubSet, gac, 1);
+    t->requires(Task::NewDW,d_varLabels[i], matSubSet, Ghost::None, 0);
     
     if(matSubSet && matSubSet->removeReference()){
       delete matSubSet;

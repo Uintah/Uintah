@@ -70,7 +70,9 @@ AnalysisModuleFactory::create(const ProblemSpecP& prob_spec,
       module_ps->getAttributes(attributes);
       module = attributes["name"];
 
-      if ( module == "lineExtract" ) {
+      if ( module == "statistics" ) {
+        modules.push_back ( scinew statistics(          module_ps, sharedState, dataArchiver) );
+      } else if ( module == "lineExtract" ) {
         modules.push_back (scinew lineExtract(          module_ps, sharedState, dataArchiver ) );
       } else if ( module == "planeExtract" ) {
         modules.push_back ( scinew planeExtract(        module_ps, sharedState, dataArchiver ) );
@@ -90,8 +92,6 @@ AnalysisModuleFactory::create(const ProblemSpecP& prob_spec,
         modules.push_back ( scinew MinMax(              module_ps, sharedState, dataArchiver) );
       } else if ( module == "radiometer" ) {
         modules.push_back ( scinew OnTheFly_radiometer( module_ps, sharedState, dataArchiver) );
-      } else if ( module == "statistics" ) {
-        modules.push_back ( scinew statistics(          module_ps, sharedState, dataArchiver) );
       }else {
         throw ProblemSetupException("\nERROR:<DataAnalysis> Unknown analysis module.  "+module,__FILE__, __LINE__);
       }
