@@ -18,7 +18,7 @@
        <delt_min>           0.0         </delt_min>
        <delt_max>           1.0         </delt_max>
        <delt_init>          1.0e-4      </delt_init>
-       <max_Timesteps>      2            </max_Timesteps>
+       <max_Timesteps>      10         </max_Timesteps>
        <timestep_multiplier>0.8         </timestep_multiplier>
    </Time>
    
@@ -26,100 +26,126 @@
     <!--      G  R  I  D     V  A  R  I  A  B  L  E  S                      -->
     <!--____________________________________________________________________-->
     <Grid>
-    <BoundaryConditions>
-      <Face side = "x-">
-        <BCType id = "0"   label = "Pressure"     var = "Neumann">
-                              <value> 0.0   </value>
-        </BCType>
-        <BCType id = "all" label = "Velocity"     var = "Neumann">
-                              <value> [0.,0.,0.] </value>
-        </BCType>
-        <BCType id = "all" label = "Temperature"  var = "Neumann">
-                              <value> 0.0  </value>
-        </BCType>
-        <BCType id = "all" label = "Density"      var = "Neumann">
-                              <value> 0.0  </value>
-        </BCType>
-      </Face>
-      <Face side = "x+">
-        <BCType id = "0"   label = "Pressure"     var = "Neumann">
-                              <value> 0.0   </value>
-        </BCType>
-        <BCType id = "all" label = "Velocity"     var = "Neumann">
-                              <value> [0.,0.,0.] </value>
-        </BCType>
-        <BCType id = "all" label = "Temperature"  var = "Neumann">
-                              <value> 0.0  </value>
-        </BCType>
-        <BCType id = "all" label = "Density"      var = "Neumann">
-                              <value> 0.0  </value>
-        </BCType>
-      </Face>
-      <Face side = "y-">
-        <BCType id = "0"   label = "Pressure"     var = "Neumann">
-                              <value> 0.0   </value>
-        </BCType>
-        <BCType id = "all" label = "Velocity"     var = "Neumann">
-                              <value> [0.,0.,0.] </value>
-        </BCType>
-        <BCType id = "all" label = "Temperature"  var = "Neumann">
-                              <value> 0.0  </value>
-        </BCType>
-        <BCType id = "all" label = "Density"      var = "Neumann">
-                              <value> 0.0  </value>
-        </BCType>
-      </Face>                  
-      <Face side = "y+">
-        <BCType id = "0"   label = "Pressure"     var = "Neumann">
-                              <value> 0.0   </value>
-        </BCType>
-        <BCType id = "all" label = "Velocity"     var = "Neumann">
-                              <value> [0.,0.,0.] </value>
-        </BCType>
-        <BCType id = "all" label = "Temperature"  var = "Neumann">
-                              <value> 0.0  </value>
-        </BCType>
-        <BCType id = "all" label = "Density"      var = "Neumann">
-                              <value> 0.0  </value>
-        </BCType>
-      </Face>
-      <Face side = "z-">
-        <BCType id = "0"   label = "Pressure"     var = "Neumann">
-                              <value> 0.0   </value>
-        </BCType>
-        <BCType id = "all" label = "Velocity"     var = "Neumann">
-                              <value> [0.,0.,0.] </value>
-        </BCType>
-        <BCType id = "all" label = "Temperature"  var = "Neumann">
-                              <value> 0.0  </value>
-        </BCType>
-        <BCType id = "all" label = "Density"      var = "Neumann">
-                              <value> 0.0  </value>
-        </BCType>
-      </Face>                  
-      <Face side = "z+">
-        <BCType id = "0"   label = "Pressure"     var = "Neumann">
-                              <value> 0.0   </value>
-        </BCType>
-        <BCType id = "all" label = "Velocity"     var = "Neumann">
-                              <value> [0.,0.,0.] </value>
-        </BCType>
-        <BCType id = "all" label = "Temperature"  var = "Neumann">
-                              <value> 0.0  </value>
-        </BCType>
-        <BCType id = "all" label = "Density"      var = "Neumann">
-                              <value> 0.0  </value>
-        </BCType>
-      </Face>
-    </BoundaryConditions>
+    
+      <BoundaryConditions>     
+          <inletVelocity type="powerLawProfile">
+            <verticalDirection> 1           </verticalDirection>
+            <exponent>          0.1571        </exponent>
+            <maxHeight>         131.0          </maxHeight>
+            <material>          atmosphere </material>
+          </inletVelocity> 
+
+          <LODI>
+            <press_infinity>    101325.0    </press_infinity>
+            <sigma>             0.27        </sigma>
+            <material>          atmosphere  </material>
+            <Li_scale>          1           </Li_scale>
+          </LODI>
+
+          <Face side = "x-">
+            <BCType id = "0" var = "Neumann"    label = "Pressure">
+                                  <value> 0.0   </value>
+            </BCType>
+            <BCType id = "1" var = "Dirichlet"  label = "Velocity">
+                                  <value> [9.3,0.0,0.0] </value>
+            </BCType>
+            <BCType id = "0" var = "Neumann"    label = "Velocity">
+                                  <value> [0.0,0.0,0.0] </value>
+            </BCType>
+            <BCType id = "1" var = "Dirichlet"  label = "Temperature">
+                                  <value> 298.0  </value>
+            </BCType>
+            <BCType id = "0" var = "Neumann"    label = "Temperature">
+                                  <value> 0.0  </value>
+            </BCType>
+            <BCType id = "1" var = "Dirichlet"  label = "Density">
+                                  <value> 1.178721  </value>
+            </BCType>
+            <BCType id = "0" var = "Neumann"    label = "Density">
+                                  <value> 0.0   </value>
+            </BCType>
+            <BCType id = "1" var = "Dirichlet"  label = "scalar-f" >
+                                  <value> 0.0   </value>
+            </BCType>
+          </Face>   
+          <Face side = "x+">
+            <BCType id = "0" var = "LODI"       label = "Pressure">
+                                  <value> 0.0   </value>
+            </BCType>
+            <BCType id = "1" var = "LODI"       label = "Velocity">
+                                  <value> [0.,0.,0.] </value>
+            </BCType>
+            <BCType id = "0" var = "Neumann"    label = "Velocity">
+                                  <value> [0.,0.,0.] </value>
+            </BCType>
+            <BCType id = "1" var = "LODI"       label = "Temperature">
+                                  <value> 0.0   </value>
+            </BCType>
+            <BCType id = "0" var = "Neumann"    label = "Temperature">
+                                  <value> 0.0   </value>
+            </BCType>
+            <BCType id = "1" var = "LODI"       label = "Density">
+                                  <value> 0.0   </value>
+            </BCType>
+            <BCType id = "0" var = "Neumann"    label = "Density">
+                                  <value> 0.0   </value>
+            </BCType>
+            <BCType id = "1" var = "Dirichlet"  label = "scalar-f" >
+                                  <value> 0.0   </value>
+            </BCType>
+          </Face>
+
+          <Face side = "y-">
+            <BCType id = "0"    var = "Neumann"    label = "Pressure">
+                                  <value> 0.0   </value>
+            </BCType>
+            <BCType id = "all"  var = "Dirichlet" label = "Velocity">
+                                  <value> [0.,0.,0.] </value>
+            </BCType>
+            <BCType id = "all"  var = "Neumann"  label = "Temperature">
+                                  <value> 0.0   </value>
+            </BCType>
+            <BCType id = "all"  var = "Neumann"  label = "Density">
+                                  <value> 0.0   </value>
+            </BCType>
+            <BCType id = "1"    var = "Dirichlet"  label = "scalar-f" >
+                                  <value> 0.0   </value>
+            </BCType>
+          </Face>                  
+          <Face side = "y+">
+            <BCType id = "0"    var = "Neumann"     label = "Pressure">
+                                  <value> 0.0   </value>
+            </BCType>
+            <BCType id = "all"  var = "Dirichlet" label = "Velocity">
+                                  <value> [8.475,0.0,0.0] </value>
+            </BCType>
+            <BCType id = "all"  var = "Neumann"  label = "Temperature">
+                                  <value> 0.0   </value>
+            </BCType>
+            <BCType id = "all"  var = "Neumann"  label = "Density">
+                                  <value> 0.0   </value>
+            </BCType>
+            <BCType id = "1"    var = "Dirichlet"  label = "scalar-f" >
+                                  <value> 0.0   </value>
+            </BCType>
+          </Face> 
+          <Face side = "z-">
+            <BCType id = "all"  var = "symmetry" label = "Symmetric">
+            </BCType>
+          </Face>                  
+          <Face side = "z+">
+            <BCType id = "all"  var = "symmetry" label = "Symmetric">
+            </BCType>
+          </Face> 
+       </BoundaryConditions>
        <Level>
            <Box label="1">
               <lower>        [0.0,0.0,-1.0]       </lower>
-              <upper>        [1.0,0.05,-0.5]          </upper>
+              <upper>        [1.0,0.5,-0.5]          </upper>
               <extraCells> [1,1,1]            </extraCells>
-              <patches>    [2,2,2]            </patches>
+              <patches>    [4,4,2]            </patches>
            </Box>
-           <spacing>        [0.01,0.001,0.001]     </spacing>
+           <spacing>        [0.002,0.002,0.002]     </spacing>
        </Level>
     </Grid>
    
@@ -129,11 +155,32 @@
    <DataArchiver>
       <filebase>micro_OKC.uda</filebase>
       <outputInitTimestep/>
-      <outputTimestepInterval>1</outputTimestepInterval>
+      <outputTimestepInterval>100</outputTimestepInterval>
+      <save label="press_CC"/>
+      <save label="vel_CC"            material = "1"/>
       <save label="vol_frac_CC"/>
-      <save label="p.x"/>
       <save label="p.volume"/>
-      <checkpoint interval="0.005" cycle="2"/>
+      <save label="scalar-f"/>
+      <save label="p.x"/>
+      
+<!--        
+      <save label="variance_press_CC" material="0"/>
+      <save label="skewness_press_CC" material="0"/>
+      <save label="kurtosis_press_CC" material="0"/>
+      <save label="variance_scalar-f" material="1"/>
+      <save label="skewness_scalar-f" material="1"/>
+      <save label="kurtosis_scalar-f" material="1"/>
+-->
+      <save label="variance_vel_CC" material="1"/>
+      <save label="skewness_vel_CC" material="1"/>
+      <save label="kurtosis_vel_CC" material="1"/>
+      <save label="uv_prime" />
+      <save label="uw_prime" />
+      <save label="vw_prime" />
+      <save label="mean_vel_CC"     material="1"/>
+
+     <outputDoubleAsFloat/>
+     <checkpoint cycle = "2" interval = "24.0"/>
    </DataArchiver>
 
     <!--____________________________________________________________________-->
@@ -194,7 +241,7 @@
             </contact>
       </MPM>
        <ICE>
-         <material>
+         <material name="atmosphere">
            <EOS type = "ideal_gas">                     </EOS>
            <dynamic_viscosity>          0.0             </dynamic_viscosity>
            <thermal_conductivity>       0.0             </thermal_conductivity>
@@ -202,7 +249,7 @@
            <gamma>                      1.4             </gamma>           
            <geom_object>
               <difference>
-                <box label="gpice">
+                <box label="domain">
                     <min>           [-1.0,-1.0,-1.0]     </min>
                     <max>           [  4.0,4.0,4.0 ]     </max>
                 </box>
@@ -226,5 +273,100 @@
     </MaterialProperties>
     
     <!--__________________________________-->
-       
+     <!--____________________________________________________________________-->
+    <!--Transport a passiv scalar around                -->
+    <Models>
+      <Model type="PassiveScalar">
+        <material>atmosphere</material>
+        <scalar name="f">
+          <constants>
+            <diffusivity>  0.0   </diffusivity>
+          </constants>
+
+          <initialization>
+            <geom_object>
+              <box label="domain"> </box>
+              <scalar>    0.00   </scalar>
+            </geom_object>
+          </initialization>
+
+          <interiorSources>
+            <geom_object>
+              <sphere label = "sphere1">
+                <origin> [0.5, 0.25, -0.75] </origin>
+                <radius> 0.001   </radius>
+              </sphere>
+              <maxScalar> 1.0   </maxScalar>
+              <scalar> 2.0 </scalar>
+            </geom_object>
+          </interiorSources>
+        </scalar> 
+      </Model>
+    </Models>     
+    
+    <!--__________________________________-->
+    <DataAnalysis>
+      <Module name = "statistics">
+        <material>atmosphere</material>
+      <!--  <samplingFrequency>  0.5      </samplingFrequency> -->
+          <timeStart>   1E-5  </timeStart>
+         <timeStop>   4400  </timeStop>
+        <computeHigherOrderStats> true </computeHigherOrderStats>
+        <Variables>
+          <analyze label="scalar-f"  matl="1"/>
+          <analyze label="press_CC"  matl="0"/>
+          <analyze label="vel_CC"    matl="1" computeReynoldsStress="true" /> 
+          
+<!--  <analyze label="variance_press_CC" matl="0"/>
+          <analyze label="skewness_press_CC" matl="0"/>
+          <analyze label="kurtosis_press_CC" matl="0"/>
+        
+          <analyze label="variance_scalar-f" matl="1"/>
+          <analyze label="skewness_scalar-f" matl="1"/>
+          <analyze label="kurtosis_scalar-f" matl="1"/>
+
+          <analyze label="variance_vel_CC" matl="1"/>
+          <analyze label="skewness_vel_CC" matl="1"/>
+          <analyze label="kurtosis_vel_CC" matl="1"/>  -->
+        </Variables>
+      </Module>
+      
+      <!--__________________________________-->
+      <Module name="planeExtract">
+        <material>    atmosphere    </material>
+        <samplingFrequency>  0.5    </samplingFrequency>
+        <timeStart>   2e-5  </timeStart>
+        <timeStop>   4400  </timeStop>
+
+        <Variables>
+          <analyze label="press_CC"     matl="0"/>
+          <analyze label="scalar-f"/>
+          <analyze label="vel_CC"/>
+          <analyze label="mean_vel_CC"  matl="1"/>
+
+<!--          
+          <analyze label="variance_press_CC" matl="0"/>
+          <analyze label="skewness_press_CC" matl="0"/>
+          <analyze label="kurtosis_press_CC" matl="0"/>
+          <analyze label="variance_scalar-f" matl="1"/>
+          <analyze label="skewness_scalar-f" matl="1"/>
+          <analyze label="kurtosis_scalar-f" matl="1"/>
+-->
+          <analyze label="variance_vel_CC" matl="1"/>
+          <analyze label="skewness_vel_CC" matl="1"/>
+          <analyze label="kurtosis_vel_CC" matl="1"/>
+          <analyze label="uv_prime" matl="1"/>
+          <analyze label="uw_prime" matl="1"/>
+          <analyze label="vw_prime" matl="1"/>
+        </Variables> 
+        
+        <planes>
+          <plane name="centerLine">
+            <startingPt> [ 0.0, 0.0,   -0.75]  </startingPt>
+            <endingPt>   [ 1.0, 0.5,   -0.75]  </endingPt>
+          </plane>
+        </planes>     
+      </Module>         
+    </DataAnalysis>
+      
 </Uintah_specification>
