@@ -90,7 +90,7 @@ PrimVar<SpatialOps::SVolField,SpatialOps::SVolField>::
 evaluate()
 {
   using namespace SpatialOps;
-  typedef typename SpatialOps::SVolField FieldT;
+  typedef SpatialOps::SVolField FieldT;
   FieldT& phi = this->value();
   const FieldT& rho = rho_->field_ref();
   const FieldT& rhophi = rhophi_->field_ref();
