@@ -52,8 +52,8 @@
 #include <CCA/Components/MD/SimpleGrid.h>
 #include <CCA/Components/MD/Electrostatics/SPME/SPME_NewHeader.h>
 #include <CCA/Components/MD/CoordinateSystems/CoordinateSystem.h>
-#include <CCA/Components/MD/Electrostatics/SPME-busted/ShiftedCardinalBSpline.h>
-#include <CCA/Components/MD/Electrostatics/SPME-busted/SPMEMapPoint.h>
+#include "../../../attic/SPME-busted/ShiftedCardinalBSpline.h"
+#include "../../../attic/SPME-busted/SPMEMapPoint.h"
 
 
 #ifdef DEBUG

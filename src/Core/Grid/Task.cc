@@ -386,13 +386,15 @@ Task::requires(WhichDW dw,
 
 //__________________________________
 void
-Task::requires(WhichDW dw,
-               const VarLabel* var,
-               const Level* level,
-               const MaterialSubset* matls,
-               MaterialDomainSpec matls_dom,
-               Ghost::GhostType gtype,
-               int numGhostCells)
+Task::requires(
+                       WhichDW                dw
+               , const VarLabel             * var
+               , const Level                * level
+               , const MaterialSubset       * matls
+               ,       MaterialDomainSpec     matls_dom
+               ,       Ghost::GhostType       gtype
+               ,       int                    numGhostCells
+              )
 {
   TypeDescription::Type vartype = var->typeDescription()->getType();
   if ((vartype == TypeDescription::ReductionVariable || vartype == TypeDescription::SoleVariable)) {
@@ -817,7 +819,7 @@ Task::Dependency::Dependency(DepType deptype,
                              Task* task,
                              WhichDW whichdw,
                              const VarLabel* var,
-                             const Level* level,
+                             const Level* reductionLevel,
                              const MaterialSubset* matls,
                              MaterialDomainSpec matls_dom,
                              Ghost::GhostType gtype,

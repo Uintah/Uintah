@@ -186,6 +186,7 @@ namespace Uintah {
                                            , const PatchSet    * patches
                                            , const MaterialSet * matls
                                            , const LevelP      & level ) const;
+
       virtual void addCalculateComputes(       Task        * task
                                        ,       MDLabel     * labels
                                        , const PatchSet    * patches

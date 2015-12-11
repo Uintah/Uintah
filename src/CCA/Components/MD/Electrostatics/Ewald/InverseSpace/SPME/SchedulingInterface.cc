@@ -88,14 +88,15 @@ void SPME::addCalculateRequirements(       Task        * task
                                    , const MaterialSet * matls
                                    , const LevelP      & level ) const
 {
+  const MaterialSubset* matl_subset = matls->getUnion();
 
-  task->requires(Task::OldDW, labels->global->pX, Ghost::None, 0);
-  task->requires(Task::OldDW, labels->global->pID, Ghost::None, 0);
+  task->requires(Task::OldDW, labels->global->pX, level.get_rep(), matl_subset, Task::NormalDomain, Ghost::None, 0);
+  task->requires(Task::OldDW, labels->global->pID, level.get_rep(), matl_subset, Task::NormalDomain, Ghost::None, 0);
   // Ensures that SPME::Setup runs first
-  task->requires(Task::NewDW, labels->electrostatic->dElectrostaticDependency);
+  task->requires(Task::NewDW, labels->electrostatic->dElectrostaticDependency, level.get_rep(), matl_subset, Task::NormalDomain);
 
   if (f_polarizable) {
-    task->requires(Task::OldDW, labels->electrostatic->pMu, Ghost::None, 0);
+    task->requires(Task::OldDW, labels->electrostatic->pMu, level.get_rep(), matl_subset, Task::NormalDomain, Ghost::None, 0);
   }
 }
 

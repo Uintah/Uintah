@@ -40,8 +40,8 @@
 
 #include <CCA/Components/MD/Electrostatics/Electrostatics.h>
 #include <CCA/Components/MD/CoordinateSystems/CoordinateSystem.h>
-#include <CCA/Components/MD/Electrostatics/SPME-busted/ShiftedCardinalBSpline.h>
-#include <CCA/Components/MD/Electrostatics/SPME-busted/SPMEPatch.h>
+#include "../../../attic/SPME-busted/ShiftedCardinalBSpline.h"
+#include "../../../attic/SPME-busted/SPMEPatch.h"
 
 
 namespace OldSPME {
