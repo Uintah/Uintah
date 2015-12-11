@@ -798,7 +798,7 @@ namespace WasatchCore{
     setup_patchinfo_map( level, sched );
 
     const Uintah::PatchSet* const allPatches   = get_patchset( USE_FOR_TASKS, level, sched );
-    const Uintah::PatchSet* const localPatches = get_patchset( USE_FOR_OPERATORS, level, sched );
+//  const Uintah::PatchSet* const localPatches = get_patchset( USE_FOR_OPERATORS, level, sched );
     
     GraphHelper* const icGraphHelper = graphCategories_[ INITIALIZATION ];
 
