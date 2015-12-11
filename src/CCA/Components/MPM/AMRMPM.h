@@ -420,6 +420,13 @@ protected:
                  const MaterialSubset*,                   
                  DataWarehouse* old_dw,                                
                  DataWarehouse* new_dw); 
+                 
+  // using experimental getParticleSubSetAllLevels()
+  void debug_CFI_experimental(const ProcessorGroup*,
+                              const PatchSubset* patches,                    
+                              const MaterialSubset*,                   
+                              DataWarehouse* old_dw,                         
+                              DataWarehouse* new_dw);
   //
   // returns does coarse patches have a CFI               
   void coarseLevelCFI_Patches(const PatchSubset* patches,

@@ -4337,27 +4337,38 @@ void AMRMPM::scheduleDebug_CFI(SchedulerP& sched,
                                const MaterialSet* matls)
 {
   const Level* level = getLevel(patches);
+  Ghost::GhostType  gn = Ghost::None;
+  #define allPatches 0
+  Task::MaterialDomainSpec  ND  = Task::NormalDomain;
 
-  printSchedule(patches,cout_doing,"AMRMPM::scheduleDebug_CFI");
-
+#if 1
+  Task* t = scinew Task("AMRMPM::debug_CFI_experimental",
+                   this,&AMRMPM::debug_CFI_experimental);
+  printSchedule(patches,cout_doing,"AMRMPM::scheduleDebug_CFI_experimental");
+  if(level->hasCoarserLevel()){ 
+    int nPaddingCells = 2;
+    Ghost::GhostType  gac  = Ghost::AroundCells;
+//    t->requires(Task::NewDW, lb->gZOILabel, allPatches, Task::FineLevel,d_one_matl, ND, gn, 0);
+  }
+                   
+#else                 
   Task* t = scinew Task("AMRMPM::debug_CFI",
                    this,&AMRMPM::debug_CFI);
-                   
-   Ghost::GhostType  gn = Ghost::None;
+  printSchedule(patches,cout_doing,"AMRMPM::scheduleDebug_CFI");
+  if(level->hasFinerLevel()){ 
+    t->requires(Task::NewDW, lb->gZOILabel, allPatches, Task::FineLevel,d_one_matl, ND, gn, 0);
+  }
+#endif                   
+   
   t->requires(Task::OldDW, lb->pXLabel,                  gn,0);
   t->requires(Task::OldDW, lb->pSizeLabel,               gn,0);
   t->requires(Task::OldDW, lb->pDeformationMeasureLabel, gn,0);
-  
-  if(level->hasFinerLevel()){ 
-    #define allPatches 0
-    Task::MaterialDomainSpec  ND  = Task::NormalDomain;
-    t->requires(Task::NewDW, lb->gZOILabel, allPatches, Task::FineLevel,d_one_matl, ND, gn, 0);
-  }
   
   t->computes(lb->pColorLabel_preReloc);
 
   sched->addTask(t, patches, matls);
 }
+
 //______________________________________________________________________
 void AMRMPM::debug_CFI(const ProcessorGroup*,
                        const PatchSubset* patches,
@@ -4445,7 +4456,7 @@ void AMRMPM::debug_CFI(const ProcessorGroup*,
 
         ParticleSubset* pset2=0;
         pset2 = old_dw->getParticleSubset(dwi, cl, ch, patch,lb->pXLabel);
-        
+
         constParticleVariable<Point>  px_CFI;
         constNCVariable<Stencil7> zoi;
         old_dw->get(px_CFI, lb->pXLabel,  pset2);
@@ -4475,6 +4486,132 @@ void AMRMPM::debug_CFI(const ProcessorGroup*,
     }  //// hasFinerLevel
     delete interpolatorCoarse;
   }  // End loop over coarse patches
+}
+
+
+
+//______________________________________________________________________
+// using experimental getParticleSubSetAllLevels()
+void AMRMPM::debug_CFI_experimental(const ProcessorGroup*,
+                                    const PatchSubset* patches,
+                                    const MaterialSubset* ,
+                                    DataWarehouse* old_dw,
+                                    DataWarehouse* new_dw)
+{
+  const Level* level = getLevel(patches);
+  
+  for(int fp=0; fp<patches->size(); fp++){
+    const Patch* finePatch = patches->get(fp);
+
+    printTask(patches,finePatch,cout_doing,"Doing AMRMPM::debug_CFI2");
+    
+    
+    //__________________________________
+    //  Write p.color all levels all patches  
+    ParticleSubset* pset=0;
+    int dwi = 0;
+    pset = old_dw->getParticleSubset(dwi, finePatch);
+    
+    constParticleVariable<Point>  px;
+    constParticleVariable<Matrix3> psize;
+    constParticleVariable<Matrix3> pDeformationMeasure;
+    ParticleVariable<double>  pColor;
+    
+    old_dw->get(px,                   lb->pXLabel,                  pset);
+    old_dw->get(psize,                lb->pSizeLabel,               pset);
+    old_dw->get(pDeformationMeasure,  lb->pDeformationMeasureLabel, pset);
+    new_dw->allocateAndPut(pColor,    lb->pColorLabel_preReloc,     pset);
+    
+    ParticleInterpolator* interpolatorCoarse = flags->d_interpolator->clone(finePatch);
+    vector<IntVector> ni(interpolatorCoarse->size());
+    vector<double> S(interpolatorCoarse->size());
+
+    for (ParticleSubset::iterator iter = pset->begin();iter != pset->end(); iter++){
+      particleIndex idx = *iter;
+      pColor[idx] = 0;
+      
+      interpolatorCoarse->findCellAndWeights(px[idx],ni,S,psize[idx],pDeformationMeasure[idx]);
+      
+      for(int k = 0; k < (int)ni.size(); k++) {
+        pColor[idx] += S[k];
+      }
+    }  
+
+    //__________________________________
+    //  Mark the particles that are accessed at the CFI.
+    if(level->hasCoarserLevel() && finePatch->hasCoarseFaces() ){
+      vector<Patch::FaceType> cf;
+      finePatch->getCoarseFaces(cf);
+
+      // Iterate over coarse/fine interface faces
+      vector<Patch::FaceType>::const_iterator iter;  
+      for (iter  = cf.begin(); iter != cf.end(); ++iter){
+        Patch::FaceType patchFace = *iter;
+        CellIterator f_iter=finePatch->getFaceIterator(patchFace, Patch::FaceNodes);
+
+        // find the particleSubset over this cell range
+        IntVector f_lo_face = f_iter.begin();              // fineLevel face indices
+        IntVector f_hi_face = f_iter.end();
+        
+        // offset by 1 the CFI cell
+        IntVector dir = finePatch->getFaceAxes(patchFace); // face axes
+        int p_dir = dir[0];
+
+        int offset = 0;
+        if(patchFace == Patch::xminus || 
+           patchFace == Patch::yminus || 
+           patchFace == Patch::zminus){
+          offset = -1;
+          f_lo_face[p_dir] += offset;
+        }
+        if(patchFace == Patch::xplus || 
+           patchFace == Patch::yplus || 
+           patchFace == Patch::zplus){
+          offset = 1;
+          f_hi_face[p_dir] += offset;
+        }
+        cout << finePatch->getFaceName(patchFace) << " lo: " << f_lo_face << " hi: " << f_hi_face << endl;
+       
+//        ParticleSubset* psettest=0;
+//        psettest = old_dw->getParticleSubsetAllLevels(dwi, f_lo_face, f_hi_face, finePatch,lb->pXLabel);
+      }
+#if 0
+      // coarseLow and coarseHigh cannot lie outside of the coarse patch
+      IntVector cl = Max(cl_tmp, patch->getCellLowIndex());
+      IntVector ch = Min(ch_tmp, patch->getCellHighIndex());
+
+      ParticleSubset* pset2=0;
+      pset2 = old_dw->getParticleSubset(dwi, cl, ch, patch,lb->pXLabel);
+
+      constParticleVariable<Point>  px_CFI;
+      constNCVariable<Stencil7> zoi;
+      old_dw->get(px_CFI, lb->pXLabel,  pset2);
+      new_dw->get(zoi,    lb->gZOILabel, 0, finePatch, Ghost::None, 0 );
+
+      ParticleInterpolator* interpolatorFine = flags->d_interpolator->clone(finePatch);
+
+      for (ParticleSubset::iterator iter = pset->begin();iter != pset->end(); iter++){
+        particleIndex idx = *iter;
+
+        for (ParticleSubset::iterator iter2 = pset2->begin();iter2 != pset2->end(); iter2++){
+          particleIndex idx2 = *iter2;
+
+          if( px[idx] == px_CFI[idx2] ){       
+            pColor[idx] = 0;
+            vector<IntVector> ni;
+            vector<double> S;
+            interpolatorFine->findCellAndWeights_CFI(px[idx],ni,S,zoi); 
+            for(int k = 0; k < (int)ni.size(); k++) {
+              pColor[idx] += S[k];
+            }
+          }
+        }  // pset2 loop
+      }  // pset loop
+      delete interpolatorFine;
+#endif
+    }  // has coarselevel & at CFI
+    delete interpolatorCoarse;
+  }  //  fine patches loop  
 }
 
 //______________________________________________________________________
