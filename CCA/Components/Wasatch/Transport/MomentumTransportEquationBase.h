@@ -190,7 +190,7 @@ namespace WasatchCore{
     Uintah::ProblemSpecP params_;
     const bool isViscous_, isTurbulent_;
     const Expr::Tag thisVelTag_, densityTag_;
-    const Expr::Tag& pressureTag_;
+    const Expr::Tag pressureTag_;
     
     Expr::ExpressionID normalStrainID_, normalConvFluxID_, pressureID_;
     Expr::TagList velTags_;  ///< TagList for the velocity expressions

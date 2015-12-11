@@ -560,16 +560,16 @@ namespace WasatchCore{
 
   template< typename FieldT >
   MomentumTransportEquationBase<FieldT>::
-  MomentumTransportEquationBase(const Direction momComponent,
-                                const std::string velName,
-                             const std::string momName,
-                             const Expr::Tag densTag,
-                             const bool isConstDensity,
-                             const Expr::Tag bodyForceTag,
-                             const Expr::Tag srcTermTag,
-                             GraphCategories& gc,
-                             Uintah::ProblemSpecP params,
-                             TurbulenceParameters turbulenceParams)
+  MomentumTransportEquationBase( const Direction momComponent,
+                                 const std::string velName,
+                                 const std::string momName,
+                                 const Expr::Tag densTag,
+                                 const bool isConstDensity,
+                                 const Expr::Tag bodyForceTag,
+                                 const Expr::Tag srcTermTag,
+                                 GraphCategories& gc,
+                                 Uintah::ProblemSpecP params,
+                                 TurbulenceParameters turbulenceParams )
     : TransportEquation( gc,
                          momName,
                          get_staggered_location<FieldT>(),
@@ -580,10 +580,10 @@ namespace WasatchCore{
       isTurbulent_     ( turbulenceParams.turbModelName != TurbulenceParameters::NOTURBULENCE ),
       thisVelTag_      ( Expr::Tag(velName, Expr::STATE_NONE) ),
       densityTag_      ( densTag                              ),
+      pressureTag_     ( TagNames::self().pressure            ),
       normalStrainID_  ( Expr::ExpressionID::null_id()        ),
       normalConvFluxID_( Expr::ExpressionID::null_id()        ),
-      pressureID_      ( Expr::ExpressionID::null_id()        ),
-      pressureTag_     ( TagNames::self().pressure )
+      pressureID_      ( Expr::ExpressionID::null_id()        )
   {
     set_vel_tags( params, this->velTags_ );
     
