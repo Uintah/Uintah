@@ -155,7 +155,7 @@
    <DataArchiver>
       <filebase>micro_OKC.uda</filebase>
       <outputInitTimestep/>
-      <outputTimestepInterval>100</outputTimestepInterval>
+      <outputTimestepInterval>2</outputTimestepInterval>
       <save label="press_CC"/>
       <save label="vel_CC"            material = "1"/>
       <save label="vol_frac_CC"/>
@@ -177,10 +177,11 @@
       <save label="uv_prime" />
       <save label="uw_prime" />
       <save label="vw_prime" />
+      <save label="mean_press_CC"/>
       <save label="mean_vel_CC"     material="1"/>
 
      <outputDoubleAsFloat/>
-     <checkpoint cycle = "2" interval = "24.0"/>
+     <checkpoint cycle = "2" timestepInterval = "3"/>
    </DataArchiver>
 
     <!--____________________________________________________________________-->

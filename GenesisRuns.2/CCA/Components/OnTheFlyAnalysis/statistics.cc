@@ -607,6 +607,7 @@ void statistics::allocateAndZeroStats( DataWarehouse* new_dw,
 {
   int matl = Q.matl;
   allocateAndZero<T>( new_dw, Q.Qvariance_Label,  matl, patch );
+  allocateAndZero<T>( new_dw, Q.Qmean_Label,      matl, patch );
 
   if( d_doHigherOrderStats ){
     allocateAndZero<T>( new_dw, Q.Qskewness_Label, matl, patch );
