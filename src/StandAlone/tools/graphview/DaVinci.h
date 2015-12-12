@@ -35,22 +35,32 @@ class GV_Task;
 class Edge;
 
 class DaVinci {
+
 public:
-  enum Orientation {TOP_DOWN, BOTTOM_UP, LEFT_RIGHT, RIGHT_LEFT};
+
+  enum Orientation {
+      TOP_DOWN
+    , BOTTOM_UP
+    , LEFT_RIGHT
+    , RIGHT_LEFT
+  };
+
 #if 0
   enum {
     EVT_DV_QUIT = 'DVQT',
     EVT_DV_SELECT_NODE = 'DVSN',
     EVT_DV_DOUBLE_CLICK_NODE = 'DVDN',
     EVT_DV_SELECT_EDGE = 'DVSE',
-    EVT_DV_DOUBLE_CLICK_EDGE = 'DVDE'       
+    EVT_DV_DOUBLE_CLICK_EDGE = 'DVDE'
   };
 #endif
-  enum {EVT_DV_QUIT, 
-        EVT_DV_SELECT_NODE, 
-        EVT_DV_DOUBLE_CLICK_NODE,
-        EVT_DV_SELECT_EDGE,
-        EVT_DV_DOUBLE_CLICK_EDGE
+
+  enum {
+      EVT_DV_QUIT
+    , EVT_DV_SELECT_NODE
+    , EVT_DV_DOUBLE_CLICK_NODE
+    , EVT_DV_SELECT_EDGE
+    , EVT_DV_DOUBLE_CLICK_EDGE
   };
 
   static DaVinci* run();
@@ -63,22 +73,35 @@ public:
   void setOrientation(Orientation orientation);
   void setFontSize(int font_size);
 
-  int getOutput() const { return m_fromDV; }
+  int getOutput() const
+  {
+    return m_fromDV;
+  }
 
   const std::string& getSelectedEdge() const
-  { return m_selectedEdge; }
+  {
+    return m_selectedEdge;
+  }
 
   const std::list<std::string>& getSelectedNodes() const
-  { return m_selectedNodes; }
+  {
+    return m_selectedNodes;
+  }
 
   static bool doExclusion;
+
+
 private:
-  DaVinci(pid_t pid, int to, int from);
+
+  DaVinci(pid_t pid,
+          int to,
+          int from);
 
   // Parses a DaVinci answer string simply by breaking it
   // the cmd and arguments (by inserting '\0's in the cmd
   // string and appending char*'s the the args list.
-  void parseAnswer(char* cmd, std::list<char*>& args);
+  void parseAnswer(char* cmd,
+                   std::list<char*>& args);
 
   pid_t m_PID;
   int m_toDV;
@@ -92,6 +115,4 @@ private:
 };
 
 #endif // DAVINCI_H
-
-
 

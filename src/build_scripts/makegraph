@@ -5,9 +5,11 @@
 # which means that "source" depends on "target". It builds a
 # <string, list<string>> map from these dependency statements: each node
 # mentioned as either a source or a target has a list of the nodes it depends
-# on. When the file has been processed, it outputs this map/graph in daVinci's
-# term representation.
-# The input file must be named on the command line, and output goes to stdout.
+# on.
+#
+# When the file has been processed, it outputs this map/graph in daVinci's
+# term representation. The input file must be named on the command line, and
+# output goes to stdout.
 
 from string import strip,split,find
 from sys import argv,exit

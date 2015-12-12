@@ -44,27 +44,29 @@
 using namespace std;
 using namespace SCIRun;
 
-static ostream& operator<<(ostream& out, const GV_Task* task);
+static ostream& operator<<(ostream& out,
+                           const GV_Task* task);
 static string readline(int fd);
-static void writeline(int fd, string str);
+static void writeline(int fd,
+                      string str);
 
-static void displayAttributes(std::ostream& out, const GV_Task* task);
-static void displayAttributes(std::ostream& out, const Edge* edge);
+static void displayAttributes(std::ostream& out,
+                              const GV_Task* task);
+static void displayAttributes(std::ostream& out,
+                              const Edge* edge);
 static const char* getColor(float percent /* max incl path / critical path */,
-			    float thresholdPercent);
+                            float thresholdPercent);
 static const char* getHidden(float percent /* max incl path / critical path */,
-			     float thresholdPercent);
+                             float thresholdPercent);
 
 bool DaVinci::doExclusion = false;
 
 DaVinci*
 DaVinci::run()
 {
-  static const char* const DAVINCI_ARGS[] = {
-    "/bin/sh", "-c", "davinci -pipe || daVinci -pipe", 0
-  };
+  static const char* const DAVINCI_ARGS[] = { "/bin/sh", "-c", "davinci -pipe || daVinci -pipe", 0 };
   int pipes[2][2];
-    
+
   // block SIGPIPE; we'll notice when we get an EPIPE error from a syscall
   sigset_t sigset;
   sigaddset(&sigset, SIGPIPE);
@@ -96,18 +98,16 @@ DaVinci::run()
     setbuf(stdin, 0);
     setbuf(stdout, 0);
 
-    if (execv("/bin/sh", const_cast<char* const*>(DAVINCI_ARGS)) == -1) {
+    if (execv("/bin/sh", const_cast<char* const *>(DAVINCI_ARGS)) == -1) {
       perror("execv() failed");
       if (errno == ENOENT) {
-	cerr << "\n******************************************\n"
-	     << "An executable named 'davinci' or 'daVinci'\n"
-	     << "must be in your path to use graphview.\n"
-	     << "******************************************\n\n";
+        cerr << "\n******************************************\n" << "An executable named 'davinci' or 'daVinci'\n"
+             << "must be in your path to use graphview.\n" << "******************************************\n\n";
       }
       exit(1);
     }
   }
-    
+
   // parent
   close(pipes[0][0]);
   close(pipes[1][1]);
@@ -117,8 +117,10 @@ DaVinci::run()
   return davinci;
 }
 
-DaVinci::DaVinci(pid_t pid, int in_fd, int out_fd)
-  : m_PID(pid), m_toDV(in_fd), m_fromDV(out_fd)
+DaVinci::DaVinci(pid_t pid,
+                 int in_fd,
+                 int out_fd) :
+    m_PID(pid), m_toDV(in_fd), m_fromDV(out_fd)
 {
   string response = readline(m_fromDV);
   if ((response != "ok") && (response.size() > 0))
@@ -128,17 +130,18 @@ DaVinci::DaVinci(pid_t pid, int in_fd, int out_fd)
 DaVinci::~DaVinci()
 {
   try {
-  
+
     ostringstream quit_cmd;
     quit_cmd << "menu(file(quit))" << endl;
     string cmdbuf = quit_cmd.str();
 
     writeline(m_toDV, cmdbuf);
     readline(m_fromDV);
-	
+
     // just throw away the response; we need to do the read in case
     // davinci blocks forever trying to write
-  } catch (Exception&) {}
+  } catch (Exception&) {
+  }
 
   while ((waitpid(m_PID, 0, 0) == -1) && (errno == EINTR))
     ;
@@ -147,25 +150,23 @@ DaVinci::~DaVinci()
   close(m_fromDV);
 }
 
-void
-DaVinci::setGraph(const GV_TaskGraph* graph)
+void DaVinci::setGraph(const GV_TaskGraph* graph)
 {
   if (graph == NULL)
     return;
-  
-  ostringstream graph_str;    
+
+  ostringstream graph_str;
 
   graph_str << "graph(new_placed([";
 
   bool first_node = true;
   const list<GV_Task*> tasks = graph->getTasks();
-  for (list<GV_Task*>::const_iterator task_iter = tasks.begin();
-       task_iter != tasks.end(); task_iter++) {
+  for (list<GV_Task*>::const_iterator task_iter = tasks.begin(); task_iter != tasks.end(); task_iter++) {
 
-   if (doExclusion && ((*task_iter)->getMaxPathPercent() < (*task_iter)->getGraph()->getThresholdPercent()))
-    continue;
+    if (doExclusion && ((*task_iter)->getMaxPathPercent() < (*task_iter)->getGraph()->getThresholdPercent()))
+      continue;
 
-   if (!first_node)
+    if (!first_node)
       graph_str << ',';
     else
       first_node = false;
@@ -175,23 +176,30 @@ DaVinci::setGraph(const GV_TaskGraph* graph)
   graph_str << "]))\n";
 
   //cout << graph_str.str() << endl;
-  
+
   writeline(m_toDV, graph_str.str());
   string response = readline(m_fromDV);
   if (response != "ok")
     cerr << "daVinci said: " << response << endl;
 }
 
-void
-DaVinci::setOrientation(Orientation orientation)
+void DaVinci::setOrientation(Orientation orientation)
 {
   ostringstream cmd;
   cmd << "menu(layout(orientation(";
   switch (orientation) {
-  case TOP_DOWN:      cmd << "top_down";	    break;
-  case BOTTOM_UP:     cmd << "bottom_up";     break;
-  case LEFT_RIGHT:    cmd << "left_right";    break;
-  case RIGHT_LEFT:    cmd << "right_left";    break;
+    case TOP_DOWN :
+      cmd << "top_down";
+      break;
+    case BOTTOM_UP :
+      cmd << "bottom_up";
+      break;
+    case LEFT_RIGHT :
+      cmd << "left_right";
+      break;
+    case RIGHT_LEFT :
+      cmd << "right_left";
+      break;
   }
   cmd << ")))\n";
 
@@ -201,8 +209,7 @@ DaVinci::setOrientation(Orientation orientation)
     cout << "daVinci said: " << response << endl;
 }
 
-void
-DaVinci::setFontSize(int font_size)
+void DaVinci::setFontSize(int font_size)
 {
   ostringstream cmd;
   cmd << "set(font_size(" << font_size << "))\n";
@@ -212,8 +219,7 @@ DaVinci::setFontSize(int font_size)
     cout << "daVinci said: " << response << endl;
 }
 
-void
-DaVinci::handleInput()
+void DaVinci::handleInput()
 {
   string input = readline(m_fromDV);
 
@@ -225,44 +231,38 @@ DaVinci::handleInput()
   parseAnswer(cmd, args);
 
   /* can uncomment when debugging
-  cout << cmd << endl;
-  int i = 0;
-  for (std::list<char*>::iterator iter = args.begin(); iter != args.end();
-       iter++) {
-    cout << i++ << ": " << *iter << endl;
-  }
-  */
-    
+   cout << cmd << endl;
+   int i = 0;
+   for (std::list<char*>::iterator iter = args.begin(); iter != args.end();
+   iter++) {
+   cout << i++ << ": " << *iter << endl;
+   }
+   */
+
   // handle cmd
   if (strcmp(cmd, "quit") == 0)
     gEventQueue.push(Event(EVT_DV_QUIT));
   else if (strcmp(cmd, "communication_error") == 0) {
     cerr << "DaVinci error: " << args.front() << endl;
-  }
-  else if (strcmp(cmd, "node_selections_labels") == 0) {
+  } else if (strcmp(cmd, "node_selections_labels") == 0) {
     m_selectedNodes.clear();
     m_selectedEdge = "";
-    for (std::list<char*>::iterator iter = args.begin();
-	 iter != args.end(); iter++)
+    for (std::list<char*>::iterator iter = args.begin(); iter != args.end(); iter++)
       m_selectedNodes.push_back(string(*iter));
     gEventQueue.push(Event(EVT_DV_SELECT_NODE));
-  }
-  else if (strcmp(cmd, "node_double_click") == 0) {
+  } else if (strcmp(cmd, "node_double_click") == 0) {
     gEventQueue.push(Event(EVT_DV_DOUBLE_CLICK_NODE));
-  }
-  else if (strcmp(cmd, "edge_selection_label") == 0) {
+  } else if (strcmp(cmd, "edge_selection_label") == 0) {
     m_selectedNodes.clear();
     if (args.size() > 0) {
       // there really should only be one argument
-      m_selectedEdge = args.front(); 
+      m_selectedEdge = args.front();
       gEventQueue.push(Event(EVT_DV_SELECT_EDGE));
     }
-  }
-  else if (strcmp(cmd, "edge_double_click") == 0) {
-    gEventQueue.push(Event(EVT_DV_DOUBLE_CLICK_EDGE));      
-  }
-  else if (strcmp(cmd, "menu_selection") == 0) {
-      
+  } else if (strcmp(cmd, "edge_double_click") == 0) {
+    gEventQueue.push(Event(EVT_DV_DOUBLE_CLICK_EDGE));
+  } else if (strcmp(cmd, "menu_selection") == 0) {
+
   }
 
   delete[] cmd;
@@ -271,14 +271,16 @@ DaVinci::handleInput()
 // Parses a DaVinci answer string simply by breaking it
 // the cmd and arguments (by inserting '\0's in the cmd
 // string and appending char*'s the the args list.
-void DaVinci::parseAnswer(char* cmd, std::list<char*>& args)
+void DaVinci::parseAnswer(char* cmd,
+                          std::list<char*>& args)
 {
   char* p = cmd;
   while (*p != '\0' && *p != '(')
     p++;
 
-  if (*p == '\0') return;
-  *p = '\0'; // NULL terminate cmd
+  if (*p == '\0')
+    return;
+  *p = '\0';  // NULL terminate cmd
   p++;
 
   // separate arguments
@@ -292,49 +294,49 @@ void DaVinci::parseAnswer(char* cmd, std::list<char*>& args)
     while (*p != '\0' && *p != '\"')
       p++;
 
-    if (*p == '\0') break;
+    if (*p == '\0')
+      break;
 
-    p++; // pass first quote
+    p++;  // pass first quote
     args.push_back(p);
-	
+
     while (*p != '\0' && *p != '\"') {
       if (*p == '\\')
-	p++; // skip passed excape sequence
+        p++;  // skip passed excape sequence
       p++;
     }
 
     if (*p != '\0') {
-      *p = '\0'; // null terminate argument at end quote
+      *p = '\0';  // null terminate argument at end quote
       p++;
-    } 
+    }
   } while (*p != '\0');
 }
 
-static
-ostream&
-operator<<(ostream& out, const GV_Task* task)
-{  
-  out << "l(\"" << task->getName()
-      << "\",n(\"\",[a(\"OBJECT\",\"" << task->getName()
-      << "\"),";
+static ostream&
+operator<<(ostream& out,
+           const GV_Task* task)
+{
+  out << "l(\"" << task->getName() << "\",n(\"\",[a(\"OBJECT\",\"" << task->getName() << "\"),";
   displayAttributes(out, task);
   out << "],[";
-	
+
   bool first_edge = true;
   const list<Edge*> dependency_edges = task->getDependencyEdges();
-  for (list<Edge*>::const_iterator dep_edge_iter = dependency_edges.begin();
-       dep_edge_iter != dependency_edges.end(); dep_edge_iter++) {
-    if (DaVinci::doExclusion && ((*dep_edge_iter)->getSource()->getMaxPathPercent() < (*dep_edge_iter)->getGraph()->getThresholdPercent() || (*dep_edge_iter)->isObsolete()))
-      continue; // JUST TESTING -- NEED TO CHANGE BACK
+  for (list<Edge*>::const_iterator dep_edge_iter = dependency_edges.begin(); dep_edge_iter != dependency_edges.end();
+      dep_edge_iter++) {
+    if (DaVinci::doExclusion && ((*dep_edge_iter)->getSource()->getMaxPathPercent()
+        < (*dep_edge_iter)->getGraph()->getThresholdPercent()
+                                 || (*dep_edge_iter)->isObsolete()))
+      continue;  // JUST TESTING -- NEED TO CHANGE BACK
 
-   if (!first_edge)
+    if (!first_edge)
       out << ',';
     else
       first_edge = false;
-	    
+
     GV_Task* dep = (*dep_edge_iter)->getSource();
-    out << "l(\"" << dep->getName() << " -> " << task->getName()
-	<< "\",e(\"\",[a(\"_DIR\",\"inverse\"),";
+    out << "l(\"" << dep->getName() << " -> " << task->getName() << "\",e(\"\",[a(\"_DIR\",\"inverse\"),";
     displayAttributes(out, (*dep_edge_iter));
     out << "],r(\"" << dep->getName() << "\")))";
   }
@@ -343,9 +345,7 @@ operator<<(ostream& out, const GV_Task* task)
   return out;
 }
 
-static
-string
-readline(int fd)
+static string readline(int fd)
 {
   // this function will handle the case the line comes in several "packets",
   // but it won't handle the case where the \n is _not_ the last character
@@ -365,20 +365,20 @@ readline(int fd)
       buf[len] = '\0';
       char* eol = strchr(buf, '\n');
       if (eol == 0)
-	need_more = true;
+        need_more = true;
       else
-	*eol = '\0';
+        *eol = '\0';
       line << buf;
     } else if (len == -1)
       throw ErrnoException("read() error", errno, __FILE__, __LINE__);
   } while (need_more);
-    
+
   return line.str();
 }
 
 static
-void
-writeline(int fd, string str)
+void writeline(int fd,
+               string str)
 {
   ssize_t written = 0;
   ssize_t len;
@@ -403,37 +403,35 @@ writeline(int fd, string str)
   }
 }
 
-
 static
-void displayAttributes(ostream& out, const GV_Task* task)
+void displayAttributes(ostream& out,
+                       const GV_Task* task)
 {
   float thresholdPercent = task->getGraph()->getThresholdPercent();
   float maxPathPercent = task->getMaxPathPercent();
-  out << "a(\"COLOR\",\"#" << getColor(maxPathPercent, thresholdPercent)
-      << "\"),";
-  out << "a(\"HIDDEN\",\"" << getHidden(maxPathPercent, thresholdPercent)
-      << "\")";
+  out << "a(\"COLOR\",\"#" << getColor(maxPathPercent, thresholdPercent) << "\"),";
+  out << "a(\"HIDDEN\",\"" << getHidden(maxPathPercent, thresholdPercent) << "\")";
 }
 
 static
-void displayAttributes(ostream& out, const Edge* edge)
+void displayAttributes(ostream& out,
+                       const Edge* edge)
 {
   float thresholdPercent = edge->getGraph()->getThresholdPercent();
   float maxPathPercent = edge->getMaxPathPercent();
-  out << "a(\"EDGECOLOR\",\"#" << getColor(maxPathPercent, thresholdPercent)
-      << "\"),a(\"EDGEPATTERN\",";
+  out << "a(\"EDGECOLOR\",\"#" << getColor(maxPathPercent, thresholdPercent) << "\"),a(\"EDGEPATTERN\",";
   if (maxPathPercent < thresholdPercent || edge->isObsolete())
-    out << "\"dashed\""; // below threshold
+    out << "\"dashed\"";  // below threshold
   else if (maxPathPercent == 1)
-    out << "\"double\""; // critical path
+    out << "\"double\"";  // critical path
   else
-    out << "\"solid\""; // normal
+    out << "\"solid\"";  // normal
   out << ")";
 }
 
 static
 const char* getColor(float percent /* max incl path / critical path */,
-		     float thresholdPercent)
+                     float thresholdPercent)
 {
   static char col_str[7];
 
@@ -448,13 +446,12 @@ const char* getColor(float percent /* max incl path / critical path */,
 
   if (adj_percent >= 0 && adj_percent <= 1) {
     int red = static_cast<int>(adj_percent * 255);
-    int green = static_cast<int>((1-adj_percent) * 255);
+    int green = static_cast<int>((1 - adj_percent) * 255);
     int blue = 0;
     sprintf(col_str, "%02x%02x%02x", red, green, blue);
-    col_str[6]='\0';
-  }
-  else {
-    strcpy(col_str, "0000FF"); // blue if out of range
+    col_str[6] = '\0';
+  } else {
+    strcpy(col_str, "0000FF");  // blue if out of range
   }
 
   return col_str;
@@ -462,9 +459,8 @@ const char* getColor(float percent /* max incl path / critical path */,
 
 static
 const char* getHidden(float percent /* max incl path / critical path */,
-		      float thresholdPercent)
+                      float thresholdPercent)
 {
   return (percent < thresholdPercent) ? "true" : "false";
 }
-
 
