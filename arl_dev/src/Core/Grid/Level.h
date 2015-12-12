@@ -80,6 +80,7 @@ class LevelFlags {
         isPeriodicX,
         isPeriodicY,
         isPeriodicZ,
+        isIndependent,
         num_flags
       };
 
@@ -293,8 +294,13 @@ public:
   inline bool isStretched() const { return d_stretched; }
 
   inline bool isAMR() const { return d_flags.test(LevelFlags::isAMR); }
+  void setAMRStatus(bool status) { d_flags.set(LevelFlags::isAMR, status); }
 
   inline bool isMultiScale() const {return d_flags.test(LevelFlags::isMultiScale); }
+  void setMultiScaleStatus(bool status) { d_flags.set(LevelFlags::isMultiScale, status); }
+
+  inline bool isIndependent() const {return d_flags.test(LevelFlags::isIndependent); }
+  void setIndependentStatus(bool status) { d_flags.set(LevelFlags::isIndependent, status); }
 
   void getCellWidths(Grid::Axis axis, OffsetArray1<double>& widths) const;
   void getFacePositions(Grid::Axis axis, OffsetArray1<double>& faces) const;

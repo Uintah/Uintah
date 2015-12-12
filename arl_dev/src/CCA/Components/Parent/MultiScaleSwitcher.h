@@ -79,8 +79,11 @@ namespace Uintah {
 
   private:
 
-    SimulationInterface*
-    matchComponentToLevelset(const LevelP& level);
+    SimulationInterface* matchComponentToLevelset(const LevelP& level);
+
+    bool matchIndependentStatusToLevelset(const LevelP& level);
+
+    bool matchAMRStatusToLevelset(const LevelP& level);
 
     void switchTest( const ProcessorGroup * /*pg*/,
                      const PatchSubset    * patches,
@@ -118,6 +121,7 @@ namespace Uintah {
     SimulationStateP     d_sharedState;
     unsigned int         d_numComponents;
     unsigned int         d_componentIndex;
+    std::vector<bool>    d_componentIsAMR;
     
     struct initVars {
       std::vector<std::string>        varNames;
