@@ -25,8 +25,9 @@
 #ifndef GRAPHVIEW_H
 #define GRAPHVIEW_H
 
-#include <queue>
 #include "Event.h"
+
+#include <queue>
 
 extern bool gQuit;
 extern std::queue<Event> gEventQueue;

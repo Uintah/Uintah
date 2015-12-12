@@ -30,7 +30,7 @@ PROGRAM := $(SRCDIR)/graphview
 
 SRCS := $(SRCDIR)/graphview.cc    \
         $(SRCDIR)/GV_TaskGraph.cc \
-	$(SRCDIR)/DaVinci.cc
+	      $(SRCDIR)/DaVinci.cc
 
 ifeq ($(IS_STATIC_BUILD),yes)
   PSELIBS := $(ALL_STATIC_PSE_LIBS)

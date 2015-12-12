@@ -342,11 +342,15 @@ class SchedulerCommon : public Scheduler, public UintahParallelComponent {
     // Maximum memory use as sampled across a given timestep.
     unsigned long d_maxMemUse;
 
+    // used when generating a task-graph XML document
+    bool                        emit_taskgraph;
     ProblemSpecP                m_graphDoc;
     ProblemSpecP                m_nodes;
+
     std::ofstream*              memlogfile;
-    bool                        emit_taskgraph;
     LocallyComputedPatchVarMap* m_locallyComputedPatchVarMap;
+
+    // for Particle relocation
     Relocate                    reloc1_;
     Relocate                    reloc2_;
 
