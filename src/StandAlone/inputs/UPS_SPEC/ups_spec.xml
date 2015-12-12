@@ -661,6 +661,7 @@
     <LevelSet			spec="MULTIPLE NO_DATA"
                           attribute1="label    OPTIONAL STRING">
       <Component          spec="REQUIRED STRING"/>
+      <IsIndependent      spec="OPTIONAL BOOLEAN"/>
       <Level              spec="MULTIPLE NO_DATA">
         <Box              spec="MULTIPLE NO_DATA"
                             attribute1="label     OPTIONAL STRING" 

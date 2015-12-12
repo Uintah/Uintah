@@ -1504,6 +1504,7 @@ Grid::parseLevelSet(  const ProblemSpecP & grid_ps
                     , const size_t         levelSetIndex
                     , const bool           do_AMR
                     , const bool           do_MultiScale
+                    , const bool           is_Independent
                    )
 {
   size_t localIndexOffset = 0;
@@ -1534,6 +1535,7 @@ Grid::parseLevelSet(  const ProblemSpecP & grid_ps
     LevelFlags flags;
     flags.set(LevelFlags::isAMR, do_AMR);
     flags.set(LevelFlags::isMultiScale, do_MultiScale);
+    flags.set(LevelFlags::isIndependent, is_Independent);
     LevelP level = addLevel(setAnchor, levelInfo.getSpacing(), flags);
     level->setExtraCells(extraCells);
 
@@ -1591,7 +1593,7 @@ Grid::problemSetup(  const ProblemSpecP   & params
   if (!levelset_ps) { // Only one level set parsed from the level section of the current block.
     level_ps = grid_ps;
     int levelIndex         = 0;
-    parseLevelSet(level_ps, pg->size(), pg->myrank(), levelIndex, 0, fileIsAMR, do_MultiScale);
+    parseLevelSet(level_ps, pg->size(), pg->myrank(), levelIndex, 0, fileIsAMR, do_MultiScale, false);
 
     // Determine size of newly parsed subset and create an empty subset to house it
     d_levelSet.createEmptySubsets(1);
@@ -1628,11 +1630,13 @@ Grid::problemSetup(  const ProblemSpecP   & params
       setNameStream << "Level Set " << std::left << levelIndex;
       std::string setName = setNameStream.str();
       levelset_ps->getAttribute("label", setName);
+      bool setIsIndependent = false;
+      levelset_ps->get("IsIndependent",setIsIndependent);
 
       // And override if present
       d_levelSubsetLabels.push_back(setName);
       d_levelSubsetComponentNames.push_back(componentName);
-      parseLevelSet(levelset_ps, pg->size(), pg->myrank(), levelIndex, currentSubsetIndex, fileIsAMR, do_MultiScale);
+      parseLevelSet(levelset_ps, pg->size(), pg->myrank(), levelIndex, currentSubsetIndex, fileIsAMR, do_MultiScale, setIsIndependent);
 
       // Determine size of newly parsed subset and create an empty subset to house it
       d_levelSet.createEmptySubsets(1);

@@ -305,21 +305,23 @@ Relocate::scheduleParticleRelocation(Scheduler* sched,
 // All variables that will be relocated must exist on the same levels. 
 // You cannot have one variable that exists on a different number of levels  
 void
-Relocate::scheduleParticleRelocation(Scheduler* sched,
-                                     const ProcessorGroup* pg,
-                                     LoadBalancer* lb,
-                                     const LevelP& level,
-                                     const VarLabel* old_posLabel,
-                                     const vector<vector<const VarLabel*> >& old_labels,
-                                     const VarLabel* new_posLabel,
-                                     const vector<vector<const VarLabel*> >& new_labels,
-                                     const VarLabel* particleIDLabel,
-                                     const MaterialSet* matls)
+Relocate::scheduleParticleRelocation(
+                                            Scheduler                   * sched
+                                     , const ProcessorGroup             * pg
+                                     ,       LoadBalancer               * lb
+                                     , const LevelP                     & level
+                                     , const VarLabel                   * preRelocation_posLabel
+                                     , const std::vector<varLabelArray> & preRelocation_labels
+                                     , const VarLabel                   * postRelocation_posLabel
+                                     , const std::vector<varLabelArray> & postRelocation_labels
+                                     , const VarLabel                   * particleIDLabel
+                                     , const MaterialSet                * matls
+                                    )
 {
-  reloc_old_posLabel = old_posLabel;
-  reloc_old_labels   = old_labels;
-  reloc_new_posLabel = new_posLabel;
-  reloc_new_labels   = new_labels;
+  reloc_old_posLabel = preRelocation_posLabel;
+  reloc_old_labels   = preRelocation_labels;
+  reloc_new_posLabel = postRelocation_posLabel;
+  reloc_new_labels   = postRelocation_labels;
   particleIDLabel_   = particleIDLabel;
   
   if(reloc_matls && reloc_matls->removeReference()){
@@ -328,6 +330,7 @@ Relocate::scheduleParticleRelocation(Scheduler* sched,
     
   reloc_matls = matls;
   reloc_matls->addReference();
+
   ASSERTEQ(reloc_old_labels.size(), reloc_new_labels.size());
   int numMatls = (int)reloc_old_labels.size();
   ASSERTEQ(matls->size(), 1);
@@ -348,20 +351,43 @@ Relocate::scheduleParticleRelocation(Scheduler* sched,
     task->usesMPI(true);
   }
   
-  task->requires(Task::NewDW, old_posLabel, Ghost::None);
 
-  for (int m = 0; m < numMatls; m++) {
-    MaterialSubset* thismatl = scinew MaterialSubset();
-    thismatl->add(matlsub->get(m));
+  // Our variable compute/requires depend on how we're calling into relocate.
+  // If we're calling from an independent level, then we need to relocate only onto that level.
+  if (level->isIndependent()) {
+    // If the level->isIndependent() task is set then we need to use only the position variables
+    // on our own level, since each level is independent.
+    task->requires(Task::NewDW, preRelocation_posLabel, level.get_rep(), 0, Task::NormalDomain, Ghost::None, 0);
+    for (int m = 0; m < numMatls; m++) {
+      MaterialSubset* thismatl = scinew MaterialSubset();
+      thismatl->add(matlsub->get(m));
 
-    for (int i = 0; i < (int)old_labels[m].size(); i++) {
-      task->requires(Task::NewDW, old_labels[m][i], thismatl, Ghost::None);
+      for (int i = 0; i < (int)preRelocation_labels[m].size(); i++) {
+        task->requires(Task::NewDW, preRelocation_labels[m][i], level.get_rep(), thismatl, Task::NormalDomain, Ghost::None, 0);
+      }
+
+      task->computes(postRelocation_posLabel, level.get_rep(), 0, Task::NormalDomain);
+
+      for (int i = 0; i < (int)postRelocation_labels[m].size(); i++) {
+        task->computes(postRelocation_labels[m][i], level.get_rep(), thismatl, Task::NormalDomain);
+      }
     }
+  }
+  else {
+    task->requires(Task::NewDW, preRelocation_posLabel, Ghost::None);
+    for (int m = 0; m < numMatls; m++) {
+      MaterialSubset* thismatl = scinew MaterialSubset();
+      thismatl->add(matlsub->get(m));
 
-    task->computes(new_posLabel, thismatl);
+      for (int i = 0; i < (int)preRelocation_labels[m].size(); i++) {
+        task->requires(Task::NewDW, preRelocation_labels[m][i], thismatl, Ghost::None);
+      }
 
-    for (int i = 0; i < (int)new_labels[m].size(); i++) {
-      task->computes(new_labels[m][i], thismatl);
+      task->computes(postRelocation_posLabel, thismatl);
+
+      for (int i = 0; i < (int)postRelocation_labels[m].size(); i++) {
+        task->computes(postRelocation_labels[m][i], thismatl);
+      }
     }
   }
   
@@ -389,12 +415,12 @@ Relocate::scheduleParticleRelocation(Scheduler* sched,
     }
   }
   else {
-    if (level->isMultiScale()) {
+ //   if (level->isMultiScale()) {
       patches = const_cast<PatchSet*> (lb->getPerProcessorPatchSet(level->getPerProcSubsetPatchSetIndex()));
-    }
-    else {
-      patches = const_cast<PatchSet*> (lb->getPerProcessorPatchSet(level->getIndexWithinSubset()));
-    }
+ //   }
+ //   else {
+ //     patches = const_cast<PatchSet*> (lb->getPerProcessorPatchSet(level->getIndexWithinSubset()));
+ //   }
 
   }
 

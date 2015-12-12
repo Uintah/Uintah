@@ -108,12 +108,16 @@ MultiScaleSwitcher::MultiScaleSwitcher( const ProcessorGroup * myworld,
     ProblemSpecP subCompUps = ProblemSpecReader().readInputFile(input_file);
 
 
+
+
     // get the component name from the input file, and the uda arg is not needed for normal simulations...  
     std::string sim_comp;
     ProblemSpecP sim_ps = subCompUps->findBlock("SimulationComponent");
     sim_ps->getAttribute("type", sim_comp);
     simComponents.insert(sim_comp);
     d_componentNameIndexMap.insert( std::pair<std::string, int>(sim_comp, num_components));
+    bool componentAMRStatus = Grid::specIsAMR(subCompUps);
+    d_componentIsAMR.push_back(componentAMRStatus);
 
     //__________________________________
     // create simulation port and attach it switcher component    
@@ -369,6 +373,24 @@ MultiScaleSwitcher::problemSetup( const ProblemSpecP     & /*params*/,
   }
 }
 
+bool MultiScaleSwitcher::matchAMRStatusToLevelset(const LevelP& level)
+{
+  GridP grid = level->getGrid();
+  std::string levelSetComponent = grid->getSubsetComponentName(level->getIndex());
+  int         componentIndex = d_componentNameIndexMap.find(levelSetComponent)->second;
+
+  return d_componentIsAMR[componentIndex];
+}
+
+bool MultiScaleSwitcher::matchIndependentStatusToLevelset(const LevelP& level)
+{
+  GridP grid = level->getGrid();
+   std::string levelSetComponent = grid->getSubsetComponentName(level->getIndex());
+   int         componentIndex = d_componentNameIndexMap.find(levelSetComponent)->second;
+
+   return d_componentIsAMR[componentIndex];
+}
+
 SimulationInterface* MultiScaleSwitcher::matchComponentToLevelset(const LevelP& level)
 {
   GridP grid = level->getGrid();
@@ -387,6 +409,17 @@ void MultiScaleSwitcher::scheduleInitialize( const LevelP & level,
                                              SchedulerP   & sched )
 {
   printSchedule(level, dbg, "MultiScaleSwitcher::scheduleInitialize");
+
+  GridP grid = level->getGrid();
+  int subsetIndexInGrid = grid->getSubsetIndex(level->getIndex());
+  const LevelSubset* currSubset = grid->getLevelSubset(subsetIndexInGrid);
+  int numLevelsInSubset = currSubset->size();
+  for (int indexInSubset=0; indexInSubset < numLevelsInSubset; ++indexInSubset) {
+    LevelP currLevel = grid->getLevel(currSubset->get(indexInSubset)->getIndex());
+    currLevel->setAMRStatus(matchAMRStatusToLevelset(level));
+ //   currLevel->setIndependentStatus(matchIndependentStatusToLevelset(level));
+  }
+
   SimulationInterface* component = matchComponentToLevelset(level);
   component->scheduleInitialize(level,sched);
 }
