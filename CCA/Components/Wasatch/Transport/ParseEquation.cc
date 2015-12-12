@@ -1366,9 +1366,9 @@ namespace WasatchCore{
         const Expr::Tag primVarCorrectedTag = Expr::Tag(primVarTag.name() + suffix, Expr::STATE_NONE);
         
         Expr::ExpressionBuilder* builder = NULL;
-        if     ( dir=="X" ) builder = build_diff_flux_expr<XFaceT>(diffFluxParams,diffFluxTag,primVarTag,densityTag,turbDiffTag);
-        else if( dir=="Y" ) builder = build_diff_flux_expr<YFaceT>(diffFluxParams,diffFluxTag,primVarTag,densityTag,turbDiffTag);
-        else if( dir=="Z" ) builder = build_diff_flux_expr<ZFaceT>(diffFluxParams,diffFluxTag,primVarTag,densityTag,turbDiffTag);
+        if     ( dir=="X" ) builder = build_diff_flux_expr<XFaceT>(diffFluxParams,diffFluxTag,primVarCorrectedTag,densityCorrectedTag,turbDiffTag);
+        else if( dir=="Y" ) builder = build_diff_flux_expr<YFaceT>(diffFluxParams,diffFluxTag,primVarCorrectedTag,densityCorrectedTag,turbDiffTag);
+        else if( dir=="Z" ) builder = build_diff_flux_expr<ZFaceT>(diffFluxParams,diffFluxTag,primVarCorrectedTag,densityCorrectedTag,turbDiffTag);
         
         if( builder == NULL ){
           std::ostringstream msg;
