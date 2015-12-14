@@ -1332,27 +1332,27 @@ class Task {
     };
 
     struct Dependency {
-        Dependency* next;
-        DepType deptype;
-        Task* task;
-        const VarLabel* var;
-        bool lookInOldTG;
-        const PatchSubset* patches;
-        const MaterialSubset* matls;
-        const Level* reductionLevel;
-        Edge* req_head;   // Used in compiling the task graph.
-        Edge* req_tail;
-        Edge* comp_head;
-        Edge* comp_tail;
-        PatchDomainSpec patches_dom;
-        MaterialDomainSpec matls_dom;
-        Ghost::GhostType gtype;
-        WhichDW whichdw;  // Used only by Requires
+                              Dependency        * next;
+                              DepType             deptype;
+                              Task              * task;
+                        const VarLabel          * var;
+                              bool                lookInOldTG;
+                        const PatchSubset       * patches;
+                        const MaterialSubset    * matls;
+                        const Level             * reductionLevel;
+                              Edge              * req_head;   // Used in compiling the task graph.
+                              Edge              * req_tail;
+                              Edge              * comp_head;
+                              Edge              * comp_tail;
+                              PatchDomainSpec     patches_dom;
+                              MaterialDomainSpec  matls_dom;
+                              Ghost::GhostType    gtype;
+                              WhichDW             whichdw;  // Used only by Requires
 
         // in the multi-TG construct, this will signify that the required
         // var will be constructed by the old TG
-        int numGhostCells;
-        int level_offset;
+                              int                 numGhostCells;
+                              int                 level_offset;
 
         int mapDataWarehouse() const
         {

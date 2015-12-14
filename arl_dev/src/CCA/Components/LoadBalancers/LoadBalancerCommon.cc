@@ -619,6 +619,42 @@ LoadBalancerCommon::createOutputPatchSet(const LevelP& level)
   }
 }
 
+void LoadBalancerCommon::createNeighborhood(
+                                              const LevelSet& levelSet
+
+                                           )
+{
+  throw InternalError("ERROR:  This routine is not yet implemented!", __FILE__, __LINE__);
+  int me = d_myworld->myrank();
+
+  int maxGhost = d_scheduler->getMaxGhost();  // Is this right for levelsets?  Probably not.
+  int maxLevelOffset = d_scheduler->getMaxLevelOffset(); // This definitely isn't right.. we have a max level offset per
+                                                         // level SUBSET!
+
+  d_neighbors.clear();
+  d_neighborProcessors.clear();
+
+  d_neighborProcessors.insert(d_myworld->myrank());
+
+  int numSubsets = levelSet.size();
+  GridP grid = levelSet.getSubset(0)->get(0)->getGrid();
+  for (int subsetIndex = 0; subsetIndex < numSubsets; ++subsetIndex) {
+    const LevelSubset* currSubset = levelSet.getSubset(subsetIndex);
+    int numLevelsInSubset = currSubset->size();
+    for (int levelInSubset = 0; levelInSubset < numLevelsInSubset; ++levelInSubset) {
+      LevelP levelHandle = grid->getLevel(currSubset->get(levelInSubset)->getIndex());
+
+      Level::const_patchIterator patchIter;
+      for (patchIter = levelHandle->patchesBegin() ; patchIter != levelHandle->patchesEnd(); ++patchIter) {
+        const Patch* patch = *patchIter;
+
+        int proc    = getPatchwiseProcessorAssignment(patch);
+        int oldproc = getOldProcessorAssignment(patch);
+      }
+    }
+  }
+}
+
 //______________________________________________________________________
 //
 void

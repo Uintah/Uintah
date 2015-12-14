@@ -194,7 +194,7 @@ TaskGraph::setupTaskConnections( GraphSortInfoMap& sortinfo )
         }
         SCI_THROW(InternalError("Variable produced in old datawarehouse: " +comp->var->getName(), __FILE__, __LINE__));
       } else if(comp->var->typeDescription()->isReductionVariable()){
-        int levelidx = comp->reductionLevel?comp->reductionLevel->getIndex():-1;
+        int levelidx = comp->reductionLevel ?   comp->reductionLevel->getIndex()    :   -1;
         // Look up this variable in the reductionTasks map
         int dw = comp->mapDataWarehouse();
         // for reduction var allows multi computes such as delT
@@ -211,9 +211,9 @@ TaskGraph::setupTaskConnections( GraphSortInfoMap& sortinfo )
 
         // use the dw as a 'material', just for the sake of looking it up.
         // it should only differentiate on AMR W-cycle graphs...
-        VarLabelMatl<Level> key(comp->var, dw, comp->reductionLevel);
-        const MaterialSet* ms = task->getMaterialSet();
         const Level* level = comp->reductionLevel;
+        VarLabelMatl<Level> key(comp->var, dw, level);
+        const MaterialSet* ms = task->getMaterialSet();
 
         ReductionTasksMap::iterator it=reductionTasks.find(key);
         if(it == reductionTasks.end()) {
@@ -340,12 +340,13 @@ TaskGraph::setupTaskConnections( GraphSortInfoMap& sortinfo )
 //______________________________________________________________________
 //
 void
-TaskGraph::addDependencyEdges( Task*              task,
-                               GraphSortInfoMap&  sortinfo,
-                               Task::Dependency*  req,
-                               CompMap&           comps,
-                               ReductionTasksMap& reductionTasks,
-                               bool               modifies )
+TaskGraph::addDependencyEdges(
+                                      Task              * task,
+                                      GraphSortInfoMap  & sortinfo,
+                                      Task::Dependency  * req,
+                                      CompMap           & comps,
+                                      ReductionTasksMap & reductionTasks,
+                                      bool                modifies )
 {
   for(; req != 0; req=req->next){
     if (detaileddbg.active()) {
