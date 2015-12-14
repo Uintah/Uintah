@@ -91,6 +91,7 @@
         </LevelSet>
 
         <LevelSet label = "MD1">
+          <IsIndependent>true</IsIndependent>
           <Component>md</Component>
           <Level>
               <Box label = "1">
@@ -104,6 +105,7 @@
         </LevelSet>
 
         <LevelSet label = "MD2">
+          <IsIndependent>true</IsIndependent>
           <Component>md</Component>
           <Level>
               <Box label = "2">
