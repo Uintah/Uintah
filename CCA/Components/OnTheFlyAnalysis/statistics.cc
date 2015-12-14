@@ -54,6 +54,8 @@ statistics::statistics(ProblemSpecP& module_spec,
   d_startTime   = 0;
   d_stopTime    = DBL_MAX;
   d_doHigherOrderStats = false;
+  d_startTimeTimestep = 0;
+  
 }
 
 //__________________________________
@@ -452,6 +454,11 @@ void statistics::computeStatsWrapper( DataWarehouse* old_dw,
 
   }else {
 //    proc0cout << " Computing------------DataAnalysis: Statistics" << endl;
+
+    if ( d_startTimeTimestep == 0 ){
+      d_startTimeTimestep = d_sharedState->getCurrentTopLevelTimeStep();
+    }
+
     computeStats< T >(old_dw, new_dw, patch, Q);
   }
 }
@@ -486,7 +493,7 @@ void statistics::computeStats( DataWarehouse* old_dw,
   new_dw->allocateAndPut( Qmean,     Q.Qmean_Label,     matl, patch );
   new_dw->allocateAndPut( Qmean2,    Q.Qmean2_Label,    matl, patch );
   new_dw->allocateAndPut( Qvariance, Q.Qvariance_Label, matl, patch );
-  int timestep = d_sharedState->getCurrentTopLevelTimeStep();
+  int timestep = d_sharedState->getCurrentTopLevelTimeStep() - d_startTimeTimestep + 1;
 
   T nTimesteps(timestep);
 
