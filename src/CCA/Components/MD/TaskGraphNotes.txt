@@ -1,0 +1,61 @@
+bool
+TaskGraph::overlaps() 
+	Determine if there is overlap between computes/requires.  Overlap requires:
+		1)  Patch overlap && material overlap
+
+void						
+TaskGraph::setupTaskConnections(GraphSortInfoMap& sortinfo)
+	1)  Loop through all tasks and find all reduction Tasks, and label them as such:
+		a)  Check to see if task is already marked a reduction task (if so, done for this task)
+		b)  Check to ensure no computation is occuring in OldDW and throw error if so.
+		c)	Check compute variable for being a reduction variable.  If so:
+			i)  Check to see if reduction is specified on a single level; if not level is generic -1
+			ii) Check for allowsMultipleComputes on reduction var; if so drop out of loop
+		d) Construct reduction map key out of varLabel, datawarehouse index, and reduction level pointer
+		e) Search for key in map; if not present add it:
+			i)  Dynamically instantiate a name for the automatic reduction task
+			ii) Create reduction task
+			iii)Set the sortinfo for task
+			iv) Map reduction to appropriate DWs
+			v)  Set computes/requires/modifies for OutOfDomain queries for reduction task.
+				// Note:  Currently requires/computes are commented out for this, but modifies aren't.
+				//        Per APH, 1/31/15.. why? Seems like if something needs the OutOfDomain specifier
+				//        it should need all of these things, or else none.  Are there instances of odd
+				//        failures of reductions with this enabled/disabled?
+	2)  Add reduction tasks to task set with no patch/material set.  (They're global!)
+	3)  Create a map for computes by iterating through all tasks, finding dependency, and inserting a simple
+		key based on the varLabel and the Task::Dependency pointer of that dependency.
+	4)	Link task requires/modifies to matching computes
+		a)  Iterate through tasks, call addDependencyEdges on task for Requires and Modifies
+		b)  Mark task's sortinfo visited
+		c)  Clear tasks' child tasks.  
+	5)  Add all children of the current task, recursively, to allChildTasks.  (allChildTasks contains direct children as well as children of children)
+	6)  Reset the GraphSortInfoMap for all tasks.
+
+void
+TaskGraph::addDependencyEdges(Task * task, GraphSortInfoMap & sortinfo, Task::Dependency * req, CompMap & comps, ReductionTasksMap & reductionTasks, bool modifies)
+	1)  iterate through the requirement dependencies
+		a)  ensure the requirement originates from Task::NewDW
+			i)	Build an iterator of all the tasks in the computes map which have the same VarLabel* as the requires dependency
+			ii)	Iterate through all computes dependnecies with the same VarLabel* as the requires
+				1)	Check the type description of each requirement against the first typedescription to ensure consistency
+				2)	Compare the requirement dataWarehouse to the computes dataWarehouse
+					a)	If same data warehouse check to see if requirement VarLabel is a reduction variable
+						i)	If so, ensure the matching require/compute are on the same level and set a flag to add them
+						ii)	If the requirement isn't due a modification and the variable doesn't allow multiple cutes, set flag to indicate reduction is required first
+					b)  If VarLabel is not a reduction variable, a requirement is generated if the requirements and computes overlap()
+				3)  If the requirement was flagged for addition
+					a)  Check for whether or not the task is a reduction.  
+						i) 	Yes -> grab reduction task from the reduction map, add the task which modifies the reduction which is the proper location for a requirement taht needs reduction to have occured.
+						ii)	Otherwise, add the current compute task to the list of required computation tasks
+					b)  If dependency is generated from a modifies statement instead of a requires statement, also add all tasks which were required before the target
+						task as a prerequisite as well.  (In other words, if you're modifying a variable, order is important and you need to make sure all the tasks
+						which have done previous calculation on that variable are ALSO already complete, so you need a dependency on them as well.)  
+					c)	Add edge between requirement/modifies and compute tasks.
+					d)  Generate warning if a requires/modifies task is placed in graph before the task that computes the required variable
+			iii)Throw exception if requirement's compute was not located.
+			iv) If task is a modification, update comp map because a modification is also a compute
+			
+DetailedTasks*
+TaskGraph::createDetailedTasks(bool useInternalDeps, DetailedTasks * first, const GridP& grid, const GridP& oldGrid)
+	1)  "sort" the tasks (null sort simply filters out reduction tasks)
