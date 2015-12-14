@@ -355,18 +355,6 @@ void MD::problemSetup(const ProblemSpecP&   params,
 void MD::scheduleInitialize(const LevelP&       level,
                                   SchedulerP&   sched)
 {
-//  int currDW = 0;
-//  DataWarehouse* dwAddress = sched->get_dw(currDW);
-//  while (dwAddress)
-//  {
-//    char fill = std::cout.fill();
-//    std::cout << " Data Warehouse: " << currDW << " Address: " << std::showbase
-//              << std::internal << std::setfill('0') << std::hex << dwAddress << std::endl;
-//    std::cout.unsetf(std::ios::hex);
-//    std::setfill(fill);
-//    ++currDW;
-//    dwAddress = sched->get_dw(currDW);
-//  }
 
   // Get list of MD materials for scheduling
   const MaterialSet*    materials       =   d_sharedState->allMDMaterials();
@@ -455,7 +443,8 @@ void MD::scheduleComputeStableTimestep(const LevelP&     level,
   task->setType(Task::OncePerProc);
 
   LoadBalancer* loadBal = sched->getLoadBalancer();
-  const PatchSet* perProcPatches = loadBal->getPerProcessorPatchSet(level->getIndexWithinSubset());
+//  const PatchSet* patches = level->eachPatch();
+  const PatchSet* perProcPatches = loadBal->getPerProcessorPatchSet(level->getPerProcSubsetPatchSetIndex());
 
   sched->addTask(task, perProcPatches, d_sharedState->allMaterials());
 
@@ -476,7 +465,7 @@ void MD::scheduleTimeAdvance(const LevelP&      level,
   // Get list of MD materials for scheduling
   const MaterialSet* atomTypes = d_sharedState->allMDMaterials();
   LoadBalancer* loadBal = sched->getLoadBalancer();
-  const PatchSet* perProcPatches = loadBal->getPerProcessorPatchSet(level->getIndexWithinSubset());
+  const PatchSet* perProcPatches = loadBal->getPerProcessorPatchSet(level->getPerProcSubsetPatchSetIndex());
   const PatchSet* patches = level->eachPatch();
 
   scheduleOutputStatistics(sched, perProcPatches, atomTypes, level);
@@ -489,7 +478,7 @@ void MD::scheduleTimeAdvance(const LevelP&      level,
 
   scheduleNonbondedCalculate(sched, patches, atomTypes, level);
 
-  scheduleElectrostaticsCalculate(sched, patches, atomTypes, level);
+  scheduleElectrostaticsCalculate(sched, perProcPatches, atomTypes, level);
 
   scheduleIntegratorCalculate(sched, patches, atomTypes, level);
 
@@ -830,29 +819,30 @@ void MD::scheduleElectrostaticsSetup(SchedulerP& sched,
 }
 
 void MD::scheduleElectrostaticsCalculate(SchedulerP& sched,
-                                         const PatchSet* patches,
+                                         const PatchSet* perProcPatches,
                                          const MaterialSet* matls,
                                          const LevelP& level)
 {
   const std::string flowLocation = "MD::scheduleElectrostaticsCalculate | ";
-  printSchedule(patches, md_cout, flowLocation);
+  printSchedule(perProcPatches, md_cout, flowLocation);
+
+  const MaterialSubset * matl_subset = matls->getUnion();
 
   Task* task = scinew Task("electrostaticsCalculate", this, &MD::electrostaticsCalculate, level);
 
   // Need delT for the subscheduler timestep
-  task->requires(Task::OldDW, d_sharedState->get_delt_label());
+  task->requires(Task::OldDW, d_sharedState->get_delt_label(), level.get_rep());
 
   MDSubcomponent* d_electroInterface =
                         dynamic_cast<MDSubcomponent*> (d_electrostatics);
 
-  d_electroInterface->addCalculateRequirements(task, d_label, patches, matls, level);
-  d_electroInterface->addCalculateComputes(task, d_label, patches, matls, level);
+  d_electroInterface->addCalculateRequirements(task, d_label, perProcPatches, matls, level);
+  d_electroInterface->addCalculateComputes(task, d_label, perProcPatches, matls, level);
 
   task->hasSubScheduler(true);
   task->setType(Task::OncePerProc);
 
   LoadBalancer* loadBal = sched->getLoadBalancer();
-  const PatchSet* perProcPatches = loadBal->getPerProcessorPatchSet(level->getIndexWithinSubset());
 
   sched->addTask(task, perProcPatches, matls);
 
