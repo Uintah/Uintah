@@ -110,6 +110,7 @@ public:
   /// that represent any patch that this load balancer will potentially have to 
   /// receive data from.
   virtual void createNeighborhood( const GridP& grid, const GridP& oldGrid );
+  virtual void createNeighborhood( const LevelSet & levelSet);
 
   const std::set<int>& getNeighborhoodProcessors() { return d_neighborProcessors; }
 
