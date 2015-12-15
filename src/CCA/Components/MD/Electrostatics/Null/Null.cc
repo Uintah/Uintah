@@ -120,11 +120,11 @@ void ElectrostaticNull::calculate (const ProcessorGroup*   /*pg*/,
   for (size_t patchIndex = 0; patchIndex < numPatches; ++patchIndex)
   {
     const Patch* patch = patches->get(patchIndex);
-    newDW->put(sum_vartype(0.0), label->electrostatic->rElectrostaticInverseEnergy, level.get_rep(), 0);
-    newDW->put(sum_vartype(0.0), label->electrostatic->rElectrostaticRealEnergy, level.get_rep(), 0);
+    newDW->put(sum_vartype(0.0), label->electrostatic->rElectrostaticInverseEnergy, level.get_rep());
+    newDW->put(sum_vartype(0.0), label->electrostatic->rElectrostaticRealEnergy, level.get_rep());
 
-    newDW->put(matrix_sum(MDConstants::M3_0), label->electrostatic->rElectrostaticInverseStress, level.get_rep(), 0);
-    newDW->put(matrix_sum(MDConstants::M3_0), label->electrostatic->rElectrostaticRealStress, level.get_rep(), 0);
+    newDW->put(matrix_sum(MDConstants::M3_0), label->electrostatic->rElectrostaticInverseStress, level.get_rep());
+    newDW->put(matrix_sum(MDConstants::M3_0), label->electrostatic->rElectrostaticRealStress, level.get_rep());
 
     for (size_t typeIndex = 0; typeIndex < numAtomTypes; ++typeIndex)
     {
@@ -225,10 +225,10 @@ void ElectrostaticNull::addCalculateComputes(       Task        * task
 {
   const MaterialSubset* matl_subset = matls->getUnion();
 
-  task->computes(label->electrostatic->rElectrostaticInverseEnergy, level.get_rep(), matl_subset, Task::NormalDomain);
-  task->computes(label->electrostatic->rElectrostaticInverseStress, level.get_rep(), matl_subset, Task::NormalDomain);
-  task->computes(label->electrostatic->rElectrostaticRealEnergy, level.get_rep(), matl_subset, Task::NormalDomain);
-  task->computes(label->electrostatic->rElectrostaticRealStress, level.get_rep(), matl_subset, Task::NormalDomain);
+  task->computes(label->electrostatic->rElectrostaticInverseEnergy, level.get_rep());
+  task->computes(label->electrostatic->rElectrostaticInverseStress, level.get_rep());
+  task->computes(label->electrostatic->rElectrostaticRealEnergy, level.get_rep());
+  task->computes(label->electrostatic->rElectrostaticRealStress, level.get_rep());
 
   task->computes(label->electrostatic->pF_electroInverse_preReloc, level.get_rep(), matl_subset, Task::NormalDomain);
   task->computes(label->electrostatic->pF_electroReal_preReloc, level.get_rep(), matl_subset, Task::NormalDomain);

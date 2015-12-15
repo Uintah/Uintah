@@ -171,20 +171,22 @@ void TwoBodyDeterministic::addCalculateComputes(       Task        * task
   task->computes(label->nonbonded->pNumPairsInCalc_preReloc, level.get_rep(), matl_subset, Task::NormalDomain);
 
   // Provide per patch contribution to energy and stress tensor
-  task->computes(label->nonbonded->rNonbondedEnergy, level.get_rep(), matl_subset, Task::NormalDomain);
-  task->computes(label->nonbonded->rNonbondedStress, level.get_rep(), matl_subset, Task::NormalDomain);
+  task->computes(label->nonbonded->rNonbondedEnergy, level.get_rep());
+  task->computes(label->nonbonded->rNonbondedStress, level.get_rep());
 
 }
 
-void TwoBodyDeterministic::calculate(const ProcessorGroup*  pg,
-                                     const PatchSubset*     patches,
-                                     const MaterialSubset*  processorAtomTypes,
-                                     DataWarehouse*         oldDW,
-                                     DataWarehouse*         newDW,
-                                     SimulationStateP&      simState,
-                                     MDSystem*              systemInfo,
-                                     const MDLabel*         label,
-                                     CoordinateSystem*      coordSys)
+void TwoBodyDeterministic::calculate(
+                                       const ProcessorGroup     * pg
+                                     , const PatchSubset        * patches
+                                     , const MaterialSubset     * processorAtomTypes
+                                     ,       DataWarehouse      * oldDW
+                                     ,       DataWarehouse      * newDW
+                                     ,       SimulationStateP   & simState
+                                     ,       MDSystem           * systemInfo
+                                     , const MDLabel            * label
+                                     ,       CoordinateSystem   * coordSys
+                                    )
 {
   // TODO FIXME
   // Note:  It is theoretically possible that the material subset on a given
@@ -198,8 +200,8 @@ void TwoBodyDeterministic::calculate(const ProcessorGroup*  pg,
   //
   // TODO FIXME (10/5/2014)
   double cutoff2 = d_nonbondedRadius * d_nonbondedRadius;
-  TwoBodyForcefield* forcefield = dynamic_cast<TwoBodyForcefield*>
-                                        ( systemInfo->getForcefieldPointer() );
+  TwoBodyForcefield* forcefield = dynamic_cast<TwoBodyForcefield*> ( systemInfo->getForcefieldPointer() );
+
   // Initialize local accumulators
   double nbEnergy_patchLocal = 0;
   Uintah::Matrix3 stressTensor_patchLocal = MDConstants::M3_0;
@@ -350,8 +352,10 @@ void TwoBodyDeterministic::calculate(const ProcessorGroup*  pg,
   }  // Loop over patches
 //  debugOut.close();
   const Level* level = patches->get(0)->getLevel();
-  newDW->put(sum_vartype(0.5 * nbEnergy_patchLocal), label->nonbonded->rNonbondedEnergy, level, 0);
-  newDW->put(matrix_sum(0.5 * stressTensor_patchLocal), label->nonbonded->rNonbondedStress, level, 0);
+  newDW->put(sum_vartype(0.5 * nbEnergy_patchLocal),
+             label->nonbonded->rNonbondedEnergy, level);
+  newDW->put(matrix_sum(0.5 * stressTensor_patchLocal),
+             label->nonbonded->rNonbondedStress, level);
 } // TwoBodyDeterministic::calculate
 
 void TwoBodyDeterministic::addFinalizeRequirements(Task* task, MDLabel* d_label) const {
