@@ -100,64 +100,66 @@ CoalTemperature::problemSetup( ProblemSpecP& db ){
     throw ProblemSetupException("Error: <Coal> is missing the <Properties> section.", __FILE__, __LINE__);
   }
 
-  DenseMatrix*  AA = scinew DenseMatrix(3,3);
-  ColumnMatrix* BBa = scinew ColumnMatrix( 3 ); // ash
-  ColumnMatrix* XXa = scinew ColumnMatrix( 3 );
-  ColumnMatrix* BBc = scinew ColumnMatrix( 3 ); // coal
-  ColumnMatrix* XXc = scinew ColumnMatrix( 3 );
-  AA->zero();
-  BBa->zero();
-  XXa->zero();
-  BBc->zero();
-  XXc->zero();
+  if   (_useCurveFit)  {
+    DenseMatrix*  AA = scinew DenseMatrix(3,3);
+    ColumnMatrix* BBa = scinew ColumnMatrix( 3 ); // ash
+    ColumnMatrix* XXa = scinew ColumnMatrix( 3 );
+    ColumnMatrix* BBc = scinew ColumnMatrix( 3 ); // coal
+    ColumnMatrix* XXc = scinew ColumnMatrix( 3 );
+    AA->zero();
+    BBa->zero();
+    XXa->zero();
+    BBc->zero();
+    XXc->zero();
 
-  double pT=0;
-  double Ha=0;
-  double Hc=0;
+    double pT=0;
+    double Ha=0;
+    double Hc=0;
 
-  for (int i=0; i< 2700; i++){
-    pT=300+i;
-    double hint = -156.076 + 380/(-1 + exp(380 / pT)) + 3600/(-1 + exp(1800 / pT));
+    for (int i=0; i< 2700; i++){
+      pT=300+i;
+      double hint = -156.076 + 380/(-1 + exp(380 / pT)) + 3600/(-1 + exp(1800 / pT));
 
-    Hc = _Hc0 + hint * _RdMW;
-    Ha = -202849.0 + _Ha0 + pT * (593. + pT * 0.293);
+      Hc = _Hc0 + hint * _RdMW;
+      Ha = -202849.0 + _Ha0 + pT * (593. + pT * 0.293);
 
-   //     H  =     ax^2          +                b*x               +         c
-    (*AA)[0][0] += pT*pT;            (*AA)[0][1] += pT;         (*AA)[0][2] += 1.0;     
-    (*AA)[1][0] += pT*pT*pT;         (*AA)[1][1] += pT*pT;      (*AA)[1][2] += pT;      
-    (*AA)[2][0] += pT*pT*pT*pT;      (*AA)[2][1] += pT*pT*pT;   (*AA)[2][2] += pT*pT;   
+     //     H  =     ax^2          +                b*x               +         c
+      (*AA)[0][0] += pT*pT;            (*AA)[0][1] += pT;         (*AA)[0][2] += 1.0;     
+      (*AA)[1][0] += pT*pT*pT;         (*AA)[1][1] += pT*pT;      (*AA)[1][2] += pT;      
+      (*AA)[2][0] += pT*pT*pT*pT;      (*AA)[2][1] += pT*pT*pT;   (*AA)[2][2] += pT*pT;   
 
-    (*BBa)[0] += Ha;        
-    (*BBa)[1] += Ha*pT;         
-    (*BBa)[2] += Ha*pT*pT;      
+      (*BBa)[0] += Ha;        
+      (*BBa)[1] += Ha*pT;         
+      (*BBa)[2] += Ha*pT*pT;      
 
 
-    (*BBc)[0] += Hc;        
-    (*BBc)[1] += Hc*pT;         
-    (*BBc)[2] += Hc*pT*pT;      
+      (*BBc)[0] += Hc;        
+      (*BBc)[1] += Hc*pT;         
+      (*BBc)[2] += Hc*pT*pT;      
 
+    }
+
+    AA->invert();
+
+    Mult( (*XXa), (*AA), (*BBa) );
+    Mult( (*XXc), (*AA), (*BBc) );
+
+    //   coefficients for ash and coal, equation H=ax^2 + bx + c   
+    _aa = (*XXa)[0];
+    _ba = (*XXa)[1];
+    _ca = (*XXa)[2];
+
+    _ac = (*XXc)[0];
+    _bc = (*XXc)[1];
+    _cc = (*XXc)[2];
+     
+
+    delete AA;
+    delete BBa;
+    delete BBc;
+    delete XXa;
+    delete XXc;
   }
-
-  AA->invert();
-
-  Mult( (*XXa), (*AA), (*BBa) );
-  Mult( (*XXc), (*AA), (*BBc) );
-
-// coefficients for ash and coal, equation H=ax^2 + bx + c   
-  _aa = (*XXa)[0];
-  _ba = (*XXa)[1];
-  _ca = (*XXa)[2];
-
-  _ac = (*XXc)[0];
-  _bc = (*XXc)[1];
-  _cc = (*XXc)[2];
-   
-
-  delete AA;
-  delete BBa;
-  delete BBc;
-  delete XXa;
-  delete XXc;
 
 }
 
