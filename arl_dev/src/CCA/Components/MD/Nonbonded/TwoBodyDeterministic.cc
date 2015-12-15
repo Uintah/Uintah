@@ -349,10 +349,9 @@ void TwoBodyDeterministic::calculate(const ProcessorGroup*  pg,
     }  // Loop over source materials
   }  // Loop over patches
 //  debugOut.close();
-  newDW->put(sum_vartype(0.5 * nbEnergy_patchLocal),
-             label->nonbonded->rNonbondedEnergy);
-  newDW->put(matrix_sum(0.5 * stressTensor_patchLocal),
-             label->nonbonded->rNonbondedStress);
+  const Level* level = patches->get(0)->getLevel();
+  newDW->put(sum_vartype(0.5 * nbEnergy_patchLocal), label->nonbonded->rNonbondedEnergy, level, 0);
+  newDW->put(matrix_sum(0.5 * stressTensor_patchLocal), label->nonbonded->rNonbondedStress, level, 0);
 } // TwoBodyDeterministic::calculate
 
 void TwoBodyDeterministic::addFinalizeRequirements(Task* task, MDLabel* d_label) const {

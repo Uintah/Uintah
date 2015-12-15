@@ -119,16 +119,12 @@ void ElectrostaticNull::calculate (const ProcessorGroup*   /*pg*/,
 
   for (size_t patchIndex = 0; patchIndex < numPatches; ++patchIndex)
   {
-    const Patch*    patch   =   patches->get(patchIndex);
-    newDW->put(sum_vartype(0.0),
-               label->electrostatic->rElectrostaticInverseEnergy);
-    newDW->put(sum_vartype(0.0),
-               label->electrostatic->rElectrostaticRealEnergy);
+    const Patch* patch = patches->get(patchIndex);
+    newDW->put(sum_vartype(0.0), label->electrostatic->rElectrostaticInverseEnergy, level.get_rep(), 0);
+    newDW->put(sum_vartype(0.0), label->electrostatic->rElectrostaticRealEnergy, level.get_rep(), 0);
 
-    newDW->put(matrix_sum(MDConstants::M3_0),
-               label->electrostatic->rElectrostaticInverseStress);
-    newDW->put(matrix_sum(MDConstants::M3_0),
-               label->electrostatic->rElectrostaticRealStress);
+    newDW->put(matrix_sum(MDConstants::M3_0), label->electrostatic->rElectrostaticInverseStress, level.get_rep(), 0);
+    newDW->put(matrix_sum(MDConstants::M3_0), label->electrostatic->rElectrostaticRealStress, level.get_rep(), 0);
 
     for (size_t typeIndex = 0; typeIndex < numAtomTypes; ++typeIndex)
     {
