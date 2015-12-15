@@ -1124,8 +1124,6 @@
             <!-- constant property model: set a constant/environment -->
             <const_size                 spec="OPTIONAL BOOLEAN"
                                         need_applies_to="type coal_temperature, coal_density"/>  <!-- defaults to true, so no change to DQMOM input files needed -->
-            <fitParticleEnthalpy        spec="OPTIONAL BOOLEAN"
-                                        need_applies_to="type coal_temperature"/>  <!-- curve fit enthalpy to avoid non-linear solve -->
                                         
             <!-- FOWY devolatilization -->
             <birth_label                spec="OPTIONAL STRING"
