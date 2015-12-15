@@ -601,7 +601,7 @@ LoadBalancerCommon::createOutputPatchSet(const LevelP& level)
 {
   if (d_outputNthProc == 1) {
     // assume the perProcessor set on the level was created first
-    return d_levelPerProcPatchSets[level->getIndex()].get_rep();
+    return d_levelPerProcPatchSets[level->getPerProcSubsetPatchSetIndex()].get_rep();
   }
   else {
     PatchSet* patches = scinew PatchSet();
