@@ -497,6 +497,8 @@ LoadBalancerCommon::possiblyDynamicallyReallocate( const GridP & grid, int state
 
     for( int i = 0; i < grid->numLevels(); i++ ) {
       d_levelPerProcPatchSets.push_back( createPerProcessorPatchSet( grid->getLevel(i) ) );
+      LevelP levelHandle = grid->getLevel(i);
+      levelHandle->setPerProcSubsetPatchSetIndex(d_levelPerProcPatchSets.size() - 1);
       d_outputPatchSets.push_back( createOutputPatchSet( grid->getLevel(i) ) );
     }
   }

@@ -222,10 +222,10 @@ void velocityVerlet::addCalculateComputes(       Task        * task
   task->computes(labels->global->pV_preReloc, level.get_rep(), matl_subset, Task::NormalDomain);
   task->computes(labels->global->pID_preReloc, level.get_rep(), matl_subset, Task::NormalDomain);
 
-  task->computes(labels->global->rKineticEnergy, level.get_rep(), matl_subset, Task::NormalDomain);
-  task->computes(labels->global->rKineticStress, level.get_rep(), matl_subset, Task::NormalDomain);
-  task->computes(labels->global->rTotalMomentum, level.get_rep(), matl_subset, Task::NormalDomain);
-  task->computes(labels->global->rTotalMass, level.get_rep(), matl_subset, Task::NormalDomain);
+  task->computes(labels->global->rKineticEnergy, level.get_rep());
+  task->computes(labels->global->rKineticStress, level.get_rep());
+  task->computes(labels->global->rTotalMomentum, level.get_rep());
+  task->computes(labels->global->rTotalMass, level.get_rep());
 
   task->computes(labels->integrator->fPatchFirstIntegration, level.get_rep(), matl_subset, Task::NormalDomain);
 
@@ -308,9 +308,9 @@ void velocityVerlet::calculate( const ProcessorGroup*       pg,
 
   kineticEnergy *= normKE;
   const Level* level = patches->get(0)->getLevel();
-  newDW->put( sum_vartype(kineticEnergy),    label->global->rKineticEnergy, level, 0);
-  newDW->put( sum_vartype(totalMass),        label->global->rTotalMass, level, 0);
-  newDW->put( sumvec_vartype(totalMomentum), label->global->rTotalMomentum, level, 0);
+  newDW->put( sum_vartype(kineticEnergy),    label->global->rKineticEnergy, level);
+  newDW->put( sum_vartype(totalMass),        label->global->rTotalMass, level);
+  newDW->put( sumvec_vartype(totalMomentum), label->global->rTotalMomentum, level);
 //  newDW->put( matrix_sum(kineticStress),     label->global->rKineticStress);
 
 //  // FIXME TODO We should be checking firstIntegration on a PER PATCH basis here
