@@ -2120,17 +2120,18 @@ void AMRMPM::coarsenNodalData_CFI(const ProcessorGroup*,
                                   DataWarehouse* new_dw,
                                   const coarsenFlag flag)
 {
-  Level::selectType coarseCFI_Patches;
+  Level::selectType CFI_coarsePatches;
+  Level::selectType CFI_finePatches;
   
-  coarseLevelCFI_Patches(coarsePatches,coarseCFI_Patches );
+  coarseLevelCFI_Patches(coarsePatches,CFI_coarsePatches, CFI_finePatches  );
   
   //__________________________________
   // From the coarse patch look up to the fine patches that have
   // coarse fine interfaces.
   const Level* coarseLevel = getLevel(coarsePatches);
   
-  for(int p=0;p<coarseCFI_Patches.size();p++){
-    const Patch* coarsePatch = coarseCFI_Patches[p];
+  for(int p=0;p<CFI_coarsePatches.size();p++){
+    const Patch* coarsePatch = CFI_coarsePatches[p];
 
     string txt = "(zero)";
     if (flag == coarsenData){
@@ -2174,13 +2175,9 @@ void AMRMPM::coarsenNodalData_CFI(const ProcessorGroup*,
       ASSERT(coarseLevel->hasFinerLevel());
       const Level* fineLevel = coarseLevel->getFinerLevel().get_rep();
 
-      Level::selectType finePatches;
-      coarsePatch->getFineLevelPatches(finePatches);
-
       // loop over all the fine level patches
-      for(int fp=0;fp<finePatches.size();fp++){  
-        const Patch* finePatch = finePatches[fp];
-        if(finePatch->hasCoarseFaces() ){
+      for(int fp=0;fp<CFI_finePatches.size();fp++){
+        const Patch* finePatch = CFI_finePatches[fp];
 
           // get fine level data
           constNCVariable<double> gMass_fine;
@@ -2224,6 +2221,8 @@ void AMRMPM::coarsenNodalData_CFI(const ProcessorGroup*,
                                          finePatch, fineLevel,
                                          n_iter, isRight_CP_FP_pair);
 
+          cout << " coarsenNodalData_CFI: face: " << finePatch->getFaceName(patchFace) << " finePatch: " << finePatch->getID() << " coarsePatch: " << coarsePatch->getID() << " node iter " << *n_iter << " isRight_CP_FP_pair: " << isRight_CP_FP_pair << endl;
+
             // Is this the right coarse/fine patch pair
             if (isRight_CP_FP_pair){
               switch(flag){
@@ -2266,7 +2265,6 @@ void AMRMPM::coarsenNodalData_CFI(const ProcessorGroup*,
               }
             }  //  isRight_CP_FP_pair
           }  //  end CFI face loop
-        }  //  if finepatch has coarse face
       }  //  end fine Patch loop
     }  //  end matl loop
   }  // end coarse patch loop
@@ -2281,16 +2279,17 @@ void AMRMPM::coarsenNodalData_CFI2(const ProcessorGroup*,
                                   DataWarehouse* old_dw,
                                   DataWarehouse* new_dw)
 {
-  Level::selectType coarseCFI_Patches;
-  coarseLevelCFI_Patches(coarsePatches,coarseCFI_Patches );
+  Level::selectType CFI_coarsePatches;
+  Level::selectType CFI_finePatches;
+  coarseLevelCFI_Patches(coarsePatches, CFI_coarsePatches, CFI_finePatches );
 
   //__________________________________
   // From the coarse patch look up to the fine patches that have
   // coarse fine interfaces.
   const Level* coarseLevel = getLevel(coarsePatches);
   
-  for(int p=0;p<coarseCFI_Patches.size();p++){
-    const Patch* coarsePatch = coarseCFI_Patches[p];
+  for(int p=0;p<CFI_coarsePatches.size();p++){
+    const Patch* coarsePatch = CFI_coarsePatches[p];
 
     printTask(coarsePatch,cout_doing,"Doing AMRMPM::coarsenNodalData_CFI2");
     
@@ -2314,13 +2313,9 @@ void AMRMPM::coarsenNodalData_CFI2(const ProcessorGroup*,
       ASSERT(coarseLevel->hasFinerLevel());
       const Level* fineLevel = coarseLevel->getFinerLevel().get_rep();
 
-      Level::selectType finePatches;
-      coarsePatch->getFineLevelPatches(finePatches);
-
-      // loop over all the coarse level patches
-      for(int fp=0;fp<finePatches.size();fp++){  
-        const Patch* finePatch = finePatches[fp];
-        if(finePatch->hasCoarseFaces() ){
+            // loop over all the fine level patches
+      for(int fp=0;fp<CFI_finePatches.size();fp++){
+        const Patch* finePatch = CFI_finePatches[fp];
 
           // get fine level data
           constNCVariable<double> gMass_fine,gConcRate_fine;
@@ -2390,7 +2385,6 @@ void AMRMPM::coarsenNodalData_CFI2(const ProcessorGroup*,
               }  //  node loop
             }  //  isRight_CP_FP_pair
           }  //  end CFI face loop
-        }  //  if finepatch has coarse face
       }  //  end fine Patch loop
     }  //  end matl loop
   }  //  end coarse patch loop
@@ -4499,17 +4493,17 @@ void AMRMPM::debug_CFI_experimental(const ProcessorGroup*,
                                     DataWarehouse* new_dw)
 {
   const Level* level = getLevel(patches);
+  int dwi = 0;
   
   for(int fp=0; fp<patches->size(); fp++){
     const Patch* finePatch = patches->get(fp);
 
     printTask(patches,finePatch,cout_doing,"Doing AMRMPM::debug_CFI2");
     
-    
     //__________________________________
     //  Write p.color all levels all patches  
     ParticleSubset* pset=0;
-    int dwi = 0;
+
     pset = old_dw->getParticleSubset(dwi, finePatch);
     
     constParticleVariable<Point>  px;
@@ -4529,13 +4523,23 @@ void AMRMPM::debug_CFI_experimental(const ProcessorGroup*,
     for (ParticleSubset::iterator iter = pset->begin();iter != pset->end(); iter++){
       particleIndex idx = *iter;
       pColor[idx] = 0;
+      cout << px[idx] << " L-" << finePatch->getLevel()->getIndex() << " patch " << *finePatch << endl;
       
       interpolatorCoarse->findCellAndWeights(px[idx],ni,S,psize[idx],pDeformationMeasure[idx]);
       
       for(int k = 0; k < (int)ni.size(); k++) {
         pColor[idx] += S[k];
+
       }
     }  
+    delete interpolatorCoarse;
+  }
+
+
+  //__________________________________
+  //
+  for(int fp=0; fp<patches->size(); fp++){
+    const Patch* finePatch = patches->get(fp);
 
     //__________________________________
     //  Mark the particles that are accessed at the CFI.
@@ -4561,19 +4565,32 @@ void AMRMPM::debug_CFI_experimental(const ProcessorGroup*,
         if(patchFace == Patch::xminus || 
            patchFace == Patch::yminus || 
            patchFace == Patch::zminus){
-          offset = -1;
+          offset = -2;
           f_lo_face[p_dir] += offset;
         }
         if(patchFace == Patch::xplus || 
            patchFace == Patch::yplus || 
            patchFace == Patch::zplus){
-          offset = 1;
+          offset = 2;
           f_hi_face[p_dir] += offset;
+          f_lo_face[p_dir] -= 1;
         }
-        cout << finePatch->getFaceName(patchFace) << " lo: " << f_lo_face << " hi: " << f_hi_face << endl;
+        cout << "\n--------------------------------\n";
+        cout << finePatch->getFaceName(patchFace) << " lo: " << f_lo_face << " hi: " << f_hi_face << " patch: " << *finePatch << endl;
+
+        ParticleSubset* psetCFI=0;
+        psetCFI = old_dw->getParticleSubsetAllLevels(dwi, f_lo_face, f_hi_face, finePatch,lb->pXLabel);
+
+        constParticleVariable<Point>  px;
+        ParticleVariable<double>  pColor;
+        old_dw->get(px,      lb->pXLabel,               psetCFI);
+      //new_dw->getModifiable(pColor,  lb->pColorLabel_preReloc,  psetCFI);
        
-//        ParticleSubset* psettest=0;
-//        psettest = old_dw->getParticleSubsetAllLevels(dwi, f_lo_face, f_hi_face, finePatch,lb->pXLabel);
+        for (ParticleSubset::iterator iter = psetCFI->begin();iter != psetCFI->end(); iter++){
+          particleIndex idx = *iter;
+         //s pColor[idx] = 9;
+          cout << px[idx] << " CFI particle location" << endl;
+        }
       }
 #if 0
       // coarseLow and coarseHigh cannot lie outside of the coarse patch
@@ -4610,14 +4627,15 @@ void AMRMPM::debug_CFI_experimental(const ProcessorGroup*,
       delete interpolatorFine;
 #endif
     }  // has coarselevel & at CFI
-    delete interpolatorCoarse;
+
   }  //  fine patches loop  
 }
 
 //______________________________________________________________________
-//  Returns the patches that have coarse fine interfaces
+//  Returns the fine and coarse level patches that have coarse fine interfaces
 void AMRMPM::coarseLevelCFI_Patches(const PatchSubset* coarsePatches,
-                                    Level::selectType& CFI_patches )
+                                    Level::selectType& CFI_coarsePatches,
+                                    Level::selectType& CFI_finePatches )
 {
   for(int p=0;p<coarsePatches->size();p++){
     const Patch* coarsePatch = coarsePatches->get(p);
@@ -4630,7 +4648,8 @@ void AMRMPM::coarseLevelCFI_Patches(const PatchSubset* coarsePatches,
       const Patch* finePatch = finePatches[fp];
       
       if(finePatch->hasCoarseFaces() ){
-        CFI_patches.push_back( coarsePatch );
+        CFI_coarsePatches.push_back( coarsePatch );
+        CFI_finePatches.push_back( finePatch );
       }
     }
   }
