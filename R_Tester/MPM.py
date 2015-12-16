@@ -93,6 +93,7 @@ NIGHTLYTESTS = [
             ]
 
 AMRTESTS = [
+                  ("advect_3L_1D",                        "advect_3L_1D.ups",           1.1,"Linux", ["exactComparison"] ),
                   ("advect_3L_3D",                        "advect_3L_3D.ups",           4,  "Linux", ["no_restart"] ),
                   ("advect_2L_3D_slabs",                  "advect_2L_3D_slabs.ups",     3,  "Linux", [ "no_restart","no_dbg"] ),
                   ("advect_2L_3D_edges",                  "advect_2L_3D_edges.ups",     1,  "Linux", ["exactComparison", "no_restart"] ),
