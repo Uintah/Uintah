@@ -179,15 +179,15 @@ void
 Task::requires(
                       WhichDW                 dw
               , const VarLabel              * var
-	          , const PatchSubset           * patches
-	          ,       PatchDomainSpec         patches_dom
-	          ,       int                     level_offset
-	          , const MaterialSubset        * matls
-	          ,       MaterialDomainSpec      matls_dom
-	          ,       Ghost::GhostType        gtype
-	          ,       int                     numGhostCells
-	          ,       bool                    oldTG
-	          )
+	            , const PatchSubset           * patches
+	            ,       PatchDomainSpec         patches_dom
+	            ,       int                     level_offset
+	            , const MaterialSubset        * matls
+	            ,       MaterialDomainSpec      matls_dom
+	            ,       Ghost::GhostType        gtype
+	            ,       int                     numGhostCells
+	            ,       bool                    oldTG
+	            )
 {
   if (matls == 0 && var->typeDescription()->isReductionVariable()) {
     // default material for a reduction variable is the global material (-1)
@@ -436,33 +436,17 @@ void Task::requires(
                     ,       bool                  oldTG /* = false */
                    )
 {
-  const TypeDescription::Type vartype = inputVariable->typeDescription()->getType();
-  if ((vartype == TypeDescription::ReductionVariable || vartype == TypeDescription::SoleVariable)) {
-    throw InternalError("Should not use this modifies for ReductionVariable and SoleVariable",
-                        __FILE__, __LINE__);
-  }
-
-  // If we're not passing in a material subset, we probably want all materials.
-  // Set things appopriately.
-  if (matls == 0 ) {
+  if (matls == 0 && inputVariable->typeDescription()->isReductionVariable()) {
     // default material for a reduction variable is the global material (-1)
-    matls        = getGlobalMatlSubset();
-    // matls_dom    = OutOfDomain;
+    matls = getGlobalMatlSubset();
+    matls_dom = OutOfDomain;
+  }
+  else if (matls != 0 && matls->size() == 0) {
+    return; // no materials, no dependency
   }
 
+  Dependency* dep = scinew Dependency(Requires, this, dw, inputVariable, oldTG, particleLevel, matls, matls_dom);
 
-  if (patches == 0) {
-    patches = particleLevel->allPatches()->getUnion();
-  }
-
-  int level_offset = 0;
-    if (particleLevel->isAMR() && (patches_dom == CoarseLevel || patches_dom == FineLevel)) {
-      level_offset = 1;
-    }
-
-  Dependency* dep = scinew Dependency(Requires, this, inputVariable, oldTG, patches, matls,
-                                      particleLevel, patches_dom, matls_dom, ghostCellType, dw,
-                                      numGhostCells, level_offset);
   dep->next = 0;
 
   if (req_tail) {
@@ -566,7 +550,7 @@ Task::computes(const VarLabel         * var,
     // default material for a reduction variable is the global material (-1)
     matls     = getGlobalMatlSubset();
     matls_dom = OutOfDomain;
-  } else if(matls->size() == 0){
+  } else if(matls->size() == 0) {
     throw InternalError("Computes of an empty material set!", __FILE__, __LINE__);
   }
   

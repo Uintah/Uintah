@@ -306,7 +306,7 @@ Relocate::scheduleParticleRelocation(Scheduler* sched,
 // You cannot have one variable that exists on a different number of levels  
 void
 Relocate::scheduleParticleRelocation(
-                                            Scheduler                   * sched
+                                             Scheduler                  * sched
                                      , const ProcessorGroup             * pg
                                      ,       LoadBalancer               * lb
                                      , const LevelP                     & level
@@ -323,11 +323,11 @@ Relocate::scheduleParticleRelocation(
   reloc_new_posLabel = postRelocation_posLabel;
   reloc_new_labels   = postRelocation_labels;
   particleIDLabel_   = particleIDLabel;
-  
-  if(reloc_matls && reloc_matls->removeReference()){
+
+  if (reloc_matls && reloc_matls->removeReference()) {
     delete reloc_matls;
   }
-    
+
   reloc_matls = matls;
   reloc_matls->addReference();
 
@@ -340,8 +340,8 @@ Relocate::scheduleParticleRelocation(
   // subset whenever you schedule a task or use the dw.
   const MaterialSubset* matlsub = matls->getSubset(0);
   ASSERTEQ(numMatls, matlsub->size());
-  
-  for (int m = 0; m< numMatls; m++){
+
+  for (int m = 0; m < numMatls; m++) {
     ASSERTEQ(reloc_old_labels[m].size(), reloc_new_labels[m].size());
   }
 
@@ -350,7 +350,6 @@ Relocate::scheduleParticleRelocation(
   if (lb) {
     task->usesMPI(true);
   }
-  
 
   // Our variable compute/requires depend on how we're calling into relocate.
   // If we're calling from an independent level, then we need to relocate only onto that level.
@@ -368,14 +367,13 @@ Relocate::scheduleParticleRelocation(
         task->requires(Task::NewDW, preRelocation_labels[m][i], level.get_rep(), thismatl, Task::NormalDomain, Ghost::None, 0);
       }
 
-      task->computes(postRelocation_posLabel, level.get_rep(), 0, Task::NormalDomain);
+      task->computes(postRelocation_posLabel, level.get_rep(), thismatl, Task::NormalDomain);
 
       for (int i = 0; i < (int)postRelocation_labels[m].size(); i++) {
         task->computes(postRelocation_labels[m][i], level.get_rep(), thismatl, Task::NormalDomain);
       }
     }
-  }
-  else {
+  } else {
     task->requires(Task::NewDW, preRelocation_posLabel, Ghost::None);
     for (int m = 0; m < numMatls; m++) {
       MaterialSubset* thismatl = scinew MaterialSubset();
@@ -392,7 +390,7 @@ Relocate::scheduleParticleRelocation(
       }
     }
   }
-  
+
   PatchSet* patches;
   GridP grid = level->getGrid();
   int subsetIndexInGrid = grid->getSubsetIndex(level->getIndex());
@@ -415,14 +413,13 @@ Relocate::scheduleParticleRelocation(
         }
       }
     }
-  }
-  else {
- //   if (level->isMultiScale()) {
-      patches = const_cast<PatchSet*> (lb->getPerProcessorPatchSet(level->getPerProcSubsetPatchSetIndex()));
- //   }
- //   else {
- //     patches = const_cast<PatchSet*> (lb->getPerProcessorPatchSet(level->getIndexWithinSubset()));
- //   }
+  } else {
+    //   if (level->isMultiScale()) {
+    patches = const_cast<PatchSet*>(lb->getPerProcessorPatchSet(level->getPerProcSubsetPatchSetIndex()));
+    //   }
+    //   else {
+    //     patches = const_cast<PatchSet*> (lb->getPerProcessorPatchSet(level->getIndexWithinSubset()));
+    //   }
 
   }
 
@@ -469,7 +466,7 @@ Relocate::scheduleParticleRelocation(
 //  }
 
   printSchedule(patches, coutdbg, "Relocate::scheduleRelocateParticles");
-  
+
   task->setType(Task::OncePerProc);
   sched->addTask(task, patches, matls);
   this->lb = lb;
@@ -1568,7 +1565,7 @@ Relocate::relocateParticles(
 #if SCI_ASSERTION_LEVEL >= 1
                 if(!toPatch && curLevel->containsPoint(px[idx])){
                   // Make sure that the particle really left the world
-                  static ProgressiveWarning warn("A particle just travelled from one patch to another non-adjacent patch.  It has been deleted and we're moving on.",10);
+                  static ProgressiveWarning warn("A particle just traveled from one patch to another non-adjacent patch.  It has been deleted and we're moving on.",10);
                   warn.invoke();
                 }
 #endif
