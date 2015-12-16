@@ -176,16 +176,18 @@ Task::subpatchCapable(bool state)
 
 //__________________________________
 void
-Task::requires(WhichDW dw, 
-               const VarLabel* var,
-	        const PatchSubset* patches,
-	        PatchDomainSpec patches_dom,
-	        int level_offset,
-	        const MaterialSubset* matls,
-	        MaterialDomainSpec matls_dom,
-	        Ghost::GhostType gtype,
-	        int numGhostCells,
-	        bool oldTG)
+Task::requires(
+                      WhichDW                 dw
+              , const VarLabel              * var
+	          , const PatchSubset           * patches
+	          ,       PatchDomainSpec         patches_dom
+	          ,       int                     level_offset
+	          , const MaterialSubset        * matls
+	          ,       MaterialDomainSpec      matls_dom
+	          ,       Ghost::GhostType        gtype
+	          ,       int                     numGhostCells
+	          ,       bool                    oldTG
+	          )
 {
   if (matls == 0 && var->typeDescription()->isReductionVariable()) {
     // default material for a reduction variable is the global material (-1)
@@ -417,6 +419,65 @@ Task::requires(
   } else {
     d_requires.insert(make_pair(var, dep));
   }
+}
+//__________________________________
+//__________________________________
+// JBH APH version for per-level particle updates. FIXME TODO 12-15-2015
+void Task::requires(
+                            WhichDW               dw
+                    , const VarLabel*             inputVariable
+                    , const Level*                particleLevel
+                    ,       Ghost::GhostType      ghostCellType
+                    ,       int                   numGhostCells /* = 0 */
+                    , const MaterialSubset*       matls /* = 0 */
+                    ,       MaterialDomainSpec    matls_dom /* = NormalDomain */
+                    , const PatchSubset*          patches /* = 0 */
+                    ,       PatchDomainSpec       patches_dom /* = ThisLevel */
+                    ,       bool                  oldTG /* = false */
+                   )
+{
+  const TypeDescription::Type vartype = inputVariable->typeDescription()->getType();
+  if ((vartype == TypeDescription::ReductionVariable || vartype == TypeDescription::SoleVariable)) {
+    throw InternalError("Should not use this modifies for ReductionVariable and SoleVariable",
+                        __FILE__, __LINE__);
+  }
+
+  // If we're not passing in a material subset, we probably want all materials.
+  // Set things appopriately.
+  if (matls == 0 ) {
+    // default material for a reduction variable is the global material (-1)
+    matls        = getGlobalMatlSubset();
+    // matls_dom    = OutOfDomain;
+  }
+
+
+  if (patches == 0) {
+    patches = particleLevel->allPatches()->getUnion();
+  }
+
+  int level_offset = 0;
+    if (particleLevel->isAMR() && (patches_dom == CoarseLevel || patches_dom == FineLevel)) {
+      level_offset = 1;
+    }
+
+  Dependency* dep = scinew Dependency(Requires, this, inputVariable, oldTG, patches, matls,
+                                      particleLevel, patches_dom, matls_dom, ghostCellType, dw,
+                                      numGhostCells, level_offset);
+  dep->next = 0;
+
+  if (req_tail) {
+    req_tail->next = dep;
+  } else {
+    req_head = dep;
+  }
+  req_tail = dep;
+
+  if (dw == OldDW) {
+    d_requiresOldDW.insert(make_pair(inputVariable, dep));
+  } else {
+    d_requires.insert(make_pair(inputVariable, dep));
+  }
+
 }
 
 //__________________________________
@@ -684,6 +745,45 @@ Task::modifies(const VarLabel* var, const MaterialSubset* matls,
 }
 
 //__________________________________
+void Task::modifies(
+                      const VarLabel*             inputVariable
+                    , const Level*                particleLevel
+                    ,       Ghost::GhostType      ghostCellType
+                    ,       int                   numGhostCells /*= 0*/
+                    , const MaterialSubset*       matls /*= 0*/
+                    ,       MaterialDomainSpec    matls_dom /*= NormalDomain*/
+                    ,       bool                  oldTG /*= false*/
+                   )
+{
+  const TypeDescription::Type vartype = inputVariable->typeDescription()->getType();
+  if ((vartype == TypeDescription::ReductionVariable || vartype == TypeDescription::SoleVariable)) {
+    throw InternalError("Should not use this modifies for ReductionVariable and SoleVariable",
+                        __FILE__, __LINE__);
+  }
+
+  // If we're not passing in a material subset, we probably want all materials.
+  // Set things appopriately.
+  if (matls == 0) {
+    // default material for the position variable is the global material
+    matls        = getGlobalMatlSubset();
+    matls_dom    = OutOfDomain;
+  }
+
+  Dependency* dep = scinew Dependency(Modifies, this, NewDW, inputVariable, oldTG, particleLevel,
+                                      matls, matls_dom);
+  dep->next=0;
+  if (mod_tail){
+    mod_tail->next=dep;
+  }else{
+    mod_head=dep;
+  }
+  mod_tail=dep;
+
+  d_requires.insert(make_pair(inputVariable, dep));
+  d_computes.insert(make_pair(inputVariable, dep));
+  d_modifies.insert(make_pair(inputVariable, dep));
+}
+//__________________________________
 bool Task::hasComputes(const VarLabel* var, int matlIndex,
                        const Patch* patch) const
 {
@@ -801,6 +901,7 @@ Task::Dependency::Dependency(DepType deptype,
   reductionLevel(0), patches_dom(patches_dom), matls_dom(matls_dom),
   gtype(gtype), whichdw(whichdw), numGhostCells(numGhostCells), level_offset(level_offset)
 {
+  // This dependency instantiation is for AMR particles (hence the level_offset instead of level)
   if (var){
     var->addReference();
   }
@@ -814,6 +915,48 @@ Task::Dependency::Dependency(DepType deptype,
   }
 }
 
+
+Task::Dependency::Dependency(
+                                     DepType              _deptype
+                             ,       Task               * _task
+                             , const VarLabel           * _varLabel
+                             ,       bool                 _oldTG
+                             , const PatchSubset        * _patchSubset
+                             , const MaterialSubset     * _materialSubset
+                             , const Level              * _reductionLevel
+                             ,       PatchDomainSpec      _patchDomain
+                             ,       MaterialDomainSpec   _materialDomain
+                             ,       Ghost::GhostType     _ghostType
+                             ,       WhichDW              _whichDW
+                             ,       int                  _numGhostCells
+                             ,       int                  _levelOffset
+                            )
+  :
+    deptype(_deptype)
+  , task(_task)
+  , var(_varLabel)
+  , lookInOldTG(_oldTG)
+  , patches(_patchSubset)
+  , matls(_materialSubset)
+  , reductionLevel(_reductionLevel)
+  , patches_dom(_patchDomain)
+  , matls_dom(_materialDomain)
+  , gtype(_ghostType)
+  , whichdw(_whichDW)
+  , numGhostCells(_numGhostCells)
+  , level_offset(_levelOffset)
+{
+  if (var) {
+    var->addReference();
+  }
+
+  if (matls) {
+    matls->addReference();
+  }
+
+  req_head = req_tail = comp_head = comp_tail = 0;
+
+}
 //__________________________________
 Task::Dependency::Dependency(DepType deptype,
                              Task* task,
@@ -839,6 +982,8 @@ Task::Dependency::Dependency(DepType deptype,
   , numGhostCells(numGhostCells)
   , level_offset(0)
 {
+  // This dependency is for non-AMR particle/cell variables where ghostCells may still be
+  // necessary.
   if (var){
     var->addReference();
   }
@@ -863,6 +1008,8 @@ Task::Dependency::Dependency(DepType deptype,
   reductionLevel(reductionLevel), patches_dom(ThisLevel),
   matls_dom(matls_dom), gtype(Ghost::None), whichdw(whichdw), numGhostCells(0), level_offset(0)
 {
+  // This dependency is for non particle/cell variables where no ghost data is necessary.
+  // Likely just sole/reduction.
   if (var){
     var->addReference();
   }

@@ -357,7 +357,9 @@ Relocate::scheduleParticleRelocation(
   if (level->isIndependent()) {
     // If the level->isIndependent() task is set then we need to use only the position variables
     // on our own level, since each level is independent.
-    task->requires(Task::NewDW, preRelocation_posLabel, level.get_rep(), 0, Task::NormalDomain, Ghost::None, 0);
+    task->requires(Task::NewDW, preRelocation_posLabel, level.get_rep(), Ghost::None);
+    // I believe this belongs here.  JBH TODO FIXME 12/15/2015
+    //task->computes(postRelocation_posLabel, level.get_rep(), 0, Task::NormalDomain);
     for (int m = 0; m < numMatls; m++) {
       MaterialSubset* thismatl = scinew MaterialSubset();
       thismatl->add(matlsub->get(m));

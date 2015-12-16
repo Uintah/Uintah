@@ -1169,6 +1169,20 @@ class Task {
                   int numGhostCells = 0);
 
     //////////
+    // Requires for level-specific particle variables - JBH 12/15/2015
+    void requires(
+                          WhichDW
+                  , const VarLabel*
+                  , const Level*
+                  ,       Ghost::GhostType
+                  ,       int                   numGhostCells = 0
+                  , const MaterialSubset*       matls = 0
+                  ,       MaterialDomainSpec    matls_dom = NormalDomain
+                  , const PatchSubset*          patches = 0
+                  ,       PatchDomainSpec       patches_dom = ThisLevel
+                  ,       bool                  oldTG = false
+                 );
+    //////////
     // Requires for reduction variables or perpatch variables
     void requires(WhichDW,
                   const VarLabel*,
@@ -1292,6 +1306,17 @@ class Task {
                   MaterialDomainSpec matls_domain = NormalDomain,
                   bool oldTG = false);
 
+    ///////////
+    // Modify level-specific particle variables JBH - 12/15/2015
+    void modifies(
+                    const VarLabel*
+                  , const Level*
+                  ,       Ghost::GhostType
+                  ,       int                   numGhostCells = 0
+                  , const MaterialSubset*       matls = 0
+                  ,       MaterialDomainSpec    matls_dom = NormalDomain
+                  ,       bool                  oldTG = false
+                 );
     //////////
     // Tells the task to actually execute the function assigned to it.
     //
@@ -1390,6 +1415,22 @@ class Task {
                    const Level* reductionLevel,
                    const MaterialSubset* matls,
                    MaterialDomainSpec matls_dom = NormalDomain);
+
+        Dependency(
+                           DepType              _deptype
+                   ,       Task               * _task
+                   , const VarLabel           * _varLabel
+                   ,       bool                 _oldTG
+                   , const PatchSubset        * _patchSubset
+                   , const MaterialSubset     * _materialSubset
+                   , const Level              * _reductionLevel
+                   ,       PatchDomainSpec      _patchDomain
+                   ,       MaterialDomainSpec   _materialDomain
+                   ,       Ghost::GhostType     _ghostType
+                   ,       WhichDW              _whichDW
+                   ,       int                  _numGhostCells
+                   ,       int                  _levelOffset
+                   );
 
         ~Dependency();
 
