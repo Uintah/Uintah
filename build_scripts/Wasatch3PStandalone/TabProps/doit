@@ -12,7 +12,8 @@ cmake                                       \
   -DTabProps_UTILS=OFF                      \
   -DTabProps_ENABLE_TESTING=OFF             \
   -DTabProps_ENABLE_IO=ON                   \
-  -DBOOST_ROOT=$BOOST_LOC                   \
+  -DBOOST_INCLUDEDIR=$BOOST_LOC/include     \
+  -DBOOST_LIBRARYDIR=$BOOST_LOC/lib         \
   -DCMAKE_INSTALL_PREFIX=${INSTALL_HERE}    \
   -DCMAKE_C_COMPILER=$CC                    \
   -DCMAKE_CXX_COMPILER=$CXX                 \
