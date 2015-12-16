@@ -4577,7 +4577,7 @@ void AMRMPM::debug_CFI_experimental(const ProcessorGroup*,
         cout << finePatch->getFaceName(patchFace) << " lo: " << f_lo_face << " hi: " << f_hi_face << " patch: " << *finePatch << endl;
 
         ParticleSubset* psetCFI=0;
-        psetCFI = old_dw->getParticleSubsetAllLevels(dwi, f_lo_face, f_hi_face, finePatch,lb->pXLabel);
+//        psetCFI = old_dw->getParticleSubsetAllLevels(dwi, f_lo_face, f_hi_face, finePatch,lb->pXLabel);
 
         constParticleVariable<Point>  px;
         ParticleVariable<double>  pColor;
