@@ -3515,11 +3515,18 @@ OnDemandDataWarehouse::getVarLabelMatlLevelTriples( std::vector<VarLabelMatl<Lev
 void
 OnDemandDataWarehouse::print()
 {
-  std::cout << d_myworld->myrank() << " VARIABLES in DW " << getID()
-       << "\n" << d_myworld->myrank() << " Variable Patch Material\n"
-       << "  -----------------------\n";
+  std::cout << "\n"
+            << "-----------------------\n"
+            << "Rank-" << d_myworld->myrank() << " VARIABLES in DW-" << getID() << "\n"
+            << "Rank-" << d_myworld->myrank() << " Variable Patch Material\n"
+            << "-----------------------\n" << std::endl;
 
-  d_varDB.print(std::cout, d_myworld->myrank());
+  std::cout << "Variable DB\n"
+            << "-----------------------" << std::endl;
+  d_varDB.print(  std::cout, d_myworld->myrank());
+
+  std::cout << "\nLevel DB\n"
+            << "-----------------------" << std::endl;
   d_levelDB.print(std::cout, d_myworld->myrank());
 }
 //______________________________________________________________________
