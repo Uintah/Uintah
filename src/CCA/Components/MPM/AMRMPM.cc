@@ -2221,8 +2221,6 @@ void AMRMPM::coarsenNodalData_CFI(const ProcessorGroup*,
                                          finePatch, fineLevel,
                                          n_iter, isRight_CP_FP_pair);
 
-          cout << " coarsenNodalData_CFI: face: " << finePatch->getFaceName(patchFace) << " finePatch: " << finePatch->getID() << " coarsePatch: " << coarsePatch->getID() << " node iter " << *n_iter << " isRight_CP_FP_pair: " << isRight_CP_FP_pair << endl;
-
             // Is this the right coarse/fine patch pair
             if (isRight_CP_FP_pair){
               switch(flag){
