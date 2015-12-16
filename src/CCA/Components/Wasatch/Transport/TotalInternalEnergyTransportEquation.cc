@@ -501,7 +501,6 @@ namespace WasatchCore {
                                               densityTag_,
                                               primVarTag_,
                                               turbDiffTag_,
-                                              "",
                                               factory,
                                               info );
       
