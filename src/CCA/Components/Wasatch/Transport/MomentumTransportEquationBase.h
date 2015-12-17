@@ -70,22 +70,22 @@ namespace WasatchCore{
   template< typename FluxT, typename AdvelT >
   Expr::ExpressionID
   setup_momentum_convective_flux( const Expr::Tag& fluxTag,
-                        const Expr::Tag& momTag,
-                        const Expr::Tag& advelTag,
-                        ConvInterpMethods convInterpMethod,
-                        const Expr::Tag& volFracTag,
-                        Expr::ExpressionFactory& factory );
+                                  const Expr::Tag& momTag,
+                                  const Expr::Tag& advelTag,
+                                  ConvInterpMethods convInterpMethod,
+                                  const Expr::Tag& volFracTag,
+                                  Expr::ExpressionFactory& factory );
 
   template< typename FieldT >
   Expr::ExpressionID
-  register_momentum_convective_fluxes(const Direction momComponent,
-                                      const bool* const doMom,
-                                      const Expr::TagList& velTags,
-                                      Expr::TagList& cfTags,
-                                      ConvInterpMethods convInterpMethod,
-                                      const Expr::Tag& momTag,
-                                      const Expr::Tag& volFracTag,
-                                      Expr::ExpressionFactory& factory );
+  register_momentum_convective_fluxes( const Direction momComponent,
+                                       const bool* const doMom,
+                                       const Expr::TagList& velTags,
+                                       Expr::TagList& cfTags,
+                                       ConvInterpMethods convInterpMethod,
+                                       const Expr::Tag& momTag,
+                                       const Expr::Tag& volFracTag,
+                                       Expr::ExpressionFactory& factory );
   
   Expr::Tag mom_tag( const std::string& momName, const bool old=false );
 
@@ -94,14 +94,14 @@ namespace WasatchCore{
   Expr::Tag rhs_part_tag( const std::string& momName );
   
   void set_vel_tags( Uintah::ProblemSpecP params,
-                    Expr::TagList& velTags );
+                     Expr::TagList& velTags );
   
   void set_mom_tags( Uintah::ProblemSpecP params,
-                    Expr::TagList& momTags,
-                    const bool old=false);
+                     Expr::TagList& momTags,
+                     const bool old=false);
 
-  bool is_normal_to_boundary(const Direction stagLoc,
-                             const Uintah::Patch::FaceType face);
+  bool is_normal_to_boundary( const Direction stagLoc,
+                              const Uintah::Patch::FaceType face);
   /**
    *  \ingroup WasatchCore
    *  \class MomentumTransportEquationBase
@@ -145,7 +145,7 @@ namespace WasatchCore{
 
     ~MomentumTransportEquationBase();
 
-    void setup_boundary_conditions(WasatchBCHelper& bcHelper,
+    void setup_boundary_conditions( WasatchBCHelper& bcHelper,
                                     GraphCategories& graphCat)
     {}
     
@@ -154,14 +154,14 @@ namespace WasatchCore{
      *         associated with this transport equation
      */
     void apply_initial_boundary_conditions( const GraphHelper& graphHelper,
-                                           WasatchBCHelper& bcHelper )
+                                            WasatchBCHelper& bcHelper )
     {}
 
     /**
      *  \brief setup the boundary conditions associated with this momentum equation
      */
     void apply_boundary_conditions( const GraphHelper& graphHelper,
-                                   WasatchBCHelper& bcHelper )
+                                    WasatchBCHelper& bcHelper )
     {}
     
     /**
@@ -184,7 +184,7 @@ namespace WasatchCore{
     void setup_source_terms( FieldTagInfo&, Expr::TagList& ){}                        
     
     virtual Expr::ExpressionID setup_rhs( FieldTagInfo& info,
-                                         const Expr::TagList& srcTags ) = 0;
+                                          const Expr::TagList& srcTags ) = 0;
     
     const Direction momComponent_;
     Uintah::ProblemSpecP params_;

@@ -105,12 +105,12 @@ ParticleResponseTime<ViscT>::evaluate()
 {
   using namespace SpatialOps;
   ParticleField& result = this->value();
-  const ParticleField& psize = psize_->field_ref();
-  const ParticleField& px = px_->field_ref();
-  const ParticleField& py = py_->field_ref();
-  const ParticleField& pz = pz_->field_ref();
+  const ParticleField& psize    = psize_   ->field_ref();
+  const ParticleField& px       = px_      ->field_ref();
+  const ParticleField& py       = py_      ->field_ref();
+  const ParticleField& pz       = pz_      ->field_ref();
   const ParticleField& pdensity = pdensity_->field_ref();
-  const ViscT& gVisc = gVisc_->field_ref();
+  const ViscT& gVisc            = gVisc_   ->field_ref();
   
   SpatFldPtr<ParticleField> tmpvisc = SpatialFieldStore::get<ParticleField>( result );
   

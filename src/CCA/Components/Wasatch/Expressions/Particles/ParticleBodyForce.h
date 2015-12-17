@@ -7,6 +7,7 @@
 #include <spatialops/OperatorDatabase.h>
 
 //==================================================================
+
 /**
  *  \class  ParticleBodyForce
  *  \ingroup WasatchParticles
@@ -61,17 +62,30 @@ public:
              const Expr::Tag& gasDensityTag,
              const Expr::Tag& particleDensityTag,
              const Expr::Tag& particleSizeTag,
-             const Expr::TagList& particlePositionTags );
+             const Expr::TagList& particlePositionTags )
+    : ExpressionBuilder(resultTag),
+      gDensityTag_  ( gasDensityTag        ),
+      pDensityTag_  ( particleDensityTag   ),
+      pSizeTag_     ( particleSizeTag      ),
+      pPosTags_     ( particlePositionTags )
+    {}
+
     ~Builder(){}
-    Expr::ExpressionBase* build() const;
+    Expr::ExpressionBase* build() const{
+      return new ParticleBodyForce<ScalarT>( gDensityTag_, pDensityTag_, pSizeTag_, pPosTags_);
+    }
+
   private:
     const Expr::Tag gDensityTag_, pDensityTag_, pSizeTag_;
     const Expr::TagList pPosTags_;
   };
   
-  ~ParticleBodyForce();
+  ~ParticleBodyForce(){}
   
-  void bind_operators( const SpatialOps::OperatorDatabase& opDB );
+  void bind_operators( const SpatialOps::OperatorDatabase& opDB ){
+    sOp_ = opDB.retrieve_operator<S2POpT>();
+  }
+
   void evaluate();
   
 };
@@ -91,30 +105,13 @@ ParticleBodyForce( const Expr::Tag& gasDensityTag,
 : Expr::Expression<ParticleField>()
 {
   this->set_gpu_runnable(false);  // need new particle operators...
-   px_ = this->template create_field_request<ParticleField>(particlePositionTags[0]);
-   py_ = this->template create_field_request<ParticleField>(particlePositionTags[1]);
-   pz_ = this->template create_field_request<ParticleField>(particlePositionTags[2]);
-   psize_ = this->template create_field_request<ParticleField>(particleSizeTag);
-   prho_ = this->template create_field_request<ParticleField>(particleDensityTag);
-   grho_ = this->template create_field_request<ScalarT>(gasDensityTag);
 
-}
-
-//------------------------------------------------------------------
-
-template<typename ScalarT>
-ParticleBodyForce<ScalarT>::
-~ParticleBodyForce()
-{}
-
-//------------------------------------------------------------------
-
-template<typename ScalarT>
-void
-ParticleBodyForce<ScalarT>::
-bind_operators( const SpatialOps::OperatorDatabase& opDB )
-{
-  sOp_ = opDB.retrieve_operator<S2POpT>();
+  px_    = this->template create_field_request<ParticleField>(particlePositionTags[0]);
+  py_    = this->template create_field_request<ParticleField>(particlePositionTags[1]);
+  pz_    = this->template create_field_request<ParticleField>(particlePositionTags[2]);
+  psize_ = this->template create_field_request<ParticleField>(particleSizeTag);
+  prho_  = this->template create_field_request<ParticleField>(particleDensityTag);
+  grho_  = this->template create_field_request<ScalarT>(gasDensityTag);
 }
 
 //------------------------------------------------------------------
@@ -139,32 +136,8 @@ evaluate()
   sOp_->set_coordinate_information(&px,&py,&pz,&psize);
   sOp_->apply_to_field( grho, *tmprho );
   
+  // jcs this hard-codes the acceleration constant in SI units and in a particular direction.  We shouldn't do this.
   result <<= -9.81 * (prho - *tmprho) / prho;
-}
-
-//------------------------------------------------------------------
-
-template<typename ScalarT>
-ParticleBodyForce<ScalarT>::
-Builder::Builder( const Expr::Tag& resultTag,
-                  const Expr::Tag& gasDensityTag,
-                  const Expr::Tag& particleDensityTag,
-                  const Expr::Tag& particleSizeTag,
-                  const Expr::TagList& particlePositionTags )
-: ExpressionBuilder(resultTag),
-  gDensityTag_  ( gasDensityTag        ),
-  pDensityTag_  ( particleDensityTag   ),
-  pSizeTag_     ( particleSizeTag      ),
-  pPosTags_     ( particlePositionTags )
-{}
-
-//------------------------------------------------------------------
-
-template<typename ScalarT>
-Expr::ExpressionBase*
-ParticleBodyForce<ScalarT>::Builder::build() const
-{
-  return new ParticleBodyForce<ScalarT>( gDensityTag_, pDensityTag_, pSizeTag_, pPosTags_);
 }
 
 //------------------------------------------------------------------

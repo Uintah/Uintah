@@ -41,7 +41,15 @@ class ParticleMomentumRHS
   DECLARE_FIELDS(ParticleField, pg_, pdrag_)
   
   ParticleMomentumRHS( const Expr::Tag& particleBodyForceTag,
-                       const Expr::Tag& ParticleDragForceTag );
+                       const Expr::Tag& ParticleDragForceTag )
+    : Expr::Expression<ParticleField>(),
+      doBodyForce_  ( particleBodyForceTag != Expr::Tag() ),
+      doDragForce_  ( ParticleDragForceTag != Expr::Tag() )
+  {
+    this->set_gpu_runnable(true);
+    if( doBodyForce_ )  pg_    = create_field_request<ParticleField>(particleBodyForceTag);
+    if( doDragForce_ )  pdrag_ = create_field_request<ParticleField>(ParticleDragForceTag);
+  }
   
 public:
   class Builder : public Expr::ExpressionBuilder
@@ -49,83 +57,31 @@ public:
   public:
     Builder( const Expr::Tag& resultTag,
              const Expr::Tag& particleBodyForceTag,
-             const Expr::Tag& ParticleDragForceTag );
+             const Expr::Tag& ParticleDragForceTag )
+      : ExpressionBuilder( resultTag ),
+        pBodyForceTag_( particleBodyForceTag ),
+        pDragTag_     ( ParticleDragForceTag )
+    {}
+
     ~Builder(){}
-    Expr::ExpressionBase* build() const;
+    Expr::ExpressionBase* build() const{
+      return new ParticleMomentumRHS( pBodyForceTag_, pDragTag_ );
+    }
+
   private:
     const Expr::Tag pBodyForceTag_, pDragTag_;
   };
   
-  void evaluate();
+  void evaluate()
+  {
+    using namespace SpatialOps;
+    ParticleField& result = this->value();
+    if( doBodyForce_ && doDragForce_ ) result <<= pdrag_->field_ref() + pg_->field_ref();
+    else if( doDragForce_ )            result <<= pdrag_->field_ref();
+    else if( doBodyForce_ )            result <<= pg_->field_ref();
+    else                               result <<= 0.0;
+  }
   
 };
-
-
-
-// ###################################################################
-//
-//                          Implementation
-//
-// ###################################################################
-
-
-
-
-ParticleMomentumRHS::
-ParticleMomentumRHS( const Expr::Tag& particleBodyForceTag,
-                     const Expr::Tag& ParticleDragForceTag )
-: Expr::Expression<ParticleField>(),
-  doBodyForce_  ( particleBodyForceTag != Expr::Tag() ),
-  doDragForce_  ( ParticleDragForceTag != Expr::Tag() )
-{
-  this->set_gpu_runnable(true);
-  if (doBodyForce_)  pg_ = create_field_request<ParticleField>(particleBodyForceTag);
-  if (doDragForce_)  pdrag_ = create_field_request<ParticleField>(ParticleDragForceTag);
-}
-
-//------------------------------------------------------------------
-
-void
-ParticleMomentumRHS::
-evaluate()
-{
-  using namespace SpatialOps;
-  
-  ParticleField& result = this->value();
-  if( doBodyForce_ && doDragForce_ ){
-    result <<= pdrag_->field_ref() + pg_->field_ref();
-  }
-  else if( doDragForce_ ){
-    result <<= pdrag_->field_ref();
-  }
-  else if( doBodyForce_ ){
-    result <<= pg_->field_ref();
-  }
-  else{
-    result <<= 0.0;
-  }
-}
-
-//------------------------------------------------------------------
-
-ParticleMomentumRHS::
-Builder::Builder( const Expr::Tag& resultTag,
-                  const Expr::Tag& particleBodyForceTag,
-                  const Expr::Tag& ParticleDragForceTag )
-: ExpressionBuilder( resultTag ),
-  pBodyForceTag_( particleBodyForceTag ),
-  pDragTag_     ( ParticleDragForceTag )
-{}
-
-//------------------------------------------------------------------
-
-
-Expr::ExpressionBase*
-ParticleMomentumRHS::Builder::build() const
-{
-  return new ParticleMomentumRHS( pBodyForceTag_, pDragTag_ );
-}
-
-//------------------------------------------------------------------
 
 #endif // ParticleParticleMomentumRHS_Expr_h

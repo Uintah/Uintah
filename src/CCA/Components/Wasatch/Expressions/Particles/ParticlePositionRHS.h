@@ -43,7 +43,6 @@ public:
       : ExpressionBuilder( positionRHSTag ),
         pvel_( particleVelocity )
     {}
-
     ~Builder(){}
     Expr::ExpressionBase* build() const{ return new ParticlePositionRHS( pvel_ ); }
     
