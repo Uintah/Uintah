@@ -959,6 +959,20 @@
     </ParticleTransportEquations>
 
     <MomentumEquations        spec="OPTIONAL NO_DATA">
+
+      <EnergyEquation spec="OPTIONAL NO_DATA">      
+        <SolutionVariable     spec="REQUIRED STRING"/>
+        <PrimitiveVariable    spec="REQUIRED STRING"/>
+        <Temperature  spec="REQUIRED NO_DATA"> 
+            <NameTag        spec="REQUIRED"/> 
+        </Temperature>
+        <MolecularWeight  spec="REQUIRED NO_DATA"> 
+            <NameTag        spec="REQUIRED"/> 
+        </MolecularWeight>        
+        <DiffusiveFlux  spec="MULTIPLE"/>        
+        <ConvectiveFlux spec="MULTIPLE"/>
+      </EnergyEquation>    
+      
       <DisableTurbulenceModel spec="OPTIONAL NO_DATA" />    
       <DisablePressureSolve   spec="OPTIONAL NO_DATA" /> <!-- disable du/dt in the pressure rhs - !DEVELOPERS ONLY! -->   
       <ConvectiveInterpMethod  spec="OPTIONAL NO_DATA"

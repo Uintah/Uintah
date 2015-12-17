@@ -4,6 +4,7 @@ import shutil
 import platform
 import socket
 import resource
+import subprocess #needed to accurately get return codes
 from optparse import OptionParser
 from sys import argv, exit
 from string import upper
@@ -37,8 +38,6 @@ no_sci_malloc = ""
 has_gpu       = 0 
 
 
-if socket.gethostname() == "albion" or socket.gethostname() == "aurora" or socket.gethostname() == "prism.crsim.utah.edu" or socket.gethostname() == "cyrus.mech.utah.edu": 
-  has_gpu = 1
 ####################################################################################
 
 #script_dir=os.sys.path[0]
@@ -348,10 +347,21 @@ def generateGS() :
                 if tmp[0] == "sus_options":
                   sus_options = tmp[1]
                   print "\n sus_option: %s \n"%(sus_options)
-    
-            if do_gpu == 1 and has_gpu == 0:
-              print "\nWARNING: skipping this test.  This machine is not configured to run gpu tests\n"
-              continue
+
+            if do_gpu == 1:
+            
+              print "Running command to see if GPU is active: " + sus + " -gpucheck"
+
+              child = subprocess.Popen( [sus, "-gpucheck"], stdout=subprocess.PIPE)
+              streamdata = child.communicate()[0]
+              rc = child.returncode
+              if rc == 1:
+                print "GPU found!"
+                has_gpu = 1
+              else:
+                has_gpu = 0
+                print "\nWARNING: skipping this test.  This machine is not configured to run gpu tests\n"
+                continue
               
             # FIXME: NOT SURE IF THIS IS RIGHT, BUT IT APPEARS TO MATCH WHAT THE RUN TESTS SCRIPT NEEDS:
             print "About to run test: " + nameoftest( test )

@@ -87,7 +87,7 @@ namespace WasatchCore{
 
     // define the primitive variable and solution variable tags and trap errors
     std::string form = "strong"; // default to strong form
-    params->get("form",form);    // get attribute for form. if none provided, then use default
+    params->getWithDefault("form",form,"strong");    // get attribute for form. if none provided, then use default
     isStrong_ = (form == "strong") ? true : false;
     const bool existPrimVar = params->findBlock("PrimitiveVariable");
 
@@ -187,7 +187,7 @@ namespace WasatchCore{
         convFluxParams != 0;
         convFluxParams=convFluxParams->findNextBlock("ConvectiveFlux") )
     {
-      setup_convective_flux_expression<FieldT>( convFluxParams, solnVarTag, "", factory, info );
+      setup_convective_flux_expression<FieldT>( convFluxParams, solnVarTag, factory, info );
     }
   }
 

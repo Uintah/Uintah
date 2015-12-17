@@ -1099,7 +1099,9 @@ namespace WasatchCore{
       proc0cout << "Wasatch: done creating solution task(s)" << std::endl;
       
       // pass the bc Helper to pressure expressions on all patches
-      bcHelperMap_[level->getID()]->synchronize_pressure_expression();
+      if (flow_treatment() != COMPRESSIBLE) {
+        bcHelperMap_[level->getID()]->synchronize_pressure_expression();
+      }
     }
 
     

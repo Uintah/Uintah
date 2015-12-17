@@ -26,13 +26,10 @@
 #define PARTICLESUBSET_H
 
 #include <Core/Util/RefCounted.h>
-#include <Core/Grid/Ghost.h>
 #include <Core/Geometry/IntVector.h>
 
 #include <vector>
 #include <iostream>
-
-using SCIRun::IntVector;
 
 namespace Uintah {
   typedef int particleIndex;
@@ -90,62 +87,51 @@ WARNING
     ParticleSubset();
     ~ParticleSubset();
     
-    //////////
-    // Insert Documentation Here:
+
     bool operator==(const ParticleSubset& ps) const {
-      return d_numParticles == ps.d_numParticles && 
-        // a null patch means that there is no patch center for the pset
-        // (probably on an AMR copy data timestep)
-        (!d_patch || !ps.d_patch || d_patch == ps.d_patch) && 
-        d_matlIndex == ps.d_matlIndex && d_low == ps.d_low && d_high == ps.d_high;
+    
+    
+      // a null patch means that there is no patch center for the pset
+      // (probably on an AMR copy data timestep)
+      bool A = ( !d_patch || !ps.d_patch || d_patch == ps.d_patch );
+      bool B = ( d_numParticles == ps.d_numParticles );
+      bool C = ( d_matlIndex == ps.d_matlIndex );
+      bool D = ( d_low == ps.d_low && d_high == ps.d_high );
+      
+      return A && B && C && D;
     }
       
-    //////////
-    // Insert Documentation Here:
     void addParticle( particleIndex idx ) {
-      if( d_numParticles >= d_allocatedSize )
+      if( d_numParticles >= d_allocatedSize ){
         expand( 1 );
+      }
+      
       d_particles[d_numParticles++] = idx;
     }
+    
     particleIndex addParticles( unsigned int count );
 
     void resize(particleIndex idx);
 
     typedef particleIndex* iterator;
-      
-    //////////
-    // Insert Documentation Here:
+
     iterator begin() {
       return d_particles;
     }
-      
-    //////////
-    // Insert Documentation Here:
 
     iterator end() {
       return d_particles+d_numParticles;
     }
-      
-    //////////
-    // Insert Documentation Here:
-    //    const particleIndex* getPointer() const
-    //    {
-    //      return d_particles;
-    //    }
       
     particleIndex* getPointer()
     {
       return d_particles;
     }
       
-    //////////
-    // Insert Documentation Here:
     unsigned int numParticles() const {
       return d_numParticles;
     }
-      
-    //////////
-    // Insert Documentation Here:
+
     void set(particleIndex idx, particleIndex value) {
       d_particles[idx] = value;
     }
@@ -183,10 +169,9 @@ WARNING
     }
     
     friend std::ostream& operator<<(std::ostream& out, Uintah::ParticleSubset& pset);
-
+  //__________________________________
+  //
    private:
-    //////////
-    // Insert Documentation Here:
     particleIndex * d_particles;
     unsigned int    d_numParticles;
     unsigned int    d_allocatedSize;

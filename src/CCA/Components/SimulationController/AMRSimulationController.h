@@ -38,7 +38,7 @@
 #include <sci_defs/visit_defs.h>
 
 #ifdef HAVE_VISIT
-#include <VisIt/libsim/visit_libsim.h>
+#  include <VisIt/libsim/visit_libsim.h>
 #endif
 
 namespace Uintah {

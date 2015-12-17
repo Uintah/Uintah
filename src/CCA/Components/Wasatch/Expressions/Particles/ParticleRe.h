@@ -28,11 +28,11 @@ template< typename GVel1T, typename GVel2T, typename GVel3T, typename ScalarT >
 class ParticleRe
  : public Expr::Expression<ParticleField>
 {
-  DECLARE_FIELDS(ParticleField, psize_, px_, py_, pz_, pu_, pv_, pw_)
-  DECLARE_FIELDS(ScalarT, gVisc_, gDensity_)
-  DECLARE_FIELD(GVel1T, gu_)
-  DECLARE_FIELD(GVel2T, gv_)
-  DECLARE_FIELD(GVel3T, gw_)
+  DECLARE_FIELDS( ParticleField, psize_, px_, py_, pz_, pu_, pv_, pw_ )
+  DECLARE_FIELDS( ScalarT, gVisc_, gDensity_ )
+  DECLARE_FIELD( GVel1T, gu_ )
+  DECLARE_FIELD( GVel2T, gv_ )
+  DECLARE_FIELD( GVel3T, gw_ )
 
   typedef typename SpatialOps::Particle::CellToParticle<GVel1T> GVel1OpT;
   typedef typename SpatialOps::Particle::CellToParticle<GVel2T> GVel2OpT;
@@ -71,15 +71,26 @@ public:
              const Expr::Tag& gasViscosityTag,
              const Expr::TagList& particlePositionTags,
              const Expr::TagList& particleVelocityTags,
-             const Expr::TagList& gasVelocityTags );
+             const Expr::TagList& gasVelocityTags )
+      : ExpressionBuilder( resultTag ),
+        pSizeTag_   ( particleSizeTag      ),
+        gDensityTag_( gasDensityTag        ),
+        gViscTag_   ( gasViscosityTag      ),
+        pPosTags_   ( particlePositionTags ),
+        pVelTags_   ( particleVelocityTags ),
+        gVelTags_   ( gasVelocityTags      )
+    {}
+
     ~Builder(){}
-    Expr::ExpressionBase* build() const;
+    Expr::ExpressionBase* build() const{
+      return new ParticleRe( pSizeTag_,  gDensityTag_, gViscTag_, pPosTags_, pVelTags_, gVelTags_);
+    }
   private:
     const Expr::Tag pSizeTag_, gDensityTag_, gViscTag_;
     const Expr::TagList pPosTags_, pVelTags_, gVelTags_;
   };
 
-  ~ParticleRe();
+  ~ParticleRe(){}
   void bind_operators( const SpatialOps::OperatorDatabase& opDB );
   void evaluate();
 
@@ -118,12 +129,6 @@ ParticleRe( const Expr::Tag& particleSizeTag,
    gv_ = this->template create_field_request<GVel2T>(gasVelocityTags[1]);
    gw_ = this->template create_field_request<GVel3T>(gasVelocityTags[2]);
 }
-
-//--------------------------------------------------------------------
-
-template< typename GVel1T, typename GVel2T, typename GVel3T, typename ScalarT >
-ParticleRe<GVel1T, GVel2T, GVel3T, ScalarT>::~ParticleRe()
-{}
 
 //--------------------------------------------------------------------
 
@@ -199,31 +204,5 @@ ParticleRe<GVel1T, GVel2T, GVel3T, ScalarT>::evaluate()
 }
 
 //--------------------------------------------------------------------
-
-template< typename GVel1T, typename GVel2T, typename GVel3T, typename ScalarT >
-ParticleRe<GVel1T, GVel2T, GVel3T, ScalarT>::Builder::
-Builder( const Expr::Tag& resultTag,
-         const Expr::Tag& particleSizeTag,
-         const Expr::Tag& gasDensityTag,
-         const Expr::Tag& gasViscosityTag,
-         const Expr::TagList& particlePositionTags,
-         const Expr::TagList& particleVelocityTags,
-         const Expr::TagList& gasVelocityTags )
-  : ExpressionBuilder( resultTag ),
-    pSizeTag_   ( particleSizeTag      ),
-    gDensityTag_( gasDensityTag        ),
-    gViscTag_   ( gasViscosityTag      ),
-    pPosTags_   ( particlePositionTags ),
-    pVelTags_   ( particleVelocityTags ),
-    gVelTags_   ( gasVelocityTags      )
-{}
-
-//--------------------------------------------------------------------
-template< typename GVel1T, typename GVel2T, typename GVel3T, typename ScalarT >
-Expr::ExpressionBase*
-ParticleRe<GVel1T, GVel2T, GVel3T, ScalarT>::Builder::build() const
-{
-  return new ParticleRe( pSizeTag_,  gDensityTag_, gViscTag_, pPosTags_, pVelTags_, gVelTags_);
-}
 
 #endif // ParticleRe_Expr_h

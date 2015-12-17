@@ -241,7 +241,7 @@ namespace WasatchCore{
     Expr::Tag volFracTag = vNames.vol_frac_tag<FieldT>();
 
     Expr::ExpressionFactory& factory = *this->gc_[ADVANCE_SOLUTION]->exprFactory;
-    typedef typename MomRHS<FieldT>::Builder RHS;
+    typedef typename MomRHS<FieldT, SpatialOps::NODIR>::Builder RHS;
     return factory.register_expression( scinew RHS( this->rhsTag_,
                                                     (enablePressureSolve ? this->pressureTag_ : Expr::Tag()),
                                                     rhs_part_tag(this->solnVarTag_),

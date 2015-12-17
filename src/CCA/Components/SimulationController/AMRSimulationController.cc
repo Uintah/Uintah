@@ -188,11 +188,9 @@ AMRSimulationController::run()
   // If VisIt has been included into the build, initialize the lib sim
   // so that a user can connect to the simulation via VisIt.
 #ifdef HAVE_VISIT
-
   if( do_visit )
   {
     d_visit_simulation_data.AMRSimController = this;
-    d_visit_simulation_data.gridP = currentGrid;
 
 #ifdef HAVE_MPICH
   d_visit_simulation_data.isProc0 = isProc0_macro;
@@ -334,7 +332,7 @@ AMRSimulationController::run()
     double new_init_delt = 0.;
 
     bool nr;
-    if( (nr=needRecompile( time, delt, currentGrid )) || first ){
+    if( (nr=needRecompile( time, delt, currentGrid )) || first ) {
         
       if(nr){ // Recompile taskgraph, re-assign BCs, reset recompile flag.
         currentGrid->assignBCS( d_grid_ps, d_lb );
@@ -355,6 +353,9 @@ AMRSimulationController::run()
         // This is not correct if we have switched to a different
         // component, since the delt will be wrong 
         d_output->finalizeTimestep( time, delt, currentGrid, d_scheduler, 0 );
+
+	// ARS - THIS CALL DOES NOTHING BECAUSE THE LAST ARG IS 0
+	// WHICH CAUSES THE METHOD TO IMMEIDATELY RETURN.
         d_output->sched_allOutputTasks( delt, currentGrid, d_scheduler, 0 );
       }
     }
@@ -439,8 +440,8 @@ AMRSimulationController::run()
       }
     }
 
-    if(d_output){
-      d_output->findNext_OutputCheckPoint_Timestep(  delt, currentGrid );
+    if(d_output) {
+      d_output->findNext_OutputCheckPoint_Timestep( delt, currentGrid );
       d_output->writeto_xml_files( delt, currentGrid );
     }
 
@@ -452,9 +453,13 @@ AMRSimulationController::run()
 #ifdef HAVE_VISIT
 
      if( do_visit ) {
+
+       d_visit_simulation_data.gridP = currentGrid;
+       d_visit_simulation_data.message = std::string("");
        d_visit_simulation_data.time  = time;
        d_visit_simulation_data.delt  = delt;
-       d_visit_simulation_data.cycle = d_sharedState->getCurrentTopLevelTimeStep();
+       d_visit_simulation_data.cycle =
+	 d_sharedState->getCurrentTopLevelTimeStep();
 
        visit_CheckState( &d_visit_simulation_data );
 

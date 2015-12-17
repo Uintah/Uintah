@@ -94,7 +94,14 @@ visit_ControlCommandCallback(const char *cmd, const char *args, void *cbdata)
 {
   visit_simulation_data *sim = (visit_simulation_data *)cbdata;
 
-  if(strcmp(cmd, "Stop") == 0 && sim->simMode != VISIT_SIMMODE_FINISHED)
+  if(strcmp(cmd, "StepCycle") == 0 && sim->simMode != VISIT_SIMMODE_FINISHED)
+  {
+    std::stringstream msg;	  
+    msg << "Visit libsim - step cycle value" << args;
+    VisItUI_setValueS("SIMULATION_STATUS", msg.str().c_str(), 1);
+    VisItUI_setValueS("SIMULATION_STATUS", " ", 1);
+  }
+  else if(strcmp(cmd, "Stop") == 0 && sim->simMode != VISIT_SIMMODE_FINISHED)
   {
     sim->runMode = VISIT_SIMMODE_STOPPED;
   }
@@ -108,6 +115,13 @@ visit_ControlCommandCallback(const char *cmd, const char *args, void *cbdata)
   }
   else if(strcmp(cmd, "Stats") == 0)
   {
+    int timestep = sim->cycle;
+    double delt  = sim->delt;
+    double time  = sim->time;
+
+    std::string message;
+
+    VisItUI_setValueS("SIMULATION_STATUS", message.c_str(), 1);
   }
   else if(strcmp(cmd, "Regrid") == 0 && sim->simMode != VISIT_SIMMODE_FINISHED)
   {

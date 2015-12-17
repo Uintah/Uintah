@@ -9,6 +9,7 @@ from commands import getoutput
 import socket
 import resource
 import re         # regular expressions
+import subprocess #needed to accurately get return codes
 
 #______________________________________________________________________
 # Assuming that running python with the '-u' arg doesn't fix the i/o buffering problem, this line
@@ -77,12 +78,8 @@ def runSusTests(argv, TESTS, ALGO, callback = nullCallback):
   svn_revision = svn_revision.split(" ")[1]
   
   
-                    # 1 for GPU RT machine (albion, aurora), 0 otherwise.
-                    #   need to make this generic, perhaps pycuda?
+  #sus itself will be queried to check if it can see a GPU
   has_gpu         = 0 
-  if socket.gethostname() == "albion" or socket.gethostname() == "aurora" or socket.gethostname() == "prism.crsim.utah.edu" or socket.gethostname() == "cyrus.mech.utah.edu": 
-    has_gpu = 1
-
   
   #__________________________________
   # set environmental variables
@@ -281,10 +278,20 @@ def runSusTests(argv, TESTS, ALGO, callback = nullCallback):
       print "\nWARNING: skipping this test (do_opt: %s, dbg_opt: %s)\n" % (do_opt, dbg_opt)
       continue
       
-    if do_gpu == 1 and has_gpu == 0:
-      print "\nWARNING: skipping this test.  This machine is not configured to run gpu tests ( do_gpu: %s, has_gpu: %s)\n" %(do_gpu,has_gpu)
-      continue      
-      
+    if do_gpu == 1:
+
+      print "Running command to see if GPU is active: " + susdir + "/sus -gpucheck"
+      sus = susdir + "/sus"
+      child = subprocess.Popen( [sus, "-gpucheck"], stdout=subprocess.PIPE)
+      streamdata = child.communicate()[0]
+      rc = child.returncode
+      if rc == 1:
+        print "GPU found!"
+        has_gpu = 1
+      else:
+        has_gpu = 0
+        print "\nWARNING: skipping this test.  This machine is not configured to run gpu tests\n"
+        continue
     
     if dbg_opt == "opt" : # qwerty: Think this is right now...
       do_memory = 0

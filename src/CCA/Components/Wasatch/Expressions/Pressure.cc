@@ -286,7 +286,7 @@ Pressure::setup_matrix( const SVolField* const volfrac )
     // definite matrix. For the Laplacian on a structured grid, the matrix A corresponding
     // to the Laplacian operator is not positive definite - but "- A" is. Hence,
     // we multiply all coefficients by -1.
-    IntVector iCell = *iter;
+    SCIRun::IntVector iCell = *iter;
     Uintah::Stencil7&  coefs = matrix_[iCell];
     coefs.w = -w;
     coefs.e = -w;
@@ -345,10 +345,10 @@ Pressure::setup_matrix( const SVolField* const rhoStar,
     // definite matrix. For the Laplacian on a structured grid, the matrix A corresponding
     // to the Laplacian operator is not positive definite - but "- A" is. Hence,
     // we multiply all coefficients by -1.
-    IntVector iCell = *iter;
+    SCIRun::IntVector iCell = *iter;
     Uintah::Stencil7&  coefs = matrix_[iCell];
 
-    IntVector iCellOffset = iCell - patchCellOffset;
+    SCIRun::IntVector iCellOffset = iCell - patchCellOffset;
     
     // interior
     const IntVec intCellIJK( iCellOffset[0],
@@ -484,10 +484,10 @@ void Pressure::process_embedded_boundaries( const SVolField& volfrac )
     didMatrixUpdate_ = true;
     
     for(Uintah::CellIterator iter(patch_->getCellIterator()); !iter.done(); iter++){
-      IntVector iCell = *iter;
+      SCIRun::IntVector iCell = *iter;
       Uintah::Stencil7&  coefs = matrix_[iCell];
       
-      const IntVector iCellOffset = iCell - patchCellOffset;
+      const SCIRun::IntVector iCellOffset = iCell - patchCellOffset;
       
       // interior
       const IntVec intCellIJK( iCellOffset[0],

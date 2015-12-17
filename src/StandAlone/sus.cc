@@ -65,6 +65,10 @@
 #endif
 #include <CCA/Components/Solvers/SolverFactory.h>
 
+#ifdef HAVE_CUDA
+#  include <CCA/Components/Schedulers/UnifiedScheduler.h>
+#endif
+
 #include <CCA/Ports/DataWarehouse.h>
 
 #include <Core/Disclosure/TypeDescription.h>
@@ -374,6 +378,20 @@ main( int argc, char *argv[], char *env[] )
     else if (arg == "-move") {
       restartFromScratch = false;
       restartRemoveOldDir = true;
+    }
+    else if (arg == "-gpucheck") {
+#ifdef HAVE_CUDA
+      int retVal = UnifiedScheduler::verifyAnyGpuActive();
+      if (retVal == 1) {
+        std::cout << "At least one GPU detected!" << std::endl;
+      } else {
+        std::cout << "No GPU detected!" << std::endl;
+      }
+      Thread::exitAll(retVal);
+#endif
+      cout << "No GPU detected!" << endl;
+      Thread::exitAll(2); //If the above didn't exit with a 1, then we didn't have a GPU, so exit with a 2.
+      cout << "This doesn't run" << endl;
     }
 #ifdef HAVE_CUDA
     else if(arg == "-gpu") {

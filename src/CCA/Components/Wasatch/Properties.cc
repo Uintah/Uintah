@@ -482,17 +482,13 @@ namespace WasatchCore{
      * to estimate their values at "*" RK stage to be able to estimate the value
      * of density at this RK stage
      */
-    const TagNames& tagNames = TagNames::self();
-
     for( Uintah::ProblemSpecP transEqnParams= params->findBlock("TransportEquation");
         transEqnParams != 0;
         transEqnParams=transEqnParams->findNextBlock("TransportEquation") )
     {
       std::string solnVarName;
       transEqnParams->get( "SolutionVariable", solnVarName );
-
-      // Here we get the variables needed for calculations at the stage "*"
-      const Expr::Tag solnVarTagNp1  ( solnVarName,                 Expr::STATE_NONE ); // tag for rhof_{n+1}
+      const Expr::Tag solnVarTagNp1( solnVarName, Expr::STATE_NONE ); // tag for rhof_{n+1}
     }
   }
 
