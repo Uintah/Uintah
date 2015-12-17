@@ -120,8 +120,7 @@ namespace WasatchCore{
     //_____________________________
     // build a bodyforce expression
     Expr::Tag pBodyForceTag;
-    if (doGravity_)
-    {
+    if( doGravity_ ){
       switch( direction_ ){
         case XDIR: pBodyForceTag = TagNames::self().pbodyx; break;
         case YDIR: pBodyForceTag = TagNames::self().pbodyy; break;
@@ -163,22 +162,19 @@ namespace WasatchCore{
       //_____________________________
       // Drag Force
       switch( direction_ ){
-        case XDIR:
-        {
+        case XDIR:{
           pDragForceTag = TagNames::self().pdragx;
           typedef ParticleDragForce<XVolField>::Builder DragForce;
           factory.register_expression( scinew DragForce(pDragForceTag, gUTag_, pDragCoefTag, pTauTag, solution_variable_tag(), pSizeTag_, pPosTags_ ) );
           break;
         }
-        case YDIR:
-        {
+        case YDIR:{
           pDragForceTag = TagNames::self().pdragy;
           typedef ParticleDragForce<YVolField>::Builder DragForce;
           factory.register_expression( scinew DragForce(pDragForceTag, gVTag_, pDragCoefTag, pTauTag, solution_variable_tag(), pSizeTag_, pPosTags_ ) );
           break;
         }
-        case ZDIR:
-        {
+        case ZDIR:{
           pDragForceTag = TagNames::self().pdragz;
           typedef ParticleDragForce<ZVolField>::Builder DragForce;
           factory.register_expression( scinew DragForce(pDragForceTag, gWTag_, pDragCoefTag, pTauTag, solution_variable_tag(), pSizeTag_, pPosTags_ ) );
@@ -225,9 +221,8 @@ namespace WasatchCore{
       const Uintah::BCGeomBase::ParticleBndSpec pBndSpec = myBndSpec.particleBndSpec;
       if( pBndSpec.hasParticleBC() ){
 
-        switch (pBndSpec.bndType) {
-          case Uintah::BCGeomBase::ParticleBndSpec::WALL:
-          {
+        switch( pBndSpec.bndType ){
+          case Uintah::BCGeomBase::ParticleBndSpec::WALL:{
             const double restCoef = pBndSpec.restitutionCoef;
             if( isNormal ){
               // create particle wall bcs

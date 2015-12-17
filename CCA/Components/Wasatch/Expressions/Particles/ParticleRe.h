@@ -113,21 +113,22 @@ ParticleRe( const Expr::Tag& particleSizeTag,
   : Expr::Expression<ParticleField>()
 {
   this->set_gpu_runnable( false );  // not until we get particle interpolants GPU ready
-   gDensity_ = this->template create_field_request<ScalarT>(gasDensityTag);
-   psize_ = this->template create_field_request<ParticleField>(particleSizeTag);
-   gVisc_ = this->template create_field_request<ScalarT>(gasViscosityTag);
   
-   px_ = this->template create_field_request<ParticleField>(particlePositionTags[0]);
-   py_ = this->template create_field_request<ParticleField>(particlePositionTags[1]);
-   pz_ = this->template create_field_request<ParticleField>(particlePositionTags[2]);
-  
-   pu_ = this->template create_field_request<ParticleField>(particleVelocityTags[0]);
-   pv_ = this->template create_field_request<ParticleField>(particleVelocityTags[1]);
-   pw_ = this->template create_field_request<ParticleField>(particleVelocityTags[2]);
+  gDensity_ = this->template create_field_request<ScalarT>(gasDensityTag);
+  psize_    = this->template create_field_request<ParticleField>(particleSizeTag);
+  gVisc_    = this->template create_field_request<ScalarT>(gasViscosityTag);
 
-   gu_ = this->template create_field_request<GVel1T>(gasVelocityTags[0]);
-   gv_ = this->template create_field_request<GVel2T>(gasVelocityTags[1]);
-   gw_ = this->template create_field_request<GVel3T>(gasVelocityTags[2]);
+  px_ = this->template create_field_request<ParticleField>(particlePositionTags[0]);
+  py_ = this->template create_field_request<ParticleField>(particlePositionTags[1]);
+  pz_ = this->template create_field_request<ParticleField>(particlePositionTags[2]);
+
+  pu_ = this->template create_field_request<ParticleField>(particleVelocityTags[0]);
+  pv_ = this->template create_field_request<ParticleField>(particleVelocityTags[1]);
+  pw_ = this->template create_field_request<ParticleField>(particleVelocityTags[2]);
+
+  gu_ = this->template create_field_request<GVel1T>(gasVelocityTags[0]);
+  gv_ = this->template create_field_request<GVel2T>(gasVelocityTags[1]);
+  gw_ = this->template create_field_request<GVel3T>(gasVelocityTags[2]);
 }
 
 //--------------------------------------------------------------------

@@ -15,7 +15,13 @@
 class ParticleDragCoefficient
  : public Expr::Expression<ParticleField>
 {
-  ParticleDragCoefficient( const Expr::Tag& pReTag );
+  ParticleDragCoefficient( const Expr::Tag& pReTag )
+    : Expr::Expression<ParticleField>()
+  {
+    this->set_gpu_runnable(true);
+    pRe_ = create_field_request<ParticleField>(pReTag);
+  }
+
   DECLARE_FIELD(ParticleField, pRe_)
 
 public:
@@ -24,55 +30,31 @@ public:
   public:
     /**
      * @param dragTag tag for the drag coefficient
-     * @param reTag tag for the particle reynolds number
+     * @param pReTag tag for the particle reynolds number
      */
     Builder( const Expr::Tag& dragTag,
-             const Expr::Tag& reTag );
+             const Expr::Tag& pReTag )
+    : ExpressionBuilder(dragTag),
+      pRet_(pReTag)
+    {}
+
     ~Builder(){}
     Expr::ExpressionBase* build() const{ return new ParticleDragCoefficient(pRet_); }
   private:
     const Expr::Tag pRet_;
-
   };
 
-  void evaluate();
+  void evaluate()
+  {
+    using namespace SpatialOps;
+    ParticleField& result = this->value();
+    const ParticleField& pRe = pRe_->field_ref();
+
+    result <<= cond( pRe <= 1.0,  1.0 )
+                   ( pRe <= 1000, 1.0 + 0.15 * pow( pRe , 0.687 ) )
+                   ( 0.0183 * pRe );
+  }
+
 };
-
-//###########################################################
-//
-//                  Implementation
-//
-//##########################################################
-
-ParticleDragCoefficient::ParticleDragCoefficient( const Expr::Tag& pReTag )
-  : Expr::Expression<ParticleField>()
-{
-  this->set_gpu_runnable(true);
-   pRe_ = create_field_request<ParticleField>(pReTag);
-}
-
-//--------------------------------------------------------------------
-
-void
-ParticleDragCoefficient::evaluate()
-{
-  using namespace SpatialOps;
-  ParticleField& result = this->value();
-  const ParticleField& pRe = pRe_->field_ref();
-  
-  result <<= cond( pRe <= 1.0,  1.0 )
-                 ( pRe <= 1000, 1.0 + 0.15 * pow( pRe , 0.687 ) )
-                 ( 0.0183 * pRe );
-}
-
-//--------------------------------------------------------------------
-
-ParticleDragCoefficient::Builder::Builder( const Expr::Tag& dragTag,
-                                           const Expr::Tag& pReTag )
-: ExpressionBuilder(dragTag),
-  pRet_(pReTag)
-{}
-
-//--------------------------------------------------------------------
 
 #endif // ParticleDragCoefficient_Expr_h

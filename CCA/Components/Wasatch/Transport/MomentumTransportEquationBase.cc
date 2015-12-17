@@ -610,7 +610,7 @@ namespace WasatchCore{
     // convective fluxes
     Expr::TagList cfTags; // these tags will be filled by register_convective_fluxes
     std::string convInterpMethod = "CENTRAL";
-    if (this->params_->findBlock("ConvectiveInterpMethod")) {
+    if( this->params_->findBlock("ConvectiveInterpMethod") ){
       this->params_->findBlock("ConvectiveInterpMethod")->getAttribute("method",convInterpMethod);
     }
     
