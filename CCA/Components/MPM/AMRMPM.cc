@@ -227,7 +227,9 @@ void AMRMPM::problemSetup(const ProblemSpecP& prob_spec,
     throw ProblemSetupException(warn, __FILE__, __LINE__);
   }
 
-#if 0
+#if 0  // This allows defining regions to be refined using geometry objects
+       // Jim was having a bit of trouble keeping this consistent with other
+       // methods of defining finer levels.  Keep for now.
   ProblemSpecP refine_ps = mpm_ps->findBlock("Refine_Regions");
   // Read in the refined regions geometry objects
   int piece_num = 0;
@@ -547,7 +549,7 @@ void AMRMPM::scheduleTimeAdvance(const LevelP & level,
     scheduleComputeLAndF(            sched, patches, matls);
   }
 
-#if 0
+#if 0  // Jim sees no need to do this task, at least not for linear interp.
   // zero the nodal data at the CFI on the coarse level 
   for (int l = 0; l < maxLevels-1; l++) {
     const LevelP& level = grid->getLevel(l);
@@ -562,7 +564,7 @@ void AMRMPM::scheduleTimeAdvance(const LevelP & level,
     scheduleInterpolateToParticlesAndUpdate(sched, patches, matls);
   }
 
-#if 0
+#if 0  // This may need to be reactivated when we enable GIMP
   for (int l = 0; l < maxLevels; l++) {
     const LevelP& level = grid->getLevel(l);
     const PatchSet* patches = level->eachPatch();
@@ -2364,21 +2366,6 @@ void AMRMPM::coarsenNodalData_CFI2(const ProcessorGroup*,
                  if(flags->d_doScalarDiffusion){
                    gConcRate_coarse[c_node] = gConcRate_fine[f_node];
                  }
-                 
-/*`==========TESTING==========*/
-#if 0
-                  if( internalForce_coarse[c_node].length()  >1e-8){
-                    ostringstream warn;
-                    warn << "Too Big: " << c_node << " f_node " << f_node 
-                         << "    L-"<< fineLevel->getIndex()
-                         <<" InternalForce_fine   " << internalForce_fine[f_node] 
-                         <<" InternalForce_coarse " << internalForce_coarse[c_node] << endl;
-                     
-                    throw InternalError(warn.str(), __FILE__, __LINE__);
-                  } 
-#endif
-/*===========TESTING==========`*/
-                  
                 }
               }  //  node loop
             }  //  isRight_CP_FP_pair
@@ -2728,13 +2715,6 @@ void AMRMPM::computeInternalForce_CFI(const ProcessorGroup*,
           pset_coarse = old_dw->getParticleSubset(dwi, cl, ch, coarsePatch,
                                                                lb->pXLabel);
 
-#if 0
-          cout << " fine patch : " << finePatch->getGridIndex() << endl;
-          cout << " cl_tmp: "<< cl_tmp << " ch_tmp: " << ch_tmp << endl;
-          cout << " cl:     " << cl    << " ch:     " << ch<< " fl: " << fl << " fh " << fh << endl;                                                     
-          cout << "  " << *pset_coarse << endl;
-#endif
-
           // coarse level data
           old_dw->get(px_coarse,       lb->pXLabel,       pset_coarse);
           old_dw->get(pvol_coarse,     lb->pVolumeLabel,  pset_coarse);
@@ -2783,27 +2763,15 @@ void AMRMPM::computeInternalForce_CFI(const ProcessorGroup*,
                 internalforce[fineNode] -=  Increment;
 
 
-                //  cout << " CIF_CFI: ni: " << ni[k] << " div " << div[k] << "\t internalForce " << internalforce[fineNode] << endl;
-                //  cout << "    before " << Before << " After " << After << " Increment " << Increment << endl;
-                //  cout << "    div " << div[k] << " stressPress: " << stresspress << " pvol_coarse " << pvol_coarse[idx] << endl;
-
-
+#if 0
   /*`==========TESTING==========*/
                 if(std::isinf( internalforce[fineNode].length() ) ||  std::isnan( internalforce[fineNode].length() )){
                   cout << "INF: " << fineNode << " " << internalforce[fineNode] 
                        << " div[k]:"<< div[k] << " stressPress: " << stresspress
                        << " pvol " << pvol_coarse[idx] << endl;
                 }
-   #if 0             
-                if( internalforce[fineNode].length()  >1e-10){
-                  cout << "CIF_CFI: " << fineNode
-                       << "    L-"<< getLevel(finePatches)->getIndex()
-                       <<" InternalForce " << internalforce[fineNode] << " div[k]: " << div[k] << " stressPress: " << stresspress 
-                       << " pvol " << pvol_coarse[idx] << endl;
-                  cout << "          Before: " << Before << " Increment " << Increment << endl;
-                }
-  #endif
   /*===========TESTING==========`*/
+#endif
               }  // contains node
             }  // node loop          
           }  // pset loop
@@ -3534,38 +3502,6 @@ void AMRMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
         totalMom   += pvelocitynew[idx]*pmass[idx];
       }
 
-#if 0 // Until Todd is ready for this, leave inactive
-      // Delete particles that have left the domain
-      // This is only needed if extra cells are being used.
-      // Also delete particles whose mass is too small (due to combustion)
-      // For particles whose new velocity exceeds a maximum set in the input
-      // file, set their velocity back to the velocity that it came into
-      // this step with
-      for(ParticleSubset::iterator iter  = pset->begin();
-                                   iter != pset->end(); iter++){
-        particleIndex idx = *iter;
-        if ((pmassNew[idx] <= flags->d_min_part_mass) || pTempNew[idx] < 0. ||
-             (pLocalized[idx]==-999)){
-          delset->addParticle(idx);
-//        cout << "Material = " << m << " Deleted Particle = " << pids_new[idx] 
-//             << " xold = " << px[idx] << " xnew = " << pxnew[idx]
-//             << " vold = " << pvelocity[idx] << " vnew = "<< pvelocitynew[idx]
-//             << " massold = " << pmass[idx] << " massnew = " << pmassNew[idx]
-//             << " tempold = " << pTemperature[idx] 
-//             << " tempnew = " << pTempNew[idx]
-//             << " pLocalized = " << pLocalized[idx]
-//             << " volnew = " << pvolume[idx] << endl;
-        }
-        if(pvelocitynew[idx].length() > flags->d_max_vel){
-          if(pvelocitynew[idx].length() >= pvelocity[idx].length()){
-	     pvelocitynew[idx]=(pvelocitynew[idx]/pvelocitynew[idx].length())*(flags->d_max_vel*.9);	  
-	     cout<<endl<<"Warning: particle "<<pids[idx]<<" hit speed ceiling #1. Modifying particle velocity accordingly."<<endl;
-            //pvelocitynew[idx]=pvelocity[idx];
-          }
-        }
-      }
-#endif
-
       new_dw->deleteParticles(delset);    
 
       new_dw->put(sum_vartype(totalmass),       lb->TotalMassLabel);
@@ -4133,7 +4069,9 @@ AMRMPM::errorEstimate(const ProcessorGroup*,
       }
     }
 
-#if 0
+#if 0  // Alternate method of initializing refined regions.  Inactive, not
+       // necessarily compatible with, say, defining levels in Grid section of
+       // input.
     // loop over all the geometry objects
     for(int obj=0; obj<(int)d_refine_geom_objs.size(); obj++){
       GeometryPieceP piece = d_refine_geom_objs[obj]->getPiece();
@@ -4156,46 +4094,6 @@ AMRMPM::errorEstimate(const ProcessorGroup*,
           refineFlag[c] = true;
           refinePatch->set();
       }
-    }
-#endif
-
-#if 0
-    for(int m = 0; m < d_sharedState->getNumMPMMatls(); m++){
-      MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial( m );
-      int dwi = mpm_matl->getDWIndex();
-      
-      // Loop over particles
-      ParticleSubset* pset = new_dw->getParticleSubset(dwi, patch);
-      
-      constParticleVariable<Point> px;
-      constParticleVariable<int> prefined;
-      new_dw->get(px,       lb->pXLabel,       pset);
-      new_dw->get(prefined, lb->pRefinedLabel, pset);
-#if 0
-      for(CellIterator iter=patch->getExtraCellIterator(); !iter.done();iter++){
-        IntVector c = *iter;
-        
-        if(level->getIndex()==0 &&(c==IntVector(26,1,0) && step > 48)){
-          refineFlag[c] = true;
-          refinePatch->set();
-        } else{
-          refineFlag[c] = false;
-        }
-      }
-#endif
-
-#if 1
-
-      for(ParticleSubset::iterator iter = pset->begin();
-                                   iter!= pset->end();  iter++){
-        if(prefined[*iter]==1){
-          IntVector c = level->getCellIndex(px[*iter]);
-          refineFlag[c] = true;
-          cout << "refineFlag Cell = " << c << endl;
-          refinePatch->set();
-        }
-      }
-#endif
     }
 #endif
   }
@@ -4653,7 +4551,7 @@ void AMRMPM::coarseLevelCFI_Patches(const PatchSubset* coarsePatches,
   }
 }
 
-#if 0
+#if 0  // May need to reactivate for GIMP
 //______________________________________________________________________
 //
 void AMRMPM::scheduleInterpolateToParticlesAndUpdate_CFI(SchedulerP& sched,
@@ -4690,7 +4588,7 @@ void AMRMPM::scheduleInterpolateToParticlesAndUpdate_CFI(SchedulerP& sched,
 }
 #endif
 
-#if 0
+#if 0  // May need to reactivate for GIMP
 //______________________________________________________________________
 //
 void AMRMPM::interpolateToParticlesAndUpdate_CFI(const ProcessorGroup*,
@@ -5063,6 +4961,7 @@ void AMRMPM::initializeScalarFluxBC(const ProcessorGroup*,
                                     DataWarehouse* ,
                                     DataWarehouse* new_dw)
 {
+  // Need to bring the ARL branch code in here
   // Get the current time
   double time = 0.0;
   printTask(patches,patches->get(0),cout_doing,"Doing initialize ScalarFluxBC");
@@ -5126,30 +5025,6 @@ void AMRMPM::initializeScalarFluxBC(const ProcessorGroup*,
 
           // Loop through the patches and calculate the force vector
           // at each particle
-
-#if 0
-          ParticleSubset::iterator iter = pset->begin();
-          for(;iter != pset->end(); iter++){
-            particleIndex idx = *iter;
-            if (pLoadCurveID[idx] == nofSFBCs) {
-//               pExternalForce[idx] = pbc->getForceVector(px[idx],
-//                                                        forcePerPart,time);
-              if (flags->d_useCBDI) {
-               Vector dxCell = patch->dCell();
-               pExternalForce[idx] = pbc->getForceVectorCBDI(px[idx],psize[idx],
-                                    pDeformationMeasure[idx],forcePerPart,time,
-                                    pExternalForceCorner1[idx],
-                                    pExternalForceCorner2[idx],
-                                    pExternalForceCorner3[idx],
-                                    pExternalForceCorner4[idx],
-                                    dxCell);
-              } else {
-               pExternalForce[idx] = pbc->getForceVector(px[idx],
-                                                        forcePerPart,time);
-              }// if CBDI
-            } // if pLoadCurveID...
-          }  // loop over particles
-#endif
         }   // if pressure loop
       }    // loop over all Physical BCs
     }     // matl loop
@@ -5255,20 +5130,6 @@ void AMRMPM::applyExternalScalarFlux(const ProcessorGroup* ,
 
         // Get the load curve data
         if(do_FluxBCs){
-#if 0
-          ParticleVariable<Point> pExternalForceCorner1, pExternalForceCorner2,
-                                  pExternalForceCorner3, pExternalForceCorner4;
-          if (flags->d_useCBDI) {
-            new_dw->allocateAndPut(pExternalForceCorner1,
-                                  lb->pExternalForceCorner1Label, pset);
-            new_dw->allocateAndPut(pExternalForceCorner2,
-                                  lb->pExternalForceCorner2Label, pset);
-            new_dw->allocateAndPut(pExternalForceCorner3,
-                                  lb->pExternalForceCorner3Label, pset);
-            new_dw->allocateAndPut(pExternalForceCorner4,
-                                  lb->pExternalForceCorner4Label, pset);
-           }
-#endif
           // Iterate over the particles
           ParticleSubset::iterator iter = pset->begin();
           for(;iter != pset->end(); iter++){
@@ -5280,20 +5141,6 @@ void AMRMPM::applyExternalScalarFlux(const ProcessorGroup* ,
               //ScalarFluxBC* pbc = pbcP[loadCurveID];
 
               pExternalScalarFlux[idx] = fluxPerPart[loadCurveID];
-#if 0
-              if (flags->d_useCBDI) {
-               Vector dxCell = patch->dCell();
-               pExternalForce_new[idx] = pbc->getForceVectorCBDI(px[idx],
-                                 psize[idx],pDeformationMeasure[idx],force,time,
-                                    pExternalForceCorner1[idx],
-                                    pExternalForceCorner2[idx],
-                                    pExternalForceCorner3[idx],
-                                    pExternalForceCorner4[idx],
-                                    dxCell);
-              } else {
-               pExternalForce_new[idx]=pbc->getForceVector(px[idx],force,time);
-              }
-#endif
             }
           }
         } else {
