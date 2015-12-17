@@ -315,7 +315,7 @@ namespace WasatchCore {
 
           Uintah::Iterator boundPtr;
           Uintah::Iterator nu;
-          const Uintah::BoundCondBase* const bc = patch_->getArrayBCValues( face, materialID_, temperatureTag_.name(), boundPtr, nu, child );
+//          const Uintah::BoundCondBase* const bc = patch_->getArrayBCValues( face, materialID_, temperatureTag_.name(), boundPtr, nu, child );
 
 //          const bool hasExtraCells = ( patch_->getExtraCells() != SCIRun::IntVector(0,0,0) );
 

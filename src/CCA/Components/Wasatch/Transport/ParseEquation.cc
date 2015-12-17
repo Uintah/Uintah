@@ -1318,8 +1318,7 @@ namespace WasatchCore{
   void setup_diffusive_flux_expression( Uintah::ProblemSpecP diffFluxParams,
                                         const Expr::Tag densityTag,
                                         const Expr::Tag primVarTag,
-                                        const Expr::Tag turbDiffTag,  
-                                        const std::string suffix,
+                                        const Expr::Tag turbDiffTag,
                                         Expr::ExpressionFactory& factory,
                                         FieldTagInfo& info )
   {
@@ -1359,11 +1358,9 @@ namespace WasatchCore{
       for( std::string::iterator it = direction.begin(); it != direction.end(); ++it ){
         std::string dir(1,*it);
         const TagNames& tagNames = TagNames::self();
-        diffFluxTag = Expr::Tag( primVarName + suffix + tagNames.diffusiveflux + dir, Expr::STATE_NONE );
+        diffFluxTag = Expr::Tag( primVarName + tagNames.diffusiveflux + dir, Expr::STATE_NONE );
         // make new Tags for density and primVar by adding the appropriate suffix ( "_*" or nothing ). This
         // is because we need the ScalarRHS at time step n+1 for our pressure projection method
-        const Expr::Tag densityCorrectedTag = Expr::Tag(densityTag.name() + suffix, Expr::STATE_NONE);
-        const Expr::Tag primVarCorrectedTag = Expr::Tag(primVarTag.name() + suffix, Expr::STATE_NONE);
         
         Expr::ExpressionBuilder* builder = NULL;
         if     ( dir=="X" ) builder = build_diff_flux_expr<XFaceT>(diffFluxParams,diffFluxTag,primVarTag,densityTag,turbDiffTag);
@@ -1375,7 +1372,8 @@ namespace WasatchCore{
           msg << "Could not build a diffusive flux expression for '" << primVarName << "'" << std::endl;
           throw Uintah::ProblemSetupException( msg.str(), __FILE__, __LINE__ );
         }
-        factory.register_expression( builder );
+        const Expr::ExpressionID diffID = factory.register_expression( builder );
+//        factory.cleave_from_parents(diffID);
         
         FieldSelector fs;
         if     ( dir=="X" ) fs=DIFFUSIVE_FLUX_X;
@@ -1508,7 +1506,6 @@ namespace WasatchCore{
        const Expr::Tag densityTag,                              \
        const Expr::Tag primVarTag,                              \
        const Expr::Tag turbDiffTag,                             \
-       const std::string suffix,                                \
        Expr::ExpressionFactory& factory,                        \
        FieldTagInfo& info );                                    \
                                                                 \

@@ -234,7 +234,6 @@ namespace WasatchCore{
                                         const Expr::Tag densityTag,
                                         const Expr::Tag primVarTag,
                                         const Expr::Tag turbDiffTag, 
-                                        const std::string suffix,
                                         Expr::ExpressionFactory& factory,
                                         FieldTagInfo& info );
   template< typename FieldT>

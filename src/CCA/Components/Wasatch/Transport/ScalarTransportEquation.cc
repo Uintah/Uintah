@@ -140,22 +140,27 @@ namespace WasatchCore{
            diffFluxParams != 0;
            diffFluxParams=diffFluxParams->findNextBlock("DiffusiveFlux") )
       {
+        const Expr::Tag densityTag = Expr::Tag(densityTag_.name(), Expr::STATE_NONE);
+        const Expr::Tag primVarTag = Expr::Tag(primVarTag_.name(), Expr::STATE_NONE);
+
         setup_diffusive_flux_expression<FieldT>( diffFluxParams,
-                                                 densityTag_,
-                                                 primVarTag_,
+                                                 densityTag,
+                                                 primVarTag,
                                                  turbDiffTag_,
-                                                 "",
                                                  factory,
                                                  info );
 
         // if doing convection, we will likely have a pressure solve that requires
         // predicted scalar values to approximate the density time derivatives
         if( params_->findBlock("ConvectiveFlux") ){
+          
+          const Expr::Tag densityCorrectedTag = Expr::Tag(densityTag.name() + TagNames::self().star, Expr::STATE_NONE);
+          const Expr::Tag primVarCorrectedTag = Expr::Tag(primVarTag.name() + TagNames::self().star, Expr::STATE_NONE);
+          
           setup_diffusive_flux_expression<FieldT>( diffFluxParams,
-                                                   densityTag_,
-                                                   primVarTag_,
+                                                   densityCorrectedTag,
+                                                   primVarCorrectedTag,
                                                    turbDiffTag_,
-                                                   TagNames::self().star,
                                                    factory,
                                                    infoStar_ );
         }
