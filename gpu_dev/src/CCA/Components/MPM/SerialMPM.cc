@@ -669,18 +669,24 @@ void SerialMPM::scheduleApplyExternalLoads(SchedulerP& sched,
   t->requires(Task::OldDW, lb->pMassLabel,              Ghost::None);
   t->requires(Task::OldDW, lb->pDeformationMeasureLabel,Ghost::None);
   t->requires(Task::OldDW, lb->pExternalForceLabel,     Ghost::None);
+
   t->computes(             lb->pExtForceLabel_preReloc);
-  if (flags->d_useLoadCurves) {
+ 
+  if (!flags->d_mms_type.empty()) {
+    //MMS problems need displacements
+    t->requires(Task::OldDW, lb->pDispLabel,            Ghost::None);
+  }
+  if (flags->d_useLoadCurves || flags->d_useCBDI) {
     t->requires(Task::OldDW, lb->pLoadCurveIDLabel,     Ghost::None);
     t->computes(             lb->pLoadCurveIDLabel_preReloc);
     if (flags->d_useCBDI) {
-       t->computes(             lb->pExternalForceCorner1Label);
-       t->computes(             lb->pExternalForceCorner2Label);
-       t->computes(             lb->pExternalForceCorner3Label);
-       t->computes(             lb->pExternalForceCorner4Label);
+      t->computes(             lb->pExternalForceCorner1Label);
+      t->computes(             lb->pExternalForceCorner2Label);
+      t->computes(             lb->pExternalForceCorner3Label);
+      t->computes(             lb->pExternalForceCorner4Label);
     }
   }
-//  t->computes(Task::OldDW, lb->pExternalHeatRateLabel_preReloc);
+  //  t->computes(Task::OldDW, lb->pExternalHeatRateLabel_preReloc);
 
   sched->addTask(t, patches, matls);
 }
@@ -3237,13 +3243,13 @@ void SerialMPM::applyExternalLoads(const ProcessorGroup* ,
            }
         }
       } else {
-// MMS
+        // MMS
         string mms_type = flags->d_mms_type;
          if(!mms_type.empty()) {
            MMS MMSObject;                                                                                
            MMSObject.computeExternalForceForMMS(old_dw,new_dw,time,pset,
                                                 lb,flags,pExternalForce_new);
-         } else { 
+         } else {
           // Get the external force data and allocate new space for
           // external force and copy the data
           constParticleVariable<Vector> pExternalForce;

@@ -127,6 +127,10 @@ namespace WasatchCore{
     // postprocessing-related tags
     const Expr::Tag
     continuityresidual;
+    
+    // compressible flow
+    const Expr::Tag
+    totalinternalenergy;
 
     template < typename T >
     const Expr::Tag make_star(T someTag,

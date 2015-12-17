@@ -155,7 +155,6 @@ namespace WasatchCore{
                                                 empty, // convective flux (empty to build it)
                                                 CENTRAL,
                                                 parse_nametag( params_->findBlock("X-Velocity" )->findBlock( "NameTag" ) ),
-                                                "",
                                                 factory,
                                                 info );
       setup_convective_flux_expression<FieldT>( "Y",
@@ -163,7 +162,6 @@ namespace WasatchCore{
                                                 empty, // convective flux (empty to build it)
                                                 CENTRAL,
                                                 parse_nametag( params_->findBlock("Y-Velocity" )->findBlock( "NameTag" ) ),
-                                                "",
                                                 factory,
                                                 info );
       setup_convective_flux_expression<FieldT>( "Z",
@@ -171,7 +169,6 @@ namespace WasatchCore{
                                                 empty, // convective flux (empty to build it)
                                                 CENTRAL,
                                                 parse_nametag( params_->findBlock("Z-Velocity" )->findBlock( "NameTag" ) ),
-                                                "",
                                                 factory,
                                                 info );
      }

@@ -103,7 +103,7 @@ namespace WasatchCore {
     {
       Uintah::IntVector iCell = *iter;
       const SCIRun::Point xyz( patch->getCellPosition(iCell) );
-      const IntVector localUintahIJK = iCell - patchCellOffset;
+      const Uintah::IntVector localUintahIJK = iCell - patchCellOffset;
       // now go to local indexing
       const SpatialOps::IntVec localIJK(localUintahIJK[0], localUintahIJK[1], localUintahIJK[2]);
       phi(localIJK) = xyz(idir_) + shift_[idir_];

@@ -177,6 +177,19 @@ UnifiedScheduler::~UnifiedScheduler()
 #endif
 }
 
+
+int UnifiedScheduler::verifyAnyGpuActive() {
+
+#ifdef HAVE_CUDA
+  //Attempt to access the zeroth GPU
+  cudaError_t errorCode =  cudaSetDevice(0);
+  if (errorCode == cudaSuccess) {
+    return 1; //let 1 be a good error code
+  }
+#endif
+  return 2;
+}
+
 //______________________________________________________________________
 //
 

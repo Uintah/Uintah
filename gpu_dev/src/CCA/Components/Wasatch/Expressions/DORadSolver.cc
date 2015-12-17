@@ -267,7 +267,7 @@ namespace WasatchCore {
 
     for( Uintah::CellIterator iter(patch_->getCellIterator()); !iter.done(); iter++ ){
 
-      const IntVector iCell = *iter;
+      const SCIRun::IntVector iCell = *iter;
       Uintah::Stencil7& coefs = matrix_[iCell];
 
       // jcs the absCoef_ and scatCoef_ fields are SpatialFields. We need to index them appropriately.

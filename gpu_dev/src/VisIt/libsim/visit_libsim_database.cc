@@ -25,6 +25,7 @@
 #include "VisItControlInterface_V2.h"
 #include "VisItDataInterface_V2.h"
 
+#include <CCA/Components/Schedulers/MPIScheduler.h>
 #include <CCA/Components/SimulationController/AMRSimulationController.h>
 #include <CCA/Ports/SchedulerP.h>
 #include <CCA/Ports/Output.h>
@@ -32,6 +33,7 @@
 
 #include <Core/Grid/Grid.h>
 #include <Core/Grid/Variables/VarLabel.h>
+
 
 #include <Core/OS/ProcessInfo.h>
 #include <Core/Parallel/Parallel.h>
@@ -45,25 +47,48 @@
 
 namespace Uintah {
 
-static int numProcLabels = 16;
-static std::string procLabels[16] = { "processor/id",
+static int numProcLabels = 25;
+static std::string procLabels[2][25] = { { "processor/id",
 
-				      "processor/memory/Base",
-				      "processor/memory/Max",
-				      "processor/memory/Used",
-				      "processor/memory/Resident",
+					   "processor/memory/Base",
+					   "processor/memory/Max",
+					   "processor/memory/Used",
+					   "processor/memory/Resident",
 
-				      "processor/time/Recompile",
-				      "processor/time/Regridding",
-				      "processor/time/Regrid-schedule",
-				      "processor/time/Regrid-copydata",
-				      "processor/time/LoadBalance",
-				      "processor/time/TaskExec",
-				      "processor/time/TaskGlobalComm",
-				      "processor/time/TaskLocalComm",
-				      "processor/time/TaskWaitCommTime",
-				      "processor/time/Output",
-				      "processor/time/TaskWaitThreadTime" };
+					   "processor/time/Recompile",
+					   "processor/time/Regridding",
+					   "processor/time/Regrid-schedule",
+					   "processor/time/Regrid-copydata",
+					   "processor/time/LoadBalance",
+					   "processor/time/TaskExec",
+					   "processor/time/TaskGlobalComm",
+					   "processor/time/TaskLocalComm",
+					   "processor/time/TaskWaitCommTime",
+					   "processor/time/Output",
+					   "processor/time/TaskWaitThreadTime",
+
+					   "processor/mpi/TotalReduce",
+					   "processor/mpi/TotalSend",
+					   "processor/mpi/TotalRecv",
+					   "processor/mpi/TotalTask",
+					   "processor/mpi/TotalReduceMPI",
+					   "processor/mpi/TotalSendMPI",
+					   "processor/mpi/TotalRecvMPI",
+					   "processor/mpi/TotalTestMPI",
+					   "processor/mpi/TotalWaitMPI" },
+
+					 { "",
+					   "bytes", "bytes", "bytes", "bytes",
+
+					   "seconds", "seconds",
+					   "seconds", "seconds", "seconds",
+					   "seconds", "seconds", "seconds",
+					   "seconds", "seconds", "seconds",
+
+					   "seconds", "seconds", "seconds",
+					   "seconds", "seconds", "seconds",
+					   "seconds", "seconds", "seconds" } };
+
 
 
 // ****************************************************************************
@@ -123,23 +148,6 @@ visit_handle visit_ReadMetaData(void *cbdata)
     int totalPatches = 0;
     for (int i=0; i<numLevels; ++i)
       totalPatches += stepInfo->levelInfo[i].patchInfo.size();
-
-  //debug5 << "avtUintahFileFormat::ReadMetaData: Levels: " << numLevels << " Patches: " << totalPatches << std::endl;
-
-    std::vector<int> groupIds(totalPatches);
-    std::vector<std::string> pieceNames(totalPatches);
-
-    for (int i=0; i<totalPatches; ++i)
-    {
-      char tmpName[64];
-      int level, local_patch;
-      
-      GetLevelAndLocalPatchNumber(stepInfo, i, level, local_patch);
-      sprintf(tmpName,"level%d, patch%d", level, local_patch);
-
-      groupIds[i] = level;
-      pieceNames[i] = tmpName;
-    }
     
     // compute the bounding box of the mesh from the grid indices of
     // level 0
@@ -173,6 +181,7 @@ visit_handle visit_ReadMetaData(void *cbdata)
     double box_max[3] = { levelInfo.anchor[0] + high[0] * levelInfo.spacing[0],
                           levelInfo.anchor[1] + high[1] * levelInfo.spacing[1],
                           levelInfo.anchor[2] + high[2] * levelInfo.spacing[2] };
+
     // debug5 << "box_min/max=["
     //     << box_min[0] << "," << box_min[1] << ","
     //     << box_min[2] << "] to ["
@@ -191,8 +200,7 @@ visit_handle visit_ReadMetaData(void *cbdata)
         
     for (int i=0; i<numVars; ++i)
     {
-      if (stepInfo->varInfo[i].type.find("ParticleVariable") ==
-          std::string::npos)
+      if (stepInfo->varInfo[i].type.find("ParticleVariable") == std::string::npos)
       {
         std::string varname = stepInfo->varInfo[i].name;
         std::string vartype = stepInfo->varInfo[i].type;
@@ -200,12 +208,10 @@ visit_handle visit_ReadMetaData(void *cbdata)
 
         std::string mesh_for_this_var;
         VisIt_VarCentering cent = VISIT_VARCENTERING_ZONE;
-//      avtCentering cent = AVT_ZONECENT;
 
         if (vartype.find("NC") != std::string::npos)
         {
           cent = VISIT_VARCENTERING_NODE;
-//        cent = AVT_NODECENT;
           mesh_for_this_var.assign("NC_Mesh"); 
           addProcId = true;
           mesh_for_procid = mesh_for_this_var;
@@ -213,7 +219,6 @@ visit_handle visit_ReadMetaData(void *cbdata)
         else if (vartype.find("CC") != std::string::npos)
         {
           cent = VISIT_VARCENTERING_ZONE;
-//        cent = AVT_ZONECENT;
           mesh_for_this_var.assign("CC_Mesh");
           addProcId = true;
           mesh_for_procid = mesh_for_this_var;
@@ -221,7 +226,6 @@ visit_handle visit_ReadMetaData(void *cbdata)
         else if (vartype.find("SFC") != std::string::npos)
         { 
           cent = VISIT_VARCENTERING_ZONE;
-//        cent = AVT_ZONECENT;
 
           if (vartype.find("SFCX") != std::string::npos)               
             mesh_for_this_var.assign("SFCX_Mesh");
@@ -232,16 +236,16 @@ visit_handle visit_ReadMetaData(void *cbdata)
         }
         else
         {
-	  if(sim->isProc0)
-	  {
-	    std::stringstream msg;
-	    msg << "Visit libsim - "
-		<< "Uintah variable \"" << varname << "\"  "
-		<< "has an unknown variable type \""
-		<< vartype << "\"";
-	    
-	    VisItUI_setValueS("SIMULATION_STATUS_WARNING", msg.str().c_str(), 1);
-	  }
+          if(sim->isProc0)
+          {
+            std::stringstream msg;
+            msg << "Visit libsim - "
+                << "Uintah variable \"" << varname << "\"  "
+                << "has an unknown variable type \""
+                << vartype << "\"";
+            
+            VisItUI_setValueS("SIMULATION_STATUS_WARNING", msg.str().c_str(), 1);
+          }
 
           continue;
         }
@@ -271,10 +275,18 @@ visit_handle visit_ReadMetaData(void *cbdata)
             VisIt_MeshMetaData_setGroupPieceName(mmd, "level");
 
             for (int k=0; k<totalPatches; ++k)
-              VisIt_MeshMetaData_addGroupId(mmd, groupIds[k]);
+            {
+              char tmpName[64];
+              int level, local_patch;
+      
+              GetLevelAndLocalPatchNumber(stepInfo, k, level, local_patch);
+              sprintf(tmpName,"level%d, patch%d", level, local_patch);
+
+              VisIt_MeshMetaData_addGroupId(mmd, level);
+              VisIt_MeshMetaData_addDomainName(mmd, tmpName);
+            }
 
           // ARS - FIXME
-//        VisIt_MeshMetaData_setBlockNames(mmd, pieceNames);
 //        VisIt_MeshMetaData_setContainsExteriorBoundaryGhosts(mmd, false);
 
             VisIt_MeshMetaData_setHasSpatialExtents(mmd, 1);
@@ -291,35 +303,6 @@ visit_handle visit_ReadMetaData(void *cbdata)
 
             VisIt_SimulationMetaData_addMesh(md, mmd);
           }
-
-          // avtMeshMetaData *mesh = new avtMeshMetaData;
-
-          // mesh->name = mesh_for_this_var;
-          // mesh->meshType = AVT_AMR_MESH;
-          // mesh->topologicalDimension = 3;
-          // mesh->spatialDimension = 3;
-
-          // mesh->numBlocks = totalPatches;
-          // mesh->blockTitle = "patches";
-          // mesh->blockPieceName = "patch";
-          // mesh->numGroups = numLevels;
-
-          // mesh->groupPieceName = "level";
-          // mesh->blockNames = pieceNames;
-          // mesh->containsExteriorBoundaryGhosts = false;
-
-          // mesh->hasSpatialExtents = true; 
-          // mesh->minSpatialExtents[0] = box_min[0];
-          // mesh->maxSpatialExtents[0] = box_max[0];
-          // mesh->minSpatialExtents[1] = box_min[1];
-          // mesh->maxSpatialExtents[1] = box_max[1];
-          // mesh->minSpatialExtents[2] = box_min[2];
-          // mesh->maxSpatialExtents[2] = box_max[2];
-
-          // mesh->hasLogicalBounds = true;
-          // mesh->logicalBounds[0] = logical[0];
-          // mesh->logicalBounds[1] = logical[1];
-          // mesh->logicalBounds[2] = logical[2];
 
           // md->Add(mesh);
           meshes_added.insert(mesh_for_this_var);
@@ -395,44 +378,34 @@ visit_handle visit_ReadMetaData(void *cbdata)
     // add a proc id enum variable
     if (addProcId)
     {
+      MPIScheduler *mpiScheduler = dynamic_cast<MPIScheduler*>
+        (sim->AMRSimController->getSchedulerP().get_rep());
+
       for( int i=0; i<numProcLabels; ++i )
       {
-	if( i < 3 ||
-	    (i == 3 && ProcessInfo::isSupported(ProcessInfo::MEM_SIZE)) ||
-	    (i == 4 && ProcessInfo::isSupported(ProcessInfo::MEM_RSS )) ||
-	    (5 <= i && i <= 15) )
-	{
-	  visit_handle vmd = VISIT_INVALID_HANDLE;
-	  
-	  if(VisIt_VariableMetaData_alloc(&vmd) == VISIT_OKAY)
-	  {
-	    VisIt_VariableMetaData_setName(vmd, procLabels[i].c_str());
-	    VisIt_VariableMetaData_setMeshName(vmd, mesh_for_procid.c_str());
-	    VisIt_VariableMetaData_setCentering(vmd, VISIT_VARCENTERING_ZONE);
-	    VisIt_VariableMetaData_setType(vmd, VISIT_VARTYPE_SCALAR);
-	    VisIt_VariableMetaData_setNumComponents(vmd, 1);
-	    if( i == 0 )
-	      VisIt_VariableMetaData_setUnits(vmd, "");
-	    else if( 1 <= i && i <= 4 )
-	      VisIt_VariableMetaData_setUnits(vmd, "bytes");
-	    else if( 5 <= i && i <= 15 )
-	      VisIt_VariableMetaData_setUnits(vmd, "seconds");
+        if( i < 3 ||
+            (i == 3 && ProcessInfo::isSupported(ProcessInfo::MEM_SIZE)) ||
+            (i == 4 && ProcessInfo::isSupported(ProcessInfo::MEM_RSS )) ||
+            (5 <= i && i <= 15) ||
+            (16 <= i && i <= 24 && mpiScheduler) )
+        {
+          visit_handle vmd = VISIT_INVALID_HANDLE;
+          
+          if(VisIt_VariableMetaData_alloc(&vmd) == VISIT_OKAY)
+          {
+            VisIt_VariableMetaData_setName(vmd, procLabels[0][i].c_str());
+            VisIt_VariableMetaData_setMeshName(vmd, mesh_for_procid.c_str());
+            VisIt_VariableMetaData_setCentering(vmd, VISIT_VARCENTERING_ZONE);
+            VisIt_VariableMetaData_setType(vmd, VISIT_VARTYPE_SCALAR);
+            VisIt_VariableMetaData_setNumComponents(vmd, 1);
+	    VisIt_VariableMetaData_setUnits(vmd, procLabels[1][i].c_str());
 
-	    // ARS - FIXME
-	    //      VisIt_VariableMetaData_setHasDataExtents(vmd, false);
-	    VisIt_VariableMetaData_setTreatAsASCII(vmd, false);
-	    VisIt_SimulationMetaData_addVariable(md, vmd);
-	  }
-
-	  // avtScalarMetaData *scalar = new avtScalarMetaData();
-	  
-	  // scalar->name = procLabels[i];
-	  // scalar->meshName = mesh_for_procid;
-	  // scalar->centering = AVT_ZONECENT;
-	  // scalar->hasDataExtents = false;
-	  // scalar->treatAsASCII = false;
-	  // md->Add(scalar);
-	}
+            // ARS - FIXME
+            //      VisIt_VariableMetaData_setHasDataExtents(vmd, false);
+            VisIt_VariableMetaData_setTreatAsASCII(vmd, false);
+            VisIt_SimulationMetaData_addVariable(md, vmd);
+          }
+        }
       }
     }
   
@@ -488,10 +461,16 @@ visit_handle visit_ReadMetaData(void *cbdata)
               VisIt_MeshMetaData_setGroupPieceName(mmd, "level");
 
               for (int k=0; k<totalPatches; ++k)
-                VisIt_MeshMetaData_addGroupId(mmd, groupIds[k]);
-
-              // ARS - FIXME
-              // VisIt_MeshMetaData_setBlockNames(mmd, pieceNames );
+              {
+                char tmpName[64];
+                int level, local_patch;
+                
+                GetLevelAndLocalPatchNumber(stepInfo, k, level, local_patch);
+                sprintf(tmpName,"level%d, patch%d", level, local_patch);
+                
+                VisIt_MeshMetaData_addGroupId(mmd, level);
+                VisIt_MeshMetaData_addDomainName(mmd, tmpName);
+              }
 
               VisIt_MeshMetaData_setHasSpatialExtents(mmd, 1);
 
@@ -508,35 +487,6 @@ visit_handle visit_ReadMetaData(void *cbdata)
               VisIt_SimulationMetaData_addMesh(md, mmd);
             }
 
-            // avtMeshMetaData *mesh = new avtMeshMetaData;
-
-            // mesh->name = mesh_for_this_var;
-            // mesh->meshType = AVT_POINT_MESH;
-            // mesh->topologicalDimension = 0;
-            // mesh->spatialDimension = 3;
-
-            // mesh->numBlocks = totalPatches;
-            // mesh->blockTitle = "patches";
-            // mesh->blockPieceName = "patch";
-            // mesh->numGroups = numLevels;
-            // mesh->groupTitle = "levels";
-            // mesh->groupPieceName = "level";
-            // mesh->blockNames = pieceNames;
-
-            // mesh->hasSpatialExtents = true; 
-            // mesh->minSpatialExtents[0] = box_min[0];
-            // mesh->maxSpatialExtents[0] = box_max[0];
-            // mesh->minSpatialExtents[1] = box_min[1];
-            // mesh->maxSpatialExtents[1] = box_max[1];
-            // mesh->minSpatialExtents[2] = box_min[2];
-            // mesh->maxSpatialExtents[2] = box_max[2];
-
-            // mesh->hasLogicalBounds = true;
-            // mesh->logicalBounds[0] = logical[0];
-            // mesh->logicalBounds[1] = logical[1];
-            // mesh->logicalBounds[2] = logical[2];
-
-            // md->Add(mesh);
             meshes_added.insert(mesh_for_this_var);
           }
 
@@ -546,7 +496,6 @@ visit_handle visit_ReadMetaData(void *cbdata)
             mesh_vars_added.insert(mesh_for_this_var+newVarname);
             
             VisIt_VarCentering cent = VISIT_VARCENTERING_NODE;
-//                avtCentering cent = AVT_NODECENT;
 
             visit_handle vmd = VISIT_INVALID_HANDLE;
             
@@ -562,35 +511,30 @@ visit_handle visit_ReadMetaData(void *cbdata)
               {
                 VisIt_VariableMetaData_setType(vmd, VISIT_VARTYPE_VECTOR);
                 VisIt_VariableMetaData_setNumComponents(vmd, 3);
-//          AddVectorVarToMetaData(md, newVarname, mesh_for_this_var, cent, 3);
               }
               // 9 -> tensor 
               else if (vartype.find("Matrix3") != std::string::npos)
               {
                 VisIt_VariableMetaData_setType(vmd, VISIT_VARTYPE_TENSOR);
                 VisIt_VariableMetaData_setNumComponents(vmd, 9);
-//          AddTensorVarToMetaData(md, newVarname, mesh_for_this_var, cent, 9);
               }
               // 7 -> vector
               else if (vartype.find("Stencil7") != std::string::npos)
               {
                 VisIt_VariableMetaData_setType(vmd, VISIT_VARTYPE_VECTOR);
                 VisIt_VariableMetaData_setNumComponents(vmd, 7);
-//          AddVectorVarToMetaData(md, newVarname, mesh_for_this_var, cent, 7);
               }
-            // 4 -> vector
+              // 4 -> vector
               else if (vartype.find("Stencil4") != std::string::npos)
               {
                 VisIt_VariableMetaData_setType(vmd, VISIT_VARTYPE_VECTOR);
                 VisIt_VariableMetaData_setNumComponents(vmd, 4);
-//          AddVectorVarToMetaData(md, newVarname, mesh_for_this_var, cent, 4);
               }
-            // scalar
+              // scalar
               else
               {
                 VisIt_VariableMetaData_setType(vmd, VISIT_VARTYPE_SCALAR);
                 VisIt_VariableMetaData_setNumComponents(vmd, 1);
- //         AddScalarVarToMetaData(md, newVarname, mesh_for_this_var, cent);
               }
               
               VisIt_SimulationMetaData_addVariable(md, vmd);
@@ -604,109 +548,6 @@ visit_handle visit_ReadMetaData(void *cbdata)
     // md->AddGroupInformation(numLevels, totalPatches, groupIds);
     // md->AddDefaultSILRestrictionDescription(std::string("!TurnOnAll"));
 
-
-    // ARS - NOT NEEDED FOR LIBSIM
-    // Set the cycles and times.
-    // md->SetCyclesAreAccurate(true);
-
-    // std::vector<int> cycles;
-
-    // cycles.resize( cycleTimes.size() );
-
-    // for (int i=0; i<(int)cycleTimes.size(); ++i)
-    //   cycles[i] = i;
-
-    // md->SetCycles( cycles );
-
-    // md->SetTimesAreAccurate(true);
-    // md->SetTimes( cycleTimes );
-  
-    // AddExpressionsToMetadata(md);
-
-
-
-#ifdef COMMENT_OUT_THIS_EXAMPLE_CODE
-    // Mesh meta data
-    visit_handle mmd = VISIT_INVALID_HANDLE;
-    visit_handle m2 = VISIT_INVALID_HANDLE;
-    
-    /* Set the first mesh’s properties.*/
-    if(VisIt_MeshMetaData_alloc(&mmd) == VISIT_OKAY)
-    {
-      /* Set the mesh’s properties.*/
-      VisIt_MeshMetaData_setName(mmd, "mesh2d");
-      VisIt_MeshMetaData_setMeshType(mmd, VISIT_MESHTYPE_RECTILINEAR);
-      VisIt_MeshMetaData_setTopologicalDimension(mmd, 2);
-      VisIt_MeshMetaData_setSpatialDimension(mmd, 2);
-      VisIt_MeshMetaData_setXUnits(mmd, "cm");
-      VisIt_MeshMetaData_setYUnits(mmd, "cm");
-      VisIt_MeshMetaData_setXLabel(mmd, "Width");
-      VisIt_MeshMetaData_setYLabel(mmd, "Height");
-      VisIt_SimulationMetaData_addMesh(md, mmd);
-    }
-    /* Set the second mesh’s properties.*/
-    if(VisIt_MeshMetaData_alloc(&m2) == VISIT_OKAY)
-    {
-      /* Set the mesh’s properties.*/
-      VisIt_MeshMetaData_setName(m2, "mesh3d");
-      VisIt_MeshMetaData_setMeshType(m2, VISIT_MESHTYPE_CURVILINEAR);
-      VisIt_MeshMetaData_setTopologicalDimension(m2, 3);
-      VisIt_MeshMetaData_setSpatialDimension(m2, 3);
-      VisIt_MeshMetaData_setXUnits(m2, "cm");
-      VisIt_MeshMetaData_setYUnits(m2, "cm");
-      VisIt_MeshMetaData_setZUnits(m2, "cm");
-      VisIt_MeshMetaData_setXLabel(m2, "Width");
-      VisIt_MeshMetaData_setYLabel(m2, "Height");
-      VisIt_MeshMetaData_setZLabel(m2, "Depth");
-      VisIt_SimulationMetaData_addMesh(md, m2);
-    }
-
-
-    // Scalar variables
-    visit_handle vmd1 = VISIT_INVALID_HANDLE;
-    visit_handle vmd2 = VISIT_INVALID_HANDLE;
-
-    /* Add a zonal scalar variable on mesh2d. */
-    if(VisIt_VariableMetaData_alloc(&vmd1) == VISIT_OKAY)
-    {
-      VisIt_VariableMetaData_setName(vmd1, "zonal");
-      VisIt_VariableMetaData_setMeshName(vmd1, "mesh2d");
-      VisIt_VariableMetaData_setType(vmd1, VISIT_VARTYPE_VECTOR);
-      VisIt_VariableMetaData_setNumComponents(vmd1, 3);
-      VisIt_VariableMetaData_setCentering(vmd1, VISIT_VARCENTERING_ZONE);
-      VisIt_SimulationMetaData_addVariable(md, vmd1);
-    }
-    
-    /* Add a nodal scalar variable on mesh3d. */
-    if(VisIt_VariableMetaData_alloc(&vmd2) == VISIT_OKAY)
-    {
-      VisIt_VariableMetaData_setName(vmd2, "nodal");
-      VisIt_VariableMetaData_setMeshName(vmd2, "mesh3d");
-      VisIt_VariableMetaData_setType(vmd2, VISIT_VARTYPE_SCALAR);
-      VisIt_VariableMetaData_setCentering(vmd2, VISIT_VARCENTERING_NODE);
-      VisIt_SimulationMetaData_addVariable(md, vmd2);
-    }
-
-    /* Add some expressions. */
-    visit_handle emd1 = VISIT_INVALID_HANDLE;
-    visit_handle emd2 = VISIT_INVALID_HANDLE;
-
-    if(VisIt_ExpressionMetaData_alloc(&emd1) == VISIT_OKAY)
-    {
-      VisIt_ExpressionMetaData_setName(emd1, "zvec");
-      VisIt_ExpressionMetaData_setDefinition(emd1, "{zonal, zonal}");
-      VisIt_ExpressionMetaData_setType(emd1, VISIT_VARTYPE_VECTOR);
-      VisIt_SimulationMetaData_addExpression(md, emd1);
-    }
-
-    if(VisIt_ExpressionMetaData_alloc(&emd2) == VISIT_OKAY)
-    {
-      VisIt_ExpressionMetaData_setName(emd2, "nid");
-      VisIt_ExpressionMetaData_setDefinition(emd2, "nodeid(mesh3d)");
-      VisIt_ExpressionMetaData_setType(emd2, VISIT_VARTYPE_SCALAR);
-    }
-#endif
-
     /* Add some commands. */
     const char *cmd_names[] = {"Stop", "Step", "Run",
                                "Stats", "Regrid", "Save",
@@ -716,12 +557,18 @@ visit_handle visit_ReadMetaData(void *cbdata)
 
     for (int i=0; i<numNames; ++i)
     {
-      visit_handle cmd = VISIT_INVALID_HANDLE;
-
-      if(VisIt_CommandMetaData_alloc(&cmd) == VISIT_OKAY)
+      // Check for AMR and regrid option.
+      if( (strcmp( "Regrid", cmd_names[i] ) != 0) ||
+          (strcmp( "Regrid", cmd_names[i] ) == 0 &&
+           sim->AMRSimController->doAMR()) )
       {
-        VisIt_CommandMetaData_setName(cmd, cmd_names[i]);
-        VisIt_SimulationMetaData_addGenericCommand(md, cmd);
+        visit_handle cmd = VISIT_INVALID_HANDLE;
+        
+        if(VisIt_CommandMetaData_alloc(&cmd) == VISIT_OKAY)
+        {
+          VisIt_CommandMetaData_setName(cmd, cmd_names[i]);
+          VisIt_SimulationMetaData_addGenericCommand(md, cmd);
+        }
       }
     }
 
@@ -731,8 +578,8 @@ visit_handle visit_ReadMetaData(void *cbdata)
       
     //   if(VisIt_MessageMetaData_alloc(&msg) == VISIT_OKAY)
     //   {
-    // 	VisIt_MessageMetaData_setName(msg, sim->message.c_str());
-    // 	VisIt_SimulationMetaData_addMessage(md, msg);
+    //  VisIt_MessageMetaData_setName(msg, sim->message.c_str());
+    //  VisIt_SimulationMetaData_addMessage(md, msg);
     //   }
     // }
   }
@@ -1332,6 +1179,8 @@ visit_handle visit_SimGetMesh(int domain, const char *meshname, void *cbdata)
 //---------------------------------------------------------------------
 visit_handle visit_SimGetVariable(int domain, const char *varname, void *cbdata)
 {
+  visit_handle varH = VISIT_INVALID_HANDLE;
+    
   visit_simulation_data *sim = (visit_simulation_data *)cbdata;
 
   SchedulerP schedulerP = sim->AMRSimController->getSchedulerP();
@@ -1345,90 +1194,88 @@ visit_handle visit_SimGetVariable(int domain, const char *varname, void *cbdata)
 
   int timestate = sim->cycle;
 
-  visit_handle varH = VISIT_INVALID_HANDLE;
-
-  if(VisIt_VariableData_alloc(&varH) == VISIT_OKAY)
-  {
-    std::string varName(varname);
-    bool isParticleVar = false;
-    
-    size_t found = varName.find("/");
-    std::string tmpVarName = varName;
-    
-    std::string matl = varName.substr(found + 1);
-    varName = varName.substr(0, found);
-    
-    std::string varType="CC_Mesh";
-    if (strcmp(varname, "proc_id")!=0) {
-      for (int k=0; k<(int)stepInfo->varInfo.size(); ++k)
+  std::string varName(varname);
+  bool isParticleVar = false;
+  
+  size_t found = varName.find("/");
+  std::string tmpVarName = varName;
+  
+  std::string matl = varName.substr(found + 1);
+  varName = varName.substr(0, found);
+  
+  std::string varType="CC_Mesh";
+  if (strcmp(varname, "proc_id")!=0) {
+    for (int k=0; k<(int)stepInfo->varInfo.size(); ++k)
+    {
+      if (stepInfo->varInfo[k].name == varName)
       {
-        if (stepInfo->varInfo[k].name == varName)
+        varType = stepInfo->varInfo[k].type;
+        if (stepInfo->varInfo[k].type.find("ParticleVariable") !=
+            std::string::npos)
         {
-          varType = stepInfo->varInfo[k].type;
-          if (stepInfo->varInfo[k].type.find("ParticleVariable") !=
-              std::string::npos)
-          {
-            isParticleVar = true;
-            break;
-          }
+          isParticleVar = true;
+          break;
         }
       }
     }
+  }
 
-    int level, local_patch;
-    GetLevelAndLocalPatchNumber(stepInfo, domain, level, local_patch);
+  int level, local_patch;
+  GetLevelAndLocalPatchNumber(stepInfo, domain, level, local_patch);
 
-    // particle data
-    if (isParticleVar)
-    {
-      int matlNo = -1;
-      if (matl.compare("*") != 0)
-        matlNo = atoi(matl.c_str());
+  // particle data
+  if (isParticleVar)
+  {
+    int matlNo = -1;
+    if (matl.compare("*") != 0)
+      matlNo = atoi(matl.c_str());
       
-      ParticleDataRaw *pd = NULL;
+    ParticleDataRaw *pd = NULL;
       
 #ifdef SERIALIZED_READS
-      int numProcs, rank;
-      int msg = 128, tag = 256;
-      MPI_Status status;
+    int numProcs, rank;
+    int msg = 128, tag = 256;
+    MPI_Status status;
       
-      MPI_Comm_size(VISIT_MPI_COMM, &numProcs);
-      MPI_Comm_rank(VISIT_MPI_COMM, &rank);
+    MPI_Comm_size(VISIT_MPI_COMM, &numProcs);
+    MPI_Comm_rank(VISIT_MPI_COMM, &rank);
       
-      int totalPatches = 0;
+    int totalPatches = 0;
 
-      for (int i=0; i<stepInfo->levelInfo.size(); ++i)
-        totalPatches += stepInfo->levelInfo[i].patchInfo.size();
+    for (int i=0; i<stepInfo->levelInfo.size(); ++i)
+      totalPatches += stepInfo->levelInfo[i].patchInfo.size();
 
-      // calculate which process we should wait for a message from
-      // if we're processing doiman 0 don't wait for anyone else
-      int prev = (rank+numProcs-1) % numProcs;
-      int next = (rank+1)%numProcs;
+    // calculate which process we should wait for a message from
+    // if we're processing doiman 0 don't wait for anyone else
+    int prev = (rank+numProcs-1) % numProcs;
+    int next = (rank+1)%numProcs;
       
-      // domain 0 always reads right away
-      if (domain==0)
-        prev = -1;
-      //debug5 << "Proc: " << rank << " sent to GetVar" << std::endl;
+    // domain 0 always reads right away
+    if (domain==0)
+      prev = -1;
+    //debug5 << "Proc: " << rank << " sent to GetVar" << std::endl;
       
-      // wait for previous read to finish
-      if (prev>=0)
-        MPI_Recv(&msg, 1, MPI_INT, prev, tag, VISIT_MPI_COMM, &status);
+    // wait for previous read to finish
+    if (prev>=0)
+      MPI_Recv(&msg, 1, MPI_INT, prev, tag, VISIT_MPI_COMM, &status);
       
-      pd = getParticleData2(schedulerP, gridP, level, local_patch, varName,
-                            matlNo, timestate);
+    pd = getParticleData2(schedulerP, gridP, level, local_patch, varName,
+                          matlNo, timestate);
 
-      // let the next read go
-      if (next>=0)
-        MPI_Send(&msg, 1, MPI_INT, next, tag, VISIT_MPI_COMM); 
+    // let the next read go
+    if (next>=0)
+      MPI_Send(&msg, 1, MPI_INT, next, tag, VISIT_MPI_COMM); 
 #else
-      pd = getParticleData2(schedulerP, gridP, level, local_patch, varName,
-                            matlNo, timestate);
+    pd = getParticleData2(schedulerP, gridP, level, local_patch, varName,
+                          matlNo, timestate);
 #endif
-      CheckNaNs(pd->num*pd->components,pd->data,level,local_patch);
+    CheckNaNs(pd->num*pd->components,pd->data,level,local_patch);
 
+    if(VisIt_VariableData_alloc(&varH) == VISIT_OKAY)
+    {
       VisIt_VariableData_setDataD(varH, VISIT_OWNER_SIM, pd->components,
                                   pd->num * pd->components, pd->data);
-
+      
       // vtkDoubleArray *rv = vtkDoubleArray::New();
       // rv->SetNumberOfComponents(pd->components);
       // rv->SetArray(pd->data, pd->num*pd->components, 0);
@@ -1437,253 +1284,291 @@ visit_handle visit_SimGetVariable(int domain, const char *varname, void *cbdata)
       // don't delete pd->data - vtk owns it now!
       // delete pd;
     }
+  }
 
-    // volume data
-    else //if (!isParticleVar)
+  // volume data
+  else //if (!isParticleVar)
+  {
+    LevelInfo &levelInfo = stepInfo->levelInfo[level];
+    PatchInfo &patchInfo = levelInfo.patchInfo[local_patch];
+
+    // The region we're going to ask uintah for (from qlow to qhigh-1)      
+    int qlow[3], qhigh[3];
+    patchInfo.getBounds(qlow,qhigh,varType);
+      
+    GridDataRaw *gd=NULL;
+
+    bool haveProcVar;
+
+    for( int i=0; i<numProcLabels; ++i)
+      if((haveProcVar = (std::string(varname) == procLabels[0][i])))
+        break;
+
+    if( haveProcVar )
     {
-      LevelInfo &levelInfo = stepInfo->levelInfo[level];
-      PatchInfo &patchInfo = levelInfo.patchInfo[local_patch];
+      gd = new GridDataRaw;
 
-      // The region we're going to ask uintah for (from qlow to qhigh-1)      
-      int qlow[3], qhigh[3];
-      patchInfo.getBounds(qlow,qhigh,varType);
-      
-      GridDataRaw *gd=NULL;
-
-      bool haveProcVar;
-
-      for( int i=0; i<numProcLabels; ++i)
-	if((haveProcVar = (std::string(varname) == procLabels[i])))
-	  break;
-
-      if( haveProcVar )
+      for (int i=0; i<3; ++i)
       {
-        gd = new GridDataRaw;
-
-        for (int i=0; i<3; ++i)
-        {
-          gd->low[i ] = qlow[i];
-          gd->high[i] = qhigh[i];
-        }
-
-        gd->components = 1;
-
-        int ncells = (qhigh[0]-qlow[0])*(qhigh[1]-qlow[1])*(qhigh[2]-qlow[2]);
-        gd->data = new double[ncells];
-
-	// Processor Id
-	if (std::string(varname) == procLabels[0] )
-	{
-	  for (int i=0; i<ncells; ++i) 
-	    gd->data[i] = patchInfo.getProcId();
-	}
-	// Processor memory usage
-	else if( std::string(varname) == procLabels[1] )
-	{
-	  unsigned long memuse, highwater, maxMemUse;
-
-	  schedulerP->checkMemoryUse( memuse, highwater, maxMemUse );
-
-	  for (int i=0; i<ncells; ++i) 
-	    gd->data[i] = memuse;
-	}
-	// Processor maximum memory usage
-	else if( std::string(varname) == procLabels[2] )
-	{
-	  unsigned long memuse, highwater, maxMemUse;
-
-	  schedulerP->checkMemoryUse( memuse, highwater, maxMemUse );
-	  
-	  for (int i=0; i<ncells; ++i)
-	    gd->data[i] = maxMemUse;
-	}
-	// Processor memory usage
-	else if( std::string(varname) == procLabels[3] )
-	{
-	  unsigned long val = ProcessInfo::getMemoryUsed();
-	
-	  for (int i=0; i<ncells; ++i)
-	    gd->data[i] = val;
-	}
-	// Processor memory resident
-	else if( std::string(varname) == procLabels[4] )
-	{
-	  unsigned long val = ProcessInfo::getMemoryResident();
-	
-	  for (int i=0; i<ncells; ++i)
-	    gd->data[i] = val;
-	}
-	// State compilationTime
-	else if( std::string(varname) == procLabels[5] )
-	{
-	  double val =
-	    sim->AMRSimController->getSimulationStateP()->compilationTime;
-	
-	  for (int i=0; i<ncells; ++i)
-	    gd->data[i] = val;
-	}
-	// State regriddingTime
-	else if( std::string(varname) == procLabels[6] )
-	{
-	  double val =
-	    sim->AMRSimController->getSimulationStateP()->regriddingTime;
-	
-	  for (int i=0; i<ncells; ++i)
-	    gd->data[i] = val;
-	}
-	// State regriddingCompilationTime;
-	else if( std::string(varname) == procLabels[7] )
-	{
-	  double val =
-	    sim->AMRSimController->getSimulationStateP()->regriddingCompilationTime;
-	
-	  for (int i=0; i<ncells; ++i)
-	    gd->data[i] = val;
-	}
-	// State regriddingCopyDataTime
-	else if( std::string(varname) == procLabels[8] )
-	{
-	  double val =
-	    sim->AMRSimController->getSimulationStateP()->regriddingCopyDataTime;
-	
-	  for (int i=0; i<ncells; ++i)
-	    gd->data[i] = val;
-	}
-	// State loadbalancerTime
-	else if( std::string(varname) == procLabels[9] )
-	{
-	  double val =
-	    sim->AMRSimController->getSimulationStateP()->loadbalancerTime;
-	
-	  for (int i=0; i<ncells; ++i)
-	    gd->data[i] = val;
-	}
-	// State taskExecTime
-	else if( std::string(varname) == procLabels[10] )
-	{
-	  double val =
-	    sim->AMRSimController->getSimulationStateP()->taskExecTime;
-	
-	  for (int i=0; i<ncells; ++i)
-	    gd->data[i] = val;
-	}
-	// State taskLocalCommTime;
-	else if( std::string(varname) == procLabels[11] )
-	{
-	  double val =
-	    sim->AMRSimController->getSimulationStateP()->taskLocalCommTime;;
-	
-	  for (int i=0; i<ncells; ++i)
-	    gd->data[i] = val;
-	}
-	// State taskGlobalCommTime
-	else if( std::string(varname) == procLabels[12] )
-	{
-	  double val =
-	    sim->AMRSimController->getSimulationStateP()->taskGlobalCommTime;
-	
-	  for (int i=0; i<ncells; ++i)
-	    gd->data[i] = val;
-	}
-	// State taskWaitCommTime
-	else if( std::string(varname) == procLabels[13] )
-	{
-	  double val =
-	    sim->AMRSimController->getSimulationStateP()->taskWaitCommTime;
-	
-	  for (int i=0; i<ncells; ++i)
-	    gd->data[i] = val;
-	}
-	// State outputTime
-	else if( std::string(varname) == procLabels[14] )
-	{
-	  double val =
-	    sim->AMRSimController->getSimulationStateP()->outputTime;
-	
-	  for (int i=0; i<ncells; ++i)
-	    gd->data[i] = val;
-	}
-	// State taskWaitThreadTime
-	else if( std::string(varname) == procLabels[15] )
-	{
-	  double val =
-	    sim->AMRSimController->getSimulationStateP()->taskWaitThreadTime;
-	
-	  for (int i=0; i<ncells; ++i)
-	    gd->data[i] = val;
-	}
+        gd->low[i ] = qlow[i];
+        gd->high[i] = qhigh[i];
       }
-      else
+
+      gd->components = 1;
+
+      int ncells = (qhigh[0]-qlow[0])*(qhigh[1]-qlow[1])*(qhigh[2]-qlow[2]);
+      gd->data = new double[ncells];
+
+      double val;
+
+      // Processor Id
+      if (std::string(varname) == procLabels[0][0] )
       {
-        if (nodeCentered == true)
-        {
-          int glow[3], ghigh[3];
-          getBounds(glow,ghigh,varType, levelInfo);
-          patchInfo.getBounds(qlow,qhigh,varType);
+          val = patchInfo.getProcId();
+      }
+      // Processor memory usage
+      else if( std::string(varname) == procLabels[0][1] )
+      {
+        unsigned long memuse, highwater, maxMemUse;
+        
+        schedulerP->checkMemoryUse( memuse, highwater, maxMemUse );
+        
+        val = memuse;
+      }
+      // Processor maximum memory usage
+      else if( std::string(varname) == procLabels[0][2] )
+      {
+        unsigned long memuse, highwater, maxMemUse;
+        
+        schedulerP->checkMemoryUse( memuse, highwater, maxMemUse );
+        
+        val = maxMemUse;
+      }
+      // Processor memory usage
+      else if( std::string(varname) == procLabels[0][3] )
+      {
+        val = ProcessInfo::getMemoryUsed();
+              }
+      // Processor memory resident
+      else if( std::string(varname) == procLabels[0][4] )
+      {
+        val = ProcessInfo::getMemoryResident();
+      }
+      // State compilationTime
+      else if( std::string(varname) == procLabels[0][5] )
+      {
+        val = sim->AMRSimController->getSimulationStateP()->compilationTime;
+      }
+      // State regriddingTime
+      else if( std::string(varname) == procLabels[0][6] )
+      {
+        val = sim->AMRSimController->getSimulationStateP()->regriddingTime;
+      }
+      // State regriddingCompilationTime;
+      else if( std::string(varname) == procLabels[0][7] )
+      {
+        val =
+          sim->AMRSimController->getSimulationStateP()->regriddingCompilationTime;
+      }
+      // State regriddingCopyDataTime
+      else if( std::string(varname) == procLabels[0][8] )
+      {
+        val =
+          sim->AMRSimController->getSimulationStateP()->regriddingCopyDataTime;
+      }
+      // State loadbalancerTime
+      else if( std::string(varname) == procLabels[0][9] )
+      {
+        val = sim->AMRSimController->getSimulationStateP()->loadbalancerTime;
+      }
+      // State taskExecTime
+      else if( std::string(varname) == procLabels[0][10] )
+      {
+        val = sim->AMRSimController->getSimulationStateP()->taskExecTime;
+      }
+      // State taskLocalCommTime;
+      else if( std::string(varname) == procLabels[0][11] )
+      {
+        val = sim->AMRSimController->getSimulationStateP()->taskLocalCommTime;
+      }
+      // State taskGlobalCommTime
+      else if( std::string(varname) == procLabels[0][12] )
+      {
+        val = sim->AMRSimController->getSimulationStateP()->taskGlobalCommTime;
+      }
+      // State taskWaitCommTime
+      else if( std::string(varname) == procLabels[0][13] )
+      {
+        val = sim->AMRSimController->getSimulationStateP()->taskWaitCommTime;
+      }
+      // State outputTime
+      else if( std::string(varname) == procLabels[0][14] )
+      {
+        val = sim->AMRSimController->getSimulationStateP()->outputTime;
+      }
+      // State taskWaitThreadTime
+      else if( std::string(varname) == procLabels[0][15] )
+      {
+        val = sim->AMRSimController->getSimulationStateP()->taskWaitThreadTime;
+      }
+
+      // State MPI TotalReduce
+      else if( std::string(varname) == procLabels[0][16] )
+      {
+        MPIScheduler *scheduler = dynamic_cast<MPIScheduler*>
+          (sim->AMRSimController->getSchedulerP().get_rep());
+        
+        val = scheduler->mpi_info_.totalreduce;
+      }
+
+      // State MPI TotalSend
+      else if( std::string(varname) == procLabels[0][17] )
+      {
+        MPIScheduler *scheduler = dynamic_cast<MPIScheduler*>
+          (sim->AMRSimController->getSchedulerP().get_rep());
+        
+        val = scheduler->mpi_info_.totalsend;
+      }
+      
+      // State MPI TotalRecv
+      else if( std::string(varname) == procLabels[0][18] )
+      {
+        MPIScheduler *scheduler = dynamic_cast<MPIScheduler*>
+          (sim->AMRSimController->getSchedulerP().get_rep());
+        
+        val = scheduler->mpi_info_.totalrecv;
+      }
+      
+      // State MPI TotalTask
+      else if( std::string(varname) == procLabels[0][19] )
+      {
+        MPIScheduler *scheduler = dynamic_cast<MPIScheduler*>
+          (sim->AMRSimController->getSchedulerP().get_rep());
+        
+        val = scheduler->mpi_info_.totaltask;
+      }
+      
+      // State MPI TotalReduceMPI
+      else if( std::string(varname) == procLabels[0][20] )
+      {
+        MPIScheduler *scheduler = dynamic_cast<MPIScheduler*>
+          (sim->AMRSimController->getSchedulerP().get_rep());
+        
+        val = scheduler->mpi_info_.totalreducempi;
+      }
+
+      // State MPI TotalsendMPI
+      else if( std::string(varname) == procLabels[0][21] )
+      {
+        MPIScheduler *scheduler = dynamic_cast<MPIScheduler*>
+          (sim->AMRSimController->getSchedulerP().get_rep());
+        
+        val = scheduler->mpi_info_.totalsendmpi;
+      }
+      
+      // State MPI TotalRecvMPI
+      else if( std::string(varname) == procLabels[0][22] )
+      {
+        MPIScheduler *scheduler = dynamic_cast<MPIScheduler*>
+          (sim->AMRSimController->getSchedulerP().get_rep());
+        
+        val = scheduler->mpi_info_.totalrecvmpi;
+      }
+      
+      // State MPI TotalTestMPI
+      else if( std::string(varname) == procLabels[0][23] )
+      {
+        MPIScheduler *scheduler = dynamic_cast<MPIScheduler*>
+          (sim->AMRSimController->getSchedulerP().get_rep());
+        
+        val = scheduler->mpi_info_.totaltestmpi;
+      }
+
+      // State MPI TotalWaitMPI
+      else if( std::string(varname) == procLabels[0][24] )
+      {
+        MPIScheduler *scheduler = dynamic_cast<MPIScheduler*>
+          (sim->AMRSimController->getSchedulerP().get_rep());
+        
+        val = scheduler->mpi_info_.totalwaitmpi;
+      }
+
+    for (int i=0; i<ncells; ++i)
+      gd->data[i] = val;
+    }
+    else
+    {
+      if (nodeCentered == true)
+      {
+        int glow[3], ghigh[3];
+        getBounds(glow,ghigh,varType, levelInfo);
+        patchInfo.getBounds(qlow,qhigh,varType);
           
-          for (int j=0; j<3; ++j)
-          {
-            if (qhigh[j] != ghigh[j]) // patch is on low boundary
-              qhigh[j] = qhigh[j]+1;
-            else
-              qhigh[j] = qhigh[j];
-          }
+        for (int j=0; j<3; ++j)
+        {
+          if (qhigh[j] != ghigh[j]) // patch is on low boundary
+            qhigh[j] = qhigh[j]+1;
+          else
+            qhigh[j] = qhigh[j];
         }
-
-#ifdef SERIALIZED_READS
-        int numProcs, rank;
-        int msg = 128, tag = 256;
-        MPI_Status status;
-        
-        MPI_Comm_size(VISIT_MPI_COMM, &numProcs);
-        MPI_Comm_rank(VISIT_MPI_COMM, &rank);
-        
-        int totalPatches = 0;
-        for (int i=0; i<stepInfo->levelInfo.size(); ++i)
-          totalPatches += stepInfo->levelInfo[i].patchInfo.size();
-        
-        // calculate which process we should wait for a message from
-        // if we're processing doiman 0 don't wait for anyone else
-        int prev = (rank+numProcs-1)%numProcs;
-        int next = (rank+1)%numProcs;
-        
-        // domain 0 always reads right away
-        if (domain==0)
-          prev = -1;
-        //debug5 << "Proc: " << rank << " sent to GetVar" << std::endl;
-        
-        // wait for previous read to finish
-        if (prev>=0)
-          MPI_Recv(&msg, 1, MPI_INT, prev, tag, VISIT_MPI_COMM, &status);
-
-        gd = getGridData2(schedulerP, gridP, level, local_patch, varName,
-                          atoi(matl.c_str()), timestate, qlow, qhigh);
-
-        // let the next read go
-        if (next>=0)
-          MPI_Send(&msg, 1, MPI_INT, next, tag, VISIT_MPI_COMM);
-#else
-        gd = getGridData2(schedulerP, gridP, level, local_patch, varName,
-                          atoi(matl.c_str()), timestate, qlow, qhigh);
-#endif
       }
-
-      if( gd )
-      {
-        int n = (qhigh[0]-qlow[0])*(qhigh[1]-qlow[1])*(qhigh[2]-qlow[2]);
       
-        CheckNaNs(n*gd->components,gd->data,level,local_patch);
+#ifdef SERIALIZED_READS
+      int numProcs, rank;
+      int msg = 128, tag = 256;
+      MPI_Status status;
         
+      MPI_Comm_size(VISIT_MPI_COMM, &numProcs);
+      MPI_Comm_rank(VISIT_MPI_COMM, &rank);
+        
+      int totalPatches = 0;
+      for (int i=0; i<stepInfo->levelInfo.size(); ++i)
+        totalPatches += stepInfo->levelInfo[i].patchInfo.size();
+        
+      // calculate which process we should wait for a message from
+      // if we're processing doiman 0 don't wait for anyone else
+      int prev = (rank+numProcs-1)%numProcs;
+      int next = (rank+1)%numProcs;
+        
+      // domain 0 always reads right away
+      if (domain==0)
+        prev = -1;
+      //debug5 << "Proc: " << rank << " sent to GetVar" << std::endl;
+        
+      // wait for previous read to finish
+      if (prev>=0)
+        MPI_Recv(&msg, 1, MPI_INT, prev, tag, VISIT_MPI_COMM, &status);
+
+      gd = getGridData2(schedulerP, gridP, level, local_patch, varName,
+                        atoi(matl.c_str()), timestate, qlow, qhigh);
+
+      // let the next read go
+      if (next>=0)
+        MPI_Send(&msg, 1, MPI_INT, next, tag, VISIT_MPI_COMM);
+#else
+      gd = getGridData2(schedulerP, gridP, level, local_patch, varName,
+                        atoi(matl.c_str()), timestate, qlow, qhigh);
+#endif
+    }
+
+    if( gd )
+    {
+      int n = (qhigh[0]-qlow[0])*(qhigh[1]-qlow[1])*(qhigh[2]-qlow[2]);
+      
+      CheckNaNs(n*gd->components,gd->data,level,local_patch);
+      
+      if(VisIt_VariableData_alloc(&varH) == VISIT_OKAY)
+      {
         VisIt_VariableData_setDataD(varH, VISIT_OWNER_SIM, gd->components,
                                     n * gd->components, gd->data);      
-
+        
         // vtkDoubleArray *rv = vtkDoubleArray::New();
         // rv->SetNumberOfComponents(gd->components);
         // rv->SetArray(gd->data, n*gd->components, 0);
-        
+          
         // ARS - FIX ME - CHECK FOR LEAKS
         // don't delete gd->data - vtk owns it now!
-        // delete gd;
+          // delete gd;
       }
     }
   }
