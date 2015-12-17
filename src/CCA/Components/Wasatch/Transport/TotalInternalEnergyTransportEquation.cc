@@ -344,7 +344,6 @@ namespace WasatchCore {
         const YFace& strainyz = strainyz_->field_ref();
         const ZFace& strainzz = strainzz_->field_ref();
 
-        const VolFieldT& visc = visc_->field_ref();
         const VolFieldT& xvel = xvel_->field_ref();
         const VolFieldT& yvel = yvel_->field_ref();
         const VolFieldT& zvel = zvel_->field_ref();
