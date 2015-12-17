@@ -120,11 +120,11 @@ void ElectrostaticNull::calculate (const ProcessorGroup*   /*pg*/,
   for (size_t patchIndex = 0; patchIndex < numPatches; ++patchIndex)
   {
     const Patch* patch = patches->get(patchIndex);
-    newDW->put(sum_vartype(0.0), label->electrostatic->rElectrostaticInverseEnergy, level.get_rep());
-    newDW->put(sum_vartype(0.0), label->electrostatic->rElectrostaticRealEnergy, level.get_rep());
+    newDW->put(sum_vartype(0.0), label->electrostatic->rElectrostaticInverseEnergy);
+    newDW->put(sum_vartype(0.0), label->electrostatic->rElectrostaticRealEnergy);
 
-    newDW->put(matrix_sum(MDConstants::M3_0), label->electrostatic->rElectrostaticInverseStress, level.get_rep());
-    newDW->put(matrix_sum(MDConstants::M3_0), label->electrostatic->rElectrostaticRealStress, level.get_rep());
+    newDW->put(matrix_sum(MDConstants::M3_0), label->electrostatic->rElectrostaticInverseStress);
+    newDW->put(matrix_sum(MDConstants::M3_0), label->electrostatic->rElectrostaticRealStress);
 
     for (size_t typeIndex = 0; typeIndex < numAtomTypes; ++typeIndex)
     {
@@ -132,12 +132,9 @@ void ElectrostaticNull::calculate (const ProcessorGroup*   /*pg*/,
       ParticleSubset* atomSubset = oldDW->getParticleSubset(atomType, patch);
 
       ParticleVariable<Vector> pF_real, pF_inverse;
-      newDW->allocateAndPut(pF_real,
-                            label->electrostatic->pF_electroReal_preReloc,
-                            atomSubset);
-      newDW->allocateAndPut(pF_inverse,
-                            label->electrostatic->pF_electroInverse_preReloc,
-                            atomSubset);
+      newDW->allocateAndPut(pF_real, label->electrostatic->pF_electroReal_preReloc, atomSubset);
+      newDW->allocateAndPut(pF_inverse, label->electrostatic->pF_electroInverse_preReloc, atomSubset);
+
       particleIndex numAtoms = atomSubset->numParticles();
       for (particleIndex atom = 0; atom < numAtoms; ++atom)
       {

@@ -308,9 +308,9 @@ void velocityVerlet::calculate( const ProcessorGroup*       pg,
 
   kineticEnergy *= normKE;
   const Level* level = patches->get(0)->getLevel();
-  newDW->put( sum_vartype(kineticEnergy),    label->global->rKineticEnergy, level);
-  newDW->put( sum_vartype(totalMass),        label->global->rTotalMass, level);
-  newDW->put( sumvec_vartype(totalMomentum), label->global->rTotalMomentum, level);
+  newDW->put( sum_vartype(kineticEnergy),    label->global->rKineticEnergy);
+  newDW->put( sum_vartype(totalMass),        label->global->rTotalMass);
+  newDW->put( sumvec_vartype(totalMomentum), label->global->rTotalMomentum);
 //  newDW->put( matrix_sum(kineticStress),     label->global->rKineticStress);
 
 //  // FIXME TODO We should be checking firstIntegration on a PER PATCH basis here
