@@ -18,7 +18,13 @@ class ParticleDensity
   DECLARE_FIELDS(ParticleField, pmass_, psize_)
   
   ParticleDensity( const Expr::Tag& pmassTag,
-                   const Expr::Tag& psizeTag );
+                   const Expr::Tag& psizeTag )
+    : Expr::Expression<ParticleField>()
+  {
+    this->set_gpu_runnable(true);
+    pmass_ = create_field_request<ParticleField>(pmassTag);
+    psize_ = create_field_request<ParticleField>(psizeTag);
+  }
   
 public:
   class Builder : public Expr::ExpressionBuilder
@@ -31,61 +37,30 @@ public:
      */
     Builder( const Expr::Tag& resultTag,
              const Expr::Tag& pmassTag,
-             const Expr::Tag& psizeTag );
+             const Expr::Tag& psizeTag )
+    : ExpressionBuilder(resultTag),
+      pmassTag_( pmassTag ),
+      psizeTag_( psizeTag )
+    {}
     ~Builder(){}
     Expr::ExpressionBase* build() const{ return new ParticleDensity(pmassTag_,psizeTag_); }
   private:
     const Expr::Tag pmassTag_, psizeTag_;
   };
   
-  ~ParticleDensity();
+  ~ParticleDensity(){}
   
-  void evaluate();
+  void evaluate()
+  {
+    using namespace SpatialOps;
+    ParticleField& result = this->value();
+    const ParticleField& pmass = pmass_->field_ref();
+    const ParticleField& psize = psize_->field_ref();
+
+    result <<= pmass / ( (22.0/42.0) * pow( psize, 3.0 )) ;
+  }
+
 };
-
-// ###################################################################
-//
-//                          Implementation
-//
-// ###################################################################
-
-ParticleDensity::
-ParticleDensity( const Expr::Tag& pmassTag,
-                 const Expr::Tag& psizeTag )
-: Expr::Expression<ParticleField>()
-{
-  this->set_gpu_runnable(true);
-   pmass_ = create_field_request<ParticleField>(pmassTag);
-   psize_ = create_field_request<ParticleField>(psizeTag);
-}
-
-//------------------------------------------------------------------
-
-ParticleDensity::~ParticleDensity(){}
-
-//------------------------------------------------------------------
-
-void
-ParticleDensity::evaluate()
-{
-  using namespace SpatialOps;
-  ParticleField& result = this->value();
-  const ParticleField& pmass = pmass_->field_ref();
-  const ParticleField& psize = psize_->field_ref();
-  
-  result <<= pmass / ( (22.0/42.0) * pow( psize, 3.0 )) ;
-}
-
-//------------------------------------------------------------------
-
-ParticleDensity::
-Builder::Builder( const Expr::Tag& resultTag,
-                  const Expr::Tag& pmassTag,
-                  const Expr::Tag& psizeTag )
-: ExpressionBuilder(resultTag),
-  pmassTag_( pmassTag ),
-  psizeTag_( psizeTag )
-{}
 
 //------------------------------------------------------------------
 

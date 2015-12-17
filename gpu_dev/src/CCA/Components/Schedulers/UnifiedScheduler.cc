@@ -124,11 +124,11 @@ UnifiedScheduler::UnifiedScheduler(const ProcessorGroup* myworld,
       if (i != j) {
         cudaDeviceCanAccessPeer(&can_access, i, j);
         if (can_access) {
-          printf("GOOD\n GPU device %d can access GPU device %d\n", i, j);
+          printf("GOOD\n GPU device #%d can access GPU device #%d\n", i, j);
           cudaDeviceEnablePeerAccess(j, 0);
         } else {
-          printf("ERROR\n GPU device %d cannot access GPU device %d\n", i, j);
-          SCI_THROW( InternalError("** Two GPU devices cannot talk to each other", __FILE__, __LINE__));
+          printf("ERROR\n GPU device #%d cannot access GPU device #%d\n.  Uintah is not yet configured to work with multiple GPUs in different NUMA regions.  For now, use the environment variable CUDA_VISIBLE_DEVICES and don't list GPU device #%d\n." , i, j, j);
+          SCI_THROW( InternalError("** GPUs in multiple NUMA regions are currently unsupported.", __FILE__, __LINE__));
         }
       }
     }

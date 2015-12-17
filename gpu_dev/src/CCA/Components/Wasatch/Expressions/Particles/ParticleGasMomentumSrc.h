@@ -29,15 +29,25 @@ public:
   public:
     
     Builder( const Expr::Tag& resultTag,
-            const Expr::Tag& particleDragTag,
-            const Expr::Tag& particleMassTag,
-            const Expr::Tag& particleSizeTag,
-            const Expr::TagList& particlePositionTags );
+             const Expr::Tag& particleDragTag,
+             const Expr::Tag& particleMassTag,
+             const Expr::Tag& particleSizeTag,
+             const Expr::TagList& particlePositionTags )
+    : ExpressionBuilder(resultTag),
+      pDragTag_( particleDragTag ),
+      pMassTag_(particleMassTag),
+      pSizeTag_(particleSizeTag),
+      pPosTags_(particlePositionTags)
+    {}
+
     ~Builder(){}
-    Expr::ExpressionBase* build() const;
+    Expr::ExpressionBase* build() const{
+      return new ParticleGasMomentumSrc<GasVelT> (pDragTag_, pMassTag_, pSizeTag_, pPosTags_ );
+    }
+
   };
   
-  ~ParticleGasMomentumSrc();
+  ~ParticleGasMomentumSrc(){}
 
   void bind_operators( const SpatialOps::OperatorDatabase& opDB );
   void evaluate();
@@ -45,9 +55,9 @@ public:
 private:
   
   ParticleGasMomentumSrc( const Expr::Tag& particleDragTag,
-                         const Expr::Tag& particleMassTag,
-                         const Expr::Tag& particleSizeTag,
-                         const Expr::TagList& particlePositionTags);
+                          const Expr::Tag& particleMassTag,
+                          const Expr::Tag& particleSizeTag,
+                          const Expr::TagList& particlePositionTags);
   
   DECLARE_FIELDS(ParticleField, px_, py_, pz_, pDrag_, pSize_, pMass_)
   double vol_; // cell volume
@@ -78,17 +88,10 @@ ParticleGasMomentumSrc( const Expr::Tag& particleDragTag,
    pDrag_ = this->template create_field_request<ParticleField>(particleDragTag);
    pSize_ = this->template create_field_request<ParticleField>(particleSizeTag);
    pMass_ = this->template create_field_request<ParticleField>(particleMassTag);
-   px_ = this->template create_field_request<ParticleField>(particlePositionTags[0]);
-   py_ = this->template create_field_request<ParticleField>(particlePositionTags[1]);
-   pz_ = this->template create_field_request<ParticleField>(particlePositionTags[2]);
+   px_    = this->template create_field_request<ParticleField>(particlePositionTags[0]);
+   py_    = this->template create_field_request<ParticleField>(particlePositionTags[1]);
+   pz_    = this->template create_field_request<ParticleField>(particlePositionTags[2]);
 }
-
-//------------------------------------------------------------------
-
-template<typename GasVelT>
-ParticleGasMomentumSrc<GasVelT>::
-~ParticleGasMomentumSrc()
-{}
 
 //--------------------------------------------------------------------
 
@@ -97,7 +100,7 @@ void
 ParticleGasMomentumSrc<GasVelT>::
 bind_operators( const SpatialOps::OperatorDatabase& opDB )
 {
-  p2gvOp_ = opDB.retrieve_operator<P2GVelT>();
+  p2gvOp_          = opDB.retrieve_operator<P2GVelT>();
   patchContainer_  = opDB.retrieve_operator<WasatchCore::UintahPatchContainer>();
   vol_ = patchContainer_->get_uintah_patch()->cellVolume();
 }
@@ -133,29 +136,5 @@ evaluate()
 }
 
 //--------------------------------------------------------------------
-
-template< typename GasVelT >
-ParticleGasMomentumSrc<GasVelT>::Builder::
-Builder( const Expr::Tag& resultTag,
-        const Expr::Tag& particleDragTag,
-        const Expr::Tag& particleMassTag,
-        const Expr::Tag& particleSizeTag,
-        const Expr::TagList& particlePositionTags)
-: ExpressionBuilder(resultTag),
-pDragTag_( particleDragTag ),
-pMassTag_(particleMassTag),
-pSizeTag_(particleSizeTag),
-pPosTags_(particlePositionTags)
-{}
-
-//--------------------------------------------------------------------
-
-template< typename GasVelT >
-Expr::ExpressionBase*
-ParticleGasMomentumSrc<GasVelT>::Builder::build() const
-{
-  return new ParticleGasMomentumSrc<GasVelT> (pDragTag_, pMassTag_, pSizeTag_, pPosTags_ );
-}
-
 
 #endif // ParticleGasMomentumSrc_h

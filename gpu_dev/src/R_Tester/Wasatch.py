@@ -142,6 +142,8 @@ DEBUGTESTS = [
 NIGHTLYTESTS = [
 #   ("scalar-transport-equation_perf",    scalarequationperf_ups,   1.1,  "Linux",  ["no_uda_comparison","no_restart","do_performance_test"] ),
 #	("particle-test-driven-cavity-upper-half-IC", "particle-test-driven-cavity-upper-half-IC.ups",   4,  "Linux",   ["exactComparison","no_memoryTest"] ),
+  ("compressible-flow-test-2d", "compressible-flow-test-2d.ups",   4,  "All",  ["exactComparison","no_restart","no_memoryTest"] ),
+  ("compressible-flow-test-1d", "compressible-flow-test-1d.ups",   4,  "All",  ["exactComparison","no_restart","no_memoryTest"] ),  
   ("varden-jet-2d",                    "varden-jet-2d.ups",   4,  "All",  ["exactComparison","no_restart","no_memoryTest"] ),
   ("varden-2dmms-tabulated", "varden-2dmms-tabulated.ups", 4,  "Linux",  ["exactComparison","no_restart","sus_options=-do_not_validate","no_memoryTest"] ),
   ("varden-projection-mms-analytic",                         "varden-projection-mms-analytic.ups",              3,  "All",  ["exactComparison","no_restart","sus_options=-do_not_validate"] ),
@@ -251,6 +253,11 @@ NIGHTLYTESTS = [
   ("rk2-verification-ode",                     rk2_verification_ode_ups,   1,  "Linux",   ["exactComparison","no_restart"] ),
   ("rk2-verification-timedep-source",          rk2_verification_timedep_source_ups,   1,  "Linux",   ["exactComparison","no_restart","sus_options=-do_not_validate"] ),
   ("lid-driven-cavity-3D-Re1000-rk2",   lid_driven_cavity_3D_Re1000_rk2_ups,   8,  "Linux",  ["exactComparison","no_restart"] )
+]
+
+COMPRESSIBLETESTS=[
+  ("compressible-flow-test-2d", "compressible-flow-test-2d.ups",   4,  "All",  ["exactComparison","no_restart","no_memoryTest"] ),
+  ("compressible-flow-test-1d", "compressible-flow-test-1d.ups",   4,  "All",  ["exactComparison","no_restart","no_memoryTest"] )
 ]
 
 TURBULENCETESTS =[
@@ -412,9 +419,9 @@ PARTICLETESTS=[
 #__________________________________
 # The following list is parsed by the local RT script
 # and allows the user to select the tests to run
-#LIST: LOCALTESTS GPUTESTS BCTESTS CONVECTIONTESTS DEBUGTESTS INTRUSIONTESTS MISCTESTS NIGHTLYTESTS PARTICLETESTS PROJECTIONTESTS QMOMTESTS RADIATIONTESTS RKTESTS SCALARTRANSPORTTESTS TURBULENCETESTS VARDENTESTS
+#LIST: LOCALTESTS GPUTESTS BCTESTS COMPRESSIBLETESTS CONVECTIONTESTS DEBUGTESTS INTRUSIONTESTS MISCTESTS NIGHTLYTESTS PARTICLETESTS PROJECTIONTESTS QMOMTESTS RADIATIONTESTS RKTESTS SCALARTRANSPORTTESTS TURBULENCETESTS VARDENTESTS
 #__________________________________
-ALLTESTS = RADIATIONTESTS + TURBULENCETESTS + INTRUSIONTESTS + PROJECTIONTESTS + RKTESTS + VARDENTESTS + MISCTESTS + CONVECTIONTESTS + BCTESTS + QMOMTESTS + SCALARTRANSPORTTESTS + PARTICLETESTS
+ALLTESTS = RADIATIONTESTS + TURBULENCETESTS + INTRUSIONTESTS + PROJECTIONTESTS + RKTESTS + VARDENTESTS + MISCTESTS + CONVECTIONTESTS + BCTESTS + QMOMTESTS + SCALARTRANSPORTTESTS + PARTICLETESTS + COMPRESSIBLETESTS
 
 
 # returns the list
@@ -451,6 +458,8 @@ def getTestList(me) :
     TESTS = RADIATIONTESTS
   elif me == "PARTICLETESTS":
     TESTS = PARTICLETESTS   
+  elif me == "COMPRESSIBLETESTS":
+    TESTS = COMPRESSIBLETESTS       
   else:
     print "\nERROR:Wasatch.py  getTestList:  The test list (%s) does not exist!\n\n" % me
     exit(1)
@@ -460,7 +469,7 @@ def getTestList(me) :
 
 # TSAAD: As an alternative to the annoying list of if-statements above, consider the following cleaner code... maybe we'll adopt
 # this in the near future
-# ALLTESTS = TURBULENCETESTS + INTRUSIONTESTS + PROJECTIONTESTS + RKTESTS + VARDENTESTS + MISCTESTS + CONVECTIONTESTS + BCTESTS + QMOMTESTS + SCALARTRANSPORTTESTS
+# ALLTESTS = TURBULENCETESTS + INTRUSIONTESTS + PROJECTIONTESTS + RKTESTS + VARDENTESTS + MISCTESTS + COMPRESSIBLETESTS + CONVECTIONTESTS + BCTESTS + QMOMTESTS + SCALARTRANSPORTTESTS
 # LOCALTESTS + GPUTESTS = ALLTESTS
 #
 # TESTNAMES=["LOCALTESTS","GPUTESTS","DEBUGTESTS","NIGHTLYTESTS","TURBULENCETESTS","INTRUSIONTESTS","PROJECTIONTESTS","RKTESTS","VARDENTESTS","MISCTESTS","CONVECTIONTESTS","BCTESTS","QMOMTESTS","SCALARTRANSPORTTESTS"]

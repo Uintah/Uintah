@@ -2,11 +2,6 @@
 #include <CCA/Components/Arches/ParticleModels/ParticleTools.h>
 #include <CCA/Components/Arches/Operators/Operators.h>
 #include <Core/Exceptions/ProblemSetupException.h>
-// Headers needed for linear solver
-#include <Core/Datatypes/ColumnMatrix.h>
-#include <Core/Datatypes/DenseMatrix.h>
-#include <Core/Datatypes/Matrix.h>
-#include <Core/Datatypes/MatrixOperations.h>
 
 #include <spatialops/structured/FVStaggered.h>
 
@@ -28,7 +23,6 @@ CoalTemperature::problemSetup( ProblemSpecP& db ){
 
   const ProblemSpecP db_root = db->getRootNode();
   db->getWithDefault("const_size",_const_size,true);
-  db->getWithDefault("fitParticleEnthalpy",_useCurveFit,false);
   
   if ( db_root->findBlock("CFD")->findBlock("ARCHES")->findBlock("ParticleProperties") ){
 
@@ -100,64 +94,6 @@ CoalTemperature::problemSetup( ProblemSpecP& db ){
     throw ProblemSetupException("Error: <Coal> is missing the <Properties> section.", __FILE__, __LINE__);
   }
 
-  DenseMatrix*  AA = scinew DenseMatrix(3,3);
-  ColumnMatrix* BBa = scinew ColumnMatrix( 3 ); // ash
-  ColumnMatrix* XXa = scinew ColumnMatrix( 3 );
-  ColumnMatrix* BBc = scinew ColumnMatrix( 3 ); // coal
-  ColumnMatrix* XXc = scinew ColumnMatrix( 3 );
-  AA->zero();
-  BBa->zero();
-  XXa->zero();
-  BBc->zero();
-  XXc->zero();
-
-  double pT=0;
-  double Ha=0;
-  double Hc=0;
-
-  for (int i=0; i< 2700; i++){
-    pT=300+i;
-    double hint = -156.076 + 380/(-1 + exp(380 / pT)) + 3600/(-1 + exp(1800 / pT));
-
-    Hc = _Hc0 + hint * _RdMW;
-    Ha = -202849.0 + _Ha0 + pT * (593. + pT * 0.293);
-
-   //     H  =     ax^2          +                b*x               +         c
-    (*AA)[0][0] += pT*pT;            (*AA)[0][1] += pT;         (*AA)[0][2] += 1.0;     
-    (*AA)[1][0] += pT*pT*pT;         (*AA)[1][1] += pT*pT;      (*AA)[1][2] += pT;      
-    (*AA)[2][0] += pT*pT*pT*pT;      (*AA)[2][1] += pT*pT*pT;   (*AA)[2][2] += pT*pT;   
-
-    (*BBa)[0] += Ha;        
-    (*BBa)[1] += Ha*pT;         
-    (*BBa)[2] += Ha*pT*pT;      
-
-
-    (*BBc)[0] += Hc;        
-    (*BBc)[1] += Hc*pT;         
-    (*BBc)[2] += Hc*pT*pT;      
-
-  }
-
-  AA->invert();
-
-  Mult( (*XXa), (*AA), (*BBa) );
-  Mult( (*XXc), (*AA), (*BBc) );
-
-// coefficients for ash and coal, equation H=ax^2 + bx + c   
-  _aa = (*XXa)[0];
-  _ba = (*XXa)[1];
-  _ca = (*XXa)[2];
-
-  _ac = (*XXc)[0];
-  _bc = (*XXc)[1];
-  _cc = (*XXc)[2];
-   
-
-  delete AA;
-  delete BBa;
-  delete BBc;
-  delete XXa;
-  delete XXc;
 
 }
 
@@ -341,133 +277,101 @@ CoalTemperature::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info,
       vdiameter = tsk_info->get_const_uintah_field<constCCVariable<double> >(diameter_name);
     }
     constCCVariable<double>& diameter = *vdiameter;
+    
+    for (CellIterator iter=patch->getCellIterator(); !iter.done(); iter++){
 
-    if   (_useCurveFit)  {
-      double initAsh =0;
-      double ax =0;
-      double bx =0;
-      double cx =0;
+      IntVector c = *iter;
 
-      for (CellIterator iter=patch->getCellIterator(); !iter.done(); iter++){
+      int icount = 0;
+      double delta = 1;
 
-        IntVector c = *iter;
+      double tol = 1;
+      double hint = 0.0;
+      double Ha = 0.0;
+      double Hc = 0.0;
+      //double Hh = 0.0; unused
+      double H = 0.0;
+      double f1 = 0.0;
+      double f2 = 0.0;
+      double dT = 0.0;
 
-        double RC = rcmass[c];
-        double CH = charmass[c];
+      double pT = temperature[c];
+      double gT = gas_temperature[c];
+      double pT_olddw = temperatureold[c];
+      double oldpT = temperature[c];
+      double RC = rcmass[c];
+      double CH = charmass[c];
+      double pE = enthalpy[c];
+      double vf = vol_frac[c];
 
-        if ( !_const_size ) { // can we remove this if statement?
-          initAsh =_pi/6.0 * pow( diameter[c], 3.0 ) * _rhop_o * _ash_mf;
+      double massDry;
+      double initAsh;
+      double dp;
+      
+      if (vf < 1.0e-10 ){
+        temperature[c]=gT; // gas temperature
+        dTdt[c]=(pT-pT_olddw)/dt;
+      } else {
+        int max_iter=15;
+        int iter =0;
+        
+        if ( !_const_size ) {
+          dp = diameter[c];
+          massDry = _pi/6.0 * pow( dp, 3.0 ) * _rhop_o;
+          initAsh = massDry * _ash_mf;
         } else {
           initAsh = _init_ash[i];
         }
+        
+        if ( initAsh > 0.0 ) {
+          for ( ; iter < max_iter; iter++) {
+            icount++;
+            oldpT = pT;
+            // compute enthalpy given Tguess
+            hint = -156.076 + 380/(-1 + exp(380 / pT)) + 3600/(-1 + exp(1800 / pT));
+            Ha = -202849.0 + _Ha0 + pT * (593. + pT * 0.293);
+            Hc = _Hc0 + hint * _RdMW;
+            H = Hc * (RC + CH) + Ha * initAsh;
+            f1 = pE - H;
+            // compute enthalpy given Tguess + delta
+            pT = pT + delta;
+            hint = -156.076 + 380/(-1 + exp(380 / pT)) + 3600/(-1 + exp(1800 / pT));
+            Ha = -202849.0 + _Ha0 + pT * (593. + pT * 0.293);
+            Hc = _Hc0 + hint * _RdMW;
+            H = Hc * (RC + CH) + Ha * initAsh;
+            f2 = pE - H;
+            // correct temperature
+            dT = f1 * delta / (f2-f1) + delta;
+            pT = pT - dT;    //to add an coefficient for steadness
+            // check to see if tolernace has been met
+            tol = abs(oldpT - pT);
 
-        // sum polynomials together
-        ax = _ac*(rcmass[c]+charmass[c]) + _aa*initAsh;
-        bx = _bc*(rcmass[c]+charmass[c]) + _ba*initAsh;
-        cx = _cc*(rcmass[c]+charmass[c]) + _ca*initAsh;
-
-
-        temperature[c]=min(max( (-bx+ sqrt(bx*bx-4.0*ax*(cx - enthalpy[c] ) ))/2.0/ax, 273.0),3500.0);
-        dTdt[c]=(temperature[c]-temperatureold[c])/dt;
-      }
-
-    } else{
-
-      for (CellIterator iter=patch->getCellIterator(); !iter.done(); iter++){
-
-        IntVector c = *iter;
-
-        int icount = 0;
-        double delta = 1;
-
-        double tol = 1;
-        double hint = 0.0;
-        double Ha = 0.0;
-        double Hc = 0.0;
-        //double Hh = 0.0; unused
-        double H = 0.0;
-        double f1 = 0.0;
-        double f2 = 0.0;
-        double dT = 0.0;
-
-        double pT = temperature[c];
-        double gT = gas_temperature[c];
-        double pT_olddw = temperatureold[c];
-        double oldpT = temperature[c];
-        double RC = rcmass[c];
-        double CH = charmass[c];
-        double pE = enthalpy[c];
-        double vf = vol_frac[c];
-
-        double massDry;
-        double initAsh;
-        double dp;
-
-        if (vf < 1.0e-10 ){
-          temperature[c]=gT; // gas temperature
-          dTdt[c]=(pT-pT_olddw)/dt;
+            if (tol < 0.01 )
+             break;
+          }
+          if (iter ==max_iter-1 || pT <273.0 || pT > 3500.0 ){
+            double pT_low=273;
+            hint = -156.076 + 380/(-1 + exp(380 / pT_low)) + 3600/(-1 + exp(1800 / pT_low));
+            Ha = -202849.0 + _Ha0 + pT_low * (593. + pT_low * 0.293);
+            Hc = _Hc0 + hint * _RdMW;
+            double H_low = Hc * (RC + CH) + Ha * initAsh;
+            double pT_high=3500;
+            hint = -156.076 + 380/(-1 + exp(380 / pT_high)) + 3600/(-1 + exp(1800 / pT_high));
+            Ha = -202849.0 + _Ha0 + pT_high * (593. + pT_high * 0.293);
+            Hc = _Hc0 + hint * _RdMW;
+            double H_high = Hc * (RC + CH) + Ha * initAsh;
+            if (pE < H_low){
+              pT = 273.0;
+            } else if (pE > H_high) {
+              pT = 3500.0;
+            }
+          }
         } else {
-          int max_iter=15;
-          int iter =0;
-
-          if ( !_const_size ) {
-            dp = diameter[c];
-            massDry = _pi/6.0 * pow( dp, 3.0 ) * _rhop_o;
-            initAsh = massDry * _ash_mf;
-          } else {
-            initAsh = _init_ash[i];
-          }
-
-          if ( initAsh > 0.0 ) {
-            for ( ; iter < max_iter; iter++) {
-              icount++;
-              oldpT = pT;
-              // compute enthalpy given Tguess
-              hint = -156.076 + 380/(-1 + exp(380 / pT)) + 3600/(-1 + exp(1800 / pT));
-              Ha = -202849.0 + _Ha0 + pT * (593. + pT * 0.293);
-              Hc = _Hc0 + hint * _RdMW;
-              H = Hc * (RC + CH) + Ha * initAsh;
-              f1 = pE - H;
-              // compute enthalpy given Tguess + delta
-              pT = pT + delta;
-              hint = -156.076 + 380/(-1 + exp(380 / pT)) + 3600/(-1 + exp(1800 / pT));
-              Ha = -202849.0 + _Ha0 + pT * (593. + pT * 0.293);
-              Hc = _Hc0 + hint * _RdMW;
-              H = Hc * (RC + CH) + Ha * initAsh;
-              f2 = pE - H;
-              // correct temperature
-              dT = f1 * delta / (f2-f1) + delta;
-              pT = pT - dT;    //to add an coefficient for steadness
-              // check to see if tolernace has been met
-              tol = abs(oldpT - pT);
-
-              if (tol < 0.01 )
-                break;
-            }
-            if (iter ==max_iter-1 || pT <273.0 || pT > 3500.0 ){
-              double pT_low=273;
-              hint = -156.076 + 380/(-1 + exp(380 / pT_low)) + 3600/(-1 + exp(1800 / pT_low));
-              Ha = -202849.0 + _Ha0 + pT_low * (593. + pT_low * 0.293);
-              Hc = _Hc0 + hint * _RdMW;
-              double H_low = Hc * (RC + CH) + Ha * initAsh;
-              double pT_high=3500;
-              hint = -156.076 + 380/(-1 + exp(380 / pT_high)) + 3600/(-1 + exp(1800 / pT_high));
-              Ha = -202849.0 + _Ha0 + pT_high * (593. + pT_high * 0.293);
-              Hc = _Hc0 + hint * _RdMW;
-              double H_high = Hc * (RC + CH) + Ha * initAsh;
-              if (pE < H_low){
-                pT = 273.0;
-              } else if (pE > H_high) {
-                pT = 3500.0;
-              }
-            }
-          } else {
-            pT = _initial_temperature; //prevent nans when dp & ash = 0.0 in cqmom
-          }
-
-          temperature[c]=pT;
-          dTdt[c]=(pT-pT_olddw)/dt;
+          pT = _initial_temperature; //prevent nans when dp & ash = 0.0 in cqmom
         }
+        
+        temperature[c]=pT;
+        dTdt[c]=(pT-pT_olddw)/dt;
       }
     }
   }
