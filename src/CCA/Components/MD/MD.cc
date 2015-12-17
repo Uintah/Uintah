@@ -993,7 +993,7 @@ void MD::scheduleOutputStatistics(      SchedulerP&     sched,
                                   const MaterialSet*    atomTypes,
                                   const LevelP&         level)
 {
-  Task* task = scinew Task("outputStatistics", this, &MD::outputStatistics);
+  Task* task = scinew Task("MD::outputStatistics", this, &MD::outputStatistics);
 
   // Output the results from last timestep
   task->requires(Task::OldDW,
@@ -1044,7 +1044,10 @@ void MD::outputStatistics(const ProcessorGroup* pg,
                                 DataWarehouse*  oldDW,
                                 DataWarehouse*/*newDW*/)
 {
-
+  const std::string location = "MD::outputStatistics";
+  const std::string flowLocation = location + " | ";
+  const std::string particleLocation = location + " P ";
+  printTask(perProcPatches, md_cout, location);
 
   sum_vartype nonbondedEnergy;
   sum_vartype kineticEnergy;
