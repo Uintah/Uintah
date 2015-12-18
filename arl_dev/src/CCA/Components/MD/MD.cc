@@ -1014,7 +1014,8 @@ void MD::outputStatistics(const ProcessorGroup* pg,
 
   if (isPrincipleProc)
   {
-    std::cout << "  Potential:  " << std::setprecision(4) << std::setw(12) << std::right << std::fixed << potentialEnergy
+    int levelIndex = getLevel(perProcPatches)->getIndex();
+    std::cout << "  (L-" << levelIndex << ")" << " Potential :  " << std::setprecision(4) << std::setw(12) << std::right << std::fixed << potentialEnergy
               << "  Kinetic:  " << std::setprecision(4) << std::setw(12) << std::right << std::fixed << kineticEnergy
               << "  Total:  " << std::setprecision(4) << std::setw(12) << std::right << std::fixed << potentialEnergy + kineticEnergy;
 
