@@ -66,6 +66,7 @@ PSELIBS := \
         Core/Util         
 
 LIBS := $(M_LIBRARY) $(F_LIBRARY)           \
+        $(Z_LIBRARY)         \
         $(LAPACK_LIBRARY) $(BLAS_LIBRARY) $(THREAD_LIBRARY) \
 	$(MPI_LIBRARY)
 
