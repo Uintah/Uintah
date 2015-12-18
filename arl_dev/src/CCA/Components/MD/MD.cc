@@ -876,114 +876,6 @@ void MD::scheduleElectrostaticsFinalize(SchedulerP& sched,
 
 }
 
-//void MD::scheduleNewUpdatePosition(      SchedulerP&    sched,
-//                                   const PatchSet*      patches,
-//                                   const MaterialSet*   atomTypes,
-//                                   const LevelP&        level)
-//{
-//  const std::string flowLocation = "MD::scheduleNewUpdatePosition | ";
-//  printSchedule(patches, md_cout, flowLocation);
-//
-//  Task* task = scinew Task("newUpdatePosition", this, &MD::newUpdatePosition);
-//
-//  // Requirements
-//  Ghost::GhostType noGhost = Ghost::None;
-//  Task::WhichDW previous = Task::OldDW;
-//  Task::WhichDW current = Task::NewDW;
-//
-//  task->requires(previous, d_label->global->pX, noGhost, 0);
-//  task->requires(previous, d_label->global->pID, noGhost, 0);
-//  task->requires(previous, d_label->global->pV, noGhost, 0);
-//
-//  task->requires(previous, d_label->global->rTotalMomentum);
-//  task->requires(previous, d_label->global->rTotalMass);
-//
-//  task->requires(previous, d_label->nonbonded->pF_nonbonded, noGhost, 0);
-//  task->requires(previous, d_label->electrostatic->pF_electroReal, noGhost, 0);
-//  task->requires(previous, d_label->electrostatic->pF_electroInverse, noGhost, 0);
-//
-//  task->requires(current, d_label->nonbonded->pF_nonbonded_preReloc, noGhost, 0);
-//  task->requires(current, d_label->electrostatic->pF_electroReal_preReloc, noGhost, 0);
-//  task->requires(current, d_label->electrostatic->pF_electroInverse_preReloc, noGhost, 0);
-//
-//  task->requires(previous, d_sharedState->get_delt_label());
-//
-//  task->computes(d_label->global->pX_preReloc);
-//  task->computes(d_label->global->pID_preReloc);
-//  task->computes(d_label->global->pV_preReloc);
-//
-//  task->computes(d_label->global->rKineticEnergy);
-//  task->computes(d_label->global->rKineticStress);
-//  task->computes(d_label->global->rTotalMomentum);
-//  task->computes(d_label->global->rTotalMass);
-//
-//  sched->addTask(task, patches, atomTypes);
-//
-//  if (mdFlowDebug.active()) {
-//    mdFlowDebug << flowLocation
-//                << "END"
-//                << std::endl;
-//  }
-//
-//}
-
-//void MD::scheduleUpdatePosition(SchedulerP& sched,
-//                                const PatchSet* patches,
-//                                const MaterialSet* matls,
-//                                const LevelP& level)
-//{
-//  const std::string flowLocation = "MD::scheduleUpdatePosition | ";
-//  printSchedule(patches, md_cout, flowLocation);
-//
-//  // This should eventually schedule a call of the integrator.  Something like d_Integrator->advanceTimestep()
-//  Task* task = scinew Task("updatePosition", this, &MD::updatePosition);
-//
-//  // Integration requires the position and particle ID from last time step
-//  task->requires(Task::OldDW, d_label->global->pX, Ghost::None, 0);
-//  task->requires(Task::OldDW, d_label->global->pID, Ghost::None, 0);
-//  task->requires(Task::OldDW, d_label->global->pV, Ghost::None, 0);
-//
-//  // Need these to offset center of mass momentum
-//  task->requires(Task::OldDW, d_label->global->rTotalMomentum);
-//  task->requires(Task::OldDW, d_label->global->rTotalMass);
-//
-//  task->requires(Task::OldDW, d_label->nonbonded->pF_nonbonded, Ghost::None, 0);
-//  task->requires(Task::OldDW, d_label->electrostatic->pF_electroInverse, Ghost::None, 0);
-//  task->requires(Task::OldDW, d_label->electrostatic->pF_electroReal, Ghost::None, 0);
-//
-//  task->requires(Task::NewDW, d_label->nonbonded->pF_nonbonded_preReloc, Ghost::None, 0);
-//  task->requires(Task::NewDW, d_label->electrostatic->pF_electroInverse_preReloc, Ghost::None, 0);
-//  task->requires(Task::NewDW, d_label->electrostatic->pF_electroReal_preReloc, Ghost::None, 0);
-//
-//  // Grabs delta_t from the previous step
-//  task->requires(Task::OldDW, d_sharedState->get_delt_label());
-//
-//  // From integration we get new positions and velocities
-//  task->computes(d_label->global->pX_preReloc);
-//  task->computes(d_label->global->pID_preReloc);
-//  task->computes(d_label->global->pV_preReloc);
-//
-//  task->computes(d_label->global->rKineticEnergy);
-//  task->computes(d_label->global->rKineticStress);
-//  task->computes(d_label->global->rTotalMomentum);
-//  task->computes(d_label->global->rTotalMass);
-////  task->computes(d_label->pXLabel_preReloc);
-////  task->computes(d_label->pVelocityLabel_preReloc);
-////  task->modifies(d_lb->pNonbondedForceLabel_preReloc);
-////  task->modifies(d_lb->pElectrostaticsForceLabel_preReloc);
-////  task->computes(d_lb->pAccelLabel_preReloc);
-////  task->computes(d_lb->pMassLabel_preReloc);
-////  task->computes(d_lb->pParticleIDLabel_preReloc);
-//
-//  sched->addTask(task, patches, matls);
-//  if (mdFlowDebug.active()) {
-//    mdFlowDebug << flowLocation
-//                << "END"
-//                << std::endl;
-//  }
-//
-//}
-
 void MD::scheduleOutputStatistics(      SchedulerP&     sched,
                                   const PatchSet*       patches,
                                   const MaterialSet*    atomTypes,
@@ -1148,34 +1040,24 @@ void MD::outputStatistics(const ProcessorGroup* pg,
 
   }
 
-  if (!d_referenceStored && kineticEnergy != 0.0 && nonbondedEnergy != 0.0)
-  {
+  if (!d_referenceStored && kineticEnergy != 0.0 && nonbondedEnergy != 0.0) {
     d_referenceEnergy = totalEnergy;
     d_referenceStored = true;
   }
 
-  if (NPT == d_system->getEnsemble())
-  {
-    oldDW->get(spmeFourierStress,
-               d_label->electrostatic->rElectrostaticInverseStress);
-    oldDW->get(spmeRealStress,
-               d_label->electrostatic->rElectrostaticRealStress);
-    if (d_electrostatics->isPolarizable())
-    {
-      oldDW->get(spmeFourierStressDipole,
-                 d_label->electrostatic->rElectrostaticInverseStressDipole);
+  if (NPT == d_system->getEnsemble()) {
+    oldDW->get(spmeFourierStress, d_label->electrostatic->rElectrostaticInverseStress, level);
+    oldDW->get(spmeRealStress, d_label->electrostatic->rElectrostaticRealStress, level);
+    if (d_electrostatics->isPolarizable()) {
+      oldDW->get(spmeFourierStressDipole, d_label->electrostatic->rElectrostaticInverseStressDipole, level);
     }
-    if (isPrincipleProc)
-    {
-
-      std::cout << "Fourier Stress = " << std::setprecision(16)
-                << spmeFourierStress << std::endl;
-      std::cout << "-----------------------------------------------------"
-                << std::endl;
+    if (isPrincipleProc) {
+      std::cout << "Fourier Stress = " << std::setprecision(16) << spmeFourierStress << std::endl;
+      std::cout << "-----------------------------------------------------" << std::endl;
     }
   }
   if (isPrincipleProc) {
-      std::cout << std::endl;
+    std::cout << std::endl;
   }
 }
 
@@ -1316,6 +1198,7 @@ void MD::initialize(const ProcessorGroup*   pg,
 //                      << std::setw(4) << std::right << static_cast<int> (ceil(currPosition.z()/currPatch->dCell().z())) << "] "
 //                      << currPatch->getBCType(Patch::xminus) << currPatch->getBCType(Patch::xplus) << std::endl;
 //          }
+
           SCIRun::Vector currVelocity = currAtom->getVelocity();
 
           // Use the forcefield to set the units of the read in coordinates
@@ -1393,10 +1276,11 @@ void MD::initialize(const ProcessorGroup*   pg,
 
   kineticEnergy /= (2.0*41.84e+5); //0.5e+7;
   kineticStress *= 1.0; //1e+7;
-  newDW->put(sum_vartype(kineticEnergy),d_label->global->rKineticEnergy);
-  newDW->put(sumvec_vartype(totalMomentum),d_label->global->rTotalMomentum);
-  newDW->put(matrix_sum(kineticStress),d_label->global->rKineticStress);
-  newDW->put(sum_vartype(totalMass),d_label->global->rTotalMass);
+  const Level* level = getLevel(perProcPatches);
+  newDW->put(sum_vartype(kineticEnergy),d_label->global->rKineticEnergy, level);
+  newDW->put(sumvec_vartype(totalMomentum),d_label->global->rTotalMomentum, level);
+  newDW->put(matrix_sum(kineticStress),d_label->global->rKineticStress, level);
+  newDW->put(sum_vartype(totalMass),d_label->global->rTotalMass, level);
 
   if (mdFlowDebug.active()) {
     mdFlowDebug << flowLocation
@@ -1419,9 +1303,8 @@ void MD::computeStableTimestep(const ProcessorGroup*    pg,
 
   printTask(patches, md_cout, "MD::computeStableTimestep");
 
-  newDW->put(delt_vartype(1.0),
-              d_sharedState->get_delt_label(),
-              getLevel(patches));
+  const Level* level = getLevel(patches);
+  newDW->put(delt_vartype(1.0), d_sharedState->get_delt_label(), level);
 
   if (mdFlowDebug.active()) {
     mdFlowDebug << flowLocation
@@ -1483,7 +1366,6 @@ void MD::calculateKineticEnergy(const ProcessorGroup*   pg,
   // truncation term.  Also normalize stress tensor by degrees of freedom
   // and account for unit conversion.
 }
-
 
 void MD::createBasePermanentParticleState() {
   // The base particle state which must be tracked when particles move across patch boundaries are
