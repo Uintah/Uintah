@@ -108,6 +108,10 @@ void statistics::problemSetup(const ProblemSpecP& prob_spec,
   //  Read in timing information
   d_prob_spec->require("timeStart",  d_startTime);
   d_prob_spec->require("timeStop",   d_stopTime);
+  
+  // a backdoor to set when the module was initiated.
+  // this is a quick fix until I find a better way.
+  d_prob_spec->getWithDefault("startTimeTimestep",d_startTimeTimestep, 0);
 
   // Start time < stop time
   if(d_startTime > d_stopTime ){
@@ -510,6 +514,20 @@ void statistics::computeStats( DataWarehouse* old_dw,
     Qmean2[c] = Qsum2[c]/nTimesteps;
 
     Qvariance[c] = Qmean2[c] - Qmean[c] * Qmean[c];
+
+  
+#if 0
+    //__________________________________
+    //  debugging    
+    if ( c == IntVector ( -1, 75, 0) ){
+      cout << Q.name << " nTimestep: " << nTimesteps 
+           <<  " topLevelTimestep " <<  d_sharedState->getCurrentTopLevelTimeStep()
+           << " d_startTimestep: " << d_startTimeTimestep
+           <<" Q_var: " << me << " Qsum: " << Qsum[c]<< " Qmean: " << Qmean[c] << endl;
+    }
+#endif
+    
+    
   }
 
   //__________________________________
