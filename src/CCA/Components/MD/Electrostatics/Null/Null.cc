@@ -120,11 +120,11 @@ void ElectrostaticNull::calculate (const ProcessorGroup*   /*pg*/,
   for (size_t patchIndex = 0; patchIndex < numPatches; ++patchIndex)
   {
     const Patch* patch = patches->get(patchIndex);
-    newDW->put(sum_vartype(0.0), label->electrostatic->rElectrostaticInverseEnergy);
-    newDW->put(sum_vartype(0.0), label->electrostatic->rElectrostaticRealEnergy);
+    newDW->put(sum_vartype(0.0), label->electrostatic->rElectrostaticInverseEnergy, level.get_rep());
+    newDW->put(sum_vartype(0.0), label->electrostatic->rElectrostaticRealEnergy, level.get_rep());
 
-    newDW->put(matrix_sum(MDConstants::M3_0), label->electrostatic->rElectrostaticInverseStress);
-    newDW->put(matrix_sum(MDConstants::M3_0), label->electrostatic->rElectrostaticRealStress);
+    newDW->put(matrix_sum(MDConstants::M3_0), label->electrostatic->rElectrostaticInverseStress, level.get_rep());
+    newDW->put(matrix_sum(MDConstants::M3_0), label->electrostatic->rElectrostaticRealStress, level.get_rep());
 
     for (size_t typeIndex = 0; typeIndex < numAtomTypes; ++typeIndex)
     {
@@ -132,9 +132,12 @@ void ElectrostaticNull::calculate (const ProcessorGroup*   /*pg*/,
       ParticleSubset* atomSubset = oldDW->getParticleSubset(atomType, patch);
 
       ParticleVariable<Vector> pF_real, pF_inverse;
-      newDW->allocateAndPut(pF_real, label->electrostatic->pF_electroReal_preReloc, atomSubset);
-      newDW->allocateAndPut(pF_inverse, label->electrostatic->pF_electroInverse_preReloc, atomSubset);
-
+      newDW->allocateAndPut(pF_real,
+                            label->electrostatic->pF_electroReal_preReloc,
+                            atomSubset);
+      newDW->allocateAndPut(pF_inverse,
+                            label->electrostatic->pF_electroInverse_preReloc,
+                            atomSubset);
       particleIndex numAtoms = atomSubset->numParticles();
       for (particleIndex atom = 0; atom < numAtoms; ++atom)
       {
@@ -164,31 +167,37 @@ void ElectrostaticNull::registerRequiredParticleStates(
                                     MDLabel*            label) const
 {
   particleState.push_back(label->electrostatic->pF_electroInverse);
-  particleState_preReloc.push_back(
-                          label->electrostatic->pF_electroInverse_preReloc);
+  particleState_preReloc.push_back(label->electrostatic->pF_electroInverse_preReloc);
+
   particleState.push_back(label->electrostatic->pF_electroReal);
-  particleState_preReloc.push_back(
-                          label->electrostatic->pF_electroReal_preReloc);
+  particleState_preReloc.push_back(label->electrostatic->pF_electroReal_preReloc);
 }
 
-void ElectrostaticNull::addInitializeRequirements(
-                                    Task*               task,
-                                    MDLabel*            label) const
+void ElectrostaticNull::addInitializeRequirements(       Task        * task
+                                                 ,       MDLabel     * label
+                                                 , const PatchSet    * patches
+                                                 , const MaterialSet * matls
+                                                 , const Level       * level
+                                                 ) const
 {
   // Empty
 }
 
-void ElectrostaticNull::addInitializeComputes(
-                                    Task*               task,
-                                    MDLabel*            label) const
+void ElectrostaticNull::addInitializeComputes(       Task        * task
+                                             ,       MDLabel     * label
+                                             , const PatchSet    * patches
+                                             , const MaterialSet * matls
+                                             , const Level       * level
+                                             ) const
 {
-  task->computes(label->electrostatic->rElectrostaticInverseEnergy);
-  task->computes(label->electrostatic->rElectrostaticInverseStress);
-  task->computes(label->electrostatic->rElectrostaticRealEnergy);
-  task->computes(label->electrostatic->rElectrostaticRealStress);
+  task->computes(label->electrostatic->rElectrostaticInverseEnergy, level);
+  task->computes(label->electrostatic->rElectrostaticInverseStress, level);
+  task->computes(label->electrostatic->rElectrostaticRealEnergy,    level);
+  task->computes(label->electrostatic->rElectrostaticRealStress,    level);
 
-  task->computes(label->electrostatic->pF_electroInverse);
-  task->computes(label->electrostatic->pF_electroReal);
+  const MaterialSubset* matl_subset = matls->getUnion();
+  task->computes(label->electrostatic->pF_electroInverse, level, matl_subset, Task::NormalDomain);
+  task->computes(label->electrostatic->pF_electroReal,    level, matl_subset, Task::NormalDomain);
 }
 
 void ElectrostaticNull::addSetupRequirements(
@@ -209,26 +218,26 @@ void ElectrostaticNull::addCalculateRequirements(       Task        * task
                                                 ,       MDLabel     * label
                                                 , const PatchSet    * patches
                                                 , const MaterialSet * matls
-                                                , const LevelP      & level) const
+                                                , const Level       * level) const
 {
   // Empty
 }
 
 void ElectrostaticNull::addCalculateComputes(       Task        * task
-                                            ,       MDLabel     * label
-                                            , const PatchSet    * patches
-                                            , const MaterialSet * matls
-                                            , const LevelP      & level) const
+                                                    ,       MDLabel     * label
+                                                    , const PatchSet    * patches
+                                                    , const MaterialSet * matls
+                                                    , const Level       * level) const
 {
   const MaterialSubset* matl_subset = matls->getUnion();
 
-  task->computes(label->electrostatic->rElectrostaticInverseEnergy, level.get_rep());
-  task->computes(label->electrostatic->rElectrostaticInverseStress, level.get_rep());
-  task->computes(label->electrostatic->rElectrostaticRealEnergy, level.get_rep());
-  task->computes(label->electrostatic->rElectrostaticRealStress, level.get_rep());
+  task->computes(label->electrostatic->rElectrostaticInverseEnergy, level);
+  task->computes(label->electrostatic->rElectrostaticInverseStress, level);
+  task->computes(label->electrostatic->rElectrostaticRealEnergy, level);
+  task->computes(label->electrostatic->rElectrostaticRealStress, level);
 
-  task->computes(label->electrostatic->pF_electroInverse_preReloc, level.get_rep(), matl_subset, Task::NormalDomain);
-  task->computes(label->electrostatic->pF_electroReal_preReloc, level.get_rep(), matl_subset, Task::NormalDomain);
+  task->computes(label->electrostatic->pF_electroInverse_preReloc, level, matl_subset, Task::NormalDomain);
+  task->computes(label->electrostatic->pF_electroReal_preReloc, level, matl_subset, Task::NormalDomain);
 }
 
 void ElectrostaticNull::addFinalizeRequirements(

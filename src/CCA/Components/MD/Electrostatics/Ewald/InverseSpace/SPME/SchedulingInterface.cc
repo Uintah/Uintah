@@ -40,35 +40,46 @@
 using namespace Uintah;
 
 // Scheduling related helpers for the base SPME class
-void SPME::addInitializeRequirements(Task* task, MDLabel* label) const
+void SPME::addInitializeRequirements(       Task        * task
+                                    ,       MDLabel     * labels
+                                    , const PatchSet    * patches
+                                    , const MaterialSet * matls
+                                    , const Level       * level
+                                    ) const
 {
   // Empty
 }
 
-void SPME::addInitializeComputes(Task* task, MDLabel* label) const
+void SPME::addInitializeComputes(       Task        * task
+                                ,       MDLabel     * labels
+                                , const PatchSet    * patches
+                                , const MaterialSet * matls
+                                , const Level       * level
+                                ) const
 {
 
-  task->computes(label->electrostatic->sForwardTransformPlan);
-  task->computes(label->electrostatic->sBackwardTransformPlan);
+  task->computes(labels->electrostatic->sForwardTransformPlan, level);
+  task->computes(labels->electrostatic->sBackwardTransformPlan);
 
 // Universal reduction variables
-  task->computes(label->electrostatic->rElectrostaticInverseEnergy);
-  task->computes(label->electrostatic->rElectrostaticInverseStress);
-  task->computes(label->electrostatic->rElectrostaticRealEnergy);
-  task->computes(label->electrostatic->rElectrostaticRealStress);
+  task->computes(labels->electrostatic->rElectrostaticInverseEnergy, level);
+  task->computes(labels->electrostatic->rElectrostaticInverseStress, level);
+  task->computes(labels->electrostatic->rElectrostaticRealEnergy, level);
+  task->computes(labels->electrostatic->rElectrostaticRealStress, level);
 
 // Universal particle variables
-  task->computes(label->electrostatic->pF_electroInverse);
-  task->computes(label->electrostatic->pF_electroReal);
+  const MaterialSubset* matl_subset = matls->getUnion();
+  task->computes(labels->electrostatic->pF_electroInverse, level);
+  task->computes(labels->electrostatic->pF_electroReal, level);
 
   if (f_polarizable)
   {
 // Polarizable specific reduction variables
-    task->computes(label->electrostatic->rElectrostaticInverseStressDipole);
+    task->computes(labels->electrostatic->rElectrostaticInverseStressDipole, level);
 // Polarizable specific particle variables
-    task->computes(label->electrostatic->pMu);
-    task->computes(label->electrostatic->pE_electroReal);
-    task->computes(label->electrostatic->pE_electroInverse);
+    task->computes(labels->electrostatic->pMu, level, matl_subset);
+    task->computes(labels->electrostatic->pE_electroReal, level);
+    task->computes(labels->electrostatic->pE_electroInverse, level);
   }
 }
 
@@ -86,17 +97,18 @@ void SPME::addCalculateRequirements(       Task        * task
                                    ,       MDLabel     * labels
                                    , const PatchSet    * patches
                                    , const MaterialSet * matls
-                                   , const LevelP      & level ) const
+                                   , const Level       * level
+                                   ) const
 {
   const MaterialSubset* matl_subset = matls->getUnion();
 
-  task->requires(Task::OldDW, labels->global->pX, level.get_rep(), matl_subset, Task::NormalDomain, Ghost::None, 0);
-  task->requires(Task::OldDW, labels->global->pID, level.get_rep(), matl_subset, Task::NormalDomain, Ghost::None, 0);
+  task->requires(Task::OldDW, labels->global->pX, level, matl_subset, Task::NormalDomain, Ghost::None, 0);
+  task->requires(Task::OldDW, labels->global->pID, level, matl_subset, Task::NormalDomain, Ghost::None, 0);
   // Ensures that SPME::Setup runs first
-  task->requires(Task::NewDW, labels->electrostatic->dElectrostaticDependency, level.get_rep(), matl_subset, Task::NormalDomain);
+  task->requires(Task::NewDW, labels->electrostatic->dElectrostaticDependency, level, matl_subset, Task::NormalDomain);
 
   if (f_polarizable) {
-    task->requires(Task::OldDW, labels->electrostatic->pMu, level.get_rep(), matl_subset, Task::NormalDomain, Ghost::None, 0);
+    task->requires(Task::OldDW, labels->electrostatic->pMu, level, matl_subset, Task::NormalDomain, Ghost::None, 0);
   }
 }
 
@@ -104,7 +116,7 @@ void SPME::addCalculateComputes(       Task        * task
                                ,       MDLabel     * labels
                                , const PatchSet    * patches
                                , const MaterialSet * matls
-                               , const LevelP      & level ) const
+                               , const Level       * level ) const
 {
 // These are the variables provided at the end of the entire SPME routine,
 // and have nothing to do with computes/requires from the subscheduler.
@@ -112,22 +124,22 @@ void SPME::addCalculateComputes(       Task        * task
 // Universal reduction variables
   const MaterialSubset* matl_subset = matls->getUnion();
 
-  task->computes(labels->electrostatic->rElectrostaticInverseEnergy, level.get_rep(), matl_subset, Task::NormalDomain);
-  task->computes(labels->electrostatic->rElectrostaticRealEnergy, level.get_rep(), matl_subset, Task::NormalDomain);
-  task->computes(labels->electrostatic->rElectrostaticInverseStress, level.get_rep(), matl_subset, Task::NormalDomain);
-  task->computes(labels->electrostatic->rElectrostaticRealStress, level.get_rep(), matl_subset, Task::NormalDomain);
+  task->computes(labels->electrostatic->rElectrostaticInverseEnergy, level, matl_subset, Task::NormalDomain);
+  task->computes(labels->electrostatic->rElectrostaticRealEnergy, level, matl_subset, Task::NormalDomain);
+  task->computes(labels->electrostatic->rElectrostaticInverseStress, level, matl_subset, Task::NormalDomain);
+  task->computes(labels->electrostatic->rElectrostaticRealStress, level, matl_subset, Task::NormalDomain);
 // We should probably actually concatenate the forces into a single
 // pF_electrostatic for gating to the integrator.
 // Universal
 
 
 
-  task->computes(labels->electrostatic->pF_electroInverse_preReloc, level.get_rep(), matl_subset, Task::NormalDomain);
-  task->computes(labels->electrostatic->pF_electroReal_preReloc, level.get_rep(), matl_subset, Task::NormalDomain);
+  task->computes(labels->electrostatic->pF_electroInverse_preReloc, level, matl_subset, Task::NormalDomain);
+  task->computes(labels->electrostatic->pF_electroReal_preReloc, level, matl_subset, Task::NormalDomain);
 
   if (f_polarizable) {
-    task->computes(labels->electrostatic->pMu_preReloc, level.get_rep(), matl_subset, Task::NormalDomain);
-    task->computes(labels->electrostatic->rElectrostaticInverseStressDipole, level.get_rep(), matl_subset, Task::NormalDomain);
+    task->computes(labels->electrostatic->pMu_preReloc, level, matl_subset, Task::NormalDomain);
+    task->computes(labels->electrostatic->rElectrostaticInverseStressDipole, level, matl_subset, Task::NormalDomain);
 //    task->computes(labels->electrostatic->pE_electroInverse_preReloc, level.get_rep(), matl_subset, Task::NormalDomain);
 //    task->computes(labels->electrostatic->pE_electroReal_preReloc, level.get_rep(), matl_subset, Task::NormalDomain);
   }

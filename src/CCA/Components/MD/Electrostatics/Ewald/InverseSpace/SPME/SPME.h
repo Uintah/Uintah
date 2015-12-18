@@ -163,10 +163,19 @@ namespace Uintah {
       * @brief Registers the required and provided variable labels for the
       *        Initialize method
       */
-      virtual void addInitializeRequirements(   Task*  task,
-                                                MDLabel*  labels) const;
-      virtual void addInitializeComputes(       Task*  task,
-                                                MDLabel*  labels) const;
+      virtual void addInitializeRequirements(       Task        * task
+                                            ,       MDLabel     * labels
+                                            , const PatchSet    * patches
+                                            , const MaterialSet * matls
+                                            , const Level       * level
+                                            ) const;
+
+      virtual void addInitializeComputes(       Task        * task
+                                        ,       MDLabel     * labels
+                                        , const PatchSet    * patches
+                                        , const MaterialSet * matls
+                                        , const Level       * level
+                                        ) const;
 
      /*
       * @brief Registers the required and provided variable labels for the
@@ -185,13 +194,15 @@ namespace Uintah {
                                            ,       MDLabel     * labels
                                            , const PatchSet    * patches
                                            , const MaterialSet * matls
-                                           , const LevelP      & level ) const;
+                                           , const Level       * level
+                                           ) const;
 
       virtual void addCalculateComputes(       Task        * task
                                        ,       MDLabel     * labels
                                        , const PatchSet    * patches
                                        , const MaterialSet * matls
-                                       , const LevelP      & level ) const;
+                                       , const Level       * level
+                                       ) const;
 
      /*
       * @brief Registers the required and provided variable labels for the
