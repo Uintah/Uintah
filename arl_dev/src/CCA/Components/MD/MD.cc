@@ -1239,7 +1239,7 @@ void MD::initialize(const ProcessorGroup*   pg,
   inverseExtentVector[1]=1.0/static_cast<double> (totalSystemExtent[1]);
   inverseExtentVector[2]=1.0/static_cast<double> (totalSystemExtent[2]);
 
-  SCIRun::Vector cellDimensions = d_coordinate->getUnitCell()*inverseExtentVector;
+//  SCIRun::Vector cellDimensions = d_coordinate->getUnitCell()*inverseExtentVector;
 
   for (size_t patchIndex = 0; patchIndex < numPatches; ++patchIndex)
   {
