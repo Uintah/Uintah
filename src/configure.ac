@@ -445,20 +445,7 @@ SCI_ARG_WITH(zlib,
   [with_zlib="$withval"
    sci_required_zlib=yes],
   [with_zlib=""])
-  
-SCI_ARG_WITH(jpeg,
-  AC_HELP_STRING(--with-jpeg=DIR,
-                 Use the jpeg installation in DIR),
-  [with_jpeg="$withval"
-   sci_required_jpeg=yes],
-  [with_jpeg=""])
-  
-SCI_ARG_WITH(tiff,
-  AC_HELP_STRING(--with-tiff=DIR,
-                 Use the tiff installation in DIR),
-  [with_tiff="$withval"
-   sci_required_tiff=yes],
-  [with_tiff=""])
+
 
 SCI_ARG_WITH(xalan,
   AC_HELP_STRING(--with-xalan=DIR,
@@ -2391,34 +2378,6 @@ fi
 
 AC_SUBST(SSTREAM_COMPAT)
 AC_LANG(C)
-##  --  search for SGI'S traceback library  ------------------------------ 
-
-_sci_optional=optional
-if test "$with_exc"; then
-  _sci_lib="$with_exc"
-  _sci_inc="$with_exc/../include"
-  _sci_optional=specific
-else
-  _sci_lib=
-  _sci_inc=
-fi
-
-SCI_TRY_LINK(EXC,traceback library and headers,libexc.h,$_sci_inc,exc,$_sci_lib,,,$_sci_optional)
-
-if test "$HAVE_EXC" = "yes"; then
-  DEF_EXC="#define HAVE_EXC 1"
-fi
-
-if test "$with_exc" && test ! "$DEF_EXC"; then
-  echo
-  AC_MSG_ERROR(One or more of the EXC components is missing.)
-  echo
-fi
-
-AC_SUBST(EXC_LIB_FLAG)
-AC_SUBST(EXC_LIB_DIR_FLAG)
-AC_SUBST(DEF_EXC)
-sci_defs_files="$sci_defs_files include/sci_defs/exe_testdefs.h"
 
 ##  --  search for gzopen (and related)  ----------------------------------
 
@@ -2457,46 +2416,6 @@ AC_SUBST(INC_Z_H)
 AC_SUBST(DEF_Z)
 sci_defs_files="$sci_defs_files include/sci_defs/z_testdefs.h"
 
-##  --  search for jpeg and tiff -----------------------------------------
-
-_sci_optional=optional
-_sci_lib=
-_sci_inc=
-
-if test "$with_jpeg"; then
-   if test "$with_jpeg" = "yes"; then
-      _sci_optional=required
-   else
-      _sci_lib="$with_jpeg/lib"
-      _sci_inc="$with_jpeg/include"
-      _sci_optional=specific
-   fi
-fi
-
-SCI_TRY_LINK(JPEG,jpeg library,,$_sci_inc,jpeg,$_sci_lib,,,$_sci_optional)
-
-AC_SUBST(JPEG_LIB_FLAG)
-AC_SUBST(JPEG_LIB_DIR_FLAG)
-
-_sci_optional=optional
-_sci_lib=
-_sci_inc=
-
-if test "$with_tiff"; then
-   if test "$with_tiff" = "yes"; then
-      _sci_optional=required
-   else
-      _sci_lib="$with_tiff/lib"
-      _sci_inc="$with_tiff/include"
-      _sci_optional=specific
-   fi
-fi
-
-SCI_TRY_LINK(TIFF,tiff library,tiff.h,$_sci_inc,tiff,$_sci_lib,$M_LIB_DIR_FLAG $M_LIB_FLAG,,$_sci_optional)
-
-AC_SUBST(TIFF_LIB_FLAG)
-AC_SUBST(TIFF_LIB_DIR_FLAG)
-AC_SUBST(HAVE_TIFF)
 
 ##  --  check if exceptions work properly --------------------------------
 
