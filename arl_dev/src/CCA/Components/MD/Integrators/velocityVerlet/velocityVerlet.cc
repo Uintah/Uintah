@@ -77,20 +77,25 @@ void velocityVerlet::registerRequiredParticleStates(
 
 }
 
-void velocityVerlet::addInitializeRequirements(Task*    task,
-                                               MDLabel* labels
+void velocityVerlet::addInitializeRequirements(       Task        * task
+                                              ,       MDLabel     * label
+                                              , const PatchSet    * patches
+                                              , const MaterialSet * matls
+                                              , const Level       * level
                                               ) const
 {
   // Nothing to add
 }
 
-void velocityVerlet::addInitializeComputes(    Task*    task,
-                                               MDLabel* labels
-                                          ) const
+void velocityVerlet::addInitializeComputes(       Task        * task
+                                          ,       MDLabel     * label
+                                          , const PatchSet    * patches
+                                          , const MaterialSet * matls
+                                          , const Level       * level
+                                           ) const
 {
-  task->computes(labels->integrator->fPatchFirstIntegration);
-
-  // Nothing to compute
+  const MaterialSubset* matl_subset = matls->getUnion();
+  task->computes(label->integrator->fPatchFirstIntegration, level, matl_subset, Task::NormalDomain);
 }
 
 void velocityVerlet::initialize(const ProcessorGroup*       pg,
@@ -106,18 +111,13 @@ void velocityVerlet::initialize(const ProcessorGroup*       pg,
   // Set the flags on each patch so we know it's the first integration of the
   // particle coordinates on that patch.
   int numPatches = patches->size();
-  int numTypes   = atomTypes->size();
-  for (int patchIndex = 0; patchIndex < numPatches; ++patchIndex)
-  {
+  int numTypes = atomTypes->size();
+  for (int patchIndex = 0; patchIndex < numPatches; ++patchIndex) {
     const Patch* currPatch = patches->get(patchIndex);
-    for (int typeIndex = 0; typeIndex < numTypes; ++typeIndex)
-    {
+    for (int typeIndex = 0; typeIndex < numTypes; ++typeIndex) {
       int currType = atomTypes->get(typeIndex);
       PerPatch<bool> patchFirstIntegration = true;
-      newDW->put(patchFirstIntegration,
-                 label->integrator->fPatchFirstIntegration,
-                 currType,
-                 currPatch);
+      newDW->put(patchFirstIntegration, label->integrator->fPatchFirstIntegration, currType, currPatch);
     }
   }  // No code
 }
@@ -153,23 +153,23 @@ void velocityVerlet::addCalculateRequirements(       Task        * task
                                              ,       MDLabel     * labels
                                              , const PatchSet    * patches
                                              , const MaterialSet * matls
-                                             , const LevelP      & level ) const
+                                             , const Level       * level ) const
 {
   const MaterialSubset* matl_subset = matls->getUnion();
 
-  task->requires(Task::OldDW, labels->global->pX,  Ghost::None, 0);
-  task->requires(Task::OldDW, labels->global->pV,  Ghost::None, 0);
-  task->requires(Task::OldDW, labels->global->pID, Ghost::None, 0);
+  task->requires(Task::OldDW, labels->global->pX, level, Ghost::None, 0);
+  task->requires(Task::OldDW, labels->global->pV, level, Ghost::None, 0);
+  task->requires(Task::OldDW, labels->global->pID, level, Ghost::None, 0);
 
-  task->requires(Task::OldDW, labels->global->rTotalMomentum);
-  task->requires(Task::OldDW, labels->global->rTotalMass);
-  task->requires(Task::OldDW, labels->global->rKineticEnergy);
+  task->requires(Task::OldDW, labels->global->rTotalMomentum, level);
+  task->requires(Task::OldDW, labels->global->rTotalMass, level);
+  task->requires(Task::OldDW, labels->global->rKineticEnergy, level);
 
-  task->requires(Task::OldDW, labels->nonbonded->rNonbondedEnergy);
-  task->requires(Task::OldDW, labels->electrostatic->rElectrostaticRealEnergy);
-  task->requires(Task::OldDW, labels->electrostatic->rElectrostaticInverseEnergy);
+  task->requires(Task::OldDW, labels->nonbonded->rNonbondedEnergy, level);
+  task->requires(Task::OldDW, labels->electrostatic->rElectrostaticRealEnergy, level);
+  task->requires(Task::OldDW, labels->electrostatic->rElectrostaticInverseEnergy, level);
 
-  task->requires(Task::OldDW, labels->integrator->fPatchFirstIntegration, Ghost::None, 0);
+  task->requires(Task::OldDW, labels->integrator->fPatchFirstIntegration, level, Ghost::None, 0);
 
   // Eventually the individual components should actually take care of
   // dropping their force contributions into a general "Force" array
@@ -182,7 +182,7 @@ void velocityVerlet::addCalculateRequirements(       Task        * task
   // pF_elec_inv+
   task->requires(Task::NewDW,
                  labels->electrostatic->pF_electroInverse_preReloc,
-                 level.get_rep(),
+                 level,
                  matl_subset,
                  Task::NormalDomain,
                  Ghost::None,
@@ -191,7 +191,7 @@ void velocityVerlet::addCalculateRequirements(       Task        * task
   // pF_nb_MD+
   task->requires(Task::NewDW,
                  labels->nonbonded->pF_nonbonded_preReloc,
-                 level.get_rep(),
+                 level,
                  matl_subset,
                  Task::NormalDomain,
                  Ghost::None,
@@ -200,7 +200,7 @@ void velocityVerlet::addCalculateRequirements(       Task        * task
 
   task->requires(Task::NewDW,
                  labels->electrostatic->pF_electroReal_preReloc,
-                 level.get_rep(),
+                 level,
                  matl_subset,
                  Task::NormalDomain,
                  Ghost::None,
@@ -214,20 +214,20 @@ void velocityVerlet::addCalculateComputes(       Task        * task
                                          ,       MDLabel     * labels
                                          , const PatchSet    * patches
                                          , const MaterialSet * matls
-                                         , const LevelP      & level ) const
+                                         , const Level       * level ) const
 {
   const MaterialSubset* matl_subset = matls->getUnion();
 
-  task->computes(labels->global->pX_preReloc, level.get_rep(), matl_subset, Task::NormalDomain);
-  task->computes(labels->global->pV_preReloc, level.get_rep(), matl_subset, Task::NormalDomain);
-  task->computes(labels->global->pID_preReloc, level.get_rep(), matl_subset, Task::NormalDomain);
+  task->computes(labels->global->pX_preReloc,  level, matl_subset, Task::NormalDomain);
+  task->computes(labels->global->pV_preReloc,  level, matl_subset, Task::NormalDomain);
+  task->computes(labels->global->pID_preReloc, level, matl_subset, Task::NormalDomain);
 
-  task->computes(labels->global->rKineticEnergy, level.get_rep());
-  task->computes(labels->global->rKineticStress, level.get_rep());
-  task->computes(labels->global->rTotalMomentum, level.get_rep());
-  task->computes(labels->global->rTotalMass, level.get_rep());
+  task->computes(labels->global->rKineticEnergy, level);
+  task->computes(labels->global->rKineticStress, level);
+  task->computes(labels->global->rTotalMomentum, level);
+  task->computes(labels->global->rTotalMass,     level);
 
-  task->computes(labels->integrator->fPatchFirstIntegration, level.get_rep(), matl_subset, Task::NormalDomain);
+  task->computes(labels->integrator->fPatchFirstIntegration, level, matl_subset, Task::NormalDomain);
 
 }
 
@@ -246,22 +246,24 @@ void velocityVerlet::calculate( const ProcessorGroup*       pg,
   // total energies from the previous timestep.
   sum_vartype       previousMass, previousKE, componentPE;
   sumvec_vartype    previousMomentum;
-  oldDW->get(previousMass,     label->global->rTotalMass);
-  oldDW->get(previousKE,       label->global->rKineticEnergy);
-  oldDW->get(previousMomentum, label->global->rTotalMomentum);
+  const Level* level = getLevel(patches);
+  oldDW->get(previousMass,     label->global->rTotalMass    , level);
+  oldDW->get(previousKE,       label->global->rKineticEnergy, level);
+  oldDW->get(previousMomentum, label->global->rTotalMomentum, level);
+
   d_previousKE          = previousKE;
   d_previousMomentum    = previousMomentum;
   d_previousMass        = previousMass;
 
-  oldDW->get(componentPE, label->nonbonded->rNonbondedEnergy);
+  oldDW->get(componentPE, label->nonbonded->rNonbondedEnergy, level);
   d_previousPE = componentPE;
-  oldDW->get(componentPE, label->electrostatic->rElectrostaticRealEnergy);
+  oldDW->get(componentPE, label->electrostatic->rElectrostaticRealEnergy, level);
   d_previousPE += componentPE;
-  oldDW->get(componentPE, label->electrostatic->rElectrostaticInverseEnergy);
+  oldDW->get(componentPE, label->electrostatic->rElectrostaticInverseEnergy, level);
   d_previousPE += componentPE;
 
   delt_vartype delT;
-  oldDW->get(delT, (*simState)->get_delt_label(), getLevel(patches));
+  oldDW->get(delT, (*simState)->get_delt_label(), level);
   d_dt = delT;
 
   double kineticEnergy = 0.0;
@@ -307,10 +309,9 @@ void velocityVerlet::calculate( const ProcessorGroup*       pg,
   }
 
   kineticEnergy *= normKE;
-  const Level* level = patches->get(0)->getLevel();
-  newDW->put( sum_vartype(kineticEnergy),    label->global->rKineticEnergy);
-  newDW->put( sum_vartype(totalMass),        label->global->rTotalMass);
-  newDW->put( sumvec_vartype(totalMomentum), label->global->rTotalMomentum);
+  newDW->put( sum_vartype(kineticEnergy),    label->global->rKineticEnergy, level);
+  newDW->put( sum_vartype(totalMass),        label->global->rTotalMass,     level);
+  newDW->put( sumvec_vartype(totalMomentum), label->global->rTotalMomentum, level);
 //  newDW->put( matrix_sum(kineticStress),     label->global->rKineticStress);
 
 //  // FIXME TODO We should be checking firstIntegration on a PER PATCH basis here
@@ -664,10 +665,11 @@ void velocityVerlet::firstIntegrate(const PatchSubset*          patches,
     } // Loop over atom type
   } // Loop over patch
   kineticEnergy *= normKE;
-  newDW->put( sum_vartype(kineticEnergy),    label->global->rKineticEnergy);
-  newDW->put( sum_vartype(totalMass),        label->global->rTotalMass    );
-  newDW->put( sumvec_vartype(totalMomentum), label->global->rTotalMomentum);
-  newDW->put( matrix_sum(kineticStress),     label->global->rKineticStress);
+  const Level* level = getLevel(patches);
+  newDW->put( sum_vartype(kineticEnergy),    label->global->rKineticEnergy, level);
+  newDW->put( sum_vartype(totalMass),        label->global->rTotalMass    , level);
+  newDW->put( sumvec_vartype(totalMomentum), label->global->rTotalMomentum, level);
+  newDW->put( matrix_sum(kineticStress),     label->global->rKineticStress, level);
 } // velocityVerlet::firstIntegrate
 
 void velocityVerlet::integrate(     const PatchSubset*          patches,
@@ -748,8 +750,9 @@ void velocityVerlet::integrate(     const PatchSubset*          patches,
     } // Loop over atom type
   } // Loop over patch
   kineticEnergy *= normKE;
-  newDW->put( sum_vartype(kineticEnergy),    label->global->rKineticEnergy);
-  newDW->put( sum_vartype(totalMass),        label->global->rTotalMass    );
-  newDW->put( sumvec_vartype(totalMomentum), label->global->rTotalMomentum);
-  newDW->put( matrix_sum(kineticStress),     label->global->rKineticStress);
+  const Level* level = getLevel(patches);
+  newDW->put( sum_vartype(kineticEnergy),    label->global->rKineticEnergy, level);
+  newDW->put( sum_vartype(totalMass),        label->global->rTotalMass    , level);
+  newDW->put( sumvec_vartype(totalMomentum), label->global->rTotalMomentum, level);
+  newDW->put( matrix_sum(kineticStress),     label->global->rKineticStress, level);
 } // velocityVerlet::integrate

@@ -391,10 +391,10 @@ void MD::scheduleInitialize(const LevelP&       level,
   // FIXME:  Do we still need this here?
   task->computes(d_label->electrostatic->dSubschedulerDependency);
 
-  task->computes(d_label->global->rKineticEnergy);
-  task->computes(d_label->global->rKineticStress);
-  task->computes(d_label->global->rTotalMomentum);
-  task->computes(d_label->global->rTotalMass);
+  task->computes(d_label->global->rKineticEnergy, level.get_rep());
+  task->computes(d_label->global->rKineticStress, level.get_rep());
+  task->computes(d_label->global->rTotalMomentum, level.get_rep());
+  task->computes(d_label->global->rTotalMass, level.get_rep());
 
   // FIXME -- Original, no longer correct?
   //sched->addTask(task, level->eachPatch(), materials);
@@ -553,8 +553,8 @@ void MD::scheduleNonbondedInitialize(SchedulerP&        sched,
 
   MDSubcomponent* d_nonbondedInterface = dynamic_cast<MDSubcomponent*> (d_nonbonded);
 
-  d_nonbondedInterface->addInitializeRequirements(task, d_label);
-  d_nonbondedInterface->addInitializeComputes(task, d_label);
+  d_nonbondedInterface->addInitializeRequirements(task, d_label, perProcPatches, matls, level.get_rep());
+  d_nonbondedInterface->addInitializeComputes(task, d_label, perProcPatches, matls, level.get_rep());
 
   task->setType(Task::OncePerProc);
   sched->addTask(task, perProcPatches, matls);
@@ -606,8 +606,8 @@ void MD::scheduleNonbondedCalculate(SchedulerP&         sched,
   MDSubcomponent* d_nonbondedInterface =
                       dynamic_cast<MDSubcomponent*> (d_nonbonded);
 
-  d_nonbondedInterface->addCalculateRequirements(task, d_label, patches, matls, level);
-  d_nonbondedInterface->addCalculateComputes(task, d_label, patches, matls, level);
+  d_nonbondedInterface->addCalculateRequirements(task, d_label, patches, matls, level.get_rep());
+  d_nonbondedInterface->addCalculateComputes(task, d_label, patches, matls, level.get_rep());
 
   sched->addTask(task, patches, matls);
   if (mdFlowDebug.active()) {
@@ -660,8 +660,8 @@ void MD::scheduleIntegratorInitialize(          SchedulerP&  sched,
   MDSubcomponent* d_integratorInterface =
                       dynamic_cast<MDSubcomponent*> (d_integrator);
 
-  d_integratorInterface->addInitializeRequirements(task, d_label);
-  d_integratorInterface->addInitializeComputes(task, d_label);
+  d_integratorInterface->addInitializeRequirements(task, d_label, patches, atomTypes, level.get_rep());
+  d_integratorInterface->addInitializeComputes(task, d_label, patches, atomTypes, level.get_rep());
 
   sched->addTask(task, patches, atomTypes);
 
@@ -714,8 +714,8 @@ void MD::scheduleIntegratorCalculate(           SchedulerP&  sched,
   MDSubcomponent* d_integratorInterface =
                       dynamic_cast<MDSubcomponent*> (d_integrator);
 
-  d_integratorInterface->addCalculateRequirements(task, d_label, patches, atomTypes, level);
-  d_integratorInterface->addCalculateComputes(task, d_label, patches, atomTypes, level);
+  d_integratorInterface->addCalculateRequirements(task, d_label, patches, atomTypes, level.get_rep());
+  d_integratorInterface->addCalculateComputes(task, d_label, patches, atomTypes, level.get_rep());
 
   sched->addTask(task, patches, atomTypes);
 
@@ -777,8 +777,8 @@ void MD::scheduleElectrostaticsInitialize(      SchedulerP&  sched,
   MDSubcomponent* d_electroInterface =
                       dynamic_cast<MDSubcomponent*> (d_electrostatics);
 
-  d_electroInterface->addInitializeRequirements(task, d_label);
-  d_electroInterface->addInitializeComputes(task, d_label);
+  d_electroInterface->addInitializeRequirements(task, d_label, perProcPatches, matls, level.get_rep());
+  d_electroInterface->addInitializeComputes(task, d_label, perProcPatches, matls, level.get_rep());
 
   task->setType(Task::OncePerProc);
   sched->addTask(task, perProcPatches, matls);
@@ -826,8 +826,6 @@ void MD::scheduleElectrostaticsCalculate(SchedulerP& sched,
   const std::string flowLocation = "MD::scheduleElectrostaticsCalculate | ";
   printSchedule(perProcPatches, md_cout, flowLocation);
 
-  const MaterialSubset * matl_subset = matls->getUnion();
-
   Task* task = scinew Task("electrostaticsCalculate", this, &MD::electrostaticsCalculate, level);
 
   // Need delT for the subscheduler timestep
@@ -836,13 +834,11 @@ void MD::scheduleElectrostaticsCalculate(SchedulerP& sched,
   MDSubcomponent* d_electroInterface =
                         dynamic_cast<MDSubcomponent*> (d_electrostatics);
 
-  d_electroInterface->addCalculateRequirements(task, d_label, perProcPatches, matls, level);
-  d_electroInterface->addCalculateComputes(task, d_label, perProcPatches, matls, level);
+  d_electroInterface->addCalculateRequirements(task, d_label, perProcPatches, matls, level.get_rep());
+  d_electroInterface->addCalculateComputes(task, d_label, perProcPatches, matls, level.get_rep());
 
   task->hasSubScheduler(true);
   task->setType(Task::OncePerProc);
-
-  LoadBalancer* loadBal = sched->getLoadBalancer();
 
   sched->addTask(task, perProcPatches, matls);
 
@@ -993,42 +989,29 @@ void MD::scheduleOutputStatistics(      SchedulerP&     sched,
                                   const MaterialSet*    atomTypes,
                                   const LevelP&         level)
 {
-  Task* task = scinew Task("MD::outputStatistics", this, &MD::outputStatistics);
+  Task* task = scinew Task("outputStatistics", this, &MD::outputStatistics);
 
   // Output the results from last timestep
-  task->requires(Task::OldDW,
-                 d_label->nonbonded->rNonbondedEnergy);
-  task->requires(Task::OldDW,
-                 d_label->electrostatic->rElectrostaticInverseEnergy);
-  task->requires(Task::OldDW,
-                 d_label->electrostatic->rElectrostaticRealEnergy);
-  task->requires(Task::OldDW,
-                 d_label->global->rKineticEnergy);
+  task->requires(Task::OldDW, d_label->nonbonded->rNonbondedEnergy, level.get_rep());
+  task->requires(Task::OldDW, d_label->electrostatic->rElectrostaticInverseEnergy, level.get_rep());
+  task->requires(Task::OldDW, d_label->electrostatic->rElectrostaticRealEnergy, level.get_rep());
+  task->requires(Task::OldDW, d_label->global->rKineticEnergy, level.get_rep());
 
   // Pair interaction debugging
-  task->requires(Task::OldDW,
-                 d_label->nonbonded->pNumPairsInCalc, Ghost::None, 0);
-  task->requires(Task::OldDW,
-                 d_label->global->pID, Ghost::None, 0);
-  task->requires(Task::OldDW,
-                 d_label->nonbonded->pF_nonbonded, Ghost::None, 0);
-  task->requires(Task::OldDW,
-                 d_label->global->pX, Ghost::None, 0);
-  task->requires(Task::OldDW,
-                 d_label->global->pV, Ghost::None, 0);
+  task->requires(Task::OldDW, d_label->nonbonded->pNumPairsInCalc, level.get_rep(), Ghost::None, 0);
+  task->requires(Task::OldDW, d_label->global->pID, level.get_rep(), Ghost::None, 0);
+  task->requires(Task::OldDW, d_label->nonbonded->pF_nonbonded, level.get_rep(), Ghost::None, 0);
+  task->requires(Task::OldDW, d_label->global->pX, level.get_rep(), Ghost::None, 0);
+  task->requires(Task::OldDW, d_label->global->pV, level.get_rep(), Ghost::None, 0);
 
   // We only -need- stress tensors if we're doing NPT
-  if ( NPT == d_system->getEnsemble()) {
-    task->requires(Task::OldDW,
-                   d_label->nonbonded->rNonbondedStress);
-    task->requires(Task::OldDW,
-                   d_label->electrostatic->rElectrostaticInverseStress);
-    task->requires(Task::OldDW,
-                   d_label->electrostatic->rElectrostaticRealStress);
+  if (NPT == d_system->getEnsemble()) {
+    task->requires(Task::OldDW, d_label->nonbonded->rNonbondedStress, level.get_rep());
+    task->requires(Task::OldDW, d_label->electrostatic->rElectrostaticInverseStress, level.get_rep());
+    task->requires(Task::OldDW, d_label->electrostatic->rElectrostaticRealStress, level.get_rep());
 
-    if ( d_electrostatics->isPolarizable() ) {
-      task->requires(Task::OldDW,
-                     d_label->electrostatic->rElectrostaticInverseStressDipole);
+    if (d_electrostatics->isPolarizable()) {
+      task->requires(Task::OldDW, d_label->electrostatic->rElectrostaticInverseStressDipole, level.get_rep());
     }
   }
 
@@ -1044,10 +1027,7 @@ void MD::outputStatistics(const ProcessorGroup* pg,
                                 DataWarehouse*  oldDW,
                                 DataWarehouse*/*newDW*/)
 {
-  const std::string location = "MD::outputStatistics";
-  const std::string flowLocation = location + " | ";
-  const std::string particleLocation = location + " P ";
-  printTask(perProcPatches, md_cout, location);
+
 
   sum_vartype nonbondedEnergy;
   sum_vartype kineticEnergy;
@@ -1058,10 +1038,11 @@ void MD::outputStatistics(const ProcessorGroup* pg,
   matrix_sum spmeRealStress;
   matrix_sum spmeFourierStressDipole;
 
-  oldDW->get(nonbondedEnergy, d_label->nonbonded->rNonbondedEnergy);
-  oldDW->get(electrostaticInverseEnergy, d_label->electrostatic->rElectrostaticInverseEnergy);
-  oldDW->get(electrostaticRealEnergy, d_label->electrostatic->rElectrostaticRealEnergy);
-  oldDW->get(kineticEnergy, d_label->global->rKineticEnergy);
+  const Level* level = getLevel(perProcPatches);
+  oldDW->get(nonbondedEnergy, d_label->nonbonded->rNonbondedEnergy, level);
+  oldDW->get(electrostaticInverseEnergy, d_label->electrostatic->rElectrostaticInverseEnergy, level);
+  oldDW->get(electrostaticRealEnergy, d_label->electrostatic->rElectrostaticRealEnergy, level);
+  oldDW->get(kineticEnergy, d_label->global->rKineticEnergy, level);
 
   int timestep = d_sharedState->getCurrentTopLevelTimeStep();
   double totalEnergy = nonbondedEnergy + kineticEnergy + electrostaticInverseEnergy + electrostaticRealEnergy;
@@ -1493,9 +1474,10 @@ void MD::calculateKineticEnergy(const ProcessorGroup*   pg,
     }
   }
   kineticEnergy *= 0.5e+7;
-  newDW->put(sum_vartype(kineticEnergy),d_label->global->rKineticEnergy);
-  newDW->put(matrix_sum(kineticStress),d_label->global->rKineticStress);
-  newDW->put(sumvec_vartype(cellMomentum),d_label->global->rTotalMomentum);
+  const Level* level = getLevel(patches);
+  newDW->put(sum_vartype(kineticEnergy),  d_label->global->rKineticEnergy, level);
+  newDW->put(matrix_sum(kineticStress),   d_label->global->rKineticStress, level);
+  newDW->put(sumvec_vartype(cellMomentum),d_label->global->rTotalMomentum, level);
   // Fixme TODO:
   // Find appropriate place to calculate the stress contribution from
   // truncation term.  Also normalize stress tensor by degrees of freedom

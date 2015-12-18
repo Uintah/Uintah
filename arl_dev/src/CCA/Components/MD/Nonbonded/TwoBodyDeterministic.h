@@ -82,14 +82,36 @@ namespace Uintah {
                                                   varLabelArray&,
                                                   MDLabel*) const;
 
-      virtual void addInitializeRequirements(Task*, MDLabel*) const;
-      virtual void addInitializeComputes(Task*, MDLabel*) const;
+      virtual void addInitializeRequirements(       Task        * task
+                                            ,       MDLabel     * label
+                                            , const PatchSet    * patches
+                                            , const MaterialSet * matls
+                                            , const Level       * level
+                                            ) const;
+
+      virtual void addInitializeComputes(       Task        * task
+                                        ,       MDLabel     * label
+                                        , const PatchSet    * patches
+                                        , const MaterialSet * matls
+                                        , const Level       * level
+                                        ) const;
 
       virtual void addSetupRequirements(Task*, MDLabel*) const;
       virtual void addSetupComputes(Task*, MDLabel*) const;
 
-      virtual void addCalculateRequirements(Task*, MDLabel*, const PatchSet*, const MaterialSet*, const LevelP&) const;
-      virtual void addCalculateComputes(Task*, MDLabel*, const PatchSet*, const MaterialSet*, const LevelP&) const;
+      virtual void addCalculateRequirements(       Task        * task
+                                           ,       MDLabel     * label
+                                           , const PatchSet    * patches
+                                           , const MaterialSet * matls
+                                           , const Level       * level
+                                           ) const;
+
+      virtual void addCalculateComputes(       Task        * task
+                                       ,       MDLabel     * label
+                                       , const PatchSet    * patches
+                                       , const MaterialSet * matls
+                                       , const Level       * level
+                                       ) const;
 
       virtual void addFinalizeRequirements(Task*, MDLabel*) const;
       virtual void addFinalizeComputes(Task*, MDLabel*) const;

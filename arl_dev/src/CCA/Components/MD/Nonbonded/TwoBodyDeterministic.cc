@@ -43,22 +43,32 @@ TwoBodyDeterministic::TwoBodyDeterministic(double _nbRadius,
   // Empty
 }
 
-void TwoBodyDeterministic::addInitializeRequirements(Task* task,
-                                                     MDLabel* label) const
+void TwoBodyDeterministic::addInitializeRequirements(       Task        * task
+                                                    ,       MDLabel     * labels
+                                                    , const PatchSet    * patches
+                                                    , const MaterialSet * matls
+                                                    , const Level       * level
+                                                    ) const
 {
   // Empty
 }
 
-void TwoBodyDeterministic::addInitializeComputes(Task* task,
-                                                 MDLabel* label) const
+void TwoBodyDeterministic::addInitializeComputes(       Task        * task
+                                                ,       MDLabel     * labels
+                                                , const PatchSet    * patches
+                                                , const MaterialSet * matls
+                                                , const Level       * level
+                                                ) const
 {
+  const MaterialSubset* matl_subset = matls->getUnion();
+
   // Need to provide the particle variables we register
-  task->computes(label->nonbonded->pF_nonbonded);
-  task->computes(label->nonbonded->pNumPairsInCalc);
+  task->computes(labels->nonbonded->pF_nonbonded, level, matl_subset, Task::NormalDomain);
+  task->computes(labels->nonbonded->pNumPairsInCalc, level, matl_subset, Task::NormalDomain);
 
   // And reductions to initialize
-  task->computes(label->nonbonded->rNonbondedEnergy);
-  task->computes(label->nonbonded->rNonbondedStress);
+  task->computes(labels->nonbonded->rNonbondedEnergy, level);
+  task->computes(labels->nonbonded->rNonbondedStress, level);
 }
 
 void TwoBodyDeterministic::initialize(const ProcessorGroup*     pg,
@@ -71,42 +81,33 @@ void TwoBodyDeterministic::initialize(const ProcessorGroup*     pg,
                                       const MDLabel*            label,
                                       CoordinateSystem*         coordSys)
 {
-  // Do nothing
+  size_t numPatches = patches->size();
+  size_t numAtomTypes = materials->size();
 
-  size_t numPatches     =   patches->size();
-  size_t numAtomTypes   =   materials->size();
+  for (size_t patchIndex = 0; patchIndex < numPatches; ++patchIndex) {
 
-  for (size_t patchIndex = 0; patchIndex < numPatches; ++patchIndex)
-  {
-    const Patch*    currPatch   =   patches->get(patchIndex);
-    for (size_t typeIndex = 0; typeIndex < numAtomTypes; ++typeIndex)
-    {
-      int   atomType    =   materials->get(typeIndex);
-      ParticleSubset*   atomSubset  =   newDW->getParticleSubset(atomType,
-                                                                 currPatch);
+    const Patch* currPatch = patches->get(patchIndex);
+    for (size_t typeIndex = 0; typeIndex < numAtomTypes; ++typeIndex) {
+
+      int atomType = materials->get(typeIndex);
+      ParticleSubset* atomSubset = newDW->getParticleSubset(atomType, currPatch);
+
       ParticleVariable<Vector> pF_nb;
-      newDW->allocateAndPut(pF_nb,
-                            label->nonbonded->pF_nonbonded,
-                            atomSubset);
+      newDW->allocateAndPut(pF_nb, label->nonbonded->pF_nonbonded, atomSubset);
+
       ParticleVariable<long64> pNumPairsCalc;
-      newDW->allocateAndPut(pNumPairsCalc,
-                            label->nonbonded->pNumPairsInCalc,
-                            atomSubset);
+      newDW->allocateAndPut(pNumPairsCalc, label->nonbonded->pNumPairsInCalc, atomSubset);
 
       particleIndex numAtoms = atomSubset->numParticles();
-      for (particleIndex atom = 0; atom < numAtoms; ++atom)
-      {
+      for (particleIndex atom = 0; atom < numAtoms; ++atom) {
         pF_nb[atom] = 0.0;
-        pNumPairsCalc[atom]=0;
+        pNumPairsCalc[atom] = 0;
       }
     }
-    newDW->put(matrix_sum(MDConstants::M3_0),
-               label->nonbonded->rNonbondedStress);
-    newDW->put(sum_vartype(0.0),
-               label->nonbonded->rNonbondedEnergy);
-
+    const Level* level = patches->get(0)->getLevel();
+    newDW->put(matrix_sum(MDConstants::M3_0), label->nonbonded->rNonbondedStress, level);
+    newDW->put(sum_vartype(0.0), label->nonbonded->rNonbondedEnergy, level);
   }
-
 }
 
 void TwoBodyDeterministic::addSetupRequirements(Task* task,
@@ -139,21 +140,14 @@ void TwoBodyDeterministic::addCalculateRequirements(       Task        * task
                                                    ,       MDLabel     * labels
                                                    , const PatchSet    * patches
                                                    , const MaterialSet * matls
-                                                   , const LevelP      & level
+                                                   , const Level       * level
                                                    ) const
 {
 
-  proc0cout << "Registering for " << d_nonbondedGhostCells
-            << " ghost cells required." << std::endl;
-  task->requires(Task::OldDW,
-                 labels->global->pX,
-                 Ghost::AroundCells,
-                 d_nonbondedGhostCells);
+  proc0cout << "Registering for " << d_nonbondedGhostCells << " ghost cells required." << std::endl;
 
-  task->requires(Task::OldDW,
-                 labels->global->pID,
-                 Ghost::AroundCells,
-                 d_nonbondedGhostCells);
+  task->requires(Task::OldDW, labels->global->pX,  level, Ghost::AroundCells, d_nonbondedGhostCells);
+  task->requires(Task::OldDW, labels->global->pID, level, Ghost::AroundCells, d_nonbondedGhostCells);
 
 }
 
@@ -161,18 +155,19 @@ void TwoBodyDeterministic::addCalculateComputes(       Task        * task
                                                ,       MDLabel     * label
                                                , const PatchSet    * patches
                                                , const MaterialSet * matls
-                                               , const LevelP      & level) const
+                                               , const Level       * level
+                                               ) const
 {
 
   const MaterialSubset* matl_subset = matls->getUnion();
 
   // Provide per particle force
-  task->computes(label->nonbonded->pF_nonbonded_preReloc, level.get_rep(), matl_subset, Task::NormalDomain);
-  task->computes(label->nonbonded->pNumPairsInCalc_preReloc, level.get_rep(), matl_subset, Task::NormalDomain);
+  task->computes(label->nonbonded->pF_nonbonded_preReloc,    level, matl_subset, Task::NormalDomain);
+  task->computes(label->nonbonded->pNumPairsInCalc_preReloc, level, matl_subset, Task::NormalDomain);
 
   // Provide per patch contribution to energy and stress tensor
-  task->computes(label->nonbonded->rNonbondedEnergy, level.get_rep());
-  task->computes(label->nonbonded->rNonbondedStress, level.get_rep());
+  task->computes(label->nonbonded->rNonbondedEnergy, level);
+  task->computes(label->nonbonded->rNonbondedStress, level);
 
 }
 
@@ -351,9 +346,11 @@ void TwoBodyDeterministic::calculate(
     }  // Loop over source materials
   }  // Loop over patches
 //  debugOut.close();
-//  const Level* level = patches->get(0)->getLevel();
-  newDW->put(sum_vartype(0.5 * nbEnergy_patchLocal), label->nonbonded->rNonbondedEnergy);
-  newDW->put(matrix_sum(0.5 * stressTensor_patchLocal), label->nonbonded->rNonbondedStress);
+
+  const Level* level = patches->get(0)->getLevel();
+  newDW->put(sum_vartype(0.5 * nbEnergy_patchLocal), label->nonbonded->rNonbondedEnergy, level);
+  newDW->put(matrix_sum(0.5 * stressTensor_patchLocal), label->nonbonded->rNonbondedStress, level);
+
 } // TwoBodyDeterministic::calculate
 
 void TwoBodyDeterministic::addFinalizeRequirements(Task* task, MDLabel* d_label) const {

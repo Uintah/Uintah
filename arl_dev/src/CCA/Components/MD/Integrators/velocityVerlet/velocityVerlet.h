@@ -91,10 +91,19 @@ namespace Uintah{
                                          varLabelArray& particleState_preReloc,
                                          MDLabel*    labels) const;
 
-      virtual void addInitializeRequirements(Task*       task,
-                                             MDLabel*    labels) const;
-      virtual void addInitializeComputes(    Task*       task,
-                                             MDLabel*    labels) const;
+      virtual void addInitializeRequirements(       Task        * task
+                                            ,       MDLabel     * label
+                                            , const PatchSet    * patches
+                                            , const MaterialSet * matls
+                                            , const Level       * level
+                                            ) const;
+
+      virtual void addInitializeComputes(       Task        * task
+                                        ,       MDLabel     * label
+                                        , const PatchSet    * patches
+                                        , const MaterialSet * matls
+                                        , const Level       * level
+                                        ) const;
 
       virtual void addSetupRequirements(     Task*       task,
                                              MDLabel*    labels) const;
@@ -105,14 +114,14 @@ namespace Uintah{
                                            ,       MDLabel     * labels
                                            , const PatchSet    * patches
                                            , const MaterialSet * matls
-                                           , const LevelP      & level
+                                           , const Level       * level
                                            ) const;
 
       virtual void addCalculateComputes(       Task        * task
                                        ,       MDLabel     * labels
                                        , const PatchSet    * patches
                                        , const MaterialSet * matls
-                                       , const LevelP      & level
+                                       , const Level       * level
                                        ) const;
 
       virtual void addFinalizeRequirements(  Task*       task,
