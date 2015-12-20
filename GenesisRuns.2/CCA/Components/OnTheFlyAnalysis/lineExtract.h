@@ -85,6 +85,9 @@ WARNING
     virtual void scheduleInitialize(SchedulerP& sched,
                                     const LevelP& level);
                                     
+    virtual void scheduleRestartInitialize(SchedulerP& sched,
+                                           const LevelP& level){};
+                                    
     virtual void restartInitialize();
                                     
     virtual void scheduleDoAnalysis(SchedulerP& sched,

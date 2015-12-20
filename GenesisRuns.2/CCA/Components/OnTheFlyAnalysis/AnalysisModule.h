@@ -59,6 +59,9 @@ namespace Uintah {
                               
     virtual void scheduleInitialize(SchedulerP& sched,
                                     const LevelP& level) =0;
+                                    
+    virtual void scheduleRestartInitialize(SchedulerP& sched,
+                                           const LevelP& level) =0;
     
     virtual void restartInitialize() = 0;
     

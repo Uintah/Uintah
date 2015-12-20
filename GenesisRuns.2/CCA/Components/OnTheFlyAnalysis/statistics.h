@@ -79,6 +79,9 @@ WARNING
 
     virtual void scheduleInitialize(SchedulerP& sched,
                                     const LevelP& level);
+                                    
+    virtual void scheduleRestartInitialize(SchedulerP& sched,
+                                           const LevelP& level);
 
     virtual void restartInitialize();
 
@@ -89,6 +92,8 @@ WARNING
                                      const LevelP& level) {};
 
   private:
+    enum ORDER {lowOrder, highOrder};
+    
     //__________________________________
     //  container to hold
     struct Qstats{
@@ -110,6 +115,8 @@ WARNING
       VarLabel* Qsum4_Label;
       VarLabel* Qmean4_Label;
       VarLabel* Qkurtosis_Label;
+      
+      std::map<ORDER,bool> isInitialized;
 
       const Uintah::TypeDescription* subtype;
 
@@ -130,6 +137,12 @@ WARNING
                     const MaterialSubset*,
                     DataWarehouse*,
                     DataWarehouse* new_dw);
+                    
+    void restartInitialize(const ProcessorGroup*,
+                           const PatchSubset* patches,
+                           const MaterialSubset*,
+                           DataWarehouse*,
+                           DataWarehouse* new_dw);
 
     void doAnalysis(const ProcessorGroup* pg,
                     const PatchSubset* patches,
@@ -188,6 +201,7 @@ WARNING
     const Material* d_matl;
     MaterialSet* d_matlSet;
     const MaterialSubset* d_matSubSet;
+    
   };
 
 

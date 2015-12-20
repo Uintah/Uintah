@@ -710,6 +710,17 @@ void ICE::scheduleInitialize(const LevelP& level,SchedulerP& sched)
 void ICE::scheduleRestartInitialize(const LevelP& level,
                                     SchedulerP& sched)
 {
+  //__________________________________
+  // dataAnalysis 
+  if(d_analysisModules.size() != 0){
+    vector<AnalysisModule*>::iterator iter;
+    for( iter  = d_analysisModules.begin();
+         iter != d_analysisModules.end(); iter++){
+      AnalysisModule* am = *iter;
+      am->scheduleRestartInitialize( sched, level);
+    }
+  }
+
 }
 /* _____________________________________________________________________
  Function~  ICE::restartInitialize--

@@ -29,7 +29,6 @@
 #include <Core/Grid/Grid.h>
 #include <Core/Grid/SimulationState.h>
 #include <Core/Grid/Variables/CellIterator.h>
-#include <Core/Parallel/ProcessorGroup.h>
 
 #include <Core/Exceptions/InternalError.h>
 #include <Core/Util/DebugStream.h>
@@ -153,7 +152,7 @@ void statistics::problemSetup(const ProblemSpecP& prob_spec,
   //__________________________________
   //  Read in variables label names
 
- ProblemSpecP vars_ps = d_prob_spec->findBlock("Variables");
+   ProblemSpecP vars_ps = d_prob_spec->findBlock("Variables");
   if (!vars_ps){
     throw ProblemSetupException("statistics: Couldn't find <Variables> tag", __FILE__, __LINE__);
   }
@@ -235,6 +234,13 @@ void statistics::problemSetup(const ProblemSpecP& prob_spec,
       proc0cout << "         Computing uv_prime, uw_prime, vw_prime using ("<< name << ")" << endl;
     }
 
+    //__________________________________
+    // keep track of which summation variables
+    // have been initialized.  A user can
+    // add a variable on a restart.  Default is false.
+    Q.isInitialized[lowOrder]  = false;
+    Q.isInitialized[highOrder] = false;
+    
     d_Qstats.push_back( Q );
 
     //__________________________________
@@ -331,6 +337,105 @@ void statistics::initialize(const ProcessorGroup*,
     }  // loop over Qstat
   }  // pathes
 }
+
+//______________________________________________________________________
+// This allows the user to restart from an uda in which this module was
+// turned off.  Only execute task if the labels were NOT in the checkpoint
+void statistics::scheduleRestartInitialize(SchedulerP& sched,
+                                           const LevelP& level)
+{
+
+  printSchedule( level,cout_doing,"statistics::scheduleRestartInitialize" );
+  
+  DataWarehouse* new_dw = sched->getLastDW();
+
+  // Find the first patch on this level that this mpi rank owns.
+  const Uintah::PatchSet* const ps = sched->getLoadBalancer()->getPerProcessorPatchSet(level);
+  int rank = Parallel::getMPIRank();
+  const PatchSubset* myPatches = ps->getSubset(rank);
+  const Patch* firstPatch = myPatches->get(0);
+  
+
+  Task* t = scinew Task("statistics::restartInitialize",
+                   this,&statistics::restartInitialize);
+
+  bool addTask = false;
+  
+  for ( unsigned int i =0 ; i < d_Qstats.size(); i++ ) {
+    Qstats Q = d_Qstats[i];
+    
+    // does sumVariables exist in checkpoint
+    //              low order
+    if (new_dw->exists( Q.Qsum_Label, Q.matl, firstPatch) ){
+      Q.isInitialized[lowOrder] = true;
+    }
+    
+    
+    //              high order
+    if( new_dw->exists( Q.Qsum3_Label, Q.matl, firstPatch) ){
+      Q.isInitialized[highOrder] = true;
+    }
+    
+   
+    // if the Q.sum was not in previous checkpoint
+    if( !Q.isInitialized[lowOrder] ){
+      t->computes ( Q.Qsum_Label );
+      t->computes ( Q.Qsum2_Label );
+      addTask = true;
+      cout << "    Adding lowOrder computes for " << Q.name << "  " << d_Qstats[i].isInitialized[lowOrder] << endl;
+    }
+
+    if( d_doHigherOrderStats && !Q.isInitialized[highOrder] ){
+      t->computes ( Q.Qsum3_Label );
+      t->computes ( Q.Qsum4_Label );                                   
+      addTask = true;                                                  
+      cout << "    Adding highOrder computes for " << Q.name << "  " << d_Qstats[i].isInitialized[highOrder] << endl;  
+    }
+  }
+  
+  if ( addTask ){
+    sched->addTask(t, level->eachPatch(), d_matlSet);
+  }
+}
+
+
+//______________________________________________________________________
+//  
+void statistics::restartInitialize(const ProcessorGroup*,
+                                   const PatchSubset* patches,
+                                   const MaterialSubset*,
+                                   DataWarehouse*,
+                                   DataWarehouse* new_dw)
+{
+#if 1
+  for(int p=0;p<patches->size();p++){
+    const Patch* patch = patches->get(p);
+    printTask(patches, patch,cout_doing,"Doing statistics::restartInitialize");
+
+    for ( unsigned int i =0 ; i < d_Qstats.size(); i++ ) {
+      Qstats Q = d_Qstats[i];
+      
+      
+
+      switch(Q.subtype->getType()) {
+
+        case TypeDescription::double_type:{         // double
+          allocateAndZeroSums<double>( new_dw, patch, Q);
+          break;
+        }
+        case TypeDescription::Vector: {             // Vector
+          allocateAndZeroSums<Vector>( new_dw, patch, Q);
+          break;
+        }
+        default: {
+          throw InternalError("statistics: invalid data type", __FILE__, __LINE__);
+        }
+      }
+    }  // loop over Qstat
+  }  // pathes
+#endif
+}
+
 
 void statistics::restartInitialize()
 {
@@ -649,12 +754,16 @@ void statistics::allocateAndZeroSums( DataWarehouse* new_dw,
                                       Qstats Q )
 {
   int matl = Q.matl;
-  allocateAndZero<T>( new_dw, Q.Qsum_Label,  matl, patch );
-  allocateAndZero<T>( new_dw, Q.Qsum2_Label, matl, patch );
-
-  if( d_doHigherOrderStats ){
+  if ( !Q.isInitialized[lowOrder] ){
+    allocateAndZero<T>( new_dw, Q.Qsum_Label,  matl, patch );
+    allocateAndZero<T>( new_dw, Q.Qsum2_Label, matl, patch );
+    cout << "__________________________________ " << Q.name << " initializing low order sums Patch: " << patch->getID()<< endl;
+  }
+  
+  if( d_doHigherOrderStats && !Q.isInitialized[highOrder] ){
     allocateAndZero<T>( new_dw, Q.Qsum3_Label, matl, patch );
     allocateAndZero<T>( new_dw, Q.Qsum4_Label, matl, patch );
+    cout << "__________________________________" << Q.name << " initializing high order sums Patch: " << patch->getID() << endl;
   }
 }
 
