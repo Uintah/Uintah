@@ -321,6 +321,17 @@ void MPMICE::scheduleRestartInitialize(const LevelP& level,
 
   d_mpm->scheduleRestartInitialize(level, sched);
   d_ice->scheduleRestartInitialize(level, sched);
+  
+  //__________________________________
+  // dataAnalysis 
+  if(d_analysisModules.size() != 0){
+    vector<AnalysisModule*>::iterator iter;
+    for( iter  = d_analysisModules.begin();
+         iter != d_analysisModules.end(); iter++){
+      AnalysisModule* am = *iter;
+      am->scheduleRestartInitialize( sched, level);
+    }
+  }
 }
 
 //______________________________________________________________________

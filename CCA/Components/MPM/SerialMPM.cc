@@ -240,7 +240,7 @@ void SerialMPM::problemSetup(const ProblemSpecP& prob_spec,
   //  create analysis modules
   // call problemSetup  
   if(!flags->d_with_ice && !flags->d_with_arches){    // mpmice or mpmarches handles this
-    d_analysisModules = AnalysisModuleFactory::create(prob_spec, sharedState, dataArchiver);
+    d_analysisModules = AnalysisModuleFactory::create(prob_spec, sharedState, dataArchiver );
     
     if(d_analysisModules.size() != 0){
       vector<AnalysisModule*>::iterator iter;
@@ -404,6 +404,16 @@ void SerialMPM::scheduleInitialize(const LevelP& level,
 void SerialMPM::scheduleRestartInitialize(const LevelP& level,
                                           SchedulerP& sched)
 {
+  //__________________________________
+  // dataAnalysis 
+  if(d_analysisModules.size() != 0){
+    vector<AnalysisModule*>::iterator iter;
+    for( iter  = d_analysisModules.begin();
+         iter != d_analysisModules.end(); iter++){
+      AnalysisModule* am = *iter;
+      am->scheduleRestartInitialize( sched, level);
+    }
+  }
 }
 /* _____________________________________________________________________
  Purpose:   Set variables that are normally set during the initialization
