@@ -35,6 +35,10 @@
 #include <iostream>
 #include <cstdio>
 
+//______________________________________________________________________
+//    TO DO:
+//   Each variable needs to keep track of the timestep.  The user can add
+//   a variable in a checkpoint.  As a quick fix should throw an exception
 
 using namespace Uintah;
 using namespace std;
@@ -262,8 +266,8 @@ void statistics::problemSetup(const ProblemSpecP& prob_spec,
 
     if( mesg.str() != "" ){
       ostringstream warn;
-      warn << "\nWARNING:  You've activated the DataAnalysis:statistics module but your not saving the variable(s) ("
-           << mesg.str() << ")\n";
+      warn << "WARNING:  You've activated the DataAnalysis:statistics module but your not saving the variable(s) ("
+           << mesg.str() << ")";
       proc0cout << warn.str() << endl;
     }
   }
@@ -355,7 +359,6 @@ void statistics::scheduleRestartInitialize(SchedulerP& sched,
   const PatchSubset* myPatches = ps->getSubset(rank);
   const Patch* firstPatch = myPatches->get(0);
   
-
   Task* t = scinew Task("statistics::restartInitialize",
                    this,&statistics::restartInitialize);
 
@@ -364,35 +367,39 @@ void statistics::scheduleRestartInitialize(SchedulerP& sched,
   for ( unsigned int i =0 ; i < d_Qstats.size(); i++ ) {
     Qstats Q = d_Qstats[i];
     
-    // does sumVariables exist in checkpoint
+    // Do the summation Variables exist in checkpoint
     //              low order
     if (new_dw->exists( Q.Qsum_Label, Q.matl, firstPatch) ){
       Q.isInitialized[lowOrder] = true;
+      d_Qstats[i].isInitialized[lowOrder] = true;
     }
     
     
     //              high order
-    if( new_dw->exists( Q.Qsum3_Label, Q.matl, firstPatch) ){
-      Q.isInitialized[highOrder] = true;
+    if( d_doHigherOrderStats ){
+      if ( new_dw->exists( Q.Qsum3_Label, Q.matl, firstPatch) ){
+        Q.isInitialized[highOrder] = true;
+        d_Qstats[i].isInitialized[highOrder] = true;
+      }
     }
     
-   
-    // if the Q.sum was not in previous checkpoint
+    // if the Q.sum was not in previous checkpoint compute it
     if( !Q.isInitialized[lowOrder] ){
       t->computes ( Q.Qsum_Label );
       t->computes ( Q.Qsum2_Label );
       addTask = true;
-      cout << "    Adding lowOrder computes for " << Q.name << "  " << d_Qstats[i].isInitialized[lowOrder] << endl;
+      proc0cout << "    Statistics: Adding lowOrder computes for " << Q.name << endl;
     }
 
     if( d_doHigherOrderStats && !Q.isInitialized[highOrder] ){
       t->computes ( Q.Qsum3_Label );
       t->computes ( Q.Qsum4_Label );                                   
       addTask = true;                                                  
-      cout << "    Adding highOrder computes for " << Q.name << "  " << d_Qstats[i].isInitialized[highOrder] << endl;  
+      proc0cout << "    Statistics: Adding highOrder computes for " << Q.name << endl;  
     }
   }
-  
+ 
+  // only add task if a variable was not found in old_dw
   if ( addTask ){
     sched->addTask(t, level->eachPatch(), d_matlSet);
   }
@@ -407,7 +414,6 @@ void statistics::restartInitialize(const ProcessorGroup*,
                                    DataWarehouse*,
                                    DataWarehouse* new_dw)
 {
-#if 1
   for(int p=0;p<patches->size();p++){
     const Patch* patch = patches->get(p);
     printTask(patches, patch,cout_doing,"Doing statistics::restartInitialize");
@@ -415,8 +421,6 @@ void statistics::restartInitialize(const ProcessorGroup*,
     for ( unsigned int i =0 ; i < d_Qstats.size(); i++ ) {
       Qstats Q = d_Qstats[i];
       
-      
-
       switch(Q.subtype->getType()) {
 
         case TypeDescription::double_type:{         // double
@@ -433,10 +437,10 @@ void statistics::restartInitialize(const ProcessorGroup*,
       }
     }  // loop over Qstat
   }  // pathes
-#endif
 }
 
-
+//______________________________________________________________________
+//
 void statistics::restartInitialize()
 {
 }
@@ -621,11 +625,11 @@ void statistics::computeStats( DataWarehouse* old_dw,
     Qvariance[c] = Qmean2[c] - Qmean[c] * Qmean[c];
 
   
-#if 0
+#if 1
     //__________________________________
     //  debugging    
     if ( c == IntVector ( -1, 75, 0) ){
-      cout << Q.name << " nTimestep: " << nTimesteps 
+      cout << "  stats:  " << Q.name << " nTimestep: " << nTimesteps 
            <<  " topLevelTimestep " <<  d_sharedState->getCurrentTopLevelTimeStep()
            << " d_startTimestep: " << d_startTimeTimestep
            <<" Q_var: " << me << " Qsum: " << Qsum[c]<< " Qmean: " << Qmean[c] << endl;
@@ -757,13 +761,13 @@ void statistics::allocateAndZeroSums( DataWarehouse* new_dw,
   if ( !Q.isInitialized[lowOrder] ){
     allocateAndZero<T>( new_dw, Q.Qsum_Label,  matl, patch );
     allocateAndZero<T>( new_dw, Q.Qsum2_Label, matl, patch );
-    cout << "__________________________________ " << Q.name << " initializing low order sums Patch: " << patch->getID()<< endl;
+    proc0cout << "    Statistics: " << Q.name << " initializing low order sums" << endl;
   }
   
   if( d_doHigherOrderStats && !Q.isInitialized[highOrder] ){
     allocateAndZero<T>( new_dw, Q.Qsum3_Label, matl, patch );
     allocateAndZero<T>( new_dw, Q.Qsum4_Label, matl, patch );
-    cout << "__________________________________" << Q.name << " initializing high order sums Patch: " << patch->getID() << endl;
+    proc0cout << "    Statistics: " << Q.name << " initializing high order sums" << endl;
   }
 }
 
