@@ -5,19 +5,20 @@
    <Meta>
        <title>cylinder in a crossflow</title>
    </Meta>
+   <Solver type = "hypre"/>
    <SimulationComponent type="rmpmice" />
     <!--____________________________________________________________________-->
     <!--      T  I  M  E     V  A  R  I  A  B  L  E  S                      -->
     <!--____________________________________________________________________-->
    <Time>
-       <maxTime>            100       </maxTime>
+       <maxTime>            0.4      </maxTime>
        <initTime>           0.0         </initTime>
        <delt_min>           0.0         </delt_min>
        <delt_max>           1.0         </delt_max>
        <delt_init>          1.0e-7      </delt_init>
        <max_delt_increase>    1.0       </max_delt_increase>
-       <timestep_multiplier>0.8 </timestep_multiplier>
-       <!--<max_Timesteps>         16 </max_Timesteps> -->
+       <timestep_multiplier>0.8        </timestep_multiplier>
+     <!--  <max_Timesteps>      100         </max_Timesteps>  -->
    </Time>
    
    <LoadBalancer type="DLB">
@@ -154,6 +155,10 @@
       <save label = "delP_Dilatate"/>
       <save label = "scalar-f"/>
 <!--
+      <save label = "mean_vel_CC"/>
+      <save label = "mean_temp_CC"/>
+-->      
+<!--
       <save label = "rhs"/>
       <save label = "Li1"/>
       <save label = "Li5"/>
@@ -162,7 +167,7 @@
       <save label = "TotalMomentum"/>
       <save label = "p.x"             levels = "-1"/>
       <save label = "p.volume"        levels = "-1"/>
-      <checkpoint cycle = "2" timestepInterval = "100"/>
+      <checkpoint cycle = "2" timestepInterval = "5"/>
    </DataArchiver>
 
     <!--____________________________________________________________________-->
@@ -329,5 +334,23 @@
           </interiorSources>
         </scalar>
       </Model>
-    </Models>            
+    </Models>         
+    
+    <!--__________________________________-->
+    <DataAnalysis>
+
+      <Module name = "statistics">
+         <timeStart>   0.015  </timeStart>
+         <timeStop>   100     </timeStop>
+        <material>    atmosphere     </material>
+        <computeHigherOrderStats> true </computeHigherOrderStats>
+        <Variables>
+          <analyze label="press_CC"  matl="0"/>
+          <analyze label="temp_CC"   matl="1"/>
+          <analyze label="vel_CC"    matl="1" computeReynoldsStress="true" />
+        </Variables>
+        
+      </Module>         
+    </DataAnalysis>
+
 </Uintah_specification>
