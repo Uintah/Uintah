@@ -61,6 +61,17 @@ void visit_ControlCommandCallback(const char *cmd, const char *args, void *cbdat
 
 int visit_ProcessVisItCommand( visit_simulation_data *sim );
 
+void visit_MaxTimeStepCallback (char *val, void *cbdata);
+void visit_MaxTimeCallback     (char *val, void *cbdata);
+void visit_DeltaTCallback      (char *val, void *cbdata);
+void visit_DeltaTMinCallback   (char *val, void *cbdata);
+void visit_DeltaTMaxCallback   (char *val, void *cbdata);
+void visit_DeltaTFactorCallback(char *val, void *cbdata);
+void visit_MaxWallTimeCallback (char *val, void *cbdata);
+ 
+void visit_VariableTableCallback(char *val, void *cbdata);
+void visit_OutputIntervalVariableTableCallback(char *val, void *cbdata);
+
 } // End namespace Uintah
 
 #endif

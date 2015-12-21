@@ -53,13 +53,15 @@ WARNING
 
 #include "Core/Grid/Grid.h"
 
+#include <map>
 #include <string>
+#include <utility>
 
 class TimeStepInfo;
 
 namespace Uintah {
 
-class AMRSimulationController;
+class SimulationController;
 
 /* Simulation Mode */
 //#define VISIT_SIMMODE_UNKNOWN  0
@@ -70,17 +72,34 @@ class AMRSimulationController;
 #define VISIT_SIMMODE_FINISHED   4
 #define VISIT_SIMMODE_TERMINATED 5
 
+
+typedef struct
+{
+  std::string name;
+  double value;
+  
+  bool modified;
+
+} uintah_variable_data;
+
+
 typedef struct
 {
   // Uintah data members
-  AMRSimulationController *AMRSimController;
+  SimulationController *simController;
   GridP gridP;
   
   TimeStepInfo* stepInfo;
 
+  // Specialize boolean flag to skip calling adjustDelT on the
+  // next time step if the user has modified the variable delt.
+  bool overrideDelT;
+
   int cycle;
+
   double time;
   double delt;
+  double elapsedt;
 
   std::string message;
 
@@ -95,6 +114,9 @@ typedef struct
   int  simMode;
 
   bool isProc0;
+
+  std::vector< uintah_variable_data > variables;
+  std::vector< uintah_variable_data > outputIntervals;
 
 } visit_simulation_data;
 

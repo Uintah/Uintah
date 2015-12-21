@@ -190,7 +190,7 @@ void visit_InitLibSim( visit_simulation_data *sim )
     VisItInitializeSocketAndDumpSimFile(simFileName.c_str(),
                                         simComment.c_str(),
                                         exeCommand.c_str(),
-                                        NULL, NULL, NULL);
+                                        NULL, "uintah.ui", NULL);
   }
 }
 
@@ -253,7 +253,7 @@ void visit_CheckState( visit_simulation_data *sim )
     {
       if(sim->isProc0)
       {
-	VisItUI_setValueS("SIMULATION_STATUS", sim->message.c_str(), 1);
+	// VisItUI_setValueS("SIMULATION_STATUS", sim->message.c_str(), 1);
 
 	std::stringstream msg;
 	msg << "Visit libsim - Completed simulation "
