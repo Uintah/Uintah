@@ -61,16 +61,28 @@ SimulationState::SimulationState(ProblemSpecP &ps)
 
   //__________________________________
   //  These variables can be modified by a component.
-  VarLabel* nonconstOutputInv =     // output timestep interval
-                          VarLabel::create("outputInterval",      min_vartype::getTypeDescription() );
-  VarLabel* nonconstCheckInv =      // check point interval
-                          VarLabel::create("checkpointInterval", min_vartype::getTypeDescription() );
+  VarLabel* nonconstOutputTimestepInv =     // output timestep interval
+    VarLabel::create("outputTimestepInterval",     min_vartype::getTypeDescription() );
+  VarLabel* nonconstCheckpointTimestepInv = // check point timestep interval
+    VarLabel::create("checkpointTimestepInterval", min_vartype::getTypeDescription() );
+
+  nonconstOutputTimestepInv->allowMultipleComputes();
+  nonconstCheckpointTimestepInv->allowMultipleComputes();
+
+  outputTimestepInterval_label     = nonconstOutputTimestepInv;
+  checkpointTimestepInterval_label = nonconstCheckpointTimestepInv;
+
+
+  VarLabel* nonconstOutputInv =     // output interval
+    VarLabel::create("outputInterval",     min_vartype::getTypeDescription() );
+  VarLabel* nonconstCheckpointInv = // check point interval
+    VarLabel::create("checkpointInterval", min_vartype::getTypeDescription() );
 
   nonconstOutputInv->allowMultipleComputes();
-  nonconstCheckInv->allowMultipleComputes();
+  nonconstCheckpointInv->allowMultipleComputes();
 
   outputInterval_label     = nonconstOutputInv;
-  checkpointInterval_label = nonconstCheckInv;
+  checkpointInterval_label = nonconstCheckpointInv;
   //__________________________________
   d_elapsed_time = 0.0;
 
