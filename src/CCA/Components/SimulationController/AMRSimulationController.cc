@@ -183,7 +183,8 @@ AMRSimulationController::run()
 #ifdef HAVE_VISIT
   if( do_visit )
   {
-    d_visit_simulation_data.AMRSimController = this;
+    d_visit_simulation_data.simController = this;
+    d_visit_simulation_data.overrideDelT = false;
 
 #ifdef HAVE_MPICH
   d_visit_simulation_data.isProc0 = isProc0_macro;
@@ -198,14 +199,12 @@ AMRSimulationController::run()
    
   int    iterations = d_sharedState->getCurrentTopLevelTimeStep();
   double delt = 0;
-   
+  delt_vartype delt_var;
   double start;
   
   d_lb->resetCostForecaster();
 
   d_scheduler->setInitTimestep(false);
-
-
 
   while( ( time < d_timeinfo->maxTime ) &&
          ( iterations < d_timeinfo->maxTimestep ) && 
@@ -265,15 +264,21 @@ AMRSimulationController::run()
     iterations++;
  
     // get delt and adjust it
-    delt_vartype delt_var;
     DataWarehouse* newDW = d_scheduler->getLastDW();
     newDW->get(delt_var, d_sharedState->get_delt_label());
 
     delt = delt_var;
 
     // delt adjusted based on timeinfo parameters
-    adjustDelT( delt, d_sharedState->d_prev_delt, first, time );
-    newDW->override(delt_vartype(delt), d_sharedState->get_delt_label());
+#ifdef HAVE_VISIT
+    // Skip calling adjustDelT for this next time step if the user
+    // modified the value during the previous time step.
+    if( !d_visit_simulation_data.overrideDelT ) 
+#endif
+    {
+      adjustDelT( delt, d_sharedState->d_prev_delt, first, time );
+      newDW->override(delt_vartype(delt), d_sharedState->get_delt_label());
+    }
 
     // printSimulationStats( d_sharedState, delt, time );
 
@@ -440,52 +445,114 @@ AMRSimulationController::run()
 
     time += delt;
 
+    if ( first ) {
+      d_scheduler->setRestartInitTimestep(false);
+      first = false;
+    }
+
     // If VisIt has been included into the build, check the lib sim state
     // to see if there is a connection and if so if anything needs to be
     // done.
 #ifdef HAVE_VISIT
-
      if( do_visit ) {
-
+       
        d_visit_simulation_data.gridP = currentGrid;
-       d_visit_simulation_data.message = std::string("");
        d_visit_simulation_data.time  = time;
        d_visit_simulation_data.delt  = delt;
+       d_visit_simulation_data.overrideDelT = false;
+       d_visit_simulation_data.elapsedt = getWallTime();
        d_visit_simulation_data.cycle =
 	 d_sharedState->getCurrentTopLevelTimeStep();
+       d_visit_simulation_data.message = std::string("");;
 
+       d_visit_simulation_data.variables.clear();
+       d_visit_simulation_data.outputIntervals.clear();
+
+       // Add in the user viewable/settable variables.
+       uintah_variable_data var;
+
+       if (d_output )
+       {
+	 std::string name;
+	 double val;
+
+	 if( d_output->getOutputInterval() > 0 )
+	 {
+	   name = d_sharedState->get_outputInterval_label()->getName();
+	   val = d_output->getOutputInterval();
+	 }
+	 else
+	 {
+	   name = d_sharedState->get_outputTimestepInterval_label()->getName();
+	   val = d_output->getOutputTimestepInterval();
+	 }
+
+	 var.name = name;
+	 var.value = val;
+	 var.modified = false;
+	 d_visit_simulation_data.outputIntervals.push_back(var);
+
+	 if( d_output->getCheckpointInterval() > 0 )
+	 {
+	   name = d_sharedState->get_checkpointInterval_label()->getName();
+	   val = d_output->getCheckpointInterval();
+	 }
+	 else
+	 {
+	   name = d_sharedState->get_checkpointTimestepInterval_label()->getName();
+	   val = d_output->getCheckpointTimestepInterval();
+	 }
+
+	 var.name = name;
+	 var.value = val;
+	 var.modified = false;
+	 d_visit_simulation_data.outputIntervals.push_back(var);
+       }
+
+       // Check the state.
        visit_CheckState( &d_visit_simulation_data );
 
        // User issued a termination.
        if( d_visit_simulation_data.simMode == VISIT_SIMMODE_TERMINATED )
          break;
+
+       // Loop through the user viewable/settable variables and update
+       // those that have been modified.
+       std::vector< uintah_variable_data > &vars =
+	 d_visit_simulation_data.variables;
+
+       for( int i=0; i<vars.size(); ++i )
+       {
+	 uintah_variable_data &var = vars[i];
+
+	 if( var.modified )
+	 {
+	   // if( var.name == SOMEVAR )
+	   // {
+	   // }
+	 }
+       }
      }
 #endif
-
-    if ( first ) {
-      d_scheduler->setRestartInitTimestep(false);
-      first = false;
-    }
      
   } // end while ( time is not up, etc )
 
-  // If VisIt has been included into the build, stop here so the
-  // user can have once last chance see their data via VisIt.
-#ifdef HAVE_VISIT
-
-   if( do_visit ) {
-     visit_EndLibSim( &d_visit_simulation_data );
-   }
-#endif
-
-  // print for the final timestep, as the one above is in the middle of a while loop - get new delt, and set walltime first
-  delt_vartype delt_var;
+  // print for the final timestep, as the one above is in the middle
+  // of a while loop - get new delt, and set walltime first
   d_scheduler->getLastDW()->get(delt_var, d_sharedState->get_delt_label());
   delt = delt_var;
   adjustDelT( delt, d_sharedState->d_prev_delt, d_sharedState->getCurrentTopLevelTimeStep(), time );
   calcWallTime();
   printSimulationStats( d_sharedState->getCurrentTopLevelTimeStep(), delt, time );
   
+  // If VisIt has been included into the build, stop here so the
+  // user can have once last chance see their data via VisIt.
+#ifdef HAVE_VISIT
+   if( do_visit ) {
+     visit_EndLibSim( &d_visit_simulation_data );
+   }
+#endif
+
   // d_ups->releaseDocument();
 #ifdef USE_GPERFTOOLS
   if (gprofile.active()){
