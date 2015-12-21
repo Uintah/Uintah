@@ -121,8 +121,8 @@ using SCIRun::Mutex;
        virtual void finalizeTimestep(double t, double delt, const GridP&,
                                      SchedulerP&, bool recompile=false );
            
-      //! schedule the output tasks if we are recompiling the taskgraph.  
-      virtual void sched_allOutputTasks(double delt, const GridP&,
+       //! schedule the output tasks if we are recompiling the taskgraph.  
+       virtual void sched_allOutputTasks(double delt, const GridP&,
 				            SchedulerP&, bool recompile = false );
                                       
 
@@ -141,10 +141,10 @@ using SCIRun::Mutex;
        //! Asks if we need to recompile the task graph.
        virtual bool needRecompile(double time, double dt, const GridP& grid);
 
-       //! The task that handles the outputting.  Scheduled in finalizeTimestep.
-       //! Handles outputs and checkpoints and differentiates between them in the
-       //! last argument.  Outputs as binary the data acquired from VarLabel in 
-       //! p_dir.
+       //! The task that handles the outputting.  Scheduled in
+       //! finalizeTimestep.  Handles outputs and checkpoints and
+       //! differentiates between them in the last argument.  Outputs
+       //! as binary the data acquired from VarLabel in p_dir.
        void outputVariables(const ProcessorGroup*, 
                             const PatchSubset* patch,
                             const MaterialSubset* matls, 
@@ -190,11 +190,20 @@ using SCIRun::Mutex;
        bool isLabelSaved ( const std::string & label ) const;
        
        //! Allow a component to define the output and checkpoint interval on the fly.
-       void updateOutputInterval(     double inv );
+       void updateOutputInterval( double inv );
+       void updateOutputTimestepInterval( int inv );
        void updateCheckpointInterval( double inv );
+       void updateCheckpointTimestepInterval( int inv );
 
-       double getOutputInterval() const {     return d_outputInterval; }
+       double getOutputInterval() const { return d_outputInterval; }
+       int    getOutputTimestepInterval() const { return d_outputTimestepInterval; }
        double getCheckpointInterval() const { return d_checkpointInterval; }
+       int    getCheckpointTimestepInterval() const { return d_checkpointTimestepInterval; }
+
+       void outputTimestep( double time, double delt,
+			    const GridP& grid, SchedulerP& sched );
+       void checkpointTimestep( double time, double delt,
+				const GridP& grid, SchedulerP& sched );
 
      public:
 
@@ -348,7 +357,7 @@ using SCIRun::Mutex;
 
        // Only one of these should be non-zero.
        double d_checkpointInterval;        // In seconds.
-       int d_checkpointTimestepInterval;   // In seconds.
+       int d_checkpointTimestepInterval;   // Number of time steps.
 
        // How much real time (in seconds) to wait for checkpoint can be
        // used with or without one of the above two.  WalltimeStart
