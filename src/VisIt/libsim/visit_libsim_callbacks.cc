@@ -32,10 +32,13 @@
 
 #include <Core/Grid/Grid.h>
 #include <Core/Grid/Variables/VarTypes.h>
+#include <Core/Util/DebugStream.h>
 
 #include "visit_libsim.h"
 
 namespace Uintah {
+
+static SCIRun::DebugStream visitdbg( "VisItLibSim", true );
 
 #define VISIT_COMMAND_PROCESS 0
 #define VISIT_COMMAND_SUCCESS 1
@@ -102,8 +105,8 @@ visit_ControlCommandCallback(const char *cmd, const char *args, void *cbdata)
   {
     std::stringstream msg;	  
     msg << "Visit libsim - step cycle value " << args;
-    VisItUI_setValueS("SIMULATION_STATUS", msg.str().c_str(), 1);
-    VisItUI_setValueS("SIMULATION_STATUS", " ", 1);
+    VisItUI_setValueS("SIMULATION_MESSAGE", msg.str().c_str(), 1);
+    VisItUI_setValueS("SIMULATION_MESSAGE", " ", 1);
   }
   else if(strcmp(cmd, "Stop") == 0 && sim->simMode != VISIT_SIMMODE_FINISHED)
   {
@@ -124,7 +127,7 @@ visit_ControlCommandCallback(const char *cmd, const char *args, void *cbdata)
     double time  = sim->time;
 
     // std::string message("");
-    // VisItUI_setValueS("SIMULATION_STATUS", message.c_str(), 1);
+    // VisItUI_setValueS("SIMULATION_MESSAGE", message.c_str(), 1);
   }
   else if(strcmp(cmd, "Regrid") == 0 && sim->simMode != VISIT_SIMMODE_FINISHED)
   {
@@ -133,28 +136,46 @@ visit_ControlCommandCallback(const char *cmd, const char *args, void *cbdata)
   }
   else if(strcmp(cmd, "Save") == 0)
   {
-    Output *output = sim->simController->getOutput();
-    SchedulerP schedulerP = sim->simController->getSchedulerP();
-
-    ((DataArchiver *)output)->outputTimestep( sim->time,
-					      sim->delt,
-					      sim->gridP,
-					      schedulerP );
-
-    VisItUI_setValueS("ENABLE_BUTTON", "Save", 0);
+    // Do not call unless the simulation is stopped or finished as it
+    // will interfer with the task graph.
+    if(sim->simMode == VISIT_SIMMODE_STOPPED ||
+       sim->simMode == VISIT_SIMMODE_FINISHED)
+    {
+      Output *output = sim->simController->getOutput();
+      SchedulerP schedulerP = sim->simController->getSchedulerP();
+      
+      ((DataArchiver *)output)->outputTimestep( sim->time,
+						sim->delt,
+						sim->gridP,
+						schedulerP );
+      
+      VisItUI_setValueS("SIMULATION_ENABLE_BUTTON", "Save", 0);
+    }
+    else
+      VisItUI_setValueS("SIMULATION_MESSAGE_BOX",
+			"Can not save a timestep unless the simulation is stopped", 0);
   }
 
   else if(strcmp(cmd, "Checkpoint") == 0)
   {
-    Output *output = sim->simController->getOutput();
-    SchedulerP schedulerP = sim->simController->getSchedulerP();
-
-    ((DataArchiver *)output)->checkpointTimestep( sim->time,
-						  sim->delt,
-						  sim->gridP,
-						  schedulerP );
-
-    VisItUI_setValueS("ENABLE_BUTTON", "Checkpoint", 0);
+    // Do not call unless the simulation is stopped or finished as it
+    // will interfer with the task graph.
+    if(sim->simMode == VISIT_SIMMODE_STOPPED ||
+       sim->simMode == VISIT_SIMMODE_FINISHED)
+    {
+      Output *output = sim->simController->getOutput();
+      SchedulerP schedulerP = sim->simController->getSchedulerP();
+      
+      ((DataArchiver *)output)->checkpointTimestep( sim->time,
+						    sim->delt,
+						    sim->gridP,
+						    schedulerP );
+      
+      VisItUI_setValueS("SIMULATION_ENABLE_BUTTON", "Checkpoint", 0);
+    }
+    else
+      VisItUI_setValueS("SIMULATION_MESSAGE_BOX",
+			"Can not save a checkpoint unless the simulation is stopped", 0);
   }
 
   // Only allow the runMode to finish if the simulation is finished.
@@ -174,8 +195,11 @@ visit_ControlCommandCallback(const char *cmd, const char *args, void *cbdata)
     {
       std::stringstream msg;	  
       msg << "Visit libsim - Terminating the simulation";
-      VisItUI_setValueS("SIMULATION_STATUS", msg.str().c_str(), 1);
-      VisItUI_setValueS("SIMULATION_STATUS", " ", 1);
+      VisItUI_setValueS("SIMULATION_MESSAGE", msg.str().c_str(), 1);
+      VisItUI_setValueS("SIMULATION_MESSAGE", " ", 1);
+
+      visitdbg << msg.str().c_str() << std::endl;
+      visitdbg.flush();
     }
   }
   else if(strcmp(cmd, "Abort") == 0)
@@ -184,8 +208,11 @@ visit_ControlCommandCallback(const char *cmd, const char *args, void *cbdata)
     {
       std::stringstream msg;	  
       msg << "Visit libsim - Aborting the simulation";
-      VisItUI_setValueS("SIMULATION_STATUS", msg.str().c_str(), 1);
-      VisItUI_setValueS("SIMULATION_STATUS", " ", 1);
+      VisItUI_setValueS("SIMULATION_MESSAGE", msg.str().c_str(), 1);
+      VisItUI_setValueS("SIMULATION_MESSAGE", " ", 1);
+
+      visitdbg << msg.str().c_str() << std::endl;
+      visitdbg.flush();
     }
 
     exit( 0 );
@@ -200,7 +227,7 @@ visit_ControlCommandCallback(const char *cmd, const char *args, void *cbdata)
 
       std::stringstream msg;	  
       msg << "Visit libsim - Continuing the simulation";
-      VisItUI_setValueS("SIMULATION_STATUS", msg.str().c_str(), 1);
+      VisItUI_setValueS("SIMULATION_MESSAGE", msg.str().c_str(), 1);
     }
   }
 }
