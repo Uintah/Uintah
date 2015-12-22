@@ -124,10 +124,8 @@ visit_handle visit_ReadMetaData(void *cbdata)
   sim->nodeCentered = false;
   // bool &nodeCentered = sim->nodeCentered;
 
-  sim->stepInfo = getTimeStepInfo2(schedulerP,
-                                   gridP,
-                                   timestate,
-                                   useExtraCells);
+  sim->stepInfo =
+    getTimeStepInfo2(schedulerP, gridP, timestate, useExtraCells);
 
   TimeStepInfo* &stepInfo = sim->stepInfo;
 
@@ -137,6 +135,10 @@ visit_handle visit_ReadMetaData(void *cbdata)
   if(VisIt_SimulationMetaData_alloc(&md) == VISIT_OKAY)
   {
     /* Set the simulation state. */
+
+    /* NOTE visit_ReadMetaData is called as a results of calling
+       visit_CheckState which calls VisItTimeStepChanged at this point
+       the sim->runMode will always be VISIT_SIMMODE_RUNNING. */
     if(sim->runMode == VISIT_SIMMODE_FINISHED ||
        sim->runMode == VISIT_SIMMODE_STOPPED ||
        sim->runMode == VISIT_SIMMODE_STEP)
@@ -247,7 +249,7 @@ visit_handle visit_ReadMetaData(void *cbdata)
                 << "has an unknown variable type \""
                 << vartype << "\"";
             
-            VisItUI_setValueS("SIMULATION_STATUS_WARNING", msg.str().c_str(), 1);
+            VisItUI_setValueS("SIMULATION_MESSAGE_WARNING", msg.str().c_str(), 1);
           }
 
           continue;

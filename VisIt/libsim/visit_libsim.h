@@ -110,8 +110,8 @@ typedef struct
   bool forceMeshReload;
 
   // Simulation control members
-  int  runMode;
-  int  simMode;
+  int  runMode;  // What the libsim is doing.
+  int  simMode;  // What the simulation is doing.
 
   bool isProc0;
 
