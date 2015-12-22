@@ -55,6 +55,6 @@ endif
 SRCS := \
 	$(SRCDIR)/uda2vis.cc
 
-LIBS := $(XML2_LIBRARY) $(Z_LIBRARY) $(M_LIBRARY) $(MPI_LIBRARY) $(F_LIBRARY)
+LIBS := $(XML2_LIBRARY) $(M_LIBRARY) $(MPI_LIBRARY) $(F_LIBRARY)
 
 include $(SCIRUN_SCRIPTS)/so_epilogue.mk
