@@ -51,7 +51,7 @@ PSELIBS :=
 #           Core/Exceptions Core/Util \
 #           Core/Exceptions Core/Util Core/Math
 
-LIBS := $(Z_LIBRARY) $(DEFAULT_LIBRARY) $(M_LIBRARY)
+LIBS := $(DEFAULT_LIBRARY) $(M_LIBRARY)
 
 # See commit message for while hacking in the MPI_LIBRARY is necessary.
 ifeq ($(IS_OSX),yes)

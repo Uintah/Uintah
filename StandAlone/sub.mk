@@ -65,7 +65,7 @@ else
   LIBS := $(MPI_LIBRARY) $(XML2_LIBRARY) $(F_LIBRARY) $(HYPRE_LIBRARY)  \
           $(CANTERA_LIBRARY) $(ZOLTAN_LIBRARY)                          \
           $(PETSC_LIBRARY) $(LAPACK_LIBRARY) $(BLAS_LIBRARY)            \
-          $(M_LIBRARY) $(THREAD_LIBRARY) $(Z_LIBRARY)                   \
+          $(M_LIBRARY) $(THREAD_LIBRARY)                                \
           $(EXPRLIB_LIBRARY) $(SPATIALOPS_LIBRARY)                      \
           $(TABPROPS_LIBRARY) $(RADPROPS_LIBRARY)                       \
           $(BOOST_LIBRARY) $(CUDA_LIBRARY)                              \
