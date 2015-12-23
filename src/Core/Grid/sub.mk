@@ -79,8 +79,7 @@ PSELIBS := \
         Core/Math        \
         Core/Disclosure
 
-LIBS := $(MPI_LIBRARY)
-
+LIBS := $(Z_LIBRARY) $(MPI_LIBRARY) 
 #HAVE_PIDX
 ifeq ($(HAVE_PIDX),yes)
 	INCLUDES += ${PIDX_INCLUDE}
