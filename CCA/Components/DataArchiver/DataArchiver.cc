@@ -3005,19 +3005,24 @@ DataArchiver::updateOutputTimestepInterval( int newinv )
 void
 DataArchiver::updateCheckpointInterval( double newinv )
 {
-  if (d_checkpointInterval == newinv) {
-    return;
-  }
-  else {
+  if (d_checkpointInterval != newinv)
+  {
     d_checkpointInterval = newinv;
     d_checkpointTimestepInterval = 0;
     d_nextCheckpointTime = 0.0;
 
-    // create checkpoints/index.xml (if we are saving checkpoints)
-    if (!d_checkpointsDir.exists()) {
-      d_checkpointsDir = d_dir.createSubdir("checkpoints");
-      createIndexXML(d_checkpointsDir);
+    // If needed create checkpoints/index.xml
+    if( !d_checkpointsDir.exists() )
+    {
+      if( d_myworld->myrank() == 0) {
+	d_checkpointsDir = d_dir.createSubdir("checkpoints");
+	createIndexXML(d_checkpointsDir);
+      }
     }
+
+    // Sync up before every rank can use the checkpoints dir
+    if (Parallel::usingMPI())
+      MPI_Barrier(d_myworld->getComm());
   }
 }
 
@@ -3032,11 +3037,18 @@ DataArchiver::updateCheckpointTimestepInterval( int newinv )
     d_checkpointInterval = 0;
     d_nextCheckpointTime = 0.0;
 
-    // create checkpoints/index.xml (if we are saving checkpoints)
-    if (!d_checkpointsDir.exists()) {
-      d_checkpointsDir = d_dir.createSubdir("checkpoints");
-      createIndexXML(d_checkpointsDir);
+    // If needed create checkpoints/index.xml
+    if( !d_checkpointsDir.exists())
+    {
+      if( d_myworld->myrank() == 0) {
+	d_checkpointsDir = d_dir.createSubdir("checkpoints");
+	createIndexXML(d_checkpointsDir);
+      }
     }
+
+    // Sync up before every rank can use the checkpoints dir
+    if (Parallel::usingMPI())
+      MPI_Barrier(d_myworld->getComm());
   }
 }
 
@@ -3108,6 +3120,7 @@ DataArchiver::outputTimestep( double time,
   // Save the var so to return to the normal output schedule.
   int nextOutputTimestep = d_nextOutputTimestep;
   int outputTimestepInterval = d_outputTimestepInterval;
+
   d_nextOutputTimestep = d_sharedState->getCurrentTopLevelTimeStep();;
   d_outputTimestepInterval = 1;
 
@@ -3153,18 +3166,26 @@ DataArchiver::checkpointTimestep( double time,
   LoadBalancer* lb = dynamic_cast<LoadBalancer*>(getPort("load balancer")); 
 
   DataWarehouse* newDW = sched->getLastDW();
-  
+
   // Save the vars so to return to the normal output schedule.
   int nextCheckpointTimestep = d_nextCheckpointTimestep;
   int checkpointTimestepInterval = d_checkpointTimestepInterval;
+
   d_nextCheckpointTimestep = d_sharedState->getCurrentTopLevelTimeStep();;
   d_checkpointTimestepInterval = 1;
 
-  // create checkpoints/index.xml (if we are saving checkpoints)
-  if (!d_checkpointsDir.exists()) {
-    d_checkpointsDir = d_dir.createSubdir("checkpoints");
-    createIndexXML(d_checkpointsDir);
+  // If needed create checkpoints/index.xml
+  if( !d_checkpointsDir.exists())
+  {
+    if( proc == 0) {
+      d_checkpointsDir = d_dir.createSubdir("checkpoints");
+      createIndexXML(d_checkpointsDir);
+    }
   }
+
+  // Sync up before every rank can use the checkpoints dir
+  if (Parallel::usingMPI())
+    MPI_Barrier(d_myworld->getComm());
 
   // Set up the inital bits including the flag d_isCheckpointTimestep
   // which triggers most actions.

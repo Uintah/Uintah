@@ -61,28 +61,33 @@ SimulationState::SimulationState(ProblemSpecP &ps)
 
   //__________________________________
   //  These variables can be modified by a component.
+  VarLabel* nonconstOutputInv =             // output interval
+    VarLabel::create("outputInterval",
+		     min_vartype::getTypeDescription() );
   VarLabel* nonconstOutputTimestepInv =     // output timestep interval
-    VarLabel::create("outputTimestepInterval",     min_vartype::getTypeDescription() );
+    VarLabel::create("outputTimestepInterval",
+		     min_vartype::getTypeDescription() );
+
+  VarLabel* nonconstCheckpointInv =         // check point interval
+    VarLabel::create("checkpointInterval",
+		     min_vartype::getTypeDescription() );
+  
   VarLabel* nonconstCheckpointTimestepInv = // check point timestep interval
-    VarLabel::create("checkpointTimestepInterval", min_vartype::getTypeDescription() );
-
-  nonconstOutputTimestepInv->allowMultipleComputes();
-  nonconstCheckpointTimestepInv->allowMultipleComputes();
-
-  outputTimestepInterval_label     = nonconstOutputTimestepInv;
-  checkpointTimestepInterval_label = nonconstCheckpointTimestepInv;
-
-
-  VarLabel* nonconstOutputInv =     // output interval
-    VarLabel::create("outputInterval",     min_vartype::getTypeDescription() );
-  VarLabel* nonconstCheckpointInv = // check point interval
-    VarLabel::create("checkpointInterval", min_vartype::getTypeDescription() );
+    VarLabel::create("checkpointTimestepInterval",
+		     min_vartype::getTypeDescription() );
 
   nonconstOutputInv->allowMultipleComputes();
-  nonconstCheckpointInv->allowMultipleComputes();
+  nonconstOutputTimestepInv->allowMultipleComputes();
 
-  outputInterval_label     = nonconstOutputInv;
-  checkpointInterval_label = nonconstCheckpointInv;
+  nonconstCheckpointInv->allowMultipleComputes();
+  nonconstCheckpointTimestepInv->allowMultipleComputes();
+
+  outputInterval_label             = nonconstOutputInv;
+  outputTimestepInterval_label     = nonconstOutputTimestepInv;
+
+  checkpointInterval_label         = nonconstCheckpointInv;
+  checkpointTimestepInterval_label = nonconstCheckpointTimestepInv;
+
   //__________________________________
   d_elapsed_time = 0.0;
 
