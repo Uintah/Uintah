@@ -42,7 +42,7 @@ fi
 # GIT Hash Tags for the various libraries
 
 # SPATIAL_OPS_TAG=
-EXPR_LIB_TAG=7c583362f4b6d69f700eaf7e6151807c50087220
+# EXPR_LIB_TAG=
 # TAB_PROPS_TAG=
 # RAD_PROPS_TAG=
 
