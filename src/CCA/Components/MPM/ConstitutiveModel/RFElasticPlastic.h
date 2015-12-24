@@ -27,7 +27,6 @@
 
 
 #include "ConstitutiveModel.h"
-#include "ImplicitCM.h"
 #include "PlasticityModels/YieldCondition.h"
 #include "PlasticityModels/StabilityCheck.h"
 #include "PlasticityModels/FlowModel.h"
@@ -79,7 +78,7 @@ namespace Uintah {
   */
   /////////////////////////////////////////////////////////////////////////////
 
-class RFElasticPlastic : public ConstitutiveModel, public ImplicitCM {
+class RFElasticPlastic : public ConstitutiveModel {
 
   public:
     // Create datatype for storing model parameters
@@ -113,16 +112,6 @@ class RFElasticPlastic : public ConstitutiveModel, public ImplicitCM {
       std::string scalarDamageDist; /*< Initial damage distrinution */
     };
 
-    // Create a datatype for storing Cp calculation paramaters
-    //struct CpData {
-    //  double A;
-    //  double B;
-    //  double C;
-    //  double n;
-    //};
-
-    const VarLabel* pRotationLabel;  // For Hypoelastic-plasticity
-    const VarLabel* pStrainRateLabel;  
     const VarLabel* pPlasticStrainLabel;  
     const VarLabel* pPlasticStrainRateLabel;  
     const VarLabel* pDamageLabel;  
@@ -130,8 +119,6 @@ class RFElasticPlastic : public ConstitutiveModel, public ImplicitCM {
     const VarLabel* pLocalizedLabel;  
     const VarLabel* pEnergyLabel;  
 
-    const VarLabel* pRotationLabel_preReloc;  // For Hypoelastic-plasticity
-    const VarLabel* pStrainRateLabel_preReloc;  
     const VarLabel* pPlasticStrainLabel_preReloc;  
     const VarLabel* pPlasticStrainRateLabel_preReloc;  
     const VarLabel* pDamageLabel_preReloc;  
@@ -144,8 +131,7 @@ class RFElasticPlastic : public ConstitutiveModel, public ImplicitCM {
     CMData           d_initialData;
     PorosityData     d_porosity;
     ScalarDamageData d_scalarDam;
-    //CpData           d_Cp;
-    
+
     double d_tol;
     double d_initialMaterialTemperature;
     double d_isothermal;
@@ -243,25 +229,6 @@ class RFElasticPlastic : public ConstitutiveModel, public ImplicitCM {
                                      DataWarehouse* new_dw);
 
     ////////////////////////////////////////////////////////////////////////
-    /*! \brief Put documentation here. */
-    ////////////////////////////////////////////////////////////////////////
-    virtual void addComputesAndRequires(Task* ,
-                                        const MPMMaterial* ,
-                                        const PatchSet* ,
-                                        const bool ,
-                                        const bool ) const;
-
-    ////////////////////////////////////////////////////////////////////////
-    /*! \brief Compute Stress Tensor Implicit */
-    ////////////////////////////////////////////////////////////////////////
-    virtual void computeStressTensorImplicit(const PatchSubset* patches,
-                                             const MPMMaterial* matl,
-                                             DataWarehouse* old_dw,
-                                             DataWarehouse* new_dw,
-                                             Solver* solver,
-                                             const bool recursion);
-
-    ////////////////////////////////////////////////////////////////////////
     /*! \brief carry forward CM data for RigidMPM */
     ////////////////////////////////////////////////////////////////////////
     virtual void carryForward(const PatchSubset* patches,
@@ -317,24 +284,6 @@ class RFElasticPlastic : public ConstitutiveModel, public ImplicitCM {
   protected:
   
     ////////////////////////////////////////////////////////////////////////
-    /*! \brief Compute Plastic State using Biswajit's approach */
-    ////////////////////////////////////////////////////////////////////////  
-    bool computePlasticStateBiswajit( PlasticityState* state, 
-                                      constParticleVariable<double>& pPlasticStrain,
-                                      constParticleVariable<double>& pStrainRate,
-                                      const Matrix3& sigma,
-                                      const Matrix3& trialS,
-                                      const Matrix3& tensorEta,
-                                      Matrix3& tensorS,
-                                      double& delGamma,
-                                      double& flowStress,
-                                      double& porosity,
-                                      double& mu_cur,
-                                      const double delT,
-                                      const MPMMaterial* matl,
-                                      const int idx);
-    
-    ////////////////////////////////////////////////////////////////////////
     /*! \brief Compute Stilde, epdot, ep, and delGamma using 
                Simo's approach */
     ////////////////////////////////////////////////////////////////////////
@@ -359,105 +308,6 @@ class RFElasticPlastic : public ConstitutiveModel, public ImplicitCM {
                              const particleIndex idx,
                              PlasticityState* state);
 
-    ////////////////////////////////////////////////////////////////////////
-    /*! Compute the elastic tangent modulus tensor for isotropic
-        materials
-        Assume: [stress] = [s11 s22 s33 s23 s31 s12]
-                [strain] = [e11 e22 e33 2e23 2e31 2e12] */
-    ////////////////////////////////////////////////////////////////////////
-    void computeElasticTangentModulus(const double& K,
-                                      const double& mu,
-                                      double Ce[6][6]);
-
-    ////////////////////////////////////////////////////////////////////////
-    /*! \brief Compute the elastic tangent modulus tensor for isotropic
-      materials */
-    ////////////////////////////////////////////////////////////////////////
-    void computeElasticTangentModulus(double bulk,
-                                      double shear,
-                                      TangentModulusTensor& Ce);
-
-    ////////////////////////////////////////////////////////////////////////
-    /*! Compute the elastic-plastic tangent modulus tensor for isotropic
-        materials for use in the implicit stress update
-        Assume: [stress] = [s11 s22 s33 s23 s31 s12]
-                [strain] = [e11 e22 e33 2e23 2e31 2e12] 
-        Uses alogorithm for small strain plasticity (Simo 1998, p.124) */
-    ////////////////////////////////////////////////////////////////////////
-    void computeEPlasticTangentModulus(const double& K,
-                                       const double& mu,
-                                       const double& delGamma,
-                                       const Matrix3& trialStess,
-                                       const particleIndex idx,
-                                       PlasticityState* state,
-                                       double Cep[6][6],
-                                       bool consistent);
-
-    ////////////////////////////////////////////////////////////////////////
-    /*! compute stress at each particle in the patch */
-    ////////////////////////////////////////////////////////////////////////
-    void computeStressTensorImplicit(const PatchSubset* patches,
-                                     const MPMMaterial* matl,
-                                     DataWarehouse* old_dw,
-                                     DataWarehouse* new_dw);
-
-    ////////////////////////////////////////////////////////////////////////
-    /*! Compute K matrix */
-    ////////////////////////////////////////////////////////////////////////
-    void computeStiffnessMatrix(const double B[6][24],
-                                const double Bnl[3][24],
-                                const double D[6][6],
-                                const Matrix3& sig,
-                                const double& vol_old,
-                                const double& vol_new,
-                                double Kmatrix[24][24]);
-
-    ////////////////////////////////////////////////////////////////////////
-    /*! Compute stiffness matrix for geomtric nonlinearity */
-    ////////////////////////////////////////////////////////////////////////
-    void BnlTSigBnl(const Matrix3& sig, const double Bnl[3][24],
-                    double Kgeo[24][24]) const;
-
-    ////////////////////////////////////////////////////////////////////////
-    /*! \brief Compute Porosity.
-      
-    The evolution of porosity is given by \n
-    \f$
-    \dot{f} = \dot{f}_{nucl} + \dot{f}_{grow}
-    \f$ \n
-    where
-    \f$
-    \dot{f}_{grow} = (1-f) D^p_{kk}
-    \f$ \n
-    \f$ D^p_{kk} = Tr(D^p) \f$, and \f$ D^p \f$ is the rate of plastic
-    deformation, and, \n
-    \f$
-    \dot{f}_{nucl} = A \dot{\epsilon}^p
-    \f$  \n
-    with 
-    \f$
-    A = f_n/(s_n \sqrt{2\pi}) \exp [-1/2 (\epsilon^p - \epsilon_n)^2/s_n^2]
-    \f$\n
-    \f$ f_n \f$ is the volume fraction of void nucleating particles , 
-    \f$ \epsilon_n \f$ is the mean of the normal distribution of nucleation
-    strains, and \f$ s_n \f$ is the standard deviation of the distribution.
-   
-    References:
-    1) Ramaswamy, S. and Aravas, N., 1998, Comput. Methods Appl. Mech. Engrg.,
-    163, 33-53.
-    2) Bernauer, G. and Brocks, W., 2002, Fatigue Fract. Engng. Mater. Struct.,
-    25, 363-384.
-    */
-    ////////////////////////////////////////////////////////////////////////
-    double updatePorosity(const Matrix3& rateOfDeform,
-                          double delT, double oldPorosity,
-                          double plasticStrain);
-
-    ////////////////////////////////////////////////////////////////////////
-    /*! \brief Calculate void nucleation factor */
-    ////////////////////////////////////////////////////////////////////////
-    inline double voidNucleationFactor(double plasticStrain);
-
   protected:
 
     void initializeLocalMPMLabels();
@@ -467,10 +317,6 @@ class RFElasticPlastic : public ConstitutiveModel, public ImplicitCM {
     void getInitialDamageData(ProblemSpecP& ps);
 
     void setErosionAlgorithm();
-
-    //void getSpecificHeatData(ProblemSpecP& ps);
-    //double computeSpecificHeat(double T);
-
   };
 
 } // End namespace Uintah
