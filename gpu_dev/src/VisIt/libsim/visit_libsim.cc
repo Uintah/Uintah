@@ -32,8 +32,8 @@
 #include <sci_defs/mpi_defs.h>
 #include <sci_defs/visit_defs.h>
 
-#include <Core/Util/DebugStream.h>
 #include <Core/Parallel/Parallel.h>
+#include <Core/Util/DebugStream.h>
 
 #include "StandAlone/tools/uda2vis/uda2vis.h"
 
@@ -45,10 +45,6 @@ static std::string simFileName( "Uintah" );
 static std::string simExecName;
 static std::string simArgs;
 static std::string simComment("Uintah Simulation");
-
-#define VISIT_COMMAND_PROCESS 0
-#define VISIT_COMMAND_SUCCESS 1
-#define VISIT_COMMAND_FAILURE 2
 
 namespace Uintah {
 
@@ -190,7 +186,7 @@ void visit_InitLibSim( visit_simulation_data *sim )
     VisItInitializeSocketAndDumpSimFile(simFileName.c_str(),
                                         simComment.c_str(),
                                         exeCommand.c_str(),
-                                        NULL, NULL, NULL);
+                                        NULL, "uintah.ui", NULL);
   }
 }
 
@@ -201,12 +197,14 @@ void visit_InitLibSim( visit_simulation_data *sim )
 //---------------------------------------------------------------------
 void visit_EndLibSim( visit_simulation_data *sim )
 {
+  // Only go into finish mode if connected and the user has not force
+  // the simulation to terminate early.
   if( VisItIsConnected() && sim->simMode != VISIT_SIMMODE_TERMINATED )
   {
     // The simulation is finished but the user may want to stay
     // conntected to analyze the last time step. So stop the run mode
-    // but do not let the simulation exit until the user says they are
-    // finished.
+    // but do not let the simulation complete until the user says they
+    // are finished.
     sim->runMode = VISIT_SIMMODE_STOPPED;
     sim->simMode = VISIT_SIMMODE_FINISHED;
 
@@ -221,19 +219,19 @@ void visit_EndLibSim( visit_simulation_data *sim )
       visitdbg << msg.str().c_str() << std::endl;
       visitdbg.flush();
       
-      VisItUI_setValueS("SIMULATION_STATUS", msg.str().c_str(), 1);
+      VisItUI_setValueS("SIMULATION_MESSAGE", msg.str().c_str(), 1);
     }
 
-    // Now check for the user to have finished.
+    // Now check for the user to have finished or issue a terminate.
     do
     {
       visit_CheckState(sim);
     }
     while( sim->runMode != VISIT_SIMMODE_FINISHED &&
            sim->simMode != VISIT_SIMMODE_TERMINATED );
-  }
 
-  VisItUI_setValueS("SIMULATION_MODE", "Unknown", 1);
+    VisItUI_setValueS("SIMULATION_MODE", "Unknown", 1);
+  }
 }
 
 
@@ -253,7 +251,7 @@ void visit_CheckState( visit_simulation_data *sim )
     {
       if(sim->isProc0)
       {
-	VisItUI_setValueS("SIMULATION_STATUS", sim->message.c_str(), 1);
+	// VisItUI_setValueS("SIMULATION_MESSAGE", sim->message.c_str(), 1);
 
 	std::stringstream msg;
 	msg << "Visit libsim - Completed simulation "
@@ -262,7 +260,7 @@ void visit_CheckState( visit_simulation_data *sim )
 	
 //      visitdbg << msg.str().c_str() << std::endl;
 //      visitdbg.flush();
-	VisItUI_setValueS("SIMULATION_STATUS", msg.str().c_str(), 1);
+	VisItUI_setValueS("SIMULATION_MESSAGE", msg.str().c_str(), 1);
       }
 
       // Tell VisIt that the timestep changed
@@ -277,26 +275,35 @@ void visit_CheckState( visit_simulation_data *sim )
     /* If running do not block */
     int blocking = (sim->runMode == VISIT_SIMMODE_RUNNING) ? 0 : 1;
 
-    if(sim->isProc0)
+    if( sim->blocking != blocking )
     {
-      if( sim->blocking != blocking )
-      {
-        sim->blocking = blocking;
+      sim->blocking = blocking;
         
-        if( VisItIsConnected() )
-        {
-	  if( blocking )
+      if( VisItIsConnected() )
+      {
+	if( blocking )
+	{
+	  // If blocking the run mode is not running so the
+	  // simulation will not be running so change the state to
+	  // allow asyncronious commands like saving a timestep or a
+	  // checkpoint to happen.
+	  if( sim->simMode != VISIT_SIMMODE_FINISHED )
 	  {
-	    VisItUI_setValueS("SIMULATION_MODE", "Stopped", 1);
+	    sim->simMode = VISIT_SIMMODE_STOPPED;
 
-	    std::stringstream msg;	  
-	    msg << "Visit libsim - Stopped the simulation at "
-		<< "timestep " << sim->cycle << ",  "
-		<< "Time = " << sim->time;
+	    if(sim->isProc0)
+	    {
+	      VisItUI_setValueS("SIMULATION_MODE", "Stopped", 1);
+	      
+	      std::stringstream msg;
+	      msg << "Visit libsim - Stopped the simulation at "
+		  << "timestep " << sim->cycle << ",  "
+		  << "Time = " << sim->time;
 	    
-	    visitdbg << msg.str().c_str() << std::endl;
-	    visitdbg.flush();
-	    VisItUI_setValueS("SIMULATION_STATUS", msg.str().c_str(), 1);
+	      visitdbg << msg.str().c_str() << std::endl;
+	      visitdbg.flush();
+	      VisItUI_setValueS("SIMULATION_MESSAGE", msg.str().c_str(), 1);
+	    }
 	  }
         }
       }
@@ -320,21 +327,26 @@ void visit_CheckState( visit_simulation_data *sim )
           
       visitdbg << msg.str().c_str() << std::endl;
       visitdbg.flush();
-      VisItUI_setValueS("SIMULATION_STATUS_ERROR", msg.str().c_str(), 1);
+      VisItUI_setValueS("SIMULATION_MESSAGE_ERROR", msg.str().c_str(), 1);
 
       err = 1;
     }
     else if(visitstate == 0)
     {
-      if(sim->isProc0)
+      if( sim->simMode != VISIT_SIMMODE_FINISHED &&
+	  sim->simMode != VISIT_SIMMODE_TERMINATED )
       {
 	VisItUI_setValueS("SIMULATION_MODE", "Running", 1);
+	sim->simMode = VISIT_SIMMODE_RUNNING;
 	
-	std::stringstream msg;	  
-	msg << "Visit libsim - Continuing the simulation - no input";
-	// visitdbg << msg.str().c_str() << std::endl;
-	// visitdbg.flush();
-	VisItUI_setValueS("SIMULATION_STATUS", msg.str().c_str(), 1);
+	if(sim->isProc0)
+	{
+	  std::stringstream msg;	  
+	  msg << "Visit libsim - Continuing the simulation - no input";
+	  // visitdbg << msg.str().c_str() << std::endl;
+	  // visitdbg.flush();
+	  VisItUI_setValueS("SIMULATION_MESSAGE", msg.str().c_str(), 1);
+	}
       }
 
       /* There was no input from VisIt, return control to sim. */
@@ -367,11 +379,11 @@ void visit_CheckState( visit_simulation_data *sim )
 
 	if(sim->isProc0)
 	{
-	  VisItUI_setValueS("SIMULATION_STATUS_CLEAR", "NoOp", 1);
+	  VisItUI_setValueS("SIMULATION_MESSAGE_CLEAR", "NoOp", 1);
 
 	  // visitdbg << msg.str().c_str() << std::endl;
 	  // visitdbg.flush();
-	  VisItUI_setValueS("SIMULATION_STATUS", msg.str().c_str(), 1);
+	  VisItUI_setValueS("SIMULATION_MESSAGE", msg.str().c_str(), 1);
 
 	  VisItUI_setValueS("SIMULATION_MODE", "Connected", 1);
 	}
@@ -393,7 +405,7 @@ void visit_CheckState( visit_simulation_data *sim )
 
 	// visitdbg << msg.str().c_str() << std::endl;
 	// visitdbg.flush();
-	VisItUI_setValueS("SIMULATION_STATUS_ERROR", msg.str().c_str(), 1);
+	VisItUI_setValueS("SIMULATION_MESSAGE_ERROR", msg.str().c_str(), 1);
       }
     }
     else if(visitstate == 2)
@@ -415,6 +427,8 @@ void visit_CheckState( visit_simulation_data *sim )
       /* If in step mode return control back to the simulation. */
       if( sim->runMode == VISIT_SIMMODE_STEP )
       {
+	sim->simMode = VISIT_SIMMODE_RUNNING;
+
 	if(sim->isProc0)
 	{
 	  VisItUI_setValueS("SIMULATION_MODE", "Running", 1);
@@ -423,9 +437,11 @@ void visit_CheckState( visit_simulation_data *sim )
 	  msg << "Visit libsim - Continuing the simulation for one time step";
 	  // visitdbg << msg.str().c_str() << std::endl;
 	  // visitdbg.flush();
-	  VisItUI_setValueS("SIMULATION_STATUS", msg.str().c_str(), 1);
+	  VisItUI_setValueS("SIMULATION_MESSAGE", msg.str().c_str(), 1);
 	}
 
+	// Swap over to stop mode because if an error occurs VisIt
+	// will otherwise advance to the next time step.
 	sim->runMode = VISIT_SIMMODE_STOPPED;
 
         sim->blocking = 0;
@@ -443,8 +459,8 @@ void visit_CheckState( visit_simulation_data *sim )
 	  msg << "Visit libsim - Finished the simulation ";
 	  // visitdbg << msg.str().c_str() << std::endl;
 	  // visitdbg.flush();
-	  VisItUI_setValueS("SIMULATION_STATUS", msg.str().c_str(), 1);
-	  VisItUI_setValueS("SIMULATION_STATUS", " ", 1);
+	  VisItUI_setValueS("SIMULATION_MESSAGE", msg.str().c_str(), 1);
+	  VisItUI_setValueS("SIMULATION_MESSAGE", " ", 1);
 	}
 
         sim->blocking = 0;

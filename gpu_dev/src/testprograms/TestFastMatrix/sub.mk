@@ -47,8 +47,7 @@ else
         $(F_LIBRARY)                      \
         $(LAPACK_LIBRARY) $(BLAS_LIBRARY) \
         $(THREAD_LIBRARY)                 \
-        $(Z_LIBRARY)                      \
-	$(CUDA_LIBRARY)                   
+        $(CUDA_LIBRARY)                   
 endif
 
 ###############################################

@@ -155,15 +155,20 @@ class SimulationState;
 
     // update output interval
     virtual void updateOutputInterval( double inv ) = 0;
+    virtual void updateOutputTimestepInterval( int inv ) = 0;
 
-    //get output interval
+    // get output interval
     virtual double getOutputInterval() const = 0;
+    virtual int    getOutputTimestepInterval() const = 0;
     
     // update checkpoint interval
     virtual void updateCheckpointInterval( double inv ) = 0;
+    virtual void updateCheckpointTimestepInterval( int inv ) = 0;
 
     //get checkpoint interval
     virtual double getCheckpointInterval() const = 0;
+    virtual int    getCheckpointTimestepInterval() const = 0;
+
     //////////
     // Get the directory of the current time step for outputting info.
     virtual const std::string& getLastTimestepOutputLocation() const = 0;

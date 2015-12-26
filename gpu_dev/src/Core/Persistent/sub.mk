@@ -38,7 +38,7 @@ SRCS     += $(SRCDIR)/Persistent.cc     \
 	    $(SRCDIR)/Pstreams.cc 
 
 PSELIBS := Core/Containers Core/Exceptions Core/Thread Core/Util
-LIBS := $(Z_LIBRARY)
+LIBS := 
 
 # See commit message for while hacking in the MPI_LIBRARY is necessary.
 ifeq ($(IS_OSX),yes)

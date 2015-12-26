@@ -109,9 +109,15 @@ public:
   const VarLabel* get_outputInterval_label() const {
     return outputInterval_label;
   }
+  const VarLabel* get_outputTimestepInterval_label() const {
+    return outputTimestepInterval_label;
+  }
 
   const VarLabel* get_checkpointInterval_label() const {
     return checkpointInterval_label;
+  }
+  const VarLabel* get_checkpointTimestepInterval_label() const {
+    return checkpointTimestepInterval_label;
   }
   void registerSimpleMaterial(SimpleMaterial*);
   void registerMPMMaterial(MPMMaterial*);
@@ -281,7 +287,9 @@ private:
   const VarLabel* refinePatchFlag_label;
   const VarLabel* switch_label;
   const VarLabel* outputInterval_label;
+  const VarLabel* outputTimestepInterval_label;
   const VarLabel* checkpointInterval_label;
+  const VarLabel* checkpointTimestepInterval_label;
 
   std::vector<Material*>        matls;
   std::vector<MPMMaterial*>     mpm_matls;
