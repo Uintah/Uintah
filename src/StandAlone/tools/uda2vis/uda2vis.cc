@@ -233,7 +233,7 @@ TimeStepInfo* getTimeStepInfo(DataArchive *archive,
   TimeStepInfo *stepInfo = new TimeStepInfo();
   stepInfo->levelInfo.resize(numLevels);
 
-  // get variable information
+  // Get the variable information
   std::vector<std::string> vars;
   std::vector<const Uintah::TypeDescription*> types;
   archive->queryVariables(vars, types);
@@ -245,7 +245,7 @@ TimeStepInfo* getTimeStepInfo(DataArchive *archive,
     varInfo.name = vars[i];
     varInfo.type = types[i]->getName();
 
-    // query each level for material info until we find something
+    // Query each level for material info until we find something
     for (int l=0; l<numLevels; l++) {
       LevelP level = (*grid)->getLevel(l);
       const Patch* patch = *(level->patchesBegin());
@@ -253,18 +253,18 @@ TimeStepInfo* getTimeStepInfo(DataArchive *archive,
         archive->queryMaterials(vars[i], patch, timestep);
       if (matls.size() > 0) {
 
-        // copy the list of materials
+        // Copy the list of materials
         for (ConsecutiveRangeSet::iterator matlIter = matls.begin();
              matlIter != matls.end(); matlIter++)
           varInfo.materials.push_back(*matlIter);
 
-        // don't query on any more levels
+        // Don't query on any more levels
         break;
       }
     }
   }
 
-  // get level information
+  // Get level information
   for (int l=0; l<numLevels; l++) {
     LevelInfo &levelInfo = stepInfo->levelInfo[l];
     LevelP level = (*grid)->getLevel(l);
@@ -274,7 +274,7 @@ TimeStepInfo* getTimeStepInfo(DataArchive *archive,
     copyVector(levelInfo.anchor, level->getAnchor());
     copyIntVector(levelInfo.periodic, level->getPeriodicBoundaries());
 
-    // patch info
+    // Patch info
     int numPatches = level->numPatches();
     levelInfo.patchInfo.resize(numPatches);
 
@@ -313,7 +313,7 @@ TimeStepInfo* getTimeStepInfo(DataArchive *archive,
                             &patch->getSFCZHighIndex()[0], "SFCZ_Mesh");
       }
 
-      //set processor id
+      // Get the processor id
       patchInfo.setProcId(archive->queryPatchwiseProcessor(patch, timestep));
     }
   }
@@ -658,7 +658,7 @@ TimeStepInfo* getTimeStepInfo2(SchedulerP schedulerP,
 {
   LoadBalancer* lb = schedulerP->getLoadBalancer();
 
-  // probably index is just 0 or 1
+  // Probably index is just 0 or 1
   int index = 1;
   DataWarehouse *dw = schedulerP->get_dw( index );
 
@@ -666,17 +666,17 @@ TimeStepInfo* getTimeStepInfo2(SchedulerP schedulerP,
   TimeStepInfo *stepInfo = new TimeStepInfo();
   stepInfo->levelInfo.resize(numLevels);
 
-  // get the variable information
+  // Get the variable information
   const std::set<const VarLabel*, VarLabel::Compare> varLabels =
     schedulerP->getInitialRequiredVars();
 
-  // get the material information
+  // Get the material information
   Scheduler::VarLabelMaterialMap* pLabelMatlMap =
     schedulerP->makeVarLabelMaterialMap();
 
   stepInfo->varInfo.resize(varLabels.size());
 
-  // loop through all of the variables
+  // Loop through all of the variables
   unsigned int i = 0;
   std::set<const VarLabel*, VarLabel::Compare>::iterator varIter;
 
@@ -709,7 +709,7 @@ TimeStepInfo* getTimeStepInfo2(SchedulerP schedulerP,
         {
           const Patch* patch = level->getPatch(p);
 
-          if( dw->exists( *varIter, *matIter, patch) )
+          if( dw->exists( *varIter, *matIter, patch ) )
           {
             // The variable exists on this level and patch.
             varInfo.materials.push_back( *matIter );
@@ -724,8 +724,9 @@ TimeStepInfo* getTimeStepInfo2(SchedulerP schedulerP,
     }
   }
 
-  // get level information
-  for (int l=0; l<numLevels; l++) {
+  // Get the level information
+  for (int l=0; l<numLevels; l++)
+  {
     LevelInfo &levelInfo = stepInfo->levelInfo[l];
     LevelP level = gridP->getLevel(l);
 
@@ -734,11 +735,12 @@ TimeStepInfo* getTimeStepInfo2(SchedulerP schedulerP,
     copyVector(levelInfo.anchor, level->getAnchor());
     copyIntVector(levelInfo.periodic, level->getPeriodicBoundaries());
 
-    // patch info
+    // Patch info
     int numPatches = level->numPatches();
     levelInfo.patchInfo.resize(numPatches);
 
-    for (int p=0; p<numPatches; p++) {
+    for (int p=0; p<numPatches; p++)
+    {
       const Patch* patch = level->getPatch(p);
       PatchInfo &patchInfo = levelInfo.patchInfo[p];
 
@@ -773,7 +775,7 @@ TimeStepInfo* getTimeStepInfo2(SchedulerP schedulerP,
                             &patch->getSFCZHighIndex()[0], "SFCZ_Mesh");
       }
 
-      //set processor id
+      // Get the processor id
       patchInfo.setProcId( lb->getPatchwiseProcessorAssignment(patch) );
     }
   }
@@ -947,7 +949,6 @@ static GridDataRaw* readGridData(SchedulerP schedulerP,
   // probably index is just 0 or 1
   int index = 1;
   DataWarehouse *dw = schedulerP->get_dw( index );
-
 
   IntVector ilow(low[0], low[1], low[2]);
   IntVector ihigh(high[0], high[1], high[2]);
@@ -1128,7 +1129,6 @@ ParticleDataRaw* readParticleData(SchedulerP schedulerP,
   // probably index is just 0 or 1
   int index = 1;
   DataWarehouse *dw = schedulerP->get_dw( index );
-
 
   ParticleDataRaw *pd = new ParticleDataRaw;
   pd->components = numComponents<T>();

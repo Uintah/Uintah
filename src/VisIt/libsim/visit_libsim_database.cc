@@ -22,11 +22,14 @@
  * IN THE SOFTWARE.
  */
 
+#include "visit_libsim.h"
+#include "visit_libsim_callbacks.h"
+
 #include "VisItControlInterface_V2.h"
 #include "VisItDataInterface_V2.h"
 
 #include <CCA/Components/Schedulers/MPIScheduler.h>
-#include <CCA/Components/SimulationController/AMRSimulationController.h>
+#include <CCA/Components/SimulationController/SimulationController.h>
 #include <CCA/Ports/SchedulerP.h>
 #include <CCA/Ports/Output.h>
 #include <CCA/Ports/Regridder.h>
@@ -102,7 +105,7 @@ visit_handle visit_ReadMetaData(void *cbdata)
 {
   visit_simulation_data *sim = (visit_simulation_data *)cbdata;
 
-  SchedulerP schedulerP = sim->AMRSimController->getSchedulerP();
+  SchedulerP schedulerP = sim->simController->getSchedulerP();
   GridP      gridP      = sim->gridP;
 
   if( !schedulerP.get_rep() || !gridP.get_rep() )
@@ -121,10 +124,8 @@ visit_handle visit_ReadMetaData(void *cbdata)
   sim->nodeCentered = false;
   // bool &nodeCentered = sim->nodeCentered;
 
-  sim->stepInfo = getTimeStepInfo2(schedulerP,
-                                   gridP,
-                                   timestate,
-                                   useExtraCells);
+  sim->stepInfo =
+    getTimeStepInfo2(schedulerP, gridP, timestate, useExtraCells);
 
   TimeStepInfo* &stepInfo = sim->stepInfo;
 
@@ -134,6 +135,10 @@ visit_handle visit_ReadMetaData(void *cbdata)
   if(VisIt_SimulationMetaData_alloc(&md) == VISIT_OKAY)
   {
     /* Set the simulation state. */
+
+    /* NOTE visit_ReadMetaData is called as a results of calling
+       visit_CheckState which calls VisItTimeStepChanged at this point
+       the sim->runMode will always be VISIT_SIMMODE_RUNNING. */
     if(sim->runMode == VISIT_SIMMODE_FINISHED ||
        sim->runMode == VISIT_SIMMODE_STOPPED ||
        sim->runMode == VISIT_SIMMODE_STEP)
@@ -244,7 +249,7 @@ visit_handle visit_ReadMetaData(void *cbdata)
                 << "has an unknown variable type \""
                 << vartype << "\"";
             
-            VisItUI_setValueS("SIMULATION_STATUS_WARNING", msg.str().c_str(), 1);
+            VisItUI_setValueS("SIMULATION_MESSAGE_WARNING", msg.str().c_str(), 1);
           }
 
           continue;
@@ -263,7 +268,11 @@ visit_handle visit_ReadMetaData(void *cbdata)
           {
             /* Set the mesh’s properties.*/
             VisIt_MeshMetaData_setName(mmd, mesh_for_this_var.c_str());
-            VisIt_MeshMetaData_setMeshType(mmd, VISIT_MESHTYPE_AMR);
+	    if( sim->simController->doAMR() )
+	      VisIt_MeshMetaData_setMeshType(mmd, VISIT_MESHTYPE_AMR);
+	    else
+	      VisIt_MeshMetaData_setMeshType(mmd, VISIT_MESHTYPE_AMR);
+
             VisIt_MeshMetaData_setTopologicalDimension(mmd, 3);
             VisIt_MeshMetaData_setSpatialDimension(mmd, 3);
             
@@ -379,7 +388,7 @@ visit_handle visit_ReadMetaData(void *cbdata)
     if (addProcId)
     {
       MPIScheduler *mpiScheduler = dynamic_cast<MPIScheduler*>
-        (sim->AMRSimController->getSchedulerP().get_rep());
+        (sim->simController->getSchedulerP().get_rep());
 
       for( int i=0; i<numProcLabels; ++i )
       {
@@ -550,27 +559,95 @@ visit_handle visit_ReadMetaData(void *cbdata)
 
     /* Add some commands. */
     const char *cmd_names[] = {"Stop", "Step", "Run",
-                               "Stats", "Regrid", "Save",
-                               "Finish", "Terminate", "Abort"};
+                               "Stats", "Save", "Checkpoint",
+                               "Finish", "Terminate", "Abort" }; //, "Regrid"};
 
     int numNames = sizeof(cmd_names) / sizeof(const char *);
 
     for (int i=0; i<numNames; ++i)
     {
-      // Check for AMR and regrid option.
-      if( (strcmp( "Regrid", cmd_names[i] ) != 0) ||
-          (strcmp( "Regrid", cmd_names[i] ) == 0 &&
-           sim->AMRSimController->doAMR()) )
+      bool enabled;
+
+      // Check for  and regrid option.
+      if(strcmp( "Regrid", cmd_names[i] ) == 0 )
+	enabled = sim->simController->doAMR();
+
+      else if(strcmp( "Save", cmd_names[i] ) == 0 )
+       	enabled = !sim->simController->getOutput()->isOutputTimestep();
+
+      else if(strcmp( "Checkpoint", cmd_names[i] ) == 0 )
+       	enabled = !sim->simController->getOutput()->isCheckpointTimestep();
+
+      else
+	enabled = true;
+
+      visit_handle cmd = VISIT_INVALID_HANDLE;
+      
+      if(VisIt_CommandMetaData_alloc(&cmd) == VISIT_OKAY)
       {
-        visit_handle cmd = VISIT_INVALID_HANDLE;
-        
-        if(VisIt_CommandMetaData_alloc(&cmd) == VISIT_OKAY)
-        {
           VisIt_CommandMetaData_setName(cmd, cmd_names[i]);
+          VisIt_CommandMetaData_setEnabled(cmd, enabled);
           VisIt_SimulationMetaData_addGenericCommand(md, cmd);
-        }
       }
     }
+
+    VisItUI_setValueI("TimeStep", sim->cycle, 0);
+    VisItUI_setValueI(  "MaxTimeStep", sim->simController->getSimulationTime()->maxTimestep, 1);
+    VisItUI_textChanged("MaxTimeStep", visit_MaxTimeStepCallback, (void*) sim);
+
+    VisItUI_setValueD("Time", sim->time, 0);
+
+    VisItUI_setValueD(  "MaxTime", sim->simController->getSimulationTime()->maxTime, 1);
+    VisItUI_textChanged("MaxTime", visit_MaxTimeCallback, (void*) sim);
+
+
+    VisItUI_setValueD(  "DeltaT", sim->delt, 1);
+    VisItUI_textChanged("DeltaT", visit_DeltaTCallback, (void*) sim);
+
+    VisItUI_setValueD(  "DeltaTFactor", sim->simController->getSimulationTime()->delt_factor, 1);
+    VisItUI_textChanged("DeltaTFactor", visit_DeltaTFactorCallback, (void*) sim);
+
+    VisItUI_setValueD(  "DeltaTMin", sim->simController->getSimulationTime()->delt_min, 1);
+    VisItUI_textChanged("DeltaTMin", visit_DeltaTMinCallback, (void*) sim);
+
+    VisItUI_setValueD(  "DeltaTMax", sim->simController->getSimulationTime()->delt_max, 1);
+    VisItUI_textChanged("DeltaTMax", visit_DeltaTMaxCallback, (void*) sim);
+
+    VisItUI_setValueD("ElapsedTime", sim->elapsedt, 0);
+
+    VisItUI_setValueD(  "MaxWallTime", sim->simController->getSimulationTime()->max_wall_time, 1);
+    VisItUI_textChanged("MaxWallTime", visit_MaxWallTimeCallback, (void*) sim);
+
+    {
+      std::vector< uintah_variable_data > &vars = sim->variables;
+      
+      for( int i=0; i<vars.size(); ++i )
+      {
+	uintah_variable_data &var = vars[i];
+	
+	VisItUI_setTableValueS("VariableTable", i, 0, var.name.c_str(),  0);
+	VisItUI_setTableValueD("VariableTable", i, 1, var.value, 1);
+      }
+    }
+
+    VisItUI_cellChanged("VariableTable", visit_VariableTableCallback, (void*) sim);
+
+    {
+      std::vector< uintah_variable_data > &vars = sim->outputIntervals;
+      
+      for( int i=0; i<vars.size(); ++i )
+      {
+	uintah_variable_data &var = vars[i];
+	
+	VisItUI_setTableValueS("OutputIntervalVariableTable",
+			       i, 0, var.name.c_str(),  0);
+	VisItUI_setTableValueD("OutputIntervalVariableTable",
+			       i, 1, var.value, 1);
+      }
+    }
+    
+    VisItUI_cellChanged("OutputIntervalVariableTable",
+			visit_OutputIntervalVariableTableCallback, (void*) sim);
 
     // if( sim->message.size() )
     // {
@@ -626,7 +703,7 @@ visit_handle visit_SimGetMetaData(void *cbdata)
 //
 //  Purpose:
 //      Calculates two important data structures.  One is the structure domain
-//      nesting, which tells VisIt how the AMR patches are nested, which allows
+//      nesting, which tells VisIt how the  patches are nested, which allows
 //      VisIt to ghost out coarse zones that are refined by smaller zones.
 //      The other structure is the rectilinear domain boundaries, which tells
 //      VisIt which patches are next to each other, allowing VisIt to create
@@ -691,14 +768,14 @@ void visit_CalculateDomainNesting(TimeStepInfo* stepInfo,
         int e[6] = { low[0], high[0],
                      low[1], high[1],
                      low[2], high[2] };
-        // debug5 << "\trdb->SetIndicesForAMRPatch(" << patch << ","
+        // debug5 << "\trdb->SetIndicesForPatch(" << patch << ","
         //           << my_level << ", <" << e[0] << "," << e[2] << "," << e[4]
         //           << "> to <" << e[1] << "," << e[3] << "," << e[5] << ">)"
         //             << std::endl;
 
         VisIt_DomainBoundaries_set_amrIndices(rdb, patch, my_level, e);
 //      VisIt_DomainBoundaries_finish(rdb, patch);
-        // rdb->SetIndicesForAMRPatch(patch, my_level, e);
+        // rdb->SetIndicesForPatch(patch, my_level, e);
       }
 
       // rdb->CalculateBoundaries();
@@ -883,7 +960,7 @@ visit_handle visit_SimGetMesh(int domain, const char *meshname, void *cbdata)
 {
   visit_simulation_data *sim = (visit_simulation_data *)cbdata;
 
-  SchedulerP schedulerP = sim->AMRSimController->getSchedulerP();
+  SchedulerP schedulerP = sim->simController->getSchedulerP();
   GridP      gridP      = sim->gridP;
 
   // bool &useExtraCells   = sim->useExtraCells;
@@ -1183,7 +1260,7 @@ visit_handle visit_SimGetVariable(int domain, const char *varname, void *cbdata)
     
   visit_simulation_data *sim = (visit_simulation_data *)cbdata;
 
-  SchedulerP schedulerP = sim->AMRSimController->getSchedulerP();
+  SchedulerP schedulerP = sim->simController->getSchedulerP();
   GridP      gridP      = sim->gridP;
 
   // bool &useExtraCells   = sim->useExtraCells;
@@ -1348,7 +1425,7 @@ visit_handle visit_SimGetVariable(int domain, const char *varname, void *cbdata)
       else if( std::string(varname) == procLabels[0][3] )
       {
         val = ProcessInfo::getMemoryUsed();
-              }
+      }
       // Processor memory resident
       else if( std::string(varname) == procLabels[0][4] )
       {
@@ -1357,66 +1434,66 @@ visit_handle visit_SimGetVariable(int domain, const char *varname, void *cbdata)
       // State compilationTime
       else if( std::string(varname) == procLabels[0][5] )
       {
-        val = sim->AMRSimController->getSimulationStateP()->compilationTime;
+        val = sim->simController->getSimulationStateP()->compilationTime;
       }
       // State regriddingTime
       else if( std::string(varname) == procLabels[0][6] )
       {
-        val = sim->AMRSimController->getSimulationStateP()->regriddingTime;
+        val = sim->simController->getSimulationStateP()->regriddingTime;
       }
       // State regriddingCompilationTime;
       else if( std::string(varname) == procLabels[0][7] )
       {
         val =
-          sim->AMRSimController->getSimulationStateP()->regriddingCompilationTime;
+          sim->simController->getSimulationStateP()->regriddingCompilationTime;
       }
       // State regriddingCopyDataTime
       else if( std::string(varname) == procLabels[0][8] )
       {
         val =
-          sim->AMRSimController->getSimulationStateP()->regriddingCopyDataTime;
+          sim->simController->getSimulationStateP()->regriddingCopyDataTime;
       }
       // State loadbalancerTime
       else if( std::string(varname) == procLabels[0][9] )
       {
-        val = sim->AMRSimController->getSimulationStateP()->loadbalancerTime;
+        val = sim->simController->getSimulationStateP()->loadbalancerTime;
       }
       // State taskExecTime
       else if( std::string(varname) == procLabels[0][10] )
       {
-        val = sim->AMRSimController->getSimulationStateP()->taskExecTime;
+        val = sim->simController->getSimulationStateP()->taskExecTime;
       }
       // State taskLocalCommTime;
       else if( std::string(varname) == procLabels[0][11] )
       {
-        val = sim->AMRSimController->getSimulationStateP()->taskLocalCommTime;
+        val = sim->simController->getSimulationStateP()->taskLocalCommTime;
       }
       // State taskGlobalCommTime
       else if( std::string(varname) == procLabels[0][12] )
       {
-        val = sim->AMRSimController->getSimulationStateP()->taskGlobalCommTime;
+        val = sim->simController->getSimulationStateP()->taskGlobalCommTime;
       }
       // State taskWaitCommTime
       else if( std::string(varname) == procLabels[0][13] )
       {
-        val = sim->AMRSimController->getSimulationStateP()->taskWaitCommTime;
+        val = sim->simController->getSimulationStateP()->taskWaitCommTime;
       }
       // State outputTime
       else if( std::string(varname) == procLabels[0][14] )
       {
-        val = sim->AMRSimController->getSimulationStateP()->outputTime;
+        val = sim->simController->getSimulationStateP()->outputTime;
       }
       // State taskWaitThreadTime
       else if( std::string(varname) == procLabels[0][15] )
       {
-        val = sim->AMRSimController->getSimulationStateP()->taskWaitThreadTime;
+        val = sim->simController->getSimulationStateP()->taskWaitThreadTime;
       }
 
       // State MPI TotalReduce
       else if( std::string(varname) == procLabels[0][16] )
       {
         MPIScheduler *scheduler = dynamic_cast<MPIScheduler*>
-          (sim->AMRSimController->getSchedulerP().get_rep());
+          (sim->simController->getSchedulerP().get_rep());
         
         val = scheduler->mpi_info_.totalreduce;
       }
@@ -1425,7 +1502,7 @@ visit_handle visit_SimGetVariable(int domain, const char *varname, void *cbdata)
       else if( std::string(varname) == procLabels[0][17] )
       {
         MPIScheduler *scheduler = dynamic_cast<MPIScheduler*>
-          (sim->AMRSimController->getSchedulerP().get_rep());
+          (sim->simController->getSchedulerP().get_rep());
         
         val = scheduler->mpi_info_.totalsend;
       }
@@ -1434,7 +1511,7 @@ visit_handle visit_SimGetVariable(int domain, const char *varname, void *cbdata)
       else if( std::string(varname) == procLabels[0][18] )
       {
         MPIScheduler *scheduler = dynamic_cast<MPIScheduler*>
-          (sim->AMRSimController->getSchedulerP().get_rep());
+          (sim->simController->getSchedulerP().get_rep());
         
         val = scheduler->mpi_info_.totalrecv;
       }
@@ -1443,7 +1520,7 @@ visit_handle visit_SimGetVariable(int domain, const char *varname, void *cbdata)
       else if( std::string(varname) == procLabels[0][19] )
       {
         MPIScheduler *scheduler = dynamic_cast<MPIScheduler*>
-          (sim->AMRSimController->getSchedulerP().get_rep());
+          (sim->simController->getSchedulerP().get_rep());
         
         val = scheduler->mpi_info_.totaltask;
       }
@@ -1452,7 +1529,7 @@ visit_handle visit_SimGetVariable(int domain, const char *varname, void *cbdata)
       else if( std::string(varname) == procLabels[0][20] )
       {
         MPIScheduler *scheduler = dynamic_cast<MPIScheduler*>
-          (sim->AMRSimController->getSchedulerP().get_rep());
+          (sim->simController->getSchedulerP().get_rep());
         
         val = scheduler->mpi_info_.totalreducempi;
       }
@@ -1461,7 +1538,7 @@ visit_handle visit_SimGetVariable(int domain, const char *varname, void *cbdata)
       else if( std::string(varname) == procLabels[0][21] )
       {
         MPIScheduler *scheduler = dynamic_cast<MPIScheduler*>
-          (sim->AMRSimController->getSchedulerP().get_rep());
+          (sim->simController->getSchedulerP().get_rep());
         
         val = scheduler->mpi_info_.totalsendmpi;
       }
@@ -1470,7 +1547,7 @@ visit_handle visit_SimGetVariable(int domain, const char *varname, void *cbdata)
       else if( std::string(varname) == procLabels[0][22] )
       {
         MPIScheduler *scheduler = dynamic_cast<MPIScheduler*>
-          (sim->AMRSimController->getSchedulerP().get_rep());
+          (sim->simController->getSchedulerP().get_rep());
         
         val = scheduler->mpi_info_.totalrecvmpi;
       }
@@ -1479,7 +1556,7 @@ visit_handle visit_SimGetVariable(int domain, const char *varname, void *cbdata)
       else if( std::string(varname) == procLabels[0][23] )
       {
         MPIScheduler *scheduler = dynamic_cast<MPIScheduler*>
-          (sim->AMRSimController->getSchedulerP().get_rep());
+          (sim->simController->getSchedulerP().get_rep());
         
         val = scheduler->mpi_info_.totaltestmpi;
       }
@@ -1488,7 +1565,7 @@ visit_handle visit_SimGetVariable(int domain, const char *varname, void *cbdata)
       else if( std::string(varname) == procLabels[0][24] )
       {
         MPIScheduler *scheduler = dynamic_cast<MPIScheduler*>
-          (sim->AMRSimController->getSchedulerP().get_rep());
+          (sim->simController->getSchedulerP().get_rep());
         
         val = scheduler->mpi_info_.totalwaitmpi;
       }
@@ -1589,7 +1666,7 @@ visit_handle visit_SimGetDomainList(const char *name, void *cbdata)
 
     visit_simulation_data *sim = (visit_simulation_data *)cbdata;
 
-    SchedulerP schedulerP = sim->AMRSimController->getSchedulerP();
+    SchedulerP schedulerP = sim->simController->getSchedulerP();
     GridP      gridP      = sim->gridP;
     
     TimeStepInfo* &stepInfo = sim->stepInfo;

@@ -24,14 +24,21 @@
 
 #include "VisItControlInterface_V2.h"
 
-#include <CCA/Components/SimulationController/AMRSimulationController.h>
+#include <CCA/Components/SimulationController/SimulationController.h>
+#include <CCA/Components/DataArchiver/DataArchiver.h>
 #include <CCA/Ports/SchedulerP.h>
 #include <CCA/Ports/Output.h>
 #include <CCA/Ports/Regridder.h>
 
 #include <Core/Grid/Grid.h>
+#include <Core/Grid/Variables/VarTypes.h>
+#include <Core/Util/DebugStream.h>
+
+#include "visit_libsim.h"
 
 namespace Uintah {
+
+static SCIRun::DebugStream visitdbg( "VisItLibSim", true );
 
 #define VISIT_COMMAND_PROCESS 0
 #define VISIT_COMMAND_SUCCESS 1
@@ -97,9 +104,9 @@ visit_ControlCommandCallback(const char *cmd, const char *args, void *cbdata)
   if(strcmp(cmd, "StepCycle") == 0 && sim->simMode != VISIT_SIMMODE_FINISHED)
   {
     std::stringstream msg;	  
-    msg << "Visit libsim - step cycle value" << args;
-    VisItUI_setValueS("SIMULATION_STATUS", msg.str().c_str(), 1);
-    VisItUI_setValueS("SIMULATION_STATUS", " ", 1);
+    msg << "Visit libsim - step cycle value " << args;
+    VisItUI_setValueS("SIMULATION_MESSAGE", msg.str().c_str(), 1);
+    VisItUI_setValueS("SIMULATION_MESSAGE", " ", 1);
   }
   else if(strcmp(cmd, "Stop") == 0 && sim->simMode != VISIT_SIMMODE_FINISHED)
   {
@@ -119,29 +126,56 @@ visit_ControlCommandCallback(const char *cmd, const char *args, void *cbdata)
     double delt  = sim->delt;
     double time  = sim->time;
 
-    std::string message;
-
-    VisItUI_setValueS("SIMULATION_STATUS", message.c_str(), 1);
+    // std::string message("");
+    // VisItUI_setValueS("SIMULATION_MESSAGE", message.c_str(), 1);
   }
   else if(strcmp(cmd, "Regrid") == 0 && sim->simMode != VISIT_SIMMODE_FINISHED)
   {
-    sim->AMRSimController->getRegridder()->setForceRegridding(true);
+    sim->simController->getRegridder()->setForceRegridding(true);
     sim->runMode = VISIT_SIMMODE_STEP;
   }
   else if(strcmp(cmd, "Save") == 0)
   {
-    GridP gridP = sim->gridP;
-    Output *output = sim->AMRSimController->getOutput();
-    SchedulerP schedulerP = sim->AMRSimController->getSchedulerP();
-
-    if (output)
+    // Do not call unless the simulation is stopped or finished as it
+    // will interfer with the task graph.
+    if(sim->simMode == VISIT_SIMMODE_STOPPED ||
+       sim->simMode == VISIT_SIMMODE_FINISHED)
     {
-      output->finalizeTimestep( sim->time, sim->delt, gridP, schedulerP, 0 );
-      output->sched_allOutputTasks( sim->delt, gridP, schedulerP, true );
-
-      output->findNext_OutputCheckPoint_Timestep( sim->delt, gridP );
-      output->writeto_xml_files( sim->delt, gridP );
+      Output *output = sim->simController->getOutput();
+      SchedulerP schedulerP = sim->simController->getSchedulerP();
+      
+      ((DataArchiver *)output)->outputTimestep( sim->time,
+						sim->delt,
+						sim->gridP,
+						schedulerP );
+      
+      VisItUI_setValueS("SIMULATION_ENABLE_BUTTON", "Save", 0);
     }
+    else
+      VisItUI_setValueS("SIMULATION_MESSAGE_BOX",
+			"Can not save a timestep unless the simulation is stopped", 0);
+  }
+
+  else if(strcmp(cmd, "Checkpoint") == 0)
+  {
+    // Do not call unless the simulation is stopped or finished as it
+    // will interfer with the task graph.
+    if(sim->simMode == VISIT_SIMMODE_STOPPED ||
+       sim->simMode == VISIT_SIMMODE_FINISHED)
+    {
+      Output *output = sim->simController->getOutput();
+      SchedulerP schedulerP = sim->simController->getSchedulerP();
+      
+      ((DataArchiver *)output)->checkpointTimestep( sim->time,
+						    sim->delt,
+						    sim->gridP,
+						    schedulerP );
+      
+      VisItUI_setValueS("SIMULATION_ENABLE_BUTTON", "Checkpoint", 0);
+    }
+    else
+      VisItUI_setValueS("SIMULATION_MESSAGE_BOX",
+			"Can not save a checkpoint unless the simulation is stopped", 0);
   }
 
   // Only allow the runMode to finish if the simulation is finished.
@@ -161,8 +195,11 @@ visit_ControlCommandCallback(const char *cmd, const char *args, void *cbdata)
     {
       std::stringstream msg;	  
       msg << "Visit libsim - Terminating the simulation";
-      VisItUI_setValueS("SIMULATION_STATUS", msg.str().c_str(), 1);
-      VisItUI_setValueS("SIMULATION_STATUS", " ", 1);
+      VisItUI_setValueS("SIMULATION_MESSAGE", msg.str().c_str(), 1);
+      VisItUI_setValueS("SIMULATION_MESSAGE", " ", 1);
+
+      visitdbg << msg.str().c_str() << std::endl;
+      visitdbg.flush();
     }
   }
   else if(strcmp(cmd, "Abort") == 0)
@@ -171,8 +208,11 @@ visit_ControlCommandCallback(const char *cmd, const char *args, void *cbdata)
     {
       std::stringstream msg;	  
       msg << "Visit libsim - Aborting the simulation";
-      VisItUI_setValueS("SIMULATION_STATUS", msg.str().c_str(), 1);
-      VisItUI_setValueS("SIMULATION_STATUS", " ", 1);
+      VisItUI_setValueS("SIMULATION_MESSAGE", msg.str().c_str(), 1);
+      VisItUI_setValueS("SIMULATION_MESSAGE", " ", 1);
+
+      visitdbg << msg.str().c_str() << std::endl;
+      visitdbg.flush();
     }
 
     exit( 0 );
@@ -187,7 +227,7 @@ visit_ControlCommandCallback(const char *cmd, const char *args, void *cbdata)
 
       std::stringstream msg;	  
       msg << "Visit libsim - Continuing the simulation";
-      VisItUI_setValueS("SIMULATION_STATUS", msg.str().c_str(), 1);
+      VisItUI_setValueS("SIMULATION_MESSAGE", msg.str().c_str(), 1);
     }
   }
 }
@@ -247,6 +287,142 @@ int visit_ProcessVisItCommand( visit_simulation_data *sim )
   }
 
   return 1;
+}
+
+void visit_MaxTimeStepCallback(char *val, void *cbdata)
+{
+  visit_simulation_data *sim = (visit_simulation_data *)cbdata;
+
+  int value;
+
+  sscanf (val, "%d", &value);
+
+  sim->simController->getSimulationTime()->maxTimestep = value;
+}
+
+void visit_MaxTimeCallback(char *val, void *cbdata)
+{
+  visit_simulation_data *sim = (visit_simulation_data *)cbdata;
+
+  double value;
+
+  sscanf (val, "%lf", &value);
+
+  sim->simController->getSimulationTime()->maxTime = value;
+}
+
+void visit_DeltaTCallback(char *val, void *cbdata)
+{
+  visit_simulation_data *sim = (visit_simulation_data *)cbdata;
+
+  DataWarehouse* newDW = sim->simController->getSchedulerP()->getLastDW();
+
+  double value;
+
+  sscanf (val, "%lf", &value);
+
+  newDW->override(delt_vartype(value),
+		  sim->simController->getSimulationStateP()->get_delt_label());
+
+  sim->overrideDelT = true;
+}
+
+void visit_DeltaTMinCallback(char *val, void *cbdata)
+{
+  visit_simulation_data *sim = (visit_simulation_data *)cbdata;
+
+  double value;
+
+  sscanf (val, "%lf", &value);
+
+  sim->simController->getSimulationTime()->delt_min = value;
+}
+
+void visit_DeltaTMaxCallback(char *val, void *cbdata)
+{
+  visit_simulation_data *sim = (visit_simulation_data *)cbdata;
+
+  double value;
+
+  sscanf (val, "%lf", &value);
+
+  sim->simController->getSimulationTime()->delt_max = value;
+}
+
+void visit_DeltaTFactorCallback(char *val, void *cbdata)
+{
+  visit_simulation_data *sim = (visit_simulation_data *)cbdata;
+
+  double value;
+
+  sscanf (val, "%lf", &value);
+
+  sim->simController->getSimulationTime()->delt_factor = value;
+}
+
+void visit_MaxWallTimeCallback(char *val, void *cbdata)
+{
+  visit_simulation_data *sim = (visit_simulation_data *)cbdata;
+
+  double value;
+
+  sscanf (val, "%lf", &value);
+
+  sim->simController->getSimulationTime()->max_wall_time = value;
+}
+
+void visit_VariableTableCallback(char *val, void *cbdata)
+{
+  visit_simulation_data *sim = (visit_simulation_data *)cbdata;
+
+  int row, column;
+  double value;
+
+  sscanf (val, "%d | %d | %lf", &row, &column, &value);
+
+  uintah_variable_data &var = sim->variables[row];
+
+  var.value = value;
+  var.modified = true;
+}
+
+void visit_OutputIntervalVariableTableCallback(char *val, void *cbdata)
+{
+  visit_simulation_data *sim = (visit_simulation_data *)cbdata;
+
+  Output *output = sim->simController->getOutput();
+  SimulationStateP simStateP = sim->simController->getSimulationStateP();
+
+  int row, column;
+  double value;
+
+  sscanf (val, "%d | %d | %lf", &row, &column, &value);
+
+  uintah_variable_data &var = sim->outputIntervals[row];
+
+  var.value = value;
+  var.modified = true;
+
+  // Specialize setting for output interval.
+  if( var.name == simStateP->get_outputInterval_label()->getName() )
+  {
+    output->updateOutputInterval( var.value );
+  }
+  // Specialize setting for output timestep interval.
+  else if( var.name == simStateP->get_outputTimestepInterval_label()->getName() )
+  {
+    output->updateOutputTimestepInterval( var.value );
+  }
+  // Specialize setting for check point interval.
+  else if( var.name == simStateP->get_checkpointInterval_label()->getName() )
+  {
+    output->updateCheckpointInterval( var.value );
+  }
+    // Specialize setting for check point timestep interval.
+  else if( var.name == simStateP->get_checkpointTimestepInterval_label()->getName() )
+  {
+    output->updateCheckpointTimestepInterval( var.value );
+  }
 }
 
 } // End namespace Uintah

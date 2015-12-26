@@ -61,16 +61,33 @@ SimulationState::SimulationState(ProblemSpecP &ps)
 
   //__________________________________
   //  These variables can be modified by a component.
-  VarLabel* nonconstOutputInv =     // output timestep interval
-                          VarLabel::create("outputInterval",      min_vartype::getTypeDescription() );
-  VarLabel* nonconstCheckInv =      // check point interval
-                          VarLabel::create("checkpointInterval", min_vartype::getTypeDescription() );
+  VarLabel* nonconstOutputInv =             // output interval
+    VarLabel::create("outputInterval",
+		     min_vartype::getTypeDescription() );
+  VarLabel* nonconstOutputTimestepInv =     // output timestep interval
+    VarLabel::create("outputTimestepInterval",
+		     min_vartype::getTypeDescription() );
+
+  VarLabel* nonconstCheckpointInv =         // check point interval
+    VarLabel::create("checkpointInterval",
+		     min_vartype::getTypeDescription() );
+  
+  VarLabel* nonconstCheckpointTimestepInv = // check point timestep interval
+    VarLabel::create("checkpointTimestepInterval",
+		     min_vartype::getTypeDescription() );
 
   nonconstOutputInv->allowMultipleComputes();
-  nonconstCheckInv->allowMultipleComputes();
+  nonconstOutputTimestepInv->allowMultipleComputes();
 
-  outputInterval_label     = nonconstOutputInv;
-  checkpointInterval_label = nonconstCheckInv;
+  nonconstCheckpointInv->allowMultipleComputes();
+  nonconstCheckpointTimestepInv->allowMultipleComputes();
+
+  outputInterval_label             = nonconstOutputInv;
+  outputTimestepInterval_label     = nonconstOutputTimestepInv;
+
+  checkpointInterval_label         = nonconstCheckpointInv;
+  checkpointTimestepInterval_label = nonconstCheckpointTimestepInv;
+
   //__________________________________
   d_elapsed_time = 0.0;
 
@@ -386,8 +403,10 @@ SimulationState::~SimulationState()
   VarLabel::destroy(oldRefineFlag_label);
   VarLabel::destroy(refinePatchFlag_label);
   VarLabel::destroy(switch_label);
-  VarLabel::destroy(checkpointInterval_label);
   VarLabel::destroy(outputInterval_label);
+  VarLabel::destroy(outputTimestepInterval_label);
+  VarLabel::destroy(checkpointInterval_label);
+  VarLabel::destroy(checkpointTimestepInterval_label);
   clearMaterials();
 
   for (unsigned i = 0; i < old_matls.size(); i++){
