@@ -118,7 +118,7 @@ int main(int argc, char* argv[])
     minv.multiply(v, xx);
     bool err=false;
     for(int i=0;i<size;i++){
-      if(std::abs(vcopy[i]-xx[i] > tolerance)){
+      if(std::abs(vcopy[i]-xx[i]) > tolerance){
 	if(!err)
 	  std::cerr << "size: " << size << '\n';
 	std::cerr << "Error: rhs[" << i << "]=" << vcopy[i] << " vs. " << xx[i] << '\n';
