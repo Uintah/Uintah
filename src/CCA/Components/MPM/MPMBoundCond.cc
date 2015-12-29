@@ -29,7 +29,6 @@
 #include <Core/Grid/Variables/NodeIterator.h>
 #include <Core/Util/DebugStream.h>
 
-#include <vector>
 #include <iostream>
 
 using namespace Uintah;

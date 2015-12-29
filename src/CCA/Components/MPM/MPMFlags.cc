@@ -24,7 +24,6 @@
 
 #include <CCA/Components/MPM/MPMFlags.h>
 #include <Core/Exceptions/ProblemSetupException.h>
-#include <Core/Grid/Level.h>
 #include <Core/Grid/LinearInterpolator.h>
 #include <Core/Grid/AxiLinearInterpolator.h>
 #include <Core/Grid/GIMPInterpolator.h>
