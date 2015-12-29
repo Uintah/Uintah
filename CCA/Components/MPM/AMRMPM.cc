@@ -2995,147 +2995,148 @@ void AMRMPM::computeZoneOfInfluence(const ProcessorGroup*,
     }
   }
   
+  // find the fine & coarse CFI patches
+  Level::selectType CFI_coarsePatches;
+  Level::selectType CFI_finePatches;
+  
+  coarseLevelCFI_Patches(patches,CFI_coarsePatches, CFI_finePatches  );
+
   //__________________________________
   // Set the ZOI on the current level.
   // Look up at the finer level patches
   // for coarse-fine interfaces
-  for(int p=0;p<patches->size();p++){
-    const Patch* patch = patches->get(p);
+  for(int p=0;p<CFI_coarsePatches.size();p++){
+    const Patch* coarsePatch = CFI_coarsePatches[p];
     
     NCVariable<Stencil7> zoi;
-    new_dw->getModifiable(zoi, lb->gZOILabel, 0,patch);
+    new_dw->getModifiable(zoi, lb->gZOILabel, 0,coarsePatch);
 
-    if(level->hasFinerLevel()) {
-      const Level* fineLevel = level->getFinerLevel().get_rep();
+    const Level* fineLevel = level->getFinerLevel().get_rep();
 
-      Level::selectType finePatches;
-      patch->getFineLevelPatches(finePatches);
-      
-      for(int p=0;p<finePatches.size();p++){  
-        const Patch* finePatch = finePatches[p];
-    
-        Vector fine_dx = finePatch->dCell();
- 
-        //__________________________________
-        // Iterate over coarsefine interface faces
-        if(finePatch->hasCoarseFaces() ){
-          vector<Patch::FaceType> cf;
-          finePatch->getCoarseFaces(cf);
-          
-          vector<Patch::FaceType>::const_iterator iter;  
-          for (iter  = cf.begin(); iter != cf.end(); ++iter){
-            Patch::FaceType patchFace = *iter;
 
-            // determine the iterator on the coarse level.
-            NodeIterator n_iter(IntVector(-8,-8,-8),IntVector(-9,-9,-9));
-            bool isRight_CP_FP_pair;
-            
-            coarseLevel_CFI_NodeIterator( patchFace,patch, finePatch, fineLevel,
-                                          n_iter, isRight_CP_FP_pair);
+    for(int p=0;p<CFI_finePatches.size();p++){  
+      const Patch* finePatch = CFI_finePatches[p];
 
-            // The ZOI element is opposite
-            // of the patch face
-            int element = patchFace;
-            if(patchFace == Patch::xminus || 
-               patchFace == Patch::yminus || 
-               patchFace == Patch::zminus){
-              element += 1;  // e, n, t 
-            }
-            if(patchFace == Patch::xplus || 
-               patchFace == Patch::yplus || 
-               patchFace == Patch::zplus){
-              element -= 1;   // w, s, b
-            }
-            IntVector dir = patch->getFaceAxes(patchFace); // face axes
-            int p_dir = dir[0];                            // normal direction
-            
-            // eject if this is not the right coarse/fine patch pair
-            if (isRight_CP_FP_pair){
-              
-//              cout << "  A) Setting ZOI  " 
-//                   << " \t On L-" << level->getIndex() << " patch  " << patch->getID()
-//                   << ", beneath patch " << finePatch->getID() << ", face: "  << finePatch->getFaceName(patchFace) 
-//                   << ", isRight_CP_FP_pair: " << isRight_CP_FP_pair  << " n_iter: " << n_iter << endl;
-              
-              for(; !n_iter.done(); n_iter++) {
-                IntVector c = *n_iter;
-                zoi[c][element]=fine_dx[p_dir];
-              }
-            }
-                         
-          }  // patch face loop
-        }  // hasCoarseFaces
-      }  // finePatches loop
-    }  // has finer level
-  }  // patches loop
+      Vector fine_dx = finePatch->dCell();
+
+      //__________________________________
+      // Iterate over coarsefine interface faces
+      vector<Patch::FaceType> cf;
+      finePatch->getCoarseFaces(cf);
+
+      vector<Patch::FaceType>::const_iterator iter;  
+      for (iter  = cf.begin(); iter != cf.end(); ++iter){
+        Patch::FaceType patchFace = *iter;
+
+        // determine the iterator on the coarse level.
+        NodeIterator n_iter(IntVector(-8,-8,-8),IntVector(-9,-9,-9));
+        bool isRight_CP_FP_pair;
+
+        coarseLevel_CFI_NodeIterator( patchFace,coarsePatch, finePatch, fineLevel,
+                                      n_iter, isRight_CP_FP_pair);
+
+        // The ZOI element is opposite
+        // of the patch face
+        int element = patchFace;
+        if(patchFace == Patch::xminus || 
+           patchFace == Patch::yminus || 
+           patchFace == Patch::zminus){
+          element += 1;  // e, n, t 
+        }
+        if(patchFace == Patch::xplus || 
+           patchFace == Patch::yplus || 
+           patchFace == Patch::zplus){
+          element -= 1;   // w, s, b
+        }
+        IntVector dir = coarsePatch->getFaceAxes(patchFace); // face axes
+        int p_dir = dir[0];                                  // normal direction
+
+        // eject if this is not the right coarse/fine patch pair
+        if (isRight_CP_FP_pair){
+
+//         cout << "  A) Setting ZOI  " 
+//              << " \t On L-" << level->getIndex() << " patch  " << coarsePatch->getID()
+//              << ", beneath patch " << finePatch->getID() << ", face: "  << finePatch->getFaceName(patchFace) 
+//              << ", isRight_CP_FP_pair: " << isRight_CP_FP_pair  << " n_iter: " << n_iter << endl;
+
+          for(; !n_iter.done(); n_iter++) {
+            IntVector c = *n_iter;
+            zoi[c][element]=fine_dx[p_dir];
+          }
+        }
+
+      }  // patch face loop
+    }  // finePatches loop
+  }  // coarse patches loop
+
 
   //__________________________________
   // set the ZOI in cells in which there are overlaping coarse level nodes
   // look down for coarse level patches 
-  for(int p=0;p<patches->size();p++){
-    const Patch* finePatch = patches->get(p);
+
+  Level::selectType coarsePatches;
+  Level::selectType CFI_finePatches2;
+  fineLevelCFI_Patches(patches,coarsePatches, CFI_finePatches2  );
+  
+  for(int p=0;p<CFI_finePatches2.size();p++){
+    const Patch* finePatch = CFI_finePatches2[p];
+
     NCVariable<Stencil7> zoi_fine;
     new_dw->getModifiable(zoi_fine, lb->gZOILabel, 0,finePatch);
 
-    // underlying coarse level
-    if( level->hasCoarserLevel() ) {
-      Level::selectType coarsePatches;
-      finePatch->getOtherLevelPatchesNB(-1,coarsePatches,0);
-      //__________________________________
-      // Iterate over coarsefine interface faces
-      if(finePatch->hasCoarseFaces() ){
-        vector<Patch::FaceType> cf;
-        finePatch->getCoarseFaces(cf);
+    //__________________________________
+    // Iterate over coarse/fine interface faces
+    vector<Patch::FaceType> cf;
+    finePatch->getCoarseFaces(cf);
 
-        vector<Patch::FaceType>::const_iterator iter;  
-        for (iter  = cf.begin(); iter != cf.end(); ++iter){
-          Patch::FaceType patchFace = *iter;
-          bool setFace = false;
-            
-          for(int p=0;p<coarsePatches.size();p++){
-            const Patch* coarsePatch = coarsePatches[p];
-            Vector coarse_dx = coarsePatch->dCell();
+    vector<Patch::FaceType>::const_iterator iter;  
+    for (iter  = cf.begin(); iter != cf.end(); ++iter){
+      Patch::FaceType patchFace = *iter;
+      bool setFace = false;
 
-            // determine the iterator on the coarse level.
-            NodeIterator n_iter(IntVector(-8,-8,-8),IntVector(-9,-9,-9));
-            bool isRight_CP_FP_pair;
-            
-            fineLevel_CFI_NodeIterator( patchFace,coarsePatch, finePatch,
-                                          n_iter ,isRight_CP_FP_pair);
-                                          
-            int element = patchFace;
-            IntVector dir = finePatch->getFaceAxes(patchFace); // face axes
-            int p_dir = dir[0];                                // normal dir 
+      for(int p=0;p<coarsePatches.size();p++){
+        const Patch* coarsePatch = coarsePatches[p];
+        Vector coarse_dx = coarsePatch->dCell();
 
-            // Is this the right coarse/fine patch pair
-            if (isRight_CP_FP_pair){
-              setFace = true; 
+        // determine the iterator on the coarse level.
+        NodeIterator n_iter(IntVector(-8,-8,-8),IntVector(-9,-9,-9));
+        bool isRight_CP_FP_pair;
+
+        fineLevel_CFI_NodeIterator( patchFace,coarsePatch, finePatch,
+                                      n_iter ,isRight_CP_FP_pair);
                    
-//              cout << "  B) Setting ZOI  " 
-//                   << " \t On L-" << level->getIndex() << " patch  " << finePatch->getID()
-//                   << "   CFI face: "  << finePatch->getFaceName(patchFace) 
-//                   << " isRight_CP_FP_pair: " << isRight_CP_FP_pair  << " n_iter: " << n_iter << endl;             
+        // Is this the right coarse/fine patch pair
+        if (isRight_CP_FP_pair){
+          int element   = patchFace;
+          IntVector dir = finePatch->getFaceAxes(patchFace); // face axes
+          int p_dir     = dir[0];                           // normal dir
+          setFace = true; 
 
-              for(; !n_iter.done(); n_iter++) {
-                IntVector c = *n_iter;
-                zoi_fine[c][element]=coarse_dx[p_dir];
-              }
-            }
-          }  // coarsePatches loop
-          
-          // bulletproofing
-          if( !setFace ){ 
-              ostringstream warn;
-              warn << "\n ERROR: computeZoneOfInfluence:Fine Level: Did not find node iterator! "
-                   << "\n coarse: L-" << level->getIndex()
-                   << "\n coarePatches size: " << coarsePatches.size()
-                   << "\n fine patch:   " << *finePatch
-                   << "\n fine patch face: " << finePatch->getFaceName(patchFace);
-              throw ProblemSetupException(warn.str(), __FILE__, __LINE__);
+//          cout << "  C) Setting ZOI  "                                                                 
+//               << " \t On L-" << level->getIndex() << " patch  " << finePatch->getID()                 
+//               << "  coarsePatch " << coarsePatch->getID()                                             
+//               << "   CFI face: "  << finePatch->getFaceName(patchFace)                                
+//               << " isRight_CP_FP_pair: " << isRight_CP_FP_pair  << " n_iter: " << n_iter << endl;                 
+
+          for(; !n_iter.done(); n_iter++) {
+            IntVector c = *n_iter;
+            zoi_fine[c][element]=coarse_dx[p_dir];
           }
-        }  // face interator
-      }  // patch has coarse face 
-    }  // has finer level
+        }
+      }  // coarsePatches loop
+
+      //__________________________________
+      // bulletproofing
+      if( !setFace ){ 
+          ostringstream warn;
+          warn << "\n ERROR: computeZoneOfInfluence:Fine Level: Did not find node iterator! "
+               << "\n coarse: L-" << level->getIndex()
+               << "\n coarePatches size: " << CFI_coarsePatches.size()
+               << "\n fine patch:   " << *finePatch
+               << "\n fine patch face: " << finePatch->getFaceName(patchFace);
+          throw ProblemSetupException(warn.str(), __FILE__, __LINE__);
+      }
+    }  // face interator
   }  // patch loop
 }
 
@@ -4527,29 +4528,103 @@ void AMRMPM::debug_CFI_experimental(const ProcessorGroup*,
   }  //  fine patches loop  
 }
 
+
+//______________________________________________________________________
+//    This removes duplicate entries in the array
+void AMRMPM::removeDuplicates( Level::selectType& array)
+{
+  int length = array.size();
+  if ( length <= 1 ){
+    return;
+  }
+  
+  int newLength = 1;        // new length of modified array
+  int i, j;
+  
+  for(i=1; i< length; i++){
+    for(j=0; j< newLength; j++){
+      if( array[i] == array[j] ){
+        break;
+      }
+    }
+    // if none of the values in array[0..j] == array[i],
+    // then copy the current value to a new position in array
+
+    if (j == newLength ){
+      array[newLength++] = array[i];
+    }
+  }
+  array.resize(newLength);
+}
+
+
 //______________________________________________________________________
 //  Returns the fine and coarse level patches that have coarse fine interfaces
 void AMRMPM::coarseLevelCFI_Patches(const PatchSubset* coarsePatches,
                                     Level::selectType& CFI_coarsePatches,
                                     Level::selectType& CFI_finePatches )
-{
+{        
+  const Level* coarseLevel = getLevel(coarsePatches);
+  if( !coarseLevel->hasFinerLevel()) {
+    return;
+  }
+
   for(int p=0;p<coarsePatches->size();p++){
     const Patch* coarsePatch = coarsePatches->get(p);
-
+    bool addMe = false;
+    
     Level::selectType finePatches;
     coarsePatch->getFineLevelPatches(finePatches);
-    // loop over all the coarse level patches
 
     for(int fp=0;fp<finePatches.size();fp++){  
       const Patch* finePatch = finePatches[fp];
       
-      if(finePatch->hasCoarseFaces() ){
-        CFI_coarsePatches.push_back( coarsePatch );
+      if(finePatch->hasCoarseFaces() ){   
+        addMe = true;
         CFI_finePatches.push_back( finePatch );
       }
     }
+    
+    if( addMe ){  // only add once
+      CFI_coarsePatches.push_back( coarsePatch );
+    }
   }
+  
+  // remove duplicate patches
+  removeDuplicates( CFI_coarsePatches );
+  removeDuplicates( CFI_finePatches );
+
 }
+
+//______________________________________________________________________
+//  Returns the fine patches that have a CFI and all of the underlying
+//  coarse patches beneath those patches.  We don't know which of the coarse
+//  patches are beneath the fine patch with the CFI.
+// This takes in fine level patches
+void AMRMPM::fineLevelCFI_Patches(const PatchSubset* finePatches,
+                                  Level::selectType& coarsePatches,
+                                  Level::selectType& CFI_finePatches )
+{
+  const Level* fineLevel = getLevel(finePatches);
+      
+  if( !fineLevel->hasCoarserLevel()) {
+    return;
+  }
+  
+  for(int p=0;p<finePatches->size();p++){
+    const Patch* finePatch = finePatches->get(p);
+    
+    if(finePatch->hasCoarseFaces() ){
+      CFI_finePatches.push_back( finePatch );
+      
+      // need to use the Node Based version of getOtherLevel
+      finePatch->getOtherLevelPatchesNB(-1,coarsePatches,0);  
+    } 
+  }
+  removeDuplicates( coarsePatches );
+  removeDuplicates( CFI_finePatches );
+}
+
 
 #if 0  // May need to reactivate for GIMP
 //______________________________________________________________________

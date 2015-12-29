@@ -428,10 +428,20 @@ protected:
                               DataWarehouse* old_dw,                         
                               DataWarehouse* new_dw);
   //
-  // returns does coarse patches have a CFI               
-  void coarseLevelCFI_Patches(const PatchSubset* patches,
+  // input coarse patches and return coarse & fine level patches with CFI               
+  void coarseLevelCFI_Patches(const PatchSubset* coarsePatches,
                               Level::selectType& CFI_coarsePatches,
                               Level::selectType& CFI_finePatches );
+
+  //
+  // input fine patches and return coarse & fine level patches with CFI               
+  void fineLevelCFI_Patches(const PatchSubset* finePatches,
+                            Level::selectType& CFI_coarsePatches,
+                            Level::selectType& CFI_finePatches );
+  
+  // remove duplicate entries in array  This belongs in Core/Grid/fixedvector.h
+  void removeDuplicates( Level::selectType& array);
+  
   
   int      d_nPaddingCells_Coarse;  // Number of cells on the coarse level that contain particles and surround a fine patch.
                                     // Coarse level particles are used in the task interpolateToParticlesAndUpdate_CFI.
