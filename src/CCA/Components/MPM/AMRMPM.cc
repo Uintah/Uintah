@@ -21,57 +21,84 @@
  * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
  * IN THE SOFTWARE.
  */
+ 
+// make uintah CXX=/usr/bin/iwyu
 #include <CCA/Components/MPM/AMRMPM.h>
 #include <CCA/Components/MPM/ConstitutiveModel/ConstitutiveModel.h>
 #include <CCA/Components/MPM/ConstitutiveModel/MPMMaterial.h>
-#include <CCA/Components/MPM/ReactionDiffusion/ScalarDiffusionModel.h>
+#include <CCA/Components/MPM/Contact/Contact.h>                     // for Contact
 #include <CCA/Components/MPM/Contact/ContactFactory.h>
-#include <CCA/Components/MPM/ReactionDiffusion/ScalarDiffusionModel.h>
+#include <CCA/Components/MPM/MPMBoundCond.h>                        // for MPMBoundCond
+#include <CCA/Components/MPM/MPMFlags.h>                            // for MPMFlags, etc
+#include <CCA/Components/MPM/ParticleCreator/ParticleCreator.h>
+#include <CCA/Components/MPM/PhysicalBC/MPMPhysicalBC.h>
+#include <CCA/Components/MPM/PhysicalBC/MPMPhysicalBCFactory.h>
+#include <CCA/Components/MPM/PhysicalBC/ScalarFluxBC.h>
 #include <CCA/Components/MPM/ReactionDiffusion/SDInterfaceModel.h>
 #include <CCA/Components/MPM/ReactionDiffusion/SDInterfaceModelFactory.h>
-#include <CCA/Components/MPM/MMS/MMS.h>
-#include <CCA/Components/MPM/MPMBoundCond.h>
-#include <CCA/Components/MPM/PhysicalBC/MPMPhysicalBCFactory.h>
-#include <CCA/Components/MPM/PhysicalBC/PressureBC.h>
-#include <CCA/Components/MPM/PhysicalBC/ScalarFluxBC.h>
-#include <CCA/Components/MPM/ParticleCreator/ParticleCreator.h>
-#include <CCA/Components/Regridder/PerPatchVars.h>
-#include <CCA/Ports/DataWarehouse.h>
-#include <CCA/Ports/LoadBalancer.h>
-#include <CCA/Ports/Scheduler.h>
-#include <Core/Exceptions/ParameterNotFound.h>
+#include <CCA/Components/MPM/ReactionDiffusion/ScalarDiffusionModel.h>
+#include <CCA/Components/MPM/SerialMPM.h>                // for SerialMPM
+#include <CCA/Components/Regridder/PerPatchVars.h>       // for PatchFlagP, etc
+#include <CCA/Ports/DataWarehouse.h>                     // for DataWarehouse
+#include <CCA/Ports/LoadBalancer.h>                      // for LoadBalancer
+#include <CCA/Ports/Output.h>                            // for Output
+#include <CCA/Ports/Scheduler.h>                         // for Scheduler
+#include <CCA/Ports/SchedulerP.h>                        // for SchedulerP
+#include <Core/Disclosure/TypeUtils.h>                   // for long64
+#include <Core/Exceptions/InternalError.h>               // for InternalError
 #include <Core/Exceptions/ProblemSetupException.h>
-#include <Core/Geometry/Point.h>
-#include <Core/Geometry/Vector.h>
-#include <Core/GeometryPiece/FileGeometryPiece.h>
-#include <Core/GeometryPiece/GeometryObject.h>
-#include <Core/GeometryPiece/GeometryPieceFactory.h>
-#include <Core/GeometryPiece/UnionGeometryPiece.h>
+#include <Core/Geometry/IntVector.h>                     // for IntVector, operator<<, Max, etc
+#include <Core/Geometry/Point.h>                         // for Point, operator<<
+#include <Core/Geometry/Vector.h>                        // for Vector, operator*, etc
+#include <Core/GeometryPiece/GeometryObject.h>           // for GeometryObject
 #include <Core/Grid/AMR.h>
-#include <Core/Grid/Grid.h>
-#include <Core/Grid/Level.h>
-#include <Core/Grid/Patch.h>
-#include <Core/Grid/SimulationState.h>
-#include <Core/Grid/Task.h>
-#include <Core/Grid/AMR_CoarsenRefine.h>
-#include <Core/Grid/UnknownVariable.h>
-#include <Core/Grid/Variables/CCVariable.h>
-#include <Core/Grid/Variables/CellIterator.h>
-#include <Core/Grid/Variables/NCVariable.h>
-#include <Core/Grid/Variables/NodeIterator.h>
-#include <Core/Grid/Variables/ParticleVariable.h>
-#include <Core/Grid/Variables/PerPatch.h>
-#include <Core/Grid/Variables/SoleVariable.h>
-#include <Core/Grid/Variables/VarTypes.h>
-#include <Core/Math/MinMax.h>
-#include <Core/Parallel/ProcessorGroup.h>
-#include <Core/ProblemSpec/ProblemSpec.h>
-#include <Core/Thread/Mutex.h>
-#include <Core/Util/DebugStream.h>
-
-#include <iostream>
-#include <fstream>
-#include <sstream>
+#include <Core/Grid/AMR_CoarsenRefine.h>                 // for fineToCoarseOperator
+#include <Core/Grid/DbgOutput.h>                         // for printTask, printSchedule
+#include <Core/Grid/Ghost.h>                             // for Ghost, etc
+#include <Core/Grid/Grid.h>                              // for Grid
+#include <Core/Grid/GridP.h>                             // for GridP
+#include <Core/Grid/Level.h>                             // for Level, getLevel, etc
+#include <Core/Grid/LevelP.h>                            // for LevelP
+#include <Core/Grid/ParticleInterpolator.h>              // for ParticleInterpolator
+#include <Core/Grid/Patch.h>                             // for Patch, Patch::FaceType, etc
+#include <Core/Grid/SimulationState.h>                   // for SimulationState
+#include <Core/Grid/SimulationStateP.h>                  // for SimulationStateP
+#include <Core/Grid/Task.h>                              // for Task, Task::WhichDW::OldDW, etc
+#include <Core/Grid/Variables/Array3.h>                  // for Array3
+#include <Core/Grid/Variables/CCVariable.h>              // for CCVariable, etc
+#include <Core/Grid/Variables/CellIterator.h>            // for CellIterator
+#include <Core/Grid/Variables/ComputeSet.h>              // for PatchSubset, etc
+#include <Core/Grid/Variables/GridVariableBase.h>        // for GridVariableBase
+#include <Core/Grid/Variables/NCVariable.h>              // for NCVariable, etc
+#include <Core/Grid/Variables/NodeIterator.h>            // for NodeIterator
+#include <Core/Grid/Variables/ParticleSubset.h>          // for ParticleSubset, etc
+#include <Core/Grid/Variables/ParticleVariable.h>        // for ParticleVariable, etc
+#include <Core/Grid/Variables/ParticleVariableBase.h>
+#include <Core/Grid/Variables/PerPatch.h>                // for PerPatch
+#include <Core/Grid/Variables/Stencil7.h>                // for Stencil7
+#include <Core/Grid/Variables/VarLabel.h>                // for VarLabel
+#include <Core/Grid/Variables/VarTypes.h>                // for delt_vartype, etc
+#include <Core/Grid/Variables/constVariable.h>           // for constVariable
+#include <Core/Grid/Variables/constVariableBase.h>
+#include <Core/Labels/MPMLabel.h>                        // for MPMLabel
+#include <Core/Malloc/Allocator.h>                       // for scinew
+#include <Core/Math/Matrix3.h>                           // for Matrix3, swapbytes, etc
+#include <Core/Parallel/Parallel.h>                      // for proc0cout
+#include <Core/Parallel/ProcessorGroup.h>                // for ProcessorGroup
+#include <Core/Parallel/UintahParallelComponent.h>
+#include <Core/Parallel/UintahParallelPort.h>            // for UintahParallelPort
+#include <Core/ProblemSpec/ProblemSpec.h>                // for Vector, IntVector, etc
+#include <Core/ProblemSpec/ProblemSpecP.h>               // for ProblemSpecP
+#include <Core/Thread/Mutex.h>                           // for Mutex
+#include <Core/Util/Assert.h>                            // for ASSERT
+#include <Core/Util/DebugStream.h>                       // for DebugStream
+#include <Core/Util/Handle.h>                            // for Handle
+#include <algorithm>                                     // for max, min
+#include <cmath>                                         // for cbrt, isinf, isnan
+#include <iostream>                                      // for operator<<, basic_ostream, etc
+#include <mpi.h>                                         // for MPI_Pack_size
+#include <stdlib.h>                                      // for abs
+#include <string>                                        // for string, operator==, etc
 
 using namespace Uintah;
 using namespace std;

@@ -25,23 +25,24 @@
 #ifndef UINTAH_HOMEBREW_AMRMPM_H
 #define UINTAH_HOMEBREW_AMRMPM_H
 
-#include <Core/Parallel/UintahParallelComponent.h>
-#include <CCA/Ports/DataWarehouseP.h>
-#include <CCA/Ports/Output.h>
-#include <CCA/Ports/SimulationInterface.h>
-#include <Core/ProblemSpec/ProblemSpecP.h>
-#include <Core/Grid/GridP.h>
-#include <Core/Grid/LevelP.h>
-#include <CCA/Components/MPM/SerialMPM.h>
-// put here to avoid template problems
-#include <Core/Math/Matrix3.h>
-#include <Core/Math/Short27.h>
-#include <Core/Labels/MPMLabel.h>
-#include <CCA/Components/MPM/MPMCommon.h>
-#include <Core/Geometry/Vector.h>
-#include <CCA/Components/MPM/MPMFlags.h>
-#include <Core/Grid/Variables/ParticleVariable.h>
-
+// make uintah CXX=/usr/bin/iwyu
+#include <CCA/Components/MPM/MPMFlags.h>      // for MPMFlags
+#include <CCA/Components/MPM/SerialMPM.h>     // for SerialMPM, etc
+#include <CCA/Ports/SchedulerP.h>             // for SchedulerP
+#include <Core/Geometry/Vector.h>             // for Vector
+#include <Core/Grid/GridP.h>                  // for GridP
+#include <Core/Grid/Level.h>                  // for Level, Level::selectType
+#include <Core/Grid/LevelP.h>                 // for LevelP
+#include <Core/Grid/Patch.h>                  // for Patch, Patch::FaceType, etc
+#include <Core/Grid/SimulationStateP.h>       // for SimulationStateP
+#include <Core/Grid/Variables/ComputeSet.h>   // for PatchSubset, etc
+#include <Core/Grid/Variables/NCVariable.h>   // for constNCVariable
+#include <Core/Grid/Variables/constVariable.h>  // for constVariable
+#include <Core/Math/Matrix3.h>                // for Matrix3
+#include <Core/ProblemSpec/ProblemSpecP.h>    // for ProblemSpecP
+#include <Core/Util/Assert.h>                 // for ASSERT
+#include <map>                                // for map, map<>::mapped_type
+#include <vector>                             // for vector
 
 namespace Uintah {
 
