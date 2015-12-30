@@ -30,7 +30,6 @@
 #include "PlasticityModels/YieldCondition.h"
 #include "PlasticityModels/StabilityCheck.h"
 #include "PlasticityModels/FlowModel.h"
-#include "PlasticityModels/DamageModel.h"
 #include "PlasticityModels/MPMEquationOfState.h"
 #include "PlasticityModels/ShearModulusModel.h"
 #include "PlasticityModels/MeltingTempModel.h"
@@ -66,7 +65,6 @@ namespace Uintah {
     2) Flow rule in the form of a Plasticity Model.
     3) Yield condition.
     4) Stability condition.
-    5) Damage model.
     6) Shear modulus model.
     7) Melting temperature model.
     8) Specific heat model.
@@ -93,44 +91,19 @@ class RFElasticPlastic : public ConstitutiveModel {
       //********** Concentration Component****************************
     };   
 
-    // Create datatype for storing porosity parameters
-    struct PorosityData {
-      double f0;     /*< Initial mean porosity */
-      double f0_std; /*< Initial standard deviation of porosity */
-      double fc;     /*< Critical porosity */
-      double fn;     /*< Volume fraction of void nucleating particles */
-      double en;     /*< Mean strain for nucleation */
-      double sn;     /*< Standard deviation of strain for nucleation */
-      std::string porosityDist; /*< Initial porosity distribution*/
-    };
-
-    // Create datatype for storing damage parameters
-    struct ScalarDamageData {
-      double D0;     /*< Initial mean scalar damage */
-      double D0_std; /*< Initial standard deviation of scalar damage */
-      double Dc;     /*< Critical scalar damage */
-      std::string scalarDamageDist; /*< Initial damage distrinution */
-    };
-
     const VarLabel* pPlasticStrainLabel;  
     const VarLabel* pPlasticStrainRateLabel;  
-    const VarLabel* pDamageLabel;  
-    const VarLabel* pPorosityLabel;  
     const VarLabel* pLocalizedLabel;  
     const VarLabel* pEnergyLabel;  
 
     const VarLabel* pPlasticStrainLabel_preReloc;  
     const VarLabel* pPlasticStrainRateLabel_preReloc;  
-    const VarLabel* pDamageLabel_preReloc;  
-    const VarLabel* pPorosityLabel_preReloc;  
     const VarLabel* pLocalizedLabel_preReloc;  
     const VarLabel* pEnergyLabel_preReloc;
 
   protected:
 
     CMData           d_initialData;
-    PorosityData     d_porosity;
-    ScalarDamageData d_scalarDam;
 
     double d_tol;
     double d_initialMaterialTemperature;
@@ -138,8 +111,6 @@ class RFElasticPlastic : public ConstitutiveModel {
     double d_partial_vol;
     bool   d_doIsothermal;
     bool   d_useModifiedEOS;
-    bool   d_evolvePorosity;
-    bool   d_evolveDamage;
     bool   d_computeSpecificHeat;
     bool   d_checkTeplaFailureCriterion;
     bool   d_doMelting;
@@ -154,7 +125,6 @@ class RFElasticPlastic : public ConstitutiveModel {
     YieldCondition*     d_yield;
     StabilityCheck*     d_stable;
     FlowModel*          d_flow;
-    DamageModel*        d_damage;
     MPMEquationOfState* d_eos;
     ShearModulusModel*  d_shear;
     MeltingTempModel*   d_melt;
@@ -281,6 +251,19 @@ class RFElasticPlastic : public ConstitutiveModel {
     ////////////////////////////////////////////////////////////////////////
     virtual double getCompressibility();
 
+    virtual void addSplitParticlesComputesAndRequires(Task* task,
+                                                      const MPMMaterial* matl,
+                                                      const PatchSet* patches);
+
+    virtual void splitCMSpecificParticleData(const Patch* patch,
+                                             const int dwi,
+                                             ParticleVariable<int> &prefOld,
+                                             ParticleVariable<int> &prefNew,
+                                             const unsigned int oldNumPar,
+                                             const int numNewPartNeeded,
+                                             DataWarehouse* old_dw,
+                                             DataWarehouse* new_dw);
+
   protected:
   
     ////////////////////////////////////////////////////////////////////////
@@ -311,10 +294,6 @@ class RFElasticPlastic : public ConstitutiveModel {
   protected:
 
     void initializeLocalMPMLabels();
-
-    void getInitialPorosityData(ProblemSpecP& ps);
-
-    void getInitialDamageData(ProblemSpecP& ps);
 
     void setErosionAlgorithm();
   };

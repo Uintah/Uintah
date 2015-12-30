@@ -463,3 +463,25 @@ ConstitutiveModel::computeDeformationGradientFromIncrementalDisplacement(
       Fnew[idx] = deformationGradientInc * Fold[idx];
     }
 }
+
+void 
+ConstitutiveModel::addSplitParticlesComputesAndRequires(Task*, 
+                                                        const MPMMaterial*,
+                                                        const PatchSet*)
+{
+//  throw InternalError("Stub Task: ConstitutiveModel::addSplitParticlesComputesAndRequires ", __FILE__, __LINE__);
+}
+
+
+void
+ConstitutiveModel::splitCMSpecificParticleData(const Patch* patch,
+                                               const int dwi,
+                                               ParticleVariable<int> &prefOld,
+                                               ParticleVariable<int> &prefNew,
+                                               const unsigned int oldNumPar,
+                                               const int numNewPartNeeded,
+                                               DataWarehouse* old_dw,
+                                               DataWarehouse* new_dw)
+{
+
+}
