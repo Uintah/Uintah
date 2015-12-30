@@ -25,20 +25,12 @@
 //  CZMaterial.cc
 
 #include <CCA/Components/MPM/CohesiveZone/CZMaterial.h>
-#include <Core/GeometryPiece/GeometryObject.h>
 #include <Core/Geometry/IntVector.h>
-#include <Core/Grid/Box.h>
-#include <Core/Grid/Patch.h>
-#include <Core/Grid/Variables/CellIterator.h>
-#include <Core/Grid/Variables/VarLabel.h>
-#include <Core/Grid/Variables/PerPatch.h>
 #include <Core/Labels/MPMLabel.h>
 #include <Core/Exceptions/ParameterNotFound.h>
 #include <CCA/Ports/DataWarehouse.h>
 #include <Core/ProblemSpec/ProblemSpecP.h>
-#include <iostream>
 #include <string>
-#include <list>
 
 using namespace std;
 using namespace Uintah;
