@@ -8,7 +8,8 @@ import subprocess #needed to accurately get return codes
 from optparse import OptionParser
 from sys import argv, exit
 from string import upper
-
+from subprocess import check_output #needed to get full pathname 
+                                    #response from which command
 
 # bulletproofing
 if os.sys.version_info <= (2,5):
@@ -176,15 +177,15 @@ def generateGS() :
     try :
       MPIRUN = os.environ['MPIRUN']    # first try the environmental variable
     except :
-      MPIRUN = "mpirun"
-      rc = os.system("which mpirun > /dev/null 2>&1 ")
-
-      if rc == 256:
+      try:
+        MPIRUN = check_output(["which", "mpirun"])
+      except:
         print "ERROR:generateGoldStandards.py "
         print "      mpirun command was not found and the environmental variable MPIRUN was not set."
         print "      You must either add mpirun to your path, or set the 'MPIRUN' environment variable."
         exit (1)
     print "Using mpirun: %s " % MPIRUN
+    print "If this is not the correct MPIRUN, please indicate the desired one with the MPIRUN environment variable"
         
     if options.verbose :
         print "Building Gold Standards in " + os.getcwd()
