@@ -23,7 +23,6 @@
  */
 
 #include <CCA/Components/MPM/ConstitutiveModel/ViscoTransIsoHyperImplicit.h>
-#include <Core/Malloc/Allocator.h>
 #include <Core/Grid/Patch.h>
 #include <CCA/Ports/DataWarehouse.h>
 #include <Core/Grid/Variables/NCVariable.h>
@@ -37,10 +36,8 @@
 #include <Core/Math/TangentModulusTensor.h> //added this for stiffness
 #include <CCA/Components/MPM/ConstitutiveModel/MPMMaterial.h>
 #include <Core/ProblemSpec/ProblemSpec.h>
-#include <Core/Math/MinMax.h>
 #include <Core/Malloc/Allocator.h>
-#include <fstream>
-#include <iostream>
+//#include <iostream>
 
 using namespace std;
 using namespace Uintah;

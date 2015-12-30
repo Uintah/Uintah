@@ -27,25 +27,19 @@
 #include <CCA/Ports/DataWarehouse.h>
 #include <Core/Math/Matrix3.h>
 #include <Core/Math/SymmMatrix3.h>
-#include <Core/Math/Short27.h> //for Fracture
-#include <Core/Grid/Variables/NodeIterator.h> // just added
 #include <Core/Grid/Patch.h>
-#include <Core/Grid/Level.h>
-#include <Core/Grid/Variables/NCVariable.h>
 #include <Core/Grid/Variables/ParticleVariable.h>
 #include <Core/Grid/Task.h>
-#include <Core/Grid/Level.h>
 #include <Core/Grid/Variables/VarLabel.h>
 #include <Core/Grid/Variables/VarTypes.h>
 #include <Core/Labels/MPMLabel.h>
 
 #include <Core/Malloc/Allocator.h>
-#include <Core/Util/Endian.h>
 #include <Core/Util/DebugStream.h>
 #include <Core/Math/MinMax.h>
 
 #include <fstream>
-#include <iostream>
+//#include <iostream>
 
 using namespace std;
 using namespace Uintah;
