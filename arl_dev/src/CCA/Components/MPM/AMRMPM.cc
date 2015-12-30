@@ -1355,9 +1355,15 @@ void AMRMPM::scheduleAddParticles(SchedulerP& sched,
     t->requires(Task::OldDW, lb->pCellNAPIDLabel, d_one_matl, Ghost::None);
     t->computes(             lb->pCellNAPIDLabel, d_one_matl);
 
+    int numMatls = d_sharedState->getNumMPMMatls();
+    for(int m = 0; m < numMatls; m++){
+      MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial(m);
+      ConstitutiveModel* cm = mpm_matl->getConstitutiveModel();
+      cm->addSplitParticlesComputesAndRequires(t, mpm_matl, patches);
+    }
+
     sched->addTask(t, patches, matls);
 }
-
 
 void AMRMPM::scheduleReduceFlagsExtents(SchedulerP& sched,
                                        const PatchSet* patches,
@@ -3720,6 +3726,7 @@ void AMRMPM::addParticles(const ProcessorGroup*,
       MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial( m );
       int dwi = mpm_matl->getDWIndex();
       ParticleSubset* pset = old_dw->getParticleSubset(dwi, patch);
+      ConstitutiveModel* cm = mpm_matl->getConstitutiveModel();
 
       ParticleVariable<Point> px;
       ParticleVariable<Matrix3> pF,pSize,pstress,pvelgrad,pscalefac;
@@ -3856,6 +3863,7 @@ void AMRMPM::addParticles(const ProcessorGroup*,
       new_dw->allocateTemporary(plaltmp,  pset);
       new_dw->allocateTemporary(ploctmp,  pset);
       new_dw->allocateTemporary(pvgradtmp,pset);
+
       // copy data from old variables for particle IDs and the position vector
       for( unsigned int pp=0; pp<oldNumPar; ++pp ){
         pidstmp[pp]  = pids[pp];
@@ -3896,7 +3904,7 @@ void AMRMPM::addParticles(const ProcessorGroup*,
       Vector dx = patch->dCell();
       int numRefPar=0;
       for( unsigned int idx=0; idx<oldNumPar; ++idx ){
-       if(pref[idx]!=prefOld[idx]){
+       if(pref[idx]!=prefOld[idx]){  // do refinement!
         IntVector c_orig;
         patch->findCell(px[idx],c_orig);
         vector<Point> new_part_pos;
@@ -3988,6 +3996,11 @@ void AMRMPM::addParticles(const ProcessorGroup*,
         numRefPar++;
        }  // if particle flagged for refinement
       } // for particles
+
+      cm->splitCMSpecificParticleData(patch, dwi, prefOld, pref,
+                                      oldNumPar, numNewPartNeeded,
+                                      old_dw, new_dw);
+
 
       // put back temporary data
       new_dw->put(pidstmp,  lb->pParticleIDLabel_preReloc,           true);
