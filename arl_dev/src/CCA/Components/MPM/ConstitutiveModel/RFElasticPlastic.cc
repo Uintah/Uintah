@@ -1447,6 +1447,7 @@ RFElasticPlastic::addSplitParticlesComputesAndRequires(Task* task,
 void 
 RFElasticPlastic::splitCMSpecificParticleData(const Patch* patch,
                                               const int dwi,
+                                              const int nDims,
                                               ParticleVariable<int> &prefOld,
                                               ParticleVariable<int> &prefNew,
                                               const unsigned int oldNumPar,
@@ -1480,14 +1481,15 @@ RFElasticPlastic::splitCMSpecificParticleData(const Patch* patch,
   }
 
   int numRefPar=0;
+  int fourOrEight=pow(2,nDims);
   for(unsigned int idx=0; idx<oldNumPar; ++idx ){
     if(prefNew[idx]!=prefOld[idx]){  // do refinement!
-      for(int i = 0;i<8;i++){
+      for(int i = 0;i<fourOrEight;i++){
         int new_index;
         if(i==0){
           new_index=idx;
         } else {
-          new_index=oldNumPar+7*numRefPar+i;
+          new_index=oldNumPar+(fourOrEight-1)*numRefPar+i;
         }
         PlasStrainTmp[new_index]     = PlasStrain[idx];
         PlasStrainRateTmp[new_index] = PlasStrainRate[idx];

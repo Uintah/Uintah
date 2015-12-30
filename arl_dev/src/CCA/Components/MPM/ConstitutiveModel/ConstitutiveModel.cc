@@ -476,6 +476,7 @@ ConstitutiveModel::addSplitParticlesComputesAndRequires(Task*,
 void
 ConstitutiveModel::splitCMSpecificParticleData(const Patch* patch,
                                                const int dwi,
+                                               const int nDims,
                                                ParticleVariable<int> &prefOld,
                                                ParticleVariable<int> &prefNew,
                                                const unsigned int oldNumPar,
