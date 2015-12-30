@@ -24,7 +24,7 @@
 
 #include "GursonYield.h"        
 #include <Core/ProblemSpec/ProblemSpec.h>
-#include <iostream>
+//#include <iostream>
 #include <cmath>
 
 

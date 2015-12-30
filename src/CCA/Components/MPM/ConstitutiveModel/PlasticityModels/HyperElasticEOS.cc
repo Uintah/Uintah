@@ -24,7 +24,6 @@
 
 
 #include "HyperElasticEOS.h"
-#include <Core/Exceptions/InternalError.h>
 #include <Core/Exceptions/InvalidValue.h>
 #include <cmath>
 

@@ -24,7 +24,6 @@
 
 #include "VonMisesYield.h"
 #include <Core/ProblemSpec/ProblemSpec.h>
-#include <cmath>
 
 using namespace Uintah;
 

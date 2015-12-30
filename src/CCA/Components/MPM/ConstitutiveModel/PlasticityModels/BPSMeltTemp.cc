@@ -24,10 +24,9 @@
 
 #include "BPSMeltTemp.h"
 #include <Core/ProblemSpec/ProblemSpec.h>
-#include <Core/Exceptions/InvalidValue.h>
 #include <cmath>
-#include <iostream>
-#include <sstream>
+//#include <iostream>
+
 
 using namespace Uintah;
 using namespace std;

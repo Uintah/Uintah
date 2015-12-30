@@ -26,7 +26,6 @@
 #include <Core/ProblemSpec/ProblemSpec.h>
 #include <Core/Math/SymmMatrix3.h>
 #include <cmath>
-#include <vector>
 
 
 using namespace Uintah;

@@ -30,12 +30,9 @@
 #endif
 
 #include <CCA/Components/MPM/ConstitutiveModel/PlasticityModels/SCGFlow.h>
-
 #include <cmath>
-
 #include <iostream>
 
-#include <Core/Exceptions/InvalidValue.h>
 
 
 using namespace Uintah;
