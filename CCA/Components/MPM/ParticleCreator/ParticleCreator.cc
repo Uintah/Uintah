@@ -23,13 +23,11 @@
  */
 
 #include <CCA/Components/MPM/ParticleCreator/ParticleCreator.h>
-#include <CCA/Components/MPM/MPMFlags.h>
 #include <Core/GeometryPiece/GeometryObject.h>
 #include <Core/Grid/Box.h>
 #include <Core/Grid/Variables/CellIterator.h>
 #include <CCA/Ports/DataWarehouse.h>
 #include <Core/Grid/Patch.h>
-#include <Core/Grid/Variables/VarLabel.h>
 #include <Core/GeometryPiece/GeometryPiece.h>
 #include <Core/GeometryPiece/FileGeometryPiece.h>
 #include <Core/GeometryPiece/SmoothGeomPiece.h>
@@ -42,10 +40,8 @@
 #include <CCA/Components/MPM/PhysicalBC/ArchesHeatFluxBC.h>
 #include <CCA/Components/MPM/ConstitutiveModel/MPMMaterial.h>
 #include <CCA/Components/MPM/ConstitutiveModel/ConstitutiveModel.h>
-#include <CCA/Components/MPM/ReactionDiffusion/ScalarDiffusionModel.h>
 #include <CCA/Components/MPM/MPMFlags.h>
 #include <CCA/Components/MPM/MMS/MMS.h>
-#include <fstream>
 #include <iostream>
 
 /*  This code is a bit tough to follow.  Here's the basic order of operations.
