@@ -27,7 +27,6 @@
 #include <CCA/Ports/Scheduler.h>
 #include <Core/Exceptions/ProblemSetupException.h>
 #include <Core/ProblemSpec/ProblemSpec.h>
-#include <Core/Grid/Box.h>
 #include <Core/Grid/Variables/CellIterator.h>
 #include <Core/Grid/Variables/CCVariable.h>
 #include <Core/Grid/Level.h>
@@ -37,8 +36,6 @@
 #include <Core/GeometryPiece/GeometryPieceFactory.h>
 #include <Core/GeometryPiece/UnionGeometryPiece.h>
 #include <Core/Exceptions/ParameterNotFound.h>
-#include <CCA/Components/ICE/ICEMaterial.h>
-#include <CCA/Components/MPM/ConstitutiveModel/MPMMaterial.h>
 #include <iostream>
 using namespace Uintah;
 using namespace std;

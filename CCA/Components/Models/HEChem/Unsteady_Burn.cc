@@ -26,20 +26,19 @@
 #include <CCA/Components/Models/HEChem/Common.h>
 #include <CCA/Ports/Scheduler.h>
 #include <Core/ProblemSpec/ProblemSpec.h>
+#include <Core/Grid/Material.h>
 #include <Core/Grid/Variables/CellIterator.h>
 #include <Core/Grid/Variables/CCVariable.h>
+#include <Core/Grid/Variables/ParticleVariable.h>
 #include <Core/Grid/SimulationState.h>
 #include <Core/Grid/Variables/VarTypes.h>
 #include <Core/Grid/DbgOutput.h>
 #include <Core/Labels/MPMLabel.h>
 #include <Core/Labels/ICELabel.h>
 #include <Core/Labels/MPMICELabel.h>
-#include <CCA/Components/ICE/ICEMaterial.h>
-#include <CCA/Components/MPM/ConstitutiveModel/MPMMaterial.h>
 #include <CCA/Components/ICE/BoundaryCond.h>
 #include <Core/Exceptions/InvalidValue.h>
 #include <Core/Util/DebugStream.h>
-#include <iomanip>
 #include <iostream>
 
 using namespace Uintah;

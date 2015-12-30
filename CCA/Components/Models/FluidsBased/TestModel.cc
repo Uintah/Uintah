@@ -36,7 +36,7 @@
 #include <Core/Labels/MPMICELabel.h>
 #include <CCA/Components/ICE/ICEMaterial.h>
 #include <CCA/Components/MPM/ConstitutiveModel/MPMMaterial.h>
-#include <iostream>
+//#include <iostream>
 
 using namespace Uintah;
 using namespace std;
