@@ -24,8 +24,6 @@
 
 #include "NoneCheck.h"
 #include <Core/ProblemSpec/ProblemSpec.h>
-#include <cmath>
-#include <vector>
 
 
 using namespace Uintah;

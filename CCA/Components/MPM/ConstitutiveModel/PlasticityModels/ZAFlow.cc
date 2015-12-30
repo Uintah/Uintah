@@ -32,7 +32,6 @@
 #include <CCA/Components/MPM/ConstitutiveModel/PlasticityModels/ZAFlow.h>
 
 #include <cmath>
-#include <Core/Exceptions/ProblemSetupException.h>
 
 
 using namespace std;

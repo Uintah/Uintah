@@ -23,7 +23,6 @@
  */
 
 #include "CopperCp.h"
-#include <cmath>
 #include <Core/ProblemSpec/ProblemSpec.h>
 
 using namespace Uintah;

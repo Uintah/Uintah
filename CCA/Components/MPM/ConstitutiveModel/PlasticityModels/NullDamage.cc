@@ -24,7 +24,6 @@
 
 
 #include "NullDamage.h"
-#include <cmath>
 
 using namespace Uintah;
 
