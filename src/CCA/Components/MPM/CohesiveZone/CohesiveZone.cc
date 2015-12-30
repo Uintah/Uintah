@@ -24,15 +24,11 @@
 #include <CCA/Components/MPM/CohesiveZone/CohesiveZone.h>
 #include <CCA/Components/MPM/CohesiveZone/CZMaterial.h>
 #include <CCA/Components/MPM/ConstitutiveModel/MPMMaterial.h>
-#include <CCA/Components/MPM/MPMFlags.h>
-#include <CCA/Components/MPM/PhysicalBC/MPMPhysicalBCFactory.h>
 #include <CCA/Ports/DataWarehouse.h>
 #include <Core/Exceptions/ProblemSetupException.h>
 #include <Core/Grid/Patch.h>
 #include <Core/Labels/MPMLabel.h>
-
 #include <fstream>
-#include <iostream>
 
 using namespace Uintah;
 using namespace std;

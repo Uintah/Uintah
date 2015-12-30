@@ -23,7 +23,6 @@
  */
 
 #include <CCA/Components/MPM/ThermalContact/ThermalContact.h>
-#include <Core/Malloc/Allocator.h>
 
 using namespace Uintah;
 

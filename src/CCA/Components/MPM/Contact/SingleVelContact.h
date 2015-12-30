@@ -29,6 +29,7 @@
 
 #include <CCA/Components/MPM/Contact/Contact.h>
 #include <CCA/Components/MPM/Contact/ContactMaterialSpec.h> 
+#include <CCA/Components/MPM/MPMFlags.h>
 #include <CCA/Ports/DataWarehouseP.h>
 #include <Core/Parallel/UintahParallelComponent.h>
 #include <Core/ProblemSpec/ProblemSpecP.h>
