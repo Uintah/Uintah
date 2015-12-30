@@ -22,7 +22,6 @@
  * IN THE SOFTWARE.
  */
 
-#include <CCA/Components/ICE/ICEMaterial.h>
 #include <CCA/Components/ICE/BoundaryCond.h>
 #include <CCA/Components/Models/HEChem/LightTime.h>
 #include <CCA/Components/Regridder/PerPatchVars.h>
