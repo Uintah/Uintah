@@ -42,9 +42,7 @@
 #include <CCA/Components/MPM/ConstitutiveModel/Biswajit/Models/ModelState.h>
 #include <CCA/Components/MPM/ConstitutiveModel/MPMMaterial.h>
 #include <Core/Grid/Patch.h>
-#include <Core/Grid/LinearInterpolator.h>
 #include <CCA/Ports/DataWarehouse.h>
-#include <Core/Grid/Variables/NCVariable.h>
 #include <Core/Grid/Variables/ParticleSubset.h>
 #include <Core/Grid/Variables/ParticleVariable.h>
 #include <Core/Grid/Task.h>
@@ -55,7 +53,6 @@
 #include <Core/Math/Gaussian.h>
 #include <Core/Math/Matrix3.h>
 #include <Core/Math/SymmMatrix3.h>
-#include <Core/Math/FastMatrix.h>
 #include <Core/Math/TangentModulusTensor.h>
 #include <Core/Grid/Variables/VarTypes.h>
 #include <Core/Malloc/Allocator.h>

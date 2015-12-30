@@ -24,8 +24,7 @@
 
 #include "InternalVar_BorjaPressure.h"
 #include <cmath>
-#include <iostream>
-#include <Core/Exceptions/InvalidValue.h>
+//#include <iostream>
 
 using namespace UintahBB;
 using namespace Uintah;
