@@ -235,6 +235,7 @@ namespace Uintah {
 
     virtual void splitCMSpecificParticleData(const Patch* patch,
                                              const int dwi,
+                                             const int nDims,
                                              ParticleVariable<int> &prefOld,
                                              ParticleVariable<int> &pref,
                                              const unsigned int oldNumPar,

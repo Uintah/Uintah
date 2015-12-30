@@ -257,6 +257,7 @@ class RFElasticPlastic : public ConstitutiveModel {
 
     virtual void splitCMSpecificParticleData(const Patch* patch,
                                              const int dwi,
+                                             const int nDims,
                                              ParticleVariable<int> &prefOld,
                                              ParticleVariable<int> &prefNew,
                                              const unsigned int oldNumPar,

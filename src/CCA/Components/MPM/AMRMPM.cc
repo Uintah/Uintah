@@ -3710,6 +3710,9 @@ void AMRMPM::addParticles(const ProcessorGroup*,
       hasCoarser=true;
     }
 
+    // nDims is 3 for 3D, 2 for 2D.  2D assumes solving in the x-y plane
+    int nDims=3; 
+
     //Carry forward CellNAPID
     constCCVariable<int> NAPID;
     CCVariable<int> NAPID_new;
@@ -3799,7 +3802,9 @@ void AMRMPM::addParticles(const ProcessorGroup*,
           numNewPartNeeded++;
         }
       }
-      numNewPartNeeded*=8;
+      int fourOrEight=pow(2,nDims);
+      double fourthOrEighth = 1./((double) fourOrEight);
+      numNewPartNeeded*=fourOrEight;
 
       /*  This tomfoolery is in place to keep refined regions that contain
           particles refined.  If a patch with particles coarsens, the particles
@@ -3916,30 +3921,44 @@ void AMRMPM::addParticles(const ProcessorGroup*,
         // Find vectors to new particle locations, based on particle size and
         // deformation (patterned after CPDI interpolator code)
         Vector r[4];
-        r[0]=Vector(-dsize(0,0)-dsize(0,1)+dsize(0,2),
-                    -dsize(1,0)-dsize(1,1)+dsize(1,2),
-                    -dsize(2,0)-dsize(2,1)+dsize(2,2))*0.25;
-        r[1]=Vector( dsize(0,0)-dsize(0,1)+dsize(0,2),
-                     dsize(1,0)-dsize(1,1)+dsize(1,2),
-                     dsize(2,0)-dsize(2,1)+dsize(2,2))*0.25;
-        r[2]=Vector( dsize(0,0)+dsize(0,1)+dsize(0,2),
-                     dsize(1,0)+dsize(1,1)+dsize(1,2),
-                     dsize(2,0)+dsize(2,1)+dsize(2,2))*0.25;
-        r[3]=Vector(-dsize(0,0)+dsize(0,1)+dsize(0,2),
-                    -dsize(1,0)+dsize(1,1)+dsize(1,2),
-                    -dsize(2,0)+dsize(2,1)+dsize(2,2))*0.25;
+        if(fourOrEight==8){
+          r[0]=Vector(-dsize(0,0)-dsize(0,1)+dsize(0,2),
+                      -dsize(1,0)-dsize(1,1)+dsize(1,2),
+                      -dsize(2,0)-dsize(2,1)+dsize(2,2))*0.25;
+          r[1]=Vector( dsize(0,0)-dsize(0,1)+dsize(0,2),
+                       dsize(1,0)-dsize(1,1)+dsize(1,2),
+                       dsize(2,0)-dsize(2,1)+dsize(2,2))*0.25;
+          r[2]=Vector( dsize(0,0)+dsize(0,1)+dsize(0,2),
+                       dsize(1,0)+dsize(1,1)+dsize(1,2),
+                       dsize(2,0)+dsize(2,1)+dsize(2,2))*0.25;
+          r[3]=Vector(-dsize(0,0)+dsize(0,1)+dsize(0,2),
+                      -dsize(1,0)+dsize(1,1)+dsize(1,2),
+                      -dsize(2,0)+dsize(2,1)+dsize(2,2))*0.25;
 
-        new_part_pos.push_back(px[idx]+r[0]);
-        new_part_pos.push_back(px[idx]+r[1]);
-        new_part_pos.push_back(px[idx]+r[2]);
-        new_part_pos.push_back(px[idx]+r[3]);
-        new_part_pos.push_back(px[idx]-r[0]);
-        new_part_pos.push_back(px[idx]-r[1]);
-        new_part_pos.push_back(px[idx]-r[2]);
-        new_part_pos.push_back(px[idx]-r[3]);
+          new_part_pos.push_back(px[idx]+r[0]);
+          new_part_pos.push_back(px[idx]+r[1]);
+          new_part_pos.push_back(px[idx]+r[2]);
+          new_part_pos.push_back(px[idx]+r[3]);
+          new_part_pos.push_back(px[idx]-r[0]);
+          new_part_pos.push_back(px[idx]-r[1]);
+          new_part_pos.push_back(px[idx]-r[2]);
+          new_part_pos.push_back(px[idx]-r[3]);
+        } else if(fourOrEight==4){
+          r[0]=Vector(-dsize(0,0)-dsize(0,1),
+                      -dsize(1,0)-dsize(1,1),
+                       0.0)*0.25;
+          r[1]=Vector( dsize(0,0)-dsize(0,1),
+                       dsize(1,0)-dsize(1,1),
+                       0.0)*0.25;
+
+          new_part_pos.push_back(px[idx]+r[0]);
+          new_part_pos.push_back(px[idx]+r[1]);
+          new_part_pos.push_back(px[idx]-r[0]);
+          new_part_pos.push_back(px[idx]-r[1]);
+        }
 
 //        cout << "OPP = " << px[idx] << endl;
-        for(int i = 0;i<8;i++){
+        for(int i = 0;i<fourOrEight;i++){
 //        cout << "NPP = " << new_part_pos[i] << endl;
           if(!level->containsPoint(new_part_pos[i])){
             Point anchor = level->getAnchor();
@@ -3958,19 +3977,32 @@ void AMRMPM::addParticles(const ProcessorGroup*,
           if(i==0){
              new_index=idx;
           } else {
-             new_index=oldNumPar+7*numRefPar+i;
+             new_index=oldNumPar+(fourOrEight-1)*numRefPar+i;
           }
 //          cout << "new_index = " << new_index << endl;
           pidstmp[new_index]    = (cellID | (long64) myCellNAPID);
           pxtmp[new_index]      = new_part_pos[i];
-          pvoltmp[new_index]    = .125*pvolume[idx];
-          pmasstmp[new_index]   = .125*pmass[idx];
+          pvoltmp[new_index]    = fourthOrEighth*pvolume[idx];
+          pmasstmp[new_index]   = fourthOrEighth*pmass[idx];
           pveltmp[new_index]    = pvelocity[idx];
-          pSFtmp[new_index]     = 0.5*pscalefac[idx];
+          if(fourOrEight==8){
+            pSFtmp[new_index]     = 0.5*pscalefac[idx];
+            psizetmp[new_index]   = 0.5*pSize[idx];
+          } else if(fourOrEight==4){
+            Matrix3 ps=pscalefac[idx];
+            Matrix3 tmp(0.5*ps(0,0), 0.5*ps(0,1), 0.0,
+                        0.5*ps(1,0), 0.5*ps(1,1), 0.0,
+                        0.0,         0.0,         ps(2,2));
+            pSFtmp[new_index]     = tmp;
+            ps = pSize[idx];
+            tmp = Matrix3(0.5*ps(0,0), 0.5*ps(0,1), 0.0,
+                          0.5*ps(1,0), 0.5*ps(1,1), 0.0,
+                          0.0,         0.0,         ps(2,2));
+            psizetmp[new_index]   = tmp;
+          }
           pextFtmp[new_index]   = pextforce[idx];
           pFtmp[new_index]      = pF[idx];
-          psizetmp[new_index]   = 0.5*pSize[idx];
-          pareatmp[new_index]   = 0.25*pArea[idx];
+          pareatmp[new_index]   = 2.*fourthOrEighth*pArea[idx];
           pdisptmp[new_index]   = pdisp[idx];
           pstrstmp[new_index]   = pstress[idx];
           if (flags->d_with_color) {
@@ -3997,7 +4029,7 @@ void AMRMPM::addParticles(const ProcessorGroup*,
        }  // if particle flagged for refinement
       } // for particles
 
-      cm->splitCMSpecificParticleData(patch, dwi, prefOld, pref,
+      cm->splitCMSpecificParticleData(patch, dwi, nDims, prefOld, pref,
                                       oldNumPar, numNewPartNeeded,
                                       old_dw, new_dw);
 
