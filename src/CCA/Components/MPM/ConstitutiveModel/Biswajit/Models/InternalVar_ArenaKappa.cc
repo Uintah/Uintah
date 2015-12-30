@@ -25,11 +25,7 @@
 #include "InternalVar_ArenaKappa.h"
 #include <cmath>
 #include <iostream>
-#include <iomanip>
 #include <Core/Exceptions/InvalidValue.h>
-
-#include <errno.h>
-#include <fenv.h>
 
 using namespace UintahBB;
 using namespace Uintah;
