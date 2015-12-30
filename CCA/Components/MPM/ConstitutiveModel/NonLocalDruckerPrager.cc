@@ -30,22 +30,17 @@
 #include <Core/Grid/Task.h>
 #include <Core/Labels/MPMLabel.h>
 #include <Core/Grid/Variables/VarLabel.h>
-#include <Core/Grid/Variables/NodeIterator.h>
 #include <Core/ProblemSpec/ProblemSpec.h>
-#include <Core/Grid/Box.h>
 #include <Core/Grid/Level.h>
-#include <Core/Exceptions/ParameterNotFound.h>
 #include <Core/Math/MinMax.h>
 #include <Core/Math/Matrix3.h>
 #include <CCA/Components/MPM/ConstitutiveModel/MPMMaterial.h>
 #include <Core/Grid/Variables/VarTypes.h>
 #include <Core/Malloc/Allocator.h>
 #include <Core/Math/Weibull.h>
-#include <sci_values.h>
 #include <iostream>
+#include <string>
 #include <fstream>
-#include<string>
-#include<cstring>
 
 using namespace std;
 using namespace Uintah;

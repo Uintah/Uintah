@@ -79,27 +79,23 @@ porosity).
 #include <CCA/Components/MPM/ConstitutiveModel/Arenisca.h>
 #include <CCA/Components/MPM/ConstitutiveModel/MPMMaterial.h>
 #include <CCA/Ports/DataWarehouse.h>
+#include <Core/Exceptions/ProblemSetupException.h>
 #include <Core/Grid/Patch.h>
-#include <Core/Grid/Variables/NCVariable.h>
 #include <Core/Grid/Variables/ParticleVariable.h>
 #include <Core/Grid/Task.h>
 #include <Core/Grid/Variables/VarLabel.h>
-#include <Core/Grid/Variables/NodeIterator.h>
-#include <Core/Grid/Box.h>
 #include <Core/Grid/Level.h>
 #include <Core/Grid/Variables/VarTypes.h>
 #include <Core/Labels/MPMLabel.h>
-#include <Core/Exceptions/ParameterNotFound.h>
 #include <Core/Exceptions/InvalidValue.h>
 #include <Core/Math/MinMax.h>
 #include <Core/Math/Matrix3.h>
 #include <Core/Math/MiscMath.h>
 #include <Core/Malloc/Allocator.h>
 #include <Core/ProblemSpec/ProblemSpec.h>
-#include <sci_values.h>
 #include <Core/Math/Weibull.h>
-#include <fstream>
 #include <iostream>
+#include <cstdio>
 
 using std::cerr;
 
