@@ -84,7 +84,6 @@ AMRSimulationController::AMRSimulationController(const ProcessorGroup* myworld,
 #ifdef HAVE_VISIT
   do_visit = false;
 #endif
-
 }
 
 AMRSimulationController::~AMRSimulationController()
@@ -235,7 +234,8 @@ AMRSimulationController::run()
         doRegridding(currentGrid, false);
         d_regridder->setAdaptivity(false);
 #ifdef HAVE_VISIT
-        d_regridder->setForceRegridding(false);
+        if( do_visit )
+          d_regridder->setForceRegridding(false);
 #endif
         proc0cout << "______________________________________________________________________\n";
       }
@@ -245,7 +245,8 @@ AMRSimulationController::run()
         proc0cout << " Need to regrid.\n";
         doRegridding(currentGrid, false);
 #ifdef HAVE_VISIT
-        d_regridder->setForceRegridding(false);
+        if( do_visit )
+          d_regridder->setForceRegridding(false);
 #endif
         proc0cout << "______________________________________________________________________\n";
       }
@@ -273,7 +274,7 @@ AMRSimulationController::run()
 #ifdef HAVE_VISIT
     // Skip calling adjustDelT for this next time step if the user
     // modified the value during the previous time step.
-    if( !d_visit_simulation_data.overrideDelT ) 
+    if( !do_visit || (do_visit && !d_visit_simulation_data.overrideDelT) )
 #endif
     {
       adjustDelT( delt, d_sharedState->d_prev_delt, first, time );
@@ -352,8 +353,8 @@ AMRSimulationController::run()
         // component, since the delt will be wrong 
         d_output->finalizeTimestep( time, delt, currentGrid, d_scheduler, 0 );
 
-	// ARS - THIS CALL DOES NOTHING BECAUSE THE LAST ARG IS 0
-	// WHICH CAUSES THE METHOD TO IMMEIDATELY RETURN.
+        // ARS - THIS CALL DOES NOTHING BECAUSE THE LAST ARG IS 0
+        // WHICH CAUSES THE METHOD TO IMMEIDATELY RETURN.
         d_output->sched_allOutputTasks( delt, currentGrid, d_scheduler, 0 );
       }
     }
@@ -462,7 +463,7 @@ AMRSimulationController::run()
        d_visit_simulation_data.overrideDelT = false;
        d_visit_simulation_data.elapsedt = getWallTime();
        d_visit_simulation_data.cycle =
-	 d_sharedState->getCurrentTopLevelTimeStep();
+         d_sharedState->getCurrentTopLevelTimeStep();
        d_visit_simulation_data.message = std::string("");;
 
        d_visit_simulation_data.variables.clear();
@@ -473,40 +474,40 @@ AMRSimulationController::run()
 
        if (d_output )
        {
-	 std::string name;
-	 double val;
+         std::string name;
+         double val;
 
-	 if( d_output->getOutputInterval() > 0 )
-	 {
-	   name = d_sharedState->get_outputInterval_label()->getName();
-	   val = d_output->getOutputInterval();
-	 }
-	 else
-	 {
-	   name = d_sharedState->get_outputTimestepInterval_label()->getName();
-	   val = d_output->getOutputTimestepInterval();
-	 }
+         if( d_output->getOutputInterval() > 0 )
+         {
+           name = d_sharedState->get_outputInterval_label()->getName();
+           val = d_output->getOutputInterval();
+         }
+         else
+         {
+           name = d_sharedState->get_outputTimestepInterval_label()->getName();
+           val = d_output->getOutputTimestepInterval();
+         }
 
-	 var.name = name;
-	 var.value = val;
-	 var.modified = false;
-	 d_visit_simulation_data.outputIntervals.push_back(var);
+         var.name = name;
+         var.value = val;
+         var.modified = false;
+         d_visit_simulation_data.outputIntervals.push_back(var);
 
-	 if( d_output->getCheckpointInterval() > 0 )
-	 {
-	   name = d_sharedState->get_checkpointInterval_label()->getName();
-	   val = d_output->getCheckpointInterval();
-	 }
-	 else
-	 {
-	   name = d_sharedState->get_checkpointTimestepInterval_label()->getName();
-	   val = d_output->getCheckpointTimestepInterval();
-	 }
+         if( d_output->getCheckpointInterval() > 0 )
+         {
+           name = d_sharedState->get_checkpointInterval_label()->getName();
+           val = d_output->getCheckpointInterval();
+         }
+         else
+         {
+           name = d_sharedState->get_checkpointTimestepInterval_label()->getName();
+           val = d_output->getCheckpointTimestepInterval();
+         }
 
-	 var.name = name;
-	 var.value = val;
-	 var.modified = false;
-	 d_visit_simulation_data.outputIntervals.push_back(var);
+         var.name = name;
+         var.value = val;
+         var.modified = false;
+         d_visit_simulation_data.outputIntervals.push_back(var);
        }
 
        // Check the state.
@@ -519,18 +520,18 @@ AMRSimulationController::run()
        // Loop through the user viewable/settable variables and update
        // those that have been modified.
        std::vector< uintah_variable_data > &vars =
-	 d_visit_simulation_data.variables;
+         d_visit_simulation_data.variables;
 
        for( int i=0; i<vars.size(); ++i )
        {
-	 uintah_variable_data &var = vars[i];
+         uintah_variable_data &var = vars[i];
 
-	 if( var.modified )
-	 {
-	   // if( var.name == SOMEVAR )
-	   // {
-	   // }
-	 }
+         if( var.modified )
+         {
+           // if( var.name == SOMEVAR )
+           // {
+           // }
+         }
        }
      }
 #endif
