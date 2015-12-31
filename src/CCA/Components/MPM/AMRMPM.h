@@ -177,6 +177,12 @@ protected:
                                       const MaterialSubset* matls,
                                       DataWarehouse* old_dw,
                                       DataWarehouse* new_dw);
+  // At Coarse Fine interface
+  void interpolateParticlesToGrid_CFI_GIMP( const ProcessorGroup*,
+                                            const PatchSubset* patches,
+                                            const MaterialSubset* matls,
+                                            DataWarehouse* old_dw,
+                                            DataWarehouse* new_dw);
                                       
   void coarsenNodalData_CFI(const ProcessorGroup*,
                             const PatchSubset* patches,
@@ -421,13 +427,6 @@ protected:
                  const MaterialSubset*,                   
                  DataWarehouse* old_dw,                                
                  DataWarehouse* new_dw); 
-                 
-  // using experimental getParticleSubSetAllLevels()
-  void debug_CFI_experimental(const ProcessorGroup*,
-                              const PatchSubset* patches,                    
-                              const MaterialSubset*,                   
-                              DataWarehouse* old_dw,                         
-                              DataWarehouse* new_dw);
   //
   // input coarse patches and return coarse & fine level patches with CFI               
   void coarseLevelCFI_Patches(const PatchSubset* coarsePatches,
@@ -470,7 +469,8 @@ protected:
 private:
 
   MaterialSubset* d_one_matl;         // matlsubset for zone of influence
-
+  std::string d_CFI_interpolator;     // user can override interpolator at CFI
+  
   std::vector<GeometryObject*> d_refine_geom_objs;
   AMRMPM(const AMRMPM&);
   AMRMPM& operator=(const AMRMPM&);

@@ -54,6 +54,20 @@ namespace Uintah {
                                                        std::vector<Vector>& d_S,
                                                        const Matrix3& size,
                                                        const Matrix3& defgrad);
+                                                       
+    //__________________________________
+    //  AMRMPM                                
+    virtual void findCellAndWeights_CFI(const Point& pos,
+                                        std::vector<IntVector>& ni,
+                                        std::vector<double>& S,
+                                        constNCVariable<Stencil7>& zoi);
+                                        
+    virtual void findCellAndWeightsAndShapeDerivatives_CFI(
+                                            const Point& pos,
+                                            std::vector<IntVector>& CFI_ni,
+                                            std::vector<double>& S,
+                                            std::vector<Vector>& d_S,
+                                            constNCVariable<Stencil7>& zoi);
     virtual int size();
     
   private:
