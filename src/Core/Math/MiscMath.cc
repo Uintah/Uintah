@@ -49,7 +49,7 @@ namespace SCIRun {
 
 double MakeReal(double value)
 {
-  if (!isfinite(value))
+  if (!std::isfinite(value))
   {
     int is_inf = 0;
 #ifdef __digital__
