@@ -135,8 +135,8 @@ int main()
 	   << nodeCoords[x].y << "   "<< nodeCoords[x].z << endl;
       exit(1);
     } 
-    if (!finite(nodeCoords[x].x) ||
-	!finite(nodeCoords[x].y) || !finite(nodeCoords[x].z) ) {
+    if (!isfinite(nodeCoords[x].x) ||
+	!isfinite(nodeCoords[x].y) || !isfinite(nodeCoords[x].z) ) {
       cout << " E R R O R :I've detected a number that isn't finite"<<endl;
       cout << " " << nodeCoords[x].x << " " <<
 	nodeCoords[x].y << " " << nodeCoords[x].z << " " <<endl; 
@@ -184,8 +184,8 @@ int main()
       exit(1);
     }
     
-    if (!finite(nodeIndx[y].n1) || 
-	!finite(nodeIndx[y].n2) || !finite(nodeIndx[y].n3)) {
+    if (!isfinite(nodeIndx[y].n1) || 
+	!isfinite(nodeIndx[y].n2) || !isfinite(nodeIndx[y].n3)) {
       cout << "I've detected a number that isn't finite"<<endl;
       cout << nodeIndx[y].n1 << " " <<
 	nodeIndx[y].n2 << " " << nodeIndx[y].n3 <<endl; 

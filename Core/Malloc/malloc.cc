@@ -44,7 +44,7 @@
 #if defined(__sun)
 #  include <cstring>
 #  define bzero(p,sz)  memset(p,0, sz);
-#elif defined(__linux) || defined(__sgi) || defined(__digital__) || defined(_AIX) || defined(__APPLE__) || defined(__CYGWIN__)
+#elif defined(__linux) || defined(__APPLE__) 
 //  do nothing
 #else
 #  error "Need bcopy define for this architecture"
