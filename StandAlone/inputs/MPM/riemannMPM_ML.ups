@@ -107,6 +107,7 @@
       <useLockStep> true </useLockStep>
       <MPM>
         <manualGrid> true </manualGrid>
+        <CFI_interpolator> linear </CFI_interpolator>
       </MPM>
     </AMR>
     <!--____________________________________________________________________-->
