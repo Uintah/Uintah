@@ -1063,11 +1063,11 @@ namespace PTR	// Portable TongeRamesh
 
       double g1((sqrt(ap1)-1.0)/(sqrt(ap1)+1.0));
       double g2((sqrt(ap2)-1.0)/(sqrt(ap2)+1.0));
-      if(abs(g1)>1.0 || abs(g2)>1.0) {
+      if(std::abs(g1)>1.0 || std::abs(g2)>1.0) {
         throw std::runtime_error("Both abs(g1) and abs(g2) must be less than 1 (real branch)");
       }
 
-      if(abs(g1)>1e-6 || abs(g2)>1e-6) {
+      if(std::abs(g1)>1e-6 || std::abs(g2)>1e-6) {
         // Compute boundary displacements (delta and rho)
         // Equation A.10 (Bhasker) Eqn. 6.9.5 Green and Zerna
         double b1(mat_s_1122-ap1*mat_s_2222);

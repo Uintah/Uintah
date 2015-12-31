@@ -82,13 +82,8 @@ OSHunk* OSHunk::alloc(size_t size, bool returnable, Allocator* allocator)
 	  }
        }
 #ifdef SCI_64BITS
-#  ifdef __sgi
-       ptr=mmap64(0, asize, PROT_READ|PROT_WRITE, MAP_PRIVATE,
-		  devzero_fd, 0);
-#  else
        ptr=mmap(0, asize, PROT_READ|PROT_WRITE, MAP_PRIVATE,
 		devzero_fd, 0);
-#  endif
 #else
        ptr=mmap(0, asize, PROT_READ|PROT_WRITE, MAP_PRIVATE,
 		devzero_fd, 0);
@@ -161,9 +156,6 @@ OSHunk::free(OSHunk* hunk)
     if(munmap((MMAP_TYPE*)hunk, len) == -1){
 	int i;
         for(i=0;i<10;i++){
-#ifdef __sgi
-	    sginap(10);
-#endif
     	    if(munmap((MMAP_TYPE*)hunk, len) != -1)
 		break;
         }
