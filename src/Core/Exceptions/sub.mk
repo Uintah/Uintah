@@ -50,7 +50,7 @@ SRCS   += \
           $(SRCDIR)/VariableNotFoundInGrid.cc  
 
 PSELIBS := 
-LIBS := $(TRACEBACK_LIB) $(DL_LIBRARY)
+LIBS := $(DL_LIBRARY)
 
 include $(SCIRUN_SCRIPTS)/smallso_epilogue.mk
 
