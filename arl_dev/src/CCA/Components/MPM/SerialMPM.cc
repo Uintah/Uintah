@@ -1896,6 +1896,7 @@ void SerialMPM::actuallyInitialize(const ProcessorGroup*,
                                    DataWarehouse* new_dw)
 {
   particleIndex totalParticles=0;
+
   for(int p=0;p<patches->size();p++){
     const Patch* patch = patches->get(p);
 
@@ -1937,47 +1938,60 @@ void SerialMPM::actuallyInitialize(const ProcessorGroup*,
 
       totalParticles+=numParticles;
       mpm_matl->getConstitutiveModel()->initializeCMData(patch,mpm_matl,new_dw);
+    }
+  } // patches
 
-    }
-    IntVector num_extra_cells=patch->getExtraCells();
-    IntVector periodic=patch->getLevel()->getPeriodicBoundaries();
-    string interp_type = flags->d_interpolator_type;
-    if(interp_type=="linear" && num_extra_cells!=IntVector(0,0,0)){
-      if(!flags->d_with_ice && !flags->d_with_arches){
-        ostringstream msg;
-        msg << "\n ERROR: When using <interpolator>linear</interpolator> \n"
-            << " you should also use <extraCells>[0,0,0]</extraCells> \n"
-            << " unless you are running an MPMICE or MPMARCHES case.\n";
-        throw ProblemSetupException(msg.str(),__FILE__, __LINE__);
-      }
-    }
-    else if(((interp_type=="gimp" || interp_type=="3rdorderBS"
-          || interp_type=="cpdi")
-                          && ((num_extra_cells+periodic)!=IntVector(1,1,1)
-                          && ((num_extra_cells+periodic)!=IntVector(1,1,0)
-                          && flags->d_axisymmetric)))){
-        ostringstream msg;
-        msg << "\n ERROR: When using <interpolator>gimp</interpolator> \n"
-            << " or <interpolator>3rdorderBS</interpolator> \n"
-            << " or <interpolator>cpdi</interpolator> \n"
-            << " you must also use extraCells and/or periodicBCs such\n"
-            << " the sum of the two is [1,1,1].\n"
-            << " If using axisymmetry, the sum of the two can be [1,1,0].\n";
-        throw ProblemSetupException(msg.str(),__FILE__, __LINE__);
-    }
+  const Level* level = getLevel(patches);
+  IntVector lowNode, highNode;
+  level->findNodeIndexRange(lowNode, highNode);
+  string interp_type = flags->d_interpolator_type;
 
-    // Only allow axisymmetric runs if the grid is one cell thick in the theta dir.
-    if(flags->d_axisymmetric){
-      IntVector patchLowNode = patch->getNodeLowIndex();
-      IntVector patchHighNode = patch->getNodeHighIndex();
-      int num_cells_in_theta = (patchHighNode.z() - patchLowNode.z()) - 1;
-      if(num_cells_in_theta > 1){
-        ostringstream msg;
-        msg << "\n ERROR: When using <axisymmetric>true</axisymmetric> \n"
-            << "the grid can only have one cell in the circumferential direction.\n";
-        throw ProblemSetupException(msg.str(),__FILE__, __LINE__);
-      }
+  // Determine dimensionality for particle splitting
+  d_ndim=3;
+  if((interp_type=="linear" && (highNode.z() - lowNode.z()==2)) ||
+     (interp_type=="gimp"   && (highNode.z() - lowNode.z()==4)) ||
+     (interp_type=="cpdi"   && (highNode.z() - lowNode.z()==4))){
+     d_ndim=2;
+  }
+
+  // Only allow axisymmetric runs if the grid is one cell
+  // thick in the theta dir.
+  if(flags->d_axisymmetric){
+    int num_cells_in_theta = (highNode.z() - lowNode.z()) - 1;
+    if(num_cells_in_theta > 1){
+     ostringstream msg;
+      msg << "\n ERROR: When using <axisymmetric>true</axisymmetric> the \n"
+          << "grid can only have one cell in the circumferential direction.\n";
+      throw ProblemSetupException(msg.str(),__FILE__, __LINE__);
     }
+  }
+
+  // Bulletproofing for extra cells/interpolators/periodic BCs
+  IntVector num_extra_cells=level->getExtraCells();
+  IntVector periodic=level->getPeriodicBoundaries();
+  if(interp_type=="linear" && num_extra_cells!=IntVector(0,0,0)){
+    if(!flags->d_with_ice && !flags->d_with_arches){
+      ostringstream msg;
+      msg << "\n ERROR: When using <interpolator>linear</interpolator> \n"
+          << " you should also use <extraCells>[0,0,0]</extraCells> \n"
+          << " unless you are running an MPMICE or MPMARCHES case.\n";
+      throw ProblemSetupException(msg.str(),__FILE__, __LINE__);
+    }
+  }
+  else if(((interp_type=="gimp"       || 
+            interp_type=="3rdorderBS" ||
+            interp_type=="cpdi")                          && 
+            ((num_extra_cells+periodic)!=IntVector(1,1,1) && 
+            ((num_extra_cells+periodic)!=IntVector(1,1,0) && 
+             flags->d_axisymmetric)))){
+      ostringstream msg;
+      msg << "\n ERROR: When using <interpolator>gimp</interpolator> \n"
+          << " or <interpolator>3rdorderBS</interpolator> \n"
+          << " or <interpolator>cpdi</interpolator> \n"
+          << " you must also use extraCells and/or periodicBCs such\n"
+          << " the sum of the two is [1,1,1].\n"
+          << " If using axisymmetry, the sum of the two can be [1,1,0].\n";
+      throw ProblemSetupException(msg.str(),__FILE__, __LINE__);
   }
 
   if (flags->d_reductionVars->accStrainEnergy) {
