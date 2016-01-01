@@ -233,7 +233,55 @@ void AMRMPM::problemSetup(const ProblemSpecP& prob_spec,
     throw ProblemSetupException(warn, __FILE__, __LINE__);
   }
 
+  ProblemSpecP refine_ps = mpm_ps->findBlock("Refinement_Criteria_Thresholds");
+  if(!refine_ps ){
+    string warn;
+    warn ="\n INPUT FILE ERROR:\n <Refinement_Criteria_Thresholds> "
+         " block not found inside of <MPM> block \n";
+    throw ProblemSetupException(warn, __FILE__, __LINE__);
+  }
+
+  //__________________________________
+  // Pull out the refinement threshold criteria 
+  for (ProblemSpecP var_ps = refine_ps->findBlock("Variable");var_ps != 0;
+                    var_ps = var_ps->findNextBlock("Variable")) {
+    thresholdVar data;
+    string name, value, matl;
+
+    map<string,string> input;
+    var_ps->getAttributes(input);
+    name  = input["name"];
+    value = input["value"];
+    matl  = input["matl"];
+
+    stringstream n_ss(name);
+    stringstream v_ss(value);
+    stringstream m_ss(matl);
+
+    n_ss >> data.name;
+    v_ss >> data.value;
+    m_ss >> data.matl;
+
+    if( !n_ss || !v_ss || (!m_ss && matl!="all") ) {
+      printf( "WARNING: AMRMPM.cc: stringstream failed...\n" );
+    }
+
+    int numMatls = d_sharedState->getNumMatls();
+
+    //__________________________________
+    // if using "all" matls 
+    if(matl == "all"){
+      for (int m = 0; m < numMatls; m++){
+        data.matl = m;
+        d_thresholdVars.push_back(data);
+      }
+    }else{
+      d_thresholdVars.push_back(data);
+    }
+  }
+
 #if 0
+
   ProblemSpecP refine_ps = mpm_ps->findBlock("Refine_Regions");
   // Read in the refined regions geometry objects
   int piece_num = 0;
@@ -290,7 +338,7 @@ void AMRMPM::problemSetup(const ProblemSpecP& prob_spec,
   
 /*`==========TESTING==========*/
   d_nPaddingCells_Coarse = 1;
-//  NGP = 1; 
+//  NGP = 1;
 /*===========TESTING==========`*/
 
   d_sharedState->setParticleGhostLayer(Ghost::AroundNodes, NGP);
@@ -3788,9 +3836,23 @@ void AMRMPM::addParticles(const ProcessorGroup*,
         // Conditions to refine particle based on physical state
         // TODO:  Check below, should be < or <= in first conditional
         bool splitCriteria=false;
-        if(pstress[pp].Norm() > 1){
-          splitCriteria = true;
+        //__________________________________
+        // Only set the refinement flags for certain materials
+        for(int i = 0; i< (int)d_thresholdVars.size(); i++ ){
+          thresholdVar data = d_thresholdVars[i];
+          string name  = data.name;
+          double thresholdValue = data.value;
+
+          if(m==data.matl){
+            if(name=="stressNorm"){
+               double stressNorm = pstress[pp].Norm();
+               if(stressNorm > thresholdValue){
+                 splitCriteria = true;
+               }
+            }
+          }
         }
+
         if((pref[pp]< levelIndex && splitCriteria && numLevels > 1 ) ||
            (pref[pp]<=levelIndex && splitCriteria && numLevels == 1)){
           pref[pp]++;

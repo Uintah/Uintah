@@ -503,7 +503,16 @@ private:
     }
   };
   std::map<const Patch*,faceMarks> faceMarks_map[2];
-         
+
+  //__________________________________
+  // refinement criteria threshold knobs
+  struct thresholdVar {
+    std::string name;
+    int matl;
+    double value;
+  };
+  std::vector<thresholdVar> d_thresholdVars;
+
   inline void computeVelocityGradient(Matrix3& velGrad,
                                     std::vector<IntVector>& ni,
                                     std::vector<Vector>& d_S,
