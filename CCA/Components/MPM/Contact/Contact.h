@@ -108,8 +108,8 @@ WARNING
       };
       
       inline bool compare(double num1, double num2) {
+            //double EPSILON=1.e-20;
             double EPSILON=1.e-14;
-            
             return (fabs(num1-num2) <= EPSILON);
       }
 
