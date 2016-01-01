@@ -1676,6 +1676,17 @@ void AMRMPM::actuallyInitialize(const ProcessorGroup*,
     }  // matl loop
   }
 
+  // Determine dimensionality for particle splitting
+  IntVector lowNode, highNode;
+  level->findNodeIndexRange(lowNode, highNode);
+  string interp_type = flags->d_interpolator_type;
+  d_ndim=3;
+  if((interp_type=="linear" && (highNode.z() - lowNode.z()==2)) ||
+     (interp_type=="gimp"   && (highNode.z() - lowNode.z()==4)) ||
+     (interp_type=="cpdi"   && (highNode.z() - lowNode.z()==4))){
+     d_ndim=2;
+  }
+
   if (flags->d_reductionVars->accStrainEnergy) {
     // Initialize the accumulated strain energy
     new_dw->put(max_vartype(0.0), lb->AccStrainEnergyLabel);
@@ -3698,20 +3709,18 @@ void AMRMPM::addParticles(const ProcessorGroup*,
                           DataWarehouse* old_dw,
                           DataWarehouse* new_dw)
 {
+  const Level* level = getLevel(patches);
+  int numLevels = level->getGrid()->numLevels();
+  int levelIndex = level->getIndex();
+  bool hasCoarser=false;
+  if(level->hasCoarserLevel()){
+    hasCoarser=true;
+  }
+
   for(int p=0;p<patches->size();p++){
     const Patch* patch = patches->get(p);
     printTask(patches, patch,cout_doing, "Doing addParticles");
     int numMPMMatls=d_sharedState->getNumMPMMatls();
-
-    const Level* level = getLevel(patches);
-    int levelIndex = level->getIndex();
-    bool hasCoarser=false;
-    if(level->hasCoarserLevel()){
-      hasCoarser=true;
-    }
-
-    // nDims is 3 for 3D, 2 for 2D.  2D assumes solving in the x-y plane
-    int nDims=3; 
 
     //Carry forward CellNAPID
     constCCVariable<int> NAPID;
@@ -3778,7 +3787,12 @@ void AMRMPM::addParticles(const ProcessorGroup*,
         prefOld[pp] = pref[pp];
         // Conditions to refine particle based on physical state
         // TODO:  Check below, should be < or <= in first conditional
-        if(pref[pp]<levelIndex && pstress[pp].Norm() > 1){
+        bool splitCriteria=false;
+        if(pstress[pp].Norm() > 1){
+          splitCriteria = true;
+        }
+        if((pref[pp]< levelIndex && splitCriteria && numLevels > 1 ) ||
+           (pref[pp]<=levelIndex && splitCriteria && numLevels == 1)){
           pref[pp]++;
           numNewPartNeeded++;
         }
@@ -3802,7 +3816,7 @@ void AMRMPM::addParticles(const ProcessorGroup*,
           numNewPartNeeded++;
         }
       }
-      int fourOrEight=pow(2,nDims);
+      int fourOrEight=pow(2,d_ndim);
       double fourthOrEighth = 1./((double) fourOrEight);
       numNewPartNeeded*=fourOrEight;
 
@@ -4029,7 +4043,7 @@ void AMRMPM::addParticles(const ProcessorGroup*,
        }  // if particle flagged for refinement
       } // for particles
 
-      cm->splitCMSpecificParticleData(patch, dwi, nDims, prefOld, pref,
+      cm->splitCMSpecificParticleData(patch, dwi, d_ndim, prefOld, pref,
                                       oldNumPar, numNewPartNeeded,
                                       old_dw, new_dw);
 
