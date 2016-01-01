@@ -364,7 +364,7 @@ GaoElastic::computeStressTensor(const PatchSubset* patches,
   //**** Used for reaction diffusion *******
   double concentration;
   double concentration_pn;
-  double conc_rate;
+  double conc_rate=0.;
   
 //  double totalStrainEnergy = 0.0;
 
