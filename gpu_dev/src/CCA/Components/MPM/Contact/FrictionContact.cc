@@ -25,7 +25,6 @@
 #include <Core/Math/Matrix3.h>
 #include <Core/Geometry/Vector.h>
 #include <Core/Geometry/IntVector.h>
-#include <Core/Grid/Grid.h>
 #include <Core/Grid/Level.h>
 #include <Core/Grid/Variables/NCVariable.h>
 #include <Core/Grid/Patch.h>
@@ -42,7 +41,6 @@
 #include <CCA/Components/MPM/MPMBoundCond.h>
 #include <vector>
 #include <iostream>
-#include <fstream>
 
 using namespace Uintah;
 using std::vector;

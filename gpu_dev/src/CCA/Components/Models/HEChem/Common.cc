@@ -24,7 +24,6 @@
 
 
 
-#include <Core/Grid/Variables/ComputeSet.h>
 #include <Core/Grid/Variables/NCVariable.h>
 #include <CCA/Components/Models/HEChem/Common.h>
 

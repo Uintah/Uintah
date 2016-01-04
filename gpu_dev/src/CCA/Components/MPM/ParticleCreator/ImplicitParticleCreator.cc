@@ -23,17 +23,9 @@
  */
 
 #include <CCA/Components/MPM/ParticleCreator/ImplicitParticleCreator.h>
-#include <CCA/Components/MPM/ConstitutiveModel/MPMMaterial.h>
-#include <Core/GeometryPiece/GeometryObject.h>
-#include <CCA/Components/MPM/MPMFlags.h>
 #include <CCA/Ports/DataWarehouse.h>
-#include <Core/Grid/Box.h>
 #include <Core/Labels/MPMLabel.h>
-#include <Core/Grid/Variables/CellIterator.h>
 #include <Core/Grid/Variables/ParticleVariable.h>
-#include <Core/GeometryPiece/GeometryPiece.h>
-#include <Core/GeometryPiece/FileGeometryPiece.h>
-#include <algorithm>
 
 using namespace Uintah;
 using namespace std;

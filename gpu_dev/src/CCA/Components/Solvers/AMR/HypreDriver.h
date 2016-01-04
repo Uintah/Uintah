@@ -313,7 +313,7 @@ namespace Uintah {
         double finalResNorm = results.finalResNorm;
         int numIterations = results.numIterations;
         
-        if ((finalResNorm > _params->tolerance) ||(finite(finalResNorm) == 0)) {
+        if ((finalResNorm > _params->tolerance) ||(std::isfinite(finalResNorm) == 0)) {
           if (_params->restart){
             if(pg->myrank() == 0)
               std::cout << "AMRSolver not converged in " << numIterations 

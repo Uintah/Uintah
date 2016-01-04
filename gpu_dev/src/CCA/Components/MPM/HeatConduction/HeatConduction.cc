@@ -23,7 +23,6 @@
  */
 
 #include <CCA/Components/MPM/HeatConduction/HeatConduction.h>
-#include <Core/Math/Short27.h>
 #include <CCA/Components/MPM/ConstitutiveModel/MPMMaterial.h>
 #include <Core/Grid/Variables/NCVariable.h>
 #include <Core/Grid/Variables/NodeIterator.h>

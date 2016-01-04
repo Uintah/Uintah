@@ -30,7 +30,6 @@
 #include <Core/Exceptions/ProblemSetupException.h>
 #include <Core/Exceptions/ParameterNotFound.h>
 #include <Core/Exceptions/InvalidValue.h>
-#include <Core/Grid/Box.h>
 #include <Core/Grid/Variables/CellIterator.h>
 #include <Core/Grid/Level.h>
 #include <Core/Grid/Material.h>
@@ -39,14 +38,11 @@
 #include <Core/GeometryPiece/GeometryPieceFactory.h>
 #include <Core/GeometryPiece/UnionGeometryPiece.h>
 #include <Core/Labels/ICELabel.h>
-#include <Core/Parallel/ProcessorGroup.h>
 #include <Core/ProblemSpec/ProblemSpec.h>
 
-#include <Core/Containers/StaticArray.h>
 #include <Core/Math/MiscMath.h>
 #include <iostream>
 #include <Core/Util/DebugStream.h>
-#include <cstdio>
 
 using namespace Uintah;
 using namespace std;

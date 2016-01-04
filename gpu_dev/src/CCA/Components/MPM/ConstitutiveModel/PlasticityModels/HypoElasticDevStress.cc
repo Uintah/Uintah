@@ -22,9 +22,6 @@
  * IN THE SOFTWARE.
  */
 #include "HypoElasticDevStress.h"
-#include <Core/Math/FastMatrix.h>
-#include <Core/Exceptions/ProblemSetupException.h>
-#include <cmath>
 using namespace std;
 using namespace Uintah;
 

@@ -26,17 +26,9 @@
 #include <CCA/Components/MPM/ReactionDiffusion/JGConcentrationDiffusion.h>
 #include <CCA/Components/MPM/ReactionDiffusion/RFConcDiffusion1MPM.h>
 #include <CCA/Components/MPM/ReactionDiffusion/GaoDiffusion.h>
-
-#include <sci_defs/uintah_defs.h> // For NO_FORTRAN
-
-#include <CCA/Components/MPM/MPMFlags.h>
-
 #include <Core/Exceptions/ProblemSetupException.h>
 #include <Core/ProblemSpec/ProblemSpec.h>
 #include <Core/Malloc/Allocator.h>
-
-#include <fstream>
-#include <iostream>
 #include <string>
 
 using namespace std;

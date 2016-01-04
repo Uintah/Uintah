@@ -169,8 +169,9 @@ RegridderCommon::needsToReGrid(const GridP &oldGrid)
   int retval = false;
 
   if( d_forceRegridding )
+  {
     retval = true;
-
+  }
   else if (!d_isAdaptive || timeStepsSinceRegrid < d_minTimestepsBetweenRegrids) {
     retval = false;
     if (d_myworld->myrank() == 0)

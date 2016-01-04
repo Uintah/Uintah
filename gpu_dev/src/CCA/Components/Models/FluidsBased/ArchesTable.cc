@@ -33,7 +33,6 @@
 #include <Core/Util/DebugStream.h>
 
 #include <iostream>
-#include <fstream>
 
 #define MAXINDEPENDENTS 100
 

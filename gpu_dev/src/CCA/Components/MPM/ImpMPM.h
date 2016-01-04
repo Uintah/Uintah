@@ -25,12 +25,10 @@
 #ifndef UINTAH_HOMEBREW_IMP_MPM_H
 #define UINTAH_HOMEBREW_IMP_MPM_H
 
-#include <sci_defs/petsc_defs.h>
 
 #include <Core/Geometry/Vector.h>
 
 #include <Core/Parallel/UintahParallelComponent.h>
-#include <CCA/Ports/DataWarehouseP.h>
 #include <CCA/Ports/SimulationInterface.h>
 #include <Core/ProblemSpec/ProblemSpecP.h>
 #include <Core/Grid/GridP.h>
@@ -44,7 +42,6 @@
 #include <CCA/Ports/SwitchingCriteria.h>
 
 
-#include <map>
 #include <vector>
 #include <list>
 

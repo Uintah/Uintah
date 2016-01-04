@@ -30,7 +30,6 @@
 #endif
 
 #include <CCA/Components/MPM/ConstitutiveModel/PlasticityModels/NoKinematicHardening.h>
-#include <cmath>
 
 
 using namespace Uintah;

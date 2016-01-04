@@ -28,7 +28,6 @@
 // multimaterial checks in dynamic model
 // Avoid recomputation of variance
 
-#include <CCA/Components/ICE/ICEMaterial.h>
 #include <CCA/Components/ICE/ConservationTest.h>
 #include <CCA/Components/ICE/BoundaryCond.h>
 #include <CCA/Components/ICE/Diffusion.h>
@@ -38,7 +37,6 @@
 #include <CCA/Ports/Scheduler.h>
 #include <Core/Exceptions/ProblemSetupException.h>
 #include <Core/ProblemSpec/ProblemSpec.h>
-#include <Core/Grid/Box.h>
 #include <Core/Grid/Variables/CellIterator.h>
 #include <Core/Grid/Level.h>
 #include <Core/Grid/Material.h>
@@ -49,8 +47,6 @@
 #include <Core/Labels/ICELabel.h>
 #include <Core/Exceptions/ParameterNotFound.h>
 #include <Core/Parallel/ProcessorGroup.h>
-#include <Core/Exceptions/InvalidValue.h>
-#include <Core/Math/MiscMath.h>
 #include <iostream>
 #include <Core/Util/DebugStream.h>
 #include <cstdio>

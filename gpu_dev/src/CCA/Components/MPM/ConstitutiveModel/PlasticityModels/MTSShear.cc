@@ -27,7 +27,6 @@
 #include <Core/Exceptions/InvalidValue.h>
 #include <cmath>
 #include <iostream>
-#include <sstream>
 
 using namespace Uintah;
 using namespace std;

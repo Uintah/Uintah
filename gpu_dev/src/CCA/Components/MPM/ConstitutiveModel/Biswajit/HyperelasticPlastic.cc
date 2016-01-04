@@ -33,7 +33,6 @@
 #include <Core/Grid/Variables/VarTypes.h>
 #include <Core/Labels/MPMLabel.h>
 #include <Core/Math/Matrix3.h>
-#include <Core/Grid/Variables/NodeIterator.h>
 #include <CCA/Components/MPM/ConstitutiveModel/MPMMaterial.h>
 #include <CCA/Components/MPM/ConstitutiveModel/Biswajit/Models/PressureModelFactory.h>
 #include <Core/ProblemSpec/ProblemSpec.h>
@@ -44,7 +43,6 @@
 #include <Core/Math/Gaussian.h>
 #include <Core/Math/Weibull.h>
 #include <Core/Malloc/Allocator.h>
-#include <fstream>
 #include <iostream>
 
 using namespace std;

@@ -23,7 +23,6 @@
  */
 
 #include <CCA/Components/MPM/ThermalContact/STThermalContact.h>
-#include <Core/Malloc/Allocator.h>
 #include <CCA/Components/MPM/ConstitutiveModel/MPMMaterial.h>
 #include <CCA/Ports/DataWarehouse.h>
 #include <Core/Grid/Variables/NodeIterator.h>

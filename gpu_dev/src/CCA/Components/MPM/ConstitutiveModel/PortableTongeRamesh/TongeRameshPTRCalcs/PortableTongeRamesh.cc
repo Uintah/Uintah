@@ -372,13 +372,13 @@ namespace PTR	// Portable TongeRamesh
               double pdfValue = 0.0;
               double eta = flawDistData.flawDensity;
               double a = flawDistData.exponent;
-              double s_mid, meanEta, stdEta;
+              double /*s_mid,*/ meanEta, stdEta;
               double s;
 
               // Generate a Pareto distribution of internal flaws:
               for (int i = 0; i < flawDistData.numCrackFamilies; i++){
                 // Calculate the flaw size for the bin:
-                s_mid = smax - (i+0.5)*binWidth;
+                //s_mid = smax - (i+0.5)*binWidth;
                 s = smax - (i+randGen.rand53())*binWidth;
                 // Calculate the flaw denstiy in the bin:
                 pdfValue = a * pow(smin, a) * pow(s, -a-1.0) / (1-pow(smin/smax,a));
@@ -767,11 +767,11 @@ namespace PTR	// Portable TongeRamesh
 	flawDistData.meanFlawSize     = flawDistArray[1];
     flawDistData.flawDensity      = flawDistArray[2];
     flawDistData.stdFlawSize      = flawDistArray[3];
-    if(abs(flawDistArray[4]) < 0.1){
+    if(fabs(flawDistArray[4]) < 0.1){
       flawDistData.type = "delta";
-    } else if(abs(flawDistArray[4]) < 1.1){
+    } else if(fabs(flawDistArray[4]) < 1.1){
       flawDistData.type = "normal";
-    } else if(abs(flawDistArray[4]) < 2.1){
+    } else if(fabs(flawDistArray[4]) < 2.1){
       flawDistData.type = "pareto";
     } else {
       flawDistData.type = "unknown";
@@ -779,7 +779,7 @@ namespace PTR	// Portable TongeRamesh
     flawDistData.minFlawSize = flawDistArray[5];
 	flawDistData.maxFlawSize = flawDistArray[6];
 	flawDistData.exponent    = flawDistArray[7];
-	flawDistData.randomizeDist = std::abs(flawDistArray[8])>0.1;
+	flawDistData.randomizeDist = std::fabs(flawDistArray[8])>0.1;
 	flawDistData.randomSeed    = (int)std::floor(flawDistArray[9]+0.5);
     flawDistData.randomMethod  = (int)std::floor(flawDistArray[10]+0.5);
 	flawDistData.binBias       = flawDistArray[11];
@@ -800,12 +800,12 @@ namespace PTR	// Portable TongeRamesh
                        CMData *eosData
                        ){
     // Flags:
-	flags->useDamage                  = std::abs(matParamArray[0])>0.1;
-	flags->usePlasticity              = std::abs(matParamArray[1])>0.1;
-	flags->useGranularPlasticity      = std::abs(matParamArray[2])>0.1;
-	flags->useOldStress               = std::abs(matParamArray[3])>0.1;
-	flags->artificialViscosity        = std::abs(matParamArray[4])>0.1;
-	flags->artificialViscosityHeating = std::abs(matParamArray[5])>0.1;
+	flags->useDamage                  = std::fabs(matParamArray[0])>0.1;
+	flags->usePlasticity              = std::fabs(matParamArray[1])>0.1;
+	flags->useGranularPlasticity      = std::fabs(matParamArray[2])>0.1;
+	flags->useOldStress               = std::fabs(matParamArray[3])>0.1;
+	flags->artificialViscosity        = std::fabs(matParamArray[4])>0.1;
+	flags->artificialViscosityHeating = std::fabs(matParamArray[5])>0.1;
 	// Unused flags:
     flags->implicit        = false;
 	flags->with_color      = false;
@@ -828,11 +828,11 @@ namespace PTR	// Portable TongeRamesh
 	flawDistData->meanFlawSize     = matParamArray[14];
     flawDistData->flawDensity      = matParamArray[15];
     flawDistData->stdFlawSize      = matParamArray[16];
-    if(abs(matParamArray[17]) < 0.1){
+    if(fabs(matParamArray[17]) < 0.1){
       flawDistData->type = "delta";
-    } else if(abs(matParamArray[17]) < 1.1){
+    } else if(fabs(matParamArray[17]) < 1.1){
       flawDistData->type = "normal";
-    } else if(abs(matParamArray[17]) < 2.1){
+    } else if(fabs(matParamArray[17]) < 2.1){
       flawDistData->type = "pareto";
     } else {
       flawDistData->type = "unknown";
@@ -840,7 +840,7 @@ namespace PTR	// Portable TongeRamesh
     flawDistData->minFlawSize = matParamArray[18];
 	flawDistData->maxFlawSize = matParamArray[19];
 	flawDistData->exponent    = matParamArray[20];
-	flawDistData->randomizeDist = std::abs(matParamArray[21])>0.1;
+	flawDistData->randomizeDist = std::fabs(matParamArray[21])>0.1;
 	flawDistData->randomSeed    = (int)std::floor(matParamArray[22]+0.5);
     flawDistData->randomMethod  = (int)std::floor(matParamArray[23]+0.5);
 	flawDistData->binBias       = matParamArray[24];
@@ -857,23 +857,23 @@ namespace PTR	// Portable TongeRamesh
 	brittle_damage->alpha       = matParamArray[29];
 	brittle_damage->criticalDamage = matParamArray[30];
 	brittle_damage->maxDamage      = matParamArray[31];
-    brittle_damage->usePlaneStrain = std::abs(matParamArray[32])>0.1;
+    brittle_damage->usePlaneStrain = std::fabs(matParamArray[32])>0.1;
 	brittle_damage->maxDamageInc   = matParamArray[33];
-    brittle_damage->useDamageTimeStep = std::abs(matParamArray[34])>0.1;
+    brittle_damage->useDamageTimeStep = std::fabs(matParamArray[34])>0.1;
     brittle_damage->useOldStress      = flags->useOldStress;
 	brittle_damage->dt_increaseFactor = matParamArray[35];
-    brittle_damage->incInitialDamage  = std::abs(matParamArray[36])>0.1;
-    brittle_damage->doFlawInteraction = std::abs(matParamArray[37])>0.1;
+    brittle_damage->incInitialDamage  = std::fabs(matParamArray[36])>0.1;
+    brittle_damage->doFlawInteraction = std::fabs(matParamArray[37])>0.1;
     // granularPlasticityData
     gpData->timeConstant = matParamArray[38];
 	gpData->JGP_loc      = matParamArray[39];
 	gpData->A            = matParamArray[40];
 	gpData->B            = matParamArray[41];
-    gpData->yeildSurfaceType = std::abs(matParamArray[42] + 0.5);
+    gpData->yeildSurfaceType = std::fabs(matParamArray[42] + 0.5);
 	gpData->Pc           = matParamArray[43];
 	gpData->alpha_e      = matParamArray[44];
 	gpData->Pe           = matParamArray[45];
-    gpData->GPModelType  = std::abs(matParamArray[46]-1.0)<0.1 ? PTR::SingleSurface : PTR::TwoSurface ;
+    gpData->GPModelType  = std::fabs(matParamArray[46]-1.0)<0.1 ? PTR::SingleSurface : PTR::TwoSurface ;
     // new and imporved model
     // It would be better to unpack these using:
     //     GFMS::unpackMaterialParameters and GFMS::unpackSolutionParameters
@@ -896,9 +896,9 @@ namespace PTR	// Portable TongeRamesh
     gpData->GFMSmatParams.a3        = matParamArray[61];
     gpData->GFMSmatParams.beta      = matParamArray[62];
     gpData->GFMSmatParams.psi       = matParamArray[63];
-    if(abs(matParamArray[64] - 1.0)<0.1){
+    if(fabs(matParamArray[64] - 1.0)<0.1){
       gpData->GFMSmatParams.J3Type    = GFMS::Gudehus;
-    } else if(abs(matParamArray[64] - 2.0) < 0.1){
+    } else if(fabs(matParamArray[64] - 2.0) < 0.1){
       gpData->GFMSmatParams.J3Type    = GFMS::WilliamWarnke;
     } else {
       gpData->GFMSmatParams.J3Type    = GFMS::DruckerPrager;
@@ -977,7 +977,7 @@ namespace PTR	// Portable TongeRamesh
     return g;
   }
 
-  void computeIncStress(	const BrittleDamageData brittle_damage,
+  void computeIncStress(    const BrittleDamageData brittle_damage,
                             const double eta3d,
                             const double matrixStress[2],
                             double incStress[3],
@@ -1063,11 +1063,11 @@ namespace PTR	// Portable TongeRamesh
 
       double g1((sqrt(ap1)-1.0)/(sqrt(ap1)+1.0));
       double g2((sqrt(ap2)-1.0)/(sqrt(ap2)+1.0));
-      if(abs(g1)>1.0 || abs(g2)>1.0) {
+      if(std::abs(g1)>1.0 || std::abs(g2)>1.0) {
         throw std::runtime_error("Both abs(g1) and abs(g2) must be less than 1 (real branch)");
       }
 
-      if(abs(g1)>1e-6 || abs(g2)>1e-6) {
+      if(std::abs(g1)>1e-6 || std::abs(g2)>1e-6) {
         // Compute boundary displacements (delta and rho)
         // Equation A.10 (Bhasker) Eqn. 6.9.5 Green and Zerna
         double b1(mat_s_1122-ap1*mat_s_2222);
@@ -1375,7 +1375,7 @@ namespace PTR	// Portable TongeRamesh
       matrixStress[1]=sig1;
       matrixStress[0]=sig2;
     } else {
-      if(abs(stress.trace()/3.0 - sig1) < 1e-3*abs(sig1)) {
+      if(fabs(stress.trace()/3.0 - sig1) < 1e-3*fabs(sig1)) {
         // The stress state is hydrostatic:
         matrixStress[1]=sig1;
         matrixStress[0]=sig1;
@@ -1474,7 +1474,7 @@ namespace PTR	// Portable TongeRamesh
     double JGP(pJGP),JEL(J/JGP);
     double p_new = computePressure(eos, identity * cbrt(JEL), *state, pDamage);
 
-    while(abs(p_new-p_target) > 1e-10*state->bulkModulus && stepNum<100) {
+    while(std::fabs(p_new-p_target) > 1e-10*state->bulkModulus && stepNum<100) {
       stepNum++;
       JGP += JGP * (p_new-p_target) / (JEL*(*state).bulkModulus);
       // JGP = JGP * exp( (p_new - p_target)/state->bulkModulus );
@@ -1995,12 +1995,12 @@ namespace PTR	// Portable TongeRamesh
     const double paramMax(1e37);
     for (int i=0; i<3; ++i){
       for (int j=0; j<3; ++j){
-        if(!(std::abs(pDefGrad.get(i,j))     < defGradMax)) inputValid=false;
-        if(!(std::abs(pDefGrad_new.get(i,j)) < defGradMax)) inputValid=false;
-        if(!(std::abs(pVelGrad.get(0,0))     < velGradMax)) inputValid=false;
-        if(!(std::abs(bElBar->get(0,0))      < defGradMax)) inputValid=false;
-        if(!(std::abs(pStress_qs->get(0,0))  < stressMax))  inputValid=false;
-        if(!(std::abs(pStress->get(0,0))     < stressMax))  inputValid=false;
+        if(!(std::fabs(pDefGrad.get(i,j))     < defGradMax)) inputValid=false;
+        if(!(std::fabs(pDefGrad_new.get(i,j)) < defGradMax)) inputValid=false;
+        if(!(std::fabs(pVelGrad.get(0,0))     < velGradMax)) inputValid=false;
+        if(!(std::fabs(bElBar->get(0,0))      < defGradMax)) inputValid=false;
+        if(!(std::fabs(pStress_qs->get(0,0))  < stressMax))  inputValid=false;
+        if(!(std::fabs(pStress->get(0,0))     < stressMax))  inputValid=false;
       }
     }
     if(!(J > 0 && J_old > 0 && Jinc > 0)) inputValid=false;
@@ -2023,14 +2023,14 @@ namespace PTR	// Portable TongeRamesh
     if( !(*pDamage_new >= 0.0) || !(*pDamage_new<paramMax) )  inputValid=false;
     if( !(*pGPJ > 0.0) || !(*pGPJ<paramMax) )  inputValid=false;
     if( !(*pGP_energy >= 0.0) || !(*pGP_energy<paramMax) )  inputValid=false;
-    if( !(std::abs(*pEnergy_new)<paramMax) )  inputValid=false;
+    if( !(std::fabs(*pEnergy_new)<paramMax) )  inputValid=false;
     if( !(*damage_dt >= 0.0) || !(*damage_dt<paramMax) )  inputValid=false;
     if( !(*p_q >= 0.0) || !(*p_q<paramMax) )  inputValid=false;
-    if( !(std::abs(*se)<paramMax) )  inputValid=false;
-    if( !(std::abs(*pdTdt)<paramMax) )  inputValid=false;
-    if( !(std::abs(*pepsV)<paramMax) )  inputValid=false;
+    if( !(std::fabs(*se)<paramMax) )  inputValid=false;
+    if( !(std::fabs(*pdTdt)<paramMax) )  inputValid=false;
+    if( !(std::fabs(*pepsV)<paramMax) )  inputValid=false;
     if( !(*pgam >= 0.0) || !(*pgam<paramMax) )  inputValid=false;
-    if( !(std::abs(*pepsV_qs)<paramMax) )  inputValid=false;
+    if( !(std::fabs(*pepsV_qs)<paramMax) )  inputValid=false;
     if( !(*pgam_qs >= 0.0) || !(*pgam_qs<paramMax) )  inputValid=false;
 
     if(!inputValid){
@@ -2190,10 +2190,10 @@ namespace PTR	// Portable TongeRamesh
     bool outputValid(true);
     for (int i=0; i<3; ++i){
       for (int j=0; j<3; ++j){
-        if(!(std::abs(bElBar->get(0,0))       < defGradMax)) outputValid=false;
-        if(!(std::abs(pVelGrad.get(0,0))      < velGradMax)) outputValid=false;
-        if(!(std::abs(pStress_qs->get(0,0))   < stressMax))  outputValid=false;
-        if(!(std::abs(pStress->get(0,0))      < stressMax))  outputValid=false;
+        if(!(std::fabs(bElBar->get(0,0))       < defGradMax)) outputValid=false;
+        if(!(std::fabs(pVelGrad.get(0,0))      < velGradMax)) outputValid=false;
+        if(!(std::fabs(pStress_qs->get(0,0))   < stressMax))  outputValid=false;
+        if(!(std::fabs(pStress->get(0,0))      < stressMax))  outputValid=false;
       }
     }
     // Input doubles:
@@ -2215,14 +2215,14 @@ namespace PTR	// Portable TongeRamesh
     if( !(*pDamage_new >= 0.0) || !(*pDamage_new<paramMax) )  outputValid=false;
     if( !(*pGPJ > 0.0) || !(*pGPJ<paramMax) )  outputValid=false;
     if( !(*pGP_energy >= 0.0) || !(*pGP_energy<paramMax) )  outputValid=false;
-    if( !(std::abs(*pEnergy_new)<paramMax) )  outputValid=false;
+    if( !(std::fabs(*pEnergy_new)<paramMax) )  outputValid=false;
     if( !(*damage_dt >= 0.0) || !(*damage_dt<paramMax) )  outputValid=false;
     if( !(*p_q >= 0.0) || !(*p_q<paramMax) )  outputValid=false;
-    if( !(std::abs(*se)<paramMax) )  outputValid=false;
-    if( !(std::abs(*pdTdt)<paramMax) )  outputValid=false;
-    if( !(std::abs(*pepsV)<paramMax) )  outputValid=false;
+    if( !(std::fabs(*se)<paramMax) )  outputValid=false;
+    if( !(std::fabs(*pdTdt)<paramMax) )  outputValid=false;
+    if( !(std::fabs(*pepsV)<paramMax) )  outputValid=false;
     if( !(*pgam >= 0.0) || !(*pgam<paramMax) )  outputValid=false;
-    if( !(std::abs(*pepsV_qs)<paramMax) )  outputValid=false;
+    if( !(std::fabs(*pepsV_qs)<paramMax) )  outputValid=false;
     if( !(*pgam_qs >= 0.0) || !(*pgam_qs<paramMax) )  outputValid=false;
 
     if(!outputValid){
@@ -2384,9 +2384,9 @@ namespace PTR	// Portable TongeRamesh
     const double paramMax(1e37);
     for (int i=0; i<3; ++i){
       for (int j=0; j<3; ++j){
-        if(!(std::abs(velGrad.get(0,0))      < velGradMax)) inputValid=false;
-        if(!(std::abs(pStress_qs->get(0,0))   < stressMax))  inputValid=false;
-        if(!(std::abs(pStress->get(0,0))      < stressMax))  inputValid=false;
+        if(!(std::fabs(velGrad.get(0,0))      < velGradMax)) inputValid=false;
+        if(!(std::fabs(pStress_qs->get(0,0))   < stressMax))  inputValid=false;
+        if(!(std::fabs(pStress->get(0,0))      < stressMax))  inputValid=false;
       }
     }
     if( !(J > 0 && J_old > 0 && Jinc > 0)) inputValid=false;
@@ -2406,10 +2406,10 @@ namespace PTR	// Portable TongeRamesh
     if( !(*pGP_energy >= 0.0) || !(*pGP_energy<paramMax) )  inputValid=false;
     if( !(*damage_dt >= 0.0) || !(*damage_dt<paramMax) )  inputValid=false;
     if( !(*p_q_out >= 0.0) || !(*p_q_out<paramMax) )  inputValid=false;
-    if( !(std::abs(*pdTdt_out)<paramMax) )  inputValid=false;
-    if( !(std::abs(*pepsV)<paramMax) )  inputValid=false;
+    if( !(std::fabs(*pdTdt_out)<paramMax) )  inputValid=false;
+    if( !(std::fabs(*pepsV)<paramMax) )  inputValid=false;
     if( !(*pgam >= 0.0) || !(*pgam<paramMax) )  inputValid=false;
-    if( !(std::abs(*pepsV_qs)<paramMax) )  inputValid=false;
+    if( !(std::fabs(*pepsV_qs)<paramMax) )  inputValid=false;
     if( !(*pgam_qs >= 0.0) || !(*pgam_qs<paramMax) )  inputValid=false;
     if(!inputValid){
       std::stringstream msg;
@@ -2842,8 +2842,8 @@ namespace PTR	// Portable TongeRamesh
           double delEnergy = GFMSIncPlasWork*J;
           if ( !( (delEnergy >= 0.0) || (GFMSIncPlasWork >= 0.0) ) ){
             double extWork = (sigma_1+sigma_0).Contract(D)*(J*0.5)*delT;
-            if( !( (delEnergy >= -std::abs(extWork)*gpData.GFMSsolParams.relToll) ||
-                   (GFMSIncPlasWork >= -std::abs(extWork)*gpData.GFMSsolParams.relToll)
+            if( !( (delEnergy >= -std::fabs(extWork)*gpData.GFMSsolParams.relToll) ||
+                   (GFMSIncPlasWork >= -std::fabs(extWork)*gpData.GFMSsolParams.relToll)
                    ) ){
               const SymMat3::SymMatrix3 symI(true);
               SymMat3::SymMatrix3 delSigma = sigma_tr-sigma_1;
@@ -3028,8 +3028,8 @@ namespace PTR	// Portable TongeRamesh
     bool outputValid(true);
     for (int i=0; i<3; ++i){
       for (int j=0; j<3; ++j){
-        if(!(std::abs(pStress_qs->get(0,0))   < stressMax))  outputValid=false;
-        if(!(std::abs(pStress->get(0,0))      < stressMax))  outputValid=false;
+        if(!(std::fabs(pStress_qs->get(0,0))   < stressMax))  outputValid=false;
+        if(!(std::fabs(pStress->get(0,0))      < stressMax))  outputValid=false;
       }
     }
     // Input/Output doubles:
@@ -3043,14 +3043,14 @@ namespace PTR	// Portable TongeRamesh
     if( !(*pGPJ > 0.0) || !(*pGPJ<paramMax) )  outputValid=false;
     if( !(*pGP_strain >= 0.0) || !(*pGP_strain<paramMax) )  outputValid=false;
     if( !(*pGP_energy >= 0.0) || !(*pGP_energy<paramMax) )  outputValid=false;
-    if( !(std::abs(*pEnergy)<paramMax) )  outputValid=false;
+    if( !(std::fabs(*pEnergy)<paramMax) )  outputValid=false;
     if( !(*damage_dt >= 0.0) || !(*damage_dt<paramMax) )  outputValid=false;
-    if( !(std::abs(*pepsV)<paramMax) )  outputValid=false;
+    if( !(std::fabs(*pepsV)<paramMax) )  outputValid=false;
     if( !(*pgam >= 0.0) || !(*pgam<paramMax) )  outputValid=false;
-    if( !(std::abs(*pepsV_qs)<paramMax) )  outputValid=false;
+    if( !(std::fabs(*pepsV_qs)<paramMax) )  outputValid=false;
     if( !(*pgam_qs >= 0.0) || !(*pgam_qs<paramMax) )  outputValid=false;
     if( !(*p_q_out >= 0.0) || !(*p_q_out<paramMax) )  outputValid=false;
-    if( !(std::abs(*pdTdt_out)<paramMax) )  outputValid=false;
+    if( !(std::fabs(*pdTdt_out)<paramMax) )  outputValid=false;
     if( !(*c_dil_out >= 0.0 && *c_dil_out<paramMax) )  outputValid=false;
 
     if(!outputValid){

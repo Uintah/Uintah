@@ -25,23 +25,24 @@
 #ifndef UINTAH_HOMEBREW_AMRMPM_H
 #define UINTAH_HOMEBREW_AMRMPM_H
 
-#include <Core/Parallel/UintahParallelComponent.h>
-#include <CCA/Ports/DataWarehouseP.h>
-#include <CCA/Ports/Output.h>
-#include <CCA/Ports/SimulationInterface.h>
-#include <Core/ProblemSpec/ProblemSpecP.h>
-#include <Core/Grid/GridP.h>
-#include <Core/Grid/LevelP.h>
-#include <CCA/Components/MPM/SerialMPM.h>
-// put here to avoid template problems
-#include <Core/Math/Matrix3.h>
-#include <Core/Math/Short27.h>
-#include <Core/Labels/MPMLabel.h>
-#include <CCA/Components/MPM/MPMCommon.h>
-#include <Core/Geometry/Vector.h>
-#include <CCA/Components/MPM/MPMFlags.h>
-#include <Core/Grid/Variables/ParticleVariable.h>
-
+// make uintah CXX=/usr/bin/iwyu
+#include <CCA/Components/MPM/MPMFlags.h>      // for MPMFlags
+#include <CCA/Components/MPM/SerialMPM.h>     // for SerialMPM, etc
+#include <CCA/Ports/SchedulerP.h>             // for SchedulerP
+#include <Core/Geometry/Vector.h>             // for Vector
+#include <Core/Grid/GridP.h>                  // for GridP
+#include <Core/Grid/Level.h>                  // for Level, Level::selectType
+#include <Core/Grid/LevelP.h>                 // for LevelP
+#include <Core/Grid/Patch.h>                  // for Patch, Patch::FaceType, etc
+#include <Core/Grid/SimulationStateP.h>       // for SimulationStateP
+#include <Core/Grid/Variables/ComputeSet.h>   // for PatchSubset, etc
+#include <Core/Grid/Variables/NCVariable.h>   // for constNCVariable
+#include <Core/Grid/Variables/constVariable.h>  // for constVariable
+#include <Core/Math/Matrix3.h>                // for Matrix3
+#include <Core/ProblemSpec/ProblemSpecP.h>    // for ProblemSpecP
+#include <Core/Util/Assert.h>                 // for ASSERT
+#include <map>                                // for map, map<>::mapped_type
+#include <vector>                             // for vector
 
 namespace Uintah {
 
@@ -176,6 +177,12 @@ protected:
                                       const MaterialSubset* matls,
                                       DataWarehouse* old_dw,
                                       DataWarehouse* new_dw);
+  // At Coarse Fine interface
+  void interpolateParticlesToGrid_CFI_GIMP( const ProcessorGroup*,
+                                            const PatchSubset* patches,
+                                            const MaterialSubset* matls,
+                                            DataWarehouse* old_dw,
+                                            DataWarehouse* new_dw);
                                       
   void coarsenNodalData_CFI(const ProcessorGroup*,
                             const PatchSubset* patches,
@@ -420,18 +427,21 @@ protected:
                  const MaterialSubset*,                   
                  DataWarehouse* old_dw,                                
                  DataWarehouse* new_dw); 
-                 
-  // using experimental getParticleSubSetAllLevels()
-  void debug_CFI_experimental(const ProcessorGroup*,
-                              const PatchSubset* patches,                    
-                              const MaterialSubset*,                   
-                              DataWarehouse* old_dw,                         
-                              DataWarehouse* new_dw);
   //
-  // returns does coarse patches have a CFI               
-  void coarseLevelCFI_Patches(const PatchSubset* patches,
+  // input coarse patches and return coarse & fine level patches with CFI               
+  void coarseLevelCFI_Patches(const PatchSubset* coarsePatches,
                               Level::selectType& CFI_coarsePatches,
                               Level::selectType& CFI_finePatches );
+
+  //
+  // input fine patches and return coarse & fine level patches with CFI               
+  void fineLevelCFI_Patches(const PatchSubset* finePatches,
+                            Level::selectType& CFI_coarsePatches,
+                            Level::selectType& CFI_finePatches );
+  
+  // remove duplicate entries in array  This belongs in Core/Grid/fixedvector.h
+  void removeDuplicates( Level::selectType& array);
+  
   
   int      d_nPaddingCells_Coarse;  // Number of cells on the coarse level that contain particles and surround a fine patch.
                                     // Coarse level particles are used in the task interpolateToParticlesAndUpdate_CFI.
@@ -459,7 +469,8 @@ protected:
 private:
 
   MaterialSubset* d_one_matl;         // matlsubset for zone of influence
-
+  std::string d_CFI_interpolator;     // user can override interpolator at CFI
+  
   std::vector<GeometryObject*> d_refine_geom_objs;
   AMRMPM(const AMRMPM&);
   AMRMPM& operator=(const AMRMPM&);

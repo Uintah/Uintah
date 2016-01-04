@@ -30,33 +30,18 @@
 #endif
 
 #include <CCA/Components/MPM/ConstitutiveModel/GaoElastic.h>
-#include <CCA/Components/MPM/ConstitutiveModel/PlasticityModels/YieldConditionFactory.h>
-#include <CCA/Components/MPM/ConstitutiveModel/PlasticityModels/StabilityCheckFactory.h>
-#include <CCA/Components/MPM/ConstitutiveModel/PlasticityModels/FlowStressModelFactory.h>
-#include <CCA/Components/MPM/ConstitutiveModel/PlasticityModels/DamageModelFactory.h>
-#include <CCA/Components/MPM/ConstitutiveModel/PlasticityModels/MPMEquationOfStateFactory.h>
-#include <CCA/Components/MPM/ConstitutiveModel/PlasticityModels/ShearModulusModelFactory.h>
-#include <CCA/Components/MPM/ConstitutiveModel/PlasticityModels/MeltingTempModelFactory.h>
-#include <CCA/Components/MPM/ConstitutiveModel/PlasticityModels/SpecificHeatModelFactory.h>
-#include <CCA/Components/MPM/ConstitutiveModel/PlasticityModels/DevStressModelFactory.h>
-#include <CCA/Components/MPM/ConstitutiveModel/PlasticityModels/PlasticityState.h>
 #include <CCA/Components/MPM/ConstitutiveModel/PlasticityModels/DeformationState.h>
 
 #include <CCA/Components/MPM/ConstitutiveModel/MPMMaterial.h>
 #include <Core/Grid/Patch.h>
 #include <CCA/Ports/DataWarehouse.h>
-#include <Core/Grid/Variables/NCVariable.h>
 #include <Core/Grid/Variables/ParticleVariable.h>
 #include <Core/Grid/Task.h>
 #include <Core/Grid/Level.h>
 #include <Core/Grid/Variables/VarLabel.h>
 #include <Core/Labels/MPMLabel.h>
 #include <Core/Math/MinMax.h>
-#include <Core/Math/Gaussian.h>
 #include <Core/Math/Matrix3.h>
-#include <Core/Math/SymmMatrix3.h>
-#include <Core/Math/FastMatrix.h>
-#include <Core/Math/TangentModulusTensor.h>
 #include <Core/Grid/Variables/VarTypes.h>
 #include <Core/Malloc/Allocator.h>
 #include <Core/Util/DebugStream.h>
@@ -64,7 +49,6 @@
 #include <iostream>
 
 #include <Core/ProblemSpec/ProblemSpec.h>
-#include <Core/Exceptions/ParameterNotFound.h>
 
 using namespace std;
 using namespace Uintah;
@@ -360,7 +344,7 @@ GaoElastic::computeStressTensor(const PatchSubset* patches,
   //**** Used for reaction diffusion *******
   double concentration;
   double concentration_pn;
-  double conc_rate;
+  double conc_rate = 0.0;
   
 //  double totalStrainEnergy = 0.0;
 

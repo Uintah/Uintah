@@ -31,10 +31,8 @@
 
 #include "NPShear.h"
 #include <Core/ProblemSpec/ProblemSpec.h>
-#include <Core/Exceptions/InvalidValue.h>
 #include <cmath>
 #include <iostream>
-#include <sstream>
 
 
 using namespace Uintah;
@@ -90,7 +88,7 @@ NPShear::computeShearModulus(const PlasticityState* state)
 
   double j_denom = d_zeta*(1.0 - That/(1.0+d_zeta));
   double J = 1.0 + exp((That-1.0)/j_denom);
-  if (!finite(J)) return mu;
+  if (!std::isfinite(J)) return mu;
 
   double eta = state->density/state->initialDensity;
   ASSERT(eta > 0.0);

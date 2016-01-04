@@ -24,30 +24,27 @@
 
 // SpecifiedBodyContact.cc
 #include <CCA/Components/MPM/Contact/SpecifiedBodyContact.h>
+#include <CCA/Components/MPM/MPMBoundCond.h>
+#include <CCA/Components/MPM/MPMFlags.h>
+#include <CCA/Ports/DataWarehouse.h>
+#include <Core/Containers/StaticArray.h>
 #include <Core/Exceptions/ProblemSetupException.h>
-#include <Core/Exceptions/ParameterNotFound.h>
-#include <Core/Geometry/Vector.h>
 #include <Core/Geometry/IntVector.h>
-#include <Core/Grid/Grid.h>
-#include <Core/Grid/Variables/NCVariable.h>
-#include <Core/Grid/Patch.h>
+#include <Core/Geometry/Vector.h>
 #include <Core/Grid/Level.h>
-#include <Core/Grid/Variables/NodeIterator.h>
+#include <Core/Grid/Patch.h>
 #include <Core/Grid/SimulationState.h>
 #include <Core/Grid/SimulationStateP.h>
 #include <Core/Grid/Task.h>
+#include <Core/Grid/Variables/NCVariable.h>
+#include <Core/Grid/Variables/NodeIterator.h>
+#include <Core/Grid/Variables/ParticleVariable.h>
 #include <Core/Grid/Variables/VarTypes.h>
 #include <Core/Labels/MPMLabel.h>
-#include <CCA/Ports/DataWarehouse.h>
-#include <CCA/Components/MPM/ConstitutiveModel/MPMMaterial.h>
-#include <CCA/Components/MPM/MPMBoundCond.h>
-#include <Core/Containers/StaticArray.h>
 
 #include <vector>
-#include <iostream>
 #include <fstream>
 #include <limits>
-#include <numeric>
 using std::cerr;
 
 using namespace std;

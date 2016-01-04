@@ -28,12 +28,11 @@
 #include <CCA/Components/MPM/ReactionDiffusion/RFConcDiffusion1MPM.h>
 #include <CCA/Components/MPM/ReactionDiffusion/GaoDiffusion.h>
 #include <CCA/Components/MPM/ConstitutiveModel/MPMMaterial.h>
-#include <CCA/Components/MPM/MPMBoundCond.h>
+#include <CCA/Ports/DataWarehouse.h>
 #include <Core/Exceptions/ProblemSetupException.h>
-#include <Core/Grid/Variables/VarTypes.h>
 #include <Core/Labels/MPMLabel.h>
-#include <Core/Grid/Task.h>
 #include <Core/Grid/Ghost.h>
+
 
 using namespace Uintah;
 using namespace std;

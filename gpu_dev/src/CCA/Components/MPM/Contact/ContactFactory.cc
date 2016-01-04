@@ -30,8 +30,6 @@
 #include <CCA/Components/MPM/Contact/SpecifiedBodyContact.h>
 #include <CCA/Components/MPM/Contact/ApproachContact.h>
 #include <CCA/Components/MPM/Contact/CompositeContact.h>
-#include <CCA/Components/MPM/MPMFlags.h>
-#include <CCA/Ports/DataWarehouse.h>
 #include <Core/Malloc/Allocator.h>
 #include <Core/ProblemSpec/ProblemSpec.h>
 #include <Core/Exceptions/ProblemSetupException.h>

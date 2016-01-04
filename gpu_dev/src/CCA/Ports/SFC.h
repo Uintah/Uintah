@@ -3751,7 +3751,7 @@ void SFC<LOCS>::Batchers(std::vector<History<BITS> > &histories, std::vector<His
 template<class LOCS> template <class BITS>
 void SFC<LOCS>::Linear(std::vector<History<BITS> > &histories, std::vector<History<BITS> >&rbuf, std::vector<History<BITS> > &mbuf)
 {
-  unsigned int i=1, c=1, val=0, iter=0;
+  int i=1, c=1, val=0, iter=0;
   int mod=(int)ceil(log((float)P)/log(3.0f));
   while(c!=0)
   {

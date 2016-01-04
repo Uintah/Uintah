@@ -476,7 +476,7 @@ namespace Uintah{
         *pO2SurfNew <<= max( 0.0, min( *pO2Inf, *pO2SurfNew ) );
         
         double tolMax = field_max_interior( *pO2SurfNew - *pO2SurfOld );
-        if ( abs(tolMax) < tol ) { //converged solution exit iterations
+        if ( std::abs(tolMax) < tol ) { //converged solution exit iterations
           *pO2Surf <<= *pO2SurfNew;
           *CO2CO <<= 0.02 * pow( *pO2Surf, 0.21 ) * exp( 3070.0/ *partTemp );
           *OF <<= 0.5 * ( 1.0 + *CO2CO * ( 1.0 + *CO2CO ) );

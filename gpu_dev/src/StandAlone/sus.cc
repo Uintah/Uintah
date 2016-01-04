@@ -520,10 +520,6 @@ main( int argc, char *argv[], char *env[] )
 
   char * start_addr = (char*)sbrk(0);
 
-#if defined(__SGI__)
-  Thread::disallow_sgi_OpenGL_page0_sillyness();
-#endif
-
   bool thrownException = false;
 
   try {

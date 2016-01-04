@@ -23,11 +23,9 @@
  */
 
 #include <CCA/Components/MPM/MPMCommon.h> 
-#include <Core/Grid/Patch.h>
 #include <CCA/Components/MPM/ConstitutiveModel/MPMMaterial.h>
 #include <CCA/Components/MPM/CohesiveZone/CZMaterial.h>
 #include <Core/ProblemSpec/ProblemSpec.h>
-#include <Core/Grid/Level.h>
 
 using namespace std;
 using namespace Uintah;
