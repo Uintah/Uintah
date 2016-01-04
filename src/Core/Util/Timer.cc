@@ -208,23 +208,12 @@ void TimeThrottle::wait_for_time(double endtime)
   if (delta <= 0) {
     return;
   }
-#ifdef __sgi
-  int nticks=delta*CLOCK_INTERVAL;
-  if(nticks<1) {
-    return;
-  }
-  if(delta > 10) {
-    cerr << "WARNING: delta=" << delta << endl;
-  }
-  sginap(nticks);
-#else
   timespec delay, remaining;
   remaining.tv_sec = SCIRun::Floor(delta);
   remaining.tv_nsec = SCIRun::Floor((delta - SCIRun::Floor(delta)) * 1000000000);
   do {
     delay = remaining;
   } while (nanosleep(&delay, &remaining) != 0);
-#endif
 }
 
 MultiThreadedTimer::MultiThreadedTimer(int numberOfThreads): timerLock("timerLock")  {

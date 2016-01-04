@@ -24,10 +24,8 @@
 
 #include <CCA/Components/MPM/ReactionDiffusion/ScalarDiffusionModel.h>
 #include <CCA/Components/MPM/ConstitutiveModel/MPMMaterial.h>
-#include <CCA/Components/MPM/MPMBoundCond.h>
 #include <CCA/Components/MPM/MPMFlags.h>
 #include <Core/Labels/MPMLabel.h>
-#include <Core/Grid/Variables/VarTypes.h>
 #include <Core/Grid/Task.h>
 #include <Core/Grid/AMR.h>
 #include <Core/Grid/Level.h>

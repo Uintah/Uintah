@@ -23,13 +23,10 @@
  */
 
 #include <CCA/Components/MPM/ThermalContact/NullThermalContact.h>
-#include <Core/Malloc/Allocator.h>
 #include <CCA/Components/MPM/ConstitutiveModel/MPMMaterial.h>
 #include <CCA/Ports/DataWarehouse.h>
 #include <Core/Grid/Task.h>
 #include <Core/Labels/MPMLabel.h>
-
-#include <vector>
 
 using namespace Uintah;
 

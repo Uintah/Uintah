@@ -36,17 +36,13 @@
 #include <Core/Grid/Box.h>
 #include <Core/Grid/Patch.h>
 #include <Core/Grid/Variables/CellIterator.h>
-#include <Core/Grid/Variables/VarLabel.h>
-#include <Core/Grid/Variables/PerPatch.h>
 #include <Core/Labels/MPMLabel.h>
 #include <Core/GeometryPiece/GeometryPieceFactory.h>
 #include <Core/GeometryPiece/UnionGeometryPiece.h>
 #include <Core/GeometryPiece/NullGeometryPiece.h>
 #include <Core/Exceptions/ParameterNotFound.h>
-#include <CCA/Ports/DataWarehouse.h>
 #include <Core/ProblemSpec/ProblemSpecP.h>
 #include   <iostream>
-#include   <string>
 #include   <list>
 
 #define d_TINY_RHO 1.0e-12 // also defined  ICE.cc and ICEMaterial.cc 

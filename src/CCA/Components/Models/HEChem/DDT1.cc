@@ -23,8 +23,6 @@
  */
 
 
-
-
 #include <CCA/Components/ICE/BoundaryCond.h>
 #include <CCA/Components/ICE/ICEMaterial.h>
 #include <CCA/Components/Models/HEChem/Common.h>
@@ -46,7 +44,6 @@
 #include <Core/ProblemSpec/ProblemSpec.h>
 #include <Core/Util/DebugStream.h>
 #include <iostream>
-#include <math.h>
 
 
 using namespace Uintah;

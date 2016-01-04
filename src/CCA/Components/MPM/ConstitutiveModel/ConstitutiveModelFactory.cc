@@ -46,7 +46,6 @@
 #include <CCA/Components/MPM/ConstitutiveModel/Diamm.h>
 #include <CCA/Components/MPM/ConstitutiveModel/HypoElasticImplicit.h>
 #include <CCA/Components/MPM/ConstitutiveModel/MWViscoElastic.h>
-#include <CCA/Components/MPM/ConstitutiveModel/MurnaghanMPM.h>
 #include <CCA/Components/MPM/ConstitutiveModel/ProgramBurn.h>
 #include <CCA/Components/MPM/ConstitutiveModel/ShellMaterial.h>
 #include <CCA/Components/MPM/ConstitutiveModel/ElasticPlasticHP.h>
@@ -73,7 +72,7 @@
 #include <Core/Malloc/Allocator.h>
 
 #include <fstream>
-#include <iostream>
+//#include <iostream>
 #include <string>
 
 using namespace std;

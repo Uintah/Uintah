@@ -31,7 +31,6 @@
 #include <Core/Malloc/Allocator.h>
 #include <string>
 #include <iostream>
-#include <sstream>
 #include <Core/Parallel/Parallel.h>
 
 using namespace Uintah;

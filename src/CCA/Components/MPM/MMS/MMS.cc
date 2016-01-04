@@ -53,9 +53,6 @@ computeExternalForceForMMS : Computes the analytically determined body force for
 
 
 #include <CCA/Components/MPM/MMS/MMS.h>
-#include <iostream>
-#include <fstream>
-#include <sstream>
 
 using namespace Uintah;
 using namespace std;

@@ -23,12 +23,10 @@
  */
 
 #include <CCA/Components/MPM/HeatConduction/ImplicitHeatConduction.h>
-#include <Core/Math/Short27.h>
 #include <CCA/Components/MPM/ConstitutiveModel/MPMMaterial.h>
 #include <Core/Grid/Variables/NCVariable.h>
 #include <Core/Grid/Variables/NodeIterator.h>
 #include <Core/Grid/BoundaryConditions/BoundCond.h>
-#include <CCA/Components/MPM/MPMBoundCond.h>
 #include <CCA/Components/MPM/MPMFlags.h>
 #include <CCA/Components/MPM/PetscSolver.h>
 #include <CCA/Components/MPM/SimpleSolver.h>
@@ -36,13 +34,10 @@
 #include <Core/Labels/MPMLabel.h>
 #include <Core/Grid/Task.h>
 #include <CCA/Ports/Scheduler.h>
-#include <CCA/Ports/LoadBalancer.h>
 #include <Core/Grid/LinearInterpolator.h>
 #include <Core/Grid/SimulationState.h>
 #include <Core/Grid/BoundaryConditions/BCDataArray.h>
-#include <Core/Parallel/Parallel.h>
 #include <Core/Util/DebugStream.h>
-#include <Core/Containers/StaticArray.h>
 
 using namespace std;
 using namespace Uintah;

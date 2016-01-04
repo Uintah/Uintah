@@ -26,13 +26,9 @@
 #include <CCA/Components/MPM/ParticleCreator/ImplicitParticleCreator.h>
 #include <CCA/Components/MPM/ParticleCreator/MembraneParticleCreator.h>
 #include <CCA/Components/MPM/ParticleCreator/ShellParticleCreator.h>
-#include <Core/Exceptions/ProblemSetupException.h>
 #include <CCA/Components/MPM/MPMFlags.h>
 #include <Core/ProblemSpec/ProblemSpec.h>
-#include <Core/Grid/SimulationState.h>
 #include <Core/Malloc/Allocator.h>
-#include <fstream>
-#include <iostream>
 #include <string>
 
 using namespace std;

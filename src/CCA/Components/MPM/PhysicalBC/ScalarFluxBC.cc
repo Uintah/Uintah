@@ -23,7 +23,6 @@
  */
 
 #include <CCA/Components/MPM/PhysicalBC/ScalarFluxBC.h>
-#include <CCA/Components/MPM/MPMFlags.h>
 #include <Core/ProblemSpec/ProblemSpec.h>
 #include <Core/Exceptions/ParameterNotFound.h>
 #include <Core/GeometryPiece/BoxGeometryPiece.h>
@@ -34,7 +33,6 @@
 #include <Core/Grid/Box.h>
 #include <Core/Grid/Level.h>
 #include <Core/Geometry/BBox.h>
-#include <Core/Math/Matrix3.h>
 #include <iostream>
 
 using namespace Uintah;

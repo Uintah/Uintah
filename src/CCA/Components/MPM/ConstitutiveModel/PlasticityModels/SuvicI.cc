@@ -23,10 +23,7 @@
  */
 
 
-#include "SuvicI.h"        
-#include <Core/Math/FastMatrix.h>       
-#include <Core/Exceptions/ProblemSetupException.h>
-#include <math.h>
+#include "SuvicI.h"
 
 using namespace std;
 using namespace Uintah;

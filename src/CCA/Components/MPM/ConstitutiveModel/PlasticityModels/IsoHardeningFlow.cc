@@ -23,9 +23,7 @@
  */
 
 
-#include "IsoHardeningFlow.h"        
-#include <Core/Math/FastMatrix.h>       
-#include <Core/Exceptions/ProblemSetupException.h>
+#include "IsoHardeningFlow.h"              
 #include <cmath>
 
 using namespace std;

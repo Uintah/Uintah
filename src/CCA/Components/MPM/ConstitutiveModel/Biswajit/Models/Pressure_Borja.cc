@@ -30,11 +30,8 @@
 #endif
 
 #include "Pressure_Borja.h"
-#include <Core/Math/DEIntegrator.h>
-#include <Core/Exceptions/ConvergenceFailure.h>
-#include <Core/Exceptions/InvalidValue.h>
 #include <cmath>
-#include <iostream>
+//#include <iostream>
 
 using namespace Uintah;
 using namespace UintahBB;

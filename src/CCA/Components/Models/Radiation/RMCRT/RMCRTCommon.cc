@@ -26,9 +26,6 @@
 //
 #include <CCA/Components/Models/Radiation/RMCRT/RMCRTCommon.h>
 
-#include <Core/Exceptions/InternalError.h>
-#include <Core/Exceptions/ProblemSetupException.h>
-#include <Core/Geometry/BBox.h>
 #include <Core/Grid/DbgOutput.h>
 #include <Core/Grid/Variables/PerPatch.h>
 #include <Core/Math/MersenneTwister.h>
