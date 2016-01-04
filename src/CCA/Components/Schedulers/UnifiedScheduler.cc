@@ -3877,7 +3877,24 @@ void UnifiedScheduler::initiateD2H(DetailedTask* dtask) {
               gpudw->getSizes(low, high, size, tempgtype, numGhostCells, dependantVar->var->getName().c_str(), patchID, matlID, levelID);
 
               gtype = (Ghost::GhostType) tempgtype;
+
+              if (gpu_stats.active()) {
+                cerrLock.lock();
+                {
+                  gpu_stats << myRankThread() << " InitiateD2H() -"
+                      // Task: " << dtask->getName()
+                      << " Yes, we are copying \""
+                      << dependantVar->var->getName() << "\ patch" << patchID
+                      << " material " << matlID
+                      << " number of ghost cells " << numGhostCells << " from device to host" << endl;
+                }
+                cerrLock.unlock();
+              }
+
+
               GridVariableBase* gridVar = dynamic_cast<GridVariableBase*>(dependantVar->var->typeDescription()->createInstance());
+
+
               dw->allocateAndPut(*gridVar, dependantVar->var, matlID, patches->get(i), gtype, numGhostCells);
               gridVar->getSizes(host_low, host_high, host_offset, host_size, host_strides);
               host_ptr = gridVar->getBasePointer();
