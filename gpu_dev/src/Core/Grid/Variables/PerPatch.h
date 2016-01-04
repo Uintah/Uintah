@@ -140,7 +140,6 @@ WARNING
       const TypeDescription*
       PerPatch<T>::getTypeDescription()
       {
-       printf("In T's getTypeDescription().\n");
         if(!td){
 
           // this is a hack to get a non-null perpatch
@@ -162,7 +161,6 @@ WARNING
     inline const TypeDescription*
       PerPatch<int>::getTypeDescription()
       {
-        printf("In int's getTypeDescription() and td is %p\n", td);
         if(!td){
           TypeDescription* sub_td;
           sub_td = scinew TypeDescription(TypeDescription::int_type, "int", true, MPI_INT);
@@ -175,7 +173,6 @@ WARNING
     inline const TypeDescription*
       PerPatch<double>::getTypeDescription()
       {
-        printf("In double's getTypeDescription() and td is %p\n", td);
         if(!td){
           TypeDescription* sub_td;
           sub_td = scinew TypeDescription(TypeDescription::double_type, "double", true, MPI_DOUBLE);
@@ -189,7 +186,6 @@ WARNING
     inline const TypeDescription*
       PerPatch<double*>::getTypeDescription()
       {
-        printf("In double*'s getTypeDescription() and td is %p\n", td);
         if(!td){
           TypeDescription* sub_td;
           sub_td = scinew TypeDescription(TypeDescription::Other, "double*", true, MPI_DOUBLE);

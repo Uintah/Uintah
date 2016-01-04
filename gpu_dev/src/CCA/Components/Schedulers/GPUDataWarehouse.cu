@@ -1594,16 +1594,24 @@ GPUDataWarehouse::getItem(char const* label, int patchID, int matlIndx, int leve
 
     //only one thread will ever match this.
     //And nobody on the device side should ever access "staging" variables.
-    if (strmatch == 0
-        && d_varDB[i].domainID == patchID
+    if (strmatch == 0) {
+    	if (patchID ==-99999999                            //Only getLevel calls should hit this
+    	&& d_varDB[i].matlIndx == matlIndx
+		&& d_varDB[i].levelIndx == levelIndx
+		&& d_varDB[i].varItem.staging == false             /* we don't support staging/foregin vars for get() */
+		&& d_varDB[i].ghostItem.dest_varDB_index == -1) {  /*don't let ghost cell copy data mix in with normal variables for get() */
+    		index = i; //we found it.
+    	}
+    	else if(d_varDB[i].domainID == patchID
         && d_varDB[i].matlIndx == matlIndx
         && d_varDB[i].levelIndx == levelIndx
-        && d_varDB[i].varItem.staging == false             /* we don't support staging/foregin vars for get() */
-        && d_varDB[i].ghostItem.dest_varDB_index == -1) {  /*don't let ghost cell copy data mix in with normal variables for get() */
-      index = i; //we found it.
+        && d_varDB[i].varItem.staging == false
+        && d_varDB[i].ghostItem.dest_varDB_index == -1) {
+    		index = i; //we found it.
       //printf("I'm thread %d In DW at %p, We found it for var %s patch %d matl %d level %d.  d_varDB has it at index %d var %s patch %d at its item address %p with var pointer %p\n",
       //              threadID, this, label, patchID, matlIndx, levelIndx, index, &(d_varDB[index].label[0]), d_varDB[index].domainID, &d_varDB[index], d_varDB[index].var_ptr);
 
+    	}
     }
     i = i + numThreads; //Since every thread is involved in searching for the string, have this thread loop to the next possible item to check for.
   }
