@@ -245,12 +245,14 @@ namespace Uintah {
 ostream &
 operator<<(ostream& out, ParticleSubset& pset)
 {
-  out << "pset (patch: " << *(pset.getPatch()) << " (" << (pset.getPatch()?pset.getPatch()->getID():0)
-      << "), matl "
-      << pset.getMatlIndex() << " range [" << pset.getLow() 
-      << ", " << pset.getHigh() << "]   " 
-      << pset.numParticles() << " particles, " 
-      << pset.getNeighbors().size() << " neighboring patches)" ;
+  const Patch* patch = pset.getPatch();
+  out << "pset L-" << patch->getLevel()->getIndex() << ", "
+      << *(patch) 
+      << " (" << (patch?patch->getID():0)
+      << "), matl: "
+      << pset.getMatlIndex() << ", pset range [" << pset.getLow() << ", " << pset.getHigh() << "]" 
+      << ", particles: " << pset.numParticles()
+      << ", neighboring patches: "<< pset.getNeighbors().size() ;
   return out;
 }
 
