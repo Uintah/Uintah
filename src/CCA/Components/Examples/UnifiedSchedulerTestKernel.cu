@@ -30,6 +30,9 @@
 
 #include <CCA/Components/Schedulers/GPUDataWarehouse.h>
 
+#include <string>
+using namespace std;
+
 namespace Uintah {
 
 //______________________________________________________________________
@@ -53,14 +56,19 @@ unifiedSchedulerTestKernel( int                patchID,
                             GPUDataWarehouse * new_gpudw,
                             cudaStream_t     * stream)
 {
+
   const GPUGridVariable<double> phi;
   GPUGridVariable<double> newphi;
   old_gpudw->get(phi, "phi", patchID, 0);
-  new_gpudw->getModifiable(newphi, "phi", patchID, 0);
 
+  new_gpudw->getModifiable(newphi, "phi", patchID, 0);
+  //if (blockIdx.x == 0 && blockIdx.y == 0 && blockIdx.z == 0 && threadIdx.x == 0 && threadIdx.y == 0) {
+  //  printf("*****For patch %d old phi %p and new phi %p*****\n", patchID, phi.getVoidPointer(), newphi.getVoidPointer());
+  //}
   // calculate the thread indices
-  int i = blockDim.x * blockIdx.x + threadIdx.x;
-  int j = blockDim.y * blockIdx.y + threadIdx.y;
+  int i = blockDim.x * blockIdx.x + threadIdx.x + patchNodeLowIndex.x;
+  int j = blockDim.y * blockIdx.y + threadIdx.y + patchNodeLowIndex.y;
+
 
   // If the threads are within the bounds of the patch
   // the algorithm is allowed to stream along the z direction
@@ -69,28 +77,35 @@ unifiedSchedulerTestKernel( int                patchID,
   // that are close to one another which should allow coalesced
   // memory accesses.
 
-  // We also need to copy the boundary cells on the z faces.
+
+  //Copy all face cells (any on an exposed face.)
+
   // These outer cells don't get computed, just preserved across iterations
   // newphi(i,j,k) = phi(i,j,k)
+  if(i >= patchNodeLowIndex.x && j >= patchNodeLowIndex.y && i < patchNodeHighIndex.x && j < patchNodeHighIndex.y ) {
+    if ((domainLow.x - patchNodeLowIndex.x == 1 && i == patchNodeLowIndex.x) ||  /*left face*/
+        (domainLow.y - patchNodeLowIndex.y == 1 && j == patchNodeLowIndex.y) ||  /*bottom face*/
+        (patchNodeHighIndex.x - domainHigh.x == 1 && i == patchNodeHighIndex.x - 1) ||  /*right face*/
+        (patchNodeHighIndex.y - domainHigh.y == 1 && j == patchNodeHighIndex.y - 1)) {  /*top face*/
 
-  if ((domainLow.x - patchNodeLowIndex.x == 1 && i == patchNodeLowIndex.x) ||
-      (domainLow.y - patchNodeLowIndex.y == 1 && j == patchNodeLowIndex.y) ||
-      (patchNodeHighIndex.x - domainHigh.x == 1 && i == patchNodeHighIndex.x - 1) ||
-      (patchNodeHighIndex.y - domainHigh.y == 1 && j == patchNodeHighIndex.y - 1)) {
       for (int k = domainLow.z; k < domainHigh.z; k++) {
         newphi(i,j,k) = phi(i,j,k);
+        //if (i == 0 && j == 1 && k == 9) {
+        //  printf("gpu - border1 - newphi(%d, %d, %d) is %1.6lf at ptr %p\n", i,j,k,newphi(i,j,k), &newphi(i,j,k));
+        //}
       }
+    }
 
-  }
-  if(i >= patchNodeLowIndex.x && j >= patchNodeLowIndex.y && i < patchNodeHighIndex.x && j < patchNodeHighIndex.y ) {
     if (domainLow.z - patchNodeLowIndex.z == 1){
-
       newphi(i,j,patchNodeLowIndex.z) = phi(i,j,patchNodeLowIndex.z);
+      //printf("gpu - border2 - newphi(%d, %d, %d) is %1.6lf at ptr %p\n", i,j,patchNodeLowIndex.z,newphi(i,j,patchNodeLowIndex.z),&newphi(i,j,patchNodeLowIndex.z));
     }
     if (patchNodeHighIndex.z - domainHigh.z == 1) {
-      newphi(i,j,patchNodeHighIndex.z - 1) = phi(i,j,patchNodeHighIndex.z - 1);
+      newphi(i,j,patchNodeHighIndex.z-1) = phi(i,j,patchNodeHighIndex.z-1);
+      //printf("gpu - border3 - newphi(%d, %d, %d) is %1.6lf at ptr %p\n", i,j,patchNodeHighIndex.z-1,newphi(i,j,patchNodeHighIndex.z-1),&newphi(i,j,patchNodeHighIndex.z-1));
     }
   }
+  __syncthreads();
 
   if(i >= domainLow.x && j >= domainLow.y && i < domainHigh.x && j < domainHigh.y ) {
 
@@ -103,8 +118,20 @@ unifiedSchedulerTestKernel( int                patchID,
                    + phi(i, j+1, k)
                    + phi(i, j, k-1)
                    + phi(i, j, k+1));
+      //if (i == 1 && j == 1 && k == 1) {
+      //        printf("gpu - newphi(%d, %d, %d) is %1.6lf ptr %p from %1.6lf %1.6lf %1.6lf %1.6lf %1.6lf %1.6lf addresses %p %p %p %p %p %p\n",
+      //            i, j, k, newphi(i, j, k), &newphi(i,j,k),
+      //            phi(i-1, j, k), phi(i+1, j, k), phi(i, j-1, k), phi(i, j+1, k), phi(i, j, k-1), phi(i, j, k+1),
+      //            &phi(i-1, j, k), &phi(i+1, j, k), &phi(i, j-1, k), &phi(i, j+1, k), &phi(i, j, k-1), &phi(i, j, k+1));
+      //}
+      //if (i == 1 && j == 1 && k == domainLow.z) {
+      //        printf("gpu - newphi(%d, %d, %d) is %1.6lf from %1.6lf %1.6lf %1.6lf %1.6lf %1.6lf %1.6lf\n", i, j, k, newphi(i, j, k), phi(i-1, j, k), phi(i+1, j, k), phi(i, j-1, k), phi(i, j+1, k), phi(i, j, k-1), phi(i, j, k+1));
+      //}
+
     }
   }
+
+  //}
 }
 
 void
@@ -127,6 +154,7 @@ launchUnifiedSchedulerTestKernel( dim3               dimGrid,
                                                                   old_gpudw,
                                                                   new_gpudw,
                                                                   stream );
+  cudaDeviceSynchronize();
 }
 
 } //end namespace Uintah

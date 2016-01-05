@@ -17,18 +17,21 @@
     <initTime>      0.0       </initTime>
     <delt_min>      0.00001   </delt_min>
     <delt_max>      1         </delt_max>
-    <max_Timesteps> 10        </max_Timesteps>
+    <max_Timesteps> 100         </max_Timesteps>
     <timestep_multiplier>  1  </timestep_multiplier>
   </Time>
   
   <!--__________________________________-->
   <DataArchiver>
   <filebase>unifiedtest.uda</filebase>
-      <outputTimestepInterval>1</outputTimestepInterval>
+      <!-- <outputTimestepInterval>1</outputTimestepInterval> -->
+      <outputTimestepInterval>4</outputTimestepInterval> 
       <save label = "phi"/>
       <save label = "residual"/>
-      <checkpoint cycle = "2" timestepInterval = "1"/>
-  </DataArchiver>
+      <!-- <checkpoint cycle = "2" timestepInterval = "1"/> --> <!-- This one -->
+      <checkpoint interval="0" cycle="0"/>
+  </DataArchiver> 
+  
   
   
   <!--__________________________________-->
@@ -77,8 +80,8 @@
       <Box label = "1">                              
          <lower>     [0,0,0]        </lower>         
          <upper>     [1.0,1.0,1.0]  </upper>         
-         <resolution>[128,128,128]     </resolution>    
-         <patches>   [1,1,1]        </patches>       
+         <resolution>[10,10,10]     </resolution>    
+         <patches>   [2,2,2]        </patches>       
       </Box>                                         
     </Level>
   </Grid>

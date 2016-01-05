@@ -58,6 +58,12 @@ class GPUReductionVariable : public GPUReductionVariableBase {
       return d_data;
     }
 
+    HOST_DEVICE void* getVoidPointer() const
+	{
+	  return d_data;
+	}
+
+
     HOST_DEVICE void getSizeInfo(std::string& elems, unsigned long& totsize, void* &ptr) const
     {
       elems = "1";

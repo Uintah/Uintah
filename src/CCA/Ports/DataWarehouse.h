@@ -293,8 +293,7 @@ public:
   GPUDataWarehouse* getGPUDW(int i) const { return d_gpuDWs[i]; }
   GPUDataWarehouse* getGPUDW() const {
     int i;
-    cudaError_t retVal;
-    CUDA_RT_SAFE_CALL( retVal = cudaGetDevice(&i));
+    CUDA_RT_SAFE_CALL(cudaGetDevice(&i));
     return d_gpuDWs[i]; 
   }
 #endif

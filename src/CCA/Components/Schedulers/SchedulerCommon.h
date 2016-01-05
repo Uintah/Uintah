@@ -330,7 +330,7 @@ class SchedulerCommon : public Scheduler, public UintahParallelComponent {
     
     // do not checkpoint these variables
     std::set<std::string> notCheckpointVars_;
-    
+
   private:
 
     // Disable copy and assignment
@@ -380,5 +380,6 @@ class SchedulerCommon : public Scheduler, public UintahParallelComponent {
     
   };
 } // End namespace Uintah
+
 
 #endif

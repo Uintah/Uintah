@@ -1529,13 +1529,16 @@ TaskGraph::createDetailedDependencies( DetailedTask*     task,
                 if (subsequentProc != proc) {
                   cond = DetailedDep::FirstIteration;  // change outer cond from always to first-only
                   DetailedTask* subsequentCreator = dts_->getOldDWSendTask(subsequentProc);
-                  dts_->possiblyCreateDependency(subsequentCreator, comp, fromNeighbor, task, req, fromNeighbor, matl, from_l,
-                                                 from_h, DetailedDep::SubsequentIterations);
+                  dts_->possiblyCreateDependency(subsequentCreator, comp, fromNeighbor,
+                      task, req, patch,
+                      matl, from_l, from_h, DetailedDep::SubsequentIterations);
                   detaileddbg << d_myworld->myrank() << "   Adding condition reqs for " << *req->var << " task : " << *creator
                               << "  to " << *task << "\n";
                 }
               }
-              dts_->possiblyCreateDependency(creator, comp, fromNeighbor, task, req, fromNeighbor, matl, from_l, from_h, cond);
+              dts_->possiblyCreateDependency(creator, comp, fromNeighbor,
+                  task, req, patch,
+                  matl, from_l, from_h, cond);
             }
           }
         }

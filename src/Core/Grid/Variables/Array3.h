@@ -462,7 +462,12 @@ namespace Uintah {
 
         Array3Window<T>* new_window=
           scinew Array3Window<T>(newData, encompassingLow, lowIndex,highIndex);
-        d_window = new_window;
+        d_window = new_window;  //Note, this has concurrency problems.
+                                //If two tasks running on two cores try to rewindow the same variable at the
+                                //same time, they could both write to d_window effectively at the same time
+                                //We hope a 64 bit write is atomic, but we're never sure exactly how
+                                //hardware will manage it.
+                                //Brad Peterson and Alan Humphrey June 15th 2015
       }
       d_window->addReference();      
       if(oldWindow->removeReference())

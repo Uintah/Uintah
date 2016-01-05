@@ -62,6 +62,10 @@
 #include <CCA/Ports/Scheduler.h>
 #include <CCA/Ports/SimulationInterface.h>
 
+#ifdef HAVE_CUDA
+//#include <CCA/Components/Schedulers/GPUUtilities.h>
+#include <CCA/Components/Schedulers/GPUGridVariableInfo.h>
+#endif
 #include <iostream>
 #include <iomanip>
 
@@ -136,6 +140,9 @@ AMRSimulationController::run()
   GridP currentGrid = gridSetup();
 
   d_scheduler->initialize( 1, 1 );
+#ifdef HAVE_CUDA
+   GpuUtilities::assignPatchesToGpus(currentGrid);
+#endif
 
   d_scheduler->advanceDataWarehouse( currentGrid, true );
 
