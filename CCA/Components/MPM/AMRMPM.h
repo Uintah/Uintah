@@ -468,6 +468,10 @@ protected:
 
 private:
 
+  Ghost::GhostType  d_gac;            // for readability
+  Ghost::GhostType  d_gan;
+  Ghost::GhostType  d_gn;
+
   MaterialSubset* d_one_matl;         // matlsubset for zone of influence
   std::string d_CFI_interpolator;     // user can override interpolator at CFI
   
