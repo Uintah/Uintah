@@ -310,7 +310,7 @@ __global__ void rayTraceKernel( dim3 dimGrid,
 /*`==========TESTING==========*/
 #if DEBUG == 1
         if( isDbgCellDevice( origin ) ){
-          printf( "\n      [%d, %d, %d]  sumI: %g  divQ: %g radiationVolq: %g  abskg: %g,    sigmaT4: %g \n",
+          printf( "\n      [%d, %d, %d]  sumI: %1.16e  divQ: %1.16e radiationVolq: %1.16e  abskg: %1.16e,    sigmaT4: %1.16e \n",
                     origin.x, origin.y, origin.z, sumI,divQ[origin], radiationVolQ[origin],abskg[origin], sigmaT4OverPi[origin]);
         }
 #endif

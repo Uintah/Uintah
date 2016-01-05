@@ -21,7 +21,6 @@
  * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
  * IN THE SOFTWARE.
  */
-
 #include <CCA/Components/Schedulers/OnDemandDataWarehouse.h>
 #include <CCA/Ports/LoadBalancer.h>
 #include <CCA/Ports/Scheduler.h>
@@ -59,12 +58,20 @@
 #include <Core/Util/DebugStream.h>
 #include <Core/Util/FancyAssert.h>
 #include <Core/Util/ProgressiveWarning.h>
+#include <CCA/Components/Schedulers/SchedulerCommon.h>
+
+#ifdef HAVE_CUDA
+//#include <CCA/Components/Schedulers/GPUUtilities.h>
+#include <CCA/Components/Schedulers/GPUGridVariableInfo.h>
+#include <Core/Grid/Variables/GPUStencil7.h>
+#endif
 
 #include <cstdio>
 #include <cstring>
 #include <iostream>
 #include <string>
 #include <sstream>
+#include <vector>
 
 using namespace SCIRun;
 using namespace Uintah;
@@ -77,10 +84,11 @@ extern DebugStream mixedDebug;
 
 #ifdef HAVE_CUDA
   extern DebugStream use_single_device;
+  extern DebugStream simulate_multiple_gpus;
+  extern DebugStream gpudbg;
 #endif
 
 static DebugStream dbg(        "OnDemandDataWarehouse",      false );
-static DebugStream gpudbg(     "GPUDataWarehouse",           false );
 static DebugStream warn(       "OnDemandDataWarehouse_warn", true  );
 static DebugStream particles(  "DWParticles",                false );
 static DebugStream particles2( "DWParticles2",               false );
@@ -93,7 +101,7 @@ struct ParticleSend : public RefCounted {
 
 // we want a particle message to have a unique tag per patch/matl/batch/dest.
 // we only have 32K message tags, so this will have to do.
-//   We need this because the possibility exists (particularly with DLB) of 
+//   We need this because the possibility exists (particularly with DLB) of
 //   two messages with the same tag being sent from the same processor.  Even
 //   if these messages are sent to different processors, they can get crossed in the mail
 //   or one can overwrite the other.
@@ -103,7 +111,7 @@ struct ParticleSend : public RefCounted {
 #define  BULLETPROOFING_FOR_CUBIC_DOMAINS  // comment out when running on non-cubic domains.
                                            // The getRegion() exceptions don't apply.
 
-bool OnDemandDataWarehouse::d_combineMemory=true;
+bool OnDemandDataWarehouse::d_combineMemory=false;
 
 
 //______________________________________________________________________
@@ -132,21 +140,33 @@ OnDemandDataWarehouse::OnDemandDataWarehouse( const ProcessorGroup* myworld,
   if (Uintah::Parallel::usingDevice()) {
     int numDevices;
     cudaError_t retVal;
-
-    if (!use_single_device.active()) {
-      CUDA_RT_SAFE_CALL(retVal = cudaGetDeviceCount(&numDevices));
-    }
-    else {
+    if (simulate_multiple_gpus.active()) {
+      numDevices = 3;
+    } else if (use_single_device.active()) {
       numDevices = 1;
+    } else {
+      CUDA_RT_SAFE_CALL(retVal = cudaGetDeviceCount(&numDevices));
     }
 
     for (int i = 0; i < numDevices; i++) {
-      GPUDataWarehouse* gpuDW;
-      gpuDW = new GPUDataWarehouse();
+      //those gpuDWs should only live host side.
+      //Ideally these don't need to be created at all as a separate datawarehouse,
+      //but could be contained within this datawarehouse
+
+      //Using "placement new" to create the object in the buffer.
+      //GPUDataWarehouse* gpuDW = new GPUDataWarehouse();
+      //void *placementNewBuffer = malloc(sizeof(GPUDataWarehouse) - sizeof(GPUDataWarehouse::dataItem) * MAX_VARDB_ITEMS);
+      //GPUDataWarehouse* gpuDW = new (placementNewBuffer) GPUDataWarehouse(i, placementNewBuffer);
+
+      GPUDataWarehouse* gpuDW = (GPUDataWarehouse*)malloc(sizeof(GPUDataWarehouse) - sizeof(GPUDataWarehouse::dataItem) * MAX_VARDB_ITEMS);
+      std::ostringstream out;
+      out << "Host-side GPU DW";
+
+      gpuDW->init(i, out.str());
       gpuDW->setDebug(gpudbg.active());
-      gpuDW->init_device(i);
       d_gpuDWs.push_back(gpuDW);
     }
+
   }
 #endif
 }
@@ -200,9 +220,17 @@ OnDemandDataWarehouse::clear()
 
 #ifdef HAVE_CUDA
   if (Uintah::Parallel::usingDevice()) {
+    //clear out the host side GPU Datawarehouses.  This does NOT touch the task DWs.
     for (size_t i = 0; i < d_gpuDWs.size(); i++) {
       d_gpuDWs[i]->clear();
-      delete d_gpuDWs[i];
+      //because it was created using placement new, we have to deallocate this way instead of through delete.
+      //d_gpuDWs[i]->~GPUDataWarehouse();
+
+      //void * getPlacementNewBuffer = d_gpuDWs[i]->getPlacementNewBuffer();
+      //free(getPlacementNewBuffer);
+      d_gpuDWs[i]->cleanup();
+      free(d_gpuDWs[i]);
+      d_gpuDWs[i] = NULL;
     }
   }
 #endif
@@ -366,6 +394,108 @@ OnDemandDataWarehouse::exists( const VarLabel* label ) const
     return false;
   }
 }
+
+#ifdef HAVE_CUDA
+
+void
+OnDemandDataWarehouse::uintahSetCudaDevice(int deviceNum) {
+  if (simulate_multiple_gpus.active()) {
+    CUDA_RT_SAFE_CALL( cudaSetDevice(0) );
+  } else {
+    CUDA_RT_SAFE_CALL( cudaSetDevice(deviceNum) );
+  }
+}
+
+int
+OnDemandDataWarehouse::getNumDevices() {
+  int numDevices = 0;
+  cudaError_t retVal;
+
+  if (Uintah::Parallel::usingDevice()) {
+    if (simulate_multiple_gpus.active()) {
+      numDevices = 2;
+    } else if (!use_single_device.active()) {
+      CUDA_RT_SAFE_CALL(retVal = cudaGetDeviceCount(&numDevices));
+    } else {
+      numDevices = 1;
+    }
+  }
+  return numDevices;
+}
+
+//std::map<const Patch *, int> OnDemandDataWarehouse::patchAcceleratorLocation;
+//unsigned int OnDemandDataWarehouse::currentAcceleratorCounter;
+
+size_t
+OnDemandDataWarehouse::getTypeDescriptionSize(const TypeDescription::Type& type) {
+  switch(type){
+    case TypeDescription::double_type : {
+      return sizeof(double);
+      break;
+    }
+    case TypeDescription::int_type : {
+      return sizeof(int);
+      break;
+    }
+    case TypeDescription::Stencil7 : {
+      return sizeof(Stencil7);
+      break;
+    }
+    default : {
+      SCI_THROW(InternalError("OnDemandDataWarehouse::getTypeDescriptionSize unsupported GPU Variable base type: " + type, __FILE__, __LINE__));
+    }
+  }
+}
+
+GPUGridVariableBase*
+OnDemandDataWarehouse::createGPUGridVariable(size_t sizeOfDataType)
+{
+  //Note: For C++11, these should return a unique_ptr.
+  GPUGridVariableBase* device_var = NULL;
+  switch ( sizeOfDataType ) {
+    case sizeof(int) : {
+      device_var = new GPUGridVariable<int>();
+      break;
+    }
+    case sizeof(double) : {
+      device_var = new GPUGridVariable<double>();
+      break;
+    }
+    case sizeof(GPUStencil7) : {
+      device_var = new GPUGridVariable<GPUStencil7>();
+      break;
+    }
+    default : {
+      printf("it's zero?\n");
+      SCI_THROW(InternalError("createGPUGridVariable, unsupported GPUGridVariable type: ", __FILE__, __LINE__));
+    }
+  }
+  return device_var;
+}
+
+GPUPerPatchBase*
+OnDemandDataWarehouse::createGPUPerPatch(size_t sizeOfDataType)
+{
+  GPUPerPatchBase* device_var = NULL;
+  switch ( sizeOfDataType ) {
+    case sizeof(int) : {
+      device_var = new GPUPerPatch<int>();
+      break;
+    }
+    case sizeof(double) : {
+      device_var = new GPUPerPatch<double>();
+      break;
+    }
+    default : {
+      SCI_THROW(InternalError("createGPUPerPatch, unsupported GPUPerPatch type: ", __FILE__, __LINE__));
+    }
+  }
+  return device_var;
+}
+
+
+#endif
+
 
 //______________________________________________________________________
 //
@@ -703,7 +833,6 @@ OnDemandDataWarehouse::recvMPI(       DependencyBatch*       batch,
       //add the var to the dependency batch and set it as invalid.  The variable is now invalid because there is outstanding MPI pointing to the variable.
       batch->addVar( var );
       d_varDB.putForeign( label, matlIndex, patch, var, d_scheduler->isCopyDataTimestep() );  //put new var in data warehouse
-
       var->getMPIBuffer( buffer, dep->low, dep->high );
     }
       break;
@@ -1644,6 +1773,7 @@ OnDemandDataWarehouse::allocateAndPut(       GridVariableBase& var,
 {
   MALLOC_TRACE_TAG_SCOPE("OnDemandDataWarehouse::allocateAndPut(Grid Variable):" + label->getName());
   if (d_finalized) {
+    std::cerr << "OnDemandDataWarehouse::allocateAndPut - When trying to allocate " << label->getName() << std::endl; 
     std::cerr << "  DW " << getID() << " finalized!\n";
   }
   ASSERT(!d_finalized);
@@ -1687,7 +1817,6 @@ OnDemandDataWarehouse::allocateAndPut(       GridVariableBase& var,
 
     // put the variable in the database
     printDebuggingPutInfo( label, matlIndex, patch, __LINE__ );
-     
     d_varDB.put(label, matlIndex, patch, var.clone(), d_scheduler->isCopyDataTimestep(), true);
   }
   else {
@@ -2699,6 +2828,116 @@ OnDemandDataWarehouse::initializeScrubs(       int                       dwid,
 
 //______________________________________________________________________
 //
+
+//The Unified Scheduler needs the ability to know and obtain the ghost cell data
+//so that it can move it into the GPU.
+//Also, getGridVar() needs to be able to get the ghost cell data as well so that
+//it can move the ghost cell data into the existing CPU variable.
+//This method will retrieve those neighbors, and also the
+//regions (indicated in low and high) which constitute the ghost cells.
+//Data is return in the ValidNeighbors vector.  NOTE: This method
+//creates a reference to the neighbor, and so these references
+//need to be deleted afterward. (It's not pretty, but it seemed to be the best option.)
+void OnDemandDataWarehouse::getValidNeighbors(const VarLabel* label,
+                            int matlIndex,
+                            const Patch* patch,
+                            Ghost::GhostType gtype,
+                            int numGhostCells,
+                            std::vector<ValidNeighbors>& validNeighbors){
+
+  Patch::VariableBasis basis = Patch::translateTypeToBasis(label->typeDescription()->getType(), false);
+
+  IntVector low = patch->getExtraLowIndex(basis, label->getBoundaryLayer());
+  IntVector high = patch->getExtraHighIndex(basis, label->getBoundaryLayer());
+
+  Patch::selectType neighbors;
+  IntVector lowIndex, highIndex;
+  patch->computeVariableExtents(basis, label->getBoundaryLayer(),
+                                gtype, numGhostCells,
+                                lowIndex, highIndex);
+
+  if (numGhostCells > 0)
+    patch->getLevel()->selectPatches(lowIndex, highIndex, neighbors);
+  else
+    neighbors.push_back(patch);
+
+  for( int i = 0; i < neighbors.size(); i++ ) {
+    const Patch* neighbor = neighbors[i];
+    if( neighbor && (neighbor != patch) ) {
+      IntVector low = Max( neighbor->getExtraLowIndex( basis, label->getBoundaryLayer() ),
+                           lowIndex );
+      IntVector high = Min( neighbor->getExtraHighIndex( basis, label->getBoundaryLayer() ),
+                            highIndex );
+      if( patch->getLevel()->getIndex() > 0 && patch != neighbor ) {
+        patch->cullIntersection( basis, label->getBoundaryLayer(), neighbor, low, high );
+      }
+      if( low == high ) {
+        continue;
+      }
+      if( !d_varDB.exists( label, matlIndex, neighbor ) ) {
+        SCI_THROW(UnknownVariable(label->getName(), getID(), neighbor, matlIndex, neighbor == patch? "on patch":"on neighbor", __FILE__, __LINE__) );
+      }
+
+      std::vector<Variable*> varlist;
+      d_varDB.getlist( label, matlIndex, neighbor, varlist );
+      GridVariableBase* v = NULL;
+
+      for( std::vector<Variable*>::iterator rit = varlist.begin();; ++rit ) {
+        if( rit == varlist.end() ) {
+          v = NULL;
+          break;
+        }
+        v = dynamic_cast<GridVariableBase*>( *rit );
+        //verify that the variable is valid and matches the depedencies requirements
+        if( (v != NULL) && (v->isValid()) ) {
+          if( neighbor->isVirtual() ) {
+            if( Min( v->getLow(), low - neighbor->getVirtualOffset() ) == v->getLow()
+                && Max( v->getHigh(), high - neighbor->getVirtualOffset() ) == v->getHigh() ) {
+              break;
+            }
+          }
+          else {
+            if( Min( v->getLow(), low ) == v->getLow()
+                && Max( v->getHigh(), high ) == v->getHigh() ) {
+              break;
+            }
+          }
+        }
+      }  //end for vars
+      if( v == NULL ) {
+        // cout << d_myworld->myrank()  << " cannot copy var " << *label << " from patch " << neighbor->getID()
+        // << " " << low << " " << high <<  ", DW has " << srcvar->getLow() << " " << srcvar->getHigh() << endl;
+        SCI_THROW(UnknownVariable(label->getName(), getID(), neighbor, matlIndex, neighbor == patch? "on patch":"on neighbor", __FILE__, __LINE__) );
+      }
+      ValidNeighbors temp;
+      temp.validNeighbor = v;
+      temp.neighborPatch = neighbor;
+      temp.low = low;
+      temp.high = high;
+      validNeighbors.push_back(temp);
+
+      //GridVariableBase* srcvar = var.cloneType();
+      //srcvar->copyPointer(*v);
+
+      //if(neighbor->isVirtual())
+      //      srcvar->offsetGrid(neighbor->getVirtualOffset());
+      //cout << "Pushing " << srcvar << endl;
+      //ValidNeighbors temp;
+      //temp.validNeighbor = srcvar;
+      //temp.low = low;
+      //temp.high = high;
+
+      //validNeighbors.push_back(temp);
+
+    } //end if neighbor
+  } //end for neigbours
+
+
+
+}
+
+//______________________________________________________________________
+//
 void
 OnDemandDataWarehouse::getGridVar(       GridVariableBase& var,
                                    const VarLabel*         label,
@@ -2711,6 +2950,7 @@ OnDemandDataWarehouse::getGridVar(       GridVariableBase& var,
   ASSERTEQ(basis, Patch::translateTypeToBasis(var.virtualGetTypeDescription()->getType(), true));
 
   if (!d_varDB.exists(label, matlIndex, patch)) {
+    printf("Couldn't find it for this datawarehouse %p\n", this);
     std::cout << d_myworld->myrank() << " unable to find variable '" << label->getName() << " on patch: " << patch->getID() << " matl: "
               << matlIndex << std::endl;
     SCI_THROW(UnknownVariable(label->getName(), getID(), patch, matlIndex, "", __FILE__, __LINE__));
@@ -2777,7 +3017,30 @@ OnDemandDataWarehouse::getGridVar(       GridVariableBase& var,
       }
     }
 
-    for (int i = 0; i < neighbors.size(); i++) {
+    std::vector<ValidNeighbors> validNeighbors;
+    getValidNeighbors(label, matlIndex, patch, gtype, numGhostCells, validNeighbors);
+    for(std::vector<ValidNeighbors>::iterator iter = validNeighbors.begin(); iter != validNeighbors.end(); ++iter) {
+
+      GridVariableBase* srcvar = var.cloneType();
+      GridVariableBase* tmp = iter->validNeighbor;
+      srcvar->copyPointer(*tmp);
+      if(iter->neighborPatch->isVirtual()) {
+        srcvar->offsetGrid(iter->neighborPatch->getVirtualOffset());
+      }
+      try {
+        //var.copyPatch(iter->validNeighbor, iter->low, iter->high);
+        var.copyPatch(srcvar, iter->low, iter->high);
+
+      } catch (InternalError& e) {
+        std::cout << " Bad range: " << iter->low << " " << iter->high
+        << " source var range: "  << iter->validNeighbor->getLow() << " " << iter->validNeighbor->getHigh() << std::endl;
+        throw e;
+      }
+      delete srcvar;
+    }
+
+    /*
+    for( int i = 0; i < neighbors.size(); i++ ) {
       const Patch* neighbor = neighbors[i];
       if (neighbor && (neighbor != patch)) {
         IntVector low = Max(neighbor->getExtraLowIndex(basis, label->getBoundaryLayer()), lowIndex);
@@ -2852,6 +3115,8 @@ OnDemandDataWarehouse::getGridVar(       GridVariableBase& var,
     //dn = highIndex - lowIndex;
     //long wanted = dn.x()*dn.y()*dn.z();
     //ASSERTEQ(wanted, total);
+
+   */
   }
 }
 

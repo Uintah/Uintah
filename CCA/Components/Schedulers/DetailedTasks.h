@@ -221,6 +221,12 @@ namespace Uintah {
 
   typedef FastHashTable<ScrubItem> ScrubCountTable;
 
+#ifdef HAVE_CUDA
+  struct TaskGpuDataWarehouses{
+    public:
+    GPUDataWarehouse* TaskGpuDW[2];
+  };
+#endif
   class DetailedTask {
 
   public:
@@ -266,11 +272,17 @@ namespace Uintah {
 
     std::map<DependencyBatch*, DependencyBatch*>& getRequires() { return reqs; }
 
+    std::map<DependencyBatch*, DependencyBatch*>& getInternalRequires() { return internal_reqs; }  
+  
     DependencyBatch* getComputes() const { return comp_head; }
 
+    DependencyBatch* getInternalComputes() const { return internal_comp_head; }
+    
     void findRequiringTasks( const VarLabel* var, std::list<DetailedTask*>& requiringTasks );
 
     void emitEdges( ProblemSpecP edgesElement ) ;
+    bool addInternalRequires(DependencyBatch*);
+    void addInternalComputes(DependencyBatch*);
 
     bool addRequires( DependencyBatch* );
 
@@ -297,12 +309,41 @@ namespace Uintah {
 
 #ifdef HAVE_CUDA
 
-    void assignDevice(int device);
-    int getDeviceNum() const;
-    cudaStream_t* getCUDAStream() const;
-    void setCUDAStream(cudaStream_t* s);
-    bool queryCUDAStreamCompletion();
+    void assignDevice (unsigned int device);
 
+    //unsigned int getDeviceNum() const;
+
+    //Most tasks will only run on one device.
+    //But some, such as the data archiver task or send old data could run on multiple devices.
+    //This is not a good idea.  A task should only run on one device.  But the capability for a task
+    //to run on multiple nodes exists.
+    std::set<unsigned int> getDeviceNums() const;
+    std::map<unsigned int, TaskGpuDataWarehouses> TaskGpuDWs;
+
+
+    //bool queryCUDAStreamCompletion();
+
+    //void setCUDAStream(cudaStream_t* s);
+
+    void setCUDAStream(unsigned int deviceNum, cudaStream_t* s);
+
+    void clearCUDAStreams();
+
+    bool checkCUDAStreamDone() const;
+
+    bool checkCUDAStreamDone(unsigned int deviceNum) const;
+
+    bool checkAllCUDAStreamsDone() const;
+
+
+
+    void setTaskGpuDataWarehouse(unsigned int deviceNum, Task::WhichDW DW, GPUDataWarehouse* TaskDW);
+
+    GPUDataWarehouse* getTaskGpuDataWarehouse(unsigned int deviceNum, Task::WhichDW DW);
+
+    void deleteTaskGpuDataWarehouses();
+
+    cudaStream_t* getCUDAStream(unsigned int deviceNum) const;
 #endif
 
   protected:
@@ -318,7 +359,9 @@ namespace Uintah {
     const PatchSubset*                           patches;
     const MaterialSubset*                        matls;
     std::map<DependencyBatch*, DependencyBatch*> reqs;
+    std::map<DependencyBatch*, DependencyBatch*> internal_reqs;
     DependencyBatch*                             comp_head;
+    DependencyBatch*                             internal_comp_head;
     DetailedTasks*                               taskGroup;
 
     bool initiated_;
@@ -357,12 +400,87 @@ namespace Uintah {
 #ifdef HAVE_CUDA
     bool deviceExternallyReady_;
     bool completed_;
-    int  deviceNum_;
-    cudaStream_t* d_cudaStream;
+    unsigned int  deviceNum_;
+    std::set <unsigned int> deviceNums_;
+    //cudaStream_t*   d_cudaStream;
+    std::map <unsigned int, cudaStream_t*> d_cudaStreams;
 #endif
+
 
   }; // end class DetailedTask
   
+#ifdef HAVE_CUDA
+
+  struct varTuple {
+     std::string          label;
+     int             matlIndx;
+     int             levelIndx;
+     int             patch;
+     int             dataWarehouse;
+     IntVector       sharedLowCoordinates;
+     IntVector       sharedHighCoordinates;
+
+     varTuple(std::string label, int matlIndx, int levelIndx, int patch, int dataWarehouse, IntVector sharedLowCoordinates, IntVector sharedHighCoordinates) {
+       this->label = label;
+       this->matlIndx = matlIndx;
+       this->levelIndx = levelIndx;
+       this->patch = patch;
+       this->dataWarehouse = dataWarehouse;
+       this->sharedLowCoordinates = sharedLowCoordinates;
+       this->sharedHighCoordinates = sharedHighCoordinates;
+     }
+     //This is so it can be used in an STL map
+     bool operator<(const varTuple& right) const {
+       if (this->label < right.label) {
+         return true;
+       } else if (this->label == right.label && (this->matlIndx < right.matlIndx)) {
+         return true;
+       } else if (this->label == right.label && (this->matlIndx == right.matlIndx)
+                  && (this->levelIndx < right.levelIndx)) {
+         return true;
+       } else if (this->label == right.label && (this->matlIndx == right.matlIndx)
+                  && (this->levelIndx == right.levelIndx) && (this->patch < right.patch)) {
+         return true;
+       } else if (this->label == right.label && (this->matlIndx == right.matlIndx)
+                  && (this->levelIndx == right.levelIndx)
+                  && (this->patch == right.patch)
+                  && (this->dataWarehouse < right.dataWarehouse)) {
+         return true;
+       } else if (this->label == right.label && (this->matlIndx == right.matlIndx)
+           && (this->levelIndx == right.levelIndx)
+           && (this->patch == right.patch)
+           && (this->dataWarehouse == right.dataWarehouse)
+           && (this->sharedLowCoordinates < right.sharedLowCoordinates)) {
+         return true;
+       } else if (this->label == right.label && (this->matlIndx == right.matlIndx)
+           && (this->levelIndx == right.levelIndx)
+           && (this->patch == right.patch)
+           && (this->dataWarehouse == right.dataWarehouse)
+           && (this->sharedLowCoordinates == right.sharedLowCoordinates)
+           && (this->sharedHighCoordinates < right.sharedHighCoordinates)) {
+         return true;
+       } else {
+         return false;
+       }
+     }
+   };
+
+  class CopyDependenciesGpu
+  {
+    public:
+      void addVar(std::string label, int matlIndx, int levelIndx, int patch, int dataWarehouse, IntVector sharedLowCoordinates, IntVector sharedHighCoordinates){
+        varTuple temp(label, matlIndx, levelIndx, patch, dataWarehouse, sharedLowCoordinates, sharedHighCoordinates);
+        varsBeingCopied.push_back(temp);
+      }
+    private:
+      //uniquely identify a variable by a tuple of label/patch/material/level/dw/low/high
+      cudaStream_t* stream;
+      unsigned int device;
+      std::vector<varTuple> varsBeingCopied;
+  }; // end class CopyDependencies
+
+#endif
+
   class DetailedTaskPriorityComparison
   {
     public:
@@ -458,14 +576,40 @@ namespace Uintah {
     QueueAlg getTaskPriorityAlg() { return taskPriorityAlg_; }
 
 #ifdef HAVE_CUDA
+    void addFinalizeDevicePreparation(DetailedTask* dtask);
     void addInitiallyReadyDeviceTask( DetailedTask* dtask );
     void addCompletionPendingDeviceTask( DetailedTask* dtask );
+    void addInitiallyReadyHostTask(DetailedTask* dtask);
+
+    DetailedTask* getNextFinalizeDevicePreparationTask();
     DetailedTask* getNextInitiallyReadyDeviceTask();
     DetailedTask* getNextCompletionPendingDeviceTask();
+    DetailedTask* getNextInitiallyReadyHostTask();
+
+    DetailedTask* peekNextFinalizeDevicePreparationTask();
     DetailedTask* peekNextInitiallyReadyDeviceTask();
     DetailedTask* peekNextCompletionPendingDeviceTask();
+    DetailedTask* peekNextInitiallyReadyHostTask();
+
+    int numFinalizeDevicePreparation() { return finalizeDevicePreparationTasks_.size(); }
     int numInitiallyReadyDeviceTasks() { return initiallyReadyDeviceTasks_.size(); }
     int numCompletionPendingDeviceTasks() { return completionPendingDeviceTasks_.size(); }
+    int numInitiallyReadyHostTasks() { return initiallyReadyHostTasks_.size(); }
+
+    void createInternalDependencyBatch(DetailedTask* from,
+                                   Task::Dependency* comp,
+                                   const Patch* fromPatch,
+                                   DetailedTask* to,
+                                   Task::Dependency* req,
+                                   const Patch *toPatch,
+                                   int matl,
+                                   const IntVector& low,
+                                   const IntVector& high,
+                                   DetailedDep::CommCondition cond);
+    // helper of possiblyCreateDependency
+    DetailedDep* findMatchingInternalDetailedDep(DependencyBatch* batch, DetailedTask* toTask, Task::Dependency* req,
+                                         const Patch* fromPatch, int matl, IntVector low, IntVector high,
+                                         IntVector& totalLow, IntVector& totalHigh, DetailedDep* &parent_dep);
 #endif
 
   protected:
@@ -560,10 +704,15 @@ namespace Uintah {
     DetailedTasks& operator=( const DetailedTasks& );
 
 #ifdef HAVE_CUDA
-    TaskPQueue            initiallyReadyDeviceTasks_;     // initially ready, h2d copies pending
-    TaskPQueue            completionPendingDeviceTasks_;  // execution and d2h copies pending
+    TaskPQueue            initiallyReadyDeviceTasks_;       // initially ready, h2d copies pending
+    TaskPQueue            finalizeDevicePreparationTasks_;  // h2d copies completed, need to mark gpu data as valid and copy gpu ghost cell data internall on device
+    TaskPQueue            completionPendingDeviceTasks_;    // execution and d2h copies pending
+    TaskPQueue            initiallyReadyHostTasks_;         // initially ready cpu task, d2h copies pending
+
+    mutable CrowdMonitor  deviceFinalizePreparationQueueLock_;
     mutable CrowdMonitor  deviceReadyQueueLock_;
     mutable CrowdMonitor  deviceCompletedQueueLock_;
+    mutable CrowdMonitor  hostReadyQueueLock_;
 #endif
 
   }; // end class DetailedTasks

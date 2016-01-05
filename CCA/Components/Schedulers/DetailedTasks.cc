@@ -21,7 +21,7 @@
  * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
  * IN THE SOFTWARE.
  */
-
+#include <Core/Thread/Time.h>
 #include <CCA/Components/Schedulers/DetailedTasks.h>
 #include <CCA/Components/Schedulers/CommRecMPI.h>
 #include <CCA/Components/Schedulers/MemoryLog.h>
@@ -86,7 +86,9 @@ DetailedTasks::DetailedTasks(       SchedulerCommon* sc,
 #ifdef HAVE_CUDA
   ,
   deviceReadyQueueLock_("DetailedTasks Device Ready Queue"),
-  deviceCompletedQueueLock_("DetailedTasks Device Completed Queue")
+  deviceCompletedQueueLock_("DetailedTasks Device Completed Queue"),
+  deviceFinalizePreparationQueueLock_("DetailedTasks Device Finalize Preparation Queue"),
+  hostReadyQueueLock_("DetailedTasks Host Ready Queue")
 #endif
 {
   // Set up mappings for the initial send tasks
@@ -259,17 +261,18 @@ DetailedTasks::computeLocalTasks( int me )
 DetailedTask::DetailedTask(       Task*           task,
                             const PatchSubset*    patches,
                             const MaterialSubset* matls,
-                                  DetailedTasks*  taskGroup ) :
-  task(task),
-  patches(patches),
-  matls(matls),
-  comp_head(0),
-  taskGroup(taskGroup),
-  numPendingInternalDependencies(0),
-  internalDependencyLock("DetailedTask Internal Dependencies"),
-  resourceIndex(-1),
-  staticOrder(-1),
-  d_profileType(Normal)
+                                  DetailedTasks*  taskGroup )
+  :   task(task),
+      patches(patches),
+      matls(matls),
+      comp_head(0),
+      internal_comp_head(0),
+      taskGroup(taskGroup),
+      numPendingInternalDependencies(0),
+      internalDependencyLock("DetailedTask Internal Dependencies"),
+      resourceIndex(-1),
+      staticOrder(-1),
+      d_profileType(Normal)
 {
   if (patches) {
     // patches and matls must be sorted
@@ -285,7 +288,6 @@ DetailedTask::DetailedTask(       Task*           task,
   deviceExternallyReady_ = false;
   completed_             = false;
   deviceNum_             = -1;
-  setCUDAStream(NULL);
 #endif
 }
 
@@ -332,15 +334,23 @@ DetailedTask::doit( const ProcessorGroup*                 pg,
 #ifdef HAVE_CUDA
   // determine if task will be executed on CPU or device, e.g. GPU or MIC
   if (task->usesDevice()) {
-    cudaError_t retVal;
-    CUDA_RT_SAFE_CALL(retVal = cudaSetDevice(deviceNum_));
-    task->doit(event, pg, patches, matls, dws, d_cudaStream, deviceNum_);
+    //Run the GPU task.  Technically the engine has structure to run one task on multiple devices if
+    //that task had patches on multiple devices.  So run the task once per device.  As often as possible,
+    //we want to design tasks so each task runs on only once device, instead of a one to many relationship.
+    for (std::set<unsigned int>::const_iterator deviceNums_it = deviceNums_.begin(); deviceNums_it != deviceNums_.end(); ++deviceNums_it) {
+      const unsigned int currentDevice = *deviceNums_it;
+      OnDemandDataWarehouse::uintahSetCudaDevice(currentDevice);
+      task->doit(event, pg, patches, matls, dws,
+                 getTaskGpuDataWarehouse(currentDevice, Task::OldDW),
+                 getTaskGpuDataWarehouse(currentDevice, Task::NewDW),
+                 getCUDAStream(currentDevice), currentDevice);
+    }
   }
   else {
-    task->doit(event, pg, patches, matls, dws, NULL, -1);
+    task->doit(event, pg, patches, matls, dws, NULL, NULL, NULL, -1);
   }
 #else
-  task->doit(event, pg, patches, matls, dws, NULL, -1);
+  task->doit(event, pg, patches, matls, dws, NULL, NULL, NULL, -1);
 #endif
 
   for (int i = 0; i < (int)dws.size(); i++) {
@@ -882,7 +892,13 @@ DetailedTasks::possiblyCreateDependency(       DetailedTask*              from,
   //if the dependency is on the same processor then add an internal dependency
   if (fromresource == d_myworld->myrank() && fromresource == toresource) {
     to->addInternalDependency(from, req->var);
-    return;
+
+    //In case of multiple GPUs per node, we don't return.  Multiple GPUs
+    //need internal dependencies to communicate data.
+    if ( ! Uintah::Parallel::usingDevice()) {
+      return;
+    }
+
   }
 
   //this should have been pruned out earlier
@@ -891,6 +907,17 @@ DetailedTasks::possiblyCreateDependency(       DetailedTask*              from,
   if (req->var->typeDescription()->getType() == TypeDescription::SoleVariable) {
     return;
   }
+#ifdef HAVE_CUDA
+  if (Uintah::Parallel::usingDevice()) {
+    if (fromresource == d_myworld->myrank() && fromresource == toresource) {
+      if (fromPatch != toPatch) {
+        //printf("In DetailedTasks::createInternalDependencyBatch creating internal dependency from patch %d to patch %d, from task %p to task %p\n", fromPatch->getID(), toPatch->getID(), from, to);
+        createInternalDependencyBatch(from, comp, fromPatch, to, req, toPatch, matl, low, high, cond);
+      }
+      return; //We've got all internal dependency information for the GPU, now we can return.
+    }
+  }
+#endif
 
   //make keys for MPI messages
   if (fromPatch) varKeyDB.insert(req->var,matl,fromPatch);
@@ -1096,7 +1123,307 @@ DetailedTasks::possiblyCreateDependency(       DetailedTask*              from,
     }
   }
 }
+#ifdef HAVE_CUDA
 
+void DetailedTasks::createInternalDependencyBatch(DetailedTask* from,
+    Task::Dependency* comp,
+    const Patch* fromPatch,
+    DetailedTask* to,
+    Task::Dependency* req,
+    const Patch *toPatch,
+    int matl,
+    const IntVector& low,
+    const IntVector& high,
+    DetailedDep::CommCondition cond) {
+  //get dependancy batch
+  DependencyBatch* batch = from->getInternalComputes();
+  int toresource = to->getAssignedResourceIndex();
+  int fromresource = from->getAssignedResourceIndex();
+  //find dependency batch that is to the same processor as this dependency
+  for (; batch != 0; batch = batch->comp_next) {
+    if (batch->to == toresource)
+      break;
+  }
+
+  //if batch doesn't exist then create it
+  if (!batch) {
+    batch = scinew DependencyBatch(toresource, from, to);
+    batches_.push_back(batch);  //Should be fine to push this batch on here, at worst
+                                //MPI message tags are created for these which won't get used.
+    from->addInternalComputes(batch);
+#if SCI_ASSERTION_LEVEL >= 2
+    bool newRequireBatch = to->addInternalRequires(batch);
+#else
+    to->addInternalRequires(batch);
+#endif
+    ASSERTL2(newRequireBatch);
+    if (dbg.active())
+      dbg << d_myworld->myrank() << "          NEW BATCH!\n";
+  } else if (mustConsiderInternalDependencies_) {  // i.e. threaded mode
+    if (to->addInternalRequires(batch)) {
+      // this is a new requires batch for this task, so add
+      // to the batch's toTasks.
+      batch->toTasks.push_back(to);
+    }
+    if (dbg.active())
+      dbg << d_myworld->myrank() << "          USING PREVIOUSLY CREATED BATCH!\n";
+  }
+
+  IntVector varRangeLow(INT_MAX, INT_MAX, INT_MAX), varRangeHigh(INT_MIN, INT_MIN, INT_MIN);
+
+  //create the new dependency
+  DetailedDep* new_dep = scinew DetailedDep(batch->head, comp, req, to, fromPatch, matl, low, high, cond);
+
+  //search for a dependency that can be combined with this dependency
+
+  //location of parent dependency
+  DetailedDep* parent_dep;
+
+  DetailedDep* matching_dep = findMatchingInternalDetailedDep(batch, to, req, fromPatch, matl, new_dep->low, new_dep->high, varRangeLow,
+                                                      varRangeHigh, parent_dep);
+
+  //This is set to either the parent of the first matching dep or when there is no matching deps the last dep in the list.
+  DetailedDep* insert_dep = parent_dep;
+  //If two dependencies are going to be on two different GPUs,
+  //then do not merge the two dependencies into one collection.
+  //Instead, keep them separate.  If they will be on the same GPU
+  //then we can merge the dependencies as normal.
+  //This means that no
+
+
+  //if we have matching dependencies we will extend the new dependency to include the old one and delete the old one
+  //check if we sohuld combine them.  If the  new_dep->low
+  while (matching_dep != 0) {
+
+    //debugging output
+    if (dbg.active()) {
+      dbg << d_myworld->myrank() << "            EXTENDED from " << new_dep->low << " " << new_dep->high << " to "
+          << Min(new_dep->low, matching_dep->low) << " " << Max(new_dep->high, matching_dep->high) << "\n";
+      dbg << *req->var << '\n';
+      dbg << *new_dep->req->var << '\n';
+      if (comp)
+        dbg << *comp->var << '\n';
+      if (new_dep->comp)
+        dbg << *new_dep->comp->var << '\n';
+    }
+
+
+
+    //extend the dependency range
+    new_dep->low = Min(new_dep->low, matching_dep->low);
+    new_dep->high = Max(new_dep->high, matching_dep->high);
+
+
+    //copy matching dependencies toTasks to the new dependency
+    new_dep->toTasks.splice(new_dep->toTasks.begin(), matching_dep->toTasks);
+
+    //erase particle sends/recvs
+    if (req->var->typeDescription()->getType() == TypeDescription::ParticleVariable && req->whichdw == Task::OldDW) {
+      PSPatchMatlGhostRange pmg(fromPatch, matl, matching_dep->low, matching_dep->high, (int)cond);
+
+      if (req->var->getName() == "p.x")
+        dbg << d_myworld->myrank() << " erasing particles from " << fromresource << " to " << toresource << " var " << *req->var
+            << " on patch " << fromPatch->getID() << " matl " << matl << " range " << matching_dep->low << " " << matching_dep->high
+            << " cond " << cond << " dw " << req->mapDataWarehouse() << std::endl;
+
+      if (fromresource == d_myworld->myrank()) {
+        std::set<PSPatchMatlGhostRange>::iterator iter = particleSends_[toresource].find(pmg);
+        ASSERT(iter!=particleSends_[toresource].end());
+        //subtract one from the count
+        iter->count_--;
+        //if the count is zero erase it from the sends list
+        if (iter->count_ == 0) {
+          particleSends_[toresource].erase(iter);
+          //particleSends_[toresource].erase(pmg);
+        }
+      } else if (toresource == d_myworld->myrank()) {
+        std::set<PSPatchMatlGhostRange>::iterator iter = particleRecvs_[fromresource].find(pmg);
+        ASSERT(iter!=particleRecvs_[fromresource].end());
+        //subtract one from the count
+        iter->count_--;
+        //if the count is zero erase it from the recvs list
+        if (iter->count_ == 0) {
+          particleRecvs_[fromresource].erase(iter);
+          //particleRecvs_[fromresource].erase(pmg);
+        }
+      }
+    }
+
+    //remove the matching_dep from the batch list
+    if (parent_dep == NULL) {
+      batch->head = matching_dep->next;
+    } else {
+      parent_dep->next = matching_dep->next;
+    }
+
+    //delete matching dep
+    delete matching_dep;
+
+    //search for another matching detailed deps
+    matching_dep = findMatchingInternalDetailedDep(batch, to, req, fromPatch, matl, new_dep->low, new_dep->high, varRangeLow, varRangeHigh,
+                                           parent_dep);
+
+    //if the matching dep is the current insert dep then we must move the insert dep to the new parent dep
+    if (matching_dep == insert_dep)
+      insert_dep = parent_dep;
+  }
+
+
+
+  // the total range of my dep and any deps later in the list with the same var/fromPatch/matl/dw
+  // (to set the next one, which will be the head of the list, you only need to see the following one)
+  new_dep->patchLow = varRangeLow;
+  new_dep->patchHigh = varRangeHigh;
+
+
+  if (insert_dep == NULL) {
+    //no dependencies are in the list so add it to the head
+    batch->head = new_dep;
+    new_dep->next = NULL;
+  } else {
+    //depedencies already exist so add it at the insert location.
+    new_dep->next = insert_dep->next;
+    insert_dep->next = new_dep;
+  }
+
+  //add communication for particle data
+  // these are to post all the particle quantities up front - sort them in TG::createDetailedDepenedencies
+  if (req->var->typeDescription()->getType() == TypeDescription::ParticleVariable && req->whichdw == Task::OldDW) {
+    PSPatchMatlGhostRange pmg = PSPatchMatlGhostRange(fromPatch, matl, new_dep->low, new_dep->high, (int)cond, 1);
+
+    if (fromresource == d_myworld->myrank()) {
+      std::set<PSPatchMatlGhostRange>::iterator iter = particleSends_[toresource].find(pmg);
+      if (iter == particleSends_[toresource].end())  //if does not exist
+          {
+        //add to the sends list
+        particleSends_[toresource].insert(pmg);
+      } else {
+        //increment count
+        iter->count_++;
+      }
+    } else if (toresource == d_myworld->myrank()) {
+      std::set<PSPatchMatlGhostRange>::iterator iter = particleRecvs_[fromresource].find(pmg);
+      if (iter == particleRecvs_[fromresource].end()) {
+        //add to the recvs list
+        particleRecvs_[fromresource].insert(pmg);
+      } else {
+        //increment the count
+        iter->count_++;
+      }
+
+    }
+    if (req->var->getName() == "p.x")
+      dbg << d_myworld->myrank() << " scheduling particles from " << fromresource << " to " << toresource << " on patch "
+          << fromPatch->getID() << " matl " << matl << " range " << low << " " << high << " cond " << cond << " dw "
+          << req->mapDataWarehouse() << std::endl;
+  }
+
+  if (dbg.active()) {
+    dbg << d_myworld->myrank() << "            ADDED " << low << " " << high << ", fromPatch = ";
+    if (fromPatch)
+      dbg << fromPatch->getID() << '\n';
+    else
+      dbg << "NULL\n";
+  }
+
+}
+
+DetailedDep* DetailedTasks::findMatchingInternalDetailedDep(DependencyBatch* batch,
+                                                    DetailedTask* toTask,
+                                                    Task::Dependency* req,
+                                                    const Patch* fromPatch,
+                                                    int matl,
+                                                    IntVector low,
+                                                    IntVector high,
+                                                    IntVector& totalLow,
+                                                    IntVector& totalHigh,
+                                                    DetailedDep* &parent_dep)
+{
+  totalLow = low;
+  totalHigh = high;
+  DetailedDep* dep = batch->head;
+
+  parent_dep = 0;
+  DetailedDep* last_dep = 0;
+  DetailedDep* valid_dep = 0;
+  //For now, turning off a feature that can combine ghost cells into larger vars
+  //for scenarios where one source ghost cell var can handle more than one destination patch.
+
+  //search each dep
+  for (; dep != 0; dep = dep->next) {
+    //Temporarily disable feature of merging source ghost cells in the same patch into
+    //a larger var (so instead of two transfers, it can be done as one transfer)
+    /*
+    //if deps are equivalent
+    if (fromPatch == dep->fromPatch && matl == dep->matl
+        && (req == dep->req || (req->var->equals(dep->req->var) && req->mapDataWarehouse() == dep->req->mapDataWarehouse()))) {
+
+
+      //For the GPUs, ensure that the destinations will be on the same device, and not another device
+      //This assumes that a GPU task will not be assigned to multiple patches belonging to more than one device.
+      if (getGpuIndexForPatch(toTask->getPatches()->get(0)) == getGpuIndexForPatch( dep->toTasks.front()->getPatches()->get(0))) {
+        // total range - the same var in each dep needs to have the same patchlow/high
+        dep->patchLow = totalLow = Min(totalLow, dep->patchLow);
+        dep->patchHigh = totalHigh = Max(totalHigh, dep->patchHigh);
+
+        int ngcDiff = req->numGhostCells > dep->req->numGhostCells ? (req->numGhostCells - dep->req->numGhostCells) : 0;
+        IntVector new_l = Min(low, dep->low);
+        IntVector new_h = Max(high, dep->high);
+        IntVector newRange = new_h - new_l;
+        IntVector requiredRange = high - low;
+        IntVector oldRange = dep->high - dep->low + IntVector(ngcDiff, ngcDiff, ngcDiff);
+        int newSize = newRange.x() * newRange.y() * newRange.z();
+        int requiredSize = requiredRange.x() * requiredRange.y() * requiredRange.z();
+        int oldSize = oldRange.x() * oldRange.y() * oldRange.z();
+
+        //bool extraComm = newSize > requiredSize + oldSize;
+
+        //if (sc_->useSmallMessages()) {
+          // If two patches on the same processor want data from the same patch on a different
+          // processor, we can either pack them in one dependency and send the min and max of their range (which
+          // will frequently result in sending the entire patch), or we can use two dependencies (which will get packed into
+          // one message) and only send the resulting data.
+
+          // We want to create a new dep in such cases.  However, we don't want to do this in cases where we simply add more
+          // ghost cells.
+          //if (!extraComm) {
+            //combining does not create extra communication so take possibly this dep;
+            //first check if the dep completely includes this dep
+            if (dep->low == new_l && dep->high == new_h) {
+              //take this dep
+              parent_dep = last_dep;
+              valid_dep = dep;
+              break;
+            } else {
+              //only take the dep if we haven't already found one
+              if (valid_dep == 0) {
+                parent_dep = last_dep;
+                valid_dep = dep;
+              }
+              //keep searching in case there is a better dep to combine with
+            }
+        //  }
+        //} else {
+        //
+        //  //not using small messages so take the first dep you find, it will be extended
+        //  valid_dep = dep;
+        //  break;
+      }
+    }
+
+    */
+
+    //pointer to dependency before this dep so insertion/deletion can be done quicker
+    last_dep = dep;
+  }
+
+  if (valid_dep == 0)
+    parent_dep = last_dep;
+
+  return valid_dep;
+}
+
+#endif
 //_____________________________________________________________________________
 //
 DetailedTask*
@@ -1132,6 +1459,19 @@ DetailedTask::addRequires( DependencyBatch* req )
 
 //_____________________________________________________________________________
 //
+void DetailedTask::addInternalComputes(DependencyBatch* comp)
+{
+  comp->comp_next = internal_comp_head;
+  internal_comp_head = comp;
+}
+
+bool DetailedTask::addInternalRequires(DependencyBatch* req)
+{
+  // return true if it is adding a new batch
+  return internal_reqs.insert(std::make_pair(req, req)).second;
+}
+
+
 // can be called in one of two places - when the last MPI Recv has completed, or from MPIScheduler
 void
 DetailedTask::checkExternalDepCount()
@@ -1196,49 +1536,177 @@ DetailedTask::addInternalDependency(       DetailedTask* prerequisiteTask,
 
 #ifdef HAVE_CUDA
 
-void
-DetailedTask::assignDevice( int device )
+void DetailedTask::assignDevice( unsigned int device )
 {
-  deviceNum_= device;
+  deviceNum_ = device;
+  deviceNums_.insert ( device );
 }
 
-int
-DetailedTask::getDeviceNum() const
+//unsigned int DetailedTask::getDeviceNum() const
+//{
+//  return deviceNum_;
+//}
+
+//For tasks where there are multiple devices for the task (i.e. data archiver output tasks)
+std::set<unsigned int> DetailedTask::getDeviceNums() const
 {
-  return deviceNum_;
+  return deviceNums_;
 }
 
-cudaStream_t*
-DetailedTask::getCUDAStream() const
+/*
+cudaStream_t* DetailedTask::getCUDAStream() const
 {
-  return d_cudaStream;
+  return getCUDAStream(0);
+}*/
+
+cudaStream_t* DetailedTask::getCUDAStream(unsigned int deviceNum) const
+{
+  std::map <unsigned int, cudaStream_t*>::const_iterator it;
+  it = d_cudaStreams.find(deviceNum);
+  if (it != d_cudaStreams.end()) {
+    return it->second;
+  }
+  return NULL;
 }
 
-void
-DetailedTask::setCUDAStream( cudaStream_t* stream )
+
+//void DetailedTask::setCUDAStream(cudaStream_t* s)
+//{
+//  //d_cudaStream = s;
+//  setCUDAStream(0, s);
+//};
+
+void DetailedTask::setCUDAStream(unsigned int deviceNum, cudaStream_t* s)
 {
-  d_cudaStream = stream;
+  if (s == NULL) {
+    d_cudaStreams.erase(deviceNum);
+  } else {
+    //printf("For device %d inserting stream at %p\n", deviceNum, s);
+    //TODO: Needs a write lock.
+    d_cudaStreams.insert(std::pair<unsigned int, cudaStream_t*>(deviceNum,s));
+  }
+};
+
+void DetailedTask::clearCUDAStreams() {
+  d_cudaStreams.clear();
 }
 
-bool
-DetailedTask::queryCUDAStreamCompletion()
+bool DetailedTask::checkCUDAStreamDone() const
 {
+  //Check all
   cudaError_t retVal;
-  CUDA_RT_SAFE_CALL( retVal = cudaSetDevice(deviceNum_) );
-  retVal = cudaStreamQuery(*d_cudaStream);
+  for (std::map<unsigned int, cudaStream_t*>::const_iterator it = d_cudaStreams.begin(); it != d_cudaStreams.end(); ++it) {
+
+    OnDemandDataWarehouse::uintahSetCudaDevice(it->first);
+    retVal = cudaStreamQuery(*(it->second));
+    if (retVal == cudaSuccess) {
+    //  cout << "checking cuda stream " << d_cudaStream << "ready" << endl;
+      continue;
+    } else if (retVal == cudaErrorNotReady ) {
+
+      retVal = cudaStreamQuery(*(it->second));
+      return false;
+    }
+    else if (retVal ==  cudaErrorLaunchFailure) {
+      printf("ERROR! - DetailedTask::checkCUDAStreamDone() - CUDA kernel execution failure on Task: %s\n", getName().c_str());
+      SCI_THROW(InternalError("Detected CUDA kernel execution failure on Task:"+ getName() , __FILE__, __LINE__));
+      return false;
+    } else { //other error
+      printf("ERROR! - DetailedTask::checkCUDAStreamDone() - The stream %p had this error code %d.  This could mean that something else in the stream just hit an error.\n", it->second, retVal);
+      SCI_THROW(InternalError("ERROR! - Invalid stream query", __FILE__, __LINE__));
+      return false;
+    }
+
+  }
+  return true;
+}
+
+bool DetailedTask::checkCUDAStreamDone(unsigned int deviceNum_) const
+{
+  // sets the CUDA context, for the call to cudaEventQuery()
+  cudaError_t retVal;
+  OnDemandDataWarehouse::uintahSetCudaDevice(deviceNum_);
+  std::map<unsigned int, cudaStream_t*>::const_iterator it= d_cudaStreams.find(deviceNum_);
+  retVal = cudaStreamQuery(*(it->second));
   if (retVal == cudaSuccess) {
+//  cout << "checking cuda stream " << d_cudaStream << "ready" << endl;
     return true;
   }
-  else if (retVal == cudaErrorNotReady) {
+  else if (retVal == cudaErrorNotReady ) {
     return false;
   }
-  else if (retVal == cudaErrorLaunchFailure) {
+  else if (retVal ==  cudaErrorLaunchFailure) {
     SCI_THROW(InternalError("Detected CUDA kernel execution failure on Task:"+ getName() , __FILE__, __LINE__));
     return false;
-  }
-  else {  //other error
-    CUDA_RT_SAFE_CALL( retVal );
+  } else { //other error
+    printf("Waiting for 60\n");
+    Time::waitFor( (double)60 );
+    CUDA_RT_SAFE_CALL (retVal);
     return false;
+  }
+}
+
+bool DetailedTask::checkAllCUDAStreamsDone() const
+{
+
+  // sets the CUDA context, for the call to cudaEventQuery()
+  bool retVal = false;
+
+  for (std::map<unsigned int ,cudaStream_t*>::const_iterator it=d_cudaStreams.begin(); it!=d_cudaStreams.end(); ++it){
+    retVal = checkCUDAStreamDone(it->first);
+    if (retVal == false) {
+      return retVal;
+    }
+  }
+  return true;
+}
+
+void DetailedTask::setTaskGpuDataWarehouse(const unsigned int whichDevice, Task::WhichDW DW, GPUDataWarehouse* TaskDW ) {
+
+  std::map<unsigned int, TaskGpuDataWarehouses>::iterator it;
+  it = TaskGpuDWs.find(whichDevice);
+  if (it != TaskGpuDWs.end()) {
+    it->second.TaskGpuDW[DW] = TaskDW;
+
+  } else {
+    TaskGpuDataWarehouses temp;
+    temp.TaskGpuDW[0] = NULL;
+    temp.TaskGpuDW[1] = NULL;
+    temp.TaskGpuDW[DW] = TaskDW;
+    TaskGpuDWs.insert(std::pair<unsigned int, TaskGpuDataWarehouses>(whichDevice, temp));
+  }
+}
+
+GPUDataWarehouse* DetailedTask::getTaskGpuDataWarehouse(const unsigned int whichDevice, Task::WhichDW DW) {
+  std::map<unsigned int, TaskGpuDataWarehouses>::iterator it;
+  it = TaskGpuDWs.find(whichDevice);
+  if (it != TaskGpuDWs.end()) {
+    return it->second.TaskGpuDW[DW];
+  }
+  return NULL;
+
+}
+
+void DetailedTask::deleteTaskGpuDataWarehouses() {
+  for (std::map<unsigned int, TaskGpuDataWarehouses>::iterator it = TaskGpuDWs.begin(); it != TaskGpuDWs.end(); ++it) {
+    for (int i = 0; i < 2; i++) {
+        if (it->second.TaskGpuDW[i] != NULL) {
+          //Note: Do not call the clear() method.  The Task GPU DWs only contains a "snapshot"
+          //of the things in the GPU.  The host side GPU DWs is responsible for
+          //deallocating all the GPU resources.  The only thing we do want to clean
+          //up is that this GPUDW lives on the GPU.
+          it->second.TaskGpuDW[i]->deleteSelfOnDevice();
+
+          //void * getPlacementNewBuffer = it->second.TaskGpuDW[i]->getPlacementNewBuffer();
+
+          //it->second.TaskGpuDW[i]->~GPUDataWarehouse();
+          //free(getPlacementNewBuffer);
+
+          it->second.TaskGpuDW[i]->cleanup();
+          free(it->second.TaskGpuDW[i]);
+          it->second.TaskGpuDW[i] = NULL;
+        }
+      }
   }
 }
 
@@ -1359,11 +1827,11 @@ operator<<(       std::ostream& out,
     else {
       out << task.getAssignedResourceIndex();
     }
-#ifdef HAVE_CUDA
-    if( task.getCUDAStream() ){
-      out << std::hex << " using CUDA stream " << task.getCUDAStream();
-    }
-#endif
+//#ifdef HAVE_CUDA
+//    if( task.getCUDAStream() ){
+//      out << std::hex << " using CUDA stream " << task.getCUDAStream() << std::dec;
+//    }
+//#endif
     
   }
   coutLock.unlock();
@@ -1479,6 +1947,19 @@ DetailedTasks::numExternalReadyTasks()
 }
 
 #ifdef HAVE_CUDA
+
+DetailedTask* DetailedTasks::getNextFinalizeDevicePreparationTask()
+{
+  DetailedTask* nextTask = NULL;
+  deviceFinalizePreparationQueueLock_.writeLock();
+  if (!finalizeDevicePreparationTasks_.empty()) {
+    nextTask = finalizeDevicePreparationTasks_.top();
+    finalizeDevicePreparationTasks_.pop();
+  }
+  deviceFinalizePreparationQueueLock_.writeUnlock();
+  return nextTask;
+}
+
 //_____________________________________________________________________________
 //
 DetailedTask*
@@ -1513,6 +1994,29 @@ DetailedTasks::getNextCompletionPendingDeviceTask()
   return nextTask;
 }
 
+DetailedTask* DetailedTasks::getNextInitiallyReadyHostTask()
+{
+  DetailedTask* nextTask = NULL;
+  hostReadyQueueLock_.writeLock();
+  if (!initiallyReadyHostTasks_.empty()) {
+    nextTask = initiallyReadyHostTasks_.top();
+    initiallyReadyHostTasks_.pop();
+  }
+  hostReadyQueueLock_.writeUnlock();
+
+  return nextTask;
+}
+
+DetailedTask* DetailedTasks::peekNextFinalizeDevicePreparationTask()
+{
+  deviceFinalizePreparationQueueLock_.readLock();
+  DetailedTask* dtask = finalizeDevicePreparationTasks_.top();
+  deviceFinalizePreparationQueueLock_.readUnlock();
+
+  return dtask;
+}
+
+
 //_____________________________________________________________________________
 //
 DetailedTask*
@@ -1540,6 +2044,22 @@ DetailedTasks::peekNextCompletionPendingDeviceTask()
   return dtask;
 }
 
+DetailedTask* DetailedTasks::peekNextInitiallyReadyHostTask()
+{
+  hostReadyQueueLock_.readLock();
+  DetailedTask* dtask = initiallyReadyHostTasks_.top();
+  hostReadyQueueLock_.readUnlock();
+
+  return dtask;
+}
+
+void DetailedTasks::addFinalizeDevicePreparation(DetailedTask* dtask)
+{
+  deviceFinalizePreparationQueueLock_.writeLock();
+  finalizeDevicePreparationTasks_.push(dtask);
+  deviceFinalizePreparationQueueLock_.writeUnlock();
+}
+
 //_____________________________________________________________________________
 //
 void
@@ -1563,6 +2083,15 @@ DetailedTasks::addCompletionPendingDeviceTask( DetailedTask* dtask )
   }
   deviceCompletedQueueLock_.writeUnlock();
 }
+
+void DetailedTasks::addInitiallyReadyHostTask(DetailedTask* dtask)
+{
+  hostReadyQueueLock_.writeLock();
+  initiallyReadyHostTasks_.push(dtask);
+  hostReadyQueueLock_.writeUnlock();
+}
+
+
 #endif
 
 //_____________________________________________________________________________
