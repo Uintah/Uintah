@@ -22,11 +22,17 @@
  * IN THE SOFTWARE.
  */
 
+#include <Core/Exceptions/ProblemSetupException.h>
+
 #include <expression/Expression.h>
 
 #include <CCA/Components/Wasatch/Transport/CompressibleMomentumTransportEquation.h>
 #include <CCA/Components/Wasatch/Transport/ParseEquation.h>
 #include <CCA/Components/Wasatch/Expressions/MomentumRHS.h>
+#include <CCA/Components/Wasatch/Expressions/BoundaryConditions/BoundaryConditionBase.h>
+#include <CCA/Components/Wasatch/Expressions/BoundaryConditions/BoundaryConditions.h>
+#include <CCA/Components/Wasatch/Expressions/BoundaryConditions/OutflowBC.h>
+#include <CCA/Components/Wasatch/Expressions/BoundaryConditions/OpenBC.h>
 
 namespace WasatchCore{
 
@@ -107,11 +113,178 @@ namespace WasatchCore{
   ~CompressibleMomentumTransportEquation()
   {}
 
+  template <typename MomDirT>
+  void CompressibleMomentumTransportEquation<MomDirT>::
+  setup_boundary_conditions( WasatchBCHelper& bcHelper,
+                                 GraphCategories& graphCat )
+  {
+    Expr::ExpressionFactory& advSlnFactory = *(graphCat[ADVANCE_SOLUTION]->exprFactory);
+    Expr::ExpressionFactory& initFactory = *(graphCat[INITIALIZATION]->exprFactory);
+    
+    const TagNames& tagNames = TagNames::self();
+    //
+    // Add dummy modifiers on all patches. This is used to inject new dpendencies across all patches.
+    // Those new dependencies, result for example from complicated boundary conditions added in this
+    // function. NOTE: whenever you want to add a new complex boundary condition, please use this
+    // functionality to inject new dependencies across patches.
+    //
+    {
+      // add dt dummy modifier for outflow bcs...
+      bcHelper.create_dummy_dependency<SpatialOps::SingleValueField, FieldT>(rhs_part_tag(this->solnVarName_), tag_list(tagNames.dt),ADVANCE_SOLUTION);
+      
+      // add momentum dummy modifiers
+      const Expr::Tag momTimeAdvanceTag(this->solnVarName_,Expr::STATE_NONE);
+      bcHelper.create_dummy_dependency<SVolField, FieldT>(momTimeAdvanceTag, tag_list(this->densityTag_),ADVANCE_SOLUTION);
+      bcHelper.create_dummy_dependency<FieldT, FieldT>(momTimeAdvanceTag, tag_list(this->thisVelTag_),ADVANCE_SOLUTION);
+      if( initFactory.have_entry(this->thisVelTag_) ){
+        const Expr::Tag densityStateNone(this->densityTag_.name(), Expr::STATE_NONE);
+        bcHelper.create_dummy_dependency<SVolField, FieldT>(momTimeAdvanceTag, tag_list(densityStateNone),INITIALIZATION);
+        bcHelper.create_dummy_dependency<FieldT, FieldT>(momTimeAdvanceTag, tag_list(this->thisVelTag_),INITIALIZATION);
+      }
+      
+      if( !this->is_constant_density() ){
+        const Expr::Tag rhoTagInit(this->densityTag_.name(), Expr::STATE_NONE);
+        const Expr::Tag rhoStarTag = tagNames.make_star(this->densityTag_); // get the tagname of rho*
+        bcHelper.create_dummy_dependency<SVolField, SVolField>(rhoStarTag, tag_list(rhoTagInit), INITIALIZATION);
+        const Expr::Tag rhoTagAdv(this->densityTag_.name(), Expr::STATE_NONE);
+        bcHelper.create_dummy_dependency<SVolField, SVolField>(rhoStarTag, tag_list(rhoTagAdv), ADVANCE_SOLUTION);
+      }
+    }
+    //
+    // END DUMMY MODIFIER SETUP
+    //
+    
+    // make logical decisions based on the specified boundary types
+    BOOST_FOREACH( const BndMapT::value_type& bndPair, bcHelper.get_boundary_information() )
+    {
+      const std::string& bndName = bndPair.first;
+      const BndSpec& myBndSpec = bndPair.second;
+      
+      const bool isNormal = is_normal_to_boundary(this->staggered_location(), myBndSpec.face);
+      
+      // variable density: add bcopiers on all boundaries
+      if( !this->is_constant_density() ){
+        // if we are solving a variable density problem, then set bcs on density estimate rho*
+        const Expr::Tag rhoStarTag = tagNames.make_star(this->densityTag_); // get the tagname of rho*
+        // check if this boundary applies a bc on the density
+        if( myBndSpec.has_field(this->densityTag_.name()) ){
+          // create a bc copier for the density estimate
+          const Expr::Tag rhoStarBCTag( rhoStarTag.name() + "_" + bndName +"_bccopier", Expr::STATE_NONE);
+          BndCondSpec rhoStarBCSpec = {rhoStarTag.name(), rhoStarBCTag.name(), 0.0, DIRICHLET, FUNCTOR_TYPE};
+          if( !initFactory.have_entry(rhoStarBCTag) ){
+            const Expr::Tag rhoTag(this->densityTag_.name(), Expr::STATE_NONE);
+            initFactory.register_expression ( new typename BCCopier<SVolField>::Builder(rhoStarBCTag, rhoTag) );
+            bcHelper.add_boundary_condition(bndName, rhoStarBCSpec);
+          }
+          if( !advSlnFactory.have_entry(rhoStarBCTag) ){
+            const Expr::Tag rhoTag(this->densityTag_.name(), Expr::STATE_NONE);
+            advSlnFactory.register_expression ( new typename BCCopier<SVolField>::Builder(rhoStarBCTag, rhoTag) );
+            bcHelper.add_boundary_condition(bndName, rhoStarBCSpec);
+          }
+        }
+      }
+      
+      switch (myBndSpec.type) {
+        case WALL:
+        {
+          // first check if the user specified momentum boundary conditions at the wall
+          if( myBndSpec.has_field(this->thisVelTag_.name()) || myBndSpec.has_field(this->solnVarName_) ||
+             myBndSpec.has_field(this->rhs_name()) || myBndSpec.has_field(this->solnVarName_ + "_rhs_part") ){
+            std::ostringstream msg;
+            msg << "ERROR: You cannot specify any momentum-related boundary conditions at a stationary wall. "
+            << "This error occured while trying to analyze boundary " << bndName
+            << std::endl;
+            throw Uintah::ProblemSetupException( msg.str(), __FILE__, __LINE__ );
+          }
+          
+          // set zero momentum on the wall
+          BndCondSpec momBCSpec = {this->solution_variable_name(),"none" ,0.0,DIRICHLET,DOUBLE_TYPE};
+          bcHelper.add_boundary_condition(bndName, momBCSpec);
+
+          // set zero pressure gradient
+          BndCondSpec pressureBCSpec = {this->pressureTag_.name(),"none" ,0.0,NEUMANN,DOUBLE_TYPE};
+          bcHelper.add_boundary_condition(bndName, pressureBCSpec);
+          
+          // set zero velocity
+          BndCondSpec velBCSpec = {this->thisVelTag_.name(),"none" ,0.0,DIRICHLET,DOUBLE_TYPE};
+          bcHelper.add_boundary_condition(bndName, velBCSpec);
+          
+          break;
+        }
+        case VELOCITY:
+        case OUTFLOW:
+        case OPEN:
+        {
+          std::ostringstream msg;
+          msg << "ERROR: VELOCITY, OPEN, and OUTFLOW boundary conditions are not currently supported for compressible flows in Wasatch. " << bndName
+          << std::endl;
+          throw Uintah::ProblemSetupException( msg.str(), __FILE__, __LINE__ );
+          break;
+        }
+        case USER:
+        {
+          // pass through the list of user specified BCs that are relevant to this transport equation
+          break;
+        }
+          
+        default:
+          break;
+      } // SWITCH BOUNDARY TYPE
+    } // BOUNDARY LOOP
+  }
+
+  template <typename MomDirT>
+  void CompressibleMomentumTransportEquation<MomDirT>::
+  apply_initial_boundary_conditions( const GraphHelper& graphHelper,
+                                         WasatchBCHelper& bcHelper )
+  {
+    const Category taskCat = INITIALIZATION;
+    
+    // apply velocity boundary condition, if specified
+    bcHelper.apply_boundary_condition<FieldT>(this->thisVelTag_, taskCat);
+    
+    // tsaad: boundary conditions will not be applied on the initial condition of momentum. This leads
+    // to tremendous complications in our graphs. Instead, specify velocity initial conditions
+    // and velocity boundary conditions, and momentum bcs will appropriately propagate.
+    bcHelper.apply_boundary_condition<FieldT>(this->initial_condition_tag(), taskCat);
+    
+    if( !this->is_constant_density() ){
+      const TagNames& tagNames = TagNames::self();
+      
+      // set bcs for density
+      const Expr::Tag densTag( this->densityTag_.name(), Expr::STATE_NONE );
+      bcHelper.apply_boundary_condition<SVolField>(densTag, taskCat);
+      
+      // set bcs for density_*
+      const Expr::Tag densStarTag = tagNames.make_star(this->densityTag_, Expr::STATE_NONE);
+      bcHelper.apply_boundary_condition<SVolField>(densStarTag, taskCat);
+    }
+  }
+  
+  
+  template <typename MomDirT>
+  void CompressibleMomentumTransportEquation<MomDirT>::
+  apply_boundary_conditions( const GraphHelper& graphHelper,
+                                 WasatchBCHelper& bcHelper )
+  {
+    const Category taskCat = ADVANCE_SOLUTION;
+    // set bcs for momentum - use the TIMEADVANCE expression
+    bcHelper.apply_boundary_condition<FieldT>( Expr::Tag(this->solnVarName_,Expr::STATE_NONE), taskCat );
+    // set bcs for velocity
+    bcHelper.apply_boundary_condition<FieldT>( this->thisVelTag_, taskCat );
+    // set bcs for partial rhs
+    bcHelper.apply_boundary_condition<FieldT>( rhs_part_tag(mom_tag(this->solnVarName_)), taskCat, true);
+    // set bcs for full rhs
+    bcHelper.apply_boundary_condition<FieldT>( this->rhs_tag(), taskCat, true);
+    // set bcs for pressure
+    bcHelper.apply_boundary_condition<FieldT>( this->pressureTag_, taskCat);
+  }
+
   //============================================================================
 
-  template class CompressibleMomentumTransportEquation< SpatialOps::XDIR>;
-  template class CompressibleMomentumTransportEquation< SpatialOps::YDIR>;
-  template class CompressibleMomentumTransportEquation< SpatialOps::ZDIR>;
+  template class CompressibleMomentumTransportEquation<SpatialOps::XDIR>;
+  template class CompressibleMomentumTransportEquation<SpatialOps::YDIR>;
+  template class CompressibleMomentumTransportEquation<SpatialOps::ZDIR>;
 } // namespace Wasatch
 
 
