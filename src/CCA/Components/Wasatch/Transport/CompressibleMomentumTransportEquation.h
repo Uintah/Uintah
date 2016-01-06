@@ -304,23 +304,13 @@ namespace WasatchCore{
     ~CompressibleMomentumTransportEquation();
 
     void setup_boundary_conditions( WasatchBCHelper& bcHelper,
-                                    GraphCategories& graphCat )
-    {
-      //assert(false);  // not ready
-    }
+                                   GraphCategories& graphCat );
 
     void apply_initial_boundary_conditions( const GraphHelper& graphHelper,
-                                            WasatchBCHelper& bcHelper )
-    {
-      //assert(false); // not ready
-    }
-
+                                           WasatchBCHelper& bcHelper );
 
     void apply_boundary_conditions( const GraphHelper& graphHelper,
-                                    WasatchBCHelper& bcHelper )
-    {
-      //assert( false );  // not ready
-    }
+                                   WasatchBCHelper& bcHelper );
 
     Expr::ExpressionID initial_condition( Expr::ExpressionFactory& icFactory )
     {

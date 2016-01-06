@@ -480,6 +480,7 @@ INSTANTIATE_BC_PROFILES(XVolField)
 INSTANTIATE_BC_PROFILES(YVolField)
 INSTANTIATE_BC_PROFILES(ZVolField)
 
+template class BCPrimVar<SVolField>;
 template class BCPrimVar<XVolField>;
 template class BCPrimVar<YVolField>;
 template class BCPrimVar<ZVolField>;
