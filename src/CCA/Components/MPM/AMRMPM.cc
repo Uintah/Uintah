@@ -244,7 +244,58 @@ void AMRMPM::problemSetup(const ProblemSpecP& prob_spec,
     warn ="\n INPUT FILE ERROR:\n <MPM>  block not found inside of <AMR> block \n";
     throw ProblemSetupException(warn, __FILE__, __LINE__);
   }
-  
+
+  ProblemSpecP refine_ps = mpm_ps->findBlock("Refinement_Criteria_Thresholds");
+#if 0
+  if(!refine_ps ){
+    string warn;
+    warn ="\n INPUT FILE ERROR:\n <Refinement_Criteria_Thresholds> "
+         " block not found inside of <MPM> block \n";
+    throw ProblemSetupException(warn, __FILE__, __LINE__);
+  }
+#endif
+
+  //__________________________________
+  // Pull out the refinement threshold criteria 
+  if(refine_ps ){
+    for (ProblemSpecP var_ps = refine_ps->findBlock("Variable");var_ps != 0;
+                      var_ps = var_ps->findNextBlock("Variable")) {
+      thresholdVar data;
+      string name, value, matl;
+
+      map<string,string> input;
+      var_ps->getAttributes(input);
+      name  = input["name"];
+      value = input["value"];
+      matl  = input["matl"];
+
+      stringstream n_ss(name);
+      stringstream v_ss(value);
+      stringstream m_ss(matl);
+
+      n_ss >> data.name;
+      v_ss >> data.value;
+      m_ss >> data.matl;
+
+      if( !n_ss || !v_ss || (!m_ss && matl!="all") ) {
+        cerr << "WARNING: AMRMPM.cc: stringstream failed...\n";
+      }
+
+      int numMatls = d_sharedState->getNumMatls();
+
+      //__________________________________
+      // if using "all" matls 
+      if(matl == "all"){
+        for (int m = 0; m < numMatls; m++){
+          data.matl = m;
+          d_thresholdVars.push_back(data);
+        }
+      }else{
+        d_thresholdVars.push_back(data);
+      }
+    } 
+  } 
+
   //__________________________________
   // override CFI_interpolator
   d_CFI_interpolator = flags->d_interpolator_type;
