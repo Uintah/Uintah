@@ -179,6 +179,7 @@ def generateGS() :
     except :
       try:
         MPIRUN = check_output(["which", "mpirun"])
+        MPIRUN = MPIRUN[:-1] # get rid of carriage return at the end of check_output
       except:
         print "ERROR:generateGoldStandards.py "
         print "      mpirun command was not found and the environmental variable MPIRUN was not set."
