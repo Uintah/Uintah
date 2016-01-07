@@ -155,15 +155,30 @@ namespace WasatchCore{
      *
      *  \param solnVarName the name of the solution variable for this transport equation.
      *
-     *  \param rhsID the Expr::ExpressionID for the right-hand-side of this transport equation.
+     *  \param rhsTag the Expr::Tag for the right-hand-side of this transport equation.
      *
      *  This method is strongly typed to ensure that the solution
      *  variables are advanced properly and to guarantee compatibility
      *  with the Expression library.
      */
     template<typename FieldT>
-    void add_equation( const std::string& solnVarName,
-                       const Expr::ExpressionID& rhsID );
+    void add_equation( const std::string& solnVarNames,
+                       const Expr::Tag& rhsTag );
+
+    /**
+     *  \brief Add a collection of transport equations to this TimeStepper
+     *
+     *  \param solnVarTags the Expr::TagList corresponding to the solution variables of these transport equations.
+     *
+     *  \param rhsTags the Expr::TagList corresponding to the right-hand-sides of these transport equations.
+     *
+     *  This method is strongly typed to ensure that the solution
+     *  variables are advanced properly and to guarantee compatibility
+     *  with the Expression library.
+     */
+    template<typename FieldT>
+    void add_equations( const Expr::TagList& solnVarTags,
+                        const Expr::TagList& rhsTags );
 
     /**
      *  \brief schedule the tasks associated with this TimeStepper
