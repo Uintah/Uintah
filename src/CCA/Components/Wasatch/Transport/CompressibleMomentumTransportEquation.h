@@ -23,6 +23,7 @@
  */
 
 #include <CCA/Components/Wasatch/TagNames.h>
+#include <Core/Exceptions/ProblemSetupException.h>
 #include <CCA/Components/Wasatch/Transport/TransportEquation.h>
 #include <CCA/Components/Wasatch/Transport/MomentumTransportEquationBase.h>
 #include <CCA/Components/Wasatch/Expressions/ScalarRHS.h>
@@ -209,20 +210,82 @@ namespace WasatchCore{
     void setup_boundary_conditions( WasatchBCHelper& bcHelper,
                                    GraphCategories& graphCat )
     {
-      //assert(false);  // not ready
+      // make logical decisions based on the specified boundary types
+      BOOST_FOREACH( const BndMapT::value_type& bndPair, bcHelper.get_boundary_information() ){
+        const std::string& bndName = bndPair.first;
+        const BndSpec& myBndSpec = bndPair.second;
+        
+        switch ( myBndSpec.type ){
+          case WALL:
+          {
+            // first check if the user specified momentum boundary conditions at the wall
+            if( myBndSpec.has_field(this->solution_variable_name()) || myBndSpec.has_field(this->solution_variable_name() + "_rhs") ){
+              std::ostringstream msg;
+              msg << "ERROR: You cannot specify any density-related boundary conditions at a stationary wall. "
+              << "This error occured while trying to analyze boundary " << bndName
+              << std::endl;
+              throw Uintah::ProblemSetupException( msg.str(), __FILE__, __LINE__ );
+            }
+            
+            // set zero Neumann for density on the wall
+            BndCondSpec rhoBCSpec = {this->solution_variable_name(),"none" ,0.0,NEUMANN,DOUBLE_TYPE};
+            bcHelper.add_boundary_condition(bndName, rhoBCSpec);
+
+            // set zero density_rhs inside the extra cell
+            BndCondSpec rhoRHSBCSpec = {this->rhs_tag().name(), "none" ,0.0,DIRICHLET,DOUBLE_TYPE};
+            bcHelper.add_boundary_condition(bndName, rhoRHSBCSpec);
+          }
+            break;
+          case VELOCITY:
+          case OUTFLOW:
+          case OPEN:{
+            // for constant density problems, on all types of boundary conditions, set the scalar rhs
+            // to zero. The variable density case requires setting the scalar rhs to zero ALL the time
+            // and is handled in the code above.
+            if( isConstDensity_ ){
+              if( myBndSpec.has_field(rhs_name()) ){
+                std::ostringstream msg;
+                msg << "ERROR: You cannot specify scalar rhs boundary conditions unless you specify USER "
+                << "as the type for the boundary condition. Please revise your input file. "
+                << "This error occured while trying to analyze boundary " << bndName
+                << std::endl;
+                throw Uintah::ProblemSetupException( msg.str(), __FILE__, __LINE__ );
+              }
+              const BndCondSpec rhsBCSpec = {rhs_name(), "none", 0.0, DIRICHLET, DOUBLE_TYPE };
+              bcHelper.add_boundary_condition(bndName, rhsBCSpec);
+            }
+            
+            break;
+          }
+          case USER:{
+            // parse through the list of user specified BCs that are relevant to this transport equation
+            break;
+          }
+            
+          default:
+            break;
+        }
+      }
     }
     
     void apply_initial_boundary_conditions( const GraphHelper& graphHelper,
                                            WasatchBCHelper& bcHelper )
     {
-      //assert(false); // not ready
+      const Category taskCat = INITIALIZATION;
+      // apply velocity boundary condition, if specified
+      bcHelper.apply_boundary_condition<FieldT>(this->initial_condition_tag(), taskCat);
+      
     }
     
     
     void apply_boundary_conditions( const GraphHelper& graphHelper,
                                    WasatchBCHelper& bcHelper )
     {
-      //assert( false );  // not ready
+      const Category taskCat = ADVANCE_SOLUTION;
+      // set bcs for momentum - use the TIMEADVANCE expression
+      bcHelper.apply_boundary_condition<FieldT>( Expr::Tag(this->solnVarName_,Expr::STATE_NONE), taskCat );
+      // set bcs for velocity
+      bcHelper.apply_boundary_condition<FieldT>( this->rhs_tag(), taskCat, true );
     }
     
     void setup_diffusive_flux( FieldTagInfo& rhsInfo ){}
