@@ -474,11 +474,25 @@ UnifiedScheduler::runTask( DetailedTask*         task,
 
       //get these ghost cells to contiguous arrays so they can be copied to host.
       performInternalGhostCellCopies(task);  //TODO: Fix for multiple GPUs
-
+      cerrLock.lock();
+      {
+        gpu_stats << myRankThread() << " Finished performInternalGhostCellCopies for task: " << task->getName() << std::endl;
+      }
+      cerrLock.unlock();
       copyAllGpuToGpuDependences(task, deviceVars, ghostVars);
+      cerrLock.lock();
+	  {
+	    gpu_stats << myRankThread() << " Finished copyAllGpuToGpuDependences for task: " << task->getName() << std::endl;
+      }
+	  cerrLock.unlock();
+
       //copy all dependencies to arrays
       copyAllExtGpuDependenciesToHost(task, deviceVars, ghostVars);
-
+      cerrLock.lock();
+	  {
+	    gpu_stats << myRankThread() << " Finished copyAllExtGpuDependenciesToHost for task: " << task->getName() << std::endl;
+      }
+	  cerrLock.unlock();
       //In order to help copy values to another on-node GPU or another MPI rank, ghost cell data
       //was placed in a var in the patch it is *going to*.  It helps reuse gpu dw engine code this way.
       //But soon, after this task is done, we are likely going to receive a different region of that patch
@@ -488,14 +502,32 @@ UnifiedScheduler::runTask( DetailedTask*         task,
     }
 #endif
     if (Uintah::Parallel::usingMPI()) {
+#ifdef HAVE_CUDA
+	  cerrLock.lock();
+  	  {
+  	    gpu_stats << myRankThread() << " Starting postMPISends for task: " << task->getName() << std::endl;
+	  }
+  	  cerrLock.unlock();
+#endif
       postMPISends(task, iteration, thread_id);
+#ifdef HAVE_CUDA
+	  cerrLock.lock();
+  	  {
+  	    gpu_stats << myRankThread() << " Finished postMPISends for task: " << task->getName() << std::endl;
+	  }
+  	  cerrLock.unlock();
+#endif
     }
 #ifdef HAVE_CUDA
 
     if (Uintah::Parallel::usingDevice()) {
       task->deleteTaskGpuDataWarehouses();
+      cerrLock.lock();
+      {
+        gpu_stats << myRankThread() << " Finished all GPU cleanup for this GPU task: " << task->getName() << std::endl;
+      }
+      cerrLock.unlock();
     }
-
 #endif
     task->done(dws);  // should this be timed with taskstart? - BJW
 
@@ -1077,6 +1109,11 @@ UnifiedScheduler::runTasks( int thread_id )
         //TODO: Move this into the gpuInitReady section and then test it.
         //Do GPU to GPU ghost cell copies if device ghost cells exist.
         performInternalGhostCellCopies(readyTask);
+        cerrLock.lock();
+		{
+		  gpu_stats << myRankThread() << " UnifiedScheduler::runTasks() - Finished performInternalGhostCellCopies for task: " << readyTask->getName() << std::endl;
+		}
+		cerrLock.unlock();
         dts->addInitiallyReadyDeviceTask(readyTask);
 
       } else if (gpuRunReady) {
@@ -1086,6 +1123,11 @@ UnifiedScheduler::runTasks( int thread_id )
         //    initiateD2H(readyTask);
         //  }
         //}
+        cerrLock.lock();
+  		{
+  		  gpu_stats << myRankThread() << " UnifiedScheduler::runTasks() - Preparing to run task: " << readyTask->getName() << std::endl;
+  		}
+  		cerrLock.unlock();
         runTask(readyTask, currentIteration, thread_id, Task::GPU);
         //postD2HCopies(readyTask);
         //initiateD2HCopies(readyTask);
@@ -1093,6 +1135,11 @@ UnifiedScheduler::runTasks( int thread_id )
       } else if (gpuPending) {
 
         //The GPU task has completed. All of the computes data is now valid and should be marked as such.
+		cerrLock.lock();
+		{
+		  gpu_stats << myRankThread() << " UnifiedScheduler::runTasks() - The gpu task has completed for: " << readyTask->getName() << std::endl;
+		}
+		cerrLock.unlock();
         markDeviceComputesDataAsValid(readyTask);
 
         //The Task GPU Datawarehouses are no longer needed.  Delete them on the host and device.
@@ -4887,7 +4934,7 @@ void UnifiedScheduler::performInternalGhostCellCopies(DetailedTask* dtask) {
         cerrLock.lock();
         {
           gpu_stats << myRankThread()
-              << " No internal ghost cell copies needed for this task \""
+              << " A No internal ghost cell copies needed for this task \""
               << dtask->getName() << "\"\'s old DW"<< endl;
         }
         cerrLock.unlock();
@@ -4901,7 +4948,7 @@ void UnifiedScheduler::performInternalGhostCellCopies(DetailedTask* dtask) {
         cerrLock.lock();
         {
           gpu_stats << myRankThread()
-              << " No internal ghost cell copies needed for this task \""
+              << " B No internal ghost cell copies needed for this task \""
               << dtask->getName() << "\"\'s new DW"<< endl;
         }
         cerrLock.unlock();
