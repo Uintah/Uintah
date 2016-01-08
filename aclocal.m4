@@ -796,11 +796,11 @@ done
 # Look for the CUDA compiler, "nvcc"
 AC_PATH_PROG([NVCC], [nvcc], [no], [$with_cuda/bin])
 
-# Allow GPU code generation for specific compute capabilities: 2.0, 2.1, 3.0, 3.5
-#   We only support code generation for Fermi and Kepler architectures now (APH 09/28/13)
-if test \( "$cuda_gencode" != "20" \) -a \( "$cuda_gencode" != "21" \) -a \( "$cuda_gencode" != "30" \) -a \( "$cuda_gencode" != "35" \); then
+# Allow GPU code generation for specific compute capabilities: 3.0, 3.5, 5.0, 5.2
+#   NOTE: We only support code generation for Kepler and Maxwell architectures now (APH 01/08/16)
+if test \( "$cuda_gencode" != "30" \) -a \( "$cuda_gencode" != "35" \) -a \( "$cuda_gencode" != "50" \) -a \( "$cuda_gencode" != "52" \); then
   AC_MSG_RESULT([no])
-  AC_MSG_ERROR( [The specified value provided: "--enable-gencode=$cuda_gencode" is invalid, must be: 2.0, 2.1, 3.0, 3.5] )
+  AC_MSG_ERROR( [The specified value provided: "--enable-gencode=$cuda_gencode" is invalid, must be: 3.0, 3.5, 5.0, 5.2] )
 fi  
   
 NVCC_CXXFLAGS="-arch=sm_$cuda_gencode "
@@ -821,7 +821,7 @@ if test "$debug" != "no"; then
   # this bug is fixed in the nvcc compiler/linker, the O2 should
   # change back to O0.
   #
-  NVCC_CXXFLAGS="-g -G -O2 -lineinfo $NVCC_CXXFLAGS $_sci_includes"
+  NVCC_CXXFLAGS="-g -G -O0 -lineinfo $NVCC_CXXFLAGS $_sci_includes"
 else
   NVCC_CXXFLAGS="$NVCC_CXXFLAGS $_sci_includes"
 fi
