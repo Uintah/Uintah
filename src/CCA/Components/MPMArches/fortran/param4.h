@@ -1,7 +1,7 @@
 c
 c The MIT License
 c
-c Copyright (c) 1997-2015 The University of Utah
+c Copyright (c) 1997-2016 The University of Utah
 c
 c Permission is hereby granted, free of charge, to any person obtaining a copy
 c of this software and associated documentation files (the "Software"), to
