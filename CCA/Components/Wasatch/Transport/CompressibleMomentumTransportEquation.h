@@ -205,7 +205,8 @@ namespace WasatchCore{
     {
       setup();
     }
-    
+
+    //----------------------------------------------------------------------------
     
     void setup_boundary_conditions( WasatchBCHelper& bcHelper,
                                    GraphCategories& graphCat )
@@ -267,6 +268,8 @@ namespace WasatchCore{
         }
       }
     }
+
+    //----------------------------------------------------------------------------
     
     void apply_initial_boundary_conditions( const GraphHelper& graphHelper,
                                            WasatchBCHelper& bcHelper )
@@ -277,6 +280,7 @@ namespace WasatchCore{
       
     }
     
+    //----------------------------------------------------------------------------
     
     void apply_boundary_conditions( const GraphHelper& graphHelper,
                                    WasatchBCHelper& bcHelper )
@@ -290,6 +294,9 @@ namespace WasatchCore{
     
     void setup_diffusive_flux( FieldTagInfo& rhsInfo ){}
     void setup_source_terms  ( FieldTagInfo& rhsInfo, Expr::TagList& srcTags ){}
+
+    //----------------------------------------------------------------------------
+    
     Expr::ExpressionID setup_rhs( FieldTagInfo& info, const Expr::TagList& srcTags )
     {
       
@@ -300,6 +307,8 @@ namespace WasatchCore{
       
       return factory.register_expression( scinew RHSBuilder( rhsTag_, info, Expr::TagList(), densTag_, false, true, Expr::Tag() ) );
     }
+
+    //----------------------------------------------------------------------------
     
     void setup_convective_flux( FieldTagInfo& rhsInfo )
     {
@@ -325,6 +334,8 @@ namespace WasatchCore{
                                                  *gc_[ADVANCE_SOLUTION]->exprFactory,
                                                  rhsInfo );
     }
+
+    //----------------------------------------------------------------------------
     
     Expr::ExpressionID initial_condition( Expr::ExpressionFactory& exprFactory )
     {
@@ -337,6 +348,8 @@ namespace WasatchCore{
     }
   };
 
+  //============================================================================
+  
   /**
    * \class CompressibleMomentumTransportEquation
    * \date November, 2015
