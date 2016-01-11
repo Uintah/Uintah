@@ -91,6 +91,7 @@ SimulationState::SimulationState(ProblemSpecP &ps)
   //__________________________________
   d_elapsed_time = 0.0;
 
+  d_adjustDelT                = true;
   d_lockstepAMR               = false;
   d_updateOutputInterval      = false;
   d_updateCheckpointInterval  = false;

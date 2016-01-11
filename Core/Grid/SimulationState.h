@@ -222,6 +222,9 @@ public:
   bool isRegridTimestep() { return d_isRegridTimestep; }
   void setRegridTimestep(bool ans) { d_isRegridTimestep = ans; }
 
+  bool adjustDelT() { return d_adjustDelT; }
+  void adjustDelT(bool ans) { d_adjustDelT = ans; }
+  
   bool isLockstepAMR() { return d_lockstepAMR; }
   void setIsLockstepAMR(bool ans) {d_lockstepAMR = ans;}
   
@@ -247,6 +250,7 @@ public:
 
   SimulationTime* d_simTime;
 
+  bool d_adjustDelT;
   bool d_lockstepAMR;
   bool d_updateCheckpointInterval;
   bool d_updateOutputInterval;
