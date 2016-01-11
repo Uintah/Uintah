@@ -79,7 +79,7 @@ WARNING
 
     virtual void scheduleInitialize(SchedulerP& sched,
                                     const LevelP& level);
-                                    
+
     virtual void scheduleRestartInitialize(SchedulerP& sched,
                                            const LevelP& level);
 
@@ -93,7 +93,7 @@ WARNING
 
   private:
     enum ORDER {lowOrder, highOrder};
-    
+
     //__________________________________
     //  container to hold
     struct Qstats{
@@ -115,7 +115,7 @@ WARNING
       VarLabel* Qsum4_Label;
       VarLabel* Qmean4_Label;
       VarLabel* Qkurtosis_Label;
-      
+
       std::map<ORDER,bool> isInitialized;
 
       const Uintah::TypeDescription* subtype;
@@ -124,11 +124,20 @@ WARNING
         std::cout << name << " matl: " << matl << " subtype: " << subtype->getName() << "\n";
       };
     };
-    
-    // For Reynolds Shear Stress
-    VarLabel* d_uv_primeLabel;
-    VarLabel* d_uw_primeLabel;
-    VarLabel* d_vw_primeLabel;
+
+    //__________________________________    
+    // For Reynolds Shear Stress computations
+    int  d_startTimeTimestepReynoldsStress;
+    bool d_isReynoldsStressInitialized; // have the sum label been initialized for the RS terms
+    bool d_computeReynoldsStress;       // on/off switch
+    int  d_RS_matl;                     // material index used for Reynolds Shear Stress variables
+    VarLabel* d_velPrimeLabel;          // u'v', v'w', w'u'
+    VarLabel* d_velSum_Label;           // sum(u'v'), sum(v'w'), sum(w'u')              over timesteps
+    VarLabel* d_velMean_Label;          // sum(u'v')/N, sum(v'w')/N, sum(w'u')/N        over timesteps where N = number of timesteps
+
+    inline Vector Multiply(Vector a, Vector b){
+      return Vector(a.x()*b.y(), a.y()*b.z(), a.z()*b.x() );
+    }
 
     //__________________________________
     //
@@ -137,7 +146,7 @@ WARNING
                     const MaterialSubset*,
                     DataWarehouse*,
                     DataWarehouse* new_dw);
-                    
+
     void restartInitialize(const ProcessorGroup*,
                            const PatchSubset* patches,
                            const MaterialSubset*,
@@ -161,8 +170,9 @@ WARNING
                        DataWarehouse* new_dw,
                        const Patch*   patch,
                        Qstats Q);
-                       
-    void computeReynoldsStress( DataWarehouse* new_dw,
+
+    void computeReynoldsStress( DataWarehouse* old_dw,
+                                DataWarehouse* new_dw,
                                 const Patch*    patch,
                                 Qstats Q);
 
@@ -201,7 +211,7 @@ WARNING
     const Material* d_matl;
     MaterialSet* d_matlSet;
     const MaterialSubset* d_matSubSet;
-    
+
   };
 
 

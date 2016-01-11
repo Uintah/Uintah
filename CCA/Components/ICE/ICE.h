@@ -1019,7 +1019,10 @@ namespace Uintah {
        const VarLabel* src;
        const VarLabel* var_Lagrangian;
        const VarLabel* var_adv;
+       const VarLabel* debugVector;
       };
+      
+      
       struct AMR_refluxVariable {
        const MaterialSubset* matls;
        const MaterialSet* matlSet;
@@ -1039,8 +1042,8 @@ namespace Uintah {
        ICEModelSetup();
        virtual ~ICEModelSetup();
        virtual void registerTransportedVariable(const MaterialSet* matlSet,
-                                           const VarLabel* var,
-                                           const VarLabel* src);
+                                                const VarLabel* var,
+                                                const VarLabel* src);
 
        virtual void registerAMR_RefluxVariable(const MaterialSet* matls,
 						     const VarLabel* var);

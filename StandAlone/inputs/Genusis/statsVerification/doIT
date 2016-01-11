@@ -4,7 +4,25 @@
 #  domain.  Those data are then used in a gunplot script and a matlab script "stats_verification.m"
 #  You must enable 
 #   ICE: define SCALAR-F-SINEWAVE
-#  for this to work.  This script is designed to verify the 
+#  for this to work.  This script is designed to verify the statistics module
+#
+#
+#    <DataAnalysis>   
+#      <Module name = "statistics">
+#         <material>BackgroundGas</material>
+#         <timeStart>   0.0  </timeStart>
+#         <timeStop>   100  </timeStop>
+#         <computeHigherOrderStats> true </computeHigherOrderStats>
+#         
+#        <Variables>
+#          <analyze label="scalar-f"/>
+#          <!--<analyze label="scalar-f_dbgVector"/> -->
+#           <analyze label="scalar-f_dbgVector" computeReynoldsStress="true" />
+#        </Variables>
+#      </Module>         
+#    </DataAnalysis>
+#______________________________________________________________________
+
 
 
 if (1) then
@@ -15,21 +33,64 @@ set uda = "advectScalar.uda"
 
 endif
 
-#set uda = "masterUda"
 
-timeextract -v scalar-f          -i 10 10 1 -uda $uda > & out-f
-timeextract -v variance_scalar-f -i 10 10 1 -uda $uda > & out-variance
-timeextract -v skewness_scalar-f -i 10 10 1 -uda $uda > & out-skewness
-timeextract -v kurtosis_scalar-f -i 10 10 1 -uda $uda > & out-kurtosis
+#set uda = "masterUda_123"
+
+timeextract -v scalar-f           -i 10 10 0 -uda $uda > & out-f
+timeextract -v variance_scalar-f  -i 10 10 0 -uda $uda > & out-variance
+timeextract -v skewness_scalar-f  -i 10 10 0 -uda $uda > & out-skewness
+timeextract -v kurtosis_scalar-f  -i 10 10 0 -uda $uda > & out-kurtosis
+
+#set uda = "masterUda_23"
+timeextract -v scalar-f_dbgVector           -i 10 10 0 -uda $uda > & out-V
+timeextract -v variance_scalar-f_dbgVector  -i 10 10 0 -uda $uda > & out-varianceV
+timeextract -v skewness_scalar-f_dbgVector  -i 10 10 0 -uda $uda > & out-skewnessV
+timeextract -v kurtosis_scalar-f_dbgVector  -i 10 10 0 -uda $uda > & out-kurtosisV
+timeextract -v uv_vw_wu_prime               -i 10 10 0 -uda $uda > & out-uv_prime
+
 
 sed -i '1,3d' out-f
 sed -i '1,3d' out-variance
 sed -i '1,3d' out-skewness
 sed -i '1,3d' out-kurtosis
 
-echo "_______________________Variance"
+sed -i '1,3d' out-V
+sed -i '1,3d' out-varianceV
+sed -i '1,3d' out-skewnessV
+sed -i '1,3d' out-kurtosisV
+sed -i '1,3d' out-uv_prime
+
+
+cat out-V | tr -d "[]" > tmp
+mv tmp out-V
+
+cat out-varianceV | tr -d "[]" > tmp
+mv tmp out-varianceV
+
+cat out-skewnessV | tr -d "[]" > tmp
+mv tmp out-skewnessV
+
+cat out-kurtosisV | tr -d "[]" > tmp
+mv tmp out-kurtosisV
+
+cat out-uv_prime | tr -d "[]" > tmp
+mv tmp out-uv_prime
+
+
+echo "_______________________Variance scalar"
 tail -n 3 out-variance
-echo "_______________________skewness"
+echo "_______________________skewness scalar"
 tail -n 3 out-skewness
-echo "_______________________kurtosis"
+echo "_______________________kurtosis scalar"
 tail -n 3 out-kurtosis
+echo "_______________________dbgV"
+tail -n 3 out-V
+echo "_______________________Variance scalarV"
+tail -n 3 out-varianceV
+echo "_______________________skewness scalarV"
+tail -n 3 out-skewnessV
+echo "_______________________kurtosis scalarV"
+tail -n 3 out-kurtosisV
+echo "_______________________uv, vw, wu _prime"
+tail -n 3 out-uv_prime
+

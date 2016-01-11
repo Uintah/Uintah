@@ -201,6 +201,7 @@ ICE::~ICE()
         TransportedVariable* tvar = *t_iter;
         VarLabel::destroy(tvar->var_Lagrangian);
         VarLabel::destroy(tvar->var_adv);
+        VarLabel::destroy(tvar->debugVector);
         delete tvar;
     }
     cout_doing << d_myworld->myrank() << " Doing: destorying refluxing variables " << endl;
@@ -1851,9 +1852,11 @@ void ICE::scheduleConservedtoPrimitive_Vars(SchedulerP& sched,
       
       if( where == "afterAdvection"){
         task->computes(tvar->var,   tvar->matls);
+        task->computes(tvar->debugVector,tvar->matls);
       }
       if( where == "finalizeTimestep"){
         task->modifies(tvar->var,   tvar->matls, fat);
+        task->modifies(tvar->debugVector,tvar->matls);
       }
       
     }
@@ -5490,6 +5493,14 @@ void ICE::conservedtoPrimitive_Vars(const ProcessorGroup* /*pg*/,
             new_dw->allocateAndPut(q_CC, tvar->var,     indx, patch);
             new_dw->get(q_adv,           tvar->var_adv, indx, patch, gn,0);
             q_CC.initialize(0.0);
+
+/*`==========TESTING==========*/
+#ifdef SCALAR_F_SINEWAVE
+            CCVariable<Vector> qV_CC;
+            new_dw->allocateAndPut(qV_CC, tvar->debugVector, indx, patch);
+            qV_CC.initialize(Vector(0));
+#endif 
+/*===========TESTING==========`*/            
             
             for(CellIterator iter = patch->getCellIterator(); !iter.done(); iter++) {
               IntVector c = *iter;
@@ -5500,8 +5511,10 @@ void ICE::conservedtoPrimitive_Vars(const ProcessorGroup* /*pg*/,
               double A     = 10;
               double omega = 100;
               double time = d_sharedState->getElapsedTime();
+              double amp = A * sin(omega * time);
+              q_CC[c] = amp;
               
-              q_CC[c] = A * sin(omega * time);
+              qV_CC[c]= Vector( amp, 0.5 * amp, 0.25 * amp );
 #endif 
 /*===========TESTING==========`*/
               
@@ -5977,7 +5990,8 @@ ICE::ICEModelSetup::ICEModelSetup()
 ICE::ICEModelSetup::~ICEModelSetup()
 {
 }
-
+//______________________________________________________________________
+//
 void ICE::ICEModelSetup::registerTransportedVariable(const MaterialSet* matlSet,
                                                      const VarLabel* var,
                                                      const VarLabel* src)
@@ -5987,8 +6001,9 @@ void ICE::ICEModelSetup::registerTransportedVariable(const MaterialSet* matlSet,
   t->matls   = matlSet->getSubset(0);
   t->var = var;
   t->src = src;
-  t->var_Lagrangian = VarLabel::create(var->getName()+"_L", var->typeDescription());
-  t->var_adv        = VarLabel::create(var->getName()+"_adv", var->typeDescription());
+  t->var_Lagrangian = VarLabel::create(var->getName()+"_L",     var->typeDescription());
+  t->var_adv        = VarLabel::create(var->getName()+"_adv",   var->typeDescription());
+  t->debugVector    = VarLabel::create(var->getName()+"_dbgVector", CCVariable<Vector>::getTypeDescription());
   tvars.push_back(t);
 }
 

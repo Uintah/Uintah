@@ -6,6 +6,7 @@ set title "Scalar-f =  A * sin(omega * time),  A = 10, omega = 100"
 
 set multiplot
 set size 1.0,0.24
+set xrange[0:10]
 
 set origin 0.0, 0.75
 plot 'out-f' using 1:2 with linespoints t 'scalar-f'
