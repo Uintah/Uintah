@@ -69,7 +69,7 @@ void visit_DeltaTMaxCallback   (char *val, void *cbdata);
 void visit_DeltaTFactorCallback(char *val, void *cbdata);
 void visit_MaxWallTimeCallback (char *val, void *cbdata);
  
-void visit_VariableTableCallback(char *val, void *cbdata);
+void visit_UPSVariableTableCallback(char *val, void *cbdata);
 void visit_OutputIntervalVariableTableCallback(char *val, void *cbdata);
 
 } // End namespace Uintah

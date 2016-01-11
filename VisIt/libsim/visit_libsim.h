@@ -85,20 +85,26 @@ typedef struct
 
 typedef struct
 {
+  std::string name;
+  double min;
+  double max;
+
+} uintah_min_max_data;
+
+
+typedef struct
+{
   // Uintah data members
   SimulationController *simController;
   GridP gridP;
   
   TimeStepInfo* stepInfo;
 
-  // Specialize boolean flag to skip calling adjustDelT on the
-  // next time step if the user has modified the variable delt.
-  bool overrideDelT;
-
   int cycle;
 
   double time;
   double delt;
+  double delt_next;
   double elapsedt;
 
   std::string message;
@@ -115,8 +121,10 @@ typedef struct
 
   bool isProc0;
 
-  std::vector< uintah_variable_data > variables;
+  std::vector< uintah_variable_data > upsVariables;
   std::vector< uintah_variable_data > outputIntervals;
+
+  std::vector< uintah_min_max_data > minMaxVariables;
 
 } visit_simulation_data;
 
@@ -125,6 +133,16 @@ void visit_LibSimArguments(int argc, char **argv);
 void visit_InitLibSim(visit_simulation_data *sim);
 void visit_EndLibSim(visit_simulation_data *sim);
 void visit_CheckState(visit_simulation_data *sim);
+
+void visit_UpdateSimData( visit_simulation_data *sim, 
+			  GridP currentGrid,
+			  double time, double delt, double delt_next,
+			  double wallTime, std::string msg );
+
+void visit_GetOutputIntervals( visit_simulation_data *sim );
+void visit_GetAnalysisVars( visit_simulation_data *sim );
+void visit_GetUPSVars( visit_simulation_data *sim );
+void visit_UpdateUPSVars( visit_simulation_data *sim );
 
 } // End namespace Uintah
 

@@ -187,16 +187,13 @@ AMRSimulationController::run()
   // If VisIt has been included into the build, initialize the lib sim
   // so that a user can connect to the simulation via VisIt.
 #ifdef HAVE_VISIT
+  visit_simulation_data visitSimData;
+
   if( do_visit )
   {
-    d_visit_simulation_data.simController = this;
-    d_visit_simulation_data.overrideDelT = false;
+    visitSimData.simController = this;
 
-#ifdef HAVE_MPICH
-  d_visit_simulation_data.isProc0 = isProc0_macro;
-#endif
-
-    visit_InitLibSim( &d_visit_simulation_data );
+    visit_InitLibSim( &visitSimData );
   }
 #endif
 
@@ -268,22 +265,26 @@ AMRSimulationController::run()
       }
     }
      
-    d_sharedState->d_prev_delt = delt;
-    iterations++;
- 
     // get delt and adjust it
     DataWarehouse* newDW = d_scheduler->getLastDW();
     newDW->get(delt_var, d_sharedState->get_delt_label());
-
     delt = delt_var;
-
-    // delt adjusted based on timeinfo parameters
+    
 #ifdef HAVE_VISIT
-    // Skip calling adjustDelT for this next time step if the user
-    // modified the value during the previous time step.
-    if( !do_visit || (do_visit && !d_visit_simulation_data.overrideDelT) )
+    // If the user modified delt during the previous time step skip
+    // calling adjustDelT for this next time step.
+
+    // Note: this code is not explicit to VisIt but it is currently
+    // the only component that is making use of the ability to
+    // overirde adjusting delta T.
+    if( do_visit && d_sharedState->adjustDelT() == false )
+    {
+      d_sharedState->adjustDelT(true);
+    }
+    else
 #endif
     {
+      // delt adjusted based on timeinfo parameters
       adjustDelT( delt, d_sharedState->d_prev_delt, first, time );
       newDW->override(delt_vartype(delt), d_sharedState->get_delt_label());
     }
@@ -458,91 +459,43 @@ AMRSimulationController::run()
       first = false;
     }
 
-    // If VisIt has been included into the build, check the lib sim state
-    // to see if there is a connection and if so if anything needs to be
-    // done.
+    d_sharedState->d_prev_delt = delt;
+
+    ++iterations;
+    
+    // If VisIt has been included into the build, check the lib sim
+    // state to see if there is a connection and if so check to see if
+    // anything needs to be done.
 #ifdef HAVE_VISIT
-     if( do_visit ) {
-       
-       d_visit_simulation_data.gridP = currentGrid;
-       d_visit_simulation_data.time  = time;
-       d_visit_simulation_data.delt  = delt;
-       d_visit_simulation_data.overrideDelT = false;
-       d_visit_simulation_data.elapsedt = getWallTime();
-       d_visit_simulation_data.cycle =
-         d_sharedState->getCurrentTopLevelTimeStep();
-       d_visit_simulation_data.message = std::string("");;
+    if( do_visit )
+    {
+      // Get the new delt so the user can change the value.
+      d_scheduler->getLastDW()->get(delt_var, d_sharedState->get_delt_label());
+      double delt_next = delt_var;
+      adjustDelT( delt_next, delt, first, time );
 
-       d_visit_simulation_data.variables.clear();
-       d_visit_simulation_data.outputIntervals.clear();
-
-       // Add in the user viewable/settable variables.
-       uintah_variable_data var;
-
-       if (d_output )
-       {
-         std::string name;
-         double val;
-
-         if( d_output->getOutputInterval() > 0 )
-         {
-           name = d_sharedState->get_outputInterval_label()->getName();
-           val = d_output->getOutputInterval();
-         }
-         else
-         {
-           name = d_sharedState->get_outputTimestepInterval_label()->getName();
-           val = d_output->getOutputTimestepInterval();
-         }
-
-         var.name = name;
-         var.value = val;
-         var.modified = false;
-         d_visit_simulation_data.outputIntervals.push_back(var);
-
-         if( d_output->getCheckpointInterval() > 0 )
-         {
-           name = d_sharedState->get_checkpointInterval_label()->getName();
-           val = d_output->getCheckpointInterval();
-         }
-         else
-         {
-           name = d_sharedState->get_checkpointTimestepInterval_label()->getName();
-           val = d_output->getCheckpointTimestepInterval();
-         }
-
-         var.name = name;
-         var.value = val;
-         var.modified = false;
-         d_visit_simulation_data.outputIntervals.push_back(var);
-       }
-
-       // Check the state.
-       visit_CheckState( &d_visit_simulation_data );
-
-       // User issued a termination.
-       if( d_visit_simulation_data.simMode == VISIT_SIMMODE_TERMINATED )
-         break;
-
-       // Loop through the user viewable/settable variables and update
-       // those that have been modified.
-       std::vector< uintah_variable_data > &vars =
-         d_visit_simulation_data.variables;
-
-       for( int i=0; i<vars.size(); ++i )
-       {
-         uintah_variable_data &var = vars[i];
-
-         if( var.modified )
-         {
-           // if( var.name == SOMEVAR )
-           // {
-           // }
-         }
-       }
-     }
+      // Update all of the simulation grid and time dependent
+      // variables.
+      visit_UpdateSimData( &visitSimData, currentGrid,
+			   time, delt, delt_next, getWallTime(),
+			   std::string("") );
+      
+      // Get the user viewable/settable variables.
+      visit_GetOutputIntervals( &visitSimData );
+      visit_GetAnalysisVars( &visitSimData );
+      visit_GetUPSVars( &visitSimData );
+      
+      // Check the state.
+      visit_CheckState( &visitSimData );
+      
+      // User issued a termination.
+      if( visitSimData.simMode == VISIT_SIMMODE_TERMINATED )
+	break;
+      
+      // Update the user settable variables.
+      visit_UpdateUPSVars( &visitSimData );
+    }
 #endif
-     
   } // end while ( time is not up, etc )
 
   // print for the final timestep, as the one above is in the middle
@@ -557,7 +510,7 @@ AMRSimulationController::run()
   // user can have once last chance see their data via VisIt.
 #ifdef HAVE_VISIT
    if( do_visit ) {
-     visit_EndLibSim( &d_visit_simulation_data );
+     visit_EndLibSim( &visitSimData );
    }
 #endif
 
