@@ -3909,7 +3909,7 @@ fi
 if test "${enable_gencode+set}" = set; then :
   enableval=$enable_gencode; cuda_gencode="$enableval"
 else
-  cuda_gencode=${gencode='20'}
+  cuda_gencode=${gencode='30'}
 fi
 
   sci_arg_enable_list="$sci_arg_enable_list --enable-gencode --disable-gencode"
@@ -35935,15 +35935,15 @@ for i in $CXXFLAGS; do
   fi
 done
 
-if test "$debug" != "no"; then
+if test "$debug" = "yes"; then
   #
-  # Note, the -O2 below really should be -O0, but at least in the nvcc
-  # (version 5.5.0) on aurora this causes debug builds not to be able
-  # to link (when using -dlink) as symbols go missing.  If and when
-  # this bug is fixed in the nvcc compiler/linker, the O2 should
-  # change back to O0.
+  # NOTE: the -O2 below really should be -O0, but for some versions of
+  # NVCC, specifically on aurora, this causes debug builds not to be able
+  # to link when using -dlink, as symbols go missing. This issue seems to
+  # be Wasatch-specific, but if it gets resolved, the -O2 should be
+  # changed to -O0.  (APH 01/11/16)
   #
-  NVCC_CXXFLAGS="-g -G -O0 -lineinfo $NVCC_CXXFLAGS $_sci_includes"
+  NVCC_CXXFLAGS="-g -G -O2 -lineinfo $NVCC_CXXFLAGS $_sci_includes"
 else
   NVCC_CXXFLAGS="$NVCC_CXXFLAGS $_sci_includes"
 fi

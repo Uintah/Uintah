@@ -558,7 +558,7 @@ SCI_ARG_ENABLE(gencode,
   AC_HELP_STRING(--enable-gencode,
                  Specify compute capability for GPU code generation (allowable values: 20, 21, 30, 35)),
   [cuda_gencode="$enableval"],
-  [cuda_gencode=${gencode='20'}])
+  [cuda_gencode=${gencode='30'}])
   
 SCI_ARG_ENABLE(exename,
   AC_HELP_STRING(--enable-exename=<name>,
