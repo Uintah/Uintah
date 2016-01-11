@@ -141,6 +141,8 @@ visit_ControlCommandCallback(const char *cmd, const char *args, void *cbdata)
     if(sim->simMode == VISIT_SIMMODE_STOPPED ||
        sim->simMode == VISIT_SIMMODE_FINISHED)
     {
+      VisItUI_setValueS("SIMULATION_ENABLE_BUTTON", "Save", 0);
+
       Output *output = sim->simController->getOutput();
       SchedulerP schedulerP = sim->simController->getSchedulerP();
       
@@ -148,8 +150,6 @@ visit_ControlCommandCallback(const char *cmd, const char *args, void *cbdata)
 						sim->delt,
 						sim->gridP,
 						schedulerP );
-      
-      VisItUI_setValueS("SIMULATION_ENABLE_BUTTON", "Save", 0);
     }
     else
       VisItUI_setValueS("SIMULATION_MESSAGE_BOX",
@@ -163,6 +163,8 @@ visit_ControlCommandCallback(const char *cmd, const char *args, void *cbdata)
     if(sim->simMode == VISIT_SIMMODE_STOPPED ||
        sim->simMode == VISIT_SIMMODE_FINISHED)
     {
+      VisItUI_setValueS("SIMULATION_ENABLE_BUTTON", "Checkpoint", 0);
+
       Output *output = sim->simController->getOutput();
       SchedulerP schedulerP = sim->simController->getSchedulerP();
       
@@ -170,8 +172,6 @@ visit_ControlCommandCallback(const char *cmd, const char *args, void *cbdata)
 						    sim->delt,
 						    sim->gridP,
 						    schedulerP );
-      
-      VisItUI_setValueS("SIMULATION_ENABLE_BUTTON", "Checkpoint", 0);
     }
     else
       VisItUI_setValueS("SIMULATION_MESSAGE_BOX",
@@ -315,16 +315,15 @@ void visit_DeltaTCallback(char *val, void *cbdata)
 {
   visit_simulation_data *sim = (visit_simulation_data *)cbdata;
 
+  SimulationStateP simStateP = sim->simController->getSimulationStateP();
   DataWarehouse* newDW = sim->simController->getSchedulerP()->getLastDW();
 
-  double value;
+  double delt;
 
-  sscanf (val, "%lf", &value);
+  sscanf (val, "%lf", &delt);
 
-  newDW->override(delt_vartype(value),
-		  sim->simController->getSimulationStateP()->get_delt_label());
-
-  sim->overrideDelT = true;
+  simStateP->adjustDelT( false );
+  newDW->override(delt_vartype(delt), simStateP->get_delt_label());
 }
 
 void visit_DeltaTMinCallback(char *val, void *cbdata)
@@ -371,7 +370,7 @@ void visit_MaxWallTimeCallback(char *val, void *cbdata)
   sim->simController->getSimulationTime()->max_wall_time = value;
 }
 
-void visit_VariableTableCallback(char *val, void *cbdata)
+void visit_UPSVariableTableCallback(char *val, void *cbdata)
 {
   visit_simulation_data *sim = (visit_simulation_data *)cbdata;
 
@@ -380,7 +379,7 @@ void visit_VariableTableCallback(char *val, void *cbdata)
 
   sscanf (val, "%d | %d | %lf", &row, &column, &value);
 
-  uintah_variable_data &var = sim->variables[row];
+  uintah_variable_data &var = sim->upsVariables[row];
 
   var.value = value;
   var.modified = true;

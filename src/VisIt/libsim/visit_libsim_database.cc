@@ -53,44 +53,44 @@ namespace Uintah {
 static int numProcLabels = 25;
 static std::string procLabels[2][25] = { { "processor/id",
 
-					   "processor/memory/Base",
-					   "processor/memory/Max",
-					   "processor/memory/Used",
-					   "processor/memory/Resident",
+                                           "processor/memory/Base",
+                                           "processor/memory/Max",
+                                           "processor/memory/Used",
+                                           "processor/memory/Resident",
 
-					   "processor/time/Recompile",
-					   "processor/time/Regridding",
-					   "processor/time/Regrid-schedule",
-					   "processor/time/Regrid-copydata",
-					   "processor/time/LoadBalance",
-					   "processor/time/TaskExec",
-					   "processor/time/TaskGlobalComm",
-					   "processor/time/TaskLocalComm",
-					   "processor/time/TaskWaitCommTime",
-					   "processor/time/Output",
-					   "processor/time/TaskWaitThreadTime",
+                                           "processor/time/Recompile",
+                                           "processor/time/Regridding",
+                                           "processor/time/Regrid-schedule",
+                                           "processor/time/Regrid-copydata",
+                                           "processor/time/LoadBalance",
+                                           "processor/time/TaskExec",
+                                           "processor/time/TaskGlobalComm",
+                                           "processor/time/TaskLocalComm",
+                                           "processor/time/TaskWaitCommTime",
+                                           "processor/time/Output",
+                                           "processor/time/TaskWaitThreadTime",
 
-					   "processor/mpi/TotalReduce",
-					   "processor/mpi/TotalSend",
-					   "processor/mpi/TotalRecv",
-					   "processor/mpi/TotalTask",
-					   "processor/mpi/TotalReduceMPI",
-					   "processor/mpi/TotalSendMPI",
-					   "processor/mpi/TotalRecvMPI",
-					   "processor/mpi/TotalTestMPI",
-					   "processor/mpi/TotalWaitMPI" },
+                                           "processor/mpi/TotalReduce",
+                                           "processor/mpi/TotalSend",
+                                           "processor/mpi/TotalRecv",
+                                           "processor/mpi/TotalTask",
+                                           "processor/mpi/TotalReduceMPI",
+                                           "processor/mpi/TotalSendMPI",
+                                           "processor/mpi/TotalRecvMPI",
+                                           "processor/mpi/TotalTestMPI",
+                                           "processor/mpi/TotalWaitMPI" },
 
-					 { "",
-					   "bytes", "bytes", "bytes", "bytes",
+                                         { "",
+                                           "bytes", "bytes", "bytes", "bytes",
 
-					   "seconds", "seconds",
-					   "seconds", "seconds", "seconds",
-					   "seconds", "seconds", "seconds",
-					   "seconds", "seconds", "seconds",
+                                           "seconds", "seconds",
+                                           "seconds", "seconds", "seconds",
+                                           "seconds", "seconds", "seconds",
+                                           "seconds", "seconds", "seconds",
 
-					   "seconds", "seconds", "seconds",
-					   "seconds", "seconds", "seconds",
-					   "seconds", "seconds", "seconds" } };
+                                           "seconds", "seconds", "seconds",
+                                           "seconds", "seconds", "seconds",
+                                           "seconds", "seconds", "seconds" } };
 
 
 
@@ -268,10 +268,10 @@ visit_handle visit_ReadMetaData(void *cbdata)
           {
             /* Set the mesh’s properties.*/
             VisIt_MeshMetaData_setName(mmd, mesh_for_this_var.c_str());
-	    if( sim->simController->doAMR() )
-	      VisIt_MeshMetaData_setMeshType(mmd, VISIT_MESHTYPE_AMR);
-	    else
-	      VisIt_MeshMetaData_setMeshType(mmd, VISIT_MESHTYPE_AMR);
+            if( sim->simController->doAMR() )
+              VisIt_MeshMetaData_setMeshType(mmd, VISIT_MESHTYPE_AMR);
+            else
+              VisIt_MeshMetaData_setMeshType(mmd, VISIT_MESHTYPE_AMR);
 
             VisIt_MeshMetaData_setTopologicalDimension(mmd, 3);
             VisIt_MeshMetaData_setSpatialDimension(mmd, 3);
@@ -407,7 +407,7 @@ visit_handle visit_ReadMetaData(void *cbdata)
             VisIt_VariableMetaData_setCentering(vmd, VISIT_VARCENTERING_ZONE);
             VisIt_VariableMetaData_setType(vmd, VISIT_VARTYPE_SCALAR);
             VisIt_VariableMetaData_setNumComponents(vmd, 1);
-	    VisIt_VariableMetaData_setUnits(vmd, procLabels[1][i].c_str());
+            VisIt_VariableMetaData_setUnits(vmd, procLabels[1][i].c_str());
 
             // ARS - FIXME
             //      VisIt_VariableMetaData_setHasDataExtents(vmd, false);
@@ -570,16 +570,16 @@ visit_handle visit_ReadMetaData(void *cbdata)
 
       // Check for  and regrid option.
       if(strcmp( "Regrid", cmd_names[i] ) == 0 )
-	enabled = sim->simController->doAMR();
+        enabled = sim->simController->doAMR();
 
       else if(strcmp( "Save", cmd_names[i] ) == 0 )
-       	enabled = !sim->simController->getOutput()->isOutputTimestep();
+        enabled = !sim->simController->getOutput()->isOutputTimestep();
 
       else if(strcmp( "Checkpoint", cmd_names[i] ) == 0 )
-       	enabled = !sim->simController->getOutput()->isCheckpointTimestep();
+        enabled = !sim->simController->getOutput()->isCheckpointTimestep();
 
       else
-	enabled = true;
+        enabled = true;
 
       visit_handle cmd = VISIT_INVALID_HANDLE;
       
@@ -601,8 +601,11 @@ visit_handle visit_ReadMetaData(void *cbdata)
     VisItUI_textChanged("MaxTime", visit_MaxTimeCallback, (void*) sim);
 
 
-    VisItUI_setValueD(  "DeltaT", sim->delt, 1);
-    VisItUI_textChanged("DeltaT", visit_DeltaTCallback, (void*) sim);
+    VisItUI_setValueD(  "DeltaT", sim->delt, 0);
+//    VisItUI_textChanged("DeltaT", visit_DeltaTCallback, (void*) sim);
+
+    VisItUI_setValueD(  "DeltaTNext", sim->delt_next, 1);
+    VisItUI_textChanged("DeltaTNext", visit_DeltaTCallback, (void*) sim);
 
     VisItUI_setValueD(  "DeltaTFactor", sim->simController->getSimulationTime()->delt_factor, 1);
     VisItUI_textChanged("DeltaTFactor", visit_DeltaTFactorCallback, (void*) sim);
@@ -618,36 +621,70 @@ visit_handle visit_ReadMetaData(void *cbdata)
     VisItUI_setValueD(  "MaxWallTime", sim->simController->getSimulationTime()->max_wall_time, 1);
     VisItUI_textChanged("MaxWallTime", visit_MaxWallTimeCallback, (void*) sim);
 
+    // Setup the optional UPS variable table
+    if( sim->upsVariables.size() )
     {
-      std::vector< uintah_variable_data > &vars = sim->variables;
+      VisItUI_setValueS( "UPSVariableGroupBox", "SHOW_WIDGET", 1);
+
+      std::vector< uintah_variable_data > &vars = sim->upsVariables;
       
       for( int i=0; i<vars.size(); ++i )
       {
-	uintah_variable_data &var = vars[i];
-	
-	VisItUI_setTableValueS("VariableTable", i, 0, var.name.c_str(),  0);
-	VisItUI_setTableValueD("VariableTable", i, 1, var.value, 1);
+        uintah_variable_data &var = vars[i];
+        
+        VisItUI_setTableValueS("UPSVariableTable", i, 0, var.name.c_str(), 0);
+        VisItUI_setTableValueD("UPSVariableTable", i, 1, var.value, 1);
       }
+
+      VisItUI_cellChanged("UPSVariableTable",
+                          visit_UPSVariableTableCallback, (void*) sim);
+
     }
+    else
+      VisItUI_setValueS( "UPSVariableGroupBox", "HIDE_WIDGET", 0);
 
-    VisItUI_cellChanged("VariableTable", visit_VariableTableCallback, (void*) sim);
-
+    // Setup the output variable table
+    if( sim->outputIntervals.size() )
     {
+      VisItUI_setValueS( "OutputIntervalGroupBox", "SHOW_WIDGET", 1);
+
       std::vector< uintah_variable_data > &vars = sim->outputIntervals;
       
       for( int i=0; i<vars.size(); ++i )
       {
-	uintah_variable_data &var = vars[i];
-	
-	VisItUI_setTableValueS("OutputIntervalVariableTable",
-			       i, 0, var.name.c_str(),  0);
-	VisItUI_setTableValueD("OutputIntervalVariableTable",
-			       i, 1, var.value, 1);
+        uintah_variable_data &var = vars[i];
+        
+        VisItUI_setTableValueS("OutputIntervalVariableTable",
+                               i, 0, var.name.c_str(),  0);
+        VisItUI_setTableValueD("OutputIntervalVariableTable",
+                               i, 1, var.value, 1);
+      }
+
+      VisItUI_cellChanged("OutputIntervalVariableTable",
+                          visit_OutputIntervalVariableTableCallback,
+                          (void*) sim);
+    }
+    else
+      VisItUI_setValueS( "OutputIntervalGroupBox", "HIDE_WIDGET", 0);
+    
+    // Setup the optional min/max variable table
+    if( sim->minMaxVariables.size() )
+    {
+      VisItUI_setValueS( "MinMaxVariableGroupBox", "SHOW_WIDGET", 1);
+      
+      std::vector< uintah_min_max_data > &vars = sim->minMaxVariables;
+      
+      for( int i=0; i<vars.size(); ++i )
+      {
+        uintah_min_max_data &var = vars[i];
+        
+        VisItUI_setTableValueS("MinMaxVariableTable", i, 0, var.name.c_str(), 0);
+        VisItUI_setTableValueD("MinMaxVariableTable", i, 1, var.min, 0);
+        VisItUI_setTableValueD("MinMaxVariableTable", i, 2, var.max, 0);
       }
     }
-    
-    VisItUI_cellChanged("OutputIntervalVariableTable",
-			visit_OutputIntervalVariableTableCallback, (void*) sim);
+    else
+      VisItUI_setValueS( "MinMaxVariableGroupBox", "HIDE_WIDGET", 0);
 
     // if( sim->message.size() )
     // {

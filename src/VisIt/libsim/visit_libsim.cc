@@ -32,8 +32,11 @@
 #include <sci_defs/mpi_defs.h>
 #include <sci_defs/visit_defs.h>
 
+#include <CCA/Components/SimulationController/SimulationController.h>
 #include <Core/Parallel/Parallel.h>
+#include <Core/ProblemSpec/ProblemSpec.h>
 #include <Core/Util/DebugStream.h>
+#include <CCA/Ports/Output.h>
 
 #include "StandAlone/tools/uda2vis/uda2vis.h"
 
@@ -105,6 +108,15 @@ void visit_LibSimArguments(int argc, char **argv)
 //---------------------------------------------------------------------
 void visit_InitLibSim( visit_simulation_data *sim )
 {
+#ifdef HAVE_MPICH
+  if( Parallel::usingMPI() )
+    sim->isProc0 = isProc0_macro;
+  else
+    sim->isProc0 = true;
+#else
+  sim->isProc0 = true;
+#endif
+
 #ifdef VISIT_STOP
   // The simulation will wait for VisIt to connect after first step.
   sim->runMode = VISIT_SIMMODE_STOPPED;
@@ -233,7 +245,6 @@ void visit_EndLibSim( visit_simulation_data *sim )
     VisItUI_setValueS("SIMULATION_MODE", "Unknown", 1);
   }
 }
-
 
 //---------------------------------------------------------------------
 // CheckState
@@ -468,6 +479,168 @@ void visit_CheckState( visit_simulation_data *sim )
       }
     }
   } while(err == 0);
+}
+
+
+//---------------------------------------------------------------------
+// UpdateSimData
+//     Update thesimulation data on all processors
+//---------------------------------------------------------------------
+void visit_UpdateSimData( visit_simulation_data *sim, 
+			  GridP currentGrid,
+			  double time, double delt, double delt_next,
+			  double wallTime, std::string msg )
+{
+  SimulationStateP simStateP = sim->simController->getSimulationStateP();
+
+  // Update all of the simulation grid and time dependent
+  // variables.
+  sim->gridP      = currentGrid;
+  sim->time       = time;
+  sim->delt       = delt;
+  sim->delt_next  = delt_next;
+  sim->elapsedt   = wallTime;
+  sim->cycle      = simStateP->getCurrentTopLevelTimeStep();
+  sim->message    = msg;
+}
+
+
+void visit_GetOutputIntervals( visit_simulation_data *sim )
+{
+  sim->outputIntervals.clear();
+
+  SimulationStateP simStateP = sim->simController->getSimulationStateP();
+  Output *output = sim->simController->getOutput();
+  
+  // Add in the output and checkout intervals.
+  if( output )
+  {
+    std::string name;
+    double val;
+    
+    // Output interval based on time.
+    if( output->getOutputInterval() > 0 )
+    {
+      name = simStateP->get_outputInterval_label()->getName();
+      val = output->getOutputInterval();
+    }
+    // Output interval based on timestep.
+    else
+    {
+      name = simStateP->get_outputTimestepInterval_label()->getName();
+      val = output->getOutputTimestepInterval();
+    }
+    
+    uintah_variable_data var;
+    
+    var.name = name;
+    var.value = val;
+    var.modified = false;
+    sim->outputIntervals.push_back(var);
+    
+    // Checkpoint interval based on times.
+    if( output->getCheckpointInterval() > 0 )
+    {
+      name = simStateP->get_checkpointInterval_label()->getName();
+      val = output->getCheckpointInterval();
+    }
+    // Checkpoint interval based on timestep.
+    else
+    {
+      name = simStateP->get_checkpointTimestepInterval_label()->getName();
+      val = output->getCheckpointTimestepInterval();
+    }
+
+    var.name = name;
+    var.value = val;
+    var.modified = false;
+    sim->outputIntervals.push_back(var);
+  }
+}
+
+
+void visit_GetAnalysisVars( visit_simulation_data *sim )
+{
+  sim->minMaxVariables.clear();
+
+  ProblemSpecP d_ups = sim->simController->getProblemSpecP();
+  
+  // Add in the data analysis variable.
+  ProblemSpecP da_ps = d_ups->findBlock("DataAnalysis");
+
+  if( da_ps )
+  {
+    for(ProblemSpecP module_ps = da_ps->findBlock("Module");
+	module_ps != 0;
+	module_ps = module_ps->findNextBlock("Module"))
+    {
+      if( module_ps )
+      {
+	std::map<std::string,std::string> attributes;
+	module_ps->getAttributes(attributes);
+	
+	// Add in the min max variables.
+	if( attributes["name"] == "minMax" )
+	{
+	  ProblemSpecP variables_ps = module_ps->findBlock("Variables");
+	  
+	  if( variables_ps )
+	  {
+	    for(ProblemSpecP var_ps = variables_ps->findBlock("analyze");
+		var_ps != 0;
+		var_ps = var_ps->findNextBlock("analyze"))
+	    {
+	      var_ps->getAttributes(attributes);
+	      
+	      uintah_min_max_data var;
+	      
+	      var.name = attributes["label"] + "/" + attributes["matl"];
+	      var.min = 0;
+	      var.max = 0;
+	      sim->minMaxVariables.push_back(var);
+	      
+	      uintah_variable_data var2;
+	      
+	      var2.name = attributes["label"] + "/" + attributes["matl"];
+	      var2.value = 0;
+	      var2.modified = false;
+	      sim->upsVariables.push_back(var2);
+	    }
+	  }
+	}
+      }
+    }
+  }
+}
+
+
+//______________________________________________________________________
+//
+void visit_GetUPSVars( visit_simulation_data *sim )
+{
+  sim->upsVariables.clear();
+}
+
+  
+//______________________________________________________________________
+//
+void visit_UpdateUPSVars( visit_simulation_data *sim )
+{
+  // Loop through the user viewable/settable variables and update
+  // those that have been modified.
+  std::vector< uintah_variable_data > &vars = sim->upsVariables;
+
+  for( int i=0; i<vars.size(); ++i )
+  {
+    uintah_variable_data &var = vars[i];
+    
+    if( var.modified )
+    {
+      // if( var.name == SOMEVAR )
+      // {
+      // }
+    }
+  }
 }
 
 } // End namespace Uintah
