@@ -16,13 +16,13 @@
     <!--      T  I  M  E     V  A  R  I  A  B  L  E  S                      -->
     <!--____________________________________________________________________-->
    <Time>
-       <maxTime>            1000.0        </maxTime>
+       <maxTime>            10        </maxTime>
        <initTime>           0.0         </initTime>
        <delt_min>           0.0         </delt_min>
        <delt_max>           1.0         </delt_max>
        <delt_init>          1.0e-5      </delt_init>
        <timestep_multiplier>1.0         </timestep_multiplier>
-        <max_Timesteps>     7         </max_Timesteps>
+        <max_Timesteps>    100000         </max_Timesteps>
    </Time>
    
     <!--____________________________________________________________________-->
@@ -169,10 +169,21 @@
       <filebase>advectScalar.uda</filebase>
       <outputTimestepInterval>1</outputTimestepInterval>
       <save label="scalar-f"/>
-      
+      <save label="scalar-f_dbgVector"/>
+      <!--
       <save label="variance_scalar-f"/>
       <save label="skewness_scalar-f"/>
       <save label="kurtosis_scalar-f"/>
+   
+      <save label="variance_scalar-f_dbgVector"/> 
+      <save label="skewness_scalar-f_dbgVector"/>
+      <save label="kurtosis_scalar-f_dbgVector"/>
+      
+      <save label="uv_vw_wu_prime"/>
+      <save label="sum_uv_vw_wu"/>
+      <save label="mean_uv_vw_wu"/>
+      -->
+
       <checkpoint timestepInterval="3" cycle="2"/>
    </DataArchiver>
 
@@ -300,13 +311,15 @@
     <DataAnalysis>   
       <Module name = "statistics">
          <material>BackgroundGas</material>
-         <timeStart>   10.0  </timeStart>
+         <timeStart>   0.0  </timeStart>
          <timeStop>   100  </timeStop>
          <computeHigherOrderStats> true </computeHigherOrderStats>
          
         <Variables>
           <analyze label="scalar-f"/>
+          <analyze label="scalar-f_dbgVector" computeReynoldsStress="true" />
         </Variables>
       </Module>         
     </DataAnalysis>
+
 </Uintah_specification>
