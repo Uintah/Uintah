@@ -62,6 +62,11 @@
 #include <CCA/Ports/Scheduler.h>
 #include <CCA/Ports/SimulationInterface.h>
 
+#ifdef HAVE_VISIT
+#  include <VisIt/libsim/visit_libsim.h>
+#  include <VisIt/libsim/visit_libsim_customui.h>
+#endif
+
 #ifdef HAVE_CUDA
 //#include <CCA/Components/Schedulers/GPUUtilities.h>
 #include <CCA/Components/Schedulers/GPUGridVariableInfo.h>
