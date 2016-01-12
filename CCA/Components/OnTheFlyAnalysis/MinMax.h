@@ -80,7 +80,15 @@ GENERAL INFORMATION
    
     virtual void scheduleDoAnalysis_preReloc(SchedulerP& sched,
                                     const LevelP& level) {};
-                                      
+
+    struct varProperties{
+      VarLabel* label;
+      VarLabel* reductionMinLabel;
+      VarLabel* reductionMaxLabel;
+      int matl;
+      int level;
+    };
+
   private:
   
     bool isRightLevel( const int myLevel, 
@@ -133,14 +141,6 @@ GENERAL INFORMATION
     double d_writeFreq; 
     double d_startTime;
     double d_stopTime;
-    
-    struct varProperties{
-      VarLabel* label;
-      VarLabel* reductionMinLabel;
-      VarLabel* reductionMaxLabel;
-      int matl;
-      int level;
-    };
     
     std::vector<varProperties> d_analyzeVars;
     
