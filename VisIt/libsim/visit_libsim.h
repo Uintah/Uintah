@@ -76,6 +76,7 @@ class SimulationController;
 typedef struct
 {
   std::string name;
+  int matl;
   double value;
   
   bool modified;
@@ -86,6 +87,8 @@ typedef struct
 typedef struct
 {
   std::string name;
+  int matl;
+  int level;
   double min;
   double max;
 
@@ -135,14 +138,9 @@ void visit_EndLibSim(visit_simulation_data *sim);
 void visit_CheckState(visit_simulation_data *sim);
 
 void visit_UpdateSimData( visit_simulation_data *sim, 
-			  GridP currentGrid,
-			  double time, double delt, double delt_next,
-			  double wallTime, std::string msg );
-
-void visit_GetOutputIntervals( visit_simulation_data *sim );
-void visit_GetAnalysisVars( visit_simulation_data *sim );
-void visit_GetUPSVars( visit_simulation_data *sim );
-void visit_UpdateUPSVars( visit_simulation_data *sim );
+                          GridP currentGrid,
+                          double time, double delt, double delt_next,
+                          double wallTime, std::string msg );
 
 } // End namespace Uintah
 

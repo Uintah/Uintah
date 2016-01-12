@@ -103,7 +103,7 @@ visit_ControlCommandCallback(const char *cmd, const char *args, void *cbdata)
 
   if(strcmp(cmd, "StepCycle") == 0 && sim->simMode != VISIT_SIMMODE_FINISHED)
   {
-    std::stringstream msg;	  
+    std::stringstream msg;        
     msg << "Visit libsim - step cycle value " << args;
     VisItUI_setValueS("SIMULATION_MESSAGE", msg.str().c_str(), 1);
     VisItUI_setValueS("SIMULATION_MESSAGE", " ", 1);
@@ -147,13 +147,13 @@ visit_ControlCommandCallback(const char *cmd, const char *args, void *cbdata)
       SchedulerP schedulerP = sim->simController->getSchedulerP();
       
       ((DataArchiver *)output)->outputTimestep( sim->time,
-						sim->delt,
-						sim->gridP,
-						schedulerP );
+                                                sim->delt,
+                                                sim->gridP,
+                                                schedulerP );
     }
     else
       VisItUI_setValueS("SIMULATION_MESSAGE_BOX",
-			"Can not save a timestep unless the simulation is stopped", 0);
+                        "Can not save a timestep unless the simulation is stopped", 0);
   }
 
   else if(strcmp(cmd, "Checkpoint") == 0)
@@ -169,13 +169,13 @@ visit_ControlCommandCallback(const char *cmd, const char *args, void *cbdata)
       SchedulerP schedulerP = sim->simController->getSchedulerP();
       
       ((DataArchiver *)output)->checkpointTimestep( sim->time,
-						    sim->delt,
-						    sim->gridP,
-						    schedulerP );
+                                                    sim->delt,
+                                                    sim->gridP,
+                                                    schedulerP );
     }
     else
       VisItUI_setValueS("SIMULATION_MESSAGE_BOX",
-			"Can not save a checkpoint unless the simulation is stopped", 0);
+                        "Can not save a checkpoint unless the simulation is stopped", 0);
   }
 
   // Only allow the runMode to finish if the simulation is finished.
@@ -193,7 +193,7 @@ visit_ControlCommandCallback(const char *cmd, const char *args, void *cbdata)
 
     if(sim->isProc0)
     {
-      std::stringstream msg;	  
+      std::stringstream msg;      
       msg << "Visit libsim - Terminating the simulation";
       VisItUI_setValueS("SIMULATION_MESSAGE", msg.str().c_str(), 1);
       VisItUI_setValueS("SIMULATION_MESSAGE", " ", 1);
@@ -206,7 +206,7 @@ visit_ControlCommandCallback(const char *cmd, const char *args, void *cbdata)
   {
     if(sim->isProc0)
     {
-      std::stringstream msg;	  
+      std::stringstream msg;      
       msg << "Visit libsim - Aborting the simulation";
       VisItUI_setValueS("SIMULATION_MESSAGE", msg.str().c_str(), 1);
       VisItUI_setValueS("SIMULATION_MESSAGE", " ", 1);
@@ -225,7 +225,7 @@ visit_ControlCommandCallback(const char *cmd, const char *args, void *cbdata)
     {
       VisItUI_setValueS("SIMULATION_MODE", "Running", 1);
 
-      std::stringstream msg;	  
+      std::stringstream msg;      
       msg << "Visit libsim - Continuing the simulation";
       VisItUI_setValueS("SIMULATION_MESSAGE", msg.str().c_str(), 1);
     }

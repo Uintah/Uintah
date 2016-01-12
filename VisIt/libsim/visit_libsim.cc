@@ -33,6 +33,11 @@
 #include <sci_defs/visit_defs.h>
 
 #include <CCA/Components/SimulationController/SimulationController.h>
+
+#include <CCA/Components/OnTheFlyAnalysis/MinMax.h>
+#include <Core/Grid/Material.h>
+#define ALL_LEVELS 99
+
 #include <Core/Parallel/Parallel.h>
 #include <Core/ProblemSpec/ProblemSpec.h>
 #include <Core/Util/DebugStream.h>
@@ -226,7 +231,7 @@ void visit_EndLibSim( visit_simulation_data *sim )
 
       std::stringstream msg;      
       msg << "Visit libsim - "
-	  << "The simulation has finished, stopping at the last time step.";
+          << "The simulation has finished, stopping at the last time step.";
       
       visitdbg << msg.str().c_str() << std::endl;
       visitdbg.flush();
@@ -262,16 +267,16 @@ void visit_CheckState( visit_simulation_data *sim )
     {
       if(sim->isProc0)
       {
-	// VisItUI_setValueS("SIMULATION_MESSAGE", sim->message.c_str(), 1);
+        // VisItUI_setValueS("SIMULATION_MESSAGE", sim->message.c_str(), 1);
 
-	std::stringstream msg;
-	msg << "Visit libsim - Completed simulation "
-	    << "timestep " << sim->cycle << ",  "
-	    << "Time = "   << sim->time;
-	
+        std::stringstream msg;
+        msg << "Visit libsim - Completed simulation "
+            << "timestep " << sim->cycle << ",  "
+            << "Time = "   << sim->time;
+        
 //      visitdbg << msg.str().c_str() << std::endl;
 //      visitdbg.flush();
-	VisItUI_setValueS("SIMULATION_MESSAGE", msg.str().c_str(), 1);
+        VisItUI_setValueS("SIMULATION_MESSAGE", msg.str().c_str(), 1);
       }
 
       // Tell VisIt that the timestep changed
@@ -292,30 +297,30 @@ void visit_CheckState( visit_simulation_data *sim )
         
       if( VisItIsConnected() )
       {
-	if( blocking )
-	{
-	  // If blocking the run mode is not running so the
-	  // simulation will not be running so change the state to
-	  // allow asyncronious commands like saving a timestep or a
-	  // checkpoint to happen.
-	  if( sim->simMode != VISIT_SIMMODE_FINISHED )
-	  {
-	    sim->simMode = VISIT_SIMMODE_STOPPED;
+        if( blocking )
+        {
+          // If blocking the run mode is not running so the
+          // simulation will not be running so change the state to
+          // allow asyncronious commands like saving a timestep or a
+          // checkpoint to happen.
+          if( sim->simMode != VISIT_SIMMODE_FINISHED )
+          {
+            sim->simMode = VISIT_SIMMODE_STOPPED;
 
-	    if(sim->isProc0)
-	    {
-	      VisItUI_setValueS("SIMULATION_MODE", "Stopped", 1);
-	      
-	      std::stringstream msg;
-	      msg << "Visit libsim - Stopped the simulation at "
-		  << "timestep " << sim->cycle << ",  "
-		  << "Time = " << sim->time;
-	    
-	      visitdbg << msg.str().c_str() << std::endl;
-	      visitdbg.flush();
-	      VisItUI_setValueS("SIMULATION_MESSAGE", msg.str().c_str(), 1);
-	    }
-	  }
+            if(sim->isProc0)
+            {
+              VisItUI_setValueS("SIMULATION_MODE", "Stopped", 1);
+              
+              std::stringstream msg;
+              msg << "Visit libsim - Stopped the simulation at "
+                  << "timestep " << sim->cycle << ",  "
+                  << "Time = " << sim->time;
+            
+              visitdbg << msg.str().c_str() << std::endl;
+              visitdbg.flush();
+              VisItUI_setValueS("SIMULATION_MESSAGE", msg.str().c_str(), 1);
+            }
+          }
         }
       }
     }
@@ -334,7 +339,7 @@ void visit_CheckState( visit_simulation_data *sim )
     {
       std::stringstream msg;      
       msg << "Visit libsim - CheckState cannot recover from error ("
-	  << visitstate << ") !!";
+          << visitstate << ") !!";
           
       visitdbg << msg.str().c_str() << std::endl;
       visitdbg.flush();
@@ -345,19 +350,19 @@ void visit_CheckState( visit_simulation_data *sim )
     else if(visitstate == 0)
     {
       if( sim->simMode != VISIT_SIMMODE_FINISHED &&
-	  sim->simMode != VISIT_SIMMODE_TERMINATED )
+          sim->simMode != VISIT_SIMMODE_TERMINATED )
       {
-	VisItUI_setValueS("SIMULATION_MODE", "Running", 1);
-	sim->simMode = VISIT_SIMMODE_RUNNING;
-	
-	if(sim->isProc0)
-	{
-	  std::stringstream msg;	  
-	  msg << "Visit libsim - Continuing the simulation - no input";
-	  // visitdbg << msg.str().c_str() << std::endl;
-	  // visitdbg.flush();
-	  VisItUI_setValueS("SIMULATION_MESSAGE", msg.str().c_str(), 1);
-	}
+        VisItUI_setValueS("SIMULATION_MODE", "Running", 1);
+        sim->simMode = VISIT_SIMMODE_RUNNING;
+        
+        if(sim->isProc0)
+        {
+          std::stringstream msg;          
+          msg << "Visit libsim - Continuing the simulation - no input";
+          // visitdbg << msg.str().c_str() << std::endl;
+          // visitdbg.flush();
+          VisItUI_setValueS("SIMULATION_MESSAGE", msg.str().c_str(), 1);
+        }
       }
 
       /* There was no input from VisIt, return control to sim. */
@@ -374,7 +379,7 @@ void visit_CheckState( visit_simulation_data *sim )
         /* Register command callback */
         VisItSetCommandCallback(visit_ControlCommandCallback, (void*) sim);
 
-	std::stringstream msg;
+        std::stringstream msg;
       
         if( Parallel::usingMPI() )
         {
@@ -388,16 +393,16 @@ void visit_CheckState( visit_simulation_data *sim )
           msg << "Visit libsim - Connected";
         }
 
-	if(sim->isProc0)
-	{
-	  VisItUI_setValueS("SIMULATION_MESSAGE_CLEAR", "NoOp", 1);
+        if(sim->isProc0)
+        {
+          VisItUI_setValueS("SIMULATION_MESSAGE_CLEAR", "NoOp", 1);
 
-	  // visitdbg << msg.str().c_str() << std::endl;
-	  // visitdbg.flush();
-	  VisItUI_setValueS("SIMULATION_MESSAGE", msg.str().c_str(), 1);
+          // visitdbg << msg.str().c_str() << std::endl;
+          // visitdbg.flush();
+          VisItUI_setValueS("SIMULATION_MESSAGE", msg.str().c_str(), 1);
 
-	  VisItUI_setValueS("SIMULATION_MODE", "Connected", 1);
-	}
+          VisItUI_setValueS("SIMULATION_MODE", "Connected", 1);
+        }
 
         /* Register data access callbacks */
         VisItSetGetMetaData(visit_SimGetMetaData, (void*) sim);
@@ -411,12 +416,12 @@ void visit_CheckState( visit_simulation_data *sim )
       }
       else
       {
-	std::stringstream msg;
-	msg << "Visit libsim - Can not connect.";
+        std::stringstream msg;
+        msg << "Visit libsim - Can not connect.";
 
-	// visitdbg << msg.str().c_str() << std::endl;
-	// visitdbg.flush();
-	VisItUI_setValueS("SIMULATION_MESSAGE_ERROR", msg.str().c_str(), 1);
+        // visitdbg << msg.str().c_str() << std::endl;
+        // visitdbg.flush();
+        VisItUI_setValueS("SIMULATION_MESSAGE_ERROR", msg.str().c_str(), 1);
       }
     }
     else if(visitstate == 2)
@@ -429,31 +434,31 @@ void visit_CheckState( visit_simulation_data *sim )
         /* Start running again if VisIt closes. */
         sim->runMode = VISIT_SIMMODE_RUNNING;
 
-	if(sim->isProc0)
-	{
-	  VisItUI_setValueS("SIMULATION_MODE", "Unknown", 1);
-	}
+        if(sim->isProc0)
+        {
+          VisItUI_setValueS("SIMULATION_MODE", "Unknown", 1);
+        }
       }
 
       /* If in step mode return control back to the simulation. */
       if( sim->runMode == VISIT_SIMMODE_STEP )
       {
-	sim->simMode = VISIT_SIMMODE_RUNNING;
+        sim->simMode = VISIT_SIMMODE_RUNNING;
 
-	if(sim->isProc0)
-	{
-	  VisItUI_setValueS("SIMULATION_MODE", "Running", 1);
+        if(sim->isProc0)
+        {
+          VisItUI_setValueS("SIMULATION_MODE", "Running", 1);
 
-	  std::stringstream msg;	  
-	  msg << "Visit libsim - Continuing the simulation for one time step";
-	  // visitdbg << msg.str().c_str() << std::endl;
-	  // visitdbg.flush();
-	  VisItUI_setValueS("SIMULATION_MESSAGE", msg.str().c_str(), 1);
-	}
+          std::stringstream msg;          
+          msg << "Visit libsim - Continuing the simulation for one time step";
+          // visitdbg << msg.str().c_str() << std::endl;
+          // visitdbg.flush();
+          VisItUI_setValueS("SIMULATION_MESSAGE", msg.str().c_str(), 1);
+        }
 
-	// Swap over to stop mode because if an error occurs VisIt
-	// will otherwise advance to the next time step.
-	sim->runMode = VISIT_SIMMODE_STOPPED;
+        // Swap over to stop mode because if an error occurs VisIt
+        // will otherwise advance to the next time step.
+        sim->runMode = VISIT_SIMMODE_STOPPED;
 
         sim->blocking = 0;
         break;
@@ -462,17 +467,17 @@ void visit_CheckState( visit_simulation_data *sim )
       /* If finished return control back to the simulation. */
       else if( sim->runMode == VISIT_SIMMODE_FINISHED )
       {
-	if(sim->isProc0)
-	{
-	  VisItUI_setValueS("SIMULATION_MODE", "Unknown", 1);
+        if(sim->isProc0)
+        {
+          VisItUI_setValueS("SIMULATION_MODE", "Unknown", 1);
 
-	  std::stringstream msg;	  
-	  msg << "Visit libsim - Finished the simulation ";
-	  // visitdbg << msg.str().c_str() << std::endl;
-	  // visitdbg.flush();
-	  VisItUI_setValueS("SIMULATION_MESSAGE", msg.str().c_str(), 1);
-	  VisItUI_setValueS("SIMULATION_MESSAGE", " ", 1);
-	}
+          std::stringstream msg;          
+          msg << "Visit libsim - Finished the simulation ";
+          // visitdbg << msg.str().c_str() << std::endl;
+          // visitdbg.flush();
+          VisItUI_setValueS("SIMULATION_MESSAGE", msg.str().c_str(), 1);
+          VisItUI_setValueS("SIMULATION_MESSAGE", " ", 1);
+        }
 
         sim->blocking = 0;
         break;
@@ -484,12 +489,12 @@ void visit_CheckState( visit_simulation_data *sim )
 
 //---------------------------------------------------------------------
 // UpdateSimData
-//     Update thesimulation data on all processors
+//     Update the simulation data on all processors
 //---------------------------------------------------------------------
 void visit_UpdateSimData( visit_simulation_data *sim, 
-			  GridP currentGrid,
-			  double time, double delt, double delt_next,
-			  double wallTime, std::string msg )
+                          GridP currentGrid,
+                          double time, double delt, double delt_next,
+                          double wallTime, std::string msg )
 {
   SimulationStateP simStateP = sim->simController->getSimulationStateP();
 
@@ -502,145 +507,6 @@ void visit_UpdateSimData( visit_simulation_data *sim,
   sim->elapsedt   = wallTime;
   sim->cycle      = simStateP->getCurrentTopLevelTimeStep();
   sim->message    = msg;
-}
-
-
-void visit_GetOutputIntervals( visit_simulation_data *sim )
-{
-  sim->outputIntervals.clear();
-
-  SimulationStateP simStateP = sim->simController->getSimulationStateP();
-  Output *output = sim->simController->getOutput();
-  
-  // Add in the output and checkout intervals.
-  if( output )
-  {
-    std::string name;
-    double val;
-    
-    // Output interval based on time.
-    if( output->getOutputInterval() > 0 )
-    {
-      name = simStateP->get_outputInterval_label()->getName();
-      val = output->getOutputInterval();
-    }
-    // Output interval based on timestep.
-    else
-    {
-      name = simStateP->get_outputTimestepInterval_label()->getName();
-      val = output->getOutputTimestepInterval();
-    }
-    
-    uintah_variable_data var;
-    
-    var.name = name;
-    var.value = val;
-    var.modified = false;
-    sim->outputIntervals.push_back(var);
-    
-    // Checkpoint interval based on times.
-    if( output->getCheckpointInterval() > 0 )
-    {
-      name = simStateP->get_checkpointInterval_label()->getName();
-      val = output->getCheckpointInterval();
-    }
-    // Checkpoint interval based on timestep.
-    else
-    {
-      name = simStateP->get_checkpointTimestepInterval_label()->getName();
-      val = output->getCheckpointTimestepInterval();
-    }
-
-    var.name = name;
-    var.value = val;
-    var.modified = false;
-    sim->outputIntervals.push_back(var);
-  }
-}
-
-
-void visit_GetAnalysisVars( visit_simulation_data *sim )
-{
-  sim->minMaxVariables.clear();
-
-  ProblemSpecP d_ups = sim->simController->getProblemSpecP();
-  
-  // Add in the data analysis variable.
-  ProblemSpecP da_ps = d_ups->findBlock("DataAnalysis");
-
-  if( da_ps )
-  {
-    for(ProblemSpecP module_ps = da_ps->findBlock("Module");
-	module_ps != 0;
-	module_ps = module_ps->findNextBlock("Module"))
-    {
-      if( module_ps )
-      {
-	std::map<std::string,std::string> attributes;
-	module_ps->getAttributes(attributes);
-	
-	// Add in the min max variables.
-	if( attributes["name"] == "minMax" )
-	{
-	  ProblemSpecP variables_ps = module_ps->findBlock("Variables");
-	  
-	  if( variables_ps )
-	  {
-	    for(ProblemSpecP var_ps = variables_ps->findBlock("analyze");
-		var_ps != 0;
-		var_ps = var_ps->findNextBlock("analyze"))
-	    {
-	      var_ps->getAttributes(attributes);
-	      
-	      uintah_min_max_data var;
-	      
-	      var.name = attributes["label"] + "/" + attributes["matl"];
-	      var.min = 0;
-	      var.max = 0;
-	      sim->minMaxVariables.push_back(var);
-	      
-	      uintah_variable_data var2;
-	      
-	      var2.name = attributes["label"] + "/" + attributes["matl"];
-	      var2.value = 0;
-	      var2.modified = false;
-	      sim->upsVariables.push_back(var2);
-	    }
-	  }
-	}
-      }
-    }
-  }
-}
-
-
-//______________________________________________________________________
-//
-void visit_GetUPSVars( visit_simulation_data *sim )
-{
-  sim->upsVariables.clear();
-}
-
-  
-//______________________________________________________________________
-//
-void visit_UpdateUPSVars( visit_simulation_data *sim )
-{
-  // Loop through the user viewable/settable variables and update
-  // those that have been modified.
-  std::vector< uintah_variable_data > &vars = sim->upsVariables;
-
-  for( int i=0; i<vars.size(); ++i )
-  {
-    uintah_variable_data &var = vars[i];
-    
-    if( var.modified )
-    {
-      // if( var.name == SOMEVAR )
-      // {
-      // }
-    }
-  }
 }
 
 } // End namespace Uintah

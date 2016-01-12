@@ -560,7 +560,7 @@ visit_handle visit_ReadMetaData(void *cbdata)
     /* Add some commands. */
     const char *cmd_names[] = {"Stop", "Step", "Run",
                                "Stats", "Save", "Checkpoint",
-                               "Finish", "Terminate", "Abort" }; //, "Regrid"};
+                               "Finish", "Terminate", "Abort", "Regrid"};
 
     int numNames = sizeof(cmd_names) / sizeof(const char *);
 
@@ -679,8 +679,10 @@ visit_handle visit_ReadMetaData(void *cbdata)
         uintah_min_max_data &var = vars[i];
         
         VisItUI_setTableValueS("MinMaxVariableTable", i, 0, var.name.c_str(), 0);
-        VisItUI_setTableValueD("MinMaxVariableTable", i, 1, var.min, 0);
-        VisItUI_setTableValueD("MinMaxVariableTable", i, 2, var.max, 0);
+        // VisItUI_setTableValueI("MinMaxVariableTable", i, 1, var.matl, 0);
+        // VisItUI_setTableValueI("MinMaxVariableTable", i, 2, var.level, 0);
+        VisItUI_setTableValueD("MinMaxVariableTable", i, 1, var.min,  0);
+        VisItUI_setTableValueD("MinMaxVariableTable", i, 2, var.max,  0);
       }
     }
     else
