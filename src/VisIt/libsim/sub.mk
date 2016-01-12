@@ -31,6 +31,7 @@ SRCDIR   := VisIt/libsim
 
 SRCS     := $(SRCDIR)/visit_libsim.cc \
 	    $(SRCDIR)/visit_libsim_callbacks.cc \
+	    $(SRCDIR)/visit_libsim_customUI.cc \
 	    $(SRCDIR)/visit_libsim_database.cc
 
 
