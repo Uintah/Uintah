@@ -47,7 +47,6 @@
     <save label="NO" table_lookup="true"/>  <!-- Needed for RADPROP to work -->
     <save label="mixture_molecular_weight" table_lookup="true"/> <!-- Needed for RADPROP to work -->
     <save label="mixture_fraction"/>
-    <save label="bc_area1the outlet"/>
 
     <checkpoint cycle="2" interval="0.02"/>
     <compression>gzip</compression>
