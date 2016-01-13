@@ -1825,6 +1825,18 @@ int ExplicitSolver::nonlinearSolve(const LevelP& level,
 
   }
 
+  //Variable stats stuff
+  std::vector<std::string> stats_tasks 
+    = i_property_models->second->retrieve_task_subset("variable_stat_models"); 
+  for ( std::vector<std::string>::iterator itsk = stats_tasks.begin();
+        itsk != stats_tasks.end(); itsk++ ){
+
+    TaskInterface* tsk = i_property_models->second->retrieve_task(*itsk);
+    //passing in curr_level > 0 because we are at the end of the time step
+    tsk->schedule_task( level, sched, matls, TaskInterface::STANDARD_TASK, 1 );
+
+  }
+
   if ( d_printTotalKE ){
    sched_computeKE( sched, patches, matls );
    sched_printTotalKE( sched, patches, matls );
