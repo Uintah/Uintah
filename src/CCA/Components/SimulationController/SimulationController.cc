@@ -706,69 +706,36 @@ SimulationController::printSimulationStats ( int timestep, double delt, double t
 
   toReduce.push_back(memuse);
   toReduceMax.push_back(double_int(memuse,rank));
-  toReduce.push_back(d_sharedState->compilationTime);
-  toReduceMax.push_back(double_int(d_sharedState->compilationTime,rank));
-  toReduce.push_back(d_sharedState->regriddingTime);
-  toReduceMax.push_back(double_int(d_sharedState->regriddingTime,rank));
-  toReduce.push_back(d_sharedState->regriddingCompilationTime);
-  toReduceMax.push_back(double_int(d_sharedState->regriddingCompilationTime,rank));
-  toReduce.push_back(d_sharedState->regriddingCopyDataTime);
-  toReduceMax.push_back(double_int(d_sharedState->regriddingCopyDataTime,rank));
-  toReduce.push_back(d_sharedState->loadbalancerTime);
-  toReduceMax.push_back(double_int(d_sharedState->loadbalancerTime,rank));
-  toReduce.push_back(d_sharedState->taskExecTime);
-  toReduceMax.push_back(double_int(d_sharedState->taskExecTime,rank));
-  toReduce.push_back(d_sharedState->taskGlobalCommTime);
-  toReduceMax.push_back(double_int(d_sharedState->taskGlobalCommTime,rank));
-  toReduce.push_back(d_sharedState->taskLocalCommTime);
-  toReduceMax.push_back(double_int(d_sharedState->taskLocalCommTime,rank));
-  toReduce.push_back(d_sharedState->taskWaitCommTime);
-  toReduceMax.push_back(double_int(d_sharedState->taskWaitCommTime,rank));
-  toReduce.push_back(d_sharedState->outputTime);
-  toReduceMax.push_back(double_int(d_sharedState->outputTime,rank));
-  toReduce.push_back(d_sharedState->taskWaitThreadTime);
-  toReduceMax.push_back(double_int(d_sharedState->taskWaitThreadTime,rank));
+  statLabels.push_back("Mem usage");
+
+  for( int i=0; i<d_sharedState->d_timingStats.size(); ++i )
+  {
+    SimulationState::TimingStat stat = (SimulationState::TimingStat) i;
+    
+    toReduce.push_back( d_sharedState->d_timingStats[ stat ] );
+    toReduceMax.push_back( double_int( d_sharedState->d_timingStats[ stat ], rank ) );
+    statLabels.push_back( d_sharedState->d_timingStats.getName( stat ).c_str() );
+  }
+
 #ifdef USE_PAPI_COUNTERS
   if (d_papiEvents.find(PAPI_FP_OPS)->second.isSupported) {
     toReduce.push_back(flop);
     toReduceMax.push_back(double_int(flop, rank));
+    statLabels.push_back(d_papiEvents.find(PAPI_FP_OPS)->second.simStatName.c_str());
   }
   if (d_papiEvents.find(PAPI_DP_OPS)->second.isSupported) {
     toReduce.push_back(vflop);
     toReduceMax.push_back(double_int(vflop, rank));
+    statLabels.push_back(d_papiEvents.find(PAPI_DP_OPS)->second.simStatName.c_str());
   }
   if (d_papiEvents.find(PAPI_L2_TCM)->second.isSupported) {
     toReduce.push_back(l2_misses);
     toReduceMax.push_back(double_int(l2_misses, rank));
+    statLabels.push_back(d_papiEvents.find(PAPI_L2_TCM)->second.simStatName.c_str());
   }
   if (d_papiEvents.find(PAPI_L3_TCM)->second.isSupported) {
     toReduce.push_back(l3_misses);
     toReduceMax.push_back(double_int(l3_misses, rank));
-  }
-#endif
-  statLabels.push_back("Mem usage");
-  statLabels.push_back("Recompile");
-  statLabels.push_back("Regridding");
-  statLabels.push_back("Regrid-schedule");
-  statLabels.push_back("Regrid-copydata");
-  statLabels.push_back("LoadBalance");
-  statLabels.push_back("TaskExec");
-  statLabels.push_back("TaskGlobalComm");
-  statLabels.push_back("TaskLocalComm");
-  statLabels.push_back("TaskWaitCommTime");
-  statLabels.push_back("Output");
-  statLabels.push_back("TaskWaitThreadTime");
-#ifdef USE_PAPI_COUNTERS
-  if (d_papiEvents.find(PAPI_FP_OPS)->second.isSupported) {
-    statLabels.push_back(d_papiEvents.find(PAPI_FP_OPS)->second.simStatName.c_str());
-  }
-  if (d_papiEvents.find(PAPI_DP_OPS)->second.isSupported) {
-    statLabels.push_back(d_papiEvents.find(PAPI_DP_OPS)->second.simStatName.c_str());
-  }
-  if (d_papiEvents.find(PAPI_L2_TCM)->second.isSupported) {
-    statLabels.push_back(d_papiEvents.find(PAPI_L2_TCM)->second.simStatName.c_str());
-  }
-  if (d_papiEvents.find(PAPI_L3_TCM)->second.isSupported) {
     statLabels.push_back(d_papiEvents.find(PAPI_L3_TCM)->second.simStatName.c_str());
   }
 #endif
@@ -821,23 +788,10 @@ SimulationController::printSimulationStats ( int timestep, double delt, double t
   }
   else {
     // Sum up the times for simulation components.
-    total_time = d_sharedState->compilationTime +
-                 d_sharedState->regriddingTime +
-                 d_sharedState->regriddingCompilationTime +
-                 d_sharedState->regriddingCopyDataTime +
-                 d_sharedState->loadbalancerTime +
-                 d_sharedState->taskExecTime +
-                 d_sharedState->taskGlobalCommTime +
-                 d_sharedState->taskLocalCommTime +
-                 d_sharedState->taskWaitCommTime +
-                 d_sharedState->taskWaitThreadTime;
+    total_time = d_sharedState->getTotalTime();
 
     // Sum up the average time for overhead related components.
-    overhead_time = d_sharedState->compilationTime +
-                    d_sharedState->regriddingTime +
-                    d_sharedState->regriddingCompilationTime +
-                    d_sharedState->regriddingCopyDataTime +
-                    d_sharedState->loadbalancerTime;
+    overhead_time = d_sharedState->getOverheadTime();
 
     // Calculate percentage of time spent in overhead.
     percent_overhead = overhead_time / total_time;
@@ -862,7 +816,7 @@ SimulationController::printSimulationStats ( int timestep, double delt, double t
     d_sharedState->overheadIndex=(d_sharedState->overheadIndex+1)%OVERHEAD_WINDOW;
     // Increase overhead size if needed.
   } 
-  d_sharedState->clearStats();
+  d_sharedState->resetStats();
 
   // calculate mean/std dev
   //double stdDev = 0;

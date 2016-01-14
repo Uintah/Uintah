@@ -35,6 +35,7 @@
 #include <Core/Parallel/PackBufferInfo.h>
 #include <Core/Grid/Task.h>
 #include <Core/Parallel/BufferInfo.h>
+#include <Core/Util/InfoMapper.h>
 
 #include <vector>
 #include <map>
@@ -45,18 +46,6 @@ namespace Uintah {
 static DebugStream mpi_stats("MPIStats", false);
 
 class Task;
-
-struct mpi_timing_info_s {
-  double totalreduce;
-  double totalsend;
-  double totalrecv;
-  double totaltask;
-  double totalreducempi;
-  double totalsendmpi;
-  double totalrecvmpi;
-  double totaltestmpi;
-  double totalwaitmpi;
-};
 
 /**************************************
 
@@ -138,7 +127,23 @@ class MPIScheduler : public SchedulerCommon {
       }
     }
 
-    mpi_timing_info_s   mpi_info_;
+    // timing statistics to test the mpi functionality
+    enum TimingStat
+    {
+      TotalReduce = 0,
+      TotalSend,
+      TotalRecv,
+      TotalTask,
+      TotalReduceMPI,
+      TotalSendMPI,
+      TotalRecvMPI,
+      TotalTestMPI,
+      TotalWaitMPI,
+      MAX_TIMING_STATS
+    };
+
+    InfoMapper< TimingStat, double > mpi_info_;
+
     MPIScheduler*       parentScheduler_;
 
     // Performs the reduction task. (In threaded schdeulers, a single worker thread will execute this.)
