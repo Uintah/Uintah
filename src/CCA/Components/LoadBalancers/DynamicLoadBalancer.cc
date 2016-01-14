@@ -1085,7 +1085,7 @@ DynamicLoadBalancer::possiblyDynamicallyReallocate( const GridP & grid, int stat
   // this must be called here (it creates the new per-proc patch sets) even if DLB does nothing.  Don't move or return earlier.
   LoadBalancerCommon::possiblyDynamicallyReallocate(grid, flag);
   
-  d_sharedState->loadbalancerTime += Time::currentSeconds() - start;
+  d_sharedState->d_timingStats[SimulationState::LoadBalancerTime] += Time::currentSeconds() - start;
   return changed;
 }
 //______________________________________________________________________
