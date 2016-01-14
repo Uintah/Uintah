@@ -542,19 +542,25 @@ UnifiedScheduler::runTask( DetailedTask*         task,
     mpi_info_.totaltestmpi += Time::currentSeconds() - test_start_time;
     // -------------------------< end MPI test timing >-------------------------
 
-    // add my timings to the parent scheduler
-    if( parentScheduler_ ) {
-      parentScheduler_->mpi_info_.totaltask += mpi_info_.totaltask;
-      parentScheduler_->mpi_info_.totaltestmpi += mpi_info_.totaltestmpi;
-      parentScheduler_->mpi_info_.totalrecv += mpi_info_.totalrecv;
-      parentScheduler_->mpi_info_.totalsend += mpi_info_.totalsend;
-      parentScheduler_->mpi_info_.totalwaitmpi += mpi_info_.totalwaitmpi;
-      parentScheduler_->mpi_info_.totalreduce += mpi_info_.totalreduce;
+    // Add subscheduler timings to the parent scheduler and reset subscheduler timings
+    if ( parentScheduler_) {
+      parentScheduler_->mpi_info_.totalreduce    += mpi_info_.totalreduce;
+      parentScheduler_->mpi_info_.totalsend      += mpi_info_.totalsend;
+      parentScheduler_->mpi_info_.totalrecv      += mpi_info_.totalrecv;
+      parentScheduler_->mpi_info_.totaltask      += mpi_info_.totaltask;
+      parentScheduler_->mpi_info_.totalreducempi += mpi_info_.totalreducempi;
+      parentScheduler_->mpi_info_.totalsendmpi   += mpi_info_.totalsendmpi;
+      parentScheduler_->mpi_info_.totalrecvmpi   += mpi_info_.totalrecvmpi;
+      parentScheduler_->mpi_info_.totaltestmpi   += mpi_info_.totaltestmpi;
+      parentScheduler_->mpi_info_.totalwaitmpi   += mpi_info_.totalwaitmpi;
+
       mpi_info_.totalreduce    = 0;
       mpi_info_.totalsend      = 0;
       mpi_info_.totalrecv      = 0;
       mpi_info_.totaltask      = 0;
       mpi_info_.totalreducempi = 0;
+      mpi_info_.totalsendmpi   = 0;
+      mpi_info_.totalrecvmpi   = 0;
       mpi_info_.totaltestmpi   = 0;
       mpi_info_.totalwaitmpi   = 0;
     }
