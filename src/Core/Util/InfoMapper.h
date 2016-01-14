@@ -22,8 +22,8 @@
  * IN THE SOFTWARE.
  */
 
-#ifndef UINTAH_HOMEBREW_Stats_H
-#define UINTAH_HOMEBREW_Stats_H
+#ifndef UINTAH_HOMEBREW_InfoMapper_H
+#define UINTAH_HOMEBREW_InfoMapper_H
 
 #include <Core/Exceptions/InternalError.h>
 
@@ -45,12 +45,12 @@ public:
 
   ~InfoMapper() {};
     
-  size_t size()
+  size_t size() const
   {
     return d_values.size();
   };
 
-  E maxStats()
+  E lastKey() const
   {
     return (E) d_values.size();
   };
@@ -61,44 +61,55 @@ public:
     d_names.clear();
   };
   
-  void reset( T val )
+  void reset( const T val )
   {
     for( int i=0; i<d_values.size(); ++i )
       d_values[(E) i] = val;
   };
 
-  void validStat( E key )
+  void validKey( const E key ) const
   {
     if( !exists( key ) )
     {
       std::stringstream msg;
-      msg << "Requesting an undefined stat key (" << key << ") ";
+      msg << "Requesting an undefined key (" << key << ") ";
       
       throw SCIRun::InternalError( msg.str(), __FUNCTION__, __LINE__);
     }
   };
 
-  bool exists( E key )
+  bool exists( const E key ) const
   {
     return (d_values.find( key ) != d_values.end());
   };
 
-  void validate( E lastKey )
+  bool exists( const std::string name )
+  {
+    for( int i=0; i<d_names.size(); ++i )
+    {
+      if( name == d_names[(E) i] )
+	return true;
+    }
+
+    return false;
+  };
+
+  void validate( const E lastKey ) const
   {
     if( d_values.size() != (int) lastKey )
     {
       std::stringstream msg;
-      msg << "The stat count does not match. Expected "
-	  << (int) lastKey << " stats. But added "
-	  << (int) d_values.size() << " stats.";
+      msg << "The count does not match. Expected "
+	  << (int) lastKey << " values. But added "
+	  << (int) d_values.size() << " values.";
       
       throw SCIRun::InternalError(msg.str(), __FILE__, __LINE__);
     }
   };
   
-  void addStat( E key, std::string name )
+  void insert( const E key, const std::string name )
   {
-    if( !exisits( key ) )
+    if( !exists( key ) && !exists( name ) )
     {
       d_values[key];
       d_names[key] = name;
@@ -113,9 +124,9 @@ public:
     }
   };
   
-  void addStat( E key, std::string name, T value )
+  void insert( const E key, const std::string name, const T value )
   {
-    if( !exists( key ) )
+    if( !exists( key ) && !exists( name ) )
     {
       d_values[key] = value;
       d_names[key] = name;
@@ -130,7 +141,7 @@ public:
     }
   };
   
-  void deleteStat( E key )
+  void erase( const E key )
   {
     typename std::map< E, T >::iterator           eIter = d_values.find( key );
     typename std::map< E, std::string >::iterator sIter = d_names.find( key );
@@ -151,39 +162,39 @@ public:
         T& operator[](E idx)       { return d_values[idx]; };
   const T& operator[](E idx) const { return d_values[idx]; };
   
-  void setStat( E key, T value )
+  void setValue( const E key, const T value )
   {
     d_values[key] = value;
   };
 
-  T getStat( E key )
+  T getValue( const E key )
   {
-    validStat( key );
+    validKey( key );
 
     return d_values[key];
   };
   
-  T getStat( std::string name )
+  T getValue( const std::string name )
   {
-    E key = getEnum(name);
+    E key = getKey(name);
     
-    validStat( key );
+    validKey( key );
 
     return d_values[ key ];
   };
   
-  std::string getName( E key )
+  std::string getName( const E key )
   {
-    validStat( key );
+    validKey( key );
 
-    return d_names[key];
+    return d_names[ key ];
   };
 
-  E getEnum( std::string name )
+  E getKey( const std::string name )
   {
-    for( int i=0; i<d_values.size(); ++i )
+    for( int i=0; i<d_names.size(); ++i )
     {
-      if( name.find( d_names[(E) i] ) != std::string::npos )
+      if( name == d_names[(E) i] )
 	return (E) i;
     }
 
