@@ -1846,7 +1846,7 @@ DataArchiver::outputReductionVars(const ProcessorGroup*,
       out << "\n";
     }
   }
-  d_sharedState->outputTime += Time::currentSeconds()-start;
+  d_sharedState->d_timingStats[SimulationState::OutputTime] += Time::currentSeconds()-start;
   dbg << "  end\n";
 }
 
@@ -2188,7 +2188,7 @@ DataArchiver::outputVariables(const ProcessorGroup * /*world*/,
       doc->output(xmlFilename.c_str());
       //doc->releaseDocument();
       
-      d_sharedState->outputTime += Time::currentSeconds()-start;
+      d_sharedState->d_timingStats[SimulationState::OutputTime] += Time::currentSeconds()-start;
     }
     d_outputLock.unlock(); 
   }
