@@ -14,7 +14,7 @@
     <BasicExpression type="SVOL">
       <TaskList>initialization</TaskList>
       <NameTag name="T"/>
-      <GaussianFunction amplitude="1000.0" deviation="1.0" mean="0.0" baseline="273.0">
+      <GaussianFunction amplitude="100.0" deviation="1.0" mean="0.0" baseline="273.0">
         <NameTag name="XSVOL"/>
       </GaussianFunction>
     </BasicExpression>

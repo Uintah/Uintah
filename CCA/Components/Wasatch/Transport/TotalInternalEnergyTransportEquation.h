@@ -71,6 +71,7 @@ namespace WasatchCore {
                                           const Expr::Tag& pressureTag,
                                           const Expr::TagList& velTags,
                                           const Expr::Tag& viscTag,
+                                          const Expr::Tag& dilTag,
                                           const TurbulenceParameters& turbulenceParams );
 
     ~TotalInternalEnergyTransportEquation();

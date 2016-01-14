@@ -236,7 +236,7 @@ MomRHSPart<FieldT>::Builder::build() const
 {
   return new MomRHSPart<FieldT>( cfluxXt_, cfluxYt_, cfluxZt_,
                                  viscTag_, strainXt_, strainYt_, strainZt_,
-                                 densityt_, dilataiont_, bodyForcet_, srcTermt_,
+                                 dilataiont_, densityt_, bodyForcet_, srcTermt_,
                                  volfract_ );
 }
 

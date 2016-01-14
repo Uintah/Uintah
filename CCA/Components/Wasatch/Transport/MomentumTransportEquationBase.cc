@@ -619,10 +619,15 @@ namespace WasatchCore{
     //__________________
     // dilatation - needed by pressure source term and strain tensor
     const Expr::Tag dilTag = tagNames.dilatation;
+    // if dilatation expression has not been registered, then register it
     if( !factory.have_entry( dilTag ) ){
-      typedef typename Dilatation<SVolField,XVolField,YVolField,ZVolField>::Builder Dilatation;
-      // if dilatation expression has not been registered, then register it
-      factory.register_expression( new Dilatation(dilTag, this->velTags_) );
+      if (get_staggered_location<FieldT>() == NODIR ) { // collocated
+        typedef typename Dilatation<SVolField,SVolField,SVolField,SVolField>::Builder Dilatation;
+        factory.register_expression( new Dilatation(dilTag, this->velTags_) );
+      } else { // staggered, const density & low-Mach projection
+        typedef typename Dilatation<SVolField,XVolField,YVolField,ZVolField>::Builder Dilatation;
+        factory.register_expression( new Dilatation(dilTag, this->velTags_) );
+      }
     }
     
     //___________________________________
