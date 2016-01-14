@@ -413,6 +413,22 @@ void visit_CheckState( visit_simulation_data *sim )
 
         if( Parallel::usingMPI() )
           VisItSetGetDomainList(visit_SimGetDomainList, (void*) sim);
+
+	VisItUI_textChanged("MaxTimeStep", visit_MaxTimeStepCallback, (void*) sim);
+	VisItUI_textChanged("MaxTime", visit_MaxTimeCallback, (void*) sim);
+//      VisItUI_textChanged("DeltaT", visit_DeltaTCallback, (void*) sim);
+	VisItUI_textChanged("DeltaTNext", visit_DeltaTCallback, (void*) sim);
+	VisItUI_textChanged("DeltaTFactor", visit_DeltaTFactorCallback, (void*) sim);
+	VisItUI_textChanged("DeltaTMin", visit_DeltaTMinCallback, (void*) sim);
+
+
+	VisItUI_textChanged("DeltaTMax", visit_DeltaTMaxCallback, (void*) sim);
+	VisItUI_textChanged("MaxWallTime", visit_MaxWallTimeCallback, (void*) sim);
+	VisItUI_cellChanged("UPSVariableTable",
+			    visit_UPSVariableTableCallback, (void*) sim);
+	VisItUI_cellChanged("OutputIntervalVariableTable",
+			    visit_OutputIntervalVariableTableCallback,
+			    (void*) sim);
       }
       else
       {
