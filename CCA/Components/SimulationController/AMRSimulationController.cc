@@ -871,7 +871,7 @@ AMRSimulationController::doRegridding( GridP & currentGrid, bool initialTimestep
   }
   
   double regridTime = Time::currentSeconds() - start;
-  d_sharedState->regriddingTime += regridTime;
+  d_sharedState->d_timingStats[SimulationState::RegriddingTime] += regridTime;
   d_sharedState->setRegridTimestep(false);
 
   int lbstate = initialTimestep ? LoadBalancer::init : LoadBalancer::regrid;
@@ -1034,7 +1034,7 @@ AMRSimulationController::recompile(double t, double delt, GridP& currentGrid, in
   double dt=Time::currentSeconds() - start;
 
   proc0cout << "DONE TASKGRAPH RE-COMPILE (" << dt << " seconds)\n";
-  d_sharedState->compilationTime += dt;
+  d_sharedState->d_timingStats[SimulationState::CompilationTime] += dt;
 }
 //______________________________________________________________________
 void

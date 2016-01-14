@@ -25,6 +25,7 @@
 #ifndef UINTAH_HOMEBREW_SimulationState_H
 #define UINTAH_HOMEBREW_SimulationState_H
 
+#include <Core/Util/InfoMapper.h>
 #include <Core/Util/RefCounted.h>
 #include <Core/ProblemSpec/ProblemSpecP.h>
 #include <Core/ProblemSpec/ProblemSpec.h>
@@ -256,19 +257,29 @@ public:
   bool d_updateOutputInterval;
   bool d_recompileTaskGraph;
 
+  void resetStats();
+  
   // timing statistics to test load balance
-  void clearStats();
-  double compilationTime;
-  double regriddingTime;
-  double regriddingCompilationTime;
-  double regriddingCopyDataTime;
-  double loadbalancerTime;
-  double taskExecTime;
-  double taskLocalCommTime;
-  double taskGlobalCommTime;
-  double taskWaitCommTime;
-  double outputTime;
-  double taskWaitThreadTime;
+  enum TimingStat
+  {
+    CompilationTime = 0,
+    RegriddingTime,
+    RegriddingCompilationTime,
+    RegriddingCopyDataTime,
+    LoadBalancerTime,
+    TaskExecTime,
+    TaskLocalCommTime,
+    TaskGlobalCommTime,
+    TaskWaitCommTime,
+    TaskWaitThreadTime,
+    OutputTime,
+    MAX_TIMING_STATS
+  };
+
+  InfoMapper< TimingStat, double > d_timingStats;
+
+  double getTotalTime();
+  double getOverheadTime();
 
   //percent time in overhead samples
   double overhead[OVERHEAD_WINDOW];
