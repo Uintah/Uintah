@@ -14,14 +14,14 @@
     <BasicExpression type="SVOL">
       <TaskList>initialization</TaskList>
       <NameTag name="f0"/>
-      <GaussianFunction amplitude="40.0" deviation="0.3" mean="0.1" baseline="0.0">
+      <GaussianFunction amplitude="10.0" deviation="0.3" mean="0.1" baseline="0.0">
         <NameTag name="XSVOL"/>
       </GaussianFunction>
     </BasicExpression>
     <BasicExpression type="SVOL">
       <TaskList>initialization</TaskList>
       <NameTag name="f1"/>
-      <GaussianFunction amplitude="40.0" deviation="0.5" mean="0" baseline="0.0">
+      <GaussianFunction amplitude="10.0" deviation="0.5" mean="0" baseline="0.0">
         <NameTag name="YSVOL"/>
       </GaussianFunction>
     </BasicExpression>
@@ -124,8 +124,8 @@
   <Time>
     <maxTime>5.0</maxTime>
     <initTime>0.0</initTime>
-    <delt_min>1e-8</delt_min>
-    <delt_max>1e-8</delt_max>
+    <delt_min>1e-7</delt_min>
+    <delt_max>1e-7</delt_max>
     <max_Timesteps> 1000 </max_Timesteps>
     <timestep_multiplier>1.0</timestep_multiplier>
   </Time>

@@ -116,4 +116,10 @@ template class Dilatation< SpatialOps::SVolField,
                            SpatialOps::XVolField,
                            SpatialOps::YVolField,
                            SpatialOps::ZVolField >;
+
+template class Dilatation< SpatialOps::SVolField,
+                           SpatialOps::SVolField,
+                           SpatialOps::SVolField,
+                           SpatialOps::SVolField >;
+
 //==========================================================================

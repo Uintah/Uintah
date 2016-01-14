@@ -677,7 +677,7 @@ namespace WasatchCore{
         throw Uintah::ProblemSetupException( msg.str(), __FILE__, __LINE__ );
       }
       momentumSpec->findBlock("EnergyEquation")->get("SolutionVariable", rhoETotal);
-      EquationBase* totalEEq = scinew TotalInternalEnergyTransportEquation(rhoETotal, momentumSpec->findBlock("EnergyEquation"), gc, rhoTag, temperatureTag, TagNames::self().pressure, velTags, viscTag, turbParams);
+      EquationBase* totalEEq = scinew TotalInternalEnergyTransportEquation(rhoETotal, momentumSpec->findBlock("EnergyEquation"), gc, rhoTag, temperatureTag, TagNames::self().pressure, velTags, viscTag, TagNames::self().dilatation , turbParams);
       adaptors.push_back( scinew EqnTimestepAdaptor<SVolField>(totalEEq) );
 
     } else {

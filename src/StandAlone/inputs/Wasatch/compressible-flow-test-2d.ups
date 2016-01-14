@@ -14,14 +14,14 @@
     <BasicExpression type="SVOL">
       <TaskList>initialization</TaskList>
       <NameTag name="f0"/>
-      <GaussianFunction amplitude="40.0" deviation="0.5" mean="0" baseline="0.0">
+      <GaussianFunction amplitude="10.0" deviation="0.5" mean="0" baseline="0.0">
         <NameTag name="XSVOL"/>
       </GaussianFunction>
     </BasicExpression>
     <BasicExpression type="SVOL">
       <TaskList>initialization</TaskList>
       <NameTag name="f1"/>
-      <GaussianFunction amplitude="40.0" deviation="0.5" mean="0" baseline="0.0">
+      <GaussianFunction amplitude="10.0" deviation="0.5" mean="0" baseline="0.0">
         <NameTag name="YSVOL"/>
       </GaussianFunction>
     </BasicExpression>
@@ -131,7 +131,7 @@
   </Time>
   <DataArchiver>
     <filebase>compressible-2d-test.uda</filebase>
-    <outputTimestepInterval>1</outputTimestepInterval>
+    <outputTimestepInterval>10</outputTimestepInterval>
     <outputInitTimestep/>
     <checkpoint cycle="2" timestepInterval="20"/>
     <save label="T"/>
@@ -150,7 +150,7 @@
       <Box label="1">
         <lower>[-2,-2,0]</lower>
         <upper>[2,2,1]</upper>
-        <resolution>[200,200,1]</resolution>
+        <resolution>[100,100,1]</resolution>
         <patches>[2,2,1]</patches>
       </Box>
       <periodic>[1,1,1]</periodic>
