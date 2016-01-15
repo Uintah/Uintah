@@ -57,12 +57,15 @@ namespace Uintah {
 
     virtual void setIncludeHydroStress(bool value);
 
-//    virtual void addInitialComputesAndRequires(Task* task, 
-//                                               const MPMMaterial* matl,
-//                                               const PatchSet* patches) const;
+    virtual void addInitialComputesAndRequires(Task* task, 
+                                               const MPMMaterial* matl,
+                                               const PatchSet* patches) const;
 
-//    virtual void initializeSDMData(const Patch* patch, const MPMMaterial* matl,
-//                                   DataWarehouse* new_dw);
+    virtual void initializeTimeStep(const Patch* patch, const MPMMaterial* matl,
+                                    DataWarehouse* new_dw);
+
+    virtual void addParticleState(std::vector<const VarLabel*>& from,
+                                  std::vector<const VarLabel*>& to);
 
     virtual void scheduleComputeFlux(Task* task, const MPMMaterial* matl, 
 		                                 const PatchSet* patch) const;
@@ -87,6 +90,7 @@ namespace Uintah {
 
     virtual void outputProblemSpec(ProblemSpecP& ps,bool output_rdm_tag = true);
     virtual double computeStableTimeStep(double Dif, Vector dx);
+    virtual double computeDiffusivityTerm(double concentration, double pressure);
 
   protected:
     MPMLabel* d_lb;

@@ -147,6 +147,11 @@ namespace Uintah {
     std::vector<Matrix3>* getSize();
 
     //////////////////////////////////////////////////////////////////////
+    /*! Returns the vector containing the set of particle area vector   */
+    //////////////////////////////////////////////////////////////////////
+    std::vector<Vector>* getArea();
+
+    //////////////////////////////////////////////////////////////////////
     /*! Deletes the vector containing the set of particle locations     */
     //////////////////////////////////////////////////////////////////////
     void deletePoints();
@@ -160,6 +165,11 @@ namespace Uintah {
     /*! Deletes the vector containing the set of particle sizes         */
     //////////////////////////////////////////////////////////////////////
     void deleteSizes();
+
+    //////////////////////////////////////////////////////////////////////
+    /*! Deletes the vector containing the set of particle areas         */
+    //////////////////////////////////////////////////////////////////////
+    void deleteAreas();
 
     //////////////////////////////////////////////////////////////////////
     /*! Deletes the vector containing the set of particle temperatures  */
@@ -206,6 +216,7 @@ namespace Uintah {
     std::vector<Vector> d_rvec2; // CPDI or CPTI
     std::vector<Vector> d_rvec3; // CPDI or CPTI
     std::vector<Matrix3> d_size; // CPDI or CPTI
+    std::vector<Vector>  d_area; // CPDI or CPTI
     double d_dx;
     Vector d_DX;
   };

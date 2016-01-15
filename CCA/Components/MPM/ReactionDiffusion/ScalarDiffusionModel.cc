@@ -26,6 +26,7 @@
 #include <CCA/Components/MPM/ConstitutiveModel/MPMMaterial.h>
 #include <CCA/Components/MPM/MPMFlags.h>
 #include <Core/Labels/MPMLabel.h>
+#include <Core/Grid/Variables/VarTypes.h>
 #include <Core/Grid/Task.h>
 #include <Core/Grid/AMR.h>
 #include <Core/Grid/Level.h>
@@ -82,6 +83,38 @@ double ScalarDiffusionModel::getMaxConcentration(){
 
 void ScalarDiffusionModel::setIncludeHydroStress(bool value){
   include_hydrostress = value;
+}
+
+void ScalarDiffusionModel::addInitialComputesAndRequires(Task* task,
+                                                   const MPMMaterial* matl,
+                                                   const PatchSet* patch) const{
+  const MaterialSubset* matlset = matl->thisMaterial();
+  task->computes(d_lb->pConcentrationLabel, matlset);
+  task->computes(d_lb->pConcPreviousLabel,  matlset);
+  task->computes(d_lb->pConcGradientLabel,  matlset);
+}
+
+void ScalarDiffusionModel::initializeTimeStep(const Patch* patch,
+		                                      const MPMMaterial* matl,
+                                              DataWarehouse* new_dw)
+{
+  Vector dx = patch->dCell();
+  double timestep = 1.0e99;
+  timestep = min(timestep, computeStableTimeStep(diffusivity, dx));
+
+  new_dw->put(delt_vartype(timestep), d_lb->delTLabel, patch->getLevel());
+}
+
+void ScalarDiffusionModel::addParticleState(std::vector<const VarLabel*>& from,
+                                            std::vector<const VarLabel*>& to)
+{
+  from.push_back(d_lb->pConcentrationLabel);
+  from.push_back(d_lb->pConcPreviousLabel);
+  from.push_back(d_lb->pConcGradientLabel);
+
+  to.push_back(d_lb->pConcentrationLabel_preReloc);
+  to.push_back(d_lb->pConcPreviousLabel_preReloc);
+  to.push_back(d_lb->pConcGradientLabel_preReloc);
 }
 
 void ScalarDiffusionModel::scheduleComputeFlux(Task* task,
@@ -174,7 +207,8 @@ void ScalarDiffusionModel::computeDivergence(const Patch* patch,
       node = ni[k];
       if(patch->containsNode(node)){
         Vector div(d_S[k].x()*oodx[0],d_S[k].y()*oodx[1],d_S[k].z()*oodx[2]);
-        Cdot_cond = Dot(div, J)/* *pMass[idx]*/;
+        Cdot_cond = Dot(div, J)*pMass[idx];
+//        Cdot_cond = Dot(div, J)/* *pMass[idx]*/;
         gConcRate[node] -= Cdot_cond;
       }
     }
@@ -201,12 +235,12 @@ void ScalarDiffusionModel::scheduleComputeDivergence_CFI(Task* t,
     // Note: were using nPaddingCells to extract the region of coarse level
     // particles around every fine patch.   Technically, these are ghost
     // cells but somehow it works.
-    t->requires(Task::NewDW, d_lb->gZOILabel,  d_one_matl, Ghost::None,0);
-    t->requires(Task::OldDW, d_lb->pXLabel,    allPatches, Task::CoarseLevel,allMatls, ND, gac, npc);
-    t->requires(Task::OldDW, d_lb->pSizeLabel, allPatches, Task::CoarseLevel,allMatls, ND, gac, npc);
-    t->requires(Task::OldDW, d_lb->pMassLabel, allPatches, Task::CoarseLevel,allMatls, ND, gac, npc);
+    t->requires(Task::NewDW, d_lb->gZOILabel,     d_one_matl, Ghost::None,0);
+    t->requires(Task::OldDW, d_lb->pXLabel,       allPatches, Task::CoarseLevel,allMatls, ND, gac, npc);
+    t->requires(Task::OldDW, d_lb->pSizeLabel,    allPatches, Task::CoarseLevel,allMatls, ND, gac, npc);
+    t->requires(Task::OldDW, d_lb->pMassLabel,    allPatches, Task::CoarseLevel,allMatls, ND, gac, npc);
     t->requires(Task::OldDW, d_lb->pDeformationMeasureLabel,    allPatches, Task::CoarseLevel,allMatls, ND, gac, npc);
-    t->requires(Task::NewDW, d_lb->pFluxLabel, allPatches, Task::CoarseLevel,allMatls, ND, gac, npc);
+    t->requires(Task::NewDW, d_lb->pFluxLabel,    allPatches, Task::CoarseLevel,allMatls, ND, gac, npc);
 
     t->modifies(d_lb->gConcentrationRateLabel, matlset);
 }
@@ -309,8 +343,10 @@ void ScalarDiffusionModel::computeDivergence_CFI(const PatchSubset* finePatches,
           for(int k = 0; k < (int)ni.size(); k++) {
             fineNode = ni[k];
             if( finePatch->containsNode( fineNode ) ){
-               double Cdot_cond = Dot(div[k], pflux_coarse[idx]);
-                                    /*      * pmass_coarse[idx]; */
+               double Cdot_cond = Dot(div[k], pflux_coarse[idx])
+                                            * pmass_coarse[idx];
+//               double Cdot_cond = Dot(div[k], pflux_coarse[idx]);
+//                                    /*      * pmass_coarse[idx]; */
                gConcRate[fineNode] -= Cdot_cond;
             }  // contains node
           }  // node loop
@@ -329,9 +365,16 @@ void ScalarDiffusionModel::outputProblemSpec(ProblemSpecP& ps, bool output_rdm_t
 double ScalarDiffusionModel::computeStableTimeStep(double Dif, Vector dx)
 {
   // For a Forward Eular timestep the limiting factor is
-  // dt < dx^2 / 2*D. A safety factor of 2.0 is used.
-  // Further work needs to be done to refine the safety factor
+  // dt < dx^2 / 2*D.
   Vector timeStep(dx.x()*dx.x(), dx.y()*dx.y(), dx.z()*dx.z());
-  timeStep = timeStep/(Dif*4);
+  timeStep = timeStep/(Dif*2);
   return timeStep.minComponent();
+}
+
+double ScalarDiffusionModel::computeDiffusivityTerm(double concentration, double pressure)
+{
+  // This is just a function stub to be tied into the multiscale
+  // component. JH, AH, CG
+
+  return diffusivity;
 }

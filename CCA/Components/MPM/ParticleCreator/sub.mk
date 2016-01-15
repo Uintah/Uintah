@@ -33,9 +33,9 @@ SRCDIR   := CCA/Components/MPM/ParticleCreator
 SRCS     += \
 	$(SRCDIR)/ParticleCreator.cc	\
 	$(SRCDIR)/ParticleCreatorFactory.cc	\
-	$(SRCDIR)/ImplicitParticleCreator.cc	\
-	$(SRCDIR)/MembraneParticleCreator.cc	\
-	$(SRCDIR)/ShellParticleCreator.cc 
+	$(SRCDIR)/ImplicitParticleCreator.cc
+#	$(SRCDIR)/MembraneParticleCreator.cc	\
+#	$(SRCDIR)/ShellParticleCreator.cc 
 
 PSELIBS := Core/Grid \
 	CCA/Components/ICE \
