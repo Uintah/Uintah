@@ -67,6 +67,7 @@ class CellInformation : public RefCounted {
   // for non-uniform grid these values will come from the
   // patch but for the time being we're assigning the values
   // locally
+public:
   SCIRun::OffsetArray1<double> xx;
   SCIRun::OffsetArray1<double> yy;
   SCIRun::OffsetArray1<double> zz;
