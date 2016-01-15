@@ -966,9 +966,6 @@ Mutex::Mutex(const char* name)
   : name_(name)
 {
   // DO NOT CALL INITIALIZE in this CTOR!
-  if (this == 0){
-    fprintf(stderr, "WARNING: creation of null mutex\n");
-  }
 
   priv_ = new Mutex_private;
 
