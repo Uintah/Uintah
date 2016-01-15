@@ -270,7 +270,6 @@ void TongeRameshPTR::addComputesAndRequires(Task* task,
                                             const bool recurse,
                                             const bool SchedParent) const
 {
-  const MaterialSubset* matlset = matl->thisMaterial();
   throw ProblemSetupException("This addComputesAndRequires() does not add damage requires"
                               , __FILE__, __LINE__);
 }
@@ -281,7 +280,6 @@ void TongeRameshPTR::addInitialComputesAndRequires(Task* task,
 {
   const MaterialSubset* matlset = matl->thisMaterial();
   // Other constitutive model and input dependent computes and requires
-  Ghost::GhostType  gnone = Ghost::None;
   // task->requires(Task::NewDW, lb->pVolumeLabel, matlset, gnone);
   for (int i=0; i<d_numHistVar; ++i){
     task->computes(histVarVect[i],     matlset);

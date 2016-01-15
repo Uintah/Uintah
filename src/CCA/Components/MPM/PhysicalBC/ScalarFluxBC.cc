@@ -156,7 +156,8 @@ ScalarFluxBC::getType() const
 // contains the surface on which the ScalarFlux is to be applied.
 bool
 ScalarFluxBC::flagMaterialPoint(const Point& p, 
-                              const Vector& dxpp)
+                                const Vector& dxpp,
+                                      int& areacomp)
 {
 
   bool flag = false;
@@ -168,6 +169,14 @@ ScalarFluxBC::flagMaterialPoint(const Point& p,
 
     if (volume->inside(p)){
       flag = true;
+      Vector diff = box.upper()-box.lower();
+      if(diff.minComponent()==diff.x()){
+        areacomp=0;
+      } else if(diff.minComponent()==diff.y()){
+        areacomp=1;
+      } else if(diff.minComponent()==diff.z()){
+        areacomp=2;
+      }
     }
     delete volume;
 
@@ -189,6 +198,7 @@ ScalarFluxBC::flagMaterialPoint(const Point& p,
       if (volume->inside(p)){
         flag = true;
       }
+      areacomp=0;  // Area normal to the radial direction
       delete volume;
 
     }else if(d_cylinder_end || d_axisymmetric_end){
@@ -201,6 +211,7 @@ ScalarFluxBC::flagMaterialPoint(const Point& p,
       if (end->inside(p)){
          flag = true;
       }
+      areacomp=2;  // Area normal to the axial direction
       delete end;
     }
   } else if (d_surfaceType == "sphere") {
@@ -213,13 +224,13 @@ ScalarFluxBC::flagMaterialPoint(const Point& p,
                                                    sgp->radius()-tol);
     GeometryPiece* volume = scinew DifferenceGeometryPiece(outer, inner);
     if (volume->inside(p)) flag = true;
+    areacomp=0;  // Area normal to the radial direction
     delete volume;
 
   } else {
     throw ParameterNotFound("ERROR: Unknown surface specified for ScalarFluxBC",
                             __FILE__, __LINE__);
   }
-  
   return flag;
 }
 
@@ -257,8 +268,7 @@ ScalarFluxBC::getSurfaceArea() const
 }
 
 // Calculate the flux per particle at a certain time
-double 
-ScalarFluxBC::fluxPerParticle(double time) const
+double ScalarFluxBC::fluxPerParticle(double time) const
 {
   if (d_numMaterialPoints < 1) return 0.0;
 
@@ -272,143 +282,17 @@ ScalarFluxBC::fluxPerParticle(double time) const
   return (flux*area)/static_cast<double>(d_numMaterialPoints);
 }
 
-#if 0
-// Calculate the force vector to be applied to a particular
-// material point location
-Vector
-ScalarFluxBC::getForceVector(const Point& px, double forcePerParticle,
-                           const double time) const
+// Calculate the flux at a certain time given the area of a particular particle
+double ScalarFluxBC::fluxPerParticle(double time, double area) const
 {
+  if (d_numMaterialPoints < 1) return 0.0;
 
-  Vector force(0.0,0.0,0.0);
-  if (d_surfaceType == "box") {
-    BoxGeometryPiece* gp = dynamic_cast<BoxGeometryPiece*>(d_surface);
-    Vector normal(0.0, 0.0, 0.0);
-    normal[gp->thicknessDirection()] = 1.0;
-    force = normal*forcePerParticle;
-  } else if (d_surfaceType == "cylinder") {
-    CylinderGeometryPiece* gp = dynamic_cast<CylinderGeometryPiece*>(d_surface);
-    Vector normal = gp->radialDirection(px);
-    force = normal*forcePerParticle;
-    if(d_cylinder_end || d_axisymmetric_end){
-      normal = (gp->top()-gp->bottom())
-              /(gp->top()-gp->bottom()).length();
-      if(!d_axisymmetric_end){
-        force = normal*forcePerParticle;
-      }else{  // It IS on an axisymmetric end
-        double pArea = px.x()*d_dxpp.x()*1.0; /*(theta = 1 radian)*/
-        double press = ScalarFlux(time);
-        double fpP = pArea*press;
-        force = normal*fpP;
-      }
-    }
-  } else if (d_surfaceType == "sphere") {
-    SphereGeometryPiece* gp = dynamic_cast<SphereGeometryPiece*>(d_surface);
-    Vector normal = gp->radialDirection(px);
-    force = normal*forcePerParticle;
-  } else {
-    throw ParameterNotFound("ERROR: Unknown surface specified for ScalarFluxBC",
-                            __FILE__, __LINE__);
-  }
-  return force;
+  // Get the initial scalar flux that is applied ( t = 0.0 )
+  double flux = ScalarFlux(time);
+
+  // Calculate the forec per particle
+  return flux*area;
 }
-
-// Calculate the force vector to be applied to a particular
-// material point location
-Vector
-ScalarFluxBC::getForceVectorCBDI(const Point& px, const Matrix3& psize,
-                              const Matrix3& pDeformationMeasure,
-                              double forcePerParticle,const double time,
-                              Point& pExternalForceCorner1,
-                              Point& pExternalForceCorner2,
-                              Point& pExternalForceCorner3,
-                              Point& pExternalForceCorner4,
-                              const Vector& dx) const
-{
-  Vector force(0.0,0.0,0.0);
-  Vector normal(0.0, 0.0, 0.0);
-  if (d_surfaceType == "box") {
-    BoxGeometryPiece* gp = dynamic_cast<BoxGeometryPiece*>(d_surface);
-    normal[gp->thicknessDirection()] = 1.0;
-    force = normal*forcePerParticle;
-  } else if (d_surfaceType == "cylinder") {
-    CylinderGeometryPiece* gp = dynamic_cast<CylinderGeometryPiece*>(d_surface);
-    normal = gp->radialDirection(px);
-    force = normal*forcePerParticle;
-    if(d_cylinder_end || d_axisymmetric_end){
-      normal = (gp->top()-gp->bottom())
-              /(gp->top()-gp->bottom()).length();
-      if(!d_axisymmetric_end){
-        force = normal*forcePerParticle;
-      }else{  // It IS on an axisymmetric end
-        double pArea = px.x()*d_dxpp.x()*1.0; /*(theta = 1 radian)*/
-        double press = ScalarFlux(time);
-        double fpP = pArea*press;
-        force = normal*fpP;
-      }
-    }
-  } else if (d_surfaceType == "sphere") {
-    SphereGeometryPiece* gp = dynamic_cast<SphereGeometryPiece*>(d_surface);
-    normal = gp->radialDirection(px);
-    force = normal*forcePerParticle;
-  } else {
-    throw ParameterNotFound("ERROR: Unknown surface specified for ScalarFluxBC",
-                            __FILE__, __LINE__);
-  }
-  // 25% of total particle force goes to each corner
-  force = force*0.25;
-  // modify the sign of force if outward normal is not correctly defined
-  if (!d_outwardNormal) {
-    normal = normal*(-1.0);
-  }
-  // determine four boundary-corners of the particle
-  // px1 is the position of the center of the boundary particle face
-  // that is on the physical boundary.
-  // The direction to px1 is determined by taking the dot product of the
-  // normal vector with each of the r-vectors.  the one with a unity dot product
-  // is the winner.  Then just go out to that surface.
-  // TODO:  Bailing out of the loop as soon as px1 is found.  
-  int i1=0,i2=0;
-  Matrix3 dsize=pDeformationMeasure*psize;
-  Point px1;
-  for (int i = 0; i < 3; ++i) {
-   Vector dummy=Vector(dsize(0,i)*dx[0],dsize(1,i)*dx[1],dsize(2,i)*dx[2])*0.5;
-   if (abs(Dot(normal,dummy)/(normal.length()*dummy.length())-1.0)<0.1) {
-    px1=Point(px.x()+dummy[0],px.y()+dummy[1],px.z()+dummy[2]);
-    i1=(i+1)%3;
-    i2=(i+2)%3;
-   } else if (abs(Dot(normal,dummy)/(normal.length()*dummy.length())+1.0)<0.1) {
-    px1 = Point(px.x()-dummy[0],px.y()-dummy[1],px.z()-dummy[2]);
-    i1=(i+1)%3;
-    i2=(i+2)%3;
-   }
-  }
-  pExternalForceCorner1=Point(px1.x()-.5*(dsize(0,i1)*dx[0]-dsize(0,i2)*dx[0]),
-                              px1.y()-.5*(dsize(1,i1)*dx[1]-dsize(1,i2)*dx[1]),
-                              px1.z()-.5*(dsize(2,i1)*dx[2]-dsize(2,i2)*dx[2]));
-  pExternalForceCorner2=Point(px1.x()+.5*(dsize(0,i1)*dx[0]-dsize(0,i2)*dx[0]),
-                              px1.y()+.5*(dsize(1,i1)*dx[1]-dsize(1,i2)*dx[1]),
-                              px1.z()+.5*(dsize(2,i1)*dx[2]-dsize(2,i2)*dx[2]));
-  pExternalForceCorner3=Point(px1.x()-.5*(dsize(0,i1)*dx[0]+dsize(0,i2)*dx[0]),
-                              px1.y()-.5*(dsize(1,i1)*dx[1]+dsize(1,i2)*dx[1]),
-                              px1.z()-.5*(dsize(2,i1)*dx[2]+dsize(2,i2)*dx[2]));
-  pExternalForceCorner4=Point(px1.x()+.5*(dsize(0,i1)*dx[0]+dsize(0,i2)*dx[0]),
-                              px1.y()+.5*(dsize(1,i1)*dx[1]+dsize(1,i2)*dx[1]),
-                              px1.z()+.5*(dsize(2,i1)*dx[2]+dsize(2,i2)*dx[2]));
-
-  // Recalculate the force based on area changes (current vs. initial)
-  Vector iniVec1(psize(0,i1),psize(1,i1),psize(2,i1));
-  Vector iniVec2(psize(0,i2),psize(1,i2),psize(2,i2));
-  Vector curVec1(dsize(0,i1),dsize(1,i1),dsize(2,i1));
-  Vector curVec2(dsize(0,i2),dsize(1,i2),dsize(2,i2));
-  Vector iniA = Cross(iniVec1,iniVec2);
-  Vector curA = Cross(curVec1,curVec2);
-  double iniArea=iniA.length();
-  double curArea=curA.length();
-  force=force*(curArea/iniArea);
-  return force;
-}
-#endif
 
 namespace Uintah {
 // A method to print out the scalar flux bcs

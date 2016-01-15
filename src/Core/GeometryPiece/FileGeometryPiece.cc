@@ -22,10 +22,7 @@
  * IN THE SOFTWARE.
  */
 #include <Core/Exceptions/ProblemSetupException.h>
-//#include <Core/Geometry/Vector.h>
 #include <Core/GeometryPiece/FileGeometryPiece.h>
-//#include <Core/Grid/Box.h>
-//#include <Core/Grid/Patch.h>
 #include <Core/Malloc/Allocator.h>
 #include <Core/Math/Matrix3.h>
 #include <Core/Parallel/Parallel.h>
@@ -254,7 +251,6 @@ FileGeometryPiece::read_line(std::istream & is, Point & xmin, Point & xmax)
   Matrix3 gsize((1./d_DX.x()),0.,0.,0.,(1./d_DX.y()),0.,0.,0.,(1./d_DX.z()));
   bool file_has_size=false;
   bool file_has_volume=false;
-
  
   //__________________________________
   //  TEXT FILE
@@ -275,7 +271,7 @@ FileGeometryPiece::read_line(std::istream & is, Point & xmin, Point & xmax)
         if(is >> v1) {
           cout << "v1 = " << v1 << endl;
           d_volume.push_back(v1);
-          bool file_has_volume=true;
+          file_has_volume=true;
         }
       } else if(*vit=="p.temperature") {
         if(is >> v1){
@@ -365,7 +361,7 @@ FileGeometryPiece::read_line(std::istream & is, Point & xmin, Point & xmax)
             swapbytes(v[0]);
           }
           d_volume.push_back(v[0]);
-          bool file_has_volume=true;
+          file_has_volume=true;
         }
       } else if(*vit=="p.temperature") {
         if(is.read((char*)&v[0], sizeof(double))) {

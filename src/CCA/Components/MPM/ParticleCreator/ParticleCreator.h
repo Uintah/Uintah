@@ -85,6 +85,7 @@ namespace Uintah {
     geomvecs d_object_fibers;  
     geomvecs d_object_velocity; // gcd add
     geomMat3s d_object_size;  
+    geomvecs d_object_area;  
     } ObjectVars;
 
     typedef struct {
@@ -94,7 +95,7 @@ namespace Uintah {
     ParticleVariable<double> pmass, pvolume, ptemperature, psp_vol,perosion;
     ParticleVariable<double> pcolor,ptempPrevious,p_q;
     ParticleVariable<long64> pparticleID;
-    ParticleVariable<Vector> pdisp,pTempGrad;
+    ParticleVariable<Vector> pdisp,pTempGrad,parea;
     ParticleVariable<Vector> pfiberdir; 
     ParticleVariable<int> pLoadCurveID;
     ParticleVariable<int> plocalized;
@@ -137,7 +138,7 @@ namespace Uintah {
     //////////////////////////////////////////////////////////////////////////
     /*! Get the LoadCurveID applicable for this material point */
     //////////////////////////////////////////////////////////////////////////
-    int getLoadCurveID(const Point& pp, const Vector& dxpp);
+    int getLoadCurveID(const Point& pp, const Vector& dxpp, int& areacomp);
 
     //////////////////////////////////////////////////////////////////////////
     /*! Print MPM physical boundary condition information */

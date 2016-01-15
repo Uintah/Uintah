@@ -228,6 +228,21 @@ namespace Uintah {
                                            Vector dx,
                                            constParticleVariable<Matrix3> psize,
                                            ParticleInterpolator* interp);
+
+    virtual void addSplitParticlesComputesAndRequires(Task* task,
+                                                      const MPMMaterial* matl,
+                                                      const PatchSet* patches);
+
+    virtual void splitCMSpecificParticleData(const Patch* patch,
+                                             const int dwi,
+                                             const int nDims,
+                                             ParticleVariable<int> &prefOld,
+                                             ParticleVariable<int> &pref,
+                                             const unsigned int oldNumPar,
+                                             const int numNewPartNeeded,
+                                             DataWarehouse* old_dw,
+                                             DataWarehouse* new_dw);
+
   protected:
 
     inline void computeVelocityGradient(Matrix3& velGrad,
@@ -429,7 +444,6 @@ namespace Uintah {
                                 DataWarehouse*  old_dw,
                                 DataWarehouse*  new_dw,
                                 const MPMMaterial* matl);
-
 
     MPMLabel* lb;
     MPMFlags* flag;

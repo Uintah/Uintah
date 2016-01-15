@@ -426,6 +426,9 @@ SmoothCylGeomPiece::createCylPoints()
 	d_points.push_back(p);
 	d_volume.push_back(axisInc*area);
 	d_size.push_back(size);
+        // area vector contains three components, these are:
+        // (area normal to r, area normal to circumference, area normal to axis)
+	d_area.push_back(Vector(axisInc*r*angularInc,radInc*axisInc,area));
 	//cout << "Size["<<count<<"] = "<<d_size[count]<<endl;
 	count++;
       }
