@@ -57,14 +57,14 @@
 #  include <Core/Malloc/Allocator.h>
 
 /*
- This file is straight out of the glibc-2.2.1 distribution, with the 
+ This file is straight out of the glibc-2.2.1 distribution, with the
  exception that I've made some very minor changes: commented out some
  code, slightly modified other code and added some code.  Each instance
  of change is delimited with "/ * - cm <change-type> ... - cm * /".
 
  The reason for doing this is as a work around for the "fork/exec in pthread
- environment" bug introduced in the 2.1.2 and 2.1.3 releases of glibc 
- (in Linux).  The work around is to force the use of the symbol "__fork" 
+ environment" bug introduced in the 2.1.2 and 2.1.3 releases of glibc
+ (in Linux).  The work around is to force the use of the symbol "__fork"
  inside the libpthreads.so library rather than the symbol "fork" in the
  libc.so library.
 
@@ -147,7 +147,7 @@ sci_system_linuxthreads(const char *line)
     {
       save = errno;
       (void) sigaction (SIGINT, &intr, (struct sigaction *) NULL);
-      /* - cm modified 
+      /* - cm modified
         __set_errno (save); */
       errno = save;
       /* - cm */
@@ -246,7 +246,7 @@ sci_system_linuxthreads(const char *line)
 	fprintf(stderr, "sci_system.cc:Error in closing write pipe in child\n");
 	exit(1);
       }
-      
+
       const char *new_argv[4];
       new_argv[0] = SHELL_NAME;
       new_argv[1] = "-c";
@@ -259,7 +259,7 @@ sci_system_linuxthreads(const char *line)
       (void) UNBLOCK;
 
       /* Exec the shell.  */
-      /* - cm modified 
+      /* - cm modified
 	 (void) __execve (SHELL_PATH, (char *const *) new_argv, __environ); */
       (void) execve (SHELL_PATH, (char *const *) new_argv, __environ);
       /* - cm */
@@ -277,7 +277,7 @@ sci_system_linuxthreads(const char *line)
   else
     /* Parent side.  */
     {
-      
+
       // Wait for signal from child that it is past the fork
       if (close(pipe_fd[1]) == -1) {
 	fprintf(stderr, "sci_system.cc:Error in closing write pipe in parent\n");
@@ -299,7 +299,7 @@ sci_system_linuxthreads(const char *line)
 	fprintf(stderr, "sci_system.cc:Error in closing read pipe in parent\n");
 	return 1;
       }
-      
+
 #ifdef	NO_WAITPID
       pid_t child;
       do
@@ -323,10 +323,10 @@ sci_system_linuxthreads(const char *line)
       do
 	/* - cm modified
 	   n = __waitpid (pid, &status, 0); */
-	n = waitpid (pid, &status, 0);      
+	n = waitpid (pid, &status, 0);
         /* - cm */
       while (n == -1 && errno == EINTR);
-      
+
       if (n != pid)
 	status = -1;
 #endif
@@ -364,7 +364,7 @@ sci_system(const char *line)
     char *buf = scinew char[n];
     confstr(_CS_GNU_LIBPTHREAD_VERSION, buf, n);
     const bool nptl = strncmp(buf, "NPTL", 4) == 0;
-    delete buf;
+    delete[] buf;
     if (nptl)
     {
       return system(line);

@@ -49,11 +49,11 @@
 using namespace std;
 
 namespace SCIRun {
-  
+
 // MAX -----------------------------------------------------------------
 template <class T>
-inline T MMAX(T a, T b) { 
-  return ((a < b) ? b : a); 
+inline T MMAX(T a, T b) {
+  return ((a < b) ? b : a);
 }
 
 //----------------------------------------------------------------------
@@ -67,7 +67,7 @@ SocketInitializer::SocketInitializer() {
      check your return codes to make sure you catch this error! */
 
   struct sigaction sig;
-  
+
   sig.sa_handler = SIG_IGN;
   sig.sa_flags = 0;
   sigemptyset(&sig.sa_mask);
@@ -99,7 +99,7 @@ Socket::FindReadyToRead(Socket** sockArray, int n, bool block) {
       maxfd = MMAX(maxfd, sockArray[i]->fd);
     }
   }
-  
+
 				// N.B.: The first argument in select
 				// might be different under UNIX
 
@@ -111,7 +111,7 @@ Socket::FindReadyToRead(Socket** sockArray, int n, bool block) {
     memset(&timeout, 0, sizeof(timeout));
     to = &timeout;
   }
-  
+
 
 				// if the last argument is NULL, make
 				// this call Block until ready
@@ -119,7 +119,7 @@ Socket::FindReadyToRead(Socket** sockArray, int n, bool block) {
     cerr << "Socket::FindReadyToRead: select() error" << endl;
   }
 
-  
+
   for (i = 0; i < n; i++) {
     if (FD_ISSET(sockArray[i]->fd, &readset)) {
       return i;
@@ -152,7 +152,7 @@ Socket::Socket() {
   }
 
   // So that we can re-bind to it without TIME_WAIT problems
-  
+
   // sources say to use this sparingly
   int reuse_addr = 1;
   setsockopt(fd, SOL_SOCKET, SO_REUSEADDR, &reuse_addr,
@@ -171,7 +171,7 @@ Socket::Socket(int f) {
 
 //----------------------------------------------------------------------
 Socket::~Socket() {
-  Close();  
+  Close();
 }
 
 //----------------------------------------------------------------------
@@ -200,11 +200,11 @@ Socket::Close() {
   if (!connected) {
     return;
   }
-  
+
   shutdown(fd, SD_SEND);
   close(fd);
   connected = false;
-  
+
 }
 
 //----------------------------------------------------------------------
@@ -212,12 +212,12 @@ void
 Socket::Reset() {
 
   Close();
-  
+
   fd = socket(AF_INET, SOCK_STREAM, 0);
 
   if (fd == INVALID_SOCKET) {
     perror("Socket::Reset: Could not create socket");
-    
+
   }
 }
 
@@ -234,9 +234,9 @@ Socket::ConnectTo(char* hostname, int port) {
   for (int i = 0; i < 8; i++) {
     address.sin_zero[i] = 0;
   }
-  
+
   err = connect(fd, (sockaddr *)(&address), sizeof(address));
-  
+
   if (err == SOCKET_ERROR) {
     char errormsg[256];
     sprintf(errormsg,
@@ -245,10 +245,10 @@ Socket::ConnectTo(char* hostname, int port) {
     Close();
     return false;
   }
-  
+
   connected = true;
   return true;
-  
+
 }
 
 //----------------------------------------------------------------------
@@ -264,7 +264,7 @@ Socket::ListenTo(char* hostname, int port) {
     address.sin_zero[i] = 0;
   }
 
-  if (bind(fd,(sockaddr *)(&address),sizeof(address)) == SOCKET_ERROR) {
+  if (::bind(fd,(sockaddr *)(&address),sizeof(address)) == SOCKET_ERROR) {
     char errormsg[256];
     sprintf(errormsg,
       "Socket::ListenTo: Could not listen to %s:%d", hostname, port);
@@ -272,7 +272,7 @@ Socket::ListenTo(char* hostname, int port) {
     Close();
     return false;
   }
-  
+
   listen(fd, 64);
   connected = true;
   return true;
@@ -280,9 +280,9 @@ Socket::ListenTo(char* hostname, int port) {
 
 //----------------------------------------------------------------------
 Socket*
-Socket::AcceptConnection() 
+Socket::AcceptConnection()
 {
-  
+
   SOCKET s = accept(fd, 0, 0);
 
   if (s == SOCKET_ERROR) {
@@ -296,7 +296,7 @@ Socket::AcceptConnection()
   Socket* sock = new Socket(s);
   sock->connected = true;
   return sock;
-  
+
 }
 
 //----------------------------------------------------------------------
@@ -309,7 +309,7 @@ Socket::isConnected() {
 int
 Socket::isSynchronous() {
   return synchronous;
-} 
+}
 
 //----------------------------------------------------------------------
 				// these nasty union hacks allow me to
@@ -331,7 +331,7 @@ union doubleintintchar {
 //----------------------------------------------------------------------
 int
 Socket::Read(char* location, int numBytes) {
-  
+
   if (!connected) {
     return SOCKET_ERROR;
   }
@@ -359,7 +359,7 @@ Socket::Read(char* location, int numBytes) {
     r += amt;
   }
   return r;
-  
+
 }
 
 //----------------------------------------------------------------------
@@ -389,7 +389,7 @@ Socket::Write(char* location, int numBytes) {
     s += amt;
   }
   return s;
-  
+
 }
 
 //----------------------------------------------------------------------
@@ -423,10 +423,10 @@ int
 Socket::Read(double* location, int numDoubles) {
   int i, temp;
   doubleintintchar* l = (doubleintintchar*)location;
-  
+
 				// send
   int retval = Read((char*)location, numDoubles*sizeof(double));
-  
+
 				// convert back to host order
   for (i = 0; i < numDoubles; i++) {
     l[i].i[0] = htonl(l[i].i[0]);
@@ -501,10 +501,10 @@ Socket::Read(char*& location) {
 
 				// read the length of the string
   r1 = Read(len);
-  
+
   if (r1 == 0) return 0;
   else if (r1 != sizeof(len)) return SOCKET_ERROR;
-  
+
 				// allocate space for string plus null
 				// char
   location = new char[len+1];
@@ -521,30 +521,30 @@ Socket::Read(char*& location) {
     rtemp = Read(location+r2, len-r2);
     if (rtemp == SOCKET_ERROR) return SOCKET_ERROR;
     r2 += rtemp;
-    
+
   }
-  
+
 				// null-terminate
   location[len] = 0;
-  
+
   return r1+r2;
 }
 
 //----------------------------------------------------------------------
 int
 Socket::Write(char* location) {
-  
+
 				// get and write string length
   int len = strlen(location);
   int r1, r2;
   r1 = Write(len);
   if (r1 == SOCKET_ERROR) return SOCKET_ERROR;
-  
+
 				// write the string
   r2 = Write(location, len);
   if (r2 == SOCKET_ERROR) return SOCKET_ERROR;
   return r1+r2;
-  
+
 }
 
 //----------------------------------------------------------------------
