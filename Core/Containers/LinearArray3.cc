@@ -127,9 +127,11 @@ void LinearArray3<T>::initialize( const T& t )
   }
 }
 
+namespace SCIRun {
+
 // Explicit template instantiations:
 template class LinearArray3<double> ;
 template class LinearArray3<std::complex<double> > ;
 template class LinearArray3<Uintah::Matrix3> ;
 template class LinearArray3<SCIRun::Vector> ;
-
+}

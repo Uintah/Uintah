@@ -30,7 +30,7 @@
 
 CLASS
    CellInformation
-   
+
    Short description...
 
 GENERAL INFORMATION
@@ -45,16 +45,16 @@ GENERAL INFORMATION
    Stanislav Borodai(borodai@crsim.utah.edu)
 
    Center for the Simulation of Accidental Fires and Explosions (C-SAFE)
-  
+
 
 KEYWORDS
    grid, nonuniform grid
 
 DESCRIPTION
    Long description...
-  
+
 WARNING
-  
+
 ****************************************/
 
 #include <CCA/Components/Arches/CellInformationP.h>
@@ -63,9 +63,9 @@ WARNING
 namespace Uintah {
   class Patch;
 
-struct CellInformation : public RefCounted {
+class CellInformation : public RefCounted {
   // for non-uniform grid these values will come from the
-  // patch but for the time being we're assigning the values 
+  // patch but for the time being we're assigning the values
   // locally
   SCIRun::OffsetArray1<double> xx;
   SCIRun::OffsetArray1<double> yy;
