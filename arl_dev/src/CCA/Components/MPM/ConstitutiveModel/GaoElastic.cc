@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2014 The University of Utah
+ * Copyright (c) 1997-2016 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -30,33 +30,18 @@
 #endif
 
 #include <CCA/Components/MPM/ConstitutiveModel/GaoElastic.h>
-#include <CCA/Components/MPM/ConstitutiveModel/PlasticityModels/YieldConditionFactory.h>
-#include <CCA/Components/MPM/ConstitutiveModel/PlasticityModels/StabilityCheckFactory.h>
-#include <CCA/Components/MPM/ConstitutiveModel/PlasticityModels/FlowStressModelFactory.h>
-#include <CCA/Components/MPM/ConstitutiveModel/PlasticityModels/DamageModelFactory.h>
-#include <CCA/Components/MPM/ConstitutiveModel/PlasticityModels/MPMEquationOfStateFactory.h>
-#include <CCA/Components/MPM/ConstitutiveModel/PlasticityModels/ShearModulusModelFactory.h>
-#include <CCA/Components/MPM/ConstitutiveModel/PlasticityModels/MeltingTempModelFactory.h>
-#include <CCA/Components/MPM/ConstitutiveModel/PlasticityModels/SpecificHeatModelFactory.h>
-#include <CCA/Components/MPM/ConstitutiveModel/PlasticityModels/DevStressModelFactory.h>
-#include <CCA/Components/MPM/ConstitutiveModel/PlasticityModels/PlasticityState.h>
 #include <CCA/Components/MPM/ConstitutiveModel/PlasticityModels/DeformationState.h>
 
 #include <CCA/Components/MPM/ConstitutiveModel/MPMMaterial.h>
 #include <Core/Grid/Patch.h>
 #include <CCA/Ports/DataWarehouse.h>
-#include <Core/Grid/Variables/NCVariable.h>
 #include <Core/Grid/Variables/ParticleVariable.h>
 #include <Core/Grid/Task.h>
 #include <Core/Grid/Level.h>
 #include <Core/Grid/Variables/VarLabel.h>
 #include <Core/Labels/MPMLabel.h>
 #include <Core/Math/MinMax.h>
-#include <Core/Math/Gaussian.h>
 #include <Core/Math/Matrix3.h>
-#include <Core/Math/SymmMatrix3.h>
-#include <Core/Math/FastMatrix.h>
-#include <Core/Math/TangentModulusTensor.h>
 #include <Core/Grid/Variables/VarTypes.h>
 #include <Core/Malloc/Allocator.h>
 #include <Core/Util/DebugStream.h>
@@ -64,7 +49,6 @@
 #include <iostream>
 
 #include <Core/ProblemSpec/ProblemSpec.h>
-#include <Core/Exceptions/ParameterNotFound.h>
 
 using namespace std;
 using namespace Uintah;
@@ -83,10 +67,6 @@ GaoElastic::GaoElastic(ProblemSpecP& ps,MPMFlags* Mflag)
     ps->require("volume_expansion_coeff",d_initialData.vol_exp_coeff);
   }else{
     d_initialData.vol_exp_coeff = 0.0;
-    ostringstream warn;
-    warn << "RFElasticPlastic:: This Constitutive Model requires the use "
-         << "of scalar diffusion." << endl;
-    throw ProblemSetupException(warn.str(), __FILE__, __LINE__);
   }
 
   d_tol = 1.0e-10;
@@ -364,7 +344,7 @@ GaoElastic::computeStressTensor(const PatchSubset* patches,
   //**** Used for reaction diffusion *******
   double concentration;
   double concentration_pn;
-  double conc_rate=0.;
+  double conc_rate = 0.0;
   
 //  double totalStrainEnergy = 0.0;
 
@@ -591,11 +571,6 @@ GaoElastic::computeStressTensor(const PatchSubset* patches,
       tensorF_new.polarDecompositionRMB(tensorU, tensorR);
 
       sigma = (tensorR*sigma)*(tensorR.Transpose());
-      
-      // if(idx == 1){
-      //   cout << "Pid: " << idx << ", Stress: " << sigma << endl;
-      //   cout << "Pid: " << idx << ", Volume: " << pVolume[idx] << endl;
-      // }
 
       // Update the kinematic variables
       pRotation_new[idx] = tensorR;
