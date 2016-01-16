@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2015 The University of Utah
+ * Copyright (c) 1997-2016 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -27,15 +27,11 @@
 #include <CCA/Components/MPM/MPMFlags.h>
 #include <Core/Math/Matrix3.h>
 #include <CCA/Ports/DataWarehouse.h>
-#include <Core/Grid/Variables/VarLabel.h>
 #include <Core/Grid/Variables/ParticleVariable.h>
 #include <Core/Grid/Variables/NCVariable.h>
-#include <Core/Grid/Patch.h>
-#include <Core/Grid/Variables/VarTypes.h>
 #include <Core/Labels/MPMLabel.h>
-#include <Core/Math/FastMatrix.h>
 #include <Core/Exceptions/InvalidValue.h>
-
+#include <Core/Malloc/Allocator.h>
 #include <cmath>
 #include <iostream>
 
@@ -48,7 +44,7 @@ using namespace std;
 
 ConstitutiveModel::ConstitutiveModel(MPMFlags* Mflag)
 {
-  lb = new MPMLabel();
+  lb = scinew MPMLabel();
   flag = Mflag;
   if(flag->d_8or27==8){
     NGN=1;
@@ -59,7 +55,7 @@ ConstitutiveModel::ConstitutiveModel(MPMFlags* Mflag)
 
 ConstitutiveModel::ConstitutiveModel(const ConstitutiveModel* cm)
 {
-  lb = new MPMLabel();
+  lb = scinew MPMLabel();
   flag = cm->flag;
   NGN = cm->NGN;
   NGP = cm->NGP;
