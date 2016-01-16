@@ -464,8 +464,8 @@ ConstitutiveModel::computeDeformationGradientFromIncrementalDisplacement(
     }
 }
 
-void 
-ConstitutiveModel::addSplitParticlesComputesAndRequires(Task*, 
+void
+ConstitutiveModel::addSplitParticlesComputesAndRequires(Task*,
                                                         const MPMMaterial*,
                                                         const PatchSet*)
 {
