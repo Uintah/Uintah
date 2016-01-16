@@ -293,8 +293,8 @@ void AMRMPM::problemSetup(const ProblemSpecP& prob_spec,
       }else{
         d_thresholdVars.push_back(data);
       }
-    } 
-  } 
+    }
+  }
 
   //__________________________________
   // override CFI_interpolator
@@ -4722,7 +4722,6 @@ void AMRMPM::debug_CFI(const ProcessorGroup*,
     delete interpolatorCoarse;
   }  // End loop over coarse patches
 }
-
 
 //______________________________________________________________________
 //    This removes duplicate entries in the array
