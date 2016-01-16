@@ -764,6 +764,10 @@ void AMRMPM::schedulePartitionOfUnity(SchedulerP& sched,
   t->computes(lb->pLastLevelLabel_preReloc);
   t->computes(lb->pPartitionUnityLabel);
   t->computes(lb->MPMRefineCellLabel, d_one_matl);
+  if(flags->d_doScalarDiffusion){
+    t->requires(Task::OldDW, lb->pAreaLabel, Ghost::None);
+    t->computes(lb->pAreaLabel_preReloc);
+  }
 
   sched->addTask(t, patches, matls);
 }
@@ -4654,7 +4658,7 @@ void AMRMPM::debug_CFI(const ProcessorGroup*,
     ParticleVariable<double>  pColor;
     
     old_dw->get(px,                   lb->pXLabel,                  pset);
-    new_dw->get(psize,                lb->pSizeLabel,               pset);
+    old_dw->get(psize,                lb->pSizeLabel,               pset);
     old_dw->get(pDeformationMeasure,  lb->pDeformationMeasureLabel, pset);
     new_dw->allocateAndPut(pColor,    lb->pColorLabel_preReloc,     pset);
     
