@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2015 The University of Utah
+ * Copyright (c) 1997-2016 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -23,13 +23,11 @@
  */
 
 #include <CCA/Components/MPM/ParticleCreator/ParticleCreator.h>
-#include <CCA/Components/MPM/MPMFlags.h>
 #include <Core/GeometryPiece/GeometryObject.h>
 #include <Core/Grid/Box.h>
 #include <Core/Grid/Variables/CellIterator.h>
 #include <CCA/Ports/DataWarehouse.h>
 #include <Core/Grid/Patch.h>
-#include <Core/Grid/Variables/VarLabel.h>
 #include <Core/GeometryPiece/GeometryPiece.h>
 #include <Core/GeometryPiece/FileGeometryPiece.h>
 #include <Core/GeometryPiece/SmoothGeomPiece.h>
@@ -45,7 +43,6 @@
 #include <CCA/Components/MPM/ReactionDiffusion/ScalarDiffusionModel.h>
 #include <CCA/Components/MPM/MPMFlags.h>
 #include <CCA/Components/MPM/MMS/MMS.h>
-#include <fstream>
 #include <iostream>
 
 /*  This code is a bit tough to follow.  Here's the basic order of operations.
@@ -966,8 +963,10 @@ void ParticleCreator::registerPermanentParticleState(MPMMaterial* matl)
     particle_state.push_back(d_lb->pLastLevelLabel);
     particle_state_preReloc.push_back(d_lb->pLastLevelLabel_preReloc);
 
-    particle_state.push_back(d_lb->pAreaLabel);
-    particle_state_preReloc.push_back(d_lb->pAreaLabel_preReloc);
+    if (d_flags->d_doScalarDiffusion) {
+      particle_state.push_back(d_lb->pAreaLabel);
+      particle_state_preReloc.push_back(d_lb->pAreaLabel_preReloc);
+    }
   }
 
   if (d_computeScaleFactor) {
