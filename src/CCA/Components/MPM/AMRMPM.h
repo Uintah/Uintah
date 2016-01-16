@@ -171,19 +171,21 @@ protected:
                                           const MaterialSubset* matls,
                                           DataWarehouse* old_dw,
                                           DataWarehouse* new_dw);
+
   // At Coarse Fine interface
   void interpolateParticlesToGrid_CFI(const ProcessorGroup*,
                                       const PatchSubset* patches,
                                       const MaterialSubset* matls,
                                       DataWarehouse* old_dw,
                                       DataWarehouse* new_dw);
+
   // At Coarse Fine interface
   void interpolateParticlesToGrid_CFI_GIMP( const ProcessorGroup*,
                                             const PatchSubset* patches,
                                             const MaterialSubset* matls,
                                             DataWarehouse* old_dw,
                                             DataWarehouse* new_dw);
-                                      
+
   void coarsenNodalData_CFI(const ProcessorGroup*,
                             const PatchSubset* patches,
                             const MaterialSubset* matls,
@@ -427,22 +429,20 @@ protected:
                  const MaterialSubset*,                   
                  DataWarehouse* old_dw,                                
                  DataWarehouse* new_dw); 
-  //
-  // input coarse patches and return coarse & fine level patches with CFI               
+
+  // input coarse patches and return coarse & fine level patches with CFI
   void coarseLevelCFI_Patches(const PatchSubset* coarsePatches,
                               Level::selectType& CFI_coarsePatches,
                               Level::selectType& CFI_finePatches );
 
-  //
-  // input fine patches and return coarse & fine level patches with CFI               
+  // input fine patches and return coarse & fine level patches with CFI
   void fineLevelCFI_Patches(const PatchSubset* finePatches,
                             Level::selectType& CFI_coarsePatches,
                             Level::selectType& CFI_finePatches );
-  
+
   // remove duplicate entries in array  This belongs in Core/Grid/fixedvector.h
   void removeDuplicates( Level::selectType& array);
-  
-  
+
   int      d_nPaddingCells_Coarse;  // Number of cells on the coarse level that contain particles and surround a fine patch.
                                     // Coarse level particles are used in the task interpolateToParticlesAndUpdate_CFI.
 
@@ -475,7 +475,7 @@ private:
 
   MaterialSubset* d_one_matl;         // matlsubset for zone of influence
   std::string d_CFI_interpolator;     // user can override interpolator at CFI
-  
+
   std::vector<GeometryObject*> d_refine_geom_objs;
   AMRMPM(const AMRMPM&);
   AMRMPM& operator=(const AMRMPM&);
