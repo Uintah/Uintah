@@ -43,6 +43,13 @@ Uintah::GV_MMS( DataArchive * da, CommandLineFlags & clf )
       
   findTimestep_loopLimits( clf.tslow_set, clf.tsup_set, times, clf.time_step_lower, clf.time_step_upper);
       
+  FILE *outFile;
+  FILE *outFileL;
+  outFile = fopen("L_norms","w");
+  outFileL = fopen("L_normsPerLevel","w");
+
+  fprintf(outFile, "#Time,    L_inf,    L2norm\n");
+  fprintf(outFileL, "#Time,  Level,   L_inf,    L2norm,    NumParticles\n");
   for(unsigned long t=clf.time_step_lower;t<=clf.time_step_upper;t+=clf.time_step_inc){
     double time = times[t];
     GridP grid = da->queryGrid(t);
@@ -148,21 +155,16 @@ Uintah::GV_MMS( DataArchive * da, CommandLineFlags & clf )
     
     //__________________________________
     // write data to the files (L_norms & L_normsPerLevels)
-    FILE *outFile;
     
     // output level information
-    outFile = fopen("L_normsPerLevel","w");
-    fprintf(outFile, "#Time,  Level,   L_inf,    L2norm,    NumParticles\n");
     for(int l=0;l<numLevels;l++){
-      fprintf(outFile, "%16.16le, %i,  %16.16le,  %16.16le  %i\n", time, l, LinfLevel[l], L2normLevel[l],numParticles[l]);
+      fprintf(outFileL, "%16.16le, %i,  %16.16le,  %16.16le  %i\n", time, l, LinfLevel[l], L2normLevel[l],numParticles[l]);
     }
-    fclose(outFile);
     
     // overall 
-    outFile = fopen("L_norms","w");
-    fprintf(outFile, "#Time,    L_inf,    L2norm\n");
     fprintf(outFile, "%16.16le, %16.16le, %16.16le\n", time, max_errorAllLevels, L2norm);
-    fclose(outFile); 
   }
+  fclose(outFileL); 
+  fclose(outFile);
 } // end GV_MMS()
 
