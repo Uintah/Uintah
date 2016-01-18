@@ -13,6 +13,7 @@ SRCS += \
   $(SRCDIR)/FOWYDevol.cc \
   $(SRCDIR)/YamamotoDevol.cc \
   $(SRCDIR)/CharOxidationShaddix.cc \
+  $(SRCDIR)/CharOxidationSmith.cc \
   $(SRCDIR)/ConstantModel.cc  \
   $(SRCDIR)/HeatTransfer.cc \
   $(SRCDIR)/EnthalpyShaddix.cc \
