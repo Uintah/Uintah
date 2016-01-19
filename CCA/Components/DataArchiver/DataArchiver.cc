@@ -2191,6 +2191,32 @@ DataArchiver::outputVariables(const ProcessorGroup * pg,
   
   if (pidx_io == true && type != CHECKPOINT)
   {
+    
+    #if 0
+    //__________________________________
+    //  bulletproofing 
+    // Only CCVariables, only Doubles, ints, or Vectors are allowed right now
+    for(vector<SaveItem>::iterator iter = saveLabels.begin(); iter!= saveLabels.end(); iter++) {
+      
+      const VarLabel* label = iter->label;    
+      const Uintah::TypeDescription* td = label->typeDescription();
+      const Uintah::TypeDescription* subtype = td->getSubType();
+      
+      // Only CCVariables, only Doubles, ints, or Vectors are allowed
+      if(td->getType() != TypeDescription::CCVariable       ||
+         ( subtype->getType() != TypeDescription::double_type &&
+           subtype->getType() != TypeDescription::int_type    &&
+           subtype->getType() != TypeDescription::Vector ) ){
+        ostringstream warn;
+        warn << "DataArchiver::outputVariables ("<<label->getName() << " " 
+             << td->getName() << " ) has not been implemented" << endl;
+        throw ProblemSetupException(warn.str(), __FILE__, __LINE__);
+      }
+    }
+    #endif
+  
+    //__________________________________
+    //
     IntVector adjust_offset = IntVector(1,1,1);  //for data conversion, some datasets start at -1,-1,-1, this will soon be handled automatically by pidx 
                                                 // <ctc> for temporal jet, set to 0,0,1, use_float=false,agg_size=4
     IntVector clowIndex;
@@ -2254,6 +2280,8 @@ DataArchiver::outputVariables(const ProcessorGroup * pg,
       if (strstr(typestr.c_str(), "Vector") == NULL)
         continue;
 
+
+      cout << var->getName() << " " << typestr << " me: " << (strstr(typestr.c_str(), "CCVariable") == NULL) << " " << (strstr(typestr.c_str(), "Vector") == NULL) << endl;
       //if (rank == 0)
       //  cout << "type = " << type << endl;
       
@@ -2416,19 +2444,20 @@ DataArchiver::outputVariables(const ProcessorGroup * pg,
             patch = patches->get(p);
             patchID = patch->getID();
 
-            IntVector low  = patch->getCellLowIndex();
-            IntVector hi   = patch->getCellHighIndex();
-            IntVector hiE  = patch->getExtraCellHighIndex();
-            IntVector lowE = patch->getExtraCellLowIndex();
+            IntVector hiE       = patch->getExtraCellHighIndex();
+            IntVector lowE      = patch->getExtraCellLowIndex();
+            IntVector nCells_EC = hiE - lowE;
+            int totalCells_EC = nCells_EC.x() * nCells_EC.y() * nCells_EC.z();
             
             //if(rank == 0)
-            if(vc == 0)
-            printf("[PIDX %d] [%d] Offset and Count %d %d %d : %d %d %d\n", rank, vc, lowE.x(), lowE.y(), lowE.z(), (hiE.x() - lowE.x()), (hiE.y() - lowE.y()), (hiE.z() - lowE.z()));
+            if(vc == 0) {
+              printf("[PIDX %d] [%d] Offset and Count %d %d %d : %d %d %d\n", rank, vc, lowE.x(), lowE.y(), lowE.z(), nCells_EC.x(), nCells_EC.y(), nCells_EC.z());
+            }
             
             PIDX_point local_offset_point, local_box_count_point;
             
             PIDX_set_point_5D(local_offset_point, lowE.x()+adjust_offset.x(), lowE.y()+adjust_offset.y(), lowE.z()+adjust_offset.z(), 0, 0);
-            PIDX_set_point_5D(local_box_count_point, hiE.x() - lowE.x(), hiE.y() - lowE.y(), hiE.z() - lowE.z(), 1, 1);
+            PIDX_set_point_5D(local_box_count_point, nCells_EC.x(), nCells_EC.y(), nCells_EC.z(), 1, 1);
             
             //if (rank==0)
             //  printf("[PIDX %d] patch_buffer size: %ld\n", rank, sample_per_variable * (use_float?sizeof(float):sizeof(double)) * ((hiE.x() - lowE.x()) * (hiE.y() - lowE.y()) * (hiE.z() - lowE.z())));
@@ -2436,44 +2465,47 @@ DataArchiver::outputVariables(const ProcessorGroup * pg,
             unsigned char *t_buffer = NULL; 
             
             if (strstr(type2.c_str(), "double") != NULL || strstr(type2.c_str(), "Vector") != NULL){
-              t_buffer = (unsigned char*)malloc(sample_per_variable * sizeof(double) * ((hiE.x() - lowE.x()) * (hiE.y() - lowE.y()) * (hiE.z() - lowE.z())));
-              memset(t_buffer, 0, sample_per_variable * sizeof(double) * ((hiE.x() - lowE.x()) * (hiE.y() - lowE.y()) * (hiE.z() - lowE.z())));
+              t_buffer = (unsigned char*)malloc(sample_per_variable * sizeof(double) * totalCells_EC );
+              memset(t_buffer, 0, sample_per_variable * sizeof(double) * totalCells_EC );
 
-              patch_buffer[vcm][p] = (unsigned char*)malloc(sample_per_variable * sizeof(float) * ((hiE.x() - lowE.x()) * (hiE.y() - lowE.y()) * (hiE.z() - lowE.z())));
-              memset(patch_buffer[vcm][p], 0, sample_per_variable * sizeof(float) * ((hiE.x() - lowE.x()) * (hiE.y() - lowE.y()) * (hiE.z() - lowE.z())));
+              patch_buffer[vcm][p] = (unsigned char*)malloc( sample_per_variable * sizeof(float) * totalCells_EC );
+              memset(patch_buffer[vcm][p], 0, sample_per_variable * sizeof(float) * totalCells_EC );
             }
             else if (strstr(type2.c_str(), "int") != NULL)
             {
-              t_buffer = (unsigned char*)malloc(sample_per_variable * sizeof(int) * ((hiE.x() - lowE.x()) * (hiE.y() - lowE.y()) * (hiE.z() - lowE.z())));
-              memset(t_buffer, 0, sample_per_variable * sizeof(int) * ((hiE.x() - lowE.x()) * (hiE.y() - lowE.y()) * (hiE.z() - lowE.z())));
+              t_buffer = (unsigned char*)malloc(sample_per_variable * sizeof(int) * totalCells_EC );
+              memset(t_buffer, 0, sample_per_variable * sizeof(int) * totalCells_EC );
 
-              patch_buffer[vcm][p] = (unsigned char*)malloc(sample_per_variable * sizeof(int) * ((hiE.x() - lowE.x()) * (hiE.y() - lowE.y()) * (hiE.z() - lowE.z())));
-              memset(patch_buffer[vcm][p], 0, sample_per_variable * sizeof(int) * ((hiE.x() - lowE.x()) * (hiE.y() - lowE.y()) * (hiE.z() - lowE.z())));
+              patch_buffer[vcm][p] = (unsigned char*)malloc(sample_per_variable * sizeof(int) * totalCells_EC );
+              memset(patch_buffer[vcm][p], 0, sample_per_variable * sizeof(int) * totalCells_EC );
             }
             else {
               printf("[1] Error !!!! Unsupported data type");
             }
             
+            //__________________________________
+            //  Read in Array3 data to t-buffer
             new_dw->emit(pc, var, matlIndex, patch, t_buffer);
 
+            
             if (strstr(type2.c_str(), "double") != NULL || (strstr(type2.c_str(), "Vector") != NULL))
             {
-              double* tt_buffer = (double*)malloc(sample_per_variable * sizeof(double) * ((hiE.x() - lowE.x()) * (hiE.y() - lowE.y()) * (hiE.z() - lowE.z())));
-              memset(tt_buffer, 0, sample_per_variable * sizeof(double) * ((hiE.x() - lowE.x()) * (hiE.y() - lowE.y()) * (hiE.z() - lowE.z())));
-              memcpy(tt_buffer, t_buffer, sample_per_variable * sizeof(double) * ((hiE.x() - lowE.x()) * (hiE.y() - lowE.y()) * (hiE.z() - lowE.z())));
+              double* tt_buffer = (double*)malloc(sample_per_variable * sizeof(double) * totalCells_EC);
+              memset(tt_buffer, 0, sample_per_variable * sizeof(double) * totalCells_EC);
+              memcpy(tt_buffer, t_buffer, sample_per_variable * sizeof(double) * totalCells_EC);
               free(t_buffer);
               
-              float* ff_buffer = (float*)malloc(sample_per_variable * sizeof(float) * ((hiE.x() - lowE.x()) * (hiE.y() - lowE.y()) * (hiE.z() - lowE.z())));
-              memset(ff_buffer, 0, sample_per_variable * sizeof(float) * ((hiE.x() - lowE.x()) * (hiE.y() - lowE.y()) * (hiE.z() - lowE.z())));
-              std::copy(tt_buffer, tt_buffer + (sample_per_variable * ((hiE.x() - lowE.x()) * (hiE.y() - lowE.y()) * (hiE.z() - lowE.z()))), ff_buffer);
+              float* ff_buffer = (float*)malloc(sample_per_variable * sizeof(float) * totalCells_EC);
+              memset(ff_buffer, 0, sample_per_variable * sizeof(float) * totalCells_EC);
+              std::copy(tt_buffer, tt_buffer + (sample_per_variable * totalCells_EC), ff_buffer);
               free(tt_buffer);
               
-              memcpy(patch_buffer[vcm][p], ff_buffer, sample_per_variable * sizeof(float) * ((hiE.x() - lowE.x()) * (hiE.y() - lowE.y()) * (hiE.z() - lowE.z())));
+              memcpy(patch_buffer[vcm][p], ff_buffer, sample_per_variable * sizeof(float) * totalCells_EC);
               free (ff_buffer);
             }
             else if (strstr(type2.c_str(), "int") != NULL)
             {
-              memcpy(patch_buffer[vcm][p], t_buffer, sample_per_variable * sizeof(int) * ((hiE.x() - lowE.x()) * (hiE.y() - lowE.y()) * (hiE.z() - lowE.z())));
+              memcpy(patch_buffer[vcm][p], t_buffer, sample_per_variable * sizeof(int) * totalCells_EC);
               free(t_buffer);
             }
             else {
@@ -2505,28 +2537,27 @@ DataArchiver::outputVariables(const ProcessorGroup * pg,
         const Patch* patch;
 
         patch = patches->get(p);
-                    
-        IntVector low   = patch->getCellLowIndex();
-        IntVector hi    = patch->getCellHighIndex();
-        IntVector hiE   = patch->getExtraCellHighIndex();
-        IntVector lowE  = patch->getExtraCellLowIndex();
+        IntVector hiE       = patch->getExtraCellHighIndex();
+        IntVector lowE      = patch->getExtraCellLowIndex();
+        IntVector nCells_EC = hiE - lowE;
+        int totalCells_EC = nCells_EC.x() * nCells_EC.y() * nCells_EC.z();
             
-        printf("[PIDX %d] [%d] Offset and Count %d %d %d : %d %d %d\n", rank, vc, lowE.x(), lowE.y(), lowE.z(), (hiE.x() - lowE.x()), (hiE.y() - lowE.y()), (hiE.z() - lowE.z()));
+        printf("[PIDX %d] [%d] Offset and Count %d %d %d : %d %d %d\n", rank, vc, lowE.x(), lowE.y(), lowE.z(), nCells_EC.x(), nCells_EC.y(), nCells_EC.z() );
             
         PIDX_point local_offset_point, local_box_count_point;
             
         PIDX_set_point_5D(local_offset_point, lowE.x()+adjust_offset.x(), lowE.y()+adjust_offset.y(), lowE.z()+adjust_offset.z(), 0, 0);
-        PIDX_set_point_5D(local_box_count_point, hiE.x() - lowE.x(), hiE.y() - lowE.y(), hiE.z() - lowE.z(), 1, 1);
+        PIDX_set_point_5D(local_box_count_point, nCells_EC.x(), nCells_EC.y(), nCells_EC.z(), 1, 1);
             
-        PIDX_patch_buffer[p] = (float*)malloc(sizeof(float) * ((hiE.x() - lowE.x()) * (hiE.y() - lowE.y()) * (hiE.z() - lowE.z())));
-        memset(PIDX_patch_buffer[p], 0, sizeof(float) * ((hiE.x() - lowE.x()) * (hiE.y() - lowE.y()) * (hiE.z() - lowE.z())));
+        PIDX_patch_buffer[p] = (float*)malloc(sizeof(float) * totalCells_EC);
+        memset(PIDX_patch_buffer[p], 0, sizeof(float) * totalCells_EC);
 
 
-        for (int k = 0; k < (hiE.z() - lowE.z()); k++) {
-          for (int j = 0; j < (hiE.y() - lowE.y()); j++) {
-            for (int i = 0; i < (hiE.x() - lowE.x()); i++) {
-              unsigned long long index = (unsigned long long) ((hiE.x() - lowE.x()) * (hiE.y() - lowE.y()) * k) + ((hiE.x() - lowE.x()) * j) + i;
-              PIDX_patch_buffer[p][index] = 100 + ((globalExtents[0] * globalExtents[1]*((lowE.z()+adjust_offset.z()) + k))+(globalExtents[0]*((lowE.y()+adjust_offset.y()) + j)) + ((lowE.x()+adjust_offset.x()) + i));
+        for (int k = 0; k < nCells_EC.z(); k++) {
+          for (int j = 0; j < nCells_EC.y(); j++) {
+            for (int i = 0; i < nCells_EC.x(); i++) {
+              unsigned long long index = (unsigned long long) ( nCells_EC.x() * (nCells_EC.y() * k) + (nCells_EC.x() * j) + i );
+              PIDX_patch_buffer[p][index] = 100 + ((globalExtents[0] * globalExtents[1]*((lowE.z()+adjust_offset.z()) + k)) +(globalExtents[0]*((lowE.y()+adjust_offset.y()) + j)) + ((lowE.x()+adjust_offset.x()) + i));
             }
           }
         }
