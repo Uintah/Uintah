@@ -1,0 +1,56 @@
+How to build and run a kokkos enabled example.
+
+1) Export CC, CXX, and LINK (these need to be exported since the included kokkos version
+   is fragile and does not correctly propagate these variables).
+
+  export CC=gcc
+  export CXX=g++
+  export LINK=g++
+
+2) Create the directories the build and third-party-libraries (TPLs)
+
+  mkdir opt
+  mkdir -p opt/TPLs
+  mkdir -p opt/TPLs_src
+  mkdir -p opt/TPLs_src/kokkos
+  mkdir -p opt/TPLs_src/kokkos-build
+
+3) Export TPL_PATH and the path to the Kokkos source
+  cd opt
+  export TPL_PATH=`pwd`/TPLs
+  export KOKKOS_PATH=`pwd`/TPLs_src/kokkos
+
+
+4) Clone the kokkos repo
+  cd TPLs_src
+  git clone https://github.com/kokkos/kokkos.git
+  
+
+5) Configure and build Kokkos
+
+  cd kokkos-build
+  $KOKKOS_PATH/generate_makefile.bash \
+    --prefix=$TPL_PATH \
+    --kokkos-path=$KOKKOS_PATH \
+    --with-openmp \
+    --with-serial
+
+  make -j CC=$CC CXX=$CXX LINK=$LINK
+  make install CC=$CC CXX=$CXX LINK=$LINK
+
+  # To test Kokkos run the following make commands
+  # make -j build-test CC=$CC CXX=$CXX LINK=$LINK
+  # make test CC=$CC CXX=$CXX LINK=$LINK
+
+6) Configure and build Uintah
+
+  cd ../..
+  ../src/configure \
+    --enable-64bit \
+    --enable-optimize \
+    --enable-static \
+    LDFLAGS="-L$TPL_PATH/lib -lkokkos" \
+    CXXFLAGS="-I$TPL_PATH/include -DUINTAH_ENABLE_KOKKOS"
+
+  make -j sus
+
