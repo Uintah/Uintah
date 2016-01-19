@@ -39,6 +39,8 @@
 #include <CCA/Ports/Scheduler.h>
 #include <CCA/Ports/SchedulerP.h>
 
+#include <sci_defs/visit_defs.h>
+
 namespace Uintah {
 
 class  DataArchive;
@@ -202,6 +204,15 @@ private:
   // SimulationController(const SimulationController&) = 0;
   // SimulationController& operator=(const SimulationController&) = 0;
 
+
+#ifdef HAVE_VISIT
+public:
+  void SetVisIt( bool val ) { d_doVisIt = val; }
+  bool GetVisIt() { return d_doVisIt; }
+  
+private:
+  bool d_doVisIt;
+#endif      
 };
 
 } // End namespace Uintah

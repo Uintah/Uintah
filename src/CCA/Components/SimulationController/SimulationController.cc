@@ -113,6 +113,10 @@ SimulationController::SimulationController( const ProcessorGroup * myworld,
 
   d_grid_ps                = d_ups->findBlock( "Grid" );
 
+#ifdef HAVE_VISIT
+  d_doVisIt                = false;
+#endif
+
 #ifdef USE_PAPI_COUNTERS
   /*
    * Setup PAPI events to track.
@@ -307,6 +311,10 @@ SimulationController::preGridSetup( void )
   // Parse time struct
   d_timeinfo = scinew SimulationTime( d_ups );
   d_sharedState->d_simTime = d_timeinfo;
+
+#ifdef HAVE_VISIT
+  d_sharedState->SetVisIt( d_doVisIt );
+#endif
 }
 
 //______________________________________________________________________
