@@ -51,7 +51,7 @@ class Task;
 
 CLASS
    MPIScheduler
-   
+
    Short description...
 
 GENERAL INFORMATION
@@ -63,14 +63,14 @@ GENERAL INFORMATION
    University of Utah
 
    Center for the Simulation of Accidental Fires and Explosions (C-SAFE)
-  
+
 
 KEYWORDS
    MPI Scheduler
 
 DESCRIPTION
    Static task ordering and deterministic execution with MPI. One MPI rank per CPU core.
-  
+
 ****************************************/
 
 class MPIScheduler : public SchedulerCommon {
@@ -80,7 +80,7 @@ class MPIScheduler : public SchedulerCommon {
     MPIScheduler( const ProcessorGroup* myworld, const Output* oport, MPIScheduler* parentScheduler = 0 );
 
     virtual ~MPIScheduler();
-      
+
     virtual void problemSetup( const ProblemSpecP& prob_spec, SimulationStateP& state );
 
     virtual void execute( int tgnum = 0, int iteration = 0 );
@@ -99,7 +99,7 @@ class MPIScheduler : public SchedulerCommon {
 
     // get the processor group this scheduler is executing with (only valid during execute())
     const ProcessorGroup* getProcessorGroup() { return d_myworld; }
-    
+
     void compile() {
       numMessages_   = 0;
       messageVolume_ = 0;
@@ -201,5 +201,5 @@ class MPIScheduler : public SchedulerCommon {
 };
 
 } // End namespace Uintah
-   
+
 #endif // End CCA_COMPONENTS_SCHEDULERS_MPISCHEDULER_H
