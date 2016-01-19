@@ -32,7 +32,6 @@
 #include <Core/Grid/DbgOutput.h>
 #include <Core/Grid/Grid.h>
 #include <Core/Grid/Material.h>
-#include <Core/Grid/SimulationState.h>
 #include <Core/Grid/Variables/CellIterator.h>
 #include <Core/Grid/Variables/PerPatch.h>
 
@@ -45,6 +44,9 @@
 #include <Core/OS/Dir.h> // for MKDIR
 #include <Core/Util/FileUtils.h>
 #include <Core/Util/DebugStream.h>
+
+#include <sci_defs/visit_defs.h>
+
 #include <dirent.h>
 #include <iostream>
 #include <fstream>
@@ -92,7 +94,6 @@ MinMax::~MinMax()
     delete d_zero_matl;
   } 
   
-  
   VarLabel::destroy(d_lb->lastCompTimeLabel);
   VarLabel::destroy(d_lb->fileVarsStructLabel);
   
@@ -135,7 +136,6 @@ void MinMax::problemSetup(const ProblemSpecP& prob_spec,
   if (!vars_ps){
     throw ProblemSetupException("MinMax: Couldn't find <Variables> tag", __FILE__, __LINE__);    
   } 
-
   
   // find the material to extract data from.  Default is matl 0.
   // The user can use either 
@@ -157,7 +157,6 @@ void MinMax::problemSetup(const ProblemSpecP& prob_spec,
   vector<int> m;
   m.push_back(0);            // matl for FileInfo label
   m.push_back(defaultMatl);
-  d_matl_set = scinew MaterialSet();
   map<string,string> attribute;
     
   //__________________________________
@@ -165,32 +164,10 @@ void MinMax::problemSetup(const ProblemSpecP& prob_spec,
     
   for (ProblemSpecP var_spec = vars_ps->findBlock("analyze"); var_spec != 0; 
                     var_spec = var_spec->findNextBlock("analyze")) {
+
     var_spec->getAttributes(attribute);
     
-    varProperties me;
-    
-    //  Read in the optional material index from the variables that may be different
-    //  from the default index and construct the material set
-    int matl = defaultMatl;
-    if (attribute["matl"].empty() == false){
-      matl = atoi(attribute["matl"].c_str());
-    }
-    
-    // bulletproofing
-    if(matl < 0 || matl > numMatls){
-      throw ProblemSetupException("MinMax: analyze: Invalid material index specified for a variable", __FILE__, __LINE__);
-    }
-    
-    me.matl = matl;
-    m.push_back(matl);
-
-    // Read in the optional level index
-    int level = ALL_LEVELS;
-    if (attribute["level"].empty() == false){
-      level = atoi(attribute["level"].c_str());
-    }
-    me.level = level;
-    
+    //__________________________________
     // Read in the variable name
     string labelName = attribute["label"];
     VarLabel* label = VarLabel::find(labelName);
@@ -199,21 +176,41 @@ void MinMax::problemSetup(const ProblemSpecP& prob_spec,
                            + labelName , __FILE__, __LINE__);
     }
     
-    //__________________________________
-    //  Bulletproofing
-    // The user must specify the matl for single matl variables
+    // Bulletproofing - The user must specify the matl for single matl
+    // variables
     if ( labelName == "press_CC" && attribute["matl"].empty() ){
       throw ProblemSetupException("MinMax: You must add (matl='0') to the press_CC line." , __FILE__, __LINE__);
     }
+
+    // Read in the optional level index
+    int level = ALL_LEVELS;
+    if (attribute["level"].empty() == false){
+      level = atoi(attribute["level"].c_str());
+    }
+    
+    //  Read in the optional material index from the variables that
+    //  may be different from the default index and construct the
+    //  material set
+    int matl = defaultMatl;
+    if (attribute["matl"].empty() == false){
+      matl = atoi(attribute["matl"].c_str());
+    }
+    
+    // Bulletproofing
+    if(matl < 0 || matl > numMatls){
+      throw ProblemSetupException("MinMax: analyze: Invalid material index specified for a variable", __FILE__, __LINE__);
+    }
+    
+    m.push_back(matl);
+    
+    //__________________________________
+    bool throwException = false;  
     
     const TypeDescription* td = label->typeDescription();
     const TypeDescription* subtype = td->getSubType();
     
     const int baseType = td->getType();
     const int subType  = subtype->getType();
-    
-    //__________________________________
-    bool throwException = false;  
     
     // only CC, SFCX, SFCY, SFCZ variables
     if(baseType != TypeDescription::CCVariable &&
@@ -242,18 +239,16 @@ void MinMax::problemSetup(const ProblemSpecP& prob_spec,
          subType != TypeDescription::double_type) {
       throwException = true;
     } 
+
     if(throwException){       
       ostringstream warn;
       warn << "ERROR:AnalysisModule:MinMax: ("<<label->getName() << " " 
            << td->getName() << " ) has not been implemented" << endl;
       throw ProblemSetupException(warn.str(), __FILE__, __LINE__); 
     }
-    me.label = label;
-    
-    
+
     //__________________________________
     //  Create the min and max VarLabels for the reduction variables
-    
     string VLmax = labelName + "_max";
     string VLmin = labelName + "_min";
     VarLabel* meMax = NULL;
@@ -269,22 +264,30 @@ void MinMax::problemSetup(const ProblemSpecP& prob_spec,
       meMax = VarLabel::create( VLmax, maxvec_vartype::getTypeDescription() );
       meMin = VarLabel::create( VLmin, minvec_vartype::getTypeDescription() );
     }    
+
+    SimulationState::analysisVar me;
+    me.analysisType = SimulationState::MinMax;
+    me.label = label;
+    me.matl  = matl;
+    me.level = level;
     me.reductionMaxLabel = meMax;
     me.reductionMinLabel = meMin;
     
     d_analyzeVars.push_back(me);
-    
+#ifdef HAVE_VISIT
+    d_sharedState->d_analysisVars.push_back(me);
+#endif
   }
   
   //__________________________________
   //
   // remove any duplicate entries
   sort(m.begin(), m.end());
-  vector<int>::iterator it;
-  it = unique(m.begin(), m.end());
+  vector<int>::iterator it = unique(m.begin(), m.end());
   m.erase(it, m.end());
 
   //Construct the matl_set
+  d_matl_set = scinew MaterialSet();
   d_matl_set->addAll(m);
   d_matl_set->addReference();
 
@@ -292,9 +295,6 @@ void MinMax::problemSetup(const ProblemSpecP& prob_spec,
   d_zero_matl = scinew MaterialSubset();
   d_zero_matl->add(0);
   d_zero_matl->addReference();
-  
-  
-  
 }
 
 //______________________________________________________________________
