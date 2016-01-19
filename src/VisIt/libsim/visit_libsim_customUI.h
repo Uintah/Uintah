@@ -51,14 +51,17 @@ WARNING
 
 ****************************************/
 
+#define OutputIntervalRow     0
+#define CheckpointIntervalRow 1
+
 class visit_simulation_data;
 
 namespace Uintah {
   
+void visit_GetTimeVars       ( visit_simulation_data *sim );
 void visit_GetOutputIntervals( visit_simulation_data *sim );
-void visit_GetAnalysisVars( visit_simulation_data *sim );
-void visit_GetUPSVars( visit_simulation_data *sim );
-void visit_UpdateUPSVars( visit_simulation_data *sim );
+void visit_GetAnalysisVars   ( visit_simulation_data *sim );
+void visit_GetUPSVars        ( visit_simulation_data *sim );
 
 } // End namespace Uintah
 

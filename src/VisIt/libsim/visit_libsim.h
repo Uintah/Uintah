@@ -75,28 +75,6 @@ class SimulationController;
 
 typedef struct
 {
-  std::string name;
-  int matl;
-  double value;
-  
-  bool modified;
-
-} uintah_variable_data;
-
-
-typedef struct
-{
-  std::string name;
-  int matl;
-  int level;
-  double min;
-  double max;
-
-} uintah_min_max_data;
-
-
-typedef struct
-{
   // Uintah data members
   SimulationController *simController;
   GridP gridP;
@@ -123,11 +101,6 @@ typedef struct
   int  simMode;  // What the simulation is doing.
 
   bool isProc0;
-
-  std::vector< uintah_variable_data > upsVariables;
-  std::vector< uintah_variable_data > outputIntervals;
-
-  std::vector< uintah_min_max_data > minMaxVariables;
 
 } visit_simulation_data;
 
