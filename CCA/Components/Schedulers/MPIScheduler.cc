@@ -42,6 +42,11 @@
 
 #include <sci_defs/mpi_defs.h> // For MPIPP_H on SGI
 
+
+#ifdef UINTAH_ENABLE_KOKKOS
+#include <Kokkos_Core.hpp>
+#endif //UINTAH_ENABLE_KOKKOS
+
 #include <sstream>
 #include <iomanip>
 #include <map>
@@ -91,6 +96,9 @@ MPIScheduler::MPIScheduler( const ProcessorGroup* myworld,
     dlbLock("loadbalancer lock"),
     waittimesLock("waittimes lock")
 {
+#ifdef UINTAH_ENABLE_KOKKOS
+  Kokkos::initialize();
+#endif //UINTAH_ENABLE_KOKKOS
   d_lasttime = Time::currentSeconds();
   reloc_new_posLabel_ = 0;
 
@@ -115,7 +123,7 @@ MPIScheduler::MPIScheduler( const ProcessorGroup* myworld,
   mpi_info_.insert( TotalRecvMPI,   std::string("TotalRecvMPI"),   0 );
   mpi_info_.insert( TotalTestMPI,   std::string("TotalTestMPI"),   0 );
   mpi_info_.insert( TotalWaitMPI,   std::string("TotalWaitMPI"),   0 );
-  mpi_info_.validate( MAX_TIMING_STATS );	  
+  mpi_info_.validate( MAX_TIMING_STATS );
 }
 
 //______________________________________________________________________
@@ -139,6 +147,9 @@ MPIScheduler::~MPIScheduler()
       maxStats.close();
     }
   }
+#ifdef UINTAH_ENABLE_KOKKOS
+  Kokkos::finalize();
+#endif //UINTAH_ENABLE_KOKKOS
 }
 
 //______________________________________________________________________
@@ -333,7 +344,7 @@ MPIScheduler::runReductionTask( DetailedTask* task )
 {
   const Task::Dependency* mod = task->getTask()->getModifies();
   ASSERT(!mod->next);
-  
+
   OnDemandDataWarehouse* dw = dws[mod->mapDataWarehouse()].get_rep();
   ASSERT(task->getTask()->d_comm>=0);
   dw->reduceMPI(mod->var, mod->reductionLevel, mod->matls, task->getTask()->d_comm);
@@ -728,7 +739,7 @@ void MPIScheduler::postMPIRecvs( DetailedTask* task,
         // otherwise, these will be deleted after it receives and unpacks the data.
         delete p_mpibuff;
         delete pBatchRecvHandler;
-#endif          
+#endif
       }
     }  // end for loop over requires
   }
@@ -868,7 +879,7 @@ MPIScheduler::execute( int tgnum     /* = 0 */,
   while (numTasksDone < ntasks) {
     i++;
 
-    // 
+    //
     // The following checkMemoryUse() is commented out to allow for
     // maintaining the same functionality as before this commit...
     // In other words, so that memory highwater checking is only done
@@ -917,7 +928,7 @@ MPIScheduler::execute( int tgnum     /* = 0 */,
         printTaskLevels(d_myworld, taskLevel_dbg, task);
       }
     }
-  
+
     if(!abort && dws[dws.size()-1] && dws[dws.size()-1]->timestepAborted()){
       abort = true;
       abort_point = task->getTask()->getSortedOrder();
