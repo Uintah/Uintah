@@ -30,10 +30,13 @@
 #include <Core/ProblemSpec/ProblemSpecP.h>
 #include <Core/ProblemSpec/ProblemSpec.h>
 #include <Core/Grid/Variables/ComputeSet.h>
+#include <Core/Grid/Variables/VarTypes.h>
 #include <Core/Grid/SimulationTime.h>
 #include <Core/Grid/Ghost.h>
 #include <Core/Geometry/Vector.h>
 #include <Core/Math/MinMax.h>
+
+#include <sci_defs/visit_defs.h>
 
 #include <map>
 #include <vector>
@@ -288,6 +291,22 @@ public:
   int overheadIndex;
   double overheadAvg;
 
+  // timing statistics to test load balance
+  enum AnalysisType
+  {
+    MinMax = 0,
+    MAX_ANALYSIS_TYPES
+  };
+  
+  struct analysisVar {
+    AnalysisType analysisType;
+    VarLabel* label;
+    VarLabel* reductionMinLabel;
+    VarLabel* reductionMaxLabel;
+    int matl;
+    int level;
+  };
+  
 private:
 
   void registerMaterial(Material*);
@@ -361,7 +380,28 @@ private:
 
   // for AMR, how many times to execute a fine level per coarse level execution
   int d_timeRefinementRatio;
+  
+#ifdef HAVE_VISIT
+public:
+  struct modifiableVar {
+    std::string name;
+    TypeDescription::Type type;
+    int*    Ivalue;
+    double* Dvalue;
+    Vector* Vvalue;
+    bool    modified;
+  };
+  
+  std::vector< modifiableVar > d_VisIt_modifiableVars;
 
+  std::vector< analysisVar > d_analysisVars;
+
+  void SetVisIt( bool val ) { d_doVisIt = val; }
+  bool GetVisIt() { return d_doVisIt; }
+  
+private:
+  bool d_doVisIt;
+#endif      
 }; // end class SimulationState
 
 } // End namespace Uintah
