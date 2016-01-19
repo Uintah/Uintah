@@ -287,7 +287,7 @@ DataArchiver::problemSetup( const ProblemSpecP    & params,
      // Verify that an interval was specified:
      if( interval == "" && timestepInterval == "" && walltimeInterval == "" && walltimeIntervalHours == "" ) {
        throw ProblemSetupException( "ERROR: \n  <checkpoint> must specify either interval, timestepInterval, walltimeInterval",
-				    __FILE__, __LINE__ );
+                                    __FILE__, __LINE__ );
      }
    }
 
@@ -1853,7 +1853,7 @@ DataArchiver::outputReductionVars(const ProcessorGroup*,
 //______________________________________________________________________
 //
 void
-DataArchiver::outputVariables(const ProcessorGroup * /*world*/,
+DataArchiver::outputVariables(const ProcessorGroup * pg,
                               const PatchSubset    * patches,
                               const MaterialSubset * /*matls*/,
                               DataWarehouse        * /*old_dw*/,
@@ -1933,7 +1933,6 @@ DataArchiver::outputVariables(const ProcessorGroup * /*world*/,
   string dataFilebase;
   string dataFilename;
   const Level* level = NULL;
-  IntVector clowIndex,chighIndex;
 
   // find the xml filename and data filename that we will write to
   // Normal reductions will be handled by outputReduction, but checkpoint
@@ -1945,18 +1944,6 @@ DataArchiver::outputVariables(const ProcessorGroup * /*world*/,
     ASSERT(patches->get(0) != 0);
 
     level = patches->get(0)->getLevel();
-
-#if HAVE_PIDX
-    IntVector lowIndex,highIndex;
-    //level->findIndexRange(lowIndex,highIndex);
-    //level->findNodeIndexRange(lowIndex,highIndex);
-    //level->findCellIndexRange(lowIndex,highIndex);
-    level->findCellIndexRange(clowIndex,chighIndex);
-    //printf("clowIndex: %d %d %d, chighindex: %d %d %d\n",clowIndex[0],clowIndex[1],clowIndex[2],chighIndex[0],chighIndex[1],chighIndex[2]);
-    //level->findInteriorIndexRange(lowIndex,highIndex);
-    //level->findInteriorNodeIndexRange(lowIndex,highIndex);
-    //level->findInteriorCellIndexRange(lowIndex,highIndex);
-#endif
 
 
 #if SCI_ASSERTION_LEVEL >= 1
@@ -2005,10 +1992,10 @@ DataArchiver::outputVariables(const ProcessorGroup * /*world*/,
     // and we will want to overwrite it
       ifstream test(xmlFilename.c_str());
       if(test) {
-	doc = loadDocument(xmlFilename);
+        doc = loadDocument(xmlFilename);
       } else
 #endif
-	doc = ProblemSpec::createDocument("Uintah_Output");
+        doc = ProblemSpec::createDocument("Uintah_Output");
 
       // Find the end of the file
       ASSERT(doc != 0);
@@ -2016,13 +2003,13 @@ DataArchiver::outputVariables(const ProcessorGroup * /*world*/,
       
       long cur=0;
       while(n != 0) {
-	ProblemSpecP endNode = n->findBlock("end");
-	ASSERT(endNode != 0);
-	long end = atol(endNode->getNodeValue().c_str());
-	
-	if(end > cur)
-	  cur=end;
-	n = n->findNextBlock("Variable");
+        ProblemSpecP endNode = n->findBlock("end");
+        ASSERT(endNode != 0);
+        long end = atol(endNode->getNodeValue().c_str());
+        
+        if(end > cur)
+          cur=end;
+        n = n->findNextBlock("Variable");
       }
       
       //__________________________________
@@ -2040,149 +2027,149 @@ DataArchiver::outputVariables(const ProcessorGroup * /*world*/,
       
       while( fd == -1 ) {
 
-	if( tries >= 50 ) {
-	  ostringstream msg;
-	  
-	  msg << "DataArchiver::output(): Failed to open file '" << dataFilename << "' (after 50 tries).";
-	  cerr << msg.str() << "\n";
-	  throw ErrnoException( msg.str(), errno, __FILE__, __LINE__ );
-	}
+        if( tries >= 50 ) {
+          ostringstream msg;
+          
+          msg << "DataArchiver::output(): Failed to open file '" << dataFilename << "' (after 50 tries).";
+          cerr << msg.str() << "\n";
+          throw ErrnoException( msg.str(), errno, __FILE__, __LINE__ );
+        }
 
-	fd = open( filename, flags, 0666 );
-	tries++;
+        fd = open( filename, flags, 0666 );
+        tries++;
       }
       
       if( tries > 1 ) {
-	proc0cout << "WARNING: There was a glitch in trying to open the checkpoint file: " 
-		  << dataFilename << ". It took " << tries << " tries to successfully open it.";
+        proc0cout << "WARNING: There was a glitch in trying to open the checkpoint file: " 
+                  << dataFilename << ". It took " << tries << " tries to successfully open it.";
       }
 
     //__________________________________
     // loop over variables
       vector<SaveItem>::iterator saveIter;
       for(saveIter = saveLabels.begin(); saveIter!= saveLabels.end(); saveIter++) {
-	const VarLabel* var = saveIter->label;
-	// check to see if we need to save on this level
-	// check is done by absolute level, or relative to end of levels (-1 finest, -2 second finest,...)
-	// find the materials to output on that level
-	map<int, MaterialSetP>::iterator iter = saveIter->matlSet.end();
-	const MaterialSubset* var_matls = 0;
-	
-	if (level) {
-	  iter = saveIter->matlSet.find(level->getIndex());
-	  if (iter == saveIter->matlSet.end())
-	    iter = saveIter->matlSet.find(level->getIndex() - level->getGrid()->numLevels());
-	  if (iter == saveIter->matlSet.end())
-	    iter = saveIter->matlSet.find(ALL_LEVELS);
-	  if (iter != saveIter->matlSet.end()) {
-	    var_matls = iter->second.get_rep()->getUnion();
-	  }
-	}
-	else { // checkpoint reductions
-	  map<int, MaterialSetP>::iterator liter;
-	  for (liter = saveIter->matlSet.begin(); liter != saveIter->matlSet.end(); liter++) {
-	    var_matls = saveIter->getMaterialSet(liter->first)->getUnion();
-	    break;
-	  }
-	}
-	if (var_matls == 0)
-	  continue;
-	
-	//__________________________________
-	//  debugging output
-	dbg << "    "<<var->getName() << ", materials: ";
-	for(int m=0;m<var_matls->size();m++) {
-	  if(m != 0)
-	    dbg << ", ";
-	  dbg << var_matls->get(m);
-	}
-	dbg <<"\n";
-	
-	//__________________________________
-	// loop through patches and materials
-	for(int p=0;p<(type==CHECKPOINT_REDUCTION?1:patches->size());p++) {
-	  const Patch* patch;
-	  int patchID;
-	  
-	  if (type == CHECKPOINT_REDUCTION) {
-	    // to consolidate into this function, force patch = 0
-	    patch = 0;
-	    patchID = -1;
-	  }
-	  else {
-	    patch = patches->get(p);
-	    patchID = patch->getID();
-	  }
-	  
-	  //__________________________________
-	  // write info for this variable to currentl index file
-	  for(int m=0;m<var_matls->size();m++) {
-	    
-	    int matlIndex = var_matls->get(m);
-	    
-	    // Variables may not exist when we get here due to something whacky with weird AMR stuff...
-	    ProblemSpecP pdElem = doc->appendChild("Variable");
-	    
-	    pdElem->appendElement("variable", var->getName());
-	    pdElem->appendElement("index", matlIndex);
-	    pdElem->appendElement("patch", patchID);
-	    pdElem->setAttribute("type",TranslateVariableType( var->typeDescription()->getName().c_str(), type != OUTPUT ) );
-	    
-	    if (var->getBoundaryLayer() != IntVector(0,0,0)) {
-	      pdElem->appendElement("boundaryLayer", var->getBoundaryLayer());
-	    }
+        const VarLabel* var = saveIter->label;
+        // check to see if we need to save on this level
+        // check is done by absolute level, or relative to end of levels (-1 finest, -2 second finest,...)
+        // find the materials to output on that level
+        map<int, MaterialSetP>::iterator iter = saveIter->matlSet.end();
+        const MaterialSubset* var_matls = 0;
+        
+        if (level) {
+          iter = saveIter->matlSet.find(level->getIndex());
+          if (iter == saveIter->matlSet.end())
+            iter = saveIter->matlSet.find(level->getIndex() - level->getGrid()->numLevels());
+          if (iter == saveIter->matlSet.end())
+            iter = saveIter->matlSet.find(ALL_LEVELS);
+          if (iter != saveIter->matlSet.end()) {
+            var_matls = iter->second.get_rep()->getUnion();
+          }
+        }
+        else { // checkpoint reductions
+          map<int, MaterialSetP>::iterator liter;
+          for (liter = saveIter->matlSet.begin(); liter != saveIter->matlSet.end(); liter++) {
+            var_matls = saveIter->getMaterialSet(liter->first)->getUnion();
+            break;
+          }
+        }
+        if (var_matls == 0)
+          continue;
+        
+        //__________________________________
+        //  debugging output
+        dbg << "    "<<var->getName() << ", materials: ";
+        for(int m=0;m<var_matls->size();m++) {
+          if(m != 0)
+            dbg << ", ";
+          dbg << var_matls->get(m);
+        }
+        dbg <<"\n";
+        
+        //__________________________________
+        // loop through patches and materials
+        for(int p=0;p<(type==CHECKPOINT_REDUCTION?1:patches->size());p++) {
+          const Patch* patch;
+          int patchID;
+          
+          if (type == CHECKPOINT_REDUCTION) {
+            // to consolidate into this function, force patch = 0
+            patch = 0;
+            patchID = -1;
+          }
+          else {
+            patch = patches->get(p);
+            patchID = patch->getID();
+          }
+          
+          //__________________________________
+          // write info for this variable to current index file
+          for(int m=0;m<var_matls->size();m++) {
+            
+            int matlIndex = var_matls->get(m);
+            
+            // Variables may not exist when we get here due to something whacky with weird AMR stuff...
+            ProblemSpecP pdElem = doc->appendChild("Variable");
+            
+            pdElem->appendElement("variable", var->getName());
+            pdElem->appendElement("index", matlIndex);
+            pdElem->appendElement("patch", patchID);
+            pdElem->setAttribute("type",TranslateVariableType( var->typeDescription()->getName().c_str(), type != OUTPUT ) );
+            
+            if (var->getBoundaryLayer() != IntVector(0,0,0)) {
+              pdElem->appendElement("boundaryLayer", var->getBoundaryLayer());
+            }
 #if 0          
-	    off_t ls = lseek(fd, cur, SEEK_SET);
-	    
-	    if(ls == -1) {
-	      cerr << "lseek error - file: " << filename << ", errno=" << errno << '\n';
-	      throw ErrnoException("DataArchiver::output (lseek call)", errno, __FILE__, __LINE__);
-	    }
+            off_t ls = lseek(fd, cur, SEEK_SET);
+            
+            if(ls == -1) {
+              cerr << "lseek error - file: " << filename << ", errno=" << errno << '\n';
+              throw ErrnoException("DataArchiver::output (lseek call)", errno, __FILE__, __LINE__);
+            }
 #endif
-	    // Pad appropriately
-	    if(cur%PADSIZE != 0) {
-	      long pad = PADSIZE-cur%PADSIZE;
-	      char* zero = scinew char[pad];
-	      memset(zero, 0, pad);
-	      int err = (int)write(fd, zero, pad);
-	      if (err != pad) {
-		cerr << "Error writing to file: " << filename << ", errno=" << errno << '\n';
-		SCI_THROW(ErrnoException("DataArchiver::output (write call)", errno, __FILE__, __LINE__));
-	      }
-	      cur+=pad;
-	      delete[] zero;
-	    }
-	    ASSERTEQ(cur%PADSIZE, 0);
-	    pdElem->appendElement("start", cur);
-	    
-	    // output data to data file
-	    OutputContext oc(fd, filename, cur, pdElem, d_outputDoubleAsFloat && type != CHECKPOINT);
-	    new_dw->emit(oc, var, matlIndex, patch);
-	    pdElem->appendElement("end", oc.cur);
-	    pdElem->appendElement("filename", dataFilebase.c_str());
-	    
+            // Pad appropriately
+            if(cur%PADSIZE != 0) {
+              long pad = PADSIZE-cur%PADSIZE;
+              char* zero = scinew char[pad];
+              memset(zero, 0, pad);
+              int err = (int)write(fd, zero, pad);
+              if (err != pad) {
+                cerr << "Error writing to file: " << filename << ", errno=" << errno << '\n';
+                SCI_THROW(ErrnoException("DataArchiver::output (write call)", errno, __FILE__, __LINE__));
+              }
+              cur+=pad;
+              delete[] zero;
+            }
+            ASSERTEQ(cur%PADSIZE, 0);
+            pdElem->appendElement("start", cur);
+            
+            // output data to data file
+            OutputContext oc(fd, filename, cur, pdElem, d_outputDoubleAsFloat && type != CHECKPOINT);
+            new_dw->emit(oc, var, matlIndex, patch);
+            pdElem->appendElement("end", oc.cur);
+            pdElem->appendElement("filename", dataFilebase.c_str());
+            
 #if SCI_ASSERTION_LEVEL >= 1
-	    struct stat st;
-	    int s = fstat(fd, &st);
-	    
-	    if(s == -1) {
-	      cerr << "fstat error - file: " << filename << ", errno=" << errno << '\n';
-	      throw ErrnoException("DataArchiver::output (stat call)", errno, __FILE__, __LINE__);
-	    }
-	    ASSERTEQ(oc.cur, st.st_size);
+            struct stat st;
+            int s = fstat(fd, &st);
+            
+            if(s == -1) {
+              cerr << "fstat error - file: " << filename << ", errno=" << errno << '\n';
+              throw ErrnoException("DataArchiver::output (stat call)", errno, __FILE__, __LINE__);
+            }
+            ASSERTEQ(oc.cur, st.st_size);
 #endif
-	    
-	    cur=oc.cur;
-	  }
-	}
+            
+            cur=oc.cur;
+          }
+        }
       }
       
       //__________________________________
       // close files and handles 
       int s = close(fd);
       if(s == -1) {
-	cerr << "Error closing file: " << filename << ", errno=" << errno << '\n';
-	throw ErrnoException("DataArchiver::output (close call)", errno, __FILE__, __LINE__);
+        cerr << "Error closing file: " << filename << ", errno=" << errno << '\n';
+        throw ErrnoException("DataArchiver::output (close call)", errno, __FILE__, __LINE__);
       }
       
       doc->output(xmlFilename.c_str());
@@ -2198,37 +2185,45 @@ DataArchiver::outputVariables(const ProcessorGroup * /*world*/,
 
 
 #if HAVE_PIDX
-
+  //______________________________________________________________________
+  //
   bool pidx_io =  true;
   
   if (pidx_io == true && type != CHECKPOINT)
   {
-    IntVector adjust_offset;//for data conversion, some datasets start at -1,-1,-1, this will soon be handled automatically by pidx 
-    adjust_offset.x(1); // <ctc> for temporal jet, set to 0,0,1, use_float=false,agg_size=4
-    adjust_offset.y(1);
-    adjust_offset.z(1);
-
+    IntVector adjust_offset = IntVector(1,1,1);  //for data conversion, some datasets start at -1,-1,-1, this will soon be handled automatically by pidx 
+                                                // <ctc> for temporal jet, set to 0,0,1, use_float=false,agg_size=4
+    IntVector clowIndex;
+    IntVector chighIndex;
+    //level->findIndexRange(lowIndex,highIndex);
+    //level->findNodeIndexRange(lowIndex,highIndex);
+    //level->findCellIndexRange(lowIndex,highIndex);
+    level->findCellIndexRange(clowIndex,chighIndex);
+    //printf("clowIndex: %d %d %d, chighindex: %d %d %d\n",clowIndex[0],clowIndex[1],clowIndex[2],chighIndex[0],chighIndex[1],chighIndex[2]);
+    //level->findInteriorIndexRange(lowIndex,highIndex);
+    //level->findInteriorNodeIndexRange(lowIndex,highIndex);
+    //level->findInteriorCellIndexRange(lowIndex,highIndex);
+    
+    int globalExtents[3];
+    globalExtents[0] = chighIndex[0] - clowIndex[0] ;
+    globalExtents[1] = chighIndex[1] - clowIndex[1] ;
+    globalExtents[2] = chighIndex[2] - clowIndex[2] ;
+    
     int number_of_variables;
     int *number_of_materials;
     
     unsigned int timeStep = d_sharedState->getCurrentTopLevelTimeStep();
     
     number_of_variables =  saveLabels.size();
-    number_of_materials = (int*)malloc(sizeof(int) * number_of_variables);
+    number_of_materials = (int*)malloc(sizeof(int) * number_of_variables);            // This doesn't look correct  - Todd
     
     string idxFilename(dir.getName());
     idxFilename = idxFilename + ".idx";
 
-    int globalExtents[3];
-    globalExtents[0] = chighIndex[0] - clowIndex[0] ;
-    globalExtents[1] = chighIndex[1] - clowIndex[1] ;
-    globalExtents[2] = chighIndex[2] - clowIndex[2] ;
-    
-    int rank;
-    MPI_Comm_rank(d_myworld->getComm(), &rank);
-    
-    if(rank == 0)
-    {
+    //__________________________________
+    //  Debugging
+    int rank = pg->myrank();
+    if( rank == 0 ) {
       printf("[PIDX] IDX file name = %s\n", (char*)idxFilename.c_str());
       printf("[PIDX] The global volume = %d %d %d\n", globalExtents[0], globalExtents[1], globalExtents[2]);
       printf("[PIDX] Current time step = %d\n", timeStep);
@@ -2243,9 +2238,13 @@ DataArchiver::outputVariables(const ProcessorGroup * /*world*/,
     int vcm = 0;
     int cc_var_count = 0;
     int actual_number_of_variables = 0;
+    
+    //__________________________________
+    //  loop over variables
+    //  determine number of 
     vector<SaveItem>::iterator saveIter;
-    for(saveIter = saveLabels.begin(); saveIter!= saveLabels.end(); saveIter++) 
-    {
+    for(saveIter = saveLabels.begin(); saveIter!= saveLabels.end(); saveIter++) {
+      
       const VarLabel* var = saveIter->label;
       string typestr = var->typeDescription()->getName().c_str();
       if (strstr(typestr.c_str(), "CCVariable") == NULL)
@@ -2262,10 +2261,13 @@ DataArchiver::outputVariables(const ProcessorGroup * /*world*/,
 
       if (level) {
         iter = saveIter->matlSet.find(level->getIndex());
-        if (iter == saveIter->matlSet.end())
+        
+        if (iter == saveIter->matlSet.end()){
           iter = saveIter->matlSet.find(level->getIndex() - level->getGrid()->numLevels());
-        if (iter == saveIter->matlSet.end())
+        }
+        if (iter == saveIter->matlSet.end()) {
           iter = saveIter->matlSet.find(ALL_LEVELS);
+        }
         if (iter != saveIter->matlSet.end()) {
           var_matls = iter->second.get_rep()->getUnion();
         }
@@ -2277,8 +2279,9 @@ DataArchiver::outputVariables(const ProcessorGroup * /*world*/,
           break;
         }
       }
-      if (var_matls == 0)
+      if (var_matls == 0){
         continue;
+      }
       
       number_of_materials[cc_var_count]=var_matls->size();
       //if(rank == 0)
@@ -2288,22 +2291,30 @@ DataArchiver::outputVariables(const ProcessorGroup * /*world*/,
       actual_number_of_variables += var_matls->size();
     }
     
+    //__________________________________
+    //
     int PIDX_debug = 1;
     int PIDX_extra_field = 0;
-    if (PIDX_debug == 1)
+    if (PIDX_debug == 1){
       PIDX_extra_field = 1;
+    }
     
     PIDX_set_variable_count(pc.file, actual_number_of_variables + PIDX_extra_field);
     pc.variable = (PIDX_variable**) malloc(sizeof (PIDX_variable*) * (cc_var_count + PIDX_extra_field));
     memset(pc.variable, 0, sizeof (PIDX_variable*) * cc_var_count);
+    
     for(int i = 0 ; i < cc_var_count ; i++) {
       pc.variable[i] = (PIDX_variable*) malloc(sizeof (PIDX_variable) * number_of_materials[i]);
       memset(pc.variable[i], 0, sizeof (PIDX_variable) * number_of_materials[i]);
     }
+    
     for(int i = cc_var_count ; i < cc_var_count + PIDX_extra_field ; i++) {
       pc.variable[i] = (PIDX_variable*) malloc(sizeof (PIDX_variable));
       memset(pc.variable[i], 0, sizeof (PIDX_variable));
     }
+    
+    //__________________________________
+    //
 #if 1    
     unsigned char ***patch_buffer;
     patch_buffer = (unsigned char***)malloc(sizeof(unsigned char**) * actual_number_of_variables);
@@ -2319,14 +2330,18 @@ DataArchiver::outputVariables(const ProcessorGroup * /*world*/,
         continue;
       
       int sample_per_variable = 1;
-      if (strstr(type2.c_str(), "Vector") != NULL)
+      if (strstr(type2.c_str(), "Vector") != NULL){
         sample_per_variable = 3;
+      }
       
       char data_type[512];
-      if (strstr(type2.c_str(), "double") != NULL || strstr(type2.c_str(), "Vector") != NULL)
-        sprintf(data_type, "%d*float32", sample_per_variable); 
-      if (strstr(type2.c_str(), "int") != NULL)
+      if (strstr(type2.c_str(), "double") != NULL || strstr(type2.c_str(), "Vector") != NULL){
+        sprintf(data_type, "%d*float32", sample_per_variable);
+      } 
+      
+      if (strstr(type2.c_str(), "int") != NULL){
         sprintf(data_type, "%d*int32", sample_per_variable); 
+      }
       
       //IntVector vhi, vlow, vrange;
       //vlow = var->getCellLowIndex();
@@ -2334,17 +2349,19 @@ DataArchiver::outputVariables(const ProcessorGroup * /*world*/,
       // check to see if we need to save on this level
       // check is done by absolute level, or relative to end of levels (-1 finest, -2 second finest,...)
       // find the materials to output on that level
+      
       map<int, MaterialSetP>::iterator iter = saveIter->matlSet.end();
       const MaterialSubset* var_matls = 0;
 
-      if (level) 
-      {
+      if (level) {
         iter = saveIter->matlSet.find(level->getIndex());
-        if (iter == saveIter->matlSet.end())
+        if ( iter == saveIter->matlSet.end() ) {
           iter = saveIter->matlSet.find(level->getIndex() - level->getGrid()->numLevels());
-        if (iter == saveIter->matlSet.end())
+        }
+        if ( iter == saveIter->matlSet.end() ){
           iter = saveIter->matlSet.find(ALL_LEVELS);
-        if (iter != saveIter->matlSet.end()) {
+        }
+        if ( iter != saveIter->matlSet.end() ) {
           var_matls = iter->second.get_rep()->getUnion();
         }
       }
@@ -2355,35 +2372,39 @@ DataArchiver::outputVariables(const ProcessorGroup * /*world*/,
           break;
         }
       }
-      if (var_matls == 0)
+      if (var_matls == 0){
         continue;
+      }
       
+      //__________________________________
+      //
       // loop through patches and materials
-      for(int m=0;m<var_matls->size();m++)
-      {
+      for(int m=0;m<var_matls->size();m++){
         int matlIndex = var_matls->get(m);
         string var_mat_name;
         
-        if (var_matls->size() == 1)
+        if (var_matls->size() == 1) {
           var_mat_name = var->getName();
-        else
-	{
-	  std::ostringstream s;
-	  s << m;
-	  var_mat_name = var->getName() + "_m" + s.str();
-	}
+        } else {
+          std::ostringstream s;
+          s << m;
+          var_mat_name = var->getName() + "_m" + s.str();
+        }
 
-	if (strstr(type2.c_str(), "double") != NULL || strstr(type2.c_str(), "Vector") != NULL)
+        if (strstr(type2.c_str(), "double") != NULL || strstr(type2.c_str(), "Vector") != NULL){
           PIDX_variable_create((char*)var_mat_name.c_str(), sample_per_variable * sizeof(float) * 8, data_type, &(pc.variable[vc][m]));
-        else if (strstr(type2.c_str(), "int") != NULL)
+        
+        }else if (strstr(type2.c_str(), "int") != NULL)  { 
           PIDX_variable_create((char*)var_mat_name.c_str(), sample_per_variable * sizeof(int) * 8, data_type, &(pc.variable[vc][m]));
+        }
         
         patch_buffer[vcm] = (unsigned char**)malloc(sizeof(unsigned char*) * patches->size());
+        
         for(int p=0;p<(type==CHECKPOINT_REDUCTION?1:patches->size());p++)
         {
           const Patch* patch;
           int patchID;
-          IntVector hiE, lowE;
+          
           if (type == CHECKPOINT_REDUCTION) {
             // to consolidate into this function, force patch = 0
             patch = 0;
@@ -2394,12 +2415,10 @@ DataArchiver::outputVariables(const ProcessorGroup * /*world*/,
             patch = patches->get(p);
             patchID = patch->getID();
 
-            IntVector hi, low, range;
-            
-            low = patch->getCellLowIndex();
-            hi = patch->getCellHighIndex();
-            hiE = patch->getExtraCellHighIndex();
-            lowE = patch->getExtraCellLowIndex();
+            IntVector low  = patch->getCellLowIndex();
+            IntVector hi   = patch->getCellHighIndex();
+            IntVector hiE  = patch->getExtraCellHighIndex();
+            IntVector lowE = patch->getExtraCellLowIndex();
             
             //if(rank == 0)
             if(vc == 0)
@@ -2415,8 +2434,7 @@ DataArchiver::outputVariables(const ProcessorGroup * /*world*/,
 
             unsigned char *t_buffer = NULL; 
             
-            if (strstr(type2.c_str(), "double") != NULL || strstr(type2.c_str(), "Vector") != NULL)
-            {
+            if (strstr(type2.c_str(), "double") != NULL || strstr(type2.c_str(), "Vector") != NULL){
               t_buffer = (unsigned char*)malloc(sample_per_variable * sizeof(double) * ((hiE.x() - lowE.x()) * (hiE.y() - lowE.y()) * (hiE.z() - lowE.z())));
               memset(t_buffer, 0, sample_per_variable * sizeof(double) * ((hiE.x() - lowE.x()) * (hiE.y() - lowE.y()) * (hiE.z() - lowE.z())));
 
@@ -2431,8 +2449,9 @@ DataArchiver::outputVariables(const ProcessorGroup * /*world*/,
               patch_buffer[vcm][p] = (unsigned char*)malloc(sample_per_variable * sizeof(int) * ((hiE.x() - lowE.x()) * (hiE.y() - lowE.y()) * (hiE.z() - lowE.z())));
               memset(patch_buffer[vcm][p], 0, sample_per_variable * sizeof(int) * ((hiE.x() - lowE.x()) * (hiE.y() - lowE.y()) * (hiE.z() - lowE.z())));
             }
-            else
+            else {
               printf("[1] Error !!!! Unsupported data type");
+            }
             
             new_dw->emit(pc, var, matlIndex, patch, t_buffer);
 
@@ -2456,10 +2475,11 @@ DataArchiver::outputVariables(const ProcessorGroup * /*world*/,
               memcpy(patch_buffer[vcm][p], t_buffer, sample_per_variable * sizeof(int) * ((hiE.x() - lowE.x()) * (hiE.y() - lowE.y()) * (hiE.z() - lowE.z())));
               free(t_buffer);
             }
-            else
+            else {
               printf("[2] Error !!!! Unsupported data type");
+            }
             
-	    PIDX_variable_write_data_layout(pc.variable[vc][m], local_offset_point, local_box_count_point, patch_buffer[vcm][p], PIDX_row_major);
+            PIDX_variable_write_data_layout(pc.variable[vc][m], local_offset_point, local_box_count_point, patch_buffer[vcm][p], PIDX_row_major);
                         
           }
         }//  Patches
@@ -2471,23 +2491,24 @@ DataArchiver::outputVariables(const ProcessorGroup * /*world*/,
       vc++;
     }//  Variables
     
+    //______________________________________________________________________
+    //      DEBUGGING 
     float **PIDX_patch_buffer;
     if (PIDX_debug == 1)
     {
       PIDX_variable_create("PIDX_test_variable", sizeof(float) * 8, FLOAT32, &(pc.variable[cc_var_count][0]));
       PIDX_patch_buffer = (float**)malloc(sizeof(float*) * patches->size());
+      
       for(int p=0;p<(type==CHECKPOINT_REDUCTION?1:patches->size());p++)
       {
         const Patch* patch;
-        IntVector hiE, lowE;
 
         patch = patches->get(p);
-        IntVector hi, low, range;
-            
-        low = patch->getCellLowIndex();
-        hi = patch->getCellHighIndex();
-        hiE = patch->getExtraCellHighIndex();
-        lowE = patch->getExtraCellLowIndex();
+                    
+        IntVector low   = patch->getCellLowIndex();
+        IntVector hi    = patch->getCellHighIndex();
+        IntVector hiE   = patch->getExtraCellHighIndex();
+        IntVector lowE  = patch->getExtraCellLowIndex();
             
         printf("[PIDX %d] [%d] Offset and Count %d %d %d : %d %d %d\n", rank, vc, lowE.x(), lowE.y(), lowE.z(), (hiE.x() - lowE.x()), (hiE.y() - lowE.y()), (hiE.z() - lowE.z()));
             
@@ -2499,21 +2520,22 @@ DataArchiver::outputVariables(const ProcessorGroup * /*world*/,
         PIDX_patch_buffer[p] = (float*)malloc(sizeof(float) * ((hiE.x() - lowE.x()) * (hiE.y() - lowE.y()) * (hiE.z() - lowE.z())));
         memset(PIDX_patch_buffer[p], 0, sizeof(float) * ((hiE.x() - lowE.x()) * (hiE.y() - lowE.y()) * (hiE.z() - lowE.z())));
 
-              
-        int i = 0, j = 0, k = 0;
-        for (k = 0; k < (hiE.z() - lowE.z()); k++)
-          for (j = 0; j < (hiE.y() - lowE.y()); j++)
-            for (i = 0; i < (hiE.x() - lowE.x()); i++)
-            {
+
+        for (int k = 0; k < (hiE.z() - lowE.z()); k++) {
+          for (int j = 0; j < (hiE.y() - lowE.y()); j++) {
+            for (int i = 0; i < (hiE.x() - lowE.x()); i++) {
               unsigned long long index = (unsigned long long) ((hiE.x() - lowE.x()) * (hiE.y() - lowE.y()) * k) + ((hiE.x() - lowE.x()) * j) + i;
               PIDX_patch_buffer[p][index] = 100 + ((globalExtents[0] * globalExtents[1]*((lowE.z()+adjust_offset.z()) + k))+(globalExtents[0]*((lowE.y()+adjust_offset.y()) + j)) + ((lowE.x()+adjust_offset.x()) + i));
             }
+          }
+        }
             
-            PIDX_variable_write_data_layout(pc.variable[cc_var_count][0], local_offset_point, local_box_count_point, PIDX_patch_buffer[p], PIDX_row_major);
+        PIDX_variable_write_data_layout(pc.variable[cc_var_count][0], local_offset_point, local_box_count_point, PIDX_patch_buffer[p], PIDX_row_major);
                         
-        }//  Patches
-        PIDX_append_and_write_variable(pc.file, pc.variable[cc_var_count][0]);
-    }
+      }//  Patches
+      PIDX_append_and_write_variable(pc.file, pc.variable[cc_var_count][0]);
+    }  // debugging
+    
     
     double start_time, end_time, io_time, max_time;
     start_time = MPI_Wtime();
@@ -3015,8 +3037,8 @@ DataArchiver::updateCheckpointInterval( double newinv )
     if( !d_checkpointsDir.exists() )
     {
       if( d_myworld->myrank() == 0) {
-	d_checkpointsDir = d_dir.createSubdir("checkpoints");
-	createIndexXML(d_checkpointsDir);
+        d_checkpointsDir = d_dir.createSubdir("checkpoints");
+        createIndexXML(d_checkpointsDir);
       }
     }
 
@@ -3041,8 +3063,8 @@ DataArchiver::updateCheckpointTimestepInterval( int newinv )
     if( !d_checkpointsDir.exists())
     {
       if( d_myworld->myrank() == 0) {
-	d_checkpointsDir = d_dir.createSubdir("checkpoints");
-	createIndexXML(d_checkpointsDir);
+        d_checkpointsDir = d_dir.createSubdir("checkpoints");
+        createIndexXML(d_checkpointsDir);
       }
     }
 
@@ -3107,9 +3129,9 @@ DataArchiver::getTimestepTopLevel()
 //
 void
 DataArchiver::outputTimestep( double time,
-			      double delt,
-			      const GridP& grid,
-			      SchedulerP& sched )
+                              double delt,
+                              const GridP& grid,
+                              SchedulerP& sched )
 {
   int proc = d_myworld->myrank();
 
@@ -3157,9 +3179,9 @@ DataArchiver::outputTimestep( double time,
 //
 void
 DataArchiver::checkpointTimestep( double time,
-				  double delt,
-				  const GridP& grid,
-				  SchedulerP& sched )
+                                  double delt,
+                                  const GridP& grid,
+                                  SchedulerP& sched )
 {
   int proc = d_myworld->myrank();
 
