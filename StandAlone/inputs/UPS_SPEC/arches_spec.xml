@@ -479,6 +479,13 @@
             <Es                           spec="REQUIRED DOUBLE"/> <!-- [J/mol] -->
             <n                            spec="REQUIRED DOUBLE"/> <!-- [] -->
           </ShaddixChar>
+          
+          <SmithChar                    spec="OPTIONAL NO_DATA"
+                                          need_applies_to="type coal">
+            <As                           spec="REQUIRED DOUBLE"/> <!-- [mol/s.m^2.atm^n] -->
+            <Es                           spec="REQUIRED DOUBLE"/> <!-- [J/mol] -->
+            <n                            spec="REQUIRED DOUBLE"/> <!-- [] -->
+          </SmithChar>
 
           <optics                       spec="OPTIONAL NO_DATA" 
                                             need_applies_to="type coal">
@@ -1591,6 +1598,7 @@
                                                                           MaximumTemperature,
                                                                           Thermophoresis,
                                                                           CharOxidationShaddix,
+                                                                          CharOxidationSmith,
                                                                           Deposition,
                                                                           SimpleBirth'">
 
