@@ -2268,11 +2268,12 @@ DataArchiver::outputVariables(const ProcessorGroup * pg,
     
     //__________________________________
     //  loop over variables
-    //  determine number of 
+    // I don't understand what this loop is doing? 
     vector<SaveItem>::iterator saveIter;
     for(saveIter = saveLabels.begin(); saveIter!= saveLabels.end(); saveIter++) {
       
       const VarLabel* var = saveIter->label;
+      
       string typestr = var->typeDescription()->getName().c_str();
       if (strstr(typestr.c_str(), "CCVariable") == NULL)
         continue;
@@ -2454,7 +2455,8 @@ DataArchiver::outputVariables(const ProcessorGroup * pg,
               printf("[PIDX %d] [%d] Offset and Count %d %d %d : %d %d %d\n", rank, vc, lowE.x(), lowE.y(), lowE.z(), nCells_EC.x(), nCells_EC.y(), nCells_EC.z());
             }
             
-            PIDX_point local_offset_point, local_box_count_point;
+            PIDX_point local_offset_point; 
+            PIDX_point local_box_count_point;
             
             PIDX_set_point_5D(local_offset_point, lowE.x()+adjust_offset.x(), lowE.y()+adjust_offset.y(), lowE.z()+adjust_offset.z(), 0, 0);
             PIDX_set_point_5D(local_box_count_point, nCells_EC.x(), nCells_EC.y(), nCells_EC.z(), 1, 1);
@@ -2462,22 +2464,29 @@ DataArchiver::outputVariables(const ProcessorGroup * pg,
             //if (rank==0)
             //  printf("[PIDX %d] patch_buffer size: %ld\n", rank, sample_per_variable * (use_float?sizeof(float):sizeof(double)) * ((hiE.x() - lowE.x()) * (hiE.y() - lowE.y()) * (hiE.z() - lowE.z())));
 
+            //__________________________________
+            //  
             unsigned char *t_buffer = NULL; 
             
-            if (strstr(type2.c_str(), "double") != NULL || strstr(type2.c_str(), "Vector") != NULL){
-              t_buffer = (unsigned char*)malloc(sample_per_variable * sizeof(double) * totalCells_EC );
-              memset(t_buffer, 0, sample_per_variable * sizeof(double) * totalCells_EC );
+            size_t mySizeD = sample_per_variable * sizeof(double) * totalCells_EC;
+            size_t mySizeF = sample_per_variable * sizeof(float) * totalCells_EC;
+            size_t mySizeI = sample_per_variable * sizeof(int) * totalCells_EC;
+            
+            if (strstr(type2.c_str(), "double") != NULL || strstr(type2.c_str(), "Vector") != NULL){ 
+             
+              t_buffer = (unsigned char*)malloc( mySizeD );
+              memset(t_buffer, 0, mySizeD );
 
-              patch_buffer[vcm][p] = (unsigned char*)malloc( sample_per_variable * sizeof(float) * totalCells_EC );
-              memset(patch_buffer[vcm][p], 0, sample_per_variable * sizeof(float) * totalCells_EC );
+              patch_buffer[vcm][p] = (unsigned char*)malloc( mySizeF );
+              memset( patch_buffer[vcm][p], 0, mySizeF );
             }
             else if (strstr(type2.c_str(), "int") != NULL)
             {
-              t_buffer = (unsigned char*)malloc(sample_per_variable * sizeof(int) * totalCells_EC );
-              memset(t_buffer, 0, sample_per_variable * sizeof(int) * totalCells_EC );
+              t_buffer = (unsigned char*)malloc(mySizeI );
+              memset(t_buffer, 0, mySizeI );
 
-              patch_buffer[vcm][p] = (unsigned char*)malloc(sample_per_variable * sizeof(int) * totalCells_EC );
-              memset(patch_buffer[vcm][p], 0, sample_per_variable * sizeof(int) * totalCells_EC );
+              patch_buffer[vcm][p] = (unsigned char*)malloc(mySizeI );
+              memset(patch_buffer[vcm][p], 0, mySizeI );
             }
             else {
               printf("[1] Error !!!! Unsupported data type");
@@ -2488,24 +2497,26 @@ DataArchiver::outputVariables(const ProcessorGroup * pg,
             new_dw->emit(pc, var, matlIndex, patch, t_buffer);
 
             
+            //__________________________________
+            //
             if (strstr(type2.c_str(), "double") != NULL || (strstr(type2.c_str(), "Vector") != NULL))
             {
-              double* tt_buffer = (double*)malloc(sample_per_variable * sizeof(double) * totalCells_EC);
-              memset(tt_buffer, 0, sample_per_variable * sizeof(double) * totalCells_EC);
-              memcpy(tt_buffer, t_buffer, sample_per_variable * sizeof(double) * totalCells_EC);
+              double* tt_buffer = (double*)malloc( mySizeD );
+              memset( tt_buffer, 0, mySizeD);
+              memcpy( tt_buffer, t_buffer, mySizeD );
               free(t_buffer);
               
-              float* ff_buffer = (float*)malloc(sample_per_variable * sizeof(float) * totalCells_EC);
-              memset(ff_buffer, 0, sample_per_variable * sizeof(float) * totalCells_EC);
-              std::copy(tt_buffer, tt_buffer + (sample_per_variable * totalCells_EC), ff_buffer);
-              free(tt_buffer);
+              float* ff_buffer = (float*)malloc( mySizeF );
+              memset( ff_buffer, 0, mySizeF );
+              std::copy( tt_buffer, tt_buffer + (sample_per_variable * totalCells_EC), ff_buffer );
+              free(tt_buffer );
               
-              memcpy(patch_buffer[vcm][p], ff_buffer, sample_per_variable * sizeof(float) * totalCells_EC);
-              free (ff_buffer);
+              memcpy( patch_buffer[vcm][p], ff_buffer, mySizeF );
+              free ( ff_buffer );
             }
             else if (strstr(type2.c_str(), "int") != NULL)
             {
-              memcpy(patch_buffer[vcm][p], t_buffer, sample_per_variable * sizeof(int) * totalCells_EC);
+              memcpy( patch_buffer[vcm][p], t_buffer, mySizeI );
               free(t_buffer);
             }
             else {
@@ -2515,14 +2526,15 @@ DataArchiver::outputVariables(const ProcessorGroup * pg,
             PIDX_variable_write_data_layout(pc.variable[vc][m], local_offset_point, local_box_count_point, patch_buffer[vcm][p], PIDX_row_major);
                         
           }
-        }//  Patches
+        }  //  Patches
+        
         PIDX_append_and_write_variable(pc.file, pc.variable[vc][m]);
         vcm++;
         
-      }//  Materials
+      }  //  Materials
       
       vc++;
-    }//  Variables
+    }  //  Variables
     
     //______________________________________________________________________
     //      DEBUGGING 
@@ -2534,9 +2546,7 @@ DataArchiver::outputVariables(const ProcessorGroup * pg,
       
       for(int p=0;p<(type==CHECKPOINT_REDUCTION?1:patches->size());p++)
       {
-        const Patch* patch;
-
-        patch = patches->get(p);
+        const Patch* patch  = patches->get(p);
         IntVector hiE       = patch->getExtraCellHighIndex();
         IntVector lowE      = patch->getExtraCellLowIndex();
         IntVector nCells_EC = hiE - lowE;
@@ -2564,11 +2574,12 @@ DataArchiver::outputVariables(const ProcessorGroup * pg,
             
         PIDX_variable_write_data_layout(pc.variable[cc_var_count][0], local_offset_point, local_box_count_point, PIDX_patch_buffer[p], PIDX_row_major);
                         
-      }//  Patches
+      }  //  Patches
       PIDX_append_and_write_variable(pc.file, pc.variable[cc_var_count][0]);
     }  // debugging
     
-    
+    //__________________________________
+    //  Start timers and Free buffers
     double start_time, end_time, io_time, max_time;
     start_time = MPI_Wtime();
     PIDX_close(pc.file);
@@ -2580,19 +2591,21 @@ DataArchiver::outputVariables(const ProcessorGroup * pg,
     {
       for(int p=0;p<(type==CHECKPOINT_REDUCTION?1:patches->size());p++)
       {
-        free(patch_buffer[i][p]);
+        free( patch_buffer[i][p] );
         patch_buffer[i][p] = 0;
       }
-      free(patch_buffer[i]);
+      free( patch_buffer[i] );
       patch_buffer[i] = 0;
     }
     free(patch_buffer);
     patch_buffer = 0;
     
+    
     if (PIDX_debug == 1)
     {
-      for(int p=0;p<(type==CHECKPOINT_REDUCTION?1:patches->size());p++)
+      for(int p=0;p<(type==CHECKPOINT_REDUCTION?1:patches->size());p++){
         free(PIDX_patch_buffer[p]);
+      }
       free(PIDX_patch_buffer);
     }
       
@@ -2601,16 +2614,21 @@ DataArchiver::outputVariables(const ProcessorGroup * pg,
     //free memory
     //for (int i=0; i<number_of_variables; i++)
     for (int i=0; i<cc_var_count + PIDX_extra_field; i++)
+    {
       free(pc.variable[i]);
-    free(pc.variable); pc.variable=0;
+    }
+    free(pc.variable); 
+    pc.variable=0;
     
-    free(number_of_materials); number_of_materials=0;
+    free(number_of_materials); 
+    number_of_materials=0;
     
 
     //compute pidx runtime
     io_time = end_time - start_time;
     MPI_Allreduce(&io_time,&max_time, 1,MPI_DOUBLE,MPI_MAX, d_myworld->getComm() );
-    if (io_time == max_time)
+    
+    if (io_time == max_time){
       cout << "Timestep = " << timeStep 
            << " Global Volume = " << globalExtents[0] << "," << globalExtents[1]
            << "," << globalExtents[2] << "," 
@@ -2618,6 +2636,7 @@ DataArchiver::outputVariables(const ProcessorGroup * pg,
            << (globalExtents[0]*globalExtents[1]*globalExtents[2]*number_of_variables*(sizeof(float)))/(1024.*1024.*max_time) << " MiB/sec " << " Max Time = " << max_time  
            << " Number of variables = " << number_of_variables 
            << endl;
+    }
     
 #endif
   }
