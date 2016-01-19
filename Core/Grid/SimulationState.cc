@@ -144,6 +144,10 @@ SimulationState::SimulationState(ProblemSpecP &ps)
   d_timingStats.validate( MAX_TIMING_STATS );
 
   resetStats();
+
+#ifdef HAVE_VISIT
+  d_doVisIt = false;
+#endif
 }
 //__________________________________
 //
