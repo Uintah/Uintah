@@ -24,6 +24,8 @@
 
 #include "VisItControlInterface_V2.h"
 
+#include "visit_libsim_customUI.h"
+
 #include <CCA/Components/SimulationController/SimulationController.h>
 #include <CCA/Components/DataArchiver/DataArchiver.h>
 #include <CCA/Ports/SchedulerP.h>
@@ -289,6 +291,10 @@ int visit_ProcessVisItCommand( visit_simulation_data *sim )
   return 1;
 }
 
+//---------------------------------------------------------------------
+// MaxTimeStepCallback
+//     Custom UI callback
+//---------------------------------------------------------------------
 void visit_MaxTimeStepCallback(char *val, void *cbdata)
 {
   visit_simulation_data *sim = (visit_simulation_data *)cbdata;
@@ -300,6 +306,10 @@ void visit_MaxTimeStepCallback(char *val, void *cbdata)
   sim->simController->getSimulationTime()->maxTimestep = value;
 }
 
+//---------------------------------------------------------------------
+// MaxTimeCallback
+//     Custom UI callback
+//---------------------------------------------------------------------
 void visit_MaxTimeCallback(char *val, void *cbdata)
 {
   visit_simulation_data *sim = (visit_simulation_data *)cbdata;
@@ -311,6 +321,10 @@ void visit_MaxTimeCallback(char *val, void *cbdata)
   sim->simController->getSimulationTime()->maxTime = value;
 }
 
+//---------------------------------------------------------------------
+// DeltaTCallback
+//     Custom UI callback
+//---------------------------------------------------------------------
 void visit_DeltaTCallback(char *val, void *cbdata)
 {
   visit_simulation_data *sim = (visit_simulation_data *)cbdata;
@@ -326,6 +340,10 @@ void visit_DeltaTCallback(char *val, void *cbdata)
   newDW->override(delt_vartype(delt), simStateP->get_delt_label());
 }
 
+//---------------------------------------------------------------------
+// DeltaTMinCallback
+//     Custom UI callback
+//---------------------------------------------------------------------
 void visit_DeltaTMinCallback(char *val, void *cbdata)
 {
   visit_simulation_data *sim = (visit_simulation_data *)cbdata;
@@ -337,6 +355,10 @@ void visit_DeltaTMinCallback(char *val, void *cbdata)
   sim->simController->getSimulationTime()->delt_min = value;
 }
 
+//---------------------------------------------------------------------
+// DeltaTMaxCallback
+//     Custom UI callback
+//---------------------------------------------------------------------
 void visit_DeltaTMaxCallback(char *val, void *cbdata)
 {
   visit_simulation_data *sim = (visit_simulation_data *)cbdata;
@@ -348,6 +370,10 @@ void visit_DeltaTMaxCallback(char *val, void *cbdata)
   sim->simController->getSimulationTime()->delt_max = value;
 }
 
+//---------------------------------------------------------------------
+// DeltaTFactorCallback
+//     Custom UI callback
+//---------------------------------------------------------------------
 void visit_DeltaTFactorCallback(char *val, void *cbdata)
 {
   visit_simulation_data *sim = (visit_simulation_data *)cbdata;
@@ -359,6 +385,10 @@ void visit_DeltaTFactorCallback(char *val, void *cbdata)
   sim->simController->getSimulationTime()->delt_factor = value;
 }
 
+//---------------------------------------------------------------------
+// MaxWallTimeCallback
+//     Custom UI callback
+//---------------------------------------------------------------------
 void visit_MaxWallTimeCallback(char *val, void *cbdata)
 {
   visit_simulation_data *sim = (visit_simulation_data *)cbdata;
@@ -370,57 +400,94 @@ void visit_MaxWallTimeCallback(char *val, void *cbdata)
   sim->simController->getSimulationTime()->max_wall_time = value;
 }
 
+//---------------------------------------------------------------------
+// UPSVariableTableCallback
+//     Custom UI callback
+//---------------------------------------------------------------------
 void visit_UPSVariableTableCallback(char *val, void *cbdata)
 {
   visit_simulation_data *sim = (visit_simulation_data *)cbdata;
 
+  SimulationStateP simStateP = sim->simController->getSimulationStateP();
+
   int row, column;
-  double value;
+  char str[128];
 
-  sscanf (val, "%d | %d | %lf", &row, &column, &value);
+  sscanf (val, "%d | %d | %s", &row, &column, str);
 
-  uintah_variable_data &var = sim->upsVariables[row];
+  std::vector< SimulationState::modifiableVar > &vars =
+    simStateP->d_VisIt_modifiableVars;
+      
+  SimulationState::modifiableVar &var = vars[row];
 
-  var.value = value;
+  switch( var.type )
+  {	  
+    case Uintah::TypeDescription::int_type:
+    {
+      int value;
+      sscanf (val, "%d | %d | %d", &row, &column, &value);
+      *(var.Ivalue) = value;
+      break;
+    }
+    
+    case Uintah::TypeDescription::double_type:
+    {
+      double value;
+      sscanf (val, "%d | %d | %lf", &row, &column, &value);
+      *(var.Dvalue) = value;
+      break;
+    }
+    
+    case Uintah::TypeDescription::Vector:
+    {
+      double x, y, z;
+      sscanf (val, "%d | %d | %lf,%lf,%lf", &row, &column, &x, &y, &z);
+
+      std::cerr << "vector " << x << "  " << y << "  " << z << "  "
+		<< std::endl;
+      *(var.Vvalue) = Vector(x, y, z);
+      break;
+    }
+    default:
+      throw InternalError(" invalid data type", __FILE__, __LINE__); 
+  }
+
   var.modified = true;
 }
 
+//---------------------------------------------------------------------
+// OutputIntervalVariableTableCallback
+//     Custom UI callback
+//---------------------------------------------------------------------
 void visit_OutputIntervalVariableTableCallback(char *val, void *cbdata)
 {
   visit_simulation_data *sim = (visit_simulation_data *)cbdata;
 
   Output *output = sim->simController->getOutput();
-  SimulationStateP simStateP = sim->simController->getSimulationStateP();
 
   int row, column;
   double value;
 
   sscanf (val, "%d | %d | %lf", &row, &column, &value);
 
-  uintah_variable_data &var = sim->outputIntervals[row];
-
-  var.value = value;
-  var.modified = true;
-
-  // Specialize setting for output interval.
-  if( var.name == simStateP->get_outputInterval_label()->getName() )
+  // Output interval based on time.
+  if( row == OutputIntervalRow )
   {
-    output->updateOutputInterval( var.value );
+    if( output->getOutputInterval() > 0 )
+      output->updateOutputInterval( value );
+    // Output interval based on timestep.
+    else
+      output->updateOutputTimestepInterval( value );
   }
-  // Specialize setting for output timestep interval.
-  else if( var.name == simStateP->get_outputTimestepInterval_label()->getName() )
+  
+  // Checkpoint interval based on times.
+  else if( row == CheckpointIntervalRow )
   {
-    output->updateOutputTimestepInterval( var.value );
-  }
-  // Specialize setting for check point interval.
-  else if( var.name == simStateP->get_checkpointInterval_label()->getName() )
-  {
-    output->updateCheckpointInterval( var.value );
-  }
-    // Specialize setting for check point timestep interval.
-  else if( var.name == simStateP->get_checkpointTimestepInterval_label()->getName() )
-  {
-    output->updateCheckpointTimestepInterval( var.value );
+    if( output->getCheckpointInterval() > 0 )
+      output->updateCheckpointInterval( value );
+    // Checkpoint interval based on timestep.
+    else
+      output->updateCheckpointTimestepInterval( value );
   }
 }
 

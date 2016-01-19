@@ -24,6 +24,7 @@
 
 #include "visit_libsim.h"
 #include "visit_libsim_callbacks.h"
+#include "visit_libsim_customUI.h"
 
 #include "VisItControlInterface_V2.h"
 #include "VisItDataInterface_V2.h"
@@ -79,7 +80,7 @@ visit_handle visit_ReadMetaData(void *cbdata)
   SchedulerP      schedulerP = sim->simController->getSchedulerP();
   SimulationStateP simStateP = sim->simController->getSimulationStateP();
   GridP           gridP      = sim->gridP;
-
+      
   if( !schedulerP.get_rep() || !gridP.get_rep() )
   {
     return VISIT_INVALID_HANDLE;
@@ -589,7 +590,7 @@ visit_handle visit_ReadMetaData(void *cbdata)
     {
       bool enabled;
 
-      // Check for  and regrid option.
+      // Check for regrid, save, and checkpoint option.
       if(strcmp( "Regrid", cmd_names[i] ) == 0 )
         enabled = sim->simController->doAMR();
 
@@ -612,78 +613,18 @@ visit_handle visit_ReadMetaData(void *cbdata)
       }
     }
 
-    VisItUI_setValueI("TimeStep", sim->cycle, 0);
-    VisItUI_setValueI("MaxTimeStep", sim->simController->getSimulationTime()->maxTimestep, 1);
-
-    VisItUI_setValueD("Time", sim->time, 0);
-    VisItUI_setValueD("MaxTime", sim->simController->getSimulationTime()->maxTime, 1);
-
-    VisItUI_setValueD("DeltaT", sim->delt, 0);
-    VisItUI_setValueD("DeltaTNext", sim->delt_next, 1);
-    VisItUI_setValueD("DeltaTFactor", sim->simController->getSimulationTime()->delt_factor, 1);
-    VisItUI_setValueD("DeltaTMin", sim->simController->getSimulationTime()->delt_min, 1);
-    VisItUI_setValueD("DeltaTMax", sim->simController->getSimulationTime()->delt_max, 1);
-    VisItUI_setValueD("ElapsedTime", sim->elapsedt, 0);
-    VisItUI_setValueD("MaxWallTime", sim->simController->getSimulationTime()->max_wall_time, 1);
-
-    // Setup the optional UPS variable table
-    if( sim->upsVariables.size() )
-    {
-      VisItUI_setValueS( "UPSVariableGroupBox", "SHOW_WIDGET", 1);
-
-      std::vector< uintah_variable_data > &vars = sim->upsVariables;
-      
-      for( int i=0; i<vars.size(); ++i )
-      {
-        uintah_variable_data &var = vars[i];
-        
-        VisItUI_setTableValueS("UPSVariableTable", i, 0, var.name.c_str(), 0);
-        VisItUI_setTableValueD("UPSVariableTable", i, 1, var.value, 1);
-      }
-    }
-    else
-      VisItUI_setValueS( "UPSVariableGroupBox", "HIDE_WIDGET", 0);
-
-    // Setup the output variable table
-    if( sim->outputIntervals.size() )
-    {
-      VisItUI_setValueS( "OutputIntervalGroupBox", "SHOW_WIDGET", 1);
-
-      std::vector< uintah_variable_data > &vars = sim->outputIntervals;
-      
-      for( int i=0; i<vars.size(); ++i )
-      {
-        uintah_variable_data &var = vars[i];
-        
-        VisItUI_setTableValueS("OutputIntervalVariableTable",
-                               i, 0, var.name.c_str(),  0);
-        VisItUI_setTableValueD("OutputIntervalVariableTable",
-                               i, 1, var.value, 1);
-      }
-    }
-    else
-      VisItUI_setValueS( "OutputIntervalGroupBox", "HIDE_WIDGET", 0);
+    // Setup the custom UI time values.
+    visit_GetTimeVars( sim );
     
-    // Setup the optional min/max variable table
-    if( sim->minMaxVariables.size() )
-    {
-      VisItUI_setValueS( "MinMaxVariableGroupBox", "SHOW_WIDGET", 1);
-      
-      std::vector< uintah_min_max_data > &vars = sim->minMaxVariables;
-      
-      for( int i=0; i<vars.size(); ++i )
-      {
-        uintah_min_max_data &var = vars[i];
-        
-        VisItUI_setTableValueS("MinMaxVariableTable", i, 0, var.name.c_str(), 0);
-        // VisItUI_setTableValueI("MinMaxVariableTable", i, 1, var.matl, 0);
-        // VisItUI_setTableValueI("MinMaxVariableTable", i, 2, var.level, 0);
-        VisItUI_setTableValueD("MinMaxVariableTable", i, 1, var.min,  0);
-        VisItUI_setTableValueD("MinMaxVariableTable", i, 2, var.max,  0);
-      }
-    }
-    else
-      VisItUI_setValueS( "MinMaxVariableGroupBox", "HIDE_WIDGET", 0);
+    // Setup the custom UI optional UPS variable table
+    visit_GetUPSVars( sim );
+
+    // Setup the custom UI output variable table
+    visit_GetOutputIntervals( sim );
+
+    // Setup the custom UI optional min/max variable table
+    visit_GetAnalysisVars( sim );
+
 
     // if( sim->message.size() )
     // {
