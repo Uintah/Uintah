@@ -2232,6 +2232,7 @@ DataArchiver::outputVariables(const ProcessorGroup * pg,
     
 
     PIDXOutputContext pc;
+    // Can this be run in serial without doing a MPI initialize
     pc.initialize(idxFilename, /*timeStep*/PIDX_ts++, globalExtents, d_myworld->getComm());
     
     int vc = 0;
