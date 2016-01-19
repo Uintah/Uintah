@@ -137,6 +137,15 @@ namespace Uintah {
       typedef typename Types::sol_type sol_type;
 
       int timestep = params->state->getCurrentTopLevelTimeStep();
+      
+      const int solvFreq = params->solveFrequency;
+      // note - the first timestep in hypre is timestep 1
+      if (solvFreq == 0 || timestep % solvFreq )
+      {
+        new_dw->transferFrom(old_dw,X_label,patches,matls,true);
+        return;
+      }
+      
       int suFreq = params->setupFrequency;
 
       bool mod_setup = true;
@@ -1166,6 +1175,7 @@ namespace Uintah {
         param->getWithDefault ("jump",            p->jump,           0);          
         param->getWithDefault ("logging",         p->logging,        0);
         param->getWithDefault ("setupFrequency",  p->setupFrequency, 1);
+        param->getWithDefault ("solveFrequency",  p->solveFrequency, 1);
 
         param->getWithDefault ("relax_type",      p->relax_type,     1); 
         
@@ -1197,6 +1207,7 @@ namespace Uintah {
       p->jump    = 0;
       p->logging = 0;
       p->setupFrequency = 1;
+      p->solveFrequency = 1;
       p->relax_type = 1;
     }
     p->restart   = true;
