@@ -62,6 +62,8 @@
 #include <CCA/Ports/Scheduler.h>
 #include <CCA/Ports/SimulationInterface.h>
 
+#include <sci_defs/visit_defs.h>
+
 #ifdef HAVE_VISIT
 #  include <VisIt/libsim/visit_libsim.h>
 #  include <VisIt/libsim/visit_libsim_customui.h>
@@ -87,12 +89,10 @@ static DebugStream gheapprofile("HeapProfiler",false);
 static DebugStream gheapchecker("HeapChecker",false);
 
 AMRSimulationController::AMRSimulationController(const ProcessorGroup* myworld,
-                                                 bool doAMR, ProblemSpecP pspec) :
+                                                 bool doAMR,
+						 ProblemSpecP pspec) :
   SimulationController(myworld, doAMR, pspec)
 {
-#ifdef HAVE_VISIT
-  do_visit = false;
-#endif
 }
 
 AMRSimulationController::~AMRSimulationController()
@@ -140,7 +140,7 @@ AMRSimulationController::run()
 
   // Sets up sharedState, timeinfo, output, scheduler, lb.
   preGridSetup();
-
+  
   // Create grid:
   GridP currentGrid = gridSetup();
 
@@ -194,7 +194,7 @@ AMRSimulationController::run()
 #ifdef HAVE_VISIT
   visit_simulation_data visitSimData;
 
-  if( do_visit )
+  if( d_sharedState->GetVisIt() )
   {
     visitSimData.simController = this;
 
@@ -243,7 +243,7 @@ AMRSimulationController::run()
         doRegridding(currentGrid, false);
         d_regridder->setAdaptivity(false);
 #ifdef HAVE_VISIT
-        if( do_visit )
+        if( d_sharedState->GetVisIt() )
           d_regridder->setForceRegridding(false);
 #endif
         proc0cout << "______________________________________________________________________\n";
@@ -254,7 +254,7 @@ AMRSimulationController::run()
         proc0cout << " Need to regrid.\n";
         doRegridding(currentGrid, false);
 #ifdef HAVE_VISIT
-        if( do_visit )
+        if( d_sharedState->GetVisIt() )
           d_regridder->setForceRegridding(false);
 #endif
         proc0cout << "______________________________________________________________________\n";
@@ -282,7 +282,7 @@ AMRSimulationController::run()
     // Note: this code is not explicit to VisIt but it is currently
     // the only component that is making use of the ability to
     // overirde adjusting delta T.
-    if( do_visit && d_sharedState->adjustDelT() == false )
+    if( d_sharedState->GetVisIt() && d_sharedState->adjustDelT() == false )
     {
       d_sharedState->adjustDelT(true);
     }
@@ -472,7 +472,7 @@ AMRSimulationController::run()
     // state to see if there is a connection and if so check to see if
     // anything needs to be done.
 #ifdef HAVE_VISIT
-    if( do_visit )
+    if( d_sharedState->GetVisIt() )
     {
       // Get the new delt so the user can change the value.
       d_scheduler->getLastDW()->get(delt_var, d_sharedState->get_delt_label());
@@ -485,20 +485,12 @@ AMRSimulationController::run()
 			   time, delt, delt_next, getWallTime(),
 			   std::string("") );
       
-      // Get the user viewable/settable variables.
-      visit_GetOutputIntervals( &visitSimData );
-      visit_GetAnalysisVars( &visitSimData );
-      visit_GetUPSVars( &visitSimData );
-      
       // Check the state.
       visit_CheckState( &visitSimData );
       
       // User issued a termination.
       if( visitSimData.simMode == VISIT_SIMMODE_TERMINATED )
 	break;
-      
-      // Update the user settable variables.
-      visit_UpdateUPSVars( &visitSimData );
     }
 #endif
   } // end while ( time is not up, etc )
@@ -514,7 +506,7 @@ AMRSimulationController::run()
   // If VisIt has been included into the build, stop here so the
   // user can have once last chance see their data via VisIt.
 #ifdef HAVE_VISIT
-   if( do_visit ) {
+   if( d_sharedState->GetVisIt() ) {
      visit_EndLibSim( &visitSimData );
    }
 #endif
