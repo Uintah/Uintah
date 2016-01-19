@@ -38,6 +38,12 @@ using namespace Uintah;
 RFConcDiffusion1MPM::RFConcDiffusion1MPM(ProblemSpecP& ps, SimulationStateP& sS, MPMFlags* Mflag, string diff_type):
   ScalarDiffusionModel(ps, sS, Mflag, diff_type) {
 
+  ps->require("partial_atomic_vol", partial_atomic_vol);
+  ps->require("operating_temp", operating_temp);
+  ps->require("boltzmann_const", boltzmann);
+
+  mech_val = (diffusivity * partial_atomic_vol)/(boltzmann * operating_temp);
+
 }
 
 RFConcDiffusion1MPM::~RFConcDiffusion1MPM() {

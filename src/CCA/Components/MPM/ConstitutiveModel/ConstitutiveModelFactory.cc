@@ -66,7 +66,6 @@
 #include <CCA/Components/MPM/ConstitutiveModel/Biswajit/Arena.h>
 
 //************** ReactiveDiffusion CMs****************************
-#include <CCA/Components/MPM/ConstitutiveModel/GaoElastic.h>
 #include <CCA/Components/MPM/ConstitutiveModel/RFElasticPlastic.h>
 //************** ReactiveDiffusion CMs****************************
 
@@ -240,9 +239,6 @@ ConstitutiveModel* ConstitutiveModelFactory::create(ProblemSpecP& ps,
 
   else if (mat_type ==  "camclay")
     return(scinew CamClay(child,flags));
-
-  else if (mat_type ==  "gao_elastic")
-    return(scinew GaoElastic(child,flags));
 
   else if (mat_type ==  "rf_elastic_plastic")
     return(scinew RFElasticPlastic(child,flags));
