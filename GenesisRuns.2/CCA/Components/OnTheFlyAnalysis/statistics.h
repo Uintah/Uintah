@@ -201,6 +201,7 @@ WARNING
     double d_startTime;
     double d_stopTime;
     int d_startTimeTimestep;   // timestep when stats are turn on.
+    IntVector d_monitorCell;   // Cell to output 
 
     bool d_doHigherOrderStats;
     std::vector< Qstats >  d_Qstats;
