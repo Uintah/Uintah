@@ -309,6 +309,9 @@ void MinMax::scheduleInitialize(SchedulerP& sched,
   t->computes(d_lb->lastCompTimeLabel );
   t->computes(d_lb->fileVarsStructLabel, d_zero_matl); 
   sched->addTask(t, level->eachPatch(),  d_matl_set);
+
+  proc0cout << "Invoking On-the-fly-analysis method Min/Max results are located in "
+	    << d_dataArchiver->getOutputLocation() << std::endl;
 }
 //______________________________________________________________________
 void MinMax::initialize(const ProcessorGroup*, 
