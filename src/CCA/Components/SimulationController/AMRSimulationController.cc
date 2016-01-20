@@ -66,7 +66,6 @@
 
 #ifdef HAVE_VISIT
 #  include <VisIt/libsim/visit_libsim.h>
-#  include <VisIt/libsim/visit_libsim_customUI.h>
 #endif
 
 #ifdef HAVE_CUDA
@@ -428,7 +427,7 @@ AMRSimulationController::run()
     d_sharedState->d_current_delt = delt;
 
     executeTimestep( time, delt, currentGrid, totalFine );
-     
+
     // Print MPI statistics
     d_scheduler->printMPIStats();
 
