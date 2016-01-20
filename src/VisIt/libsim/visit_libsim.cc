@@ -134,10 +134,6 @@ void visit_InitLibSim( visit_simulation_data *sim )
   // initializing.
   sim->simMode = VISIT_SIMMODE_RUNNING;
     
-  // TODO: look for the VisItSetupEnvironment2 function.
-  // Has better scaling, but has not been release for fortran.
-  VisItSetupEnvironment();
-
   if( Parallel::usingMPI() )
   {
     sim->isProc0 = isProc0_macro;
@@ -160,6 +156,10 @@ void visit_InitLibSim( visit_simulation_data *sim )
   {
     sim->isProc0 = 1;
   }
+
+  // TODO: look for the VisItSetupEnvironment2 function.
+  // Has better scaling, but has not been release for fortran.
+  VisItSetupEnvironment();
 
   // Have the rank 0 process create the sim file.
   if(sim->isProc0)
