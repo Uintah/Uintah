@@ -33,19 +33,19 @@
 #include <sci_defs/visit_defs.h>
 
 #include <CCA/Components/SimulationController/SimulationController.h>
-
 #include <CCA/Components/OnTheFlyAnalysis/MinMax.h>
-#include <Core/Grid/Material.h>
-#define ALL_LEVELS 99
+#include <CCA/Ports/Output.h>
 
+#include <Core/Grid/Material.h>
 #include <Core/Parallel/Parallel.h>
 #include <Core/ProblemSpec/ProblemSpec.h>
 #include <Core/Util/DebugStream.h>
-#include <CCA/Ports/Output.h>
 
 #include "StandAlone/tools/uda2vis/uda2vis.h"
 
 #include <dlfcn.h>
+
+#define ALL_LEVELS 99
 
 static SCIRun::DebugStream visitdbg( "VisItLibSim", true );
 
@@ -113,15 +113,6 @@ void visit_LibSimArguments(int argc, char **argv)
 //---------------------------------------------------------------------
 void visit_InitLibSim( visit_simulation_data *sim )
 {
-#ifdef HAVE_MPICH
-  if( Parallel::usingMPI() )
-    sim->isProc0 = isProc0_macro;
-  else
-    sim->isProc0 = true;
-#else
-  sim->isProc0 = true;
-#endif
-
 #ifdef VISIT_STOP
   // The simulation will wait for VisIt to connect after first step.
   sim->runMode = VISIT_SIMMODE_STOPPED;
@@ -134,6 +125,7 @@ void visit_InitLibSim( visit_simulation_data *sim )
   // initializing.
   sim->simMode = VISIT_SIMMODE_RUNNING;
     
+#ifdef HAVE_MPICH
   if( Parallel::usingMPI() )
   {
     sim->isProc0 = isProc0_macro;
@@ -141,8 +133,8 @@ void visit_InitLibSim( visit_simulation_data *sim )
     int par_rank, par_size;
 
     // Initialize MPI
-    MPI_Comm_rank (MPI_COMM_WORLD, &par_rank);
-    MPI_Comm_size (MPI_COMM_WORLD, &par_size);
+    MPI_Comm_rank( MPI_COMM_WORLD, &par_rank );
+    MPI_Comm_size( MPI_COMM_WORLD, &par_size );
     
     // Tell libsim if the simulation is running in parallel.
     VisItSetParallel( par_size > 1 );
@@ -154,11 +146,16 @@ void visit_InitLibSim( visit_simulation_data *sim )
   }
   else
   {
-    sim->isProc0 = 1;
+    sim->isProc0 = true;
   }
+#else
+  sim->isProc0 = true;
+#endif
 
   // TODO: look for the VisItSetupEnvironment2 function.
   // Has better scaling, but has not been release for fortran.
+
+  // NOTE: This call must be AFTER the parallel related calls.
   VisItSetupEnvironment();
 
   // Have the rank 0 process create the sim file.
