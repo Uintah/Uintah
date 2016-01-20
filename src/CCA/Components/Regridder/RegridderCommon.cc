@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2015 The University of Utah
+ * Copyright (c) 1997-2016 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -169,8 +169,9 @@ RegridderCommon::needsToReGrid(const GridP &oldGrid)
   int retval = false;
 
   if( d_forceRegridding )
+  {
     retval = true;
-
+  }
   else if (!d_isAdaptive || timeStepsSinceRegrid < d_minTimestepsBetweenRegrids) {
     retval = false;
     if (d_myworld->myrank() == 0)

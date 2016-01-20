@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2015 The University of Utah
+ * Copyright (c) 1997-2016 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -69,6 +69,7 @@ namespace Uintah {
     int         logging;            // Log Hypre solver (using Hypre options)
     bool        restart;            // Allow solver to restart if not converged
     int         setupFrequency;     // Frequency for calling hypre setup calls
+    int         solveFrequency;     // Frequency for solving the linear system. timestep % solveFrequency
     int         relax_type;         // relaxation type
     
     // SMG parameters
@@ -90,6 +91,15 @@ namespace Uintah {
     int getSetupFrequency() const { 
       return setupFrequency;
     }
+
+    void setSolveFrequency(const int freq) {
+      solveFrequency = freq;
+    }
+    
+    int getSolveFrequency() const {
+      return solveFrequency;
+    }
+
   };
 
 

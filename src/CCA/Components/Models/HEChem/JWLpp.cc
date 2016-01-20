@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2015 The University of Utah
+ * Copyright (c) 1997-2016 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -30,7 +30,6 @@
 #include <Core/Grid/Variables/CCVariable.h>
 #include <Core/Grid/Level.h>
 #include <Core/Grid/Material.h>
-#include <CCA/Components/ICE/ICEMaterial.h>
 #include <CCA/Components/MPM/ConstitutiveModel/MPMMaterial.h>
 #include <Core/Grid/SimulationState.h>
 #include <Core/Grid/Variables/VarTypes.h>
@@ -87,15 +86,16 @@ JWLpp::~JWLpp()
 void JWLpp::problemSetup(GridP&, SimulationStateP& sharedState, ModelSetup*)
 {
   d_sharedState = sharedState;
-  d_params->getWithDefault("ThresholdVolFrac",d_threshold_volFrac, 0.01);
+  ProblemSpecP JWL_ps = d_params->findBlock("JWLpp");
+  JWL_ps->getWithDefault("ThresholdVolFrac",d_threshold_volFrac, 0.01);
   
-  d_params->require("ThresholdPressure", d_threshold_pressure);
-  d_params->require("fromMaterial",fromMaterial);
-  d_params->require("toMaterial",  toMaterial);
-  d_params->require("G",    d_G);
-  d_params->require("b",    d_b);
-  d_params->require("E0",   d_E0);
-  d_params->require("rho0", d_rho0);
+  JWL_ps->require("ThresholdPressure", d_threshold_pressure);
+  JWL_ps->require("fromMaterial",fromMaterial);
+  JWL_ps->require("toMaterial",  toMaterial);
+  JWL_ps->require("G",    d_G);
+  JWL_ps->require("b",    d_b);
+  JWL_ps->require("E0",   d_E0);
+  JWL_ps->require("rho0", d_rho0);
 
   //__________________________________
   //  Are we saving the total burned mass and total burned energy
@@ -114,8 +114,8 @@ void JWLpp::problemSetup(GridP&, SimulationStateP& sharedState, ModelSetup*)
     }
   }
   
-  matl0 = sharedState->parseAndLookupMaterial(d_params, "fromMaterial");
-  matl1 = sharedState->parseAndLookupMaterial(d_params, "toMaterial");
+  matl0 = sharedState->parseAndLookupMaterial(JWL_ps, "fromMaterial");
+  matl1 = sharedState->parseAndLookupMaterial(JWL_ps, "toMaterial");
 
   //__________________________________
   //  define the materialSet
@@ -135,14 +135,16 @@ void JWLpp::outputProblemSpec(ProblemSpecP& ps)
 {
   ProblemSpecP model_ps = ps->appendChild("Model");
   model_ps->setAttribute("type","JWLpp");
+  ProblemSpecP JWL_ps = model_ps->appendChild("JWLpp");
 
-  model_ps->appendElement("ThresholdVolFrac", d_threshold_volFrac);
-  model_ps->appendElement("fromMaterial",fromMaterial);
-  model_ps->appendElement("toMaterial",toMaterial);
-  model_ps->appendElement("G",    d_G);
-  model_ps->appendElement("b",    d_b);
-  model_ps->appendElement("E0",   d_E0);
-  model_ps->appendElement("rho0", d_rho0);
+  JWL_ps->appendElement("ThresholdVolFrac",  d_threshold_volFrac);
+  JWL_ps->appendElement("ThresholdPressure", d_threshold_pressure);
+  JWL_ps->appendElement("fromMaterial",     fromMaterial);
+  JWL_ps->appendElement("toMaterial",       toMaterial);
+  JWL_ps->appendElement("G",    d_G);
+  JWL_ps->appendElement("b",    d_b);
+  JWL_ps->appendElement("E0",   d_E0);
+  JWL_ps->appendElement("rho0", d_rho0);
   
 }
 

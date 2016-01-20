@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2015 The University of Utah
+ * Copyright (c) 1997-2016 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -36,12 +36,10 @@
 #include <Core/Labels/ICELabel.h>
 #include <Core/Labels/MPMICELabel.h>
 #include <Core/Grid/DbgOutput.h>
-#include <CCA/Components/ICE/ICEMaterial.h>
 #include <CCA/Components/ICE/BoundaryCond.h>
 #include <CCA/Components/MPM/ConstitutiveModel/MPMMaterial.h>
 #include <CCA/Components/MPM/ConstitutiveModel/ElasticPlasticHP.h>
 #include <Core/Util/DebugStream.h>
-#include <iomanip>
 #include <iostream>
 
 #undef DEBUG_SCALAR

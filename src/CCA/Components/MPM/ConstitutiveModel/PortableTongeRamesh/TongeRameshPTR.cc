@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 2013-2014 The Johns Hopkins University
+ * Copyright (c) 2013-2016 The Johns Hopkins University
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -31,36 +31,21 @@
 
 #include <Core/Grid/Patch.h>
 #include <CCA/Ports/DataWarehouse.h>
-#include <Core/Grid/Variables/NCVariable.h>
+#include <Core/Exceptions/ProblemSetupException.h>
 #include <Core/Grid/Variables/ParticleVariable.h>
 #include <Core/Grid/Task.h>
 #include <Core/Grid/Level.h>
 #include <Core/Grid/Variables/VarLabel.h>
 #include <Core/Geometry/Vector.h>
-#include <Core/Geometry/Point.h>
 #include <Core/Grid/Variables/VarTypes.h>
 #include <Core/Labels/MPMLabel.h>
 #include <Core/Math/Matrix3.h>
-// #include <Core/Math/FastMatrix.h>
 #include <CCA/Components/MPM/ConstitutiveModel/MPMMaterial.h>
 #include <Core/ProblemSpec/ProblemSpec.h>
-// #include <Core/Math/MinMax.h>
-// #include <Core/Math/Gaussian.h>
-// #include <Core/Math/Weibull.h>
 #include <Core/Malloc/Allocator.h>
-// #include <Core/Math/MersenneTwister.h>
-// #include <fstream>
 #include <iostream>
-#include <iomanip>
 #include <vector>
-// #include <complex>
-
-#include <Core/Exceptions/ParameterNotFound.h>
-#include <Core/Exceptions/InvalidValue.h>
-#include <Core/Exceptions/ConvergenceFailure.h>
 #include <stdexcept>
-#include <libxml/parser.h>
-#include <libxml/tree.h>
 
 using namespace Uintah;
 
@@ -285,7 +270,6 @@ void TongeRameshPTR::addComputesAndRequires(Task* task,
                                             const bool recurse,
                                             const bool SchedParent) const
 {
-  const MaterialSubset* matlset = matl->thisMaterial();
   throw ProblemSetupException("This addComputesAndRequires() does not add damage requires"
                               , __FILE__, __LINE__);
 }
@@ -296,7 +280,6 @@ void TongeRameshPTR::addInitialComputesAndRequires(Task* task,
 {
   const MaterialSubset* matlset = matl->thisMaterial();
   // Other constitutive model and input dependent computes and requires
-  Ghost::GhostType  gnone = Ghost::None;
   // task->requires(Task::NewDW, lb->pVolumeLabel, matlset, gnone);
   for (int i=0; i<d_numHistVar; ++i){
     task->computes(histVarVect[i],     matlset);

@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 2012-2015 The University of Utah
+ * Copyright (c) 2012-2016 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -173,7 +173,7 @@ private:
                           const std::string fileName );
   const std::string filename_;
   DECLARE_FIELDS(FieldT, x_, y_, z_)
-  Wasatch::UintahPatchContainer* patchContainer_;
+  WasatchCore::UintahPatchContainer* patchContainer_;
 };
 
 //--------------------------------------------------------------------
@@ -199,7 +199,7 @@ void
 ReadFromFileExpression<FieldT>::
 bind_operators( const SpatialOps::OperatorDatabase& opDB )
 {
-  patchContainer_ = opDB.retrieve_operator<Wasatch::UintahPatchContainer>();
+  patchContainer_ = opDB.retrieve_operator<WasatchCore::UintahPatchContainer>();
 }
 
 //--------------------------------------------------------------------
@@ -243,7 +243,7 @@ evaluate()
   
   if(inputFile == NULL) {
     std::ostringstream warn;
-    warn << "ERROR: Wasatch::ReadFromFileExpresssion: \n Unable to open the given input file " << filename_;
+    warn << "ERROR: WasatchCore::ReadFromFileExpresssion: \n Unable to open the given input file " << filename_;
     throw Uintah::ProblemSetupException(warn.str(), __FILE__, __LINE__);
   }
   
@@ -308,7 +308,7 @@ evaluate()
     }
   } else {
     std::ostringstream warn;
-    warn << "ERROR: Wasatch::ReadFromFileExpresssion: \n unsupported file format. Supported file formats are FLAT and XYZ. You must include that in the first line of your data." << filename_;
+    warn << "ERROR: WasatchCore::ReadFromFileExpresssion: \n unsupported file format. Supported file formats are FLAT and XYZ. You must include that in the first line of your data." << filename_;
     throw Uintah::ProblemSetupException(warn.str(), __FILE__, __LINE__);
   }
   gzclose( inputFile );

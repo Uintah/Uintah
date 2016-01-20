@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 2012-2015 The University of Utah
+ * Copyright (c) 2012-2016 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -63,9 +63,9 @@
     {                                                                                           \
       masked_assign( *(this->spatialMask_), f, BCVALUE);                                        \
     } else {                                                                                    \
-      typedef Wasatch::BCOpTypeSelector<FieldT> OpT;                                            \
+      typedef WasatchCore::BCOpTypeSelector<FieldT> OpT;                                            \
       switch (this->bcTypeEnum_) {                                                              \
-        case Wasatch::DIRICHLET:                                                                \
+        case WasatchCore::DIRICHLET:                                                                \
         {                                                                                       \
           switch (this->faceTypeEnum_) {                                                        \
             case Uintah::Patch::xminus:                                                         \
@@ -96,7 +96,7 @@
           }                                                                                     \
           break;                                                                                \
         }                                                                                       \
-        case Wasatch::NEUMANN:                                                                  \
+        case WasatchCore::NEUMANN:                                                                  \
         {                                                                                       \
           switch (this->faceTypeEnum_) {                                                        \
             case Uintah::Patch::xminus:                                                         \
@@ -182,16 +182,16 @@
  */
 #define APPLY_CONSTANT_BC(f, BCVALUE)                                                              \
 {                                                                                               \
-  if( this->isStaggeredNormal_ && this->bcTypeEnum_ != Wasatch::NEUMANN ){                            \
+  if( this->isStaggeredNormal_ && this->bcTypeEnum_ != WasatchCore::NEUMANN ){                            \
     masked_assign ( STAGGERED_MASK, f, bcValue_ );                                              \
   } else {                                                                                      \
     if (this->setInExtraCellsOnly_)                                                             \
     {                                                                                           \
       masked_assign( *(this->spatialMask_), f, BCVALUE);                                        \
     } else {                                                                                    \
-      typedef Wasatch::BCOpTypeSelector<FieldT> OpT;                                            \
+      typedef WasatchCore::BCOpTypeSelector<FieldT> OpT;                                            \
       switch (this->bcTypeEnum_) {                                                              \
-        case Wasatch::DIRICHLET:                                                                \
+        case WasatchCore::DIRICHLET:                                                                \
         {                                                                                       \
           switch (this->faceTypeEnum_) {                                                        \
             case Uintah::Patch::xminus:                                                         \
@@ -222,7 +222,7 @@
           }                                                                                     \
           break;                                                                                \
         }                                                                                       \
-        case Wasatch::NEUMANN:                                                                  \
+        case WasatchCore::NEUMANN:                                                                  \
         {                                                                                       \
           switch (this->faceTypeEnum_) {                                                        \
             case Uintah::Patch::xminus:                                                         \
@@ -480,6 +480,7 @@ INSTANTIATE_BC_PROFILES(XVolField)
 INSTANTIATE_BC_PROFILES(YVolField)
 INSTANTIATE_BC_PROFILES(ZVolField)
 
+template class BCPrimVar<SVolField>;
 template class BCPrimVar<XVolField>;
 template class BCPrimVar<YVolField>;
 template class BCPrimVar<ZVolField>;

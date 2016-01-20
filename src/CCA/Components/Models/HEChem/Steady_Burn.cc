@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2015 The University of Utah
+ * Copyright (c) 1997-2016 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -26,19 +26,18 @@
 #include <CCA/Components/Models/HEChem/Common.h>
 #include <CCA/Ports/Scheduler.h>
 #include <Core/ProblemSpec/ProblemSpec.h>
+#include <Core/Grid/Material.h>
 #include <Core/Grid/Variables/CellIterator.h>
 #include <Core/Grid/Variables/CCVariable.h>
+#include <Core/Grid/Variables/ParticleVariable.h>
 #include <Core/Grid/SimulationState.h>
 #include <Core/Grid/Variables/VarTypes.h>
 #include <Core/Labels/MPMLabel.h>
 #include <Core/Labels/ICELabel.h>
 #include <Core/Labels/MPMICELabel.h>
 #include <Core/Grid/DbgOutput.h>
-#include <CCA/Components/ICE/ICEMaterial.h>
 #include <CCA/Components/ICE/BoundaryCond.h>
-#include <CCA/Components/MPM/ConstitutiveModel/MPMMaterial.h>
 #include <Core/Util/DebugStream.h>
-#include <iomanip>
 #include <iostream>
 
 #undef DEBUG_SCALAR
@@ -96,22 +95,24 @@ Steady_Burn::~Steady_Burn(){
 //______________________________________________________________________
 void Steady_Burn::problemSetup(GridP&, SimulationStateP& sharedState, ModelSetup*){
   d_sharedState = sharedState;
-  matl0 = sharedState->parseAndLookupMaterial(d_params, "fromMaterial");
-  matl1 = sharedState->parseAndLookupMaterial(d_params, "toMaterial");  
   
-  d_params->require("IdealGasConst",     R );
-  d_params->require("PreExpCondPh",      Ac);
-  d_params->require("ActEnergyCondPh",   Ec);
-  d_params->require("PreExpGasPh",       Bg);
-  d_params->require("CondPhaseHeat",     Qc);
-  d_params->require("GasPhaseHeat",      Qg);
-  d_params->require("HeatConductGasPh",  Kg);
-  d_params->require("HeatConductCondPh", Kc);
-  d_params->require("SpecificHeatBoth",  Cp);
-  d_params->require("MoleWeightGasPh",   MW);
-  d_params->require("BoundaryParticles", BP);
-  d_params->require("ThresholdPressure", ThresholdPressure);
-  d_params->require("IgnitionTemp",      ignitionTemp);
+  ProblemSpecP SB_ps = d_params->findBlock("Steady_Burn");
+  matl0 = sharedState->parseAndLookupMaterial(SB_ps, "fromMaterial");
+  matl1 = sharedState->parseAndLookupMaterial(SB_ps, "toMaterial");  
+  
+  SB_ps->require("IdealGasConst",     R );
+  SB_ps->require("PreExpCondPh",      Ac);
+  SB_ps->require("ActEnergyCondPh",   Ec);
+  SB_ps->require("PreExpGasPh",       Bg);
+  SB_ps->require("CondPhaseHeat",     Qc);
+  SB_ps->require("GasPhaseHeat",      Qg);
+  SB_ps->require("HeatConductGasPh",  Kg);
+  SB_ps->require("HeatConductCondPh", Kc);
+  SB_ps->require("SpecificHeatBoth",  Cp);
+  SB_ps->require("MoleWeightGasPh",   MW);
+  SB_ps->require("BoundaryParticles", BP);
+  SB_ps->require("ThresholdPressure", ThresholdPressure);
+  SB_ps->require("IgnitionTemp",      ignitionTemp);
   
   /* initialize constants */
   CC1 = Ac*R*Kc/Ec/Cp;        
@@ -154,23 +155,24 @@ void Steady_Burn::outputProblemSpec(ProblemSpecP& ps)
 {
   ProblemSpecP model_ps = ps->appendChild("Model");
   model_ps->setAttribute("type","Steady_Burn");
+  ProblemSpecP SB_ps = model_ps->appendChild("Steady_Burn");
   
-  model_ps->appendElement("fromMaterial",matl0->getName());
-  model_ps->appendElement("toMaterial",  matl1->getName());
+  SB_ps->appendElement("fromMaterial",matl0->getName());
+  SB_ps->appendElement("toMaterial",  matl1->getName());
   
-  model_ps->appendElement("IdealGasConst",     R );
-  model_ps->appendElement("PreExpCondPh",      Ac);
-  model_ps->appendElement("ActEnergyCondPh",   Ec);
-  model_ps->appendElement("PreExpGasPh",       Bg);
-  model_ps->appendElement("CondPhaseHeat",     Qc);
-  model_ps->appendElement("GasPhaseHeat",      Qg);
-  model_ps->appendElement("HeatConductGasPh",  Kg);
-  model_ps->appendElement("HeatConductCondPh", Kc);
-  model_ps->appendElement("SpecificHeatBoth",  Cp);
-  model_ps->appendElement("MoleWeightGasPh",   MW);
-  model_ps->appendElement("BoundaryParticles", BP);
-  model_ps->appendElement("ThresholdPressure", ThresholdPressure);
-  model_ps->appendElement("IgnitionTemp",      ignitionTemp);
+  SB_ps->appendElement("IdealGasConst",     R );
+  SB_ps->appendElement("PreExpCondPh",      Ac);
+  SB_ps->appendElement("ActEnergyCondPh",   Ec);
+  SB_ps->appendElement("PreExpGasPh",       Bg);
+  SB_ps->appendElement("CondPhaseHeat",     Qc);
+  SB_ps->appendElement("GasPhaseHeat",      Qg);
+  SB_ps->appendElement("HeatConductGasPh",  Kg);
+  SB_ps->appendElement("HeatConductCondPh", Kc);
+  SB_ps->appendElement("SpecificHeatBoth",  Cp);
+  SB_ps->appendElement("MoleWeightGasPh",   MW);
+  SB_ps->appendElement("BoundaryParticles", BP);
+  SB_ps->appendElement("ThresholdPressure", ThresholdPressure);
+  SB_ps->appendElement("IgnitionTemp",      ignitionTemp);
 }
 //______________________________________________________________________
 void Steady_Burn::scheduleInitialize(SchedulerP& sched, const LevelP& level, const ModelInfo*){

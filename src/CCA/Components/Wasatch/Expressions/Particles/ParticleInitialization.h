@@ -133,117 +133,88 @@ public:
     Builder( const Expr::Tag& resultTag,
              const std::string& coord,
              const int seed,
-             std::vector<Uintah::GeometryPieceP> geomObjects );
+             std::vector<Uintah::GeometryPieceP> geomObjects )
+    : ExpressionBuilder(resultTag),
+      coord_(coord),
+      seed_(seed),
+      geomObjects_(geomObjects)
+    {}
+
     ~Builder(){}
-    Expr::ExpressionBase* build() const;
+    Expr::ExpressionBase* build() const{
+      return new ParticleGeometryBased( coord_, seed_, geomObjects_ );
+    }
+
   private:
     const std::string coord_;
     const int seed_;
     std::vector <Uintah::GeometryPieceP > geomObjects_;
   };
   
-  void bind_operators( const SpatialOps::OperatorDatabase& opDB );
-  void evaluate();
+  void bind_operators( const SpatialOps::OperatorDatabase& opDB ){
+    patchContainer_ = opDB.retrieve_operator<WasatchCore::UintahPatchContainer>();
+  }
+
+  void evaluate()
+  {
+    using namespace SpatialOps;
+    using namespace Uintah;
+    ParticleField& result = this->value();
+
+    const Uintah::Patch* const patch = patchContainer_->get_uintah_patch();
+
+    // random number generator
+    typedef boost::mt19937 base_generator_type; // mersenne twister
+    // seed the random number generator based on the MPI rank
+    const int pid =  patchContainer_->get_uintah_patch()->getID();
+    base_generator_type generator((unsigned) ( (pid+1) * (1 + seed_) ));
+    const double dx =  get_cell_size(patch, coord_); // dx, dy, or dz
+    boost::uniform_real<> rand_dist(0,dx); // generate random numbers between 0 and dx. Then we offset those by the cell location
+    boost::variate_generator<base_generator_type&, boost::uniform_real<> > boost_rand(generator, rand_dist);
+
+    //________________________________________________
+    // collect the grid points that live inside the geometry
+    const std::vector<SCIRun::Point>& insidePoints = GeometryPieceFactory::getInsidePoints(patch);
+
+    ParticleField::iterator phiIter = result.begin();
+    ParticleField::iterator phiIterEnd = result.end();
+
+    if( insidePoints.size() > 0 && phiIter < phiIterEnd ){
+      // random distribution to pick random points within the geometry shape
+      base_generator_type generator2((unsigned) ( (pid+1) ));
+      boost::uniform_int<> rand_dist_int(0, insidePoints.size() - 1);
+      boost::variate_generator<base_generator_type&, boost::uniform_int<> > boost_rand_int(generator2, rand_dist_int);
+
+      //________________________________________________
+      // now iterate over the inside points and fill in the particles
+      while( phiIter < phiIterEnd ){
+        const int idx = boost_rand_int();
+        SCIRun::Point insidePoint = insidePoints[idx];
+        const double offset = get_cell_position_offset(patch, coord_, insidePoint);
+        *phiIter = boost_rand() + offset;
+        ++phiIter;
+      }
+    }
+  }
+
   
 private:
   const std::string coord_;
   const int seed_;
   typedef std::vector <Uintah::GeometryPieceP > GeomValueMapT;  // temporary typedef map that stores boundary
-  ParticleGeometryBased( const std::string& coord, const int seed, GeomValueMapT geomObjects );
+  ParticleGeometryBased( const std::string& coord, const int seed, GeomValueMapT geomObjects )
+  : Expr::Expression<ParticleField>(),
+    coord_(coord),
+    seed_(seed),
+    geomObjects_(geomObjects)
+  {}
 
   GeomValueMapT geomObjects_;
-  Wasatch::UintahPatchContainer* patchContainer_;
+  WasatchCore::UintahPatchContainer* patchContainer_;
 
 };
 
 //--------------------------------------------------------------------
-
-ParticleGeometryBased::
-ParticleGeometryBased( const std::string& coord, const int seed, GeomValueMapT geomObjects )
-: Expr::Expression<ParticleField>(),
-  coord_(coord),
-  seed_(seed),
-  geomObjects_(geomObjects)
-{}
-
-//--------------------------------------------------------------------
-
-void
-ParticleGeometryBased::
-bind_operators( const SpatialOps::OperatorDatabase& opDB )
-{
-  patchContainer_ = opDB.retrieve_operator<Wasatch::UintahPatchContainer>();
-}
-
-//--------------------------------------------------------------------
-
-void
-ParticleGeometryBased::
-evaluate()
-{
-  using namespace SpatialOps;
-  using namespace Uintah;
-  ParticleField& result = this->value();
-
-  const Uintah::Patch* const patch = patchContainer_->get_uintah_patch();
-
-  // random number generator
-  typedef boost::mt19937 base_generator_type; // mersenne twister
-  // seed the random number generator based on the MPI rank
-  const int pid =  patchContainer_->get_uintah_patch()->getID();
-  base_generator_type generator((unsigned) ( (pid+1) * (1 + seed_) ));
-  const double dx =  get_cell_size(patch, coord_); // dx, dy, or dz
-  boost::uniform_real<> rand_dist(0,dx); // generate random numbers between 0 and dx. Then we offset those by the cell location
-  boost::variate_generator<base_generator_type&, boost::uniform_real<> > boost_rand(generator, rand_dist);
-  
-  //________________________________________________
-  // collect the grid points that live inside the geometry
-  const std::vector<SCIRun::Point>& insidePoints = GeometryPieceFactory::getInsidePoints(patch);
-
-  ParticleField::iterator phiIter = result.begin();
-  ParticleField::iterator phiIterEnd = result.end();
-  
-  if (insidePoints.size() > 0 && phiIter < phiIterEnd) {
-    // random distribution to pick random points within the geometry shape
-    base_generator_type generator2((unsigned) ( (pid+1) ));
-    boost::uniform_int<> rand_dist_int(0, insidePoints.size() - 1);
-    boost::variate_generator<base_generator_type&, boost::uniform_int<> > boost_rand_int(generator2, rand_dist_int);
-    
-    //________________________________________________
-    // now iterate over the inside points and fill in the particles
-    while (phiIter < phiIterEnd) {
-      const int idx = boost_rand_int();
-      SCIRun::Point insidePoint = insidePoints[idx];
-      const double offset = get_cell_position_offset(patch, coord_, insidePoint);
-      *phiIter = boost_rand() + offset;
-      ++phiIter;
-    }
-  }
-}
-
-//--------------------------------------------------------------------
-
-ParticleGeometryBased::Builder::
-Builder( const Expr::Tag& result,
-         const std::string& coord,
-         const int seed,
-         GeomValueMapT geomObjects )
-: ExpressionBuilder(result),
-  coord_(coord),
-  seed_(seed),
-  geomObjects_(geomObjects)
-{}
-
-//--------------------------------------------------------------------
-
-
-Expr::ExpressionBase*
-ParticleGeometryBased::Builder::
-build() const
-{
-  return new ParticleGeometryBased( coord_, seed_, geomObjects_ );
-}
-
 
 /**
  *  \class  ParticleRandomIC
@@ -284,10 +255,21 @@ public:
              const double lo,
              const double hi,
              const int seed,
-             const bool usePatchBounds );
+             const bool usePatchBounds )
+    : ExpressionBuilder(resultTag),
+      coord_(coord),
+      lo_(lo),
+      hi_(hi),
+      seed_(seed),
+      usePatchBounds_(usePatchBounds)
+    {}
 
     ~Builder(){}
-    Expr::ExpressionBase* build() const;
+
+    Expr::ExpressionBase* build() const{
+      return new ParticleRandomIC(coord_,lo_, hi_, seed_,usePatchBounds_ );
+    }
+
   private:
     const std::string coord_;
     const double lo_, hi_;
@@ -295,7 +277,10 @@ public:
     const bool usePatchBounds_;
   };
   
-  void bind_operators( const SpatialOps::OperatorDatabase& opDB );
+  void bind_operators( const SpatialOps::OperatorDatabase& opDB ){
+    patchContainer_ = opDB.retrieve_operator<WasatchCore::UintahPatchContainer>();
+  }
+
   void evaluate();
   
 private:
@@ -304,43 +289,26 @@ private:
   const int seed_;
   const bool usePatchBounds_;
   const bool isCoordExpr_; // is this expression evaluating a coordinate or not? for non coordinates, we use the user provided lo and hi
-  Wasatch::UintahPatchContainer* patchContainer_;
+  WasatchCore::UintahPatchContainer* patchContainer_;
   
   ParticleRandomIC( const std::string& coord,
                    const double lo,
                    const double hi,
                    const int seed,
-                   const bool usePatchBounds );
+                   const bool usePatchBounds )
+  : Expr::Expression<ParticleField>(),
+    coord_(coord),
+    lo_(lo),
+    hi_(hi),
+    seed_(seed),
+    usePatchBounds_(usePatchBounds),
+    isCoordExpr_ ( coord_ != "" )
+  {
+    this->set_gpu_runnable( false );  // definitely not GPU ready
+  }
 };
 
 //====================================================================
-
-ParticleRandomIC::
-ParticleRandomIC( const std::string& coord,
-                  const double lo,
-                  const double hi,
-                  const int seed,
-                  const bool usePatchBounds )
-: Expr::Expression<ParticleField>(),
-  coord_(coord),
-  lo_(lo),
-  hi_(hi),
-  seed_(seed),
-  usePatchBounds_(usePatchBounds),
-  isCoordExpr_ ( coord_ != "" )
-{
-  this->set_gpu_runnable( false );  // definitely not GPU ready
-}
-
-//--------------------------------------------------------------------
-
-void
-ParticleRandomIC::bind_operators( const SpatialOps::OperatorDatabase& opDB )
-{
-  patchContainer_ = opDB.retrieve_operator<Wasatch::UintahPatchContainer>();
-}
-
-//--------------------------------------------------------------------
 
 void
 ParticleRandomIC::
@@ -389,31 +357,6 @@ evaluate()
   }
 }
 
-//--------------------------------------------------------------------
-
-ParticleRandomIC::Builder::
-Builder( const Expr::Tag& resultTag,
-         const std::string& coord,
-         const double lo,
-         const double hi,
-         const int seed,
-         const bool usePatchBounds )
-: ExpressionBuilder(resultTag),
-  coord_(coord),
-  lo_(lo),
-  hi_(hi),
-  seed_(seed),
-  usePatchBounds_(usePatchBounds)
-{}
-
-//--------------------------------------------------------------------
-
-Expr::ExpressionBase*
-ParticleRandomIC::Builder::build() const
-{
-  return new ParticleRandomIC(coord_,lo_, hi_, seed_,usePatchBounds_ );
-}
-
 //==================================================================
 
 /**
@@ -454,10 +397,20 @@ public:
              const double hi,
              const bool transverse,
              const std::string coord,
-             const bool usePatchBounds );
+             const bool usePatchBounds )
+    : ExpressionBuilder(resultTag),
+      lo_(lo),
+      hi_(hi),
+      transverse_(transverse),
+      coord_(coord),
+      usePatchBounds_(usePatchBounds)
+    {}
     
     ~Builder(){}
-    Expr::ExpressionBase* build() const;
+    Expr::ExpressionBase* build() const{
+      return new ParticleUniformIC( lo_, hi_, transverse_, coord_, usePatchBounds_ );
+    }
+
   private:
     const double lo_, hi_;
     const bool transverse_;
@@ -465,7 +418,10 @@ public:
     const bool usePatchBounds_;
   };
   
-  void bind_operators( const SpatialOps::OperatorDatabase& opDB );
+  void bind_operators( const SpatialOps::OperatorDatabase& opDB ){
+    patchContainer_ = opDB.retrieve_operator<WasatchCore::UintahPatchContainer>();
+  }
+
   void evaluate();
   
 private:
@@ -473,42 +429,26 @@ private:
   const bool transverse_;
   const std::string coord_;
   const bool usePatchBounds_;
-  Wasatch::UintahPatchContainer* patchContainer_;
+  WasatchCore::UintahPatchContainer* patchContainer_;
   
   ParticleUniformIC( const double lo,
                      const double hi,
                      const bool transverse,
                      const std::string coord,
-                     const bool usePatchBounds );
+                     const bool usePatchBounds )
+  : Expr::Expression<ParticleField>(),
+    lo_(lo),
+    hi_(hi),
+    transverse_(transverse),
+    coord_(coord),
+    usePatchBounds_(usePatchBounds)
+  {
+    this->set_gpu_runnable( false );
+  }
+
 };
 
 //====================================================================
-
-ParticleUniformIC::
-ParticleUniformIC( const double lo,
-                   const double hi,
-                   const bool transverse,
-                   const std::string coord,
-                   const bool usePatchBounds )
-: Expr::Expression<ParticleField>(),
-  lo_(lo),
-  hi_(hi),
-  transverse_(transverse),
-  coord_(coord),
-  usePatchBounds_(usePatchBounds)
-{
-  this->set_gpu_runnable( false );
-}
-
-//--------------------------------------------------------------------
-
-void
-ParticleUniformIC::bind_operators( const SpatialOps::OperatorDatabase& opDB )
-{
-  patchContainer_ = opDB.retrieve_operator<Wasatch::UintahPatchContainer>();
-}
-
-//--------------------------------------------------------------------
 
 void
 ParticleUniformIC::
@@ -549,31 +489,6 @@ evaluate()
       *phiIter = low + i*dx;
     }
   }
-}
-
-//--------------------------------------------------------------------
-
-ParticleUniformIC::Builder::
-Builder( const Expr::Tag& resultTag,
-         const double lo,
-         const double hi,
-         const bool transverse,
-         const std::string coord,
-         const bool usePatchBounds )
-: ExpressionBuilder(resultTag),
-  lo_(lo),
-  hi_(hi),
-  transverse_(transverse),
-  coord_(coord),
-  usePatchBounds_(usePatchBounds)
-{}
-
-//--------------------------------------------------------------------
-
-Expr::ExpressionBase*
-ParticleUniformIC::Builder::build() const
-{
-  return new ParticleUniformIC( lo_, hi_, transverse_, coord_, usePatchBounds_ );
 }
 
 //--------------------------------------------------------------------

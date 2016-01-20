@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2015 The University of Utah
+ * Copyright (c) 1997-2016 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -30,11 +30,8 @@
 #endif
 
 #include "Pressure_Borja.h"
-#include <Core/Math/DEIntegrator.h>
-#include <Core/Exceptions/ConvergenceFailure.h>
-#include <Core/Exceptions/InvalidValue.h>
 #include <cmath>
-#include <iostream>
+//#include <iostream>
 
 using namespace Uintah;
 using namespace UintahBB;
