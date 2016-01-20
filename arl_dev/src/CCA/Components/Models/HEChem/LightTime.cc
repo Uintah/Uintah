@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2015 The University of Utah
+ * Copyright (c) 1997-2016 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -22,7 +22,6 @@
  * IN THE SOFTWARE.
  */
 
-#include <CCA/Components/ICE/ICEMaterial.h>
 #include <CCA/Components/ICE/BoundaryCond.h>
 #include <CCA/Components/Models/HEChem/LightTime.h>
 #include <CCA/Components/Regridder/PerPatchVars.h>
@@ -98,11 +97,11 @@ void LightTime::problemSetup(GridP&,
                              ModelSetup*)
 {
   d_sharedState = sharedState;
-  
-  ProblemSpecP lt_ps = params;
+  ProblemSpecP lt_ps = params->findBlock("LightTime");
   if (!lt_ps){
-    throw ProblemSetupException("LightTime: Couldn't find (Models) tag", __FILE__, __LINE__);    
+    throw ProblemSetupException("LightTime: Couldn't find <LightTime> tag", __FILE__, __LINE__);    
   }
+  
   matl0 = sharedState->parseAndLookupMaterial(lt_ps, "fromMaterial");
   matl1 = sharedState->parseAndLookupMaterial(lt_ps, "toMaterial");
   

@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 2012-2015 The University of Utah
+ * Copyright (c) 2012-2016 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -37,7 +37,7 @@ class OpenBC
   {
     this->set_gpu_runnable(false);
     u_  = this->template create_field_request<FieldT>(momTag);
-    dt_ = this->template create_field_request<SpatialOps::SingleValueField>(Wasatch::TagNames::self().dt);
+    dt_ = this->template create_field_request<SpatialOps::SingleValueField>(WasatchCore::TagNames::self().dt);
   }
 public:
   class Builder : public Expr::ExpressionBuilder

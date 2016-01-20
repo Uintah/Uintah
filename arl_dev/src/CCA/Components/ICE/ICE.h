@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2015 The University of Utah
+ * Copyright (c) 1997-2016 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -59,6 +59,31 @@
 #include <vector>
 #include <string>
 #include <sci_defs/hypre_defs.h>
+
+#ifdef HAVE_CUDA
+#include <sci_defs/cuda_defs.h>
+#include <CCA/Components/Schedulers/GPUDataWarehouse.h>
+
+//#ifdef __cplusplus
+//extern "C" {
+//#endif
+
+void launchIceEquilibrationKernelUnified(dim3 dimGrid,
+                          dim3 dimBlock,
+                          cudaStream_t* stream,
+                          uint3 size,
+                          double d_SMALL_NUM,
+                          int d_max_iter_equilibration,
+                          double convergence_crit,
+                          int patchID,
+                          int zSliceThickness,
+                          Uintah::GPUDataWarehouse * old_gpudw,
+                          Uintah::GPUDataWarehouse * new_gpudw);
+
+//#ifdef __cplusplus
+//}
+//#endif
+#endif
 
 #define MAX_MATLS 16
 
@@ -382,6 +407,18 @@ namespace Uintah {
                                         DataWarehouse*,
                                         DataWarehouse*);
 
+
+#ifdef HAVE_CUDA
+
+      void computeEquilibrationPressureUnifiedGPU(Task::CallBackEvent event,
+                                              const ProcessorGroup*,
+                                              const PatchSubset* patch,
+                                              const MaterialSubset* matls,
+                                              DataWarehouse*,
+                                              DataWarehouse*,
+                                              void* stream);
+
+#endif
       void computeEquilPressure_1_matl(const ProcessorGroup*,
                                        const PatchSubset* patches,
                                        const MaterialSubset* matls,

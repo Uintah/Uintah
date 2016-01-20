@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2015 The University of Utah
+ * Copyright (c) 1997-2016 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -313,7 +313,7 @@ namespace Uintah {
         double finalResNorm = results.finalResNorm;
         int numIterations = results.numIterations;
         
-        if ((finalResNorm > _params->tolerance) ||(finite(finalResNorm) == 0)) {
+        if ((finalResNorm > _params->tolerance) ||(std::isfinite(finalResNorm) == 0)) {
           if (_params->restart){
             if(pg->myrank() == 0)
               std::cout << "AMRSolver not converged in " << numIterations 

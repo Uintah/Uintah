@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 2012-2015 The University of Utah
+ * Copyright (c) 2012-2016 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -38,29 +38,29 @@ TurbulentViscosity( const Expr::Tag rhoTag,
                     const Expr::Tag waleTsrMagTag,
                     const Expr::Tag vremanTsrMagTag,
                     const Expr::Tag dynamicSmagCoefTag,
-                    const Wasatch::TurbulenceParameters& turbParams )
+                    const WasatchCore::TurbulenceParameters& turbParams )
 : Expr::Expression<SVolField>(),
-  isConstSmag_( turbParams.turbModelName != Wasatch::TurbulenceParameters::DYNAMIC ),
+  isConstSmag_( turbParams.turbModelName != WasatchCore::TurbulenceParameters::DYNAMIC ),
   turbParams_      ( turbParams         )
 {
   this->set_gpu_runnable(true);
    rho_ = create_field_request<SVolField>(rhoTag);
   switch( turbParams_.turbModelName ){
-    case Wasatch::TurbulenceParameters::SMAGORINSKY :
+    case WasatchCore::TurbulenceParameters::SMAGORINSKY :
        strTsrSq_ = create_field_request<SVolField>(strTsrSqTag);
       break;
-    case Wasatch::TurbulenceParameters::WALE :
+    case WasatchCore::TurbulenceParameters::WALE :
        strTsrSq_ = create_field_request<SVolField>(strTsrSqTag);
        waleTsrMag_ = create_field_request<SVolField>(waleTsrMagTag);
       break;
-    case Wasatch::TurbulenceParameters::DYNAMIC :
+    case WasatchCore::TurbulenceParameters::DYNAMIC :
        strTsrSq_ = create_field_request<SVolField>(strTsrSqTag);
        dynCoef_ = create_field_request<SVolField>(dynamicSmagCoefTag);
       break;
-    case Wasatch::TurbulenceParameters::VREMAN :
+    case WasatchCore::TurbulenceParameters::VREMAN :
        vremanTsrMag_ = create_field_request<SVolField>(vremanTsrMagTag);
       break;
-    case Wasatch::TurbulenceParameters::NOTURBULENCE :
+    case WasatchCore::TurbulenceParameters::NOTURBULENCE :
       assert(false);
       break;
   }
@@ -106,16 +106,16 @@ evaluate()
   
   switch ( turbParams_.turbModelName ) {
 
-    case Wasatch::TurbulenceParameters::SMAGORINSKY:
+    case WasatchCore::TurbulenceParameters::SMAGORINSKY:
       result <<= rho * mixingLengthSq  * sqrt(2.0 * strTsrSq_->field_ref() ) ; // rho * (Cs * delta)^2 * |S|, Cs is the Smagorinsky constant
       break;
 
-    case Wasatch::TurbulenceParameters::DYNAMIC:
+    case WasatchCore::TurbulenceParameters::DYNAMIC:
       // tsaad.Note: When the dynamic model is used, the DynamicSmagorinskyCoefficient expression calculates both the coefficient and the StrainTensorMagnitude = sqrt(2*Sij*Sij). Unlike the StrainTensorMagnitude.cc Expression, which calculates SijSij instead. That's why for the constant smagorinsky case, we have take the sqrt() of that quanitity. In the Dynamic model case, we don't.
       result <<= rho * dynCoef_->field_ref()  * strTsrSq_->field_ref() ;//rho * *dynCoef_ * sqrt(2.0 * *strTsrSq_);
       break;
 
-    case Wasatch::TurbulenceParameters::WALE:
+    case WasatchCore::TurbulenceParameters::WALE:
     {
       SpatFldPtr<SVolField> denom = SpatialFieldStore::get<SVolField>( result );
       *denom <<= pow(strTsrSq_->field_ref() , 2.5) + pow(waleTsrMag_->field_ref() , 1.25);
@@ -124,7 +124,7 @@ evaluate()
     }
       break;
 
-    case Wasatch::TurbulenceParameters::VREMAN:
+    case WasatchCore::TurbulenceParameters::VREMAN:
       // NOTE: the constant used in the Vreman model input corresponds to the
       // best Smagorinsky constant when using the constant Smagorinsky model
       // for the problem being simulated. The Vreman constant is estimated at Cv ~ 2.5 Cs

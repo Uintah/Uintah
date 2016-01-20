@@ -39,7 +39,7 @@ atNP1_(atNP1)
   x_ = this->template create_field_request<FieldT>(xTag);
   y_ = this->template create_field_request<FieldT>(yTag);
   t_ = this->template create_field_request<TimeField>(tTag);
-  dt_ = this->template create_field_request<TimeField>(Wasatch::TagNames::self().dt);
+  dt_ = this->template create_field_request<TimeField>(WasatchCore::TagNames::self().dt);
 }
 
 //--------------------------------------------------------------------

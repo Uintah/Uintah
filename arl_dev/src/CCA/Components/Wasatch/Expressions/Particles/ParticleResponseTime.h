@@ -47,16 +47,29 @@ public:
              const Expr::Tag& particleDensityTag,
              const Expr::Tag& particleSizeTag,
              const Expr::Tag& gasViscosityTag,
-             const Expr::TagList& particlePositionTags );
+             const Expr::TagList& particlePositionTags )
+      : ExpressionBuilder( resultTag ),
+        pDensityTag_( particleDensityTag ),
+        pSizeTag_   ( particleSizeTag    ),
+        gViscTag_   ( gasViscosityTag    ),
+        pPosTags_   (particlePositionTags)
+    {}
     ~Builder(){}
-    Expr::ExpressionBase* build() const;
+    Expr::ExpressionBase* build() const{
+      return new ParticleResponseTime( pDensityTag_, pSizeTag_, gViscTag_, pPosTags_ );
+    }
+
   private:
     const Expr::Tag pDensityTag_, pSizeTag_, gViscTag_;
     const Expr::TagList pPosTags_;
   };
 
-  ~ParticleResponseTime();
-  void bind_operators( const SpatialOps::OperatorDatabase& opDB );
+  ~ParticleResponseTime(){}
+
+  void bind_operators( const SpatialOps::OperatorDatabase& opDB ){
+    s2pOp_ = opDB.retrieve_operator<Scal2POpT>();
+  }
+
   void evaluate();
 };
 
@@ -75,27 +88,13 @@ ParticleResponseTime( const Expr::Tag& particleDensityTag,
   : Expr::Expression<ParticleField>()
 {
   this->set_gpu_runnable( false );  // not until we get particle interpolants GPU ready
-   pdensity_ = this->template create_field_request<ParticleField>(particleDensityTag);
-   psize_ = this->template create_field_request<ParticleField>(particleSizeTag);
-   gVisc_ = this->template create_field_request<ViscT>(gasViscosityTag);
-   px_ = this->template create_field_request<ParticleField>(particlePositionTags[0]);
-   py_ = this->template create_field_request<ParticleField>(particlePositionTags[1]);
-   pz_ = this->template create_field_request<ParticleField>(particlePositionTags[2]);
-}
 
-//--------------------------------------------------------------------
-
-template< typename ViscT >
-ParticleResponseTime<ViscT>::~ParticleResponseTime()
-{}
-
-//--------------------------------------------------------------------
-
-template< typename ViscT >
-void
-ParticleResponseTime<ViscT>::bind_operators( const SpatialOps::OperatorDatabase& opDB )
-{
-  s2pOp_ = opDB.retrieve_operator<Scal2POpT>();
+  pdensity_ = this->template create_field_request<ParticleField>(particleDensityTag);
+  psize_ = this->template create_field_request<ParticleField>(particleSizeTag);
+  gVisc_ = this->template create_field_request<ViscT>(gasViscosityTag);
+  px_ = this->template create_field_request<ParticleField>(particlePositionTags[0]);
+  py_ = this->template create_field_request<ParticleField>(particlePositionTags[1]);
+  pz_ = this->template create_field_request<ParticleField>(particlePositionTags[2]);
 }
 
 //--------------------------------------------------------------------
@@ -106,12 +105,12 @@ ParticleResponseTime<ViscT>::evaluate()
 {
   using namespace SpatialOps;
   ParticleField& result = this->value();
-  const ParticleField& psize = psize_->field_ref();
-  const ParticleField& px = px_->field_ref();
-  const ParticleField& py = py_->field_ref();
-  const ParticleField& pz = pz_->field_ref();
+  const ParticleField& psize    = psize_   ->field_ref();
+  const ParticleField& px       = px_      ->field_ref();
+  const ParticleField& py       = py_      ->field_ref();
+  const ParticleField& pz       = pz_      ->field_ref();
   const ParticleField& pdensity = pdensity_->field_ref();
-  const ViscT& gVisc = gVisc_->field_ref();
+  const ViscT& gVisc            = gVisc_   ->field_ref();
   
   SpatFldPtr<ParticleField> tmpvisc = SpatialFieldStore::get<ParticleField>( result );
   
@@ -122,28 +121,5 @@ ParticleResponseTime<ViscT>::evaluate()
 }
 
 //--------------------------------------------------------------------
-
-template< typename ViscT >
-ParticleResponseTime<ViscT>::
-Builder::Builder( const Expr::Tag& resultTag,
-                  const Expr::Tag& particleDensityTag,
-                  const Expr::Tag& particleSizeTag,
-                  const Expr::Tag& gasViscosityTag,
-                  const Expr::TagList& particlePositionTags )
-  : ExpressionBuilder( resultTag ),
-    pDensityTag_( particleDensityTag ),
-    pSizeTag_   ( particleSizeTag    ),
-    gViscTag_   ( gasViscosityTag    ),
-    pPosTags_   (particlePositionTags)
-{}
-
-//--------------------------------------------------------------------
-
-template< typename ViscT >
-Expr::ExpressionBase*
-ParticleResponseTime<ViscT>::Builder::build() const
-{
-  return new ParticleResponseTime( pDensityTag_, pSizeTag_, gViscTag_, pPosTags_ );
-}
 
 #endif // ParticleResponseTime_Expr_h

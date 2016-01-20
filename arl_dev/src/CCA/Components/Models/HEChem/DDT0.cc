@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2015 The University of Utah
+ * Copyright (c) 1997-2016 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -55,8 +55,8 @@ using namespace std;
 static DebugStream cout_doing("MODELS_DOING_COUT", false);
 
 DDT0::DDT0(const ProcessorGroup* myworld,
-                         ProblemSpecP& params,
-                         const ProblemSpecP& prob_spec)
+           ProblemSpecP& params,                       
+           const ProblemSpecP& prob_spec)              
   : ModelInterface(myworld), d_prob_spec(prob_spec), d_params(params)
 {
   d_mymatls  = 0;
@@ -95,7 +95,8 @@ DDT0::DDT0(const ProcessorGroup* myworld,
                                              sum_vartype::getTypeDescription() );
 
 }
-
+//______________________________________________________________________
+//
 DDT0::~DDT0()
 {
   delete Ilb;
@@ -120,35 +121,37 @@ DDT0::~DDT0()
   if (d_one_matl && d_one_matl->removeReference())
     delete d_one_matl;
 }
-
+//______________________________________________________________________
+//
 void DDT0::problemSetup(GridP&, SimulationStateP& sharedState,
 			     ModelSetup*)
 {
   d_sharedState = sharedState;
+  ProblemSpecP ddt_ps = d_params->findBlock("DDT0");
   
   // Required for JWL++
-  d_params->require("ThresholdPressureJWL",   d_threshold_press_JWL);
-  d_params->require("fromMaterial",fromMaterial);
-  d_params->require("toMaterial",toMaterial);
-  d_params->require("G",    d_G);
-  d_params->require("b",    d_b);
-  d_params->require("E0",   d_E0);
-  d_params->getWithDefault("ThresholdVolFrac",d_threshold_volFrac, 0.01);
+  ddt_ps->require("ThresholdPressureJWL",   d_threshold_press_JWL);
+  ddt_ps->require("fromMaterial",fromMaterial);
+  ddt_ps->require("toMaterial",toMaterial);
+  ddt_ps->require("G",    d_G);
+  ddt_ps->require("b",    d_b);
+  ddt_ps->require("E0",   d_E0);
+  ddt_ps->getWithDefault("ThresholdVolFrac",d_threshold_volFrac, 0.01);
 
   // Required for Simple Burn
-  d_matl0 = sharedState->parseAndLookupMaterial(d_params, "fromMaterial");
-  d_matl1 = sharedState->parseAndLookupMaterial(d_params, "toMaterial");
-  d_params->require("Enthalpy",         d_Enthalpy);
-  d_params->require("BurnCoeff",        d_BurnCoeff);
-  d_params->require("refPressure",      d_refPress);
-  d_params->require("ThresholdTemp",    d_thresholdTemp);
-  d_params->require("ThresholdPressureSB",d_thresholdPress_SB);
-  d_params->getWithDefault("useCrackModel",    d_useCrackModel, false); 
+  d_matl0 = sharedState->parseAndLookupMaterial(ddt_ps, "fromMaterial");
+  d_matl1 = sharedState->parseAndLookupMaterial(ddt_ps, "toMaterial");
+  ddt_ps->require("Enthalpy",         d_Enthalpy);
+  ddt_ps->require("BurnCoeff",        d_BurnCoeff);
+  ddt_ps->require("refPressure",      d_refPress);
+  ddt_ps->require("ThresholdTemp",    d_thresholdTemp);
+  ddt_ps->require("ThresholdPressureSB",d_thresholdPress_SB);
+  ddt_ps->getWithDefault("useCrackModel",    d_useCrackModel, false); 
   
   if(d_useCrackModel){
-    d_params->require("Gcrack",           d_Gcrack);
-    d_params->getWithDefault("CrackVolThreshold",     d_crackVolThreshold, 1e-14 );
-    d_params->require("nCrack",           d_nCrack);
+    ddt_ps->require("Gcrack",           d_Gcrack);
+    ddt_ps->getWithDefault("CrackVolThreshold",     d_crackVolThreshold, 1e-14 );
+    ddt_ps->require("nCrack",           d_nCrack);
       
     pCrackRadiusLabel = VarLabel::find("p.crackRad");
     if(!pCrackRadiusLabel){
@@ -197,27 +200,28 @@ void DDT0::outputProblemSpec(ProblemSpecP& ps)
 {
   ProblemSpecP model_ps = ps->appendChild("Model");
   model_ps->setAttribute("type","DDT0");
+  ProblemSpecP ddt_ps = model_ps->appendChild("DDT1");
+  
+  ddt_ps->appendElement("ThresholdPressureJWL",d_threshold_press_JWL);
+  ddt_ps->appendElement("fromMaterial",fromMaterial);
+  ddt_ps->appendElement("toMaterial",  toMaterial);
+  ddt_ps->appendElement("G",    d_G);
+  ddt_ps->appendElement("b",    d_b);
+  ddt_ps->appendElement("E0",   d_E0);
 
-  model_ps->appendElement("ThresholdPressureJWL",d_threshold_press_JWL);
-  model_ps->appendElement("fromMaterial",fromMaterial);
-  model_ps->appendElement("toMaterial",  toMaterial);
-  model_ps->appendElement("G",    d_G);
-  model_ps->appendElement("b",    d_b);
-  model_ps->appendElement("E0",   d_E0);
-
-  model_ps->appendElement("ThresholdTemp",       d_thresholdTemp);
-  model_ps->appendElement("ThresholdPressureSB", d_thresholdPress_SB);
-  model_ps->appendElement("ThresholdVolFrac",    d_threshold_volFrac);
-  model_ps->appendElement("fromMaterial",        d_matl0->getName());
-  model_ps->appendElement("toMaterial",          d_matl1->getName());
-  model_ps->appendElement("Enthalpy",            d_Enthalpy);   
-  model_ps->appendElement("BurnCoeff",           d_BurnCoeff);  
-  model_ps->appendElement("refPressure",         d_refPress);  
+  ddt_ps->appendElement("ThresholdTemp",       d_thresholdTemp);
+  ddt_ps->appendElement("ThresholdPressureSB", d_thresholdPress_SB);
+  ddt_ps->appendElement("ThresholdVolFrac",    d_threshold_volFrac);
+  ddt_ps->appendElement("fromMaterial",        d_matl0->getName());
+  ddt_ps->appendElement("toMaterial",          d_matl1->getName());
+  ddt_ps->appendElement("Enthalpy",            d_Enthalpy);   
+  ddt_ps->appendElement("BurnCoeff",           d_BurnCoeff);  
+  ddt_ps->appendElement("refPressure",         d_refPress);  
   if(d_useCrackModel){
-    model_ps->appendElement("useCrackModel",     d_useCrackModel);
-    model_ps->appendElement("Gcrack",            d_Gcrack);
-    model_ps->appendElement("nCrack",            d_nCrack);
-    model_ps->appendElement("CrackVolThreshold", d_crackVolThreshold);
+    ddt_ps->appendElement("useCrackModel",     d_useCrackModel);
+    ddt_ps->appendElement("Gcrack",            d_Gcrack);
+    ddt_ps->appendElement("nCrack",            d_nCrack);
+    ddt_ps->appendElement("CrackVolThreshold", d_crackVolThreshold);
   }
 }
 

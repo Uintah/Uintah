@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2015 The University of Utah
+ * Copyright (c) 1997-2016 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -26,7 +26,6 @@
 #include <CCA/Components/MPM/ThermalContact/STThermalContact.h>
 #include <CCA/Components/MPM/ThermalContact/NullThermalContact.h>
 #include <Core/Malloc/Allocator.h>
-#include <string>
 using std::cerr;
 
 using namespace Uintah;

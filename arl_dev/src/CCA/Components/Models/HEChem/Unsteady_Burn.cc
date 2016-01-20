@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2015 The University of Utah
+ * Copyright (c) 1997-2016 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -26,20 +26,19 @@
 #include <CCA/Components/Models/HEChem/Common.h>
 #include <CCA/Ports/Scheduler.h>
 #include <Core/ProblemSpec/ProblemSpec.h>
+#include <Core/Grid/Material.h>
 #include <Core/Grid/Variables/CellIterator.h>
 #include <Core/Grid/Variables/CCVariable.h>
+#include <Core/Grid/Variables/ParticleVariable.h>
 #include <Core/Grid/SimulationState.h>
 #include <Core/Grid/Variables/VarTypes.h>
 #include <Core/Grid/DbgOutput.h>
 #include <Core/Labels/MPMLabel.h>
 #include <Core/Labels/ICELabel.h>
 #include <Core/Labels/MPMICELabel.h>
-#include <CCA/Components/ICE/ICEMaterial.h>
-#include <CCA/Components/MPM/ConstitutiveModel/MPMMaterial.h>
 #include <CCA/Components/ICE/BoundaryCond.h>
 #include <Core/Exceptions/InvalidValue.h>
 #include <Core/Util/DebugStream.h>
-#include <iomanip>
 #include <iostream>
 
 using namespace Uintah;
@@ -97,28 +96,31 @@ Unsteady_Burn::~Unsteady_Burn(){
     delete mymatls;
 }
 
-
+//______________________________________________________________________
+//
 void Unsteady_Burn::problemSetup(GridP&, SimulationStateP& sharedState, ModelSetup*){
   d_sharedState = sharedState;
-  matl0 = sharedState->parseAndLookupMaterial(d_params, "fromMaterial");
-  matl1 = sharedState->parseAndLookupMaterial(d_params, "toMaterial");  
 
-  d_params->require("IdealGasConst",     R );
-  d_params->require("PreExpCondPh",      Ac);
-  d_params->require("ActEnergyCondPh",   Ec);
-  d_params->require("PreExpGasPh",       Bg);
-  d_params->require("CondPhaseHeat",     Qc);
-  d_params->require("GasPhaseHeat",      Qg);
-  d_params->require("HeatConductGasPh",  Kg);
-  d_params->require("HeatConductCondPh", Kc);
-  d_params->require("SpecificHeatBoth",  Cp);
-  d_params->require("MoleWeightGasPh",   MW);
-  d_params->require("BoundaryParticles", BP);
-  d_params->require("BurnrateModCoef",   Bm);
-  d_params->require("CondUnsteadyCoef",  Nc);
-  d_params->require("GasUnsteadyCoef",   Ng);
-  d_params->require("ThresholdPressure", ThresholdPressure);
-  d_params->require("IgnitionTemp",      ignitionTemp);
+  ProblemSpecP USB_ps = d_params->findBlock("Unsteady_Burn");
+  matl0 = sharedState->parseAndLookupMaterial(USB_ps, "fromMaterial");
+  matl1 = sharedState->parseAndLookupMaterial(USB_ps, "toMaterial");  
+
+  USB_ps->require("IdealGasConst",     R );
+  USB_ps->require("PreExpCondPh",      Ac);
+  USB_ps->require("ActEnergyCondPh",   Ec);
+  USB_ps->require("PreExpGasPh",       Bg);
+  USB_ps->require("CondPhaseHeat",     Qc);
+  USB_ps->require("GasPhaseHeat",      Qg);
+  USB_ps->require("HeatConductGasPh",  Kg);
+  USB_ps->require("HeatConductCondPh", Kc);
+  USB_ps->require("SpecificHeatBoth",  Cp);
+  USB_ps->require("MoleWeightGasPh",   MW);
+  USB_ps->require("BoundaryParticles", BP);
+  USB_ps->require("BurnrateModCoef",   Bm);
+  USB_ps->require("CondUnsteadyCoef",  Nc);
+  USB_ps->require("GasUnsteadyCoef",   Ng);
+  USB_ps->require("ThresholdPressure", ThresholdPressure);
+  USB_ps->require("IgnitionTemp",      ignitionTemp);
 
   /* initialize constants */
   CC1 = Ac*R*Kc/Ec/Cp;        
@@ -156,34 +158,37 @@ void Unsteady_Burn::problemSetup(GridP&, SimulationStateP& sharedState, ModelSet
   mymatls->addReference();  
 }
 
-
+//______________________________________________________________________
+//
 void Unsteady_Burn::outputProblemSpec(ProblemSpecP& ps)
 {
   ProblemSpecP model_ps = ps->appendChild("Model");
   model_ps->setAttribute("type","Unsteady_Burn");
+  ProblemSpecP USB_ps = model_ps->appendChild("Unsteady_Burn");
+  
+  USB_ps->appendElement("fromMaterial",      matl0->getName());
+  USB_ps->appendElement("toMaterial",        matl1->getName());
 
-  model_ps->appendElement("fromMaterial",      matl0->getName());
-  model_ps->appendElement("toMaterial",        matl1->getName());
-
-  model_ps->appendElement("IdealGasConst",     R );
-  model_ps->appendElement("PreExpCondPh",      Ac);
-  model_ps->appendElement("ActEnergyCondPh",   Ec);
-  model_ps->appendElement("PreExpGasPh",       Bg);
-  model_ps->appendElement("CondPhaseHeat",     Qc);
-  model_ps->appendElement("GasPhaseHeat",      Qg);
-  model_ps->appendElement("HeatConductGasPh",  Kg);
-  model_ps->appendElement("HeatConductCondPh", Kc);
-  model_ps->appendElement("SpecificHeatBoth",  Cp);
-  model_ps->appendElement("MoleWeightGasPh",   MW);
-  model_ps->appendElement("BoundaryParticles", BP);
-  model_ps->appendElement("BurnrateModCoef",   Bm);
-  model_ps->appendElement("CondUnsteadyCoef",  Nc);
-  model_ps->appendElement("GasUnsteadyCoef",   Ng);
-  model_ps->appendElement("ThresholdPressure", ThresholdPressure);
-  model_ps->appendElement("IgnitionTemp",      ignitionTemp);
+  USB_ps->appendElement("IdealGasConst",     R );
+  USB_ps->appendElement("PreExpCondPh",      Ac);
+  USB_ps->appendElement("ActEnergyCondPh",   Ec);
+  USB_ps->appendElement("PreExpGasPh",       Bg);
+  USB_ps->appendElement("CondPhaseHeat",     Qc);
+  USB_ps->appendElement("GasPhaseHeat",      Qg);
+  USB_ps->appendElement("HeatConductGasPh",  Kg);
+  USB_ps->appendElement("HeatConductCondPh", Kc);
+  USB_ps->appendElement("SpecificHeatBoth",  Cp);
+  USB_ps->appendElement("MoleWeightGasPh",   MW);
+  USB_ps->appendElement("BoundaryParticles", BP);
+  USB_ps->appendElement("BurnrateModCoef",   Bm);
+  USB_ps->appendElement("CondUnsteadyCoef",  Nc);
+  USB_ps->appendElement("GasUnsteadyCoef",   Ng);
+  USB_ps->appendElement("ThresholdPressure", ThresholdPressure);
+  USB_ps->appendElement("IgnitionTemp",      ignitionTemp);
 }
 
-
+//______________________________________________________________________
+//
 void Unsteady_Burn::scheduleInitialize(SchedulerP& sched, const LevelP& level, const ModelInfo*){
   printSchedule(level,cout_doing,"Unsteady_Burn::scheduleInitialize");
   Task* t = scinew Task("Unsteady_Burn::initialize", this, &Unsteady_Burn::initialize);                        
@@ -196,7 +201,8 @@ void Unsteady_Burn::scheduleInitialize(SchedulerP& sched, const LevelP& level, c
   sched->addTask(t, level->eachPatch(), mymatls);
 }
 
-
+//______________________________________________________________________
+//
 void Unsteady_Burn::initialize(const ProcessorGroup*, 
                              const PatchSubset* patches, 
                              const MaterialSubset* /*matls*/, 

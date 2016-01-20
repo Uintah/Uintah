@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2015 The University of Utah
+ * Copyright (c) 1997-2016 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -53,9 +53,6 @@ computeExternalForceForMMS : Computes the analytically determined body force for
 
 
 #include <CCA/Components/MPM/MMS/MMS.h>
-#include <iostream>
-#include <fstream>
-#include <sstream>
 
 using namespace Uintah;
 using namespace std;

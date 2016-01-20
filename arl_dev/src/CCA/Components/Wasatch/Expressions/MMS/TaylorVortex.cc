@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 2012-2015 The University of Utah
+ * Copyright (c) 2012-2016 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -285,7 +285,7 @@ build() const
 
 // Explicit template instantiation for supported versions of this expression
 #include <CCA/Components/Wasatch/FieldTypes.h>
-using namespace Wasatch;
+using namespace WasatchCore;
 
 #define DECLARE_TAYLOR_MMS( VOL ) 	\
   template class VelocityX< VOL >;	\

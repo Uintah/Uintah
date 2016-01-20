@@ -2,7 +2,7 @@
 
 The MIT License
 
-Copyright (c) 2013-2014 The Johns Hopkins University
+Copyright (c) 2013-2016 The Johns Hopkins University
 
 License for the specific language governing rights and limitations under
 Permission is hereby granted, free of charge, to any person obtaining a 

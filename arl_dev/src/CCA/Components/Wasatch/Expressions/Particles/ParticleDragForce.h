@@ -66,17 +66,33 @@ public:
              const Expr::Tag& particleTauTag,
              const Expr::Tag& particleVelTag,
              const Expr::Tag& particleSizeTag,
-             const Expr::TagList& particlePositionTags );
+             const Expr::TagList& particlePositionTags )
+      : ExpressionBuilder(resultTag),
+        gVelTag_      ( gasVelTag            ),
+        pDragCoefTag_ ( ParticleDragForceCoefTag  ),
+        pTauTag_      ( particleTauTag       ),
+        pVelTag_      ( particleVelTag       ),
+        pSizeTag_     ( particleSizeTag      ),
+        pPosTags_     ( particlePositionTags )
+    {}
+
     ~Builder(){}
-    Expr::ExpressionBase* build() const;
+
+    Expr::ExpressionBase* build() const{
+      return new ParticleDragForce<GasVelT>( gVelTag_, pDragCoefTag_, pTauTag_, pVelTag_, pSizeTag_, pPosTags_);
+    }
+
   private:
     const Expr::Tag gVelTag_, pDragCoefTag_, pTauTag_, pVelTag_, pSizeTag_;
     const Expr::TagList pPosTags_;
   };
   
-  ~ParticleDragForce();
+  ~ParticleDragForce(){}
 
-  void bind_operators( const SpatialOps::OperatorDatabase& opDB );
+  void bind_operators( const SpatialOps::OperatorDatabase& opDB ){
+    gvOp_ = opDB.retrieve_operator<GVel2POpT>();
+  }
+
   void evaluate();
 };
 
@@ -102,32 +118,15 @@ ParticleDragForce( const Expr::Tag& gasVelTag,
 {
   this->set_gpu_runnable(false);  // need new particle operators...
 
-   px_ = this->template create_field_request<ParticleField>(particlePositionTags[0]);
-   py_ = this->template create_field_request<ParticleField>(particlePositionTags[1]);
-   pz_ = this->template create_field_request<ParticleField>(particlePositionTags[2]);
+  px_    = this->template create_field_request<ParticleField>(particlePositionTags[0]);
+  py_    = this->template create_field_request<ParticleField>(particlePositionTags[1]);
+  pz_    = this->template create_field_request<ParticleField>(particlePositionTags[2]);
 
-   gvel_ = this->template create_field_request<GasVelT>(gasVelTag);
-   pfd_ = this->template create_field_request<ParticleField>(ParticleDragForceCoefTag);
-   ptau_ = this->template create_field_request<ParticleField>(particleTauTag);
-   pvel_ = this->template create_field_request<ParticleField>(particleVelTag);
-   psize_ = this->template create_field_request<ParticleField>(particleSizeTag);  
-}
-
-//------------------------------------------------------------------
-
-template<typename GasVelT>
-ParticleDragForce<GasVelT>::
-~ParticleDragForce()
-{}
-
-//------------------------------------------------------------------
-
-template<typename GasVelT>
-void
-ParticleDragForce<GasVelT>::
-bind_operators( const SpatialOps::OperatorDatabase& opDB )
-{
-  gvOp_ = opDB.retrieve_operator<GVel2POpT>();
+  gvel_  = this->template create_field_request<GasVelT>(gasVelTag);
+  pfd_   = this->template create_field_request<ParticleField>(ParticleDragForceCoefTag);
+  ptau_  = this->template create_field_request<ParticleField>(particleTauTag);
+  pvel_  = this->template create_field_request<ParticleField>(particleVelTag);
+  psize_ = this->template create_field_request<ParticleField>(particleSizeTag);
 }
 
 //------------------------------------------------------------------
@@ -157,35 +156,6 @@ evaluate()
   gvOp_->apply_to_field( gvel, *tmpu );
   
   result <<= ( *tmpu - pvel ) * pfd / ptau;
-}
-
-//------------------------------------------------------------------
-
-template<typename GasVelT>
-ParticleDragForce<GasVelT>::
-Builder::Builder( const Expr::Tag& resultTag,
-                  const Expr::Tag& gasVelTag,
-                  const Expr::Tag& ParticleDragForceCoefTag,
-                  const Expr::Tag& particleTauTag,
-                  const Expr::Tag& particleVelTag,
-                  const Expr::Tag& particleSizeTag,
-                  const Expr::TagList& particlePositionTags )
-: ExpressionBuilder(resultTag),
-  gVelTag_      ( gasVelTag            ),
-  pDragCoefTag_ ( ParticleDragForceCoefTag  ),
-  pTauTag_      ( particleTauTag       ),
-  pVelTag_      ( particleVelTag       ),
-  pSizeTag_     ( particleSizeTag      ),
-  pPosTags_     ( particlePositionTags )
-{}
-
-//------------------------------------------------------------------
-
-template<typename GasVelT>
-Expr::ExpressionBase*
-ParticleDragForce<GasVelT>::Builder::build() const
-{
-  return new ParticleDragForce<GasVelT>( gVelTag_, pDragCoefTag_, pTauTag_, pVelTag_, pSizeTag_, pPosTags_);
 }
 
 //------------------------------------------------------------------
