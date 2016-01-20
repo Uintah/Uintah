@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2014 The University of Utah
+ * Copyright (c) 1997-2016 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -24,13 +24,9 @@
 
 #include <CCA/Components/MPM/ReactionDiffusion/RFConcDiffusion1MPM.h>
 #include <CCA/Components/MPM/ConstitutiveModel/MPMMaterial.h>
-#include <CCA/Components/MPM/MPMBoundCond.h>
-#include <CCA/Components/MPM/MPMFlags.h>
 #include <Core/Labels/MPMLabel.h>
-#include <Core/Grid/Variables/VarTypes.h>
 #include <Core/Grid/Task.h>
 
-#include <iostream>
 using namespace std;
 using namespace Uintah;
 

@@ -3,7 +3,7 @@
  *
  * The MIT License
  *
- * Copyright (c) 2013-2014 The University of Utah
+ * Copyright (c) 2013-2016 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -42,7 +42,7 @@
 #include <Core/Grid/Material.h>
 #include <Core/Exceptions/ProblemSetupException.h>
 
-namespace Wasatch {
+namespace WasatchCore {
 
   //==================================================================
 
@@ -265,7 +265,7 @@ namespace Wasatch {
 
   //==================================================================
 
-} /* namespace Wasatch */
+} /* namespace WasatchCore */
 
 
 
@@ -275,8 +275,8 @@ namespace Wasatch {
 #include "FieldTypes.h"
 
 #define INSTANTIATE( T )                 \
-  template class Wasatch::VarHelper<T>;  \
-  template void Wasatch::OldVariable::add_variable<T>(const Category, const Expr::Tag&, const bool retainName);
+  template class WasatchCore::VarHelper<T>;  \
+  template void WasatchCore::OldVariable::add_variable<T>(const Category, const Expr::Tag&, const bool retainName);
 
 #define INSTANTIATE_VARIANTS( VOL )                            \
   INSTANTIATE( VOL )

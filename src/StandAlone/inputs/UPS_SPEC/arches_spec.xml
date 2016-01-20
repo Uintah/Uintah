@@ -479,6 +479,13 @@
             <Es                           spec="REQUIRED DOUBLE"/> <!-- [J/mol] -->
             <n                            spec="REQUIRED DOUBLE"/> <!-- [] -->
           </ShaddixChar>
+          
+          <SmithChar                    spec="OPTIONAL NO_DATA"
+                                          need_applies_to="type coal">
+            <As                           spec="REQUIRED DOUBLE"/> <!-- [mol/s.m^2.atm^n] -->
+            <Es                           spec="REQUIRED DOUBLE"/> <!-- [J/mol] -->
+            <n                            spec="REQUIRED DOUBLE"/> <!-- [] -->
+          </SmithChar>
 
           <optics                       spec="OPTIONAL NO_DATA" 
                                             need_applies_to="type coal">
@@ -918,6 +925,7 @@
           <outputEquations              spec="OPTIONAL BOOLEAN" />
           <skip                         spec="OPTIONAL INTEGER" />
           <setupFrequency               spec="OPTIONAL INTEGER" />
+          <solveFrequency              spec="OPTIONAL INTEGER"/>          
           <solver                       spec="REQUIRED STRING 'smg, SMG, PFMG, pfmg, SparseMSG, sparsemsg, CG, cg, Hybrid, hybrid, GMRES, gmres'" />
           <tolerance                    spec="REQUIRED DOUBLE 'positive'" />
           <relax_type                   spec="OPTIONAL INTEGER '0,3'"/> <!-- 0=jacobi,1=weighted jacobi,2=rb symmetric,3=rb non-symmetric -->
@@ -1591,6 +1599,7 @@
                                                                           MaximumTemperature,
                                                                           Thermophoresis,
                                                                           CharOxidationShaddix,
+                                                                          CharOxidationSmith,
                                                                           Deposition,
                                                                           SimpleBirth'">
 

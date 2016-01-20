@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2015 The University of Utah
+ * Copyright (c) 1997-2016 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -34,12 +34,6 @@
 #include <Core/ProblemSpec/ProblemSpecP.h>
 #include <CCA/Components/SimulationController/SimulationController.h>
 #include <Core/Grid/Variables/ComputeSet.h>
-
-#include <sci_defs/visit_defs.h>
-
-#ifdef HAVE_VISIT
-#include <VisIt/libsim/visit_libsim.h>
-#endif
 
 namespace Uintah {
 
@@ -117,16 +111,6 @@ class Regridder;
                                DataWarehouse  * /*old_dw*/,
                                DataWarehouse  * new_dw );
 
-
-#ifdef HAVE_VISIT
-     visit_simulation_data d_visit_simulation_data;
-
-     bool do_visit;
-
-   public:
-     void SetVisIt( bool val ) { do_visit = val; }
-     bool GetVisIt() { return do_visit; }
-#endif      
    };
 
 } // End namespace Uintah

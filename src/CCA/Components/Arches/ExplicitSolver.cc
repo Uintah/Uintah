@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2015 The University of Utah
+ * Copyright (c) 1997-2016 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -65,6 +65,7 @@
 #include <CCA/Components/Arches/CoalModels/Thermophoresis.h>
 #include <CCA/Components/Arches/CoalModels/Deposition.h>
 #include <CCA/Components/Arches/CoalModels/CharOxidationShaddix.h>
+#include <CCA/Components/Arches/CoalModels/CharOxidationSmith.h>
 #include <CCA/Components/Arches/CoalModels/DragModel.h>
 #include <CCA/Components/Arches/PropertyModels/PropertyModelBase.h>
 #include <CCA/Components/Arches/PropertyModels/PropertyModelFactory.h>
@@ -1818,6 +1819,18 @@ int ExplicitSolver::nonlinearSolve(const LevelP& level,
     = i_property_models->second->retrieve_task_subset("final_property_models");
   for ( std::vector<std::string>::iterator itsk = final_prop_tasks.begin();
         itsk != final_prop_tasks.end(); itsk++ ){
+
+    TaskInterface* tsk = i_property_models->second->retrieve_task(*itsk);
+    //passing in curr_level > 0 because we are at the end of the time step
+    tsk->schedule_task( level, sched, matls, TaskInterface::STANDARD_TASK, 1 );
+
+  }
+
+  //Variable stats stuff
+  std::vector<std::string> stats_tasks 
+    = i_property_models->second->retrieve_task_subset("variable_stat_models"); 
+  for ( std::vector<std::string>::iterator itsk = stats_tasks.begin();
+        itsk != stats_tasks.end(); itsk++ ){
 
     TaskInterface* tsk = i_property_models->second->retrieve_task(*itsk);
     //passing in curr_level > 0 because we are at the end of the time step
@@ -3857,6 +3870,9 @@ void ExplicitSolver::registerModels(ProblemSpecP& db)
           model_factory.register_model( temp_model_name, modelBuilder );
         } else if ( model_type == "CharOxidationShaddix" ) {
           ModelBuilder* modelBuilder = scinew CharOxidationShaddixBuilder(temp_model_name, requiredICVarLabels, requiredScalarVarLabels, d_lab, d_lab->d_sharedState, iqn);
+          model_factory.register_model( temp_model_name, modelBuilder );
+        } else if ( model_type == "CharOxidationSmith" ) {
+          ModelBuilder* modelBuilder = scinew CharOxidationSmithBuilder(temp_model_name, requiredICVarLabels, requiredScalarVarLabels, d_lab, d_lab->d_sharedState, iqn);
           model_factory.register_model( temp_model_name, modelBuilder );
         } else if ( model_type == "EnthalpyShaddix" ) {
           ModelBuilder* modelBuilder = scinew EnthalpyShaddixBuilder(temp_model_name, requiredICVarLabels, requiredScalarVarLabels, d_lab, d_lab->d_sharedState, d_props, iqn);

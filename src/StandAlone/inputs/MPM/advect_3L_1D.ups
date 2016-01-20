@@ -14,7 +14,7 @@
       <initTime>        0.0     </initTime>    
       <delt_min>        1e-10   </delt_min>    
       <delt_max>        0.001   </delt_max>    
-      <max_Timesteps>  120      </max_Timesteps>
+      <max_Timesteps>  500      </max_Timesteps>
       <timestep_multiplier> 0.1 </timestep_multiplier>
   </Time>
 
@@ -54,7 +54,8 @@
   <AMR>
      <useLockStep> true </useLockStep>
      <MPM>
-       <manualGrid> true </manualGrid>
+       <manualGrid>       true   </manualGrid>
+       <CFI_interpolator> linear </CFI_interpolator>
      </MPM>
    </AMR>
 
@@ -86,7 +87,7 @@
 
             <sphere label = "sphere">
                <origin>  [ 0.0, 0.0, 0.0]   </origin>         
-               <radius>  1.0                </radius>         
+               <radius>  0.9                </radius>         
             </sphere>           
 
             <res>         [1,1,1]       </res>
@@ -106,9 +107,9 @@
       <!--       1D    -->
       <Level>
         <Box label = "0">
-          <lower>       [-2, -0.012, -0.012]    </lower>
-          <upper>       [ 2,  0.012,  0.012]    </upper>
-          <resolution>  [40, 1, 1]              </resolution>
+          <lower>       [-1., -0.012, -0.012]    </lower>
+          <upper>       [ 1.,  0.012,  0.012]    </upper>
+          <resolution>  [20, 1, 1]              </resolution>
           <patches>     [3,1,1]                 </patches>
           <extraCells>  [0,0,0]                 </extraCells>
         </Box>

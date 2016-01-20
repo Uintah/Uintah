@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2015 The University of Utah
+ * Copyright (c) 1997-2016 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -25,20 +25,20 @@
 
 #include <Core/Grid/Variables/ParticleSubset.h>
 #include <Core/Grid/Variables/ParticleVariable.h>
-#include <Core/Parallel/Parallel.h>
-#include <Core/Disclosure/TypeUtils.h>
 #include <Core/Exceptions/InternalError.h>
-#include <Core/Malloc/Allocator.h>
-#include <Core/Util/ProgressiveWarning.h>
-
-#include <algorithm>
 #include <iostream>
 
 using namespace Uintah;
 using namespace SCIRun;
 using namespace std;
 
+ParticleSubset::ParticleSubset() : d_numParticles(0)
+{
+  init();
+}
 
+//______________________________________________________________________
+//
 ParticleSubset::~ParticleSubset()
 {
   for( unsigned int i = 0; i < neighbor_subsets.size(); i++ ) {
@@ -52,11 +52,9 @@ ParticleSubset::~ParticleSubset()
   }
 }
 
-ParticleSubset::ParticleSubset() : d_numParticles(0)
-{
-  init();
-}
 
+//______________________________________________________________________
+//
 ParticleSubset::ParticleSubset( const unsigned int   num_particles,
                                 const int            matlIndex, 
                                 const Patch        * patch)
@@ -65,17 +63,19 @@ ParticleSubset::ParticleSubset( const unsigned int   num_particles,
   init();
 
   if (patch) {
-    d_low = patch->getExtraCellLowIndex();
+    d_low  = patch->getExtraCellLowIndex();
     d_high = patch->getExtraCellHighIndex();
   }
   else {
     // don't matter...
-    d_low = IntVector(0,0,0);
+    d_low  = IntVector(0,0,0);
     d_high = IntVector(0,0,0);
   }
   fillset();
 }
 
+//______________________________________________________________________
+//
 ParticleSubset::ParticleSubset( const unsigned int              num_particles,
                                 const int                       matlIndex,
                                 const Patch                   * patch,
@@ -87,14 +87,17 @@ ParticleSubset::ParticleSubset( const unsigned int              num_particles,
     d_low(low), d_high(high),
     neighbors(neighbors), neighbor_subsets(neighbor_subsets)
 {
-  //cout << "ParticleSubset contstructor called\n";
-  //WAIT_FOR_DEBUGGER();
   init();
-  for(int i=0;i<(int)neighbor_subsets.size();i++)
+  
+  for(int i=0;i<(int)neighbor_subsets.size();i++){
     neighbor_subsets[i]->addReference();
+  }
+  
   fillset();
 }
 
+//______________________________________________________________________
+//
 ParticleSubset::ParticleSubset(       unsigned int   num_particles,
                                       int            matlIndex, 
                                 const Patch        * patch,
@@ -104,24 +107,32 @@ ParticleSubset::ParticleSubset(       unsigned int   num_particles,
     d_low(low), d_high(high)
 {
   init();
-  for(int i=0;i<(int)neighbor_subsets.size();i++)
+  
+  for(int i=0;i<(int)neighbor_subsets.size();i++){
     neighbor_subsets[i]->addReference();
+  }
+  
   fillset();
 }
 
+//______________________________________________________________________
+//
 void
 ParticleSubset::fillset()
 {
   if (d_numParticles > 0) {
     d_particles = scinew particleIndex[d_numParticles];
+    
     for( unsigned int i = 0; i < d_numParticles; i++ ) {
       d_particles[i] = i;
     }
+    
     d_allocatedSize = d_numParticles;
   }
 }
 
-
+//______________________________________________________________________
+//
 class compareIDFunctor
 {
 public:
@@ -137,17 +148,23 @@ private:
   ParticleVariable<long64>* particleIDs_;
 };
 
+//______________________________________________________________________
+//
 void
 ParticleSubset::sort(ParticleVariableBase* particleIDs)
 {
-  ParticleVariable<long64>* pIDs =
-    dynamic_cast<ParticleVariable<long64>*>(particleIDs);
-  if (pIDs == 0)
+  ParticleVariable<long64>* pIDs = dynamic_cast<ParticleVariable<long64>*>(particleIDs);
+  
+  if (pIDs == 0){
     SCI_THROW(InternalError("particleID variable must be ParticleVariable<long64>", __FILE__, __LINE__));
+  }
+
   compareIDFunctor comp(pIDs);
   std::sort(d_particles, d_particles+d_numParticles, comp);
 }
 
+//______________________________________________________________________
+//
 void
 ParticleSubset::init()
 {
@@ -156,6 +173,8 @@ ParticleSubset::init()
   d_numExpansions = 0;
 }
 
+//______________________________________________________________________
+//
 void
 ParticleSubset::resize(particleIndex newSize)
 {
@@ -170,6 +189,8 @@ ParticleSubset::resize(particleIndex newSize)
   d_particles = scinew particleIndex[ newSize ];
 }
 
+//______________________________________________________________________
+//
 void
 ParticleSubset::expand( unsigned int minSizeIncrement )
 {
@@ -177,6 +198,7 @@ ParticleSubset::expand( unsigned int minSizeIncrement )
   if( minAmount < 10 ) {
     minAmount = 10;
   }
+  
   if( minSizeIncrement < minAmount ) {
     minSizeIncrement = minAmount;
   }
@@ -198,6 +220,8 @@ ParticleSubset::expand( unsigned int minSizeIncrement )
   d_particles = newparticles;
 }
 
+//______________________________________________________________________
+//
 particleIndex
 ParticleSubset::addParticles( unsigned int count )
 {
@@ -214,17 +238,21 @@ ParticleSubset::addParticles( unsigned int count )
   return oldsize;  // The beginning of the new index range
 }
 
+//______________________________________________________________________
+//
 namespace Uintah {
 
 ostream &
 operator<<(ostream& out, ParticleSubset& pset)
 {
-  out << "pset (patch: " << *(pset.getPatch()) << " (" << (pset.getPatch()?pset.getPatch()->getID():0)
-      << "), matl "
-      << pset.getMatlIndex() << " range [" << pset.getLow() 
-      << ", " << pset.getHigh() << "]   " 
-      << pset.numParticles() << " particles, " 
-      << pset.getNeighbors().size() << " neighboring patches)" ;
+  const Patch* patch = pset.getPatch();
+  out << "pset L-" << patch->getLevel()->getIndex() << ", "
+      << *(patch) 
+      << " (" << (patch?patch->getID():0)
+      << "), matl: "
+      << pset.getMatlIndex() << ", pset range [" << pset.getLow() << ", " << pset.getHigh() << "]" 
+      << ", particles: " << pset.numParticles()
+      << ", neighboring patches: "<< pset.getNeighbors().size() ;
   return out;
 }
 

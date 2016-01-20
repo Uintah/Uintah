@@ -9,7 +9,7 @@
 
   <Wasatch>
 
-    <Density>
+    <Density method="CONSTANT">
       <Constant value="1" name="rho"/>
     </Density>
 
@@ -119,7 +119,7 @@
     <filebase>wasatch_test.uda</filebase>
     <outputTimestepInterval>2</outputTimestepInterval>
     <outputInitTimestep/>
-    <checkpoint cycle="2" interval="3.0"/>
+    <!-- <checkpoint cycle="2" interval="3.0"/> -->
     <compression>gzip</compression>
     <save label="phi1"/>
     <save label="phi2"/>

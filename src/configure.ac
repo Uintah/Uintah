@@ -1,7 +1,7 @@
 ##
 ## The MIT License
 ##
-## Copyright (c) 1997-2015 The University of Utah
+## Copyright (c) 1997-2016 The University of Utah
 ##
 ## Permission is hereby granted, free of charge, to any person obtaining a copy
 ## of this software and associated documentation files (the "Software"), to
@@ -70,7 +70,7 @@ AC_COPYRIGHT(
 ##
 ## The MIT License
 ##
-## Copyright (c) 1997-2015 The University of Utah
+## Copyright (c) 1997-2016 The University of Utah
 ##
 ## Permission is hereby granted, free of charge, to any person obtaining a copy
 ## of this software and associated documentation files (the "Software"), to
@@ -565,7 +565,7 @@ SCI_ARG_ENABLE(gencode,
   AC_HELP_STRING(--enable-gencode,
                  Specify compute capability for GPU code generation (allowable values: 20, 21, 30, 35)),
   [cuda_gencode="$enableval"],
-  [cuda_gencode=${gencode='20'}])
+  [cuda_gencode=${gencode='30'}])
   
 SCI_ARG_ENABLE(exename,
   AC_HELP_STRING(--enable-exename=<name>,
@@ -2428,34 +2428,6 @@ fi
 
 AC_SUBST(SSTREAM_COMPAT)
 AC_LANG(C)
-##  --  search for SGI'S traceback library  ------------------------------ 
-
-_sci_optional=optional
-if test "$with_exc"; then
-  _sci_lib="$with_exc"
-  _sci_inc="$with_exc/../include"
-  _sci_optional=specific
-else
-  _sci_lib=
-  _sci_inc=
-fi
-
-SCI_TRY_LINK(EXC,traceback library and headers,libexc.h,$_sci_inc,exc,$_sci_lib,,,$_sci_optional)
-
-if test "$HAVE_EXC" = "yes"; then
-  DEF_EXC="#define HAVE_EXC 1"
-fi
-
-if test "$with_exc" && test ! "$DEF_EXC"; then
-  echo
-  AC_MSG_ERROR(One or more of the EXC components is missing.)
-  echo
-fi
-
-AC_SUBST(EXC_LIB_FLAG)
-AC_SUBST(EXC_LIB_DIR_FLAG)
-AC_SUBST(DEF_EXC)
-sci_defs_files="$sci_defs_files include/sci_defs/exe_testdefs.h"
 
 ##  --  search for gzopen (and related)  ----------------------------------
 
@@ -3120,14 +3092,6 @@ if test "$HAVE_LAPACK" != "yes"; then
   HAVE_LAPACKMP=$HAVE_LAPACK
   LAPACKMP_LIB_FLAG=$LAPACK_LIB_FLAG
   LAPACKMP_LIB_DIR_FLAG=$LAPACK_LIB_DIR_FLAG
-
-  if test "$HAVE_LAPACK" != "yes"; then
-    SCI_TRY_LINK(LAPACK,complib.sgimath library,,,complib.sgimath,$_sci_lib,,,optional)
-    if test "$HAVE_LAPACK" = "yes"; then
-         AC_MSG_WARN(Using complib for lapack)
-         SCI_TRY_LINK(LAPACKMP,complib.sgimath_mp library,,,complib.sgimath_mp,$_sci_lib,,,optional)
-    fi
-  fi
 
   if test "$HAVE_LAPACK" = "yes"; then
     DEF_LAPACK="#define HAVE_LAPACK 1"

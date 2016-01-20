@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2015 The University of Utah
+ * Copyright (c) 1997-2016 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -44,7 +44,7 @@
 #if defined(__sun)
 #  include <cstring>
 #  define bzero(p,sz)  memset(p,0, sz);
-#elif defined(__linux) || defined(__sgi) || defined(__digital__) || defined(_AIX) || defined(__APPLE__) || defined(__CYGWIN__)
+#elif defined(__linux) || defined(__APPLE__) 
 //  do nothing
 #else
 #  error "Need bcopy define for this architecture"

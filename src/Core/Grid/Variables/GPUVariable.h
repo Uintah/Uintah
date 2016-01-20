@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2015 The University of Utah
+ * Copyright (c) 1997-2016 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -36,6 +36,7 @@ class GPUVariable {
   public:
     HOST_DEVICE virtual ~GPUVariable() {};
     HOST_DEVICE virtual size_t getMemSize() = 0;
+    HOST_DEVICE virtual void* getVoidPointer() const = 0;
 
   protected:
     HOST_DEVICE GPUVariable() {};

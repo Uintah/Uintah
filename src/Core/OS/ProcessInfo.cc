@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2015 The University of Utah
+ * Copyright (c) 1997-2016 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -43,12 +43,6 @@
 #include <cstdio>
 #include <cstring>
 
-#if defined( __sgi ) || defined ( __alpha ) || defined ( _AIX )
-#  include <fcntl.h>
-#  include <sys/ioctl.h>
-#  include <sys/procfs.h>
-#endif
-
 #if defined( __APPLE__ )
 #  include <mach/mach_init.h>
 #  include <mach/task.h>
@@ -65,7 +59,7 @@ bool
 ProcessInfo::isSupported ( int info_type )
 {
 
-#if defined( __linux ) || defined( __sgi ) || defined( __alpha) || defined( _AIX ) || defined( __APPLE__ )
+#if defined( __linux ) || defined( __APPLE__ )
 
   switch ( info_type ) {
     case MEM_SIZE: return true;

@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 2012-2015 The University of Utah
+ * Copyright (c) 2012-2016 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -39,7 +39,7 @@
 #include <Core/Parallel/UintahParallelComponent.h>
 #include <CCA/Ports/SolverInterface.h>
 
-namespace Wasatch{
+namespace WasatchCore{
 
   /**
    *  \ingroup WasatchCore
@@ -51,7 +51,7 @@ namespace Wasatch{
    *
    */
   template< typename FieldT >
-  class LowMachMomentumTransportEquation : public Wasatch::MomentumTransportEquationBase<FieldT>
+  class LowMachMomentumTransportEquation : public WasatchCore::MomentumTransportEquationBase<FieldT>
   {
   public:
 
@@ -73,7 +73,8 @@ namespace Wasatch{
      *  \param linSolver the linear solver object for the pressure solve
      *  \param sharedState contains useful stuff like the value of timestep, etc.
      */
-    LowMachMomentumTransportEquation( const std::string velName,
+    LowMachMomentumTransportEquation(const Direction momComponent,
+                                     const std::string velName,
                                const std::string momName,
                                const Expr::Tag densTag,
                                const bool isConstDensity,
@@ -129,6 +130,6 @@ namespace Wasatch{
 
   };
 
-} // namespace Wasatch
+} // namespace WasatchCore
 
 #endif // Wasatch_LowMachMomentumTransportEquation_h

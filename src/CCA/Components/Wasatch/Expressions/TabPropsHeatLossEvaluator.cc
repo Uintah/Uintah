@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 2013-2015 The University of Utah
+ * Copyright (c) 2013-2016 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -35,9 +35,9 @@ TabPropsHeatLossEvaluator( const InterpT* const adEnthInterp,
                            const Expr::TagList& ivarNames )
   : Expr::Expression<FieldT>(),
     hlIx_( hlIx ),
-    enthEval_     ( enthInterp     ),
-    adEnthEval_   ( adEnthInterp   ),
-    sensEnthEval_ ( sensEnthInterp )
+    enthEval_    ( enthInterp     ),
+    adEnthEval_  ( adEnthInterp   ),
+    sensEnthEval_( sensEnthInterp )
 {
   this->template create_field_vector_request<FieldT>(ivarNames, indepVars_);
 }
@@ -65,7 +65,7 @@ evaluate()
   typedef std::vector< typename FieldT::const_iterator > IVarIter;
   IVarIter ivarIters;
 
-  for (size_t i=0; i<indepVars_.size(); ++i) {
+  for( size_t i=0; i<indepVars_.size(); ++i ){
     const FieldT& iVar = indepVars_[i]->field_ref();
     ivarIters.push_back( iVar.begin() );
   }

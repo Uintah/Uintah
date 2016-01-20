@@ -387,14 +387,16 @@
 
     <Models>
       <Model type="Simple_Burn">
-        <fromMaterial> reactant     </fromMaterial>
-        <toMaterial>  product       </toMaterial>
-        <ThresholdTemp>       450.0 </ThresholdTemp>
-        <ThresholdPressure> 50000.0 </ThresholdPressure>
-        <Enthalpy>        2000000.0 </Enthalpy>
-        <BurnCoeff>            75.3 </BurnCoeff>
-        <refPressure>      101325.0 </refPressure>
-      <Active>true</Active></Model>
+        <Simple_Burn>
+          <fromMaterial> reactant     </fromMaterial>
+          <toMaterial>  product       </toMaterial>
+          <ThresholdTemp>       450.0 </ThresholdTemp>
+          <ThresholdPressure> 50000.0 </ThresholdPressure>
+          <Enthalpy>        2000000.0 </Enthalpy>
+          <BurnCoeff>            75.3 </BurnCoeff>
+          <refPressure>      101325.0 </refPressure>
+        <Simple_Burn>
+      </Model>
     </Models>
 
     <PhysicalBC>

@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2015 The University of Utah
+ * Copyright (c) 1997-2016 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -196,7 +196,7 @@ ComponentFactory::create( ProblemSpecP& ps, const ProcessorGroup* world,
   }
 #ifndef NO_WASATCH
   if (sim_comp == "wasatch") {
-    return scinew Wasatch::Wasatch(world);
+    return scinew WasatchCore::Wasatch(world);
   } 
 #endif
 

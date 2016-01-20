@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2015 The University of Utah
+ * Copyright (c) 1997-2016 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -70,7 +70,8 @@ using namespace SCIRun;
 using namespace std;
 
 static DebugStream schedulercommon_dbg("SchedulerCommon_DBG", false);
-
+extern DebugStream use_single_device;
+extern DebugStream simulate_multiple_gpus;
 // for calculating memory usage when sci-malloc is disabled.
 char* SchedulerCommon::start_addr = NULL;
 
@@ -970,7 +971,7 @@ void
 SchedulerCommon::advanceDataWarehouse( const GridP& grid,
                                              bool initialization /*=false*/ )
 {
-  schedulercommon_dbg << "advanceDataWarehouse, numDWs = " << dws.size() << '\n';
+  schedulercommon_dbg << d_myworld->myrank() << " advanceDataWarehouse, numDWs = " << dws.size() << '\n';
   ASSERT(dws.size() >= 2);
   // The last becomes last old, and the rest are new
   dws[numOldDWs - 1] = dws[dws.size() - 1];
@@ -1305,6 +1306,7 @@ void
 SchedulerCommon::finalizeTimestep()
 {
   finalizeNodes(d_myworld->myrank());
+
   for (unsigned int i = numOldDWs; i < dws.size(); i++) {
     dws[i]->finalize();
   }
@@ -1593,12 +1595,12 @@ SchedulerCommon::scheduleAndDoDataCopy( const GridP&               grid,
 #endif
   this->compile();
 
-  d_sharedState->regriddingCompilationTime += Time::currentSeconds() - start;
+  d_sharedState->d_timingStats[SimulationState::RegriddingCompilationTime] += Time::currentSeconds() - start;
 
   // save these and restore them, since the next execute will append the scheduler's, and we don't want to.
-  double executeTime = d_sharedState->taskExecTime;
-  double globalCommTime = d_sharedState->taskGlobalCommTime;
-  double localCommTime = d_sharedState->taskLocalCommTime;
+  double executeTime = d_sharedState->d_timingStats[SimulationState::TaskExecTime];
+  double globalCommTime = d_sharedState->d_timingStats[SimulationState::TaskGlobalCommTime];
+  double localCommTime = d_sharedState->d_timingStats[SimulationState::TaskLocalCommTime];
 
   start = Time::currentSeconds();
   this->execute();
@@ -1645,10 +1647,10 @@ SchedulerCommon::scheduleAndDoDataCopy( const GridP&               grid,
 
   newDataWarehouse->refinalize();
 
-  d_sharedState->regriddingCopyDataTime += Time::currentSeconds() - start;
-  d_sharedState->taskExecTime = executeTime;
-  d_sharedState->taskGlobalCommTime = globalCommTime;
-  d_sharedState->taskLocalCommTime = localCommTime;
+  d_sharedState->d_timingStats[SimulationState::RegriddingCopyDataTime] += Time::currentSeconds() - start;
+  d_sharedState->d_timingStats[SimulationState::TaskExecTime] = executeTime;
+  d_sharedState->d_timingStats[SimulationState::TaskGlobalCommTime] = globalCommTime;
+  d_sharedState->d_timingStats[SimulationState::TaskLocalCommTime] = localCommTime;
   d_sharedState->setCopyDataTimestep(false);
 }
 

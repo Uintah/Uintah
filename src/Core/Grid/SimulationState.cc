@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2015 The University of Utah
+ * Copyright (c) 1997-2016 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -62,19 +62,37 @@ SimulationState::SimulationState(ProblemSpecP &ps)
 
   //__________________________________
   //  These variables can be modified by a component.
-  VarLabel* nonconstOutputInv =     // output timestep interval
-                          VarLabel::create("outputInterval",      min_vartype::getTypeDescription() );
-  VarLabel* nonconstCheckInv =      // check point interval
-                          VarLabel::create("checkpointInterval", min_vartype::getTypeDescription() );
+  VarLabel* nonconstOutputInv =             // output interval
+    VarLabel::create("outputInterval",
+		     min_vartype::getTypeDescription() );
+  VarLabel* nonconstOutputTimestepInv =     // output timestep interval
+    VarLabel::create("outputTimestepInterval",
+		     min_vartype::getTypeDescription() );
+
+  VarLabel* nonconstCheckpointInv =         // check point interval
+    VarLabel::create("checkpointInterval",
+		     min_vartype::getTypeDescription() );
+  
+  VarLabel* nonconstCheckpointTimestepInv = // check point timestep interval
+    VarLabel::create("checkpointTimestepInterval",
+		     min_vartype::getTypeDescription() );
 
   nonconstOutputInv->allowMultipleComputes();
-  nonconstCheckInv->allowMultipleComputes();
+  nonconstOutputTimestepInv->allowMultipleComputes();
 
-  outputInterval_label     = nonconstOutputInv;
-  checkpointInterval_label = nonconstCheckInv;
+  nonconstCheckpointInv->allowMultipleComputes();
+  nonconstCheckpointTimestepInv->allowMultipleComputes();
+
+  outputInterval_label             = nonconstOutputInv;
+  outputTimestepInterval_label     = nonconstOutputTimestepInv;
+
+  checkpointInterval_label         = nonconstCheckpointInv;
+  checkpointTimestepInterval_label = nonconstCheckpointTimestepInv;
+
   //__________________________________
   d_elapsed_time = 0.0;
 
+  d_adjustDelT                = true;
   d_lockstepAMR               = false;
   d_updateOutputInterval      = false;
   d_updateCheckpointInterval  = false;
@@ -113,7 +131,25 @@ SimulationState::SimulationState(ProblemSpecP &ps)
     overheadWeights[i]=8-x*x*x;
     overhead[i]=0;
   }
-  clearStats();  
+
+  d_timingStats.insert( CompilationTime, std::string("Compilation"), 0 );
+  d_timingStats.insert( RegriddingTime,  std::string("Regridding"), 0 );
+  d_timingStats.insert( RegriddingCompilationTime, std::string("RegriddingCompilation"), 0 );
+  d_timingStats.insert( RegriddingCopyDataTime,  std::string("RegriddingCopyData"), 0 );
+  d_timingStats.insert( LoadBalancerTime,   std::string("LoadBalancer"), 0 );
+  d_timingStats.insert( TaskExecTime,       std::string("TaskExec"), 0 );
+  d_timingStats.insert( TaskLocalCommTime,  std::string("TaskLocalComm"), 0 );
+  d_timingStats.insert( TaskGlobalCommTime, std::string("TaskGlobalComm"), 0 );
+  d_timingStats.insert( TaskWaitCommTime,   std::string("TaskWaitComm"), 0 );
+  d_timingStats.insert( TaskWaitThreadTime, std::string("TaskWaitThread"), 0 );
+  d_timingStats.insert( OutputTime,         std::string("Output"), 0 );
+  d_timingStats.validate( MAX_TIMING_STATS );
+
+  resetStats();
+
+#ifdef HAVE_VISIT
+  d_doVisIt = false;
+#endif
 }
 //__________________________________
 //
@@ -416,8 +452,10 @@ SimulationState::~SimulationState()
   VarLabel::destroy(oldRefineFlag_label);
   VarLabel::destroy(refinePatchFlag_label);
   VarLabel::destroy(switch_label);
-  VarLabel::destroy(checkpointInterval_label);
   VarLabel::destroy(outputInterval_label);
+  VarLabel::destroy(outputTimestepInterval_label);
+  VarLabel::destroy(checkpointInterval_label);
+  VarLabel::destroy(checkpointTimestepInterval_label);
   clearMaterials();
 
   for (unsigned i = 0; i < old_matls.size(); i++){
@@ -538,20 +576,36 @@ Material* SimulationState::parseAndLookupMaterial(ProblemSpecP& params,
 }
 //__________________________________
 //
-void SimulationState::clearStats()
+void SimulationState::resetStats()
 {
-  compilationTime       = 0;
-  regriddingTime        = 0;
-  regriddingCompilationTime = 0;
-  regriddingCopyDataTime = 0;
-  loadbalancerTime      = 0;
-  taskExecTime          = 0;
-  taskGlobalCommTime    = 0;
-  taskLocalCommTime     = 0;
-  taskWaitCommTime      = 0;
-  taskWaitThreadTime    = 0;
-  outputTime            = 0;
+  d_timingStats.reset( 0 );  
 }
+//__________________________________
+//
+double SimulationState::getTotalTime()
+{
+  double totalTime = 0;
+  
+  for( unsigned int i=0; i<d_timingStats.size(); ++i )
+  {
+    if( (TimingStat) i != OutputTime )
+      totalTime += d_timingStats[(TimingStat) i];
+  }
+
+  return totalTime;
+}
+//__________________________________
+//
+double SimulationState::getOverheadTime()
+{
+  // Sum up the average time for overhead related components.
+  return (d_timingStats[CompilationTime] +
+	  d_timingStats[RegriddingTime] +
+	  d_timingStats[RegriddingCompilationTime] +
+	  d_timingStats[RegriddingCopyDataTime] +
+	  d_timingStats[LoadBalancerTime]);
+}
+
 //__________________________________
 //
 void SimulationState::setDimensionality(bool x, bool y, bool z)

@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 2012-2015 The University of Utah
+ * Copyright (c) 2012-2016 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -36,7 +36,7 @@
 #include <Core/ProblemSpec/ProblemSpecP.h>
 
 
-namespace Wasatch{
+namespace WasatchCore{
 
   /**
    *  \ingroup WasatchCore
@@ -76,7 +76,7 @@ namespace Wasatch{
    *  \todo Need to hook in parser support for boundary and initial conditions.
    */
   template<typename FieldT>
-  class ScalabilityTestTransportEquation : public Wasatch::TransportEquation
+  class ScalabilityTestTransportEquation : public WasatchCore::TransportEquation
   {
   public:
 
@@ -148,5 +148,5 @@ namespace Wasatch{
                                          Expr::ExpressionFactory& factory,
                                          FieldTagInfo& info );
 
-} // namespace Wasatch
+} // namespace WasatchCore
 #endif // Wasatch_ScalabilityTestTransportEquation_h

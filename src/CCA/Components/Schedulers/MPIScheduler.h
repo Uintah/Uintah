@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2015 The University of Utah
+ * Copyright (c) 1997-2016 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -35,6 +35,7 @@
 #include <Core/Parallel/PackBufferInfo.h>
 #include <Core/Grid/Task.h>
 #include <Core/Parallel/BufferInfo.h>
+#include <Core/Util/InfoMapper.h>
 
 #include <vector>
 #include <map>
@@ -46,23 +47,11 @@ static DebugStream mpi_stats("MPIStats", false);
 
 class Task;
 
-struct mpi_timing_info_s {
-  double totalreduce;
-  double totalsend;
-  double totalrecv;
-  double totaltask;
-  double totalreducempi;
-  double totalsendmpi;
-  double totalrecvmpi;
-  double totaltestmpi;
-  double totalwaitmpi;
-};
-
 /**************************************
 
 CLASS
    MPIScheduler
-   
+
    Short description...
 
 GENERAL INFORMATION
@@ -74,14 +63,14 @@ GENERAL INFORMATION
    University of Utah
 
    Center for the Simulation of Accidental Fires and Explosions (C-SAFE)
-  
+
 
 KEYWORDS
    MPI Scheduler
 
 DESCRIPTION
    Static task ordering and deterministic execution with MPI. One MPI rank per CPU core.
-  
+
 ****************************************/
 
 class MPIScheduler : public SchedulerCommon {
@@ -91,7 +80,7 @@ class MPIScheduler : public SchedulerCommon {
     MPIScheduler( const ProcessorGroup* myworld, const Output* oport, MPIScheduler* parentScheduler = 0 );
 
     virtual ~MPIScheduler();
-      
+
     virtual void problemSetup( const ProblemSpecP& prob_spec, SimulationStateP& state );
 
     virtual void execute( int tgnum = 0, int iteration = 0 );
@@ -110,7 +99,7 @@ class MPIScheduler : public SchedulerCommon {
 
     // get the processor group this scheduler is executing with (only valid during execute())
     const ProcessorGroup* getProcessorGroup() { return d_myworld; }
-    
+
     void compile(const LevelSet* levelSet = NULL) {
       numMessages_   = 0;
       messageVolume_ = 0;
@@ -138,7 +127,23 @@ class MPIScheduler : public SchedulerCommon {
       }
     }
 
-    mpi_timing_info_s   mpi_info_;
+    // timing statistics to test the mpi functionality
+    enum TimingStat
+    {
+      TotalReduce = 0,
+      TotalSend,
+      TotalRecv,
+      TotalTask,
+      TotalReduceMPI,
+      TotalSendMPI,
+      TotalRecvMPI,
+      TotalTestMPI,
+      TotalWaitMPI,
+      MAX_TIMING_STATS
+    };
+
+    InfoMapper< TimingStat, double > mpi_info_;
+
     MPIScheduler*       parentScheduler_;
 
     // Performs the reduction task. (In threaded schdeulers, a single worker thread will execute this.)
@@ -196,5 +201,5 @@ class MPIScheduler : public SchedulerCommon {
 };
 
 } // End namespace Uintah
-   
+
 #endif // End CCA_COMPONENTS_SCHEDULERS_MPISCHEDULER_H

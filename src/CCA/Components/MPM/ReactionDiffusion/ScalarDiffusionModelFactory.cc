@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2014 The University of Utah
+ * Copyright (c) 1997-2016 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -26,17 +26,9 @@
 #include <CCA/Components/MPM/ReactionDiffusion/JGConcentrationDiffusion.h>
 #include <CCA/Components/MPM/ReactionDiffusion/RFConcDiffusion1MPM.h>
 #include <CCA/Components/MPM/ReactionDiffusion/NonLinearDiff1.h>
-
-#include <sci_defs/uintah_defs.h> // For NO_FORTRAN
-
-#include <CCA/Components/MPM/MPMFlags.h>
-
 #include <Core/Exceptions/ProblemSetupException.h>
 #include <Core/ProblemSpec/ProblemSpec.h>
 #include <Core/Malloc/Allocator.h>
-
-#include <fstream>
-#include <iostream>
 #include <string>
 
 using namespace std;

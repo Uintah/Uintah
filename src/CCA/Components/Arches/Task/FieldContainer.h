@@ -54,7 +54,7 @@ namespace Uintah{
 
       typedef std::vector<VariableInformation > VariableRegistry;
 
-      ArchesFieldContainer( const Wasatch::AllocInfo& alloc_info,
+      ArchesFieldContainer( const WasatchCore::AllocInfo& alloc_info,
                             const Patch* patch,
                             const int matl_index,
                             const VariableRegistry variable_registry,
@@ -315,12 +315,12 @@ namespace Uintah{
       template <class ST>
       SpatialOps::SpatFldPtr<ST> get_so_field(const std::string name){
 
-        typedef typename Wasatch::SelectUintahFieldType<ST>::type MY_TYPE;
+        typedef typename WasatchCore::SelectUintahFieldType<ST>::type MY_TYPE;
         FieldContainerMap::iterator icheck = _nonconst_var_map.find( name );
         VariableInformation ivar = get_variable_information( name, false );
 
         if ( icheck != _nonconst_var_map.end() ){
-           return Wasatch::wrap_uintah_field_as_spatialops<ST>(
+           return WasatchCore::wrap_uintah_field_as_spatialops<ST>(
              *(icheck->second.get_field<MY_TYPE>()), this->_wasatch_ainfo, 0 );
         }
 
@@ -337,7 +337,7 @@ namespace Uintah{
         icontain.set_label(ivar.label);
         this->add_variable(name, icontain);
 
-        return Wasatch::wrap_uintah_field_as_spatialops<ST>( *field, this->_wasatch_ainfo, 0 );
+        return WasatchCore::wrap_uintah_field_as_spatialops<ST>( *field, this->_wasatch_ainfo, 0 );
 
       }
 
@@ -345,13 +345,13 @@ namespace Uintah{
       template <class ST>
       SpatialOps::SpatFldPtr<ST> get_const_so_field(const std::string name){
 
-        typedef typename Wasatch::SelectUintahFieldType<ST>::const_type MY_TYPE;
+        typedef typename WasatchCore::SelectUintahFieldType<ST>::const_type MY_TYPE;
         VariableInformation ivar = get_variable_information( name, true );
         ConstFieldContainerMap::iterator icheck = _const_var_map.find( name );
         int nGhost = ivar.nGhost;
 
         if ( icheck != _const_var_map.end() ){
-           return Wasatch::wrap_uintah_field_as_spatialops<ST>(
+           return WasatchCore::wrap_uintah_field_as_spatialops<ST>(
              *(icheck->second.get_field<MY_TYPE>()), this->_wasatch_ainfo, nGhost );
         }
 
@@ -368,7 +368,7 @@ namespace Uintah{
         icontain.set_label(ivar.label);
         this->add_const_variable(name, icontain);
 
-        return Wasatch::wrap_uintah_field_as_spatialops<ST>( *field, this->_wasatch_ainfo, nGhost );
+        return WasatchCore::wrap_uintah_field_as_spatialops<ST>( *field, this->_wasatch_ainfo, nGhost );
 
       }
 
@@ -379,13 +379,13 @@ namespace Uintah{
         std::ostringstream dw_value;
         dw_value << which_dw;
 
-        typedef typename Wasatch::SelectUintahFieldType<ST>::const_type MY_TYPE;
+        typedef typename WasatchCore::SelectUintahFieldType<ST>::const_type MY_TYPE;
         VariableInformation ivar = get_variable_information( name, true, which_dw );
         ConstFieldContainerMap::iterator icheck = _const_var_map.find( name+"_"+dw_value.str() );
         int nGhost = ivar.nGhost;
 
         if ( icheck != _const_var_map.end() ){
-           return Wasatch::wrap_uintah_field_as_spatialops<ST>(
+           return WasatchCore::wrap_uintah_field_as_spatialops<ST>(
              *(icheck->second.get_field<MY_TYPE>()), this->_wasatch_ainfo, nGhost );
         }
 
@@ -402,7 +402,7 @@ namespace Uintah{
         icontain.set_label(ivar.label);
         this->add_const_variable(name+"_"+dw_value.str(), icontain);
 
-        return Wasatch::wrap_uintah_field_as_spatialops<ST>( *field, this->_wasatch_ainfo, nGhost );
+        return WasatchCore::wrap_uintah_field_as_spatialops<ST>( *field, this->_wasatch_ainfo, nGhost );
 
       }
 
@@ -413,7 +413,7 @@ namespace Uintah{
         UintahParticleMap::iterator icheck = _particle_map.find(name);
 
         if ( icheck != _particle_map.end() ){
-          return Wasatch::wrap_uintah_field_as_spatialops<ParticleField>(
+          return WasatchCore::wrap_uintah_field_as_spatialops<ParticleField>(
             *(icheck->second.get_field()),this->_wasatch_ainfo, ivar.nGhost );
         }
 
@@ -438,7 +438,7 @@ namespace Uintah{
         icontain.set_label(ivar.label);
         this->add_particle_variable(name, icontain);
 
-        return Wasatch::wrap_uintah_field_as_spatialops<ParticleField>(*pvar,
+        return WasatchCore::wrap_uintah_field_as_spatialops<ParticleField>(*pvar,
           this->_wasatch_ainfo, ivar.nGhost );
 
       }
@@ -451,7 +451,7 @@ namespace Uintah{
         ConstUintahParticleMap::iterator icheck = _const_particle_map.find(name);
 
         if ( icheck != _const_particle_map.end() ){
-          return Wasatch::wrap_uintah_field_as_spatialops<ParticleField>(
+          return WasatchCore::wrap_uintah_field_as_spatialops<ParticleField>(
             *(icheck->second.get_field()), this->_wasatch_ainfo, ivar.nGhost );
         }
 
@@ -470,7 +470,7 @@ namespace Uintah{
         icontain.set_label(ivar.label);
         this->add_const_particle_variable(name, icontain);
 
-        return Wasatch::wrap_uintah_field_as_spatialops<ParticleField>(*pvar,
+        return WasatchCore::wrap_uintah_field_as_spatialops<ParticleField>(*pvar,
           this->_wasatch_ainfo, ivar.nGhost );
 
       }
@@ -487,7 +487,7 @@ namespace Uintah{
         VariableInformation ivar = get_variable_information( name, true, which_dw );
 
         if ( icheck != _const_particle_map.end() ){
-          return Wasatch::wrap_uintah_field_as_spatialops<ParticleField>(
+          return WasatchCore::wrap_uintah_field_as_spatialops<ParticleField>(
             *(icheck->second.get_field()), this->_wasatch_ainfo, ivar.nGhost );
         }
 
@@ -506,7 +506,7 @@ namespace Uintah{
         icontain.set_label(ivar.label);
         this->add_const_particle_variable(name+"_"+dw_value.str(), icontain);
 
-        return Wasatch::wrap_uintah_field_as_spatialops<ParticleField>(*pvar,
+        return WasatchCore::wrap_uintah_field_as_spatialops<ParticleField>(*pvar,
           this->_wasatch_ainfo, ivar.nGhost );
 
       }
@@ -517,7 +517,7 @@ namespace Uintah{
       ConstFieldContainerMap _const_var_map;
       UintahParticleMap _particle_map;
       ConstUintahParticleMap _const_particle_map;
-      const Wasatch::AllocInfo& _wasatch_ainfo;
+      const WasatchCore::AllocInfo& _wasatch_ainfo;
       const Patch* _patch;
 
       const int _matl_index;

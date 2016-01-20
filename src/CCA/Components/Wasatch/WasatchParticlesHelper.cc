@@ -6,7 +6,7 @@
  *
  * The MIT License
  *
- * Copyright (c) 2013-2015 The University of Utah
+ * Copyright (c) 2013-2016 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -40,7 +40,7 @@
 #include <Core/GeometryPiece/GeometryPiece.h>
 #include <Core/GeometryPiece/GeometryPieceFactory.h>
 
-namespace Wasatch {
+namespace WasatchCore {
   
   //==================================================================
   
@@ -244,4 +244,4 @@ namespace Wasatch {
   
   //--------------------------------------------------------------------
   
-} /* namespace Wasatch */
+} /* namespace WasatchCore */

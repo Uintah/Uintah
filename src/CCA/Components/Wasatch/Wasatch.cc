@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 2010-2015 The University of Utah
+ * Copyright (c) 2010-2016 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -91,8 +91,9 @@
 #include <CCA/Components/Wasatch/WasatchBCHelper.h>
 #include <CCA/Components/Wasatch/Expressions/CellType.h>
 using std::endl;
+WasatchCore::FlowTreatment WasatchCore::Wasatch::flowTreatment_;
 
-namespace Wasatch{
+namespace WasatchCore{
 
   //--------------------------------------------------------------------
 
@@ -419,6 +420,11 @@ namespace Wasatch{
           msg << "ERROR: You must include a 'Density' block in your input file when solving transport equations" << endl;
           throw Uintah::ProblemSetupException( msg.str(), __FILE__, __LINE__ );
         }
+        
+        std::string flowTreatment;
+        densityParams->getAttribute("method",flowTreatment);
+        Wasatch::set_flow_treatment(flowTreatment);
+        
         if( densityParams->findBlock("NameTag") ){
           densityTag = parse_nametag( densityParams->findBlock("NameTag") );
           isConstDensity = false;
@@ -792,7 +798,7 @@ namespace Wasatch{
     setup_patchinfo_map( level, sched );
 
     const Uintah::PatchSet* const allPatches   = get_patchset( USE_FOR_TASKS, level, sched );
-    const Uintah::PatchSet* const localPatches = get_patchset( USE_FOR_OPERATORS, level, sched );
+//  const Uintah::PatchSet* const localPatches = get_patchset( USE_FOR_OPERATORS, level, sched );
     
     GraphHelper* const icGraphHelper = graphCategories_[ INITIALIZATION ];
 
@@ -932,7 +938,7 @@ namespace Wasatch{
         SpatialOps::OperatorDatabase* const opdb = scinew SpatialOps::OperatorDatabase();
         const Uintah::Patch* const patch = pss->get(ip);
 
-        //tsaad: register an patch container as an operator for easy access to the Uintah patch
+        //tsaad: register a patch container as an operator for easy access to the Uintah patch
         // inside of an expression.
         opdb->register_new_operator<UintahPatchContainer>(scinew UintahPatchContainer(patch) );
         
@@ -1093,7 +1099,9 @@ namespace Wasatch{
       proc0cout << "Wasatch: done creating solution task(s)" << std::endl;
       
       // pass the bc Helper to pressure expressions on all patches
-      bcHelperMap_[level->getID()]->synchronize_pressure_expression();
+      if (flow_treatment() != COMPRESSIBLE) {
+        bcHelperMap_[level->getID()]->synchronize_pressure_expression();
+      }
     }
 
     
@@ -1293,4 +1301,4 @@ namespace Wasatch{
  }
 //------------------------------------------------------------------
 
-} // namespace Wasatch
+} // namespace WasatchCore

@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2015 The University of Utah
+ * Copyright (c) 1997-2016 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -25,7 +25,6 @@
 #include <Core/Math/Matrix3.h>
 #include <Core/Geometry/Vector.h>
 #include <Core/Geometry/IntVector.h>
-#include <Core/Grid/Grid.h>
 #include <Core/Grid/Level.h>
 #include <Core/Grid/Variables/NCVariable.h>
 #include <Core/Grid/Patch.h>
@@ -42,7 +41,6 @@
 #include <CCA/Components/MPM/MPMBoundCond.h>
 #include <vector>
 #include <iostream>
-#include <fstream>
 
 using namespace Uintah;
 using std::vector;

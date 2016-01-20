@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2015 The University of Utah
+ * Copyright (c) 1997-2016 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -966,9 +966,6 @@ Mutex::Mutex(const char* name)
   : name_(name)
 {
   // DO NOT CALL INITIALIZE in this CTOR!
-  if (this == 0){
-    fprintf(stderr, "WARNING: creation of null mutex\n");
-  }
 
   priv_ = new Mutex_private;
 

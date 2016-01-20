@@ -23,9 +23,9 @@ DensityCalculatorBase::
 DensityCalculatorBase( const int neq,
                        const double rtol,
                        const size_t maxIter )
-: neq_    ( neq     ),
-  rtol_   ( rtol    ),
-  maxIter_( maxIter )
+: rtol_   ( rtol    ),
+  maxIter_( maxIter ),
+  neq_    ( neq     )
 {
   jac_ .resize( neq_*neq_ );
   res_ .resize( neq_      );

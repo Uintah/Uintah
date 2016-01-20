@@ -8,6 +8,7 @@
 #include <CCA/Components/Arches/CoalModels/CoalModelFactory.h>
 #include <CCA/Components/Arches/CoalModels/ModelBase.h>
 #include <CCA/Components/Arches/CoalModels/CharOxidationShaddix.h>
+#include <CCA/Components/Arches/CoalModels/CharOxidationSmith.h>
 #include <CCA/Components/Arches/TransportEqns/DQMOMEqn.h>
 
 //===========================================================================

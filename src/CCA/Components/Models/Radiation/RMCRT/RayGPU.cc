@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2015 The University of Utah
+ * Copyright (c) 1997-2016 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -48,6 +48,8 @@ void Ray::rayTraceGPU(Task::CallBackEvent event,
                       const MaterialSubset* matls,
                       DataWarehouse* old_dw,
                       DataWarehouse* new_dw,
+                      void* oldTaskGpuDW,
+                      void* newTaskGpuDW,
                       void* stream,
                       int deviceID,
                       bool modifies_divQ,
@@ -77,12 +79,35 @@ void Ray::rayTraceGPU(Task::CallBackEvent event,
 
     //__________________________________
     //
-    GPUDataWarehouse* old_gdw = old_dw->getGPUDW()->getdevice_ptr();
-    GPUDataWarehouse* new_gdw = new_dw->getGPUDW()->getdevice_ptr();
+    GPUDataWarehouse* old_taskgdw = NULL;
+    if (oldTaskGpuDW) {
+    	old_taskgdw = static_cast<GPUDataWarehouse*>(oldTaskGpuDW)->getdevice_ptr();
+    }
 
-    GPUDataWarehouse* abskg_gdw    = new_dw->getOtherDataWarehouse(which_abskg_dw)->getGPUDW()->getdevice_ptr();
-    GPUDataWarehouse* sigmaT4_gdw  = new_dw->getOtherDataWarehouse(which_sigmaT4_dw)->getGPUDW()->getdevice_ptr();
-    GPUDataWarehouse* celltype_gdw = new_dw->getOtherDataWarehouse(which_celltype_dw)->getGPUDW()->getdevice_ptr();
+    GPUDataWarehouse* new_taskgdw = NULL;
+    if (newTaskGpuDW) {
+    	new_taskgdw = static_cast<GPUDataWarehouse*>(newTaskGpuDW)->getdevice_ptr();
+    }
+
+    GPUDataWarehouse* abskg_gdw = NULL;
+    GPUDataWarehouse* sigmaT4_gdw = NULL;
+    GPUDataWarehouse* celltype_gdw = NULL;
+    if (which_abskg_dw == Task::OldDW) {
+    	abskg_gdw = old_taskgdw;
+    } else {
+    	abskg_gdw = new_taskgdw;
+    }
+    if (which_sigmaT4_dw == Task::OldDW) {
+    	sigmaT4_gdw = old_taskgdw;
+	} else {
+		sigmaT4_gdw = new_taskgdw;
+	}
+    if (which_celltype_dw == Task::OldDW) {
+    	celltype_gdw = old_taskgdw;
+	} else {
+		celltype_gdw = new_taskgdw;
+	}
+
 
     //__________________________________
     //  varLabel name struct
@@ -182,8 +207,8 @@ void Ray::rayTraceGPU(Task::CallBackEvent event,
                               RT_flags, labelNames, abskg_gdw,
                               sigmaT4_gdw,
                               celltype_gdw,
-                              old_gdw,
-                              new_gdw);
+                              old_taskgdw,
+                              new_taskgdw);
 
       //__________________________________
       //
@@ -213,6 +238,8 @@ void Ray::rayTraceDataOnionGPU( Task::CallBackEvent event,
                                const MaterialSubset* matls,
                                DataWarehouse* old_dw,
                                DataWarehouse* new_dw,
+                               void* oldTaskGpuDW,
+                               void* newTaskGpuDW,
                                void* stream,
                                int deviceID,
                                bool modifies_divQ,
@@ -282,12 +309,27 @@ void Ray::rayTraceDataOnionGPU( Task::CallBackEvent event,
 
     //__________________________________
     //   Assign dataWarehouses
-    GPUDataWarehouse* old_gdw = old_dw->getGPUDW()->getdevice_ptr();
-    GPUDataWarehouse* new_gdw = new_dw->getGPUDW()->getdevice_ptr();
+    //GPUDataWarehouse* old_gdw = old_dw->getGPUDW()->getdevice_ptr();
+    //GPUDataWarehouse* new_gdw = new_dw->getGPUDW()->getdevice_ptr();
 
-    GPUDataWarehouse* abskg_gdw    = new_dw->getOtherDataWarehouse(which_abskg_dw)->getGPUDW()->getdevice_ptr();
-    GPUDataWarehouse* sigmaT4_gdw  = new_dw->getOtherDataWarehouse(which_sigmaT4_dw)->getGPUDW()->getdevice_ptr();
-    GPUDataWarehouse* celltype_gdw = new_dw->getOtherDataWarehouse(which_celltype_dw)->getGPUDW()->getdevice_ptr();    
+    GPUDataWarehouse* abskg_gdw = NULL;
+    GPUDataWarehouse* sigmaT4_gdw = NULL;
+    GPUDataWarehouse* celltype_gdw = NULL;
+    if (which_abskg_dw == Task::OldDW) {
+    	abskg_gdw = static_cast<GPUDataWarehouse*>(oldTaskGpuDW);
+    } else {
+    	abskg_gdw = static_cast<GPUDataWarehouse*>(newTaskGpuDW);
+    }
+    if (which_sigmaT4_dw == Task::OldDW) {
+    	sigmaT4_gdw = static_cast<GPUDataWarehouse*>(oldTaskGpuDW);
+	} else {
+		sigmaT4_gdw = static_cast<GPUDataWarehouse*>(newTaskGpuDW);
+	}
+    if (which_celltype_dw == Task::OldDW) {
+    	celltype_gdw = static_cast<GPUDataWarehouse*>(oldTaskGpuDW);
+	} else {
+		celltype_gdw = static_cast<GPUDataWarehouse*>(newTaskGpuDW);
+	}
     
     //__________________________________
     //  RMCRT_flags
@@ -401,8 +443,8 @@ void Ray::rayTraceDataOnionGPU( Task::CallBackEvent event,
                                        abskg_gdw,
                                        sigmaT4_gdw,
                                        celltype_gdw,
-                                       old_gdw,
-                                       new_gdw);
+                                       static_cast<GPUDataWarehouse*>(oldTaskGpuDW),
+                                       static_cast<GPUDataWarehouse*>(newTaskGpuDW));
 
       //__________________________________
       //
@@ -433,6 +475,8 @@ void Ray::rayTraceGPU< float > ( Task::CallBackEvent,
                                  const MaterialSubset*,
                                  DataWarehouse*,
                                  DataWarehouse*,
+                                 void*,
+                                 void*,
                                  void* stream,
                                  int deviceID,
                                  bool,
@@ -448,6 +492,8 @@ void Ray::rayTraceGPU< double > ( Task::CallBackEvent,
                                   const MaterialSubset*,
                                   DataWarehouse*,
                                   DataWarehouse*,
+                                  void*,
+                                  void*,
                                   void* stream,
                                   int deviceID,
                                   bool,
@@ -463,6 +509,8 @@ void Ray::rayTraceDataOnionGPU< float > ( Task::CallBackEvent,
                                           const MaterialSubset*,
                                           DataWarehouse*,
                                           DataWarehouse*,
+                                          void*,
+                                          void*,
                                           void* stream,
                                           int deviceID,
                                           bool,
@@ -478,6 +526,8 @@ void Ray::rayTraceDataOnionGPU< double > ( Task::CallBackEvent,
                                            const MaterialSubset*,
                                            DataWarehouse*,
                                            DataWarehouse*,
+                                           void* oldTaskGpuDW,
+                                           void* newTaskGpuDW,
                                            void* stream,
                                            int deviceID,
                                            bool,

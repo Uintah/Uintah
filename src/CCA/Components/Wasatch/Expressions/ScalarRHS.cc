@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 2012-2015 The University of Utah
+ * Copyright (c) 2012-2016 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -92,8 +92,6 @@ ScalarRHS<FieldT>::ScalarRHS( const FieldTagInfo& fieldTags,
 
     srcTags_( srcTags )
 {
-//  srcTags_.push_back( resolve_field_tag( SOURCE_TERM, fieldTags ) );
-
   if( !strongForm_ ){
     if( phiTag_ == Expr::Tag() ){
       std::ostringstream msg;
@@ -131,21 +129,21 @@ ScalarRHS<FieldT>::ScalarRHS( const FieldTagInfo& fieldTags,
   if( doYDiff_ )  yDiffFlux_ = this->template create_field_request<YFluxT>( diffTagY_ );
   if( doZDiff_ )  zDiffFlux_ = this->template create_field_request<ZFluxT>( diffTagZ_ );
   
-  if ( haveVolFrac_ ) {
-     volfrac_  = this->template create_field_request<FieldT>( volFracTag_);
+  if( haveVolFrac_ ){
+    volfrac_ = this->template create_field_request<FieldT>( volFracTag_);
   }
   
-  if ( doXDir_ && haveXAreaFrac_ )  xareafrac_  = this->template create_field_request<XVolField>( xAreaFracTag_);
-  if ( doYDir_ && haveYAreaFrac_ )  yareafrac_  = this->template create_field_request<YVolField>( yAreaFracTag_);
-  if ( doZDir_ && haveZAreaFrac_ )  zareafrac_  = this->template create_field_request<ZVolField>( zAreaFracTag_);
+  if( doXDir_ && haveXAreaFrac_ )  xareafrac_ = this->template create_field_request<XVolField>( xAreaFracTag_);
+  if( doYDir_ && haveYAreaFrac_ )  yareafrac_ = this->template create_field_request<YVolField>( yAreaFracTag_);
+  if( doZDir_ && haveZAreaFrac_ )  zareafrac_ = this->template create_field_request<ZVolField>( zAreaFracTag_);
 
-  this->template create_field_vector_request<FieldT>(srcTags_, srcTerms_);
+  this->template create_field_vector_request<FieldT>( srcTags_, srcTerms_ );
   
-  if( isConstDensity_ && (srcTerms_.size()>0 || !strongForm_) )  rho_  = this->template create_field_request<SVolField>( densityTag_);
+  if( isConstDensity_ && (srcTerms_.size()>0 || !strongForm_) )  rho_ = this->template create_field_request<SVolField>( densityTag_);
   
   if( !strongForm_ ){
-     phi_  = this->template create_field_request<SVolField>( phiTag_);
-     drhodt_  = this->template create_field_request<SVolField>( drhodtTag_);
+    phi_    = this->template create_field_request<SVolField>( phiTag_    );
+    drhodt_ = this->template create_field_request<SVolField>( drhodtTag_ );
   }
 }
 
@@ -165,10 +163,10 @@ void ScalarRHS<FieldT>::bind_operators( const SpatialOps::OperatorDatabase& opDB
   if( doZDir_ )  divOpZ_ = opDB.retrieve_operator<DivZ>();
 
   for( std::vector<Expr::Tag>::const_iterator isrc=srcTags_.begin(); isrc!=srcTags_.end(); ++isrc ){
-    if( (isrc->context() != Expr::INVALID_CONTEXT) && isConstDensity_)
+    if( (isrc->context() != Expr::INVALID_CONTEXT) && isConstDensity_ )
       densityInterpOp_ = opDB.retrieve_operator<DensityInterpT>();
   }
-  if( haveVolFrac_   ) volFracInterpOp_   = opDB.retrieve_operator<SVolToFieldTInterpT>();
+  if( haveVolFrac_              ) volFracInterpOp_   = opDB.retrieve_operator<SVolToFieldTInterpT>();
   if( doXDir_ && haveXAreaFrac_ ) xAreaFracInterpOp_ = opDB.retrieve_operator<XVolToXFluxInterpT >();
   if( doYDir_ && haveYAreaFrac_ ) yAreaFracInterpOp_ = opDB.retrieve_operator<YVolToYFluxInterpT >();
   if( doZDir_ && haveZAreaFrac_ ) zAreaFracInterpOp_ = opDB.retrieve_operator<ZVolToZFluxInterpT >();
@@ -191,13 +189,13 @@ void ScalarRHS<FieldT>::evaluate()
   if( doXConv_ &&  doYConv_ && doZConv_ && doXDiff_ && doYDiff_ && doZDiff_ ){
     // inline everything
     
-    const XFluxT& xConvFlux  =  xConvFlux_->field_ref();
-    const YFluxT& yConvFlux  =  yConvFlux_->field_ref();
-    const ZFluxT& zConvFlux  =  zConvFlux_->field_ref();
+    const XFluxT& xConvFlux = xConvFlux_->field_ref();
+    const YFluxT& yConvFlux = yConvFlux_->field_ref();
+    const ZFluxT& zConvFlux = zConvFlux_->field_ref();
     
-    const XFluxT& xDiffFlux  =  xDiffFlux_->field_ref();
-    const YFluxT& yDiffFlux  =  yDiffFlux_->field_ref();
-    const ZFluxT& zDiffFlux  =  zDiffFlux_->field_ref();
+    const XFluxT& xDiffFlux = xDiffFlux_->field_ref();
+    const YFluxT& yDiffFlux = yDiffFlux_->field_ref();
+    const ZFluxT& zDiffFlux = zDiffFlux_->field_ref();
     
     if( haveXAreaFrac_ ){ // previous error checking enforces that y and z area fractions are also present
       const XVolField& xAreaFrac = xareafrac_->field_ref();
@@ -208,16 +206,16 @@ void ScalarRHS<FieldT>::evaluate()
               -(*divOpZ_)( (*zAreaFracInterpOp_)(zAreaFrac) * ( zConvFlux + zDiffFlux ) );
     }
     else{
-        rhs <<= -(*divOpX_)( xConvFlux + xDiffFlux )
-                -(*divOpY_)( yConvFlux + yDiffFlux )
-                -(*divOpZ_)( zConvFlux + zDiffFlux );
+      rhs <<= -(*divOpX_)( xConvFlux + xDiffFlux )
+              -(*divOpY_)( yConvFlux + yDiffFlux )
+              -(*divOpZ_)( zConvFlux + zDiffFlux );
     }
   }
   else{
     // handle 2D and 1D cases - not quite as efficient since we won't be
     // running as many production scale calculations in these configurations
     
-    if (doXConv_ && doXDiff_) {
+    if( doXConv_ && doXDiff_ ){
       if( haveXAreaFrac_ ) rhs <<= -(*divOpX_)( (*xAreaFracInterpOp_)(xareafrac_->field_ref()) * (xConvFlux_->field_ref() + xDiffFlux_->field_ref()) );
       else                 rhs <<= -(*divOpX_)( xConvFlux_->field_ref() + xDiffFlux_->field_ref() );
     } else if (doXConv_) {
@@ -230,24 +228,28 @@ void ScalarRHS<FieldT>::evaluate()
       rhs <<= 0.0; // zero so that we can sum in Y and Z contributions as necessary
     }
 
-    if (doYConv_ && doYDiff_) {
+    if( doYConv_ && doYDiff_ ){
       if( haveYAreaFrac_ ) rhs <<= rhs -(*divOpY_)( (*yAreaFracInterpOp_)(yareafrac_->field_ref()) * (yConvFlux_->field_ref() + yDiffFlux_->field_ref()) );
       else                 rhs <<= rhs -(*divOpY_)( yConvFlux_->field_ref() + yDiffFlux_->field_ref() );
-    } else if (doYConv_) {
+    }
+    else if( doYConv_ ){
       if( haveYAreaFrac_ ) rhs <<= rhs - (*divOpY_)( (*yAreaFracInterpOp_)(yareafrac_->field_ref()) * yConvFlux_->field_ref() );
       else                 rhs <<= rhs - (*divOpY_)( yConvFlux_->field_ref() );
-    } else if (doYDiff_) {
+    }
+    else if( doYDiff_ ){
       if( haveYAreaFrac_ ) rhs <<= rhs -(*divOpY_)( (*yAreaFracInterpOp_)(yareafrac_->field_ref()) * yDiffFlux_->field_ref() );
       else                 rhs <<= rhs -(*divOpY_)( yDiffFlux_->field_ref() );
     }
 
-    if (doZConv_ && doZDiff_) {
+    if( doZConv_ && doZDiff_ ){
       if( haveZAreaFrac_ ) rhs <<= rhs -(*divOpZ_)( (*zAreaFracInterpOp_)(zareafrac_->field_ref()) * (zConvFlux_->field_ref() + zDiffFlux_->field_ref()) );
       else                 rhs <<= rhs -(*divOpZ_)( zConvFlux_->field_ref() + zDiffFlux_->field_ref() );
-    } else if (doZConv_) {
+    }
+    else if( doZConv_ ){
       if( haveZAreaFrac_ ) rhs <<= rhs - (*divOpZ_)( (*zAreaFracInterpOp_)(zareafrac_->field_ref()) * zConvFlux_->field_ref() );
       else                 rhs <<= rhs - (*divOpZ_)( zConvFlux_->field_ref() );
-    } else if (doZDiff_) {
+    }
+    else if( doZDiff_ ){
       if( haveZAreaFrac_ ) rhs <<= rhs -(*divOpZ_)( (*zAreaFracInterpOp_)(zareafrac_->field_ref()) * zDiffFlux_->field_ref() );
       else                 rhs <<= rhs -(*divOpZ_)( zDiffFlux_->field_ref() );
     }
@@ -270,7 +272,8 @@ void ScalarRHS<FieldT>::evaluate()
   }
 
   // for weak form (variable density) cases, augment with drhodt term and scale by density
-  if( !strongForm_ && !isConstDensity_ ) rhs <<= ( rhs - phi_->field_ref() * drhodt_->field_ref() ) / rho_->field_ref();
+  if( !strongForm_ && !isConstDensity_ )
+    rhs <<= ( rhs - phi_->field_ref() * drhodt_->field_ref() ) / rho_->field_ref();
 }
 
 //------------------------------------------------------------------

@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 2012-2015 The University of Utah
+ * Copyright (c) 2012-2016 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -32,7 +32,7 @@
 #include <Core/Grid/Task.h>
 #include <Core/Parallel/ProcessorGroup.h>
 
-namespace Wasatch{
+namespace WasatchCore{
 
   typedef Uintah::CCVariable<double> FieldT;
 
@@ -91,4 +91,4 @@ namespace Wasatch{
 
   //------------------------------------------------------------------
 
-} // namespace Wasatch
+} // namespace WasatchCore

@@ -1,7 +1,7 @@
 #
 #  The MIT License
 #
-#  Copyright (c) 1997-2015 The University of Utah
+#  Copyright (c) 1997-2016 The University of Utah
 # 
 #  Permission is hereby granted, free of charge, to any person obtaining a copy
 #  of this software and associated documentation files (the "Software"), to
@@ -51,7 +51,7 @@ SRCS     += \
 SRCS += $(TIME_IMPL) $(THREAD_IMPL) $(ATOMIC_IMPL)
 
 PSELIBS := Core/Exceptions
-LIBS := $(THREAD_LIBRARY) $(TRACEBACK_LIB) $(SEMAPHORE_LIBRARY)
+LIBS := $(THREAD_LIBRARY) $(SEMAPHORE_LIBRARY)
 
 include $(SCIRUN_SCRIPTS)/smallso_epilogue.mk
 

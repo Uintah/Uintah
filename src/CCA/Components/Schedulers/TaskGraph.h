@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2015 The University of Utah
+ * Copyright (c) 1997-2016 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -212,8 +212,11 @@ class TaskGraph {
 
   private:
 
-#ifdef HAVE_GNU_HASHMAP
+#ifdef __PGI
+     //PGI won't compile with hash_multimap, so it will use multimap
     typedef std::multimap<const VarLabel*, Task::Dependency*> CompMap;
+#elif HAVE_GNU_HASHMAP
+     typedef std::multimap<const VarLabel*, Task::Dependency*> CompMap;
 #else
     typedef hash_multimap<const VarLabel*, Task::Dependency*> CompMap;
 #endif

@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 2012-2015 The University of Utah
+ * Copyright (c) 2012-2016 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -34,7 +34,7 @@
  * \file ConvectiveInterpolationMethods.h
  */
 
-namespace Wasatch {
+namespace WasatchCore {
 
   /**
    *  \enum ConvInterpMethods
@@ -70,6 +70,6 @@ namespace Wasatch {
    */
   std::string get_conv_interp_method( const ConvInterpMethods method );
 
-} // namespace Wasatch
+} // namespace WasatchCore
 
 #endif

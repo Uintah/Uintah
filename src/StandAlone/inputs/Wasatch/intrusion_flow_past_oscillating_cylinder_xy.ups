@@ -40,7 +40,7 @@
 <!--       <NameTag name="vel_magnitude" state="STATE_DYNAMIC" /> -->
     </ForceOnGraph>
 
-    <Density>
+    <Density method="CONSTANT">
       <Constant value="1.0" name="density"/>
     </Density>
 

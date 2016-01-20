@@ -9,8 +9,8 @@
   <Wasatch>
     <TimeIntegrator> FE </TimeIntegrator>    
     
-    <Density>
-      <NameTag name="density" />
+    <Density method="LOWMACH">
+      <NameTag name="density"/>
     </Density>
     
     <!-- Set the initial condition expression for mixture fraction -->
@@ -72,16 +72,16 @@
         <NameInTable>MixtureFraction</NameInTable>
       </IndependentVariable>
       <IndependentVariable>
-        <NameTag name="gamma" />
+        <NameTag name="gamma"/>
         <NameInTable>HeatLoss</NameInTable>
       </IndependentVariable>
             
       <ExtractDensity>
-        <NameTag name="density" />
+        <NameTag name="density"/>
         <ModelBasedOnMixtureFractionAndHeatLoss>
           <DensityWeightedMixtureFraction><NameTag name="rhof" state="STATE_DYNAMIC"/></DensityWeightedMixtureFraction>    
           <DensityWeightedEnthalpy>       <NameTag name="rhoh" state="STATE_DYNAMIC"/></DensityWeightedEnthalpy>
-          <HeatLoss>                      <NameTag name="gamma" /></HeatLoss>
+          <HeatLoss>                      <NameTag name="gamma"/></HeatLoss>
         </ModelBasedOnMixtureFractionAndHeatLoss>
       </ExtractDensity>
 

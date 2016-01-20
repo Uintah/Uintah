@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2015 The University of Utah
+ * Copyright (c) 1997-2016 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -41,6 +41,11 @@
 #include <Core/Util/FancyAssert.h>
 
 #include <sci_defs/mpi_defs.h> // For MPIPP_H on SGI
+
+
+#ifdef UINTAH_ENABLE_KOKKOS
+#include <Kokkos_Core.hpp>
+#endif //UINTAH_ENABLE_KOKKOS
 
 #include <sstream>
 #include <iomanip>
@@ -91,6 +96,9 @@ MPIScheduler::MPIScheduler( const ProcessorGroup* myworld,
     dlbLock("loadbalancer lock"),
     waittimesLock("waittimes lock")
 {
+#ifdef UINTAH_ENABLE_KOKKOS
+  Kokkos::initialize();
+#endif //UINTAH_ENABLE_KOKKOS
   d_lasttime = Time::currentSeconds();
   reloc_new_posLabel_ = 0;
 
@@ -105,6 +113,17 @@ MPIScheduler::MPIScheduler( const ProcessorGroup* myworld,
       maxStats.open(filename);
     }
   }
+
+  mpi_info_.insert( TotalReduce,    std::string("TotalReduce"),    0 );
+  mpi_info_.insert( TotalSend,      std::string("TotalSend"),      0 );
+  mpi_info_.insert( TotalRecv,      std::string("TotalRecv"),      0 );
+  mpi_info_.insert( TotalTask,      std::string("TotalTask"),      0 );
+  mpi_info_.insert( TotalReduceMPI, std::string("TotalReduceMPI"), 0 );
+  mpi_info_.insert( TotalSendMPI,   std::string("TotalSendMPI"),   0 );
+  mpi_info_.insert( TotalRecvMPI,   std::string("TotalRecvMPI"),   0 );
+  mpi_info_.insert( TotalTestMPI,   std::string("TotalTestMPI"),   0 );
+  mpi_info_.insert( TotalWaitMPI,   std::string("TotalWaitMPI"),   0 );
+  mpi_info_.validate( MAX_TIMING_STATS );
 }
 
 //______________________________________________________________________
@@ -128,6 +147,9 @@ MPIScheduler::~MPIScheduler()
       maxStats.close();
     }
   }
+#ifdef UINTAH_ENABLE_KOKKOS
+  Kokkos::finalize();
+#endif //UINTAH_ENABLE_KOKKOS
 }
 
 //______________________________________________________________________
@@ -234,8 +256,8 @@ MPIScheduler::initiateReduction( DetailedTask* task )
 
   emitNode(task, reducestart, reduceend - reducestart, 0);
 
-  mpi_info_.totalreduce    += reduceend - reducestart;
-  mpi_info_.totalreducempi += reduceend - reducestart;
+  mpi_info_[TotalReduce   ] += reduceend - reducestart;
+  mpi_info_[TotalReduceMPI] += reduceend - reducestart;
 }
 
 //______________________________________________________________________
@@ -279,7 +301,7 @@ MPIScheduler::runTask( DetailedTask* task,
     // if I do not have a sub scheduler
     if (!task->getTask()->getHasSubScheduler()) {
       //add my task time to the total time
-      mpi_info_.totaltask += total_task_time;
+      mpi_info_[TotalTask] += total_task_time;
       if (!d_sharedState->isCopyDataTimestep() && task->getTask()->getType() != Task::Output) {
         //add contribution for patchlist
         getLoadBalancer()->addContribution(task, total_task_time);
@@ -296,23 +318,19 @@ MPIScheduler::runTask( DetailedTask* task,
 
   sends_[thread_id].testsome(d_myworld);
 
-  mpi_info_.totaltestmpi += Time::currentSeconds() - teststart;
+  mpi_info_[TotalTestMPI] += Time::currentSeconds() - teststart;
 
-  // Add subscheduler timings to the parent scheduler and reset subscheduler timings
+  // Add subscheduler timings to the parent scheduler and reset
+  // subscheduler timings
   if (parentScheduler_) {
-    parentScheduler_->mpi_info_.totaltask    += mpi_info_.totaltask;
-    parentScheduler_->mpi_info_.totaltestmpi += mpi_info_.totaltestmpi;
-    parentScheduler_->mpi_info_.totalrecv    += mpi_info_.totalrecv;
-    parentScheduler_->mpi_info_.totalsend    += mpi_info_.totalsend;
-    parentScheduler_->mpi_info_.totalwaitmpi += mpi_info_.totalwaitmpi;
-    parentScheduler_->mpi_info_.totalreduce  += mpi_info_.totalreduce;
-    mpi_info_.totalreduce    = 0;
-    mpi_info_.totalsend      = 0;
-    mpi_info_.totalrecv      = 0;
-    mpi_info_.totaltask      = 0;
-    mpi_info_.totalreducempi = 0;
-    mpi_info_.totaltestmpi   = 0;
-    mpi_info_.totalwaitmpi   = 0;
+
+      for( int i=0; i<mpi_info_.size(); ++i )
+      {
+	MPIScheduler::TimingStat e = (MPIScheduler::TimingStat) i;
+	parentScheduler_->mpi_info_[e] += mpi_info_[e];
+      }
+
+      mpi_info_.reset( 0 );
   }
 
   emitNode(task, taskstart, total_task_time, 0);
@@ -326,7 +344,7 @@ MPIScheduler::runReductionTask( DetailedTask* task )
 {
   const Task::Dependency* mod = task->getTask()->getModifies();
   ASSERT(!mod->next);
-  
+
   OnDemandDataWarehouse* dw = dws[mod->mapDataWarehouse()].get_rep();
   ASSERT(task->getTask()->d_comm>=0);
   dw->reduceMPI(mod->var, mod->reductionLevel, mod->matls, task->getTask()->d_comm);
@@ -492,14 +510,14 @@ MPIScheduler::postMPISends( DetailedTask* task,
       sends_[thread_id].add(requestid, bytes, mpibuff.takeSendlist(), ostr.str(), batch->messageTag);
       sendLock.writeUnlock();
 
-      mpi_info_.totalsendmpi += Time::currentSeconds() - start;
+      mpi_info_[TotalSendMPI] += Time::currentSeconds() - start;
 
       //}
     }
   }  // end for (DependencyBatch* batch = task->getComputes())
 
   double dsend = Time::currentSeconds() - sendstart;
-  mpi_info_.totalsend += dsend;
+  mpi_info_[TotalSend] += dsend;
   if (dbgst.active() && numSend > 0) {
     if (d_myworld->myrank() == d_myworld->size() / 2) {
       if (dbgst.active()) {
@@ -703,7 +721,7 @@ void MPIScheduler::postMPIRecvs( DetailedTask* task,
         MPI_Irecv(buf, count, datatype, from, batch->messageTag, d_myworld->getComm(), &requestid);
         int bytes = count;
         recvs_.add(requestid, bytes, scinew ReceiveHandler(p_mpibuff, pBatchRecvHandler), ostr.str(), batch->messageTag);
-        mpi_info_.totalrecvmpi += Time::currentSeconds() - start;
+        mpi_info_[TotalRecvMPI] += Time::currentSeconds() - start;
 
         /*}
          else
@@ -721,14 +739,14 @@ void MPIScheduler::postMPIRecvs( DetailedTask* task,
         // otherwise, these will be deleted after it receives and unpacks the data.
         delete p_mpibuff;
         delete pBatchRecvHandler;
-#endif          
+#endif
       }
     }  // end for loop over requires
   }
   recvLock.writeUnlock();
 
   double drecv = Time::currentSeconds() - recvstart;
-  mpi_info_.totalrecv += drecv;
+  mpi_info_[TotalRecv] += drecv;
 
 }  // end postMPIRecvs()
 
@@ -784,7 +802,7 @@ void MPIScheduler::processMPIRecvs(int how_much)
   }
   recvLock.writeUnlock();
 
-  mpi_info_.totalwaitmpi += Time::currentSeconds() - start;
+  mpi_info_[TotalWaitMPI] += Time::currentSeconds() - start;
   CurrentWaitTime += Time::currentSeconds() - start;
 
 }  // end processMPIRecvs()
@@ -840,15 +858,7 @@ MPIScheduler::execute( int tgnum     /* = 0 */,
   //if(timeout.active())
   //emitTime("taskGraph output");
 
-  mpi_info_.totalreduce    = 0;
-  mpi_info_.totalsend      = 0;
-  mpi_info_.totalrecv      = 0;
-  mpi_info_.totaltask      = 0;
-  mpi_info_.totalreducempi = 0;
-  mpi_info_.totalsendmpi   = 0;
-  mpi_info_.totalrecvmpi   = 0;
-  mpi_info_.totaltestmpi   = 0;
-  mpi_info_.totalwaitmpi   = 0;
+  mpi_info_.reset( 0 );
 
   int numTasksDone = 0;
 
@@ -869,7 +879,7 @@ MPIScheduler::execute( int tgnum     /* = 0 */,
   while (numTasksDone < ntasks) {
     i++;
 
-    // 
+    //
     // The following checkMemoryUse() is commented out to allow for
     // maintaining the same functionality as before this commit...
     // In other words, so that memory highwater checking is only done
@@ -918,7 +928,7 @@ MPIScheduler::execute( int tgnum     /* = 0 */,
         printTaskLevels(d_myworld, taskLevel_dbg, task);
       }
     }
-  
+
     if(!abort && dws[dws.size()-1] && dws[dws.size()-1]->timestepAborted()){
       abort = true;
       abort_point = task->getTask()->getSortedOrder();
@@ -927,30 +937,34 @@ MPIScheduler::execute( int tgnum     /* = 0 */,
   } // end while( numTasksDone < ntasks )
 
   if (timeout.active()) {
-    emitTime("MPI send time", mpi_info_.totalsendmpi);
-    emitTime("MPI Testsome time", mpi_info_.totaltestmpi);
-    emitTime("Total send time", mpi_info_.totalsend - mpi_info_.totalsendmpi - mpi_info_.totaltestmpi);
-    emitTime("MPI recv time", mpi_info_.totalrecvmpi);
-    emitTime("MPI wait time", mpi_info_.totalwaitmpi);
-    emitTime("Total recv time", mpi_info_.totalrecv - mpi_info_.totalrecvmpi - mpi_info_.totalwaitmpi);
-    emitTime("Total task time", mpi_info_.totaltask);
-    emitTime("Total MPI reduce time", mpi_info_.totalreducempi);
-    emitTime("Total reduction time", mpi_info_.totalreduce - mpi_info_.totalreducempi);
-    emitTime("Total comm time", mpi_info_.totalrecv + mpi_info_.totalsend + mpi_info_.totalreduce);
+    emitTime("MPI send time", mpi_info_[TotalSendMPI]);
+    emitTime("MPI Testsome time", mpi_info_[TotalTestMPI]);
+    emitTime("Total send time", mpi_info_[TotalSend] - mpi_info_[TotalSendMPI] - mpi_info_[TotalTestMPI]);
+    emitTime("MPI recv time", mpi_info_[TotalRecvMPI]);
+    emitTime("MPI wait time", mpi_info_[TotalWaitMPI]);
+    emitTime("Total recv time", mpi_info_[TotalRecv] - mpi_info_[TotalRecvMPI] - mpi_info_[TotalWaitMPI]);
+    emitTime("Total task time", mpi_info_[TotalTask]);
+    emitTime("Total MPI reduce time", mpi_info_[TotalReduceMPI]);
+    emitTime("Total reduction time", mpi_info_[TotalReduce] - mpi_info_[TotalReduceMPI]);
+    emitTime("Total comm time", mpi_info_[TotalRecv] + mpi_info_[TotalSend] + mpi_info_[TotalReduce]);
 
     double time = Time::currentSeconds();
     double totalexec = time - d_lasttime;
 
     d_lasttime = time;
 
-    emitTime("Other execution time", totalexec - mpi_info_.totalsend - mpi_info_.totalrecv - mpi_info_.totaltask - mpi_info_.totalreduce);
+    emitTime("Other execution time", totalexec - mpi_info_[TotalSend] - mpi_info_[TotalRecv] - mpi_info_[TotalTask] - mpi_info_[TotalReduce]);
   }
 
   if( !parentScheduler_ ) { // If this scheduler is the root scheduler...
-    d_sharedState->taskExecTime       += mpi_info_.totaltask - d_sharedState->outputTime; // don't count output time...
-    d_sharedState->taskLocalCommTime  += mpi_info_.totalrecv + mpi_info_.totalsend;
-    d_sharedState->taskWaitCommTime   += mpi_info_.totalwaitmpi;
-    d_sharedState->taskGlobalCommTime += mpi_info_.totalreduce;
+    d_sharedState->d_timingStats[SimulationState::TaskExecTime]       +=
+      mpi_info_[TotalTask] - d_sharedState->d_timingStats[SimulationState::OutputTime]; // don't count output time...
+    d_sharedState->d_timingStats[SimulationState::TaskLocalCommTime]  +=
+      mpi_info_[TotalRecv] + mpi_info_[TotalSend];
+    d_sharedState->d_timingStats[SimulationState::TaskWaitCommTime]   +=
+      mpi_info_[TotalWaitMPI];
+    d_sharedState->d_timingStats[SimulationState::TaskGlobalCommTime] +=
+      mpi_info_[TotalReduce];
   }
 
   // Don't need to lock sends 'cause all threads are done at this point.

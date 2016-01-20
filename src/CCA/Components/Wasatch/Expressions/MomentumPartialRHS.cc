@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 2012-2015 The University of Utah
+ * Copyright (c) 2012-2016 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -115,7 +115,7 @@ evaluate()
   using namespace SpatialOps;
   FieldT& result = this->value();
 
-  const Wasatch::Direction stagLoc = Wasatch::get_staggered_location<FieldT>();
+  const WasatchCore::Direction stagLoc = WasatchCore::get_staggered_location<FieldT>();
   
   if( is3dconvdiff_ ){ // inline all convective and diffusive contributions
     const XFluxT& cfx = cFluxX_->field_ref();
@@ -134,13 +134,13 @@ evaluate()
     *strainZDil <<= strainZ;
   
     switch (stagLoc) {
-      case Wasatch::XDIR:
+      case WasatchCore::XDIR:
         *strainXDil <<= *strainXDil - 1.0/3.0 * (*sVol2XFluxInterpOp_)(divu_->field_ref());
         break;
-      case Wasatch::YDIR:
+      case WasatchCore::YDIR:
         *strainYDil <<= *strainYDil - 1.0/3.0 * (*sVol2YFluxInterpOp_)(divu_->field_ref());
         break;
-      case Wasatch::ZDIR:
+      case WasatchCore::ZDIR:
         *strainZDil <<= *strainZDil - 1.0/3.0 * (*sVol2ZFluxInterpOp_)(divu_->field_ref());
         break;
       default:
@@ -173,19 +173,19 @@ evaluate()
     if( doXTau_ ) {
       SpatialOps::SpatFldPtr<XFluxT> strainXDil = SpatialOps::SpatialFieldStore::get<XFluxT>( result );
       *strainXDil <<= strainX_->field_ref();
-      if (stagLoc == Wasatch::XDIR) *strainXDil <<= *strainXDil - 1.0/3.0 * (*sVol2XFluxInterpOp_)(divu_->field_ref());
+      if (stagLoc == WasatchCore::XDIR) *strainXDil <<= *strainXDil - 1.0/3.0 * (*sVol2XFluxInterpOp_)(divu_->field_ref());
       result <<= result + 2.0 * (*divXOp_)( (*sVol2XFluxInterpOp_)(visc_->field_ref()) * *strainXDil); // + 2*div(mu*S_xi)
     }
     if( doYTau_ ) {
       SpatialOps::SpatFldPtr<YFluxT> strainYDil = SpatialOps::SpatialFieldStore::get<YFluxT>( result );
       *strainYDil <<= strainY_->field_ref();
-      if (stagLoc == Wasatch::YDIR) *strainYDil <<= *strainYDil - 1.0/3.0 * (*sVol2YFluxInterpOp_)(divu_->field_ref());
+      if (stagLoc == WasatchCore::YDIR) *strainYDil <<= *strainYDil - 1.0/3.0 * (*sVol2YFluxInterpOp_)(divu_->field_ref());
       result <<= result + 2.0 * (*divYOp_)( (*sVol2YFluxInterpOp_)(visc_->field_ref()) * *strainYDil); // + 2*div(mu*S_yi)
     }
     if( doZTau_ ) {
       SpatialOps::SpatFldPtr<ZFluxT> strainZDil = SpatialOps::SpatialFieldStore::get<ZFluxT>( result );
       *strainZDil <<= strainZ_->field_ref();
-      if (stagLoc == Wasatch::ZDIR) *strainZDil <<= *strainZDil - 1.0/3.0 * (*sVol2ZFluxInterpOp_)(divu_->field_ref());
+      if (stagLoc == WasatchCore::ZDIR) *strainZDil <<= *strainZDil - 1.0/3.0 * (*sVol2ZFluxInterpOp_)(divu_->field_ref());
       result <<= result + 2.0 * (*divZOp_)( (*sVol2ZFluxInterpOp_)(visc_->field_ref()) * *strainZDil); // + 2*div(mu*S_zi)
     }
   }
@@ -236,7 +236,7 @@ MomRHSPart<FieldT>::Builder::build() const
 {
   return new MomRHSPart<FieldT>( cfluxXt_, cfluxYt_, cfluxZt_,
                                  viscTag_, strainXt_, strainYt_, strainZt_,
-                                 densityt_, dilataiont_, bodyForcet_, srcTermt_,
+                                 dilataiont_, densityt_, bodyForcet_, srcTermt_,
                                  volfract_ );
 }
 
@@ -244,6 +244,7 @@ MomRHSPart<FieldT>::Builder::build() const
 
 //==================================================================
 // Explicit template instantiation
+template class MomRHSPart< SpatialOps::SVolField >;
 template class MomRHSPart< SpatialOps::XVolField >;
 template class MomRHSPart< SpatialOps::YVolField >;
 template class MomRHSPart< SpatialOps::ZVolField >;

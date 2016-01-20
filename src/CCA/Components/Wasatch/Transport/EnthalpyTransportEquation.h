@@ -6,7 +6,7 @@
  *
  * The MIT License
  *
- * Copyright (c) 2013-2015 The University of Utah
+ * Copyright (c) 2013-2016 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -32,10 +32,10 @@
 
 #include <CCA/Components/Wasatch/Transport/ScalarTransportEquation.h>
 
-namespace Wasatch {
+namespace WasatchCore {
 
   /**
-   *  \class  Wasatch::EnthalpyTransportEquation
+   *  \class  WasatchCore::EnthalpyTransportEquation
    *  \date   November, 2013
    *  \author "James C. Sutherland"
    *
@@ -104,6 +104,6 @@ namespace Wasatch {
 
   };
 
-} /* namespace Wasatch */
+} /* namespace WasatchCore */
 
 #endif /* ENTHALPYTRANSPORTEQUATION_H_ */

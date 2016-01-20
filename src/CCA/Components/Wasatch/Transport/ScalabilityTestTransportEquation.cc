@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 2012-2015 The University of Utah
+ * Copyright (c) 2012-2016 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -45,7 +45,7 @@
 
 using std::endl;
 
-namespace Wasatch{
+namespace WasatchCore{
 
   //------------------------------------------------------------------
 
@@ -100,7 +100,7 @@ namespace Wasatch{
   ScalabilityTestTransportEquation( GraphCategories& gc,
                                     const std::string thisPhiName,
                                     Uintah::ProblemSpecP params )
-  : Wasatch::TransportEquation( gc,
+  : WasatchCore::TransportEquation( gc,
                                 thisPhiName,
                                 get_staggered_location<FieldT>(),
                                 true),   // always constant density
@@ -155,7 +155,6 @@ namespace Wasatch{
                                                 empty, // convective flux (empty to build it)
                                                 CENTRAL,
                                                 parse_nametag( params_->findBlock("X-Velocity" )->findBlock( "NameTag" ) ),
-                                                "",
                                                 factory,
                                                 info );
       setup_convective_flux_expression<FieldT>( "Y",
@@ -163,7 +162,6 @@ namespace Wasatch{
                                                 empty, // convective flux (empty to build it)
                                                 CENTRAL,
                                                 parse_nametag( params_->findBlock("Y-Velocity" )->findBlock( "NameTag" ) ),
-                                                "",
                                                 factory,
                                                 info );
       setup_convective_flux_expression<FieldT>( "Z",
@@ -171,7 +169,6 @@ namespace Wasatch{
                                                 empty, // convective flux (empty to build it)
                                                 CENTRAL,
                                                 parse_nametag( params_->findBlock("Z-Velocity" )->findBlock( "NameTag" ) ),
-                                                "",
                                                 factory,
                                                 info );
      }
@@ -287,4 +284,4 @@ namespace Wasatch{
   //==================================================================
 
 
-} // namespace Wasatch
+} // namespace WasatchCore

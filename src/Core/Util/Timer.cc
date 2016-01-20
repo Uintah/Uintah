@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2015 The University of Utah
+ * Copyright (c) 1997-2016 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -46,8 +46,12 @@
 #include <unistd.h>
 #include <climits>
 #include <iostream>
+#include <Core/Thread/Thread.h>
 
 #include <time.h>
+using namespace std;
+using namespace SCIRun;
+
 
 using std::cerr;
 using std::endl;
@@ -159,23 +163,28 @@ WallClockTimer::WallClockTimer()
 #endif
 }
 
+WallClockTimer::~WallClockTimer() {}
+
 double WallClockTimer::get_time()
 {
-#if 0
+//#if 0
   struct timeval tp;
-  if(gettimeofday(&tp) != 0) {
+  if(gettimeofday(&tp,NULL) != 0) {
     cerr << "Time request failed!\n";
   }
   double time=double(tp.tv_sec)+double(tp.tv_usec)/1000000.;
-#endif
+  return time;
+//#endif
+#if 0
   struct tms buffer;
+  //Be careful, on some machines it seems that times() is returning times in milliseconds and not microseconds.
+  //If that's the case, use the above gettimeofday() approach instead.
   double time = double(times(&buffer)) * ci;
   return time;
+#endif
 }
 
-WallClockTimer::~WallClockTimer()
-{
-}
+
 
 CPUTimer::~CPUTimer()
 {
@@ -199,21 +208,92 @@ void TimeThrottle::wait_for_time(double endtime)
   if (delta <= 0) {
     return;
   }
-#ifdef __sgi
-  int nticks=delta*CLOCK_INTERVAL;
-  if(nticks<1) {
-    return;
-  }
-  if(delta > 10) {
-    cerr << "WARNING: delta=" << delta << endl;
-  }
-  sginap(nticks);
-#else
   timespec delay, remaining;
   remaining.tv_sec = SCIRun::Floor(delta);
   remaining.tv_nsec = SCIRun::Floor((delta - SCIRun::Floor(delta)) * 1000000000);
   do {
     delay = remaining;
   } while (nanosleep(&delay, &remaining) != 0);
-#endif
 }
+
+MultiThreadedTimer::MultiThreadedTimer(int numberOfThreads): timerLock("timerLock")  {
+  //create by passing the number of threads.  You can determine this with:
+  //int numThreads = Uintah::Parallel::getNumThreads();
+  //if (numThreads == -1) {
+  //  numThreads = 1;
+ // }
+
+  //To make sense of times, it helps to have the number of patches >= the number of threads.
+  this->numberOfThreads = numberOfThreads;
+  timers = new WallClockTimer[this->numberOfThreads];
+  accumulatedTimes = new double[this->numberOfThreads];
+  for (int i = 0; i < this->numberOfThreads; i++) {
+    accumulatedTimes[i] = 0;
+  }
+}
+
+MultiThreadedTimer::~MultiThreadedTimer() {
+  delete[] timers;
+  delete[] accumulatedTimes;
+}
+void MultiThreadedTimer::start() {
+
+  int threadID = SCIRun::Thread::self()->myid();
+  timers[threadID].start();
+}
+
+void MultiThreadedTimer::stop(){
+  timers[SCIRun::Thread::self()->myid()].stop();
+}
+void MultiThreadedTimer::clear(){
+  int threadID = SCIRun::Thread::self()->myid();
+  accumulatedTimes[threadID] += time();
+  timers[threadID].clear();
+}
+
+void MultiThreadedTimer::clearAll(){
+  //To get accurate results, only call when you know one
+  //thread will be accessing methods of this class.
+  for (int i = 0; i < numberOfThreads; i++) {
+    accumulatedTimes[i] += timers[i].time();
+    timers[i].clear();
+  }
+}
+
+
+double MultiThreadedTimer::time(){
+  //timerLock.writeLock();
+  return timers[SCIRun::Thread::self()->myid()].time();
+  //timerLock.writeUnlock();
+}
+
+double MultiThreadedTimer::getElapsedSeconds(){
+  int threadID = SCIRun::Thread::self()->myid();
+  return timers[threadID].time();
+}
+
+double MultiThreadedTimer::getElapsedAccumulatedSeconds(){
+  int threadID = SCIRun::Thread::self()->myid();
+  return accumulatedTimes[threadID] + timers[threadID].time();
+}
+
+double MultiThreadedTimer::getAllThreadsElapsedSeconds(){
+  //To get accurate results, only call when all other
+  //threads have finished their times.  Also read the last
+  //entry.
+  //timerLock.readLock();
+
+  double total = 0.0;
+  for (int i = 0; i < numberOfThreads; i++) {
+    total += timers[i].time();
+  }
+  //timerLock.readUnlock();
+  return total;
+
+
+}
+
+double MultiThreadedTimer::get_time(){
+  return 0;
+}
+

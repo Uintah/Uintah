@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 2012-2015 The University of Utah
+ * Copyright (c) 2012-2016 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -28,6 +28,7 @@
 #include <expression/Expression.h>
 
 #include <spatialops/structured/stencil/FVStaggeredOperatorTypes.h>
+#include <CCA/Components/Wasatch/Operators/Operators.h> // contains the gradop selector
 
 /**
  *  \class Dilatation
@@ -49,9 +50,9 @@ class Dilatation
 {
   const bool doX_, doY_, doZ_, is3d_;
 
-  typedef typename SpatialOps::OperatorTypeBuilder< SpatialOps::Gradient, Vel1T, FieldT >::type Vel1GradT;
-  typedef typename SpatialOps::OperatorTypeBuilder< SpatialOps::Gradient, Vel2T, FieldT >::type Vel2GradT;
-  typedef typename SpatialOps::OperatorTypeBuilder< SpatialOps::Gradient, Vel3T, FieldT >::type Vel3GradT;
+  typedef typename SpatialOps::OperatorTypeBuilder< typename WasatchCore::GradOpSelector<Vel1T, SpatialOps::XDIR>::Gradient, Vel1T, FieldT >::type Vel1GradT;
+  typedef typename SpatialOps::OperatorTypeBuilder< typename WasatchCore::GradOpSelector<Vel2T, SpatialOps::YDIR>::Gradient, Vel2T, FieldT >::type Vel2GradT;
+  typedef typename SpatialOps::OperatorTypeBuilder< typename WasatchCore::GradOpSelector<Vel3T, SpatialOps::ZDIR>::Gradient, Vel3T, FieldT >::type Vel3GradT;
 
   DECLARE_FIELD(Vel1T, vel1_)
   DECLARE_FIELD(Vel2T, vel2_)

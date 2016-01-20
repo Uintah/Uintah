@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2015 The University of Utah
+ * Copyright (c) 1997-2016 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -118,7 +118,7 @@ int main(int argc, char* argv[])
     minv.multiply(v, xx);
     bool err=false;
     for(int i=0;i<size;i++){
-      if(std::abs(vcopy[i]-xx[i] > tolerance)){
+      if(std::abs(vcopy[i]-xx[i]) > tolerance){
 	if(!err)
 	  std::cerr << "size: " << size << '\n';
 	std::cerr << "Error: rhs[" << i << "]=" << vcopy[i] << " vs. " << xx[i] << '\n';

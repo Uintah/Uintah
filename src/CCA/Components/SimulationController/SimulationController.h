@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2015 The University of Utah
+ * Copyright (c) 1997-2016 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -39,6 +39,8 @@
 #include <CCA/Ports/Scheduler.h>
 #include <CCA/Ports/SchedulerP.h>
 
+#include <sci_defs/visit_defs.h>
+
 namespace Uintah {
 
 class  DataArchive;
@@ -46,7 +48,7 @@ class  LoadBalancer;
 class  Output;
 class  Regridder;
 class  SimulationInterface;
-struct SimulationTime;
+class  SimulationTime;
 
 /**************************************
       
@@ -110,6 +112,8 @@ public:
   SimulationInterface* getSimulationInterface() { return d_sim; }
   Regridder*           getRegridder() { return d_regridder; }
   DataArchive*         getDataArchive() { return d_archive; }
+
+  bool                 doAMR() { return d_doAMR; }
 
 protected:
 
@@ -202,6 +206,15 @@ private:
   // SimulationController(const SimulationController&) = 0;
   // SimulationController& operator=(const SimulationController&) = 0;
 
+
+#ifdef HAVE_VISIT
+public:
+  void SetVisIt( bool val ) { d_doVisIt = val; }
+  bool GetVisIt() { return d_doVisIt; }
+  
+private:
+  bool d_doVisIt;
+#endif      
 };
 
 } // End namespace Uintah

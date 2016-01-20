@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 2012-2015 The University of Utah
+ * Copyright (c) 2012-2016 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -54,7 +54,7 @@ using std::endl;
 namespace so=SpatialOps;
 
 
-namespace Wasatch{
+namespace WasatchCore{
 
   //==================================================================
   
@@ -211,9 +211,9 @@ namespace Wasatch{
   template<typename FieldT>
   void
   TimeStepper::add_equation( const std::string& solnVarName,
-                             const Expr::ExpressionID& rhsID )
+                             const Expr::Tag&   rhsTag )
   {
-    const std::string rhsName = solnGraphHelper_->exprFactory->get_labels(rhsID)[0].name();
+    const std::string rhsName = rhsTag.name();
 
     const Expr::Tag solnVarTag(solnVarName,Expr::STATE_NONE);
     const Expr::Tag rhsVarTag (rhsName,    Expr::STATE_NONE);
@@ -226,6 +226,27 @@ namespace Wasatch{
     solnGraphHelper_->exprFactory->register_expression( new typename FieldExpr::Builder(Expr::Tag(solnVarName,Expr::STATE_DYNAMIC)), true );
     
     postProcGraphHelper_->exprFactory->register_expression( new typename FieldExpr::Builder(Expr::Tag(solnVarName,Expr::STATE_NP1)), true );    
+  }
+
+  //------------------------------------------------------------------
+
+  template<typename FieldT>
+  void
+  TimeStepper::add_equations( const Expr::TagList& solnVarTags,
+                              const Expr::TagList& rhsTags )
+  {
+
+    if( rhsTags.size() != solnVarTags.size() ){
+      std::ostringstream msg;
+      msg << "ERROR: Size of SolnVarTags is inconsistent with size of rhsTags" << std::endl
+          << __FILE__ << " : " << __LINE__ << std::endl;
+      throw std::runtime_error( msg.str() );
+    }
+
+    for ( int i = 0; i<rhsTags.size(); ++i ){
+      add_equation<FieldT>( solnVarTags[i].name(),
+                            rhsTags[i] );
+    }
   }
 
   //------------------------------------------------------------------
@@ -263,9 +284,15 @@ namespace Wasatch{
 
   //------------------------------------------------------------------
 
-  template void TimeStepper::add_equation<so::SVolField              >( const std::string&, const Expr::ExpressionID& );
-  template void TimeStepper::add_equation<so::XVolField              >( const std::string&, const Expr::ExpressionID& );
-  template void TimeStepper::add_equation<so::YVolField              >( const std::string&, const Expr::ExpressionID& );
-  template void TimeStepper::add_equation<so::ZVolField              >( const std::string&, const Expr::ExpressionID& );
-  template void TimeStepper::add_equation<so::Particle::ParticleField>( const std::string&, const Expr::ExpressionID& );
-} // namespace Wasatch
+  template void TimeStepper::add_equation<so::SVolField              >( const std::string&, const Expr::Tag& );
+  template void TimeStepper::add_equation<so::XVolField              >( const std::string&, const Expr::Tag& );
+  template void TimeStepper::add_equation<so::YVolField              >( const std::string&, const Expr::Tag& );
+  template void TimeStepper::add_equation<so::ZVolField              >( const std::string&, const Expr::Tag& );
+  template void TimeStepper::add_equation<so::Particle::ParticleField>( const std::string&, const Expr::Tag& );
+
+  template void TimeStepper::add_equations<so::SVolField              >( const Expr::TagList&, const Expr::TagList& );
+  template void TimeStepper::add_equations<so::XVolField              >( const Expr::TagList&, const Expr::TagList& );
+  template void TimeStepper::add_equations<so::YVolField              >( const Expr::TagList&, const Expr::TagList& );
+  template void TimeStepper::add_equations<so::ZVolField              >( const Expr::TagList&, const Expr::TagList& );
+  template void TimeStepper::add_equations<so::Particle::ParticleField>( const Expr::TagList&, const Expr::TagList& );
+} // namespace WasatchCore

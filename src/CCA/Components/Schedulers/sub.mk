@@ -1,7 +1,7 @@
 #
 #  The MIT License
 #
-#  Copyright (c) 1997-2015 The University of Utah
+#  Copyright (c) 1997-2016 The University of Utah
 # 
 #  Permission is hereby granted, free of charge, to any person obtaining a copy
 #  of this software and associated documentation files (the "Software"), to
@@ -51,7 +51,9 @@ SRCS += \
         $(SRCDIR)/templates.cc
         
 ifeq ($(HAVE_CUDA),yes)
-  SRCS += $(SRCDIR)/GPUDataWarehouse.cu
+  SRCS += $(SRCDIR)/GPUDataWarehouse.cu         \
+          $(SRCDIR)/GPUGridVariableInfo.cc      \
+          $(SRCDIR)/GPUGridVariableGhosts.cc    
   DLINK_FILES += CCA/Components/Schedulers/GPUDataWarehouse.o
 endif
 

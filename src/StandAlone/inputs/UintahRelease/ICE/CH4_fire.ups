@@ -253,23 +253,25 @@
     </MaterialProperties>
     <!--__________________________________-->
     <Models>
-       <Model type="AdiabaticTable">
-        <table name="adiabatic" type="Arches">
-          <include href="inputs/Models/CH4.xml"/> 
-       </table>
-        <material>BackgroundGas</material>
-       <scalar name="f">
-        <constants>
-          <diffusivity>0</diffusivity>
-        </constants> 
-          <geom_object>
-             <box label = "world">  </box>
-             <scalar>    0.00       </scalar>
-          </geom_object>
-       </scalar>
-      
-       <varianceScale>0</varianceScale>
-       <varianceMax>1</varianceMax>
+      <Model type="AdiabaticTable">
+        <AdiabaticTable>
+          <material>BackgroundGas</material>
+          <table name="adiabatic" type="Arches">
+            <include href="inputs/Models/CH4.xml"/>
+          </table>
+          <scalar name="f">
+            <constants>
+              <diffusivity>0</diffusivity>
+            </constants>
+            <geom_object>
+              <box label="world">  </box>
+              <scalar>    0.00       </scalar>
+            </geom_object>
+          </scalar>
+          
+          <varianceScale>0</varianceScale>
+          <varianceMax>1</varianceMax>
+        </AdiabaticTable>
       </Model>
     </Models>
 </Uintah_specification>

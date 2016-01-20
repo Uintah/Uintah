@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 2012-2015 The University of Utah
+ * Copyright (c) 2012-2016 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -33,7 +33,12 @@
 // note that the ordering of Vel1T and Vel2T are very important, and
 // must be consistent with the order of the velocity tags passed
 // into the Strain constructor.
-template< typename FaceT > struct StrainHelper;
+template< typename FaceT > struct StrainHelper
+{
+  // Default to collocated velocity field
+  typedef SVolField Vel1T;
+  typedef SVolField Vel2T;
+};
 // nomenclature: XSurfXField - first letter is volume type: S, X, Y, Z
 // then it is followed by the field type
 template<> struct StrainHelper<SpatialOps::XSurfXField>

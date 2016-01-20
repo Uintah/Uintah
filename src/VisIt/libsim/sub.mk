@@ -29,7 +29,11 @@
 
 SRCDIR   := VisIt/libsim
 
-SRCS     := $(SRCDIR)/visit_libsim.cc
+SRCS     := $(SRCDIR)/visit_libsim.cc \
+	    $(SRCDIR)/visit_libsim_callbacks.cc \
+	    $(SRCDIR)/visit_libsim_customUI.cc \
+	    $(SRCDIR)/visit_libsim_database.cc
+
 
 INCLUDES += $(VISIT_INCLUDE)
 
@@ -38,6 +42,8 @@ ifeq ($(LARGESOS),yes)
 else
   PSELIBS := \
       CCA/Ports         \
+      CCA/Components/DataArchiver \
+      CCA/Components/Schedulers \
       CCA/Components/ProblemSpecification \
       Core/Containers   \
       Core/DataArchive  \
@@ -52,6 +58,7 @@ else
       Core/ProblemSpec  \
       Core/Thread       \
       Core/Util         \
+      Core/OS           \
       StandAlone/tools/uda2vis
 endif
 

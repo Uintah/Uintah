@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 2012-2015 The University of Utah
+ * Copyright (c) 2012-2016 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -34,7 +34,7 @@
 #include <CCA/Components/Wasatch/Operators/Operators.h>
 #include <CCA/Components/Wasatch/Operators/OperatorTypes.h>
 
-namespace Wasatch{
+namespace WasatchCore{
   
   /**
    *  \class 	 Coordinates
@@ -83,6 +83,6 @@ namespace Wasatch{
     void evaluate();
     
   };
-} // namespace Wasatch
+} // namespace WasatchCore
 
 #endif // Coordinates_h

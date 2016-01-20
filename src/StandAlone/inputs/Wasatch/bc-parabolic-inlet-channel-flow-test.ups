@@ -38,7 +38,7 @@
     <NameTag name="yvelcc"  />
   </ForceOnGraph -->
 
-    <Density>
+    <Density method="CONSTANT">
       <Constant value="1.0" name="density"/>
     </Density>
     

@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2015 The University of Utah
+ * Copyright (c) 1997-2016 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -127,9 +127,11 @@ void LinearArray3<T>::initialize( const T& t )
   }
 }
 
+namespace SCIRun {
+
 // Explicit template instantiations:
 template class LinearArray3<double> ;
 template class LinearArray3<std::complex<double> > ;
 template class LinearArray3<Uintah::Matrix3> ;
 template class LinearArray3<SCIRun::Vector> ;
-
+}

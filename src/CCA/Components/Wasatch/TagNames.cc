@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 2012-2015 The University of Utah
+ * Copyright (c) 2012-2016 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -25,7 +25,7 @@
 //-- Wasatch includes --//
 #include "TagNames.h"
 
-namespace Wasatch{
+namespace WasatchCore{
   
   //------------------------------------------------------------------
   
@@ -117,7 +117,10 @@ namespace Wasatch{
   mms_continuitysrc("mms_continuity_src", Expr::STATE_NONE),
   mms_pressurecontsrc("mms_pressure_continuity_src", Expr::STATE_NONE),
   // postprocessing
-  continuityresidual( "ContinuityResidual", Expr::STATE_NONE )
+  continuityresidual( "ContinuityResidual", Expr::STATE_NONE ),
+
+  //compressible flow
+  totalinternalenergy("rhoet",Expr::STATE_NONE)
   
   {}
   
@@ -162,4 +165,4 @@ namespace Wasatch{
   
   //------------------------------------------------------------------
   
-} // namespace Wasatch
+} // namespace WasatchCore

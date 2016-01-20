@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 2012-2015 The University of Utah
+ * Copyright (c) 2012-2016 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -131,7 +131,7 @@ OrdinateDirections::~OrdinateDirections()
 
 //==============================================================================
 
-namespace Wasatch {
+namespace WasatchCore {
 
   Expr::TagList DORadSolver::intensityTags = Expr::TagList();
 
@@ -164,9 +164,9 @@ namespace Wasatch {
     matrixLabel_   ( Uintah::VarLabel::create( intensityName + "_matrix",
                                                Uintah::CCVariable<Uintah::Stencil7>::getTypeDescription() ) ),
     intensityLabel_( Uintah::VarLabel::create( intensityName,
-                                               Wasatch::get_uintah_field_type_descriptor<SVolField>() ) ),
+                                               WasatchCore::get_uintah_field_type_descriptor<SVolField>() ) ),
     rhsLabel_      ( Uintah::VarLabel::create( intensityRHSName,
-                                               Wasatch::get_uintah_field_type_descriptor<SVolField>() ) )
+                                               WasatchCore::get_uintah_field_type_descriptor<SVolField>() ) )
   {
     this->set_gpu_runnable( false );
     
@@ -267,7 +267,7 @@ namespace Wasatch {
 
     for( Uintah::CellIterator iter(patch_->getCellIterator()); !iter.done(); iter++ ){
 
-      const IntVector iCell = *iter;
+      const SCIRun::IntVector iCell = *iter;
       Uintah::Stencil7& coefs = matrix_[iCell];
 
       // jcs the absCoef_ and scatCoef_ fields are SpatialFields. We need to index them appropriately.
@@ -315,7 +315,7 @@ namespace Wasatch {
 
           Uintah::Iterator boundPtr;
           Uintah::Iterator nu;
-          const Uintah::BoundCondBase* const bc = patch_->getArrayBCValues( face, materialID_, temperatureTag_.name(), boundPtr, nu, child );
+//          const Uintah::BoundCondBase* const bc = patch_->getArrayBCValues( face, materialID_, temperatureTag_.name(), boundPtr, nu, child );
 
 //          const bool hasExtraCells = ( patch_->getExtraCells() != SCIRun::IntVector(0,0,0) );
 
@@ -472,4 +472,4 @@ namespace Wasatch {
 
   //============================================================================
 
-} // namespace Wasatch
+} // namespace WasatchCore

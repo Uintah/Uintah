@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2015 The University of Utah
+ * Copyright (c) 1997-2016 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -25,14 +25,18 @@
 #ifndef UINTAH_HOMEBREW_SimulationState_H
 #define UINTAH_HOMEBREW_SimulationState_H
 
+#include <Core/Util/InfoMapper.h>
 #include <Core/Util/RefCounted.h>
 #include <Core/ProblemSpec/ProblemSpecP.h>
 #include <Core/ProblemSpec/ProblemSpec.h>
 #include <Core/Grid/Variables/ComputeSet.h>
+#include <Core/Grid/Variables/VarTypes.h>
 #include <Core/Grid/SimulationTime.h>
 #include <Core/Grid/Ghost.h>
 #include <Core/Geometry/Vector.h>
 #include <Core/Math/MinMax.h>
+
+#include <sci_defs/visit_defs.h>
 
 #include <map>
 #include <vector>
@@ -110,9 +114,15 @@ public:
   const VarLabel* get_outputInterval_label() const {
     return outputInterval_label;
   }
+  const VarLabel* get_outputTimestepInterval_label() const {
+    return outputTimestepInterval_label;
+  }
 
   const VarLabel* get_checkpointInterval_label() const {
     return checkpointInterval_label;
+  }
+  const VarLabel* get_checkpointTimestepInterval_label() const {
+    return checkpointTimestepInterval_label;
   }
   void registerSimpleMaterial(SimpleMaterial*);
   void registerMPMMaterial(MPMMaterial*);
@@ -226,6 +236,9 @@ public:
   bool isRegridTimestep() { return d_isRegridTimestep; }
   void setRegridTimestep(bool ans) { d_isRegridTimestep = ans; }
 
+  bool adjustDelT() { return d_adjustDelT; }
+  void adjustDelT(bool ans) { d_adjustDelT = ans; }
+  
   bool isLockstepAMR() { return d_lockstepAMR; }
   void setIsLockstepAMR(bool ans) {d_lockstepAMR = ans;}
   
@@ -251,24 +264,35 @@ public:
 
   SimulationTime* d_simTime;
 
+  bool d_adjustDelT;
   bool d_lockstepAMR;
   bool d_updateCheckpointInterval;
   bool d_updateOutputInterval;
   bool d_recompileTaskGraph;
 
+  void resetStats();
+  
   // timing statistics to test load balance
-  void clearStats();
-  double compilationTime;
-  double regriddingTime;
-  double regriddingCompilationTime;
-  double regriddingCopyDataTime;
-  double loadbalancerTime;
-  double taskExecTime;
-  double taskLocalCommTime;
-  double taskGlobalCommTime;
-  double taskWaitCommTime;
-  double outputTime;
-  double taskWaitThreadTime;
+  enum TimingStat
+  {
+    CompilationTime = 0,
+    RegriddingTime,
+    RegriddingCompilationTime,
+    RegriddingCopyDataTime,
+    LoadBalancerTime,
+    TaskExecTime,
+    TaskLocalCommTime,
+    TaskGlobalCommTime,
+    TaskWaitCommTime,
+    TaskWaitThreadTime,
+    OutputTime,
+    MAX_TIMING_STATS
+  };
+
+  InfoMapper< TimingStat, double > d_timingStats;
+
+  double getTotalTime();
+  double getOverheadTime();
 
   //percent time in overhead samples
   double overhead[OVERHEAD_WINDOW];
@@ -277,6 +301,22 @@ public:
   int overheadIndex;
   double overheadAvg;
 
+  // timing statistics to test load balance
+  enum AnalysisType
+  {
+    MinMax = 0,
+    MAX_ANALYSIS_TYPES
+  };
+  
+  struct analysisVar {
+    AnalysisType analysisType;
+    VarLabel* label;
+    VarLabel* reductionMinLabel;
+    VarLabel* reductionMaxLabel;
+    int matl;
+    int level;
+  };
+  
 private:
 
   void registerMaterial(Material*);
@@ -291,7 +331,9 @@ private:
   const VarLabel* refinePatchFlag_label;
   const VarLabel* switch_label;
   const VarLabel* outputInterval_label;
+  const VarLabel* outputTimestepInterval_label;
   const VarLabel* checkpointInterval_label;
+  const VarLabel* checkpointTimestepInterval_label;
 
   std::vector<Material*>        matls;
   std::vector<MPMMaterial*>     mpm_matls;
@@ -350,7 +392,28 @@ private:
 
   // for AMR, how many times to execute a fine level per coarse level execution
   int d_timeRefinementRatio;
+  
+#ifdef HAVE_VISIT
+public:
+  struct modifiableVar {
+    std::string name;
+    TypeDescription::Type type;
+    int*    Ivalue;
+    double* Dvalue;
+    Vector* Vvalue;
+    bool    modified;
+  };
+  
+  std::vector< modifiableVar > d_VisIt_modifiableVars;
 
+  std::vector< analysisVar > d_analysisVars;
+
+  void SetVisIt( bool val ) { d_doVisIt = val; }
+  bool GetVisIt() { return d_doVisIt; }
+  
+private:
+  bool d_doVisIt;
+#endif      
 }; // end class SimulationState
 
 } // End namespace Uintah

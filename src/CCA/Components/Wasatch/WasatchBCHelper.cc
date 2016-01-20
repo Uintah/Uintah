@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 2013-2015 The University of Utah
+ * Copyright (c) 2013-2016 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -58,7 +58,7 @@
  * \author  Tony Saad
  */
 
-namespace Wasatch {
+namespace WasatchCore {
 
   // This function returns true if the boundary condition is applied in the same direction
   // as the staggered field. For example, xminus/xplus on a XVOL field.

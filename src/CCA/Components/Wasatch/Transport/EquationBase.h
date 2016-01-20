@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 2012-2015 The University of Utah
+ * Copyright (c) 2012-2016 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -43,7 +43,7 @@
 #include <CCA/Components/Wasatch/ParseTools.h>
 #include <CCA/Components/Wasatch/Expressions/RHSTerms.h>
 
-namespace Wasatch{
+namespace WasatchCore{
 
   class ExprDeps;  // forward declaration.
   class GraphHelper;
@@ -169,6 +169,6 @@ namespace Wasatch{
     Expr::ExpressionID rhsExprID_;   ///< The label for the rhs expression for this EquationBase.
   };
 
-} // namespace Wasatch
+} // namespace WasatchCore
 
 #endif // Wasatch_EquationBase_h

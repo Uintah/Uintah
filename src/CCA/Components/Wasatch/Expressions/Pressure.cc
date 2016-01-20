@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 2012-2015 The University of Utah
+ * Copyright (c) 2012-2016 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -44,7 +44,7 @@
 //-- SpatialOps Includes --//
 #include <spatialops/OperatorDatabase.h>
 
-namespace Wasatch {
+namespace WasatchCore {
 
 //==================================================================
 
@@ -95,9 +95,9 @@ Pressure::Pressure( const std::string& pressureName,
     // note that this does not provide any ghost entries in the matrix...
     matrixLabel_  ( Uintah::VarLabel::create( "pressure_matrix", Uintah::CCVariable<Uintah::Stencil7>::getTypeDescription() ) ),
     pressureLabel_( Uintah::VarLabel::create( pressureName,
-                                              Wasatch::get_uintah_field_type_descriptor<SVolField>() ) ),
+                                              WasatchCore::get_uintah_field_type_descriptor<SVolField>() ) ),
     prhsLabel_    ( Uintah::VarLabel::create( pressureRHSName,
-                                              Wasatch::get_uintah_field_type_descriptor<SVolField>() ) )
+                                              WasatchCore::get_uintah_field_type_descriptor<SVolField>() ) )
 {
    timestep_ = create_field_request<TimeField>(TagNames::self().timestep);
    t_ = create_field_request<TimeField>(TagNames::self().time);
@@ -129,7 +129,7 @@ Pressure::schedule_solver( const Uintah::LevelP& level,
                            const int RKStage )
 {
   if (enforceSolvability_) {
-    solver_.scheduleEnforceSolvability<Wasatch::SelectUintahFieldType<SVolField>::type >(level, sched, materials, prhsLabel_, RKStage);
+    solver_.scheduleEnforceSolvability<WasatchCore::SelectUintahFieldType<SVolField>::type >(level, sched, materials, prhsLabel_, RKStage);
   }
   solver_.scheduleSolve( level, sched, materials, matrixLabel_, Uintah::Task::NewDW,
                          pressureLabel_, true,
@@ -137,7 +137,7 @@ Pressure::schedule_solver( const Uintah::LevelP& level,
                          pressureLabel_, RKStage == 1 ? Uintah::Task::OldDW : Uintah::Task::NewDW,
                          &solverParams_, RKStage == 1 ? false:true);
   if(useRefPressure_) {
-    solver_.scheduleSetReferenceValue<Wasatch::SelectUintahFieldType<SVolField>::type >(level, sched, materials, pressureLabel_, RKStage, refPressureLocation_, refPressureValue_);
+    solver_.scheduleSetReferenceValue<WasatchCore::SelectUintahFieldType<SVolField>::type >(level, sched, materials, pressureLabel_, RKStage, refPressureLocation_, refPressureValue_);
   }
 }
 
@@ -286,7 +286,7 @@ Pressure::setup_matrix( const SVolField* const volfrac )
     // definite matrix. For the Laplacian on a structured grid, the matrix A corresponding
     // to the Laplacian operator is not positive definite - but "- A" is. Hence,
     // we multiply all coefficients by -1.
-    IntVector iCell = *iter;
+    SCIRun::IntVector iCell = *iter;
     Uintah::Stencil7&  coefs = matrix_[iCell];
     coefs.w = -w;
     coefs.e = -w;
@@ -345,10 +345,10 @@ Pressure::setup_matrix( const SVolField* const rhoStar,
     // definite matrix. For the Laplacian on a structured grid, the matrix A corresponding
     // to the Laplacian operator is not positive definite - but "- A" is. Hence,
     // we multiply all coefficients by -1.
-    IntVector iCell = *iter;
+    SCIRun::IntVector iCell = *iter;
     Uintah::Stencil7&  coefs = matrix_[iCell];
 
-    IntVector iCellOffset = iCell - patchCellOffset;
+    SCIRun::IntVector iCellOffset = iCell - patchCellOffset;
     
     // interior
     const IntVec intCellIJK( iCellOffset[0],
@@ -484,10 +484,10 @@ void Pressure::process_embedded_boundaries( const SVolField& volfrac )
     didMatrixUpdate_ = true;
     
     for(Uintah::CellIterator iter(patch_->getCellIterator()); !iter.done(); iter++){
-      IntVector iCell = *iter;
+      SCIRun::IntVector iCell = *iter;
       Uintah::Stencil7&  coefs = matrix_[iCell];
       
-      const IntVector iCellOffset = iCell - patchCellOffset;
+      const SCIRun::IntVector iCellOffset = iCell - patchCellOffset;
       
       // interior
       const IntVec intCellIJK( iCellOffset[0],
@@ -641,4 +641,4 @@ Pressure::Builder::build() const
                        enforceSolvability_, isConstDensity_, sparams_, solver_ );
 }
 
-} // namespace Wasatch
+} // namespace WasatchCore

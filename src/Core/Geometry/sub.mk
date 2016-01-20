@@ -1,7 +1,7 @@
 #
 #  The MIT License
 #
-#  Copyright (c) 1997-2015 The University of Utah
+#  Copyright (c) 1997-2016 The University of Utah
 # 
 #  Permission is hereby granted, free of charge, to any person obtaining a copy
 #  of this software and associated documentation files (the "Software"), to
@@ -51,7 +51,7 @@ PSELIBS :=
 #           Core/Exceptions Core/Util \
 #           Core/Exceptions Core/Util Core/Math
 
-LIBS := $(Z_LIBRARY) $(DEFAULT_LIBRARY) $(M_LIBRARY)
+LIBS := $(DEFAULT_LIBRARY) $(M_LIBRARY)
 
 # See commit message for while hacking in the MPI_LIBRARY is necessary.
 ifeq ($(IS_OSX),yes)

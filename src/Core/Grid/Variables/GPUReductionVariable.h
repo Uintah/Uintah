@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2015 The University of Utah
+ * Copyright (c) 1997-2016 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -57,6 +57,12 @@ class GPUReductionVariable : public GPUReductionVariableBase {
     {
       return d_data;
     }
+
+    HOST_DEVICE void* getVoidPointer() const
+	{
+	  return d_data;
+	}
+
 
     HOST_DEVICE void getSizeInfo(std::string& elems, unsigned long& totsize, void* &ptr) const
     {

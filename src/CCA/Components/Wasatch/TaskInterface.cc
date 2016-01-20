@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 2012-2015 The University of Utah
+ * Copyright (c) 2012-2016 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -56,6 +56,7 @@
 #include <CCA/Components/Wasatch/Expressions/Coordinate.h>
 #include <CCA/Components/Wasatch/Expressions/DORadSolver.h>
 #include <CCA/Components/Wasatch/TagNames.h>
+#include <CCA/Components/Wasatch/Wasatch.h>
 #include <CCA/Components/Wasatch/Expressions/RadiationSource.h>
 #include <CCA/Components/Wasatch/ReductionHelper.h>
 #include <CCA/Components/Wasatch/CoordinateHelper.h>
@@ -105,7 +106,7 @@ static SCIRun::DebugStream dbgf("WASATCH_FIELDS", false); // field diagnostics
 #define dbg_tasks  if( dbg_tasks_on  ) dbgt
 #define dbg_fields if( dbg_fields_on ) dbgf
 
-namespace Wasatch{
+namespace WasatchCore{
 
   /**
    *  \class TreeTaskExecute
@@ -139,6 +140,8 @@ namespace Wasatch{
                   const Uintah::MaterialSubset* const,
                   Uintah::DataWarehouse* const,
                   Uintah::DataWarehouse* const,
+                  void* old_TaskGpuDW,
+                  void* new_TaskGpuDW,
                   void* stream,  // for GPU tasks, this is the associated stream
                   int deviceID,
                   const int rkStage );
@@ -544,7 +547,7 @@ namespace Wasatch{
     // jcs eachPatch vs. allPatches (gang schedule vs. independent...)
     scheduler_->addTask( task, patches_, materials_ );
 
-    if( hasPressureExpression_ ){
+    if( hasPressureExpression_ && Wasatch::flow_treatment() != WasatchCore::COMPRESSIBLE ){
       Pressure& pexpr = dynamic_cast<Pressure&>( factory.retrieve_expression( TagNames::self().pressure, patchID, true ) );
       pexpr.declare_uintah_vars( *task, pss, mss, rkStage );
       pexpr.schedule_solver( Uintah::getLevelP(pss), scheduler_, materials_, rkStage );
@@ -592,6 +595,8 @@ namespace Wasatch{
                             const Uintah::MaterialSubset* const materials,
                             Uintah::DataWarehouse* const oldDW,
                             Uintah::DataWarehouse* const newDW,
+                            void* old_TaskGpuDW,
+                            void* new_TaskGpuDW,
                             void* stream,
                             int deviceID,
                             const int rkStage )
@@ -653,7 +658,7 @@ namespace Wasatch{
           AllocInfo ainfo( oldDW, newDW, material, patch, pset, pg, isGPUTask );
           fml_->allocate_fields( ainfo );
 
-          if( hasPressureExpression_ ){
+          if( hasPressureExpression_ && Wasatch::flow_treatment() != WasatchCore::COMPRESSIBLE  ){
             Pressure& pexpr = dynamic_cast<Pressure&>( factory.retrieve_expression( TagNames::self().pressure, patchID, true ) );
             pexpr.bind_uintah_vars( newDW, patch, material, rkStage );
           }
@@ -815,4 +820,4 @@ namespace Wasatch{
 
   //------------------------------------------------------------------
 
-} // namespace Wasatch
+} // namespace WasatchCore
