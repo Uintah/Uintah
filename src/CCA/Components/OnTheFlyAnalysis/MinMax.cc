@@ -807,7 +807,7 @@ MinMax::createDirectory(string& dirName, string& levelIndex)
 {
   DIR *check = opendir(dirName.c_str());
   if ( check == NULL ) {
-    cout_doing << Parallel::getMPIRank() << "MinMax:Making directory " << dirName << endl;
+    cout_doing << Parallel::getMPIRank() << " MinMax:Making directory " << dirName << endl;
     MKDIR( dirName.c_str(), 0777 );
   } else {
     closedir(check);
