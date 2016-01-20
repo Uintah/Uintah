@@ -63,7 +63,7 @@ public:
   
   void reset( const T val )
   {
-    for( int i=0; i<d_values.size(); ++i )
+    for( unsigned int i=0; i<d_values.size(); ++i )
       d_values[(E) i] = val;
   };
 
@@ -85,7 +85,7 @@ public:
 
   bool exists( const std::string name )
   {
-    for( int i=0; i<d_names.size(); ++i )
+    for( unsigned int i=0; i<d_names.size(); ++i )
     {
       if( name == d_names[(E) i] )
 	return true;
@@ -96,12 +96,12 @@ public:
 
   void validate( const E lastKey ) const
   {
-    if( d_values.size() != (int) lastKey )
+    if( d_values.size() != (unsigned int) lastKey )
     {
       std::stringstream msg;
       msg << "The count does not match. Expected "
-	  << (int) lastKey << " values. But added "
-	  << (int) d_values.size() << " values.";
+	  << (unsigned int) lastKey << " values. But added "
+	  << d_values.size() << " values.";
       
       throw SCIRun::InternalError(msg.str(), __FILE__, __LINE__);
     }
@@ -192,7 +192,7 @@ public:
 
   E getKey( const std::string name )
   {
-    for( int i=0; i<d_names.size(); ++i )
+    for( unsigned int i=0; i<d_names.size(); ++i )
     {
       if( name == d_names[(E) i] )
 	return (E) i;

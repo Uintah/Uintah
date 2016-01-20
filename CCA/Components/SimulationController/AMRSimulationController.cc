@@ -66,7 +66,7 @@
 
 #ifdef HAVE_VISIT
 #  include <VisIt/libsim/visit_libsim.h>
-#  include <VisIt/libsim/visit_libsim_customui.h>
+#  include <VisIt/libsim/visit_libsim_customUI.h>
 #endif
 
 #ifdef HAVE_CUDA
