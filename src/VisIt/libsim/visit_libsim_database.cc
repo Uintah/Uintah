@@ -361,7 +361,7 @@ visit_handle visit_ReadMetaData(void *cbdata)
     if (addProcId)
     {
       // Add in the processor timing stats.
-      for( int i=0; i<simStateP->d_timingStats.size(); ++i )
+      for( unsigned int i=0; i<simStateP->d_timingStats.size(); ++i )
       {
 	std::string stat = std::string("processor/time/") + 
 	  simStateP->d_timingStats.getName( (SimulationState::TimingStat)i );
@@ -390,7 +390,7 @@ visit_handle visit_ReadMetaData(void *cbdata)
       // Add in the mpi timing stats.
       if( mpiScheduler )
       {
-	for( int i=0; i<mpiScheduler->mpi_info_.size(); ++i )
+	for( unsigned int i=0; i<mpiScheduler->mpi_info_.size(); ++i )
         {
 	  std::string stat = std::string("processor/mpi/") + 
 	    mpiScheduler->mpi_info_.getName( (MPIScheduler::TimingStat)i );

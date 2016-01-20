@@ -146,7 +146,6 @@ void visit_GetAnalysisVars( visit_simulation_data *sim )
   SchedulerP      schedulerP = sim->simController->getSchedulerP();
   SimulationStateP simStateP = sim->simController->getSimulationStateP();
   GridP           gridP      = sim->gridP;
-  Output         *output     = sim->simController->getOutput();
   DataWarehouse*  newDW      = sim->simController->getSchedulerP()->getLastDW();
 
   std::vector< SimulationState::analysisVar > minMaxVars =
@@ -158,7 +157,7 @@ void visit_GetAnalysisVars( visit_simulation_data *sim )
     
     VisItUI_setValueS( "MinMaxVariableGroupBox", "SHOW_WIDGET", 1);
     
-    for( int i=0; i<minMaxVars.size(); ++i )
+    for( unsigned int i=0; i<minMaxVars.size(); ++i )
     {
       SimulationState::analysisVar minMaxVar = minMaxVars[i];
       
@@ -235,7 +234,7 @@ void visit_GetUPSVars( visit_simulation_data *sim )
     std::vector< SimulationState::modifiableVar > &vars =
       simStateP->d_VisIt_modifiableVars;
       
-    for( int i=0; i<vars.size(); ++i )
+    for( unsigned int i=0; i<vars.size(); ++i )
     {
       SimulationState::modifiableVar &var = vars[i];
       

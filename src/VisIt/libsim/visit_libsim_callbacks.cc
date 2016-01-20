@@ -36,6 +36,8 @@
 #include <Core/Grid/Variables/VarTypes.h>
 #include <Core/Util/DebugStream.h>
 
+#include <stdio.h>
+
 #include "visit_libsim.h"
 
 namespace Uintah {

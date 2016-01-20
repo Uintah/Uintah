@@ -549,7 +549,7 @@ double SimulationState::getTotalTime()
 {
   double totalTime = 0;
   
-  for( int i=0; i<d_timingStats.size(); ++i )
+  for( unsigned int i=0; i<d_timingStats.size(); ++i )
   {
     if( (TimingStat) i != OutputTime )
       totalTime += d_timingStats[(TimingStat) i];
