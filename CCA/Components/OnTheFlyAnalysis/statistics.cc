@@ -34,11 +34,16 @@
 #include <Core/Util/DebugStream.h>
 #include <iostream>
 #include <cstdio>
+#include <iomanip>
 
 //______________________________________________________________________
 //    TO DO:
 //   Each variable needs to keep track of the timestep.  The user can add
-//   a variable in a checkpoint.  As a quick fix should throw an exception
+//   a variable in a checkpoint.  
+//______________________________________________________________________
+//
+
+
 
 using namespace Uintah;
 using namespace std;
@@ -56,6 +61,7 @@ statistics::statistics(ProblemSpecP& module_spec,
   d_matlSet     = 0;
   d_startTime   = 0;
   d_stopTime    = DBL_MAX;
+  d_monitorCell = IntVector(0,0,0);
   d_doHigherOrderStats = false;
   d_startTimeTimestep = 0;
 
@@ -116,6 +122,8 @@ void statistics::problemSetup(const ProblemSpecP& prob_spec,
   //  Read in timing information
   d_prob_spec->require("timeStart",  d_startTime);
   d_prob_spec->require("timeStop",   d_stopTime);
+  
+  d_prob_spec->get("monitorCell",    d_monitorCell);
 
   // a backdoor to set when the module was initiated.
   // this is a quick fix until I find a better way.
@@ -683,14 +691,16 @@ void statistics::computeStats( DataWarehouse* old_dw,
 
     Qvariance[c] = Qmean2[c] - Qmean[c] * Qmean[c];
 
-#if 0
+#if 1
     //__________________________________
     //  debugging
-    if ( c == IntVector ( -1, 75, 0) ){
-      cout << "  stats:  " << Q.name << " nTimestep: " << nTimesteps
-           <<  " topLevelTimestep " <<  d_sharedState->getCurrentTopLevelTimeStep()
+    if ( c == d_monitorCell ){
+      cout << "  stats:  " << d_monitorCell <<  setw(10)<< Q.name << " nTimestep: " << nTimesteps
+           <<"\t topLevelTimestep " <<  d_sharedState->getCurrentTopLevelTimeStep()
            << " d_startTimestep: " << d_startTimeTimestep
-           <<" Q_var: " << me << " Qsum: " << Qsum[c]<< " Qmean: " << Qmean[c] << endl;
+           <<"\t Q_var: " << me 
+           <<"\t Qsum: "  << Qsum[c]
+           <<"\t Qmean: " << Qmean[c] << endl;
     }
 #endif
 
@@ -793,17 +803,16 @@ void statistics::computeReynoldsStress( DataWarehouse* old_dw,
 
 
     uv_vw_wu[c] = Qmean[c] - Multiply(vel_mean[c],vel_mean[c]);
-#if 0
+#if 1
     //__________________________________
     //  debugging
-    if ( c == IntVector ( 10, 10, 0) ){
-      cout << "  stats:  " << Q.name << " nTimestep: " << nTimesteps
+    if ( c == d_monitorCell ){
+      cout << "  ReynoldsStress stats:  \n \t \t"<< d_monitorCell << " nTimestep: " << nTimesteps.x()
            <<  " topLevelTimestep " <<  d_sharedState->getCurrentTopLevelTimeStep()
-           << " d_startTimestep: " << d_startTimeTimestepReynoldsStress
-           <<"\n Vel_CC: " << vel[c]
-           <<"\n Q_var: " << me << "\n Qsum: " << Qsum[c]<< " Qmean: " << Qmean[c] 
-           <<"\n vel_mean: " << vel_mean[c]
-           <<"\n uv_vw_wu_prime: " <<  uv_vw_wu[c] << endl;
+           << " d_startTimeTimestepReynoldsStress: " << d_startTimeTimestepReynoldsStress
+           <<"\n \t \t"<<Q.name<< ": " << vel[c]<< " vel_CC_mean: " << vel_mean[c]
+           <<"\n \t \tuv_vw_wu: " << me << ",  uv_vw_wu_sum: " << Qsum[c]<< ",  uv_vw_wu_mean: " << Qmean[c] 
+           <<"\n \t \tuv_vw_wu_prime: " <<  uv_vw_wu[c] << endl;
     }
 #endif
   }
@@ -838,13 +847,13 @@ void statistics::allocateAndZeroSums( DataWarehouse* new_dw,
   if ( !Q.isInitialized[lowOrder] ){
     allocateAndZero<T>( new_dw, Q.Qsum_Label,  matl, patch );
     allocateAndZero<T>( new_dw, Q.Qsum2_Label, matl, patch );
-    proc0cout << "    Statistics: " << Q.name << " initializing low order sums" << endl;
+    proc0cout << "    Statistics: " << Q.name << " initializing low order sums on patch: " << patch->getID()<<endl;
   }
 
   if( d_doHigherOrderStats && !Q.isInitialized[highOrder] ){
     allocateAndZero<T>( new_dw, Q.Qsum3_Label, matl, patch );
     allocateAndZero<T>( new_dw, Q.Qsum4_Label, matl, patch );
-    proc0cout << "    Statistics: " << Q.name << " initializing high order sums" << endl;
+    proc0cout << "    Statistics: " << Q.name << " initializing high order sums on patch: " << patch->getID() << endl;
   }
 }
 
