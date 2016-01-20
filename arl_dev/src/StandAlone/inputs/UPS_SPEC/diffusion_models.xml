@@ -3,7 +3,7 @@
 
   <diffusion_model               spec="OPTIONAL NO_DATA"
                                  attribute1="type REQUIRED STRING 'linear,
-                                 jg, rf1, gao_diffusion, non_linear1'">
+                                 jg, rf1, non_linear1'">
 
     <diffusivity                 spec="OPTIONAL DOUBLE" />
     <boltzmann_const             spec="OPTIONAL DOUBLE" />
