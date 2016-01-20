@@ -26,7 +26,6 @@
 #include <CCA/Components/MPM/ReactionDiffusion/JGConcentrationDiffusion.h>
 #include <CCA/Components/MPM/ReactionDiffusion/RFConcDiffusion1MPM.h>
 #include <CCA/Components/MPM/ReactionDiffusion/NonLinearDiff1.h>
-#include <CCA/Components/MPM/ReactionDiffusion/GaoDiffusion.h>
 
 #include <sci_defs/uintah_defs.h> // For NO_FORTRAN
 
@@ -59,9 +58,6 @@ ScalarDiffusionModel* ScalarDiffusionModelFactory::create(ProblemSpecP& ps,
 
   else if (diffusion_type == "rf1")
     return(scinew RFConcDiffusion1MPM(child, ss, flags, diffusion_type));
-
-  else if (diffusion_type == "gao_diffusion")
-    return(scinew GaoDiffusion(child, ss, flags, diffusion_type));
 
   else if (diffusion_type == "non_linear1")
     return(scinew NonLinearDiff1(child, ss, flags, diffusion_type));

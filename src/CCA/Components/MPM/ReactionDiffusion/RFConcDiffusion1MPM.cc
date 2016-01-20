@@ -38,11 +38,16 @@ using namespace Uintah;
 RFConcDiffusion1MPM::RFConcDiffusion1MPM(ProblemSpecP& ps, SimulationStateP& sS, MPMFlags* Mflag, string diff_type):
   ScalarDiffusionModel(ps, sS, Mflag, diff_type) {
 
-  ps->require("partial_atomic_vol", partial_atomic_vol);
-  ps->require("operating_temp", operating_temp);
-  ps->require("boltzmann_const", boltzmann);
-
-  mech_val = (diffusivity * partial_atomic_vol)/(boltzmann * operating_temp);
+  //***********************************************************************
+  // This is working code that uses pressure gradients to as part of
+  // computing the flux of concentration.
+  //
+  //ps->require("partial_atomic_vol", partial_atomic_vol);
+  //ps->require("operating_temp", operating_temp);
+  //ps->require("boltzmann_const", boltzmann);
+  //mech_val = (diffusivity * partial_atomic_vol)/(boltzmann * operating_temp);
+  //
+  //*************************************************************************
 
 }
 
@@ -77,12 +82,60 @@ void RFConcDiffusion1MPM::computeFlux(const Patch* patch,
   old_dw->get(pConcGrad,           d_lb->pConcGradientLabel,       pset);
   new_dw->allocateAndPut(pFlux,    d_lb->pFluxLabel,             pset);
 
+  //***********************************************************************
+  // This is working code that uses pressure gradients to as part of
+  // computing the flux of concentration.
+  //
+  //double oodx[3];
+  //oodx[0] = 1.0/dx.x();
+  //oodx[1] = 1.0/dx.y();
+  //oodx[2] = 1.0/dx.z();
+  //constParticleVariable<Point>   px;
+  //constParticleVariable<double>  pMass;
+  //constParticleVariable<Matrix3> psize;
+  //constParticleVariable<Matrix3> deformationGradient;
+  //constParticleVariable<double>  pConcentration;
+  //constNCVariable<double>        gMass;
+  //constNCVariable<double>        gHydrostaticStress;
+  //ParticleVariable<Vector>       pHydroStressGradient;
+  //old_dw->get(px,                  d_lb->pXLabel,                  pset);
+  //old_dw->get(pMass,               d_lb->pMassLabel,               pset);
+  //old_dw->get(psize,               d_lb->pSizeLabel,               pset);
+  //old_dw->get(deformationGradient, d_lb->pDeformationMeasureLabel, pset);
+  //old_dw->get(pConcentration,      d_lb->pConcentrationLabel,      pset);
+  //old_dw->get(pConcGradient,       d_lb->pConcGradientLabel,       pset);
+  //new_dw->get(gMass,              d_lb->gMassLabel,                dwi,
+  //                                                            patch, gnone, 0);
+  //new_dw->get(gHydrostaticStress, d_lb->gHydrostaticStressLabel, dwi,
+  //new_dw->allocateTemporary(pHydroStressGradient, pset);
+  //
+  //************************************************************************
+
   double timestep = 1.0e99;
   for (ParticleSubset::iterator iter = pset->begin(); iter != pset->end();
                                                       iter++){
     particleIndex idx = *iter;
 
     pFlux[idx] = diffusivity*pConcGrad[idx];
+
+    //***********************************************************************
+    // This is working code that uses pressure gradients to as part of
+    // computing the flux of concentration.
+    //
+    //interpolator->findCellAndShapeDerivatives(px[idx],ni,d_S,psize[idx],
+    //                                          deformationGradient[idx]);
+    //pHydroStressGradient[idx] = Vector(0.0,0.0,0.0);
+    //for (int k = 0; k < d_Mflag->d_8or27; k++){
+    //  for (int j = 0; j<3; j++) {
+    //      pHydroStressGradient[idx][j]
+    //                        += gHydrostaticStress[ni[k]] * d_S[k][j] * oodx[j];
+    //  }
+    //}
+    //chem_potential = -diffusivity;
+    //mech_potential = mech_val * (1 - pConcentration[idx]/max_concentration) * pConcentration[idx];
+    //pFlux[idx] = chem_potential*pConcGradient[idx] + mech_potential*pHydroStressGradient[idx];
+    //
+    //**************************************************************************
 
     timestep = min(timestep, computeStableTimeStep(diffusivity, dx));
   } //End of Particle Loop

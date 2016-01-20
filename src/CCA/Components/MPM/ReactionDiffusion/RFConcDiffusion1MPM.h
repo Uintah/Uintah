@@ -57,6 +57,10 @@ namespace Uintah {
 
   private:
     double init_potential;
+    //double partial_atomic_vol;
+    //double operating_temp;
+    //double boltzmann;
+    //double mech_val;
 
     RFConcDiffusion1MPM(const RFConcDiffusion1MPM&);
     RFConcDiffusion1MPM& operator=(const RFConcDiffusion1MPM&);
