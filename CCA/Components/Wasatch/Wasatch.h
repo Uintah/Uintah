@@ -246,7 +246,10 @@ namespace WasatchCore{
      */
     void scheduleTimeAdvance( const Uintah::LevelP& level,
                               Uintah::SchedulerP& );
-    
+
+    void scheduleUpdateCurrentTime( const Uintah::LevelP& level,
+                             Uintah::SchedulerP&, const int rkStage );
+
     void preGridProblemSetup(const Uintah::ProblemSpecP& params,
                              Uintah::GridP& grid,
                              Uintah::SimulationStateP& state);
@@ -331,6 +334,10 @@ namespace WasatchCore{
 
     static FlowTreatment flowTreatment_;
     
+    Uintah::SchedulerP subsched_; // needed for dualtime
+    bool dualTime_;
+    bool compileDualTimeSched_;
+    
     Wasatch( const Wasatch& );            // disallow copying
     Wasatch& operator=( const Wasatch& ); // disallow assignment
     
@@ -352,6 +359,23 @@ namespace WasatchCore{
     void setup_patchinfo_map( const Uintah::LevelP& level,
                               Uintah::SchedulerP& sched );
 
+    void dualTimeAdvance(const Uintah::ProcessorGroup* pg,
+                         const Uintah::PatchSubset* patches,
+                         const Uintah::MaterialSubset* matls,
+                         Uintah::DataWarehouse* old_dw,
+                         Uintah::DataWarehouse* new_dw,
+                         Uintah::LevelP level, Uintah::Scheduler* sched,
+                         Expr::ExpressionFactory* const factory);
+    
+
+    void
+    update_current_time( const Uintah::ProcessorGroup* const pg,
+                        const Uintah::PatchSubset* const patches,
+                        const Uintah::MaterialSubset* const materials,
+                        Uintah::DataWarehouse* const oldDW,
+                        Uintah::DataWarehouse* const newDW,
+                        const int rkStage );
+    
     enum PatchsetSelector{
       USE_FOR_TASKS,
       USE_FOR_OPERATORS

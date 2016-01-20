@@ -56,6 +56,9 @@ namespace WasatchCore{
     int nStages;
     double alpha[3];
     double beta[3];
+    bool hasDualTime;
+    int dualTimeIterations;
+    double dualTimeTolerance;
 
     TimeIntegrator(TimeIntegratorEnum theTimeIntEnum)
     : timeIntEnum(theTimeIntEnum)    
@@ -93,7 +96,13 @@ namespace WasatchCore{
           alpha[2] = 1.0/3.0; beta[2]  = 2.0/3.0;
           break;
       }
+      hasDualTime = false;
+      dualTimeIterations = 100;
+      dualTimeTolerance = 1.0e-8;
     }
+    
+    void set_has_dual_time(const bool hasDT) { hasDualTime = hasDT; }
+    bool has_dual_time(){ return hasDualTime;}
   };
 
 } // namespace WasatchCore

@@ -606,7 +606,12 @@
     <!-- NOTE: when using Wasatch in Arches, the Wasatch TimeIntegrator tag has no effect at all because Arches
          handles the time integration of the Wasatch scalars in this case. It is only necessary to specify
          the Arches time integration scheme !-->
-    <TimeIntegrator     spec="OPTIONAL STRING 'RK3SSP, RK2SSP, FE'" />
+    <TimeIntegrator     spec="OPTIONAL STRING 'RK3SSP, RK2SSP, FE'"/>
+    <DualTime spec="OPTIONAL NO_DATA"
+             attribute1="iterations OPTIONAL INTEGER"
+             attribute2="tolerance OPTIONAL DOUBLE">
+   </DualTime>
+
 
     <!-- The CommonGeometry block allows one to define geometries that can be reused in
                             other parts of the input file and the code. For example, when initializing
