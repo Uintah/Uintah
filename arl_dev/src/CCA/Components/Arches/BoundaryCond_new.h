@@ -331,7 +331,7 @@ public:
   get_mem_win_for_masks( const Uintah::Patch* const patch, const int nGhost ){
 
     SpatialOps::IntVec bcMinus, bcPlus;
-    Wasatch::get_bc_logicals( patch, bcMinus, bcPlus );
+    WasatchCore::get_bc_logicals( patch, bcMinus, bcPlus );
     const IntVector gs = patch->getCellHighIndex(0) - patch->getCellLowIndex(0);
     const SpatialOps::IntVec glob( gs[0] + nGhost*2 + (bcPlus[0] ? T::Location::BCExtra::X : 0),
                                    gs[1] + nGhost*2 + (bcPlus[1] ? T::Location::BCExtra::Y : 0),
@@ -365,7 +365,7 @@ public:
         if ( iter == _mask_storage.end() ){
 
           SpatialOps::IntVec bcMinus, bcPlus; 
-          Wasatch::get_bc_logicals( patch, bcMinus, bcPlus ); 
+          WasatchCore::get_bc_logicals( patch, bcMinus, bcPlus ); 
           SpatialOps::BoundaryCellInfo bcInfo = SpatialOps::BoundaryCellInfo::build<FieldT>(bcPlus);
           SpatialOps::GhostData gd(nGhosts); 
           const SpatialOps::MemoryWindow window = BoundaryCondition_new::get_mem_win_for_masks<FieldT>( patch, nGhosts );

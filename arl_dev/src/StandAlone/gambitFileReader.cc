@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2015 The University of Utah
+ * Copyright (c) 1997-2016 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -135,8 +135,8 @@ int main()
 	   << nodeCoords[x].y << "   "<< nodeCoords[x].z << endl;
       exit(1);
     } 
-    if (!finite(nodeCoords[x].x) ||
-	!finite(nodeCoords[x].y) || !finite(nodeCoords[x].z) ) {
+    if (!std::isfinite(nodeCoords[x].x) ||
+	!std::isfinite(nodeCoords[x].y) || !std::isfinite(nodeCoords[x].z) ) {
       cout << " E R R O R :I've detected a number that isn't finite"<<endl;
       cout << " " << nodeCoords[x].x << " " <<
 	nodeCoords[x].y << " " << nodeCoords[x].z << " " <<endl; 
@@ -184,8 +184,8 @@ int main()
       exit(1);
     }
     
-    if (!finite(nodeIndx[y].n1) || 
-	!finite(nodeIndx[y].n2) || !finite(nodeIndx[y].n3)) {
+    if (!std::isfinite(nodeIndx[y].n1) || 
+	!std::isfinite(nodeIndx[y].n2) || !std::isfinite(nodeIndx[y].n3)) {
       cout << "I've detected a number that isn't finite"<<endl;
       cout << nodeIndx[y].n1 << " " <<
 	nodeIndx[y].n2 << " " << nodeIndx[y].n3 <<endl; 

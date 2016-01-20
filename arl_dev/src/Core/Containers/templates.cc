@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2015 The University of Utah
+ * Copyright (c) 1997-2016 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -38,7 +38,7 @@ find . -name "*.ii" -print | xargs cat | sort | uniq -c | sort -nr | more
 #include <Core/Containers/Array1.h>
 #include <Core/Containers/Array2.h>
 
-using namespace SCIRun;
+namespace SCIRun {
 
 template class Array1<int>;
 template class Array1<double>;
@@ -46,4 +46,5 @@ template class Array1<double>;
 template class Array2<int>;
 template class Array2<double>;
 
+}
 

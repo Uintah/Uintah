@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 2012-2015 The University of Utah
+ * Copyright (c) 2012-2016 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -59,7 +59,7 @@
 #include <Core/ProblemSpec/ProblemSpec.h>
 #include <Core/Exceptions/ProblemSetupException.h>
 
-namespace Wasatch {
+namespace WasatchCore {
 
   //------------------------------------------------------------------
   template< typename FieldT >
@@ -368,7 +368,7 @@ namespace Wasatch {
                            const bool isConstDensity,
                            Uintah::ProblemSpecP params,
                            const double initialMoment )
-  : Wasatch::TransportEquation( gc,
+  : WasatchCore::TransportEquation( gc,
                                 get_soln_var_name(params,momentOrder),
                                 get_staggered_location<FieldT>(),
                                 isConstDensity ),
@@ -510,7 +510,7 @@ namespace Wasatch {
          convFluxParams != 0;
          convFluxParams=convFluxParams->findNextBlock("ConvectiveFlux") )
     {
-       setup_convective_flux_expression<FieldT>( convFluxParams, solnVarTag_, "", factory, info );
+       setup_convective_flux_expression<FieldT>( convFluxParams, solnVarTag_, factory, info );
      }
   }
 
@@ -627,5 +627,5 @@ namespace Wasatch {
   template class MomentTransportEquation< SVolField >;
   //==================================================================
 
-} // namespace Wasatch
+} // namespace WasatchCore
 

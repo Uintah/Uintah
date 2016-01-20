@@ -6,7 +6,7 @@
  *
  * The MIT License
  *
- * Copyright (c) 2013-2015 The University of Utah
+ * Copyright (c) 2013-2016 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -36,7 +36,7 @@
 #include <CCA/Components/Wasatch/Expressions/ExprAlgebra.h>
 #include <CCA/Components/Wasatch/Expressions/PostProcessing/KineticEnergy.h>
 
-namespace Wasatch {
+namespace WasatchCore {
 
 
   /**
@@ -219,7 +219,7 @@ namespace Wasatch {
     typedef typename SpatialOps::FaceTypes<VolFieldT>::YFace YFace;
     typedef typename SpatialOps::FaceTypes<VolFieldT>::ZFace ZFace;
 
-    DECLARE_FIELDS( VolFieldT, xvel_, yvel_, zvel_, visc_ )
+    DECLARE_FIELDS( VolFieldT, xvel_, yvel_, zvel_, visc_, dil_ )
     DECLARE_FIELDS( XFace, strainxx_, strainxy_, strainxz_ )
     DECLARE_FIELDS( YFace, strainyx_, strainyy_, strainyz_ )
     DECLARE_FIELDS( ZFace, strainzx_, strainzy_, strainzz_ )
@@ -239,9 +239,18 @@ namespace Wasatch {
     DivX* divX_;
     DivY* divY_;
     DivZ* divZ_;
+    
+    typedef typename SpatialOps::OperatorTypeBuilder<SpatialOps::Interpolant,SVolField,XFace>::type  SVol2XFluxInterpT;
+    typedef typename SpatialOps::OperatorTypeBuilder<SpatialOps::Interpolant,SVolField,YFace>::type  SVol2YFluxInterpT;
+    typedef typename SpatialOps::OperatorTypeBuilder<SpatialOps::Interpolant,SVolField,ZFace>::type  SVol2ZFluxInterpT;
+    const SVol2XFluxInterpT* sVol2XFluxInterpOp_;
+    const SVol2YFluxInterpT* sVol2YFluxInterpOp_;
+    const SVol2ZFluxInterpT* sVol2ZFluxInterpOp_;
+
 
     ViscousDissipation( const Expr::Tag& xvelTag, const Expr::Tag& yvelTag, const Expr::Tag& zvelTag,
-                        const Expr::Tag viscTag_,
+                        const Expr::Tag viscTag,
+                        const Expr::Tag& dilataionTag,
                         const Expr::Tag& strainxxTag, const Expr::Tag& strainyxTag, const Expr::Tag& strainzxTag,
                         const Expr::Tag& strainxyTag, const Expr::Tag& strainyyTag, const Expr::Tag& strainzyTag,
                         const Expr::Tag& strainxzTag, const Expr::Tag& strainyzTag, const Expr::Tag& strainzzTag )
@@ -252,8 +261,8 @@ namespace Wasatch {
     {
       this->set_gpu_runnable( true );
 
-      visc_ = this->template create_field_request<VolFieldT>( viscTag_ );
-
+      visc_ = this->template create_field_request<VolFieldT>( viscTag      );
+      dil_  = this->template create_field_request<VolFieldT>( dilataionTag );
       if( doX_ ){
         xvel_     = this->template create_field_request<VolFieldT>( xvelTag );
         strainxx_ = this->template create_field_request<XFace>( strainxxTag );
@@ -279,7 +288,7 @@ namespace Wasatch {
     class Builder : public Expr::ExpressionBuilder
     {
       const Expr::TagList velTags_;
-      const Expr::Tag viscTag_;
+      const Expr::Tag viscTag_, dilTag_;
       const Expr::Tag strainxxTag_, strainyxTag_, strainzxTag_;
       const Expr::Tag strainxyTag_, strainyyTag_, strainzyTag_;
       const Expr::Tag strainxzTag_, strainyzTag_, strainzzTag_;
@@ -291,6 +300,7 @@ namespace Wasatch {
       Builder( const Expr::Tag& resultTag,
                const Expr::TagList& velTags,
                const Expr::Tag& viscTag,
+               const Expr::Tag& dilataionTag,
                const Expr::Tag& strainxxTag, const Expr::Tag& strainyxTag, const Expr::Tag& strainzxTag, // X-momentum
                const Expr::Tag& strainxyTag, const Expr::Tag& strainyyTag, const Expr::Tag& strainzyTag, // Y-momentum
                const Expr::Tag& strainxzTag, const Expr::Tag& strainyzTag, const Expr::Tag& strainzzTag, // Z-momentum
@@ -298,6 +308,7 @@ namespace Wasatch {
         : ExpressionBuilder( resultTag, nghost ),
           velTags_( velTags ),
           viscTag_( viscTag ),
+          dilTag_ ( dilataionTag ),
           strainxxTag_( strainxxTag ), strainyxTag_( strainyxTag ), strainzxTag_( strainzxTag ),
           strainxyTag_( strainxyTag ), strainyyTag_( strainyyTag ), strainzyTag_( strainzyTag ),
           strainxzTag_( strainxzTag ), strainyzTag_( strainyzTag ), strainzzTag_( strainzzTag )
@@ -307,7 +318,7 @@ namespace Wasatch {
 
       Expr::ExpressionBase* build() const{
         return new ViscousDissipation<VolFieldT>( velTags_[0], velTags_[1], velTags_[2],
-                                                  viscTag_,
+                                                  viscTag_, dilTag_,
                                                   strainxxTag_, strainyxTag_, strainzxTag_,
                                                   strainxyTag_, strainyyTag_, strainzyTag_,
                                                   strainxzTag_, strainyzTag_, strainzzTag_ );
@@ -326,13 +337,18 @@ namespace Wasatch {
       if( doX_ ) divX_    = opDB.retrieve_operator<DivX   >();
       if( doY_ ) divY_    = opDB.retrieve_operator<DivY   >();
       if( doZ_ ) divZ_    = opDB.retrieve_operator<DivZ   >();
+      
+      if( doX_ ) sVol2XFluxInterpOp_ = opDB.retrieve_operator<SVol2XFluxInterpT>();
+      if( doY_ ) sVol2YFluxInterpOp_ = opDB.retrieve_operator<SVol2YFluxInterpT>();
+      if( doZ_ ) sVol2ZFluxInterpOp_ = opDB.retrieve_operator<SVol2ZFluxInterpT>();
     }
 
     void evaluate()
     {
       VolFieldT& result = this->value();
       const VolFieldT& visc = visc_->field_ref();
-
+      const VolFieldT& dil = dil_->field_ref();
+      
       if( doX_ && doY_ && doZ_ ){
         const XFace& strainxx = strainxx_->field_ref();
         const YFace& strainyx = strainyx_->field_ref();
@@ -344,44 +360,41 @@ namespace Wasatch {
         const YFace& strainyz = strainyz_->field_ref();
         const ZFace& strainzz = strainzz_->field_ref();
 
-        const VolFieldT& visc = visc_->field_ref();
         const VolFieldT& xvel = xvel_->field_ref();
         const VolFieldT& yvel = yvel_->field_ref();
         const VolFieldT& zvel = zvel_->field_ref();
 
-        result <<= (*divX_)( 2.0*(*xInterp_)(visc) * (strainxx + strainxy + strainxz) * (*xInterp_)( xvel ) )
-                 + (*divY_)( 2.0*(*yInterp_)(visc) * (strainyx + strainyy + strainyz) * (*yInterp_)( yvel ) )
-                 + (*divZ_)( 2.0*(*zInterp_)(visc) * (strainzx + strainzy + strainzz) * (*zInterp_)( zvel ) );
+        result <<= (*divX_)( 2.0*(*xInterp_)(visc) * (strainxx - 1.0/3.0*(*sVol2XFluxInterpOp_)(dil) + strainxy + strainxz) * (*xInterp_)( xvel ) )
+                 + (*divY_)( 2.0*(*yInterp_)(visc) * (strainyx + strainyy - 1.0/3.0*(*sVol2YFluxInterpOp_)(dil) + strainyz) * (*yInterp_)( yvel ) )
+                 + (*divZ_)( 2.0*(*zInterp_)(visc) * (strainzx + strainzy + strainzz - 1.0/3.0*(*sVol2ZFluxInterpOp_)(dil)) * (*zInterp_)( zvel ) );
       }
       else{
         result <<= 0.0; // accumulate in as needed
 
         if( doX_ ){ // 1D x or 2D xy or 2D xz
           const XFace& strainxx = strainxx_->field_ref();
-          const XFace& strainxy = strainxy_->field_ref();
-          const XFace& strainxz = strainxz_->field_ref();
 
           SpatialOps::SpatFldPtr<XFace> xvelFacePtr = SpatialOps::SpatialFieldStore::get<XFace>( strainxx );
           XFace& xvel = *xvelFacePtr;
           xvel <<= (*xInterp_)( xvel_->field_ref() );
 
-          result <<= (*divX_)( strainxx * xvel );
+          result <<= (*divX_)( 2.0*(*xInterp_)(visc) * (strainxx - 1.0/3.0*(*sVol2XFluxInterpOp_)(dil)) * xvel );
 
           if( doY_ ){
             const YFace& strainyx = strainyx_->field_ref();
             const XFace& strainxy = strainxy_->field_ref();
             const YFace& strainyy = strainyy_->field_ref();
 
-            result <<= result + (*divX_)(strainxy * xvel)
-                    + (*divY_)( ( strainyx + strainyy ) * (*yInterp_)( yvel_->field_ref() ) );
+            result <<= result + (*divX_)( 2.0*(*xInterp_)(visc) * strainxy * xvel)
+                              + (*divY_)( 2.0*(*yInterp_)(visc) * strainyx * (*yInterp_)(yvel_->field_ref()) );
           }
           if( doZ_ ){
             const ZFace& strainzx = strainzx_->field_ref();
             const XFace& strainxz = strainxz_->field_ref();
             const ZFace& strainzz = strainzz_->field_ref();
 
-            result <<= result + (*divX_)( ( strainxz * xvel ) )
-                    + (*divZ_)( ( strainzx + strainzz ) * (*zInterp_)( zvel_->field_ref() ) );
+            result <<= result + (*divX_)( 2.0*(*xInterp_)(visc) * strainxz * xvel )
+                              + (*divZ_)( 2.0*(*zInterp_)(visc) * strainzx * (*zInterp_)(zvel_->field_ref()) );
           }
         } // doX_
         else if( doY_ ){ // 1D y or 2D yz
@@ -391,20 +404,20 @@ namespace Wasatch {
           YFace& yvel = *yvelFacePtr;
           yvel <<= (*yInterp_)( yvel_->field_ref() );
 
-          result <<= result + (*divY_)( strainyy * yvel );
+          result <<= result + (*divY_)( 2.0*(*yInterp_)(visc) * (strainyy- 1.0/3.0*(*sVol2YFluxInterpOp_)(dil)) * yvel );
 
           if( doZ_ ){
             const ZFace& strainzy = strainzy_->field_ref();
             const YFace& strainyz = strainyz_->field_ref();
             const ZFace& strainzz = strainzz_->field_ref();
 
-            result <<= result + (*divY_)( strainyz * yvel )
-                    + (*divZ_)( ( strainzy + strainzz ) * (*zInterp_)( zvel_->field_ref() ) );
+            result <<= result + (*divY_)( 2.0*(*yInterp_)(visc) * strainyz * yvel )
+                              + (*divZ_)( 2.0*(*zInterp_)(visc) * strainzy * (*zInterp_)(zvel_->field_ref()) );
           }
         }
         else if( doZ_ ){ // 1D z
           const ZFace& strainzz = strainzz_->field_ref();
-          result <<= result + (*divZ_)( strainzz * (*zInterp_)( zvel_->field_ref() ) );
+          result <<= result + (*divZ_)( 2.0*(*zInterp_)(visc) * (strainzz - 1.0/3.0*(*sVol2ZFluxInterpOp_)(dil)) * (*zInterp_)( zvel_->field_ref() ) );
         }
       }
     }
@@ -421,6 +434,7 @@ namespace Wasatch {
                                         const Expr::Tag& pressureTag,
                                         const Expr::TagList& velTags,
                                         const Expr::Tag& viscTag,
+                                        const Expr::Tag& dilTag,
                                         const TurbulenceParameters& turbulenceParams )
     : ScalarTransportEquation<SVolField>( e0Name, params, gc, densityTag,
                                           false, /* variable density */
@@ -433,21 +447,23 @@ namespace Wasatch {
       velTags_( velTags )
   {
     const TagNames& tags = TagNames::self();
-
-    Expr::ExpressionFactory&   icFactory = *gc[INITIALIZATION  ]->exprFactory;
     Expr::ExpressionFactory& solnFactory = *gc[ADVANCE_SOLUTION]->exprFactory;
 
+    //----------------------------------------------------------
     // kinetic energy
     solnFactory.register_expression( scinew KineticEnergy<MyFieldT,MyFieldT,MyFieldT,MyFieldT>::Builder( kineticEnergyTag_, velTags[0], velTags[1], velTags[2] ) );
 
+    //----------------------------------------------------------
     // temperature calculation
     typedef TemperaturePurePerfectGas<MyFieldT>::Builder SimpleTemperature;
     solnFactory.register_expression( scinew SimpleTemperature( temperatureTag, primVarTag_, kineticEnergyTag_ ) );
 
+    //----------------------------------------------------------
     // viscous dissipation
     typedef ViscousDissipation<MyFieldT>::Builder ViscDissip;
-    solnFactory.register_expression( scinew ViscDissip( Expr::Tag("viscous_dissipation",Expr::STATE_NONE),
-                                                        velTags, viscTag,
+    const Expr::Tag visDisTag("viscous_dissipation",Expr::STATE_NONE);
+    solnFactory.register_expression( scinew ViscDissip( visDisTag,
+                                                        velTags, viscTag, dilTag,
                                                         tags.strainxx, tags.strainyx, tags.strainzx,
                                                         tags.strainxy, tags.strainyy, tags.strainzy,
                                                         tags.strainxz, tags.strainyz, tags.strainzz ) );
@@ -455,6 +471,7 @@ namespace Wasatch {
     setup();  // base setup stuff (register RHS, etc.)
 
     // attach viscous dissipation expression to the RHS as a source
+    solnFactory.attach_dependency_to_expression(visDisTag, this->rhsTag_);
   }
 
   //---------------------------------------------------------------------------
@@ -468,9 +485,20 @@ namespace Wasatch {
   TotalInternalEnergyTransportEquation::
   initial_condition( Expr::ExpressionFactory& icFactory )
   {
+    
     // initial condition for total internal energy
     typedef TotalInternalEnergy_PurePerfectGas_IC<SVolField>::Builder SimpleEnergyIC;
-    return icFactory.register_expression( scinew SimpleEnergyIC( primVarTag_, temperatureTag_, velTags_ ) );
+    icFactory.register_expression( scinew SimpleEnergyIC( primVarTag_, temperatureTag_, velTags_ ) );
+    
+    // register expression to calculate the momentum initial condition from the initial conditions on
+    // velocity and density in the cases that we are initializing velocity in the input file
+    typedef ExprAlgebra<SVolField> ExprAlgbr;
+    const Expr::Tag rhoTag(this->densityTag_.name(), Expr::STATE_NONE);
+    const Expr::TagList theTagList( tag_list( primVarTag_, rhoTag ) );
+    return icFactory.register_expression( new ExprAlgbr::Builder( this->initial_condition_tag(),
+                                                          theTagList,
+                                                          ExprAlgbr::PRODUCT ) );
+
   }
 
   //---------------------------------------------------------------------------
@@ -480,27 +508,19 @@ namespace Wasatch {
   setup_diffusive_flux( FieldTagInfo& info )
   {
     Expr::ExpressionFactory& factory = *gc_[ADVANCE_SOLUTION]->exprFactory;
-
-    typedef DiffusiveVelocity< SpatialOps::SSurfXField >::Builder XFlux;
-    typedef DiffusiveVelocity< SpatialOps::SSurfYField >::Builder YFlux;
-    typedef DiffusiveVelocity< SpatialOps::SSurfZField >::Builder ZFlux;
-
-    // jcs how will we determine if we have each direction on???
-    const bool doX=true, doY=true, doZ=true;
-
-    // jcs for now we will only include the Fourier heat flux (q = -\lambda \nabla T)
-    // and we will neglect the species energy diffusive flux until we get species transport in
-
-    const TagNames& tagNames = TagNames::self();
-    const Expr::Tag xDiffFluxTag( solnVarName_ + tagNames.diffusiveflux + "_x", Expr::STATE_NONE );
-    const Expr::Tag yDiffFluxTag( solnVarName_ + tagNames.diffusiveflux + "_y", Expr::STATE_NONE );
-    const Expr::Tag zDiffFluxTag( solnVarName_ + tagNames.diffusiveflux + "_z", Expr::STATE_NONE );
-
-    Uintah::ProblemSpecP tcond = parserParams_->findBlock( "ThermalConductivity" );
-    const Expr::Tag thermCondTag = parse_nametag( tcond->findBlock("NameTag") );
-    if( doX ){ info[DIFFUSIVE_FLUX_X]=xDiffFluxTag; factory.register_expression( scinew XFlux( xDiffFluxTag, temperatureTag_, thermCondTag, turbDiffTag_ ) ); }
-    if( doY ){ info[DIFFUSIVE_FLUX_Y]=yDiffFluxTag; factory.register_expression( scinew YFlux( yDiffFluxTag, temperatureTag_, thermCondTag, turbDiffTag_ ) ); }
-    if( doZ ){ info[DIFFUSIVE_FLUX_Z]=zDiffFluxTag; factory.register_expression( scinew ZFlux( zDiffFluxTag, temperatureTag_, thermCondTag, turbDiffTag_ ) ); }
+    
+    for( Uintah::ProblemSpecP diffFluxParams=params_->findBlock("DiffusiveFlux");
+        diffFluxParams != 0;
+        diffFluxParams=diffFluxParams->findNextBlock("DiffusiveFlux") )
+    {
+      setup_diffusive_flux_expression<MyFieldT>( diffFluxParams,
+                                              densityTag_,
+                                              primVarTag_,
+                                              turbDiffTag_,
+                                              factory,
+                                              info );
+      
+    }
   }
 
   //------------------------------------------------------------------
@@ -522,7 +542,7 @@ namespace Wasatch {
         convFluxParams != 0;
         convFluxParams=convFluxParams->findNextBlock("ConvectiveFlux") )
     {
-      setup_convective_flux_expression<MyFieldT>( convFluxParams, combinedVarTag, "", factory, info );
+      setup_convective_flux_expression<MyFieldT>( convFluxParams, combinedVarTag, factory, info );
     }
   }
 
@@ -544,4 +564,4 @@ namespace Wasatch {
 
   //---------------------------------------------------------------------------
 
-} /* namespace Wasatch */
+} /* namespace WasatchCore */

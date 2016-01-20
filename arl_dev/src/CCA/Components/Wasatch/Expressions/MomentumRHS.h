@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 2012-2015 The University of Utah
+ * Copyright (c) 2012-2016 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -25,13 +25,19 @@
 #ifndef MomentumRHS_Expr_h
 #define MomentumRHS_Expr_h
 
+//-- ExprLib Includes --//
 #include <expression/Expression.h>
+
+//-- SpatialOps Includes --//
 #include <spatialops/structured/FVStaggered.h>
+
+//-- Wasatch Includes --//
+#include <CCA/Components/Wasatch/Operators/Operators.h>
 
 /**
  *  \class MomRHS
  *  \ingroup Expressions
- *
+ *  \author Tony Saad, James C. Sutherland
  *  \brief Calculates the full momentum RHS
  *
  *  \tparam FieldT the type of field for the momentum RHS (nominally
@@ -42,12 +48,12 @@
  *   - the convective, diffusive, and body force terms
  *  These are calculated in the MomRHSPart and Pressure expressions, respectively.
  */
-template< typename FieldT >
+template< typename FieldT, typename DirT>
 class MomRHS
  : public Expr::Expression<FieldT>
 {
   typedef SpatialOps::SVolField PFieldT;
-  typedef typename SpatialOps::OperatorTypeBuilder< SpatialOps::Gradient, PFieldT, FieldT >::type Grad;
+  typedef typename SpatialOps::OperatorTypeBuilder< typename WasatchCore::GradOpSelector<FieldT, DirT>::Gradient, PFieldT, FieldT >::type Grad;
 
   DECLARE_FIELDS(FieldT, rhsPart_, volfrac_)
   DECLARE_FIELD(PFieldT, pressure_)

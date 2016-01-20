@@ -91,7 +91,7 @@
 			</ParticleMomentum>
     </ParticleTransportEquations>
     
-    <Density>
+    <Density method="CONSTANT">
       <Constant value="1.225" name="density"/>
     </Density>
 

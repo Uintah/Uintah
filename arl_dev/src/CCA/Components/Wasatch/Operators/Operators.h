@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 2012-2015 The University of Utah
+ * Copyright (c) 2012-2016 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -25,6 +25,9 @@
 #ifndef Wasatch_Operators_h
 #define Wasatch_Operators_h
 
+//-- SpatialOps includes --//
+#include <spatialops/structured/FVStaggered.h>
+
 /**
  *  \file Operators.h
  */
@@ -32,7 +35,26 @@
 namespace SpatialOps{ class OperatorDatabase; }  // forward declaration
 namespace Uintah{ class Patch; }
 
-namespace Wasatch{
+namespace WasatchCore{
+
+  template< typename SrcT, typename DirT > struct GradOpSelector{
+    typedef SpatialOps::Gradient Gradient;
+  };
+  
+  template<>
+  struct GradOpSelector<SpatialOps::SVolField, SpatialOps::XDIR>{
+    typedef SpatialOps::GradientX Gradient;
+  };
+  
+  template<>
+  struct GradOpSelector<SpatialOps::SVolField, SpatialOps::YDIR>{
+    typedef SpatialOps::GradientY Gradient;
+  };
+  
+  template<>
+  struct GradOpSelector<SpatialOps::SVolField, SpatialOps::ZDIR>{
+    typedef SpatialOps::GradientZ Gradient;
+  };
 
   /**
    *  \ingroup WasatchOperators
@@ -52,6 +74,6 @@ namespace Wasatch{
                         SpatialOps::OperatorDatabase& opDB );
 
 
-} // namespace Wasatch
+} // namespace WasatchCore
 
 #endif // Wasatch_Operators_h

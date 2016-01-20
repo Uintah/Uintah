@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2015 The University of Utah
+ * Copyright (c) 1997-2016 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -23,24 +23,17 @@
  */
 
 #include <CCA/Components/MPM/ConstitutiveModel/HypoElasticImplicit.h>
-#include <Core/Malloc/Allocator.h>
 #include <Core/Grid/Patch.h>
 #include <CCA/Ports/DataWarehouse.h>
 #include <Core/Grid/Variables/NCVariable.h>
 #include <Core/Grid/Variables/ParticleVariable.h>
 #include <Core/Grid/Task.h>
 #include <Core/Grid/Level.h>
-#include <Core/Grid/Variables/VarLabel.h>
 #include <Core/Grid/Variables/VarTypes.h>
 #include <Core/Labels/MPMLabel.h>
 #include <Core/Math/Matrix3.h>
 #include <CCA/Components/MPM/ConstitutiveModel/MPMMaterial.h>
 #include <Core/ProblemSpec/ProblemSpec.h>
-#include <Core/Exceptions/ParameterNotFound.h>
-#include <Core/Math/MinMax.h>
-#include <Core/Math/FastMatrix.h>
-#include <Core/Malloc/Allocator.h>
-#include <fstream>
 #include <iostream>
 
 using std::cerr;

@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2015 The University of Utah
+ * Copyright (c) 1997-2016 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -293,8 +293,7 @@ public:
   GPUDataWarehouse* getGPUDW(int i) const { return d_gpuDWs[i]; }
   GPUDataWarehouse* getGPUDW() const {
     int i;
-    cudaError_t retVal;
-    CUDA_RT_SAFE_CALL( retVal = cudaGetDevice(&i));
+    CUDA_RT_SAFE_CALL(cudaGetDevice(&i));
     return d_gpuDWs[i]; 
   }
 #endif

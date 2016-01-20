@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 2012-2015 The University of Utah
+ * Copyright (c) 2012-2016 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -68,7 +68,8 @@ public:
     Builder( const Expr::Tag& result,
              const Expr::Tag& rhoPhiTag,
              const Expr::Tag& rhoTag,
-             const Expr::Tag& volFracTag);
+             const Expr::Tag& volFracTag = Expr::Tag());
+    
     ~Builder(){}
     Expr::ExpressionBase* build() const;
 
@@ -79,37 +80,6 @@ public:
   ~PrimVar();
 
   void bind_operators( const SpatialOps::OperatorDatabase& opDB );
-  void evaluate();
-
-};
-
-
-
-template< typename FieldT >
-class PrimVar<FieldT,FieldT>
- : public Expr::Expression<FieldT>
-{
-  DECLARE_FIELDS(FieldT, rhophi_, rho_)
-
-  PrimVar( const Expr::Tag& rhoPhiTag,
-           const Expr::Tag& rhoTag );
-
-public:
-  class Builder : public Expr::ExpressionBuilder
-  {
-  public:
-    Builder( const Expr::Tag& result,
-             const Expr::Tag& rhoPhiTag,
-             const Expr::Tag& rhoTag );
-    ~Builder(){}
-    Expr::ExpressionBase* build() const;
-
-  private:
-  const Expr::Tag rhophit_, rhot_;
-  };
-
-  ~PrimVar();
-
   void evaluate();
 };
 

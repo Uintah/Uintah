@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 2012-2015 The University of Utah
+ * Copyright (c) 2012-2016 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -90,7 +90,7 @@ GeometryBased( GeomValueMapT geomObjects,
   geomObjects_(geomObjects),
   outsideValue_(outsideValue)
 {
-  const Wasatch::TagNames& tags = Wasatch::TagNames::self();
+  const WasatchCore::TagNames& tags = WasatchCore::TagNames::self();
    x_ = this->template create_field_request<SVolField>(tags.xsvolcoord);
    y_ = this->template create_field_request<SVolField>(tags.ysvolcoord);
    z_ = this->template create_field_request<SVolField>(tags.zsvolcoord);

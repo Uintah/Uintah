@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 2012-2015 The University of Utah
+ * Copyright (c) 2012-2016 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -24,6 +24,7 @@
 
 //-- Wasatch Includes --//
 #include "ParseEquation.h"
+#include <CCA/Components/Wasatch/Wasatch.h>
 #include <CCA/Components/Wasatch/TimeStepper.h>
 #include <CCA/Components/Wasatch/TagNames.h>
 #include <CCA/Components/Wasatch/ParseTools.h>
@@ -35,6 +36,8 @@
 #include "ScalabilityTestTransportEquation.h"
 #include "MomentumTransportEquationBase.h"
 #include "LowMachMomentumTransportEquation.h"
+#include "CompressibleMomentumTransportEquation.h"
+#include "TotalInternalEnergyTransportEquation.h"
 #include "EquationBase.h"
 
 #include "MomentTransportEquation.h"
@@ -72,7 +75,7 @@
 
 #include <iostream>
 
-namespace Wasatch{
+namespace WasatchCore{
 
 
   /**
@@ -91,7 +94,8 @@ namespace Wasatch{
     void hook( TimeStepper& ts ) const
     {
       ts.add_equation<FieldT>( eqn_->solution_variable_name(),
-                               eqn_->get_rhs_id() );
+                               eqn_->rhs_tag() );
+
     }
   };
 
@@ -524,6 +528,8 @@ namespace Wasatch{
     typedef std::vector<EqnTimestepAdaptorBase*> EquationAdaptors;
     EquationAdaptors adaptors;
 
+    bool isCompressible = (Wasatch::flow_treatment() == COMPRESSIBLE);
+    
     Uintah::ProblemSpecP momentumSpec = wasatchSpec->findBlock("MomentumEquations");
     std::string xvelname, yvelname, zvelname;
     const Uintah::ProblemSpecP doxvel = momentumSpec->get( "X-Velocity", xvelname );
@@ -535,6 +541,13 @@ namespace Wasatch{
     const Uintah::ProblemSpecP doymom = momentumSpec->get( "Y-Momentum", ymomname );
     const Uintah::ProblemSpecP dozmom = momentumSpec->get( "Z-Momentum", zmomname );
 
+    if (isCompressible && momentumSpec->findBlock("Pressure")) {
+      std::ostringstream msg;
+      msg << "ERROR: There is no need to specify a pressure tag in the momentum equations block."
+      << "Please revise your input file" << std::endl;
+      throw Uintah::InvalidValue( msg.str(), __FILE__, __LINE__ );
+    }
+    
     // check if none of the momentum directions were specified
     if( !(doxvel || doyvel || dozvel) ){
       std::ostringstream msg;
@@ -570,60 +583,154 @@ namespace Wasatch{
     GraphHelper* const solnGraphHelper = gc[ADVANCE_SOLUTION  ];
     GraphHelper* const icGraphHelper   = gc[INITIALIZATION    ];
 
-    //___________________________________________________________________________
+    //___________________________________________________________________________‰‰
     // resolve the momentum equation to be solved and create the adaptor for it.
     //
     proc0cout << "------------------------------------------------" << std::endl
               << "Creating momentum equations..." << std::endl;
 
-    if( doxvel && doxmom ){
-      proc0cout << "Setting up X momentum transport equation" << std::endl;
-      typedef LowMachMomentumTransportEquation< XVolField > MomTransEq;
-      EquationBase* momtranseq = scinew MomTransEq( xvelname,
-                                                         xmomname,
-                                                         densityTag,
-                                                         isConstDensity,
-                                                         xBodyForceTag,
-                                                         xSrcTermTag,
-                                                         gc,
-                                                         momentumSpec,
-                                                         turbParams,
-                                                         linSolver, sharedState );
-      adaptors.push_back( scinew EqnTimestepAdaptor<XVolField>(momtranseq) );
-    }
+    if (isCompressible) {
+      
+      
+      const Expr::Tag temperatureTag = parse_nametag(momentumSpec->findBlock("EnergyEquation")->findBlock("Temperature")->findBlock("NameTag"));
+      const Expr::Tag mixMWTag = parse_nametag(momentumSpec->findBlock("EnergyEquation")->findBlock("MolecularWeight")->findBlock("NameTag"));
+      const double R = 8.314459848;  // gas constant J/(mol K)
+      
+      Expr::Tag xVelTag, yVelTag, zVelTag;
+      Expr::Tag rhoTag(densityTag.name(), Expr::STATE_DYNAMIC);
+      if( doxvel && doxmom ) {
+        proc0cout << "Setting up X momentum transport equation" << std::endl;
+      
+        typedef CompressibleMomentumTransportEquation<SpatialOps::XDIR> XMomEq;
+        EquationBase* momtranseq = scinew XMomEq( WasatchCore::XDIR,
+                                                     xvelname,
+                                                     xmomname,
+                                                     rhoTag,
+                                                     temperatureTag,
+                                                     mixMWTag,
+                                                     R,
+                                                     xBodyForceTag,
+                                                     xSrcTermTag,
+                                                     gc,
+                                                     momentumSpec,
+                                                     turbParams);
+          
+        adaptors.push_back( scinew EqnTimestepAdaptor<SVolField>(momtranseq) );
+        
+        xVelTag = Expr::Tag(xvelname, Expr::STATE_NONE);
+      }
+      
+      if( doyvel && doymom ){
+        proc0cout << "Setting up Y momentum transport equation" << std::endl;
 
-    if( doyvel && doymom ){
-      proc0cout << "Setting up Y momentum transport equation" << std::endl;
-      typedef LowMachMomentumTransportEquation< YVolField > MomTransEq;
-      EquationBase* momtranseq = scinew MomTransEq( yvelname,
-                                                         ymomname,
-                                                         densityTag,
-                                                         isConstDensity,
-                                                         yBodyForceTag,
-                                                         ySrcTermTag,
-                                                         gc,
-                                                         momentumSpec,
-                                                         turbParams,
-                                                         linSolver,sharedState );
-      adaptors.push_back( scinew EqnTimestepAdaptor<YVolField>(momtranseq) );
-    }
+        typedef CompressibleMomentumTransportEquation<SpatialOps::YDIR> YMomEq;
+        EquationBase* momtranseq = scinew YMomEq( WasatchCore::YDIR, yvelname,
+                                                     ymomname,
+                                                     rhoTag,
+                                                     temperatureTag,
+                                                     mixMWTag,
+                                                     R,
+                                                     xBodyForceTag,
+                                                     xSrcTermTag,
+                                                     gc,
+                                                     momentumSpec,
+                                                     turbParams );
+          
+        adaptors.push_back( scinew EqnTimestepAdaptor<SVolField>(momtranseq) );
 
-    if( dozvel && dozmom ){
-      proc0cout << "Setting up Z momentum transport equation" << std::endl;
-      typedef LowMachMomentumTransportEquation< ZVolField > MomTransEq;
-      EquationBase* momtranseq = scinew MomTransEq( zvelname,
-                                                         zmomname,
-                                                         densityTag,
-                                                         isConstDensity,
-                                                         zBodyForceTag,
-                                                         zSrcTermTag,
-                                                         gc,
-                                                         momentumSpec,
-                                                         turbParams,
-                                                         linSolver,sharedState );
-      adaptors.push_back( scinew EqnTimestepAdaptor<ZVolField>(momtranseq) );
-    }
+        yVelTag = Expr::Tag(yvelname, Expr::STATE_NONE);
+      }
+      
+      if( dozvel && dozmom ){
+        proc0cout << "Setting up Z momentum transport equation" << std::endl;
+        typedef CompressibleMomentumTransportEquation<SpatialOps::ZDIR> ZMomEq;
+        EquationBase* momtranseq = scinew ZMomEq( WasatchCore::ZDIR, zvelname,
+                                                     zmomname,
+                                                     rhoTag,
+                                                     temperatureTag,
+                                                     mixMWTag,
+                                                     R,
+                                                     xBodyForceTag,
+                                                     xSrcTermTag,
+                                                     gc,
+                                                     momentumSpec,
+                                                     turbParams );
+          
+        adaptors.push_back( scinew EqnTimestepAdaptor<SVolField>(momtranseq) );
 
+        zVelTag = Expr::Tag(zvelname, Expr::STATE_NONE);
+      }
+
+
+      // register continuity equation
+      EquationBase* contEq = scinew ContinuityTransportEquation(rhoTag, temperatureTag, mixMWTag, R, gc, xVelTag, yVelTag, zVelTag);
+      adaptors.push_back( scinew EqnTimestepAdaptor<SVolField>(contEq) );
+      
+      // register total internal energy equation
+      const Expr::TagList velTags = tag_list(xVelTag, yVelTag, zVelTag);
+      const Expr::Tag viscTag = (momentumSpec->findBlock("Viscosity")) ? parse_nametag( momentumSpec->findBlock("Viscosity")->findBlock("NameTag") ) : Expr::Tag();
+      std::string rhoETotal;
+      Uintah::ProblemSpecP energySpec = momentumSpec->findBlock("EnergyEquation");
+      if (!energySpec) {
+        std::ostringstream msg;
+        msg << "ERROR: When solving a compressible flow problem you must specify an energy equation." << std::endl;
+        throw Uintah::ProblemSetupException( msg.str(), __FILE__, __LINE__ );
+      }
+      momentumSpec->findBlock("EnergyEquation")->get("SolutionVariable", rhoETotal);
+      EquationBase* totalEEq = scinew TotalInternalEnergyTransportEquation(rhoETotal, momentumSpec->findBlock("EnergyEquation"), gc, rhoTag, temperatureTag, TagNames::self().pressure, velTags, viscTag, TagNames::self().dilatation , turbParams);
+      adaptors.push_back( scinew EqnTimestepAdaptor<SVolField>(totalEEq) );
+
+    } else {
+      
+      if( doxvel && doxmom ){
+        proc0cout << "Setting up X momentum transport equation" << std::endl;
+        typedef LowMachMomentumTransportEquation< XVolField > MomTransEq;
+      EquationBase* momtranseq = scinew MomTransEq( WasatchCore::XDIR, xvelname,
+                                         xmomname,
+                                         densityTag,
+                                         isConstDensity,
+                                         xBodyForceTag,
+                                         xSrcTermTag,
+                                         gc,
+                                         momentumSpec,
+                                         turbParams,
+                                         linSolver, sharedState );
+        adaptors.push_back( scinew EqnTimestepAdaptor<XVolField>(momtranseq) );
+      }
+      
+      if( doyvel && doymom ){
+        proc0cout << "Setting up Y momentum transport equation" << std::endl;
+        typedef LowMachMomentumTransportEquation< YVolField > MomTransEq;
+      EquationBase* momtranseq = scinew MomTransEq( WasatchCore::YDIR, yvelname,
+                                         ymomname,
+                                         densityTag,
+                                         isConstDensity,
+                                         yBodyForceTag,
+                                         ySrcTermTag,
+                                         gc,
+                                         momentumSpec,
+                                         turbParams,
+                                         linSolver,sharedState );
+        adaptors.push_back( scinew EqnTimestepAdaptor<YVolField>(momtranseq) );
+      }
+      
+      if( dozvel && dozmom ){
+        proc0cout << "Setting up Z momentum transport equation" << std::endl;
+        typedef LowMachMomentumTransportEquation< ZVolField > MomTransEq;
+      EquationBase* momtranseq = scinew MomTransEq( WasatchCore::ZDIR, zvelname,
+                                         zmomname,
+                                         densityTag,
+                                         isConstDensity,
+                                         zBodyForceTag,
+                                         zSrcTermTag,
+                                         gc,
+                                         momentumSpec,
+                                         turbParams,
+                                         linSolver,sharedState );
+        adaptors.push_back( scinew EqnTimestepAdaptor<ZVolField>(momtranseq) );
+      }
+    }
+    
     //
     // ADD ADAPTIVE TIMESTEPPING
     if( useAdaptiveDt ){
@@ -1027,7 +1134,6 @@ namespace Wasatch{
                                          Expr::Tag convFluxTag,
                                          const ConvInterpMethods convMethod,
                                          const Expr::Tag& advVelocityTag,
-                                         const std::string& suffix,
                                          Expr::ExpressionFactory& factory,
                                          FieldTagInfo& info )
   {
@@ -1044,44 +1150,74 @@ namespace Wasatch{
 
     if( convFluxTag == Expr::Tag() ){
       const TagNames& tagNames = TagNames::self();
-      convFluxTag = Expr::Tag( solnVarTag.name() + suffix + tagNames.convectiveflux + dir, Expr::STATE_NONE );
+      convFluxTag = Expr::Tag( solnVarTag.name() + tagNames.convectiveflux + dir, Expr::STATE_NONE );
       // make new Tag for solnVar by adding the appropriate suffix ( "_*" or nothing ). This
       // is because we need the ScalarRHS at time step n+1 for our pressure projection method
-      Expr::Tag solnVarCorrectedTag;
-      solnVarCorrectedTag = Expr::Tag(solnVarTag.name(),   suffix=="" ? Expr::STATE_DYNAMIC : Expr::STATE_NONE );
 
       Expr::ExpressionBuilder* builder = NULL;
 
       const std::string interpMethod = get_conv_interp_method( convMethod );
       if( dir=="X" ){
         proc0cout << "SETTING UP CONVECTIVE FLUX EXPRESSION IN X DIRECTION USING " << interpMethod << std::endl;
-        typedef typename ConvectiveFluxLimiter<
-            typename Ops::InterpC2FXLimiter,
-            typename Ops::InterpC2FXUpwind,
-            typename OperatorTypeBuilder<Interpolant,FieldT,   XFace>::type, // scalar interp type
-            typename OperatorTypeBuilder<Interpolant,XVolField,XFace>::type  // velocity interp type
-            >::Builder ConvFluxLim;
-        builder = scinew ConvFluxLim( convFluxTag, solnVarCorrectedTag, advVelocityTag, convMethod, info[VOLUME_FRAC] );
+        if (Wasatch::flow_treatment() == WasatchCore::COMPRESSIBLE) {
+          typedef typename ConvectiveFluxLimiter<
+              typename Ops::InterpC2FXLimiter,
+              typename Ops::InterpC2FXUpwind,
+              typename OperatorTypeBuilder<Interpolant,FieldT,   XFace>::type, // scalar interp type
+              typename OperatorTypeBuilder<Interpolant,SVolField,XFace>::type  // velocity interp type
+              >::Builder ConvFluxLim;
+          builder = scinew ConvFluxLim( convFluxTag, solnVarTag, advVelocityTag, convMethod, info[VOLUME_FRAC] );
+        } else {
+          typedef typename ConvectiveFluxLimiter<
+              typename Ops::InterpC2FXLimiter,
+              typename Ops::InterpC2FXUpwind,
+              typename OperatorTypeBuilder<Interpolant,FieldT,   XFace>::type, // scalar interp type
+              typename OperatorTypeBuilder<Interpolant,XVolField,XFace>::type  // velocity interp type
+              >::Builder ConvFluxLim;
+        builder = scinew ConvFluxLim( convFluxTag, solnVarTag, advVelocityTag, convMethod, info[VOLUME_FRAC] );
+        }
+        
       }
       else if( dir=="Y" ){
         proc0cout << "SETTING UP CONVECTIVE FLUX EXPRESSION IN Y DIRECTION USING " << interpMethod << std::endl;
-        typedef typename ConvectiveFluxLimiter<
-            typename Ops::InterpC2FYLimiter,
-            typename Ops::InterpC2FYUpwind,
-            typename OperatorTypeBuilder<Interpolant,FieldT,   YFace>::type, // scalar interp type
-            typename OperatorTypeBuilder<Interpolant,YVolField,YFace>::type  // velocity interp type
-            >::Builder ConvFluxLim;
-        builder = scinew ConvFluxLim( convFluxTag, solnVarCorrectedTag, advVelocityTag, convMethod, info[VOLUME_FRAC] );
+        if (Wasatch::flow_treatment() == WasatchCore::COMPRESSIBLE) {
+          typedef typename ConvectiveFluxLimiter<
+          typename Ops::InterpC2FYLimiter,
+          typename Ops::InterpC2FYUpwind,
+          typename OperatorTypeBuilder<Interpolant,FieldT,   YFace>::type, // scalar interp type
+          typename OperatorTypeBuilder<Interpolant,SVolField,YFace>::type  // velocity interp type
+          >::Builder ConvFluxLim;
+          builder = scinew ConvFluxLim( convFluxTag, solnVarTag, advVelocityTag, convMethod, info[VOLUME_FRAC] );
+        } else {
+          typedef typename ConvectiveFluxLimiter<
+          typename Ops::InterpC2FYLimiter,
+          typename Ops::InterpC2FYUpwind,
+          typename OperatorTypeBuilder<Interpolant,FieldT,   YFace>::type, // scalar interp type
+          typename OperatorTypeBuilder<Interpolant,YVolField,YFace>::type  // velocity interp type
+          >::Builder ConvFluxLim;
+        builder = scinew ConvFluxLim( convFluxTag, solnVarTag, advVelocityTag, convMethod, info[VOLUME_FRAC] );
+        }
+
       }
       else if( dir=="Z") {
         proc0cout << "SETTING UP CONVECTIVE FLUX EXPRESSION IN Z DIRECTION USING " << interpMethod << std::endl;
-        typedef typename ConvectiveFluxLimiter<
-            typename Ops::InterpC2FZLimiter,
-            typename Ops::InterpC2FZUpwind,
-            typename OperatorTypeBuilder<Interpolant,FieldT,   ZFace>::type, // scalar interp type
-            typename OperatorTypeBuilder<Interpolant,ZVolField,ZFace>::type  // velocity interp type
-            >::Builder ConvFluxLim;
-        builder = scinew ConvFluxLim( convFluxTag, solnVarCorrectedTag, advVelocityTag, convMethod, info[VOLUME_FRAC] );
+        if (Wasatch::flow_treatment() == WasatchCore::COMPRESSIBLE) {
+          typedef typename ConvectiveFluxLimiter<
+          typename Ops::InterpC2FZLimiter,
+          typename Ops::InterpC2FZUpwind,
+          typename OperatorTypeBuilder<Interpolant,FieldT,   ZFace>::type, // scalar interp type
+          typename OperatorTypeBuilder<Interpolant,SVolField,ZFace>::type  // velocity interp type
+          >::Builder ConvFluxLim;
+          builder = scinew ConvFluxLim( convFluxTag, solnVarTag, advVelocityTag, convMethod, info[VOLUME_FRAC] );
+        } else {
+          typedef typename ConvectiveFluxLimiter<
+          typename Ops::InterpC2FZLimiter,
+          typename Ops::InterpC2FZUpwind,
+          typename OperatorTypeBuilder<Interpolant,FieldT,   ZFace>::type, // scalar interp type
+          typename OperatorTypeBuilder<Interpolant,ZVolField,ZFace>::type  // velocity interp type
+          >::Builder ConvFluxLim;
+        builder = scinew ConvFluxLim( convFluxTag, solnVarTag, advVelocityTag, convMethod, info[VOLUME_FRAC] );
+        }
       }
 
       if( builder == NULL ){
@@ -1108,7 +1244,6 @@ namespace Wasatch{
   template< typename FieldT >
   void setup_convective_flux_expression( Uintah::ProblemSpecP convFluxParams,
                                          const Expr::Tag& solnVarTag,
-                                         const std::string& suffix,
                                          Expr::ExpressionFactory& factory,
                                          FieldTagInfo& info )
   {
@@ -1122,9 +1257,6 @@ namespace Wasatch{
     Uintah::ProblemSpecP advVelocityTagParam = convFluxParams->findBlock( "AdvectiveVelocity" );
     if( advVelocityTagParam ){
       advVelocityTag = parse_nametag( advVelocityTagParam->findBlock( "NameTag" ) );
-      // make new Tag for advective velocity by adding the appropriate suffix ( "_*" or nothing ). This
-      // is because we need the ScalarRHS at time step n+1 for our pressure projection method
-      advVelocityCorrectedTag = Expr::Tag(advVelocityTag.name() + suffix, advVelocityTag.context());
     }
 
     // see if we have an expression set for the advective flux.
@@ -1134,8 +1266,7 @@ namespace Wasatch{
     setup_convective_flux_expression<FieldT>( dir,
                                               solnVarTag, convFluxTag,
                                               get_conv_interp_method(interpMethod),
-                                              advVelocityCorrectedTag,
-                                              suffix,
+                                              advVelocityTag,
                                               factory,
                                               info );
   }
@@ -1188,8 +1319,7 @@ namespace Wasatch{
   void setup_diffusive_flux_expression( Uintah::ProblemSpecP diffFluxParams,
                                         const Expr::Tag densityTag,
                                         const Expr::Tag primVarTag,
-                                        const Expr::Tag turbDiffTag,  
-                                        const std::string suffix,
+                                        const Expr::Tag turbDiffTag,
                                         Expr::ExpressionFactory& factory,
                                         FieldTagInfo& info )
   {
@@ -1229,23 +1359,22 @@ namespace Wasatch{
       for( std::string::iterator it = direction.begin(); it != direction.end(); ++it ){
         std::string dir(1,*it);
         const TagNames& tagNames = TagNames::self();
-        diffFluxTag = Expr::Tag( primVarName + suffix + tagNames.diffusiveflux + dir, Expr::STATE_NONE );
+        diffFluxTag = Expr::Tag( primVarName + tagNames.diffusiveflux + dir, Expr::STATE_NONE );
         // make new Tags for density and primVar by adding the appropriate suffix ( "_*" or nothing ). This
         // is because we need the ScalarRHS at time step n+1 for our pressure projection method
-        const Expr::Tag densityCorrectedTag = Expr::Tag(densityTag.name() + suffix, Expr::STATE_NONE);
-        const Expr::Tag primVarCorrectedTag = Expr::Tag(primVarTag.name() + suffix, Expr::STATE_NONE);
         
         Expr::ExpressionBuilder* builder = NULL;
-        if     ( dir=="X" ) builder = build_diff_flux_expr<XFaceT>(diffFluxParams,diffFluxTag,primVarCorrectedTag,densityCorrectedTag,turbDiffTag);
-        else if( dir=="Y" ) builder = build_diff_flux_expr<YFaceT>(diffFluxParams,diffFluxTag,primVarCorrectedTag,densityCorrectedTag,turbDiffTag);
-        else if( dir=="Z" ) builder = build_diff_flux_expr<ZFaceT>(diffFluxParams,diffFluxTag,primVarCorrectedTag,densityCorrectedTag,turbDiffTag);
+        if     ( dir=="X" ) builder = build_diff_flux_expr<XFaceT>(diffFluxParams,diffFluxTag,primVarTag,densityTag,turbDiffTag);
+        else if( dir=="Y" ) builder = build_diff_flux_expr<YFaceT>(diffFluxParams,diffFluxTag,primVarTag,densityTag,turbDiffTag);
+        else if( dir=="Z" ) builder = build_diff_flux_expr<ZFaceT>(diffFluxParams,diffFluxTag,primVarTag,densityTag,turbDiffTag);
         
         if( builder == NULL ){
           std::ostringstream msg;
           msg << "Could not build a diffusive flux expression for '" << primVarName << "'" << std::endl;
           throw Uintah::ProblemSetupException( msg.str(), __FILE__, __LINE__ );
         }
-        factory.register_expression( builder );
+        const Expr::ExpressionID diffID = factory.register_expression( builder );
+//        factory.cleave_from_parents(diffID);
         
         FieldSelector fs;
         if     ( dir=="X" ) fs=DIFFUSIVE_FLUX_X;
@@ -1378,7 +1507,6 @@ namespace Wasatch{
        const Expr::Tag densityTag,                              \
        const Expr::Tag primVarTag,                              \
        const Expr::Tag turbDiffTag,                             \
-       const std::string suffix,                                \
        Expr::ExpressionFactory& factory,                        \
        FieldTagInfo& info );                                    \
                                                                 \
@@ -1396,14 +1524,12 @@ namespace Wasatch{
         Expr::Tag convFluxTag,                                  \
         const ConvInterpMethods convMethod,                     \
         const Expr::Tag& advVelocityTag,                        \
-        const std::string& suffix,                              \
         Expr::ExpressionFactory& factory,                       \
         FieldTagInfo& info );                                   \
                                                                 \
     template void setup_convective_flux_expression<FIELDT>(     \
         Uintah::ProblemSpecP convFluxParams,                    \
         const Expr::Tag& solnVarName,                           \
-        const std::string& suffix,                              \
         Expr::ExpressionFactory& factory,                       \
         FieldTagInfo& info );
 
@@ -1415,4 +1541,4 @@ namespace Wasatch{
 
   //-----------------------------------------------------------------
 
-} // namespace Wasatch
+} // namespace WasatchCore

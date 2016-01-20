@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2015 The University of Utah
+ * Copyright (c) 1997-2016 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -87,12 +87,12 @@ WARNING
                                                const ModelInfo*);
                                   
     virtual void scheduleComputeModelSources(SchedulerP&,
-                                                   const LevelP& level,
-                                                   const ModelInfo*);
+                                             const LevelP& level,
+                                             const ModelInfo*);
                                             
    virtual void scheduleModifyThermoTransportProperties(SchedulerP&,
-                                                const LevelP&,
-                                                const MaterialSet*);
+                                                        const LevelP&,
+                                                        const MaterialSet*);
                                                 
    virtual void computeSpecificHeat(CCVariable<double>&,
                                     const Patch*,
@@ -117,9 +117,9 @@ WARNING
    
     void initialize(const ProcessorGroup*, 
                     const PatchSubset* patches,
-                      const MaterialSubset* matls, 
+                    const MaterialSubset* matls, 
                     DataWarehouse*, 
-                      DataWarehouse* new_dw);
+                    DataWarehouse* new_dw);
                                    
     void computeModelSources(const ProcessorGroup*, 
                              const PatchSubset* patches,
@@ -136,10 +136,10 @@ WARNING
                           const ModelInfo* mi);
                                                        
     void errorEstimate(const ProcessorGroup* pg,
-                         const PatchSubset* patches,
-                          const MaterialSubset* matl,
-                          DataWarehouse* old_dw,
-                          DataWarehouse* new_dw,
+                       const PatchSubset* patches,
+                       const MaterialSubset* matl, 
+                       DataWarehouse* old_dw,      
+                       DataWarehouse* new_dw,      
                        bool initial);
 
     PassiveScalar(const PassiveScalar&);
@@ -151,6 +151,8 @@ WARNING
     MaterialSet* d_matl_set;
     const MaterialSubset* d_matl_sub;
 
+    //__________________________________
+    //  Region used for initialization
     class Region {
     public:
       Region(GeometryPieceP piece, ProblemSpecP&);
@@ -171,11 +173,24 @@ WARNING
       
       bool  uniformInitialize;
     };
+    
+    //__________________________________
+    //  For injecting a scalar inside the domain
+    class interiorRegion {
+    public:
+      interiorRegion(GeometryPieceP piece, ProblemSpecP&);
+      GeometryPieceP piece;
+      double value;
+      double clampValue;
+    };
 
+    //__________________________________
+    //
     class Scalar {
     public:
       int index;
       std::string name;
+      
       // labels for this particular scalar
       VarLabel* scalar_CCLabel;
       VarLabel* scalar_source_CCLabel;
@@ -183,6 +198,8 @@ WARNING
       VarLabel* diffusionCoefLabel;
       
       std::vector<Region*> regions;
+      std::vector<interiorRegion*> interiorRegions;
+      
       double diff_coeff;
       double refineCriteria;
       int  initialize_diffusion_knob;

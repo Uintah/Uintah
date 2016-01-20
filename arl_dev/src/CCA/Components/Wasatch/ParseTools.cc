@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 2012-2015 The University of Utah
+ * Copyright (c) 2012-2016 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -36,7 +36,7 @@
 #include <string>
 #include <sstream>
 
-namespace Wasatch{
+namespace WasatchCore{
 
   Expr::Tag
   parse_nametag( Uintah::ProblemSpecP param )
@@ -155,4 +155,4 @@ namespace Wasatch{
 
   //============================================================================
   
-} // namespace Wasatch
+} // namespace WasatchCore

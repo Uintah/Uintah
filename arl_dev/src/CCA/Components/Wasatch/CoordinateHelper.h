@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 2012-2015 The University of Utah
+ * Copyright (c) 2012-2016 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -41,7 +41,7 @@
 
 namespace Expr{ class ExpressionFactory; }
 
-namespace Wasatch{
+namespace WasatchCore{
   
   class CoordinateNames
   {
@@ -63,6 +63,6 @@ namespace Wasatch{
   void register_coordinate_expressions( GraphCategories& gc,
                                         const bool isPeriodic );
 
-} // namespace Wasatch
+} // namespace WasatchCore
 
 #endif // Wasatch_CoordHelper_h

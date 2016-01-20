@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2015 The University of Utah
+ * Copyright (c) 1997-2016 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -60,7 +60,7 @@ const int ALIGN=16;
 #  if defined(__sun)
 #    include <cstring>
 #    define bcopy(src,dest,n) memcpy(dest,src,n)
-#  elif defined(__linux) || defined(__digital__) || defined(__sgi) || defined(_AIX) || defined(__APPLE__) || defined(__CYGWIN__)
+#  elif defined(__linux) || defined(__APPLE__) 
 #    include <cstring>
 #  else
 #    error "Need bcopy idfdef for this architecture"

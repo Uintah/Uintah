@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2015 The University of Utah
+ * Copyright (c) 1997-2016 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -24,7 +24,6 @@
 
 #include <CCA/Components/MPM/ConstitutiveModel/ShellMaterial.h>
 #include <CCA/Components/MPM/ConstitutiveModel/MPMMaterial.h>
-#include <Core/Malloc/Allocator.h>
 #include <Core/Grid/Patch.h>
 #include <CCA/Ports/DataWarehouse.h>
 #include <Core/Grid/Variables/NCVariable.h>
@@ -38,9 +37,7 @@
 #include <Core/Grid/Variables/NodeIterator.h> // just added
 #include <Core/ProblemSpec/ProblemSpec.h>
 #include <Core/Math/MinMax.h>
-#include <Core/Malloc/Allocator.h>
 #include <Core/Util/DebugStream.h>
-#include <fstream>
 #include <iostream>
 
 using namespace std;

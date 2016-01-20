@@ -140,7 +140,7 @@ run "cd ../../.."  # back to Wasatch3P
 
 run "cd src"
 run "rm -rf ExprLib"
-run "env GIT_SSL_NO_VERIFY=true git clone --depth 1 https://software.crsim.utah.edu:8443/James_Research_Group/ExprLib.git ExprLib"
+run "env GIT_SSL_NO_VERIFY=true git clone --depth 20 https://software.crsim.utah.edu:8443/James_Research_Group/ExprLib.git ExprLib"
 if test ! -z $EXPR_LIB_TAG ; then
     run "cd ExprLib"
     run "git reset --hard $EXPR_LIB_TAG"

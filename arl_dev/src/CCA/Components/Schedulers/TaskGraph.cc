@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2015 The University of Utah
+ * Copyright (c) 1997-2016 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -1530,13 +1530,16 @@ TaskGraph::createDetailedDependencies( DetailedTask*     task,
                 if (subsequentProc != proc) {
                   cond = DetailedDep::FirstIteration;  // change outer cond from always to first-only
                   DetailedTask* subsequentCreator = dts_->getOldDWSendTask(subsequentProc);
-                  dts_->possiblyCreateDependency(subsequentCreator, comp, fromNeighbor, task, req, fromNeighbor, matl, from_l,
-                                                 from_h, DetailedDep::SubsequentIterations);
+                  dts_->possiblyCreateDependency(subsequentCreator, comp, fromNeighbor,
+                      task, req, patch,
+                      matl, from_l, from_h, DetailedDep::SubsequentIterations);
                   detaileddbg << d_myworld->myrank() << "   Adding condition reqs for " << *req->var << " task : " << *creator
                               << "  to " << *task << "\n";
                 }
               }
-              dts_->possiblyCreateDependency(creator, comp, fromNeighbor, task, req, fromNeighbor, matl, from_l, from_h, cond);
+              dts_->possiblyCreateDependency(creator, comp, fromNeighbor,
+                  task, req, patch,
+                  matl, from_l, from_h, cond);
             }
           }
         }

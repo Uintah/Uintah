@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 2012-2015 The University of Utah
+ * Copyright (c) 2012-2016 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -50,7 +50,7 @@
 
 using std::endl;
 
-namespace Wasatch{
+namespace WasatchCore{
 
   //------------------------------------------------------------------
 
@@ -63,7 +63,7 @@ namespace Wasatch{
                            const bool isConstDensity,
                            const TurbulenceParameters& turbulenceParams,
                            const bool callSetup )
-    : Wasatch::TransportEquation( gc,
+    : WasatchCore::TransportEquation( gc,
                                   solnVarName,
                                   get_staggered_location<FieldT>(),
                                   isConstDensity ),
@@ -87,7 +87,7 @@ namespace Wasatch{
 
     // define the primitive variable and solution variable tags and trap errors
     std::string form = "strong"; // default to strong form
-    params->get("form",form);    // get attribute for form. if none provided, then use default
+    params->getWithDefault("form",form,"strong");    // get attribute for form. if none provided, then use default
     isStrong_ = (form == "strong") ? true : false;
     const bool existPrimVar = params->findBlock("PrimitiveVariable");
 
@@ -140,22 +140,27 @@ namespace Wasatch{
            diffFluxParams != 0;
            diffFluxParams=diffFluxParams->findNextBlock("DiffusiveFlux") )
       {
+        const Expr::Tag densityTag = Expr::Tag(densityTag_.name(), Expr::STATE_NONE);
+        const Expr::Tag primVarTag = Expr::Tag(primVarTag_.name(), Expr::STATE_NONE);
+
         setup_diffusive_flux_expression<FieldT>( diffFluxParams,
-                                                 densityTag_,
-                                                 primVarTag_,
+                                                 densityTag,
+                                                 primVarTag,
                                                  turbDiffTag_,
-                                                 "",
                                                  factory,
                                                  info );
 
         // if doing convection, we will likely have a pressure solve that requires
         // predicted scalar values to approximate the density time derivatives
         if( params_->findBlock("ConvectiveFlux") ){
+          
+          const Expr::Tag densityCorrectedTag = Expr::Tag(densityTag.name() + TagNames::self().star, Expr::STATE_NONE);
+          const Expr::Tag primVarCorrectedTag = Expr::Tag(primVarTag.name() + TagNames::self().star, Expr::STATE_NONE);
+          
           setup_diffusive_flux_expression<FieldT>( diffFluxParams,
-                                                   densityTag_,
-                                                   primVarTag_,
+                                                   densityCorrectedTag,
+                                                   primVarCorrectedTag,
                                                    turbDiffTag_,
-                                                   TagNames::self().star,
                                                    factory,
                                                    infoStar_ );
         }
@@ -187,7 +192,7 @@ namespace Wasatch{
         convFluxParams != 0;
         convFluxParams=convFluxParams->findNextBlock("ConvectiveFlux") )
     {
-      setup_convective_flux_expression<FieldT>( convFluxParams, solnVarTag, "", factory, info );
+      setup_convective_flux_expression<FieldT>( convFluxParams, solnVarTag, factory, info );
     }
   }
 
@@ -420,4 +425,4 @@ namespace Wasatch{
   // explicit template instantiation
   template class ScalarTransportEquation< SVolField >;
 
-} // namespace Wasatch
+} // namespace WasatchCore

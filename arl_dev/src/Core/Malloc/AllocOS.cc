@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2015 The University of Utah
+ * Copyright (c) 1997-2016 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -82,13 +82,8 @@ OSHunk* OSHunk::alloc(size_t size, bool returnable, Allocator* allocator)
 	  }
        }
 #ifdef SCI_64BITS
-#  ifdef __sgi
-       ptr=mmap64(0, asize, PROT_READ|PROT_WRITE, MAP_PRIVATE,
-		  devzero_fd, 0);
-#  else
        ptr=mmap(0, asize, PROT_READ|PROT_WRITE, MAP_PRIVATE,
 		devzero_fd, 0);
-#  endif
 #else
        ptr=mmap(0, asize, PROT_READ|PROT_WRITE, MAP_PRIVATE,
 		devzero_fd, 0);
@@ -161,9 +156,6 @@ OSHunk::free(OSHunk* hunk)
     if(munmap((MMAP_TYPE*)hunk, len) == -1){
 	int i;
         for(i=0;i<10;i++){
-#ifdef __sgi
-	    sginap(10);
-#endif
     	    if(munmap((MMAP_TYPE*)hunk, len) != -1)
 		break;
         }

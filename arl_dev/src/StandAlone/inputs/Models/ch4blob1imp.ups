@@ -245,33 +245,35 @@
     </MaterialProperties>
     <!--__________________________________-->
     <Models>
-       <Model type="AdiabaticTable">
-        <table name="adiabatic" type="Arches">
-          <filename>inputs/Models/ch4.rxn</filename>
-       </table>
-        <material>BackgroundGas</material>
-        <scalar name="f">
-        <constants>
-        </constants>
-        <geom_object>
-            <box label="world">                     </box>
-            <scalar>    0.00      </scalar>
-        </geom_object>
-        <geom_object>
-              <sphere label = "CH4_blob">
-                 <origin>           [0.0,0.0,0.0]   </origin>
-                 <radius>           0.5             </radius>
-              </sphere>
-               <scalar>    1.00   </scalar>
-        </geom_object>
-        <geom_object>
-              <sphere label = "hole in middle">
-                 <origin>           [0.0,0.0,0.0]    </origin>
-                 <radius>           0.25             </radius>
-              </sphere>
-              <scalar>    0.00   </scalar>
-        </geom_object>
-       </scalar>
+      <Model type="AdiabaticTable">
+        <AdiabaticTable>
+          <table name="adiabatic" type="Arches">
+            <filename>inputs/Models/ch4.rxn</filename>
+          </table>
+          <material>BackgroundGas</material>
+          <scalar name="f">
+            <constants>
+            </constants>
+            <geom_object>
+                <box label="world">                     </box>
+                <scalar>    0.00      </scalar>
+            </geom_object>
+            <geom_object>
+                <sphere label = "CH4_blob">
+                   <origin>           [0.0,0.0,0.0]   </origin>
+                   <radius>           0.5             </radius>
+                </sphere>
+                <scalar>    1.00   </scalar>
+            </geom_object>
+            <geom_object>
+                <sphere label = "hole in middle">
+                   <origin>           [0.0,0.0,0.0]    </origin>
+                   <radius>           0.25             </radius>
+                </sphere>
+                <scalar>    0.00   </scalar>
+            </geom_object>
+          </scalar>
+        </AdiabaticTable>
       </Model>
     </Models>                
 

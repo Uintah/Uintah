@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2015 The University of Utah
+ * Copyright (c) 1997-2016 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -62,6 +62,17 @@
 #include <CCA/Ports/Scheduler.h>
 #include <CCA/Ports/SimulationInterface.h>
 
+#include <sci_defs/visit_defs.h>
+
+#ifdef HAVE_VISIT
+#  include <VisIt/libsim/visit_libsim.h>
+#  include <VisIt/libsim/visit_libsim_customUI.h>
+#endif
+
+#ifdef HAVE_CUDA
+//#include <CCA/Components/Schedulers/GPUUtilities.h>
+#include <CCA/Components/Schedulers/GPUGridVariableInfo.h>
+#endif
 #include <iostream>
 #include <iomanip>
 
@@ -85,10 +96,6 @@ AMRSimulationController::AMRSimulationController( const ProcessorGroup * myworld
                                                         ProblemSpecP     pspec)
   : SimulationController(myworld, doAMR, doMultiScale, pspec)
 {
-#ifdef HAVE_VISIT
-  do_visit = true;
-#endif
-
 }
 
 AMRSimulationController::~AMRSimulationController()
@@ -134,11 +141,14 @@ AMRSimulationController::run()
 
   // Sets up SimulationState (d_sharedState), output, scheduler, and timeinfo - also runs problemSetup for scheduler and output
   preGridSetup();
-
+  
   // Create grid:
   GridP currentGrid = gridSetup();
 
   d_scheduler->initialize( 1, 1 );
+#ifdef HAVE_CUDA
+   GpuUtilities::assignPatchesToGpus(currentGrid);
+#endif
 
   d_scheduler->advanceDataWarehouse( currentGrid, true );
 
@@ -183,17 +193,13 @@ AMRSimulationController::run()
   // If VisIt has been included into the build, initialize the lib sim
   // so that a user can connect to the simulation via VisIt.
 #ifdef HAVE_VISIT
+  visit_simulation_data visitSimData;
 
-  if( do_visit )
+  if( d_sharedState->GetVisIt() )
   {
-    d_visit_simulation_data.AMRSimController = this;
-    d_visit_simulation_data.gridP = currentGrid;
+    visitSimData.simController = this;
 
-#ifdef HAVE_MPICH
-  d_visit_simulation_data.isProc0 = isProc0_macro;
-#endif
-
-    visit_InitLibSim( &d_visit_simulation_data );
+    visit_InitLibSim( &visitSimData );
   }
 #endif
 
@@ -202,14 +208,12 @@ AMRSimulationController::run()
    
   int    iterations = d_sharedState->getCurrentTopLevelTimeStep();
   double delt = 0;
-   
+  delt_vartype delt_var;
   double start;
   
   d_lb->resetCostForecaster();
 
   d_scheduler->setInitTimestep(false);
-
-
 
   while( ( time < d_timeinfo->maxTime ) &&
          ( iterations < d_timeinfo->maxTimestep ) && 
@@ -240,7 +244,8 @@ AMRSimulationController::run()
         doRegridding(currentGrid, false);
         d_regridder->setAdaptivity(false);
 #ifdef HAVE_VISIT
-        d_regridder->setForceRegridding(false);
+        if( d_sharedState->GetVisIt() )
+          d_regridder->setForceRegridding(false);
 #endif
         proc0cout << "______________________________________________________________________\n";
       }
@@ -250,7 +255,8 @@ AMRSimulationController::run()
         proc0cout << " Need to regrid.\n";
         doRegridding(currentGrid, false);
 #ifdef HAVE_VISIT
-        d_regridder->setForceRegridding(false);
+        if( d_sharedState->GetVisIt() )
+          d_regridder->setForceRegridding(false);
 #endif
         proc0cout << "______________________________________________________________________\n";
       }
@@ -265,19 +271,29 @@ AMRSimulationController::run()
       }
     }
      
-    d_sharedState->d_prev_delt = delt;
-    iterations++;
- 
     // get delt and adjust it
-    delt_vartype delt_var;
     DataWarehouse* newDW = d_scheduler->getLastDW();
     newDW->get(delt_var, d_sharedState->get_delt_label());
-
     delt = delt_var;
+    
+#ifdef HAVE_VISIT
+    // If the user modified delt during the previous time step skip
+    // calling adjustDelT for this next time step.
 
-    // delt adjusted based on timeinfo parameters
-    adjustDelT( delt, d_sharedState->d_prev_delt, first, time );
-    newDW->override(delt_vartype(delt), d_sharedState->get_delt_label());
+    // Note: this code is not explicit to VisIt but it is currently
+    // the only component that is making use of the ability to
+    // overirde adjusting delta T.
+    if( d_sharedState->GetVisIt() && d_sharedState->adjustDelT() == false )
+    {
+      d_sharedState->adjustDelT(true);
+    }
+    else
+#endif
+    {
+      // delt adjusted based on timeinfo parameters
+      adjustDelT( delt, d_sharedState->d_prev_delt, first, time );
+      newDW->override(delt_vartype(delt), d_sharedState->get_delt_label());
+    }
 
     // printSimulationStats( d_sharedState, delt, time );
 
@@ -328,7 +344,7 @@ AMRSimulationController::run()
     double new_init_delt = 0.;
 
     bool nr;
-    if( (nr=needRecompile( time, delt, currentGrid )) || first ){
+    if( (nr=needRecompile( time, delt, currentGrid )) || first ) {
         
       if(nr){ // Recompile taskgraph, re-assign BCs, reset recompile flag.
         currentGrid->assignBCS( d_grid_ps, d_lb );
@@ -349,6 +365,9 @@ AMRSimulationController::run()
         // This is not correct if we have switched to a different
         // component, since the delt will be wrong 
         d_output->finalizeTimestep( time, delt, currentGrid, d_scheduler, 0 );
+
+        // ARS - THIS CALL DOES NOTHING BECAUSE THE LAST ARG IS 0
+        // WHICH CAUSES THE METHOD TO IMMEIDATELY RETURN.
         d_output->sched_allOutputTasks( delt, currentGrid, d_scheduler, 0 );
       }
     }
@@ -430,55 +449,65 @@ AMRSimulationController::run()
       }
     }
 
-    if(d_output){
-      d_output->findNext_OutputCheckPoint_Timestep(  delt, currentGrid );
+    if(d_output) {
+      d_output->findNext_OutputCheckPoint_Timestep( delt, currentGrid );
       d_output->writeto_xml_files( delt, currentGrid );
     }
 
     time += delt;
 
-    // If VisIt has been included into the build, check the lib sim state
-    // to see if there is a connection and if so if anything needs to be
-    // done.
-#ifdef HAVE_VISIT
-
-     if( do_visit ) {
-       d_visit_simulation_data.time  = time;
-       d_visit_simulation_data.delt  = delt;
-       d_visit_simulation_data.cycle = d_sharedState->getCurrentTopLevelTimeStep();
-
-       visit_CheckState( &d_visit_simulation_data );
-
-       // User issued a termination.
-       if( d_visit_simulation_data.simMode == VISIT_SIMMODE_TERMINATED )
-         break;
-     }
-#endif
-
     if ( first ) {
       d_scheduler->setRestartInitTimestep(false);
       first = false;
     }
-     
+
+    d_sharedState->d_prev_delt = delt;
+
+    ++iterations;
+    
+    // If VisIt has been included into the build, check the lib sim
+    // state to see if there is a connection and if so check to see if
+    // anything needs to be done.
+#ifdef HAVE_VISIT
+    if( d_sharedState->GetVisIt() )
+    {
+      // Get the new delt so the user can change the value.
+      d_scheduler->getLastDW()->get(delt_var, d_sharedState->get_delt_label());
+      double delt_next = delt_var;
+      adjustDelT( delt_next, delt, first, time );
+
+      // Update all of the simulation grid and time dependent
+      // variables.
+      visit_UpdateSimData( &visitSimData, currentGrid,
+			   time, delt, delt_next, getWallTime(),
+			   std::string("") );
+      
+      // Check the state.
+      visit_CheckState( &visitSimData );
+      
+      // User issued a termination.
+      if( visitSimData.simMode == VISIT_SIMMODE_TERMINATED )
+	break;
+    }
+#endif
   } // end while ( time is not up, etc )
 
-  // If VisIt has been included into the build, stop here so the
-  // user can have once last chance see their data via VisIt.
-#ifdef HAVE_VISIT
-
-   if( do_visit ) {
-     visit_EndLibSim( &d_visit_simulation_data );
-   }
-#endif
-
-  // print for the final timestep, as the one above is in the middle of a while loop - get new delt, and set walltime first
-  delt_vartype delt_var;
+  // print for the final timestep, as the one above is in the middle
+  // of a while loop - get new delt, and set walltime first
   d_scheduler->getLastDW()->get(delt_var, d_sharedState->get_delt_label());
   delt = delt_var;
   adjustDelT( delt, d_sharedState->d_prev_delt, d_sharedState->getCurrentTopLevelTimeStep(), time );
   calcWallTime();
   printSimulationStats( d_sharedState->getCurrentTopLevelTimeStep(), delt, time );
   
+  // If VisIt has been included into the build, stop here so the
+  // user can have once last chance see their data via VisIt.
+#ifdef HAVE_VISIT
+   if( d_sharedState->GetVisIt() ) {
+     visit_EndLibSim( &visitSimData );
+   }
+#endif
+
   // d_ups->releaseDocument();
 #ifdef USE_GPERFTOOLS
   if (gprofile.active()){
@@ -831,7 +860,7 @@ AMRSimulationController::doRegridding( GridP & currentGrid, bool initialTimestep
   }
   
   double regridTime = Time::currentSeconds() - start;
-  d_sharedState->regriddingTime += regridTime;
+  d_sharedState->d_timingStats[SimulationState::RegriddingTime] += regridTime;
   d_sharedState->setRegridTimestep(false);
 
   int lbstate = initialTimestep ? LoadBalancer::init : LoadBalancer::regrid;
@@ -994,7 +1023,7 @@ AMRSimulationController::recompile(double t, double delt, GridP& currentGrid, in
   double dt=Time::currentSeconds() - start;
 
   proc0cout << "DONE TASKGRAPH RE-COMPILE (" << dt << " seconds)\n";
-  d_sharedState->compilationTime += dt;
+  d_sharedState->d_timingStats[SimulationState::CompilationTime] += dt;
 }
 //______________________________________________________________________
 void

@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 2012-2015 The University of Utah
+ * Copyright (c) 2012-2016 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -30,8 +30,8 @@
 #include <spatialops/structured/FVStaggered.h>
 
 
-template< typename FieldT >
-MomRHS<FieldT>::
+template< typename FieldT, typename DirT>
+MomRHS<FieldT, DirT>::
 MomRHS( const Expr::Tag& pressureTag,
         const Expr::Tag& partRHSTag,
         const Expr::Tag& volFracTag )
@@ -48,16 +48,16 @@ MomRHS( const Expr::Tag& pressureTag,
 
 //--------------------------------------------------------------------
 
-template< typename FieldT >
-MomRHS<FieldT>::
+template< typename FieldT, typename DirT>
+MomRHS<FieldT, DirT>::
 ~MomRHS()
 {}
 
 //--------------------------------------------------------------------
 
-template< typename FieldT >
+template< typename FieldT, typename DirT>
 void
-MomRHS<FieldT>::
+MomRHS<FieldT, DirT>::
 bind_operators( const SpatialOps::OperatorDatabase& opDB )
 {
   gradOp_ = opDB.retrieve_operator<Grad>();
@@ -65,9 +65,9 @@ bind_operators( const SpatialOps::OperatorDatabase& opDB )
 
 //--------------------------------------------------------------------
 
-template< typename FieldT >
+template< typename FieldT, typename DirT>
 void
-MomRHS<FieldT>::
+MomRHS<FieldT, DirT>::
 evaluate()
 {
   using namespace SpatialOps;
@@ -88,8 +88,8 @@ evaluate()
 
 //--------------------------------------------------------------------
 
-template< typename FieldT >
-MomRHS<FieldT>::
+template< typename FieldT, typename DirT>
+MomRHS<FieldT, DirT>::
 Builder::Builder( const Expr::Tag& result,
                   const Expr::Tag& pressure,
                   const Expr::Tag& partRHS,
@@ -102,18 +102,21 @@ Builder::Builder( const Expr::Tag& result,
 
 //--------------------------------------------------------------------
 
-template< typename FieldT >
+template< typename FieldT, typename DirT>
 Expr::ExpressionBase*
-MomRHS<FieldT>::Builder::build() const
+MomRHS<FieldT, DirT>::Builder::build() const
 {
-  return new MomRHS<FieldT>( pressuret_, rhspartt_, volfract_ );
+  return new MomRHS<FieldT, DirT>( pressuret_, rhspartt_, volfract_ );
 }
 
 //--------------------------------------------------------------------
 
 //==================================================================
 // Explicit template instantiation
-template class MomRHS< SpatialOps::XVolField >;
-template class MomRHS< SpatialOps::YVolField >;
-template class MomRHS< SpatialOps::ZVolField >;
+template class MomRHS< SpatialOps::SVolField, SpatialOps::XDIR >;
+template class MomRHS< SpatialOps::SVolField, SpatialOps::YDIR >;
+template class MomRHS< SpatialOps::SVolField, SpatialOps::ZDIR >;
+template class MomRHS< SpatialOps::XVolField, SpatialOps::NODIR >;
+template class MomRHS< SpatialOps::YVolField, SpatialOps::NODIR >;
+template class MomRHS< SpatialOps::ZVolField, SpatialOps::NODIR >;
 //==================================================================

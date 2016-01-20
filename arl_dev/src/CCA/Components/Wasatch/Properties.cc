@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 2012-2015 The University of Utah
+ * Copyright (c) 2012-2016 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -60,7 +60,7 @@ Interp2D i2d;
 Interp3D i3d;
 
 
-namespace Wasatch{
+namespace WasatchCore{
 
   //====================================================================
 
@@ -482,17 +482,13 @@ namespace Wasatch{
      * to estimate their values at "*" RK stage to be able to estimate the value
      * of density at this RK stage
      */
-    const TagNames& tagNames = TagNames::self();
-
     for( Uintah::ProblemSpecP transEqnParams= params->findBlock("TransportEquation");
         transEqnParams != 0;
         transEqnParams=transEqnParams->findNextBlock("TransportEquation") )
     {
       std::string solnVarName;
       transEqnParams->get( "SolutionVariable", solnVarName );
-
-      // Here we get the variables needed for calculations at the stage "*"
-      const Expr::Tag solnVarTagNp1  ( solnVarName,                 Expr::STATE_NONE ); // tag for rhof_{n+1}
+      const Expr::Tag solnVarTagNp1( solnVarName, Expr::STATE_NONE ); // tag for rhof_{n+1}
     }
   }
 
@@ -543,4 +539,4 @@ namespace Wasatch{
 
   //====================================================================
 
-} // namespace Wasatch
+} // namespace WasatchCore

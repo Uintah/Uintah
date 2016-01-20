@@ -6,7 +6,7 @@
  *
  * The MIT License
  *
- * Copyright (c) 2013-2015 The University of Utah
+ * Copyright (c) 2013-2016 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -32,12 +32,12 @@
 
 #include <CCA/Components/Wasatch/Transport/ScalarTransportEquation.h>
 
-namespace Wasatch {
+namespace WasatchCore {
 
   /**
-   *  \class  Wasatch::EnthalpyTransportEquation
+   *  \class  WasatchCore::TotalInternalEnergyTransportEquation
    *  \date   November, 2013
-   *  \author "James C. Sutherland"
+   *  \author James C. Sutherland, Tony Saad
    *
    *  The total internal energy transport equation has the form:
    *  \f[
@@ -71,6 +71,7 @@ namespace Wasatch {
                                           const Expr::Tag& pressureTag,
                                           const Expr::TagList& velTags,
                                           const Expr::Tag& viscTag,
+                                          const Expr::Tag& dilTag,
                                           const TurbulenceParameters& turbulenceParams );
 
     ~TotalInternalEnergyTransportEquation();
@@ -87,6 +88,6 @@ namespace Wasatch {
     const Expr::TagList velTags_;
   };
 
-} /* namespace Wasatch */
+} /* namespace WasatchCore */
 
 #endif /* TotalInternalEnergy_Transport_Equation_H_ */

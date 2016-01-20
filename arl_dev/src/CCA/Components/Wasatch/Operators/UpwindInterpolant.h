@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 2012-2015 The University of Utah
+ * Copyright (c) 2012-2016 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -111,7 +111,7 @@ public:
    *   \brief Sets the flux limiter type to be used by this interpolant.
    *   \param limiterType: An enum that holds the limiter name.
    */
-  void set_flux_limiter_type( Wasatch::ConvInterpMethods limiterType ){}
+  void set_flux_limiter_type( WasatchCore::ConvInterpMethods limiterType ){}
 
   /**
    *  \brief Applies the Upwind interpolation to the source field.

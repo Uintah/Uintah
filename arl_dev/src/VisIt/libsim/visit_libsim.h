@@ -25,30 +25,6 @@
 #ifndef UINTAH_VISIT_LIBSIM_H
 #define UINTAH_VISIT_LIBSIM_H
 
-#include "VisItControlInterface_V2.h"
-#include "VisItDataInterface_V2.h"
-
-#include <Core/Grid/Grid.h>
-
-#include <sci_defs/mpi_defs.h>
-
-#include <string>
-
-class TimeStepInfo;
-
-namespace Uintah {
-
-class AMRSimulationController;
-
-/* Simulation Mode */
-//#define VISIT_SIMMODE_UNKNOWN  0
-//#define VISIT_SIMMODE_RUNNING  1
-//#define VISIT_SIMMODE_STOPPED  2
-
-#define VISIT_SIMMODE_STEP       3
-#define VISIT_SIMMODE_FINISHED   4
-#define VISIT_SIMMODE_TERMINATED 5
-
 /**************************************
         
 CLASS
@@ -72,18 +48,47 @@ DESCRIPTION
         
 WARNING
         
+
 ****************************************/
+
+#include "Core/Grid/Grid.h"
+
+#include <map>
+#include <string>
+#include <utility>
+
+class TimeStepInfo;
+
+namespace Uintah {
+
+class SimulationController;
+
+/* Simulation Mode */
+//#define VISIT_SIMMODE_UNKNOWN  0
+//#define VISIT_SIMMODE_RUNNING  1
+//#define VISIT_SIMMODE_STOPPED  2
+
+#define VISIT_SIMMODE_STEP       3
+#define VISIT_SIMMODE_FINISHED   4
+#define VISIT_SIMMODE_TERMINATED 5
+
+
 typedef struct
 {
   // Uintah data members
-  AMRSimulationController *AMRSimController;
+  SimulationController *simController;
   GridP gridP;
   
   TimeStepInfo* stepInfo;
 
   int cycle;
+
   double time;
   double delt;
+  double delt_next;
+  double elapsedt;
+
+  std::string message;
 
   int blocking;
 
@@ -92,40 +97,24 @@ typedef struct
   bool forceMeshReload;
 
   // Simulation control members
-  int  runMode;
-  int  simMode;
+  int  runMode;  // What the libsim is doing.
+  int  simMode;  // What the simulation is doing.
 
   bool isProc0;
 
 } visit_simulation_data;
 
 
-static int visit_BroadcastStringCallback(char *str, int len, int sender);
-static int visit_BroadcastIntCallback(int *value, int sender);
-static void visit_BroadcastSlaveCommand(int *command);
-void visit_SlaveProcessCallback();
-int visit_ProcessVisItCommand( visit_simulation_data *sim );
-
-void
-visit_ControlCommandCallback(const char *cmd, const char *args, void *cbdata);
-
 void visit_LibSimArguments(int argc, char **argv);
 void visit_InitLibSim(visit_simulation_data *sim);
 void visit_EndLibSim(visit_simulation_data *sim);
 void visit_CheckState(visit_simulation_data *sim);
 
+void visit_UpdateSimData( visit_simulation_data *sim, 
+                          GridP currentGrid,
+                          double time, double delt, double delt_next,
+                          double wallTime, std::string msg );
 
-void visit_CalculateDomainNesting(TimeStepInfo* stepInfo,
-                                  bool &forceMeshReload,
-                                  int timestate, const std::string &meshname);
-
-visit_handle visit_ReadMetaData(void *cbdata);
-
-visit_handle visit_SimGetMetaData(void *cbdata);
-visit_handle visit_SimGetMesh(int domain, const char *name, void *cbdata);
-visit_handle visit_SimGetVariable(int domain, const char *name, void *cbdata);
-
-visit_handle visit_SimGetDomainList(const char *name, void *cbdata);
 } // End namespace Uintah
 
 #endif

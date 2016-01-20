@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2015 The University of Utah
+ * Copyright (c) 1997-2014 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -22,57 +22,43 @@
  * IN THE SOFTWARE.
  */
 
+#ifndef UINTAH_VISIT_LIBSIM_DATABASE_H
+#define UINTAH_VISIT_LIBSIM_DATABASE_H
 
-/*
- *  Ring.h: A static-length ring buffer
- *
- *  Written by:
- *   David Weinstein
- *   Department of Computer Science
- *   University of Utah
- *   December 1996
- *
- */
+/**************************************
+        
+CLASS
+   visit_libsim_database
+        
+   Short description...
+        
+GENERAL INFORMATION
+        
+   visit_init
+        
+   Allen R. Sanderson
+   Scientific Computing and Imaging Institute
+   University of Utah
+        
+KEYWORDS
+   VisIt, libsim, in-situ
+        
+DESCRIPTION
+   Long description...
+        
+WARNING
+        
 
+****************************************/
 
-#ifndef SCI_Containers_Ring_h
-#define SCI_Containers_Ring_h 1
+namespace Uintah {
 
-#ifdef __GNUG__
-#pragma interface
-#endif
+visit_handle visit_SimGetMetaData(void *cbdata);
+visit_handle visit_SimGetMesh(int domain, const char *name, void *cbdata);
+visit_handle visit_SimGetVariable(int domain, const char *name, void *cbdata);
 
-#include <vector>
+visit_handle visit_SimGetDomainList(const char *name, void *cbdata);
 
-namespace SCIRun {
-
-template<class T> class Ring {
-    std::vector<T> data;
-    int head_;
-    int tail_;
-    int size_;
-public:
-    inline int size() {return size_;}
-    inline int head() {return head_;}
-    inline int tail() {return tail_;}
-    Ring(int s);
-    ~Ring();
-    inline T pop() {T item=data_[head_]; head_=(head_+1)%size_; return item;}
-    inline T top() {return data_[head_];}
-    inline void push(T item) {data_[tail_]=item; tail_=(tail_+1)%size_;}
-    inline void swap(T item) {int i=(tail_-1)%size_; T tmp=data_[i]; data_[i]=item; data_[tail_]=tmp; tail_=(tail_+1)%size_;}
-};
-
-template<class T> Ring<T>::Ring(int s)
-  : data_(s), head_(0), tail_(0), size_(s)
-{
-}
-
-template<class T> Ring<T>::~Ring()
-{
-}
-
-} // End namespace SCIRun
-
+} // End namespace Uintah
 
 #endif

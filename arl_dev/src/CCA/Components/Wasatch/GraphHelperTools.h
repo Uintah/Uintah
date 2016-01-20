@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 2012-2015 The University of Utah
+ * Copyright (c) 2012-2016 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -42,7 +42,7 @@ namespace Expr{
   class ExpressionFactory;
 }
 
-namespace Wasatch{
+namespace WasatchCore{
 
   class TransportEquation;  // forward declaration
 
@@ -57,7 +57,7 @@ namespace Wasatch{
    *  Tasks associated with a particular category are registered in
    *  the associated Wasatch method that Uintah calls to register
    *  tasks.  They are generally combined into one or more Expression
-   *  trees that are wrapped using the Wasatch::TaskInterface.
+   *  trees that are wrapped using the WasatchCore::TaskInterface.
    */
   enum Category{
     INITIALIZATION,	///< Tasks associated with simulation initialization
@@ -93,13 +93,13 @@ namespace Wasatch{
 
   /**
    *  \brief Defines a map that provides GraphHelper objects given the
-   *  \ref Wasatch::Category "Category" that they belong to.
+   *  \ref WasatchCore::Category "Category" that they belong to.
    */
   typedef std::map< Category, GraphHelper* > GraphCategories;
 
   /** @} */
 
-} // namespace Wasatch
+} // namespace WasatchCore
 
 
 #endif // Wasatch_GraphHelperTools_h

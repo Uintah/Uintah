@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2015 The University of Utah
+ * Copyright (c) 1997-2016 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -36,17 +36,13 @@
 #include <Core/Grid/Box.h>
 #include <Core/Grid/Patch.h>
 #include <Core/Grid/Variables/CellIterator.h>
-#include <Core/Grid/Variables/VarLabel.h>
-#include <Core/Grid/Variables/PerPatch.h>
 #include <Core/Labels/MPMLabel.h>
 #include <Core/GeometryPiece/GeometryPieceFactory.h>
 #include <Core/GeometryPiece/UnionGeometryPiece.h>
 #include <Core/GeometryPiece/NullGeometryPiece.h>
 #include <Core/Exceptions/ParameterNotFound.h>
-#include <CCA/Ports/DataWarehouse.h>
 #include <Core/ProblemSpec/ProblemSpecP.h>
 #include   <iostream>
-#include   <string>
 #include   <list>
 
 #define d_TINY_RHO 1.0e-12 // also defined  ICE.cc and ICEMaterial.cc 

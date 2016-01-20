@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 2012-2015 The University of Utah
+ * Copyright (c) 2012-2016 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -22,24 +22,21 @@
  * IN THE SOFTWARE.
  */
 
-//-- SpatialOps includes --//
-#include <spatialops/structured/FVStaggered.h>
-
 //-- Wasatch includes --//
 #include "Operators.h"
-#include <CCA/Components/Wasatch/Operators/UpwindInterpolant.h>
-#include <CCA/Components/Wasatch/Operators/Extrapolant.h>
-#include <CCA/Components/Wasatch/Operators/FluxLimiterInterpolant.h>
 #include <CCA/Components/Wasatch/BCHelper.h>
 #include <CCA/Components/Wasatch/WasatchBCHelper.h>
 #include <spatialops/particles/ParticleOperators.h>
+#include <CCA/Components/Wasatch/Operators/Extrapolant.h>
+#include <CCA/Components/Wasatch/Operators/UpwindInterpolant.h>
+#include <CCA/Components/Wasatch/Operators/FluxLimiterInterpolant.h>
 
 //-- Uintah includes --//
 #include <Core/Grid/Patch.h>
 
 using namespace SpatialOps;
 
-namespace Wasatch{
+namespace WasatchCore{
   
   template<typename FieldT>
   const SCIRun::Point get_low_position(const Uintah::Patch& patch);
@@ -173,4 +170,4 @@ namespace Wasatch{
     BUILD_PARTICLE_OPS( ZVolField );
   }
   
-} // namespace Wasatch
+} // namespace WasatchCore

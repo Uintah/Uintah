@@ -1,7 +1,7 @@
 #
 #  The MIT License
 #
-#  Copyright (c) 1997-2015 The University of Utah
+#  Copyright (c) 1997-2016 The University of Utah
 # 
 #  Permission is hereby granted, free of charge, to any person obtaining a copy
 #  of this software and associated documentation files (the "Software"), to
@@ -50,7 +50,7 @@ SRCS   += \
           $(SRCDIR)/VariableNotFoundInGrid.cc  
 
 PSELIBS := 
-LIBS := $(TRACEBACK_LIB) $(DL_LIBRARY)
+LIBS := $(DL_LIBRARY)
 
 include $(SCIRUN_SCRIPTS)/smallso_epilogue.mk
 

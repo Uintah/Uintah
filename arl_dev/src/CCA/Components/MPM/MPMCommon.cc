@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2015 The University of Utah
+ * Copyright (c) 1997-2016 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -23,11 +23,9 @@
  */
 
 #include <CCA/Components/MPM/MPMCommon.h> 
-#include <Core/Grid/Patch.h>
 #include <CCA/Components/MPM/ConstitutiveModel/MPMMaterial.h>
 #include <CCA/Components/MPM/CohesiveZone/CZMaterial.h>
 #include <Core/ProblemSpec/ProblemSpec.h>
-#include <Core/Grid/Level.h>
 
 using namespace std;
 using namespace Uintah;

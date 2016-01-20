@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 2012-2015 The University of Utah
+ * Copyright (c) 2012-2016 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -27,7 +27,7 @@
 
 #include <expression/Expression.h>
 
-namespace Wasatch{
+namespace WasatchCore{
 
 /**
  *  \class 	SetCurrentTime
@@ -64,6 +64,6 @@ public:
   void set_time  ( const double t ){ simTime_ = t; }
 };
 
-} // namespace Wasatch
+} // namespace WasatchCore
 
 #endif // SetCurrentTime_Expr_h

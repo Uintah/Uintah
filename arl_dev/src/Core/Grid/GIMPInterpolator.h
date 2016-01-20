@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2015 The University of Utah
+ * Copyright (c) 1997-2016 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -54,6 +54,20 @@ namespace Uintah {
                                                        std::vector<Vector>& d_S,
                                                        const Matrix3& size,
                                                        const Matrix3& defgrad);
+                                                       
+    //__________________________________
+    //  AMRMPM                                
+    virtual void findCellAndWeights_CFI(const Point& pos,
+                                        std::vector<IntVector>& ni,
+                                        std::vector<double>& S,
+                                        constNCVariable<Stencil7>& zoi);
+                                        
+    virtual void findCellAndWeightsAndShapeDerivatives_CFI(
+                                            const Point& pos,
+                                            std::vector<IntVector>& CFI_ni,
+                                            std::vector<double>& S,
+                                            std::vector<Vector>& d_S,
+                                            constNCVariable<Stencil7>& zoi);
     virtual int size();
     
   private:

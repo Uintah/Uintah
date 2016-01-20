@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2015 The University of Utah
+ * Copyright (c) 1997-2016 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -22,10 +22,7 @@
  * IN THE SOFTWARE.
  */
 #include <Core/Exceptions/ProblemSetupException.h>
-//#include <Core/Geometry/Vector.h>
 #include <Core/GeometryPiece/FileGeometryPiece.h>
-//#include <Core/Grid/Box.h>
-//#include <Core/Grid/Patch.h>
 #include <Core/Malloc/Allocator.h>
 #include <Core/Math/Matrix3.h>
 #include <Core/Parallel/Parallel.h>
@@ -88,7 +85,7 @@ FileGeometryPiece::FileGeometryPiece( ProblemSpecP & ps )
 {
   name_ = "Unnamed " + TYPE_NAME + " from PS";
   ps->require("name",d_file_name);
-  
+
   for(ProblemSpecP varblock = ps->findBlock("var");
       varblock;varblock=varblock->findNextBlock("var")) {
     string next_var_name("");
@@ -97,7 +94,7 @@ FileGeometryPiece::FileGeometryPiece( ProblemSpecP & ps )
   }
   
   proc0cout << "File Geometry Piece: reading positions ";
-  for(list<string>::const_iterator vit(d_vars.begin());vit!=d_vars.end();vit++) {
+  for(list<string>::const_iterator vit(d_vars.begin());vit!=d_vars.end();vit++){
     if       (*vit=="p.volume") {
       proc0cout << " and volume";
     } else if(*vit=="p.temperature") {
@@ -251,9 +248,11 @@ FileGeometryPiece::read_line(std::istream & is, Point & xmin, Point & xmax)
 
   // CPTI and CPDI can pass the size matrix columns containing rvec1, rvec2, rvec3
   // Other interpolators will default to grid spacing and default orientation
-  Matrix3 size(1.0,0.0,0.0, 0.0,1.0,0.0, 0.0,0.0,1.0);
+  Matrix3 size(d_DX.x(),0.,0.,0.,d_DX.y(),0.,0.,0.,d_DX.z());
   // grid spacing for normalizing size
   Matrix3 gsize((1./d_DX.x()),0.,0.,0.,(1./d_DX.y()),0.,0.,0.,(1./d_DX.z()));
+  bool file_has_size=false;
+  bool file_has_volume=false;
  
   //__________________________________
   //  TEXT FILE
@@ -272,7 +271,9 @@ FileGeometryPiece::read_line(std::istream & is, Point & xmin, Point & xmax)
     for(list<string>::const_iterator vit(d_vars.begin());vit!=d_vars.end();vit++) {
       if (*vit=="p.volume") {
         if(is >> v1) {
+          cout << "v1 = " << v1 << endl;
           d_volume.push_back(v1);
+          file_has_volume=true;
         }
       } else if(*vit=="p.temperature") {
         if(is >> v1){
@@ -289,28 +290,31 @@ FileGeometryPiece::read_line(std::istream & is, Point & xmin, Point & xmax)
       } else if(*vit=="p.fiberdir") {
         if(is >> v1 >> v2 >> v3){
           d_fiberdirs.push_back(Vector(v1,v2,v3));
-	      }  
+        }  
       } else if(*vit=="p.rvec1") {
         if(is >> v1 >> v2 >> v3){
           d_rvec1.push_back(Vector(v1,v2,v3));
           size(0,0)=v1;
           size(1,0)=v2;
           size(2,0)=v3;
-	      }  
+          file_has_size=true;
+        }  
       } else if(*vit=="p.rvec2") {
         if(is >> v1 >> v2 >> v3){
           d_rvec2.push_back(Vector(v1,v2,v3));
           size(0,1)=v1;
           size(1,1)=v2;
           size(2,1)=v3;
-	      }  
+          file_has_size=true;
+        }  
       } else if(*vit=="p.rvec3") {
         if(is >> v1 >> v2 >> v3){
           d_rvec3.push_back(Vector(v1,v2,v3));
           size(0,2)=v1;
           size(1,2)=v2;
           size(2,2)=v3;
-	      }  
+          file_has_size=true;
+        }  
       } else if(*vit=="p.velocity") {
         if(is >> v1 >> v2 >> v3){
           d_velocity.push_back(Vector(v1,v2,v3));
@@ -357,13 +361,13 @@ FileGeometryPiece::read_line(std::istream & is, Point & xmin, Point & xmax)
     //__________________________________
     //
     for(list<string>::const_iterator vit(d_vars.begin());vit!=d_vars.end();vit++) {
-    
       if (*vit=="p.volume") {
         if(is.read((char*)&v[0], sizeof(double))) {
           if(needflip){ 
             swapbytes(v[0]);
           }
           d_volume.push_back(v[0]);
+          file_has_volume=true;
         }
       } else if(*vit=="p.temperature") {
         if(is.read((char*)&v[0], sizeof(double))) {
@@ -403,7 +407,7 @@ FileGeometryPiece::read_line(std::istream & is, Point & xmin, Point & xmax)
             swapbytes(v[2]);
           }
           d_fiberdirs.push_back(Vector(v[0],v[1],v[2]));
-	      }
+        }
       } else if(*vit=="p.rvec1") {
         if(is.read((char*)&v[0], sizeof(double)*3)) {
           if(needflip) {
@@ -415,7 +419,8 @@ FileGeometryPiece::read_line(std::istream & is, Point & xmin, Point & xmax)
           size(0,0)=v[0];
           size(1,0)=v[1];
           size(2,0)=v[2];
-	      }
+          file_has_size=true;
+        }
       } else if(*vit=="p.rvec2") {
         if(is.read((char*)&v[0], sizeof(double)*3)) {
           if(needflip) {
@@ -427,7 +432,8 @@ FileGeometryPiece::read_line(std::istream & is, Point & xmin, Point & xmax)
           size(0,1)=v[0];
           size(1,1)=v[1];
           size(2,1)=v[2];
-	      }
+          file_has_size=true;
+        }
       } else if(*vit=="p.rvec3") {
         if(is.read((char*)&v[0], sizeof(double)*3)) {
           if(needflip) {
@@ -439,16 +445,17 @@ FileGeometryPiece::read_line(std::istream & is, Point & xmin, Point & xmax)
           size(0,2)=v[0];
           size(1,2)=v[1];
           size(2,2)=v[2];
-	      }
+          file_has_size=true;
+        }
       } else if(*vit=="p.velocity") {
-	      if(is.read((char*)&v[0], sizeof(double)*3)) {
-	        if(needflip) {
-	          swapbytes(v[0]);
-	          swapbytes(v[1]);
-	          swapbytes(v[2]);
+        if(is.read((char*)&v[0], sizeof(double)*3)) {
+          if(needflip) {
+            swapbytes(v[0]);
+            swapbytes(v[1]);
+            swapbytes(v[2]);
           }
           d_velocity.push_back(Vector(v[0],v[1],v[2]));
-	      }  
+        }  
       }          
       if(!is){
         std::ostringstream warn;
@@ -459,25 +466,33 @@ FileGeometryPiece::read_line(std::istream & is, Point & xmin, Point & xmax)
       
     }
   }
-  double vol = size.Determinant();
-  // CPDI and CPTI check for negative volumes due to Rvector order
-  if (vol < 0) {
-    // switch r2 and r3 in size to get a positive volume 
-    Matrix3 tmpsize(size(0,0),size(0,2),size(0,1),size(1,0),size(1,2),size(1,1),size(2,0),size(2,2),size(2,1));
-    vol = tmpsize.Determinant();
-    // normalize size matrix by grid cell dimensions 
-    size = tmpsize;
+  if(file_has_size){
+    // CPTI and CPDI populate size matrix with Rvectors defining the particle domain in columns
+    // proc0cout << endl << "<res> is ignored for CPDI and CPTI particle domain import." << endl;
+    double vol = size.Determinant();
+    // CPDI and CPTI check for negative volumes due to Rvector order
+    if (vol < 0) {
+      // switch r2 and r3 in size to get a positive volume 
+      Matrix3 tmpsize(size(0,0),size(0,2),size(0,1),
+                      size(1,0),size(1,2),size(1,1),
+                      size(2,0),size(2,2),size(2,1));
+      vol = tmpsize.Determinant();
+      // normalize size matrix by grid cell dimensions 
+      size = tmpsize;
+    }
+    // CPDI and CPTI volumes determined prior to grid cell size normalization
+    if(d_useCPTI){
+      vol=size.Determinant()/6.0;
+    }
+    // Imported volumes override calculated volume
+    if(!file_has_volume){
+      d_volume.push_back(vol);
+    }
+    // Size matrix normalized by the grid spacing for interpolators
+    size = gsize*size;
+    d_size.push_back(size);
   }
-  // CPDI and CPTI volumes determined prior to grid cell size normalization
-  if(d_useCPTI){
-    vol=size.Determinant()/6.0;
-  }
-  d_volume.push_back(vol);
-  // CPTI and CPDI populate size matrix with Rvectors defining the particle domain in columns
-  // Size matrix normalized by the grid spacing for interpolators
-  size = size*gsize;
-  d_size.push_back(size);
- 
+
   xmin = Min(xmin, Point(x1,x2,x3));
   xmax = Max(xmax, Point(x1,x2,x3));
   return true;

@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2015 The University of Utah
+ * Copyright (c) 1997-2016 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -29,8 +29,6 @@
 #include <Core/Grid/Patch.h>
 #include <Core/Grid/Task.h>
 #include <Core/Grid/Level.h>
-#include <Core/Grid/Variables/NCVariable.h>
-#include <Core/Grid/Variables/NodeIterator.h>
 #include <Core/Grid/Variables/ParticleVariable.h>
 #include <Core/Grid/Variables/VarLabel.h>
 #include <Core/Grid/Variables/VarTypes.h>
@@ -39,11 +37,9 @@
 #include <Core/Math/Matrix3.h>
 #include <Core/Math/MinMax.h>
 #include <Core/ProblemSpec/ProblemSpec.h>
-#include <Core/Exceptions/ParameterNotFound.h>
 #include <Core/Exceptions/InvalidValue.h>
-#include <fstream>
 #include <iostream>
-#include <iomanip>
+
 
 using namespace std;
 using namespace Uintah;

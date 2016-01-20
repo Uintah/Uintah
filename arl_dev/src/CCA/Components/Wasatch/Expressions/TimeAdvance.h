@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 2014-2015 The University of Utah
+ * Copyright (c) 2014-2016 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -47,7 +47,7 @@ class TimeAdvance
   typedef typename SpatialOps::SingleValueField SingleValue;
   const Expr::Tag phiOldt_, rhst_, dtt_, rkstaget_;
 
-  const Wasatch::TimeIntegrator timeIntInfo_;
+  const WasatchCore::TimeIntegrator timeIntInfo_;
   
 //  const SingleValue* dt_;
 //  const SingleValue* rkStage_;
@@ -57,12 +57,12 @@ class TimeAdvance
   
   TimeAdvance( const std::string& solnVarName,
                const Expr::Tag& rhsTag,
-               const Wasatch::TimeIntegrator timeIntInfo );
+               const WasatchCore::TimeIntegrator timeIntInfo );
 
   TimeAdvance( const std::string& solnVarName,
                const Expr::Tag& phiOldTag,
                const Expr::Tag& rhsTag,
-               const Wasatch::TimeIntegrator timeIntInfo );
+               const WasatchCore::TimeIntegrator timeIntInfo );
 
 public:
   class Builder : public Expr::ExpressionBuilder
@@ -76,12 +76,12 @@ public:
      */
     Builder( const Expr::Tag& result,
              const Expr::Tag& rhsTag,
-             const Wasatch::TimeIntegrator timeIntInfo );
+             const WasatchCore::TimeIntegrator timeIntInfo );
 
     Builder( const Expr::Tag& result,
              const Expr::Tag& phiOldTag,
              const Expr::Tag& rhsTag,
-             const Wasatch::TimeIntegrator timeIntInfo );
+             const WasatchCore::TimeIntegrator timeIntInfo );
     
     ~Builder(){}
     Expr::ExpressionBase* build() const;
@@ -89,7 +89,7 @@ public:
   private:
     const std::string solnVarName_;
     const Expr::Tag phiOldt_, rhst_;
-    const Wasatch::TimeIntegrator timeIntInfo_;
+    const WasatchCore::TimeIntegrator timeIntInfo_;
   };
 
   ~TimeAdvance();

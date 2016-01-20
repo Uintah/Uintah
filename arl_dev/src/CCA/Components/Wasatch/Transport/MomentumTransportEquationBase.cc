@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 2012-2015 The University of Utah
+ * Copyright (c) 2012-2016 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -71,7 +71,7 @@
 
 using std::string;
 
-namespace Wasatch{
+namespace WasatchCore{
 
   //==================================================================
   
@@ -246,14 +246,15 @@ namespace Wasatch{
   
   template< typename FieldT >
   void
-  set_strain_tags( const bool* doMom,
+  set_strain_tags( const Direction momComponent,
+                   const bool* doMom,
                    const bool isViscous,
                    Expr::TagList& strainTags )
   {
     const TagNames& tagNames = TagNames::self();
     strainTags.clear();
     Expr::Tag xTag, yTag, zTag;
-    switch( get_staggered_location<FieldT>() ){
+    switch( momComponent ){
       case XDIR : xTag=tagNames.strainxx; yTag=tagNames.strainyx; zTag=tagNames.strainzx; break;
       case YDIR : xTag=tagNames.strainxy; yTag=tagNames.strainyy; zTag=tagNames.strainzy; break;
       case ZDIR : xTag=tagNames.strainxz; yTag=tagNames.strainyz; zTag=tagNames.strainzz; break;
@@ -301,52 +302,111 @@ namespace Wasatch{
     typedef typename Strain< FaceFieldT, Vel1T, Vel2T >::Builder StrainT;
     return factory.register_expression( scinew StrainT( strainTag, vel1Tag, vel2Tag ) );
   }
+  
+  template< typename FaceFieldT, typename DirT >
+  Expr::ExpressionID
+  setup_collocated_strain( const Expr::Tag& strainTag,
+               const Expr::Tag& vel1Tag,
+               const Expr::Tag& vel2Tag,
+               Expr::ExpressionFactory& factory )
+  {
+    typedef typename CollocatedStrain< FaceFieldT, DirT >::Builder StrainT;
+    return factory.register_expression( scinew StrainT( strainTag, vel1Tag, vel2Tag ) );
+  }
+
 
   //==================================================================
 
   template< typename FieldT >
   Expr::ExpressionID
-  register_strain_tensor( const bool* const doMom,
+  register_strain_tensor( const Direction momComponent,
+                          const bool* const doMom,
                           const bool isViscous,
                           const Expr::TagList& velTags,
                           Expr::TagList& strainTags,
                           const Expr::Tag& dilTag,
                           Expr::ExpressionFactory& factory )
   {
-    const Direction stagLoc = get_staggered_location<FieldT>();
-
     typedef typename SpatialOps::FaceTypes<FieldT>::XFace XFace;
     typedef typename SpatialOps::FaceTypes<FieldT>::YFace YFace;
     typedef typename SpatialOps::FaceTypes<FieldT>::ZFace ZFace;
 
-    set_strain_tags<FieldT>( doMom, isViscous, strainTags );
+    set_strain_tags<FieldT>( momComponent, doMom, isViscous, strainTags );
     const Expr::Tag& strainXt = strainTags[0];
     const Expr::Tag& strainYt = strainTags[1];
     const Expr::Tag& strainZt = strainTags[2];
     
     Expr::ExpressionID normalStrainID;
     
-    const int thisVelIdx = (stagLoc == XDIR) ? 0 : ( (stagLoc == YDIR) ? 1 : 2 );    
+    const int thisVelIdx = (momComponent == XDIR) ? 0 : ( (momComponent == YDIR) ? 1 : 2 );
     const Expr::Tag& thisVelTag = velTags[thisVelIdx];
 
     // register necessary strain expression when the flow is viscous
     if( isViscous ) {
       if( doMom[0] ){
         const Expr::ExpressionID strainID = setup_strain< XFace >( strainXt, thisVelTag, velTags[0], factory );
-        if( stagLoc == XDIR ) normalStrainID = strainID;
+        if( momComponent == XDIR ) normalStrainID = strainID;
       }
       if( doMom[1] ){
         const Expr::ExpressionID strainID = setup_strain< YFace >( strainYt, thisVelTag, velTags[1], factory );
-        if( stagLoc == YDIR ) normalStrainID = strainID;
+        if( momComponent == YDIR ) normalStrainID = strainID;
       }
       if( doMom[2] ){
         const Expr::ExpressionID strainID = setup_strain< ZFace >( strainZt, thisVelTag, velTags[2], factory );
-        if( stagLoc == ZDIR ) normalStrainID = strainID;
+        if( momComponent == ZDIR ) normalStrainID = strainID;
       }
       factory.cleave_from_children( normalStrainID );
       factory.cleave_from_parents ( normalStrainID );
     }
     return normalStrainID;
+  }
+
+  //==================================================================
+  
+  template<>
+  Expr::ExpressionID
+  register_strain_tensor<SVolField>(const Direction momComponent,
+                                    const bool* const doMom,
+                         const bool isViscous,
+                         const Expr::TagList& velTags,
+                         Expr::TagList& strainTags,
+                         const Expr::Tag& dilTag,
+                         Expr::ExpressionFactory& factory )
+  {
+    typedef SVolField FieldT;
+    typedef SpatialOps::FaceTypes<FieldT>::XFace XFace;
+    typedef SpatialOps::FaceTypes<FieldT>::YFace YFace;
+    typedef SpatialOps::FaceTypes<FieldT>::ZFace ZFace;
+    
+    set_strain_tags<FieldT>(momComponent, doMom, isViscous, strainTags );
+    const Expr::Tag& strainXt = strainTags[0];
+    const Expr::Tag& strainYt = strainTags[1];
+    const Expr::Tag& strainZt = strainTags[2];
+    
+    Expr::ExpressionID normalStrainID;
+    
+    const int thisVelIdx = (momComponent == XDIR) ? 0 : ( (momComponent == YDIR) ? 1 : 2 );
+    const Expr::Tag& thisVelTag = velTags[thisVelIdx];
+    
+    // register necessary strain expression when the flow is viscous
+    if( isViscous ) {
+      if( doMom[0] ){
+        const Expr::ExpressionID strainID = setup_collocated_strain< XFace, SpatialOps::XDIR >( strainXt, thisVelTag, velTags[0], factory );
+        if( momComponent == XDIR ) normalStrainID = strainID;
+      }
+      if( doMom[1] ){
+        const Expr::ExpressionID strainID = setup_collocated_strain< YFace, SpatialOps::YDIR >( strainYt, thisVelTag, velTags[1], factory );
+        if( momComponent == YDIR ) normalStrainID = strainID;
+      }
+      if( doMom[2] ){
+        const Expr::ExpressionID strainID = setup_collocated_strain< ZFace, SpatialOps::ZDIR >( strainZt, thisVelTag, velTags[2], factory );
+        if( momComponent == ZDIR ) normalStrainID = strainID;
+      }
+      factory.cleave_from_children( normalStrainID );
+      factory.cleave_from_parents ( normalStrainID );
+    }
+    return normalStrainID;
+
   }
   
   //==================================================================
@@ -371,13 +431,12 @@ namespace Wasatch{
     else{
       typedef typename SpatialOps::VolType<FluxT>::VolField  MomT;
       typedef typename ConvectiveFluxLimiter<
-      FluxLimiterInterpolant< MomT, FluxT >,
-      UpwindInterpolant< MomT, FluxT >,
-      typename OperatorTypeBuilder<Interpolant,MomT,FluxT>::type, // scalar interp type
-      typename OperatorTypeBuilder<Interpolant,AdvelT,FluxT>::type  // velocity interp type
-      >::Builder ConvFluxLim;
+                                            FluxLimiterInterpolant< MomT, FluxT >,
+                                            UpwindInterpolant< MomT, FluxT >,
+                                            typename OperatorTypeBuilder<Interpolant,MomT,FluxT>::type, // scalar interp type
+                                            typename OperatorTypeBuilder<Interpolant,AdvelT,FluxT>::type  // velocity interp type
+                                            >::Builder ConvFluxLim;
       return factory.register_expression( scinew ConvFluxLim( fluxTag, momTag, advelTag, convInterpMethod, volFracTag ) );
-      
     }
   }
 
@@ -385,13 +444,14 @@ namespace Wasatch{
   
   template< typename FieldT >
   Expr::ExpressionID
-  register_momentum_convective_fluxes( const bool* const doMom,
-                              const Expr::TagList& velTags,
-                              Expr::TagList& cfTags,
-                              ConvInterpMethods convInterpMethod,
-                              const Expr::Tag& momTag,
-                              const Expr::Tag& volFracTag,
-                              Expr::ExpressionFactory& factory )
+  register_momentum_convective_fluxes(const Direction momComponent,
+                                      const bool* const doMom,
+                                      const Expr::TagList& velTags,
+                                      Expr::TagList& cfTags,
+                                      ConvInterpMethods convInterpMethod,
+                                      const Expr::Tag& momTag,
+                                      const Expr::Tag& volFracTag,
+                                      Expr::ExpressionFactory& factory )
   {
     set_convflux_tags( doMom, cfTags, momTag );
     const Expr::Tag& cfxt = cfTags[0];
@@ -416,6 +476,50 @@ namespace Wasatch{
     if( doMom[2] ){
       const Expr::ExpressionID id = setup_momentum_convective_flux< ZFace, ZVolField >( cfzt, momTag, velTags[2], convInterpMethod, volFracTag, factory );
       if( stagLoc == ZDIR )  normalConvFluxID = id;
+    }
+    // convective fluxes require ghost updates after they are calculated
+    // jcs note that we need to set BCs on these quantities as well.
+    factory.cleave_from_children( normalConvFluxID );
+    factory.cleave_from_parents ( normalConvFluxID );
+    return normalConvFluxID;
+  }
+
+  //==================================================================
+  
+  template<>
+  Expr::ExpressionID
+  register_momentum_convective_fluxes<SVolField>(const Direction momComponent,
+                                                 const bool* const doMom,
+                                      const Expr::TagList& velTags,
+                                      Expr::TagList& cfTags,
+                                      ConvInterpMethods convInterpMethod,
+                                      const Expr::Tag& momTag,
+                                      const Expr::Tag& volFracTag,
+                                      Expr::ExpressionFactory& factory )
+  {
+    set_convflux_tags( doMom, cfTags, momTag );
+    const Expr::Tag& cfxt = cfTags[0];
+    const Expr::Tag& cfyt = cfTags[1];
+    const Expr::Tag& cfzt = cfTags[2];
+    
+    typedef SVolField FieldT;
+    typedef SpatialOps::FaceTypes<FieldT>::XFace XFace;
+    typedef SpatialOps::FaceTypes<FieldT>::YFace YFace;
+    typedef SpatialOps::FaceTypes<FieldT>::ZFace ZFace;
+    
+    Expr::ExpressionID normalConvFluxID;
+    
+    if( doMom[0] ){
+      const Expr::ExpressionID id = setup_momentum_convective_flux< XFace, SVolField >( cfxt, momTag, velTags[0],convInterpMethod, volFracTag, factory );
+      if( momComponent == XDIR )  normalConvFluxID = id;
+    }
+    if( doMom[1] ){
+      const Expr::ExpressionID id = setup_momentum_convective_flux< YFace, SVolField >( cfyt, momTag, velTags[1], convInterpMethod, volFracTag, factory );
+      if( momComponent == YDIR )  normalConvFluxID = id;
+    }
+    if( doMom[2] ){
+      const Expr::ExpressionID id = setup_momentum_convective_flux< ZFace, SVolField >( cfzt, momTag, velTags[2], convInterpMethod, volFracTag, factory );
+      if( momComponent == ZDIR )  normalConvFluxID = id;
     }
     // convective fluxes require ghost updates after they are calculated
     // jcs note that we need to set BCs on these quantities as well.
@@ -456,31 +560,159 @@ namespace Wasatch{
 
   template< typename FieldT >
   MomentumTransportEquationBase<FieldT>::
-  MomentumTransportEquationBase( const std::string velName,
-                             const std::string momName,
-                             const Expr::Tag densTag,
-                             const bool isConstDensity,
-                             const Expr::Tag bodyForceTag,
-                             const Expr::Tag srcTermTag,
-                             GraphCategories& gc,
-                             Uintah::ProblemSpecP params,
-                             TurbulenceParameters turbulenceParams,
-                             Uintah::SolverInterface& linSolver,
-                             Uintah::SimulationStateP sharedState)
+  MomentumTransportEquationBase( const Direction momComponent,
+                                 const std::string velName,
+                                 const std::string momName,
+                                 const Expr::Tag densTag,
+                                 const bool isConstDensity,
+                                 const Expr::Tag bodyForceTag,
+                                 const Expr::Tag srcTermTag,
+                                 GraphCategories& gc,
+                                 Uintah::ProblemSpecP params,
+                                 TurbulenceParameters turbulenceParams )
     : TransportEquation( gc,
                          momName,
                          get_staggered_location<FieldT>(),
                          isConstDensity ),
+      momComponent_    ( momComponent),
       params_          ( params ),
       isViscous_       ( params->findBlock("Viscosity") ? true : false ),
       isTurbulent_     ( turbulenceParams.turbModelName != TurbulenceParameters::NOTURBULENCE ),
       thisVelTag_      ( Expr::Tag(velName, Expr::STATE_NONE) ),
       densityTag_      ( densTag                              ),
+      pressureTag_     ( TagNames::self().pressure            ),
       normalStrainID_  ( Expr::ExpressionID::null_id()        ),
       normalConvFluxID_( Expr::ExpressionID::null_id()        ),
-      pressureID_      ( Expr::ExpressionID::null_id()        ),
-      pressureTag_     ( TagNames::self().pressure )
-  {}
+      pressureID_      ( Expr::ExpressionID::null_id()        )
+  {
+    set_vel_tags( params, this->velTags_ );
+    
+    GraphHelper& graphHelper   = *(gc[ADVANCE_SOLUTION  ]);
+    Expr::ExpressionFactory& factory = *(graphHelper.exprFactory);
+    
+    const TagNames& tagNames = TagNames::self();
+    
+    std::string xmomname, ymomname, zmomname; // these are needed to construct fx, fy, and fz for pressure RHS
+    bool doMom[3];
+    doMom[0] = params->get( "X-Momentum", xmomname );
+    doMom[1] = params->get( "Y-Momentum", ymomname );
+    doMom[2] = params->get( "Z-Momentum", zmomname );
+    
+    set_mom_tags( params, this->momTags_ );
+    set_mom_tags( params, this->oldMomTags_, true );
+
+    //_____________
+    // volume fractions for embedded boundaries Terms
+    const EmbeddedGeometryHelper& embedGeom = EmbeddedGeometryHelper::self();
+    this->thisVolFracTag_ = embedGeom.vol_frac_tag<FieldT>();
+    
+    //__________________
+    // convective fluxes
+    Expr::TagList cfTags; // these tags will be filled by register_convective_fluxes
+    std::string convInterpMethod = "CENTRAL";
+    if( this->params_->findBlock("ConvectiveInterpMethod") ){
+      this->params_->findBlock("ConvectiveInterpMethod")->getAttribute("method",convInterpMethod);
+    }
+    
+    this->normalConvFluxID_ = register_momentum_convective_fluxes<FieldT>(momComponent, doMom, this->velTags_, cfTags, get_conv_interp_method(convInterpMethod), this->solnVarTag_, this->thisVolFracTag_, factory );
+    
+    //__________________
+    // dilatation - needed by pressure source term and strain tensor
+    const Expr::Tag dilTag = tagNames.dilatation;
+    // if dilatation expression has not been registered, then register it
+    if( !factory.have_entry( dilTag ) ){
+      if (get_staggered_location<FieldT>() == NODIR ) { // collocated
+        typedef typename Dilatation<SVolField,SVolField,SVolField,SVolField>::Builder Dilatation;
+        factory.register_expression( new Dilatation(dilTag, this->velTags_) );
+      } else { // staggered, const density & low-Mach projection
+        typedef typename Dilatation<SVolField,XVolField,YVolField,ZVolField>::Builder Dilatation;
+        factory.register_expression( new Dilatation(dilTag, this->velTags_) );
+      }
+    }
+    
+    //___________________________________
+    // diffusive flux (strain components)
+    Expr::TagList strainTags;
+    this->normalStrainID_ = register_strain_tensor<FieldT>(momComponent, doMom, this->isViscous_, this->velTags_, strainTags, dilTag, factory);
+    
+    //--------------------------------------
+    // TURBULENCE
+    // check if we have a turbulence model turned on
+    // check if the flow is viscous
+    const Expr::Tag viscTag = (this->isViscous_) ? parse_nametag( params->findBlock("Viscosity")->findBlock("NameTag") ) : Expr::Tag();
+    
+    const bool enableTurbulenceModel = !(params->findBlock("DisableTurbulenceModel"));
+    const Expr::Tag turbViscTag = tagNames.turbulentviscosity;
+    if( this->isTurbulent_ && this->isViscous_ && enableTurbulenceModel ){
+      register_turbulence_expressions(turbulenceParams, factory, this->velTags_, densTag, this->is_constant_density() );
+      factory.attach_dependency_to_expression(turbViscTag, viscTag);
+    }
+    // END TURBULENCE
+    //--------------------------------------
+    
+    //_________________________________________________________
+    // partial rhs:
+    // register expression to calculate the partial RHS (absent
+    // pressure gradient) for use in the projection
+    const Expr::ExpressionID momRHSPartID = factory.register_expression(
+                                                                        new typename MomRHSPart<FieldT>::Builder( rhs_part_tag( this->solnVarTag_ ),
+                                                                                                                 cfTags[0] , cfTags[1] , cfTags[2] ,
+                                                                                                                 viscTag,
+                                                                                                                 strainTags[0], strainTags[1], strainTags[2],
+                                                                                                                 dilTag,
+                                                                                                                 this->densityTag_, bodyForceTag, srcTermTag,
+                                                                                                                 this->thisVolFracTag_) );
+    factory.cleave_from_parents ( momRHSPartID );
+    
+    //__________________
+    // continuity residual
+    const bool computeContinuityResidual = params->findBlock("ComputeMassResidual");
+    if( computeContinuityResidual ) {
+      const Expr::Tag contTag = tagNames.continuityresidual;
+      
+      if( !factory.have_entry( contTag ) ){
+        typedef typename ContinuityResidual<SVolField,XVolField,YVolField,ZVolField>::Builder ContResT;
+        
+        Expr::Tag drhodtTag = Expr::Tag();
+        if( !this->is_constant_density() ){
+          drhodtTag = tagNames.drhodtstar;
+        }
+        Expr::ExpressionID contID = factory.register_expression( new ContResT(contTag, drhodtTag, this->momTags_) );
+        graphHelper.rootIDs.insert(contID);
+      }
+    }
+    
+    
+    //__________________
+    // calculate velocity at the current time step
+    factory.register_expression( new typename PrimVar<FieldT,SVolField>::Builder( this->thisVelTag_, this->solnVarTag_, this->densityTag_, this->thisVolFracTag_ ) );
+    
+    // Kinetic energy calculation, if necessary
+    if( params->findBlock("ComputeKE") ){
+      Uintah::ProblemSpecP keSpec = params->findBlock("ComputeKE");
+      bool isTotalKE = true;
+      keSpec->getAttribute("total", isTotalKE);
+      if( isTotalKE ){ // calculate total kinetic energy. then follow that with a reduction variable
+        if( !factory.have_entry( TagNames::self().totalKineticEnergy )){
+          bool outputKE = true;
+          keSpec->getAttribute("output", outputKE);
+          
+          // we need to create two expressions
+          const Expr::Tag tkeTempTag("TotalKE_temp", Expr::STATE_NONE);
+          factory.register_expression(scinew typename TotalKineticEnergy<XVolField,YVolField,ZVolField>::Builder( tkeTempTag,
+                                                                                                                 this->velTags_[0],this->velTags_[1],this->velTags_[2] ),true);
+          
+          ReductionHelper::self().add_variable<SpatialOps::SingleValueField, ReductionSumOpT>(ADVANCE_SOLUTION, TagNames::self().totalKineticEnergy, tkeTempTag, outputKE, false);
+        }
+      }
+      else if( !factory.have_entry( TagNames::self().kineticEnergy ) ){ // calculate local, pointwise kinetic energy
+        const Expr::ExpressionID keID = factory.register_expression(
+                                                                    scinew typename KineticEnergy<SVolField,XVolField,YVolField,ZVolField>::Builder(
+                                                                                                                                                    TagNames::self().kineticEnergy, this->velTags_[0],this->velTags_[1],this->velTags_[2] ), true);
+        graphHelper.rootIDs.insert( keID );
+      }
+    }
+  }
 
   //-----------------------------------------------------------------
 
@@ -500,20 +732,23 @@ namespace Wasatch{
   
 #define REGISTER_STRAIN(VOL)\
   template Expr::ExpressionID \
-  register_strain_tensor<VOL>( const bool* const doMom,\
+  register_strain_tensor<VOL>( const Direction momComponent, \
+                               const bool* const doMom,\
                                const bool isViscous,\
                                const Expr::TagList& velTags,\
                                Expr::TagList& strainTags,\
                                const Expr::Tag& dilTag,\
                                Expr::ExpressionFactory& factory );
   
+  REGISTER_STRAIN(SVolField);
   REGISTER_STRAIN(XVolField);
   REGISTER_STRAIN(YVolField);
   REGISTER_STRAIN(ZVolField);
 
 #define REGISTER_CONVECTIVE_FLUXES(VOL) \
   template Expr::ExpressionID \
-  register_momentum_convective_fluxes<VOL> ( const bool* const doMom,\
+  register_momentum_convective_fluxes<VOL> ( const Direction momComponent,\
+                                             const bool* const doMom,\
                                              const Expr::TagList& velTags,\
                                              Expr::TagList& cfTags,\
                                              ConvInterpMethods convInterpMethod,\
@@ -521,10 +756,11 @@ namespace Wasatch{
                                              const Expr::Tag& volFracTag,\
                                              Expr::ExpressionFactory& factory );
   
+  REGISTER_CONVECTIVE_FLUXES(SVolField);
   REGISTER_CONVECTIVE_FLUXES(XVolField);
   REGISTER_CONVECTIVE_FLUXES(YVolField);
   REGISTER_CONVECTIVE_FLUXES(ZVolField);
 
   //==================================================================
 
-} // namespace Wasatch
+} // namespace WasatchCore

@@ -36,7 +36,7 @@
         </GasProperties>
       </ParticleMomentum>
     </ParticleTransportEquations>
-    <Density>
+    <Density method="CONSTANT">
       <Constant value="1.0" name="density"/>
     </Density>
     <BasicExpression type="PARTICLE">

@@ -343,24 +343,26 @@
 
     <Models>
       <Model type="Unsteady_Burn">
-        <ActEnergyCondPh>      1.76e5       </ActEnergyCondPh>
-        <BoundaryParticles>    1            </BoundaryParticles>
-        <BurnrateModCoef>      1.0          </BurnrateModCoef>
-        <CondPhaseHeat>        4.0e5        </CondPhaseHeat>
-        <CondUnsteadyCoef>     0.20          </CondUnsteadyCoef>
-        <fromMaterial>         Reactant     </fromMaterial>
-        <GasPhaseHeat>         3.018e6      </GasPhaseHeat>
-        <GasUnsteadyCoef>      0.25         </GasUnsteadyCoef>
-        <HeatConductGasPh>     0.07         </HeatConductGasPh>
-        <HeatConductCondPh>    0.2          </HeatConductCondPh>
-        <IdealGasConst>        8.314        </IdealGasConst>
-        <IgnitionTemp>         550.0        </IgnitionTemp>
-        <MoleWeightGasPh>      0.0342       </MoleWeightGasPh>
-        <PreExpCondPh>         1.637e15     </PreExpCondPh>
-        <PreExpGasPh>          1.6e-3       </PreExpGasPh>
-        <SpecificHeatBoth>     1.4e3        </SpecificHeatBoth>
-        <ThresholdPressure>    50000        </ThresholdPressure>
-        <toMaterial>           Product      </toMaterial>
+        <Unsteady_Burn>
+          <ActEnergyCondPh>      1.76e5       </ActEnergyCondPh>
+          <BoundaryParticles>    1            </BoundaryParticles>
+          <BurnrateModCoef>      1.0          </BurnrateModCoef>
+          <CondPhaseHeat>        4.0e5        </CondPhaseHeat>
+          <CondUnsteadyCoef>     0.20          </CondUnsteadyCoef>
+          <fromMaterial>         Reactant     </fromMaterial>
+          <GasPhaseHeat>         3.018e6      </GasPhaseHeat>
+          <GasUnsteadyCoef>      0.25         </GasUnsteadyCoef>
+          <HeatConductGasPh>     0.07         </HeatConductGasPh>
+          <HeatConductCondPh>    0.2          </HeatConductCondPh>
+          <IdealGasConst>        8.314        </IdealGasConst>
+          <IgnitionTemp>         550.0        </IgnitionTemp>
+          <MoleWeightGasPh>      0.0342       </MoleWeightGasPh>
+          <PreExpCondPh>         1.637e15     </PreExpCondPh>
+          <PreExpGasPh>          1.6e-3       </PreExpGasPh>
+          <SpecificHeatBoth>     1.4e3        </SpecificHeatBoth>
+          <ThresholdPressure>    50000        </ThresholdPressure>
+          <toMaterial>           Product      </toMaterial>
+        </Unsteady_Burn>
       </Model>
     </Models>
 

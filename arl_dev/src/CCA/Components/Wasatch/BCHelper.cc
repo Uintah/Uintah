@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 2013-2015 The University of Utah
+ * Copyright (c) 2013-2016 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -64,7 +64,7 @@ static SCIRun::DebugStream dbgbc("WASATCH_BC", false);
  * \author  Tony Saad
  */
 
-namespace Wasatch {
+namespace WasatchCore {
   // Given a string BC type (Dirichlet, Neumann,...), this function returns a BndCondTypeEnum
   // of supported boundary condition types
   BndCondTypeEnum select_bc_type_enum( const std::string& bcTypeStr )
@@ -323,7 +323,7 @@ namespace Wasatch {
     Uintah::IntVector bcPointIJK;
     
     Uintah::IntVector edgePoint;
-    const Uintah::IntVector idxHi = patch->getCellHighIndex() - IntVector(1,1,1);// - patchCellOffset;
+    const Uintah::IntVector idxHi = patch->getCellHighIndex() - Uintah::IntVector(1,1,1);// - patchCellOffset;
     const Uintah::IntVector idxLo = patch->getCellLowIndex();
 
     for( bndIter.reset(); !bndIter.done(); ++bndIter ){
@@ -357,30 +357,30 @@ namespace Wasatch {
     // convert the svol extra cell boundary iterator to a spatial mask
     const int ng = get_n_ghost<SVolField>();
     SpatialOps::IntVec bcMinus, bcPlus;
-    Wasatch::get_bc_logicals( patch, bcMinus, bcPlus );
+    WasatchCore::get_bc_logicals( patch, bcMinus, bcPlus );
     SpatialOps::BoundaryCellInfo bcInfo = SpatialOps::BoundaryCellInfo::build<SVolField>(bcPlus);
     SpatialOps::GhostData gd(ng);
-    const SpatialOps::MemoryWindow window = Wasatch::get_memory_window_for_masks<SVolField>( patch );
+    const SpatialOps::MemoryWindow window = WasatchCore::get_memory_window_for_masks<SVolField>( patch );
     myBndIters.svolExtraCellSpatialMask = new SpatialOps::SpatialMask<SVolField>(window, bcInfo, gd, neboExtraBndSOIter);
 #   ifdef HAVE_CUDA
     myBndIters.svolExtraCellSpatialMask->add_consumer(GPU_INDEX);
 #   endif
     
-    const SpatialOps::MemoryWindow xwindow = Wasatch::get_memory_window_for_masks<XVolField>( patch );
+    const SpatialOps::MemoryWindow xwindow = WasatchCore::get_memory_window_for_masks<XVolField>( patch );
     SpatialOps::BoundaryCellInfo xBCInfo = SpatialOps::BoundaryCellInfo::build<XVolField>(bcPlus);
     myBndIters.xvolExtraCellSpatialMask = new SpatialOps::SpatialMask<XVolField>(xwindow, xBCInfo, gd, neboExtraBndSOIter);
 #   ifdef HAVE_CUDA
     myBndIters.xvolExtraCellSpatialMask->add_consumer(GPU_INDEX);
 #   endif
     
-    const SpatialOps::MemoryWindow ywindow = Wasatch::get_memory_window_for_masks<YVolField>( patch );
+    const SpatialOps::MemoryWindow ywindow = WasatchCore::get_memory_window_for_masks<YVolField>( patch );
     SpatialOps::BoundaryCellInfo yBCInfo = SpatialOps::BoundaryCellInfo::build<YVolField>(bcPlus);
     myBndIters.yvolExtraCellSpatialMask = new SpatialOps::SpatialMask<YVolField>(ywindow, yBCInfo, gd, neboExtraBndSOIter);
 #   ifdef HAVE_CUDA
     myBndIters.yvolExtraCellSpatialMask->add_consumer(GPU_INDEX);
 #   endif
     
-    const SpatialOps::MemoryWindow zwindow = Wasatch::get_memory_window_for_masks<ZVolField>( patch );
+    const SpatialOps::MemoryWindow zwindow = WasatchCore::get_memory_window_for_masks<ZVolField>( patch );
     SpatialOps::BoundaryCellInfo zBCInfo = SpatialOps::BoundaryCellInfo::build<ZVolField>(bcPlus);
     myBndIters.zvolExtraCellSpatialMask = new SpatialOps::SpatialMask<ZVolField>(zwindow, zBCInfo, gd, neboExtraBndSOIter);
 #   ifdef HAVE_CUDA

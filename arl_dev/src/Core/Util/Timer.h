@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2015 The University of Utah
+ * Copyright (c) 1997-2016 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -37,6 +37,8 @@
 #ifndef SCI_Containers_Timer_h
 #define SCI_Containers_Timer_h 1
 
+#include <Core/Thread/CrowdMonitor.h>
+
 class Timer {
 public:
   enum timer_state_e {
@@ -67,7 +69,8 @@ public:
 };
 
 class WallClockTimer : public Timer {
-    virtual double get_time();
+private:
+  virtual double get_time();
 public:
     WallClockTimer();
     virtual ~WallClockTimer();
@@ -78,6 +81,30 @@ public:
     TimeThrottle();
     virtual ~TimeThrottle();
     void wait_for_time(double time);
+};
+
+
+class MultiThreadedTimer : public Timer {
+public:
+  MultiThreadedTimer(int numberOfThreads);
+  ~MultiThreadedTimer();
+  void start();
+  void stop();
+  void clear();
+  double time();
+  double getElapsedSeconds();
+  double getElapsedAccumulatedSeconds();
+  double getAllThreadsElapsedSeconds();
+  void clearAll();
+  //void add(double t);
+
+
+private:
+  virtual double get_time();
+  WallClockTimer* timers;
+  double* accumulatedTimes;
+  int numberOfThreads;
+  mutable SCIRun::CrowdMonitor timerLock;
 };
 
 #endif /* SCI_Containers_Timer_h */

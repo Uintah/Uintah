@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2015 The University of Utah
+ * Copyright (c) 1997-2016 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -71,10 +71,26 @@ namespace Uintah {
         return d_data[x - d_offset.x + d_size.x * (y - d_offset.y + (z - d_offset.z) * d_size.y)];
       }
 
-      HOST_DEVICE T* getPointer() const
-      {
+      HOST_DEVICE const T& operator()(const int& x, const int& y, const int& z, const int& m) const { //get data from global index
+        CHECK_INSIDE3(x,y,z,d_offset, d_size)
+        return d_data[ x-d_offset.x + d_size.x*(y-d_offset.y + (z-d_offset.z)*d_size.y)];
+      }
+
+      HOST_DEVICE T& operator()(const int& x, const int& y, const int& z, const int& m) { //get data from global index
+        CHECK_INSIDE3(x,y,z,d_offset, d_size)
+        //TODO: Get materials working with the offsets.
+        //return d_data[ x-d_offset.x + d_size.x*(y-d_offset.y + (z-d_offset.z)*d_size.y)];
+        return d_data[ m * d_size.x * d_size.y * d_size.z + x + d_size.x*(y + (z)*d_size.y)];
+      }
+
+
+      HOST_DEVICE T* getPointer() const {
         return d_data;
       }
+
+
+      HOST_DEVICE void copyZSliceData(const GPUArray3& copyFromVar);
+
 
       HOST_DEVICE size_t getMemSize() const
       {
@@ -117,13 +133,14 @@ namespace Uintah {
         ptr = (void*)d_data;
       }
 
+      mutable T*    d_data;
+
     private:
 
       //---------------------------------------------------------------
       // global high = d_offset+d_data
       // global low  = d_offset
       //---------------------------------------------------------------
-      mutable T*    d_data;
       mutable int3  d_offset;  //offset from global index to local index
       mutable int3  d_size;    //size of local storage 
 
@@ -202,6 +219,10 @@ namespace Uintah {
         return GPUArray3<T>::getHighIndex();
       }
     
+
+      HOST_DEVICE void* getVoidPointer() const {
+        return GPUArray3<T>::d_data;
+      }
 
     private:
 

@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2015 The University of Utah
+ * Copyright (c) 1997-2016 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -3751,7 +3751,7 @@ void SFC<LOCS>::Batchers(std::vector<History<BITS> > &histories, std::vector<His
 template<class LOCS> template <class BITS>
 void SFC<LOCS>::Linear(std::vector<History<BITS> > &histories, std::vector<History<BITS> >&rbuf, std::vector<History<BITS> > &mbuf)
 {
-  unsigned int i=1, c=1, val=0, iter=0;
+  int i=1, c=1, val=0, iter=0;
   int mod=(int)ceil(log((float)P)/log(3.0f));
   while(c!=0)
   {

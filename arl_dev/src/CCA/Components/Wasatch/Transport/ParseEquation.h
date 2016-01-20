@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 2012-2015 The University of Utah
+ * Copyright (c) 2012-2016 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -42,7 +42,7 @@
  *  \brief Parser tools for transport equations.
  */
 
-namespace Wasatch{
+namespace WasatchCore{
 
   class TimeStepper;
   class EquationBase;
@@ -234,7 +234,6 @@ namespace Wasatch{
                                         const Expr::Tag densityTag,
                                         const Expr::Tag primVarTag,
                                         const Expr::Tag turbDiffTag, 
-                                        const std::string suffix,
                                         Expr::ExpressionFactory& factory,
                                         FieldTagInfo& info );
   template< typename FieldT>
@@ -263,7 +262,6 @@ namespace Wasatch{
                                          Expr::Tag convFluxTag,
                                          const ConvInterpMethods convMethod,
                                          const Expr::Tag& advVelocityTag,
-                                         const std::string& suffix,
                                          Expr::ExpressionFactory& factory,
                                          FieldTagInfo& info );
 
@@ -279,12 +277,11 @@ namespace Wasatch{
   template< typename FieldT >
   void setup_convective_flux_expression( Uintah::ProblemSpecP convFluxParams,
                                          const Expr::Tag& solnVarTag,
-                                         const std::string& suffix,
                                          Expr::ExpressionFactory& factory,
                                          FieldTagInfo& info );
 
   /** @} */
 
-}// namespace Wasatch
+}// namespace WasatchCore
 
 #endif // Wasatch_ParseEquations_h

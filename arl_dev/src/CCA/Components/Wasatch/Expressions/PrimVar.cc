@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 2012-2015 The University of Utah
+ * Copyright (c) 2012-2016 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -43,31 +43,16 @@ PrimVar( const Expr::Tag& rhoPhiTag,
 {
   this->set_gpu_runnable( true );
   
-   rhophi_ = this->template create_field_request<FieldT>(rhoPhiTag);
-   rho_ = this->template create_field_request<DensT>(rhoTag);
-  if (hasIntrusion_)  volfrac_ = this->template create_field_request<FieldT>(volFracTag);
-}
+  rhophi_ = this->template create_field_request<FieldT>(rhoPhiTag);
+  rho_    = this->template create_field_request<DensT >(rhoTag   );
 
-template< typename FieldT >
-PrimVar<FieldT,FieldT>::
-PrimVar( const Expr::Tag& rhoPhiTag,
-         const Expr::Tag& rhoTag )
-  : Expr::Expression<FieldT>()
-{
-  this->set_gpu_runnable( true );
-   rhophi_ = this->template create_field_request<FieldT>(rhoPhiTag);
-   rho_ = this->template create_field_request<FieldT>(rhoTag);
+  if( hasIntrusion_ ) volfrac_ = this->template create_field_request<FieldT>(volFracTag);
 }
 
 //--------------------------------------------------------------------
 
 template< typename FieldT, typename DensT >
 PrimVar<FieldT,DensT>::
-~PrimVar()
-{}
-
-template< typename FieldT >
-PrimVar<FieldT,FieldT>::
 ~PrimVar()
 {}
 
@@ -80,6 +65,14 @@ bind_operators( const SpatialOps::OperatorDatabase& opDB )
 {
   interpOp_ = opDB.retrieve_operator<InterpT>();
 }
+
+//--------------------------------------------------------------------
+
+template<>
+void
+PrimVar<SpatialOps::SVolField,SpatialOps::SVolField>::
+bind_operators( const SpatialOps::OperatorDatabase& opDB )
+{}
 
 //--------------------------------------------------------------------
 
@@ -96,20 +89,25 @@ evaluate()
   SpatialOps::SpatFldPtr<FieldT> tmp = SpatialOps::SpatialFieldStore::get<FieldT>( phi );
   *tmp <<= 1.0; // we need to set this to 1.0 so that we don't get random values in out-of-domain faces
   *tmp <<= (*interpOp_)( rho );
+
   if( hasIntrusion_ ) phi <<= volfrac_->field_ref() * rhophi / *tmp;
-  else                        phi <<= rhophi / *tmp;
+  else                phi <<= rhophi / *tmp;
 }
 
-template< typename FieldT >
+//--------------------------------------------------------------------
+
+template<>
 void
-PrimVar<FieldT,FieldT>::
+PrimVar<SpatialOps::SVolField,SpatialOps::SVolField>::
 evaluate()
 {
   using namespace SpatialOps;
+  typedef SpatialOps::SVolField FieldT;
   FieldT& phi = this->value();
-  const FieldT& rho = rho_->field_ref();
+  const FieldT& rho    = rho_   ->field_ref();
   const FieldT& rhophi = rhophi_->field_ref();
-  phi <<= rhophi / rho;
+  if( hasIntrusion_ ) phi <<= volfrac_->field_ref() * rhophi / rho;
+  else                phi <<= rhophi / rho;
 }
 
 //--------------------------------------------------------------------
@@ -126,16 +124,6 @@ Builder::Builder( const Expr::Tag& result,
     volfract_( volFracTag )
 {}
 
-template< typename FieldT >
-PrimVar<FieldT,FieldT>::
-Builder::Builder( const Expr::Tag& result,
-                  const Expr::Tag& rhoPhiTag,
-                  const Expr::Tag& rhoTag )
-  : ExpressionBuilder(result),
-    rhophit_( rhoPhiTag ),
-    rhot_   ( rhoTag    )
-{}
-
 //--------------------------------------------------------------------
 
 template< typename FieldT, typename DensT >
@@ -143,13 +131,6 @@ Expr::ExpressionBase*
 PrimVar<FieldT,DensT>::Builder::build() const
 {
   return new PrimVar<FieldT,DensT>( rhophit_, rhot_, volfract_ );
-}
-
-template< typename FieldT >
-Expr::ExpressionBase*
-PrimVar<FieldT,FieldT>::Builder::build() const
-{
-  return new PrimVar<FieldT,FieldT>( rhophit_, rhot_ );
 }
 
 //====================================================================
@@ -160,6 +141,5 @@ template class PrimVar< SpatialOps::XVolField, SpatialOps::SVolField >;
 template class PrimVar< SpatialOps::YVolField, SpatialOps::SVolField >;
 template class PrimVar< SpatialOps::ZVolField, SpatialOps::SVolField >;
 //====================================================================
-
 
 #endif // PrimVar_h

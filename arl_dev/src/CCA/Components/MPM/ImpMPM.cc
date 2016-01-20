@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2015 The University of Utah
+ * Copyright (c) 1997-2016 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -44,7 +44,6 @@
 #include <CCA/Components/MPM/HeatConduction/ImplicitHeatConduction.h>
 #include <CCA/Components/MPM/ThermalContact/ThermalContact.h>
 #include <CCA/Components/MPM/ThermalContact/ThermalContactFactory.h>
-#include <CCA/Components/MPM/MPMBoundCond.h>
 #include <CCA/Ports/DataWarehouse.h>
 #include <CCA/Ports/Scheduler.h>
 #include <Core/Grid/Grid.h>
@@ -59,12 +58,9 @@
 #include <Core/Grid/Variables/CellIterator.h>
 #include <Core/Grid/Patch.h>
 #include <Core/Grid/SimulationState.h>
-#include <Core/Grid/Variables/SoleVariable.h>
 #include <Core/Grid/Task.h>
 #include <Core/Grid/BoundaryConditions/BoundCond.h>
 #include <Core/Grid/Variables/VarTypes.h>
-#include <Core/Exceptions/ParameterNotFound.h>
-#include <Core/Exceptions/ProblemSetupException.h>
 #include <Core/Parallel/ProcessorGroup.h>
 #include <Core/Parallel/Parallel.h>
 #include <Core/Geometry/Vector.h>
@@ -80,11 +76,9 @@
 #include <Core/Math/FastMatrix.h>
 #include <set>
 #include <map>
-#include <numeric>
 #include <algorithm>
 #include <limits>
 #include <iostream>
-#include <fstream>
 #include <cmath>
 
 

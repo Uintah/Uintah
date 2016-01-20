@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 2012-2015 The University of Utah
+ * Copyright (c) 2012-2016 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -37,7 +37,7 @@
 // forward declaration
 namespace Expr{ class Tag; }
 
-namespace Wasatch{
+namespace WasatchCore{
 
   /**
    *  \ingroup WasatchParser
@@ -89,7 +89,7 @@ namespace Wasatch{
   template <typename T>
   std::string number_to_string ( T n );
   
-} // namespace Wasatch
+} // namespace WasatchCore
 
 
 #endif // Wasatch_ParseTools_h

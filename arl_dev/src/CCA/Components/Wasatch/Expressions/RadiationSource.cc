@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 2012-2015 The University of Utah
+ * Copyright (c) 2012-2016 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -45,7 +45,7 @@
 //-- SpatialOps Includes --//
 #include <spatialops/OperatorDatabase.h>
 
-namespace Wasatch {
+namespace WasatchCore {
   
   //==================================================================
   
@@ -68,13 +68,13 @@ namespace Wasatch {
   
   // note that this does not provide any ghost entries in the matrix...
   temperatureLabel_( Uintah::VarLabel::create( temperatureTag.name(),
-                                              Wasatch::get_uintah_field_type_descriptor<SVolField>() ) ),
+                                              WasatchCore::get_uintah_field_type_descriptor<SVolField>() ) ),
   absorptionLabel_ ( Uintah::VarLabel::create( absorptionTag.name(),
-                                              Wasatch::get_uintah_field_type_descriptor<SVolField>() ) ),
+                                              WasatchCore::get_uintah_field_type_descriptor<SVolField>() ) ),
   celltypeLabel_   ( Uintah::VarLabel::create( celltypeTag.name(),
-                                              Wasatch::get_uintah_field_type_descriptor<int>() ) ),
+                                              WasatchCore::get_uintah_field_type_descriptor<int>() ) ),
   divqLabel_       ( Uintah::VarLabel::create( radiationSourceName,
-                                              Wasatch::get_uintah_field_type_descriptor<SVolField>() ) ),
+                                              WasatchCore::get_uintah_field_type_descriptor<SVolField>() ) ),
   rmcrt_(rmcrt)
   {
      temperature_ = create_field_request<SVolField>(temperatureTag);
@@ -266,4 +266,4 @@ namespace Wasatch {
     return new RadiationSource( radTags[0].name(), temperatureTag_, absorptionTag_, celltypeTag_, rmcrt_, radiationSpec_, sharedState_, grid_ );
   }
   
-} // namespace Wasatch
+} // namespace WasatchCore

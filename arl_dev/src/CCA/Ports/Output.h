@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2015 The University of Utah
+ * Copyright (c) 1997-2016 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -89,23 +89,23 @@ class SimulationState;
     // Call this when restarting from a checkpoint after calling
     // problemSetup.
     virtual void restartSetup(Dir& restartFromDir, int startTimestep,
-			      int timestep, double time, bool fromScratch,
-			      bool removeOldDir) = 0;
+                              int timestep, double time, bool fromScratch,
+                              bool removeOldDir) = 0;
     //////////
     // set timeinfoFlags and 
     virtual void reduceUdaSetup(Dir& fromDir) = 0;
 
     virtual bool needRecompile(double time, double delt,
-			       const GridP& grid) = 0;
+                               const GridP& grid) = 0;
 
     //////////
     // Call this after all other tasks have been added to the scheduler
     virtual void finalizeTimestep(double t, double delt, const GridP&,
-				      SchedulerP&, bool recompile = false ) = 0;
+                                  SchedulerP&, bool recompile = false ) = 0;
 
     // schedule all output tasks
     virtual void sched_allOutputTasks(double delt, const GridP&,
-				          SchedulerP&, bool recompile = false ) = 0;
+                                      SchedulerP&, bool recompile = false ) = 0;
 
     //////////
     // Call this after a timestep restart to make sure we still
@@ -155,15 +155,20 @@ class SimulationState;
 
     // update output interval
     virtual void updateOutputInterval( double inv ) = 0;
+    virtual void updateOutputTimestepInterval( int inv ) = 0;
 
-    //get output interval
+    // get output interval
     virtual double getOutputInterval() const = 0;
+    virtual int    getOutputTimestepInterval() const = 0;
     
     // update checkpoint interval
     virtual void updateCheckpointInterval( double inv ) = 0;
+    virtual void updateCheckpointTimestepInterval( int inv ) = 0;
 
     //get checkpoint interval
     virtual double getCheckpointInterval() const = 0;
+    virtual int    getCheckpointTimestepInterval() const = 0;
+
     //////////
     // Get the directory of the current time step for outputting info.
     virtual const std::string& getLastTimestepOutputLocation() const = 0;

@@ -205,6 +205,7 @@
       <min_grid_level                   spec="OPTIONAL INTEGER" />   <!-- AMRMPM doesn't need it, but MPMICE does -->
       <max_grid_level                   spec="OPTIONAL INTEGER" />
       <manualGrid                       spec="OPTIONAL BOOLEAN" />
+      <CFI_interpolator                 spec="OPTIONAL STRING 'linear, gimp'" />
       
       <Refine_Regions                   spec="OPTIONAL NO_DATA" >  
         <geom_object                    spec="MULTIPLE" />

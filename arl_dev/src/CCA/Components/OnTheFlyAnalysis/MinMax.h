@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2015 The University of Utah
+ * Copyright (c) 1997-2016 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -27,6 +27,7 @@
 #define Packages_Uintah_CCA_Components_ontheflyAnalysis_MinMax_h
 #include <CCA/Components/OnTheFlyAnalysis/AnalysisModule.h>
 #include <CCA/Ports/Output.h>
+#include <Core/Grid/SimulationState.h>
 #include <Core/Grid/Variables/VarTypes.h>
 #include <Core/Grid/Variables/CCVariable.h>
 #include <Core/Grid/Variables/SFCXVariable.h>
@@ -57,9 +58,10 @@ GENERAL INFORMATION
 ****************************************/
   class MinMax : public AnalysisModule {
   public:
+
     MinMax(ProblemSpecP& prob_spec,
            SimulationStateP& sharedState,
-	    Output* dataArchiver);
+	   Output* dataArchiver);
     MinMax();
                     
     virtual ~MinMax();
@@ -68,8 +70,7 @@ GENERAL INFORMATION
                               const ProblemSpecP& restart_prob_spec,
                               GridP& grid,
                               SimulationStateP& sharedState);
-    
-                                  
+                                          
     virtual void scheduleInitialize(SchedulerP& sched,
                                     const LevelP& level);
                                     
@@ -80,7 +81,7 @@ GENERAL INFORMATION
    
     virtual void scheduleDoAnalysis_preReloc(SchedulerP& sched,
                                     const LevelP& level) {};
-                                      
+
   private:
   
     bool isRightLevel( const int myLevel, 
@@ -134,15 +135,7 @@ GENERAL INFORMATION
     double d_startTime;
     double d_stopTime;
     
-    struct varProperties{
-      VarLabel* label;
-      VarLabel* reductionMinLabel;
-      VarLabel* reductionMaxLabel;
-      int matl;
-      int level;
-    };
-    
-    std::vector<varProperties> d_analyzeVars;
+    std::vector<SimulationState::analysisVar> d_analyzeVars;
     
     SimulationStateP d_sharedState;
     Output* d_dataArchiver;
@@ -153,8 +146,6 @@ GENERAL INFORMATION
     std::set<std::string> d_isDirCreated;
     MaterialSubset*  d_zero_matl;
     PatchSet*        d_zeroPatch;
-    
-  
   };
 }
 

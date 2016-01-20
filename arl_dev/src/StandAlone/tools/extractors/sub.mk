@@ -1,7 +1,7 @@
 #
 #  The MIT License
 #
-#  Copyright (c) 1997-2015 The University of Utah
+#  Copyright (c) 1997-2016 The University of Utah
 # 
 #  Permission is hereby granted, free of charge, to any person obtaining a copy
 #  of this software and associated documentation files (the "Software"), to
@@ -53,7 +53,7 @@ else
   LIBS := $(XML2_LIBRARY) $(F_LIBRARY) $(HYPRE_LIBRARY) \
           $(CANTERA_LIBRARY) \
           $(PETSC_LIBRARY)  $(LAPACK_LIBRARY) $(BLAS_LIBRARY) \
-          $(MPI_LIBRARY) $(M_LIBRARY) $(THREAD_LIBRARY) $(Z_LIBRARY) \
+          $(MPI_LIBRARY) $(M_LIBRARY) $(THREAD_LIBRARY) \
           $(CUDA_LIBRARY)
   ifeq ($(HAVE_TIFF),yes)
     LIBS := $(LIBS) $(TIFF_LIBRARY)

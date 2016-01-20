@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 2012-2015 The University of Utah
+ * Copyright (c) 2012-2016 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -57,7 +57,6 @@
 #include <CCA/Components/Wasatch/Expressions/BoundaryConditions/OutflowBC.h>
 #include <CCA/Components/Wasatch/Expressions/BoundaryConditions/OpenBC.h>
 #include <CCA/Components/Wasatch/Expressions/EmbeddedGeometry/EmbeddedGeometryHelper.h>
-#include <CCA/Components/Wasatch/Expressions/PrimVar.h>
 #include <CCA/Components/Wasatch/Expressions/PressureSource.h>
 #include <CCA/Components/Wasatch/Expressions/ExprAlgebra.h>
 #include <CCA/Components/Wasatch/Expressions/PostProcessing/InterpolateExpression.h>
@@ -72,14 +71,15 @@
 
 using std::string;
 
-namespace Wasatch{
+namespace WasatchCore{
 
 
   //==================================================================
 
   template< typename FieldT >
   LowMachMomentumTransportEquation<FieldT>::
-  LowMachMomentumTransportEquation( const std::string velName,
+  LowMachMomentumTransportEquation(const Direction momComponent,
+                                   const std::string velName,
                              const std::string momName,
                              const Expr::Tag densTag,
                              const bool isConstDensity,
@@ -90,127 +90,38 @@ namespace Wasatch{
                              TurbulenceParameters turbulenceParams,
                              Uintah::SolverInterface& linSolver,
                              Uintah::SimulationStateP sharedState)
-    : MomentumTransportEquationBase<FieldT>( velName,
+    : MomentumTransportEquationBase<FieldT>(momComponent,
+                                            velName,
                          momName,
                          densTag,
                          isConstDensity,
-                          bodyForceTag,
-                          srcTermTag,
-                          gc,
-                          params,
-                          turbulenceParams,
-                          linSolver,
-                          sharedState)
+                         bodyForceTag,
+                         srcTermTag,
+                         gc,
+                         params,
+                         turbulenceParams)
   {
-    solverParams_ = NULL;
-    set_vel_tags( params, this->velTags_ );
-
-    GraphHelper& graphHelper   = *(gc[ADVANCE_SOLUTION  ]);
-    Expr::ExpressionFactory& factory = *(graphHelper.exprFactory);
-    
-    const TagNames& tagNames = TagNames::self();
-    
     std::string xmomname, ymomname, zmomname; // these are needed to construct fx, fy, and fz for pressure RHS
     bool doMom[3];
     doMom[0] = params->get( "X-Momentum", xmomname );
     doMom[1] = params->get( "Y-Momentum", ymomname );
     doMom[2] = params->get( "Z-Momentum", zmomname );
 
+    GraphHelper& graphHelper   = *(gc[ADVANCE_SOLUTION  ]);
+    Expr::ExpressionFactory& factory = *(graphHelper.exprFactory);
+
+    const TagNames& tagNames = TagNames::self();
+    
+    solverParams_ = NULL;
     const bool enablePressureSolve = !(params->findBlock("DisablePressureSolve"));
-    
-    //_____________
-    // volume fractions for embedded boundaries Terms
     const EmbeddedGeometryHelper& embedGeom = EmbeddedGeometryHelper::self();
-    this->thisVolFracTag_ = embedGeom.vol_frac_tag<FieldT>();
-    
-    //__________________
-    // convective fluxes
-    Expr::TagList cfTags; // these tags will be filled by register_convective_fluxes
-    std::string convInterpMethod = "CENTRAL";
-    if (this->params_->findBlock("ConvectiveInterpMethod")) {
-      this->params_->findBlock("ConvectiveInterpMethod")->getAttribute("method",convInterpMethod);
-    }
-    
-    this->normalConvFluxID_ = register_momentum_convective_fluxes<FieldT>(doMom, this->velTags_, cfTags, get_conv_interp_method(convInterpMethod), this->solnVarTag_, this->thisVolFracTag_, factory );
-
-    //__________________
-    // dilatation - needed by pressure source term and strain tensor
-    const Expr::Tag dilTag = tagNames.dilatation;
-    if( !factory.have_entry( dilTag ) ){
-      typedef typename Dilatation<SVolField,XVolField,YVolField,ZVolField>::Builder Dilatation;
-      // if dilatation expression has not been registered, then register it
-      factory.register_expression( new Dilatation(dilTag, this->velTags_) );
-    }
-
-//    if( computeContinuityResidual ){
-//      GraphHelper& postProcGH   = *(gc[POSTPROCESSING]);
-//      Expr::ExpressionFactory& postProcFactory = *(postProcGH.exprFactory);
-//
-//      const Expr::Tag contTag = tagNames.continuityresidual;
-//
-//      if( !postProcFactory.have_entry( contTag ) ){
-//        typedef typename ContinuityResidual<SVolField,XVolField,YVolField,ZVolField>::Builder ContResT;
-//        // if dilatation expression has not been registered, then register it
-//        Expr::TagList np1MomTags;
-//        if(doMom[0]) np1MomTags.push_back(Expr::Tag("x-mom",Expr::STATE_NP1));
-//        else         np1MomTags.push_back(Expr::Tag());
-//        if(doMom[1]) np1MomTags.push_back(Expr::Tag("y-mom",Expr::STATE_NP1));
-//        else         np1MomTags.push_back(Expr::Tag());
-//        if(doMom[2]) np1MomTags.push_back(Expr::Tag("z-mom",Expr::STATE_NP1));
-//        else         np1MomTags.push_back(Expr::Tag());
-//
-//        Expr::Tag drhodtTag = Expr::Tag();
-//        if( !this->is_constant_density() ){
-//          drhodtTag = tagNames.drhodtstarnp1;
-//          typedef Expr::PlaceHolder<SVolField>  FieldExpr;
-//          postProcFactory.register_expression( new typename FieldExpr::Builder(drhodtTag),true );
-//        }
-//        Expr::ExpressionID contID = postProcFactory.register_expression( new ContResT(contTag, drhodtTag, np1MomTags) );
-//        postProcGH.rootIDs.insert(contID);
-//      }
-//    }
-
-    //___________________________________
-    // diffusive flux (strain components)
-    Expr::TagList strainTags;
-    this->normalStrainID_ = register_strain_tensor<FieldT>(doMom, this->isViscous_, this->velTags_, strainTags, dilTag, factory);
-    
-    //--------------------------------------
-    // TURBULENCE
-    // check if we have a turbulence model turned on
-    // check if the flow is viscous
-    const Expr::Tag viscTag = (this->isViscous_) ? parse_nametag( params->findBlock("Viscosity")->findBlock("NameTag") ) : Expr::Tag();
-    
-    const bool enableTurbulenceModel = !(params->findBlock("DisableTurbulenceModel"));
-    const Expr::Tag turbViscTag = tagNames.turbulentviscosity;
-    if( this->isTurbulent_ && this->isViscous_ && enableTurbulenceModel ){
-      register_turbulence_expressions(turbulenceParams, factory, this->velTags_, densTag, this->is_constant_density() );
-      factory.attach_dependency_to_expression(turbViscTag, viscTag);
-    }
-    // END TURBULENCE
-    //--------------------------------------
-
-    //_________________________________________________________
-    // partial rhs:
-    // register expression to calculate the partial RHS (absent
-    // pressure gradient) for use in the projection
-    const Expr::ExpressionID momRHSPartID = factory.register_expression(
-        new typename MomRHSPart<FieldT>::Builder( rhs_part_tag( this->solnVarTag_ ),
-                                                  cfTags[0] , cfTags[1] , cfTags[2] ,
-                                                  viscTag,
-                                                  strainTags[0], strainTags[1], strainTags[2],
-                                                  dilTag,
-                                                  this->densityTag_, bodyForceTag, srcTermTag,
-                                                  this->thisVolFracTag_) );
-    factory.cleave_from_parents ( momRHSPartID );
-    
     //__________________
     // Pressure source term        
     if( !factory.have_entry( tagNames.pressuresrc ) ){
       const Expr::Tag densStarTag  = tagNames.make_star(densTag, Expr::STATE_NONE);
       
-      set_mom_tags( params, this->momTags_ );
-      set_mom_tags( params, this->oldMomTags_, true );
+//      set_mom_tags( params, this->momTags_ );
+//      set_mom_tags( params, this->oldMomTags_, true );
       // register the expression for pressure source term
       Expr::TagList psrcTagList;
       psrcTagList.push_back(tagNames.pressuresrc);
@@ -235,29 +146,6 @@ namespace Wasatch{
       factory.cleave_from_children( psrcID  );
     }
     
-    
-    //__________________
-    // continuity residual
-    const bool computeContinuityResidual = params->findBlock("ComputeMassResidual");
-    if( computeContinuityResidual ) {
-      const Expr::Tag contTag = tagNames.continuityresidual;
-      
-      if( !factory.have_entry( contTag ) ){
-        typedef typename ContinuityResidual<SVolField,XVolField,YVolField,ZVolField>::Builder ContResT;
-        
-        Expr::Tag drhodtTag = Expr::Tag();
-        if( !this->is_constant_density() ){
-          drhodtTag = tagNames.drhodtstar;
-        }
-        Expr::ExpressionID contID = factory.register_expression( new ContResT(contTag, drhodtTag, this->momTags_) );
-        graphHelper.rootIDs.insert(contID);
-      }
-    }
-
-    
-    //__________________
-    // calculate velocity at the current time step    
-    factory.register_expression( new typename PrimVar<FieldT,SVolField>::Builder( this->thisVelTag_, this->solnVarTag_, this->densityTag_, this->thisVolFracTag_ ) );
     
     //__________________
     // pressure
@@ -328,32 +216,6 @@ namespace Wasatch{
       }
     }
     
-    // Kinetic energy calculation, if necessary
-    if( params->findBlock("ComputeKE") ){
-      Uintah::ProblemSpecP keSpec = params->findBlock("ComputeKE");
-      bool isTotalKE = true;
-      keSpec->getAttribute("total", isTotalKE);
-      if( isTotalKE ){ // calculate total kinetic energy. then follow that with a reduction variable
-        if( !factory.have_entry( TagNames::self().totalKineticEnergy )){
-          bool outputKE = true;
-          keSpec->getAttribute("output", outputKE);
-          
-          // we need to create two expressions
-          const Expr::Tag tkeTempTag("TotalKE_temp", Expr::STATE_NONE);
-          factory.register_expression(scinew typename TotalKineticEnergy<XVolField,YVolField,ZVolField>::Builder( tkeTempTag,
-                                                                                                                 this->velTags_[0],this->velTags_[1],this->velTags_[2] ),true);
-          
-          ReductionHelper::self().add_variable<SpatialOps::SingleValueField, ReductionSumOpT>(ADVANCE_SOLUTION, TagNames::self().totalKineticEnergy, tkeTempTag, outputKE, false);
-        }
-      }
-      else if( !factory.have_entry( TagNames::self().kineticEnergy ) ){ // calculate local, pointwise kinetic energy
-        const Expr::ExpressionID keID = factory.register_expression(
-            scinew typename KineticEnergy<SVolField,XVolField,YVolField,ZVolField>::Builder(
-                TagNames::self().kineticEnergy, this->velTags_[0],this->velTags_[1],this->velTags_[2] ), true);
-        graphHelper.rootIDs.insert( keID );
-      }
-    }
-
     this->setup();
   }
 
@@ -379,7 +241,7 @@ namespace Wasatch{
     Expr::Tag volFracTag = vNames.vol_frac_tag<FieldT>();
 
     Expr::ExpressionFactory& factory = *this->gc_[ADVANCE_SOLUTION]->exprFactory;
-    typedef typename MomRHS<FieldT>::Builder RHS;
+    typedef typename MomRHS<FieldT, SpatialOps::NODIR>::Builder RHS;
     return factory.register_expression( scinew RHS( this->rhsTag_,
                                                     (enablePressureSolve ? this->pressureTag_ : Expr::Tag()),
                                                     rhs_part_tag(this->solnVarTag_),
@@ -708,4 +570,4 @@ namespace Wasatch{
   template class LowMachMomentumTransportEquation< ZVolField >;
   //==================================================================
 
-} // namespace Wasatch
+} // namespace WasatchCore

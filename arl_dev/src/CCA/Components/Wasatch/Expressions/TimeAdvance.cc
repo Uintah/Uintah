@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 2014-2015 The University of Utah
+ * Copyright (c) 2014-2016 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -33,20 +33,20 @@ TimeAdvance<FieldT>::
 TimeAdvance( const std::string& solnVarName,
              const Expr::Tag& phiOldTag,
              const Expr::Tag& rhsTag,
-             const Wasatch::TimeIntegrator timeIntInfo )
+             const WasatchCore::TimeIntegrator timeIntInfo )
 : Expr::Expression<FieldT>(),
   phiOldt_    ( phiOldTag                         ),
   rhst_       ( rhsTag                            ),
-  dtt_        ( Wasatch::TagNames::self().dt      ),
-  rkstaget_   ( Wasatch::TagNames::self().rkstage ),
+  dtt_        ( WasatchCore::TagNames::self().dt      ),
+  rkstaget_   ( WasatchCore::TagNames::self().rkstage ),
   timeIntInfo_( timeIntInfo                       )
 {
   this->set_gpu_runnable( true );
   
    phiOld_ = this->template create_field_request<FieldT>(phiOldTag);
    rhs_ = this->template create_field_request<FieldT>(rhsTag);
-   dt_ = this->template create_field_request<SingleValue>(Wasatch::TagNames::self().dt);
-   rkStage_ = this->template create_field_request<SingleValue>(Wasatch::TagNames::self().rkstage);
+   dt_ = this->template create_field_request<SingleValue>(WasatchCore::TagNames::self().dt);
+   rkStage_ = this->template create_field_request<SingleValue>(WasatchCore::TagNames::self().rkstage);
 }
 
 //--------------------------------------------------------------------
@@ -94,7 +94,7 @@ template< typename FieldT >
 TimeAdvance<FieldT>::
 Builder::Builder( const Expr::Tag& result,
                   const Expr::Tag& rhsTag,
-                  const Wasatch::TimeIntegrator timeIntInfo )
+                  const WasatchCore::TimeIntegrator timeIntInfo )
   : ExpressionBuilder(result),
     solnVarName_( result.name() ),
     phiOldt_( Expr::Tag(solnVarName_, Expr::STATE_N) ),
@@ -109,7 +109,7 @@ TimeAdvance<FieldT>::
 Builder::Builder( const Expr::Tag& result,
                   const Expr::Tag& phiOldTag,
                   const Expr::Tag& rhsTag,
-                  const Wasatch::TimeIntegrator timeIntInfo )
+                  const WasatchCore::TimeIntegrator timeIntInfo )
 : ExpressionBuilder( result ),
   solnVarName_( result.name() ),
   phiOldt_( phiOldTag ),

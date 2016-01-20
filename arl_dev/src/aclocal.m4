@@ -1,7 +1,7 @@
 #
 #  The MIT License
 #
-#  Copyright (c) 1997-2015 The University of Utah
+#  Copyright (c) 1997-2016 The University of Utah
 # 
 #  Permission is hereby granted, free of charge, to any person obtaining a copy
 #  of this software and associated documentation files (the "Software"), to
@@ -796,30 +796,32 @@ done
 # Look for the CUDA compiler, "nvcc"
 AC_PATH_PROG([NVCC], [nvcc], [no], [$with_cuda/bin])
 
-# Allow GPU code generation for specific compute capabilities: 2.0, 2.1, 3.0, 3.5
-#   We only support code generation for Fermi and Kepler architectures now (APH 09/28/13)
-if test \( "$cuda_gencode" != "20" \) -a \( "$cuda_gencode" != "21" \) -a \( "$cuda_gencode" != "30" \) -a \( "$cuda_gencode" != "35" \); then
+# Allow GPU code generation for specific compute capabilities: 3.0, 3.5, 5.0, 5.2
+#   NOTE: We only support code generation for Kepler and Maxwell architectures now (APH 01/08/16)
+if test \( "$cuda_gencode" != "30" \) -a \( "$cuda_gencode" != "35" \) -a \( "$cuda_gencode" != "50" \) -a \( "$cuda_gencode" != "52" \); then
   AC_MSG_RESULT([no])
-  AC_MSG_ERROR( [The specified value provided: "--enable-gencode=$cuda_gencode" is invalid, must be: 2.0, 2.1, 3.0, 3.5] )
+  AC_MSG_ERROR( [The specified value provided: "--enable-gencode=$cuda_gencode" is invalid, must be: 3.0, 3.5, 5.0, 5.2] )
 fi  
   
 NVCC_CXXFLAGS="-arch=sm_$cuda_gencode "
 
-# set up the -Xcompiler flag so that NVCC can pass CXXFLAGS to host C++ comiler
-#  * don't pass c++11 flag, CUDA <=6.0 doesn't support it and we don't use it yet in any Uintah CUDA code
+# set up the -Xcompiler flag so that NVCC can pass CXXFLAGS to the host C++ compiler
+#  NOTE: -std=c++11 flag is a valid option for CUDA >=7.0, so pass it directly to NVCC
 for i in $CXXFLAGS; do
-  if test "$i" != "-std=c++11"; then
+  if test "$i" = "-std=c++11"; then
+    NVCC_CXXFLAGS="$NVCC_CXXFLAGS $i"
+  else
     NVCC_CXXFLAGS="$NVCC_CXXFLAGS -Xcompiler $i"
   fi
 done
 
 if test "$debug" != "no"; then
   #
-  # Note, the -O2 below really should be -O0, but at least in the nvcc
-  # (version 5.5.0) on aurora this causes debug builds not to be able
-  # to link (when using -dlink) as symbols go missing.  If and when
-  # this bug is fixed in the nvcc compiler/linker, the O2 should
-  # change back to O0.
+  # NOTE: the -O2 below really should be -O0, but for some versions of
+  # NVCC, specifically on aurora, this causes debug builds not to be able
+  # to link when using -dlink, as symbols go missing. This issue seems to
+  # be Wasatch-specific, but if it gets resolved, the -O2 should be
+  # changed to -O0.  (APH 01/11/16)
   #
   NVCC_CXXFLAGS="-g -G -O2 -lineinfo $NVCC_CXXFLAGS $_sci_includes"
 else

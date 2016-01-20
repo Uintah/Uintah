@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 2012-2015 The University of Utah
+ * Copyright (c) 2012-2016 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -49,7 +49,7 @@ namespace Uintah{
   class Ray;
 }
 
-namespace Wasatch{
+namespace WasatchCore{
 
 /**
  *  \class 	  RadiationSource
@@ -121,7 +121,7 @@ public:
   ~RadiationSource();
 
   /**
-   *  \brief allows Wasatch::TaskInterface to reach in and give this
+   *  \brief allows WasatchCore::TaskInterface to reach in and give this
    *         expression the information requried to schedule the
    *         linear solver.
    */
@@ -132,7 +132,7 @@ public:
 
  
   /**
-   *  \brief allows Wasatch::TaskInterface to reach in and provide
+   *  \brief allows WasatchCore::TaskInterface to reach in and provide
    *         this expression with a way to set the variables that it
    *         needs to.
    */
@@ -143,7 +143,7 @@ public:
 
   
   /**
-   *  \brief allows Wasatch::TaskInterface to reach in and provide
+   *  \brief allows WasatchCore::TaskInterface to reach in and provide
    *         this expression with a way to retrieve Uintah-specific
    *         variables from the data warehouse.
    *
@@ -170,6 +170,6 @@ public:
 
 };
 
-} // namespace Wasatch
+} // namespace WasatchCore
 
 #endif // RadiationSource_Expr_h

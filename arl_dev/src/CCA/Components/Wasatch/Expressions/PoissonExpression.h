@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 2012-2015 The University of Utah
+ * Copyright (c) 2012-2016 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -45,7 +45,7 @@ namespace Uintah{
   class SolverParameters;
 }
 
-namespace Wasatch{
+namespace WasatchCore{
   
   /**
    *  \class 	 PoissonExpression
@@ -140,7 +140,7 @@ namespace Wasatch{
     static Expr::TagList poissonTagList;
     
     /**
-     *  \brief Allows Wasatch::TaskInterface to reach in and give this
+     *  \brief Allows WasatchCore::TaskInterface to reach in and give this
      *         expression the information requried to schedule the
      *         linear solver.
      */
@@ -150,7 +150,7 @@ namespace Wasatch{
                           const int RKStage, const bool isDoingInitialization );
     
     /**
-     *  \brief Allows Wasatch::TaskInterface to reach in set the boundary conditions
+     *  \brief Allows WasatchCore::TaskInterface to reach in set the boundary conditions
      *  on PoissonExpression at the appropriate time - namely after the linear solve.
      */  
     // NOTE: Maybe we should not expose this to the outside?
@@ -160,7 +160,7 @@ namespace Wasatch{
                                    const int RKStage );
     
     /**
-     *  \brief Allows Wasatch::TaskInterface to reach in and provide
+     *  \brief Allows WasatchCore::TaskInterface to reach in and provide
      *         this expression with a way to set the variables that it
      *         needs to.
      */
@@ -172,7 +172,7 @@ namespace Wasatch{
     void set_bchelper( WasatchBCHelper* bcHelper ) { bcHelper_ = bcHelper;}
     
     /**
-     *  \brief allows Wasatch::TaskInterface to reach in and provide
+     *  \brief allows WasatchCore::TaskInterface to reach in and provide
      *         this expression with a way to retrieve Uintah-specific
      *         variables from the data warehouse.
      *
@@ -206,6 +206,6 @@ namespace Wasatch{
     void evaluate();
     
   };
-} // namespace Wasatch
+} // namespace WasatchCore
 
 #endif // Poisson_Eq_h

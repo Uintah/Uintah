@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 2012-2015 The University of Utah
+ * Copyright (c) 2012-2016 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -43,7 +43,7 @@
 //-- SpatialOps Includes --//
 #include <spatialops/OperatorDatabase.h>
 
-namespace Wasatch {
+namespace WasatchCore {
 
   PoissonExpression::PoissonExpression( const Expr::Tag& phiTag,
                                         const Expr::Tag& phiRHSLocalTag,
@@ -80,9 +80,9 @@ namespace Wasatch {
     matrixLabel_( Uintah::VarLabel::create( phit_.name() + "_matrix",
                                             Uintah::CCVariable<Uintah::Stencil7>::getTypeDescription() ) ),
     phiLabel_   ( Uintah::VarLabel::create( phit_.name(),
-                                            Wasatch::get_uintah_field_type_descriptor<SVolField>() ) ),
+                                            WasatchCore::get_uintah_field_type_descriptor<SVolField>() ) ),
     phirhsLabel_( Uintah::VarLabel::create( phirhslocalt_.name(),
-                                            Wasatch::get_uintah_field_type_descriptor<SVolField>() ) )
+                                            WasatchCore::get_uintah_field_type_descriptor<SVolField>() ) )
   {
      phiRhs_ = create_field_request<SVolField>(phiRHSTag);
   }
@@ -201,7 +201,7 @@ namespace Wasatch {
       // definite matrix. For the Laplacian on a structured grid, the matrix A corresponding
       // to the Laplacian operator is not positive definite - but "- A" is. Hence,
       // we multiply all coefficients by -1.
-      IntVector iCell = *iter;
+      SCIRun::IntVector iCell = *iter;
       Uintah::Stencil7&  coefs = matrix_[iCell];
       coefs.w = -w;
       coefs.e = -w;
@@ -307,4 +307,4 @@ namespace Wasatch {
 
   Expr::TagList PoissonExpression::poissonTagList = Expr::TagList();
 
-} // namespace Wasatch
+} // namespace WasatchCore

@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 2012-2015 The University of Utah
+ * Copyright (c) 2012-2016 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -35,7 +35,7 @@
 #include <Core/ProblemSpec/ProblemSpecP.h>
 
 
-namespace Wasatch{
+namespace WasatchCore{
 
   /**
    *  \ingroup WasatchCore
@@ -74,7 +74,7 @@ namespace Wasatch{
    *
    */
   template<typename FieldT>
-  class MomentTransportEquation : public Wasatch::TransportEquation
+  class MomentTransportEquation : public WasatchCore::TransportEquation
   {
   public:
     /**
@@ -135,7 +135,7 @@ namespace Wasatch{
     Expr::TagList weightsTags_, abscissaeTags_;
   };
 
-} // namespace Wasatch
+} // namespace WasatchCore
 #endif // Wasatch_MomentTransportEquation_h
 
 

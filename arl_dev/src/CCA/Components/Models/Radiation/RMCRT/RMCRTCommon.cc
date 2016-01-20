@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2015 The University of Utah
+ * Copyright (c) 1997-2016 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -26,9 +26,6 @@
 //
 #include <CCA/Components/Models/Radiation/RMCRT/RMCRTCommon.h>
 
-#include <Core/Exceptions/InternalError.h>
-#include <Core/Exceptions/ProblemSetupException.h>
-#include <Core/Geometry/BBox.h>
 #include <Core/Grid/DbgOutput.h>
 #include <Core/Grid/Variables/PerPatch.h>
 #include <Core/Math/MersenneTwister.h>

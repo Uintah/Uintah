@@ -4,10 +4,12 @@ import shutil
 import platform
 import socket
 import resource
+import subprocess #needed to accurately get return codes
 from optparse import OptionParser
 from sys import argv, exit
 from string import upper
-
+from subprocess import check_output #needed to get full pathname 
+                                    #response from which command
 
 # bulletproofing
 if os.sys.version_info <= (2,5):
@@ -37,8 +39,6 @@ no_sci_malloc = ""
 has_gpu       = 0 
 
 
-if socket.gethostname() == "albion" or socket.gethostname() == "aurora" or socket.gethostname() == "prism.crsim.utah.edu" or socket.gethostname() == "cyrus.mech.utah.edu": 
-  has_gpu = 1
 ####################################################################################
 
 #script_dir=os.sys.path[0]
@@ -177,15 +177,16 @@ def generateGS() :
     try :
       MPIRUN = os.environ['MPIRUN']    # first try the environmental variable
     except :
-      MPIRUN = "mpirun"
-      rc = os.system("which mpirun > /dev/null 2>&1 ")
-
-      if rc == 256:
+      try:
+        MPIRUN = check_output(["which", "mpirun"])
+        MPIRUN = MPIRUN[:-1] # get rid of carriage return at the end of check_output
+      except:
         print "ERROR:generateGoldStandards.py "
         print "      mpirun command was not found and the environmental variable MPIRUN was not set."
         print "      You must either add mpirun to your path, or set the 'MPIRUN' environment variable."
         exit (1)
     print "Using mpirun: %s " % MPIRUN
+    print "If this is not the correct MPIRUN, please indicate the desired one with the MPIRUN environment variable"
         
     if options.verbose :
         print "Building Gold Standards in " + os.getcwd()
@@ -348,10 +349,21 @@ def generateGS() :
                 if tmp[0] == "sus_options":
                   sus_options = tmp[1]
                   print "\n sus_option: %s \n"%(sus_options)
-    
-            if do_gpu == 1 and has_gpu == 0:
-              print "\nWARNING: skipping this test.  This machine is not configured to run gpu tests\n"
-              continue
+
+            if do_gpu == 1:
+            
+              print "Running command to see if GPU is active: " + sus + " -gpucheck"
+
+              child = subprocess.Popen( [sus, "-gpucheck"], stdout=subprocess.PIPE)
+              streamdata = child.communicate()[0]
+              rc = child.returncode
+              if rc == 1:
+                print "GPU found!"
+                has_gpu = 1
+              else:
+                has_gpu = 0
+                print "\nWARNING: skipping this test.  This machine is not configured to run gpu tests\n"
+                continue
               
             # FIXME: NOT SURE IF THIS IS RIGHT, BUT IT APPEARS TO MATCH WHAT THE RUN TESTS SCRIPT NEEDS:
             print "About to run test: " + nameoftest( test )

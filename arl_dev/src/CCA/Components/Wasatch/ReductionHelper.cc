@@ -6,7 +6,7 @@
  *
  * The MIT License
  *
- * Copyright (c) 2013-2015 The University of Utah
+ * Copyright (c) 2013-2016 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -52,7 +52,7 @@
 
 namespace so = SpatialOps;
 
-namespace Wasatch {
+namespace WasatchCore {
 
   //==================================================================
 
@@ -299,16 +299,16 @@ namespace Wasatch {
     }    
   }
 
-} /* namespace Wasatch */
+} /* namespace WasatchCore */
 
 //==========================================================================
 // Explicit template instantiation for supported versions of this expression
 #include <spatialops/structured/FVStaggered.h>
 
 #define DECLARE_REDUCTION_VARIANTS(T) \
-template void Wasatch::ReductionHelper::add_variable<T,ReductionMinOpT>( const Category, const Expr::Tag&, const Expr::Tag&, const bool, const bool ); \
-template void Wasatch::ReductionHelper::add_variable<T,ReductionMaxOpT>( const Category, const Expr::Tag&, const Expr::Tag&, const bool, const bool ); \
-template void Wasatch::ReductionHelper::add_variable<T,ReductionSumOpT>( const Category, const Expr::Tag&, const Expr::Tag&, const bool, const bool );
+template void WasatchCore::ReductionHelper::add_variable<T,ReductionMinOpT>( const Category, const Expr::Tag&, const Expr::Tag&, const bool, const bool ); \
+template void WasatchCore::ReductionHelper::add_variable<T,ReductionMaxOpT>( const Category, const Expr::Tag&, const Expr::Tag&, const bool, const bool ); \
+template void WasatchCore::ReductionHelper::add_variable<T,ReductionSumOpT>( const Category, const Expr::Tag&, const Expr::Tag&, const bool, const bool );
 
 DECLARE_REDUCTION_VARIANTS(so::SingleValueField)
 DECLARE_REDUCTION_VARIANTS(SVolField)

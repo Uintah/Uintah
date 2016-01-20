@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2015 The University of Utah
+ * Copyright (c) 1997-2016 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -386,6 +386,15 @@ class OnDemandDataWarehouse : public DataWarehouse {
 
     virtual void finalize();
 
+#ifdef HAVE_CUDA
+   static int getNumDevices();
+   static void uintahSetCudaDevice(int deviceNum);
+   static size_t getTypeDescriptionSize(const TypeDescription::Type& type);
+   static GPUGridVariableBase* createGPUGridVariable(size_t sizeOfDataType);
+   static GPUPerPatchBase* createGPUPerPatch(size_t sizeOfDataType);
+
+#endif
+
     virtual void unfinalize();
 
     virtual void refinalize();
@@ -456,7 +465,17 @@ class OnDemandDataWarehouse : public DataWarehouse {
       hasRestarted_ = true;
     }
 
-    void logMemoryUse(std::ostream& out,
+   struct ValidNeighbors {
+     GridVariableBase* validNeighbor;
+     const Patch* neighborPatch;
+     IntVector low;
+     IntVector high;
+
+   };
+   void getValidNeighbors(const VarLabel* label, int matlIndex, const Patch* patch,
+           Ghost::GhostType gtype, int numGhostCells, std::vector<ValidNeighbors>& validNeighbors);
+
+   void logMemoryUse(std::ostream& out,
                       unsigned long& total,
                       const std::string& tag);
 
@@ -602,6 +621,10 @@ class OnDemandDataWarehouse : public DataWarehouse {
     typedef std::multimap<PSPatchMatlGhost, ParticleSubset*> psetDBType;
     typedef std::map<std::pair<int, const Patch*>, std::map<const VarLabel*, ParticleVariableBase*>*> psetAddDBType;
     typedef std::map<std::pair<int, const Patch*>, int> particleQuantityType;
+#ifdef HAVE_CUDA
+   std::map<Patch*, bool> assignedPatches;
+   // indicates where a given patch should be stored in an accelerator
+#endif
 
     ParticleSubset* queryPSetDB(psetDBType &db,
                                 const Patch* patch,

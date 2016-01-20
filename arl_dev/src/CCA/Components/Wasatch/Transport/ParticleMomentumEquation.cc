@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 2012-2015 The University of Utah
+ * Copyright (c) 2012-2016 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -38,7 +38,7 @@
 #include <CCA/Components/Wasatch/Expressions/Particles/ParticleDragCoefficient.h>
 #include <CCA/Components/Wasatch/Expressions/BoundaryConditions/ParticleWallBC.h>
 
-namespace Wasatch{
+namespace WasatchCore{
 
   extern bool is_normal_to_boundary( const Direction stagLoc,
                                      const Uintah::Patch::FaceType face );
@@ -120,8 +120,7 @@ namespace Wasatch{
     //_____________________________
     // build a bodyforce expression
     Expr::Tag pBodyForceTag;
-    if (doGravity_)
-    {
+    if( doGravity_ ){
       switch( direction_ ){
         case XDIR: pBodyForceTag = TagNames::self().pbodyx; break;
         case YDIR: pBodyForceTag = TagNames::self().pbodyy; break;
@@ -163,22 +162,19 @@ namespace Wasatch{
       //_____________________________
       // Drag Force
       switch( direction_ ){
-        case XDIR:
-        {
+        case XDIR:{
           pDragForceTag = TagNames::self().pdragx;
           typedef ParticleDragForce<XVolField>::Builder DragForce;
           factory.register_expression( scinew DragForce(pDragForceTag, gUTag_, pDragCoefTag, pTauTag, solution_variable_tag(), pSizeTag_, pPosTags_ ) );
           break;
         }
-        case YDIR:
-        {
+        case YDIR:{
           pDragForceTag = TagNames::self().pdragy;
           typedef ParticleDragForce<YVolField>::Builder DragForce;
           factory.register_expression( scinew DragForce(pDragForceTag, gVTag_, pDragCoefTag, pTauTag, solution_variable_tag(), pSizeTag_, pPosTags_ ) );
           break;
         }
-        case ZDIR:
-        {
+        case ZDIR:{
           pDragForceTag = TagNames::self().pdragz;
           typedef ParticleDragForce<ZVolField>::Builder DragForce;
           factory.register_expression( scinew DragForce(pDragForceTag, gWTag_, pDragCoefTag, pTauTag, solution_variable_tag(), pSizeTag_, pPosTags_ ) );
@@ -225,9 +221,8 @@ namespace Wasatch{
       const Uintah::BCGeomBase::ParticleBndSpec pBndSpec = myBndSpec.particleBndSpec;
       if( pBndSpec.hasParticleBC() ){
 
-        switch (pBndSpec.bndType) {
-          case Uintah::BCGeomBase::ParticleBndSpec::WALL:
-          {
+        switch( pBndSpec.bndType ){
+          case Uintah::BCGeomBase::ParticleBndSpec::WALL:{
             const double restCoef = pBndSpec.restitutionCoef;
             if( isNormal ){
               // create particle wall bcs

@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 2012-2015 The University of Utah
+ * Copyright (c) 2012-2016 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -34,7 +34,7 @@
 #include <CCA/Components/Wasatch/Expressions/Turbulence/TurbulenceParameters.h>
 #include <CCA/Components/Wasatch/Expressions/Turbulence/TurbulentDiffusivity.h>
 
-namespace Wasatch{
+namespace WasatchCore{
 
   /**
    *  \ingroup WasatchCore
@@ -97,7 +97,7 @@ namespace Wasatch{
    *    automatically.
    */
   template<typename FieldT>
-  class ScalarTransportEquation : public Wasatch::TransportEquation
+  class ScalarTransportEquation : public WasatchCore::TransportEquation
   {
   public:
 
@@ -201,6 +201,6 @@ namespace Wasatch{
     FieldTagInfo infoStar_;  // needed to form predicted scalar quantities
   };
 
-} // namespace Wasatch
+} // namespace WasatchCore
 
 #endif // Wasatch_ScalarTransportEquation_h

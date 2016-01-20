@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2015 The University of Utah
+ * Copyright (c) 1997-2016 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -96,6 +96,8 @@ class Task {
                           const MaterialSubset* matls,
                           DataWarehouse* fromDW,
                           DataWarehouse* toDW,
+                          void* oldTaskGpuDW,
+                          void* newTaskGpuDW,
                           void* stream,
                           int deviceID) = 0;
     };
@@ -135,6 +137,8 @@ class Task {
                           const MaterialSubset* matls,
                           DataWarehouse* fromDW,
                           DataWarehouse* toDW,
+                          void* oldTaskGpuDW,
+                          void* newTaskGpuDW,
                           void* stream,
                           int deviceID)
         {
@@ -178,6 +182,8 @@ class Task {
                           const MaterialSubset* matls,
                           DataWarehouse* fromDW,
                           DataWarehouse* toDW,
+                          void* oldTaskGpuDW,
+                          void* newTaskGpuDW,
                           void* stream,
                           int deviceID)
         {
@@ -225,6 +231,8 @@ class Task {
                           const MaterialSubset* matls,
                           DataWarehouse* fromDW,
                           DataWarehouse* toDW,
+                          void* oldTaskGpuDW,
+                          void* newTaskGpuDW,
                           void* stream,
                           int deviceID)
         {
@@ -276,6 +284,8 @@ class Task {
                           const MaterialSubset* matls,
                           DataWarehouse* fromDW,
                           DataWarehouse* toDW,
+                          void* oldTaskGpuDW,
+                          void* newTaskGpuDW,
                           void* stream,
                           int deviceID)
         {
@@ -331,6 +341,8 @@ class Task {
                           const MaterialSubset* matls,
                           DataWarehouse* fromDW,
                           DataWarehouse* toDW,
+                          void* oldTaskGpuDW,
+                          void* newTaskGpuDW,
                           void* stream,
                           int deviceID)
         {
@@ -390,6 +402,8 @@ class Task {
                           const MaterialSubset* matls,
                           DataWarehouse* fromDW,
                           DataWarehouse* toDW,
+                          void* oldTaskGpuDW,
+                          void* newTaskGpuDW,
                           void* stream,
                           int deviceID)
         {
@@ -410,6 +424,8 @@ class Task {
                        const MaterialSubset* matls,
                        DataWarehouse* fromDW,
                        DataWarehouse* toDW,
+                       void* oldTaskGpuDW,
+                       void* newTaskGpuDW,
                        void* stream,
                        int deviceID);
       public:
@@ -421,6 +437,8 @@ class Task {
                                      const MaterialSubset* matls,
                                      DataWarehouse* fromDW,
                                      DataWarehouse* toDW,
+                                     void* oldTaskGpuDW,
+                                     void* newTaskGpuDW,
                                      void* stream,
                                      int deviceID) ) :
           ptr(ptr), pmf(pmf)
@@ -438,10 +456,12 @@ class Task {
                           const MaterialSubset* matls,
                           DataWarehouse* fromDW,
                           DataWarehouse* toDW,
+                          void* oldTaskGpuDW,
+                          void* newTaskGpuDW,
                           void* stream,
                           int deviceID)
         {
-          (ptr->*pmf)(event, pg, patches, matls, fromDW, toDW, stream, deviceID);
+          (ptr->*pmf)(event, pg, patches, matls, fromDW, toDW, oldTaskGpuDW, newTaskGpuDW, stream, deviceID);
         }
     };  // end class ActionDevice
 
@@ -454,6 +474,8 @@ class Task {
                         const MaterialSubset* matls,
                               DataWarehouse* fromDW,
                               DataWarehouse* toDW,
+                              void* oldTaskGpuDW,
+                              void* newTaskGpuDW,
                               void* stream,
                               int deviceID,
                               Arg1 arg1);
@@ -467,6 +489,8 @@ class Task {
                                      const MaterialSubset* matls,
                                      DataWarehouse* fromDW,
                                      DataWarehouse* toDW,
+                                     void* oldTaskGpuDW,
+                                     void* newTaskGpuDW,
                                      void* stream,
                                      int deviceID,
                                      Arg1 arg1),
@@ -486,10 +510,12 @@ class Task {
                           const MaterialSubset* matls,
                           DataWarehouse* fromDW,
                           DataWarehouse* toDW,
+                          void* oldTaskGpuDW,
+                          void* newTaskGpuDW,
                           void* stream,
                           int deviceID)
         {
-          (ptr->*pmf)(event, pg, patches, matls, fromDW, toDW, stream, deviceID, arg1);
+          (ptr->*pmf)(event, pg, patches, matls, fromDW, toDW, oldTaskGpuDW, newTaskGpuDW, stream, deviceID, arg1);
         }
     };  // end class ActionDevice1
 
@@ -502,6 +528,8 @@ class Task {
                        const MaterialSubset* matls,
                        DataWarehouse* fromDW,
                        DataWarehouse* toDW,
+                       void* oldTaskGpuDW,
+                       void* newTaskGpuDW,
                        void* stream,
                        int deviceID,
                        Arg1 arg1,
@@ -517,6 +545,8 @@ class Task {
                                      const MaterialSubset* matls,
                                      DataWarehouse* fromDW,
                                      DataWarehouse* toDW,
+                                     void* oldTaskGpuDW,
+                                     void* newTaskGpuDW,
                                      void* stream,
                                      int deviceID,
                                      Arg1 arg1,
@@ -538,10 +568,12 @@ class Task {
                           const MaterialSubset* matls,
                           DataWarehouse* fromDW,
                           DataWarehouse* toDW,
+                          void* oldTaskGpuDW,
+                          void* newTaskGpuDW,
                           void* stream,
                           int deviceID)
         {
-          (ptr->*pmf)(event, pg, patches, matls, fromDW, toDW, stream, deviceID, arg1, arg2);
+          (ptr->*pmf)(event, pg, patches, matls, fromDW, toDW, oldTaskGpuDW, newTaskGpuDW, stream, deviceID, arg1, arg2);
         }
     };  // end class ActionDevice2
 
@@ -554,6 +586,8 @@ class Task {
                        const MaterialSubset* matls,
                        DataWarehouse* fromDW,
                        DataWarehouse* toDW,
+                       void* oldTaskGpuDW,
+                       void* newTaskGpuDW,
                        void* stream,
                        int deviceID,
                        Arg1 arg1,
@@ -572,6 +606,8 @@ class Task {
                                      const MaterialSubset* matls,
                                      DataWarehouse* fromDW,
                                      DataWarehouse* toDW,
+                                     void* oldTaskGpuDW,
+                                     void* newTaskGpuDW,
                                      void* stream,
                                      int deviceID,
                                      Arg1 arg1,
@@ -595,10 +631,12 @@ class Task {
                            const MaterialSubset * matls,
                                  DataWarehouse  * fromDW,
                                  DataWarehouse  * toDW,
+                                 void* oldTaskGpuDW,
+                                 void* newTaskGpuDW,
                                  void           * stream,
                                  int              deviceID)
         {
-          (ptr->*pmf)(event, pg, patches, matls, fromDW, toDW, stream, deviceID, arg1, arg2, arg3);
+          (ptr->*pmf)(event, pg, patches, matls, fromDW, toDW, oldTaskGpuDW, newTaskGpuDW, stream, deviceID, arg1, arg2, arg3);
         }
     };  // end class ActionDevice3
 
@@ -611,6 +649,8 @@ class Task {
                        const MaterialSubset* matls,
                        DataWarehouse* fromDW,
                        DataWarehouse* toDW,
+                       void* oldTaskGpuDW,
+                       void* newTaskGpuDW,
                        void* stream,
                        int deviceID,
                        Arg1 arg1,
@@ -630,6 +670,8 @@ class Task {
                                      const MaterialSubset* matls,
                                      DataWarehouse* fromDW,
                                      DataWarehouse* toDW,
+                                     void* oldTaskGpuDW,
+                                     void* newTaskGpuDW,
                                      void * stream,
                                      int deviceID,
                                      Arg1 arg1,
@@ -655,10 +697,12 @@ class Task {
                           const MaterialSubset* matls,
                           DataWarehouse* fromDW,
                           DataWarehouse* toDW,
+                          void* oldTaskGpuDW,
+                          void* newTaskGpuDW,
                           void* stream,
                           int deviceID)
         {
-          (ptr->*pmf)(event, pg, patches, matls, fromDW, toDW, stream, deviceID, arg1, arg2, arg3, arg4);
+          (ptr->*pmf)(event, pg, patches, matls, fromDW, toDW, oldTaskGpuDW, newTaskGpuDW, stream, deviceID, arg1, arg2, arg3, arg4);
         }
     };  // end class ActionDevice4
 
@@ -671,6 +715,8 @@ class Task {
                        const MaterialSubset* matls,
                        DataWarehouse* fromDW,
                        DataWarehouse* toDW,
+                       void* oldTaskGpuDW,
+                       void* newTaskGpuDW,
                        void* stream,
                        int deviceID,
                        Arg1 arg1,
@@ -692,6 +738,8 @@ class Task {
                                       const MaterialSubset* matls,
                                       DataWarehouse * fromDW,
                                       DataWarehouse * toDW,
+                                      void* oldTaskGpuDW,
+                                      void* newTaskGpuDW,
                                       void* stream,
                                       int deviceID,
                                       Arg1 arg1,
@@ -719,10 +767,12 @@ class Task {
                           const MaterialSubset* matls,
                           DataWarehouse* fromDW,
                           DataWarehouse* toDW,
+                          void* oldTaskGpuDW,
+                          void* newTaskGpuDW,
                           void* stream,
                           int deviceID)
         {
-          (ptr->*pmf)(event, pg, patches, matls, fromDW, toDW, stream, deviceID, arg1, arg2, arg3, arg4, arg5);
+          (ptr->*pmf)(event, pg, patches, matls, fromDW, toDW, oldTaskGpuDW, newTaskGpuDW, stream, deviceID, arg1, arg2, arg3, arg4, arg5);
         }
     };  // end class ActionDevice5
     // end Device Action constructors
@@ -900,6 +950,8 @@ class Task {
                         const MaterialSubset* matls,
                         DataWarehouse* fromDW,
                         DataWarehouse* toDW,
+                        void* old_TaskGpuDW,
+                        void* new_TaskGpuDW,
                         void* stream,
                         int deviceID))
         :
@@ -920,6 +972,8 @@ class Task {
                         const MaterialSubset* matls,
                         DataWarehouse* fromDW,
                         DataWarehouse* toDW,
+                        void* oldTaskGpuDW,
+                        void* newTaskGpuDW,
                         void* stream,
                         int deviceID,
                         Arg1 arg1),
@@ -941,6 +995,8 @@ class Task {
                         const MaterialSubset* matls,
                         DataWarehouse* fromDW,
                         DataWarehouse* toDW,
+                        void* oldTaskGpuDW,
+                        void* newTaskGpuDW,
                         void* stream,
                         int deviceID,
                         Arg1 arg1,
@@ -964,6 +1020,8 @@ class Task {
                         const MaterialSubset* matls,
                         DataWarehouse* fromDW,
                         DataWarehouse* toDW,
+                        void* oldTaskGpuDW,
+                        void* newTaskGpuDW,
                         void* stream,
                         int deviceID,
                         Arg1 arg1,
@@ -989,6 +1047,8 @@ class Task {
                         const MaterialSubset* matls,
                         DataWarehouse* fromDW,
                         DataWarehouse* toDW,
+                        void* oldTaskGpuDW,
+                        void* newTaskGpuDW,
                         void* stream,
                         int deviceID,
                         Arg1 arg1,
@@ -1016,6 +1076,8 @@ class Task {
                         const MaterialSubset* matls,
                         DataWarehouse* fromDW,
                         DataWarehouse* toDW,
+                        void* oldTaskGpuDW,
+                        void* newTaskGpuDW,
                         void* stream,
                         int deviceID,
                         Arg1 arg1,
@@ -1247,6 +1309,12 @@ class Task {
         model). Be aware that the ghost-values computed/modified in one patch will
         NOT be reproduced/correspond to interior cells of the neighboring patch,
         and vice versa.
+
+        Another component which breaks this assumption is working with GPU tasks.
+        Here it is not efficient to attempt to enlarge and copy variables within the
+        GPU to make room for requires ghost cells.  Instead it is better to simply
+        provide that extra room early when it's declared as a compute.  Then when it
+        becomes a requires, no costly enlarging step is necessary.
      */
     void modifiesWithScratchGhost(const VarLabel*,
                   const PatchSubset* patches,
@@ -1325,6 +1393,8 @@ class Task {
                       const PatchSubset*,
                       const MaterialSubset*,
                       std::vector<DataWarehouseP>& dws,
+                      void* oldTaskGpuDW,
+                      void* newTaskGpuDW,
                       void* stream,
                       int deviceID );
 

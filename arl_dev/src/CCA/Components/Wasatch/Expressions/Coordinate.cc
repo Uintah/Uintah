@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 2012-2015 The University of Utah
+ * Copyright (c) 2012-2016 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -38,7 +38,7 @@
 //-- SpatialOps Includes --//
 #include <spatialops/OperatorDatabase.h>
 
-namespace Wasatch {
+namespace WasatchCore {
   template < typename FieldT >
   Coordinates<FieldT>::Coordinates(const int idir)
   : Expr::Expression<FieldT>(),
@@ -103,7 +103,7 @@ namespace Wasatch {
     {
       Uintah::IntVector iCell = *iter;
       const SCIRun::Point xyz( patch->getCellPosition(iCell) );
-      const IntVector localUintahIJK = iCell - patchCellOffset;
+      const Uintah::IntVector localUintahIJK = iCell - patchCellOffset;
       // now go to local indexing
       const SpatialOps::IntVec localIJK(localUintahIJK[0], localUintahIJK[1], localUintahIJK[2]);
       phi(localIJK) = xyz(idir_) + shift_[idir_];
@@ -144,4 +144,4 @@ namespace Wasatch {
   template class Coordinates<XVolField>;
   template class Coordinates<YVolField>;
   template class Coordinates<ZVolField>;
-} // namespace Wasatch
+} // namespace WasatchCore
