@@ -39,6 +39,11 @@
 #include <Core/Grid/BoundaryConditions/BCDataArray.h>
 #include <Core/Grid/BoundaryConditions/BoundCond.h>
 
+#ifdef UINTAH_ENABLE_KOKKOS
+#include <Core/Grid/Variables/BlockRange.h>
+#include <Kokkos_Core.hpp>
+#endif //UINTAH_ENABLE_KOKKOS
+
 using namespace std;
 using namespace Uintah;
 
@@ -189,6 +194,42 @@ void Poisson1::initialize(const ProcessorGroup*,
 }
 //______________________________________________________________________
 //
+#ifdef UINTAH_ENABLE_KOKKOS
+namespace {
+
+struct TimeAdvanceFunctor
+{
+  constNCVariable<double> & m_phi;
+  NCVariable<double> & m_newphi;
+  ColumnMajorRange<> m_range;
+
+  typedef double value_type;
+
+  TimeAdvanceFunctor( constNCVariable<double> & phi, NCVariable<double> & newphi, ColumnMajorRange<> & range )
+    : m_phi( phi )
+    , m_newphi( newphi )
+    , m_range( range )
+  {}
+
+  void operator()(int x, double & residual) const
+  {
+    int i, j, k;
+    m_range(x,i,j,k);
+    const IntVector n(i,j,k);
+
+    m_newphi[n]=(1./6)*( m_phi[IntVector(i+1,j,k)] + m_phi[IntVector(i-1,j,k)] +
+                         m_phi[IntVector(i,j+1,k)] + m_phi[IntVector(i,j-1,k)] +
+                         m_phi[IntVector(i,j,k+1)] + m_phi[IntVector(i,j,k-1)] );
+
+    double diff = m_newphi[n] - m_phi[n];
+    residual += diff * diff;
+  }
+};
+
+} // namespace
+#endif //UINTAH_ENABLE_KOKKOS
+//______________________________________________________________________
+//
 void Poisson1::timeAdvance(const ProcessorGroup*,
                            const PatchSubset* patches,
                            const MaterialSubset* matls,
@@ -216,7 +257,15 @@ void Poisson1::timeAdvance(const ProcessorGroup*,
     h -= IntVector(patch->getBCType(Patch::xplus)  == Patch::Neighbor?0:1,
                    patch->getBCType(Patch::yplus)  == Patch::Neighbor?0:1,
                    patch->getBCType(Patch::zplus)  == Patch::Neighbor?0:1);
-    
+
+#ifdef UINTAH_ENABLE_KOKKOS
+    Uintah::ColumnMajorRange<> range(l, h);
+
+    TimeAdvanceFunctor func( phi, newphi, range );
+    {
+      Kokkos::parallel_reduce( range.size(), func, residual );
+    }
+#else
     //__________________________________
     //  Stencil 
     for(NodeIterator iter(l, h);!iter.done(); iter++){
@@ -230,6 +279,8 @@ void Poisson1::timeAdvance(const ProcessorGroup*,
       double diff = newphi[n] - phi[n];
       residual += diff * diff;
     }
+#endif //UINTAH_ENABLE_KOKKOS
+
     new_dw->put(sum_vartype(residual), residual_label);
   }
 }
