@@ -2278,7 +2278,7 @@ DataArchiver::outputVariables(const ProcessorGroup * pg,
       if (strstr(typestr.c_str(), "CCVariable") == NULL)
         continue;
       
-      if (strstr(typestr.c_str(), "Vector") == NULL)
+      if (strstr(typestr.c_str(), "Vector") != NULL)
         continue;
 
 
@@ -2356,7 +2356,7 @@ DataArchiver::outputVariables(const ProcessorGroup * pg,
       if (strstr(type2.c_str(), "CCVariable") == NULL)
         continue;
       
-      if (strstr(type2.c_str(), "Vector") == NULL)
+      if (strstr(type2.c_str(), "Vector") != NULL)
         continue;
       
       int sample_per_variable = 1;
