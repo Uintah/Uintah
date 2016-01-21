@@ -89,7 +89,7 @@ using namespace SCIRun;
 
 static DebugStream dbg("DataArchiver", false);
 static DebugStream dbgPIDX ("DataArchiverPIDX", false);
-static int PIDX_ts = 0;
+
 bool DataArchiver::d_wereSavesAndCheckpointsInitialized = false;
 
 DataArchiver::DataArchiver(const ProcessorGroup* myworld, int udaSuffix)
@@ -2189,9 +2189,9 @@ DataArchiver::outputVariables(const ProcessorGroup * pg,
   //______________________________________________________________________
   //
   //  ToDo
-  //     1) pass timestep index into PIDX
-  //     2) Create CC, SFC(X,Y,Z) pidx directories and idx files  (stop gap for now)
-  //     3) Add logic for saveAsFloats
+  //      Create CC, SFC(X,Y,Z) pidx directories and idx files  (stop gap for now)
+  //      Add logic for saveAsFloats
+  //      consolidate debugging variaable output into main saveLabel loop
   //
   
   
@@ -2246,28 +2246,30 @@ DataArchiver::outputVariables(const ProcessorGroup * pg,
     int number_of_variables;
     int *number_of_materials;
     
-    unsigned int timeStep = d_sharedState->getCurrentTopLevelTimeStep();
-    
     number_of_variables =  saveLabels.size();
     number_of_materials = (int*)malloc(sizeof(int) * number_of_variables);            // This doesn't look correct  - Todd
+    int rank = pg->myrank();
     
-    string idxFilename(dir.getName());
-    idxFilename = idxFilename + ".idx";
-
+    #if 0
     //__________________________________
     //  Debugging
-    int rank = pg->myrank();
+    
     if( rank == 0 ) {
       printf("[PIDX] IDX file name = %s\n", (char*)idxFilename.c_str());
       printf("[PIDX] The global volume = %d %d %d\n", globalExtents[0], globalExtents[1], globalExtents[2]);
       printf("[PIDX] Current time step = %d\n", timeStep);
       printf("[PIDX] Total number of variable = %d\n", number_of_variables);
     }
+    #endif
     
-
+    //__________________________________
+    //  create pidx idx
+    string idxFilename(dir.getName());
+    idxFilename = idxFilename + ".idx";
     PIDXOutputContext pc;
+    unsigned int timeStep = d_sharedState->getCurrentTopLevelTimeStep();
     // Can this be run in serial without doing a MPI initialize
-    pc.initialize(idxFilename, /*timeStep*/PIDX_ts++, globalExtents, d_myworld->getComm());
+    pc.initialize(idxFilename, timeStep, globalExtents, d_myworld->getComm());
     
     int vc = 0;
     int vcm = 0;
@@ -2286,9 +2288,6 @@ DataArchiver::outputVariables(const ProcessorGroup * pg,
       
       string typestr = var->typeDescription()->getName().c_str();
       if (strstr(typestr.c_str(), "CCVariable") == NULL)
-        continue;
-      
-      if (strstr(typestr.c_str(), "Vector") != NULL)
         continue;
 
       
@@ -2328,7 +2327,7 @@ DataArchiver::outputVariables(const ProcessorGroup * pg,
     
     //__________________________________
     //
-    int PIDX_debug = 1;
+    int PIDX_debug = 0;
     int PIDX_extra_field = 0;
     if (PIDX_debug == 1){
       PIDX_extra_field = 1;
@@ -2365,11 +2364,6 @@ DataArchiver::outputVariables(const ProcessorGroup * pg,
       if (strstr(type2.c_str(), "CCVariable") == NULL){
         continue;
       }
-      if (strstr(type2.c_str(), "Vector") != NULL){
-        continue;
-      }
-      
-      
       
       //IntVector vhi, vlow, vrange;
       //vlow = var->getCellLowIndex();
@@ -2472,7 +2466,8 @@ DataArchiver::outputVariables(const ProcessorGroup * pg,
             // To Do:  generalize this for different variables types
             IntVector hiE       = patch->getExtraCellHighIndex();
             IntVector lowE      = patch->getExtraCellLowIndex();
-            IntVector pidxLo    = lowE + adjust_offset;
+            IntVector offset    = level->getExtraCells();
+            IntVector pidxLo    = lowE + offset;                                // pidx array indexing starts at 0, must shift nExtraCells
             IntVector nCells_EC = hiE - lowE;
             int totalCells_EC   = nCells_EC.x() * nCells_EC.y() * nCells_EC.z();
            
@@ -2536,14 +2531,16 @@ DataArchiver::outputVariables(const ProcessorGroup * pg,
         const Patch* patch  = patches->get(p);
         IntVector hiE       = patch->getExtraCellHighIndex();
         IntVector lowE      = patch->getExtraCellLowIndex();
+        IntVector offset    = level->getExtraCells();
+        IntVector pidxLo    = lowE + offset;                                // pidx array indexing starts at 0, must shift nExtraCells
         IntVector nCells_EC = hiE - lowE;
-        int totalCells_EC = nCells_EC.x() * nCells_EC.y() * nCells_EC.z();
+        int totalCells_EC   = nCells_EC.x() * nCells_EC.y() * nCells_EC.z();
             
         printf("[PIDX %d] [%d] Offset and Count %d %d %d : %d %d %d\n", rank, vc, lowE.x(), lowE.y(), lowE.z(), nCells_EC.x(), nCells_EC.y(), nCells_EC.z() );
             
         PIDX_point local_offset_point, local_box_count_point;
             
-        PIDX_set_point_5D(local_offset_point, lowE.x()+adjust_offset.x(), lowE.y()+adjust_offset.y(), lowE.z()+adjust_offset.z(), 0, 0);
+        PIDX_set_point_5D(local_offset_point,    pidxLo.x(),    pidxLo.y(),    pidxLo.z(),   0, 0);
         PIDX_set_point_5D(local_box_count_point, nCells_EC.x(), nCells_EC.y(), nCells_EC.z(), 1, 1);
             
         PIDX_patch_buffer[p] = (float*)malloc(sizeof(float) * totalCells_EC);
