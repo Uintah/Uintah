@@ -52,26 +52,36 @@ namespace Uintah {
 
   ostream& operator<<(ostream& out, const Uintah::PatchSubset& pss)
   {
-    out << "{";
-    for(int j=0;j<pss.size();j++){
-      if(j != 0)
-        out << ",";
-      const Patch* patch = pss.get(j);
-      out << patch->getID();
+    if( &pss == 0 ) {
+      out << "(null PatchSubset)";
     }
-    out << "}";
+    else {
+      out << "{";
+      for(int j=0;j<pss.size();j++){
+        if(j != 0)
+          out << ",";
+        const Patch* patch = pss.get(j);
+        out << patch->getID();
+      }
+      out << "}";
+    }
     return out;
   }
 
   ostream& operator<<(ostream& out, const Uintah::MaterialSubset& mss)
   {
-    out << "{";
-    for(int j=0;j<mss.size();j++){
-      if(j != 0)
-        out << ",";
-      out << mss.get(j);
+    if( &mss == 0 ) {
+      out << "(null MaterialSubset)";
     }
-    out << "}";
+    else {
+      out << "{";
+      for(int j=0;j<mss.size();j++){
+        if(j != 0)
+          out << ",";
+        out << mss.get(j);
+      }
+      out << "}";
+    }
     return out;
   }
 
