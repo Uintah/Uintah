@@ -27,6 +27,7 @@
 
 #include <CCA/Ports/Output.h>
 #include <Core/Parallel/UintahParallelComponent.h>
+#include <Core/Grid/Level.h>
 #include <Core/Grid/Variables/MaterialSetP.h>
 #include <Core/Grid/SimulationState.h>
 #include <Core/Grid/SimulationStateP.h>
@@ -218,6 +219,7 @@ using SCIRun::Mutex;
 
        class SaveItem {
          public:
+         
            void setMaterials(int level, 
                              const ConsecutiveRangeSet& matls,
                              ConsecutiveRangeSet& prevMatls,
@@ -226,7 +228,9 @@ using SCIRun::Mutex;
            MaterialSet* getMaterialSet(int level){ 
              return matlSet[level].get_rep(); 
            }
-
+           
+           const MaterialSubset* getMaterialSubset(const Level* level);
+           
            const VarLabel* label;
            std::map<int, MaterialSetP> matlSet;
        };
