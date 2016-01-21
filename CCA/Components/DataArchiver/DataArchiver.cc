@@ -88,6 +88,7 @@ using namespace std;
 using namespace SCIRun;
 
 static DebugStream dbg("DataArchiver", false);
+static DebugStream dbgPIDX ("DataArchiverPIDX", false);
 static int PIDX_ts = 0;
 bool DataArchiver::d_wereSavesAndCheckpointsInitialized = false;
 
@@ -2187,6 +2188,13 @@ DataArchiver::outputVariables(const ProcessorGroup * pg,
 #if HAVE_PIDX
   //______________________________________________________________________
   //
+  //  ToDo
+  //     1) pass timestep index into PIDX
+  //     2) Create CC, SFC(X,Y,Z) pidx directories and idx files  (stop gap for now)
+  //     3) Add logic for saveAsFloats
+  //
+  
+  
   bool pidx_io =  true;
   
   if (pidx_io == true && type != CHECKPOINT)
@@ -2268,7 +2276,9 @@ DataArchiver::outputVariables(const ProcessorGroup * pg,
     
     //__________________________________
     //  loop over variables
-    // I don't understand what this loop is doing? 
+    // Count up the number of variables that will 
+    // be output. Each variable can have a different number of 
+    // materials and live on a different number of levels
     vector<SaveItem>::iterator saveIter;
     for(saveIter = saveLabels.begin(); saveIter!= saveLabels.end(); saveIter++) {
       
@@ -2281,11 +2291,8 @@ DataArchiver::outputVariables(const ProcessorGroup * pg,
       if (strstr(typestr.c_str(), "Vector") != NULL)
         continue;
 
-
-      cout << var->getName() << " " << typestr << " me: " << (strstr(typestr.c_str(), "CCVariable") == NULL) << " " << (strstr(typestr.c_str(), "Vector") == NULL) << endl;
-      //if (rank == 0)
-      //  cout << "type = " << type << endl;
       
+      // for this variable determine the number of materials
       map<int, MaterialSetP>::iterator iter = saveIter->matlSet.end();
       const MaterialSubset* var_matls = 0;
 
@@ -2314,8 +2321,6 @@ DataArchiver::outputVariables(const ProcessorGroup * pg,
       }
       
       number_of_materials[cc_var_count]=var_matls->size();
-      //if(rank == 0)
-      //  printf("Number of materials for variable %d = %d\n", cc_var_count, var_matls->size());
 
       cc_var_count++;
       actual_number_of_variables += var_matls->size();
@@ -2345,33 +2350,26 @@ DataArchiver::outputVariables(const ProcessorGroup * pg,
     
     //__________________________________
     //
-#if 1    
     unsigned char ***patch_buffer;
     patch_buffer = (unsigned char***)malloc(sizeof(unsigned char**) * actual_number_of_variables);
     vc = 0;
     for(saveIter = saveLabels.begin(); saveIter!= saveLabels.end(); saveIter++) 
     {
-      const VarLabel* var = saveIter->label;
-      string type2 = var->typeDescription()->getName().c_str();
-      if (strstr(type2.c_str(), "CCVariable") == NULL)
-        continue;
+
+      const VarLabel* label = saveIter->label;     
+      const TypeDescription* td = label->typeDescription();
+      const TypeDescription* subtype = td->getSubType();
       
-      if (strstr(type2.c_str(), "Vector") != NULL)
-        continue;
       
-      int sample_per_variable = 1;
+      string type2 = label->typeDescription()->getName().c_str();
+      if (strstr(type2.c_str(), "CCVariable") == NULL){
+        continue;
+      }
       if (strstr(type2.c_str(), "Vector") != NULL){
-        sample_per_variable = 3;
+        continue;
       }
       
-      char data_type[512];
-      if (strstr(type2.c_str(), "double") != NULL || strstr(type2.c_str(), "Vector") != NULL){
-        sprintf(data_type, "%d*float32", sample_per_variable);
-      } 
       
-      if (strstr(type2.c_str(), "int") != NULL){
-        sprintf(data_type, "%d*int32", sample_per_variable); 
-      }
       
       //IntVector vhi, vlow, vrange;
       //vlow = var->getCellLowIndex();
@@ -2407,29 +2405,56 @@ DataArchiver::outputVariables(const ProcessorGroup * pg,
       }
       
       //__________________________________
-      //
-      // loop through patches and materials
+      //  materials loop
       for(int m=0;m<var_matls->size();m++){
         int matlIndex = var_matls->get(m);
         string var_mat_name;
         
         if (var_matls->size() == 1) {
-          var_mat_name = var->getName();
+          var_mat_name = label->getName();
         } else {
           std::ostringstream s;
           s << m;
-          var_mat_name = var->getName() + "_m" + s.str();
+          var_mat_name = label->getName() + "_m" + s.str();
         }
+   
+        // set values depending on the variable's subtype
+        char data_type[512];
+        int sample_per_variable = -9;
+        size_t varSubType_size = -9;
 
-        if (strstr(type2.c_str(), "double") != NULL || strstr(type2.c_str(), "Vector") != NULL){
-          PIDX_variable_create((char*)var_mat_name.c_str(), sample_per_variable * sizeof(float) * 8, data_type, &(pc.variable[vc][m]));
-        
-        }else if (strstr(type2.c_str(), "int") != NULL)  { 
-          PIDX_variable_create((char*)var_mat_name.c_str(), sample_per_variable * sizeof(int) * 8, data_type, &(pc.variable[vc][m]));
-        }
+        switch( subtype->getType( )) {
+
+          case Uintah::TypeDescription::double_type:
+            sample_per_variable = 1;
+            varSubType_size = sample_per_variable * sizeof(double);
+            sprintf(data_type, "%d*float64", sample_per_variable); 
+            break;
+
+          case Uintah::TypeDescription::Vector:
+            sample_per_variable = 3;
+            varSubType_size = sample_per_variable * sizeof(double);
+            sprintf(data_type, "%d*float64", sample_per_variable);
+            break;
+
+          case Uintah::TypeDescription::int_type:
+            sample_per_variable = 1;
+            varSubType_size = sample_per_variable * sizeof(int);
+            sprintf(data_type, "%d*int32", sample_per_variable);
+            break;
+          default:
+            ostringstream warn;
+            warn << "DataArchiver::outputVariables_PIDX:: ("<< label->getName() << " " 
+                 << td->getName() << " ) has not been implemented" << endl;
+            throw InternalError(warn.str(), __FILE__, __LINE__); 
+        }                
+
+        PIDX_variable_create((char*)var_mat_name.c_str(), varSubType_size * 8, data_type, &(pc.variable[vc][m]));
         
         patch_buffer[vcm] = (unsigned char**)malloc(sizeof(unsigned char*) * patches->size());
         
+        //__________________________________
+        //  patch Loop
         for(int p=0;p<(type==CHECKPOINT_REDUCTION?1:patches->size());p++)
         {
           const Patch* patch;
@@ -2439,89 +2464,51 @@ DataArchiver::outputVariables(const ProcessorGroup * pg,
             // to consolidate into this function, force patch = 0
             patch = 0;
             patchID = -1;
-            //patch_buffer[vc][p] = (float*)NULL;
 
           } else {
             patch = patches->get(p);
             patchID = patch->getID();
 
+            // To Do:  generalize this for different variables types
             IntVector hiE       = patch->getExtraCellHighIndex();
             IntVector lowE      = patch->getExtraCellLowIndex();
+            IntVector pidxLo    = lowE + adjust_offset;
             IntVector nCells_EC = hiE - lowE;
-            int totalCells_EC = nCells_EC.x() * nCells_EC.y() * nCells_EC.z();
-            
-            //if(rank == 0)
-            if(vc == 0) {
-              printf("[PIDX %d] [%d] Offset and Count %d %d %d : %d %d %d\n", rank, vc, lowE.x(), lowE.y(), lowE.z(), nCells_EC.x(), nCells_EC.y(), nCells_EC.z());
-            }
+            int totalCells_EC   = nCells_EC.x() * nCells_EC.y() * nCells_EC.z();
+           
+            /*`==========TESTING==========*/
+            proc0cout << rank <<"  PIDX:  " << setw(15) <<label->getName() << "  "<< td->getName() << " Patch: " << patchID 
+                      << ",  sample_per_variable: " << sample_per_variable <<" varSubType_size: " << varSubType_size << " dataType: " << data_type 
+                      << " offset: " << pidxLo << " count: " << nCells_EC << " totalCells_EC " << totalCells_EC << endl; 
+            /*===========TESTING==========`*/
             
             PIDX_point local_offset_point; 
             PIDX_point local_box_count_point;
-            
-            PIDX_set_point_5D(local_offset_point, lowE.x()+adjust_offset.x(), lowE.y()+adjust_offset.y(), lowE.z()+adjust_offset.z(), 0, 0);
+
+            PIDX_set_point_5D(local_offset_point,    pidxLo.x(),    pidxLo.y(),    pidxLo.z(),   0, 0);
             PIDX_set_point_5D(local_box_count_point, nCells_EC.x(), nCells_EC.y(), nCells_EC.z(), 1, 1);
-            
-            //if (rank==0)
-            //  printf("[PIDX %d] patch_buffer size: %ld\n", rank, sample_per_variable * (use_float?sizeof(float):sizeof(double)) * ((hiE.x() - lowE.x()) * (hiE.y() - lowE.y()) * (hiE.z() - lowE.z())));
+
 
             //__________________________________
-            //  
+            // allocate memory for the grid variables
             unsigned char *t_buffer = NULL; 
             
-            size_t mySizeD = sample_per_variable * sizeof(double) * totalCells_EC;
-            size_t mySizeF = sample_per_variable * sizeof(float) * totalCells_EC;
-            size_t mySizeI = sample_per_variable * sizeof(int) * totalCells_EC;
-            
-            if (strstr(type2.c_str(), "double") != NULL || strstr(type2.c_str(), "Vector") != NULL){ 
+            size_t arraySize = varSubType_size * totalCells_EC;
              
-              t_buffer = (unsigned char*)malloc( mySizeD );
-              memset(t_buffer, 0, mySizeD );
+            t_buffer = (unsigned char*)malloc( arraySize );
+            memset(t_buffer, 0, arraySize );
 
-              patch_buffer[vcm][p] = (unsigned char*)malloc( mySizeF );
-              memset( patch_buffer[vcm][p], 0, mySizeF );
-            }
-            else if (strstr(type2.c_str(), "int") != NULL)
-            {
-              t_buffer = (unsigned char*)malloc(mySizeI );
-              memset(t_buffer, 0, mySizeI );
-
-              patch_buffer[vcm][p] = (unsigned char*)malloc(mySizeI );
-              memset(patch_buffer[vcm][p], 0, mySizeI );
-            }
-            else {
-              printf("[1] Error !!!! Unsupported data type");
-            }
+            patch_buffer[vcm][p] = (unsigned char*)malloc( arraySize );
+            memset( patch_buffer[vcm][p], 0, arraySize );
             
             //__________________________________
             //  Read in Array3 data to t-buffer
-            new_dw->emit(pc, var, matlIndex, patch, t_buffer);
-
+            new_dw->emit(pc, label, matlIndex, patch, t_buffer);
             
             //__________________________________
-            //
-            if (strstr(type2.c_str(), "double") != NULL || (strstr(type2.c_str(), "Vector") != NULL))
-            {
-              double* tt_buffer = (double*)malloc( mySizeD );
-              memset( tt_buffer, 0, mySizeD);
-              memcpy( tt_buffer, t_buffer, mySizeD );
-              free(t_buffer);
-              
-              float* ff_buffer = (float*)malloc( mySizeF );
-              memset( ff_buffer, 0, mySizeF );
-              std::copy( tt_buffer, tt_buffer + (sample_per_variable * totalCells_EC), ff_buffer );
-              free(tt_buffer );
-              
-              memcpy( patch_buffer[vcm][p], ff_buffer, mySizeF );
-              free ( ff_buffer );
-            }
-            else if (strstr(type2.c_str(), "int") != NULL)
-            {
-              memcpy( patch_buffer[vcm][p], t_buffer, mySizeI );
-              free(t_buffer);
-            }
-            else {
-              printf("[2] Error !!!! Unsupported data type");
-            }
+            //  copy t_buffer -> patch_buffer
+            memcpy( patch_buffer[vcm][p], t_buffer, arraySize );
+            free(t_buffer);
             
             PIDX_variable_write_data_layout(pc.variable[vc][m], local_offset_point, local_box_count_point, patch_buffer[vcm][p], PIDX_row_major);
                         
@@ -2536,8 +2523,8 @@ DataArchiver::outputVariables(const ProcessorGroup * pg,
       vc++;
     }  //  Variables
     
-    //______________________________________________________________________
-    //      DEBUGGING 
+    //__________________________________
+    //      DEBUGGING   This simply creates a dummy variable
     float **PIDX_patch_buffer;
     if (PIDX_debug == 1)
     {
@@ -2579,14 +2566,16 @@ DataArchiver::outputVariables(const ProcessorGroup * pg,
     }  // debugging
     
     //__________________________________
-    //  Start timers and Free buffers
+    //  Start timers and clean up memory
     double start_time, end_time, io_time, max_time;
     start_time = MPI_Wtime();
     PIDX_close(pc.file);
     end_time = MPI_Wtime();
     
-#if 1//not PIDX_FLUSH
-    //free buffers
+
+    
+    //__________________________________
+    // free buffers
     for (int i=0;i<actual_number_of_variables;i++)
     {
       for(int p=0;p<(type==CHECKPOINT_REDUCTION?1:patches->size());p++)
@@ -2608,10 +2597,9 @@ DataArchiver::outputVariables(const ProcessorGroup * pg,
       }
       free(PIDX_patch_buffer);
     }
-      
-#endif
 
-    //free memory
+    //__________________________________
+    //  free memory
     //for (int i=0; i<number_of_variables; i++)
     for (int i=0; i<cc_var_count + PIDX_extra_field; i++)
     {
@@ -2624,7 +2612,8 @@ DataArchiver::outputVariables(const ProcessorGroup * pg,
     number_of_materials=0;
     
 
-    //compute pidx runtime
+    //__________________________________
+    //  compute pidx runtime
     io_time = end_time - start_time;
     MPI_Allreduce(&io_time,&max_time, 1,MPI_DOUBLE,MPI_MAX, d_myworld->getComm() );
     
@@ -2637,8 +2626,6 @@ DataArchiver::outputVariables(const ProcessorGroup * pg,
            << " Number of variables = " << number_of_variables 
            << endl;
     }
-    
-#endif
   }
 #endif
 } // end output()
