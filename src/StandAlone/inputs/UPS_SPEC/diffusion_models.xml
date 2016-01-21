@@ -3,13 +3,13 @@
 
   <diffusion_model               spec="OPTIONAL NO_DATA"
                                  attribute1="type REQUIRED STRING 'linear,
-                                 jg, rf1, gao_diffusion'">
+                                 jg, rf1'">
 
     <diffusivity                 spec="OPTIONAL DOUBLE" />
     <boltzmann_const             spec="OPTIONAL DOUBLE" />
     <operating_temp              spec="OPTIONAL DOUBLE" />
     <max_concentration           spec="OPTIONAL DOUBLE" />
-                <partial_atomic_vol          spec="OPTIONAL DOUBLE" />
+    <partial_atomic_vol          spec="OPTIONAL DOUBLE" />
   
   </diffusion_model>
 

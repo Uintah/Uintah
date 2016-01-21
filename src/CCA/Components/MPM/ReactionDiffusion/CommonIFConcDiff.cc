@@ -26,7 +26,6 @@
 #include <CCA/Components/MPM/ReactionDiffusion/ScalarDiffusionModel.h>
 #include <CCA/Components/MPM/ReactionDiffusion/JGConcentrationDiffusion.h>
 #include <CCA/Components/MPM/ReactionDiffusion/RFConcDiffusion1MPM.h>
-#include <CCA/Components/MPM/ReactionDiffusion/GaoDiffusion.h>
 #include <CCA/Components/MPM/ConstitutiveModel/MPMMaterial.h>
 #include <CCA/Ports/DataWarehouse.h>
 #include <Core/Exceptions/ProblemSetupException.h>
@@ -66,8 +65,6 @@ CommonIFConcDiff::CommonIFConcDiff(ProblemSpecP& ps, SimulationStateP& sS, MPMFl
       throw ProblemSetupException("No type for diffusion_model", __FILE__, __LINE__);
     if(mat_type == "rf1"){
       include_hydrostress = true;
-    }else if(mat_type == "gao_diffusion"){
-      include_hydrostress = true;
     }
   }
 
@@ -81,8 +78,6 @@ CommonIFConcDiff::CommonIFConcDiff(ProblemSpecP& ps, SimulationStateP& sS, MPMFl
         dynamic_cast<JGConcentrationDiffusion*>(sdm)->setIncludeHydroStress(true);
       }else if( diffusion_type == "rf1"){
         dynamic_cast<RFConcDiffusion1MPM*>(sdm)->setIncludeHydroStress(true);
-      }else if( diffusion_type == "gao_diffusion"){
-        dynamic_cast<GaoDiffusion*>(sdm)->setIncludeHydroStress(true);
       }
     }
   }
