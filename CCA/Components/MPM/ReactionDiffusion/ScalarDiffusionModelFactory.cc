@@ -25,7 +25,6 @@
 #include <CCA/Components/MPM/ReactionDiffusion/ScalarDiffusionModel.h>
 #include <CCA/Components/MPM/ReactionDiffusion/JGConcentrationDiffusion.h>
 #include <CCA/Components/MPM/ReactionDiffusion/RFConcDiffusion1MPM.h>
-#include <CCA/Components/MPM/ReactionDiffusion/GaoDiffusion.h>
 #include <Core/Exceptions/ProblemSetupException.h>
 #include <Core/ProblemSpec/ProblemSpec.h>
 #include <Core/Malloc/Allocator.h>
@@ -51,8 +50,6 @@ ScalarDiffusionModel* ScalarDiffusionModelFactory::create(ProblemSpecP& ps,
     return(scinew JGConcentrationDiffusion(child, ss, flags, diffusion_type));
   else if (diffusion_type == "rf1")
     return(scinew RFConcDiffusion1MPM(child, ss, flags, diffusion_type));
-  else if (diffusion_type == "gao_diffusion")
-    return(scinew GaoDiffusion(child, ss, flags, diffusion_type));
 
   else
     throw ProblemSetupException("Unknown Scalar Diffusion Type ("+diffusion_type+")", __FILE__, __LINE__);
