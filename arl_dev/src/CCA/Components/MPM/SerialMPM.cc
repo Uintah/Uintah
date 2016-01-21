@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2015 The University of Utah
+ * Copyright (c) 1997-2016 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -29,7 +29,6 @@
 #include <CCA/Components/MPM/HeatConduction/HeatConduction.h>
 #include <CCA/Components/MPM/MPMBoundCond.h>
 #include <CCA/Components/MPM/ParticleCreator/ParticleCreator.h>
-#include <CCA/Components/MPM/PhysicalBC/ForceBC.h>
 #include <CCA/Components/MPM/PhysicalBC/MPMPhysicalBCFactory.h>
 #include <CCA/Components/MPM/PhysicalBC/PressureBC.h>
 #include <CCA/Components/MPM/SerialMPM.h>
@@ -41,7 +40,6 @@
 #include <CCA/Ports/DataWarehouse.h>
 #include <CCA/Ports/LoadBalancer.h>
 #include <CCA/Ports/Scheduler.h>
-#include <Core/Exceptions/ParameterNotFound.h>
 #include <Core/Exceptions/ProblemSetupException.h>
 #include <Core/Grid/AMR.h>
 #include <Core/Grid/Grid.h>
@@ -49,14 +47,12 @@
 #include <Core/Grid/Patch.h>
 #include <Core/Grid/SimulationState.h>
 #include <Core/Grid/Task.h>
-#include <Core/Grid/UnknownVariable.h>
 #include <Core/Grid/Variables/CCVariable.h>
 #include <Core/Grid/Variables/CellIterator.h>
 #include <Core/Grid/Variables/NCVariable.h>
 #include <Core/Grid/Variables/NodeIterator.h>
 #include <Core/Grid/Variables/ParticleVariable.h>
 #include <Core/Grid/Variables/PerPatch.h>
-#include <Core/Grid/Variables/SoleVariable.h>
 #include <Core/Grid/Variables/VarTypes.h>
 #include <Core/Parallel/ProcessorGroup.h>
 #include <Core/ProblemSpec/ProblemSpec.h>
@@ -64,13 +60,11 @@
 #include <Core/Geometry/Point.h>
 #include <Core/Math/MinMax.h>
 #include <Core/Math/Matrix3.h>
-#include <Core/Math/CubicPolyRoots.h>
 #include <Core/Util/DebugStream.h>
 #include <Core/Thread/Mutex.h>
 
 #include <iostream>
 #include <fstream>
-#include <sstream>
 
 using namespace Uintah;
 using namespace std;
@@ -688,7 +682,12 @@ void SerialMPM::scheduleApplyExternalLoads(SchedulerP& sched,
   t->requires(Task::OldDW, lb->pDeformationMeasureLabel,Ghost::None);
   t->requires(Task::OldDW, lb->pExternalForceLabel,     Ghost::None);
   t->computes(             lb->pExtForceLabel_preReloc);
-  if (flags->d_useLoadCurves) {
+
+  if (!flags->d_mms_type.empty()) {
+    //MMS problems need displacements
+    t->requires(Task::OldDW, lb->pDispLabel,            Ghost::None);
+  }
+  if (flags->d_useLoadCurves || flags->d_useCBDI) {
     t->requires(Task::OldDW, lb->pLoadCurveIDLabel,     Ghost::None);
     t->computes(             lb->pLoadCurveIDLabel_preReloc);
     if (flags->d_useCBDI) {
