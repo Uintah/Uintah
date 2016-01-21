@@ -40,7 +40,6 @@
 #include <Core/GeometryPiece/GeometryPieceFactory.h>
 #include <Core/Grid/Box.h>
 #include <Core/Grid/Grid.h>
-#include <Core/Grid/Level.h>
 #include <Core/Grid/Patch.h>
 #include <Core/Grid/Task.h>
 #include <Core/Grid/Variables/VarTypes.h>
@@ -1070,13 +1069,9 @@ DataArchiver::sched_allOutputTasks(double delt,
     for(int i=0;i<(int)d_saveReductionLabels.size();i++) {
       SaveItem& saveItem = d_saveReductionLabels[i];
       const VarLabel* var = saveItem.label;
-      map<int, MaterialSetP>::iterator liter;
       
-      for (liter = saveItem.matlSet.begin(); liter != saveItem.matlSet.end(); liter++) {
-        const MaterialSubset* matls = saveItem.getMaterialSet(liter->first)->getUnion();
-        t->requires(Task::NewDW, var, matls, true);
-        break; // this might break things later, but we'll leave it for now
-      }
+      const MaterialSubset* matls = saveItem.getMaterialSubset(0);
+      t->requires(Task::NewDW, var, matls, true);
     }
     
     sched->addTask(t, 0, 0);
@@ -1098,13 +1093,9 @@ DataArchiver::sched_allOutputTasks(double delt,
     for(int i=0;i<(int)d_checkpointReductionLabels.size();i++) {
       SaveItem& saveItem = d_checkpointReductionLabels[i];
       const VarLabel* var = saveItem.label;
-      map<int, MaterialSetP>::iterator liter;
+      const MaterialSubset* matls = saveItem.getMaterialSubset(0);
       
-      for (liter = saveItem.matlSet.begin(); liter != saveItem.matlSet.end(); liter++) {
-        const MaterialSubset* matls = saveItem.getMaterialSet(liter->first)->getUnion();
-        t->requires(Task::NewDW, var, matls, true);
-        break;
-      }
+      t->requires(Task::NewDW, var, matls, true);
     }
     sched->addTask(t, 0, 0);
     
@@ -1714,24 +1705,11 @@ DataArchiver::scheduleOutputTimestep(vector<DataArchiver::SaveItem>& saveLabels,
     
     //__________________________________
     //
-    for(saveIter = saveLabels.begin(); saveIter!= saveLabels.end();
-        saveIter++) {
-      // check to see if the input file requested to save on this level.
-      // check is done by absolute level, or relative to end of levels (-1 finest, -2 second finest,...)
-      map<int, MaterialSetP>::iterator iter;
-
-      iter = saveIter->matlSet.find(level->getIndex());
-      if (iter == saveIter->matlSet.end())
-        iter = saveIter->matlSet.find(level->getIndex() - level->getGrid()->numLevels());
+    for(saveIter = saveLabels.begin(); saveIter!= saveLabels.end(); saveIter++) {
+    
+      const MaterialSubset* matls = saveIter->getMaterialSubset(level.get_rep());
       
-      if (iter == saveIter->matlSet.end())
-        iter = saveIter->matlSet.find(ALL_LEVELS);
-        
-      if (iter != saveIter->matlSet.end()) {
-        
-        const MaterialSubset* matls = iter->second.get_rep()->getUnion();
-
-        // out of domain really is only there to handle the "all-in-one material", but doesn't break anything else
+      if ( matls != NULL ){
         t->requires(Task::NewDW, (*saveIter).label, matls, Task::OutOfDomain, Ghost::None, 0, true);
         n++;
       }
@@ -2050,29 +2028,9 @@ DataArchiver::outputVariables(const ProcessorGroup * pg,
       vector<SaveItem>::iterator saveIter;
       for(saveIter = saveLabels.begin(); saveIter!= saveLabels.end(); saveIter++) {
         const VarLabel* var = saveIter->label;
-        // check to see if we need to save on this level
-        // check is done by absolute level, or relative to end of levels (-1 finest, -2 second finest,...)
-        // find the materials to output on that level
-        map<int, MaterialSetP>::iterator iter = saveIter->matlSet.end();
-        const MaterialSubset* var_matls = 0;
         
-        if (level) {
-          iter = saveIter->matlSet.find(level->getIndex());
-          if (iter == saveIter->matlSet.end())
-            iter = saveIter->matlSet.find(level->getIndex() - level->getGrid()->numLevels());
-          if (iter == saveIter->matlSet.end())
-            iter = saveIter->matlSet.find(ALL_LEVELS);
-          if (iter != saveIter->matlSet.end()) {
-            var_matls = iter->second.get_rep()->getUnion();
-          }
-        }
-        else { // checkpoint reductions
-          map<int, MaterialSetP>::iterator liter;
-          for (liter = saveIter->matlSet.begin(); liter != saveIter->matlSet.end(); liter++) {
-            var_matls = saveIter->getMaterialSet(liter->first)->getUnion();
-            break;
-          }
-        }
+        const MaterialSubset* var_matls = saveIter->getMaterialSubset(level);
+        
         if (var_matls == 0)
           continue;
         
@@ -2291,31 +2249,8 @@ DataArchiver::outputVariables(const ProcessorGroup * pg,
         continue;
 
       
-      // for this variable determine the number of materials
-      map<int, MaterialSetP>::iterator iter = saveIter->matlSet.end();
-      const MaterialSubset* var_matls = 0;
-
-      if (level) {
-        iter = saveIter->matlSet.find(level->getIndex());
-        
-        if (iter == saveIter->matlSet.end()){
-          iter = saveIter->matlSet.find(level->getIndex() - level->getGrid()->numLevels());
-        }
-        if (iter == saveIter->matlSet.end()) {
-          iter = saveIter->matlSet.find(ALL_LEVELS);
-        }
-        if (iter != saveIter->matlSet.end()) {
-          var_matls = iter->second.get_rep()->getUnion();
-        }
-      }
-      else { // checkpoint reductions
-        map<int, MaterialSetP>::iterator liter;
-        for (liter = saveIter->matlSet.begin(); liter != saveIter->matlSet.end(); liter++) {
-          var_matls = saveIter->getMaterialSet(liter->first)->getUnion();
-          break;
-        }
-      }
-      if (var_matls == 0){
+      const MaterialSubset* var_matls = saveIter->getMaterialSubset(level);
+      if (var_matls == NULL){
         continue;
       }
       
@@ -2372,29 +2307,8 @@ DataArchiver::outputVariables(const ProcessorGroup * pg,
       // check is done by absolute level, or relative to end of levels (-1 finest, -2 second finest,...)
       // find the materials to output on that level
       
-      map<int, MaterialSetP>::iterator iter = saveIter->matlSet.end();
-      const MaterialSubset* var_matls = 0;
-
-      if (level) {
-        iter = saveIter->matlSet.find(level->getIndex());
-        if ( iter == saveIter->matlSet.end() ) {
-          iter = saveIter->matlSet.find(level->getIndex() - level->getGrid()->numLevels());
-        }
-        if ( iter == saveIter->matlSet.end() ){
-          iter = saveIter->matlSet.find(ALL_LEVELS);
-        }
-        if ( iter != saveIter->matlSet.end() ) {
-          var_matls = iter->second.get_rep()->getUnion();
-        }
-      }
-      else { // checkpoint reductions
-        map<int, MaterialSetP>::iterator liter;
-        for (liter = saveIter->matlSet.begin(); liter != saveIter->matlSet.end(); liter++) {
-          var_matls = saveIter->getMaterialSet(liter->first)->getUnion();
-          break;
-        }
-      }
-      if (var_matls == 0){
+      const MaterialSubset* var_matls = saveIter->getMaterialSubset(level);
+      if (var_matls == NULL){
         continue;
       }
       
@@ -2951,6 +2865,47 @@ DataArchiver::SaveItem::setMaterials(int level,
   }
 }
 
+//______________________________________________________________________
+//  Find the materials to output on this level for this saveItem
+const MaterialSubset*
+DataArchiver::SaveItem::getMaterialSubset(const Level* level)
+{
+  // search done by absolute level, or relative to end of levels (-1 finest, -2 second finest,...)
+  // 
+  map<int, MaterialSetP>::iterator iter = matlSet.end();
+  const MaterialSubset* var_matls = NULL;
+  
+  if (level) {
+    int L_index = level->getIndex();
+    int maxLevels = level->getGrid()->numLevels();
+    
+    iter = matlSet.find( L_index );
+    
+    if (iter == matlSet.end()){
+      iter = matlSet.find( L_index - maxLevels );
+    }
+    
+    if (iter == matlSet.end()) {
+      iter = matlSet.find(ALL_LEVELS);
+    }
+    
+    if (iter != matlSet.end()) {
+      var_matls = iter->second.get_rep()->getUnion();
+    }
+  }
+  else { // reductions variables that are level independent
+    map<int, MaterialSetP>::iterator liter;
+    for (liter = matlSet.begin(); liter != matlSet.end(); liter++) {
+      var_matls = getMaterialSet(liter->first)->getUnion();
+      break;
+    }
+  }
+  return var_matls;
+}
+
+
+//______________________________________________________________________
+//
 bool
 DataArchiver::needRecompile(double /*time*/, double /*dt*/,
                             const GridP& /*grid*/)
