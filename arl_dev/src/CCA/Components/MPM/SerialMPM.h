@@ -52,10 +52,8 @@
 namespace Uintah {
 
 class ThermalContact;
-class ConcentrationContact;
 class HeatConduction;
 class AnalysisModule;
-class ConcentrationDiffusion;
 
 /**************************************
 
@@ -90,11 +88,9 @@ public:
   SerialMPM(const ProcessorGroup* myworld);
   virtual ~SerialMPM();
 
-  Contact*         			contactModel;
-  ThermalContact*  			thermalContactModel;
-  ConcentrationContact* concentrationContactModel;
-  HeatConduction* 			heatConductionModel;
-  ConcentrationDiffusion* 	concentrationDiffusionModel;
+  Contact*         contactModel;
+  ThermalContact*  thermalContactModel;
+  HeatConduction* heatConductionModel;
  
   //////////
   // Insert Documentation Here:
