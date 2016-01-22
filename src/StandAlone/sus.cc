@@ -631,7 +631,6 @@ main( int argc, char *argv[], char *env[] )
 #ifdef HAVE_VISIT
     if( do_VisIt )
     {
-
       bool have_comment = false;
 
       for (int i = 1; i < argc; i++)
@@ -700,7 +699,7 @@ main( int argc, char *argv[], char *env[] )
     SimulationController* ctl = scinew AMRSimulationController( world, do_AMR, ups );
 
 #ifdef HAVE_VISIT
-    ((AMRSimulationController*) ctl)->SetVisIt( do_VisIt );
+    ctl->SetVisIt( do_VisIt );
 #endif
 
     RegridderCommon* reg = 0;
