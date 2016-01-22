@@ -309,9 +309,6 @@ void MinMax::scheduleInitialize(SchedulerP& sched,
   t->computes(d_lb->lastCompTimeLabel );
   t->computes(d_lb->fileVarsStructLabel, d_zero_matl); 
   sched->addTask(t, level->eachPatch(),  d_matl_set);
-
-  proc0cout << "Invoking On-the-fly-analysis method Min/Max results are located in "
-	    << d_dataArchiver->getOutputLocation() << std::endl;
 }
 //______________________________________________________________________
 void MinMax::initialize(const ProcessorGroup*, 
@@ -640,20 +637,26 @@ void MinMax::doAnalysis(const ProcessorGroup* pg,
 
         //__________________________________
         // create the directory structure
-        string udaDir = d_dataArchiver->getOutputLocation();
+        string analysisDir =
+	  d_dataArchiver->getOutputLocation() + "/DataAnalysis";
 
+        if( d_isDirCreated.count(analysisDir) == 0){
+          createDirectory(analysisDir);
+          d_isDirCreated.insert(analysisDir);
+        }
+	
         ostringstream li;
-        li<<"L-"<<level->getIndex();
+        li<<"l"<<level->getIndex();
         string levelIndex = li.str();
-        string path = udaDir + "/" + levelIndex;
+        string levelDir = analysisDir + "/" + levelIndex;
 
-        if( d_isDirCreated.count(path) == 0){
-          createDirectory(path, levelIndex);
-          d_isDirCreated.insert(path);
+        if( d_isDirCreated.count(levelDir) == 0){
+          createDirectory(levelDir);
+          d_isDirCreated.insert(levelDir);
         }
         
         ostringstream fname;
-        fname<< path << "/" << labelName <<"_"<<d_analyzeVars[i].matl;
+        fname << levelDir << "/" << labelName << "_" << d_analyzeVars[i].matl;
         string filename = fname.str();
 
         //__________________________________
@@ -802,11 +805,13 @@ void MinMax::createFile(string& filename,  FILE*& fp, string& levelIndex)
   fprintf( fp,"#Time                      min                       max\n" );
   
   cout_doing << Parallel::getMPIRank() << " MinMax:Created file " << filename << endl;
+
+  cout << "OnTheFlyAnalysis MinMax results are located in " << filename << endl;
 }
 //______________________________________________________________________
 // create the directory structure   dirName/LevelIndex
 void
-MinMax::createDirectory(string& dirName, string& levelIndex)
+MinMax::createDirectory(string& dirName)
 {
   DIR *check = opendir(dirName.c_str());
   if ( check == NULL ) {

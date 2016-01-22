@@ -110,7 +110,7 @@ GENERAL INFORMATION
                     FILE*& fp,
                     std::string& levelIndex);
     
-    void createDirectory(std::string& lineName, std::string& levelIndex);
+    void createDirectory(std::string& lineName);
 
     template <class Tvar, class Ttype>
     void findMinMax( DataWarehouse*  new_dw,
