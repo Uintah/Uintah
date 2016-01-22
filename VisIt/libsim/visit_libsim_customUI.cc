@@ -143,10 +143,10 @@ void visit_GetOutputIntervals( visit_simulation_data *sim )
 //---------------------------------------------------------------------
 void visit_GetAnalysisVars( visit_simulation_data *sim )
 {
-  SchedulerP      schedulerP = sim->simController->getSchedulerP();
-  SimulationStateP simStateP = sim->simController->getSimulationStateP();
   GridP           gridP      = sim->gridP;
-  DataWarehouse*  newDW      = sim->simController->getSchedulerP()->getLastDW();
+  SimulationStateP simStateP = sim->simController->getSimulationStateP();
+  SchedulerP      schedulerP = sim->simController->getSchedulerP();
+  DataWarehouse  *dw         = sim->simController->getSchedulerP()->getLastDW();
 
   std::vector< SimulationState::analysisVar > minMaxVars =
     simStateP->d_analysisVars;
@@ -180,8 +180,8 @@ void visit_GetAnalysisVars( visit_simulation_data *sim )
 	  min_vartype var_min;
 	  max_vartype var_max;
 	    
-	  newDW->get(var_min, minMaxVar.reductionMinLabel, level );
-	  newDW->get(var_max, minMaxVar.reductionMaxLabel, level );
+	  dw->get(var_min, minMaxVar.reductionMinLabel, level );
+	  dw->get(var_max, minMaxVar.reductionMaxLabel, level );
 	  varMin = var_min;
 	  varMax = var_max;
 	}
@@ -193,8 +193,8 @@ void visit_GetAnalysisVars( visit_simulation_data *sim )
 	  minvec_vartype var_min;
 	  maxvec_vartype var_max;
 	  
-	  newDW->get(var_min, minMaxVar.reductionMinLabel, level );
-	  newDW->get(var_max, minMaxVar.reductionMaxLabel, level );
+	  dw->get(var_min, minMaxVar.reductionMinLabel, level );
+	  dw->get(var_max, minMaxVar.reductionMaxLabel, level );
 	  
 	  varMin = ((Vector) var_min).length();
 	  varMax = ((Vector) var_max).length();

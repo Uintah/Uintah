@@ -332,14 +332,14 @@ void visit_DeltaTCallback(char *val, void *cbdata)
   visit_simulation_data *sim = (visit_simulation_data *)cbdata;
 
   SimulationStateP simStateP = sim->simController->getSimulationStateP();
-  DataWarehouse* newDW = sim->simController->getSchedulerP()->getLastDW();
+  DataWarehouse          *dw = sim->simController->getSchedulerP()->getLastDW();
 
   double delt;
 
   sscanf (val, "%lf", &delt);
 
   simStateP->adjustDelT( false );
-  newDW->override(delt_vartype(delt), simStateP->get_delt_label());
+  dw->override(delt_vartype(delt), simStateP->get_delt_label());
 }
 
 //---------------------------------------------------------------------
@@ -444,9 +444,6 @@ void visit_UPSVariableTableCallback(char *val, void *cbdata)
     {
       double x, y, z;
       sscanf (val, "%d | %d | %lf,%lf,%lf", &row, &column, &x, &y, &z);
-
-      std::cerr << "vector " << x << "  " << y << "  " << z << "  "
-		<< std::endl;
       *(var.Vvalue) = Vector(x, y, z);
       break;
     }
