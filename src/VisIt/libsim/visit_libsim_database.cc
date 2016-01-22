@@ -1256,15 +1256,17 @@ visit_handle visit_SimGetVariable(int domain, const char *varname, void *cbdata)
   std::string matl = varName.substr(found + 1);
   varName = varName.substr(0, found);
 
-  std::string varType="CC_Mesh";
+  std::string varType( "CC_Mesh" );
 
-  if (strcmp(varname, "proc_id") != 0)
+  // Check for a particle variable
+  if (strcmp(varname, "processor") != 0)
   {
     for (int k=0; k<(int)stepInfo->varInfo.size(); ++k)
     {
       if (stepInfo->varInfo[k].name == varName)
       {
         varType = stepInfo->varInfo[k].type;
+
         if (stepInfo->varInfo[k].type.find("ParticleVariable") !=
             std::string::npos)
         {
@@ -1363,19 +1365,6 @@ visit_handle visit_SimGetVariable(int domain, const char *varname, void *cbdata)
       found = varName.find_last_of("/");
       varName = varName.substr(found + 1);
 
-      gd = new GridDataRaw;
-
-      for (int i=0; i<3; ++i)
-      {
-        gd->low[i ] = qlow[i];
-        gd->high[i] = qhigh[i];
-      }
-
-      gd->components = 1;
-
-      int ncells = (qhigh[0]-qlow[0])*(qhigh[1]-qlow[1])*(qhigh[2]-qlow[2]);
-      gd->data = new double[ncells];
-
       double val;
 
       // Processor Id
@@ -1416,8 +1405,6 @@ visit_handle visit_SimGetVariable(int domain, const char *varname, void *cbdata)
       else if( strncmp( varname, "processor/time/", 15 ) == 0 &&
 	       simStateP->d_timingStats.exists(varName) )
       {
-	std::cerr << varname << "  " << varName << std::endl;
-    
 	val = simStateP->d_timingStats.getValue( varName );
       }
 
@@ -1425,10 +1412,22 @@ visit_handle visit_SimGetVariable(int domain, const char *varname, void *cbdata)
       else if( strncmp( varname, "processor/mpi/", 14 ) == 0 &&
 	       mpiScheduler && mpiScheduler->mpi_info_.exists(varName) )
       {
-	std::cerr << varname << "  " << varName << std::endl;
-    
 	val = mpiScheduler->mpi_info_.getValue( varName );
       }
+
+      // Create at new grid data for the values.
+      gd = new GridDataRaw;
+
+      for (int i=0; i<3; ++i)
+      {
+        gd->low[i ] = qlow[i];
+        gd->high[i] = qhigh[i];
+      }
+
+      gd->components = 1;
+
+      int ncells = (qhigh[0]-qlow[0])*(qhigh[1]-qlow[1])*(qhigh[2]-qlow[2]);
+      gd->data = new double[ncells];
 
       for (int i=0; i<ncells; ++i)
 	gd->data[i] = val;
@@ -1507,6 +1506,25 @@ visit_handle visit_SimGetVariable(int domain, const char *varname, void *cbdata)
         // don't delete gd->data - vtk owns it now!
           // delete gd;
       }
+    }
+    else
+    {
+      // Create at new grid data for the values.
+      gd = new GridDataRaw;
+
+      for (int i=0; i<3; ++i)
+      {
+        gd->low[i ] = qlow[i];
+        gd->high[i] = qhigh[i];
+      }
+
+      gd->components = 1;
+
+      int ncells = (qhigh[0]-qlow[0])*(qhigh[1]-qlow[1])*(qhigh[2]-qlow[2]);
+      gd->data = new double[ncells];
+
+      for (int i=0; i<ncells; ++i)
+	gd->data[i] = 0;
     }
   }
 
