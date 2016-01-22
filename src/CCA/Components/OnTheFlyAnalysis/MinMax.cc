@@ -637,15 +637,7 @@ void MinMax::doAnalysis(const ProcessorGroup* pg,
 
         //__________________________________
         // create the directory structure
-        string analysisDir =
-	  d_dataArchiver->getOutputLocation() + "/DataAnalysis";
-
-        if( d_isDirCreated.count(analysisDir) == 0){
-          createDirectory(analysisDir);
-          d_isDirCreated.insert(analysisDir);
-        }
-
-        string minmaxDir = analysisDir + "/MinMax";
+        string minmaxDir = d_dataArchiver->getOutputLocation() + "/MinMax";
 
         if( d_isDirCreated.count(minmaxDir) == 0){
           createDirectory(minmaxDir);
