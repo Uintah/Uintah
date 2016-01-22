@@ -28,19 +28,19 @@ endif
 set hardcopy = "n"
 if ( $#argv == 2 ) then
   set hardcopy = $argv[2]
-endif 
+endif
 
 unalias rm
 #__________________________________
 # Make a copy of the output file
-
+/usr/bin/rm -rf scraps
 mkdir scraps >&/dev/null
 cp $out scraps/tmp
 cd scraps
 
 grep Time= tmp |grep Mem >& rawData.clean
 
-#__________________________________
+#______________________________________________________________________
 # Parse the output file.  This is gross
 echo "Now extracting the data"
 
@@ -58,7 +58,11 @@ grep delT rawData.clean | cut -d"=" -f3 | cut -d"," -f1 >& delT
 grep delT rawData.clean | cut -d"=" -f5 | cut -d" " -f2  > memAve
 grep delT rawData.clean | cut -d"=" -f5 | cut -d" " -f5  > memMax
 
-paste -d "  " elapsedTime meanTime physicalTime delT memAve memMax>& data
+awk 'NR>1{print $1-p} {p=$1}' elapsedTime >& timePerTimestep
+echo "?" >> timePerTimestep
+
+
+paste -d "  " elapsedTime meanTime timePerTimestep physicalTime delT memAve memMax>& data
 sed  -i s/","//g data    # eliminate any ","
 
 set procs   = `grep "MPI processes" tmp | awk '{print $2}'`
@@ -75,7 +79,7 @@ echo "" > gp
 
 #__________________________________
 # if making a hardcopy
-if( $hardcopy == "y" || $hardcopy == "Y" ) then 
+if( $hardcopy == "y" || $hardcopy == "Y" ) then
 echo "Generating the postscript file plotStats.ps"
 /bin/rm gp
 cat > gp << fin
@@ -95,51 +99,57 @@ cat >> gp << fin
 #__________________________________
 # compute stats this version of gnuplot is > 3.8
 haveStats =0
-# does this version have the stats patch 
+# does this version have the stats patch
 if ( strstrt(GPVAL_COMPILE_OPTIONS,"+STATS") ) print "Computing the statistics of the mean time per timestep"; haveStats = 1
-if(haveStats == 1) stats 'data' using 3 name "A"; 
-if(haveStats == 1) stats 'data' using 2 name "B"; 
+if(haveStats == 1) stats 'data' using 4 name "A";
+if(haveStats == 1) stats 'data' using 2 name "B";
 
 
 set multiplot
 set size 1.0,0.33 # for three plots
 set autoscale
 set grid xtics ytics
-set y2tics     
+
 
 #__________________________________ TOP
-set size   1.0, 0.33       
+set size   1.0, 0.33
 set origin 0.0, 0.66
 set title "$date : $machine : $procs Processors: ($threads) Threads"
+set xlabel "Elaspsed Time [s]" offset 0,+0.5
 set ylabel 'Delt'           textcolor lt 1
 set y2label 'Physical Time' textcolor lt 2
+set y2tics
 
 set y2range[A_mean - 2*A_stddev:A_mean + 2*A_stddev]
 
-plot 'data' using 1:4           t 'Delt' with lines, \
-     'data' using 1:3 axes x1y2 t 'Physical Time' with lines
+plot 'data' using 1:5           t 'Delt' with lines,\
+     'data' using 1:4 axes x1y2 t 'Physical Time' with lines
 
 #__________________________________ Middle
 set origin 0.0,0.33
 set title ''
-set ylabel 'Mean Time/timestep'
-unset y2label
-unset y2tics
+set xlabel "Timestep" offset 0,+0.5
+set ylabel 'Mean Time/timestep' textcolor lt 1
+set y2label 'Time per timestep [sec]'     textcolor lt 2
+set y2tics
+set autoscale
 set yrange[B_mean - 2*B_stddev:B_mean + 2*B_stddev]
-plot 'data' using 1:2 t 'meanTime/timestep' with lines
+
+plot 'data' using 2           t 'meanTime/timestep' with lines, \
+     'data' using 3 axes x1y2 t 'time/timestep' with lines
 
 
-#__________________________________Bottom   
+#__________________________________Bottom
 set origin 0.0,0.0
 set title ''
-set xlabel "ElapsedTime"
+set xlabel "Elapsed Time [s]" offset 0,+0.5
 set ylabel "Memory useage [MB]"
 unset y2label
 unset y2tics
 set autoscale
 
-plot 'data' using 1:5   t 'ave' with lines, \
-     'data' using 1:6   t 'max' with lines
+plot 'data' using 1:6   t 'ave' with lines, \
+     'data' using 1:7   t 'max' with lines
 set nomultiplot
 pause -1 "Hit return to exit"
 fin
