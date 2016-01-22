@@ -644,11 +644,18 @@ void MinMax::doAnalysis(const ProcessorGroup* pg,
           createDirectory(analysisDir);
           d_isDirCreated.insert(analysisDir);
         }
+
+        string minmaxDir = analysisDir + "/MinMax";
+
+        if( d_isDirCreated.count(minmaxDir) == 0){
+          createDirectory(minmaxDir);
+          d_isDirCreated.insert(minmaxDir);
+        }
 	
         ostringstream li;
         li<<"l"<<level->getIndex();
         string levelIndex = li.str();
-        string levelDir = analysisDir + "/" + levelIndex;
+        string levelDir = minmaxDir + "/" + levelIndex;
 
         if( d_isDirCreated.count(levelDir) == 0){
           createDirectory(levelDir);
