@@ -2289,29 +2289,51 @@ DataArchiver::outputVariables(const ProcessorGroup * pg,
     vc = 0;
     for(saveIter = saveLabels.begin(); saveIter!= saveLabels.end(); saveIter++) 
     {
-
-      const VarLabel* label = saveIter->label;     
-      const TypeDescription* td = label->typeDescription();
-      const TypeDescription* subtype = td->getSubType();
-      
-      
+      const VarLabel* label = saveIter->label;
       string type2 = label->typeDescription()->getName().c_str();
       if (strstr(type2.c_str(), "CCVariable") == NULL){
         continue;
       }
       
-      //IntVector vhi, vlow, vrange;
-      //vlow = var->getCellLowIndex();
-      //vhi = var->getCellHighIndex();
-      // check to see if we need to save on this level
-      // check is done by absolute level, or relative to end of levels (-1 finest, -2 second finest,...)
-      // find the materials to output on that level
-      
       const MaterialSubset* var_matls = saveIter->getMaterialSubset(level);
       if (var_matls == NULL){
         continue;
       }
+           
+      const TypeDescription* td = label->typeDescription();
+      const TypeDescription* subtype = td->getSubType();      
       
+      // set values depending on the variable's subtype
+      char data_type[512];
+      int sample_per_variable = -9;
+      size_t varSubType_size = -9;
+
+      switch( subtype->getType( )) {
+
+        case Uintah::TypeDescription::double_type:
+          sample_per_variable = 1;
+          varSubType_size = sample_per_variable * sizeof(double);
+          sprintf(data_type, "%d*float64", sample_per_variable); 
+          break;
+
+        case Uintah::TypeDescription::Vector:
+          sample_per_variable = 3;
+          varSubType_size = sample_per_variable * sizeof(double);
+          sprintf(data_type, "%d*float64", sample_per_variable);
+          break;
+
+        case Uintah::TypeDescription::int_type:
+          sample_per_variable = 1;
+          varSubType_size = sample_per_variable * sizeof(int);
+          sprintf(data_type, "%d*int32", sample_per_variable);
+          break;
+        default:
+          ostringstream warn;
+          warn << "DataArchiver::outputVariables_PIDX:: ("<< label->getName() << " " 
+               << td->getName() << " ) has not been implemented" << endl;
+          throw InternalError(warn.str(), __FILE__, __LINE__); 
+      }
+
       //__________________________________
       //  materials loop
       for(int m=0;m<var_matls->size();m++){
@@ -2325,37 +2347,6 @@ DataArchiver::outputVariables(const ProcessorGroup * pg,
           s << m;
           var_mat_name = label->getName() + "_m" + s.str();
         }
-   
-        // set values depending on the variable's subtype
-        char data_type[512];
-        int sample_per_variable = -9;
-        size_t varSubType_size = -9;
-
-        switch( subtype->getType( )) {
-
-          case Uintah::TypeDescription::double_type:
-            sample_per_variable = 1;
-            varSubType_size = sample_per_variable * sizeof(double);
-            sprintf(data_type, "%d*float64", sample_per_variable); 
-            break;
-
-          case Uintah::TypeDescription::Vector:
-            sample_per_variable = 3;
-            varSubType_size = sample_per_variable * sizeof(double);
-            sprintf(data_type, "%d*float64", sample_per_variable);
-            break;
-
-          case Uintah::TypeDescription::int_type:
-            sample_per_variable = 1;
-            varSubType_size = sample_per_variable * sizeof(int);
-            sprintf(data_type, "%d*int32", sample_per_variable);
-            break;
-          default:
-            ostringstream warn;
-            warn << "DataArchiver::outputVariables_PIDX:: ("<< label->getName() << " " 
-                 << td->getName() << " ) has not been implemented" << endl;
-            throw InternalError(warn.str(), __FILE__, __LINE__); 
-        }                
 
         PIDX_variable_create((char*)var_mat_name.c_str(), varSubType_size * 8, data_type, &(pc.variable[vc][m]));
         
@@ -2377,12 +2368,12 @@ DataArchiver::outputVariables(const ProcessorGroup * pg,
             patch = patches->get(p);
             patchID = patch->getID();
 
-            // To Do:  generalize this for different variables types
-            IntVector hiE       = patch->getExtraCellHighIndex();
-            IntVector lowE      = patch->getExtraCellLowIndex();
+            IntVector hi_EC;
+            IntVector lo_EC;                                // compute the extents of the variable (CCVariable, SFC(*)Variable...etc)
+            patch->computeVariableExtents(td->getType(), label->getBoundaryLayer(), Ghost::None, 0, lo_EC, hi_EC);
             IntVector offset    = level->getExtraCells();
-            IntVector pidxLo    = lowE + offset;                                // pidx array indexing starts at 0, must shift nExtraCells
-            IntVector nCells_EC = hiE - lowE;
+            IntVector pidxLo    = lo_EC + offset;           // pidx array indexing starts at 0, must shift nExtraCells
+            IntVector nCells_EC = hi_EC - lo_EC;
             int totalCells_EC   = nCells_EC.x() * nCells_EC.y() * nCells_EC.z();
            
             /*`==========TESTING==========*/
@@ -2465,7 +2456,7 @@ DataArchiver::outputVariables(const ProcessorGroup * pg,
           for (int j = 0; j < nCells_EC.y(); j++) {
             for (int i = 0; i < nCells_EC.x(); i++) {
               unsigned long long index = (unsigned long long) ( nCells_EC.x() * (nCells_EC.y() * k) + (nCells_EC.x() * j) + i );
-              PIDX_patch_buffer[p][index] = 100 + ((globalExtents[0] * globalExtents[1]*((lowE.z()+adjust_offset.z()) + k)) +(globalExtents[0]*((lowE.y()+adjust_offset.y()) + j)) + ((lowE.x()+adjust_offset.x()) + i));
+              PIDX_patch_buffer[p][index] = 100 + ((globalExtents[0] * globalExtents[1]*(pidxLo.z() + k)) +(globalExtents[0]*(pidxLo.y() + j)) + (pidxLo.x() + i));
             }
           }
         }
