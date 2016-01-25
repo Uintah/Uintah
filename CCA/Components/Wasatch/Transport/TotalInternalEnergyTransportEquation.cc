@@ -104,8 +104,8 @@ namespace WasatchCore {
     {
       const FieldT& totalInternalEnergy = totalInternalEnergy_->field_ref();
       const FieldT& kineticEnergy       = kineticEnergy_      ->field_ref();
-      const double gasConstant = 8.314459848;  // J/(mol K)
-      this->value() <<= 2.0*gasConstant/5.0 * ( totalInternalEnergy - kineticEnergy );
+      const double gasConstant = 8.314459848/0.028966;  // universal R = J/(mol K). Specific R* = R/Mw = J/k
+      this->value() <<= 2.0/(5.0*gasConstant) * ( totalInternalEnergy - kineticEnergy ); // total internal energy = J/Kg (per unit mass)
     }
 
   };
@@ -180,16 +180,16 @@ namespace WasatchCore {
 
       const FieldT& temperature = temperature_->field_ref();
 
-      const double gasConstant = 8.314459848;  // J/(mol K)
+      const double gasConstant = 8.314459848/0.028966;  // Universal R = J/(mol K). Specific R* = R/Mw = J/(Kg K)
 
       if( doX_ && doY_ && doZ_ ){
         const FieldT& xvel = xvel_->field_ref();
         const FieldT& yvel = yvel_->field_ref();
         const FieldT& zvel = zvel_->field_ref();
-        result <<= 5.0/(2.0*gasConstant) * temperature + 0.5 * ( xvel*xvel + yvel*yvel + zvel*zvel );
+        result <<= 5.0*gasConstant/2.0 * temperature + 0.5 * ( xvel*xvel + yvel*yvel + zvel*zvel );
       }
       else{
-        result <<= 5.0/(2.0*gasConstant) * temperature;
+        result <<= 5.0*gasConstant/2.0 * temperature;
         if( doX_ ){
           const FieldT& xvel = xvel_->field_ref();
           result <<= result + 0.5 * xvel * xvel;
@@ -513,12 +513,11 @@ namespace WasatchCore {
         diffFluxParams != 0;
         diffFluxParams=diffFluxParams->findNextBlock("DiffusiveFlux") )
     {
-      setup_diffusive_flux_expression<MyFieldT>( diffFluxParams,
-                                              densityTag_,
-                                              primVarTag_,
-                                              turbDiffTag_,
-                                              factory,
-                                              info );
+      setup_diffusive_velocity_expression<MyFieldT>( diffFluxParams,
+                                                    temperatureTag_,
+                                                    turbDiffTag_,
+                                                    factory,
+                                                    info );
       
     }
   }

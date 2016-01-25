@@ -28,7 +28,7 @@
     <BasicExpression type="SVOL">
       <TaskList>initialization</TaskList>
       <NameTag name="pressure"/>
-      <Constant>101325</Constant>
+      <Constant>101325.0</Constant>
     </BasicExpression>
     <!-- Set the molecular weight - needed both on initial condition and advance solution -->
     <BasicExpression type="SVOL">
@@ -45,7 +45,7 @@
     <BasicExpression type="SVOL">
       <TaskList>advance_solution</TaskList>
       <NameTag name="viscosity"/>
-      <Constant>1.0e-5</Constant>
+      <Constant>1.95e-5</Constant>
     </BasicExpression>
     
     <!-- Momentum transport equations -->
@@ -64,7 +64,7 @@
         <MolecularWeight>
           <NameTag name="MW"/>
         </MolecularWeight>
-        <DiffusiveFlux direction="X" coefficient="0.001"/>
+        <DiffusiveFlux direction="X" coefficient="0.025"/>
         <ConvectiveFlux direction="X" method="CENTRAL">
           <AdvectiveVelocity>
             <NameTag name="u"/>
@@ -76,14 +76,14 @@
   <Time>
     <maxTime>5.0</maxTime>
     <initTime>0.0</initTime>
-    <delt_min>1e-7</delt_min>
-    <delt_max>1e-7</delt_max>
+    <delt_min>1.3e-6</delt_min>
+    <delt_max>1.3e-6</delt_max>
     <max_Timesteps> 200 </max_Timesteps>
     <timestep_multiplier>1.0</timestep_multiplier>
   </Time>
   <DataArchiver>
     <filebase>compressible-1d-test.uda</filebase>
-    <outputTimestepInterval>10</outputTimestepInterval>
+    <outputTimestepInterval>1</outputTimestepInterval>
     <outputInitTimestep/>
     <checkpoint cycle="2" timestepInterval="20"/>
     <save label="T"/>
@@ -92,6 +92,10 @@
     <save label="density"/>
     <save label="et"/>
     <save label="rhoet"/>
+    <save label="rhoet_rhs"/>
+    <save label="viscous_dissipation"/>
+    <save label="x-mom_rhs"/>    
+    <save label="x-mom_rhs_partial"/>        
   </DataArchiver>
   <Grid>
     <BoundaryConditions>
