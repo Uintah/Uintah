@@ -1898,15 +1898,17 @@ DataArchiver::outputVariables(const ProcessorGroup * pg,
   
   //__________________________________
   Dir dir;
-  if (type == OUTPUT)
+  if (type == OUTPUT){
     dir = d_dir;
-  else
+  }else{
     dir = d_checkpointsDir;
-
+  }
+  
   ostringstream tname;
   tname << "t" << setw(5) << setfill('0') << getTimestepTopLevel();    // could be modified by reduceUda
   
   Dir tdir = dir.getSubdir(tname.str());
+  Dir ldir;
   
   string xmlFilename;
   string dataFilebase;
@@ -1926,11 +1928,13 @@ DataArchiver::outputVariables(const ProcessorGroup * pg,
 
 
 #if SCI_ASSERTION_LEVEL >= 1
-    for(int i=0;i<patches->size();i++)
+    for(int i=0;i<patches->size();i++){
       ASSERT(patches->get(i)->getLevel() == level);
+    }
 #endif
-    lname << "l" << level->getIndex(); // Hard coded - steve
-    Dir ldir = tdir.getSubdir(lname.str());
+
+    lname << "l" << level->getIndex();
+    ldir = tdir.getSubdir(lname.str());
     
     ostringstream pname;
     pname << "p" << setw(5) << setfill('0') << d_myworld->myrank();
@@ -2149,13 +2153,15 @@ DataArchiver::outputVariables(const ProcessorGroup * pg,
   //  ToDo
   //      Create CC, SFC(X,Y,Z) pidx directories and idx files  (stop gap for now)
   //      Add logic for saveAsFloats
-  //      consolidate debugging variaable output into main saveLabel loop
+  //      consolidate debugging variable output into main saveLabel loop
+  //      Do we need patch_buffer?
+  //      Do we need the memset calls?
   //
   
   
   bool pidx_io =  true;
   
-  if (pidx_io == true && type != CHECKPOINT)
+  if (pidx_io == true && type != CHECKPOINT_REDUCTION)
   {
     
     #if 0
@@ -2183,18 +2189,9 @@ DataArchiver::outputVariables(const ProcessorGroup * pg,
   
     //__________________________________
     //
-    IntVector adjust_offset = IntVector(1,1,1);  //for data conversion, some datasets start at -1,-1,-1, this will soon be handled automatically by pidx 
-                                                // <ctc> for temporal jet, set to 0,0,1, use_float=false,agg_size=4
     IntVector clowIndex;
     IntVector chighIndex;
-    //level->findIndexRange(lowIndex,highIndex);
-    //level->findNodeIndexRange(lowIndex,highIndex);
-    //level->findCellIndexRange(lowIndex,highIndex);
     level->findCellIndexRange(clowIndex,chighIndex);
-    //printf("clowIndex: %d %d %d, chighindex: %d %d %d\n",clowIndex[0],clowIndex[1],clowIndex[2],chighIndex[0],chighIndex[1],chighIndex[2]);
-    //level->findInteriorIndexRange(lowIndex,highIndex);
-    //level->findInteriorNodeIndexRange(lowIndex,highIndex);
-    //level->findInteriorCellIndexRange(lowIndex,highIndex);
     
     int globalExtents[3];
     globalExtents[0] = chighIndex[0] - clowIndex[0] ;
@@ -2222,6 +2219,9 @@ DataArchiver::outputVariables(const ProcessorGroup * pg,
     
     //__________________________________
     //  create pidx idx
+    
+    proc0cout << " dataFileName: " << dataFilename << " dir: " <<dir.getName() << " ldir: " << ldir.getName() << endl;
+    
     string idxFilename(dir.getName());
     idxFilename = idxFilename + ".idx";
     PIDXOutputContext pc;
@@ -2377,7 +2377,7 @@ DataArchiver::outputVariables(const ProcessorGroup * pg,
             int totalCells_EC   = nCells_EC.x() * nCells_EC.y() * nCells_EC.z();
            
             /*`==========TESTING==========*/
-            proc0cout << rank <<"  PIDX:  " << setw(15) <<label->getName() << "  "<< td->getName() << " Patch: " << patchID 
+            proc0cout << rank <<" taskType: " << type << "  PIDX:  " << setw(15) <<label->getName() << "  "<< td->getName() << " Patch: " << patchID 
                       << ",  sample_per_variable: " << sample_per_variable <<" varSubType_size: " << varSubType_size << " dataType: " << data_type 
                       << " offset: " << pidxLo << " count: " << nCells_EC << " totalCells_EC " << totalCells_EC << endl; 
             /*===========TESTING==========`*/
