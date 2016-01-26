@@ -2228,6 +2228,7 @@ DataArchiver::saveLabels_PIDX(std::vector< SaveItem >& saveLabels,
                               const TypeDescription::Type TD,
                               Dir                   myDir)            
 {
+#if HAVE_PIDX
   //__________________________________
   //
   const Level* level = getLevel(patches);
@@ -2556,6 +2557,7 @@ DataArchiver::saveLabels_PIDX(std::vector< SaveItem >& saveLabels,
          << " Number of variables = " << number_of_variables 
          << endl;
   }
+#endif
 }
 
 //______________________________________________________________________
