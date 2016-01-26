@@ -2152,385 +2152,431 @@ DataArchiver::outputVariables(const ProcessorGroup * pg,
   //
   //  ToDo
   //      Create CC, SFC(X,Y,Z) pidx directories and idx files  (stop gap for now)
+  //      move creation of directories to makeTimestepDirs()
   //      Add logic for saveAsFloats
   //      consolidate debugging variable output into main saveLabel loop
   //      Do we need patch_buffer?
   //      Do we need the memset calls?
+  //      Move the timers upstream
   //
-  
-  
   bool pidx_io =  true;
   
   if (pidx_io == true && type != CHECKPOINT_REDUCTION)
   {
-    
-    #if 0
-    //__________________________________
-    //  bulletproofing 
-    // Only CCVariables, only Doubles, ints, or Vectors are allowed right now
-    for(vector<SaveItem>::iterator iter = saveLabels.begin(); iter!= saveLabels.end(); iter++) {
-      
-      const VarLabel* label = iter->label;    
-      const Uintah::TypeDescription* td = label->typeDescription();
-      const Uintah::TypeDescription* subtype = td->getSubType();
-      
-      // Only CCVariables, only Doubles, ints, or Vectors are allowed
-      if(td->getType() != TypeDescription::CCVariable       ||
-         ( subtype->getType() != TypeDescription::double_type &&
-           subtype->getType() != TypeDescription::int_type    &&
-           subtype->getType() != TypeDescription::Vector ) ){
-        ostringstream warn;
-        warn << "DataArchiver::outputVariables ("<<label->getName() << " " 
-             << td->getName() << " ) has not been implemented" << endl;
-        throw ProblemSetupException(warn.str(), __FILE__, __LINE__);
-      }
-    }
-    #endif
   
-    //__________________________________
-    //
-    IntVector clowIndex;
-    IntVector chighIndex;
-    level->findCellIndexRange(clowIndex,chighIndex);
+    vector<TypeDescription::Type> GridVarTypes;
+    GridVarTypes.push_back(TypeDescription::CCVariable );
+    GridVarTypes.push_back(TypeDescription::SFCXVariable );
+    GridVarTypes.push_back(TypeDescription::SFCYVariable );
+    GridVarTypes.push_back(TypeDescription::SFCZVariable );
     
-    int globalExtents[3];
-    globalExtents[0] = chighIndex[0] - clowIndex[0] ;
-    globalExtents[1] = chighIndex[1] - clowIndex[1] ;
-    globalExtents[2] = chighIndex[2] - clowIndex[2] ;
-    
-    int number_of_variables;
-    int *number_of_materials;
-    
-    number_of_variables =  saveLabels.size();
-    number_of_materials = (int*)malloc(sizeof(int) * number_of_variables);            // This doesn't look correct  - Todd
-    int rank = pg->myrank();
-    
-    #if 0
-    //__________________________________
-    //  Debugging
-    
-    if( rank == 0 ) {
-      printf("[PIDX] IDX file name = %s\n", (char*)idxFilename.c_str());
-      printf("[PIDX] The global volume = %d %d %d\n", globalExtents[0], globalExtents[1], globalExtents[2]);
-      printf("[PIDX] Current time step = %d\n", timeStep);
-      printf("[PIDX] Total number of variable = %d\n", number_of_variables);
-    }
-    #endif
-    
-    //__________________________________
-    //  create pidx idx
-    
-    proc0cout << " dataFileName: " << dataFilename << " dir: " <<dir.getName() << " ldir: " << ldir.getName() << endl;
-    
-    string idxFilename(dir.getName());
-    idxFilename = idxFilename + ".idx";
-    PIDXOutputContext pc;
-    unsigned int timeStep = d_sharedState->getCurrentTopLevelTimeStep();
-    // Can this be run in serial without doing a MPI initialize
-    pc.initialize(idxFilename, timeStep, globalExtents, d_myworld->getComm());
-    
-    int vc = 0;
-    int vcm = 0;
-    int cc_var_count = 0;
-    int actual_number_of_variables = 0;
-    
-    //__________________________________
-    //  loop over variables
-    // Count up the number of variables that will 
-    // be output. Each variable can have a different number of 
-    // materials and live on a different number of levels
-    vector<SaveItem>::iterator saveIter;
-    for(saveIter = saveLabels.begin(); saveIter!= saveLabels.end(); saveIter++) {
+    // loop over the grid variable types.
+
+    for(vector<TypeDescription::Type>::iterator iter = GridVarTypes.begin(); iter!= GridVarTypes.end(); iter++) {
+      TypeDescription::Type TD = *iter;
+      Dir myDir;
       
-      const VarLabel* var = saveIter->label;
+      // find all variables of this type
+      vector<SaveItem> saveTheseLabels;
+      saveTheseLabels = findAllVariableTypes( saveLabels, TD );
       
-      string typestr = var->typeDescription()->getName().c_str();
-      if (strstr(typestr.c_str(), "CCVariable") == NULL)
-        continue;
-
+      // create the sub directories.  This should be moved upstream
+      if( saveTheseLabels.size() > 0 ) {
       
-      const MaterialSubset* var_matls = saveIter->getMaterialSubset(level);
-      if (var_matls == NULL){
-        continue;
-      }
-      
-      number_of_materials[cc_var_count]=var_matls->size();
+        switch ( TD ){
+          case TypeDescription::CCVariable:
+            cout << "Working on CCVariables: " << endl;
+            myDir = ldir.createSubdir( "CCVars" );  
+            break;
 
-      cc_var_count++;
-      actual_number_of_variables += var_matls->size();
-    }
-    
-    //__________________________________
-    //
-    int PIDX_debug = 0;
-    int PIDX_extra_field = 0;
-    if (PIDX_debug == 1){
-      PIDX_extra_field = 1;
-    }
-    
-    PIDX_set_variable_count(pc.file, actual_number_of_variables + PIDX_extra_field);
-    pc.variable = (PIDX_variable**) malloc(sizeof (PIDX_variable*) * (cc_var_count + PIDX_extra_field));
-    memset(pc.variable, 0, sizeof (PIDX_variable*) * cc_var_count);
-    
-    for(int i = 0 ; i < cc_var_count ; i++) {
-      pc.variable[i] = (PIDX_variable*) malloc(sizeof (PIDX_variable) * number_of_materials[i]);
-      memset(pc.variable[i], 0, sizeof (PIDX_variable) * number_of_materials[i]);
-    }
-    
-    for(int i = cc_var_count ; i < cc_var_count + PIDX_extra_field ; i++) {
-      pc.variable[i] = (PIDX_variable*) malloc(sizeof (PIDX_variable));
-      memset(pc.variable[i], 0, sizeof (PIDX_variable));
-    }
-    
-    //__________________________________
-    //
-    unsigned char ***patch_buffer;
-    patch_buffer = (unsigned char***)malloc(sizeof(unsigned char**) * actual_number_of_variables);
-    vc = 0;
-    for(saveIter = saveLabels.begin(); saveIter!= saveLabels.end(); saveIter++) 
-    {
-      const VarLabel* label = saveIter->label;
-      string type2 = label->typeDescription()->getName().c_str();
-      if (strstr(type2.c_str(), "CCVariable") == NULL){
-        continue;
-      }
-      
-      const MaterialSubset* var_matls = saveIter->getMaterialSubset(level);
-      if (var_matls == NULL){
-        continue;
-      }
-           
-      const TypeDescription* td = label->typeDescription();
-      const TypeDescription* subtype = td->getSubType();      
-      
-      // set values depending on the variable's subtype
-      char data_type[512];
-      int sample_per_variable = -9;
-      size_t varSubType_size = -9;
+          case TypeDescription::SFCXVariable:
+            cout << "Working on SFCXVariable: " << endl;
+            myDir = ldir.createSubdir( "SFCXVars" );
+            break;
 
-      switch( subtype->getType( )) {
+          case TypeDescription::SFCYVariable:
+            cout << "Working on SFCZVariable: " << endl;
+            myDir = ldir.createSubdir( "SFCYVars" );
+            break;
 
-        case Uintah::TypeDescription::double_type:
-          sample_per_variable = 1;
-          varSubType_size = sample_per_variable * sizeof(double);
-          sprintf(data_type, "%d*float64", sample_per_variable); 
-          break;
+          case TypeDescription::SFCZVariable:
+            cout << "Working on SFCZVariable: " << endl;
+            myDir = ldir.createSubdir( "SFCZVars" );
+            break;
 
-        case Uintah::TypeDescription::Vector:
-          sample_per_variable = 3;
-          varSubType_size = sample_per_variable * sizeof(double);
-          sprintf(data_type, "%d*float64", sample_per_variable);
-          break;
+          default:
+             throw InternalError("planeExtract: (SFCXVariable>invalid data type", __FILE__, __LINE__);
 
-        case Uintah::TypeDescription::int_type:
-          sample_per_variable = 1;
-          varSubType_size = sample_per_variable * sizeof(int);
-          sprintf(data_type, "%d*int32", sample_per_variable);
-          break;
-        default:
-          ostringstream warn;
-          warn << "DataArchiver::outputVariables_PIDX:: ("<< label->getName() << " " 
-               << td->getName() << " ) has not been implemented" << endl;
-          throw InternalError(warn.str(), __FILE__, __LINE__); 
-      }
-
-      //__________________________________
-      //  materials loop
-      for(int m=0;m<var_matls->size();m++){
-        int matlIndex = var_matls->get(m);
-        string var_mat_name;
-        
-        if (var_matls->size() == 1) {
-          var_mat_name = label->getName();
-        } else {
-          std::ostringstream s;
-          s << m;
-          var_mat_name = label->getName() + "_m" + s.str();
         }
-
-        PIDX_variable_create((char*)var_mat_name.c_str(), varSubType_size * 8, data_type, &(pc.variable[vc][m]));
-        
-        patch_buffer[vcm] = (unsigned char**)malloc(sizeof(unsigned char*) * patches->size());
-        
-        //__________________________________
-        //  patch Loop
-        for(int p=0;p<(type==CHECKPOINT_REDUCTION?1:patches->size());p++)
-        {
-          const Patch* patch;
-          int patchID;
-          
-          if (type == CHECKPOINT_REDUCTION) {
-            // to consolidate into this function, force patch = 0
-            patch = 0;
-            patchID = -1;
-
-          } else {
-            patch = patches->get(p);
-            patchID = patch->getID();
-
-            IntVector hi_EC;
-            IntVector lo_EC;                                // compute the extents of the variable (CCVariable, SFC(*)Variable...etc)
-            patch->computeVariableExtents(td->getType(), label->getBoundaryLayer(), Ghost::None, 0, lo_EC, hi_EC);
-            IntVector offset    = level->getExtraCells();
-            IntVector pidxLo    = lo_EC + offset;           // pidx array indexing starts at 0, must shift nExtraCells
-            IntVector nCells_EC = hi_EC - lo_EC;
-            int totalCells_EC   = nCells_EC.x() * nCells_EC.y() * nCells_EC.z();
-           
-            /*`==========TESTING==========*/
-            proc0cout << rank <<" taskType: " << type << "  PIDX:  " << setw(15) <<label->getName() << "  "<< td->getName() << " Patch: " << patchID 
-                      << ",  sample_per_variable: " << sample_per_variable <<" varSubType_size: " << varSubType_size << " dataType: " << data_type 
-                      << " offset: " << pidxLo << " count: " << nCells_EC << " totalCells_EC " << totalCells_EC << endl; 
-            /*===========TESTING==========`*/
-            
-            PIDX_point local_offset_point; 
-            PIDX_point local_box_count_point;
-
-            PIDX_set_point_5D(local_offset_point,    pidxLo.x(),    pidxLo.y(),    pidxLo.z(),   0, 0);
-            PIDX_set_point_5D(local_box_count_point, nCells_EC.x(), nCells_EC.y(), nCells_EC.z(), 1, 1);
-
-
-            //__________________________________
-            // allocate memory for the grid variables
-            unsigned char *t_buffer = NULL; 
-            
-            size_t arraySize = varSubType_size * totalCells_EC;
-             
-            t_buffer = (unsigned char*)malloc( arraySize );
-            memset(t_buffer, 0, arraySize );
-
-            patch_buffer[vcm][p] = (unsigned char*)malloc( arraySize );
-            memset( patch_buffer[vcm][p], 0, arraySize );
-            
-            //__________________________________
-            //  Read in Array3 data to t-buffer
-            new_dw->emit(pc, label, matlIndex, patch, t_buffer);
-            
-            //__________________________________
-            //  copy t_buffer -> patch_buffer
-            memcpy( patch_buffer[vcm][p], t_buffer, arraySize );
-            free(t_buffer);
-            
-            PIDX_variable_write_data_layout(pc.variable[vc][m], local_offset_point, local_box_count_point, patch_buffer[vcm][p], PIDX_row_major);
-                        
-          }
-        }  //  Patches
-        
-        PIDX_append_and_write_variable(pc.file, pc.variable[vc][m]);
-        vcm++;
-        
-      }  //  Materials
-      
-      vc++;
-    }  //  Variables
-    
-    //__________________________________
-    //      DEBUGGING   This simply creates a dummy variable
-    float **PIDX_patch_buffer;
-    if (PIDX_debug == 1)
-    {
-      PIDX_variable_create("PIDX_test_variable", sizeof(float) * 8, FLOAT32, &(pc.variable[cc_var_count][0]));
-      PIDX_patch_buffer = (float**)malloc(sizeof(float*) * patches->size());
-      
-      for(int p=0;p<(type==CHECKPOINT_REDUCTION?1:patches->size());p++)
-      {
-        const Patch* patch  = patches->get(p);
-        IntVector hiE       = patch->getExtraCellHighIndex();
-        IntVector lowE      = patch->getExtraCellLowIndex();
-        IntVector offset    = level->getExtraCells();
-        IntVector pidxLo    = lowE + offset;                                // pidx array indexing starts at 0, must shift nExtraCells
-        IntVector nCells_EC = hiE - lowE;
-        int totalCells_EC   = nCells_EC.x() * nCells_EC.y() * nCells_EC.z();
-            
-        printf("[PIDX %d] [%d] Offset and Count %d %d %d : %d %d %d\n", rank, vc, lowE.x(), lowE.y(), lowE.z(), nCells_EC.x(), nCells_EC.y(), nCells_EC.z() );
-            
-        PIDX_point local_offset_point, local_box_count_point;
-            
-        PIDX_set_point_5D(local_offset_point,    pidxLo.x(),    pidxLo.y(),    pidxLo.z(),   0, 0);
-        PIDX_set_point_5D(local_box_count_point, nCells_EC.x(), nCells_EC.y(), nCells_EC.z(), 1, 1);
-            
-        PIDX_patch_buffer[p] = (float*)malloc(sizeof(float) * totalCells_EC);
-        memset(PIDX_patch_buffer[p], 0, sizeof(float) * totalCells_EC);
-
-
-        for (int k = 0; k < nCells_EC.z(); k++) {
-          for (int j = 0; j < nCells_EC.y(); j++) {
-            for (int i = 0; i < nCells_EC.x(); i++) {
-              unsigned long long index = (unsigned long long) ( nCells_EC.x() * (nCells_EC.y() * k) + (nCells_EC.x() * j) + i );
-              PIDX_patch_buffer[p][index] = 100 + ((globalExtents[0] * globalExtents[1]*(pidxLo.z() + k)) +(globalExtents[0]*(pidxLo.y() + j)) + (pidxLo.x() + i));
-            }
-          }
-        }
-            
-        PIDX_variable_write_data_layout(pc.variable[cc_var_count][0], local_offset_point, local_box_count_point, PIDX_patch_buffer[p], PIDX_row_major);
-                        
-      }  //  Patches
-      PIDX_append_and_write_variable(pc.file, pc.variable[cc_var_count][0]);
-    }  // debugging
-    
-    //__________________________________
-    //  Start timers and clean up memory
-    double start_time, end_time, io_time, max_time;
-    start_time = MPI_Wtime();
-    PIDX_close(pc.file);
-    end_time = MPI_Wtime();
-    
-
-    
-    //__________________________________
-    // free buffers
-    for (int i=0;i<actual_number_of_variables;i++)
-    {
-      for(int p=0;p<(type==CHECKPOINT_REDUCTION?1:patches->size());p++)
-      {
-        free( patch_buffer[i][p] );
-        patch_buffer[i][p] = 0;
-      }
-      free( patch_buffer[i] );
-      patch_buffer[i] = 0;
-    }
-    free(patch_buffer);
-    patch_buffer = 0;
-    
-    
-    if (PIDX_debug == 1)
-    {
-      for(int p=0;p<(type==CHECKPOINT_REDUCTION?1:patches->size());p++){
-        free(PIDX_patch_buffer[p]);
-      }
-      free(PIDX_patch_buffer);
-    }
-
-    //__________________________________
-    //  free memory
-    //for (int i=0; i<number_of_variables; i++)
-    for (int i=0; i<cc_var_count + PIDX_extra_field; i++)
-    {
-      free(pc.variable[i]);
-    }
-    free(pc.variable); 
-    pc.variable=0;
-    
-    free(number_of_materials); 
-    number_of_materials=0;
-    
-
-    //__________________________________
-    //  compute pidx runtime
-    io_time = end_time - start_time;
-    MPI_Allreduce(&io_time,&max_time, 1,MPI_DOUBLE,MPI_MAX, d_myworld->getComm() );
-    
-    if (io_time == max_time){
-      cout << "Timestep = " << timeStep 
-           << " Global Volume = " << globalExtents[0] << "," << globalExtents[1]
-           << "," << globalExtents[2] << "," 
-           << " Throughput = " 
-           << (globalExtents[0]*globalExtents[1]*globalExtents[2]*number_of_variables*(sizeof(float)))/(1024.*1024.*max_time) << " MiB/sec " << " Max Time = " << max_time  
-           << " Number of variables = " << number_of_variables 
-           << endl;
+        saveLabels_PIDX(saveTheseLabels, pg, patches, new_dw, type, TD, myDir);
+      } 
     }
   }
+  
 #endif
 } // end output()
+
+
+//______________________________________________________________________
+//  outut only the savedLabels of a specified type description in PIDX format.
+void
+DataArchiver::saveLabels_PIDX(std::vector< SaveItem >& saveLabels,
+                              const ProcessorGroup * pg,
+                              const PatchSubset    * patches,      
+                              DataWarehouse        * new_dw,          
+                              int                    type,
+                              const TypeDescription::Type TD,
+                              Dir                   myDir)            
+{
+  //__________________________________
+  //
+  const Level* level = getLevel(patches);
+  IntVector clowIndex;
+  IntVector chighIndex;
+  level->findCellIndexRange(clowIndex,chighIndex);
+
+  int globalExtents[3];
+  globalExtents[0] = chighIndex[0] - clowIndex[0] ;
+  globalExtents[1] = chighIndex[1] - clowIndex[1] ;
+  globalExtents[2] = chighIndex[2] - clowIndex[2] ;
+
+  int number_of_variables;
+  int *number_of_materials;
+
+  number_of_variables =  saveLabels.size();
+  number_of_materials = (int*)malloc(sizeof(int) * number_of_variables);            // This doesn't look correct  - Todd
+  int rank = pg->myrank();
+
+  #if 0
+  //__________________________________
+  //  Debugging
+
+  if( rank == 0 ) {
+    printf("[PIDX] IDX file name = %s\n", (char*)idxFilename.c_str());
+    printf("[PIDX] The global volume = %d %d %d\n", globalExtents[0], globalExtents[1], globalExtents[2]);
+    printf("[PIDX] Current time step = %d\n", timeStep);
+    printf("[PIDX] Total number of variable = %d\n", number_of_variables);
+  }
+  #endif
+
+  //__________________________________
+  //  create subdirectory
+  proc0cout << " Dir: " << myDir.getName() << endl;
+
+  string idxFilename( myDir.getName() );
+  idxFilename = idxFilename + ".idx";
+  PIDXOutputContext pc;
+  unsigned int timeStep = d_sharedState->getCurrentTopLevelTimeStep();
+  // Can this be run in serial without doing a MPI initialize
+  pc.initialize(idxFilename, timeStep, globalExtents, d_myworld->getComm());
+
+  int vc = 0;
+  int vcm = 0;
+  int cc_var_count = 0;
+  int actual_number_of_variables = 0;
+
+  //__________________________________
+  //  loop over variables
+  // Count up the number of variables that will 
+  // be output. Each variable can have a different number of 
+  // materials and live on a different number of levels
+  vector<SaveItem>::iterator saveIter;
+  for(saveIter = saveLabels.begin(); saveIter!= saveLabels.end(); saveIter++) {
+
+    const VarLabel* var = saveIter->label;         
+    const MaterialSubset* var_matls = saveIter->getMaterialSubset(level);
+    if (var_matls == NULL){
+      continue;
+    }
+
+    number_of_materials[cc_var_count]=var_matls->size();
+
+    cc_var_count++;
+    actual_number_of_variables += var_matls->size();
+  }
+
+  //__________________________________
+  //
+  int PIDX_debug = 0;
+  int PIDX_extra_field = 0;
+  if (PIDX_debug == 1){
+    PIDX_extra_field = 1;
+  }
+
+  PIDX_set_variable_count(pc.file, actual_number_of_variables + PIDX_extra_field);
+  pc.variable = (PIDX_variable**) malloc(sizeof (PIDX_variable*) * (cc_var_count + PIDX_extra_field));
+  memset(pc.variable, 0, sizeof (PIDX_variable*) * cc_var_count);
+
+  for(int i = 0 ; i < cc_var_count ; i++) {
+    pc.variable[i] = (PIDX_variable*) malloc(sizeof (PIDX_variable) * number_of_materials[i]);
+    memset(pc.variable[i], 0, sizeof (PIDX_variable) * number_of_materials[i]);
+  }
+
+  for(int i = cc_var_count ; i < cc_var_count + PIDX_extra_field ; i++) {
+    pc.variable[i] = (PIDX_variable*) malloc(sizeof (PIDX_variable));
+    memset(pc.variable[i], 0, sizeof (PIDX_variable));
+  }
+
+  //__________________________________
+  //
+  unsigned char ***patch_buffer;
+  patch_buffer = (unsigned char***)malloc(sizeof(unsigned char**) * actual_number_of_variables);
+  vc = 0;
+  for(saveIter = saveLabels.begin(); saveIter!= saveLabels.end(); saveIter++) 
+  {
+    const VarLabel* label = saveIter->label;
+
+    const MaterialSubset* var_matls = saveIter->getMaterialSubset(level);
+    if (var_matls == NULL){
+      continue;
+    }
+
+    const TypeDescription* td = label->typeDescription();
+    const TypeDescription* subtype = td->getSubType();      
+
+    // set values depending on the variable's subtype
+    char data_type[512];
+    int sample_per_variable = -9;
+    size_t varSubType_size = -9;
+
+    switch( subtype->getType( )) {
+
+      case Uintah::TypeDescription::double_type:
+        sample_per_variable = 1;
+        varSubType_size = sample_per_variable * sizeof(double);
+        sprintf(data_type, "%d*float64", sample_per_variable); 
+        break;
+
+      case Uintah::TypeDescription::Vector:
+        sample_per_variable = 3;
+        varSubType_size = sample_per_variable * sizeof(double);
+        sprintf(data_type, "%d*float64", sample_per_variable);
+        break;
+
+      case Uintah::TypeDescription::int_type:
+        sample_per_variable = 1;
+        varSubType_size = sample_per_variable * sizeof(int);
+        sprintf(data_type, "%d*int32", sample_per_variable);
+        break;
+      default:
+        ostringstream warn;
+        warn << "DataArchiver::saveLabels_PIDX:: ("<< label->getName() << " " 
+             << td->getName() << " ) has not been implemented" << endl;
+        throw InternalError(warn.str(), __FILE__, __LINE__); 
+    }
+
+    //__________________________________
+    //  materials loop
+    for(int m=0;m<var_matls->size();m++){
+      int matlIndex = var_matls->get(m);
+      string var_mat_name;
+
+      if (var_matls->size() == 1) {
+        var_mat_name = label->getName();
+      } else {
+        std::ostringstream s;
+        s << m;
+        var_mat_name = label->getName() + "_m" + s.str();
+      }
+
+      PIDX_variable_create((char*)var_mat_name.c_str(), varSubType_size * 8, data_type, &(pc.variable[vc][m]));
+
+      patch_buffer[vcm] = (unsigned char**)malloc(sizeof(unsigned char*) * patches->size());
+
+      //__________________________________
+      //  patch Loop
+      for(int p=0;p<(type==CHECKPOINT_REDUCTION?1:patches->size());p++)
+      {
+        const Patch* patch;
+        int patchID;
+
+        if (type == CHECKPOINT_REDUCTION) {
+          patch = 0;
+          patchID = -1;
+
+        } else {
+          patch   = patches->get(p);
+          patchID = patch->getID();
+
+          IntVector hi_EC;
+          IntVector lo_EC;                                // compute the extents of the variable (CCVariable, SFC(*)Variable...etc)
+          patch->computeVariableExtents(td->getType(), label->getBoundaryLayer(), Ghost::None, 0, lo_EC, hi_EC);
+         
+          IntVector offset    = level->getExtraCells();
+          IntVector pidxLo    = lo_EC + offset;           // pidx array indexing starts at 0, must shift nExtraCells
+          IntVector nCells_EC = hi_EC - lo_EC;
+          int totalCells_EC   = nCells_EC.x() * nCells_EC.y() * nCells_EC.z();
+
+          /*`==========TESTING==========*/
+          proc0cout << rank <<" taskType: " << type << "  PIDX:  " << setw(15) <<label->getName() << "  "<< td->getName() << " Patch: " << patchID 
+                    << ",  sample_per_variable: " << sample_per_variable <<" varSubType_size: " << varSubType_size << " dataType: " << data_type 
+                    << " offset: " << pidxLo << " count: " << nCells_EC << " totalCells_EC " << totalCells_EC << endl; 
+          /*===========TESTING==========`*/
+
+          PIDX_point local_offset_point; 
+          PIDX_point local_box_count_point;
+
+          PIDX_set_point_5D(local_offset_point,    pidxLo.x(),    pidxLo.y(),    pidxLo.z(),   0, 0);
+          PIDX_set_point_5D(local_box_count_point, nCells_EC.x(), nCells_EC.y(), nCells_EC.z(), 1, 1);
+
+          //__________________________________
+          // allocate memory for the grid variables
+          unsigned char *t_buffer = NULL; 
+
+          size_t arraySize = varSubType_size * totalCells_EC;
+
+          t_buffer = (unsigned char*)malloc( arraySize );
+          memset(t_buffer, 0, arraySize );
+
+          patch_buffer[vcm][p] = (unsigned char*)malloc( arraySize );
+          memset( patch_buffer[vcm][p], 0, arraySize );
+
+          //__________________________________
+          //  Read in Array3 data to t-buffer
+          new_dw->emit(pc, label, matlIndex, patch, t_buffer);
+
+          //__________________________________
+          //  copy t_buffer -> patch_buffer
+          memcpy( patch_buffer[vcm][p], t_buffer, arraySize );
+          free(t_buffer);
+
+          PIDX_variable_write_data_layout(pc.variable[vc][m], local_offset_point, local_box_count_point, patch_buffer[vcm][p], PIDX_row_major);
+
+        }
+      }  //  Patches
+
+      PIDX_append_and_write_variable(pc.file, pc.variable[vc][m]);
+      vcm++;
+
+    }  //  Materials
+
+    vc++;
+  }  //  Variables
+
+  //__________________________________
+  //      DEBUGGING   This simply creates a dummy variable
+  float **PIDX_patch_buffer;
+  if (PIDX_debug == 1)
+  {
+    PIDX_variable_create("PIDX_test_variable", sizeof(float) * 8, FLOAT32, &(pc.variable[cc_var_count][0]));
+    PIDX_patch_buffer = (float**)malloc(sizeof(float*) * patches->size());
+
+    for(int p=0;p<(type==CHECKPOINT_REDUCTION?1:patches->size());p++)
+    {
+      const Patch* patch  = patches->get(p);
+      IntVector hiE       = patch->getExtraCellHighIndex();
+      IntVector lowE      = patch->getExtraCellLowIndex();
+      IntVector offset    = level->getExtraCells();
+      IntVector pidxLo    = lowE + offset;                                // pidx array indexing starts at 0, must shift nExtraCells
+      IntVector nCells_EC = hiE - lowE;
+      int totalCells_EC   = nCells_EC.x() * nCells_EC.y() * nCells_EC.z();
+
+      printf("[PIDX %d] [%d] Offset and Count %d %d %d : %d %d %d\n", rank, vc, lowE.x(), lowE.y(), lowE.z(), nCells_EC.x(), nCells_EC.y(), nCells_EC.z() );
+
+      PIDX_point local_offset_point, local_box_count_point;
+
+      PIDX_set_point_5D(local_offset_point,    pidxLo.x(),    pidxLo.y(),    pidxLo.z(),   0, 0);
+      PIDX_set_point_5D(local_box_count_point, nCells_EC.x(), nCells_EC.y(), nCells_EC.z(), 1, 1);
+
+      PIDX_patch_buffer[p] = (float*)malloc(sizeof(float) * totalCells_EC);
+      memset(PIDX_patch_buffer[p], 0, sizeof(float) * totalCells_EC);
+
+
+      for (int k = 0; k < nCells_EC.z(); k++) {
+        for (int j = 0; j < nCells_EC.y(); j++) {
+          for (int i = 0; i < nCells_EC.x(); i++) {
+            unsigned long long index = (unsigned long long) ( nCells_EC.x() * (nCells_EC.y() * k) + (nCells_EC.x() * j) + i );
+            PIDX_patch_buffer[p][index] = 100 + ((globalExtents[0] * globalExtents[1]*(pidxLo.z() + k)) +(globalExtents[0]*(pidxLo.y() + j)) + (pidxLo.x() + i));
+          }
+        }
+      }
+
+      PIDX_variable_write_data_layout(pc.variable[cc_var_count][0], local_offset_point, local_box_count_point, PIDX_patch_buffer[p], PIDX_row_major);
+
+    }  //  Patches
+    PIDX_append_and_write_variable(pc.file, pc.variable[cc_var_count][0]);
+  }  // debugging
+
+  //__________________________________
+  //  Start timers and clean up memory
+  double start_time, end_time, io_time, max_time;
+  start_time = MPI_Wtime();
+  PIDX_close(pc.file);
+  end_time = MPI_Wtime();
+
+  //__________________________________
+  // free buffers
+  for (int i=0;i<actual_number_of_variables;i++)
+  {
+    for(int p=0;p<(type==CHECKPOINT_REDUCTION?1:patches->size());p++)
+    {
+      free( patch_buffer[i][p] );
+      patch_buffer[i][p] = 0;
+    }
+    free( patch_buffer[i] );
+    patch_buffer[i] = 0;
+  }
+  free(patch_buffer);
+  patch_buffer = 0;
+
+
+  if (PIDX_debug == 1)
+  {
+    for(int p=0;p<(type==CHECKPOINT_REDUCTION?1:patches->size());p++){
+      free(PIDX_patch_buffer[p]);
+    }
+    free(PIDX_patch_buffer);
+  }
+
+  //__________________________________
+  //  free memory
+  //for (int i=0; i<number_of_variables; i++)
+  for (int i=0; i<cc_var_count + PIDX_extra_field; i++)
+  {
+    free(pc.variable[i]);
+  }
+  free(pc.variable); 
+  pc.variable=0;
+
+  free(number_of_materials); 
+  number_of_materials=0;
+
+
+  //__________________________________
+  //  compute pidx runtime
+  io_time = end_time - start_time;
+  MPI_Allreduce(&io_time,&max_time, 1,MPI_DOUBLE,MPI_MAX, d_myworld->getComm() );
+
+  if (io_time == max_time){
+    cout << "Timestep = " << timeStep 
+         << " Global Volume = " << globalExtents[0] << "," << globalExtents[1]
+         << "," << globalExtents[2] << "," 
+         << " Throughput = " 
+         << (globalExtents[0]*globalExtents[1]*globalExtents[2]*number_of_variables*(sizeof(float)))/(1024.*1024.*max_time) << " MiB/sec " << " Max Time = " << max_time  
+         << " Number of variables = " << number_of_variables 
+         << endl;
+  }
+}
+
+//______________________________________________________________________
+//  Return a vector of saveItems with a common typeDescription
+std::vector<DataArchiver::SaveItem> 
+DataArchiver::findAllVariableTypes( std::vector< SaveItem >& saveLabels,
+                                    const TypeDescription::Type TD )
+{
+  std::vector< SaveItem > myItems;
+  myItems.empty();
+  
+  for(vector< SaveItem >::iterator saveIter = saveLabels.begin(); saveIter!= saveLabels.end(); saveIter++) {
+    const VarLabel* label = saveIter->label;
+    TypeDescription::Type myType = label->typeDescription()->getType();
+    
+    if( myType == TD){
+      myItems.push_back( *saveIter );
+    }
+  }
+  return myItems;
+}
 
 //______________________________________________________________________
 //
