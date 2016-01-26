@@ -2342,6 +2342,17 @@ DataArchiver::saveLabels_PIDX(std::vector< SaveItem >& saveLabels,
 
     switch( subtype->getType( )) {
 
+      case Uintah::TypeDescription::Stencil7:
+        sample_per_variable = 7;
+        varSubType_size = sample_per_variable * sizeof(double);
+        sprintf(data_type, "%d*float64", sample_per_variable); 
+        break;
+      case Uintah::TypeDescription::Stencil4:
+        sample_per_variable = 4;
+        varSubType_size = sample_per_variable * sizeof(double);
+        sprintf(data_type, "%d*float64", sample_per_variable); 
+        break;
+        
       case Uintah::TypeDescription::double_type:
         sample_per_variable = 1;
         varSubType_size = sample_per_variable * sizeof(double);
