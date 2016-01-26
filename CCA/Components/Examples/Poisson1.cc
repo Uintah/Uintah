@@ -51,9 +51,9 @@ Poisson1::Poisson1(const ProcessorGroup* myworld)
   : UintahParallelComponent(myworld)
 {
 
-  phi_label = VarLabel::create("phi", 
+  phi_label = VarLabel::create("phi",
                                NCVariable<double>::getTypeDescription());
-  residual_label = VarLabel::create("residual", 
+  residual_label = VarLabel::create("residual",
                                     sum_vartype::getTypeDescription());
 }
 
@@ -64,18 +64,18 @@ Poisson1::~Poisson1()
 }
 //______________________________________________________________________
 //
-void Poisson1::problemSetup(const ProblemSpecP& params, 
-                            const ProblemSpecP& restart_prob_spec, 
-                            GridP& /*grid*/, 
+void Poisson1::problemSetup(const ProblemSpecP& params,
+                            const ProblemSpecP& restart_prob_spec,
+                            GridP& /*grid*/,
                             SimulationStateP& sharedState)
 {
   sharedState_ = sharedState;
   ProblemSpecP poisson = params->findBlock("Poisson");
-  
+
   poisson->require("delt", delt_);
-  
+
   mymat_ = scinew SimpleMaterial();
-  
+
   sharedState->registerSimpleMaterial(mymat_);
 }
 //______________________________________________________________________
@@ -85,7 +85,7 @@ void Poisson1::scheduleInitialize(const LevelP& level,
 {
   Task* task = scinew Task("Poisson1::initialize",
                      this, &Poisson1::initialize);
-                     
+
   task->computes(phi_label);
   task->computes(residual_label);
   sched->addTask(task, level->eachPatch(), sharedState_->allMaterials());
@@ -103,7 +103,7 @@ void Poisson1::scheduleComputeStableTimestep(const LevelP& level,
 {
   Task* task = scinew Task("Poisson1::computeStableTimestep",
                      this, &Poisson1::computeStableTimestep);
-                     
+
   task->requires(Task::NewDW, residual_label);
   task->computes(sharedState_->get_delt_label(),level.get_rep());
   sched->addTask(task, level->eachPatch(), sharedState_->allMaterials());
@@ -111,12 +111,12 @@ void Poisson1::scheduleComputeStableTimestep(const LevelP& level,
 //______________________________________________________________________
 //
 void
-Poisson1::scheduleTimeAdvance( const LevelP& level, 
+Poisson1::scheduleTimeAdvance( const LevelP& level,
                                SchedulerP& sched)
 {
   Task* task = scinew Task("Poisson1::timeAdvance",
                      this, &Poisson1::timeAdvance);
-                     
+
   task->requires(Task::OldDW, phi_label, Ghost::AroundNodes, 1);
   task->computes(phi_label);
   task->computes(residual_label);
@@ -148,7 +148,7 @@ void Poisson1::initialize(const ProcessorGroup*,
   int matl = 0;
   for(int p=0;p<patches->size();p++){
     const Patch* patch = patches->get(p);
-    
+
     NCVariable<double> phi;
     new_dw->allocateAndPut(phi, phi_label, matl, patch);
     phi.initialize(0.);
@@ -160,12 +160,12 @@ void Poisson1::initialize(const ProcessorGroup*,
         int numChildren = patch->getBCDataArray(face)->getNumberChildren(matl);
         for (int child = 0; child < numChildren; child++) {
           Iterator nbound_ptr, nu;
-          
+
           const BoundCondBase* bcb = patch->getArrayBCValues(face,matl,"Phi",nu,
                                                              nbound_ptr,child);
-          
-          const BoundCond<double>* bc = 
-            dynamic_cast<const BoundCond<double>*>(bcb); 
+
+          const BoundCond<double>* bc =
+            dynamic_cast<const BoundCond<double>*>(bcb);
           double value = bc->getValue();
           for (nbound_ptr.reset(); !nbound_ptr.done();nbound_ptr++) {
             phi[*nbound_ptr]=value;
@@ -174,12 +174,12 @@ void Poisson1::initialize(const ProcessorGroup*,
           delete bcb;
         }
       }
-    }            
+    }
 #if 0
     if(patch->getBCType(Patch::xminus) != Patch::Neighbor){
        IntVector l,h;
        patch->getFaceNodes(Patch::xminus, 0, l, h);
- 
+
       for(NodeIterator iter(l,h); !iter.done(); iter++){
         if (phi[*iter] != 1.0) {
           cout << "phi_old[" << *iter << "]=" << phi[*iter] << endl;
@@ -199,15 +199,15 @@ namespace {
 
 struct TimeAdvanceFunctor
 {
-  constNCVariable<double> & m_phi;
-  NCVariable<double> & m_newphi;
+  KokkosView3<const double> m_phi;
+  KokkosView3<double> m_newphi;
   ColumnMajorRange<> m_range;
 
   typedef double value_type;
 
   TimeAdvanceFunctor( constNCVariable<double> & phi, NCVariable<double> & newphi, ColumnMajorRange<> & range )
-    : m_phi( phi )
-    , m_newphi( newphi )
+    : m_phi( phi.getKokkosView() )
+    , m_newphi( newphi.getKokkosView() )
     , m_range( range )
   {}
 
@@ -215,13 +215,12 @@ struct TimeAdvanceFunctor
   {
     int i, j, k;
     m_range(x,i,j,k);
-    const IntVector n(i,j,k);
 
-    m_newphi[n]=(1./6)*( m_phi[IntVector(i+1,j,k)] + m_phi[IntVector(i-1,j,k)] +
-                         m_phi[IntVector(i,j+1,k)] + m_phi[IntVector(i,j-1,k)] +
-                         m_phi[IntVector(i,j,k+1)] + m_phi[IntVector(i,j,k-1)] );
+    m_newphi(i,j,k)=(1./6)*( m_phi(i+1,j,k) + m_phi(i-1,j,k) +
+                         m_phi(i,j+1,k) + m_phi(i,j-1,k) +
+                         m_phi(i,j,k+1) + m_phi(i,j,k-1) );
 
-    double diff = m_newphi[n] - m_phi[n];
+    double diff = m_newphi(i,j,k) - m_phi(i,j,k);
     residual += diff * diff;
   }
 };
@@ -233,24 +232,24 @@ struct TimeAdvanceFunctor
 void Poisson1::timeAdvance(const ProcessorGroup*,
                            const PatchSubset* patches,
                            const MaterialSubset* matls,
-                           DataWarehouse* old_dw, 
+                           DataWarehouse* old_dw,
                            DataWarehouse* new_dw)
 {
   int matl = 0;
   for(int p=0;p<patches->size();p++){
     const Patch* patch = patches->get(p);
     constNCVariable<double> phi;
- 
+
     old_dw->get(phi, phi_label, matl, patch, Ghost::AroundNodes, 1);
     NCVariable<double> newphi;
- 
+
     new_dw->allocateAndPut(newphi, phi_label, matl, patch);
     newphi.copyPatch(phi, newphi.getLowIndex(), newphi.getHighIndex());
- 
+
     double residual=0;
     IntVector l = patch->getNodeLowIndex();
     IntVector h = patch->getNodeHighIndex();
- 
+
     l += IntVector(patch->getBCType(Patch::xminus) == Patch::Neighbor?0:1,
                    patch->getBCType(Patch::yminus) == Patch::Neighbor?0:1,
                    patch->getBCType(Patch::zminus) == Patch::Neighbor?0:1);
@@ -267,15 +266,15 @@ void Poisson1::timeAdvance(const ProcessorGroup*,
     }
 #else
     //__________________________________
-    //  Stencil 
+    //  Stencil
     for(NodeIterator iter(l, h);!iter.done(); iter++){
       IntVector n = *iter;
- 
+
       newphi[n]=(1./6)*(
         phi[n+IntVector(1,0,0)] + phi[n+IntVector(-1,0,0)] +
         phi[n+IntVector(0,1,0)] + phi[n+IntVector(0,-1,0)] +
         phi[n+IntVector(0,0,1)] + phi[n+IntVector(0,0,-1)]);
- 
+
       double diff = newphi[n] - phi[n];
       residual += diff * diff;
     }

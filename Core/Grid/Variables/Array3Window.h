@@ -36,11 +36,15 @@
 #include <Core/Exceptions/InternalError.h>
 #endif
 
+#ifdef UINTAH_ENABLE_KOKKOS
+#include <type_traits>
+#endif //UINTAH_ENABLE_KOKKOS
+
 /**************************************
 
 CLASS
    Array3Window
-   
+
 GENERAL INFORMATION
 
    Array3Window.h
@@ -50,7 +54,7 @@ GENERAL INFORMATION
    University of Utah
 
    Center for the Simulation of Accidental Fires and Explosions (C-SAFE)
-  
+
 
 KEYWORDS
    Array3Window
@@ -61,27 +65,55 @@ DESCRIPTION
    multiple patches per process, this allows one large block of memory
    to be accessed by each patch with local 0-based access from the
    patch.  The offset contained herein is a GLOBAL offset.
-  
+
 WARNING
-  
+
 ****************************************/
 
 namespace Uintah {
-   template<class T> class Array3Window : public RefCounted {
+
+#ifdef UINTAH_ENABLE_KOKKOS
+template <typename T>
+struct KokkosView3
+{
+  using view_type = Kokkos::View<T***, Kokkos::LayoutStride, Kokkos::MemoryTraits<Kokkos::Unmanaged> >;
+  using reference_type = typename view_type::reference_type;
+
+  template< typename IType, typename JType, typename KType >
+  KOKKOS_FORCEINLINE_FUNCTION
+  reference_type operator()(const IType & i, const JType & j, const KType & k ) const
+  { return m_view( i - m_i, j - m_j, k - m_k ); }
+
+  KokkosView3( const view_type & v, int i, int j, int k )
+    : m_view(v)
+    , m_i(i)
+    , m_j(j)
+    , m_k(k)
+  {}
+
+  view_type m_view;
+  int       m_i;
+  int       m_j;
+  int       m_k;
+};
+#endif //UINTAH_ENABLE_KOKKOS
+
+
+template<class T> class Array3Window : public RefCounted {
    public:
       Array3Window(Array3Data<T>*);
       Array3Window(Array3Data<T>*, const IntVector& offset,
                    const IntVector& lowIndex, const IntVector& highIndex);
       virtual ~Array3Window();
-      
+
       inline const Array3Data<T>* getData() const {
          return data;
       }
-     
+
       inline Array3Data<T>* getData() {
          return data;
       }
-      
+
       void copy(const Array3Window<T>*);
       void copy(const Array3Window<T>*, const IntVector& low, const IntVector& high);
       void initialize(const T&);
@@ -106,23 +138,37 @@ namespace Uintah {
           if (idx.z() < lowIndex.z() || idx.z() >= highIndex.z()) bad = true;
           if (bad) {
             std::ostringstream ostr;
-            ostr << "Index not in range of window (on get): index: " << idx << " window low " 
+            ostr << "Index not in range of window (on get): index: " << idx << " window low "
                  << lowIndex << " window high " << highIndex;
             throw SCIRun::InternalError(ostr.str(), __FILE__, __LINE__);
           }
 #endif
          return data->get(idx-offset);
       }
-      
+
+#ifdef UINTAH_ENABLE_KOKKOS
+      inline KokkosView3<T> getKokkosView() const
+      {
+        return KokkosView3<T>(  Kokkos::subview(   data->getKokkosData()
+                                 , Kokkos::pair<int,int>( lowIndex.x() - offset.x(), highIndex.x() - offset.x())
+                                 , Kokkos::pair<int,int>( lowIndex.y() - offset.y(), highIndex.y() - offset.y())
+                                 , Kokkos::pair<int,int>( lowIndex.z() - offset.z(), highIndex.z() - offset.z()) )
+                              ,offset.x()
+                              ,offset.y()
+                              ,offset.z()
+                            );
+      }
+#endif //UINTAH_ENABLE_KOKKOS
+
       ///////////////////////////////////////////////////////////////////////
-      // Return pointer to the data 
+      // Return pointer to the data
       // (**WARNING**not complete implementation)
       inline T* getPointer() {
         return data ? (data->getPointer()) : 0;
       }
-      
+
       ///////////////////////////////////////////////////////////////////////
-      // Return const pointer to the data 
+      // Return const pointer to the data
       // (**WARNING**not complete implementation)
       inline const T* getPointer() const {
         return (data->getPointer());
@@ -136,7 +182,7 @@ namespace Uintah {
       }
 
    private:
-      
+
       Array3Data<T>* data;
       IntVector offset;
       IntVector lowIndex;
@@ -144,20 +190,20 @@ namespace Uintah {
       Array3Window(const Array3Window<T>&);
       Array3Window<T>& operator=(const Array3Window<T>&);
    };
-   
+
    template<class T>
       void Array3Window<T>::initialize(const T& val)
       {
          data->initialize(val, lowIndex-offset, highIndex-offset);
       }
-   
+
    template<class T>
       void Array3Window<T>::copy(const Array3Window<T>* from)
       {
          data->copy(lowIndex-offset, highIndex-offset, from->data,
                     from->lowIndex-from->offset, from->highIndex-from->offset);
       }
-   
+
    template<class T>
       void Array3Window<T>::copy(const Array3Window<T>* from,
                                  const IntVector& low, const IntVector& high)
@@ -165,7 +211,7 @@ namespace Uintah {
          data->copy(low-offset, high-offset, from->data,
                     low-from->offset, high-from->offset);
       }
-   
+
    template<class T>
       void Array3Window<T>::initialize(const T& val,
                                        const IntVector& s,
@@ -179,14 +225,14 @@ namespace Uintah {
          CHECKARRAYBOUNDS(e.z(), s.z(), highIndex.z()+1);
          data->initialize(val, s-offset, e-offset);
       }
-   
+
    template<class T>
       Array3Window<T>::Array3Window(Array3Data<T>* data)
       : data(data), offset(0,0,0), lowIndex(0,0,0), highIndex(data->size())
       {
          data->addReference();
       }
-   
+
    template<class T>
       Array3Window<T>::Array3Window(Array3Data<T>* data,
                                     const IntVector& offset,
@@ -210,7 +256,7 @@ namespace Uintah {
           if (high.z() < 0 || high.z() > data->size().z()) bad = true;;
           if (bad) {
             std::ostringstream ostr;
-            ostr << "Data not in range of new window: data size: " << data->size() << " window low " 
+            ostr << "Data not in range of new window: data size: " << data->size() << " window low "
                  << lowIndex << " window high " << highIndex;
             throw SCIRun::InternalError(ostr.str(), __FILE__, __LINE__);
           }
@@ -225,7 +271,7 @@ namespace Uintah {
           ASSERT(offset == IntVector(INT_MAX, INT_MAX, INT_MAX));
         }
       }
-   
+
    template<class T>
       Array3Window<T>::~Array3Window()
       {
