@@ -172,7 +172,7 @@ namespace Uintah {
 
         IntVector getIndex() const
         { return iterator::getIndex(); }
-    };    
+    };
 
     public:
       Array3() {
@@ -216,7 +216,7 @@ namespace Uintah {
           d_window=0;
         }
         d_window = copy.d_window;
-      }    
+      }
 
       IntVector size() const {
         if (d_window)
@@ -280,6 +280,10 @@ namespace Uintah {
         return d_window;
       }
 
+#ifdef UINTAH_ENABLE_KOKKOS
+      inline KokkosView3<T>       getKokkosView() const { return d_window->getKokkosView(); }
+#endif //UINTAH_ENABLE_KOKKOS
+
       inline T& operator[](const IntVector& idx) {
         return d_window->get(idx);
       }
@@ -321,14 +325,14 @@ namespace Uintah {
       }
 
       ///////////////////////////////////////////////////////////////////////
-      // Return pointer to the data 
+      // Return pointer to the data
       // (**WARNING**not complete implementation)
       inline T* getPointer() {
         return (d_window->getPointer());
       }
 
       ///////////////////////////////////////////////////////////////////////
-      // Return const pointer to the data 
+      // Return const pointer to the data
       // (**WARNING**not complete implementation)
       inline const T* getPointer() const {
         return (d_window->getPointer());
@@ -380,7 +384,7 @@ namespace Uintah {
           for (int jj = l.y(); jj < h.y(); jj++) {
             for (int kk = l.z(); kk < h.z(); kk++) {
               out.width(10);
-              out << (*this)[IntVector(ii,jj,kk)] << " " ; 
+              out << (*this)[IntVector(ii,jj,kk)] << " " ;
             }
             out << endl;
           }
@@ -469,7 +473,7 @@ namespace Uintah {
                                 //hardware will manage it.
                                 //Brad Peterson and Alan Humphrey June 15th 2015
       }
-      d_window->addReference();      
+      d_window->addReference();
       if(oldWindow->removeReference())
       {
         delete oldWindow;

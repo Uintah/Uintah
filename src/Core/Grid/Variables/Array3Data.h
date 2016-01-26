@@ -31,6 +31,10 @@
 #include <Core/Util/FancyAssert.h>
 #include <Core/Malloc/Allocator.h>
 
+#ifdef UINTAH_ENABLE_KOKKOS
+#include <Kokkos_Core.hpp>
+#endif //UINTAH_ENABLE_KOKKOS
+
 namespace Uintah {
 
   using SCIRun::IntVector;
@@ -61,6 +65,11 @@ namespace Uintah {
 
    ****************************************/
 
+#ifdef UINTAH_ENABLE_KOKKOS
+template <typename T>
+using KokkosData = Kokkos::View<T***, Kokkos::LayoutLeft, Kokkos::MemoryTraits<Kokkos::Unmanaged> >;
+#endif //UINTAH_ENABLE_KOKKOS
+
   template<class T> class Array3Data : public RefCounted {
     public:
       Array3Data(const IntVector& size);
@@ -82,14 +91,14 @@ namespace Uintah {
       }
 
       ///////////////////////////////////////////////////////////////////////
-      // Return pointer to the data 
+      // Return pointer to the data
       // (**WARNING**not complete implementation)
       inline T* getPointer() {
         return d_data;
       }
 
       ///////////////////////////////////////////////////////////////////////
-      // Return const pointer to the data 
+      // Return const pointer to the data
       // (**WARNING**not complete implementation)
       inline const T* getPointer() const {
         return d_data;
@@ -101,6 +110,13 @@ namespace Uintah {
       inline T*** get3DPointer() const {
         return d_data3;
       }
+
+#ifdef UINTAH_ENABLE_KOKKOS
+      inline KokkosData<T> getKokkosData() const {
+        return KokkosData<T>(d_data, d_size.x(), d_size.y(), d_size.z());
+      }
+#endif //UINTAH_ENABLE_KOKKOS
+
 
     private:
       T*    d_data;
