@@ -2230,7 +2230,7 @@ DataArchiver::saveLabels_PIDX(std::vector< SaveItem >& saveLabels,
 {
 #if HAVE_PIDX
   //__________________________________
-  //
+  // define the extents for this variable type
   const Level* level = getLevel(patches);
   IntVector clowIndex;
   IntVector chighIndex;
@@ -2241,27 +2241,41 @@ DataArchiver::saveLabels_PIDX(std::vector< SaveItem >& saveLabels,
   globalExtents[1] = chighIndex[1] - clowIndex[1] ;
   globalExtents[2] = chighIndex[2] - clowIndex[2] ;
 
-  int number_of_variables;
-  int *number_of_materials;
+  int nSaveItems =  saveLabels.size();
+  vector<int> nSaveItemMatls (nSaveItems);
 
-  number_of_variables =  saveLabels.size();
-  number_of_materials = (int*)malloc(sizeof(int) * number_of_variables);            // This doesn't look correct  - Todd
   int rank = pg->myrank();
 
-  #if 0
-  //__________________________________
-  //  Debugging
 
-  if( rank == 0 ) {
-    printf("[PIDX] IDX file name = %s\n", (char*)idxFilename.c_str());
-    printf("[PIDX] The global volume = %d %d %d\n", globalExtents[0], globalExtents[1], globalExtents[2]);
-    printf("[PIDX] Current time step = %d\n", timeStep);
-    printf("[PIDX] Total number of variable = %d\n", number_of_variables);
+  //__________________________________
+  // Count up the number of variables that will 
+  // be output. Each variable can have a different number of 
+  // materials and live on a different number of levels
+  
+  int count = 0;
+  int actual_number_of_variables = 0;
+  
+  vector<SaveItem>::iterator saveIter;
+  for(saveIter = saveLabels.begin(); saveIter!= saveLabels.end(); saveIter++) {
+
+    const MaterialSubset* var_matls = saveIter->getMaterialSubset(level);
+    if (var_matls == NULL){
+      continue;
+    }
+    nSaveItemMatls[count] = var_matls->size();
+
+    count++;
+    actual_number_of_variables += var_matls->size();
   }
-  #endif
 
   //__________________________________
-  //  create subdirectory
+  // initialize PIDX variables
+  int PIDX_debug = 0;
+  int PIDX_extra_field = 0;
+  if (PIDX_debug == 1){
+    PIDX_extra_field = 1;
+  }
+
   proc0cout << " Dir: " << myDir.getName() << endl;
 
   string idxFilename( myDir.getName() );
@@ -2271,58 +2285,37 @@ DataArchiver::saveLabels_PIDX(std::vector< SaveItem >& saveLabels,
   // Can this be run in serial without doing a MPI initialize
   pc.initialize(idxFilename, timeStep, globalExtents, d_myworld->getComm());
 
-  int vc = 0;
-  int vcm = 0;
-  int cc_var_count = 0;
-  int actual_number_of_variables = 0;
-
-  //__________________________________
-  //  loop over variables
-  // Count up the number of variables that will 
-  // be output. Each variable can have a different number of 
-  // materials and live on a different number of levels
-  vector<SaveItem>::iterator saveIter;
-  for(saveIter = saveLabels.begin(); saveIter!= saveLabels.end(); saveIter++) {
-
-    const VarLabel* var = saveIter->label;         
-    const MaterialSubset* var_matls = saveIter->getMaterialSubset(level);
-    if (var_matls == NULL){
-      continue;
-    }
-
-    number_of_materials[cc_var_count]=var_matls->size();
-
-    cc_var_count++;
-    actual_number_of_variables += var_matls->size();
-  }
-
-  //__________________________________
-  //
-  int PIDX_debug = 0;
-  int PIDX_extra_field = 0;
-  if (PIDX_debug == 1){
-    PIDX_extra_field = 1;
-  }
-
   PIDX_set_variable_count(pc.file, actual_number_of_variables + PIDX_extra_field);
-  pc.variable = (PIDX_variable**) malloc(sizeof (PIDX_variable*) * (cc_var_count + PIDX_extra_field));
-  memset(pc.variable, 0, sizeof (PIDX_variable*) * cc_var_count);
+  pc.variable = (PIDX_variable**) malloc(sizeof (PIDX_variable*) * (nSaveItems + PIDX_extra_field));
+  memset(pc.variable, 0, sizeof (PIDX_variable*) * nSaveItems);
 
-  for(int i = 0 ; i < cc_var_count ; i++) {
-    pc.variable[i] = (PIDX_variable*) malloc(sizeof (PIDX_variable) * number_of_materials[i]);
-    memset(pc.variable[i], 0, sizeof (PIDX_variable) * number_of_materials[i]);
+  for(int i = 0 ; i < nSaveItems ; i++) {
+    pc.variable[i] = (PIDX_variable*) malloc(sizeof (PIDX_variable) * nSaveItemMatls[i]);
+    memset(pc.variable[i], 0, sizeof (PIDX_variable) * nSaveItemMatls[i]);
   }
 
-  for(int i = cc_var_count ; i < cc_var_count + PIDX_extra_field ; i++) {
+  for(int i = nSaveItems ; i < nSaveItems + PIDX_extra_field ; i++) {
     pc.variable[i] = (PIDX_variable*) malloc(sizeof (PIDX_variable));
     memset(pc.variable[i], 0, sizeof (PIDX_variable));
+  }
+
+  //__________________________________
+  //  PIDX Diagnostics
+  if( rank == 0 ) {
+    printf("[PIDX] IDX file name = %s\n", (char*)idxFilename.c_str());
+    printf("[PIDX] globalExtents = %d %d %d\n", globalExtents[0], globalExtents[1], globalExtents[2]);
+    printf("[PIDX] Time step     = %d\n", timeStep);
+    printf("[PIDX] Total number of variable = %d\n", nSaveItems);
   }
 
   //__________________________________
   //
   unsigned char ***patch_buffer;
   patch_buffer = (unsigned char***)malloc(sizeof(unsigned char**) * actual_number_of_variables);
-  vc = 0;
+  
+  int vc = 0;
+  int vcm = 0;
+  
   for(saveIter = saveLabels.begin(); saveIter!= saveLabels.end(); saveIter++) 
   {
     const VarLabel* label = saveIter->label;
@@ -2377,6 +2370,7 @@ DataArchiver::saveLabels_PIDX(std::vector< SaveItem >& saveLabels,
         throw InternalError(warn.str(), __FILE__, __LINE__); 
     }
 
+  
     //__________________________________
     //  materials loop
     for(int m=0;m<var_matls->size();m++){
@@ -2470,7 +2464,7 @@ DataArchiver::saveLabels_PIDX(std::vector< SaveItem >& saveLabels,
   float **PIDX_patch_buffer;
   if (PIDX_debug == 1)
   {
-    PIDX_variable_create("PIDX_test_variable", sizeof(float) * 8, FLOAT32, &(pc.variable[cc_var_count][0]));
+    PIDX_variable_create("PIDX_test_variable", sizeof(float) * 8, FLOAT32, &(pc.variable[nSaveItems][0]));
     PIDX_patch_buffer = (float**)malloc(sizeof(float*) * patches->size());
 
     for(int p=0;p<(type==CHECKPOINT_REDUCTION?1:patches->size());p++)
@@ -2503,10 +2497,10 @@ DataArchiver::saveLabels_PIDX(std::vector< SaveItem >& saveLabels,
         }
       }
 
-      PIDX_variable_write_data_layout(pc.variable[cc_var_count][0], local_offset_point, local_box_count_point, PIDX_patch_buffer[p], PIDX_row_major);
+      PIDX_variable_write_data_layout(pc.variable[nSaveItems][0], local_offset_point, local_box_count_point, PIDX_patch_buffer[p], PIDX_row_major);
 
     }  //  Patches
-    PIDX_append_and_write_variable(pc.file, pc.variable[cc_var_count][0]);
+    PIDX_append_and_write_variable(pc.file, pc.variable[nSaveItems][0]);
   }  // debugging
 
   //__________________________________
@@ -2542,17 +2536,12 @@ DataArchiver::saveLabels_PIDX(std::vector< SaveItem >& saveLabels,
 
   //__________________________________
   //  free memory
-  //for (int i=0; i<number_of_variables; i++)
-  for (int i=0; i<cc_var_count + PIDX_extra_field; i++)
+  for (int i=0; i<nSaveItems + PIDX_extra_field; i++)
   {
     free(pc.variable[i]);
   }
   free(pc.variable); 
   pc.variable=0;
-
-  free(number_of_materials); 
-  number_of_materials=0;
-
 
   //__________________________________
   //  compute pidx runtime
@@ -2564,8 +2553,8 @@ DataArchiver::saveLabels_PIDX(std::vector< SaveItem >& saveLabels,
          << " Global Volume = " << globalExtents[0] << "," << globalExtents[1]
          << "," << globalExtents[2] << "," 
          << " Throughput = " 
-         << (globalExtents[0]*globalExtents[1]*globalExtents[2]*number_of_variables*(sizeof(float)))/(1024.*1024.*max_time) << " MiB/sec " << " Max Time = " << max_time  
-         << " Number of variables = " << number_of_variables 
+         << (globalExtents[0]*globalExtents[1]*globalExtents[2] * nSaveItems * (sizeof(float)))/(1024.*1024.*max_time) << " MiB/sec " << " Max Time = " << max_time  
+         << " Number of variables " << nSaveItems 
          << endl;
   }
 #endif
