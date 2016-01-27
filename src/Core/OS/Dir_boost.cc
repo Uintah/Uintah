@@ -26,7 +26,7 @@
 
 #include <Core/Exceptions/ErrnoException.h>
 #include <Core/Exceptions/InternalError.h>
-
+#include <Core/Parallel/Parallel.h>
 #include <sci_defs/boost_defs.h>
 
 #include <sys/types.h>
@@ -242,7 +242,7 @@ Dir::createSubdirPlus( const string & sub )
   }
   
   if( tries > 1 ) {
-    cout << "WARNING:  Dir::createSubdirPlus() created the directory ("<< sub << ") after " << tries <<" attempts.\n";
+    cout << Uintah::Parallel::getMPIRank()<< " WARNING:  Dir::createSubdirPlus() created the directory ("<< sub << ") after " << tries <<" attempts.\n";
   }
   return myDir;
 }
