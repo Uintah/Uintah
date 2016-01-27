@@ -1,20 +1,66 @@
 #include "PIDXOutputContext.h"
+#include <Core/Exceptions/InternalError.h>
 #if HAVE_PIDX
 
 namespace Uintah 
 {
 
   PIDXOutputContext::PIDXOutputContext() 
-  {}
+  {
+    d_isInitialized = false;
 
+  }
+  //______________________________________________________________________
+  //
   PIDXOutputContext::~PIDXOutputContext() 
   {
-    PIDX_close_access(this->access);
+    if(d_isInitialized){
+      PIDX_close_access(this->access);
+    }
   }
 
-
-
+  //______________________________________________________________________
+  //  returns a vector of supported variables types
+  std::vector<TypeDescription::Type>
+  PIDXOutputContext::getSupportedVariableTypes(){
+    
+    std::vector<TypeDescription::Type> GridVarTypes;
+    GridVarTypes.empty();
+    GridVarTypes.push_back(TypeDescription::CCVariable );        // This is where you define what types are supported.
+    GridVarTypes.push_back(TypeDescription::SFCXVariable );
+    GridVarTypes.push_back(TypeDescription::SFCYVariable );
+    GridVarTypes.push_back(TypeDescription::SFCZVariable );
+    return GridVarTypes;
+  }
+ 
+  //______________________________________________________________________
+  //  This returns the directory name associated with each data type
+  std::string
+  PIDXOutputContext::getDirectoryName(TypeDescription::Type TD)
+  {
   
+    switch ( TD ){
+      case TypeDescription::CCVariable:
+        return "CCVars";  
+        break;
+      case TypeDescription::SFCXVariable:
+        return "SFCXVars";
+        break;
+      case TypeDescription::SFCYVariable:
+        return "SFCYVars";
+        break;
+      case TypeDescription::SFCZVariable:
+        return "SFCZVars";
+        break;
+      default:
+         throw SCIRun::InternalError("  PIDXOutputContext::getDirectoryName type description not supported", __FILE__, __LINE__);
+    }
+  } 
+ 
+ 
+  
+  //______________________________________________________________________
+  //
   void PIDXOutputContext::initialize(std::string filename, unsigned int timeStep, int globalExtents[3] ,MPI_Comm comm)
   {
 
@@ -45,7 +91,7 @@ namespace Uintah
     
     //PIDX_set_compression_type(this->file, PIDX_CHUNKING_ZFP);
     //PIDX_set_lossy_compression_bit_rate(this->file, 8);
-
+    d_isInitialized = true;
   }
 
 

@@ -1231,6 +1231,7 @@ DataArchiver::makeTimestepDirs(       Dir                            & baseDir,
   tname << "t" << setw(5) << setfill('0') << dir_timestep;
   *pTimestepDir = baseDir.getName() + "/" + tname.str();
 
+  //__________________________________
   // Create the directory for this timestep, if necessary
   // It is not gurantteed that the rank holding d_writeMeta will call 
   // outputTimstep to create dir before another rank begin to output data.
@@ -1246,6 +1247,8 @@ DataArchiver::makeTimestepDirs(       Dir                            & baseDir,
     ostringstream lname;
     lname << "l" << l;
     Dir ldir = tdir.createSubdirPlus( lname.str() );
+    
+    createPIDX_dirs( saveLabels,ldir );
   }
 }
 
@@ -2094,8 +2097,6 @@ DataArchiver::outputVariables(const ProcessorGroup * pg,
   //______________________________________________________________________
   //
   //  ToDo
-  //      Create CC, SFC(X,Y,Z) pidx directories and idx files  (stop gap for now)
-  //      move creation of directories to makeTimestepDirs()
   //      Add logic for saveAsFloats
   //      consolidate debugging variable output into main saveLabel loop
   //      Do we need patch_buffer?
@@ -2104,53 +2105,24 @@ DataArchiver::outputVariables(const ProcessorGroup * pg,
   //
   bool pidx_io =  true;
   
-  if (pidx_io == true && type != CHECKPOINT_REDUCTION)
-  {
-  
-    vector<TypeDescription::Type> GridVarTypes;
-    GridVarTypes.push_back(TypeDescription::CCVariable );
-    GridVarTypes.push_back(TypeDescription::SFCXVariable );
-    GridVarTypes.push_back(TypeDescription::SFCYVariable );
-    GridVarTypes.push_back(TypeDescription::SFCZVariable );
+  if (pidx_io == true && type != CHECKPOINT_REDUCTION){
+      
+    PIDXOutputContext pidx;
+    vector<TypeDescription::Type> GridVarTypes = pidx.getSupportedVariableTypes();
     
     // loop over the grid variable types.
-
     for(vector<TypeDescription::Type>::iterator iter = GridVarTypes.begin(); iter!= GridVarTypes.end(); iter++) {
       TypeDescription::Type TD = *iter;
-      Dir myDir;
       
       // find all variables of this type
       vector<SaveItem> saveTheseLabels;
       saveTheseLabels = findAllVariableTypes( saveLabels, TD );
       
-      // create the sub directories.  This should be moved upstream
       if( saveTheseLabels.size() > 0 ) {
-      
-        switch ( TD ){
-          case TypeDescription::CCVariable:
-            cout << "Working on CCVariables: " << endl;
-            myDir = ldir.createSubdir( "CCVars" );  
-            break;
+        string dirName = pidx.getDirectoryName( TD );
 
-          case TypeDescription::SFCXVariable:
-            cout << "Working on SFCXVariable: " << endl;
-            myDir = ldir.createSubdir( "SFCXVars" );
-            break;
+        Dir myDir = ldir.getSubdir( dirName );
 
-          case TypeDescription::SFCYVariable:
-            cout << "Working on SFCZVariable: " << endl;
-            myDir = ldir.createSubdir( "SFCYVars" );
-            break;
-
-          case TypeDescription::SFCZVariable:
-            cout << "Working on SFCZVariable: " << endl;
-            myDir = ldir.createSubdir( "SFCZVars" );
-            break;
-
-          default:
-             throw InternalError("planeExtract: (SFCXVariable>invalid data type", __FILE__, __LINE__);
-
-        }
         saveLabels_PIDX(saveTheseLabels, pg, patches, new_dw, type, TD, myDir);
       } 
     }
@@ -2219,8 +2191,6 @@ DataArchiver::saveLabels_PIDX(std::vector< SaveItem >& saveLabels,
     PIDX_extra_field = 1;
   }
 
-  proc0cout << " Dir: " << myDir.getName() << endl;
-
   string idxFilename( myDir.getName() );
   idxFilename = idxFilename + ".idx";
   PIDXOutputContext pc;
@@ -2247,7 +2217,6 @@ DataArchiver::saveLabels_PIDX(std::vector< SaveItem >& saveLabels,
   if( rank == 0 ) {
     printf("[PIDX] IDX file name = %s\n", (char*)idxFilename.c_str());
     printf("[PIDX] globalExtents = %d %d %d\n", globalExtents[0], globalExtents[1], globalExtents[2]);
-    printf("[PIDX] Time step     = %d\n", timeStep);
     printf("[PIDX] Total number of variable = %d\n", nSaveItems);
   }
 
@@ -2522,6 +2491,37 @@ DataArchiver::findAllVariableTypes( std::vector< SaveItem >& saveLabels,
   }
   return myItems;
 }
+
+
+//______________________________________________________________________
+//  Create the PIDX sub directories
+void
+DataArchiver::createPIDX_dirs( std::vector< SaveItem >& saveLabels,
+                               Dir& levelDir )
+{
+#if HAVE_PIDX
+
+  PIDXOutputContext pidx;
+  vector<TypeDescription::Type> GridVarTypes = pidx.getSupportedVariableTypes();
+
+  // loop over the grid variable types.
+
+  for(vector<TypeDescription::Type>::iterator iter = GridVarTypes.begin(); iter!= GridVarTypes.end(); iter++) {
+    TypeDescription::Type TD = *iter;
+
+    // find all variables of this type
+    vector<SaveItem> saveTheseLabels;
+    saveTheseLabels = findAllVariableTypes( saveLabels, TD );
+
+    // create the sub directories
+    if( saveTheseLabels.size() > 0 ) {
+      string dirName = pidx.getDirectoryName(TD);
+      Dir myDir = levelDir.createSubdirPlus( dirName );
+    }
+  }
+#endif
+}
+
 
 //______________________________________________________________________
 //

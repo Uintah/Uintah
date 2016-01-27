@@ -237,6 +237,8 @@ using SCIRun::Mutex;
 
      private:
      
+      //__________________________________
+      //         PIDX related
       //! output the all of the saveLabels in PIDX format
       void saveLabels_PIDX(std::vector< SaveItem >& saveLabels,
                            const ProcessorGroup * pg,
@@ -250,7 +252,12 @@ using SCIRun::Mutex;
       std::vector<DataArchiver::SaveItem> 
           findAllVariableTypes( std::vector< SaveItem >& saveLabels,
                                  const TypeDescription::Type TD );
+                                 
+      void createPIDX_dirs( std::vector< SaveItem >& saveLabels,
+                            Dir& levelDir );
      
+       
+       //__________________________________
        //! returns a ProblemSpecP reading the xml file xmlName.
        //! You will need to that you need to call ProblemSpec::releaseDocument
        ProblemSpecP loadDocument(std::string xmlName);     
