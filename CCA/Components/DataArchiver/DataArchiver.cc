@@ -102,7 +102,7 @@ DataArchiver::DataArchiver(const ProcessorGroup* myworld, int udaSuffix)
   d_saveP_x               = false;
   d_particlePositionName  = "p.x";
   d_usingReduceUda        = false;
-  d_usingPIDX             = false;
+  d_outputFileFormat      = UDA;
   //d_currentTime=-1;
   //d_currentTimestep=-1;
 
@@ -137,12 +137,12 @@ DataArchiver::problemSetup( const ProblemSpecP    & params,
   string type;
   p->getAttribute("type", type);
   if(type == "pidx" || type == "PIDX"){
-    d_usingPIDX = true;
+    d_outputFileFormat= PIDX;
   }
   
   // bulletproofing
 #ifndef HAVE_PIDX
-  if(d_usingPIDX){
+  if( d_outputFileFormat == PIDX ){
     ostringstream warn;
     warn << " ERROR:  To output with the PIDX file format, you must use the following in your configure line..." << endl;
     warn << "                 --with-pidx=<path to PIDX installation>" << endl;
@@ -1916,20 +1916,9 @@ DataArchiver::outputVariables(const ProcessorGroup * pg,
 
   // Not only lock to prevent multiple threads from writing over the same
   // file, but also lock because xerces (DOM..) has thread-safety issues.
+
+  if ( d_outputFileFormat==UDA ){
   
-  int uda_vis_dump = 1;
-#if HAVE_PIDX
-  uda_vis_dump = 0;
-#else
-  uda_vis_dump = 1;
-#endif
-  
-  int uda_checkpoint_dump = 0;
-  if (type == CHECKPOINT)
-    uda_checkpoint_dump = 1;
-  
-  if (uda_checkpoint_dump == 1 || uda_vis_dump == 1)
-  {
     d_outputLock.lock(); 
     { // make sure doc's constructor is called after the lock.
       ProblemSpecP doc; 
@@ -2124,7 +2113,7 @@ DataArchiver::outputVariables(const ProcessorGroup * pg,
   //      Do we need the memset calls?
   //      Move the timers upstream
   //
-  if ( d_usingPIDX && type != CHECKPOINT_REDUCTION){
+  if ( d_outputFileFormat == PIDX && type != CHECKPOINT_REDUCTION){
       
     PIDXOutputContext pidx;
     vector<TypeDescription::Type> GridVarTypes = pidx.getSupportedVariableTypes();
@@ -2520,7 +2509,7 @@ DataArchiver::createPIDX_dirs( std::vector< SaveItem >& saveLabels,
 {
 #if HAVE_PIDX
 
-  if(d_usingPIDX){
+  if(d_outputFileFormat==UDA){
     return;
   }
   
