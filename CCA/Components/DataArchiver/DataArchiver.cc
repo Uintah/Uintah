@@ -102,6 +102,7 @@ DataArchiver::DataArchiver(const ProcessorGroup* myworld, int udaSuffix)
   d_saveP_x               = false;
   d_particlePositionName  = "p.x";
   d_usingReduceUda        = false;
+  d_usingPIDX             = false;
   //d_currentTime=-1;
   //d_currentTimestep=-1;
 
@@ -125,215 +126,235 @@ void
 DataArchiver::problemSetup( const ProblemSpecP    & params,
                                   SimulationState * state )
 {
-   dbg << "Doing ProblemSetup \t\t\t\tDataArchiver"<< endl;
-   
-   d_sharedState = state;
-   d_upsFile = params;
+  dbg << "Doing ProblemSetup \t\t\t\tDataArchiver"<< endl;
+
+  d_sharedState = state;
+  d_upsFile = params;
+
+  ProblemSpecP p = params->findBlock("DataArchiver");
   
-   if (params->findBlock("ParticlePosition")) {
-     params->findBlock("ParticlePosition")->getAttribute("label",d_particlePositionName);
-   }
+  // PIDX related
+  string type;
+  p->getAttribute("type", type);
+  if(type == "pidx" || type == "PIDX"){
+    d_usingPIDX = true;
+  }
   
-   ProblemSpecP p = params->findBlock("DataArchiver");
+  // bulletproofing
+#ifndef HAVE_PIDX
+  if(d_usingPIDX){
+    ostringstream warn;
+    warn << " ERROR:  To output with the PIDX file format, you must use the following in your configure line..." << endl;
+    warn << "                 --with-pidx=<path to PIDX installation>" << endl;
+    throw ProblemSetupException(warn.str(), __FILE__, __LINE__);
+  }
+#endif
 
-   d_outputDoubleAsFloat = p->findBlock("outputDoubleAsFloat") != 0;
+  d_outputDoubleAsFloat = p->findBlock("outputDoubleAsFloat") != 0;
 
-   // set to false if restartSetup is called - we can't do it there
-   // as the first timestep doesn't have any tasks
-   d_outputInitTimestep = p->findBlock("outputInitTimestep") != 0;
-   
-   // problemSetup is called again from the Switcher to reset vars (and frequency) it wants to save
-   //   DO NOT get it again.  Currently the directory won't change mid-run, so calling problemSetup
-   //   will not change the directory.  What happens then, is even if a switched component wants a 
-   //   different uda name, it will not get one until sus restarts (i.e., when you switch, component
-   //   2's data dumps will be in whichever uda started sus.), which is not optimal.  So we disable
-   //   this feature until we can make the DataArchiver make a new directory mid-run.
-   if (d_filebase == "")
-     p->require("filebase", d_filebase);
+  // set to false if restartSetup is called - we can't do it there
+  // as the first timestep doesn't have any tasks
+  d_outputInitTimestep = p->findBlock("outputInitTimestep") != 0;
 
-   // get output timestep or time interval info
-   d_outputInterval = 0;
-   if (!p->get("outputTimestepInterval", d_outputTimestepInterval))
-     d_outputTimestepInterval = 0;
-     
-   if ( !p->get("outputInterval", d_outputInterval) && d_outputTimestepInterval == 0 )
-     d_outputInterval = 0.0; // default
+  // problemSetup is called again from the Switcher to reset vars (and frequency) it wants to save
+  //   DO NOT get it again.  Currently the directory won't change mid-run, so calling problemSetup
+  //   will not change the directory.  What happens then, is even if a switched component wants a 
+  //   different uda name, it will not get one until sus restarts (i.e., when you switch, component
+  //   2's data dumps will be in whichever uda started sus.), which is not optimal.  So we disable
+  //   this feature until we can make the DataArchiver make a new directory mid-run.
+  if (d_filebase == ""){
+    p->require("filebase", d_filebase);
+  }
 
-   if ( d_outputInterval != 0.0 && d_outputTimestepInterval != 0 )
-     throw ProblemSetupException("Use <outputInterval> or <outputTimestepInterval>, not both",
-                                 __FILE__, __LINE__);
-   
-   // set default compression mode - can be "tryall", "gzip", "rle", "rle, gzip", "gzip, rle", or "none"
-   string defaultCompressionMode = "";
-   if (p->get("compression", defaultCompressionMode)) {
-     VarLabel::setDefaultCompressionMode(defaultCompressionMode);
-   }
-   
-   // get the variables to save
-   d_saveLabelNames.clear(); // we can problemSetup multiple times on a component Switch, clear the old ones.
-   map<string, string> attributes;
-   SaveNameItem saveItem;
-   ProblemSpecP save = p->findBlock("save");
-
-   if( save == 0 ) {
-     proc0cout << "\nWARNING: No data will be saved as none was specified to be saved in the .ups file!\n\n";
-   }
-
-   while( save != 0 ) {
-      attributes.clear();
-      save->getAttributes(attributes);
-      saveItem.labelName = attributes["label"];
-      saveItem.compressionMode = attributes["compression"];
-      try {
-        saveItem.matls = ConsecutiveRangeSet(attributes["material"]);
-      }
-      catch (ConsecutiveRangeSetException) {
-        throw ProblemSetupException("'" + attributes["material"] + "'" +
-               " cannot be parsed as a set of material" +
-               " indices for saving '" + saveItem.labelName + "'",
-                                    __FILE__, __LINE__);
-      }
-
-      if (saveItem.matls.size() == 0)
-        // if materials aren't specified, all valid materials will be saved
-        saveItem.matls = ConsecutiveRangeSet::all;
-      
-      try {
-        // level values are normal for exact level values (i.e.,
-        //   0, 2-4 will save those levels.
-        //   Leave blank for all levels
-        //   Also handle negative values to be relative to the finest levels
-        //   I.e., -3--1 would be the top three levels.
-        saveItem.levels = ConsecutiveRangeSet(attributes["levels"]);
-      }
-      catch (ConsecutiveRangeSetException) {
-        throw ProblemSetupException("'" + attributes["levels"] + "'" +
-               " cannot be parsed as a set of levels" +
-               " for saving '" + saveItem.labelName + "'",
-                                    __FILE__, __LINE__);
-      }
-
-      if (saveItem.levels.size() == 0)
-        // if materials aren't specified, all valid materials will be saved
-        saveItem.levels = ConsecutiveRangeSet(ALL_LEVELS, ALL_LEVELS);
-      
-      //__________________________________
-      //  bullet proofing: must save p.x 
-      //  in addition to other particle variables "p.*"
-      if (saveItem.labelName == d_particlePositionName || saveItem.labelName == "p.xx") {
-         d_saveP_x = true;
-      }
-
-      string::size_type pos = saveItem.labelName.find("p.");
-      if ( pos != string::npos &&  saveItem.labelName != d_particlePositionName) {
-        d_saveParticleVariables = true;
-      }
-      
-      d_saveLabelNames.push_back(saveItem);
-      
-      save = save->findNextBlock("save");
-   }
-   if(d_saveP_x == false && d_saveParticleVariables == true) {
-     throw ProblemSetupException(" You must save " + d_particlePositionName + " when saving other particle variables",
-                                 __FILE__, __LINE__);
-   }     
-   
-   // get checkpoint information
-   d_checkpointInterval         = 0.0;
-   d_checkpointTimestepInterval = 0;
-   d_checkpointWalltimeStart    = 0;
-   d_checkpointWalltimeInterval = 0;
-   d_checkpointCycle            = 2; /* 2 is the smallest number that is safe
-                                     (always keeping an older copy for backup) */
-                          
-   ProblemSpecP checkpoint = p->findBlock("checkpoint");
-   if( checkpoint != 0 ) {
-
-     string interval, timestepInterval, walltimeStart, walltimeInterval, walltimeStartHours, walltimeIntervalHours, cycle;
-
-     attributes.clear();
-     checkpoint->getAttributes( attributes );
-      
-     interval              = attributes[ "interval" ];
-     timestepInterval      = attributes[ "timestepInterval" ];
-     walltimeStart         = attributes[ "walltimeStart" ];
-     walltimeInterval      = attributes[ "walltimeInterval" ];
-     walltimeStartHours    = attributes[ "walltimeStartHours" ];
-     walltimeIntervalHours = attributes[ "walltimeIntervalHours" ];
-     cycle                 = attributes[ "cycle" ];
-
-     if( interval != "" ) {
-       d_checkpointInterval = atof( interval.c_str() );
-     }
-     if( timestepInterval != "" ) {
-       d_checkpointTimestepInterval = atoi( timestepInterval.c_str() );
-     }
-     if( walltimeStart != "" ) {
-       d_checkpointWalltimeStart = atof( walltimeStart.c_str() );
-     }      
-     if( walltimeInterval != "" ) {
-       d_checkpointWalltimeInterval = atof( walltimeInterval.c_str() );
-     }
-     if( walltimeStartHours != "" ) {
-       d_checkpointWalltimeStart = atof( walltimeStartHours.c_str() ) * 3600.0;
-     }      
-     if( walltimeIntervalHours != "" ) {
-       d_checkpointWalltimeInterval = atof( walltimeIntervalHours.c_str() ) * 3600.0;
-     }
-     if( cycle != "" ) {
-       d_checkpointCycle = atoi( cycle.c_str() );
-     }
-
-     // Verify that an interval was specified:
-     if( interval == "" && timestepInterval == "" && walltimeInterval == "" && walltimeIntervalHours == "" ) {
-       throw ProblemSetupException( "ERROR: \n  <checkpoint> must specify either interval, timestepInterval, walltimeInterval",
-                                    __FILE__, __LINE__ );
-     }
-   }
-
-   // Can't use both checkpointInterval and checkpointTimestepInterval.
-   if (d_checkpointInterval != 0.0 && d_checkpointTimestepInterval != 0) {
-     throw ProblemSetupException("Use <checkpoint interval=...> or <checkpoint timestepInterval=...>, not both",
-                                 __FILE__, __LINE__);
-   }
-   // Can't have a walltimeStart without a walltimeInterval.
-   if (d_checkpointWalltimeStart != 0 && d_checkpointWalltimeInterval == 0) {
-     throw ProblemSetupException("<checkpoint walltimeStart must have a corresponding walltimeInterval",
-                                 __FILE__, __LINE__);
-   }
-   // Set walltimeStart to walltimeInterval if not specified.
-   if (d_checkpointWalltimeInterval != 0 && d_checkpointWalltimeStart == 0) {
-     d_checkpointWalltimeStart = d_checkpointWalltimeInterval;
-   }
-   //d_currentTimestep = 0;
-   
-   //int startTimestep;
-   //if (p->get("startTimestep", startTimestep)) {
-   //  d_currentTimestep = startTimestep - 1;
-   //}
+  // get output timestep or time interval info
+  d_outputInterval = 0;
+  if (!p->get("outputTimestepInterval", d_outputTimestepInterval)){
+    d_outputTimestepInterval = 0;
+  }
   
-   d_lastTimestepLocation   = "invalid";
-   d_isOutputTimestep       = false;
+  if ( !p->get("outputInterval", d_outputInterval) && d_outputTimestepInterval == 0 ){
+    d_outputInterval = 0.0; // default
+  }
 
-   // Set up the next output and checkpoint time.
-   d_nextOutputTime         = 0.0;
-   d_nextOutputTimestep     = d_outputInitTimestep?0:1;
-   d_nextCheckpointTime     = d_checkpointInterval; 
-   d_nextCheckpointTimestep = d_checkpointTimestepInterval+1;
+  if ( d_outputInterval != 0.0 && d_outputTimestepInterval != 0 ) {
+    throw ProblemSetupException("Use <outputInterval> or <outputTimestepInterval>, not both",__FILE__, __LINE__);
+  }
 
-   proc0cout << "Next checkpoint time is " << d_checkpointInterval << "\n";
+  // set default compression mode - can be "tryall", "gzip", "rle", "rle, gzip", "gzip, rle", or "none"
+  string defaultCompressionMode = "";
+  if (p->get("compression", defaultCompressionMode)) {
+    VarLabel::setDefaultCompressionMode(defaultCompressionMode);
+  }
 
-   if (d_checkpointWalltimeInterval > 0) {
-     d_nextCheckpointWalltime = d_checkpointWalltimeStart + (int) Time::currentSeconds();
-     if( Parallel::usingMPI() ) {
-       // Make sure we are all writing at same time.  When node clocks disagree,
-       // make decision based on processor zero time.
-       MPI_Bcast(&d_nextCheckpointWalltime, 1, MPI_INT, 0, d_myworld->getComm());
-     }
-   }
-   else { 
-     d_nextCheckpointWalltime = 0;
-   }
+  if (params->findBlock("ParticlePosition")) {
+    params->findBlock("ParticlePosition")->getAttribute("label",d_particlePositionName);
+  }
+
+  //__________________________________
+  // parse the variables to be saved
+  d_saveLabelNames.clear(); // we can problemSetup multiple times on a component Switch, clear the old ones.
+  map<string, string> attributes;
+  SaveNameItem saveItem;
+  ProblemSpecP save = p->findBlock("save");
+
+  if( save == 0 ) {
+    proc0cout << "\nWARNING: No data will be saved as none was specified to be saved in the .ups file!\n\n";
+  }
+
+  while( save != 0 ) {
+    attributes.clear();
+    save->getAttributes(attributes);
+    saveItem.labelName       = attributes["label"];
+    saveItem.compressionMode = attributes["compression"];
+    
+    try {
+      saveItem.matls = ConsecutiveRangeSet(attributes["material"]);
+    }
+    catch (ConsecutiveRangeSetException) {
+      throw ProblemSetupException("'" + attributes["material"] + "'" +
+             " cannot be parsed as a set of material" +
+             " indices for saving '" + saveItem.labelName + "'",
+                                  __FILE__, __LINE__);
+    }
+    
+    // if materials aren't specified, all valid materials will be saved
+    if (saveItem.matls.size() == 0){  
+      saveItem.matls = ConsecutiveRangeSet::all;
+    }
+
+
+    try {
+      // level values are normal for exact level values (i.e.,
+      //   0, 2-4 will save those levels.
+      //   Leave blank for all levels
+      //   Also handle negative values to be relative to the finest levels
+      //   I.e., -3--1 would be the top three levels.
+      saveItem.levels = ConsecutiveRangeSet(attributes["levels"]);
+    }
+    catch (ConsecutiveRangeSetException) {
+      throw ProblemSetupException("'" + attributes["levels"] + "'" +
+             " cannot be parsed as a set of levels" +
+             " for saving '" + saveItem.labelName + "'",
+                                  __FILE__, __LINE__);
+    }
+    
+    // if levels aren't specified, all valid materials will be saved
+    if (saveItem.levels.size() == 0) {
+      saveItem.levels = ConsecutiveRangeSet(ALL_LEVELS, ALL_LEVELS);
+    }
+    
+    //__________________________________
+    //  bullet proofing: must save p.x 
+    //  in addition to other particle variables "p.*"
+    if (saveItem.labelName == d_particlePositionName || saveItem.labelName == "p.xx") {
+      d_saveP_x = true;
+    }
+
+    string::size_type pos = saveItem.labelName.find("p.");
+    if ( pos != string::npos &&  saveItem.labelName != d_particlePositionName) {
+      d_saveParticleVariables = true;
+    }
+
+    d_saveLabelNames.push_back(saveItem);
+
+    save = save->findNextBlock("save");
+  }
+  
+  if(d_saveP_x == false && d_saveParticleVariables == true) {
+    throw ProblemSetupException(" You must save " + d_particlePositionName + " when saving other particle variables", __FILE__, __LINE__);
+  }     
+
+  //__________________________________
+  // get checkpoint information
+  d_checkpointInterval         = 0.0;
+  d_checkpointTimestepInterval = 0;
+  d_checkpointWalltimeStart    = 0;
+  d_checkpointWalltimeInterval = 0;
+  d_checkpointCycle            = 2; /* 2 is the smallest number that is safe
+                                    (always keeping an older copy for backup) */
+
+  ProblemSpecP checkpoint = p->findBlock("checkpoint");
+  if( checkpoint != 0 ) {
+
+    string interval, timestepInterval, walltimeStart, walltimeInterval, walltimeStartHours, walltimeIntervalHours, cycle;
+
+    attributes.clear();
+    checkpoint->getAttributes( attributes );
+
+    interval              = attributes[ "interval" ];
+    timestepInterval      = attributes[ "timestepInterval" ];
+    walltimeStart         = attributes[ "walltimeStart" ];
+    walltimeInterval      = attributes[ "walltimeInterval" ];
+    walltimeStartHours    = attributes[ "walltimeStartHours" ];
+    walltimeIntervalHours = attributes[ "walltimeIntervalHours" ];
+    cycle                 = attributes[ "cycle" ];
+
+    if( interval != "" ) {
+      d_checkpointInterval = atof( interval.c_str() );
+    }
+    if( timestepInterval != "" ) {
+      d_checkpointTimestepInterval = atoi( timestepInterval.c_str() );
+    }
+    if( walltimeStart != "" ) {
+      d_checkpointWalltimeStart = atof( walltimeStart.c_str() );
+    }      
+    if( walltimeInterval != "" ) {
+      d_checkpointWalltimeInterval = atof( walltimeInterval.c_str() );
+    }
+    if( walltimeStartHours != "" ) {
+      d_checkpointWalltimeStart = atof( walltimeStartHours.c_str() ) * 3600.0;
+    }      
+    if( walltimeIntervalHours != "" ) {
+      d_checkpointWalltimeInterval = atof( walltimeIntervalHours.c_str() ) * 3600.0;
+    }
+    if( cycle != "" ) {
+      d_checkpointCycle = atoi( cycle.c_str() );
+    }
+
+    // Verify that an interval was specified:
+    if( interval == "" && timestepInterval == "" && walltimeInterval == "" && walltimeIntervalHours == "" ) {
+      throw ProblemSetupException( "ERROR: \n  <checkpoint> must specify either interval, timestepInterval, walltimeInterval",
+                                   __FILE__, __LINE__ );
+    }
+  }
+
+  // Can't use both checkpointInterval and checkpointTimestepInterval.
+  if (d_checkpointInterval != 0.0 && d_checkpointTimestepInterval != 0) {
+    throw ProblemSetupException("Use <checkpoint interval=...> or <checkpoint timestepInterval=...>, not both",
+                                __FILE__, __LINE__);
+  }
+  // Can't have a walltimeStart without a walltimeInterval.
+  if (d_checkpointWalltimeStart != 0 && d_checkpointWalltimeInterval == 0) {
+    throw ProblemSetupException("<checkpoint walltimeStart must have a corresponding walltimeInterval",
+                                __FILE__, __LINE__);
+  }
+  // Set walltimeStart to walltimeInterval if not specified.
+  if (d_checkpointWalltimeInterval != 0 && d_checkpointWalltimeStart == 0) {
+    d_checkpointWalltimeStart = d_checkpointWalltimeInterval;
+  }
+
+  d_lastTimestepLocation   = "invalid";
+  d_isOutputTimestep       = false;
+
+  // Set up the next output and checkpoint time.
+  d_nextOutputTime         = 0.0;
+  d_nextOutputTimestep     = d_outputInitTimestep?0:1;
+  d_nextCheckpointTime     = d_checkpointInterval; 
+  d_nextCheckpointTimestep = d_checkpointTimestepInterval+1;
+
+  proc0cout << "Next checkpoint time is " << d_checkpointInterval << "\n";
+
+  if (d_checkpointWalltimeInterval > 0) {
+    d_nextCheckpointWalltime = d_checkpointWalltimeStart + (int) Time::currentSeconds();
+    if( Parallel::usingMPI() ) {
+      // Make sure we are all writing at same time.  When node clocks disagree,
+      // make decision based on processor zero time.
+      MPI_Bcast(&d_nextCheckpointWalltime, 1, MPI_INT, 0, d_myworld->getComm());
+    }
+  }
+  else { 
+    d_nextCheckpointWalltime = 0;
+  }
 }
 //______________________________________________________________________
 //
@@ -2103,9 +2124,7 @@ DataArchiver::outputVariables(const ProcessorGroup * pg,
   //      Do we need the memset calls?
   //      Move the timers upstream
   //
-  bool pidx_io =  true;
-  
-  if (pidx_io == true && type != CHECKPOINT_REDUCTION){
+  if ( d_usingPIDX && type != CHECKPOINT_REDUCTION){
       
     PIDXOutputContext pidx;
     vector<TypeDescription::Type> GridVarTypes = pidx.getSupportedVariableTypes();
@@ -2501,6 +2520,10 @@ DataArchiver::createPIDX_dirs( std::vector< SaveItem >& saveLabels,
 {
 #if HAVE_PIDX
 
+  if(d_usingPIDX){
+    return;
+  }
+  
   PIDXOutputContext pidx;
   vector<TypeDescription::Type> GridVarTypes = pidx.getSupportedVariableTypes();
 
