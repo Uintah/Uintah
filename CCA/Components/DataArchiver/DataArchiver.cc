@@ -1238,72 +1238,15 @@ DataArchiver::makeTimestepDirs(       Dir                            & baseDir,
   // the rank holding d_writeMeta is still compiling task graph. 
   // So every rank should try to create dir.
   //if(d_writeMeta) {
-    Dir tdir;
 
-    bool done = false;
-    int  tries = 0;
-
-    while( !done ) {
-
-      try {
-        tries++;
-
-        if( tries > 500 ) {
-          cout << "Tries is " << tries << "\n";
-          throw InternalError( "DataArchiver::outputTimstep(): Unable to create timestep directory!", __FILE__, __LINE__ );
-        }
-
-        tdir = baseDir.createSubdir(tname.str());
-        done = true;
-      }
-      catch( ErrnoException & e ) {
-        if( e.getErrno() == EEXIST ) {
-          done = true;
-          tdir = baseDir.getSubdir( tname.str() );
-        }
-      }
-    }
-
-    if( tries > 1 ) {
-      cout << d_myworld->myrank() << " - tries: " << tries << "\n";
-    }
-    
-    // Create the directory for this level, if necessary
-
-    for( int l = 0; l < numLevels; l++ ) {
-
-      tries = 0;
-      ostringstream lname;
-      lname << "l" << l;
-      Dir ldir;
-      
-      done = false;
-      while( !done ) {
-
-        try {
-          tries++;
-
-          if( tries > 500 ) {
-            cout << "2) Tries is " << tries << "\n";
-            throw InternalError( "DataArchiver::outputTimstep(): 2) Unable to create timestep directory!", __FILE__, __LINE__ );
-          }
-          
-          ldir = tdir.createSubdir( lname.str() );
-          done = true;
-        }
-        catch( ErrnoException & e ) {
-          if( e.getErrno() == EEXIST ) {
-            done = true;
-            ldir = tdir.getSubdir( lname.str() );
-          }
-        }
-      }
-      if( tries > 1 ) {
-        cout << d_myworld->myrank() << ": " << l << " - tries: " << tries << "\n";
-      }
-
-    } // end for( int l = 0 )
-//}
+  Dir tdir = baseDir.createSubdirPlus(tname.str());
+  
+  // Create the directory for this level, if necessary
+  for( int l = 0; l < numLevels; l++ ) {
+    ostringstream lname;
+    lname << "l" << l;
+    Dir ldir = tdir.createSubdirPlus( lname.str() );
+  }
 }
 
 
