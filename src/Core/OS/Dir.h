@@ -85,6 +85,10 @@ public:
   void move( const std::string & filename, Dir & destDir );
   
   Dir  createSubdir( const std::string & name );
+  
+  // tries 500 times to create a subdir
+  Dir  createSubdirPlus( const std::string & sub );
+  
   Dir  getSubdir(    const std::string & name ) const;
   bool exists();
   
