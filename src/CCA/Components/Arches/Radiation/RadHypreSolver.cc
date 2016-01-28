@@ -45,6 +45,7 @@ RadHypreSolver::RadHypreSolver(const ProcessorGroup* myworld)
    : d_myworld(myworld)
 {
   d_iteration = 0;
+  d_use7PointStencil = false; 
 }
 
 // ****************************************************************************
@@ -66,31 +67,35 @@ RadHypreSolver::problemSetup(const ProblemSpecP& params)
   if (d_kspType == "smg")
     d_kspType = "1";
   else
-  if (d_kspType == "pfmg")
-    d_kspType = "2";
-  else
+    if (d_kspType == "pfmg"){
+      d_kspType = "2";
+      d_use7PointStencil = true;
+    }else
   if (d_kspType == "gmres"){
     d_kspFix = "gmres";
     db->getWithDefault("pctype", d_pcType, "jacobi");
     if (d_pcType == "smg")
       d_kspType = "3";
     else
-      if (d_pcType == "pfmg")
+      if (d_pcType == "pfmg"){ // relax type of 1 is default, for pfmg, as is skip=1 
         d_kspType = "4";
-    else
-      if (d_pcType == "jacobi")
-        d_kspType = "5";
-  }
-  else
+        d_use7PointStencil = true;
+      }else{
+        if (d_pcType == "jacobi"){
+          d_kspType = "5";
+        }
+      }
+  }else
   if (d_kspType == "cg"){
     d_kspFix = "cg";
     db->getWithDefault("pctype", d_pcType, "pfmg");
     if (d_pcType == "smg")
         d_kspType = "6";
     else
-    if (d_pcType == "pfmg")
+    if (d_pcType == "pfmg"){
         d_kspType = "7";
-    else
+        d_use7PointStencil = true;
+    }else
     if (d_pcType == "jacobi")
         d_kspType = "8";
   }
@@ -124,34 +129,75 @@ RadHypreSolver::gridSetup(const ProcessorGroup*,
   by = 1;
   bz = 1;
   d_dim = 3;
-  d_stencilSize = 4;
+  d_stencilSize = (d_use7PointStencil) ? 7 : 4;
   d_nblocks = bx*by*bz;           //number of blocks per processor, now is set to 1
   d_stencilIndices = hypre_CTAlloc(int, d_stencilSize);
   d_offsets = hypre_CTAlloc(int*, d_stencilSize);   //Allocating memory for 7 point stencil but since I'm using symmetry, only 4 is needed
 
+  if(d_use7PointStencil){ 
 
-  d_offsets[0] = hypre_CTAlloc(int, 3); //Allocating memory for 3 d_dimension indexing
-  d_offsets[0][0] = 0;                  //setting the location of each stencil.
-  d_offsets[0][1] = 0;                  //First index is the stencil number.
-  d_offsets[0][2] = 1;                  //Second index is the [0,1,2]=[i,j,k]
-  if (plusZ)
-  d_offsets[0][2] = -1;
-  d_offsets[1]    = hypre_CTAlloc(int, 3);
-  d_offsets[1][0] = 0; 
-  d_offsets[1][1] = 1; 
-  if (plusY)
-  d_offsets[1][1] = -1;
-  d_offsets[1][2] = 0; 
-  d_offsets[2]    = hypre_CTAlloc(int, 3);
-  d_offsets[2][0] = 1;
-  if (plusX)
-  d_offsets[2][0] = -1; 
-  d_offsets[2][1] = 0; 
-  d_offsets[2][2] = 0; 
-  d_offsets[3]    = hypre_CTAlloc(int, 3);
-  d_offsets[3][0] = 0; 
-  d_offsets[3][1] = 0; 
-  d_offsets[3][2] = 0;
+    d_offsets[0] = hypre_CTAlloc(int, 3); 
+    d_offsets[1] = hypre_CTAlloc(int, 3); 
+    d_offsets[2] = hypre_CTAlloc(int, 3); 
+    d_offsets[3] = hypre_CTAlloc(int, 3); 
+    d_offsets[4] = hypre_CTAlloc(int, 3); 
+    d_offsets[5] = hypre_CTAlloc(int, 3); 
+    d_offsets[6] = hypre_CTAlloc(int, 3); 
+
+    d_offsets[0][0] = 0; // central                   
+    d_offsets[0][1] = 0;                  
+    d_offsets[0][2] = 0;                    
+                   
+    d_offsets[1][0] = 0; // top or bottom                   
+    d_offsets[1][1] = 0;                  
+    d_offsets[1][2] = plusZ ? -1 : 1;                    
+                   
+    d_offsets[2][0] = 0; // north or south                   
+    d_offsets[2][1] = plusY ? -1 : 1;                    
+    d_offsets[2][2] = 0;                  
+                   
+    d_offsets[3][0] = plusX ? -1 : 1;  // east or west                    
+    d_offsets[3][1] = 0;                    
+    d_offsets[3][2] = 0;                  
+                   
+    // the following are to hold zeros, for radiation
+    d_offsets[4][0] = 0; // top or bottom                   
+    d_offsets[4][1] = 0;                  
+    d_offsets[4][2] = plusZ ? 1 : -1;                    
+                   
+    d_offsets[5][0] = 0; // north or south                   
+    d_offsets[5][1] = plusY ? 1 : -1;                    
+    d_offsets[5][2] = 0;                  
+                   
+    d_offsets[6][0] = plusX ? 1 : -1;  // east or west                    
+    d_offsets[6][1] = 0;                    
+    d_offsets[6][2] = 0;                  
+
+
+  }else{
+    d_offsets[0] = hypre_CTAlloc(int, 3); //Allocating memory for 3 d_dimension indexing
+    d_offsets[0][0] = 0;                  //setting the location of each stencil.
+    d_offsets[0][1] = 0;                  //First index is the stencil number.
+    d_offsets[0][2] = 1;                  //Second index is the [0,1,2]=[i,j,k]
+    if (plusZ)
+      d_offsets[0][2] = -1;
+    d_offsets[1]    = hypre_CTAlloc(int, 3);
+    d_offsets[1][0] = 0; 
+    d_offsets[1][1] = 1; 
+    if (plusY)
+      d_offsets[1][1] = -1;
+    d_offsets[1][2] = 0; 
+    d_offsets[2]    = hypre_CTAlloc(int, 3);
+    d_offsets[2][0] = 1;
+    if (plusX)
+      d_offsets[2][0] = -1; 
+    d_offsets[2][1] = 0; 
+    d_offsets[2][2] = 0; 
+    d_offsets[3]    = hypre_CTAlloc(int, 3);
+    d_offsets[3][0] = 0; 
+    d_offsets[3][1] = 0; 
+    d_offsets[3][2] = 0;
+  }
      
   d_ilower = hypre_CTAlloc(int*, d_nblocks);
   d_iupper = hypre_CTAlloc(int*, d_nblocks);
@@ -276,22 +322,38 @@ RadHypreSolver::setMatrix(const ProcessorGroup* pc,
     d_stencilIndices[s] = s;
   }
   
-  for (int colZ = idxLo.z(); colZ <= idxHi.z(); colZ ++) {
-    for (int colY = idxLo.y(); colY <= idxHi.y(); colY ++) {
-      for (int colX = idxLo.x(); colX <= idxHi.x(); colX ++) {
-        d_value[i] = -AB[IntVector(colX,colY,colZ)];
-        d_value[i+1] = -AS[IntVector(colX,colY,colZ)];
-        d_value[i+2] = -AW[IntVector(colX,colY,colZ)];
-        d_value[i+3] = AP[IntVector(colX,colY,colZ)];
-
+  if(d_use7PointStencil){  
+    for (int colZ = idxLo.z(); colZ <= idxHi.z(); colZ ++) {
+      for (int colY = idxLo.y(); colY <= idxHi.y(); colY ++) {
+        for (int colX = idxLo.x(); colX <= idxHi.x(); colX ++) {
+          d_value[i] = AP[IntVector(colX,colY,colZ)];
+          d_value[i+1] = -AB[IntVector(colX,colY,colZ)];
+          d_value[i+2] = -AS[IntVector(colX,colY,colZ)];
+          d_value[i+3] = -AW[IntVector(colX,colY,colZ)];
+          d_value[i+4] = 0;
+          d_value[i+5] = 0;
+          d_value[i+6] = 0;
+          i = i + d_stencilSize;
+        }
+      }
+    }
+  }else{
+    for (int colZ = idxLo.z(); colZ <= idxHi.z(); colZ ++) {
+      for (int colY = idxLo.y(); colY <= idxHi.y(); colY ++) {
+        for (int colX = idxLo.x(); colX <= idxHi.x(); colX ++) {
+          d_value[i] = -AB[IntVector(colX,colY,colZ)];
+          d_value[i+1] = -AS[IntVector(colX,colY,colZ)];
+          d_value[i+2] = -AW[IntVector(colX,colY,colZ)];
+          d_value[i+3] = AP[IntVector(colX,colY,colZ)];
 #if 0
-        cerr << "["<<colX<<","<<colY<<","<<colZ<<"]"<<endl;  
-        cerr << "value[AB]=" << d_value[i] << endl;
-        cerr << "value[AS]=" << d_value[i+1] << endl;
-        cerr << "value[AW]=" << d_value[i+2] << endl;
-        cerr << "value[AP]=" << d_value[i+3] << endl;
+          cerr << "["<<colX<<","<<colY<<","<<colZ<<"]"<<endl;  
+          cerr << "value[AB]=" << d_value[i] << endl;
+          cerr << "value[AS]=" << d_value[i+1] << endl;
+          cerr << "value[AW]=" << d_value[i+2] << endl;
+          cerr << "value[AP]=" << d_value[i+3] << endl;
 #endif
-            i = i + d_stencilSize;
+          i = i + d_stencilSize;
+        }
       }
     }
   }
@@ -479,6 +541,7 @@ RadHypreSolver::radLinearSolve( const int direcn, const bool print_all_info )
     }
 
     else if (d_kspType == "4") {  
+
       /* use symmetric PFMG as preconditioner */
       HYPRE_StructPFMGCreate(MPI_COMM_WORLD, &precond);
       HYPRE_StructPFMGSetMaxIter(precond, 1);
@@ -499,6 +562,7 @@ RadHypreSolver::radLinearSolve( const int direcn, const bool print_all_info )
     }
 
     else if (d_kspType == "5") {
+
       /* use two-step Jacobi as preconditioner */
       HYPRE_StructJacobiCreate(MPI_COMM_WORLD, &precond);
       HYPRE_StructJacobiSetMaxIter(precond, 2);
