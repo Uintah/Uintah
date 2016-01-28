@@ -69,7 +69,7 @@ namespace WasatchCore{
     //  - strain tensor       // registered by MomentumTransportEquationBase
     //  - convective flux     // registered by the MomentumTransportEquationBase
     //  - turbulent viscosity // SHOULD be registered by the MomentumTransportEquationBase. NOT READY YET.
-    //  - buoyancy? //
+    //  - buoyancy? //        // body forces are handled in the momentumequationbase
 
     Expr::ExpressionFactory& factory = *gc[ADVANCE_SOLUTION]->exprFactory;
 
