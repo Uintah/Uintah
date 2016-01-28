@@ -143,13 +143,14 @@ private:
   int *d_stencilIndices;
   int d_A_num_ghost[6];
   int d_iteration;
-  
+  bool d_use7PointStencil;    ///> Tells the Arches-Hypre solver to setup a 7 point stencil instead of the default 4 point stencil
+
   double d_convgTol; // convergence tolerence
   double d_initResid;
   double d_residual;
   double d_stored_residual;
   double init_norm;
-
+  
   double *d_value;
   const ProcessorGroup* d_myworld;
   std::map<const Patch*, int> d_petscGlobalStart;
