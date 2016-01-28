@@ -436,6 +436,7 @@
   <!-- NOTE: while the DataArchiver section is required, if no 'save' tags are specified,
              then no data will be saved (and no .uda dir will be created). -->
   <DataArchiver         spec="REQUIRED NO_DATA"
+                          attribute1="type        OPTIONAL STRING 'pidx, PIDX'"
                           children1="ONE_OF(CHILD outputInterval, outputTimestepInterval)" >
       <!-- Checkpoint: interval         - How often (in simulation time - seconds) to save a checkpoint.
                        cycle            - How many check points to keep around before one is overwritten (to save disk space).
