@@ -258,7 +258,7 @@ namespace WasatchCore{
   {
     const Category taskCat = ADVANCE_SOLUTION;
     // set bcs for particle momentum
-    bcHelper.apply_boundary_condition<ParticleField>( Expr::Tag(solution_variable_name(), Expr::STATE_NONE), taskCat );
+    bcHelper.apply_boundary_condition<ParticleField>( this->solnvar_np1_tag(), taskCat );
   }
   //==================================================================
 

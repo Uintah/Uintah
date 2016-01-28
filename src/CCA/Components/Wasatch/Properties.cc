@@ -188,7 +188,7 @@ namespace WasatchCore{
       const Uintah::ProblemSpecP modelParams = params->findBlock("ModelBasedOnMixtureFraction");
       Expr::Tag rhofTag = parse_nametag( modelParams->findBlock("DensityWeightedMixtureFraction")->findBlock("NameTag") );
       Expr::Tag fTag = parse_nametag(modelParams->findBlock("MixtureFraction")->findBlock("NameTag"));
-      if( densLevel != NORMAL ) rhofTag.reset_context( Expr::STATE_NONE );
+      if( densLevel != NORMAL ) rhofTag.reset_context( Expr::STATE_NP1 );
       rhofTag.reset_name( rhofTag.name() + scalarTagNameAppend );
 
       typedef DensFromMixfrac<SVolField>::Builder DensCalc;
@@ -223,8 +223,8 @@ namespace WasatchCore{
       // levels since this will be using STATE_NONE information as opposed to
       // potentially STATE_N information.
       if( densLevel != NORMAL ){
-        rhofTag.reset( rhofTag.name() + scalarTagNameAppend, Expr::STATE_NONE );
-        rhohTag.reset( rhohTag.name() + scalarTagNameAppend, Expr::STATE_NONE );
+        rhofTag.reset( rhofTag.name() + scalarTagNameAppend, Expr::STATE_NP1 );
+        rhohTag.reset( rhohTag.name() + scalarTagNameAppend, Expr::STATE_NP1 );
         heatLossTag.reset_name( heatLossTag.name() + scalarTagNameAppend );
       }
 
@@ -460,10 +460,11 @@ namespace WasatchCore{
     gc[ADVANCE_SOLUTION]->exprFactory->register_expression( scinew DensExpr(theTagList,rhofTag,rho0,rho1) );
 
     if( doDenstPlus ){
+      std::cout << "doing density plus \n";
       const TagNames& names = TagNames::self();
 
       Expr::Tag rhoStar ( rhoTag .name()+names.star, rhoTag.context() );
-      Expr::Tag rhofStar( rhofTag.name(), Expr::STATE_NONE );
+      Expr::Tag rhofStar( rhofTag.name(), Expr::STATE_NP1 );
 
       const Expr::Tag drhodfStarTag("drhod" + fTag.name() + "*", Expr::STATE_NONE);
       const Expr::TagList theTagList( tag_list( rhoStar, drhodfStarTag ));

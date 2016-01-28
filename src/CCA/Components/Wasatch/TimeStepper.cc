@@ -172,7 +172,7 @@ namespace WasatchCore{
   {
     const std::string rhsName = rhsTag.name();
 
-    const Expr::Tag solnVarTag(solnVarName,Expr::STATE_NONE);
+    const Expr::Tag solnVarTag(solnVarName,Expr::STATE_NP1);
     const Expr::Tag rhsVarTag (rhsName,    Expr::STATE_NONE);
     
     std::set< FieldInfo<FieldT> >& fields = field_info_selctor<FieldT>();
