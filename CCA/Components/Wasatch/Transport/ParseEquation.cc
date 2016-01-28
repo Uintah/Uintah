@@ -630,8 +630,8 @@ namespace WasatchCore{
                                                      temperatureTag,
                                                      mixMWTag,
                                                      R,
-                                                     xBodyForceTag,
-                                                     xSrcTermTag,
+                                                     yBodyForceTag,
+                                                     ySrcTermTag,
                                                      gc,
                                                      momentumSpec,
                                                      turbParams );
@@ -650,8 +650,8 @@ namespace WasatchCore{
                                                      temperatureTag,
                                                      mixMWTag,
                                                      R,
-                                                     xBodyForceTag,
-                                                     xSrcTermTag,
+                                                     zBodyForceTag,
+                                                     zSrcTermTag,
                                                      gc,
                                                      momentumSpec,
                                                      turbParams );
@@ -668,6 +668,7 @@ namespace WasatchCore{
       
       // register total internal energy equation
       const Expr::TagList velTags = tag_list(xVelTag, yVelTag, zVelTag);
+      const Expr::TagList bodyForceTags = tag_list(xBodyForceTag,yBodyForceTag,zBodyForceTag);
       const Expr::Tag viscTag = (momentumSpec->findBlock("Viscosity")) ? parse_nametag( momentumSpec->findBlock("Viscosity")->findBlock("NameTag") ) : Expr::Tag();
       std::string rhoETotal;
       Uintah::ProblemSpecP energySpec = momentumSpec->findBlock("EnergyEquation");
@@ -677,7 +678,7 @@ namespace WasatchCore{
         throw Uintah::ProblemSetupException( msg.str(), __FILE__, __LINE__ );
       }
       momentumSpec->findBlock("EnergyEquation")->get("SolutionVariable", rhoETotal);
-      EquationBase* totalEEq = scinew TotalInternalEnergyTransportEquation(rhoETotal, momentumSpec->findBlock("EnergyEquation"), gc, rhoTag, temperatureTag, TagNames::self().pressure, velTags, viscTag, TagNames::self().dilatation , turbParams);
+      EquationBase* totalEEq = scinew TotalInternalEnergyTransportEquation(rhoETotal, momentumSpec->findBlock("EnergyEquation"), gc, rhoTag, temperatureTag, TagNames::self().pressure, velTags, bodyForceTags, viscTag, TagNames::self().dilatation , turbParams);
       adaptors.push_back( scinew EqnTimestepAdaptor<SVolField>(totalEEq) );
 
     } else {

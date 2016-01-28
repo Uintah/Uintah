@@ -433,6 +433,7 @@ namespace WasatchCore {
                                         const Expr::Tag& temperatureTag,
                                         const Expr::Tag& pressureTag,
                                         const Expr::TagList& velTags,
+                                        const Expr::TagList& bodyForceTags,
                                         const Expr::Tag& viscTag,
                                         const Expr::Tag& dilTag,
                                         const TurbulenceParameters& turbulenceParams )
@@ -444,7 +445,8 @@ namespace WasatchCore {
       kineticEnergyTag_( "kinetic energy", Expr::STATE_NONE ),
       temperatureTag_( temperatureTag ),
       pressureTag_( TagNames::self().pressure ),
-      velTags_( velTags )
+      velTags_( velTags ),
+      bodyForceTags_(bodyForceTags)
   {
     const TagNames& tags = TagNames::self();
     Expr::ExpressionFactory& solnFactory = *gc[ADVANCE_SOLUTION]->exprFactory;
@@ -472,6 +474,38 @@ namespace WasatchCore {
 
     // attach viscous dissipation expression to the RHS as a source
     solnFactory.attach_dependency_to_expression(visDisTag, this->rhsTag_);
+
+    //----------------------------------------------------------
+    // body force tags
+    typedef ExprAlgebra<SVolField> ExprAlgbr;
+    const Expr::Tag rhoTag(this->densityTag_.name(), Expr::STATE_DYNAMIC);
+    if (bodyForceTags_[0] != Expr::Tag()) {
+      const Expr::Tag xBodyForceWorkTag("xBodyForceWork", Expr::STATE_NONE);
+      const Expr::TagList theTagList( tag_list( rhoTag, velTags_[0], bodyForceTags_[0] ) );
+      solnFactory.register_expression( new ExprAlgbr::Builder( xBodyForceWorkTag,
+                                                               theTagList,
+                                                                ExprAlgbr::PRODUCT ) );
+      solnFactory.attach_dependency_to_expression(xBodyForceWorkTag, this->rhsTag_);
+    }
+    
+    if (bodyForceTags_[1] != Expr::Tag()) {
+      const Expr::Tag yBodyForceWorkTag("yBodyForceWork", Expr::STATE_NONE);
+      const Expr::TagList theTagList( tag_list( rhoTag, velTags_[1], bodyForceTags_[1] ) );
+      solnFactory.register_expression( new ExprAlgbr::Builder( yBodyForceWorkTag,
+                                                              theTagList,
+                                                              ExprAlgbr::PRODUCT ) );
+      solnFactory.attach_dependency_to_expression(yBodyForceWorkTag, this->rhsTag_);
+    }
+
+    if (bodyForceTags_[2] != Expr::Tag()) {
+      const Expr::Tag zBodyForceWorkTag("zBodyForceWork", Expr::STATE_NONE);
+      const Expr::TagList theTagList( tag_list( rhoTag, velTags_[2], bodyForceTags_[2] ) );
+      solnFactory.register_expression( new ExprAlgbr::Builder( zBodyForceWorkTag,
+                                                              theTagList,
+                                                              ExprAlgbr::PRODUCT ) );
+      solnFactory.attach_dependency_to_expression(zBodyForceWorkTag, this->rhsTag_);
+    }
+
   }
 
   //---------------------------------------------------------------------------

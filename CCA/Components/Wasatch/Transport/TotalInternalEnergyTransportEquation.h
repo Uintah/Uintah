@@ -70,6 +70,7 @@ namespace WasatchCore {
                                           const Expr::Tag& temperatureTag,
                                           const Expr::Tag& pressureTag,
                                           const Expr::TagList& velTags,
+                                          const Expr::TagList& bodyForceTags,
                                           const Expr::Tag& viscTag,
                                           const Expr::Tag& dilTag,
                                           const TurbulenceParameters& turbulenceParams );
@@ -85,7 +86,7 @@ namespace WasatchCore {
 
     Uintah::ProblemSpecP parserParams_;
     const Expr::Tag kineticEnergyTag_, temperatureTag_, pressureTag_;
-    const Expr::TagList velTags_;
+    const Expr::TagList velTags_, bodyForceTags_;
   };
 
 } /* namespace WasatchCore */
