@@ -287,7 +287,7 @@ namespace WasatchCore{
     {
       const Category taskCat = ADVANCE_SOLUTION;
       // set bcs for momentum - use the TIMEADVANCE expression
-      bcHelper.apply_boundary_condition<FieldT>( Expr::Tag(this->solnVarName_,Expr::STATE_NONE), taskCat );
+      bcHelper.apply_boundary_condition<FieldT>( this->solnvar_np1_tag(), taskCat );
       // set bcs for velocity
       bcHelper.apply_boundary_condition<FieldT>( this->rhs_tag(), taskCat, true );
     }

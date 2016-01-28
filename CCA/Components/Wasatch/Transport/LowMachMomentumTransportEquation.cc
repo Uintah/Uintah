@@ -269,7 +269,7 @@ namespace WasatchCore{
       bcHelper.create_dummy_dependency<SpatialOps::SingleValueField, FieldT>(rhs_part_tag(this->solnVarName_), tag_list(tagNames.dt),ADVANCE_SOLUTION);
       
       // add momentum dummy modifiers
-      const Expr::Tag momTimeAdvanceTag(this->solnVarName_,Expr::STATE_NONE);
+      const Expr::Tag momTimeAdvanceTag(this->solnvar_np1_tag());
       bcHelper.create_dummy_dependency<SVolField, FieldT>(momTimeAdvanceTag, tag_list(this->densityTag_),ADVANCE_SOLUTION);
       bcHelper.create_dummy_dependency<FieldT, FieldT>(momTimeAdvanceTag, tag_list(this->thisVelTag_),ADVANCE_SOLUTION);
       if( initFactory.have_entry(this->thisVelTag_) ){
@@ -499,7 +499,7 @@ namespace WasatchCore{
     const Category taskCat = ADVANCE_SOLUTION;
     
     // set bcs for momentum - use the TIMEADVANCE expression
-    bcHelper.apply_boundary_condition<FieldT>( Expr::Tag(this->solnVarName_,Expr::STATE_NONE), taskCat );
+    bcHelper.apply_boundary_condition<FieldT>( this->solnvar_np1_tag(), taskCat );
     // set bcs for velocity
     bcHelper.apply_boundary_condition<FieldT>( this->thisVelTag_, taskCat );
     // set bcs for partial rhs
