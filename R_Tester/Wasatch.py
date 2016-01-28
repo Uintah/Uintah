@@ -135,8 +135,7 @@ decayIsotropicTurbulenceDSmag64_ups = modUPS( turbulenceDir, \
 #______________________________________________________________________
 
 DEBUGTESTS = [
-  ("lid-driven-cavity-3D-Re1000",   "lid-driven-cavity-3D-Re1000.ups",   8,  "All",   ["exactComparison"] ),
-  ("liddrivencavity3DRe1000rk3",   liddrivencavity3DRe1000rk3_ups,   8,  "All",  ["exactComparison","no_restart"] )  
+  ("varden-jet-2d",                    "varden-jet-2d.ups",   4,  "All",  ["exactComparison","no_restart","no_memoryTest"] )
   ]
 
 NIGHTLYTESTS = [
@@ -163,7 +162,7 @@ NIGHTLYTESTS = [
 	("particle-test-free-fall-ydir", "particle-test-free-fall-ydir.ups",   1,  "Linux",   ["exactComparison","no_restart","no_memoryTest"] ),
 	("particle-test-free-fall-zdir", "particle-test-free-fall-zdir.ups",   1,  "Linux",   ["exactComparison","no_restart","no_memoryTest"] ),		
   ("turbulent-flow-over-cavity",                         "turbulent-flow-over-cavity.ups",    8,  "Linux",  ["abs_tolerance=1e-8","no_restart","no_memoryTest","no_dbg"]                                          ),
-  ("coal-boiler-mini",                         "coal-boiler-mini.ups",    16,  "Linux",  ["exactComparison","no_restart","no_memoryTest"]                                          ),
+  ("coal-boiler-mini",                         "coal-boiler-mini.ups",    8,  "Linux",  ["exactComparison","no_restart","no_memoryTest"]                                          ),
   ("bc-linear-inlet-channel-flow-test",     "bc-linear-inlet-channel-flow-test.ups",             6,  "Linux",   ["exactComparison","no_restart","no_memoryTest"] ),
   ("bc-parabolic-inlet-channel-flow-test",  "bc-parabolic-inlet-channel-flow-test.ups",             6,  "Linux",   ["exactComparison","no_restart","no_memoryTest"] ),
   ("RMCRT-Burns-Christon", "RMCRT-Burns-Christon.ups",   8,  "Linux",   ["exactComparison","no_restart","no_memoryTest"] ),
@@ -186,11 +185,11 @@ NIGHTLYTESTS = [
   ("intrusion_flow_past_cylinder_xy",          "intrusion_flow_past_cylinder_xy.ups",    8,  "Linux",  ["exactComparison","no_restart","sus_options=-do_not_validate"] ),
   ("intrusion_flow_past_cylinder_xz",          "intrusion_flow_past_cylinder_xz.ups",    8,  "Linux",  ["exactComparison","no_restart","sus_options=-do_not_validate"] ),
   ("intrusion_flow_past_cylinder_yz",          "intrusion_flow_past_cylinder_yz.ups",    8,  "Linux",  ["exactComparison","no_restart","sus_options=-do_not_validate"] ),
-  ("intrusion_flow_past_objects_xy",           "intrusion_flow_past_objects_xy.ups",    16,  "Linux",  ["exactComparison","no_restart","sus_options=-do_not_validate"] ),
-  ("intrusion_flow_over_icse",                 "intrusion_flow_over_icse.ups",          16,  "Linux",  ["exactComparison","no_restart","sus_options=-do_not_validate"] ),
+  ("intrusion_flow_past_objects_xy",           "intrusion_flow_past_objects_xy.ups",    8,  "Linux",  ["exactComparison","no_restart","sus_options=-do_not_validate"] ),
+  ("intrusion_flow_over_icse",                 "intrusion_flow_over_icse.ups",          8,  "Linux",  ["exactComparison","no_restart","sus_options=-do_not_validate"] ),
   ("intrusion_flow_past_oscillating_cylinder_xy",          "intrusion_flow_past_oscillating_cylinder_xy.ups",    8,  "Linux",  ["exactComparison","no_restart","sus_options=-do_not_validate"] ),
   ("turb-lid-driven-cavity-3D-VREMAN",   "turb-lid-driven-cavity-3D-VREMAN.ups",   8,  "Linux",  ["exactComparison","no_restart","sus_options=-do_not_validate"] ),
-  ("projection_rk3_verification_dt0.01s",      "order-verification/projection_rk3_verification_dt0.01s.ups",   16,  "All",   ["exactComparison","no_restart","sus_options=-do_not_validate"] ),
+  ("projection_rk3_verification_dt0.01s",      "order-verification/projection_rk3_verification_dt0.01s.ups",   8,  "All",   ["exactComparison","no_restart","sus_options=-do_not_validate"] ),
   ("taylor-green-vortex-mms-pressure-src",      "taylor-green-vortex-mms-pressure-src.ups",   4,  "Linux",   ["exactComparison","no_restart","sus_options=-do_not_validate"] ),
   ("rk3-verification-ode",                     "rk3-verification-ode.ups",   1,  "Linux",   ["exactComparison","no_restart","sus_options=-do_not_validate"] ),
   ("rk3-verification-timedep-source",          "rk3-verification-timedep-source.ups",   1,  "Linux",   ["exactComparison","no_restart","sus_options=-do_not_validate"] ),
@@ -277,12 +276,12 @@ TURBULENCETESTS =[
 ]
 
 INTRUSIONTESTS=[
-  ("coal-boiler-mini",                         "coal-boiler-mini.ups",    16,  "All",  ["exactComparison","no_restart"]               ),
+  ("coal-boiler-mini",                         "coal-boiler-mini.ups",    8,  "All",  ["exactComparison","no_restart"]               ),
   ("intrusion_flow_past_cylinder_xy",          "intrusion_flow_past_cylinder_xy.ups",    8,  "All",  ["exactComparison","no_restart"] ),
   ("intrusion_flow_past_cylinder_xz",          "intrusion_flow_past_cylinder_xz.ups",    8,  "All",  ["exactComparison","no_restart"] ),
   ("intrusion_flow_past_cylinder_yz",          "intrusion_flow_past_cylinder_yz.ups",    8,  "All",  ["exactComparison","no_restart"] ),
-  ("intrusion_flow_past_objects_xy",           "intrusion_flow_past_objects_xy.ups",    16,  "All",  ["exactComparison","no_restart"] ),
-  ("intrusion_flow_over_icse",                 "intrusion_flow_over_icse.ups",          16,  "All",  ["exactComparison","no_restart"] ),
+  ("intrusion_flow_past_objects_xy",           "intrusion_flow_past_objects_xy.ups",     8,  "All",  ["exactComparison","no_restart"] ),
+  ("intrusion_flow_over_icse",                 "intrusion_flow_over_icse.ups",           8,  "All",  ["exactComparison","no_restart"] ),
   ("intrusion_flow_past_oscillating_cylinder_xy",          "intrusion_flow_past_oscillating_cylinder_xy.ups",    8,  "All",  ["exactComparison","no_restart"] ),
   ("turbulent-flow-over-cavity",                         "turbulent-flow-over-cavity.ups",    8,  "All",  ["abs_tolerance=1e-8","no_restart","no_memoryTest","no_dbg"] )
 #   ("clip-with-intrusions-test",           "clip-with-intrusions-test.ups",    4,  "All",  ["exactComparison","no_restart"] )
@@ -309,7 +308,7 @@ PROJECTIONTESTS=[
 ]
 
 RKTESTS=[
-  ("projection_rk3_verification_dt0.01s",      "order-verification/projection_rk3_verification_dt0.01s.ups",   16,  "All",   ["exactComparison","no_restart"] ),
+  ("projection_rk3_verification_dt0.01s",      "order-verification/projection_rk3_verification_dt0.01s.ups",   8,  "All",   ["exactComparison","no_restart"] ),
   ("rk3-verification-ode",                     "rk3-verification-ode.ups",   1,  "All",   ["exactComparison","no_restart"] ),
   ("rk3-verification-timedep-source",          "rk3-verification-timedep-source.ups",   1,  "All",   ["exactComparison","no_restart"] ),
   ("liddrivencavity3DRe1000rk3",   liddrivencavity3DRe1000rk3_ups,   8,  "All",  ["exactComparison","no_restart"] ),
