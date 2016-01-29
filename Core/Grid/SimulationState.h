@@ -389,7 +389,9 @@ public:
     int*    Ivalue;
     double* Dvalue;
     Vector* Vvalue;
-    bool    modified;
+    bool    modifiable; // If true the user may modify the value, otherwise it is read-only.
+    bool    modified;   // If true the variable was modified by the user.
+    bool    recompile;  // If true and the variable was modified force the task graph to be recompiled.
   };
   
   std::vector< modifiableVar > d_VisIt_modifiableVars;
