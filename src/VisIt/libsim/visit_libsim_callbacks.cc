@@ -451,7 +451,13 @@ void visit_UPSVariableTableCallback(char *val, void *cbdata)
       throw InternalError(" invalid data type", __FILE__, __LINE__); 
   }
 
+  // Set the modified flag to true so the component knows the variable
+  // was modified.
   var.modified = true;
+
+  // Changing this variable may require recompiling the task graph.
+  if( var.recompile )
+    simStateP->setRecompileTaskGraph( true );
 }
 
 //---------------------------------------------------------------------
