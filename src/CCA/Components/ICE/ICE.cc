@@ -74,6 +74,7 @@ extern SCIRun::Mutex cerrLock;
 
 #include <cfloat>
 #include <sci_defs/hypre_defs.h>
+#include <sci_defs/visit_defs.h>
 
 #ifdef HAVE_HYPRE
 #include <CCA/Components/Solvers/HypreSolver.h>
@@ -570,7 +571,31 @@ void ICE::problemSetup(const ProblemSpecP& prob_spec,
       }
     }
   }  // mpm
+  
+#ifdef HAVE_VISIT
+  // Running with VisIt add in the variable that the user change modify.
+  if( d_sharedState->GetVisIt() )
+  {
+    // variable 1
+    SimulationState::modifiableVar var;
+    var.name     = "ICE-OrderOfAdvection";
+    var.type     = Uintah::TypeDescription::int_type;
+    var.Ivalue   = &d_OrderOfAdvection;
+    var.modifiable = true;
+    var.recompile  = true;
+    var.modified   = false;
+    d_sharedState->d_VisIt_modifiableVars.push_back( var );
 
+    // variable 2
+    var.name     = "ICE-gravity";
+    var.type     = Uintah::TypeDescription::Vector;
+    var.Vvalue   = &d_gravity;
+    var.modifiable = true;
+    var.recompile  = false;
+    var.modified   = false;
+    d_sharedState->d_VisIt_modifiableVars.push_back( var );
+  }
+#endif
 }
 
 /*______________________________________________________________________
