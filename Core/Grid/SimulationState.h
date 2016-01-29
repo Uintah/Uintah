@@ -263,7 +263,7 @@ public:
   void resetStats();
   
   // timing statistics to test load balance
-  enum TimingStat
+  enum RunTimeStat
   {
     CompilationTime = 0,
     RegriddingTime,
@@ -279,7 +279,7 @@ public:
     MAX_TIMING_STATS
   };
 
-  InfoMapper< TimingStat, double > d_timingStats;
+  InfoMapper< RunTimeStat, double > d_runTimeStats;
 
   double getTotalTime();
   double getOverheadTime();

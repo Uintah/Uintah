@@ -361,17 +361,17 @@ visit_handle visit_ReadMetaData(void *cbdata)
     if (addProcId)
     {
       // Add in the processor runtime stats.
-      for( unsigned int i=0; i<simStateP->d_timingStats.size(); ++i )
+      for( unsigned int i=0; i<simStateP->d_runTimeStats.size(); ++i )
       {
 	visit_handle vmd = VISIT_INVALID_HANDLE;
           
 	if(VisIt_VariableMetaData_alloc(&vmd) == VISIT_OKAY)
         {
 	  std::string stat = std::string("processor/runtime/") + 
-	    simStateP->d_timingStats.getName( (SimulationState::TimingStat) i );
+	    simStateP->d_runTimeStats.getName( (SimulationState::TimingStat) i );
 
 	  std::string units = 
-	    simStateP->d_timingStats.getUnits( (SimulationState::TimingStat) i );
+	    simStateP->d_runTimeStats.getUnits( (SimulationState::TimingStat) i );
 
 	  VisIt_VariableMetaData_setName(vmd, stat.c_str());
 	  VisIt_VariableMetaData_setMeshName(vmd, mesh_for_procid.c_str());
@@ -403,7 +403,7 @@ visit_handle visit_ReadMetaData(void *cbdata)
 	      mpiScheduler->mpi_info_.getName( (MPIScheduler::TimingStat)i );
 
 	    std::string units = 
-	      simStateP->d_timingStats.getUnits( (SimulationState::TimingStat) i );
+	      simStateP->d_runTimeStats.getUnits( (SimulationState::TimingStat) i );
 
 	    VisIt_VariableMetaData_setName(vmd, stat.c_str());
 	    VisIt_VariableMetaData_setMeshName(vmd, mesh_for_procid.c_str());
@@ -1409,9 +1409,9 @@ visit_handle visit_SimGetVariable(int domain, const char *varname, void *cbdata)
 
       // Simulation State Timing stats
       else if( strncmp( varname, "processor/runtime/", 15 ) == 0 &&
-	       simStateP->d_timingStats.exists(varName) )
+	       simStateP->d_runTimeStats.exists(varName) )
       {
-	val = simStateP->d_timingStats.getValue( varName );
+	val = simStateP->d_runTimeStats.getValue( varName );
       }
 
       // MPI State Timing stats

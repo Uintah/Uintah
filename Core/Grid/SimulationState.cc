@@ -133,18 +133,18 @@ SimulationState::SimulationState(ProblemSpecP &ps)
   std::string timeStr("seconds");
   std::string bytesStr("bytes");
     
-  d_timingStats.insert( CompilationTime,    std::string("Compilation"),    timeStr, 0 );
-  d_timingStats.insert( RegriddingTime,     std::string("Regridding"),     timeStr, 0 );
-  d_timingStats.insert( RegriddingCompilationTime, std::string("RegriddingCompilation"), timeStr, 0 );
-  d_timingStats.insert( RegriddingCopyDataTime,  std::string("RegriddingCopyData"), timeStr, 0 );
-  d_timingStats.insert( LoadBalancerTime,   std::string("LoadBalancer"),   timeStr, 0 );
-  d_timingStats.insert( TaskExecTime,       std::string("TaskExec"),       timeStr, 0 );
-  d_timingStats.insert( TaskLocalCommTime,  std::string("TaskLocalComm"),  timeStr, 0 );
-  d_timingStats.insert( TaskGlobalCommTime, std::string("TaskGlobalComm"), timeStr, 0 );
-  d_timingStats.insert( TaskWaitCommTime,   std::string("TaskWaitComm"),   timeStr, 0 );
-  d_timingStats.insert( TaskWaitThreadTime, std::string("TaskWaitThread"), timeStr, 0 );
-  d_timingStats.insert( OutputTime,         std::string("Output"),         timeStr, 0 );
-  d_timingStats.validate( MAX_TIMING_STATS );
+  d_runTimeStats.insert( CompilationTime,    std::string("Compilation"),    timeStr, 0 );
+  d_runTimeStats.insert( RegriddingTime,     std::string("Regridding"),     timeStr, 0 );
+  d_runTimeStats.insert( RegriddingCompilationTime, std::string("RegriddingCompilation"), timeStr, 0 );
+  d_runTimeStats.insert( RegriddingCopyDataTime,  std::string("RegriddingCopyData"), timeStr, 0 );
+  d_runTimeStats.insert( LoadBalancerTime,   std::string("LoadBalancer"),   timeStr, 0 );
+  d_runTimeStats.insert( TaskExecTime,       std::string("TaskExec"),       timeStr, 0 );
+  d_runTimeStats.insert( TaskLocalCommTime,  std::string("TaskLocalComm"),  timeStr, 0 );
+  d_runTimeStats.insert( TaskGlobalCommTime, std::string("TaskGlobalComm"), timeStr, 0 );
+  d_runTimeStats.insert( TaskWaitCommTime,   std::string("TaskWaitComm"),   timeStr, 0 );
+  d_runTimeStats.insert( TaskWaitThreadTime, std::string("TaskWaitThread"), timeStr, 0 );
+  d_runTimeStats.insert( OutputTime,         std::string("Output"),         timeStr, 0 );
+  d_runTimeStats.validate( MAX_TIMING_STATS );
 
   resetStats();
 
@@ -544,7 +544,7 @@ Material* SimulationState::parseAndLookupMaterial(ProblemSpecP& params,
 //
 void SimulationState::resetStats()
 {
-  d_timingStats.reset( 0 );  
+  d_runTimeStats.reset( 0 );  
 }
 //__________________________________
 //
@@ -552,10 +552,10 @@ double SimulationState::getTotalTime()
 {
   double totalTime = 0;
   
-  for( unsigned int i=0; i<d_timingStats.size(); ++i )
+  for( unsigned int i=0; i<d_runTimeStats.size(); ++i )
   {
-    if( (TimingStat) i != OutputTime )
-      totalTime += d_timingStats[(TimingStat) i];
+    if( (RunTimeStat) i != OutputTime )
+      totalTime += d_runTimeStats[(RunTimeStat) i];
   }
 
   return totalTime;
@@ -565,11 +565,11 @@ double SimulationState::getTotalTime()
 double SimulationState::getOverheadTime()
 {
   // Sum up the average time for overhead related components.
-  return (d_timingStats[CompilationTime] +
-	  d_timingStats[RegriddingTime] +
-	  d_timingStats[RegriddingCompilationTime] +
-	  d_timingStats[RegriddingCopyDataTime] +
-	  d_timingStats[LoadBalancerTime]);
+  return (d_runTimeStats[CompilationTime] +
+	  d_runTimeStats[RegriddingTime] +
+	  d_runTimeStats[RegriddingCompilationTime] +
+	  d_runTimeStats[RegriddingCopyDataTime] +
+	  d_runTimeStats[LoadBalancerTime]);
 }
 
 //__________________________________

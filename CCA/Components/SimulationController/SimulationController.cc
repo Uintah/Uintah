@@ -705,6 +705,7 @@ SimulationController::printSimulationStats ( int timestep, double delt, double t
   std::vector<double_int>  toReduceMax;
   std::vector<double_int>  maxReduce;
   std::vector<const char*> statLabels;
+  std::vector<string>      statUnits;
 
   int    rank             = d_myworld->myrank();
 
@@ -715,14 +716,16 @@ SimulationController::printSimulationStats ( int timestep, double delt, double t
   toReduce.push_back(memuse);
   toReduceMax.push_back(double_int(memuse,rank));
   statLabels.push_back("Mem usage");
+  statUnits.push_back("MB");
 
-  for( int i=0; i<d_sharedState->d_timingStats.size(); ++i )
+  for( int i=0; i<d_sharedState->d_runTimeStats.size(); ++i )
   {
-    SimulationState::TimingStat stat = (SimulationState::TimingStat) i;
+    SimulationState::RunTimeStat stat = (SimulationState::RunTimeStat) i;
     
-    toReduce.push_back( d_sharedState->d_timingStats[ stat ] );
-    toReduceMax.push_back( double_int( d_sharedState->d_timingStats[ stat ], rank ) );
-    statLabels.push_back( d_sharedState->d_timingStats.getName( stat ).c_str() );
+    toReduce.push_back( d_sharedState->d_runTimeStats[ stat ] );
+    toReduceMax.push_back( double_int( d_sharedState->d_runTimeStats[ stat ], rank ) );
+    statLabels.push_back( d_sharedState->d_runTimeStats.getName( stat ).c_str() );
+    statUnits.push_back ( d_sharedState->d_runTimeStats.getUnits( stat ) );
   }
 
 #ifdef USE_PAPI_COUNTERS
@@ -858,7 +861,7 @@ SimulationController::printSimulationStats ( int timestep, double delt, double t
   if (istats.active()) {
     for (unsigned i = 1; i < statLabels.size(); i++) { // index 0 is memuse
       if (toReduce[i] > 0)
-        istats << "rank: " << d_myworld->myrank() << " " << statLabels[i] << " avg: " << toReduce[i] << "\n";
+        istats << "rank: " << d_myworld->myrank() << " " << left << setw(15) << statLabels[i] << " [" << statUnits[i] << "]: " << toReduce[i] << "\n";
     }
   } 
 
@@ -901,12 +904,13 @@ SimulationController::printSimulationStats ( int timestep, double delt, double t
     cout.flush();
 
     if (stats.active()) {
-      stats << left << setw(19)  << "  Description         Ave time:      max Time:      mpi proc:    100*(1-ave/max) '% load imbalance'\n";
+   //   stats << left << setw(19)  << "  Description         Ave time:      max Time:      mpi proc:    100*(1-ave/max) '% load imbalance'\n";
+      stats << left << setw(15)  << "  Description                 Ave:            max:      mpi proc:    100*(1-ave/max) '% load imbalance'\n";
 
       if(d_myworld->size()>1){
         for (unsigned i = 1; i < statLabels.size(); i++) { // index 0 is memuse
           if (maxReduce[i].val > 0) {
-            stats << "  "<< left << setw(19)<< statLabels[i]
+            stats << "  "<< left << setw(15)<< statLabels[i] << "[" <<setw(3)<<statUnits[i] << "]"
                   << " : " << setw(12) << avgReduce[i]
                   << " : " << setw(12) << maxReduce[i].val
                   << " : " << setw(10) << maxReduce[i].loc
