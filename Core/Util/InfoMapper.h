@@ -41,6 +41,7 @@ public:
   {
     d_values.clear();
     d_names.clear();
+    d_units.clear();
   };
 
   ~InfoMapper() {};
@@ -59,6 +60,7 @@ public:
   {
     d_values.clear();
     d_names.clear();
+    d_units.clear();
   };
   
   void reset( const T val )
@@ -107,12 +109,13 @@ public:
     }
   };
   
-  void insert( const E key, const std::string name )
+  void insert( const E key, const std::string name, const std::string units )
   {
     if( !exists( key ) && !exists( name ) )
     {
       d_values[key];
       d_names[key] = name;
+      d_units[key] = units;
     }
     else
     {
@@ -124,12 +127,14 @@ public:
     }
   };
   
-  void insert( const E key, const std::string name, const T value )
+  void insert( const E key, const std::string name, const std::string units,
+	       const T value )
   {
     if( !exists( key ) && !exists( name ) )
     {
       d_values[key] = value;
       d_names[key] = name;
+      d_units[key] = units;
     }
     else
     {
@@ -143,13 +148,16 @@ public:
   
   void erase( const E key )
   {
-    typename std::map< E, T >::iterator           eIter = d_values.find( key );
-    typename std::map< E, std::string >::iterator sIter = d_names.find( key );
+    typename std::map< E, T >::iterator           vIter = d_values.find( key );
+    typename std::map< E, std::string >::iterator nIter = d_names.find( key );
+    typename std::map< E, std::string >::iterator uIter = d_units.find( key );
     
-    if( eIter != d_values.end() && sIter != d_names.end() )
+    if( vIter != d_values.end() &&
+	nIter != d_names.end() && uIter != d_units.end() )
     {
       d_values.erase(key);
       d_names.erase(key);
+      d_units.erase(key);
     }
     else
     {
@@ -190,6 +198,13 @@ public:
     return d_names[ key ];
   };
 
+  std::string getUnits( const E key )
+  {
+    validKey( key );
+
+    return d_units[ key ];
+  };
+
   E getKey( const std::string name )
   {
     for( unsigned int i=0; i<d_names.size(); ++i )
@@ -204,6 +219,7 @@ public:
 private:  
   std::map< E, T > d_values;
   std::map< E, std::string > d_names;
+  std::map< E, std::string > d_units;
 };
 
 } // End namespace Uintah

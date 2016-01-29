@@ -130,17 +130,20 @@ SimulationState::SimulationState(ProblemSpecP &ps)
     overhead[i]=0;
   }
 
-  d_timingStats.insert( CompilationTime, std::string("Compilation"), 0 );
-  d_timingStats.insert( RegriddingTime,  std::string("Regridding"), 0 );
-  d_timingStats.insert( RegriddingCompilationTime, std::string("RegriddingCompilation"), 0 );
-  d_timingStats.insert( RegriddingCopyDataTime,  std::string("RegriddingCopyData"), 0 );
-  d_timingStats.insert( LoadBalancerTime,   std::string("LoadBalancer"), 0 );
-  d_timingStats.insert( TaskExecTime,       std::string("TaskExec"), 0 );
-  d_timingStats.insert( TaskLocalCommTime,  std::string("TaskLocalComm"), 0 );
-  d_timingStats.insert( TaskGlobalCommTime, std::string("TaskGlobalComm"), 0 );
-  d_timingStats.insert( TaskWaitCommTime,   std::string("TaskWaitComm"), 0 );
-  d_timingStats.insert( TaskWaitThreadTime, std::string("TaskWaitThread"), 0 );
-  d_timingStats.insert( OutputTime,         std::string("Output"), 0 );
+  std::string timeStr("seconds");
+  std::string bytesStr("bytes");
+    
+  d_timingStats.insert( CompilationTime,    std::string("Compilation"),    timeStr, 0 );
+  d_timingStats.insert( RegriddingTime,     std::string("Regridding"),     timeStr, 0 );
+  d_timingStats.insert( RegriddingCompilationTime, std::string("RegriddingCompilation"), timeStr, 0 );
+  d_timingStats.insert( RegriddingCopyDataTime,  std::string("RegriddingCopyData"), timeStr, 0 );
+  d_timingStats.insert( LoadBalancerTime,   std::string("LoadBalancer"),   timeStr, 0 );
+  d_timingStats.insert( TaskExecTime,       std::string("TaskExec"),       timeStr, 0 );
+  d_timingStats.insert( TaskLocalCommTime,  std::string("TaskLocalComm"),  timeStr, 0 );
+  d_timingStats.insert( TaskGlobalCommTime, std::string("TaskGlobalComm"), timeStr, 0 );
+  d_timingStats.insert( TaskWaitCommTime,   std::string("TaskWaitComm"),   timeStr, 0 );
+  d_timingStats.insert( TaskWaitThreadTime, std::string("TaskWaitThread"), timeStr, 0 );
+  d_timingStats.insert( OutputTime,         std::string("Output"),         timeStr, 0 );
   d_timingStats.validate( MAX_TIMING_STATS );
 
   resetStats();

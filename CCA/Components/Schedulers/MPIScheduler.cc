@@ -114,15 +114,17 @@ MPIScheduler::MPIScheduler( const ProcessorGroup* myworld,
     }
   }
 
-  mpi_info_.insert( TotalReduce,    std::string("TotalReduce"),    0 );
-  mpi_info_.insert( TotalSend,      std::string("TotalSend"),      0 );
-  mpi_info_.insert( TotalRecv,      std::string("TotalRecv"),      0 );
-  mpi_info_.insert( TotalTask,      std::string("TotalTask"),      0 );
-  mpi_info_.insert( TotalReduceMPI, std::string("TotalReduceMPI"), 0 );
-  mpi_info_.insert( TotalSendMPI,   std::string("TotalSendMPI"),   0 );
-  mpi_info_.insert( TotalRecvMPI,   std::string("TotalRecvMPI"),   0 );
-  mpi_info_.insert( TotalTestMPI,   std::string("TotalTestMPI"),   0 );
-  mpi_info_.insert( TotalWaitMPI,   std::string("TotalWaitMPI"),   0 );
+  std::string timeStr("seconds");
+
+  mpi_info_.insert( TotalReduce,    std::string("TotalReduce"),    timeStr, 0 );
+  mpi_info_.insert( TotalSend,      std::string("TotalSend"),      timeStr, 0 );
+  mpi_info_.insert( TotalRecv,      std::string("TotalRecv"),      timeStr, 0 );
+  mpi_info_.insert( TotalTask,      std::string("TotalTask"),      timeStr, 0 );
+  mpi_info_.insert( TotalReduceMPI, std::string("TotalReduceMPI"), timeStr, 0 );
+  mpi_info_.insert( TotalSendMPI,   std::string("TotalSendMPI"),   timeStr, 0 );
+  mpi_info_.insert( TotalRecvMPI,   std::string("TotalRecvMPI"),   timeStr, 0 );
+  mpi_info_.insert( TotalTestMPI,   std::string("TotalTestMPI"),   timeStr, 0 );
+  mpi_info_.insert( TotalWaitMPI,   std::string("TotalWaitMPI"),   timeStr, 0 );
   mpi_info_.validate( MAX_TIMING_STATS );
 }
 
