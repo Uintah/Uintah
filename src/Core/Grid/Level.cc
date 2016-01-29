@@ -884,7 +884,7 @@ void Level::setBCTypes()
   
   if(rgtimes.active()){
     double avg[3]={0};
-    MPI_Reduce(&rtimes,&avg,3,MPI_DOUBLE,MPI_SUM,0,myworld->getComm());
+    MPI_Reduce(rtimes,avg,3,MPI_DOUBLE,MPI_SUM,0,myworld->getComm());
     
     if(myworld->myrank()==0) {
 
@@ -897,7 +897,7 @@ void Level::setBCTypes()
     }
 
     double max[3]={0};
-    MPI_Reduce(&rtimes,&max,3,MPI_DOUBLE,MPI_MAX,0,myworld->getComm());
+    MPI_Reduce(rtimes,max,3,MPI_DOUBLE,MPI_MAX,0,myworld->getComm());
 
     if(myworld->myrank()==0) {
       cout << "SetBCType Max Times: ";

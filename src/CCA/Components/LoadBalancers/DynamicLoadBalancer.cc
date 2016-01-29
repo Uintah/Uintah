@@ -686,7 +686,7 @@ DynamicLoadBalancer::assignPatchesFactor( const GridP & grid, bool force )
   {
     double avg[5]={0};
     
-    MPI_Reduce(&lbtimes,&avg,5,MPI_DOUBLE,MPI_SUM,0,d_myworld->getComm());
+    MPI_Reduce(lbtimes,avg,5,MPI_DOUBLE,MPI_SUM,0,d_myworld->getComm());
     
     if(d_myworld->myrank()==0) {
       cout << "LoadBalance Avg Times: "; 
@@ -699,7 +699,7 @@ DynamicLoadBalancer::assignPatchesFactor( const GridP & grid, bool force )
     
     double max[5]={0};
     
-    MPI_Reduce(&lbtimes,&max,5,MPI_DOUBLE,MPI_MAX,0,d_myworld->getComm());
+    MPI_Reduce(lbtimes,max,5,MPI_DOUBLE,MPI_MAX,0,d_myworld->getComm());
     
     if(d_myworld->myrank()==0) {
       cout << "LoadBalance Max Times: "; 

@@ -433,13 +433,13 @@ AMRSimulationController::run()
 
     // Update the profiler weights
     d_lb->finalizeContributions(currentGrid);
-     
+
     if(dbg_barrier.active()) {
       start = Time::currentSeconds();
       MPI_Barrier( d_myworld->getComm() );
       barrier_times[4]+=Time::currentSeconds()-start;
       double avg[5];
-      MPI_Reduce( &barrier_times, &avg, 5, MPI_DOUBLE, MPI_SUM, 0, d_myworld->getComm() );
+      MPI_Reduce( barrier_times, avg, 5, MPI_DOUBLE, MPI_SUM, 0, d_myworld->getComm() );
        
       if(d_myworld->myrank()==0) {
         cout << "Barrier Times: "; 
@@ -505,7 +505,8 @@ AMRSimulationController::run()
   // If VisIt has been included into the build, stop here so the
   // user can have once last chance see their data via VisIt.
 #ifdef HAVE_VISIT
-   if( d_sharedState->GetVisIt() ) {
+   if( d_sharedState->GetVisIt() )
+   {
      visit_EndLibSim( &visitSimData );
    }
 #endif

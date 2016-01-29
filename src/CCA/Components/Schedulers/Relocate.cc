@@ -1311,7 +1311,7 @@ Relocate::relocateParticlesModifies(const ProcessorGroup* pg,
     //if (!lb->isDynamic() && level->getGrid()->numLevels() == 1 && level->numPatches() >= pg->size() && pg->size() > 1) {
     if (pg->size() > 1) {
       mpidbg << pg->myrank() << " Relocate reduce\n";
-      MPI_Reduce(total_reloc, &alltotal, 3, MPI_INT, MPI_SUM, 0, pg->getComm());
+      MPI_Reduce(total_reloc, alltotal, 3, MPI_INT, MPI_SUM, 0, pg->getComm());
       mpidbg << pg->myrank() << " Done Relocate reduce\n";
     }
     if(pg->myrank() == 0){
@@ -1775,7 +1775,7 @@ Relocate::relocateParticles(const ProcessorGroup* pg,
     //if (!lb->isDynamic() && level->getGrid()->numLevels() == 1 && level->numPatches() >= pg->size() && pg->size() > 1) {
     if (pg->size() > 1) {
       mpidbg << pg->myrank() << " Relocate reduce\n";
-      MPI_Reduce(total_reloc, &alltotal, 3, MPI_INT, MPI_SUM, 0, pg->getComm());
+      MPI_Reduce(total_reloc, alltotal, 3, MPI_INT, MPI_SUM, 0, pg->getComm());
       mpidbg << pg->myrank() << " Done Relocate reduce\n";
     }
     if(pg->myrank() == 0){
