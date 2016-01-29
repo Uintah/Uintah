@@ -1159,11 +1159,11 @@ namespace PTR	// Portable TongeRamesh
 
       std::complex<double> g1((sqrt(ap1)-1.0)/(sqrt(ap1)+1.0));
       std::complex<double> g2((sqrt(ap2)-1.0)/(sqrt(ap2)+1.0));
-      if(abs(g1)>1.0 || abs(g2)>1.0) {
+      if(std::abs(g1)>1.0 || std::abs(g2)>1.0) {
         throw std::runtime_error("Both abs(g1) and abs(g2) must be less than 1 (complex branch)");
       }
 
-      if(abs(g1)>1e-6) {
+      if(std::abs(g1)>1e-6) {
         // Compute boundary displacements (delta and rho)
         // Equation A.10
         std::complex<double> b1(mat_s_1122 - mat_s_2222*ap1);
