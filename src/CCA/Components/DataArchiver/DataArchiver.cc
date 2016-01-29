@@ -1792,7 +1792,7 @@ DataArchiver::outputReductionVars(const ProcessorGroup*,
       out << "\n";
     }
   }
-  d_sharedState->d_timingStats[SimulationState::OutputTime] += Time::currentSeconds()-start;
+  d_sharedState->d_runTimeStats[SimulationState::OutputTime] += Time::currentSeconds()-start;
   dbg << "  end\n";
 }
 
@@ -2094,7 +2094,7 @@ DataArchiver::outputVariables(const ProcessorGroup * pg,
       doc->output(xmlFilename.c_str());
       //doc->releaseDocument();
       
-      d_sharedState->d_timingStats[SimulationState::OutputTime] += Time::currentSeconds()-start;
+      d_sharedState->d_runTimeStats[SimulationState::OutputTime] += Time::currentSeconds()-start;
     }
     d_outputLock.unlock(); 
   }
@@ -2111,7 +2111,6 @@ DataArchiver::outputVariables(const ProcessorGroup * pg,
   //      consolidate debugging variable output into main saveLabel loop
   //      Do we need patch_buffer?
   //      Do we need the memset calls?
-  //      Move the timers upstream
   //
   if ( d_outputFileFormat == PIDX && type != CHECKPOINT_REDUCTION){
       
@@ -2134,6 +2133,7 @@ DataArchiver::outputVariables(const ProcessorGroup * pg,
         saveLabels_PIDX(saveTheseLabels, pg, patches, new_dw, type, TD, myDir);
       } 
     }
+    d_sharedState->d_runTimeStats[SimulationState::OutputTime] += Time::currentSeconds()-start;
   }
   
 #endif

@@ -1554,12 +1554,12 @@ SchedulerCommon::scheduleAndDoDataCopy( const GridP&               grid,
 #endif
   this->compile();
 
-  d_sharedState->d_timingStats[SimulationState::RegriddingCompilationTime] += Time::currentSeconds() - start;
+  d_sharedState->d_runTimeStats[SimulationState::RegriddingCompilationTime] += Time::currentSeconds() - start;
 
   // save these and restore them, since the next execute will append the scheduler's, and we don't want to.
-  double executeTime = d_sharedState->d_timingStats[SimulationState::TaskExecTime];
-  double globalCommTime = d_sharedState->d_timingStats[SimulationState::TaskGlobalCommTime];
-  double localCommTime = d_sharedState->d_timingStats[SimulationState::TaskLocalCommTime];
+  double executeTime = d_sharedState->d_runTimeStats[SimulationState::TaskExecTime];
+  double globalCommTime = d_sharedState->d_runTimeStats[SimulationState::TaskGlobalCommTime];
+  double localCommTime = d_sharedState->d_runTimeStats[SimulationState::TaskLocalCommTime];
 
   start = Time::currentSeconds();
   this->execute();
@@ -1606,10 +1606,10 @@ SchedulerCommon::scheduleAndDoDataCopy( const GridP&               grid,
 
   newDataWarehouse->refinalize();
 
-  d_sharedState->d_timingStats[SimulationState::RegriddingCopyDataTime] += Time::currentSeconds() - start;
-  d_sharedState->d_timingStats[SimulationState::TaskExecTime] = executeTime;
-  d_sharedState->d_timingStats[SimulationState::TaskGlobalCommTime] = globalCommTime;
-  d_sharedState->d_timingStats[SimulationState::TaskLocalCommTime] = localCommTime;
+  d_sharedState->d_runTimeStats[SimulationState::RegriddingCopyDataTime] += Time::currentSeconds() - start;
+  d_sharedState->d_runTimeStats[SimulationState::TaskExecTime] = executeTime;
+  d_sharedState->d_runTimeStats[SimulationState::TaskGlobalCommTime] = globalCommTime;
+  d_sharedState->d_runTimeStats[SimulationState::TaskLocalCommTime] = localCommTime;
   d_sharedState->setCopyDataTimestep(false);
 }
 

@@ -959,13 +959,13 @@ MPIScheduler::execute( int tgnum     /* = 0 */,
   }
 
   if( !parentScheduler_ ) { // If this scheduler is the root scheduler...
-    d_sharedState->d_timingStats[SimulationState::TaskExecTime]       +=
-      mpi_info_[TotalTask] - d_sharedState->d_timingStats[SimulationState::OutputTime]; // don't count output time...
-    d_sharedState->d_timingStats[SimulationState::TaskLocalCommTime]  +=
+    d_sharedState->d_runTimeStats[SimulationState::TaskExecTime]       +=
+      mpi_info_[TotalTask] - d_sharedState->d_runTimeStats[SimulationState::OutputTime]; // don't count output time...
+    d_sharedState->d_runTimeStats[SimulationState::TaskLocalCommTime]  +=
       mpi_info_[TotalRecv] + mpi_info_[TotalSend];
-    d_sharedState->d_timingStats[SimulationState::TaskWaitCommTime]   +=
+    d_sharedState->d_runTimeStats[SimulationState::TaskWaitCommTime]   +=
       mpi_info_[TotalWaitMPI];
-    d_sharedState->d_timingStats[SimulationState::TaskGlobalCommTime] +=
+    d_sharedState->d_runTimeStats[SimulationState::TaskGlobalCommTime] +=
       mpi_info_[TotalReduce];
   }
 
