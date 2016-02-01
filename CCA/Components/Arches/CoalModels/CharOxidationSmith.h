@@ -10,6 +10,7 @@
 #include <CCA/Components/Arches/Directives.h>
 #include <vector>
 #include <string>
+#include <Core/Datatypes/DenseMatrix.h>
 
 namespace Uintah{
 
@@ -87,6 +88,10 @@ public:
 
 private:
 
+  /** @brief   */
+  inline void root_function( std::vector<double> &F, DenseMatrix* &dfdrh, std::vector<double> &rh_l, double &p_T, double &cg, std::vector<double> &oxid_mass_frac, double &MW, double &r_devol, double &gas_rho, double &p_diam, std::vector<double> &Sh, double &w, double &p_area );
+  inline void invert_2_2( DenseMatrix* &dfdrh );
+
   const VarLabel* _devolCharLabel;
   const VarLabel* _devolRCLabel;
   const VarLabel* _rcmass_varlabel;
@@ -112,7 +117,6 @@ private:
   double _As;
   double _Es;
   double _n;
-  double _R;
   double _HF_CO2;
   double _HF_CO;
   double _small;
@@ -130,6 +134,29 @@ private:
   double _char_scaling_constant;   ///< Scaling factor for char internal coordinate
   double _weight_scaling_constant;   ///< Scaling factor for weight 
   double _weight_small;   ///< small weight 
+
+  // new stuff
+  std::vector< const VarLabel*> _oxidizer_varlabels;
+  std::vector< const VarLabel*> _reaction_rate_varlabels;
+  bool _use_simple_invert;  
+  double oxidizer_MW; // 
+  std::string oxidizer_name; // 
+  double a; // 
+  double e; // 
+  double phi; // 
+  std::vector<std::string> _oxid_l;
+  std::vector<double> _MW_l;
+  std::vector<double> _a_l;
+  std::vector<double> _e_l;
+  std::vector<double> _phi_l;
+  std::vector<double> _D_oxid_mix_l;
+  int _NUM_reactions; // 
+  double _R_cal; // [cal/ (K mol) ]
+  double _R; // [J/ (K mol) ]
+  double _Mh; // 12 kg carbon / kmole carbon
+  double _S;
+
+  DenseMatrix* dfdrh;
   
 }; // end CharOxidationSmith
 } // end namespace Uintah
