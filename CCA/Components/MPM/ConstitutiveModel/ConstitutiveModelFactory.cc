@@ -63,6 +63,7 @@
 #include <CCA/Components/MPM/ConstitutiveModel/JWLppMPM.h>
 #include <CCA/Components/MPM/ConstitutiveModel/Biswajit/CamClay.h>
 #include <CCA/Components/MPM/ConstitutiveModel/Biswajit/Arena.h>
+#include <CCA/Components/MPM/ConstitutiveModel/RFElasticPlastic.h>
 #include <CCA/Components/MPM/ConstitutiveModel/PortableTongeRamesh/TongeRameshPTR.h>
 #include <CCA/Components/MPM/MPMFlags.h>
 
@@ -234,6 +235,9 @@ ConstitutiveModel* ConstitutiveModelFactory::create(ProblemSpecP& ps,
 
   else if (mat_type ==  "camclay")
     return(scinew CamClay(child,flags));
+
+  else if (mat_type ==  "rf_elastic_plastic")
+    return(scinew RFElasticPlastic(child,flags));
 
   else if (mat_type ==  "TongeRameshPTR") {
     if (flags->d_integrator_type == "explicit"){

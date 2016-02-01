@@ -59,7 +59,10 @@ MPMLabel::MPMLabel()
 			ParticleVariable<double>::getTypeDescription() );
 
   pFluxLabel = VarLabel::create("p.flux",
-            ParticleVariable<Vector>::getTypeDescription());
+                        ParticleVariable<Vector>::getTypeDescription() );
+
+  pDiffusivityLabel = VarLabel::create( "p.diffusivity",
+			ParticleVariable<double>::getTypeDescription() );
 
   // for visualization only
   pScaleFactorLabel = VarLabel::create( "p.scalefactor",
@@ -727,6 +730,15 @@ MPMLabel::MPMLabel()
   pCellNACZIDLabel =
     VarLabel::create("cellNACZID", CCVariable<short int>::getTypeDescription());
 
+  // ******* start - for temporary use only, CG
+  pPressureLabel_t1  = VarLabel::create( "p.pressure_t1",
+			ParticleVariable<double>::getTypeDescription() );
+  pConcInterpLabel  = VarLabel::create( "p.concentrationInterp",
+			ParticleVariable<double>::getTypeDescription() );
+  pEquivalentStress_t1  = VarLabel::create( "p.equivalentStress_t1",
+			ParticleVariable<double>::getTypeDescription() );
+  // ******* end - for temporary use only, CG
+
 } 
 
 MPMLabel::~MPMLabel()
@@ -803,6 +815,7 @@ MPMLabel::~MPMLabel()
   VarLabel::destroy(pTemperatureGradientLabel_preReloc);
   VarLabel::destroy(pConcGradientLabel);
   VarLabel::destroy(pConcGradientLabel_preReloc);
+  VarLabel::destroy(pDiffusivityLabel);
   VarLabel::destroy(pPartitionUnityLabel);
 
   VarLabel::destroy(gAccelerationLabel);
@@ -988,4 +1001,10 @@ MPMLabel::~MPMLabel()
   VarLabel::destroy(czBotMatLabel_preReloc);
   VarLabel::destroy(czFailedLabel);
   VarLabel::destroy(czFailedLabel_preReloc);
+
+  // ******* start - for temporary use, CG
+  VarLabel::destroy(pPressureLabel_t1);
+  VarLabel::destroy(pConcInterpLabel); 
+  VarLabel::destroy(pEquivalentStress_t1);
+  // ******* end - for temporary use, CG
 }
