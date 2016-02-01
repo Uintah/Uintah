@@ -720,8 +720,8 @@ SimulationController::printSimulationStats ( int timestep, double delt, double t
 
   for( int i=0; i<d_sharedState->d_runTimeStats.size(); ++i )
   {
-    SimulationState::RunTimeStat stat = (SimulationState::RunTimeStat) i;
     
+    SimulationState::RunTimeStat stat = (SimulationState::RunTimeStat) i;
     toReduce.push_back( d_sharedState->d_runTimeStats[ stat ] );
     toReduceMax.push_back( double_int( d_sharedState->d_runTimeStats[ stat ], rank ) );
     statLabels.push_back( d_sharedState->d_runTimeStats.getName( stat ).c_str() );
@@ -861,7 +861,7 @@ SimulationController::printSimulationStats ( int timestep, double delt, double t
   if (istats.active()) {
     for (unsigned i = 1; i < statLabels.size(); i++) { // index 0 is memuse
       if (toReduce[i] > 0)
-        istats << "rank: " << d_myworld->myrank() << " " << left << setw(15) << statLabels[i] << " [" << statUnits[i] << "]: " << toReduce[i] << "\n";
+        istats << "rank: " << d_myworld->myrank() << " " << left << setw(19) << statLabels[i] << " [" << statUnits[i] << "]: " << toReduce[i] << "\n";
     }
   } 
 
@@ -904,14 +904,13 @@ SimulationController::printSimulationStats ( int timestep, double delt, double t
     cout.flush();
 
     if (stats.active()) {
-   //   stats << left << setw(19)  << "  Description         Ave time:      max Time:      mpi proc:    100*(1-ave/max) '% load imbalance'\n";
-      stats << left << setw(15)  << "  Description                 Ave:            max:      mpi proc:    100*(1-ave/max) '% load imbalance'\n";
+      stats << left << setw(19)  << "  Description                 Ave:            max:      mpi proc:    100*(1-ave/max) '% load imbalance'\n";
 
       if(d_myworld->size()>1){
         for (unsigned i = 1; i < statLabels.size(); i++) { // index 0 is memuse
           if (maxReduce[i].val > 0) {
-            stats << "  "<< left << setw(15)<< statLabels[i] << "[" <<setw(3)<<statUnits[i] << "]"
-                  << " : " << setw(12) << avgReduce[i]
+            stats << "  "<< left << setw(19)<< statLabels[i]  << "[" <<statUnits[i] <<"]"
+                  <<" : " << setw(12) << avgReduce[i]
                   << " : " << setw(12) << maxReduce[i].val
                   << " : " << setw(10) << maxReduce[i].loc
                   << " : " << setw(10) << 100*(1-(avgReduce[i]/maxReduce[i].val)) << "\n";
@@ -921,7 +920,7 @@ SimulationController::printSimulationStats ( int timestep, double delt, double t
       else { // Runing in serial.
         for ( unsigned int i = 1; i < statLabels.size(); i++ ) { // index 0 is memuse
           if( toReduce[i] > 0 ) {
-            stats << "  "<< left << setw(19)<< statLabels[i]
+            stats << "  "<< left << setw(19)<< statLabels[i]  << "[" <<statUnits[i] <<"]"
                   << " : " << setw(12) << toReduce[i]
                   << " : " << setw(12) << toReduce[i]
                   << " : " << setw(10)  << 0

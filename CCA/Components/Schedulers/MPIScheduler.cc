@@ -958,15 +958,8 @@ MPIScheduler::execute( int tgnum     /* = 0 */,
     emitTime("Other execution time", totalexec - mpi_info_[TotalSend] - mpi_info_[TotalRecv] - mpi_info_[TotalTask] - mpi_info_[TotalReduce]);
   }
 
-  if( !parentScheduler_ ) { // If this scheduler is the root scheduler...
-    d_sharedState->d_runTimeStats[SimulationState::TaskExecTime]       +=
-      mpi_info_[TotalTask] - d_sharedState->d_runTimeStats[SimulationState::OutputTime]; // don't count output time...
-    d_sharedState->d_runTimeStats[SimulationState::TaskLocalCommTime]  +=
-      mpi_info_[TotalRecv] + mpi_info_[TotalSend];
-    d_sharedState->d_runTimeStats[SimulationState::TaskWaitCommTime]   +=
-      mpi_info_[TotalWaitMPI];
-    d_sharedState->d_runTimeStats[SimulationState::TaskGlobalCommTime] +=
-      mpi_info_[TotalReduce];
+  if( !parentScheduler_ ) { // If this scheduler is the root scheduler...    
+    computeNetRunTimeStats(d_sharedState->d_runTimeStats);
   }
 
   // Don't need to lock sends 'cause all threads are done at this point.
@@ -1182,3 +1175,14 @@ MPIScheduler::outputTimingStats(const char* label)
   }
 }
 
+//______________________________________________________________________
+//  Take the various timers and compute the net results
+void MPIScheduler::computeNetRunTimeStats(InfoMapper< SimulationState::RunTimeStat, double >& runTimeStats)
+{
+    runTimeStats[SimulationState::TaskExecTime]       += mpi_info_[TotalTask] - runTimeStats[SimulationState::OutputFileIO_Time]  // don't count output time or bytes
+                                                                              - runTimeStats[SimulationState::OutputFileIO_Rate];
+     
+    runTimeStats[SimulationState::TaskLocalCommTime]  += mpi_info_[TotalRecv] + mpi_info_[TotalSend];
+    runTimeStats[SimulationState::TaskWaitCommTime]   += mpi_info_[TotalWaitMPI];
+    runTimeStats[SimulationState::TaskGlobalCommTime] += mpi_info_[TotalReduce];
+}

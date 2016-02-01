@@ -131,7 +131,7 @@ SimulationState::SimulationState(ProblemSpecP &ps)
   }
 
   std::string timeStr("seconds");
-  std::string bytesStr("bytes");
+  std::string bytesStr("bytes/sec");
     
   d_runTimeStats.insert( CompilationTime,    std::string("Compilation"),    timeStr, 0 );
   d_runTimeStats.insert( RegriddingTime,     std::string("Regridding"),     timeStr, 0 );
@@ -143,7 +143,8 @@ SimulationState::SimulationState(ProblemSpecP &ps)
   d_runTimeStats.insert( TaskGlobalCommTime, std::string("TaskGlobalComm"), timeStr, 0 );
   d_runTimeStats.insert( TaskWaitCommTime,   std::string("TaskWaitComm"),   timeStr, 0 );
   d_runTimeStats.insert( TaskWaitThreadTime, std::string("TaskWaitThread"), timeStr, 0 );
-  d_runTimeStats.insert( OutputTime,         std::string("Output"),         timeStr, 0 );
+  d_runTimeStats.insert( OutputFileIO_Time,  std::string("OutputFileIO"),   timeStr, 0 );
+  d_runTimeStats.insert( OutputFileIO_Rate,  std::string("OutputFileIO_Rate"), bytesStr, 0 );
   d_runTimeStats.validate( MAX_TIMING_STATS );
 
   resetStats();
@@ -554,7 +555,7 @@ double SimulationState::getTotalTime()
   
   for( unsigned int i=0; i<d_runTimeStats.size(); ++i )
   {
-    if( (RunTimeStat) i != OutputTime )
+    if( (RunTimeStat) i != OutputFileIO_Time || (RunTimeStat) i != OutputFileIO_Rate)
       totalTime += d_runTimeStats[(RunTimeStat) i];
   }
 
