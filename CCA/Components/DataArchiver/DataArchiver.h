@@ -243,7 +243,8 @@ using SCIRun::Mutex;
       //__________________________________
       //         PIDX related
       //! output the all of the saveLabels in PIDX format
-      void saveLabels_PIDX(std::vector< SaveItem >& saveLabels,
+      size_t
+          saveLabels_PIDX(std::vector< SaveItem >& saveLabels,
                            const ProcessorGroup * pg,
                            const PatchSubset    * patches,      
                            DataWarehouse        * new_dw,          

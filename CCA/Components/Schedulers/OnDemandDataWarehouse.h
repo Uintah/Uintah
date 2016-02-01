@@ -399,7 +399,7 @@ class OnDemandDataWarehouse : public DataWarehouse {
 
     virtual void refinalize();
 
-    virtual void emit(OutputContext&,
+    virtual size_t emit(OutputContext&,
                       const VarLabel* label,
                       int matlIndex,
                       const Patch* patch);
