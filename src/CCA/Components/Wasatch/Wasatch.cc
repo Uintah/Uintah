@@ -773,8 +773,13 @@ namespace WasatchCore{
     // note - parse_particle_transport_equations returns a vector of equation adaptors
     if( particleEqnSpec ){
       try{
-        const EquationAdaptors adaptors = parse_particle_transport_equations( particleEqnSpec, wasatchSpec_, useAdaptiveDt, graphCategories_);
-        adaptors_.insert( adaptors_.end(), adaptors.begin(), adaptors.end() );
+        if (flow_treatment() == COMPRESSIBLE) {
+          const EquationAdaptors adaptors = parse_particle_transport_equations<SVolField,SVolField,SVolField>( particleEqnSpec, wasatchSpec_, useAdaptiveDt, graphCategories_);
+          adaptors_.insert( adaptors_.end(), adaptors.begin(), adaptors.end() );
+        } else {
+          const EquationAdaptors adaptors = parse_particle_transport_equations<XVolField,YVolField,ZVolField>( particleEqnSpec, wasatchSpec_, useAdaptiveDt, graphCategories_);
+          adaptors_.insert( adaptors_.end(), adaptors.begin(), adaptors.end() );
+        }
       }
       catch( std::runtime_error& err ){
         std::ostringstream msg;

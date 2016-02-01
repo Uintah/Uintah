@@ -210,6 +210,7 @@ namespace WasatchCore{
                                                                          const bool isConstDensity,
                                                                          GraphCategories& gc);
 
+  template<typename GasVel1T, typename GasVel2T, typename GasVel3T>
   std::vector<EqnTimestepAdaptorBase*>
   parse_particle_transport_equations( Uintah::ProblemSpecP particleSpec,
                                       Uintah::ProblemSpecP wasatchSpec,
