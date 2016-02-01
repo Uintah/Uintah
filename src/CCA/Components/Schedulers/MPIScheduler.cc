@@ -322,17 +322,13 @@ MPIScheduler::runTask( DetailedTask* task,
 
   mpi_info_[TotalTestMPI] += Time::currentSeconds() - teststart;
 
-  // Add subscheduler timings to the parent scheduler and reset
-  // subscheduler timings
+  // Add subscheduler timings to the parent scheduler and reset subscheduler timings
   if (parentScheduler_) {
-
-      for( int i=0; i<mpi_info_.size(); ++i )
-      {
-	MPIScheduler::TimingStat e = (MPIScheduler::TimingStat) i;
-	parentScheduler_->mpi_info_[e] += mpi_info_[e];
-      }
-
-      mpi_info_.reset( 0 );
+    for (size_t i = 0; i < mpi_info_.size(); ++i) {
+      MPIScheduler::TimingStat e = (MPIScheduler::TimingStat)i;
+      parentScheduler_->mpi_info_[e] += mpi_info_[e];
+    }
+    mpi_info_.reset(0);
   }
 
   emitNode(task, taskstart, total_task_time, 0);
@@ -531,6 +527,17 @@ MPIScheduler::postMPISends( DetailedTask* task,
     }
   }
 }  // end postMPISends();
+
+//______________________________________________________________________
+//
+int MPIScheduler::pendingMPIRecvs()
+{
+  int num = 0;
+  recvLock.readLock();
+  num = recvs_.numRequests();
+  recvLock.readUnlock();
+  return num;
+}
 
 //______________________________________________________________________
 //

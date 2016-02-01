@@ -93,6 +93,8 @@ class MPIScheduler : public SchedulerCommon {
 
             void postMPIRecvs( DetailedTask* task, bool only_old_recvs, int abort_point, int iteration );
 
+            int  pendingMPIRecvs();
+
             void runTask( DetailedTask* task, int iteration, int thread_id = 0 );
 
     virtual void runReductionTask( DetailedTask* task );

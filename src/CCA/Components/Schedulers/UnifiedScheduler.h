@@ -119,8 +119,6 @@ class UnifiedScheduler : public MPIScheduler  {
 
     int getAvailableThreadNum();
 
-    int  pendingMPIRecvs();
-    
     ConditionVariable          d_nextsignal;           // conditional wait mutex
     Mutex                      d_nextmutex;            // next mutex
     Mutex                      schedulerLock;          // scheduler lock (acquire and release quickly)

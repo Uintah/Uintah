@@ -542,17 +542,13 @@ UnifiedScheduler::runTask( DetailedTask*         task,
     mpi_info_[TotalTestMPI] += Time::currentSeconds() - test_start_time;
     // -------------------------< end MPI test timing >-------------------------
 
-    // Add subscheduler timings to the parent scheduler and reset
-    // subscheduler timings
-    if( parentScheduler_ ) {
-
-      for( int i=0; i<mpi_info_.size(); ++i )
-      {
-	MPIScheduler::TimingStat e = (MPIScheduler::TimingStat) i;
-	parentScheduler_->mpi_info_[e] += mpi_info_[e];
+    // Add subscheduler timings to the parent scheduler and reset subscheduler timings
+    if (parentScheduler_) {
+      for (size_t i = 0; i < mpi_info_.size(); ++i) {
+        MPIScheduler::TimingStat e = (MPIScheduler::TimingStat)i;
+        parentScheduler_->mpi_info_[e] += mpi_info_[e];
       }
-
-      mpi_info_.reset( 0 );
+      mpi_info_.reset(0);
     }
   }
 }  // end runTask()
@@ -1222,18 +1218,6 @@ struct CompareDep {
     return a->messageTag < b->messageTag;
   }
 };
-
-//______________________________________________________________________
-//
-
-int UnifiedScheduler::pendingMPIRecvs()
-{
-  int num = 0;
-  recvLock.readLock();
-  num = recvs_.numRequests();
-  recvLock.readUnlock();
-  return num;
-}
 
 //______________________________________________________________________
 //

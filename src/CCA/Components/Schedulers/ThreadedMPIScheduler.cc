@@ -516,7 +516,7 @@ ThreadedMPIScheduler::execute( int tgnum     /* = 0 */,
     
     for (int i = 0; i < numThreads_; i++) {
       d_sharedState->d_runTimeStats[SimulationState::TaskWaitThreadTime] +=
-	t_worker[i]->getWaittime();
+          t_worker[i]->getWaittime();
     }
   }
 
