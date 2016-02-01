@@ -720,7 +720,6 @@ SimulationController::printSimulationStats ( int timestep, double delt, double t
 
   for( int i=0; i<d_sharedState->d_runTimeStats.size(); ++i )
   {
-    
     SimulationState::RunTimeStat stat = (SimulationState::RunTimeStat) i;
     toReduce.push_back( d_sharedState->d_runTimeStats[ stat ] );
     toReduceMax.push_back( double_int( d_sharedState->d_runTimeStats[ stat ], rank ) );
@@ -751,7 +750,8 @@ SimulationController::printSimulationStats ( int timestep, double delt, double t
   }
 #endif
 
-  if (highwater) { // add highwater to the end so we know where everything else is (as highwater is conditional)
+  // Add highwater to the end because it is a conditional.
+  if (highwater) {
     toReduce.push_back( highwater );
   }
 
@@ -774,22 +774,29 @@ SimulationController::printSimulationStats ( int timestep, double delt, double t
       avgReduce[i] /= d_myworld->size();
     }
 
-    // Get specific values - pop front since we don't know if there is a highwater.
     avg_memuse = avgReduce[0];
     max_memuse = static_cast<unsigned long>(maxReduce[0].val);
     max_memuse_loc = maxReduce[0].loc;
 
+    // Highwater was added to the end because it was conditional.
     if (highwater) {
       avg_highwater = avgReduce[avgReduce.size() - 1];
       max_highwater = static_cast<unsigned long>(maxReduce[maxReduce.size() - 1].val);
     }
     
-    // Sum up the average times for simulation components.
+    // Sum up the average times for simulation components. These
+    // same values are used in SimulationState::getTotalTime.
+    // Skip the first value as that is for the memory usage.
+
+    // ARS NOTE THIS SHOULD BE FROM 1 TO 11 TO MATCH
+    // SimulationState::getTotalTime.
     for( int i = 1; i < 10; i++ ) {
       total_time += avgReduce[i];
     }
 
-    // Sum up the average time for overhead related components.
+    // Sum up the average time for overhead related components. These
+    // same values are used in SimulationState::getOverheadTime.
+    // Skip the first value as that is for the memory usage.
     for( int i = 1; i < 6; i++ ) {
       overhead_time += avgReduce[i];
     }
@@ -857,7 +864,6 @@ SimulationController::printSimulationStats ( int timestep, double delt, double t
   */
 
   // Output timestep statistics...
-
   if (istats.active()) {
     for (unsigned i = 1; i < statLabels.size(); i++) { // index 0 is memuse
       if (toReduce[i] > 0)
@@ -865,7 +871,7 @@ SimulationController::printSimulationStats ( int timestep, double delt, double t
     }
   } 
 
-  if(d_myworld->myrank() == 0){
+  if(d_myworld->myrank() == 0) {
     char walltime[96];
     if (d_n > 3) {
       //sprintf(walltime, ", elap T = %.2lf, mean: %.2lf +- %.3lf", d_wallTime, mean, stdDev);
@@ -874,13 +880,14 @@ SimulationController::printSimulationStats ( int timestep, double delt, double t
     else {
       sprintf( walltime, ", elap T = %6.2lf,                ", d_wallTime );
     }
-    ostringstream message;
 
+    ostringstream message;
     message << "Time="        << time
             << " (timestep "  << timestep 
             << "), delT="     << delt
             << walltime;
     message << "Memory Use = ";
+
     if (avg_memuse == max_memuse && avg_highwater == max_highwater) {
       message << ProcessInfo::toHumanUnits((unsigned long) avg_memuse);
       if(avg_highwater) {
@@ -907,10 +914,12 @@ SimulationController::printSimulationStats ( int timestep, double delt, double t
       stats << left << setw(19)  << "  Description                 Ave:            max:      mpi proc:    100*(1-ave/max) '% load imbalance'\n";
 
       if(d_myworld->size()>1){
-        for (unsigned i = 1; i < statLabels.size(); i++) { // index 0 is memuse
+	// index 0 is memuse
+        for (unsigned i = 1; i < statLabels.size(); i++) {
           if (maxReduce[i].val > 0) {
-            stats << "  "<< left << setw(19)<< statLabels[i]  << "[" <<statUnits[i] <<"]"
-                  <<" : " << setw(12) << avgReduce[i]
+            stats << "  " << left << setw(19)<< statLabels[i]
+                  << "[" <<statUnits[i] << "]"
+                  << " : " << setw(12) << avgReduce[i]
                   << " : " << setw(12) << maxReduce[i].val
                   << " : " << setw(10) << maxReduce[i].loc
                   << " : " << setw(10) << 100*(1-(avgReduce[i]/maxReduce[i].val)) << "\n";
@@ -918,9 +927,11 @@ SimulationController::printSimulationStats ( int timestep, double delt, double t
         }
       }
       else { // Runing in serial.
-        for ( unsigned int i = 1; i < statLabels.size(); i++ ) { // index 0 is memuse
+	// index 0 is memuse
+        for ( unsigned int i = 1; i < statLabels.size(); i++ ) {
           if( toReduce[i] > 0 ) {
-            stats << "  "<< left << setw(19)<< statLabels[i]  << "[" <<statUnits[i] <<"]"
+            stats << "  " << left << setw(19)<< statLabels[i]
+                  << "[" <<statUnits[i] <<"]"
                   << " : " << setw(12) << toReduce[i]
                   << " : " << setw(12) << toReduce[i]
                   << " : " << setw(10)  << 0
@@ -929,7 +940,8 @@ SimulationController::printSimulationStats ( int timestep, double delt, double t
         }
       }
       if( d_n > 2 && !std::isnan(d_sharedState->overheadAvg) ) {
-        stats << "  Percent Time in overhead:" << d_sharedState->overheadAvg*100 <<  "\n";
+        stats << "  Percent Time in overhead:"
+              << d_sharedState->overheadAvg*100 <<  "\n";
       }
     } 
 

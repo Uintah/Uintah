@@ -265,18 +265,21 @@ public:
   // timing statistics to test load balance
   enum RunTimeStat
   {
-    CompilationTime = 0,
-    RegriddingTime,
-    RegriddingCompilationTime,
-    RegriddingCopyDataTime,
-    LoadBalancerTime,
-    TaskExecTime,
-    TaskLocalCommTime,
-    TaskGlobalCommTime,
-    TaskWaitCommTime,
-    TaskWaitThreadTime,
-    OutputFileIO_Time,        // you may want to modify SimulationState::getTotalTime()
-    OutputFileIO_Rate,
+    CompilationTime = 0,       // Note: do not change the order 
+    RegriddingTime,            // of these five enumberators.
+    RegriddingCompilationTime, // They are use in
+    RegriddingCopyDataTime,    // SimulationState::getOverheadTime
+    LoadBalancerTime,          // to determine the overhead time.
+    
+    TaskExecTime,              // Note: do not change the order
+    TaskLocalCommTime,         // of these five enumerators.
+    TaskGlobalCommTime,        // They are used in
+    TaskWaitCommTime,          // SimulationController::printSimulationStats
+    TaskWaitThreadTime,        // and SimulationState::getTotalTime.
+
+    OutputFileIO_Time,         // These two enumerators are not used in
+    OutputFileIO_Rate,	       // SimulationState::getTotalTime.
+
     MAX_TIMING_STATS
   };
 

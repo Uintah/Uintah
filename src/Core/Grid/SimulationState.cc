@@ -553,9 +553,12 @@ double SimulationState::getTotalTime()
 {
   double totalTime = 0;
   
+  // Sum up all times except as excluded below.
+  // These are also used in SimulationController::printSimulationStats 
   for( unsigned int i=0; i<d_runTimeStats.size(); ++i )
   {
-    if( (RunTimeStat) i != OutputFileIO_Time || (RunTimeStat) i != OutputFileIO_Rate)
+    if( (RunTimeStat) i != OutputFileIO_Time ||
+	(RunTimeStat) i != OutputFileIO_Rate)
       totalTime += d_runTimeStats[(RunTimeStat) i];
   }
 
@@ -565,7 +568,8 @@ double SimulationState::getTotalTime()
 //
 double SimulationState::getOverheadTime()
 {
-  // Sum up the average time for overhead related components.
+  // Sum up the time for overhead related components.
+  // These are also used in SimulationController::printSimulationStats 
   return (d_runTimeStats[CompilationTime] +
 	  d_runTimeStats[RegriddingTime] +
 	  d_runTimeStats[RegriddingCompilationTime] +
