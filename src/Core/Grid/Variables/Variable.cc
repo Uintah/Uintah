@@ -66,7 +66,7 @@ Variable::setForeign()
    d_foreign = true;
 }
 
-void
+size_t
 Variable::emit( OutputContext& oc, const IntVector& l,
                 const IntVector& h, const string& compressionModeHint )
 {
@@ -149,7 +149,7 @@ Variable::emit( OutputContext& oc, const IntVector& l,
   errno = -1;
 
   const char* writebuffer = (*writeoutString).c_str();
-  unsigned long writebufferSize = (*writeoutString).size();
+  size_t writebufferSize = (*writeoutString).size();
   if(writebufferSize>0)
   {
     ssize_t s = ::write(oc.fd, writebuffer, writebufferSize);
@@ -180,9 +180,12 @@ Variable::emit( OutputContext& oc, const IntVector& l,
       compressionMode = "";
   }
 
-  if (compressionMode != "" && compressionMode != "none")
-    //appendElement(oc.varnode, "compression", compressionMode);
+  if (compressionMode != "" && compressionMode != "none"){
     oc.varnode->appendElement("compression", compressionMode);
+  }
+  
+  
+  return writebufferSize;
 }
 
 #if HAVE_PIDX

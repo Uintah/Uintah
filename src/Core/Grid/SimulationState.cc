@@ -131,7 +131,7 @@ SimulationState::SimulationState(ProblemSpecP &ps)
   }
 
   std::string timeStr("seconds");
-  std::string bytesStr("bytes/sec");
+  std::string bytesStr("MBytes/sec");
     
   d_runTimeStats.insert( CompilationTime,    std::string("Compilation"),    timeStr, 0 );
   d_runTimeStats.insert( RegriddingTime,     std::string("Regridding"),     timeStr, 0 );

@@ -1982,9 +1982,12 @@ DataArchiver::outputVariables(const ProcessorGroup * pg,
         proc0cout << "WARNING: There was a glitch in trying to open the checkpoint file: " 
                   << dataFilename << ". It took " << tries << " tries to successfully open it.";
       }
-
+      
+      
+      
     //__________________________________
     // loop over variables
+      size_t totalBytes = 0;                      // total bytes saved over all variables
       vector<SaveItem>::iterator saveIter;
       for(saveIter = saveLabels.begin(); saveIter!= saveLabels.end(); saveIter++) {
         const VarLabel* var = saveIter->label;
@@ -2063,7 +2066,8 @@ DataArchiver::outputVariables(const ProcessorGroup * pg,
             
             // output data to data file
             OutputContext oc(fd, filename, cur, pdElem, d_outputDoubleAsFloat && type != CHECKPOINT);
-            new_dw->emit(oc, var, matlIndex, patch);
+            totalBytes +=  new_dw->emit(oc, var, matlIndex, patch);
+            
             pdElem->appendElement("end", oc.cur);
             pdElem->appendElement("filename", dataFilebase.c_str());
             
@@ -2079,9 +2083,9 @@ DataArchiver::outputVariables(const ProcessorGroup * pg,
 #endif
             
             cur=oc.cur;
-          }
-        }
-      }
+          }  // matls
+        }  // patches
+      }  // save items
       
       //__________________________________
       // close files and handles 
@@ -2093,9 +2097,10 @@ DataArchiver::outputVariables(const ProcessorGroup * pg,
       
       doc->output(xmlFilename.c_str());
       //doc->releaseDocument();
-      
-      d_sharedState->d_runTimeStats[SimulationState::OutputFileIO_Time] += Time::currentSeconds()-start;
-      d_sharedState->d_runTimeStats[SimulationState::OutputFileIO_Rate] += SHRT_MAX;       // Need to compute something
+      double myTime = Time::currentSeconds()-start;
+      double byteToMB = 1024*1024;
+      d_sharedState->d_runTimeStats[SimulationState::OutputFileIO_Time] += myTime;
+      d_sharedState->d_runTimeStats[SimulationState::OutputFileIO_Rate] += (double)totalBytes/(byteToMB * myTime);
     }
     d_outputLock.unlock(); 
   }
@@ -2117,6 +2122,7 @@ DataArchiver::outputVariables(const ProcessorGroup * pg,
       
     PIDXOutputContext pidx;
     vector<TypeDescription::Type> GridVarTypes = pidx.getSupportedVariableTypes();
+    size_t totalBytes = 0;
     
     // loop over the grid variable types.
     for(vector<TypeDescription::Type>::iterator iter = GridVarTypes.begin(); iter!= GridVarTypes.end(); iter++) {
@@ -2131,11 +2137,13 @@ DataArchiver::outputVariables(const ProcessorGroup * pg,
 
         Dir myDir = ldir.getSubdir( dirName );
 
-        saveLabels_PIDX(saveTheseLabels, pg, patches, new_dw, type, TD, myDir);
+        totalBytes += saveLabels_PIDX(saveTheseLabels, pg, patches, new_dw, type, TD, myDir);
       } 
     }
-    d_sharedState->d_runTimeStats[SimulationState::OutputFileIO_Time] += Time::currentSeconds()-start;
-    d_sharedState->d_runTimeStats[SimulationState::OutputFileIO_Rate] += SHRT_MAX;       // Need to compute something
+    double myTime = Time::currentSeconds()-start;
+    double byteToMB = 1024*1024;
+    d_sharedState->d_runTimeStats[SimulationState::OutputFileIO_Time] += myTime;
+    d_sharedState->d_runTimeStats[SimulationState::OutputFileIO_Rate] += (double)totalBytes/(byteToMB * myTime);
   }
   
 #endif
@@ -2144,7 +2152,7 @@ DataArchiver::outputVariables(const ProcessorGroup * pg,
 
 //______________________________________________________________________
 //  outut only the savedLabels of a specified type description in PIDX format.
-void
+size_t
 DataArchiver::saveLabels_PIDX(std::vector< SaveItem >& saveLabels,
                               const ProcessorGroup * pg,
                               const PatchSubset    * patches,      
@@ -2153,7 +2161,9 @@ DataArchiver::saveLabels_PIDX(std::vector< SaveItem >& saveLabels,
                               const TypeDescription::Type TD,
                               Dir                   myDir)            
 {
+  size_t totalBytesSaved = 0;
 #if HAVE_PIDX
+  
   //__________________________________
   // define the extents for this variable type
   const Level* level = getLevel(patches);
@@ -2170,7 +2180,6 @@ DataArchiver::saveLabels_PIDX(std::vector< SaveItem >& saveLabels,
   vector<int> nSaveItemMatls (nSaveItems);
 
   int rank = pg->myrank();
-
 
   //__________________________________
   // Count up the number of variables that will 
@@ -2247,6 +2256,8 @@ DataArchiver::saveLabels_PIDX(std::vector< SaveItem >& saveLabels,
       continue;
     }
 
+    //__________________________________
+    //  determine data subtype sizes
     const TypeDescription* td = label->typeDescription();
     const TypeDescription* subtype = td->getSubType();      
 
@@ -2352,7 +2363,7 @@ DataArchiver::saveLabels_PIDX(std::vector< SaveItem >& saveLabels,
           unsigned char *t_buffer = NULL; 
 
           size_t arraySize = varSubType_size * totalCells_EC;
-
+          
           t_buffer = (unsigned char*)malloc( arraySize );
           memset(t_buffer, 0, arraySize );
 
@@ -2369,7 +2380,8 @@ DataArchiver::saveLabels_PIDX(std::vector< SaveItem >& saveLabels,
           free(t_buffer);
 
           PIDX_variable_write_data_layout(pc.variable[vc][m], local_offset_point, local_box_count_point, patch_buffer[vcm][p], PIDX_row_major);
-
+          
+          totalBytesSaved += arraySize;
         }
       }  //  Patches
 
@@ -2425,12 +2437,9 @@ DataArchiver::saveLabels_PIDX(std::vector< SaveItem >& saveLabels,
     PIDX_append_and_write_variable(pc.file, pc.variable[nSaveItems][0]);
   }  // debugging
 
-  //__________________________________
-  //  Start timers and clean up memory
-  double start_time, end_time, io_time, max_time;
-  start_time = MPI_Wtime();
+
   PIDX_close(pc.file);
-  end_time = MPI_Wtime();
+
 
   //__________________________________
   // free buffers
@@ -2465,21 +2474,10 @@ DataArchiver::saveLabels_PIDX(std::vector< SaveItem >& saveLabels,
   free(pc.variable); 
   pc.variable=0;
 
-  //__________________________________
-  //  compute pidx runtime
-  io_time = end_time - start_time;
-  MPI_Allreduce(&io_time,&max_time, 1,MPI_DOUBLE,MPI_MAX, d_myworld->getComm() );
-
-  if (io_time == max_time){
-    cout << "Timestep = " << timeStep 
-         << " Global Volume = " << globalExtents[0] << "," << globalExtents[1]
-         << "," << globalExtents[2] << "," 
-         << " Throughput = " 
-         << (globalExtents[0]*globalExtents[1]*globalExtents[2] * nSaveItems * (sizeof(float)))/(1024.*1024.*max_time) << " MiB/sec " << " Max Time = " << max_time  
-         << " Number of variables " << nSaveItems 
-         << endl;
-  }
 #endif
+
+//cout << "   totalBytesSaved: " << totalBytesSaved << " nSavedItems: " << nSaveItems << endl;
+return totalBytesSaved;
 }
 
 //______________________________________________________________________

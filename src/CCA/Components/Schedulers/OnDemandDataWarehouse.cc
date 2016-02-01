@@ -2515,7 +2515,7 @@ OnDemandDataWarehouse::getRegion(       GridVariableBase& var,
 
 //______________________________________________________________________
 //
-void
+size_t
 OnDemandDataWarehouse::emit(       OutputContext& oc,
                              const VarLabel*      label,
                                    int            matlIndex,
@@ -2571,7 +2571,9 @@ OnDemandDataWarehouse::emit(       OutputContext& oc,
   if (var == NULL) {
     SCI_THROW(UnknownVariable(label->getName(), getID(), patch, matlIndex, "on emit", __FILE__, __LINE__));
   }
-  var->emit(oc, l, h, label->getCompressionMode());
+  size_t bytes;
+  bytes = var->emit(oc, l, h, label->getCompressionMode());
+  return bytes;
 }
 
 #if HAVE_PIDX
