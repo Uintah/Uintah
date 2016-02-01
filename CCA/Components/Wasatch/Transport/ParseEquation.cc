@@ -810,6 +810,7 @@ namespace WasatchCore{
   
   //==================================================================
   
+  template<typename GasVel1T, typename GasVel2T, typename GasVel3T>
   std::vector<EqnTimestepAdaptorBase*>
   parse_particle_transport_equations( Uintah::ProblemSpecP particleSpec,
                                       Uintah::ProblemSpecP wasatchSpec,
@@ -893,7 +894,7 @@ namespace WasatchCore{
     //
     Expr::ExpressionFactory& factory = *(gc[ADVANCE_SOLUTION]->exprFactory);
     proc0cout << "Setting up particle x-momentum equation" << std::endl;
-    EquationBase* pueq = scinew ParticleMomentumEquation( puname,
+    EquationBase* pueq = scinew ParticleMomentumEquation<GasVel1T,GasVel2T,GasVel3T>( puname,
                                                           XDIR,
                                                           pPosTags,
                                                           pSizeTag,
@@ -902,7 +903,7 @@ namespace WasatchCore{
     adaptors.push_back( scinew EqnTimestepAdaptor<ParticleField>(pueq) );
     
     proc0cout << "Setting up particle y-momentum equation" << std::endl;
-    EquationBase* pveq = scinew ParticleMomentumEquation( pvname,
+    EquationBase* pveq = scinew ParticleMomentumEquation<GasVel1T,GasVel2T,GasVel3T>( pvname,
                                                           YDIR,
                                                           pPosTags,
                                                           pSizeTag,
@@ -911,7 +912,7 @@ namespace WasatchCore{
     adaptors.push_back( scinew EqnTimestepAdaptor<ParticleField>(pveq) );
     
     proc0cout << "Setting up particle z-momentum equation" << std::endl;
-    EquationBase* pweq = scinew ParticleMomentumEquation( pwname,
+    EquationBase* pweq = scinew ParticleMomentumEquation<GasVel1T,GasVel2T,GasVel3T>( pwname,
                                                           ZDIR,
                                                           pPosTags,
                                                           pSizeTag,
@@ -1539,6 +1540,20 @@ namespace WasatchCore{
 
   // convective fluxes are supported for momentum as well.
   INSTANTIATE_CONVECTION( SVolField )
+
+  template
+  std::vector<EqnTimestepAdaptorBase*>
+  parse_particle_transport_equations<XVolField, YVolField, ZVolField>( Uintah::ProblemSpecP particleSpec,
+                                     Uintah::ProblemSpecP wasatchSpec,
+                                     const bool useAdaptiveDt,
+                                     GraphCategories& gc);
+
+  template
+  std::vector<EqnTimestepAdaptorBase*>
+  parse_particle_transport_equations<SVolField, SVolField, SVolField>( Uintah::ProblemSpecP particleSpec,
+                                                                      Uintah::ProblemSpecP wasatchSpec,
+                                                                      const bool useAdaptiveDt,
+                                                                      GraphCategories& gc);
 
   //-----------------------------------------------------------------
 
