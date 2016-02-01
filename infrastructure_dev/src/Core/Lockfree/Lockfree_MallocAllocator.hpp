@@ -29,8 +29,8 @@ public:
   MallocAllocator( const MallocAllocator & ) {}
   MallocAllocator & operator=( const MallocAllocator & ) { return *this; }
 
-  static       pointer address(       reference x ) noexcept { return &x; }
-  static const_pointer address( const_reference x ) noexcept { return &x; }
+  static       pointer address(       reference x ) LOCKFREE_NOEXCEPT { return &x; }
+  static const_pointer address( const_reference x ) LOCKFREE_NOEXCEPT { return &x; }
 
   static constexpr size_type max_size() { return std::numeric_limits<size_t>::max(); }
 

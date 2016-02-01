@@ -3,7 +3,7 @@
 
 // data structures
 #include "Lockfree_UsageModel.hpp"
-#include "Lockfree_UnstructuredList.hpp"
+#include "Lockfree_CircularPool.hpp"
 
 // timer
 #include "Lockfree_Timer.hpp"

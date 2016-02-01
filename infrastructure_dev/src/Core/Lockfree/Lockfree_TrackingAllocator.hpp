@@ -170,8 +170,8 @@ public:
 
   ~TrackingAllocator() {}
 
-        pointer address(       reference x ) const noexcept { return m_base_allocator.address(x); }
-  const_pointer address( const_reference x ) const noexcept { return m_base_allocator.address(x); }
+        pointer address(       reference x ) const LOCKFREE_NOEXCEPT { return m_base_allocator.address(x); }
+  const_pointer address( const_reference x ) const LOCKFREE_NOEXCEPT { return m_base_allocator.address(x); }
 
   size_type max_size() const { return m_base_allocator.max_size(); }
 
