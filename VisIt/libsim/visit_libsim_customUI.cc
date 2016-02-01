@@ -201,7 +201,6 @@ void visit_GetAnalysisVars( visit_simulation_data *sim )
 	}
 	
 	std::stringstream name;
-	
 	name << "L-" << l << "/"
 	     << minMaxVar.label->getName()
 	     << "/" << minMaxVar.matl;
@@ -266,4 +265,62 @@ void visit_GetUPSVars( visit_simulation_data *sim )
     VisItUI_setValueS( "UPSVariableGroupBox", "HIDE_WIDGET", 0);
 }
 
+
+//---------------------------------------------------------------------
+// GetGridStats
+//    Get the Grid stats
+//---------------------------------------------------------------------
+void visit_GetGridInfo( visit_simulation_data *sim )
+{
+  SimulationStateP simStateP = sim->simController->getSimulationStateP();
+  GridP           gridP      = sim->gridP;
+
+  VisItUI_setValueS( "GridInfoGroupBox", "SHOW_WIDGET", 1);
+
+  for (int l = 0; l < gridP->numLevels(); l++) 
+  {
+    LevelP level = gridP->getLevel(l);
+    unsigned int num_patches = level->numPatches();
+
+    if(num_patches == 0)
+      break;
+
+    double total_cells = 0;
+    double sum_of_cells_squared = 0;
+      
+    //calculate total cells and cells squared
+    for(unsigned int p=0; p<num_patches; ++p)
+    {
+      const Patch* patch = level->getPatch(p);
+      int num_cells = patch->getNumCells();
+      
+      total_cells += num_cells;
+      sum_of_cells_squared += num_cells * num_cells;
+    }
+    
+    //calculate conversion factor into simulation coordinates
+    double factor = 1.0;
+    
+    for(int d=0; d<3; d++)
+      factor *= gridP->getLevel(l)->dCell()[d];
+      
+    //calculate mean
+    double mean = total_cells /(double) num_patches;
+    double stdv = sqrt((sum_of_cells_squared-total_cells*total_cells /
+			(double) num_patches) / (double) num_patches);
+    IntVector refineRatio = level->getRefinementRatio();
+
+    std::stringstream ratio;
+    ratio << refineRatio.x() << ","
+	  << refineRatio.y() << "," << refineRatio.z();
+	
+    VisItUI_setTableValueI("GridInfoTable", l, 0, l+1, 0);
+    VisItUI_setTableValueS("GridInfoTable", l, 1, ratio.str().c_str(), 0);
+    VisItUI_setTableValueI("GridInfoTable", l, 2, num_patches, 0);
+    VisItUI_setTableValueI("GridInfoTable", l, 3, total_cells, 0);
+    VisItUI_setTableValueD("GridInfoTable", l, 4, mean, 0);
+    VisItUI_setTableValueD("GridInfoTable", l, 5, total_cells*factor, 0);
+  }
+}
+  
 } // End namespace Uintah

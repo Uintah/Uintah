@@ -248,8 +248,12 @@ visit_handle visit_ReadMetaData(void *cbdata)
 
             VisIt_MeshMetaData_setTopologicalDimension(mmd, 3);
             VisIt_MeshMetaData_setSpatialDimension(mmd, 3);
-            
-            VisIt_MeshMetaData_setNumDomains(mmd, totalPatches);
+
+	    int par_size;
+	    MPI_Comm_size( MPI_COMM_WORLD, &par_size );
+	    VisIt_MeshMetaData_setNumDomains(mmd, par_size);
+
+            // VisIt_MeshMetaData_setNumDomains(mmd, totalPatches);
             VisIt_MeshMetaData_setDomainTitle(mmd, "patches");
             VisIt_MeshMetaData_setDomainPieceName(mmd, "patch");
             VisIt_MeshMetaData_setNumGroups(mmd, numLevels);
@@ -368,10 +372,10 @@ visit_handle visit_ReadMetaData(void *cbdata)
 	if(VisIt_VariableMetaData_alloc(&vmd) == VISIT_OKAY)
         {
 	  std::string stat = std::string("processor/runtime/") + 
-	    simStateP->d_runTimeStats.getName( (SimulationState::TimingStat) i );
+	    simStateP->d_runTimeStats.getName( (SimulationState::RunTimeStat) i );
 
 	  std::string units = 
-	    simStateP->d_runTimeStats.getUnits( (SimulationState::TimingStat) i );
+	    simStateP->d_runTimeStats.getUnits( (SimulationState::RunTimeStat) i );
 
 	  VisIt_VariableMetaData_setName(vmd, stat.c_str());
 	  VisIt_VariableMetaData_setMeshName(vmd, mesh_for_procid.c_str());
@@ -403,7 +407,7 @@ visit_handle visit_ReadMetaData(void *cbdata)
 	      mpiScheduler->mpi_info_.getName( (MPIScheduler::TimingStat)i );
 
 	    std::string units = 
-	      simStateP->d_runTimeStats.getUnits( (SimulationState::TimingStat) i );
+	      simStateP->d_runTimeStats.getUnits( (SimulationState::RunTimeStat) i );
 
 	    VisIt_VariableMetaData_setName(vmd, stat.c_str());
 	    VisIt_VariableMetaData_setMeshName(vmd, mesh_for_procid.c_str());
@@ -630,6 +634,9 @@ visit_handle visit_ReadMetaData(void *cbdata)
 
     // Setup the custom UI optional min/max variable table
     visit_GetAnalysisVars( sim );
+
+    // Setup the custom UI optional min/max variable table
+    visit_GetGridInfo( sim );
 
 
     // if( sim->message.size() )
