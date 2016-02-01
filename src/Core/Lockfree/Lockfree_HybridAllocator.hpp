@@ -8,8 +8,8 @@ namespace Lockfree {
 
 template <  typename T
           , size_t CompareBytes
-          , template <typename> class LEAllocator  // use if num_bytes <= CompareBytes
-          , template <typename> class GTAllocator  // use if num_bytes > CompareBytes
+          , template <typename> class LEAllocator  // use if num_bytes < CompareBytes
+          , template <typename> class GTAllocator  // use if num_bytes >= CompareBytes
          >
 class HybridAllocator
 {
@@ -87,17 +87,17 @@ public:
 
   ~HybridAllocator() {}
 
-  pointer address( reference x ) noexcept
+  pointer address( reference x ) LOCKFREE_NOEXCEPT
   {
     return  le_allocator.address( x );
   }
 
-  const_pointer address( const_reference x ) noexcept
+  const_pointer address( const_reference x ) LOCKFREE_NOEXCEPT
   {
     return  le_allocator.address( x );
   }
 
-  size_type max_size() const noexcept
+  size_type max_size() const LOCKFREE_NOEXCEPT
   {
     return gt_allocator.max_size();
   }
@@ -118,7 +118,7 @@ public:
   {
     const size_type num_bytes = n * sizeof( value_type );
     pointer ptr = nullptr;
-    if ( num_bytes <= CompareBytes ) {
+    if ( num_bytes < CompareBytes ) {
       ptr = le_allocator.allocate( n, hint );
     }
     else {
@@ -130,7 +130,7 @@ public:
   void deallocate( pointer ptr, size_type n )
   {
     const size_type num_bytes = n * sizeof( value_type );
-    if ( num_bytes <= CompareBytes ) {
+    if ( num_bytes < CompareBytes ) {
       le_allocator.deallocate( ptr, n );
     }
     else {

@@ -11,6 +11,8 @@ namespace Lockfree {
 /// EXCLUSIVE_INSTANCE -- one and only one thread will access an instance
 enum UsageModel { SHARED_INSTANCE, EXCLUSIVE_INSTANCE };
 
+enum SizeModel { ENABLE_SIZE = true, DISABLE_SIZE = false };
+
 } // namespace Lockfree
 
 

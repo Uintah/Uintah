@@ -3,7 +3,7 @@
 
 #include "impl/Lockfree_Macros.hpp"
 
-#include "Lockfree_UnstructuredList.hpp"
+#include "Lockfree_CircularPool.hpp"
 
 #include <new> // for bad_alloc
 
@@ -12,33 +12,29 @@ namespace Lockfree {
 template <  typename T
           , template <typename> class BaseAllocator = std::allocator
           , template <typename> class SizeTypeAllocator = BaseAllocator
-          , int Alignment = 16
-          , typename BitsetType = uint64_t
-         >
+        >
 class PoolAllocator
 {
-  static_assert( std::is_unsigned<BitsetType>::value, "ERROR: BitsetType must be an unsigned integer type." );
 
-  struct LOCKFREE_ALIGNAS(Alignment) Node
+  struct LOCKFREE_ALIGNAS( LOCKFREE_ALIGNOF(T) ) Node
   {
-    static constexpr size_t alignment = Alignment ;
+    static constexpr size_t alignment = LOCKFREE_ALIGNOF(T) ? LOCKFREE_ALIGNOF(T) : 16;
     static constexpr size_t buffer_size =  (alignment * ((sizeof(T) + sizeof(void *) - 1u + alignment) / alignment)) - sizeof(void*);
 
     char   m_buffer[buffer_size];
-    void * m_list_node;
+    void * m_circular_pool_node;
   };
 
 public:
-  using internal_list_type = UnstructuredList<  Node
-                                              , SHARED_INSTANCE
-                                              , BaseAllocator
-                                              , SizeTypeAllocator
-                                              , BitsetType
-                                              , Alignment
-                                             >;
+  using internal_circular_pool_type = CircularPool<  Node
+                                                   , DISABLE_SIZE
+                                                   , SHARED_INSTANCE
+                                                   , BaseAllocator
+                                                   , SizeTypeAllocator
+                                                  >;
 
 private:
-  using list_node_type = typename internal_list_type::impl_node_type;
+  using circular_pool_node_type = typename internal_circular_pool_type::impl_node_type;
 
 public:
 
@@ -56,39 +52,37 @@ public:
     using other = PoolAllocator<   U
                                  , BaseAllocator
                                  , SizeTypeAllocator
-                                 , Alignment
-                                 , BitsetType
                                >;
   };
 
   PoolAllocator()
-    : m_list{}
+    : m_circular_pool{}
   {}
 
   PoolAllocator( const PoolAllocator & rhs )
-    : m_list{ rhs.m_list }
+    : m_circular_pool{ rhs.m_circular_pool }
   {}
 
   PoolAllocator & operator=( const PoolAllocator & rhs )
   {
-    m_list = rhs.m_list;
+    m_circular_pool = rhs.m_circular_pool;
     return *this;
   }
 
   PoolAllocator( PoolAllocator && rhs )
-    : m_list{ std::move( rhs.m_list ) }
+    : m_circular_pool{ std::move( rhs.m_circular_pool ) }
   {}
 
   PoolAllocator & operator=( PoolAllocator && rhs )
   {
-    m_list = std::move( rhs.m_list );
+    m_circular_pool = std::move( rhs.m_circular_pool );
     return *this;
   }
 
   ~PoolAllocator() {}
 
-  static       pointer address(       reference x ) noexcept { return &x; }
-  static const_pointer address( const_reference x ) noexcept { return &x; }
+  static       pointer address(       reference x ) LOCKFREE_NOEXCEPT { return &x; }
+  static const_pointer address( const_reference x ) LOCKFREE_NOEXCEPT { return &x; }
 
   static constexpr size_type max_size() { return 1u; }
 
@@ -110,14 +104,14 @@ public:
       throw std::bad_alloc();
     }
 
-    typename internal_list_type::iterator itr = m_list.emplace();
+    typename internal_circular_pool_type::iterator itr = m_circular_pool.emplace();
 
     if (!itr) {
       throw std::bad_alloc();
     }
 
-    // set the list node to allow O(1) deallocate
-    itr->m_list_node = reinterpret_cast<void*>(list_node_type::get_node(itr));
+    // set the circular_pool node to allow O(1) deallocate
+    itr->m_circular_pool_node = reinterpret_cast<void*>(circular_pool_node_type::get_node(itr));
     __sync_synchronize();
 
     return reinterpret_cast<pointer>(itr->m_buffer);
@@ -131,11 +125,11 @@ public:
     }
 
     Node * node = reinterpret_cast<Node *>(p);
-    list_node_type * list_node = reinterpret_cast<list_node_type *>(node->m_list_node);
-    typename internal_list_type::iterator itr = list_node->get_iterator( node );
+    circular_pool_node_type * circular_pool_node = reinterpret_cast<circular_pool_node_type *>(node->m_circular_pool_node);
+    typename internal_circular_pool_type::iterator itr = circular_pool_node->get_iterator( node );
 
     if (itr) {
-      m_list.erase(itr);
+      m_circular_pool.erase(itr);
     }
     else {
       printf("Error: double deallocate.");
@@ -143,7 +137,7 @@ public:
   }
 
 private:
-  internal_list_type m_list;
+  internal_circular_pool_type m_circular_pool;
 };
 
 } // namespace Lockfree

@@ -1,8 +1,8 @@
-#ifndef LOCKFREE_UNSTRUCTURED_LIST
-#define LOCKFREE_UNSTRUCTURED_LIST
+#ifndef LOCKFREE_CIRCULAR_POOL_HPP
+#define LOCKFREE_CIRCULAR_POOL_HPP
 
 #include "impl/Lockfree_Macros.hpp"
-#include "impl/Lockfree_UnstructuredNode.hpp"
+#include "impl/Lockfree_CircularPoolNode.hpp"
 
 #include "Lockfree_UsageModel.hpp"
 
@@ -13,35 +13,33 @@
 
 namespace Lockfree {
 
-// Copies of list are shallow,  i.e., they point to the same reference counted memory.
-// So each thread should have its own copy of the list
-// It is not thread safe for multiple threads to interact with the same instance of a list
+// Copies of circular_pool are shallow,  i.e., they point to the same reference counted memory.
+// So each thread should have its own copy of the circular_pool
+// It is not thread safe for multiple threads to interact with the same instance of a circular_pool
 template <  typename T
+          , SizeModel Size = ENABLE_SIZE
           , UsageModel Model = SHARED_INSTANCE
           , template <typename> class Allocator = std::allocator
-          , template <typename> class SizeTypeAllocator = std::allocator
-          , typename BitsetType = uint64_t
-          , int Alignment = 16
+          , template <typename> class SizeTypeAllocator = Allocator
          >
-class UnstructuredList
+class CircularPool
 {
 public:
   using size_type = size_t;
   using value_type = T;
-  using bitset_type = BitsetType;
-  static constexpr int alignment = Alignment;
   static constexpr UsageModel usage_model = Model;
   template <typename U> using allocator = Allocator<U>;
 
-  using list_type = UnstructuredList<  T
-                                     , Model
-                                     , Allocator
-                                     , SizeTypeAllocator
-                                     , BitsetType
-                                     , Alignment
-                                    >;
+  static constexpr bool has_size = Size;
 
-  using impl_node_type = Impl::UnstructuredNode<T, BitsetType, Alignment>;
+  using circular_pool_type = CircularPool<  T
+                                          , Size
+                                          , Model
+                                          , Allocator
+                                          , SizeTypeAllocator
+                                         >;
+
+  using impl_node_type = Impl::CircularPoolNode<T>;
 
   using node_allocator_type   = allocator<impl_node_type>;
   using size_t_allocator_type = SizeTypeAllocator<size_type>;
@@ -79,21 +77,40 @@ public:
   iterator emplace(Args... args)
   {
     iterator itr;
+    impl_node_type * curr;
 
-    __sync_fetch_and_add( (m_shared + SHARED_SIZE), one );
+    if (has_size) {
+      const size_t curr_size = __sync_add_and_fetch( (m_shared + SHARED_SIZE), one );
+      const size_t curr_capacity = capacity();
+      const bool has_unused_capacity = 100ull*curr_size < 95ull*curr_capacity;
 
-    impl_node_type * const start = get_insert_head();
-    impl_node_type * curr = start;
-    impl_node_type * prev = curr;
+      impl_node_type * const start = get_insert_head();
+      impl_node_type * next = start;
 
-    // try to insert the value into an existing node
-    do {
-      itr = curr->try_atomic_emplace( std::forward<Args>(args)... );
-      prev = curr;
-      curr = curr->next();
-    } while ( !itr && (curr != start) && (100ull*size() < 95ull*capacity()) );
+      // try to insert the value into an existing node
+      do {
+        curr = next;
+        next = curr->next();
+        itr = curr->try_atomic_emplace( std::forward<Args>(args)... );
+      } while ( !itr && (next != start) && has_unused_capacity );
+    }
+    else {
 
-    // wrapped around the list
+      const int num_search_nodes = 5;
+      int n = 0;
+      impl_node_type * const start = get_insert_head();
+      impl_node_type * next = start;
+
+      // try to insert the value into an existing node
+      do {
+        curr = next;
+        next = curr->next();
+        itr = curr->try_atomic_emplace( std::forward<Args>(args)... );
+      } while ( !itr && (next != start) && ( ++n < num_search_nodes) );
+
+    }
+
+    // wrapped around the circular_pool
     // Allocate node and insert the value
     if ( !itr ) {
       // allocate and construct
@@ -102,27 +119,27 @@ public:
 
       __sync_fetch_and_add( (m_shared + SHARED_NUM_NODES), 1 );
 
-      // will always succeed since the node is not in the list
+      // will always succeed since the node is not in the circular_pool
       itr = new_node->try_atomic_emplace( std::forward<Args>(args)... );
 
-      // insert the node at the end of list (prev->next)
+      // insert the node at the end of circular_pool (curr->next)
       impl_node_type * next;
       do {
-        next = prev->next();
+        next = curr->next();
         new_node->set_next(next);
-      } while ( ! prev->try_update_next( next, new_node ) );
+      } while ( ! curr->try_update_next( next, new_node ) );
 
-      prev = new_node;
+      curr = new_node;
     }
 
-    try_set_insert_head( prev );
+    try_set_insert_head( curr );
 
     return itr;
   }
 
   /// front()
   ///
-  /// return an iterator to the front of the list,
+  /// return an iterator to the front of the circular_pool,
   /// may return an invalid iterator
   iterator front() const
   {
@@ -163,7 +180,9 @@ public:
   {
     if ( itr ) {
       impl_node_type::erase( itr );
-      __sync_sub_and_fetch( (m_shared + SHARED_SIZE), one );
+      if (has_size) {
+        __sync_sub_and_fetch( (m_shared + SHARED_SIZE), one );
+      }
     }
   }
 
@@ -176,10 +195,12 @@ public:
   {
     if ( itr ) {
       impl_node_type::erase_and_advance( itr, pred );
-      __sync_sub_and_fetch( (m_shared + SHARED_SIZE), one );
+      if (has_size) {
+        __sync_sub_and_fetch( (m_shared + SHARED_SIZE), one );
+      }
     }
 
-    // set the front of the list to the new iterator
+    // set the front of the circular_pool to the new iterator
     if ( itr ) {
       try_set_find_head( impl_node_type::get_node(itr) );
     }
@@ -197,16 +218,17 @@ public:
 
   /// size()
   ///
-  /// number of values currently in the list
+  /// number of values currently in the circular_pool
   LOCKFREE_FORCEINLINE
   size_type size() const
   {
+    static_assert( has_size, "ERROR: Size disabled!" );
     return m_shared[SHARED_SIZE];
   }
 
   /// capacity()
   ///
-  /// number of values the list can currently hold
+  /// number of values the circular_pool can currently hold
   LOCKFREE_FORCEINLINE
   size_type capacity() const
   {
@@ -215,7 +237,7 @@ public:
 
   /// num_nodes()
   ///
-  /// number of nodes in the list
+  /// number of nodes in the circular_pool
   LOCKFREE_FORCEINLINE
   size_type num_nodes() const
   {
@@ -224,16 +246,16 @@ public:
 
   /// num_bytes()
   ///
-  /// number of bytes the list is currently using
+  /// number of bytes the circular_pool is currently using
   LOCKFREE_FORCEINLINE
   size_type num_bytes() const
   {
-    return sizeof(impl_node_type) * num_nodes() + sizeof(list_type) * ref_count();
+    return sizeof(impl_node_type) * num_nodes() + sizeof(circular_pool_type) * ref_count();
   }
 
   /// ref_count()
   ///
-  /// number of references to the list
+  /// number of references to the circular_pool
   size_type ref_count() const
   {
     return m_shared[SHARED_REF_COUNT];
@@ -241,7 +263,7 @@ public:
 
   /// empty()
   ///
-  /// is the list empty
+  /// is the circular_pool empty
   LOCKFREE_FORCEINLINE
   bool empty() const
   {
@@ -251,7 +273,7 @@ public:
 
   /// advance_head
   ///
-  /// advance the head of the list by n nodes
+  /// advance the head of the circular_pool by n nodes
   void advance_head( const size_type n )
   {
     impl_node_type * start = get_insert_head();
@@ -262,10 +284,10 @@ public:
     try_set_find_head( start );
   }
 
-  /// Contruct a list
-  UnstructuredList(  node_allocator_type   arg_node_allocator   = node_allocator_type{}
-                   , size_t_allocator_type arg_size_t_allocator = size_t_allocator_type{}
-                  )
+  /// Contruct a circular_pool
+  CircularPool(  node_allocator_type   arg_node_allocator   = node_allocator_type{}
+               , size_t_allocator_type arg_size_t_allocator = size_t_allocator_type{}
+              )
     : m_insert_head{}
     , m_find_head{}
     , m_shared{}
@@ -288,7 +310,7 @@ public:
   }
 
   // shallow copy with a hint on how many task this thread will insert
-  UnstructuredList( UnstructuredList const & rhs, const size_type num_insert_hint = 0  )
+  CircularPool( CircularPool const & rhs, const size_type num_insert_hint = 0  )
     : m_insert_head{ rhs.m_insert_head }
     , m_find_head{ rhs.m_find_head }
     , m_shared{ rhs.m_shared }
@@ -314,14 +336,14 @@ public:
         curr = new_node;
       }
 
-      // set the head of the list to a newly created node(s)
+      // set the head of the circular_pool to a newly created node(s)
       m_insert_head = start;
       m_find_head = start;
 
       // memory fence
       __sync_synchronize();
 
-      // add all the new nodes to the list
+      // add all the new nodes to the circular_pool
       impl_node_type * head = rhs.get_insert_head();
       impl_node_type * next;
       do {
@@ -338,7 +360,7 @@ public:
 
 
   // shallow copy
-  UnstructuredList & operator=( UnstructuredList const & rhs )
+  CircularPool & operator=( CircularPool const & rhs )
   {
     // check for self assignment
     if ( this != & rhs ) {
@@ -356,7 +378,7 @@ public:
   }
 
   // move constructor
-  UnstructuredList( UnstructuredList && rhs )
+  CircularPool( CircularPool && rhs )
     : m_insert_head{ std::move( rhs.m_insert_head ) }
     , m_find_head{ std::move( rhs.m_find_head ) }
     , m_shared{ std::move( rhs.m_shared ) }
@@ -374,7 +396,7 @@ public:
   // move assignement
   //
   // NOT thread safe if UsageModel is SHARED_INSTANCE
-  UnstructuredList & operator=( UnstructuredList && rhs )
+  CircularPool & operator=( CircularPool && rhs )
   {
     std::swap( m_insert_head, rhs.m_insert_head );
     std::swap( m_find_head, rhs.m_find_head );
@@ -385,7 +407,7 @@ public:
     return *this;
   }
 
-  ~UnstructuredList()
+  ~CircularPool()
   {
     if ( m_shared &&  __sync_sub_and_fetch( (m_shared+SHARED_REF_COUNT), one ) == 0u ) {
 
@@ -393,7 +415,7 @@ public:
       impl_node_type * curr = start;
       impl_node_type * next;
 
-      // iterate circular list deleting nodes
+      // iterate circular circular_pool deleting nodes
       do {
         next = curr->next();
         m_node_allocator.destroy(curr);
@@ -462,4 +484,4 @@ private: // data members
 } // namespace Lockfree
 
 
-#endif //LOCKFREE_UNSTRUCTURED_LIST
+#endif //LOCKFREE_CIRCULAR_POOL_HPP
