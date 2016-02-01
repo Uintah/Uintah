@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2016 The University of Utah
+ * Copyright (c) 1997-2015 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -22,33 +22,22 @@
  * IN THE SOFTWARE.
  */
 
-#ifndef __SDINTERFACEMODEL_H__
-#define __SDINTERFACEMODEL_H__
+#ifndef __NULLIFCONCDIFF_H__
+#define __NULLIFCONCDIFF_H__
 
-#include <CCA/Components/MPM/MPMFlags.h>
-#include <CCA/Components/MPM/ConstitutiveModel/MPMMaterial.h>
-#include <CCA/Ports/Scheduler.h>
-#include <CCA/Ports/SchedulerP.h>
-#include <CCA/Ports/DataWarehouse.h>
-#include <Core/Grid/SimulationStateP.h>
-#include <Core/Grid/SimulationState.h>
-#include <Core/Grid/Task.h>
-#include <Core/Grid/Variables/ComputeSet.h>
-#include <Core/Labels/MPMLabel.h>
-#include <Core/Parallel/ProcessorGroup.h>
-#include <Core/ProblemSpec/ProblemSpecP.h>
+#include <CCA/Components/MPM/ReactionDiffusion/SDInterfaceModel.h>
 
 namespace Uintah {
 
-  class SDInterfaceModel {
+  class NullIFConcDiff : public SDInterfaceModel {
   public:
     
-    SDInterfaceModel(ProblemSpecP& ps, SimulationStateP& sS, MPMFlags* Mflag);
-    virtual ~SDInterfaceModel();
+    NullIFConcDiff(ProblemSpecP& ps, SimulationStateP& sS, MPMFlags* Mflag);
+    virtual ~NullIFConcDiff();
 
     virtual void addComputesAndRequiresInterpolated(SchedulerP & sched,
-                                          const PatchSet* patches,
-                                          const MaterialSet* matls);
+                                      const PatchSet* patches,
+                                      const MaterialSet* matls);
 
     virtual void sdInterfaceInterpolated(const ProcessorGroup*,
                                          const PatchSubset* patches,
@@ -57,8 +46,8 @@ namespace Uintah {
                                          DataWarehouse* new_dw);
 
     virtual void addComputesAndRequiresDivergence(SchedulerP & sched,
-                                                  const PatchSet* patches,
-                                                  const MaterialSet* matls);
+                                      const PatchSet* patches,
+                                      const MaterialSet* matls);
 
     virtual void sdInterfaceDivergence(const ProcessorGroup*,
                                        const PatchSubset* patches,
@@ -75,9 +64,10 @@ namespace Uintah {
 
     int NGP, NGN;
     int numMPMmatls;
+    //bool do_explicit;
 
-    SDInterfaceModel(const SDInterfaceModel&);
-    SDInterfaceModel& operator=(const SDInterfaceModel&);
+    NullIFConcDiff(const NullIFConcDiff&);
+    NullIFConcDiff& operator=(const NullIFConcDiff&);
     
   };
   

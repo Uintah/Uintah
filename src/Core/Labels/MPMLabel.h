@@ -119,6 +119,7 @@ namespace Uintah {
       const VarLabel* pTemperatureGradientLabel_preReloc; //for heat conduction
       const VarLabel* pConcGradientLabel; //for scalar diffusion
       const VarLabel* pConcGradientLabel_preReloc; //for scalar diffusion
+      const VarLabel* pDiffusivityLabel; //for scalar diffusion
       
       const VarLabel* gLambdaDotLabel;
       const VarLabel* gColorLabel;
@@ -304,6 +305,12 @@ namespace Uintah {
       const VarLabel* czIDLabel; 
       const VarLabel* czIDLabel_preReloc; 
       const VarLabel* pCellNACZIDLabel;
+
+      // ******* start - for temporary use only, CG
+      const VarLabel* pPressureLabel_t1;
+      const VarLabel* pConcInterpLabel; 
+      const VarLabel* pEquivalentStress_t1; 
+      // ******* end - for temporary use only, CG
 
     };
 } // End namespace Uintah

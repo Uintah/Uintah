@@ -24,6 +24,7 @@
 #include <CCA/Components/MPM/ReactionDiffusion/SDInterfaceModelFactory.h>
 #include <CCA/Components/MPM/ReactionDiffusion/SDInterfaceModel.h>
 #include <CCA/Components/MPM/ReactionDiffusion/CommonIFConcDiff.h>
+#include <CCA/Components/MPM/ReactionDiffusion/NullIFConcDiff.h>
 
 #include <CCA/Components/MPM/MPMFlags.h>
 
@@ -54,6 +55,12 @@ SDInterfaceModel* SDInterfaceModelFactory::create(ProblemSpecP& ps,
   if(!child->getWithDefault("type",diff_interface_type, "null"))
     throw ProblemSetupException("No type for diffusion_interface", __FILE__, __LINE__);
 
+  if (flags->d_integrator_type != "implicit" &&
+      flags->d_integrator_type != "explicit"){
+    string txt="MPM: time integrator [explicit or implicit] hasn't been set.";
+    throw ProblemSetupException(txt, __FILE__, __LINE__);
+  }
+
   if(flags->d_integrator_type == "implicit"){
     string txt="MPM:  Implicit Scalar Diffusion is not working yet!";
     throw ProblemSetupException(txt, __FILE__, __LINE__);
@@ -61,8 +68,10 @@ SDInterfaceModel* SDInterfaceModelFactory::create(ProblemSpecP& ps,
 
   if (diff_interface_type == "common"){
     return(scinew CommonIFConcDiff(mpm_ps, ss, flags));
+  }else if (diff_interface_type == "null"){
+    return(scinew NullIFConcDiff(mpm_ps, ss, flags));
   }else if (diff_interface_type == "paired"){
-    return(scinew SDInterfaceModel(child, ss, flags));
+    return(scinew NullIFConcDiff(mpm_ps, ss, flags));
   }else{
     throw ProblemSetupException("Unknown Scalar Interface Type ("+diff_interface_type+")", __FILE__, __LINE__);
   }

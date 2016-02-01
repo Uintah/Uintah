@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2016 The University of Utah
+ * Copyright (c) 1997-2015 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -22,14 +22,12 @@
  * IN THE SOFTWARE.
  */
 
-#include <CCA/Components/MPM/ReactionDiffusion/SDInterfaceModel.h>
-#include <CCA/Components/MPM/ReactionDiffusion/ScalarDiffusionModel.h>
-#include <CCA/Components/MPM/ConstitutiveModel/MPMMaterial.h>
-#include <Core/Labels/MPMLabel.h>
+#include <CCA/Components/MPM/ReactionDiffusion/NullIFConcDiff.h>
 
 using namespace Uintah;
 
-SDInterfaceModel::SDInterfaceModel(ProblemSpecP& ps, SimulationStateP& sS, MPMFlags* Mflag){
+NullIFConcDiff::NullIFConcDiff(ProblemSpecP& ps, SimulationStateP& sS, MPMFlags* Mflag):
+  SDInterfaceModel(ps, sS, Mflag){
 
   d_Mflag = Mflag;
   d_sharedState = sS;
@@ -43,19 +41,31 @@ SDInterfaceModel::SDInterfaceModel(ProblemSpecP& ps, SimulationStateP& sS, MPMFl
     NGP=2;
     NGN=2;
   }
+
+  //**** Currently only explicit is used, no need to test for integrator type
+  // if(d_Mflag->d_scalarDiffusion_type == "explicit"){
+  //   do_explicit = true;
+  // }else{
+  //   do_explicit = false;
+  // }
+
 }
 
-SDInterfaceModel::~SDInterfaceModel(){
+NullIFConcDiff::~NullIFConcDiff(){
   delete(d_lb);
 }
 
-void SDInterfaceModel::addComputesAndRequiresInterpolated(SchedulerP & sched,
+void NullIFConcDiff::addComputesAndRequiresInterpolated(SchedulerP & sched,
                                                    const PatchSet* patches,
                                                    const MaterialSet* matls)
 {
+  Task * t = scinew Task("NullIFConcDiff::sdInterfaceMomInterpolated",
+                         this, &NullIFConcDiff::sdInterfaceInterpolated);
+  
+  sched->addTask(t, patches, matls);
 }
 
-void SDInterfaceModel::sdInterfaceInterpolated(const ProcessorGroup*,
+void NullIFConcDiff::sdInterfaceInterpolated(const ProcessorGroup*,
                                              const PatchSubset* patches,
                                              const MaterialSubset* matls,
                                              DataWarehouse* old_dw,
@@ -63,13 +73,17 @@ void SDInterfaceModel::sdInterfaceInterpolated(const ProcessorGroup*,
 {
 }
 
-void SDInterfaceModel::addComputesAndRequiresDivergence(SchedulerP & sched,
+void NullIFConcDiff::addComputesAndRequiresDivergence(SchedulerP & sched,
                                                  const PatchSet* patches,
                                                  const MaterialSet* matls)
 {
+  Task * t = scinew Task("NullIFConcDiff::sdInterfaceDivergence",
+                         this, &NullIFConcDiff::sdInterfaceDivergence);
+  
+  sched->addTask(t, patches, matls);
 }
 
-void SDInterfaceModel::sdInterfaceDivergence(const ProcessorGroup*,
+void NullIFConcDiff::sdInterfaceDivergence(const ProcessorGroup*,
                                            const PatchSubset* patches,
                                            const MaterialSubset* matls,
                                            DataWarehouse* old_dw,
@@ -77,7 +91,10 @@ void SDInterfaceModel::sdInterfaceDivergence(const ProcessorGroup*,
 {
 }
 
-void SDInterfaceModel::outputProblemSpec(ProblemSpecP& ps)
+void NullIFConcDiff::outputProblemSpec(ProblemSpecP& ps)
 {
-  // To be filled out in interface model
+
+  ProblemSpecP sdim_ps = ps;
+  sdim_ps = ps->appendChild("diffusion_interface");
+  sdim_ps->appendElement("type","null");
 }

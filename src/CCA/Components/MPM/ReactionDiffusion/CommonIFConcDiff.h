@@ -26,43 +26,17 @@
 #define __COMMONIFCONCDIFF_H__
 
 #include <CCA/Components/MPM/ReactionDiffusion/SDInterfaceModel.h>
-#include <Core/Grid/SimulationStateP.h>
-#include <Core/Grid/SimulationState.h>
-#include <CCA/Components/MPM/MPMFlags.h>
-#include <Core/ProblemSpec/ProblemSpecP.h>
+#include <CCA/Components/MPM/ReactionDiffusion/NullIFConcDiff.h>
 
 namespace Uintah {
 
-  class Task;
-  class MPMFlags;
-  class MPMLabel;
-  class MPMMaterial;
-  class DataWarehouse;
-  class ProcessorGroup;
-
-  
-  class CommonIFConcDiff : public SDInterfaceModel {
+  class CommonIFConcDiff : public NullIFConcDiff {
   public:
     
     CommonIFConcDiff(ProblemSpecP& ps, SimulationStateP& sS, MPMFlags* Mflag);
     ~CommonIFConcDiff();
 
-//    virtual void initializeSDMData(const Patch* patch, DataWarehouse* new_dw);
-
-    virtual void computeDivergence(const Patch* patch, DataWarehouse* old_dw,
-		                               DataWarehouse* new_dw);
-
-    virtual void outputProblemSpec(ProblemSpecP& ps,bool output_sdim_tag = true);
-
   protected:
-    MPMLabel* d_lb;
-    MPMFlags* d_Mflag;
-    SimulationStateP d_sharedState;
-
-    int NGP, NGN;
-    std::string diffusion_type;
-    int numMPMmatls;
-    bool include_hydrostress;
 
     CommonIFConcDiff(const CommonIFConcDiff&);
     CommonIFConcDiff& operator=(const CommonIFConcDiff&);
