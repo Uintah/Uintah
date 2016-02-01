@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>624</width>
-    <height>588</height>
+    <width>616</width>
+    <height>746</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -17,7 +17,7 @@
    <widget class="QGroupBox" name="TimeInfoGroupBox">
     <property name="geometry">
      <rect>
-      <x>20</x>
+      <x>10</x>
       <y>10</y>
       <width>241</width>
       <height>391</height>
@@ -283,7 +283,7 @@
    <widget class="QGroupBox" name="OutputIntervalGroupBox">
     <property name="geometry">
      <rect>
-      <x>20</x>
+      <x>10</x>
       <y>400</y>
       <width>241</width>
       <height>151</height>
@@ -316,7 +316,7 @@
    <widget class="QGroupBox" name="UPSVariableGroupBox">
     <property name="geometry">
      <rect>
-      <x>270</x>
+      <x>260</x>
       <y>10</y>
       <width>341</width>
       <height>301</height>
@@ -349,7 +349,7 @@
    <widget class="QGroupBox" name="MinMaxVariableGroupBox">
     <property name="geometry">
      <rect>
-      <x>270</x>
+      <x>260</x>
       <y>320</y>
       <width>341</width>
       <height>231</height>
@@ -384,13 +384,66 @@
      </column>
     </widget>
    </widget>
+   <widget class="QGroupBox" name="GridInfoGroupBox">
+    <property name="geometry">
+     <rect>
+      <x>10</x>
+      <y>550</y>
+      <width>591</width>
+      <height>151</height>
+     </rect>
+    </property>
+    <property name="title">
+     <string>Grid Information</string>
+    </property>
+    <widget class="QTableWidget" name="GridInfoTable">
+     <property name="geometry">
+      <rect>
+       <x>10</x>
+       <y>30</y>
+       <width>571</width>
+       <height>111</height>
+      </rect>
+     </property>
+     <column>
+      <property name="text">
+       <string>Level</string>
+      </property>
+     </column>
+     <column>
+      <property name="text">
+       <string>Refinement Ratio</string>
+      </property>
+     </column>
+     <column>
+      <property name="text">
+       <string>Patches</string>
+      </property>
+     </column>
+     <column>
+      <property name="text">
+       <string>Cells</string>
+      </property>
+     </column>
+     <column>
+      <property name="text">
+       <string>Mean</string>
+      </property>
+     </column>
+     <column>
+      <property name="text">
+       <string>Volume</string>
+      </property>
+     </column>
+    </widget>
+   </widget>
   </widget>
   <widget class="QMenuBar" name="menubar">
    <property name="geometry">
     <rect>
      <x>0</x>
      <y>0</y>
-     <width>624</width>
+     <width>616</width>
      <height>22</height>
     </rect>
    </property>
