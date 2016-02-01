@@ -275,7 +275,8 @@ public:
     TaskGlobalCommTime,
     TaskWaitCommTime,
     TaskWaitThreadTime,
-    OutputTime,
+    OutputFileIO_Time,        // you may want to modify SimulationState::getTotalTime()
+    OutputFileIO_Rate,
     MAX_TIMING_STATS
   };
 
@@ -283,6 +284,7 @@ public:
 
   double getTotalTime();
   double getOverheadTime();
+  void computeRunTimeStats(InfoMapper< RunTimeStat, double > mpi_info);
 
   //percent time in overhead samples
   double overhead[OVERHEAD_WINDOW];

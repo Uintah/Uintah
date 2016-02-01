@@ -1792,7 +1792,7 @@ DataArchiver::outputReductionVars(const ProcessorGroup*,
       out << "\n";
     }
   }
-  d_sharedState->d_runTimeStats[SimulationState::OutputTime] += Time::currentSeconds()-start;
+  d_sharedState->d_runTimeStats[SimulationState::OutputFileIO_Time] += Time::currentSeconds()-start;
   dbg << "  end\n";
 }
 
@@ -2094,7 +2094,8 @@ DataArchiver::outputVariables(const ProcessorGroup * pg,
       doc->output(xmlFilename.c_str());
       //doc->releaseDocument();
       
-      d_sharedState->d_runTimeStats[SimulationState::OutputTime] += Time::currentSeconds()-start;
+      d_sharedState->d_runTimeStats[SimulationState::OutputFileIO_Time] += Time::currentSeconds()-start;
+      d_sharedState->d_runTimeStats[SimulationState::OutputFileIO_Rate] += SHRT_MAX;       // Need to compute something
     }
     d_outputLock.unlock(); 
   }
@@ -2133,7 +2134,8 @@ DataArchiver::outputVariables(const ProcessorGroup * pg,
         saveLabels_PIDX(saveTheseLabels, pg, patches, new_dw, type, TD, myDir);
       } 
     }
-    d_sharedState->d_runTimeStats[SimulationState::OutputTime] += Time::currentSeconds()-start;
+    d_sharedState->d_runTimeStats[SimulationState::OutputFileIO_Time] += Time::currentSeconds()-start;
+    d_sharedState->d_runTimeStats[SimulationState::OutputFileIO_Rate] += SHRT_MAX;       // Need to compute something
   }
   
 #endif

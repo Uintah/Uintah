@@ -712,16 +712,10 @@ UnifiedScheduler::execute( int tgnum     /* = 0 */,
 
   emitTime("Other excution time", totalexec - mpi_info_[TotalSend] - mpi_info_[TotalRecv] - mpi_info_[TotalTask] - mpi_info_[TotalReduce]);
 
+  // compute the net timings
   if (d_sharedState != 0) {
 
-    d_sharedState->d_runTimeStats[SimulationState::TaskExecTime]       +=
-      mpi_info_[TotalTask] - d_sharedState->d_runTimeStats[SimulationState::OutputTime];  // don't count output time...
-    d_sharedState->d_runTimeStats[SimulationState::TaskLocalCommTime]  +=
-      mpi_info_[TotalRecv] + mpi_info_[TotalSend];
-    d_sharedState->d_runTimeStats[SimulationState::TaskWaitCommTime]   +=
-      mpi_info_[TotalWaitMPI];
-    d_sharedState->d_runTimeStats[SimulationState::TaskGlobalCommTime] +=
-      mpi_info_[TotalReduce];
+    computeNetRunTimeStats(d_sharedState->d_runTimeStats);
 
     for (int i = 0; i < numThreads_; i++) {
       d_sharedState->d_runTimeStats[SimulationState::TaskWaitThreadTime] +=
