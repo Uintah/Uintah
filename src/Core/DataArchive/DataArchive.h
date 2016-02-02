@@ -386,7 +386,8 @@ namespace Uintah {
       friend class DataArchive::TimeData;
       DataArchive( const DataArchive& );
       DataArchive& operator=( const DataArchive& );
-
+      //______________________________________________________________________
+      //
       void queryVariables( FILE                                * fp,
                            std::vector<std::string>            & names,
                            std::vector<const TypeDescription*> & types,
@@ -432,28 +433,32 @@ namespace Uintah {
       static DebugStream dbg;
   };
 
-
+  //______________________________________________________________________
+  //
   template<class T>
   void
   DataArchive::query( NCVariable< T >&, const std::string& name, int matlIndex,
                       const IntVector& index, double min, double max ) {
     std::cerr << "DataArchive::query not finished\n";
   }
-
+  //______________________________________________________________________
+  //
   template<class T>
   void
   DataArchive::query( CCVariable< T >&, const std::string& name, int matlIndex,
                       const IntVector& index, double min, double max ) {
     std::cerr << "DataArchive::query not finished\n";
   }
-
+//______________________________________________________________________
+//
   template<class T>
   void
   DataArchive::query( ParticleVariable< T >& var, const std::string& name,
                       int matlIndex, particleId id, double min, double max ) {
     std::cerr << "DataArchive::query not finished\n";
   }
-
+//______________________________________________________________________
+//
   template<class T>
   void
   DataArchive::query(       std::vector<T> & values,
@@ -521,7 +526,8 @@ namespace Uintah {
     }
     dbg << "DataArchive::query(values) completed in " << (SCIRun::Time::currentSeconds() - call_start) << " seconds\n";
   }  
-
+//______________________________________________________________________
+//
   template<class T>
   void
   DataArchive::query(       std::vector<T> & values,

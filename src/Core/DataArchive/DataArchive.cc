@@ -56,7 +56,8 @@ using namespace Uintah;
 using namespace SCIRun;
 
 DebugStream DataArchive::dbg("DataArchive", false);
-
+//______________________________________________________________________
+//
 DataArchive::DataArchive( const string & filebase,
                                 int      processor     /* = 0 */,
                                 int      numProcessors /* = 1 */,
@@ -95,7 +96,8 @@ DataArchive::DataArchive( const string & filebase,
 
   queryParticlePositionName( d_indexFile );
 }
-
+//______________________________________________________________________
+//
 DataArchive::~DataArchive()
 {
   // The d_createdVarLabels member variable, is used to keep track of
@@ -111,7 +113,8 @@ DataArchive::~DataArchive()
     VarLabel::destroy( vm_iter->second );
   }
 }
-
+//______________________________________________________________________
+//
 void
 DataArchive::queryParticlePositionName( FILE * doc )
 {
@@ -130,7 +133,8 @@ DataArchive::queryParticlePositionName( FILE * doc )
     }
   }
 }
-
+//______________________________________________________________________
+//
 // Static, so can be called from either DataArchive or TimeData.
 void
 DataArchive::queryEndiannessAndBits(  FILE * doc, string & endianness, int & numBits )
@@ -157,7 +161,8 @@ DataArchive::queryEndiannessAndBits(  FILE * doc, string & endianness, int & num
     }
   }
 }
-
+//______________________________________________________________________
+//
 void
 DataArchive::queryTimesteps( vector<int>    & index,
                              vector<double> & times )
@@ -229,7 +234,8 @@ DataArchive::queryTimesteps( vector<int>    & index,
   times = d_ts_times;
   dbg << "DataArchive::queryTimesteps completed in " << Time::currentSeconds()-start << " seconds\n";
 }
-
+//______________________________________________________________________
+//
 DataArchive::TimeData &
 DataArchive::getTimeData( int index )
 {
@@ -265,7 +271,8 @@ DataArchive::getTimeData( int index )
   d_lastNtimesteps.push_front( index );
   return td;
 }
-
+//______________________________________________________________________
+//
 int
 DataArchive::queryPatchwiseProcessor( const Patch * patch, const int index )
 {
@@ -276,7 +283,8 @@ DataArchive::queryPatchwiseProcessor( const Patch * patch, const int index )
   d_lock.unlock();
   return proc;
 }
-
+//______________________________________________________________________
+//
 GridP
 DataArchive::queryGrid( int index, const ProblemSpecP & ups /* = NULL */, bool assignBCs )
 {
@@ -358,21 +366,24 @@ DataArchive::queryGrid( int index, const ProblemSpecP & ups /* = NULL */, bool a
 
   return grid;
 }
-
+//______________________________________________________________________
+//
 void
 DataArchive::queryLifetime( double& /*min*/, double& /*max*/,
                             particleId /*id*/)
 {
   cerr << "DataArchive::lifetime not finished\n";
 }
-
+//______________________________________________________________________
+//
 void
 DataArchive::queryLifetime( double& /*min*/, double& /*max*/,
                             const Patch* /*patch*/)
 {
   cerr << "DataArchive::lifetime not finished\n";
 }
-
+//______________________________________________________________________
+//
 void
 DataArchive::queryVariables( vector<string>                         & names,
                              vector<const Uintah::TypeDescription*> & types )
@@ -391,7 +402,8 @@ DataArchive::queryVariables( vector<string>                         & names,
   d_lock.unlock();
   dbg << "DataArchive::queryVariables completed in " << Time::currentSeconds()-start << " seconds\n";
 }
-
+//______________________________________________________________________
+//
 void
 DataArchive::queryGlobals( vector<string>                         & names,
                            vector<const Uintah::TypeDescription*> & types )
@@ -413,7 +425,8 @@ DataArchive::queryGlobals( vector<string>                         & names,
 
   dbg << "DataArchive::queryGlobals completed in " << Time::currentSeconds()-start << " seconds\n";   
 }
-
+//______________________________________________________________________
+//
 void
 DataArchive::queryVariables( FILE                                   * fp,
                              vector<string>                         & names,
@@ -469,13 +482,14 @@ DataArchive::queryVariables( FILE                                   * fp,
     }
   }
 }
-
+//______________________________________________________________________
+//
 void
 DataArchive::query(       Variable     & var,
                     const string       & name,
                     const int            matlIndex, 
                     const Patch        * patch,
-                    const int            index,
+                    const int            timeIndex,
                           DataFileInfo * dfi /* = 0 */ )
 {
   double tstart = Time::currentSeconds();
@@ -485,7 +499,7 @@ DataArchive::query(       Variable     & var,
 #endif
 
   d_lock.lock();
-  TimeData& timedata = getTimeData(index);
+  TimeData& timedata = getTimeData(timeIndex);
   d_lock.unlock();
 
   ASSERT(timedata.d_initialized);
@@ -524,16 +538,20 @@ DataArchive::query(       Variable     & var,
     // If this is a virtual patch, grab the real patch, but only do that here - in the next query, we want
     // the data to be returned in the virtual coordinate space.
     if (!timedata.d_datafileInfo.lookup(VarnameMatlPatch(name, matlIndex, patchid), datafileinfo)) {
-      cerr << "VARIABLE NOT FOUND: " << name << ", material index " << matlIndex << ", patch " << patch->getID() << ", time index " << index << "\nPlease make sure the correct material index is specified\n";
-      throw InternalError("DataArchive::query:Variable not found",
-                          __FILE__, __LINE__);
+      cerr << "VARIABLE NOT FOUND: " << name << ", material index " << matlIndex << ", patch " << patch->getID() << ", time index " << timeIndex << "\nPlease make sure the correct material index is specified\n";
+      throw InternalError("DataArchive::query:Variable not found", __FILE__, __LINE__);
     }
     dfi = &datafileinfo;
   }
+  
+  
   const TypeDescription* td = var.virtualGetTypeDescription();
   ASSERT(td->getName() == varinfo.type);
   
+  //__________________________________
+  // Allocate memory for grid or particle variables
   if (td->getType() == TypeDescription::ParticleVariable) {
+  
     if(dfi->numParticles == -1) {
       throw InternalError( "DataArchive::query:Cannot get numParticles", __FILE__, __LINE__ );
     }
@@ -541,12 +559,15 @@ DataArchive::query(       Variable     & var,
       throw InternalError("DataArchive::query: Particle query on virtual patches "
                           "not finished.  We need to adjust the particle positions to virtual space...", __FILE__, __LINE__);
     }
+  
     psetDBType::key_type   key( matlIndex, patch );
     ParticleSubset       * psubset  = 0;
     psetDBType::iterator   psetIter = d_psetDB.find(key);
+    
     if(psetIter != d_psetDB.end()) {
       psubset = (*psetIter).second.get_rep();
     }
+    
     if (psubset == 0 || (int)psubset->numParticles() != dfi->numParticles)
     {
       psubset = scinew ParticleSubset(dfi->numParticles, matlIndex, patch);
@@ -563,24 +584,31 @@ DataArchive::query(       Variable     & var,
     var.allocate( patch, varinfo.boundaryLayer );
   }
   
+  //__________________________________
+  // open data file
   int fd = open( data_filename.c_str(), O_RDONLY );
+  
   if(fd == -1) {
     cerr << "Error opening file: " << data_filename.c_str() << ", errno=" << errno << '\n';
     throw ErrnoException("DataArchive::query (open call)", errno, __FILE__, __LINE__);
   }
+  
   off_t ls = lseek( fd, dfi->start, SEEK_SET );
 
   if( ls == -1 ) {
     cerr << "Error lseek - file: " << data_filename.c_str() << ", errno=" << errno << '\n';
     throw ErrnoException("DataArchive::query (lseek call)", errno, __FILE__, __LINE__);
   }
+  
+  // read in the variable
   InputContext ic( fd, data_filename.c_str(), dfi->start );
-  double       starttime = Time::currentSeconds();
+  double starttime = Time::currentSeconds();
 
   var.read( ic, dfi->end, timedata.d_swapBytes, timedata.d_nBytes, varinfo.compression );
 
   dbg << "DataArchive::query: time to read raw data: "<<Time::currentSeconds() - starttime<<endl;
   ASSERTEQ( dfi->end, ic.cur );
+  
   int result = close( fd );
   if( result == -1 ) {
     cerr << "Error closing file: " << data_filename.c_str() << ", errno=" << errno << '\n';
@@ -592,7 +620,8 @@ DataArchive::query(       Variable     & var,
 #endif
   dbg << "DataArchive::query() completed in " << Time::currentSeconds()-tstart << " seconds\n";
 }
-
+//______________________________________________________________________
+//
 void
 DataArchive::query(       Variable       & var,
                     const string         & name,
@@ -625,7 +654,8 @@ DataArchive::query(       Variable       & var,
     }
   }
 }
-
+//______________________________________________________________________
+//
 void
 DataArchive::queryRegion(       Variable  & var,
                           const string    & name,
@@ -684,7 +714,8 @@ DataArchive::queryRegion(       Variable  & var,
     delete tmpVar;
   }
 }
-
+//______________________________________________________________________
+//
 void 
 DataArchive::findPatchAndIndex( const GridP            grid,
                                       Patch         *& patch,
@@ -741,7 +772,8 @@ DataArchive::findPatchAndIndex( const GridP            grid,
     }
 //  }
 }
-
+//______________________________________________________________________
+//
 void
 DataArchive::restartInitialize( const int             index,
                                 const GridP         & grid,
@@ -935,7 +967,6 @@ DataArchive::reduceUda_ReadUda( const ProcessorGroup * pg,
 
 //______________________________________________________________________
 //
-
 bool
 DataArchive::queryRestartTimestep( int & timestep )
 {
@@ -991,6 +1022,7 @@ DataArchive::queryRestartTimestep( int & timestep )
   }
 }
 
+//______________________________________________________________________
 // We want to cache at least a single timestep, so that we don't have
 // to reread the timestep for every patch queried.  This sets the
 // cache size to one, so that this condition is held.
@@ -999,12 +1031,14 @@ DataArchive::turnOffXMLCaching() {
   setTimestepCacheSize(1);
 }
 
+//______________________________________________________________________
 // Sets the number of timesteps to cache back to the default_cache_size
 void
 DataArchive::turnOnXMLCaching() {
   setTimestepCacheSize(default_cache_size);
 }
 
+//______________________________________________________________________
 // Sets the timestep cache size to whatever you want.  This is useful
 // if you want to override the default cache size determined by
 // TimeHashMaps.
@@ -1032,6 +1066,8 @@ DataArchive::setTimestepCacheSize( int new_size ) {
   d_lock.unlock();
 }
 
+//______________________________________________________________________
+//s
 DataArchive::TimeData::TimeData( DataArchive * da, const string & timestepPathAndFilename ) :
   d_initialized( false ), d_ts_path_and_filename( timestepPathAndFilename ), d_parent_da( da )
 {
@@ -1042,7 +1078,8 @@ DataArchive::TimeData::~TimeData()
 {
   purgeCache();
 }
-
+//______________________________________________________________________
+//
 void
 DataArchive::TimeData::init()
 {
@@ -1141,7 +1178,8 @@ DataArchive::TimeData::init()
   fclose( ts_file );
 
 } // end init()
-
+//______________________________________________________________________
+//
 void
 DataArchive::TimeData::purgeCache()
 {
@@ -1155,6 +1193,7 @@ DataArchive::TimeData::purgeCache()
   d_initialized = false;
 }
 
+//______________________________________________________________________
 // This is the function that parses the p*****.xml file for a single processor.
 void
 DataArchive::TimeData::parseFile( const string & filename, int levelNum, int basePatch )
@@ -1270,6 +1309,8 @@ DataArchive::TimeData::parseFile( const string & filename, int levelNum, int bas
   }
 } // end TimeData::parseFile()
 
+//______________________________________________________________________
+//
 void
 DataArchive::TimeData::parsePatch( const Patch * patch )
 {
@@ -1316,6 +1357,7 @@ DataArchive::TimeData::parsePatch( const Patch * patch )
   }
 }
 
+//______________________________________________________________________
 // Parses the timestep xml file for <oldDelt>
 //
 double
@@ -1344,9 +1386,9 @@ DataArchive::getOldDelt( int restart_index )
       return atof( pieces[1].c_str() );
     }
   }
-
 }
 
+//______________________________________________________________________
 // Parses the timestep xml file and skips the <Meta>, <Grid>, and <Data> sections, returning 
 // everything else.  This function assumes that the timestep.xml file was created by us and
 // is in the correct order - in other words, anything after </Data> is component related,
@@ -1387,7 +1429,8 @@ DataArchive::getTimestepDocForComponent( int restart_index )
 
   return result;
 }
-
+//______________________________________________________________________
+//
 ConsecutiveRangeSet
 DataArchive::queryMaterials( const string & varname,
                              const Patch  * patch,
@@ -1406,9 +1449,9 @@ DataArchive::queryMaterials( const string & varname,
     VarnameMatlPatch vmp(varname, i-1, patch->getRealPatch()->getID());
     DataFileInfo dummy;
 
-    if (timedata.d_datafileInfo.lookup(vmp, dummy) == 1)
+    if (timedata.d_datafileInfo.lookup(vmp, dummy) == 1) {
       matls.addInOrder(i-1);
-
+    }
   }
 
   d_lock.unlock();
@@ -1416,7 +1459,8 @@ DataArchive::queryMaterials( const string & varname,
 
   return matls;
 }
-
+//______________________________________________________________________
+//
 int
 DataArchive::queryNumMaterials(const Patch* patch, int index)
 {
