@@ -29,6 +29,9 @@
 #include <CCA/Ports/DataWarehouseP.h>
 #include <CCA/Ports/DataWarehouse.h>
 #include <CCA/Ports/LoadBalancer.h>
+#if HAVE_PIDX
+#include <CCA/Ports/PIDXOutputContext.h>
+#endif
 
 #include <Core/Exceptions/InternalError.h>
 #include <Core/Exceptions/ProblemSetupException.h>
@@ -62,12 +65,15 @@ DataArchive::DataArchive( const string & filebase,
                                 int      processor     /* = 0 */,
                                 int      numProcessors /* = 1 */,
                                 bool     verbose       /* = true */ ) :
-  ref_cnt(0), lock("DataArchive ref_cnt lock"),
-  timestep_cache_size(10), default_cache_size(10), 
+  ref_cnt(0), 
+  lock("DataArchive ref_cnt lock"),
+  timestep_cache_size(10), 
+  default_cache_size(10), 
   d_filebase(filebase), 
   d_cell_scale( Vector(1.0,1.0,1.0) ),
   d_processor(processor),
-  d_numProcessors(numProcessors), d_lock("DataArchive lock"),
+  d_numProcessors(numProcessors), 
+  d_lock("DataArchive lock"),
   d_particlePositionName("p.x"),
   d_lb( NULL )
 {
@@ -95,6 +101,9 @@ DataArchive::DataArchive( const string & filebase,
   queryEndiannessAndBits( d_indexFile, d_globalEndianness, d_globalNumBits );
 
   queryParticlePositionName( d_indexFile );
+  
+  queryOutputFormat( d_indexFile );
+  
 }
 //______________________________________________________________________
 //
@@ -133,6 +142,37 @@ DataArchive::queryParticlePositionName( FILE * doc )
     }
   }
 }
+
+
+//______________________________________________________________________
+//
+void
+DataArchive::queryOutputFormat( FILE * doc )
+{
+  rewind( doc );
+
+  while( true ) {
+
+    string line = UintahXML::getLine( doc );
+    if( line == "" ) {
+      return;
+    }
+    else if( line.compare( 0, 14, "<outputFormat>" ) == 0 ) {
+      vector<string> pieces = UintahXML::splitXMLtag( line );
+      
+      if( pieces[1] == "PIDX" || pieces[1] == "pidx" ){
+        d_outputFileFormat = PIDX;
+        proc0cout << "Restart UDA format:     PIDX \n";
+      } else {
+        d_outputFileFormat = UDA;
+        proc0cout << "Restart UDA format:     uda\n";
+      }
+      return;
+    }
+  }
+}
+
+
 //______________________________________________________________________
 //
 // Static, so can be called from either DataArchive or TimeData.
@@ -585,35 +625,46 @@ DataArchive::query(       Variable     & var,
   }
   
   //__________________________________
-  // open data file
-  int fd = open( data_filename.c_str(), O_RDONLY );
-  
-  if(fd == -1) {
-    cerr << "Error opening file: " << data_filename.c_str() << ", errno=" << errno << '\n';
-    throw ErrnoException("DataArchive::query (open call)", errno, __FILE__, __LINE__);
-  }
-  
-  off_t ls = lseek( fd, dfi->start, SEEK_SET );
+  // open data file Standard Uda Format
+  if( d_outputFileFormat == UDA) {
 
-  if( ls == -1 ) {
-    cerr << "Error lseek - file: " << data_filename.c_str() << ", errno=" << errno << '\n';
-    throw ErrnoException("DataArchive::query (lseek call)", errno, __FILE__, __LINE__);
-  }
-  
-  // read in the variable
-  InputContext ic( fd, data_filename.c_str(), dfi->start );
-  double starttime = Time::currentSeconds();
+    int fd = open( data_filename.c_str(), O_RDONLY );
 
-  var.read( ic, dfi->end, timedata.d_swapBytes, timedata.d_nBytes, varinfo.compression );
+    if(fd == -1) {
+      cerr << "Error opening file: " << data_filename.c_str() << ", errno=" << errno << '\n';
+      throw ErrnoException("DataArchive::query (open call)", errno, __FILE__, __LINE__);
+    }
 
-  dbg << "DataArchive::query: time to read raw data: "<<Time::currentSeconds() - starttime<<endl;
-  ASSERTEQ( dfi->end, ic.cur );
-  
-  int result = close( fd );
-  if( result == -1 ) {
-    cerr << "Error closing file: " << data_filename.c_str() << ", errno=" << errno << '\n';
-    throw ErrnoException("DataArchive::query (close call)", errno, __FILE__, __LINE__);
+    off_t ls = lseek( fd, dfi->start, SEEK_SET );
+
+    if( ls == -1 ) {
+      cerr << "Error lseek - file: " << data_filename.c_str() << ", errno=" << errno << '\n';
+      throw ErrnoException("DataArchive::query (lseek call)", errno, __FILE__, __LINE__);
+    }
+
+    // read in the variable
+    InputContext ic( fd, data_filename.c_str(), dfi->start );
+    double starttime = Time::currentSeconds();
+
+    var.read( ic, dfi->end, timedata.d_swapBytes, timedata.d_nBytes, varinfo.compression );
+
+    dbg << "DataArchive::query: time to read raw data: "<<Time::currentSeconds() - starttime<<endl;
+    ASSERTEQ( dfi->end, ic.cur );
+
+    int result = close( fd );
+    if( result == -1 ) {
+      cerr << "Error closing file: " << data_filename.c_str() << ", errno=" << errno << '\n';
+      throw ErrnoException("DataArchive::query (close call)", errno, __FILE__, __LINE__);
+    }
   }
+  #if HAVE_PIDX
+  //__________________________________
+  //   open PIDX 
+  if( d_outputFileFormat == PIDX) {
+    
+    throw InternalError("DataArchive::query:PIDX format not supported", __FILE__, __LINE__);
+  }
+  #endif
 
 #if !defined( DISABLE_SCI_MALLOC )
   AllocatorSetDefaultTag(tag);
@@ -649,8 +700,7 @@ DataArchive::query(       Variable       & var,
     else {
       cerr << "VARIABLE NOT FOUND: " << name << ", material index " << matlIndex << ", patch " << patch->getID() << ", time index " 
            << timeIndex << "\nPlease make sure the correct material index is specified\n";
-      throw InternalError("DataArchive::query:Variable not found",
-                          __FILE__, __LINE__);
+      throw InternalError("DataArchive::query:Variable not found", __FILE__, __LINE__);
     }
   }
 }

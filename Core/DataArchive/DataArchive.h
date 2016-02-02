@@ -218,10 +218,13 @@ namespace Uintah {
       static void queryEndiannessAndBits( ProblemSpecP doc, std::string & endianness, int & numBits );
 
       // Note, this function rewinds 'fp', and thus starts at the top of the file.
-      static void queryEndiannessAndBits( FILE         * fp,  std::string & endianness, int & numBits );
+      static void queryEndiannessAndBits( FILE* fp,  std::string & endianness, int & numBits );
 
       // Sets d_particlePositionName if found. Note, rewinds 'xml_fp', thus starting at the top of the file.
       void queryParticlePositionName( FILE * xml_fp ); 
+
+      // Sets d_outputFileFormat
+      void queryOutputFormat( FILE * xml_fp );
 
       // GROUP:  Information Access
       //////////
@@ -347,8 +350,10 @@ namespace Uintah {
 
       // Only cache a single timestep
       void turnOnXMLCaching();
+      
       // Cache the default number of timesteps
       void turnOffXMLCaching();
+      
       // Cache new_size number of timesteps.  Calls the
       // TimeHashMaps::updateCacheSize function with new_size.  See
       // corresponding documentation.
@@ -386,6 +391,10 @@ namespace Uintah {
       friend class DataArchive::TimeData;
       DataArchive( const DataArchive& );
       DataArchive& operator=( const DataArchive& );
+      
+      enum outputFileFormat {UDA, PIDX};
+      outputFileFormat d_outputFileFormat;
+      
       //______________________________________________________________________
       //
       void queryVariables( FILE                                * fp,
