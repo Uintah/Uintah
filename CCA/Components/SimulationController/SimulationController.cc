@@ -711,7 +711,7 @@ SimulationController::printSimulationStats ( int timestep, double delt, double t
   statLabels.push_back("MemUsage");
   statUnits.push_back("MB");
 
-  for( int i=0; i<d_sharedState->d_runTimeStats.size(); ++i )
+  for (size_t i = 0; i < d_sharedState->d_runTimeStats.size(); ++i)
   {
     SimulationState::RunTimeStat stat = (SimulationState::RunTimeStat) i;
     toReduce.push_back( d_sharedState->d_runTimeStats[ stat ] );
