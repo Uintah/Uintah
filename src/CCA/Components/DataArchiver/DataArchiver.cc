@@ -975,6 +975,13 @@ DataArchiver::createIndexXML(Dir& dir)
    rootElem->appendElement("numberOfProcessors", d_myworld->size());
 
    rootElem->appendElement("ParticlePosition", d_particlePositionName);
+   
+   string format = "uda";
+   if ( d_outputFileFormat == PIDX ){
+    format = "PIDX";
+   }
+   rootElem->appendElement("outputFormat", format);
+   
  
    ProblemSpecP metaElem = rootElem->appendChild("Meta");
 
