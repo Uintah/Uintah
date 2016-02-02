@@ -133,7 +133,6 @@ void Poisson1::computeStableTimestep(const ProcessorGroup* pg,
   if(pg->myrank() == 0){
     sum_vartype residual;
     new_dw->get(residual, residual_label);
-    cerr << "Residual=" << residual << '\n';
   }
   new_dw->put(delt_vartype(delt_), sharedState_->get_delt_label(),getLevel(patches));
 }
