@@ -1887,19 +1887,18 @@ DataArchiver::outputVariables(const ProcessorGroup * pg,
   // reductions call this function, and we handle them differently.
   if (type != CHECKPOINT_REDUCTION) {
     // find the level and level number associated with this patch
-    ostringstream lname;
+    
     ASSERT(patches->size() != 0);
     ASSERT(patches->get(0) != 0);
-
     level = patches->get(0)->getLevel();
-
-
+    
 #if SCI_ASSERTION_LEVEL >= 1
     for(int i=0;i<patches->size();i++){
       ASSERT(patches->get(i)->getLevel() == level);
     }
 #endif
 
+    ostringstream lname;
     lname << "l" << level->getIndex();
     ldir = tdir.getSubdir(lname.str());
     
@@ -1914,10 +1913,12 @@ DataArchiver::outputVariables(const ProcessorGroup * pg,
     dataFilename = tdir.getName() + "/" + dataFilebase;
   }
 
+  //__________________________________
+  //  Output using standard output format
   // Not only lock to prevent multiple threads from writing over the same
   // file, but also lock because xerces (DOM..) has thread-safety issues.
 
-  if ( d_outputFileFormat==UDA ){
+  if ( d_outputFileFormat==UDA || type == CHECKPOINT_REDUCTION){
   
     d_outputLock.lock(); 
     { // make sure doc's constructor is called after the lock.
@@ -1959,10 +1960,10 @@ DataArchiver::outputVariables(const ProcessorGroup * pg,
       // successfully opened their file, it is possible that a second open call would have succeeded.
       // (The original error no was 71.)  Therefore I am using a while loop and counting the 'tries'.
       
-      int         tries = 1;
+      int tries = 1;
       
       const char* filename = dataFilename.c_str();
-      int         fd       = open( filename, flags, 0666 );
+      int fd  = open( filename, flags, 0666 );
       
       while( fd == -1 ) {
 
