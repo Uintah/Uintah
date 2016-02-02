@@ -1357,7 +1357,7 @@ DataArchiver::findNext_OutputCheckPoint_Timestep(double delt, const GridP& grid)
 
 
 //______________________________________________________________________
-//  update the xml files for the 
+//  update the xml files (index.xml, timestep.xml, 
 void
 DataArchiver::writeto_xml_files(double delt, const GridP& grid)
 {
@@ -1371,10 +1371,10 @@ DataArchiver::writeto_xml_files(double delt, const GridP& grid)
   // start dumping files to disk
   vector<Dir*> baseDirs;
   if (d_isOutputTimestep) {
-    baseDirs.push_back(&d_dir);
+    baseDirs.push_back( &d_dir );
   }    
   if (d_isCheckpointTimestep) {
-    baseDirs.push_back(&d_checkpointsDir);
+    baseDirs.push_back( &d_checkpointsDir );
   }
 
   ostringstream tname;
@@ -1392,12 +1392,12 @@ DataArchiver::writeto_xml_files(double delt, const GridP& grid)
       bool hasGlobals = false;
 
       if ( baseDirs[i] == &d_dir ) {
-        savelist.push_back(&d_saveLabels);
+        savelist.push_back( &d_saveLabels );
       }
       else if ( baseDirs[i] == &d_checkpointsDir ) {
         hasGlobals = d_checkpointReductionLabels.size() > 0;
-        savelist.push_back(&d_checkpointLabels);
-        savelist.push_back(&d_checkpointReductionLabels);
+        savelist.push_back( &d_checkpointLabels );
+        savelist.push_back( &d_checkpointReductionLabels );
       }
       else {
         throw "DataArchiver::writeto_xml_files(): Unknown directory!";
@@ -1405,10 +1405,12 @@ DataArchiver::writeto_xml_files(double delt, const GridP& grid)
       indexDoc = loadDocument(iname);
 
       // if this timestep isn't already in index.xml, add it in
-      if (indexDoc == 0)
+      if (indexDoc == 0) {
         continue; // output timestep but no variables scheduled to be saved.
+      }
       ASSERT(indexDoc != 0);
 
+      //__________________________________
       // output data pointers
       for (unsigned j = 0; j < savelist.size(); j++) {
         string variableSection = savelist[j] == &d_checkpointReductionLabels ? "globals" : "variables";
@@ -1419,13 +1421,17 @@ DataArchiver::writeto_xml_files(double delt, const GridP& grid)
         for (unsigned k = 0; k < savelist[j]->size(); k++) {
           const VarLabel* var = (*savelist[j])[k].label;
           bool found=false;
+          
           for(ProblemSpecP n = vs->getFirstChild(); n != 0; n=n->getNextSibling()) {
             if(n->getNodeName() == "variable") {
               map<string,string> attributes;
               n->getAttributes(attributes);
               string varname = attributes["name"];
-              if(varname == "")
+          
+              if(varname == ""){
                 throw InternalError("varname not found", __FILE__, __LINE__);
+              }
+              
               if(varname == var->getName()) {
                 found=true;
                 break;
@@ -1441,6 +1447,7 @@ DataArchiver::writeto_xml_files(double delt, const GridP& grid)
         }
       }
       
+      //__________________________________
       // Check if it's the first checkpoint timestep by checking if the "timesteps" field is in 
       // checkpoints/index.xml.  If it is then there exists a timestep.xml file already.
       // Use this below to change information in input.xml...
@@ -1455,26 +1462,30 @@ DataArchiver::writeto_xml_files(double delt, const GridP& grid)
       for(ProblemSpecP n = ts->getFirstChild(); n != 0; n=n->getNextSibling()) {
         if(n->getNodeName() == "timestep") {
           int readtimestep;
-          if(!n->get(readtimestep))
+          
+          if(!n->get(readtimestep)){
             throw InternalError("Error parsing timestep number", __FILE__, __LINE__);
+          }
           if(readtimestep == dir_timestep) {
             found=true;
             break;
           }
         }
       }
+      //__________________________________
+      // add timestep info
       if(!found) {
-        // add timestep info
+        
         string timestepindex = tname.str()+"/timestep.xml";      
         
         ostringstream value, timeVal, deltVal;
         value << dir_timestep;
-        ProblemSpecP newElem = ts->appendElement("timestep",value.str().c_str());
-        newElem->setAttribute("href", timestepindex.c_str());
+        ProblemSpecP newElem = ts->appendElement( "timestep",value.str().c_str() );
+        newElem->setAttribute( "href",     timestepindex.c_str() );
         timeVal << std::setprecision(17) << d_tempElapsedTime;
-        newElem->setAttribute("time", timeVal.str());
+        newElem->setAttribute( "time",     timeVal.str() );
         deltVal << std::setprecision(17) << delt;
-        newElem->setAttribute("oldDelt", deltVal.str());
+        newElem->setAttribute( "oldDelt",  deltVal.str() );
       }
       
       indexDoc->output(iname.c_str());
@@ -1487,86 +1498,114 @@ DataArchiver::writeto_xml_files(double delt, const GridP& grid)
 
       // Create a metadata element to store the per-timestep endianness
       ProblemSpecP metaElem = rootElem->appendChild("Meta");
-      metaElem->appendElement("endianness", endianness().c_str());
-      metaElem->appendElement("nBits", (int)sizeof(unsigned long) * 8 );
-      metaElem->appendElement("numProcs", d_myworld->size());
+      metaElem->appendElement( "endianness", endianness().c_str() );
+      metaElem->appendElement( "nBits",      (int)sizeof(unsigned long) * 8 );
+      metaElem->appendElement( "numProcs",   d_myworld->size() );
       
-
-      ProblemSpecP timeElem = rootElem->appendChild("Time");
-      timeElem->appendElement("timestepNumber", dir_timestep);
-      timeElem->appendElement("currentTime", d_tempElapsedTime);
-      timeElem->appendElement("oldDelt", delt);
-      int numLevels = grid->numLevels();
+      // Timestep information
+      ProblemSpecP timeElem = rootElem->appendChild( "Time" );
+      timeElem->appendElement( "timestepNumber", dir_timestep );
+      timeElem->appendElement( "currentTime",    d_tempElapsedTime );
+      timeElem->appendElement( "oldDelt",        delt );
       
-      // in amr, we're not guaranteed that a proc do work on a given level
+      
+      //__________________________________
+      //  output grid section
+      // With AMR, we're not guaranteed that a proc do work on a given level
       //   quick check to see that, so we don't create a node that points to no data
+      int numLevels = grid->numLevels();
       vector<vector<int> > procOnLevel(numLevels);
 
       ProblemSpecP gridElem = rootElem->appendChild("Grid");
       gridElem->appendElement("numLevels", numLevels);
+      
+      //__________________________________
+      //  output level information
       for(int l = 0;l<numLevels;l++) {
         LevelP level = grid->getLevel(l);
         ProblemSpecP levelElem = gridElem->appendChild("Level");
 
-        if (level->getPeriodicBoundaries() != IntVector(0,0,0))
-          levelElem->appendElement("periodic", level->getPeriodicBoundaries());
-        levelElem->appendElement("numPatches", level->numPatches());
-        levelElem->appendElement("totalCells", level->totalCells());
-        if (level->getExtraCells() != IntVector(0,0,0))
-          levelElem->appendElement("extraCells", level->getExtraCells());
-        levelElem->appendElement("anchor", level->getAnchor());
-        levelElem->appendElement("id", level->getID());
-        if (!level->isStretched()) {
-          levelElem->appendElement("cellspacing", level->dCell());
+        if (level->getPeriodicBoundaries() != IntVector(0,0,0)) {
+          levelElem->appendElement( "periodic", level->getPeriodicBoundaries());
         }
-        else {
+        
+        levelElem->appendElement( "numPatches", level->numPatches() );
+        levelElem->appendElement( "totalCells", level->totalCells() );
+        
+        if (level->getExtraCells() != IntVector(0,0,0)) {
+          levelElem->appendElement( "extraCells", level->getExtraCells() );
+        }
+        
+        levelElem->appendElement( "anchor", level->getAnchor() );
+        levelElem->appendElement( "id",     level->getID() );
+        
+        // For stretched grids
+        if (!level->isStretched()) {
+          levelElem->appendElement( "cellspacing", level->dCell() );
+        } else {
           for (int axis = 0; axis < 3; axis++) {
             ostringstream axisstr, lowstr, highstr;
             axisstr << axis;
-            ProblemSpecP stretch = levelElem->appendChild("StretchPositions");
-            stretch->setAttribute("axis", axisstr.str());
+            ProblemSpecP stretch = levelElem->appendChild( "StretchPositions");
+            stretch->setAttribute( "axis", axisstr.str());
 
             OffsetArray1<double> faces;
             level->getFacePositions((Grid::Axis)axis, faces);
-            int low = faces.low();
+            
+            int low  = faces.low();
             int high = faces.high();
             lowstr << low;
-            stretch->setAttribute("low", lowstr.str());
             highstr << high;
-            stretch->setAttribute("high", highstr.str());
+            
+            stretch->setAttribute( "low",  lowstr.str());
+            stretch->setAttribute( "high", highstr.str());
           
-            for (int i = low; i < high; i++)
-              stretch->appendElement("pos", faces[i]);
+            for (int i = low; i < high; i++){
+              stretch->appendElement( "pos", faces[i]);
+            }
           }
         }
 
-
+        //__________________________________
+        //  output patch information
         Level::const_patchIterator iter;
 
         procOnLevel[l].resize(d_myworld->size());
 
         for(iter=level->patchesBegin(); iter != level->patchesEnd(); iter++) {
           const Patch* patch=*iter;
+          
+          IntVector lo = patch->getCellLowIndex();    // for readability
+          IntVector hi = patch->getCellHighIndex();
+          IntVector lo_EC = patch->getExtraCellLowIndex();
+          IntVector hi_EC = patch->getExtraCellHighIndex();
+          
           int proc = lb->getOutputProc(patch);
           procOnLevel[l][proc] = 1;
 
           Box box = patch->getExtraBox();
           ProblemSpecP patchElem = levelElem->appendChild("Patch");
-          patchElem->appendElement("id", patch->getID());
-          patchElem->appendElement("proc", proc);
-          patchElem->appendElement("lowIndex", patch->getExtraCellLowIndex());
-          patchElem->appendElement("highIndex", patch->getExtraCellHighIndex());
-          if (patch->getExtraCellLowIndex() != patch->getCellLowIndex())
-            patchElem->appendElement("interiorLowIndex", patch->getCellLowIndex());
-          if (patch->getExtraCellHighIndex() != patch->getCellHighIndex())
-            patchElem->appendElement("interiorHighIndex", patch->getCellHighIndex());
-          patchElem->appendElement("nnodes", patch->getNumExtraNodes());
-          patchElem->appendElement("lower", box.lower());
-          patchElem->appendElement("upper", box.upper());
-          patchElem->appendElement("totalCells", patch->getNumExtraCells());
-        }
-      }
+          patchElem->appendElement( "id",        patch->getID() );
+          patchElem->appendElement( "proc",      proc );
+          patchElem->appendElement( "lowIndex",  lo_EC );
+          patchElem->appendElement( "highIndex", hi_EC );
+          
+          if ( lo_EC != lo){
+            patchElem->appendElement( "interiorLowIndex", lo );
+          }
+          if ( hi_EC != hi) {
+            patchElem->appendElement( "interiorHighIndex", hi );
+          }
+          
+          patchElem->appendElement( "nnodes",     patch->getNumExtraNodes() );
+          patchElem->appendElement( "lower",      box.lower() );
+          patchElem->appendElement( "upper",      box.upper() );
+          patchElem->appendElement( "totalCells", patch->getNumExtraCells() );
+        }  // patchLoop
+      }  // level loop
       
+      //__________________________________
+      //  Write headers to pXXXX.xml and 
       ProblemSpecP dataElem = rootElem->appendChild("Data");
       for(int l=0;l<numLevels;l++) {
         ostringstream lname;
@@ -1574,18 +1613,19 @@ DataArchiver::writeto_xml_files(double delt, const GridP& grid)
 
         // create a pxxxxx.xml file for each proc doing the outputting
         for(int i=0;i<d_myworld->size();i++) {
-          if (i % lb->getNthProc() != 0 || procOnLevel[l][i] == 0)
+          if (i % lb->getNthProc() != 0 || procOnLevel[l][i] == 0){
             continue;
+          }
+          
           ostringstream pname;
-          pname << lname.str() << "/p" << setw(5) << setfill('0') << i 
-                << ".xml";
+          pname << lname.str() << "/p" << setw(5) << setfill('0') << i << ".xml";
 
           ProblemSpecP df = dataElem->appendChild("Datafile");
-          df->setAttribute("href",pname.str());
+          df->setAttribute("href",  pname.str());
           
           ostringstream procID;
           procID << i;
-          df->setAttribute("proc",procID.str());
+          df->setAttribute("proc",  procID.str());
           
           ostringstream labeltext;
           labeltext << "Processor " << i << " of " << d_myworld->size();
@@ -1603,13 +1643,19 @@ DataArchiver::writeto_xml_files(double delt, const GridP& grid)
 
       GeometryPieceFactory::resetGeometryPiecesOutput();
 
+      // output each components output Problem spec
       sim->outputProblemSpec(rootElem);
 
+      // write out the timestep.xml file
       string name = baseDirs[i]->getName()+"/"+tname.str()+"/timestep.xml";
       rootElem->output(name.c_str());
+      
+      //__________________________________
+      // output input.xml & input.xml.orig
       // a small convenience to the user who wants to change things when he restarts
       // let him know that some information to change will need to be done in the timestep.xml
       // file instead of the input.xml file.  Only do this once, though.  
+      
       if (firstCheckpointTimestep) {
         // loop over the blocks in timestep.xml and remove them from input.xml, with some exceptions.
         string inputname = d_dir.getName()+"/input.xml";
@@ -1623,6 +1669,7 @@ DataArchiver::writeto_xml_files(double delt, const GridP& grid)
             continue;
           }
           
+          // find and replace the node 
           ProblemSpecP removeNode = inputDoc->findBlock(nodeName);
           if (removeNode != 0) {
             string comment = "The node " + nodeName + " has been removed.  Its original values are\n"
@@ -1636,12 +1683,13 @@ DataArchiver::writeto_xml_files(double delt, const GridP& grid)
       }
       //rootElem->releaseDocument();
       
+      //__________________________________
       // copy the component sections of timestep.xml.
       if( d_usingReduceUda ) {
         copy_outputProblemSpec( d_fromDir, d_dir );
       }
     }
-  }
+  }  // loop over baseDirs
   dbg << "  end\n";
 }
 
