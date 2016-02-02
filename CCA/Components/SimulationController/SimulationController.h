@@ -50,6 +50,14 @@ class  Regridder;
 class  SimulationInterface;
 class  SimulationTime;
 
+struct double_int
+{
+  double val;
+  int loc;
+  double_int(double val, int loc): val(val), loc(loc) {}
+  double_int(): val(0), loc(-1) {}
+};
+
 /**************************************
       
   CLASS
@@ -113,6 +121,11 @@ public:
   DataArchive*         getDataArchive() { return d_archive; }
 
   bool                 doAMR() { return d_doAMR; }
+
+  std::vector<double>      avgReduce;
+  std::vector<double_int>  maxReduce;
+  std::vector<std::string> statLabels;
+  std::vector<std::string> statUnits;
 
 protected:
 
