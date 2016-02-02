@@ -253,7 +253,7 @@ visit_handle visit_ReadMetaData(void *cbdata)
 	    MPI_Comm_size( MPI_COMM_WORLD, &par_size );
 	    VisIt_MeshMetaData_setNumDomains(mmd, par_size);
 
-            // VisIt_MeshMetaData_setNumDomains(mmd, totalPatches);
+            VisIt_MeshMetaData_setNumDomains(mmd, totalPatches);
             VisIt_MeshMetaData_setDomainTitle(mmd, "patches");
             VisIt_MeshMetaData_setDomainPieceName(mmd, "patch");
             VisIt_MeshMetaData_setNumGroups(mmd, numLevels);
