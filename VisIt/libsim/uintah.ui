@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>616</width>
-    <height>746</height>
+    <height>1012</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -433,6 +433,59 @@
      <column>
       <property name="text">
        <string>Volume</string>
+      </property>
+     </column>
+    </widget>
+   </widget>
+   <widget class="QGroupBox" name="RuntimeStatsGroupBox">
+    <property name="geometry">
+     <rect>
+      <x>10</x>
+      <y>700</y>
+      <width>591</width>
+      <height>271</height>
+     </rect>
+    </property>
+    <property name="title">
+     <string>Runtime Performance Stats</string>
+    </property>
+    <widget class="QTableWidget" name="RuntimeStatsTable">
+     <property name="geometry">
+      <rect>
+       <x>10</x>
+       <y>30</y>
+       <width>571</width>
+       <height>231</height>
+      </rect>
+     </property>
+     <column>
+      <property name="text">
+       <string>Variable</string>
+      </property>
+     </column>
+     <column>
+      <property name="text">
+       <string>Units</string>
+      </property>
+     </column>
+     <column>
+      <property name="text">
+       <string>Average</string>
+      </property>
+     </column>
+     <column>
+      <property name="text">
+       <string>Maxium</string>
+      </property>
+     </column>
+     <column>
+      <property name="text">
+       <string>Rank</string>
+      </property>
+     </column>
+     <column>
+      <property name="text">
+       <string>%</string>
       </property>
      </column>
     </widget>

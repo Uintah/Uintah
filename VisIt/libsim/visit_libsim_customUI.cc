@@ -34,7 +34,7 @@
 #include <CCA/Components/OnTheFlyAnalysis/MinMax.h>
 
 #include <Core/Grid/Material.h>
-#include <Core/ProblemSpec/ProblemSpec.h>
+#include <Core/OS/ProcessInfo.h>
 #include <Core/Util/DebugStream.h>
 
 #define ALL_LEVELS 99
@@ -320,6 +320,44 @@ void visit_GetGridInfo( visit_simulation_data *sim )
     VisItUI_setTableValueI("GridInfoTable", l, 3, total_cells, 0);
     VisItUI_setTableValueD("GridInfoTable", l, 4, mean, 0);
     VisItUI_setTableValueD("GridInfoTable", l, 5, total_cells*factor, 0);
+  }
+}
+
+//---------------------------------------------------------------------
+// GetRuntimeStats
+//    Get the Runtime stats
+//---------------------------------------------------------------------
+void visit_GetRuntimeStats( visit_simulation_data *sim )
+{
+  std::vector<double>      &avgReduce = sim->simController->avgReduce;
+  std::vector<double_int>  &maxReduce = sim->simController->maxReduce;
+  std::vector<std::string> &statLabels = sim->simController->statLabels;
+  std::vector<std::string> &statUnits = sim->simController->statUnits;
+
+  int i=0, cc=0;
+  
+  if (maxReduce[i].val > 0) {
+    VisItUI_setTableValueS("RuntimeStatsTable", cc, 0, statLabels[i].c_str(), 0);
+    VisItUI_setTableValueS("RuntimeStatsTable", cc, 1, statUnits[i].c_str(), 0);
+    VisItUI_setTableValueS("RuntimeStatsTable", cc, 2, ProcessInfo::toHumanUnits(avgReduce[i]).c_str(), 0);
+    VisItUI_setTableValueS("RuntimeStatsTable", cc, 3, ProcessInfo::toHumanUnits(maxReduce[i].val).c_str(), 0);
+    VisItUI_setTableValueI("RuntimeStatsTable", cc, 4, maxReduce[i].loc, 0);
+    VisItUI_setTableValueD("RuntimeStatsTable", cc, 5, 100*(1-(avgReduce[i]/maxReduce[i].val)), 0);
+    
+    ++cc;
+  }
+  
+  for (unsigned i = 1; i < statLabels.size(); i++) {
+    if (maxReduce[i].val > 0) {
+      VisItUI_setTableValueS("RuntimeStatsTable", cc, 0, statLabels[i].c_str(), 0);
+      VisItUI_setTableValueS("RuntimeStatsTable", cc, 1, statUnits[i].c_str(), 0);
+      VisItUI_setTableValueD("RuntimeStatsTable", cc, 2, avgReduce[i], 0);
+      VisItUI_setTableValueD("RuntimeStatsTable", cc, 3, maxReduce[i].val, 0);
+      VisItUI_setTableValueI("RuntimeStatsTable", cc, 4, maxReduce[i].loc, 0);
+      VisItUI_setTableValueD("RuntimeStatsTable", cc, 5, 100*(1-(avgReduce[i]/maxReduce[i].val)), 0);
+
+      ++cc;
+    }
   }
 }
   

@@ -635,10 +635,13 @@ visit_handle visit_ReadMetaData(void *cbdata)
     // Setup the custom UI optional min/max variable table
     visit_GetAnalysisVars( sim );
 
-    // Setup the custom UI optional min/max variable table
+    // Setup the custom UI Grid Info
     visit_GetGridInfo( sim );
 
+    // Setup the custom UI Runtime Stats
+    visit_GetRuntimeStats( sim );
 
+    
     // if( sim->message.size() )
     // {
     //   visit_handle msg = VISIT_INVALID_HANDLE;
@@ -1502,18 +1505,18 @@ visit_handle visit_SimGetVariable(int domain, const char *varname, void *cbdata)
 
     if( gd )
     {
-      int n = (qhigh[0]-qlow[0])*(qhigh[1]-qlow[1])*(qhigh[2]-qlow[2]);
+      int ncells = (qhigh[0]-qlow[0])*(qhigh[1]-qlow[1])*(qhigh[2]-qlow[2]);
       
-      CheckNaNs(n*gd->components,gd->data,level,local_patch);
+      CheckNaNs(ncells*gd->components, gd->data, level, local_patch);
       
       if(VisIt_VariableData_alloc(&varH) == VISIT_OKAY)
       {
         VisIt_VariableData_setDataD(varH, VISIT_OWNER_SIM, gd->components,
-                                    n * gd->components, gd->data);      
+                                    ncells * gd->components, gd->data);
         
         // vtkDoubleArray *rv = vtkDoubleArray::New();
         // rv->SetNumberOfComponents(gd->components);
-        // rv->SetArray(gd->data, n*gd->components, 0);
+        // rv->SetArray(gd->data, ncells*gd->components, 0);
           
         // ARS - FIX ME - CHECK FOR LEAKS
         // don't delete gd->data - vtk owns it now!
