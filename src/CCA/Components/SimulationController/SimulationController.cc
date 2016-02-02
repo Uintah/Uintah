@@ -78,14 +78,6 @@ extern DebugStream amrout;
 
 namespace Uintah {
 
-struct double_int
-{
-  double val;
-  int loc;
-  double_int(double val, int loc): val(val), loc(loc) {}
-  double_int(): val(0), loc(-1) {}
-};
-
 double
 stdDeviation( double sum_of_x, double sum_of_x_squares, int n )
 {
@@ -701,11 +693,12 @@ SimulationController::printSimulationStats ( int timestep, double delt, double t
   // a little ugly, but do it anyway so we only have to do one reduce for sum and
   // one reduce for max
   std::vector<double>      toReduce;
-  std::vector<double>      avgReduce;
   std::vector<double_int>  toReduceMax;
-  std::vector<double_int>  maxReduce;
-  std::vector<const char*> statLabels;
-  std::vector<string>      statUnits;
+
+  avgReduce.clear();
+  maxReduce.clear();
+  statLabels.clear();
+  statUnits.clear();
 
   int    rank             = d_myworld->myrank();
 
@@ -715,7 +708,7 @@ SimulationController::printSimulationStats ( int timestep, double delt, double t
 
   toReduce.push_back(memuse);
   toReduceMax.push_back(double_int(memuse,rank));
-  statLabels.push_back("Mem usage");
+  statLabels.push_back("MemUsage");
   statUnits.push_back("MB");
 
   for( int i=0; i<d_sharedState->d_runTimeStats.size(); ++i )
@@ -723,7 +716,7 @@ SimulationController::printSimulationStats ( int timestep, double delt, double t
     SimulationState::RunTimeStat stat = (SimulationState::RunTimeStat) i;
     toReduce.push_back( d_sharedState->d_runTimeStats[ stat ] );
     toReduceMax.push_back( double_int( d_sharedState->d_runTimeStats[ stat ], rank ) );
-    statLabels.push_back( d_sharedState->d_runTimeStats.getName( stat ).c_str() );
+    statLabels.push_back( d_sharedState->d_runTimeStats.getName( stat ) );
     statUnits.push_back ( d_sharedState->d_runTimeStats.getUnits( stat ) );
   }
 
@@ -732,21 +725,25 @@ SimulationController::printSimulationStats ( int timestep, double delt, double t
     toReduce.push_back(flop);
     toReduceMax.push_back(double_int(flop, rank));
     statLabels.push_back(d_papiEvents.find(PAPI_FP_OPS)->second.simStatName.c_str());
+    statUnits.push_back ( "flops" );
   }
   if (d_papiEvents.find(PAPI_DP_OPS)->second.isSupported) {
     toReduce.push_back(vflop);
     toReduceMax.push_back(double_int(vflop, rank));
     statLabels.push_back(d_papiEvents.find(PAPI_DP_OPS)->second.simStatName.c_str());
+    statUnits.push_back ( "vflops" );
   }
   if (d_papiEvents.find(PAPI_L2_TCM)->second.isSupported) {
     toReduce.push_back(l2_misses);
     toReduceMax.push_back(double_int(l2_misses, rank));
     statLabels.push_back(d_papiEvents.find(PAPI_L2_TCM)->second.simStatName.c_str());
+    statUnits.push_back ( "misses" );
   }
   if (d_papiEvents.find(PAPI_L3_TCM)->second.isSupported) {
     toReduce.push_back(l3_misses);
     toReduceMax.push_back(double_int(l3_misses, rank));
     statLabels.push_back(d_papiEvents.find(PAPI_L3_TCM)->second.simStatName.c_str());
+    statUnits.push_back ( "misses" );
   }
 #endif
 
@@ -817,7 +814,7 @@ SimulationController::printSimulationStats ( int timestep, double delt, double t
 
   //set the overhead sample
   if( d_n > 2 ) { // Ignore the first 3 samples, they are not good samples.
-    d_sharedState->overhead[d_sharedState->overheadIndex]=percent_overhead;
+    d_sharedState->overhead[d_sharedState->overheadIndex] = percent_overhead;
     // Increment the overhead index
 
     double overhead=0;
@@ -826,14 +823,17 @@ SimulationController::printSimulationStats ( int timestep, double delt, double t
     int t = min( d_n - 2, OVERHEAD_WINDOW );
     //calcualte total weight by incrementing through the overhead sample array backwards and multiplying samples by the weights
     for( int i = 0; i < t; i++ ) {
-      overhead+=d_sharedState->overhead[(d_sharedState->overheadIndex+OVERHEAD_WINDOW-i)%OVERHEAD_WINDOW]*d_sharedState->overheadWeights[i];
-      weight+=d_sharedState->overheadWeights[i];
+      overhead += d_sharedState->overhead[(d_sharedState->overheadIndex+OVERHEAD_WINDOW-i)%OVERHEAD_WINDOW] * d_sharedState->overheadWeights[i];
+      weight += d_sharedState->overheadWeights[i];
     }
-    d_sharedState->overheadAvg=overhead/weight; 
 
-    d_sharedState->overheadIndex=(d_sharedState->overheadIndex+1)%OVERHEAD_WINDOW;
+    d_sharedState->overheadAvg = overhead/weight; 
+    d_sharedState->overheadIndex =
+      (d_sharedState->overheadIndex+1) % OVERHEAD_WINDOW;
+
     // Increase overhead size if needed.
   } 
+
   d_sharedState->resetStats();
 
   // calculate mean/std dev
@@ -847,11 +847,11 @@ SimulationController::printSimulationStats ( int timestep, double delt, double t
     //d_sumOfWallTimeSquares += pow(walltime,2);
 
     //alpha=2/(N+1)
-    float alpha=2.0/(min(d_n-2,AVERAGE_WINDOW)+1);  
-    d_movingAverage=alpha*walltime+(1-alpha)*d_movingAverage;
-    mean=d_movingAverage;
-
+    float alpha = 2.0 / (min(d_n-2,AVERAGE_WINDOW)+1);  
+    d_movingAverage = alpha*walltime + (1-alpha) * d_movingAverage;
+    mean = d_movingAverage;
   }
+  
   /*
     if (d_n > 3) {
     // divide by n-2 and not n, because we wait till n>2 to keep track
@@ -867,11 +867,11 @@ SimulationController::printSimulationStats ( int timestep, double delt, double t
   if (istats.active()) {
     for (unsigned i = 1; i < statLabels.size(); i++) { // index 0 is memuse
       if (toReduce[i] > 0)
-        istats << "rank: " << d_myworld->myrank() << " " << left << setw(19) << statLabels[i] << " [" << statUnits[i] << "]: " << toReduce[i] << "\n";
+        istats << "rank: " << rank << " " << left << setw(19) << statLabels[i] << " [" << statUnits[i] << "]: " << toReduce[i] << "\n";
     }
   } 
 
-  if(d_myworld->myrank() == 0) {
+  if(rank == 0) {
     char walltime[96];
     if (d_n > 3) {
       //sprintf(walltime, ", elap T = %.2lf, mean: %.2lf +- %.3lf", d_wallTime, mean, stdDev);
@@ -913,12 +913,12 @@ SimulationController::printSimulationStats ( int timestep, double delt, double t
     if (stats.active()) {
       stats << left << setw(19)  << "  Description                 Ave:            max:      mpi proc:    100*(1-ave/max) '% load imbalance'\n";
 
-      if(d_myworld->size()>1){
+      if(d_myworld->size()>1) {
 	// index 0 is memuse
         for (unsigned i = 1; i < statLabels.size(); i++) {
           if (maxReduce[i].val > 0) {
             stats << "  " << left << setw(19)<< statLabels[i]
-                  << "[" <<statUnits[i] << "]"
+                  << "[" << statUnits[i] << "]"
                   << " : " << setw(12) << avgReduce[i]
                   << " : " << setw(12) << maxReduce[i].val
                   << " : " << setw(10) << maxReduce[i].loc
@@ -931,7 +931,7 @@ SimulationController::printSimulationStats ( int timestep, double delt, double t
         for ( unsigned int i = 1; i < statLabels.size(); i++ ) {
           if( toReduce[i] > 0 ) {
             stats << "  " << left << setw(19)<< statLabels[i]
-                  << "[" <<statUnits[i] <<"]"
+                  << "[" << statUnits[i] << "]"
                   << " : " << setw(12) << toReduce[i]
                   << " : " << setw(12) << toReduce[i]
                   << " : " << setw(10)  << 0
