@@ -27,7 +27,6 @@
 #include "visit_libsim.h"
 #include "visit_libsim_customUI.h"
 
-#include <sci_defs/mpi_defs.h>
 #include <sci_defs/visit_defs.h>
 
 #include <CCA/Components/SimulationController/SimulationController.h>
@@ -50,29 +49,29 @@ namespace Uintah {
 void visit_GetTimeVars( visit_simulation_data *sim )
 {
   VisItUI_setValueI("TimeStep",
-		    sim->cycle, 0);
+                    sim->cycle, 0);
   VisItUI_setValueI("MaxTimeStep",
-		    sim->simController->getSimulationTime()->maxTimestep, 1);
+                    sim->simController->getSimulationTime()->maxTimestep, 1);
 
   VisItUI_setValueD("Time",
-		    sim->time, 0);
+                    sim->time, 0);
   VisItUI_setValueD("MaxTime",
-		    sim->simController->getSimulationTime()->maxTime, 1);
+                    sim->simController->getSimulationTime()->maxTime, 1);
 
   VisItUI_setValueD("DeltaT",
-		    sim->delt, 0);
+                    sim->delt, 0);
   VisItUI_setValueD("DeltaTNext",
-		    sim->delt_next, 1);
+                    sim->delt_next, 1);
   VisItUI_setValueD("DeltaTFactor",
-		    sim->simController->getSimulationTime()->delt_factor, 1);
+                    sim->simController->getSimulationTime()->delt_factor, 1);
   VisItUI_setValueD("DeltaTMin",
-		    sim->simController->getSimulationTime()->delt_min, 1);
+                    sim->simController->getSimulationTime()->delt_min, 1);
   VisItUI_setValueD("DeltaTMax",
-		    sim->simController->getSimulationTime()->delt_max, 1);
+                    sim->simController->getSimulationTime()->delt_max, 1);
   VisItUI_setValueD("ElapsedTime",
-		    sim->elapsedt, 0);
+                    sim->elapsedt, 0);
   VisItUI_setValueD("MaxWallTime",
-		    sim->simController->getSimulationTime()->max_wall_time, 1);
+                    sim->simController->getSimulationTime()->max_wall_time, 1);
 }
   
 //---------------------------------------------------------------------
@@ -83,6 +82,8 @@ void visit_GetOutputIntervals( visit_simulation_data *sim )
 {
   SimulationStateP simStateP  = sim->simController->getSimulationStateP();
   Output          *output     = sim->simController->getOutput();
+
+  VisItUI_setTableValueS("OutputIntervalVariableTable", -1, -1, "CLEAR_TABLE", 0);
 
   if( output )
   {
@@ -108,9 +109,9 @@ void visit_GetOutputIntervals( visit_simulation_data *sim )
     // This var must be in row specified by CheckpointIntervalRow so
     // that the callback OutputIntervalVariableTableCallback can get it.
     VisItUI_setTableValueS("OutputIntervalVariableTable",
-			   OutputIntervalRow, 0, name.c_str(),  0);
+                           OutputIntervalRow, 0, name.c_str(),  0);
     VisItUI_setTableValueD("OutputIntervalVariableTable",
-			   OutputIntervalRow, 1, val, 1);
+                           OutputIntervalRow, 1, val, 1);
     
     // Checkpoint interval based on times.
     if( output->getCheckpointInterval() > 0 )
@@ -128,9 +129,9 @@ void visit_GetOutputIntervals( visit_simulation_data *sim )
     // This var must be in row specified by CheckpointIntervalRow so
     // that the callback OutputIntervalVariableTableCallback can get it.
     VisItUI_setTableValueS("OutputIntervalVariableTable",
-			   CheckpointIntervalRow, 0, name.c_str(),  0);
+                           CheckpointIntervalRow, 0, name.c_str(),  0);
     VisItUI_setTableValueD("OutputIntervalVariableTable",
-			   CheckpointIntervalRow, 1, val, 1);
+                           CheckpointIntervalRow, 1, val, 1);
   }
   else
     VisItUI_setValueS( "OutputIntervalGroupBox", "HIDE_WIDGET", 0);
@@ -151,6 +152,8 @@ void visit_GetAnalysisVars( visit_simulation_data *sim )
   std::vector< SimulationState::analysisVar > minMaxVars =
     simStateP->d_analysisVars;
     
+  VisItUI_setTableValueS("MinMaxVariableTable", -1, -1, "CLEAR_TABLE", 0);
+
   if( minMaxVars.size() )
   {
     int numLevels = gridP->numLevels();
@@ -166,50 +169,55 @@ void visit_GetAnalysisVars( visit_simulation_data *sim )
       // Get level info
       for (int l=0; l<numLevels; ++l)
       {
-	if( minMaxVar.level != ALL_LEVELS &&
-	    minMaxVar.level != l )
-	  continue;
-	
-	LevelP levelP = gridP->getLevel(l);
-	Level *level = levelP.get_rep();
-	
-	// double
-	if( minMaxVar.label->typeDescription()->getSubType()->getType() ==
-	    TypeDescription::double_type )
-	{
-	  min_vartype var_min;
-	  max_vartype var_max;
-	    
-	  dw->get(var_min, minMaxVar.reductionMinLabel, level );
-	  dw->get(var_max, minMaxVar.reductionMaxLabel, level );
-	  varMin = var_min;
-	  varMax = var_max;
-	}
+        if( minMaxVar.level != ALL_LEVELS &&
+            minMaxVar.level != l )
+          continue;
+        
+        LevelP levelP = gridP->getLevel(l);
+        Level *level = levelP.get_rep();
+        
+	std::cerr << __FUNCTION__ << "  " << __LINE__ << std::endl;
+	std::cerr << i << "  " << l << "  " << std::endl;
+        // double
+        if( minMaxVar.label->typeDescription()->getSubType()->getType() ==
+            TypeDescription::double_type )
+        {
+          min_vartype var_min;
+          max_vartype var_max;
+            
+          dw->get(var_min, minMaxVar.reductionMinLabel, level );
+          dw->get(var_max, minMaxVar.reductionMaxLabel, level );
+          varMin = var_min;
+          varMax = var_max;
+        }
 
-	// Vector
-	else if( minMaxVar.label->typeDescription()->getSubType()->getType() ==
-		 TypeDescription::Vector )
-	{
-	  minvec_vartype var_min;
-	  maxvec_vartype var_max;
-	  
-	  dw->get(var_min, minMaxVar.reductionMinLabel, level );
-	  dw->get(var_max, minMaxVar.reductionMaxLabel, level );
-	  
-	  varMin = ((Vector) var_min).length();
-	  varMax = ((Vector) var_max).length();
-	}
-	
-	std::stringstream name;
-	name << "L-" << l << "/"
-	     << minMaxVar.label->getName()
-	     << "/" << minMaxVar.matl;
-	
-	VisItUI_setTableValueS("MinMaxVariableTable", i, 0, name.str().c_str(), 0);
-	// VisItUI_setTableValueI("MinMaxVariableTable", i, 1, matl, 0);
-	// VisItUI_setTableValueI("MinMaxVariableTable", i, 2, level, 0);
-	VisItUI_setTableValueD("MinMaxVariableTable", i, 1, varMin,  0);
-	VisItUI_setTableValueD("MinMaxVariableTable", i, 2, varMax,  0);
+        // Vector
+        else if( minMaxVar.label->typeDescription()->getSubType()->getType() ==
+                 TypeDescription::Vector )
+        {
+          minvec_vartype var_min;
+          maxvec_vartype var_max;
+          
+          dw->get(var_min, minMaxVar.reductionMinLabel, level );
+          dw->get(var_max, minMaxVar.reductionMaxLabel, level );
+          
+          varMin = ((Vector) var_min).length();
+          varMax = ((Vector) var_max).length();
+        }
+        
+        std::stringstream name;
+        name << "L-" << l << "/"
+             << minMaxVar.label->getName()
+             << "/" << minMaxVar.matl;
+        
+	std::cerr << __FUNCTION__ << "  " << __LINE__ << std::endl;
+	std::cerr << i << "  " << l << "  " << name.str() << std::endl;
+  
+        VisItUI_setTableValueS("MinMaxVariableTable", i, 0, name.str().c_str(), 0);
+        // VisItUI_setTableValueI("MinMaxVariableTable", i, 1, matl, 0);
+        // VisItUI_setTableValueI("MinMaxVariableTable", i, 2, level, 0);
+        VisItUI_setTableValueD("MinMaxVariableTable", i, 1, varMin,  0);
+        VisItUI_setTableValueD("MinMaxVariableTable", i, 2, varMax,  0);
       }
     }
   }
@@ -244,20 +252,20 @@ void visit_GetUPSVars( visit_simulation_data *sim )
       switch( var.type )
       {
       case Uintah::TypeDescription::int_type:
-	VisItUI_setTableValueI("UPSVariableTable", i, 1, *(var.Ivalue), 1);
-	break;
-	    
+        VisItUI_setTableValueI("UPSVariableTable", i, 1, *(var.Ivalue), 1);
+        break;
+            
       case Uintah::TypeDescription::double_type:
-	VisItUI_setTableValueD("UPSVariableTable", i, 1, *(var.Dvalue), 1);
-	break;
-	    
+        VisItUI_setTableValueD("UPSVariableTable", i, 1, *(var.Dvalue), 1);
+        break;
+            
       case Uintah::TypeDescription::Vector:
-	VisItUI_setTableValueV("UPSVariableTable", i, 1,
-			       var.Vvalue->x(), var.Vvalue->y(), var.Vvalue->z(), 1);
-	break;
-	    
+        VisItUI_setTableValueV("UPSVariableTable", i, 1,
+                               var.Vvalue->x(), var.Vvalue->y(), var.Vvalue->z(), 1);
+        break;
+            
       default:
-	throw InternalError(" invalid data type", __FILE__, __LINE__); 
+        throw InternalError(" invalid data type", __FILE__, __LINE__); 
       }
     }
   }
@@ -276,6 +284,7 @@ void visit_GetGridInfo( visit_simulation_data *sim )
   GridP           gridP      = sim->gridP;
 
   VisItUI_setValueS( "GridInfoGroupBox", "SHOW_WIDGET", 1);
+  VisItUI_setTableValueS("GridInfoTable", -1, -1, "CLEAR_TABLE", 0);
 
   for (int l = 0; l < gridP->numLevels(); l++) 
   {
@@ -307,13 +316,13 @@ void visit_GetGridInfo( visit_simulation_data *sim )
     //calculate mean
     double mean = total_cells /(double) num_patches;
     double stdv = sqrt((sum_of_cells_squared-total_cells*total_cells /
-			(double) num_patches) / (double) num_patches);
+                        (double) num_patches) / (double) num_patches);
     IntVector refineRatio = level->getRefinementRatio();
 
     std::stringstream ratio;
     ratio << refineRatio.x() << ","
-	  << refineRatio.y() << "," << refineRatio.z();
-	
+          << refineRatio.y() << "," << refineRatio.z();
+        
     VisItUI_setTableValueI("GridInfoTable", l, 0, l+1, 0);
     VisItUI_setTableValueS("GridInfoTable", l, 1, ratio.str().c_str(), 0);
     VisItUI_setTableValueI("GridInfoTable", l, 2, num_patches, 0);
@@ -329,36 +338,51 @@ void visit_GetGridInfo( visit_simulation_data *sim )
 //---------------------------------------------------------------------
 void visit_GetRuntimeStats( visit_simulation_data *sim )
 {
-  std::vector<double>      &avgReduce = sim->simController->avgReduce;
-  std::vector<double_int>  &maxReduce = sim->simController->maxReduce;
-  std::vector<std::string> &statLabels = sim->simController->statLabels;
-  std::vector<std::string> &statUnits = sim->simController->statUnits;
+  SimulationStateP simStateP = sim->simController->getSimulationStateP();
 
-  int i=0, cc=0;
-  
-  if (maxReduce[i].val > 0) {
-    VisItUI_setTableValueS("RuntimeStatsTable", cc, 0, statLabels[i].c_str(), 0);
-    VisItUI_setTableValueS("RuntimeStatsTable", cc, 1, statUnits[i].c_str(), 0);
-    VisItUI_setTableValueS("RuntimeStatsTable", cc, 2, ProcessInfo::toHumanUnits(avgReduce[i]).c_str(), 0);
-    VisItUI_setTableValueS("RuntimeStatsTable", cc, 3, ProcessInfo::toHumanUnits(maxReduce[i].val).c_str(), 0);
-    VisItUI_setTableValueI("RuntimeStatsTable", cc, 4, maxReduce[i].loc, 0);
-    VisItUI_setTableValueD("RuntimeStatsTable", cc, 5, 100*(1-(avgReduce[i]/maxReduce[i].val)), 0);
+  ReductionInfoMapper< SimulationState::RunTimeStat, double > &runTimeStats =
+    simStateP->d_runTimeStats;
+
+  VisItUI_setValueS( "RunTimeStatsGroupBox", "SHOW_WIDGET", 1);
+  VisItUI_setTableValueS("RuntimeStatsTable", -1, -1, "CLEAR_TABLE", 0);
+
+  int cc = 0;
+
+  for (unsigned int i=0; i<runTimeStats.size(); ++i)
+  {
+    SimulationState::RunTimeStat e = (SimulationState::RunTimeStat) i;
     
-    ++cc;
-  }
+    std::string name  = runTimeStats.getName(e);
+    std::string units = runTimeStats.getUnits(e);
+
+    double  average = runTimeStats.getAverage(e);
+    double  maximum = runTimeStats.getMaximum(e);
+    int     rank    = runTimeStats.getRank(e);
+
+    if( average > 0 && units == std::string("MBytes"))
+    {
+      VisItUI_setTableValueS("RuntimeStatsTable", cc, 0, name.c_str(), 0);
+      VisItUI_setTableValueS("RuntimeStatsTable", cc, 1, units.c_str(), 0);
+      VisItUI_setTableValueS("RuntimeStatsTable", cc, 2, ProcessInfo::toHumanUnits(average).c_str(), 0);
+      VisItUI_setTableValueS("RuntimeStatsTable", cc, 3, ProcessInfo::toHumanUnits(maximum).c_str(), 0);
+      VisItUI_setTableValueI("RuntimeStatsTable", cc, 4, rank, 0);
+      VisItUI_setTableValueD("RuntimeStatsTable", cc, 5, 100*(1-(average/maximum)), 0);
+    
+      ++cc;
+    }
   
-  for (unsigned i = 1; i < statLabels.size(); i++) {
-    if (maxReduce[i].val > 0) {
-      VisItUI_setTableValueS("RuntimeStatsTable", cc, 0, statLabels[i].c_str(), 0);
-      VisItUI_setTableValueS("RuntimeStatsTable", cc, 1, statUnits[i].c_str(), 0);
-      VisItUI_setTableValueD("RuntimeStatsTable", cc, 2, avgReduce[i], 0);
-      VisItUI_setTableValueD("RuntimeStatsTable", cc, 3, maxReduce[i].val, 0);
-      VisItUI_setTableValueI("RuntimeStatsTable", cc, 4, maxReduce[i].loc, 0);
-      VisItUI_setTableValueD("RuntimeStatsTable", cc, 5, 100*(1-(avgReduce[i]/maxReduce[i].val)), 0);
+    else if( average > 0 )
+    {
+      VisItUI_setTableValueS("RuntimeStatsTable", cc, 0, name.c_str(), 0);
+      VisItUI_setTableValueS("RuntimeStatsTable", cc, 1, units.c_str(), 0);
+      VisItUI_setTableValueD("RuntimeStatsTable", cc, 2, average, 0);
+      VisItUI_setTableValueD("RuntimeStatsTable", cc, 3, maximum, 0);
+      VisItUI_setTableValueI("RuntimeStatsTable", cc, 4, rank, 0);
+      VisItUI_setTableValueD("RuntimeStatsTable", cc, 5, 100*(1-(average/maximum)), 0);
 
       ++cc;
     }
   }
 }
-  
+
 } // End namespace Uintah

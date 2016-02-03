@@ -249,10 +249,6 @@ visit_handle visit_ReadMetaData(void *cbdata)
             VisIt_MeshMetaData_setTopologicalDimension(mmd, 3);
             VisIt_MeshMetaData_setSpatialDimension(mmd, 3);
 
-	    int par_size;
-	    MPI_Comm_size( MPI_COMM_WORLD, &par_size );
-	    VisIt_MeshMetaData_setNumDomains(mmd, par_size);
-
             VisIt_MeshMetaData_setNumDomains(mmd, totalPatches);
             VisIt_MeshMetaData_setDomainTitle(mmd, "patches");
             VisIt_MeshMetaData_setDomainPieceName(mmd, "patch");
@@ -641,7 +637,6 @@ visit_handle visit_ReadMetaData(void *cbdata)
     // Setup the custom UI Runtime Stats
     visit_GetRuntimeStats( sim );
 
-    
     // if( sim->message.size() )
     // {
     //   visit_handle msg = VISIT_INVALID_HANDLE;

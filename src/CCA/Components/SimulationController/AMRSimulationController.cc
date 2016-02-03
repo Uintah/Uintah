@@ -419,8 +419,13 @@ AMRSimulationController::run()
         d_output->updateCheckpointInterval( checkInv_var );
       }
     }
- 
+
+    getMemoryStats( d_sharedState->getCurrentTopLevelTimeStep()-1, delt, time );
+    getPAPIStats( d_sharedState->getCurrentTopLevelTimeStep()-1, delt, time );
+    d_sharedState->d_runTimeStats.reduce(d_regridder && d_regridder->useDynamicDilation(), d_myworld );
+    
     calcWallTime();
+
     printSimulationStats( d_sharedState->getCurrentTopLevelTimeStep()-1, delt, time );
 
     // Execute the current timestep, restarting if necessary
@@ -499,7 +504,13 @@ AMRSimulationController::run()
   d_scheduler->getLastDW()->get(delt_var, d_sharedState->get_delt_label());
   delt = delt_var;
   adjustDelT( delt, d_sharedState->d_prev_delt, d_sharedState->getCurrentTopLevelTimeStep(), time );
+
+  getMemoryStats( d_sharedState->getCurrentTopLevelTimeStep()-1, delt, time );
+  getPAPIStats( d_sharedState->getCurrentTopLevelTimeStep()-1, delt, time );
+  d_sharedState->d_runTimeStats.reduce(d_regridder && d_regridder->useDynamicDilation(), d_myworld );
+  
   calcWallTime();
+
   printSimulationStats( d_sharedState->getCurrentTopLevelTimeStep(), delt, time );
   
   // If VisIt has been included into the build, stop here so the

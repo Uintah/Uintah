@@ -29,9 +29,6 @@
 #include "visit_libsim_callbacks.h"
 #include "visit_libsim_database.h"
 
-#include <sci_defs/mpi_defs.h>
-#include <sci_defs/visit_defs.h>
-
 #include <CCA/Components/SimulationController/SimulationController.h>
 #include <CCA/Components/OnTheFlyAnalysis/MinMax.h>
 #include <CCA/Ports/Output.h>
@@ -40,6 +37,9 @@
 #include <Core/Parallel/Parallel.h>
 #include <Core/ProblemSpec/ProblemSpec.h>
 #include <Core/Util/DebugStream.h>
+
+#include <sci_defs/mpi_defs.h>
+#include <sci_defs/visit_defs.h>
 
 #include "StandAlone/tools/uda2vis/uda2vis.h"
 
