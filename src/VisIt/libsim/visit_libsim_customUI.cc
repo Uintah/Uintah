@@ -176,8 +176,6 @@ void visit_GetAnalysisVars( visit_simulation_data *sim )
         LevelP levelP = gridP->getLevel(l);
         Level *level = levelP.get_rep();
         
-	std::cerr << __FUNCTION__ << "  " << __LINE__ << std::endl;
-	std::cerr << i << "  " << l << "  " << std::endl;
         // double
         if( minMaxVar.label->typeDescription()->getSubType()->getType() ==
             TypeDescription::double_type )
@@ -210,9 +208,6 @@ void visit_GetAnalysisVars( visit_simulation_data *sim )
              << minMaxVar.label->getName()
              << "/" << minMaxVar.matl;
         
-	std::cerr << __FUNCTION__ << "  " << __LINE__ << std::endl;
-	std::cerr << i << "  " << l << "  " << name.str() << std::endl;
-  
         VisItUI_setTableValueS("MinMaxVariableTable", i, 0, name.str().c_str(), 0);
         // VisItUI_setTableValueI("MinMaxVariableTable", i, 1, matl, 0);
         // VisItUI_setTableValueI("MinMaxVariableTable", i, 2, level, 0);
