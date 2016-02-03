@@ -51,21 +51,6 @@
 
 namespace Uintah {
 
-static int numProcLabels = 5;
-static std::string procLabels[2][5] = { { "processor/id",
-					  
-					  "processor/memory/Base",
-					  "processor/memory/Max",
-					  "processor/memory/Used",
-					  "processor/memory/Resident" },
-					
-					{ "",
-					  
-					  "bytes", "bytes",
-					  "bytes", "bytes" } };
-
-
-
 // ****************************************************************************
 //  Method: ReadMetaData
 //
@@ -420,28 +405,22 @@ visit_handle visit_ReadMetaData(void *cbdata)
 	}
       }
 
-      for( int i=0; i<numProcLabels; ++i )
       {
-        if( i < 3 ||
-            (i == 3 && ProcessInfo::isSupported(ProcessInfo::MEM_SIZE)) ||
-            (i == 4 && ProcessInfo::isSupported(ProcessInfo::MEM_RSS )) )
-        {
-          visit_handle vmd = VISIT_INVALID_HANDLE;
+	visit_handle vmd = VISIT_INVALID_HANDLE;
           
-          if(VisIt_VariableMetaData_alloc(&vmd) == VISIT_OKAY)
-          {
-            VisIt_VariableMetaData_setName(vmd, procLabels[0][i].c_str());
-            VisIt_VariableMetaData_setMeshName(vmd, mesh_for_procid.c_str());
-            VisIt_VariableMetaData_setCentering(vmd, VISIT_VARCENTERING_ZONE);
-            VisIt_VariableMetaData_setType(vmd, VISIT_VARTYPE_SCALAR);
-            VisIt_VariableMetaData_setNumComponents(vmd, 1);
-            VisIt_VariableMetaData_setUnits(vmd, procLabels[1][i].c_str());
+	if(VisIt_VariableMetaData_alloc(&vmd) == VISIT_OKAY)
+        {
+	  VisIt_VariableMetaData_setName(vmd, "processor/id");
+	  VisIt_VariableMetaData_setMeshName(vmd, mesh_for_procid.c_str());
+	  VisIt_VariableMetaData_setCentering(vmd, VISIT_VARCENTERING_ZONE);
+	  VisIt_VariableMetaData_setType(vmd, VISIT_VARTYPE_SCALAR);
+	  VisIt_VariableMetaData_setNumComponents(vmd, 1);
+	  VisIt_VariableMetaData_setUnits(vmd, "");
 
-            // ARS - FIXME
-            //      VisIt_VariableMetaData_setHasDataExtents(vmd, false);
-            VisIt_VariableMetaData_setTreatAsASCII(vmd, false);
-            VisIt_SimulationMetaData_addVariable(md, vmd);
-          }
+	  // ARS - FIXME
+	  //      VisIt_VariableMetaData_setHasDataExtents(vmd, false);
+	  VisIt_VariableMetaData_setTreatAsASCII(vmd, false);
+	  VisIt_SimulationMetaData_addVariable(md, vmd);
         }
       }
     }
@@ -1382,47 +1361,18 @@ visit_handle visit_SimGetVariable(int domain, const char *varname, void *cbdata)
       double val;
 
       // Processor Id
-      if (std::string(varname) == procLabels[0][0] )
+      if( strcmp(varname, "processor/id") == 0 )
       {
           val = patchInfo.getProcId();
       }
-      // Processor memory usage
-      else if( std::string(varname) == procLabels[0][1] )
-      {
-        unsigned long memuse, highwater, maxMemUse;
-        
-        schedulerP->checkMemoryUse( memuse, highwater, maxMemUse );
-        
-        val = memuse;
-      }
-      // Processor maximum memory usage
-      else if( std::string(varname) == procLabels[0][2] )
-      {
-        unsigned long memuse, highwater, maxMemUse;
-        
-        schedulerP->checkMemoryUse( memuse, highwater, maxMemUse );
-        
-        val = maxMemUse;
-      }
-      // Processor memory usage
-      else if( std::string(varname) == procLabels[0][3] )
-      {
-        val = ProcessInfo::getMemoryUsed();
-      }
-      // Processor memory resident
-      else if( std::string(varname) == procLabels[0][4] )
-      {
-        val = ProcessInfo::getMemoryResident();
-      }
-
-      // Simulation State Timing stats
-      else if( strncmp( varname, "processor/runtime/", 15 ) == 0 &&
+      // Simulation State Runtime stats
+      else if( strncmp( varname, "processor/runtime/", 18 ) == 0 &&
 	       simStateP->d_runTimeStats.exists(varName) )
       {
 	val = simStateP->d_runTimeStats.getValue( varName );
       }
 
-      // MPI State Timing stats
+      // MPI Scheduler Timing stats
       else if( strncmp( varname, "processor/mpi/", 14 ) == 0 &&
 	       mpiScheduler && mpiScheduler->mpi_info_.exists(varName) )
       {
