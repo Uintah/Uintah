@@ -44,8 +44,6 @@
 #include <Kokkos_Core.hpp>
 #endif //UINTAH_ENABLE_KOKKOS
 
-#include <chrono>
-
 using namespace std;
 using namespace Uintah;
 
