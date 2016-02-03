@@ -144,7 +144,7 @@ class MPIScheduler : public SchedulerCommon {
       MAX_TIMING_STATS
     };
 
-    InfoMapper< TimingStat, double > mpi_info_;
+    ReductionInfoMapper< TimingStat, double > mpi_info_;
     
     void computeNetRunTimeStats(InfoMapper< SimulationState::RunTimeStat, double >& runTimeStats);
 

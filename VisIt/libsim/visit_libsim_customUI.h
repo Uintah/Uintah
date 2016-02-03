@@ -65,6 +65,7 @@ void visit_GetUPSVars        ( visit_simulation_data *sim );
 
 void visit_GetGridInfo       ( visit_simulation_data *sim );
 void visit_GetRuntimeStats   ( visit_simulation_data *sim );
+void visit_GetMPIStats       ( visit_simulation_data *sim );
 
 } // End namespace Uintah
 

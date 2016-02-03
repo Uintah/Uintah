@@ -29,6 +29,7 @@
 
 #include <sci_defs/visit_defs.h>
 
+#include <CCA/Components/Schedulers/MPIScheduler.h>
 #include <CCA/Components/SimulationController/SimulationController.h>
 #include <CCA/Components/OnTheFlyAnalysis/MinMax.h>
 
@@ -377,6 +378,54 @@ void visit_GetRuntimeStats( visit_simulation_data *sim )
 
       ++cc;
     }
+  }
+}
+
+//---------------------------------------------------------------------
+// GetMPIStats
+//    Get the MPI stats
+//---------------------------------------------------------------------
+void visit_GetMPIStats( visit_simulation_data *sim )
+{
+  SimulationStateP simStateP = sim->simController->getSimulationStateP();
+
+  MPIScheduler *mpiScheduler = dynamic_cast<MPIScheduler*>
+    (sim->simController->getSchedulerP().get_rep());
+  
+  // Add in the mpi run time stats.
+  if( mpiScheduler )
+  {
+    ReductionInfoMapper< MPIScheduler::TimingStat, double > &mpiStats =
+      mpiScheduler->mpi_info_;
+
+    VisItUI_setValueS( "MPIStatsGroupBox", "SHOW_WIDGET", 1);
+    VisItUI_setTableValueS("MPIStatsTable", -1, -1, "CLEAR_TABLE", 0);
+
+    int cc = 0;
+
+    for (unsigned int i=0; i<mpiStats.size(); ++i)
+    {
+      MPIScheduler::TimingStat e = (MPIScheduler::TimingStat) i;
+      
+      std::string name  = mpiStats.getName(e);
+      std::string units = mpiStats.getUnits(e);
+      
+      double  average = mpiStats.getAverage(e);
+      double  maximum = mpiStats.getMaximum(e);
+      int     rank    = mpiStats.getRank(e);
+      
+      VisItUI_setTableValueS("MPIStatsTable", i, 0, name.c_str(), 0);
+      VisItUI_setTableValueS("MPIStatsTable", i, 1, units.c_str(), 0);
+      VisItUI_setTableValueD("MPIStatsTable", i, 2, average, 0);
+      VisItUI_setTableValueD("MPIStatsTable", i, 3, maximum, 0);
+      VisItUI_setTableValueI("MPIStatsTable", i, 4, rank, 0);
+      VisItUI_setTableValueD("MPIStatsTable", i, 5, 100*(1-(average/maximum)), 0);
+    }
+  }
+  else
+  {
+    VisItUI_setValueS( "MPIStatsGroupBox", "HIDE_WIDGET", 0);
+    VisItUI_setTableValueS("MPIStatsTable", -1, -1, "CLEAR_TABLE", 0);
   }
 }
 
