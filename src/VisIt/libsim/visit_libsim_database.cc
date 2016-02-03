@@ -637,6 +637,9 @@ visit_handle visit_ReadMetaData(void *cbdata)
     // Setup the custom UI Runtime Stats
     visit_GetRuntimeStats( sim );
 
+    // Setup the custom UI MPI Stats
+    visit_GetMPIStats( sim );
+
     // if( sim->message.size() )
     // {
     //   visit_handle msg = VISIT_INVALID_HANDLE;

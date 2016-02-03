@@ -53,6 +53,7 @@
 
 #include <CCA/Components/ReduceUda/UdaReducer.h>
 #include <CCA/Components/Regridder/PerPatchVars.h>
+#include <CCA/Components/Schedulers/MPIScheduler.h>
 
 #include <CCA/Ports/DataWarehouse.h>
 #include <CCA/Ports/LoadBalancer.h>
@@ -422,7 +423,9 @@ AMRSimulationController::run()
 
     getMemoryStats( d_sharedState->getCurrentTopLevelTimeStep()-1, delt, time );
     getPAPIStats( d_sharedState->getCurrentTopLevelTimeStep()-1, delt, time );
-    d_sharedState->d_runTimeStats.reduce(d_regridder && d_regridder->useDynamicDilation(), d_myworld );
+    d_sharedState->d_runTimeStats.reduce(d_regridder &&
+					 d_regridder->useDynamicDilation(),
+					 d_myworld );
     
     calcWallTime();
 
@@ -432,6 +435,17 @@ AMRSimulationController::run()
     d_sharedState->d_current_delt = delt;
 
     executeTimestep( time, delt, currentGrid, totalFine );
+
+    // Reduce the mpi run time stats.
+    MPIScheduler *mpiScheduler = 
+      dynamic_cast<MPIScheduler*>(d_scheduler.get_rep());
+    
+    if( mpiScheduler )
+    {
+      mpiScheduler->mpi_info_.reduce(d_regridder && 
+				     d_regridder->useDynamicDilation(),
+				     d_myworld);
+    }
 
     // Print MPI statistics
     d_scheduler->printMPIStats();
