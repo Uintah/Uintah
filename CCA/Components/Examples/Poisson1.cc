@@ -44,6 +44,8 @@
 #include <Kokkos_Core.hpp>
 #endif //UINTAH_ENABLE_KOKKOS
 
+#include <chrono>
+
 using namespace std;
 using namespace Uintah;
 
@@ -222,6 +224,16 @@ struct TimeAdvanceFunctor
     double diff = m_newphi(i,j,k) - m_phi(i,j,k);
     residual += diff * diff;
   }
+
+  void operator()(int i, int j, int k, double & residual) const
+  {
+    m_newphi(i,j,k)=(1./6)*( m_phi(i+1,j,k) + m_phi(i-1,j,k) +
+                         m_phi(i,j+1,k) + m_phi(i,j-1,k) +
+                         m_phi(i,j,k+1) + m_phi(i,j,k-1) );
+
+    double diff = m_newphi(i,j,k) - m_phi(i,j,k);
+    residual += diff * diff;
+  }
 };
 
 } // namespace
@@ -260,9 +272,8 @@ void Poisson1::timeAdvance(const ProcessorGroup*,
     Uintah::ColumnMajorRange<> range(l, h);
 
     TimeAdvanceFunctor func( phi, newphi, range );
-    {
-      Kokkos::parallel_reduce( range.size(), func, residual );
-    }
+    Uintah::parallel_reduce( range, func, residual);
+    //Kokkos::parallel_reduce( range.size(), func, residual );
 #else
     //__________________________________
     //  Stencil
