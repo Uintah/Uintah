@@ -154,6 +154,7 @@ AMRSimulationController::run()
   d_scheduler->setInitTimestep( true );
   
   bool first = true;
+  
   if (d_restarting) {
     d_scheduler->setRestartInitTimestep(first);
   }
@@ -217,7 +218,7 @@ AMRSimulationController::run()
   while( ( time < d_timeinfo->maxTime ) &&
          ( iterations < d_timeinfo->maxTimestep ) && 
          ( d_timeinfo->max_wall_time == 0 || getWallTime() < d_timeinfo->max_wall_time )  ) {
-  
+
 #ifdef USE_GPERFTOOLS
     if (gheapprofile.active()){
       char heapename[512];
@@ -293,8 +294,6 @@ AMRSimulationController::run()
       adjustDelT( delt, d_sharedState->d_prev_delt, first, time );
       newDW->override(delt_vartype(delt), d_sharedState->get_delt_label());
     }
-
-    // printSimulationStats( d_sharedState, delt, time );
 
     if(log_dw_mem){
       // Remember, this isn't logged if DISABLE_SCI_MALLOC is set
@@ -407,12 +406,12 @@ AMRSimulationController::run()
       min_vartype outputInv_var;
       oldDW->get( outputInv_var, d_sharedState->get_outputInterval_label() );
        
-      if ( !outputInv_var.isBenignValue() ){
+      if( !outputInv_var.isBenignValue() ) {
         d_output->updateOutputInterval( outputInv_var );
       }
     }
 
-    if (d_output && d_sharedState->updateCheckpointInterval() && !first ) {
+    if( d_output && d_sharedState->updateCheckpointInterval() && !first ) {
       min_vartype checkInv_var;
       oldDW->get( checkInv_var, d_sharedState->get_checkpointInterval_label() );
        
@@ -421,39 +420,31 @@ AMRSimulationController::run()
       }
     }
 
-    getMemoryStats( d_sharedState->getCurrentTopLevelTimeStep()-1, delt, time );
-    getPAPIStats( d_sharedState->getCurrentTopLevelTimeStep()-1, delt, time );
-    d_sharedState->d_runTimeStats.reduce(d_regridder &&
-					 d_regridder->useDynamicDilation(),
-					 d_myworld );
-    
-    calcWallTime();
-
-    printSimulationStats( d_sharedState->getCurrentTopLevelTimeStep()-1, delt, time );
-
-    // Execute the current timestep, restarting if necessary
     d_sharedState->d_current_delt = delt;
 
-    executeTimestep( time, delt, currentGrid, totalFine );
-
-    // Reduce the mpi run time stats.
-    MPIScheduler *mpiScheduler = 
-      dynamic_cast<MPIScheduler*>(d_scheduler.get_rep());
-    
-    if( mpiScheduler )
-    {
-      mpiScheduler->mpi_info_.reduce(d_regridder && 
-				     d_regridder->useDynamicDilation(),
-				     d_myworld);
+    // For the first time through the loop print the inital runtime
+    // performance stats. Use a time step of -1 to note that these
+    // stats are from before the executeTimestep.
+    if( first ) {
+      getMemoryStats( d_sharedState->getCurrentTopLevelTimeStep()-1 );
+      getPAPIStats( );
+      d_sharedState->d_runTimeStats.reduce(d_regridder &&
+					   d_regridder->useDynamicDilation(),
+					   d_myworld );
+      
+      calcWallTime();
+      
+      printSimulationStats( d_sharedState->getCurrentTopLevelTimeStep()-1, delt, time );
     }
 
-    // Print MPI statistics
-    d_scheduler->printMPIStats();
+    // Execute the current timestep, restarting if necessary
+    executeTimestep( time, delt, currentGrid, totalFine );
 
     // Update the profiler weights
     d_lb->finalizeContributions(currentGrid);
 
-    if(dbg_barrier.active()) {
+    // If debugging output the barrier times.
+    if( dbg_barrier.active() ) {
       start = Time::currentSeconds();
       MPI_Barrier( d_myworld->getComm() );
       barrier_times[4]+=Time::currentSeconds()-start;
@@ -470,22 +461,49 @@ AMRSimulationController::run()
       }
     }
 
-    if(d_output) {
+    // Get the next checkpoint timestep.
+    if( d_output ) {
       d_output->findNext_OutputCheckPoint_Timestep( delt, currentGrid );
       d_output->writeto_xml_files( delt, currentGrid );
     }
 
+    // Update the time.
     time += delt;
-
-    if ( first ) {
-      d_scheduler->setRestartInitTimestep(false);
-      first = false;
-    }
 
     d_sharedState->d_prev_delt = delt;
 
     ++iterations;
     
+    if( first ) {
+      d_scheduler->setRestartInitTimestep(false);
+      first = false;
+    }
+    
+    // Get and reduce the performace run time stats
+    getMemoryStats( d_sharedState->getCurrentTopLevelTimeStep() );
+    getPAPIStats( );
+    d_sharedState->d_runTimeStats.reduce(d_regridder &&
+					 d_regridder->useDynamicDilation(),
+					 d_myworld );
+    
+    calcWallTime();
+    
+    printSimulationStats( d_sharedState->getCurrentTopLevelTimeStep(), delt, time );
+    
+    // Reduce the mpi run time stats.
+    MPIScheduler *mpiScheduler = 
+      dynamic_cast<MPIScheduler*>(d_scheduler.get_rep());
+    
+    if( mpiScheduler )
+    {
+      mpiScheduler->mpi_info_.reduce(d_regridder && 
+				     d_regridder->useDynamicDilation(),
+				     d_myworld);
+    }
+
+    // Print MPI statistics
+    d_scheduler->printMPIStats();
+
     // If VisIt has been included into the build, check the lib sim
     // state to see if there is a connection and if so check to see if
     // anything needs to be done.
@@ -497,8 +515,7 @@ AMRSimulationController::run()
       double delt_next = delt_var;
       adjustDelT( delt_next, delt, first, time );
 
-      // Update all of the simulation grid and time dependent
-      // variables.
+      // Update all of the simulation grid and time dependent variables.
       visit_UpdateSimData( &visitSimData, currentGrid,
 			   time, delt, delt_next, getWallTime(),
 			   std::string("") );
@@ -511,21 +528,13 @@ AMRSimulationController::run()
 	break;
     }
 #endif
+
+    // Reset the runtime performance stats
+    d_sharedState->resetStats();
+    // Reset memory use tracking variable
+    d_scheduler->resetMaxMemValue();
+
   } // end while ( time is not up, etc )
-
-  // print for the final timestep, as the one above is in the middle
-  // of a while loop - get new delt, and set walltime first
-  d_scheduler->getLastDW()->get(delt_var, d_sharedState->get_delt_label());
-  delt = delt_var;
-  adjustDelT( delt, d_sharedState->d_prev_delt, d_sharedState->getCurrentTopLevelTimeStep(), time );
-
-  getMemoryStats( d_sharedState->getCurrentTopLevelTimeStep()-1, delt, time );
-  getPAPIStats( d_sharedState->getCurrentTopLevelTimeStep()-1, delt, time );
-  d_sharedState->d_runTimeStats.reduce(d_regridder && d_regridder->useDynamicDilation(), d_myworld );
-  
-  calcWallTime();
-
-  printSimulationStats( d_sharedState->getCurrentTopLevelTimeStep(), delt, time );
   
   // If VisIt has been included into the build, stop here so the
   // user can have once last chance see their data via VisIt.
