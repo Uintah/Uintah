@@ -1186,8 +1186,8 @@ MPIScheduler::outputTimingStats(const char* label)
 //  Take the various timers and compute the net results
 void MPIScheduler::computeNetRunTimeStats(InfoMapper< SimulationState::RunTimeStat, double >& runTimeStats)
 {
-    runTimeStats[SimulationState::TaskExecTime]       += mpi_info_[TotalTask] - runTimeStats[SimulationState::OutputFileIO_Time]  // don't count output time or bytes
-                                                                              - runTimeStats[SimulationState::OutputFileIO_Rate];
+    runTimeStats[SimulationState::TaskExecTime]       += mpi_info_[TotalTask] - runTimeStats[SimulationState::OutputFileIOTime]  // don't count output time or bytes
+                                                                              - runTimeStats[SimulationState::OutputFileIORate];
      
     runTimeStats[SimulationState::TaskLocalCommTime]  += mpi_info_[TotalRecv] + mpi_info_[TotalSend];
     runTimeStats[SimulationState::TaskWaitCommTime]   += mpi_info_[TotalWaitMPI];

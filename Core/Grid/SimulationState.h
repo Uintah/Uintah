@@ -277,17 +277,28 @@ public:
     TaskWaitCommTime,          // SimulationController::printSimulationStats
     TaskWaitThreadTime,        // and SimulationState::getTotalTime.
 
-    OutputFileIO_Time,         // These two enumerators are not used in
-    OutputFileIO_Rate,	       // SimulationState::getTotalTime.
+    OutputFileIOTime ,         // These two enumerators are not used in
+    OutputFileIORate,	       // SimulationState::getTotalTime.
 
+
+    SCIMemoryUsed,
+    SCIMemoryMaxUsed,
+    SCIMemoryHighwater,
+
+    MemoryUsed,
+    MemoryResident,
+    
+#ifdef USE_PAPI_COUNTERS
+    TotalFlops,                // Total FLOPS
+    TottalVFlops,              // Total FLOPS optimized to count 
+                               // scaled double precision vector operations
+    L2Misses,                  // Total L2 cache misses
+    L3Misses,                  // Total L3 cache misses
+#endif
     MAX_TIMING_STATS
   };
 
-  InfoMapper< RunTimeStat, double > d_runTimeStats;
-
-  double getTotalTime();
-  double getOverheadTime();
-  void computeRunTimeStats(InfoMapper< RunTimeStat, double > mpi_info);
+  ReductionInfoMapper< RunTimeStat, double > d_runTimeStats;
 
   //percent time in overhead samples
   double overhead[OVERHEAD_WINDOW];

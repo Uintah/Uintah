@@ -50,14 +50,6 @@ class  Regridder;
 class  SimulationInterface;
 class  SimulationTime;
 
-struct double_int
-{
-  double val;
-  int loc;
-  double_int(double val, int loc): val(val), loc(loc) {}
-  double_int(): val(0), loc(-1) {}
-};
-
 /**************************************
       
   CLASS
@@ -122,11 +114,6 @@ public:
 
   bool                 doAMR() { return d_doAMR; }
 
-  std::vector<double>      avgReduce;
-  std::vector<double_int>  maxReduce;
-  std::vector<std::string> statLabels;
-  std::vector<std::string> statUnits;
-
 protected:
 
   double getWallTime     ( void );
@@ -146,6 +133,9 @@ protected:
   void initSimulationStatsVars ( void );
   void printSimulationStats    ( int timestep, double delt, double time );
 
+  void getMemoryStats ( int timestep, double delt, double time );
+  void getPAPIStats   ( int timestep, double delt, double time );
+  
   ProblemSpecP         d_ups;
   ProblemSpecP         d_grid_ps;         // Problem Spec for the Grid
   SimulationStateP     d_sharedState;
@@ -181,11 +171,13 @@ protected:
 #ifdef USE_PAPI_COUNTERS
   int         d_eventSet;            // PAPI event set
   long long * d_eventValues;         // PAPI event set values
+
   struct PapiEvent {
     int         eventValueIndex;
     std::string name;
     std::string simStatName;
     bool        isSupported;
+
     PapiEvent( const std::string& _name, const std::string& _simStatName )
       : name(_name), simStatName(_simStatName)
     {
@@ -193,6 +185,7 @@ protected:
       isSupported = false;
     }
   };
+
   std::map<int, PapiEvent>   d_papiEvents;
   std::map<int, std::string> d_papiErrorCodes;
 #endif

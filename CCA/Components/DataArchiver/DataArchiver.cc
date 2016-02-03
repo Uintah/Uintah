@@ -1847,7 +1847,7 @@ DataArchiver::outputReductionVars(const ProcessorGroup*,
       out << "\n";
     }
   }
-  d_sharedState->d_runTimeStats[SimulationState::OutputFileIO_Time] += Time::currentSeconds()-start;
+  d_sharedState->d_runTimeStats[SimulationState::OutputFileIOTime] += Time::currentSeconds()-start;
   dbg << "  end\n";
 }
 
@@ -2155,8 +2155,8 @@ DataArchiver::outputVariables(const ProcessorGroup * pg,
       //doc->releaseDocument();
       double myTime = Time::currentSeconds()-start;
       double byteToMB = 1024*1024;
-      d_sharedState->d_runTimeStats[SimulationState::OutputFileIO_Time] += myTime;
-      d_sharedState->d_runTimeStats[SimulationState::OutputFileIO_Rate] += (double)totalBytes/(byteToMB * myTime);
+      d_sharedState->d_runTimeStats[SimulationState::OutputFileIOTime] += myTime;
+      d_sharedState->d_runTimeStats[SimulationState::OutputFileIORate] += (double)totalBytes/(byteToMB * myTime);
     }
     d_outputLock.unlock(); 
   }

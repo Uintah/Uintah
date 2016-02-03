@@ -131,20 +131,33 @@ SimulationState::SimulationState(ProblemSpecP &ps)
   }
 
   std::string timeStr("seconds");
-  std::string bytesStr("MBytes/sec");
+  std::string bytesStr("MBytes");
     
-  d_runTimeStats.insert( CompilationTime,    std::string("Compilation"),    timeStr, 0 );
-  d_runTimeStats.insert( RegriddingTime,     std::string("Regridding"),     timeStr, 0 );
+  d_runTimeStats.insert( CompilationTime,    std::string("Compilation"),      timeStr, 0 );
+  d_runTimeStats.insert( RegriddingTime,     std::string("Regridding"),       timeStr, 0 );
   d_runTimeStats.insert( RegriddingCompilationTime, std::string("RegriddingCompilation"), timeStr, 0 );
-  d_runTimeStats.insert( RegriddingCopyDataTime,  std::string("RegriddingCopyData"), timeStr, 0 );
-  d_runTimeStats.insert( LoadBalancerTime,   std::string("LoadBalancer"),   timeStr, 0 );
-  d_runTimeStats.insert( TaskExecTime,       std::string("TaskExec"),       timeStr, 0 );
-  d_runTimeStats.insert( TaskLocalCommTime,  std::string("TaskLocalComm"),  timeStr, 0 );
-  d_runTimeStats.insert( TaskGlobalCommTime, std::string("TaskGlobalComm"), timeStr, 0 );
-  d_runTimeStats.insert( TaskWaitCommTime,   std::string("TaskWaitComm"),   timeStr, 0 );
-  d_runTimeStats.insert( TaskWaitThreadTime, std::string("TaskWaitThread"), timeStr, 0 );
-  d_runTimeStats.insert( OutputFileIO_Time,  std::string("OutputFileIO"),   timeStr, 0 );
-  d_runTimeStats.insert( OutputFileIO_Rate,  std::string("OutputFileIO_Rate"), bytesStr, 0 );
+  d_runTimeStats.insert( RegriddingCopyDataTime,    std::string("RegriddingCopyData"),    timeStr, 0 );
+  d_runTimeStats.insert( LoadBalancerTime,   std::string("LoadBalancer"),     timeStr, 0 );
+  d_runTimeStats.insert( TaskExecTime,       std::string("TaskExec"),         timeStr, 0 );
+  d_runTimeStats.insert( TaskLocalCommTime,  std::string("TaskLocalComm"),    timeStr, 0 );
+  d_runTimeStats.insert( TaskGlobalCommTime, std::string("TaskGlobalComm"),   timeStr, 0 );
+  d_runTimeStats.insert( TaskWaitCommTime,   std::string("TaskWaitComm"),     timeStr, 0 );
+  d_runTimeStats.insert( TaskWaitThreadTime, std::string("TaskWaitThread"),   timeStr, 0 );
+  d_runTimeStats.insert( OutputFileIOTime,   std::string("OutputFileIO"),     timeStr, 0 );
+  d_runTimeStats.insert( OutputFileIORate,   std::string("OutputFileIORate"), "MBytes/sec", 0 );
+
+  d_runTimeStats.insert( SCIMemoryUsed,      std::string("SCIMemoryUsed"),      bytesStr, 0 );
+  d_runTimeStats.insert( SCIMemoryMaxUsed,   std::string("SCIMemoryMaxUsed"),   bytesStr, 0 );
+  d_runTimeStats.insert( SCIMemoryHighwater, std::string("SCIMemoryHighwater"), bytesStr, 0 );
+  d_runTimeStats.insert( MemoryUsed,         std::string("MemoryUsed"),         bytesStr, 0 );
+  d_runTimeStats.insert( MemoryResident,     std::string("MemoryResident"),     bytesStr, 0 );
+
+#ifdef USE_PAPI_COUNTERS
+  d_runTimeStats.insert( TotalFlops,  std::string("TotalFlops"),  "flops", 0 );
+  d_runTimeStats.insert( TotalVFlops, std::string("TotalVFlops"), "flops", 0 );
+  d_runTimeStats.insert( L2Misses,    std::string("L2Misses"), "misses", 0 );
+  d_runTimeStats.insert( L3Misses,    std::string("L3Misses"), "misses", 0 );
+#endif
   d_runTimeStats.validate( MAX_TIMING_STATS );
 
   resetStats();
@@ -547,36 +560,6 @@ void SimulationState::resetStats()
 {
   d_runTimeStats.reset( 0 );  
 }
-//__________________________________
-//
-double SimulationState::getTotalTime()
-{
-  double totalTime = 0;
-  
-  // Sum up all times except as excluded below.
-  // These are also used in SimulationController::printSimulationStats 
-  for( unsigned int i=0; i<d_runTimeStats.size(); ++i )
-  {
-    if( (RunTimeStat) i != OutputFileIO_Time ||
-	(RunTimeStat) i != OutputFileIO_Rate)
-      totalTime += d_runTimeStats[(RunTimeStat) i];
-  }
-
-  return totalTime;
-}
-//__________________________________
-//
-double SimulationState::getOverheadTime()
-{
-  // Sum up the time for overhead related components.
-  // These are also used in SimulationController::printSimulationStats 
-  return (d_runTimeStats[CompilationTime] +
-	  d_runTimeStats[RegriddingTime] +
-	  d_runTimeStats[RegriddingCompilationTime] +
-	  d_runTimeStats[RegriddingCopyDataTime] +
-	  d_runTimeStats[LoadBalancerTime]);
-}
-
 //__________________________________
 //
 void SimulationState::setDimensionality(bool x, bool y, bool z)
