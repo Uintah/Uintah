@@ -673,8 +673,6 @@ SimulationController::printSimulationStats ( int timestep, double delt, double t
     // Increase overhead size if needed.
   } 
 
-  d_sharedState->resetStats();
-
   // calculate mean/std dev
   //double stdDev = 0;
   double mean = 0;
@@ -839,10 +837,8 @@ SimulationController::printSimulationStats ( int timestep, double delt, double t
 
     d_prevWallTime = d_wallTime;
   }
-  d_n++;
 
-  // Reset mem use tracking variable for next iteration
-  d_scheduler->resetMaxMemValue();
+  d_n++;
 
 } // end printSimulationStats()
 
@@ -850,17 +846,24 @@ SimulationController::printSimulationStats ( int timestep, double delt, double t
 //______________________________________________________________________
 //
 void
-SimulationController::getMemoryStats ( int timestep, double delt, double time )
+SimulationController::getMemoryStats ( int timestep, bool create )
 {
   unsigned long memUse, highwater, maxMemUse;
   d_scheduler->checkMemoryUse( memUse, highwater, maxMemUse );
 
-  d_sharedState->d_runTimeStats[ SimulationState::SCIMemoryUsed ] = memUse;
-  d_sharedState->d_runTimeStats[ SimulationState::SCIMemoryMaxUsed ] = maxMemUse;
-  d_sharedState->d_runTimeStats[ SimulationState::SCIMemoryHighwater ] = highwater;
+  d_sharedState->d_runTimeStats[ SimulationState::SCIMemoryUsed ] =
+    memUse;
+  d_sharedState->d_runTimeStats[ SimulationState::SCIMemoryMaxUsed ] =
+    maxMemUse;
+  d_sharedState->d_runTimeStats[ SimulationState::SCIMemoryHighwater ] =
+    highwater;
 
-  d_sharedState->d_runTimeStats[ SimulationState::MemoryUsed ] = ProcessInfo::getMemoryUsed();
-  d_sharedState->d_runTimeStats[ SimulationState::MemoryResident ] = ProcessInfo::getMemoryResident();
+  if( ProcessInfo::isSupported(ProcessInfo::MEM_SIZE) )
+    d_sharedState->d_runTimeStats[ SimulationState::MemoryUsed ] =
+      ProcessInfo::getMemoryUsed();
+  if( ProcessInfo::isSupported(ProcessInfo::MEM_RSS) )
+    d_sharedState->d_runTimeStats[ SimulationState::MemoryResident ] =
+      ProcessInfo::getMemoryResident();
 
   // Get memory stats for each proc if MALLOC_PERPROC is in the environent.
   if ( getenv( "MALLOC_PERPROC" ) )
@@ -877,7 +880,7 @@ SimulationController::getMemoryStats ( int timestep, double delt, double time )
       char filename[256];
       sprintf( filename, "%s.%d" ,filenamePrefix, d_myworld->myrank() );
 
-      if ( timestep == 0 )
+      if ( create )
       {
         mallocPerProcStream = scinew ofstream( filename, ios::out | ios::trunc );
       }
@@ -895,8 +898,12 @@ SimulationController::getMemoryStats ( int timestep, double delt, double time )
 
     *mallocPerProcStream << "Proc "     << d_myworld->myrank() << "   ";
     *mallocPerProcStream << "Timestep " << timestep << "   ";
-    *mallocPerProcStream << "Size "     << ProcessInfo::getMemoryUsed() << "   ";
-    *mallocPerProcStream << "RSS "      << ProcessInfo::getMemoryResident() << "   ";
+
+    if( ProcessInfo::isSupported(ProcessInfo::MEM_SIZE) )
+      *mallocPerProcStream << "Size "     << ProcessInfo::getMemoryUsed() << "   ";
+    if( ProcessInfo::isSupported(ProcessInfo::MEM_RSS) )
+      *mallocPerProcStream << "RSS "      << ProcessInfo::getMemoryResident() << "   ";
+
     *mallocPerProcStream << "Sbrk "     << (char*)sbrk(0) - d_scheduler->getStartAddr() << "   ";
 #ifndef DISABLE_SCI_MALLOC
     *mallocPerProcStream << "Sci_Malloc_Memuse "    << memUse << "   ";
@@ -914,7 +921,7 @@ SimulationController::getMemoryStats ( int timestep, double delt, double time )
 //______________________________________________________________________
 //
 void
-SimulationController::getPAPIStats( int timestep, double delt, double time )
+SimulationController::getPAPIStats( )
 {
 #ifdef USE_PAPI_COUNTERS
   int retp = PAPI_read(d_eventSet, d_eventValues);

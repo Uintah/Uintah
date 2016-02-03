@@ -133,8 +133,8 @@ protected:
   void initSimulationStatsVars ( void );
   void printSimulationStats    ( int timestep, double delt, double time );
 
-  void getMemoryStats ( int timestep, double delt, double time );
-  void getPAPIStats   ( int timestep, double delt, double time );
+  void getMemoryStats ( int timestep, bool create = false );
+  void getPAPIStats   ( );
   
   ProblemSpecP         d_ups;
   ProblemSpecP         d_grid_ps;         // Problem Spec for the Grid
