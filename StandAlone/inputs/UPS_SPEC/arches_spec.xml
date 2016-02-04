@@ -485,6 +485,7 @@
             <use_simple_inversion        spec="OPTIONAL BOOLEAN"/> <!-- default is false.. this option uses a simple 2x2 matrix inversion function which can be faster than using Lapack-->
             <char_MW                     spec="OPTIONAL DOUBLE"/> <!-- [kg char / kmoles char] default is 12.0-->
             <surface_area_mult_factor    spec="OPTIONAL DOUBLE"/> <!-- [multiplication factor for area, default is 1.0. area = X * pi * D ^ 2-->
+            <species                     spec="MULTIPLE STRING"/> <!-- species names (from table) to be used in diffusion coefficient calculation. -->
             <reaction                    spec="MULTIPLE NO_DATA"> <!-- a reaction section is specified for each reaction equation -->
               <oxidizer_name             spec="REQUIRED STRING"/> <!-- name of oxidizer (used to populate oxidizer vector) -->
               <oxidizer_MW               spec="REQUIRED DOUBLE"/> <!-- [kg oxidizer / kmoles oxidizer] -->

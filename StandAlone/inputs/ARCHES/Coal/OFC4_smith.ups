@@ -16,7 +16,7 @@
   </Scheduler>
   <Time>
     <maxTime>100</maxTime>
-    <max_Timesteps>10</max_Timesteps>
+    <max_Timesteps>30</max_Timesteps>
     <initTime>0.0</initTime>
     <delt_min>1e-9</delt_min>
     <delt_max>1e-3</delt_max>
@@ -149,14 +149,15 @@
     <save label="weight_os_src_qn2"/>
     <save label="temperature" table_lookup="true"/>
     <save label="density" table_lookup="true"/>
-    <save label="CO" table_lookup="true"/>
-    <save label="CO2" table_lookup="true"/>
+    <save label="H2" table_lookup="true"/>
+    <!--save label="CO" table_lookup="true"/>
+    <save label="CO2" table_lookup="true"/-->
     <save label="H2O" table_lookup="true"/>
     <save label="OH" table_lookup="true"/>
     <save label="O2" table_lookup="true"/>
+    <save label="N2" table_lookup="true"/>
     <save label="sensibleenthalpy" table_lookup="true"/>
     <save label="adiabaticenthalpy" table_lookup="true"/>
-    <save label="N2" table_lookup="true"/>
     <save label="mixture_molecular_weight" table_lookup="true"/>
     <!-- originalOFC -->
     <!-- The original OFC file didn't use interval instead used: walltimeInterval="1600" walltimeStart="0" -->
@@ -1187,6 +1188,12 @@
             <use_simple_inversion>true</use_simple_inversion>
             <char_MW>12.0</char_MW>
             <surface_area_mult_factor>1.0</surface_area_mult_factor>
+            <!--species>H2</species-->
+            <species>O2</species>
+            <species>H2O</species>
+            <!--species>CO</species-->
+            <species>CO2</species>
+            <species>N2</species>
             <reaction>
               <oxidizer_name>O2</oxidizer_name>
               <oxidizer_MW>32.0</oxidizer_MW>

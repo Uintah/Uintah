@@ -51,20 +51,14 @@ CharOxidationSmith::CharOxidationSmith( std::string modelName,
 {
   // Set constants
   _pi = acos(-1.0);
-  _R = 8.314; // J/K/mol
-  _WO2 = 32.0; //g/mol
-  _WCO2 = 44.0; //g/mol
-  _WH2O = 18.0; //g/mol
-  _WN2 = 28.0; //g/mol
-  _small = 1e-30;
   // Enthalpy of formation (J/mol)
   _HF_CO2 = -393509.0;
   _HF_CO  = -110525.0;
   //binary diffsuion at 293 K
-  _D1 = 0.153e-4; //O2-CO2 m^2/s
-  _D2 = 0.240e-4; //O2-H2O
-  _D3 = 0.219e-4; //O2-N2
   _T0 = 293.0;
+  // ideal gas constants
+  _R_cal = 1.9872036; // [cal/ (K mol) ]
+  _R = 8.314; // [J/ (K mol) ]
   
   _char_birth_label = NULL;
   _rawcoal_birth_label = NULL; 
@@ -96,22 +90,24 @@ CharOxidationSmith::problemSetup(const ProblemSpecP& params, int qn)
       throw InvalidValue("ERROR: CharOxidationSmith: Can't use particles of type: "+particleType,__FILE__,__LINE__);
     }
   
+  if (params_root->findBlock("PhysicalConstants")) {
+    ProblemSpecP db_phys = params_root->findBlock("PhysicalConstants");
+    db_phys->require("viscosity", _dynamic_visc);
+  } else {
+    throw InvalidValue("Error: Missing <PhysicalConstants> section in input file required for Smith Char Oxidation model.",__FILE__,__LINE__);
+  }
+  
   // create raw coal mass var label 
   std::string rcmass_root = ParticleTools::parse_for_role_to_label(db, "raw_coal");
   std::string rcmass_name = ParticleTools::append_env( rcmass_root, d_quadNode );
   std::string rcmassqn_name = ParticleTools::append_qn_env(rcmass_root, d_quadNode );
   _rcmass_varlabel = VarLabel::find(rcmass_name);
-  std::string rc_weighted_scaled_name = ParticleTools::append_qn_env( rcmass_root, d_quadNode );
-  _rcmass_weighted_scaled_varlabel = VarLabel::find(rc_weighted_scaled_name); 
  
   // check for char mass and get scaling constant
   std::string char_root = ParticleTools::parse_for_role_to_label(db, "char");
   std::string char_name = ParticleTools::append_env( char_root, d_quadNode );
   std::string charqn_name = ParticleTools::append_qn_env( char_root, d_quadNode );
   _char_varlabel = VarLabel::find(char_name);
-  std::string char_weighted_scaled_name = ParticleTools::append_qn_env( char_root, d_quadNode );
-  _charmass_weighted_scaled_varlabel = VarLabel::find(char_weighted_scaled_name); 
-
 
   EqnBase& temp_char_eqn = dqmom_eqn_factory.retrieve_scalar_eqn(charqn_name);
   DQMOMEqn& char_eqn = dynamic_cast<DQMOMEqn&>(temp_char_eqn);
@@ -176,7 +172,6 @@ CharOxidationSmith::problemSetup(const ProblemSpecP& params, int qn)
   for( DevolModelMap::iterator iModel = devolmodels_.begin(); iModel != devolmodels_.end(); ++iModel ) {
     int modelNode = iModel->second->getquadNode();
     if( modelNode == d_quadNode) {
-      _devolCharLabel = iModel->second->getCharSourceLabel();
       _devolRCLabel = iModel->second->getModelLabel() ;
     }
   }
@@ -184,24 +179,28 @@ CharOxidationSmith::problemSetup(const ProblemSpecP& params, int qn)
   // Ensure the following species are populated from table
   // (this is expensive and should be avoided, if a species isn't needed)
   d_fieldLabels->add_species("temperature");
-  //d_fieldLabels->add_species("O2");
-  //d_fieldLabels->add_species("CO2");
-  d_fieldLabels->add_species("H2O");
-  d_fieldLabels->add_species("N2");
   d_fieldLabels->add_species("mixture_molecular_weight");
   
   
   // model global constants 
-  _D_oxid_mix_l.push_back(0.00063);
-  _D_oxid_mix_l.push_back(0.00049);
-  _R_cal = 1.9872036; // [cal/ (K mol) ]
-  _R = 8.314; // [J/ (K mol) ]
   // get model coefficients
+  std::string oxidizer_name;
+  double oxidizer_MW; // 
+  double a; // 
+  double e; // 
+  double phi; // 
   if (db_coal_props->findBlock("SmithChar")) {
     ProblemSpecP db_Smith = db_coal_props->findBlock("SmithChar");
     db_Smith->getWithDefault("use_simple_inversion",_use_simple_invert,false); 
     db_Smith->getWithDefault("char_MW",_Mh,12.0); // kg char / kmole char 
     db_Smith->getWithDefault("surface_area_mult_factor",_S,1.0);
+    _NUM_species = 0; 
+    for ( ProblemSpecP db_species = db_Smith->findBlock( "species" ); db_species != 0; db_species = db_species->findNextBlock( "species" ) ){
+      std::string new_species; 
+      new_species = db_species->getNodeValue(); 
+      _species_names.push_back(new_species); 
+      _NUM_species += 1; 
+    }
     _NUM_reactions = 0;
     for ( ProblemSpecP db_reaction = db_Smith->findBlock( "reaction" ); db_reaction != 0; db_reaction = db_reaction->findNextBlock( "reaction" ) ){
       //get reaction rate params
@@ -210,8 +209,6 @@ CharOxidationSmith::problemSetup(const ProblemSpecP& params, int qn)
       db_reaction->require("pre_exponential_factor",a);
       db_reaction->require("activation_energy",e);
       db_reaction->require("stoich_coeff_ratio",phi);
-      _oxid_l.push_back(oxidizer_name);
-      d_fieldLabels->add_species(oxidizer_name); // request oxidizer 
       _MW_l.push_back(oxidizer_MW);
       _oxid_l.push_back(oxidizer_name);
       _a_l.push_back(a);
@@ -236,7 +233,50 @@ CharOxidationSmith::problemSetup(const ProblemSpecP& params, int qn)
     throw ProblemSetupException("Error: SmithChar oxidation coefficients missing in <ParticleProperties>.", __FILE__, __LINE__);
   }
 
-
+  diffusion_terms binary_diff_terms; // this allows access to the binary diff coefficients etc, in the header file.
+  int table_size;
+  table_size = binary_diff_terms.num_species;
+  // find indices specified by user.
+  std::vector<int> specified_indices;
+  bool check_species;
+  for (int j=0; j<_NUM_species; j++) {
+    check_species = true;
+    for (int i=0; i<table_size; i++) {
+      if (_species_names[j]==binary_diff_terms.sp_name[i]){
+        specified_indices.push_back(i);
+        check_species = false;
+      }
+    }
+    if (check_species ) { 
+      throw ProblemSetupException("Error: Species specified in SmithChar oxidation species, not found in SmithChar data-base (please add it).", __FILE__, __LINE__);
+    }
+  }
+  std::vector<double> temp_v;
+  for (int i=0; i<_NUM_species; i++) {
+    temp_v.clear();
+    _MW_species.push_back(binary_diff_terms.MW_sp[specified_indices[i]]);
+    d_fieldLabels->add_species(_species_names[i]); // request all indicated species from table 
+    for (int j=0; j<_NUM_species; j++) {
+      temp_v.push_back(binary_diff_terms.D_matrix[specified_indices[i]][specified_indices[j]]);
+    }
+    _D_mat.push_back(temp_v);
+  }
+  // find index of the oxidizers.
+  for (int reac=0; reac<_NUM_reactions; reac++) { 
+    for (int spec=0; spec<_NUM_species; spec++) {
+      if (_oxid_l[reac] == _species_names[spec]){
+        _oxidizer_indices.push_back(spec);
+      } 
+    }
+  }
+  // find index of the other species.
+  for (int spec=0; spec<_NUM_species; spec++) {
+    if(std::find(_oxidizer_indices.begin(), _oxidizer_indices.end(), spec) != _oxidizer_indices.end()){
+        // spec is in _oxidizer_indices    
+    } else {
+      _other_indices.push_back(spec); 
+    }
+  }
 }
 
 
@@ -316,32 +356,14 @@ CharOxidationSmith::sched_computeModel( const LevelP& level, SchedulerP& sched, 
   } else {
     throw InvalidValue("ERROR: CharOxidationSmith: problemSetup(): can't find gas phase temperature.",__FILE__,__LINE__);
   }
-  // get oxidizer labels 
-  for (int l=0; l<_NUM_reactions; l++) {
-    if (VarLabel::find(_oxid_l[l])) {
-      VarLabel * _oxidizer_varlabel_temp = VarLabel::find(_oxid_l[l]);
-      _oxidizer_varlabels.push_back(_oxidizer_varlabel_temp);
+  // get species labels 
+  for (int l=0; l<_NUM_species; l++) {
+    if (VarLabel::find(_species_names[l])) {
+      VarLabel * _species_varlabel_temp = VarLabel::find(_species_names[l]);
+      _species_varlabels.push_back(_species_varlabel_temp);
     } else {
       throw InvalidValue("ERROR: CharOxidationSmith: problemSetup(): can't find gas phase oxidizer.",__FILE__,__LINE__);
     }
-  }
-  // get gas phase CO2 label 
-  //if (VarLabel::find("CO2")) {
-  //  _CO2_varlabel = VarLabel::find("CO2");
-  //} else {
-  //  throw InvalidValue("ERROR: CharOxidationSmith: problemSetup(): can't find gas phase CO2.",__FILE__,__LINE__);
-  //}
-  // get gas phase H2O label 
-  if (VarLabel::find("H2O")) {
-    _H2O_varlabel = VarLabel::find("H2O");
-  } else {
-    throw InvalidValue("ERROR: CharOxidationSmith: problemSetup(): can't find gas phase H2O.",__FILE__,__LINE__);
-  }
-  // get gas phase N2 label 
-  if (VarLabel::find("N2")) {
-    _N2_varlabel = VarLabel::find("N2");
-  } else {
-    throw InvalidValue("ERROR: CharOxidationSmith: problemSetup(): can't find gas phase N2.",__FILE__,__LINE__);
   }
   // get gas phase mixture_molecular_weight label 
   if (VarLabel::find("mixture_molecular_weight")) {
@@ -386,8 +408,6 @@ CharOxidationSmith::sched_computeModel( const LevelP& level, SchedulerP& sched, 
   tsk->requires( Task::NewDW, _number_density_varlabel, gn, 0 ); 
   tsk->requires( which_dw, _rcmass_varlabel, gn, 0 ); 
   tsk->requires( which_dw, _char_varlabel, gn, 0 );
-  tsk->requires( which_dw, _charmass_weighted_scaled_varlabel, gn, 0 ); 
-  tsk->requires( which_dw, _rcmass_weighted_scaled_varlabel, gn, 0 ); 
 
   for (int i=0; i<_nQn_part;i++ ){ 
   tsk->requires( which_dw, _length_varlabel[i], gn, 0 ); 
@@ -399,18 +419,15 @@ CharOxidationSmith::sched_computeModel( const LevelP& level, SchedulerP& sched, 
   tsk->requires( Task::NewDW, i->second, gn, 0 );
   tsk->requires( which_dw, d_fieldLabels->d_CCVelocityLabel, gn, 0 );
   tsk->requires( which_dw, _gas_temperature_varlabel, gn, 0);
-  for (int l=0; l<_NUM_reactions; l++) {
-    tsk->requires( which_dw, _oxidizer_varlabels[l], gn, 0 );
+  for (int l=0; l<_NUM_species; l++) {
+    tsk->requires( which_dw, _species_varlabels[l], gn, 0 );
   }
-  tsk->requires( which_dw, _H2O_varlabel, gn, 0 );
-  tsk->requires( which_dw, _N2_varlabel, gn, 0 );
   tsk->requires( which_dw, _MW_varlabel, gn, 0 );
   tsk->requires( Task::OldDW, d_fieldLabels->d_sharedState->get_delt_label()); 
   tsk->requires( Task::NewDW, _RHS_source_varlabel, gn, 0 ); 
   tsk->requires( Task::NewDW, _RC_RHS_source_varlabel, gn, 0 ); 
   
   tsk->requires( which_dw, d_fieldLabels->d_densityCPLabel, gn, 0);
-  tsk->requires( Task::NewDW, _devolCharLabel, gn, 0);
   tsk->requires( Task::NewDW, _devolRCLabel, gn, 0);
   if ( _char_birth_label != NULL )
     tsk->requires( Task::NewDW, _char_birth_label, gn, 0 ); 
@@ -433,6 +450,9 @@ CharOxidationSmith::computeModel( const ProcessorGroup * pc,
 {
   for( int p=0; p < patches->size(); p++ ) {  // Patch loop
 
+    //SpatialOps::TimeLogger my_timer;
+    //my_timer.start("my_total");
+    
     Ghost::GhostType  gn  = Ghost::None;
 
     const Patch* patch = patches->get(p);
@@ -509,28 +529,18 @@ CharOxidationSmith::computeModel( const ProcessorGroup * pc,
     which_dw->get( rawcoal_mass, _rcmass_varlabel, matlIndex, patch, gn, 0 );
     constCCVariable<double> char_mass;
     which_dw->get( char_mass, _char_varlabel, matlIndex, patch, gn, 0 );
-    constCCVariable<double> rawcoal_weighted_scaled; 
-    which_dw->get( rawcoal_weighted_scaled, _rcmass_weighted_scaled_varlabel, matlIndex, patch, gn, 0 ); 
-    constCCVariable<double> char_weighted_scaled; 
-    which_dw->get( char_weighted_scaled, _charmass_weighted_scaled_varlabel, matlIndex, patch, gn, 0 ); 
     constCCVariable<double> RHS_source; 
     new_dw->get( RHS_source , _RHS_source_varlabel , matlIndex , patch , gn , 0 );
     constCCVariable<double> RC_RHS_source; 
     new_dw->get( RC_RHS_source , _RC_RHS_source_varlabel , matlIndex , patch , gn , 0 );
     constCCVariable<double> number_density; 
     new_dw->get( number_density , _number_density_varlabel , matlIndex , patch , gn , 0 );
-    StaticArray< constCCVariable<double> > oxidizers(_NUM_reactions); 
-    for (int l=0; l<_NUM_reactions; l++) {
-      which_dw->get( oxidizers[l], _oxidizer_varlabels[l], matlIndex, patch, gn, 0 );
+    StaticArray< constCCVariable<double> > species(_NUM_species); 
+    for (int l=0; l<_NUM_species; l++) {
+      which_dw->get( species[l], _species_varlabels[l], matlIndex, patch, gn, 0 );
     }
-    constCCVariable<double> H2O;
-    which_dw->get( H2O, _H2O_varlabel, matlIndex, patch, gn, 0 );
-    constCCVariable<double> N2;
-    which_dw->get( N2, _N2_varlabel, matlIndex, patch, gn, 0 );
     constCCVariable<double> MWmix;
     which_dw->get( MWmix, _MW_varlabel, matlIndex, patch, gn, 0 );  // in kmol/kg_mix ?
-    constCCVariable<double> devolChar;
-    new_dw->get( devolChar, _devolCharLabel, matlIndex, patch, gn, 0 );
     constCCVariable<double> devolRC;
     new_dw->get( devolRC, _devolRCLabel, matlIndex, patch, gn, 0 );
 
@@ -559,26 +569,26 @@ CharOxidationSmith::computeModel( const ProcessorGroup * pc,
     double rc;
     double ch;
     double w;
-    double H2O_mass_frac;
-    double N2_mass_frac;
     double MW;
     double r_devol;
     double RHS;
     double RHS_v;
-    double dynamic_visc; 
     double Re_p; 
     double cg; 
     double residual; 
     double char_mass_rate; 
+    double AreaSum;
+    double surfaceAreaFraction;
+    double sum_x_D;
+    double sum_x;
     std::vector<double> oxid_mass_frac;
+    std::vector<double> species_mass_frac;
     std::vector<double> rh_l;
     std::vector<double> rh_l_new;
     std::vector<double> _D_oxid_mix_l;
     std::vector<double> F;
     std::vector<double> Sc;
     std::vector<double> Sh;
-    //SpatialOps::TimeLogger my_timer;
-    //my_timer.start("my_total");
 
     for (CellIterator iter=patch->getCellIterator(); !iter.done(); iter++){
       IntVector c = *iter;
@@ -603,25 +613,15 @@ CharOxidationSmith::computeModel( const ProcessorGroup * pc,
         rc=rawcoal_mass[c];// [kg/#]
         ch=char_mass[c];// [kg/#]
         w=weight[d_quadNode][c];// [#/m^3]
-        H2O_mass_frac=H2O[c];// [mass fraction]
-        N2_mass_frac=N2[c];// [mass fraction]
         MW=1/MWmix[c]; // [kg mix / kmol mix] (MW in table is 1/MW).
         RHS=RHS_source[c]*_char_scaling_constant*_weight_scaling_constant; // [kg/s]
         r_devol=devolRC[c]*_char_scaling_constant*_weight_scaling_constant; // [kg/m^3/s]
         RHS_v=RC_RHS_source[c]*_char_scaling_constant*_weight_scaling_constant; // [kg/s]
-        dynamic_visc = 0.00005; // [kg/(m s)] 
-
-        
-        // TODO list ....
-        // get dynamice viscosity from ups file
-        // incorporate some sort of diffusion model to get oxidizer diffusion coefficients. 
-        // clean up all unused variables in .cc file
-        // clean up all unused variables in .h file
-        // do one last verification against matlab code to make sure things are working properly.
 
         // clear temporary variable vectors.
         _D_oxid_mix_l.clear();
         oxid_mass_frac.clear();
+        species_mass_frac.clear();
         rh_l.clear();
         rh_l_new.clear();
         F.clear();
@@ -630,30 +630,47 @@ CharOxidationSmith::computeModel( const ProcessorGroup * pc,
 
         // populate temporary variable vectors
         dfdrh->zero();// [-]
-        _D_oxid_mix_l.push_back(0.00063);// [m^2/s]
-        _D_oxid_mix_l.push_back(0.00049);// [m^2/s]
         for (int l=0; l<_NUM_reactions; l++) {
-          oxid_mass_frac.push_back(oxidizers[l][c]);// [mass fraction]
           rh_l.push_back(old_reaction_rate_l[l][c]);// [kg/m^3/s]
           rh_l_new.push_back(old_reaction_rate_l[l][c]);// [kg/m^3/s]
           F.push_back(0.0);// [kg/m^3/s] 
           Sc.push_back(0.0);// [-]
           Sh.push_back(0.0);// [-]
+          _D_oxid_mix_l.push_back(0.0);// [m^2/s]
+        }
+        for (int l=0; l<_NUM_reactions; l++) {
+          oxid_mass_frac.push_back(species[_oxidizer_indices[l]][c]);// [mass fraction]
+        }
+        for (int l2=0; l2<_NUM_species; l2++) {
+          species_mass_frac.push_back(species[l2][c]);// [mass fraction]
         }
         
         // update the rate 
+        for (int i=0; i<_nQn_part;i++ ){ 
+          AreaSum+=  weight[i][c]*length[i][c]*length[i][c]; // [#/m]
+        }
+        surfaceAreaFraction=w*p_diam*p_diam/AreaSum; // [-] this is the weighted area fraction for the current particle size.
         CO_CO2_ratio = 200*exp(-9000/(_R_cal*p_T)); // [ kg CO / kg CO2]
         CO_CO2_ratio=CO_CO2_ratio*44.0/28.0; // [kmoles CO / kmoles CO2]
         relative_velocity = sqrt( ( gas_vel.x() - part_vel.x() ) * ( gas_vel.x() - part_vel.x() ) + 
                                          ( gas_vel.y() - part_vel.y() ) * ( gas_vel.y() - part_vel.y() ) +
                                          ( gas_vel.z() - part_vel.z() ) * ( gas_vel.z() - part_vel.z() )  );// [m/s]  
-        Re_p  = relative_velocity * p_diam / ( dynamic_visc / gas_rho ); // Reynolds number [-]
+        Re_p  = relative_velocity * p_diam / ( _dynamic_visc / gas_rho ); // Reynolds number [-]
         
-        cg = 101325 / (_R * p_T * 1000); // [kmoles/m^3] - Gas concentration 
-        p_area; // particle surface area [m^2]
+        cg = 101325 / (_R * gas_T * 1000); // [kmoles/m^3] - Gas concentration 
         p_area = _pi * pow(p_diam,2); // particle surface area [m^2]
+        // Calculate oxidizer diffusion coefficient // effect diffusion through stagnant gas (see "Multicomponent Mass Transfer", Taylor and Krishna equation 6.1.14)
         for (int l=0; l<_NUM_reactions; l++) {
-          Sc[l] = dynamic_visc / (gas_rho * _D_oxid_mix_l[l]); // Schmidt number [-]
+          sum_x_D=0;
+          sum_x=0;
+          for (int l2=0; l2<_NUM_species; l2++) {
+            sum_x_D = (_oxid_l[l] != _species_names[l2]) ? sum_x_D + species_mass_frac[l2]/(_MW_species[l2]*_D_mat[_oxidizer_indices[l]][l2]) : sum_x_D;
+            sum_x = (_oxid_l[l] != _species_names[l2]) ? sum_x + species_mass_frac[l2]/(_MW_species[l2]) : sum_x;
+          }
+          _D_oxid_mix_l[l] = sum_x/sum_x_D * pow( gas_T/_T0 ,1.5);
+        }
+        for (int l=0; l<_NUM_reactions; l++) {
+          Sc[l] = _dynamic_visc / (gas_rho * _D_oxid_mix_l[l]); // Schmidt number [-]
           Sh[l] = 2.0 + 0.6 * pow(Re_p,0.5) * pow(Sc[l],0.33333); // Sherwood number [-]
         }
         // Newton-Raphson solve for rh_l.
@@ -665,7 +682,7 @@ CharOxidationSmith::computeModel( const ProcessorGroup * pc,
             rh_l[l]=rh_l_new[l];
           }
           // get F and Jacobian -> dF/drh
-          root_function( F, dfdrh, rh_l, p_T, cg, oxid_mass_frac, MW, r_devol, gas_rho, p_diam, Sh, w, p_area );  
+          root_function( F, dfdrh, rh_l, p_T, cg, oxid_mass_frac, MW, r_devol, gas_rho, p_diam, Sh, w, p_area, _D_oxid_mix_l );  
           // invert Jacobian -> (dF_(n)/drh_(n))^-1 
           if (_use_simple_invert){
             invert_2_2(dfdrh); // simple matrix inversion for a 2x2 matrix. 
@@ -674,7 +691,6 @@ CharOxidationSmith::computeModel( const ProcessorGroup * pc,
           }
           // get rh_(n+1)
           for (int l=0; l<_NUM_reactions; l++) {
-            rh_l_new[l]=rh_l[l];
             for (int var=0; var<_NUM_reactions; var++) {
               rh_l_new[l]-=(*dfdrh)[l][var]*F[var];
             }
@@ -691,7 +707,12 @@ CharOxidationSmith::computeModel( const ProcessorGroup * pc,
           if (residual < 1e-15) {
             break;
           }
-        }
+        } // end newton solve
+        //if (c==IntVector(4,10,10)){
+        //  for (int l=0; l<_NUM_reactions; l++) {
+        //    std::cout << "rh_l_new[l]: " << rh_l_new[l] << std::endl;
+        //  }
+        //}
         // convert rh units from kg/m^3/s to kg/s/#
         char_mass_rate  = 0.0;
         for (int l=0; l<_NUM_reactions; l++) {
@@ -700,7 +721,7 @@ CharOxidationSmith::computeModel( const ProcessorGroup * pc,
         }
         // check to see if reaction rate is oxidizer limited.
         for (int l=0; l<_NUM_reactions; l++) {
-          char_mass_rate = max( char_mass_rate, - (oxid_mass_frac[l] * gas_rho) / (dt * w) );// [kg/s/#]  
+          char_mass_rate = max( char_mass_rate, - (oxid_mass_frac[l] * gas_rho * surfaceAreaFraction) / (dt * w) );// [kg/s/#] // here the surfaceAreaFraction parameter is allowing us to only consume the oxidizer multiplied by the weighted area fraction for the current particle. 
         }
         // check to see if reaction rate is fuel limited.
         if ( add_rawcoal_birth && add_char_birth ){ 
@@ -717,14 +738,14 @@ CharOxidationSmith::computeModel( const ProcessorGroup * pc,
 
       }// else statement 
     }//end cell loop
-  //my_timer.stop("my_total");
   // delete scinew DenseMatrix 
   delete dfdrh; 
+  //my_timer.stop("my_total");
   }//end patch loop
 }
 
 inline void 
-CharOxidationSmith::root_function( std::vector<double> &F, DenseMatrix* &dfdrh, std::vector<double> &rh_l, double &p_T, double &cg, std::vector<double> &oxid_mass_frac, double &MW, double &r_devol, double &gas_rho, double &p_diam, std::vector<double> &Sh, double &w, double &p_area ){
+CharOxidationSmith::root_function( std::vector<double> &F, DenseMatrix* &dfdrh, std::vector<double> &rh_l, double &p_T, double &cg, std::vector<double> &oxid_mass_frac, double &MW, double &r_devol, double &gas_rho, double &p_diam, std::vector<double> &Sh, double &w, double &p_area, std::vector<double> &_D_oxid_mix_l ){
 
   double oxid_mole_frac = 0.0;
   double co_r = 0.0;
