@@ -28,7 +28,6 @@
 #include <CCA/Ports/InputContext.h>
 #include <CCA/Ports/DataWarehouseP.h>
 #include <CCA/Ports/DataWarehouse.h>
-#include <CCA/Ports/LoadBalancer.h>
 
 #include <Core/Exceptions/InternalError.h>
 #include <Core/Exceptions/ProblemSetupException.h>
@@ -68,8 +67,7 @@ DataArchive::DataArchive( const string & filebase,
   d_cell_scale( Vector(1.0,1.0,1.0) ),
   d_processor(processor),
   d_numProcessors(numProcessors), d_lock("DataArchive lock"),
-  d_particlePositionName("p.x"),
-  d_lb( NULL )
+  d_particlePositionName("p.x")
 {
   if( d_filebase == "" ) {
     throw InternalError("DataArchive::DataArchive 'filebase' cannot be empty (\"\").", __FILE__, __LINE__);
@@ -781,8 +779,6 @@ DataArchive::restartInitialize( const int             index,
                                       LoadBalancer  * lb,
                                       double        * pTime )
 {
-  d_lb = lb;
-
   vector<int>    indices;
   vector<double> times;
   queryTimesteps( indices, times );

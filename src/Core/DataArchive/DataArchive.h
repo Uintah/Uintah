@@ -386,6 +386,7 @@ namespace Uintah {
       friend class DataArchive::TimeData;
       DataArchive( const DataArchive& );
       DataArchive& operator=( const DataArchive& );
+      
       //______________________________________________________________________
       //
       void queryVariables( FILE                                * fp,
@@ -419,8 +420,6 @@ namespace Uintah {
       Mutex d_lock;
     
       std::string d_particlePositionName;
-
-      LoadBalancer * d_lb;
 
       void findPatchAndIndex( const GridP            grid,
                                     Patch         *& patch,
