@@ -102,7 +102,7 @@ typedef struct
 
   bool isProc0;
 
-  bool image;
+  bool imageSave;
   std::string imageFilename;
   int imageHeight;
   int imageWidth;

@@ -202,7 +202,7 @@ void visit_InitLibSim( visit_simulation_data *sim )
                                         exeCommand.c_str(),
                                         NULL, "uintah.ui", NULL);
 
-    sim->image         = 0;
+    sim->imageSave     = 0;
     sim->imageFilename = simFileName;
     sim->imageHeight   = 480;
     sim->imageWidth    = 640;
@@ -286,8 +286,8 @@ void visit_CheckState( visit_simulation_data *sim )
       VisItTimeStepChanged();
       // Tell VisIt to update its plots
       VisItUpdatePlots();
-      // The VisIt to save the window.
-      if( sim->image )
+      // Tell VisIt to save the window.
+      if( sim->imageSave )
       {
         std::stringstream fname;
         fname << sim->imageFilename << "_" << sim->cycle;
