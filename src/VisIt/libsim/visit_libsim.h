@@ -102,6 +102,12 @@ typedef struct
 
   bool isProc0;
 
+  bool image;
+  std::string imageFilename;
+  int imageHeight;
+  int imageWidth;
+  int imageFormat;
+
 } visit_simulation_data;
 
 

@@ -348,28 +348,28 @@ visit_handle visit_ReadMetaData(void *cbdata)
       // Add in the processor runtime stats.
       for( unsigned int i=0; i<simStateP->d_runTimeStats.size(); ++i )
       {
-	visit_handle vmd = VISIT_INVALID_HANDLE;
+        visit_handle vmd = VISIT_INVALID_HANDLE;
           
-	if(VisIt_VariableMetaData_alloc(&vmd) == VISIT_OKAY)
+        if(VisIt_VariableMetaData_alloc(&vmd) == VISIT_OKAY)
         {
-	  std::string stat = std::string("processor/runtime/") + 
-	    simStateP->d_runTimeStats.getName( (SimulationState::RunTimeStat) i );
+          std::string stat = std::string("processor/runtime/") + 
+            simStateP->d_runTimeStats.getName( (SimulationState::RunTimeStat) i );
 
-	  std::string units = 
-	    simStateP->d_runTimeStats.getUnits( (SimulationState::RunTimeStat) i );
+          std::string units = 
+            simStateP->d_runTimeStats.getUnits( (SimulationState::RunTimeStat) i );
 
-	  VisIt_VariableMetaData_setName(vmd, stat.c_str());
-	  VisIt_VariableMetaData_setMeshName(vmd, mesh_for_procid.c_str());
-	  VisIt_VariableMetaData_setCentering(vmd, VISIT_VARCENTERING_ZONE);
-	  VisIt_VariableMetaData_setType(vmd, VISIT_VARTYPE_SCALAR);
-	  VisIt_VariableMetaData_setNumComponents(vmd, 1);
-	  VisIt_VariableMetaData_setUnits(vmd, units.c_str());
-	  
-	  // ARS - FIXME
-	  //      VisIt_VariableMetaData_setHasDataExtents(vmd, false);
-	  VisIt_VariableMetaData_setTreatAsASCII(vmd, false);
-	  VisIt_SimulationMetaData_addVariable(md, vmd);
-	}
+          VisIt_VariableMetaData_setName(vmd, stat.c_str());
+          VisIt_VariableMetaData_setMeshName(vmd, mesh_for_procid.c_str());
+          VisIt_VariableMetaData_setCentering(vmd, VISIT_VARCENTERING_ZONE);
+          VisIt_VariableMetaData_setType(vmd, VISIT_VARTYPE_SCALAR);
+          VisIt_VariableMetaData_setNumComponents(vmd, 1);
+          VisIt_VariableMetaData_setUnits(vmd, units.c_str());
+          
+          // ARS - FIXME
+          //      VisIt_VariableMetaData_setHasDataExtents(vmd, false);
+          VisIt_VariableMetaData_setTreatAsASCII(vmd, false);
+          VisIt_SimulationMetaData_addVariable(md, vmd);
+        }
       }
       
       MPIScheduler *mpiScheduler = dynamic_cast<MPIScheduler*>
@@ -378,49 +378,49 @@ visit_handle visit_ReadMetaData(void *cbdata)
       // Add in the mpi run time stats.
       if( mpiScheduler )
       {
-	for( unsigned int i=0; i<mpiScheduler->mpi_info_.size(); ++i )
+        for( unsigned int i=0; i<mpiScheduler->mpi_info_.size(); ++i )
         {
-	  visit_handle vmd = VISIT_INVALID_HANDLE;
+          visit_handle vmd = VISIT_INVALID_HANDLE;
           
-	  if(VisIt_VariableMetaData_alloc(&vmd) == VISIT_OKAY)
+          if(VisIt_VariableMetaData_alloc(&vmd) == VISIT_OKAY)
           {
-	    std::string stat = std::string("processor/mpi/") + 
-	      mpiScheduler->mpi_info_.getName( (MPIScheduler::TimingStat)i );
+            std::string stat = std::string("processor/mpi/") + 
+              mpiScheduler->mpi_info_.getName( (MPIScheduler::TimingStat)i );
 
-	    std::string units = 
-	      simStateP->d_runTimeStats.getUnits( (SimulationState::RunTimeStat) i );
+            std::string units = 
+              simStateP->d_runTimeStats.getUnits( (SimulationState::RunTimeStat) i );
 
-	    VisIt_VariableMetaData_setName(vmd, stat.c_str());
-	    VisIt_VariableMetaData_setMeshName(vmd, mesh_for_procid.c_str());
-	    VisIt_VariableMetaData_setCentering(vmd, VISIT_VARCENTERING_ZONE);
-	    VisIt_VariableMetaData_setType(vmd, VISIT_VARTYPE_SCALAR);
-	    VisIt_VariableMetaData_setNumComponents(vmd, 1);
-	    VisIt_VariableMetaData_setUnits(vmd, units.c_str());
-	    
-	    // ARS - FIXME
-	    //      VisIt_VariableMetaData_setHasDataExtents(vmd, false);
-	    VisIt_VariableMetaData_setTreatAsASCII(vmd, false);
-	    VisIt_SimulationMetaData_addVariable(md, vmd);
-	  }
-	}
+            VisIt_VariableMetaData_setName(vmd, stat.c_str());
+            VisIt_VariableMetaData_setMeshName(vmd, mesh_for_procid.c_str());
+            VisIt_VariableMetaData_setCentering(vmd, VISIT_VARCENTERING_ZONE);
+            VisIt_VariableMetaData_setType(vmd, VISIT_VARTYPE_SCALAR);
+            VisIt_VariableMetaData_setNumComponents(vmd, 1);
+            VisIt_VariableMetaData_setUnits(vmd, units.c_str());
+            
+            // ARS - FIXME
+            //      VisIt_VariableMetaData_setHasDataExtents(vmd, false);
+            VisIt_VariableMetaData_setTreatAsASCII(vmd, false);
+            VisIt_SimulationMetaData_addVariable(md, vmd);
+          }
+        }
       }
 
       {
-	visit_handle vmd = VISIT_INVALID_HANDLE;
+        visit_handle vmd = VISIT_INVALID_HANDLE;
           
-	if(VisIt_VariableMetaData_alloc(&vmd) == VISIT_OKAY)
+        if(VisIt_VariableMetaData_alloc(&vmd) == VISIT_OKAY)
         {
-	  VisIt_VariableMetaData_setName(vmd, "processor/id");
-	  VisIt_VariableMetaData_setMeshName(vmd, mesh_for_procid.c_str());
-	  VisIt_VariableMetaData_setCentering(vmd, VISIT_VARCENTERING_ZONE);
-	  VisIt_VariableMetaData_setType(vmd, VISIT_VARTYPE_SCALAR);
-	  VisIt_VariableMetaData_setNumComponents(vmd, 1);
-	  VisIt_VariableMetaData_setUnits(vmd, "");
+          VisIt_VariableMetaData_setName(vmd, "processor/id");
+          VisIt_VariableMetaData_setMeshName(vmd, mesh_for_procid.c_str());
+          VisIt_VariableMetaData_setCentering(vmd, VISIT_VARCENTERING_ZONE);
+          VisIt_VariableMetaData_setType(vmd, VISIT_VARTYPE_SCALAR);
+          VisIt_VariableMetaData_setNumComponents(vmd, 1);
+          VisIt_VariableMetaData_setUnits(vmd, "");
 
-	  // ARS - FIXME
-	  //      VisIt_VariableMetaData_setHasDataExtents(vmd, false);
-	  VisIt_VariableMetaData_setTreatAsASCII(vmd, false);
-	  VisIt_SimulationMetaData_addVariable(md, vmd);
+          // ARS - FIXME
+          //      VisIt_VariableMetaData_setHasDataExtents(vmd, false);
+          VisIt_VariableMetaData_setTreatAsASCII(vmd, false);
+          VisIt_SimulationMetaData_addVariable(md, vmd);
         }
       }
     }
@@ -566,8 +566,8 @@ visit_handle visit_ReadMetaData(void *cbdata)
 
     /* Add some commands. */
     const char *cmd_names[] = {"Stop", "Step", "Run",
-                               "Stats", "Save", "Checkpoint",
-                               "Finish", "Terminate", "Abort", "Regrid"};
+                               "Save", "Checkpoint", "Regrid",
+                               "Finish", "Terminate", "Abort"};
 
     int numNames = sizeof(cmd_names) / sizeof(const char *);
 
@@ -618,6 +618,9 @@ visit_handle visit_ReadMetaData(void *cbdata)
 
     // Setup the custom UI MPI Stats
     visit_GetMPIStats( sim );
+
+    // Setup the custom UI Image variables
+    visit_GetImageVars( sim );
 
     // if( sim->message.size() )
     // {
@@ -1367,16 +1370,16 @@ visit_handle visit_SimGetVariable(int domain, const char *varname, void *cbdata)
       }
       // Simulation State Runtime stats
       else if( strncmp( varname, "processor/runtime/", 18 ) == 0 &&
-	       simStateP->d_runTimeStats.exists(varName) )
+               simStateP->d_runTimeStats.exists(varName) )
       {
-	val = simStateP->d_runTimeStats.getValue( varName );
+        val = simStateP->d_runTimeStats.getValue( varName );
       }
 
       // MPI Scheduler Timing stats
       else if( strncmp( varname, "processor/mpi/", 14 ) == 0 &&
-	       mpiScheduler && mpiScheduler->mpi_info_.exists(varName) )
+               mpiScheduler && mpiScheduler->mpi_info_.exists(varName) )
       {
-	val = mpiScheduler->mpi_info_.getValue( varName );
+        val = mpiScheduler->mpi_info_.getValue( varName );
       }
 
       // Create at new grid data for the values.
@@ -1394,7 +1397,7 @@ visit_handle visit_SimGetVariable(int domain, const char *varname, void *cbdata)
       gd->data = new double[ncells];
 
       for (int i=0; i<ncells; ++i)
-	gd->data[i] = val;
+        gd->data[i] = val;
     }
     else
     {
@@ -1488,7 +1491,7 @@ visit_handle visit_SimGetVariable(int domain, const char *varname, void *cbdata)
       gd->data = new double[ncells];
 
       for (int i=0; i<ncells; ++i)
-	gd->data[i] = 0;
+        gd->data[i] = 0;
     }
   }
 

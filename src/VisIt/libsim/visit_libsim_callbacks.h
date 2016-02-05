@@ -53,24 +53,30 @@ WARNING
 
 namespace Uintah {
 
-int visit_BroadcastIntCallback(int *value, int sender);
-int visit_BroadcastStringCallback(char *str, int len, int sender);
-void visit_SlaveProcessCallback();
+  int visit_BroadcastIntCallback(int *value, int sender);
+  int visit_BroadcastStringCallback(char *str, int len, int sender);
+  void visit_SlaveProcessCallback();
 
-void visit_ControlCommandCallback(const char *cmd, const char *args, void *cbdata);
+  void visit_ControlCommandCallback(const char *cmd, const char *args, void *cbdata);
 
-int visit_ProcessVisItCommand( visit_simulation_data *sim );
+  int visit_ProcessVisItCommand( visit_simulation_data *sim );
 
-void visit_MaxTimeStepCallback (char *val, void *cbdata);
-void visit_MaxTimeCallback     (char *val, void *cbdata);
-void visit_DeltaTCallback      (char *val, void *cbdata);
-void visit_DeltaTMinCallback   (char *val, void *cbdata);
-void visit_DeltaTMaxCallback   (char *val, void *cbdata);
-void visit_DeltaTFactorCallback(char *val, void *cbdata);
-void visit_MaxWallTimeCallback (char *val, void *cbdata);
+  void visit_MaxTimeStepCallback (char *val, void *cbdata);
+  void visit_MaxTimeCallback     (char *val, void *cbdata);
+  void visit_DeltaTCallback      (char *val, void *cbdata);
+  void visit_DeltaTMinCallback   (char *val, void *cbdata);
+  void visit_DeltaTMaxCallback   (char *val, void *cbdata);
+  void visit_DeltaTFactorCallback(char *val, void *cbdata);
+  void visit_MaxWallTimeCallback (char *val, void *cbdata);
  
-void visit_UPSVariableTableCallback(char *val, void *cbdata);
-void visit_OutputIntervalVariableTableCallback(char *val, void *cbdata);
+  void visit_UPSVariableTableCallback(char *val, void *cbdata);
+  void visit_OutputIntervalVariableTableCallback(char *val, void *cbdata);
+
+  void visit_ImageCallback(int val, void *cbdata);
+  void visit_ImageFilenameCallback(char *val, void *cbdata);
+  void visit_ImageHeightCallback(char *val, void *cbdata);
+  void visit_ImageWidthCallback(char *val, void *cbdata);
+  void visit_ImageFormatCallback(int val, void *cbdata);
 
 } // End namespace Uintah
 

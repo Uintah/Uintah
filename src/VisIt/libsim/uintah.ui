@@ -565,6 +565,160 @@
       </widget>
      </widget>
     </widget>
+    <widget class="QWidget" name="tab_3">
+     <attribute name="title">
+      <string>Misc</string>
+     </attribute>
+     <widget class="QGroupBox" name="ImageGroupBox">
+      <property name="geometry">
+       <rect>
+        <x>10</x>
+        <y>10</y>
+        <width>601</width>
+        <height>71</height>
+       </rect>
+      </property>
+      <property name="title">
+       <string>Generate Images</string>
+      </property>
+      <property name="checkable">
+       <bool>true</bool>
+      </property>
+      <widget class="QLabel" name="ImageFilenameLabel">
+       <property name="geometry">
+        <rect>
+         <x>10</x>
+         <y>30</y>
+         <width>56</width>
+         <height>13</height>
+        </rect>
+       </property>
+       <property name="text">
+        <string>Filename</string>
+       </property>
+      </widget>
+      <widget class="QLabel" name="ImageHeightLabel">
+       <property name="geometry">
+        <rect>
+         <x>200</x>
+         <y>30</y>
+         <width>56</width>
+         <height>13</height>
+        </rect>
+       </property>
+       <property name="text">
+        <string>Height</string>
+       </property>
+      </widget>
+      <widget class="QLabel" name="ImageWidthLabel">
+       <property name="geometry">
+        <rect>
+         <x>320</x>
+         <y>30</y>
+         <width>56</width>
+         <height>13</height>
+        </rect>
+       </property>
+       <property name="text">
+        <string>Width</string>
+       </property>
+      </widget>
+      <widget class="QLabel" name="ImageFormatLabel">
+       <property name="geometry">
+        <rect>
+         <x>440</x>
+         <y>30</y>
+         <width>56</width>
+         <height>13</height>
+        </rect>
+       </property>
+       <property name="text">
+        <string>Format</string>
+       </property>
+      </widget>
+      <widget class="QComboBox" name="ImageFormat">
+       <property name="geometry">
+        <rect>
+         <x>490</x>
+         <y>30</y>
+         <width>104</width>
+         <height>26</height>
+        </rect>
+       </property>
+       <item>
+        <property name="text">
+         <string>BMP</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>JPEG</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string notr="true">PNG</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>POVRAY</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>PPM</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>RGB</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>TIFF</string>
+        </property>
+       </item>
+      </widget>
+      <widget class="QLineEdit" name="ImageWidth">
+       <property name="geometry">
+        <rect>
+         <x>369</x>
+         <y>30</y>
+         <width>61</width>
+         <height>22</height>
+        </rect>
+       </property>
+       <property name="text">
+        <string>0</string>
+       </property>
+      </widget>
+      <widget class="QLineEdit" name="ImageHeight">
+       <property name="geometry">
+        <rect>
+         <x>250</x>
+         <y>30</y>
+         <width>61</width>
+         <height>22</height>
+        </rect>
+       </property>
+       <property name="text">
+        <string>0</string>
+       </property>
+      </widget>
+      <widget class="QLineEdit" name="ImageFilename">
+       <property name="geometry">
+        <rect>
+         <x>70</x>
+         <y>30</y>
+         <width>121</width>
+         <height>22</height>
+        </rect>
+       </property>
+      </widget>
+     </widget>
+    </widget>
    </widget>
   </widget>
   <widget class="QMenuBar" name="menubar">
