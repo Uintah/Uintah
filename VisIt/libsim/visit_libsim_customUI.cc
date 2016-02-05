@@ -429,4 +429,17 @@ void visit_GetMPIStats( visit_simulation_data *sim )
   }
 }
 
+//---------------------------------------------------------------------
+// GetImageVars
+//    
+//---------------------------------------------------------------------
+void visit_GetImageVars( visit_simulation_data *sim )
+{
+  VisItUI_setValueI("ImageGroupBox", sim->image, 1);
+  VisItUI_setValueS("ImageFilename", sim->imageFilename.c_str(), 1);
+  VisItUI_setValueI("ImageHeight",   sim->imageHeight, 1);
+  VisItUI_setValueI("ImageWidth",    sim->imageWidth,  1);
+  VisItUI_setValueI("ImageFormat",   sim->imageFormat, 1);
+}
+
 } // End namespace Uintah

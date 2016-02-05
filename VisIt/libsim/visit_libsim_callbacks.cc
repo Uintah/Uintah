@@ -124,15 +124,6 @@ visit_ControlCommandCallback(const char *cmd, const char *args, void *cbdata)
   {
     sim->runMode = VISIT_SIMMODE_RUNNING;
   }
-  else if(strcmp(cmd, "Stats") == 0)
-  {
-    int timestep = sim->cycle;
-    double delt  = sim->delt;
-    double time  = sim->time;
-
-    // std::string message("");
-    // VisItUI_setValueS("SIMULATION_MESSAGE", message.c_str(), 1);
-  }
   else if(strcmp(cmd, "Regrid") == 0 && sim->simMode != VISIT_SIMMODE_FINISHED)
   {
     sim->simController->getRegridder()->setForceRegridding(true);
@@ -423,7 +414,7 @@ void visit_UPSVariableTableCallback(char *val, void *cbdata)
   SimulationState::modifiableVar &var = vars[row];
 
   switch( var.type )
-  {	  
+  {       
     case Uintah::TypeDescription::int_type:
     {
       int value;
@@ -494,6 +485,69 @@ void visit_OutputIntervalVariableTableCallback(char *val, void *cbdata)
     else
       output->updateCheckpointTimestepInterval( value );
   }
+}
+
+
+//---------------------------------------------------------------------
+// ImageCallback
+//     Custom UI callback
+//---------------------------------------------------------------------
+void visit_ImageCallback(int val, void *cbdata)
+{
+  visit_simulation_data *sim = (visit_simulation_data *)cbdata;
+
+  sim->image = val;
+}
+
+//---------------------------------------------------------------------
+// ImageFilenameCallback
+//     Custom UI callback
+//---------------------------------------------------------------------
+void visit_ImageFilenameCallback(char *val, void *cbdata)
+{
+  visit_simulation_data *sim = (visit_simulation_data *)cbdata;
+
+  sim->imageFilename = std::string(val);;
+}
+
+
+//---------------------------------------------------------------------
+// ImageHeightCallback
+//     Custom UI callback
+//---------------------------------------------------------------------
+void visit_ImageHeightCallback(char *val, void *cbdata)
+{
+  visit_simulation_data *sim = (visit_simulation_data *)cbdata;
+
+  int value;
+  sscanf (val, "%d", &value);
+
+  sim->imageHeight = value;
+}
+
+//---------------------------------------------------------------------
+// ImageWidthCallback
+//     Custom UI callback
+//---------------------------------------------------------------------
+void visit_ImageWidthCallback(char *val, void *cbdata)
+{
+  visit_simulation_data *sim = (visit_simulation_data *)cbdata;
+
+  int value;
+  sscanf (val, "%d", &value);
+
+  sim->imageWidth = value;
+}
+
+//---------------------------------------------------------------------
+// ImageFormatCallback
+//     Custom UI callback
+//---------------------------------------------------------------------
+void visit_ImageFormatCallback(int val, void *cbdata)
+{
+  visit_simulation_data *sim = (visit_simulation_data *)cbdata;
+
+  sim->imageFormat = val;
 }
 
 } // End namespace Uintah

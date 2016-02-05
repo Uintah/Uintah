@@ -201,6 +201,12 @@ void visit_InitLibSim( visit_simulation_data *sim )
                                         simComment.c_str(),
                                         exeCommand.c_str(),
                                         NULL, "uintah.ui", NULL);
+
+    sim->image         = 0;
+    sim->imageFilename = simFileName;
+    sim->imageHeight   = 480;
+    sim->imageWidth    = 640;
+    sim->imageFormat   = 2;
   }
 }
 
@@ -226,7 +232,7 @@ void visit_EndLibSim( visit_simulation_data *sim )
     {
       VisItUI_setValueS("SIMULATION_MODE", "Stopped", 1);
 
-      std::stringstream msg;      
+      std::stringstream msg;
       msg << "Visit libsim - "
           << "The simulation has finished, stopping at the last time step.";
       
@@ -280,6 +286,15 @@ void visit_CheckState( visit_simulation_data *sim )
       VisItTimeStepChanged();
       // Tell VisIt to update its plots
       VisItUpdatePlots();
+      // The VisIt to save the window.
+      if( sim->image )
+      {
+        std::stringstream fname;
+        fname << sim->imageFilename << "_" << sim->cycle;
+        VisItSaveWindow( fname.str().c_str(),
+                         sim->imageWidth, sim->imageHeight,
+                         sim->imageFormat );
+      }
     }
   }
 
@@ -411,21 +426,27 @@ void visit_CheckState( visit_simulation_data *sim )
         if( Parallel::usingMPI() )
           VisItSetGetDomainList(visit_SimGetDomainList, (void*) sim);
 
-	VisItUI_textChanged("MaxTimeStep", visit_MaxTimeStepCallback, (void*) sim);
-	VisItUI_textChanged("MaxTime", visit_MaxTimeCallback, (void*) sim);
+        VisItUI_textChanged("MaxTimeStep", visit_MaxTimeStepCallback, (void*) sim);
+        VisItUI_textChanged("MaxTime", visit_MaxTimeCallback, (void*) sim);
 //      VisItUI_textChanged("DeltaT", visit_DeltaTCallback, (void*) sim);
-	VisItUI_textChanged("DeltaTNext", visit_DeltaTCallback, (void*) sim);
-	VisItUI_textChanged("DeltaTFactor", visit_DeltaTFactorCallback, (void*) sim);
-	VisItUI_textChanged("DeltaTMin", visit_DeltaTMinCallback, (void*) sim);
+        VisItUI_textChanged("DeltaTNext", visit_DeltaTCallback, (void*) sim);
+        VisItUI_textChanged("DeltaTFactor", visit_DeltaTFactorCallback, (void*) sim);
+        VisItUI_textChanged("DeltaTMin", visit_DeltaTMinCallback, (void*) sim);
 
 
-	VisItUI_textChanged("DeltaTMax", visit_DeltaTMaxCallback, (void*) sim);
-	VisItUI_textChanged("MaxWallTime", visit_MaxWallTimeCallback, (void*) sim);
-	VisItUI_cellChanged("UPSVariableTable",
-			    visit_UPSVariableTableCallback, (void*) sim);
-	VisItUI_cellChanged("OutputIntervalVariableTable",
-			    visit_OutputIntervalVariableTableCallback,
-			    (void*) sim);
+        VisItUI_textChanged("DeltaTMax", visit_DeltaTMaxCallback, (void*) sim);
+        VisItUI_textChanged("MaxWallTime", visit_MaxWallTimeCallback, (void*) sim);
+        VisItUI_cellChanged("UPSVariableTable",
+                            visit_UPSVariableTableCallback, (void*) sim);
+        VisItUI_cellChanged("OutputIntervalVariableTable",
+                            visit_OutputIntervalVariableTableCallback,
+                            (void*) sim);
+        
+        VisItUI_valueChanged("ImageGroupBox", visit_ImageCallback, (void*) sim);
+        VisItUI_textChanged("ImageFilename", visit_ImageFilenameCallback, (void*) sim);
+        VisItUI_textChanged("ImageHeight", visit_ImageHeightCallback, (void*) sim);
+        VisItUI_textChanged("ImageWidth", visit_ImageWidthCallback, (void*) sim);
+        VisItUI_valueChanged("ImageFormat", visit_ImageFormatCallback, (void*) sim);
       }
       else
       {
