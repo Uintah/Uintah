@@ -2198,8 +2198,8 @@ DataArchiver::outputVariables(const ProcessorGroup * pg,
     }
     double myTime = Time::currentSeconds()-start;
     double byteToMB = 1024*1024;
-    d_sharedState->d_runTimeStats[SimulationState::OutputFileIO_Time] += myTime;
-    d_sharedState->d_runTimeStats[SimulationState::OutputFileIO_Rate] += (double)totalBytes/(byteToMB * myTime);
+    d_sharedState->d_runTimeStats[SimulationState::OutputFileIOTime] += myTime;
+    d_sharedState->d_runTimeStats[SimulationState::OutputFileIORate] += (double)totalBytes/(byteToMB * myTime);
   }
   
 #endif
@@ -2425,7 +2425,10 @@ DataArchiver::saveLabels_PIDX(std::vector< SaveItem >& saveLabels,
 
           patch_buffer[vcm][p] = (unsigned char*)malloc( arraySize );
           memset( patch_buffer[vcm][p], 0, arraySize );
-
+          
+          if ( t_buffer == NULL || patch_buffer[vcm][p] == NULL ){
+            throw InternalError("DataArchiver::saveLabels_PIDX: Failed allocating memory", __FILE__, __LINE__);
+          }
           //__________________________________
           //  Read in Array3 data to t-buffer
           new_dw->emit(pc, label, matlIndex, patch, t_buffer);

@@ -28,6 +28,9 @@
 #include <CCA/Ports/InputContext.h>
 #include <CCA/Ports/DataWarehouseP.h>
 #include <CCA/Ports/DataWarehouse.h>
+#if HAVE_PIDX
+#include <CCA/Ports/PIDXOutputContext.h>
+#endif
 
 #include <Core/Exceptions/InternalError.h>
 #include <Core/Exceptions/ProblemSetupException.h>
@@ -655,9 +658,150 @@ DataArchive::query(       Variable     & var,
   #if HAVE_PIDX
   //__________________________________
   //   open PIDX 
+  //  TO DO:
+  //    - write out in the p000.xml files the variable index
+  //    - consolidate the code to identify variable type and subtype info
+  //    - do we need  calls to PIDX_get_variable_count() PIDX_get_dims()??
+  //    - use the right idx file name
+  //    - convert array into a Uintah Grid Variable
+  //    - need to do something with MPI_COMM
+
   if( d_outputFileFormat == PIDX) {
     
-    throw InternalError("DataArchive::query:PIDX format not supported", __FILE__, __LINE__);
+    //__________________________________
+    // define the extents for this variable type
+    const Level* level = patch->getLevel();
+    IntVector lo;
+    IntVector hi;
+    level->findCellIndexRange(lo,hi);
+
+    int levelExtents[3];
+    levelExtents[0] = hi[0] - lo[0] ;
+    levelExtents[1] = hi[1] - lo[1] ;
+    levelExtents[2] = hi[2] - lo[2] ;
+    
+    PIDX_point level_size;
+    PIDX_set_point_5D(level_size, levelExtents[0], levelExtents[1], levelExtents[2], 1, 1);
+
+    IntVector hi_EC;
+    IntVector lo_EC;                                // compute the extents of the variable (CCVariable, SFC(*)Variable...etc)
+    patch->computeVariableExtents(td->getType(), varinfo.boundaryLayer, Ghost::None, 0, lo_EC, hi_EC);
+
+    IntVector offset    = level->getExtraCells();
+    IntVector pidxLo    = lo_EC + offset;           // pidx array indexing starts at 0, must shift nExtraCells
+    IntVector nCells_EC = hi_EC - lo_EC;
+    int totalCells_EC   = nCells_EC.x() * nCells_EC.y() * nCells_EC.z();
+       
+    PIDX_point local_offset; 
+    PIDX_point local_size;
+
+    PIDX_set_point_5D(local_offset,  pidxLo.x(),    pidxLo.y(),    pidxLo.z(),   0, 0);
+    PIDX_set_point_5D(local_size,    nCells_EC.x(), nCells_EC.y(), nCells_EC.z(),1, 1);
+
+    //__________________________________
+    //  Creating access
+    PIDX_access access;
+    PIDX_create_access(&access);
+    PIDX_set_mpi_access(access, MPI_COMM_WORLD);        // change MPI_COMM_WORLD
+    int ret = -9;   // function return value
+    
+    //__________________________________
+    //  Open idx file
+    string idxFilename = "./advectPIDX.uda.000/checkpoints/t00010/l0/CCVars.idx";
+    PIDX_file idxFile;                     // IDX file descriptor
+
+    ret = PIDX_file_open(idxFilename.c_str(), PIDX_MODE_RDONLY, access, &idxFile);
+    if (ret != PIDX_success){
+      throw InternalError("DataArchive::query() - PIDX_file_open failure", __FILE__, __LINE__);
+    }
+
+    //__________________________________
+    //  Extra Calls that _MAY_ be needed
+    PIDX_point global_size;
+    ret = PIDX_get_dims(idxFile, global_size);          // returns the levelSize  Is this needed?
+    if (ret != PIDX_success){
+      throw InternalError("DataArchive::query() - PIDX_get_dims failure", __FILE__, __LINE__);
+    }
+
+    int variable_count = 0;             ///< Number of fields in PIDX file
+    ret = PIDX_get_variable_count(idxFile, &variable_count);
+    if (ret != PIDX_success){
+      throw InternalError("DataArchive::query() - PIDX_get_variable_count failure", __FILE__, __LINE__);
+    }
+    
+    int me;
+    PIDX_get_current_time_step(idxFile, &me);
+    cout << " PIDX file has currentl timestep: " << me << endl;
+    
+    //__________________________________
+    //  set locations in PIDX file for querying variable
+    int timestep = 10;                          // HARDWIRED
+    ret = PIDX_set_current_time_step(idxFile, timestep);
+    if (ret != PIDX_success){
+      throw InternalError("DataArchive::query() - PIDX_set_current_time_step failure", __FILE__, __LINE__);
+    }
+
+    int varIndex = 4;                 /// need to read in from p000000.xml file  HDARDWIRED
+
+    ret = PIDX_set_current_variable_index(idxFile, varIndex);
+    if (ret != PIDX_success){
+      throw InternalError("DataArchive::query() - PIDX_set_current_variable_index failure", __FILE__, __LINE__);
+    }
+    
+    //__________________________________
+    // read IDX file for variable desc
+    PIDX_variable varDesc;   // variable descriptor
+    ret = PIDX_get_current_variable(idxFile, &varDesc);    
+    if (ret != PIDX_success){
+      throw InternalError("DataArchive::query() - PIDX_get_current_variable failure", __FILE__, __LINE__);
+    } 
+
+    int values_per_sample = varDesc->values_per_sample;
+
+    int bits_per_sample = 0;
+    ret = PIDX_default_bits_per_datatype(varDesc->type_name, &bits_per_sample);
+    if (ret != PIDX_success){
+      throw InternalError("DataArchive::query() - PIDX_default_bits_per_datatype failure", __FILE__, __LINE__);
+    }
+
+    proc0cout << " variableName: " << varDesc->var_name 
+              << " query name: " << name 
+              << " type_name: " << varDesc->type_name 
+              << " values_per_sample: " << varDesc->values_per_sample 
+              << " bits_per_sample: "<< bits_per_sample << endl;
+
+    //__________________________________
+    // Allocate memory and read in data from PIDX file
+    unsigned char *dataPIDX;
+    size_t arraySize = (bits_per_sample/8) * totalCells_EC  * values_per_sample;
+    dataPIDX = (unsigned char*)malloc( arraySize );
+    memset( dataPIDX, 123456789, arraySize);
+    
+    ret = PIDX_variable_read_data_layout(varDesc, local_offset, local_size, dataPIDX, PIDX_row_major);
+    if (ret != PIDX_success){
+      throw InternalError("DataArchive::query() - PIDX_variable_read_data_layout failure", __FILE__, __LINE__);
+    }
+
+
+    // push it into a uintah grid variable
+
+
+    //__________________________________
+    // close idx file and access
+    ret = PIDX_close( idxFile );
+    if (ret != PIDX_success){
+      throw InternalError("DataArchive::query() - PIDX_close failure", __FILE__, __LINE__);
+    }
+
+    ret = PIDX_close_access( access );
+    if (ret != PIDX_success){
+      throw InternalError("DataArchive::query() - PIDX_close_access failure", __FILE__, __LINE__);
+    }
+        
+        
+    free( dataPIDX );
+    
+    throw InternalError("DataArchive::query:PIDX format not FULLY supported", __FILE__, __LINE__);
   }
   #endif
 
