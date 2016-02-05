@@ -496,7 +496,7 @@ void visit_ImageCallback(int val, void *cbdata)
 {
   visit_simulation_data *sim = (visit_simulation_data *)cbdata;
 
-  sim->image = val;
+  sim->imageSave = val;
 }
 
 //---------------------------------------------------------------------
