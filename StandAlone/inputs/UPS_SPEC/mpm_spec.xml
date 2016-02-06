@@ -210,6 +210,12 @@
       <Refine_Regions                   spec="OPTIONAL NO_DATA" >  
         <geom_object                    spec="MULTIPLE" />
       </Refine_Regions>
+      <Refinement_Criteria_Thresholds   spec="OPTIONAL NO_DATA" >
+        <Variable                       spec="MULTIPLE NO_DATA" 
+                                          attribute1="name  REQUIRED STRING"
+                                          attribute2="value REQUIRED DOUBLE"
+                                          attribute3="matl  REQUIRED STRING" />
+      </Refinement_Criteria_Thresholds>
     </MPM>
   </AMR>
 
