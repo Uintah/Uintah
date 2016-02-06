@@ -124,12 +124,21 @@ void visit_InitLibSim( visit_simulation_data *sim )
   // Assume the simulation will be running (or about to run) when
   // initializing.
   sim->simMode = VISIT_SIMMODE_RUNNING;
+
+  sim->timeRange = 0;
+  sim->timeStart = 0;
+  sim->timeStep  = 1;
+  sim->timeStop  = 0;
+
+  sim->imageGenerate = 0;
+  sim->imageFilename = simFileName;
+  sim->imageHeight   = 480;
+  sim->imageWidth    = 640;
+  sim->imageFormat   = 2;
     
 #ifdef HAVE_MPICH
   if( Parallel::usingMPI() )
   {
-    sim->isProc0 = isProc0_macro;
-
     int par_rank, par_size;
 
     // Initialize MPI
@@ -143,12 +152,17 @@ void visit_InitLibSim( visit_simulation_data *sim )
     // Install callback functions for global communication.
     VisItSetBroadcastIntFunction( visit_BroadcastIntCallback );
     VisItSetBroadcastStringFunction( visit_BroadcastStringCallback );
+
+    sim->rank = par_rank;
+    sim->isProc0 = isProc0_macro;
   }
   else
   {
+    sim->rank = 0;
     sim->isProc0 = true;
   }
 #else
+  sim->rank = 0;
   sim->isProc0 = true;
 #endif
 
@@ -201,12 +215,6 @@ void visit_InitLibSim( visit_simulation_data *sim )
                                         simComment.c_str(),
                                         exeCommand.c_str(),
                                         NULL, "uintah.ui", NULL);
-
-    sim->imageSave     = 0;
-    sim->imageFilename = simFileName;
-    sim->imageHeight   = 480;
-    sim->imageWidth    = 640;
-    sim->imageFormat   = 2;
   }
 }
 
@@ -284,16 +292,23 @@ void visit_CheckState( visit_simulation_data *sim )
 
       // Tell VisIt that the timestep changed
       VisItTimeStepChanged();
-      // Tell VisIt to update its plots
-      VisItUpdatePlots();
-      // Tell VisIt to save the window.
-      if( sim->imageSave )
+
+      if( ( sim->timeRange == 0 ) ||
+          ( sim->timeRange == 1 &&
+            sim->timeStart <= sim->cycle && sim->cycle <= sim->timeStop &&
+            (sim->cycle-sim->timeStart) % sim->timeStep == 0 ) )
       {
-        std::stringstream fname;
-        fname << sim->imageFilename << "_" << sim->cycle;
-        VisItSaveWindow( fname.str().c_str(),
-                         sim->imageWidth, sim->imageHeight,
-                         sim->imageFormat );
+        // Tell VisIt to update its plots
+        VisItUpdatePlots();
+        // Tell VisIt to save the window.
+        if( sim->imageGenerate )
+        {
+          std::stringstream fname;
+          fname << sim->imageFilename << "_" << sim->cycle;
+          VisItSaveWindow( fname.str().c_str(),
+                           sim->imageWidth, sim->imageHeight,
+                           sim->imageFormat );
+        }
       }
     }
   }
@@ -395,10 +410,7 @@ void visit_CheckState( visit_simulation_data *sim )
       
         if( Parallel::usingMPI() )
         {
-          int par_rank;
-          MPI_Comm_rank (MPI_COMM_WORLD, &par_rank);
-
-          msg << "Visit libsim - Processor " << par_rank << " connected";
+          msg << "Visit libsim - Processor " << sim->rank << " connected";
         }
         else
         {
@@ -442,7 +454,7 @@ void visit_CheckState( visit_simulation_data *sim )
                             visit_OutputIntervalVariableTableCallback,
                             (void*) sim);
         
-        VisItUI_valueChanged("ImageGroupBox", visit_ImageCallback, (void*) sim);
+        VisItUI_valueChanged("ImageGroupBox", visit_ImageGenerateCallback, (void*) sim);
         VisItUI_textChanged("ImageFilename", visit_ImageFilenameCallback, (void*) sim);
         VisItUI_textChanged("ImageHeight", visit_ImageHeightCallback, (void*) sim);
         VisItUI_textChanged("ImageWidth", visit_ImageWidthCallback, (void*) sim);
