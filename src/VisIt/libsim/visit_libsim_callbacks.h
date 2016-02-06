@@ -72,7 +72,7 @@ namespace Uintah {
   void visit_UPSVariableTableCallback(char *val, void *cbdata);
   void visit_OutputIntervalVariableTableCallback(char *val, void *cbdata);
 
-  void visit_ImageCallback(int val, void *cbdata);
+  void visit_ImageGenerateCallback(int val, void *cbdata);
   void visit_ImageFilenameCallback(char *val, void *cbdata);
   void visit_ImageHeightCallback(char *val, void *cbdata);
   void visit_ImageWidthCallback(char *val, void *cbdata);

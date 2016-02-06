@@ -100,9 +100,15 @@ typedef struct
   int  runMode;  // What the libsim is doing.
   int  simMode;  // What the simulation is doing.
 
+  int  rank;
   bool isProc0;
 
-  bool imageSave;
+  bool timeRange;
+  int timeStart;
+  int timeStep;
+  int timeStop;
+  
+  bool imageGenerate;
   std::string imageFilename;
   int imageHeight;
   int imageWidth;

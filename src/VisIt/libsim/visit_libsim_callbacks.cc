@@ -105,14 +105,7 @@ visit_ControlCommandCallback(const char *cmd, const char *args, void *cbdata)
 {
   visit_simulation_data *sim = (visit_simulation_data *)cbdata;
 
-  if(strcmp(cmd, "StepCycle") == 0 && sim->simMode != VISIT_SIMMODE_FINISHED)
-  {
-    std::stringstream msg;        
-    msg << "Visit libsim - step cycle value " << args;
-    VisItUI_setValueS("SIMULATION_MESSAGE", msg.str().c_str(), 1);
-    VisItUI_setValueS("SIMULATION_MESSAGE", " ", 1);
-  }
-  else if(strcmp(cmd, "Stop") == 0 && sim->simMode != VISIT_SIMMODE_FINISHED)
+  if(strcmp(cmd, "Stop") == 0 && sim->simMode != VISIT_SIMMODE_FINISHED)
   {
     sim->runMode = VISIT_SIMMODE_STOPPED;
   }
@@ -212,7 +205,46 @@ visit_ControlCommandCallback(const char *cmd, const char *args, void *cbdata)
 
     exit( 0 );
   }
+  else if(strcmp(cmd, "TimeLimitsEnabled") == 0 )
+  {
+    std::string varStr = std::string(args);
+    size_t found = varStr.find_last_of(";");
+    varStr = varStr.substr(found + 1);
 
+    sim->timeRange = atoi( varStr.c_str() );
+  }
+  else if(strcmp(cmd, "StartCycle") == 0 )
+  {
+    std::string varStr = std::string(args);
+    size_t found = varStr.find_last_of(";");
+    varStr = varStr.substr(found + 1);
+
+    sim->timeStart = atoi( varStr.c_str() );
+  }
+  else if(strcmp(cmd, "StepCycle") == 0 )
+  {
+    std::string varStr = std::string(args);
+    size_t found = varStr.find_last_of(";");
+    varStr = varStr.substr(found + 1);
+
+    sim->timeStep = atoi( varStr.c_str() );
+  }
+  else if(strcmp(cmd, "StopCycle") == 0 )
+  {
+    std::string varStr = std::string(args);
+    size_t found = varStr.find_last_of(";");
+    varStr = varStr.substr(found + 1);
+
+    sim->timeStop = atoi( varStr.c_str() );
+  }
+  else
+  {
+    std::stringstream msg;
+    msg << "Visit libsim - ignoring command " << cmd << "  args " << args;
+    VisItUI_setValueS("SIMULATION_MESSAGE_WARNING", msg.str().c_str(), 1);
+    VisItUI_setValueS("SIMULATION_MESSAGE", " ", 1);
+  }
+  
   if( sim->runMode == VISIT_SIMMODE_RUNNING &&
       sim->simMode == VISIT_SIMMODE_RUNNING )
   {
@@ -492,11 +524,11 @@ void visit_OutputIntervalVariableTableCallback(char *val, void *cbdata)
 // ImageCallback
 //     Custom UI callback
 //---------------------------------------------------------------------
-void visit_ImageCallback(int val, void *cbdata)
+void visit_ImageGenerateCallback(int val, void *cbdata)
 {
   visit_simulation_data *sim = (visit_simulation_data *)cbdata;
 
-  sim->imageSave = val;
+  sim->imageGenerate = val;
 }
 
 //---------------------------------------------------------------------
