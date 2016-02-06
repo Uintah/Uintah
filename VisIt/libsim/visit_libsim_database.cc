@@ -598,11 +598,6 @@ visit_handle visit_ReadMetaData(void *cbdata)
       }
     }
 
-    VisItUI_setValueI("SIMULATION_TIME_LIMITS_ENABLED", sim->timeRange, 1);
-    VisItUI_setValueI("SIMULATION_TIME_START_CYCLE", sim->timeStart, 1);
-    VisItUI_setValueI("SIMULATION_TIME_STEP_CYCLE", sim->timeStep, 1);
-    VisItUI_setValueI("SIMULATION_TIME_STOP_CYCLE", sim->timeStop, 1);
-    
     // Setup the custom UI time values.
     visit_GetTimeVars( sim );
     
@@ -623,9 +618,6 @@ visit_handle visit_ReadMetaData(void *cbdata)
 
     // Setup the custom UI MPI Stats
     visit_GetMPIStats( sim );
-
-    // Setup the custom UI Image variables
-    visit_GetImageVars( sim );
 
     // if( sim->message.size() )
     // {
