@@ -311,8 +311,8 @@ void visit_GetGridInfo( visit_simulation_data *sim )
       
     //calculate mean
     double mean = total_cells /(double) num_patches;
-    double stdv = sqrt((sum_of_cells_squared-total_cells*total_cells /
-                        (double) num_patches) / (double) num_patches);
+    // double stdv = sqrt((sum_of_cells_squared-total_cells*total_cells /
+    //                     (double) num_patches) / (double) num_patches);
     IntVector refineRatio = level->getRefinementRatio();
 
     std::stringstream ratio;
@@ -400,8 +400,6 @@ void visit_GetMPIStats( visit_simulation_data *sim )
 
     VisItUI_setValueS( "MPIStatsGroupBox", "SHOW_WIDGET", 1);
     VisItUI_setTableValueS("MPIStatsTable", -1, -1, "CLEAR_TABLE", 0);
-
-    int cc = 0;
 
     for (unsigned int i=0; i<mpiStats.size(); ++i)
     {

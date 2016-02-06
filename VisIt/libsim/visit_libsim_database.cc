@@ -1386,7 +1386,9 @@ visit_handle visit_SimGetVariable(int domain, const char *varname, void *cbdata)
       {
         val = mpiScheduler->mpi_info_.getValue( varName );
       }
-
+      else
+	val = 0;
+      
       // Create at new grid data for the values.
       gd = new GridDataRaw;
 
