@@ -1976,11 +1976,7 @@ DataArchiver::outputVariables(const ProcessorGroup * pg,
   if ( d_outputFileFormat==UDA || type == CHECKPOINT_REDUCTION){
   
     d_outputLock.lock(); 
-    { // make sure doc's constructor is called after the lock.
-      ProblemSpecP doc; 
-
-      // file-opening flags
-      int flags = O_WRONLY|O_CREAT|O_TRUNC;
+    {  
 
 #if 0
       // DON'T reload a timestep.xml - it will probably mean there was a timestep restart that had written data
@@ -1990,8 +1986,8 @@ DataArchiver::outputVariables(const ProcessorGroup * pg,
         doc = loadDocument(xmlFilename);
       } else
 #endif
-        doc = ProblemSpec::createDocument("Uintah_Output");
-
+      // make sure doc's constructor is called after the lock.
+      ProblemSpecP doc = ProblemSpec::createDocument("Uintah_Output");
       // Find the end of the file
       ASSERT(doc != 0);
       ProblemSpecP n = doc->findBlock("Variable");
@@ -2016,6 +2012,7 @@ DataArchiver::outputVariables(const ProcessorGroup * pg,
       // (The original error no was 71.)  Therefore I am using a while loop and counting the 'tries'.
       
       int tries = 1;
+      int flags = O_WRONLY|O_CREAT|O_TRUNC;       // file-opening flags
       
       const char* filename = dataFilename.c_str();
       int fd  = open( filename, flags, 0666 );
@@ -2175,6 +2172,15 @@ DataArchiver::outputVariables(const ProcessorGroup * pg,
   //      Do we need the memset calls?
   //
   if ( d_outputFileFormat == PIDX && type != CHECKPOINT_REDUCTION){
+  
+    //__________________________________
+    // create the xml dom for this variable
+    ProblemSpecP doc = ProblemSpec::createDocument("Uintah_Output-PIDX");
+    ASSERT(doc != 0);
+    ProblemSpecP n = doc->findBlock("Variable");
+    while(n != 0) {
+      n = n->findNextBlock("Variable");
+    }  
       
     PIDXOutputContext pidx;
     vector<TypeDescription::Type> GridVarTypes = pidx.getSupportedVariableTypes();
@@ -2193,13 +2199,16 @@ DataArchiver::outputVariables(const ProcessorGroup * pg,
 
         Dir myDir = ldir.getSubdir( dirName );
 
-        totalBytes += saveLabels_PIDX(saveTheseLabels, pg, patches, new_dw, type, TD, myDir);
+        totalBytes += saveLabels_PIDX(saveTheseLabels, pg, patches, new_dw, type, TD, myDir, doc);
       } 
     }
     double myTime = Time::currentSeconds()-start;
     double byteToMB = 1024*1024;
     d_sharedState->d_runTimeStats[SimulationState::OutputFileIOTime] += myTime;
     d_sharedState->d_runTimeStats[SimulationState::OutputFileIORate] += (double)totalBytes/(byteToMB * myTime);
+    
+    // write the xml 
+    doc->output(xmlFilename.c_str());
   }
   
 #endif
@@ -2215,7 +2224,8 @@ DataArchiver::saveLabels_PIDX(std::vector< SaveItem >& saveLabels,
                               DataWarehouse        * new_dw,          
                               int                    type,
                               const TypeDescription::Type TD,
-                              Dir                   myDir)            
+                              Dir                   myDir,
+                              ProblemSpecP&          doc)            
 {
   size_t totalBytesSaved = 0;
 #if HAVE_PIDX
@@ -2373,7 +2383,7 @@ DataArchiver::saveLabels_PIDX(std::vector< SaveItem >& saveLabels,
         s << m;
         var_mat_name = label->getName() + "_m" + s.str();
       }
-
+    
       PIDX_variable_create((char*)var_mat_name.c_str(), varSubType_size * 8, data_type, &(pc.variable[vc][m]));
 
       patch_buffer[vcm] = (unsigned char**)malloc(sizeof(unsigned char*) * patches->size());
@@ -2441,12 +2451,26 @@ DataArchiver::saveLabels_PIDX(std::vector< SaveItem >& saveLabels,
           PIDX_variable_write_data_layout(pc.variable[vc][m], local_offset_point, local_box_count_point, patch_buffer[vcm][p], PIDX_row_major);
           
           totalBytesSaved += arraySize;
-        }
+          
+          //__________________________________
+          //  populate the xml dom      This layout allows us to highjack all of the existing data structures in DataArchive
+          ProblemSpecP var_ps = doc->appendChild("Variable");
+          var_ps->setAttribute( "type",      TranslateVariableType( td->getName().c_str(), type != OUTPUT ) );
+          var_ps->appendElement("variable",  label->getName());
+          var_ps->appendElement("index",     matlIndex);
+          var_ps->appendElement("patch",     patchID);                     
+          var_ps->appendElement("start",     vcm);                         
+          var_ps->appendElement("end",       vcm);          // redundant   
+          var_ps->appendElement("filename",  idxFilename);
+
+          if (label->getBoundaryLayer() != IntVector(0,0,0)) {
+            var_ps->appendElement("boundaryLayer", label->getBoundaryLayer());
+          }
+        }  // is checkpoint?
       }  //  Patches
 
       PIDX_append_and_write_variable(pc.file, pc.variable[vc][m]);
       vcm++;
-
     }  //  Materials
 
     vc++;
