@@ -18,7 +18,6 @@
       <timestep_multiplier> 0.1 </timestep_multiplier>
   </Time>
 
-
   <!--__________________________________-->
   <DataArchiver>
     <filebase>collide_AMR_3L_2D.uda</filebase>
@@ -47,16 +46,19 @@
   <AMR>
      <useLockStep> true </useLockStep>
      <MPM>
+       <Refinement_Criteria_Thresholds>
+         <Variable name = "stressNorm" value = "1" matl = "0" />
+       </Refinement_Criteria_Thresholds>
      </MPM>
-      <Regridder type="Tiled">
-        <max_levels>3</max_levels>
-        <cell_refinement_ratio>    [[2,2,1]]  </cell_refinement_ratio>
-        <min_patch_size>           [[10,10,1]] </min_patch_size>
-        <min_boundary_cells>       [1,1,0]   </min_boundary_cells>
-        <max_timestep_interval>       1       </max_timestep_interval>
-        <cell_regrid_dilation>      [0,0,0]   </cell_regrid_dilation>
-        <cell_stability_dilation>   [0,0,0]   </cell_stability_dilation>
-      </Regridder>
+     <Regridder type="Tiled">
+       <max_levels>3</max_levels>
+       <cell_refinement_ratio>    [[2,2,1]]  </cell_refinement_ratio>
+       <min_patch_size>           [[10,10,1]] </min_patch_size>
+       <min_boundary_cells>       [1,1,0]   </min_boundary_cells>
+       <max_timestep_interval>       1       </max_timestep_interval>
+       <cell_regrid_dilation>      [0,0,0]   </cell_regrid_dilation>
+       <cell_stability_dilation>   [0,0,0]   </cell_stability_dilation>
+     </Regridder>
    </AMR>
 
    <!--__________________________________-->
