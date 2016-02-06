@@ -27,6 +27,7 @@
 
 #include "visit_libsim.h"
 #include "visit_libsim_callbacks.h"
+#include "visit_libsim_customUI.h"
 #include "visit_libsim_database.h"
 
 #include <CCA/Components/SimulationController/SimulationController.h>
@@ -459,6 +460,15 @@ void visit_CheckState( visit_simulation_data *sim )
         VisItUI_textChanged("ImageHeight", visit_ImageHeightCallback, (void*) sim);
         VisItUI_textChanged("ImageWidth", visit_ImageWidthCallback, (void*) sim);
         VisItUI_valueChanged("ImageFormat", visit_ImageFormatCallback, (void*) sim);
+
+	// These are one time initializations.
+	VisItUI_setValueI("SIMULATION_TIME_LIMITS_ENABLED", sim->timeRange, 1);
+	VisItUI_setValueI("SIMULATION_TIME_START_CYCLE", sim->timeStart, 1);
+	VisItUI_setValueI("SIMULATION_TIME_STEP_CYCLE", sim->timeStep, 1);
+	VisItUI_setValueI("SIMULATION_TIME_STOP_CYCLE", sim->timeStop, 1);
+
+	// Setup the custom UI Image variables
+	visit_GetImageVars( sim );
       }
       else
       {
