@@ -741,7 +741,7 @@ DataArchive::query(       Variable     & var,
       throw InternalError("DataArchive::query() - PIDX_set_current_time_step failure", __FILE__, __LINE__);
     }
 
-    int varIndex = 4;                 /// need to read in from p000000.xml file  HDARDWIRED
+    int varIndex = dfi->start;
 
     ret = PIDX_set_current_variable_index(idxFile, varIndex);
     if (ret != PIDX_success){
@@ -764,9 +764,15 @@ DataArchive::query(       Variable     & var,
       throw InternalError("DataArchive::query() - PIDX_default_bits_per_datatype failure", __FILE__, __LINE__);
     }
 
-    proc0cout << " variableName: " << varDesc->var_name 
-              << " query name: " << name 
+    proc0cout << "Query:\n"
+              << "    " << name
+              << " timeIndex: " << timeIndex
+              << " matlIndex: " <<  matlIndex
+              << " patchID: "   << patchid << endl;
+    proc0cout << "PIDX query: \n"
+              << "    " << varDesc->var_name
               << " type_name: " << varDesc->type_name 
+              << " varIndex: " << varIndex
               << " values_per_sample: " << varDesc->values_per_sample 
               << " bits_per_sample: "<< bits_per_sample << endl;
 
@@ -797,11 +803,9 @@ DataArchive::query(       Variable     & var,
     if (ret != PIDX_success){
       throw InternalError("DataArchive::query() - PIDX_close_access failure", __FILE__, __LINE__);
     }
-        
-        
+   
     free( dataPIDX );
-    
-    throw InternalError("DataArchive::query:PIDX format not FULLY supported", __FILE__, __LINE__);
+  
   }
   #endif
 
@@ -1061,6 +1065,12 @@ DataArchive::restartInitialize( const int             index,
       dw->put( var, label, matl, patch ); 
       delete var; // should have been cloned when it was put
     }
+    
+#if HAVE_PIDX    
+//    throw InternalError("DataArchive::restartInitialize:PIDX format not FULLY supported", __FILE__, __LINE__);
+#endif
+    
+    
   }
 } // end restartInitialize()
 
