@@ -3985,7 +3985,7 @@ void AMRMPM::addParticles(const ProcessorGroup*,
           pref[pp]++;
           numNewPartNeeded++;
         }
-        if(pref[pp]>prefOld[pp] || pstress[pp].Norm() > 1){
+        if(pref[pp]>prefOld[pp]) {
           IntVector c = level->getCellIndex(px[pp]);
           if(patch->containsCell(c)){
             refineCell[c] = 3.0;  // Why did I use 3 here?  JG
@@ -3998,6 +3998,7 @@ void AMRMPM::addParticles(const ProcessorGroup*,
             }
           }
         }
+
         // Refine particle if it is too big relative to the cell size
         // of the level it is on.  Don't refine the grid.
         if(pref[pp]< levelIndex){
