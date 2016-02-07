@@ -667,6 +667,7 @@ DataArchive::query(       Variable     & var,
   //    - do we need  calls to PIDX_get_variable_count() PIDX_get_dims()??
   //    - convert array into a Uintah Grid Variable
   //    - need to do something with MPI_COMM
+  //    - consolidate 
 
   if( d_outputFileFormat == PIDX && varType == PATCH_VAR ) {
     
@@ -737,14 +738,13 @@ DataArchive::query(       Variable     & var,
     
     //__________________________________
     //  set locations in PIDX file for querying variable
-    int timestep = 10;                          // HARDWIRED
+    int timestep = d_ts_indices[timeIndex];
     ret = PIDX_set_current_time_step(idxFile, timestep);
     if (ret != PIDX_success){
       throw InternalError("DataArchive::query() - PIDX_set_current_time_step failure", __FILE__, __LINE__);
     }
 
     int varIndex = dfi->start;
-
     ret = PIDX_set_current_variable_index(idxFile, varIndex);
     if (ret != PIDX_success){
       throw InternalError("DataArchive::query() - PIDX_set_current_variable_index failure", __FILE__, __LINE__);
@@ -752,7 +752,7 @@ DataArchive::query(       Variable     & var,
     
     //__________________________________
     // read IDX file for variable desc
-    PIDX_variable varDesc;   // variable descriptor
+    PIDX_variable varDesc;
     ret = PIDX_get_current_variable(idxFile, &varDesc);    
     if (ret != PIDX_success){
       throw InternalError("DataArchive::query() - PIDX_get_current_variable failure", __FILE__, __LINE__);
@@ -768,7 +768,7 @@ DataArchive::query(       Variable     & var,
 
     proc0cout << "Query:\n"
               << "    " << name
-              << " timeIndex: " << timeIndex
+              << " timestep: " << timestep
               << " matlIndex: " <<  matlIndex
               << " patchID: "   << patchid << endl;
     proc0cout << "PIDX query: \n"
@@ -976,10 +976,10 @@ DataArchive::restartInitialize( const int             index,
                                       LoadBalancer  * lb,
                                       double        * pTime )
 {
-  vector<int>    indices;
+  vector<int>    ts_indices;
   vector<double> times;
-  queryTimesteps( indices, times );
-
+  queryTimesteps( ts_indices, times );
+  
   vector<string>                   names;
   vector< const TypeDescription *> typeDescriptions;
   queryVariables( names, typeDescriptions );
@@ -1015,7 +1015,7 @@ DataArchive::restartInitialize( const int             index,
 
   // set here instead of the SimCont because we need the DW ID to be set 
   // before saving particle subsets 
-  dw->setID( indices[index] );
+  dw->setID( ts_indices[index] );
   
   // Make sure to load all the data so we can iterate through it.
   for( int l = 0; l < grid->numLevels(); l++ ) {
