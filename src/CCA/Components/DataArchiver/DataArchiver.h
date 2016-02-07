@@ -250,7 +250,7 @@ using SCIRun::Mutex;
                            DataWarehouse        * new_dw,          
                            int                    type,
                            const TypeDescription::Type TD,
-                           Dir                   levelDir,
+                           const std::string      myDir,
                            ProblemSpecP&          doc);
                            
       //! returns a vector of SaveItems with a common type description
