@@ -162,7 +162,7 @@ namespace Uintah {
           std::vector< std::vector<std::string> > d_xmlFilenames;
           std::vector< std::vector<bool> >        d_xmlParsed;
 
-          std::string         d_globaldata;
+          std::string   d_globaldata;
 
           ConsecutiveRangeSet d_matls;  // materials available this timestep
 
