@@ -395,6 +395,8 @@ namespace Uintah {
       enum outputFormat {UDA, PIDX};
       outputFormat d_outputFileFormat; 
       
+      enum {BLANK, REDUCTION_VAR, PATCH_VAR };
+      
       //______________________________________________________________________
       //
       void queryVariables( FILE                                * fp,

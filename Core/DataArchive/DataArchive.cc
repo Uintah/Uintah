@@ -549,9 +549,12 @@ DataArchive::query(       Variable     & var,
 
   VarData & varinfo = timedata.d_varInfo[name];
   string    data_filename;
+  string    filename_noPath;  
   int       patchid;
+  int       varType = BLANK;
 
   if (patch) {
+    varType = PATCH_VAR;
     // we need to use the real_patch (in case of periodic boundaries) to get the data, but we need the
     // passed in patch to allocate the patch to the proper virtual region... (see var.allocate below)
     const Patch* real_patch = patch->getRealPatch();
@@ -563,8 +566,10 @@ DataArchive::query(       Variable     & var,
     // append l#/datafilename to the directory
     ostr << timedata.d_ts_directory << "l" << patch->getLevel()->getIndex() << "/" << patchinfo.datafilename;
     data_filename = ostr.str();
+    filename_noPath = patchinfo.datafilename;    // used for PIDX
   }
   else {
+    varType = REDUCTION_VAR;
     // reference reduction file 'global.data' will a null patch
     patchid = -1;
     data_filename = timedata.d_ts_directory + timedata.d_globaldata;
@@ -625,7 +630,7 @@ DataArchive::query(       Variable     & var,
   
   //__________________________________
   // open data file Standard Uda Format
-  if( d_outputFileFormat == UDA) {
+  if( d_outputFileFormat == UDA || varType == REDUCTION_VAR) {
     int fd = open( data_filename.c_str(), O_RDONLY );
 
     if(fd == -1) {
@@ -659,14 +664,11 @@ DataArchive::query(       Variable     & var,
   //__________________________________
   //   open PIDX 
   //  TO DO:
-  //    - write out in the p000.xml files the variable index
-  //    - consolidate the code to identify variable type and subtype info
   //    - do we need  calls to PIDX_get_variable_count() PIDX_get_dims()??
-  //    - use the right idx file name
   //    - convert array into a Uintah Grid Variable
   //    - need to do something with MPI_COMM
 
-  if( d_outputFileFormat == PIDX) {
+  if( d_outputFileFormat == PIDX && varType == PATCH_VAR ) {
     
     //__________________________________
     // define the extents for this variable type
@@ -707,7 +709,7 @@ DataArchive::query(       Variable     & var,
     
     //__________________________________
     //  Open idx file
-    string idxFilename = "./advectPIDX.uda.000/checkpoints/t00010/l0/CCVars.idx";
+    string idxFilename = filename_noPath;
     PIDX_file idxFile;                     // IDX file descriptor
 
     ret = PIDX_file_open(idxFilename.c_str(), PIDX_MODE_RDONLY, access, &idxFile);
