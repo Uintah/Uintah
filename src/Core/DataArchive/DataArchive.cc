@@ -779,7 +779,7 @@ DataArchive::query(       Variable     & var,
               << " bits_per_sample: "<< bits_per_sample << endl;
 
     //__________________________________
-    // Allocate memory and read in data from PIDX file
+    // Allocate memory and read in data from PIDX file  Need to use patch_buffer !!!
     unsigned char *dataPIDX;
     size_t arraySize = (bits_per_sample/8) * totalCells_EC  * values_per_sample;
     dataPIDX = (unsigned char*)malloc( arraySize );
@@ -791,7 +791,10 @@ DataArchive::query(       Variable     & var,
     }
 
 
-    // push it into a uintah grid variable
+
+
+
+
 
 
     //__________________________________
@@ -806,6 +809,10 @@ DataArchive::query(       Variable     & var,
       throw InternalError("DataArchive::query() - PIDX_close_access failure", __FILE__, __LINE__);
     }
    
+   
+    // push it into a uintah grid variable
+       
+       
     free( dataPIDX );
   
   }

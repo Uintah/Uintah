@@ -70,7 +70,19 @@ class PIDXOutputContext {
     PIDXOutputContext();
     ~PIDXOutputContext();
 
-    void initialize(std::string filename, unsigned int timeStep, int globalExtent[3], MPI_Comm comm);
+    void initialize(std::string filename, 
+                    unsigned int timeStep, 
+                    int globalExtent[3], 
+                    MPI_Comm comm);
+    
+    void setOutputDoubleAsFloat( bool me){
+      d_outputDoubleAsFloat = me;
+    }
+
+    bool isOutputDoubleAsFloat(){
+      return d_outputDoubleAsFloat;
+    }
+    
 
     std::vector<TypeDescription::Type> getSupportedVariableTypes();
     
@@ -84,7 +96,11 @@ class PIDXOutputContext {
 
     PIDX_access access;
   private:
+  
+
+      
     bool d_isInitialized;
+    bool d_outputDoubleAsFloat;
     
     
 

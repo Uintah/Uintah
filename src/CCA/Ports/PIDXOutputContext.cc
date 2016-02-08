@@ -31,6 +31,7 @@ namespace Uintah
   PIDXOutputContext::PIDXOutputContext() 
   {
     d_isInitialized = false;
+    d_outputDoubleAsFloat = false;
 
   }
   //______________________________________________________________________
