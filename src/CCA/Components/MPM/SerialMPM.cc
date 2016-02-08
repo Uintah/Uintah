@@ -4626,9 +4626,9 @@ void SerialMPM::computeParticleScaleFactor(const ProcessorGroup*,
         for(ParticleSubset::iterator iter  = pset->begin();
                                      iter != pset->end(); iter++){
           particleIndex idx = *iter;
-          pScaleFactor[idx] = (pF[idx]*psize[idx]*Matrix3(dx[0],0,0,
-                                                          0,dx[1],0,
-                                                          0,0,dx[2]));
+          pScaleFactor[idx] = (pF[idx]*(Matrix3(dx[0],0,0,
+                                               0,dx[1],0,
+                                               0,0,dx[2])*psize[idx]));
 
         } // for particles
       } // isOutputTimestep
