@@ -285,9 +285,6 @@ RadHypreSolver::setMatrix(const ProcessorGroup* pc,
                           CCVariable<double>& AS,
                           CCVariable<double>& AW,
                           CCVariable<double>& AP,
-                          CCVariable<double>& AE,
-                          CCVariable<double>& AN,
-                          CCVariable<double>& AT, 
                           const bool print_all_info )
 
 { 
