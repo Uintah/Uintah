@@ -2197,7 +2197,9 @@ DataArchiver::outputVariables(const ProcessorGroup * pg,
       if( saveTheseLabels.size() > 0 ) {
         string dirName = pidx.getDirectoryName( TD );
 
-        totalBytes += saveLabels_PIDX(saveTheseLabels, pg, patches, new_dw, type, TD, dirName, doc);
+        Dir myDir = ldir.getSubdir( dirName );
+
+        totalBytes += saveLabels_PIDX(saveTheseLabels, pg, patches, new_dw, type, TD, myDir, doc);
       } 
     }
     double myTime = Time::currentSeconds()-start;
@@ -2222,7 +2224,7 @@ DataArchiver::saveLabels_PIDX(std::vector< SaveItem >& saveLabels,
                               DataWarehouse        * new_dw,          
                               int                    type,
                               const TypeDescription::Type TD,
-                              const string           myDir,
+                              Dir                   myDir,
                               ProblemSpecP&          doc)            
 {
   size_t totalBytesSaved = 0;
@@ -2274,9 +2276,14 @@ DataArchiver::saveLabels_PIDX(std::vector< SaveItem >& saveLabels,
     PIDX_extra_field = 1;
   }
 
-  string idxFilename = myDir + ".idx";
+  // must use this format or else file won't be written
+  // inside of uda
+  string idxFilename( myDir.getName() );
+  idxFilename = idxFilename + ".idx";
+  
   PIDXOutputContext pc;
   unsigned int timeStep = d_sharedState->getCurrentTopLevelTimeStep();
+  
   // Can this be run in serial without doing a MPI initialize
   pc.initialize(idxFilename, timeStep, globalExtents, d_myworld->getComm());
 
