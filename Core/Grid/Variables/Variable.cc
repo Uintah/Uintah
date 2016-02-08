@@ -28,6 +28,9 @@
 #include <Core/Disclosure/TypeDescription.h>
 #include <CCA/Ports/InputContext.h>
 #include <CCA/Ports/OutputContext.h>
+#if HAVE_PIDX
+#include <CCA/Ports/PIDXOutputContext.h>
+#endif
 #include <Core/IO/SpecializedRunLengthEncoder.h>
 #include <Core/Grid/Patch.h>
 #include <Core/Exceptions/ErrnoException.h>
@@ -65,7 +68,8 @@ Variable::setForeign()
 {
    d_foreign = true;
 }
-
+//______________________________________________________________________
+//
 size_t
 Variable::emit( OutputContext& oc, const IntVector& l,
                 const IntVector& h, const string& compressionModeHint )
@@ -98,7 +102,7 @@ Variable::emit( OutputContext& oc, const IntVector& l,
 
   used_rle = use_rle;
   used_gzip = use_gzip;
-  
+
   std::ostringstream outstream;
 
   if (use_rle) {
@@ -129,11 +133,11 @@ Variable::emit( OutputContext& oc, const IntVector& l,
       if (emitRLE(outstream2, l, h, oc.varnode)) {
         preGzip2 = outstream2.str();
         string* writeoutString2 = gzipCompress(&preGzip2, &buffer2);
-        
+
         if ((*writeoutString2).size() < (*writeoutString).size()) {
           // rle was making it worse
           writeoutString->erase(); // erase the old one to save space
-          writeoutString = writeoutString2; 
+          writeoutString = writeoutString2;
           used_rle = true;
           if (writeoutString2 == &buffer2)
             used_gzip = true;
@@ -155,7 +159,7 @@ Variable::emit( OutputContext& oc, const IntVector& l,
     ssize_t s = ::write(oc.fd, writebuffer, writebufferSize);
 
     if(s != (long)writebufferSize) {
-      cerr << "\nVariable::emit - write system call failed writing to " << oc.filename 
+      cerr << "\nVariable::emit - write system call failed writing to " << oc.filename
          << " with errno " << errno << ": " << strerror(errno) <<  endl;
       cerr << " * wanted to write: " << writebufferSize << ", but actually wrote " << s << "\n\n";
 
@@ -183,39 +187,43 @@ Variable::emit( OutputContext& oc, const IntVector& l,
   if (compressionMode != "" && compressionMode != "none"){
     oc.varnode->appendElement("compression", compressionMode);
   }
-  
-  
+
+
   return writebufferSize;
 }
 
 #if HAVE_PIDX
+//______________________________________________________________________
+//
 void
-Variable::emit(PIDXOutputContext& pc,
-	       const IntVector& l,
-	       const IntVector& h, const string& compressionModeHint,
-               unsigned char* pidx_buffer
-	       )
+Variable::emitPIDX( PIDXOutputContext& pc,
+                    unsigned char* pidx_buffer,
+                    const IntVector& l,
+                    const IntVector& h,
+                    const size_t pidx_bufferSize )
 {
-  // cout << "Start of PIDX emit" << endl;                                                                                                                                      
+  // cout << "Start of PIDX emit" << endl;
   ProblemSpecP dummy;
-
+  bool outputDoubleAsFloat = pc.isOutputDoubleAsFloat();
+  
   std::ostringstream outstream;
-  emitNormal(outstream, l, h, dummy,false);
+  emitNormal(outstream, l, h, dummy, outputDoubleAsFloat);
 
-  string writeoutString = outstream.str();
-
+  string writeoutString   = outstream.str();
   const char* writebuffer = writeoutString.c_str();
-  unsigned long writebufferSize = writeoutString.size();
+  size_t uda_bufferSize   = writeoutString.size();
 
-  //cout << "write buffer size = " << writebufferSize << endl;// << " Name: " << var_name << endl;                                                                             
-  int i,zeroCount=0, nonZeroCount=0;
-  if(writebufferSize>0) {
-    //pidx_buffer = (double *) malloc((writebufferSize/8)*sizeof(double));                                                                                                     
-    memcpy(pidx_buffer, writebuffer, writebufferSize);
+  cout << "uda_bufferSize = " << uda_bufferSize <<  " pidx_bufferSize " << pidx_bufferSize 
+       << " outputDoubleAsFloat: " << outputDoubleAsFloat << endl;
+  if( uda_bufferSize == pidx_bufferSize) {
+    memcpy(pidx_buffer, writebuffer, uda_bufferSize);
+  } else {
+    throw InternalError("ERROR: Variable::emitPIDX() error reading in buffer", __FILE__, __LINE__);
   }
 }
 #endif
-
+//______________________________________________________________________
+//
 string*
 Variable::gzipCompress(string* pUncompressed, string* pBuffer)
 {
@@ -223,13 +231,13 @@ Variable::gzipCompress(string* pUncompressed, string* pBuffer)
 
   // follows compress guidelines: 1% more than source size + 12
   // (round up, so use + 13).
-  unsigned long compressBufsize = uncompressedSize * 101 / 100 + 13; 
+  unsigned long compressBufsize = uncompressedSize * 101 / 100 + 13;
 
   pBuffer->resize(compressBufsize + sizeof(ssize_t));
   char* buf = const_cast<char*>(pBuffer->c_str()); // casting from const
   buf += sizeof(ssize_t); /* the first part will give the size of
                                    the uncompressed data */
-  
+
   if (compress((Bytef*)buf, &compressBufsize,
                (const Bytef*)pUncompressed->c_str(), uncompressedSize) != Z_OK)
     cerr << "compress failed in Uintah::Variable::gzipCompress\n";
@@ -251,9 +259,10 @@ Variable::gzipCompress(string* pUncompressed, string* pBuffer)
     pUncompressed->erase(); /* the original buffer isn't needed, erase it to
                                save space */
     return pBuffer;
-  } 
+  }
 }
-
+//______________________________________________________________________
+//
 //<ctc> fix reading files with multiple compression types
 void
 Variable::read( InputContext& ic, long end, bool swapBytes, int nByteMode,
@@ -294,17 +303,19 @@ Variable::read( InputContext& ic, long end, bool swapBytes, int nByteMode,
       cerr << "Error reading file: " << ic.filename << ", errno=" << errno << '\n';
       SCI_THROW(ErrnoException("Variable::read (read call)", errno, __FILE__, __LINE__));
     }
-  
+
     ic.cur += datasize;
 
+    //__________________________________
+    //              gzip compression
     if (use_gzip) {
       // use gzip compression
 
       // first read the uncompressed data size
       istringstream compressedStream(data);
-      uint64_t uncompressed_size_64;    
+      uint64_t uncompressed_size_64;
       compressedStream.read((char*)&uncompressed_size_64, nByteMode);
-      
+
       unsigned long uncompressed_size = convertSizeType(&uncompressed_size_64, swapBytes, nByteMode);
 
       if( uncompressed_size > 1000000000 ) {
@@ -320,49 +331,56 @@ Variable::read( InputContext& ic, long end, bool swapBytes, int nByteMode,
       }
 
       const char* compressed_data = data.c_str() + nByteMode;
-      
+
       long compressed_datasize = datasize - (long)(nByteMode);
 
       // casting from const char* below to char* -- use caution
       bufferStr.resize(uncompressed_size);
       char* buffer = (char*)bufferStr.c_str();
-      
+
       int result = uncompress( (Bytef*)buffer, &uncompressed_size,
                                (const Bytef*)compressed_data, compressed_datasize );
-      
+
       if (result != Z_OK) {
         printf( "Uncompress error result is %d\n", result );
         throw InternalError("uncompress failed in Uintah::Variable::read", __FILE__, __LINE__);
       }
 
       uncompressedData = &bufferStr;
-    }
+    }  // gzip
 
+    //__________________________________
+    //   rle and uncompressed
     istringstream instream(*uncompressedData);
-  
-    if (use_rle)
+
+    if (use_rle) {
       readRLE(instream, swapBytes, nByteMode);
-    else
+    } else {
       readNormal(instream, swapBytes);
+    }
     ASSERT(instream.fail() == 0);
 
   } // end if datasize > 0
 } // end read()
 
+//______________________________________________________________________
+//
 bool
 Variable::emitRLE(ostream& /*out*/, const IntVector& /*l*/,
                   const IntVector& /*h*/, ProblemSpecP /*varnode*/)
 {
   return false; // not supported by default
 }
-  
+//______________________________________________________________________
+//
 void
 Variable::readRLE(istream& /*in*/, bool /*swapBytes*/, int /*nByteMode*/)
 {
   SCI_THROW(InvalidCompressionMode("rle",
                                virtualGetTypeDescription()->getName(), __FILE__, __LINE__));
 }
-
+//______________________________________________________________________
+//
 void
 Variable::offsetGrid(const IntVector& /*offset*/)
 {

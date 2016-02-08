@@ -2280,8 +2280,11 @@ DataArchiver::saveLabels_PIDX(std::vector< SaveItem >& saveLabels,
   // inside of uda
   string idxFilename( myDir.getName() );
   idxFilename = idxFilename + ".idx";
-  
+
   PIDXOutputContext pc;
+
+  pc.setOutputDoubleAsFloat( (d_outputDoubleAsFloat && type == OUTPUT) );  
+
   unsigned int timeStep = d_sharedState->getCurrentTopLevelTimeStep();
   
   // Can this be run in serial without doing a MPI initialize
@@ -2335,7 +2338,7 @@ DataArchiver::saveLabels_PIDX(std::vector< SaveItem >& saveLabels,
     char data_type[512];
     int sample_per_variable = -9;
     size_t varSubType_size = -9;
-
+    
     switch( subtype->getType( )) {
 
       case Uintah::TypeDescription::Stencil7:
@@ -2349,12 +2352,6 @@ DataArchiver::saveLabels_PIDX(std::vector< SaveItem >& saveLabels,
         sprintf(data_type, "%d*float64", sample_per_variable); 
         break;
         
-      case Uintah::TypeDescription::double_type:
-        sample_per_variable = 1;
-        varSubType_size = sample_per_variable * sizeof(double);
-        sprintf(data_type, "%d*float64", sample_per_variable); 
-        break;
-
       case Uintah::TypeDescription::Vector:
         sample_per_variable = 3;
         varSubType_size = sample_per_variable * sizeof(double);
@@ -2366,6 +2363,19 @@ DataArchiver::saveLabels_PIDX(std::vector< SaveItem >& saveLabels,
         varSubType_size = sample_per_variable * sizeof(int);
         sprintf(data_type, "%d*int32", sample_per_variable);
         break;
+        
+      case Uintah::TypeDescription::double_type:
+        sample_per_variable = 1;
+        
+        // take into account saving doubles as floats
+        if ( pc.isOutputDoubleAsFloat() ){
+          varSubType_size = sample_per_variable * sizeof(float);
+          sprintf(data_type, "%d*float32", sample_per_variable);
+        } else {
+          varSubType_size = sample_per_variable * sizeof(double);
+          sprintf(data_type, "%d*float64", sample_per_variable);
+        }
+        break;
       default:
         ostringstream warn;
         warn << "DataArchiver::saveLabels_PIDX:: ("<< label->getName() << " " 
@@ -2373,7 +2383,6 @@ DataArchiver::saveLabels_PIDX(std::vector< SaveItem >& saveLabels,
         throw InternalError(warn.str(), __FILE__, __LINE__); 
     }
 
-  
     //__________________________________
     //  materials loop
     for(int m=0;m<var_matls->size();m++){
@@ -2443,17 +2452,18 @@ DataArchiver::saveLabels_PIDX(std::vector< SaveItem >& saveLabels,
           if ( t_buffer == NULL || patch_buffer[vcm][p] == NULL ){
             throw InternalError("DataArchiver::saveLabels_PIDX: Failed allocating memory", __FILE__, __LINE__);
           }
+
           //__________________________________
           //  Read in Array3 data to t-buffer
-          new_dw->emit(pc, label, matlIndex, patch, t_buffer);
+          new_dw->emitPIDX(pc, label, matlIndex, patch, t_buffer, arraySize);
 
           //__________________________________
           //  copy t_buffer -> patch_buffer
           memcpy( patch_buffer[vcm][p], t_buffer, arraySize );
+         
           free(t_buffer);
-
           PIDX_variable_write_data_layout(pc.variable[vc][m], local_offset_point, local_box_count_point, patch_buffer[vcm][p], PIDX_row_major);
-          
+      
           totalBytesSaved += arraySize;
           
           //__________________________________
