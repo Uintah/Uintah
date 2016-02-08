@@ -118,9 +118,6 @@ public:
                      CCVariable<double>& AS,
                      CCVariable<double>& AW,
                      CCVariable<double>& AP,
-                     CCVariable<double>& AE,
-                     CCVariable<double>& AN,
-                     CCVariable<double>& AT, 
                      const bool print );
 
       bool radLinearSolve( const int dir, const bool print_all_info );

@@ -315,6 +315,225 @@ DORadiationModel::boundarycondition(const ProcessorGroup*,
 
 }
 
+#ifdef UINTAH_ENABLE_KOKKOS
+namespace {
+
+struct TimeAdvanceFunctor
+{
+  KokkosView3<const double> m_phi;
+  KokkosView3<double> m_newphi;
+  ColumnMajorRange<> m_range;
+
+  typedef double value_type;
+
+  TimeAdvanceFunctor( constNCVariable<double> & phi, NCVariable<double> & newphi, ColumnMajorRange<> & range )
+    : m_phi( phi.getKokkosView() )
+    , m_newphi( newphi.getKokkosView() )
+    , m_range( range )
+  {}
+
+  void operator()(int x, double & residual) const
+  {
+    int i, j, k;
+    m_range(x,i,j,k);
+
+    m_newphi(i,j,k)=(1./6)*( m_phi(i+1,j,k) + m_phi(i-1,j,k) +
+                         m_phi(i,j+1,k) + m_phi(i,j-1,k) +
+                         m_phi(i,j,k+1) + m_phi(i,j,k-1) );
+
+    double diff = m_newphi(i,j,k) - m_phi(i,j,k);
+    residual += diff * diff;
+  }
+};
+
+} // namespace
+#endif //UINTAH_ENABLE_KOKKOS
+
+
+
+struct computeAMatrix{  
+       computeAMatrix( double  omu, double oeta, double oxi, 
+                       double areaEW, double areaNS, double areaTB, double vol, int intFlow,
+                       constCCVariable<int>      &cellType, 
+                       constCCVariable<double>   &wallTemp, 
+                       constCCVariable<double>   &abskt, 
+                       CCVariable<double>   &srcIntensity,
+                       CCVariable<double>   &matrixB,
+                       CCVariable<double>   &west,
+                       CCVariable<double>   &south,
+                       CCVariable<double>   &bottom,
+                       CCVariable<double>   &center,
+                       CCVariable<double>   &scatSource,
+                       CCVariable<double>   &fluxX,
+                       CCVariable<double>   &fluxY,
+                       CCVariable<double>   &fluxZ) : 
+                       _omu(omu),
+                       _oeta(oeta),
+                       _oxi(oxi),
+                       _areaEW(areaEW),
+                       _areaNS(areaNS),
+                       _areaTB(areaTB),
+                       _vol(vol),
+                       _intFlow(intFlow),
+#ifdef UINTAH_ENABLE_KOKKOS
+                       _cellType(cellType.getKokkosView()),
+                       _wallTemp(wallTemp.getKokkosView()),
+                       _abskt(abskt.getKokkosView()),
+                       _srcIntensity(srcIntensity.getKokkosView()),
+                       _matrixB(matrixB.getKokkosView()),
+                       _west(west.getKokkosView()),
+                       _south(south.getKokkosView()),
+                       _bottom(bottom.getKokkosView()),
+                       _center(center.getKokkosView()),
+                       _scatSource(scatSource.getKokkosView()),
+                       _fluxX(fluxX.getKokkosView()) , 
+                       _fluxY(fluxY.getKokkosView()) , 
+                       _fluxZ(fluxZ.getKokkosView())
+#else
+                       _cellType(cellType),
+                       _wallTemp(wallTemp),
+                       _abskt(abskt),
+                       _srcIntensity(srcIntensity),
+                       _matrixB(matrixB),
+                       _west(west),
+                       _south(south),
+                       _bottom(bottom),
+                       _center(center),
+                       _scatSource(scatSource),
+                       _fluxX(fluxX) , 
+                       _fluxY(fluxY) , 
+                       _fluxZ(fluxZ)
+#endif //UINTAH_ENABLE_KOKKOS
+                                    { _SB=5.67e-8;  // W / m^2 / K^4 
+                                       _dirX = (_omu  > 0.0)? -1 : 1;
+                                       _dirY = (_oeta > 0.0)? -1 : 1;
+                                       _dirZ = (_oxi  > 0.0)? -1 : 1;
+                                       _omu=abs(_omu);
+                                       _oeta=abs(_oeta);
+                                       _oxi=abs(_oxi);
+                                     }
+
+       void operator()(int i , int j, int k ) const {
+
+#ifdef UINTAH_ENABLE_KOKKOS
+
+         if (_cellType[i][j][k]==_intFlow) {
+
+           _matrixB[i][j][k]=(_srcIntensity[i][j][k]+ _scatSource[i][j][k])*_vol;
+           _center[i][j][k] =  _omu*_areaEW + _oeta*_areaNS +  _oxi*_areaTB +
+             _abskt[i][j][k] * _vol; // out scattering 
+
+          int ipm = i+_dirX;
+          int jpm = j+_dirY;
+          int kpm = k+_dirZ;
+
+           if (_cellType[ipm][j][k]==_intFlow) {
+             _west[i][j][k]= _omu*_areaEW; // signed changed in radhypresolve 
+           }else{
+             _matrixB[i][j][k]+= _omu*_areaEW*_SB/M_PI*pow(_wallTemp[ipm][j][k],4.0);  
+           }
+           if (_cellType[i][jpm][k]==_intFlow) {
+             _south[i][j][k]= _oeta*_areaNS; // signed changed in radhypresolve 
+           }else{
+             _matrixB[i][j][k]+= _oeta*_areaNS*_SB/M_PI*pow(_wallTemp[i][jpm][k],4.0);
+           }
+           if (_cellType[i][j][kpm]==_intFlow) {
+             _bottom[i][j][k] =  _oxi*_areaTB; // sign changed in radhypresolve 
+           }else{
+             _matrixB[i][j][k]+= _oxi*_areaTB*_SB/M_PI*pow(_wallTemp[i][j][kpm],4.0); 
+           }
+         }else{
+           _matrixB[i][j][k] = _SB/M_PI*pow(_wallTemp[i][j][k],4.0);
+           _center[i][j][k]  = 1.0;
+         }
+#else
+
+         IntVector c(i,j,k) ;
+
+          if (_cellType[c]==_intFlow) {
+           _matrixB[c]=(_srcIntensity[c]+ _scatSource[c])*_vol ;
+           _center[c] =  _omu*_areaEW + _oeta*_areaNS +  _oxi*_areaTB +
+           _abskt[c] * _vol; // out scattering 
+
+           IntVector cmX(i+_dirX,j,k) ;
+           IntVector cmY(i,j+_dirY,k) ;
+           IntVector cmZ(i,j,k+_dirZ) ;
+
+           if (_cellType[cmX]==_intFlow) {
+               _west[c]= _omu*_areaEW; // negative factored in later
+           }else{
+             _matrixB[c]+= _omu*_areaEW*_SB/M_PI*pow(_wallTemp[cmX],4.0);  
+           }
+           if (_cellType[cmY]==_intFlow) {
+               _south[c]= _oeta*_areaNS; // negative factored in later
+           }else{
+             _matrixB[c]+= _oeta*_areaNS*_SB/M_PI*pow(_wallTemp[cmY],4.0);
+           }
+           if (_cellType[cmZ]==_intFlow) {
+               _bottom[c] =  _oxi*_areaTB; // negative factored in later
+           }else{
+             _matrixB[c]+= _oxi*_areaTB*_SB/M_PI*pow(_wallTemp[cmZ],4.0) ; 
+           }
+         }else{
+           _matrixB[c] = _SB/M_PI*pow(_wallTemp[c],4.0);
+           _center[c]   =1.0;
+         }
+#endif //UINTAH_ENABLE_KOKKOS
+       }
+
+  private:
+       double _omu;
+       double _oeta;
+       double _oxi; 
+       double _areaEW;
+       double _areaNS;
+       double _areaTB;
+       double _vol;
+       int    _intFlow;
+
+
+
+
+#ifdef UINTAH_ENABLE_KOKKOS
+       KokkosView3<const int> _cellType;
+       KokkosView3<const double> _wallTemp;
+       KokkosView3<const double> _abskt;
+
+       KokkosView3<double> _srcIntensity;
+       KokkosView3<double> _matrixB;
+       KokkosView3<double> _west;
+       KokkosView3<double> _south;
+       KokkosView3<double> _bottom;
+       KokkosView3<double> _center;
+       KokkosView3<double> _scatSource;
+       KokkosView3<double> _fluxX;
+       KokkosView3<double> _fluxY;
+       KokkosView3<double> _fluxZ; 
+#else
+       constCCVariable<int>      &_cellType; 
+       constCCVariable<double>   &_wallTemp; 
+       constCCVariable<double>   &_abskt; 
+
+       CCVariable<double>   &_srcIntensity;
+       CCVariable<double>   &_matrixB;
+       CCVariable<double>   &_west;
+       CCVariable<double>   &_south;
+       CCVariable<double>   &_bottom;
+       CCVariable<double>   &_center;
+       CCVariable<double>   &_scatSource;
+       CCVariable<double>   &_fluxX;
+       CCVariable<double>   &_fluxY;
+       CCVariable<double>   &_fluxZ; 
+#endif //UINTAH_ENABLE_KOKKOS
+
+       double _SB;
+       int    _dirX;
+       int    _dirY;
+       int    _dirZ;
+
+
+};
+
 //***************************************************************************
 // Solves for intensity in the D.O method
 //***************************************************************************
@@ -355,11 +574,8 @@ DORadiationModel::intensitysolve(const ProcessorGroup* pg,
   IntVector domHi = patch->getExtraCellHighIndex();
 
   CCVariable<double> su;
-  CCVariable<double> ae;
   CCVariable<double> aw;
-  CCVariable<double> an;
   CCVariable<double> as;
-  CCVariable<double> at;
   CCVariable<double> ab;
   CCVariable<double> ap;
 
@@ -399,6 +615,13 @@ DORadiationModel::intensitysolve(const ProcessorGroup* pg,
   scatIntensitySource.initialize(0.0); // needed for non-scattering cases
 
 
+   Vector Dx = patch->dCell();
+   double volume = Dx.x()* Dx.y()* Dx.z();
+   double areaEW = Dx.y()*Dx.z();  
+   double areaNS = Dx.x()*Dx.z();  
+   double areaTB = Dx.x()*Dx.y();  
+
+
   if(_scatteringOn){
     if(old_DW_isMissingIntensities){
       for( int ix=0;  ix<d_totalOrds ;ix++){
@@ -422,13 +645,11 @@ DORadiationModel::intensitysolve(const ProcessorGroup* pg,
   }
      
   su.allocate(domLo,domHi);
-  ae.allocate(domLo,domHi);
   aw.allocate(domLo,domHi);
-  an.allocate(domLo,domHi);
   as.allocate(domLo,domHi);
-  at.allocate(domLo,domHi);
   ab.allocate(domLo,domHi);
   ap.allocate(domLo,domHi);
+
   
   srcbm.resize(domLo.x(),domHi.x());
   srcbm.initialize(0.0);
@@ -474,34 +695,66 @@ DORadiationModel::intensitysolve(const ProcessorGroup* pg,
       as.initialize(0.0);
       ab.initialize(0.0);
       ap.initialize(0.0);
-      ae.initialize(0.0);
-      an.initialize(0.0);
-      at.initialize(0.0);
+
+
       bool plusX, plusY, plusZ;
+      plusX = (omu[direcn]  > 0.0)? 1 : 0;
+      plusY = (oeta[direcn] > 0.0)? 1 : 0;
+      plusZ = (oxi[direcn]  > 0.0)? 1 : 0;
 
       if(_scatteringOn){
-           
       if(old_DW_isMissingIntensities) 
-        computeScatteringIntensities(direcn,scatkt, IntensitiesRestart,scatIntensitySource,asymmetryParam, patch, vars->ESRCG);
+        computeScatteringIntensities(direcn,scatkt, IntensitiesRestart,scatIntensitySource,asymmetryParam, patch);
       else
-        computeScatteringIntensities(direcn,scatkt, Intensities,scatIntensitySource,asymmetryParam, patch, vars->ESRCG);
+        computeScatteringIntensities(direcn,scatkt, Intensities,scatIntensitySource,asymmetryParam, patch);
       }
-                                                         
 
-      fort_rdomsolve( idxLo, idxHi, constvars->cellType, ffield, 
-                      cellinfo->sew, cellinfo->sns, cellinfo->stb, 
-                      vars->ESRCG, direcn, oxi, omu,oeta, wt, 
-                      constvars->temperature, constvars->ABSKT,
-                      su, aw, as, ab, ap, ae, an, at,
-                      plusX, plusY, plusZ, fraction, bands, 
-                      radiationFlux_old[0] , radiationFlux_old[1],
-                      radiationFlux_old[2] , radiationFlux_old[3],
-                      radiationFlux_old[4] , radiationFlux_old[5]); //  this term needed for scattering
+      // old construction of the A-matrix using fortran  
+      //fort_rdomsolve( idxLo, idxHi, constvars->cellType, ffield,   
+                      //cellinfo->sew, cellinfo->sns, cellinfo->stb, 
+                      //vars->ESRCG, direcn, oxi, omu,oeta, wt, 
+                      //constvars->temperature, constvars->ABSKT,
+                      //su, aw, as, ab, ap,
+                      //plusX, plusY, plusZ, fraction, bands, 
+                      //radiationFlux_old[0] , radiationFlux_old[1],
+                      //radiationFlux_old[2] , radiationFlux_old[3],
+                      //radiationFlux_old[4] , radiationFlux_old[5],scatIntensitySource); //  this term needed for scattering
                       
+     // new (2-2016) construction of A-matrix and b-matrix
+      computeAMatrix  doMakeMatrixA( omu[direcn], oeta[direcn], oxi[direcn], 
+                                     areaEW, areaNS, areaTB, volume, ffield,
+                                     constvars->cellType, 
+                                     constvars->temperature, 
+                                     constvars->ABSKT, 
+                                     vars->ESRCG,
+                                     su,
+                                     aw,
+                                     as,
+                                     ab,     
+                                     ap,
+                                     scatIntensitySource,
+                                     radiationFlux_old[plusX ? 0 : 1],
+                                     radiationFlux_old[plusY ? 2 : 3],
+                                     radiationFlux_old[plusZ ? 4 : 5]);
+
+#ifdef UINTAH_ENABLE_KOKKOS
+      IntVector idxHi2 = patch->getCellHighIndex();
+      IntVector idxLo2 = patch->getCellHighIndex();
+      Uintah::ColumnMajorRange<> range(idxLo2, idxHi2);
+
+      Kokkos::parallel_for( range.size(), doMakeMatrixA );
+#else
+      for (int i =  idxLo[0] ; i <= idxHi[0] ; i++)
+        for (int j =  idxLo[1] ; j <= idxHi[1] ; j++)
+          for (int k =  idxLo[2] ; k <= idxHi[2] ; k++){
+            doMakeMatrixA(i,j,k);
+          } 
+#endif //UINTAH_ENABLE_KOKKOS
 
 
+     // Done constructing A-matrix and matrix, pass to solver object
       d_linearSolver->setMatrix( pg ,patch, vars, constvars, plusX, plusY, plusZ, 
-                                 su, ab, as, aw, ap, ae, an, at, d_print_all_info );
+                                 su, ab, as, aw, ap, d_print_all_info );
                                 
       bool converged =  d_linearSolver->radLinearSolve( direcn, d_print_all_info );
       
@@ -586,12 +839,8 @@ DORadiationModel::setLabels(){
 }
 template<class TYPE> 
 void
-//DORadiationModel::computeScatteringIntensities(int direction, constCCVariable<double> &scatkt, StaticArray < constCCVariable<double> > &Intensities, CCVariable<double> &scatIntensitySource,constCCVariable<double> &asymmetryFactor , const Patch* patch, CCVariable<double> &b_sourceArray ){
-DORadiationModel::computeScatteringIntensities(int direction, constCCVariable<double> &scatkt, StaticArray < TYPE > &Intensities, CCVariable<double> &scatIntensitySource,constCCVariable<double> &asymmetryFactor , const Patch* patch, CCVariable<double> &b_sourceArray ){
+DORadiationModel::computeScatteringIntensities(int direction, constCCVariable<double> &scatkt, StaticArray < TYPE > &Intensities, CCVariable<double> &scatIntensitySource,constCCVariable<double> &asymmetryFactor , const Patch* patch){
 
-  for (CellIterator iter=patch->getCellIterator(); !iter.done(); iter++){
-    b_sourceArray[*iter]-=scatIntensitySource[*iter];
-  }
   scatIntensitySource.initialize(0.0); //reinitialize to zero for sum
 
   direction -=1;   // change from fortran vector to c++ vector
@@ -610,9 +859,6 @@ DORadiationModel::computeScatteringIntensities(int direction, constCCVariable<do
     scatIntensitySource[*iter] *= scatkt[*iter]  ;
   }
 
-  for (CellIterator iter=patch->getCellIterator(); !iter.done(); iter++){
-      b_sourceArray[*iter]+=scatIntensitySource[*iter];
-  }
 
   return;
 }

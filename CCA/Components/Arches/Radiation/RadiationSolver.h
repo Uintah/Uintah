@@ -116,9 +116,6 @@ public:
                            CCVariable<double>& AS,
                            CCVariable<double>& AW,
                            CCVariable<double>& AP,
-                           CCVariable<double>& AE,
-                           CCVariable<double>& AN,
-                           CCVariable<double>& AT, 
                            const bool print ) = 0;
 
    virtual bool radLinearSolve( const int direction, const bool print_all_info ) = 0;

@@ -161,13 +161,11 @@ private:
 
       template<class TYPE> 
       void computeScatteringIntensities(int direction,
-                      constCCVariable<double> &scatkt,
-  //StaticArray< constCCVariable<double> > &Intensities,
-  SCIRun::StaticArray< TYPE > &Intensities,
-              CCVariable<double> &scatIntensitySource,
-              constCCVariable<double> &asymmetryFactor,
-                                    const Patch* patch,
-                   CCVariable<double> &b_sourceArray);
+                                        constCCVariable<double> &scatkt,
+                                        SCIRun::StaticArray< TYPE > &Intensities,
+                                        CCVariable<double> &scatIntensitySource,
+                                        constCCVariable<double> &asymmetryFactor,
+                                        const Patch* patch);
 
 
 
