@@ -33,7 +33,6 @@
 #include <CCA/Components/SimulationController/SimulationController.h>
 #include <CCA/Ports/SchedulerP.h>
 #include <CCA/Ports/Output.h>
-#include <CCA/Ports/Regridder.h>
 
 #include <Core/Grid/Grid.h>
 #include <Core/Grid/Variables/VarLabel.h>
@@ -566,7 +565,7 @@ visit_handle visit_ReadMetaData(void *cbdata)
 
     /* Add some commands. */
     const char *cmd_names[] = {"Stop", "Step", "Run",
-                               "Save", "Checkpoint", "Regrid",
+                               "Save", "Checkpoint", "Unused",
                                "Finish", "Terminate", "Abort"};
 
     int numNames = sizeof(cmd_names) / sizeof(const char *);
@@ -575,11 +574,7 @@ visit_handle visit_ReadMetaData(void *cbdata)
     {
       bool enabled;
 
-      // Check for regrid, save, and checkpoint option.
-      if(strcmp( "Regrid", cmd_names[i] ) == 0 )
-        enabled = sim->simController->doAMR();
-
-      else if(strcmp( "Save", cmd_names[i] ) == 0 )
+      if(strcmp( "Save", cmd_names[i] ) == 0 )
         enabled = !sim->simController->getOutput()->isOutputTimestep();
 
       else if(strcmp( "Checkpoint", cmd_names[i] ) == 0 )
@@ -618,6 +613,13 @@ visit_handle visit_ReadMetaData(void *cbdata)
 
     // Setup the custom UI MPI Stats
     visit_GetMPIStats( sim );
+
+    // These are one time initializations.
+    VisItUI_setValueI("StopAtTimestep",     sim->stopAtTimestep,     1);	
+    VisItUI_setValueI("StopAtLastTimestep", sim->stopAtLastTimestep, 1);	
+
+    // Setup the custom UI Image variables
+    visit_GetImageVars( sim );
 
     // if( sim->message.size() )
     // {

@@ -114,6 +114,9 @@ typedef struct
   int imageWidth;
   int imageFormat;
 
+  int  stopAtTimestep;
+  bool stopAtLastTimestep;
+  
 } visit_simulation_data;
 
 

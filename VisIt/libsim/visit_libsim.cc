@@ -136,7 +136,10 @@ void visit_InitLibSim( visit_simulation_data *sim )
   sim->imageHeight   = 480;
   sim->imageWidth    = 640;
   sim->imageFormat   = 2;
-    
+
+  sim->stopAtTimestep = 0;
+  sim->stopAtLastTimestep = 0;
+  
 #ifdef HAVE_MPICH
   if( Parallel::usingMPI() )
   {
@@ -311,6 +314,12 @@ void visit_CheckState( visit_simulation_data *sim )
                            sim->imageFormat );
         }
       }
+
+      // Check to see if the user wants to stop.
+      if( sim->cycle == sim->stopAtTimestep )
+      {
+	sim->runMode = VISIT_SIMMODE_STOPPED;
+      }
     }
   }
 
@@ -429,6 +438,12 @@ void visit_CheckState( visit_simulation_data *sim )
           VisItUI_setValueS("SIMULATION_MODE", "Connected", 1);
         }
 
+	// These are one time initializations.
+	VisItUI_setValueI("SIMULATION_TIME_LIMITS_ENABLED", sim->timeRange, 1);
+	VisItUI_setValueI("SIMULATION_TIME_START_CYCLE",    sim->timeStart, 1);
+	VisItUI_setValueI("SIMULATION_TIME_STEP_CYCLE",     sim->timeStep,  1);
+	VisItUI_setValueI("SIMULATION_TIME_STOP_CYCLE",     sim->timeStop,  1);
+
         /* Register data access callbacks */
         VisItSetGetMetaData(visit_SimGetMetaData, (void*) sim);
 
@@ -461,14 +476,8 @@ void visit_CheckState( visit_simulation_data *sim )
         VisItUI_textChanged("ImageWidth", visit_ImageWidthCallback, (void*) sim);
         VisItUI_valueChanged("ImageFormat", visit_ImageFormatCallback, (void*) sim);
 
-	// These are one time initializations.
-	VisItUI_setValueI("SIMULATION_TIME_LIMITS_ENABLED", sim->timeRange, 1);
-	VisItUI_setValueI("SIMULATION_TIME_START_CYCLE", sim->timeStart, 1);
-	VisItUI_setValueI("SIMULATION_TIME_STEP_CYCLE", sim->timeStep, 1);
-	VisItUI_setValueI("SIMULATION_TIME_STOP_CYCLE", sim->timeStop, 1);
-
-	// Setup the custom UI Image variables
-	visit_GetImageVars( sim );
+        VisItUI_textChanged("StopAtTimestep", visit_StopAtTimestepCallback, (void*) sim);
+        VisItUI_valueChanged("StopAtLastTimestep", visit_StopAtLastTimestepCallback, (void*) sim);
       }
       else
       {

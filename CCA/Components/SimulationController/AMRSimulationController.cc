@@ -243,10 +243,6 @@ AMRSimulationController::run()
         proc0cout << " Regridding once.\n";
         doRegridding(currentGrid, false);
         d_regridder->setAdaptivity(false);
-#ifdef HAVE_VISIT
-        if( d_sharedState->GetVisIt() )
-          d_regridder->setForceRegridding(false);
-#endif
         proc0cout << "______________________________________________________________________\n";
       }
       
@@ -254,10 +250,6 @@ AMRSimulationController::run()
         proc0cout << "______________________________________________________________________\n";
         proc0cout << " Need to regrid.\n";
         doRegridding(currentGrid, false);
-#ifdef HAVE_VISIT
-        if( d_sharedState->GetVisIt() )
-          d_regridder->setForceRegridding(false);
-#endif
         proc0cout << "______________________________________________________________________\n";
       }
     }
@@ -507,6 +499,7 @@ AMRSimulationController::run()
     // If VisIt has been included into the build, check the lib sim
     // state to see if there is a connection and if so check to see if
     // anything needs to be done.
+
 #ifdef HAVE_VISIT
     if( d_sharedState->GetVisIt() )
     {
@@ -526,7 +519,18 @@ AMRSimulationController::run()
       // User issued a termination.
       if( visitSimData.simMode == VISIT_SIMMODE_TERMINATED )
 	break;
-    }
+
+      // Check to see if at the last iteration. If so stop so the
+      // user can have once last chance see the data.
+      if( visitSimData.stopAtLastTimestep &&
+	  ( (time >= d_timeinfo->maxTime) ||
+	    (iterations >= d_timeinfo->maxTimestep) ||
+	    (d_timeinfo->max_wall_time != 0 &&
+	     getWallTime() >= d_timeinfo->max_wall_time) ) )
+      {
+	visit_EndLibSim( &visitSimData );
+      }
+    }    
 #endif
 
     // Reset the runtime performance stats
@@ -536,15 +540,6 @@ AMRSimulationController::run()
 
   } // end while ( time is not up, etc )
   
-  // If VisIt has been included into the build, stop here so the
-  // user can have once last chance see their data via VisIt.
-#ifdef HAVE_VISIT
-   if( d_sharedState->GetVisIt() )
-   {
-     visit_EndLibSim( &visitSimData );
-   }
-#endif
-
   // d_ups->releaseDocument();
 #ifdef USE_GPERFTOOLS
   if (gprofile.active()){
