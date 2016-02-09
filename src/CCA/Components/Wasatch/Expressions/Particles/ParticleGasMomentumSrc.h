@@ -85,6 +85,7 @@ ParticleGasMomentumSrc( const Expr::Tag& particleDragTag,
                        const Expr::TagList& particlePositionTags)
 : Expr::Expression<GasVelT>()
 {
+   this->set_gpu_runnable(false);
    pDrag_ = this->template create_field_request<ParticleField>(particleDragTag);
    pSize_ = this->template create_field_request<ParticleField>(particleSizeTag);
    pMass_ = this->template create_field_request<ParticleField>(particleMassTag);
