@@ -80,9 +80,6 @@ RadPetscSolver::setMatrix(const ProcessorGroup* ,
                           CCVariable<double>& ,
                           CCVariable<double>& ,
                           CCVariable<double>& ,
-                          CCVariable<double>& ,
-                          CCVariable<double>& ,
-                          CCVariable<double>& ,
                           const bool print )
 {
   throw InternalError("PetscSolver not configured", __FILE__, __LINE__);
