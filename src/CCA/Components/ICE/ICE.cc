@@ -577,14 +577,14 @@ void ICE::problemSetup(const ProblemSpecP& prob_spec,
   if( d_sharedState->GetVisIt() )
   {
     // variable 1
-    SimulationState::modifiableVar var;
+    SimulationState::interactiveVar var;
     var.name     = "ICE-OrderOfAdvection";
     var.type     = Uintah::TypeDescription::int_type;
     var.Ivalue   = &d_OrderOfAdvection;
     var.modifiable = true;
     var.recompile  = true;
     var.modified   = false;
-    d_sharedState->d_VisIt_modifiableVars.push_back( var );
+    d_sharedState->d_interactiveVars.push_back( var );
 
     // variable 2
     var.name     = "ICE-gravity";
@@ -593,7 +593,7 @@ void ICE::problemSetup(const ProblemSpecP& prob_spec,
     var.modifiable = true;
     var.recompile  = false;
     var.modified   = false;
-    d_sharedState->d_VisIt_modifiableVars.push_back( var );
+    d_sharedState->d_interactiveVars.push_back( var );
   }
 #endif
 }

@@ -78,6 +78,8 @@ namespace Uintah {
   void visit_ImageWidthCallback(char *val, void *cbdata);
   void visit_ImageFormatCallback(int val, void *cbdata);
 
+  void visit_StopAtTimestepCallback(char *val, void *cbdata);
+  void visit_StopAtLastTimestepCallback(int val, void *cbdata);
 } // End namespace Uintah
 
 #endif

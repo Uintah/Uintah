@@ -224,22 +224,22 @@ void visit_GetAnalysisVars( visit_simulation_data *sim )
 
 //---------------------------------------------------------------------
 // GetUPSVars
-//    Get the UPS vars that the user can modify in the Custon UI
+//    Get the UPS vars that the user can interact with in the Custon UI
 //---------------------------------------------------------------------
 void visit_GetUPSVars( visit_simulation_data *sim )
 {
   SimulationStateP simStateP = sim->simController->getSimulationStateP();
 
-  if( simStateP->d_VisIt_modifiableVars.size() )
+  if( simStateP->d_interactiveVars.size() )
   {
     VisItUI_setValueS( "UPSVariableGroupBox", "SHOW_WIDGET", 1);
 
-    std::vector< SimulationState::modifiableVar > &vars =
-      simStateP->d_VisIt_modifiableVars;
+    std::vector< SimulationState::interactiveVar > &vars =
+      simStateP->d_interactiveVars;
       
     for( unsigned int i=0; i<vars.size(); ++i )
     {
-      SimulationState::modifiableVar &var = vars[i];
+      SimulationState::interactiveVar &var = vars[i];
       
       var.modified = false;
       

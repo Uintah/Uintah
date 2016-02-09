@@ -718,6 +718,55 @@
        </property>
       </widget>
      </widget>
+     <widget class="QGroupBox" name="InteractionGroupBox">
+      <property name="geometry">
+       <rect>
+        <x>10</x>
+        <y>140</y>
+        <width>601</width>
+        <height>111</height>
+       </rect>
+      </property>
+      <property name="title">
+       <string>Simulation Intereaction</string>
+      </property>
+      <widget class="QCheckBox" name="StopAtLastTimeStep">
+       <property name="geometry">
+        <rect>
+         <x>10</x>
+         <y>80</y>
+         <width>251</width>
+         <height>18</height>
+        </rect>
+       </property>
+       <property name="text">
+        <string>Stop execution at the last time step</string>
+       </property>
+      </widget>
+      <widget class="QLineEdit" name="StopAtTimestep">
+       <property name="geometry">
+        <rect>
+         <x>190</x>
+         <y>40</y>
+         <width>61</width>
+         <height>22</height>
+        </rect>
+       </property>
+      </widget>
+      <widget class="QLabel" name="StopAtLastTimeStepLabel">
+       <property name="geometry">
+        <rect>
+         <x>10</x>
+         <y>40</y>
+         <width>171</width>
+         <height>16</height>
+        </rect>
+       </property>
+       <property name="text">
+        <string>Stop execution at time step</string>
+       </property>
+      </widget>
+     </widget>
     </widget>
    </widget>
   </widget>

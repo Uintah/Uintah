@@ -30,7 +30,6 @@
 #include <CCA/Components/DataArchiver/DataArchiver.h>
 #include <CCA/Ports/SchedulerP.h>
 #include <CCA/Ports/Output.h>
-#include <CCA/Ports/Regridder.h>
 
 #include <Core/Grid/Grid.h>
 #include <Core/Grid/Variables/VarTypes.h>
@@ -116,11 +115,6 @@ visit_ControlCommandCallback(const char *cmd, const char *args, void *cbdata)
   else if(strcmp(cmd, "Run") == 0 && sim->simMode != VISIT_SIMMODE_FINISHED)
   {
     sim->runMode = VISIT_SIMMODE_RUNNING;
-  }
-  else if(strcmp(cmd, "Regrid") == 0 && sim->simMode != VISIT_SIMMODE_FINISHED)
-  {
-    sim->simController->getRegridder()->setForceRegridding(true);
-    sim->runMode = VISIT_SIMMODE_STEP;
   }
   else if(strcmp(cmd, "Save") == 0)
   {
@@ -324,11 +318,7 @@ void visit_MaxTimeStepCallback(char *val, void *cbdata)
 {
   visit_simulation_data *sim = (visit_simulation_data *)cbdata;
 
-  int value;
-
-  sscanf (val, "%d", &value);
-
-  sim->simController->getSimulationTime()->maxTimestep = value;
+  sim->simController->getSimulationTime()->maxTimestep = atoi(val);
 }
 
 //---------------------------------------------------------------------
@@ -339,11 +329,7 @@ void visit_MaxTimeCallback(char *val, void *cbdata)
 {
   visit_simulation_data *sim = (visit_simulation_data *)cbdata;
 
-  double value;
-
-  sscanf (val, "%lf", &value);
-
-  sim->simController->getSimulationTime()->maxTime = value;
+  sim->simController->getSimulationTime()->maxTime = atof(val);
 }
 
 //---------------------------------------------------------------------
@@ -357,9 +343,7 @@ void visit_DeltaTCallback(char *val, void *cbdata)
   SimulationStateP simStateP = sim->simController->getSimulationStateP();
   DataWarehouse          *dw = sim->simController->getSchedulerP()->getLastDW();
 
-  double delt;
-
-  sscanf (val, "%lf", &delt);
+  double delt = atof(val);
 
   simStateP->adjustDelT( false );
   dw->override(delt_vartype(delt), simStateP->get_delt_label());
@@ -373,11 +357,7 @@ void visit_DeltaTMinCallback(char *val, void *cbdata)
 {
   visit_simulation_data *sim = (visit_simulation_data *)cbdata;
 
-  double value;
-
-  sscanf (val, "%lf", &value);
-
-  sim->simController->getSimulationTime()->delt_min = value;
+  sim->simController->getSimulationTime()->delt_min = atof(val);
 }
 
 //---------------------------------------------------------------------
@@ -388,11 +368,7 @@ void visit_DeltaTMaxCallback(char *val, void *cbdata)
 {
   visit_simulation_data *sim = (visit_simulation_data *)cbdata;
 
-  double value;
-
-  sscanf (val, "%lf", &value);
-
-  sim->simController->getSimulationTime()->delt_max = value;
+  sim->simController->getSimulationTime()->delt_max = atof(val);
 }
 
 //---------------------------------------------------------------------
@@ -403,11 +379,7 @@ void visit_DeltaTFactorCallback(char *val, void *cbdata)
 {
   visit_simulation_data *sim = (visit_simulation_data *)cbdata;
 
-  double value;
-
-  sscanf (val, "%lf", &value);
-
-  sim->simController->getSimulationTime()->delt_factor = value;
+  sim->simController->getSimulationTime()->delt_factor = atof(val);
 }
 
 //---------------------------------------------------------------------
@@ -418,11 +390,7 @@ void visit_MaxWallTimeCallback(char *val, void *cbdata)
 {
   visit_simulation_data *sim = (visit_simulation_data *)cbdata;
 
-  double value;
-
-  sscanf (val, "%lf", &value);
-
-  sim->simController->getSimulationTime()->max_wall_time = value;
+  sim->simController->getSimulationTime()->max_wall_time = atof(val);
 }
 
 //---------------------------------------------------------------------
@@ -440,10 +408,10 @@ void visit_UPSVariableTableCallback(char *val, void *cbdata)
 
   sscanf (val, "%d | %d | %s", &row, &column, str);
 
-  std::vector< SimulationState::modifiableVar > &vars =
-    simStateP->d_VisIt_modifiableVars;
+  std::vector< SimulationState::interactiveVar > &vars =
+    simStateP->d_interactiveVars;
       
-  SimulationState::modifiableVar &var = vars[row];
+  SimulationState::interactiveVar &var = vars[row];
 
   switch( var.type )
   {       
@@ -519,7 +487,6 @@ void visit_OutputIntervalVariableTableCallback(char *val, void *cbdata)
   }
 }
 
-
 //---------------------------------------------------------------------
 // ImageCallback
 //     Custom UI callback
@@ -539,9 +506,8 @@ void visit_ImageFilenameCallback(char *val, void *cbdata)
 {
   visit_simulation_data *sim = (visit_simulation_data *)cbdata;
 
-  sim->imageFilename = std::string(val);;
+  sim->imageFilename = std::string(val);
 }
-
 
 //---------------------------------------------------------------------
 // ImageHeightCallback
@@ -551,10 +517,7 @@ void visit_ImageHeightCallback(char *val, void *cbdata)
 {
   visit_simulation_data *sim = (visit_simulation_data *)cbdata;
 
-  int value;
-  sscanf (val, "%d", &value);
-
-  sim->imageHeight = value;
+  sim->imageHeight = atoi(val);
 }
 
 //---------------------------------------------------------------------
@@ -565,10 +528,7 @@ void visit_ImageWidthCallback(char *val, void *cbdata)
 {
   visit_simulation_data *sim = (visit_simulation_data *)cbdata;
 
-  int value;
-  sscanf (val, "%d", &value);
-
-  sim->imageWidth = value;
+  sim->imageWidth = atoi(val);
 }
 
 //---------------------------------------------------------------------
@@ -582,4 +542,27 @@ void visit_ImageFormatCallback(int val, void *cbdata)
   sim->imageFormat = val;
 }
 
+//---------------------------------------------------------------------
+// StopAtTimestepCallback
+//     Custom UI callback
+//---------------------------------------------------------------------
+void visit_StopAtTimestepCallback(char *val, void *cbdata)
+{
+  visit_simulation_data *sim = (visit_simulation_data *)cbdata;
+
+  sim->stopAtTimestep = atoi(val);
+}
+
+  //---------------------------------------------------------------------
+// StopAtLastTimestepCallback
+//     Custom UI callback
+//---------------------------------------------------------------------
+void visit_StopAtLastTimestepCallback(int val, void *cbdata)
+{
+  visit_simulation_data *sim = (visit_simulation_data *)cbdata;
+
+  sim->stopAtLastTimestep = val;
+}
+
 } // End namespace Uintah
+

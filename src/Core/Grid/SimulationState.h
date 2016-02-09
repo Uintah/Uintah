@@ -399,7 +399,7 @@ private:
   
 #ifdef HAVE_VISIT
 public:
-  struct modifiableVar {
+  struct interactiveVar {
     std::string name;
     TypeDescription::Type type;
     int*    Ivalue;
@@ -410,8 +410,7 @@ public:
     bool    recompile;  // If true and the variable was modified force the task graph to be recompiled.
   };
   
-  std::vector< modifiableVar > d_VisIt_modifiableVars;
-
+  std::vector< interactiveVar > d_interactiveVars;
   std::vector< analysisVar > d_analysisVars;
 
   void SetVisIt( bool val ) { d_doVisIt = val; }
