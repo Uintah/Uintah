@@ -723,11 +723,6 @@ CharOxidationSmith::computeModel( const ProcessorGroup * pc,
             break;
           }
         } // end newton solve
-        // make sure rh_(n+1) is inbounds
-        for (int l=0; l<_NUM_reactions; l++) {
-          rh_l_new[l]=std::min(1000.0, std::max(0.0, rh_l_new[l]));
-        }
-        // see if solution is converged (F = 0.0)
         if (count > 90){
             std::cout << "warning no solution found in char ox: " << c << std::endl;
             std::cout << "gas_rho: " << gas_rho << std::endl;
@@ -744,6 +739,10 @@ CharOxidationSmith::computeModel( const ProcessorGroup * pc,
             std::cout << "_D_oxid_mix_l[1]: " << _D_oxid_mix_l[1] << std::endl;
             std::cout << "rh_l_new[0]: " << rh_l_new[0] << std::endl;
             std::cout << "rh_l_new[1]: " << rh_l_new[1] << std::endl;
+        }
+        // make sure rh_(n+1) is inbounds
+        for (int l=0; l<_NUM_reactions; l++) {
+          rh_l_new[l]=std::min(1000.0, std::max(0.0, rh_l_new[l]));
         }
         // convert rh units from kg/m^3/s to kg/s/#
         char_mass_rate  = 0.0;
@@ -795,9 +794,8 @@ CharOxidationSmith::root_function( std::vector<double> &F, std::vector<double> &
     k_r = ( 10 * _a_l[l] * exp( - _e_l[l] / ( _R_cal * p_T)) * _R * p_T * 1000) / ( _Mh * _phi_l[l] * 101325 ); // [m / s]
     rh = std::accumulate(rh_l.begin(), rh_l.end(), 0.0);
     rtotal = rh + r_devol; // [kg/m^3/s]
-    Bjm = std::min( 80.0 , std::max( 1e-7, (rtotal/(p_area*w*MW))/( cg * _D_oxid_mix_l[l] / p_diam ) )); // [-] // this is the rate factor N_t / kx,loc from BSL chapter 22
-          //  rh_l_new[l]=std::min(0.0, max(-1000.0, rh_l_new[l])); // rh can't be larger than zero or smaller than -1000
-    Fac = Bjm/(exp(Bjm)-1); // also from BSL chapter 22 the mass transfer correction factor.
+    Bjm = std::min( 80.0 , (-rtotal/(p_area*w*MW))/( cg * _D_oxid_mix_l[l] / p_diam ) ); // [-] // this is the rate factor N_t / kx,loc from BSL chapter 22
+    Fac = ( abs(Bjm) >= 1e-7 ) ?  Bjm/(exp(Bjm)-1) : 1.0; // also from BSL chapter 22 the mass transfer correction factor.
     mtc_r = (Sh[l] * _D_oxid_mix_l[l] * Fac) / p_diam; // [m/s]
     numerator = pow( p_area * w, 2.0) * _Mh * MW * _phi_l[l] * k_r * mtc_r * _S * co_r * cg; // [(#^2 kg-char kg-mix) / (s^2 m^6)] 
     denominator = MW * p_area * w *cg * (k_r * _S + mtc_r); // [(kg-mix #) / (m^3 s)]
