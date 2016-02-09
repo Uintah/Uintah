@@ -78,6 +78,9 @@
           <!-- The variable_stats model produces a sum(phi*dt) or sum(rho*u*phi) (all three components) and the sum(squared value) from which
                a time average can be computed.
 
+               NOTE: only cc-scalars can be averaged. Fluxes at faces are computed using the flux_variable option. If you really
+               need to time average a velocity, please contact a developer for this request. 
+
                For single variables:
                 - The summed variable to save is the label+"_running_sum". (i.e., label=my_var then my_var_running_sum)
                 - The squared sum variable to save is the label+"_squared_sum".

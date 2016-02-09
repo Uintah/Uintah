@@ -38,6 +38,12 @@ void VariableStats::problemSetup( ProblemSpecP& db ){
     std::string var_name;
     var_db->getAttribute("label", var_name);
 
+    if ( var_name == "uVelocitySPBC"
+        || var_name == "vVelocitySPBC"
+        || var_name == "wVelocitySPBC" ){
+      throw InvalidValue("Error: Cannot average velocities. Try a flux variable instead.",__FILE__,__LINE__); 
+    }
+
     std::string var_ave_name = var_name + "_running_sum";
     std::string sqr_name = var_name + "_squared_sum";
 
