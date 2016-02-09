@@ -571,6 +571,7 @@ CharOxidationSmith::computeModel( const ProcessorGroup * pc,
     double w;
     double MW;
     double r_devol;
+    double r_devol_ns;
     double RHS;
     double RHS_v;
     double Re_p; 
@@ -581,12 +582,15 @@ CharOxidationSmith::computeModel( const ProcessorGroup * pc,
     double surfaceAreaFraction;
     double sum_x_D;
     double sum_x;
+    double delta;
     std::vector<double> oxid_mass_frac;
     std::vector<double> species_mass_frac;
     std::vector<double> rh_l;
     std::vector<double> rh_l_new;
     std::vector<double> _D_oxid_mix_l;
     std::vector<double> F;
+    std::vector<double> F_delta;
+    std::vector<double> rh_l_delta;
     std::vector<double> Sc;
     std::vector<double> Sh;
 
@@ -616,6 +620,7 @@ CharOxidationSmith::computeModel( const ProcessorGroup * pc,
         MW=1/MWmix[c]; // [kg mix / kmol mix] (MW in table is 1/MW).
         RHS=RHS_source[c]*_char_scaling_constant*_weight_scaling_constant; // [kg/s]
         r_devol=devolRC[c]*_char_scaling_constant*_weight_scaling_constant; // [kg/m^3/s]
+        r_devol_ns=-r_devol; // [kg/m^3/s]
         RHS_v=RC_RHS_source[c]*_char_scaling_constant*_weight_scaling_constant; // [kg/s]
 
         // clear temporary variable vectors.
@@ -625,15 +630,20 @@ CharOxidationSmith::computeModel( const ProcessorGroup * pc,
         rh_l.clear();
         rh_l_new.clear();
         F.clear();
+        F_delta.clear();
+        rh_l_delta.clear();
         Sc.clear();
         Sh.clear();
 
         // populate temporary variable vectors
+        delta = 1e-10;
         dfdrh->zero();// [-]
         for (int l=0; l<_NUM_reactions; l++) {
           rh_l.push_back(old_reaction_rate_l[l][c]);// [kg/m^3/s]
           rh_l_new.push_back(old_reaction_rate_l[l][c]);// [kg/m^3/s]
           F.push_back(0.0);// [kg/m^3/s] 
+          F_delta.push_back(0.0);// [kg/m^3/s] 
+          rh_l_delta.push_back(0.0);// [kg/m^3/s] 
           Sc.push_back(0.0);// [-]
           Sh.push_back(0.0);// [-]
           _D_oxid_mix_l.push_back(0.0);// [m^2/s]
@@ -682,7 +692,17 @@ CharOxidationSmith::computeModel( const ProcessorGroup * pc,
             rh_l[l]=rh_l_new[l];
           }
           // get F and Jacobian -> dF/drh
-          root_function( F, dfdrh, rh_l, p_T, cg, oxid_mass_frac, MW, r_devol, gas_rho, p_diam, Sh, w, p_area, _D_oxid_mix_l );  
+          root_function( F, rh_l, p_T, cg, oxid_mass_frac, MW, r_devol_ns, gas_rho, p_diam, Sh, w, p_area, _D_oxid_mix_l );  
+          for (int l=0; l<_NUM_reactions; l++) {
+            for (int j=0; j<_NUM_reactions; j++) {
+              for (int k=0; k<_NUM_reactions; k++) {
+                rh_l_delta[k] = rh_l[k];
+              }
+              rh_l_delta[j] = rh_l[j]+delta;
+              root_function( F_delta, rh_l_delta, p_T, cg, oxid_mass_frac, MW, r_devol_ns, gas_rho, p_diam, Sh, w, p_area, _D_oxid_mix_l );  
+              (*dfdrh)[l][j] = (F_delta[l] - F[l]) / delta;
+            }
+          } 
           // invert Jacobian -> (dF_(n)/drh_(n))^-1 
           if (_use_simple_invert){
             invert_2_2(dfdrh); // simple matrix inversion for a 2x2 matrix. 
@@ -695,29 +715,41 @@ CharOxidationSmith::computeModel( const ProcessorGroup * pc,
               rh_l_new[l]-=(*dfdrh)[l][var]*F[var];
             }
           }
-          // make sure rh_(n+1) is inbounds
-          for (int l=0; l<_NUM_reactions; l++) {
-            rh_l_new[l]=std::min(0.0, max(-1000.0, rh_l_new[l])); // rh can't be larger than zero or smaller than -1000
-          }
-          // see if solution is converged (F = 0.0)
           residual = 0.0; 
           for (int l=0; l<_NUM_reactions; l++) {
             residual += std::abs(F[l]);
           }
-          if (residual < 1e-15) {
+          if (residual < 1e-12) {
             break;
           }
         } // end newton solve
-        //if (c==IntVector(4,10,10)){
-        //  for (int l=0; l<_NUM_reactions; l++) {
-        //    std::cout << "rh_l_new[l]: " << rh_l_new[l] << std::endl;
-        //  }
-        //}
+        // make sure rh_(n+1) is inbounds
+        for (int l=0; l<_NUM_reactions; l++) {
+          rh_l_new[l]=std::min(1000.0, std::max(0.0, rh_l_new[l]));
+        }
+        // see if solution is converged (F = 0.0)
+        if (count > 90){
+            std::cout << "warning no solution found in char ox: " << c << std::endl;
+            std::cout << "gas_rho: " << gas_rho << std::endl;
+            std::cout << "gas_T: " << gas_T << std::endl;
+            std::cout << "p_T: " << p_T << std::endl;
+            std::cout << "p_diam: " << p_diam << std::endl;
+            std::cout << "relative_velocity: " << relative_velocity << std::endl;
+            std::cout << "w: " << w << std::endl;
+            std::cout << "MW: " << MW << std::endl;
+            std::cout << "r_devol_ns: " << r_devol_ns << std::endl;
+            std::cout << "oxid_mass_frac[0]: " << oxid_mass_frac[0] << std::endl;
+            std::cout << "oxid_mass_frac[1]: " << oxid_mass_frac[1] << std::endl;
+            std::cout << "_D_oxid_mix_l[0]: " << _D_oxid_mix_l[0] << std::endl;
+            std::cout << "_D_oxid_mix_l[1]: " << _D_oxid_mix_l[1] << std::endl;
+            std::cout << "rh_l_new[0]: " << rh_l_new[0] << std::endl;
+            std::cout << "rh_l_new[1]: " << rh_l_new[1] << std::endl;
+        }
         // convert rh units from kg/m^3/s to kg/s/#
         char_mass_rate  = 0.0;
         for (int l=0; l<_NUM_reactions; l++) {
           reaction_rate_l[l][c]=rh_l_new[l];// [kg/m^3/s]
-          char_mass_rate+=rh_l_new[l]/w;// [kg/s/#]
+          char_mass_rate+= -rh_l_new[l]/w;// [kg/s/#]  negative sign because we are computing the destruction rate for the particles.
         }
         // check to see if reaction rate is oxidizer limited.
         for (int l=0; l<_NUM_reactions; l++) {
@@ -745,7 +777,7 @@ CharOxidationSmith::computeModel( const ProcessorGroup * pc,
 }
 
 inline void 
-CharOxidationSmith::root_function( std::vector<double> &F, DenseMatrix* &dfdrh, std::vector<double> &rh_l, double &p_T, double &cg, std::vector<double> &oxid_mass_frac, double &MW, double &r_devol, double &gas_rho, double &p_diam, std::vector<double> &Sh, double &w, double &p_area, std::vector<double> &_D_oxid_mix_l ){
+CharOxidationSmith::root_function( std::vector<double> &F, std::vector<double> &rh_l, double &p_T, double &cg, std::vector<double> &oxid_mass_frac, double &MW, double &r_devol, double &gas_rho, double &p_diam, std::vector<double> &Sh, double &w, double &p_area, std::vector<double> &_D_oxid_mix_l ){
 
   double oxid_mole_frac = 0.0;
   double co_r = 0.0;
@@ -754,8 +786,6 @@ CharOxidationSmith::root_function( std::vector<double> &F, DenseMatrix* &dfdrh, 
   double rtotal = 0.0;
   double Bjm = 0.0;
   double Fac = 0.0;
-  double Bjmj = 0.0;
-  double Denom = 0.0;
   double mtc_r = 0.0;
   double numerator = 0.0;
   double denominator = 0.0;
@@ -765,22 +795,13 @@ CharOxidationSmith::root_function( std::vector<double> &F, DenseMatrix* &dfdrh, 
     k_r = ( 10 * _a_l[l] * exp( - _e_l[l] / ( _R_cal * p_T)) * _R * p_T * 1000) / ( _Mh * _phi_l[l] * 101325 ); // [m / s]
     rh = std::accumulate(rh_l.begin(), rh_l.end(), 0.0);
     rtotal = rh + r_devol; // [kg/m^3/s]
-    Bjm = rtotal/( 2 * _pi * _D_oxid_mix_l[l] * gas_rho * p_diam ); // [m^3]
-    Fac = 1.0; // [-]
-    Bjmj = 0.0;
-    Denom = 1.0; // [m^3] ??
-    if (Bjm >= 1e-7) {
-      Bjmj = Bjm;
-      Denom = (Bjm >= 80) ? 1e25 : exp(Bjmj)-1;
-      Fac = Bjm/Denom;
-    } 
+    Bjm = std::min( 80.0 , std::max( 1e-7, (rtotal/(p_area*w*MW))/( cg * _D_oxid_mix_l[l] / p_diam ) )); // [-] // this is the rate factor N_t / kx,loc from BSL chapter 22
+          //  rh_l_new[l]=std::min(0.0, max(-1000.0, rh_l_new[l])); // rh can't be larger than zero or smaller than -1000
+    Fac = Bjm/(exp(Bjm)-1); // also from BSL chapter 22 the mass transfer correction factor.
     mtc_r = (Sh[l] * _D_oxid_mix_l[l] * Fac) / p_diam; // [m/s]
     numerator = pow( p_area * w, 2.0) * _Mh * MW * _phi_l[l] * k_r * mtc_r * _S * co_r * cg; // [(#^2 kg-char kg-mix) / (s^2 m^6)] 
     denominator = MW * p_area * w *cg * (k_r * _S + mtc_r); // [(kg-mix #) / (m^3 s)]
-    F[l] = rh_l[l] + numerator / ( denominator + rh  + r_devol); // [kg-char/m^3/s]
-    for (int var=0; var<_NUM_reactions; var++) {
-      (*dfdrh)[l][var] = (var==l) ? 1 - numerator/pow(denominator + rh + r_devol,2.0) : - numerator/pow(denominator + rh + r_devol,2.0); // [-]
-    }
+    F[l] = rh_l[l] - numerator / ( denominator + rh  + r_devol); // [kg-char/m^3/s]
   } 
 }
 
