@@ -636,7 +636,7 @@ CharOxidationSmith::computeModel( const ProcessorGroup * pc,
         Sh.clear();
 
         // populate temporary variable vectors
-        delta = 1e-10;
+        delta = 1e-6;
         dfdrh->zero();// [-]
         for (int l=0; l<_NUM_reactions; l++) {
           rh_l.push_back(old_reaction_rate_l[l][c]);// [kg/m^3/s]
@@ -719,6 +719,10 @@ CharOxidationSmith::computeModel( const ProcessorGroup * pc,
           for (int l=0; l<_NUM_reactions; l++) {
             residual += std::abs(F[l]);
           }
+          // make sure rh_(n+1) is inbounds
+          for (int l=0; l<_NUM_reactions; l++) {
+            rh_l_new[l]=std::min(1000.0, std::max(0.0, rh_l_new[l]));
+          }
           if (residual < 1e-12) {
             break;
           }
@@ -740,14 +744,10 @@ CharOxidationSmith::computeModel( const ProcessorGroup * pc,
             std::cout << "rh_l_new[0]: " << rh_l_new[0] << std::endl;
             std::cout << "rh_l_new[1]: " << rh_l_new[1] << std::endl;
         }
-        // make sure rh_(n+1) is inbounds
-        for (int l=0; l<_NUM_reactions; l++) {
-          rh_l_new[l]=std::min(1000.0, std::max(0.0, rh_l_new[l]));
-        }
         // convert rh units from kg/m^3/s to kg/s/#
         char_mass_rate  = 0.0;
         for (int l=0; l<_NUM_reactions; l++) {
-          reaction_rate_l[l][c]=rh_l_new[l];// [kg/m^3/s]
+          reaction_rate_l[l][c]=rh_l_new[l];// [kg/m^3/s] this is for the intial guess during the next time-step
           char_mass_rate+= -rh_l_new[l]/w;// [kg/s/#]  negative sign because we are computing the destruction rate for the particles.
         }
         // check to see if reaction rate is oxidizer limited.
@@ -794,8 +794,8 @@ CharOxidationSmith::root_function( std::vector<double> &F, std::vector<double> &
     k_r = ( 10 * _a_l[l] * exp( - _e_l[l] / ( _R_cal * p_T)) * _R * p_T * 1000) / ( _Mh * _phi_l[l] * 101325 ); // [m / s]
     rh = std::accumulate(rh_l.begin(), rh_l.end(), 0.0);
     rtotal = rh + r_devol; // [kg/m^3/s]
-    Bjm = std::min( 80.0 , (-rtotal/(p_area*w*MW))/( cg * _D_oxid_mix_l[l] / p_diam ) ); // [-] // this is the rate factor N_t / kx,loc from BSL chapter 22
-    Fac = ( abs(Bjm) >= 1e-7 ) ?  Bjm/(exp(Bjm)-1) : 1.0; // also from BSL chapter 22 the mass transfer correction factor.
+    Bjm = std::min( 80.0 , (rtotal/(p_area*w*MW))/( cg * _D_oxid_mix_l[l] / p_diam ) ); // [-] // this is the rate factor N_t / kx,loc from BSL chapter 22
+    Fac = ( Bjm >= 1e-7 ) ?  Bjm/(exp(Bjm)-1) : 1.0; // also from BSL chapter 22 the mass transfer correction factor.
     mtc_r = (Sh[l] * _D_oxid_mix_l[l] * Fac) / p_diam; // [m/s]
     numerator = pow( p_area * w, 2.0) * _Mh * MW * _phi_l[l] * k_r * mtc_r * _S * co_r * cg; // [(#^2 kg-char kg-mix) / (s^2 m^6)] 
     denominator = MW * p_area * w *cg * (k_r * _S + mtc_r); // [(kg-mix #) / (m^3 s)]
