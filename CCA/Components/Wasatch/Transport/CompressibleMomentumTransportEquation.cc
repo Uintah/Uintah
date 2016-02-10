@@ -36,6 +36,155 @@
 
 namespace WasatchCore{
 
+  //============================================================================
+  
+  /**
+   *  \class IdealGasPressure
+   *  \author James C. Sutherland
+   *  \date November, 2015
+   *
+   *  \brief Calculates the pressure from the ideal gas law: \f$p=\frac{\rho R T}{M}\f$
+   *   where \f$M\f$ is the mixture molecular weight.
+   */
+  template< typename FieldT >
+  class IdealGasPressure : public Expr::Expression<FieldT>
+  {
+    const double gasConstant_;
+    DECLARE_FIELDS( FieldT, density_, temperature_, mixMW_ )
+    
+    IdealGasPressure( const Expr::Tag& densityTag,
+                     const Expr::Tag& temperatureTag,
+                     const Expr::Tag& mixMWTag,
+                     const double gasConstant )
+    : Expr::Expression<FieldT>(),
+    gasConstant_( gasConstant )
+    {
+      this->set_gpu_runnable(true);
+      density_     = this->template create_field_request<FieldT>( densityTag     );
+      temperature_ = this->template create_field_request<FieldT>( temperatureTag );
+      mixMW_       = this->template create_field_request<FieldT>( mixMWTag       );
+    }
+    
+  public:
+    
+    class Builder : public Expr::ExpressionBuilder
+    {
+      const Expr::Tag densityTag_, temperatureTag_, mixMWTag_;
+      const double gasConstant_;
+    public:
+      /**
+       *  @brief Build a IdealGasPressure expression
+       *  @param resultTag the tag for the value that this expression computes
+       */
+      Builder( const Expr::Tag& resultTag,
+              const Expr::Tag& densityTag,
+              const Expr::Tag& temperatureTag,
+              const Expr::Tag& mixMWTag,
+              const double gasConstant,
+              const int nghost = DEFAULT_NUMBER_OF_GHOSTS )
+      : ExpressionBuilder( resultTag, nghost ),
+      densityTag_( densityTag ),
+      temperatureTag_( temperatureTag ),
+      mixMWTag_( mixMWTag ),
+      gasConstant_( gasConstant )
+      {}
+      
+      Expr::ExpressionBase* build() const{
+        return new IdealGasPressure<FieldT>( densityTag_, temperatureTag_, mixMWTag_, gasConstant_ );
+      }
+      
+    };  /* end of Builder class */
+    
+    ~IdealGasPressure(){}
+    
+    void evaluate()
+    {
+      FieldT& result = this->value();
+      const FieldT& density     = density_    ->field_ref();
+      const FieldT& temperature = temperature_->field_ref();
+      const FieldT& mixMW       = mixMW_      ->field_ref();
+      result <<= density * gasConstant_ * temperature / mixMW;
+    }
+  };
+  
+  //============================================================================
+  
+  /**
+   *  \class Density_IC
+   *  \author James C. Sutherland
+   *  \date November, 2015
+   *
+   *  \brief Calculates initial condition for the density given an initial pressure and temperature.
+   */
+  template< typename FieldT >
+  class Density_IC
+  : public Expr::Expression<FieldT>
+  {
+    const double gasConstant_;
+    DECLARE_FIELDS( FieldT, temperature_, pressure_, mixMW_ )
+    
+    Density_IC( const Expr::Tag& temperatureTag,
+               const Expr::Tag& pressureTag,
+               const Expr::Tag& mixMWTag,
+               const double gasConstant )
+    : Expr::Expression<FieldT>(),
+    gasConstant_( gasConstant )
+    {
+      this->set_gpu_runnable(true);
+      temperature_ = this->template create_field_request<FieldT>( temperatureTag );
+      pressure_    = this->template create_field_request<FieldT>( pressureTag    );
+      mixMW_       = this->template create_field_request<FieldT>( mixMWTag       );
+    }
+    
+  public:
+    
+    class Builder : public Expr::ExpressionBuilder
+    {
+      const double gasConstant_;
+      const Expr::Tag temperatureTag_, pressureTag_, mixMWTag_;
+    public:
+      /**
+       *  @brief Build a Density_IC expression
+       *  @param resultTag the tag for the value that this expression computes
+       */
+      Builder( const Expr::Tag& resultTag,
+              const Expr::Tag& temperatureTag,
+              const Expr::Tag& pressureTag,
+              const Expr::Tag& mixMWTag,
+              const double gasConstant,
+              const int nghost = DEFAULT_NUMBER_OF_GHOSTS )
+      : ExpressionBuilder( resultTag, nghost ),
+      gasConstant_   ( gasConstant    ),
+      temperatureTag_( temperatureTag ),
+      pressureTag_   ( pressureTag    ),
+      mixMWTag_      ( mixMWTag       )
+      {}
+      
+      Expr::ExpressionBase* build() const{
+        return new Density_IC<FieldT>( temperatureTag_,pressureTag_,mixMWTag_,gasConstant_ );
+      }
+    };  /* end of Builder class */
+    
+    ~Density_IC(){}
+    
+    void evaluate(){
+      this->value() <<=  ( pressure_->field_ref() * mixMW_->field_ref() )/( gasConstant_ * temperature_->field_ref() );
+    }
+  };
+
+  
+  //----------------------------------------------------------------------------
+  
+  Expr::ExpressionID
+  ContinuityTransportEquation::initial_condition( Expr::ExpressionFactory& exprFactory )
+  {
+    typedef Density_IC<FieldT>::Builder DensIC;
+    return exprFactory.register_expression( scinew DensIC( initial_condition_tag(),
+                                                          temperatureTag_,
+                                                          TagNames::self().pressure,
+                                                          mixMWTag_,
+                                                          gasConstant_) );
+  }
 
 
   //============================================================================
