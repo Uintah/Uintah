@@ -392,10 +392,18 @@ namespace Uintah {
       DataArchive( const DataArchive& );
       DataArchive& operator=( const DataArchive& );
       
+      //__________________________________
+      //  PIDX related
       enum outputFormat {UDA, PIDX};
       outputFormat d_outputFileFormat; 
       
       enum {BLANK, REDUCTION_VAR, PATCH_VAR };
+      
+      void PIDX_checkReturnCode( const int rc,
+                                 const std::string warn,
+                                 const char* file, 
+                                 int line);
+      
       
       //______________________________________________________________________
       //
