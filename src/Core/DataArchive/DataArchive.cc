@@ -549,7 +549,7 @@ DataArchive::query(       Variable     & var,
 
   VarData & varinfo = timedata.d_varInfo[name];
   string    data_filename;
-  string    filename_noPath;  
+  string    filename_noPath = "BLANK";  
   int       patchid;
   int       varType = BLANK;
 
@@ -664,10 +664,10 @@ DataArchive::query(       Variable     & var,
   //__________________________________
   //   open PIDX 
   //  TO DO:
+  //    - Need to debug why saving two different types doesn't work.  
   //    - do we need  calls to PIDX_get_variable_count() PIDX_get_dims()??
-  //    - convert array into a Uintah Grid Variable
   //    - need to do something with MPI_COMM
-  //    - consolidate 
+  //    - consolidate with code in DataArchiver
 
   if( d_outputFileFormat == PIDX && varType == PATCH_VAR ) {
     
@@ -765,7 +765,7 @@ DataArchive::query(       Variable     & var,
     dataPIDX = (unsigned char*)malloc( arraySize );
     memset( dataPIDX, 0, arraySize);
     
-    proc0cout << "Query:\n"
+    proc0cout << "Query:  filename: " << idxFilename << "\n"
               << "    " << name
               << " timestep: " << timestep
               << " matlIndex: " <<  matlIndex
@@ -780,21 +780,6 @@ DataArchive::query(       Variable     & var,
 
     ret = PIDX_variable_read_data_layout(varDesc, local_offset, local_size, dataPIDX, PIDX_row_major);
     PIDX_checkReturnCode(ret, "DataArchive::query() - PIDX_variable_read_data_layout failure", __FILE__, __LINE__);
-    
-    
-/*`==========TESTING==========*/
-cout << "__________________________________ " << endl;
-cout << "  DataArchive::query    AFTER  PIDX_variable_read_data_layout" << endl;
-double* d_buffer = (double*)malloc( arraySize );
-memcpy( d_buffer, dataPIDX, arraySize );
-
-for ( int i = 0; i < totalCells_EC; ++i ){
-   printf("%i) %f ", i, d_buffer[i]);  
-} 
-cout << "\n__________________________________ " << endl;
-printf("\n");
-free(d_buffer);
-/*===========TESTING==========`*/
 
     //__________________________________
     // close idx file and access
@@ -804,26 +789,36 @@ free(d_buffer);
     ret = PIDX_close_access( access );
     PIDX_checkReturnCode(ret, "DataArchive::query() - PIDX_close_access failure", __FILE__, __LINE__);
    
- #if 0
+ #if 1
 /*`==========TESTING==========*/
-cout << "  DataArchive::query    BBB " << endl;
+cout << "__________________________________ " << endl;
+cout << "  DataArchive::query    AFTER  close" << endl;
 double* d_buffer = (double*)malloc( arraySize );
 memcpy( d_buffer, dataPIDX, arraySize );
 
-for ( int i = 0; i < totalCells_EC; ++i ){
-   printf("%i) %f ", i, d_buffer[i]);  
-} 
+int c = 0;
+for (int k=lo_EC.z(); k<hi_EC.z(); k++){
+  for (int j=lo_EC.y(); j<hi_EC.y(); j++){
+    for (int i=lo_EC.x(); i<hi_EC.x(); i++){
+      printf( " [%2i,%2i,%2i] ", i,j,k);
+      for ( int s = 0; s < varDesc->values_per_sample; ++s ){
+        printf( "%5.3f ",d_buffer[c]);
+        c++;
+      }
+    }
+    printf("\n");
+  }
+  printf("\n");
+}  
+cout << "\n__________________________________ " << endl;
 printf("\n");
 free(d_buffer);
 /*===========TESTING==========`*/
+#endif
    
-/*`==========TESTING==========*/
-     var.readPIDX( dataPIDX,  arraySize, timedata.d_swapBytes ); 
-/*===========TESTING==========`*/  
-#endif   
-       
+    // now move the datapIDX into the array3 variable
+    var.readPIDX( dataPIDX,  arraySize, timedata.d_swapBytes ); 
     free( dataPIDX );
-  
   }
   #endif
 

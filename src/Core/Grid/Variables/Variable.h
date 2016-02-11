@@ -109,6 +109,10 @@ public:
                 const IntVector& l,
                 const IntVector& h,
                 const size_t pidx_bufferSize);
+                
+  void readPIDX( unsigned char* pidx_buffer,
+                 const size_t& pidx_bufferSize,
+                 bool swapBytes );
 #endif
 
   virtual void emitNormal(std::ostream& out, const IntVector& l,
