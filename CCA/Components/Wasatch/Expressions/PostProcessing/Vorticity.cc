@@ -22,7 +22,7 @@
  * IN THE SOFTWARE.
  */
 
-#include "Vorticity.h"
+#include <CCA/Components/Wasatch/Expressions/PostProcessing/Vorticity.h>
 
 #include <spatialops/OperatorDatabase.h>
 #include <spatialops/structured/SpatialFieldStore.h>

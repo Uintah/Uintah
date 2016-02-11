@@ -22,7 +22,7 @@
  * IN THE SOFTWARE.
  */
 
-#include "VelocityMagnitude.h"
+#include <CCA/Components/Wasatch/Expressions/PostProcessing/VelocityMagnitude.h>
 
 #include <spatialops/OperatorDatabase.h>
 #include <spatialops/structured/SpatialFieldStore.h>
