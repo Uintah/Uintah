@@ -655,7 +655,8 @@ CharOxidationSmith::computeModel( const ProcessorGroup * pc,
           species_mass_frac.push_back(species[l2][c]);// [mass fraction]
         }
         
-        // update the rate 
+        // update the rate
+        AreaSum = 0.0; 
         for (int i=0; i<_nQn_part;i++ ){ 
           AreaSum+=  weight[i][c]*length[i][c]*length[i][c]; // [#/m]
         }
