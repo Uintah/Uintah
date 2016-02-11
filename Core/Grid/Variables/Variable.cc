@@ -202,25 +202,50 @@ Variable::emitPIDX( PIDXOutputContext& pc,
                     const IntVector& h,
                     const size_t pidx_bufferSize )
 {
-  // cout << "Start of PIDX emit" << endl;
+  // This seems inefficient  -Todd
+
   ProblemSpecP dummy;
   bool outputDoubleAsFloat = pc.isOutputDoubleAsFloat();
   
-  std::ostringstream outstream;
-  emitNormal(outstream, l, h, dummy, outputDoubleAsFloat);
+  // read the Array3 variable into tmpStream
+  std::ostringstream tmpStream;
+  emitNormal(tmpStream, l, h, dummy, outputDoubleAsFloat);
 
-  string writeoutString   = outstream.str();
-  const char* writebuffer = writeoutString.c_str();
-  size_t uda_bufferSize   = writeoutString.size();
+  // Create a string from the ostringstream
+  string tmpString   = tmpStream.str();
+  
+  // create a c-string
+  const char* writebuffer = tmpString.c_str();
+  size_t uda_bufferSize   = tmpString.size();
 
-  cout << "uda_bufferSize = " << uda_bufferSize <<  " pidx_bufferSize " << pidx_bufferSize 
-       << " outputDoubleAsFloat: " << outputDoubleAsFloat << endl;
+  // copy the write buffer into the pidx_buffer
   if( uda_bufferSize == pidx_bufferSize) {
     memcpy(pidx_buffer, writebuffer, uda_bufferSize);
   } else {
     throw InternalError("ERROR: Variable::emitPIDX() error reading in buffer", __FILE__, __LINE__);
   }
 }
+
+//______________________________________________________________________
+//
+void
+Variable::readPIDX( unsigned char* pidx_buffer,
+                    const size_t& pidx_bufferSize,
+                    bool swapBytes )
+{
+  // I don't know if there's a better way to create a istringstream directly from unsigned char*  -Todd
+  
+  // create a string from pidx_buffer      
+  std::string strBuffer(pidx_buffer, pidx_buffer + pidx_bufferSize);
+
+  // create a istringstream from the string 
+  istringstream instream(strBuffer);
+  
+  // push the istringstream into an Array3 variable
+  readNormal(instream, swapBytes);
+
+} // end read()
+
 #endif
 //______________________________________________________________________
 //

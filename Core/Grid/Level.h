@@ -64,7 +64,6 @@ namespace Uintah {
   class Box;
   class Patch;
   class Task;
-  class TypeDescription; 
 /**************************************
 
 CLASS
