@@ -137,8 +137,11 @@ void visit_InitLibSim( visit_simulation_data *sim )
   sim->imageWidth    = 640;
   sim->imageFormat   = 2;
 
-  sim->stopAtTimestep = 0;
-  sim->stopAtLastTimestep = 0;
+  sim->stopAtTimeStep = 0;
+  sim->stopAtLastTimeStep = 0;
+
+  for( int i=0; i<5; ++i )
+    sim->stripChartNames[i] = std::string("");
   
 #ifdef HAVE_MPICH
   if( Parallel::usingMPI() )
@@ -270,7 +273,7 @@ void visit_EndLibSim( visit_simulation_data *sim )
 // CheckState
 //     Check the state from the viewer on all processors.
 //---------------------------------------------------------------------
-void visit_CheckState( visit_simulation_data *sim )
+bool visit_CheckState( visit_simulation_data *sim )
 {
   int err = 0;
 
@@ -316,7 +319,7 @@ void visit_CheckState( visit_simulation_data *sim )
       }
 
       // Check to see if the user wants to stop.
-      if( sim->cycle == sim->stopAtTimestep )
+      if( sim->cycle == sim->stopAtTimeStep )
       {
 	sim->runMode = VISIT_SIMMODE_STOPPED;
       }
@@ -410,74 +413,7 @@ void visit_CheckState( visit_simulation_data *sim )
       /* VisIt is trying to connect to sim. */
       if(VisItAttemptToCompleteConnection())
       {
-        if( Parallel::usingMPI() )
-          VisItSetSlaveProcessCallback(visit_SlaveProcessCallback);
-
-        /* Register command callback */
-        VisItSetCommandCallback(visit_ControlCommandCallback, (void*) sim);
-
-        std::stringstream msg;
-      
-        if( Parallel::usingMPI() )
-        {
-          msg << "Visit libsim - Processor " << sim->rank << " connected";
-        }
-        else
-        {
-          msg << "Visit libsim - Connected";
-        }
-
-        if(sim->isProc0)
-        {
-          VisItUI_setValueS("SIMULATION_MESSAGE_CLEAR", "NoOp", 1);
-
-          // visitdbg << msg.str().c_str() << std::endl;
-          // visitdbg.flush();
-          VisItUI_setValueS("SIMULATION_MESSAGE", msg.str().c_str(), 1);
-
-          VisItUI_setValueS("SIMULATION_MODE", "Connected", 1);
-        }
-
-	// These are one time initializations.
-	VisItUI_setValueI("SIMULATION_TIME_LIMITS_ENABLED", sim->timeRange, 1);
-	VisItUI_setValueI("SIMULATION_TIME_START_CYCLE",    sim->timeStart, 1);
-	VisItUI_setValueI("SIMULATION_TIME_STEP_CYCLE",     sim->timeStep,  1);
-	VisItUI_setValueI("SIMULATION_TIME_STOP_CYCLE",     sim->timeStop,  1);
-
-        /* Register data access callbacks */
-        VisItSetGetMetaData(visit_SimGetMetaData, (void*) sim);
-
-        VisItSetGetMesh(visit_SimGetMesh, (void*) sim);
-
-        VisItSetGetVariable(visit_SimGetVariable, (void*) sim);
-
-        if( Parallel::usingMPI() )
-          VisItSetGetDomainList(visit_SimGetDomainList, (void*) sim);
-
-        VisItUI_textChanged("MaxTimeStep", visit_MaxTimeStepCallback, (void*) sim);
-        VisItUI_textChanged("MaxTime", visit_MaxTimeCallback, (void*) sim);
-//      VisItUI_textChanged("DeltaT", visit_DeltaTCallback, (void*) sim);
-        VisItUI_textChanged("DeltaTNext", visit_DeltaTCallback, (void*) sim);
-        VisItUI_textChanged("DeltaTFactor", visit_DeltaTFactorCallback, (void*) sim);
-        VisItUI_textChanged("DeltaTMin", visit_DeltaTMinCallback, (void*) sim);
-
-
-        VisItUI_textChanged("DeltaTMax", visit_DeltaTMaxCallback, (void*) sim);
-        VisItUI_textChanged("MaxWallTime", visit_MaxWallTimeCallback, (void*) sim);
-        VisItUI_cellChanged("UPSVariableTable",
-                            visit_UPSVariableTableCallback, (void*) sim);
-        VisItUI_cellChanged("OutputIntervalVariableTable",
-                            visit_OutputIntervalVariableTableCallback,
-                            (void*) sim);
-        
-        VisItUI_valueChanged("ImageGroupBox", visit_ImageGenerateCallback, (void*) sim);
-        VisItUI_textChanged("ImageFilename", visit_ImageFilenameCallback, (void*) sim);
-        VisItUI_textChanged("ImageHeight", visit_ImageHeightCallback, (void*) sim);
-        VisItUI_textChanged("ImageWidth", visit_ImageWidthCallback, (void*) sim);
-        VisItUI_valueChanged("ImageFormat", visit_ImageFormatCallback, (void*) sim);
-
-        VisItUI_textChanged("StopAtTimestep", visit_StopAtTimestepCallback, (void*) sim);
-        VisItUI_valueChanged("StopAtLastTimestep", visit_StopAtLastTimestepCallback, (void*) sim);
+	visit_Initialize( sim );
       }
       else
       {
@@ -549,6 +485,9 @@ void visit_CheckState( visit_simulation_data *sim )
       }
     }
   } while(err == 0);
+
+
+  return (sim->simMode == VISIT_SIMMODE_TERMINATED);  
 }
 
 
@@ -559,7 +498,7 @@ void visit_CheckState( visit_simulation_data *sim )
 void visit_UpdateSimData( visit_simulation_data *sim, 
                           GridP currentGrid,
                           double time, double delt, double delt_next,
-                          double wallTime, std::string msg )
+                          double wallTime, bool last )
 {
   SimulationStateP simStateP = sim->simController->getSimulationStateP();
 
@@ -571,7 +510,110 @@ void visit_UpdateSimData( visit_simulation_data *sim,
   sim->delt_next  = delt_next;
   sim->elapsedt   = wallTime;
   sim->cycle      = simStateP->getCurrentTopLevelTimeStep();
-  sim->message    = msg;
+
+  // Check to see if at the last iteration. If so stop so the
+  // user can have once last chance see the data.
+  if( sim->stopAtLastTimeStep && last )
+  {
+    sim->runMode = VISIT_SIMMODE_STOPPED;
+
+    if(sim->isProc0)
+    {
+      std::stringstream msg;
+      msg << "Visit libsim - "
+          << "The simulation has finished, stopping at the last time step.";
+      
+      visitdbg << msg.str().c_str() << std::endl;
+      visitdbg.flush();
+      
+      VisItUI_setValueS("SIMULATION_MESSAGE", msg.str().c_str(), 1);
+    }
+  }
 }
 
+//---------------------------------------------------------------------
+// Initialize()
+//     Initialize everything
+//---------------------------------------------------------------------
+void visit_Initialize( visit_simulation_data *sim )
+{    
+  std::stringstream msg;
+      
+  if( Parallel::usingMPI() )
+  {
+    msg << "Visit libsim - Processor " << sim->rank << " connected";
+  }
+  else
+  {
+    msg << "Visit libsim - Connected";
+  }
+
+  if(sim->isProc0)
+  {
+    VisItUI_setValueS("SIMULATION_MESSAGE_CLEAR", "NoOp", 1);
+    
+    for( int i=0; i<5; ++i )
+      VisItUI_setValueI("STRIP_CHART_RESET", i, 1);
+    
+    // visitdbg << msg.str().c_str() << std::endl;
+    // visitdbg.flush();
+    VisItUI_setValueS("SIMULATION_MESSAGE", msg.str().c_str(), 1);    
+    VisItUI_setValueS("SIMULATION_MODE", "Connected", 1);
+  }
+  
+
+  if( Parallel::usingMPI() )
+    VisItSetSlaveProcessCallback(visit_SlaveProcessCallback);
+
+  /* Register command callback */
+  VisItSetCommandCallback(visit_ControlCommandCallback, (void*) sim);
+
+  // These are one time initializations.
+  VisItUI_setValueI("SIMULATION_TIME_LIMITS_ENABLED", sim->timeRange, 1);
+  VisItUI_setValueI("SIMULATION_TIME_START_CYCLE",    sim->timeStart, 1);
+  VisItUI_setValueI("SIMULATION_TIME_STEP_CYCLE",     sim->timeStep,  1);
+  VisItUI_setValueI("SIMULATION_TIME_STOP_CYCLE",     sim->timeStop,  1);
+
+  /* Register data access callbacks */
+  VisItSetGetMetaData(visit_SimGetMetaData, (void*) sim);
+
+  VisItSetGetMesh(visit_SimGetMesh, (void*) sim);
+
+  VisItSetGetVariable(visit_SimGetVariable, (void*) sim);
+
+  if( Parallel::usingMPI() )
+    VisItSetGetDomainList(visit_SimGetDomainList, (void*) sim);
+
+  VisItUI_textChanged("MaxTimeStep", visit_MaxTimeStepCallback, (void*) sim);
+  VisItUI_textChanged("MaxTime", visit_MaxTimeCallback, (void*) sim);
+  //      VisItUI_textChanged("DeltaT", visit_DeltaTCallback, (void*) sim);
+  VisItUI_textChanged("DeltaTNext", visit_DeltaTCallback, (void*) sim);
+  VisItUI_textChanged("DeltaTFactor", visit_DeltaTFactorCallback, (void*) sim);
+  VisItUI_textChanged("DeltaTMin", visit_DeltaTMinCallback, (void*) sim);
+
+
+  VisItUI_textChanged("DeltaTMax", visit_DeltaTMaxCallback, (void*) sim);
+  VisItUI_textChanged("MaxWallTime", visit_MaxWallTimeCallback, (void*) sim);
+  VisItUI_cellChanged("UPSVariableTable",
+		      visit_UPSVariableTableCallback, (void*) sim);
+  VisItUI_cellChanged("OutputIntervalVariableTable",
+		      visit_OutputIntervalVariableTableCallback,
+		      (void*) sim);
+        
+  VisItUI_valueChanged("ImageGroupBox", visit_ImageGenerateCallback, (void*) sim);
+  VisItUI_textChanged("ImageFilename", visit_ImageFilenameCallback, (void*) sim);
+  VisItUI_textChanged("ImageHeight", visit_ImageHeightCallback, (void*) sim);
+  VisItUI_textChanged("ImageWidth", visit_ImageWidthCallback, (void*) sim);
+  VisItUI_valueChanged("ImageFormat", visit_ImageFormatCallback, (void*) sim);
+
+  VisItUI_textChanged("StopAtTimeStep", visit_StopAtTimeStepCallback, (void*) sim);
+  VisItUI_valueChanged("StopAtLastTimeStep", visit_StopAtLastTimeStepCallback, (void*) sim);
+
+  VisItUI_textChanged("StripChartVar0", visit_StripChart0Callback, (void*) sim);
+  VisItUI_textChanged("StripChartVar1", visit_StripChart1Callback, (void*) sim);
+  VisItUI_textChanged("StripChartVar2", visit_StripChart2Callback, (void*) sim);
+  VisItUI_textChanged("StripChartVar3", visit_StripChart3Callback, (void*) sim);
+  VisItUI_textChanged("StripChartVar4", visit_StripChart4Callback, (void*) sim);
+}
+  
 } // End namespace Uintah

@@ -24,6 +24,8 @@
 
 #include "VisItControlInterface_V2.h"
 
+#include "visit_libsim.h"
+#include "visit_libsim_callbacks.h"
 #include "visit_libsim_customUI.h"
 
 #include <CCA/Components/SimulationController/SimulationController.h>
@@ -36,8 +38,6 @@
 #include <Core/Util/DebugStream.h>
 
 #include <stdio.h>
-
-#include "visit_libsim.h"
 
 namespace Uintah {
 
@@ -319,6 +319,8 @@ void visit_MaxTimeStepCallback(char *val, void *cbdata)
   visit_simulation_data *sim = (visit_simulation_data *)cbdata;
 
   sim->simController->getSimulationTime()->maxTimestep = atoi(val);
+
+  visit_VarModifiedMessage( sim, "MaxTimeStep");
 }
 
 //---------------------------------------------------------------------
@@ -330,6 +332,8 @@ void visit_MaxTimeCallback(char *val, void *cbdata)
   visit_simulation_data *sim = (visit_simulation_data *)cbdata;
 
   sim->simController->getSimulationTime()->maxTime = atof(val);
+
+  visit_VarModifiedMessage( sim, "MaxTime");
 }
 
 //---------------------------------------------------------------------
@@ -347,6 +351,8 @@ void visit_DeltaTCallback(char *val, void *cbdata)
 
   simStateP->adjustDelT( false );
   dw->override(delt_vartype(delt), simStateP->get_delt_label());
+
+  visit_VarModifiedMessage( sim, "DeltaT");
 }
 
 //---------------------------------------------------------------------
@@ -358,6 +364,8 @@ void visit_DeltaTMinCallback(char *val, void *cbdata)
   visit_simulation_data *sim = (visit_simulation_data *)cbdata;
 
   sim->simController->getSimulationTime()->delt_min = atof(val);
+
+  visit_VarModifiedMessage( sim, "DeltaTMin");
 }
 
 //---------------------------------------------------------------------
@@ -369,6 +377,8 @@ void visit_DeltaTMaxCallback(char *val, void *cbdata)
   visit_simulation_data *sim = (visit_simulation_data *)cbdata;
 
   sim->simController->getSimulationTime()->delt_max = atof(val);
+
+  visit_VarModifiedMessage( sim, "DeltaTMax");
 }
 
 //---------------------------------------------------------------------
@@ -380,6 +390,8 @@ void visit_DeltaTFactorCallback(char *val, void *cbdata)
   visit_simulation_data *sim = (visit_simulation_data *)cbdata;
 
   sim->simController->getSimulationTime()->delt_factor = atof(val);
+
+  visit_VarModifiedMessage( sim, "DeltaTFactor");
 }
 
 //---------------------------------------------------------------------
@@ -391,6 +403,8 @@ void visit_MaxWallTimeCallback(char *val, void *cbdata)
   visit_simulation_data *sim = (visit_simulation_data *)cbdata;
 
   sim->simController->getSimulationTime()->max_wall_time = atof(val);
+
+  visit_VarModifiedMessage( sim, "MaxWallTime");
 }
 
 //---------------------------------------------------------------------
@@ -449,6 +463,22 @@ void visit_UPSVariableTableCallback(char *val, void *cbdata)
   // Changing this variable may require recompiling the task graph.
   if( var.recompile )
     simStateP->setRecompileTaskGraph( true );
+
+  if( sim->isProc0 )
+  {
+    std::stringstream msg;
+    msg << "Visit libsim - The variable " << var.name << " "
+	<< "was modified by the user at time step " << sim->cycle << ". ";
+
+    if( var.recompile )
+      msg << "The task graph will be recompiled.";
+      
+    VisItUI_setValueS("SIMULATION_MESSAGE", msg.str().c_str(), 1);
+    VisItUI_setValueS("SIMULATION_MESSAGE", " ", 1);
+    
+    visitdbg << msg.str().c_str() << std::endl;
+    visitdbg.flush();
+  }
 }
 
 //---------------------------------------------------------------------
@@ -543,26 +573,126 @@ void visit_ImageFormatCallback(int val, void *cbdata)
 }
 
 //---------------------------------------------------------------------
-// StopAtTimestepCallback
+// StopAtTimeStepCallback
 //     Custom UI callback
 //---------------------------------------------------------------------
-void visit_StopAtTimestepCallback(char *val, void *cbdata)
+void visit_StopAtTimeStepCallback(char *val, void *cbdata)
 {
   visit_simulation_data *sim = (visit_simulation_data *)cbdata;
 
-  sim->stopAtTimestep = atoi(val);
+  sim->stopAtTimeStep = atoi(val);
 }
 
-  //---------------------------------------------------------------------
-// StopAtLastTimestepCallback
+//---------------------------------------------------------------------
+// StopAtLastTimeStepCallback
 //     Custom UI callback
 //---------------------------------------------------------------------
-void visit_StopAtLastTimestepCallback(int val, void *cbdata)
+void visit_StopAtLastTimeStepCallback(int val, void *cbdata)
 {
   visit_simulation_data *sim = (visit_simulation_data *)cbdata;
 
-  sim->stopAtLastTimestep = val;
+  sim->stopAtLastTimeStep = val;
 }
 
+//---------------------------------------------------------------------
+// StripChart0Callback
+//     Custom UI callback
+//---------------------------------------------------------------------
+void visit_StripChart0Callback(char *val, void *cbdata)
+{
+  visit_simulation_data *sim = (visit_simulation_data *)cbdata;
+
+  sim->stripChartNames[0] = std::string(val);
+
+  char cmd[128];
+  sprintf(cmd, "%d | %s", 0, val);
+  
+  VisItUI_setValueS("STRIP_CHART_SET_NAME", cmd, 1);
+}
+
+//---------------------------------------------------------------------
+// StripChart1Callback
+//     Custom UI callback
+//---------------------------------------------------------------------
+void visit_StripChart1Callback(char *val, void *cbdata)
+{
+  visit_simulation_data *sim = (visit_simulation_data *)cbdata;
+
+  sim->stripChartNames[1] = std::string(val);
+
+  char cmd[128];
+  sprintf(cmd, "%d | %s", 1, val);
+  
+  VisItUI_setValueS("STRIP_CHART_SET_NAME", cmd, 1);
+}
+
+//---------------------------------------------------------------------
+// StripChart2Callback
+//     Custom UI callback
+//---------------------------------------------------------------------
+void visit_StripChart2Callback(char *val, void *cbdata)
+{
+  visit_simulation_data *sim = (visit_simulation_data *)cbdata;
+
+  sim->stripChartNames[2] = std::string(val);
+
+  char cmd[128];
+  sprintf(cmd, "%d | %s", 2, val);
+
+  VisItUI_setValueS("STRIP_CHART_SET_NAME", cmd, 1);
+}
+
+//---------------------------------------------------------------------
+// StripChart3Callback
+//     Custom UI callback
+//---------------------------------------------------------------------
+void visit_StripChart3Callback(char *val, void *cbdata)
+{
+  visit_simulation_data *sim = (visit_simulation_data *)cbdata;
+
+  sim->stripChartNames[3] = std::string(val);
+
+  char cmd[128];
+  sprintf(cmd, "%d | %s", 3, val);
+  
+  VisItUI_setValueS("STRIP_CHART_SET_NAME", cmd, 1);
+}
+
+//---------------------------------------------------------------------
+// StripChart4Callback
+//     Custom UI callback
+//---------------------------------------------------------------------
+void visit_StripChart4Callback(char *val, void *cbdata)
+{
+  visit_simulation_data *sim = (visit_simulation_data *)cbdata;
+
+  sim->stripChartNames[4] = std::string(val);
+
+  char cmd[128];
+  sprintf(cmd, "%d | %s", 4, val);
+  
+  VisItUI_setValueS("STRIP_CHART_SET_NAME", cmd, 1);
+}
+
+//---------------------------------------------------------------------
+// ProcessVisItCommand
+//     Process commands from the viewer on all processors.
+//---------------------------------------------------------------------
+void visit_VarModifiedMessage( visit_simulation_data *sim, std::string name )
+{
+  if( sim->isProc0 )
+  {
+    std::stringstream msg;
+    msg << "Visit libsim - The variable " << name << " "
+	<< "was modified by the user at time step " << sim->cycle << ". ";
+
+    VisItUI_setValueS("SIMULATION_MESSAGE", msg.str().c_str(), 1);
+    VisItUI_setValueS("SIMULATION_MESSAGE", " ", 1);
+    
+    visitdbg << msg.str().c_str() << std::endl;
+    visitdbg.flush();
+  }
+}
+  
 } // End namespace Uintah
 

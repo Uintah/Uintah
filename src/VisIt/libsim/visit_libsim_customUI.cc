@@ -73,6 +73,9 @@ void visit_GetTimeVars( visit_simulation_data *sim )
                     sim->elapsedt, 0);
   VisItUI_setValueD("MaxWallTime",
                     sim->simController->getSimulationTime()->max_wall_time, 1);
+
+  visit_SetStripChartValue( sim, "DeltaT", sim->delt );
+  visit_SetStripChartValue( sim, "TimeStep", (double) sim->cycle );
 }
   
 //---------------------------------------------------------------------
@@ -177,6 +180,15 @@ void visit_GetAnalysisVars( visit_simulation_data *sim )
         LevelP levelP = gridP->getLevel(l);
         Level *level = levelP.get_rep();
         
+        std::stringstream name;
+        name << "L-" << l << "/"
+             << minMaxVar.label->getName()
+             << "/" << minMaxVar.matl;
+        
+        VisItUI_setTableValueS("MinMaxVariableTable", i, 0, name.str().c_str(), 0);
+        // VisItUI_setTableValueI("MinMaxVariableTable", i, 1, matl, 0);
+        // VisItUI_setTableValueI("MinMaxVariableTable", i, 2, level, 0);
+
         // double
         if( minMaxVar.label->typeDescription()->getSubType()->getType() ==
             TypeDescription::double_type )
@@ -188,6 +200,9 @@ void visit_GetAnalysisVars( visit_simulation_data *sim )
           dw->get(var_max, minMaxVar.reductionMaxLabel, level );
           varMin = var_min;
           varMax = var_max;
+
+	  VisItUI_setTableValueD("MinMaxVariableTable", i, 1, varMin,  0);
+	  VisItUI_setTableValueD("MinMaxVariableTable", i, 2, varMax,  0);
         }
 
         // Vector
@@ -202,18 +217,20 @@ void visit_GetAnalysisVars( visit_simulation_data *sim )
           
           varMin = ((Vector) var_min).length();
           varMax = ((Vector) var_max).length();
+
+	  VisItUI_setTableValueV("MinMaxVariableTable", i, 1,
+				 ((Vector) var_min).x(),
+				 ((Vector) var_min).y(),
+				 ((Vector) var_min).z(), 0);
+	  VisItUI_setTableValueV("MinMaxVariableTable", i, 2,
+				 ((Vector) var_max).x(),
+				 ((Vector) var_max).y(),
+				 ((Vector) var_max).z(), 0);	  
         }
         
-        std::stringstream name;
-        name << "L-" << l << "/"
-             << minMaxVar.label->getName()
-             << "/" << minMaxVar.matl;
-        
-        VisItUI_setTableValueS("MinMaxVariableTable", i, 0, name.str().c_str(), 0);
-        // VisItUI_setTableValueI("MinMaxVariableTable", i, 1, matl, 0);
-        // VisItUI_setTableValueI("MinMaxVariableTable", i, 2, level, 0);
-        VisItUI_setTableValueD("MinMaxVariableTable", i, 1, varMin,  0);
-        VisItUI_setTableValueD("MinMaxVariableTable", i, 2, varMax,  0);
+	visit_SetStripChartValue( sim, name.str(), varMin );
+	visit_SetStripChartValue( sim, name.str()+"_Min", varMin );
+	visit_SetStripChartValue( sim, name.str()+"_Max", varMax );
       }
     }
   }
@@ -378,6 +395,10 @@ void visit_GetRuntimeStats( visit_simulation_data *sim )
 
       ++cc;
     }
+
+    visit_SetStripChartValue( sim, name, average );
+    visit_SetStripChartValue( sim, name+"_Ave", average );
+    visit_SetStripChartValue( sim, name+"_Max", maximum );
   }
 }
 
@@ -418,6 +439,9 @@ void visit_GetMPIStats( visit_simulation_data *sim )
       VisItUI_setTableValueD("MPIStatsTable", i, 3, maximum, 0);
       VisItUI_setTableValueI("MPIStatsTable", i, 4, rank, 0);
       VisItUI_setTableValueD("MPIStatsTable", i, 5, 100*(1-(average/maximum)), 0);
+      visit_SetStripChartValue( sim, name, average );
+      visit_SetStripChartValue( sim, name+"_Ave", average );
+      visit_SetStripChartValue( sim, name+"_Max", maximum );
     }
   }
   else
@@ -440,4 +464,25 @@ void visit_GetImageVars( visit_simulation_data *sim )
   VisItUI_setValueI("ImageFormat",   sim->imageFormat, 1);
 }
 
+//---------------------------------------------------------------------
+// SetStripChartValue
+//    
+//---------------------------------------------------------------------
+void visit_SetStripChartValue( visit_simulation_data *sim,
+			       std::string name,
+			       double value )
+{
+  for( int i=0; i<5; ++i )
+  {
+    if( name == sim->stripChartNames[i] )
+    {
+      char cmd[128];
+      sprintf( cmd, "%s | %lf | %lf",
+	       name.c_str(), (double) sim->cycle, value );
+
+      VisItUI_setValueS("STRIP_CHART_ADD_POINT", cmd, 1);
+    }
+  }
+}
+  
 } // End namespace Uintah

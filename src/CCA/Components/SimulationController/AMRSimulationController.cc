@@ -154,6 +154,7 @@ AMRSimulationController::run()
   d_scheduler->setInitTimestep( true );
   
   bool first = true;
+  bool last  = false;
   
   if (d_restarting) {
     d_scheduler->setRestartInitTimestep(first);
@@ -471,6 +472,15 @@ AMRSimulationController::run()
       first = false;
     }
     
+    calcWallTime();
+
+    // Check to see if at the last iteration
+    last = ( (time >= d_timeinfo->maxTime) ||
+	     (iterations >= d_timeinfo->maxTimestep) ||
+	     (d_timeinfo->max_wall_time != 0 &&
+	      getWallTime() >= d_timeinfo->max_wall_time) );
+    
+
     // Get and reduce the performace run time stats
     getMemoryStats( d_sharedState->getCurrentTopLevelTimeStep() );
     getPAPIStats( );
@@ -478,10 +488,9 @@ AMRSimulationController::run()
 					 d_regridder->useDynamicDilation(),
 					 d_myworld );
     
-    calcWallTime();
     
     printSimulationStats( d_sharedState->getCurrentTopLevelTimeStep(), delt, time );
-    
+
     // Reduce the mpi run time stats.
     MPIScheduler *mpiScheduler = 
       dynamic_cast<MPIScheduler*>(d_scheduler.get_rep());
@@ -511,25 +520,18 @@ AMRSimulationController::run()
       // Update all of the simulation grid and time dependent variables.
       visit_UpdateSimData( &visitSimData, currentGrid,
 			   time, delt, delt_next, getWallTime(),
-			   std::string("") );
+			   last );
       
-      // Check the state.
-      visit_CheckState( &visitSimData );
-      
-      // User issued a termination.
-      if( visitSimData.simMode == VISIT_SIMMODE_TERMINATED )
+      // Check the state - if the return value is true the issued a
+      // termination.
+
+      if( visit_CheckState( &visitSimData ) )
 	break;
 
       // Check to see if at the last iteration. If so stop so the
       // user can have once last chance see the data.
-      if( visitSimData.stopAtLastTimestep &&
-	  ( (time >= d_timeinfo->maxTime) ||
-	    (iterations >= d_timeinfo->maxTimestep) ||
-	    (d_timeinfo->max_wall_time != 0 &&
-	     getWallTime() >= d_timeinfo->max_wall_time) ) )
-      {
-	visit_EndLibSim( &visitSimData );
-      }
+      // if( visitSimData.stopAtLastTimeStep && last )
+      // 	visit_EndLibSim( &visitSimData );
     }    
 #endif
 
