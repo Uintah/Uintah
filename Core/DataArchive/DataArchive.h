@@ -107,6 +107,7 @@ namespace Uintah {
       struct VarData {
         std::string type;
         std::string compression;
+        std::string filename;            // needed for PIDX
         IntVector boundaryLayer;
       };
 

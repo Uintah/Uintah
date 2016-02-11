@@ -549,7 +549,6 @@ DataArchive::query(       Variable     & var,
 
   VarData & varinfo = timedata.d_varInfo[name];
   string    data_filename;
-  string    filename_noPath = "BLANK";  
   int       patchid;
   int       varType = BLANK;
 
@@ -566,7 +565,6 @@ DataArchive::query(       Variable     & var,
     // append l#/datafilename to the directory
     ostr << timedata.d_ts_directory << "l" << patch->getLevel()->getIndex() << "/" << patchinfo.datafilename;
     data_filename = ostr.str();
-    filename_noPath = patchinfo.datafilename;    // used for PIDX
   }
   else {
     varType = REDUCTION_VAR;
@@ -664,7 +662,6 @@ DataArchive::query(       Variable     & var,
   //__________________________________
   //   open PIDX 
   //  TO DO:
-  //    - Need to debug why saving two different types doesn't work.  
   //    - do we need  calls to PIDX_get_variable_count() PIDX_get_dims()??
   //    - need to do something with MPI_COMM
   //    - consolidate with code in DataArchiver
@@ -716,7 +713,7 @@ DataArchive::query(       Variable     & var,
     
     //__________________________________
     //  Open idx file
-    string idxFilename = filename_noPath;
+    string idxFilename = varinfo.filename;
     PIDX_file idxFile;                     // IDX file descriptor
 
     ret = PIDX_file_open(idxFilename.c_str(), PIDX_MODE_RDONLY, access, &idxFile);
@@ -765,18 +762,21 @@ DataArchive::query(       Variable     & var,
     dataPIDX = (unsigned char*)malloc( arraySize );
     memset( dataPIDX, 0, arraySize);
     
-    proc0cout << "Query:  filename: " << idxFilename << "\n"
-              << "    " << name
-              << " timestep: " << timestep
-              << " matlIndex: " <<  matlIndex
-              << " patchID: "   << patchid << endl;
-    proc0cout << "PIDX query: \n"
-              << "    " << varDesc->var_name
-              << " type_name: " << varDesc->type_name 
-              << " varIndex: " << varIndex
-              << " values_per_sample: " << varDesc->values_per_sample 
-              << " bits_per_sample: "<< bits_per_sample 
-              << " arraySize " << arraySize << endl;
+    // debugging
+    if (dbg.active() ){
+      proc0cout << "Query:  filename: " << idxFilename << "\n"
+                << "    " << name
+                << " timestep: " << timestep
+                << " matlIndex: " <<  matlIndex
+                << " patchID: "   << patchid << endl;
+      proc0cout << "PIDX query: \n"
+                << "    " << varDesc->var_name
+                << " type_name: " << varDesc->type_name 
+                << " varIndex: " << varIndex
+                << " values_per_sample: " << varDesc->values_per_sample 
+                << " bits_per_sample: "<< bits_per_sample 
+                << " arraySize " << arraySize << endl;
+    }
 
     ret = PIDX_variable_read_data_layout(varDesc, local_offset, local_size, dataPIDX, PIDX_row_major);
     PIDX_checkReturnCode(ret, "DataArchive::query() - PIDX_variable_read_data_layout failure", __FILE__, __LINE__);
@@ -788,33 +788,34 @@ DataArchive::query(       Variable     & var,
 
     ret = PIDX_close_access( access );
     PIDX_checkReturnCode(ret, "DataArchive::query() - PIDX_close_access failure", __FILE__, __LINE__);
-   
- #if 1
-/*`==========TESTING==========*/
-cout << "__________________________________ " << endl;
-cout << "  DataArchive::query    AFTER  close" << endl;
-double* d_buffer = (double*)malloc( arraySize );
-memcpy( d_buffer, dataPIDX, arraySize );
+    
+    // debugging
+    if (dbg.active() ){
+      /*`==========TESTING==========*/
+      cout << "__________________________________ " << endl;
+      cout << "  DataArchive::query    AFTER  close" << endl;
+      double* d_buffer = (double*)malloc( arraySize );
+      memcpy( d_buffer, dataPIDX, arraySize );
 
-int c = 0;
-for (int k=lo_EC.z(); k<hi_EC.z(); k++){
-  for (int j=lo_EC.y(); j<hi_EC.y(); j++){
-    for (int i=lo_EC.x(); i<hi_EC.x(); i++){
-      printf( " [%2i,%2i,%2i] ", i,j,k);
-      for ( int s = 0; s < varDesc->values_per_sample; ++s ){
-        printf( "%5.3f ",d_buffer[c]);
-        c++;
-      }
+      int c = 0;
+      for (int k=lo_EC.z(); k<hi_EC.z(); k++){
+        for (int j=lo_EC.y(); j<hi_EC.y(); j++){
+          for (int i=lo_EC.x(); i<hi_EC.x(); i++){
+            printf( " [%2i,%2i,%2i] ", i,j,k);
+            for ( int s = 0; s < varDesc->values_per_sample; ++s ){
+              printf( "%5.3f ",d_buffer[c]);
+              c++;
+            }
+          }
+          printf("\n");
+        }
+        printf("\n");
+      }  
+      cout << "\n__________________________________ " << endl;
+      printf("\n");
+      free(d_buffer);
+      /*===========TESTING==========`*/
     }
-    printf("\n");
-  }
-  printf("\n");
-}  
-cout << "\n__________________________________ " << endl;
-printf("\n");
-free(d_buffer);
-/*===========TESTING==========`*/
-#endif
    
     // now move the datapIDX into the array3 variable
     var.readPIDX( dataPIDX,  arraySize, timedata.d_swapBytes ); 
@@ -1077,13 +1078,7 @@ DataArchive::restartInitialize( const int             index,
       }
       dw->put( var, label, matl, patch ); 
       delete var; // should have been cloned when it was put
-    }
-    
-#if HAVE_PIDX    
-//    throw InternalError("DataArchive::restartInitialize:PIDX format not FULLY supported", __FILE__, __LINE__);
-#endif
-    
-    
+    }    
   }
 } // end restartInitialize()
 
@@ -1469,10 +1464,11 @@ DataArchive::TimeData::parseFile( const string & filename, int levelNum, int bas
       vnode->get( "numParticles", numParticles );
 
       if( d_varInfo.find(varname) == d_varInfo.end() ) {
-        VarData& varinfo = d_varInfo[varname];
-        varinfo.type = type;
-        varinfo.compression = compressionMode;
+        VarData& varinfo      = d_varInfo[varname];
+        varinfo.type          = type;
+        varinfo.compression   = compressionMode;
         varinfo.boundaryLayer = boundary;
+        varinfo.filename      = filename;
       }
       else if (compressionMode != "") {
         // For particles variables of size 0, the uda doesn't say it
