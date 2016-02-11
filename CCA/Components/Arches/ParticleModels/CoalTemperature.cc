@@ -360,9 +360,9 @@ CoalTemperature::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info,
             Ha = -202849.0 + _Ha0 + pT_high * (593. + pT_high * 0.293);
             Hc = _Hc0 + hint * _RdMW;
             double H_high = Hc * (RC + CH) + Ha * initAsh;
-            if (pE < H_low){
+            if (pE < H_low || pT < 273.0){
               pT = 273.0;
-            } else if (pE > H_high) {
+            } else if (pE > H_high || pT > 3500.0) {
               pT = 3500.0;
             }
           }
