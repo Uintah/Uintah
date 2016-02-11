@@ -25,6 +25,7 @@
 #ifndef UINTAH_GRID_LEVEL_H
 #define UINTAH_GRID_LEVEL_H
 
+#include <Core/Disclosure/TypeDescription.h>
 #include <Core/Util/RefCounted.h>
 #include <Core/Grid/GridP.h>
 #include <Core/Grid/Grid.h>
@@ -63,7 +64,7 @@ namespace Uintah {
   class Box;
   class Patch;
   class Task;
-   
+  class TypeDescription; 
 /**************************************
 
 CLASS
@@ -166,6 +167,10 @@ public:
                                   IntVector& highIndex) const;
   void findInteriorCellIndexRange(IntVector& lowIndex,
                                   IntVector& highIndex) const;
+                                  
+  void computeVariableExtents(const TypeDescription::Type TD,
+                              IntVector& lo,
+                              IntVector& hi ) const;
       
   void performConsistencyCheck() const;
   GridP getGrid() const;
