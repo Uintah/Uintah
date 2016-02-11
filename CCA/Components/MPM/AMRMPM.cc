@@ -471,6 +471,7 @@ void AMRMPM::scheduleInitialize(const LevelP& level, SchedulerP& sched)
   t->computes(lb->pLocalizedMPMLabel);
   t->computes(d_sharedState->get_delt_label(),level.get_rep());
   t->computes(lb->pCellNAPIDLabel,d_one_matl);
+  t->computes(lb->NC_CCweightLabel,d_one_matl);
 
   if(!flags->d_doGridReset){
     t->computes(lb->gDisplacementLabel);
@@ -1309,6 +1310,9 @@ void AMRMPM::scheduleInterpolateToParticlesAndUpdate(SchedulerP& sched,
     t->computes(             lb->pRefinedLabel_preReloc);
   }
 
+  t->requires(Task::OldDW, lb->NC_CCweightLabel, d_one_matl, Ghost::None);
+  t->computes(             lb->NC_CCweightLabel, d_one_matl);
+
   if(flags->d_doScalarDiffusion){
     t->requires(Task::OldDW, lb->pConcentrationLabel,           d_gn);
     t->requires(Task::NewDW, lb->gConcentrationRateLabel,       d_gac, NGN);
@@ -1499,6 +1503,7 @@ void AMRMPM::scheduleRefine(const PatchSet* patches, SchedulerP& sched)
   t->computes(lb->pSizeLabel);
   t->computes(lb->pVelGradLabel);
   t->computes(lb->pCellNAPIDLabel, d_one_matl);
+  t->computes(lb->NC_CCweightLabel);
 
   // Debugging Scalar
   if (flags->d_with_color) {
@@ -1716,6 +1721,25 @@ void AMRMPM::actuallyInitialize(const ProcessorGroup*,
     CCVariable<int> cellNAPID;
     new_dw->allocateAndPut(cellNAPID, lb->pCellNAPIDLabel, 0, patch);
     cellNAPID.initialize(0);
+
+    NCVariable<double> NC_CCweight;
+    new_dw->allocateAndPut(NC_CCweight, lb->NC_CCweightLabel,    0, patch);
+
+    //__________________________________
+    // - Initialize NC_CCweight = 0.125
+    // - Find the walls with symmetry BC and double NC_CCweight
+    NC_CCweight.initialize(0.125); 
+    for(Patch::FaceType face = Patch::startFace; face <= Patch::endFace;
+        face=Patch::nextFace(face)){
+      int mat_id = 0;
+
+      if (patch->haveBC(face,mat_id,"symmetry","Symmetric")) {
+        for(CellIterator iter = patch->getFaceIterator(face,Patch::FaceNodes);
+                                                  !iter.done(); iter++) {
+          NC_CCweight[*iter] = 2.0*NC_CCweight[*iter];
+        }
+      }
+    }
 
     for(int m=0;m<matls->size();m++){
       MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial( m );
@@ -3647,6 +3671,14 @@ void AMRMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
       move_particles=0.;
     }
 
+    //Carry forward NC_CCweight (put outside of matl loop, only need for matl 0)
+    constNCVariable<double> NC_CCweight;
+    NCVariable<double> NC_CCweight_new;
+    Ghost::GhostType  gnone = Ghost::None;
+    old_dw->get(NC_CCweight,       lb->NC_CCweightLabel,  0, patch, gnone, 0);
+    new_dw->allocateAndPut(NC_CCweight_new, lb->NC_CCweightLabel,0,patch);
+    NC_CCweight_new.copyData(NC_CCweight);
+
     for(int m = 0; m < numMPMMatls; m++){
       MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial( m );
       int dwi = mpm_matl->getDWIndex();
@@ -3970,6 +4002,7 @@ void AMRMPM::addParticles(const ProcessorGroup*,
           string name  = data.name;
           double thresholdValue = data.value;
 
+
           if(m==data.matl){
             if(name=="stressNorm"){
                double stressNorm = pstress[pp].Norm();
@@ -3985,7 +4018,7 @@ void AMRMPM::addParticles(const ProcessorGroup*,
           pref[pp]++;
           numNewPartNeeded++;
         }
-        if(pref[pp]>prefOld[pp]) {
+        if(pref[pp]>prefOld[pp] || splitCriteria) {
           IntVector c = level->getCellIndex(px[pp]);
           if(patch->containsCell(c)){
             refineCell[c] = 3.0;  // Why did I use 3 here?  JG
@@ -4471,6 +4504,30 @@ void AMRMPM::refineGrid(const ProcessorGroup*,
     CCVariable<int> cellNAPID;
     new_dw->allocateAndPut(cellNAPID, lb->pCellNAPIDLabel, 0, patch);
     cellNAPID.initialize(0);
+
+    // First do NC_CCweight
+    NCVariable<double> NC_CCweight;
+    new_dw->allocateAndPut(NC_CCweight, lb->NC_CCweightLabel,  0, patch);
+    //__________________________________
+    // - Initialize NC_CCweight = 0.125
+    // - Find the walls with symmetry BC and
+    //   double NC_CCweight
+    NC_CCweight.initialize(0.125);
+    vector<Patch::FaceType>::const_iterator iter;
+    vector<Patch::FaceType> bf;
+    patch->getBoundaryFaces(bf);
+
+    for (iter  = bf.begin(); iter != bf.end(); ++iter){
+      Patch::FaceType face = *iter;
+      int mat_id = 0;
+      if (patch->haveBC(face,mat_id,"symmetry","Symmetric")) {
+
+        for(CellIterator iter = patch->getFaceIterator(face,Patch::FaceNodes);
+            !iter.done(); iter++) {
+          NC_CCweight[*iter] = 2.0*NC_CCweight[*iter];
+        }
+      }
+    }
 
     int numMPMMatls=d_sharedState->getNumMPMMatls();
     for(int m = 0; m < numMPMMatls; m++){
