@@ -78,8 +78,17 @@ namespace Uintah {
   void visit_ImageWidthCallback(char *val, void *cbdata);
   void visit_ImageFormatCallback(int val, void *cbdata);
 
-  void visit_StopAtTimestepCallback(char *val, void *cbdata);
-  void visit_StopAtLastTimestepCallback(int val, void *cbdata);
+  void visit_StopAtTimeStepCallback(char *val, void *cbdata);
+  void visit_StopAtLastTimeStepCallback(int val, void *cbdata);
+
+  void visit_StripChart0Callback (char *val, void *cbdata);
+  void visit_StripChart1Callback (char *val, void *cbdata);
+  void visit_StripChart2Callback (char *val, void *cbdata);
+  void visit_StripChart3Callback (char *val, void *cbdata);
+  void visit_StripChart4Callback (char *val, void *cbdata);
+
+  void visit_VarModifiedMessage( visit_simulation_data *sim, std::string name );
+
 } // End namespace Uintah
 
 #endif

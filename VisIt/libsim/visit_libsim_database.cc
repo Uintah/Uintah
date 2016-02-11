@@ -564,9 +564,15 @@ visit_handle visit_ReadMetaData(void *cbdata)
     // md->AddDefaultSILRestrictionDescription(std::string("!TurnOnAll"));
 
     /* Add some commands. */
+    // const char *cmd_names[] = {"Stop", "Step", "Run",
+    //                            "Save", "Checkpoint", "Unused",
+    //                            "Finish", "Terminate", "Abort"};
+
+
     const char *cmd_names[] = {"Stop", "Step", "Run",
                                "Save", "Checkpoint", "Unused",
-                               "Finish", "Terminate", "Abort"};
+                               "Terminate", "Abort"};
+
 
     int numNames = sizeof(cmd_names) / sizeof(const char *);
 
@@ -615,8 +621,8 @@ visit_handle visit_ReadMetaData(void *cbdata)
     visit_GetMPIStats( sim );
 
     // These are one time initializations.
-    VisItUI_setValueI("StopAtTimestep",     sim->stopAtTimestep,     1);	
-    VisItUI_setValueI("StopAtLastTimestep", sim->stopAtLastTimestep, 1);	
+    VisItUI_setValueI("StopAtTimeStep",     sim->stopAtTimeStep,     1);	
+    VisItUI_setValueI("StopAtLastTimeStep", sim->stopAtLastTimeStep, 1);	
 
     // Setup the custom UI Image variables
     visit_GetImageVars( sim );
