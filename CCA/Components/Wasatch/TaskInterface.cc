@@ -410,6 +410,12 @@ namespace WasatchCore{
         Expr::UintahFieldAllocInfo& fieldInfo = *(ii->second);
         const Expr::Tag& fieldTag = ii->first;
 
+        // for the initialization tree, make sure ALL fields are persistent. This is needed
+        // in case an initial condition for a transport equation is "derived" from other quantities.
+        // In this case, ExprLib will mark the expression as local non persistent
+        if (tree.name() == "initialization") {
+          tree.set_expr_is_persistent(fieldTag, fml);
+        }
         // look for particle variables that are managed by uintah
         if (tree.name()!="initialization") {
           if (fieldInfo.varlabel->typeDescription()->getType() == Uintah::TypeDescription::ParticleVariable) {
