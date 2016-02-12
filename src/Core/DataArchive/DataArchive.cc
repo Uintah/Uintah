@@ -658,6 +658,18 @@ DataArchive::query(       Variable     & var,
       throw ErrnoException("DataArchive::query (close call)", errno, __FILE__, __LINE__);
     }
   }
+  
+  //__________________________________
+  //  bulletproofing
+  if(getenv("HAVE_PIDX") == NULL && d_outputFileFormat == PIDX ){
+    ostringstream warn;
+    warn << "\nERROR DataArchive::query()\n"
+         << "The uda you are trying to open was written using the PIDX file format.\n"
+         << "You must configure and compile with PIDX enabled.\n";
+    throw InternalError(warn.str() , __FILE__, __LINE__);
+  }
+  
+  
   #if HAVE_PIDX
   //__________________________________
   //   open PIDX 
