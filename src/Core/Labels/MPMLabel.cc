@@ -48,15 +48,6 @@ MPMLabel::MPMLabel()
   //non PermanentParticleState
   pPressureLabel  = VarLabel::create( "p.pressure",
 			ParticleVariable<double>::getTypeDescription() );
-
-  // ******* start - for temporary use only, CG
-  pPressureLabel_t1  = VarLabel::create( "p.pressure_t1",
-			ParticleVariable<double>::getTypeDescription() );
-  pConcInterpLabel  = VarLabel::create( "p.concentrationInterp",
-			ParticleVariable<double>::getTypeDescription() );
-  pEquivalentStress_t1  = VarLabel::create( "p.equivalentStress_t1",
-			ParticleVariable<double>::getTypeDescription() );
-  // ******* end - for temporary use only, CG
   
   pScratchVecLabel  = VarLabel::create( "p.scratchvec",
 			ParticleVariable<Vector>::getTypeDescription() );
@@ -65,6 +56,12 @@ MPMLabel::MPMLabel()
 			ParticleVariable<double>::getTypeDescription() );
   
   pExternalScalarFluxLabel = VarLabel::create( "p.externalscalarflux",
+			ParticleVariable<double>::getTypeDescription() );
+
+  pFluxLabel = VarLabel::create("p.flux",
+                        ParticleVariable<Vector>::getTypeDescription() );
+
+  pDiffusivityLabel = VarLabel::create( "p.diffusivity",
 			ParticleVariable<double>::getTypeDescription() );
 
   // for visualization only
@@ -267,12 +264,6 @@ MPMLabel::MPMLabel()
 
   pConcGradientLabel_preReloc =VarLabel::create("p.concentrationGradient+",
 			ParticleVariable<Vector>::getTypeDescription() );
-
-  pFluxLabel = VarLabel::create( "p.flux",
-			ParticleVariable<Vector>::getTypeDescription() );
-
-  pDiffusivityLabel = VarLabel::create( "p.diffusivity",
-			ParticleVariable<double>::getTypeDescription() );
 
   // Node Centered Variables
   
@@ -739,6 +730,15 @@ MPMLabel::MPMLabel()
   pCellNACZIDLabel =
     VarLabel::create("cellNACZID", CCVariable<short int>::getTypeDescription());
 
+  // ******* start - for temporary use only, CG
+  pPressureLabel_t1  = VarLabel::create( "p.pressure_t1",
+			ParticleVariable<double>::getTypeDescription() );
+  pConcInterpLabel  = VarLabel::create( "p.concentrationInterp",
+			ParticleVariable<double>::getTypeDescription() );
+  pEquivalentStress_t1  = VarLabel::create( "p.equivalentStress_t1",
+			ParticleVariable<double>::getTypeDescription() );
+  // ******* end - for temporary use only, CG
+
 } 
 
 MPMLabel::~MPMLabel()
@@ -749,12 +749,6 @@ MPMLabel::~MPMLabel()
   VarLabel::destroy(pTempCurrentLabel); // for thermal stress
   VarLabel::destroy(pXXLabel);
 
-  // ******* start - for temporary use, CG
-  VarLabel::destroy(pPressureLabel_t1);
-  VarLabel::destroy(pConcInterpLabel); 
-  VarLabel::destroy(pEquivalentStress_t1);
-  // ******* end - for temporary use, CG
- 
   //PermanentParticleState
   VarLabel::destroy(pDeformationMeasureLabel);
   VarLabel::destroy(pDeformationMeasureLabel_preReloc);
@@ -808,6 +802,7 @@ MPMLabel::~MPMLabel()
   VarLabel::destroy(pConcPreviousLabel_preReloc);
   VarLabel::destroy(pScratchLabel);
   VarLabel::destroy(pExternalScalarFluxLabel);
+  VarLabel::destroy(pFluxLabel);
   VarLabel::destroy(pSizeLabel);
   VarLabel::destroy(pSizeLabel_preReloc);
   VarLabel::destroy(pAreaLabel);
@@ -820,7 +815,6 @@ MPMLabel::~MPMLabel()
   VarLabel::destroy(pTemperatureGradientLabel_preReloc);
   VarLabel::destroy(pConcGradientLabel);
   VarLabel::destroy(pConcGradientLabel_preReloc);
-  VarLabel::destroy(pFluxLabel);
   VarLabel::destroy(pDiffusivityLabel);
   VarLabel::destroy(pPartitionUnityLabel);
 
@@ -1007,4 +1001,10 @@ MPMLabel::~MPMLabel()
   VarLabel::destroy(czBotMatLabel_preReloc);
   VarLabel::destroy(czFailedLabel);
   VarLabel::destroy(czFailedLabel_preReloc);
+
+  // ******* start - for temporary use, CG
+  VarLabel::destroy(pPressureLabel_t1);
+  VarLabel::destroy(pConcInterpLabel); 
+  VarLabel::destroy(pEquivalentStress_t1);
+  // ******* end - for temporary use, CG
 }

@@ -89,7 +89,7 @@
     <BasicExpression type="SVOL">
       <TaskList>advance_solution</TaskList>
       <NameTag name="viscosity"/>
-      <Constant>1.0e-5</Constant>
+      <Constant>1.95e-5</Constant>
     </BasicExpression>
     <!-- Momentum transport equations -->
     <MomentumEquations>
@@ -100,7 +100,7 @@
         <MolecularWeight>
           <NameTag name="MW"/>
         </MolecularWeight>
-        <DiffusiveFlux direction="XY" coefficient="0.001"/>
+        <DiffusiveFlux direction="XY" coefficient="0.025"/>
         <ConvectiveFlux direction="X" method="CENTRAL">
           <AdvectiveVelocity>
             <NameTag name="u"/>
@@ -124,9 +124,9 @@
   <Time>
     <maxTime>5.0</maxTime>
     <initTime>0.0</initTime>
-    <delt_min>1e-7</delt_min>
-    <delt_max>1e-7</delt_max>
-    <max_Timesteps> 100 </max_Timesteps>
+    <delt_min>1.0e-6</delt_min>
+    <delt_max>1.0e-6</delt_max>
+    <max_Timesteps> 200 </max_Timesteps>
     <timestep_multiplier>1.0</timestep_multiplier>
   </Time>
   <DataArchiver>

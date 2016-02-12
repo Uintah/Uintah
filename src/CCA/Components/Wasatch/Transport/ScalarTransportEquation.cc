@@ -87,7 +87,10 @@ namespace WasatchCore{
 
     // define the primitive variable and solution variable tags and trap errors
     std::string form = "strong"; // default to strong form
-    params->getWithDefault("form",form,"strong");    // get attribute for form. if none provided, then use default
+    // get attribute for form. if none provided, then use default    
+    if (params->findAttribute("form"))
+      params->getAttribute("form",form);
+
     isStrong_ = (form == "strong") ? true : false;
     const bool existPrimVar = params->findBlock("PrimitiveVariable");
 
@@ -244,8 +247,8 @@ namespace WasatchCore{
           infoStar_[AREA_FRAC_Y] = vNames.vol_frac_tag<YVolField>();
           infoStar_[AREA_FRAC_Z] = vNames.vol_frac_tag<ZVolField>();
         }
-        const Expr::Tag solnVarTagNp1( solnVarTag_.name(), Expr::STATE_NONE );
-        factory.register_expression( new typename PrimVar<FieldT,SVolField>::Builder( primVarStarTag, solnVarTagNp1, densityStarTag ) );
+
+        factory.register_expression( new typename PrimVar<FieldT,SVolField>::Builder( primVarStarTag, this->solnvar_np1_tag(), densityStarTag ) );
 
         const Expr::Tag scalEOSTag (primVarStarTag.name() + "_EOS_Coupling", Expr::STATE_NONE);
         const Expr::Tag dRhoDfStarTag("drhod" + primVarStarTag.name(), Expr::STATE_NONE);

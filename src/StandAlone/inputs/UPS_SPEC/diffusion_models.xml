@@ -2,9 +2,8 @@
 <Uintah_Include>
 
   <diffusion_model               spec="OPTIONAL NO_DATA"
-                                 attribute1="type REQUIRED STRING 'linear,
-                                 jg, rf1, non_linear1'">
-
+                                 attribute1="type REQUIRED STRING 'jg,
+                                             rf1, non_linear1'">
     <diffusivity                 spec="OPTIONAL DOUBLE" />
     <boltzmann_const             spec="OPTIONAL DOUBLE" />
     <operating_temp              spec="OPTIONAL DOUBLE" />

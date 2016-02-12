@@ -30594,6 +30594,7 @@ _sci_includes=''
           if test "$HAVE_LAPACK" = yes ; then
              LAPACK_LIB_FLAG="-framework Accelerate"
           else
+             # using macports gcc, clang, etc (not default Apple LLVM); use system installation of lapack
 
 ##
 ## SCI_TRY_LINK (LAPACK):  lapack library

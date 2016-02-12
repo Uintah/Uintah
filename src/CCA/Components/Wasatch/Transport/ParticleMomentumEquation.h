@@ -37,6 +37,7 @@ namespace WasatchCore{
    *  @date June 2014
    *  @brief Solves the particle momentum equation.
    */
+  template<typename GasVel1T, typename GasVel2T, typename GasVel3T>
   class ParticleMomentumEquation
     : public ParticleEquationBase
   {

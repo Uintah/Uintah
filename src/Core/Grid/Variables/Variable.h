@@ -97,14 +97,23 @@ public:
   //returns if a variable is marked valid or invalid
   bool isValid() const {return d_valid;}
 
-  void emit(OutputContext&, const IntVector& l, const IntVector& h,
+  size_t emit(OutputContext&, const IntVector& l, const IntVector& h,
             const std::string& compressionModeHint);
-#if HAVE_PIDX
-  void emit(PIDXOutputContext&, const IntVector& l, const IntVector& h,
-            const std::string& compressionModeHint, unsigned char* buffer);
-#endif
+
   void read(InputContext&, long end, bool swapbytes, int nByteMode,
             const std::string& compressionMode);
+
+#if HAVE_PIDX
+  void emitPIDX(PIDXOutputContext& oc,
+                unsigned char* buffer,
+                const IntVector& l,
+                const IntVector& h,
+                const size_t pidx_bufferSize);
+                
+  void readPIDX( unsigned char* pidx_buffer,
+                 const size_t& pidx_bufferSize,
+                 bool swapBytes );
+#endif
 
   virtual void emitNormal(std::ostream& out, const IntVector& l,
                           const IntVector& h, ProblemSpecP varnode, bool outputDoubleAsFloat ) = 0;

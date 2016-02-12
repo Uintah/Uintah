@@ -78,14 +78,6 @@ extern DebugStream amrout;
 
 namespace Uintah {
 
-struct double_int
-{
-  double val;
-  int loc;
-  double_int(double val, int loc): val(val), loc(loc) {}
-  double_int(): val(0), loc(-1) {}
-};
-
 double
 stdDeviation( double sum_of_x, double sum_of_x_squares, int n )
 {
@@ -636,207 +628,62 @@ SimulationController::initSimulationStatsVars ( void )
 void
 SimulationController::printSimulationStats ( int timestep, double delt, double time )
 {
-  unsigned long memuse, highwater, maxMemUse;
-  d_scheduler->checkMemoryUse( memuse, highwater, maxMemUse );
+  ReductionInfoMapper< SimulationState::RunTimeStat, double > &runTimeStats =
+    d_sharedState->d_runTimeStats;
 
-  // Get memory stats for each proc if MALLOC_PERPROC is in the environent.
-  if ( getenv( "MALLOC_PERPROC" ) ) {
-    ostream* mallocPerProcStream = NULL;
-    char* filenamePrefix = getenv( "MALLOC_PERPROC" );
-    if ( !filenamePrefix || strlen( filenamePrefix ) == 0 ) {
-      mallocPerProcStream = &dbg;
-    } else {
-      char filename[256];
-      sprintf( filename, "%s.%d" ,filenamePrefix, d_myworld->myrank() );
-      if ( timestep == 0 ) {
-        mallocPerProcStream = scinew ofstream( filename, ios::out | ios::trunc );
-      } else {
-        mallocPerProcStream = scinew ofstream( filename, ios::out | ios::app );
-      }
-      if ( !mallocPerProcStream ) {
-        delete mallocPerProcStream;
-        mallocPerProcStream = &dbg;
-      }
-    }
-    *mallocPerProcStream << "Proc "     << d_myworld->myrank() << "   ";
-    *mallocPerProcStream << "Timestep " << timestep << "   ";
-    *mallocPerProcStream << "Size "     << ProcessInfo::getMemoryUsed() << "   ";
-    *mallocPerProcStream << "RSS "      << ProcessInfo::getMemoryResident() << "   ";
-    *mallocPerProcStream << "Sbrk "     << (char*)sbrk(0) - d_scheduler->getStartAddr() << "   ";
-#ifndef DISABLE_SCI_MALLOC
-    *mallocPerProcStream << "Sci_Malloc_Memuse "    << memuse << "   ";
-    *mallocPerProcStream << "Sci_Malloc_Highwater " << highwater;
-#endif
-    *mallocPerProcStream << "\n";
-    if ( mallocPerProcStream != &dbg ) {
-      delete mallocPerProcStream;
-    }
-  }
-
-#ifdef USE_PAPI_COUNTERS
-  double flop;                          // total FLOPS
-  double vflop;                         // total FLOPS optimized to additionally count scaled double precision vector operations
-  double l2_misses;                     // total L2 cache misses
-  double l3_misses;                     // total L3 cache misses
-  int retp = -1;                        // return value for error checking
-
-  retp = PAPI_read(d_eventSet, d_eventValues);
-  if (retp != PAPI_OK) {
-    proc0cout << "Error: Cannot read PAPI event set!" << endl
-              << "       Error code = " << retp << " (" << d_papiErrorCodes.find(retp)->second << ")" << endl;
-    throw PapiInitializationError("PAPI read error. Unable to read hardware event set values.", __FILE__, __LINE__);
-  }
-  else {
-    flop      = (double) d_eventValues[d_papiEvents.find(PAPI_FP_OPS)->second.eventValueIndex];
-    vflop     = (double) d_eventValues[d_papiEvents.find(PAPI_DP_OPS)->second.eventValueIndex];
-    l2_misses = (double) d_eventValues[d_papiEvents.find(PAPI_L2_TCM)->second.eventValueIndex];
-    l3_misses = (double) d_eventValues[d_papiEvents.find(PAPI_L3_TCM)->second.eventValueIndex];
-  }
-
-  // zero the values in the hardware counter event set array
-  retp = PAPI_reset(d_eventSet);
-  if (retp != PAPI_OK) {
-    proc0cout << "WARNNING: Cannot reset PAPI event set!" << endl
-              << "          Error code = " << retp << " (" << d_papiErrorCodes.find(retp)->second << ")" << endl;
-    throw PapiInitializationError("PAPI reset error on hardware event set. Unable to reset event set values.", __FILE__, __LINE__);
-  }
-#endif
-
-  // with the sum reduces, use double, since with memory it is possible that
+  // With the sum reduces, use double, since with memory it is possible that
   // it will overflow
-  double        avg_memuse     = memuse;
-  unsigned long max_memuse     = memuse;
-  int           max_memuse_loc = -1;
-  double        avg_highwater  = highwater;
-  unsigned long max_highwater  = highwater;
+  double avg_memuse = runTimeStats.getAverage(SimulationState::SCIMemoryUsed);
+  unsigned long max_memuse = static_cast<unsigned long>(runTimeStats.getMaximum(SimulationState::SCIMemoryUsed));
+  int max_memuse_rank = runTimeStats.getRank(SimulationState::SCIMemoryUsed);
 
-  // a little ugly, but do it anyway so we only have to do one reduce for sum and
-  // one reduce for max
-  std::vector<double>      toReduce;
-  std::vector<double>      avgReduce;
-  std::vector<double_int>  toReduceMax;
-  std::vector<double_int>  maxReduce;
-  std::vector<const char*> statLabels;
-
-  int    rank             = d_myworld->myrank();
-
-  double total_time       = 0;
-  double overhead_time    = 0;
-  double percent_overhead = 0;
-
-  toReduce.push_back(memuse);
-  toReduceMax.push_back(double_int(memuse,rank));
-  statLabels.push_back("Mem usage");
-
-  for( int i=0; i<d_sharedState->d_timingStats.size(); ++i )
-  {
-    SimulationState::TimingStat stat = (SimulationState::TimingStat) i;
+  double avg_highwater = runTimeStats.getAverage(SimulationState::SCIMemoryHighwater);
+  unsigned long max_highwater =
+      static_cast<unsigned long>(runTimeStats.getMaximum(SimulationState::SCIMemoryHighwater));
     
-    toReduce.push_back( d_sharedState->d_timingStats[ stat ] );
-    toReduceMax.push_back( double_int( d_sharedState->d_timingStats[ stat ], rank ) );
-    statLabels.push_back( d_sharedState->d_timingStats.getName( stat ).c_str() );
-  }
+  // Sum up the average time for overhead related components. These
+  // same values are used in SimulationState::getOverheadTime.
+  double overhead_time =
+    (runTimeStats.getAverage(SimulationState::CompilationTime) +
+     runTimeStats.getAverage(SimulationState::RegriddingTime) +
+     runTimeStats.getAverage(SimulationState::RegriddingCompilationTime) +
+     runTimeStats.getAverage(SimulationState::RegriddingCopyDataTime) +
+     runTimeStats.getAverage(SimulationState::LoadBalancerTime));
 
-#ifdef USE_PAPI_COUNTERS
-  if (d_papiEvents.find(PAPI_FP_OPS)->second.isSupported) {
-    toReduce.push_back(flop);
-    toReduceMax.push_back(double_int(flop, rank));
-    statLabels.push_back(d_papiEvents.find(PAPI_FP_OPS)->second.simStatName.c_str());
-  }
-  if (d_papiEvents.find(PAPI_DP_OPS)->second.isSupported) {
-    toReduce.push_back(vflop);
-    toReduceMax.push_back(double_int(vflop, rank));
-    statLabels.push_back(d_papiEvents.find(PAPI_DP_OPS)->second.simStatName.c_str());
-  }
-  if (d_papiEvents.find(PAPI_L2_TCM)->second.isSupported) {
-    toReduce.push_back(l2_misses);
-    toReduceMax.push_back(double_int(l2_misses, rank));
-    statLabels.push_back(d_papiEvents.find(PAPI_L2_TCM)->second.simStatName.c_str());
-  }
-  if (d_papiEvents.find(PAPI_L3_TCM)->second.isSupported) {
-    toReduce.push_back(l3_misses);
-    toReduceMax.push_back(double_int(l3_misses, rank));
-    statLabels.push_back(d_papiEvents.find(PAPI_L3_TCM)->second.simStatName.c_str());
-  }
-#endif
-
-  if (highwater) { // add highwater to the end so we know where everything else is (as highwater is conditional)
-    toReduce.push_back( highwater );
-  }
-
-  avgReduce.resize( toReduce.size() );
-  maxReduce.resize( toReduce.size() );
-
-  if (d_myworld->size() > 1) {
-    // If AMR and using dynamic dilation use an allreduce.
-    if(d_regridder && d_regridder->useDynamicDilation()) {
-      MPI_Allreduce( &toReduce[0],    &avgReduce[0], toReduce.size(),    MPI_DOUBLE,     MPI_SUM,    d_myworld->getComm() );
-      MPI_Allreduce( &toReduceMax[0], &maxReduce[0], toReduceMax.size(), MPI_DOUBLE_INT, MPI_MAXLOC, d_myworld->getComm() );
-    }
-    else {
-      MPI_Reduce( &toReduce[0],    &avgReduce[0], toReduce.size(),    MPI_DOUBLE,     MPI_SUM,    0, d_myworld->getComm() );
-      MPI_Reduce( &toReduceMax[0], &maxReduce[0], toReduceMax.size(), MPI_DOUBLE_INT, MPI_MAXLOC, 0, d_myworld->getComm() );
-    }
-
-    // make sums averages
-    for (unsigned i = 0; i < avgReduce.size(); i++) {
-      avgReduce[i] /= d_myworld->size();
-    }
-
-    // Get specific values - pop front since we don't know if there is a highwater.
-    avg_memuse = avgReduce[0];
-    max_memuse = static_cast<unsigned long>(maxReduce[0].val);
-    max_memuse_loc = maxReduce[0].loc;
-
-    if (highwater) {
-      avg_highwater = avgReduce[avgReduce.size() - 1];
-      max_highwater = static_cast<unsigned long>(maxReduce[maxReduce.size() - 1].val);
-    }
-    
-    // Sum up the average times for simulation components.
-    for( int i = 1; i < 10; i++ ) {
-      total_time += avgReduce[i];
-    }
-
-    // Sum up the average time for overhead related components.
-    for( int i = 1; i < 6; i++ ) {
-      overhead_time += avgReduce[i];
-    }
-
-    //calculate percentage of time spent in overhead
-    percent_overhead = overhead_time / total_time;
-  }
-  else {
-    // Sum up the times for simulation components.
-    total_time = d_sharedState->getTotalTime();
-
-    // Sum up the average time for overhead related components.
-    overhead_time = d_sharedState->getOverheadTime();
-
-    // Calculate percentage of time spent in overhead.
-    percent_overhead = overhead_time / total_time;
-  }
-
+  // Sum up the average times for simulation components. These
+  // same values are used in SimulationState::getTotalTime.
+  double total_time =
+    (overhead_time +
+     runTimeStats.getAverage(SimulationState::TaskExecTime) +
+     runTimeStats.getAverage(SimulationState::TaskLocalCommTime) +
+     runTimeStats.getAverage(SimulationState::TaskGlobalCommTime) +
+     runTimeStats.getAverage(SimulationState::TaskWaitCommTime) +
+     runTimeStats.getAverage(SimulationState::TaskWaitThreadTime));
+  
+  // Calculate percentage of time spent in overhead.
+  double percent_overhead = overhead_time / total_time;
+  
   //set the overhead sample
   if( d_n > 2 ) { // Ignore the first 3 samples, they are not good samples.
-    d_sharedState->overhead[d_sharedState->overheadIndex]=percent_overhead;
+    d_sharedState->overhead[d_sharedState->overheadIndex] = percent_overhead;
     // Increment the overhead index
 
-    double overhead=0;
-    double weight=0;
+    double overhead = 0;
+    double weight = 0;
 
     int t = min( d_n - 2, OVERHEAD_WINDOW );
     //calcualte total weight by incrementing through the overhead sample array backwards and multiplying samples by the weights
     for( int i = 0; i < t; i++ ) {
-      overhead+=d_sharedState->overhead[(d_sharedState->overheadIndex+OVERHEAD_WINDOW-i)%OVERHEAD_WINDOW]*d_sharedState->overheadWeights[i];
-      weight+=d_sharedState->overheadWeights[i];
+      overhead += d_sharedState->overhead[(d_sharedState->overheadIndex+OVERHEAD_WINDOW-i)%OVERHEAD_WINDOW] * d_sharedState->overheadWeights[i];
+      weight += d_sharedState->overheadWeights[i];
     }
-    d_sharedState->overheadAvg=overhead/weight; 
 
-    d_sharedState->overheadIndex=(d_sharedState->overheadIndex+1)%OVERHEAD_WINDOW;
+    d_sharedState->overheadAvg = overhead/weight; 
+    d_sharedState->overheadIndex =
+      (d_sharedState->overheadIndex+1) % OVERHEAD_WINDOW;
+
     // Increase overhead size if needed.
   } 
-  d_sharedState->resetStats();
 
   // calculate mean/std dev
   //double stdDev = 0;
@@ -849,11 +696,11 @@ SimulationController::printSimulationStats ( int timestep, double delt, double t
     //d_sumOfWallTimeSquares += pow(walltime,2);
 
     //alpha=2/(N+1)
-    float alpha=2.0/(min(d_n-2,AVERAGE_WINDOW)+1);  
-    d_movingAverage=alpha*walltime+(1-alpha)*d_movingAverage;
-    mean=d_movingAverage;
-
+    float alpha = 2.0 / (min(d_n-2,AVERAGE_WINDOW)+1);  
+    d_movingAverage = alpha*walltime + (1-alpha) * d_movingAverage;
+    mean = d_movingAverage;
   }
+  
   /*
     if (d_n > 3) {
     // divide by n-2 and not n, because we wait till n>2 to keep track
@@ -866,30 +713,42 @@ SimulationController::printSimulationStats ( int timestep, double delt, double t
   */
 
   // Output timestep statistics...
-
-  if (istats.active()) {
-    for (unsigned i = 1; i < statLabels.size(); i++) { // index 0 is memuse
-      if (toReduce[i] > 0)
-        istats << "rank: " << d_myworld->myrank() << " " << statLabels[i] << " avg: " << toReduce[i] << "\n";
+  if (istats.active())
+  {
+    for (unsigned int i=0; i<runTimeStats.size(); i++)
+    {
+      SimulationState::RunTimeStat e = (SimulationState::RunTimeStat) i;
+      
+      if (runTimeStats[e] > 0)
+      {
+        istats << "rank: " << d_myworld->myrank() << " "
+	       << left << setw(19) << runTimeStats.getName(e)
+	       << " [" << runTimeStats.getUnits(e) << "]: "
+	       << runTimeStats[e] << "\n";
+      }
     }
   } 
 
-  if(d_myworld->myrank() == 0){
+  if( d_myworld->myrank() == 0 )
+  {
     char walltime[96];
-    if (d_n > 3) {
+
+    if (d_n > 3)
+    {
       //sprintf(walltime, ", elap T = %.2lf, mean: %.2lf +- %.3lf", d_wallTime, mean, stdDev);
       sprintf( walltime, ", elap T = %6.2lf (mean: %6.2lf), ", d_wallTime, mean );
     }
     else {
       sprintf( walltime, ", elap T = %6.2lf,                ", d_wallTime );
     }
-    ostringstream message;
 
+    ostringstream message;
     message << "Time="        << time
             << " (timestep "  << timestep 
             << "), delT="     << delt
             << walltime;
     message << "Memory Use = ";
+
     if (avg_memuse == max_memuse && avg_highwater == max_highwater) {
       message << ProcessInfo::toHumanUnits((unsigned long) avg_memuse);
       if(avg_highwater) {
@@ -905,7 +764,7 @@ SimulationController::printSimulationStats ( int timestep, double delt, double t
       if(max_highwater) {
         message << "/" << ProcessInfo::toHumanUnits(max_highwater);
       }
-      message << " (max on rank:" << max_memuse_loc << ")";
+      message << " (max on rank:" << max_memuse_rank << ")";
     }
 
     dbg << message.str() << "\n";
@@ -913,34 +772,29 @@ SimulationController::printSimulationStats ( int timestep, double delt, double t
     cout.flush();
 
     if (stats.active()) {
-      stats << left << setw(19)  << "  Description         Ave time:      max Time:      mpi proc:    100*(1-ave/max) '% load imbalance'\n";
+      stats << left << setw(19)  << "  Description                 Ave:            max:      mpi proc:    100*(1-ave/max) '% load imbalance'\n";
 
-      if(d_myworld->size()>1){
-        for (unsigned i = 1; i < statLabels.size(); i++) { // index 0 is memuse
-          if (maxReduce[i].val > 0) {
-            stats << "  "<< left << setw(19)<< statLabels[i]
-                  << " : " << setw(12) << avgReduce[i]
-                  << " : " << setw(12) << maxReduce[i].val
-                  << " : " << setw(10) << maxReduce[i].loc
-                  << " : " << setw(10) << 100*(1-(avgReduce[i]/maxReduce[i].val)) << "\n";
-          }
-        }
+      for (unsigned int i=0; i<runTimeStats.size(); ++i)
+      {
+	SimulationState::RunTimeStat e = (SimulationState::RunTimeStat) i;
+	
+	if (runTimeStats.getMaximum(e) > 0)
+	{
+	  stats << "  " << left << setw(19)<< runTimeStats.getName(e)
+		<< "[" << runTimeStats.getUnits(e) << "]"
+		<< " : " << setw(12) << runTimeStats.getAverage(e)
+		<< " : " << setw(12) << runTimeStats.getMaximum(e)
+		<< " : " << setw(10) << runTimeStats.getRank(e)
+		<< " : " << setw(10)
+		<< 100*(1-(runTimeStats.getAverage(e)/runTimeStats.getMaximum(e))) << "\n";
+	}
       }
-      else { // Runing in serial.
-        for ( unsigned int i = 1; i < statLabels.size(); i++ ) { // index 0 is memuse
-          if( toReduce[i] > 0 ) {
-            stats << "  "<< left << setw(19)<< statLabels[i]
-                  << " : " << setw(12) << toReduce[i]
-                  << " : " << setw(12) << toReduce[i]
-                  << " : " << setw(10)  << 0
-                  << " : " << setw(10)  << 0 << "\n";
-          }
-        }
-      }
+      
       if( d_n > 2 && !std::isnan(d_sharedState->overheadAvg) ) {
-        stats << "  Percent Time in overhead:" << d_sharedState->overheadAvg*100 <<  "\n";
+        stats << "  Percent Time in overhead:"
+              << d_sharedState->overheadAvg*100 <<  "\n";
       }
-    } 
+    }
 
     if ( d_n > 0 ) {
       double realSecondsNow = (d_wallTime - d_prevWallTime)/delt;
@@ -995,11 +849,124 @@ SimulationController::printSimulationStats ( int timestep, double delt, double t
 
     d_prevWallTime = d_wallTime;
   }
+
   d_n++;
 
-  // Reset mem use tracking variable for next iteration
-  d_scheduler->resetMaxMemValue();
-
 } // end printSimulationStats()
+
+
+//______________________________________________________________________
+//
+void
+SimulationController::getMemoryStats ( int timestep, bool create )
+{
+  unsigned long memUse, highwater, maxMemUse;
+  d_scheduler->checkMemoryUse( memUse, highwater, maxMemUse );
+
+  d_sharedState->d_runTimeStats[ SimulationState::SCIMemoryUsed ] =
+    memUse;
+  d_sharedState->d_runTimeStats[ SimulationState::SCIMemoryMaxUsed ] =
+    maxMemUse;
+  d_sharedState->d_runTimeStats[ SimulationState::SCIMemoryHighwater ] =
+    highwater;
+
+  if( ProcessInfo::isSupported(ProcessInfo::MEM_SIZE) )
+    d_sharedState->d_runTimeStats[ SimulationState::MemoryUsed ] =
+      ProcessInfo::getMemoryUsed();
+  if( ProcessInfo::isSupported(ProcessInfo::MEM_RSS) )
+    d_sharedState->d_runTimeStats[ SimulationState::MemoryResident ] =
+      ProcessInfo::getMemoryResident();
+
+  // Get memory stats for each proc if MALLOC_PERPROC is in the environent.
+  if ( getenv( "MALLOC_PERPROC" ) )
+  {
+    ostream* mallocPerProcStream = NULL;
+    char* filenamePrefix = getenv( "MALLOC_PERPROC" );
+
+    if ( !filenamePrefix || strlen( filenamePrefix ) == 0 )
+    {
+      mallocPerProcStream = &dbg;
+    }
+    else
+    {
+      char filename[256];
+      sprintf( filename, "%s.%d" ,filenamePrefix, d_myworld->myrank() );
+
+      if ( create )
+      {
+        mallocPerProcStream = scinew ofstream( filename, ios::out | ios::trunc );
+      }
+      else
+      {
+        mallocPerProcStream = scinew ofstream( filename, ios::out | ios::app );
+      }
+
+      if ( !mallocPerProcStream )
+      {
+        delete mallocPerProcStream;
+        mallocPerProcStream = &dbg;
+      }
+    }
+
+    *mallocPerProcStream << "Proc "     << d_myworld->myrank() << "   ";
+    *mallocPerProcStream << "Timestep " << timestep << "   ";
+
+    if( ProcessInfo::isSupported(ProcessInfo::MEM_SIZE) )
+      *mallocPerProcStream << "Size "     << ProcessInfo::getMemoryUsed() << "   ";
+    if( ProcessInfo::isSupported(ProcessInfo::MEM_RSS) )
+      *mallocPerProcStream << "RSS "      << ProcessInfo::getMemoryResident() << "   ";
+
+    *mallocPerProcStream << "Sbrk "     << (char*)sbrk(0) - d_scheduler->getStartAddr() << "   ";
+#ifndef DISABLE_SCI_MALLOC
+    *mallocPerProcStream << "Sci_Malloc_Memuse "    << memUse << "   ";
+    *mallocPerProcStream << "Sci_Malloc_MaxMemuse " << maxMemUse << "   ";
+    *mallocPerProcStream << "Sci_Malloc_Highwater " << highwater;
+#endif
+    *mallocPerProcStream << "\n";
+
+    if ( mallocPerProcStream != &dbg ) {
+      delete mallocPerProcStream;
+    }
+  }
+}
+
+//______________________________________________________________________
+//
+void
+SimulationController::getPAPIStats( )
+{
+#ifdef USE_PAPI_COUNTERS
+  int retp = PAPI_read(d_eventSet, d_eventValues);
+
+  if (retp != PAPI_OK) {
+    proc0cout << "Error: Cannot read PAPI event set!" << endl
+              << "       Error code = " << retp << " (" << d_papiErrorCodes.find(retp)->second << ")" << endl;
+    throw PapiInitializationError("PAPI read error. Unable to read hardware event set values.", __FILE__, __LINE__);
+  }
+  else {
+    d_sharedState->d_runTimeStats[ SimulationState::TotalFlops ] =
+      (double) d_eventValues[d_papiEvents.find(PAPI_FP_OPS)->second.eventValueIndex];
+    d_sharedState->d_runTimeStats[ SimulationState::TotalVFlops ] =
+      (double) d_eventValues[d_papiEvents.find(PAPI_DP_OPS)->second.eventValueIndex];
+    d_sharedState->d_runTimeStats[ SimulationState::L2Misses ] =
+      (double) d_eventValues[d_papiEvents.find(PAPI_L2_TCM)->second.eventValueIndex];
+    d_sharedState->d_runTimeStats[ SimulationState::L3Misses ] =
+      (double) d_eventValues[d_papiEvents.find(PAPI_L3_TCM)->second.eventValueIndex];
+  }
+
+  // zero the values in the hardware counter event set array
+  retp = PAPI_reset(d_eventSet);
+
+  if (retp != PAPI_OK) {
+    proc0cout << "WARNNING: Cannot reset PAPI event set!" << endl
+              << "          Error code = " << retp << " ("
+	      << d_papiErrorCodes.find(retp)->second << ")" << endl;
+
+    throw PapiInitializationError("PAPI reset error on hardware event set. "
+				  "Unable to reset event set values.",
+				  __FILE__, __LINE__);
+  }
+#endif
+}
   
 } // namespace Uintah

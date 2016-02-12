@@ -2515,7 +2515,7 @@ OnDemandDataWarehouse::getRegion(       GridVariableBase& var,
 
 //______________________________________________________________________
 //
-void
+size_t
 OnDemandDataWarehouse::emit(       OutputContext& oc,
                              const VarLabel*      label,
                                    int            matlIndex,
@@ -2571,22 +2571,25 @@ OnDemandDataWarehouse::emit(       OutputContext& oc,
   if (var == NULL) {
     SCI_THROW(UnknownVariable(label->getName(), getID(), patch, matlIndex, "on emit", __FILE__, __LINE__));
   }
-  var->emit(oc, l, h, label->getCompressionMode());
+  size_t bytes;
+  bytes = var->emit(oc, l, h, label->getCompressionMode());
+  return bytes;
 }
 
 #if HAVE_PIDX
 void
-OnDemandDataWarehouse::emit(PIDXOutputContext& pc,
-                            const VarLabel* label,
-                            int matlIndex,
-                            const Patch* patch,
-                             unsigned char* buffer
-			    )
+OnDemandDataWarehouse::emitPIDX(PIDXOutputContext& pc,
+                                 const VarLabel* label,
+                                 int matlIndex,
+                                 const Patch* patch,
+                                 unsigned char* buffer,
+                                 const size_t bufferSize)
 {
   checkGetAccess( label, matlIndex, patch );
 
   Variable* var = NULL;
   IntVector l, h;
+  
   if( patch ) {
     // Save with the boundary layer, otherwise restarting from the DataArchive won't work.                                                                                      
     patch->computeVariableExtents( label->typeDescription()->getType(), label->getBoundaryLayer(),
@@ -2599,7 +2602,7 @@ OnDemandDataWarehouse::emit(PIDXOutputContext& pc,
     case TypeDescription::SFCZVariable :
       //get list                                                                                                                                                              
       {
-	std::vector<Variable*> varlist;
+	 std::vector<Variable*> varlist;
         d_varDB.getlist( label, matlIndex, patch, varlist );
 
         GridVariableBase* v = NULL;
@@ -2609,10 +2612,13 @@ OnDemandDataWarehouse::emit(PIDXOutputContext& pc,
             break;
           }
           v = dynamic_cast<GridVariableBase*>( *rit );
+          
           //verify that the variable is valid and matches the dependencies requirements.                                                                                        
-          if( v && v->isValid() && Min( l, v->getLow() ) == v->getLow()
-              && Max( h, v->getHigh() ) == v->getHigh() )  //find a completed region                                                                                            
+          if( v && v->isValid() 
+                && Min( l, v->getLow() ) == v->getLow()
+                && Max( h, v->getHigh() ) == v->getHigh() ){  //find a completed region                                                                                            
             break;
+          }
         }
         var = v;
       }
@@ -2624,19 +2630,20 @@ OnDemandDataWarehouse::emit(PIDXOutputContext& pc,
       var = d_varDB.get( label, matlIndex, patch );
     }
   }
-  else {
+  else {    // reduction variables
     l = h = IntVector( -1, -1, -1 );
 
     const Level* level = patch ? patch->getLevel() : 0;
-    if( d_levelDB.exists( label, matlIndex, level ) )
+    if( d_levelDB.exists( label, matlIndex, level ) ){
       var = d_levelDB.get( label, matlIndex, level );
+    }
   }
 
   if( var == NULL ) {
-    SCI_THROW(
-	      UnknownVariable(label->getName(), getID(), patch, matlIndex, "on emit", __FILE__, __LINE__) );
+    SCI_THROW(UnknownVariable(label->getName(), getID(), patch, matlIndex, "OnDemandDataWarehouse::emit ", __FILE__, __LINE__) );
   }
-  var->emit(pc, l, h, label->getCompressionMode(), buffer);
+  
+  var->emitPIDX( pc, buffer, l, h, bufferSize);
 }
 
 #endif

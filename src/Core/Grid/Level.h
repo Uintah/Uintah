@@ -27,6 +27,7 @@
 
 #include <CCA/Ports/LoadBalancer.h>
 
+#include <Core/Disclosure/TypeDescription.h>
 #include <Core/Containers/OffsetArray1.h>
 #include <Core/Grid/GridP.h>
 #include <Core/Grid/Grid.h>
@@ -235,6 +236,10 @@ public:
 
   void findInteriorCellIndexRange(  IntVector & lowIndex
                                   , IntVector & highIndex ) const;
+                                  
+  void computeVariableExtents(const TypeDescription::Type TD,
+                              IntVector& lo,
+                              IntVector& hi ) const;
       
   void performConsistencyCheck() const;
 

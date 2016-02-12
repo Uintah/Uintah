@@ -25,58 +25,86 @@
 #ifndef UINTAH_HOMEBREW_PIDXOutputContext_H
 #define UINTAH_HOMEBREW_PIDXOutputContext_H
 
+#include <Core/Disclosure/TypeDescription.h>
 #include <sci_defs/pidx_defs.h>
 #if HAVE_PIDX
 #include <PIDX.h>
 #include <mpi.h>
 #include <string>
+#include <vector>
 
 namespace Uintah {
-   /**************************************
-     
-     CLASS
-       PIDXOutputContext
-      
-       Short Description...
-      
-     GENERAL INFORMATION
-      
-       PIDXOutputContext.h
-      
-       Sidharth Kumar
-       School of Computing
-       University of Utah
-      
-       Center for the Simulation of Accidental Fires and Explosions (C-SAFE)
-      
-       Copyright (C) 2000 SCI Group
-      
-     KEYWORDS
-       PIDXOutputContext
-      
-     DESCRIPTION
-       Long description...
-      
-     WARNING
-      
-     ****************************************/
+/**************************************
+
+  CLASS
+    PIDXOutputContext
+
+    Short Description...
+
+  GENERAL INFORMATION
+
+    PIDXOutputContext.h
+
+    Sidharth Kumar
+    School of Computing
+    University of Utah
+
+    Center for the Simulation of Accidental Fires and Explosions (C-SAFE)
+
+    Copyright (C) 2000 SCI Group
+
+  KEYWORDS
+    PIDXOutputContext
+
+  DESCRIPTION
+    Long description...
+
+  WARNING
+
+  ****************************************/
+
+class TypeDescription;
     
 class PIDXOutputContext {
-public:
-  PIDXOutputContext();
-  ~PIDXOutputContext();
+  public:
+    PIDXOutputContext();
+    ~PIDXOutputContext();
 
-  void initialize(std::string filename, unsigned int timeStep, int globalExtent[3], MPI_Comm comm);
+    void initialize(std::string filename, 
+                    unsigned int timeStep, 
+                    int globalExtent[3], 
+                    MPI_Comm comm);
+    
+    void setOutputDoubleAsFloat( bool me){
+      d_outputDoubleAsFloat = me;
+    }
+
+    bool isOutputDoubleAsFloat(){
+      return d_outputDoubleAsFloat;
+    }
+    
+
+    std::vector<TypeDescription::Type> getSupportedVariableTypes();
+    
+    std::string getDirectoryName(TypeDescription::Type TD);
+
+    std::string filename;
+    unsigned int timestep;
+    PIDX_file file;
+    MPI_Comm comm;
+    PIDX_variable **variable;         // is this the variableDescription?  --Todd
+
+    PIDX_access access;
+  private:
   
-  std::string filename;
-  unsigned int timestep;
-  PIDX_file file;
-  MPI_Comm comm;
-  PIDX_variable **variable;
-      
-  PIDX_access access;
 
-   };
+      
+    bool d_isInitialized;
+    bool d_outputDoubleAsFloat;
+    
+    
+
+  };
 } // End namespace Uintah
 
 #endif //HAVE_PIDX

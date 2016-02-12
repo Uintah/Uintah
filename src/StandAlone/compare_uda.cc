@@ -645,7 +645,7 @@ MaterialParticleVarData::compare( MaterialParticleVarData & data2,
   // Assumes that the particleVariables are in corresponding order --
   // not necessarily by their particle set order.  This is what the
   // sort/gather achieves.
-  for( int i = 0; i < pset1->numParticles(); i++ ) {
+  for( unsigned int i = 0; i < pset1->numParticles(); i++ ) {
     if (!(::compare((*value1)[i], (*value2)[i], abs_tolerance, rel_tolerance))) {
       if (d_name != "p.particleID") {
         ASSERT(getParticleID(i) == data2.getParticleID(i));

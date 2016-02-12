@@ -24,6 +24,7 @@
 #include <CCA/Components/MPM/ReactionDiffusion/SDInterfaceModelFactory.h>
 #include <CCA/Components/MPM/ReactionDiffusion/SDInterfaceModel.h>
 #include <CCA/Components/MPM/ReactionDiffusion/CommonIFConcDiff.h>
+#include <CCA/Components/MPM/ReactionDiffusion/NullIFConcDiff.h>
 
 #include <CCA/Components/MPM/MPMFlags.h>
 

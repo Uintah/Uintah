@@ -656,11 +656,8 @@ TimeStepInfo* getTimeStepInfo2(SchedulerP schedulerP,
                                int timestep,
                                bool useExtraCells)
 {
-  LoadBalancer* lb = schedulerP->getLoadBalancer();
-
-  // Probably index is just 0 or 1
-  int index = 1;
-  DataWarehouse *dw = schedulerP->get_dw( index );
+  DataWarehouse *dw = schedulerP->getLastDW();
+  LoadBalancer  *lb = schedulerP->getLoadBalancer();
 
   int numLevels = gridP->numLevels();
   TimeStepInfo *stepInfo = new TimeStepInfo();
@@ -944,11 +941,9 @@ static GridDataRaw* readGridData(SchedulerP schedulerP,
                                  int low[3],
                                  int high[3])
 {
-  std::string variable_name = varLabel->getName();
+  DataWarehouse *dw = schedulerP->getLastDW();
 
-  // probably index is just 0 or 1
-  int index = 1;
-  DataWarehouse *dw = schedulerP->get_dw( index );
+  std::string variable_name = varLabel->getName();
 
   IntVector ilow(low[0], low[1], low[2]);
   IntVector ihigh(high[0], high[1], high[2]);
@@ -1124,11 +1119,9 @@ ParticleDataRaw* readParticleData(SchedulerP schedulerP,
                                   int material,
                                   int timestep)
 {
-  std::string variable_name = varLabel->getName();
+  DataWarehouse *dw = schedulerP->getLastDW();
 
-  // probably index is just 0 or 1
-  int index = 1;
-  DataWarehouse *dw = schedulerP->get_dw( index );
+  std::string variable_name = varLabel->getName();
 
   ParticleDataRaw *pd = new ParticleDataRaw;
   pd->components = numComponents<T>();

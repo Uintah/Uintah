@@ -43,8 +43,8 @@ endif
    SRCS += $(SRCDIR)/sock.cc
 
 
-PSELIBS := Core/Exceptions
-LIBS := $(SOCKET_LIBRARY) 
+PSELIBS := Core/Exceptions Core/Parallel
+LIBS := $(SOCKET_LIBRARY)
 
 ifeq ($(HAVE_BOOST),yes)
   LIBS := $(LIBS) $(BOOST_LIBRARY) 

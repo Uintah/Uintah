@@ -99,8 +99,7 @@ namespace WasatchCore{
 
   // jcs this should be done on a single patch, since the PatchInfo is for a single patch.
   void
-  TimeStepper::create_tasks( const Expr::ExpressionID timeID,
-                             const PatchInfoMap& patchInfoMap,
+  TimeStepper::create_tasks( const PatchInfoMap& patchInfoMap,
                              const Uintah::PatchSet* const patches,
                              const Uintah::MaterialSet* const materials,
                              const Uintah::LevelP& level,
@@ -121,21 +120,6 @@ namespace WasatchCore{
     BOOST_FOREACH( const FieldInfo<SpatialOps::YVolField>& f, yVolFields_ ) persistentFields.insert( f.rhsTag.name() );
     BOOST_FOREACH( const FieldInfo<SpatialOps::ZVolField>& f, zVolFields_ ) persistentFields.insert( f.rhsTag.name() );
     BOOST_FOREACH( const FieldInfo<SpatialOps::Particle::ParticleField>& f, particleFields_ ) persistentFields.insert( f.rhsTag.name() );
-
-    //________________________________________________________
-    // add a task to populate a "field" with the current time.
-    // This is required by the time integrator.
-    {
-      // add a task to update current simulation time
-      Uintah::Task* updateCurrentTimeTask =
-          scinew Uintah::Task( "update current time",
-                               this,
-                               &TimeStepper::update_current_time,
-                               solnGraphHelper_->exprFactory,
-                               rkStage );
-      updateCurrentTimeTask->requires( Uintah::Task::OldDW, sharedState_->get_delt_label() );
-      sched->addTask( updateCurrentTimeTask, patches, materials );
-    }
 
     //_________________________________________________________________
     // Schedule the task to compute the RHS for the transport equations
@@ -181,33 +165,6 @@ namespace WasatchCore{
 
   //------------------------------------------------------------------
 
-  void
-  TimeStepper::update_current_time( const Uintah::ProcessorGroup* const pg,
-                                    const Uintah::PatchSubset* const patches,
-                                    const Uintah::MaterialSubset* const materials,
-                                    Uintah::DataWarehouse* const oldDW,
-                                    Uintah::DataWarehouse* const newDW,
-                                    Expr::ExpressionFactory* const factory,
-                                    const int rkStage )
-  {
-    // grab the timestep
-    Uintah::delt_vartype deltat;
-    oldDW->get( deltat, sharedState_->get_delt_label() );
-    const Expr::Tag timeTag = TagNames::self().time;
-    //__________________
-    // loop over patches
-    for( int ip=0; ip<patches->size(); ++ip ){
-      SetCurrentTime& settimeexpr = dynamic_cast<SetCurrentTime&>(
-          factory->retrieve_expression( timeTag, patches->get(ip)->getID(), false ) );
-      settimeexpr.set_integrator_stage( rkStage );
-      settimeexpr.set_deltat  ( deltat );
-      settimeexpr.set_time    ( sharedState_->getElapsedTime() );
-      settimeexpr.set_timestep( sharedState_->getCurrentTopLevelTimeStep() );
-    }
-  }
-
-  //------------------------------------------------------------------
-
   template<typename FieldT>
   void
   TimeStepper::add_equation( const std::string& solnVarName,
@@ -215,7 +172,7 @@ namespace WasatchCore{
   {
     const std::string rhsName = rhsTag.name();
 
-    const Expr::Tag solnVarTag(solnVarName,Expr::STATE_NONE);
+    const Expr::Tag solnVarTag(solnVarName,Expr::STATE_NP1);
     const Expr::Tag rhsVarTag (rhsName,    Expr::STATE_NONE);
     
     std::set< FieldInfo<FieldT> >& fields = field_info_selctor<FieldT>();

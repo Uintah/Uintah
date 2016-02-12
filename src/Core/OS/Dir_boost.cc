@@ -26,7 +26,7 @@
 
 #include <Core/Exceptions/ErrnoException.h>
 #include <Core/Exceptions/InternalError.h>
-
+#include <Core/Parallel/Parallel.h>
 #include <sci_defs/boost_defs.h>
 
 #include <sys/types.h>
@@ -37,6 +37,7 @@
 #include <cstdlib>
 #include <cstdio>
 #include <iostream>
+#include <sstream>
 
 #include <unistd.h>
 #include <dirent.h>
@@ -52,7 +53,8 @@ namespace bsys = boost::system;
 
 using namespace std;
 using namespace SCIRun;
-
+//______________________________________________________________________
+//
 Dir
 Dir::create( const string & name )
 {
@@ -80,14 +82,16 @@ Dir::Dir( const Dir & dir ) :
 Dir::~Dir()
 {
 }
-
+//______________________________________________________________________
+//
 Dir&
 Dir::operator=( const Dir & copy )
 {
   name_ = copy.name_;
   return *this;
 }
-
+//______________________________________________________________________
+//
 void
 Dir::remove( bool throwOnError /* = true */ ) const
 {
@@ -103,7 +107,7 @@ Dir::remove( bool throwOnError /* = true */ ) const
   }
   return;
 }
-
+//______________________________________________________________________
 // Removes a directory (and all its contents) using C++ calls.  Returns true if it succeeds.
 bool
 Dir::removeDir( const char * dirName )
@@ -164,7 +168,8 @@ Dir::removeDir( const char * dirName )
   }
   return true;
 }
-
+//______________________________________________________________________
+//
 void
 Dir::forceRemove(bool throwOnError)
 {
@@ -178,7 +183,8 @@ Dir::forceRemove(bool throwOnError)
        cerr << "WARNING: " << exception.message() << "\n";
    }
 }
-
+//______________________________________________________________________
+//
 void
 Dir::remove( const string & filename, bool throwOnError /* = true */ ) const
 {
@@ -193,20 +199,64 @@ Dir::remove( const string & filename, bool throwOnError /* = true */ ) const
        cerr << "WARNING: " << exception.message() << "\n";
    }
 }
-
+//______________________________________________________________________
+//
 Dir
 Dir::createSubdir(const string& sub)
 {
    return create(name_+"/"+sub);
 }
 
+
+//______________________________________________________________________
+//       This version of createSubdir tries multiple times and
+//       throws an exception if it fails
+Dir
+Dir::createSubdirPlus( const string & sub )
+{
+  Dir myDir;
+
+  bool done = false;
+  int  tries = 0;
+
+  while( !done ) {
+
+    try {
+      tries++;
+
+      if( tries > 500 ) {
+        ostringstream warn;
+        warn << " ERROR: Dir::createSubdirPlus() failed to create the directory ("<< sub << ") after " << tries <<" attempts.";
+        throw InternalError( warn.str(), __FILE__, __LINE__ );
+      }
+
+      myDir = createSubdir(sub);
+      done = true;
+    }
+    catch( ErrnoException & e ) {
+      if( e.getErrno() == EEXIST ) {
+        done = true;
+        myDir = getSubdir( sub );
+      }
+    }
+  }
+  
+  if( tries > 1 ) {
+    cout << Uintah::Parallel::getMPIRank() << " - WARNING:  Dir::createSubdirPlus() created the directory ("<< sub << ") after " << tries <<" attempts.\n";
+  }
+  return myDir;
+}
+
+//______________________________________________________________________
+//
 Dir
 Dir::getSubdir( const string & sub ) const
 {
   // This should probably do more
   return Dir( name_ + "/" + sub );
 }
-
+//______________________________________________________________________
+//
 void
 Dir::copy( const Dir & destDir ) const
 {
@@ -258,7 +308,8 @@ Dir::copy( const Dir & destDir ) const
 
    return;
 }
-
+//______________________________________________________________________
+//
 void
 Dir::move(Dir& destDir)
 {
@@ -271,7 +322,8 @@ Dir::move(Dir& destDir)
       throw InternalError(string("Dir::move failed to move: ") + name_, __FILE__, __LINE__);
    return;
 }
-
+//______________________________________________________________________
+//
 void
 Dir::copy( const string & filename, const Dir & destDir ) const
 {
@@ -290,7 +342,8 @@ Dir::copy( const string & filename, const Dir & destDir ) const
   }
   return;
 }
-
+//______________________________________________________________________
+//
 void
 Dir::move( const string & filename, Dir & destDir )
 {
@@ -303,7 +356,8 @@ Dir::move( const string & filename, Dir & destDir )
       throw InternalError(string("Dir::move failed to move: ") + filepath, __FILE__, __LINE__);
    return;
 }
-
+//______________________________________________________________________
+//
 void
 Dir::getFilenamesBySuffix( const string         & suffix,
                                  vector<string> & filenames ) const
@@ -323,7 +377,8 @@ Dir::getFilenamesBySuffix( const string         & suffix,
   }
   closedir(dir);
 }
-
+//______________________________________________________________________
+//
 bool
 Dir::exists()
 {

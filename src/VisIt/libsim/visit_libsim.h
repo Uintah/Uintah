@@ -88,8 +88,6 @@ typedef struct
   double delt_next;
   double elapsedt;
 
-  std::string message;
-
   int blocking;
 
   bool useExtraCells;
@@ -100,21 +98,40 @@ typedef struct
   int  runMode;  // What the libsim is doing.
   int  simMode;  // What the simulation is doing.
 
+  int  rank;
   bool isProc0;
 
+  bool timeRange;
+  int timeStart;
+  int timeStep;
+  int timeStop;
+  
+  bool imageGenerate;
+  std::string imageFilename;
+  int imageHeight;
+  int imageWidth;
+  int imageFormat;
+
+  int  stopAtTimeStep;
+  bool stopAtLastTimeStep;
+
+  std::string stripChartNames[5];
+  
 } visit_simulation_data;
 
 
 void visit_LibSimArguments(int argc, char **argv);
 void visit_InitLibSim(visit_simulation_data *sim);
 void visit_EndLibSim(visit_simulation_data *sim);
-void visit_CheckState(visit_simulation_data *sim);
+bool visit_CheckState(visit_simulation_data *sim);
 
 void visit_UpdateSimData( visit_simulation_data *sim, 
                           GridP currentGrid,
                           double time, double delt, double delt_next,
-                          double wallTime, std::string msg );
+                          double wallTime, bool last );
 
+void visit_Initialize( visit_simulation_data *sim );
+  
 } // End namespace Uintah
 
 #endif

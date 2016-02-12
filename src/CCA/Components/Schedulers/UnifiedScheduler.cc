@@ -542,17 +542,13 @@ UnifiedScheduler::runTask( DetailedTask*         task,
     mpi_info_[TotalTestMPI] += Time::currentSeconds() - test_start_time;
     // -------------------------< end MPI test timing >-------------------------
 
-    // Add subscheduler timings to the parent scheduler and reset
-    // subscheduler timings
-    if( parentScheduler_ ) {
-
-      for( int i=0; i<mpi_info_.size(); ++i )
-      {
-	MPIScheduler::TimingStat e = (MPIScheduler::TimingStat) i;
-	parentScheduler_->mpi_info_[e] += mpi_info_[e];
+    // Add subscheduler timings to the parent scheduler and reset subscheduler timings
+    if (parentScheduler_) {
+      for (size_t i = 0; i < mpi_info_.size(); ++i) {
+        MPIScheduler::TimingStat e = (MPIScheduler::TimingStat)i;
+        parentScheduler_->mpi_info_[e] += mpi_info_[e];
       }
-
-      mpi_info_.reset( 0 );
+      mpi_info_.reset(0);
     }
   }
 }  // end runTask()
@@ -712,19 +708,13 @@ UnifiedScheduler::execute( int tgnum     /* = 0 */,
 
   emitTime("Other excution time", totalexec - mpi_info_[TotalSend] - mpi_info_[TotalRecv] - mpi_info_[TotalTask] - mpi_info_[TotalReduce]);
 
+  // compute the net timings
   if (d_sharedState != 0) {
 
-    d_sharedState->d_timingStats[SimulationState::TaskExecTime]       +=
-      mpi_info_[TotalTask] - d_sharedState->d_timingStats[SimulationState::OutputTime];  // don't count output time...
-    d_sharedState->d_timingStats[SimulationState::TaskLocalCommTime]  +=
-      mpi_info_[TotalRecv] + mpi_info_[TotalSend];
-    d_sharedState->d_timingStats[SimulationState::TaskWaitCommTime]   +=
-      mpi_info_[TotalWaitMPI];
-    d_sharedState->d_timingStats[SimulationState::TaskGlobalCommTime] +=
-      mpi_info_[TotalReduce];
+    computeNetRunTimeStats(d_sharedState->d_runTimeStats);
 
     for (int i = 0; i < numThreads_; i++) {
-      d_sharedState->d_timingStats[SimulationState::TaskWaitThreadTime] +=
+      d_sharedState->d_runTimeStats[SimulationState::TaskWaitThreadTime] +=
 	t_worker[i]->getWaittime();
     }
   }
@@ -1228,18 +1218,6 @@ struct CompareDep {
     return a->messageTag < b->messageTag;
   }
 };
-
-//______________________________________________________________________
-//
-
-int UnifiedScheduler::pendingMPIRecvs()
-{
-  int num = 0;
-  recvLock.readLock();
-  num = recvs_.numRequests();
-  recvLock.readUnlock();
-  return num;
-}
 
 //______________________________________________________________________
 //

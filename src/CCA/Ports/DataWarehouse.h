@@ -246,11 +246,16 @@ public:
 			    const PatchSubset*, const MaterialSubset*,
                             bool replace = false, const PatchSubset* = 0) = 0;
 
-  virtual void emit(OutputContext&, const VarLabel* label,
+  virtual size_t emit(OutputContext&, const VarLabel* label,
 		    int matlIndex, const Patch* patch) = 0;
 
 #if HAVE_PIDX
-  virtual void emit(PIDXOutputContext&, const VarLabel* label, int matlIndex, const Patch* patch, unsigned char* buffer) = 0;
+  virtual void emitPIDX(PIDXOutputContext&, 
+                        const VarLabel* label, 
+                        int matlIndex, 
+                        const Patch* patch, 
+                        unsigned char* buffer,
+                        size_t bufferSize) = 0;
 #endif
 
 

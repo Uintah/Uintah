@@ -114,15 +114,17 @@ MPIScheduler::MPIScheduler( const ProcessorGroup* myworld,
     }
   }
 
-  mpi_info_.insert( TotalReduce,    std::string("TotalReduce"),    0 );
-  mpi_info_.insert( TotalSend,      std::string("TotalSend"),      0 );
-  mpi_info_.insert( TotalRecv,      std::string("TotalRecv"),      0 );
-  mpi_info_.insert( TotalTask,      std::string("TotalTask"),      0 );
-  mpi_info_.insert( TotalReduceMPI, std::string("TotalReduceMPI"), 0 );
-  mpi_info_.insert( TotalSendMPI,   std::string("TotalSendMPI"),   0 );
-  mpi_info_.insert( TotalRecvMPI,   std::string("TotalRecvMPI"),   0 );
-  mpi_info_.insert( TotalTestMPI,   std::string("TotalTestMPI"),   0 );
-  mpi_info_.insert( TotalWaitMPI,   std::string("TotalWaitMPI"),   0 );
+  std::string timeStr("seconds");
+
+  mpi_info_.insert( TotalReduce,    std::string("TotalReduce"),    timeStr, 0 );
+  mpi_info_.insert( TotalSend,      std::string("TotalSend"),      timeStr, 0 );
+  mpi_info_.insert( TotalRecv,      std::string("TotalRecv"),      timeStr, 0 );
+  mpi_info_.insert( TotalTask,      std::string("TotalTask"),      timeStr, 0 );
+  mpi_info_.insert( TotalReduceMPI, std::string("TotalReduceMPI"), timeStr, 0 );
+  mpi_info_.insert( TotalSendMPI,   std::string("TotalSendMPI"),   timeStr, 0 );
+  mpi_info_.insert( TotalRecvMPI,   std::string("TotalRecvMPI"),   timeStr, 0 );
+  mpi_info_.insert( TotalTestMPI,   std::string("TotalTestMPI"),   timeStr, 0 );
+  mpi_info_.insert( TotalWaitMPI,   std::string("TotalWaitMPI"),   timeStr, 0 );
   mpi_info_.validate( MAX_TIMING_STATS );
 }
 
@@ -320,17 +322,13 @@ MPIScheduler::runTask( DetailedTask* task,
 
   mpi_info_[TotalTestMPI] += Time::currentSeconds() - teststart;
 
-  // Add subscheduler timings to the parent scheduler and reset
-  // subscheduler timings
+  // Add subscheduler timings to the parent scheduler and reset subscheduler timings
   if (parentScheduler_) {
-
-      for( int i=0; i<mpi_info_.size(); ++i )
-      {
-	MPIScheduler::TimingStat e = (MPIScheduler::TimingStat) i;
-	parentScheduler_->mpi_info_[e] += mpi_info_[e];
-      }
-
-      mpi_info_.reset( 0 );
+    for (size_t i = 0; i < mpi_info_.size(); ++i) {
+      MPIScheduler::TimingStat e = (MPIScheduler::TimingStat)i;
+      parentScheduler_->mpi_info_[e] += mpi_info_[e];
+    }
+    mpi_info_.reset(0);
   }
 
   emitNode(task, taskstart, total_task_time, 0);
@@ -529,6 +527,17 @@ MPIScheduler::postMPISends( DetailedTask* task,
     }
   }
 }  // end postMPISends();
+
+//______________________________________________________________________
+//
+int MPIScheduler::pendingMPIRecvs()
+{
+  int num = 0;
+  recvLock.readLock();
+  num = recvs_.numRequests();
+  recvLock.readUnlock();
+  return num;
+}
 
 //______________________________________________________________________
 //
@@ -956,15 +965,8 @@ MPIScheduler::execute( int tgnum     /* = 0 */,
     emitTime("Other execution time", totalexec - mpi_info_[TotalSend] - mpi_info_[TotalRecv] - mpi_info_[TotalTask] - mpi_info_[TotalReduce]);
   }
 
-  if( !parentScheduler_ ) { // If this scheduler is the root scheduler...
-    d_sharedState->d_timingStats[SimulationState::TaskExecTime]       +=
-      mpi_info_[TotalTask] - d_sharedState->d_timingStats[SimulationState::OutputTime]; // don't count output time...
-    d_sharedState->d_timingStats[SimulationState::TaskLocalCommTime]  +=
-      mpi_info_[TotalRecv] + mpi_info_[TotalSend];
-    d_sharedState->d_timingStats[SimulationState::TaskWaitCommTime]   +=
-      mpi_info_[TotalWaitMPI];
-    d_sharedState->d_timingStats[SimulationState::TaskGlobalCommTime] +=
-      mpi_info_[TotalReduce];
+  if( !parentScheduler_ ) { // If this scheduler is the root scheduler...    
+    computeNetRunTimeStats(d_sharedState->d_runTimeStats);
   }
 
   // Don't need to lock sends 'cause all threads are done at this point.
@@ -1180,3 +1182,14 @@ MPIScheduler::outputTimingStats(const char* label)
   }
 }
 
+//______________________________________________________________________
+//  Take the various timers and compute the net results
+void MPIScheduler::computeNetRunTimeStats(InfoMapper< SimulationState::RunTimeStat, double >& runTimeStats)
+{
+    runTimeStats[SimulationState::TaskExecTime]       += mpi_info_[TotalTask] - runTimeStats[SimulationState::OutputFileIOTime]  // don't count output time or bytes
+                                                                              - runTimeStats[SimulationState::OutputFileIORate];
+     
+    runTimeStats[SimulationState::TaskLocalCommTime]  += mpi_info_[TotalRecv] + mpi_info_[TotalSend];
+    runTimeStats[SimulationState::TaskWaitCommTime]   += mpi_info_[TotalWaitMPI];
+    runTimeStats[SimulationState::TaskGlobalCommTime] += mpi_info_[TotalReduce];
+}

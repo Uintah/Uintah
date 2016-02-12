@@ -399,14 +399,18 @@ class OnDemandDataWarehouse : public DataWarehouse {
 
     virtual void refinalize();
 
-    virtual void emit(OutputContext&,
-                      const VarLabel* label,
-                      int matlIndex,
-                      const Patch* patch);
+    virtual size_t emit(OutputContext&,
+                        const VarLabel* label,
+                        int matlIndex,
+                        const Patch* patch);
 
 #if HAVE_PIDX
-    virtual void emit(PIDXOutputContext&, const VarLabel* label, int matlIndex,
-		      const Patch* patch, unsigned char *patch_buffer);
+     void emitPIDX(PIDXOutputContext&, 
+                      const VarLabel* label, 
+                      int matlIndex,
+		        const Patch* patch, 
+                      unsigned char *pidx_buffer,
+                      size_t pidx_bufferSize);
 #endif
 
 

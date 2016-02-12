@@ -78,6 +78,9 @@
           <!-- The variable_stats model produces a sum(phi*dt) or sum(rho*u*phi) (all three components) and the sum(squared value) from which
                a time average can be computed.
 
+               NOTE: only cc-scalars can be averaged. Fluxes at faces are computed using the flux_variable option. If you really
+               need to time average a velocity, please contact a developer for this request. 
+
                For single variables:
                 - The summed variable to save is the label+"_running_sum". (i.e., label=my_var then my_var_running_sum)
                 - The squared sum variable to save is the label+"_squared_sum".
@@ -480,11 +483,19 @@
             <n                            spec="REQUIRED DOUBLE"/> <!-- [] -->
           </ShaddixChar>
           
-          <SmithChar                    spec="OPTIONAL NO_DATA"
-                                          need_applies_to="type coal">
-            <As                           spec="REQUIRED DOUBLE"/> <!-- [mol/s.m^2.atm^n] -->
-            <Es                           spec="REQUIRED DOUBLE"/> <!-- [J/mol] -->
-            <n                            spec="REQUIRED DOUBLE"/> <!-- [] -->
+          <SmithChar                     spec="OPTIONAL NO_DATA"
+                                         need_applies_to="type coal">
+            <use_simple_inversion        spec="OPTIONAL BOOLEAN"/> <!-- default is false.. this option uses a simple 2x2 matrix inversion function which can be faster than using Lapack-->
+            <char_MW                     spec="OPTIONAL DOUBLE"/> <!-- [kg char / kmoles char] default is 12.0-->
+            <surface_area_mult_factor    spec="OPTIONAL DOUBLE"/> <!-- [multiplication factor for area, default is 1.0. area = X * pi * D ^ 2-->
+            <species                     spec="MULTIPLE STRING"/> <!-- species names (from table) to be used in diffusion coefficient calculation. -->
+            <reaction                    spec="MULTIPLE NO_DATA"> <!-- a reaction section is specified for each reaction equation -->
+              <oxidizer_name             spec="REQUIRED STRING"/> <!-- name of oxidizer (used to populate oxidizer vector) -->
+              <oxidizer_MW               spec="REQUIRED DOUBLE"/> <!-- [kg oxidizer / kmoles oxidizer] -->
+              <pre_exponential_factor    spec="REQUIRED DOUBLE"/> <!-- [g/(cm^2 s atm O2)] (see pg 87-89 of "Coal Combustion and Gasification" by Smoot and Smith for coal specific parameters) -->
+              <activation_energy         spec="REQUIRED DOUBLE"/> <!-- [cal/gmole] (see pg 87-89 of "Coal Combustion and Gasification" by Smoot and Smith for coal specific parameters) -->
+              <stoich_coeff_ratio        spec="REQUIRED DOUBLE"/> <!-- [kmoles char / kmoles oxidizer] from stoichiometric coefficients -->
+            </reaction>
           </SmithChar>
 
           <optics                       spec="OPTIONAL NO_DATA" 
@@ -1361,8 +1372,8 @@
               <LinearSolver               spec="OPTIONAL NO_DATA"
                                           attribute1="type REQUIRED STRING 'hypre, petsc'">
                 <res_tol                  spec="REQUIRED DOUBLE" />
-                <ksptype                  spec="REQUIRED STRING 'gmres, cg'" />
-                <pctype                   spec="REQUIRED STRING 'jacobi, blockjacobi'" />
+                <ksptype                  spec="REQUIRED STRING 'pfmg, gmres, cg'" />
+                <pctype                   spec="REQUIRED STRING 'pfmg, jacobi, blockjacobi'" />
                 <max_iter                 spec="REQUIRED INTEGER" />
               </LinearSolver>
               <spherical_harmonics        spec="OPTIONAL BOOLEAN" />                                   <!-- Spherical harmonics, default = false (works?) -->

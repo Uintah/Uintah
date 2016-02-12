@@ -22,7 +22,7 @@
  * IN THE SOFTWARE.
  */
 
-#include "InterpolateExpression.h"
+#include <CCA/Components/Wasatch/Expressions/PostProcessing/InterpolateExpression.h>
 
 #include <spatialops/OperatorDatabase.h>
 #include <spatialops/structured/SpatialFieldStore.h>

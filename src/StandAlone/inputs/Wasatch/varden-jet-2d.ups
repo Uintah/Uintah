@@ -74,13 +74,7 @@
         <NameTag name="f*"/>
       </FieldExpression>
       <FieldExpression type="SVOL" min="0.0" max="5.0">
-        <NameTag name="rhof"/>
-      </FieldExpression>
-      <FieldExpression type="SVOL" min="0.0" max="5.0">
-        <NameTag name="rhof*"/>
-      </FieldExpression>
-      <FieldExpression type="SVOL" min="0.0" max="5.0">
-        <NameTag name="rhof**"/>
+        <NameTag name="rhof" state="STATE_NP1"/>
       </FieldExpression>
     </FieldClipping>
 

@@ -105,7 +105,9 @@ namespace WasatchCore{
       isPeriodic_ (true ),
       doRadiation_(false),
       doParticles_(false),
-      timeIntegrator_(TimeIntegrator("FE"))
+      timeIntegrator_(TimeIntegrator("FE")),
+      subsched_(NULL),
+      compileDualTimeSched_(true)
   {
     proc0cout << std::endl
               << "-------------------------------------------------------------" << std::endl
@@ -435,8 +437,8 @@ namespace WasatchCore{
           constDensParam->getAttribute( "value", densVal );
           constDensParam->getAttribute( "name", densName );
           densityTag = Expr::Tag( densName, Expr::STATE_NONE );
-          graphCategories_[INITIALIZATION  ]->exprFactory->register_expression( new Expr::ConstantExpr<SVolField>::Builder(densityTag,densVal) );
-          graphCategories_[ADVANCE_SOLUTION]->exprFactory->register_expression( new Expr::ConstantExpr<SVolField>::Builder(densityTag,densVal) );
+          graphCategories_[INITIALIZATION  ]->exprFactory->register_expression( scinew Expr::ConstantExpr<SVolField>::Builder(densityTag,densVal) );
+          graphCategories_[ADVANCE_SOLUTION]->exprFactory->register_expression( scinew Expr::ConstantExpr<SVolField>::Builder(densityTag,densVal) );
         }
       }
     }
@@ -520,6 +522,20 @@ namespace WasatchCore{
     wasatchSpec_->get("TimeIntegrator",timeIntName);
     timeIntegrator_ = TimeIntegrator(timeIntName);
     nRKStages_ = timeIntegrator_.nStages;
+    
+    if (wasatchSpec_->findBlock("DualTime")) {
+      Uintah::ProblemSpecP dualTimeSpec = wasatchSpec_->findBlock("DualTime");
+      timeIntegrator_.set_has_dual_time(true);
+      if (dualTimeSpec->findAttribute("iterations"))
+      {
+        dualTimeSpec->getAttribute("iterations", timeIntegrator_.dualTimeIterations);
+      }
+      if (dualTimeSpec->findAttribute("tolerance"))
+      {
+        dualTimeSpec->getAttribute("tolerance", timeIntegrator_.dualTimeTolerance);
+      }
+    }
+
 
     //
     //  Parse geometry pieces. NOTE: This must take place before create_expressions_from_input
@@ -757,8 +773,13 @@ namespace WasatchCore{
     // note - parse_particle_transport_equations returns a vector of equation adaptors
     if( particleEqnSpec ){
       try{
-        const EquationAdaptors adaptors = parse_particle_transport_equations( particleEqnSpec, wasatchSpec_, useAdaptiveDt, graphCategories_);
-        adaptors_.insert( adaptors_.end(), adaptors.begin(), adaptors.end() );
+        if (flow_treatment() == COMPRESSIBLE) {
+          const EquationAdaptors adaptors = parse_particle_transport_equations<SVolField,SVolField,SVolField>( particleEqnSpec, wasatchSpec_, useAdaptiveDt, graphCategories_);
+          adaptors_.insert( adaptors_.end(), adaptors.begin(), adaptors.end() );
+        } else {
+          const EquationAdaptors adaptors = parse_particle_transport_equations<XVolField,YVolField,ZVolField>( particleEqnSpec, wasatchSpec_, useAdaptiveDt, graphCategories_);
+          adaptors_.insert( adaptors_.end(), adaptors.begin(), adaptors.end() );
+        }
       }
       catch( std::runtime_error& err ){
         std::ostringstream msg;
@@ -1018,144 +1039,281 @@ namespace WasatchCore{
     const Uintah::PatchSet* const localPatches = get_patchset( USE_FOR_OPERATORS, level, sched );
     const GraphHelper* advSolGraphHelper = graphCategories_[ ADVANCE_SOLUTION ];
 
-    if( isRestarting_ ){
-      setup_patchinfo_map( level, sched );
+    Uintah::LoadBalancer* lb = sched->getLoadBalancer();
+    const Uintah::PatchSet* perproc_patches = lb->getPerProcessorPatchSet(level);
+
+    if ( timeIntegrator_.has_dual_time() ) {
+      subsched_ = sched->createSubScheduler();
+      subsched_->initialize();
       
+      // updates the current time. This should happen on the outer timestep since time will be
+      // frozen in the dual time iteration
+      scheduleUpdateCurrentTime(level, sched, 1);
+
+      // if we are in dual time, then the TimeAdvance will drive the dual time integrator
+      Uintah::Task* dualTimeTask = scinew Uintah::Task("Wasatch::dualTimeAdvance",
+                                                       this, &Wasatch::dualTimeAdvance,
+                                                       level, sched.get_rep(),
+                                                       advSolGraphHelper->exprFactory);
+      dualTimeTask->hasSubScheduler();
+
+      // we need the "outer" timestep for this temporary example
+      dualTimeTask->requires( Uintah::Task::OldDW, sharedState_->get_delt_label() );
+
+      // to get all the task dependencies in a jif, create a dummy subscheduler and
+      // create the wasatch tasks on it. Once these tasks are created, one can easily obtain the
+      // requires/computes from the dummy scheduler
+      Uintah::SchedulerP dummySched = sched->createSubScheduler();
+      dummySched->initialize();
+      create_timestepper_on_patches( perproc_patches, materials_, level, dummySched, 1 );
+      Uintah::GridP grid = level->getGrid();
+      dummySched->advanceDataWarehouse(grid); // needed for compiling the subscheduler tasks
+      dummySched->compile();
+      const std::set<const Uintah::VarLabel*, Uintah::VarLabel::Compare>& initialRequires = dummySched->getInitialRequiredVars();
+      for (std::set<const Uintah::VarLabel*>::const_iterator it=initialRequires.begin(); it!=initialRequires.end(); ++it)
+      {
+        dualTimeTask->requires(Uintah::Task::OldDW, *it, Uintah::Ghost::AroundCells, 1);
+      }
+
+      const std::set<const Uintah::VarLabel*, Uintah::VarLabel::Compare>& computedVars = dummySched->getComputedVars();
+      for (std::set<const Uintah::VarLabel*>::const_iterator it=computedVars.begin(); it!=computedVars.end(); ++it)
+      {
+        dualTimeTask->computes(*it);
+      }
+      //
+
+      sched->addTask(dualTimeTask, perproc_patches, sharedState_->allMaterials());
+
+    } else {
+      if( isRestarting_ ){
+        setup_patchinfo_map( level, sched );
+        
+        
+        if( doParticles_ ){
+          particlesHelper_->schedule_restart_initialize(level,sched);
+          particlesHelper_->schedule_find_boundary_particles(level,sched);
+        }
+        
+        bcHelperMap_[level->getID()] = scinew WasatchBCHelper(level, sched, materials_, patchInfoMap_, graphCategories_,  bcFunctorMap_);
+      }
       
       if( doParticles_ ){
-        particlesHelper_->schedule_restart_initialize(level,sched);
         particlesHelper_->schedule_find_boundary_particles(level,sched);
       }
-
-      bcHelperMap_[level->getID()] = scinew WasatchBCHelper(level, sched, materials_, patchInfoMap_, graphCategories_,  bcFunctorMap_);
-    }
-    
-    if( doParticles_ ){
-      particlesHelper_->schedule_find_boundary_particles(level,sched);
-    }
-    
-    for( int iStage=1; iStage<=nRKStages_; iStage++ ){
-      // jcs why do we need this instead of getting the level?
-      // jcs notes:
-      //
-      //   eachPatch() returns a PatchSet that will result in the task
-      //       being executed asynchronously accross all patches.  This
-      //       can improve performance but will deadlock if any global MPI
-      //       calls occur.
-      //
-      //   allPatches() returns a PatchSet that results in the task being
-      //       executed together across all patches.  This is required if
-      //       any global MPI syncronizations occurr (e.g. in a linear
-      //       solve)
-      //    also need to set a flag on the task: task->setType(Task::OncePerProc);
       
-      // set up any "old" variables that have been requested.
-      OldVariable::self().setup_tasks( allPatches, materials_, sched, iStage );
-
-      // Compute the cell type only when radiation is present. This may change in the future.
-      if( doRadiation_ ) cellType_->schedule_carry_forward(allPatches,materials_,sched);
-
-      // -----------------------------------------------------------------------
-      // BOUNDARY CONDITIONS TREATMENT
-      // -----------------------------------------------------------------------
-      proc0cout << "------------------------------------------------" << std::endl
-      << "SETTING BOUNDARY CONDITIONS:" << std::endl;
-      proc0cout << "------------------------------------------------" << std::endl;
-
-      typedef std::vector<EqnTimestepAdaptorBase*> EquationAdaptors;
-      
-      for( EquationAdaptors::const_iterator ia=adaptors_.begin(); ia!=adaptors_.end(); ++ia ){
-        EqnTimestepAdaptorBase* const adaptor = *ia;
-        EquationBase* transEq = adaptor->equation();
-        std::string eqnLabel = transEq->solution_variable_name();
-        //______________________________________________________
-        // set up boundary conditions on this transport equation
-        try{
-          // only verify boundary conditions on the first stage!
-          if( isRestarting_ && iStage < 2 ) transEq->setup_boundary_conditions(*bcHelperMap_[level->getID()], graphCategories_);
-          proc0cout << "Setting BCs for transport equation '" << eqnLabel << "'" << std::endl;
-          transEq->apply_boundary_conditions(*advSolGraphHelper, *bcHelperMap_[level->getID()]);
+      for( int iStage=1; iStage<=nRKStages_; iStage++ ){
+        // jcs why do we need this instead of getting the level?
+        // jcs notes:
+        //
+        //   eachPatch() returns a PatchSet that will result in the task
+        //       being executed asynchronously accross all patches.  This
+        //       can improve performance but will deadlock if any global MPI
+        //       calls occur.
+        //
+        //   allPatches() returns a PatchSet that results in the task being
+        //       executed together across all patches.  This is required if
+        //       any global MPI syncronizations occurr (e.g. in a linear
+        //       solve)
+        //    also need to set a flag on the task: task->setType(Task::OncePerProc);
+        
+        // set up any "old" variables that have been requested.
+        OldVariable::self().setup_tasks( allPatches, materials_, sched, iStage );
+        
+        // Compute the cell type only when radiation is present. This may change in the future.
+        if( doRadiation_ ) cellType_->schedule_carry_forward(allPatches,materials_,sched);
+        
+        // -----------------------------------------------------------------------
+        // BOUNDARY CONDITIONS TREATMENT
+        // -----------------------------------------------------------------------
+        proc0cout << "------------------------------------------------" << std::endl
+        << "SETTING BOUNDARY CONDITIONS:" << std::endl;
+        proc0cout << "------------------------------------------------" << std::endl;
+        
+        typedef std::vector<EqnTimestepAdaptorBase*> EquationAdaptors;
+        
+        for( EquationAdaptors::const_iterator ia=adaptors_.begin(); ia!=adaptors_.end(); ++ia ){
+          EqnTimestepAdaptorBase* const adaptor = *ia;
+          EquationBase* transEq = adaptor->equation();
+          std::string eqnLabel = transEq->solution_variable_name();
+          //______________________________________________________
+          // set up boundary conditions on this transport equation
+          try{
+            // only verify boundary conditions on the first stage!
+            if( isRestarting_ && iStage < 2 ) transEq->setup_boundary_conditions(*bcHelperMap_[level->getID()], graphCategories_);
+            proc0cout << "Setting BCs for transport equation '" << eqnLabel << "'" << std::endl;
+            transEq->apply_boundary_conditions(*advSolGraphHelper, *bcHelperMap_[level->getID()]);
+          }
+          catch( std::runtime_error& e ){
+            std::ostringstream msg;
+            msg << e.what()
+            << std::endl
+            << "ERORR while setting boundary conditions on equation '" << eqnLabel << "'"
+            << std::endl;
+            throw Uintah::ProblemSetupException( msg.str(), __FILE__, __LINE__ );
+          }
         }
-        catch( std::runtime_error& e ){
-          std::ostringstream msg;
-          msg << e.what()
-          << std::endl
-          << "ERORR while setting boundary conditions on equation '" << eqnLabel << "'"
-          << std::endl;
-          throw Uintah::ProblemSetupException( msg.str(), __FILE__, __LINE__ );
+        proc0cout << "------------------------------------------------" << std::endl;
+        
+        //
+        // process clipping on fields - must be done AFTER all bcs are applied
+        //
+        process_field_clipping( wasatchSpec_, graphCategories_, localPatches );
+        
+        if( buildTimeIntegrator_ ){
+          scheduleUpdateCurrentTime(level, sched, iStage);
+          create_timestepper_on_patches( allPatches, materials_, level, sched, iStage );
+        }
+        
+        proc0cout << "Wasatch: done creating solution task(s)" << std::endl;
+        
+        // pass the bc Helper to pressure expressions on all patches
+        if (flow_treatment() != COMPRESSIBLE) {
+          bcHelperMap_[level->getID()]->synchronize_pressure_expression();
         }
       }
-      proc0cout << "------------------------------------------------" << std::endl;
       
-      //
-      // process clipping on fields - must be done AFTER all bcs are applied
-      //
-      process_field_clipping( wasatchSpec_, graphCategories_, localPatches );
-
-      if( buildTimeIntegrator_ ){
-        create_timestepper_on_patches( allPatches, materials_, level, sched, iStage );
-      }
-
-      proc0cout << "Wasatch: done creating solution task(s)" << std::endl;
       
-      // pass the bc Helper to pressure expressions on all patches
-      if (flow_treatment() != COMPRESSIBLE) {
-        bcHelperMap_[level->getID()]->synchronize_pressure_expression();
+      // post processing
+      GraphHelper* const postProcGH = graphCategories_[ POSTPROCESSING ];
+      Expr::ExpressionFactory& postProcFactory = *postProcGH->exprFactory;
+      if( !postProcGH->rootIDs.empty() ){
+        TaskInterface* const task = scinew TaskInterface( postProcGH->rootIDs,
+                                                         "postprocessing",
+                                                         postProcFactory,
+                                                         level, sched,
+                                                         allPatches,
+                                                         materials_,
+                                                         patchInfoMap_,
+                                                         1,
+                                                         sharedState_,
+                                                         persistentFields_ );
+        task->schedule(1);
+        taskInterfaceList_.push_back( task );
       }
+      proc0cout << "Wasatch: done creating post-processing task(s)" << std::endl;
+      
+      //_________________________
+      // After the time advance graphs have all finished executing, it is time
+      // to synchronize the Wasatch particle position varibles with Uintah's.
+      // Recall that Uintah requires that particle position be specified as a
+      // Uintah::Point whereas Wasatch uses x, y, and z variables, separately.
+      if( doParticles_ ){
+        particlesHelper_->schedule_transfer_particle_ids(level,sched);
+        particlesHelper_->schedule_sync_particle_position(level,sched);
+        particlesHelper_->schedule_relocate_particles(level,sched);
+        particlesHelper_->schedule_add_particles(level,sched);
+      }
+      
+      if( isRestarting_ ) isRestarting_ = false;
+      
     }
-
-    
-    // post processing
-    GraphHelper* const postProcGH = graphCategories_[ POSTPROCESSING ];
-    Expr::ExpressionFactory& postProcFactory = *postProcGH->exprFactory;
-    if( !postProcGH->rootIDs.empty() ){
-      TaskInterface* const task = scinew TaskInterface( postProcGH->rootIDs,
-                                                       "postprocessing",
-                                                       postProcFactory,
-                                                       level, sched,
-                                                       allPatches,
-                                                       materials_,
-                                                       patchInfoMap_,
-                                                       1,
-                                                       sharedState_,
-                                                       persistentFields_ );
-      task->schedule(1);
-      taskInterfaceList_.push_back( task );
-    }
-    proc0cout << "Wasatch: done creating post-processing task(s)" << std::endl;
-    
-    //_________________________
-    // After the time advance graphs have all finished executing, it is time
-    // to synchronize the Wasatch particle position varibles with Uintah's.
-    // Recall that Uintah requires that particle position be specified as a
-    // Uintah::Point whereas Wasatch uses x, y, and z variables, separately.
-    if( doParticles_ ){
-      particlesHelper_->schedule_transfer_particle_ids(level,sched);
-      particlesHelper_->schedule_sync_particle_position(level,sched);
-      particlesHelper_->schedule_relocate_particles(level,sched);
-      particlesHelper_->schedule_add_particles(level,sched);
-    }
-    
-    if( isRestarting_ ) isRestarting_ = false;
   }
 
   //--------------------------------------------------------------------
 
-  void
-  Wasatch::create_timestepper_on_patches( const Uintah::PatchSet* const localPatches,
-                                          const Uintah::MaterialSet* const materials,
-                                          const Uintah::LevelP& level,
-                                          Uintah::SchedulerP& sched,
-                                          const int rkStage )
+  void Wasatch::dualTimeAdvance(const Uintah::ProcessorGroup* pg,
+                                const Uintah::PatchSubset* patches,
+                                const Uintah::MaterialSubset* matls,
+                                Uintah::DataWarehouse* parentOldDW,
+                                Uintah::DataWarehouse* parentNewDW,
+                                Uintah::LevelP level, Uintah::Scheduler* sched,
+                                Expr::ExpressionFactory* const factory)
   {
-    GraphHelper* const gh = graphCategories_[ ADVANCE_SOLUTION ];
-    Expr::ExpressionFactory& exprFactory = *gh->exprFactory;
+    using namespace Uintah;
+    proc0cout << "executing dual time advance \n";
+    GridP grid = level->getGrid();
+//    subsched_->setInitTimestep(true);
+    
+    //__________________________________
+    //  turn off parentDW scrubbing
+    DataWarehouse::ScrubMode parentOldDWScrubMode =
+                             parentOldDW->setScrubbing(DataWarehouse::ScrubNone);
+    DataWarehouse::ScrubMode parentNewDWScrubMode =
+                             parentNewDW->setScrubbing(DataWarehouse::ScrubNone);
+    
+    // Create the Wasatch tasks and add them to the subscheduler
+    if (compileDualTimeSched_) {
+      proc0cout << "compiling subsched \n";
+      create_timestepper_on_patches( level->eachPatch(), materials_, level, subsched_, 1 );
+      subsched_->advanceDataWarehouse(grid); // needed for compiling the subscheduler tasks
+      subsched_->compile();
+      compileDualTimeSched_ = false;
+    }
+    DataWarehouse* subOldDW = subsched_->get_dw(0);
+    DataWarehouse* subNewDW = subsched_->get_dw(1);
 
-    if( adaptors_.size() == 0 && gh->rootIDs.empty()) return; // no equations registered.
+    //__________________________________
+    //  Move data from parentOldDW to subSchedNewDW.
+    delt_vartype dt;
+    parentOldDW->get(dt, sharedState_->get_delt_label(),level.get_rep());
+    subNewDW->put(dt, sharedState_->get_delt_label(),level.get_rep());
 
+    const std::set<const Uintah::VarLabel*, Uintah::VarLabel::Compare>& initialRequires = subsched_->getInitialRequiredVars();
+    for (std::set<const Uintah::VarLabel*>::const_iterator it=initialRequires.begin(); it!=initialRequires.end(); ++it)
+    {
+      if (!(*it)->typeDescription()->isReductionVariable()) { // avoid reduction vars {
+        subNewDW->transferFrom(parentOldDW, *it, patches, matls, true);
+      }
+    }
+
+    subsched_->advanceDataWarehouse(grid);
+//    subsched_->setInitTimestep(false);
+    
+    // Iterate
+    int c = 0;
+    // dual time iteration goes here
+    do {
+      proc0cout << "iteration: " << c << std::endl;
+      subOldDW = subsched_->get_dw(0);
+      subNewDW = subsched_->get_dw(1);
+      subOldDW->setScrubbing(DataWarehouse::ScrubNone);
+      subNewDW->setScrubbing(DataWarehouse::ScrubNone);
+
+      subsched_->execute();
+      subsched_->advanceDataWarehouse(grid);
+      
+      //----------------------------------------------------------------------
+      // THIS IS TEMPORARY SO THAT THE EXAMPLE WORKS
+      // grab the timestep
+      Uintah::delt_vartype deltat;
+      parentOldDW->get( deltat, sharedState_->get_delt_label() );
+      const Expr::Tag timeTag = TagNames::self().time;
+      //__________________
+      // loop over patches
+      for( int ip=0; ip<patches->size(); ++ip ){
+        SetCurrentTime& settimeexpr = dynamic_cast<SetCurrentTime&>(factory->retrieve_expression( timeTag, patches->get(ip)->getID(), false ) );
+        settimeexpr.set_integrator_stage( 1 );
+        settimeexpr.set_deltat  ( deltat );
+        settimeexpr.set_time    ( sharedState_->getElapsedTime() );
+        settimeexpr.set_timestep( sharedState_->getCurrentTopLevelTimeStep() );
+        c++;
+      }
+      //----------------------------------------------------------------------
+    } while(c < timeIntegrator_.dualTimeIterations);
+//    std::cout << "done iterating \n";
+    
+    const std::set<const Uintah::VarLabel*, Uintah::VarLabel::Compare>& computedVars = subsched_->getComputedVars();
+    for (std::set<const Uintah::VarLabel*>::const_iterator it=computedVars.begin(); it!=computedVars.end(); ++it)
+    {
+      if (!(*it)->typeDescription()->isReductionVariable()) // avoid reduction vars
+        parentNewDW->transferFrom(subNewDW, *it, patches, matls);
+    }
+    
+  }
+  
+  //---------------------------------------------------------------------------------
+  
+  void
+  Wasatch::scheduleUpdateCurrentTime( const Uintah::LevelP& level,
+                                      Uintah::SchedulerP& sched,
+                                      const int rkStage)
+  {
     //_____________________________________________________________
     // create an expression to set the current time as a field that
     // will be available to all expressions if needed.
+    GraphHelper* const gh = graphCategories_[ ADVANCE_SOLUTION ];
+    Expr::ExpressionFactory& exprFactory = *gh->exprFactory;
+
     Expr::ExpressionID timeID;
     if( rkStage==1 && !exprFactory.have_entry(TagNames::self().time) ){
       Expr::TagList timeTags;
@@ -1168,6 +1326,68 @@ namespace WasatchCore{
     else{
       timeID = exprFactory.get_id(TagNames::self().time);
     }
+
+    //________________________________________________________
+    // add a task to populate a "field" with the current time.
+    // This is required by the time integrator.
+    Uintah::LoadBalancer* lb = sched->getLoadBalancer();
+//    const Uintah::PatchSet* localPatches = lb->getPerProcessorPatchSet(level);
+    const Uintah::PatchSet* const localPatches = get_patchset( USE_FOR_TASKS, level, sched );
+    {
+      // add a task to update current simulation time
+      Uintah::Task* updateCurrentTimeTask =
+      scinew Uintah::Task( "update current time",
+                          this,
+                          &Wasatch::update_current_time,
+                          rkStage );
+      updateCurrentTimeTask->requires( Uintah::Task::OldDW, sharedState_->get_delt_label() );
+      sched->addTask( updateCurrentTimeTask, localPatches, materials_ );
+    }
+  }
+
+  //------------------------------------------------------------------
+  
+  void
+  Wasatch::update_current_time( const Uintah::ProcessorGroup* const pg,
+                                   const Uintah::PatchSubset* const patches,
+                                   const Uintah::MaterialSubset* const materials,
+                                   Uintah::DataWarehouse* const oldDW,
+                                   Uintah::DataWarehouse* const newDW,
+                                   const int rkStage )
+  {
+    // grab the timestep
+    Uintah::delt_vartype deltat;
+    oldDW->get( deltat, sharedState_->get_delt_label() );
+    const Expr::Tag timeTag = TagNames::self().time;
+    //__________________
+    // loop over patches
+    GraphHelper* const gh = graphCategories_[ ADVANCE_SOLUTION ];
+    Expr::ExpressionFactory& factory = *gh->exprFactory;
+
+    for( int ip=0; ip<patches->size(); ++ip ){
+      SetCurrentTime& settimeexpr = dynamic_cast<SetCurrentTime&>(
+                                                                  factory.retrieve_expression( timeTag, patches->get(ip)->getID(), false ) );
+      settimeexpr.set_integrator_stage( rkStage );
+      settimeexpr.set_deltat  ( deltat );
+      settimeexpr.set_time    ( sharedState_->getElapsedTime() );
+      settimeexpr.set_timestep( sharedState_->getCurrentTopLevelTimeStep() );
+    }
+  }
+
+  
+  //---------------------------------------------------------------------------------
+  
+  void
+  Wasatch::create_timestepper_on_patches( const Uintah::PatchSet* const localPatches,
+                                          const Uintah::MaterialSet* const materials,
+                                          const Uintah::LevelP& level,
+                                          Uintah::SchedulerP& sched,
+                                          const int rkStage )
+  {
+    GraphHelper* const gh = graphCategories_[ ADVANCE_SOLUTION ];
+    Expr::ExpressionFactory& exprFactory = *gh->exprFactory;
+
+    if( adaptors_.size() == 0 && gh->rootIDs.empty()) return; // no equations registered.
 
     //___________________________________________
     // Plug in each equation that has been set up
@@ -1193,7 +1413,7 @@ namespace WasatchCore{
     // create all of the required tasks on the timestepper.  This involves
     // the task(s) that compute(s) the RHS for each transport equation and
     // the task that updates the variables from time "n" to "n+1"
-    timeStepper_->create_tasks( timeID, patchInfoMap_, localPatches,
+    timeStepper_->create_tasks( patchInfoMap_, localPatches,
                                 materials, level, sched,
                                 rkStage, persistentFields_ );
   }

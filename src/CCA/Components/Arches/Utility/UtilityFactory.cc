@@ -88,9 +88,9 @@ UtilityFactory::add_task( ProblemSpecP& db ){
         register_task(name, tsk_builder);
 
         //also must build it here:
-        TaskInterface* tsk = retrieve_task(name);
-        tsk->problemSetup(db_util);
-        tsk->create_local_labels();
+        // TaskInterface* tsk = retrieve_task(name);
+        // tsk->problemSetup(db_util);
+        // tsk->create_local_labels();
 
       } else {
 
