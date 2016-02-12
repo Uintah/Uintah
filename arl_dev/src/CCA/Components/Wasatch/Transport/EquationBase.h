@@ -80,6 +80,11 @@ namespace WasatchCore{
      *  \brief Obtain the tag of the solution variable for this transport equation.
      */
     inline const Expr::Tag& solution_variable_tag() const{ return solnVarTag_; }
+    
+    /**
+     *  \brief Obtain the tag of the solution variable for this transport equation at NP1.
+     */
+    inline const Expr::Tag& solnvar_np1_tag() const{ return solnVarNP1Tag_; }
 
     /**
      *  \brief Obtain the tag of the solution variable for this transport equation.
@@ -164,7 +169,8 @@ namespace WasatchCore{
     Uintah::ProblemSpecP params_;
     GraphCategories& gc_;
     const std::string  solnVarName_; ///< Name of the solution variable for this EquationBase.
-    const Expr::Tag solnVarTag_;     ///< Tag for the solution variable (at STATE_N)
+    const Expr::Tag solnVarTag_;     ///< Tag for the solution variable. uses STATE_DYNAMIC (points to STATE_N - or latest)
+    const Expr::Tag solnVarNP1Tag_;     ///< Tag for the solution variable at NP1. This points to the time advance tag
     const Expr::Tag rhsTag_;         ///< Tag for the rhs
     Expr::ExpressionID rhsExprID_;   ///< The label for the rhs expression for this EquationBase.
   };

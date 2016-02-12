@@ -410,6 +410,12 @@ namespace WasatchCore{
         Expr::UintahFieldAllocInfo& fieldInfo = *(ii->second);
         const Expr::Tag& fieldTag = ii->first;
 
+        // for the initialization tree, make sure ALL fields are persistent. This is needed
+        // in case an initial condition for a transport equation is "derived" from other quantities.
+        // In this case, ExprLib will mark the expression as local non persistent
+        if (tree.name() == "initialization") {
+          tree.set_expr_is_persistent(fieldTag, fml);
+        }
         // look for particle variables that are managed by uintah
         if (tree.name()!="initialization") {
           if (fieldInfo.varlabel->typeDescription()->getType() == Uintah::TypeDescription::ParticleVariable) {
@@ -739,28 +745,28 @@ namespace WasatchCore{
 
       // write out graph information.
       if( Uintah::Parallel::getMPIRank() == 0 && ip == 0 ){
-      const bool writeTreeDetails = dbg_tasks_on;
-      if( treeList.size() > 1 ){
-        std::ostringstream fnam;
-            fnam << tree->name() << "_original.dot";
-        proc0cout << "writing pre-cleave tree to " << fnam.str() << endl;
-        std::ofstream fout( fnam.str().c_str() );
-        tree->write_tree(fout,false,writeTreeDetails);
-      }
-      BOOST_FOREACH( TreePtr tr, treeList ){
-        std::ostringstream fnam;
-            fnam << tr->name() << ".dot";
-        std::ofstream fout( fnam.str().c_str() );
-        tr->write_tree(fout,false,writeTreeDetails);
-      }
+        const bool writeTreeDetails = dbg_tasks_on;
+        if( treeList.size() > 1 ){
+          std::ostringstream fnam;
+              fnam << tree->name() << "_original.dot";
+          proc0cout << "writing pre-cleave tree to " << fnam.str() << endl;
+          std::ofstream fout( fnam.str().c_str() );
+          tree->write_tree(fout,false,writeTreeDetails);
         }
+        BOOST_FOREACH( TreePtr tr, treeList ){
+          std::ostringstream fnam;
+              fnam << tr->name() << ".dot";
+          std::ofstream fout( fnam.str().c_str() );
+          tr->write_tree(fout,false,writeTreeDetails);
+        }
+      }
 
       // Transpose the storage so that we have a vector with each entry in the
       // vector containing the map of patch IDs to each tree
       for( size_t i=0; i<treeList.size(); ++i ){
         trLstTrns[i][patchID] = treeList[i];
       }
-
+      
     } // patch loop
 
     // create a TreeTaskExecute for each tree (on all patches)

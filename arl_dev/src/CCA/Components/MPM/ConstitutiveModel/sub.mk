@@ -64,6 +64,7 @@ SRCS   += \
         $(SRCDIR)/Arenisca.cc                   \
         $(SRCDIR)/Arenisca3.cc                  \
         $(SRCDIR)/Arenisca4.cc                  \
+        $(SRCDIR)/TongeRamesh_gitInfo.cc        \
         $(SRCDIR)/RFElasticPlastic.cc
 
 ifneq ($(NO_FORTRAN),yes)
@@ -76,6 +77,7 @@ endif
 SUBDIRS := \
         $(SRCDIR)/PlasticityModels \
         $(SRCDIR)/Biswajit \
+        $(SRCDIR)/PortableTongeRamesh \
 
 ifneq ($(NO_FORTRAN),yes)
   SUBDIRS += $(SRCDIR)/fortran

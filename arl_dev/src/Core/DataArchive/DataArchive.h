@@ -107,6 +107,7 @@ namespace Uintah {
       struct VarData {
         std::string type;
         std::string compression;
+        std::string filename;            // needed for PIDX
         IntVector boundaryLayer;
       };
 
@@ -162,7 +163,7 @@ namespace Uintah {
           std::vector< std::vector<std::string> > d_xmlFilenames;
           std::vector< std::vector<bool> >        d_xmlParsed;
 
-          std::string         d_globaldata;
+          std::string   d_globaldata;
 
           ConsecutiveRangeSet d_matls;  // materials available this timestep
 
@@ -218,10 +219,13 @@ namespace Uintah {
       static void queryEndiannessAndBits( ProblemSpecP doc, std::string & endianness, int & numBits );
 
       // Note, this function rewinds 'fp', and thus starts at the top of the file.
-      static void queryEndiannessAndBits( FILE         * fp,  std::string & endianness, int & numBits );
+      static void queryEndiannessAndBits( FILE* fp,  std::string & endianness, int & numBits );
 
       // Sets d_particlePositionName if found. Note, rewinds 'xml_fp', thus starting at the top of the file.
       void queryParticlePositionName( FILE * xml_fp ); 
+
+      // Sets d_outputFileFormat
+      void queryOutputFormat( FILE * xml_fp );
 
       // GROUP:  Information Access
       //////////
@@ -347,8 +351,10 @@ namespace Uintah {
 
       // Only cache a single timestep
       void turnOnXMLCaching();
+      
       // Cache the default number of timesteps
       void turnOffXMLCaching();
+      
       // Cache new_size number of timesteps.  Calls the
       // TimeHashMaps::updateCacheSize function with new_size.  See
       // corresponding documentation.
@@ -386,7 +392,22 @@ namespace Uintah {
       friend class DataArchive::TimeData;
       DataArchive( const DataArchive& );
       DataArchive& operator=( const DataArchive& );
-
+      
+      //__________________________________
+      //  PIDX related
+      enum outputFormat {UDA, PIDX};
+      outputFormat d_outputFileFormat; 
+      
+      enum {BLANK, REDUCTION_VAR, PATCH_VAR };
+      
+      void PIDX_checkReturnCode( const int rc,
+                                 const std::string warn,
+                                 const char* file, 
+                                 int line);
+      
+      
+      //______________________________________________________________________
+      //
       void queryVariables( FILE                                * fp,
                            std::vector<std::string>            & names,
                            std::vector<const TypeDescription*> & types,
@@ -419,8 +440,6 @@ namespace Uintah {
     
       std::string d_particlePositionName;
 
-      LoadBalancer * d_lb;
-
       void findPatchAndIndex( const GridP            grid,
                                     Patch         *& patch,
                                     particleIndex  & idx,
@@ -432,28 +451,32 @@ namespace Uintah {
       static DebugStream dbg;
   };
 
-
+  //______________________________________________________________________
+  //
   template<class T>
   void
   DataArchive::query( NCVariable< T >&, const std::string& name, int matlIndex,
                       const IntVector& index, double min, double max ) {
     std::cerr << "DataArchive::query not finished\n";
   }
-
+  //______________________________________________________________________
+  //
   template<class T>
   void
   DataArchive::query( CCVariable< T >&, const std::string& name, int matlIndex,
                       const IntVector& index, double min, double max ) {
     std::cerr << "DataArchive::query not finished\n";
   }
-
+//______________________________________________________________________
+//
   template<class T>
   void
   DataArchive::query( ParticleVariable< T >& var, const std::string& name,
                       int matlIndex, particleId id, double min, double max ) {
     std::cerr << "DataArchive::query not finished\n";
   }
-
+//______________________________________________________________________
+//
   template<class T>
   void
   DataArchive::query(       std::vector<T> & values,
@@ -521,7 +544,8 @@ namespace Uintah {
     }
     dbg << "DataArchive::query(values) completed in " << (SCIRun::Time::currentSeconds() - call_start) << " seconds\n";
   }  
-
+//______________________________________________________________________
+//
   template<class T>
   void
   DataArchive::query(       std::vector<T> & values,

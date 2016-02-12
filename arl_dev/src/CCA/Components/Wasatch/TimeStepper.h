@@ -126,15 +126,6 @@ namespace WasatchCore{
                            void* stream,
                            const int rkStage );
 
-    void
-    update_current_time( const Uintah::ProcessorGroup* const pg,
-                         const Uintah::PatchSubset* const patches,
-                         const Uintah::MaterialSubset* const materials,
-                         Uintah::DataWarehouse* const oldDW,
-                         Uintah::DataWarehouse* const newDW,
-                         Expr::ExpressionFactory* const factory,
-                         const int rkStage );
-
   public:
 
     /**
@@ -183,7 +174,6 @@ namespace WasatchCore{
     /**
      *  \brief schedule the tasks associated with this TimeStepper
      *
-     *  \param timeID the ExpressionID for the Expression that calculates the time.
      *  \param infoMap information about each patch including operators, etc.
      *  \param localPatches the patches that this task will be executed on
      *  \param materials the materials that this task will be executed on
@@ -192,8 +182,7 @@ namespace WasatchCore{
      *  \param rkStage the RK stage (1 for forward euler)
      *  \param ioFieldSet the set of fields that should be locked to maintain persistence
      */
-    void create_tasks( const Expr::ExpressionID timeID,
-                       const PatchInfoMap& infoMap,
+    void create_tasks( const PatchInfoMap& infoMap,
                        const Uintah::PatchSet* const localPatches,
                        const Uintah::MaterialSet* const materials,
                        const Uintah::LevelP& level,

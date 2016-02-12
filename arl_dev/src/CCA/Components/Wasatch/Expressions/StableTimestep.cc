@@ -129,9 +129,7 @@ evaluate()
     *tmpP <<= 1.0 / *tmpP;
     
     minPDt <<= field_min(*tmpP);
-    std::cout << "min p dt = " << minPDt[0] << std::endl;
     result <<= min( minPDt, field_min_interior(*tmp) );
-    std::cout << "min overall dt = " << result[0] << std::endl;
   } else {
     result <<= field_min_interior(*tmp);
   }

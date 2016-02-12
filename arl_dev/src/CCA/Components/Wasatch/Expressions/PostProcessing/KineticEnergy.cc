@@ -22,7 +22,7 @@
  * IN THE SOFTWARE.
  */
 
-#include "KineticEnergy.h"
+#include <CCA/Components/Wasatch/Expressions/PostProcessing/KineticEnergy.h>
 
 #include <spatialops/structured/FVStaggered.h>
 

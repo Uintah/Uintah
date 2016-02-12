@@ -26,112 +26,254 @@
 #define UINTAH_HOMEBREW_BLOCK_RANGE_H
 
 #include <type_traits>
-#include <array>
-#include <algorithm>
 
 namespace Uintah {
 
 /// RowMajor mapping of [0,n) -> [ (i0,j0,k0,..), (i1,j1,k1,...) )
-template <  typename IntType = int
+template <  typename SizeType = int
           , int Rank = 3
          >
 class RowMajorRange
 {
-  static_assert( std::is_integral<IntType>::value || std::is_enum<IntType>::value
-                ,"Error: IntType must be an integral type"
+  static_assert( std::is_integral<SizeType>::value || std::is_enum<SizeType>::value
+                ,"Error: SizeType must be an integral type"
+               );
+
+  static_assert( Rank > 0
+                ,"Error: Rank must be greater than 0"
                );
 public:
 
-  using int_type = IntType;
+  using size_type = SizeType;
   static constexpr int rank = Rank;
-  using array_type = std::array<int_type, rank>;
 
-  RowMajorRange( array_type const & c0, array_type const & c1 )
+  template <typename ArrayType>
+  RowMajorRange( ArrayType const & c0, ArrayType const & c1 )
   {
     for (int i=0; i<rank; ++i) {
-      m_offset[i] = std::min( c0[i], c1[i] );
-      m_dim[i] = std::max( c0[i], c1[i] ) - m_offset[i];
+      m_offset[i] = c0[i] < c1[i] ? c0[i] : c1[i];
+      m_dim[i] =   (c0[i] < c1[i] ? c1[i] : c0[i]) - m_offset[i];
     }
   }
 
-  int_type size() const
+  size_type size() const
   {
-    int_type result{1};
-    for (auto d : m_dim) {
-      result *= d;
+    size_type result{1};
+    for (int i=0; i<rank; ++i) {
+      result *= m_dim[i];
     }
     return result;
   }
 
-  array_type operator[]( int_type x ) const
+  // populate the multi-index associated with the given linear index
+  // e.g.
+  //   x is the linear index
+  //   range(x, i, j, k);
+  template <typename IType, typename... Indices>
+  inline __attribute__((always_inline))
+  void operator()(size_type x, IType & idx, Indices &... indices) const
   {
-    array_type result;
-    for (int i=rank-1; i > 0; --i) {
-      result[i] = (x % m_dim[i]) + m_offset[i];
-      x /= m_dim[i];
-    }
-    result[0] = x + m_offset[0];
+    static_assert( (sizeof...(Indices) == (rank-1))
+                  ,"Error: The number of indices does not equal the rank" );
 
-    return result;
+    static_assert( std::is_integral<IType>::value
+                  ,"Error: Index is not a intergral type" );
+    static_assert( !std::is_signed<size_type>::value || std::is_signed<IType>::value
+                  ,"Error: Signed size_type requires using signed indices" );
+
+    x = apply(1, x, indices...);
+    idx = x + m_offset[0];
   }
 
 private:
 
-  array_type m_offset;
-  array_type m_dim;
+  template <typename IType, typename... Indices>
+  inline __attribute__((always_inline))
+  int apply(int d, size_type x, IType & idx, Indices &... indices) const
+  {
+    static_assert( std::is_integral<IType>::value
+                  ,"Error: Index is not a intergral type" );
+    static_assert( !std::is_signed<size_type>::value || std::is_signed<IType>::value
+                  ,"Error: Signed size_type requires using signed indices" );
+
+    x = apply( d+1, x, indices...);
+    idx = (x % m_dim[d]) + m_offset[d];
+    return x / m_dim[d];
+  }
+
+  template <typename IType>
+  inline __attribute__((always_inline))
+  int apply(int d, size_type x, IType & idx) const
+  {
+    static_assert( std::is_integral<IType>::value
+                  ,"Error: Index is not a intergral type" );
+    static_assert( !std::is_signed<size_type>::value || std::is_signed<IType>::value
+                  ,"Error: Signed size_type requires using signed indices" );
+
+    idx = (x % m_dim[d]) + m_offset[d];
+    return x / m_dim[d];
+  }
+
+public:
+  size_type m_offset[rank];
+  size_type m_dim[rank];
 };
 
 
 /// ColumnMajor mapping of [0,n) -> [ (i0,j0,k0,..), (i1,j1,k1,...) )
-template <  typename IntType = int
+template <  typename SizeType = int
           , int Rank = 3
          >
 class ColumnMajorRange
 {
-  static_assert( std::is_integral<IntType>::value || std::is_enum<IntType>::value
-                ,"Error: IntType must be an integral type"
+  static_assert( std::is_integral<SizeType>::value || std::is_enum<SizeType>::value
+                ,"Error: SizeType must be an integral type"
                );
 public:
 
-  using int_type = IntType;
+  using size_type = SizeType;
   static constexpr int rank = Rank;
-  using array_type = std::array<int_type, rank>;
 
-  ColumnMajorRange( array_type const & c0, array_type const & c1 )
+  template <typename ArrayType>
+  ColumnMajorRange( ArrayType const & c0, ArrayType const & c1 )
   {
     for (int i=0; i<rank; ++i) {
-      m_offset[i] = std::min( c0[i], c1[i] );
-      m_dim[i] = std::max( c0[i], c1[i] ) - m_offset[i];
+      m_offset[i] = c0[i] < c1[i] ? c0[i] : c1[i];
+      m_dim[i] =   (c0[i] < c1[i] ? c1[i] : c0[i]) - m_offset[i];
     }
   }
 
-  int_type size() const
+  size_type size() const
   {
-    int_type result{1};
-    for (auto d : m_dim) {
-      result *= d;
+    size_type result{1};
+    for (int i=0; i<rank; ++i) {
+      result *= m_dim[i];
     }
     return result;
   }
 
-  array_type operator[]( int_type x ) const
+  // populate the multi-index associated with the given linear index
+  // e.g.
+  //   x is the linear index
+  //   range(x, i, j, k);
+  template <typename... Indices>
+  inline __attribute__((always_inline))
+  void operator()(size_type x, Indices &... indices) const
   {
-    array_type result;
-    for (int i=0; i < rank-1; ++i) {
-      result[i] = (x % m_dim[i]) + m_offset[i];
-      x /= m_dim[i];
-    }
-    result[rank-1] = x + m_offset[rank-1];
-
-    return result;
+    static_assert( sizeof...(Indices) == rank
+                  ,"Error: The number of indices does not equal the rank" );
+    apply(0, x, indices...);
   }
 
 private:
 
-  array_type m_offset;
-  array_type m_dim;
+  template <typename IType, typename... Indices>
+  inline __attribute__((always_inline))
+  void apply(int d, size_type x, IType & idx, Indices &... indices) const
+  {
+    static_assert( std::is_integral<IType>::value
+                  ,"Error: Index is not a intergral type" );
+    static_assert( !std::is_signed<size_type>::value || std::is_signed<IType>::value
+                  ,"Error: Signed size_type requires using signed indices" );
+
+    idx = (x % m_dim[d]) + m_offset[d];
+    apply( d+1, x/m_dim[d], indices...);
+  }
+
+  template <typename IType>
+  inline __attribute__((always_inline))
+  void apply(int d, size_type x, IType & idx) const
+  {
+    static_assert( std::is_integral<IType>::value
+                  ,"Error: Index is not a intergral type" );
+    static_assert( !std::is_signed<size_type>::value || std::is_signed<IType>::value
+                  ,"Error: Signed size_type requires using signed indices" );
+
+    idx = x + m_offset[d];
+  }
+
+public:
+  size_type m_offset[rank];
+  size_type m_dim[rank];
 };
 
+
+template <typename SizeType, typename Functor>
+void parallel_for( const RowMajorRange<SizeType,3> & r, const Functor & f )
+{
+  const SizeType ib = r.m_offset[0];
+  const SizeType jb = r.m_offset[1];
+  const SizeType kb = r.m_offset[2];
+
+  const SizeType ie = ib + r.m_dim[0];
+  const SizeType je = jb + r.m_dim[1];
+  const SizeType ke = kb + r.m_dim[2];
+
+#pragma omp parallel for collapse(3)
+  for (SizeType i=ib; i<ie; ++i) {
+  for (SizeType j=jb; j<je; ++j) {
+  for (SizeType k=kb; k<ke; ++k) {
+    f(i,j,k);
+  }}}
+};
+
+template <typename SizeType, typename Functor>
+void parallel_for( const ColumnMajorRange<SizeType,3> & r, const Functor & f )
+{
+  const SizeType ib = r.m_offset[0];
+  const SizeType jb = r.m_offset[1];
+  const SizeType kb = r.m_offset[2];
+
+  const SizeType ie = ib + r.m_dim[0];
+  const SizeType je = jb + r.m_dim[1];
+  const SizeType ke = kb + r.m_dim[2];
+
+#pragma omp parallel for collapse(3)
+  for (SizeType k=kb; k<ke; ++k) {
+  for (SizeType j=jb; j<je; ++j) {
+  for (SizeType i=ib; i<ie; ++i) {
+    f(i,j,k);
+  }}}
+};
+
+
+template <typename SizeType, typename Functor, typename ReductionType>
+void parallel_reduce( const RowMajorRange<SizeType,3> & r, const Functor & f, ReductionType & red  )
+{
+  const SizeType ib = r.m_offset[0];
+  const SizeType jb = r.m_offset[1];
+  const SizeType kb = r.m_offset[2];
+
+  const SizeType ie = ib + r.m_dim[0];
+  const SizeType je = jb + r.m_dim[1];
+  const SizeType ke = kb + r.m_dim[2];
+
+#pragma omp parallel for collapse(3) reduction(+:red)
+  for (SizeType i=ib; i<ie; ++i) {
+  for (SizeType j=jb; j<je; ++j) {
+  for (SizeType k=kb; k<ke; ++k) {
+    f(i,j,k,red);
+  }}}
+};
+
+template <typename SizeType, typename Functor, typename ReductionType>
+void parallel_reduce( const ColumnMajorRange<SizeType,3> & r, const Functor & f, ReductionType & red  )
+{
+  const SizeType ib = r.m_offset[0];
+  const SizeType jb = r.m_offset[1];
+  const SizeType kb = r.m_offset[2];
+
+  const SizeType ie = ib + r.m_dim[0];
+  const SizeType je = jb + r.m_dim[1];
+  const SizeType ke = kb + r.m_dim[2];
+
+#pragma omp parallel for collapse(3) reduction(+:red)
+  for (SizeType k=kb; k<ke; ++k) {
+  for (SizeType j=jb; j<je; ++j) {
+  for (SizeType i=ib; i<ie; ++i) {
+    f(i,j,k,red);
+  }}}
+};
 
 } // namespace Uintah
 

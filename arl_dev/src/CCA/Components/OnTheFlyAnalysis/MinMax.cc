@@ -275,7 +275,8 @@ void MinMax::problemSetup(const ProblemSpecP& prob_spec,
     
     d_analyzeVars.push_back(me);
 #ifdef HAVE_VISIT
-    d_sharedState->d_analysisVars.push_back(me);
+    if( sharedState->GetVisIt() )
+      d_sharedState->d_analysisVars.push_back(me);
 #endif
   }
   
@@ -636,20 +637,25 @@ void MinMax::doAnalysis(const ProcessorGroup* pg,
 
         //__________________________________
         // create the directory structure
-        string udaDir = d_dataArchiver->getOutputLocation();
+        string minmaxDir = d_dataArchiver->getOutputLocation() + "/MinMax";
 
+        if( d_isDirCreated.count(minmaxDir) == 0){
+          createDirectory(minmaxDir);
+          d_isDirCreated.insert(minmaxDir);
+        }
+	
         ostringstream li;
-        li<<"L-"<<level->getIndex();
+        li<<"l"<<level->getIndex();
         string levelIndex = li.str();
-        string path = udaDir + "/" + levelIndex;
+        string levelDir = minmaxDir + "/" + levelIndex;
 
-        if( d_isDirCreated.count(path) == 0){
-          createDirectory(path, levelIndex);
-          d_isDirCreated.insert(path);
+        if( d_isDirCreated.count(levelDir) == 0){
+          createDirectory(levelDir);
+          d_isDirCreated.insert(levelDir);
         }
         
         ostringstream fname;
-        fname<< path << "/" << labelName <<"_"<<d_analyzeVars[i].matl;
+        fname << levelDir << "/" << labelName << "_" << d_analyzeVars[i].matl;
         string filename = fname.str();
 
         //__________________________________
@@ -769,8 +775,8 @@ void MinMax::findMinMax( DataWarehouse*  new_dw,
   //Point maxPos = level->getCellPosition(maxIndx);
   //Point minPos = level->getCellPosition(minIndx);          
 
-  // cout << varLabel->getName() << " max: " << maxQ << " " << maxIndx << " maxPos " << maxPos << endl;
-  // cout << "         min: " << minQ << " " << minIndx << " minPos " << minPos << endl; 
+  // cout_doing << varLabel->getName() << " max: " << maxQ << " " << maxIndx << " maxPos " << maxPos << endl;
+  // cout_doing << "         min: " << minQ << " " << minIndx << " minPos " << minPos << endl; 
   
   const string labelName = varLabel->getName();
   string VLmax = labelName + "_max";
@@ -797,16 +803,18 @@ void MinMax::createFile(string& filename,  FILE*& fp, string& levelIndex)
   fprintf( fp,"#The reported min & max values are for this level %s \n", levelIndex.c_str() );
   fprintf( fp,"#Time                      min                       max\n" );
   
-  cout << Parallel::getMPIRank() << " MinMax:Created file " << filename << endl;
+  cout_doing << Parallel::getMPIRank() << " MinMax:Created file " << filename << endl;
+
+  cout << "OnTheFlyAnalysis MinMax results are located in " << filename << endl;
 }
 //______________________________________________________________________
 // create the directory structure   dirName/LevelIndex
 void
-MinMax::createDirectory(string& dirName, string& levelIndex)
+MinMax::createDirectory(string& dirName)
 {
   DIR *check = opendir(dirName.c_str());
   if ( check == NULL ) {
-    cout << Parallel::getMPIRank() << "MinMax:Making directory " << dirName << endl;
+    cout_doing << Parallel::getMPIRank() << " MinMax:Making directory " << dirName << endl;
     MKDIR( dirName.c_str(), 0777 );
   } else {
     closedir(check);

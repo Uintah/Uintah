@@ -51,16 +51,11 @@ namespace Uintah {
       const VarLabel* pScratchVecLabel;
       const VarLabel* pScratchLabel;
       const VarLabel* pExternalScalarFluxLabel;
+      const VarLabel* pFluxLabel;
       const VarLabel* pVolumeDeformedLabel;
       const VarLabel* TotalVolumeDeformedLabel;
       const VarLabel* pXXLabel;
       const VarLabel* pPartitionUnityLabel;
-
-      // ******* start - for temporary use only, CG
-      const VarLabel* pPressureLabel_t1;
-      const VarLabel* pConcInterpLabel; 
-      const VarLabel* pEquivalentStress_t1; 
-      // ******* end - for temporary use only, CG
 
       //PermanentParticleState
       const VarLabel* pDeformationMeasureLabel;
@@ -124,7 +119,6 @@ namespace Uintah {
       const VarLabel* pTemperatureGradientLabel_preReloc; //for heat conduction
       const VarLabel* pConcGradientLabel; //for scalar diffusion
       const VarLabel* pConcGradientLabel_preReloc; //for scalar diffusion
-      const VarLabel* pFluxLabel; //for scalar diffusion
       const VarLabel* pDiffusivityLabel; //for scalar diffusion
       
       const VarLabel* gLambdaDotLabel;
@@ -311,6 +305,12 @@ namespace Uintah {
       const VarLabel* czIDLabel; 
       const VarLabel* czIDLabel_preReloc; 
       const VarLabel* pCellNACZIDLabel;
+
+      // ******* start - for temporary use only, CG
+      const VarLabel* pPressureLabel_t1;
+      const VarLabel* pConcInterpLabel; 
+      const VarLabel* pEquivalentStress_t1; 
+      // ******* end - for temporary use only, CG
 
     };
 } // End namespace Uintah

@@ -273,26 +273,42 @@ public:
   void resetStats();
   
   // timing statistics to test load balance
-  enum TimingStat
+  enum RunTimeStat
   {
-    CompilationTime = 0,
-    RegriddingTime,
-    RegriddingCompilationTime,
-    RegriddingCopyDataTime,
-    LoadBalancerTime,
-    TaskExecTime,
-    TaskLocalCommTime,
-    TaskGlobalCommTime,
-    TaskWaitCommTime,
-    TaskWaitThreadTime,
-    OutputTime,
+    CompilationTime = 0,       // Note: do not change the order 
+    RegriddingTime,            // of these five enumberators.
+    RegriddingCompilationTime, // They are use in
+    RegriddingCopyDataTime,    // SimulationState::getOverheadTime
+    LoadBalancerTime,          // to determine the overhead time.
+    
+    TaskExecTime,              // Note: do not change the order
+    TaskLocalCommTime,         // of these five enumerators.
+    TaskGlobalCommTime,        // They are used in
+    TaskWaitCommTime,          // SimulationController::printSimulationStats
+    TaskWaitThreadTime,        // and SimulationState::getTotalTime.
+
+    OutputFileIOTime ,         // These two enumerators are not used in
+    OutputFileIORate,	       // SimulationState::getTotalTime.
+
+
+    SCIMemoryUsed,
+    SCIMemoryMaxUsed,
+    SCIMemoryHighwater,
+
+    MemoryUsed,
+    MemoryResident,
+    
+#ifdef USE_PAPI_COUNTERS
+    TotalFlops,                // Total FLOPS
+    TottalVFlops,              // Total FLOPS optimized to count 
+                               // scaled double precision vector operations
+    L2Misses,                  // Total L2 cache misses
+    L3Misses,                  // Total L3 cache misses
+#endif
     MAX_TIMING_STATS
   };
 
-  InfoMapper< TimingStat, double > d_timingStats;
-
-  double getTotalTime();
-  double getOverheadTime();
+  ReductionInfoMapper< RunTimeStat, double > d_runTimeStats;
 
   //percent time in overhead samples
   double overhead[OVERHEAD_WINDOW];
@@ -395,17 +411,18 @@ private:
   
 #ifdef HAVE_VISIT
 public:
-  struct modifiableVar {
+  struct interactiveVar {
     std::string name;
     TypeDescription::Type type;
     int*    Ivalue;
     double* Dvalue;
     Vector* Vvalue;
-    bool    modified;
+    bool    modifiable; // If true the user may modify the value, otherwise it is read-only.
+    bool    modified;   // If true the variable was modified by the user.
+    bool    recompile;  // If true and the variable was modified force the task graph to be recompiled.
   };
   
-  std::vector< modifiableVar > d_VisIt_modifiableVars;
-
+  std::vector< interactiveVar > d_interactiveVars;
   std::vector< analysisVar > d_analysisVars;
 
   void SetVisIt( bool val ) { d_doVisIt = val; }

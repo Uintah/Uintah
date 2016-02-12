@@ -48,8 +48,8 @@ namespace WasatchCore{
   //                          Implementation
   //
   // #################################################################
-
-  ParticleMomentumEquation::
+  template<typename GasVel1T, typename GasVel2T, typename GasVel3T>
+  ParticleMomentumEquation<GasVel1T,GasVel2T,GasVel3T>::
   ParticleMomentumEquation( const std::string& solnVarName,
                             const Direction pdir,
                             const Expr::TagList& particlePositionTags,
@@ -97,16 +97,16 @@ namespace WasatchCore{
   }
 
   //------------------------------------------------------------------
-  
-  void ParticleMomentumEquation::setup()
+  template<typename GasVel1T, typename GasVel2T, typename GasVel3T>
+  void   ParticleMomentumEquation<GasVel1T,GasVel2T,GasVel3T>::setup()
   {
     rhsExprID_ = setup_rhs();
     gc_[ADVANCE_SOLUTION]->rootIDs.insert( rhsExprID_ );
   }
   
   //------------------------------------------------------------------
-  
-  Expr::ExpressionID ParticleMomentumEquation::setup_rhs()
+  template<typename GasVel1T, typename GasVel2T, typename GasVel3T>
+  Expr::ExpressionID ParticleMomentumEquation<GasVel1T,GasVel2T,GasVel3T>::setup_rhs()
   {
     Expr::ExpressionFactory& factory = *gc_[ADVANCE_SOLUTION]->exprFactory;
     
@@ -127,7 +127,7 @@ namespace WasatchCore{
         case ZDIR: pBodyForceTag = TagNames::self().pbodyz; break;
         default:                                            break;
       }
-      typedef ParticleBodyForce<SVolField>::Builder BodyForce;
+      typedef typename ParticleBodyForce<SVolField>::Builder BodyForce;
       factory.register_expression( scinew BodyForce(pBodyForceTag, gRhoTag_, pRhoTag_, pSizeTag_, pPosTags_ ) );
     }
 
@@ -137,7 +137,7 @@ namespace WasatchCore{
       // build a particle relaxation time expression
       const Expr::Tag pTauTag = TagNames::self().presponse;
       if( !factory.have_entry( pTauTag ) ){
-        typedef ParticleResponseTime<SVolField>::Builder ParticleTau;
+        typedef typename ParticleResponseTime<SVolField>::Builder ParticleTau;
         factory.register_expression( scinew ParticleTau(pTauTag, pRhoTag_, pSizeTag_, gViscTag_, pPosTags_ ) );
       }
       
@@ -145,7 +145,7 @@ namespace WasatchCore{
       // build a particle Re expression
       const Expr::Tag pReTag = TagNames::self().preynolds;
       if( !factory.have_entry( pReTag) ){
-        typedef ParticleRe<XVolField, YVolField, ZVolField, SVolField>::Builder ParticleReB;
+        typedef typename ParticleRe<GasVel1T, GasVel2T, GasVel3T, SVolField>::Builder ParticleReB;
         const Expr::TagList gVelTags(tag_list(gUTag_, gVTag_, gWTag_));
         const Expr::TagList pVelTags(tag_list(pUTag_, pVTag_, pWTag_));
         factory.register_expression( scinew ParticleReB(pReTag, pSizeTag_, gRhoTag_, gViscTag_, pPosTags_, pVelTags, gVelTags ) );
@@ -164,19 +164,19 @@ namespace WasatchCore{
       switch( direction_ ){
         case XDIR:{
           pDragForceTag = TagNames::self().pdragx;
-          typedef ParticleDragForce<XVolField>::Builder DragForce;
+          typedef typename ParticleDragForce<GasVel1T>::Builder DragForce;
           factory.register_expression( scinew DragForce(pDragForceTag, gUTag_, pDragCoefTag, pTauTag, solution_variable_tag(), pSizeTag_, pPosTags_ ) );
           break;
         }
         case YDIR:{
           pDragForceTag = TagNames::self().pdragy;
-          typedef ParticleDragForce<YVolField>::Builder DragForce;
+          typedef typename ParticleDragForce<GasVel2T>::Builder DragForce;
           factory.register_expression( scinew DragForce(pDragForceTag, gVTag_, pDragCoefTag, pTauTag, solution_variable_tag(), pSizeTag_, pPosTags_ ) );
           break;
         }
         case ZDIR:{
           pDragForceTag = TagNames::self().pdragz;
-          typedef ParticleDragForce<ZVolField>::Builder DragForce;
+          typedef typename ParticleDragForce<GasVel3T>::Builder DragForce;
           factory.register_expression( scinew DragForce(pDragForceTag, gWTag_, pDragCoefTag, pTauTag, solution_variable_tag(), pSizeTag_, pPosTags_ ) );
           break;
         }
@@ -190,23 +190,23 @@ namespace WasatchCore{
   }
   
   //------------------------------------------------------------------
-  
-  ParticleMomentumEquation::~ParticleMomentumEquation()
+  template<typename GasVel1T, typename GasVel2T, typename GasVel3T>
+  ParticleMomentumEquation<GasVel1T,GasVel2T,GasVel3T>::~ParticleMomentumEquation()
   {}
 
   //------------------------------------------------------------------
-
+  template<typename GasVel1T, typename GasVel2T, typename GasVel3T>
   Expr::ExpressionID
-  ParticleMomentumEquation::
+  ParticleMomentumEquation<GasVel1T,GasVel2T,GasVel3T>::
   initial_condition( Expr::ExpressionFactory& exprFactory )
   {
     return exprFactory.get_id( initial_condition_tag() );
   }
 
   //------------------------------------------------------------------
-  
+  template<typename GasVel1T, typename GasVel2T, typename GasVel3T>
   void
-  ParticleMomentumEquation::setup_boundary_conditions( WasatchBCHelper& bcHelper,
+  ParticleMomentumEquation<GasVel1T,GasVel2T,GasVel3T>::setup_boundary_conditions( WasatchBCHelper& bcHelper,
                                                        GraphCategories& graphCat )
   {
     Expr::ExpressionFactory& advSlnFactory = *(graphCat[ADVANCE_SOLUTION]->exprFactory);
@@ -251,15 +251,20 @@ namespace WasatchCore{
   }
   
   //==================================================================
-  
-  void ParticleMomentumEquation::
+  template<typename GasVel1T, typename GasVel2T, typename GasVel3T>
+  void ParticleMomentumEquation<GasVel1T,GasVel2T,GasVel3T>::
   apply_boundary_conditions( const GraphHelper& graphHelper,
                              WasatchBCHelper& bcHelper )
   {
     const Category taskCat = ADVANCE_SOLUTION;
     // set bcs for particle momentum
-    bcHelper.apply_boundary_condition<ParticleField>( Expr::Tag(solution_variable_name(), Expr::STATE_NONE), taskCat );
+    bcHelper.apply_boundary_condition<ParticleField>( this->solnvar_np1_tag(), taskCat );
   }
   //==================================================================
+  
+  // Explicit Template Instantiation:
+  template class ParticleMomentumEquation< XVolField, YVolField, ZVolField >;
+  template class ParticleMomentumEquation< SVolField, SVolField, SVolField >;
+
 
 } // namespace Particle

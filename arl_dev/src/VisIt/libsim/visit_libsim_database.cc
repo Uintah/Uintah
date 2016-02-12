@@ -33,7 +33,6 @@
 #include <CCA/Components/SimulationController/SimulationController.h>
 #include <CCA/Ports/SchedulerP.h>
 #include <CCA/Ports/Output.h>
-#include <CCA/Ports/Regridder.h>
 
 #include <Core/Grid/Grid.h>
 #include <Core/Grid/Variables/VarLabel.h>
@@ -50,21 +49,6 @@
 #include <stdio.h>
 
 namespace Uintah {
-
-static int numProcLabels = 5;
-static std::string procLabels[2][5] = { { "processor/id",
-					  
-					  "processor/memory/Base",
-					  "processor/memory/Max",
-					  "processor/memory/Used",
-					  "processor/memory/Resident" },
-					
-					{ "",
-					  
-					  "bytes", "bytes",
-					  "bytes", "bytes" } };
-
-
 
 // ****************************************************************************
 //  Method: ReadMetaData
@@ -248,7 +232,7 @@ visit_handle visit_ReadMetaData(void *cbdata)
 
             VisIt_MeshMetaData_setTopologicalDimension(mmd, 3);
             VisIt_MeshMetaData_setSpatialDimension(mmd, 3);
-            
+
             VisIt_MeshMetaData_setNumDomains(mmd, totalPatches);
             VisIt_MeshMetaData_setDomainTitle(mmd, "patches");
             VisIt_MeshMetaData_setDomainPieceName(mmd, "patch");
@@ -360,82 +344,82 @@ visit_handle visit_ReadMetaData(void *cbdata)
     // add a proc id enum variable
     if (addProcId)
     {
-      // Add in the processor timing stats.
-      for( unsigned int i=0; i<simStateP->d_timingStats.size(); ++i )
+      // Add in the processor runtime stats.
+      for( unsigned int i=0; i<simStateP->d_runTimeStats.size(); ++i )
       {
-	std::string stat = std::string("processor/time/") + 
-	  simStateP->d_timingStats.getName( (SimulationState::TimingStat)i );
-
-	visit_handle vmd = VISIT_INVALID_HANDLE;
+        visit_handle vmd = VISIT_INVALID_HANDLE;
           
-	if(VisIt_VariableMetaData_alloc(&vmd) == VISIT_OKAY)
+        if(VisIt_VariableMetaData_alloc(&vmd) == VISIT_OKAY)
         {
-	  VisIt_VariableMetaData_setName(vmd, stat.c_str());
-	  VisIt_VariableMetaData_setMeshName(vmd, mesh_for_procid.c_str());
-	  VisIt_VariableMetaData_setCentering(vmd, VISIT_VARCENTERING_ZONE);
-	  VisIt_VariableMetaData_setType(vmd, VISIT_VARTYPE_SCALAR);
-	  VisIt_VariableMetaData_setNumComponents(vmd, 1);
-	  VisIt_VariableMetaData_setUnits(vmd, "seconds" );
-	  
-	  // ARS - FIXME
-	  //      VisIt_VariableMetaData_setHasDataExtents(vmd, false);
-	  VisIt_VariableMetaData_setTreatAsASCII(vmd, false);
-	  VisIt_SimulationMetaData_addVariable(md, vmd);
-	}
+          std::string stat = std::string("processor/runtime/") + 
+            simStateP->d_runTimeStats.getName( (SimulationState::RunTimeStat) i );
+
+          std::string units = 
+            simStateP->d_runTimeStats.getUnits( (SimulationState::RunTimeStat) i );
+
+          VisIt_VariableMetaData_setName(vmd, stat.c_str());
+          VisIt_VariableMetaData_setMeshName(vmd, mesh_for_procid.c_str());
+          VisIt_VariableMetaData_setCentering(vmd, VISIT_VARCENTERING_ZONE);
+          VisIt_VariableMetaData_setType(vmd, VISIT_VARTYPE_SCALAR);
+          VisIt_VariableMetaData_setNumComponents(vmd, 1);
+          VisIt_VariableMetaData_setUnits(vmd, units.c_str());
+          
+          // ARS - FIXME
+          //      VisIt_VariableMetaData_setHasDataExtents(vmd, false);
+          VisIt_VariableMetaData_setTreatAsASCII(vmd, false);
+          VisIt_SimulationMetaData_addVariable(md, vmd);
+        }
       }
       
       MPIScheduler *mpiScheduler = dynamic_cast<MPIScheduler*>
         (sim->simController->getSchedulerP().get_rep());
 
-      // Add in the mpi timing stats.
+      // Add in the mpi run time stats.
       if( mpiScheduler )
       {
-	for( unsigned int i=0; i<mpiScheduler->mpi_info_.size(); ++i )
-        {
-	  std::string stat = std::string("processor/mpi/") + 
-	    mpiScheduler->mpi_info_.getName( (MPIScheduler::TimingStat)i );
-
-	  visit_handle vmd = VISIT_INVALID_HANDLE;
-          
-	  if(VisIt_VariableMetaData_alloc(&vmd) == VISIT_OKAY)
-          {
-	    VisIt_VariableMetaData_setName(vmd, stat.c_str());
-	    VisIt_VariableMetaData_setMeshName(vmd, mesh_for_procid.c_str());
-	    VisIt_VariableMetaData_setCentering(vmd, VISIT_VARCENTERING_ZONE);
-	    VisIt_VariableMetaData_setType(vmd, VISIT_VARTYPE_SCALAR);
-	    VisIt_VariableMetaData_setNumComponents(vmd, 1);
-	    VisIt_VariableMetaData_setUnits(vmd, "seconds" );
-	    
-	    // ARS - FIXME
-	    //      VisIt_VariableMetaData_setHasDataExtents(vmd, false);
-	    VisIt_VariableMetaData_setTreatAsASCII(vmd, false);
-	    VisIt_SimulationMetaData_addVariable(md, vmd);
-	  }
-	}
-      }
-
-      for( int i=0; i<numProcLabels; ++i )
-      {
-        if( i < 3 ||
-            (i == 3 && ProcessInfo::isSupported(ProcessInfo::MEM_SIZE)) ||
-            (i == 4 && ProcessInfo::isSupported(ProcessInfo::MEM_RSS )) )
+        for( unsigned int i=0; i<mpiScheduler->mpi_info_.size(); ++i )
         {
           visit_handle vmd = VISIT_INVALID_HANDLE;
           
           if(VisIt_VariableMetaData_alloc(&vmd) == VISIT_OKAY)
           {
-            VisIt_VariableMetaData_setName(vmd, procLabels[0][i].c_str());
+            std::string stat = std::string("processor/mpi/") + 
+              mpiScheduler->mpi_info_.getName( (MPIScheduler::TimingStat)i );
+
+            std::string units = 
+              simStateP->d_runTimeStats.getUnits( (SimulationState::RunTimeStat) i );
+
+            VisIt_VariableMetaData_setName(vmd, stat.c_str());
             VisIt_VariableMetaData_setMeshName(vmd, mesh_for_procid.c_str());
             VisIt_VariableMetaData_setCentering(vmd, VISIT_VARCENTERING_ZONE);
             VisIt_VariableMetaData_setType(vmd, VISIT_VARTYPE_SCALAR);
             VisIt_VariableMetaData_setNumComponents(vmd, 1);
-            VisIt_VariableMetaData_setUnits(vmd, procLabels[1][i].c_str());
-
+            VisIt_VariableMetaData_setUnits(vmd, units.c_str());
+            
             // ARS - FIXME
             //      VisIt_VariableMetaData_setHasDataExtents(vmd, false);
             VisIt_VariableMetaData_setTreatAsASCII(vmd, false);
             VisIt_SimulationMetaData_addVariable(md, vmd);
           }
+        }
+      }
+
+      {
+        visit_handle vmd = VISIT_INVALID_HANDLE;
+          
+        if(VisIt_VariableMetaData_alloc(&vmd) == VISIT_OKAY)
+        {
+          VisIt_VariableMetaData_setName(vmd, "processor/id");
+          VisIt_VariableMetaData_setMeshName(vmd, mesh_for_procid.c_str());
+          VisIt_VariableMetaData_setCentering(vmd, VISIT_VARCENTERING_ZONE);
+          VisIt_VariableMetaData_setType(vmd, VISIT_VARTYPE_SCALAR);
+          VisIt_VariableMetaData_setNumComponents(vmd, 1);
+          VisIt_VariableMetaData_setUnits(vmd, "");
+
+          // ARS - FIXME
+          //      VisIt_VariableMetaData_setHasDataExtents(vmd, false);
+          VisIt_VariableMetaData_setTreatAsASCII(vmd, false);
+          VisIt_SimulationMetaData_addVariable(md, vmd);
         }
       }
     }
@@ -580,9 +564,15 @@ visit_handle visit_ReadMetaData(void *cbdata)
     // md->AddDefaultSILRestrictionDescription(std::string("!TurnOnAll"));
 
     /* Add some commands. */
+    // const char *cmd_names[] = {"Stop", "Step", "Run",
+    //                            "Save", "Checkpoint", "Unused",
+    //                            "Finish", "Terminate", "Abort"};
+
+
     const char *cmd_names[] = {"Stop", "Step", "Run",
-                               "Stats", "Save", "Checkpoint",
-                               "Finish", "Terminate", "Abort", "Regrid"};
+                               "Save", "Checkpoint", "Unused",
+                               "Terminate", "Abort"};
+
 
     int numNames = sizeof(cmd_names) / sizeof(const char *);
 
@@ -590,11 +580,7 @@ visit_handle visit_ReadMetaData(void *cbdata)
     {
       bool enabled;
 
-      // Check for regrid, save, and checkpoint option.
-      if(strcmp( "Regrid", cmd_names[i] ) == 0 )
-        enabled = sim->simController->doAMR();
-
-      else if(strcmp( "Save", cmd_names[i] ) == 0 )
+      if(strcmp( "Save", cmd_names[i] ) == 0 )
         enabled = !sim->simController->getOutput()->isOutputTimestep();
 
       else if(strcmp( "Checkpoint", cmd_names[i] ) == 0 )
@@ -625,6 +611,21 @@ visit_handle visit_ReadMetaData(void *cbdata)
     // Setup the custom UI optional min/max variable table
     visit_GetAnalysisVars( sim );
 
+    // Setup the custom UI Grid Info
+    visit_GetGridInfo( sim );
+
+    // Setup the custom UI Runtime Stats
+    visit_GetRuntimeStats( sim );
+
+    // Setup the custom UI MPI Stats
+    visit_GetMPIStats( sim );
+
+    // These are one time initializations.
+    VisItUI_setValueI("StopAtTimeStep",     sim->stopAtTimeStep,     1);	
+    VisItUI_setValueI("StopAtLastTimeStep", sim->stopAtLastTimeStep, 1);	
+
+    // Setup the custom UI Image variables
+    visit_GetImageVars( sim );
 
     // if( sim->message.size() )
     // {
@@ -1256,15 +1257,17 @@ visit_handle visit_SimGetVariable(int domain, const char *varname, void *cbdata)
   std::string matl = varName.substr(found + 1);
   varName = varName.substr(0, found);
 
-  std::string varType="CC_Mesh";
+  std::string varType( "CC_Mesh" );
 
-  if (strcmp(varname, "proc_id") != 0)
+  // Check for a particle variable
+  if (strcmp(varname, "processor") != 0)
   {
     for (int k=0; k<(int)stepInfo->varInfo.size(); ++k)
     {
       if (stepInfo->varInfo[k].name == varName)
       {
         varType = stepInfo->varInfo[k].type;
+
         if (stepInfo->varInfo[k].type.find("ParticleVariable") !=
             std::string::npos)
         {
@@ -1363,6 +1366,30 @@ visit_handle visit_SimGetVariable(int domain, const char *varname, void *cbdata)
       found = varName.find_last_of("/");
       varName = varName.substr(found + 1);
 
+      double val;
+
+      // Processor Id
+      if( strcmp(varname, "processor/id") == 0 )
+      {
+          val = patchInfo.getProcId();
+      }
+      // Simulation State Runtime stats
+      else if( strncmp( varname, "processor/runtime/", 18 ) == 0 &&
+               simStateP->d_runTimeStats.exists(varName) )
+      {
+        val = simStateP->d_runTimeStats.getValue( varName );
+      }
+
+      // MPI Scheduler Timing stats
+      else if( strncmp( varname, "processor/mpi/", 14 ) == 0 &&
+               mpiScheduler && mpiScheduler->mpi_info_.exists(varName) )
+      {
+        val = mpiScheduler->mpi_info_.getValue( varName );
+      }
+      else
+	val = 0;
+      
+      // Create at new grid data for the values.
       gd = new GridDataRaw;
 
       for (int i=0; i<3; ++i)
@@ -1376,62 +1403,8 @@ visit_handle visit_SimGetVariable(int domain, const char *varname, void *cbdata)
       int ncells = (qhigh[0]-qlow[0])*(qhigh[1]-qlow[1])*(qhigh[2]-qlow[2]);
       gd->data = new double[ncells];
 
-      double val;
-
-      // Processor Id
-      if (std::string(varname) == procLabels[0][0] )
-      {
-          val = patchInfo.getProcId();
-      }
-      // Processor memory usage
-      else if( std::string(varname) == procLabels[0][1] )
-      {
-        unsigned long memuse, highwater, maxMemUse;
-        
-        schedulerP->checkMemoryUse( memuse, highwater, maxMemUse );
-        
-        val = memuse;
-      }
-      // Processor maximum memory usage
-      else if( std::string(varname) == procLabels[0][2] )
-      {
-        unsigned long memuse, highwater, maxMemUse;
-        
-        schedulerP->checkMemoryUse( memuse, highwater, maxMemUse );
-        
-        val = maxMemUse;
-      }
-      // Processor memory usage
-      else if( std::string(varname) == procLabels[0][3] )
-      {
-        val = ProcessInfo::getMemoryUsed();
-      }
-      // Processor memory resident
-      else if( std::string(varname) == procLabels[0][4] )
-      {
-        val = ProcessInfo::getMemoryResident();
-      }
-
-      // Simulation State Timing stats
-      else if( strncmp( varname, "processor/time/", 15 ) == 0 &&
-	       simStateP->d_timingStats.exists(varName) )
-      {
-	std::cerr << varname << "  " << varName << std::endl;
-    
-	val = simStateP->d_timingStats.getValue( varName );
-      }
-
-      // MPI State Timing stats
-      else if( strncmp( varname, "processor/mpi/", 14 ) == 0 &&
-	       mpiScheduler && mpiScheduler->mpi_info_.exists(varName) )
-      {
-	std::cerr << varname << "  " << varName << std::endl;
-    
-	val = mpiScheduler->mpi_info_.getValue( varName );
-      }
-
       for (int i=0; i<ncells; ++i)
-	gd->data[i] = val;
+        gd->data[i] = val;
     }
     else
     {
@@ -1490,23 +1463,42 @@ visit_handle visit_SimGetVariable(int domain, const char *varname, void *cbdata)
 
     if( gd )
     {
-      int n = (qhigh[0]-qlow[0])*(qhigh[1]-qlow[1])*(qhigh[2]-qlow[2]);
+      int ncells = (qhigh[0]-qlow[0])*(qhigh[1]-qlow[1])*(qhigh[2]-qlow[2]);
       
-      CheckNaNs(n*gd->components,gd->data,level,local_patch);
+      CheckNaNs(ncells*gd->components, gd->data, level, local_patch);
       
       if(VisIt_VariableData_alloc(&varH) == VISIT_OKAY)
       {
         VisIt_VariableData_setDataD(varH, VISIT_OWNER_SIM, gd->components,
-                                    n * gd->components, gd->data);      
+                                    ncells * gd->components, gd->data);
         
         // vtkDoubleArray *rv = vtkDoubleArray::New();
         // rv->SetNumberOfComponents(gd->components);
-        // rv->SetArray(gd->data, n*gd->components, 0);
+        // rv->SetArray(gd->data, ncells*gd->components, 0);
           
         // ARS - FIX ME - CHECK FOR LEAKS
         // don't delete gd->data - vtk owns it now!
           // delete gd;
       }
+    }
+    else
+    {
+      // Create at new grid data for the values.
+      gd = new GridDataRaw;
+
+      for (int i=0; i<3; ++i)
+      {
+        gd->low[i ] = qlow[i];
+        gd->high[i] = qhigh[i];
+      }
+
+      gd->components = 1;
+
+      int ncells = (qhigh[0]-qlow[0])*(qhigh[1]-qlow[1])*(qhigh[2]-qlow[2]);
+      gd->data = new double[ncells];
+
+      for (int i=0; i<ncells; ++i)
+        gd->data[i] = 0;
     }
   }
 
@@ -1521,9 +1513,6 @@ visit_handle visit_SimGetDomainList(const char *name, void *cbdata)
 {
   if( Parallel::usingMPI() )
   {
-    int par_rank;
-    MPI_Comm_rank(MPI_COMM_WORLD, &par_rank);
-
     visit_simulation_data *sim = (visit_simulation_data *)cbdata;
 
     SchedulerP schedulerP = sim->simController->getSchedulerP();
@@ -1558,7 +1547,7 @@ visit_handle visit_SimGetDomainList(const char *name, void *cbdata)
         const Patch* patch = level->getPatch(p);
 
         // Record the patch id if it belongs to this process.
-        if( par_rank == lb->getPatchwiseProcessorAssignment(patch) )
+        if( sim->rank == lb->getPatchwiseProcessorAssignment(patch) )
           localPatches[cc++] = GetGlobalDomainNumber(stepInfo, l, p);
       }
     }

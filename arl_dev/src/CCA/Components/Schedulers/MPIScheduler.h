@@ -93,6 +93,8 @@ class MPIScheduler : public SchedulerCommon {
 
             void postMPIRecvs( DetailedTask* task, bool only_old_recvs, int abort_point, int iteration );
 
+            int  pendingMPIRecvs();
+
             void runTask( DetailedTask* task, int iteration, int thread_id = 0 );
 
     virtual void runReductionTask( DetailedTask* task );
@@ -142,7 +144,9 @@ class MPIScheduler : public SchedulerCommon {
       MAX_TIMING_STATS
     };
 
-    InfoMapper< TimingStat, double > mpi_info_;
+    ReductionInfoMapper< TimingStat, double > mpi_info_;
+    
+    void computeNetRunTimeStats(InfoMapper< SimulationState::RunTimeStat, double >& runTimeStats);
 
     MPIScheduler*       parentScheduler_;
 

@@ -25,6 +25,7 @@
 #define UINTAH_HOMEBREW_CONSTVARIABLE_H
 
 #include <Core/Grid/Variables/constVariableBase.h>
+#include <Core/Grid/Variables/Array3.h>
 #include <Core/Util/Assert.h>
 
 namespace Uintah {
@@ -35,7 +36,7 @@ namespace Uintah {
 
 CLASS
    constVariable
-   
+
    Version of *Variable that is const in the sense that you can't
    modify the data that it points to (although you can change what it
    points to if it is a non-const version of the constVariableBase).
@@ -49,19 +50,19 @@ GENERAL INFORMATION
    University of Utah
 
    Center for the Simulation of Accidental Fires and Explosions (C-SAFE)
-  
+
 
 KEYWORDS
    Variable, const
 
 DESCRIPTION
    Long description...
-  
+
 WARNING
-  
+
 ****************************************/
 
-  template<class VariableBase, class Variable, class T, class Index> 
+  template<class VariableBase, class Variable, class T, class Index>
   class constVariable : public constVariableBase<VariableBase> {
   public:
     typedef T value_type;
@@ -78,7 +79,7 @@ WARNING
 
     constVariable<VariableBase, Variable, T, Index>& operator=(const Variable& v)
     { copyPointer(v); return *this; }
-    
+
     constVariableBase<VariableBase>&
     operator=(const constVariableBase<VariableBase>& v)
     {
@@ -103,7 +104,7 @@ WARNING
     Variable& castOffConst() {
       return this->rep_;
     }
-   
+
     virtual ~constVariable() {}
 
     operator const Variable&() const
@@ -128,7 +129,15 @@ WARNING
 
     inline const T& operator[](Index idx) const
     { return this->rep_[idx]; }
-     
+
+#ifdef UINTAH_ENABLE_KOKKOS
+      inline KokkosView3<const T> getKokkosView() const
+      {
+        auto v = this->rep_.getKokkosView();
+        return KokkosView3<const T>( v.m_view, v.m_i, v.m_j, v.m_k );
+      }
+#endif //UINTAH_ENABLE_KOKKOS
+
     virtual const TypeDescription* virtualGetTypeDescription() const
     { return this->rep_.virtualGetTypeDescription(); }
 

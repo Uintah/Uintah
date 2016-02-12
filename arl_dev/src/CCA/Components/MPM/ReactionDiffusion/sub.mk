@@ -31,12 +31,12 @@
 SRCDIR   := CCA/Components/MPM/ReactionDiffusion
 
 SRCS     += \
-	$(SRCDIR)/ScalarDiffusionModel.cc \
-	$(SRCDIR)/JGConcentrationDiffusion.cc \
-	$(SRCDIR)/RFConcDiffusion1MPM.cc \
-	$(SRCDIR)/NonLinearDiff1.cc \
-	$(SRCDIR)/SDInterfaceModel.cc \
+	$(SRCDIR)/ScalarDiffusionModel.cc        \
+	$(SRCDIR)/JGConcentrationDiffusion.cc    \
+	$(SRCDIR)/SDInterfaceModel.cc            \
+	$(SRCDIR)/CommonIFConcDiff.cc            \
+	$(SRCDIR)/NullIFConcDiff.cc              \
 	$(SRCDIR)/ScalarDiffusionModelFactory.cc \
-	$(SRCDIR)/NullIFConcDiff.cc \
-	$(SRCDIR)/CommonIFConcDiff.cc \
-	$(SRCDIR)/SDInterfaceModelFactory.cc
+	$(SRCDIR)/SDInterfaceModelFactory.cc     \
+	$(SRCDIR)/RFConcDiffusion1MPM.cc         \
+	$(SRCDIR)/NonLinearDiff1.cc

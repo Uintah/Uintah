@@ -132,18 +132,35 @@ SimulationState::SimulationState(ProblemSpecP &ps)
     overhead[i]=0;
   }
 
-  d_timingStats.insert( CompilationTime, std::string("Compilation"), 0 );
-  d_timingStats.insert( RegriddingTime,  std::string("Regridding"), 0 );
-  d_timingStats.insert( RegriddingCompilationTime, std::string("RegriddingCompilation"), 0 );
-  d_timingStats.insert( RegriddingCopyDataTime,  std::string("RegriddingCopyData"), 0 );
-  d_timingStats.insert( LoadBalancerTime,   std::string("LoadBalancer"), 0 );
-  d_timingStats.insert( TaskExecTime,       std::string("TaskExec"), 0 );
-  d_timingStats.insert( TaskLocalCommTime,  std::string("TaskLocalComm"), 0 );
-  d_timingStats.insert( TaskGlobalCommTime, std::string("TaskGlobalComm"), 0 );
-  d_timingStats.insert( TaskWaitCommTime,   std::string("TaskWaitComm"), 0 );
-  d_timingStats.insert( TaskWaitThreadTime, std::string("TaskWaitThread"), 0 );
-  d_timingStats.insert( OutputTime,         std::string("Output"), 0 );
-  d_timingStats.validate( MAX_TIMING_STATS );
+  std::string timeStr("seconds");
+  std::string bytesStr("MBytes");
+    
+  d_runTimeStats.insert( CompilationTime,    std::string("Compilation"),      timeStr, 0 );
+  d_runTimeStats.insert( RegriddingTime,     std::string("Regridding"),       timeStr, 0 );
+  d_runTimeStats.insert( RegriddingCompilationTime, std::string("RegriddingCompilation"), timeStr, 0 );
+  d_runTimeStats.insert( RegriddingCopyDataTime,    std::string("RegriddingCopyData"),    timeStr, 0 );
+  d_runTimeStats.insert( LoadBalancerTime,   std::string("LoadBalancer"),     timeStr, 0 );
+  d_runTimeStats.insert( TaskExecTime,       std::string("TaskExec"),         timeStr, 0 );
+  d_runTimeStats.insert( TaskLocalCommTime,  std::string("TaskLocalComm"),    timeStr, 0 );
+  d_runTimeStats.insert( TaskGlobalCommTime, std::string("TaskGlobalComm"),   timeStr, 0 );
+  d_runTimeStats.insert( TaskWaitCommTime,   std::string("TaskWaitComm"),     timeStr, 0 );
+  d_runTimeStats.insert( TaskWaitThreadTime, std::string("TaskWaitThread"),   timeStr, 0 );
+  d_runTimeStats.insert( OutputFileIOTime,   std::string("OutputFileIO"),     timeStr, 0 );
+  d_runTimeStats.insert( OutputFileIORate,   std::string("OutputFileIORate"), "MBytes/sec", 0 );
+
+  d_runTimeStats.insert( SCIMemoryUsed,      std::string("SCIMemoryUsed"),      bytesStr, 0 );
+  d_runTimeStats.insert( SCIMemoryMaxUsed,   std::string("SCIMemoryMaxUsed"),   bytesStr, 0 );
+  d_runTimeStats.insert( SCIMemoryHighwater, std::string("SCIMemoryHighwater"), bytesStr, 0 );
+  d_runTimeStats.insert( MemoryUsed,         std::string("MemoryUsed"),         bytesStr, 0 );
+  d_runTimeStats.insert( MemoryResident,     std::string("MemoryResident"),     bytesStr, 0 );
+
+#ifdef USE_PAPI_COUNTERS
+  d_runTimeStats.insert( TotalFlops,  std::string("TotalFlops"),  "flops", 0 );
+  d_runTimeStats.insert( TotalVFlops, std::string("TotalVFlops"), "flops", 0 );
+  d_runTimeStats.insert( L2Misses,    std::string("L2Misses"), "misses", 0 );
+  d_runTimeStats.insert( L3Misses,    std::string("L3Misses"), "misses", 0 );
+#endif
+  d_runTimeStats.validate( MAX_TIMING_STATS );
 
   resetStats();
 
@@ -578,34 +595,8 @@ Material* SimulationState::parseAndLookupMaterial(ProblemSpecP& params,
 //
 void SimulationState::resetStats()
 {
-  d_timingStats.reset( 0 );  
+  d_runTimeStats.reset( 0 );  
 }
-//__________________________________
-//
-double SimulationState::getTotalTime()
-{
-  double totalTime = 0;
-  
-  for( unsigned int i=0; i<d_timingStats.size(); ++i )
-  {
-    if( (TimingStat) i != OutputTime )
-      totalTime += d_timingStats[(TimingStat) i];
-  }
-
-  return totalTime;
-}
-//__________________________________
-//
-double SimulationState::getOverheadTime()
-{
-  // Sum up the average time for overhead related components.
-  return (d_timingStats[CompilationTime] +
-	  d_timingStats[RegriddingTime] +
-	  d_timingStats[RegriddingCompilationTime] +
-	  d_timingStats[RegriddingCopyDataTime] +
-	  d_timingStats[LoadBalancerTime]);
-}
-
 //__________________________________
 //
 void SimulationState::setDimensionality(bool x, bool y, bool z)

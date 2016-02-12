@@ -41,11 +41,12 @@ namespace WasatchCore{
   EquationBase( GraphCategories& gc,
                 const std::string solnVarName,
                 const Direction direction )
-  : direction_  ( direction ),
-    gc_         ( gc ),
-    solnVarName_( solnVarName ),
-    solnVarTag_ ( solnVarName, Expr::STATE_DYNAMIC ),
-    rhsTag_     ( solnVarName + "_rhs", Expr::STATE_NONE )
+  : direction_    ( direction ),
+    gc_           ( gc ),
+    solnVarName_  ( solnVarName ),
+    solnVarTag_   ( solnVarName, Expr::STATE_DYNAMIC ),
+    solnVarNP1Tag_( solnVarName, Expr::STATE_NP1 ),
+    rhsTag_       ( solnVarName + "_rhs", Expr::STATE_NONE )
   {}
 
 

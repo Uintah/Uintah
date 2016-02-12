@@ -40,7 +40,7 @@ c     calculate incident flux at cell centers and radiative source
 
                src(i,j,k) =src(i,j,k)+(abskg(i,j,k) -scatkt(i,j,k)) 
      &           * volq(i,j,k) -
-     &           4.0D0*PI * (esrcg(i,j,k)-scatSource(i,j,k))
+     &           4.0D0*PI * (esrcg(i,j,k))
 
  10         continue
  20      continue

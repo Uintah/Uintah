@@ -27,6 +27,7 @@
 
 #include <CCA/Ports/Output.h>
 #include <Core/Parallel/UintahParallelComponent.h>
+#include <Core/Grid/Level.h>
 #include <Core/Grid/Variables/MaterialSetP.h>
 #include <Core/Grid/SimulationState.h>
 #include <Core/Grid/SimulationStateP.h>
@@ -218,6 +219,7 @@ using SCIRun::Mutex;
 
        class SaveItem {
          public:
+         
            void setMaterials(int level, 
                              const ConsecutiveRangeSet& matls,
                              ConsecutiveRangeSet& prevMatls,
@@ -226,12 +228,46 @@ using SCIRun::Mutex;
            MaterialSet* getMaterialSet(int level){ 
              return matlSet[level].get_rep(); 
            }
-
+           
+           const MaterialSubset* getMaterialSubset(const Level* level);
+           
            const VarLabel* label;
            std::map<int, MaterialSetP> matlSet;
        };
 
      private:
+     
+      enum outputFileFormat {UDA, PIDX};
+      outputFileFormat d_outputFileFormat;
+      
+      //__________________________________
+      //         PIDX related
+      //! output the all of the saveLabels in PIDX format
+      size_t
+          saveLabels_PIDX(std::vector< SaveItem >& saveLabels,
+                           const ProcessorGroup * pg,
+                           const PatchSubset    * patches,      
+                           DataWarehouse        * new_dw,          
+                           int                    type,
+                           const TypeDescription::Type TD,
+                           Dir                   levelDir,
+                           ProblemSpecP&          doc);
+                           
+      //! returns a vector of SaveItems with a common type description
+      std::vector<DataArchiver::SaveItem> 
+          findAllVariableTypes( std::vector< SaveItem >& saveLabels,
+                                 const TypeDescription::Type TD );
+                                 
+      void createPIDX_dirs( std::vector< SaveItem >& saveLabels,
+                            Dir& levelDir );
+                            
+      void PIDX_checkReturnCode( const int rc,
+                                 const std::string warn,
+                                 const char* file, 
+                                 int line);
+     
+       
+       //__________________________________
        //! returns a ProblemSpecP reading the xml file xmlName.
        //! You will need to that you need to call ProblemSpec::releaseDocument
        ProblemSpecP loadDocument(std::string xmlName);     

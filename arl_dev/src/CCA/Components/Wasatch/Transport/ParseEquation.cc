@@ -630,8 +630,8 @@ namespace WasatchCore{
                                                      temperatureTag,
                                                      mixMWTag,
                                                      R,
-                                                     xBodyForceTag,
-                                                     xSrcTermTag,
+                                                     yBodyForceTag,
+                                                     ySrcTermTag,
                                                      gc,
                                                      momentumSpec,
                                                      turbParams );
@@ -650,8 +650,8 @@ namespace WasatchCore{
                                                      temperatureTag,
                                                      mixMWTag,
                                                      R,
-                                                     xBodyForceTag,
-                                                     xSrcTermTag,
+                                                     zBodyForceTag,
+                                                     zSrcTermTag,
                                                      gc,
                                                      momentumSpec,
                                                      turbParams );
@@ -668,6 +668,7 @@ namespace WasatchCore{
       
       // register total internal energy equation
       const Expr::TagList velTags = tag_list(xVelTag, yVelTag, zVelTag);
+      const Expr::TagList bodyForceTags = tag_list(xBodyForceTag,yBodyForceTag,zBodyForceTag);
       const Expr::Tag viscTag = (momentumSpec->findBlock("Viscosity")) ? parse_nametag( momentumSpec->findBlock("Viscosity")->findBlock("NameTag") ) : Expr::Tag();
       std::string rhoETotal;
       Uintah::ProblemSpecP energySpec = momentumSpec->findBlock("EnergyEquation");
@@ -677,7 +678,7 @@ namespace WasatchCore{
         throw Uintah::ProblemSetupException( msg.str(), __FILE__, __LINE__ );
       }
       momentumSpec->findBlock("EnergyEquation")->get("SolutionVariable", rhoETotal);
-      EquationBase* totalEEq = scinew TotalInternalEnergyTransportEquation(rhoETotal, momentumSpec->findBlock("EnergyEquation"), gc, rhoTag, temperatureTag, TagNames::self().pressure, velTags, viscTag, TagNames::self().dilatation , turbParams);
+      EquationBase* totalEEq = scinew TotalInternalEnergyTransportEquation(rhoETotal, momentumSpec->findBlock("EnergyEquation"), gc, rhoTag, temperatureTag, TagNames::self().pressure, velTags, bodyForceTags, viscTag, TagNames::self().dilatation , turbParams);
       adaptors.push_back( scinew EqnTimestepAdaptor<SVolField>(totalEEq) );
 
     } else {
@@ -809,6 +810,7 @@ namespace WasatchCore{
   
   //==================================================================
   
+  template<typename GasVel1T, typename GasVel2T, typename GasVel3T>
   std::vector<EqnTimestepAdaptorBase*>
   parse_particle_transport_equations( Uintah::ProblemSpecP particleSpec,
                                       Uintah::ProblemSpecP wasatchSpec,
@@ -892,7 +894,7 @@ namespace WasatchCore{
     //
     Expr::ExpressionFactory& factory = *(gc[ADVANCE_SOLUTION]->exprFactory);
     proc0cout << "Setting up particle x-momentum equation" << std::endl;
-    EquationBase* pueq = scinew ParticleMomentumEquation( puname,
+    EquationBase* pueq = scinew ParticleMomentumEquation<GasVel1T,GasVel2T,GasVel3T>( puname,
                                                           XDIR,
                                                           pPosTags,
                                                           pSizeTag,
@@ -901,7 +903,7 @@ namespace WasatchCore{
     adaptors.push_back( scinew EqnTimestepAdaptor<ParticleField>(pueq) );
     
     proc0cout << "Setting up particle y-momentum equation" << std::endl;
-    EquationBase* pveq = scinew ParticleMomentumEquation( pvname,
+    EquationBase* pveq = scinew ParticleMomentumEquation<GasVel1T,GasVel2T,GasVel3T>( pvname,
                                                           YDIR,
                                                           pPosTags,
                                                           pSizeTag,
@@ -910,7 +912,7 @@ namespace WasatchCore{
     adaptors.push_back( scinew EqnTimestepAdaptor<ParticleField>(pveq) );
     
     proc0cout << "Setting up particle z-momentum equation" << std::endl;
-    EquationBase* pweq = scinew ParticleMomentumEquation( pwname,
+    EquationBase* pweq = scinew ParticleMomentumEquation<GasVel1T,GasVel2T,GasVel3T>( pwname,
                                                           ZDIR,
                                                           pPosTags,
                                                           pSizeTag,
@@ -1538,6 +1540,20 @@ namespace WasatchCore{
 
   // convective fluxes are supported for momentum as well.
   INSTANTIATE_CONVECTION( SVolField )
+
+  template
+  std::vector<EqnTimestepAdaptorBase*>
+  parse_particle_transport_equations<XVolField, YVolField, ZVolField>( Uintah::ProblemSpecP particleSpec,
+                                     Uintah::ProblemSpecP wasatchSpec,
+                                     const bool useAdaptiveDt,
+                                     GraphCategories& gc);
+
+  template
+  std::vector<EqnTimestepAdaptorBase*>
+  parse_particle_transport_equations<SVolField, SVolField, SVolField>( Uintah::ProblemSpecP particleSpec,
+                                                                      Uintah::ProblemSpecP wasatchSpec,
+                                                                      const bool useAdaptiveDt,
+                                                                      GraphCategories& gc);
 
   //-----------------------------------------------------------------
 

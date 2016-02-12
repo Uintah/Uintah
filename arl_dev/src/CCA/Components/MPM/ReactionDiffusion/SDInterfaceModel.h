@@ -25,18 +25,18 @@
 #ifndef __SDINTERFACEMODEL_H__
 #define __SDINTERFACEMODEL_H__
 
-#include <Core/Grid/Task.h>
-#include <Core/Grid/SimulationStateP.h>
-#include <Core/Grid/SimulationState.h>
-#include <Core/Grid/Variables/ComputeSet.h>
-#include <Core/Labels/MPMLabel.h>
-#include <Core/ProblemSpec/ProblemSpecP.h>
-#include <Core/Parallel/ProcessorGroup.h>
+#include <CCA/Components/MPM/MPMFlags.h>
+#include <CCA/Components/MPM/ConstitutiveModel/MPMMaterial.h>
 #include <CCA/Ports/Scheduler.h>
 #include <CCA/Ports/SchedulerP.h>
 #include <CCA/Ports/DataWarehouse.h>
-#include <CCA/Components/MPM/MPMFlags.h>
-#include <CCA/Components/MPM/ConstitutiveModel/MPMMaterial.h>
+#include <Core/Grid/SimulationStateP.h>
+#include <Core/Grid/SimulationState.h>
+#include <Core/Grid/Task.h>
+#include <Core/Grid/Variables/ComputeSet.h>
+#include <Core/Labels/MPMLabel.h>
+#include <Core/Parallel/ProcessorGroup.h>
+#include <Core/ProblemSpec/ProblemSpecP.h>
 
 namespace Uintah {
 

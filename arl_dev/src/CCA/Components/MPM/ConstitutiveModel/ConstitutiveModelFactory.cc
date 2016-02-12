@@ -63,11 +63,8 @@
 #include <CCA/Components/MPM/ConstitutiveModel/JWLppMPM.h>
 #include <CCA/Components/MPM/ConstitutiveModel/Biswajit/CamClay.h>
 #include <CCA/Components/MPM/ConstitutiveModel/Biswajit/Arena.h>
-
-//************** ReactiveDiffusion CMs****************************
 #include <CCA/Components/MPM/ConstitutiveModel/RFElasticPlastic.h>
-//************** ReactiveDiffusion CMs****************************
-
+#include <CCA/Components/MPM/ConstitutiveModel/PortableTongeRamesh/TongeRameshPTR.h>
 #include <CCA/Components/MPM/MPMFlags.h>
 
 #include <Core/Exceptions/ProblemSetupException.h>
@@ -241,6 +238,17 @@ ConstitutiveModel* ConstitutiveModelFactory::create(ProblemSpecP& ps,
 
   else if (mat_type ==  "rf_elastic_plastic")
     return(scinew RFElasticPlastic(child,flags));
+
+  else if (mat_type ==  "TongeRameshPTR") {
+    if (flags->d_integrator_type == "explicit"){
+      return(scinew TongeRameshPTR(child,flags));
+    } else {
+      ostringstream msg;
+      msg << "\n ERROR: One may not use TongeRameshPTR along with \n"
+          << " the fracture or implicit intergrator \n";
+      throw ProblemSetupException(msg.str(),__FILE__, __LINE__);
+    }
+  }
 
   else
     throw ProblemSetupException("Unknown Material Type R ("+mat_type+")", __FILE__, __LINE__);

@@ -62,7 +62,15 @@ void visit_GetTimeVars       ( visit_simulation_data *sim );
 void visit_GetOutputIntervals( visit_simulation_data *sim );
 void visit_GetAnalysisVars   ( visit_simulation_data *sim );
 void visit_GetUPSVars        ( visit_simulation_data *sim );
+void visit_GetImageVars      ( visit_simulation_data *sim );
 
+void visit_GetGridInfo       ( visit_simulation_data *sim );
+void visit_GetRuntimeStats   ( visit_simulation_data *sim );
+void visit_GetMPIStats       ( visit_simulation_data *sim );
+
+void visit_SetStripChartValue( visit_simulation_data *sim,
+			       std::string name,
+			       double value );
 } // End namespace Uintah
 
 #endif

@@ -186,9 +186,6 @@ RadPetscSolver::setMatrix(const ProcessorGroup* ,
                            CCVariable<double>& AS,
                            CCVariable<double>& AW,
                            CCVariable<double>& AP,
-                           CCVariable<double>& AE,
-                           CCVariable<double>& AN,
-                           CCVariable<double>& AT, 
                            const bool print )
 
 {

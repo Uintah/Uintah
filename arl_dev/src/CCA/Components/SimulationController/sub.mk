@@ -46,6 +46,7 @@ PSELIBS :=                         \
 	CCA/Components/DataArchiver    \
 	CCA/Components/ReduceUda       \
 	CCA/Components/Regridder       \
+	CCA/Components/Schedulers      \
 	CCA/Ports                      \
 	Core/OS                        \
 	Core/Geometry                  \

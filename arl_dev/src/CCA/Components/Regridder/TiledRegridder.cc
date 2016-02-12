@@ -248,7 +248,7 @@ Grid* TiledRegridder::regrid(Grid* oldGrid)
   // ignore...
   if (rgtimes.active()) {
     double avg[20] = { 0 };
-    MPI_Reduce(&rtimes, &avg, 20, MPI_DOUBLE, MPI_SUM, 0, d_myworld->getComm());
+    MPI_Reduce(rtimes, avg, 20, MPI_DOUBLE, MPI_SUM, 0, d_myworld->getComm());
     if (d_myworld->myrank() == 0) {
       cout << "Regrid Avg Times: ";
       for (int i = 0; i < 20; i++) {
@@ -258,7 +258,7 @@ Grid* TiledRegridder::regrid(Grid* oldGrid)
       cout << endl;
     }
     double max[20] = { 0 };
-    MPI_Reduce(&rtimes, &max, 20, MPI_DOUBLE, MPI_MAX, 0, d_myworld->getComm());
+    MPI_Reduce(rtimes, max, 20, MPI_DOUBLE, MPI_MAX, 0, d_myworld->getComm());
     if (d_myworld->myrank() == 0) {
       cout << "Regrid Max Times: ";
       for (int i = 0; i < 20; i++) {

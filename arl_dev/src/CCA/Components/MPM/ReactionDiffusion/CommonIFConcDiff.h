@@ -37,6 +37,7 @@ namespace Uintah {
     ~CommonIFConcDiff();
 
   protected:
+
     CommonIFConcDiff(const CommonIFConcDiff&);
     CommonIFConcDiff& operator=(const CommonIFConcDiff&);
     

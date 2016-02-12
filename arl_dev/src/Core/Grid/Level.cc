@@ -21,7 +21,6 @@
  * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
  * IN THE SOFTWARE.
  */
-
 #include <Core/Exceptions/InvalidGrid.h>
 #include <Core/Exceptions/ProblemSetupException.h>
 #include <Core/Geometry/BBox.h>
@@ -343,6 +342,41 @@ void Level::findInteriorNodeIndexRange(IntVector& lowIndex,
   
   lowIndex  = roundNearest(l);
   highIndex = roundNearest(h);
+}
+
+//______________________________________________________________________
+//  Compute the variable extents for this variable type
+void Level::computeVariableExtents(const TypeDescription::Type TD,
+                                   IntVector& lo,
+                                   IntVector& hi ) const         
+{
+  IntVector CCLo;
+  IntVector CCHi;
+  findCellIndexRange(CCLo,CCHi);
+  
+  switch ( TD ){
+   case TypeDescription::CCVariable:
+     lo = CCLo;
+     hi = CCHi;
+     break;
+   case TypeDescription::SFCXVariable:
+     lo = CCLo;
+     hi = CCHi + IntVector(1,0,0);
+     break;
+   case TypeDescription::SFCYVariable:
+     lo = CCLo;
+     hi = CCHi + IntVector(0,1,0);
+     break;
+   case TypeDescription::SFCZVariable:
+     lo = CCLo;
+     hi = CCHi + IntVector(0,0,1);
+     break;
+   case TypeDescription::NCVariable:
+      findInteriorCellIndexRange(lo, hi);
+     break;
+   default:
+      throw InternalError("  ERROR: Level::computeVariableExtents type description not supported", __FILE__, __LINE__);
+  }
 }
 
 //______________________________________________________________________

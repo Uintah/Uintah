@@ -179,7 +179,7 @@ main( int argc, char* argv[] )
         std::fill(&hnMessage[0],&hnMessage[HOST_NAME_SIZE],'\0');
         MPI_Status status;
 
-        MPI_Recv( &hnMessage, HOST_NAME_SIZE, MPI_CHAR, proc, 0, MPI_COMM_WORLD, &status );
+        MPI_Recv( hnMessage, HOST_NAME_SIZE, MPI_CHAR, proc, 0, MPI_COMM_WORLD, &status );
 
         // int numBytesReceived = -1;
         // MPI_Get_count( &status, MPI_CHAR, &numBytesReceived );
