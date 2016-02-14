@@ -674,7 +674,7 @@
 
   </CFD>
   
-  include href="miniAero_spec.xml"    section="MiniAero" />
+  <include href="miniAero_spec.xml"    section="MiniAero" />
 
   <!--__________________________________-->
 
