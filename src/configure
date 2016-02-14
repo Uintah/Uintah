@@ -842,12 +842,14 @@ DEF_WASATCH
 DEF_MODELS_RADIATION
 DEF_NO_FORTRAN
 DEF_MPM
+DEF_MINIAERO
 DEF_ICE
 DEF_ARCHES
 BUILD_WASATCH_FOR_ARCHES
 BUILD_WASATCH
 BUILD_MPM
 BUILD_MODELS_RADIATION
+BUILD_MINIAERO
 BUILD_ICE
 BUILD_ARCHES
 OGL_ERR_MACRO
@@ -998,6 +1000,7 @@ enable_throw_level
 enable_rpath
 enable_arches
 enable_ice
+enable_miniaero
 enable_mpm
 enable_wasatch
 enable_all_components
@@ -1669,6 +1672,7 @@ Optional Features:
 --enable-rpath          Set a default runtime library search path
 --enable-arches         Turn on the Arches component - and Radiation Model.
 --enable-ice            Turn on the Ice component.
+--enable-miniaero       Turn on the MiniAero component.
 --enable-mpm            Turn on the Mpm component.
 --enable-wasatch        Turn on the Wasatch component.
 --enable-all-components Turn on the all components.
@@ -4048,6 +4052,18 @@ fi
 
 
 
+  # Check whether --enable-miniaero was given.
+if test "${enable_miniaero+set}" = set; then :
+  enableval=$enable_miniaero; BUILD_MINIAERO="yes"
+else
+  BUILD_MINIAERO="no"
+   DEF_MINIAERO="#define NO_MINIAERO"
+fi
+
+  sci_arg_enable_list="$sci_arg_enable_list --enable-miniaero --disable-miniaero"
+
+
+
   # Check whether --enable-mpm was given.
 if test "${enable_mpm+set}" = set; then :
   enableval=$enable_mpm; BUILD_MPM="yes"
@@ -4077,10 +4093,12 @@ if test "${enable_all_components+set}" = set; then :
   enableval=$enable_all_components; use_all_components="yes"
    BUILD_ARCHES="yes"
    BUILD_ICE="yes"
+   BUILD_MINIAERO="yes"
    BUILD_MPM="yes"
    BUILD_WASATCH="yes"
    DEF_ARCHES=
    DEF_ICE=
+   DEF_MINIAERO=
    DEF_MPM=
    DEF_WASATCH=
 
@@ -4101,15 +4119,17 @@ DEF_MODELS_RADIATION=
 if test "$use_all_components" = "yes" -a          \
         \( "$enable_arches"           = "yes" -o  \
            "$enable_ice"              = "yes" -o  \
+           "$enable_miniaero"         = "yes" -o  \
            "$enable_models_radiation" = "yes" -o  \
            "$enable_mpm"              = "yes" -o  \
            "$enable_wasatch"          = "yes" \); then
    as_fn_error $? "Please do not use both --enable-all-components and --enable-<specific-component> " "$LINENO" 5
 fi
-if test "$BUILD_ARCHES"  != "yes"              -a   \
-        "$BUILD_ICE"     != "yes"              -a   \
-        "$BUILD_MPM"     != "yes"              -a   \
-        "$BUILD_WASATCH" != "yes"; then
+if test "$BUILD_ARCHES"   != "yes"              -a   \
+        "$BUILD_ICE"      != "yes"              -a   \
+        "$BUILD_MINIAERO" != "yes"              -a   \
+        "$BUILD_MPM"      != "yes"              -a   \
+        "$BUILD_WASATCH"  != "yes"; then
   add_important_warning "-------------------------------------------------------------------------"
   msg="!!! NO COMPONENTS WERE SPECIFIED! ONLY UTILITY PROGRAMS WILL BE BUILT !!!"
   add_important_warning "$msg"
@@ -6682,6 +6702,8 @@ if test "$with_fortran" = no; then
 fi
 
 # NO_FORTRAN is used in configVars.mk[.in] and DEF_NO_FORTRAN is used in uintah_testdefs.h.in
+
+
 
 
 

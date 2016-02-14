@@ -631,6 +631,13 @@ SCI_ARG_ENABLE(ice,
   [BUILD_ICE="yes"],
   [BUILD_ICE="no"
    DEF_ICE=["#define NO_ICE"]])
+   
+SCI_ARG_ENABLE(miniaero,
+  AC_HELP_STRING(--enable-miniaero,
+                 Turn on the MiniAero component.),
+  [BUILD_MINIAERO="yes"],
+  [BUILD_MINIAERO="no"
+   DEF_MINIAERO=["#define NO_MINIAERO"]])  
 
 SCI_ARG_ENABLE(mpm,
   AC_HELP_STRING(--enable-mpm,
@@ -652,10 +659,12 @@ SCI_ARG_ENABLE(all_components,
   [use_all_components="yes"
    BUILD_ARCHES="yes"
    BUILD_ICE="yes"
+   BUILD_MINIAERO="yes"
    BUILD_MPM="yes"
    BUILD_WASATCH="yes"
    DEF_ARCHES=
    DEF_ICE=
+   DEF_MINIAERO=
    DEF_MPM=
    DEF_WASATCH=
   ],
@@ -671,15 +680,17 @@ DEF_MODELS_RADIATION=
 if test "$use_all_components" = "yes" -a          \
         \( "$enable_arches"           = "yes" -o  \
            "$enable_ice"              = "yes" -o  \
+           "$enable_miniaero"         = "yes" -o  \
            "$enable_models_radiation" = "yes" -o  \
            "$enable_mpm"              = "yes" -o  \
            "$enable_wasatch"          = "yes" \); then
    AC_MSG_ERROR( Please do not use both --enable-all-components and --enable-<specific-component> )
 fi
-if test "$BUILD_ARCHES"  != "yes"              -a   \
-        "$BUILD_ICE"     != "yes"              -a   \
-        "$BUILD_MPM"     != "yes"              -a   \
-        "$BUILD_WASATCH" != "yes"; then
+if test "$BUILD_ARCHES"   != "yes"              -a   \
+        "$BUILD_ICE"      != "yes"              -a   \
+        "$BUILD_MINIAERO" != "yes"              -a   \
+        "$BUILD_MPM"      != "yes"              -a   \
+        "$BUILD_WASATCH"  != "yes"; then
   add_important_warning "-------------------------------------------------------------------------"
   msg="!!! NO COMPONENTS WERE SPECIFIED! ONLY UTILITY PROGRAMS WILL BE BUILT !!!"
   add_important_warning "$msg"
@@ -1170,6 +1181,7 @@ fi
 
 AC_SUBST(BUILD_ARCHES)
 AC_SUBST(BUILD_ICE)
+AC_SUBST(BUILD_MINIAERO)
 AC_SUBST(BUILD_MODELS_RADIATION)
 AC_SUBST(BUILD_MPM)
 AC_SUBST(BUILD_WASATCH)
@@ -1177,6 +1189,7 @@ AC_SUBST(BUILD_WASATCH_FOR_ARCHES)
 
 AC_SUBST(DEF_ARCHES)
 AC_SUBST(DEF_ICE)
+AC_SUBST(DEF_MINIAERO)
 AC_SUBST(DEF_MPM)
 AC_SUBST(DEF_NO_FORTRAN)
 AC_SUBST(DEF_MODELS_RADIATION)
