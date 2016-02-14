@@ -1,0 +1,91 @@
+<Uintah_specification>
+  <Meta>
+    <title>Test Interior Boundary Conditions</title>
+  </Meta>
+  <SimulationComponent type="wasatch"/>
+  <Wasatch>
+    <Density method="CONSTANT">
+      <Constant value="1.0" name="density"/>
+    </Density>
+    <!-- Set the initial condition for non-staggered scalar -->
+    <BasicExpression type="SVOL">
+      <TaskList>initialization</TaskList>
+      <NameTag name="f"/>
+      <Constant>1.0</Constant>
+    </BasicExpression>
+    <!-- Build a cell-centered scalar transport equation -->
+    <TransportEquation equation="generic">
+      <SolutionVariable>f</SolutionVariable>
+      <DiffusiveFlux direction="XYZ" coefficient="0.001"/>
+    </TransportEquation>
+  </Wasatch>
+  <Time>
+    <maxTime>100</maxTime>
+    <initTime>0.0</initTime>
+    <delt_min>1e-4</delt_min>
+    <delt_max>1e-4</delt_max>
+    <max_Timesteps> 10 </max_Timesteps>
+    <timestep_multiplier>1.0</timestep_multiplier>
+  </Time>
+  <DataArchiver>
+    <filebase>interior-bc-test.uda</filebase>
+    <outputTimestepInterval>1</outputTimestepInterval>
+    <outputInitTimestep/>
+    <checkpoint cycle="2" interval="1e-4"/>
+    <save label="f"/>
+  </DataArchiver>
+  <Grid>
+    <BoundaryConditions>
+      <DefaultMaterial>all</DefaultMaterial>
+      <!-- BOUNDARY CONDITIONS FOR NON-STAGGERED SCALAR -->
+      <InteriorFace ellipse="x-" origin="0.2 0.5 0.5" major_radius="0.2" minor_radius="0.05" angle="270" name="a">
+        <BCType var="Dirichlet" label="f" value="10.0"/>
+      </InteriorFace>
+      <InteriorFace annulus="z-" origin="0.4 0.5 0.2" inner_radius="0.1" outer_radius="0.2" name="b">
+        <BCType var="Dirichlet" label="f" value="15.0"/>
+      </InteriorFace>
+      <InteriorFace rectangle="z-" lower="0.4 0.2 0.8" upper="0.6 0.4 0.8" name="c">
+        <BCType var="Dirichlet" label="f" value="12.0"/>
+      </InteriorFace>
+      <InteriorFace circle="y-" origin="0.6 0.2 0.5" radius="0.1" name="d">
+        <BCType var="Dirichlet" label="f" value="20.0"/>
+      </InteriorFace>
+      <InteriorFace ellipse="x+" origin="0.75 0.5 0.5" major_radius="0.2" minor_radius="0.05" angle="250" name="e">
+        <BCType var="Dirichlet" label="f" value="10.0"/>
+      </InteriorFace>
+      <InteriorFace annulus="y+" origin="0.5 0.9 0.6" inner_radius="0.1" outer_radius="0.2" name="f">
+        <BCType var="Dirichlet" label="f" value="15.0"/>
+      </InteriorFace>
+      <InteriorFace rectangle="z+" lower="0.4 0.2 0.3" upper="0.6 0.4 0.3" name="g">
+        <BCType var="Dirichlet" label="f" value="12.0"/>
+      </InteriorFace>
+      <Face side="x-" name="left-wall">
+        <BCType var="Dirichlet" label="f" value="10.0"/>
+      </Face>
+      <Face side="x+" name="right-wall">
+        <BCType var="Dirichlet" label="f" value="0.0"/>
+      </Face>
+      <Face side="y-" name="bottom-wall">
+        <BCType var="Neumann" label="f" value="0.0"/>
+      </Face>
+      <Face side="y+" name="top-wall">
+        <BCType var="Neumann" label="f" value="0.0"/>
+      </Face>
+      <Face side="z-" name="zminus-wall">
+        <BCType var="Neumann" label="f" value="0.0"/>
+      </Face>
+      <Face side="z+" name="zplus-wall">
+        <BCType var="Neumann" label="f" value="0.0"/>
+      </Face>
+    </BoundaryConditions>
+    <Level>
+      <Box label="1">
+        <lower>[0,0,0]</lower>
+        <upper>[1,1,1]</upper>
+        <resolution>[60,60,60]</resolution>
+        <patches>[3,3,3]</patches>
+      </Box>
+      <periodic>[0,0,0]</periodic>
+    </Level>
+  </Grid>
+</Uintah_specification>

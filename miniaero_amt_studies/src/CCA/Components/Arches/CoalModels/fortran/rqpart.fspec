@@ -1,0 +1,8 @@
+void rqpart(
+   double dia,
+   double tmp, 
+   double omegaa,
+   double afrac0,
+   double qabs, 
+   double qsca
+    );
