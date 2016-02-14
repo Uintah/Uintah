@@ -37,6 +37,7 @@
 #include <CCA/Components/Examples/Wave.h>
 #include <CCA/Components/ICE/AMRICE.h>
 #include <CCA/Components/ICE/ICE.h>
+#include <CCA/Components/MiniAero/MiniAero.h>
 #include <CCA/Components/ICE/impAMRICE.h>
 #include <CCA/Components/MPM/AMRMPM.h>
 #include <CCA/Components/MPM/ImpMPM.h>
@@ -50,6 +51,7 @@
 #include <Core/Exceptions/ProblemSetupException.h>
 #include <Core/Parallel/Parallel.h>
 #include <Core/Parallel/ProcessorGroup.h>
+
 #include <sci_defs/uintah_defs.h>
 #include <sci_defs/cuda_defs.h>
 
@@ -233,7 +235,16 @@ ComponentFactory::create( ProblemSpecP& ps, const ProcessorGroup* world,
   if (sim_comp == "reduce_uda") {
     return scinew UdaReducer(world, uda);
   } 
-  throw ProblemSetupException("Unknown simulationComponent ('" + sim_comp + "'). Must specify -arches, -ice, -mpm, "
+
+#ifndef NO_MINIAERO
+  if (sim_comp == "miniaero") {
+    return scinew MiniAero(world);
+  }
+#else
+  turned_off_options += "MINIAERO ";
+#endif
+
+  throw ProblemSetupException("Unknown simulationComponent ('" + sim_comp + "'). Must specify -arches, -ice, -miniaero, -mpm, "
                               "-impm, -mpmice, -mpmarches, -burger, -wave, -poisson1, -poisson2, -poisson3 or -benchmark.\n"
                               "Note: the following components were turned off at configure time: " + turned_off_options + "\n"
                               "Make sure that the requested component is supported in this build.", __FILE__, __LINE__);

@@ -1,6 +1,3 @@
-#ifndef UINTAH_DEFS_H
-#define UINTAH_DEFS_H
-
 /*
  * The MIT License
  *
@@ -25,33 +22,32 @@
  * IN THE SOFTWARE.
  */
 
-@DEF_ZOLTAN@
-
-@DEF_TABPROPS@
-@DEF_RADPROPS@
-
-@DEF_ARCHES@
-@DEF_ICE@
-@DEF_MINIAERO@
-@DEF_MPM@
-@DEF_MODELS_RADIATION@
-
-@DEF_WASATCH@
-
-@DEF_NO_FORTRAN@
-@DEF_FORTRAN_UNDERSCORE@
-
-@DEF_RAY_SCATTER@
-
-@DEF_CXX11@
-
-#if !defined( FIX_NAME )
-#  if defined( FORTRAN_UNDERSCORE_END )
-     // This ## magic (apparently) concatenates the _ to the 'fun' varaible.
-#    define FIX_NAME(fun) fun ## _
-#  else // NONE
-#    define FIX_NAME(fun) fun
-#  endif
-#endif
-
-#endif // UINTAH_DEFS_H
+double limit(double dumax, double dumin, double du, double deltax3){
+  double beta = 1;
+  double epstilde2 = deltax3*beta*beta*beta;
+  double phi = 0;
+  
+  double denom = 0;
+  double num = 0;
+  
+  
+  if (du > 0)
+  {
+    num = (dumax*dumax + epstilde2)*du + 2*du*du*dumax;
+    denom = du*(dumax*dumax  + 2*du*du + dumax*du + epstilde2);
+    phi = num/denom;
+  }
+  else if (du < 0)
+  {
+    num  = (dumin*dumin + epstilde2)*du + 2*du*du*dumin;
+    denom = du*(dumin*dumin  + 2*du*du + dumin*du + epstilde2);
+    phi = num/denom;
+  }
+  else
+  {
+    phi = 1;
+  }
+  
+  
+  return phi;
+}

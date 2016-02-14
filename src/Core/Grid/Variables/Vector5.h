@@ -1,10 +1,7 @@
-#ifndef UINTAH_DEFS_H
-#define UINTAH_DEFS_H
-
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2016 The University of Utah
+ * Copyright (c) 1997-2014 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -25,33 +22,44 @@
  * IN THE SOFTWARE.
  */
 
-@DEF_ZOLTAN@
 
-@DEF_TABPROPS@
-@DEF_RADPROPS@
+#ifndef Packages_Uintah_Core_Grid_Vector5_h
+#define Packages_Uintah_Core_Grid_Vector5_h
 
-@DEF_ARCHES@
-@DEF_ICE@
-@DEF_MINIAERO@
-@DEF_MPM@
-@DEF_MODELS_RADIATION@
+#include <Core/Disclosure/TypeUtils.h>
+#include <Core/Util/FancyAssert.h>
+#include <iostream>
 
-@DEF_WASATCH@
+namespace Uintah {
+  class TypeDescription;
+  
+  struct Vector5 {
+    double  rho, momX, momY, momZ, eng;
+  
+    double& operator[](int index) {
+      ASSERTRANGE(index, 0, 5);
+      return (&rho)[index];
+    }
+    const double& operator[](int index) const {
+      ASSERTRANGE(index, 0, 5);
+      return (&rho)[index];
+    }
+    
+    void initialize(double a){
+      rho  = a;
+      momX = a;
+      momY = a;
+      momZ = a; 
+      eng  = a;
+    }
+  };
 
-@DEF_NO_FORTRAN@
-@DEF_FORTRAN_UNDERSCORE@
+  std::ostream & operator << (std::ostream &out, const Uintah::Vector5 &a);
 
-@DEF_RAY_SCATTER@
+}
 
-@DEF_CXX11@
+namespace SCIRun {
+   void swapbytes( Uintah::Vector5& );
+} // namespace SCIRun
 
-#if !defined( FIX_NAME )
-#  if defined( FORTRAN_UNDERSCORE_END )
-     // This ## magic (apparently) concatenates the _ to the 'fun' varaible.
-#    define FIX_NAME(fun) fun ## _
-#  else // NONE
-#    define FIX_NAME(fun) fun
-#  endif
 #endif
-
-#endif // UINTAH_DEFS_H
