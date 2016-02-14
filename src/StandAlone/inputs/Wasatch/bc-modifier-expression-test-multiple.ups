@@ -1,0 +1,86 @@
+<Uintah_specification>
+
+  <Meta>
+    <title>BC modifier expression test with same expression on multiple sides </title>
+  </Meta>
+
+  <SimulationComponent type="wasatch"/>
+
+  <Wasatch>
+
+    <Density method="CONSTANT">
+      <Constant value="1.0" name="density"/>
+    </Density>
+  
+    <!-- Set the initial condition for non-staggered scalar -->
+    <BasicExpression type="SVOL">
+      <TaskList>initialization</TaskList>
+      <NameTag name="phi-dirichlet-dirichlet-a"/>
+      <Constant>0.0</Constant>
+    </BasicExpression>
+    
+
+    <BCExpression type="SVOL">
+      <TaskList>initialization advance_solution</TaskList>
+      <NameTag name="parabolic-inlet"/>
+      <ParabolicFunction type="GENERAL">
+         <General a="-2560" b="640" c="-30"/>
+         <NameTag name="YSVOL"/>
+       </ParabolicFunction>
+    </BCExpression>
+ 
+    <!-- Build a non-staggered scalar transport equation -->
+    <TransportEquation equation="generic">
+      <SolutionVariable>phi-dirichlet-dirichlet-a</SolutionVariable>
+      <DiffusiveFlux direction="X" coefficient="1.0"/>
+    </TransportEquation>
+    </Wasatch>
+
+
+  <Time>
+    <maxTime>0.005</maxTime>
+    <initTime>0.0</initTime>
+    <delt_min>0.00001</delt_min>
+    <delt_max>0.00001</delt_max>
+    <max_Timesteps> 3 </max_Timesteps>    
+    <timestep_multiplier>1.0</timestep_multiplier>
+  </Time>
+
+
+  <DataArchiver>
+    <filebase>bc-modifier-expression-test-multiple.uda</filebase>
+    <outputTimestepInterval>1</outputTimestepInterval>
+    <outputInitTimestep/>
+    <checkpoint cycle="2" interval="0.00001"/>
+    <compression>gzip</compression>
+    <save label="phi-dirichlet-dirichlet-a"/>
+  </DataArchiver> 
+
+  <Grid>
+      <BoundaryConditions>
+      
+      <DefaultMaterial>all</DefaultMaterial>
+      <Face rectangle="x-" lower="0 0.0625 -1" upper="0 0.1875 1">
+        <BCType label="phi-dirichlet-dirichlet-a" var="Dirichlet" value="parabolic-inlet"/>
+      </Face>
+      <Face side="x-">
+        <BCType label="phi-dirichlet-dirichlet-a" var="Dirichlet" value="10.0"/>
+      </Face>
+      <Face side="x+">
+        <BCType label="phi-dirichlet-dirichlet-a" var="Dirichlet" value="parabolic-inlet"/>
+      </Face>
+
+    </BoundaryConditions>
+
+    <Level>
+      <Box label="1">
+        <lower>[0,0,0]</lower>
+        <upper>[0.5,0.25,0.01]</upper>
+        <resolution>[80,40,2]</resolution>
+        <patches>[4,2,1]</patches>
+      </Box>
+      <periodic>[0,1,1]</periodic>
+    </Level>
+  </Grid>
+
+</Uintah_specification>

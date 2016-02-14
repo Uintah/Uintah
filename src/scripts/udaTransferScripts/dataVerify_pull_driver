@@ -1,0 +1,82 @@
+#_____________________________________________________________________.
+#      pscp_pull_driver
+#
+#   10/21/07
+#
+# This gmake file works with pscp_pull.  It performs an rsync
+# on each of the directories inside of REMOTEDIR on LOGIN.
+#
+# NOTE: Many important environment variables used in this script are
+#       set from the 'pscp_pull' script.
+#_____________________________________________________________________.
+
+######################################################################
+# Hopefully the correct 'tar' is already in your path... so do NOT
+# set it here...  (One reason for relying on the tar in your path is
+# that TAR may not be in the same place on the local and remote 
+# systems...
+#
+#TAR  = /bin/tar
+
+##############################################################
+# Set things up to use the proper programs on LLNL's uP machine:
+SSH = $(shell if test `uname` == AIX; then \
+                      echo "/usr/local/bin/ssh" ;\
+                    else \
+                      echo "/usr/bin/ssh" ;\
+                    fi \
+             )
+RSYNC = $(shell if test `uname` == AIX; then \
+                      echo "/usr/bin/rsync" ;\
+                    else \
+                      echo "rsync" ;\
+                    fi \
+             )
+
+######################################################################
+# Grab a list of files/directories from the remote machine, exclude the checkpoints dir
+
+REMOTE_FILES_LIST=`$(SSH) -x $(LOGIN)  "find  $(REMOTEDIR) -depth -maxdepth 1 \! -name checkpoints" `
+
+# Get the list of checkpoint files
+
+REMOTE_FILES_LIST2=`$(SSH) -x $(LOGIN) "find $(REMOTEDIR)/checkpoints -maxdepth 1 -depth"`
+
+######################################################################
+# Turn the list of files into a single string:
+# ignore "$(REMOTEDIR)/" in the list
+REMOTE_FILES=$(shell for file in $(REMOTE_FILES_LIST); do \
+               if \
+                 test $$file != $(REMOTEDIR) ;\
+               then \
+                 echo $$file;\
+               fi \
+               done)
+
+# ignore "$(REMOTEDIR)/checkpoints" directory
+REMOTE_FILES2=$(shell for file in $(REMOTE_FILES_LIST2); do \
+                if \
+                  test $$file != $(REMOTEDIR)/checkpoints ;\
+                then \
+                  echo "$$file/" ;\
+                fi \
+                done)
+######################################################################
+# Add the "LOCALDIR" to the beginning of the name of each of the files...
+#
+
+LOCAL_FILES=$(patsubst %,$(LOCALDIR)/%,$(REMOTE_FILES))
+LOCAL_FILES2=$(patsubst %,$(LOCALDIR)/%,$(REMOTE_FILES2))
+######################################################################
+# Get the files:
+#
+all : $(LOCAL_FILES2) \
+      $(LOCAL_FILES)
+
+$(LOCAL_FILES) :
+	@echo "Verifying: $(patsubst $(LOCALDIR)/%,%,$@)"
+	@$(RSYNC) -a --log-format="File %f bytes transferred %b" --rsh='$(SSH) -x' $(LOGIN):$(patsubst $(LOCALDIR)/%,%,$@) $(LOCALDIR)/
+
+$(LOCAL_FILES2) :
+	@echo "Verifying checkpoints: $(patsubst $(LOCALDIR)/%,%,$@)"
+	@$(RSYNC) -a --log-format="Checkpoint file %f bytes transferred %b" --rsh='$(SSH) -x' $(LOGIN):$(patsubst $(LOCALDIR)/%,%,$@) $(LOCALDIR)/checkpoints/

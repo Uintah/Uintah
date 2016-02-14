@@ -1,0 +1,205 @@
+<?xml version="1.0" encoding="iso-8859-1"?>
+<Uintah_specification>
+
+  <Meta>
+    <title>Nano Pillar Example 1</title>
+  </Meta>
+
+  <SimulationComponent type="amrmpm" />
+
+  <Time>
+     <maxTime>1e-3</maxTime>
+     <initTime>0.0</initTime>
+     <delt_min>1.0e-16</delt_min>
+     <delt_max>1.0e-8</delt_max>
+     <max_Timesteps>10000000</max_Timesteps>
+     <timestep_multiplier>0.4</timestep_multiplier>
+  </Time>
+
+  <DataArchiver>
+    <filebase>jimNano_pillar2D.uda</filebase>
+<!--
+    <outputTimestepInterval>1</outputTimestepInterval>
+-->
+    <outputInterval>5.e-6</outputInterval>
+    <save label="p.x"/>
+    <save label="p.particleID"/>
+    <save label="p.velocity"/>
+    <save label="p.mass"/>
+    <save label="p.flux"/>
+    <save label="p.volume"/>
+    <save label="p.scalefactor"/>
+    <save label="p.concentration"/>
+    <save label="p.stress"/>
+    <save label="p.loadCurveID"/>
+    <save label="g.mass"/>
+    <save label="g.acceleration"/>
+    <save label="g.concentration"/>
+    <save label="g.concentrationRate"/>
+    <save label="g.concentrationStar"/>
+    <save label="g.externalscalarflux"/>
+    <save label="p.externalscalarflux"/>
+    <save label="g.velocity"/>
+
+    <checkpoint cycle = "2" interval = "5.e-6"/>
+  </DataArchiver>
+
+  <MPM>
+      <time_integrator>explicit</time_integrator>
+      <interpolator>linear</interpolator>
+      <use_load_curves> true </use_load_curves>
+      <scalar_diffusion>explicit</scalar_diffusion>
+  </MPM>
+  <AMR>
+      <useLockStep> true </useLockStep>
+      <MPM> </MPM>
+  </AMR>
+
+  <PhysicalConstants>
+    <gravity>[0.0, 0.0, 0.0]</gravity>
+  </PhysicalConstants>
+
+  <MaterialProperties>
+     <MPM>
+       <material name="pillar">
+         <density>2330</density> <!-- micrograms/mm^3 -->
+         <constitutive_model type="gao_elastic"> 
+           <bulk_modulus>            6.5e4    </bulk_modulus>
+           <shear_modulus>           3.0e4    </shear_modulus>
+           <volume_expansion_coeff>  10.56     </volume_expansion_coeff>
+         </constitutive_model>
+         <thermal_conductivity>0.0</thermal_conductivity>
+         <specific_heat>5</specific_heat>
+
+         <diffusion_model type = "rf1">
+           <diffusivity>  2e-4   </diffusivity>
+           <max_concentration>  1.0      </max_concentration>
+<!--
+           <init_conc> 0.0  </init_conc>
+           <tuning1>   1.95 </tuning1>
+           <ramp_time> 1.0e-4 </ramp_time>
+-->
+         </diffusion_model>
+         <geom_object>
+           <box label = "pillar">
+             <min>[0.0,    0.0,      0.0]</min> <!-- units in mm -->
+             <max>[0.5e-3, 0.125e-3, 0.05e-3]</max> <!-- units in mm -->
+           </box>
+           <res>[2,2,1]</res>
+           <velocity>[0.0,0.0,0.0]</velocity>
+           <temperature>0</temperature>
+           <concentration> 0 </concentration>
+         </geom_object>
+       </material>
+       <contact>
+         <type>null</type>
+         <materials>[0,1] </materials>
+       </contact>
+       <diffusion_interface>
+         <type>paired</type>
+       </diffusion_interface>
+     </MPM>
+   </MaterialProperties>
+
+   <PhysicalBC>
+     <MPM>
+       <scalar_flux>
+         <geom_object>
+           <box label = "x-">
+             <min>[0.000e-3, 0.000e-3, 0.0]</min>
+             <max>[0.001e-3, 0.125e-3, 0.01e-3]</max>
+           </box>
+         </geom_object>
+         <load_curve>
+           <id>1</id>
+           <time_point>
+             <time> 0 </time>
+             <load> 1.e12 </load>
+           </time_point>
+           <time_point>
+             <time> 1.e12 </time>
+             <load> 1.e12 </load>
+           </time_point>
+         </load_curve>
+       </scalar_flux>
+       <scalar_flux>
+         <geom_object>
+           <box label = "x+">
+             <min>[0.499e-3, 0.0e-3,   0.0]</min>
+             <max>[0.500e-3, 0.125e-3, 0.01e-3]</max>
+           </box>
+         </geom_object>
+         <load_curve>
+           <id>2</id>
+           <time_point>
+             <time> 0 </time>
+             <load> 1.e12 </load>
+           </time_point>
+           <time_point>
+             <time> 1.e12 </time>
+             <load> 1.e12 </load>
+           </time_point>
+         </load_curve>
+       </scalar_flux>
+       <scalar_flux>
+         <geom_object>
+           <box label = "y+">
+             <min>[0.0e-3, 0.124e-3, 0.0]</min>
+             <max>[0.5e-3, 0.125e-3, 0.01e-3]</max>
+           </box>
+         </geom_object>
+         <load_curve>
+           <id>3</id>
+           <time_point>
+             <time> 0 </time>
+             <load> 1.e12 </load>
+           </time_point>
+           <time_point>
+             <time> 1.e12 </time>
+             <load> 1.e12 </load>
+           </time_point>
+         </load_curve>
+       </scalar_flux>
+<!--
+-->
+     </MPM>
+   </PhysicalBC>
+
+  <Grid>
+    <BoundaryConditions>
+      <Face side = "x-">
+        <BCType id = "all" label = "Symmetric"     var = "symmetry"> </BCType>
+      </Face>
+      <Face side = "x+">
+        <BCType id = "all" label = "Symmetric"     var = "symmetry"> </BCType>
+      </Face>
+      <Face side = "y-">
+        <BCType id = "all" label = "Velocity"     var = "Dirichlet">
+                              <value> [0.,0.,0.] </value>
+        </BCType>
+        <BCType id = "all" label = "SD-Type"  var = "Neumann">
+                              <value> 0.0  </value>
+        </BCType>
+      </Face>                  
+      <Face side = "y+">
+        <BCType id = "all" label = "Symmetric"     var = "symmetry"> </BCType>
+      </Face>                  
+      <Face side = "z-">
+        <BCType id = "all" label = "Symmetric"     var = "symmetry"> </BCType>
+      </Face>                  
+      <Face side = "z+">
+        <BCType id = "all" label = "Symmetric"     var = "symmetry"> </BCType>
+      </Face>
+    </BoundaryConditions>
+    <Level>
+      <Box label="1">
+        <lower>[-0.1e-3, 0.0,    0.0]    </lower> <!-- units in mm -->
+        <upper>[ 0.6e-3, 0.2e-3, 0.01e-3]</upper> <!-- units in mm -->
+        <resolution>[70, 20, 1]        </resolution>
+        <extraCells>[0, 0, 0]          </extraCells>
+        <patches>[2,1,1]               </patches>
+      </Box>
+    </Level>
+  </Grid>
+
+</Uintah_specification>
