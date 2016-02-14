@@ -364,12 +364,12 @@
       
     <SimulationComponent          spec="REQUIRED NO_DATA"
                                     attribute1="type REQUIRED STRING
-                                                'arches,
-                                                burger,dosweep, ice,
+                                                'arches, 
+                                                ice, miniaero,
                                                 impm, mpm,
                                                 mpmarches, 
                                                 mpmf, mpmice, amrmpm, wasatch, reduce_uda,
-                                                advectslabs,
+                                                advectslabs, burger,dosweep, 
                                                 unifiedschedulertest,poissongpu1,poisson1,
                                                 poisson2, poisson3, poisson4, benchmark,
                                                 rigidmpmice,reduce_uda, rmpmice,smpm,
@@ -673,6 +673,8 @@
     <include href="arches_spec.xml" section="CFD/ARCHES" />
 
   </CFD>
+  
+  include href="miniAero_spec.xml"    section="MiniAero" />
 
   <!--__________________________________-->
 
@@ -1007,5 +1009,10 @@
 
   <!-- Wasatch Component -->
   <include href="wasatch_spec.xml" section="" />
+  
+  <!-- MiniAero         -->
+  <MiniAero                   spec="OPTIONAL NO_DATA">
+    <delt                     spec="REQUIRED DOUBLE 'positive'" />
+  </MiniAero>
 
 </Uintah_specification>
