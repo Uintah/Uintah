@@ -39,6 +39,7 @@
 
 #include <iosfwd>
 #include <map>
+#include <thread>
 #include <vector>
 
 #include <sci_defs/mpi_defs.h> // For MPIPP_H on SGI
@@ -67,7 +68,7 @@ using SCIRun::FastHashTable;
 class BufferInfo;
 class DependencyBatch;
 class DetailedTasks;
-class DetailedDep;
+class DetailedDependency;
 class TypeDescription;
 class Patch;
 class ProcessorGroup;
@@ -422,13 +423,13 @@ class OnDemandDataWarehouse : public DataWarehouse {
                  const VarLabel* pos_var,
                  BufferInfo& buffer,
                  OnDemandDataWarehouse* old_dw,
-                 const DetailedDep* dep,
+                 const DetailedDependency* dep,
                  LoadBalancer* lb);
 
     void recvMPI(DependencyBatch* batch,
                  BufferInfo& buffer,
                  OnDemandDataWarehouse* old_dw,
-                 const DetailedDep* dep,
+                 const DetailedDependency* dep,
                  LoadBalancer* lb);
 
     void reduceMPI(const VarLabel* label,
@@ -496,7 +497,7 @@ class OnDemandDataWarehouse : public DataWarehouse {
 
     ScrubMode getScrubMode() const { return d_scrubMode; }
 
-    // The following is for support of regriding
+    // The following is for support of regridding
     virtual void getVarLabelMatlLevelTriples(std::vector<VarLabelMatl<Level> >& vars) const;
 
     static bool d_combineMemory;
@@ -625,6 +626,7 @@ class OnDemandDataWarehouse : public DataWarehouse {
     typedef std::multimap<PSPatchMatlGhost, ParticleSubset*> psetDBType;
     typedef std::map<std::pair<int, const Patch*>, std::map<const VarLabel*, ParticleVariableBase*>*> psetAddDBType;
     typedef std::map<std::pair<int, const Patch*>, int> particleQuantityType;
+
 #ifdef HAVE_CUDA
    std::map<Patch*, bool> assignedPatches;
    // indicates where a given patch should be stored in an accelerator
@@ -687,8 +689,10 @@ class OnDemandDataWarehouse : public DataWarehouse {
 
     inline RunningTaskInfo* getCurrentTaskInfo();
 
-    //std::map<Thread*, std::list<RunningTaskInfo> > d_runningTasks;
-    std::list<RunningTaskInfo> d_runningTasks[MAX_THREADS];
+    std::mutex m_running_tasks_lock;
+    std::map<std::thread::id, std::list<RunningTaskInfo> > d_runningTasks;
+//    std::list<RunningTaskInfo> d_runningTasks[MAX_THREADS];
+
     ScrubMode d_scrubMode;
 
     bool aborted;

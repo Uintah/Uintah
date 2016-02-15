@@ -809,7 +809,7 @@
   <!-- Scheduler Options -->
   
   <Scheduler              spec="OPTIONAL NO_DATA"
-                            attribute1="type OPTIONAL STRING 'SingleProcessor MPI DynamicMPI ThreadedMPI Unified'">
+                            attribute1="type OPTIONAL STRING 'SingleProcessor MPI DynamicMPI ThreadedMPI ThreadFunneled Unified'">
     <small_messages       spec="OPTIONAL BOOLEAN" />
     <taskReadyQueueAlg    spec="OPTIONAL STRING 'MostChildren LeastChildren MostAllChildren LeastAllChildren MostL2Children LeastL2Children PatchOrder PatchOrderRandom MostMessages LeastMessages Random FCFS Stack'" />
     <VarTracker           spec="OPTIONAL NO_DATA">

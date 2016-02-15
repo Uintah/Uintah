@@ -71,6 +71,7 @@
 #include <iostream>
 #include <string>
 #include <sstream>
+#include <thread>
 #include <vector>
 
 using namespace SCIRun;
@@ -111,7 +112,7 @@ struct ParticleSend : public RefCounted {
 #define  BULLETPROOFING_FOR_CUBIC_DOMAINS  // comment out when running on non-cubic domains.
                                            // The getRegion() exceptions don't apply.
 
-bool OnDemandDataWarehouse::d_combineMemory=false;
+bool OnDemandDataWarehouse::d_combineMemory = false;
 
 
 //______________________________________________________________________
@@ -135,6 +136,7 @@ OnDemandDataWarehouse::OnDemandDataWarehouse( const ProcessorGroup* myworld,
   hasRestarted_ = false;
   aborted = false;
   doReserve();
+
 
 #ifdef HAVE_CUDA
   if (Uintah::Parallel::usingDevice()) {
@@ -504,7 +506,7 @@ OnDemandDataWarehouse::sendMPI(       DependencyBatch*       batch,
                                 const VarLabel*              pos_var,
                                       BufferInfo&            buffer,
                                       OnDemandDataWarehouse* old_dw,
-                                const DetailedDep*           dep,
+                                const DetailedDependency*           dep,
                                       LoadBalancer*          lb )
 {
   if( dep->isNonDataDependency() ) {
@@ -515,21 +517,21 @@ OnDemandDataWarehouse::sendMPI(       DependencyBatch*       batch,
     return;
   }
 
-  const VarLabel* label = dep->req->var;
-  const Patch* patch = dep->fromPatch;
-  int matlIndex = dep->matl;
+  const VarLabel* label = dep->m_req->var;
+  const Patch* patch = dep->m_from_patch;
+  int matlIndex = dep->m_matl;
 
   switch ( label->typeDescription()->getType() ) {
     case TypeDescription::ParticleVariable : {
-      IntVector low = dep->low;
-      IntVector high = dep->high;
+      IntVector low = dep->m_low;
+      IntVector high = dep->m_high;
 
       if( !d_varDB.exists( label, matlIndex, patch ) ) {
         SCI_THROW( UnknownVariable(label->getName(), getID(), patch, matlIndex, "in sendMPI", __FILE__, __LINE__) );
       }
       ParticleVariableBase* var = dynamic_cast<ParticleVariableBase*>( d_varDB.get( label, matlIndex, patch ) );
 
-      int dest = batch->toTasks.front()->getAssignedResourceIndex();
+      int dest = batch->m_to_tasks.front()->getAssignedResourceIndex();
       ASSERTRANGE( dest, 0, d_myworld->size() );
 
       ParticleSubset* sendset = 0;
@@ -582,13 +584,13 @@ OnDemandDataWarehouse::sendMPI(       DependencyBatch*       batch,
     case TypeDescription::SFCYVariable :
     case TypeDescription::SFCZVariable : {
       if (!d_varDB.exists(label, matlIndex, patch)) {
-        std::cout << d_myworld->myrank() << "  Needed by " << *dep << " on task " << *dep->toTasks.front() << std::endl;
+        std::cout << d_myworld->myrank() << "  Needed by " << *dep << " on task " << *dep->m_to_tasks.front() << std::endl;
         SCI_THROW(
             UnknownVariable(label->getName(), getID(), patch, matlIndex, "in Task OnDemandDataWarehouse::sendMPI", __FILE__, __LINE__));
       }
       GridVariableBase* var;
       var = dynamic_cast<GridVariableBase*>( d_varDB.get( label, matlIndex, patch ) );
-      var->getMPIBuffer( buffer, dep->low, dep->high );
+      var->getMPIBuffer( buffer, dep->m_low, dep->m_high );
       buffer.addSendlist( var->getRefCounted() );
     }
       break;
@@ -643,12 +645,12 @@ OnDemandDataWarehouse::exchangeParticleQuantities(       DetailedTasks* dts,
       int i = 0;
       for( std::set<PSPatchMatlGhostRange>::iterator siter = s.begin(); siter != s.end(); siter++, i++ ) {
         const PSPatchMatlGhostRange& pmg = *siter;
-        if( (pmg.dwid_ == DetailedDep::FirstIteration && iteration > 0)
-            || (pmg.dwid_ == DetailedDep::SubsequentIterations && iteration == 0) ) {
+        if( (pmg.dwid_ == DetailedDependency::FirstIteration && iteration > 0)
+            || (pmg.dwid_ == DetailedDependency::SubsequentIterations && iteration == 0) ) {
           // not used
           data[i] = -2;
         }
-        else if( pmg.dwid_ == DetailedDep::FirstIteration && iteration == 0
+        else if( pmg.dwid_ == DetailedDependency::FirstIteration && iteration == 0
             && lb->getOldProcessorAssignment( pmg.patch_ ) == iter->first ) {
           // signify that the recving proc already has this data.  Only use for the FirstIteration after a LB
           // send -1 rather than force the recving end above to iterate through its set
@@ -711,7 +713,7 @@ OnDemandDataWarehouse::exchangeParticleQuantities(       DetailedTasks* dts,
           continue;
         }
         if( data[i] == -1 ) {
-          ASSERT( pmg.dwid_ == DetailedDep::FirstIteration && iteration == 0
+          ASSERT( pmg.dwid_ == DetailedDependency::FirstIteration && iteration == 0
                   && haveParticleSubset( pmg.matl_, pmg.patch_ ) );
           continue;
         }
@@ -743,7 +745,7 @@ void
 OnDemandDataWarehouse::recvMPI(       DependencyBatch*       batch,
                                       BufferInfo&            buffer,
                                       OnDemandDataWarehouse* old_dw,
-                                const DetailedDep*           dep,
+                                const DetailedDependency*           dep,
                                       LoadBalancer*          lb )
 {
   if( dep->isNonDataDependency() ) {
@@ -754,14 +756,14 @@ OnDemandDataWarehouse::recvMPI(       DependencyBatch*       batch,
     return;
   }
 
-  const VarLabel* label = dep->req->var;
-  const Patch* patch = dep->fromPatch;
-  int matlIndex = dep->matl;
+  const VarLabel* label = dep->m_req->var;
+  const Patch* patch = dep->m_from_patch;
+  int matlIndex = dep->m_matl;
 
   switch ( label->typeDescription()->getType() ) {
     case TypeDescription::ParticleVariable : {
-      IntVector low = dep->low;
-      IntVector high = dep->high;
+      IntVector low = dep->m_low;
+      IntVector high = dep->m_high;
       bool whole_patch_pset = false;
       // First, get the particle set.  We should already have it
       //      if(!old_dw->haveParticleSubset(matlIndex, patch, gt, ngc)){
@@ -824,7 +826,7 @@ OnDemandDataWarehouse::recvMPI(       DependencyBatch*       batch,
       //allocate the variable
       GridVariableBase* var =
           dynamic_cast<GridVariableBase*>( label->typeDescription()->createInstance() );
-      var->allocate( dep->low, dep->high );
+      var->allocate( dep->m_low, dep->m_high );
 
       //set the var as foreign
       var->setForeign();
@@ -833,7 +835,7 @@ OnDemandDataWarehouse::recvMPI(       DependencyBatch*       batch,
       //add the var to the dependency batch and set it as invalid.  The variable is now invalid because there is outstanding MPI pointing to the variable.
       batch->addVar( var );
       d_varDB.putForeign( label, matlIndex, patch, var, d_scheduler->isCopyDataTimestep() );  //put new var in data warehouse
-      var->getMPIBuffer( buffer, dep->low, dep->high );
+      var->getMPIBuffer( buffer, dep->m_low, dep->m_high );
     }
       break;
     default :
@@ -878,20 +880,11 @@ OnDemandDataWarehouse::reduceMPI( const VarLabel       * label,
       // "inactive" processors work with reduction vars
       //cout << "NEWRV1\n";
       var = dynamic_cast<ReductionVariableBase*>( label->typeDescription()->createInstance() );
-      //cout << "var=" << var << '\n';
-      //cout << "NEWRV2\n";
-      //cout << "VL = " << label->getName() << endl;
       var->setBenignValue();
-      //cout << d_myworld->myrank() << " BENIGN VAL ";
-      //var->print(cout);
 
       // put it in the db so the next get won't fail and so we won't 
       // have to delete it manually
       d_levelDB.put( label, matlIndex, level, var, d_scheduler->isCopyDataTimestep(), true );
-      //cout << "NEWRV3\n";
-      //cout << endl;
-      //SCI_THROW(UnknownVariable(label->getName(), getID(), level, matlIndex,
-      //                                "on reduceMPI", __FILE__, __LINE__));
     }
 
     int sendcount;
@@ -2984,7 +2977,6 @@ OnDemandDataWarehouse::getGridVar(       GridVariableBase& var,
   }
   else {
     IntVector dn = high - low;
-    long total = dn.x() * dn.y() * dn.z();
 
     Patch::selectType neighbors;
     IntVector lowIndex, highIndex;
@@ -3007,7 +2999,7 @@ OnDemandDataWarehouse::getGridVar(       GridVariableBase& var,
       // more ghost cells from the old datawarehouse).
       static bool warned = false;
       bool ignore = d_isInitializationDW && d_finalized;
-      if (!ignore && !warned) {
+//      if (!ignore && !warned) {
         //warned = true;
         //static ProgressiveWarning rw("Warning: Reallocation needed for ghost region you requested.\nThis means the data you get back will be a copy of what's in the DW", 100);
         //if (rw.invoke()) {
@@ -3021,7 +3013,7 @@ OnDemandDataWarehouse::getGridVar(       GridVariableBase& var,
          errmsg << ".  Old range: " << oldLow << " " << oldHigh << " - new range " << lowIndex << " " << highIndex << " NGC " << numGhostCells;
          warn << errmsg.str() << '\n';
          }*/
-      }
+//      }
     }
 
     std::vector<ValidNeighbors> validNeighbors;
@@ -3045,85 +3037,6 @@ OnDemandDataWarehouse::getGridVar(       GridVariableBase& var,
       }
       delete srcvar;
     }
-
-    /*
-    for( int i = 0; i < neighbors.size(); i++ ) {
-      const Patch* neighbor = neighbors[i];
-      if (neighbor && (neighbor != patch)) {
-        IntVector low = Max(neighbor->getExtraLowIndex(basis, label->getBoundaryLayer()), lowIndex);
-        IntVector high = Min(neighbor->getExtraHighIndex(basis, label->getBoundaryLayer()), highIndex);
-
-        if (patch->getLevel()->getIndex() > 0 && patch != neighbor) {
-          patch->cullIntersection(basis, label->getBoundaryLayer(), neighbor, low, high);
-        }
-        if (low == high) {
-          continue;
-        }
-
-        if (!d_varDB.exists(label, matlIndex, neighbor)) {
-          SCI_THROW(
-              UnknownVariable(label->getName(), getID(), neighbor, matlIndex, neighbor == patch? "on patch":"on neighbor", __FILE__, __LINE__));
-        }
-
-        std::vector<Variable*> varlist;
-        d_varDB.getlist(label, matlIndex, neighbor, varlist);
-        GridVariableBase* v = NULL;
-
-        for (std::vector<Variable*>::iterator rit = varlist.begin();; ++rit) {
-          if (rit == varlist.end()) {
-            v = NULL;
-            break;
-          }
-
-          v = dynamic_cast<GridVariableBase*>(*rit);
-          //verify that the variable is valid and matches the depedencies requirements
-          if ((v != NULL) && (v->isValid())) {
-            if (neighbor->isVirtual()) {
-              if (Min(v->getLow(), low - neighbor->getVirtualOffset()) == v->getLow() && Max(v->getHigh(),
-                                                                                             high - neighbor->getVirtualOffset())
-                                                                                         == v->getHigh()) {
-                break;
-              }
-            }
-            else {
-              if (Min(v->getLow(), low) == v->getLow() && Max(v->getHigh(), high) == v->getHigh()) {
-                break;
-              }
-            }
-          }
-        }  //end for vars
-        if (v == NULL) {
-          // cout << d_myworld->myrank()  << " cannot copy var " << *label << " from patch " << neighbor->getID()
-          // << " " << low << " " << high <<  ", DW has " << srcvar->getLow() << " " << srcvar->getHigh() << endl;
-          SCI_THROW(
-              UnknownVariable(label->getName(), getID(), neighbor, matlIndex, neighbor == patch? "on patch":"on neighbor", __FILE__, __LINE__));
-        }
-
-        GridVariableBase* srcvar = var.cloneType();
-        srcvar->copyPointer(*v);
-
-        if (neighbor->isVirtual())
-          srcvar->offsetGrid(neighbor->getVirtualOffset());
-
-        try {
-          var.copyPatch(srcvar, low, high);
-        }
-        catch (InternalError& e) {
-          std::cout << " Bad range: " << low << " " << high << " source var range: " << srcvar->getLow() << " " << srcvar->getHigh()
-                    << std::endl;
-          throw e;
-        }
-        delete srcvar;
-        dn = high - low;
-        total += dn.x() * dn.y() * dn.z();
-      }  //end if neigbor
-    }  //end for neigbours
-
-    //dn = highIndex - lowIndex;
-    //long wanted = dn.x()*dn.y()*dn.z();
-    //ASSERTEQ(wanted, total);
-
-   */
   }
 }
 
@@ -3240,7 +3153,7 @@ OnDemandDataWarehouse::checkGetAccess( const VarLabel*        label,
                                              Ghost::GhostType gtype,
                                              int              numGhostCells )
 {
-#if 1
+#if 0
 #if SCI_ASSERTION_LEVEL >= 1
   std::list<RunningTaskInfo>* runningTasks = getRunningTasksInfo();
 
@@ -3364,7 +3277,7 @@ OnDemandDataWarehouse::checkPutAccess( const VarLabel* label,
                                        const Patch*    patch,
                                              bool      replace )
 {
-#if 1
+#if 0
 #if SCI_ASSERTION_LEVEL >= 1
   std::list<RunningTaskInfo>* runningTasks = getRunningTasksInfo();
   if (runningTasks != 0) {
@@ -3432,7 +3345,7 @@ OnDemandDataWarehouse::checkModifyAccess( const VarLabel* label,
                                                 int       matlIndex,
                                           const Patch*    patch )
 {
-  checkPutAccess(label, matlIndex, patch, true);
+//  checkPutAccess(label, matlIndex, patch, true);
 }
 
 //______________________________________________________________________
@@ -3490,7 +3403,17 @@ OnDemandDataWarehouse::pushRunningTask( const Task* task,
                                               std::vector<OnDemandDataWarehouseP>* dws )
 {
   ASSERT( task );
-  d_runningTasks[Thread::self()->myid()].push_back( RunningTaskInfo( task, dws ) );
+
+  m_running_tasks_lock.lock();
+  std::map<std::thread::id, std::list<RunningTaskInfo> >::iterator iter = d_runningTasks.find(std::this_thread::get_id());
+  if (iter == d_runningTasks.end()) {
+    std::list<RunningTaskInfo> list;
+    d_runningTasks.insert(std::make_pair(std::this_thread::get_id(), list));
+  }
+
+  d_runningTasks.find(std::this_thread::get_id())->second.push_back( RunningTaskInfo( task, dws ) );
+  m_running_tasks_lock.unlock();
+//  d_runningTasks[Thread::self()->myid()].push_back( RunningTaskInfo( task, dws ) );
 }
 
 //______________________________________________________________________
@@ -3498,7 +3421,10 @@ OnDemandDataWarehouse::pushRunningTask( const Task* task,
 void
 OnDemandDataWarehouse::popRunningTask()
 {
-  d_runningTasks[Thread::self()->myid()].pop_back();
+  m_running_tasks_lock.lock();
+  d_runningTasks.find(std::this_thread::get_id())->second.pop_back();
+//  d_runningTasks[Thread::self()->myid()].pop_back();
+  m_running_tasks_lock.unlock();
 }
 
 //______________________________________________________________________
@@ -3506,11 +3432,12 @@ OnDemandDataWarehouse::popRunningTask()
 inline std::list<OnDemandDataWarehouse::RunningTaskInfo>*
 OnDemandDataWarehouse::getRunningTasksInfo()
 {
-  if (d_runningTasks[Thread::self()->myid()].empty()) {
+  if (d_runningTasks.find(std::this_thread::get_id())->second.empty()) {
+//  if (d_runningTasks[Thread::self()->myid()].empty()) {
     return 0;
-  }
-  else {
-    return &d_runningTasks[Thread::self()->myid()];
+  } else {
+    return &(d_runningTasks.find(std::this_thread::get_id())->second);
+//    return &d_runningTasks[Thread::self()->myid()];
   }
 }
 
@@ -3519,10 +3446,9 @@ OnDemandDataWarehouse::getRunningTasksInfo()
 inline bool
 OnDemandDataWarehouse::hasRunningTask()
 {
-  if( d_runningTasks[Thread::self()->myid()].empty() ) {
+  if (d_runningTasks.find(std::this_thread::get_id())->second.empty()) {
     return false;
-  }
-  else {
+  } else {
     return true;
   }
 }
@@ -3532,11 +3458,11 @@ OnDemandDataWarehouse::hasRunningTask()
 inline OnDemandDataWarehouse::RunningTaskInfo*
 OnDemandDataWarehouse::getCurrentTaskInfo()
 {
-  if( d_runningTasks[Thread::self()->myid()].empty() ) {
+  if( d_runningTasks.find(std::this_thread::get_id())->second.empty() ) {
     return 0;
   }
   else {
-    return &d_runningTasks[Thread::self()->myid()].back();
+    return &d_runningTasks.find(std::this_thread::get_id())->second.back();
   }
 }
 
@@ -3606,137 +3532,137 @@ OnDemandDataWarehouse::checkAccesses(       RunningTaskInfo*  currentTaskInfo,
                                       const PatchSubset*      domainPatches,
                                       const MaterialSubset*   domainMatls )
 {
-  ASSERT(currentTaskInfo != 0);
-  const Task* currentTask = currentTaskInfo->d_task;
-  if (currentTask->isReductionTask()) {
-    return;  // no need to check reduction tasks.
-  }
-
-  VarAccessMap& currentTaskAccesses = currentTaskInfo->d_accesses;
-
-  Handle<PatchSubset> default_patches = scinew PatchSubset();
-  Handle<MaterialSubset> default_matls = scinew MaterialSubset();
-  default_patches->add(0);
-  default_matls->add(-1);
-
-  for (; dep != 0; dep = dep->next) {
-#if 0
-    if ((isFinalized() && dep->dw == Task::NewDW) || (!isFinalized() && dep->dw == Task::OldDW)) {
-      continue;
-    }
-#endif
-
-    const VarLabel* label = dep->var;
-    IntVector lowOffset, highOffset;
-    Patch::getGhostOffsets(label->typeDescription()->getType(), dep->gtype, dep->numGhostCells, lowOffset, highOffset);
-
-    constHandle<PatchSubset> patches = dep->getPatchesUnderDomain(domainPatches);
-    constHandle<MaterialSubset> matls = dep->getMaterialsUnderDomain(domainMatls);
-
-    if (label->typeDescription() && label->typeDescription()->isReductionVariable()) {
-      patches = default_patches.get_rep();
-    }
-    else if (patches == 0) {
-      patches = default_patches.get_rep();
-    }
-    if (matls == 0) {
-      matls = default_matls.get_rep();
-    }
-
-    if (currentTask->getName() == "Relocate::relocateParticles") {
-      continue;
-    }
-
-    for (int m = 0; m < matls->size(); m++) {
-      int matl = matls->get(m);
-
-      for (int p = 0; p < patches->size(); p++) {
-        const Patch* patch = patches->get(p);
-
-        VarLabelMatl<Patch> key(label, matl, patch);
-        std::map<VarLabelMatl<Patch>, AccessInfo>::iterator find_iter;
-        find_iter = currentTaskAccesses.find(key);
-        if (find_iter == currentTaskAccesses.end() || (*find_iter).second.accessType != accessType) {
-          if ((*find_iter).second.accessType == ModifyAccess && accessType == GetAccess) {  // If you require with ghost cells
-            continue;                    // and modify, it can get into this
-          }                              // situation.
-
-#if 1
-// THIS OLD HACK PERHAPS CAN GO AWAY
-          if (lowOffset == IntVector(0, 0, 0) && highOffset == IntVector(0, 0, 0)) {
-            // In checkGetAccess(), this case does not record the fact
-            // that the var was accessed, so don't throw exception here.
-            continue;
-          }
-#endif
-          if (find_iter == currentTaskAccesses.end()) {
-            std::cout << "Error: did not find " << label->getName() << "\n";
-            std::cout << "Mtl: " << m << ", Patch: " << *patch << "\n";
-          }
-          else {
-            std::cout << "Error: accessType is not GetAccess for " << label->getName() << "\n";
-          }
-          std::cout << "For Task:\n";
-          currentTask->displayAll(std::cout);
-
-          // Makes request that is never followed through.
-          std::string has, needs;
-          if (accessType == GetAccess) {
-            has = "task requires";
-            if (isFinalized()) {
-              needs = "get from the old datawarehouse";
-            }
-            else {
-              needs = "get from the new datawarehouse";
-            }
-          }
-          else if (accessType == PutAccess) {
-            has = "task computes";
-            needs = "datawarehouse put";
-          }
-          else {
-            has = "task modifies";
-            needs = "datawarehouse modify";
-          }
-          //WAIT_FOR_DEBUGGER();
-          SCI_THROW(DependencyException(currentTask, label, matl, patch, has, needs, __FILE__, __LINE__));
-        }
-        else if (((*find_iter).second.lowOffset != lowOffset || (*find_iter).second.highOffset != highOffset)
-            && accessType != ModifyAccess /* Can == ModifyAccess when you require with
-             ghost cells and modify */) {
-          // Makes request for ghost cells that are never gotten.
-          AccessInfo accessInfo = (*find_iter).second;
-          ASSERT(accessType == GetAccess);
-
-          // Assert that the request was greater than what was asked for
-          // because the other cases (where it asked for more than the request)
-          // should have been caught in checkGetAccess().
-          ASSERT(Max((*find_iter).second.lowOffset, lowOffset) == lowOffset);
-          ASSERT(Max((*find_iter).second.highOffset, highOffset) == highOffset);
-
-          std::string has, needs;
-          has = "task requires";
-          std::ostringstream ghost_str;
-          ghost_str << " requesting " << dep->numGhostCells << " layer";
-          if (dep->numGhostCells > 1) {
-            ghost_str << "s";
-          }
-          ghost_str << " of ghosts around " << Ghost::getGhostTypeName(dep->gtype);
-          has += ghost_str.str();
-
-          if (isFinalized()) {
-            needs = "get from the old datawarehouse";
-          }
-          else {
-            needs = "get from the new datawarehouse";
-          }
-          needs += " that includes these ghosts";
-
-          SCI_THROW(DependencyException(currentTask, label, matl, patch, has, needs, __FILE__, __LINE__));
-        }
-      }
-    }
-  }
+//  ASSERT(currentTaskInfo != 0);
+//  const Task* currentTask = currentTaskInfo->d_task;
+//  if (currentTask->isReductionTask()) {
+//    return;  // no need to check reduction tasks.
+//  }
+//
+//  VarAccessMap& currentTaskAccesses = currentTaskInfo->d_accesses;
+//
+//  Handle<PatchSubset> default_patches = scinew PatchSubset();
+//  Handle<MaterialSubset> default_matls = scinew MaterialSubset();
+//  default_patches->add(0);
+//  default_matls->add(-1);
+//
+//  for (; dep != 0; dep = dep->next) {
+//#if 0
+//    if ((isFinalized() && dep->dw == Task::NewDW) || (!isFinalized() && dep->dw == Task::OldDW)) {
+//      continue;
+//    }
+//#endif
+//
+//    const VarLabel* label = dep->var;
+//    IntVector lowOffset, highOffset;
+//    Patch::getGhostOffsets(label->typeDescription()->getType(), dep->gtype, dep->numGhostCells, lowOffset, highOffset);
+//
+//    constHandle<PatchSubset> patches = dep->getPatchesUnderDomain(domainPatches);
+//    constHandle<MaterialSubset> matls = dep->getMaterialsUnderDomain(domainMatls);
+//
+//    if (label->typeDescription() && label->typeDescription()->isReductionVariable()) {
+//      patches = default_patches.get_rep();
+//    }
+//    else if (patches == 0) {
+//      patches = default_patches.get_rep();
+//    }
+//    if (matls == 0) {
+//      matls = default_matls.get_rep();
+//    }
+//
+//    if (currentTask->getName() == "Relocate::relocateParticles") {
+//      continue;
+//    }
+//
+//    for (int m = 0; m < matls->size(); m++) {
+//      int matl = matls->get(m);
+//
+//      for (int p = 0; p < patches->size(); p++) {
+//        const Patch* patch = patches->get(p);
+//
+//        VarLabelMatl<Patch> key(label, matl, patch);
+//        std::map<VarLabelMatl<Patch>, AccessInfo>::iterator find_iter;
+//        find_iter = currentTaskAccesses.find(key);
+//        if (find_iter == currentTaskAccesses.end() || (*find_iter).second.accessType != accessType) {
+//          if ((*find_iter).second.accessType == ModifyAccess && accessType == GetAccess) {  // If you require with ghost cells
+//            continue;                    // and modify, it can get into this
+//          }                              // situation.
+//
+//#if 1
+//// THIS OLD HACK PERHAPS CAN GO AWAY
+//          if (lowOffset == IntVector(0, 0, 0) && highOffset == IntVector(0, 0, 0)) {
+//            // In checkGetAccess(), this case does not record the fact
+//            // that the var was accessed, so don't throw exception here.
+//            continue;
+//          }
+//#endif
+//          if (find_iter == currentTaskAccesses.end()) {
+//            std::cout << "Error: did not find " << label->getName() << "\n";
+//            std::cout << "Mtl: " << m << ", Patch: " << *patch << "\n";
+//          }
+//          else {
+//            std::cout << "Error: accessType is not GetAccess for " << label->getName() << "\n";
+//          }
+//          std::cout << "For Task:\n";
+//          currentTask->displayAll(std::cout);
+//
+//          // Makes request that is never followed through.
+//          std::string has, needs;
+//          if (accessType == GetAccess) {
+//            has = "task requires";
+//            if (isFinalized()) {
+//              needs = "get from the old datawarehouse";
+//            }
+//            else {
+//              needs = "get from the new datawarehouse";
+//            }
+//          }
+//          else if (accessType == PutAccess) {
+//            has = "task computes";
+//            needs = "datawarehouse put";
+//          }
+//          else {
+//            has = "task modifies";
+//            needs = "datawarehouse modify";
+//          }
+//          //WAIT_FOR_DEBUGGER();
+//          SCI_THROW(DependencyException(currentTask, label, matl, patch, has, needs, __FILE__, __LINE__));
+//        }
+//        else if (((*find_iter).second.lowOffset != lowOffset || (*find_iter).second.highOffset != highOffset)
+//            && accessType != ModifyAccess /* Can == ModifyAccess when you require with
+//             ghost cells and modify */) {
+//          // Makes request for ghost cells that are never gotten.
+//          AccessInfo accessInfo = (*find_iter).second;
+//          ASSERT(accessType == GetAccess);
+//
+//          // Assert that the request was greater than what was asked for
+//          // because the other cases (where it asked for more than the request)
+//          // should have been caught in checkGetAccess().
+//          ASSERT(Max((*find_iter).second.lowOffset, lowOffset) == lowOffset);
+//          ASSERT(Max((*find_iter).second.highOffset, highOffset) == highOffset);
+//
+//          std::string has, needs;
+//          has = "task requires";
+//          std::ostringstream ghost_str;
+//          ghost_str << " requesting " << dep->numGhostCells << " layer";
+//          if (dep->numGhostCells > 1) {
+//            ghost_str << "s";
+//          }
+//          ghost_str << " of ghosts around " << Ghost::getGhostTypeName(dep->gtype);
+//          has += ghost_str.str();
+//
+//          if (isFinalized()) {
+//            needs = "get from the old datawarehouse";
+//          }
+//          else {
+//            needs = "get from the new datawarehouse";
+//          }
+//          needs += " that includes these ghosts";
+//
+//          SCI_THROW(DependencyException(currentTask, label, matl, patch, has, needs, __FILE__, __LINE__));
+//        }
+//      }
+//    }
+//  }
 }
 
 //______________________________________________________________________
@@ -3761,7 +3687,7 @@ void
 OnDemandDataWarehouse::abortTimestep()
 {
   // BJW - timestep aborting does not work in MPI - disabling until we get fixed.
-  if( d_myworld->size() == 0 ) {
+  if (d_myworld->size() == 0) {
     aborted = true;
   }
 }

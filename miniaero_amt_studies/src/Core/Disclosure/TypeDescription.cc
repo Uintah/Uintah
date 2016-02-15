@@ -29,7 +29,9 @@
 #include <Core/Util/Assert.h>
 #include <Core/Thread/Mutex.h>
 #include <Core/Thread/CrowdMonitor.h>
+
 #include <map>
+#include <mutex>
 #include <vector>
 #include <iostream>
 
@@ -38,8 +40,8 @@ using namespace Uintah;
 using namespace SCIRun;
 using namespace std;
 
-static Mutex tdLock("TypeDescription::getMPIType lock");
-static CrowdMonitor tpLock("TypeDescription type lock"); 
+static std::mutex tdLock{};
+static std::mutex tpLock{};
 
 static map<string, const TypeDescription*>* types = 0;
 static vector<const TypeDescription*>* typelist=0;
@@ -71,7 +73,7 @@ TypeDescription::deleteAll()
 void
 TypeDescription::register_type()
 {
-  tpLock.writeLock(); 
+  tpLock.lock();
   if( !types ) {
     ASSERT( !killed );
     ASSERT( !typelist )
@@ -86,7 +88,7 @@ TypeDescription::register_type()
     (*types)[ getName() ] = this;
   }
   typelist->push_back( this );
-  tpLock.writeUnlock(); 
+  tpLock.unlock();
 }
 
 TypeDescription::TypeDescription(       Type          type,
@@ -160,17 +162,17 @@ string TypeDescription::getFileName() const
 const TypeDescription *
 TypeDescription::lookupType( const std::string & t )
 {
-  tpLock.readLock(); 
+  tpLock.lock();
   if( !types ){
-    tpLock.readUnlock();
+    tpLock.unlock();
     return 0;
   }
   map<string, const TypeDescription*>::iterator iter = types->find( t );
   if( iter == types->end() ){
-    tpLock.readUnlock();
+    tpLock.unlock();
     return 0;
   }
-  tpLock.readUnlock();
+  tpLock.unlock();
   return iter->second;
 }
 
