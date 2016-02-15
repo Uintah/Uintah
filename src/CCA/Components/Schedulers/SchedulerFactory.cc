@@ -129,6 +129,9 @@ SchedulerFactory::create( const ProblemSpecP   & ps,
   else if (scheduler == "ThreadedMPI") {
     sch = scinew ThreadedMPIScheduler(world, output, NULL);
   }
+  else if (scheduler == "ThreadFunneled") {
+    sch = scinew ThreadedMPIScheduler(world, output, NULL);
+  }
   else if (scheduler == "Unified") {
     sch = scinew UnifiedScheduler(world, output, NULL);
   }

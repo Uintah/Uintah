@@ -29,7 +29,6 @@
 #include <Core/Thread/Mutex.h>
 #include <Core/Util/DebugStream.h>
 #include <Core/Util/ProgressiveWarning.h>
-#include <sci_algorithm.h>
 
 #include <map>
 #include <set>

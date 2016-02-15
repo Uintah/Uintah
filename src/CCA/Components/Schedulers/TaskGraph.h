@@ -25,10 +25,10 @@
 #ifndef CCA_COMPONENTS_SCHEDULERS_TASKGRAPH_H
 #define CCA_COMPONENTS_SCHEDULERS_TASKGRAPH_H
 
- 
-#include <Core/Grid/Task.h>
+
 #include <CCA/Ports/Scheduler.h>
 #include <Core/Grid/Grid.h>
+#include <Core/Grid/Task.h>
 
 #include <vector>
 #include <list>
@@ -39,7 +39,8 @@ namespace Uintah {
   class DetailedTask;
   class DetailedTasks;
   class Patch;
-  class LoadBalancer;
+  class CompTable;
+  class SchedulerCommon;
 
 /**************************************
 
@@ -62,7 +63,7 @@ CLASS
                                        patches on the current processor)
 
    Detailed Task portion: divides up tasks into smaller pieces, and sets up the
-   data that need to be communicated between processors when the taskgraph executes.
+   data that needs to be communicated between processors when the taskgraph executes.
 
      createDetailedTask (for each task, patch subset, matl subset)
 
@@ -91,35 +92,41 @@ KEYWORDS
 
 DESCRIPTION
 
-  
-WARNING
-  
 ****************************************/
 
-class CompTable;
-class SchedulerCommon;
 
-// this is so we can keep tasks independent of taskgraph
-struct GraphSortInfo {
+//_______________________________________________________________________________________________
+//
+//    GraphSortInfo
+//_______________________________________________________________________________________________
+//
+struct GraphSortInfo {  // this is so we can keep tasks independent of taskgraph
+
     GraphSortInfo()
-    {
-      visited = false;
-      sorted = false;
-    }
+      : m_visited{ false}
+      , m_sorted{ false }
+    {}
 
-    bool visited;
-    bool sorted;
+    bool m_visited;
+    bool m_sorted;
 };
 
-typedef std::map<Task*, GraphSortInfo> GraphSortInfoMap;
 
+
+
+//_______________________________________________________________________________________________
+//
+//    DetailedDependency
+//_______________________________________________________________________________________________
+//
 class TaskGraph {
 
   public:
 
-    TaskGraph(       SchedulerCommon*  sc,
-               const ProcessorGroup*   pg,
-                     Scheduler::tgType type );
+    TaskGraph(       SchedulerCommon   * sched
+             , const ProcessorGroup    * pg
+             ,       Scheduler::tgType   type
+             );
 
     ~TaskGraph();
 
@@ -129,35 +136,32 @@ class TaskGraph {
     /// Adds a task to the task graph.  If the task is empty, it
     /// deletes it.  Also, as each task is added, it updates the list
     /// of vars that are required from the old DW
-    void addTask(       Task*        t,
-                  const PatchSet*    patchset,
-                  const MaterialSet* matlset );
+    void addTask(       Task         * task
+                ,  const PatchSet    * patchset
+                ,  const MaterialSet * matlset
+                );
 
     /// sets up the task connections and puts them in a sorted order.
     /// Calls setupTaskConnections, which has the side effect of creating
     /// reduction tasks for tasks that compute reduction variables.
     /// calls processTask on each task to sort them.
-    void topologicalSort( std::vector<Task*>& tasks );
+    void topologicalSort( std::vector<Task*> & tasks );
+
 
     /// Sorts the tasks, and makes DetailedTask's out of them,
     /// and loads them into a new DetailedTasks object. (There is one
     /// DetailedTask for each PatchSubset and MaterialSubset in a Task,
     /// where a Task may have many PatchSubsets and MaterialSubsets.).
     /// Sorts using topologicalSort.
-    DetailedTasks* createDetailedTasks(       bool           useInternalDeps,
-                                              DetailedTasks* first,
-                                        const GridP&         grid,
-                                        const GridP&         oldGrid ) ;
+    DetailedTasks* createDetailedTasks(       bool            useInternalDeps
+                                      ,       DetailedTasks * first
+                                      , const GridP         & grid
+                                      , const GridP         & oldGrid
+                                      );
 
-    inline DetailedTasks* getDetailedTasks()
-    {
-      return dts_;
-    }
+    inline DetailedTasks* getDetailedTasks() { return m_detailed_tasks; }
 
-    inline Scheduler::tgType getType() const
-    {
-      return type_;
-    }
+    inline Scheduler::tgType getType() const { return m_tg_type; }
 
     /// This will go through the detailed tasks and create the
     /// dependencies need to communicate data across separate
@@ -171,7 +175,7 @@ class TaskGraph {
     /// However, this routine leaves the tasks in the order they were
     /// added, so that reduction tasks are hit in the correct order
     /// by each MPI process.
-    void nullSort( std::vector<Task*>& tasks );
+    void nullSort( std::vector<Task*> & tasks );
 
     int getNumTasks() const;
 
@@ -191,127 +195,130 @@ class TaskGraph {
     /// starting with 0
     void setIteration( int iter )
     {
-      currentIteration = iter;
+      m_current_iteration = iter;
     }
 
     int getNumTaskPhases()
     {
-      return d_numtaskphases;
+      return m_num_task_phases;
     }
 
     std::vector<Task*>& getTasks()
     {
-      return d_tasks;
+      return m_tasks;
     }
 
     /// Makes and returns a map that associates VarLabel names with
     /// the materials the variable is computed for.
-    typedef std::map<std::string, std::list<int> > VarLabelMaterialMap;
+    using VarLabelMaterialMap = std::map<std::string, std::list<int> >;
+    void makeVarLabelMaterialMap( VarLabelMaterialMap * result );
 
-    void makeVarLabelMaterialMap( VarLabelMaterialMap* result );
 
   private:
 
-#ifdef __PGI
-     //PGI won't compile with hash_multimap, so it will use multimap
-    typedef std::multimap<const VarLabel*, Task::Dependency*> CompMap;
-#elif HAVE_GNU_HASHMAP
-     typedef std::multimap<const VarLabel*, Task::Dependency*> CompMap;
-#else
-    typedef hash_multimap<const VarLabel*, Task::Dependency*> CompMap;
-#endif
+    using GraphSortInfoMap = std::map<Task*, GraphSortInfo>;
+    using CompMap = hash_multimap<const VarLabel*, Task::Dependency*>;
+    using ReductionTasksMap = std::map<VarLabelMatl<Level>, Task*>;
+    using DetailedReductionTasksMap = std::map<const VarLabel*, DetailedTask*, VarLabel::Compare>;
 
-    typedef std::map<VarLabelMatl<Level>, Task*> ReductionTasksMap;
+    // eliminate copy, assignment and move
+    TaskGraph( const TaskGraph & )            = delete;
+    TaskGraph& operator=( const TaskGraph & ) = delete;
+    TaskGraph( TaskGraph && )                 = delete;
+    TaskGraph& operator=( TaskGraph && )      = delete;
 
     /// Helper function for processTasks, processing the dependencies
     /// for the given task in the dependency list whose head is req.
     /// Will call processTask (recursively, as this is a helper for
     /// processTask) for each dependent task.
-    void processDependencies( Task*               task,
-                              Task::Dependency*   req,
-                              std::vector<Task*>& sortedTasks,
-                              GraphSortInfoMap&   sortinfo ) const;
+    void processDependencies( Task               * task
+                            , Task::Dependency   * req
+                            , std::vector<Task*> & sortedTasks
+                            , GraphSortInfoMap   & sortinfo
+                            ) const;
 
     /// Helper function for setupTaskConnections, adding dependency edges
     /// for the given task for each of the require (or modify) depencies in
     /// the list whose head is req.  If modifies is true then each found
     /// compute will be replaced by its modifying dependency on the CompMap.
-    void addDependencyEdges( Task* task,
-                             GraphSortInfoMap&  sortinfo,
-                             Task::Dependency*  req,
-                             CompMap&           comps,
-                             ReductionTasksMap& reductionTasks,
-                             bool               modifies );
+    void addDependencyEdges( Task              * task
+                           , GraphSortInfoMap  & sortinfo
+                           , Task::Dependency  * req
+                           , CompMap           & comps
+                           , ReductionTasksMap & reductionTasks
+                           , bool                modifies
+                           );
 
     /// Used by (the public) createDetailedDependencies to store comps
     /// in a ComputeTable (See TaskGraph.cc).
-    void remembercomps( DetailedTask*     task,
-                        Task::Dependency* comp,
-                        CompTable&        ct );
+    void remembercomps( DetailedTask     * task
+                      , Task::Dependency * comp
+                      , CompTable        & ct
+                      );
 
     /// This is the "detailed" version of addDependencyEdges.  It does for
     /// the public createDetailedDependencies member function essentially
     /// what addDependencyEdges does for setupTaskConnections.  This will
     /// set up the data dependencies that need to be communicated between
     /// processors.
-    void createDetailedDependencies( DetailedTask*     task,
-                                     Task::Dependency* req,
-                                     CompTable&        ct,
-                                     bool              modifies );
+    void createDetailedDependencies( DetailedTask     * task
+                                   , Task::Dependency * req
+                                   , CompTable        & ct
+                                   , bool               modifies
+                                   );
 
     /// Makes a DetailedTask from task with given PatchSubset and
     /// MaterialSubset.
-    void createDetailedTask(       Task*           task,
-                             const PatchSubset*    patches,
-                             const MaterialSubset* matls );
+    void createDetailedTask(       Task           * task
+                           , const PatchSubset    * patches
+                           , const MaterialSubset * matls
+                           );
 
     /// find the processor that a variable (req) is on given patch and
     /// material.
-    int findVariableLocation(       Task::Dependency* req,
-                              const Patch*            patch,
-                                    int               matl,
-                                    int               iteration );
+    int findVariableLocation(       Task::Dependency * req
+                            , const Patch            * patch
+                            ,       int                matl
+                            ,       int                iteration
+                            );
 
-    TaskGraph(const TaskGraph&);
-
-    TaskGraph& operator=(const TaskGraph&);
-
-    bool overlaps( const Task::Dependency* comp,
-                   const Task::Dependency* req ) const;
+    bool overlaps( const Task::Dependency * comp
+                 , const Task::Dependency * req
+                 ) const;
 
     /// Adds edges in the TaskGraph between requires/modifies and their
     /// associated computes.  Uses addDependencyEdges as a helper
-    void setupTaskConnections( GraphSortInfoMap& sortinfo );
+    void setupTaskConnections( GraphSortInfoMap & sortinfo );
 
     /// Called for each task, this "sorts" the taskgraph.
     /// This sorts in topological order by calling processDependency
     /// (which checks for cycles in the graph), which then recursively
     /// calls processTask for each dependentTask.  After this process is
     /// finished, then the task is added at the end of sortedTasks.
-    void processTask( Task*               task,
-                      std::vector<Task*>& sortedTasks,
-                      GraphSortInfoMap&   sortinfo ) const;
+    void processTask( Task               * task
+                    , std::vector<Task*> & sortedTasks
+                    , GraphSortInfoMap   & sortinfo
+                    ) const;
 
-    std::vector<Task*>       d_tasks;
-    std::vector<Task::Edge*> edges;
+    std::vector<Task*>        m_tasks;
+    std::vector<Task::Edge*>  m_edges;
 
-    SchedulerCommon*      sc;
-    LoadBalancer*         lb;
-    const ProcessorGroup* d_myworld;
-    Scheduler::tgType     type_;
-    DetailedTasks*        dts_;
+    SchedulerCommon      * m_sched;
+    LoadBalancer         * m_load_balancer;
+    const ProcessorGroup * m_proc_group;
+    Scheduler::tgType      m_tg_type;
+    DetailedTasks        * m_detailed_tasks;
 
     // how many times this taskgraph has executed this timestep
-    int currentIteration;
+    int m_current_iteration;
 
     // how many task phases this taskgraph has been through
-    int d_numtaskphases;
+    int m_num_task_phases;
 
-    typedef std::map<const VarLabel*, DetailedTask*, VarLabel::Compare> DetailedReductionTasksMap;
+    DetailedReductionTasksMap m_reduction_tasks;
 
-    DetailedReductionTasksMap d_reductionTasks;
-};
+}; // class TaskGraph
 
-}  // End namespace Uintah
+}  // namespace Uintah
 
-#endif // End CCA_COMPONENTS_SCHEDULERS_TASKGRAPH_H
+#endif // CCA_COMPONENTS_SCHEDULERS_TASKGRAPH_H

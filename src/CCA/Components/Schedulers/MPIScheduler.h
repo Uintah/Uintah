@@ -37,8 +37,10 @@
 #include <Core/Parallel/BufferInfo.h>
 #include <Core/Util/InfoMapper.h>
 
+#include <chrono>
 #include <vector>
 #include <map>
+#include <mutex>
 #include <fstream>
 
 namespace Uintah {
@@ -117,10 +119,10 @@ class MPIScheduler : public SchedulerCommon {
         double max_volume;
 
         // do SUM and MAX reduction for numMessages and messageVolume
-        MPI_Reduce(&numMessages_,&total_messages,1,MPI_UNSIGNED,MPI_SUM,0,d_myworld->getComm());
-        MPI_Reduce(&messageVolume_,&total_volume,1,MPI_DOUBLE,MPI_SUM,0,d_myworld->getComm());
-        MPI_Reduce(&numMessages_,&max_messages,1,MPI_UNSIGNED,MPI_MAX,0,d_myworld->getComm());
-        MPI_Reduce(&messageVolume_,&max_volume,1,MPI_DOUBLE,MPI_MAX,0,d_myworld->getComm());
+        MPI_Reduce(&numMessages_  , &total_messages, 1, MPI_UNSIGNED,MPI_SUM, 0, d_myworld->getComm());
+        MPI_Reduce(&messageVolume_, &total_volume  , 1, MPI_DOUBLE,MPI_SUM  , 0, d_myworld->getComm());
+        MPI_Reduce(&numMessages_  , &max_messages  , 1, MPI_UNSIGNED,MPI_MAX, 0, d_myworld->getComm());
+        MPI_Reduce(&messageVolume_, &max_volume    , 1, MPI_DOUBLE,MPI_MAX  , 0, d_myworld->getComm());
 
         if( d_myworld->myrank() == 0 ) {
           mpi_stats << "MPIStats: Num Messages (avg): " << total_messages/(float)d_myworld->size() << " (max):" << max_messages << std::endl;
@@ -192,10 +194,12 @@ class MPIScheduler : public SchedulerCommon {
     //   This eliminates miles of unnecessarily redundant code in threaded schedulers
     //-------------------------------------------------------------------------
     // multiple reader, single writer lock (pthread_rwlock_t wrapper)
-    mutable CrowdMonitor        recvLock;               // CommRecMPI recvs lock
-    mutable CrowdMonitor        sendLock;               // CommRecMPI sends lock
-    Mutex                       dlbLock;                // load balancer lock
-    Mutex                       waittimesLock;          // MPI wait times lock
+    std::mutex      recvLock;               // CommRecMPI recvs lock
+    std::mutex      sendLock;               // CommRecMPI sends lock
+    std::mutex      dlbLock;                // load balancer lock
+    std::mutex      waittimesLock;          // MPI wait times lock
+
+    std::chrono::high_resolution_clock::time_point m_last_exec_time{};
 
   private:
 

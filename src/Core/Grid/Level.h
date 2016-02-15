@@ -49,6 +49,7 @@
 
 #include <vector>
 #include <map>
+#include <mutex>
 
 namespace Uintah {
 
@@ -319,7 +320,10 @@ private:
   typedef std::map<std::pair<IntVector, IntVector>, std::vector<const Patch*>, IntVectorCompare> selectCache;
   mutable selectCache d_selectCache; // we like const Levels in most places :) 
   PatchBVH* d_bvh;
-  mutable CrowdMonitor    d_cachelock;
+
+//  mutable CrowdMonitor    d_cachelock;
+  mutable std::mutex    d_cachelock;
+
 };
 
 const Level * getLevel(const PatchSubset* subset);

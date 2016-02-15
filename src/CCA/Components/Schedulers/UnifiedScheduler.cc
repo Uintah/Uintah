@@ -1215,7 +1215,7 @@ struct CompareDep {
   bool operator()( DependencyBatch* a,
                    DependencyBatch* b )
   {
-    return a->messageTag < b->messageTag;
+    return a->m_message_tag < b->m_message_tag;
   }
 };
 
@@ -5311,7 +5311,7 @@ UnifiedSchedulerWorker::UnifiedSchedulerWorker( UnifiedScheduler*  scheduler,
     d_runmutex( "run mutex" ),
     d_quit( false ),
     d_idle( true ),
-    d_thread_id( thread_id + 1),
+    d_thread_id( thread_id + 1 ),
     d_rank( scheduler->getProcessorGroup()->myrank() ),
     d_waittime( 0.0 ),
     d_waitstart( 0.0 )

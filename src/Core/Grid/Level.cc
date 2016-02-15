@@ -72,8 +72,7 @@ Level::Level(       Grid      * grid,
   d_int_spatial_range(Point(DBL_MAX,DBL_MAX,DBL_MAX),Point(DBL_MIN,DBL_MIN,DBL_MIN)),
   d_index(index),
   d_patchDistribution(-1,-1,-1), d_periodicBoundaries(0, 0, 0), d_id(id),
-  d_refinementRatio(refinementRatio),
-  d_cachelock("Level Cache Lock")
+  d_refinementRatio(refinementRatio)
 {
   d_stretched   = false;
   d_each_patch  = 0;
@@ -512,7 +511,7 @@ void Level::selectPatches(const IntVector& low, const IntVector& high,
 {
  if(cache){
    // look it up in the cache first
-   d_cachelock.readLock();
+   d_cachelock.lock();
    selectCache::const_iterator iter = d_selectCache.find(make_pair(low, high));
 
    if (iter != d_selectCache.end()) {
@@ -520,10 +519,10 @@ void Level::selectPatches(const IntVector& low, const IntVector& high,
      for (unsigned i = 0; i < cache.size(); i++) {
        neighbors.push_back(cache[i]);
      }
-     d_cachelock.readUnlock();
+     d_cachelock.unlock();
      return;
    }
-   d_cachelock.readUnlock();
+   d_cachelock.unlock();
    ASSERT(neighbors.size() == 0);
  }
 
@@ -558,13 +557,13 @@ void Level::selectPatches(const IntVector& low, const IntVector& high,
    if(cache){
      // put it in the cache - start at orig_size in case there was something in
      // neighbors before this query
-     d_cachelock.writeLock();
+     d_cachelock.lock();
      vector<const Patch*>& cache = d_selectCache[make_pair(low,high)];
      cache.reserve(6);  // don't reserve too much to save memory, not too little to avoid too much reallocation
      for (int i = 0; i < neighbors.size(); i++) {
        cache.push_back(neighbors[i]);
      }
-     d_cachelock.writeUnlock();
+     d_cachelock.unlock();
    }
 }
 
