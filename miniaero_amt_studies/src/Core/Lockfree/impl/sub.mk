@@ -1,7 +1,7 @@
 #
 #  The MIT License
 #
-#  Copyright (c) 1997-2016 The University of Utah
+#  Copyright (c) 1997-2015 The University of Utah
 # 
 #  Permission is hereby granted, free of charge, to any person obtaining a copy
 #  of this software and associated documentation files (the "Software"), to
@@ -22,24 +22,13 @@
 #  IN THE SOFTWARE.
 # 
 # 
-# 
-# 
-# 
 # Makefile fragment for this subdirectory 
 
+SRCDIR := Core/Lockfree/impl
 
-include $(SCIRUN_SCRIPTS)/smallso_prologue.mk
+SRCS += $(SRCDIR)/Lockfree_MMapAllocator.cpp
 
-SRCDIR   := Core/Malloc
+PSELIBS :=
 
-SRCS     += $(SRCDIR)/Allocator.cc        \
-            $(SRCDIR)/AllocatorTags.ccpp  \
-            $(SRCDIR)/AllocOS.cc          \
-            $(SRCDIR)/malloc.cc           \
-            $(SRCDIR)/new.cc
-
-PSELIBS := 
-LIBS := $(THREAD_LIBRARY)
-
-include $(SCIRUN_SCRIPTS)/smallso_epilogue.mk
+LIBS :=
 
