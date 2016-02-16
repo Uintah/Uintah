@@ -404,6 +404,14 @@ namespace Uintah {
                                  const std::string warn,
                                  const char* file, 
                                  int line);
+ 
+      bool isPIDXEnabled(){
+      #if HAVE_PIDX
+        return true;  
+      #else
+        return false;
+      #endif
+      };
       
       
       //______________________________________________________________________
