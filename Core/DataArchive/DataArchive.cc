@@ -661,7 +661,7 @@ DataArchive::query(       Variable     & var,
   
   //__________________________________
   //  bulletproofing
-  if(getenv("HAVE_PIDX") == NULL && d_outputFileFormat == PIDX ){
+  if( isPIDXEnabled() == false && d_outputFileFormat == PIDX ){
     ostringstream warn;
     warn << "\nERROR DataArchive::query()\n"
          << "The uda you are trying to open was written using the PIDX file format.\n"
