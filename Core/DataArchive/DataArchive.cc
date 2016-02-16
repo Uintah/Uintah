@@ -801,35 +801,19 @@ DataArchive::query(       Variable     & var,
     ret = PIDX_close_access( access );
     PIDX_checkReturnCode(ret, "DataArchive::query() - PIDX_close_access failure", __FILE__, __LINE__);
     
+    //__________________________________
     // debugging
     if (dbg.active() ){
-      /*`==========TESTING==========*/
-      cout << "__________________________________ " << endl;
-      cout << "  DataArchive::query    AFTER  close" << endl;
-      double* d_buffer = (double*)malloc( arraySize );
-      memcpy( d_buffer, dataPIDX, arraySize );
-
-      int c = 0;
-      for (int k=lo_EC.z(); k<hi_EC.z(); k++){
-        for (int j=lo_EC.y(); j<hi_EC.y(); j++){
-          for (int i=lo_EC.x(); i<hi_EC.x(); i++){
-            printf( " [%2i,%2i,%2i] ", i,j,k);
-            for ( int s = 0; s < varDesc->values_per_sample; ++s ){
-              printf( "%5.3f ",d_buffer[c]);
-              c++;
-            }
-          }
-          printf("\n");
-        }
-        printf("\n");
-      }  
-      cout << "\n__________________________________ " << endl;
-      printf("\n");
-      free(d_buffer);
-      /*===========TESTING==========`*/
+      PIDXOutputContext pc;
+      pc.printBuffer<double>("DataArchive::query    AFTER  close",
+                              varDesc->values_per_sample,        
+                              lo_EC, hi_EC,                      
+                              dataPIDX,                          
+                              arraySize );
     }
    
-    // now move the datapIDX into the array3 variable
+    //__________________________________
+    // now move the dataPIDX buffer into the array3 variable
     var.readPIDX( dataPIDX,  arraySize, timedata.d_swapBytes ); 
     free( dataPIDX );
   }

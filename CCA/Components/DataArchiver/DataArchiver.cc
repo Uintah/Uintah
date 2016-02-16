@@ -2432,11 +2432,13 @@ DataArchiver::saveLabels_PIDX(std::vector< SaveItem >& saveLabels,
           int totalCells_EC   = nCells_EC.x() * nCells_EC.y() * nCells_EC.z();
 
           /*`==========TESTING==========*/
-          proc0cout << rank <<" taskType: " << type << "  PIDX:  " << setw(15) <<label->getName() << "  "<< td->getName() 
-                    << " Patch: " << patchID << " L-" << level->getIndex() 
-                    << ",  sample_per_variable: " << sample_per_variable <<" varSubType_size: " << varSubType_size << " dataType: " << data_type 
-                    << " localOffset: " << pidxLo << " count: " << nCells_EC << ", totalCells_EC " << totalCells_EC 
-                    << ", lo_EC: " << lo_EC << ", hi_EC: " << hi_EC << endl; 
+          if (dbgPIDX.active() ){
+            proc0cout << rank <<" taskType: " << type << "  PIDX:  " << setw(15) <<label->getName() << "  "<< td->getName() 
+                      << " Patch: " << patchID << " L-" << level->getIndex() 
+                      << ",  sample_per_variable: " << sample_per_variable <<" varSubType_size: " << varSubType_size << " dataType: " << data_type 
+                      << " localOffset: " << pidxLo << " count: " << nCells_EC << ", totalCells_EC " << totalCells_EC 
+                      << ", lo_EC: " << lo_EC << ", hi_EC: " << hi_EC << endl; 
+          }
           /*===========TESTING==========`*/
 
           PIDX_point local_offset_point; 
@@ -2474,35 +2476,16 @@ DataArchiver::saveLabels_PIDX(std::vector< SaveItem >& saveLabels,
          
           free(t_buffer);
 
-/*`==========TESTING==========*/
-if (dbgPIDX.active() ){
-  cout << "__________________________________ " << endl;
-  cout << "  DataArchiver::saveLabels_PIDX    BEFORE  PIDX_variable_write_data_layout, ArraySize: " << arraySize << endl;
-
-  double* d_buffer = (double*)malloc( arraySize );
-  memcpy( d_buffer, patch_buffer[vcm][p], arraySize );
-  
-  int c = 0;
-  for (int k=lo_EC.z(); k<hi_EC.z(); k++){
-    for (int j=lo_EC.y(); j<hi_EC.y(); j++){
-      for (int i=lo_EC.x(); i<hi_EC.x(); i++){
-        printf( " [%2i,%2i,%2i] ", i,j,k);
-        for ( int s = 0; s < sample_per_variable; ++s ){
-          printf( "%5.3f ",d_buffer[c]);
-          c++;
-        }
-      }
-      printf("\n");
-    }
-    printf("\n");
-  }   
-  cout << "\n__________________________________ " << endl;
-  printf("\n");
-  free(d_buffer);
-}
-/*===========TESTING==========`*/
-         
-         
+          //__________________________________
+          //  debugging
+          if (dbgPIDX.active() ){
+             PIDXOutputContext pc;
+             pc.printBuffer<double>("DataArchiver::saveLabels_PIDX    BEFORE  PIDX_variable_write_data_layout",
+                                     sample_per_variable,        
+                                     lo_EC, hi_EC,                      
+                                     patch_buffer[vcm][p],                          
+                                     arraySize );
+          }         
          
           rc = PIDX_variable_write_data_layout(pc.variable[vc][m], local_offset_point, local_box_count_point, patch_buffer[vcm][p], PIDX_row_major);
           PIDX_checkReturnCode( rc, "DataArchiver::saveLabels_PIDX - PIDX_variable_write_data_layout failure",__FILE__, __LINE__);
