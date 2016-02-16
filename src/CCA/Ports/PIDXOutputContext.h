@@ -25,9 +25,10 @@
 #ifndef UINTAH_HOMEBREW_PIDXOutputContext_H
 #define UINTAH_HOMEBREW_PIDXOutputContext_H
 
-#include <Core/Disclosure/TypeDescription.h>
 #include <sci_defs/pidx_defs.h>
 #if HAVE_PIDX
+#include <Core/Disclosure/TypeDescription.h>
+#include <Core/Geometry/IntVector.h>
 #include <PIDX.h>
 #include <mpi.h>
 #include <string>
@@ -63,8 +64,6 @@ namespace Uintah {
 
   ****************************************/
 
-class TypeDescription;
-    
 class PIDXOutputContext {
   public:
     PIDXOutputContext();
@@ -87,6 +86,14 @@ class PIDXOutputContext {
     std::vector<TypeDescription::Type> getSupportedVariableTypes();
     
     std::string getDirectoryName(TypeDescription::Type TD);
+    
+    template<class T>
+    void printBuffer(const std::string & desc,
+                     int samples_per_value,
+                     SCIRun::IntVector& lo_EC,
+                     SCIRun::IntVector& hi_EC,
+                     unsigned char* dataPIDX,
+                     size_t arraySize );
 
     std::string filename;
     unsigned int timestep;
@@ -96,9 +103,6 @@ class PIDXOutputContext {
 
     PIDX_access access;
   private:
-  
-
-      
     bool d_isInitialized;
     bool d_outputDoubleAsFloat;
     
