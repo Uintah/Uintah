@@ -468,7 +468,7 @@ CharOxidationShaddix::computeModel( const ProcessorGroup * pc,
     double particle_temp_rate_;
     int NIter;
     double rc_destruction_rate_;
-    double PO2_surf;
+    double PO2_surf=0.0;
     double PO2_surf_guess;
     double PO2_surf_tmp;
     double PO2_surf_new;

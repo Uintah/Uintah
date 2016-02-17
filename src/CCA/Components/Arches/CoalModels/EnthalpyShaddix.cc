@@ -247,7 +247,7 @@ EnthalpyShaddix::problemSetup(const ProblemSpecP& params, int qn)
     double ash_mf = coal.ASH / coal_dry;
     _init_ash.clear();
     for ( unsigned int i = 0; i < _sizes.size(); i++ ){
-      double mass_dry = (_pi/6.0) * pow(_sizes[i],3) * _rhop_o;     // kg/particle
+      double mass_dry = (_pi/6.0) * pow(_sizes[i],3.0) * _rhop_o;     // kg/particle
       _init_ash.push_back(mass_dry  * ash_mf);                      // kg_ash/particle (initial)
     }
   } else {
@@ -259,7 +259,7 @@ EnthalpyShaddix::problemSetup(const ProblemSpecP& params, int qn)
   for(int i=0;i<5;i++){
     _MW_avg += yelem[i]/MW[i];
   }
-  _MW_avg = 1/_MW_avg;
+  _MW_avg = 1.0/_MW_avg;
 
   //_RdC = _Rgas/12.0107;
   _RdC = _Rgas/12.0;
@@ -540,7 +540,7 @@ EnthalpyShaddix::computeModel( const ProcessorGroup * pc,
 
         // A BLOWING CORRECTION TO THE HEAT TRANSFER MODEL IS EMPLOYED
         kappa =  -surface_rateph*lengthph*specific_heatph/(2.0*rkg);
-        if(std::abs(exp(kappa)-1) < 1e-16){
+        if(std::abs(exp(kappa)-1.0) < 1e-16){
           blow = 1.0;
         } else {
           blow = kappa/(exp(kappa)-1.0);
@@ -591,7 +591,7 @@ EnthalpyShaddix::computeModel( const ProcessorGroup * pc,
 
 double
 EnthalpyShaddix::g2( double z ){
-  double sol = exp(z)/pow((exp(z)-1)/z,2);
+  double sol = exp(z)/pow((exp(z)-1.0)/z,2.0);
   return sol;
 }
 
