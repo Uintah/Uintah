@@ -69,7 +69,7 @@ CoalTemperature::problemSetup( ProblemSpecP& db ){
 
       for ( unsigned int i = 0; i < _sizes.size(); i++ ){
 
-        double mass_dry = (_pi/6.0) * pow(_sizes[i],3.0) * _rhop_o;     // kg/particle
+        double mass_dry = (_pi/6.0) * std::pow(_sizes[i],3.0) * _rhop_o;     // kg/particle
         _init_ash.push_back(mass_dry  * _ash_mf);                     // kg_ash/particle (initial)
         _init_char.push_back(mass_dry * char_mf);                     // kg_char/particle (initial)
         _init_rawcoal.push_back(mass_dry * raw_coal_mf);              // kg_ash/particle (initial)
@@ -317,7 +317,7 @@ CoalTemperature::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info,
         
         if ( !_const_size ) {
           dp = diameter[c];
-          massDry = _pi/6.0 * pow( dp, 3.0 ) * _rhop_o;
+          massDry = _pi/6.0 * std::pow( dp, 3.0 ) * _rhop_o;
           initAsh = massDry * _ash_mf;
         } else {
           initAsh = _init_ash[i];

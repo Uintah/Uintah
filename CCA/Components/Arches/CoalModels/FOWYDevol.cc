@@ -172,7 +172,7 @@ FOWYDevol::problemSetup(const ProblemSpecP& params, int qn)
     int p_size=particle_sizes.size();
     for (int n=0; n<p_size; n=n+1)
       {
-        vol_dry.push_back((pi/6)*pow(particle_sizes[n],3.0)); // m^3/particle
+        vol_dry.push_back((pi/6)*std::pow(particle_sizes[n],3.0)); // m^3/particle
         mass_dry.push_back(vol_dry[n]*rhop); // kg/particle
         ash_mass_init.push_back(mass_dry[n]*ash_mass_frac); // kg_ash/particle (initial) 
         char_mass_init.push_back(mass_dry[n]*char_mass_frac); // kg_char/particle (initial)

@@ -247,7 +247,7 @@ EnthalpyShaddix::problemSetup(const ProblemSpecP& params, int qn)
     double ash_mf = coal.ASH / coal_dry;
     _init_ash.clear();
     for ( unsigned int i = 0; i < _sizes.size(); i++ ){
-      double mass_dry = (_pi/6.0) * pow(_sizes[i],3.0) * _rhop_o;     // kg/particle
+      double mass_dry = (_pi/6.0) * std::pow(_sizes[i],3.0) * _rhop_o;     // kg/particle
       _init_ash.push_back(mass_dry  * ash_mf);                      // kg_ash/particle (initial)
     }
   } else {
@@ -529,11 +529,11 @@ EnthalpyShaddix::computeModel( const ProcessorGroup * pc,
         double rkg;
         // Convection part: -----------------------
         // Reynolds number
-        double delta_V =sqrt(pow(gas_velocity.x() - particle_velocity.x(),2.0) + pow(gas_velocity.y() - particle_velocity.y(),2.0)+pow(gas_velocity.z() - particle_velocity.z(),2.0));
+        double delta_V =sqrt(std::pow(gas_velocity.x() - particle_velocity.x(),2.0) + std::pow(gas_velocity.y() - particle_velocity.y(),2.0)+std::pow(gas_velocity.z() - particle_velocity.z(),2.0));
         Re = delta_V*lengthph*denph/_visc;
 
         // Nusselt number
-        Nu = 2.0 + 0.65*pow(Re,0.50)*pow(_Pr,(1.0/3.0));
+        Nu = 2.0 + 0.65*std::pow(Re,0.50)*std::pow(_Pr,(1.0/3.0));
 
         // Gas thermal conductivity
         rkg = props(temperatureph, particle_temperatureph); // [=] J/s/m/K
@@ -559,10 +559,10 @@ EnthalpyShaddix::computeModel( const ProcessorGroup * pc,
         Q_radiation = 0.0;
         if ( d_radiation) {
           double Eb;
-          Eb = 4.0*_sigma*pow(rad_particle_temperature[c],4.0);
+          Eb = 4.0*_sigma*std::pow(rad_particle_temperature[c],4.0);
           FSum = radiationVolqIN[c];
           Q_radiation = abskp[c]*(FSum - Eb);
-          double Q_radMax=(pow( radiationVolqIN[c] / (4.0 * _sigma )  , 0.25)-rad_particle_temperature[c])/(dt)*alpha_cp;
+          double Q_radMax=(std::pow( radiationVolqIN[c] / (4.0 * _sigma )  , 0.25)-rad_particle_temperature[c])/(dt)*alpha_cp;
           if (abs(Q_radMax) < abs(Q_radiation)){
             Q_radiation=Q_radMax;
           }
@@ -591,7 +591,7 @@ EnthalpyShaddix::computeModel( const ProcessorGroup * pc,
 
 double
 EnthalpyShaddix::g2( double z ){
-  double sol = exp(z)/pow((exp(z)-1.0)/z,2.0);
+  double sol = exp(z)/std::pow((exp(z)-1.0)/z,2.0);
   return sol;
 }
 
@@ -629,7 +629,7 @@ EnthalpyShaddix::props(double Tg, double Tp){
   double kg = 0.0;
 
   if( T > 1200.0 ) {
-    kg = kg0[9] * pow( T/tg0[9], 0.58);
+    kg = kg0[9] * std::pow( T/tg0[9], 0.58);
 
   } else if ( T < 300 ) {
     kg = kg0[0];
