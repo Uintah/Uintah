@@ -48,15 +48,15 @@ extern std::map<std::string, double> exectimes;
 
 extern DebugStream execout;
 extern DebugStream taskdbg;
+extern DebugStream timeout;
 extern DebugStream waitout;
 
 //______________________________________________________________________
 //
 namespace {
 
-static DebugStream threaded_dbg(         "ThreadFunneled_DBG",         false);
-static DebugStream threaded_timeout(     "ThreadFunneled_TimingsOut",  false);
-static DebugStream threaded_threaddbg(   "ThreadFunneled_ThreadDBG",   false);
+static DebugStream threaded_dbg(       "ThreadFunneled_DBG",        false);
+static DebugStream threaded_threaddbg( "ThreadFunneled_ThreadDBG",  false);
 
 static Lockfree::Timer s_total_exec_time {};
 static std::mutex      s_io_mutex;
@@ -196,10 +196,8 @@ void init_threads(ThreadFunneledScheduler * sched, int num_threads)
 ThreadFunneledScheduler::~ThreadFunneledScheduler()
 {
   // detailed MPI information, written to file per rank
-  if (threaded_timeout.active()) {
+  if (timeout.active()) {
     timingStats.close();
-
-    // reduced avg and max stats
     if (d_myworld->myrank() == 0) {
       avgStats.close();
       maxStats.close();
@@ -545,11 +543,8 @@ void ThreadFunneledScheduler::execute(  int tgnum     /*=0*/
     m_detailed_tasks->localTask(i)->resetDependencyCounts();
   }
 
-  bool emit_timings = threaded_timeout.active();
-  if (emit_timings) {
-    d_labels.clear();
-    d_times.clear();
-  }
+  int my_rank = d_myworld->myrank();
+  makeTaskGraphDoc(m_detailed_tasks, my_rank);
 
   mpi_info_.reset( 0 );
 
@@ -579,7 +574,7 @@ void ThreadFunneledScheduler::execute(  int tgnum     /*=0*/
   if (threaded_dbg.active()) {
     coutLock.lock();
     {
-      threaded_dbg << "\n" << "Rank-" << d_myworld->myrank() << " Executing " << m_detailed_tasks->numTasks() << " tasks (" << m_num_tasks
+      threaded_dbg << "\n" << "Rank-" << my_rank << " Executing " << m_detailed_tasks->numTasks() << " tasks (" << m_num_tasks
           << " local)\n" << "Total task phases: " << m_num_phases << "\n";
       for (size_t phase = 0; phase < m_phase_tasks.size(); ++phase) {
         threaded_dbg << "Phase: " << phase << " has " << m_phase_tasks[phase] << " total tasks\n";
@@ -589,8 +584,7 @@ void ThreadFunneledScheduler::execute(  int tgnum     /*=0*/
     coutLock.unlock();
   }
 
-  taskdbg << d_myworld->myrank() << " Switched to Task Phase " << m_current_phase << " , total task  " << m_phase_tasks[m_current_phase] << std::endl;
-
+  taskdbg << my_rank << " Switched to Task Phase " << m_current_phase << " , total task  " << m_phase_tasks[m_current_phase] << std::endl;
 
 
   //------------------------------------------------------------------------------------------------
@@ -615,8 +609,6 @@ void ThreadFunneledScheduler::execute(  int tgnum     /*=0*/
   //------------------------------------------------------------------------------------------------
 
 
-
-
   emitNetMPIStats();
 
   // compute the net timings and add in wait times for all TaskRunner threads
@@ -634,7 +626,7 @@ void ThreadFunneledScheduler::execute(  int tgnum     /*=0*/
 
   log.finishTimestep();
 
-  if ( (execout.active() || emit_timings) && !parentScheduler_) {  // only do on toplevel scheduler
+  if (!parentScheduler_) {  // only do on toplevel scheduler
     outputTimingStats("ThreadFunnledScheduler");
   }
 } // end execute()

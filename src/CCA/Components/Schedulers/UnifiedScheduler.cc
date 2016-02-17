@@ -60,6 +60,7 @@ extern SCIRun::Mutex cerrLock;
 extern DebugStream taskdbg;
 extern DebugStream waitout;
 extern DebugStream execout;
+extern DebugStream timeout;
 extern DebugStream taskorder;
 extern DebugStream taskLevel_dbg;
 
@@ -69,7 +70,6 @@ extern std::map<std::string, double> exectimes;
 static double Unified_CurrentWaitTime = 0;
 
 static DebugStream unified_dbg(             "Unified_DBG",             false);
-static DebugStream unified_timeout(         "Unified_TimingsOut",      false);
 static DebugStream unified_queuelength(     "Unified_QueueLength",     false);
 static DebugStream unified_threaddbg(       "Unified_ThreadDBG",       false);
 static DebugStream unified_compactaffinity( "Unified_CompactAffinity", true);
@@ -135,18 +135,6 @@ UnifiedScheduler::UnifiedScheduler(const ProcessorGroup* myworld,
   }
 
 #endif
-
-  if (unified_timeout.active()) {
-    char filename[64];
-    sprintf(filename, "timingStats.%d", d_myworld->myrank());
-    timingStats.open(filename);
-    if (d_myworld->myrank() == 0) {
-      sprintf(filename, "timingStats.%d.max", d_myworld->size());
-      maxStats.open(filename);
-      sprintf(filename, "timingStats.%d.avg", d_myworld->size());
-      avgStats.open(filename);
-    }
-  }
 }
 
 //______________________________________________________________________
@@ -165,7 +153,7 @@ UnifiedScheduler::~UnifiedScheduler()
     }
   }
 
-  if (unified_timeout.active()) {
+  if (timeout.active()) {
     timingStats.close();
     if (d_myworld->myrank() == 0) {
       maxStats.close();
@@ -594,17 +582,8 @@ UnifiedScheduler::execute( int tgnum     /* = 0 */,
     dts->localTask(i)->resetDependencyCounts();
   }
 
-  bool emit_timings = unified_timeout.active();
-  if (emit_timings) {
-    d_labels.clear();
-    d_times.clear();
-  }
-
-  //  // TODO - determine if this TG output code is even working correctly (APH - 09/16/15)
-  //  makeTaskGraphDoc(dts, d_myworld->myrank());
-  //  if (useInternalDeps() && emit_timings) {
-  //    emitTime("taskGraph output");
-  //  }
+  int me = d_myworld->myrank();
+  makeTaskGraphDoc(dts, me);
 
   mpi_info_.reset( 0 );
 
@@ -695,9 +674,7 @@ UnifiedScheduler::execute( int tgnum     /* = 0 */,
 
   // compute the net timings
   if (d_sharedState != 0) {
-
     computeNetRunTimeStats(d_sharedState->d_runTimeStats);
-
     for (int i = 0; i < numThreads_; i++) {
       d_sharedState->d_runTimeStats[SimulationState::TaskWaitThreadTime] += t_worker[i]->getWaittime();
     }
@@ -710,7 +687,7 @@ UnifiedScheduler::execute( int tgnum     /* = 0 */,
 
   log.finishTimestep();
 
-  if ( (execout.active() || emit_timings) && !parentScheduler_) {  // only do on toplevel scheduler
+  if (!parentScheduler_) {  // only do on toplevel scheduler
     outputTimingStats("UnifiedScheduler");
   }
 
