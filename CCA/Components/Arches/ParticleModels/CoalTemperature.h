@@ -76,7 +76,6 @@ private:
 
     bool _const_size;
     int _Nenv;
-    double _value; 
     double _rhop_o;
     double _pi; 
     double _initial_temperature; 
