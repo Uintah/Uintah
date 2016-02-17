@@ -72,6 +72,9 @@
 #include <strings.h>
 #include <unistd.h>
 
+#include <libxml/xmlwriter.h>
+
+
 //TODO - BJW - if multilevel reduction doesn't work, fix all
 //       getMaterialSet(0)
 
@@ -81,6 +84,9 @@
 #define OUTPUT               0
 #define CHECKPOINT           1
 #define CHECKPOINT_REDUCTION 2
+
+#define XML_TEXTWRITER 1
+//#undef XML_TEXTWRITER
 
 using namespace Uintah;
 using namespace std;
@@ -1368,6 +1374,7 @@ DataArchiver::findNext_OutputCheckPoint_Timestep(double delt, const GridP& grid)
 void
 DataArchiver::writeto_xml_files(double delt, const GridP& grid)
 {
+
   dbg << "  writeto_xml_files() begin\n";
   //__________________________________
   //  Writeto XML files
@@ -1500,61 +1507,142 @@ DataArchiver::writeto_xml_files(double delt, const GridP& grid)
 
       // make a timestep.xml file for this timestep 
       // we need to do it here in case there is a timestesp restart
-      ProblemSpecP rootElem = ProblemSpec::createDocument("Uintah_timestep");
+      // Break out the <Grid> and <Data> section of the DOM tree into a separate grid.xml file
+      // which can be created quickly and use less memory using the xmlTextWriter functions
+      // (streaming output)
 
+      ProblemSpecP rootElem = ProblemSpec::createDocument("Uintah_timestep");
 
       // Create a metadata element to store the per-timestep endianness
       ProblemSpecP metaElem = rootElem->appendChild("Meta");
-      metaElem->appendElement( "endianness", endianness().c_str() );
-      metaElem->appendElement( "nBits",      (int)sizeof(unsigned long) * 8 );
-      metaElem->appendElement( "numProcs",   d_myworld->size() );
-      
+
+      metaElem->appendElement("endianness", endianness().c_str());
+      metaElem->appendElement("nBits", (int)sizeof(unsigned long) * 8 );
+      metaElem->appendElement("numProcs", d_myworld->size());
+
       // Timestep information
-      ProblemSpecP timeElem = rootElem->appendChild( "Time" );
-      timeElem->appendElement( "timestepNumber", dir_timestep );
-      timeElem->appendElement( "currentTime",    d_tempElapsedTime );
-      timeElem->appendElement( "oldDelt",        delt );
-      
-      
+      ProblemSpecP timeElem = rootElem->appendChild("Time");
+      timeElem->appendElement("timestepNumber", dir_timestep);
+      timeElem->appendElement("currentTime", d_tempElapsedTime);
+      timeElem->appendElement("oldDelt", delt);
+
       //__________________________________
       //  output grid section
-      // With AMR, we're not guaranteed that a proc do work on a given level
-      //   quick check to see that, so we don't create a node that points to no data
+      // With AMR, we're not guaranteed that a proc do work on a given level.
+      // Quick check to see that, so we don't create a node that points to no data
       int numLevels = grid->numLevels();
       vector<vector<int> > procOnLevel(numLevels);
 
+      //  Break out the <Grid> and <Data> sections and write those to a
+      // "grid.xml" section using libxml2's TextWriter which is a streaming
+      //  output format which doesn't use a DOM tree.
+
+#ifndef XML_TEXTWRITER
       ProblemSpecP gridElem = rootElem->appendChild("Grid");
-      gridElem->appendElement("numLevels", numLevels);
-      
+#else
+      string name_grid = baseDirs[i]->getName()+"/"+tname.str()+"/grid.xml";
+      xmlTextWriterPtr writer_grid;
+      /* Create a new XmlWriter for uri, with no compression. */
+      writer_grid = xmlNewTextWriterFilename(name_grid.c_str(), 0);
+      xmlTextWriterSetIndent(writer_grid,1);
+
+      #define MY_ENCODING "UTF-8"
+      xmlTextWriterStartDocument(writer_grid, NULL, MY_ENCODING, NULL);
+
+      xmlTextWriterStartElement(writer_grid, BAD_CAST "Grid_Data");
+      xmlTextWriterStartElement(writer_grid, BAD_CAST "Grid");
+#endif
       //__________________________________
       //  output level information
+#ifndef XML_TEXTWRITER      
+      gridElem->appendElement("numLevels", numLevels);
+#else
+      xmlTextWriterWriteFormatElement(writer_grid, BAD_CAST "numLevels","%d", numLevels);
+#endif      
       for(int l = 0;l<numLevels;l++) {
         LevelP level = grid->getLevel(l);
+#ifndef XML_TEXTWRITER
         ProblemSpecP levelElem = gridElem->appendChild("Level");
+#else
+	xmlTextWriterStartElement(writer_grid, BAD_CAST "Level");
+#endif
 
         if (level->getPeriodicBoundaries() != IntVector(0,0,0)) {
-          levelElem->appendElement( "periodic", level->getPeriodicBoundaries());
-        }
-        
-        levelElem->appendElement( "numPatches", level->numPatches() );
-        levelElem->appendElement( "totalCells", level->totalCells() );
-        
+#ifndef XML_TEXTWRITER
+          levelElem->appendElement("periodic", level->getPeriodicBoundaries());
+#else
+	  xmlTextWriterWriteFormatElement(writer_grid, BAD_CAST "periodic","[%d,%d,%d]",
+					  level->getPeriodicBoundaries().x(),
+					  level->getPeriodicBoundaries().y(),
+					  level->getPeriodicBoundaries().z()
+					  );
+#endif
+	}
+#ifndef XML_TEXTWRITER
+        levelElem->appendElement("numPatches", level->numPatches());
+#else
+	xmlTextWriterWriteFormatElement(writer_grid, BAD_CAST "numPatches","%d",
+					level->numPatches());
+#endif
+#ifndef XML_TEXTWRITER
+        levelElem->appendElement("totalCells", level->totalCells());
+#else
+	xmlTextWriterWriteFormatElement(writer_grid, BAD_CAST "totalCells","%ld",
+					level->totalCells());
+#endif
         if (level->getExtraCells() != IntVector(0,0,0)) {
-          levelElem->appendElement( "extraCells", level->getExtraCells() );
-        }
-        
-        levelElem->appendElement( "anchor", level->getAnchor() );
-        levelElem->appendElement( "id",     level->getID() );
-        
-        // For stretched grids
+#ifndef XML_TEXTWRITER
+          levelElem->appendElement("extraCells", level->getExtraCells());
+#else
+	  xmlTextWriterWriteFormatElement(writer_grid, BAD_CAST "extraCells","[%d,%d,%d]",
+					  level->getExtraCells().x(),
+					  level->getExtraCells().y(),
+					  level->getExtraCells().z()
+					  );
+#endif
+	}
+#ifndef XML_TEXTWRITER
+        levelElem->appendElement("anchor", level->getAnchor());
+#else
+	xmlTextWriterWriteFormatElement(writer_grid, BAD_CAST "anchor","[%g,%g,%g]",
+					level->getAnchor().x(),
+					level->getAnchor().y(),
+					level->getAnchor().z()
+					);
+#endif
+#ifndef XML_TEXTWRITER
+        levelElem->appendElement("id", level->getID());
+#else
+	xmlTextWriterWriteFormatElement(writer_grid, BAD_CAST "id","%d",level->getID());
+#endif
+	// For stretched grids
         if (!level->isStretched()) {
-          levelElem->appendElement( "cellspacing", level->dCell() );
-        } else {
+#ifndef XML_TEXTWRITER
+          levelElem->appendElement("cellspacing", level->dCell());
+#else
+	  xmlTextWriterWriteFormatElement(writer_grid, BAD_CAST "cellspacing","[%g,%g,%g]",
+					  level->dCell().x(),
+					  level->dCell().y(),
+					  level->dCell().z()
+					  );
+#endif
+        }
+        else {
+	  // Need to verify this with a working example --- JAS
           for (int axis = 0; axis < 3; axis++) {
             ostringstream axisstr, lowstr, highstr;
             axisstr << axis;
-            ProblemSpecP stretch = levelElem->appendChild( "StretchPositions");
-            stretch->setAttribute( "axis", axisstr.str());
+#ifndef XML_TEXTWRITER
+            ProblemSpecP stretch = levelElem->appendChild("StretchPositions");
+#else
+	    xmlTextWriterStartElement(writer_grid, BAD_CAST "StretchPositions");
+#endif
+#ifndef XML_TEXTWRITER
+            stretch->setAttribute("axis", axisstr.str());
+#else
+	    xmlTextWriterWriteAttribute(writer_grid, BAD_CAST "axis",
+					BAD_CAST axisstr.str().c_str());
+	    #endif
 
             OffsetArray1<double> faces;
             level->getFacePositions((Grid::Axis)axis, faces);
@@ -1562,14 +1650,32 @@ DataArchiver::writeto_xml_files(double delt, const GridP& grid)
             int low  = faces.low();
             int high = faces.high();
             lowstr << low;
+
+#ifndef XML_TEXTWRITER
+            stretch->setAttribute("low", lowstr.str());
+#else
+	    xmlTextWriterWriteAttribute(writer_grid, BAD_CAST "low",
+					BAD_CAST lowstr.str().c_str());
+#endif
+
             highstr << high;
-            
-            stretch->setAttribute( "low",  lowstr.str());
-            stretch->setAttribute( "high", highstr.str());
+#ifndef XML_TEXTWRITER
+            stretch->setAttribute("high", highstr.str());
+#else
+	    xmlTextWriterWriteAttribute(writer_grid, BAD_CAST "high",
+					BAD_CAST highstr.str().c_str());
+#endif
           
-            for (int i = low; i < high; i++){
-              stretch->appendElement( "pos", faces[i]);
-            }
+            for (int i = low; i < high; i++) {
+#ifndef XML_TEXTWRITER
+              stretch->appendElement("pos", faces[i]);
+#else
+	      xmlTextWriterWriteFormatElement(writer_grid, BAD_CAST "pos","%g",faces[i]);
+#endif
+	    }
+#ifdef XML_TEXTWRITER
+	    xmlTextWriterEndElement(writer_grid); // Closes StretchPositions
+#endif
           }
         }
 
@@ -1591,29 +1697,113 @@ DataArchiver::writeto_xml_files(double delt, const GridP& grid)
           procOnLevel[l][proc] = 1;
 
           Box box = patch->getExtraBox();
+#ifndef XML_TEXTWRITER
           ProblemSpecP patchElem = levelElem->appendChild("Patch");
-          patchElem->appendElement( "id",        patch->getID() );
-          patchElem->appendElement( "proc",      proc );
-          patchElem->appendElement( "lowIndex",  lo_EC );
-          patchElem->appendElement( "highIndex", hi_EC );
-          
-          if ( lo_EC != lo){
-            patchElem->appendElement( "interiorLowIndex", lo );
-          }
-          if ( hi_EC != hi) {
-            patchElem->appendElement( "interiorHighIndex", hi );
-          }
-          
-          patchElem->appendElement( "nnodes",     patch->getNumExtraNodes() );
-          patchElem->appendElement( "lower",      box.lower() );
-          patchElem->appendElement( "upper",      box.upper() );
-          patchElem->appendElement( "totalCells", patch->getNumExtraCells() );
-        }  // patchLoop
-      }  // level loop
       
       //__________________________________
       //  Write headers to pXXXX.xml and 
+=======
+#else
+	  xmlTextWriterStartElement(writer_grid, BAD_CAST "Patch");
+#endif
+#ifndef XML_TEXTWRITER
+          patchElem->appendElement("id", patch->getID());
+#else
+	  xmlTextWriterWriteFormatElement(writer_grid, BAD_CAST "id","%d",patch->getID());
+#endif
+#ifndef XML_TEXTWRITER
+          patchElem->appendElement("proc", proc);
+#else
+	  xmlTextWriterWriteFormatElement(writer_grid, BAD_CAST "proc","%d",proc);
+#endif
+#ifndef XML_TEXTWRITER
+          patchElem->appendElement("lowIndex", patch->getExtraCellLowIndex());
+#else
+	  xmlTextWriterWriteFormatElement(writer_grid, BAD_CAST "lowIndex","[%d,%d,%d]",
+					  patch->getExtraCellLowIndex().x(),
+					  patch->getExtraCellLowIndex().y(),
+					  patch->getExtraCellLowIndex().z()
+					  );
+#endif
+#ifndef XML_TEXTWRITER
+          patchElem->appendElement("highIndex", patch->getExtraCellHighIndex());
+#else
+	  xmlTextWriterWriteFormatElement(writer_grid, BAD_CAST "highIndex","[%d,%d,%d]",
+					  patch->getExtraCellHighIndex().x(),
+					  patch->getExtraCellHighIndex().y(),
+					  patch->getExtraCellHighIndex().z()
+					  );
+#endif
+          if (patch->getExtraCellLowIndex() != patch->getCellLowIndex()){
+#ifndef XML_TEXTWRITER
+            patchElem->appendElement("interiorLowIndex", patch->getCellLowIndex());
+#else
+	    xmlTextWriterWriteFormatElement(writer_grid, BAD_CAST "interiorLowIndex",
+					    "[%d,%d,%d]",
+					    patch->getCellLowIndex().x(),
+					    patch->getCellLowIndex().y(),
+					    patch->getCellLowIndex().z()
+					    );
+#endif
+	  }
+          if (patch->getExtraCellHighIndex() != patch->getCellHighIndex()){
+#ifndef XML_TEXTWRITER
+            patchElem->appendElement("interiorHighIndex", patch->getCellHighIndex());
+#else
+	    xmlTextWriterWriteFormatElement(writer_grid, BAD_CAST "interiorHighIndex",
+					    "[%d,%d,%d]",
+					    patch->getCellHighIndex().x(),
+					    patch->getCellHighIndex().y(),
+					    patch->getCellHighIndex().z()
+					    );
+#endif
+	  }
+#ifndef XML_TEXTWRITER
+          patchElem->appendElement("nnodes", patch->getNumExtraNodes());
+#else
+	  xmlTextWriterWriteFormatElement(writer_grid, BAD_CAST "nnodes","%d",
+					  patch->getNumExtraNodes());
+#endif
+#ifndef XML_TEXTWRITER
+          patchElem->appendElement("lower", box.lower());
+#else
+	  xmlTextWriterWriteFormatElement(writer_grid, BAD_CAST "lower","[%g,%g,%g]",
+					  box.lower().x(),
+					  box.lower().y(),
+					  box.lower().z()
+					  );
+#endif
+#ifndef XML_TEXTWRITER
+          patchElem->appendElement("upper", box.upper());
+#else
+	  xmlTextWriterWriteFormatElement(writer_grid, BAD_CAST "upper","[%g,%g,%g]",
+					  box.upper().x(),
+					  box.upper().y(),
+					  box.upper().z()
+					  );
+#endif
+#ifndef XML_TEXTWRITER
+          patchElem->appendElement("totalCells", patch->getNumExtraCells());
+#else
+	  xmlTextWriterWriteFormatElement(writer_grid, BAD_CAST "totalCells","%d",
+					  patch->getNumExtraCells());
+	  xmlTextWriterEndElement(writer_grid); // Closes Patch
+#endif
+        }
+#ifdef XML_TEXTWRITER
+	xmlTextWriterEndElement(writer_grid); // Closes Level
+#endif
+      }
+#ifdef XML_TEXTWRITER
+      xmlTextWriterEndElement(writer_grid); // Closes Grid
+#endif
+#ifndef XML_TEXTWRITER
+      //__________________________________
+      //  Write headers to pXXXX.xml and 
       ProblemSpecP dataElem = rootElem->appendChild("Data");
+#else
+      xmlTextWriterStartElement(writer_grid, BAD_CAST "Data");
+#endif 
       for(int l=0;l<numLevels;l++) {
         ostringstream lname;
         lname << "l" << l;
@@ -1626,24 +1816,47 @@ DataArchiver::writeto_xml_files(double delt, const GridP& grid)
           
           ostringstream pname;
           pname << lname.str() << "/p" << setw(5) << setfill('0') << i << ".xml";
-
+#ifndef XML_TEXTWRITER
           ProblemSpecP df = dataElem->appendChild("Datafile");
-          df->setAttribute("href",  pname.str());
-          
+#else
+	  xmlTextWriterStartElement(writer_grid, BAD_CAST "Datafile");
+#endif
+#ifndef XML_TEXTWRITER
+          df->setAttribute("href",pname.str());
+#else
+	  xmlTextWriterWriteAttribute(writer_grid, BAD_CAST "href",BAD_CAST pname.str().c_str());
+#endif
           ostringstream procID;
           procID << i;
-          df->setAttribute("proc",  procID.str());
-          
+#ifndef XML_TEXTWRITER
+          df->setAttribute("proc",procID.str());
+#else
+	  xmlTextWriterWriteAttribute(writer_grid, BAD_CAST "proc",BAD_CAST procID.str().c_str());
+#endif
           ostringstream labeltext;
           labeltext << "Processor " << i << " of " << d_myworld->size();
+#ifdef XML_TEXTWRITER
+	  xmlTextWriterEndElement(writer_grid); // Closes Datafile
+#endif
         }
       }
-      
+
       if (hasGlobals) {
+#ifndef XML_TEXTWRITER
         ProblemSpecP df = dataElem->appendChild("Datafile");
         df->setAttribute("href", "global.xml");
+#else
+	xmlTextWriterStartElement(writer_grid, BAD_CAST "Datafile");
+	xmlTextWriterWriteAttribute(writer_grid, BAD_CAST "href",BAD_CAST "global.xml");
+	xmlTextWriterEndElement(writer_grid); // Closes Datafile
+#endif
       }
-
+#ifdef XML_TEXTWRITER
+      xmlTextWriterEndElement(writer_grid); // Closes Data
+      xmlTextWriterEndElement(writer_grid); // Closes Grid_Data
+      xmlTextWriterEndDocument(writer_grid); // Writes output to the timestep.xml file
+      xmlFreeTextWriter(writer_grid);
+#endif
       // Add the <Materials> section to the timestep.xml
       SimulationInterface* sim = 
         dynamic_cast<SimulationInterface*>(getPort("sim")); 
@@ -1656,15 +1869,16 @@ DataArchiver::writeto_xml_files(double delt, const GridP& grid)
       // write out the timestep.xml file
       string name = baseDirs[i]->getName()+"/"+tname.str()+"/timestep.xml";
       rootElem->output(name.c_str());
-      
       //__________________________________
       // output input.xml & input.xml.orig
+
       // a small convenience to the user who wants to change things when he restarts
       // let him know that some information to change will need to be done in the timestep.xml
       // file instead of the input.xml file.  Only do this once, though.  
       
       if (firstCheckpointTimestep) {
-        // loop over the blocks in timestep.xml and remove them from input.xml, with some exceptions.
+        // loop over the blocks in timestep.xml and remove them from input.xml, with
+	// some exceptions.
         string inputname = d_dir.getName()+"/input.xml";
         ProblemSpecP inputDoc = loadDocument(inputname);
         inputDoc->output((inputname + ".orig").c_str());
