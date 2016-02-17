@@ -116,6 +116,56 @@ PIDXOutputContext::initialize( string filename, unsigned int timeStep, int globa
 }
 
 //______________________________________________________________________
+//  
+void
+PIDXOutputContext::setPatchExtents( string desc, 
+                                    const Patch* patch,
+                                    const Level* level,
+                                    const IntVector& boundaryLayer,
+                                    const TypeDescription* TD,
+                                    patchExtents& pExtents,
+                                    PIDX_point& patchOffset,
+                                    PIDX_point& patchSize )
+{
+
+   // compute the extents of this variable (CCVariable, SFC(*)Variable...etc)
+   IntVector hi_EC;
+   IntVector lo_EC;
+   patch->computeVariableExtents(TD->getType(), boundaryLayer, Ghost::None, 0, lo_EC, hi_EC);
+
+   IntVector nCells_EC    = hi_EC - lo_EC;
+   int totalCells_EC      = nCells_EC.x() * nCells_EC.y() * nCells_EC.z();
+   
+   IntVector offset       = level->getExtraCells();
+   IntVector pOffset      = lo_EC + offset;           // pidx array indexing starts at 0, must shift by nExtraCells
+   
+   pExtents.lo_EC         = lo_EC;      // for readability
+   pExtents.hi_EC         = hi_EC;
+   pExtents.patchSize     = nCells_EC;
+   pExtents.patchOffset   = pOffset;
+   pExtents.totalCells_EC = totalCells_EC;
+
+   int rc = PIDX_set_point_5D(patchOffset,    pOffset.x(),    pOffset.y(), pOffset.z(),   0, 0);
+   checkReturnCode( rc, "DataArchiver::saveLabels_PIDX - PIDX_set_point_5D failure",__FILE__, __LINE__);
+
+   rc = PIDX_set_point_5D(patchSize, nCells_EC.x(), nCells_EC.y(), nCells_EC.z(), 1, 1);
+   checkReturnCode( rc, desc + "- PIDX_set_point_5D failure",__FILE__, __LINE__);
+}
+
+//______________________________________________________________________
+//
+void
+PIDXOutputContext::checkReturnCode( const int rc,
+                                    const string warn,
+                                    const char* file, 
+                                    int line)
+{
+  if (rc != PIDX_success){
+    throw InternalError(warn, file, line);
+  }
+}
+
+//______________________________________________________________________
 //
 template<class T>
 void

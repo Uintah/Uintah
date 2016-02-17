@@ -399,11 +399,6 @@ namespace Uintah {
       outputFormat d_outputFileFormat; 
       
       enum {BLANK, REDUCTION_VAR, PATCH_VAR };
-      
-      void PIDX_checkReturnCode( const int rc,
-                                 const std::string warn,
-                                 const char* file, 
-                                 int line);
  
       bool isPIDXEnabled(){
       #if HAVE_PIDX

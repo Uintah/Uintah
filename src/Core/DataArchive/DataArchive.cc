@@ -680,6 +680,8 @@ DataArchive::query(       Variable     & var,
 
   if( d_outputFileFormat == PIDX && varType == PATCH_VAR ) {
     
+    PIDXOutputContext pidx;
+        
     //__________________________________
     // define the extents for this variable type
     const Level* level = patch->getLevel();
@@ -688,7 +690,7 @@ DataArchive::query(       Variable     & var,
     level->findCellIndexRange(lo,hi);
     int ret = -9;   // function return value
 
-
+    
     int levelExtents[3];
     levelExtents[0] = hi[0] - lo[0] ;
     levelExtents[1] = hi[1] - lo[1] ;
@@ -696,26 +698,19 @@ DataArchive::query(       Variable     & var,
     
     PIDX_point level_size;
     ret = PIDX_set_point_5D(level_size, levelExtents[0], levelExtents[1], levelExtents[2], 1, 1);
-    PIDX_checkReturnCode( ret,"DataArchive::query() - PIDX_set_point_5D failure", __FILE__, __LINE__);
+    pidx.checkReturnCode( ret,"DataArchive::query() - PIDX_set_point_5D failure", __FILE__, __LINE__);
 
-    IntVector hi_EC;
-    IntVector lo_EC;                                // compute the extents of the variable (CCVariable, SFC(*)Variable...etc)
-    patch->computeVariableExtents(td->getType(), varinfo.boundaryLayer, Ghost::None, 0, lo_EC, hi_EC);
-
-    IntVector offset    = level->getExtraCells();
-    IntVector pidxLo    = lo_EC + offset;           // pidx array indexing starts at 0, must shift nExtraCells
-    IntVector nCells_EC = hi_EC - lo_EC;
-    int totalCells_EC   = nCells_EC.x() * nCells_EC.y() * nCells_EC.z();
-       
-    PIDX_point local_offset; 
-    PIDX_point local_size;
-
-    ret = PIDX_set_point_5D(local_offset,  pidxLo.x(),    pidxLo.y(),    pidxLo.z(),   0, 0);
-    PIDX_checkReturnCode( ret,"DataArchive::query() - PIDX_set_point_5D failure", __FILE__, __LINE__);
+    PIDX_point patchOffset;
+    PIDX_point patchSize;
+    PIDXOutputContext::patchExtents patchExts;
     
-    ret = PIDX_set_point_5D(local_size,    nCells_EC.x(), nCells_EC.y(), nCells_EC.z(),1, 1);
-    PIDX_checkReturnCode( ret,"DataArchive::query() - PIDX_set_point_5D failure", __FILE__, __LINE__);
-  
+      
+    pidx.setPatchExtents( "DataArchive::query()", patch, level, varinfo.boundaryLayer,
+                         td, patchExts, patchOffset, patchSize );
+    
+    if (dbg.active() && isProc0_macro ){
+      patchExts.print(cout);
+    }       
     //__________________________________
     //  Creating access
     PIDX_access access;
@@ -729,17 +724,17 @@ DataArchive::query(       Variable     & var,
     PIDX_file idxFile;                     // IDX file descriptor
 
     ret = PIDX_file_open(idxFilename.c_str(), PIDX_MODE_RDONLY, access, &idxFile);
-    PIDX_checkReturnCode( ret,"DataArchive::query() - PIDX_file_open failure", __FILE__, __LINE__);
+    pidx.checkReturnCode( ret,"DataArchive::query() - PIDX_file_open failure", __FILE__, __LINE__);
 
     //__________________________________
     //  Extra Calls that _MAY_ be needed
     PIDX_point global_size;
     ret = PIDX_get_dims(idxFile, global_size);          // returns the levelSize  Is this needed?
-    PIDX_checkReturnCode( ret,"DataArchive::query() - PIDX_get_dims failure", __FILE__, __LINE__);
+    pidx.checkReturnCode( ret,"DataArchive::query() - PIDX_get_dims failure", __FILE__, __LINE__);
 
     int variable_count = 0;             ///< Number of fields in PIDX file
     ret = PIDX_get_variable_count(idxFile, &variable_count);
-    PIDX_checkReturnCode( ret,"DataArchive::query() - PIDX_get_variable_count failure", __FILE__, __LINE__);
+    pidx.checkReturnCode( ret,"DataArchive::query() - PIDX_get_variable_count failure", __FILE__, __LINE__);
     
     //int me;
     //PIDX_get_current_time_step(idxFile, &me);
@@ -749,28 +744,28 @@ DataArchive::query(       Variable     & var,
     //  set locations in PIDX file for querying variable
     int timestep = d_ts_indices[timeIndex];
     ret = PIDX_set_current_time_step(idxFile, timestep);
-    PIDX_checkReturnCode(ret, "DataArchive::query() - PIDX_set_current_time_step failure", __FILE__, __LINE__);
+    pidx.checkReturnCode(ret, "DataArchive::query() - PIDX_set_current_time_step failure", __FILE__, __LINE__);
 
     int varIndex = dfi->start;
     ret = PIDX_set_current_variable_index(idxFile, varIndex);
-    PIDX_checkReturnCode(ret, "DataArchive::query() - PIDX_set_current_variable_index failure", __FILE__, __LINE__);
+    pidx.checkReturnCode(ret, "DataArchive::query() - PIDX_set_current_variable_index failure", __FILE__, __LINE__);
     
     //__________________________________
     // read IDX file for variable desc
     PIDX_variable varDesc;
     ret = PIDX_get_current_variable(idxFile, &varDesc);    
-    PIDX_checkReturnCode(ret, "DataArchive::query() - PIDX_get_current_variable failure", __FILE__, __LINE__);
+    pidx.checkReturnCode(ret, "DataArchive::query() - PIDX_get_current_variable failure", __FILE__, __LINE__);
 
     int values_per_sample = varDesc->values_per_sample;
 
     int bits_per_sample = 0;
     ret = PIDX_default_bits_per_datatype(varDesc->type_name, &bits_per_sample);
-    PIDX_checkReturnCode(ret, "DataArchive::query() - PIDX_default_bits_per_datatype failure", __FILE__, __LINE__);
+    pidx.checkReturnCode(ret, "DataArchive::query() - PIDX_default_bits_per_datatype failure", __FILE__, __LINE__);
 
     //__________________________________
     // Allocate memory and read in data from PIDX file  Need to use patch_buffer !!!
     unsigned char *dataPIDX;
-    size_t arraySize = (bits_per_sample/8) * totalCells_EC  * values_per_sample;
+    size_t arraySize = (bits_per_sample/8) * patchExts.totalCells_EC  * values_per_sample;
     dataPIDX = (unsigned char*)malloc( arraySize );
     memset( dataPIDX, 0, arraySize);
     
@@ -790,16 +785,16 @@ DataArchive::query(       Variable     & var,
                 << " arraySize " << arraySize << endl;
     }
 
-    ret = PIDX_variable_read_data_layout(varDesc, local_offset, local_size, dataPIDX, PIDX_row_major);
-    PIDX_checkReturnCode(ret, "DataArchive::query() - PIDX_variable_read_data_layout failure", __FILE__, __LINE__);
+    ret = PIDX_variable_read_data_layout(varDesc, patchOffset, patchSize, dataPIDX, PIDX_row_major);
+    pidx.checkReturnCode(ret, "DataArchive::query() - PIDX_variable_read_data_layout failure", __FILE__, __LINE__);
 
     //__________________________________
     // close idx file and access
     ret = PIDX_close( idxFile );
-    PIDX_checkReturnCode(ret, "DataArchive::query() - PIDX_close failure", __FILE__, __LINE__);
+    pidx.checkReturnCode(ret, "DataArchive::query() - PIDX_close failure", __FILE__, __LINE__);
 
     ret = PIDX_close_access( access );
-    PIDX_checkReturnCode(ret, "DataArchive::query() - PIDX_close_access failure", __FILE__, __LINE__);
+    pidx.checkReturnCode(ret, "DataArchive::query() - PIDX_close_access failure", __FILE__, __LINE__);
     
     //__________________________________
     // debugging
@@ -807,7 +802,7 @@ DataArchive::query(       Variable     & var,
       PIDXOutputContext pc;
       pc.printBuffer<double>("DataArchive::query    AFTER  close",
                               varDesc->values_per_sample,        
-                              lo_EC, hi_EC,                      
+                              patchExts.lo_EC, patchExts.hi_EC,                      
                               dataPIDX,                          
                               arraySize );
     }
@@ -1716,20 +1711,4 @@ DataArchive::exists( const string& varname,
   d_lock.unlock();
 
   return false;
-}
-
-
-//______________________________________________________________________
-//
-void
-DataArchive::PIDX_checkReturnCode( const int rc,
-                                   const string warn,
-                                   const char* file, 
-                                   int line)
-{
-#if HAVE_PIDX
-  if (rc != PIDX_success){
-    throw InternalError(warn, file, line);
-  }
-#endif
 }
