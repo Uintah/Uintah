@@ -41,10 +41,9 @@ extern SCIRun::Mutex      cerrLock;
 
 extern DebugStream        taskdbg;
 extern DebugStream        taskorder;
-extern DebugStream        execout;
+extern DebugStream        timeout;
 
 static DebugStream dynamicmpi_dbg(        "DynamicMPI_DBG",         false);
-static DebugStream dynamicmpi_timeout(    "DynamicMPI_TimingsOut",  false);
 static DebugStream dynamicmpi_queuelength("DynamicMPI_QueueLength", false);
 
 
@@ -56,25 +55,14 @@ DynamicMPIScheduler::DynamicMPIScheduler( const ProcessorGroup*      myworld,
   : MPIScheduler( myworld, oport, parentScheduler )
 {
   taskQueueAlg_ =  MostMessages;
-
-  if (dynamicmpi_timeout.active()) {
-    char filename[64];
-    sprintf(filename, "timingStats.%d", d_myworld->myrank());
-    timingStats.open(filename);
-    if (d_myworld->myrank() == 0) {
-      sprintf(filename, "timingStats.avg");
-      avgStats.open(filename);
-      sprintf(filename, "timingStats.max");
-      maxStats.open(filename);
-    }
-  }
 }
 
 //______________________________________________________________________
 //
 DynamicMPIScheduler::~DynamicMPIScheduler()
 {
-  if (dynamicmpi_timeout.active()) {
+  // detailed MPI information, written to file per rank
+  if (timeout.active()) {
     timingStats.close();
     if (d_myworld->myrank() == 0) {
       avgStats.close();
@@ -199,17 +187,8 @@ DynamicMPIScheduler::execute( int tgnum     /*=0*/,
     dts->localTask(i)->resetDependencyCounts();
   }
 
-  if(dynamicmpi_timeout.active()) {
-    d_labels.clear();
-    d_times.clear();
-    //emitTime("time since last execute");
-  }
-
   int me = d_myworld->myrank();
   makeTaskGraphDoc(dts, me);
-
-  //if(timeout.active())
-    //emitTime("taskGraph output");
 
   mpi_info_.reset( 0 );
 
@@ -430,7 +409,7 @@ DynamicMPIScheduler::execute( int tgnum     /*=0*/,
   log.finishTimestep();
   
 
-  if( ( execout.active() || dynamicmpi_timeout.active() ) && !parentScheduler_ ) {  // only do on toplevel scheduler
+  if (!parentScheduler_) {  // only do on toplevel scheduler
     outputTimingStats("DynamicMPIScheduler");
   }
 

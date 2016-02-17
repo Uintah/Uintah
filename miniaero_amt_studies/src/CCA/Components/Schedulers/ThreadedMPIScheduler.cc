@@ -44,10 +44,9 @@ extern SCIRun::Mutex coutLock;
 extern SCIRun::Mutex cerrLock;
 
 extern DebugStream taskdbg;
-extern DebugStream mpidbg;
+extern DebugStream timeout;
 
 static DebugStream threadedmpi_dbg(             "ThreadedMPI_DBG",             false);
-static DebugStream threadedmpi_timeout(         "ThreadedMPI_TimingsOut",      false);
 static DebugStream threadedmpi_queuelength(     "ThreadedMPI_QueueLength",     false);
 static DebugStream threadedmpi_threaddbg(       "ThreadedMPI_ThreadDBG",       false);
 static DebugStream threadedmpi_compactaffinity( "ThreadedMPI_CompactAffinity", true);
@@ -59,17 +58,7 @@ ThreadedMPIScheduler::ThreadedMPIScheduler( const ProcessorGroup*       myworld,
     d_nextsignal("next condition"),
     d_nextmutex("next mutex")
 {
-  if (threadedmpi_timeout.active()) {
-    char filename[64];
-    sprintf(filename, "timingStats.%d", d_myworld->myrank());
-    timingStats.open(filename);
-    if (d_myworld->myrank() == 0) {
-      sprintf(filename, "timingStats.%d.max", d_myworld->size());
-      maxStats.open(filename);
-      sprintf(filename, "timingStats.%d.avg", d_myworld->size());
-      avgStats.open(filename);
-    }
-  }
+
 }
 
 //______________________________________________________________________
@@ -86,11 +75,12 @@ ThreadedMPIScheduler::~ThreadedMPIScheduler()
     t_thread[i]->join();
   }
 
-  if (threadedmpi_timeout.active()) {
+  // detailed MPI information, written to file per rank
+  if (timeout.active()) {
     timingStats.close();
     if (d_myworld->myrank() == 0) {
-      maxStats.close();
       avgStats.close();
+      maxStats.close();
     }
   }
 }
@@ -280,20 +270,9 @@ ThreadedMPIScheduler::execute( int tgnum     /* = 0 */,
     dts->localTask(i)->resetDependencyCounts();
   }
 
-  if (threadedmpi_timeout.active()) {
-    d_labels.clear();
-    d_times.clear();
-    //emitTime("time since last execute");
-  }
-
   int me = d_myworld->myrank();
   makeTaskGraphDoc(dts, me);
 
-  // TODO - figure out and fix this (APH - 01/12/15)
-//  if (timeout.active()) {
-//    emitTime("taskGraph output");
-//  }
-  
   mpi_info_.reset( 0 );
 
   int numTasksDone = 0;
@@ -492,12 +471,9 @@ ThreadedMPIScheduler::execute( int tgnum     /* = 0 */,
   
   // compute the net timings
   if (d_sharedState != 0) {
-      
     computeNetRunTimeStats(d_sharedState->d_runTimeStats);
-    
     for (int i = 0; i < numThreads_; i++) {
-      d_sharedState->d_runTimeStats[SimulationState::TaskWaitThreadTime] +=
-          t_worker[i]->getWaittime();
+      d_sharedState->d_runTimeStats[SimulationState::TaskWaitThreadTime] += t_worker[i]->getWaittime();
     }
   }
 
@@ -507,7 +483,7 @@ ThreadedMPIScheduler::execute( int tgnum     /* = 0 */,
   finalizeTimestep();
   log.finishTimestep();
 
-  if( threadedmpi_timeout.active() && !parentScheduler_ ) {  // only do on toplevel scheduler
+  if (!parentScheduler_) {  // only do on toplevel scheduler
     outputTimingStats("ThreadedMPIScheduler");
   }
 
