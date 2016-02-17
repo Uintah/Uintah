@@ -44,8 +44,10 @@
 #include <Core/Util/Assert.h>
 #include <Core/Util/DebugStream.h>
 #include <Core/Util/XMLUtils.h>
+#include <libxml/xmlreader.h>
 
 #include <iostream>
+#include <sstream>
 #include <iomanip>
 #include <fstream>
 #include <fcntl.h>
@@ -238,9 +240,15 @@ DataArchive::queryTimesteps( vector<int>    & index,
 
           int          timestepNumber;
           double       currentTime;
-          string       ts_path_and_filename = d_filebase + "/" + tsfile; // Usually '.../timestep.xml'
+	  // Usually '.../timestep.xml'
+          string       ts_path_and_filename = d_filebase + "/" + tsfile;
           ProblemSpecP timestepDoc = 0;
 
+	  string::size_type deliminator_index = tsfile.find("/");
+	  string tnumber(tsfile,0,deliminator_index);
+	  // Usually '.../grid.xml'
+	  string       grid_path_and_filename = d_filebase + "/" + tnumber + "/" + "grid.xml"; 
+	
           if( attributes["time"] == "" ) {
             // This block is for earlier versions of the index.xml file that did not
             // contain time information as an attribute of the timestep field.
@@ -263,7 +271,7 @@ DataArchive::queryTimesteps( vector<int>    & index,
 
           d_ts_indices.push_back( timestepNumber );
           d_ts_times.push_back( currentTime );
-          d_timeData.push_back( TimeData( this, ts_path_and_filename ) );
+          d_timeData.push_back( TimeData( this, ts_path_and_filename,grid_path_and_filename ) );
         }
       } // end while
     }
@@ -339,7 +347,18 @@ DataArchive::queryGrid( int index, const ProblemSpecP & ups /* = NULL */, bool a
   double     start    = Time::currentSeconds();
   TimeData & timedata = getTimeData( index );
 
-  FILE * fp = fopen( timedata.d_ts_path_and_filename.c_str(), "r" );
+  FILE* fp = 0;
+  FILE* fp_grid = fopen( timedata.d_grid_path_and_filename.c_str(), "r" );
+
+  // Check if the grid.xml is present, and use that, if it isn't, then use the grid information
+  // that is stored in timestep.xml.
+
+  if (fp_grid == NULL) {
+    fp = fopen( timedata.d_ts_path_and_filename.c_str(), "r" );
+  } else {
+
+    fp = fp_grid;
+  }
 
   if( fp == NULL ) {
     throw InternalError("DataArchive::queryGrid() failed to open input file.\n", __FILE__, __LINE__);
@@ -1254,10 +1273,11 @@ DataArchive::setTimestepCacheSize( int new_size ) {
   d_lock.unlock();
 }
 
-//______________________________________________________________________
-//s
-DataArchive::TimeData::TimeData( DataArchive * da, const string & timestepPathAndFilename ) :
-  d_initialized( false ), d_ts_path_and_filename( timestepPathAndFilename ), d_parent_da( da )
+
+DataArchive::TimeData::TimeData( DataArchive* da, const string& timestepPathAndFilename,
+				 const string& gridPathAndFilename) :
+  d_initialized( false ), d_ts_path_and_filename( timestepPathAndFilename ),
+  d_grid_path_and_filename( gridPathAndFilename ), d_parent_da( da )
 {
   d_ts_directory = timestepPathAndFilename.substr( 0, timestepPathAndFilename.find_last_of('/') + 1 );
 }
@@ -1276,7 +1296,8 @@ DataArchive::TimeData::init()
   // Pull the list of data xml files from the timestep.xml file.
 
   FILE * ts_file = fopen( d_ts_path_and_filename.c_str(), "r" );
-
+  FILE * grid_file = fopen( d_grid_path_and_filename.c_str(), "r" );
+    
   if( ts_file == NULL ) {
     // FIXME: add more info to exception.
     throw ProblemSetupException( "Failed to open timestep file.", __FILE__, __LINE__ );    
@@ -1296,16 +1317,107 @@ DataArchive::TimeData::init()
   d_swapBytes = endianness != string(SCIRun::endianness());
   d_nBytes    = numbits / 8;
 
-  bool found = ProblemSpec::findBlock( "<Data>", ts_file );
+#if 0
+
+    fclose( ts_file );
+
+    
+    //// Use the xmlTextReader to parse the file
+  xmlTextReaderPtr reader;
+  reader = xmlNewTextReaderFilename(d_grid_path_and_filename.c_str());
+
+  // If the grid.xml file is not found, then use the timestep.xml file
+  if (reader == NULL)
+    reader = xmlNewTextReaderFilename(d_ts_path_and_filename.c_str());
+  
+  int ret;
+  if (reader != NULL) {
+    while (xmlTextReaderRead(reader)) {
+      string node_name((char *)xmlTextReaderName(reader));
+
+      printf("%d %d %s %s %d %d\n",
+	     xmlTextReaderDepth(reader),
+	     xmlTextReaderNodeType(reader),
+	     node_name.c_str(),
+	     xmlTextReaderValue(reader),
+	     xmlTextReaderHasAttributes(reader),
+	     xmlTextReaderIsEmptyElement(reader));
+
+      // Find the <Data> node
+      if (node_name == "Data" && xmlTextReaderNodeType(reader) != 15) {
+	cout << "Found the <Data> node" << endl;
+	cout << "Search for the <Datafile> node" << endl;
+	while (xmlTextReaderRead(reader) ) {
+	  string datafile_name((char *)xmlTextReaderName(reader));
+	  cout << "datafile_name = " << datafile_name << endl;
+	  if (datafile_name == "Datafile") {
+	    cout << "Found the <Datafile> node" << endl;
+	    while (xmlTextReaderMoveToNextAttribute(reader) ) {
+	      string attribute_name ((char *)xmlTextReaderName(reader));
+	      string attribute_value ((char *)xmlTextReaderValue(reader));
+	      cout << "attribute name = " << attribute_name << " value = "
+		   << attribute_value << endl;
+
+	      if (attribute_value == "global.xml") {
+		parseFile( d_ts_directory + "global.xml", -1, -1 );
+	      } else {
+
+		// Get the level info out of the xml file: should be lX/pxxxxx.xml.
+		unsigned level = 0;
+		string::size_type start =
+		  attribute_value.find_first_of("l",0,attribute_value.length()-3);
+		string::size_type end = attribute_value.find_first_of("/");
+		if (start != string::npos && end != string::npos && end > start && end-start <= 2) {
+		  level = atoi(attribute_value.substr(start+1, end-start).c_str());
+		}
+		    
+		if( level >= d_xmlFilenames.size() ) {
+		  d_xmlFilenames.resize( level +1 );
+		  d_xmlParsed.resize(    level + 1 );
+		}
+		   
+		string filename = d_ts_directory + attribute_value;
+		d_xmlFilenames[ level ].push_back( filename );
+		d_xmlParsed[    level ].push_back( false );
+	      }
+		
+	    } // End of search through attributes
+	  }
+	}
+      }
+
+    }
+    xmlFreeTextReader(reader);
+  } else {
+    printf("Unable to open %s\n", d_grid_path_and_filename.c_str());
+  }
+
+#endif
+
+#if 1
+  bool found = false;
+  string data_file_name = "";
+  if (grid_file != NULL) {
+    found = ProblemSpec::findBlock( "<Data>", grid_file );
+    data_file_name = d_grid_path_and_filename;
+  } else {
+    found = ProblemSpec::findBlock( "<Data>", ts_file );
+    data_file_name = d_ts_path_and_filename;
+  }
 
   if( !found ) {
-    throw InternalError( "Cannot find <Data> in timestep file", __FILE__, __LINE__ );
+    throw InternalError( "Cannot find <Data> in " + data_file_name, __FILE__, __LINE__ );
   }
 
   bool done = false;
   while( !done ) {
 
-    string line = UintahXML::getLine( ts_file );
+    string line = "";
+    if (grid_file != NULL) {
+      line = UintahXML::getLine( grid_file );
+    } else {
+      line = UintahXML::getLine( ts_file );
+    }
     if( line == "" || line == "</Data>" ) {
       done = true;
     }
@@ -1364,6 +1476,8 @@ DataArchive::TimeData::init()
   } // end while()
 
   fclose( ts_file );
+  fclose( grid_file );
+#endif
 
 } // end init()
 //______________________________________________________________________
@@ -1583,6 +1697,8 @@ DataArchive::getOldDelt( int restart_index )
 // is in the correct order - in other words, anything after </Data> is component related,
 // and everything before it can be removed.
 //
+// Now that we are using the grid.xml for <Grid> and <Data> sections, this function is altered
+// slightly.  Read in from the beginning of the <Uintah_timestep> including the <Meta> section.
 ProblemSpecP
 DataArchive::getTimestepDocForComponent( int restart_index )
 {
@@ -1593,13 +1709,20 @@ DataArchive::getTimestepDocForComponent( int restart_index )
     throw InternalError("DataArchive::getTimespecDocForComponent() failed open datafile.", __FILE__, __LINE__);
   }
 
+#if 0
   bool found = ProblemSpec::findBlock( "</Data>", fp );
+  if (!found) {
+    found = ProblemSpec::findBlock( "</Data>", fp_grid );
+    cout << "Found </Data> in grid_path filename" << endl;
+  }
 
   if( !found ) {
     throw InternalError("DataArchive::getTimespecDocForComponent() failed to find </Data>.", __FILE__, __LINE__);
   }
+#endif
 
-  string buffer = "<Uintah_timestep>";
+  ////  string buffer = "<Uintah_timestep>";
+  string buffer = "";
 
   while( true ) {
 
@@ -1611,7 +1734,7 @@ DataArchive::getTimestepDocForComponent( int restart_index )
       break;
     }
   }
-
+  
   fclose( fp );
 
   ProblemSpec * result = new ProblemSpec( buffer );
