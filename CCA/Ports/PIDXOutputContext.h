@@ -109,6 +109,11 @@ class PIDXOutputContext {
                           const std::string warn,
                           const char* file, 
                           int line);
+                          
+    void hardWireBufferValues(unsigned char* patchBuffer, 
+                              const patchExtents patchExts,
+                              const size_t arraySize,
+                              const int samples_per_value );
 
     void setOutputDoubleAsFloat( bool me){
       d_outputDoubleAsFloat = me;
@@ -140,12 +145,18 @@ class PIDXOutputContext {
     PIDX_access access;
     
 
-    
+  //__________________________________
+  //    
   private:
+
     bool d_isInitialized;
     bool d_outputDoubleAsFloat;
+    int d_levelExtents[3];
     
-
+    IntVector getLevelExtents(){
+      IntVector levelExtents (d_levelExtents[0],d_levelExtents[1],d_levelExtents[2]);                                                                          
+      return levelExtents;                    
+    };
 
   };
 } // End namespace Uintah
