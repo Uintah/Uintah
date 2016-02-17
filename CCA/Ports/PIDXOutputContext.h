@@ -29,6 +29,8 @@
 #if HAVE_PIDX
 #include <Core/Disclosure/TypeDescription.h>
 #include <Core/Geometry/IntVector.h>
+#include <Core/Grid/Level.h>
+#include <Core/Grid/Patch.h>
 #include <PIDX.h>
 #include <mpi.h>
 #include <string>
@@ -68,12 +70,43 @@ class PIDXOutputContext {
   public:
     PIDXOutputContext();
     ~PIDXOutputContext();
-
-    void initialize(std::string filename, 
-                    unsigned int timeStep, 
-                    int globalExtent[3], 
-                    MPI_Comm comm);
     
+    //  Struct for storing patch extents
+    struct patchExtents{      
+      IntVector lo_EC;
+      IntVector hi_EC;
+      IntVector patchSize;
+      IntVector patchOffset;
+      int totalCells_EC;
+      
+      //__________________________________
+      // debugging
+      void print(std::ostream& out){
+        out  << "patchExtents: patchOffset: " << patchOffset << " patchSize: " << patchSize << ", totalCells_EC " << totalCells_EC 
+             << ", lo_EC: " << lo_EC << ", hi_EC: " << hi_EC << std::endl; 
+      }
+    };
+
+    void initialize(std::string filename,
+                    unsigned int timeStep,
+                    int globalExtent[3],
+                    MPI_Comm comm);
+
+
+    void setPatchExtents( std::string desc, 
+                          const Patch* patch,
+                          const Level* level,
+                          const IntVector& boundaryLayer,
+                          const TypeDescription* TD,
+                          patchExtents& pExtents,
+                          PIDX_point& patchOffset,
+                          PIDX_point& nPatchCells );
+
+    void checkReturnCode( const int rc,
+                          const std::string warn,
+                          const char* file, 
+                          int line);
+
     void setOutputDoubleAsFloat( bool me){
       d_outputDoubleAsFloat = me;
     }
@@ -81,12 +114,12 @@ class PIDXOutputContext {
     bool isOutputDoubleAsFloat(){
       return d_outputDoubleAsFloat;
     }
-    
+
 
     std::vector<TypeDescription::Type> getSupportedVariableTypes();
-    
+
     std::string getDirectoryName(TypeDescription::Type TD);
-    
+
     template<class T>
     void printBuffer(const std::string & desc,
                      int samples_per_value,
@@ -102,11 +135,14 @@ class PIDXOutputContext {
     PIDX_variable **variable;         // is this the variableDescription?  --Todd
 
     PIDX_access access;
+    
+
+    
   private:
     bool d_isInitialized;
     bool d_outputDoubleAsFloat;
     
-    
+
 
   };
 } // End namespace Uintah
