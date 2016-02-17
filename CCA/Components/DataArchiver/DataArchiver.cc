@@ -2231,17 +2231,7 @@ DataArchiver::saveLabels_PIDX(std::vector< SaveItem >& saveLabels,
   size_t totalBytesSaved = 0;
 #if HAVE_PIDX
   
-  //__________________________________
-  // define the extents for this variable type
   const Level* level = getLevel(patches);
-  IntVector lo;
-  IntVector hi;
-  level->computeVariableExtents(TD,lo, hi);
-
-  int globalExtents[3];
-  globalExtents[0] = hi[0] - lo[0];
-  globalExtents[1] = hi[1] - lo[1];
-  globalExtents[2] = hi[2] - lo[2];
 
   int nSaveItems =  saveLabels.size();
   vector<int> nSaveItemMatls (nSaveItems);
@@ -2290,8 +2280,20 @@ DataArchiver::saveLabels_PIDX(std::vector< SaveItem >& saveLabels,
   unsigned int timeStep = d_sharedState->getCurrentTopLevelTimeStep();
   
   // Can this be run in serial without doing a MPI initialize
-  pidx.initialize(idxFilename, timeStep, globalExtents, d_myworld->getComm());
+  pidx.initialize(idxFilename, timeStep, d_myworld->getComm());
 
+  //__________________________________
+  // define the level extents for this variable type
+  IntVector lo;
+  IntVector hi;
+  level->computeVariableExtents(TD,lo, hi);
+  
+  PIDX_point level_size;
+  pidx.setLevelExtents( "DataArchiver::saveLabels_PIDX",  lo, hi, level_size );
+  PIDX_set_dims(pidx.file, level_size);
+
+  //__________________________________
+  //
   rc = PIDX_set_variable_count(pidx.file, actual_number_of_variables + PIDX_extra_field);
   pidx.checkReturnCode( rc, "DataArchiver::saveLabels_PIDX - PIDX_set_variable_count failure",__FILE__, __LINE__);
   
@@ -2312,7 +2314,7 @@ DataArchiver::saveLabels_PIDX(std::vector< SaveItem >& saveLabels,
   //  PIDX Diagnostics
   if( rank == 0 && dbgPIDX.active()) {
     printf("[PIDX] IDX file name = %s\n", (char*)idxFilename.c_str());
-    printf("[PIDX] globalExtents = %d %d %d\n", globalExtents[0], globalExtents[1], globalExtents[2]);
+    printf("[PIDX] levelExtents = %d %d %d\n", (hi.x() - lo.x()), (hi.y() - lo.y()), (hi.z() - lo.z()) );
     printf("[PIDX] Total number of variable = %d\n", nSaveItems);
   }
 
@@ -2505,6 +2507,7 @@ DataArchiver::saveLabels_PIDX(std::vector< SaveItem >& saveLabels,
 
   //__________________________________
   //      DEBUGGING   This simply creates a dummy variable
+#if 0
   float **PIDX_patch_buffer;
   if (PIDX_debug == 1)
   {
@@ -2516,19 +2519,11 @@ DataArchiver::saveLabels_PIDX(std::vector< SaveItem >& saveLabels,
     for(int p=0;p<(type==CHECKPOINT_REDUCTION?1:patches->size());p++)
     {
       const Patch* patch  = patches->get(p);
-      IntVector hiE       = patch->getExtraCellHighIndex();
-      IntVector lowE      = patch->getExtraCellLowIndex();
-      IntVector offset    = level->getExtraCells();
-      IntVector pidxLo    = lowE + offset;                                // pidx array indexing starts at 0, must shift nExtraCells
-      IntVector nCells_EC = hiE - lowE;
-      int totalCells_EC   = nCells_EC.x() * nCells_EC.y() * nCells_EC.z();
-
-      printf("[PIDX %d] [%d] Offset and Count %d %d %d : %d %d %d\n", rank, vc, lowE.x(), lowE.y(), lowE.z(), nCells_EC.x(), nCells_EC.y(), nCells_EC.z() );
-
-      PIDX_point local_offset_point, local_box_count_point;
-
-      PIDX_set_point_5D(local_offset_point,    pidxLo.x(),    pidxLo.y(),    pidxLo.z(),   0, 0);
-      PIDX_set_point_5D(local_box_count_point, nCells_EC.x(), nCells_EC.y(), nCells_EC.z(), 1, 1);
+      PIDX_point patchOffset;
+      PIDX_point patchSize;
+      patchExtents patchExts;
+    
+      pidx.setPatchExtents( "debugging Var", patch, level, IntVector(0,0,0), TypeDescription::CCVariable, patchExts, patchOffset, patchSize);
 
       PIDX_patch_buffer[p] = (float*)malloc(sizeof(float) * totalCells_EC);
       memset(PIDX_patch_buffer[p], 0, sizeof(float) * totalCells_EC);
@@ -2550,7 +2545,7 @@ DataArchiver::saveLabels_PIDX(std::vector< SaveItem >& saveLabels,
     rc = PIDX_append_and_write_variable(pidx.file, pidx.variable[nSaveItems][0]);
     pidx.checkReturnCode( rc, "DataArchiver::saveLabels_PIDX - PIDX_append_and_write_variable failure",__FILE__, __LINE__);
   }  // debugging
-
+#endif
 
   rc = PIDX_close(pidx.file);
   pidx.checkReturnCode( rc, "DataArchiver::saveLabels_PIDX - PIDX_close failure",__FILE__, __LINE__);
@@ -2572,6 +2567,7 @@ DataArchiver::saveLabels_PIDX(std::vector< SaveItem >& saveLabels,
   patch_buffer = 0;
 
 
+#if 0
   if (PIDX_debug == 1)
   {
     for(int p=0;p<(type==CHECKPOINT_REDUCTION?1:patches->size());p++){
@@ -2579,6 +2575,8 @@ DataArchiver::saveLabels_PIDX(std::vector< SaveItem >& saveLabels,
     }
     free(PIDX_patch_buffer);
   }
+#endif
+
 
   //__________________________________
   //  free memory

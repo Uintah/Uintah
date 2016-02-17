@@ -681,30 +681,22 @@ DataArchive::query(       Variable     & var,
   if( d_outputFileFormat == PIDX && varType == PATCH_VAR ) {
     
     PIDXOutputContext pidx;
+    const Level* level = patch->getLevel();
         
     //__________________________________
-    // define the extents for this variable type
-    const Level* level = patch->getLevel();
+    // define the level extents for this variable type
     IntVector lo;
     IntVector hi;
     level->findCellIndexRange(lo,hi);
-    int ret = -9;   // function return value
-
-    
-    int levelExtents[3];
-    levelExtents[0] = hi[0] - lo[0] ;
-    levelExtents[1] = hi[1] - lo[1] ;
-    levelExtents[2] = hi[2] - lo[2] ;
-    
     PIDX_point level_size;
-    ret = PIDX_set_point_5D(level_size, levelExtents[0], levelExtents[1], levelExtents[2], 1, 1);
-    pidx.checkReturnCode( ret,"DataArchive::query() - PIDX_set_point_5D failure", __FILE__, __LINE__);
+    pidx.setLevelExtents( "DataArchive::query()", lo, hi, level_size );
 
+    //__________________________________
+    // define patch extents
     PIDX_point patchOffset;
     PIDX_point patchSize;
     PIDXOutputContext::patchExtents patchExts;
-    
-      
+
     pidx.setPatchExtents( "DataArchive::query()", patch, level, varinfo.boundaryLayer,
                          td, patchExts, patchOffset, patchSize );
     
@@ -723,7 +715,7 @@ DataArchive::query(       Variable     & var,
     string idxFilename = varinfo.filename;
     PIDX_file idxFile;                     // IDX file descriptor
 
-    ret = PIDX_file_open(idxFilename.c_str(), PIDX_MODE_RDONLY, access, &idxFile);
+    int ret = PIDX_file_open(idxFilename.c_str(), PIDX_MODE_RDONLY, access, &idxFile);
     pidx.checkReturnCode( ret,"DataArchive::query() - PIDX_file_open failure", __FILE__, __LINE__);
 
     //__________________________________

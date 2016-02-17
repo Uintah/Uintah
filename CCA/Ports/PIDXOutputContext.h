@@ -89,9 +89,12 @@ class PIDXOutputContext {
 
     void initialize(std::string filename,
                     unsigned int timeStep,
-                    int globalExtent[3],
                     MPI_Comm comm);
-
+    
+    void setLevelExtents( std::string desc, 
+                          IntVector lo,
+                          IntVector hi,
+                          PIDX_point& level_size );
 
     void setPatchExtents( std::string desc, 
                           const Patch* patch,

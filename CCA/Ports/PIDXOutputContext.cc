@@ -87,17 +87,16 @@ PIDXOutputContext::getDirectoryName(TypeDescription::Type TD)
 //______________________________________________________________________
 //
 void
-PIDXOutputContext::initialize( string filename, unsigned int timeStep, int globalExtents[3] ,MPI_Comm comm )
+PIDXOutputContext::initialize( string filename, 
+                               unsigned int timeStep,
+                               MPI_Comm comm )
 {
   this->filename = filename;
   this->timestep = timeStep;
   this->comm = comm; 
 
-  PIDX_point global_bounding_box;
   PIDX_create_access(&(this->access));
   PIDX_set_mpi_access(this->access, this->comm);
-
-  PIDX_set_point_5D(global_bounding_box, globalExtents[0], globalExtents[1], globalExtents[2], 1, 1);
 
   PIDX_file_create(filename.c_str(), PIDX_MODE_CREATE, access, &(this->file));
 
@@ -105,7 +104,7 @@ PIDXOutputContext::initialize( string filename, unsigned int timeStep, int globa
   PIDX_set_restructuring_box(file, restructured_box_size);
 
   //PIDX_set_resolution(this->file, 0, 2);
-  PIDX_set_dims(this->file, global_bounding_box);
+  
   PIDX_set_current_time_step(this->file, timeStep);
   PIDX_set_block_size(this->file, 16);
   PIDX_set_block_count(this->file, 128);
@@ -146,11 +145,29 @@ PIDXOutputContext::setPatchExtents( string desc,
    pExtents.totalCells_EC = totalCells_EC;
 
    int rc = PIDX_set_point_5D(patchOffset,    pOffset.x(),    pOffset.y(), pOffset.z(),   0, 0);
-   checkReturnCode( rc, "DataArchiver::saveLabels_PIDX - PIDX_set_point_5D failure",__FILE__, __LINE__);
+   checkReturnCode( rc, desc + " - PIDX_set_point_5D failure",__FILE__, __LINE__);
 
    rc = PIDX_set_point_5D(patchSize, nCells_EC.x(), nCells_EC.y(), nCells_EC.z(), 1, 1);
    checkReturnCode( rc, desc + "- PIDX_set_point_5D failure",__FILE__, __LINE__);
 }
+
+//______________________________________________________________________
+//  
+void
+PIDXOutputContext::setLevelExtents( string desc, 
+                                    IntVector lo,
+                                    IntVector hi,
+                                    PIDX_point& level_size )
+{
+  int levelExtents[3];                                                                               
+  levelExtents[0] = hi[0] - lo[0] ;                                                                  
+  levelExtents[1] = hi[1] - lo[1] ;                                                                  
+  levelExtents[2] = hi[2] - lo[2] ;                                                                  
+
+  int ret = PIDX_set_point_5D(level_size, levelExtents[0], levelExtents[1], levelExtents[2], 1, 1);  
+  checkReturnCode( ret,desc+" - PIDX_set_point_5D failure", __FILE__, __LINE__);                     
+}
+
 
 //______________________________________________________________________
 //
