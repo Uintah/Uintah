@@ -158,19 +158,18 @@ PIDXOutputContext::setLevelExtents( string desc,
                                     IntVector lo,
                                     IntVector hi,
                                     PIDX_point& level_size )
-{
-  int levelExtents[3];                                                                               
-  levelExtents[0] = hi[0] - lo[0] ;                                                                  
-  levelExtents[1] = hi[1] - lo[1] ;                                                                  
-  levelExtents[2] = hi[2] - lo[2] ;                                                                  
+{                                                                             
+  d_levelExtents[0] = hi[0] - lo[0] ;                                                                  
+  d_levelExtents[1] = hi[1] - lo[1] ;                                                                  
+  d_levelExtents[2] = hi[2] - lo[2] ;                                                                  
 
-  int ret = PIDX_set_point_5D(level_size, levelExtents[0], levelExtents[1], levelExtents[2], 1, 1);  
+  int ret = PIDX_set_point_5D(level_size, d_levelExtents[0], d_levelExtents[1], d_levelExtents[2], 1, 1);  
   checkReturnCode( ret,desc+" - PIDX_set_point_5D failure", __FILE__, __LINE__);                     
 }
 
-
 //______________________________________________________________________
-//
+//  
+
 void
 PIDXOutputContext::checkReturnCode( const int rc,
                                     const string warn,
@@ -181,6 +180,38 @@ PIDXOutputContext::checkReturnCode( const int rc,
     throw InternalError(warn, file, line);
   }
 }
+
+
+//______________________________________________________________________
+//
+void
+PIDXOutputContext::hardWireBufferValues(unsigned char* patchBuffer, 
+                                        const patchExtents patchExts,
+                                        const size_t arraySize,
+                                        const int samples_per_value )
+{ 
+  IntVector lo_EC = patchExts.lo_EC;
+  IntVector hi_EC = patchExts.hi_EC;  
+  
+  double* buffer = (double*)malloc( arraySize );
+  memcpy( buffer, patchBuffer, arraySize );
+
+  int c = 0;
+  for (int k=lo_EC.z(); k<hi_EC.z(); k++){
+    for (int j=lo_EC.y(); j<hi_EC.y(); j++){
+      for (int i=lo_EC.x(); i<hi_EC.x(); i++){
+        for ( int s = 0; s < samples_per_value; ++s ){
+          buffer[c] = (double)i + (double)j/2 + (double)k/3;                         // Add function here for 
+          c++;
+        }
+      }
+    }
+  }
+    
+  memcpy(patchBuffer,buffer, arraySize );
+  free(buffer);
+}
+
 
 //______________________________________________________________________
 //

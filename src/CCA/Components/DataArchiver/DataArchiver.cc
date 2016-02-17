@@ -2474,14 +2474,6 @@ DataArchiver::saveLabels_PIDX(std::vector< SaveItem >& saveLabels,
     actual_number_of_variables += var_matls->size();
   }
 
-  //__________________________________
-  // initialize PIDX variables
-  int PIDX_debug = 0;
-  int PIDX_extra_field = 0;
-  if (PIDX_debug == 1){
-    PIDX_extra_field = 1;
-  }
-
   // must use this format or else file won't be written
   // inside of uda
   string idxFilename( myDir.getName() );
@@ -2507,21 +2499,17 @@ DataArchiver::saveLabels_PIDX(std::vector< SaveItem >& saveLabels,
   PIDX_set_dims(pidx.file, level_size);
 
   //__________________________________
-  //
-  rc = PIDX_set_variable_count(pidx.file, actual_number_of_variables + PIDX_extra_field);
+  // allocate memory for pidx variable descriptor array
+  rc = PIDX_set_variable_count(pidx.file, actual_number_of_variables);
   pidx.checkReturnCode( rc, "DataArchiver::saveLabels_PIDX - PIDX_set_variable_count failure",__FILE__, __LINE__);
   
-  pidx.variable = (PIDX_variable**) malloc(sizeof (PIDX_variable*) * (nSaveItems + PIDX_extra_field));
-  memset(pidx.variable, 0, sizeof (PIDX_variable*) * nSaveItems);
+  size_t pidxVarSize = sizeof (PIDX_variable*);
+  pidx.variable = (PIDX_variable**) malloc( pidxVarSize * nSaveItems );
+  memset(pidx.variable, 0, pidxVarSize * nSaveItems);
 
   for(int i = 0 ; i < nSaveItems ; i++) {
-    pidx.variable[i] = (PIDX_variable*) malloc(sizeof (PIDX_variable) * nSaveItemMatls[i]);
-    memset(pidx.variable[i], 0, sizeof (PIDX_variable) * nSaveItemMatls[i]);
-  }
-
-  for(int i = nSaveItems ; i < nSaveItems + PIDX_extra_field ; i++) {
-    pidx.variable[i] = (PIDX_variable*) malloc(sizeof (PIDX_variable));
-    memset(pidx.variable[i], 0, sizeof (PIDX_variable));
+    pidx.variable[i] = (PIDX_variable*) malloc( pidxVarSize * nSaveItemMatls[i]);
+    memset(pidx.variable[i], 0, pidxVarSize * nSaveItemMatls[i]);
   }
 
   //__________________________________
@@ -2672,11 +2660,16 @@ DataArchiver::saveLabels_PIDX(std::vector< SaveItem >& saveLabels,
           //  Read in Array3 data to t-buffer
           new_dw->emitPIDX(pidx, label, matlIndex, patch, t_buffer, arraySize);
 
+          #if 0           // to hardwire buffer values for debugging.
+          pidx.hardWireBufferValues(t_buffer, patchExts, arraySize, sample_per_variable );
+          #endif
+          
           //__________________________________
           //  copy t_buffer -> patch_buffer
           memcpy( patch_buffer[vcm][p], t_buffer, arraySize );
          
           free(t_buffer);
+          
 
           //__________________________________
           //  debugging
@@ -2719,48 +2712,6 @@ DataArchiver::saveLabels_PIDX(std::vector< SaveItem >& saveLabels,
     vc++;
   }  //  Variables
 
-  //__________________________________
-  //      DEBUGGING   This simply creates a dummy variable
-#if 0
-  float **PIDX_patch_buffer;
-  if (PIDX_debug == 1)
-  {
-    rc = PIDX_variable_create("PIDX_test_variable", sizeof(float) * 8, FLOAT32, &(pidx.variable[nSaveItems][0]));
-    pidx.checkReturnCode( rc, "DataArchiver::saveLabels_PIDX - PIDX_variable_create failure",__FILE__, __LINE__);
-    
-    PIDX_patch_buffer = (float**)malloc(sizeof(float*) * patches->size());
-
-    for(int p=0;p<(type==CHECKPOINT_REDUCTION?1:patches->size());p++)
-    {
-      const Patch* patch  = patches->get(p);
-      PIDX_point patchOffset;
-      PIDX_point patchSize;
-      patchExtents patchExts;
-    
-      pidx.setPatchExtents( "debugging Var", patch, level, IntVector(0,0,0), TypeDescription::CCVariable, patchExts, patchOffset, patchSize);
-
-      PIDX_patch_buffer[p] = (float*)malloc(sizeof(float) * totalCells_EC);
-      memset(PIDX_patch_buffer[p], 0, sizeof(float) * totalCells_EC);
-
-
-      for (int k = 0; k < nCells_EC.z(); k++) {
-        for (int j = 0; j < nCells_EC.y(); j++) {
-          for (int i = 0; i < nCells_EC.x(); i++) {
-            unsigned long long index = (unsigned long long) ( nCells_EC.x() * (nCells_EC.y() * k) + (nCells_EC.x() * j) + i );
-            PIDX_patch_buffer[p][index] = 100 + ((globalExtents[0] * globalExtents[1]*(pidxLo.z() + k)) +(globalExtents[0]*(pidxLo.y() + j)) + (pidxLo.x() + i));
-          }
-        }
-      }
-
-      rc = PIDX_variable_write_data_layout(pidx.variable[nSaveItems][0], local_offset_point, local_box_count_point, PIDX_patch_buffer[p], PIDX_row_major);
-      pidx.checkReturnCode( rc, "DataArchiver::saveLabels_PIDX - PIDX_variable_write_data_layout failure",__FILE__, __LINE__);
-
-    }  //  Patches
-    rc = PIDX_append_and_write_variable(pidx.file, pidx.variable[nSaveItems][0]);
-    pidx.checkReturnCode( rc, "DataArchiver::saveLabels_PIDX - PIDX_append_and_write_variable failure",__FILE__, __LINE__);
-  }  // debugging
-#endif
-
   rc = PIDX_close(pidx.file);
   pidx.checkReturnCode( rc, "DataArchiver::saveLabels_PIDX - PIDX_close failure",__FILE__, __LINE__);
 
@@ -2780,22 +2731,9 @@ DataArchiver::saveLabels_PIDX(std::vector< SaveItem >& saveLabels,
   free(patch_buffer);
   patch_buffer = 0;
 
-
-#if 0
-  if (PIDX_debug == 1)
-  {
-    for(int p=0;p<(type==CHECKPOINT_REDUCTION?1:patches->size());p++){
-      free(PIDX_patch_buffer[p]);
-    }
-    free(PIDX_patch_buffer);
-  }
-#endif
-
-
   //__________________________________
   //  free memory
-  for (int i=0; i<nSaveItems + PIDX_extra_field; i++)
-  {
+  for (int i=0; i<nSaveItems ; i++){
     free(pidx.variable[i]);
   }
   free(pidx.variable); 
