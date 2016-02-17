@@ -46,9 +46,9 @@ extern SCIRun::Mutex coutLock;
 extern std::map<std::string, double> waittimes;
 extern std::map<std::string, double> exectimes;
 
+extern DebugStream execout;
 extern DebugStream taskdbg;
 extern DebugStream waitout;
-extern DebugStream execout;
 
 //______________________________________________________________________
 //
@@ -311,6 +311,7 @@ ThreadFunneledScheduler::createSubScheduler()
 void ThreadFunneledScheduler::select_tasks()
 {
   while (m_num_tasks_done < m_num_tasks) {
+
     DetailedTask* readyTask = nullptr;
     DetailedTask* initTask = nullptr;
     int processMPIs = 0;
@@ -354,7 +355,7 @@ void ThreadFunneledScheduler::select_tasks()
             m_phase_sync_tasks[initTask->getTask()->d_phase] = initTask;
             ASSERT(initTask->getRequires().size() == 0)
             initTask = nullptr;
-          } else if (initTask->getRequires().size() == 0) {  //if no ext deps,skip MPI sends
+          } else if (initTask->getRequires().size() == 0) {  // if no ext deps, skip MPI sends
             initTask->markInitiated();
             initTask->checkExternalDepCount();
             initTask = nullptr;
@@ -387,9 +388,16 @@ void ThreadFunneledScheduler::select_tasks()
       initTask->markInitiated();
       initTask->checkExternalDepCount();
     } else if (readyTask != nullptr) {
+
+
+      // TODO - FIXME: // TODO - FIXME - these calls should be made from the man thread
       if (readyTask->getTask()->getType() == Task::Reduction) {
         initiateReduction(readyTask);
-      } else {
+      }
+
+
+
+      else {
         run_task(readyTask, m_current_iteration);
 
         if (taskdbg.active()) {
@@ -399,9 +407,16 @@ void ThreadFunneledScheduler::select_tasks()
         }
 
       }
-    } else if (processMPIs > 0) {
+    }
+
+
+    // TODO - FIXME: // TODO - FIXME - these calls should be made from the man thread
+    else if (processMPIs > 0) {
       processMPIRecvs(TEST);
-    } else {
+    }
+
+
+    else {
       //This could only happen when finished all tasks
       ASSERT(m_num_tasks_done == m_num_tasks);
     }
@@ -461,13 +476,16 @@ ThreadFunneledScheduler::run_task(  DetailedTask * task
         getLoadBalancer()->addContribution(task, total_task_time);
       }
     }
-  }
+  } // std::lock_guard<std::mutex> lb_guard(s_lb_mutex);
 
 
-  // TODO - FIXME - these calls should be made from the master thread
+  // TODO - FIXME - these calls should be made from the man thread
   //  will also need to get rid of the TaskRunner member: m_mpi_test_time
   postMPISends(task, iteration, Impl::t_tid);
   task->done(dws);  // should this be timed with taskstart?
+
+
+
   // -------------------------< begin MPI test timing >-------------------------
   Impl::g_runners[Impl::t_tid]->m_mpi_test_time.reset();
   sends_[Impl::t_tid].testsome(d_myworld);
@@ -598,24 +616,8 @@ void ThreadFunneledScheduler::execute(  int tgnum     /*=0*/
 
 
 
-  if (threaded_timeout.active()) {
-    emitTime("Total task time"      , mpi_info_[TotalTask]);
-    emitTime("MPI Send time"        , mpi_info_[TotalSendMPI]);
-    emitTime("MPI Recv time"        , mpi_info_[TotalRecvMPI]);
-    emitTime("MPI TestSome time"    , mpi_info_[TotalTestMPI]);
-    emitTime("MPI Wait time"        , mpi_info_[TotalWaitMPI]);
-    emitTime("MPI reduce time"      , mpi_info_[TotalReduceMPI]);
-    emitTime("Total reduction time" , mpi_info_[TotalReduce] - mpi_info_[TotalReduceMPI]);
-    emitTime("Total send time"      , mpi_info_[TotalSend]   - mpi_info_[TotalSendMPI] - mpi_info_[TotalTestMPI]);
-    emitTime("Total recv time"      , mpi_info_[TotalRecv]   - mpi_info_[TotalRecvMPI] - mpi_info_[TotalWaitMPI]);
-    emitTime("Total comm time"      , mpi_info_[TotalRecv]   + mpi_info_[TotalSend]    + mpi_info_[TotalReduce]);
 
-    clock_type::time_point time_now = clock_type::now();
-    double totalexec = std::chrono::duration_cast<nanoseconds>( time_now - m_last_exec_time ).count() * 1.0e-9;
-    m_last_exec_time = time_now;
-
-    emitTime("Other execution time", totalexec - mpi_info_[TotalSend] - mpi_info_[TotalRecv] - mpi_info_[TotalTask] - mpi_info_[TotalReduce]);
-  }
+  emitNetMPIStats();
 
   // compute the net timings and add in wait times for all TaskRunner threads
   if (d_sharedState != 0) {
@@ -625,20 +627,8 @@ void ThreadFunneledScheduler::execute(  int tgnum     /*=0*/
     }
   }
 
-  if (restartable && tgnum == static_cast<int>(graphs.size() - 1)) {
-    // Copy the restart flag to all processors
-    int myrestart = dws[dws.size() - 1]->timestepRestarted();
-    int netrestart;
-
-    MPI_Allreduce(&myrestart, &netrestart, 1, MPI_INT, MPI_LOR, d_myworld->getComm());
-
-    if (netrestart) {
-      dws[dws.size() - 1]->restartTimestep();
-      if (dws[0]) {
-        dws[0]->setRestarted();
-      }
-    }
-  }
+  // Copy the restart flag to all processors
+  reduceRestartFlag(tgnum);
 
   finalizeTimestep();
 

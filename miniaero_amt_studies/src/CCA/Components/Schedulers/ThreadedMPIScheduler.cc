@@ -488,26 +488,7 @@ ThreadedMPIScheduler::execute( int tgnum     /* = 0 */,
     proc0cout << "average queue length:" << allqueuelength / d_myworld->size() << std::endl;
   }
 
-  if (threadedmpi_timeout.active()) {
-    emitTime("MPI send time", mpi_info_[TotalSendMPI]);
-    emitTime("MPI Testsome time", mpi_info_[TotalTestMPI]);
-    emitTime("Total send time", mpi_info_[TotalSend] - mpi_info_[TotalSendMPI] - mpi_info_[TotalTestMPI]);
-    emitTime("MPI recv time", mpi_info_[TotalRecvMPI]);
-    emitTime("MPI wait time", mpi_info_[TotalWaitMPI]);
-    emitTime("Total recv time", mpi_info_[TotalRecv] - mpi_info_[TotalRecvMPI] - mpi_info_[TotalWaitMPI]);
-    emitTime("Total task time", mpi_info_[TotalTask]);
-    emitTime("Total MPI reduce time", mpi_info_[TotalReduceMPI]);
-    emitTime("Total reduction time", mpi_info_[TotalReduce] - mpi_info_[TotalReduceMPI]);
-    emitTime("Total comm time", mpi_info_[TotalRecv] + mpi_info_[TotalSend] + mpi_info_[TotalReduce]);
-
-    double time = Time::currentSeconds();
-    double totalexec = time - d_lasttime;
-
-    d_lasttime = time;
-
-    emitTime("Other excution time",
-             totalexec - mpi_info_[TotalSend] - mpi_info_[TotalRecv] - mpi_info_[TotalTask] - mpi_info_[TotalReduce]);
-  }
+  emitNetMPIStats();
   
   // compute the net timings
   if (d_sharedState != 0) {
@@ -520,22 +501,8 @@ ThreadedMPIScheduler::execute( int tgnum     /* = 0 */,
     }
   }
 
-  //if(timeout.active())
-  //emitTime("final wait");
-  if (restartable && tgnum == (int)graphs.size() - 1) {
-    // Copy the restart flag to all processors
-    int myrestart = dws[dws.size() - 1]->timestepRestarted();
-    int netrestart;
-
-    MPI_Allreduce(&myrestart, &netrestart, 1, MPI_INT, MPI_LOR, d_myworld->getComm());
-
-    if (netrestart) {
-      dws[dws.size() - 1]->restartTimestep();
-      if (dws[0]) {
-        dws[0]->setRestarted();
-      }
-    }
-  }
+  // Copy the restart flag to all processors
+  reduceRestartFlag(tgnum);
 
   finalizeTimestep();
   log.finishTimestep();

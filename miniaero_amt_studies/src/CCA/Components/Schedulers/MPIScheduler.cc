@@ -48,10 +48,10 @@
 #endif //UINTAH_ENABLE_KOKKOS
 
 #include <chrono>
-#include <sstream>
+#include <cstring>
 #include <iomanip>
 #include <map>
-#include <cstring>
+#include <sstream>
 
 // Pack data into a buffer before sending -- testing to see if this
 // works better and avoids certain problems possible when you allow
@@ -96,6 +96,7 @@ MPIScheduler::MPIScheduler( const ProcessorGroup* myworld,
 #ifdef UINTAH_ENABLE_KOKKOS
   Kokkos::initialize();
 #endif //UINTAH_ENABLE_KOKKOS
+
   m_last_exec_time = std::chrono::high_resolution_clock::now();
   d_lasttime = Time::currentSeconds();
   reloc_new_posLabel_ = 0;
@@ -943,25 +944,7 @@ MPIScheduler::execute( int tgnum     /* = 0 */,
     }
   } // end while( numTasksDone < ntasks )
 
-  if (timeout.active()) {
-    emitTime("MPI send time", mpi_info_[TotalSendMPI]);
-    emitTime("MPI Testsome time", mpi_info_[TotalTestMPI]);
-    emitTime("Total send time", mpi_info_[TotalSend] - mpi_info_[TotalSendMPI] - mpi_info_[TotalTestMPI]);
-    emitTime("MPI recv time", mpi_info_[TotalRecvMPI]);
-    emitTime("MPI wait time", mpi_info_[TotalWaitMPI]);
-    emitTime("Total recv time", mpi_info_[TotalRecv] - mpi_info_[TotalRecvMPI] - mpi_info_[TotalWaitMPI]);
-    emitTime("Total task time", mpi_info_[TotalTask]);
-    emitTime("Total MPI reduce time", mpi_info_[TotalReduceMPI]);
-    emitTime("Total reduction time", mpi_info_[TotalReduce] - mpi_info_[TotalReduceMPI]);
-    emitTime("Total comm time", mpi_info_[TotalRecv] + mpi_info_[TotalSend] + mpi_info_[TotalReduce]);
-
-    double time = Time::currentSeconds();
-    double totalexec = time - d_lasttime;
-
-    d_lasttime = time;
-
-    emitTime("Other execution time", totalexec - mpi_info_[TotalSend] - mpi_info_[TotalRecv] - mpi_info_[TotalTask] - mpi_info_[TotalReduce]);
-  }
+  emitNetMPIStats();
 
   if( !parentScheduler_ ) { // If this scheduler is the root scheduler...    
     computeNetRunTimeStats(d_sharedState->d_runTimeStats);
@@ -971,20 +954,9 @@ MPIScheduler::execute( int tgnum     /* = 0 */,
   sends_[0].waitall(d_myworld);
 
   ASSERT(sends_[0].numRequests() == 0);
-  //if(timeout.active())
-    //emitTime("final wait");
-  if (restartable && tgnum == (int)graphs.size() - 1) {
-    // Copy the restart flag to all processors
-    int myrestart = dws[dws.size() - 1]->timestepRestarted();
-    int netrestart;
-    MPI_Allreduce(&myrestart, &netrestart, 1, MPI_INT, MPI_LOR, d_myworld->getComm());
-    if (netrestart) {
-      dws[dws.size() - 1]->restartTimestep();
-      if (dws[0]) {
-        dws[0]->setRestarted();
-      }
-    }
-  }
+
+  // Copy the restart flag to all processors
+  reduceRestartFlag(tgnum);
 
   finalizeTimestep();
   log.finishTimestep();
@@ -1018,6 +990,52 @@ MPIScheduler::emitTime( const char*  label,
 {
    d_labels.push_back(label);
    d_times.push_back(dt);
+}
+
+//______________________________________________________________________
+//
+void
+MPIScheduler::emitNetMPIStats()
+{
+  if (timeout.scientific) {
+    emitTime("Total task time"      , mpi_info_[TotalTask]);
+    emitTime("MPI Send time"        , mpi_info_[TotalSendMPI]);
+    emitTime("MPI Recv time"        , mpi_info_[TotalRecvMPI]);
+    emitTime("MPI TestSome time"    , mpi_info_[TotalTestMPI]);
+    emitTime("MPI Wait time"        , mpi_info_[TotalWaitMPI]);
+    emitTime("MPI reduce time"      , mpi_info_[TotalReduceMPI]);
+    emitTime("Total reduction time" , mpi_info_[TotalReduce] - mpi_info_[TotalReduceMPI]);
+    emitTime("Total send time"      , mpi_info_[TotalSend]   - mpi_info_[TotalSendMPI] - mpi_info_[TotalTestMPI]);
+    emitTime("Total recv time"      , mpi_info_[TotalRecv]   - mpi_info_[TotalRecvMPI] - mpi_info_[TotalWaitMPI]);
+    emitTime("Total comm time"      , mpi_info_[TotalRecv]   + mpi_info_[TotalSend]    + mpi_info_[TotalReduce]);
+
+    clock_type::time_point time_now = clock_type::now();
+    double totalexec = std::chrono::duration_cast<nanoseconds>( time_now - m_last_exec_time ).count() * 1.0e-9;
+    m_last_exec_time = time_now;
+
+    emitTime("Other execution time", totalexec - mpi_info_[TotalSend] - mpi_info_[TotalRecv] - mpi_info_[TotalTask] - mpi_info_[TotalReduce]);
+  }
+}
+
+//______________________________________________________________________
+//
+void
+MPIScheduler::reduceRestartFlag( int task_graph_num )
+{
+  if (restartable && task_graph_num == static_cast<int>(graphs.size() - 1)) {
+    // Copy the restart flag to all processors
+    int myrestart = dws[dws.size() - 1]->timestepRestarted();
+    int netrestart;
+
+    MPI_Allreduce(&myrestart, &netrestart, 1, MPI_INT, MPI_LOR, d_myworld->getComm());
+
+    if (netrestart) {
+      dws[dws.size() - 1]->restartTimestep();
+      if (dws[0]) {
+        dws[0]->setRestarted();
+      }
+    }
+  }
 }
 
 //______________________________________________________________________

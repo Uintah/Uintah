@@ -45,9 +45,16 @@
 
 namespace Uintah {
 
-static DebugStream mpi_stats("MPIStats", false);
+namespace {
+
+DebugStream mpi_stats("MPIStats", false);
+
+} // namespace
 
 class Task;
+
+using clock_type = std::chrono::high_resolution_clock;
+using nanoseconds = std::chrono::nanoseconds;
 
 /**************************************
 
@@ -170,6 +177,10 @@ class MPIScheduler : public SchedulerCommon {
     void emitTime( const char* label );
 
     void emitTime( const char* label, double time );
+
+    void emitNetMPIStats();
+
+    void reduceRestartFlag( int task_graph_num  );
 
     void outputTimingStats( const char* label );
 
