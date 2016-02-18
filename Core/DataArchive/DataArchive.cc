@@ -1476,7 +1476,8 @@ DataArchive::TimeData::init()
   } // end while()
 
   fclose( ts_file );
-  fclose( grid_file );
+  if (grid_file)
+    fclose( grid_file );
 #endif
 
 } // end init()
