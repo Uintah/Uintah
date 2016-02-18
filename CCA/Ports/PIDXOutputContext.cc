@@ -195,13 +195,18 @@ PIDXOutputContext::hardWireBufferValues(unsigned char* patchBuffer,
   
   double* buffer = (double*)malloc( arraySize );
   memcpy( buffer, patchBuffer, arraySize );
+  IntVector levelExts = getLevelExtents();
+  Vector origin = levelExts.asVector()/2.0;
 
   int c = 0;
   for (int k=lo_EC.z(); k<hi_EC.z(); k++){
     for (int j=lo_EC.y(); j<hi_EC.y(); j++){
       for (int i=lo_EC.x(); i<hi_EC.x(); i++){
         for ( int s = 0; s < samples_per_value; ++s ){
-          buffer[c] = (double)i + (double)j/2 + (double)k/3;                         // Add function here for 
+          IntVector here(i,j,k);
+          Vector diff = here.asVector() - origin;
+          double R = diff.length();
+          buffer[c] = R;                         // Add function here for 
           c++;
         }
       }
@@ -215,9 +220,29 @@ PIDXOutputContext::hardWireBufferValues(unsigned char* patchBuffer,
 
 //______________________________________________________________________
 //
+void
+PIDXOutputContext::printBufferWrap( const string&   desc,
+                                    const TypeDescription::Type TD,
+                                    int             samples_per_value,
+                                    IntVector     & lo_EC,
+                                    IntVector     & hi_EC,
+                                    unsigned char * dataPIDX,
+                                    size_t          arraySize )
+{
+  if (TD == TypeDescription::int_type) {
+    printBuffer<int>( desc, "%3i ", samples_per_value, lo_EC, hi_EC,dataPIDX, arraySize );
+  } else {
+    printBuffer<int>( desc, "%5.3f ", samples_per_value, lo_EC, hi_EC,dataPIDX, arraySize );
+  }
+}
+
+
+//______________________________________________________________________
+//
 template<class T>
 void
 PIDXOutputContext::printBuffer( const string        & desc,
+                                const string        & format,
                                       int             samples_per_value,
                                       IntVector     & lo_EC,
                                       IntVector     & hi_EC,
@@ -235,7 +260,7 @@ PIDXOutputContext::printBuffer( const string        & desc,
       for (int i=lo_EC.x(); i<hi_EC.x(); i++){
         printf( " [%2i,%2i,%2i] ", i,j,k);
         for ( int s = 0; s < samples_per_value; ++s ){
-          printf( "%5.3f ",buffer[c]);
+          printf( format.c_str(),buffer[c]);
           c++;
         }
       }
@@ -249,26 +274,28 @@ PIDXOutputContext::printBuffer( const string        & desc,
 }
 
 // explicit instantiations
-template void PIDXOutputContext::printBuffer<int>( const string & desc,
-                                                      int samples_per_value,
-                                                      IntVector& lo_EC,
-                                                      IntVector& hi_EC,
-                                                      unsigned char* dataPIDX,
-                                                      size_t arraySize );
+template void PIDXOutputContext::printBuffer<int>( const string& desc,
+                                                   const string& format,
+                                                   int samples_per_value,
+                                                   IntVector& lo_EC,
+                                                   IntVector& hi_EC,
+                                                   unsigned char* dataPIDX,
+                                                   size_t arraySize );
 
 template void PIDXOutputContext::printBuffer<float>( const string & desc,
-                                                      int samples_per_value,
-                                                      IntVector& lo_EC,
-                                                      IntVector& hi_EC,
-                                                      unsigned char* dataPIDX,
-                                                      size_t arraySize );
+                                                     const string& format,
+                                                     int samples_per_value,
+                                                     IntVector& lo_EC,
+                                                     IntVector& hi_EC,
+                                                     unsigned char* dataPIDX,
+                                                     size_t arraySize );
 
 template void PIDXOutputContext::printBuffer<double>( const string & desc,
+                                                      const string& format,
                                                       int samples_per_value,
                                                       IntVector& lo_EC,
                                                       IntVector& hi_EC,
                                                       unsigned char* dataPIDX,
                                                       size_t arraySize );
-
 
 #endif // HAVE_PIDX

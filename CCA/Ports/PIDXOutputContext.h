@@ -128,14 +128,23 @@ class PIDXOutputContext {
 
     std::string getDirectoryName(TypeDescription::Type TD);
 
+    void
+    printBufferWrap( const std::string&   desc,
+                     const TypeDescription::Type TD,
+                     int             samples_per_value,
+                     IntVector     & lo_EC,
+                     IntVector     & hi_EC,
+                     unsigned char * dataPIDX,
+                     size_t          arraySize );
     template<class T>
     void printBuffer(const std::string & desc,
+                     const std::string & format,
                      int samples_per_value,
                      SCIRun::IntVector& lo_EC,
                      SCIRun::IntVector& hi_EC,
                      unsigned char* dataPIDX,
                      size_t arraySize );
-
+                     
     std::string filename;
     unsigned int timestep;
     PIDX_file file;
