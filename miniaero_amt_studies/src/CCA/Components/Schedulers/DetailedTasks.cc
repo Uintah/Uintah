@@ -37,7 +37,6 @@
 #include <Core/Util/ProgressiveWarning.h>
 
 #include <sci_defs/config_defs.h>
-
 #include <sci_defs/cuda_defs.h>
 
 using namespace Uintah;
@@ -45,20 +44,21 @@ using namespace Uintah;
 // sync cout/cerr so they are readable when output by multiple threads
 extern SCIRun::Mutex cerrLock;
 extern SCIRun::Mutex coutLock;
-
 extern DebugStream mixedDebug;
 extern DebugStream mpidbg;
 
-static DebugStream dbg(         "DetailedTasks", false);
-static DebugStream scrubout(    "Scrubbing",     false);
-static DebugStream messagedbg(  "MessageTags",   false);
-static DebugStream internaldbg( "InternalDeps",  false);
-static DebugStream dwdbg(       "DetailedDWDBG", false);
-static DebugStream waitout(     "WaitTimes",     false);
+namespace {
 
-// for debugging - set the var name to watch one in the scrubout
-static std::string dbgScrubVar   = "";
-static int         dbgScrubPatch = -1;
+DebugStream dbg(         "DetailedTasks", false);
+DebugStream scrubout(    "Scrubbing",     false);
+DebugStream messagedbg(  "MessageTags",   false);
+DebugStream internaldbg( "InternalDeps",  false);
+DebugStream dwdbg(       "DetailedDWDBG", false);
+DebugStream waitout(     "WaitTimes",     false);
+std::string dbgScrubVar   = ""; // for debugging - set the var name to watch one in the scrubout
+int         dbgScrubPatch = -1;
+
+}
 
 std::map<std::string, double> DependencyBatch::s_wait_times{};
 
@@ -138,7 +138,6 @@ DependencyBatch::~DependencyBatch()
     delete dep;
     dep = tmp;
   }
-  delete m_lock;
 }
 
 //_____________________________________________________________________________
@@ -231,8 +230,8 @@ DetailedTasks::computeLocalTasks( int me )
   }
 
   int order = 0;
-  size_t num_tasks = m_tasks.size();
-  for (size_t i = 0; i < num_tasks; i++) {
+  m_initially_ready_tasks = TaskQueue();
+  for (int i = 0; i < (int)m_tasks.size(); i++) {
     DetailedTask* task = m_tasks[i];
 
     ASSERTRANGE(task->getAssignedResourceIndex(), 0, m_proc_group->size());
@@ -240,7 +239,7 @@ DetailedTasks::computeLocalTasks( int me )
       m_local_tasks.push_back(task);
 
       if (task->areInternalDependenciesSatisfied()) {
-        m_initially_ready_tasks.insert(task);
+        m_initially_ready_tasks.push(task);
 
         if (mixedDebug.active()) {
           cerrLock.lock();
@@ -270,7 +269,6 @@ DetailedTask::DetailedTask(       Task           * task
   , m_externally_ready{ false }
   , m_external_dependency_count{ 0 }
   , m_num_pending_internal_dependencies{ 0 }
-  , m_internal_dependency_lock{ "DetailedTask Internal Dependencies" }
   , m_resource_index{ -1 }
   , m_static_order{ -1 }
   , m_profile_type{ Normal }
@@ -1487,7 +1485,7 @@ DetailedTask::checkExternalDepCount()
   }
 
   if (m_external_dependency_count == 0 && m_task_group->m_sched->useInternalDeps() && m_initiated && !m_task->usesMPI()) {
-
+    m_task_group->m_mpi_completed_queue_lock.lock();
     if (mpidbg.active()) {
       cerrLock.lock();
       mpidbg << "Rank-" << Parallel::getMPIRank() << " Task " << this->getTask()->getName()
@@ -1495,11 +1493,11 @@ DetailedTask::checkExternalDepCount()
       cerrLock.unlock();
     }
 
-    // where the task gets placed into the external ready queue
     if (m_externally_ready == false) {
-      m_task_group->m_mpi_completed_tasks.insert(this);
+      m_task_group->m_mpi_completed_tasks.push(this);
       m_externally_ready = true;
     }
+    m_task_group->m_mpi_completed_queue_lock.unlock();
   }
 }
 
@@ -1751,30 +1749,32 @@ void
 DetailedTask::dependencySatisfied( InternalDependency * dep )
 {
   m_internal_dependency_lock.lock();
-  ASSERT(m_num_pending_internal_dependencies > 0);
-  unsigned long currentGeneration = m_task_group->getCurrentDependencyGeneration();
+  {
+    ASSERT(m_num_pending_internal_dependencies > 0);
+    unsigned long currentGeneration = m_task_group->getCurrentDependencyGeneration();
 
-  // if false, then the dependency has already been satisfied
-  ASSERT(dep->m_satisfied_generation < currentGeneration);
+    // if false, then the dependency has already been satisfied
+    ASSERT(dep->m_satisfied_generation < currentGeneration);
 
-  dep->m_satisfied_generation = currentGeneration;
-  m_num_pending_internal_dependencies--;
+    dep->m_satisfied_generation = currentGeneration;
+    m_num_pending_internal_dependencies--;
 
-  if (mixedDebug.active()) {
-    cerrLock.lock();
-    mixedDebug << *(dep->m_dependent_task->getTask()) << " has " << m_num_pending_internal_dependencies << " left.\n";
-    cerrLock.unlock();
-  }
+    if (mixedDebug.active()) {
+      cerrLock.lock();
+      mixedDebug << *(dep->m_dependent_task->getTask()) << " has " << m_num_pending_internal_dependencies << " left.\n";
+      cerrLock.unlock();
+    }
 
-  if (internaldbg.active()) {
-    internaldbg << Parallel::getMPIRank() << " satisfying dependency: prereq: " << *dep->m_prerequisite_task << " dep: "
-                << *dep->m_dependent_task << " numPending: " << m_num_pending_internal_dependencies << "\n";
-  }
+    if (internaldbg.active()) {
+      internaldbg << Parallel::getMPIRank() << " satisfying dependency: prereq: " << *dep->m_prerequisite_task << " dep: "
+                  << *dep->m_dependent_task << " numPending: " << m_num_pending_internal_dependencies << "\n";
+    }
 
-  if (m_num_pending_internal_dependencies == 0) {
-    m_task_group->internalDependenciesSatisfied(this);
-    // reset for next timestep
-    m_num_pending_internal_dependencies = m_internal_dependencies.size();
+    if (m_num_pending_internal_dependencies == 0) {
+      m_task_group->internalDependenciesSatisfied(this);
+      // reset for next timestep
+      m_num_pending_internal_dependencies = m_internal_dependencies.size();
+    }
   }
   m_internal_dependency_lock.unlock();
 }
@@ -1878,14 +1878,17 @@ DetailedTasks::internalDependenciesSatisfied( DetailedTask * task )
     mixedDebug << "Begin internalDependenciesSatisfied\n";
     cerrLock.unlock();
   }
+  m_ready_queue_lock.lock();
+  {
+    m_ready_tasks.push(task);
 
-  m_ready_tasks.insert(task);
-
-  if (mixedDebug.active()) {
-    cerrLock.lock();
-    mixedDebug << *task << " satisfied.  Now " << m_ready_tasks.size() << " ready.\n";
-    cerrLock.unlock();
+    if (mixedDebug.active()) {
+      cerrLock.lock();
+      mixedDebug << *task << " satisfied.  Now " << m_ready_tasks.size() << " ready.\n";
+      cerrLock.unlock();
+    }
   }
+  m_ready_queue_lock.unlock();
 }
 
 //_____________________________________________________________________________
@@ -1893,16 +1896,16 @@ DetailedTasks::internalDependenciesSatisfied( DetailedTask * task )
 DetailedTask*
 DetailedTasks::getNextInternalReadyTask()
 {
-  DetailedTask* next_internal_ready_task = nullptr;
-
-  auto internal_ready_task = [](DetailedTask* const& dtask)->bool { return dtask != nullptr; };
-  TaskQueue::iterator iter;
-  if (iter = m_ready_tasks.find_any(internal_ready_task)) {
-    next_internal_ready_task = *iter;
-    m_ready_tasks.erase(iter);
+  DetailedTask* nextTask = NULL;
+  m_ready_queue_lock.lock();
+  {
+    if (!m_ready_tasks.empty()) {
+      nextTask = m_ready_tasks.front();
+      m_ready_tasks.pop();
+    }
   }
-
-  return next_internal_ready_task;
+  m_ready_queue_lock.unlock();
+  return nextTask;
 }
 
 //_____________________________________________________________________________
@@ -1910,7 +1913,12 @@ DetailedTasks::getNextInternalReadyTask()
 int
 DetailedTasks::numInternalReadyTasks()
 {
-  size_t size = m_ready_tasks.size();
+  int size = 0;
+  m_ready_queue_lock.lock();
+  {
+    size = m_ready_tasks.size();
+  }
+  m_ready_queue_lock.unlock();
   return size;
 }
 
@@ -1919,16 +1927,16 @@ DetailedTasks::numInternalReadyTasks()
 DetailedTask*
 DetailedTasks::getNextExternalReadyTask()
 {
-  DetailedTask* next_external_ready_task = nullptr;
-
-  auto external_ready_task = [](DetailedTask* const& dtask)->bool { return dtask != nullptr; };
-  TaskQueue::iterator iter;
-  if (iter = m_mpi_completed_tasks.find_any(external_ready_task)) {
-    next_external_ready_task = *iter;
-    m_mpi_completed_tasks.erase(iter);
+  DetailedTask* nextTask = NULL;
+  m_mpi_completed_queue_lock.lock();
+  {
+    if (!m_mpi_completed_tasks.empty()) {
+      nextTask = m_mpi_completed_tasks.top();
+      m_mpi_completed_tasks.pop();
+    }
   }
-
-  return next_external_ready_task;
+  m_mpi_completed_queue_lock.unlock();
+  return nextTask;
 }
 
 //_____________________________________________________________________________
@@ -1936,7 +1944,12 @@ DetailedTasks::getNextExternalReadyTask()
 int
 DetailedTasks::numExternalReadyTasks()
 {
-  size_t size = m_mpi_completed_tasks.size();
+  int size = 0;
+  m_mpi_completed_queue_lock.lock();
+  {
+    size = m_mpi_completed_tasks.size();
+  }
+  m_mpi_completed_queue_lock.unlock();
   return size;
 }
 
@@ -2102,12 +2115,6 @@ void DetailedTasks::addInitiallyReadyHostTask(DetailedTask* dtask)
 void
 DetailedTasks::initTimestep()
 {
-  // TODO - FIXME: this is a hack and is broken for AMR, need to fix.
-  if (m_ready_tasks.empty()) {
-    m_local_tasks.clear();
-    computeLocalTasks(m_proc_group->myrank());
-  }
-
   m_ready_tasks = m_initially_ready_tasks;
   incrementDependencyGeneration();
   initializeBatches();
@@ -2139,11 +2146,6 @@ DetailedTasks::initializeBatches()
 void
 DependencyBatch::reset()
 {
-  if (m_to_tasks.size() > 1) {
-    if (m_lock == 0) {
-      m_lock = scinew Mutex("DependencyBatch receive lock");
-    }
-  }
   m_received = false;
   m_made_mpi_request = false;
 }
@@ -2154,15 +2156,14 @@ bool
 DependencyBatch::makeMPIRequest()
 {
   if (m_to_tasks.size() > 1) {
-    ASSERT(m_lock != 0);
     if (!m_made_mpi_request) {
-      m_lock->lock();
+      m_lock.lock();
       if (!m_made_mpi_request) {
         m_made_mpi_request = true;
-        m_lock->unlock();
+        m_lock.unlock();
         return true;  // first to make the request
       } else {
-        m_lock->unlock();
+        m_lock.unlock();
         return false;  // got beat out -- request already made
       }
     }

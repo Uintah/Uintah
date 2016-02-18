@@ -40,20 +40,23 @@ SendState::SendState()
 
 SendState::~SendState()
 {
-  d_lock.writeLock();
+//  d_lock.writeLock();
+  d_mutex.lock();
   for( maptype::iterator iter = sendSubsets.begin(); iter != sendSubsets.end();iter++) {
     if( iter->second->removeReference() ) {
       delete iter->second;
     }
   }
-  d_lock.writeUnlock();
+  d_mutex.unlock();
+//  d_lock.writeUnlock();
 }
 
 ParticleSubset*
 SendState::find_sendset(int dest, const Patch* patch, int matlIndex,
                         IntVector low, IntVector high, int dwid /* =0 */) const
 {
-  d_lock.readLock();
+//  d_lock.readLock();
+  d_mutex.lock();
   ParticleSubset* ret;
   maptype::const_iterator iter = sendSubsets.find( make_pair( PSPatchMatlGhostRange(patch, matlIndex, low, high, dwid), dest) );
 
@@ -62,7 +65,8 @@ SendState::find_sendset(int dest, const Patch* patch, int matlIndex,
   } else {
     ret=iter->second;
   }
-  d_lock.readUnlock();
+  d_mutex.unlock();
+//  d_lock.readUnlock();
   return ret;
 }
 
@@ -70,33 +74,39 @@ void
 SendState::add_sendset(ParticleSubset* sendset, int dest, const Patch* patch, 
                        int matlIndex, IntVector low, IntVector high, int dwid /*=0*/)
 {
-  d_lock.writeLock();
-  maptype::iterator iter = 
-    sendSubsets.find(make_pair(PSPatchMatlGhostRange(patch,matlIndex,low,high,dwid), dest));
+//  d_lock.writeLock();
+  d_mutex.lock();
+  maptype::iterator iter = sendSubsets.find(make_pair(PSPatchMatlGhostRange(patch,matlIndex,low,high,dwid), dest));
   if( iter != sendSubsets.end() ) {
     cout << "sendSubset Already exists for sendset:" << *sendset << " on patch:" << *patch << " matl:" << matlIndex << endl;
     SCI_THROW( InternalError( "sendSubset already exists", __FILE__, __LINE__ ) );
   }
   sendSubsets[make_pair(PSPatchMatlGhostRange(patch, matlIndex, low, high, dwid), dest)]=sendset;
   sendset->addReference();
-  d_lock.writeUnlock();
+  d_mutex.unlock();
+//  d_lock.writeUnlock();
 }
 
 void
 SendState::reset()
 {
-  d_lock.writeLock();
+//  d_lock.writeLock();
+  d_mutex.lock();
   sendSubsets.clear();
-  d_lock.writeUnlock();
+  d_mutex.unlock();
+//  d_lock.writeUnlock();
+
 }
 
 void
 SendState::print() 
 {
-  d_lock.readLock();
+//  d_lock.readLock();
+  d_mutex.lock();
   for (maptype::iterator iter = sendSubsets.begin(); iter != sendSubsets.end(); iter++) {
     cout << Parallel::getMPIRank() << ' ' << *(iter->second) << " src/dest: " 
          << iter->first.second << "\n";
   }
-  d_lock.readUnlock();
+  d_mutex.unlock();
+//  d_lock.readUnlock();
 }
