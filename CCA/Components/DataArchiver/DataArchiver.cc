@@ -86,7 +86,7 @@
 #define CHECKPOINT_REDUCTION 2
 
 #define XML_TEXTWRITER 1
-//#undef XML_TEXTWRITER
+#undef XML_TEXTWRITER
 
 using namespace Uintah;
 using namespace std;
@@ -1702,7 +1702,6 @@ DataArchiver::writeto_xml_files(double delt, const GridP& grid)
       
       //__________________________________
       //  Write headers to pXXXX.xml and 
-=======
 #else
 	  xmlTextWriterStartElement(writer_grid, BAD_CAST "Patch");
 #endif
