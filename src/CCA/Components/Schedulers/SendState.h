@@ -25,9 +25,11 @@
 #ifndef UINTAH_HOMEBREW_SendState_H
 #define UINTAH_HOMEBREW_SendState_H
 
-#include <map>
 #include <Core/Grid/Ghost.h>
 #include <Core/Grid/Variables/PSPatchMatlGhostRange.h>
+
+#include <map>
+#include <mutex>
 
 namespace Uintah {
 
@@ -83,7 +85,9 @@ namespace Uintah {
     maptype sendSubsets;
     SendState(const SendState&);
     SendState& operator=(const SendState&);
+
     mutable CrowdMonitor d_lock;
+    mutable std::mutex   d_mutex;
 
    };
 } // End namespace Uintah

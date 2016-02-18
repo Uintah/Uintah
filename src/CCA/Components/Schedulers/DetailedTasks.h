@@ -33,14 +33,11 @@
 #include <Core/Grid/Task.h>
 #include <Core/Grid/Variables/PSPatchMatlGhostRange.h>
 #include <Core/Grid/Variables/ScrubItem.h>
-#include <Core/Malloc/AllocatorTags.hpp>
 #include <Core/Thread/CrowdMonitor.h>
-#include <Core/Thread/Mutex.h>
-
-#include <queue>
 
 #include <sci_defs/cuda_defs.h>
 
+#include <queue>
 
 namespace Uintah {
 
@@ -52,21 +49,15 @@ namespace Uintah {
   using ParticleExchangeVar = std::map<int, std::set<PSPatchMatlGhostRange> >;
   using ScrubCountTable     = SCIRun::FastHashTable<ScrubItem>;
   
-  using TaskQueue = Lockfree::CircularPool<   DetailedTask*
-                                            , Lockfree::ENABLE_SIZE         // size model
-                                            , Lockfree::EXCLUSIVE_INSTANCE // usage model
-                                            , Uintah::MallocAllocator      // allocator
-                                            , Uintah::MallocAllocator      // size_type allocator
-                                          >;
 
-
+  //_______________________________________________________________________________________________
   enum ProfileType {
       Normal
     , Fine
   };
+
+
   //_______________________________________________________________________________________________
-
-
   enum QueueAlg {
       FCFS
     , Stack
@@ -83,7 +74,7 @@ namespace Uintah {
     , PatchOrder
     , PatchOrderRandom
   };
-  //_______________________________________________________________________________________________
+
 
 
 
@@ -188,14 +179,13 @@ namespace Uintah {
                    , DetailedTask * fromTask
                    , DetailedTask * toTask
                    )
-      : m_comp_next{ 0 }
+      : m_comp_next{ nullptr }
       , m_from_task{ fromTask }
-      , m_head{ 0 }
+      , m_head{ nullptr }
       , m_message_tag{ -1 }
       , m_to_rank{ to }
       , m_received{ false }
       , m_made_mpi_request{ false }
-      , m_lock{ 0 }
     {
       m_to_tasks.push_back(toTask);
     }
@@ -238,7 +228,7 @@ namespace Uintah {
 
     volatile bool            m_received;
     volatile bool            m_made_mpi_request;
-    SCIRun::Mutex          * m_lock;
+    std::mutex               m_lock;
     std::vector<Variable*>   m_to_variables;
 
     // eliminate copy, assignment and move
@@ -324,7 +314,7 @@ namespace Uintah {
     // Called after doit and mpi data sent (packed in buffers) finishes.
     // Handles internal dependencies and scrubbing.
     // Called after doit finishes.
-    void done(std::vector<OnDemandDataWarehouseP>& dws);
+    void done( std::vector<OnDemandDataWarehouseP>& dws );
 
     std::string getName() const;
     
@@ -466,7 +456,7 @@ namespace Uintah {
     std::map<DetailedTask*, InternalDependency*> m_internal_dependents;
     
     unsigned long  m_num_pending_internal_dependencies;
-    SCIRun::Mutex  m_internal_dependency_lock;
+    std::mutex     m_internal_dependency_lock;
     
     int m_resource_index;
     int m_static_order;
@@ -790,11 +780,22 @@ namespace Uintah {
     // True for mixed scheduler which needs to keep track of internal dependencies.
     bool m_must_consider_internal_dependencies;
 
+    // In the future, we may want to prioritize tasks for the MixedScheduler
+    // to run.  I implemented this using topological sort order as the priority
+    // but that probably isn't a good way to do unless you make it a breadth
+    // first topological order.
+    //typedef priority_queue<DetailedTask*, std::vector<DetailedTask*>, TaskNumberCompare> TaskQueue;
     QueueAlg m_task_priority_algorithm;
     
-    TaskQueue  m_ready_tasks{};
-    TaskQueue  m_initially_ready_tasks{};
-    TaskQueue  m_mpi_completed_tasks{};
+    using TaskQueue  = std::queue<DetailedTask*>;
+    using TaskPQueue = std::priority_queue<DetailedTask*, std::vector<DetailedTask*>, DetailedTaskPriorityComparison>;
+
+    TaskQueue   m_ready_tasks;
+    TaskQueue   m_initially_ready_tasks;
+    TaskPQueue  m_mpi_completed_tasks;
+
+    std::mutex  m_ready_queue_lock;
+    std::mutex  m_mpi_completed_queue_lock;
 
     // This "generation" number is to keep track of which InternalDependency
     // links have been satisfied in the current timestep and avoids the

@@ -34,7 +34,6 @@ SRCDIR   := Core/Parallel
 
 SRCS     += \
 	$(SRCDIR)/BufferInfo.cc              \
-	$(SRCDIR)/MPI_Communicator.cc        \
 	$(SRCDIR)/PackBufferInfo.cc          \
 	$(SRCDIR)/Parallel.cc                \
 	$(SRCDIR)/ProcessorGroup.cc          \

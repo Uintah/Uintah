@@ -27,6 +27,7 @@
 
 #include <CCA/Components/Schedulers/MPIScheduler.h>
 #include <Core/Lockfree/Lockfree_Timer.hpp>
+#include <Core/Malloc/AllocatorTags.hpp>
 
 #include <mutex>
 #include <thread>
@@ -39,6 +40,13 @@ class TaskRunner;
 
 using clock_type = std::chrono::high_resolution_clock;
 using nanoseconds = std::chrono::nanoseconds;
+
+using TaskQueue = Lockfree::CircularPool<   DetailedTask*
+                                          , Lockfree::ENABLE_SIZE         // size model
+                                          , Lockfree::EXCLUSIVE_INSTANCE // usage model
+                                          , Uintah::MallocAllocator      // allocator
+                                          , Uintah::MallocAllocator      // size_type allocator
+                                        >;
 
 
 /**************************************
