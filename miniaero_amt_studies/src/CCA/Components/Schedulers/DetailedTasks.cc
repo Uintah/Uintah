@@ -232,7 +232,8 @@ DetailedTasks::computeLocalTasks( int me )
 
   int order = 0;
   m_initially_ready_tasks = TaskQueue();
-  for (int i = 0; i < (int)m_tasks.size(); i++) {
+  size_t num_tasks = m_tasks.size();
+  for (size_t i = 0; i < num_tasks; i++) {
     DetailedTask* task = m_tasks[i];
 
     ASSERTRANGE(task->getAssignedResourceIndex(), 0, m_proc_group->size());

@@ -1137,11 +1137,14 @@ void OnDemandDataWarehouse::insertPSetRecord(       psetDBType&     subsetDB,
     SCI_THROW(InternalError("tried to create a particle subset that already exists", __FILE__, __LINE__));
   }
 #endif
-  d_plock.writeLock();
+
+//  d_plock.writeLock();
+  d_pmutex.lock();
   psetDBType::key_type key(patch->getRealPatch(), matlIndex, getID());
   subsetDB.insert(std::pair<psetDBType::key_type,ParticleSubset*>(key,psubset));
   psubset->addReference();
-  d_plock.writeUnlock();
+  d_pmutex.unlock();
+//  d_plock.writeUnlock();
 }
 //______________________________________________________________________
 //
@@ -1163,7 +1166,8 @@ OnDemandDataWarehouse::queryPSetDB(       psetDBType& subsetDB,
   int best_volume = INT_MAX;
   int target_volume = Region::getVolume(low,high);
 
-  d_plock.readLock();
+//  d_plock.readLock();
+  d_pmutex.lock();
   std::pair<psetDBType::const_iterator, psetDBType::const_iterator> ret = subsetDB.equal_range(key);
   
   //search multimap for best subset
@@ -1190,7 +1194,8 @@ OnDemandDataWarehouse::queryPSetDB(       psetDBType& subsetDB,
       }
     }
   }
-  d_plock.readUnlock();
+  d_pmutex.unlock();
+//  d_plock.readUnlock();
 
   if( exact && best_volume != target_volume ) {
     return 0;
@@ -1217,10 +1222,12 @@ OnDemandDataWarehouse::queryPSetDB(       psetDBType& subsetDB,
   }
 
   //save subset for future queries
-  d_plock.writeLock();
+//  d_plock.writeLock();
+  d_pmutex.lock();
   subsetDB.insert(std::pair<psetDBType::key_type,ParticleSubset*>(key,newsubset));
   newsubset->addReference();
-  d_plock.writeUnlock();
+  d_pmutex.unlock();
+//  d_plock.writeUnlock();
 
   return newsubset;
 }
@@ -2669,7 +2676,8 @@ OnDemandDataWarehouse::deleteParticles( ParticleSubset* delset )
   Patch* patch = (Patch*)delset->getPatch();
   const Patch* realPatch = (patch != 0) ? patch->getRealPatch() : 0;
 
-  d_pslock.writeLock();
+//  d_pslock.writeLock();
+  d_psmutex.lock();
   psetDBType::key_type key(realPatch, matlIndex, getID());
   psetDBType::iterator iter = d_delsetDB.find(key);
   ParticleSubset* currentDelset;
@@ -2690,7 +2698,8 @@ OnDemandDataWarehouse::deleteParticles( ParticleSubset* delset )
     d_delsetDB.insert(std::pair<psetDBType::key_type, ParticleSubset*>(key, delset));
     delset->addReference();
   }
-  d_pslock.writeUnlock();
+  d_psmutex.unlock();
+//  d_pslock.writeUnlock();
 }
 
 //______________________________________________________________________
@@ -2700,7 +2709,8 @@ OnDemandDataWarehouse::addParticles( const Patch* patch,
                                            int    matlIndex,
                                            std::map<const VarLabel*, ParticleVariableBase*>* addedState )
 {
-  d_pslock.writeLock();
+//  d_pslock.writeLock();
+  d_psmutex.lock();
   psetAddDBType::key_type key( matlIndex, patch );
   psetAddDBType::iterator iter = d_addsetDB.find( key );
   if( iter != d_addsetDB.end() ) {
@@ -2710,8 +2720,8 @@ OnDemandDataWarehouse::addParticles( const Patch* patch,
   else {
     d_addsetDB[key] = addedState;
   }
-
-  d_pslock.writeUnlock();
+  d_psmutex.unlock();
+//  d_pslock.writeUnlock();
 }
 
 //______________________________________________________________________

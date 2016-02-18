@@ -131,8 +131,6 @@ class ThreadFunneledScheduler : public MPIScheduler {
     std::vector<DetailedTask*> m_phase_sync_tasks{};
     DetailedTasks*             m_detailed_tasks{};
 
-    QueueAlg m_task_queue_alg{ MostMessages };
-
     bool     m_abort{ false };
     int      m_current_iteration{ 0 };
     int      m_num_tasks_done{ 0 };

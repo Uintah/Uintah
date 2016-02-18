@@ -1558,7 +1558,7 @@ TaskGraph::createDetailedDependencies( DetailedTask     * task
         static std::vector<DetailedTask*> creators;
         creators.resize(0);
 
-        // TODO - FIXME: figure out wht this does/did - APH (02/15/16)
+        // TODO - FIXME: figure out what this does/did - APH (02/15/16)
 #if 0
         if (m_tg_type == Scheduler::IntermediateTaskGraph && req->lookInOldTG && m_sched->isNewDW(req->mapDataWarehouse())) {
           continue;  // will we need to fix for mixed scheduling?
