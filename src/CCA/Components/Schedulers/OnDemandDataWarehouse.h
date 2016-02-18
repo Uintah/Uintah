@@ -39,6 +39,7 @@
 
 #include <iosfwd>
 #include <map>
+#include <mutex>
 #include <thread>
 #include <vector>
 
@@ -675,8 +676,14 @@ class OnDemandDataWarehouse : public DataWarehouse {
     // Insert Documentation Here:
     mutable CrowdMonitor d_lock;
     mutable CrowdMonitor d_lvlock;
+
+    // TODO - FIXME: fix this - APH (02/17/16)
     mutable CrowdMonitor d_plock;
     mutable CrowdMonitor d_pslock;
+    std::mutex           d_pmutex;
+    std::mutex           d_psmutex;
+
+
     bool                 d_finalized;
     GridP                d_grid;
 

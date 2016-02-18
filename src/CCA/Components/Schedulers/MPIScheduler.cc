@@ -64,17 +64,16 @@ using namespace Uintah;
 extern SCIRun::Mutex coutLock;
 extern SCIRun::Mutex cerrLock;
 
-DebugStream dbg(          "MPIScheduler_DBG",        false );
-DebugStream dbgst(        "SendTiming",              false );
-DebugStream timeout(      "MPIScheduler_TimingsOut", false );
-DebugStream reductionout( "ReductionTasks",          false );
-
-DebugStream taskorder(     "TaskOrder", false );
-DebugStream waitout(       "WaitTimes", false );
-DebugStream execout(       "ExecTimes", false );
-DebugStream taskdbg(       "TaskDBG",   false );
-DebugStream taskLevel_dbg( "TaskLevel", false );
-DebugStream mpidbg(        "MPIDBG",    false );
+DebugStream dbg(           "MPIDBG"        , false );
+DebugStream dbgst(         "SendTiming"    , false );
+DebugStream timeout(       "MPITimes"      , false );
+DebugStream reductionout(  "ReductionTasks", false );
+DebugStream taskorder(     "TaskOrder"     , false );
+DebugStream waitout(       "WaitTimes"     , false );
+DebugStream execout(       "ExecTimes"     , false );
+DebugStream taskdbg(       "TaskDBG"       , false );
+DebugStream taskLevel_dbg( "TaskLevel"     , false );
+DebugStream mpidbg(        "MPIDBG"        , false );
 
 static double CurrentWaitTime = 0;
 
@@ -712,11 +711,6 @@ void MPIScheduler::postMPIRecvs( DetailedTask* task,
         mpibuff.get_type(buf, count, datatype);
 #endif
 
-        //only receive message if size is greater than zero
-        //we need this empty message to enforce modify after read dependencies
-        //if(count>0)
-        //{
-
         int from = batch->m_from_task->getAssignedResourceIndex();
         ASSERTRANGE(from, 0, d_myworld->size());
         MPI_Request requestid;
@@ -732,14 +726,6 @@ void MPIScheduler::postMPIRecvs( DetailedTask* task,
         int bytes = count;
         recvs_.add(requestid, bytes, scinew ReceiveHandler(p_mpibuff, pBatchRecvHandler), ostr.str(), batch->m_message_tag);
         mpi_info_[TotalRecvMPI] += Time::currentSeconds() - start;
-
-        /*}
-         else
-         {
-         //no message was sent so clean up buffer and handler
-         delete p_mpibuff;
-         delete pBatchRecvHandler;
-         }*/
       }
       else {
         // Nothing really need to be received, but let everyone else know
@@ -809,11 +795,12 @@ void MPIScheduler::processMPIRecvs(int how_much)
         coutLock.unlock();
         break;
     } // end switch
+
+    mpi_info_[TotalWaitMPI] += Time::currentSeconds() - start;
+    CurrentWaitTime += Time::currentSeconds() - start;
+
   }
   recvLock.unlock();
-
-  mpi_info_[TotalWaitMPI] += Time::currentSeconds() - start;
-  CurrentWaitTime += Time::currentSeconds() - start;
 
 }  // end processMPIRecvs()
 

@@ -1382,6 +1382,8 @@ class Task {
 
     int d_phase;                    // synchronized phase id, for dynamic task scheduling
     int d_comm;                     // task communicator id, for threaded task scheduling
+
+
     int maxGhostCells;              // max ghost cells of this task
     int maxLevelOffset;             // max level offset of this task
     std::set<Task*> childTasks;

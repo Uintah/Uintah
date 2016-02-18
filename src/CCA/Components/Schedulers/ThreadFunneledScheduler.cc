@@ -40,9 +40,6 @@
 
 using namespace Uintah;
 
-// sync cout/cerr so they are readable when output by multiple threads
-extern SCIRun::Mutex coutLock;
-
 extern std::map<std::string, double> waittimes;
 extern std::map<std::string, double> exectimes;
 
@@ -55,12 +52,12 @@ extern DebugStream waitout;
 //
 namespace {
 
-static DebugStream threaded_dbg(       "ThreadFunneled_DBG",        false);
-static DebugStream threaded_threaddbg( "ThreadFunneled_ThreadDBG",  false);
+DebugStream threaded_dbg(       "ThreadFunneled_DBG",        false);
+DebugStream threaded_threaddbg( "ThreadFunneled_ThreadDBG",  false);
 
-static Lockfree::Timer s_total_exec_time {};
-static std::mutex      s_io_mutex;
-static std::mutex      s_lb_mutex;
+Lockfree::Timer s_total_exec_time {};
+std::mutex      s_io_mutex;
+std::mutex      s_lb_mutex;
 
 double                 g_thread_funneled_current_wait_time = 0;
 
@@ -162,7 +159,7 @@ void thread_fence()
 
 //______________________________________________________________________
 // only called by thread 0 (master)
-void init_threads(ThreadFunneledScheduler * sched, int num_threads)
+void init_threads( ThreadFunneledScheduler * sched, int num_threads )
 {
   g_num_threads = num_threads;
   for (int i = 0; i < g_num_threads; ++i) {
@@ -213,51 +210,6 @@ void ThreadFunneledScheduler::problemSetup(  const ProblemSpecP     & prob_spec
                                           )
 {
   std::string taskQueueAlg = "MostMessages"; // default taskReadyQueueAlg
-  ProblemSpecP params = prob_spec->findBlock("Scheduler");
-  if (params) {
-
-    params->get("taskReadyQueueAlg", taskQueueAlg);
-
-    if (taskQueueAlg == "FCFS") {
-      m_task_queue_alg = FCFS;
-    }
-    else if (taskQueueAlg == "Random") {
-      m_task_queue_alg = Random;
-    }
-    else if (taskQueueAlg == "Stack") {
-      m_task_queue_alg = Stack;
-    }
-    else if (taskQueueAlg == "MostChildren") {
-      m_task_queue_alg = MostChildren;
-    }
-    else if (taskQueueAlg == "LeastChildren") {
-      m_task_queue_alg = LeastChildren;
-    }
-    else if (taskQueueAlg == "MostAllChildren") {
-      m_task_queue_alg = MostChildren;
-    }
-    else if (taskQueueAlg == "LeastAllChildren") {
-      m_task_queue_alg = LeastChildren;
-    }
-    else if (taskQueueAlg == "MostL2Children") {
-      m_task_queue_alg = MostL2Children;
-    }
-    else if (taskQueueAlg == "LeastL2Children") {
-      m_task_queue_alg = LeastL2Children;
-    }
-    else if (taskQueueAlg == "MostMessages") {
-      m_task_queue_alg = MostMessages;
-    }
-    else if (taskQueueAlg == "LeastMessages") {
-      m_task_queue_alg = LeastMessages;
-    }
-    else if (taskQueueAlg == "PatchOrder") {
-      m_task_queue_alg = PatchOrder;
-    }
-    else if (taskQueueAlg == "PatchOrderRandom") {
-      m_task_queue_alg = PatchOrderRandom;
-    }
-  }
 
   proc0cout << "   Using \"" << taskQueueAlg << "\" task queue priority algorithm" << std::endl;
 
@@ -292,8 +244,7 @@ void ThreadFunneledScheduler::problemSetup(  const ProblemSpecP     & prob_spec
 
 //______________________________________________________________________
 //
-SchedulerP
-ThreadFunneledScheduler::createSubScheduler()
+SchedulerP ThreadFunneledScheduler::createSubScheduler()
 {
   ThreadFunneledScheduler* newsched = new ThreadFunneledScheduler(d_myworld, m_outPort, this);
   newsched->d_sharedState = d_sharedState;
@@ -306,210 +257,7 @@ ThreadFunneledScheduler::createSubScheduler()
 
 //______________________________________________________________________
 //
-void ThreadFunneledScheduler::select_tasks()
-{
-  while (m_num_tasks_done < m_num_tasks) {
-
-    DetailedTask* readyTask = nullptr;
-    DetailedTask* initTask = nullptr;
-    int processMPIs = 0;
-    bool havework = false;
-
-    // Part 1. Check if anything this thread can do concurrently. If so, update the scheduler counters.
-    m_scheduler_lock.lock();
-    while (!havework) {
-
-      if ((m_phase_sync_tasks[m_current_phase] != nullptr) && (m_phase_tasks_done[m_current_phase] == m_phase_tasks[m_current_phase] - 1)) {
-        readyTask = m_phase_sync_tasks[m_current_phase];
-        havework = true;
-        m_num_tasks_done++;
-        m_phase_tasks_done[readyTask->getTask()->d_phase]++;
-        while (m_phase_tasks[m_current_phase] == m_phase_tasks_done[m_current_phase] && m_current_phase + 1 < m_num_phases) {
-          m_current_phase++;
-        }
-        break;
-      }
-
-      // get an external ready task
-      else if (m_detailed_tasks->numExternalReadyTasks() > 0) {
-        readyTask = m_detailed_tasks->getNextExternalReadyTask();
-        if (readyTask != nullptr) {
-          havework = true;
-          m_num_tasks_done++;
-          m_phase_tasks_done[readyTask->getTask()->d_phase]++;
-          while (m_phase_tasks[m_current_phase] == m_phase_tasks_done[m_current_phase] && m_current_phase + 1 < m_num_phases) {
-            m_current_phase++;
-          }
-          break;
-        }
-      }
-
-
-      else if (m_detailed_tasks->numInternalReadyTasks() > 0) {
-        initTask = m_detailed_tasks->getNextInternalReadyTask();
-
-        if (initTask != nullptr) {
-          if (initTask->getTask()->getType() == Task::Reduction || initTask->getTask()->usesMPI()) {
-            m_phase_sync_tasks[initTask->getTask()->d_phase] = initTask;
-            ASSERT(initTask->getRequires().size() == 0)
-            initTask = nullptr;
-          } else if (initTask->getRequires().size() == 0) {  // if no ext deps, skip MPI sends
-            initTask->markInitiated();
-            initTask->checkExternalDepCount();
-            initTask = nullptr;
-          } else {
-            havework = true;
-            break;
-          }
-        }
-      }
-
-
-      else {
-        processMPIs = pendingMPIRecvs();
-        if (processMPIs > 0) {
-          havework = true;
-          break;
-        }
-      }
-
-      if (m_num_tasks_done == m_num_tasks) {
-        break;
-      }
-    }
-    m_scheduler_lock.unlock();
-
-
-    // Part 2. Concurrent Part
-    if (initTask != nullptr) {
-      initiateTask(initTask, m_abort, m_abort_point, m_current_iteration);
-      initTask->markInitiated();
-      initTask->checkExternalDepCount();
-    } else if (readyTask != nullptr) {
-
-
-      // TODO - FIXME: // TODO - FIXME - these calls should be made from the man thread
-      if (readyTask->getTask()->getType() == Task::Reduction) {
-        initiateReduction(readyTask);
-      }
-
-
-
-      else {
-        run_task(readyTask, m_current_iteration);
-
-        if (taskdbg.active()) {
-          taskdbg << d_myworld->myrank() << " Completed task:  \t";
-          printTask(taskdbg, readyTask);
-          taskdbg << '\n';
-        }
-
-      }
-    }
-
-
-    // TODO - FIXME: // TODO - FIXME - these calls should be made from the man thread
-    else if (processMPIs > 0) {
-      processMPIRecvs(TEST);
-    }
-
-
-    else {
-      //This could only happen when finished all tasks
-      ASSERT(m_num_tasks_done == m_num_tasks);
-    }
-  }  //end while tasks
-}
-
-
-//______________________________________________________________________
-//
-void
-ThreadFunneledScheduler::run_task(  DetailedTask * task
-                                  , int iteration
-                                 )
-{
-  if (waitout.active()) {
-    std::lock_guard<std::mutex> wait_guard(s_io_mutex);
-    {
-      waittimes[task->getTask()->getName()] += g_thread_funneled_current_wait_time;
-      g_thread_funneled_current_wait_time = 0;
-    }
-  }
-
-  if (trackingVarsPrintLocation_ & SchedulerCommon::PRINT_BEFORE_EXEC) {
-    printTrackedVars(task, SchedulerCommon::PRINT_BEFORE_EXEC);
-  }
-
-  std::vector<DataWarehouseP> plain_old_dws(dws.size());
-  for (int i = 0; i < (int)dws.size(); i++) {
-    plain_old_dws[i] = dws[i].get_rep();
-  }
-
-
-  // -------------------------< begin task execution timing >-------------------------
-  Impl::g_runners[Impl::t_tid]->m_task_exec_time.reset();
-  task->doit(d_myworld, dws, plain_old_dws);
-  double total_task_time = Impl::g_runners[Impl::t_tid]->m_task_exec_time.elapsed();
-  // -------------------------< end task execution timing >---------------------------
-
-
-  if (trackingVarsPrintLocation_ & SchedulerCommon::PRINT_AFTER_EXEC) {
-    printTrackedVars(task, SchedulerCommon::PRINT_AFTER_EXEC);
-  }
-
-  // TODO - FIXME - should become lock-free
-  std::lock_guard<std::mutex> lb_guard(s_lb_mutex);
-  {
-    if (execout.active()) {
-      exectimes[task->getTask()->getName()] += total_task_time;
-    }
-
-    // If I do not have a sub scheduler
-    if (!task->getTask()->getHasSubScheduler()) {
-      //add my task time to the total time
-      mpi_info_[TotalTask] += total_task_time;
-      if (!d_sharedState->isCopyDataTimestep() && task->getTask()->getType() != Task::Output) {
-        // add contribution of task execution time to load balancer
-        getLoadBalancer()->addContribution(task, total_task_time);
-      }
-    }
-  } // std::lock_guard<std::mutex> lb_guard(s_lb_mutex);
-
-
-  // TODO - FIXME - these calls should be made from the man thread
-  //  will also need to get rid of the TaskRunner member: m_mpi_test_time
-  postMPISends(task, iteration, Impl::t_tid);
-  task->done(dws);  // should this be timed with taskstart?
-
-
-
-  // -------------------------< begin MPI test timing >-------------------------
-  Impl::g_runners[Impl::t_tid]->m_mpi_test_time.reset();
-  sends_[Impl::t_tid].testsome(d_myworld);
-  mpi_info_[TotalTestMPI] += Impl::g_runners[Impl::t_tid]->m_mpi_test_time.elapsed();
-  // -------------------------< end MPI test timing >-------------------------
-
-
-
-
-  // Add subscheduler timings to the parent scheduler and reset subscheduler timings
-  if (parentScheduler_) {
-    for (size_t i = 0; i < mpi_info_.size(); ++i) {
-      MPIScheduler::TimingStat e = (MPIScheduler::TimingStat)i;
-      parentScheduler_->mpi_info_[e] += mpi_info_[e];
-    }
-    mpi_info_.reset(0);
-  }
-
-}  // end runTask()
-
-
-//______________________________________________________________________
-//
-void ThreadFunneledScheduler::execute(  int tgnum     /*=0*/
-                                      , int iteration /*=0*/
-                                     )
+void ThreadFunneledScheduler::execute(  int tgnum     /*=0*/ , int iteration /*=0*/ )
 {
   // must be single threaded for this phase
   if (d_sharedState->isCopyDataTimestep()) {
@@ -564,27 +312,26 @@ void ThreadFunneledScheduler::execute(  int tgnum     /*=0*/
   m_phase_tasks_done.clear();
   m_phase_tasks_done.resize(m_num_phases, 0);
   m_phase_sync_tasks.clear();
-  m_phase_sync_tasks.resize(m_num_phases, NULL);
-  m_detailed_tasks->setTaskPriorityAlg(m_task_queue_alg);
+  m_phase_sync_tasks.resize(m_num_phases, nullptr);
 
+  // count the number of tasks in each task-phase
+  //   each task is assigned a task-phase in TaskGraph::createDetailedDependencies()
   for (int i = 0; i < m_num_tasks; i++) {
     m_phase_tasks[m_detailed_tasks->localTask(i)->getTask()->d_phase]++;
   }
 
   if (threaded_dbg.active()) {
-    coutLock.lock();
+    std::lock_guard<std::mutex> wait_guard(s_io_mutex);
     {
       threaded_dbg << "\n" << "Rank-" << my_rank << " Executing " << m_detailed_tasks->numTasks() << " tasks (" << m_num_tasks
           << " local)\n" << "Total task phases: " << m_num_phases << "\n";
       for (size_t phase = 0; phase < m_phase_tasks.size(); ++phase) {
         threaded_dbg << "Phase: " << phase << " has " << m_phase_tasks[phase] << " total tasks\n";
       }
-      threaded_dbg << std::endl;
+      threaded_dbg << "\n" << "Rank-" << my_rank << " starting task phase " << m_current_phase << ", total phase " << m_current_phase << " tasks = "
+                   << m_phase_tasks[m_current_phase] << std::endl;
     }
-    coutLock.unlock();
   }
-
-  taskdbg << my_rank << " Switched to Task Phase " << m_current_phase << " , total task  " << m_phase_tasks[m_current_phase] << std::endl;
 
 
   //------------------------------------------------------------------------------------------------
@@ -614,9 +361,11 @@ void ThreadFunneledScheduler::execute(  int tgnum     /*=0*/
   // compute the net timings and add in wait times for all TaskRunner threads
   if (d_sharedState != 0) {
     computeNetRunTimeStats(d_sharedState->d_runTimeStats);
+    double thread_wait_time = 0.0;
     for (int i = 1; i < m_num_threads; i++) {
-      d_sharedState->d_runTimeStats[SimulationState::TaskWaitThreadTime] += Impl::g_runners[i]->m_task_wait_time.elapsed();
+      thread_wait_time += Impl::g_runners[i]->m_task_wait_time.elapsed();
     }
+    d_sharedState->d_runTimeStats[SimulationState::TaskWaitThreadTime] += (thread_wait_time / (m_num_threads - 1) );
   }
 
   // Copy the restart flag to all processors
@@ -634,7 +383,243 @@ void ThreadFunneledScheduler::execute(  int tgnum     /*=0*/
 
 //______________________________________________________________________
 //
-void ThreadFunneledScheduler::set_runner(TaskRunner* runner, int tid )
+void ThreadFunneledScheduler::select_tasks()
+{
+  while (m_num_tasks_done < m_num_tasks) {
+
+
+
+
+    DetailedTask* readyTask = nullptr;
+    DetailedTask* initTask  = nullptr;
+
+    int processMPIs = 0;
+    bool havework   = false;
+
+    // Part 1. Check if anything this thread can do concurrently. If so, update the scheduler counters.
+    m_scheduler_lock.lock();
+    while (!havework) {
+
+      //-----------------------------------------------------------------------
+      // if we have a reduction task and we're on the last task in a phase... do the reduction
+      if ((m_phase_sync_tasks[m_current_phase] != nullptr) && (m_phase_tasks_done[m_current_phase] == m_phase_tasks[m_current_phase] - 1)) {
+        readyTask = m_phase_sync_tasks[m_current_phase];
+        havework = true;
+        m_num_tasks_done++;
+        m_phase_tasks_done[readyTask->getTask()->d_phase]++;
+        while (m_phase_tasks[m_current_phase] == m_phase_tasks_done[m_current_phase] && m_current_phase + 1 < m_num_phases) {
+          m_current_phase++;
+
+          std::lock_guard<std::mutex> wait_guard(s_io_mutex);
+          {
+            threaded_dbg << "Rank-" <<d_myworld->myrank() << " switched to task phase " << m_current_phase << ", total phase " << m_current_phase << " tasks = "
+                         << m_phase_tasks[m_current_phase] << std::endl;
+          }
+
+        }
+
+        break;
+      }
+
+
+      //-----------------------------------------------------------------------
+      // get an external ready task
+      else if (m_detailed_tasks->numExternalReadyTasks() > 0) {
+        readyTask = m_detailed_tasks->getNextExternalReadyTask();
+        if (readyTask != nullptr) {
+          havework = true;
+          m_num_tasks_done++;
+          m_phase_tasks_done[readyTask->getTask()->d_phase]++;
+          while (m_phase_tasks[m_current_phase] == m_phase_tasks_done[m_current_phase] && m_current_phase + 1 < m_num_phases) {
+            m_current_phase++;
+
+
+            std::lock_guard<std::mutex> wait_guard(s_io_mutex);
+            {
+              threaded_dbg << "Rank-" <<d_myworld->myrank() << " switched to task phase " << m_current_phase << ", total phase " << m_current_phase << " tasks = "
+                           << m_phase_tasks[m_current_phase] << std::endl;
+            }
+
+          }
+          break;
+        }
+      }
+
+
+      //-----------------------------------------------------------------------
+      // get an internal ready task
+      else if (m_detailed_tasks->numInternalReadyTasks() > 0) {
+        initTask = m_detailed_tasks->getNextInternalReadyTask();
+
+        if (initTask != nullptr) {
+
+          if (initTask->getTask()->getType() == Task::Reduction || initTask->getTask()->usesMPI()) {
+            m_phase_sync_tasks[initTask->getTask()->d_phase] = initTask;
+            ASSERT(initTask->getRequires().size() == 0) // should have NO external dependencies
+            initTask = nullptr;
+          }
+
+          else if (initTask->getRequires().size() == 0) {  // if no external dependencies, skip MPI sends
+            initTask->markInitiated();
+            initTask->checkExternalDepCount();
+            initTask = nullptr;
+          }
+
+          else {
+            havework = true;
+            break;
+          }
+        }
+      }
+
+
+      //-----------------------------------------------------------------------
+      // we couldn't get a ready task, and will process MPI recvs below
+      else {
+        processMPIs = pendingMPIRecvs();
+        if (processMPIs > 0) {
+          havework = true;
+          break;
+        }
+      }
+
+      if (m_num_tasks_done == m_num_tasks) {
+        break;
+      }
+    }
+    m_scheduler_lock.unlock();
+
+
+
+    // Part 2. Concurrent Part
+    if (initTask != nullptr) {
+
+      // TODO - FIXME: these calls should be made from the man thread
+      initiateTask(initTask, m_abort, m_abort_point, m_current_iteration);
+      initTask->markInitiated();
+      initTask->checkExternalDepCount();
+
+
+    } else if (readyTask != nullptr) {
+
+
+      // TODO - FIXME: these calls should be made from the man thread
+      if (readyTask->getTask()->getType() == Task::Reduction) {
+        initiateReduction(readyTask);
+      }
+
+
+      else {
+        run_task(readyTask, m_current_iteration);
+
+        if (taskdbg.active()) {
+          taskdbg << d_myworld->myrank() << " Completed task:  \t";
+          printTask(taskdbg, readyTask);
+          taskdbg << '\n';
+        }
+
+      }
+    }
+
+
+    // TODO - FIXME: these calls should be made from the man thread
+    else if (processMPIs > 0) {
+      processMPIRecvs(TEST);
+    }
+
+
+    else {
+      //This could only happen when finished all tasks
+      ASSERT(m_num_tasks_done == m_num_tasks);
+    }
+  }  //end while tasks
+}
+
+
+//______________________________________________________________________
+//
+void ThreadFunneledScheduler::run_task( DetailedTask * task , int iteration )
+{
+  if (waitout.active()) {
+    std::lock_guard<std::mutex> wait_guard(s_io_mutex);
+    {
+      waittimes[task->getTask()->getName()] += g_thread_funneled_current_wait_time;
+      g_thread_funneled_current_wait_time = 0;
+    }
+  }
+
+  if (trackingVarsPrintLocation_ & SchedulerCommon::PRINT_BEFORE_EXEC) {
+    printTrackedVars(task, SchedulerCommon::PRINT_BEFORE_EXEC);
+  }
+
+  std::vector<DataWarehouseP> plain_old_dws(dws.size());
+  for (int i = 0; i < (int)dws.size(); i++) {
+    plain_old_dws[i] = dws[i].get_rep();
+  }
+
+
+  // -------------------------< begin task execution timing >-------------------------
+  Impl::g_runners[Impl::t_tid]->m_task_exec_time.reset();
+  task->doit(d_myworld, dws, plain_old_dws);
+  double total_task_time = Impl::g_runners[Impl::t_tid]->m_task_exec_time.elapsed();
+  // -------------------------< end task execution timing >---------------------------
+
+
+  if (trackingVarsPrintLocation_ & SchedulerCommon::PRINT_AFTER_EXEC) {
+    printTrackedVars(task, SchedulerCommon::PRINT_AFTER_EXEC);
+  }
+
+  // TODO - FIXME - should become lock-free
+  std::lock_guard<std::mutex> lb_guard(s_lb_mutex);
+  {
+    if (execout.active()) {
+      exectimes[task->getTask()->getName()] += total_task_time;
+    }
+
+    // If I do not have a sub scheduler
+    if (!task->getTask()->getHasSubScheduler()) {
+      //add my task time to the total time
+      // TODO - FIXME: this is wrong, shold be computed nthreads-1 separate times and then averaged (also need to be atomic) - APH (02/17/16)
+      mpi_info_[TotalTask] += total_task_time;
+      if (!d_sharedState->isCopyDataTimestep() && task->getTask()->getType() != Task::Output) {
+        // add contribution of task execution time to load balancer
+        getLoadBalancer()->addContribution(task, total_task_time);
+      }
+    }
+  } // std::lock_guard<std::mutex> lb_guard(s_lb_mutex);
+
+
+  // TODO - FIXME - these calls should be made from the man thread
+  //  will also need to get rid of the TaskRunner member: m_mpi_test_time
+  postMPISends(task, iteration, Impl::t_tid);
+  task->done(dws);  // should this be timed with taskstart?
+
+
+
+  // -------------------------< begin MPI test timing >-------------------------
+  Impl::g_runners[Impl::t_tid]->m_mpi_test_time.reset();
+  sends_[Impl::t_tid].testsome(d_myworld);
+  mpi_info_[TotalTestMPI] += Impl::g_runners[Impl::t_tid]->m_mpi_test_time.elapsed();
+  // -------------------------< end MPI test timing >-------------------------
+
+
+
+
+  // Add subscheduler timings to the parent scheduler and reset subscheduler timings
+  if (parentScheduler_) {
+    for (size_t i = 0; i < mpi_info_.size(); ++i) {
+      MPIScheduler::TimingStat e = (MPIScheduler::TimingStat)i;
+      parentScheduler_->mpi_info_[e] += mpi_info_[e];
+    }
+    mpi_info_.reset(0);
+  }
+
+}  // end runTask()
+
+
+//______________________________________________________________________
+//
+void ThreadFunneledScheduler::set_runner( TaskRunner * runner, int tid )
 {
   Impl::g_runners[tid] = runner;
   std::atomic_thread_fence(std::memory_order_seq_cst);
@@ -643,7 +628,7 @@ void ThreadFunneledScheduler::set_runner(TaskRunner* runner, int tid )
 
 //______________________________________________________________________
 //
-void ThreadFunneledScheduler::init_threads(ThreadFunneledScheduler * sched, int num_threads)
+void ThreadFunneledScheduler::init_threads(ThreadFunneledScheduler * sched, int num_threads )
 {
   Impl::init_threads(sched, num_threads);
 }
@@ -654,8 +639,6 @@ void ThreadFunneledScheduler::init_threads(ThreadFunneledScheduler * sched, int 
 void
 TaskRunner::run() const
 {
-
   m_scheduler->select_tasks();
-
 }
 
