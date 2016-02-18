@@ -3953,7 +3953,7 @@ void AMRMPM::addParticles(const ProcessorGroup*,
       ParticleVariable<double> pvolume,pmass,ptemp,ptempP,pcolor,pconc,pconcpre;
       ParticleVariable<double> pESF;
       ParticleVariable<Vector> pvelocity,pextforce,pdisp,pconcgrad,pArea;
-      ParticleVariable<int> pref,ploc,plal,prefOld,pLoadCID;
+      ParticleVariable<int> pref,ploc,plal,prefOld,pLoadCID,pSplitR1R2R3;
       new_dw->getModifiable(px,       lb->pXLabel_preReloc,            pset);
       new_dw->getModifiable(pids,     lb->pParticleIDLabel_preReloc,   pset);
       new_dw->getModifiable(pmass,    lb->pMassLabel_preReloc,         pset);
@@ -3985,9 +3985,12 @@ void AMRMPM::addParticles(const ProcessorGroup*,
         new_dw->getModifiable(pLoadCID, lb->pLoadCurveIDLabel_preReloc,  pset);
       }
 
-      new_dw->allocateTemporary(prefOld,  pset);
+      new_dw->allocateTemporary(prefOld,       pset);
+      new_dw->allocateTemporary(pSplitR1R2R3,  pset);
 
       int numNewPartNeeded=0;
+      bool splitForStretch=false;
+      bool splitForAny=false;
       // Put refinement criteria here
       const unsigned int origNParticles = pset->addParticles(0);
       for( unsigned int pp=0; pp<origNParticles; ++pp ){
@@ -4002,16 +4005,54 @@ void AMRMPM::addParticles(const ProcessorGroup*,
           string name  = data.name;
           double thresholdValue = data.value;
 
-
           if(m==data.matl){
+            pSplitR1R2R3[pp]=0;
             if(name=="stressNorm"){
                double stressNorm = pstress[pp].Norm();
                if(stressNorm > thresholdValue){
                  splitCriteria = true;
+                 splitForAny = true;
                }
             }
-          }
-        }
+            if(name=="stretchRatio"){
+              // This is the same R-vector equation used in CPDI interpolator
+              // The "size" is relative to the grid cell size at this point
+              Matrix3 dsize = pF[pp]*pSize[pp];
+              Vector R1(dsize(0,0), dsize(1,0), dsize(2,0));
+              Vector R2(dsize(0,1), dsize(1,1), dsize(2,1));
+              Vector R3(dsize(0,2), dsize(1,2), dsize(2,2));
+              double R1L=R1.length2();
+              double R2L=R2.length2();
+              double R3L=R3.length2();
+              double R1_R2_ratSq = R1L/R2L;
+              double R1_R3_ratSq = R1L/R3L;
+              double R2_R3_ratSq = R2L/R3L;
+              double tVSq = thresholdValue*thresholdValue;
+              double tV_invSq = 1.0/tVSq;
+              if (R1_R2_ratSq > tVSq){
+                pSplitR1R2R3[pp]=1;
+              } else if (R1_R2_ratSq < tV_invSq) {
+                pSplitR1R2R3[pp]=-1;
+              } else if (R1_R3_ratSq > tVSq){
+                pSplitR1R2R3[pp]=2;
+              } else if (R1_R3_ratSq < tV_invSq){
+                pSplitR1R2R3[pp]=-2;
+              } else if (R2_R3_ratSq > tVSq){
+                 pSplitR1R2R3[pp]=3;
+              } else if (R2_R3_ratSq < tV_invSq){
+                 pSplitR1R2R3[pp]=-3;
+              } else {
+                 pSplitR1R2R3[pp]=0;
+              }
+  
+              if(pSplitR1R2R3[pp]){
+                splitCriteria  = true;
+                splitForStretch = true;
+                splitForAny = true;
+              }
+            }
+          } // if this matl is in the list
+        } // loop over criteria
 
         if((pref[pp]< levelIndex && splitCriteria && numLevels > 1 ) ||
            (pref[pp]<=levelIndex && splitCriteria && numLevels == 1)){
@@ -4035,11 +4076,15 @@ void AMRMPM::addParticles(const ProcessorGroup*,
         // Refine particle if it is too big relative to the cell size
         // of the level it is on.  Don't refine the grid.
         if(pref[pp]< levelIndex){
+          splitForAny = true;
           pref[pp]++;
           numNewPartNeeded++;
         }
       }
       int fourOrEight=pow(2,d_ndim);
+      if(splitForStretch){
+        fourOrEight=4;
+      }
       double fourthOrEighth = 1./((double) fourOrEight);
       numNewPartNeeded*=fourOrEight;
 
@@ -4145,12 +4190,17 @@ void AMRMPM::addParticles(const ProcessorGroup*,
 
       Vector dx = patch->dCell();
       int numRefPar=0;
+      if(splitForAny){
+       // Don't loop over particles unless at least one needs to be refined
       for( unsigned int idx=0; idx<oldNumPar; ++idx ){
        if(pref[idx]!=prefOld[idx]){  // do refinement!
         IntVector c_orig;
         patch->findCell(px[idx],c_orig);
         vector<Point> new_part_pos;
 
+        // This dsize is now in terms of physical dimensions
+        // The additional scaling by the grid cell size is needed
+        // for determining new particle positions (below)
         Matrix3 dsize = (pF[idx]*pSize[idx]*Matrix3(dx[0],0,0,
                                                     0,dx[1],0,
                                                     0,0,dx[2]));
@@ -4181,22 +4231,43 @@ void AMRMPM::addParticles(const ProcessorGroup*,
           new_part_pos.push_back(px[idx]-r[2]);
           new_part_pos.push_back(px[idx]-r[3]);
         } else if(fourOrEight==4){
-          r[0]=Vector(-dsize(0,0)-dsize(0,1),
-                      -dsize(1,0)-dsize(1,1),
-                       0.0)*0.25;
-          r[1]=Vector( dsize(0,0)-dsize(0,1),
-                       dsize(1,0)-dsize(1,1),
-                       0.0)*0.25;
+          if(pSplitR1R2R3[idx]){
+            // divide the particle in the direction of longest relative R-vector
+            Vector R(0.,0.,0.);
+            if(pSplitR1R2R3[idx]==1 || pSplitR1R2R3[idx]==2){
+              //cout << "split in R1-direction!" << endl;
+              R = Vector(dsize(0,0), dsize(1,0), dsize(2,0));
+            } else if(pSplitR1R2R3[idx]==3 || pSplitR1R2R3[idx]==-1){
+              //cout << "split in R2-direction!" << endl;
+              R = Vector(dsize(0,1), dsize(1,1), dsize(2,1));
+            } else if(pSplitR1R2R3[idx]==-2 || pSplitR1R2R3[idx]==-3){
+              // Grab the third R-vector
+              R = Vector(dsize(0,2), dsize(1,2), dsize(2,2));
+              //cout << "split in R3-direction!" << endl;
+            }
+            new_part_pos.push_back(px[idx]-.375*R);
+            new_part_pos.push_back(px[idx]-.125*R);
+            new_part_pos.push_back(px[idx]+.125*R);
+            new_part_pos.push_back(px[idx]+.375*R);
+          } else {
+            // divide the particle along x and y direction
+            r[0]=Vector(-dsize(0,0)-dsize(0,1),
+                        -dsize(1,0)-dsize(1,1),
+                         0.0)*0.25;
+            r[1]=Vector( dsize(0,0)-dsize(0,1),
+                         dsize(1,0)-dsize(1,1),
+                         0.0)*0.25;
 
-          new_part_pos.push_back(px[idx]+r[0]);
-          new_part_pos.push_back(px[idx]+r[1]);
-          new_part_pos.push_back(px[idx]-r[0]);
-          new_part_pos.push_back(px[idx]-r[1]);
+            new_part_pos.push_back(px[idx]+r[0]);
+            new_part_pos.push_back(px[idx]+r[1]);
+            new_part_pos.push_back(px[idx]-r[0]);
+            new_part_pos.push_back(px[idx]-r[1]);
+          }
         }
 
 //        cout << "OPP = " << px[idx] << endl;
         for(int i = 0;i<fourOrEight;i++){
-//        cout << "NPP = " << new_part_pos[i] << endl;
+//          cout << "NPP = " << new_part_pos[i] << endl;
           if(!level->containsPoint(new_part_pos[i])){
             Point anchor = level->getAnchor();
             Point orig = new_part_pos[i];
@@ -4210,61 +4281,88 @@ void AMRMPM::addParticles(const ProcessorGroup*,
                           ((long64)c_orig.z() << 48);
 
           int& myCellNAPID = NAPID_new[c_orig];
-          int new_index;
+          int new_idx;
           if(i==0){
-             new_index=idx;
+             new_idx=idx;
           } else {
-             new_index=oldNumPar+(fourOrEight-1)*numRefPar+i;
+             new_idx=oldNumPar+(fourOrEight-1)*numRefPar+i;
           }
-//          cout << "new_index = " << new_index << endl;
-          pidstmp[new_index]    = (cellID | (long64) myCellNAPID);
-          pxtmp[new_index]      = new_part_pos[i];
-          pvoltmp[new_index]    = fourthOrEighth*pvolume[idx];
-          pmasstmp[new_index]   = fourthOrEighth*pmass[idx];
-          pveltmp[new_index]    = pvelocity[idx];
+//          cout << "new_idx = " << new_idx << endl;
+          pidstmp[new_idx]    = (cellID | (long64) myCellNAPID);
+          pxtmp[new_idx]      = new_part_pos[i];
+          pvoltmp[new_idx]    = fourthOrEighth*pvolume[idx];
+          pmasstmp[new_idx]   = fourthOrEighth*pmass[idx];
+          pveltmp[new_idx]    = pvelocity[idx];
           if(fourOrEight==8){
-            pSFtmp[new_index]     = 0.5*pscalefac[idx];
-            psizetmp[new_index]   = 0.5*pSize[idx];
+            pSFtmp[new_idx]     = 0.5*pscalefac[idx];
+            psizetmp[new_idx]   = 0.5*pSize[idx];
           } else if(fourOrEight==4){
-            Matrix3 ps=pscalefac[idx];
-            Matrix3 tmp(0.5*ps(0,0), 0.5*ps(0,1), 0.0,
-                        0.5*ps(1,0), 0.5*ps(1,1), 0.0,
-                        0.0,         0.0,         ps(2,2));
-            pSFtmp[new_index]     = tmp;
-            ps = pSize[idx];
-            tmp = Matrix3(0.5*ps(0,0), 0.5*ps(0,1), 0.0,
+           if(pSplitR1R2R3[idx]){
+            // Divide psize in the direction of the biggest R-vector
+            Matrix3 dSNew;
+            if(pSplitR1R2R3[idx]==1 || pSplitR1R2R3[idx]==2){
+              // Split across the first R-vector
+              dSNew = Matrix3(0.25*dsize(0,0), dsize(0,1), dsize(0,2),
+                              0.25*dsize(1,0), dsize(1,1), dsize(1,2),
+                              0.25*dsize(2,0), dsize(2,1), dsize(2,2));
+            } else if(pSplitR1R2R3[idx]==3 || pSplitR1R2R3[idx]==-1){
+              // Split across the second R-vector
+              dSNew = Matrix3(dsize(0,0), 0.25*dsize(0,1), dsize(0,2),
+                              dsize(1,0), 0.25*dsize(1,1), dsize(1,2),
+                              dsize(2,0), 0.25*dsize(2,1), dsize(2,2));
+            } else if(pSplitR1R2R3[idx]==-2 || pSplitR1R2R3[idx]==-3){
+              // Split across the third R-vector
+              dSNew = Matrix3(dsize(0,0), dsize(0,1), 0.25*dsize(0,2),
+                              dsize(1,0), dsize(1,1), 0.25*dsize(1,2),
+                              dsize(2,0), dsize(2,1), 0.25*dsize(2,2));
+            }
+            pSFtmp[new_idx]  = dSNew;
+            psizetmp[new_idx]= pF[idx].Inverse()*dSNew*Matrix3(1./dx[0],0.,0.,
+                                                              0.,1./dx[1],0.,
+                                                              0.,0.,1./dx[2]);
+           } else {
+              // Divide psize by two in both x and y directions
+              Matrix3 ps=pscalefac[idx];
+              Matrix3 tmp(0.5*ps(0,0), 0.5*ps(0,1), 0.0,
                           0.5*ps(1,0), 0.5*ps(1,1), 0.0,
                           0.0,         0.0,         ps(2,2));
-            psizetmp[new_index]   = tmp;
+              pSFtmp[new_idx]     = tmp;
+              ps = pSize[idx];
+              tmp = Matrix3(0.5*ps(0,0), 0.5*ps(0,1), 0.0,
+                            0.5*ps(1,0), 0.5*ps(1,1), 0.0,
+                            0.0,         0.0,         ps(2,2));
+              psizetmp[new_idx]   = tmp;
+           }
           }
-          pextFtmp[new_index]   = pextforce[idx];
-          pFtmp[new_index]      = pF[idx];
-          pdisptmp[new_index]   = pdisp[idx];
-          pstrstmp[new_index]   = pstress[idx];
+          pextFtmp[new_idx]   = pextforce[idx];
+          pFtmp[new_idx]      = pF[idx];
+          pdisptmp[new_idx]   = pdisp[idx];
+          pstrstmp[new_idx]   = pstress[idx];
           if (flags->d_with_color) {
-            pcolortmp[new_index]  = pcolor[idx];
+            pcolortmp[new_idx]  = pcolor[idx];
           }
           if(flags->d_doScalarDiffusion){
-            pconctmp[new_index]     = pconc[idx];
-            pconcpretmp[new_index]  = pconcpre[idx];
-            pconcgradtmp[new_index] = pconcgrad[idx];
-            pESFtmp[new_index]      = pESF[idx];
-            pareatmp[new_index]     = 2.*fourthOrEighth*pArea[idx];
+            pconctmp[new_idx]     = pconc[idx];
+            pconcpretmp[new_idx]  = pconcpre[idx];
+            pconcgradtmp[new_idx] = pconcgrad[idx];
+            pESFtmp[new_idx]      = pESF[idx];
+            pareatmp[new_idx]     = 2.*fourthOrEighth*pArea[idx];
           }
           if (flags->d_useLoadCurves) {
-            pLoadCIDtmp[new_index]  = pLoadCID[idx];
+            pLoadCIDtmp[new_idx]  = pLoadCID[idx];
           }
-          ptemptmp[new_index]   = ptemp[idx];
-          ptempPtmp[new_index]  = ptempP[idx];
-          preftmp[new_index]    = pref[idx];
-          plaltmp[new_index]    = plal[idx];
-          ploctmp[new_index]    = ploc[idx];
-          pvgradtmp[new_index]  = pvelgrad[idx];
+          ptemptmp[new_idx]   = ptemp[idx];
+          ptempPtmp[new_idx]  = ptempP[idx];
+          preftmp[new_idx]    = pref[idx];
+          plaltmp[new_idx]    = plal[idx];
+          ploctmp[new_idx]    = ploc[idx];
+          pvgradtmp[new_idx]  = pvelgrad[idx];
           NAPID_new[c_orig]++;
         }
         numRefPar++;
-       }  // if particle flagged for refinement
+       }  // if this particle flagged for refinement
       } // for particles
+      } // if any particles flagged for refinement
 
       cm->splitCMSpecificParticleData(patch, dwi, d_ndim, prefOld, pref,
                                       oldNumPar, numNewPartNeeded,
