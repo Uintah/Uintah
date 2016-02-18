@@ -727,8 +727,7 @@ DataArchive::query(       Variable     & var,
     PIDX_access access;
     PIDX_create_access(&access);
     PIDX_set_mpi_access(access, MPI_COMM_WORLD);        // change MPI_COMM_WORLD
-    
-    
+
     //__________________________________
     //  Open idx file
     string idxFilename = varinfo.filename;
@@ -810,14 +809,13 @@ DataArchive::query(       Variable     & var,
     //__________________________________
     // debugging
     if (dbg.active() ){
-      PIDXOutputContext pc;
-      pc.printBuffer<double>("DataArchive::query    AFTER  close",
-                              varDesc->values_per_sample,        
-                              patchExts.lo_EC, patchExts.hi_EC,                      
-                              dataPIDX,                          
-                              arraySize );
+      pidx.printBufferWrap("DataArchive::query    AFTER  close",
+                           td->getSubType()->getType(),
+                           varDesc->values_per_sample,        
+                           patchExts.lo_EC, patchExts.hi_EC,
+                           dataPIDX,                          
+                           arraySize );
     }
-   
     //__________________________________
     // now move the dataPIDX buffer into the array3 variable
     var.readPIDX( dataPIDX,  arraySize, timedata.d_swapBytes ); 

@@ -2379,7 +2379,10 @@ DataArchiver::outputVariables(const ProcessorGroup * pg,
   //______________________________________________________________________
   //
   //  ToDo
-  //      consolidate debugging variable output into main saveLabel loop
+  //      Multiple patches per core (Sidharth)
+  //      turn off debugging inside of PIDX (Sidharth)
+  //      disable need for MPI in PIDX (Sidharth)
+  //      Fix ints issue in PIDX (sidharth)
   //      Do we need patch_buffer?
   //      Do we need the memset calls?
   //
@@ -2641,43 +2644,29 @@ DataArchiver::saveLabels_PIDX(std::vector< SaveItem >& saveLabels,
                     
           //__________________________________
           // allocate memory for the grid variables
-          unsigned char *t_buffer = NULL; 
-
           size_t arraySize = varSubType_size * patchExts.totalCells_EC;
-          
-          t_buffer = (unsigned char*)malloc( arraySize );
-          memset(t_buffer, 0, arraySize );
 
           patch_buffer[vcm][p] = (unsigned char*)malloc( arraySize );
           memset( patch_buffer[vcm][p], 0, arraySize );
           
-          if ( t_buffer == NULL || patch_buffer[vcm][p] == NULL ){
-            throw InternalError("DataArchiver::saveLabels_PIDX: Failed allocating memory", __FILE__, __LINE__);
-          }
-
           //__________________________________
           //  Read in Array3 data to t-buffer
-          new_dw->emitPIDX(pidx, label, matlIndex, patch, t_buffer, arraySize);
+          new_dw->emitPIDX(pidx, label, matlIndex, patch, patch_buffer[vcm][p], arraySize);
 
           #if 0           // to hardwire buffer values for debugging.
           pidx.hardWireBufferValues(t_buffer, patchExts, arraySize, sample_per_variable );
           #endif
           
-          //__________________________________
-          //  copy t_buffer -> patch_buffer
-          memcpy( patch_buffer[vcm][p], t_buffer, arraySize );
-         
-          free(t_buffer);
-          
 
           //__________________________________
           //  debugging
           if (dbgPIDX.active() ){
-             pidx.printBuffer<double>("DataArchiver::saveLabels_PIDX    BEFORE  PIDX_variable_write_data_layout",
-                                     sample_per_variable,        
-                                     patchExts.lo_EC, patchExts.hi_EC,                      
-                                     patch_buffer[vcm][p],                          
-                                     arraySize );
+             pidx.printBufferWrap("DataArchiver::saveLabels_PIDX    BEFORE  PIDX_variable_write_data_layout",
+                                   subtype->getType(),
+                                   sample_per_variable,        
+                                   patchExts.lo_EC, patchExts.hi_EC,
+                                   patch_buffer[vcm][p],                          
+                                   arraySize );
           }         
          
           rc = PIDX_variable_write_data_layout(pidx.variable[vc][m], patchOffset, patchSize, patch_buffer[vcm][p], PIDX_row_major);
