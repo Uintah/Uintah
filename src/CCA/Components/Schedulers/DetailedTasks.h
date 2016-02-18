@@ -33,6 +33,7 @@
 #include <Core/Grid/Task.h>
 #include <Core/Grid/Variables/PSPatchMatlGhostRange.h>
 #include <Core/Grid/Variables/ScrubItem.h>
+#include <Core/Malloc/AllocatorTags.hpp>
 #include <Core/Thread/CrowdMonitor.h>
 #include <Core/Thread/Mutex.h>
 
@@ -51,6 +52,13 @@ namespace Uintah {
   using ParticleExchangeVar = std::map<int, std::set<PSPatchMatlGhostRange> >;
   using ScrubCountTable     = SCIRun::FastHashTable<ScrubItem>;
   
+  using TaskQueue = Lockfree::CircularPool<   DetailedTask*
+                                            , Lockfree::ENABLE_SIZE         // size model
+                                            , Lockfree::EXCLUSIVE_INSTANCE // usage model
+                                            , Uintah::MallocAllocator      // allocator
+                                            , Uintah::MallocAllocator      // size_type allocator
+                                          >;
+
 
   enum ProfileType {
       Normal
@@ -782,22 +790,11 @@ namespace Uintah {
     // True for mixed scheduler which needs to keep track of internal dependencies.
     bool m_must_consider_internal_dependencies;
 
-    // In the future, we may want to prioritize tasks for the MixedScheduler
-    // to run.  I implemented this using topological sort order as the priority
-    // but that probably isn't a good way to do unless you make it a breadth
-    // first topological order.
-    //typedef priority_queue<DetailedTask*, std::vector<DetailedTask*>, TaskNumberCompare> TaskQueue;
     QueueAlg m_task_priority_algorithm;
     
-    using TaskQueue  = std::queue<DetailedTask*>;
-    using TaskPQueue = std::priority_queue<DetailedTask*, std::vector<DetailedTask*>, DetailedTaskPriorityComparison>;
-
-    TaskQueue   m_ready_tasks;
-    TaskQueue   m_initially_ready_tasks;
-    TaskPQueue  m_mpi_completed_tasks;
-
-    std::mutex  m_ready_queue_lock;
-    std::mutex  m_mpi_completed_queue_lock;
+    TaskQueue  m_ready_tasks{};
+    TaskQueue  m_initially_ready_tasks{};
+    TaskQueue  m_mpi_completed_tasks{};
 
     // This "generation" number is to keep track of which InternalDependency
     // links have been satisfied in the current timestep and avoids the
