@@ -231,7 +231,6 @@ DetailedTasks::computeLocalTasks( int me )
   }
 
   int order = 0;
-  m_initially_ready_tasks = TaskQueue();
   size_t num_tasks = m_tasks.size();
   for (size_t i = 0; i < num_tasks; i++) {
     DetailedTask* task = m_tasks[i];
@@ -241,7 +240,7 @@ DetailedTasks::computeLocalTasks( int me )
       m_local_tasks.push_back(task);
 
       if (task->areInternalDependenciesSatisfied()) {
-        m_initially_ready_tasks.push(task);
+        m_initially_ready_tasks.insert(task);
 
         if (mixedDebug.active()) {
           cerrLock.lock();
@@ -1488,7 +1487,7 @@ DetailedTask::checkExternalDepCount()
   }
 
   if (m_external_dependency_count == 0 && m_task_group->m_sched->useInternalDeps() && m_initiated && !m_task->usesMPI()) {
-    m_task_group->m_mpi_completed_queue_lock.lock();
+
     if (mpidbg.active()) {
       cerrLock.lock();
       mpidbg << "Rank-" << Parallel::getMPIRank() << " Task " << this->getTask()->getName()
@@ -1496,11 +1495,11 @@ DetailedTask::checkExternalDepCount()
       cerrLock.unlock();
     }
 
+    // where the task gets placed into the external ready queue
     if (m_externally_ready == false) {
-      m_task_group->m_mpi_completed_tasks.push(this);
+      m_task_group->m_mpi_completed_tasks.insert(this);
       m_externally_ready = true;
     }
-    m_task_group->m_mpi_completed_queue_lock.unlock();
   }
 }
 
@@ -1879,17 +1878,14 @@ DetailedTasks::internalDependenciesSatisfied( DetailedTask * task )
     mixedDebug << "Begin internalDependenciesSatisfied\n";
     cerrLock.unlock();
   }
-  m_ready_queue_lock.lock();
-  {
-    m_ready_tasks.push(task);
 
-    if (mixedDebug.active()) {
-      cerrLock.lock();
-      mixedDebug << *task << " satisfied.  Now " << m_ready_tasks.size() << " ready.\n";
-      cerrLock.unlock();
-    }
+  m_ready_tasks.insert(task);
+
+  if (mixedDebug.active()) {
+    cerrLock.lock();
+    mixedDebug << *task << " satisfied.  Now " << m_ready_tasks.size() << " ready.\n";
+    cerrLock.unlock();
   }
-  m_ready_queue_lock.unlock();
 }
 
 //_____________________________________________________________________________
@@ -1897,16 +1893,16 @@ DetailedTasks::internalDependenciesSatisfied( DetailedTask * task )
 DetailedTask*
 DetailedTasks::getNextInternalReadyTask()
 {
-  DetailedTask* nextTask = NULL;
-  m_ready_queue_lock.lock();
-  {
-    if (!m_ready_tasks.empty()) {
-      nextTask = m_ready_tasks.front();
-      m_ready_tasks.pop();
-    }
+  DetailedTask* next_internal_ready_task = nullptr;
+
+  auto internal_ready_task = [](DetailedTask* const& dtask)->bool { return dtask != nullptr; };
+  TaskQueue::iterator iter;
+  if (iter = m_ready_tasks.find_any(internal_ready_task)) {
+    next_internal_ready_task = *iter;
+    m_ready_tasks.erase(iter);
   }
-  m_ready_queue_lock.unlock();
-  return nextTask;
+
+  return next_internal_ready_task;
 }
 
 //_____________________________________________________________________________
@@ -1914,12 +1910,7 @@ DetailedTasks::getNextInternalReadyTask()
 int
 DetailedTasks::numInternalReadyTasks()
 {
-  int size = 0;
-  m_ready_queue_lock.lock();
-  {
-    size = m_ready_tasks.size();
-  }
-  m_ready_queue_lock.unlock();
+  size_t size = m_ready_tasks.size();
   return size;
 }
 
@@ -1928,16 +1919,16 @@ DetailedTasks::numInternalReadyTasks()
 DetailedTask*
 DetailedTasks::getNextExternalReadyTask()
 {
-  DetailedTask* nextTask = NULL;
-  m_mpi_completed_queue_lock.lock();
-  {
-    if (!m_mpi_completed_tasks.empty()) {
-      nextTask = m_mpi_completed_tasks.top();
-      m_mpi_completed_tasks.pop();
-    }
+  DetailedTask* next_external_ready_task = nullptr;
+
+  auto external_ready_task = [](DetailedTask* const& dtask)->bool { return dtask != nullptr; };
+  TaskQueue::iterator iter;
+  if (iter = m_mpi_completed_tasks.find_any(external_ready_task)) {
+    next_external_ready_task = *iter;
+    m_mpi_completed_tasks.erase(iter);
   }
-  m_mpi_completed_queue_lock.unlock();
-  return nextTask;
+
+  return next_external_ready_task;
 }
 
 //_____________________________________________________________________________
@@ -1945,12 +1936,7 @@ DetailedTasks::getNextExternalReadyTask()
 int
 DetailedTasks::numExternalReadyTasks()
 {
-  int size = 0;
-  m_mpi_completed_queue_lock.lock();
-  {
-    size = m_mpi_completed_tasks.size();
-  }
-  m_mpi_completed_queue_lock.unlock();
+  size_t size = m_mpi_completed_tasks.size();
   return size;
 }
 
@@ -2116,6 +2102,12 @@ void DetailedTasks::addInitiallyReadyHostTask(DetailedTask* dtask)
 void
 DetailedTasks::initTimestep()
 {
+  // TODO - FIXME: this is a hack and is broken for AMR, need to fix.
+  if (m_ready_tasks.empty()) {
+    m_local_tasks.clear();
+    computeLocalTasks(m_proc_group->myrank());
+  }
+
   m_ready_tasks = m_initially_ready_tasks;
   incrementDependencyGeneration();
   initializeBatches();
