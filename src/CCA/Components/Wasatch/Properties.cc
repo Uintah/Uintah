@@ -460,7 +460,6 @@ namespace WasatchCore{
     gc[ADVANCE_SOLUTION]->exprFactory->register_expression( scinew DensExpr(theTagList,rhofTag,rho0,rho1) );
 
     if( doDenstPlus ){
-      std::cout << "doing density plus \n";
       const TagNames& names = TagNames::self();
 
       Expr::Tag rhoStar ( rhoTag .name()+names.star, rhoTag.context() );
