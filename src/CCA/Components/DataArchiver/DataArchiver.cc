@@ -1620,7 +1620,7 @@ DataArchiver::writeto_xml_files(double delt, const GridP& grid)
 #ifndef XML_TEXTWRITER
           levelElem->appendElement("cellspacing", level->dCell());
 #else
-	  xmlTextWriterWriteFormatElement(writer_grid, BAD_CAST "cellspacing","[%g,%g,%g]",
+	  xmlTextWriterWriteFormatElement(writer_grid, BAD_CAST "cellspacing","[%.17g,%.17g,%.17g]",
 					  level->dCell().x(),
 					  level->dCell().y(),
 					  level->dCell().z()
@@ -1766,7 +1766,7 @@ DataArchiver::writeto_xml_files(double delt, const GridP& grid)
 #ifndef XML_TEXTWRITER
           patchElem->appendElement("lower", box.lower());
 #else
-	  xmlTextWriterWriteFormatElement(writer_grid, BAD_CAST "lower","[%g,%g,%g]",
+	  xmlTextWriterWriteFormatElement(writer_grid, BAD_CAST "lower","[%.17g,%.17g,%.17g]",
 					  box.lower().x(),
 					  box.lower().y(),
 					  box.lower().z()
@@ -1775,7 +1775,7 @@ DataArchiver::writeto_xml_files(double delt, const GridP& grid)
 #ifndef XML_TEXTWRITER
           patchElem->appendElement("upper", box.upper());
 #else
-	  xmlTextWriterWriteFormatElement(writer_grid, BAD_CAST "upper","[%g,%g,%g]",
+	  xmlTextWriterWriteFormatElement(writer_grid, BAD_CAST "upper","[%.17g,%.17g,%.17g]",
 					  box.upper().x(),
 					  box.upper().y(),
 					  box.upper().z()
