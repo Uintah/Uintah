@@ -14,31 +14,33 @@ namespace Lockfree { namespace Impl {
 /// If i is 0 return the number of bits in the integer type.
 
 LOCKFREE_FORCEINLINE
+constexpr
 int count_trailing_zeros( unsigned i )
 {
-  enum { bits = sizeof(unsigned) * CHAR_BIT };
-  return i ? __builtin_ctz( i ) : bits ;
+  return i ? __builtin_ctz( i ) : sizeof(unsigned) * CHAR_BIT ;
 }
 LOCKFREE_FORCEINLINE
+constexpr
 int count_trailing_zeros( unsigned long i )
 {
-  enum { bits = sizeof(unsigned long) * CHAR_BIT };
-  return i ? __builtin_ctzl( i ) : bits ;
+  return i ? __builtin_ctzl( i ) : sizeof(unsigned long) * CHAR_BIT ;
 }
 LOCKFREE_FORCEINLINE
+constexpr
 int count_trailing_zeros( unsigned long long i )
 {
-  enum { bits = sizeof(unsigned long long) * CHAR_BIT };
-  return i ? __builtin_ctzll( i ) : bits ;
+  return i ? __builtin_ctzll( i ) : sizeof(unsigned long long) * CHAR_BIT ;
 }
 
 LOCKFREE_FORCEINLINE
+constexpr
 int count_trailing_zeros( unsigned short i )
 {
   return count_trailing_zeros( static_cast<unsigned>(i) );
 }
 
 LOCKFREE_FORCEINLINE
+constexpr
 int count_trailing_zeros( unsigned char i )
 {
   return count_trailing_zeros( static_cast<unsigned>(i) );
@@ -50,28 +52,33 @@ int count_trailing_zeros( unsigned char i )
 /// Returns the number of 1-bits in i.
 
 LOCKFREE_FORCEINLINE
+constexpr
 int popcount( unsigned i )
 {
   return __builtin_popcount( i );
 }
 LOCKFREE_FORCEINLINE
+constexpr
 int popcount( unsigned long i )
 {
   return __builtin_popcountl( i );
 }
 LOCKFREE_FORCEINLINE
+constexpr
 int popcount( unsigned long long i )
 {
   return __builtin_popcountll( i );
 }
 
 LOCKFREE_FORCEINLINE
+constexpr
 int popcount( unsigned short i )
 {
   return popcount( static_cast<unsigned>(i) );
 }
 
 LOCKFREE_FORCEINLINE
+constexpr
 int popcount( unsigned char i )
 {
   return popcount( static_cast<unsigned>(i) );
@@ -79,30 +86,35 @@ int popcount( unsigned char i )
 
 //-----------------------------------------------------------------------------
 LOCKFREE_FORCEINLINE
+constexpr
 unsigned char complement( unsigned char i )
 {
   return static_cast<unsigned char>(~i);
 }
 
 LOCKFREE_FORCEINLINE
+constexpr
 unsigned short complement( unsigned short i )
 {
   return static_cast<unsigned short>(~i);
 }
 
 LOCKFREE_FORCEINLINE
+constexpr
 unsigned complement( unsigned i )
 {
   return ~i;
 }
 
 LOCKFREE_FORCEINLINE
+constexpr
 unsigned long complement( unsigned long i )
 {
   return ~i;
 }
 
 LOCKFREE_FORCEINLINE
+constexpr
 unsigned long long complement( unsigned long long i )
 {
   return ~i;

@@ -1,5 +1,5 @@
-#ifndef LOCKFREE_CIRCULAR_POOL_NODE_HPP
-#define LOCKFREE_CIRCULAR_POOL_NODE_HPP
+#ifndef LOCKFREE_POOL_NODE_HPP
+#define LOCKFREE_POOL_NODE_HPP
 
 #include "Lockfree_Macros.hpp"
 #include "Lockfree_Bits.hpp"
@@ -9,6 +9,7 @@
 
 #include <climits>
 #include <cstdio>
+#include <atomic>
 
 namespace Lockfree { namespace Impl {
 
@@ -19,16 +20,16 @@ constexpr int align_to_cacheline()
 }
 
 //-----------------------------------------------------------------------------
-/// class CircularPoolNode
+/// class Node
 ///
 /// Fundamental building block for more complex lockfree data structures
 //-----------------------------------------------------------------------------
 template <typename T>
-class LOCKFREE_ALIGNAS( align_to_cacheline<T>() ) CircularPoolNode
+class LOCKFREE_ALIGNAS( align_to_cacheline<T>() ) Node
 {
 
 public:
-  using node_type = CircularPoolNode<T>;
+  using node_type = Node<T>;
   using value_type = T;
   using bitset_type = uint64_t;
 
@@ -38,7 +39,7 @@ public:
 
   /// class iterator
   ///
-  /// CircularPoolNode iterators are moveable but not copyable.  When a valid iterator
+  /// Node iterators are moveable but not copyable.  When a valid iterator
   /// is constructed its corresponding valid bit on the node is atomically claimed.
   /// Before a valid iterator is advanced or destroyed the valid bit is release.
   /// So a valid iterator is guaranteed to have exclusive read/write access to the
@@ -58,12 +59,22 @@ public:
 
     // advance the iterator to the next item
     LOCKFREE_FORCEINLINE
-    void operator++() { node_type::advance(*this); }
+    void operator++() {
+      node_type::advance(*this);
+      std::atomic_thread_fence( std::memory_order_seq_cst );
+    }
 
     // is this iterator valid ?
     LOCKFREE_FORCEINLINE
     explicit operator bool() const { return m_node != nullptr; }
 
+
+    // release the iterator
+    LOCKFREE_FORCEINLINE
+    size_t level() const
+    {
+      return m_node->impl_pool_id();
+    }
 
     // release the iterator
     LOCKFREE_FORCEINLINE
@@ -85,7 +96,7 @@ public:
     {
       itr.m_node = nullptr;
       itr.m_idx = -1;
-      __sync_synchronize();
+      std::atomic_thread_fence( std::memory_order_seq_cst );
     }
 
     // move assignment
@@ -95,7 +106,7 @@ public:
       // swap values to let it clean up "this" resource
       std::swap( m_node , itr.m_node );
       std::swap( m_idx , itr.m_idx );
-      __sync_synchronize();
+      std::atomic_thread_fence( std::memory_order_seq_cst );
       return *this;
     }
 
@@ -113,14 +124,14 @@ public:
     iterator & operator=( const iterator & ) = delete;
 
   private:
-    friend class CircularPoolNode;
+    friend class Node;
 
-    // only CircularPoolNode is allowed to construct a valid iterator
+    // only Node is allowed to construct a valid iterator
     iterator( node_type * node, int idx )
       : m_node{ node }
       , m_idx{ idx }
     {
-      __sync_synchronize();
+      std::atomic_thread_fence( std::memory_order_seq_cst );
     }
 
     node_type * m_node;
@@ -148,18 +159,15 @@ public:
   }
 
 
-  /// advance( iterator & itr, [start] )
+  /// advance( iterator & itr )
   ///
   /// advance the iterator to the next valid value in the circular_pool
   /// if there are no valid values invalidated the iterator
-  static void advance( iterator & itr, node_type * start = nullptr )
+  static void advance( iterator & itr )
   {
     if ( !itr.m_node ) { return; }
 
-    // if start not specified uses the iterator as the starting node
-    if (start == nullptr) {
-      start = itr.m_node;
-    }
+    const node_type * start = itr.m_node;
 
     node_type * curr = itr.m_node;
     node_type * prev = curr;
@@ -222,7 +230,10 @@ public:
       curr = curr->next();
     } while ( idx == capacity && curr != start );
 
-    return (idx < capacity ) ? iterator{ prev, idx } : iterator{};
+    iterator iter =  (idx < capacity ) ? iterator{ prev, idx } : iterator{};
+    std::atomic_thread_fence( std::memory_order_seq_cst );
+
+    return iter;
   }
 
   /// find_any( node_ptr, predicate)
@@ -245,10 +256,9 @@ public:
 
     do {
       // invalidate entire node
-      bitset_type old_valid = __sync_fetch_and_and( &curr->m_valid_bitset, zero );
+      bitset_type old_valid = curr->m_valid_bitset.fetch_and( zero, std::memory_order_seq_cst );
 
       if (old_valid) {
-        __sync_synchronize();
 
         bitset_type test_valid = old_valid;
 
@@ -264,11 +274,11 @@ public:
         // release the other indexes
         // mask out idx
         const bitset_type new_valid = old_valid & complement(one << idx );
-        __sync_fetch_and_or( &curr->m_valid_bitset, new_valid);
+        curr->m_valid_bitset.fetch_or( new_valid, std::memory_order_relaxed );
       }
       else {
         // release the indexes
-        __sync_fetch_and_or( &curr->m_valid_bitset, old_valid);
+        curr->m_valid_bitset.fetch_or( old_valid, std::memory_order_relaxed );
       }
 
       prev = curr;
@@ -294,13 +304,59 @@ public:
     const bitset_type bit = one << idx ;
 
     // while the index is used
-    while ( __sync_fetch_and_or( &m_used_bitset, zero ) & bit ) {
+    while ( m_used_bitset.load( std::memory_order_relaxed ) & bit ) {
       if ( try_atomic_claim( idx ) ) {
+        std::atomic_thread_fence( std::memory_order_seq_cst );
         return iterator{ this, idx };
       }
     }
 
     return iterator{};
+  }
+
+  /// emplace( args... )
+  ///
+  /// return an iterator to the newly created value
+  template <typename NodeAllocator, typename... Args>
+  iterator emplace_helper( const int num_search_nodes, NodeAllocator & allocator, int & added_node,  Args&&... args)
+  {
+    iterator itr;
+    node_type * curr;
+
+    int n = 0;
+
+    node_type * const start = this;
+    node_type * next = start;
+
+    // try to insert the value into an existing node
+    do {
+      curr = next;
+      next = curr->next();
+      itr = curr->try_atomic_emplace( std::forward<Args>(args)... );
+    } while ( !itr && (next != start) && ( ++n < num_search_nodes ) );
+
+    // wrapped around the pool
+    // Allocate node and insert the value
+    if ( !itr ) {
+      // allocate and construct
+      node_type * new_node = allocator.allocate(1);
+      allocator.construct( new_node, m_pool_id, m_pool );
+
+      // will always succeed since the node is not in the pool
+      itr = new_node->try_atomic_emplace( std::forward<Args>(args)... );
+
+      // insert the node at the end of pool (curr->next)
+      node_type * next;
+      do {
+        next = curr->next();
+        new_node->set_next(next);
+      } while ( ! curr->try_update_next( next, new_node ) );
+
+      curr = new_node;
+      added_node = 1;
+    }
+
+    return itr;
   }
 
   /// try_atomic_emplace( args... )
@@ -309,7 +365,7 @@ public:
   /// if successful return the index where the value was created
   /// otherwise return capacity
   template <typename... Args>
-  iterator try_atomic_emplace(Args... args)
+  iterator try_atomic_emplace(Args&&... args)
   {
     int idx;
     bool inserted = false;
@@ -346,7 +402,7 @@ public:
   LOCKFREE_FORCEINLINE
   node_type * next() const
   {
-    return m_next;
+    return m_next.load( std::memory_order_relaxed );
   }
 
   /// try_update_next( old_ptr, new_ptr )
@@ -359,9 +415,9 @@ public:
   /// if ( curr_ptr == old_ptr ) { m_next = new_ptr; }
   /// return curr_ptr == old_ptr
   LOCKFREE_FORCEINLINE
-  bool try_update_next( node_type * const old_ptr, node_type * const new_ptr )
+  bool try_update_next( node_type * old_ptr, node_type * new_ptr )
   {
-    return __sync_bool_compare_and_swap( &m_next, old_ptr, new_ptr );
+    return m_next.compare_exchange_strong( old_ptr, new_ptr, std::memory_order_relaxed, std::memory_order_relaxed );
   }
 
   /// set_next( new_ptr )
@@ -370,30 +426,29 @@ public:
   LOCKFREE_FORCEINLINE
   void set_next( node_type * new_ptr )
   {
-    m_next = new_ptr;
-    __sync_synchronize();
+    m_next.store( new_ptr, std::memory_order_relaxed );
   }
 
   /// Construct a node pointing to itself
-  CircularPoolNode()
-    : m_buffer{}
-    , m_next{ this }
-    , m_values{ reinterpret_cast< value_type * >( m_buffer ) }
-    , m_used_bitset{ 0u }
-    , m_valid_bitset{ 0u }
+  Node( size_t pid, void * pool )
+    : m_pool_id{ pid }
+    , m_pool{ pool }
   {}
 
   /// Destroy the values in the node
-  ~CircularPoolNode()
+  ~Node()
   {
-    const bitset_type curr_valid = __sync_fetch_and_and( &m_valid_bitset, zero );
+    const bitset_type curr_valid = m_valid_bitset.fetch_and( zero, std::memory_order_seq_cst );
     for (int i=0; i<capacity; ++i) {
       if ( curr_valid & ( one << i) ) {
         (m_values + i)->~value_type();
       }
     }
-    __sync_synchronize();
+    std::atomic_thread_fence( std::memory_order_seq_cst );
   }
+
+  size_t  impl_pool_id() const { return m_pool_id; }
+  void *  impl_pool() const { return m_pool; }
 
 private: // private functions
 
@@ -431,7 +486,7 @@ private: // private functions
   int find_unset_idx() const
   {
     // need to static cast to a bitset_type to handle uint16_t and uint8_t
-    return count_trailing_zeros(complement(m_used_bitset));
+    return count_trailing_zeros( complement(m_used_bitset.load( std::memory_order_relaxed )) );
   }
 
   /// find_set_idx()
@@ -441,7 +496,7 @@ private: // private functions
   LOCKFREE_FORCEINLINE
   int find_set_idx() const
   {
-    return count_trailing_zeros( m_valid_bitset );
+    return count_trailing_zeros( m_valid_bitset.load( std::memory_order_relaxed ) );
   }
 
   /// find_next_set_idx( idx )
@@ -452,7 +507,7 @@ private: // private functions
   int find_next_set_idx( int idx ) const
   {
     // mask out bits less than idx
-    return idx+1 < capacity ? count_trailing_zeros( m_valid_bitset & complement((one << (idx+1)) - one)) : 64;
+    return idx+1 < capacity ? count_trailing_zeros( m_valid_bitset.load( std::memory_order_relaxed ) & complement((one << (idx+1)) - one)) : 64;
   }
 
   /// atomic_erase( idx )
@@ -464,24 +519,21 @@ private: // private functions
 
     // call the destructor
     (m_values + i)->~value_type();
-    // memory fence
-    __sync_synchronize();
-
     // allow index to be used again
-    __sync_fetch_and_and( &m_used_bitset, complement(bit) );
+    m_used_bitset.fetch_and( complement(bit), std::memory_order_relaxed );
   }
 
   // return true if this thread atomically set the ith bit
   template <typename... Args>
-  bool try_atomic_emplace_helper( int i, Args... args)
+  bool try_atomic_emplace_helper( int i, Args&&... args)
   {
     const bitset_type bit = one << i ;
-    const bool inserted =  !( __sync_fetch_and_or( &m_used_bitset, bit ) & bit);
+    const bool inserted =  !( m_used_bitset.fetch_or(bit, std::memory_order_relaxed) & bit);
     if (inserted ) {
       // placement new with constructor
       new ((void*)(m_values + i)) value_type{ std::forward<Args>(args)... } ;
       // memory fence
-      __sync_synchronize();
+      std::atomic_thread_fence( std::memory_order_seq_cst );
     }
     return inserted;
   }
@@ -491,7 +543,7 @@ private: // private functions
   bool try_atomic_claim( int i )
   {
     const bitset_type bit = one << i ;
-    const bool result =  __sync_fetch_and_and( &m_valid_bitset, complement(bit) ) & bit;
+    const bool result =  m_valid_bitset.fetch_and( complement(bit), std::memory_order_relaxed ) & bit;
     return result;
   }
 
@@ -500,26 +552,33 @@ private: // private functions
   LOCKFREE_FORCEINLINE
   void atomic_release( int i )
   {
-    __sync_synchronize();
     const bitset_type bit = one << i ;
-    __sync_fetch_and_or( &m_valid_bitset, bit );
+    m_valid_bitset.fetch_or( bit, std::memory_order_relaxed );
   }
 
 private: // data members
 
   // align to cacheline (64 bytes)
+  static constexpr bitset_type offset = sizeof(value_type * )            // m_values
+                                      + sizeof(std::atomic<bitset_type>) // m_used_bitset
+                                      + sizeof(std::atomic<bitset_type>) // m_valid_bitset
+                                      + sizeof(std::atomic<node_type *>) // m_next
+                                      + sizeof(size_t)                   // m_pool_id
+                                      + sizeof(void *)                   // m_pool
+                                      ;
   static constexpr bitset_type alignment = align_to_cacheline<T>();
   static constexpr bitset_type min_buffer_size = capacity * sizeof(value_type);
-  static constexpr bitset_type offset = sizeof(node_type *) + sizeof(value_type *) + 2u * sizeof(bitset_type);
   static constexpr bitset_type buffer_size = ( alignment * ( min_buffer_size + offset + alignment - one ) / alignment ) - offset;
 
-  char         m_buffer[ buffer_size ]; // must be first to get correct alignment
-  node_type  * m_next;
-  value_type * m_values;
-  bitset_type  m_used_bitset;
-  bitset_type  m_valid_bitset;
+  char                      m_buffer[ buffer_size ]; // must be first to get correct alignment
+  value_type *              m_values{ reinterpret_cast<value_type *>(m_buffer) };
+  std::atomic<bitset_type>  m_used_bitset{ 0u };
+  std::atomic<bitset_type>  m_valid_bitset{ 0u };
+  std::atomic<node_type *>  m_next{ this };
+  size_t                    m_pool_id;
+  void *                    m_pool;
 };
 
 }} // namespace Lockfree::Impl
 
-#endif //LOCKFREE_CIRCULAR_POOL_NODE_HPP
+#endif //LOCKFREE_POOL_NODE_HPP

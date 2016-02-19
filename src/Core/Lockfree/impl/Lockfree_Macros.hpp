@@ -2,9 +2,9 @@
 #define LOCKFREE_MACROS_HPP
 
 // supported compilers
-// gcc >= 4.7.2
+// gcc >= 4.8
 // clang >= 3.5
-// intel >= 14
+// intel >= 15
 
 // include sized integer types
 #include <cstdint>
