@@ -3,15 +3,16 @@
 
 #include "impl/Lockfree_Macros.hpp"
 
-#include "Lockfree_CircularPool.hpp"
+#include "Lockfree_LevelPool.hpp"
+#include "Lockfree_Mappers.hpp"
 
 #include <new> // for bad_alloc
 
 namespace Lockfree {
 
 template <  typename T
-          , template <typename> class BaseAllocator = std::allocator
-          , template <typename> class SizeTypeAllocator = BaseAllocator
+          , template <typename> class Allocator = std::allocator
+          , template <typename> class SizeAllocator = std::allocator
         >
 class PoolAllocator
 {
@@ -22,19 +23,17 @@ class PoolAllocator
     static constexpr size_t buffer_size =  (alignment * ((sizeof(T) + sizeof(void *) - 1u + alignment) / alignment)) - sizeof(void*);
 
     char   m_buffer[buffer_size];
-    void * m_circular_pool_node;
+    void * m_pool_node;
   };
 
 public:
-  using internal_circular_pool_type = CircularPool<  Node
-                                                   , DISABLE_SIZE
-                                                   , SHARED_INSTANCE
-                                                   , BaseAllocator
-                                                   , SizeTypeAllocator
-                                                  >;
+  using internal_pool_type = LevelPool<  Node
+                                       , Allocator
+                                       , SizeAllocator
+                                      >;
 
 private:
-  using circular_pool_node_type = typename internal_circular_pool_type::impl_node_type;
+  using pool_node_type = typename internal_pool_type::impl_node_type;
 
 public:
 
@@ -50,32 +49,32 @@ public:
   struct rebind
   {
     using other = PoolAllocator<   U
-                                 , BaseAllocator
-                                 , SizeTypeAllocator
+                                 , Allocator
+                                 , SizeAllocator
                                >;
   };
 
-  PoolAllocator()
-    : m_circular_pool{}
+  PoolAllocator( size_t n = 31)
+    : m_pool{n}
   {}
 
   PoolAllocator( const PoolAllocator & rhs )
-    : m_circular_pool{ rhs.m_circular_pool }
+    : m_pool{ rhs.m_pool }
   {}
 
   PoolAllocator & operator=( const PoolAllocator & rhs )
   {
-    m_circular_pool = rhs.m_circular_pool;
+    m_pool = rhs.m_pool;
     return *this;
   }
 
   PoolAllocator( PoolAllocator && rhs )
-    : m_circular_pool{ std::move( rhs.m_circular_pool ) }
+    : m_pool{ std::move( rhs.m_pool ) }
   {}
 
   PoolAllocator & operator=( PoolAllocator && rhs )
   {
-    m_circular_pool = std::move( rhs.m_circular_pool );
+    m_pool = std::move( rhs.m_pool );
     return *this;
   }
 
@@ -90,29 +89,39 @@ public:
   static void construct (U* p, Args&&... args)
   {
     new ((void*)p) U( std::forward<Args>(args)... );
+    std::atomic_thread_fence( std::memory_order_seq_cst );
   }
 
   template <class U>
   static void destroy (U* p)
   {
     p->~U();
+    std::atomic_thread_fence( std::memory_order_seq_cst );
   }
 
-  pointer allocate( size_type n, void * = nullptr)
+  pointer allocate( size_type n, void * hint = nullptr)
   {
     if (n > max_size() ) {
       throw std::bad_alloc();
     }
 
-    typename internal_circular_pool_type::iterator itr = m_circular_pool.emplace();
+    size_t level = m_mapper( m_pool.num_levels() );
+
+    if ( hint ) {
+      Node * node = reinterpret_cast<Node *>(hint);
+      pool_node_type * pool_node = reinterpret_cast<pool_node_type *>(node->m_pool_node);
+      level = pool_node->impl_pool_id();
+    }
+
+    typename internal_pool_type::iterator itr = m_pool.emplace( level );
 
     if (!itr) {
       throw std::bad_alloc();
     }
 
-    // set the circular_pool node to allow O(1) deallocate
-    itr->m_circular_pool_node = reinterpret_cast<void*>(circular_pool_node_type::get_node(itr));
-    __sync_synchronize();
+    // set the pool node to allow O(1) deallocate
+    itr->m_pool_node = reinterpret_cast<void*>(pool_node_type::get_node(itr));
+    std::atomic_thread_fence( std::memory_order_seq_cst );
 
     return reinterpret_cast<pointer>(itr->m_buffer);
   }
@@ -125,11 +134,11 @@ public:
     }
 
     Node * node = reinterpret_cast<Node *>(p);
-    circular_pool_node_type * circular_pool_node = reinterpret_cast<circular_pool_node_type *>(node->m_circular_pool_node);
-    typename internal_circular_pool_type::iterator itr = circular_pool_node->get_iterator( node );
+    pool_node_type * pool_node = reinterpret_cast<pool_node_type *>(node->m_pool_node);
+    typename internal_pool_type::iterator itr = pool_node->get_iterator( node );
 
     if (itr) {
-      m_circular_pool.erase(itr);
+      m_pool.erase(itr);
     }
     else {
       printf("Error: double deallocate.");
@@ -137,7 +146,8 @@ public:
   }
 
 private:
-  internal_circular_pool_type m_circular_pool;
+  internal_pool_type m_pool;
+  ThreadIDMapper     m_mapper{};
 };
 
 } // namespace Lockfree

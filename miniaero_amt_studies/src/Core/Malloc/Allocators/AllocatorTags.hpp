@@ -25,7 +25,11 @@
 #ifndef CORE_MALLOC_ALLOCATORTAGS_HPP
 #define CORE_MALLOC_ALLOCATORTAGS_HPP
 
-#include <Core/Lockfree/Lockfree.hpp>
+#include <Core/Malloc/Allocators/AlignedAllocator.hpp>
+#include <Core/Malloc/Allocators/HybridAllocator.hpp>
+#include <Core/Malloc/Allocators/MallocAllocator.hpp>
+#include <Core/Malloc/Allocators/MMapAllocator.hpp>
+#include <Core/Malloc/Allocators/TrackingAllocator.hpp>
 
 #include <sci_defs/mpi_defs.h>
 
@@ -81,25 +85,25 @@ struct MallocStats
 
 }} // end namespace Uintah::Impl
 
-#define UINTAH_CREATE_TAG(TagName)                                  \
-  struct TagName : public ::Uintah::Impl::TagBase                   \
-  {                                                                 \
-    static constexpr const char* const name()                       \
-    { return #TagName; }                                            \
-    virtual ::Uintah::Impl::TagData data() const                    \
-    {                                                               \
-      ::Uintah::Impl::TagData d;                                    \
-      d.name = name();                                              \
-      d.alloc_size  = ::Lockfree::TagStats<TagName>::alloc_size();  \
-      d.high_water  = ::Lockfree::TagStats<TagName>::high_water();  \
-      d.num_alloc   = ::Lockfree::TagStats<TagName>::num_alloc();   \
-      d.num_dealloc = ::Lockfree::TagStats<TagName>::num_dealloc(); \
-      d.h0          = ::Lockfree::TagStats<TagName>::histogram(0);  \
-      d.h1          = ::Lockfree::TagStats<TagName>::histogram(1);  \
-      d.h2          = ::Lockfree::TagStats<TagName>::histogram(2);  \
-      d.h3          = ::Lockfree::TagStats<TagName>::histogram(3);  \
-      return d;                                                     \
-    }                                                               \
+#define UINTAH_CREATE_TAG(TagName)                                    \
+  struct TagName : public ::Uintah::Impl::TagBase                     \
+  {                                                                   \
+    static constexpr const char* const name()                         \
+    { return #TagName; }                                              \
+    virtual ::Uintah::Impl::TagData data() const                      \
+    {                                                                 \
+      ::Uintah::Impl::TagData d;                                      \
+      d.name = name();                                                \
+      d.alloc_size  = ::Allocators::TagStats<TagName>::alloc_size();  \
+      d.high_water  = ::Allocators::TagStats<TagName>::high_water();  \
+      d.num_alloc   = ::Allocators::TagStats<TagName>::num_alloc();   \
+      d.num_dealloc = ::Allocators::TagStats<TagName>::num_dealloc(); \
+      d.h0          = ::Allocators::TagStats<TagName>::histogram(0);  \
+      d.h1          = ::Allocators::TagStats<TagName>::histogram(1);  \
+      d.h2          = ::Allocators::TagStats<TagName>::histogram(2);  \
+      d.h3          = ::Allocators::TagStats<TagName>::histogram(3);  \
+      return d;                                                       \
+    }                                                                 \
   }
 
 #define UINTAH_REGISTER_TAG(TagName)                                         \
@@ -125,20 +129,20 @@ UINTAH_CREATE_TAG(Array3Data);
 namespace Uintah {
 
 template < typename T, typename Tag, template< typename > class BaseAllocator >
-using TrackingAllocator = Lockfree::TrackingAllocator< T, Tag, BaseAllocator >;
+using TrackingAllocator = Allocators::TrackingAllocator< T, Tag, BaseAllocator >;
 
 namespace Impl {
 
 template < typename T >
 using MMapAllocator = TrackingAllocator<   T
                                          , Tags::Global
-                                         , Lockfree::MMapAllocator
+                                         , Allocators::MMapAllocator
                                        >;
 
 template < typename T >
 using MallocAllocator = TrackingAllocator<   T
                                            , Tags::Global
-                                           , Lockfree::MallocAllocator
+                                           , Allocators::MallocAllocator
                                          >;
 } // end namespace Impl
 
@@ -156,13 +160,7 @@ using MallocAllocator = TrackingAllocator<   T
                                          >;
 
 template < typename T >
-using PoolAllocator = Lockfree::PoolAllocator<   T
-                                               , Uintah::MMapAllocator
-                                               , Uintah::MallocAllocator
-                                             >;
-
-template < typename T >
-using HybridAllocator = Lockfree::HybridAllocator<   T
+using HybridAllocator = Allocators::HybridAllocator<   T
                                                    , 4096ull * 8
                                                    , Uintah::MallocAllocator
                                                    , Uintah::MMapAllocator
@@ -177,9 +175,9 @@ using HybridAllocator = Lockfree::HybridAllocator<   T
 // the reduction operations
 void print_malloc_stats(MPI_Comm comm, int time_step, int root = 0);
 
-template < typename T > using TagStats = Lockfree::TagStats< T >;
+template < typename T > using TagStats = Allocators::TagStats< T >;
 
-using GlobalStats = Lockfree::TagStats<Tags::Global>;
+using GlobalStats = Allocators::TagStats<Tags::Global>;
 
 } // end namespace Uintah
 
