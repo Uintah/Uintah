@@ -30,6 +30,7 @@
 #include <Core/Malloc/AllocatorTags.hpp>
 
 #include <mutex>
+#include <queue>
 #include <thread>
 
 namespace Uintah {
@@ -41,12 +42,12 @@ class TaskRunner;
 using clock_type = std::chrono::high_resolution_clock;
 using nanoseconds = std::chrono::nanoseconds;
 
-using TaskQueue = Lockfree::CircularPool<   DetailedTask*
-                                          , Lockfree::ENABLE_SIZE         // size model
-                                          , Lockfree::EXCLUSIVE_INSTANCE // usage model
-                                          , Uintah::MallocAllocator      // allocator
-                                          , Uintah::MallocAllocator      // size_type allocator
-                                        >;
+using TaskPool = Lockfree::CircularPool<   DetailedTask*
+                                         , Lockfree::ENABLE_SIZE         // size model
+                                         , Lockfree::EXCLUSIVE_INSTANCE // usage model
+                                         , Uintah::MallocAllocator      // allocator
+                                         , Uintah::MallocAllocator      // size_type allocator
+                                       >;
 
 
 /**************************************
@@ -119,9 +120,13 @@ class ThreadFunneledScheduler : public MPIScheduler {
     ThreadFunneledScheduler( ThreadFunneledScheduler && )                 = delete;
     ThreadFunneledScheduler& operator=( ThreadFunneledScheduler && )      = delete;
 
-    static void init_threads(ThreadFunneledScheduler * scheduler, int num_threads);
+    DetailedTask* get_reduction_task();
 
-    void run_task( DetailedTask* task, int iteration);
+    void process_mpi( int iteration );
+
+    static void init_threads( ThreadFunneledScheduler * scheduler, int num_threads );
+
+    void run_task( DetailedTask* task, int iteration );
 
     void select_tasks();
 
@@ -130,13 +135,19 @@ class ThreadFunneledScheduler : public MPIScheduler {
     static void set_runner( TaskRunner*, int tid );
 
 
-    std::mutex  m_scheduler_lock{};       // scheduler lock (acquire and release quickly)
+    TaskPool   m_task_pool{};
+    TaskPool   m_mpi_pending_pool{};
+    TaskPool   m_mpi_test_pool{};
 
+    std::queue<DetailedTask*>                 m_reduction_tasks{};
+    std::vector<std::vector<DetailedTask*> >  m_phase_task_list{};
+
+    Lockfree::Timer  m_mpi_test_time{};
 
     // thread shared data, needs lock protection when accessed
     std::vector<int>           m_phase_tasks{};
     std::vector<int>           m_phase_tasks_done{};
-    std::vector<DetailedTask*> m_phase_sync_tasks{};
+//    std::vector<DetailedTask*> m_phase_sync_tasks{};
     DetailedTasks*             m_detailed_tasks{};
 
     bool     m_abort{ false };
@@ -161,7 +172,6 @@ class TaskRunner {
       : m_scheduler{ scheduler }
       , m_task_wait_time{}
       , m_task_exec_time{}
-      , m_mpi_test_time{}
     {}
 
     ~TaskRunner() {};
@@ -174,7 +184,6 @@ class TaskRunner {
     ThreadFunneledScheduler*  m_scheduler{ nullptr };
     Lockfree::Timer           m_task_wait_time{};
     Lockfree::Timer           m_task_exec_time{};
-    Lockfree::Timer           m_mpi_test_time{};
 
 
     TaskRunner( const TaskRunner & )            = delete;

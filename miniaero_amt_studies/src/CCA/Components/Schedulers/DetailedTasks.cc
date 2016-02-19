@@ -148,7 +148,8 @@ DetailedTasks::assignMessageTags( int me )
   // maps from, to (process) pairs to indices for each batch of that pair
   std::map<std::pair<int, int>, int> perPairBatchIndices;
 
-  for (int i = 0; i < (int)m_dep_batches.size(); i++) {
+  size_t num_dep_batches = m_dep_batches.size();
+  for (size_t i = 0; i < num_dep_batches; i++) {
     DependencyBatch* batch = m_dep_batches[i];
     int from = batch->m_from_task->getAssignedResourceIndex();
     ASSERTRANGE(from, 0, m_proc_group->size());
@@ -193,7 +194,8 @@ DetailedTasks::add( DetailedTask* task )
 void
 DetailedTasks::makeDWKeyDatabase()
 {
-  for (int i = 0; i < (int)m_local_tasks.size(); i++) {
+  size_t num_tasks = m_tasks.size();
+  for (size_t i = 0; i < num_tasks; i++) {
     DetailedTask* task = m_local_tasks[i];
     //for reduction task check modifies other task check computes
     const Task::Dependency *comp = task->getTask()->isReductionTask() ? task->getTask()->getModifies() : task->getTask()->getComputes();
@@ -231,7 +233,8 @@ DetailedTasks::computeLocalTasks( int me )
 
   int order = 0;
   m_initially_ready_tasks = TaskQueue();
-  for (int i = 0; i < (int)m_tasks.size(); i++) {
+  size_t num_tasks = m_tasks.size();
+  for (size_t i = 0; i < num_tasks; i++) {
     DetailedTask* task = m_tasks[i];
 
     ASSERTRANGE(task->getAssignedResourceIndex(), 0, m_proc_group->size());
@@ -374,7 +377,7 @@ DetailedTasks::initializeScrubs( std::vector<OnDemandDataWarehouseP> & dws
   }
 
   std::vector<bool> initialized(dws.size(), false);
-  for (int i = 0; i < (int)Task::TotalDWs; i++) {
+  for (size_t i = 0; i < Task::TotalDWs; i++) {
     if (dwmap[i] < 0) {
       continue;
     }
