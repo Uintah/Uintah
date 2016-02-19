@@ -26,8 +26,9 @@
 #define CCA_COMPONENTS_SCHEDULERS_THREADFUNNELEDSCHEDULER_H
 
 #include <CCA/Components/Schedulers/MPIScheduler.h>
-#include <Core/Lockfree/Lockfree_Timer.hpp>
-#include <Core/Malloc/AllocatorTags.hpp>
+#include <Core/Lockfree/Lockfree_Pool.hpp>
+#include <Core/Malloc/Allocators/AllocatorTags.hpp>
+#include <Core/Util/Timers/Timers.hpp>
 
 #include <mutex>
 #include <queue>
@@ -42,12 +43,10 @@ class TaskRunner;
 using clock_type = std::chrono::high_resolution_clock;
 using nanoseconds = std::chrono::nanoseconds;
 
-using TaskPool = Lockfree::CircularPool<   DetailedTask*
-                                         , Lockfree::ENABLE_SIZE         // size model
-                                         , Lockfree::EXCLUSIVE_INSTANCE // usage model
-                                         , Uintah::MallocAllocator      // allocator
-                                         , Uintah::MallocAllocator      // size_type allocator
-                                       >;
+using TaskPool = Lockfree::Pool< DetailedTask*
+                               , Uintah::MallocAllocator      // allocator
+                               , Uintah::MallocAllocator      // size_type allocator
+                               >;
 
 
 /**************************************
@@ -134,15 +133,17 @@ class ThreadFunneledScheduler : public MPIScheduler {
 
     static void set_runner( TaskRunner*, int tid );
 
+    static constexpr size_t one = 1;
+
 
     TaskPool   m_task_pool{};
-    TaskPool   m_mpi_pending_pool{};
     TaskPool   m_mpi_test_pool{};
+    TaskPool   m_mpi_pending_pool{};
 
     std::queue<DetailedTask*>                 m_reduction_tasks{};
     std::vector<std::vector<DetailedTask*> >  m_phase_task_list{};
 
-    Lockfree::Timer  m_mpi_test_time{};
+    Timers::Simple  m_mpi_test_time{};
 
     // thread shared data, needs lock protection when accessed
     std::vector<int>           m_phase_tasks{};
@@ -182,8 +183,9 @@ class TaskRunner {
   private:
 
     ThreadFunneledScheduler*  m_scheduler{ nullptr };
-    Lockfree::Timer           m_task_wait_time{};
-    Lockfree::Timer           m_task_exec_time{};
+
+    Timers::Simple            m_task_wait_time{};
+    Timers::Simple            m_task_exec_time{};
 
 
     TaskRunner( const TaskRunner & )            = delete;

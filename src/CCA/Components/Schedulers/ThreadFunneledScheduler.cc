@@ -44,7 +44,6 @@ extern std::map<std::string, double> waittimes;
 extern std::map<std::string, double> exectimes;
 
 extern DebugStream execout;
-extern DebugStream taskdbg;
 extern DebugStream timeout;
 extern DebugStream waitout;
 
@@ -55,7 +54,7 @@ namespace {
 DebugStream threaded_dbg(       "ThreadFunneled_DBG",        false);
 DebugStream threaded_threaddbg( "ThreadFunneled_ThreadDBG",  false);
 
-Lockfree::Timer s_total_exec_time {};
+Timers::Simple  s_total_exec_time {};
 std::mutex      s_io_mutex;
 std::mutex      s_lb_mutex;
 
@@ -150,7 +149,8 @@ void thread_fence()
     while (g_thread_states[i] == ThreadState::Active) {
       // std::this_thread::sleep_for( ... )
       // backoff
-      std::this_thread::yield();
+//      std::this_thread::yield();
+      std::this_thread::sleep_for(std::chrono::nanoseconds(100));
     }
   }
   std::atomic_thread_fence(std::memory_order_seq_cst);
@@ -280,6 +280,7 @@ void ThreadFunneledScheduler::execute(  int tgnum     /*=0*/ , int iteration /*=
   m_detailed_tasks->initTimestep();
 
   m_num_tasks = m_detailed_tasks->numLocalTasks();
+  printf("Total=%i  Done=%i\n", m_num_tasks, m_num_tasks_done);
   for (int i = 0; i < m_num_tasks; i++) {
     m_detailed_tasks->localTask(i)->resetDependencyCounts();
   }
@@ -338,6 +339,7 @@ void ThreadFunneledScheduler::execute(  int tgnum     /*=0*/ , int iteration /*=
     } else {
       // this calls postMPIRecvs for the task
       initiateTask(dtask, m_abort, m_abort_point, m_current_iteration);
+      dtask->markInitiated();
       m_mpi_test_pool.insert(dtask);
     }
   }
@@ -375,7 +377,7 @@ void ThreadFunneledScheduler::execute(  int tgnum     /*=0*/ , int iteration /*=
     computeNetRunTimeStats(d_sharedState->d_runTimeStats);
     double thread_wait_time = 0.0;
     for (int i = 1; i < m_num_threads; i++) {
-      thread_wait_time += Impl::g_runners[i]->m_task_wait_time.elapsed();
+      thread_wait_time += Impl::g_runners[i]->m_task_wait_time.nanoseconds();
     }
     d_sharedState->d_runTimeStats[SimulationState::TaskWaitThreadTime] += (thread_wait_time / (m_num_threads - 1) );
   }
@@ -397,33 +399,36 @@ void ThreadFunneledScheduler::execute(  int tgnum     /*=0*/ , int iteration /*=
 //
 void ThreadFunneledScheduler::select_tasks()
 {
-  while (m_num_tasks_done < m_num_tasks) {
+  auto external_ready_functor =[&](DetailedTask* const& dtask)->bool{ return (dtask->getExternalDepCount() == 0) && useInternalDeps(); };
+  auto internal_ready_functor =[&](DetailedTask* const& dtask)->bool{ return dtask->areInternalDependenciesSatisfied(); };
 
-    thread_local DetailedTask* ready_task = nullptr;
+  while (*((volatile int *)&m_num_tasks_done) < m_num_tasks - 1) {
+    printf("Total=%i  Done=%i\n", m_num_tasks, m_num_tasks_done);
 
-    auto external_ready_functor =[&](DetailedTask* const& dtask)->bool{ return (dtask->getExternalDepCount() == 0) && useInternalDeps(); };
-    auto internal_ready_functor =[&](DetailedTask* const& dtask)->bool{ return dtask->areInternalDependenciesSatisfied(); };
+    DetailedTask* ready_task = nullptr;
+    TaskPool::iterator iter;
 
     //externally ready task
-    TaskPool::iterator iter = m_mpi_test_pool.find_any(external_ready_functor);
+    iter = m_mpi_test_pool.find_any(external_ready_functor);
     if (iter) {
       ready_task = *iter;
       m_mpi_test_pool.erase(iter);
     }
 
     // internally ready task
-    else {
-      iter = m_task_pool.find_any(internal_ready_functor);
-      if (iter) {
-        ready_task = *iter;
-        m_task_pool.erase(iter);
-      }
+    iter = m_task_pool.find_any(internal_ready_functor);
+    if (iter) {
+      ready_task = *iter;
+      m_task_pool.erase(iter);
     }
 
-    run_task(ready_task, m_current_iteration);
-
-    // now place the task in the mpi pending queue for the main thread to post MPI sends
-    m_mpi_pending_pool.insert(ready_task);
+    // run task and place into MPI pending queue for the main thread to post the task's sends
+    if (ready_task) {
+      run_task(ready_task, m_current_iteration);
+      m_mpi_pending_pool.insert(ready_task);
+    } else {
+      continue;
+    }
 
   }  //end while tasks
 }
@@ -431,7 +436,7 @@ void ThreadFunneledScheduler::select_tasks()
 
 //______________________________________________________________________
 //
-void ThreadFunneledScheduler::run_task( DetailedTask * task , int iteration )
+void ThreadFunneledScheduler::run_task( DetailedTask * task, int iteration )
 {
   if (waitout.active()) {
     std::lock_guard<std::mutex> wait_guard(s_io_mutex);
@@ -454,7 +459,7 @@ void ThreadFunneledScheduler::run_task( DetailedTask * task , int iteration )
   // -------------------------< begin task execution timing >-------------------------
   Impl::g_runners[Impl::t_tid]->m_task_exec_time.reset();
   task->doit(d_myworld, dws, plain_old_dws);
-  double total_task_time = Impl::g_runners[Impl::t_tid]->m_task_exec_time.elapsed();
+  double total_task_time = Impl::g_runners[Impl::t_tid]->m_task_exec_time.nanoseconds();
   // -------------------------< end task execution timing >---------------------------
 
 
@@ -468,7 +473,6 @@ void ThreadFunneledScheduler::run_task( DetailedTask * task , int iteration )
     if (execout.active()) {
       exectimes[task->getTask()->getName()] += total_task_time;
     }
-
     // If I do not have a sub scheduler
     if (!task->getTask()->getHasSubScheduler()) {
       //add my task time to the total time
@@ -488,29 +492,34 @@ void ThreadFunneledScheduler::run_task( DetailedTask * task , int iteration )
 //
 void ThreadFunneledScheduler::process_mpi( int iteration )
 {
-  while (m_num_tasks_done < m_num_tasks) {
 
-    DetailedTask* ready_task = nullptr;
+  auto mpi_send_task = [](DetailedTask* const& dtask)->bool { return true; };
+
+
+  while (m_num_tasks_done < m_num_tasks) {
+    printf("Total=%i  Done=%i\n", m_num_tasks, m_num_tasks_done);
 
     while (m_phase_tasks_done[m_current_phase] != m_phase_tasks[m_current_phase] - 1) {
 
       processMPIRecvs(TEST);
 
+      DetailedTask* ready_task = nullptr;
       TaskPool::iterator iter;
-      auto mpi_send_task = [](DetailedTask* const& dtask)->bool {return dtask != nullptr;};
-      while (iter = m_mpi_test_pool.find_any(mpi_send_task)) {
+      while (iter = m_mpi_pending_pool.find_any(mpi_send_task)) {
         ready_task = *iter;
         postMPISends(ready_task, iteration);
         ready_task->done(dws);
+
+        m_phase_tasks_done[m_current_phase]++;
         m_num_tasks_done++;
-        m_mpi_test_pool.erase(iter);
+        m_mpi_pending_pool.erase(iter);
       }
 
 
       // -------------------------< begin MPI test timing >-------------------------
       m_mpi_test_time.reset();
       sends_[0].testsome(d_myworld);
-      mpi_info_[TotalTestMPI] += m_mpi_test_time.elapsed();
+      mpi_info_[TotalTestMPI] += m_mpi_test_time.nanoseconds();
       // -------------------------< end MPI test timing >-------------------------
 
 
@@ -523,20 +532,31 @@ void ThreadFunneledScheduler::process_mpi( int iteration )
         mpi_info_.reset(0);
       }
 
-    } // while (m_phase_tasks_done[m_current_phase]
+    } // while (m_phase_tasks_done[m_current_phase] - break out when done and add next phase tasks to internal ready Q
 
-    Impl::thread_fence();
-
-    for (int i = 1; i < m_num_threads; i++) {
-      Impl::g_thread_states[i] = Impl::ThreadState::Inactive;
-    }
-
-    DetailedTask* reduction_task = m_reduction_tasks.front();
-    m_reduction_tasks.pop();
+    DetailedTask* reduction_task = get_reduction_task();
     initiateReduction(reduction_task);
 
+    m_phase_tasks_done[m_current_phase]++;
     m_num_tasks_done++;
     m_current_phase++;
+
+    // load the task queue with the next wave of tasks for threads to execute then process MPI again
+    std::vector<DetailedTask*> next_tasks = m_phase_task_list[m_current_phase];
+    size_t num_next_tasks = next_tasks.size();
+    for (size_t i = 0; i < num_next_tasks; ++i) {
+      DetailedTask* dtask = next_tasks[i];
+
+      if (dtask->getRequires().size() == 0) {
+        dtask->markInitiated();
+        m_task_pool.insert(dtask);
+      } else {
+        // this calls postMPIRecvs for the task
+        initiateTask(dtask, m_abort, m_abort_point, m_current_iteration);
+        dtask->markInitiated();
+        m_mpi_test_pool.insert(dtask);
+      }
+    }
 
     // reset per-thread wait times and activate
     for (int i = 1; i < m_num_threads; i++) {
