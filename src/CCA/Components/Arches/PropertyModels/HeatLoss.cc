@@ -46,6 +46,8 @@ HeatLoss::problemSetup( const ProblemSpecP& inputdb )
 {
   ProblemSpecP db = inputdb; 
 
+  _boundary_condition->problemSetup( db, _prop_name );
+
   if ( db->findBlock("constant_heat_loss") ){ 
 
     _constant_heat_loss = true; 
