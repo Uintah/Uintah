@@ -278,9 +278,8 @@ void ThreadFunneledScheduler::execute(  int tgnum     /*=0*/ , int iteration /*=
   m_detailed_tasks = tg->getDetailedTasks();
   m_detailed_tasks->initializeScrubs(dws, dwmap);
   m_detailed_tasks->initTimestep();
-
   m_num_tasks = m_detailed_tasks->numLocalTasks();
-  printf("Total=%i  Done=%i\n", m_num_tasks, m_num_tasks_done);
+
   for (int i = 0; i < m_num_tasks; i++) {
     m_detailed_tasks->localTask(i)->resetDependencyCounts();
   }
@@ -399,11 +398,15 @@ void ThreadFunneledScheduler::execute(  int tgnum     /*=0*/ , int iteration /*=
 //
 void ThreadFunneledScheduler::select_tasks()
 {
-  auto external_ready_functor =[&](DetailedTask* const& dtask)->bool{ return (dtask->getExternalDepCount() == 0) && useInternalDeps(); };
-  auto internal_ready_functor =[&](DetailedTask* const& dtask)->bool{ return dtask->areInternalDependenciesSatisfied(); };
+  auto external_ready_functor =[&](DetailedTask* const& dtask)->bool{
+    return (dtask->getExternalDepCount() == 0u) && useInternalDeps();
+   };
+
+  auto internal_ready_functor =[&](DetailedTask* const& dtask)->bool{
+    return dtask->getInternalRequires().size() == 0u;
+   };
 
   while (*((volatile int *)&m_num_tasks_done) < m_num_tasks - 1) {
-    printf("Total=%i  Done=%i\n", m_num_tasks, m_num_tasks_done);
 
     DetailedTask* ready_task = nullptr;
     TaskPool::iterator iter;
@@ -446,9 +449,9 @@ void ThreadFunneledScheduler::run_task( DetailedTask * task, int iteration )
     }
   }
 
-  if (trackingVarsPrintLocation_ & SchedulerCommon::PRINT_BEFORE_EXEC) {
-    printTrackedVars(task, SchedulerCommon::PRINT_BEFORE_EXEC);
-  }
+//  if (trackingVarsPrintLocation_ & SchedulerCommon::PRINT_BEFORE_EXEC) {
+//    printTrackedVars(task, SchedulerCommon::PRINT_BEFORE_EXEC);
+//  }
 
   std::vector<DataWarehouseP> plain_old_dws(dws.size());
   for (int i = 0; i < (int)dws.size(); i++) {
@@ -457,33 +460,33 @@ void ThreadFunneledScheduler::run_task( DetailedTask * task, int iteration )
 
 
   // -------------------------< begin task execution timing >-------------------------
-  Impl::g_runners[Impl::t_tid]->m_task_exec_time.reset();
+//  Impl::g_runners[Impl::t_tid]->m_task_exec_time.reset();
   task->doit(d_myworld, dws, plain_old_dws);
-  double total_task_time = Impl::g_runners[Impl::t_tid]->m_task_exec_time.nanoseconds();
+//  double total_task_time = Impl::g_runners[Impl::t_tid]->m_task_exec_time.nanoseconds();
   // -------------------------< end task execution timing >---------------------------
 
 
-  if (trackingVarsPrintLocation_ & SchedulerCommon::PRINT_AFTER_EXEC) {
-    printTrackedVars(task, SchedulerCommon::PRINT_AFTER_EXEC);
-  }
-
-  // TODO - FIXME - should become lock-free
-  std::lock_guard<std::mutex> lb_guard(s_lb_mutex);
-  {
-    if (execout.active()) {
-      exectimes[task->getTask()->getName()] += total_task_time;
-    }
-    // If I do not have a sub scheduler
-    if (!task->getTask()->getHasSubScheduler()) {
-      //add my task time to the total time
-      // TODO - FIXME: this is wrong, shold be computed nthreads-1 separate times and then averaged (also need to be atomic) - APH (02/17/16)
-      mpi_info_[TotalTask] += total_task_time;
-      if (!d_sharedState->isCopyDataTimestep() && task->getTask()->getType() != Task::Output) {
-        // add contribution of task execution time to load balancer
-        getLoadBalancer()->addContribution(task, total_task_time);
-      }
-    }
-  } // std::lock_guard<std::mutex> lb_guard(s_lb_mutex);
+//  if (trackingVarsPrintLocation_ & SchedulerCommon::PRINT_AFTER_EXEC) {
+//    printTrackedVars(task, SchedulerCommon::PRINT_AFTER_EXEC);
+//  }
+//
+//  // TODO - FIXME - should become lock-free
+//  std::lock_guard<std::mutex> lb_guard(s_lb_mutex);
+//  {
+//    if (execout.active()) {
+//      exectimes[task->getTask()->getName()] += total_task_time;
+//    }
+//    // If I do not have a sub scheduler
+//    if (!task->getTask()->getHasSubScheduler()) {
+//      //add my task time to the total time
+//      // TODO - FIXME: this is wrong, shold be computed nthreads-1 separate times and then averaged (also need to be atomic) - APH (02/17/16)
+//      mpi_info_[TotalTask] += total_task_time;
+//      if (!d_sharedState->isCopyDataTimestep() && task->getTask()->getType() != Task::Output) {
+//        // add contribution of task execution time to load balancer
+//        getLoadBalancer()->addContribution(task, total_task_time);
+//      }
+//    }
+//  } // std::lock_guard<std::mutex> lb_guard(s_lb_mutex);
 
 }  // end runTask()
 
@@ -497,7 +500,6 @@ void ThreadFunneledScheduler::process_mpi( int iteration )
 
 
   while (m_num_tasks_done < m_num_tasks) {
-    printf("Total=%i  Done=%i\n", m_num_tasks, m_num_tasks_done);
 
     while (m_phase_tasks_done[m_current_phase] != m_phase_tasks[m_current_phase] - 1) {
 
@@ -534,8 +536,14 @@ void ThreadFunneledScheduler::process_mpi( int iteration )
 
     } // while (m_phase_tasks_done[m_current_phase] - break out when done and add next phase tasks to internal ready Q
 
-    DetailedTask* reduction_task = get_reduction_task();
-    initiateReduction(reduction_task);
+    DetailedTask* once_per_proc_task = get_reduction_task();
+    ASSERT(once_per_proc_task->getRequires().size() == 0);
+    if (once_per_proc_task->getTask()->getType() == Task::Reduction) {
+      initiateReduction(once_per_proc_task);
+    } else {
+      run_task(once_per_proc_task, iteration);
+      once_per_proc_task->done(dws);
+    }
 
     m_phase_tasks_done[m_current_phase]++;
     m_num_tasks_done++;
@@ -557,15 +565,7 @@ void ThreadFunneledScheduler::process_mpi( int iteration )
         m_mpi_test_pool.insert(dtask);
       }
     }
-
-    // reset per-thread wait times and activate
-    for (int i = 1; i < m_num_threads; i++) {
-      Impl::g_runners[i]->m_task_wait_time.reset();
-      Impl::g_thread_states[i] = Impl::ThreadState::Active;
-    }
-
   } // while (m_num_tasks_done < m_num_tasks)
-
 }
 
 
