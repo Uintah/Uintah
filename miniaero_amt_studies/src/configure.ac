@@ -3038,6 +3038,9 @@ if test "$HAVE_LAPACK" != "yes"; then
                        Accelerate/Accelerate.h,,,,-framework Accelerate,,optional)
           if test "$HAVE_LAPACK" = yes ; then
              LAPACK_LIB_FLAG="-framework Accelerate"
+          else
+             # using macports gcc, clang, etc (not default Apple LLVM); use system installation of lapack
+             SCI_TRY_LINK(LAPACK,lapack library,,,lapack,$_sci_lib,$BLAS_LIB_DIR_FLAG $BLAS_LIB_FLAG $F_LIB_DIR_FLAG $F_LIB_FLAG,,optional)
           fi
        else
           SCI_TRY_LINK(LAPACK,Old Mac lapack version of libraries and headers,
