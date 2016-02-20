@@ -66,7 +66,6 @@ PSELIBS := \
         Core/Exceptions  \
         Core/Geometry    \
         Core/Grid        \
-        Core/Lockfree    \
         Core/Math        \
         Core/OS          \
         Core/Parallel    \
