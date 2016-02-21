@@ -506,7 +506,7 @@ OnDemandDataWarehouse::sendMPI(       DependencyBatch*       batch,
                                 const VarLabel*              pos_var,
                                       BufferInfo&            buffer,
                                       OnDemandDataWarehouse* old_dw,
-                                const DetailedDependency*           dep,
+                                const DetailedDep*           dep,
                                       LoadBalancer*          lb )
 {
   if( dep->isNonDataDependency() ) {
@@ -517,21 +517,21 @@ OnDemandDataWarehouse::sendMPI(       DependencyBatch*       batch,
     return;
   }
 
-  const VarLabel* label = dep->m_req->var;
-  const Patch* patch = dep->m_from_patch;
-  int matlIndex = dep->m_matl;
+  const VarLabel* label = dep->req->var;
+  const Patch* patch = dep->fromPatch;
+  int matlIndex = dep->matl;
 
   switch ( label->typeDescription()->getType() ) {
     case TypeDescription::ParticleVariable : {
-      IntVector low = dep->m_low;
-      IntVector high = dep->m_high;
+      IntVector low = dep->low;
+      IntVector high = dep->high;
 
       if( !d_varDB.exists( label, matlIndex, patch ) ) {
         SCI_THROW( UnknownVariable(label->getName(), getID(), patch, matlIndex, "in sendMPI", __FILE__, __LINE__) );
       }
       ParticleVariableBase* var = dynamic_cast<ParticleVariableBase*>( d_varDB.get( label, matlIndex, patch ) );
 
-      int dest = batch->m_to_tasks.front()->getAssignedResourceIndex();
+      int dest = batch->toTasks.front()->getAssignedResourceIndex();
       ASSERTRANGE( dest, 0, d_myworld->size() );
 
       ParticleSubset* sendset = 0;
@@ -584,13 +584,13 @@ OnDemandDataWarehouse::sendMPI(       DependencyBatch*       batch,
     case TypeDescription::SFCYVariable :
     case TypeDescription::SFCZVariable : {
       if (!d_varDB.exists(label, matlIndex, patch)) {
-        std::cout << d_myworld->myrank() << "  Needed by " << *dep << " on task " << *dep->m_to_tasks.front() << std::endl;
+        std::cout << d_myworld->myrank() << "  Needed by " << *dep << " on task " << *dep->toTasks.front() << std::endl;
         SCI_THROW(
             UnknownVariable(label->getName(), getID(), patch, matlIndex, "in Task OnDemandDataWarehouse::sendMPI", __FILE__, __LINE__));
       }
       GridVariableBase* var;
       var = dynamic_cast<GridVariableBase*>( d_varDB.get( label, matlIndex, patch ) );
-      var->getMPIBuffer( buffer, dep->m_low, dep->m_high );
+      var->getMPIBuffer( buffer, dep->low, dep->high );
       buffer.addSendlist( var->getRefCounted() );
     }
       break;
@@ -645,12 +645,12 @@ OnDemandDataWarehouse::exchangeParticleQuantities(       DetailedTasks* dts,
       int i = 0;
       for( std::set<PSPatchMatlGhostRange>::iterator siter = s.begin(); siter != s.end(); siter++, i++ ) {
         const PSPatchMatlGhostRange& pmg = *siter;
-        if( (pmg.dwid_ == DetailedDependency::FirstIteration && iteration > 0)
-            || (pmg.dwid_ == DetailedDependency::SubsequentIterations && iteration == 0) ) {
+        if( (pmg.dwid_ == DetailedDep::FirstIteration && iteration > 0)
+            || (pmg.dwid_ == DetailedDep::SubsequentIterations && iteration == 0) ) {
           // not used
           data[i] = -2;
         }
-        else if( pmg.dwid_ == DetailedDependency::FirstIteration && iteration == 0
+        else if( pmg.dwid_ == DetailedDep::FirstIteration && iteration == 0
             && lb->getOldProcessorAssignment( pmg.patch_ ) == iter->first ) {
           // signify that the recving proc already has this data.  Only use for the FirstIteration after a LB
           // send -1 rather than force the recving end above to iterate through its set
@@ -713,7 +713,7 @@ OnDemandDataWarehouse::exchangeParticleQuantities(       DetailedTasks* dts,
           continue;
         }
         if( data[i] == -1 ) {
-          ASSERT( pmg.dwid_ == DetailedDependency::FirstIteration && iteration == 0
+          ASSERT( pmg.dwid_ == DetailedDep::FirstIteration && iteration == 0
                   && haveParticleSubset( pmg.matl_, pmg.patch_ ) );
           continue;
         }
@@ -745,7 +745,7 @@ void
 OnDemandDataWarehouse::recvMPI(       DependencyBatch*       batch,
                                       BufferInfo&            buffer,
                                       OnDemandDataWarehouse* old_dw,
-                                const DetailedDependency*           dep,
+                                const DetailedDep*           dep,
                                       LoadBalancer*          lb )
 {
   if( dep->isNonDataDependency() ) {
@@ -756,14 +756,14 @@ OnDemandDataWarehouse::recvMPI(       DependencyBatch*       batch,
     return;
   }
 
-  const VarLabel* label = dep->m_req->var;
-  const Patch* patch = dep->m_from_patch;
-  int matlIndex = dep->m_matl;
+  const VarLabel* label = dep->req->var;
+  const Patch* patch = dep->fromPatch;
+  int matlIndex = dep->matl;
 
   switch ( label->typeDescription()->getType() ) {
     case TypeDescription::ParticleVariable : {
-      IntVector low = dep->m_low;
-      IntVector high = dep->m_high;
+      IntVector low = dep->low;
+      IntVector high = dep->high;
       bool whole_patch_pset = false;
       // First, get the particle set.  We should already have it
       //      if(!old_dw->haveParticleSubset(matlIndex, patch, gt, ngc)){
@@ -826,7 +826,7 @@ OnDemandDataWarehouse::recvMPI(       DependencyBatch*       batch,
       //allocate the variable
       GridVariableBase* var =
           dynamic_cast<GridVariableBase*>( label->typeDescription()->createInstance() );
-      var->allocate( dep->m_low, dep->m_high );
+      var->allocate( dep->low, dep->high );
 
       //set the var as foreign
       var->setForeign();
@@ -835,7 +835,7 @@ OnDemandDataWarehouse::recvMPI(       DependencyBatch*       batch,
       //add the var to the dependency batch and set it as invalid.  The variable is now invalid because there is outstanding MPI pointing to the variable.
       batch->addVar( var );
       d_varDB.putForeign( label, matlIndex, patch, var, d_scheduler->isCopyDataTimestep() );  //put new var in data warehouse
-      var->getMPIBuffer( buffer, dep->m_low, dep->m_high );
+      var->getMPIBuffer( buffer, dep->low, dep->high );
     }
       break;
     default :
