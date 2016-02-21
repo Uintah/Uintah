@@ -119,17 +119,18 @@ class ThreadFunneledScheduler : public MPIScheduler {
     ThreadFunneledScheduler( ThreadFunneledScheduler && )                 = delete;
     ThreadFunneledScheduler& operator=( ThreadFunneledScheduler && )      = delete;
 
-    DetailedTask* get_reduction_task();
-
     void process_mpi( int iteration );
-
-    static void init_threads( ThreadFunneledScheduler * scheduler, int num_threads );
-
-    void run_task( DetailedTask* task, int iteration );
 
     void select_tasks();
 
+    void run_task( DetailedTask* task, int iteration );
+
+    void run_sync_task( int iteration );
+
     void thread_fence();
+
+
+    static void init_threads( ThreadFunneledScheduler * scheduler, int num_threads );
 
     static void set_runner( TaskRunner*, int tid );
 
@@ -140,7 +141,6 @@ class ThreadFunneledScheduler : public MPIScheduler {
     TaskPool   m_mpi_test_pool{};
     TaskPool   m_mpi_pending_pool{};
 
-    std::queue<DetailedTask*>                 m_reduction_tasks{};
     std::vector<std::vector<DetailedTask*> >  m_phase_task_list{};
 
     Timers::Simple  m_mpi_test_time{};
@@ -148,7 +148,7 @@ class ThreadFunneledScheduler : public MPIScheduler {
     // thread shared data, needs lock protection when accessed
     std::vector<int>           m_phase_tasks{};
     std::vector<int>           m_phase_tasks_done{};
-//    std::vector<DetailedTask*> m_phase_sync_tasks{};
+    std::vector<DetailedTask*> m_phase_sync_tasks{};
     DetailedTasks*             m_detailed_tasks{};
 
     bool     m_abort{ false };

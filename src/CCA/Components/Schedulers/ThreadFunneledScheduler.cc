@@ -297,6 +297,7 @@ void ThreadFunneledScheduler::execute(  int tgnum     /*=0*/ , int iteration /*=
     dws[dwmap[Task::OldDW]]->exchangeParticleQuantities(m_detailed_tasks, getLoadBalancer(), reloc_new_posLabel_, iteration);
   }
 
+  // clear/resize teh task phase bookkeeping data structures
   m_current_iteration = iteration;
   m_current_phase = 0;
   m_num_phases = tg->getNumTaskPhases();
@@ -304,8 +305,10 @@ void ThreadFunneledScheduler::execute(  int tgnum     /*=0*/ , int iteration /*=
   m_phase_tasks.resize(m_num_phases, 0);
   m_phase_tasks_done.clear();
   m_phase_tasks_done.resize(m_num_phases, 0);
-//  m_phase_sync_tasks.clear();
-//  m_phase_sync_tasks.resize(m_num_phases, nullptr);
+  m_phase_sync_tasks.clear();
+  m_phase_sync_tasks.resize(m_num_phases, nullptr);
+  m_phase_task_list.clear();
+  m_phase_task_list.resize(m_num_phases, std::vector<DetailedTask*>());
 
   // count the number of tasks in each task-phase
   //   each task is assigned a task-phase in TaskGraph::createDetailedDependencies()
@@ -314,14 +317,12 @@ void ThreadFunneledScheduler::execute(  int tgnum     /*=0*/ , int iteration /*=
   }
 
   // organize the tasks by task-phase
-  m_phase_task_list.clear();
-  m_phase_task_list.resize(m_num_phases, std::vector<DetailedTask*>());
   for (int i = 0; i < m_num_tasks; ++i) {
     DetailedTask * dtask = m_detailed_tasks->localTask(i);
+    int task_phase_num = dtask->getTask()->d_phase;
     if (dtask->getTask()->getType() == Task::Reduction || dtask->getTask()->usesMPI()) {
-      m_reduction_tasks.emplace(dtask);
+      m_phase_sync_tasks[task_phase_num] = dtask;
     } else {
-      int task_phase_num = dtask->getTask()->d_phase;
       m_phase_task_list[task_phase_num].emplace_back(dtask);
     }
   }
@@ -496,18 +497,23 @@ void ThreadFunneledScheduler::run_task( DetailedTask * task, int iteration )
 void ThreadFunneledScheduler::process_mpi( int iteration )
 {
 
-  auto mpi_send_task = [](DetailedTask* const& dtask)->bool { return true; };
-
-
   while (m_num_tasks_done < m_num_tasks) {
 
-    while (m_phase_tasks_done[m_current_phase] != m_phase_tasks[m_current_phase] - 1) {
+    while (m_phase_tasks_done[m_current_phase] < m_phase_tasks[m_current_phase]) {
+
+      // If we have a synchronization task in this phase, run it and advance to the next task phase
+      bool is_phase_sync = (m_phase_tasks_done[m_current_phase] == (m_phase_tasks[m_current_phase] - 1)) &&
+                           (m_phase_sync_tasks[m_current_phase]);
+      if (is_phase_sync) {
+        run_sync_task(iteration);
+        break;
+      }
 
       processMPIRecvs(TEST);
 
       DetailedTask* ready_task = nullptr;
       TaskPool::iterator iter;
-      while (iter = m_mpi_pending_pool.find_any(mpi_send_task)) {
+      while (iter = m_mpi_pending_pool.find_any()) {
         ready_task = *iter;
         postMPISends(ready_task, iteration);
         ready_task->done(dws);
@@ -517,13 +523,11 @@ void ThreadFunneledScheduler::process_mpi( int iteration )
         m_mpi_pending_pool.erase(iter);
       }
 
-
       // -------------------------< begin MPI test timing >-------------------------
       m_mpi_test_time.reset();
       sends_[0].testsome(d_myworld);
       mpi_info_[TotalTestMPI] += m_mpi_test_time.nanoseconds();
       // -------------------------< end MPI test timing >-------------------------
-
 
       // Add subscheduler timings to the parent scheduler and reset subscheduler timings
       if (parentScheduler_) {
@@ -534,19 +538,7 @@ void ThreadFunneledScheduler::process_mpi( int iteration )
         mpi_info_.reset(0);
       }
 
-    } // while (m_phase_tasks_done[m_current_phase] - break out when done and add next phase tasks to internal ready Q
-
-    DetailedTask* once_per_proc_task = get_reduction_task();
-    ASSERT(once_per_proc_task->getRequires().size() == 0);
-    if (once_per_proc_task->getTask()->getType() == Task::Reduction) {
-      initiateReduction(once_per_proc_task);
-    } else {
-      MPIScheduler::runTask(once_per_proc_task, iteration);
-    }
-
-    m_phase_tasks_done[m_current_phase]++;
-    m_num_tasks_done++;
-    m_current_phase++;
+    } // while (m_phase_tasks_done[m_current_phase]
 
     // load the task queue with the next wave of tasks for threads to execute then process MPI again
     std::vector<DetailedTask*> next_tasks = m_phase_task_list[m_current_phase];
@@ -570,11 +562,18 @@ void ThreadFunneledScheduler::process_mpi( int iteration )
 
 //______________________________________________________________________
 //
-DetailedTask* ThreadFunneledScheduler::get_reduction_task()
+void ThreadFunneledScheduler::run_sync_task( int iteration )
 {
-  DetailedTask* reduction_task = m_reduction_tasks.front();
-  m_reduction_tasks.pop();
-  return reduction_task;
+  DetailedTask* sync_task = m_phase_sync_tasks[m_current_phase];
+  if (sync_task->getTask()->getType() == Task::Reduction) {
+    initiateReduction(sync_task);
+  } else {
+    MPIScheduler::runTask(sync_task, iteration);
+  }
+
+  m_phase_tasks_done[m_current_phase]++;
+  m_num_tasks_done++;
+  m_current_phase++;
 }
 
 
