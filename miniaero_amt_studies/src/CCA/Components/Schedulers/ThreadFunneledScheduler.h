@@ -160,6 +160,13 @@ class ThreadFunneledScheduler : public MPIScheduler {
     int      m_abort_point{ 0 };
     int      m_num_threads{ 0 };
 
+    bool pools_empty() const {
+//      printf("m_task_pool size %lu\n", m_task_pool.size());
+//      printf("m_mpi_pending_pool size %lu\n", m_mpi_pending_pool.size());
+//      printf("m_mpi_test_pool size %lu\n", m_mpi_test_pool.size());
+      return m_task_pool.empty() && m_mpi_test_pool.empty() && m_mpi_pending_pool.empty();
+    }
+
 };
 
 
