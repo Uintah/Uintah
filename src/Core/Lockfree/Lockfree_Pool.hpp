@@ -271,7 +271,7 @@ public:
   ~Pool()
   {
 
-    if ( m_size &&  m_refcount->fetch_sub(one, std::memory_order_relaxed ) == one ) {
+    if ( m_refcount &&  m_refcount->fetch_sub(one, std::memory_order_relaxed ) == one ) {
 
       for ( size_t i=0; i<m_num_levels; ++i) {
         m_pool_allocator.destroy( m_pools + i );
