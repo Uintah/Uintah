@@ -23,16 +23,17 @@
  */
 
 #include <CCA/Components/Schedulers/ThreadFunneledScheduler.h>
-#include <CCA/Components/Schedulers/OnDemandDataWarehouse.h>
+
 #include <CCA/Components/Schedulers/TaskGraph.h>
+#include <CCA/Components/Schedulers/OnDemandDataWarehouse.h>
 #include <CCA/Ports/Output.h>
 
 #include <Core/Exceptions/ProblemSetupException.h>
 
+#include <atomic>
+#include <chrono>
 #include <cstring>
 #include <thread>
-#include <chrono>
-#include <atomic>
 
 #include <sched.h>
 
