@@ -210,16 +210,6 @@ class MPIScheduler : public SchedulerCommon {
     std::mutex      dlbLock;                // load balancer lock
     std::mutex      waittimesLock;          // MPI wait times lock
 
-  private:
-
-    // disable copy, assignment, and move
-    MPIScheduler( const MPIScheduler & )            = delete;
-    MPIScheduler& operator=( const MPIScheduler & ) = delete;
-    MPIScheduler( MPIScheduler &&)                  = delete;
-    MPIScheduler& operator=( MPIScheduler && )      = delete;
-
-  private:
-
     // Timers for MPI stats
     Timers::Simple  m_last_exec_timer{};
     Timers::Simple  m_task_exec_timer{};
@@ -230,6 +220,15 @@ class MPIScheduler : public SchedulerCommon {
     Timers::Simple  m_mpi_test_timer{};
     Timers::Simple  m_mpi_wait_timer{};
     Timers::Simple  m_mpi_reduce_timer{};
+
+  private:
+
+    // disable copy, assignment, and move
+    MPIScheduler( const MPIScheduler & )            = delete;
+    MPIScheduler& operator=( const MPIScheduler & ) = delete;
+    MPIScheduler( MPIScheduler &&)                  = delete;
+    MPIScheduler& operator=( MPIScheduler && )      = delete;
+
 };
 
 } // End namespace Uintah
