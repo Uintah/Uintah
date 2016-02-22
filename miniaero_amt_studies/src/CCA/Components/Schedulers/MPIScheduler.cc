@@ -252,15 +252,15 @@ MPIScheduler::initiateReduction( DetailedTask* task )
   }
 
   m_mpi_reduce_timer.reset();
+  double reduce_start = m_mpi_reduce_timer.seconds();
 
   runReductionTask(task);
 
-  double reduce_time = m_mpi_reduce_timer.seconds();
+  double total_reduce_time = m_mpi_reduce_timer.seconds();
+  emitNode(task, reduce_start, total_reduce_time, 0);
 
-//  emitNode(task, reducestart, reduceend - reducestart, 0);
-
-  mpi_info_[TotalReduce]    += reduce_time;
-  mpi_info_[TotalReduceMPI] += reduce_time;
+  mpi_info_[TotalReduce]    += total_reduce_time;
+  mpi_info_[TotalReduceMPI] += total_reduce_time;
 }
 
 //______________________________________________________________________
@@ -288,6 +288,7 @@ MPIScheduler::runTask( DetailedTask* task,
 
 
   m_task_exec_timer.reset();
+  double task_start = m_task_exec_timer.seconds();
   task->doit(d_myworld, dws, plain_old_dws);
   double total_task_time = m_task_exec_timer.seconds();
 
@@ -333,7 +334,7 @@ MPIScheduler::runTask( DetailedTask* task,
     mpi_info_.reset(0);
   }
 
-//  emitNode(task, taskstart, total_task_time, 0);
+  emitNode(task, task_start, total_task_time, 0);
 
 }  // end runTask()
 
