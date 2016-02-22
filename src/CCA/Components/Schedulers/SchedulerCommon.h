@@ -23,8 +23,8 @@
  */
 
 
-#ifndef UINTAH_HOMEBREW_SCHEDULERCOMMON_H
-#define UINTAH_HOMEBREW_SCHEDULERCOMMON_H
+#ifndef CCA_COMPONENTS_SCHEDULERS_SCHEDULERCOMMON_H
+#define CCA_COMPONENTS_SCHEDULERS_SCHEDULERCOMMON_H
 
 #include <CCA/Components/Schedulers/OnDemandDataWarehouseP.h>
 #include <CCA/Components/Schedulers/Relocate.h>
@@ -379,7 +379,7 @@ class SchedulerCommon : public Scheduler, public UintahParallelComponent {
 //    std::map<int, int> maxLevelOffsets;
     
   };
-} // End namespace Uintah
+} // namespace Uintah
 
 
-#endif
+#endif // CCA_COMPONENTS_SCHEDULERS_SCHEDULERCOMMON_H

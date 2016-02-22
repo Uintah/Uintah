@@ -510,7 +510,8 @@ void ThreadFunneledScheduler::process_mpi( int iteration )
       DetailedTask* ready_task = nullptr;
       TaskPool::iterator iter;
       while (!m_mpi_pending_pool.empty()) {
-        if (iter = m_mpi_pending_pool.find_any()) {
+        iter  = m_mpi_pending_pool.find_any();
+        if (iter) {
           ready_task = *iter;
           postMPISends(ready_task, iteration);
           ready_task->done(dws);

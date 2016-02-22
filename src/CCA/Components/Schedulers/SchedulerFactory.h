@@ -38,11 +38,12 @@ class ProcessorGroup;
     public:
 
       // this function has a switch for all known Schedulers
-      static SchedulerCommon* create( const ProblemSpecP&   ps,
-                                      const ProcessorGroup* world,
-                                      const Output*         ouput );
+      static SchedulerCommon* create( const ProblemSpecP   & ps
+                                    , const ProcessorGroup * world
+                                    , const Output         * ouput
+                                    );
   };
-} // End namespace Uintah
+} // namespace Uintah
 
 
-#endif // End CCA_COMPONENTS_SCHEDULERS_SCHEDULERFACTORY_H
+#endif // CCA_COMPONENTS_SCHEDULERS_SCHEDULERFACTORY_H
