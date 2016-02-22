@@ -769,7 +769,7 @@ void MPIScheduler::processMPIRecvs( int how_much )
 
   recvLock.lock();
   {
-    clock_type::time_point start = std::chrono::high_resolution_clock::now();
+    m_mpi_wait_timer.reset();
 
     switch (how_much) {
       case TEST :
@@ -806,8 +806,7 @@ void MPIScheduler::processMPIRecvs( int how_much )
         break;
     } // end switch
 
-    clock_type::time_point end = std::chrono::high_resolution_clock::now();
-    double total_wait = std::chrono::duration_cast<nanoseconds>( end - start ).count() * 1.0e-9;
+    double total_wait = m_mpi_wait_timer.seconds();
     mpi_info_[TotalWaitMPI] += total_wait;
     s_current_wait_time += total_wait;
 
