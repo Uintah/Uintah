@@ -125,7 +125,8 @@ namespace Uintah {
       //! - containing data for each time step.
       class TimeData {
         public:    
-          TimeData( DataArchive * da, const std::string & timestepPathAndFilename );
+	TimeData( DataArchive * da, const std::string & timestepPathAndFilename,
+		  const std::string & gridPathAndFilename);
           ~TimeData();
           VarData& findVariableInfo(const std::string& name, const Patch* patch, int matl);
 
@@ -172,6 +173,7 @@ namespace Uintah {
 
           ProblemSpecP  d_timestep_ps_for_component;    // timestep.xml's xml for components.
           std::string   d_ts_path_and_filename;         // Path to timestep.xml.
+	  std::string   d_grid_path_and_filename;       // Path to grid.xml.
           std::string   d_ts_directory;                 // Directory that contains timestep.xml.
           bool          d_swapBytes;
           int           d_nBytes;
@@ -399,11 +401,14 @@ namespace Uintah {
       outputFormat d_outputFileFormat; 
       
       enum {BLANK, REDUCTION_VAR, PATCH_VAR };
-      
-      void PIDX_checkReturnCode( const int rc,
-                                 const std::string warn,
-                                 const char* file, 
-                                 int line);
+ 
+      bool isPIDXEnabled(){
+      #if HAVE_PIDX
+        return true;  
+      #else
+        return false;
+      #endif
+      };
       
       
       //______________________________________________________________________

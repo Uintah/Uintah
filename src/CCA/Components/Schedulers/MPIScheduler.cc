@@ -255,7 +255,7 @@ MPIScheduler::initiateReduction( DetailedTask* task )
 
   runReductionTask(task);
 
-  double reduce_time = m_mpi_reduce_timer.nanoseconds();
+  double reduce_time = m_mpi_reduce_timer.seconds();
 
 //  emitNode(task, reducestart, reduceend - reducestart, 0);
 
@@ -289,7 +289,7 @@ MPIScheduler::runTask( DetailedTask* task,
 
   m_task_exec_timer.reset();
   task->doit(d_myworld, dws, plain_old_dws);
-  double total_task_time = m_task_exec_timer.nanoseconds();
+  double total_task_time = m_task_exec_timer.seconds();
 
 
   if (trackingVarsPrintLocation_ & SchedulerCommon::PRINT_AFTER_EXEC) {
@@ -321,7 +321,7 @@ MPIScheduler::runTask( DetailedTask* task,
 
   m_mpi_test_timer.reset();
   sends_[thread_id].testsome(d_myworld);
-  mpi_info_[TotalTestMPI] += m_mpi_test_timer.nanoseconds();
+  mpi_info_[TotalTestMPI] += m_mpi_test_timer.seconds();
 
 
   // Add subscheduler timings to the parent scheduler and reset subscheduler timings
@@ -513,13 +513,13 @@ MPIScheduler::postMPISends( DetailedTask* task,
       sends_[thread_id].add(requestid, bytes, mpibuff.takeSendlist(), ostr.str(), batch->messageTag);
       sendLock.unlock();
 
-      mpi_info_[TotalSendMPI] += m_mpi_send_timer.nanoseconds();
+      mpi_info_[TotalSendMPI] += m_mpi_send_timer.seconds();
 
       //}
     }
   }  // end for (DependencyBatch* batch = task->getComputes())
 
-  double total_send_time = m_total_send_timer.nanoseconds();
+  double total_send_time = m_total_send_timer.seconds();
   mpi_info_[TotalSend] += total_send_time;
 
   if (dbgst.active() && numSend > 0) {
@@ -734,7 +734,7 @@ void MPIScheduler::postMPIRecvs( DetailedTask* task,
         int bytes = count;
         recvs_.add(requestid, bytes, scinew ReceiveHandler(p_mpibuff, pBatchRecvHandler), ostr.str(), batch->messageTag);
 
-        mpi_info_[TotalRecvMPI] += m_mpi_recv_timer.nanoseconds();
+        mpi_info_[TotalRecvMPI] += m_mpi_recv_timer.seconds();
       }
       else {
         // Nothing really need to be received, but let everyone else know
@@ -750,7 +750,7 @@ void MPIScheduler::postMPIRecvs( DetailedTask* task,
   }
   recvLock.unlock();
 
-  double total_receive_time = m_total_recv_timer.nanoseconds();
+  double total_receive_time = m_total_recv_timer.seconds();
   mpi_info_[TotalRecv] += total_receive_time;
 
 }  // end postMPIRecvs()

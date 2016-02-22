@@ -44,8 +44,10 @@
 #include <Core/Util/Assert.h>
 #include <Core/Util/DebugStream.h>
 #include <Core/Util/XMLUtils.h>
+#include <libxml/xmlreader.h>
 
 #include <iostream>
+#include <sstream>
 #include <iomanip>
 #include <fstream>
 #include <fcntl.h>
@@ -238,9 +240,15 @@ DataArchive::queryTimesteps( vector<int>    & index,
 
           int          timestepNumber;
           double       currentTime;
-          string       ts_path_and_filename = d_filebase + "/" + tsfile; // Usually '.../timestep.xml'
+	  // Usually '.../timestep.xml'
+          string       ts_path_and_filename = d_filebase + "/" + tsfile;
           ProblemSpecP timestepDoc = 0;
 
+	  string::size_type deliminator_index = tsfile.find("/");
+	  string tnumber(tsfile,0,deliminator_index);
+	  // Usually '.../grid.xml'
+	  string       grid_path_and_filename = d_filebase + "/" + tnumber + "/" + "grid.xml"; 
+	
           if( attributes["time"] == "" ) {
             // This block is for earlier versions of the index.xml file that did not
             // contain time information as an attribute of the timestep field.
@@ -263,7 +271,7 @@ DataArchive::queryTimesteps( vector<int>    & index,
 
           d_ts_indices.push_back( timestepNumber );
           d_ts_times.push_back( currentTime );
-          d_timeData.push_back( TimeData( this, ts_path_and_filename ) );
+          d_timeData.push_back( TimeData( this, ts_path_and_filename,grid_path_and_filename ) );
         }
       } // end while
     }
@@ -339,7 +347,18 @@ DataArchive::queryGrid( int index, const ProblemSpecP & ups /* = NULL */, bool a
   double     start    = Time::currentSeconds();
   TimeData & timedata = getTimeData( index );
 
-  FILE * fp = fopen( timedata.d_ts_path_and_filename.c_str(), "r" );
+  FILE* fp = 0;
+  FILE* fp_grid = fopen( timedata.d_grid_path_and_filename.c_str(), "r" );
+
+  // Check if the grid.xml is present, and use that, if it isn't, then use the grid information
+  // that is stored in timestep.xml.
+
+  if (fp_grid == NULL) {
+    fp = fopen( timedata.d_ts_path_and_filename.c_str(), "r" );
+  } else {
+
+    fp = fp_grid;
+  }
 
   if( fp == NULL ) {
     throw InternalError("DataArchive::queryGrid() failed to open input file.\n", __FILE__, __LINE__);
@@ -661,7 +680,7 @@ DataArchive::query(       Variable     & var,
   
   //__________________________________
   //  bulletproofing
-  if(getenv("HAVE_PIDX") == NULL && d_outputFileFormat == PIDX ){
+  if( isPIDXEnabled() == false && d_outputFileFormat == PIDX ){
     ostringstream warn;
     warn << "\nERROR DataArchive::query()\n"
          << "The uda you are trying to open was written using the PIDX file format.\n"
@@ -680,66 +699,52 @@ DataArchive::query(       Variable     & var,
 
   if( d_outputFileFormat == PIDX && varType == PATCH_VAR ) {
     
-    //__________________________________
-    // define the extents for this variable type
+    PIDXOutputContext pidx;
     const Level* level = patch->getLevel();
+        
+    //__________________________________
+    // define the level extents for this variable type
     IntVector lo;
     IntVector hi;
     level->findCellIndexRange(lo,hi);
-    int ret = -9;   // function return value
-
-
-    int levelExtents[3];
-    levelExtents[0] = hi[0] - lo[0] ;
-    levelExtents[1] = hi[1] - lo[1] ;
-    levelExtents[2] = hi[2] - lo[2] ;
-    
     PIDX_point level_size;
-    ret = PIDX_set_point_5D(level_size, levelExtents[0], levelExtents[1], levelExtents[2], 1, 1);
-    PIDX_checkReturnCode( ret,"DataArchive::query() - PIDX_set_point_5D failure", __FILE__, __LINE__);
+    pidx.setLevelExtents( "DataArchive::query()", lo, hi, level_size );
 
-    IntVector hi_EC;
-    IntVector lo_EC;                                // compute the extents of the variable (CCVariable, SFC(*)Variable...etc)
-    patch->computeVariableExtents(td->getType(), varinfo.boundaryLayer, Ghost::None, 0, lo_EC, hi_EC);
+    //__________________________________
+    // define patch extents
+    PIDX_point patchOffset;
+    PIDX_point patchSize;
+    PIDXOutputContext::patchExtents patchExts;
 
-    IntVector offset    = level->getExtraCells();
-    IntVector pidxLo    = lo_EC + offset;           // pidx array indexing starts at 0, must shift nExtraCells
-    IntVector nCells_EC = hi_EC - lo_EC;
-    int totalCells_EC   = nCells_EC.x() * nCells_EC.y() * nCells_EC.z();
-       
-    PIDX_point local_offset; 
-    PIDX_point local_size;
-
-    ret = PIDX_set_point_5D(local_offset,  pidxLo.x(),    pidxLo.y(),    pidxLo.z(),   0, 0);
-    PIDX_checkReturnCode( ret,"DataArchive::query() - PIDX_set_point_5D failure", __FILE__, __LINE__);
+    pidx.setPatchExtents( "DataArchive::query()", patch, level, varinfo.boundaryLayer,
+                         td, patchExts, patchOffset, patchSize );
     
-    ret = PIDX_set_point_5D(local_size,    nCells_EC.x(), nCells_EC.y(), nCells_EC.z(),1, 1);
-    PIDX_checkReturnCode( ret,"DataArchive::query() - PIDX_set_point_5D failure", __FILE__, __LINE__);
-  
+    if (dbg.active() && isProc0_macro ){
+      patchExts.print(cout);
+    }       
     //__________________________________
     //  Creating access
     PIDX_access access;
     PIDX_create_access(&access);
     PIDX_set_mpi_access(access, MPI_COMM_WORLD);        // change MPI_COMM_WORLD
-    
-    
+
     //__________________________________
     //  Open idx file
     string idxFilename = varinfo.filename;
     PIDX_file idxFile;                     // IDX file descriptor
 
-    ret = PIDX_file_open(idxFilename.c_str(), PIDX_MODE_RDONLY, access, &idxFile);
-    PIDX_checkReturnCode( ret,"DataArchive::query() - PIDX_file_open failure", __FILE__, __LINE__);
+    int ret = PIDX_file_open(idxFilename.c_str(), PIDX_MODE_RDONLY, access, &idxFile);
+    pidx.checkReturnCode( ret,"DataArchive::query() - PIDX_file_open failure", __FILE__, __LINE__);
 
     //__________________________________
     //  Extra Calls that _MAY_ be needed
     PIDX_point global_size;
     ret = PIDX_get_dims(idxFile, global_size);          // returns the levelSize  Is this needed?
-    PIDX_checkReturnCode( ret,"DataArchive::query() - PIDX_get_dims failure", __FILE__, __LINE__);
+    pidx.checkReturnCode( ret,"DataArchive::query() - PIDX_get_dims failure", __FILE__, __LINE__);
 
     int variable_count = 0;             ///< Number of fields in PIDX file
     ret = PIDX_get_variable_count(idxFile, &variable_count);
-    PIDX_checkReturnCode( ret,"DataArchive::query() - PIDX_get_variable_count failure", __FILE__, __LINE__);
+    pidx.checkReturnCode( ret,"DataArchive::query() - PIDX_get_variable_count failure", __FILE__, __LINE__);
     
     //int me;
     //PIDX_get_current_time_step(idxFile, &me);
@@ -749,28 +754,28 @@ DataArchive::query(       Variable     & var,
     //  set locations in PIDX file for querying variable
     int timestep = d_ts_indices[timeIndex];
     ret = PIDX_set_current_time_step(idxFile, timestep);
-    PIDX_checkReturnCode(ret, "DataArchive::query() - PIDX_set_current_time_step failure", __FILE__, __LINE__);
+    pidx.checkReturnCode(ret, "DataArchive::query() - PIDX_set_current_time_step failure", __FILE__, __LINE__);
 
     int varIndex = dfi->start;
     ret = PIDX_set_current_variable_index(idxFile, varIndex);
-    PIDX_checkReturnCode(ret, "DataArchive::query() - PIDX_set_current_variable_index failure", __FILE__, __LINE__);
+    pidx.checkReturnCode(ret, "DataArchive::query() - PIDX_set_current_variable_index failure", __FILE__, __LINE__);
     
     //__________________________________
     // read IDX file for variable desc
     PIDX_variable varDesc;
     ret = PIDX_get_current_variable(idxFile, &varDesc);    
-    PIDX_checkReturnCode(ret, "DataArchive::query() - PIDX_get_current_variable failure", __FILE__, __LINE__);
+    pidx.checkReturnCode(ret, "DataArchive::query() - PIDX_get_current_variable failure", __FILE__, __LINE__);
 
     int values_per_sample = varDesc->values_per_sample;
 
     int bits_per_sample = 0;
     ret = PIDX_default_bits_per_datatype(varDesc->type_name, &bits_per_sample);
-    PIDX_checkReturnCode(ret, "DataArchive::query() - PIDX_default_bits_per_datatype failure", __FILE__, __LINE__);
+    pidx.checkReturnCode(ret, "DataArchive::query() - PIDX_default_bits_per_datatype failure", __FILE__, __LINE__);
 
     //__________________________________
     // Allocate memory and read in data from PIDX file  Need to use patch_buffer !!!
     unsigned char *dataPIDX;
-    size_t arraySize = (bits_per_sample/8) * totalCells_EC  * values_per_sample;
+    size_t arraySize = (bits_per_sample/8) * patchExts.totalCells_EC  * values_per_sample;
     dataPIDX = (unsigned char*)malloc( arraySize );
     memset( dataPIDX, 0, arraySize);
     
@@ -790,46 +795,29 @@ DataArchive::query(       Variable     & var,
                 << " arraySize " << arraySize << endl;
     }
 
-    ret = PIDX_variable_read_data_layout(varDesc, local_offset, local_size, dataPIDX, PIDX_row_major);
-    PIDX_checkReturnCode(ret, "DataArchive::query() - PIDX_variable_read_data_layout failure", __FILE__, __LINE__);
+    ret = PIDX_variable_read_data_layout(varDesc, patchOffset, patchSize, dataPIDX, PIDX_row_major);
+    pidx.checkReturnCode(ret, "DataArchive::query() - PIDX_variable_read_data_layout failure", __FILE__, __LINE__);
 
     //__________________________________
     // close idx file and access
     ret = PIDX_close( idxFile );
-    PIDX_checkReturnCode(ret, "DataArchive::query() - PIDX_close failure", __FILE__, __LINE__);
+    pidx.checkReturnCode(ret, "DataArchive::query() - PIDX_close failure", __FILE__, __LINE__);
 
     ret = PIDX_close_access( access );
-    PIDX_checkReturnCode(ret, "DataArchive::query() - PIDX_close_access failure", __FILE__, __LINE__);
+    pidx.checkReturnCode(ret, "DataArchive::query() - PIDX_close_access failure", __FILE__, __LINE__);
     
+    //__________________________________
     // debugging
     if (dbg.active() ){
-      /*`==========TESTING==========*/
-      cout << "__________________________________ " << endl;
-      cout << "  DataArchive::query    AFTER  close" << endl;
-      double* d_buffer = (double*)malloc( arraySize );
-      memcpy( d_buffer, dataPIDX, arraySize );
-
-      int c = 0;
-      for (int k=lo_EC.z(); k<hi_EC.z(); k++){
-        for (int j=lo_EC.y(); j<hi_EC.y(); j++){
-          for (int i=lo_EC.x(); i<hi_EC.x(); i++){
-            printf( " [%2i,%2i,%2i] ", i,j,k);
-            for ( int s = 0; s < varDesc->values_per_sample; ++s ){
-              printf( "%5.3f ",d_buffer[c]);
-              c++;
-            }
-          }
-          printf("\n");
-        }
-        printf("\n");
-      }  
-      cout << "\n__________________________________ " << endl;
-      printf("\n");
-      free(d_buffer);
-      /*===========TESTING==========`*/
+      pidx.printBufferWrap("DataArchive::query    AFTER  close",
+                           td->getSubType()->getType(),
+                           varDesc->values_per_sample,        
+                           patchExts.lo_EC, patchExts.hi_EC,
+                           dataPIDX,                          
+                           arraySize );
     }
-   
-    // now move the datapIDX into the array3 variable
+    //__________________________________
+    // now move the dataPIDX buffer into the array3 variable
     var.readPIDX( dataPIDX,  arraySize, timedata.d_swapBytes ); 
     free( dataPIDX );
   }
@@ -1283,10 +1271,11 @@ DataArchive::setTimestepCacheSize( int new_size ) {
   d_lock.unlock();
 }
 
-//______________________________________________________________________
-//s
-DataArchive::TimeData::TimeData( DataArchive * da, const string & timestepPathAndFilename ) :
-  d_initialized( false ), d_ts_path_and_filename( timestepPathAndFilename ), d_parent_da( da )
+
+DataArchive::TimeData::TimeData( DataArchive* da, const string& timestepPathAndFilename,
+				 const string& gridPathAndFilename) :
+  d_initialized( false ), d_ts_path_and_filename( timestepPathAndFilename ),
+  d_grid_path_and_filename( gridPathAndFilename ), d_parent_da( da )
 {
   d_ts_directory = timestepPathAndFilename.substr( 0, timestepPathAndFilename.find_last_of('/') + 1 );
 }
@@ -1305,7 +1294,8 @@ DataArchive::TimeData::init()
   // Pull the list of data xml files from the timestep.xml file.
 
   FILE * ts_file = fopen( d_ts_path_and_filename.c_str(), "r" );
-
+  FILE * grid_file = fopen( d_grid_path_and_filename.c_str(), "r" );
+    
   if( ts_file == NULL ) {
     // FIXME: add more info to exception.
     throw ProblemSetupException( "Failed to open timestep file.", __FILE__, __LINE__ );    
@@ -1325,16 +1315,107 @@ DataArchive::TimeData::init()
   d_swapBytes = endianness != string(SCIRun::endianness());
   d_nBytes    = numbits / 8;
 
-  bool found = ProblemSpec::findBlock( "<Data>", ts_file );
+#if 0
+
+    fclose( ts_file );
+
+    
+    //// Use the xmlTextReader to parse the file
+  xmlTextReaderPtr reader;
+  reader = xmlNewTextReaderFilename(d_grid_path_and_filename.c_str());
+
+  // If the grid.xml file is not found, then use the timestep.xml file
+  if (reader == NULL)
+    reader = xmlNewTextReaderFilename(d_ts_path_and_filename.c_str());
+  
+  int ret;
+  if (reader != NULL) {
+    while (xmlTextReaderRead(reader)) {
+      string node_name((char *)xmlTextReaderName(reader));
+
+      printf("%d %d %s %s %d %d\n",
+	     xmlTextReaderDepth(reader),
+	     xmlTextReaderNodeType(reader),
+	     node_name.c_str(),
+	     xmlTextReaderValue(reader),
+	     xmlTextReaderHasAttributes(reader),
+	     xmlTextReaderIsEmptyElement(reader));
+
+      // Find the <Data> node
+      if (node_name == "Data" && xmlTextReaderNodeType(reader) != 15) {
+	cout << "Found the <Data> node" << endl;
+	cout << "Search for the <Datafile> node" << endl;
+	while (xmlTextReaderRead(reader) ) {
+	  string datafile_name((char *)xmlTextReaderName(reader));
+	  cout << "datafile_name = " << datafile_name << endl;
+	  if (datafile_name == "Datafile") {
+	    cout << "Found the <Datafile> node" << endl;
+	    while (xmlTextReaderMoveToNextAttribute(reader) ) {
+	      string attribute_name ((char *)xmlTextReaderName(reader));
+	      string attribute_value ((char *)xmlTextReaderValue(reader));
+	      cout << "attribute name = " << attribute_name << " value = "
+		   << attribute_value << endl;
+
+	      if (attribute_value == "global.xml") {
+		parseFile( d_ts_directory + "global.xml", -1, -1 );
+	      } else {
+
+		// Get the level info out of the xml file: should be lX/pxxxxx.xml.
+		unsigned level = 0;
+		string::size_type start =
+		  attribute_value.find_first_of("l",0,attribute_value.length()-3);
+		string::size_type end = attribute_value.find_first_of("/");
+		if (start != string::npos && end != string::npos && end > start && end-start <= 2) {
+		  level = atoi(attribute_value.substr(start+1, end-start).c_str());
+		}
+		    
+		if( level >= d_xmlFilenames.size() ) {
+		  d_xmlFilenames.resize( level +1 );
+		  d_xmlParsed.resize(    level + 1 );
+		}
+		   
+		string filename = d_ts_directory + attribute_value;
+		d_xmlFilenames[ level ].push_back( filename );
+		d_xmlParsed[    level ].push_back( false );
+	      }
+		
+	    } // End of search through attributes
+	  }
+	}
+      }
+
+    }
+    xmlFreeTextReader(reader);
+  } else {
+    printf("Unable to open %s\n", d_grid_path_and_filename.c_str());
+  }
+
+#endif
+
+#if 1
+  bool found = false;
+  string data_file_name = "";
+  if (grid_file != NULL) {
+    found = ProblemSpec::findBlock( "<Data>", grid_file );
+    data_file_name = d_grid_path_and_filename;
+  } else {
+    found = ProblemSpec::findBlock( "<Data>", ts_file );
+    data_file_name = d_ts_path_and_filename;
+  }
 
   if( !found ) {
-    throw InternalError( "Cannot find <Data> in timestep file", __FILE__, __LINE__ );
+    throw InternalError( "Cannot find <Data> in " + data_file_name, __FILE__, __LINE__ );
   }
 
   bool done = false;
   while( !done ) {
 
-    string line = UintahXML::getLine( ts_file );
+    string line = "";
+    if (grid_file != NULL) {
+      line = UintahXML::getLine( grid_file );
+    } else {
+      line = UintahXML::getLine( ts_file );
+    }
     if( line == "" || line == "</Data>" ) {
       done = true;
     }
@@ -1393,6 +1474,9 @@ DataArchive::TimeData::init()
   } // end while()
 
   fclose( ts_file );
+  if (grid_file)
+    fclose( grid_file );
+#endif
 
 } // end init()
 //______________________________________________________________________
@@ -1612,6 +1696,8 @@ DataArchive::getOldDelt( int restart_index )
 // is in the correct order - in other words, anything after </Data> is component related,
 // and everything before it can be removed.
 //
+// Now that we are using the grid.xml for <Grid> and <Data> sections, this function is altered
+// slightly.  Read in from the beginning of the <Uintah_timestep> including the <Meta> section.
 ProblemSpecP
 DataArchive::getTimestepDocForComponent( int restart_index )
 {
@@ -1622,13 +1708,20 @@ DataArchive::getTimestepDocForComponent( int restart_index )
     throw InternalError("DataArchive::getTimespecDocForComponent() failed open datafile.", __FILE__, __LINE__);
   }
 
+#if 0
   bool found = ProblemSpec::findBlock( "</Data>", fp );
+  if (!found) {
+    found = ProblemSpec::findBlock( "</Data>", fp_grid );
+    cout << "Found </Data> in grid_path filename" << endl;
+  }
 
   if( !found ) {
     throw InternalError("DataArchive::getTimespecDocForComponent() failed to find </Data>.", __FILE__, __LINE__);
   }
+#endif
 
-  string buffer = "<Uintah_timestep>";
+  ////  string buffer = "<Uintah_timestep>";
+  string buffer = "";
 
   while( true ) {
 
@@ -1640,7 +1733,7 @@ DataArchive::getTimestepDocForComponent( int restart_index )
       break;
     }
   }
-
+  
   fclose( fp );
 
   ProblemSpec * result = new ProblemSpec( buffer );
@@ -1732,20 +1825,4 @@ DataArchive::exists( const string& varname,
   d_lock.unlock();
 
   return false;
-}
-
-
-//______________________________________________________________________
-//
-void
-DataArchive::PIDX_checkReturnCode( const int rc,
-                                   const string warn,
-                                   const char* file, 
-                                   int line)
-{
-#if HAVE_PIDX
-  if (rc != PIDX_success){
-    throw InternalError(warn, file, line);
-  }
-#endif
 }

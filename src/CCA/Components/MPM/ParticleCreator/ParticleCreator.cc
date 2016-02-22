@@ -638,7 +638,7 @@ ParticleCreator::initializeParticle(const Patch* patch,
                0.,1./((double) ppc.y()),0.,
                0.,0.,1./((double) ppc.z()));
   size=affineTrans_A*size;
-  Vector area(dxpp.y()*dxpp.z(),dxpp.x()*dxpp.z(),dxpp.x()*dxpp.z());
+  Vector area(dxpp.y()*dxpp.z(),dxpp.x()*dxpp.z(),dxpp.x()*dxpp.y());
   area=affineTrans_A*area;
 
 /*
@@ -686,7 +686,7 @@ ParticleCreator::initializeParticle(const Patch* patch,
     }
 
     pvars.psize[i]      = size;  // Normalized by grid spacing
-    pvars.parea[i]      = area;  // Normalized by grid spacing
+    pvars.parea[i]      = area;
    
     pvars.pvelocity[i]  = (*obj)->getInitialData_Vector("velocity");
     if(d_flags->d_integrator_type=="explicit"){

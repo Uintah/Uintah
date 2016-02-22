@@ -248,12 +248,14 @@ void parallel_reduce( const RowMajorRange<SizeType,3> & r, const Functor & f, Re
   const SizeType je = jb + r.m_dim[1];
   const SizeType ke = kb + r.m_dim[2];
 
-#pragma omp parallel for collapse(3) reduction(+:red)
+  ReductionType tmp = red;
+#pragma omp parallel for collapse(3) reduction(+:tmp)
   for (SizeType i=ib; i<ie; ++i) {
   for (SizeType j=jb; j<je; ++j) {
   for (SizeType k=kb; k<ke; ++k) {
-    f(i,j,k,red);
+    f(i,j,k,tmp);
   }}}
+  red = tmp;
 };
 
 template <typename SizeType, typename Functor, typename ReductionType>
@@ -267,12 +269,14 @@ void parallel_reduce( const ColumnMajorRange<SizeType,3> & r, const Functor & f,
   const SizeType je = jb + r.m_dim[1];
   const SizeType ke = kb + r.m_dim[2];
 
-#pragma omp parallel for collapse(3) reduction(+:red)
+ReductionType tmp = red;
+#pragma omp parallel for collapse(3) reduction(+:tmp)
   for (SizeType k=kb; k<ke; ++k) {
   for (SizeType j=jb; j<je; ++j) {
   for (SizeType i=ib; i<ie; ++i) {
-    f(i,j,k,red);
+    f(i,j,k,tmp);
   }}}
+  red = tmp;
 };
 
 } // namespace Uintah

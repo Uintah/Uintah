@@ -72,6 +72,9 @@
 #include <strings.h>
 #include <unistd.h>
 
+#include <libxml/xmlwriter.h>
+
+
 //TODO - BJW - if multilevel reduction doesn't work, fix all
 //       getMaterialSet(0)
 
@@ -81,6 +84,9 @@
 #define OUTPUT               0
 #define CHECKPOINT           1
 #define CHECKPOINT_REDUCTION 2
+
+#define XML_TEXTWRITER 1
+#undef XML_TEXTWRITER
 
 using namespace Uintah;
 using namespace std;
@@ -1368,6 +1374,7 @@ DataArchiver::findNext_OutputCheckPoint_Timestep(double delt, const GridP& grid)
 void
 DataArchiver::writeto_xml_files(double delt, const GridP& grid)
 {
+
   dbg << "  writeto_xml_files() begin\n";
   //__________________________________
   //  Writeto XML files
@@ -1500,61 +1507,142 @@ DataArchiver::writeto_xml_files(double delt, const GridP& grid)
 
       // make a timestep.xml file for this timestep 
       // we need to do it here in case there is a timestesp restart
-      ProblemSpecP rootElem = ProblemSpec::createDocument("Uintah_timestep");
+      // Break out the <Grid> and <Data> section of the DOM tree into a separate grid.xml file
+      // which can be created quickly and use less memory using the xmlTextWriter functions
+      // (streaming output)
 
+      ProblemSpecP rootElem = ProblemSpec::createDocument("Uintah_timestep");
 
       // Create a metadata element to store the per-timestep endianness
       ProblemSpecP metaElem = rootElem->appendChild("Meta");
-      metaElem->appendElement( "endianness", endianness().c_str() );
-      metaElem->appendElement( "nBits",      (int)sizeof(unsigned long) * 8 );
-      metaElem->appendElement( "numProcs",   d_myworld->size() );
-      
+
+      metaElem->appendElement("endianness", endianness().c_str());
+      metaElem->appendElement("nBits", (int)sizeof(unsigned long) * 8 );
+      metaElem->appendElement("numProcs", d_myworld->size());
+
       // Timestep information
-      ProblemSpecP timeElem = rootElem->appendChild( "Time" );
-      timeElem->appendElement( "timestepNumber", dir_timestep );
-      timeElem->appendElement( "currentTime",    d_tempElapsedTime );
-      timeElem->appendElement( "oldDelt",        delt );
-      
-      
+      ProblemSpecP timeElem = rootElem->appendChild("Time");
+      timeElem->appendElement("timestepNumber", dir_timestep);
+      timeElem->appendElement("currentTime", d_tempElapsedTime);
+      timeElem->appendElement("oldDelt", delt);
+
       //__________________________________
       //  output grid section
-      // With AMR, we're not guaranteed that a proc do work on a given level
-      //   quick check to see that, so we don't create a node that points to no data
+      // With AMR, we're not guaranteed that a proc do work on a given level.
+      // Quick check to see that, so we don't create a node that points to no data
       int numLevels = grid->numLevels();
       vector<vector<int> > procOnLevel(numLevels);
 
+      //  Break out the <Grid> and <Data> sections and write those to a
+      // "grid.xml" section using libxml2's TextWriter which is a streaming
+      //  output format which doesn't use a DOM tree.
+
+#ifndef XML_TEXTWRITER
       ProblemSpecP gridElem = rootElem->appendChild("Grid");
-      gridElem->appendElement("numLevels", numLevels);
-      
+#else
+      string name_grid = baseDirs[i]->getName()+"/"+tname.str()+"/grid.xml";
+      xmlTextWriterPtr writer_grid;
+      /* Create a new XmlWriter for uri, with no compression. */
+      writer_grid = xmlNewTextWriterFilename(name_grid.c_str(), 0);
+      xmlTextWriterSetIndent(writer_grid,1);
+
+      #define MY_ENCODING "UTF-8"
+      xmlTextWriterStartDocument(writer_grid, NULL, MY_ENCODING, NULL);
+
+      xmlTextWriterStartElement(writer_grid, BAD_CAST "Grid_Data");
+      xmlTextWriterStartElement(writer_grid, BAD_CAST "Grid");
+#endif
       //__________________________________
       //  output level information
+#ifndef XML_TEXTWRITER      
+      gridElem->appendElement("numLevels", numLevels);
+#else
+      xmlTextWriterWriteFormatElement(writer_grid, BAD_CAST "numLevels","%d", numLevels);
+#endif      
       for(int l = 0;l<numLevels;l++) {
         LevelP level = grid->getLevel(l);
+#ifndef XML_TEXTWRITER
         ProblemSpecP levelElem = gridElem->appendChild("Level");
+#else
+	xmlTextWriterStartElement(writer_grid, BAD_CAST "Level");
+#endif
 
         if (level->getPeriodicBoundaries() != IntVector(0,0,0)) {
-          levelElem->appendElement( "periodic", level->getPeriodicBoundaries());
-        }
-        
-        levelElem->appendElement( "numPatches", level->numPatches() );
-        levelElem->appendElement( "totalCells", level->totalCells() );
-        
+#ifndef XML_TEXTWRITER
+          levelElem->appendElement("periodic", level->getPeriodicBoundaries());
+#else
+	  xmlTextWriterWriteFormatElement(writer_grid, BAD_CAST "periodic","[%d,%d,%d]",
+					  level->getPeriodicBoundaries().x(),
+					  level->getPeriodicBoundaries().y(),
+					  level->getPeriodicBoundaries().z()
+					  );
+#endif
+	}
+#ifndef XML_TEXTWRITER
+        levelElem->appendElement("numPatches", level->numPatches());
+#else
+	xmlTextWriterWriteFormatElement(writer_grid, BAD_CAST "numPatches","%d",
+					level->numPatches());
+#endif
+#ifndef XML_TEXTWRITER
+        levelElem->appendElement("totalCells", level->totalCells());
+#else
+	xmlTextWriterWriteFormatElement(writer_grid, BAD_CAST "totalCells","%ld",
+					level->totalCells());
+#endif
         if (level->getExtraCells() != IntVector(0,0,0)) {
-          levelElem->appendElement( "extraCells", level->getExtraCells() );
-        }
-        
-        levelElem->appendElement( "anchor", level->getAnchor() );
-        levelElem->appendElement( "id",     level->getID() );
-        
-        // For stretched grids
+#ifndef XML_TEXTWRITER
+          levelElem->appendElement("extraCells", level->getExtraCells());
+#else
+	  xmlTextWriterWriteFormatElement(writer_grid, BAD_CAST "extraCells","[%d,%d,%d]",
+					  level->getExtraCells().x(),
+					  level->getExtraCells().y(),
+					  level->getExtraCells().z()
+					  );
+#endif
+	}
+#ifndef XML_TEXTWRITER
+        levelElem->appendElement("anchor", level->getAnchor());
+#else
+	xmlTextWriterWriteFormatElement(writer_grid, BAD_CAST "anchor","[%g,%g,%g]",
+					level->getAnchor().x(),
+					level->getAnchor().y(),
+					level->getAnchor().z()
+					);
+#endif
+#ifndef XML_TEXTWRITER
+        levelElem->appendElement("id", level->getID());
+#else
+	xmlTextWriterWriteFormatElement(writer_grid, BAD_CAST "id","%d",level->getID());
+#endif
+	// For stretched grids
         if (!level->isStretched()) {
-          levelElem->appendElement( "cellspacing", level->dCell() );
-        } else {
+#ifndef XML_TEXTWRITER
+          levelElem->appendElement("cellspacing", level->dCell());
+#else
+	  xmlTextWriterWriteFormatElement(writer_grid, BAD_CAST "cellspacing","[%.17g,%.17g,%.17g]",
+					  level->dCell().x(),
+					  level->dCell().y(),
+					  level->dCell().z()
+					  );
+#endif
+        }
+        else {
+	  // Need to verify this with a working example --- JAS
           for (int axis = 0; axis < 3; axis++) {
             ostringstream axisstr, lowstr, highstr;
             axisstr << axis;
-            ProblemSpecP stretch = levelElem->appendChild( "StretchPositions");
-            stretch->setAttribute( "axis", axisstr.str());
+#ifndef XML_TEXTWRITER
+            ProblemSpecP stretch = levelElem->appendChild("StretchPositions");
+#else
+	    xmlTextWriterStartElement(writer_grid, BAD_CAST "StretchPositions");
+#endif
+#ifndef XML_TEXTWRITER
+            stretch->setAttribute("axis", axisstr.str());
+#else
+	    xmlTextWriterWriteAttribute(writer_grid, BAD_CAST "axis",
+					BAD_CAST axisstr.str().c_str());
+	    #endif
 
             OffsetArray1<double> faces;
             level->getFacePositions((Grid::Axis)axis, faces);
@@ -1562,14 +1650,32 @@ DataArchiver::writeto_xml_files(double delt, const GridP& grid)
             int low  = faces.low();
             int high = faces.high();
             lowstr << low;
+
+#ifndef XML_TEXTWRITER
+            stretch->setAttribute("low", lowstr.str());
+#else
+	    xmlTextWriterWriteAttribute(writer_grid, BAD_CAST "low",
+					BAD_CAST lowstr.str().c_str());
+#endif
+
             highstr << high;
-            
-            stretch->setAttribute( "low",  lowstr.str());
-            stretch->setAttribute( "high", highstr.str());
+#ifndef XML_TEXTWRITER
+            stretch->setAttribute("high", highstr.str());
+#else
+	    xmlTextWriterWriteAttribute(writer_grid, BAD_CAST "high",
+					BAD_CAST highstr.str().c_str());
+#endif
           
-            for (int i = low; i < high; i++){
-              stretch->appendElement( "pos", faces[i]);
-            }
+            for (int i = low; i < high; i++) {
+#ifndef XML_TEXTWRITER
+              stretch->appendElement("pos", faces[i]);
+#else
+	      xmlTextWriterWriteFormatElement(writer_grid, BAD_CAST "pos","%g",faces[i]);
+#endif
+	    }
+#ifdef XML_TEXTWRITER
+	    xmlTextWriterEndElement(writer_grid); // Closes StretchPositions
+#endif
           }
         }
 
@@ -1591,29 +1697,112 @@ DataArchiver::writeto_xml_files(double delt, const GridP& grid)
           procOnLevel[l][proc] = 1;
 
           Box box = patch->getExtraBox();
+#ifndef XML_TEXTWRITER
           ProblemSpecP patchElem = levelElem->appendChild("Patch");
-          patchElem->appendElement( "id",        patch->getID() );
-          patchElem->appendElement( "proc",      proc );
-          patchElem->appendElement( "lowIndex",  lo_EC );
-          patchElem->appendElement( "highIndex", hi_EC );
-          
-          if ( lo_EC != lo){
-            patchElem->appendElement( "interiorLowIndex", lo );
-          }
-          if ( hi_EC != hi) {
-            patchElem->appendElement( "interiorHighIndex", hi );
-          }
-          
-          patchElem->appendElement( "nnodes",     patch->getNumExtraNodes() );
-          patchElem->appendElement( "lower",      box.lower() );
-          patchElem->appendElement( "upper",      box.upper() );
-          patchElem->appendElement( "totalCells", patch->getNumExtraCells() );
-        }  // patchLoop
-      }  // level loop
       
       //__________________________________
       //  Write headers to pXXXX.xml and 
+#else
+	  xmlTextWriterStartElement(writer_grid, BAD_CAST "Patch");
+#endif
+#ifndef XML_TEXTWRITER
+          patchElem->appendElement("id", patch->getID());
+#else
+	  xmlTextWriterWriteFormatElement(writer_grid, BAD_CAST "id","%d",patch->getID());
+#endif
+#ifndef XML_TEXTWRITER
+          patchElem->appendElement("proc", proc);
+#else
+	  xmlTextWriterWriteFormatElement(writer_grid, BAD_CAST "proc","%d",proc);
+#endif
+#ifndef XML_TEXTWRITER
+          patchElem->appendElement("lowIndex", patch->getExtraCellLowIndex());
+#else
+	  xmlTextWriterWriteFormatElement(writer_grid, BAD_CAST "lowIndex","[%d,%d,%d]",
+					  patch->getExtraCellLowIndex().x(),
+					  patch->getExtraCellLowIndex().y(),
+					  patch->getExtraCellLowIndex().z()
+					  );
+#endif
+#ifndef XML_TEXTWRITER
+          patchElem->appendElement("highIndex", patch->getExtraCellHighIndex());
+#else
+	  xmlTextWriterWriteFormatElement(writer_grid, BAD_CAST "highIndex","[%d,%d,%d]",
+					  patch->getExtraCellHighIndex().x(),
+					  patch->getExtraCellHighIndex().y(),
+					  patch->getExtraCellHighIndex().z()
+					  );
+#endif
+          if (patch->getExtraCellLowIndex() != patch->getCellLowIndex()){
+#ifndef XML_TEXTWRITER
+            patchElem->appendElement("interiorLowIndex", patch->getCellLowIndex());
+#else
+	    xmlTextWriterWriteFormatElement(writer_grid, BAD_CAST "interiorLowIndex",
+					    "[%d,%d,%d]",
+					    patch->getCellLowIndex().x(),
+					    patch->getCellLowIndex().y(),
+					    patch->getCellLowIndex().z()
+					    );
+#endif
+	  }
+          if (patch->getExtraCellHighIndex() != patch->getCellHighIndex()){
+#ifndef XML_TEXTWRITER
+            patchElem->appendElement("interiorHighIndex", patch->getCellHighIndex());
+#else
+	    xmlTextWriterWriteFormatElement(writer_grid, BAD_CAST "interiorHighIndex",
+					    "[%d,%d,%d]",
+					    patch->getCellHighIndex().x(),
+					    patch->getCellHighIndex().y(),
+					    patch->getCellHighIndex().z()
+					    );
+#endif
+	  }
+#ifndef XML_TEXTWRITER
+          patchElem->appendElement("nnodes", patch->getNumExtraNodes());
+#else
+	  xmlTextWriterWriteFormatElement(writer_grid, BAD_CAST "nnodes","%d",
+					  patch->getNumExtraNodes());
+#endif
+#ifndef XML_TEXTWRITER
+          patchElem->appendElement("lower", box.lower());
+#else
+	  xmlTextWriterWriteFormatElement(writer_grid, BAD_CAST "lower","[%.17g,%.17g,%.17g]",
+					  box.lower().x(),
+					  box.lower().y(),
+					  box.lower().z()
+					  );
+#endif
+#ifndef XML_TEXTWRITER
+          patchElem->appendElement("upper", box.upper());
+#else
+	  xmlTextWriterWriteFormatElement(writer_grid, BAD_CAST "upper","[%.17g,%.17g,%.17g]",
+					  box.upper().x(),
+					  box.upper().y(),
+					  box.upper().z()
+					  );
+#endif
+#ifndef XML_TEXTWRITER
+          patchElem->appendElement("totalCells", patch->getNumExtraCells());
+#else
+	  xmlTextWriterWriteFormatElement(writer_grid, BAD_CAST "totalCells","%d",
+					  patch->getNumExtraCells());
+	  xmlTextWriterEndElement(writer_grid); // Closes Patch
+#endif
+        }
+#ifdef XML_TEXTWRITER
+	xmlTextWriterEndElement(writer_grid); // Closes Level
+#endif
+      }
+#ifdef XML_TEXTWRITER
+      xmlTextWriterEndElement(writer_grid); // Closes Grid
+#endif
+#ifndef XML_TEXTWRITER
+      //__________________________________
+      //  Write headers to pXXXX.xml and 
       ProblemSpecP dataElem = rootElem->appendChild("Data");
+#else
+      xmlTextWriterStartElement(writer_grid, BAD_CAST "Data");
+#endif 
       for(int l=0;l<numLevels;l++) {
         ostringstream lname;
         lname << "l" << l;
@@ -1626,24 +1815,47 @@ DataArchiver::writeto_xml_files(double delt, const GridP& grid)
           
           ostringstream pname;
           pname << lname.str() << "/p" << setw(5) << setfill('0') << i << ".xml";
-
+#ifndef XML_TEXTWRITER
           ProblemSpecP df = dataElem->appendChild("Datafile");
-          df->setAttribute("href",  pname.str());
-          
+#else
+	  xmlTextWriterStartElement(writer_grid, BAD_CAST "Datafile");
+#endif
+#ifndef XML_TEXTWRITER
+          df->setAttribute("href",pname.str());
+#else
+	  xmlTextWriterWriteAttribute(writer_grid, BAD_CAST "href",BAD_CAST pname.str().c_str());
+#endif
           ostringstream procID;
           procID << i;
-          df->setAttribute("proc",  procID.str());
-          
+#ifndef XML_TEXTWRITER
+          df->setAttribute("proc",procID.str());
+#else
+	  xmlTextWriterWriteAttribute(writer_grid, BAD_CAST "proc",BAD_CAST procID.str().c_str());
+#endif
           ostringstream labeltext;
           labeltext << "Processor " << i << " of " << d_myworld->size();
+#ifdef XML_TEXTWRITER
+	  xmlTextWriterEndElement(writer_grid); // Closes Datafile
+#endif
         }
       }
-      
+
       if (hasGlobals) {
+#ifndef XML_TEXTWRITER
         ProblemSpecP df = dataElem->appendChild("Datafile");
         df->setAttribute("href", "global.xml");
+#else
+	xmlTextWriterStartElement(writer_grid, BAD_CAST "Datafile");
+	xmlTextWriterWriteAttribute(writer_grid, BAD_CAST "href",BAD_CAST "global.xml");
+	xmlTextWriterEndElement(writer_grid); // Closes Datafile
+#endif
       }
-
+#ifdef XML_TEXTWRITER
+      xmlTextWriterEndElement(writer_grid); // Closes Data
+      xmlTextWriterEndElement(writer_grid); // Closes Grid_Data
+      xmlTextWriterEndDocument(writer_grid); // Writes output to the timestep.xml file
+      xmlFreeTextWriter(writer_grid);
+#endif
       // Add the <Materials> section to the timestep.xml
       SimulationInterface* sim = 
         dynamic_cast<SimulationInterface*>(getPort("sim")); 
@@ -1656,15 +1868,16 @@ DataArchiver::writeto_xml_files(double delt, const GridP& grid)
       // write out the timestep.xml file
       string name = baseDirs[i]->getName()+"/"+tname.str()+"/timestep.xml";
       rootElem->output(name.c_str());
-      
       //__________________________________
       // output input.xml & input.xml.orig
+
       // a small convenience to the user who wants to change things when he restarts
       // let him know that some information to change will need to be done in the timestep.xml
       // file instead of the input.xml file.  Only do this once, though.  
       
       if (firstCheckpointTimestep) {
-        // loop over the blocks in timestep.xml and remove them from input.xml, with some exceptions.
+        // loop over the blocks in timestep.xml and remove them from input.xml, with
+	// some exceptions.
         string inputname = d_dir.getName()+"/input.xml";
         ProblemSpecP inputDoc = loadDocument(inputname);
         inputDoc->output((inputname + ".orig").c_str());
@@ -2166,7 +2379,10 @@ DataArchiver::outputVariables(const ProcessorGroup * pg,
   //______________________________________________________________________
   //
   //  ToDo
-  //      consolidate debugging variable output into main saveLabel loop
+  //      Multiple patches per core (Sidharth)
+  //      turn off debugging inside of PIDX (Sidharth)
+  //      disable need for MPI in PIDX (Sidharth)
+  //      Fix ints issue in PIDX (sidharth)
   //      Do we need patch_buffer?
   //      Do we need the memset calls?
   //
@@ -2231,17 +2447,7 @@ DataArchiver::saveLabels_PIDX(std::vector< SaveItem >& saveLabels,
   size_t totalBytesSaved = 0;
 #if HAVE_PIDX
   
-  //__________________________________
-  // define the extents for this variable type
   const Level* level = getLevel(patches);
-  IntVector lo;
-  IntVector hi;
-  level->computeVariableExtents(TD,lo, hi);
-
-  int globalExtents[3];
-  globalExtents[0] = hi[0] - lo[0];
-  globalExtents[1] = hi[1] - lo[1];
-  globalExtents[2] = hi[2] - lo[2];
 
   int nSaveItems =  saveLabels.size();
   vector<int> nSaveItemMatls (nSaveItems);
@@ -2270,49 +2476,49 @@ DataArchiver::saveLabels_PIDX(std::vector< SaveItem >& saveLabels,
     actual_number_of_variables += var_matls->size();
   }
 
-  //__________________________________
-  // initialize PIDX variables
-  int PIDX_debug = 0;
-  int PIDX_extra_field = 0;
-  if (PIDX_debug == 1){
-    PIDX_extra_field = 1;
-  }
-
   // must use this format or else file won't be written
   // inside of uda
   string idxFilename( myDir.getName() );
   idxFilename = idxFilename + ".idx";
 
-  PIDXOutputContext pc;
+  PIDXOutputContext pidx;
 
-  pc.setOutputDoubleAsFloat( (d_outputDoubleAsFloat && type == OUTPUT) );  
+  pidx.setOutputDoubleAsFloat( (d_outputDoubleAsFloat && type == OUTPUT) );  
 
   unsigned int timeStep = d_sharedState->getCurrentTopLevelTimeStep();
   
   // Can this be run in serial without doing a MPI initialize
-  pc.initialize(idxFilename, timeStep, globalExtents, d_myworld->getComm());
+  pidx.initialize(idxFilename, timeStep, d_myworld->getComm());
 
-  rc = PIDX_set_variable_count(pc.file, actual_number_of_variables + PIDX_extra_field);
-  PIDX_checkReturnCode( rc, "DataArchiver::saveLabels_PIDX - PIDX_set_variable_count failure",__FILE__, __LINE__);
+  //__________________________________
+  // define the level extents for this variable type
+  IntVector lo;
+  IntVector hi;
+  level->computeVariableExtents(TD,lo, hi);
   
-  pc.variable = (PIDX_variable**) malloc(sizeof (PIDX_variable*) * (nSaveItems + PIDX_extra_field));
-  memset(pc.variable, 0, sizeof (PIDX_variable*) * nSaveItems);
+  PIDX_point level_size;
+  pidx.setLevelExtents( "DataArchiver::saveLabels_PIDX",  lo, hi, level_size );
+  PIDX_set_dims(pidx.file, level_size);
+
+  //__________________________________
+  // allocate memory for pidx variable descriptor array
+  rc = PIDX_set_variable_count(pidx.file, actual_number_of_variables);
+  pidx.checkReturnCode( rc, "DataArchiver::saveLabels_PIDX - PIDX_set_variable_count failure",__FILE__, __LINE__);
+  
+  size_t pidxVarSize = sizeof (PIDX_variable*);
+  pidx.variable = (PIDX_variable**) malloc( pidxVarSize * nSaveItems );
+  memset(pidx.variable, 0, pidxVarSize * nSaveItems);
 
   for(int i = 0 ; i < nSaveItems ; i++) {
-    pc.variable[i] = (PIDX_variable*) malloc(sizeof (PIDX_variable) * nSaveItemMatls[i]);
-    memset(pc.variable[i], 0, sizeof (PIDX_variable) * nSaveItemMatls[i]);
-  }
-
-  for(int i = nSaveItems ; i < nSaveItems + PIDX_extra_field ; i++) {
-    pc.variable[i] = (PIDX_variable*) malloc(sizeof (PIDX_variable));
-    memset(pc.variable[i], 0, sizeof (PIDX_variable));
+    pidx.variable[i] = (PIDX_variable*) malloc( pidxVarSize * nSaveItemMatls[i]);
+    memset(pidx.variable[i], 0, pidxVarSize * nSaveItemMatls[i]);
   }
 
   //__________________________________
   //  PIDX Diagnostics
-  if( rank == 0 ) {
+  if( rank == 0 && dbgPIDX.active()) {
     printf("[PIDX] IDX file name = %s\n", (char*)idxFilename.c_str());
-    printf("[PIDX] globalExtents = %d %d %d\n", globalExtents[0], globalExtents[1], globalExtents[2]);
+    printf("[PIDX] levelExtents = %d %d %d\n", (hi.x() - lo.x()), (hi.y() - lo.y()), (hi.z() - lo.z()) );
     printf("[PIDX] Total number of variable = %d\n", nSaveItems);
   }
 
@@ -2372,7 +2578,7 @@ DataArchiver::saveLabels_PIDX(std::vector< SaveItem >& saveLabels,
         sample_per_variable = 1;
         
         // take into account saving doubles as floats
-        if ( pc.isOutputDoubleAsFloat() ){
+        if ( pidx.isOutputDoubleAsFloat() ){
           varSubType_size = sample_per_variable * sizeof(float);
           sprintf(data_type, "%d*float32", sample_per_variable);
         } else {
@@ -2401,8 +2607,8 @@ DataArchiver::saveLabels_PIDX(std::vector< SaveItem >& saveLabels,
         var_mat_name = label->getName() + "_m" + s.str();
       }
     
-      rc = PIDX_variable_create((char*)var_mat_name.c_str(), varSubType_size * 8, data_type, &(pc.variable[vc][m]));
-      PIDX_checkReturnCode( rc, "DataArchiver::saveLabels_PIDX - PIDX_variable_create failure",__FILE__, __LINE__);
+      rc = PIDX_variable_create((char*)var_mat_name.c_str(), varSubType_size * 8, data_type, &(pidx.variable[vc][m]));
+      pidx.checkReturnCode( rc, "DataArchiver::saveLabels_PIDX - PIDX_variable_create failure",__FILE__, __LINE__);
       
 
       patch_buffer[vcm] = (unsigned char**)malloc(sizeof(unsigned char*) * patches->size());
@@ -2419,93 +2625,52 @@ DataArchiver::saveLabels_PIDX(std::vector< SaveItem >& saveLabels,
           patchID = -1;
 
         } else {
-          patch   = patches->get(p);
-          patchID = patch->getID();
-
-          IntVector hi_EC;
-          IntVector lo_EC;                                // compute the extents of the variable (CCVariable, SFC(*)Variable...etc)
-          patch->computeVariableExtents(td->getType(), label->getBoundaryLayer(), Ghost::None, 0, lo_EC, hi_EC);
-         
-          IntVector offset    = level->getExtraCells();
-          IntVector pidxLo    = lo_EC + offset;           // pidx array indexing starts at 0, must shift nExtraCells
-          IntVector nCells_EC = hi_EC - lo_EC;
-          int totalCells_EC   = nCells_EC.x() * nCells_EC.y() * nCells_EC.z();
-
-          /*`==========TESTING==========*/
-          proc0cout << rank <<" taskType: " << type << "  PIDX:  " << setw(15) <<label->getName() << "  "<< td->getName() 
-                    << " Patch: " << patchID << " L-" << level->getIndex() 
-                    << ",  sample_per_variable: " << sample_per_variable <<" varSubType_size: " << varSubType_size << " dataType: " << data_type 
-                    << " localOffset: " << pidxLo << " count: " << nCells_EC << ", totalCells_EC " << totalCells_EC 
-                    << ", lo_EC: " << lo_EC << ", hi_EC: " << hi_EC << endl; 
-          /*===========TESTING==========`*/
-
-          PIDX_point local_offset_point; 
-          PIDX_point local_box_count_point;
-
-          rc = PIDX_set_point_5D(local_offset_point,    pidxLo.x(),    pidxLo.y(),    pidxLo.z(),   0, 0);
-          PIDX_checkReturnCode( rc, "DataArchiver::saveLabels_PIDX - PIDX_set_point_5D failure",__FILE__, __LINE__);
+          patch   = patches->get(p);      
+          PIDX_point patchOffset;
+          PIDX_point patchSize;
+          PIDXOutputContext::patchExtents patchExts;
           
-          rc = PIDX_set_point_5D(local_box_count_point, nCells_EC.x(), nCells_EC.y(), nCells_EC.z(), 1, 1);
-          PIDX_checkReturnCode( rc, "DataArchiver::saveLabels_PIDX - PIDX_set_point_5D failure",__FILE__, __LINE__);
-
+          pidx.setPatchExtents( "DataArchiver::saveLabels_PIDX", patch, level, label->getBoundaryLayer(),
+                              td, patchExts, patchOffset, patchSize );
+                              
+          //__________________________________
+          // debugging
+          if (dbgPIDX.active() && isProc0_macro){
+            proc0cout << rank <<" taskType: " << type << "  PIDX:  " << setw(15) <<label->getName() << "  "<< td->getName() 
+                      << " Patch: " << patch->getID() << " L-" << level->getIndex() 
+                      << ",  sample_per_variable: " << sample_per_variable <<" varSubType_size: " << varSubType_size << " dataType: " << data_type << "\n";
+            patchExts.print(cout); 
+          }
+                    
           //__________________________________
           // allocate memory for the grid variables
-          unsigned char *t_buffer = NULL; 
-
-          size_t arraySize = varSubType_size * totalCells_EC;
-          
-          t_buffer = (unsigned char*)malloc( arraySize );
-          memset(t_buffer, 0, arraySize );
+          size_t arraySize = varSubType_size * patchExts.totalCells_EC;
 
           patch_buffer[vcm][p] = (unsigned char*)malloc( arraySize );
           memset( patch_buffer[vcm][p], 0, arraySize );
           
-          if ( t_buffer == NULL || patch_buffer[vcm][p] == NULL ){
-            throw InternalError("DataArchiver::saveLabels_PIDX: Failed allocating memory", __FILE__, __LINE__);
-          }
-
           //__________________________________
           //  Read in Array3 data to t-buffer
-          new_dw->emitPIDX(pc, label, matlIndex, patch, t_buffer, arraySize);
+          new_dw->emitPIDX(pidx, label, matlIndex, patch, patch_buffer[vcm][p], arraySize);
+
+          #if 0           // to hardwire buffer values for debugging.
+          pidx.hardWireBufferValues(t_buffer, patchExts, arraySize, sample_per_variable );
+          #endif
+          
 
           //__________________________________
-          //  copy t_buffer -> patch_buffer
-          memcpy( patch_buffer[vcm][p], t_buffer, arraySize );
+          //  debugging
+          if (dbgPIDX.active() ){
+             pidx.printBufferWrap("DataArchiver::saveLabels_PIDX    BEFORE  PIDX_variable_write_data_layout",
+                                   subtype->getType(),
+                                   sample_per_variable,        
+                                   patchExts.lo_EC, patchExts.hi_EC,
+                                   patch_buffer[vcm][p],                          
+                                   arraySize );
+          }         
          
-          free(t_buffer);
-
-/*`==========TESTING==========*/
-if (dbgPIDX.active() ){
-  cout << "__________________________________ " << endl;
-  cout << "  DataArchiver::saveLabels_PIDX    BEFORE  PIDX_variable_write_data_layout, ArraySize: " << arraySize << endl;
-
-  double* d_buffer = (double*)malloc( arraySize );
-  memcpy( d_buffer, patch_buffer[vcm][p], arraySize );
-  
-  int c = 0;
-  for (int k=lo_EC.z(); k<hi_EC.z(); k++){
-    for (int j=lo_EC.y(); j<hi_EC.y(); j++){
-      for (int i=lo_EC.x(); i<hi_EC.x(); i++){
-        printf( " [%2i,%2i,%2i] ", i,j,k);
-        for ( int s = 0; s < sample_per_variable; ++s ){
-          printf( "%5.3f ",d_buffer[c]);
-          c++;
-        }
-      }
-      printf("\n");
-    }
-    printf("\n");
-  }   
-  cout << "\n__________________________________ " << endl;
-  printf("\n");
-  free(d_buffer);
-}
-/*===========TESTING==========`*/
-         
-         
-         
-          rc = PIDX_variable_write_data_layout(pc.variable[vc][m], local_offset_point, local_box_count_point, patch_buffer[vcm][p], PIDX_row_major);
-          PIDX_checkReturnCode( rc, "DataArchiver::saveLabels_PIDX - PIDX_variable_write_data_layout failure",__FILE__, __LINE__);
+          rc = PIDX_variable_write_data_layout(pidx.variable[vc][m], patchOffset, patchSize, patch_buffer[vcm][p], PIDX_row_major);
+          pidx.checkReturnCode( rc, "DataArchiver::saveLabels_PIDX - PIDX_variable_write_data_layout failure",__FILE__, __LINE__);
           
           totalBytesSaved += arraySize;
           
@@ -2515,7 +2680,7 @@ if (dbgPIDX.active() ){
           var_ps->setAttribute( "type",      TranslateVariableType( td->getName().c_str(), type != OUTPUT ) );
           var_ps->appendElement("variable",  label->getName());
           var_ps->appendElement("index",     matlIndex);
-          var_ps->appendElement("patch",     patchID);                     
+          var_ps->appendElement("patch",     patch->getID());                     
           var_ps->appendElement("start",     vcm);                         
           var_ps->appendElement("end",       vcm);          // redundant   
           var_ps->appendElement("filename",  idxFilename);
@@ -2526,8 +2691,8 @@ if (dbgPIDX.active() ){
         }  // is checkpoint?
       }  //  Patches
 
-      rc = PIDX_append_and_write_variable(pc.file, pc.variable[vc][m]);
-      PIDX_checkReturnCode( rc, "DataArchiver::saveLabels_PIDX - PIDX_append_and_write_variable failure",__FILE__, __LINE__);
+      rc = PIDX_append_and_write_variable(pidx.file, pidx.variable[vc][m]);
+      pidx.checkReturnCode( rc, "DataArchiver::saveLabels_PIDX - PIDX_append_and_write_variable failure",__FILE__, __LINE__);
       
       vcm++;
     }  //  Materials
@@ -2535,57 +2700,8 @@ if (dbgPIDX.active() ){
     vc++;
   }  //  Variables
 
-  //__________________________________
-  //      DEBUGGING   This simply creates a dummy variable
-  float **PIDX_patch_buffer;
-  if (PIDX_debug == 1)
-  {
-    rc = PIDX_variable_create("PIDX_test_variable", sizeof(float) * 8, FLOAT32, &(pc.variable[nSaveItems][0]));
-    PIDX_checkReturnCode( rc, "DataArchiver::saveLabels_PIDX - PIDX_variable_create failure",__FILE__, __LINE__);
-    
-    PIDX_patch_buffer = (float**)malloc(sizeof(float*) * patches->size());
-
-    for(int p=0;p<(type==CHECKPOINT_REDUCTION?1:patches->size());p++)
-    {
-      const Patch* patch  = patches->get(p);
-      IntVector hiE       = patch->getExtraCellHighIndex();
-      IntVector lowE      = patch->getExtraCellLowIndex();
-      IntVector offset    = level->getExtraCells();
-      IntVector pidxLo    = lowE + offset;                                // pidx array indexing starts at 0, must shift nExtraCells
-      IntVector nCells_EC = hiE - lowE;
-      int totalCells_EC   = nCells_EC.x() * nCells_EC.y() * nCells_EC.z();
-
-      printf("[PIDX %d] [%d] Offset and Count %d %d %d : %d %d %d\n", rank, vc, lowE.x(), lowE.y(), lowE.z(), nCells_EC.x(), nCells_EC.y(), nCells_EC.z() );
-
-      PIDX_point local_offset_point, local_box_count_point;
-
-      PIDX_set_point_5D(local_offset_point,    pidxLo.x(),    pidxLo.y(),    pidxLo.z(),   0, 0);
-      PIDX_set_point_5D(local_box_count_point, nCells_EC.x(), nCells_EC.y(), nCells_EC.z(), 1, 1);
-
-      PIDX_patch_buffer[p] = (float*)malloc(sizeof(float) * totalCells_EC);
-      memset(PIDX_patch_buffer[p], 0, sizeof(float) * totalCells_EC);
-
-
-      for (int k = 0; k < nCells_EC.z(); k++) {
-        for (int j = 0; j < nCells_EC.y(); j++) {
-          for (int i = 0; i < nCells_EC.x(); i++) {
-            unsigned long long index = (unsigned long long) ( nCells_EC.x() * (nCells_EC.y() * k) + (nCells_EC.x() * j) + i );
-            PIDX_patch_buffer[p][index] = 100 + ((globalExtents[0] * globalExtents[1]*(pidxLo.z() + k)) +(globalExtents[0]*(pidxLo.y() + j)) + (pidxLo.x() + i));
-          }
-        }
-      }
-
-      rc = PIDX_variable_write_data_layout(pc.variable[nSaveItems][0], local_offset_point, local_box_count_point, PIDX_patch_buffer[p], PIDX_row_major);
-      PIDX_checkReturnCode( rc, "DataArchiver::saveLabels_PIDX - PIDX_variable_write_data_layout failure",__FILE__, __LINE__);
-
-    }  //  Patches
-    rc = PIDX_append_and_write_variable(pc.file, pc.variable[nSaveItems][0]);
-    PIDX_checkReturnCode( rc, "DataArchiver::saveLabels_PIDX - PIDX_append_and_write_variable failure",__FILE__, __LINE__);
-  }  // debugging
-
-
-  rc = PIDX_close(pc.file);
-  PIDX_checkReturnCode( rc, "DataArchiver::saveLabels_PIDX - PIDX_close failure",__FILE__, __LINE__);
+  rc = PIDX_close(pidx.file);
+  pidx.checkReturnCode( rc, "DataArchiver::saveLabels_PIDX - PIDX_close failure",__FILE__, __LINE__);
 
 
   //__________________________________
@@ -2603,23 +2719,13 @@ if (dbgPIDX.active() ){
   free(patch_buffer);
   patch_buffer = 0;
 
-
-  if (PIDX_debug == 1)
-  {
-    for(int p=0;p<(type==CHECKPOINT_REDUCTION?1:patches->size());p++){
-      free(PIDX_patch_buffer[p]);
-    }
-    free(PIDX_patch_buffer);
-  }
-
   //__________________________________
   //  free memory
-  for (int i=0; i<nSaveItems + PIDX_extra_field; i++)
-  {
-    free(pc.variable[i]);
+  for (int i=0; i<nSaveItems ; i++){
+    free(pidx.variable[i]);
   }
-  free(pc.variable); 
-  pc.variable=0;
+  free(pidx.variable); 
+  pidx.variable=0;
 
 #endif
 
@@ -2677,21 +2783,6 @@ DataArchiver::createPIDX_dirs( std::vector< SaveItem >& saveLabels,
       string dirName = pidx.getDirectoryName(TD);
       Dir myDir = levelDir.createSubdirPlus( dirName );
     }
-  }
-#endif
-}
-
-//______________________________________________________________________
-//
-void
-DataArchiver::PIDX_checkReturnCode( const int rc,
-                                    const string warn,
-                                    const char* file, 
-                                    int line)
-{
-#if HAVE_PIDX
-  if (rc != PIDX_success){
-    throw InternalError(warn, file, line);
   }
 #endif
 }

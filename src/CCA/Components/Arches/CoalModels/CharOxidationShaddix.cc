@@ -468,7 +468,7 @@ CharOxidationShaddix::computeModel( const ProcessorGroup * pc,
     double particle_temp_rate_;
     int NIter;
     double rc_destruction_rate_;
-    double PO2_surf;
+    double PO2_surf=0.0;
     double PO2_surf_guess;
     double PO2_surf_tmp;
     double PO2_surf_new;
@@ -548,24 +548,24 @@ CharOxidationShaddix::computeModel( const ProcessorGroup * pc,
           
           // Calculate O2 diffusion coefficient
           DO2 = (CO2ph/_WCO2 + H2Oph/_WH2O + N2ph/_WN2)/(CO2ph/(_WCO2*_D1) + H2Oph/(_WH2O*_D2) + N2ph/(_WN2*_D3))*
-                (pow((temperatureph/_T0),1.5));
+                (std::pow((temperatureph/_T0),1.5));
           // Concentration C = P/RT
           Conc = MWmixph*denph*1000.0;
           ks = _As*exp(-_Es/(_R*particle_temperatureph));
           
           PO2_surf_guess = PO2_inf/2.0;
           PO2_surf_old = PO2_surf_guess-delta;
-          CO2CO = 0.02*(pow(PO2_surf_old,0.21))*exp(3070.0/particle_temperatureph);
+          CO2CO = 0.02*(std::pow(PO2_surf_old,0.21))*exp(3070.0/particle_temperatureph);
           OF = 0.5*(1.0 + CO2CO*(1+CO2CO));
           gamma = -(1.0-OF);
-          q = ks*(pow(PO2_surf_old,_n));
+          q = ks*(std::pow(PO2_surf_old,_n));
           f0 = PO2_surf_old - gamma - (PO2_inf-gamma)*exp(-(q*lengthph)/(2*Conc*DO2));
           
           PO2_surf_new = PO2_surf_guess+delta;
-          CO2CO = 0.02*(pow(PO2_surf_new,0.21))*exp(3070.0/particle_temperatureph);
+          CO2CO = 0.02*(std::pow(PO2_surf_new,0.21))*exp(3070.0/particle_temperatureph);
           OF = 0.5*(1.0 + CO2CO*(1+CO2CO));
           gamma = -(1.0-OF);
-          q = ks*(pow(PO2_surf_new,_n));
+          q = ks*(std::pow(PO2_surf_new,_n));
           f1 = PO2_surf_new - gamma - (PO2_inf-gamma)*exp(-(q*lengthph)/(2*Conc*DO2));
           
           for ( int iter=0; iter < NIter; iter++) {
@@ -576,17 +576,17 @@ CharOxidationShaddix::computeModel( const ProcessorGroup * pc,
             PO2_surf_new = max(0.0, min(PO2_inf, PO2_surf_new));            
             if (std::abs(PO2_surf_new-PO2_surf_old) < d_tol){
               PO2_surf=PO2_surf_new;
-              CO2CO = 0.02*(pow(PO2_surf,0.21))*exp(3070.0/particle_temperatureph);
+              CO2CO = 0.02*(std::pow(PO2_surf,0.21))*exp(3070.0/particle_temperatureph);
               OF = 0.5*(1.0 + CO2CO*(1+CO2CO));
               gamma = -(1.0-OF);
-              q = ks*(pow(PO2_surf,_n));
+              q = ks*(std::pow(PO2_surf,_n));
               break;
             }
             f0 = f1;
-            CO2CO = 0.02*(pow(PO2_surf_new,0.21))*exp(3070.0/particle_temperatureph);
+            CO2CO = 0.02*(std::pow(PO2_surf_new,0.21))*exp(3070.0/particle_temperatureph);
             OF = 0.5*(1.0 + CO2CO*(1+CO2CO));
             gamma = -(1.0-OF);
-            q = ks*(pow(PO2_surf_new,_n));
+            q = ks*(std::pow(PO2_surf_new,_n));
             f1 = PO2_surf_new - gamma - (PO2_inf-gamma)*exp(-(q*lengthph)/(2*Conc*DO2));
             PO2_surf=PO2_surf_new; // This is needed to assign PO2_surf if we don't converge.
           }
@@ -613,7 +613,7 @@ CharOxidationShaddix::computeModel( const ProcessorGroup * pc,
 
 
         max_char_reaction_rate_ = min( max_char_reaction_rate_ ,max_char_reaction_rate_O2_ );
-        char_reaction_rate_ = min(_pi*(pow(lengthph,2.0))*_WC*q , max_char_reaction_rate_); // kg/(s.#)    
+        char_reaction_rate_ = min(_pi*(std::pow(lengthph,2.0))*_WC*q , max_char_reaction_rate_); // kg/(s.#)    
 
         particle_temp_rate_ = -char_reaction_rate_/_WC/(1.0+CO2CO)*(CO2CO*_HF_CO2 + _HF_CO); // J/(s.#)
         char_rate[c] = (-char_reaction_rate_*weightph+char_production_rate_)/(_char_scaling_constant*_weight_scaling_constant);

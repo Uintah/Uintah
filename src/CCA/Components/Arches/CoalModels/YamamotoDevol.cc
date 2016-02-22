@@ -134,7 +134,7 @@ YamamotoDevol::problemSetup(const ProblemSpecP& params, int qn)
     int p_size=particle_sizes.size();
     for (int n=0; n<p_size; n=n+1)
       {
-        vol_dry.push_back((_pi/6)*pow(particle_sizes[n],3)); // m^3/particle
+        vol_dry.push_back((_pi/6.0)*std::pow(particle_sizes[n],3.0)); // m^3/particle
         mass_dry.push_back(vol_dry[n]*rhop); // kg/particle
         ash_mass_init.push_back(mass_dry[n]*ash_mass_frac); // kg_ash/particle (initial) 
         char_mass_init.push_back(mass_dry[n]*char_mass_frac); // kg_char/particle (initial)
@@ -319,7 +319,7 @@ YamamotoDevol::computeModel( const ProcessorGroup * pc,
         
         Xv = (rcmass_init-rcmassph)/rcmass_init;
         Xv = min(max(Xv,0.0),1.0);// make sure Xv is between 0 and 1
-        Fv = _c5*pow(Xv,5.0) + _c4*pow(Xv,4.0) + _c3*pow(Xv,3.0) + _c2*pow(Xv,2.0) + _c1*Xv +_c0;
+        Fv = _c5*std::pow(Xv,5.0) + _c4*std::pow(Xv,4.0) + _c3*std::pow(Xv,3.0) + _c2*std::pow(Xv,2.0) + _c1*Xv +_c0;
         kv = exp(Fv)*_Av*exp(-_Ev/(_R*temperatureph));
         
         rateMax = 0.5 * max( (rcmassph+min(0.0,charmassph))/(dt) + RHS_sourceph/(vol*weightph) , 0.0 );

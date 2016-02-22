@@ -25,9 +25,12 @@
 #ifndef UINTAH_HOMEBREW_PIDXOutputContext_H
 #define UINTAH_HOMEBREW_PIDXOutputContext_H
 
-#include <Core/Disclosure/TypeDescription.h>
 #include <sci_defs/pidx_defs.h>
 #if HAVE_PIDX
+#include <Core/Disclosure/TypeDescription.h>
+#include <Core/Geometry/IntVector.h>
+#include <Core/Grid/Level.h>
+#include <Core/Grid/Patch.h>
 #include <PIDX.h>
 #include <mpi.h>
 #include <string>
@@ -63,18 +66,55 @@ namespace Uintah {
 
   ****************************************/
 
-class TypeDescription;
-    
 class PIDXOutputContext {
   public:
     PIDXOutputContext();
     ~PIDXOutputContext();
+    
+    //  Struct for storing patch extents
+    struct patchExtents{      
+      IntVector lo_EC;
+      IntVector hi_EC;
+      IntVector patchSize;
+      IntVector patchOffset;
+      int totalCells_EC;
+      
+      //__________________________________
+      // debugging
+      void print(std::ostream& out){
+        out  << "patchExtents: patchOffset: " << patchOffset << " patchSize: " << patchSize << ", totalCells_EC " << totalCells_EC 
+             << ", lo_EC: " << lo_EC << ", hi_EC: " << hi_EC << std::endl; 
+      }
+    };
 
-    void initialize(std::string filename, 
-                    unsigned int timeStep, 
-                    int globalExtent[3], 
+    void initialize(std::string filename,
+                    unsigned int timeStep,
                     MPI_Comm comm);
     
+    void setLevelExtents( std::string desc, 
+                          IntVector lo,
+                          IntVector hi,
+                          PIDX_point& level_size );
+
+    void setPatchExtents( std::string desc, 
+                          const Patch* patch,
+                          const Level* level,
+                          const IntVector& boundaryLayer,
+                          const TypeDescription* TD,
+                          patchExtents& pExtents,
+                          PIDX_point& patchOffset,
+                          PIDX_point& nPatchCells );
+
+    void checkReturnCode( const int rc,
+                          const std::string warn,
+                          const char* file, 
+                          int line);
+                          
+    void hardWireBufferValues(unsigned char* patchBuffer, 
+                              const patchExtents patchExts,
+                              const size_t arraySize,
+                              const int samples_per_value );
+
     void setOutputDoubleAsFloat( bool me){
       d_outputDoubleAsFloat = me;
     }
@@ -82,12 +122,29 @@ class PIDXOutputContext {
     bool isOutputDoubleAsFloat(){
       return d_outputDoubleAsFloat;
     }
-    
+
 
     std::vector<TypeDescription::Type> getSupportedVariableTypes();
-    
+
     std::string getDirectoryName(TypeDescription::Type TD);
 
+    void
+    printBufferWrap( const std::string&   desc,
+                     const TypeDescription::Type TD,
+                     int             samples_per_value,
+                     IntVector     & lo_EC,
+                     IntVector     & hi_EC,
+                     unsigned char * dataPIDX,
+                     size_t          arraySize );
+    template<class T>
+    void printBuffer(const std::string & desc,
+                     const std::string & format,
+                     int samples_per_value,
+                     SCIRun::IntVector& lo_EC,
+                     SCIRun::IntVector& hi_EC,
+                     unsigned char* dataPIDX,
+                     size_t arraySize );
+                     
     std::string filename;
     unsigned int timestep;
     PIDX_file file;
@@ -95,14 +152,20 @@ class PIDXOutputContext {
     PIDX_variable **variable;         // is this the variableDescription?  --Todd
 
     PIDX_access access;
-  private:
-  
+    
 
-      
+  //__________________________________
+  //    
+  private:
+
     bool d_isInitialized;
     bool d_outputDoubleAsFloat;
+    int d_levelExtents[3];
     
-    
+    IntVector getLevelExtents(){
+      IntVector levelExtents (d_levelExtents[0],d_levelExtents[1],d_levelExtents[2]);                                                                          
+      return levelExtents;                    
+    };
 
   };
 } // End namespace Uintah
