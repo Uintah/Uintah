@@ -23,8 +23,8 @@
  */
 
 
-#ifndef UINTAH_HOMEBREW_SCHEDULER_H
-#define UINTAH_HOMEBREW_SCHEDULER_H
+#ifndef CCA_PORTS_SCHEDULER_H
+#define CCA_PORTS_SCHEDULER_H
 
 #include <Core/Parallel/UintahParallelPort.h>
 #include <Core/ProblemSpec/ProblemSpecP.h>
@@ -36,8 +36,8 @@
 
 #include <map>
 #include <list>
-#include <string>
 #include <set>
+#include <string>
 #include <vector>
 
 
@@ -70,8 +70,6 @@ KEYWORDS
 
 DESCRIPTION
 
-  
-WARNING
   
 ****************************************/
 
@@ -139,7 +137,7 @@ class Scheduler : public UintahParallelPort {
 
     virtual DataWarehouse* get_dw( int idx ) = 0;
 
-    virtual DataWarehouse* getLastDW(void) = 0;
+    virtual DataWarehouse* getLastDW() = 0;
 
     virtual bool isOldDW( int idx ) const = 0;
 
@@ -155,11 +153,11 @@ class Scheduler : public UintahParallelPort {
 
     virtual void setRestartable( bool restartable ) = 0;
     
-    virtual bool isRestartInitTimestep()=0;
+    virtual bool isRestartInitTimestep() = 0;
 
 //        protected:
 
-    virtual void setPositionVar(const VarLabel* posLabel) = 0;
+    virtual void setPositionVar( const VarLabel* posLabel ) = 0;
     
     virtual void scheduleParticleRelocation( const LevelP& coarsestLevelwithParticles,
                                              const VarLabel* posLabel,
@@ -235,9 +233,13 @@ class Scheduler : public UintahParallelPort {
 
   private:
 
-    Scheduler(const Scheduler&);
-    Scheduler& operator=(const Scheduler&);
+    // disable copy, assignment, and move
+    Scheduler( const Scheduler & )            = delete;
+    Scheduler& operator=( const Scheduler & ) = delete;
+    Scheduler( Scheduler &&)                  = delete;
+    Scheduler& operator=( Scheduler && )      = delete;
 };
-} // End namespace Uintah
 
-#endif
+} // namespace Uintah
+
+#endif // CCA_PORTS_SCHEDULER_H

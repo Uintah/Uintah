@@ -36,12 +36,13 @@
 #include <Core/Grid/Task.h>
 #include <Core/Parallel/BufferInfo.h>
 #include <Core/Util/InfoMapper.h>
+#include <Core/Util/Timers/Timers.hpp>
 
 #include <chrono>
-#include <vector>
+#include <fstream>
 #include <map>
 #include <mutex>
-#include <fstream>
+#include <vector>
 
 namespace Uintah {
 
@@ -154,12 +155,12 @@ class MPIScheduler : public SchedulerCommon {
     };
 
     ReductionInfoMapper< TimingStat, double > mpi_info_;
-    
+
     void computeNetRunTimeStats(InfoMapper< SimulationState::RunTimeStat, double >& runTimeStats);
 
-    MPIScheduler*       parentScheduler_;
+    MPIScheduler *  parentScheduler_;
 
-    // Performs the reduction task. (In threaded schdeulers, a single worker thread will execute this.)
+    // Performs the reduction task. (In threaded schedulers, a single worker thread will execute this.)
     virtual void initiateReduction( DetailedTask* task );
 
     enum {
@@ -185,11 +186,11 @@ class MPIScheduler : public SchedulerCommon {
     void outputTimingStats( const char* label );
 
     MessageLog                  log;
-    const Output*               oport_;
+    const Output              * oport_;
     CommRecMPI                  sends_[MAX_THREADS];
     CommRecMPI                  recvs_;
 
-    double                      d_lasttime;
+    clock_type::time_point      d_lasttime;
     std::vector<const char*>    d_labels;
     std::vector<double>         d_times;
 
@@ -204,19 +205,30 @@ class MPIScheduler : public SchedulerCommon {
     // The following locks are for multi-threaded schedulers that derive from MPIScheduler
     //   This eliminates miles of unnecessarily redundant code in threaded schedulers
     //-------------------------------------------------------------------------
-    // multiple reader, single writer lock (pthread_rwlock_t wrapper)
     std::mutex      recvLock;               // CommRecMPI recvs lock
     std::mutex      sendLock;               // CommRecMPI sends lock
     std::mutex      dlbLock;                // load balancer lock
     std::mutex      waittimesLock;          // MPI wait times lock
 
-    std::chrono::high_resolution_clock::time_point m_last_exec_time{};
+  private:
+
+    // disable copy, assignment, and move
+    MPIScheduler( const MPIScheduler & )            = delete;
+    MPIScheduler& operator=( const MPIScheduler & ) = delete;
+    MPIScheduler( MPIScheduler &&)                  = delete;
+    MPIScheduler& operator=( MPIScheduler && )      = delete;
 
   private:
 
-    // Disable copy and assignment
-    MPIScheduler( const MPIScheduler& );
-    MPIScheduler& operator=( const MPIScheduler& );
+    // Timers for MPI stats
+    Timers::Simple  m_task_exec_timer{};
+    Timers::Simple  m_mpi_send_timer{};
+    Timers::Simple  m_total_send_timer{};
+    Timers::Simple  m_mpi_recv_timer{};
+    Timers::Simple  m_total_recv_timer{};
+    Timers::Simple  m_mpi_test_timer{};
+    Timers::Simple  m_mpi_wait_timer{};
+    Timers::Simple  m_mpi_reduce_timer{};
 };
 
 } // End namespace Uintah

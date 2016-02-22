@@ -124,10 +124,10 @@ class SchedulerCommon;
       USE_IF_ASSERTS_ON( Patch::VariableBasis basis = Patch::translateTypeToBasis(req->var->typeDescription()->getType(), true); )
 
       ASSERT(fromPatch == 0 || (SCIRun::Min(low, fromPatch->getExtraLowIndex(basis, req->var->getBoundaryLayer())) ==
-				fromPatch->getExtraLowIndex(basis, req->var->getBoundaryLayer())));
+				     fromPatch->getExtraLowIndex(basis, req->var->getBoundaryLayer())));
 
       ASSERT(fromPatch == 0 || (SCIRun::Max(high, fromPatch->getExtraHighIndex(basis, req->var->getBoundaryLayer())) ==
-				fromPatch->getExtraHighIndex(basis, req->var->getBoundaryLayer())));
+				     fromPatch->getExtraHighIndex(basis, req->var->getBoundaryLayer())));
 
       toTasks.push_back(toTask);
     }
@@ -212,10 +212,8 @@ class SchedulerCommon;
     void addVar( Variable* var ) { toVars.push_back(var); }
 
     void addReceiveListener( int mpiSignal );
-    
-    // TODO - FIXME: Figure out why this was commented out long ago - APH 02/12/16
-//    DependencyBatch          * req_next;
 
+    
     DependencyBatch          * comp_next;
     DetailedTask             * fromTask;
     std::list<DetailedTask*>   toTasks;
