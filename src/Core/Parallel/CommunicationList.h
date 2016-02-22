@@ -29,7 +29,7 @@
 
 #include <CCA/Components/Schedulers/BatchReceiveHandler.h>
 
-#include <Core/Malloc/AllocatorTags.hpp>
+#include <Core/Malloc/Allocators/AllocatorTags.hpp>
 #include <Core/Parallel/BufferInfo.h>
 #include <Core/Parallel/PackBufferInfo.h>
 
@@ -164,20 +164,20 @@ using TrackingListAllocator = Uintah::TrackingAllocator<   T
                                                        >;
 
 
-using SendCommList = Lockfree::CircularPool<   SendCommNode
-                                             , Lockfree::ENABLE_SIZE        // size model
-                                             , Lockfree::EXCLUSIVE_INSTANCE // usage model
-                                             , TrackingListAllocator        // allocator
-                                             , TrackingListAllocator        // size_type allocator
-                                           >;
+using SendCommList = Lockfree::Pool<  SendCommNode
+                                    , uint64_t
+                                    , 1
+                                    , TrackingListAllocator        // allocator
+                                    , TrackingListAllocator        // size_type allocator
+                                    >;
 
 
-using RecvCommList = Lockfree::CircularPool<   RecvCommNode
-                                             , Lockfree::ENABLE_SIZE        // size model
-                                             , Lockfree::EXCLUSIVE_INSTANCE // usage model
-                                             , TrackingListAllocator        // allocator
-                                             , TrackingListAllocator        // size_type allocator
-                                           >;
+using RecvCommList = Lockfree::Pool<  RecvCommNode
+                                    , uint64_t
+                                    , 1
+                                    , TrackingListAllocator        // allocator
+                                    , TrackingListAllocator        // size_type allocator
+                                   >;
 
 } // end namespace Uintah
 
