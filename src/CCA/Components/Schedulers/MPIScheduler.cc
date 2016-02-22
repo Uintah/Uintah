@@ -98,7 +98,7 @@ MPIScheduler::MPIScheduler( const ProcessorGroup * myworld
   Kokkos::initialize();
 #endif //UINTAH_ENABLE_KOKKOS
 
-  d_lasttime = clock_type::now();
+  m_last_exec_timer.reset();
 
   reloc_new_posLabel_ = 0;
 
@@ -963,10 +963,9 @@ void MPIScheduler::execute( int tgnum /* = 0 */, int iteration /* = 0 */ )
 void
 MPIScheduler::emitTime( const char* label )
 {
-  clock_type::time_point current_time = std::chrono::high_resolution_clock::now();
-  double elapsed = std::chrono::duration_cast<nanoseconds>( current_time - d_lasttime ).count() * 1.0e-9;
+  double elapsed = m_last_exec_timer.seconds();
+  m_last_exec_timer.reset();
   emitTime(label, elapsed);
-  d_lasttime = current_time;
 }
 
 //______________________________________________________________________
@@ -999,9 +998,8 @@ MPIScheduler::emitNetMPIStats()
     emitTime("Total recv time"      , mpi_info_[TotalRecv]   - mpi_info_[TotalRecvMPI] - mpi_info_[TotalWaitMPI]);
     emitTime("Total comm time"      , mpi_info_[TotalRecv]   + mpi_info_[TotalSend]    + mpi_info_[TotalReduce]);
 
-    clock_type::time_point current_time = clock_type::now();
-    double totalexec = std::chrono::duration_cast<nanoseconds>( current_time - d_lasttime ).count() * 1.0e-9;
-    d_lasttime = current_time;
+    double totalexec = m_last_exec_timer.seconds();
+    m_last_exec_timer.reset();
 
     emitTime("Other execution time", totalexec - mpi_info_[TotalSend] - mpi_info_[TotalRecv] - mpi_info_[TotalTask] - mpi_info_[TotalReduce]);
   }
@@ -1132,8 +1130,7 @@ MPIScheduler::outputTimingStats( const char* label )
     }
   }
 
-  clock_type::time_point current_time = clock_type::now();
-  d_lasttime = current_time;
+  m_last_exec_timer.reset();
 
   if (execout.active()) {
     static int count = 0;

@@ -190,7 +190,6 @@ class MPIScheduler : public SchedulerCommon {
     CommRecMPI                  sends_[MAX_THREADS];
     CommRecMPI                  recvs_;
 
-    clock_type::time_point      d_lasttime;
     std::vector<const char*>    d_labels;
     std::vector<double>         d_times;
 
@@ -221,6 +220,7 @@ class MPIScheduler : public SchedulerCommon {
   private:
 
     // Timers for MPI stats
+    Timers::Simple  m_last_exec_timer{};
     Timers::Simple  m_task_exec_timer{};
     Timers::Simple  m_mpi_send_timer{};
     Timers::Simple  m_total_send_timer{};
