@@ -44,6 +44,8 @@ using clock_type = std::chrono::high_resolution_clock;
 using nanoseconds = std::chrono::nanoseconds;
 
 using TaskPool = Lockfree::Pool< DetailedTask*
+                               , uint64_t
+                               , 1u
                                , Uintah::MallocAllocator      // allocator
                                , Uintah::MallocAllocator      // size_type allocator
                                >;

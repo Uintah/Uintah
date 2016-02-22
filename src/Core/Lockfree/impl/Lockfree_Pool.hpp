@@ -16,6 +16,8 @@ namespace Lockfree { namespace Impl {
 // So each thread should have its own copy of the pool
 // It is not thread safe for multiple threads to interact with the same instance of a pool
 template <  typename T
+          , typename BitsetBlockType
+          , unsigned BitsetNumBlocks
           , template <typename> class Allocator
          >
 class Pool
@@ -24,37 +26,46 @@ public:
   using value_type = T;
   template <typename U> using allocator = Allocator<U>;
 
-  using node_type = Node<T>;
+  using node_type = Node<T, BitsetBlockType, BitsetNumBlocks >;
   using node_allocator_type = allocator<node_type>;
 
   using iterator = typename node_type::iterator;
+  using handle   = typename node_type::handle;
 
   /// emplace( args... )
   ///
   /// return an iterator to the newly created value
   template <typename... Args>
-  iterator emplace( Args&&... args)
+  iterator emplace( handle const& h, Args&&... args)
   {
     constexpr size_t one = 1u;
+
     m_size.fetch_add( one, std::memory_order_relaxed );
 
     int added_node = 0;
-    node_type * start = m_head.load( std::memory_order_relaxed );
+    node_type * const start = static_cast<bool>(h) ? node_type::get_node(h) : m_head.load( std::memory_order_relaxed );
+    int start_block = static_cast<bool>(h) ? node_type::get_block(h) : 0;
 
-    const int num_search_nodes = 100u * size() < 95u * capacity() ?
-                                   m_nodes.load( std::memory_order_relaxed ) : 1;
+    const int num_search_nodes = 100u * size() < 95u * capacity() ? m_nodes.load( std::memory_order_relaxed ) : 1;
 
-    iterator itr = start->emplace_helper( num_search_nodes
-                                         ,m_node_allocator
-                                         ,added_node
-                                         ,std::forward<Args>(args)...
-                                        );
+    iterator itr = node_type::emplace_helper( m_pool_id
+                                            , this
+                                            , start
+                                            , start_block
+                                            , start
+                                            , num_search_nodes
+                                            , m_node_allocator
+                                            , added_node
+                                            , std::forward<Args>(args)...
+                                            );
 
-
-    m_head.store( node_type::get_node(itr), std::memory_order_relaxed );
 
     if (added_node) {
       m_nodes.fetch_add( one, std::memory_order_relaxed );
+    }
+
+    if (!h) {
+      m_head.store( node_type::get_node(itr), std::memory_order_relaxed );
     }
 
     return itr;
@@ -72,44 +83,23 @@ public:
     }
   }
 
-  /// erase_and_advance( iterator, pred )
-  ///
-  /// if the iterator is valid erase its current value
-  /// advance it to the next value for which predicate is true
   template <typename UnaryPredicate>
-  void erase_and_advance( iterator & itr, UnaryPredicate const & pred )
-  {
-    if (itr) {
-      if (m_size.load( std::memory_order_relaxed) > 1u ) {
-        node_type::erase_and_advance(itr, pred);
-        constexpr size_t one = 1;
-        m_size.fetch_sub( one, std::memory_order_relaxed );
-      }
-      else {
-        erase( itr );
-      }
-    }
-  }
-
-  /// find_any( predicate )
-  ///
-  /// return an iterator to a value for which predicate returns true
-  /// Predicate is a function, functor, or lambda of the form
-  /// bool ()( const value_type & )
-  /// If there are no values for which predicate is true return an invalid iterator
-  template <typename UnaryPredicate>
-  iterator find_any( UnaryPredicate const & pred ) const
+  iterator find_any( handle const& h, UnaryPredicate const & pred ) const
   {
     iterator itr{};
 
-    if (m_size.load( std::memory_order_relaxed) > 0u ) {
-      node_type * start = m_find_head.load( std::memory_order_relaxed );
-      itr = node_type::find_any( start, pred );
+    if (m_size.load( std::memory_order_relaxed ) == 0u) return itr;
 
-      // try to set front to itr
-      if ( itr ) {
-        m_find_head.store( node_type::get_node(itr), std::memory_order_relaxed );
-      }
+    node_type * start = static_cast<bool>(h) ?
+                        node_type::get_node(h) :
+                        m_find_head.load( std::memory_order_relaxed )
+                        ;
+    int start_block = static_cast<bool>(h) ? node_type::get_block(h) : 0;
+
+    itr = node_type::find_any( start, start_block, start, pred );
+
+    if ( !h && itr ) {
+      m_find_head.store( node_type::get_node(itr), std::memory_order_relaxed );
     }
 
     return itr;

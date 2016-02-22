@@ -7,11 +7,12 @@
 
 namespace Lockfree {
 
-
 // Copies of pool are shallow,  i.e., they point to the same reference counted memory.
 // So each thread should have its own copy of the pool
 // It is not thread safe for multiple threads to interact with the same instance of a pool
 template <  typename T
+          , typename BitsetBlockType = uint64_t
+          , unsigned BitsetNumBlocks = 1u
           , template <typename> class Allocator = std::allocator
           , template <typename> class SizeAllocator = std::allocator
           , typename Mapper = ThreadIDMapper
@@ -26,12 +27,18 @@ public:
   using mapper = Mapper;
 
   using pool_type = Pool<  T
+                         , BitsetBlockType
+                         , BitsetNumBlocks
                          , Allocator
                          , SizeAllocator
                          , Mapper
                         >;
 
-  using impl_pool_type = Impl::Pool<T, Allocator >;
+  using impl_pool_type = Impl::Pool<  T
+                                    , BitsetBlockType
+                                    , BitsetNumBlocks
+                                    , Allocator
+                                   >;
   using impl_node_type = typename impl_pool_type::node_type;
 
 
@@ -61,49 +68,66 @@ private:
 
 public:
   using iterator = typename impl_pool_type::iterator;
+  using handle   = typename impl_pool_type::handle;
 
   /// insert( value )
   ///
   /// return an iterator to the newly inserted value
-  iterator insert(value_type const & value)
-  {
-    return emplace(value);
-  }
+  iterator insert(value_type const & value) { return emplace( handle{}, value); }
+
+  /// insert( value )
+  ///
+  /// return an iterator to the newly inserted value
+  iterator insert( handle const& h, value_type const & value) { return emplace(h, value); }
+
+  /// return an iterator to the newly created value
+  iterator emplace() { return emplace( handle{} ); }
+
+  /// emplace( args... )
+  ///
+  /// return an iterator to the newly created value
+  template <typename U>
+  typename std::enable_if< !Impl::equivalent< U, handle >::value, iterator >::type
+  emplace(U & u) { return emplace( handle{}, u ); }
+
+  /// emplace( args... )
+  ///
+  /// return an iterator to the newly created value
+  template <typename U, typename... Args>
+  typename std::enable_if< !Impl::equivalent< U, handle >::value, iterator >::type
+  emplace(U && u) { return emplace( handle{}, std::forward<U>(u) ); }
+
+  /// emplace( args... )
+  ///
+  /// return an iterator to the newly created value
+  template <typename U, typename... Args>
+  typename std::enable_if< !Impl::equivalent< U, handle >::value, iterator >::type
+  emplace(U & u, Args&&... args) { return emplace( handle{}, u, std::forward<Args>(args)...); }
+
+  /// emplace( args... )
+  ///
+  /// return an iterator to the newly created value
+  template <typename U, typename... Args>
+  typename std::enable_if< !Impl::equivalent< U, handle >::value, iterator >::type
+  emplace(U && u, Args&&... args) { return emplace( handle{}, std::forward<U>(u), std::forward<Args>(args)...); }
 
   /// emplace( args... )
   ///
   /// return an iterator to the newly created value
   template <typename... Args>
-  iterator emplace(Args&&... args)
+  iterator emplace(handle && h, Args&&... args) { return emplace( h, std::forward<Args>(args)...); }
+
+  /// emplace( args... )
+  ///
+  /// return an iterator to the newly created value
+  template <typename... Args>
+  iterator emplace(handle const& h, Args&&... args)
   {
     m_size->fetch_add( one, std::memory_order_relaxed );
 
-    const size_t id = m_mapper(m_num_levels, args...);
+    const size_t id = static_cast<bool>(h) ? impl_node_type::get_node(h)->impl_pool_id() : m_mapper(m_num_levels);
 
-    iterator itr = m_pools[id].m_pool.emplace( std::forward<Args>(args)... );
-
-    return itr;
-  }
-
-
-
-  /// find_any( predicate )
-  ///
-  /// return an iterator to a value for which predicate returns true
-  /// Predicate is a function, functor, or lambda of the form
-  /// bool ()( const value_type & )
-  /// If there are no values for which predicate is true return an invalid iterator
-  template <typename UnaryPredicate>
-  iterator find_any( UnaryPredicate const & pred ) const
-  {
-    iterator itr{};
-
-    size_t start = m_mapper( m_num_levels );
-
-    for (size_t i=0u; !itr && i < m_num_levels; ++i) {
-      itr = m_pools[(i+start)%m_num_levels].m_pool.find_any(pred);
-    }
-
+    iterator itr = m_pools[id].m_pool.emplace( h, std::forward<Args>(args)... );
     return itr;
   }
 
@@ -113,9 +137,55 @@ public:
   //  may return an invalid iterator
   iterator find_any() const
   {
-    auto pred = []( const value_type & ) { return true; };
-    return find_any( pred );
+    return find_any( handle{}, []( value_type const& ) { return true; } );
   }
+
+  /// find_any()
+  ///
+  /// return any valid iterater
+  //  may return an invalid iterator
+  iterator find_any(handle const& h) const
+  {
+    return find_any( h, []( value_type const& ) { return true; } );
+  }
+
+  /// find_any( predicate )
+  ///
+  /// return an iterator to a value for which predicate returns true
+  /// Predicate is a function, functor, or lambda of the form
+  /// bool ()( const value_type & )
+  /// If there are no values for which predicate is true return an invalid iterator
+  template <typename UnaryPredicate>
+  typename  std::enable_if< !Impl::equivalent< UnaryPredicate, handle >::value, iterator >::type
+  find_any( UnaryPredicate const & pred ) const
+  {
+    return find_any( handle{}, pred );
+  }
+
+  /// find_any( predicate )
+  ///
+  /// return an iterator to a value for which predicate returns true
+  /// Predicate is a function, functor, or lambda of the form
+  /// bool ()( const value_type & )
+  /// If there are no values for which predicate is true return an invalid iterator
+  template <typename UnaryPredicate>
+  iterator find_any( handle const& h, UnaryPredicate const & pred ) const
+  {
+    iterator itr{};
+
+    if (m_size->load( std::memory_order_relaxed ) == 0u ) return itr;
+
+    const int start = static_cast<int>( static_cast<bool>(h) ?
+                                        impl_node_type::get_node(h)->impl_pool_id() :
+                                        m_mapper(m_num_levels)
+                                      );
+
+    for (int i=start; !itr && i<(m_num_levels+start); ++i) {
+      itr = m_pools[i%m_num_levels].m_pool.find_any(h, pred);
+    }
+    return itr;
+  }
+
 
   /// erase( iterator )
   ///
@@ -127,30 +197,6 @@ public:
       pool->erase( itr );
       m_size->fetch_sub( one, std::memory_order_relaxed );
     }
-  }
-
-  /// erase_and_advance( iterator, pred )
-  ///
-  /// if the iterator is valid erase its current value
-  /// advance it to the next value for which predicate is true
-  template <typename UnaryPredicate>
-  void erase_and_advance( iterator & itr, UnaryPredicate const & pred )
-  {
-    if (itr) {
-      impl_pool_type * pool = reinterpret_cast<impl_pool_type *>( impl_node_type::get_node(itr)->impl_pool() );
-      pool->erase_and_advance( itr, pred );
-      m_size->fetch_sub( one, std::memory_order_relaxed );
-    }
-  }
-
-  /// erase_and_advance( iterator )
-  ///
-  /// if the iterator is valid erase its current value
-  /// advance it to the next value
-  void erase_and_advance( iterator & itr )
-  {
-    auto pred = []( value_type const& )->bool { return true; };
-    erase_and_advance( itr, pred );
   }
 
   /// size()
@@ -271,7 +317,7 @@ public:
   ~Pool()
   {
 
-    if ( m_refcount &&  m_refcount->fetch_sub(one, std::memory_order_relaxed ) == one ) {
+    if ( m_refcount && m_refcount->fetch_sub(one, std::memory_order_relaxed ) == one ) {
 
       for ( size_t i=0; i<m_num_levels; ++i) {
         m_pool_allocator.destroy( m_pools + i );

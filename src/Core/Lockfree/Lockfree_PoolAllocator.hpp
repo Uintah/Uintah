@@ -11,6 +11,8 @@
 namespace Lockfree {
 
 template <  typename T
+          , typename BitsetBlockType = uint64_t
+          , unsigned BitsetNumBlocks = 1u
           , template <typename> class Allocator = std::allocator
           , template <typename> class SizeAllocator = std::allocator
         >
@@ -28,6 +30,8 @@ class PoolAllocator
 
 public:
   using internal_pool_type = LevelPool<  Node
+                                       , BitsetBlockType
+                                       , BitsetNumBlocks
                                        , Allocator
                                        , SizeAllocator
                                       >;
@@ -49,6 +53,8 @@ public:
   struct rebind
   {
     using other = PoolAllocator<   U
+                                 , BitsetBlockType
+                                 , BitsetNumBlocks
                                  , Allocator
                                  , SizeAllocator
                                >;
@@ -107,13 +113,16 @@ public:
 
     size_t level = m_mapper( m_pool.num_levels() );
 
+    typename internal_pool_type::iterator itr;
     if ( hint ) {
       Node * node = reinterpret_cast<Node *>(hint);
       pool_node_type * pool_node = reinterpret_cast<pool_node_type *>(node->m_pool_node);
-      level = pool_node->impl_pool_id();
+      typename internal_pool_type::handle h = pool_node->get_handle( node );
+      itr = m_pool.emplace( h, level );
     }
-
-    typename internal_pool_type::iterator itr = m_pool.emplace( level );
+    else {
+      itr = m_pool.emplace( level );
+    }
 
     if (!itr) {
       throw std::bad_alloc();

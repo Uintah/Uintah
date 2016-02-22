@@ -2,6 +2,9 @@
 #define LOCKFREE_BITS_HPP
 
 #include "Lockfree_Macros.hpp"
+#include <atomic>
+#include <array>
+#include <iostream>
 
 namespace Lockfree { namespace Impl {
 
@@ -46,80 +49,100 @@ int count_trailing_zeros( unsigned char i )
   return count_trailing_zeros( static_cast<unsigned>(i) );
 }
 
-//-----------------------------------------------------------------------------
-/// popcount( integer_type i )
-///
-/// Returns the number of 1-bits in i.
-
+template <typename T>
 LOCKFREE_FORCEINLINE
 constexpr
-int popcount( unsigned i )
+T complement( T const& t )
 {
-  return __builtin_popcount( i );
-}
-LOCKFREE_FORCEINLINE
-constexpr
-int popcount( unsigned long i )
-{
-  return __builtin_popcountl( i );
-}
-LOCKFREE_FORCEINLINE
-constexpr
-int popcount( unsigned long long i )
-{
-  return __builtin_popcountll( i );
+  static_assert( std::is_integral<T>::value, " Must be integral type ");
+  return static_cast<T>(~t);
 }
 
-LOCKFREE_FORCEINLINE
-constexpr
-int popcount( unsigned short i )
-{
-  return popcount( static_cast<unsigned>(i) );
-}
-
-LOCKFREE_FORCEINLINE
-constexpr
-int popcount( unsigned char i )
-{
-  return popcount( static_cast<unsigned>(i) );
-}
 
 //-----------------------------------------------------------------------------
-LOCKFREE_FORCEINLINE
-constexpr
-unsigned char complement( unsigned char i )
-{
-  return static_cast<unsigned char>(~i);
-}
 
-LOCKFREE_FORCEINLINE
-constexpr
-unsigned short complement( unsigned short i )
+template <typename BlockType, unsigned NumBlocks>
+class Bitset
 {
-  return static_cast<unsigned short>(~i);
-}
+  static_assert( std::is_unsigned<BlockType>::value, "BlockType must be an unsigned integer type");
 
-LOCKFREE_FORCEINLINE
-constexpr
-unsigned complement( unsigned i )
-{
-  return ~i;
-}
+  static constexpr int log2( BlockType n )
+  { return n>1u ? 1 + log2( n >> 1 ) : 0; }
 
-LOCKFREE_FORCEINLINE
-constexpr
-unsigned long complement( unsigned long i )
-{
-  return ~i;
-}
+public:
+  static constexpr int capacity = NumBlocks * sizeof(BlockType) * CHAR_BIT;
 
-LOCKFREE_FORCEINLINE
-constexpr
-unsigned long long complement( unsigned long long i )
-{
-  return ~i;
-}
-//-----------------------------------------------------------------------------
+  using block_type = BlockType;
+
+  static constexpr block_type block_size  = sizeof(block_type) * CHAR_BIT;
+  static constexpr int        num_blocks  = capacity / block_size;
+  static constexpr int        block_mask  = block_size - 1u;
+  static constexpr int        block_shift = log2(block_size);
+  static constexpr block_type one         = 1u;
+  static constexpr block_type zero        = 0u;
+
+  Bitset() = default;
+
+  Bitset( const Bitset & ) = delete;
+  Bitset & operator=( const Bitset & ) = delete;
+  Bitset( Bitset && ) = delete;
+  Bitset & operator=( Bitset && ) = delete;
+
+
+  LOCKFREE_FORCEINLINE
+  // return true if this call set the bit to 1
+  bool set( int i, std::memory_order order = std::memory_order_relaxed )
+  {
+    const block_type bit = one << (i & block_mask);
+    return !(m_blocks[ i >> block_shift ].fetch_or( bit, order) & bit);
+  }
+
+  LOCKFREE_FORCEINLINE
+  // return true if this call set the bit to 0
+  bool clear( int i, std::memory_order order = std::memory_order_relaxed )
+  {
+    const block_type bit = one << (i & block_mask);
+    return m_blocks[ i >> block_shift ].fetch_and( complement(bit), order) & bit;
+  }
+
+  LOCKFREE_FORCEINLINE
+  // return true if the ith bit is set
+  bool test( int i, std::memory_order order = std::memory_order_relaxed ) const
+  {
+    const block_type bit = one << (i & block_mask);
+    return m_blocks[ i >> block_shift ].load( order ) & bit;
+  }
+
+  LOCKFREE_FORCEINLINE
+  block_type and_block( int i, block_type b, std::memory_order order = std::memory_order_relaxed )
+  {
+    return m_blocks[i].fetch_and( b, order );
+  }
+
+  LOCKFREE_FORCEINLINE
+  block_type or_block( int i, block_type b, std::memory_order order = std::memory_order_relaxed )
+  {
+    return m_blocks[i].fetch_or( b, order );
+  }
+
+  LOCKFREE_FORCEINLINE
+  block_type load_block( int i, std::memory_order order = std::memory_order_relaxed ) const
+  {
+    return m_blocks[i].load( order );
+  }
+
+  friend std::ostream & operator<<(std::ostream & out, Bitset const& b) {
+    for (int i=0; i<b.num_blocks; ++i) {
+      out << std::hex << b.load_block(i) << " ";
+    }
+    out << std::dec << "\b";
+    return out;
+  }
+
+private:
+
+  std::array< std::atomic<block_type>, num_blocks> m_blocks{};
+};
 
 }} // namespace Lockfree::Impl
 

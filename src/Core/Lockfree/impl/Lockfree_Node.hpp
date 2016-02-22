@@ -14,6 +14,19 @@
 namespace Lockfree { namespace Impl {
 
 template <typename T>
+struct remove_cvr
+{
+  using type = typename std::remove_reference< typename std::remove_cv< T >::type >::type;
+};
+
+template <typename T, typename U>
+struct equivalent
+{
+  static constexpr bool value = std::is_same< typename remove_cvr<T>::type, typename remove_cvr<U>::type >::value;
+};
+
+
+template <typename T>
 constexpr int align_to_cacheline()
 {
   return LOCKFREE_ALIGNOF(T) > 64 ? LOCKFREE_ALIGNOF(T) : 64;
@@ -24,18 +37,19 @@ constexpr int align_to_cacheline()
 ///
 /// Fundamental building block for more complex lockfree data structures
 //-----------------------------------------------------------------------------
-template <typename T>
+template <typename T, typename BitsetBlockType, unsigned BitsetNumBlocks>
 class LOCKFREE_ALIGNAS( align_to_cacheline<T>() ) Node
 {
-
 public:
-  using node_type = Node<T>;
+  using node_type = Node<T, BitsetBlockType, BitsetNumBlocks>;
   using value_type = T;
-  using bitset_type = uint64_t;
+  using bitset_type = Bitset<BitsetBlockType, BitsetNumBlocks>;
+  using block_type = typename bitset_type::block_type;
 
-  static constexpr int capacity = sizeof(bitset_type) * CHAR_BIT;
-  static constexpr bitset_type one = 1u;
-  static constexpr bitset_type zero = 0u;
+  static constexpr int capacity = bitset_type::capacity;
+  static constexpr block_type one  = 1u;
+  static constexpr block_type zero = 0u;
+
 
   /// class iterator
   ///
@@ -57,13 +71,6 @@ public:
     LOCKFREE_FORCEINLINE
     value_type * operator->() const { return m_node->get_ptr(m_idx); }
 
-    // advance the iterator to the next item
-    LOCKFREE_FORCEINLINE
-    void operator++() {
-      node_type::advance(*this);
-      std::atomic_thread_fence( std::memory_order_seq_cst );
-    }
-
     // is this iterator valid ?
     LOCKFREE_FORCEINLINE
     explicit operator bool() const { return m_node != nullptr; }
@@ -71,17 +78,11 @@ public:
 
     // release the iterator
     LOCKFREE_FORCEINLINE
-    size_t level() const
-    {
-      return m_node->impl_pool_id();
-    }
+    size_t level() const { return m_node->impl_pool_id(); }
 
     // release the iterator
     LOCKFREE_FORCEINLINE
-    void clear()
-    {
-      *this = iterator{};
-    }
+    void clear() { *this = iterator{}; }
 
     // construct an invalid iterator
     iterator()
@@ -125,6 +126,7 @@ public:
 
   private:
     friend class Node;
+    friend class handle;
 
     // only Node is allowed to construct a valid iterator
     iterator( node_type * node, int idx )
@@ -138,18 +140,84 @@ public:
     int         m_idx;
   };
 
+  class handle
+  {
+  public:
+    using iterator = typename node_type::iterator;
+
+    // is this handle valid ?
+    LOCKFREE_FORCEINLINE
+    explicit operator bool() const { return m_node != nullptr; }
+
+    LOCKFREE_FORCEINLINE
+    explicit operator iterator() const
+    {
+      if ( m_node ) {
+        return m_node->get_iterator(m_idx);
+      }
+      return iterator{};
+    }
+
+    bool exists() const
+    {
+      return (m_node != nullptr) && m_node->test_used( m_idx );
+    }
+
+    // construct an invalid handle
+    handle() = default;
+    handle( const handle & ) = default;
+    handle & operator=( const handle & ) = default;
+    handle( handle && ) = default;
+    handle & operator=( handle && ) = default;
+
+    handle( const iterator & itr )
+      : m_node{ itr.m_node }
+      , m_idx{ itr.m_idx }
+    {}
+
+    handle & operator=( const iterator & itr )
+    {
+      m_node = itr.m_node;
+      m_idx = itr.m_idx;
+      return *this;
+    }
+
+  private:
+    friend class Node;
+
+    handle( node_type * n, int i )
+      : m_node{n}
+      , m_idx{i}
+    {}
+
+    node_type * m_node{nullptr};
+    int         m_idx{-1};
+  };
+
   /// get_node( iterator )
   ///
   /// get the node off the iterator
   LOCKFREE_FORCEINLINE
   static node_type * get_node( iterator const & itr ) { return itr.m_node; }
 
+  /// get_node( handle )
+  ///
+  /// get the node off the handle
+  LOCKFREE_FORCEINLINE
+  static node_type * get_node( handle const & h ) { return h.m_node; }
+
+  /// get_block( handle )
+  ///
+  /// get the block off the handle
+  LOCKFREE_FORCEINLINE
+  static int get_block( handle const & h ) { return h.m_idx / bitset_type::block_size ; }
+
   /// erase the iterator
   ///
   /// erase the value of iterator
   /// the iterator is invalidated
   LOCKFREE_FORCEINLINE
-  static void  erase( iterator & itr )
+  static void erase( iterator & itr )
   {
     if (itr) {
       itr.m_node->atomic_erase( itr.m_idx );
@@ -159,83 +227,6 @@ public:
   }
 
 
-  /// advance( iterator & itr )
-  ///
-  /// advance the iterator to the next valid value in the circular_pool
-  /// if there are no valid values invalidated the iterator
-  static void advance( iterator & itr )
-  {
-    if ( !itr.m_node ) { return; }
-
-    const node_type * start = itr.m_node;
-
-    node_type * curr = itr.m_node;
-    node_type * prev = curr;
-
-    int idx = itr.m_idx;
-
-    // release the current value so that another iterator can reference it
-    itr = iterator{};
-
-    // try to find another valid index within the current node
-    idx = curr->try_atomic_find_next( itr.m_idx );
-
-    // search next node
-    if ( idx == capacity ) {
-      do {
-        idx = curr->try_atomic_find();
-        prev = curr;
-        curr = curr->next();
-      } while ( idx == capacity && curr != start );
-    }
-
-    // successfully claimed an index
-    if ( idx < capacity ) {
-      itr = iterator{ prev, idx };
-    }
-  }
-
-  /// erase_and_advance( iterator & itr )
-  ///
-  /// erase the value of iterator
-  /// advance the iterator to the next valid value in the circular_pool
-  /// if there are no valid values invalidated the iterator
-  template <typename UnaryPredicate>
-  static void erase_and_advance( iterator & itr, UnaryPredicate const & pred )
-  {
-    if ( itr.m_node ) {
-      node_type * start = itr.m_node;
-      erase( itr );
-      itr = find_any( start, pred );
-    }
-  }
-
-  /// front( node_type * node )
-  ///
-  /// get an iterator to the first valid value starting at node.
-  /// if there are no valid values return an invalid iterator
-  static iterator front( node_type * node )
-  {
-    if ( !node ) return iterator{};
-
-    node_type * start = node;
-    node_type * curr = start;
-    node_type * prev = curr;
-
-    int idx = capacity;
-
-    do {
-      idx = curr->try_atomic_find();
-      prev = curr;
-      curr = curr->next();
-    } while ( idx == capacity && curr != start );
-
-    iterator iter =  (idx < capacity ) ? iterator{ prev, idx } : iterator{};
-    std::atomic_thread_fence( std::memory_order_seq_cst );
-
-    return iter;
-  }
-
   /// find_any( node_ptr, predicate)
   ///
   /// return an iterator to a value for which predicate returns true
@@ -243,70 +234,43 @@ public:
   /// bool ()( const value_type & )
   /// If there are no values for which predicate is true return an invalid iterator
   template <typename UnaryPredicate>
-  static iterator find_any( node_type * node, UnaryPredicate const & pred)
+  static iterator find_any( node_type * start, int start_block, node_type * end, UnaryPredicate const& pred)
   {
-    if ( !node ) return iterator{};
+    iterator itr;
 
-    node_type * start = node;
-    node_type * curr = start;
-    node_type * prev = curr;
+    if ( !start ) return itr;
 
-    int idx;
-    bool found = false;
+    itr = find_any_block( start, start_block, pred );
 
-    do {
-      // invalidate entire node
-      bitset_type old_valid = curr->m_valid_bitset.fetch_and( zero, std::memory_order_seq_cst );
+    for (node_type * curr = start->next(); !itr && curr != end; curr = curr->next()) {
+      itr = find_any_block( curr, 0, pred );
+    }
 
-      if (old_valid) {
-
-        bitset_type test_valid = old_valid;
-
-        while ( test_valid && !found ) {
-          idx = count_trailing_zeros( test_valid );
-          found = pred( curr->get(idx) );
-          // mask out idx
-          test_valid = test_valid & complement(one << idx);
-        }
-      }
-
-      if (found) {
-        // release the other indexes
-        // mask out idx
-        const bitset_type new_valid = old_valid & complement(one << idx );
-        curr->m_valid_bitset.fetch_or( new_valid, std::memory_order_relaxed );
-      }
-      else {
-        // release the indexes
-        curr->m_valid_bitset.fetch_or( old_valid, std::memory_order_relaxed );
-      }
-
-      prev = curr;
-      curr = curr->next();
-
-    } while ( !found && curr != start );
-
-    return ( found ) ? iterator{ prev, idx } : iterator{};
+    return itr;
   }
 
-  // get_iterator( node, value_ptr )
+  // get_handle( node, value_ptr )
   //
-  // get an iterator to the value
-  iterator get_iterator( const value_type * ptr )
+  // get an handle to the value
+  handle get_handle( const value_type * ptr )
   {
     int idx=0;
     for (; idx<capacity && (m_values + idx != ptr); ++idx) {}
+    return idx < capacity ? handle{ this, idx } : handle{};
+  }
 
-    if ( idx == capacity ) {
+  // get_iterator( int )
+  //
+  // get an iterator to the value
+  iterator get_iterator( int idx )
+  {
+    if ( idx >= capacity || idx < 0 ) {
       return iterator{};
     }
 
-    const bitset_type bit = one << idx ;
-
     // while the index is used
-    while ( m_used_bitset.load( std::memory_order_relaxed ) & bit ) {
-      if ( try_atomic_claim( idx ) ) {
-        std::atomic_thread_fence( std::memory_order_seq_cst );
+    while ( m_used_bitset.test( idx ) ) {
+      if ( try_atomic_claim(idx) ) {
         return iterator{ this, idx };
       }
     }
@@ -314,43 +278,55 @@ public:
     return iterator{};
   }
 
+  // get_iterator( node, value_ptr )
+  //
+  // get an iterator to the value
+  iterator get_iterator( const value_type * ptr )
+  {
+    return iterator{ get_handle(ptr) };
+  }
+
+
   /// emplace( args... )
   ///
   /// return an iterator to the newly created value
   template <typename NodeAllocator, typename... Args>
-  iterator emplace_helper( const int num_search_nodes, NodeAllocator & allocator, int & added_node,  Args&&... args)
+  static iterator emplace_helper( size_t pid
+                                , void * pool
+                                , node_type * const start
+                                , int start_block
+                                , node_type * const end
+                                , const int num_search_nodes
+                                , NodeAllocator & allocator
+                                , int & added_node
+                                ,  Args&&... args
+                                )
   {
-    iterator itr;
-    node_type * curr;
+    iterator itr = start->try_atomic_emplace( start_block, std::forward<Args>(args)...);
 
-    int n = 0;
-
-    node_type * const start = this;
-    node_type * next = start;
+    node_type * curr = start->next();
 
     // try to insert the value into an existing node
-    do {
-      curr = next;
-      next = curr->next();
-      itr = curr->try_atomic_emplace( std::forward<Args>(args)... );
-    } while ( !itr && (next != start) && ( ++n < num_search_nodes ) );
+    for (int n=0; !itr && (curr != end) && n< num_search_nodes; ++n) {
+      itr = curr->try_atomic_emplace( 0, std::forward<Args>(args)... );
+    }
 
     // wrapped around the pool
     // Allocate node and insert the value
     if ( !itr ) {
       // allocate and construct
-      node_type * new_node = allocator.allocate(1);
-      allocator.construct( new_node, m_pool_id, m_pool );
+      node_type * new_node = allocator.allocate(1, curr);
+      allocator.construct( new_node, pid, pool );
 
       // will always succeed since the node is not in the pool
-      itr = new_node->try_atomic_emplace( std::forward<Args>(args)... );
+      itr = new_node->try_atomic_emplace( 0, std::forward<Args>(args)... );
 
       // insert the node at the end of pool (curr->next)
-      node_type * next;
-      do {
-        next = curr->next();
-        new_node->set_next(next);
-      } while ( ! curr->try_update_next( next, new_node ) );
+      node_type * next = curr->next();
+      new_node->m_next.store( next, std::memory_order_relaxed );
+      while ( !(curr->m_next.compare_exchange_strong( next, new_node, std::memory_order_relaxed, std::memory_order_relaxed) )) {
+        new_node->m_next.store( next, std::memory_order_relaxed );
+      }
 
       curr = new_node;
       added_node = 1;
@@ -365,16 +341,22 @@ public:
   /// if successful return the index where the value was created
   /// otherwise return capacity
   template <typename... Args>
-  iterator try_atomic_emplace(Args&&... args)
+  iterator try_atomic_emplace(int start, Args&&... args)
   {
     int idx;
     bool inserted = false;
-    do {
-      idx = find_unset_idx();
-      inserted = (idx < capacity) &&  try_atomic_emplace_helper( idx, std::forward<Args>(args)... );
-    } while ( idx < capacity && !inserted );
+    for (int b=start; !inserted && b < bitset_type::num_blocks; ++b) {
+      block_type block = complement(m_used_bitset.load_block(b));
+      while (!inserted && block) {
+        int i = count_trailing_zeros(block);
+        idx = (b << bitset_type::block_shift) + i;
+        inserted = try_atomic_emplace_helper( idx, std::forward<Args>(args)... );
 
-    return ( idx < capacity ) ? iterator{ this, idx } : iterator{};
+        block = block & complement(one << i);
+      }
+    }
+
+    return inserted ? iterator{ this, idx } : iterator{};
   }
 
 
@@ -405,30 +387,6 @@ public:
     return m_next.load( std::memory_order_relaxed );
   }
 
-  /// try_update_next( old_ptr, new_ptr )
-  ///
-  /// Try to atomically update next with a compare and swap.
-  ///
-  /// i.e. atomically do the following code
-  ///
-  /// curr_ptr = m_next;
-  /// if ( curr_ptr == old_ptr ) { m_next = new_ptr; }
-  /// return curr_ptr == old_ptr
-  LOCKFREE_FORCEINLINE
-  bool try_update_next( node_type * old_ptr, node_type * new_ptr )
-  {
-    return m_next.compare_exchange_strong( old_ptr, new_ptr, std::memory_order_relaxed, std::memory_order_relaxed );
-  }
-
-  /// set_next( new_ptr )
-  ///
-  /// NON-ATOMICALLY set next to given pointer
-  LOCKFREE_FORCEINLINE
-  void set_next( node_type * new_ptr )
-  {
-    m_next.store( new_ptr, std::memory_order_relaxed );
-  }
-
   /// Construct a node pointing to itself
   Node( size_t pid, void * pool )
     : m_pool_id{ pid }
@@ -438,10 +396,12 @@ public:
   /// Destroy the values in the node
   ~Node()
   {
-    const bitset_type curr_valid = m_valid_bitset.fetch_and( zero, std::memory_order_seq_cst );
-    for (int i=0; i<capacity; ++i) {
-      if ( curr_valid & ( one << i) ) {
-        (m_values + i)->~value_type();
+    for ( int b = 0; b < bitset_type::num_blocks; ++b) {
+      const block_type curr_valid = m_valid_bitset.and_block(b, zero, std::memory_order_seq_cst );
+      for (int i=0; i<capacity; ++i) {
+        if ( curr_valid & ( one << i) ) {
+          (m_values + i)->~value_type();
+        }
       }
     }
     std::atomic_thread_fence( std::memory_order_seq_cst );
@@ -452,62 +412,39 @@ public:
 
 private: // private functions
 
-
-  /// try_atomic_find_next( idx )
-  int try_atomic_find_next( int idx )
+  template <typename UnaryPredicate>
+  static iterator find_any_block( node_type * node, int start_block, UnaryPredicate const& pred)
   {
     bool found = false;
-    do {
-      idx = find_next_set_idx( idx );
-      found = (idx < capacity) &&  try_atomic_claim( idx );
-    } while ( idx < capacity && !found );
-
-    return idx;
-  }
-
-  /// try_atomic_find()
-  int try_atomic_find()
-  {
     int idx;
-    bool found = false;
-    do {
-      idx = find_set_idx();
-      found = (idx < capacity) &&  try_atomic_claim( idx );
-    } while ( idx < capacity && !found );
 
-    return idx;
-  }
+    for (int b=start_block; !found && b < bitset_type::num_blocks; ++b) {
+      block_type old_valid = node->m_valid_bitset.and_block(b, zero);
+      if (old_valid) {
+        block_type test_valid = old_valid;
 
-  /// find_unset_idx()
-  ///
-  /// return an unused index
-  /// if none found return capacity
-  LOCKFREE_FORCEINLINE
-  int find_unset_idx() const
-  {
-    // need to static cast to a bitset_type to handle uint16_t and uint8_t
-    return count_trailing_zeros( complement(m_used_bitset.load( std::memory_order_relaxed )) );
-  }
+        while ( test_valid && !found ) {
+          idx = count_trailing_zeros( test_valid );
+          found = pred( node->get(idx) );
+          // mask out idx
+          test_valid = test_valid & complement(one << idx);
+        }
+      }
 
-  /// find_set_idx()
-  ///
-  /// return the first used index in the node
-  /// if none exist return capacity
-  LOCKFREE_FORCEINLINE
-  int find_set_idx() const
-  {
-    return count_trailing_zeros( m_valid_bitset.load( std::memory_order_relaxed ) );
-  }
+      if (found) {
+        // release the other indexes
+        // mask out idx
+        const block_type new_valid = old_valid & complement(one << idx);
+        node->m_valid_bitset.or_block( b, new_valid );
 
-  /// find_next_set_idx( idx )
-  ///
-  /// return the first used index greater than the given index
-  /// if none exist return capacity
-  LOCKFREE_FORCEINLINE
-  int find_next_set_idx( int idx ) const
-  {
-    // mask out bits less than idx
-    return idx+1 < capacity ? count_trailing_zeros( m_valid_bitset.load( std::memory_order_relaxed ) & complement((one << (idx+1)) - one)) : 64;
+      }
+      else {
+        // release the indexes
+        node->m_valid_bitset.or_block( b, old_valid );
+      }
+    }
+
+    return ( found ) ? iterator{ node, idx } : iterator{};
   }
 
   /// atomic_erase( idx )
@@ -515,20 +452,17 @@ private: // private functions
   /// destroy the value and release the used index
   void atomic_erase( int i )
   {
-    const bitset_type bit = one << i ;
-
     // call the destructor
     (m_values + i)->~value_type();
     // allow index to be used again
-    m_used_bitset.fetch_and( complement(bit), std::memory_order_relaxed );
+    m_used_bitset.clear(i, std::memory_order_seq_cst );
   }
 
   // return true if this thread atomically set the ith bit
   template <typename... Args>
   bool try_atomic_emplace_helper( int i, Args&&... args)
   {
-    const bitset_type bit = one << i ;
-    const bool inserted =  !( m_used_bitset.fetch_or(bit, std::memory_order_relaxed) & bit);
+    const bool inserted =  m_used_bitset.set(i);
     if (inserted ) {
       // placement new with constructor
       new ((void*)(m_values + i)) value_type{ std::forward<Args>(args)... } ;
@@ -542,9 +476,7 @@ private: // private functions
   LOCKFREE_FORCEINLINE
   bool try_atomic_claim( int i )
   {
-    const bitset_type bit = one << i ;
-    const bool result =  m_valid_bitset.fetch_and( complement(bit), std::memory_order_relaxed ) & bit;
-    return result;
+    return m_valid_bitset.clear(i);
   }
 
 
@@ -552,28 +484,33 @@ private: // private functions
   LOCKFREE_FORCEINLINE
   void atomic_release( int i )
   {
-    const bitset_type bit = one << i ;
-    m_valid_bitset.fetch_or( bit, std::memory_order_relaxed );
+    m_valid_bitset.set( i, std::memory_order_seq_cst );
+  }
+
+  LOCKFREE_FORCEINLINE
+  bool test_used( int i ) const
+  {
+    return m_used_bitset.test(i);
   }
 
 private: // data members
 
   // align to cacheline (64 bytes)
-  static constexpr bitset_type offset = sizeof(value_type * )            // m_values
-                                      + sizeof(std::atomic<bitset_type>) // m_used_bitset
-                                      + sizeof(std::atomic<bitset_type>) // m_valid_bitset
-                                      + sizeof(std::atomic<node_type *>) // m_next
-                                      + sizeof(size_t)                   // m_pool_id
-                                      + sizeof(void *)                   // m_pool
-                                      ;
-  static constexpr bitset_type alignment = align_to_cacheline<T>();
-  static constexpr bitset_type min_buffer_size = capacity * sizeof(value_type);
-  static constexpr bitset_type buffer_size = ( alignment * ( min_buffer_size + offset + alignment - one ) / alignment ) - offset;
+  static constexpr size_t offset = sizeof(value_type * )            // m_values
+                                 + sizeof(bitset_type)              // m_used_bitset
+                                 + sizeof(bitset_type)              // m_valid_bitset
+                                 + sizeof(std::atomic<node_type *>) // m_next
+                                 + sizeof(size_t)                   // m_pool_id
+                                 + sizeof(void *)                   // m_pool
+                                 ;
+  static constexpr size_t alignment = align_to_cacheline<T>();
+  static constexpr size_t min_buffer_size = capacity * sizeof(value_type);
+  static constexpr size_t buffer_size = ( alignment * ( min_buffer_size + offset + alignment - one ) / alignment ) - offset;
 
   char                      m_buffer[ buffer_size ]; // must be first to get correct alignment
   value_type *              m_values{ reinterpret_cast<value_type *>(m_buffer) };
-  std::atomic<bitset_type>  m_used_bitset{ 0u };
-  std::atomic<bitset_type>  m_valid_bitset{ 0u };
+  bitset_type               m_used_bitset{};
+  bitset_type               m_valid_bitset{};
   std::atomic<node_type *>  m_next{ this };
   size_t                    m_pool_id;
   void *                    m_pool;
