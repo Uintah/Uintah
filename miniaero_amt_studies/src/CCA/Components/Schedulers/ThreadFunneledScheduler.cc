@@ -218,6 +218,11 @@ void ThreadFunneledScheduler::problemSetup(  const ProblemSpecP     & prob_spec
   proc0cout << "   Using \"" << taskQueueAlg << "\" task queue priority algorithm" << std::endl;
 
   m_num_threads = Uintah::Parallel::getNumThreads();
+
+  m_task_pool        = TaskPool{m_num_threads};
+  m_mpi_test_pool    = TaskPool{m_num_threads};
+  m_mpi_pending_pool = TaskPool{m_num_threads};
+
   if ((m_num_threads < 1) && Uintah::Parallel::usingMPI()) {
     if (d_myworld->myrank() == 0) {
       std::cerr << "Error: no thread number specified for ThreadedMPIScheduler" << std::endl;
@@ -580,8 +585,7 @@ void ThreadFunneledScheduler::init_threads(ThreadFunneledScheduler * sched, int 
 
 //______________________________________________________________________
 //
-void
-TaskRunner::run() const
+void TaskRunner::run() const
 {
   m_scheduler->select_tasks();
 }
