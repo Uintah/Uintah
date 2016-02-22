@@ -165,7 +165,7 @@ public:
 
     if (m_size->load( std::memory_order_relaxed ) == 0u ) return itr;
 
-    for (int i=0; !itr && i<m_num_levels; ++i) {
+    for (size_t i=0; !itr && i<m_num_levels; ++i) {
       handle hh = (static_cast<bool>(h) && impl_node_type::get_node(h)->impl_pool_id() == i) ? h : handle{};
       itr = m_pools[i].m_pool.find_any( hh, pred );
     }

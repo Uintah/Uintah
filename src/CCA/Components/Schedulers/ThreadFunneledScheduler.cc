@@ -219,9 +219,9 @@ void ThreadFunneledScheduler::problemSetup(  const ProblemSpecP     & prob_spec
 
   m_num_threads = Uintah::Parallel::getNumThreads();
 
-  m_task_pool        = TaskPool{m_num_threads};
-  m_mpi_test_pool    = TaskPool{m_num_threads};
-  m_mpi_pending_pool = TaskPool{m_num_threads};
+  m_task_pool        = TaskPool{ static_cast<size_t>(m_num_threads) };
+  m_mpi_test_pool    = TaskPool{ static_cast<size_t>(m_num_threads) };
+  m_mpi_pending_pool = TaskPool{ static_cast<size_t>(m_num_threads) };
 
   if ((m_num_threads < 1) && Uintah::Parallel::usingMPI()) {
     if (d_myworld->myrank() == 0) {

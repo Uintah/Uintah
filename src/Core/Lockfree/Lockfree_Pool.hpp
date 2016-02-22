@@ -180,7 +180,7 @@ public:
                                         m_mapper(m_num_levels)
                                       );
 
-    for (int i=start; !itr && i<(m_num_levels+start); ++i) {
+    for (size_t i=start; !itr && i<(m_num_levels+start); ++i) {
       itr = m_pools[i%m_num_levels].m_pool.find_any(h, pred);
     }
     return itr;

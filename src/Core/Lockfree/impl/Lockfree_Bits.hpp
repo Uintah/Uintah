@@ -65,6 +65,7 @@ template <typename BlockType, unsigned NumBlocks>
 class Bitset
 {
   static_assert( std::is_unsigned<BlockType>::value, "BlockType must be an unsigned integer type");
+  static_assert( NumBlocks > 0u, "NumBlocks must be greater than 0");
 
   static constexpr int log2( BlockType n )
   { return n>1u ? 1 + log2( n >> 1 ) : 0; }

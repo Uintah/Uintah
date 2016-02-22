@@ -31,6 +31,7 @@
 
 #include <Core/Malloc/Allocators/AllocatorTags.hpp>
 #include <Core/Parallel/BufferInfo.h>
+#include <Core/Parallel/CommunicationList.h>
 #include <Core/Parallel/PackBufferInfo.h>
 
 #include <utility>
