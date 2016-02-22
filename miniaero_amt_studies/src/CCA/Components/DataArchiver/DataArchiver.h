@@ -260,12 +260,6 @@ using SCIRun::Mutex;
                                  
       void createPIDX_dirs( std::vector< SaveItem >& saveLabels,
                             Dir& levelDir );
-                            
-      void PIDX_checkReturnCode( const int rc,
-                                 const std::string warn,
-                                 const char* file, 
-                                 int line);
-     
        
        //__________________________________
        //! returns a ProblemSpecP reading the xml file xmlName.
