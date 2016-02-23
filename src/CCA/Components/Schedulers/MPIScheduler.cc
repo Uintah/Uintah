@@ -37,6 +37,7 @@
 #include <Core/Util/DebugStream.h>
 #include <Core/Util/FancyAssert.h>
 #include <Core/Util/Timers/Timers.hpp>
+#include <Core/Util/DOUT.hpp>
 
 #include <sci_defs/mpi_defs.h> // For MPIPP_H on SGI
 
