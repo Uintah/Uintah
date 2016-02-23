@@ -1052,6 +1052,12 @@ Mutex::lock()
   }
 #endif
 
+  
+  if ( !priv_ ) {
+    priv_=new Mutex_private;
+    pthread_mutex_init(&priv_->mutex, NULL);
+  }
+
   int status = pthread_mutex_lock(&priv_->mutex);
   if (status)
   {
