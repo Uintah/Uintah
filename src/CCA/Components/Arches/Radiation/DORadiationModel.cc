@@ -66,6 +66,13 @@
 #include <CCA/Components/Arches/Radiation/fortran/rdomflux_fort.h>
 #include <CCA/Components/Arches/Radiation/fortran/rdomvolq_fort.h>
 
+
+#ifdef UINTAH_ENABLE_KOKKOS
+#include <Core/Grid/Variables/BlockRange.h>
+#include <Kokkos_Core.hpp>
+#endif //UINTAH_ENABLE_KOKKOS
+
+
 using namespace std;
 using namespace Uintah;
 
@@ -315,41 +322,6 @@ DORadiationModel::boundarycondition(const ProcessorGroup*,
 
 }
 
-#ifdef UINTAH_ENABLE_KOKKOS
-namespace {
-
-struct TimeAdvanceFunctor
-{
-  KokkosView3<const double> m_phi;
-  KokkosView3<double> m_newphi;
-  ColumnMajorRange<> m_range;
-
-  typedef double value_type;
-
-  TimeAdvanceFunctor( constNCVariable<double> & phi, NCVariable<double> & newphi, ColumnMajorRange<> & range )
-    : m_phi( phi.getKokkosView() )
-    , m_newphi( newphi.getKokkosView() )
-    , m_range( range )
-  {}
-
-  void operator()(int x, double & residual) const
-  {
-    int i, j, k;
-    m_range(x,i,j,k);
-
-    m_newphi(i,j,k)=(1./6)*( m_phi(i+1,j,k) + m_phi(i-1,j,k) +
-                         m_phi(i,j+1,k) + m_phi(i,j-1,k) +
-                         m_phi(i,j,k+1) + m_phi(i,j,k-1) );
-
-    double diff = m_newphi(i,j,k) - m_phi(i,j,k);
-    residual += diff * diff;
-  }
-};
-
-} // namespace
-#endif //UINTAH_ENABLE_KOKKOS
-
-
 
 struct computeAMatrix{  
        computeAMatrix( double  omu, double oeta, double oxi, 
@@ -366,7 +338,12 @@ struct computeAMatrix{
                        CCVariable<double>   &scatSource,
                        CCVariable<double>   &fluxX,
                        CCVariable<double>   &fluxY,
-                       CCVariable<double>   &fluxZ) : 
+#ifdef UINTAH_ENABLE_KOKKOS
+                       CCVariable<double>   &fluxZ,
+                       ColumnMajorRange<> & m_range) :
+#else
+                       CCVariable<double>   &fluxZ)  :
+#endif //UINTAH_ENABLE_KOKKOS
                        _omu(omu),
                        _oeta(oeta),
                        _oxi(oxi),
@@ -388,7 +365,8 @@ struct computeAMatrix{
                        _scatSource(scatSource.getKokkosView()),
                        _fluxX(fluxX.getKokkosView()) , 
                        _fluxY(fluxY.getKokkosView()) , 
-                       _fluxZ(fluxZ.getKokkosView())
+                       _fluxZ(fluxZ.getKokkosView()),
+                       _m_range(m_range) 
 #else
                        _cellType(cellType),
                        _wallTemp(wallTemp),
@@ -413,40 +391,44 @@ struct computeAMatrix{
                                        _oxi=abs(_oxi);
                                      }
 
-       void operator()(int i , int j, int k ) const {
-
 #ifdef UINTAH_ENABLE_KOKKOS
+       void operator()(int ixyz) const {
 
-         if (_cellType[i][j][k]==_intFlow) {
+         int i, j, k ;
 
-           _matrixB[i][j][k]=(_srcIntensity[i][j][k]+ _scatSource[i][j][k])*_vol;
-           _center[i][j][k] =  _omu*_areaEW + _oeta*_areaNS +  _oxi*_areaTB +
-             _abskt[i][j][k] * _vol; // out scattering 
+         _m_range(ixyz, i,j,k) ;
+         if (_cellType(i,j,k)==_intFlow) {
+
+           _matrixB(i,j,k)=(_srcIntensity(i,j,k)+ _scatSource(i,j,k))*_vol;
+           _center(i,j,k) =  _omu*_areaEW + _oeta*_areaNS +  _oxi*_areaTB +
+             _abskt(i,j,k) * _vol; // out scattering 
 
           int ipm = i+_dirX;
           int jpm = j+_dirY;
           int kpm = k+_dirZ;
 
-           if (_cellType[ipm][j][k]==_intFlow) {
-             _west[i][j][k]= _omu*_areaEW; // signed changed in radhypresolve 
+           if (_cellType(ipm,j,k)==_intFlow) {
+             _west(i,j,k)= _omu*_areaEW; // signed changed in radhypresolve 
            }else{
-             _matrixB[i][j][k]+= _omu*_areaEW*_SB/M_PI*pow(_wallTemp[ipm][j][k],4.0);  
+             _matrixB(i,j,k)+= _omu*_areaEW*_SB/M_PI*pow(_wallTemp(ipm,j,k),4.0);  
            }
-           if (_cellType[i][jpm][k]==_intFlow) {
-             _south[i][j][k]= _oeta*_areaNS; // signed changed in radhypresolve 
+           if (_cellType(i,jpm,k)==_intFlow) {
+             _south(i,j,k)= _oeta*_areaNS; // signed changed in radhypresolve 
            }else{
-             _matrixB[i][j][k]+= _oeta*_areaNS*_SB/M_PI*pow(_wallTemp[i][jpm][k],4.0);
+             _matrixB(i,j,k)+= _oeta*_areaNS*_SB/M_PI*pow(_wallTemp(i,jpm,k),4.0);
            }
-           if (_cellType[i][j][kpm]==_intFlow) {
-             _bottom[i][j][k] =  _oxi*_areaTB; // sign changed in radhypresolve 
+           if (_cellType(i,j,kpm)==_intFlow) {
+             _bottom(i,j,k) =  _oxi*_areaTB; // sign changed in radhypresolve 
            }else{
-             _matrixB[i][j][k]+= _oxi*_areaTB*_SB/M_PI*pow(_wallTemp[i][j][kpm],4.0); 
+             _matrixB(i,j,k)+= _oxi*_areaTB*_SB/M_PI*pow(_wallTemp(i,j,kpm),4.0); 
            }
          }else{
-           _matrixB[i][j][k] = _SB/M_PI*pow(_wallTemp[i][j][k],4.0);
-           _center[i][j][k]  = 1.0;
+           _matrixB(i,j,k) = _SB/M_PI*pow(_wallTemp(i,j,k),4.0);
+           _center(i,j,k)  = 1.0;
          }
+ }
 #else
+       void operator()(int i , int j, int k ) const {
 
          IntVector c(i,j,k) ;
 
@@ -478,8 +460,8 @@ struct computeAMatrix{
            _matrixB[c] = _SB/M_PI*pow(_wallTemp[c],4.0);
            _center[c]   =1.0;
          }
-#endif //UINTAH_ENABLE_KOKKOS
        }
+#endif //UINTAH_ENABLE_KOKKOS
 
   private:
        double _omu;
@@ -495,6 +477,7 @@ struct computeAMatrix{
 
 
 #ifdef UINTAH_ENABLE_KOKKOS
+       ColumnMajorRange<> _m_range;
        KokkosView3<const int> _cellType;
        KokkosView3<const double> _wallTemp;
        KokkosView3<const double> _abskt;
@@ -720,6 +703,14 @@ DORadiationModel::intensitysolve(const ProcessorGroup* pg,
                       //radiationFlux_old[2] , radiationFlux_old[3],
                       //radiationFlux_old[4] , radiationFlux_old[5],scatIntensitySource); //  this term needed for scattering
                       
+     //
+       
+#ifdef UINTAH_ENABLE_KOKKOS
+      IntVector idxHi2 = patch->getCellHighIndex();
+      IntVector idxLo2 = patch->getCellHighIndex();
+      Uintah::ColumnMajorRange<> range(idxLo2, idxHi2);
+#endif //UINTAH_ENABLE_KOKKOS
+
      // new (2-2016) construction of A-matrix and b-matrix
       computeAMatrix  doMakeMatrixA( omu[direcn], oeta[direcn], oxi[direcn], 
                                      areaEW, areaNS, areaTB, volume, ffield,
@@ -735,12 +726,14 @@ DORadiationModel::intensitysolve(const ProcessorGroup* pg,
                                      scatIntensitySource,
                                      radiationFlux_old[plusX ? 0 : 1],
                                      radiationFlux_old[plusY ? 2 : 3],
+#ifdef UINTAH_ENABLE_KOKKOS
+                                     radiationFlux_old[plusZ ? 4 : 5], 
+                                     range);
+#else
                                      radiationFlux_old[plusZ ? 4 : 5]);
+#endif //UINTAH_ENABLE_KOKKOS
 
 #ifdef UINTAH_ENABLE_KOKKOS
-      IntVector idxHi2 = patch->getCellHighIndex();
-      IntVector idxLo2 = patch->getCellHighIndex();
-      Uintah::ColumnMajorRange<> range(idxLo2, idxHi2);
 
       Kokkos::parallel_for( range.size(), doMakeMatrixA );
 #else
