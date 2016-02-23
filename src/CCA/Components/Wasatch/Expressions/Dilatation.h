@@ -28,7 +28,7 @@
 #include <expression/Expression.h>
 
 #include <spatialops/structured/stencil/FVStaggeredOperatorTypes.h>
-#include <CCA/Components/Wasatch/Operators/Operators.h> // contains the gradop selector
+#include <CCA/Components/Wasatch/Operators/OperatorTypes.h> // contains the gradop selector
 
 /**
  *  \class Dilatation

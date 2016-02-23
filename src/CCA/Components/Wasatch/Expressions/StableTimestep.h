@@ -2,9 +2,7 @@
 #define StableTimestep_Expr_h
 
 #include <expression/Expression.h>
-#include <CCA/Components/Wasatch/Operators/OperatorTypes.h>
-#include <CCA/Components/Wasatch/Operators/Operators.h>
-
+#include <spatialops/structured/FVStaggered.h>
 /**
  *  \class 	StableTimestep
  *  \author 	Tony Saad
