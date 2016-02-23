@@ -26,7 +26,6 @@
 #define StrainTensorBase_Expr_h
 
 //-- Wasatch Includes --//
-#include <CCA/Components/Wasatch/Operators/Operators.h> // contains the gradop selector
 #include <CCA/Components/Wasatch/Operators/OperatorTypes.h>
 
 //-- ExprLib Includes --//

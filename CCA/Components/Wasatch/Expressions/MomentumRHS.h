@@ -32,7 +32,7 @@
 #include <spatialops/structured/FVStaggered.h>
 
 //-- Wasatch Includes --//
-#include <CCA/Components/Wasatch/Operators/Operators.h>
+#include <CCA/Components/Wasatch/Operators/OperatorTypes.h>
 
 /**
  *  \class MomRHS

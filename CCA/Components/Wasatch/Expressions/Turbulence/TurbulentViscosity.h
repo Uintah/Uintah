@@ -1,9 +1,8 @@
 #ifndef TurbulentViscosity_Expr_h
 #define TurbulentViscosity_Expr_h
 
-#include <CCA/Components/Wasatch/Operators/OperatorTypes.h>
-#include <CCA/Components/Wasatch/Operators/Operators.h>
 #include "TurbulenceParameters.h"
+#include <CCA/Components/Wasatch/Operators/OperatorTypes.h>
 
 #include <expression/Expression.h>
 
