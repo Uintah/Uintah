@@ -392,6 +392,7 @@ class OnDemandDataWarehouse : public DataWarehouse {
    static size_t getTypeDescriptionSize(const TypeDescription::Type& type);
    static GPUGridVariableBase* createGPUGridVariable(size_t sizeOfDataType);
    static GPUPerPatchBase* createGPUPerPatch(size_t sizeOfDataType);
+   static GPUReductionVariableBase* createGPUReductionVariable(size_t sizeOfDataType);
 
 #endif
 

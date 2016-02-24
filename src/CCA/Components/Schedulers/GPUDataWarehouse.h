@@ -177,13 +177,20 @@ public:
     }
   };
 
-  enum status { NOT_ALLOCATED = 0x00000000,
-                ALLOCATING    = 0x00000001,
-                ALLOCATED     = 0x00000002,
-                COPYING_IN    = 0x00000004,
-                VALID         = 0x00000008,
-                UNKNOWN       = 0x80000000}; //TODO: REMOVE THIS WHEN YOU CAN, IT'S NOT OPTIMAL DESIGN.
-  //copying_out can be the other 29 bits.  See below.
+  enum status { UNALLOCATED               = 0x00000000,
+                ALLOCATING                = 0x00000001,
+                ALLOCATED                 = 0x00000002,
+                COPYING_IN                = 0x00000004,
+                VALID                     = 0x00000008,  //For when a variable has its data, this excludes any knowledge of ghost cells.
+                AWAITING_GHOST_COPY       = 0x00000010,  //For when when we know a variable is awaiting ghost cell data
+                                                         //It is possible for VALID bit set to 0 or 1 with this bit set,
+                                                         //meaning we can know a variable is awaiting ghost copies but we
+                                                         //don't know from this bit alone if the variable is valid yet.
+                VALID_WITH_GHOSTS         = 0x00000020,  //For when a variable has its data and it has its ghost cells
+                                                         //Note: Change to just GHOST_VALID?  Meaning ghost cells could be valid but the
+                                                         //non ghost part is unknown?
+                UNKNOWN                   = 0x80000040}; //TODO: REMOVE THIS WHEN YOU CAN, IT'S NOT OPTIMAL DESIGN.
+                //COPYING_OUT = The remaining bits. See below.
 
 
   typedef int atomicDataStatus;
@@ -191,16 +198,18 @@ public:
   //    0                   1                   2                   3
   //    0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
   //   +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-  //   |                                                       | | | | |
+  //   |                                                   | | | | | | |
   //   +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
 
   //Not allocated/Invalid = If the value is 0x00000000
 
-  //Allocating            = bit 31 - 0x00000001
-  //Allocated             = bit 30 - 0x00000002
-  //Copying in            = bit 28 - 0x00000004
-  //Valid                 = bit 29 - 0x00000008
-  //Copying out           = bits 1 through 27, allowing for 27 copy out sources.
+  //Allocating                = bit 31 - 0x00000001
+  //Allocated                 = bit 30 - 0x00000002
+  //Copying in                = bit 29 - 0x00000004
+  //Valid                     = bit 28 - 0x00000008
+  //awaiting ghost data       = bit 27 - 0x00000010
+  //Valid with ghost cells    = bit 26 - 0x00000020
+  //Copying out               = bits 1 through 25, allowing for 25 copy out sources.
 
   //With this approach we can allow for multiple copy outs, but only one copy in.
   //We should never attempt to copy unless the status is odd (allocated)
@@ -258,8 +267,8 @@ public:
 
   struct allVarPointersInfo {
     allVarPointersInfo() {
-      __sync_fetch_and_and(&atomicStatusInHostMemory, NOT_ALLOCATED);
-      __sync_fetch_and_and(&atomicStatusInGpuMemory, NOT_ALLOCATED);
+      __sync_fetch_and_and(&atomicStatusInHostMemory, UNALLOCATED);
+      __sync_fetch_and_and(&atomicStatusInGpuMemory, UNALLOCATED);
       varDB_index = -1;
     }
     void*           device_ptr;   //Where it is on the device
@@ -315,29 +324,6 @@ public:
     }
 
   };
-/*
-  struct tempGhostCellInfo {  //We only need enough information to copy a linear chunk of data.
-    std::string     label;
-    int        patchID;
-    int        matlIndx;
-    int        levelIndx;
-    bool       foreign;
-    void* cpuDetailedTaskOwner;   //Only the task that placed the item in should be the one that copies it.
-
-    int        sizeOfDataType;
-
-    void*      device_ptr;
-    int        memSize;
-    int3 ghostCellLow;
-    int3 ghostCellHigh;
-    int toPatchID;
-    int fromDeviceIndex;
-    int toDeviceIndex;
-    //int fromresource;
-    //int toresource;
-    //bool copied;
-  };
-*/
 
   //______________________________________________________________________
   // GPU GridVariable methods
@@ -378,14 +364,18 @@ public:
   }
 
   //HOST_DEVICE void put(GPUGridVariableBase& var, char const* label, int patchID, int matlIndex, bool overWrite=false);
-  HOST_DEVICE void put(GPUGridVariableBase& var, size_t sizeOfDataType, char const* label, int patchID, int matlIndx, int levelIndx = 0, bool staging = false, GhostType gtype = None, int numGhostCells = 0, void* hostPtr = NULL);
-  HOST_DEVICE void put(GPUReductionVariableBase& var, size_t sizeOfDataType, char const* label, int patchID, int matlIndx, int levelIndx = 0, bool staging = false, void* hostPtr = NULL);
-  HOST_DEVICE void put(GPUPerPatchBase& var, size_t sizeOfDataType, char const* label, int patchID, int matlIndx, int levelIndx = 0, void* hostPtr = NULL);
+  __host__ void put(GPUGridVariableBase& var, size_t sizeOfDataType, char const* label, int patchID, int matlIndx, int levelIndx = 0, bool staging = false, GhostType gtype = None, int numGhostCells = 0, void* hostPtr = NULL);
+  __host__ void put(GPUReductionVariableBase& var, size_t sizeOfDataType, char const* label, int patchID, int matlIndx, int levelIndx = 0, void* hostPtr = NULL);
+  __host__ void put(GPUPerPatchBase& var, size_t sizeOfDataType, char const* label, int patchID, int matlIndx, int levelIndx = 0, void* hostPtr = NULL);
 
-  HOST_DEVICE void allocateAndPut(GPUGridVariableBase& var, char const* label, int patchID, int matlIndx, int levelIndx, bool staging, int3 low, int3 high, size_t sizeOfDataType, GhostType gtype = None, int numGhostCells = 0);
-  HOST_DEVICE void allocateAndPut(GPUReductionVariableBase& var, char const* label, int patchID, int matlIndx, int levelIndx, size_t sizeOfDataType);
-  HOST_DEVICE void allocateAndPut(GPUPerPatchBase& var, char const* label, int patchID, int matlIndx, int levelIndx, size_t sizeOfDataType);
+  __host__ void allocateAndPut(GPUGridVariableBase& var, char const* label, int patchID, int matlIndx, int levelIndx, bool staging, int3 low, int3 high, size_t sizeOfDataType, GhostType gtype = None, int numGhostCells = 0);
+  __host__ void allocateAndPut(GPUReductionVariableBase& var, char const* label, int patchID, int matlIndx, int levelIndx, size_t sizeOfDataType);
+  __host__ void allocateAndPut(GPUPerPatchBase& var, char const* label, int patchID, int matlIndx, int levelIndx, size_t sizeOfDataType);
 
+  __host__ void putUnallocatedIfNotExists(char const* label, int patchID, int matlIndx, int levelIndx, bool staging, int3 offset, int3 size);
+  __host__ void copyItemIntoTaskDW(GPUDataWarehouse *hostSideGPUDW, char const* label,
+                                   int patchID, int matlIndx, int levelIndx, bool staging,
+                                   int3 offset, int3 size);
   //HOST_DEVICE void* getPointer(char const* label, int patchID, int matlIndex);
   HOST_DEVICE void putContiguous(GPUGridVariableBase &var, char const* indexID, char const* label, int patchID, int matlIndx, int levelIndx, bool staging, int3 low, int3 high, size_t sizeOfDataType, GridVariableBase* gridVar, bool stageOnHost);
   HOST_DEVICE void allocate(const char* indexID, size_t size);
@@ -393,8 +383,8 @@ public:
   //______________________________________________________________________
   // GPU DataWarehouse support methods
   
-  HOST_DEVICE bool exist(char const* label, int patchID, int matlIndx, int levelIndx);
-  HOST_DEVICE bool exist(char const* label, int patchID, int matlIndx, int levelIndx, bool staging, int3 host_size, int3 host_offset, bool skipContiguous = false, bool onlyContiguous = false);
+  //HOST_DEVICE bool exist(char const* label, int patchID, int matlIndx, int levelIndx);
+  //HOST_DEVICE bool exist(char const* label, int patchID, int matlIndx, int levelIndx, bool staging, int3 host_size, int3 host_offset, bool skipContiguous = false, bool onlyContiguous = false);
   HOST_DEVICE bool existContiguously(char const* label, int patchID, int matlIndx, int levelIndx, bool staging, int3 host_size, int3 host_offset);
   HOST_DEVICE bool existsLevelDB( char const* name, int matlIndx, int levelIndx);       // levelDB
   HOST_DEVICE bool removeLevelDB( char const* name, int matlIndx, int levelIndx);
@@ -405,7 +395,6 @@ public:
   HOST_DEVICE void deleteSelfOnDevice();
   HOST_DEVICE GPUDataWarehouse* getdevice_ptr(){return d_device_copy;};
   HOST_DEVICE void setDebug(bool s){d_debug=s;}
-  __host__ void copyToGpuIfNeeded(void * host_ptr, char const* label, int patchID, int matlIndx, int levelIndx, bool staging, int3 low, int3 high, void *cuda_stream);
   HOST_DEVICE cudaError_t copyDataHostToDevice(char const* indexID, void *cuda_stream);
   HOST_DEVICE cudaError_t copyDataDeviceToHost(char const* indexID, void *cuda_stream);
   HOST_DEVICE void copyHostContiguousToHost(GPUGridVariableBase& device_var, GridVariableBase* host_var, char const* label, int patchID, int matlIndx, int levelIndx);
@@ -420,21 +409,35 @@ public:
                                 int3 varOffset, int3 varSize,
                                 int3 sharedLowCoordinates, int3 sharedHighCoordinates, int3 virtualOffset);
 
+  __host__ bool areAllStagingVarsValid(char const* label, int patchID, int matlIndx, int levelIndx);
 
 
 
-  //returns false if something else already allocated space and we don't have to.
-  //returns true if we are the ones to allocate the space.
-  //performs operations with atomic compare and swaps
+  __host__ atomicDataStatus getStatus(atomicDataStatus& status);
+  __host__ std::string getDisplayableStatusCodes(atomicDataStatus& status);
   __host__ bool testAndSetAllocating(atomicDataStatus& status);
   __host__ bool testAndSetAllocate(atomicDataStatus& status);
   __host__ bool checkAllocated(atomicDataStatus& status);
-  __host__ bool testAndSetCopying(atomicDataStatus& status);
+  __host__ bool checkValid(atomicDataStatus& status);
+  //__host__ bool testAndSetCopying(atomicDataStatus& status);
 
-  __host__ bool getValidOnGPU(char const* label, int patchID, int matlIndx, int levelIndx);
-  __host__ void setValidOnGPU(char const* label, int patchID, int matlIndx, int levelInd);
-  __host__ bool getValidOnCPU(char const* label, int patchID, int matlIndx, int levelIndx);
+  __host__ bool isAllocatedOnGPU(char const* label, int patchID, int matlIndx, int levelIndx);
+  __host__ bool isAllocatedOnGPU(char const* label, int patchID, int matlIndx, int levelIndx, int3 offset, int3 size);
+  __host__ bool isValidOnGPU(char const* label, int patchID, int matlIndx, int levelIndx);
+  __host__ void setValidOnGPU(char const* label, int patchID, int matlIndx, int levelIndx);
+  __host__ void setValidOnGPUStaging(char const* label, int patchID, int matlIndx, int levelIndx, int3 offset, int3 size);
+  __host__ bool dwEntryExistsOnCPU(char const* label, int patchID, int matlIndx, int levelIndx);
+  __host__ bool isValidOnCPU(char const* label, int patchID, int matlIndx, int levelIndx);
   __host__ void setValidOnCPU(char const* label, int patchID, int matlIndx, int levelIndx);
+
+  __host__ bool testAndSetAwaitingGhostDataOnGPU(char const* label, int patchID, int matlIndx, int levelIndx);
+  __host__ bool testAndSetCopyingIntoGPU(char const* label, int patchID, int matlIndx, int levelIndx);
+  __host__ bool testAndSetCopyingIntoCPU(char const* label, int patchID, int matlIndx, int levelIndx);
+  __host__ bool testAndSetCopyingIntoGPUStaging(char const* label, int patchID, int matlIndx, int levelIndx, int3 offset, int3 size);
+  __host__ void setAwaitingGhostDataOnGPU(char const* label, int patchID, int matlIndx, int levelIndx);
+  __host__ bool isValidWithGhostsOnGPU(char const* label, int patchID, int matlIndx, int levelIndx);
+  __host__ void setValidWithGhostsOnGPU(char const* label, int patchID, int matlIndx, int levelIndx);
+
 
 
   //This and the function below go through the d_ghostCellData array and copies data into

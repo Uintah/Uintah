@@ -331,7 +331,6 @@ OnDemandDataWarehouse::get(       ReductionVariableBase& var,
                                   int                    matlIndex /*= -1*/ )
 {
   checkGetAccess( label, matlIndex, 0 );
-
   if( !d_levelDB.exists( label, matlIndex, level ) ) {
     SCI_THROW( UnknownVariable(label->getName(), getID(), level, matlIndex, "on reduction", __FILE__, __LINE__) );
   }
@@ -423,9 +422,6 @@ OnDemandDataWarehouse::getNumDevices() {
   return numDevices;
 }
 
-//std::map<const Patch *, int> OnDemandDataWarehouse::patchAcceleratorLocation;
-//unsigned int OnDemandDataWarehouse::currentAcceleratorCounter;
-
 size_t
 OnDemandDataWarehouse::getTypeDescriptionSize(const TypeDescription::Type& type) {
   switch(type){
@@ -488,6 +484,26 @@ OnDemandDataWarehouse::createGPUPerPatch(size_t sizeOfDataType)
     }
     default : {
       SCI_THROW(InternalError("createGPUPerPatch, unsupported GPUPerPatch type: ", __FILE__, __LINE__));
+    }
+  }
+  return device_var;
+}
+
+GPUReductionVariableBase*
+OnDemandDataWarehouse::createGPUReductionVariable(size_t sizeOfDataType)
+{
+  GPUReductionVariableBase* device_var = NULL;
+  switch ( sizeOfDataType ) {
+    case sizeof(int) : {
+      device_var = new GPUReductionVariable<int>();
+      break;
+    }
+    case sizeof(double) : {
+      device_var = new GPUReductionVariable<double>();
+      break;
+    }
+    default : {
+      SCI_THROW(InternalError("createGPUReductionVariable, unsupported GPUReductionVariable type: ", __FILE__, __LINE__));
     }
   }
   return device_var;
@@ -989,7 +1005,6 @@ OnDemandDataWarehouse::put( const ReductionVariableBase& var,
 {
   MALLOC_TRACE_TAG_SCOPE( "OnDemandDataWarehouse::put(Reduction):" + label->getName() );
   ASSERT( !d_finalized );
-
   checkPutAccess(label, matlIndex, 0,
                  false /* it actually may be replaced, but it doesn't need
                           to explicitly modify with multiple reduces in the
@@ -998,6 +1013,7 @@ OnDemandDataWarehouse::put( const ReductionVariableBase& var,
   // Put it in the database
   bool init = (d_scheduler->isCopyDataTimestep()) || !(d_levelDB.exists( label, matlIndex, level ));
   d_levelDB.putReduce( label, matlIndex, level, var.clone(), init );
+
 }
 
 //______________________________________________________________________
@@ -1782,7 +1798,6 @@ OnDemandDataWarehouse::allocateAndPut(       GridVariableBase& var,
   // allocations in a multi-threaded environment.  Whichever patch in a
   // super patch group gets here first, does the allocating for the entire
   // super patch group.
-
 #if 0
   if (!hasRunningTask()) {
     SCI_THROW(InternalError("OnDemandDataWarehouse::AllocateAndPutGridVar can only be used when the dw has a running task associated with it.", __FILE__, __LINE__));
@@ -2060,7 +2075,7 @@ OnDemandDataWarehouse::put(       GridVariableBase& var,
   Patch::VariableBasis basis = Patch::translateTypeToBasis(label->typeDescription()->getType(), false);
   ASSERTEQ(basis, Patch::translateTypeToBasis(var.virtualGetTypeDescription()->getType(), true));    
 
- checkPutAccess(label, matlIndex, patch, replace);
+  checkPutAccess(label, matlIndex, patch, replace);
 
 #if DAV_DEBUG
   cerr << "Putting: " << *label << " MI: " << matlIndex << " patch: " 
@@ -2957,7 +2972,6 @@ OnDemandDataWarehouse::getGridVar(       GridVariableBase& var,
   ASSERTEQ(basis, Patch::translateTypeToBasis(var.virtualGetTypeDescription()->getType(), true));
 
   if (!d_varDB.exists(label, matlIndex, patch)) {
-    printf("Couldn't find it for this datawarehouse %p\n", this);
     std::cout << d_myworld->myrank() << " unable to find variable '" << label->getName() << " on patch: " << patch->getID() << " matl: "
               << matlIndex << std::endl;
     SCI_THROW(UnknownVariable(label->getName(), getID(), patch, matlIndex, "", __FILE__, __LINE__));

@@ -142,22 +142,18 @@ class UnifiedScheduler : public MPIScheduler  {
     int      abort_point;
     int      numThreads_;
 
+    void markTaskConsumed(int& numTasksDone, int& currphase, int numPhases, DetailedTask* dtask);
+
 #ifdef HAVE_CUDA
 
-    void assignDevicesAndStreams(DetailedTask* task);
-    void assignDevicesAndStreams(DeviceGhostCells& ghostVars, DetailedTask* task);
+    void assignDevicesAndStreams(DetailedTask* dtask);
+    void assignDevicesAndStreamsFromGhostVars(DetailedTask* dtask);
 
-    void findIntAndExtGpuDependencies(DeviceGridVariables& deviceVars,
-        DeviceGridVariables& taskVars,
-        DeviceGhostCells& ghostVars,
-        DetailedTask* task,
+    void findIntAndExtGpuDependencies(DetailedTask* dtask,
         int iteration,
         int t_id);
 
-    void prepareGpuDependencies(DeviceGridVariables& deviceVars,
-        DeviceGridVariables& taskVars,
-        DeviceGhostCells& ghostVars,
-        DetailedTask* task,
+    void prepareGpuDependencies(DetailedTask* dtask,
         DependencyBatch* batch,
         const VarLabel* pos_var,
         OnDemandDataWarehouse* dw,
@@ -166,9 +162,7 @@ class UnifiedScheduler : public MPIScheduler  {
         LoadBalancer* lb,
         GpuUtilities::DeviceVarDestination dest);
 
-    void createTaskGpuDWs(DetailedTask * task,
-        const DeviceGridVariables& taskVars,
-        const DeviceGhostCells& ghostVars);
+    void createTaskGpuDWs(DetailedTask * dtask);
 
 
     void gpuInitialize( bool reset=false );
@@ -176,25 +170,21 @@ class UnifiedScheduler : public MPIScheduler  {
     void syncTaskGpuDWs(DetailedTask* dtask);
 
     void performInternalGhostCellCopies(DetailedTask* dtask);
-    void copyAllGpuToGpuDependences(const DetailedTask* dtask,
-        const DeviceGridVariables& deviceVars,
-        const DeviceGhostCells& ghostVars);
+    void copyAllGpuToGpuDependences(DetailedTask* dtask);
 
-    void copyAllExtGpuDependenciesToHost(const DetailedTask* dtask,
-        const DeviceGridVariables& deviceVars,
-        const DeviceGhostCells& ghostVars);
-
-    //void clearForeignGpuVars(DeviceGridVariables& deviceVars);
+    void copyAllExtGpuDependenciesToHost(DetailedTask* dtask);
 
     void initiateH2DCopies(DetailedTask* dtask);
 
-    void prepareDeviceVars(DetailedTask* dtask, DeviceGridVariables& deviceVars);
+    void prepareDeviceVars(DetailedTask* dtask);
 
-    void prepareTaskVarsIntoTaskDW(DetailedTask* dtask, DeviceGridVariables& taskVars);
+    void prepareTaskVarsIntoTaskDW(DetailedTask* dtask);
 
-    void prepareGhostCellsIntoTaskDW(DetailedTask* dtask, DeviceGhostCells& ghostVars);
+    void prepareGhostCellsIntoTaskDW(DetailedTask* dtask);
 
     void markDeviceRequiresDataAsValid(DetailedTask* dtask);
+
+    void markDeviceGhostsAsValid(DetailedTask* dtask);
 
     void markDeviceComputesDataAsValid(DetailedTask* dtask);
 
@@ -202,9 +192,9 @@ class UnifiedScheduler : public MPIScheduler  {
 
     void initiateD2H(DetailedTask* dtask);
 
-    void copyAllDataD2H(DetailedTask* dtask);
+    //void copyAllDataD2H(DetailedTask* dtask);
 
-    void processD2HCopies(DetailedTask* dtask);
+    //void processD2HCopies(DetailedTask* dtask);
 
     void postD2HCopies( DetailedTask* dtask );
     
@@ -213,6 +203,11 @@ class UnifiedScheduler : public MPIScheduler  {
     void preallocateDeviceMemory( DetailedTask* dtask );
 
     //void createCudaStreams(int numStreams, int device);
+    bool ghostCellsProcessingReady( DetailedTask* dtask );
+
+    bool allHostVarsProcessingReady( DetailedTask* dtask );
+
+    bool allGPUVarsProcessingReady( DetailedTask* dtask );
 
     void reclaimCudaStreams( DetailedTask* dtask );
 
@@ -265,9 +260,7 @@ class UnifiedScheduler : public MPIScheduler  {
     std::vector< std::string >               materialsNames;
 
     // All are multiple reader, single writer locks (pthread_rwlock_t wrapper)
-    mutable CrowdMonitor d2hComputesLock_;
     mutable CrowdMonitor idleStreamsLock_;
-    mutable CrowdMonitor h2dRequiresLock_;
     /*mutable CrowdMonitor deviceComputesLock_;
     mutable CrowdMonitor hostComputesLock_;
     mutable CrowdMonitor deviceRequiresLock_;

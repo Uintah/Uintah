@@ -23,6 +23,8 @@ public:
 
   DeviceGhostCells();
 
+  void clear();
+
   void add(const VarLabel* label,
       const Patch* sourcePatchPointer,
       const Patch* destPatchPointer,
