@@ -83,7 +83,8 @@ int                    g_num_threads                 = 0;
 
 thread_local int       t_tid = 0;
 
-std::atomic<int>       g_flag{ 0 };
+std::atomic<int>                g_flag{ 0 };
+std::map<std::thread::id, int>  g_tids{};
 
 
 
@@ -171,6 +172,7 @@ void init_threads( ThreadFunneledScheduler * sched, int num_threads )
 
   // set main thread's affinity - core 0
   set_affinity(g_cpu_affinities[0]);
+  g_tids.insert(std::pair<std::thread::id, int>(std::this_thread::get_id(), 0));
 
   // TaskRunner threads start at [1]
   for (int i = 1; i < g_num_threads; ++i) {
@@ -181,6 +183,7 @@ void init_threads( ThreadFunneledScheduler * sched, int num_threads )
   // TaskRunner threads start at [1]
   for (int i = 1; i < g_num_threads; ++i) {
     std::thread(thread_driver, i).detach();
+    g_tids.insert(std::pair<std::thread::id, int>(std::this_thread::get_id(), i));
   }
 
   thread_fence();
