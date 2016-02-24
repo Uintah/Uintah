@@ -321,8 +321,16 @@ MPIScheduler::runTask( DetailedTask* task,
   task->done(dws);  // should this be part of task execution time? - APH 09/16/15
 
 
+//  m_mpi_test_timer.reset();
+//  sends_[thread_id].testsome(d_myworld);
+//  mpi_info_[TotalTestMPI] += m_mpi_test_timer.seconds();
+
   m_mpi_test_timer.reset();
-  sends_[thread_id].testsome(d_myworld);
+  auto ready_request = [](SendCommNode const& n)->bool { return n.test(); };
+  SendCommList::iterator iter = m_send_list.find_any(ready_request);
+  if (iter) {
+    m_send_list.erase(iter);
+  }
   mpi_info_[TotalTestMPI] += m_mpi_test_timer.seconds();
 
 
@@ -497,24 +505,11 @@ MPIScheduler::postMPISends( DetailedTask* task,
       messageVolume_ += count * typeSize;
       volSend += count * typeSize;
 
-      MPI_Request requestid;
-      MPI_Isend(buf, count, datatype, to, batch->messageTag, d_myworld->getComm(), &requestid);
-      int bytes = count;
+      SendCommList::iterator iter = m_send_list.emplace(mpibuff.takeSendlist());
 
-      // with multi-threaded schedulers (derived from MPIScheduler), this is written per thread
-      // ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-      // TODO - Somehow, with only the ThreadedMPI scheduler, a race condition exists on a member
-      //        one of these CommRecMPI objects (deletion and access to this member)
-      //        "sends_" contains per-threads objects so this is puzzling... for now, just lock it.
-      //
-      // NOTE:  This may have something to do with the PackBufferInfo leak in the Unified Scheduler
-      //
-      // APH - 02/21/16
-      //
-      sendLock.lock();
-      sends_[thread_id].add(requestid, bytes, mpibuff.takeSendlist(), ostr.str(), batch->messageTag);
-      sendLock.unlock();
+      MPI_Isend(buf, count, datatype, to, batch->messageTag, d_myworld->getComm(), iter->request());
 
+      // TODO - FIXME: needs to be made thread-safe - APH 02/24/16
       mpi_info_[TotalSendMPI] += m_mpi_send_timer.seconds();
 
       //}
@@ -524,7 +519,7 @@ MPIScheduler::postMPISends( DetailedTask* task,
   double total_send_time = m_total_send_timer.seconds();
   mpi_info_[TotalSend] += total_send_time;
 
-  if (dbgst.active() && numSend > 0) {
+  if (dbgst.active() && !m_send_list.empty()) {
     if (d_myworld->myrank() == d_myworld->size() / 2) {
       if (dbgst.active()) {
         s_cerr_mutex.lock();
@@ -536,16 +531,6 @@ MPIScheduler::postMPISends( DetailedTask* task,
   }
 }  // end postMPISends();
 
-//______________________________________________________________________
-//
-int MPIScheduler::pendingMPIRecvs()
-{
-  int num = 0;
-  recvLock.lock();
-  num = recvs_.numRequests();
-  recvLock.unlock();
-  return num;
-}
 
 //______________________________________________________________________
 //
@@ -724,7 +709,6 @@ void MPIScheduler::postMPIRecvs( DetailedTask* task,
 
         int from = batch->fromTask->getAssignedResourceIndex();
         ASSERTRANGE(from, 0, d_myworld->size());
-        MPI_Request requestid;
 
         if (mpidbg.active()) {
         s_cerr_mutex.lock();
@@ -733,9 +717,9 @@ void MPIScheduler::postMPIRecvs( DetailedTask* task,
         s_cerr_mutex.unlock();
         }
 
-        MPI_Irecv(buf, count, datatype, from, batch->messageTag, d_myworld->getComm(), &requestid);
-        int bytes = count;
-        recvs_.add(requestid, bytes, scinew ReceiveHandler(p_mpibuff, pBatchRecvHandler), ostr.str(), batch->messageTag);
+        RecvCommList::iterator iter = m_recv_list.emplace(p_mpibuff, pBatchRecvHandler);
+
+        MPI_Irecv(buf, count, datatype, from, batch->messageTag, d_myworld->getComm(), iter->request());
 
         mpi_info_[TotalRecvMPI] += m_mpi_recv_timer.seconds();
       }
@@ -765,7 +749,7 @@ void MPIScheduler::processMPIRecvs( int how_much )
   // Should only have external receives in the MixedScheduler version which
   // shouldn't use this function.
   // ASSERT(outstandingExtRecvs.empty());
-  if (recvs_.numRequests() == 0) {
+  if (m_recv_list.empty()) {
     return;
   }
 
@@ -773,32 +757,49 @@ void MPIScheduler::processMPIRecvs( int how_much )
   {
     m_mpi_wait_timer.reset();
 
+    auto ready_request = [](RecvCommNode const& n)->bool    { return n.test(); };
+    auto finished_request = [](RecvCommNode const& n)->bool { return n.wait(); };
+
     switch (how_much) {
-      case TEST :
-        recvs_.testsome(d_myworld);
+      case TEST : {
+        RecvCommList::iterator iter = m_recv_list.find_any(ready_request);
+        if (iter) {
+          MPI_Status status;
+          iter->finishedCommunication(d_myworld, status);
+          m_recv_list.erase(iter);
+        }
         break;
-      case WAIT_ONCE :
+      }
+      case WAIT_ONCE : {
         s_cout_mutex.lock();
         mpidbg << "Rank-" << d_myworld->myrank() << " Start waiting once (WAIT_ONCE)...\n";
         s_cout_mutex.unlock();
 
-        recvs_.waitsome(d_myworld);
+        RecvCommList::iterator iter = m_recv_list.find_any(finished_request);
+        if (iter) {
+          MPI_Status status;
+          iter->finishedCommunication(d_myworld, status);
+          m_recv_list.erase(iter);
+        }
 
         s_cout_mutex.lock();
         mpidbg << "Rank-" << d_myworld->myrank() << " Done waiting once (WAIT_ONCE)...\n";
         s_cout_mutex.unlock();
         break;
-      case WAIT_ALL :
+      }
+      case WAIT_ALL : {
         // This will allow some receives to be "handled" by their
         // AfterCommincationHandler while waiting for others.
         s_cout_mutex.lock();
         mpidbg << "Rank-" << d_myworld->myrank() << "  Start waiting (WAIT_ALL)...\n";
         s_cout_mutex.unlock();
 
-        while ((recvs_.numRequests() > 0)) {
-          bool keep_waiting = recvs_.waitsome(d_myworld);
-          if (!keep_waiting) {
-            break;
+        while (!m_recv_list.empty()) {
+          RecvCommList::iterator iter = m_recv_list.find_any(finished_request);
+          if (iter) {
+            MPI_Status status;
+            iter->finishedCommunication(d_myworld, status);
+            m_recv_list.erase(iter);
           }
         }
 
@@ -806,6 +807,7 @@ void MPIScheduler::processMPIRecvs( int how_much )
         mpidbg << "Rank-" << d_myworld->myrank() << "  Done waiting (WAIT_ALL)...\n";
         s_cout_mutex.unlock();
         break;
+      }
     } // end switch
 
     double total_wait = m_mpi_wait_timer.seconds();
@@ -914,7 +916,7 @@ void MPIScheduler::execute( int tgnum /* = 0 */, int iteration /* = 0 */ )
     else {
       initiateTask(task, abort, abort_point, iteration);
       processMPIRecvs(WAIT_ALL);
-      ASSERT(recvs_.numRequests() == 0);
+      ASSERT(m_recv_list.empty());
       runTask(task, iteration);
 
       if (taskdbg.active()) {
@@ -938,10 +940,15 @@ void MPIScheduler::execute( int tgnum /* = 0 */, int iteration /* = 0 */ )
     computeNetRunTimeStats(d_sharedState->d_runTimeStats);
   }
 
-  // Don't need to lock sends 'cause all threads are done at this point.
-  sends_[0].waitall(d_myworld);
+  auto ready_request = [](SendCommNode const& n)->bool { return n.wait(); };
+  while (!m_send_list.empty()) {
+    SendCommList::iterator iter = m_send_list.find_any(ready_request);
+    if (iter) {
+      m_send_list.erase(iter);
+    }
+  }
 
-  ASSERT(sends_[0].numRequests() == 0);
+  ASSERT(m_send_list.empty());
 
   // Copy the restart flag to all processors
   reduceRestartFlag(tgnum);
