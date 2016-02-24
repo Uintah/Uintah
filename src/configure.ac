@@ -1924,6 +1924,7 @@ fi
 AC_MSG_RESULT($have_cxx11)
 AC_SUBST(DEF_CXX11)
 
+AX_CXX_COMPILE_STDCXX_11
 
 ##  ----------------------------------------------------------------------
 ##  ----------  required checks for required libraries and headers  ------
