@@ -31,8 +31,6 @@
 //-- Wasatch Includes --//
 #include <CCA/Components/Wasatch/PatchInfo.h>
 #include <CCA/Components/Wasatch/FieldTypes.h>
-#include <CCA/Components/Wasatch/Operators/Operators.h>
-#include <CCA/Components/Wasatch/Operators/OperatorTypes.h>
 
 namespace WasatchCore{
   

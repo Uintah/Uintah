@@ -25,8 +25,8 @@
   </Time>
   <DataArchiver>
     <filebase>coal_RadPropsPlanck.uda</filebase>
-    <outputInitTimestep/>
-    <outputTimestepInterval>5</outputTimestepInterval>
+    <!--outputInitTimestep/-->
+    <outputTimestepInterval>2</outputTimestepInterval>
     <save label="residence_time"/>
     <save label="res_source"/>
     <save label="coal_gas_momentum"/>
@@ -128,7 +128,7 @@
     <save label="sensibleenthalpy" table_lookup="true"/>
     <save label="adiabaticenthalpy" table_lookup="true"/>
     <save label="mixture_molecular_weight" table_lookup="true"/>
-    <checkpoint cycle="2" interval="0.15"/>
+    <checkpoint cycle="2" interval="0.05"/>
     <compression>gzip</compression>
   </DataArchiver>
   <Grid>
