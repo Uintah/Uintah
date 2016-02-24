@@ -277,6 +277,29 @@ CharOxidationSmith::problemSetup(const ProblemSpecP& params, int qn)
       _other_indices.push_back(spec); 
     }
   }
+  
+  // get gas phase temperature label 
+  if (VarLabel::find("temperature")) {
+    _gas_temperature_varlabel = VarLabel::find("temperature");
+  } else {
+    throw InvalidValue("ERROR: CharOxidationSmith: problemSetup(): can't find gas phase temperature.",__FILE__,__LINE__);
+  }
+  // get species labels 
+  for (int l=0; l<_NUM_species; l++) {
+    if (VarLabel::find(_species_names[l])) {
+      VarLabel * _species_varlabel_temp = VarLabel::find(_species_names[l]);
+      _species_varlabels.push_back(_species_varlabel_temp);
+    } else {
+      throw InvalidValue("ERROR: CharOxidationSmith: problemSetup(): can't find gas phase oxidizer.",__FILE__,__LINE__);
+    }
+  }
+  // get gas phase mixture_molecular_weight label 
+  if (VarLabel::find("mixture_molecular_weight")) {
+    _MW_varlabel = VarLabel::find("mixture_molecular_weight");
+  } else {
+    throw InvalidValue("ERROR: CharOxidationSmith: problemSetup(): can't find gas phase mixture_molecular_weight.",__FILE__,__LINE__);
+  }
+
 }
 
 
@@ -349,28 +372,6 @@ CharOxidationSmith::initVars( const ProcessorGroup * pc,
 void 
 CharOxidationSmith::sched_computeModel( const LevelP& level, SchedulerP& sched, int timeSubStep )
 {
-
-  // get gas phase temperature label 
-  if (VarLabel::find("temperature")) {
-    _gas_temperature_varlabel = VarLabel::find("temperature");
-  } else {
-    throw InvalidValue("ERROR: CharOxidationSmith: problemSetup(): can't find gas phase temperature.",__FILE__,__LINE__);
-  }
-  // get species labels 
-  for (int l=0; l<_NUM_species; l++) {
-    if (VarLabel::find(_species_names[l])) {
-      VarLabel * _species_varlabel_temp = VarLabel::find(_species_names[l]);
-      _species_varlabels.push_back(_species_varlabel_temp);
-    } else {
-      throw InvalidValue("ERROR: CharOxidationSmith: problemSetup(): can't find gas phase oxidizer.",__FILE__,__LINE__);
-    }
-  }
-  // get gas phase mixture_molecular_weight label 
-  if (VarLabel::find("mixture_molecular_weight")) {
-    _MW_varlabel = VarLabel::find("mixture_molecular_weight");
-  } else {
-    throw InvalidValue("ERROR: CharOxidationSmith: problemSetup(): can't find gas phase mixture_molecular_weight.",__FILE__,__LINE__);
-  }
 
   std::string taskname = "CharOxidationSmith::sched_computeModel";
   Task* tsk = scinew Task(taskname, this, &CharOxidationSmith::computeModel, timeSubStep );
