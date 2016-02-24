@@ -48,22 +48,6 @@
     printf("%s\n",msg.str().c_str()); \
   }
 
-#define FOUT( f, cond, ... )             \
-  if (cond) {                            \
-    std::ostringstream msg;              \
-    msg << __VA_ARGS__;                  \
-    fprintf(f,"%s\n",msg.str().c_str()); \
-  }
-
-#define DFOUT( f, cond, ... )            \
-  if (cond) {                            \
-    std::ostringstream msg;              \
-    msg << __FILE__ << ":";              \
-    msg << __LINE__ << " : ";            \
-    msg << __VA_ARGS__;                  \
-    fprintf(f,"%s\n",msg.str().c_str()); \
-  }
-
 namespace Uintah {
 
 class Dout
