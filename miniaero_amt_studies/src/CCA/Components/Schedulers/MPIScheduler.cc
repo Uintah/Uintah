@@ -650,6 +650,7 @@ void MPIScheduler::postMPIRecvs( DetailedTask* task,
           if (dbg_active) {
             s_cerr_mutex.lock();
             dbg << "Rank-" << d_myworld->myrank() << "   Ignoring conditional receive for " << *req << std::endl;
+            s_cerr_mutex.unlock();
           }
           continue;
         }
