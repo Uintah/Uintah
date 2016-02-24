@@ -121,13 +121,13 @@ class ThreadFunneledScheduler : public MPIScheduler {
     ThreadFunneledScheduler( ThreadFunneledScheduler && )                 = delete;
     ThreadFunneledScheduler& operator=( ThreadFunneledScheduler && )      = delete;
 
-    void process_mpi( int iteration );
+    void processMPISends();
+
+    void run_task( DetailedTask * task );
 
     void select_tasks();
 
     void run_task( DetailedTask* task, int iteration );
-
-    void run_sync_task( int iteration );
 
     void thread_fence();
 
@@ -138,20 +138,15 @@ class ThreadFunneledScheduler : public MPIScheduler {
 
     static constexpr size_t one = 1;
 
-
-    TaskPool   m_task_pool{};
-    TaskPool   m_mpi_test_pool{};
-    TaskPool   m_mpi_pending_pool{};
-
-    std::vector<std::vector<DetailedTask*> >  m_phase_task_list{};
-
-    Timers::Simple  m_mpi_test_time{};
-
-    // thread shared data, needs lock protection when accessed
     std::vector<int>           m_phase_tasks{};
     std::vector<int>           m_phase_tasks_done{};
     std::vector<DetailedTask*> m_phase_sync_tasks{};
     DetailedTasks*             m_detailed_tasks{};
+
+    TaskPool   m_task_pool{};
+    TaskPool   m_mpi_pending_pool{};
+
+    Timers::Simple  m_mpi_test_time{};
 
     bool     m_abort{ false };
     int      m_current_iteration{ 0 };

@@ -40,6 +40,7 @@
 #include <list>
 #include <queue>
 #include <map>
+#include <mutex>
 #include <set>
 #include <vector>
 
@@ -800,8 +801,8 @@ class SchedulerCommon;
     // for logging purposes - how much extra comm is going on
     int extraCommunication_;
     
-    mutable CrowdMonitor  readyQueueLock_;
-    mutable CrowdMonitor  mpiCompletedQueueLock_;
+    std::mutex  readyQueueLock_;
+    std::mutex  mpiCompletedQueueLock_;
 
     ScrubCountTable scrubCountTable_;
 
