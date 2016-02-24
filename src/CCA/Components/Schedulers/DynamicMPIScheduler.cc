@@ -399,8 +399,14 @@ DynamicMPIScheduler::execute( int tgnum     /*=0*/,
     computeNetRunTimeStats(d_sharedState->d_runTimeStats);
   }
 
-  sends_[0].waitall(d_myworld);
-  ASSERT(sends_[0].numRequests() == 0);
+  auto ready_request = [](SendCommNode const& n)->bool { return n.wait(); };
+  while (!m_send_list.empty()) {
+    SendCommList::iterator iter = m_send_list.find_any(ready_request);
+    if (iter) {
+      m_send_list.erase(iter);
+    }
+  }
+  ASSERT(m_send_list.empty());
 
   // Copy the restart flag to all processors
   reduceRestartFlag(tgnum);

@@ -524,8 +524,8 @@ UnifiedScheduler::runTask( DetailedTask*         task,
     double test_start_time = Time::currentSeconds();
 
     if (Uintah::Parallel::usingMPI()) {
-      // This is per thread, no lock needed.
-      sends_[thread_id].testsome(d_myworld);
+      auto ready_request = [](SendCommNode const& n)->bool { return n.test(); };
+      SendCommList::iterator iter = m_send_list.find_any(ready_request);
     }
 
     mpi_info_[TotalTestMPI] += Time::currentSeconds() - test_start_time;
@@ -710,7 +710,7 @@ UnifiedScheduler::runTasks( int thread_id )
     DetailedTask* readyTask = NULL;
     DetailedTask* initTask = NULL;
 
-    int pendingMPIMsgs = 0;
+    bool recv_list_empty = false;
     bool havework = false;
 
 #ifdef HAVE_CUDA
@@ -982,8 +982,8 @@ UnifiedScheduler::runTasks( int thread_id )
        * Otherwise there's nothing to do but process MPI recvs.
        */
       else {
-        pendingMPIMsgs = pendingMPIRecvs();
-        if (pendingMPIMsgs > 0) {
+        recv_list_empty = m_recv_list.empty();
+        if (!recv_list_empty) {
           havework = true;
           break;
         }
@@ -1147,7 +1147,7 @@ UnifiedScheduler::runTasks( int thread_id )
 #endif
       }
     }
-    else if (pendingMPIMsgs > 0) {
+    else if (!recv_list_empty) {
       processMPIRecvs(TEST);
     }
     else {

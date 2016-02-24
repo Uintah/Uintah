@@ -27,7 +27,6 @@
 
 #include <CCA/Components/Schedulers/SchedulerCommon.h>
 #include <CCA/Components/Schedulers/MessageLog.h>
-#include <CCA/Components/Schedulers/CommRecMPI.h>
 #include <CCA/Components/Schedulers/DetailedTasks.h>
 #include <CCA/Components/Schedulers/OnDemandDataWarehouseP.h>
 #include <CCA/Ports/DataWarehouseP.h>
@@ -35,6 +34,7 @@
 #include <Core/Parallel/PackBufferInfo.h>
 #include <Core/Grid/Task.h>
 #include <Core/Lockfree/Lockfree_Pool.hpp>
+#include <Core/Parallel/CommunicationList.h>
 #include <Core/Parallel/BufferInfo.h>
 #include <Core/Util/InfoMapper.h>
 #include <Core/Util/Timers/Timers.hpp>
@@ -103,8 +103,6 @@ class MPIScheduler : public SchedulerCommon {
             void postMPISends( DetailedTask* task, int iteration, int thread_id = 0 );
 
             void postMPIRecvs( DetailedTask* task, bool only_old_recvs, int abort_point, int iteration );
-
-            int  pendingMPIRecvs();
 
             void runTask( DetailedTask* task, int iteration, int thread_id = 0 );
 
@@ -188,8 +186,9 @@ class MPIScheduler : public SchedulerCommon {
 
     MessageLog                  log;
     const Output              * oport_;
-    CommRecMPI                  sends_[MAX_THREADS];
-    CommRecMPI                  recvs_;
+
+    SendCommList                m_send_list;
+    RecvCommList                m_recv_list;
 
     std::vector<const char*>    d_labels;
     std::vector<double>         d_times;

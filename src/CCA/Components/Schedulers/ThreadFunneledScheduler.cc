@@ -27,7 +27,7 @@
 #include <CCA/Components/Schedulers/TaskGraph.h>
 #include <CCA/Components/Schedulers/OnDemandDataWarehouse.h>
 #include <CCA/Ports/Output.h>
-
+#include <Core/Parallel/CommunicationList.h>
 #include <Core/Exceptions/ProblemSetupException.h>
 
 #include <atomic>
@@ -84,8 +84,6 @@ int                    g_num_threads                 = 0;
 thread_local int       t_tid = 0;
 
 std::atomic<int>                g_flag{ 0 };
-std::map<std::thread::id, int>  g_tids{};
-
 
 
 //______________________________________________________________________
@@ -172,7 +170,6 @@ void init_threads( ThreadFunneledScheduler * sched, int num_threads )
 
   // set main thread's affinity - core 0
   set_affinity(g_cpu_affinities[0]);
-  g_tids.insert(std::pair<std::thread::id, int>(std::this_thread::get_id(), 0));
 
   // TaskRunner threads start at [1]
   for (int i = 1; i < g_num_threads; ++i) {
@@ -183,7 +180,6 @@ void init_threads( ThreadFunneledScheduler * sched, int num_threads )
   // TaskRunner threads start at [1]
   for (int i = 1; i < g_num_threads; ++i) {
     std::thread(thread_driver, i).detach();
-    g_tids.insert(std::pair<std::thread::id, int>(std::this_thread::get_id(), i));
   }
 
   thread_fence();
@@ -348,7 +344,7 @@ void ThreadFunneledScheduler::execute(  int tgnum /*=0*/ , int iteration /*=0*/ 
         ASSERT(task->getRequires().size() == 0)
       }
       else {
-        initiateTask(task, m_abort, m_abort_point, iteration);
+        MPIScheduler::initiateTask(task, m_abort, m_abort_point, iteration);
         task->markInitiated();
         task->checkExternalDepCount();
       }
@@ -357,11 +353,11 @@ void ThreadFunneledScheduler::execute(  int tgnum /*=0*/ , int iteration /*=0*/ 
     else if ((m_phase_sync_tasks[m_current_phase] != nullptr) && (m_phase_tasks_done[m_current_phase] == m_phase_tasks[m_current_phase] - 1)) {
       DetailedTask* sync_task = m_phase_sync_tasks[m_current_phase];
       if (sync_task->getTask()->getType() == Task::Reduction) {
-        initiateReduction(sync_task);
+        MPIScheduler::initiateReduction(sync_task);
       }
       else {  // Task::OncePerProc task
         ASSERT(sync_task->getTask()->usesMPI());
-        initiateTask(sync_task, m_abort, m_abort_point, iteration);
+        MPIScheduler::initiateTask(sync_task, m_abort, m_abort_point, iteration);
         sync_task->markInitiated();
         ASSERT(sync_task->getExternalDepCount() == 0)
         MPIScheduler::runTask(sync_task, m_current_iteration);
@@ -425,12 +421,11 @@ void ThreadFunneledScheduler::execute(  int tgnum /*=0*/ , int iteration /*=0*/ 
 void ThreadFunneledScheduler::processMPISends()
 {
   DetailedTask* ready_task = nullptr;
-  TaskPool::iterator iter;
   while (!m_mpi_pending_pool.empty()) {
-    iter  = m_mpi_pending_pool.find_any();
+    TaskPool::iterator iter = m_mpi_pending_pool.find_any();
     if (iter) {
       ready_task = *iter;
-      postMPISends(ready_task, m_current_iteration);
+      MPIScheduler::postMPISends(ready_task, m_current_iteration);
       ready_task->done(dws);
       m_mpi_pending_pool.erase(iter);
       m_num_tasks_done++;
@@ -440,7 +435,15 @@ void ThreadFunneledScheduler::processMPISends()
 
   // -------------------------< begin MPI test timing >-------------------------
   m_mpi_test_time.reset();
-  sends_[0].testsome(d_myworld);
+
+//  sends_[0].testsome(d_myworld);
+
+  auto ready_request = [](SendCommNode const& n)->bool { return n.test(); };
+  SendCommList::iterator iter = m_send_list.find_any(ready_request);
+  if (iter) {
+    m_send_list.erase(iter);
+  }
+
   mpi_info_[TotalTestMPI] += m_mpi_test_time.nanoseconds();
   // -------------------------< end MPI test timing >-------------------------
 
