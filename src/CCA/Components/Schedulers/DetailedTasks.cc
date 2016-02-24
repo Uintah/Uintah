@@ -77,9 +77,7 @@ DetailedTasks::DetailedTasks(       SchedulerCommon* sc,
   taskgraph_(taskgraph),
   mustConsiderInternalDependencies_(mustConsiderInternalDependencies),
   currentDependencyGeneration_(1),
-  extraCommunication_(0),
-  readyQueueLock_("DetailedTasks Ready Queue"),
-  mpiCompletedQueueLock_("DetailedTasks MPI completed Queue")
+  extraCommunication_(0)
 #ifdef HAVE_CUDA
   ,
   deviceReadyQueueLock_("DetailedTasks Device Ready Queue"),
@@ -1479,7 +1477,7 @@ DetailedTask::checkExternalDepCount()
   }
 
   if (externalDependencyCount_ == 0 && taskGroup->sc_->useInternalDeps() && initiated_ && !task->usesMPI()) {
-    taskGroup->mpiCompletedQueueLock_.writeLock();
+    taskGroup->mpiCompletedQueueLock_.lock();
     if (mpidbg.active()) {
       cerrLock.lock();
       mpidbg << "Rank-" << Parallel::getMPIRank() << " Task " << this->getTask()->getName()
@@ -1491,7 +1489,7 @@ DetailedTask::checkExternalDepCount()
       taskGroup->mpiCompletedTasks_.push(this);
       externallyReady_ = true;
     }
-    taskGroup->mpiCompletedQueueLock_.writeUnlock();
+    taskGroup->mpiCompletedQueueLock_.unlock();
   }
 }
 
@@ -1742,30 +1740,32 @@ void
 DetailedTask::dependencySatisfied( InternalDependency* dep )
 {
   internalDependencyLock.lock();
-  ASSERT(numPendingInternalDependencies > 0);
-  unsigned long currentGeneration = taskGroup->getCurrentDependencyGeneration();
+  {
+    ASSERT(numPendingInternalDependencies > 0);
+    unsigned long currentGeneration = taskGroup->getCurrentDependencyGeneration();
 
-  // if false, then the dependency has already been satisfied
-  ASSERT(dep->satisfiedGeneration < currentGeneration);
+    // if false, then the dependency has already been satisfied
+    ASSERT(dep->satisfiedGeneration < currentGeneration);
 
-  dep->satisfiedGeneration = currentGeneration;
-  numPendingInternalDependencies--;
+    dep->satisfiedGeneration = currentGeneration;
+    numPendingInternalDependencies--;
 
-  if (mixedDebug.active()) {
-    cerrLock.lock();
-    mixedDebug << *(dep->dependentTask->getTask()) << " has " << numPendingInternalDependencies << " left.\n";
-    cerrLock.unlock();
-  }
+    if (mixedDebug.active()) {
+      cerrLock.lock();
+      mixedDebug << *(dep->dependentTask->getTask()) << " has " << numPendingInternalDependencies << " left.\n";
+      cerrLock.unlock();
+    }
 
-  if (internaldbg.active()) {
-    internaldbg << Parallel::getMPIRank() << " satisfying dependency: prereq: " << *dep->prerequisiteTask << " dep: "
-                << *dep->dependentTask << " numPending: " << numPendingInternalDependencies << "\n";
-  }
+    if (internaldbg.active()) {
+      internaldbg << Parallel::getMPIRank() << " satisfying dependency: prereq: " << *dep->prerequisiteTask << " dep: "
+                  << *dep->dependentTask << " numPending: " << numPendingInternalDependencies << "\n";
+    }
 
-  if (numPendingInternalDependencies == 0) {
-    taskGroup->internalDependenciesSatisfied(this);
-    // reset for next timestep
-    numPendingInternalDependencies = internalDependencies.size();
+    if (numPendingInternalDependencies == 0) {
+      taskGroup->internalDependenciesSatisfied(this);
+      // reset for next timestep
+      numPendingInternalDependencies = internalDependencies.size();
+    }
   }
   internalDependencyLock.unlock();
 }
@@ -1861,12 +1861,7 @@ operator<<(       std::ostream& out,
 void
 DetailedTasks::internalDependenciesSatisfied( DetailedTask* task )
 {
-  if (mixedDebug.active()) {
-    cerrLock.lock();
-    mixedDebug << "Begin internalDependenciesSatisfied\n";
-    cerrLock.unlock();
-  }
-  readyQueueLock_.writeLock();
+  readyQueueLock_.lock();
   {
     readyTasks_.push(task);
 
@@ -1876,7 +1871,7 @@ DetailedTasks::internalDependenciesSatisfied( DetailedTask* task )
       cerrLock.unlock();
     }
   }
-  readyQueueLock_.writeUnlock();
+  readyQueueLock_.unlock();
 }
 
 //_____________________________________________________________________________
@@ -1885,14 +1880,14 @@ DetailedTask*
 DetailedTasks::getNextInternalReadyTask()
 {
   DetailedTask* nextTask = NULL;
-  readyQueueLock_.writeLock();
+  readyQueueLock_.lock();
   {
     if (!readyTasks_.empty()) {
       nextTask = readyTasks_.front();
       readyTasks_.pop();
     }
   }
-  readyQueueLock_.writeUnlock();
+  readyQueueLock_.unlock();
   return nextTask;
 }
 
@@ -1902,11 +1897,11 @@ int
 DetailedTasks::numInternalReadyTasks()
 {
   int size = 0;
-  readyQueueLock_.readLock();
+  readyQueueLock_.lock();
   {
     size = readyTasks_.size();
   }
-  readyQueueLock_.readUnlock();
+  readyQueueLock_.unlock();
   return size;
 }
 
@@ -1916,14 +1911,14 @@ DetailedTask*
 DetailedTasks::getNextExternalReadyTask()
 {
   DetailedTask* nextTask = NULL;
-  mpiCompletedQueueLock_.writeLock();
+  mpiCompletedQueueLock_.lock();
   {
     if (!mpiCompletedTasks_.empty()) {
       nextTask = mpiCompletedTasks_.top();
       mpiCompletedTasks_.pop();
     }
   }
-  mpiCompletedQueueLock_.writeUnlock();
+  mpiCompletedQueueLock_.unlock();
   return nextTask;
 }
 
@@ -1933,11 +1928,11 @@ int
 DetailedTasks::numExternalReadyTasks()
 {
   int size = 0;
-  mpiCompletedQueueLock_.readLock();
+  mpiCompletedQueueLock_.lock();
   {
     size = mpiCompletedTasks_.size();
   }
-  mpiCompletedQueueLock_.readUnlock();
+  mpiCompletedQueueLock_.unlock();
   return size;
 }
 
