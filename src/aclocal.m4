@@ -808,10 +808,10 @@ NVCC_CXXFLAGS="-arch=sm_$cuda_gencode "
 # set up the -Xcompiler flag so that NVCC can pass CXXFLAGS to the host C++ compiler
 #  NOTE: -std=c++11 flag is a valid option for CUDA >=7.0, so pass it directly to NVCC
 for i in $CXXFLAGS; do
-  if test "$i" = "-std=c++11"; then
-    NVCC_CXXFLAGS="$NVCC_CXXFLAGS $i"
+  if test "$i" = "-std=c++11" || test "$i" = "-std=g++11"; then
+    NVCC_CXXFLAGS="$NVCC_CXXFLAGS -std=c++11"
   else
-    NVCC_CXXFLAGS="$NVCC_CXXFLAGS -Xcompiler $i"
+    NVCC_CXXFLAGS="$NVCC_CXXFLAGS -Xcompiler -std=c++11"
   fi
 done
 
