@@ -39,6 +39,11 @@
 #include <Core/Thread/CrowdMonitor.h>
 #include <Core/Thread/Mutex.h>
 
+#ifdef HAVE_CUDA
+#include <CCA/Components/Schedulers/GPUGridVariableGhosts.h>
+#include <CCA/Components/Schedulers/GPUGridVariableInfo.h>
+#endif
+
 #include <list>
 #include <queue>
 #include <vector>
@@ -226,7 +231,9 @@ namespace Uintah {
     public:
     GPUDataWarehouse* TaskGpuDW[2];
   };
+
 #endif
+
   class DetailedTask {
 
   public:
@@ -344,6 +351,15 @@ namespace Uintah {
     void deleteTaskGpuDataWarehouses();
 
     cudaStream_t* getCUDAStream(unsigned int deviceNum) const;
+
+    DeviceGridVariables& getDeviceVars() { return deviceVars; }
+    DeviceGridVariables& getTaskVars() { return taskVars; }
+    DeviceGhostCells& getGhostVars() { return ghostVars; }
+    DeviceGridVariables& getVarsToBeGhostReady() { return varsToBeGhostReady; }
+    DeviceGridVariables& getVarsBeingCopiedByTask() { return varsBeingCopiedByTask; }
+    void clearPreparationCollections();
+
+
 #endif
 
   protected:
@@ -404,82 +420,27 @@ namespace Uintah {
     std::set <unsigned int> deviceNums_;
     //cudaStream_t*   d_cudaStream;
     std::map <unsigned int, cudaStream_t*> d_cudaStreams;
+
+    //Store information about each set of grid variables.
+    //This will help later when we figure out the best way to store data into the GPU.
+    //It may be stored contiguously.  It may handle material data.  It just helps to gather it all up
+    //into a collection prior to copying data.
+    DeviceGridVariables deviceVars; //Holds variables that will need to be copied into the GPU
+    DeviceGridVariables taskVars;   //Holds variables that will be needed for a GPU task (a Task DW has a snapshot of
+                                    //all important pointer info from the host-side GPU DW)
+    DeviceGhostCells ghostVars;     //Holds ghost cell meta data copy information
+
+    DeviceGridVariables varsToBeGhostReady; //Holds a list of vars this task is managing to ensure their ghost cells will be ready.
+                                            //This means this task is the exlusive ghost cell gatherer and ghost cell validator for any
+                                            //label/patch/matl/level vars it has listed in here
+                                            //But it is NOT the exclusive copier.  Because some ghost cells from one patch may be used by
+                                            //two or more destination patches.  We only want to copy ghost cells once.
+
+    DeviceGridVariables varsBeingCopiedByTask;  //Holds a list of the vars that this task is actually copying into the GPU.
 #endif
 
 
   }; // end class DetailedTask
-  
-#ifdef HAVE_CUDA
-
-  struct varTuple {
-     std::string          label;
-     int             matlIndx;
-     int             levelIndx;
-     int             patch;
-     int             dataWarehouse;
-     IntVector       sharedLowCoordinates;
-     IntVector       sharedHighCoordinates;
-
-     varTuple(std::string label, int matlIndx, int levelIndx, int patch, int dataWarehouse, IntVector sharedLowCoordinates, IntVector sharedHighCoordinates) {
-       this->label = label;
-       this->matlIndx = matlIndx;
-       this->levelIndx = levelIndx;
-       this->patch = patch;
-       this->dataWarehouse = dataWarehouse;
-       this->sharedLowCoordinates = sharedLowCoordinates;
-       this->sharedHighCoordinates = sharedHighCoordinates;
-     }
-     //This is so it can be used in an STL map
-     bool operator<(const varTuple& right) const {
-       if (this->label < right.label) {
-         return true;
-       } else if (this->label == right.label && (this->matlIndx < right.matlIndx)) {
-         return true;
-       } else if (this->label == right.label && (this->matlIndx == right.matlIndx)
-                  && (this->levelIndx < right.levelIndx)) {
-         return true;
-       } else if (this->label == right.label && (this->matlIndx == right.matlIndx)
-                  && (this->levelIndx == right.levelIndx) && (this->patch < right.patch)) {
-         return true;
-       } else if (this->label == right.label && (this->matlIndx == right.matlIndx)
-                  && (this->levelIndx == right.levelIndx)
-                  && (this->patch == right.patch)
-                  && (this->dataWarehouse < right.dataWarehouse)) {
-         return true;
-       } else if (this->label == right.label && (this->matlIndx == right.matlIndx)
-           && (this->levelIndx == right.levelIndx)
-           && (this->patch == right.patch)
-           && (this->dataWarehouse == right.dataWarehouse)
-           && (this->sharedLowCoordinates < right.sharedLowCoordinates)) {
-         return true;
-       } else if (this->label == right.label && (this->matlIndx == right.matlIndx)
-           && (this->levelIndx == right.levelIndx)
-           && (this->patch == right.patch)
-           && (this->dataWarehouse == right.dataWarehouse)
-           && (this->sharedLowCoordinates == right.sharedLowCoordinates)
-           && (this->sharedHighCoordinates < right.sharedHighCoordinates)) {
-         return true;
-       } else {
-         return false;
-       }
-     }
-   };
-
-  class CopyDependenciesGpu
-  {
-    public:
-      void addVar(std::string label, int matlIndx, int levelIndx, int patch, int dataWarehouse, IntVector sharedLowCoordinates, IntVector sharedHighCoordinates){
-        varTuple temp(label, matlIndx, levelIndx, patch, dataWarehouse, sharedLowCoordinates, sharedHighCoordinates);
-        varsBeingCopied.push_back(temp);
-      }
-    private:
-      //uniquely identify a variable by a tuple of label/patch/material/level/dw/low/high
-      cudaStream_t* stream;
-      unsigned int device;
-      std::vector<varTuple> varsBeingCopied;
-  }; // end class CopyDependencies
-
-#endif
 
   class DetailedTaskPriorityComparison
   {
@@ -576,24 +537,32 @@ namespace Uintah {
     QueueAlg getTaskPriorityAlg() { return taskPriorityAlg_; }
 
 #ifdef HAVE_CUDA
+    void addVerifyDataTransferCompletion(DetailedTask* dtask);
     void addFinalizeDevicePreparation(DetailedTask* dtask);
     void addInitiallyReadyDeviceTask( DetailedTask* dtask );
     void addCompletionPendingDeviceTask( DetailedTask* dtask );
+    void addFinalizeHostPreparation(DetailedTask* dtask);
     void addInitiallyReadyHostTask(DetailedTask* dtask);
 
+    DetailedTask* getNextVerifyDataTransferCompletionTask();
     DetailedTask* getNextFinalizeDevicePreparationTask();
     DetailedTask* getNextInitiallyReadyDeviceTask();
     DetailedTask* getNextCompletionPendingDeviceTask();
+    DetailedTask* getNextFinalizeHostPreparationTask();
     DetailedTask* getNextInitiallyReadyHostTask();
 
+    DetailedTask* peekNextVerifyDataTransferCompletionTask();
     DetailedTask* peekNextFinalizeDevicePreparationTask();
     DetailedTask* peekNextInitiallyReadyDeviceTask();
     DetailedTask* peekNextCompletionPendingDeviceTask();
+    DetailedTask* peekNextFinalizeHostPreparationTask();
     DetailedTask* peekNextInitiallyReadyHostTask();
 
+    int numVerifyDataTransferCompletion() { return verifyDataTransferCompletionTasks_.size(); }
     int numFinalizeDevicePreparation() { return finalizeDevicePreparationTasks_.size(); }
     int numInitiallyReadyDeviceTasks() { return initiallyReadyDeviceTasks_.size(); }
     int numCompletionPendingDeviceTasks() { return completionPendingDeviceTasks_.size(); }
+    int numFinalizeHostPreparation() { return finalizeHostPreparationTasks_.size(); }
     int numInitiallyReadyHostTasks() { return initiallyReadyHostTasks_.size(); }
 
     void createInternalDependencyBatch(DetailedTask* from,
@@ -704,14 +673,18 @@ namespace Uintah {
     DetailedTasks& operator=( const DetailedTasks& );
 
 #ifdef HAVE_CUDA
+    TaskPQueue            verifyDataTransferCompletionTasks_;    // Some or all ghost cells still need to be processed before a task is ready.
     TaskPQueue            initiallyReadyDeviceTasks_;       // initially ready, h2d copies pending
-    TaskPQueue            finalizeDevicePreparationTasks_;  // h2d copies completed, need to mark gpu data as valid and copy gpu ghost cell data internall on device
+    TaskPQueue            finalizeDevicePreparationTasks_;  // h2d copies completed, need to mark gpu data as valid and copy gpu ghost cell data internally on device
     TaskPQueue            completionPendingDeviceTasks_;    // execution and d2h copies pending
+    TaskPQueue            finalizeHostPreparationTasks_;    // d2h copies completed, need to mark cpu data as valid
     TaskPQueue            initiallyReadyHostTasks_;         // initially ready cpu task, d2h copies pending
 
+    mutable CrowdMonitor  deviceVerifyDataTransferCompletionQueueLock_;
     mutable CrowdMonitor  deviceFinalizePreparationQueueLock_;
     mutable CrowdMonitor  deviceReadyQueueLock_;
     mutable CrowdMonitor  deviceCompletedQueueLock_;
+    mutable CrowdMonitor  hostFinalizePreparationQueueLock_;
     mutable CrowdMonitor  hostReadyQueueLock_;
 #endif
 
