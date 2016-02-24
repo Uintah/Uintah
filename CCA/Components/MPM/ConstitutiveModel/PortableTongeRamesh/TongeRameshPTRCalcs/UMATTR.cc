@@ -250,7 +250,7 @@ void PTR_umat_stressUpdate(double STRESS[6], double STATEV[], double DDSDDE[6][6
     // 0 > damage > -1.0)
     double urandomSeed = std::abs(STATEV[1]) - std::floor(std::abs(STATEV[1]));
     unsigned long artViscSeed = static_cast<unsigned long>(static_cast<double>(ULONG_MAX)*urandomSeed);
-    unsigned long seedArray[6] = {flawDistData.randomSeed, artViscSeed, *NOEL, *NPT, *LAYER, *KSPT};
+    unsigned long seedArray[6] = {static_cast<unsigned long>(flawDistData.randomSeed), artViscSeed, static_cast<unsigned long>(*NOEL), static_cast<unsigned long>(*NPT), static_cast<unsigned long>(*LAYER), static_cast<unsigned long>(*KSPT)};
     damage = PTR::initalizeFlawDist(flawSize.data(), flawNumber.data(), flawDistData, *CELENT, seedArray, 6);
     damage = brittle_damage.incInitialDamage ? damage : 0.0;
   }
