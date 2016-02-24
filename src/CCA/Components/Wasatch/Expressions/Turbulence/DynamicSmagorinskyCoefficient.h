@@ -2,11 +2,9 @@
 #define DynamicSmagorinskyCoefficient_h
 
 #include "StrainTensorBase.h"
-#include <CCA/Components/Wasatch/Operators/Operators.h>
-#include <CCA/Components/Wasatch/Operators/OperatorTypes.h>
 #include "StrainTensorMagnitude.h"
 #include <expression/Expression.h>
-
+#include <spatialops/structured/FVStaggered.h>
 /**
  *  \class  DynamicSmagorinskyCoefficient
  *  \author Tony Saad

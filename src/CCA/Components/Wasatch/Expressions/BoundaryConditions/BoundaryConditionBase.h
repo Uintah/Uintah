@@ -29,9 +29,6 @@
 #include <CCA/Components/Wasatch/BCHelper.h>
 #include <CCA/Components/Wasatch/WasatchBCHelper.h>
 
-#include <CCA/Components/Wasatch/Operators/Operators.h>
-#include <CCA/Components/Wasatch/Operators/OperatorTypes.h>
-
 /**
  *  \class 	BoundaryConditionBase
  *  \ingroup 	Expressions

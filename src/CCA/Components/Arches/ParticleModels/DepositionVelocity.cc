@@ -142,6 +142,8 @@ DepositionVelocity::timestep_init( const Patch* patch, ArchesTaskInfoManager* ts
 
   CCVariable<double>* vdeposit_velocity = tsk_info->get_uintah_field<CCVariable<double> >(_task_name);
   CCVariable<double>& deposit_velocity = *vdeposit_velocity;
+  constCCVariable<double>* vdeposit_velocity_old = tsk_info->get_const_uintah_field<constCCVariable<double> >(_task_name);
+  constCCVariable<double>& deposit_velocity_old = *vdeposit_velocity_old;
   constCCVariable<double>* vnew_time_old = tsk_info->get_const_uintah_field<constCCVariable<double> >(_new_time_name);
   constCCVariable<double>& new_time_old = *vnew_time_old;
   CCVariable<double>* vnew_time = tsk_info->get_uintah_field<CCVariable<double> >(_new_time_name);
@@ -155,12 +157,7 @@ DepositionVelocity::timestep_init( const Patch* patch, ArchesTaskInfoManager* ts
       new_time[c] = 0.0; // this is required for determining when to reset running sums for time-averaging.
       deposit_velocity[c]=0.0;
     } else {
-      constCCVariable<double>* vdeposit_velocity_old = tsk_info->get_const_uintah_field<constCCVariable<double> >(_task_name);
-      constCCVariable<double>& deposit_velocity_old = *vdeposit_velocity_old;
-      for (CellIterator iter=patch->getExtraCellIterator(); !iter.done(); iter++){
-        IntVector c = *iter;
-        deposit_velocity[c]=deposit_velocity_old[c];
-      }
+      deposit_velocity[c]=deposit_velocity_old[c];
     }
   }
   

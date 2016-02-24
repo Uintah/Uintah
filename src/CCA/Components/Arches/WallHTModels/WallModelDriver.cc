@@ -263,7 +263,7 @@ WallModelDriver::doWallHT( const ProcessorGroup* my_world,
       new_dw->allocateAndPut( vars.T_real     , _True_T_Label , _matl_index, patch );
       new_dw->get(   vars.celltype , _cellType_label , _matl_index , patch , Ghost::AroundCells, 1 );
 
-      vars.T_real.initialize(0.0);
+      vars.T_real.copyData(vars.T_real_old);
 
         old_dw->get(   vars.incident_hf_e     , _HF_E_label     , _matl_index , patch, Ghost::AroundCells, 1 );
         old_dw->get(   vars.incident_hf_w     , _HF_W_label     , _matl_index , patch, Ghost::AroundCells, 1 );
