@@ -80,9 +80,11 @@ DetailedTasks::DetailedTasks(       SchedulerCommon* sc,
   extraCommunication_(0)
 #ifdef HAVE_CUDA
   ,
+  deviceVerifyDataTransferCompletionQueueLock_("DetailedTasks Device Verify Data Transfer Queue"),
+  deviceFinalizePreparationQueueLock_("DetailedTasks Device Finalize Preparation Queue"),
   deviceReadyQueueLock_("DetailedTasks Device Ready Queue"),
   deviceCompletedQueueLock_("DetailedTasks Device Completed Queue"),
-  deviceFinalizePreparationQueueLock_("DetailedTasks Device Finalize Preparation Queue"),
+  hostFinalizePreparationQueueLock_("DetailedTasks Host Finalize Preparation Queue"),
   hostReadyQueueLock_("DetailedTasks Host Ready Queue")
 #endif
 {
@@ -1605,7 +1607,7 @@ bool DetailedTask::checkCUDAStreamDone() const
       SCI_THROW(InternalError("Detected CUDA kernel execution failure on Task:"+ getName() , __FILE__, __LINE__));
       return false;
     } else { //other error
-      printf("ERROR! - DetailedTask::checkCUDAStreamDone() - The stream %p had this error code %d.  This could mean that something else in the stream just hit an error.\n", it->second, retVal);
+      printf("ERROR! - DetailedTask::checkCUDAStreamDone() - The stream %p had this error code %d.  This could mean that something else in the stream just hit an error.\n",  it->second, retVal);
       SCI_THROW(InternalError("ERROR! - Invalid stream query", __FILE__, __LINE__));
       return false;
     }
@@ -1703,6 +1705,15 @@ void DetailedTask::deleteTaskGpuDataWarehouses() {
   }
 }
 
+
+void DetailedTask::clearPreparationCollections(){
+
+  deviceVars.clear();
+  ghostVars.clear();
+  taskVars.clear();
+  varsToBeGhostReady.clear();
+  varsBeingCopiedByTask.clear();
+}
 #endif // HAVE_CUDA
 
 //_____________________________________________________________________________
@@ -1938,7 +1949,29 @@ DetailedTasks::numExternalReadyTasks()
 
 #ifdef HAVE_CUDA
 
-DetailedTask* DetailedTasks::getNextFinalizeDevicePreparationTask()
+
+//_____________________________________________________________________________
+//
+DetailedTask*
+DetailedTasks::getNextVerifyDataTransferCompletionTask()
+{
+  DetailedTask* nextTask = NULL;
+  deviceVerifyDataTransferCompletionQueueLock_.writeLock();
+  {
+    if (!verifyDataTransferCompletionTasks_.empty()) {
+      nextTask = verifyDataTransferCompletionTasks_.top();
+      verifyDataTransferCompletionTasks_.pop();
+    }
+  }
+  deviceVerifyDataTransferCompletionQueueLock_.writeUnlock();
+
+  return nextTask;
+}
+
+//_____________________________________________________________________________
+//
+DetailedTask*
+DetailedTasks::getNextFinalizeDevicePreparationTask()
 {
   DetailedTask* nextTask = NULL;
   deviceFinalizePreparationQueueLock_.writeLock();
@@ -1984,6 +2017,23 @@ DetailedTasks::getNextCompletionPendingDeviceTask()
   return nextTask;
 }
 
+//_____________________________________________________________________________
+//
+DetailedTask*
+DetailedTasks::getNextFinalizeHostPreparationTask()
+{
+  DetailedTask* nextTask = NULL;
+  hostFinalizePreparationQueueLock_.writeLock();
+  if (!finalizeHostPreparationTasks_.empty()) {
+    nextTask = finalizeHostPreparationTasks_.top();
+    finalizeHostPreparationTasks_.pop();
+  }
+  hostFinalizePreparationQueueLock_.writeUnlock();
+  return nextTask;
+}
+
+//_____________________________________________________________________________
+//
 DetailedTask* DetailedTasks::getNextInitiallyReadyHostTask()
 {
   DetailedTask* nextTask = NULL;
@@ -1997,7 +2047,23 @@ DetailedTask* DetailedTasks::getNextInitiallyReadyHostTask()
   return nextTask;
 }
 
-DetailedTask* DetailedTasks::peekNextFinalizeDevicePreparationTask()
+
+//_____________________________________________________________________________
+//
+DetailedTask*
+DetailedTasks::peekNextVerifyDataTransferCompletionTask()
+{
+  deviceVerifyDataTransferCompletionQueueLock_.readLock();
+  DetailedTask* dtask = verifyDataTransferCompletionTasks_.top();
+  deviceVerifyDataTransferCompletionQueueLock_.readUnlock();
+
+  return dtask;
+}
+
+//_____________________________________________________________________________
+//
+DetailedTask*
+DetailedTasks::peekNextFinalizeDevicePreparationTask()
 {
   deviceFinalizePreparationQueueLock_.readLock();
   DetailedTask* dtask = finalizeDevicePreparationTasks_.top();
@@ -2005,7 +2071,6 @@ DetailedTask* DetailedTasks::peekNextFinalizeDevicePreparationTask()
 
   return dtask;
 }
-
 
 //_____________________________________________________________________________
 //
@@ -2034,6 +2099,20 @@ DetailedTasks::peekNextCompletionPendingDeviceTask()
   return dtask;
 }
 
+//_____________________________________________________________________________
+//
+DetailedTask*
+DetailedTasks::peekNextFinalizeHostPreparationTask()
+{
+  hostFinalizePreparationQueueLock_.readLock();
+  DetailedTask* dtask = finalizeHostPreparationTasks_.top();
+  hostFinalizePreparationQueueLock_.readUnlock();
+
+  return dtask;
+}
+
+//_____________________________________________________________________________
+//
 DetailedTask* DetailedTasks::peekNextInitiallyReadyHostTask()
 {
   hostReadyQueueLock_.readLock();
@@ -2043,6 +2122,17 @@ DetailedTask* DetailedTasks::peekNextInitiallyReadyHostTask()
   return dtask;
 }
 
+//_____________________________________________________________________________
+//
+void DetailedTasks::addVerifyDataTransferCompletion(DetailedTask* dtask)
+{
+  deviceVerifyDataTransferCompletionQueueLock_.writeLock();
+  verifyDataTransferCompletionTasks_.push(dtask);
+  deviceVerifyDataTransferCompletionQueueLock_.writeUnlock();
+}
+
+//_____________________________________________________________________________
+//
 void DetailedTasks::addFinalizeDevicePreparation(DetailedTask* dtask)
 {
   deviceFinalizePreparationQueueLock_.writeLock();
@@ -2074,6 +2164,17 @@ DetailedTasks::addCompletionPendingDeviceTask( DetailedTask* dtask )
   deviceCompletedQueueLock_.writeUnlock();
 }
 
+//_____________________________________________________________________________
+//
+void DetailedTasks::addFinalizeHostPreparation(DetailedTask* dtask)
+{
+  hostFinalizePreparationQueueLock_.writeLock();
+  finalizeHostPreparationTasks_.push(dtask);
+  hostFinalizePreparationQueueLock_.writeUnlock();
+}
+
+//_____________________________________________________________________________
+//
 void DetailedTasks::addInitiallyReadyHostTask(DetailedTask* dtask)
 {
   hostReadyQueueLock_.writeLock();

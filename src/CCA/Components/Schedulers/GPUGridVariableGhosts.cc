@@ -66,6 +66,10 @@ DeviceGhostCellsInfo::DeviceGhostCellsInfo(const VarLabel* label,
 
 DeviceGhostCells::DeviceGhostCells() {}
 
+void DeviceGhostCells::clear() {
+  ghostVars.clear();
+  totalGhostCellCopies.clear();
+}
 void DeviceGhostCells::add(const VarLabel* label,
           const Patch* sourcePatchPointer,
           const Patch* destPatchPointer,
@@ -119,8 +123,8 @@ void DeviceGhostCells::add(const VarLabel* label,
     ghostVars.insert( std::map<GpuUtilities::GhostVarsTuple, DeviceGhostCellsInfo>::value_type( gvt, tmp ) );
   } else {
     //Don't add the same device var twice.
-    printf("ERROR:\n This preparation queue for ghost cell copies already added this exact copy for label %s matl %d level %d dw %d\n",label->getName().c_str(), matlIndx, levelIndx, (int)dwIndex);
-    SCI_THROW(InternalError("Preparation queue already contained same exact variable for: -" + label->getName(), __FILE__, __LINE__));
+    printf("DeviceGhostCells::add() - ERROR:\n This preparation queue for ghost cell copies already added this exact copy for label %s matl %d level %d dw %d\n",label->getName().c_str(), matlIndx, levelIndx, (int)dwIndex);
+    SCI_THROW(InternalError("DeviceGhostCells::add() - Preparation queue already contained same exact variable for: -" + label->getName(), __FILE__, __LINE__));
   }
 
 

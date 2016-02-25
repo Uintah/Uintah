@@ -45,7 +45,7 @@
 #include <vector>
 
 #include <sci_hash_map.h>
-
+#include <iostream>
 namespace Uintah {
 
    /**************************************
@@ -473,6 +473,7 @@ void
 DWDatabase<DomainType>::put( const VarLabel* label, int matlIndex,const DomainType* dom,
 				      Variable* var, bool init, bool replace )
 {
+
   ASSERT(matlIndex >= -1);
 
   if (init) {

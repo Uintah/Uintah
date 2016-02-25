@@ -1,3 +1,32 @@
+/*
+ * The MIT License
+ *
+ * Copyright (c) 1997-2016 The University of Utah
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to
+ * deal in the Software without restriction, including without limitation the
+ * rights to use, copy, modify, merge, publish, distribute, sublicense, and/or
+ * sell copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in
+ * all copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+ * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
+ * IN THE SOFTWARE.
+ */
+
+//The purpose of this is to provide tools to allow better tracking of what will be queued
+//into the GPU, and to manage that queued process.  For example, the engine may see that
+//for variable phi, patch 2, material 0, level 0, that it needs to send the CPU var data
+//into the GPU.  This helps collect this and all other forthcoming copies.
+
 #ifndef CCA_COMPONENTS_SCHEDULERS_GPUGRIDVARIABLEINFO_H
 #define CCA_COMPONENTS_SCHEDULERS_GPUGRIDVARIABLEINFO_H
 
@@ -206,6 +235,8 @@ class DeviceGridVariables {
 public:
   DeviceGridVariables();
 
+  void clear();
+
   //For grid vars
   void add(const Patch* patchPointer,
             int matlIndx,
@@ -222,7 +253,7 @@ public:
             Variable* var,
             GpuUtilities::DeviceVarDestination dest);
 
-  //For PerPatch vars.  They don't use ghost cells
+  //For PerPatch vars and reduction vars.  They don't use ghost cells
   void add(const Patch* patchPointer,
             int matlIndx,
             int levelIndx,
@@ -254,6 +285,13 @@ public:
               size_t varMemSize,
               const Task::Dependency* dep,
               unsigned int whichGPU);
+
+  //As the name suggests, to keep track of all vars for which this task is managing ghost cells.
+  void addVarToBeGhostReady(const Patch* patchPointer,
+            int matlIndx,
+            int levelIndx,
+            const Task::Dependency* dep,
+            unsigned int whichGPU);
 
   //For staging contiguous arrays
   void addTaskGpuDWStagingVar(const Patch* patchPointer,
@@ -296,10 +334,9 @@ private:
                         //which are first queued up, and then processed in a group.  These DeviceGridVariableInfo objects
                         //can 1) Tell the host-side GPU DW what variables need to be created on the GPU and what copies need
                         //to be made host to deivce.  2) Tell a task GPU DW which variables it needs to know about from
-                        //the host-side GPU DW (this task GPU DW gets sent into the GPU).  Or 3) Tells a task GPU DW
-                        //the ghost cell copies that need to occur within a GPU.
-                        //TODO: For #2/#3, it is that ghost cell copies could be duplicated or within one another.  If so...handle this...
-
+                        //the host-side GPU DW (this task GPU DW gets sent into the GPU).
+                        //This is a multimap because it can hold staging/foreign vars in it as well.  A regular variable can have
+                        //zero to many staging/foreign variables associated with it.
   std::map <unsigned int, DeviceInfo> deviceInfoMap;
   //size_t totalSize;
   //size_t totalSizeForDataWarehouse[Task::TotalDWs];
@@ -313,6 +350,5 @@ private:
 
 
 static std::map<const Patch *, int> patchAcceleratorLocation;
-static unsigned int currentAcceleratorCounter;
 
 #endif // End CCA_COMPONENTS_SCHEDULERS_GPUGRIDVARIABLEINFO_H
