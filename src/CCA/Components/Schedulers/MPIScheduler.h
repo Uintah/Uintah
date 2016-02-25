@@ -204,8 +204,6 @@ class MPIScheduler : public SchedulerCommon {
     // The following locks are for multi-threaded schedulers that derive from MPIScheduler
     //   This eliminates miles of unnecessarily redundant code in threaded schedulers
     //-------------------------------------------------------------------------
-    std::mutex      recvLock;               // CommRecMPI recvs lock
-    std::mutex      sendLock;               // CommRecMPI sends lock
     std::mutex      dlbLock;                // load balancer lock
     std::mutex      waittimesLock;          // MPI wait times lock
 
