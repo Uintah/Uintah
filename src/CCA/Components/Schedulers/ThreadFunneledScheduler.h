@@ -115,22 +115,20 @@ class ThreadFunneledScheduler : public MPIScheduler {
 
   private:
 
+    using atomic_int_array = std::unique_ptr<std::atomic<int>[]>;
+
     // eliminate copy, assignment and move
     ThreadFunneledScheduler( const ThreadFunneledScheduler & )            = delete;
     ThreadFunneledScheduler& operator=( const ThreadFunneledScheduler & ) = delete;
     ThreadFunneledScheduler( ThreadFunneledScheduler && )                 = delete;
     ThreadFunneledScheduler& operator=( ThreadFunneledScheduler && )      = delete;
 
-    void processMPISends();
-
-    void run_task( DetailedTask * task );
 
     void select_tasks();
 
     void run_task( DetailedTask* task, int iteration );
 
     void thread_fence();
-
 
     static void init_threads( ThreadFunneledScheduler * scheduler, int num_threads );
 
@@ -139,23 +137,23 @@ class ThreadFunneledScheduler : public MPIScheduler {
     static constexpr size_t one = 1;
 
     std::vector<int>           m_phase_tasks{};
-    std::vector<int>           m_phase_tasks_done{};
     std::vector<DetailedTask*> m_phase_sync_tasks{};
     DetailedTasks*             m_detailed_tasks{};
 
     TaskPool   m_task_pool{};
-    TaskPool   m_mpi_pending_pool{};
 
     Timers::Simple  m_mpi_test_time{};
 
     bool     m_abort{ false };
     int      m_current_iteration{ 0 };
-    int      m_num_tasks_done{ 0 };
     int      m_num_tasks{ 0 };
     int      m_current_phase{ 0 };
     int      m_num_phases{ 0 };
     int      m_abort_point{ 0 };
     int      m_num_threads{ 0 };
+
+    std::atomic<int>   m_num_tasks_done;
+    atomic_int_array   m_phase_tasks_done;
 
 };
 
