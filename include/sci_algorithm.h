@@ -35,5 +35,41 @@
 #include <sci_defs/uintah_defs.h>
 #include <algorithm>
 
+#if (!defined(HAVE_CXX11)) && ( HAVE_EXT_ALGORITHM ) // forget about using extension library
+
+namespace std {
+  template <class Iter, class Compare>
+  bool is_sorted(Iter begin, Iter end, Compare compare)
+  {
+    if(begin == end)
+      return true;
+    Iter cur = begin;
+    Iter next = cur; next++;
+    while(next != end){
+      if (compare(*next, *cur))
+	return false;
+      cur = next;
+      next++;
+    }
+    return true;
+  }
+
+  template <class Iter>
+  bool is_sorted(Iter begin, Iter end)
+  {
+    if(begin == end)
+      return true;
+    Iter cur = begin;
+    Iter next = cur; next++;
+    while(next != end){
+      if (*next < *cur)
+	return false;
+      cur = next;
+      next++;
+    }
+    return true;
+  }
+}
+#endif
 #endif
 
