@@ -394,14 +394,14 @@ struct computeAMatrix{
 #ifdef UINTAH_ENABLE_KOKKOS
        void operator()(int ixyz) const {
 
-         int i, j, k ;
+         int i, j, k;
+         _m_range(ixyz,i,j,k);
 
-         _m_range(ixyz, i,j,k) ;
          if (_cellType(i,j,k)==_intFlow) {
 
            _matrixB(i,j,k)=(_srcIntensity(i,j,k)+ _scatSource(i,j,k))*_vol;
            _center(i,j,k) =  _omu*_areaEW + _oeta*_areaNS +  _oxi*_areaTB +
-             _abskt(i,j,k) * _vol; // out scattering 
+           _abskt(i,j,k) * _vol; // out scattering 
 
           int ipm = i+_dirX;
           int jpm = j+_dirY;
@@ -707,7 +707,7 @@ DORadiationModel::intensitysolve(const ProcessorGroup* pg,
        
 #ifdef UINTAH_ENABLE_KOKKOS
       IntVector idxHi2 = patch->getCellHighIndex();
-      IntVector idxLo2 = patch->getCellHighIndex();
+      IntVector idxLo2 = patch->getCellLowIndex();
       Uintah::ColumnMajorRange<> range(idxLo2, idxHi2);
 #endif //UINTAH_ENABLE_KOKKOS
 
@@ -734,7 +734,6 @@ DORadiationModel::intensitysolve(const ProcessorGroup* pg,
 #endif //UINTAH_ENABLE_KOKKOS
 
 #ifdef UINTAH_ENABLE_KOKKOS
-
       Kokkos::parallel_for( range.size(), doMakeMatrixA );
 #else
       for (int i =  idxLo[0] ; i <= idxHi[0] ; i++)
@@ -743,7 +742,6 @@ DORadiationModel::intensitysolve(const ProcessorGroup* pg,
             doMakeMatrixA(i,j,k);
           } 
 #endif //UINTAH_ENABLE_KOKKOS
-
 
      // Done constructing A-matrix and matrix, pass to solver object
       d_linearSolver->setMatrix( pg ,patch, vars, constvars, plusX, plusY, plusZ, 
