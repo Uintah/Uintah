@@ -1447,7 +1447,7 @@ RFElasticPlastic::addSplitParticlesComputesAndRequires(Task* task,
 void 
 RFElasticPlastic::splitCMSpecificParticleData(const Patch* patch,
                                               const int dwi,
-                                              const int nDims,
+                                              const int fourOrEight,
                                               ParticleVariable<int> &prefOld,
                                               ParticleVariable<int> &prefNew,
                                               const unsigned int oldNumPar,
@@ -1481,7 +1481,6 @@ RFElasticPlastic::splitCMSpecificParticleData(const Patch* patch,
   }
 
   int numRefPar=0;
-  int fourOrEight=pow(2,nDims);
   for(unsigned int idx=0; idx<oldNumPar; ++idx ){
     if(prefNew[idx]!=prefOld[idx]){  // do refinement!
       for(int i = 0;i<fourOrEight;i++){
