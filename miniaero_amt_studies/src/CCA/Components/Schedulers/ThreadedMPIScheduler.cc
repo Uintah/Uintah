@@ -352,7 +352,7 @@ ThreadedMPIScheduler::execute( int tgnum     /* = 0 */,
         }
       }
       else {
-        initiateTask(task, abort, abort_point, iteration);
+        MPIScheduler::initiateTask(task, abort, abort_point, iteration);
         task->markInitiated();
         task->checkExternalDepCount();
         if (taskdbg.active()) {
@@ -393,7 +393,7 @@ ThreadedMPIScheduler::execute( int tgnum     /* = 0 */,
       }
       else {  // Task::OncePerProc task
         ASSERT(reducetask->getTask()->usesMPI());
-        initiateTask(reducetask, abort, abort_point, iteration);
+        MPIScheduler::initiateTask(reducetask, abort, abort_point, iteration);
         reducetask->markInitiated();
 
         ASSERT(reducetask->getExternalDepCount() == 0)
