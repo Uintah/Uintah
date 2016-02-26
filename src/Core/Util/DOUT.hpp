@@ -32,21 +32,33 @@
 #include <string>
 #include <sstream>
 
-#define DOUT( cond, ... )           \
-  if (cond) {                       \
-    std::ostringstream msg;         \
-    msg << __VA_ARGS__;             \
+#include <Core/Util/Timers/Timers.hpp>
+
+#define DOUT( cond, ... )             \
+  if (cond) {                         \
+    std::ostringstream msg;           \
+    msg << __VA_ARGS__;               \
     printf("%s\n",msg.str().c_str()); \
   }
 
-#define DDOUT( cond, ... )          \
-  if (cond) {                       \
-    std::ostringstream msg;         \
-    msg << __FILE__ << ":";         \
-    msg << __LINE__ << " : ";       \
-    msg << __VA_ARGS__;             \
+#define DDOUT( cond, ... )            \
+  if (cond) {                         \
+    std::ostringstream msg;           \
+    msg << __FILE__ << ":";           \
+    msg << __LINE__ << " : ";         \
+    msg << __VA_ARGS__;               \
     printf("%s\n",msg.str().c_str()); \
   }
+
+#define POUT( ... )                   \
+  {                                   \
+    std::ostringstream msg;           \
+    msg << __FILE__ << ":";           \
+    msg << __LINE__ << " : ";         \
+    msg << __VA_ARGS__;               \
+    printf("%s\n",msg.str().c_str()); \
+  }
+
 
 namespace Uintah {
 
@@ -90,16 +102,22 @@ private:
   Dout & operator=( Dout && ) = delete;
 };
 
-extern Dout ddbg;
-extern Dout ddbgst;
-extern Dout dtimeout;
-extern Dout dreductionout;
-extern Dout dtaskorder;
-extern Dout dwaitout;
-extern Dout dexecout;
-extern Dout dtaskdbg;
-extern Dout dtaskLevel_dbg;
-extern Dout dmpidbg;
+class TimerOut
+{
+public:
+  TimerOut( std::string const & name = "Timer" )
+    : m_name{ name }
+  {}
+
+  ~TimerOut()
+  {
+    DOUT(true, m_name << " : " << m_simple.seconds() << " seconds");
+  }
+private:
+  std::string    m_name;
+  Timers::Simple m_simple{};
+};
+
 
 } //namespace Uintah
 
