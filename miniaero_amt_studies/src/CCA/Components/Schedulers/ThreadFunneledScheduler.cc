@@ -80,6 +80,8 @@ volatile ThreadState   g_thread_states[MAX_THREADS]  = {};
 int                    g_cpu_affinities[MAX_THREADS] = {};
 int                    g_num_threads                 = 0;
 
+volatile int g_run_tasks{0};
+
 
 //______________________________________________________________________
 //
@@ -280,7 +282,7 @@ void ThreadFunneledScheduler::execute(  int tgnum /*=0*/ , int iteration /*=0*/ 
   m_detailed_tasks->initTimestep();
   m_num_tasks = m_detailed_tasks->numLocalTasks();
 
-  for (int i = 0; i < m_num_tasks; i++) {
+  for (int i = 0; i < m_num_tasks; ++i) {
     m_detailed_tasks->localTask(i)->resetDependencyCounts();
   }
 
@@ -304,24 +306,21 @@ void ThreadFunneledScheduler::execute(  int tgnum /*=0*/ , int iteration /*=0*/ 
   m_phase_sync_tasks.resize(m_num_phases, nullptr);
 
   m_phase_tasks_done.release();
-  m_phase_tasks_done = atomic_int_array(new std::atomic<int>[m_num_phases]);
-  for (auto i = 0; i < m_num_phases; ++i) {
-    m_phase_tasks_done[i].store(0, std::memory_order_relaxed);
-  }
+  m_phase_tasks_done = atomic_int_array(new std::atomic<int>[m_num_phases]{});
 
   // count the number of tasks in each task-phase
   //   each task is assigned a task-phase in TaskGraph::createDetailedDependencies()
   for (int i = 0; i < m_num_tasks; ++i) {
-    m_phase_tasks[m_detailed_tasks->localTask(i)->getTask()->d_phase]++;
+    ++m_phase_tasks[m_detailed_tasks->localTask(i)->getTask()->d_phase];
   }
 
   //------------------------------------------------------------------------------------------------
   // activate TaskRunners
   //------------------------------------------------------------------------------------------------
-  m_run_tasks = 1;
+  Impl::g_run_tasks = 1;
 
   // reset per-thread wait times and activate
-  for (int i = 1; i < m_num_threads; i++) {
+  for (int i = 1; i < m_num_threads; ++i) {
     Impl::g_runners[i]->m_task_wait_time.reset();
     Impl::g_thread_states[i] = Impl::ThreadState::Active;
   }
@@ -332,7 +331,7 @@ void ThreadFunneledScheduler::execute(  int tgnum /*=0*/ , int iteration /*=0*/ 
   while (m_num_tasks_done.load(std::memory_order_relaxed) < m_num_tasks) {
 
     if (m_phase_tasks[m_current_phase] == m_phase_tasks_done[m_current_phase].load(std::memory_order_relaxed)) {  // this phase done, goto next phase
-      m_current_phase++;
+      ++m_current_phase;
     }
     // if we have an internally-ready task, initiate its recvs
     else if (m_detailed_tasks->numInternalReadyTasks() > 0) {
@@ -380,11 +379,11 @@ void ThreadFunneledScheduler::execute(  int tgnum /*=0*/ , int iteration /*=0*/ 
   //------------------------------------------------------------------------------------------------
   // deactivate TaskRunners
   //------------------------------------------------------------------------------------------------
-  m_run_tasks = 0;
+  Impl::g_run_tasks = 0;
 
   Impl::thread_fence();
 
-  for (int i = 1; i < m_num_threads; i++) {
+  for (int i = 1; i < m_num_threads; ++i) {
     Impl::g_thread_states[i] = Impl::ThreadState::Inactive;
   }
   //------------------------------------------------------------------------------------------------
@@ -395,7 +394,7 @@ void ThreadFunneledScheduler::execute(  int tgnum /*=0*/ , int iteration /*=0*/ 
   if (d_sharedState != 0) {
     computeNetRunTimeStats(d_sharedState->d_runTimeStats);
     double thread_wait_time = 0.0;
-    for (int i = 1; i < m_num_threads; i++) {
+    for (int i = 1; i < m_num_threads; ++i) {
       thread_wait_time += Impl::g_runners[i]->m_task_wait_time.nanoseconds();
     }
     d_sharedState->d_runTimeStats[SimulationState::TaskWaitThreadTime] += (thread_wait_time / (m_num_threads - 1) );
@@ -418,7 +417,7 @@ void ThreadFunneledScheduler::execute(  int tgnum /*=0*/ , int iteration /*=0*/ 
 //
 void ThreadFunneledScheduler::select_tasks()
 {
-  while ( m_run_tasks ) {
+  while ( Impl::g_run_tasks ) {
     TaskPool::iterator iter = m_task_pool.find_any();
     if (iter) {
       DetailedTask* ready_task = *iter;
