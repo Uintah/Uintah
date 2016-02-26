@@ -28,6 +28,8 @@
 #include <atomic>
 #include <cstdint>
 
+#include <Core/Lockfree/Lockfree_Mappers.hpp>
+
 namespace Timers {
 
 using clock_type  = std::chrono::high_resolution_clock;
@@ -224,6 +226,60 @@ template <typename Tag> std::atomic<uint64_t> AtomicTrip<Tag>::s_trips{0u};
 template <typename Tag> std::atomic<uint64_t> AtomicTrip<Tag>::s_total{0};
 template <typename Tag> std::atomic<uint64_t> AtomicTrip<Tag>::s_min{std::numeric_limits<uint64_t>::max()};
 template <typename Tag> std::atomic<uint64_t> AtomicTrip<Tag>::s_max{0};
+
+
+/// ThreadTrip timer
+///
+/// RAII timer
+template <typename Tag>
+struct ThreadTrip
+{
+  static constexpr int SIZE = 512;
+
+  using tag = Tag;
+
+  ThreadTrip() = default;
+
+  // disable copy, assignment, and move
+  ThreadTrip( const ThreadTrip & ) = delete;
+  ThreadTrip & operator=( const ThreadTrip & ) = delete;
+  ThreadTrip( ThreadTrip && ) = delete;
+  ThreadTrip & operator=( ThreadTrip && ) = delete;
+
+  ~ThreadTrip()
+  {
+    s_total[ Lockfree::ThreadIDMapper::tid() % SIZE ] += m_simple.nanoseconds();
+  }
+
+  static void reset()
+  {
+    for (int i=0; i<SIZE; ++i) {
+      s_total[i] = 0u;
+    }
+  }
+
+  static uint64_t nanoseconds()
+  {
+    uint64_t result = s_total[0];
+    for (int i=1; i<SIZE; ++i) {
+      result = s_total[i] < result ? result : s_total[i];
+    }
+    return result;
+  }
+
+  static double   microseconds() { return ConvertTo::microseconds(nanoseconds()); }
+  static double   milliseconds() { return ConvertTo::milliseconds(nanoseconds()); }
+  static double   seconds()      { return ConvertTo::seconds(nanoseconds()); }
+  static double   minutes()      { return ConvertTo::minutes(nanoseconds()); }
+  static double   hours()        { return ConvertTo::hours(nanoseconds()); }
+
+private:
+  static uint64_t s_total[SIZE];
+
+  Simple m_simple{};
+};
+
+template <typename Tag> uint64_t ThreadTrip<Tag>::s_total[SIZE] = {0};
 
 } // namespace Timers
 

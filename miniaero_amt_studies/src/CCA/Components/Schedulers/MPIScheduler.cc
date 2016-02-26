@@ -243,7 +243,7 @@ MPIScheduler::initiateReduction( DetailedTask* task )
 {
   Timers::Simple simple;
   {
-    Timers::AtomicTrip< TotalReduceTag > tr;
+    Timers::ThreadTrip< TotalReduceTag > tr;
     runReductionTask(task);
   }
   emitNode(task, 0.0, simple.seconds(), 0);
@@ -257,7 +257,7 @@ MPIScheduler::runTask( DetailedTask* task,
                        int           thread_id /*=0*/ )
 {
   if (waitout.active()) {
-    waittimes[task->getTask()->getName()].fetch_add( Timers::AtomicTrip< TotalWaitMPITag >::nanoseconds(), std::memory_order_relaxed );
+    waittimes[task->getTask()->getName()].fetch_add( Timers::ThreadTrip< TotalWaitMPITag >::nanoseconds(), std::memory_order_relaxed );
   }
 
   if (trackingVarsPrintLocation_ & SchedulerCommon::PRINT_BEFORE_EXEC) {
@@ -273,7 +273,7 @@ MPIScheduler::runTask( DetailedTask* task,
   m_task_exec_timer.reset();
   double task_start = m_task_exec_timer.seconds();
   {
-    Timers::AtomicTrip< TotalTaskTag > task_timer;
+    Timers::ThreadTrip< TotalTaskTag > task_timer;
     task->doit(d_myworld, dws, plain_old_dws);
   }
   uint64_t total_task_time = m_task_exec_timer.nanoseconds();
@@ -305,7 +305,7 @@ MPIScheduler::runTask( DetailedTask* task,
   task->done(dws);  // should this be part of task execution time? - APH 09/16/15
 
   {
-    Timers::AtomicTrip< TotalTestMPITag > test_mpi_timer;
+    Timers::ThreadTrip< TotalTestMPITag > test_mpi_timer;
     auto ready_request = [](SendCommNode const& n)->bool { return n.test(); };
     SendCommList::iterator iter = m_send_list.find_any(ready_request);
     if (iter) {
@@ -348,7 +348,7 @@ MPIScheduler::postMPISends( DetailedTask* task,
                             int           iteration,
                             int           thread_id  /*=0*/ )
 {
-  Timers::AtomicTrip< TotalSendTag > send_timer;
+  Timers::ThreadTrip< TotalSendTag > send_timer;
 
   bool dbg_active = dbg.active();
 
@@ -451,7 +451,7 @@ MPIScheduler::postMPISends( DetailedTask* task,
     if (mpibuff.count() > 0) {
       ASSERT(batch->messageTag > 0);
 
-      Timers::AtomicTrip< TotalSendMPITag > mpi_send_timer;
+      Timers::ThreadTrip< TotalSendMPITag > mpi_send_timer;
 
       void* buf;
       int count;
@@ -498,7 +498,7 @@ void MPIScheduler::postMPIRecvs( DetailedTask* task,
                                  int           abort_point,
                                  int           iteration )
 {
-  Timers::AtomicTrip< TotalRecvTag > recv_timer;
+  Timers::ThreadTrip< TotalRecvTag > recv_timer;
 
   bool dbg_active = dbg.active();
   if (dbg_active) {
@@ -640,7 +640,7 @@ void MPIScheduler::postMPIRecvs( DetailedTask* task,
 
       ASSERT(batch->messageTag > 0);
 
-      Timers::AtomicTrip< TotalRecvMPITag > mpi_recv_timer;
+      Timers::ThreadTrip< TotalRecvMPITag > mpi_recv_timer;
 
       void* buf;
       int count;
@@ -681,7 +681,7 @@ void MPIScheduler::processMPIRecvs( int how_much )
     return;
   }
 
-  Timers::AtomicTrip < TotalWaitMPITag > mpi_wait_timer;
+  Timers::ThreadTrip < TotalWaitMPITag > mpi_wait_timer;
 
   auto ready_request = [](RecvCommNode const& n)->bool {return n.test();};
   auto finished_request = [](RecvCommNode const& n)->bool {return n.wait();};
@@ -893,15 +893,26 @@ MPIScheduler::emitTime( const char* label, double dt )
 void
 MPIScheduler::emitNetMPIStats()
 {
-  mpi_info_[TotalWaitMPI]    = Timers::AtomicTrip< TotalWaitMPITag >::seconds();
-  mpi_info_[TotalReduce]     = Timers::AtomicTrip< TotalReduceTag >::seconds();
-  mpi_info_[TotalReduceMPI]  = Timers::AtomicTrip< TotalReduceTag >::seconds();
-  mpi_info_[TotalSend]       = Timers::AtomicTrip< TotalSendTag >::seconds();
-  mpi_info_[TotalSendMPI]    = Timers::AtomicTrip< TotalSendMPITag >::seconds();
-  mpi_info_[TotalRecv]       = Timers::AtomicTrip< TotalRecvTag >::seconds();
-  mpi_info_[TotalRecvMPI]    = Timers::AtomicTrip< TotalRecvMPITag >::seconds();
-  mpi_info_[TotalTask]       = Timers::AtomicTrip< TotalTaskTag >::seconds();
-  mpi_info_[TotalTestMPI]    = Timers::AtomicTrip< TotalTestMPITag >::seconds();
+  mpi_info_[TotalWaitMPI]    = Timers::ThreadTrip< TotalWaitMPITag >::seconds();
+  mpi_info_[TotalReduce]     = Timers::ThreadTrip< TotalReduceTag >::seconds();
+  mpi_info_[TotalReduceMPI]  = Timers::ThreadTrip< TotalReduceTag >::seconds();
+  mpi_info_[TotalSend]       = Timers::ThreadTrip< TotalSendTag >::seconds();
+  mpi_info_[TotalSendMPI]    = Timers::ThreadTrip< TotalSendMPITag >::seconds();
+  mpi_info_[TotalRecv]       = Timers::ThreadTrip< TotalRecvTag >::seconds();
+  mpi_info_[TotalRecvMPI]    = Timers::ThreadTrip< TotalRecvMPITag >::seconds();
+  mpi_info_[TotalTask]       = Timers::ThreadTrip< TotalTaskTag >::seconds();
+  mpi_info_[TotalTestMPI]    = Timers::ThreadTrip< TotalTestMPITag >::seconds();
+
+  Timers::ThreadTrip< TotalWaitMPITag >::reset();
+  Timers::ThreadTrip< TotalReduceTag >::reset();
+  Timers::ThreadTrip< TotalReduceTag >::reset();
+  Timers::ThreadTrip< TotalSendTag >::reset();
+  Timers::ThreadTrip< TotalSendMPITag >::reset();
+  Timers::ThreadTrip< TotalRecvTag >::reset();
+  Timers::ThreadTrip< TotalRecvMPITag >::reset();
+  Timers::ThreadTrip< TotalTaskTag >::reset();
+  Timers::ThreadTrip< TotalTestMPITag >::reset();
+
 
   if (timeout.active()) {
 
