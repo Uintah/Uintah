@@ -141,7 +141,7 @@ class MPIScheduler : public SchedulerCommon {
     // timing statistics to test the mpi functionality
     enum TimingStat
     {
-      TotalReduce = 0,
+      TotalReduce,
       TotalSend,
       TotalRecv,
       TotalTask,
@@ -152,6 +152,19 @@ class MPIScheduler : public SchedulerCommon {
       TotalWaitMPI,
       MAX_TIMING_STATS
     };
+
+    struct TotalReduceTag{};
+    // struct TotalReduceMPITag{};
+
+    struct TotalSendTag{};
+    struct TotalSendMPITag{};
+
+    struct TotalRecvTag{};
+    struct TotalRecvMPITag{};
+
+    struct TotalTestMPITag{};
+    struct TotalTaskTag{};
+    struct TotalWaitMPITag{};
 
     ReductionInfoMapper< TimingStat, double > mpi_info_;
 
@@ -205,18 +218,10 @@ class MPIScheduler : public SchedulerCommon {
     //   This eliminates miles of unnecessarily redundant code in threaded schedulers
     //-------------------------------------------------------------------------
     std::mutex      dlbLock;                // load balancer lock
-    std::mutex      waittimesLock;          // MPI wait times lock
 
     // Timers for MPI stats
     Timers::Simple  m_last_exec_timer{};
     Timers::Simple  m_task_exec_timer{};
-    Timers::Simple  m_mpi_send_timer{};
-    Timers::Simple  m_total_send_timer{};
-    Timers::Simple  m_mpi_recv_timer{};
-    Timers::Simple  m_total_recv_timer{};
-    Timers::Simple  m_mpi_test_timer{};
-    Timers::Simple  m_mpi_wait_timer{};
-    Timers::Simple  m_mpi_reduce_timer{};
 
   private:
 

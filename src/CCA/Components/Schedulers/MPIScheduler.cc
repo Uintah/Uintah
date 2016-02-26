@@ -70,13 +70,12 @@ DebugStream taskdbg(       "TaskDBG"       , false );
 DebugStream taskLevel_dbg( "TaskLevel"     , false );
 DebugStream mpidbg(        "MPIDBG"        , false );
 
-std::map<std::string, double> waittimes;
-std::map<std::string, double> exectimes;
+std::map<std::string, std::atomic<uint64_t> > waittimes;
+std::map<std::string, std::atomic<uint64_t> > exectimes;
 
 
 namespace {
 
-double      s_current_wait_time = 0;
 std::mutex  s_cout_mutex;
 std::mutex  s_cerr_mutex;
 
@@ -235,10 +234,6 @@ void MPIScheduler::initiateTask( DetailedTask * task
                                )
 {
   postMPIRecvs(task, only_old_recvs, abort_point, iteration);
-
-  if (only_old_recvs) {
-    return;
-  }
 }
 
 //______________________________________________________________________
@@ -246,22 +241,12 @@ void MPIScheduler::initiateTask( DetailedTask * task
 void
 MPIScheduler::initiateReduction( DetailedTask* task )
 {
-  if (reductionout.active() && d_myworld->myrank() == 0) {
-    s_cout_mutex.lock();
-    reductionout << "Running Reduction Task: " << task->getName() << std::endl;
-    s_cout_mutex.unlock();
+  Timers::Simple simple;
+  {
+    Timers::AtomicTrip< TotalReduceTag > tr;
+    runReductionTask(task);
   }
-
-  m_mpi_reduce_timer.reset();
-  double reduce_start = m_mpi_reduce_timer.seconds();
-
-  runReductionTask(task);
-
-  double total_reduce_time = m_mpi_reduce_timer.seconds();
-  emitNode(task, reduce_start, total_reduce_time, 0);
-
-  mpi_info_[TotalReduce]    += total_reduce_time;
-  mpi_info_[TotalReduceMPI] += total_reduce_time;
+  emitNode(task, 0.0, simple.seconds(), 0);
 }
 
 //______________________________________________________________________
@@ -272,10 +257,7 @@ MPIScheduler::runTask( DetailedTask* task,
                        int           thread_id /*=0*/ )
 {
   if (waitout.active()) {
-    waittimesLock.lock();
-    waittimes[task->getTask()->getName()] += s_current_wait_time;
-    s_current_wait_time = 0;
-    waittimesLock.unlock();
+    waittimes[task->getTask()->getName()].fetch_add( Timers::AtomicTrip< TotalWaitMPITag >::nanoseconds(), std::memory_order_relaxed );
   }
 
   if (trackingVarsPrintLocation_ & SchedulerCommon::PRINT_BEFORE_EXEC) {
@@ -290,8 +272,11 @@ MPIScheduler::runTask( DetailedTask* task,
 
   m_task_exec_timer.reset();
   double task_start = m_task_exec_timer.seconds();
-  task->doit(d_myworld, dws, plain_old_dws);
-  double total_task_time = m_task_exec_timer.seconds();
+  {
+    Timers::AtomicTrip< TotalTaskTag > task_timer;
+    task->doit(d_myworld, dws, plain_old_dws);
+  }
+  uint64_t total_task_time = m_task_exec_timer.nanoseconds();
 
 
   if (trackingVarsPrintLocation_ & SchedulerCommon::PRINT_AFTER_EXEC) {
@@ -301,16 +286,15 @@ MPIScheduler::runTask( DetailedTask* task,
   dlbLock.lock();
   {
     if (execout.active()) {
-      exectimes[task->getTask()->getName()] += total_task_time;
+      exectimes[task->getTask()->getName()].fetch_add( total_task_time, std::memory_order_relaxed );
     }
 
     // if I do not have a sub scheduler
     if (!task->getTask()->getHasSubScheduler()) {
       //add my task time to the total time
-      mpi_info_[TotalTask] += total_task_time;
       if (!d_sharedState->isCopyDataTimestep() && task->getTask()->getType() != Task::Output) {
         //add contribution for patchlist
-        getLoadBalancer()->addContribution(task, total_task_time);
+        getLoadBalancer()->addContribution(task, total_task_time * 1.0e-9);
       }
     }
   }
@@ -320,18 +304,14 @@ MPIScheduler::runTask( DetailedTask* task,
 
   task->done(dws);  // should this be part of task execution time? - APH 09/16/15
 
-
-//  m_mpi_test_timer.reset();
-//  sends_[thread_id].testsome(d_myworld);
-//  mpi_info_[TotalTestMPI] += m_mpi_test_timer.seconds();
-
-  m_mpi_test_timer.reset();
-  auto ready_request = [](SendCommNode const& n)->bool { return n.test(); };
-  SendCommList::iterator iter = m_send_list.find_any(ready_request);
-  if (iter) {
-    m_send_list.erase(iter);
+  {
+    Timers::AtomicTrip< TotalTestMPITag > test_mpi_timer;
+    auto ready_request = [](SendCommNode const& n)->bool { return n.test(); };
+    SendCommList::iterator iter = m_send_list.find_any(ready_request);
+    if (iter) {
+      m_send_list.erase(iter);
+    }
   }
-  mpi_info_[TotalTestMPI] += m_mpi_test_timer.seconds();
 
 
   // Add subscheduler timings to the parent scheduler and reset subscheduler timings
@@ -343,7 +323,7 @@ MPIScheduler::runTask( DetailedTask* task,
     mpi_info_.reset(0);
   }
 
-  emitNode(task, task_start, total_task_time, 0);
+  emitNode(task, task_start, total_task_time * 1.0e-9, 0);
 
 }  // end runTask()
 
@@ -368,7 +348,7 @@ MPIScheduler::postMPISends( DetailedTask* task,
                             int           iteration,
                             int           thread_id  /*=0*/ )
 {
-  m_total_send_timer.reset();
+  Timers::AtomicTrip< TotalSendTag > send_timer;
 
   bool dbg_active = dbg.active();
 
@@ -471,7 +451,7 @@ MPIScheduler::postMPISends( DetailedTask* task,
     if (mpibuff.count() > 0) {
       ASSERT(batch->messageTag > 0);
 
-      m_mpi_send_timer.reset();
+      Timers::AtomicTrip< TotalSendMPITag > mpi_send_timer;
 
       void* buf;
       int count;
@@ -484,21 +464,8 @@ MPIScheduler::postMPISends( DetailedTask* task,
       mpibuff.get_type(buf, count, datatype);
 #endif
 
-      // TODO need to determine if this is actually true now - I don't think it is, APH - 01/07/15
-      //only send message if size is greater than zero
-      //we need this empty message to enforce modify after read dependencies
-      //if(count>0)
-      //{
-
-      if (mpidbg.active()) {
-        s_cerr_mutex.lock();
-        mpidbg << "Rank-" << me << " Posting send for message number " << batch->messageTag << " to   rank-" << to << ", length: " << count
-               << " (bytes)\n";
-        s_cerr_mutex.unlock();
-      }
-
-      numMessages_++;
-      numSend++;
+      ++numMessages_;
+      ++numSend;
       int typeSize;
 
       MPI_Type_size(datatype, &typeSize);
@@ -508,27 +475,9 @@ MPIScheduler::postMPISends( DetailedTask* task,
       SendCommList::iterator iter = m_send_list.emplace(mpibuff.takeSendlist());
 
       MPI_Isend(buf, count, datatype, to, batch->messageTag, d_myworld->getComm(), iter->request());
-
-      // TODO - FIXME: needs to be made thread-safe - APH 02/24/16
-      mpi_info_[TotalSendMPI] += m_mpi_send_timer.seconds();
-
-      //}
     }
   }  // end for (DependencyBatch* batch = task->getComputes())
 
-  double total_send_time = m_total_send_timer.seconds();
-  mpi_info_[TotalSend] += total_send_time;
-
-  if (dbgst.active() && !m_send_list.empty()) {
-    if (d_myworld->myrank() == d_myworld->size() / 2) {
-      if (dbgst.active()) {
-        s_cerr_mutex.lock();
-        dbgst << d_myworld->myrank() << " Time: " << total_send_time << " , NumSend= " << numSend << " , VolSend: "
-              << volSend << std::endl;
-        s_cerr_mutex.unlock();
-      }
-    }
-  }
 }  // end postMPISends();
 
 
@@ -549,7 +498,7 @@ void MPIScheduler::postMPIRecvs( DetailedTask* task,
                                  int           abort_point,
                                  int           iteration )
 {
-  m_total_recv_timer.reset();
+  Timers::AtomicTrip< TotalRecvTag > recv_timer;
 
   bool dbg_active = dbg.active();
   if (dbg_active) {
@@ -691,7 +640,7 @@ void MPIScheduler::postMPIRecvs( DetailedTask* task,
 
       ASSERT(batch->messageTag > 0);
 
-      m_mpi_recv_timer.reset();
+      Timers::AtomicTrip< TotalRecvMPITag > mpi_recv_timer;
 
       void* buf;
       int count;
@@ -706,18 +655,10 @@ void MPIScheduler::postMPIRecvs( DetailedTask* task,
       int from = batch->fromTask->getAssignedResourceIndex();
       ASSERTRANGE(from, 0, d_myworld->size());
 
-      if (mpidbg.active()) {
-        s_cerr_mutex.lock();
-        mpidbg << "Rank-" << d_myworld->myrank() << " Posting recv for message number " << batch->messageTag << " from rank-"
-               << from << ", length: " << count << " (bytes)" << std::endl;
-        s_cerr_mutex.unlock();
-      }
-
       RecvCommList::iterator iter = m_recv_list.emplace(p_mpibuff, pBatchRecvHandler);
 
       MPI_Irecv(buf, count, datatype, from, batch->messageTag, d_myworld->getComm(), iter->request());
 
-      mpi_info_[TotalRecvMPI] += m_mpi_recv_timer.seconds();
     } else {
       // Nothing really need to be received, but let everyone else know
       // that it has what is needed (nothing).
@@ -730,24 +671,17 @@ void MPIScheduler::postMPIRecvs( DetailedTask* task,
 
     }
   }  // end for loop over requires
-
-  double total_receive_time = m_total_recv_timer.seconds();
-  mpi_info_[TotalRecv] += total_receive_time;
-
 }  // end postMPIRecvs()
 
 //______________________________________________________________________
 //
 void MPIScheduler::processMPIRecvs( int how_much )
 {
-  // Should only have external receives in the MixedScheduler version which
-  // shouldn't use this function.
-  // ASSERT(outstandingExtRecvs.empty());
   if (m_recv_list.empty()) {
     return;
   }
 
-  m_mpi_wait_timer.reset();
+  Timers::AtomicTrip < TotalWaitMPITag > mpi_wait_timer;
 
   auto ready_request = [](RecvCommNode const& n)->bool {return n.test();};
   auto finished_request = [](RecvCommNode const& n)->bool {return n.wait();};
@@ -763,29 +697,15 @@ void MPIScheduler::processMPIRecvs( int how_much )
       break;
     }
     case WAIT_ONCE : {
-      s_cout_mutex.lock();
-      mpidbg << "Rank-" << d_myworld->myrank() << " Start waiting once (WAIT_ONCE)...\n";
-      s_cout_mutex.unlock();
-
       RecvCommList::iterator iter = m_recv_list.find_any(finished_request);
       if (iter) {
         MPI_Status status;
         iter->finishedCommunication(d_myworld, status);
         m_recv_list.erase(iter);
       }
-
-      s_cout_mutex.lock();
-      mpidbg << "Rank-" << d_myworld->myrank() << " Done waiting once (WAIT_ONCE)...\n";
-      s_cout_mutex.unlock();
       break;
     }
     case WAIT_ALL : {
-      // This will allow some receives to be "handled" by their
-      // AfterCommincationHandler while waiting for others.
-      s_cout_mutex.lock();
-      mpidbg << "Rank-" << d_myworld->myrank() << "  Start waiting (WAIT_ALL)...\n";
-      s_cout_mutex.unlock();
-
       while (!m_recv_list.empty()) {
         RecvCommList::iterator iter = m_recv_list.find_any(finished_request);
         if (iter) {
@@ -794,17 +714,9 @@ void MPIScheduler::processMPIRecvs( int how_much )
           m_recv_list.erase(iter);
         }
       }
-
-      s_cout_mutex.lock();
-      mpidbg << "Rank-" << d_myworld->myrank() << "  Done waiting (WAIT_ALL)...\n";
-      s_cout_mutex.unlock();
       break;
     }
   }  // end switch
-
-  double total_wait = m_mpi_wait_timer.seconds();
-  mpi_info_[TotalWaitMPI] += total_wait;
-  s_current_wait_time += total_wait;
 
 }  // end processMPIRecvs()
 
@@ -923,6 +835,7 @@ void MPIScheduler::execute( int tgnum /* = 0 */, int iteration /* = 0 */ )
     }
   } // end while( numTasksDone < ntasks )
 
+  // MUST call before computeNetRunTimeStats
   emitNetMPIStats();
 
   if( !parentScheduler_ ) { // If this scheduler is the root scheduler...
@@ -980,10 +893,21 @@ MPIScheduler::emitTime( const char* label, double dt )
 void
 MPIScheduler::emitNetMPIStats()
 {
+  mpi_info_[TotalWaitMPI]    = Timers::AtomicTrip< TotalWaitMPITag >::seconds();
+  mpi_info_[TotalReduce]     = Timers::AtomicTrip< TotalReduceTag >::seconds();
+  mpi_info_[TotalReduceMPI]  = Timers::AtomicTrip< TotalReduceTag >::seconds();
+  mpi_info_[TotalSend]       = Timers::AtomicTrip< TotalSendTag >::seconds();
+  mpi_info_[TotalSendMPI]    = Timers::AtomicTrip< TotalSendMPITag >::seconds();
+  mpi_info_[TotalRecv]       = Timers::AtomicTrip< TotalRecvTag >::seconds();
+  mpi_info_[TotalRecvMPI]    = Timers::AtomicTrip< TotalRecvMPITag >::seconds();
+  mpi_info_[TotalTask]       = Timers::AtomicTrip< TotalTaskTag >::seconds();
+  mpi_info_[TotalTestMPI]    = Timers::AtomicTrip< TotalTestMPITag >::seconds();
+
   if (timeout.active()) {
 
     d_labels.clear();
     d_times.clear();
+
 
     emitTime("Total task time"      , mpi_info_[TotalTask]);
     emitTime("MPI Send time"        , mpi_info_[TotalSendMPI]);
@@ -1144,9 +1068,10 @@ MPIScheduler::outputTimingStats( const char* label )
       fout << "Reported values are cumulative over 10 timesteps (" << d_sharedState->getCurrentTopLevelTimeStep() - 9 << " through "
            << d_sharedState->getCurrentTopLevelTimeStep() << ")" << std::endl;
 
-      for (std::map<std::string, double>::iterator iter = exectimes.begin(); iter != exectimes.end(); iter++) {
-        fout << std::fixed << d_myworld->myrank() << ": TaskExecTime(s): " << iter->second << " Task:" << iter->first << std::endl;
+      for (auto const& p : exectimes) {
+        fout << std::fixed << d_myworld->myrank() << ": TaskExecTime(s): " << p.second * 1.0e-9 << " Task:" << p.first << std::endl;
       }
+
       fout.close();
       exectimes.clear();
     }
@@ -1154,6 +1079,8 @@ MPIScheduler::outputTimingStats( const char* label )
 
   if (waitout.active()) {
     static int count = 0;
+
+    //TODO reduce and print to screen
 
     // only output the exec times every 10 timesteps
     if (++count % 10 == 0) {
@@ -1166,16 +1093,17 @@ MPIScheduler::outputTimingStats( const char* label )
         sprintf(fname, "waittimes.%d.%d", d_myworld->size(), d_myworld->myrank());
         wout.open(fname);
 
-        for (std::map<std::string, double>::iterator iter = waittimes.begin(); iter != waittimes.end(); iter++) {
-          wout << std::fixed << d_myworld->myrank() << ":   TaskWaitTime(TO): " << iter->second << " Task:" << iter->first
+        for (auto const& p : waittimes) {
+          wout << std::fixed << d_myworld->myrank() << ":   TaskWaitTime(TO): " << p.second * 1.0e-9 << " Task:" << p.first
                << std::endl;
         }
 
-        for (std::map<std::string, double>::iterator iter = DependencyBatch::waittimes.begin();
-            iter != DependencyBatch::waittimes.end(); iter++) {
-          wout << std::fixed << d_myworld->myrank() << ": TaskWaitTime(FROM): " << iter->second << " Task:" << iter->first
+        for (auto const& p : DependencyBatch::waittimes) {
+          wout << std::fixed << d_myworld->myrank() << ": TaskWaitTime(FROM): " << p.second *1.0e-9 << " Task:" << p.first
                << std::endl;
+
         }
+
         wout.close();
       }
 

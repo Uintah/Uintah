@@ -65,10 +65,8 @@ extern DebugStream timeout;
 extern DebugStream taskorder;
 extern DebugStream taskLevel_dbg;
 
-extern std::map<std::string, double> waittimes;
-extern std::map<std::string, double> exectimes;
-
-static double Unified_CurrentWaitTime = 0;
+extern std::map<std::string, std::atomic<uint64_t> > waittimes;
+extern std::map<std::string, std::atomic<uint64_t> > exectimes;
 
 static DebugStream unified_dbg(             "Unified_DBG",             false);
 static DebugStream unified_queuelength(     "Unified_QueueLength",     false);
@@ -387,16 +385,9 @@ UnifiedScheduler::runTask( DetailedTask*         task,
 {
 
   if (waitout.active()) {
-    waittimesLock.lock();
-    {
-      waittimes[task->getTask()->getName()] += Unified_CurrentWaitTime;
-      Unified_CurrentWaitTime = 0;
-    }
-    waittimesLock.unlock();
+    waittimes[task->getTask()->getName()].fetch_add( Timers::AtomicTrip< TotalWaitMPITag >::nanoseconds(), std::memory_order_relaxed );
   }
 
-  // -------------------------< begin task execution timing >-------------------------
-  double task_start_time = Time::currentSeconds();
 
   if (trackingVarsPrintLocation_ & SchedulerCommon::PRINT_BEFORE_EXEC) {
     printTrackedVars(task, SchedulerCommon::PRINT_BEFORE_EXEC);
@@ -406,19 +397,24 @@ UnifiedScheduler::runTask( DetailedTask*         task,
   for (int i = 0; i < (int)dws.size(); i++) {
     plain_old_dws[i] = dws[i].get_rep();
   }
+
+  // -------------------------< begin task execution timing >-------------------------
+  Timers::Simple task_timer;
+
   task->doit(d_myworld, dws, plain_old_dws, event);
+
+  uint64_t total_task_time = task_timer.nanoseconds();
+  // -------------------------< end task execution timing >-------------------------
 
   if (trackingVarsPrintLocation_ & SchedulerCommon::PRINT_AFTER_EXEC) {
     printTrackedVars(task, SchedulerCommon::PRINT_AFTER_EXEC);
   }
 
-  double total_task_time = Time::currentSeconds() - task_start_time;
-  // -------------------------< end task execution timing >-------------------------
 
   dlbLock.lock();
   {
     if (execout.active()) {
-      exectimes[task->getTask()->getName()] += total_task_time;
+      exectimes[task->getTask()->getName()].fetch_add( total_task_time, std::memory_order_relaxed );
     }
 
     // If I do not have a sub scheduler
@@ -707,8 +703,6 @@ void UnifiedScheduler::markTaskConsumed(int& numTasksDone, int& currphase, int n
 void
 UnifiedScheduler::runTasks( int thread_id )
 {
-  int me = d_myworld->myrank();
-
   while( numTasksDone < ntasks ) {
 
     DetailedTask* readyTask = NULL;
@@ -985,7 +979,7 @@ UnifiedScheduler::runTasks( int thread_id )
     // ----------------------------------------------------------------------------------
 
     if (initTask != NULL) {
-      initiateTask(initTask, abort, abort_point, currentIteration);
+      MPIScheduler::initiateTask(initTask, abort, abort_point, currentIteration);
       if (taskdbg.active()) {
         coutLock.lock();
         taskdbg << myRankThread() << " Task internal ready 2 " << *initTask << " deps needed: "
@@ -1127,7 +1121,7 @@ UnifiedScheduler::runTasks( int thread_id )
       }
     }
     else if (!recv_list_empty) {
-      processMPIRecvs(TEST);
+      MPIScheduler::processMPIRecvs(TEST);
     }
     else {
       // This can only happen when all tasks have finished.
@@ -5687,7 +5681,7 @@ void UnifiedScheduler::copyAllExtGpuDependenciesToHost(DetailedTask* dtask) {
 
 //______________________________________________________________________
 //  generate string   <MPI rank>.<Thread ID>
-//  useful to see who running what    
+//  useful to see who running what
 std::string
 UnifiedScheduler::myRankThread()
 {
