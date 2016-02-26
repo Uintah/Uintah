@@ -309,7 +309,7 @@ namespace WasatchCore {
       }
     }            
     
-    // save pointer to the Uintah iterator. This will be needed for expression that require access to the
+    // save pointer to the Uintah iterator. This will be needed for expressions that require access to the
     // native uintah iterators, such as the pressure expression.
     myBndIters.extraBndCellsUintah = bndIter;
 
