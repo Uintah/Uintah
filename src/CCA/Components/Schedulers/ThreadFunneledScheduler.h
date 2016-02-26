@@ -60,7 +60,7 @@ using TaskPool = Lockfree::Pool< DetailedTask*
  GENERAL INFORMATION
  ThreadFunneledScheduler.h
 
- Alan Humphrey
+ Alan Humphrey & Dan SUnderland
  Scientific Computing and Imaging Institute
  University of Utah
 
@@ -100,7 +100,7 @@ class ThreadFunneledScheduler : public MPIScheduler {
       : MPIScheduler(myworld, oport, parentScheduler)
       {}
 
-    virtual ~ThreadFunneledScheduler();
+    virtual ~ThreadFunneledScheduler(){};
 
     virtual void problemSetup( const ProblemSpecP& prob_spec, SimulationStateP& state );
 
