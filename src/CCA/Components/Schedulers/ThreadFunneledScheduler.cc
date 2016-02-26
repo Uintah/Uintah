@@ -359,7 +359,6 @@ void ThreadFunneledScheduler::execute(  int tgnum /*=0*/ , int iteration /*=0*/ 
         sync_task->markInitiated();
         ASSERT(sync_task->getExternalDepCount() == 0)
         MPIScheduler::runTask(sync_task, iteration, Impl::t_tid);
-        std::cout << "Thread: " << Impl::t_tid << " running task: " << *sync_task << std::endl;
       }
       ASSERT(sync_task->getTask()->d_phase == m_current_phase);
       m_num_tasks_done.fetch_add(1, std::memory_order_relaxed);
