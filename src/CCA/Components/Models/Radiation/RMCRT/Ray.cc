@@ -545,7 +545,7 @@ Ray::rayTrace( const ProcessorGroup* pg,
   celltype_dw->getLevel( celltype ,     d_cellTypeLabel, d_matl , level );
 
 
-  double start=clock();
+//  double start=clock();
 
   // patch loop
   for (int p=0; p < patches->size(); p++){
@@ -718,8 +718,8 @@ Ray::rayTrace( const ProcessorGroup* pg,
   }  // end of if(_solveDivQ)
 
 
-    double end =clock();
-    double efficiency = size/((end-start)/ CLOCKS_PER_SEC);
+//    double end =clock();
+//    double efficiency = size/((end-start)/ CLOCKS_PER_SEC);
 //    if (patch->getGridIndex() == 0) {
 //      cout<< endl;
 //      cout << " RMCRT REPORT: Patch 0" << endl;
@@ -1051,14 +1051,14 @@ Ray::rayTrace_dataOnion( const ProcessorGroup* pg,
     //
     double end =clock();
     double efficiency = nRaySteps/((end-start)/ CLOCKS_PER_SEC);
-//    if (finePatch->getGridIndex() == levelPatchID) {
-//      cout<< endl;
-//      cout << " RMCRT REPORT: Patch " << levelPatchID <<endl;
-//      cout << " Used "<< (end-start) * 1000 / CLOCKS_PER_SEC<< " milliseconds of CPU time. \n" << endl;// Convert time to ms
-//      cout << " Size: " << nRaySteps << endl;
-//      cout << " Efficiency: " << efficiency << " steps per sec" << endl;
-//      cout << endl;
-//    }
+    if (finePatch->getGridIndex() == levelPatchID) {
+      cout<< endl;
+      cout << " RMCRT REPORT: Patch " << levelPatchID <<endl;
+      cout << " Used "<< (end-start) * 1000 / CLOCKS_PER_SEC<< " milliseconds of CPU time. \n" << endl;// Convert time to ms
+      cout << " Size: " << nRaySteps << endl;
+      cout << " Efficiency: " << efficiency << " steps per sec" << endl;
+      cout << endl;
+    }
   }  // end finePatch loop
 }  // end ray trace method
 

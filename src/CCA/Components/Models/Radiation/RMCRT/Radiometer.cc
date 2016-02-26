@@ -323,13 +323,11 @@ Radiometer::sched_radiometer( const LevelP& level,
   
   vector<const Patch*> myPatches = getPatchSet( sched, level );
   bool hasRadiometers = false;
-  int nGhostCells = SHRT_MAX;
   
   //__________________________________
   //  If this processor owns any patches with radiometers
   if( myPatches.size() !=  0 ){
     hasRadiometers = true;
-    nGhostCells = SHRT_MAX; 
   }
   
   std::string taskname = "Radiometer::radiometer";
