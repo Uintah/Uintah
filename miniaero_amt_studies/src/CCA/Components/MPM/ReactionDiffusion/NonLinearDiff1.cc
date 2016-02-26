@@ -94,7 +94,6 @@ void NonLinearDiff1::computeFlux(const Patch* patch,
   int dwi = matl->getDWIndex();
   Vector dx = patch->dCell();
   double comp_diffusivity;
-  double neg_one_third = -1.0/3.0;
 
   constParticleVariable<Vector>  pConcGrad;
   constParticleVariable<double>  pConcentration;

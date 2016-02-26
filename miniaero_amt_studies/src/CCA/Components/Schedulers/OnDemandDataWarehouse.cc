@@ -3013,33 +3013,6 @@ OnDemandDataWarehouse::getGridVar(       GridVariableBase& var,
       neighbors.push_back(patch);
     }
 
-    IntVector oldLow = var.getLow(), oldHigh = var.getHigh();
-    if (!var.rewindow(lowIndex, highIndex)) {
-      // reallocation needed
-      // Ignore this if this is the initialization dw in its old state.
-      // The reason for this is that during initialization it doesn't
-      // know what ghost cells will be required of it for the next timestep.
-      // (This will be an issue whenever the taskgraph changes to require
-      // more ghost cells from the old datawarehouse).
-      static bool warned = false;
-      bool ignore = d_isInitializationDW && d_finalized;
-//      if (!ignore && !warned) {
-        //warned = true;
-        //static ProgressiveWarning rw("Warning: Reallocation needed for ghost region you requested.\nThis means the data you get back will be a copy of what's in the DW", 100);
-        //if (rw.invoke()) {
-        // print out this message if the ProgressiveWarning does
-        /*ostringstream errmsg;
-         errmsg << d_myworld->myrank() << " This occurrence for " << label->getName();
-         if (patch)
-         errmsg << " on patch " << patch->getID();
-         errmsg << " for material " << matlIndex;
-
-         errmsg << ".  Old range: " << oldLow << " " << oldHigh << " - new range " << lowIndex << " " << highIndex << " NGC " << numGhostCells;
-         warn << errmsg.str() << '\n';
-         }*/
-//      }
-    }
-
     std::vector<ValidNeighbors> validNeighbors;
     getValidNeighbors(label, matlIndex, patch, gtype, numGhostCells, validNeighbors);
     for(std::vector<ValidNeighbors>::iterator iter = validNeighbors.begin(); iter != validNeighbors.end(); ++iter) {
@@ -3051,9 +3024,7 @@ OnDemandDataWarehouse::getGridVar(       GridVariableBase& var,
         srcvar->offsetGrid(iter->neighborPatch->getVirtualOffset());
       }
       try {
-        //var.copyPatch(iter->validNeighbor, iter->low, iter->high);
         var.copyPatch(srcvar, iter->low, iter->high);
-
       } catch (InternalError& e) {
         std::cout << " Bad range: " << iter->low << " " << iter->high
         << " source var range: "  << iter->validNeighbor->getLow() << " " << iter->validNeighbor->getHigh() << std::endl;

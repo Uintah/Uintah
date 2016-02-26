@@ -74,9 +74,7 @@ DataArchive::DataArchive( const string & filebase,
   d_cell_scale( Vector(1.0,1.0,1.0) ),
   d_processor(processor),
   d_numProcessors(numProcessors), 
-  d_lock("DataArchive lock"),
-  d_particlePositionName("p.x"),
-  d_outputFileFormat(UDA)
+  d_lock("DataArchive lock")
 {
   if( d_filebase == "" ) {
     throw InternalError("DataArchive::DataArchive 'filebase' cannot be empty (\"\").", __FILE__, __LINE__);
