@@ -27,6 +27,7 @@
 #include <CCA/Components/Schedulers/TaskGraph.h>
 #include <CCA/Components/Schedulers/OnDemandDataWarehouse.h>
 #include <CCA/Ports/Output.h>
+
 #include <Core/Parallel/CommunicationList.h>
 #include <Core/Exceptions/ProblemSetupException.h>
 #include <Core/Util/DOUT.hpp>
@@ -41,8 +42,6 @@
 #define USE_PACKING
 
 using namespace Uintah;
-
-extern DebugStream timeout;
 
 //______________________________________________________________________
 //
@@ -215,9 +214,9 @@ void ThreadFunneledScheduler::problemSetup(  const ProblemSpecP     & prob_spec
   }
 
   if (d_myworld->myrank() == 0) {
-    std::string plural = (m_num_threads == 1) ? " thread" : " threads";
-    std::cout << "   WARNING: Component tasks must be thread safe.\n"
-              << "   Using 1 thread for scheduling, and " << m_num_threads
+    std::string plural = ((m_num_threads - 1) == 1) ? " thread" : " threads";
+    std::cout << "   WARNING: Component tasks must be thread safe when using this scheduler.\n"
+              << "   Using 1 thread for task scheduling and MPI collectives. Using " << m_num_threads - 1
               << plural + " for task execution." << std::endl;
   }
 
