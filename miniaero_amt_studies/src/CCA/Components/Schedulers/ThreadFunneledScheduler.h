@@ -155,6 +155,7 @@ class ThreadFunneledScheduler : public MPIScheduler {
     std::atomic<int>   m_num_tasks_done;
     atomic_int_array   m_phase_tasks_done;
 
+    volatile int m_run_tasks{0};
 };
 
 

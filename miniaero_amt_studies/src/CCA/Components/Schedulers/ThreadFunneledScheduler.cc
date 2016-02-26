@@ -61,6 +61,11 @@ std::mutex      s_lb_mutex;
 //______________________________________________________________________
 //
 namespace Uintah { namespace Impl {
+
+namespace {
+thread_local int       t_tid = 0;
+}
+
 namespace {
 
 enum class ThreadState : int
@@ -74,10 +79,6 @@ TaskRunner *           g_runners[MAX_THREADS]        = {};
 volatile ThreadState   g_thread_states[MAX_THREADS]  = {};
 int                    g_cpu_affinities[MAX_THREADS] = {};
 int                    g_num_threads                 = 0;
-
-thread_local int       t_tid = 0;
-
-std::atomic<int>       g_flag{ 0 };
 
 
 //______________________________________________________________________
@@ -317,7 +318,7 @@ void ThreadFunneledScheduler::execute(  int tgnum /*=0*/ , int iteration /*=0*/ 
   //------------------------------------------------------------------------------------------------
   // activate TaskRunners
   //------------------------------------------------------------------------------------------------
-  Impl::g_flag.store(1, std::memory_order_relaxed);
+  m_run_tasks = 1;
 
   // reset per-thread wait times and activate
   for (int i = 1; i < m_num_threads; i++) {
@@ -373,15 +374,13 @@ void ThreadFunneledScheduler::execute(  int tgnum /*=0*/ , int iteration /*=0*/ 
     else { // nothing to do process MPI
       processMPIRecvs(TEST);
     }
-
-  } while (m_num_tasks_done.load(std::memory_order_relaxed) < m_num_tasks)
+  }
 
 
   //------------------------------------------------------------------------------------------------
   // deactivate TaskRunners
   //------------------------------------------------------------------------------------------------
-  Impl::g_flag.store(0, std::memory_order_relaxed);
-  DDOUT(true, "******************************");
+  m_run_tasks = 0;
 
   Impl::thread_fence();
 
@@ -419,25 +418,16 @@ void ThreadFunneledScheduler::execute(  int tgnum /*=0*/ , int iteration /*=0*/ 
 //
 void ThreadFunneledScheduler::select_tasks()
 {
-  while (Impl::g_flag.load(std::memory_order_relaxed)) {
-    DOUT(true, "g_flag " << Impl::g_flag.load(std::memory_order_relaxed));
+  while ( m_run_tasks ) {
     TaskPool::iterator iter = m_task_pool.find_any();
-    DDOUT(true, "iter: " << static_cast<bool>(iter));
     if (iter) {
       DetailedTask* ready_task = *iter;
       MPIScheduler::runTask(ready_task, Impl::t_tid);
       m_task_pool.erase(iter);
       m_num_tasks_done.fetch_add(1, std::memory_order_relaxed);
       m_phase_tasks_done[ready_task->getTask()->d_phase].fetch_add(1, std::memory_order_relaxed);
-    } else {
-      DDOUT(true, "yielding");
-     std::this_thread::yield();
-     DDOUT(true, "");
     }
-    std::atomic_thread_fence(std::memory_order_seq_cst);
-    DDOUT(true, "");
   }
-  DDOUT(true, "");
 }
 
 

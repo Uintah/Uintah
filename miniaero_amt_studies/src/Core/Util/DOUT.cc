@@ -26,15 +26,4 @@
 
 namespace Uintah {
 
-Dout ddbg(           "MPIDBG"        , false );
-Dout ddbgst(         "SendTiming"    , false );
-Dout dtimeout(       "MPITimes"      , false );
-Dout dreductionout(  "ReductionTasks", false );
-Dout dtaskorder(     "TaskOrder"     , false );
-Dout dwaitout(       "WaitTimes"     , false );
-Dout dexecout(       "ExecTimes"     , false );
-Dout dtaskdbg(       "TaskDBG"       , false );
-Dout dtaskLevel_dbg( "TaskLevel"     , false );
-Dout dmpidbg(        "MPIDBG"        , false );
-
 } // namespace Uintah
