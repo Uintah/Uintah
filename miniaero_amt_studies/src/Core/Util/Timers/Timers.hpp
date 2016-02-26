@@ -249,20 +249,22 @@ struct ThreadTrip
   ~ThreadTrip()
   {
     s_total[ Lockfree::ThreadIDMapper::tid() % SIZE ] += m_simple.nanoseconds();
+    s_used[ Lockfree::ThreadIDMapper::tid() % SIZE ] = true;
   }
 
   static void reset()
   {
     for (int i=0; i<SIZE; ++i) {
       s_total[i] = 0u;
+      s_used[i] = false;
     }
   }
 
   static uint64_t nanoseconds()
   {
-    uint64_t result = s_total[0];
-    for (int i=1; i<SIZE; ++i) {
-      result = s_total[i] < result ? result : s_total[i];
+    uint64_t result = 0;
+    for (int i=0; i<SIZE; ++i) {
+      result = (s_used[i] && result < s_total[i]) ? s_total[i] : result ;
     }
     return result;
   }
@@ -273,13 +275,29 @@ struct ThreadTrip
   static double   minutes()      { return ConvertTo::minutes(nanoseconds()); }
   static double   hours()        { return ConvertTo::hours(nanoseconds()); }
 
+  static uint64_t min_nanoseconds()
+  {
+    uint64_t result = std::numeric_limits<uint64_t>::max();
+    for (int i=0; i<SIZE; ++i) {
+      result = (s_used[i] && s_total[i] < result) ? s_total[i] : result ;
+    }
+    return result;
+  }
+  static double   min_microseconds() { return ConvertTo::microseconds(min_nanoseconds()); }
+  static double   min_milliseconds() { return ConvertTo::milliseconds(min_nanoseconds()); }
+  static double   min_seconds()      { return ConvertTo::seconds(min_nanoseconds()); }
+  static double   min_minutes()      { return ConvertTo::minutes(min_nanoseconds()); }
+  static double   min_hours()        { return ConvertTo::hours(min_nanoseconds()); }
+
 private:
   static uint64_t s_total[SIZE];
+  static bool     s_used[SIZE];
 
   Simple m_simple{};
 };
 
-template <typename Tag> uint64_t ThreadTrip<Tag>::s_total[SIZE] = {0};
+template <typename Tag> uint64_t ThreadTrip<Tag>::s_total[SIZE] = {};
+template <typename Tag> bool     ThreadTrip<Tag>::s_used[SIZE] = {};
 
 } // namespace Timers
 
