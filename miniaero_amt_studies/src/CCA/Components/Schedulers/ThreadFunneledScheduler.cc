@@ -189,21 +189,6 @@ void init_threads( ThreadFunneledScheduler * sched, int num_threads )
 
 //______________________________________________________________________
 //
-ThreadFunneledScheduler::~ThreadFunneledScheduler()
-{
-  // detailed MPI information, written to file per rank
-  if (timeout.active()) {
-    timingStats.close();
-    if (d_myworld->myrank() == 0) {
-      avgStats.close();
-      maxStats.close();
-    }
-  }
-}
-
-
-//______________________________________________________________________
-//
 void ThreadFunneledScheduler::problemSetup(  const ProblemSpecP     & prob_spec
                                            ,       SimulationStateP & state
                                           )
