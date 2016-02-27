@@ -66,9 +66,6 @@
 
 #define AVERAGE_WINDOW 10
 
-using namespace SCIRun;
-using namespace std;
-
 extern SCIRun::DebugStream amrout;
 
 namespace {
@@ -79,16 +76,10 @@ SCIRun::DebugStream simdbg(  "SimulationController",       false );
 SCIRun::DebugStream stats(   "ComponentTimings",           false );
 SCIRun::DebugStream istats(  "IndividualComponentTimings", false );
 
-
 }
 
 namespace Uintah {
 
-double
-stdDeviation( double sum_of_x, double sum_of_x_squares, int n )
-{
-  return sqrt( (n*sum_of_x_squares - sum_of_x*sum_of_x) / (n*n) );
-}
 
 SimulationController::SimulationController( const ProcessorGroup * myworld
                                           ,       bool             doAMR
@@ -151,10 +142,10 @@ SimulationController::SimulationController( const ProcessorGroup * myworld
    * PAPI_L2_TCM - level 2 total cache misses
    * PAPI_L3_TCM - level 3 total cache misses
    */
-  d_papiEvents.insert(pair<int, PapiEvent>(PAPI_FP_OPS, PapiEvent("PAPI_FP_OPS", "FLOPS")));
-  d_papiEvents.insert(pair<int, PapiEvent>(PAPI_DP_OPS, PapiEvent("PAPI_DP_OPS", "VFLOPS")));
-  d_papiEvents.insert(pair<int, PapiEvent>(PAPI_L2_TCM, PapiEvent("PAPI_L2_TCM", "L2CacheMisses")));
-  d_papiEvents.insert(pair<int, PapiEvent>(PAPI_L3_TCM, PapiEvent("PAPI_L3_TCM", "L3CacheMisses")));
+  d_papiEvents.insert(std::pair<int, PapiEvent>(PAPI_FP_OPS, PapiEvent("PAPI_FP_OPS", "FLOPS")));
+  d_papiEvents.insert(std::pair<int, PapiEvent>(PAPI_DP_OPS, PapiEvent("PAPI_DP_OPS", "VFLOPS")));
+  d_papiEvents.insert(std::pair<int, PapiEvent>(PAPI_L2_TCM, PapiEvent("PAPI_L2_TCM", "L2CacheMisses")));
+  d_papiEvents.insert(std::pair<int, PapiEvent>(PAPI_L3_TCM, PapiEvent("PAPI_L3_TCM", "L3CacheMisses")));
 
   // For meaningful error reporting - PAPI Version: 5.1.0 has 25 error return codes:
   d_papiErrorCodes.insert(pair<int, string>( 0,  "No error"));
@@ -206,7 +197,7 @@ SimulationController::SimulationController( const ProcessorGroup * myworld
   }
 
   // query all the events to find that are supported, flag those that are unsupported
-  for (map<int, PapiEvent>::iterator iter=d_papiEvents.begin(); iter!=d_papiEvents.end(); iter++) {
+  for (std::map<int, PapiEvent>::iterator iter=d_papiEvents.begin(); iter!=d_papiEvents.end(); iter++) {
     retp = PAPI_query_event(iter->first);
     if (retp != PAPI_OK) {
       proc0cout << "WARNNING: Cannot query PAPI event: " << iter->second.name << "!" << endl
@@ -230,7 +221,7 @@ SimulationController::SimulationController( const ProcessorGroup * myworld
    *   this is the purpose of this block of code.
    */
   int index = 0;
-  for (map<int, PapiEvent>::iterator iter = d_papiEvents.begin(); iter != d_papiEvents.end(); iter++) {
+  for (std::map<int, PapiEvent>::iterator iter = d_papiEvents.begin(); iter != d_papiEvents.end(); iter++) {
     if (iter->second.isSupported) {
       retp = PAPI_add_event(d_eventSet, iter->first);
       if (retp != PAPI_OK) { // this means the event queried OK but could not be added
@@ -272,7 +263,7 @@ SimulationController::~SimulationController()
 //
 
 void
-SimulationController::setReduceUdaFlags( const string & fromDir )
+SimulationController::setReduceUdaFlags( const std::string & fromDir )
 {
   d_doAMR       = false;
   d_reduceUda   = true;
@@ -281,9 +272,8 @@ SimulationController::setReduceUdaFlags( const string & fromDir )
 
 //______________________________________________________________________
 //
-
 void
-SimulationController::doRestart( const string & restartFromDir, int timestep,
+SimulationController::doRestart( const std::string & restartFromDir, int timestep,
                                  bool fromScratch, bool removeOldDir )
 {
   d_restarting          = true;
@@ -295,31 +285,30 @@ SimulationController::doRestart( const string & restartFromDir, int timestep,
 
 //______________________________________________________________________
 //
-
 void
 SimulationController::preGridSetup( void )
 {
   d_sharedState = scinew SimulationState(d_ups);
-    
+
   d_output = dynamic_cast<Output*>(getPort("output"));
-    
+
   Scheduler* sched = dynamic_cast<Scheduler*>(getPort("scheduler"));
   sched->problemSetup(d_ups, d_sharedState);
   d_scheduler = sched;
-    
-  if( !d_output ){
-    cout << "dynamic_cast of 'd_output' failed!\n";
+
+  if (!d_output) {
+    std::cout << "dynamic_cast of 'd_output' failed!\n";
     throw InternalError("dynamic_cast of 'd_output' failed!", __FILE__, __LINE__);
   }
-  d_output->problemSetup( d_ups, d_sharedState.get_rep() );
+  d_output->problemSetup(d_ups, d_sharedState.get_rep());
 
   ProblemSpecP amr_ps = d_ups->findBlock("AMR");
-  if( amr_ps ) {
-    amr_ps->get( "doMultiTaskgraphing", d_doMultiTaskgraphing );
+  if (amr_ps) {
+    amr_ps->get("doMultiTaskgraphing", d_doMultiTaskgraphing);
   }
-  
+
   // Parse time struct
-  d_timeinfo = scinew SimulationTime( d_ups );
+  d_timeinfo = scinew SimulationTime(d_ups);
   d_sharedState->d_simTime = d_timeinfo;
 
 #ifdef HAVE_VISIT
@@ -329,7 +318,6 @@ SimulationController::preGridSetup( void )
 
 //______________________________________________________________________
 //
-
 GridP
 SimulationController::gridSetup( void )
 {
@@ -346,21 +334,21 @@ SimulationController::gridSetup( void )
     d_archive = scinew DataArchive( checkpointRestartDir.getName(),
                                     d_myworld->myrank(), d_myworld->size() );
 
-    vector<int>    indices;
-    vector<double> times;
+    std::vector<int>    indices;
+    std::vector<double> times;
 
     try {
       d_archive->queryTimesteps( indices, times );
     }
     catch( InternalError & ie ) {
-      cerr << "\n";
-      cerr << "An internal error was caught while trying to restart:\n";
-      cerr << "\n";
-      cerr << ie.message() << "\n";
-      cerr << "This most likely means that the simulation UDA that you have specified\n";
-      cerr << "to use for the restart does not have any checkpoint data in it.  Look\n";
-      cerr << "in <uda>/checkpoints/ for timestep directories (t#####/) to verify.\n";
-      cerr << "\n";
+      std::cerr << "\n";
+      std::cerr << "An internal error was caught while trying to restart:\n";
+      std::cerr << "\n";
+      std::cerr << ie.message() << "\n";
+      std::cerr << "This most likely means that the simulation UDA that you have specified\n";
+      std::cerr << "to use for the restart does not have any checkpoint data in it.  Look\n";
+      std::cerr << "in <uda>/checkpoints/ for timestep directories (t#####/) to verify.\n";
+      std::cerr << "\n";
       Thread::exitAll(1);
     }
 
@@ -385,7 +373,7 @@ SimulationController::gridSetup( void )
       
     if (d_restartIndex == (int) indices.size()) {
       // timestep not found
-      ostringstream message;
+      std::ostringstream message;
       message << "Timestep " << d_restartTimestep << " not found";
       throw InternalError(message.str(), __FILE__, __LINE__);
     }
@@ -418,7 +406,7 @@ SimulationController::gridSetup( void )
   // Print out meta data
   if (d_myworld->myrank() == 0){
     grid->printStatistics();
-    amrout << "Restart grid\n" << *grid.get_rep() << endl;
+    amrout << "Restart grid\n" << *grid.get_rep() << std::endl;
   }
 
   // set the dimensionality of the problem.
@@ -432,7 +420,6 @@ SimulationController::gridSetup( void )
 
 //______________________________________________________________________
 //
-
 void
 SimulationController::postGridSetup( GridP& grid, double& t )
 {
@@ -520,7 +507,6 @@ SimulationController::postGridSetup( GridP& grid, double& t )
 
 //______________________________________________________________________
 //
-
 void
 SimulationController::adjustDelT( double& delt, double prev_delt, bool first, double t ) 
 {
@@ -539,67 +525,63 @@ SimulationController::adjustDelT( double& delt, double prev_delt, bool first, do
 #endif
 
   delt *= d_timeinfo->delt_factor;
-      
-  if( delt < d_timeinfo->delt_min ) {
+
+  if (delt < d_timeinfo->delt_min) {
     proc0cout << "WARNING: raising delt from " << delt << " to minimum: " << d_timeinfo->delt_min << '\n';
     delt = d_timeinfo->delt_min;
   }
-  if( !first && 
-      d_timeinfo->max_delt_increase < 1.e90 &&
-      delt > (1+d_timeinfo->max_delt_increase)*prev_delt) {
-    proc0cout << "WARNING (a): lowering delt from " << delt 
-              << " to maxmimum: " << (1+d_timeinfo->max_delt_increase)*prev_delt
-              << " (maximum increase of " << d_timeinfo->max_delt_increase
-              << ")\n";
-    delt = (1+d_timeinfo->max_delt_increase)*prev_delt;
+  if (!first && d_timeinfo->max_delt_increase < 1.e90 && delt > (1 + d_timeinfo->max_delt_increase) * prev_delt) {
+    proc0cout << "WARNING (a): lowering delt from " << delt << " to maxmimum: " << (1 + d_timeinfo->max_delt_increase) * prev_delt
+              << " (maximum increase of " << d_timeinfo->max_delt_increase << ")\n";
+    delt = (1 + d_timeinfo->max_delt_increase) * prev_delt;
   }
-  if( t <= d_timeinfo->initial_delt_range && delt > d_timeinfo->max_initial_delt ) {
-    proc0cout << "WARNING (b): lowering delt from " << delt 
-              << " to maximum: " << d_timeinfo->max_initial_delt
+  if (t <= d_timeinfo->initial_delt_range && delt > d_timeinfo->max_initial_delt) {
+    proc0cout << "WARNING (b): lowering delt from " << delt << " to maximum: " << d_timeinfo->max_initial_delt
               << " (for initial timesteps)\n";
     delt = d_timeinfo->max_initial_delt;
   }
-  if( delt > d_timeinfo->delt_max ) {
+  if (delt > d_timeinfo->delt_max) {
     proc0cout << "WARNING (c): lowering delt from " << delt << " to maximum: " << d_timeinfo->delt_max << '\n';
     delt = d_timeinfo->delt_max;
   }
   // Clamp timestep to output/checkpoint.
-  if( d_timeinfo->timestep_clamping && d_output ) {
+  if (d_timeinfo->timestep_clamping && d_output) {
     double orig_delt = delt;
     double nextOutput = d_output->getNextOutputTime();
     double nextCheckpoint = d_output->getNextCheckpointTime();
     if (nextOutput != 0 && t + delt > nextOutput) {
-      delt = nextOutput - t;       
+      delt = nextOutput - t;
     }
     if (nextCheckpoint != 0 && t + delt > nextCheckpoint) {
       delt = nextCheckpoint - t;
     }
     if (delt != orig_delt) {
-      proc0cout << "WARNING (d): lowering delt from " << orig_delt 
-                << " to " << delt
-                << " to line up with output/checkpoint time\n";
+      proc0cout << "WARNING (d): lowering delt from " << orig_delt << " to " << delt << " to line up with output/checkpoint time\n";
     }
   }
-  if (d_timeinfo->end_on_max_time && t + delt > d_timeinfo->maxTime){
+  if (d_timeinfo->end_on_max_time && t + delt > d_timeinfo->maxTime) {
     delt = d_timeinfo->maxTime - t;
   }
 }
 
 //______________________________________________________________________
 //
-
 double
 SimulationController::getWallTime( void )
 {
   return d_wallTime;
 }
 
+//______________________________________________________________________
+//
 void
 SimulationController::calcWallTime ( void )
 {
   d_wallTime = Time::currentSeconds() - d_startTime;
 }
 
+//______________________________________________________________________
+//
 double
 SimulationController::getStartTime ( void )
 {
@@ -612,12 +594,16 @@ SimulationController::calcStartTime ( void )
   d_startTime = Time::currentSeconds();
 }
 
+//______________________________________________________________________
+//
 void
 SimulationController::setStartSimTime ( double t )
 {
   d_startSimTime = t;
 }
 
+//______________________________________________________________________
+//
 void
 SimulationController::initSimulationStatsVars ( void )
 {
@@ -677,7 +663,7 @@ SimulationController::printSimulationStats ( int timestep, double delt, double t
     double overhead = 0;
     double weight = 0;
 
-    int t = min( d_n - 2, OVERHEAD_WINDOW );
+    int t = std::min( d_n - 2, OVERHEAD_WINDOW );
     //calcualte total weight by incrementing through the overhead sample array backwards and multiplying samples by the weights
     for( int i = 0; i < t; i++ ) {
       overhead += d_sharedState->overhead[(d_sharedState->overheadIndex+OVERHEAD_WINDOW-i)%OVERHEAD_WINDOW] * d_sharedState->overheadWeights[i];
@@ -692,32 +678,15 @@ SimulationController::printSimulationStats ( int timestep, double delt, double t
   } 
 
   // calculate mean/std dev
-  //double stdDev = 0;
   double mean = 0;
   double walltime = d_wallTime-d_prevWallTime;
 
   if (d_n > 2) { // ignore times 0,1,2
-    //walltimes.push_back();
-    //d_sumOfWallTimes += (walltime);
-    //d_sumOfWallTimeSquares += pow(walltime,2);
-
-    //alpha=2/(N+1)
-    float alpha = 2.0 / (min(d_n-2,AVERAGE_WINDOW)+1);  
+    float alpha = 2.0 / (std::min(d_n-2,AVERAGE_WINDOW)+1);
     d_movingAverage = alpha*walltime + (1-alpha) * d_movingAverage;
     mean = d_movingAverage;
   }
   
-  /*
-    if (d_n > 3) {
-    // divide by n-2 and not n, because we wait till n>2 to keep track
-    // of our stats
-    stdDev = stdDeviation(d_sumOfWallTimes, d_sumOfWallTimeSquares, d_n-2);
-    //mean = d_sumOfWallTimes / (d_n-2);
-    //         ofstream timefile("avg_elapsed_wallTime.txt");
-    //         timefile << mean << " +- " << stdDev << "\n";
-    }
-  */
-
   // Output timestep statistics...
   if (istats.active())
   {
@@ -728,7 +697,7 @@ SimulationController::printSimulationStats ( int timestep, double delt, double t
       if (runTimeStats[e] > 0)
       {
         istats << "rank: " << d_myworld->myrank() << " "
-	       << left << setw(19) << runTimeStats.getName(e)
+	       << std::left << std::setw(19) << runTimeStats.getName(e)
 	       << " [" << runTimeStats.getUnits(e) << "]: "
 	       << runTimeStats[e] << "\n";
       }
@@ -741,14 +710,13 @@ SimulationController::printSimulationStats ( int timestep, double delt, double t
 
     if (d_n > 3)
     {
-      //sprintf(walltime, ", elap T = %.2lf, mean: %.2lf +- %.3lf", d_wallTime, mean, stdDev);
       sprintf( walltime, ", elap T = %6.2lf (mean: %6.2lf), ", d_wallTime, mean );
     }
     else {
       sprintf( walltime, ", elap T = %6.2lf,                ", d_wallTime );
     }
 
-    ostringstream message;
+    std::ostringstream message;
     message << "Time="        << time
             << " (timestep "  << timestep 
             << "), delT="     << delt
@@ -775,10 +743,10 @@ SimulationController::printSimulationStats ( int timestep, double delt, double t
 
     dbg << message.str() << "\n";
     dbg.flush();
-    cout.flush();
+    std::cout.flush();
 
     if (stats.active()) {
-      stats << left << setw(19)  << "  Description                 Ave:            max:      mpi proc:    100*(1-ave/max) '% load imbalance'\n";
+      stats << std::left << std::setw(19)  << "  Description                 Ave:            max:      mpi proc:    100*(1-ave/max) '% load imbalance'\n";
 
       for (unsigned int i=0; i<runTimeStats.size(); ++i)
       {
@@ -786,12 +754,12 @@ SimulationController::printSimulationStats ( int timestep, double delt, double t
 	
 	if (runTimeStats.getMaximum(e) > 0)
 	{
-	  stats << "  " << left << setw(19)<< runTimeStats.getName(e)
+	  stats << "  " << std::left << std::setw(19)<< runTimeStats.getName(e)
 		<< "[" << runTimeStats.getUnits(e) << "]"
-		<< " : " << setw(12) << runTimeStats.getAverage(e)
-		<< " : " << setw(12) << runTimeStats.getMaximum(e)
-		<< " : " << setw(10) << runTimeStats.getRank(e)
-		<< " : " << setw(10)
+		<< " : " << std::setw(12) << runTimeStats.getAverage(e)
+		<< " : " << std::setw(12) << runTimeStats.getMaximum(e)
+		<< " : " << std::setw(10) << runTimeStats.getRank(e)
+		<< " : " << std::setw(10)
 		<< 100*(1-(runTimeStats.getAverage(e)/runTimeStats.getMaximum(e))) << "\n";
 	}
       }
@@ -808,7 +776,7 @@ SimulationController::printSimulationStats ( int timestep, double delt, double t
 
       dbgTime << "1 sim second takes ";
 
-      dbgTime << left << showpoint << setprecision(3) << setw(4);
+      dbgTime << std::left << std::showpoint << std::setprecision(3) << std::setw(4);
 
       if (realSecondsNow < SECONDS_PER_MINUTE) {
         dbgTime << realSecondsNow << " seconds (now), ";
@@ -829,7 +797,7 @@ SimulationController::printSimulationStats ( int timestep, double delt, double t
         dbgTime << realSecondsNow / SECONDS_PER_YEAR << " years (now), ";
       }
 
-      dbgTime << setw(4);
+      dbgTime << std::setw(4);
 
       if (realSecondsAvg < SECONDS_PER_MINUTE) {
         dbgTime << realSecondsAvg << " seconds (avg) ";
@@ -886,7 +854,7 @@ SimulationController::getMemoryStats ( int timestep, bool create )
   // Get memory stats for each proc if MALLOC_PERPROC is in the environent.
   if ( getenv( "MALLOC_PERPROC" ) )
   {
-    ostream* mallocPerProcStream = NULL;
+    std::ostream* mallocPerProcStream = NULL;
     char* filenamePrefix = getenv( "MALLOC_PERPROC" );
 
     if ( !filenamePrefix || strlen( filenamePrefix ) == 0 )
@@ -900,11 +868,11 @@ SimulationController::getMemoryStats ( int timestep, bool create )
 
       if ( create )
       {
-        mallocPerProcStream = scinew ofstream( filename, ios::out | ios::trunc );
+        mallocPerProcStream = scinew std::ofstream( filename, std::ios::out | std::ios::trunc );
       }
       else
       {
-        mallocPerProcStream = scinew ofstream( filename, ios::out | ios::app );
+        mallocPerProcStream = scinew std::ofstream( filename, std::ios::out | std::ios::app );
       }
 
       if ( !mallocPerProcStream )
