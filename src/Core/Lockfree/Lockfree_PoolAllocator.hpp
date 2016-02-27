@@ -1,9 +1,7 @@
 #ifndef LOCKFREE_POOL_ALLOCATOR_HPP
 #define LOCKFREE_POOL_ALLOCATOR_HPP
 
-#include "impl/Lockfree_Macros.hpp"
-
-#include "Lockfree_LevelPool.hpp"
+#include "impl/Lockfree_Pool.hpp"
 #include "Lockfree_Mappers.hpp"
 
 #include <new> // for bad_alloc
@@ -12,7 +10,7 @@ namespace Lockfree {
 
 template <  typename T
           , typename BitsetBlockType = uint64_t
-          , unsigned BitsetNumBlocks = 1u
+          , unsigned BitsetNumBlocks = 2u
           , template <typename> class Allocator = std::allocator
           , template <typename> class SizeAllocator = std::allocator
         >
@@ -29,17 +27,12 @@ class PoolAllocator
   };
 
 public:
-  using internal_pool_type = LevelPool<  Node
-                                       , BitsetBlockType
-                                       , BitsetNumBlocks
-                                       , Allocator
-                                       , SizeAllocator
-                                      >;
-
-private:
-  using pool_node_type = typename internal_pool_type::impl_node_type;
-
-public:
+  using allocator = PoolAllocator< T
+                                 , BitsetBlockType
+                                 , BitsetNumBlocks
+                                 , Allocator
+                                 , SizeAllocator
+                                 >;
 
   using size_type = size_t;
   using difference_type = ptrdiff_t;
@@ -48,6 +41,24 @@ public:
   using reference = T&;
   using const_pointer = const T*;
   using const_reference = const T&;
+
+
+private:
+  using impl_pool_type = Impl::Pool< Node
+                                   , BitsetBlockType
+                                   , BitsetNumBlocks
+                                   , Allocator
+                                   >;
+  using impl_node_type = typename impl_pool_type::node_type;
+
+  using node_allocator_type = Allocator<impl_node_type>;
+  using pool_allocator_type = SizeAllocator< impl_pool_type >;
+  using size_allocator_type = SizeAllocator< std::atomic<size_type> >;
+
+  static constexpr size_type one = 1;
+  static constexpr size_type zero = 0;
+
+public:
 
   template <class U>
   struct rebind
@@ -60,31 +71,91 @@ public:
                                >;
   };
 
-  PoolAllocator( size_t n = 31)
-    : m_pool{n}
-  {}
+  PoolAllocator( size_type n = 31 )
+    : m_num_levels{ n }
+  {
+    m_pools = m_pool_allocator.allocate( m_num_levels );
+    for ( size_type i=0; i<m_num_levels; ++i) {
+      m_pool_allocator.construct( m_pools + i, i, m_node_allocator );
+    }
+
+    m_refcount = m_size_allocator.allocate(1);
+    m_size_allocator.construct( m_refcount, 1 );
+
+    std::atomic_thread_fence( std::memory_order_seq_cst );
+  }
 
   PoolAllocator( const PoolAllocator & rhs )
-    : m_pool{ rhs.m_pool }
-  {}
+    : m_num_levels{ rhs.m_num_levels }
+    , m_pools{ rhs.m_pools }
+    , m_refcount{ rhs.m_refcount }
+    , m_node_allocator{ rhs.m_node_allocator }
+    , m_pool_allocator{ rhs.m_pool_allocator }
+    , m_size_allocator{ rhs.m_size_allocator }
+  {
+    m_refcount->fetch_add(one, std::memory_order_relaxed );
+  }
 
   PoolAllocator & operator=( const PoolAllocator & rhs )
   {
-    m_pool = rhs.m_pool;
+    // check for self assignment
+    if ( this != & rhs ) {
+      m_num_levels       = rhs.m_num_levels;
+      m_pools            = rhs.m_pools;
+      m_refcount         = rhs.m_refcount;
+      m_node_allocator   = rhs.m_node_allocator;
+      m_pool_allocator   = rhs.m_pool_allocator;
+      m_size_allocator   = rhs.m_size_allocator;
+
+      size_type rcount = m_refcount->fetch_add(one, std::memory_order_relaxed);
+    }
+
     return *this;
   }
 
   PoolAllocator( PoolAllocator && rhs )
-    : m_pool{ std::move( rhs.m_pool ) }
-  {}
+    : m_num_levels{ std::move( rhs.m_num_levels ) }
+    , m_pools{ rhs.m_pools }
+    , m_refcount{ std::move( rhs.m_refcount ) }
+    , m_node_allocator{ std::move( rhs.m_node_allocator ) }
+    , m_pool_allocator{ std::move( rhs.m_pool_allocator ) }
+    , m_size_allocator{ std::move( rhs.m_size_allocator ) }
+  {
+    // invalidate rhs
+    rhs.m_num_levels = 0u;
+    rhs.m_pools = nullptr;
+    rhs.m_refcount = nullptr;
+    rhs.m_node_allocator   = node_allocator_type{};
+    rhs.m_pool_allocator   = pool_allocator_type{};
+    rhs.m_size_allocator = size_allocator_type{};
+  }
 
   PoolAllocator & operator=( PoolAllocator && rhs )
   {
-    m_pool = std::move( rhs.m_pool );
+    std::swap( m_num_levels, rhs.m_num_levels );
+    std::swap( m_pools, rhs.m_pools );
+    std::swap( m_refcount, rhs.m_refcount );
+    std::swap( m_node_allocator, rhs.m_node_allocator );
+    std::swap( m_pool_allocator, rhs.m_pool_allocator );
+    std::swap( m_size_allocator, rhs.m_size_allocator );
+
     return *this;
   }
 
-  ~PoolAllocator() {}
+  ~PoolAllocator()
+  {
+    if ( m_refcount && m_refcount->fetch_sub(one, std::memory_order_relaxed ) == one ) {
+
+      for ( size_type i=0; i<m_num_levels; ++i) {
+        m_pool_allocator.destroy( m_pools + i );
+      }
+      m_pool_allocator.deallocate( m_pools, m_num_levels);
+
+      m_size_allocator.deallocate( m_refcount, 1 );
+    }
+  }
+
+  size_type num_levels() const { return m_num_levels; }
 
   static       pointer address(       reference x ) LOCKFREE_NOEXCEPT { return &x; }
   static const_pointer address( const_reference x ) LOCKFREE_NOEXCEPT { return &x; }
@@ -111,25 +182,25 @@ public:
       throw std::bad_alloc();
     }
 
-    size_t level = m_mapper( m_pool.num_levels() );
 
-    typename internal_pool_type::iterator itr;
+    typename impl_pool_type::iterator itr;
+    typename impl_pool_type::handle h;
     if ( hint ) {
       Node * node = reinterpret_cast<Node *>(hint);
-      pool_node_type * pool_node = reinterpret_cast<pool_node_type *>(node->m_pool_node);
-      typename internal_pool_type::handle h = pool_node->get_handle( node );
-      itr = m_pool.emplace( h, level );
-    }
-    else {
-      itr = m_pool.emplace( level );
+      impl_node_type * pool_node = reinterpret_cast<impl_node_type *>(node->m_pool_node);
+      typename impl_pool_type::handle h = pool_node->get_handle( node );
     }
 
-    if (!itr) {
-      throw std::bad_alloc();
-    }
+    const size_type level = static_cast<bool>(h) ?
+                             impl_node_type::get_node(h)->impl_pool_id() :
+                             m_mapper( num_levels() );
+
+    itr = m_pools[level].emplace( h );
+
+    if (!itr) { throw std::bad_alloc(); }
 
     // set the pool node to allow O(1) deallocate
-    itr->m_pool_node = reinterpret_cast<void*>(pool_node_type::get_node(itr));
+    itr->m_pool_node = reinterpret_cast<void*>(impl_node_type::get_node(itr));
     std::atomic_thread_fence( std::memory_order_seq_cst );
 
     return reinterpret_cast<pointer>(itr->m_buffer);
@@ -143,11 +214,11 @@ public:
     }
 
     Node * node = reinterpret_cast<Node *>(p);
-    pool_node_type * pool_node = reinterpret_cast<pool_node_type *>(node->m_pool_node);
-    typename internal_pool_type::iterator itr = pool_node->get_iterator( node );
+    impl_node_type * pool_node = reinterpret_cast<impl_node_type *>(node->m_pool_node);
+    typename impl_pool_type::iterator itr = pool_node->get_iterator( node );
 
     if (itr) {
-      m_pool.erase(itr);
+      m_pools[itr.level()].erase(itr);
     }
     else {
       printf("Error: double deallocate.");
@@ -155,8 +226,13 @@ public:
   }
 
 private:
-  internal_pool_type m_pool;
-  ThreadIDMapper     m_mapper{};
+  size_type                m_num_levels;
+  impl_pool_type         * m_pools{nullptr};
+  std::atomic<size_type> * m_refcount{nullptr};
+  node_allocator_type      m_node_allocator{};
+  pool_allocator_type      m_pool_allocator{};
+  size_allocator_type      m_size_allocator{};
+  ThreadIDMapper           m_mapper{};
 };
 
 } // namespace Lockfree
