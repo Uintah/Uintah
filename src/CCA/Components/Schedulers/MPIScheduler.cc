@@ -73,6 +73,15 @@ DebugStream mpidbg(        "MPIDBG"        , false );
 std::map<std::string, std::atomic<uint64_t> > waittimes;
 std::map<std::string, std::atomic<uint64_t> > exectimes;
 
+namespace {
+
+thread_local SendCommList::handle t_send_emplace;
+thread_local SendCommList::handle t_send_find;
+
+thread_local RecvCommList::handle t_recv_emplace;
+thread_local RecvCommList::handle t_recv_find;
+
+}
 
 namespace {
 
@@ -307,8 +316,9 @@ MPIScheduler::runTask( DetailedTask* task,
   {
     Timers::ThreadTrip< TotalTestMPITag > test_mpi_timer;
     auto ready_request = [](SendCommNode const& n)->bool { return n.test(); };
-    SendCommList::iterator iter = m_send_list.find_any(ready_request);
+    SendCommList::iterator iter = m_send_list.find_any(t_send_find, ready_request);
     if (iter) {
+      t_send_find = iter;
       m_send_list.erase(iter);
     }
   }
@@ -472,7 +482,8 @@ MPIScheduler::postMPISends( DetailedTask* task,
       messageVolume_ += count * typeSize;
       volSend += count * typeSize;
 
-      SendCommList::iterator iter = m_send_list.emplace(mpibuff.takeSendlist());
+      SendCommList::iterator iter = m_send_list.emplace(t_send_emplace, mpibuff.takeSendlist());
+      t_send_emplace = iter;
 
       MPI_Isend(buf, count, datatype, to, batch->messageTag, d_myworld->getComm(), iter->request());
     }
@@ -655,7 +666,8 @@ void MPIScheduler::postMPIRecvs( DetailedTask* task,
       int from = batch->fromTask->getAssignedResourceIndex();
       ASSERTRANGE(from, 0, d_myworld->size());
 
-      RecvCommList::iterator iter = m_recv_list.emplace(p_mpibuff, pBatchRecvHandler);
+      RecvCommList::iterator iter = m_recv_list.emplace(t_recv_emplace, p_mpibuff, pBatchRecvHandler);
+      t_recv_emplace = iter;
 
       MPI_Irecv(buf, count, datatype, from, batch->messageTag, d_myworld->getComm(), iter->request());
 
@@ -688,8 +700,9 @@ void MPIScheduler::processMPIRecvs( int how_much )
 
   switch (how_much) {
     case TEST : {
-      RecvCommList::iterator iter = m_recv_list.find_any(ready_request);
+      RecvCommList::iterator iter = m_recv_list.find_any(t_recv_find, ready_request);
       if (iter) {
+        t_recv_find = iter;
         MPI_Status status;
         iter->finishedCommunication(d_myworld, status);
         m_recv_list.erase(iter);
@@ -697,8 +710,9 @@ void MPIScheduler::processMPIRecvs( int how_much )
       break;
     }
     case WAIT_ONCE : {
-      RecvCommList::iterator iter = m_recv_list.find_any(finished_request);
+      RecvCommList::iterator iter = m_recv_list.find_any(t_recv_find, finished_request);
       if (iter) {
+        t_recv_find = iter;
         MPI_Status status;
         iter->finishedCommunication(d_myworld, status);
         m_recv_list.erase(iter);
@@ -707,8 +721,9 @@ void MPIScheduler::processMPIRecvs( int how_much )
     }
     case WAIT_ALL : {
       while (!m_recv_list.empty()) {
-        RecvCommList::iterator iter = m_recv_list.find_any(finished_request);
+        RecvCommList::iterator iter = m_recv_list.find_any(t_recv_find, finished_request);
         if (iter) {
+          t_recv_find = iter;
           MPI_Status status;
           iter->finishedCommunication(d_myworld, status);
           m_recv_list.erase(iter);
@@ -844,8 +859,9 @@ void MPIScheduler::execute( int tgnum /* = 0 */, int iteration /* = 0 */ )
 
   auto ready_request = [](SendCommNode const& n)->bool { return n.wait(); };
   while (!m_send_list.empty()) {
-    SendCommList::iterator iter = m_send_list.find_any(ready_request);
+    SendCommList::iterator iter = m_send_list.find_any(t_send_find, ready_request);
     if (iter) {
+      t_send_find = iter;
       m_send_list.erase(iter);
     }
   }
