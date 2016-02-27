@@ -77,12 +77,42 @@ public:
     , gt_allocator{}
   {}
 
-  HybridAllocator(  le_allocator_type arg_le_allocator
-                  , gt_allocator_type arg_gt_allocator
+  HybridAllocator(  le_allocator_type const& arg_le_allocator
+                  , gt_allocator_type const& arg_gt_allocator
                  )
     : le_allocator{ arg_le_allocator }
     , gt_allocator{ arg_gt_allocator }
   {}
+
+  HybridAllocator(  le_allocator_type && arg_le_allocator
+                  , gt_allocator_type && arg_gt_allocator
+                 )
+    : le_allocator{ std::move(arg_le_allocator) }
+    , gt_allocator{ std::move(arg_gt_allocator) }
+  {
+    arg_le_allocator = le_allocator_type{};
+    arg_gt_allocator = gt_allocator_type{};
+  }
+
+  HybridAllocator(  le_allocator_type const& arg_le_allocator
+                  , gt_allocator_type && arg_gt_allocator
+                 )
+    : le_allocator{ arg_le_allocator }
+    , gt_allocator{ std::move(arg_gt_allocator) }
+  {
+    arg_le_allocator = le_allocator_type{};
+    arg_gt_allocator = gt_allocator_type{};
+  }
+
+  HybridAllocator(  le_allocator_type && arg_le_allocator
+                  , gt_allocator_type const& arg_gt_allocator
+                 )
+    : le_allocator{ std::move(arg_le_allocator) }
+    , gt_allocator{ arg_gt_allocator }
+  {
+    arg_le_allocator = le_allocator_type{};
+    arg_gt_allocator = gt_allocator_type{};
+  }
 
   HybridAllocator( const HybridAllocator & rhs )
     : le_allocator{ rhs.le_allocator }
