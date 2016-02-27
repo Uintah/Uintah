@@ -198,7 +198,7 @@ void ThreadFunneledScheduler::problemSetup(  const ProblemSpecP     & prob_spec
 
   m_num_threads = Uintah::Parallel::getNumThreads();
 
-  m_task_pool        = TaskPool{ static_cast<size_t>(m_num_threads) };
+  m_task_pool = TaskPool{ static_cast<size_t>(m_num_threads) };
 
   if ((m_num_threads < 1) && Uintah::Parallel::usingMPI()) {
     if (d_myworld->myrank() == 0) {
@@ -310,6 +310,7 @@ void ThreadFunneledScheduler::execute(  int tgnum /*=0*/ , int iteration /*=0*/ 
   }
   //------------------------------------------------------------------------------------------------
 
+  TaskPool::handle insert_handle;
 
   // The main task loop
   while (m_num_tasks_done.load(std::memory_order_relaxed) < m_num_tasks) {
@@ -351,7 +352,7 @@ void ThreadFunneledScheduler::execute(  int tgnum /*=0*/ , int iteration /*=0*/ 
     else if (m_detailed_tasks->numExternalReadyTasks() > 0) {
       DetailedTask* task = m_detailed_tasks->getNextExternalReadyTask();
       ASSERTEQ(task->getExternalDepCount(), 0);
-      m_task_pool.insert(task);
+      insert_handle = m_task_pool.insert(insert_handle, task);
     }
     else { // nothing to do process MPI
       processMPIRecvs(TEST);
@@ -400,9 +401,11 @@ void ThreadFunneledScheduler::execute(  int tgnum /*=0*/ , int iteration /*=0*/ 
 //
 void ThreadFunneledScheduler::select_tasks()
 {
+  TaskPool::handle find_handle;
   while ( Impl::g_run_tasks ) {
-    TaskPool::iterator iter = m_task_pool.find_any();
+    TaskPool::iterator iter = m_task_pool.find_any(find_handle);
     if (iter) {
+      find_handle = iter;
       DetailedTask* ready_task = *iter;
       MPIScheduler::runTask(ready_task, Impl::t_tid);
       m_task_pool.erase(iter);
