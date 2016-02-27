@@ -69,12 +69,18 @@
 using namespace SCIRun;
 using namespace std;
 
-static DebugStream dbg(     "SimulationStats",            true  );
-static DebugStream dbgTime( "SimulationTimeStats",        false );
-static DebugStream simdbg(  "SimulationController",       false );
-static DebugStream stats(   "ComponentTimings",           false );
-static DebugStream istats(  "IndividualComponentTimings", false );
-extern DebugStream amrout;
+extern SCIRun::DebugStream amrout;
+
+namespace {
+
+SCIRun::DebugStream dbg(     "SimulationStats",            true  );
+SCIRun::DebugStream dbgTime( "SimulationTimeStats",        false );
+SCIRun::DebugStream simdbg(  "SimulationController",       false );
+SCIRun::DebugStream stats(   "ComponentTimings",           false );
+SCIRun::DebugStream istats(  "IndividualComponentTimings", false );
+
+
+}
 
 namespace Uintah {
 
@@ -84,26 +90,38 @@ stdDeviation( double sum_of_x, double sum_of_x_squares, int n )
   return sqrt( (n*sum_of_x_squares - sum_of_x*sum_of_x) / (n*n) );
 }
 
-SimulationController::SimulationController( const ProcessorGroup * myworld,
-                                                  bool             doAMR,
-                                                  ProblemSpecP     pspec ) :
-  UintahParallelComponent( myworld ), d_ups( pspec ), d_doAMR( doAMR )
-{
-  d_n                      = 0;
-  d_wallTime               = 0;
-  d_startTime              = 0;
-  d_prevWallTime           = 0;
-  //d_sumOfWallTimes       = 0;
-  //d_sumOfWallTimeSquares = 0;
-  d_movingAverage          = 0;
-
-  d_restarting             = false;
-  d_reduceUda              = false;
-  d_doMultiTaskgraphing    = false;
-  d_archive                = NULL;
-  d_sim                    = 0;
-
-  d_grid_ps                = d_ups->findBlock( "Grid" );
+SimulationController::SimulationController( const ProcessorGroup * myworld
+                                          ,       bool             doAMR
+                                          ,       ProblemSpecP     pspec
+                                          )
+  : UintahParallelComponent( myworld )
+  , d_ups                    {pspec}
+  , d_grid_ps                {d_ups->findBlock( "Grid" )}
+  , d_sharedState            {nullptr}
+  , d_scheduler              {nullptr}
+  , d_lb                     {nullptr}
+  , d_output                 {nullptr}
+  , d_timeinfo               {nullptr}
+  , d_sim                    {nullptr}
+  , d_regridder              {nullptr}
+  , d_archive                {nullptr}
+  , d_doAMR                  {doAMR}
+  , d_doMultiTaskgraphing    {false}
+  , d_restarting             {false}
+  , d_fromDir                {""}
+  , d_restartTimestep        {0}
+  , d_restartIndex           {0}
+  , d_lastRecompileTimestep  {0}
+  , d_reduceUda              {false}
+  , d_restartFromScratch     {false}
+  , d_restartRemoveOldDir    {false}
+  , d_n                      {0}
+  , d_wallTime               {0.0}
+  , d_startTime              {0.0}
+  , d_startSimTime           {0.0}
+  , d_prevWallTime           {0.0}
+  , d_movingAverage          {0.0}
+  {
 
 #ifdef HAVE_VISIT
   d_doVisIt                = false;
