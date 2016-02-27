@@ -22,10 +22,12 @@
  * IN THE SOFTWARE.
  */
 
-#ifndef UINTAH_HOMEBREW_SIMULATIONCONTROLLER_H
-#define UINTAH_HOMEBREW_SIMULATIONCONTROLLER_H
+#ifndef CCA_COMPONENTS_SIMULATIONCONTROLLER_SIMULATIONCONTROLLER_H
+#define CCA_COMPONENTS_SIMULATIONCONTROLLER_SIMULATIONCONTROLLER_H
 
-#include <sci_defs/papi_defs.h> // for PAPI performance counters
+#include <CCA/Ports/DataWarehouseP.h>
+#include <CCA/Ports/Scheduler.h>
+#include <CCA/Ports/SchedulerP.h>
 
 #include <Core/Grid/GridP.h>
 #include <Core/Grid/LevelP.h>
@@ -35,10 +37,7 @@
 #include <Core/ProblemSpec/ProblemSpec.h>
 #include <Core/ProblemSpec/ProblemSpecP.h>
 
-#include <CCA/Ports/DataWarehouseP.h>
-#include <CCA/Ports/Scheduler.h>
-#include <CCA/Ports/SchedulerP.h>
-
+#include <sci_defs/papi_defs.h> // for PAPI performance counters
 #include <sci_defs/visit_defs.h>
 
 namespace Uintah {
@@ -208,9 +207,10 @@ public:
   
 private:
   bool d_doVisIt;
-#endif      
+#endif
+
 };
 
 } // End namespace Uintah
 
-#endif
+#endif // CCA_COMPONENTS_SIMULATIONCONTROLLER_SIMULATIONCONTROLLER_H
