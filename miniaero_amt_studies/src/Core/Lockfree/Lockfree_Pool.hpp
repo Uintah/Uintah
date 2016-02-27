@@ -34,6 +34,7 @@ public:
                          , Mapper
                         >;
 
+private:
   using impl_pool_type = Impl::Pool<  T
                                     , BitsetBlockType
                                     , BitsetNumBlocks
@@ -41,32 +42,14 @@ public:
                                    >;
   using impl_node_type = typename impl_pool_type::node_type;
 
-
-private:
-  using node_allocator_type = allocator<impl_node_type>;
-
-  struct PoolNode {
-    std::atomic<PoolNode *>  m_next{nullptr};
-    impl_pool_type m_pool;
-
-    PoolNode( size_t pid, node_allocator_type & node_allocator)
-      : m_pool{ pid, node_allocator }
-    {}
-
-    PoolNode( const PoolNode & ) = delete;
-    PoolNode & operator=( const PoolNode & ) = delete;
-    PoolNode( PoolNode && ) = delete;
-    PoolNode & operator=( PoolNode && ) = delete;
-  };
-
-
-  using pool_allocator_type = size_allocator< PoolNode >;
-  using size_allocator_type = size_allocator< std::atomic<size_type> >;
-
   static constexpr size_type one = 1;
   static constexpr size_type zero = 0;
 
 public:
+  using node_allocator_type = allocator<impl_node_type>;
+  using pool_allocator_type = size_allocator< impl_pool_type >;
+  using size_allocator_type = size_allocator< std::atomic<size_type> >;
+
   using iterator = typename impl_pool_type::iterator;
   using handle   = typename impl_pool_type::handle;
 
@@ -127,7 +110,7 @@ public:
 
     const size_t id = static_cast<bool>(h) ? impl_node_type::get_node(h)->impl_pool_id() : m_mapper(m_num_levels);
 
-    iterator itr = m_pools[id].m_pool.emplace( h, std::forward<Args>(args)... );
+    iterator itr = m_pools[id].emplace( h, std::forward<Args>(args)... );
     return itr;
   }
 
@@ -181,7 +164,7 @@ public:
                                       );
 
     for (size_t i=start; !itr && i<(m_num_levels+start); ++i) {
-      itr = m_pools[i%m_num_levels].m_pool.find_any(h, pred);
+      itr = m_pools[i%m_num_levels].find_any(h, pred);
     }
     return itr;
   }
@@ -227,8 +210,15 @@ public:
 
 
   /// Contruct a pool
-  Pool( size_t num_levels = 31u )
+  Pool( size_t num_levels = 31u
+      , node_allocator_type const& node_alloc = node_allocator_type{}
+      , pool_allocator_type const& pool_alloc = pool_allocator_type{}
+      , size_allocator_type const& size_alloc = size_allocator_type{}
+      )
     : m_num_levels{ num_levels }
+    , m_node_allocator{ node_alloc }
+    , m_pool_allocator{ pool_alloc }
+    , m_size_allocator{ size_alloc }
   {
     m_pools = m_pool_allocator.allocate( num_levels );
     for ( size_t i=0; i<m_num_levels; ++i) {
@@ -272,7 +262,7 @@ public:
       m_pool_allocator   = rhs.m_pool_allocator;
       m_size_allocator   = rhs.m_size_allocator;
 
-      size_type rcount = m_refcount->fetch_add(one, std::memory_order_relaxed);
+      m_refcount->fetch_add(one, std::memory_order_relaxed);
     }
 
     return *this;
@@ -334,12 +324,12 @@ public:
 private: // data members
 
   size_t                   m_num_levels;
-  PoolNode               * m_pools{nullptr};
+  impl_pool_type         * m_pools{nullptr};
   std::atomic<size_type> * m_size{nullptr};
   std::atomic<size_type> * m_refcount{nullptr};
-  node_allocator_type      m_node_allocator{};
-  pool_allocator_type      m_pool_allocator{};
-  size_allocator_type      m_size_allocator{};
+  node_allocator_type      m_node_allocator;
+  pool_allocator_type      m_pool_allocator;
+  size_allocator_type      m_size_allocator;
   mapper                   m_mapper{};
 };
 

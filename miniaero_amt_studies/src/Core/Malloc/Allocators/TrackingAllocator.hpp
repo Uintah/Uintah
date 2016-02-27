@@ -150,11 +150,43 @@ public:
     : m_base_allocator{ std::forward<Args>(args)... }
   {}
 
-  TrackingAllocator( const TrackingAllocator & rhs )
+  explicit
+  TrackingAllocator( base_allocator_type const& base )
+    : m_base_allocator{ base }
+  {}
+
+  explicit
+  TrackingAllocator( base_allocator_type && base )
+    : m_base_allocator{ std::move(base) }
+  {}
+
+  TrackingAllocator & operator=( base_allocator_type const& base )
+  {
+    m_base_allocator = base;
+    return *this;
+  }
+
+  TrackingAllocator & operator=( base_allocator_type && base )
+  {
+    m_base_allocator = std::move(base);
+    return *this;
+  }
+
+  TrackingAllocator( TrackingAllocator const & rhs )
     : m_base_allocator{ rhs.m_base_allocator }
   {}
 
-  TrackingAllocator & operator=( const TrackingAllocator & rhs )
+  TrackingAllocator & operator=( TrackingAllocator const& rhs )
+  {
+    m_base_allocator = rhs.m_base_allocator;
+    return *this;
+  }
+
+  TrackingAllocator( TrackingAllocator & rhs )
+    : m_base_allocator{ rhs.m_base_allocator }
+  {}
+
+  TrackingAllocator & operator=( TrackingAllocator & rhs )
   {
     m_base_allocator = rhs.m_base_allocator;
     return *this;
