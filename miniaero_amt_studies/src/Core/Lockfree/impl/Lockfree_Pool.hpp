@@ -105,11 +105,6 @@ public:
     return itr;
   }
 
-  handle get_handle( void * p ) const {
-    node_type * start = m_find_head.load( std::memory_order_relaxed );
-    return node_type::get_handle( start, start, p );
-  }
-
   /// Contruct a pool
   Pool( size_t pid, node_allocator_type const& node_allocator )
     : m_pool_id{pid}

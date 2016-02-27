@@ -249,24 +249,14 @@ public:
     return itr;
   }
 
-  static handle get_handle( node_type * start, node_type * end, void * p )
-  {
-    value_type * ptr = reinterpret_cast<value_type *>(p);
-    handle h = start->get_handle(ptr);
-
-    for ( node_type * curr = start->next(); !h && curr != end; curr = curr->next() ) {
-      h = curr->get_handle(ptr);
-    }
-    return h;
-  }
-
   // get_handle( node, value_ptr )
   //
   // get an handle to the value
   handle get_handle( const value_type * ptr )
   {
-    if (  ptr < m_values ||  ptr >= (m_values + bitset_type::capacity) ) { return handle{}; };
-    return handle{ this, static_cast<int>(ptr-m_values) };
+    int idx=0;
+    for (; idx<capacity && (m_values + idx != ptr); ++idx) {}
+    return idx < capacity ? handle{ this, idx } : handle{};
   }
 
   // get_iterator( int )
