@@ -330,9 +330,9 @@ void MPMPetscSolver::createMatrix(const ProcessorGroup* d_myworld,
   }
 
 #if ((PETSC_VERSION_MAJOR == 3) && (PETSC_VERSION_MINOR >= 2))
-  PetscBool exists;(void)exists;
+  PetscBool exists;
 #else
-  PetscTruth exists;(void)exists;
+  PetscTruth exists;
 #endif
 
 #if 0
