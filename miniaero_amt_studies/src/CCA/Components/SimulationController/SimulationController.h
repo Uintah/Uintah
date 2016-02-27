@@ -197,19 +197,9 @@ private:
   double d_startTime;             // starting wall time
   double d_startSimTime;          // starting sim time
   double d_prevWallTime;
-  //double d_sumOfWallTimes;
-  //double d_sumOfWallTimeSquares;
      
   // this is for calculating an exponential moving average
   double d_movingAverage;
-
-  // void problemSetup( const ProblemSpecP&, GridP& ) = 0;
-  // bool needRecompile( double t, double delt, const LevelP& level,
-  //                     SimulationInterface* cfd, Output* output,
-  //                     LoadBalancer* lb ) = 0;
-  // SimulationController(const SimulationController&) = 0;
-  // SimulationController& operator=(const SimulationController&) = 0;
-
 
 #ifdef HAVE_VISIT
 public:
