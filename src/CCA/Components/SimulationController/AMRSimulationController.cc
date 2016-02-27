@@ -154,6 +154,7 @@ AMRSimulationController::run()
   d_scheduler->setInitTimestep( true );
   
   bool first = true;
+  bool last  = false;
   
   if (d_restarting) {
     d_scheduler->setRestartInitTimestep(first);
@@ -473,6 +474,13 @@ AMRSimulationController::run()
     
     calcWallTime();
 
+    // Check to see if at the last iteration
+    last = ( (time >= d_timeinfo->maxTime) ||
+	     (iterations >= d_timeinfo->maxTimestep) ||
+	     (d_timeinfo->max_wall_time != 0 &&
+	      getWallTime() >= d_timeinfo->max_wall_time) );
+    
+
     // Get and reduce the performace run time stats
     getMemoryStats( d_sharedState->getCurrentTopLevelTimeStep() );
     getPAPIStats( );
@@ -484,7 +492,8 @@ AMRSimulationController::run()
     printSimulationStats( d_sharedState->getCurrentTopLevelTimeStep(), delt, time );
 
     // Reduce the mpi run time stats.
-    MPIScheduler *mpiScheduler = dynamic_cast<MPIScheduler*>(d_scheduler.get_rep());
+    MPIScheduler *mpiScheduler = 
+      dynamic_cast<MPIScheduler*>(d_scheduler.get_rep());
     
     if( mpiScheduler )
     {

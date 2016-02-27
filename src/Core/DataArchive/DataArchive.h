@@ -398,7 +398,7 @@ namespace Uintah {
       //__________________________________
       //  PIDX related
       enum outputFormat {UDA, PIDX};
-      outputFormat d_outputFileFormat{UDA};
+      outputFormat d_outputFileFormat; 
       
       enum {BLANK, REDUCTION_VAR, PATCH_VAR };
  
@@ -443,7 +443,7 @@ namespace Uintah {
 
       Mutex d_lock;
     
-      std::string d_particlePositionName{"p.x"};
+      std::string d_particlePositionName;
 
       void findPatchAndIndex( const GridP            grid,
                                     Patch         *& patch,
