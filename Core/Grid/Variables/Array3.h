@@ -282,7 +282,15 @@ namespace Uintah {
 
 #ifdef UINTAH_ENABLE_KOKKOS
       inline KokkosView3<T>       getKokkosView() const { return d_window->getKokkosView(); }
-#endif //UINTAH_ENABLE_KOKKOS
+#else
+      inline const T& operator()(int i, int j, int k) const {
+        return (*this)[IntVector(i,j,k)];
+      }
+
+      inline T& operator()(int i, int j, int k) {
+        return (*this)[IntVector(i,j,k)];
+      }
+#endif
 
       inline T& operator[](const IntVector& idx) {
         return d_window->get(idx);
