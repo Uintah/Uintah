@@ -524,10 +524,8 @@ void MPIScheduler::postMPIRecvs( DetailedTask* task,
 
   // sort the requires, so in case there is a particle send we receive it with
   // the right message tag
-
   std::vector<DependencyBatch*> sorted_reqs;
   std::map<DependencyBatch*, DependencyBatch*>::const_iterator iter = task->getRequires().begin();
-
   for (; iter != task->getRequires().end(); iter++) {
     sorted_reqs.push_back(iter->first);
   }
@@ -543,7 +541,6 @@ void MPIScheduler::postMPIRecvs( DetailedTask* task,
     // The first thread that calls this on the batch will return true
     // while subsequent threads calling this will block and wait for
     // that first thread to receive the data.
-
     task->incrementExternalDepCount();
     if (!batch->makeMPIRequest()) {
       if (dbg_active) {
@@ -1113,7 +1110,7 @@ MPIScheduler::outputTimingStats( const char* label )
     if (++count % 10 == 0) {
 
       if (d_myworld->myrank() == 0 || d_myworld->myrank() == d_myworld->size() / 2
-          || d_myworld->myrank() == d_myworld->size() - 1) {
+                                   || d_myworld->myrank() == d_myworld->size() - 1) {
 
         std::ofstream wout;
         char fname[100];
@@ -1128,7 +1125,6 @@ MPIScheduler::outputTimingStats( const char* label )
         for (auto const& p : DependencyBatch::waittimes) {
           wout << std::fixed << d_myworld->myrank() << ": TaskWaitTime(FROM): " << p.second *1.0e-9 << " Task:" << p.first
                << std::endl;
-
         }
 
         wout.close();

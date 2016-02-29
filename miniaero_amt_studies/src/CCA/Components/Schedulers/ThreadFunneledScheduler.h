@@ -60,7 +60,7 @@ using TaskPool = Lockfree::Pool< DetailedTask*
  GENERAL INFORMATION
  ThreadFunneledScheduler.h
 
- Alan Humphrey & Dan SUnderland
+ Alan Humphrey & Dan Sunderland - February, 2016
  Scientific Computing and Imaging Institute
  University of Utah
 

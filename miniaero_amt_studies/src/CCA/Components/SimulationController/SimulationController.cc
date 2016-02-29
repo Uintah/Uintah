@@ -530,20 +530,24 @@ SimulationController::adjustDelT( double& delt, double prev_delt, bool first, do
     proc0cout << "WARNING: raising delt from " << delt << " to minimum: " << d_timeinfo->delt_min << '\n';
     delt = d_timeinfo->delt_min;
   }
+
   if (!first && d_timeinfo->max_delt_increase < 1.e90 && delt > (1 + d_timeinfo->max_delt_increase) * prev_delt) {
     proc0cout << "WARNING (a): lowering delt from " << delt << " to maxmimum: " << (1 + d_timeinfo->max_delt_increase) * prev_delt
               << " (maximum increase of " << d_timeinfo->max_delt_increase << ")\n";
     delt = (1 + d_timeinfo->max_delt_increase) * prev_delt;
   }
+
   if (t <= d_timeinfo->initial_delt_range && delt > d_timeinfo->max_initial_delt) {
     proc0cout << "WARNING (b): lowering delt from " << delt << " to maximum: " << d_timeinfo->max_initial_delt
               << " (for initial timesteps)\n";
     delt = d_timeinfo->max_initial_delt;
   }
+
   if (delt > d_timeinfo->delt_max) {
     proc0cout << "WARNING (c): lowering delt from " << delt << " to maximum: " << d_timeinfo->delt_max << '\n';
     delt = d_timeinfo->delt_max;
   }
+
   // Clamp timestep to output/checkpoint.
   if (d_timeinfo->timestep_clamping && d_output) {
     double orig_delt = delt;
@@ -552,13 +556,16 @@ SimulationController::adjustDelT( double& delt, double prev_delt, bool first, do
     if (nextOutput != 0 && t + delt > nextOutput) {
       delt = nextOutput - t;
     }
+
     if (nextCheckpoint != 0 && t + delt > nextCheckpoint) {
       delt = nextCheckpoint - t;
     }
+
     if (delt != orig_delt) {
       proc0cout << "WARNING (d): lowering delt from " << orig_delt << " to " << delt << " to line up with output/checkpoint time\n";
     }
   }
+
   if (d_timeinfo->end_on_max_time && t + delt > d_timeinfo->maxTime) {
     delt = d_timeinfo->maxTime - t;
   }
@@ -623,8 +630,7 @@ SimulationController::printSimulationStats ( int timestep, double delt, double t
   ReductionInfoMapper< SimulationState::RunTimeStat, double > &runTimeStats =
     d_sharedState->d_runTimeStats;
 
-  // With the sum reduces, use double, since with memory it is possible that
-  // it will overflow
+  // With the sum reduces, use double, since with memory it is possible that it will overflow
   double avg_memuse = runTimeStats.getAverage(SimulationState::SCIMemoryUsed);
   unsigned long max_memuse = static_cast<unsigned long>(runTimeStats.getMaximum(SimulationState::SCIMemoryUsed));
   int max_memuse_rank = runTimeStats.getRank(SimulationState::SCIMemoryUsed);
