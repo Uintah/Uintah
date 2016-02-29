@@ -49,7 +49,7 @@
 #include <Core/Parallel/ProcessorGroup.h>
 #include <Core/ProblemSpec/ProblemSpec.h>
 #include <Core/ProblemSpec/ProblemSpecP.h>
-#include <Core/Thread/Time.h>
+#include <Core/Util/Timers/Timers.hpp>
 
 #include <CCA/Components/ReduceUda/UdaReducer.h>
 #include <CCA/Components/Regridder/PerPatchVars.h>
@@ -76,28 +76,29 @@
 #include <iostream>
 #include <iomanip>
 
-using namespace std;
-using namespace SCIRun;
 using namespace Uintah;
 
-DebugStream amrout("AMR", false);
-static DebugStream dbg("AMRSimulationController", false);
-static DebugStream dbg_barrier("MPIBarriers",false);
-static DebugStream dbg_dwmem("LogDWMemory",false);
-static DebugStream gprofile("CPUProfiler",false);
-static DebugStream gheapprofile("HeapProfiler",false);
-static DebugStream gheapchecker("HeapChecker",false);
+SCIRun::DebugStream amrout(       "AMR"                    , false);
+
+namespace {
+
+SCIRun::DebugStream dbg(          "AMRSimulationController", false);
+SCIRun::DebugStream dbg_barrier(  "MPIBarriers"            ,false);
+SCIRun::DebugStream dbg_dwmem(    "LogDWMemory"            ,false);
+SCIRun::DebugStream gprofile(     "CPUProfiler"            ,false);
+SCIRun::DebugStream gheapprofile( "HeapProfiler"           ,false);
+SCIRun::DebugStream gheapchecker( "HeapChecker"            ,false);
+
+}
 
 AMRSimulationController::AMRSimulationController(const ProcessorGroup* myworld,
                                                  bool doAMR,
 						 ProblemSpecP pspec) :
   SimulationController(myworld, doAMR, pspec)
-{
-}
+{}
 
 AMRSimulationController::~AMRSimulationController()
-{
-}
+{}
 
 double barrier_times[5]={0};
 
@@ -210,7 +211,6 @@ AMRSimulationController::run()
   int    iterations = d_sharedState->getCurrentTopLevelTimeStep();
   double delt = 0;
   delt_vartype delt_var;
-  double start;
   
   d_lb->resetCostForecaster();
 
@@ -292,18 +292,18 @@ AMRSimulationController::run()
       // Remember, this isn't logged if DISABLE_SCI_MALLOC is set
       // (So usually in optimized mode this will not be run.)
       d_scheduler->logMemoryUse();
-      ostringstream fn;
-      fn << "alloc." << setw(5) << setfill('0') << d_myworld->myrank() << ".out";
-      string filename(fn.str());
+      std::ostringstream fn;
+      fn << "alloc." << std::setw(5) << std::setfill('0') << d_myworld->myrank() << ".out";
+      std::string filename(fn.str());
 #if !defined( DISABLE_SCI_MALLOC )
       DumpAllocator(DefaultAllocator(), filename.c_str());
 #endif
     }
      
-    if(dbg_barrier.active()) {
-      start=Time::currentSeconds();
+    if (dbg_barrier.active()) {
+      Timers::Simple barrier_timer{};
       MPI_Barrier(d_myworld->getComm());
-      barrier_times[2]+=Time::currentSeconds()-start;
+      barrier_times[2] += barrier_timer.seconds();
     }
 
     // Yes, I know this is kind of hacky, but this is the only way to
@@ -353,7 +353,7 @@ AMRSimulationController::run()
       recompile( time, delt, currentGrid, totalFine );
     }
     else {
-      if (d_output){
+      if (d_output) {
         // This is not correct if we have switched to a different
         // component, since the delt will be wrong 
         d_output->finalizeTimestep( time, delt, currentGrid, d_scheduler, 0 );
@@ -364,52 +364,52 @@ AMRSimulationController::run()
       }
     }
 
-    if(dbg_barrier.active()) {
-      start=Time::currentSeconds();
+    if (dbg_barrier.active()) {
+      Timers::Simple barrier_timer{};
       MPI_Barrier(d_myworld->getComm());
-      barrier_times[3]+=Time::currentSeconds()-start;
+      barrier_times[3] += barrier_timer.seconds();
     }
 
     // adjust the delt for each level and store it in all applicable dws.
     double delt_fine = delt;
-    int skip=totalFine;
-    for(int i=0;i<currentGrid->numLevels();i++){
+    int skip = totalFine;
+    for (int i = 0; i < currentGrid->numLevels(); i++) {
       const Level* level = currentGrid->getLevel(i).get_rep();
-      
-      if( d_doAMR && i != 0 && !d_sharedState->isLockstepAMR() ) {
+
+      if (d_doAMR && i != 0 && !d_sharedState->isLockstepAMR()) {
         int rr = level->getRefinementRatioMaxDim();
         delt_fine /= rr;
-        skip      /= rr;
+        skip /= rr;
       }
-       
-      for( int idw = 0; idw < totalFine; idw += skip ){
-        DataWarehouse* dw = d_scheduler->get_dw( idw );
-        dw->override( delt_vartype( delt_fine ), d_sharedState->get_delt_label(), level );
+
+      for (int idw = 0; idw < totalFine; idw += skip) {
+        DataWarehouse* dw = d_scheduler->get_dw(idw);
+        dw->override(delt_vartype(delt_fine), d_sharedState->get_delt_label(), level);
       }
     }
      
     // override for the global level as well (which only matters on dw 0)
     DataWarehouse* oldDW = d_scheduler->get_dw(0);
-    oldDW->override( delt_vartype(delt), d_sharedState->get_delt_label() );
+    oldDW->override(delt_vartype(delt), d_sharedState->get_delt_label());
 
     // a component may update the output interval or the checkpoint
     // interval during a simulation.  For example in deflagration ->
     // detonation simulations
-    if (d_output && d_sharedState->updateOutputInterval() && !first ) {
+    if (d_output && d_sharedState->updateOutputInterval() && !first) {
       min_vartype outputInv_var;
-      oldDW->get( outputInv_var, d_sharedState->get_outputInterval_label() );
-       
-      if( !outputInv_var.isBenignValue() ) {
-        d_output->updateOutputInterval( outputInv_var );
+      oldDW->get(outputInv_var, d_sharedState->get_outputInterval_label());
+
+      if (!outputInv_var.isBenignValue()) {
+        d_output->updateOutputInterval(outputInv_var);
       }
     }
 
-    if( d_output && d_sharedState->updateCheckpointInterval() && !first ) {
+    if (d_output && d_sharedState->updateCheckpointInterval() && !first) {
       min_vartype checkInv_var;
-      oldDW->get( checkInv_var, d_sharedState->get_checkpointInterval_label() );
-       
-      if ( !checkInv_var.isBenignValue() ){
-        d_output->updateCheckpointInterval( checkInv_var );
+      oldDW->get(checkInv_var, d_sharedState->get_checkpointInterval_label());
+
+      if (!checkInv_var.isBenignValue()) {
+        d_output->updateCheckpointInterval(checkInv_var);
       }
     }
 
@@ -437,20 +437,19 @@ AMRSimulationController::run()
     d_lb->finalizeContributions(currentGrid);
 
     // If debugging output the barrier times.
-    if( dbg_barrier.active() ) {
-      start = Time::currentSeconds();
-      MPI_Barrier( d_myworld->getComm() );
-      barrier_times[4]+=Time::currentSeconds()-start;
+    if (dbg_barrier.active()) {
+      Timers::Simple barrier_timer{};
+      MPI_Barrier(d_myworld->getComm());
+      barrier_times[4] += barrier_timer.seconds();
       double avg[5];
-      MPI_Reduce( barrier_times, avg, 5, MPI_DOUBLE, MPI_SUM, 0, d_myworld->getComm() );
-       
-      if(d_myworld->myrank()==0) {
-        cout << "Barrier Times: "; 
-        for(int i=0;i<5;i++){
-          avg[i]/=d_myworld->size();
-          cout << avg[i] << " ";
+      MPI_Reduce(barrier_times, avg, 5, MPI_DOUBLE, MPI_SUM, 0, d_myworld->getComm());
+      if (d_myworld->myrank() == 0) {
+        std::cout << "Barrier Times: ";
+        for (int i = 0; i < 5; i++) {
+          avg[i] /= d_myworld->size();
+          std::cout << avg[i] << " ";
         }
-        cout << "\n";
+        std::cout << "\n";
       }
     }
 
@@ -698,7 +697,7 @@ AMRSimulationController::subCycleExecute( GridP & grid, int startDW, int dwStrid
       dbg << d_myworld->myrank() << "   Executing TG on level " << levelNum << " with old DW " 
           << curDW << "=" << d_scheduler->get_dw(curDW)->getID() << " and new " 
           << curDW+newDWStride << "=" << d_scheduler->get_dw(curDW+newDWStride)->getID() 
-          << "CO-DW: " << startDW << " CNDW " << startDW+dwStride << " on iteration " << iteration << endl;
+          << "CO-DW: " << startDW << " CNDW " << startDW+dwStride << " on iteration " << iteration << std::endl;
     }
     
     d_scheduler->execute(levelNum, iteration);
@@ -729,7 +728,7 @@ AMRSimulationController::subCycleExecute( GridP & grid, int startDW, int dwStrid
         dbg << d_myworld->myrank() << "   Executing INT TG on level " << levelNum << " with old DW " 
             << curDW << "=" << d_scheduler->get_dw(curDW)->getID() << " and new " 
             << curDW+newDWStride << "=" << d_scheduler->get_dw(curDW+newDWStride)->getID() 
-            << " CO-DW: " << startDW << " CNDW " << startDW+dwStride << " on iteration " << iteration << endl;
+            << " CO-DW: " << startDW << " CNDW " << startDW+dwStride << " on iteration " << iteration << std::endl;
       }
       
       d_scheduler->get_dw(curDW+newDWStride)->unfinalize();
@@ -747,7 +746,7 @@ AMRSimulationController::subCycleExecute( GridP & grid, int startDW, int dwStrid
     if (dbg.active())
       dbg << d_myworld->myrank() << "   Executing Final TG on level " << levelNum << " with old DW " 
           << curDW << " = " << d_scheduler->get_dw(curDW)->getID() << " and new " 
-          << curDW+newDWStride << " = " << d_scheduler->get_dw(curDW+newDWStride)->getID() << endl;
+          << curDW+newDWStride << " = " << d_scheduler->get_dw(curDW+newDWStride)->getID() << std::endl;
     d_scheduler->get_dw(curDW+newDWStride)->unfinalize();
     d_scheduler->execute(d_scheduler->getNumTaskGraphs()-1, 1);
   }
@@ -916,31 +915,31 @@ AMRSimulationController::doRegridding( GridP & currentGrid, bool initialTimestep
     //__________________________________
     //  output regridding stats
     if (d_myworld->myrank() == 0) {
-      cout << "  REGRIDDING:";
+      std::cout << "  REGRIDDING:";
      
       //amrout << "---------- OLD GRID ----------" << endl << *(oldGrid.get_rep());
       for (int i = 0; i < currentGrid->numLevels(); i++) {
-        cout << " Level " << i << " has " << currentGrid->getLevel(i)->numPatches() << " patches...";
+        std::cout << " Level " << i << " has " << currentGrid->getLevel(i)->numPatches() << " patches...";
       }
-      cout << endl;
+      std::cout << std::endl;
       
       if (amrout.active()) {
-        amrout << "---------- NEW GRID ----------" << endl;
-        amrout << "Grid has " << currentGrid->numLevels() << " level(s)" << endl;
+        amrout << "---------- NEW GRID ----------" << std::endl;
+        amrout << "Grid has " << currentGrid->numLevels() << " level(s)" << std::endl;
       
         for ( int levelIndex = 0; levelIndex < currentGrid->numLevels(); levelIndex++ ) {
           LevelP level = currentGrid->getLevel( levelIndex );
           
           amrout << "  Level " << level->getID()
                  << ", indx: "<< level->getIndex()
-                 << " has " << level->numPatches() << " patch(es)" << endl;
+                 << " has " << level->numPatches() << " patch(es)" << std::endl;
             
           for ( Level::patchIterator patchIter = level->patchesBegin(); patchIter < level->patchesEnd(); patchIter++ ) {
             const Patch* patch = *patchIter;
             amrout << "(Patch " << patch->getID() << " proc " << d_lb->getPatchwiseProcessorAssignment(patch)
                    << ": box=" << patch->getExtraBox()
                    << ", lowIndex=" << patch->getExtraCellLowIndex() << ", highIndex="
-                   << patch->getExtraCellHighIndex() << ")" << endl;
+                   << patch->getExtraCellHighIndex() << ")" << std::endl;
           }
         }
       }
@@ -957,12 +956,12 @@ AMRSimulationController::doRegridding( GridP & currentGrid, bool initialTimestep
     double time = Time::currentSeconds() - start;
     
     if(d_myworld->myrank() == 0){
-      cout << "done regridding (" << time << " seconds, regridding took " << regridTime;
+      std::cout << "done regridding (" << time << " seconds, regridding took " << regridTime;
       
       if (!initialTimestep){
-        cout << ", scheduling and copying took " << scheduleTime << ")";
+        std::cout << ", scheduling and copying took " << scheduleTime << ")";
       }
-      cout << endl;
+      std::cout << std::endl;
     }
     return true;
   }  // grid != oldGrid
@@ -996,20 +995,20 @@ AMRSimulationController::recompile(double t, double delt, GridP& currentGrid, in
         // we have the first one already
         d_scheduler->addTaskGraph(Scheduler::NormalTaskGraph);
       }
-      dbg << d_myworld->myrank() << "   Creating level " << i << " tg " << endl;
+      dbg << d_myworld->myrank() << "   Creating level " << i << " tg " << std::endl;
       d_sim->scheduleTimeAdvance(currentGrid->getLevel(i), d_scheduler);
     }
     
     for (int i = 0; i < currentGrid->numLevels(); i++) {
       if (d_doAMR && currentGrid->numLevels() > 1) {
-        dbg << d_myworld->myrank() << "   Doing Int TG level " << i << " tg " << endl;
+        dbg << d_myworld->myrank() << "   Doing Int TG level " << i << " tg " << std::endl;
         // taskgraphs numlevels-2*numlevels-1
         d_scheduler->addTaskGraph(Scheduler::IntermediateTaskGraph);
       }
     
       // schedule a coarsen from the finest level to this level
       for (int j = currentGrid->numLevels()-2; j >= i; j--) {
-        dbg << d_myworld->myrank() << "   schedule coarsen on level " << j << endl;
+        dbg << d_myworld->myrank() << "   schedule coarsen on level " << j << std::endl;
         d_sim->scheduleCoarsen(currentGrid->getLevel(j), d_scheduler);
       }
     
@@ -1018,7 +1017,7 @@ AMRSimulationController::recompile(double t, double delt, GridP& currentGrid, in
       // schedule a refineInterface from this level to the finest level
       for (int j = i; j < currentGrid->numLevels(); j++) {
         if (j != 0) {
-          dbg << d_myworld->myrank() << "   schedule RI on level " << j << " for tg " << i << " coarseold " << (j==i) << " coarsenew " << true << endl;
+          dbg << d_myworld->myrank() << "   schedule RI on level " << j << " for tg " << i << " coarseold " << (j==i) << " coarsenew " << true << std::endl;
           d_sim->scheduleRefineInterface(currentGrid->getLevel(j), d_scheduler, j==i, true);
         }
       }
@@ -1034,7 +1033,7 @@ AMRSimulationController::recompile(double t, double delt, GridP& currentGrid, in
   }
     
   for(int i = currentGrid->numLevels()-1; i >= 0; i--){
-    dbg << d_myworld->myrank() << "   final TG " << i << endl;
+    dbg << d_myworld->myrank() << "   final TG " << i << std::endl;
     
     if (d_regridder) {
       d_regridder->scheduleInitializeErrorEstimate(currentGrid->getLevel(i));
@@ -1107,7 +1106,7 @@ AMRSimulationController::executeTimestep(double t, double& delt, GridP& currentG
      
       // bulletproofing
       if(new_delt < d_timeinfo->delt_min || new_delt <= 0 ){
-        ostringstream warn;
+        std::ostringstream warn;
         warn << "The new delT (" << new_delt << ") is either less than delT_min (" << d_timeinfo->delt_min
              << ") or equal to 0";
         throw InternalError(warn.str(), __FILE__, __LINE__);

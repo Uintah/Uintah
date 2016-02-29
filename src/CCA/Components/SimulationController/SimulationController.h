@@ -36,6 +36,7 @@
 #include <Core/Parallel/UintahParallelComponent.h>
 #include <Core/ProblemSpec/ProblemSpec.h>
 #include <Core/ProblemSpec/ProblemSpecP.h>
+#include <Core/Util/Timers/Timers.hpp>
 
 #include <sci_defs/papi_defs.h> // for PAPI performance counters
 #include <sci_defs/visit_defs.h>
@@ -122,9 +123,9 @@ protected:
   void   calcStartTime   ( void );
   void   setStartSimTime ( double t );
 
-  void preGridSetup();
+  void  preGridSetup();
   GridP gridSetup();
-  void postGridSetup( GridP& grid, double& t);
+  void  postGridSetup( GridP& grid, double& t);
 
   //! adjust delt based on timeinfo and other parameters
   //    'first' is whether this is the first time adjustDelT is called.
@@ -196,7 +197,9 @@ private:
   double d_startTime;             // starting wall time
   double d_startSimTime;          // starting sim time
   double d_prevWallTime;
-     
+
+  Timers::Simple m_wall_time_timer{};
+
   // this is for calculating an exponential moving average
   double d_movingAverage;
 
