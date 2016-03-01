@@ -149,7 +149,7 @@ class PIDXOutputContext {
     unsigned int timestep;
     PIDX_file file;
     MPI_Comm comm;
-    PIDX_variable **variable;         // is this the variableDescription?  --Todd
+    PIDX_variable **varDesc;    // variable descriptor array
 
     PIDX_access access;
     
