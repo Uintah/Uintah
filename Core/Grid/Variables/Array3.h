@@ -288,7 +288,7 @@ namespace Uintah {
       }
 
       inline T& operator()(int i, int j, int k) {
-        return (*this)[IntVector(i,j,k)];
+        return d_window->get(i,j,k);
       }
 #endif
 

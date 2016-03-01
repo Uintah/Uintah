@@ -90,6 +90,13 @@ using KokkosData = Kokkos::View<T***, Kokkos::LayoutLeft, Kokkos::MemoryTraits<K
         return d_data3[idx.z()][idx.y()][idx.x()];
       }
 
+      inline T& get(int i, int j, int k) {
+        CHECKARRAYBOUNDS(i, 0, d_size.x());
+        CHECKARRAYBOUNDS(j, 0, d_size.y());
+        CHECKARRAYBOUNDS(k, 0, d_size.z());
+        return d_data3[k][j][i];
+      }
+
       ///////////////////////////////////////////////////////////////////////
       // Return pointer to the data
       // (**WARNING**not complete implementation)
