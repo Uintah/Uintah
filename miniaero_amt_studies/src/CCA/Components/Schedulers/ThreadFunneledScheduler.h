@@ -112,6 +112,21 @@ class ThreadFunneledScheduler : public MPIScheduler {
 
     friend class TaskRunner;
 
+    struct TotalReduceTag{};
+    // struct TotalReduceMPITag{};
+
+    struct TotalSendTag{};
+    struct TotalSendMPITag{};
+
+    struct TotalRecvTag{};
+    struct TotalRecvMPITag{};
+
+    struct TotalTestMPITag{};
+    struct TotalTaskTag{};
+    struct TotalWaitMPITag{};
+
+    ReductionInfoMapper< TimingStat, double > mpi_info_;
+
 
   private:
 
@@ -123,6 +138,9 @@ class ThreadFunneledScheduler : public MPIScheduler {
     ThreadFunneledScheduler( ThreadFunneledScheduler && )                 = delete;
     ThreadFunneledScheduler& operator=( ThreadFunneledScheduler && )      = delete;
 
+    void emitNetMPIStats();
+
+    void reduceRestartFlag( int task_graph_num  );
 
     void select_tasks();
 
@@ -142,7 +160,10 @@ class ThreadFunneledScheduler : public MPIScheduler {
 
     TaskPool   m_task_pool{};
 
+    // Timers for MPI stats
     Timers::Simple  m_mpi_test_time{};
+    Timers::Simple  m_last_exec_timer{};
+    Timers::Simple  m_task_exec_timer{};
 
     bool     m_abort{ false };
     int      m_current_iteration{ 0 };

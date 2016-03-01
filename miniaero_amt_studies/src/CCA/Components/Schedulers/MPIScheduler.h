@@ -27,36 +27,26 @@
 
 #include <CCA/Components/Schedulers/SchedulerCommon.h>
 #include <CCA/Components/Schedulers/MessageLog.h>
+#include <CCA/Components/Schedulers/CommRecMPI.h>
 #include <CCA/Components/Schedulers/DetailedTasks.h>
 #include <CCA/Components/Schedulers/OnDemandDataWarehouseP.h>
 #include <CCA/Ports/DataWarehouseP.h>
 
 #include <Core/Parallel/PackBufferInfo.h>
 #include <Core/Grid/Task.h>
-#include <Core/Lockfree/Lockfree_Pool.hpp>
-#include <Core/Parallel/CommunicationList.h>
 #include <Core/Parallel/BufferInfo.h>
+#include <Core/Thread/Mutex.h>
 #include <Core/Util/InfoMapper.h>
-#include <Core/Util/Timers/Timers.hpp>
 
-#include <chrono>
-#include <fstream>
-#include <map>
-#include <mutex>
 #include <vector>
+#include <map>
+#include <fstream>
 
 namespace Uintah {
 
-namespace {
-
-DebugStream mpi_stats("MPIStats", false);
-
-} // namespace
+static DebugStream mpi_stats("MPIStats", false);
 
 class Task;
-
-using clock_type = std::chrono::high_resolution_clock;
-using nanoseconds = std::chrono::nanoseconds;
 
 /**************************************
 
@@ -104,6 +94,8 @@ class MPIScheduler : public SchedulerCommon {
 
             void postMPIRecvs( DetailedTask* task, bool only_old_recvs, int abort_point, int iteration );
 
+            int  pendingMPIRecvs();
+
             void runTask( DetailedTask* task, int iteration, int thread_id = 0 );
 
     virtual void runReductionTask( DetailedTask* task );
@@ -126,10 +118,10 @@ class MPIScheduler : public SchedulerCommon {
         double max_volume;
 
         // do SUM and MAX reduction for numMessages and messageVolume
-        MPI_Reduce(&numMessages_  , &total_messages, 1, MPI_UNSIGNED,MPI_SUM, 0, d_myworld->getComm());
-        MPI_Reduce(&messageVolume_, &total_volume  , 1, MPI_DOUBLE,MPI_SUM  , 0, d_myworld->getComm());
-        MPI_Reduce(&numMessages_  , &max_messages  , 1, MPI_UNSIGNED,MPI_MAX, 0, d_myworld->getComm());
-        MPI_Reduce(&messageVolume_, &max_volume    , 1, MPI_DOUBLE,MPI_MAX  , 0, d_myworld->getComm());
+        MPI_Reduce(&numMessages_,&total_messages,1,MPI_UNSIGNED,MPI_SUM,0,d_myworld->getComm());
+        MPI_Reduce(&messageVolume_,&total_volume,1,MPI_DOUBLE,MPI_SUM,0,d_myworld->getComm());
+        MPI_Reduce(&numMessages_,&max_messages,1,MPI_UNSIGNED,MPI_MAX,0,d_myworld->getComm());
+        MPI_Reduce(&messageVolume_,&max_volume,1,MPI_DOUBLE,MPI_MAX,0,d_myworld->getComm());
 
         if( d_myworld->myrank() == 0 ) {
           mpi_stats << "MPIStats: Num Messages (avg): " << total_messages/(float)d_myworld->size() << " (max):" << max_messages << std::endl;
@@ -141,7 +133,7 @@ class MPIScheduler : public SchedulerCommon {
     // timing statistics to test the mpi functionality
     enum TimingStat
     {
-      TotalReduce,
+      TotalReduce = 0,
       TotalSend,
       TotalRecv,
       TotalTask,
@@ -153,26 +145,13 @@ class MPIScheduler : public SchedulerCommon {
       MAX_TIMING_STATS
     };
 
-    struct TotalReduceTag{};
-    // struct TotalReduceMPITag{};
-
-    struct TotalSendTag{};
-    struct TotalSendMPITag{};
-
-    struct TotalRecvTag{};
-    struct TotalRecvMPITag{};
-
-    struct TotalTestMPITag{};
-    struct TotalTaskTag{};
-    struct TotalWaitMPITag{};
-
     ReductionInfoMapper< TimingStat, double > mpi_info_;
-
+    
     void computeNetRunTimeStats(InfoMapper< SimulationState::RunTimeStat, double >& runTimeStats);
 
-    MPIScheduler *  parentScheduler_;
+    MPIScheduler*       parentScheduler_;
 
-    // Performs the reduction task. (In threaded schedulers, a single worker thread will execute this.)
+    // Performs the reduction task. (In threaded schdeulers, a single worker thread will execute this.)
     virtual void initiateReduction( DetailedTask* task );
 
     enum {
@@ -191,18 +170,14 @@ class MPIScheduler : public SchedulerCommon {
 
     void emitTime( const char* label, double time );
 
-    void emitNetMPIStats();
-
-    void reduceRestartFlag( int task_graph_num  );
-
     void outputTimingStats( const char* label );
 
     MessageLog                  log;
-    const Output              * oport_;
+    const Output*               oport_;
+    CommRecMPI                  sends_[MAX_THREADS];
+    CommRecMPI                  recvs_;
 
-    SendCommList                m_send_list;
-    RecvCommList                m_recv_list;
-
+    double                      d_lasttime;
     std::vector<const char*>    d_labels;
     std::vector<double>         d_times;
 
@@ -217,20 +192,17 @@ class MPIScheduler : public SchedulerCommon {
     // The following locks are for multi-threaded schedulers that derive from MPIScheduler
     //   This eliminates miles of unnecessarily redundant code in threaded schedulers
     //-------------------------------------------------------------------------
-    std::mutex      dlbLock;                // load balancer lock
-
-    // Timers for MPI stats
-    Timers::Simple  m_last_exec_timer{};
-    Timers::Simple  m_task_exec_timer{};
+    // multiple reader, single writer lock (pthread_rwlock_t wrapper)
+    mutable CrowdMonitor        recvLock;               // CommRecMPI recvs lock
+    mutable CrowdMonitor        sendLock;               // CommRecMPI sends lock
+    SCIRun::Mutex               dlbLock;                // load balancer lock
+    SCIRun::Mutex               waittimesLock;          // MPI wait times lock
 
   private:
 
-    // disable copy, assignment, and move
-    MPIScheduler( const MPIScheduler & )            = delete;
-    MPIScheduler& operator=( const MPIScheduler & ) = delete;
-    MPIScheduler( MPIScheduler &&)                  = delete;
-    MPIScheduler& operator=( MPIScheduler && )      = delete;
-
+    // Disable copy and assignment
+    MPIScheduler( const MPIScheduler& );
+    MPIScheduler& operator=( const MPIScheduler& );
 };
 
 } // End namespace Uintah

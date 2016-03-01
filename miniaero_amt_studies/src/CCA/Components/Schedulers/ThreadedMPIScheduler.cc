@@ -44,9 +44,10 @@ extern SCIRun::Mutex coutLock;
 extern SCIRun::Mutex cerrLock;
 
 extern DebugStream taskdbg;
-extern DebugStream timeout;
+extern DebugStream mpidbg;
 
 static DebugStream threadedmpi_dbg(             "ThreadedMPI_DBG",             false);
+static DebugStream threadedmpi_timeout(         "ThreadedMPI_TimingsOut",      false);
 static DebugStream threadedmpi_queuelength(     "ThreadedMPI_QueueLength",     false);
 static DebugStream threadedmpi_threaddbg(       "ThreadedMPI_ThreadDBG",       false);
 static DebugStream threadedmpi_compactaffinity( "ThreadedMPI_CompactAffinity", true);
@@ -58,7 +59,17 @@ ThreadedMPIScheduler::ThreadedMPIScheduler( const ProcessorGroup*       myworld,
     d_nextsignal("next condition"),
     d_nextmutex("next mutex")
 {
-
+  if (threadedmpi_timeout.active()) {
+    char filename[64];
+    sprintf(filename, "timingStats.%d", d_myworld->myrank());
+    timingStats.open(filename);
+    if (d_myworld->myrank() == 0) {
+      sprintf(filename, "timingStats.%d.max", d_myworld->size());
+      maxStats.open(filename);
+      sprintf(filename, "timingStats.%d.avg", d_myworld->size());
+      avgStats.open(filename);
+    }
+  }
 }
 
 //______________________________________________________________________
@@ -75,12 +86,11 @@ ThreadedMPIScheduler::~ThreadedMPIScheduler()
     t_thread[i]->join();
   }
 
-  // detailed MPI information, written to file per rank
-  if (timeout.active()) {
+  if (threadedmpi_timeout.active()) {
     timingStats.close();
     if (d_myworld->myrank() == 0) {
-      avgStats.close();
       maxStats.close();
+      avgStats.close();
     }
   }
 }
@@ -270,9 +280,20 @@ ThreadedMPIScheduler::execute( int tgnum     /* = 0 */,
     dts->localTask(i)->resetDependencyCounts();
   }
 
+  if (threadedmpi_timeout.active()) {
+    d_labels.clear();
+    d_times.clear();
+    //emitTime("time since last execute");
+  }
+
   int me = d_myworld->myrank();
   makeTaskGraphDoc(dts, me);
 
+  // TODO - figure out and fix this (APH - 01/12/15)
+//  if (timeout.active()) {
+//    emitTime("taskGraph output");
+//  }
+  
   mpi_info_.reset( 0 );
 
   int numTasksDone = 0;
@@ -352,7 +373,7 @@ ThreadedMPIScheduler::execute( int tgnum     /* = 0 */,
         }
       }
       else {
-        MPIScheduler::initiateTask(task, abort, abort_point, iteration);
+        initiateTask(task, abort, abort_point, iteration);
         task->markInitiated();
         task->checkExternalDepCount();
         if (taskdbg.active()) {
@@ -393,7 +414,7 @@ ThreadedMPIScheduler::execute( int tgnum     /* = 0 */,
       }
       else {  // Task::OncePerProc task
         ASSERT(reducetask->getTask()->usesMPI());
-        MPIScheduler::initiateTask(reducetask, abort, abort_point, iteration);
+        initiateTask(reducetask, abort, abort_point, iteration);
         reducetask->markInitiated();
 
         ASSERT(reducetask->getExternalDepCount() == 0)
@@ -467,23 +488,59 @@ ThreadedMPIScheduler::execute( int tgnum     /* = 0 */,
     proc0cout << "average queue length:" << allqueuelength / d_myworld->size() << std::endl;
   }
 
-  emitNetMPIStats();
+  if (threadedmpi_timeout.active()) {
+    emitTime("MPI send time", mpi_info_[TotalSendMPI]);
+    emitTime("MPI Testsome time", mpi_info_[TotalTestMPI]);
+    emitTime("Total send time", mpi_info_[TotalSend] - mpi_info_[TotalSendMPI] - mpi_info_[TotalTestMPI]);
+    emitTime("MPI recv time", mpi_info_[TotalRecvMPI]);
+    emitTime("MPI wait time", mpi_info_[TotalWaitMPI]);
+    emitTime("Total recv time", mpi_info_[TotalRecv] - mpi_info_[TotalRecvMPI] - mpi_info_[TotalWaitMPI]);
+    emitTime("Total task time", mpi_info_[TotalTask]);
+    emitTime("Total MPI reduce time", mpi_info_[TotalReduceMPI]);
+    emitTime("Total reduction time", mpi_info_[TotalReduce] - mpi_info_[TotalReduceMPI]);
+    emitTime("Total comm time", mpi_info_[TotalRecv] + mpi_info_[TotalSend] + mpi_info_[TotalReduce]);
+
+    double time = Time::currentSeconds();
+    double totalexec = time - d_lasttime;
+
+    d_lasttime = time;
+
+    emitTime("Other excution time",
+             totalexec - mpi_info_[TotalSend] - mpi_info_[TotalRecv] - mpi_info_[TotalTask] - mpi_info_[TotalReduce]);
+  }
   
   // compute the net timings
   if (d_sharedState != 0) {
+      
     computeNetRunTimeStats(d_sharedState->d_runTimeStats);
+    
     for (int i = 0; i < numThreads_; i++) {
-      d_sharedState->d_runTimeStats[SimulationState::TaskWaitThreadTime] += t_worker[i]->getWaittime();
+      d_sharedState->d_runTimeStats[SimulationState::TaskWaitThreadTime] +=
+          t_worker[i]->getWaittime();
     }
   }
 
-  // Copy the restart flag to all processors
-  reduceRestartFlag(tgnum);
+  //if(timeout.active())
+  //emitTime("final wait");
+  if (restartable && tgnum == (int)graphs.size() - 1) {
+    // Copy the restart flag to all processors
+    int myrestart = dws[dws.size() - 1]->timestepRestarted();
+    int netrestart;
+
+    MPI_Allreduce(&myrestart, &netrestart, 1, MPI_INT, MPI_LOR, d_myworld->getComm());
+
+    if (netrestart) {
+      dws[dws.size() - 1]->restartTimestep();
+      if (dws[0]) {
+        dws[0]->setRestarted();
+      }
+    }
+  }
 
   finalizeTimestep();
   log.finishTimestep();
 
-  if (!parentScheduler_) {  // only do on toplevel scheduler
+  if( threadedmpi_timeout.active() && !parentScheduler_ ) {  // only do on toplevel scheduler
     outputTimingStats("ThreadedMPIScheduler");
   }
 
