@@ -527,11 +527,9 @@ void
 UnifiedScheduler::execute( int tgnum     /* = 0 */,
                            int iteration /* = 0 */ )
 {
-  // copy data and restart timesteps must be single threaded for now
-  bool isMPICopyDataTS = Uintah::Parallel::usingMPI() && d_sharedState->isCopyDataTimestep();
-  bool runSingleThreaded = isMPICopyDataTS || d_isRestartInitTimestep;
-  if (runSingleThreaded) {
-    MPIScheduler::execute( tgnum, iteration );
+  // copy data timestep must be single threaded for now
+  if (d_sharedState->isCopyDataTimestep()) {
+    MPIScheduler::execute(tgnum, iteration);
     return;
   }
 
@@ -566,12 +564,6 @@ UnifiedScheduler::execute( int tgnum     /* = 0 */,
     d_labels.clear();
     d_times.clear();
   }
-
-  //  // TODO - determine if this TG output code is even working correctly (APH - 09/16/15)
-  //  makeTaskGraphDoc(dts, d_myworld->myrank());
-  //  if (useInternalDeps() && emit_timings) {
-  //    emitTime("taskGraph output");
-  //  }
 
   mpi_info_.reset( 0 );
 
