@@ -139,7 +139,7 @@ WARNING
 #else //UINTAH_ENABLE_KOKKOS
       inline const T& operator()(int i, int j, int k) const
       {
-        return (*this)[IntVector(i,j,k)];
+        return this->rep_(i,j,k);
       }
 #endif
 
