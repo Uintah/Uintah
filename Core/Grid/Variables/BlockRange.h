@@ -67,12 +67,20 @@ void parallel_for( BlockRange const & r, const Functor & f )
   const int jb = r.begin(1); const int je = r.end(1);
   const int kb = r.begin(2); const int ke = r.end(2);
 
+#if defined( UINTAH_ENABLE_KOKKOS )
 #pragma omp parallel for collapse(3)
   for (int k=kb; k<ke; ++k) {
   for (int j=jb; j<je; ++j) {
   for (int i=ib; i<ie; ++i) {
     f(i,j,k);
   }}}
+#else
+  for (int k=kb; k<ke; ++k) {
+  for (int j=jb; j<je; ++j) {
+  for (int i=ib; i<ie; ++i) {
+    f(i,j,k);
+  }}}
+#endif
 };
 
 template <typename Functor, typename ReductionType>
@@ -83,12 +91,20 @@ void parallel_reduce( BlockRange const & r, const Functor & f, ReductionType & r
   const int kb = r.begin(2); const int ke = r.end(2);
 
 ReductionType tmp = red;
+#if defined( UINTAH_ENABLE_KOKKOS )
 #pragma omp parallel for collapse(3) reduction(+:tmp)
   for (int k=kb; k<ke; ++k) {
   for (int j=jb; j<je; ++j) {
   for (int i=ib; i<ie; ++i) {
     f(i,j,k,tmp);
   }}}
+#else
+  for (int k=kb; k<ke; ++k) {
+  for (int j=jb; j<je; ++j) {
+  for (int i=ib; i<ie; ++i) {
+    f(i,j,k,tmp);
+  }}}
+#endif
   red = tmp;
 };
 
