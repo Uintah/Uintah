@@ -41,9 +41,10 @@ extern SCIRun::Mutex      cerrLock;
 
 extern DebugStream        taskdbg;
 extern DebugStream        taskorder;
-extern DebugStream        timeout;
+extern DebugStream        execout;
 
 static DebugStream dynamicmpi_dbg(        "DynamicMPI_DBG",         false);
+static DebugStream dynamicmpi_timeout(    "DynamicMPI_TimingsOut",  false);
 static DebugStream dynamicmpi_queuelength("DynamicMPI_QueueLength", false);
 
 
@@ -55,14 +56,25 @@ DynamicMPIScheduler::DynamicMPIScheduler( const ProcessorGroup*      myworld,
   : MPIScheduler( myworld, oport, parentScheduler )
 {
   taskQueueAlg_ =  MostMessages;
+
+  if (dynamicmpi_timeout.active()) {
+    char filename[64];
+    sprintf(filename, "timingStats.%d", d_myworld->myrank());
+    timingStats.open(filename);
+    if (d_myworld->myrank() == 0) {
+      sprintf(filename, "timingStats.avg");
+      avgStats.open(filename);
+      sprintf(filename, "timingStats.max");
+      maxStats.open(filename);
+    }
+  }
 }
 
 //______________________________________________________________________
 //
 DynamicMPIScheduler::~DynamicMPIScheduler()
 {
-  // detailed MPI information, written to file per rank
-  if (timeout.active()) {
+  if (dynamicmpi_timeout.active()) {
     timingStats.close();
     if (d_myworld->myrank() == 0) {
       avgStats.close();
@@ -187,8 +199,17 @@ DynamicMPIScheduler::execute( int tgnum     /*=0*/,
     dts->localTask(i)->resetDependencyCounts();
   }
 
+  if(dynamicmpi_timeout.active()) {
+    d_labels.clear();
+    d_times.clear();
+    //emitTime("time since last execute");
+  }
+
   int me = d_myworld->myrank();
   makeTaskGraphDoc(dts, me);
+
+  //if(timeout.active())
+    //emitTime("taskGraph output");
 
   mpi_info_.reset( 0 );
 
@@ -392,30 +413,53 @@ DynamicMPIScheduler::execute( int tgnum     /*=0*/,
     proc0cout << "average queue length:" << allqueuelength / d_myworld->size() << std::endl;
   }
   
-  emitNetMPIStats();
+  if (dynamicmpi_timeout.active()) {
+    emitTime("MPI send time", mpi_info_[TotalSendMPI]);
+    emitTime("MPI Testsome time", mpi_info_[TotalTestMPI]);
+    emitTime("Total send time", mpi_info_[TotalSend] - mpi_info_[TotalSendMPI] - mpi_info_[TotalTestMPI]);
+    emitTime("MPI recv time", mpi_info_[TotalRecvMPI]);
+    emitTime("MPI wait time", mpi_info_[TotalWaitMPI]);
+    emitTime("Total recv time", mpi_info_[TotalRecv] - mpi_info_[TotalRecvMPI] - mpi_info_[TotalWaitMPI]);
+    emitTime("Total task time", mpi_info_[TotalTask]);
+    emitTime("Total MPI reduce time", mpi_info_[TotalReduceMPI]);
+    emitTime("Total reduction time", mpi_info_[TotalReduce] - mpi_info_[TotalReduceMPI]);
+    emitTime("Total comm time", mpi_info_[TotalRecv] + mpi_info_[TotalSend] + mpi_info_[TotalReduce]);
+
+    double time = Time::currentSeconds();
+    double totalexec = time - d_lasttime;
+    d_lasttime = time;
+
+    emitTime("Other excution time", totalexec - mpi_info_[TotalSend] - mpi_info_[TotalRecv] - mpi_info_[TotalTask] - mpi_info_[TotalReduce]);
+  }
 
   // compute the net timings
   if (d_sharedState != 0) {  // subschedulers don't have a sharedState
     computeNetRunTimeStats(d_sharedState->d_runTimeStats);
   }
 
-  auto ready_request = [](SendCommNode const& n)->bool { return n.wait(); };
-  while (!m_send_list.empty()) {
-    SendCommList::iterator iter = m_send_list.find_any(ready_request);
-    if (iter) {
-      m_send_list.erase(iter);
+  sends_[0].waitall(d_myworld);
+  ASSERT(sends_[0].numRequests() == 0);
+
+  if (restartable && tgnum == (int)graphs.size() - 1) {
+    // Copy the restart flag to all processors
+    int myrestart = dws[dws.size() - 1]->timestepRestarted();
+    int netrestart;
+
+    MPI_Allreduce(&myrestart, &netrestart, 1, MPI_INT, MPI_LOR, d_myworld->getComm());
+
+    if (netrestart) {
+      dws[dws.size() - 1]->restartTimestep();
+      if (dws[0]) {
+        dws[0]->setRestarted();
+      }
     }
   }
-  ASSERT(m_send_list.empty());
-
-  // Copy the restart flag to all processors
-  reduceRestartFlag(tgnum);
 
   finalizeTimestep();
   log.finishTimestep();
   
 
-  if (!parentScheduler_) {  // only do on toplevel scheduler
+  if( ( execout.active() || dynamicmpi_timeout.active() ) && !parentScheduler_ ) {  // only do on toplevel scheduler
     outputTimingStats("DynamicMPIScheduler");
   }
 

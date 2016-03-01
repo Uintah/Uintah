@@ -43,12 +43,15 @@
 
 using namespace Uintah;
 
+extern DebugStream timeout;
+
 //______________________________________________________________________
 //
 namespace {
 
-DebugStream threaded_dbg(       "ThreadFunneled_DBG",        false);
-DebugStream threaded_threaddbg( "ThreadFunneled_ThreadDBG",  false);
+DebugStream threaded_dbg(       "ThreadFunneled_DBG"      ,  false );
+DebugStream threaded_threaddbg( "ThreadFunneled_ThreadDBG",  false );
+DebugStream threaded_timeout(   "ThreadFunneled_ThreadDBG",  false );
 
 Timers::Simple  s_total_exec_time {};
 std::mutex      s_io_mutex;
@@ -355,7 +358,7 @@ void ThreadFunneledScheduler::execute(  int tgnum /*=0*/ , int iteration /*=0*/ 
       insert_handle = m_task_pool.insert(insert_handle, task);
     }
     else { // nothing to do process MPI
-      processMPIRecvs(TEST);
+      MPIScheduler::processMPIRecvs(TEST);
     }
   }
 
@@ -399,6 +402,78 @@ void ThreadFunneledScheduler::execute(  int tgnum /*=0*/ , int iteration /*=0*/ 
 
 //______________________________________________________________________
 //
+void ThreadFunneledScheduler::emitNetMPIStats()
+{
+  mpi_info_[TotalWaitMPI]    = Timers::ThreadTrip< TotalWaitMPITag >::seconds();
+  mpi_info_[TotalReduce]     = Timers::ThreadTrip< TotalReduceTag >::seconds();
+  mpi_info_[TotalReduceMPI]  = Timers::ThreadTrip< TotalReduceTag >::seconds();
+  mpi_info_[TotalSend]       = Timers::ThreadTrip< TotalSendTag >::seconds();
+  mpi_info_[TotalSendMPI]    = Timers::ThreadTrip< TotalSendMPITag >::seconds();
+  mpi_info_[TotalRecv]       = Timers::ThreadTrip< TotalRecvTag >::seconds();
+  mpi_info_[TotalRecvMPI]    = Timers::ThreadTrip< TotalRecvMPITag >::seconds();
+  mpi_info_[TotalTask]       = Timers::ThreadTrip< TotalTaskTag >::seconds();
+  mpi_info_[TotalTestMPI]    = Timers::ThreadTrip< TotalTestMPITag >::seconds();
+
+  Timers::ThreadTrip< TotalWaitMPITag >::reset();
+  Timers::ThreadTrip< TotalReduceTag >::reset();
+  Timers::ThreadTrip< TotalReduceTag >::reset();
+  Timers::ThreadTrip< TotalSendTag >::reset();
+  Timers::ThreadTrip< TotalSendMPITag >::reset();
+  Timers::ThreadTrip< TotalRecvTag >::reset();
+  Timers::ThreadTrip< TotalRecvMPITag >::reset();
+  Timers::ThreadTrip< TotalTaskTag >::reset();
+  Timers::ThreadTrip< TotalTestMPITag >::reset();
+
+
+  if (threaded_timeout.active()) {
+
+    d_labels.clear();
+    d_times.clear();
+
+
+    emitTime("Total task time"      , mpi_info_[TotalTask]);
+    emitTime("MPI Send time"        , mpi_info_[TotalSendMPI]);
+    emitTime("MPI Recv time"        , mpi_info_[TotalRecvMPI]);
+    emitTime("MPI TestSome time"    , mpi_info_[TotalTestMPI]);
+    emitTime("MPI Wait time"        , mpi_info_[TotalWaitMPI]);
+    emitTime("MPI reduce time"      , mpi_info_[TotalReduceMPI]);
+    emitTime("Total reduction time" , mpi_info_[TotalReduce] - mpi_info_[TotalReduceMPI]);
+    emitTime("Total send time"      , mpi_info_[TotalSend]   - mpi_info_[TotalSendMPI] - mpi_info_[TotalTestMPI]);
+    emitTime("Total recv time"      , mpi_info_[TotalRecv]   - mpi_info_[TotalRecvMPI] - mpi_info_[TotalWaitMPI]);
+    emitTime("Total comm time"      , mpi_info_[TotalRecv]   + mpi_info_[TotalSend]    + mpi_info_[TotalReduce]);
+
+    double totalexec = m_last_exec_timer.seconds();
+    m_last_exec_timer.reset();
+
+    emitTime("Other execution time", totalexec - mpi_info_[TotalSend] - mpi_info_[TotalRecv] - mpi_info_[TotalTask] - mpi_info_[TotalReduce]);
+  }
+}
+
+
+//______________________________________________________________________
+//
+void
+ThreadFunneledScheduler::reduceRestartFlag( int task_graph_num )
+{
+  if (restartable && task_graph_num == static_cast<int>(graphs.size() - 1)) {
+    // Copy the restart flag to all processors
+    int myrestart = dws[dws.size() - 1]->timestepRestarted();
+    int netrestart;
+
+    MPI_Allreduce(&myrestart, &netrestart, 1, MPI_INT, MPI_LOR, d_myworld->getComm());
+
+    if (netrestart) {
+      dws[dws.size() - 1]->restartTimestep();
+      if (dws[0]) {
+        dws[0]->setRestarted();
+      }
+    }
+  }
+}
+
+
+//______________________________________________________________________
+//
 void ThreadFunneledScheduler::select_tasks()
 {
   TaskPool::handle find_handle;
@@ -407,7 +482,7 @@ void ThreadFunneledScheduler::select_tasks()
     if (iter) {
       find_handle = iter;
       DetailedTask* ready_task = *iter;
-      MPIScheduler::runTask(ready_task, Impl::t_tid);
+      MPIScheduler::runTask(ready_task, m_current_iteration, Impl::t_tid);
       m_task_pool.erase(iter);
       m_num_tasks_done.fetch_add(1, std::memory_order_relaxed);
       m_phase_tasks_done[ready_task->getTask()->d_phase].fetch_add(1, std::memory_order_relaxed);
