@@ -147,7 +147,7 @@ public:
   friend class TaskRunner;
 
   struct TotalReduceTag{};
-  // struct TotalReduceMPITag{};
+  struct TotalReduceMPITag{};
 
   struct TotalSendTag{};
   struct TotalSendMPITag{};
@@ -157,6 +157,8 @@ public:
 
   struct TotalTestMPITag{};
   struct TotalTaskTag{};
+
+  struct TotalWaitTag{};
   struct TotalWaitMPITag{};
 
 
@@ -184,11 +186,11 @@ private:
 
   void post_MPI_recvs( DetailedTask * task, bool only_old_recvs, int abort_point, int iteration );
 
-  void post_MPI_sends( DetailedTask * task, int iteration, int thread_id = 0 );
+  void post_MPI_sends( DetailedTask * task, int iteration );
 
   bool process_MPI_requests();
 
-  void run_task( DetailedTask * task, int iteration, int thread_id = 0 );
+  void run_task( DetailedTask * task, int iteration );
 
   void run_reduction_task( DetailedTask* task );
 
@@ -198,7 +200,7 @@ private:
 
   void compute_net_runtime_stats( InfoMapper< SimulationState::RunTimeStat, double > & runTimeStats );
 
-  void copy_restart_flag( int task_graph_num  );
+  void copy_restart_flag( int task_graph_num );
 
   void output_timing_stats( const char* label );
 
@@ -207,16 +209,11 @@ private:
   // Methods for TaskRunner management
   void select_tasks();
 
-  void run_task( DetailedTask * task, int iteration );
-
   void thread_fence();
 
   static void init_threads( ThreadedTaskScheduler * scheduler, int num_threads );
 
   static void set_runner( TaskRunner * runner, int tid );
-
-  static constexpr size_t one = 1;
-
 
   std::vector<int>             m_phase_tasks{};
   std::vector<DetailedTask*>   m_phase_sync_tasks{};

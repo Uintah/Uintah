@@ -399,7 +399,7 @@ void ThreadedTaskScheduler::execute(  int tgnum /*=0*/ , int iteration /*=0*/ )
         post_MPI_recvs(sync_task, m_abort, m_abort_point, iteration);
         sync_task->markInitiated();
         ASSERT(sync_task->getExternalDepCount() == 0)
-        run_task(sync_task, iteration, Impl::t_tid);
+        run_task(sync_task, iteration);
       }
       ASSERT(sync_task->getTask()->d_phase == m_current_phase);
       m_num_tasks_done.fetch_add(1, std::memory_order_relaxed);
@@ -634,10 +634,7 @@ void ThreadedTaskScheduler::post_MPI_recvs( DetailedTask * task
 
 //______________________________________________________________________
 //
-void ThreadedTaskScheduler::post_MPI_sends( DetailedTask * task
-                                          , int            iteration
-                                          , int            thread_id
-                                          )
+void ThreadedTaskScheduler::post_MPI_sends( DetailedTask * task, int iteration )
 {
   Timers::ThreadTrip< TotalSendTag > send_timer;
 
@@ -763,10 +760,7 @@ bool ThreadedTaskScheduler::process_MPI_requests()
 
 //______________________________________________________________________
 //
-void ThreadedTaskScheduler::run_task( DetailedTask * task
-                                    , int            iteration
-                                    , int            thread_id
-                                    )
+void ThreadedTaskScheduler::run_task( DetailedTask * task, int iteration )
 {
   if (waitout.active()) {
     waittimes[task->getTask()->getName()].fetch_add( Timers::ThreadTrip< TotalWaitMPITag >::nanoseconds(), std::memory_order_relaxed );
@@ -810,7 +804,7 @@ void ThreadedTaskScheduler::run_task( DetailedTask * task
     }
   }
 
-  post_MPI_sends(task, iteration, thread_id);
+  post_MPI_sends(task, iteration);
 
   task->done(dws);
 
@@ -983,10 +977,12 @@ void ThreadedTaskScheduler::select_tasks()
     if (iter) {
       find_handle = iter;
       DetailedTask* ready_task = *iter;
-      run_task(ready_task, m_current_iteration, Impl::t_tid);
+      run_task(ready_task, m_current_iteration);
       m_task_pool.erase(iter);
       m_num_tasks_done.fetch_add(1, std::memory_order_relaxed);
       m_phase_tasks_done[ready_task->getTask()->d_phase].fetch_add(1, std::memory_order_relaxed);
+    } else {
+      process_MPI_requests();
     }
   }
 }
