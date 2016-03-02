@@ -257,9 +257,15 @@ using SCIRun::Mutex;
       std::vector<DataArchiver::SaveItem> 
           findAllVariableTypes( std::vector< SaveItem >& saveLabels,
                                  const TypeDescription::Type TD );
-                                 
+      
+      //! bulletproofing so user can't save unsupported var type
+      void isVarTypeSupported( std::vector< SaveItem >& saveLabels,
+                               std::vector<TypeDescription::Type> pidxVarTypes );
+           
       void createPIDX_dirs( std::vector< SaveItem >& saveLabels,
                             Dir& levelDir );
+                            
+                            
        
        //__________________________________
        //! returns a ProblemSpecP reading the xml file xmlName.
