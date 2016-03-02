@@ -226,6 +226,16 @@ public:
     return m_size->load( std::memory_order_relaxed );
   }
 
+  /// size( size_t level )
+  ///
+  /// number of values currently in the given level
+  LOCKFREE_FORCEINLINE
+  size_type size(size_t level) const
+  {
+    return m_pools[level].size();
+  }
+
+
   /// ref_count()
   ///
   /// number of references to the pool
@@ -241,6 +251,15 @@ public:
   bool empty() const
   {
     return size() == 0u;
+  }
+
+  /// empty( size_t level )
+  ///
+  /// is the pool empty
+  LOCKFREE_FORCEINLINE
+  bool empty( size_t level ) const
+  {
+    return size(level) == 0u;
   }
 
 

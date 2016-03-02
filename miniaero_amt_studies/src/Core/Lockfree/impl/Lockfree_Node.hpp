@@ -78,7 +78,7 @@ public:
 
     // release the iterator
     LOCKFREE_FORCEINLINE
-    size_t level() const { return m_node->impl_pool_id(); }
+    size_t level() const { return m_node ? m_node->impl_pool_id() : ~static_cast<size_t>(0); }
 
     // release the iterator
     LOCKFREE_FORCEINLINE
@@ -162,6 +162,10 @@ public:
     {
       return (m_node != nullptr) && m_node->test_used( m_idx );
     }
+
+    // release the iterator
+    LOCKFREE_FORCEINLINE
+    size_t level() const { return m_node ? m_node->impl_pool_id() : ~static_cast<size_t>(0); }
 
     // construct an invalid handle
     handle() = default;
