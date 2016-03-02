@@ -45,7 +45,7 @@ SRCS += \
         $(SRCDIR)/SingleProcessorScheduler.cc \
         $(SRCDIR)/TaskGraph.cc                \
         $(SRCDIR)/ThreadedMPIScheduler.cc     \
-        $(SRCDIR)/ThreadFunneledScheduler.cc  \
+        $(SRCDIR)/ThreadedTaskScheduler.cc    \
         $(SRCDIR)/UnifiedScheduler.cc         \
         $(SRCDIR)/Util.cc                     \
         \

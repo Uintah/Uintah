@@ -28,7 +28,7 @@
 #include <CCA/Components/Schedulers/MPIScheduler.h>
 #include <CCA/Components/Schedulers/DynamicMPIScheduler.h>
 #include <CCA/Components/Schedulers/ThreadedMPIScheduler.h>
-#include <CCA/Components/Schedulers/ThreadFunneledScheduler.h>
+#include <CCA/Components/Schedulers/ThreadedTaskScheduler.h>
 #include <CCA/Components/Schedulers/UnifiedScheduler.h>
 
 #include <Core/Exceptions/ProblemSetupException.h>
@@ -49,7 +49,7 @@ namespace {
 
 DebugStream singleProcessor("SingleProcessorScheduler", false);
 DebugStream dynamicMPI(     "DynamicMPIScheduler"     , false);
-DebugStream thread_funneled("ThreadFunneledScheduler" , false);
+DebugStream thread_funneled("ThreadedTaskScheduler"   , false);
 DebugStream unified(        "UnifiedScheduler"        , false);
 
 }
@@ -91,7 +91,7 @@ SchedulerFactory::create( const ProblemSpecP   & ps,
         scheduler = "Unified";
       }
       else if (thread_funneled.active()) {
-        scheduler = "ThreadFunneled";
+        scheduler = "ThreadedTask";
       }
       else {
         scheduler = "ThreadedMPI";
@@ -138,8 +138,8 @@ SchedulerFactory::create( const ProblemSpecP   & ps,
   else if (scheduler == "ThreadedMPI") {
     sch = scinew ThreadedMPIScheduler(world, output, nullptr);
   }
-  else if (scheduler == "ThreadFunneled") {
-    sch = scinew ThreadFunneledScheduler(world, output, nullptr);
+  else if (scheduler == "ThreadedTask") {
+    sch = scinew ThreadedTaskScheduler(world, output, nullptr);
   }
   else if (scheduler == "Unified") {
     sch = scinew UnifiedScheduler(world, output, nullptr);
@@ -154,7 +154,7 @@ SchedulerFactory::create( const ProblemSpecP   & ps,
   //__________________________________
   //  bulletproofing
   // "-nthreads" at command line, something other than "ThreadedMPI" specified in UPS file (w/ -do_not_validate)
-  if ((Uintah::Parallel::getNumThreads() > 0) && ((scheduler != "Unified") && (scheduler != "ThreadedMPI") && (scheduler != "ThreadFunneled"))) {
+  if ((Uintah::Parallel::getNumThreads() > 0) && ((scheduler != "Unified") && (scheduler != "ThreadedMPI") && (scheduler != "ThreadedTask"))) {
     throw ProblemSetupException("ThreadedMPI or Unified Scheduler needed for '-nthreads <n>' option", __FILE__, __LINE__);
   }
 
