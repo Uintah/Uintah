@@ -988,8 +988,6 @@ void ThreadedTaskScheduler::select_tasks()
       m_task_pool.erase(iter);
       m_num_tasks_done.fetch_add(1, std::memory_order_relaxed);
       m_phase_tasks_done[ready_task->getTask()->d_phase].fetch_add(1, std::memory_order_relaxed);
-    } else {
-      process_MPI_requests();
     }
   }
 }
