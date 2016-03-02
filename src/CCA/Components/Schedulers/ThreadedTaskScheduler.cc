@@ -202,7 +202,30 @@ ThreadedTaskScheduler::ThreadedTaskScheduler( const ProcessorGroup        * mywo
   , m_output_port{ oport }
   , m_parent_scheduler{ parentScheduler }
 {
+  if (timeout.active()) {
+    char filename[64];
+    sprintf(filename, "timingStats.%d", d_myworld->myrank());
+    m_timings_stats.open(filename);
+    if (d_myworld->myrank() == 0) {
+      sprintf(filename, "timingStats.avg");
+      m_avg_stats.open(filename);
+      sprintf(filename, "timingStats.max");
+      m_max_stats.open(filename);
+    }
+  }
 
+  std::string timeStr("seconds");
+
+  m_mpi_info.insert( TotalReduce,    std::string("TotalReduce"),    timeStr, 0 );
+  m_mpi_info.insert( TotalSend,      std::string("TotalSend"),      timeStr, 0 );
+  m_mpi_info.insert( TotalRecv,      std::string("TotalRecv"),      timeStr, 0 );
+  m_mpi_info.insert( TotalTask,      std::string("TotalTask"),      timeStr, 0 );
+  m_mpi_info.insert( TotalReduceMPI, std::string("TotalReduceMPI"), timeStr, 0 );
+  m_mpi_info.insert( TotalSendMPI,   std::string("TotalSendMPI"),   timeStr, 0 );
+  m_mpi_info.insert( TotalRecvMPI,   std::string("TotalRecvMPI"),   timeStr, 0 );
+  m_mpi_info.insert( TotalTestMPI,   std::string("TotalTestMPI"),   timeStr, 0 );
+  m_mpi_info.insert( TotalWaitMPI,   std::string("TotalWaitMPI"),   timeStr, 0 );
+  m_mpi_info.validate( MAX_TIMING_STATS );
 }
 
 
@@ -210,8 +233,15 @@ ThreadedTaskScheduler::ThreadedTaskScheduler( const ProcessorGroup        * mywo
 //
 ThreadedTaskScheduler::~ThreadedTaskScheduler()
 {
-
+  if (timeout.active()) {
+    m_timings_stats.close();
+    if (d_myworld->myrank() == 0) {
+      m_avg_stats.close();
+      m_max_stats.close();
+    }
+  }
 }
+
 
 //______________________________________________________________________
 //
@@ -249,6 +279,7 @@ void ThreadedTaskScheduler::problemSetup( const ProblemSpecP & prob_spec, Simula
   init_threads(this, m_num_threads);
 
   m_message_log.problemSetup(prob_spec);
+
   SchedulerCommon::problemSetup(prob_spec, state);
 }
 
@@ -763,7 +794,7 @@ void ThreadedTaskScheduler::run_task( DetailedTask * task
     printTrackedVars(task, SchedulerCommon::PRINT_AFTER_EXEC);
   }
 
-  m_lb_mutex.lock();
+  std::lock_guard<std::mutex> lb_guard(s_lb_mutex);
   {
     if (execout.active()) {
       exectimes[task->getTask()->getName()].fetch_add( total_task_time, std::memory_order_relaxed );
@@ -778,7 +809,6 @@ void ThreadedTaskScheduler::run_task( DetailedTask * task
       }
     }
   }
-  m_lb_mutex.unlock();
 
   post_MPI_sends(task, iteration, thread_id);
 
@@ -919,6 +949,8 @@ void ThreadedTaskScheduler::output_timing_stats( const char* label )
 }
 
 
+//______________________________________________________________________
+//
 void ThreadedTaskScheduler::printMPIStats()
 {
   if (mpi_stats.active()) {
