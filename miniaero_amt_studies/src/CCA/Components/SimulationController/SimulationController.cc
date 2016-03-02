@@ -42,6 +42,7 @@
 #include <Core/Thread/Time.h>
 #include <Core/Thread/Thread.h>
 #include <Core/Util/DebugStream.h>
+#include <Core/Util/DOUT.hpp>
 
 #include <CCA/Ports/LoadBalancer.h>
 #include <CCA/Ports/Output.h>
@@ -702,10 +703,9 @@ SimulationController::printSimulationStats ( int timestep, double delt, double t
       
       if (runTimeStats[e] > 0)
       {
-        istats << "rank: " << d_myworld->myrank() << " "
-	       << std::left << std::setw(19) << runTimeStats.getName(e)
-	       << " [" << runTimeStats.getUnits(e) << "]: "
-	       << runTimeStats[e] << "\n";
+
+        DOUT(true, "rank: " << d_myworld->myrank() << " " << std::left << std::setw(19) << runTimeStats.getName(e)
+	                          << " [" << runTimeStats.getUnits(e) << "]: " << runTimeStats[e]);
       }
     }
   } 
