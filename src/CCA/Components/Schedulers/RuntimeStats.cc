@@ -33,7 +33,6 @@ namespace {
 
 Dout g_exec_times{"ExecTimes", false};
 Dout g_wait_times{"WaitTimes", false};
-Dout g_print_histograms{"Histograms", false};
 
 size_t g_num_global_task_ids{0};
 std::unique_ptr< std::string[] >          g_task_names{nullptr};
@@ -88,6 +87,26 @@ void RuntimeStats::reset_timers()
 
 void RuntimeStats::initialize_timestep( std::vector<TaskGraph *> const &  /*graph*/ )
 {
+  static bool first_init = true;
+  if (first_init) {
+
+    register_timer_tag( TaskExecTag{}, "Task Exec", Max );
+    register_timer_tag( TaskWaitTag{}, "Task Wait", Min );
+
+    register_timer_tag( CollectiveTag{}, "Total Coll", Total);
+    register_timer_tag( RecvTag{}, "Total Recv", Total);
+    register_timer_tag( SendTag{}, "Total Send", Total);
+    register_timer_tag( TestTag{}, "Total Test", Total);
+    register_timer_tag( WaitTag{}, "Total Wait", Total);
+
+    register_timer_tag( CollectiveMPITag{}, "MPI Coll", Total);
+    register_timer_tag( RecvMPITag{}, "MPI Recv", Total);
+    register_timer_tag( SendMPITag{}, "MPI Send", Total);
+
+    reset_timers();
+
+    first_init = false;
+  }
   // TODO
   // init
   // g_num_global_task_ids
@@ -117,19 +136,19 @@ inline std::string bytes_to_string( int64_t bytes )
     out << bytes << " B";
   }
   else if ( bytes < MB ) {
-    out << std::setprecision(5) << (static_cast<double>(bytes) / KB) << " KB";
+    out << std::setprecision(3) << (static_cast<double>(bytes) / KB) << " KB";
   }
   else if ( bytes < GB ) {
-    out << std::setprecision(5) << (static_cast<double>(bytes) / MB) << " MB";
+    out << std::setprecision(3) << (static_cast<double>(bytes) / MB) << " MB";
   }
   else if ( bytes < TB ) {
-    out << std::setprecision(5) << (static_cast<double>(bytes) / GB) << " GB";
+    out << std::setprecision(3) << (static_cast<double>(bytes) / GB) << " GB";
   }
   else if ( bytes < PB ) {
-    out << std::setprecision(5) << (static_cast<double>(bytes) / TB) << " TB";
+    out << std::setprecision(3) << (static_cast<double>(bytes) / TB) << " TB";
   }
   else {
-    out << std::setprecision(5) << (static_cast<double>(bytes) / PB) << " PB";
+    out << std::setprecision(3) << (static_cast<double>(bytes) / PB) << " PB";
   }
 
   return out.str();
@@ -137,7 +156,7 @@ inline std::string bytes_to_string( int64_t bytes )
 
 
 /// convert a nanoseconds to human readable string
-inline std::string nanoseconds_to_string( int64_t ns )
+inline std::string nanoseconds_to_string( double ns )
 {
   constexpr int64_t one    = 1;
   constexpr int64_t MICRO  = one << 3;
@@ -149,44 +168,39 @@ inline std::string nanoseconds_to_string( int64_t ns )
   std::ostringstream out;
 
   if ( ns < MICRO ) {
-    out << ns << " nanoseconds";
-  }
-  else if ( ns < MILLA ) {
-    out << std::setprecision(5) << (static_cast<double>(ns) / MICRO) << " microseconds";
+    out << std::setprecision(3) << ns << " ns";
   }
   else if ( ns < SECOND ) {
-    out << std::setprecision(5) << (static_cast<double>(ns) / MILLA) << " milliseconds";
-  }
-  else if ( ns < MINUTE ) {
-    out << std::setprecision(5) << (static_cast<double>(ns) / SECOND) << " seconds";
-  }
-  else if ( ns < HOUR ) {
-    out << std::setprecision(5) << (static_cast<double>(ns) / MINUTE) << " minutes";
+    out << std::setprecision(3) << (ns / MILLA) << " ms";
   }
   else {
-    out << std::setprecision(5) << (static_cast<double>(ns) / HOUR) << " hours";
+    out << std::setprecision(3) << (ns / SECOND) << " s ";
   }
 
   return out.str();
 }
 
 template <typename T>
-void sum_min_max_impl( T const * in, T * inout, int len )
+void rank_sum_min_max_impl( T const * in, T * inout, int len )
 {
-  const int size = len/3;
+  const int size = len/4;
   for (int i=0; i<size; ++i) {
-    inout[3*i+0] += in[3*i+0];
-    inout[3*i+1]  = inout[3*i+1] < in[3*i+1] ? inout[3*i+1] : in[3*i+1] ;
-    inout[3*i+2]  = in[3*i+2] < inout[3*i+2] ? inout[3*i+2] : in[3*i+2] ;
+    inout[4*i+0]  = in[4*i+3] < inout[4*i+3] ? inout[4*i+0] : in[4*i+0] ; // max_rank
+    inout[4*i+1] += in[4*i+1] ;                                           // sum
+    inout[4*i+2]  = inout[4*i+2] < in[4*i+2] ? inout[4*i+2] : in[4*i+2] ; // min
+    inout[4*i+3]  = in[4*i+3] < inout[4*i+3] ? inout[4*i+3] : in[4*i+3] ; // max
   }
 }
 
-extern "C" void sum_min_max( void * in, void * inout, int * len, MPI_Datatype * type )
+extern "C" void rank_sum_min_max( void * in, void * inout, int * len, MPI_Datatype * type )
 {
- sum_min_max_impl( reinterpret_cast<int64_t*>(in), reinterpret_cast<int64_t*>(inout), *len );
+ rank_sum_min_max_impl( reinterpret_cast<int64_t*>(in), reinterpret_cast<int64_t*>(inout), *len );
 }
 
-MPI_Op sum_min_max_op;
+MPI_Op rank_sum_min_max_op;
+
+enum { RANK=0, SUM, MIN, MAX };
+enum { Q1=0, Q2, Q3, Q4 };
 
 } // unnamed namespace
 
@@ -196,16 +210,7 @@ void RuntimeStats::report( MPI_Comm comm, InfoStats & stats )
   {
     static bool init = false;
     if (!init) {
-      MPI_Op_create( sum_min_max, true, &sum_min_max_op );
-
-      register_timer_tag( TaskExecTag{}, "Task Exec", Max );
-      register_timer_tag( TaskWaitTag{}, "Task Wait", Min );
-
-      register_timer_tag( CollectiveTag{}, "Total Collective", Total);
-      register_timer_tag( RecvTag{}, "Total Recv", Total);
-      register_timer_tag( SendTag{}, "Total Send", Total);
-      register_timer_tag( TestTag{}, "Total Test", Total);
-      register_timer_tag( WaitTag{}, "Total Wait", Total);
+      MPI_Op_create( rank_sum_min_max, true, &rank_sum_min_max_op );
 
       init = true;
     }
@@ -229,7 +234,7 @@ void RuntimeStats::report( MPI_Comm comm, InfoStats & stats )
 
   const int num_allocators = static_cast<int>(s_allocators.size());
 
-  const int data_size = (num_timers + num_allocators) * 3;
+  const int data_size = (num_timers + num_allocators) * 4;
   const int histogram_size = (num_timers + num_allocators) * 4;
 
   std::vector<int64_t>     local_times;
@@ -244,8 +249,9 @@ void RuntimeStats::report( MPI_Comm comm, InfoStats & stats )
 
   global_data.resize(data_size);
 
+  const int num = num_timers + num_allocators;
   if (prank==0) {
-    names.reserve( num_timers + num_allocators );
+    names.reserve( num );
   }
 
   for( auto const& p : s_timers ) {
@@ -254,6 +260,7 @@ void RuntimeStats::report( MPI_Comm comm, InfoStats & stats )
     }
     const int64_t ns = p.second();
     local_times.push_back(ns);
+    data.push_back(prank); // rank
     data.push_back(ns); // total
     data.push_back(ns); // min
     data.push_back(ns); // max
@@ -266,6 +273,7 @@ void RuntimeStats::report( MPI_Comm comm, InfoStats & stats )
       }
       const int64_t ns = g_task_exec_times[i].load( std::memory_order_relaxed );
       local_times.push_back(ns);
+      data.push_back(prank); // rank
       data.push_back(ns); // total
       data.push_back(ns); // min
       data.push_back(ns); // max
@@ -279,6 +287,7 @@ void RuntimeStats::report( MPI_Comm comm, InfoStats & stats )
       }
       const int64_t ns = g_task_wait_times[i].load( std::memory_order_relaxed );
       local_times.push_back(ns);
+      data.push_back(prank); // rank
       data.push_back(ns); // total
       data.push_back(ns); // min
       data.push_back(ns); // max
@@ -291,71 +300,89 @@ void RuntimeStats::report( MPI_Comm comm, InfoStats & stats )
     }
     const int64_t bytes = p.second();
     local_times.push_back(bytes);
+    data.push_back(prank); // rank
     data.push_back(bytes); // total
     data.push_back(bytes); // min
     data.push_back(bytes); // max
   }
 
-  if (g_print_histograms) {
 
-    MPI_Allreduce( data.data(), global_data.data(), data_size, MPI_INT64_T, sum_min_max_op, comm);
+  MPI_Allreduce( data.data(), global_data.data(), data_size, MPI_INT64_T, rank_sum_min_max_op, comm);
 
-    histograms.resize( histogram_size, 0 );
-    global_histograms.resize( histogram_size, 0 );
+  histograms.resize( histogram_size, 0 );
+  global_histograms.resize( histogram_size, 0 );
 
 
-    for( int i=0; i<num_timers; ++i ) {
-      const int64_t min = global_data[3*i+1]; // min
-      const int64_t mag = global_data[3*i+2] - min;  // max - min
-      const int64_t t = local_times[i] - min;
+  for( int i=0; i<num; ++i ) {
+    const int off = 4*i;
+    const int64_t min = global_data[off+MIN];
+    const int64_t max = global_data[off+MAX];
+    const int64_t mag = max - min;
 
-      int bin = 0 < mag ? 4*t / mag : 0;
-      bin = bin < 4 ? bin : 3;
+    const int64_t t = local_times[i] - min;
 
-      histograms[i*4+bin] = 1;
-    }
+    int bin = 0 < mag ? 4*t / mag : 0;
+    bin = bin < 4 ? bin : 3;
 
-    MPI_Reduce(histograms.data(), global_histograms.data(), histogram_size, MPI_INT64_T, MPI_SUM, 0, comm);
-
-  }
-  else {
-    MPI_Reduce( data.data(), global_data.data(), data_size, MPI_INT64_T, sum_min_max_op, 0, comm);
+    histograms[off+bin] = 1;
   }
 
+  MPI_Reduce(histograms.data(), global_histograms.data(), histogram_size, MPI_INT64_T, MPI_SUM, 0, comm);
 
-  if (prank == 0) {
+  Dout mpi_report("MPIReport", false);
+
+  if (mpi_report && prank == 0) {
     const int end = num_timers + num_allocators;
 
+    const int w_desc = 12;
+    const int w_num  = 10;
+    const int w_hist = 35;
+    const int w_load = 18;
+
+
+
+    printf( "%*s%*s%*s%*s%*s%*s%*s%*s\n"
+        ,w_desc, "Description:"
+        ,w_num,  "Total:"
+        ,w_num,  "Avg:"
+        ,w_num,  "Min:"
+        ,w_num,  "Max:"
+        ,w_num,  "Mrank:"
+        ,w_hist, "Hist \% [  Q1 |  Q2 |  Q3 |  Q4 ]:"
+        ,w_load, "\%Load Imbalance"
+    );
+
+
     for (int i=0; i<end; ++i) {
+      const int off = 4*i;
+      const int max_rank  = global_data[off+RANK];
+      const int64_t total = global_data[off+SUM];
+      const int64_t min = global_data[off+MIN];
+      const int64_t max = global_data[off+MAX];
 
-      std::string hist{};
-      if (g_print_histograms) {
-        std::ostringstream out;
-        out  << ", Histogram : [ "
-          << std::setw(5) << std::setprecision(4) << (100.0 * global_histograms[4*i+0]) / psize << " | "
-          << std::setw(5) << std::setprecision(4) << (100.0 * global_histograms[4*i+1]) / psize << " | "
-          << std::setw(5) << std::setprecision(4) << (100.0 * global_histograms[4*i+2]) / psize << " | "
-          << std::setw(5) << std::setprecision(4) << (100.0 * global_histograms[4*i+3]) / psize
-          << " ] ";
-        hist = out.str();
-      }
+      const double avg = static_cast<double>(total) / psize;
 
-      if ( i < num_timers ) {
-        DOUT( true, names[i] << " : "
-                             << "Total[ " << nanoseconds_to_string( global_data[3*i+0] ) << " ], "
-                             << "Min[ " << nanoseconds_to_string( global_data[3*i+1] ) << " ], "
-                             << "Max[ " << nanoseconds_to_string( global_data[3*i+2] ) << " ], "
-                             << hist
-            );
-      }
-      else {
-        DOUT( true, names[i] << " : "
-                             << "Total[ " << bytes_to_string( data[3*i+0] ) << " ], "
-                             << "Min[ " << bytes_to_string( data[3*i+1] ) << " ], "
-                             << "Max[ " << bytes_to_string( data[3*i+2] ) << " ], "
-                             << hist
-            );
-      }
+      const double q1 = static_cast<double>(100 * global_histograms[off+Q1]) / psize;
+      const double q2 = static_cast<double>(100 * global_histograms[off+Q2]) / psize;
+      const double q3 = static_cast<double>(100 * global_histograms[off+Q3]) / psize;
+      const double q4 = static_cast<double>(100 * global_histograms[off+Q4]) / psize;
+
+      const double load = max != 0 ? (100.0 * (1.0 - (avg / max))) : 0.0;
+
+      printf("%*s:%*s%*s%*s%*s%*d          %6.1f%6.1f%6.1f%6.1f%8.1f\n"
+          , w_desc-1, names[i].c_str()
+          , w_num, ( i < num_timers ? nanoseconds_to_string( total ) : bytes_to_string( total )).c_str()
+          , w_num, ( i < num_timers ? nanoseconds_to_string( avg ) : bytes_to_string( avg )).c_str()
+          , w_num, ( i < num_timers ? nanoseconds_to_string( min ) : bytes_to_string( min )).c_str()
+          , w_num, ( i < num_timers ? nanoseconds_to_string( max ) : bytes_to_string( max )).c_str()
+          , w_num, max_rank
+          , q1
+          , q2
+          , q3
+          , q4
+          , load
+          );
+
     }
   }
 

@@ -119,6 +119,9 @@ public:
   struct SendTag {};       // Total Send
   struct TestTag {};       // Total Test
   struct WaitTag {};       // Total Wait
+  struct CollectiveMPITag {}; // Total Reduce
+  struct RecvMPITag {};       // Total Recv
+  struct SendMPITag {};       // Total Send
 
   // RAII timer types
 
@@ -128,12 +131,18 @@ public:
   using TestTimer       = TripTimer< TestTag >;
   using WaitTimer       = TripTimer< WaitTag >;
 
+  using CollectiveMPITimer = TripTimer< CollectiveMPITag >;
+  using RecvMPITimer       = TripTimer< RecvMPITag >;
+  using SendMPITimer       = TripTimer< SendMPITag >;
+
+  using ExecTimer = TripTimer< TaskExecTag >;
+
   struct TaskExecTimer
-    : public TripTimer< TaskExecTag >
+    : public ExecTimer
   {
     template <typename... ExcludeTimers>
     TaskExecTimer( DetailedTask const* t, ExcludeTimers&... exclude_timers )
-      : TripTimer< TaskExecTag >{ exclude_timers... }
+      : ExecTimer{ exclude_timers... }
     {
       m_task_time = get_atomic_exec_ptr(t);
     }
