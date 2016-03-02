@@ -2399,6 +2399,10 @@ DataArchiver::outputVariables(const ProcessorGroup * pg,
       
     PIDXOutputContext pidx;
     vector<TypeDescription::Type> GridVarTypes = pidx.getSupportedVariableTypes();
+    
+    //bulletproofing
+    isVarTypeSupported( saveLabels, GridVarTypes );
+    
     size_t totalBytes = 0;
     
     // loop over the grid variable types.
@@ -2753,6 +2757,36 @@ DataArchiver::findAllVariableTypes( std::vector< SaveItem >& saveLabels,
   return myItems;
 }
 
+
+//______________________________________________________________________
+//  throw exception if saveItems type description is NOT supported 
+void 
+DataArchiver::isVarTypeSupported( std::vector< SaveItem >& saveLabels,
+                                  std::vector<TypeDescription::Type> pidxVarTypes )
+{ 
+  for(vector< SaveItem >::iterator saveIter = saveLabels.begin(); saveIter!= saveLabels.end(); saveIter++) {
+    const VarLabel* label = saveIter->label;
+    const TypeDescription* myType = label->typeDescription();
+    
+    bool found = false;
+    vector<TypeDescription::Type>::iterator it;
+    for(it = pidxVarTypes.begin(); it!= pidxVarTypes.end(); it++) {
+      TypeDescription::Type TD = *it;
+      if( myType->getType() == TD ){
+        found = true;
+        continue;
+      }
+    }
+    
+    // throw exception if this type isn't supported
+    if( found == false){
+      ostringstream warn;
+      warn << "DataArchiver::saveLabels_PIDX:: ("<< label->getName() << ",  " 
+           << myType->getName() << " ) has not been implemented" << endl;
+      throw InternalError(warn.str(), __FILE__, __LINE__);
+    }
+  }
+}
 
 //______________________________________________________________________
 //  Create the PIDX sub directories
