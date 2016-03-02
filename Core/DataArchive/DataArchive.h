@@ -173,7 +173,7 @@ namespace Uintah {
 
           ProblemSpecP  d_timestep_ps_for_component;    // timestep.xml's xml for components.
           std::string   d_ts_path_and_filename;         // Path to timestep.xml.
-	  std::string   d_grid_path_and_filename;       // Path to grid.xml.
+	   std::string   d_grid_path_and_filename;       // Path to grid.xml.
           std::string   d_ts_directory;                 // Directory that contains timestep.xml.
           bool          d_swapBytes;
           int           d_nBytes;

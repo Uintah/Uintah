@@ -576,7 +576,10 @@ DataArchive::query(       Variable     & var,
     // we need to use the real_patch (in case of periodic boundaries) to get the data, but we need the
     // passed in patch to allocate the patch to the proper virtual region... (see var.allocate below)
     const Patch* real_patch = patch->getRealPatch();
-    PatchData& patchinfo = timedata.d_patchInfo[real_patch->getLevel()->getIndex()][real_patch->getLevelIndex()];
+    int levelIndex          = real_patch->getLevel()->getIndex(); 
+    int patchIndex          = real_patch->getLevelIndex();
+    
+    PatchData& patchinfo = timedata.d_patchInfo[levelIndex][patchIndex];
     ASSERT(patchinfo.parsed);
     patchid = real_patch->getID();
 
@@ -730,8 +733,11 @@ DataArchive::query(       Variable     & var,
 
     //__________________________________
     //  Open idx file
-    string idxFilename = varinfo.filename;
-    PIDX_file idxFile;                     // IDX file descriptor
+    ostringstream levelPath;
+    levelPath << timedata.d_ts_directory << "l" << level->getIndex() << "/";  // uda/timestep/level/
+    string idxFilename = (levelPath.str() + varinfo.filename );               // be careful, the patch.datafilename != varinfo.filename
+                                                                              // varinfo.filename == <CCVars.idx, SFC*Vars.idx....>
+    PIDX_file idxFile;      // IDX file descriptor
 
     int ret = PIDX_file_open(idxFilename.c_str(), PIDX_MODE_RDONLY, access, &idxFile);
     pidx.checkReturnCode( ret,"DataArchive::query() - PIDX_file_open failure", __FILE__, __LINE__);
@@ -785,7 +791,8 @@ DataArchive::query(       Variable     & var,
                 << "    " << name
                 << " timestep: " << timestep
                 << " matlIndex: " <<  matlIndex
-                << " patchID: "   << patchid << endl;
+                << " patchID: "   << patchid 
+                << " level: "     << level->getIndex() << endl;
       proc0cout << "PIDX query: \n"
                 << "    " << varDesc->var_name
                 << " type_name: " << varDesc->type_name 
@@ -806,6 +813,7 @@ DataArchive::query(       Variable     & var,
     ret = PIDX_close_access( access );
     pidx.checkReturnCode(ret, "DataArchive::query() - PIDX_close_access failure", __FILE__, __LINE__);
     
+
     //__________________________________
     // debugging
     if (dbg.active() ){

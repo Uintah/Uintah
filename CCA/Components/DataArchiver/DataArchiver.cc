@@ -2417,8 +2417,9 @@ DataArchiver::outputVariables(const ProcessorGroup * pg,
         string dirName = pidx.getDirectoryName( TD );
 
         Dir myDir = ldir.getSubdir( dirName );
+        
 
-        totalBytes += saveLabels_PIDX(saveTheseLabels, pg, patches, new_dw, type, TD, myDir, doc);
+        totalBytes += saveLabels_PIDX(saveTheseLabels, pg, patches, new_dw, type, TD, ldir, dirName, doc);
       } 
     }
     double myTime = Time::currentSeconds()-start;
@@ -2445,7 +2446,8 @@ DataArchiver::saveLabels_PIDX(std::vector< SaveItem >& saveLabels,
                               DataWarehouse        * new_dw,          
                               int                    type,
                               const TypeDescription::Type TD,
-                              Dir                   myDir,
+                              Dir                    ldir,        // uda/timestep/levelIndex
+                              const std::string      dirName,     // CCVars, SFC*Vars
                               ProblemSpecP&          doc)            
 {
   size_t totalBytesSaved = 0;
@@ -2482,9 +2484,10 @@ DataArchiver::saveLabels_PIDX(std::vector< SaveItem >& saveLabels,
 
   // must use this format or else file won't be written
   // inside of uda
-  string idxFilename( myDir.getName() );
-  idxFilename = idxFilename + ".idx";
-
+  Dir myDir = ldir.getSubdir( dirName );                   // uda/timestep/level/<CCVars, SFC*Vars>
+  string idxFilename ( dirName + ".idx" );                 // <CCVars, SFC*Vars....>.idx
+  string full_idxFilename( myDir.getName() + ".idx" );     // uda/timestep/level/<CCVars, SFC*Vars...>.idx
+  
   PIDXOutputContext pidx;
 
   pidx.setOutputDoubleAsFloat( (d_outputDoubleAsFloat && type == OUTPUT) );  
@@ -2492,7 +2495,7 @@ DataArchiver::saveLabels_PIDX(std::vector< SaveItem >& saveLabels,
   unsigned int timeStep = d_sharedState->getCurrentTopLevelTimeStep();
   
   // Can this be run in serial without doing a MPI initialize
-  pidx.initialize(idxFilename, timeStep, d_myworld->getComm());
+  pidx.initialize(full_idxFilename, timeStep, d_myworld->getComm());
 
   //__________________________________
   // define the level extents for this variable type
@@ -2686,7 +2689,7 @@ DataArchiver::saveLabels_PIDX(std::vector< SaveItem >& saveLabels,
           var_ps->appendElement("index",     matlIndex);
           var_ps->appendElement("patch",     patch->getID());                     
           var_ps->appendElement("start",     vcm);                         
-          var_ps->appendElement("end",       vcm);          // redundant   
+          var_ps->appendElement("end",       vcm);          // redundant
           var_ps->appendElement("filename",  idxFilename);
 
           if (label->getBoundaryLayer() != IntVector(0,0,0)) {
