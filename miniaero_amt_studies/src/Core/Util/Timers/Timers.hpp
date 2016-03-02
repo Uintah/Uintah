@@ -277,7 +277,8 @@ struct ThreadTrip : public Simple
     for (int i=0; i<size; ++i) {
       result = (s_used[i] && s_total[i] < result) ? s_total[i] : result ;
     }
-    return result;
+
+    return result != std::numeric_limits<int64_t>::max() ? result : 0 ;
   }
   static double min_microseconds() { return ConvertTo::microseconds(min_nanoseconds()); }
   static double min_milliseconds() { return ConvertTo::milliseconds(min_nanoseconds()); }
@@ -291,7 +292,8 @@ struct ThreadTrip : public Simple
     for (int i=0; i<size; ++i) {
       result = (s_used[i] && result < s_total[i]) ? s_total[i] : result ;
     }
-    return result;
+
+    return result != std::numeric_limits<int64_t>::min() ? result : 0 ;
   }
   static double max_microseconds() { return ConvertTo::microseconds(max_nanoseconds()); }
   static double max_milliseconds() { return ConvertTo::milliseconds(max_nanoseconds()); }
