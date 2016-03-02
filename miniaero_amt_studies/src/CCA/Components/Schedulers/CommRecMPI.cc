@@ -183,6 +183,7 @@ CommRecMPI::waitsome( const ProcessorGroup * pg,
   clock_t start = clock();
 
   MPI_Waitsome( size, &combinedIDs[0], &donecount, &combinedIndices[0], &statii[0] );
+
   WaitTimePerMessage = (clock() - start) / (double)CLOCKS_PER_SEC / donecount;
 
   mixedDebug << "after combined waitsome\n";

@@ -778,7 +778,9 @@ void
 AMRSimulationController::doInitialTimestep(GridP& grid, double& t)
 {
   MALLOC_TRACE_TAG_SCOPE("AMRSimulationController::doInitialTimestep()");
+
   double start = Time::currentSeconds();
+
   d_scheduler->mapDataWarehouse(Task::OldDW, 0);
   d_scheduler->mapDataWarehouse(Task::NewDW, 1);
   d_scheduler->mapDataWarehouse(Task::CoarseOldDW, 0);

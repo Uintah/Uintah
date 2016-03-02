@@ -703,7 +703,6 @@ SimulationController::printSimulationStats ( int timestep, double delt, double t
       
       if (runTimeStats[e] > 0)
       {
-
         DOUT(true, "rank: " << d_myworld->myrank() << " " << std::left << std::setw(19) << runTimeStats.getName(e)
 	                          << " [" << runTimeStats.getUnits(e) << "]: " << runTimeStats[e]);
       }

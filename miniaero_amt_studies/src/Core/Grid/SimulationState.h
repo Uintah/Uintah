@@ -266,7 +266,7 @@ public:
   enum RunTimeStat
   {
     CompilationTime = 0,       // Note: do not change the order 
-    RegriddingTime,            // of these five enumberators.
+    RegriddingTime,            // of these five enumerators.
     RegriddingCompilationTime, // They are use in
     RegriddingCopyDataTime,    // SimulationState::getOverheadTime
     LoadBalancerTime,          // to determine the overhead time.

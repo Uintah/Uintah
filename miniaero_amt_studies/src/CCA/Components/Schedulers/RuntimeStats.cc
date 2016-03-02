@@ -235,10 +235,14 @@ void RuntimeStats::report( MPI_Comm comm, InfoStats & stats )
   std::vector<int64_t>     local_times;
   std::vector<int64_t>     data;
   std::vector<int64_t>     histograms;
+  std::vector<int64_t>     global_data;
+  std::vector<int64_t>     global_histograms;
   std::vector<std::string> names;
 
   local_times.reserve( num_timers );
   data.reserve( data_size );
+
+  global_data.resize(data_size);
 
   if (prank==0) {
     names.reserve( num_timers + num_allocators );
@@ -294,13 +298,15 @@ void RuntimeStats::report( MPI_Comm comm, InfoStats & stats )
 
   if (g_print_histograms) {
 
-    MPI_Allreduce( MPI_IN_PLACE, data.data(), data_size, MPI_INT64_T, sum_min_max_op, comm);
+    MPI_Allreduce( data.data(), global_data.data(), data_size, MPI_INT64_T, sum_min_max_op, comm);
 
     histograms.resize( histogram_size, 0 );
+    global_histograms.resize( histogram_size, 0 );
+
 
     for( int i=0; i<num_timers; ++i ) {
-      const int64_t min = data[3*i+1]; // min
-      const int64_t mag = data[3*i+2] - min;  // max - min
+      const int64_t min = global_data[3*i+1]; // min
+      const int64_t mag = global_data[3*i+2] - min;  // max - min
       const int64_t t = local_times[i] - min;
 
       int bin = 0 < mag ? 4*t / mag : 0;
@@ -309,11 +315,11 @@ void RuntimeStats::report( MPI_Comm comm, InfoStats & stats )
       histograms[i*4+bin] = 1;
     }
 
-    MPI_Reduce( MPI_IN_PLACE, histograms.data(), histogram_size, MPI_INT64_T, MPI_SUM, 0, comm);
+    MPI_Reduce(histograms.data(), global_histograms.data(), histogram_size, MPI_INT64_T, MPI_SUM, 0, comm);
 
   }
   else {
-    MPI_Reduce( MPI_IN_PLACE, data.data(), data_size, MPI_INT64_T, sum_min_max_op, 0, comm);
+    MPI_Reduce( data.data(), global_data.data(), data_size, MPI_INT64_T, sum_min_max_op, 0, comm);
   }
 
 
@@ -326,19 +332,19 @@ void RuntimeStats::report( MPI_Comm comm, InfoStats & stats )
       if (g_print_histograms) {
         std::ostringstream out;
         out  << ", Histogram : [ "
-          << std::setw(5) << std::setprecision(1) << (100.0 * histograms[4*i+0]) / psize << " | "
-          << std::setw(5) << std::setprecision(1) << (100.0 * histograms[4*i+1]) / psize << " | "
-          << std::setw(5) << std::setprecision(1) << (100.0 * histograms[4*i+2]) / psize << " | "
-          << std::setw(5) << std::setprecision(1) << (100.0 * histograms[4*i+3]) / psize
+          << std::setw(5) << std::setprecision(4) << (100.0 * global_histograms[4*i+0]) / psize << " | "
+          << std::setw(5) << std::setprecision(4) << (100.0 * global_histograms[4*i+1]) / psize << " | "
+          << std::setw(5) << std::setprecision(4) << (100.0 * global_histograms[4*i+2]) / psize << " | "
+          << std::setw(5) << std::setprecision(4) << (100.0 * global_histograms[4*i+3]) / psize
           << " ] ";
         hist = out.str();
       }
 
       if ( i < num_timers ) {
         DOUT( true, names[i] << " : "
-                             << "Total[ " << nanoseconds_to_string( data[3*i+0] ) << " ], "
-                             << "Min[ " << nanoseconds_to_string( data[3*i+1] ) << " ], "
-                             << "Max[ " << nanoseconds_to_string( data[3*i+2] ) << " ], "
+                             << "Total[ " << nanoseconds_to_string( global_data[3*i+0] ) << " ], "
+                             << "Min[ " << nanoseconds_to_string( global_data[3*i+1] ) << " ], "
+                             << "Max[ " << nanoseconds_to_string( global_data[3*i+2] ) << " ], "
                              << hist
             );
       }
