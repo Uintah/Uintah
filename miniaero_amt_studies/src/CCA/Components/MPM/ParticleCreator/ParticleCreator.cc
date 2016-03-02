@@ -349,9 +349,9 @@ ParticleCreator::createParticles(MPMMaterial* matl,
           if(areacomp==0){
             pvars.parea[pidx]=Vector(pvars.parea[pidx].x(),0.,0.);
           } else if(areacomp==1){
-            pvars.parea[pidx]=Vector(pvars.parea[pidx].y(),0.,0.);
+            pvars.parea[pidx]=Vector(0.,pvars.parea[pidx].y(),0.);
           } else if(areacomp==2){
-            pvars.parea[pidx]=Vector(pvars.parea[pidx].z(),0.,0.);
+            pvars.parea[pidx]=Vector(0.,0.,pvars.parea[pidx].z());
           }
         } else {
           pvars.pLoadCurveID[pidx] = 0;

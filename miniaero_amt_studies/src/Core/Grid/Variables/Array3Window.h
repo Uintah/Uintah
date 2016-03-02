@@ -146,6 +146,10 @@ template<class T> class Array3Window : public RefCounted {
          return data->get(idx-offset);
       }
 
+      inline T& get(int i, int j, int k) {
+        return data->get(i-offset.x(), j-offset.y(), k-offset.z());
+      }
+
 #ifdef UINTAH_ENABLE_KOKKOS
       inline KokkosView3<T> getKokkosView() const
       {
