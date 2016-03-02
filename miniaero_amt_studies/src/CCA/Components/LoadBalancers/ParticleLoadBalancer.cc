@@ -40,9 +40,9 @@
 #include <Core/Grid/SimulationState.h>
 #include <Core/Parallel/Parallel.h>
 #include <Core/Parallel/ProcessorGroup.h>
-#include <Core/Thread/Time.h>
 #include <Core/Util/DebugStream.h>
 #include <Core/Util/FancyAssert.h>
+#include <Core/Util/Timers/Timers.hpp>
 
 #include <iostream> // debug only
 #include <stack>
@@ -775,7 +775,8 @@ bool ParticleLoadBalancer::possiblyDynamicallyReallocate(const GridP& grid, int 
   if (d_myworld->myrank() == 0)
     dbg << d_myworld->myrank() << " In DLB, state " << state << endl;
 
-  double start = Time::currentSeconds();
+  //------------------------------< begin load balancer timing >------------------------------
+  Timers::Simple lb_timer{};
 
   bool changed = false;
   bool force = false;
@@ -855,7 +856,11 @@ bool ParticleLoadBalancer::possiblyDynamicallyReallocate(const GridP& grid, int 
   
   // this must be called here (it creates the new per-proc patch sets) even if DLB does nothing.  Don't move or return earlier.
   LoadBalancerCommon::possiblyDynamicallyReallocate( grid, flag );
-  d_sharedState->d_runTimeStats[SimulationState::LoadBalancerTime] += Time::currentSeconds() - start;
+
+  double lb_time = lb_timer.seconds();
+  d_sharedState->d_runTimeStats[SimulationState::LoadBalancerTime] += lb_time;
+  //------------------------------< end load balancer timing >------------------------------
+
   return changed;
 }
 
