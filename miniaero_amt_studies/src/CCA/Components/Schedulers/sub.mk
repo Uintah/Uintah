@@ -39,6 +39,7 @@ SRCS += \
         $(SRCDIR)/MPIScheduler.cc             \
         $(SRCDIR)/OnDemandDataWarehouse.cc    \
         $(SRCDIR)/Relocate.cc                 \
+        $(SRCDIR)/RuntimeStats.cc                 \
         $(SRCDIR)/SchedulerCommon.cc          \
         $(SRCDIR)/SchedulerFactory.cc         \
         $(SRCDIR)/SendState.cc                \
