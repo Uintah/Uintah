@@ -76,8 +76,8 @@ endif
 
 SUBDIRS := \
         $(SRCDIR)/PlasticityModels \
-        $(SRCDIR)/Biswajit \
         $(SRCDIR)/PortableTongeRamesh \
+#        $(SRCDIR)/Biswajit \
 
 ifneq ($(NO_FORTRAN),yes)
   SUBDIRS += $(SRCDIR)/fortran

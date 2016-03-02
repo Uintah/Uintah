@@ -2506,12 +2506,12 @@ DataArchiver::saveLabels_PIDX(std::vector< SaveItem >& saveLabels,
   pidx.checkReturnCode( rc, "DataArchiver::saveLabels_PIDX - PIDX_set_variable_count failure",__FILE__, __LINE__);
   
   size_t pidxVarSize = sizeof (PIDX_variable*);
-  pidx.variable = (PIDX_variable**) malloc( pidxVarSize * nSaveItems );
-  memset(pidx.variable, 0, pidxVarSize * nSaveItems);
+  pidx.varDesc = (PIDX_variable**) malloc( pidxVarSize * nSaveItems );
+  memset(pidx.varDesc, 0, pidxVarSize * nSaveItems);
 
   for(int i = 0 ; i < nSaveItems ; i++) {
-    pidx.variable[i] = (PIDX_variable*) malloc( pidxVarSize * nSaveItemMatls[i]);
-    memset(pidx.variable[i], 0, pidxVarSize * nSaveItemMatls[i]);
+    pidx.varDesc[i] = (PIDX_variable*) malloc( pidxVarSize * nSaveItemMatls[i]);
+    memset(pidx.varDesc[i], 0, pidxVarSize * nSaveItemMatls[i]);
   }
 
   //__________________________________
@@ -2607,7 +2607,7 @@ DataArchiver::saveLabels_PIDX(std::vector< SaveItem >& saveLabels,
         var_mat_name = label->getName() + "_m" + s.str();
       }
     
-      rc = PIDX_variable_create((char*)var_mat_name.c_str(), varSubType_size * 8, data_type, &(pidx.variable[vc][m]));
+      rc = PIDX_variable_create((char*)var_mat_name.c_str(), varSubType_size * 8, data_type, &(pidx.varDesc[vc][m]));
       pidx.checkReturnCode( rc, "DataArchiver::saveLabels_PIDX - PIDX_variable_create failure",__FILE__, __LINE__);
       
 
@@ -2669,7 +2669,7 @@ DataArchiver::saveLabels_PIDX(std::vector< SaveItem >& saveLabels,
                                    arraySize );
           }         
          
-          rc = PIDX_variable_write_data_layout(pidx.variable[vc][m], patchOffset, patchSize, patch_buffer[vcm][p], PIDX_row_major);
+          rc = PIDX_variable_write_data_layout(pidx.varDesc[vc][m], patchOffset, patchSize, patch_buffer[vcm][p], PIDX_row_major);
           pidx.checkReturnCode( rc, "DataArchiver::saveLabels_PIDX - PIDX_variable_write_data_layout failure",__FILE__, __LINE__);
           
           totalBytesSaved += arraySize;
@@ -2691,7 +2691,7 @@ DataArchiver::saveLabels_PIDX(std::vector< SaveItem >& saveLabels,
         }  // is checkpoint?
       }  //  Patches
 
-      rc = PIDX_append_and_write_variable(pidx.file, pidx.variable[vc][m]);
+      rc = PIDX_append_and_write_variable(pidx.file, pidx.varDesc[vc][m]);
       pidx.checkReturnCode( rc, "DataArchiver::saveLabels_PIDX - PIDX_append_and_write_variable failure",__FILE__, __LINE__);
       
       vcm++;
@@ -2722,10 +2722,10 @@ DataArchiver::saveLabels_PIDX(std::vector< SaveItem >& saveLabels,
   //__________________________________
   //  free memory
   for (int i=0; i<nSaveItems ; i++){
-    free(pidx.variable[i]);
+    free(pidx.varDesc[i]);
   }
-  free(pidx.variable); 
-  pidx.variable=0;
+  free(pidx.varDesc); 
+  pidx.varDesc=0;
 
 #endif
 

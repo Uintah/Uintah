@@ -374,18 +374,14 @@ namespace WasatchCore {
         if( doX_ ){ // 1D x or 2D xy or 2D xz
           const XFace& strainxx = strainxx_->field_ref();
 
-          SpatialOps::SpatFldPtr<XFace> xvelFacePtr = SpatialOps::SpatialFieldStore::get<XFace>( strainxx );
-          XFace& xvel = *xvelFacePtr;
-          xvel <<= (*xInterp_)( xvel_->field_ref() );
-
-          result <<= (*divX_)( 2.0*(*xInterp_)(visc) * (strainxx - 1.0/3.0*(*sVol2XFluxInterpOp_)(dil)) * xvel );
+          result <<= (*divX_)( 2.0*(*xInterp_)(visc) * (strainxx - 1.0/3.0*(*sVol2XFluxInterpOp_)(dil)) * (*xInterp_)(xvel_->field_ref()) );
 
           if( doY_ ){
             const YFace& strainyx = strainyx_->field_ref();
             const XFace& strainxy = strainxy_->field_ref();
             const YFace& strainyy = strainyy_->field_ref();
 
-            result <<= result + (*divX_)( 2.0*(*xInterp_)(visc) * strainxy * xvel)
+            result <<= result + (*divX_)( 2.0*(*xInterp_)(visc) * strainxy * (*xInterp_)(xvel_->field_ref()) )
                               + (*divY_)( 2.0*(*yInterp_)(visc) * strainyx * (*yInterp_)(yvel_->field_ref()) );
           }
           if( doZ_ ){
@@ -393,25 +389,21 @@ namespace WasatchCore {
             const XFace& strainxz = strainxz_->field_ref();
             const ZFace& strainzz = strainzz_->field_ref();
 
-            result <<= result + (*divX_)( 2.0*(*xInterp_)(visc) * strainxz * xvel )
+            result <<= result + (*divX_)( 2.0*(*xInterp_)(visc) * strainxz * (*xInterp_)(xvel_->field_ref()) )
                               + (*divZ_)( 2.0*(*zInterp_)(visc) * strainzx * (*zInterp_)(zvel_->field_ref()) );
           }
         } // doX_
         else if( doY_ ){ // 1D y or 2D yz
           const YFace& strainyy = strainyy_->field_ref();
 
-          SpatialOps::SpatFldPtr<YFace> yvelFacePtr = SpatialOps::SpatialFieldStore::get<YFace>( strainyy );
-          YFace& yvel = *yvelFacePtr;
-          yvel <<= (*yInterp_)( yvel_->field_ref() );
-
-          result <<= result + (*divY_)( 2.0*(*yInterp_)(visc) * (strainyy- 1.0/3.0*(*sVol2YFluxInterpOp_)(dil)) * yvel );
+          result <<= result + (*divY_)( 2.0*(*yInterp_)(visc) * (strainyy- 1.0/3.0*(*sVol2YFluxInterpOp_)(dil)) * (*yInterp_)( yvel_->field_ref() ) );
 
           if( doZ_ ){
             const ZFace& strainzy = strainzy_->field_ref();
             const YFace& strainyz = strainyz_->field_ref();
             const ZFace& strainzz = strainzz_->field_ref();
 
-            result <<= result + (*divY_)( 2.0*(*yInterp_)(visc) * strainyz * yvel )
+            result <<= result + (*divY_)( 2.0*(*yInterp_)(visc) * strainyz * (*yInterp_)( yvel_->field_ref() ) )
                               + (*divZ_)( 2.0*(*zInterp_)(visc) * strainzy * (*zInterp_)(zvel_->field_ref()) );
           }
         }
