@@ -23,6 +23,7 @@
  */
 
 #include <CCA/Components/Schedulers/ThreadedTaskScheduler.h>
+#include <CCA/Components/Schedulers/RuntimeStats.hpp>
 
 #include <CCA/Components/Schedulers/TaskGraph.h>
 #include <CCA/Components/Schedulers/OnDemandDataWarehouse.h>
@@ -308,6 +309,9 @@ void ThreadedTaskScheduler::execute(  int tgnum /*=0*/ , int iteration /*=0*/ )
 //  }
 
   ASSERTRANGE(tgnum, 0, static_cast<int>(graphs.size()));
+
+  RuntimeStats::initialize_timestep(graphs);
+
   TaskGraph* tg = graphs[tgnum];
   tg->setIteration(iteration);
   currentTG_ = tgnum;
@@ -450,6 +454,9 @@ void ThreadedTaskScheduler::execute(  int tgnum /*=0*/ , int iteration /*=0*/ )
   if (!m_parent_scheduler) {  // only do on toplevel scheduler
     output_timing_stats("ThreadFunnledScheduler");
   }
+
+  RuntimeStats::report(d_myworld->getComm(), d_sharedState->d_runTimeStats);
+
 } // end execute()
 
 

@@ -144,8 +144,6 @@ public:
     MAX_TIMING_STATS
   };
 
-  friend class TaskRunner;
-
   struct TotalReduceTag{};
   struct TotalReduceMPITag{};
 
@@ -160,6 +158,8 @@ public:
 
   struct TotalWaitTag{};
   struct TotalWaitMPITag{};
+
+  friend class TaskRunner;
 
 
 
