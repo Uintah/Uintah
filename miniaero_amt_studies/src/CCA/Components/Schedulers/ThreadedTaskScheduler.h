@@ -40,6 +40,7 @@
 #include <Core/Util/InfoMapper.h>
 #include <Core/Util/Timers/Timers.hpp>
 
+#include <atomic>
 #include <fstream>
 #include <map>
 #include <mutex>
@@ -254,8 +255,6 @@ private:
 
   unsigned int                m_num_messages{};
   double                      m_message_volume{};
-
-  std::mutex                  m_lb_mutex{};    ///> load balancer mutex
 
   ThreadedTaskScheduler     * m_parent_scheduler;
 
