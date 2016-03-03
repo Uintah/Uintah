@@ -171,7 +171,7 @@ struct computeEnthalpySource{
          double alpha_rc=(rawcoal_massph+char_massph);
          double alpha_cp=TCA->cp_c(particle_temperatureph)*alpha_rc+TCA->cp_ash(particle_temperatureph)*TCA->_init_ash[TCA->_nQuadNode];
          max_Q_convection=alpha_cp*(deltaT/dt);
-         if (abs(Q_convection) > abs(max_Q_convection)){
+         if (std::abs(Q_convection) > std::abs(max_Q_convection)){
          Q_convection = max_Q_convection;
          }
          // Radiation part: -------------------------
@@ -182,7 +182,7 @@ struct computeEnthalpySource{
          FSum = radiationVolqIN(i,j,k);
          Q_radiation = abskp(i,j,k)*(FSum - Eb);
          double Q_radMax=(std::pow( radiationVolqIN(i,j,k) / (4.0 * TCA->_sigma )  , 0.25)-rad_particle_temperature(i,j,k))/(dt)*alpha_cp;
-         if (abs(Q_radMax) < abs(Q_radiation)){
+         if (std::abs(Q_radMax) < std::abs(Q_radiation)){
          Q_radiation=Q_radMax;
          }
          }
