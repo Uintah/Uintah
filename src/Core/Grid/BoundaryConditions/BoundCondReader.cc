@@ -31,6 +31,7 @@
 #include <Core/Grid/BoundaryConditions/SideBCData.h>
 #include <Core/Grid/BoundaryConditions/CircleBCData.h>
 #include <Core/Grid/BoundaryConditions/AnnulusBCData.h>
+#include <Core/Grid/BoundaryConditions/RectangulusBCData.h>
 #include <Core/Grid/BoundaryConditions/EllipseBCData.h>
 #include <Core/Grid/BoundaryConditions/RectangleBCData.h>
 #include <Core/Grid/BoundaryConditions/UnionBCData.h>
@@ -268,6 +269,75 @@ BCGeomBase* BoundCondReader::createBoundaryConditionFace(ProblemSpecP& face_ps,
       throw ProblemSetupException(warn.str(), __FILE__, __LINE__);
     }
     bcGeom = scinew AnnulusBCData(p,i_r,o_r);
+  }
+  else if (values.find("rectangulus") != values.end()) {
+    fc = values["rectangulus"];
+    whichPatchFace(fc, face_side, plusMinusFaces, p_dir);
+    string in_low = values["inner_lower"];
+    string in_up = values["inner_upper"];
+    string out_low = values["outer_lower"];
+    string out_up = values["outer_upper"];
+    std::stringstream in_low_stream(in_low), in_up_stream(in_up);
+    std::stringstream out_low_stream(out_low), out_up_stream(out_up);
+    double in_lower[3],in_upper[3];
+    double out_lower[3],out_upper[3];
+    in_low_stream >> in_lower[0] >> in_lower[1] >> in_lower[2];
+    out_low_stream >> out_lower[0] >> out_lower[1] >>out_lower[2];
+    in_up_stream >> in_upper[0] >> in_upper[1] >> in_upper[2];
+    out_up_stream >> out_upper[0] >> out_upper[1] >> out_upper[2];
+    Point l(in_lower[0],in_lower[1],in_lower[2]),u(in_upper[0],in_upper[1],in_upper[2]);
+    Point l2(out_lower[0],out_lower[1],out_lower[2]),u2(out_upper[0],out_upper[1],out_upper[2]);
+   
+    //  bullet proofing-- both rectangles must be on the same plane as the face
+    bool isOnFace1 = false;
+    bool isOnFace2 = false;
+
+    if(plusMinusFaces == -1){    // x-, y-, z- faces
+      isOnFace1 = is_on_face(p_dir,l,grid_LoPts) && is_on_face(p_dir,u,grid_LoPts);
+      isOnFace2 = is_on_face(p_dir,l2,grid_LoPts) && is_on_face(p_dir,u2,grid_LoPts);
+    }
+    
+    if(plusMinusFaces == 1){     // x+, y+, z+ faces
+      isOnFace1 = is_on_face(p_dir,l,grid_HiPts) && is_on_face(p_dir,u,grid_HiPts);      
+      isOnFace2 = is_on_face(p_dir,l2,grid_HiPts) && is_on_face(p_dir,u2,grid_HiPts);      
+    }    
+    
+    if(!isOnFace1 || !isOnFace2){
+      ostringstream warn;
+      warn<<"ERROR: Input file\n The rectangle BC geometry is not correctly specified."
+          << " The low " << l << " high " << u << " points must be on the same plane" 
+          << " The low " << l2 << " high " << u2 << " points must be on the same plane" 
+          << " as face (" << fc <<"). Double check against and Level:box spec. \n\n";
+      throw ProblemSetupException(warn.str(), __FILE__, __LINE__);
+    }   
+   
+    if (in_low == "" || in_up == "") {
+      ostringstream warn;
+      warn<<"ERROR\n Rectangle BC geometry not correctly specified \n"
+          << " you must specify in_lower [x,y,z] and in_upper[x,y,z] \n\n";
+      throw ProblemSetupException(warn.str(), __FILE__, __LINE__);
+    }
+    if (out_low == "" || out_up == "") {
+      ostringstream warn;
+      warn<<"ERROR\n Rectangle BC geometry not correctly specified \n"
+          << " you must specify out_lower [x,y,z] and out_upper[x,y,z] \n\n";
+      throw ProblemSetupException(warn.str(), __FILE__, __LINE__);
+    }
+    if ( (l.x() >  u.x() || l.y() >  u.y() || l.z() >  u.z()) ||
+         (l.x() == u.x() && l.y() == u.y() && l.z() == u.z())){
+      ostringstream warn;
+      warn<<"ERROR\n Rectangle BC geometry not correctly specified \n"
+          << " lower pt "<< l <<" upper pt " << u;
+      throw ProblemSetupException(warn.str(), __FILE__, __LINE__);
+    }
+    if ( (l2.x() >  u2.x() || l2.y() >  u2.y() || l2.z() >  u2.z()) ||
+         (l2.x() == u2.x() && l2.y() == u2.y() && l2.z() == u2.z())){
+      ostringstream warn;
+      warn<<"ERROR\n Rectangle BC geometry not correctly specified \n"
+          << " lower pt "<< l <<" upper pt " << u;
+      throw ProblemSetupException(warn.str(), __FILE__, __LINE__);
+    }
+    bcGeom = scinew RectangulusBCData(l,u,l2,u2);
   }
   else if (values.find("ellipse") != values.end()) {
     fc = values["ellipse"];

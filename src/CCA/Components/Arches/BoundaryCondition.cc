@@ -1968,6 +1968,8 @@ BoundaryCondition::setupBCs( ProblemSpecP& db )
         db_face->getAttribute("circle",which_face);
       } else if ( db_face->getAttribute( "rectangle", which_face)) {
         db_face->getAttribute("rectangle",which_face);
+      } else if ( db_face->getAttribute( "rectangulus", which_face)) {
+        db_face->getAttribute("rectangulus",which_face);
       } else if ( db_face->getAttribute( "annulus", which_face)) {
         db_face->getAttribute("annulus",which_face);
       } else if ( db_face->getAttribute( "ellipse", which_face)) {
