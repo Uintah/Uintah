@@ -1279,7 +1279,8 @@ void
 SchedulerCommon::scheduleAndDoDataCopy( const GridP&               grid,
                                               SimulationInterface* sim )
 {
-  Timers::Simple timer{};
+  //------------------------------< begin RegriddingCompilationTime timing >------------------------------
+  Timers::Simple regrid_timer;
 
   // TODO - use the current initReqs and push them back, instead of doing this...
   // clear the old list of vars and matls
@@ -1557,14 +1558,18 @@ SchedulerCommon::scheduleAndDoDataCopy( const GridP&               grid,
 #endif
   this->compile();
 
-  d_sharedState->d_runTimeStats[SimulationState::RegriddingCompilationTime] += timer.nanoseconds();
+  double total_regrid_time = regrid_timer.seconds();
+  d_sharedState->d_runTimeStats[SimulationState::RegriddingCompilationTime] += total_regrid_time;
+  //------------------------------< end RegriddingCompilationTime timing >------------------------------
 
   // save these and restore them, since the next execute will append the scheduler's, and we don't want to.
   double executeTime = d_sharedState->d_runTimeStats[SimulationState::TaskExecTime];
   double globalCommTime = d_sharedState->d_runTimeStats[SimulationState::TaskGlobalCommTime];
   double localCommTime = d_sharedState->d_runTimeStats[SimulationState::TaskLocalCommTime];
 
-  timer.reset();
+
+  //------------------------------< begin RegriddingCopyDataTime timing >------------------------------
+  regrid_timer.reset();
 
   this->execute();
 
@@ -1610,7 +1615,11 @@ SchedulerCommon::scheduleAndDoDataCopy( const GridP&               grid,
 
   newDataWarehouse->refinalize();
 
-  d_sharedState->d_runTimeStats[SimulationState::RegriddingCopyDataTime] += timer.nanoseconds();
+  double total_sched_copy_time = regrid_timer.seconds();
+  d_sharedState->d_runTimeStats[SimulationState::RegriddingCopyDataTime] += total_sched_copy_time;
+  //------------------------------< end RegriddingCopyDataTime timing >------------------------------
+
+
   d_sharedState->d_runTimeStats[SimulationState::TaskExecTime] = executeTime;
   d_sharedState->d_runTimeStats[SimulationState::TaskGlobalCommTime] = globalCommTime;
   d_sharedState->d_runTimeStats[SimulationState::TaskLocalCommTime] = localCommTime;

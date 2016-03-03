@@ -39,7 +39,6 @@
 #include <Core/Parallel/Parallel.h>
 #include <Core/Parallel/ProcessorGroup.h>
 #include <Core/ProblemSpec/ProblemSpec.h>
-#include <Core/Thread/Time.h>
 #include <Core/Thread/Thread.h>
 #include <Core/Util/DebugStream.h>
 #include <Core/Util/DOUT.hpp>
@@ -674,7 +673,7 @@ SimulationController::printSimulationStats ( int timestep, double delt, double t
     //calcualte total weight by incrementing through the overhead sample array backwards and multiplying samples by the weights
     for( int i = 0; i < t; i++ ) {
       overhead += d_sharedState->overhead[(d_sharedState->overheadIndex+OVERHEAD_WINDOW-i)%OVERHEAD_WINDOW] * d_sharedState->overheadWeights[i];
-      weight += d_sharedState->overheadWeights[i];
+      weight   += d_sharedState->overheadWeights[i];
     }
 
     d_sharedState->overheadAvg = overhead/weight; 
@@ -755,29 +754,30 @@ SimulationController::printSimulationStats ( int timestep, double delt, double t
 
       for (unsigned int i=0; i<runTimeStats.size(); ++i)
       {
-	SimulationState::RunTimeStat e = (SimulationState::RunTimeStat) i;
+	      SimulationState::RunTimeStat e = (SimulationState::RunTimeStat) i;
 	
-	if (runTimeStats.getMaximum(e) > 0)
-	{
-	  stats << "  " << std::left << std::setw(19)<< runTimeStats.getName(e)
-		<< "[" << runTimeStats.getUnits(e) << "]"
-		<< " : " << std::setw(12) << runTimeStats.getAverage(e)
-		<< " : " << std::setw(12) << runTimeStats.getMaximum(e)
-		<< " : " << std::setw(10) << runTimeStats.getRank(e)
-		<< " : " << std::setw(10)
-		<< 100*(1-(runTimeStats.getAverage(e)/runTimeStats.getMaximum(e))) << "\n";
-	}
+	      if (runTimeStats.getMaximum(e) > 0)
+	      {
+	        stats << "  " << std::left << std::setw(19)<< runTimeStats.getName(e)
+	      	<< "[" << runTimeStats.getUnits(e) << "]"
+	      	<< " : " << std::setw(12) << runTimeStats.getAverage(e)
+	      	<< " : " << std::setw(12) << runTimeStats.getMaximum(e)
+	      	<< " : " << std::setw(10) << runTimeStats.getRank(e)
+	      	<< " : " << std::setw(10)
+	      	<< 100*(1-(runTimeStats.getAverage(e)/runTimeStats.getMaximum(e))) << "\n";
+	      }
       }
       
-      if( d_n > 2 && !std::isnan(d_sharedState->overheadAvg) ) {
-        stats << "  Percent Time in overhead:"
-              << d_sharedState->overheadAvg*100 <<  "\n";
+      if( d_n > 2 && !std::isnan(d_sharedState->overheadAvg) )
+      {
+        stats << "  Time in overhead (%): " << d_sharedState->overheadAvg*100 <<  "\n";
       }
     }
 
     if ( d_n > 0 ) {
-      double realSecondsNow = (d_wallTime - d_prevWallTime)/delt;
-      double realSecondsAvg = (d_wallTime - d_startTime)/(time-d_startSimTime);
+
+      double realSecondsNow = (d_wallTime - d_prevWallTime) / delt;
+      double realSecondsAvg = (d_wallTime - d_startTime) / (time - d_startSimTime);
 
       dbgTime << "1 sim second takes ";
 

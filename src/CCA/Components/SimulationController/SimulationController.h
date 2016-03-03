@@ -72,7 +72,7 @@ class  SimulationTime;
        Simulation_Controller
       
   DESCRIPTION
-       Abstract baseclass for the SimulationControllers.
+       Abstract base class for the SimulationControllers.
        Introduced to make the "old" SimulationController
        and the new AMRSimulationController interchangeable.
      
@@ -86,6 +86,7 @@ class SimulationController : public UintahParallelComponent {
 
 public:
   SimulationController( const ProcessorGroup* myworld, bool doAMR, ProblemSpecP pspec );
+
   virtual ~SimulationController();
 
   //! Notifies (before calling run) the SimulationController
@@ -102,14 +103,23 @@ public:
   void setReduceUdaFlags( const std::string& fromDir );
      
   ProblemSpecP         getProblemSpecP() { return d_ups; }
+
   ProblemSpecP         getGridProblemSpecP() { return d_grid_ps; }
+
   SimulationStateP     getSimulationStateP() { return d_sharedState; }
+
   SchedulerP           getSchedulerP() { return d_scheduler; }
+
   LoadBalancer*        getLoadBalancer() { return d_lb; }
+
   Output*              getOutput() { return d_output; }
+
   SimulationTime*      getSimulationTime() { return d_timeinfo; }
+
   SimulationInterface* getSimulationInterface() { return d_sim; }
+
   Regridder*           getRegridder() { return d_regridder; }
+
   DataArchive*         getDataArchive() { return d_archive; }
 
   bool                 doAMR() { return d_doAMR; }

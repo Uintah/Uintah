@@ -60,9 +60,9 @@
 #include <Core/Util/DOUT.hpp>
 #include <Core/Util/Timers/Timers.hpp>
 
-#include <sci_defs/visit_defs.h>
-#include <sci_defs/malloc_defs.h>
 #include <sci_defs/gperftools_defs.h>
+#include <sci_defs/malloc_defs.h>
+#include <sci_defs/visit_defs.h>
 
 
 #ifdef HAVE_VISIT
@@ -304,7 +304,7 @@ AMRSimulationController::run()
     }
      
     if (dbg_barrier.active()) {
-      Timers::Simple barrier_timer{};
+      Timers::Simple barrier_timer;
       MPI_Barrier(d_myworld->getComm());
       double barrier_time = barrier_timer.seconds();
       barrier_times[2] += barrier_time;
@@ -369,7 +369,7 @@ AMRSimulationController::run()
     }
 
     if (dbg_barrier.active()) {
-      Timers::Simple barrier_timer{};
+      Timers::Simple barrier_timer;
       double barrier_time = barrier_timer.seconds();
       barrier_times[3] += barrier_time;
     }
@@ -442,7 +442,7 @@ AMRSimulationController::run()
 
     // If debugging output the barrier times.
     if (dbg_barrier.active()) {
-      Timers::Simple barrier_timer{};
+      Timers::Simple barrier_timer;
       double barrier_time = barrier_timer.seconds();
       barrier_times[4] += barrier_time;
 
@@ -856,7 +856,7 @@ AMRSimulationController::doInitialTimestep(GridP& grid, double& t)
       }
       
       //------------------------------< begin tg compile timing >------------------------------
-      Timers::Simple tg_compile_timer{};
+      Timers::Simple tg_compile_timer;
 
       d_scheduler->compile();
 
@@ -886,7 +886,7 @@ AMRSimulationController::doRegridding( GridP & currentGrid, bool initialTimestep
 {
   MALLOC_TRACE_TAG_SCOPE("AMRSimulationController::doRegridding()");
 
-  Timers::Simple regrid_timer{};
+  Timers::Simple regrid_timer;
 
   //------------------------------< begin regrid and total-regrid timing >------------------------------
   regrid_timer.reset();
@@ -895,7 +895,7 @@ AMRSimulationController::doRegridding( GridP & currentGrid, bool initialTimestep
   currentGrid = d_regridder->regrid(oldGrid.get_rep());
   
   if (dbg_barrier.active()) {
-    Timers::Simple barrier_timer{};
+    Timers::Simple barrier_timer;
     MPI_Barrier(d_myworld->getComm());
     double barrier_time = barrier_timer.seconds();
     barrier_times[0] += barrier_time;
@@ -917,7 +917,7 @@ AMRSimulationController::doRegridding( GridP & currentGrid, bool initialTimestep
     d_lb->possiblyDynamicallyReallocate(currentGrid, lbstate);
 
     if (dbg_barrier.active()) {
-      Timers::Simple barrier_timer{};
+      Timers::Simple barrier_timer;
       MPI_Barrier(d_myworld->getComm());
       double barrier_time = barrier_timer.seconds();
       barrier_times[1] += barrier_time;
@@ -960,7 +960,7 @@ AMRSimulationController::doRegridding( GridP & currentGrid, bool initialTimestep
     }  // rank 0
 
     //------------------------------< begin schedule timing >------------------------------
-    Timers::Simple scheduler_timer{};
+    Timers::Simple scheduler_timer;
     
     if( !initialTimestep ) {
       d_scheduler->scheduleAndDoDataCopy( currentGrid, d_sim );
@@ -993,7 +993,7 @@ AMRSimulationController::recompile(double t, double delt, GridP& currentGrid, in
 {
   MALLOC_TRACE_TAG_SCOPE("AMRSimulationController::Recompile()");
 
-  Timers::Simple tg_compile_timer{};
+  Timers::Simple tg_compile_timer;
 
   proc0cout << "Compiling taskgraph...\n";
 

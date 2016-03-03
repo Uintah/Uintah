@@ -101,20 +101,20 @@ SimulationState::SimulationState(ProblemSpecP &ps)
     amr->get("useLockStep", d_lockstepAMR);
   }
   
-  all_mpm_matls     = 0;
-  all_cz_matls      = 0;
-  all_ice_matls     = 0;
-  all_wasatch_matls = 0;  
-  all_arches_matls  = 0;
-  all_matls         = 0;
-  orig_all_matls    = 0;
-  allInOneMatl      = 0;
+  all_mpm_matls      = 0;
+  all_cz_matls       = 0;
+  all_ice_matls      = 0;
+  all_wasatch_matls  = 0;
+  all_arches_matls   = 0;
+  all_matls          = 0;
+  orig_all_matls     = 0;
+  allInOneMatl       = 0;
   
-  max_matl_index    = 0;
-  refine_flag_matls = 0;
+  max_matl_index     = 0;
+  refine_flag_matls  = 0;
   d_isRegridTimestep = 0;
-  d_simTime         = 0;
-  d_numDims         = 0;
+  d_simTime          = 0;
+  d_numDims          = 0;
   
   d_isCopyDataTimestep = 0;
   d_recompileTaskGraph = false;
@@ -122,12 +122,13 @@ SimulationState::SimulationState(ProblemSpecP &ps)
   d_activeDims[0] = d_activeDims[1] = d_activeDims[2] = 0;
   
   //initialize the overhead percentage
-  overheadIndex=0;
-  overheadAvg=0;
-  for(int i=0;i<OVERHEAD_WINDOW;i++){
-    double x=i/(OVERHEAD_WINDOW/2);
-    overheadWeights[i]=8-x*x*x;
-    overhead[i]=0;
+  overheadIndex = 0;
+  overheadAvg   = 0;
+
+  for (int i = 0; i < OVERHEAD_WINDOW; i++) {
+    double x = i / (OVERHEAD_WINDOW / 2);
+    overheadWeights[i] = 8 - x * x * x;
+    overhead[i] = 0;
   }
 
   std::string timeStr("seconds");
