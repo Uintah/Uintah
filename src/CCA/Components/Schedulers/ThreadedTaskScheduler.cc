@@ -439,7 +439,7 @@ void ThreadedTaskScheduler::execute(  int tgnum /*=0*/ , int iteration /*=0*/ )
     compute_net_runtime_stats(d_sharedState->d_runTimeStats);
     double thread_wait_time = 0.0;
     for (int i = 1; i < m_num_threads; ++i) {
-      thread_wait_time += Impl::g_runners[i]->m_task_wait_time.nanoseconds();
+      thread_wait_time += Impl::g_runners[i]->m_task_wait_time.seconds();
     }
     d_sharedState->d_runTimeStats[SimulationState::TaskWaitThreadTime] += (thread_wait_time / (m_num_threads - 1) );
   }
@@ -788,7 +788,7 @@ void ThreadedTaskScheduler::run_task( DetailedTask * task, int iteration )
     Timers::ThreadTrip< TotalTaskTag > task_timer;
     task->doit(d_myworld, dws, plain_old_dws);
   }
-  uint64_t total_task_time = m_task_exec_timer.nanoseconds();
+  double total_task_time = m_task_exec_timer.seconds();
 
 
   if (trackingVarsPrintLocation_ & SchedulerCommon::PRINT_AFTER_EXEC) {
