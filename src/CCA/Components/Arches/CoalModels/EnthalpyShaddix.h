@@ -23,6 +23,8 @@
   *
   */
 
+#define USE_FUNCTOR 1
+#undef  USE_FUNCTOR 
 namespace Uintah{
 
 //---------------------------------------------------------------------------
@@ -53,7 +55,183 @@ private:
 //---------------------------------------------------------------------------
 
 class EnthalpyShaddix: public HeatTransfer {
+
+struct computeEnthalpySource{  
+       computeEnthalpySource(  double _dt,
+                               constCCVariable<double> &_weight,
+                               constCCVariable<double> &_rawcoal_mass,
+                               constCCVariable<double> &_char_mass,
+                               constCCVariable<double> &_particle_temperature,
+                               constCCVariable<double> &_temperature,               
+                               constCCVariable<double> &_specific_heat,
+                               constCCVariable<double> &_radiationVolqIN,
+                               constCCVariable<double> &_abskp,
+                               constCCVariable<double> &_rad_particle_temperature, 
+                               constCCVariable<double> &_den,
+                               constCCVariable<double> &_devol_gas_source,
+                               constCCVariable<double> &_chargas_source,
+                               constCCVariable<double> &_length,
+                               constCCVariable<double> &_charoxi_temp_source,
+                               constCCVariable<double> &_surface_rate,
+                               constCCVariable<Vector> &_gasVel,
+                               constCCVariable<Vector> &_partVel,
+                               CCVariable<double> &_heat_rate,
+                               CCVariable<double> &_gas_heat_rate,
+                               CCVariable<double> &_qconv,
+                               CCVariable<double> &_qrad,
+                               EnthalpyShaddix* theClassAbove ):
+                                dt(_dt),
+                                weight(_weight),
+                                rawcoal_mass(_rawcoal_mass),
+                                char_mass(_char_mass),
+                                particle_temperature(_particle_temperature),
+                                temperature(_temperature),               
+                                specific_heat(_specific_heat),
+                                radiationVolqIN(_radiationVolqIN),
+                                abskp(_abskp),
+                                rad_particle_temperature(_rad_particle_temperature), 
+                                den(_den),
+                                devol_gas_source(_devol_gas_source),
+                                chargas_source(_chargas_source),
+                                length(_length),
+                                charoxi_temp_source(_charoxi_temp_source),
+                                surface_rate(_surface_rate),
+                                gasVel(_gasVel),
+                                partVel(_partVel),
+                                heat_rate(_heat_rate),
+                                gas_heat_rate(_gas_heat_rate),
+                                qconv(_qconv),
+                                qrad(_qrad), 
+                                TCA(theClassAbove) {  } 
+
+
+       void operator()(int i , int j, int k ) const {
+         double max_Q_convection;
+         double heat_rate_;
+         double gas_heat_rate_;
+         double Q_convection;
+         double Q_radiation;
+         double Q_reaction;
+         double blow;
+         double kappa;
+
+         if (weight(i,j,k)/TCA->_weight_scaling_constant < TCA->_weight_small) {
+         heat_rate_ = 0.0;
+         gas_heat_rate_ = 0.0;
+         Q_convection = 0.0;
+         Q_radiation = 0.0;
+         } else {
+
+         double rawcoal_massph=rawcoal_mass(i,j,k);
+         double char_massph=char_mass(i,j,k);
+         double temperatureph=temperature(i,j,k);
+         double specific_heatph=specific_heat(i,j,k);
+         double denph=den(i,j,k);
+         double devol_gas_sourceph=devol_gas_source(i,j,k);
+         double chargas_sourceph=chargas_source(i,j,k);
+         double lengthph=length(i,j,k);
+         double weightph=weight(i,j,k);
+         double particle_temperatureph=particle_temperature(i,j,k);
+         double charoxi_temp_sourceph=charoxi_temp_source(i,j,k);
+         double surface_rateph=surface_rate(i,j,k);
+
+         // velocities
+         Vector gas_velocity = gasVel(i,j,k);
+         Vector particle_velocity = partVel(i,j,k);
+
+
+         double FSum = 0.0;
+
+         // intermediate calculation values
+         double Re;
+         double Nu;
+         double rkg;
+         // Convection part: -----------------------
+         // Reynolds number
+         double delta_V =sqrt(std::pow(gas_velocity.x() - particle_velocity.x(),2.0) + std::pow(gas_velocity.y() - particle_velocity.y(),2.0)+std::pow(gas_velocity.z() - particle_velocity.z(),2.0));
+         Re = delta_V*lengthph*denph/TCA->_visc;
+
+         // Nusselt number
+         Nu = 2.0 + 0.65*std::pow(Re,0.50)*std::pow(TCA->_Pr,(1.0/3.0));
+
+         // Gas thermal conductivity
+         rkg = TCA->props(temperatureph, particle_temperatureph); // [=] J/s/m/K
+
+         // A BLOWING CORRECTION TO THE HEAT TRANSFER MODEL IS EMPLOYED
+         kappa =  -surface_rateph*lengthph*specific_heatph/(2.0*rkg);
+         if(std::abs(exp(kappa)-1.0) < 1e-16){
+         blow = 1.0;
+         } else {
+         blow = kappa/(exp(kappa)-1.0);
+         }
+
+         Q_convection = Nu*TCA->_pi*blow*rkg*lengthph*(temperatureph - particle_temperatureph); // J/(#.s)
+         //clip convection term if timesteps are too large
+         double deltaT=temperatureph-particle_temperatureph;
+         double alpha_rc=(rawcoal_massph+char_massph);
+         double alpha_cp=TCA->cp_c(particle_temperatureph)*alpha_rc+TCA->cp_ash(particle_temperatureph)*TCA->_init_ash[TCA->_nQuadNode];
+         max_Q_convection=alpha_cp*(deltaT/dt);
+         if (abs(Q_convection) > abs(max_Q_convection)){
+         Q_convection = max_Q_convection;
+         }
+         // Radiation part: -------------------------
+         Q_radiation = 0.0;
+         if ( TCA->_radiationOn) {
+         double Eb;
+         Eb = 4.0*TCA->_sigma*std::pow(rad_particle_temperature(i,j,k),4.0);
+         FSum = radiationVolqIN(i,j,k);
+         Q_radiation = abskp(i,j,k)*(FSum - Eb);
+         double Q_radMax=(std::pow( radiationVolqIN(i,j,k) / (4.0 * TCA->_sigma )  , 0.25)-rad_particle_temperature(i,j,k))/(dt)*alpha_cp;
+         if (abs(Q_radMax) < abs(Q_radiation)){
+         Q_radiation=Q_radMax;
+         }
+         }
+         double hint = -156.076 + 380/(-1 + exp(380 / particle_temperatureph)) + 3600/(-1 + exp(1800 / particle_temperatureph));
+         double hc = TCA->_Hc0 + hint * TCA->_RdMW;
+         Q_reaction = charoxi_temp_sourceph;
+         // This needs to be made consistant with lagrangian particles!!! - derek 12/14
+         heat_rate_ = (Q_convection*weightph + Q_radiation + TCA->_ksi*Q_reaction - (devol_gas_sourceph + chargas_sourceph)*hc)/
+         (TCA->_enthalpy_scaling_constant*TCA->_weight_scaling_constant);
+         gas_heat_rate_ = -weightph*Q_convection - Q_radiation - TCA->_ksi*Q_reaction + (devol_gas_sourceph+chargas_sourceph)*hc;
+         }
+         heat_rate(i,j,k) = heat_rate_;
+         gas_heat_rate(i,j,k) = gas_heat_rate_;
+         qconv(i,j,k) = Q_convection;
+         qrad(i,j,k) = Q_radiation;
+       }
+
+  private:
+                               double dt;
+                               constCCVariable<double>& weight;
+                               constCCVariable<double>& rawcoal_mass;
+                               constCCVariable<double>& char_mass;
+                               constCCVariable<double>& particle_temperature;
+                               constCCVariable<double>& temperature;               
+                               constCCVariable<double>& specific_heat;
+                               constCCVariable<double>& radiationVolqIN;
+                               constCCVariable<double>& abskp;
+                               constCCVariable<double>& rad_particle_temperature;
+                               constCCVariable<double>& den;
+                               constCCVariable<double>& devol_gas_source;
+                               constCCVariable<double>& chargas_source;
+                               constCCVariable<double>& length;
+                               constCCVariable<double>& charoxi_temp_source;
+                               constCCVariable<double>& surface_rate;
+                               constCCVariable<Vector> &gasVel;
+                               constCCVariable<Vector> &partVel;
+                               CCVariable<double>& heat_rate;
+                               CCVariable<double>& gas_heat_rate;
+                               CCVariable<double>& qconv;
+                               CCVariable<double>& qrad; 
+                               EnthalpyShaddix* TCA;
+
+};
+
 public: 
+
+       
+
+  friend struct computeEnthalpySource;
 
   typedef std::map< std::string, CharOxidation*> CharOxiModelMap;
   typedef std::map< std::string, Devolatilization*> DevolModelMap;
@@ -67,6 +245,8 @@ public:
                    int qn );
 
   ~EnthalpyShaddix();
+
+
 
   /////////////////////////////////////////
   // Initialization methods
@@ -193,6 +373,8 @@ private:
   double _enthalpy_scaling_constant;
   double _weight_scaling_constant;
   double _weight_small;   ///< small weight 
+  bool   _radiationOn;
+  int   _nQuadNode;
   std::string _weight_name;
   std::vector<double> _init_ash;
   std::vector<double> _sizes;
