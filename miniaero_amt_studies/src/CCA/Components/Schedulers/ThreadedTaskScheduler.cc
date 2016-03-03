@@ -512,7 +512,7 @@ void ThreadedTaskScheduler::post_MPI_recvs( DetailedTask * task
                                           ,  int           iteration
                                           )
 {
-  Timers::ThreadTrip< TotalRecvTag > recv_timer;
+  RuntimeStats::RecvTimer recv_timer;
 
   if (trackingVarsPrintLocation_ & SchedulerCommon::PRINT_BEFORE_COMM) {
     printTrackedVars(task, SchedulerCommon::PRINT_BEFORE_COMM);
@@ -604,8 +604,6 @@ void ThreadedTaskScheduler::post_MPI_recvs( DetailedTask * task
 
       ASSERT(batch->messageTag > 0);
 
-      Timers::ThreadTrip< TotalRecvMPITag > mpi_recv_timer;
-
       void* buf;
       int count;
       MPI_Datatype datatype;
@@ -622,6 +620,7 @@ void ThreadedTaskScheduler::post_MPI_recvs( DetailedTask * task
       CommPool::iterator iter = m_comm_requests.emplace(t_emplace, REQUEST_RECV, new RecvHandle(p_mpibuff, pBatchRecvHandler));
       t_emplace = iter;
 
+      RuntimeStats::RecvMPITimer mpi_recv_timer;
       MPI_Irecv(buf, count, datatype, from, batch->messageTag, d_myworld->getComm(), iter->request());
 
     } else {
@@ -643,7 +642,7 @@ void ThreadedTaskScheduler::post_MPI_recvs( DetailedTask * task
 //
 void ThreadedTaskScheduler::post_MPI_sends( DetailedTask * task, int iteration )
 {
-  Timers::ThreadTrip< TotalSendTag > send_timer;
+  RuntimeStats::SendTimer send_timer;
 
   int num_sends    = 0;
   int volume_sends = 0;
@@ -709,8 +708,6 @@ void ThreadedTaskScheduler::post_MPI_sends( DetailedTask * task, int iteration )
     if (mpibuff.count() > 0) {
       ASSERT(batch->messageTag > 0);
 
-      Timers::ThreadTrip< TotalSendMPITag > mpi_send_timer;
-
       void* buf;
       int count;
       MPI_Datatype datatype;
@@ -733,6 +730,7 @@ void ThreadedTaskScheduler::post_MPI_sends( DetailedTask * task, int iteration )
       CommPool::iterator iter = m_comm_requests.emplace(t_emplace, REQUEST_SEND, new SendHandle(mpibuff.takeSendlist()));
       t_emplace = iter;
 
+      RuntimeStats::SendMPITimer mpi_send_timer;
       MPI_Isend(buf, count, datatype, to, batch->messageTag, d_myworld->getComm(), iter->request());
     }
   }  // end for (DependencyBatch* batch = task->getComputes())
@@ -744,11 +742,11 @@ void ThreadedTaskScheduler::post_MPI_sends( DetailedTask * task, int iteration )
 //
 bool ThreadedTaskScheduler::process_MPI_requests()
 {
+  RuntimeStats::TestTimer mpi_test_timer;
+
   if (m_comm_requests.empty()) {
     return false;
   }
-
-  Timers::ThreadTrip < TotalWaitMPITag > mpi_wait_timer;
 
   bool result = false;
 
@@ -769,6 +767,8 @@ bool ThreadedTaskScheduler::process_MPI_requests()
 //
 void ThreadedTaskScheduler::run_task( DetailedTask * task, int iteration )
 {
+  RuntimeStats::ExecTimer total_exec_timer;
+
   if (waitout.active()) {
     waittimes[task->getTask()->getName()].fetch_add( Timers::ThreadTrip< TotalWaitMPITag >::total_nanoseconds(), std::memory_order_relaxed );
   }
@@ -782,13 +782,12 @@ void ThreadedTaskScheduler::run_task( DetailedTask * task, int iteration )
     plain_old_dws[i] = dws[i].get_rep();
   }
 
-  m_task_exec_timer.reset();
-  double task_start = m_task_exec_timer.seconds();
+  double total_task_time;
   {
-    Timers::ThreadTrip< TotalTaskTag > task_timer;
+    RuntimeStats::TaskExecTimer exec_timer(task, total_exec_timer);
     task->doit(d_myworld, dws, plain_old_dws);
+    total_task_time = exec_timer.seconds();
   }
-  double total_task_time = m_task_exec_timer.seconds();
 
 
   if (trackingVarsPrintLocation_ & SchedulerCommon::PRINT_AFTER_EXEC) {
@@ -797,16 +796,12 @@ void ThreadedTaskScheduler::run_task( DetailedTask * task, int iteration )
 
   std::lock_guard<std::mutex> lb_guard(s_lb_mutex);
   {
-    if (execout.active()) {
-      exectimes[task->getTask()->getName()].fetch_add( total_task_time, std::memory_order_relaxed );
-    }
-
     // if I do not have a sub scheduler
     if (!task->getTask()->getHasSubScheduler()) {
       //add my task time to the total time
       if (!d_sharedState->isCopyDataTimestep() && task->getTask()->getType() != Task::Output) {
         //add contribution for patchlist
-        SchedulerCommon::getLoadBalancer()->addContribution(task, total_task_time * 1.0e-9);
+        SchedulerCommon::getLoadBalancer()->addContribution(task, total_task_time);
       }
     }
   }
@@ -824,7 +819,7 @@ void ThreadedTaskScheduler::run_task( DetailedTask * task, int iteration )
     m_mpi_info.reset(0);
   }
 
-  SchedulerCommon::emitNode(task, task_start, total_task_time * 1.0e-9, 0);
+  SchedulerCommon::emitNode(task, 0, total_task_time, 0);
 
 }  // end runTask()
 

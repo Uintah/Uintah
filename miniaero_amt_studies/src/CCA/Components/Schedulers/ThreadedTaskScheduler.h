@@ -222,9 +222,7 @@ private:
   TaskPool   m_task_pool{};
 
   // Timers for MPI stats
-  Timers::Simple  m_mpi_test_time{};
   Timers::Simple  m_last_exec_timer{};
-  Timers::Simple  m_task_exec_timer{};
 
   bool     m_abort{ false };
   int      m_current_iteration{ 0 };
@@ -258,7 +256,6 @@ private:
   ReductionInfoMapper< TimingStat, double > m_mpi_info;
 
   std::map<std::string, std::atomic<uint64_t> > waittimes{};
-  std::map<std::string, std::atomic<uint64_t> > exectimes{};
 
 };
 

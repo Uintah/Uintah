@@ -159,10 +159,7 @@ inline std::string nanoseconds_to_string( int64_t ns )
 {
   std::ostringstream out;
 
-  if ( (double)ns < 1.0e5 ) {
-    out << std::setprecision(3) << ns << " ns";
-  }
-  else if ( (double)ns < 1.0e8) {
+  if ( (double)ns < 1.0e8) {
     out << std::setprecision(3) << (ns * 1.0e-6) << " ms";
   }
   else {
@@ -177,10 +174,7 @@ inline std::string nanoseconds_to_string( double ns )
 {
   std::ostringstream out;
 
-  if ( ns < 1.0e5 ) {
-    out << std::setprecision(3) << ns << " ns";
-  }
-  else if ( ns < 1.0e8) {
+  if ( ns < 1.0e8) {
     out << std::setprecision(3) << (ns * 1.0e-6) << " ms";
   } else {
     out << std::setprecision(3) << (ns * 1.0e-9) << " s ";
