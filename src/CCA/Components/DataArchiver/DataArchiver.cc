@@ -139,6 +139,7 @@ DataArchiver::problemSetup( const ProblemSpecP    & params,
 
   ProblemSpecP p = params->findBlock("DataArchiver");
   
+  //__________________________________
   // PIDX related
   string type;
   p->getAttribute("type", type);
@@ -2379,14 +2380,21 @@ DataArchiver::outputVariables(const ProcessorGroup * pg,
   //______________________________________________________________________
   //
   //  ToDo
-  //      Multiple patches per core (Sidharth)
-  //      turn off debugging inside of PIDX (Sidharth)
-  //      disable need for MPI in PIDX (Sidharth)
-  //      Fix ints issue in PIDX (sidharth)
-  //      Do we need patch_buffer?
+  //      Multiple patches per core.   This is needed for outputNthProc  (Sidharth)
+  //      Turn off output from inside of PIDX (Sidharth)
+  //      Disable need for MPI in PIDX (Sidharth)
+  //      Fix ints issue in PIDX (Sidharth)
   //      Do we need the memset calls?
+  //      Is Variable::emitPIDX() and Variable::readPIDX() efficient? 
+  //      Should we be using calloc() instead of malloc+memset?
   //
   if ( d_outputFileFormat == PIDX && type != CHECKPOINT_REDUCTION){
+  
+    //__________________________________
+    // bulletproofing
+    if( patches->size() > 1 ){
+      throw SCIRun::InternalError("ERROR: (PIDX:outputVariables) Only 1 patch per MPI process is currently supported.", __FILE__, __LINE__);
+    }
   
     //__________________________________
     // create the xml dom for this variable
