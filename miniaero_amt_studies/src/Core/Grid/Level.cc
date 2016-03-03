@@ -36,31 +36,25 @@
 #include <Core/Parallel/Parallel.h>
 #include <Core/Parallel/ProcessorGroup.h>
 #include <Core/ProblemSpec/ProblemSpec.h>
-#include <Core/Thread/AtomicCounter.h>
-#include <Core/Thread/Mutex.h>
 #include <Core/Thread/Thread.h>
-#include <Core/Thread/Time.h>
 #include <Core/Util/DebugStream.h>
 #include <Core/Util/FancyAssert.h>
 #include <Core/Util/Handle.h>
 #include <Core/Util/ProgressiveWarning.h>
 #include <Core/Util/Timers/Timers.hpp>
 
-#include <atomic>
 #include <algorithm>
+#include <atomic>
 #include <cmath>
 #include <iostream>
-#include <map>
 
-using namespace std;
 using namespace Uintah;
-using namespace SCIRun;
 
 namespace {
 
 std::atomic<int> ids{0};
-DebugStream   bcout("BCTypes", false);
-DebugStream   rgtimes("RGTimes",false);
+SCIRun::DebugStream   bcout("BCTypes", false);
+SCIRun::DebugStream   rgtimes("RGTimes",false);
 
 }
 
@@ -285,8 +279,8 @@ Level::performConsistencyCheck() const
       Box b2 = getBox(r2->getCellLowIndex(), r2->getCellHighIndex());
 
       if(b1.overlaps(b2)){
-        cerr << "r1: " << *r1 << '\n';
-        cerr << "r2: " << *r2 << '\n';
+        std::cerr << "r1: " << *r1 << '\n';
+        std::cerr << "r2: " << *r2 << '\n';
         SCI_THROW(InvalidGrid("Two patches overlap",__FILE__,__LINE__));
       }
     }
@@ -412,11 +406,11 @@ Level::getRelativeLevel( int offset ) const
 
 //______________________________________________________________________
 //
-Point
+SCIRun::Point
 Level::getNodePosition( const IntVector & v ) const
 {
   if( d_stretched ) {
-    return Point(d_facePosition[0][v.x()], d_facePosition[1][v.y()], d_facePosition[2][v.z()]);
+    return SCIRun::Point(d_facePosition[0][v.x()], d_facePosition[1][v.y()], d_facePosition[2][v.z()]);
   }
   else {
     return d_anchor+d_dcell*v;
@@ -426,13 +420,13 @@ Level::getNodePosition( const IntVector & v ) const
 //______________________________________________________________________
 //
 
-Point
+SCIRun::Point
 Level::getCellPosition( const IntVector & v ) const
 {
   if( d_stretched ) {
-    return Point((d_facePosition[0][v.x()]+d_facePosition[0][v.x()+1])*0.5,
-                 (d_facePosition[1][v.y()]+d_facePosition[1][v.y()+1])*0.5,
-                 (d_facePosition[2][v.z()]+d_facePosition[2][v.z()+1])*0.5);
+    return SCIRun::Point((d_facePosition[0][v.x()]+d_facePosition[0][v.x()+1])*0.5,
+                         (d_facePosition[1][v.y()]+d_facePosition[1][v.y()+1])*0.5,
+                         (d_facePosition[2][v.z()]+d_facePosition[2][v.z()+1])*0.5);
   }
   else {
     return d_anchor+d_dcell*v+d_dcell*0.5;
@@ -479,7 +473,7 @@ Level::getCellIndex( const Point & p ) const
 //______________________________________________________________________
 //
 
-Point
+SCIRun::Point
 Level::positionToIndex( const Point & p ) const
 {
   if(d_stretched){
@@ -499,9 +493,9 @@ Level::positionToIndex( const Point & p ) const
     // d_facePosition[0], then the binary_search returns the "high()"
     // value... and the interpolation below segfaults due to trying to
     // go to x+1.  The following check prevents this from happening.
-    x = min( x, d_facePosition[0].high()-2 );
-    y = min( y, d_facePosition[1].high()-2 );
-    z = min( z, d_facePosition[2].high()-2 );
+    x = std::min( x, d_facePosition[0].high()-2 );
+    y = std::min( y, d_facePosition[1].high()-2 );
+    z = std::min( z, d_facePosition[2].high()-2 );
 
     double xfrac = (p.x() - d_facePosition[0][x]) / (d_facePosition[0][x+1] - d_facePosition[0][x]);
     double yfrac = (p.y() - d_facePosition[1][y]) / (d_facePosition[1][y+1] - d_facePosition[1][y]);
@@ -520,10 +514,10 @@ void Level::selectPatches(const IntVector& low, const IntVector& high,
  if(cache){
    // look it up in the cache first
    d_cachelock.lock();
-   selectCache::const_iterator iter = d_selectCache.find(make_pair(low, high));
+   selectCache::const_iterator iter = d_selectCache.find(std::make_pair(low, high));
 
    if (iter != d_selectCache.end()) {
-     const vector<const Patch*>& cache = iter->second;
+     const std::vector<const Patch*>& cache = iter->second;
      for (unsigned i = 0; i < cache.size(); i++) {
        neighbors.push_back(cache[i]);
      }
@@ -536,29 +530,28 @@ void Level::selectPatches(const IntVector& low, const IntVector& high,
 
    //cout << Parallel::getMPIRank() << " Level Quesy: " << low << " " << high << endl;
    d_bvh->query(low, high, neighbors, withExtraCells);
-   sort(neighbors.begin(), neighbors.end(), Patch::Compare());
+   std::sort(neighbors.begin(), neighbors.end(), Patch::Compare());
 
 #ifdef CHECK_SELECT
-   // Double-check the more advanced selection algorithms against the
-   // slow (exhaustive) one.
-   vector<const Patch*> tneighbors;
-   for(const_patchIterator iter=d_virtualAndRealPatches.begin();
-       iter != d_virtualAndRealPatches.end(); iter++){
-      const Patch* patch = *iter;
+  // Double-check the more advanced selection algorithms against the
+  // slow (exhaustive) one.
+  std::vector<const Patch*> tneighbors;
+  for (const_patchIterator iter = d_virtualAndRealPatches.begin(); iter != d_virtualAndRealPatches.end(); iter++) {
+    const Patch* patch = *iter;
 
-      IntVector l=Max(patch->getCellLowIndex(), low);
-      IntVector u=Min(patch->getCellHighIndex(), high);
+    IntVector l = Max(patch->getCellLowIndex(), low);
+    IntVector u = Min(patch->getCellHighIndex(), high);
 
-    if(u.x() > l.x() && u.y() > l.y() && u.z() > l.z()) {
-         tneighbors.push_back(*iter);
-   }
+    if (u.x() > l.x() && u.y() > l.y() && u.z() > l.z()) {
+      tneighbors.push_back(*iter);
+    }
   }
 
-   ASSERTEQ(neighbors.size(), tneighbors.size());
+  ASSERTEQ(neighbors.size(), tneighbors.size());
 
-   sort(tneighbors.begin(), tneighbors.end(), Patch::Compare());
-  for(int i=0;i<(int)neighbors.size();i++) {
-      ASSERT(neighbors[i] == tneighbors[i]);
+  std::sort(tneighbors.begin(), tneighbors.end(), Patch::Compare());
+  for (int i = 0; i < (int)neighbors.size(); i++) {
+    ASSERT(neighbors[i] == tneighbors[i]);
   }
 #endif
 
@@ -566,7 +559,7 @@ void Level::selectPatches(const IntVector& low, const IntVector& high,
      // put it in the cache - start at orig_size in case there was something in
      // neighbors before this query
      d_cachelock.lock();
-     vector<const Patch*>& cache = d_selectCache[make_pair(low,high)];
+     std::vector<const Patch*>& cache = d_selectCache[std::make_pair(low,high)];
      cache.reserve(6);  // don't reserve too much to save memory, not too little to avoid too much reallocation
      for (int i = 0; i < neighbors.size(); i++) {
        cache.push_back(neighbors[i]);
@@ -611,7 +604,7 @@ void Level::finalizeLevel()
   d_each_patch->addReference();
 
   // The compute set requires an array const Patch*, we must copy d_realPatches
-  vector<const Patch*> tmp_patches(d_realPatches.size());
+  std::vector<const Patch*> tmp_patches(d_realPatches.size());
   for(int i=0;i<(int)d_realPatches.size();i++){
     tmp_patches[i]=d_realPatches[i];
   }
@@ -659,7 +652,7 @@ void Level::finalizeLevel(bool periodicX, bool periodicY, bool periodicZ)
   d_each_patch->addReference();
   
   // The compute set requires an array const Patch*, we must copy d_realPatches
-  vector<const Patch*> tmp_patches(d_realPatches.size());
+  std::vector<const Patch*> tmp_patches(d_realPatches.size());
 
   for(int i=0;i<(int)d_realPatches.size();i++){
     tmp_patches[i]=d_realPatches[i];
@@ -742,7 +735,7 @@ void Level::setBCTypes()
 {
   double rtimes[4]={0};
 
-  double start=Time::currentSeconds();
+  Timers::Simple level_bc_timer;
 
   MALLOC_TRACE_TAG_SCOPE("Level::setBCTypes");
 
@@ -752,9 +745,8 @@ void Level::setBCTypes()
   
   d_bvh = scinew PatchBVH(d_virtualAndRealPatches);
   
-  rtimes[0]+=Time::currentSeconds()-start;
-  start=Time::currentSeconds();
-  patchIterator iter;
+  rtimes[0] += level_bc_timer.seconds();
+  level_bc_timer.reset();
   
   ProcessorGroup *myworld=NULL;
   int numProcs=1;
@@ -767,8 +759,8 @@ void Level::setBCTypes()
     rank=myworld->myrank();
   }
 
-  vector<int> displacements(numProcs,0);
-  vector<int> recvcounts(numProcs,0);
+  std::vector<int> displacements(numProcs,0);
+  std::vector<int> recvcounts(numProcs,0);
 
   //create recvcounts and displacement arrays
   int div=d_virtualAndRealPatches.size()/numProcs;
@@ -788,8 +780,8 @@ void Level::setBCTypes()
     displacements[p]=displacements[p-1]+recvcounts[p-1];
   }
    
-  vector<unsigned int> bctypes(d_virtualAndRealPatches.size());
-  vector<unsigned int> mybctypes(recvcounts[rank]);
+  std::vector<unsigned int> bctypes(d_virtualAndRealPatches.size());
+  std::vector<unsigned int> mybctypes(recvcounts[rank]);
 
   int idx;
   
@@ -797,6 +789,7 @@ void Level::setBCTypes()
   patchIterator endpatch=startpatch+recvcounts[rank];
 
   //for each of my patches
+  patchIterator iter;
   for(iter=startpatch,idx=0; iter != endpatch; iter++,idx++){
     Patch* patch = *iter;
     //cout << "Patch bounding box = " << patch->getExtraBox() << endl;
@@ -866,8 +859,8 @@ void Level::setBCTypes()
      bctypes.swap(mybctypes);
   }
 
-  rtimes[1]+=Time::currentSeconds()-start;
-  start=Time::currentSeconds();
+  rtimes[1] += level_bc_timer.seconds();
+  level_bc_timer.reset();
   
   int i;
   //loop through patches
@@ -911,7 +904,7 @@ void Level::setBCTypes()
   //  bullet proofing
   for (int dir=0; dir<3; dir++){
     if(d_periodicBoundaries[dir] == 1 && d_extraCells[dir] !=0) {
-      ostringstream warn;
+      std::ostringstream warn;
       warn<< "\n \n INPUT FILE ERROR: \n You've specified a periodic boundary condition on a face with extra cells specified\n"
           <<" Please set the extra cells on that face to 0";
       throw ProblemSetupException(warn.str(),__FILE__,__LINE__);
@@ -921,8 +914,8 @@ void Level::setBCTypes()
   
   d_finalized=true;
   
-  rtimes[2]+=Time::currentSeconds()-start;
-  start=Time::currentSeconds();
+  rtimes[2] += level_bc_timer.seconds();
+  level_bc_timer.reset();
   
   if(rgtimes.active()){
     double avg[3]={0};
@@ -930,23 +923,23 @@ void Level::setBCTypes()
     
     if(myworld->myrank()==0) {
 
-      cout << "SetBCType Avg Times: ";
+      std::cout << "SetBCType Avg Times: ";
       for(int i=0;i<3;i++){
         avg[i]/=myworld->size();
-        cout << avg[i] << " ";
+        std::cout << avg[i] << " ";
       }
-      cout << endl;
+      std::cout << std::endl;
     }
 
     double max[3]={0};
     MPI_Reduce(rtimes,max,3,MPI_DOUBLE,MPI_MAX,0,myworld->getComm());
 
     if(myworld->myrank()==0) {
-      cout << "SetBCType Max Times: ";
+      std::cout << "SetBCType Max Times: ";
       for(int i=0;i<3;i++){
-        cout << max[i] << " ";
+        std::cout << max[i] << " ";
       }
-      cout << endl;
+      std::cout << std::endl;
     }
   }
 
@@ -1276,7 +1269,7 @@ namespace Uintah {
   
 //______________________________________________________________________
 //    We may need to put coutLocks around this?
-  ostream& operator<<(ostream& out, const Level& level)
+  std::ostream& operator<<(std::ostream& out, const Level& level)
   {
     IntVector lo, hi;
     level.findCellIndexRange(lo,hi);
