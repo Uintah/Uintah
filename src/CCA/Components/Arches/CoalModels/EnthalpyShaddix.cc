@@ -589,7 +589,7 @@ EnthalpyShaddix::computeModel( const ProcessorGroup * pc,
         double alpha_rc=(rawcoal_massph+char_massph);
         double alpha_cp=cp_c(particle_temperatureph)*alpha_rc+cp_ash(particle_temperatureph)*_init_ash[d_quadNode];
         max_Q_convection=alpha_cp*(deltaT/dt);
-        if (abs(Q_convection) > abs(max_Q_convection)){
+        if (std::abs(Q_convection) > std::abs(max_Q_convection)){
           Q_convection = max_Q_convection;
         }
         // Radiation part: -------------------------
@@ -600,7 +600,7 @@ EnthalpyShaddix::computeModel( const ProcessorGroup * pc,
           FSum = radiationVolqIN[c];
           Q_radiation = abskp[c]*(FSum - Eb);
           double Q_radMax=(std::pow( radiationVolqIN[c] / (4.0 * _sigma )  , 0.25)-rad_particle_temperature[c])/(dt)*alpha_cp;
-          if (abs(Q_radMax) < abs(Q_radiation)){
+          if (std::abs(Q_radMax) < std::abs(Q_radiation)){
             Q_radiation=Q_radMax;
           }
         }
