@@ -835,15 +835,17 @@ void ThreadedTaskScheduler::run_reduction_task( DetailedTask * task )
 {
   Timers::Simple simple;
   {
-    Timers::ThreadTrip<TotalReduceTag> tr;
-
     const Task::Dependency* mod = task->getTask()->getModifies();
     ASSERT(!mod->next);
 
     OnDemandDataWarehouse* dw = dws[mod->mapDataWarehouse()].get_rep();
     ASSERT(task->getTask()->d_comm >= 0);
+
+    RuntimeStats::CollectiveTimer rt;
     dw->reduceMPI(mod->var, mod->reductionLevel, mod->matls, task->getTask()->d_comm);
+    DOUT(d_myworld->myrank() == 0, "OUTER " << rt.seconds());
   }
+
   task->done(dws);
 
   SchedulerCommon::emitNode(task, 0.0, simple.seconds(), 0);
