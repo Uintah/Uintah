@@ -159,23 +159,15 @@ inline std::string bytes_to_string( int64_t bytes )
 inline std::string nanoseconds_to_string( double ns )
 {
   constexpr int64_t one    = 1;
-  constexpr int64_t MICRO  = one << 3;
-  constexpr int64_t MILLA  = one << 6;
-  constexpr int64_t SECOND = one << 9;
+  constexpr int64_t MICRO  = one   * 1000;
+  constexpr int64_t MILLA  = MICRO * 1000;
+  constexpr int64_t SECOND = MILLA * 1000;
   constexpr int64_t MINUTE = SECOND * 60;
   constexpr int64_t HOUR   = MINUTE * 60;
 
   std::ostringstream out;
 
-  if ( ns < MICRO ) {
-    out << std::setprecision(3) << ns << " ns";
-  }
-  else if ( ns < SECOND ) {
-    out << std::setprecision(3) << (ns / MILLA) << " ms";
-  }
-  else {
-    out << std::setprecision(3) << (ns / SECOND) << " s ";
-  }
+  out << std::setprecision(3) << (ns / SECOND) << " s ";
 
   return out.str();
 }
@@ -352,13 +344,12 @@ void RuntimeStats::report( MPI_Comm comm, InfoStats & stats )
         ,w_load, "\%Load Imbalance"
     );
 
-
     for (int i=0; i<end; ++i) {
       const int off = 4*i;
       const int max_rank  = global_data[off+RANK];
       const int64_t total = global_data[off+SUM];
-      const int64_t min = global_data[off+MIN];
-      const int64_t max = global_data[off+MAX];
+      const int64_t min   = global_data[off+MIN];
+      const int64_t max   = global_data[off+MAX];
 
       const double avg = static_cast<double>(total) / psize;
 

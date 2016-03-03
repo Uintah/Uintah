@@ -28,6 +28,8 @@
 #include <CCA/Components/Schedulers/DependencyException.h>
 #include <CCA/Components/Schedulers/IncorrectAllocation.h>
 #include <CCA/Components/Schedulers/MPIScheduler.h>
+#include <CCA/Components/Schedulers/RuntimeStats.hpp>
+#include <CCA/Components/Schedulers/SchedulerCommon.h>
 
 #include <Core/Exceptions/InternalError.h>
 #include <Core/Exceptions/TypeMismatchException.h>
@@ -58,7 +60,7 @@
 #include <Core/Util/DebugStream.h>
 #include <Core/Util/FancyAssert.h>
 #include <Core/Util/ProgressiveWarning.h>
-#include <CCA/Components/Schedulers/SchedulerCommon.h>
+#include <Core/Util/DOUT.hpp>
 
 #ifdef HAVE_CUDA
 //#include <CCA/Components/Schedulers/GPUUtilities.h>
@@ -950,7 +952,12 @@ OnDemandDataWarehouse::reduceMPI( const VarLabel       * label,
            << (level ? level->getID() : -1) << std::endl;
   }
 
-  int error = MPI_Allreduce( &sendbuf[0], &recvbuf[0], count, datatype, op, d_myworld->getgComm( nComm ) );
+  int error;
+  {
+    RuntimeStats::CollectiveMPITimer rt;
+    error = MPI_Allreduce( &sendbuf[0], &recvbuf[0], count, datatype, op, d_myworld->getgComm( nComm ) );
+    DOUT(d_myworld->myrank() == 0, "INNER " << rt.seconds());
+  }
 
   if( mpidbg.active() ) {
     mpidbg << "Rank-" << d_myworld->myrank() << " allreduce, done " << label->getName() << " level "
