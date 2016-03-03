@@ -154,33 +154,53 @@ inline std::string bytes_to_string( int64_t bytes )
   return out.str();
 }
 
+/// convert a nanoseconds to human readable string
+inline std::string nanoseconds_to_string( int64_t ns )
+{
+  std::ostringstream out;
+
+  if ( (double)ns < 1.0e5 ) {
+    out << std::setprecision(3) << ns << " ns";
+  }
+  else if ( (double)ns < 1.0e8) {
+    out << std::setprecision(3) << (ns * 1.0e-6) << " ms";
+  }
+  else {
+    out << std::setprecision(3) << (ns * 1.0e-9) << " s ";
+  }
+
+  return out.str();
+}
 
 /// convert a nanoseconds to human readable string
 inline std::string nanoseconds_to_string( double ns )
 {
-  constexpr int64_t one    = 1;
-  constexpr int64_t MICRO  = one   * 1000;
-  constexpr int64_t MILLA  = MICRO * 1000;
-  constexpr int64_t SECOND = MILLA * 1000;
-  constexpr int64_t MINUTE = SECOND * 60;
-  constexpr int64_t HOUR   = MINUTE * 60;
-
   std::ostringstream out;
 
-  out << std::setprecision(3) << (ns / SECOND) << " s ";
+  if ( ns < 1.0e5 ) {
+    out << std::setprecision(3) << ns << " ns";
+  }
+  else if ( ns < 1.0e8) {
+    out << std::setprecision(3) << (ns * 1.0e-6) << " ms";
+  } else {
+    out << std::setprecision(3) << (ns * 1.0e-9) << " s ";
+  }
 
   return out.str();
 }
+
+enum { RANK=0, SUM, MIN, MAX };
 
 template <typename T>
 void rank_sum_min_max_impl( T const * in, T * inout, int len )
 {
   const int size = len/4;
   for (int i=0; i<size; ++i) {
-    inout[4*i+0]  = in[4*i+3] < inout[4*i+3] ? inout[4*i+0] : in[4*i+0] ; // max_rank
-    inout[4*i+1] += in[4*i+1] ;                                           // sum
-    inout[4*i+2]  = inout[4*i+2] < in[4*i+2] ? inout[4*i+2] : in[4*i+2] ; // min
-    inout[4*i+3]  = in[4*i+3] < inout[4*i+3] ? inout[4*i+3] : in[4*i+3] ; // max
+    const int off = 4*i;
+    inout[off+RANK] = in[off+MAX] < inout[off+MAX] ? inout[off+RANK] : in[off+RANK] ; // max_rank
+    inout[off+SUM] += in[off+SUM] ;                                           // sum
+    inout[off+MIN]  = inout[off+MIN] < in[off+MIN] ? inout[off+MIN] : in[off+MIN] ; // min
+    inout[off+MAX]  = in[off+MAX] < inout[off+MAX] ? inout[off+MAX] : in[off+MAX] ; // max
   }
 }
 
@@ -191,7 +211,6 @@ extern "C" void rank_sum_min_max( void * in, void * inout, int * len, MPI_Dataty
 
 MPI_Op rank_sum_min_max_op;
 
-enum { RANK=0, SUM, MIN, MAX };
 enum { Q1=0, Q2, Q3, Q4 };
 
 } // unnamed namespace
@@ -226,24 +245,22 @@ void RuntimeStats::report( MPI_Comm comm, InfoStats & stats )
 
   const int num_allocators = static_cast<int>(s_allocators.size());
 
-  const int data_size = (num_timers + num_allocators) * 4;
-  const int histogram_size = (num_timers + num_allocators) * 4;
+  const int num_values = num_timers + num_allocators;
 
-  std::vector<int64_t>     local_times;
+  const int data_size = num_values * 4;
+
+  std::vector<int64_t>     local_data;
   std::vector<int64_t>     data;
   std::vector<int64_t>     histograms;
   std::vector<int64_t>     global_data;
   std::vector<int64_t>     global_histograms;
   std::vector<std::string> names;
 
-  local_times.reserve( num_timers );
+  local_data.reserve( num_values );
   data.reserve( data_size );
 
-  global_data.resize(data_size);
-
-  const int num = num_timers + num_allocators;
   if (prank==0) {
-    names.reserve( num );
+    names.reserve( num_values );
   }
 
   for( auto const& p : s_timers ) {
@@ -251,7 +268,7 @@ void RuntimeStats::report( MPI_Comm comm, InfoStats & stats )
       names.push_back( p.first );
     }
     const int64_t ns = p.second();
-    local_times.push_back(ns);
+    local_data.push_back(ns);
     data.push_back(prank); // rank
     data.push_back(ns); // total
     data.push_back(ns); // min
@@ -264,7 +281,7 @@ void RuntimeStats::report( MPI_Comm comm, InfoStats & stats )
         names.push_back( g_task_names[i] );
       }
       const int64_t ns = g_task_exec_times[i].load( std::memory_order_relaxed );
-      local_times.push_back(ns);
+      local_data.push_back(ns);
       data.push_back(prank); // rank
       data.push_back(ns); // total
       data.push_back(ns); // min
@@ -278,7 +295,7 @@ void RuntimeStats::report( MPI_Comm comm, InfoStats & stats )
         names.push_back( g_task_names[i] );
       }
       const int64_t ns = g_task_wait_times[i].load( std::memory_order_relaxed );
-      local_times.push_back(ns);
+      local_data.push_back(ns);
       data.push_back(prank); // rank
       data.push_back(ns); // total
       data.push_back(ns); // min
@@ -291,7 +308,7 @@ void RuntimeStats::report( MPI_Comm comm, InfoStats & stats )
       names.push_back( p.first );
     }
     const int64_t bytes = p.second();
-    local_times.push_back(bytes);
+    local_data.push_back(bytes);
     data.push_back(prank); // rank
     data.push_back(bytes); // total
     data.push_back(bytes); // min
@@ -299,19 +316,19 @@ void RuntimeStats::report( MPI_Comm comm, InfoStats & stats )
   }
 
 
+  global_data.resize(data_size);
   MPI_Allreduce( data.data(), global_data.data(), data_size, MPI_INT64_T, rank_sum_min_max_op, comm);
 
-  histograms.resize( histogram_size, 0 );
-  global_histograms.resize( histogram_size, 0 );
+  histograms.resize( data_size, 0 );
+  global_histograms.resize( data_size, 0 );
 
-
-  for( int i=0; i<num; ++i ) {
+  for( int i=0; i<num_values; ++i ) {
     const int off = 4*i;
     const int64_t min = global_data[off+MIN];
     const int64_t max = global_data[off+MAX];
     const int64_t mag = max - min;
 
-    const int64_t t = local_times[i] - min;
+    const int64_t t = local_data[i] - min;
 
     int bin = 0 < mag ? 4*t / mag : 0;
     bin = bin < 4 ? bin : 3;
@@ -319,19 +336,16 @@ void RuntimeStats::report( MPI_Comm comm, InfoStats & stats )
     histograms[off+bin] = 1;
   }
 
-  MPI_Reduce(histograms.data(), global_histograms.data(), histogram_size, MPI_INT64_T, MPI_SUM, 0, comm);
+  MPI_Reduce(histograms.data(), global_histograms.data(), data_size, MPI_INT64_T, MPI_SUM, 0, comm);
 
   Dout mpi_report("MPIReport", false);
 
   if (mpi_report && prank == 0) {
-    const int end = num_timers + num_allocators;
 
     const int w_desc = 12;
     const int w_num  = 10;
     const int w_hist = 35;
     const int w_load = 18;
-
-
 
     printf( "%*s%*s%*s%*s%*s%*s%*s%*s\n"
         ,w_desc, "Description:"
@@ -344,7 +358,7 @@ void RuntimeStats::report( MPI_Comm comm, InfoStats & stats )
         ,w_load, "\%Load Imbalance"
     );
 
-    for (int i=0; i<end; ++i) {
+    for (int i=0; i<num_values; ++i) {
       const int off = 4*i;
       const int max_rank  = global_data[off+RANK];
       const int64_t total = global_data[off+SUM];
