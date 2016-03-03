@@ -44,7 +44,9 @@
 #include <Core/Util/FancyAssert.h>
 #include <Core/Util/Handle.h>
 #include <Core/Util/ProgressiveWarning.h>
+#include <Core/Util/Timers/Timers.hpp>
 
+#include <atomic>
 #include <algorithm>
 #include <cmath>
 #include <iostream>
@@ -54,11 +56,14 @@ using namespace std;
 using namespace Uintah;
 using namespace SCIRun;
 
-static AtomicCounter ids("Level ID counter",0);
-static Mutex         ids_init("ID init");
+namespace {
 
-static DebugStream   bcout("BCTypes", false);
-static DebugStream   rgtimes("RGTimes",false);
+std::atomic<int> ids{0};
+DebugStream   bcout("BCTypes", false);
+DebugStream   rgtimes("RGTimes",false);
+
+}
+
 //______________________________________________________________________
 //
 Level::Level(       Grid      * grid,
@@ -66,13 +71,15 @@ Level::Level(       Grid      * grid,
               const Vector    & dcell, 
                     int         index,
                     IntVector   refinementRatio,
-                    int         id /* = -1 */ ) :
-  d_grid(grid), d_anchor(anchor), d_dcell(dcell), 
-  d_spatial_range(Point(DBL_MAX,DBL_MAX,DBL_MAX),Point(DBL_MIN,DBL_MIN,DBL_MIN)),
-  d_int_spatial_range(Point(DBL_MAX,DBL_MAX,DBL_MAX),Point(DBL_MIN,DBL_MIN,DBL_MIN)),
-  d_index(index),
-  d_patchDistribution(-1,-1,-1), d_periodicBoundaries(0, 0, 0), d_id(id),
-  d_refinementRatio(refinementRatio)
+                    int         id /* = -1 */ )
+  : d_grid(grid), d_anchor(anchor), d_dcell(dcell),
+    d_spatial_range(Point(DBL_MAX,DBL_MAX,DBL_MAX),Point(DBL_MIN,DBL_MIN,DBL_MIN)),
+    d_int_spatial_range(Point(DBL_MAX,DBL_MAX,DBL_MAX),Point(DBL_MIN,DBL_MIN,DBL_MIN)),
+    d_index(index),
+    d_patchDistribution(-1,-1,-1),
+    d_periodicBoundaries(0, 0, 0),
+    d_id(id),
+    d_refinementRatio(refinementRatio)
 {
   d_stretched   = false;
   d_each_patch  = 0;
@@ -83,10 +90,11 @@ Level::Level(       Grid      * grid,
   d_totalCells  = 0;
 
   if( d_id == -1 ) {
-    d_id = ids++;
+    d_id = ids.fetch_add(1, std::memory_order_relaxed);
   }
-  else if(d_id >= ids) {
-    ids.set(d_id+1);
+  else if(d_id >= ids.load(std::memory_order_relaxed)) {
+    int old = ids.load(std::memory_order_relaxed);
+    while (old < d_id && !ids.compare_exchange_weak(old, d_id, std::memory_order_relaxed, std::memory_order_relaxed)){}
   }
 }
 //______________________________________________________________________
@@ -733,6 +741,7 @@ void Level::finalizeLevel(bool periodicX, bool periodicY, bool periodicZ)
 void Level::setBCTypes()
 {
   double rtimes[4]={0};
+
   double start=Time::currentSeconds();
 
   MALLOC_TRACE_TAG_SCOPE("Level::setBCTypes");
@@ -941,7 +950,7 @@ void Level::setBCTypes()
     }
   }
 
-  //recreate BVH with extracells
+  // recreate BVH with extracells
   if (d_bvh != NULL){
     delete d_bvh;
   }
