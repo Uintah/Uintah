@@ -389,6 +389,7 @@ void RuntimeStats::report( MPI_Comm comm, InfoStats & stats )
           );
 
     }
+    printf("\n");
   }
 
 
