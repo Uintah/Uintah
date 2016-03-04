@@ -146,12 +146,12 @@ ExplicitSolver(SimulationStateP& sharedState,
                std::map<std::string, boost::shared_ptr<TaskFactoryBase> >& task_factory_map,
                const ProcessorGroup* myworld,
                SolverInterface* hypreSolver):
-               d_sharedState(sharedState),
                NonlinearSolver(myworld),
+               d_sharedState(sharedState),
                d_MAlab(MAlb),
                d_physicalConsts(physConst),
-               d_hypreSolver(hypreSolver),
-               _task_factory_map(task_factory_map)
+               _task_factory_map(task_factory_map),
+               d_hypreSolver(hypreSolver)
 {
 
   d_lab  = scinew ArchesLabel();
@@ -1070,7 +1070,7 @@ void
 ExplicitSolver::sched_restartInitialize( const LevelP& level, SchedulerP& sched )
 {
 
-  bool doingRestart = true;
+  //bool doingRestart = true;
   //__________________________________
   //  initialize src terms
   SourceTermFactory& srcFactory = SourceTermFactory::self();
@@ -2052,7 +2052,7 @@ ExplicitSolver::interpolateFromFCToCC(const ProcessorGroup* ,
     new_dw->get(cellInfoP, d_lab->d_cellInfoLabel, indx, patch);
     CellInformation* cellinfo = cellInfoP.get().get_rep();
 
-    double vol_integral;
+    double vol_integral=0.0;
     if ( d_solvability ){
 
       std::stringstream strRKStage;

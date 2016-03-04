@@ -395,7 +395,6 @@ public:
 
   // const VarLabel*
   ArchesLabel* d_lab;
-  const MPMArchesLabel* d_MAlab;
 
   // Total number of nonlinear iterates
   int d_nonlinear_its;
@@ -411,9 +410,13 @@ public:
   bool d_mixedModel;
 
   MomentumSolver* d_momSolver;             ///< Momentum solver
-  PhysicalConstants* d_physicalConsts;     ///< Physical constants
   WallModelDriver* d_wall_ht_models;       ///< Heat transfer models for walls
   SimulationStateP& d_sharedState;
+  const MPMArchesLabel* d_MAlab;
+  PhysicalConstants* d_physicalConsts;     ///< Physical constants
+
+  //NEW TASK INTERFACE STUFF:
+  std::map<std::string, boost::shared_ptr<TaskFactoryBase> >& _task_factory_map;
 
   std::vector<TimeIntegratorLabel* > d_timeIntegratorLabels;
   TimeIntegratorLabel* nosolve_timelabels;
@@ -472,8 +475,6 @@ public:
   bool d_printTotalKE;
   double d_ke_limit;
 
-  //NEW TASK INTERFACE STUFF:
-  std::map<std::string, boost::shared_ptr<TaskFactoryBase> >& _task_factory_map;
 
 }; // End class ExplicitSolver
 } // End namespace Uintah

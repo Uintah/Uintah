@@ -14,7 +14,13 @@
 #include <Core/Parallel/Parallel.h>
 #include <iostream>
 #include <iomanip>
-#include <Core/Containers/StaticArray.h>
+
+#ifdef USE_FUNCTOR
+#include <Core/Grid/Variables/BlockRange.h>
+#ifdef UINTAH_ENABLE_KOKKOS
+#include <Kokkos_Core.hpp>
+#endif //UINTAH_ENABLE_KOKKOS
+#endif
 
 using namespace std;
 using namespace Uintah; 
@@ -462,6 +468,46 @@ CharOxidationShaddix::computeModel( const ProcessorGroup * pc,
       new_dw->get( char_birth, _rawcoal_birth_label, matlIndex, patch, gn, 0 ); 
     }
 
+
+
+#ifdef USE_FUNCTOR              
+  Uintah::BlockRange range(patch->getCellLowIndex(),patch->getCellHighIndex());
+  computeCharOxidation doCharOxidationSource(dt, 
+                                             vol, 
+                                             add_rawcoal_birth, 
+                                             add_char_birth, 
+                                             den,
+                                             temperature,
+                                             particle_temperature,
+                                             length,
+                                             weight,
+                                             rawcoal_mass,
+                                             char_mass,
+                                             rawcoal_weighted_scaled, 
+                                             char_weighted_scaled, 
+                                             RHS_source, 
+                                             RC_RHS_source, 
+                                             number_density, 
+                                             O2,
+                                             CO2,
+                                             H2O,
+                                             N2,
+                                             MWmix,
+                                             devolChar,
+                                             devolRC,
+                                             rawcoal_birth, 
+                                             char_birth, 
+                                             char_rate,
+                                             gas_char_rate, 
+                                             particle_temp_rate,
+                                             surface_rate,
+                                             PO2surf_,
+                                             this);
+
+      Uintah::parallel_for( range, doCharOxidationSource );
+
+#else              
+
     double max_char_reaction_rate_O2_;
     double char_reaction_rate_;
     double char_production_rate_;
@@ -631,5 +677,6 @@ CharOxidationShaddix::computeModel( const ProcessorGroup * pc,
         }
       }
     }//end cell loop
+#endif              
   }//end patch loop
 }
