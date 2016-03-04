@@ -590,7 +590,7 @@ Arches::scheduleTimeAdvance( const LevelP& level,
 
   printSchedule(level,dbg, "Arches::scheduleTimeAdvance");
 
-  const MaterialSet* matls = d_sharedState->allArchesMaterials();
+  //const MaterialSet* matls = d_sharedState->allArchesMaterials(); // not used - commented to remove warnings
 
   nofTimeSteps++;
 
