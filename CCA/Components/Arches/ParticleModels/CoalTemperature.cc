@@ -5,6 +5,11 @@
 
 #include <spatialops/structured/FVStaggered.h>
 
+
+#ifdef USE_FUNCTOR
+#include <Core/Grid/Variables/BlockRange.h>
+#endif
+
 using namespace Uintah;
 using namespace std;
 
@@ -242,41 +247,56 @@ CoalTemperature::register_timestep_eval( std::vector<ArchesFieldContainer::Varia
   register_variable( _vol_fraction_name, ArchesFieldContainer::REQUIRES , 0 , ArchesFieldContainer::LATEST, variable_registry );
 }
 
+
 void
 CoalTemperature::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info,
     SpatialOps::OperatorDatabase& opr ){
   const std::string gas_temperature_name   = _gas_temperature_name;
-  constCCVariable<double>* vgas_temperature = tsk_info->get_const_uintah_field<constCCVariable<double> >(gas_temperature_name);
-  constCCVariable<double>& gas_temperature = *vgas_temperature;
-  constCCVariable<double>* vvol_frac = tsk_info->get_const_uintah_field<constCCVariable<double> >(_vol_fraction_name);
-  constCCVariable<double>& vol_frac = *vvol_frac;
-  for ( int i = 0; i < _Nenv; i++ ){
-    const std::string temperature_name  = get_env_name( i, _task_name );
-    const std::string dTdt_name  = get_env_name( i, _dTdt_base_name );
-    const std::string char_name = get_env_name( i, _char_base_name );
-    const std::string enthalpy_name = get_env_name( i, _enthalpy_base_name );
-    const std::string rc_name   = get_env_name( i, _rawcoal_base_name );
+  constCCVariable<double>& gas_temperature = *(tsk_info->get_const_uintah_field<constCCVariable<double> >(gas_temperature_name));
+  constCCVariable<double>& vol_frac = *(tsk_info->get_const_uintah_field<constCCVariable<double> >(_vol_fraction_name));
+  for ( int ix = 0; ix < _Nenv; ix++ ){
+    const std::string temperature_name  = get_env_name( ix, _task_name );
+    const std::string dTdt_name  = get_env_name( ix, _dTdt_base_name );
+    const std::string char_name = get_env_name( ix, _char_base_name );
+    const std::string enthalpy_name = get_env_name( ix, _enthalpy_base_name );
+    const std::string rc_name   = get_env_name( ix, _rawcoal_base_name );
     const double dt = tsk_info->get_dt(); // this is from the old dw.. so we have [T^t-T^(t-1)]/[t-(t-1)]
 
-    CCVariable<double>* vtemperature = tsk_info->get_uintah_field<CCVariable<double> >(temperature_name);
-    CCVariable<double>* vdTdt = tsk_info->get_uintah_field<CCVariable<double> >(dTdt_name);
-    constCCVariable<double>* vrcmass = tsk_info->get_const_uintah_field<constCCVariable<double> >(rc_name);
-    constCCVariable<double>* vchar = tsk_info->get_const_uintah_field<constCCVariable<double> >(char_name);
-    constCCVariable<double>* venthalpy = tsk_info->get_const_uintah_field<constCCVariable<double> >(enthalpy_name);
-    constCCVariable<double>* vtemperatureold = tsk_info->get_const_uintah_field<constCCVariable<double> >(temperature_name);
-    CCVariable<double>& temperature = *vtemperature;
-    CCVariable<double>& dTdt = *vdTdt;
-    constCCVariable<double>& temperatureold = *vtemperatureold;
-    constCCVariable<double>& rcmass = *vrcmass;
-    constCCVariable<double>& charmass = *vchar;
-    constCCVariable<double>& enthalpy = *venthalpy;
+
+    CCVariable<double>& temperature = *(tsk_info->get_uintah_field<CCVariable<double> >(temperature_name));
+    CCVariable<double>& dTdt = *(tsk_info->get_uintah_field<CCVariable<double> >(dTdt_name));
+    constCCVariable<double>& rcmass = *(tsk_info->get_const_uintah_field<constCCVariable<double> >(rc_name));
+    constCCVariable<double>& charmass = *(tsk_info->get_const_uintah_field<constCCVariable<double> >(char_name));
+    constCCVariable<double>& enthalpy = *(tsk_info->get_const_uintah_field<constCCVariable<double> >(enthalpy_name));
+    constCCVariable<double>& temperatureold = *(tsk_info->get_const_uintah_field<constCCVariable<double> >(temperature_name));
 
     constCCVariable<double>* vdiameter;
     if ( !_const_size ) {
-      const std::string diameter_name = get_env_name( i, _diameter_base_name );
+      const std::string diameter_name = get_env_name( ix, _diameter_base_name );
       vdiameter = tsk_info->get_const_uintah_field<constCCVariable<double> >(diameter_name);
     }
     constCCVariable<double>& diameter = *vdiameter;
+
+
+
+#ifdef USE_FUNCTOR              
+
+      Uintah::BlockRange range(patch->getCellLowIndex(),patch->getCellHighIndex());
+      computeCoalTemperature doCoalTemperature(dt, ix,
+                                               gas_temperature,
+                                               vol_frac,
+                                               rcmass, 
+                                               charmass,
+                                               enthalpy,
+                                               temperatureold,
+                                               diameter,
+                                               temperature, 
+                                               dTdt,
+                                               this);
+
+      Uintah::parallel_for( range, doCoalTemperature );
+
+#else              
     
     for (CellIterator iter=patch->getCellIterator(); !iter.done(); iter++){
 
@@ -289,7 +309,6 @@ CoalTemperature::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info,
       double hint = 0.0;
       double Ha = 0.0;
       double Hc = 0.0;
-      //double Hh = 0.0; unused
       double H = 0.0;
       double f1 = 0.0;
       double f2 = 0.0;
@@ -320,7 +339,7 @@ CoalTemperature::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info,
           massDry = _pi/6.0 * std::pow( dp, 3.0 ) * _rhop_o;
           initAsh = massDry * _ash_mf;
         } else {
-          initAsh = _init_ash[i];
+          initAsh = _init_ash[ix];
         }
         
         if ( initAsh > 0.0 ) {
@@ -344,7 +363,7 @@ CoalTemperature::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info,
             dT = f1 * delta / (f2-f1) + delta;
             pT = pT - dT;    //to add an coefficient for steadness
             // check to see if tolernace has been met
-            tol = abs(oldpT - pT);
+            tol = std::abs(oldpT - pT);
 
             if (tol < 0.01 )
              break;
@@ -374,5 +393,6 @@ CoalTemperature::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info,
         dTdt[c]=(pT-pT_olddw)/dt;
       }
     }
+#endif
   }
 }
