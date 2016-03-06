@@ -28,9 +28,6 @@
 #include <CCA/Ports/DataWarehouse.h>
 #include <CCA/Ports/LoadBalancer.h>
 #include <CCA/Ports/OutputContext.h>
-#if HAVE_PIDX
-#include <CCA/Ports/PIDXOutputContext.h>
-#endif
 #include <CCA/Ports/Scheduler.h>
 #include <CCA/Ports/SimulationInterface.h>
 
@@ -145,6 +142,8 @@ DataArchiver::problemSetup( const ProblemSpecP    & params,
   p->getAttribute("type", type);
   if(type == "pidx" || type == "PIDX"){
     d_outputFileFormat= PIDX;
+    d_PIDX_flags.problemSetup(p);
+    d_PIDX_flags.print();
   }
   
   // bulletproofing
@@ -2386,7 +2385,7 @@ DataArchiver::outputVariables(const ProcessorGroup * pg,
   //      Fix ints issue in PIDX (Sidharth)
   //      Do we need the memset calls?
   //      Is Variable::emitPIDX() and Variable::readPIDX() efficient? 
-  //      Should we be using calloc() instead of malloc+memset?
+  //      Should we be using calloc() instead of malloc+memset
   //
   if ( d_outputFileFormat == PIDX && type != CHECKPOINT_REDUCTION){
   
@@ -2503,7 +2502,7 @@ DataArchiver::saveLabels_PIDX(std::vector< SaveItem >& saveLabels,
   unsigned int timeStep = d_sharedState->getCurrentTopLevelTimeStep();
   
   // Can this be run in serial without doing a MPI initialize
-  pidx.initialize(full_idxFilename, timeStep, d_myworld->getComm());
+  pidx.initialize(full_idxFilename, timeStep, d_myworld->getComm(), d_PIDX_flags);
 
   //__________________________________
   // define the level extents for this variable type

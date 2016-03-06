@@ -26,6 +26,7 @@
 #define UINTAH_HOMEBREW_DataArchiver_H
 
 #include <CCA/Ports/Output.h>
+#include <CCA/Ports/PIDXOutputContext.h>
 #include <Core/Parallel/UintahParallelComponent.h>
 #include <Core/Grid/Level.h>
 #include <Core/Grid/Variables/MaterialSetP.h>
@@ -266,7 +267,8 @@ using SCIRun::Mutex;
       void createPIDX_dirs( std::vector< SaveItem >& saveLabels,
                             Dir& levelDir );
                             
-                            
+      
+       PIDXOutputContext::PIDX_flags d_PIDX_flags;    // contains the knobs & switches                      
        
        //__________________________________
        //! returns a ProblemSpecP reading the xml file xmlName.

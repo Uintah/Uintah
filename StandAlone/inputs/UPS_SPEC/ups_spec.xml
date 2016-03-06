@@ -466,15 +466,15 @@
                                 attribute2="levels       OPTIONAL STRING"
                                 attribute3="material     OPTIONAL STRING" 
                                 attribute4="table_lookup OPTIONAL BOOLEAN" /> <!-- FIXME: are these really STRINGs? and what are the valid values? -->
-<!--
-                            'press_equil_CC, vol_frac_CC, sp_vol_CC, uvel_FC, vvel_FC, wvel_FC, uvel_FCME, vvel_FCME,
-                             wvel_FCME, delP_Dilatate, delP_MassX, press_CC, mass_L_CC, mom_source_CC, mom_L_ME_CC, vel_CC, rho_CC, rhs, 
-                             scalar-f, speedSound_CC, temp_CC,
-                             KineticEnergy, TotalIntEng, TotalMass, StrainEnergy, CenterOfMassPosition,
-                             CenterOfMassVelocity, p.x, p.volume, p.stress, g.mass, g.stressFS'" />
--->
       <save_crack_geometry    spec="OPTIONAL BOOLEAN" /> <!-- FIXME: default? -->
       <outputDoubleAsFloat    spec="OPTIONAL NO_DATA" />
+      
+      <PIDX                   spec="OPTIONAL NO_DATA">
+        <outputRawIO          spec="OPTIONAL BOOLEAN" />
+        <combinePatches       spec="OPTIONAL VECTOR"  />
+        <debugOutput          spec="OPTIONAL BOOLEAN" />
+        <compressionType      spec="OPTIONAL STRING 'NONE, none, CHUNKING, chunking, CHUNKING_ZFP, chunking_ZFP'"/>
+      </PIDX>
   </DataArchiver>
 
   <InitialConditions        spec="OPTIONAL NO_DATA">

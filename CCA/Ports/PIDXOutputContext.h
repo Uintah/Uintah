@@ -31,10 +31,13 @@
 #include <Core/Geometry/IntVector.h>
 #include <Core/Grid/Level.h>
 #include <Core/Grid/Patch.h>
+#include <Core/ProblemSpec/ProblemSpec.h>
 #include <PIDX.h>
+#include <iomanip>             // setw()
 #include <mpi.h>
 #include <string>
 #include <vector>
+
 
 namespace Uintah {
 /**************************************
@@ -71,6 +74,40 @@ class PIDXOutputContext {
     PIDXOutputContext();
     ~PIDXOutputContext();
     
+    //______________________________________________________________________
+    // Various flags and options
+    class PIDX_flags{
+      public:
+        PIDX_flags();
+        ~PIDX_flags();
+
+        unsigned int  compressionType;
+        bool outputRawIO;
+        bool debugOutput;
+        IntVector combinePatches;
+
+        //__________________________________
+        // debugging
+        void print(){
+          std::cout << "PIDXFlags: " << std::setw(26) <<"outputRawIO: " <<  outputRawIO 
+                    << ", compressionType: "<< getCompressTypeName(compressionType)
+                    << ", combinePatches: " << combinePatches << std::endl;
+        }  
+
+        void problemSetup( const ProblemSpecP& params );
+      
+      private:
+        //__________________________________
+        // convert user input into compres type
+        unsigned int str2CompressType( const std::string& me );
+        
+        std::string  getCompressTypeName( const int me );
+        
+        std::map<std::string, int> compressMap;
+    };
+    //______________________________________________________________________
+    
+    //__________________________________
     //  Struct for storing patch extents
     struct patchExtents{      
       IntVector lo_EC;
@@ -78,18 +115,18 @@ class PIDXOutputContext {
       IntVector patchSize;
       IntVector patchOffset;
       int totalCells_EC;
-      
-      //__________________________________
+
       // debugging
       void print(std::ostream& out){
         out  << "patchExtents: patchOffset: " << patchOffset << " patchSize: " << patchSize << ", totalCells_EC " << totalCells_EC 
              << ", lo_EC: " << lo_EC << ", hi_EC: " << hi_EC << std::endl; 
       }
     };
-
+    
     void initialize(std::string filename,
                     unsigned int timeStep,
-                    MPI_Comm comm);
+                    MPI_Comm comm,
+                    PIDX_flags flags);
     
     void setLevelExtents( std::string desc, 
                           IntVector lo,
@@ -150,9 +187,7 @@ class PIDXOutputContext {
     PIDX_file file;
     MPI_Comm comm;
     PIDX_variable **varDesc;    // variable descriptor array
-
     PIDX_access access;
-    
 
   //__________________________________
   //    
@@ -166,7 +201,7 @@ class PIDXOutputContext {
       IntVector levelExtents (d_levelExtents[0],d_levelExtents[1],d_levelExtents[2]);                                                                          
       return levelExtents;                    
     };
-
+    
   };
 } // End namespace Uintah
 

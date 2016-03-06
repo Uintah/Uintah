@@ -24,14 +24,95 @@
 #include <CCA/Ports/PIDXOutputContext.h>
 
 #if HAVE_PIDX
+#include <PIDX_compression.h>
 
 #include <Core/Exceptions/InternalError.h>
+#include <Core/Util/StringUtil.h>
 #include <iostream>
 #include <vector>
 
 using namespace std;
 using namespace SCIRun;
 using namespace Uintah;
+
+//______________________________________________________________________
+//                P I D X _ F L A G S   C L A S S
+//______________________________________________________________________
+//
+PIDXOutputContext::PIDX_flags::PIDX_flags()
+{
+  compressMap["NONE"]              = PIDX_NO_COMPRESSION;
+  compressMap["CHUNKING"]          = PIDX_CHUNKING_ONLY;
+  compressMap["PIDX_CHUNKING_ZFP"] = PIDX_CHUNKING_ZFP;
+  
+  outputRawIO    = false;
+  debugOutput    = false;
+  combinePatches = IntVector(-9,-9,-9);
+  compressionType = PIDX_NO_COMPRESSION;
+}
+
+
+PIDXOutputContext::PIDX_flags::~PIDX_flags(){};
+
+
+//______________________________________________________________________
+//  Utility:  returns the the compression type from input string
+unsigned int 
+PIDXOutputContext::PIDX_flags::str2CompressType( const std::string& me)
+{
+  string ME = string_toupper( me );  // convert to upper case  
+  if ( compressMap.count(ME) == 0){
+    ostringstream warn;
+    warn<< "ERROR:PIDXOutput:: the compression type ("<<ME<<") is not supported."
+        << " Valid options are: NONE, CHUNKING, CHUNKING_ZFP";
+    throw SCIRun::InternalError(warn.str(), __FILE__, __LINE__);
+  }
+  return compressMap[ME];
+}
+
+//______________________________________________________________________
+//   Utility:  returns the name of the compression type
+std::string  
+PIDXOutputContext::PIDX_flags::getCompressTypeName( const int me )
+{
+  std::map< std::string, int >::const_iterator it;
+  std::string key = "NULL";
+  for (it = compressMap.begin(); it!= compressMap.end(); ++it){
+    if( it->second == me){
+      key = it->first;
+      return key;
+    }
+  }
+  return key;
+}
+
+//______________________________________________________________________
+//  Parses the ups file and set flags
+void
+PIDXOutputContext::PIDX_flags::problemSetup( const ProblemSpecP& DA_ps )
+{
+  ProblemSpecP pidx_ps = DA_ps->findBlock("PIDX");
+
+  if( pidx_ps != 0 ) {
+  
+    string me;
+    pidx_ps->getWithDefault( "compressionType",  me, "NONE");
+    
+    compressionType = str2CompressType( me );
+    pidx_ps->get( "debugOutput",     debugOutput );
+
+    pidx_ps->get( "outputRawIO",     outputRawIO );
+
+    if( outputRawIO ){
+      pidx_ps->get( "combinePatches", combinePatches );
+    }
+  }
+}
+
+//______________________________________________________________________
+//         P I D X O U T P U T C O N T E X T   C L A S S
+//______________________________________________________________________
+
 
 PIDXOutputContext::PIDXOutputContext() 
 {
@@ -83,23 +164,35 @@ PIDXOutputContext::getDirectoryName(TypeDescription::Type TD)
          throw SCIRun::InternalError("  PIDXOutputContext::getDirectoryName type description not supported", __FILE__, __LINE__);
   }
 } 
- 
 //______________________________________________________________________
 //
 void
 PIDXOutputContext::initialize( string filename, 
                                unsigned int timeStep,
-                               MPI_Comm comm )
+                               MPI_Comm comm,
+                               PIDX_flags flags)
 {
+    
   this->filename = filename;
   this->timestep = timeStep;
   this->comm = comm; 
 
   PIDX_create_access(&(this->access));
-  PIDX_set_mpi_access(this->access, this->comm);
+  
+  if(comm != NULL){
+    PIDX_set_mpi_access( this->access, this->comm );
+  }
+  
+  PIDX_file_create( filename.c_str(), PIDX_MODE_CREATE, access, &(this->file) );
+  
+  if ( flags.debugOutput ){
+    PIDX_debug_output( (this->file) );
+  }
 
-  PIDX_file_create(filename.c_str(), PIDX_MODE_CREATE, access, &(this->file));
-
+  if ( flags.outputRawIO ){
+    PIDX_enable_raw_io(this->file);  //Possible performance improvement at low core counts
+  }
+  
   int64_t restructured_box_size[5] = {64, 64, 64, 1, 1};
   PIDX_set_restructuring_box(file, restructured_box_size);
 
@@ -109,8 +202,12 @@ PIDXOutputContext::initialize( string filename,
   PIDX_set_block_size(this->file, 16);
   PIDX_set_block_count(this->file, 128);
     
-  //PIDX_set_compression_type(this->file, PIDX_CHUNKING_ZFP);
-  //PIDX_set_lossy_compression_bit_rate(this->file, 8);
+  
+                                       // Need to add logic so set compression to none on a checkpoint
+  // compression settings
+  PIDX_set_compression_type(this->file, flags.compressionType);
+//  PIDX_set_lossy_compression_bit_rate(this->file, 8);
+
   d_isInitialized = true;
 }
 
