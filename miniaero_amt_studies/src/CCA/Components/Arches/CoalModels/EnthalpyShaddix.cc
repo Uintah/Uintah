@@ -18,6 +18,12 @@
 #include <iostream>
 #include <iomanip>
 
+
+#include <Core/Grid/Variables/BlockRange.h>
+#ifdef UINTAH_ENABLE_KOKKOS
+#include <Kokkos_Core.hpp>
+#endif //UINTAH_ENABLE_KOKKOS
+
 using namespace std;
 using namespace Uintah;
 
@@ -264,6 +270,8 @@ EnthalpyShaddix::problemSetup(const ProblemSpecP& params, int qn)
   //_RdC = _Rgas/12.0107;
   _RdC = _Rgas/12.0;
   _RdMW = _Rgas/_MW_avg;
+  _radiationOn = d_radiation;
+  _nQuadNode=d_quadNode;
 
 }
 
@@ -465,7 +473,36 @@ EnthalpyShaddix::computeModel( const ProcessorGroup * pc,
     ArchesLabel::PartVelMap::const_iterator iter = d_fieldLabels->partVel.find(d_quadNode);
     new_dw->get(partVel, iter->second, matlIndex, patch, gn, 0);
 
-    // variables used in cell loops
+      
+#ifdef USE_FUNCTOR              
+  Uintah::BlockRange range(patch->getCellLowIndex(),patch->getCellHighIndex());
+  computeEnthalpySource doEnthalpySource(dt,
+                                         weight,
+                                         rawcoal_mass,
+                                         char_mass,
+                                         particle_temperature,
+                                         temperature,               
+                                         specific_heat,
+                                         radiationVolqIN,
+                                         abskp,
+                                         rad_particle_temperature, 
+                                         den,
+                                         devol_gas_source,
+                                         chargas_source,
+                                         length,
+                                         charoxi_temp_source,
+                                         surface_rate,
+                                         gasVel,
+                                         partVel,
+                                         heat_rate,
+                                         gas_heat_rate,
+                                         qconv,
+                                         qrad,
+                                         this );
+      Uintah::parallel_for( range, doEnthalpySource );
+      
+      
+#else              
     double max_Q_convection;
     double heat_rate_;
     double gas_heat_rate_;
@@ -552,7 +589,7 @@ EnthalpyShaddix::computeModel( const ProcessorGroup * pc,
         double alpha_rc=(rawcoal_massph+char_massph);
         double alpha_cp=cp_c(particle_temperatureph)*alpha_rc+cp_ash(particle_temperatureph)*_init_ash[d_quadNode];
         max_Q_convection=alpha_cp*(deltaT/dt);
-        if (abs(Q_convection) > abs(max_Q_convection)){
+        if (std::abs(Q_convection) > std::abs(max_Q_convection)){
           Q_convection = max_Q_convection;
         }
         // Radiation part: -------------------------
@@ -563,7 +600,7 @@ EnthalpyShaddix::computeModel( const ProcessorGroup * pc,
           FSum = radiationVolqIN[c];
           Q_radiation = abskp[c]*(FSum - Eb);
           double Q_radMax=(std::pow( radiationVolqIN[c] / (4.0 * _sigma )  , 0.25)-rad_particle_temperature[c])/(dt)*alpha_cp;
-          if (abs(Q_radMax) < abs(Q_radiation)){
+          if (std::abs(Q_radMax) < std::abs(Q_radiation)){
             Q_radiation=Q_radMax;
           }
         }
@@ -581,7 +618,9 @@ EnthalpyShaddix::computeModel( const ProcessorGroup * pc,
       qrad[c] = Q_radiation;
     }//end cell loop
 
+#endif              
   }//end patch loop
+
 }
 
 

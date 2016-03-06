@@ -538,7 +538,12 @@
                               attribute13="minor_radius OPTIONAL DOUBLE 'positive'"
                               attribute14="angle        OPTIONAL DOUBLE"                                                                                          
                               attribute15="name         OPTIONAL STRING"
-                              attribute16="type         OPTIONAL STRING 'Wall, Velocity, Outflow, Open, User'">
+                              attribute16="type         OPTIONAL STRING 'Wall, Velocity, Outflow, Open, User'"
+                              attribute17="inner_lower  OPTIONAL MULTIPLE_DOUBLES"
+                              attribute18="outer_lower  OPTIONAL MULTIPLE_DOUBLES"
+                              attribute19="inner_upper  OPTIONAL MULTIPLE_DOUBLES"
+                              attribute20="outer_upper  OPTIONAL MULTIPLE_DOUBLES"
+                              attribute21="rectangulus   OPTIONAL STRING 'x-, x+, y-, y+, z-, z+'">
                                 
                                 <ParticleBC spec="OPTIONAL NO_DATA"
                                             children1="ONE_OF(CHILD Wall, Inlet)">
