@@ -41,6 +41,7 @@ SRCS     += \
 	$(SRCDIR)/SideBCData.cc \
 	$(SRCDIR)/CircleBCData.cc \
 	$(SRCDIR)/AnnulusBCData.cc \
+	$(SRCDIR)/RectangulusBCData.cc \
 	$(SRCDIR)/EllipseBCData.cc \
 	$(SRCDIR)/RectangleBCData.cc \
 	$(SRCDIR)/BCUtils.cc       

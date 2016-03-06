@@ -8,6 +8,15 @@
 #include <CCA/Components/Arches/ArchesVariables.h>
 #include <CCA/Components/Arches/Directives.h>
 
+
+
+#define USE_FUNCTOR 1
+#undef  USE_FUNCTOR 
+
+#ifdef USE_FUNCTOR
+#include <boost/math/special_functions/erf.hpp>
+#endif
+
 //===========================================================================
 
 /**
@@ -51,6 +60,135 @@ private:
 //---------------------------------------------------------------------------
 
 class FOWYDevol: public Devolatilization {
+
+
+
+
+#ifdef USE_FUNCTOR
+
+   struct computeDevolSource{  
+     computeDevolSource( double _dt,
+                         double _vol,
+                         bool _add_birth,
+                         constCCVariable<double> &_temperature, 
+                         constCCVariable<double> &_rcmass, 
+                         constCCVariable<double> &_charmass, 
+                         constCCVariable<double> &_weight, 
+                         constCCVariable<double> &_RHS_source, 
+                         constCCVariable<double> &_char_RHS_source, 
+                         constCCVariable<double> &_rc_weighted_scaled, 
+                         constCCVariable<double> &_char_weighted_scaled, 
+                         constCCVariable<double> &_rawcoal_birth,
+                         CCVariable<double> &_devol_rate,
+                         CCVariable<double> &_gas_devol_rate, 
+                         CCVariable<double> &_char_rate,
+                         CCVariable<double> &_v_inf,
+                         FOWYDevol* theClassAbove) :
+                       dt(_dt),
+                       vol(_vol),
+                       add_birth(_add_birth),
+                       temperature(_temperature), 
+                       rcmass(_rcmass), 
+                       charmass(_charmass), 
+                       weight(_weight), 
+                       RHS_source(_RHS_source), 
+                       char_RHS_source(_char_RHS_source), 
+                       rc_weighted_scaled(_rc_weighted_scaled), 
+                       char_weighted_scaled(_char_weighted_scaled), 
+                       rawcoal_birth(_rawcoal_birth),
+                       devol_rate(_devol_rate),
+                       gas_devol_rate(_gas_devol_rate), 
+                       char_rate(_char_rate),
+                       v_inf(_v_inf),
+                       TCA(theClassAbove) { }
+   
+   
+     void operator()(int i , int j, int k ) const {
+   
+       double rcmass_init = TCA->rc_mass_init[TCA->d_quadNode];
+       double Z=0;
+   
+       if (weight(i,j,k)/TCA->_weight_scaling_constant > TCA->_weight_small) {
+   
+         double rcmassph=rcmass(i,j,k);
+         double RHS_sourceph=RHS_source(i,j,k);
+         double temperatureph=temperature(i,j,k);
+         double charmassph=charmass(i,j,k);
+         double weightph=weight(i,j,k);
+   
+         //VERIFICATION
+         //rcmassph=1;
+         //temperatureph=300;
+         //charmassph=0.0;
+         //weightph=_rc_scaling_constant*_weight_scaling_constant;
+         //rcmass_init = 1;
+   
+   
+         // m_init = m_residual_solid + m_h_off_gas + m_vol
+         // m_vol = m_init - m_residual_solid - m_h_off_gas
+         // but m_h_off_gas = - m_char
+         // m_vol = m_init - m_residual_solid + m_char
+   
+         double m_vol = rcmass_init - (rcmassph+charmassph);
+   
+         double v_inf_local = 0.5*TCA->_v_hiT*(1.0 - tanh(TCA->_C1*(TCA->_Tig-temperatureph)/temperatureph + TCA->_C2));
+         v_inf(i,j,k) = v_inf_local; 
+         double f_drive = std::max((rcmass_init*v_inf_local - m_vol) , 0.0);
+         double zFact =std::min(std::max(f_drive/rcmass_init/TCA->_v_hiT,2.5e-5 ),1.0-2.5e-5  );
+   
+         double rateMax = 0.0; 
+         if ( add_birth ){ 
+           rateMax = std::max(f_drive/dt 
+               + (  (RHS_sourceph+char_RHS_source(i,j,k)) /vol + rawcoal_birth(i,j,k) ) / weightph
+               * TCA->_rc_scaling_constant*TCA->_weight_scaling_constant , 0.0 );
+         } else { 
+           rateMax = std::max(f_drive/dt 
+               + (  (RHS_sourceph+char_RHS_source(i,j,k)) /vol ) / weightph
+               * TCA->_rc_scaling_constant*TCA->_weight_scaling_constant , 0.0 );
+         }
+   
+         Z = sqrt(2.0) * boost::math::erf_inv(1.0-2.0*zFact );
+   
+         double rate = std::min(TCA->_A*exp(-(TCA->_Ta + Z *TCA->_sigma)/temperatureph)*f_drive , rateMax);
+         devol_rate(i,j,k) = -rate*weightph/(TCA->_rc_scaling_constant*TCA->_weight_scaling_constant); //rate of consumption of raw coal mass
+         gas_devol_rate(i,j,k) = rate*weightph; // rate of creation of coal off gas
+         char_rate(i,j,k) = 0; // rate of creation of char
+   
+         //additional check to make sure we have positive rates when we have small amounts of rc and char.. 
+         if( devol_rate(i,j,k)>0.0 || ( rc_weighted_scaled(i,j,k) + char_weighted_scaled(i,j,k) )<1e-16) {
+           devol_rate(i,j,k) = 0;
+           gas_devol_rate(i,j,k) = 0;
+           char_rate(i,j,k) = 0;
+         }
+   
+       } else {
+         devol_rate(i,j,k) = 0;
+         gas_devol_rate(i,j,k) = 0;
+         char_rate(i,j,k) = 0;
+       }
+     }//end cell loop
+     private:
+   
+     double dt;
+     double vol;
+     bool add_birth;
+     constCCVariable<double> &temperature; 
+     constCCVariable<double> &rcmass; 
+     constCCVariable<double> &charmass; 
+     constCCVariable<double> &weight; 
+     constCCVariable<double> &RHS_source; 
+     constCCVariable<double> &char_RHS_source; 
+     constCCVariable<double> &rc_weighted_scaled; 
+     constCCVariable<double> &char_weighted_scaled; 
+     constCCVariable<double> &rawcoal_birth;
+     CCVariable<double> &devol_rate;
+     CCVariable<double> &gas_devol_rate; 
+     CCVariable<double> &char_rate;
+     CCVariable<double> &v_inf;
+     FOWYDevol* TCA;
+   };
+#endif
+
 public: 
 
   FOWYDevol( std::string modelName, 
@@ -143,7 +281,6 @@ private:
     double ASH; 
     double H2O; 
   };
-
 }; // end ConstSrcTerm
 } // end namespace Uintah
 #endif

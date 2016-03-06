@@ -95,7 +95,7 @@ void ScalarDiffusionModel::addInitialComputesAndRequires(Task* task,
 }
 
 void ScalarDiffusionModel::initializeTimeStep(const Patch* patch,
-		                                      const MPMMaterial* matl,
+                                              const MPMMaterial* matl,
                                               DataWarehouse* new_dw)
 {
   Vector dx = patch->dCell();
@@ -364,7 +364,7 @@ void ScalarDiffusionModel::outputProblemSpec(ProblemSpecP& ps, bool output_rdm_t
 
 double ScalarDiffusionModel::computeStableTimeStep(double Dif, Vector dx)
 {
-  // For a Forward Eular timestep the limiting factor is
+  // For a Forward Euler timestep the limiting factor is
   // dt < dx^2 / 2*D.
   Vector timeStep(dx.x()*dx.x(), dx.y()*dx.y(), dx.z()*dx.z());
   timeStep = timeStep/(Dif*2);

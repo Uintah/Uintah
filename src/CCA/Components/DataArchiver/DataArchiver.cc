@@ -139,6 +139,7 @@ DataArchiver::problemSetup( const ProblemSpecP    & params,
 
   ProblemSpecP p = params->findBlock("DataArchiver");
   
+  //__________________________________
   // PIDX related
   string type;
   p->getAttribute("type", type);
@@ -2379,14 +2380,21 @@ DataArchiver::outputVariables(const ProcessorGroup * pg,
   //______________________________________________________________________
   //
   //  ToDo
-  //      Multiple patches per core (Sidharth)
-  //      turn off debugging inside of PIDX (Sidharth)
-  //      disable need for MPI in PIDX (Sidharth)
-  //      Fix ints issue in PIDX (sidharth)
-  //      Do we need patch_buffer?
+  //      Multiple patches per core.   This is needed for outputNthProc  (Sidharth)
+  //      Turn off output from inside of PIDX (Sidharth)
+  //      Disable need for MPI in PIDX (Sidharth)
+  //      Fix ints issue in PIDX (Sidharth)
   //      Do we need the memset calls?
+  //      Is Variable::emitPIDX() and Variable::readPIDX() efficient? 
+  //      Should we be using calloc() instead of malloc+memset?
   //
   if ( d_outputFileFormat == PIDX && type != CHECKPOINT_REDUCTION){
+  
+    //__________________________________
+    // bulletproofing
+    if( patches->size() > 1 ){
+      throw SCIRun::InternalError("ERROR: (PIDX:outputVariables) Only 1 patch per MPI process is currently supported.", __FILE__, __LINE__);
+    }
   
     //__________________________________
     // create the xml dom for this variable
@@ -2399,6 +2407,10 @@ DataArchiver::outputVariables(const ProcessorGroup * pg,
       
     PIDXOutputContext pidx;
     vector<TypeDescription::Type> GridVarTypes = pidx.getSupportedVariableTypes();
+    
+    //bulletproofing
+    isVarTypeSupported( saveLabels, GridVarTypes );
+    
     size_t totalBytes = 0;
     
     // loop over the grid variable types.
@@ -2413,8 +2425,9 @@ DataArchiver::outputVariables(const ProcessorGroup * pg,
         string dirName = pidx.getDirectoryName( TD );
 
         Dir myDir = ldir.getSubdir( dirName );
+        
 
-        totalBytes += saveLabels_PIDX(saveTheseLabels, pg, patches, new_dw, type, TD, myDir, doc);
+        totalBytes += saveLabels_PIDX(saveTheseLabels, pg, patches, new_dw, type, TD, ldir, dirName, doc);
       } 
     }
     double myTime = Time::currentSeconds()-start;
@@ -2441,7 +2454,8 @@ DataArchiver::saveLabels_PIDX(std::vector< SaveItem >& saveLabels,
                               DataWarehouse        * new_dw,          
                               int                    type,
                               const TypeDescription::Type TD,
-                              Dir                   myDir,
+                              Dir                    ldir,        // uda/timestep/levelIndex
+                              const std::string      dirName,     // CCVars, SFC*Vars
                               ProblemSpecP&          doc)            
 {
   size_t totalBytesSaved = 0;
@@ -2478,9 +2492,10 @@ DataArchiver::saveLabels_PIDX(std::vector< SaveItem >& saveLabels,
 
   // must use this format or else file won't be written
   // inside of uda
-  string idxFilename( myDir.getName() );
-  idxFilename = idxFilename + ".idx";
-
+  Dir myDir = ldir.getSubdir( dirName );                   // uda/timestep/level/<CCVars, SFC*Vars>
+  string idxFilename ( dirName + ".idx" );                 // <CCVars, SFC*Vars....>.idx
+  string full_idxFilename( myDir.getName() + ".idx" );     // uda/timestep/level/<CCVars, SFC*Vars...>.idx
+  
   PIDXOutputContext pidx;
 
   pidx.setOutputDoubleAsFloat( (d_outputDoubleAsFloat && type == OUTPUT) );  
@@ -2488,7 +2503,7 @@ DataArchiver::saveLabels_PIDX(std::vector< SaveItem >& saveLabels,
   unsigned int timeStep = d_sharedState->getCurrentTopLevelTimeStep();
   
   // Can this be run in serial without doing a MPI initialize
-  pidx.initialize(idxFilename, timeStep, d_myworld->getComm());
+  pidx.initialize(full_idxFilename, timeStep, d_myworld->getComm());
 
   //__________________________________
   // define the level extents for this variable type
@@ -2682,7 +2697,7 @@ DataArchiver::saveLabels_PIDX(std::vector< SaveItem >& saveLabels,
           var_ps->appendElement("index",     matlIndex);
           var_ps->appendElement("patch",     patch->getID());                     
           var_ps->appendElement("start",     vcm);                         
-          var_ps->appendElement("end",       vcm);          // redundant   
+          var_ps->appendElement("end",       vcm);          // redundant
           var_ps->appendElement("filename",  idxFilename);
 
           if (label->getBoundaryLayer() != IntVector(0,0,0)) {
@@ -2753,6 +2768,36 @@ DataArchiver::findAllVariableTypes( std::vector< SaveItem >& saveLabels,
   return myItems;
 }
 
+
+//______________________________________________________________________
+//  throw exception if saveItems type description is NOT supported 
+void 
+DataArchiver::isVarTypeSupported( std::vector< SaveItem >& saveLabels,
+                                  std::vector<TypeDescription::Type> pidxVarTypes )
+{ 
+  for(vector< SaveItem >::iterator saveIter = saveLabels.begin(); saveIter!= saveLabels.end(); saveIter++) {
+    const VarLabel* label = saveIter->label;
+    const TypeDescription* myType = label->typeDescription();
+    
+    bool found = false;
+    vector<TypeDescription::Type>::iterator it;
+    for(it = pidxVarTypes.begin(); it!= pidxVarTypes.end(); it++) {
+      TypeDescription::Type TD = *it;
+      if( myType->getType() == TD ){
+        found = true;
+        continue;
+      }
+    }
+    
+    // throw exception if this type isn't supported
+    if( found == false){
+      ostringstream warn;
+      warn << "DataArchiver::saveLabels_PIDX:: ("<< label->getName() << ",  " 
+           << myType->getName() << " ) has not been implemented" << endl;
+      throw InternalError(warn.str(), __FILE__, __LINE__);
+    }
+  }
+}
 
 //______________________________________________________________________
 //  Create the PIDX sub directories

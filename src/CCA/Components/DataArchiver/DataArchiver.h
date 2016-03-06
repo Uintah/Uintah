@@ -250,16 +250,23 @@ using SCIRun::Mutex;
                            DataWarehouse        * new_dw,          
                            int                    type,
                            const TypeDescription::Type TD,
-                           Dir                   levelDir,
+                           Dir                    ldir,        // uda/timestep/levelIndex
+                           const std::string      dirName,     // CCVars, SFC*Vars
                            ProblemSpecP&          doc);
                            
       //! returns a vector of SaveItems with a common type description
       std::vector<DataArchiver::SaveItem> 
           findAllVariableTypes( std::vector< SaveItem >& saveLabels,
                                  const TypeDescription::Type TD );
-                                 
+      
+      //! bulletproofing so user can't save unsupported var type
+      void isVarTypeSupported( std::vector< SaveItem >& saveLabels,
+                               std::vector<TypeDescription::Type> pidxVarTypes );
+           
       void createPIDX_dirs( std::vector< SaveItem >& saveLabels,
                             Dir& levelDir );
+                            
+                            
        
        //__________________________________
        //! returns a ProblemSpecP reading the xml file xmlName.

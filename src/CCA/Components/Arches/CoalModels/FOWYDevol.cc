@@ -15,6 +15,13 @@
 #include <Core/Parallel/Parallel.h>
 
 #include <boost/math/special_functions/erf.hpp>
+
+#ifdef USE_FUNCTOR
+#include <Core/Grid/Variables/BlockRange.h>
+#ifdef UINTAH_ENABLE_KOKKOS
+#include <Kokkos_Core.hpp>
+#endif //UINTAH_ENABLE_KOKKOS
+#endif
 //===========================================================================
 
 using namespace std;
@@ -190,6 +197,7 @@ FOWYDevol::problemSetup(const ProblemSpecP& params, int qn)
   DQMOMEqn& weight_eqn = dynamic_cast<DQMOMEqn&>(temp_weight_eqn);
   _weight_small = weight_eqn.getSmallClipPlusTol();
   _weight_scaling_constant = weight_eqn.getScalingConstant(d_quadNode);
+
 }
 
 //---------------------------------------------------------------------------
@@ -358,6 +366,33 @@ FOWYDevol::computeModel( const ProcessorGroup * pc,
     }
 
 
+
+#ifdef USE_FUNCTOR              
+    Uintah::BlockRange range(patch->getCellLowIndex(),patch->getCellHighIndex());
+
+    computeDevolSource doDevolSource(dt,
+                                     vol,
+                                     add_birth,
+                                     temperature, 
+                                     rcmass, 
+                                     charmass, 
+                                     weight, 
+                                     RHS_source, 
+                                     char_RHS_source, 
+                                     rc_weighted_scaled, 
+                                     char_weighted_scaled, 
+                                     rawcoal_birth,
+                                     devol_rate,
+                                     gas_devol_rate, 
+                                     char_rate,
+                                     v_inf,
+                                     this);
+
+    Uintah::parallel_for( range, doDevolSource );
+#else              
+
+
+
     double rcmass_init = rc_mass_init[d_quadNode];
     double Z=0;
     for (CellIterator iter=patch->getCellIterator(); !iter.done(); iter++){
@@ -377,7 +412,6 @@ FOWYDevol::computeModel( const ProcessorGroup * pc,
         //charmassph=0.0;
         //weightph=_rc_scaling_constant*_weight_scaling_constant;
         //rcmass_init = 1;
-
 
         // m_init = m_residual_solid + m_h_off_gas + m_vol
         // m_vol = m_init - m_residual_solid - m_h_off_gas
@@ -422,5 +456,6 @@ FOWYDevol::computeModel( const ProcessorGroup * pc,
         char_rate[c] = 0;
       }
     }//end cell loop
+#endif
   }//end patch loop
 }

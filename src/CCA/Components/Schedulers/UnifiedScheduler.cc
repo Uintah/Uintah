@@ -749,8 +749,6 @@ void UnifiedScheduler::markTaskConsumed(int& numTasksDone, int& currphase, int n
 void
 UnifiedScheduler::runTasks( int thread_id )
 {
-  int me = d_myworld->myrank();
-
   while( numTasksDone < ntasks ) {
 
     DetailedTask* readyTask = NULL;
