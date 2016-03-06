@@ -35,7 +35,6 @@ SRCS += \
         $(SRCDIR)/DynamicMPIScheduler.cc      \
         $(SRCDIR)/IncorrectAllocation.cc      \
         $(SRCDIR)/MemoryLog.cc                \
-        $(SRCDIR)/MessageLog.cc               \
         $(SRCDIR)/MPIScheduler.cc             \
         $(SRCDIR)/OnDemandDataWarehouse.cc    \
         $(SRCDIR)/Relocate.cc                 \

@@ -190,7 +190,6 @@ ThreadedMPIScheduler::problemSetup( const ProblemSpecP&     prob_spec,
     t_thread[i] = t;
   }
 
-  log.problemSetup(prob_spec);
   SchedulerCommon::problemSetup(prob_spec, state);
 }
 
@@ -538,7 +537,6 @@ ThreadedMPIScheduler::execute( int tgnum     /* = 0 */,
   }
 
   finalizeTimestep();
-  log.finishTimestep();
 
   if( threadedmpi_timeout.active() && !parentScheduler_ ) {  // only do on toplevel scheduler
     outputTimingStats("ThreadedMPIScheduler");

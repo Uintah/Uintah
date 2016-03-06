@@ -421,8 +421,6 @@ void ThreadedTaskScheduler::execute(  int tgnum /*=0*/ , int iteration /*=0*/ )
   }
   //------------------------------------------------------------------------------------------------
 
-  emit_net_MPI_stats();
-
   // compute the net timings and add in wait times for all TaskRunner threads
   if (d_sharedState != 0) {
     compute_net_runtime_stats(d_sharedState->d_runTimeStats);
@@ -438,7 +436,9 @@ void ThreadedTaskScheduler::execute(  int tgnum /*=0*/ , int iteration /*=0*/ )
 
   finalizeTimestep();
 
-  output_timing_stats("ThreadFunnledScheduler");
+  output_timing_stats("ThreadedTaskScheduler");
+
+  emit_net_MPI_stats();
 
   RuntimeStats::report(d_myworld->getComm(), d_sharedState->d_runTimeStats);
 
