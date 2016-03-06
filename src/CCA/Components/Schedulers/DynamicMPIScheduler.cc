@@ -141,7 +141,7 @@ DynamicMPIScheduler::problemSetup( const ProblemSpecP&     prob_spec,
   else {
     throw ProblemSetupException("Unknown task ready queue algorithm", __FILE__, __LINE__);
   }
-  log.problemSetup(prob_spec);
+
   SchedulerCommon::problemSetup(prob_spec, state);
 }
 
@@ -456,7 +456,6 @@ DynamicMPIScheduler::execute( int tgnum     /*=0*/,
   }
 
   finalizeTimestep();
-  log.finishTimestep();
   
 
   if( ( execout.active() || dynamicmpi_timeout.active() ) && !parentScheduler_ ) {  // only do on toplevel scheduler
