@@ -24,7 +24,6 @@
 
 #include <CCA/Components/Schedulers/ThreadedTaskScheduler.h>
 #include <CCA/Components/Schedulers/RuntimeStats.hpp>
-
 #include <CCA/Components/Schedulers/TaskGraph.h>
 #include <CCA/Components/Schedulers/OnDemandDataWarehouse.h>
 #include <CCA/Ports/Output.h>
@@ -196,12 +195,9 @@ void init_threads( ThreadedTaskScheduler * sched, int num_threads )
 //
 ThreadedTaskScheduler::ThreadedTaskScheduler( const ProcessorGroup        * myworld
                                             , const Output                * oport
-                                            ,       ThreadedTaskScheduler * parentScheduler /* = nullptr */
                                             )
   : SchedulerCommon( myworld, oport )
-  , m_message_log{ myworld, oport }
   , m_output_port{ oport }
-  , m_parent_scheduler{ parentScheduler }
 {
   if (timeout.active()) {
     char filename[64];
@@ -279,8 +275,6 @@ void ThreadedTaskScheduler::problemSetup( const ProblemSpecP & prob_spec, Simula
   // this spawns threads, sets affinity, etc
   init_threads(this, m_num_threads);
 
-  m_message_log.problemSetup(prob_spec);
-
   SchedulerCommon::problemSetup(prob_spec, state);
 }
 
@@ -289,12 +283,7 @@ void ThreadedTaskScheduler::problemSetup( const ProblemSpecP & prob_spec, Simula
 //
 SchedulerP ThreadedTaskScheduler::createSubScheduler()
 {
-  ThreadedTaskScheduler* newsched = new ThreadedTaskScheduler(d_myworld, m_outPort, this);
-  newsched->d_sharedState = d_sharedState;
-  UintahParallelPort* lbp = getPort("load balancer");
-  newsched->attachPort("load balancer", lbp);
-  newsched->d_sharedState = d_sharedState;
-  return newsched;
+  throw ProblemSetupException("createSubScheduler() not implemented for ThreadedTaskScheduler.", __FILE__, __LINE__);
 }
 
 
@@ -449,11 +438,7 @@ void ThreadedTaskScheduler::execute(  int tgnum /*=0*/ , int iteration /*=0*/ )
 
   finalizeTimestep();
 
-  m_message_log.finishTimestep();
-
-  if (!m_parent_scheduler) {  // only do on toplevel scheduler
-    output_timing_stats("ThreadFunnledScheduler");
-  }
+  output_timing_stats("ThreadFunnledScheduler");
 
   RuntimeStats::report(d_myworld->getComm(), d_sharedState->d_runTimeStats);
 
@@ -575,7 +560,7 @@ void ThreadedTaskScheduler::post_MPI_recvs( DetailedTask * task
       // the load balancer is used to determine where data was in the old dw on the prev timestep
       // pass it in if the particle data is on the old dw
       LoadBalancer* lb = 0;
-      if (!reloc_new_posLabel_ && m_parent_scheduler) {
+      if (!reloc_new_posLabel_) {
         posDW = dws[req->req->task->mapDataWarehouse(Task::ParentOldDW)].get_rep();
       } else {
         // on an output task (and only on one) we require particle variables from the NewDW
@@ -585,11 +570,6 @@ void ThreadedTaskScheduler::post_MPI_recvs( DetailedTask * task
           posDW = dws[req->req->task->mapDataWarehouse(Task::OldDW)].get_rep();
           lb = getLoadBalancer();
         }
-      }
-
-      ThreadedTaskScheduler* top = this;
-      while (top->m_parent_scheduler) {
-        top = top->m_parent_scheduler;
       }
 
       dw->recvMPI(batch, mpibuff, posDW, req, lb);
@@ -680,9 +660,8 @@ void ThreadedTaskScheduler::post_MPI_sends( DetailedTask * task, int iteration )
       OnDemandDataWarehouse* posDW;
       LoadBalancer* lb = 0;
 
-      if( !reloc_new_posLabel_ && m_parent_scheduler ) {
+      if( !reloc_new_posLabel_) {
         posDW = dws[req->req->task->mapDataWarehouse(Task::ParentOldDW)].get_rep();
-        posLabel = m_parent_scheduler->reloc_new_posLabel_;
       }
       else {
         // on an output task (and only on one) we require particle variables from the NewDW
@@ -694,11 +673,6 @@ void ThreadedTaskScheduler::post_MPI_sends( DetailedTask * task, int iteration )
           lb = getLoadBalancer();
         }
         posLabel = reloc_new_posLabel_;
-      }
-
-      ThreadedTaskScheduler* top = this;
-      while( top->m_parent_scheduler ) {
-        top = top->m_parent_scheduler;
       }
 
       dw->sendMPI(batch, posLabel, mpibuff, posDW, req, lb);
@@ -809,15 +783,6 @@ void ThreadedTaskScheduler::run_task( DetailedTask * task, int iteration )
   post_MPI_sends(task, iteration);
 
   task->done(dws);
-
-  // Add subscheduler timings to the parent scheduler and reset subscheduler timings
-  if (m_parent_scheduler) {
-    for (size_t i = 0; i < m_mpi_info.size(); ++i) {
-      TimingStat e = (TimingStat)i;
-      m_parent_scheduler->m_mpi_info[e] += m_mpi_info[e];
-    }
-    m_mpi_info.reset(0);
-  }
 
   SchedulerCommon::emitNode(task, 0, total_task_time, 0);
 
