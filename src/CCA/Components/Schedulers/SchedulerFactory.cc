@@ -139,7 +139,7 @@ SchedulerFactory::create( const ProblemSpecP   & ps,
     sch = scinew ThreadedMPIScheduler(world, output, nullptr);
   }
   else if (scheduler == "ThreadedTask") {
-    sch = scinew ThreadedTaskScheduler(world, output, nullptr);
+    sch = scinew ThreadedTaskScheduler(world, output);
   }
   else if (scheduler == "Unified") {
     sch = scinew UnifiedScheduler(world, output, nullptr);

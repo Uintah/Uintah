@@ -26,7 +26,6 @@
 #define CCA_COMPONENTS_SCHEDULERS_THREADEDTASKSCHEDULER_H
 
 #include <CCA/Components/Schedulers/SchedulerCommon.h>
-#include <CCA/Components/Schedulers/MessageLog.h>
 #include <CCA/Components/Schedulers/DetailedTasks.h>
 #include <CCA/Components/Schedulers/OnDemandDataWarehouseP.h>
 #include <CCA/Ports/DataWarehouseP.h>
@@ -107,7 +106,7 @@ class ThreadedTaskScheduler : public SchedulerCommon {
 
 public:
 
-  ThreadedTaskScheduler( const ProcessorGroup * myworld, const Output * oport, ThreadedTaskScheduler * parentScheduler = nullptr);
+  ThreadedTaskScheduler( const ProcessorGroup * myworld, const Output * oport);
 
   virtual ~ThreadedTaskScheduler();
 
@@ -236,11 +235,6 @@ private:
   std::atomic<int>            m_num_tasks_done;
   atomic_int_array            m_phase_tasks_done;
 
-  MessageLog                  m_message_log;
-  const Output              * m_output_port;
-
-  CommPool                    m_comm_requests{REQUEST_SIZE};
-
   std::vector<const char*>    m_labels{};
   std::vector<double>         m_times{};
 
@@ -251,9 +245,11 @@ private:
   unsigned int                m_num_messages{};
   double                      m_message_volume{};
 
-  ThreadedTaskScheduler     * m_parent_scheduler;
+  const Output              * m_output_port;
 
-  ReductionInfoMapper< TimingStat, double > m_mpi_info;
+  CommPool                    m_comm_requests{REQUEST_SIZE};
+
+  ReductionInfoMapper< TimingStat, double >     m_mpi_info;
 
   std::map<std::string, std::atomic<uint64_t> > waittimes{};
 
