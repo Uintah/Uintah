@@ -26,15 +26,19 @@
 #define UINTAH_HOMEBREW_PIDXOutputContext_H
 
 #include <sci_defs/pidx_defs.h>
+#include <Core/ProblemSpec/ProblemSpec.h>
+#include <Core/Exceptions/InternalError.h>
+
 #if HAVE_PIDX
 #include <Core/Disclosure/TypeDescription.h>
 #include <Core/Geometry/IntVector.h>
 #include <Core/Grid/Level.h>
 #include <Core/Grid/Patch.h>
-#include <Core/ProblemSpec/ProblemSpec.h>
+
 #include <PIDX.h>
 #include <iomanip>             // setw()
 #include <mpi.h>
+#include <iostream>
 #include <string>
 #include <vector>
 
@@ -204,6 +208,30 @@ class PIDXOutputContext {
     
   };
 } // End namespace Uintah
-
+//______________________________________________________________________
+//                    Empty methods so you can compile without PIDX
+#else
+namespace Uintah {
+  class  PIDXOutputContext{
+    public:
+      PIDXOutputContext();
+      ~PIDXOutputContext();
+      
+    class PIDX_flags{
+      public:
+        PIDX_flags(){};
+        ~PIDX_flags(){};
+        void print(){};
+        
+        void problemSetup( const Uintah::ProblemSpecP& params ){
+          std::ostringstream warn;
+          warn << " ERROR:  To output with the PIDX file format, you must use the following in your configure line...";
+          warn << "                 --with-pidx=<path to PIDX installation>\n";
+          throw InternalError(warn.str(), __FILE__, __LINE__);
+        
+        };
+    };
+  };
+}
 #endif //HAVE_PIDX
 #endif //UINTAH_HOMEBREW_PIDXOutputContext_H
