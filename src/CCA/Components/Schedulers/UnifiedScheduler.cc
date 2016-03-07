@@ -406,43 +406,48 @@ UnifiedScheduler::runTask( DetailedTask*         task,
     waittimesLock.unlock();
   }
 
-  // -------------------------< begin task execution timing >-------------------------
-  double task_start_time = Time::currentSeconds();
+  //Only execute CPU or GPU tasks.  Don't execute postGPU tasks a second time.
+  if ( event == Task::CPU || event == Task::GPU) {
+    // -------------------------< begin task execution timing >-------------------------
+    double task_start_time = Time::currentSeconds();
 
-  if (trackingVarsPrintLocation_ & SchedulerCommon::PRINT_BEFORE_EXEC) {
-    printTrackedVars(task, SchedulerCommon::PRINT_BEFORE_EXEC);
-  }
-
-  std::vector<DataWarehouseP> plain_old_dws(dws.size());
-  for (int i = 0; i < (int)dws.size(); i++) {
-    plain_old_dws[i] = dws[i].get_rep();
-  }
-  task->doit(d_myworld, dws, plain_old_dws, event);
-
-  if (trackingVarsPrintLocation_ & SchedulerCommon::PRINT_AFTER_EXEC) {
-    printTrackedVars(task, SchedulerCommon::PRINT_AFTER_EXEC);
-  }
-
-  double total_task_time = Time::currentSeconds() - task_start_time;
-  // -------------------------< end task execution timing >-------------------------
-
-  dlbLock.lock();
-  {
-    if (execout.active()) {
-      exectimes[task->getTask()->getName()] += total_task_time;
+    if (trackingVarsPrintLocation_ & SchedulerCommon::PRINT_BEFORE_EXEC) {
+      printTrackedVars(task, SchedulerCommon::PRINT_BEFORE_EXEC);
     }
 
-    // If I do not have a sub scheduler
-    if (!task->getTask()->getHasSubScheduler()) {
-      //add my task time to the total time
-      mpi_info_[TotalTask] += total_task_time;
-      if (!d_sharedState->isCopyDataTimestep() && task->getTask()->getType() != Task::Output) {
-        // add contribution of task execution time to load balancer
-        getLoadBalancer()->addContribution(task, total_task_time);
+    std::vector<DataWarehouseP> plain_old_dws(dws.size());
+    for (int i = 0; i < (int)dws.size(); i++) {
+      plain_old_dws[i] = dws[i].get_rep();
+    }
+
+    task->doit(d_myworld, dws, plain_old_dws, event);
+
+
+    if (trackingVarsPrintLocation_ & SchedulerCommon::PRINT_AFTER_EXEC) {
+      printTrackedVars(task, SchedulerCommon::PRINT_AFTER_EXEC);
+    }
+
+    double total_task_time = Time::currentSeconds() - task_start_time;
+    // -------------------------< end task execution timing >-------------------------
+
+    dlbLock.lock();
+    {
+      if (execout.active()) {
+        exectimes[task->getTask()->getName()] += total_task_time;
+      }
+
+      // If I do not have a sub scheduler
+      if (!task->getTask()->getHasSubScheduler()) {
+        //add my task time to the total time
+        mpi_info_[TotalTask] += total_task_time;
+        if (!d_sharedState->isCopyDataTimestep() && task->getTask()->getType() != Task::Output) {
+          // add contribution of task execution time to load balancer
+          getLoadBalancer()->addContribution(task, total_task_time);
+        }
       }
     }
+    dlbLock.unlock();
   }
-  dlbLock.unlock();
 
   // For CPU and postGPU task runs, post MPI sends and call task->done;
   if (event == Task::CPU || event == Task::postGPU) {
@@ -1116,8 +1121,8 @@ UnifiedScheduler::runTasks( int thread_id )
         //The Task GPU Datawarehouses are no longer needed.  Delete them on the host and device.
         readyTask->deleteTaskGpuDataWarehouses();
 
-        // run post GPU part of task
-        // Note: This is very likely to not be needed anymore.
+        // run post GPU part of task.  It won't actually rerun the task
+        // But it will run post computation management logic if needed.
         runTask(readyTask, currentIteration, thread_id, Task::postGPU);
         // recycle this task's stream
         reclaimCudaStreams(readyTask);
