@@ -357,7 +357,7 @@ ArchesTable::setup(const bool cerrSwitch)
   vector<Dep*> in_deps(ndeps);
   for(int j=0;j<ndeps;j++) {
     Dep* dep = scinew Dep(Dep::TableValue);
-    
+
     dep->name = getString( gzFp );
     dep->data = scinew double[size];
     // Add the first (typically masss fraction) axis with stride 1
@@ -399,7 +399,7 @@ ArchesTable::setup(const bool cerrSwitch)
   //
   string data = getString( gzFp );
   if( data != "" ) {
-    throw InternalError( "Extra data found in file after parsing... (starting with " + 
+    throw InternalError( "Extra data found in file after parsing... (starting with " +
                          data + ".\n", __FILE__, __LINE__ );
   }
 
@@ -491,7 +491,7 @@ ArchesTable::setup(const bool cerrSwitch)
         dep->addAxis(newAxis);
       }
     }
-  
+
     // Find the axes to be eliminated...
     for(int j=0;j<interp_size;j++){
       idx[j] = 0;
@@ -576,13 +576,13 @@ ArchesTable::setup(const bool cerrSwitch)
         n[s]=0;
         s--;
       }
-      
+
     }
   }
 
   // Free up the input deps
-  delete idx;
-  delete w;
+  delete [] idx;
+  delete [] w;
   for(int i=0;i<(int)in_inds.size();i++)
     delete in_inds[i];
   for(int i=1;i<(int)in_axes.size();i++)
@@ -594,8 +594,8 @@ ArchesTable::setup(const bool cerrSwitch)
     if(in_deps[i]->expression)
       delete in_deps[i]->expression;
     delete in_deps[i];
-  }  
-  
+  }
+
   // Compute derived values
   for(int i=0;i<static_cast<int>(deps.size());i++){
     Dep* dep = deps[i];
@@ -631,7 +631,7 @@ ArchesTable::checkAxes( const vector<InterpAxis*> & a,
     }
   }
   if(a.size() != b.size()) {
-    throw InternalError("Cannot compute a derived quantity on variables with different dimension", 
+    throw InternalError("Cannot compute a derived quantity on variables with different dimension",
                         __FILE__, __LINE__);
   }
   for(int i=0;i<static_cast<int>(a.size());i++) {
@@ -757,7 +757,7 @@ ArchesTable::evaluate(Expr* expr, vector<InterpAxis*>& out_axes,
     throw InternalError("Bad op in expression", __FILE__, __LINE__);
   }
 }
-    
+
 void
 ArchesTable::interpolate( int index, CCVariable<double>& result,
                           const CellIterator& in_iter,
@@ -947,7 +947,7 @@ ArchesTable::getInt(istream& in)
 {
   if(startline)
     skipComments(in);
-  
+
   eatWhite(in);
 
   int c = in.get();
@@ -970,7 +970,7 @@ double ArchesTable::getDouble(istream& in)
 {
   eatWhite(in);
   if(startline)
-    skipComments(in);  
+    skipComments(in);
   eatWhite(in);
 
   int c = in.get();
@@ -1088,7 +1088,7 @@ ArchesTable::InterpAxis::InterpAxis(int size, int stride)
     offset[i] = i*stride;
 }
 
-ArchesTable::InterpAxis::InterpAxis(const InterpAxis* copy, int newStride) : 
+ArchesTable::InterpAxis::InterpAxis(const InterpAxis* copy, int newStride) :
   weights(copy->weights), offset(copy->offset.size()),
   uniform(copy->uniform), dx(copy->dx), useCount(0)
 {
