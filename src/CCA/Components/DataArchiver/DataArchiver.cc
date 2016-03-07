@@ -145,16 +145,6 @@ DataArchiver::problemSetup( const ProblemSpecP    & params,
     d_PIDX_flags.problemSetup(p);
     d_PIDX_flags.print();
   }
-  
-  // bulletproofing
-#ifndef HAVE_PIDX
-  if( d_outputFileFormat == PIDX ){
-    ostringstream warn;
-    warn << " ERROR:  To output with the PIDX file format, you must use the following in your configure line..." << endl;
-    warn << "                 --with-pidx=<path to PIDX installation>" << endl;
-    throw ProblemSetupException(warn.str(), __FILE__, __LINE__);
-  }
-#endif
 
   d_outputDoubleAsFloat = p->findBlock("outputDoubleAsFloat") != 0;
 

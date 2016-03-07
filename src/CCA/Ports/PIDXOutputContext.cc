@@ -25,10 +25,7 @@
 
 #if HAVE_PIDX
 #include <PIDX_compression.h>
-
-#include <Core/Exceptions/InternalError.h>
 #include <Core/Util/StringUtil.h>
-#include <iostream>
 #include <vector>
 
 using namespace std;
@@ -394,5 +391,4 @@ template void PIDXOutputContext::printBuffer<double>( const string & desc,
                                                       IntVector& hi_EC,
                                                       unsigned char* dataPIDX,
                                                       size_t arraySize );
-
-#endif // HAVE_PIDX
+#endif
