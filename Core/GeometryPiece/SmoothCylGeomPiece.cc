@@ -414,7 +414,7 @@ SmoothCylGeomPiece::createCylPoints()
         area = 0.5*angularInc*
                           (nextRadius*nextRadius-prevRadius*prevRadius);
         double pvol = area*axisInc;
-        if(pvol/cell_vol < 1.e-2){
+        if(pvol/cell_vol < 5.e-2){
           redNumAng*=0.9;
           tooMany=true;
         } else {
@@ -449,7 +449,12 @@ SmoothCylGeomPiece::createCylPoints()
 	d_size.push_back(size);
         // area vector contains three components, these are:
         // (area normal to r, area normal to circumference, area normal to axis)
-	d_area.push_back(Vector(axisInc*r*angularInc,radInc*axisInc,area));
+//	d_area.push_back(Vector(axisInc*r*angularInc,radInc*axisInc,area));
+
+        // area vector contains three components, these are:
+        // (area normal to r, area normal to r, area normal to axis)
+	d_area.push_back(Vector(axisInc*r*angularInc,
+                                axisInc*r*angularInc, area));
 	//cout << "Size["<<count<<"] = "<<d_size[count]<<endl;
 	count++;
       }
