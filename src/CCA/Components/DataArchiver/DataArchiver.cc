@@ -324,10 +324,6 @@ DataArchiver::problemSetup( const ProblemSpecP    & params,
     throw ProblemSetupException("<checkpoint walltimeStart must have a corresponding walltimeInterval",
                                 __FILE__, __LINE__);
   }
-  // Set walltimeStart to walltimeInterval if not specified.
-  if (d_checkpointWalltimeInterval != 0 && d_checkpointWalltimeStart == 0) {
-    d_checkpointWalltimeStart = d_checkpointWalltimeInterval;
-  }
 
   d_lastTimestepLocation   = "invalid";
   d_isOutputTimestep       = false;
@@ -338,18 +334,27 @@ DataArchiver::problemSetup( const ProblemSpecP    & params,
   d_nextCheckpointTime     = d_checkpointInterval; 
   d_nextCheckpointTimestep = d_checkpointTimestepInterval+1;
 
-  proc0cout << "Next checkpoint time is " << d_checkpointInterval << "\n";
-
   if (d_checkpointWalltimeInterval > 0) {
-    d_nextCheckpointWalltime = d_checkpointWalltimeStart + (int) Time::currentSeconds();
+    d_nextCheckpointWalltime = d_checkpointWalltimeStart + d_checkpointWalltimeInterval;
+
     if( Parallel::usingMPI() ) {
       // Make sure we are all writing at same time.  When node clocks disagree,
       // make decision based on processor zero time.
       MPI_Bcast(&d_nextCheckpointWalltime, 1, MPI_INT, 0, d_myworld->getComm());
     }
   }
-  else { 
-    d_nextCheckpointWalltime = 0;
+  
+  //__________________________________
+  // 
+  if ( d_checkpointInterval > 0 ){
+    proc0cout << "Checkpointing:"<< std::setw(16)<< " Every "<<  d_checkpointInterval << " physical seconds.\n";
+  }
+  if  ( d_checkpointTimestepInterval > 0 ){
+    proc0cout << "Checkpointing:"<< std::setw(16)<< " Every "<<  d_checkpointTimestepInterval << " timesteps.\n";
+  }
+  if  ( d_checkpointWalltimeInterval > 0 ){
+    proc0cout << "Checkpointing:"<< std::setw(16)<< " Every "<<  d_checkpointWalltimeInterval << " wall clock seconds,"
+              << " starting time:" << d_checkpointWalltimeStart << " sec.\n";
   }
 }
 //______________________________________________________________________
