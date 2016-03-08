@@ -326,7 +326,7 @@ SparseRowMatrix::transpose()
     }
   }
 
-  delete [] at;
+  delete at;
   return t;
 }
 
@@ -588,7 +588,7 @@ SparseRowMatrix::sparse_mult_transXB(const DenseMatrix& x,
 
 class SparseSparseElement {
 public:
-  int     row;
+  int     row; 
   int     col;
   double  val;
 };
@@ -611,21 +611,21 @@ SparseRowMatrix::sparse_sparse_mult(const SparseRowMatrix &b) const
 {
   // Compute A*B=C
   ASSERT(b.nrows() == ncols_);
-
+  
   MatrixHandle output = 0;
-
+  
   int bncols = b.ncols_;
   int *brows = b.rows;
   int *bcolumns = b.columns;
-  double* ba = b.a;
-
+  double* ba = b.a;  
+  
   // Rough estimate
   std::vector<SparseSparseElement> elems;
-
+  
   for (int r =0; r<nrows_; r++)
   {
     int ps = rows[r];
-    int pe = rows[r+1];
+    int pe = rows[r+1];   
     for (int p = ps; p < pe; p++)
     {
       int s = columns[p];
@@ -642,9 +642,9 @@ SparseRowMatrix::sparse_sparse_mult(const SparseRowMatrix &b) const
       }
     }
   }
-
+  
   std::sort(elems.begin(),elems.end());
-
+  
   int s = 0;
   int nnz = 0;
   if (elems.size()) nnz = 1;
@@ -661,35 +661,35 @@ SparseRowMatrix::sparse_sparse_mult(const SparseRowMatrix &b) const
       s = r;
     }
   }
-
+  
   int *rr = scinew int[nrows_+1];
   int *cc = scinew int[nnz];
   double *vv = scinew double[nnz];
-
+  
   if ((rr == 0)||(cc == 0)||(vv == 0))
   {
     if (rr) delete[] rr;
     if (cc) delete[] cc;
     if (vv) delete[] vv;
-    return (output);
+    return (output);  
   }
-
+  
   rr[0] = 0;
   int q = 0;
   unsigned int k = 0;
   for( int p=0; p < nrows_; p++ )
   {
-    while ((k < elems.size())&&(elems[k].row == p)) {
-      if (elems[k].val) {
+    while ((k < elems.size())&&(elems[k].row == p)) { 
+      if (elems[k].val) { 
         cc[q] = elems[k].col; vv[q] = elems[k].val; q++;
-      }
-      k++;
+      } 
+      k++; 
     }
     rr[p+1] = q;
-  }
-
+  }   
+  
   output = dynamic_cast<Matrix *>(scinew SparseRowMatrix(nrows_,bncols,rr,cc,nnz,vv));
-
+  
   return (output);
 }
 
@@ -956,7 +956,7 @@ SparseRowMatrix::submatrix(int r1, int c1, int r2, int c2)
 
 SparseRowMatrix *
 SparseRowMatrix::identity(int size)
-{
+{ 
   int *r = scinew int[size+1];
   int *c = scinew int[size];
   double *d = scinew double[size];
