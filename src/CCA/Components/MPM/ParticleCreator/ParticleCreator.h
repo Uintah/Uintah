@@ -138,7 +138,7 @@ namespace Uintah {
     //////////////////////////////////////////////////////////////////////////
     /*! Get the LoadCurveID applicable for this material point */
     //////////////////////////////////////////////////////////////////////////
-    int getLoadCurveID(const Point& pp, const Vector& dxpp, int& areacomp);
+    int getLoadCurveID(const Point& pp, const Vector& dxpp, Vector& areacomps);
 
     //////////////////////////////////////////////////////////////////////////
     /*! Print MPM physical boundary condition information */
