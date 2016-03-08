@@ -344,15 +344,11 @@ ParticleCreator::createParticles(MPMMaterial* matl,
       // physical BC pointer
       if (d_useLoadCurves) {
         if (checkForSurface(piece,*itr,dxpp)) {
-          int areacomp;
-          pvars.pLoadCurveID[pidx] = getLoadCurveID(*itr, dxpp,areacomp);
-          if(areacomp==0){
-            pvars.parea[pidx]=Vector(pvars.parea[pidx].x(),0.,0.);
-          } else if(areacomp==1){
-            pvars.parea[pidx]=Vector(0.,pvars.parea[pidx].y(),0.);
-          } else if(areacomp==2){
-            pvars.parea[pidx]=Vector(0.,0.,pvars.parea[pidx].z());
-          }
+          Vector areacomps;
+          pvars.pLoadCurveID[pidx] = getLoadCurveID(*itr, dxpp,areacomps);
+          pvars.parea[pidx]=Vector(pvars.parea[pidx].x()*areacomps.x(),
+                                   pvars.parea[pidx].y()*areacomps.y(),
+                                   pvars.parea[pidx].z()*areacomps.z());
         } else {
           pvars.pLoadCurveID[pidx] = 0;
         }
@@ -372,7 +368,7 @@ ParticleCreator::createParticles(MPMMaterial* matl,
 // WARNING : Should be called only once per particle during a simulation 
 // because it updates the number of particles to which a BC is applied.
 int ParticleCreator::getLoadCurveID(const Point& pp, const Vector& dxpp,
-                                    int& areacomp)
+                                    Vector& areacomps)
 {
   int ret=0;
   for (int ii = 0; ii<(int)MPMPhysicalBCFactory::mpmPhysicalBCs.size(); ii++){
@@ -389,7 +385,7 @@ int ParticleCreator::getLoadCurveID(const Point& pp, const Vector& dxpp,
     else if (bcs_type == "ScalarFlux") {
       ScalarFluxBC* pbc = 
         dynamic_cast<ScalarFluxBC*>(MPMPhysicalBCFactory::mpmPhysicalBCs[ii]);
-      if (pbc->flagMaterialPoint(pp, dxpp, areacomp)) {
+      if (pbc->flagMaterialPoint(pp, dxpp, areacomps)) {
          ret = pbc->loadCurveID(); 
       }
     }

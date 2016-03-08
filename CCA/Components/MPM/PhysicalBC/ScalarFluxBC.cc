@@ -157,7 +157,7 @@ ScalarFluxBC::getType() const
 bool
 ScalarFluxBC::flagMaterialPoint(const Point& p, 
                                 const Vector& dxpp,
-                                      int& areacomp)
+                                Vector& areacomps)
 {
 
   bool flag = false;
@@ -171,11 +171,11 @@ ScalarFluxBC::flagMaterialPoint(const Point& p,
       flag = true;
       Vector diff = box.upper()-box.lower();
       if(diff.minComponent()==diff.x()){
-        areacomp=0;
+        areacomps = Vector(1.0,0.0,0.0);
       } else if(diff.minComponent()==diff.y()){
-        areacomp=1;
+        areacomps = Vector(0.0,1.0,0.0);
       } else if(diff.minComponent()==diff.z()){
-        areacomp=2;
+        areacomps = Vector(0.0,0.0,1.0);
       }
     }
     delete volume;
@@ -198,7 +198,10 @@ ScalarFluxBC::flagMaterialPoint(const Point& p,
       if (volume->inside(p)){
         flag = true;
       }
-      areacomp=0;  // Area normal to the radial direction
+      double normalX = p.x() - 0.5*(cgp->bottom()+cgp->top()).x();
+      double normalY = p.y() - 0.5*(cgp->bottom()+cgp->top()).y();
+      double length = sqrt(normalX*normalX + normalY*normalY);
+      areacomps = Vector(normalX/length,normalY/length,0.0);
       delete volume;
 
     }else if(d_cylinder_end || d_axisymmetric_end){
@@ -211,7 +214,7 @@ ScalarFluxBC::flagMaterialPoint(const Point& p,
       if (end->inside(p)){
          flag = true;
       }
-      areacomp=2;  // Area normal to the axial direction
+      areacomps = Vector(0.0,0.0,1.0); // Area normal to the axial direction
       delete end;
     }
   } else if (d_surfaceType == "sphere") {
@@ -224,7 +227,7 @@ ScalarFluxBC::flagMaterialPoint(const Point& p,
                                                    sgp->radius()-tol);
     GeometryPiece* volume = scinew DifferenceGeometryPiece(outer, inner);
     if (volume->inside(p)) flag = true;
-    areacomp=0;  // Area normal to the radial direction
+    areacomps = Vector(1.0,0.0,0.0); // Area normal to the radial direction
     delete volume;
 
   } else {
@@ -234,6 +237,7 @@ ScalarFluxBC::flagMaterialPoint(const Point& p,
   return flag;
 }
 
+#if 0
 // Calculate the area of the surface on which the scalar flux BC
 // is applied
 double
@@ -281,6 +285,7 @@ double ScalarFluxBC::fluxPerParticle(double time) const
   // Calculate the forec per particle
   return (flux*area)/static_cast<double>(d_numMaterialPoints);
 }
+#endif
 
 // Calculate the flux at a certain time given the area of a particular particle
 double ScalarFluxBC::fluxPerParticle(double time, double area) const
