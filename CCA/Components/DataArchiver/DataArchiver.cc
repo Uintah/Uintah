@@ -2492,7 +2492,7 @@ DataArchiver::saveLabels_PIDX(std::vector< SaveItem >& saveLabels,
   unsigned int timeStep = d_sharedState->getCurrentTopLevelTimeStep();
   
   // Can this be run in serial without doing a MPI initialize
-  pidx.initialize(full_idxFilename, timeStep, d_myworld->getComm(), d_PIDX_flags);
+  pidx.initialize(full_idxFilename, timeStep, d_myworld->getComm(), d_PIDX_flags, patches, type);
 
   //__________________________________
   // define the level extents for this variable type

@@ -111,7 +111,7 @@ PIDXOutputContext::PIDX_flags::problemSetup( const ProblemSpecP& DA_ps )
 //______________________________________________________________________
 
 
-PIDXOutputContext::PIDXOutputContext() 
+PIDXOutputContext::PIDXOutputContext()
 {
   d_isInitialized = false;
   d_outputDoubleAsFloat = false;
@@ -160,50 +160,104 @@ PIDXOutputContext::getDirectoryName(TypeDescription::Type TD)
       default:
          throw SCIRun::InternalError("  PIDXOutputContext::getDirectoryName type description not supported", __FILE__, __LINE__);
   }
-} 
+}
+//______________________________________________________________________
+//    Logic for determinine the size of the box
+void
+PIDXOutputContext::computeBoxSize( const PatchSubset* patches, 
+                                   const PIDX_flags flags,
+                                   PIDX_point& newBox )
+{
+  ASSERT(patches->size() != 0);
+  ASSERT(patches->get(0) != 0);
+    
+  int nPatches = patches->size();
+  const Level* level = patches->get(0)->getLevel();
+  const Patch* patch = patches->get(0);
+  
+  
+  IntVector box(64,64,64);   
+  
+  // To be filled in   
+  
+  if (flags.debugOutput){
+    cout << " PIDX box size: " << box << endl;
+  }
+  PIDX_set_point_5D(newBox, box.x(), box.y(), box.z(), 1, 1);
+}
+
+
+
 //______________________________________________________________________
 //
 void
 PIDXOutputContext::initialize( string filename, 
                                unsigned int timeStep,
                                MPI_Comm comm,
-                               PIDX_flags flags)
+                               PIDX_flags flags,
+                               const PatchSubset* patches,
+                               const int typeOutput)
 {
-    
   this->filename = filename;
   this->timestep = timeStep;
   this->comm = comm; 
-
-  PIDX_create_access(&(this->access));
+  string desc = "PIDXOutputContext::initialize";
+  //__________________________________
+  //
+  int rc = PIDX_create_access(&(this->access));
+  checkReturnCode( rc, desc+" - PIDX_create_access", __FILE__, __LINE__);
   
   if(comm != NULL){
     PIDX_set_mpi_access( this->access, this->comm );
+    checkReturnCode( rc, desc+" - PIDX_set_mpi_access", __FILE__, __LINE__);
   }
   
   PIDX_file_create( filename.c_str(), PIDX_MODE_CREATE, access, &(this->file) );
+  checkReturnCode( rc, desc+" - PIDX_file_create", __FILE__, __LINE__);
   
+  //__________________________________
   if ( flags.debugOutput ){
     PIDX_debug_output( (this->file) );
   }
 
+  //__________________________________
   if ( flags.outputRawIO ){
     PIDX_enable_raw_io(this->file);  //Possible performance improvement at low core counts
+    checkReturnCode( rc, desc+" - PIDX_enable_raw_io", __FILE__, __LINE__);
   }
   
-  int64_t restructured_box_size[5] = {64, 64, 64, 1, 1};
-  PIDX_set_restructuring_box(file, restructured_box_size);
-
+  
+  //__________________________________
+  //
+  PIDX_point new_box_size;
+  computeBoxSize( patches, flags, new_box_size );
+  
+  PIDX_set_restructuring_box(file, new_box_size);
+  checkReturnCode( rc, desc+" - PIDX_set_restructuring_box", __FILE__, __LINE__);
+  
+  PIDX_set_block_size(this->file,  16);
+  checkReturnCode( rc, desc+" - PIDX_set_block_size", __FILE__, __LINE__);
+  
+  PIDX_set_block_count(this->file, 128);
+  checkReturnCode( rc, desc+" - PIDX_set_block_count", __FILE__, __LINE__);
   //PIDX_set_resolution(this->file, 0, 2);
   
+  //__________________________________
+  //  
   PIDX_set_current_time_step(this->file, timeStep);
-  PIDX_set_block_size(this->file, 16);
-  PIDX_set_block_count(this->file, 128);
-    
-  
-                                       // Need to add logic so set compression to none on a checkpoint
-  // compression settings
-  PIDX_set_compression_type(this->file, flags.compressionType);
-//  PIDX_set_lossy_compression_bit_rate(this->file, 8);
+  checkReturnCode( rc, desc+" - PIDX_set_current_time_step", __FILE__, __LINE__);
+
+  //__________________________________
+  // Set compresssion settings
+  if( typeOutput == CHECKPOINT){
+    PIDX_set_compression_type(this->file, PIDX_NO_COMPRESSION);
+    checkReturnCode( rc, desc+" - PIDX_set_compression_type", __FILE__, __LINE__);
+  } else {
+    PIDX_set_compression_type(this->file, flags.compressionType);
+    checkReturnCode( rc, desc+" - PIDX_set_compression_type", __FILE__, __LINE__);
+    //  PIDX_set_lossy_compression_bit_rate(this->file, 8);                // What to do here?
+  }
+
 
   d_isInitialized = true;
 }

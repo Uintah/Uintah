@@ -74,7 +74,7 @@ namespace Uintah {
   ****************************************/
 
 class PIDXOutputContext {
-  public:
+  public:  
     PIDXOutputContext();
     ~PIDXOutputContext();
     
@@ -127,10 +127,17 @@ class PIDXOutputContext {
       }
     };
     
+    
+    void computeBoxSize( const PatchSubset* patches, 
+                         const PIDX_flags flags,
+                         PIDX_point& newBox );
+
     void initialize(std::string filename,
                     unsigned int timeStep,
                     MPI_Comm comm,
-                    PIDX_flags flags);
+                    PIDX_flags flags,
+                    const PatchSubset* patches,
+                    const int type);
     
     void setLevelExtents( std::string desc, 
                           IntVector lo,
@@ -192,14 +199,16 @@ class PIDXOutputContext {
     MPI_Comm comm;
     PIDX_variable **varDesc;    // variable descriptor array
     PIDX_access access;
+    
+    // this must match what is specified in DataArchiver.cc
+    enum typeOutput { OUTPUT=0, CHECKPOINT=1, CHECKPOINT_REDUCTION=3, NONE=-9};
 
   //__________________________________
   //    
   private:
-
     bool d_isInitialized;
     bool d_outputDoubleAsFloat;
-    int d_levelExtents[3];
+    int  d_levelExtents[3];
     
     IntVector getLevelExtents(){
       IntVector levelExtents (d_levelExtents[0],d_levelExtents[1],d_levelExtents[2]);                                                                          
