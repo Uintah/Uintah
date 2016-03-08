@@ -252,6 +252,7 @@ private:
   ReductionInfoMapper< TimingStat, double >     m_mpi_info;
 
   std::map<std::string, std::atomic<uint64_t> > waittimes{};
+  std::map<std::string, std::atomic<uint64_t> > exectimes{};
 
 };
 
