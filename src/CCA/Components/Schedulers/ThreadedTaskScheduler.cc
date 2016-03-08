@@ -291,11 +291,11 @@ SchedulerP ThreadedTaskScheduler::createSubScheduler()
 //
 void ThreadedTaskScheduler::execute(  int tgnum /*=0*/ , int iteration /*=0*/ )
 {
-  // copy data timestep must be single threaded for now
-  if (d_sharedState->isCopyDataTimestep()) {
-    MPIScheduler::execute(tgnum, iteration);
-    return;
-  }
+//  // copy data timestep must be single threaded for now
+//  if (d_sharedState->isCopyDataTimestep()) {
+//    MPIScheduler::execute(tgnum, iteration);
+//    return;
+//  }
 
   ASSERTRANGE(tgnum, 0, static_cast<int>(graphs.size()));
 
