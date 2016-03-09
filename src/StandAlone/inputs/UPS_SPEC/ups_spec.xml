@@ -471,7 +471,7 @@
       
       <PIDX                   spec="OPTIONAL NO_DATA">
         <outputRawIO          spec="OPTIONAL BOOLEAN" />
-        <combinePatches       spec="OPTIONAL VECTOR"  />
+        <outputPatchSize      spec="OPTIONAL VECTOR"  />
         <debugOutput          spec="OPTIONAL BOOLEAN" />
         <compressionType      spec="OPTIONAL STRING 'NONE, none, CHUNKING, chunking, CHUNKING_ZFP, chunking_ZFP'"/>
       </PIDX>
