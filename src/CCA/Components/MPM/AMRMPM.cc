@@ -3982,13 +3982,12 @@ void AMRMPM::addParticles(const ProcessorGroup*,
       const unsigned int origNParticles = pset->addParticles(0);
       for( unsigned int pp=0; pp<origNParticles; ++pp ){
        prefOld[pp] = pref[pp];
-       if(pref[pp]==0){
-        // Conditions to refine particle based on physical state
-        // TODO:  Check below, should be < or <= in first conditional
-        bool splitCriteria=false;
-        //__________________________________
-        // Only set the refinement flags for certain materials
-        for(int i = 0; i< (int)d_thresholdVars.size(); i++ ){
+       // Conditions to refine particle based on physical state
+       // TODO:  Check below, should be < or <= in first conditional
+       bool splitCriteria=false;
+       //__________________________________
+       // Only set the refinement flags for certain materials
+       for(int i = 0; i< (int)d_thresholdVars.size(); i++ ){
           thresholdVar data = d_thresholdVars[i];
           string name  = data.name;
           double thresholdValue = data.value;
@@ -4040,14 +4039,14 @@ void AMRMPM::addParticles(const ProcessorGroup*,
               }
   
               if(pSplitR1R2R3[pp]){
-                cout << "pSplit = " << pSplitR1R2R3[pp] << endl;
+                //cout << "pSplit = " << pSplitR1R2R3[pp] << endl;
                 splitCriteria  = true;
                 splitForStretch = true;
                 splitForAny = true;
               }
-            }
-          } // if this matl is in the list
-        } // loop over criteria
+           }
+         } // if this matl is in the list
+       } // loop over criteria
 
         if((pref[pp]< levelIndex && splitCriteria && numLevels > 1 ) ||
            (pref[pp]<=levelIndex && splitCriteria && numLevels == 1)){
@@ -4075,7 +4074,6 @@ void AMRMPM::addParticles(const ProcessorGroup*,
           pref[pp]++;
           numNewPartNeeded++;
         }
-       }
       }  // Loop over original particles
       int fourOrEight=pow(2,d_ndim);
       if(splitForStretch){
