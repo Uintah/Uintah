@@ -15,6 +15,15 @@
 #include <Core/Grid/Variables/CCVariable.h>
 
 //===========================================================================
+#define USE_FUNCTOR 1
+#undef  USE_FUNCTOR 
+
+#ifdef USE_FUNCTOR
+#include <Core/Grid/Variables/BlockRange.h>
+#ifdef UINTAH_ENABLE_KOKKOS
+#include <Kokkos_Core.hpp>
+#endif //UINTAH_ENABLE_KOKKOS
+#endif
 
 using namespace std;
 using namespace Uintah; 
@@ -99,6 +108,28 @@ CoalGasMomentum::sched_computeSource( const LevelP& level, SchedulerP& sched, in
   sched->addTask(tsk, level->eachPatch(), _shared_state->allArchesMaterials());
 
 }
+
+struct sumMomentum{
+       sumMomentum(constCCVariable<double> &_qn_gas_xdrag, 
+                   constCCVariable<double> &_qn_gas_ydrag,
+                   constCCVariable<double> &_qn_gas_zdrag,
+                   CCVariable<Vector> &_dragSrc) :
+                   qn_gas_xdrag(_qn_gas_xdrag),
+                   qn_gas_ydrag(_qn_gas_ydrag),
+                   qn_gas_zdrag(_qn_gas_zdrag),
+                   dragSrc     (_dragSrc){  }
+       void operator()(int i , int j, int k ) const {
+         dragSrc(i,j,k) += Vector(qn_gas_xdrag(i,j,k),qn_gas_ydrag(i,j,k),qn_gas_zdrag(i,j,k)); // All the work is performed in Drag model
+       }
+
+    private:
+       constCCVariable<double> &qn_gas_xdrag; 
+       constCCVariable<double> &qn_gas_ydrag;
+       constCCVariable<double> &qn_gas_zdrag;
+       CCVariable<Vector> &dragSrc;
+};
+
+                   
 //---------------------------------------------------------------------------
 // Method: Actually compute the source term 
 //---------------------------------------------------------------------------
@@ -169,6 +200,14 @@ CoalGasMomentum::computeSource( const ProcessorGroup* pc,
       new_dw->get( qn_gas_zdrag, ZDragGasLabel, matlIndex, patch, gn, 0 );
 
 
+#ifdef USE_FUNCTOR              
+      Uintah::BlockRange range(patch->getCellLowIndex(),patch->getCellHighIndex());
+      sumMomentum doSumMomentum(qn_gas_xdrag,
+                                qn_gas_ydrag,
+                                qn_gas_zdrag,
+                                dragSrc);
+      Uintah::parallel_for( range, doSumMomentum );
+#else              
       for (CellIterator iter=patch->getCellIterator(); !iter.done(); iter++){
         IntVector c = *iter; 
         qn_gas_drag = Vector(qn_gas_xdrag[c],qn_gas_ydrag[c],qn_gas_zdrag[c]);
@@ -176,6 +215,7 @@ CoalGasMomentum::computeSource( const ProcessorGroup* pc,
         dragSrc[c] += qn_gas_drag; // All the work is performed in Drag model
 
        }
+#endif
     }
   }
 }
