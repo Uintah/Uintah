@@ -25,12 +25,13 @@
 #include <CCA/Components/Wasatch/TagNames.h>
 #include <Core/Exceptions/ProblemSetupException.h>
 #include <CCA/Components/Wasatch/Transport/TransportEquation.h>
+#include <CCA/Components/Wasatch/Transport/ParseEquationHelper.h>
 #include <CCA/Components/Wasatch/Transport/MomentumTransportEquationBase.h>
 #include <CCA/Components/Wasatch/Expressions/ScalarRHS.h>
 #include <CCA/Components/Wasatch/Expressions/ExprAlgebra.h>
 #include <CCA/Components/Wasatch/Expressions/Turbulence/TurbulenceParameters.h>
 #include <CCA/Components/Wasatch/Expressions/EmbeddedGeometry/EmbeddedGeometryHelper.h>
-#include <CCA/Components/Wasatch/Transport/ParseEquation.h>
+
 
 namespace WasatchCore{
 
