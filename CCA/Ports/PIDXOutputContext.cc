@@ -44,7 +44,7 @@ PIDXOutputContext::PIDX_flags::PIDX_flags()
   
   outputRawIO    = false;
   debugOutput    = false;
-  combinePatches = IntVector(-9,-9,-9);
+  outputPatchSize = IntVector(-9,-9,-9);
   compressionType = PIDX_NO_COMPRESSION;
 }
 
@@ -97,12 +97,8 @@ PIDXOutputContext::PIDX_flags::problemSetup( const ProblemSpecP& DA_ps )
     
     compressionType = str2CompressType( me );
     pidx_ps->get( "debugOutput",     debugOutput );
-
     pidx_ps->get( "outputRawIO",     outputRawIO );
-
-    if( outputRawIO ){
-      pidx_ps->get( "combinePatches", combinePatches );
-    }
+    pidx_ps->get( "outputPatchSize", outputPatchSize );
   }
 }
 
@@ -171,17 +167,71 @@ PIDXOutputContext::computeBoxSize( const PatchSubset* patches,
   ASSERT(patches->size() != 0);
   ASSERT(patches->get(0) != 0);
     
-  int nPatches = patches->size();
-  const Level* level = patches->get(0)->getLevel();
   const Patch* patch = patches->get(0);
+  const Level* level = patches->get(0)->getLevel();
+
+  //__________________________________
+  //  1) compute a patch size
+  // WARNING:  this can produce inconsistent patch sizes and subsequent box sizes.  
+  //           This is a place holder 
   
   
-  IntVector box(64,64,64);   
+  IntVector extraCells = level->getExtraCells();
+  IntVector hi_EC;
+  IntVector lo_EC;
+  IntVector boundaryLayer(0,0,0);
+
+  patch->computeVariableExtents( TypeDescription::NCVariable, boundaryLayer, Ghost::None, 0, lo_EC, hi_EC);
+  hi_EC -= IntVector(1,1,1);
   
-  // To be filled in   
+  //__________________________________
+  // add "extraCells to any interior patch so all patches are NEARLY the same
+  // size on a level
+  IntVector neighborsLo = patch->neighborsLow();
+  IntVector neighborsHi = patch->neighborsHigh();
+
+  for ( int i=0; i<3; i++ ){
+    if( neighborsLo[i] ){ 
+      lo_EC[i] += extraCells[i];
+    }
+    if( neighborsHi[i] ){
+      hi_EC[i] += extraCells[i];
+    }
+  }
+
+  //__________________________________
+  //  compute the number of cells in that patch
+  IntVector nCells = hi_EC - lo_EC;
+  int nPatchCells = nCells.x() * nCells.y() * nCells.z();
+
+  const int cubed32  = 32*32*32;
+  const int cubed64  = 64*64*64;
+  const int cubed128 = 128*128*128;
+  const int cubed256 = 256*256*256;
+  
+  //__________________________________
+  // logic for adjusting the box
+  IntVector box(64,64,64);    // default value
+  if (nPatchCells <=  cubed32) {
+    box = IntVector(32,32,32);
+  } else if ( nPatchCells >  cubed32  && nPatchCells <= cubed64 ) {
+    box = IntVector(64,64,64);
+  } else if ( nPatchCells >  cubed64  && nPatchCells <= cubed128 ){
+    box = IntVector(128,128,128);
+  } else if ( nPatchCells >  cubed128 && nPatchCells <= cubed256 ){
+    box = IntVector(256,256,256);
+  }
+  
+  //__________________________________
+  //  override the logic if user specifies somthing
+  if ( flags.outputPatchSize != IntVector(-9,-9,-9) ){
+    box = flags.outputPatchSize;
+    cout << " overriding box logic " << endl;
+  }
   
   if (flags.debugOutput){
-    cout << " PIDX box size: " << box << endl;
+    cout << " PIDX box size: Level- "<< level->getIndex() << " box: " << box 
+         << " Patchsize: " << nCells << " nPatchCells: " << nPatchCells << endl;
   }
   PIDX_set_point_5D(newBox, box.x(), box.y(), box.z(), 1, 1);
 }

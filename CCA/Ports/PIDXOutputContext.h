@@ -88,14 +88,14 @@ class PIDXOutputContext {
         unsigned int  compressionType;
         bool outputRawIO;
         bool debugOutput;
-        IntVector combinePatches;
+        IntVector outputPatchSize;
 
         //__________________________________
         // debugging
         void print(){
           std::cout << "PIDXFlags: " << std::setw(26) <<"outputRawIO: " <<  outputRawIO 
                     << ", compressionType: "<< getCompressTypeName(compressionType)
-                    << ", combinePatches: " << combinePatches << std::endl;
+                    << ", outputPatchSize: " << outputPatchSize << std::endl;
         }  
 
         void problemSetup( const ProblemSpecP& params );
