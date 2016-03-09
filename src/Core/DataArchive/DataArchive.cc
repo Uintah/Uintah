@@ -40,6 +40,7 @@
 #include <Core/Grid/UnknownVariable.h>
 #include <Core/Grid/Variables/VarLabel.h>
 #include <Core/Math/MiscMath.h>
+#include <Core/Parallel/Parallel.h>
 #include <Core/Thread/Time.h>
 #include <Core/Util/Assert.h>
 #include <Core/Util/DebugStream.h>
@@ -66,17 +67,16 @@ DataArchive::DataArchive( const string & filebase,
                                 int      processor     /* = 0 */,
                                 int      numProcessors /* = 1 */,
                                 bool     verbose       /* = true */ ) :
-  ref_cnt(0), 
+  ref_cnt(0),
   lock("DataArchive ref_cnt lock"),
-  timestep_cache_size(10), 
-  default_cache_size(10), 
-  d_filebase(filebase), 
+  timestep_cache_size(10),
+  default_cache_size(10),
+  d_filebase(filebase),
   d_cell_scale( Vector(1.0,1.0,1.0) ),
   d_processor(processor),
-  d_numProcessors(numProcessors), 
+  d_numProcessors(numProcessors),
   d_lock("DataArchive lock"),
-  d_particlePositionName("p.x"),
-  d_outputFileFormat(UDA)
+  d_particlePositionName("p.x")
 {
   if( d_filebase == "" ) {
     throw InternalError("DataArchive::DataArchive 'filebase' cannot be empty (\"\").", __FILE__, __LINE__);
@@ -97,14 +97,15 @@ DataArchive::DataArchive( const string & filebase,
     throw InternalError( "DataArchive::DataArchive() failed to open index xml file.", __FILE__, __LINE__ );
   }
 
+  d_outputFileFormat = UDA;
   d_globalEndianness = "";
-  d_globalNumBits = -1;
+  d_globalNumBits    = -1;
   queryEndiannessAndBits( d_indexFile, d_globalEndianness, d_globalNumBits );
 
   queryParticlePositionName( d_indexFile );
-  
+
   queryOutputFormat( d_indexFile );
-  
+
 }
 //______________________________________________________________________
 //
@@ -160,7 +161,7 @@ DataArchive::queryOutputFormat( FILE * doc )
     }
     else if( line.compare( 0, 14, "<outputFormat>" ) == 0 ) {
       vector<string> pieces = UintahXML::splitXMLtag( line );
-      
+
       if( pieces[1] == "PIDX" || pieces[1] == "pidx" ){
         d_outputFileFormat = PIDX;
         //proc0cout << "Restart UDA format:     PIDX \n";
@@ -247,8 +248,8 @@ DataArchive::queryTimesteps( vector<int>    & index,
 	  string::size_type deliminator_index = tsfile.find("/");
 	  string tnumber(tsfile,0,deliminator_index);
 	  // Usually '.../grid.xml'
-	  string       grid_path_and_filename = d_filebase + "/" + tnumber + "/" + "grid.xml"; 
-	
+	  string       grid_path_and_filename = d_filebase + "/" + tnumber + "/" + "grid.xml";
+
           if( attributes["time"] == "" ) {
             // This block is for earlier versions of the index.xml file that did not
             // contain time information as an attribute of the timestep field.
@@ -335,12 +336,12 @@ DataArchive::queryPatchwiseProcessor( const Patch * patch, const int index )
 GridP
 DataArchive::queryGrid( int index, const ProblemSpecP & ups /* = NULL */, bool assignBCs )
 {
-  // The following variable along with d_cell_scale is necessary to allow the 
+  // The following variable along with d_cell_scale is necessary to allow the
   // UdaScale module work.  Small domains are a problem for the SCIRun widgets
-  // so UdaScale allows the user increase the domain by setting the 
+  // so UdaScale allows the user increase the domain by setting the
   // d_cell_scale. The next call to this function will use the new scaling.
   // This can be removed if SCIRun is no longer used for visualization.
-  static Vector old_cell_scale(1.0,1.0,1.0);  
+  static Vector old_cell_scale(1.0,1.0,1.0);
 
   d_lock.lock();
 
@@ -378,7 +379,7 @@ DataArchive::queryGrid( int index, const ProblemSpecP & ups /* = NULL */, bool a
   if (timedata.d_grid != 0  &&  old_cell_scale == d_cell_scale) {
     d_lock.unlock();
     return timedata.d_grid;
-  } 
+  }
 
   // update the static variable old_cell_scale if the cell scale has changed.
   // Can be removed if SCIRun is no longer used for visualization.
@@ -410,7 +411,7 @@ DataArchive::queryGrid( int index, const ProblemSpecP & ups /* = NULL */, bool a
       pi.proc = *iter;
       timedata.d_patchInfo[ levelIndex ].push_back(pi);
     }
-    
+
   }
 
   timedata.d_grid = grid;
@@ -469,8 +470,8 @@ DataArchive::queryGlobals( vector<string>                         & names,
   double start = Time::currentSeconds();
 
   d_lock.lock();
-  
-  rewind( d_indexFile ); // Start looking from the top of the file. 
+
+  rewind( d_indexFile ); // Start looking from the top of the file.
 
   bool result = ProblemSpec::findBlock( "<globals>", d_indexFile );
 
@@ -481,7 +482,7 @@ DataArchive::queryGlobals( vector<string>                         & names,
 
   d_lock.unlock();
 
-  dbg << "DataArchive::queryGlobals completed in " << Time::currentSeconds()-start << " seconds\n";   
+  dbg << "DataArchive::queryGlobals completed in " << Time::currentSeconds()-start << " seconds\n";
 }
 //______________________________________________________________________
 //
@@ -508,7 +509,7 @@ DataArchive::queryVariables( FILE                                   * fp,
       break;
     }
     else if( line.compare( 0, 10, "<variable " ) == 0 ) {
-          
+
       ProblemSpec ts_doc( line );
 
       map<string,string> attributes;
@@ -545,7 +546,7 @@ DataArchive::queryVariables( FILE                                   * fp,
 void
 DataArchive::query(       Variable     & var,
                     const string       & name,
-                    const int            matlIndex, 
+                    const int            matlIndex,
                     const Patch        * patch,
                     const int            timeIndex,
                           DataFileInfo * dfi /* = 0 */ )
@@ -562,9 +563,9 @@ DataArchive::query(       Variable     & var,
 
   ASSERT(timedata.d_initialized);
   // make sure info for this patch gets parsed from p*****.xml.
-  d_lock.lock();  
+  d_lock.lock();
   timedata.parsePatch(patch);
-  d_lock.unlock();  
+  d_lock.unlock();
 
   VarData & varinfo = timedata.d_varInfo[name];
   string    data_filename;
@@ -576,9 +577,9 @@ DataArchive::query(       Variable     & var,
     // we need to use the real_patch (in case of periodic boundaries) to get the data, but we need the
     // passed in patch to allocate the patch to the proper virtual region... (see var.allocate below)
     const Patch* real_patch = patch->getRealPatch();
-    int levelIndex          = real_patch->getLevel()->getIndex(); 
+    int levelIndex          = real_patch->getLevel()->getIndex();
     int patchIndex          = real_patch->getLevelIndex();
-    
+
     PatchData& patchinfo = timedata.d_patchInfo[levelIndex][patchIndex];
     ASSERT(patchinfo.parsed);
     patchid = real_patch->getID();
@@ -607,15 +608,15 @@ DataArchive::query(       Variable     & var,
     }
     dfi = &datafileinfo;
   }
-  
-  
+
+
   const TypeDescription* td = var.virtualGetTypeDescription();
   ASSERT(td->getName() == varinfo.type);
-  
+
   //__________________________________
   // Allocate memory for grid or particle variables
   if (td->getType() == TypeDescription::ParticleVariable) {
-  
+
     if(dfi->numParticles == -1) {
       throw InternalError( "DataArchive::query:Cannot get numParticles", __FILE__, __LINE__ );
     }
@@ -623,15 +624,15 @@ DataArchive::query(       Variable     & var,
       throw InternalError("DataArchive::query: Particle query on virtual patches "
                           "not finished.  We need to adjust the particle positions to virtual space...", __FILE__, __LINE__);
     }
-  
+
     psetDBType::key_type   key( matlIndex, patch );
     ParticleSubset       * psubset  = 0;
     psetDBType::iterator   psetIter = d_psetDB.find(key);
-    
+
     if(psetIter != d_psetDB.end()) {
       psubset = (*psetIter).second.get_rep();
     }
-    
+
     if (psubset == 0 || (int)psubset->numParticles() != dfi->numParticles)
     {
       psubset = scinew ParticleSubset(dfi->numParticles, matlIndex, patch);
@@ -647,7 +648,7 @@ DataArchive::query(       Variable     & var,
   else if (td->getType() != TypeDescription::ReductionVariable) {
     var.allocate( patch, varinfo.boundaryLayer );
   }
-  
+
   //__________________________________
   // open data file Standard Uda Format
   if( d_outputFileFormat == UDA || varType == REDUCTION_VAR) {
@@ -680,7 +681,7 @@ DataArchive::query(       Variable     & var,
       throw ErrnoException("DataArchive::query (close call)", errno, __FILE__, __LINE__);
     }
   }
-  
+
   //__________________________________
   //  bulletproofing
   if( isPIDXEnabled() == false && d_outputFileFormat == PIDX ){
@@ -690,21 +691,19 @@ DataArchive::query(       Variable     & var,
          << "You must configure and compile with PIDX enabled.\n";
     throw InternalError(warn.str() , __FILE__, __LINE__);
   }
-  
-  
+
+
   #if HAVE_PIDX
   //__________________________________
-  //   open PIDX 
+  //   open PIDX
   //  TO DO:
   //    - do we need  calls to PIDX_get_variable_count() PIDX_get_dims()??
-  //    - need to do something with MPI_COMM
-  //    - consolidate with code in DataArchiver
 
   if( d_outputFileFormat == PIDX && varType == PATCH_VAR ) {
-    
+
     PIDXOutputContext pidx;
     const Level* level = patch->getLevel();
-        
+
     //__________________________________
     // define the level extents for this variable type
     IntVector lo;
@@ -721,16 +720,19 @@ DataArchive::query(       Variable     & var,
 
     pidx.setPatchExtents( "DataArchive::query()", patch, level, varinfo.boundaryLayer,
                          td, patchExts, patchOffset, patchSize );
-    
+
     if (dbg.active() && isProc0_macro ){
       patchExts.print(cout);
-    }       
+    }
     //__________________________________
     //  Creating access
     PIDX_access access;
     PIDX_create_access(&access);
-    PIDX_set_mpi_access(access, MPI_COMM_WORLD);        // change MPI_COMM_WORLD
-
+    
+    if( Parallel::usingMPI() ) {
+      MPI_Comm comm = Parallel::getRootProcessorGroup()->getComm();
+      PIDX_set_mpi_access(access, comm);
+    }
     //__________________________________
     //  Open idx file
     ostringstream levelPath;
@@ -751,11 +753,11 @@ DataArchive::query(       Variable     & var,
     int variable_count = 0;             ///< Number of fields in PIDX file
     ret = PIDX_get_variable_count(idxFile, &variable_count);
     pidx.checkReturnCode( ret,"DataArchive::query() - PIDX_get_variable_count failure", __FILE__, __LINE__);
-    
+
     //int me;
     //PIDX_get_current_time_step(idxFile, &me);
     //cout << " PIDX file has currentl timestep: " << me << endl;
-    
+
     //__________________________________
     //  set locations in PIDX file for querying variable
     int timestep = d_ts_indices[timeIndex];
@@ -765,11 +767,11 @@ DataArchive::query(       Variable     & var,
     int varIndex = dfi->start;
     ret = PIDX_set_current_variable_index(idxFile, varIndex);
     pidx.checkReturnCode(ret, "DataArchive::query() - PIDX_set_current_variable_index failure", __FILE__, __LINE__);
-    
+
     //__________________________________
     // read IDX file for variable desc
     PIDX_variable varDesc;
-    ret = PIDX_get_current_variable(idxFile, &varDesc);    
+    ret = PIDX_get_current_variable(idxFile, &varDesc);
     pidx.checkReturnCode(ret, "DataArchive::query() - PIDX_get_current_variable failure", __FILE__, __LINE__);
 
     int values_per_sample = varDesc->values_per_sample;
@@ -784,21 +786,21 @@ DataArchive::query(       Variable     & var,
     size_t arraySize = (bits_per_sample/8) * patchExts.totalCells_EC  * values_per_sample;
     dataPIDX = (unsigned char*)malloc( arraySize );
     memset( dataPIDX, 0, arraySize);
-    
+
     // debugging
     if (dbg.active() ){
       proc0cout << "Query:  filename: " << idxFilename << "\n"
                 << "    " << name
                 << " timestep: " << timestep
                 << " matlIndex: " <<  matlIndex
-                << " patchID: "   << patchid 
+                << " patchID: "   << patchid
                 << " level: "     << level->getIndex() << endl;
       proc0cout << "PIDX query: \n"
                 << "    " << varDesc->var_name
-                << " type_name: " << varDesc->type_name 
+                << " type_name: " << varDesc->type_name
                 << " varIndex: " << varIndex
-                << " values_per_sample: " << varDesc->values_per_sample 
-                << " bits_per_sample: "<< bits_per_sample 
+                << " values_per_sample: " << varDesc->values_per_sample
+                << " bits_per_sample: "<< bits_per_sample
                 << " arraySize " << arraySize << endl;
     }
 
@@ -812,21 +814,21 @@ DataArchive::query(       Variable     & var,
 
     ret = PIDX_close_access( access );
     pidx.checkReturnCode(ret, "DataArchive::query() - PIDX_close_access failure", __FILE__, __LINE__);
-    
+
 
     //__________________________________
     // debugging
     if (dbg.active() ){
       pidx.printBufferWrap("DataArchive::query    AFTER  close",
                            td->getSubType()->getType(),
-                           varDesc->values_per_sample,        
+                           varDesc->values_per_sample,
                            patchExts.lo_EC, patchExts.hi_EC,
-                           dataPIDX,                          
+                           dataPIDX,
                            arraySize );
     }
     //__________________________________
     // now move the dataPIDX buffer into the array3 variable
-    var.readPIDX( dataPIDX,  arraySize, timedata.d_swapBytes ); 
+    var.readPIDX( dataPIDX,  arraySize, timedata.d_swapBytes );
     free( dataPIDX );
   }
   #endif
@@ -841,7 +843,7 @@ DataArchive::query(       Variable     & var,
 void
 DataArchive::query(       Variable       & var,
                     const string         & name,
-                    const int              matlIndex, 
+                    const int              matlIndex,
                     const Patch          * patch,
                     const int              timeIndex,
                     const Ghost::GhostType gt,
@@ -863,7 +865,7 @@ DataArchive::query(       Variable       & var,
       queryRegion(var, name, matlIndex, patch->getLevel(), timeIndex, low, high);
     }
     else {
-      cerr << "VARIABLE NOT FOUND: " << name << ", material index " << matlIndex << ", patch " << patch->getID() << ", time index " 
+      cerr << "VARIABLE NOT FOUND: " << name << ", material index " << matlIndex << ", patch " << patch->getID() << ", time index "
            << timeIndex << "\nPlease make sure the correct material index is specified\n";
       throw InternalError("DataArchive::query:Variable not found", __FILE__, __LINE__);
     }
@@ -874,13 +876,13 @@ DataArchive::query(       Variable       & var,
 void
 DataArchive::queryRegion(       Variable  & var,
                           const string    & name,
-                          const int         matlIndex, 
+                          const int         matlIndex,
                           const Level     * level,
                           const int         timeIndex,
                           const IntVector & low,
                           const IntVector & high)
 {
-  // NOTE - this is not going to do error checking like making sure the entire volume is filled.  
+  // NOTE - this is not going to do error checking like making sure the entire volume is filled.
   //        We'll assume that if there were bad regions, they would have been caught in the simulation.
   GridVariableBase* gridvar = dynamic_cast<GridVariableBase*>(&var);
   ASSERT(gridvar);
@@ -892,11 +894,11 @@ DataArchive::queryRegion(       Variable  & var,
   const TypeDescription* type = 0;
   Patch::VariableBasis basis = Patch::NodeBased; // not sure if this is a reasonable default...
   Patch::selectType patches;
-  
+
   level->selectPatches( low, high, patches );
   for(int i=0;i<patches.size();i++){
     const Patch* patch = patches[i];
-    
+
     if (type == 0) {
       td.parsePatch(patch); // make sure varInfo is loaded
       VarData& varinfo = td.d_varInfo[name];
@@ -921,8 +923,8 @@ DataArchive::queryRegion(       Variable  & var,
     try {
       gridvar->copyPatch(tmpVar, l, h);
     } catch (InternalError& e) {
-      cout << " Bad range: " << low << " " << high << ", patch intersection: " << l << " " << h 
-           << " actual patch " << patch->getLowIndex(basis) << " " << patch->getHighIndex(basis) 
+      cout << " Bad range: " << low << " " << high << ", patch intersection: " << l << " " << h
+           << " actual patch " << patch->getLowIndex(basis) << " " << patch->getHighIndex(basis)
            << " var range: "  << tmpVar->getLow() << " " << tmpVar->getHigh() << endl;
       throw e;
     }
@@ -931,7 +933,7 @@ DataArchive::queryRegion(       Variable  & var,
 }
 //______________________________________________________________________
 //
-void 
+void
 DataArchive::findPatchAndIndex( const GridP            grid,
                                       Patch         *& patch,
                                       particleIndex  & idx,
@@ -962,10 +964,10 @@ DataArchive::findPatchAndIndex( const GridP            grid,
   patch = NULL;
 //   for (int level_nr = 0;
 //        (level_nr < grid->numLevels()) && (patch == NULL); level_nr++) {
-    
+
 //     const LevelP level = grid->getLevel(level_nr);
     const LevelP level = grid->getLevel(levelIndex);
-    
+
     for (Level::const_patchIterator iter = level->patchesBegin();
          (iter != level->patchesEnd()) && (patch == NULL); iter++) {
       if( *iter == local ) continue;
@@ -981,7 +983,7 @@ DataArchive::findPatchAndIndex( const GridP            grid,
           break;
         }
       }
-      
+
       if( patch != NULL )
         break;
     }
@@ -999,12 +1001,12 @@ DataArchive::restartInitialize( const int             index,
   vector<int>    ts_indices;
   vector<double> times;
   queryTimesteps( ts_indices, times );
-  
+
   vector<string>                   names;
   vector< const TypeDescription *> typeDescriptions;
   queryVariables( names, typeDescriptions );
-  queryGlobals(   names, typeDescriptions );  
-  
+  queryGlobals(   names, typeDescriptions );
+
   map<string, VarLabel*> varMap;
 
   for (unsigned i = 0; i < names.size(); i++) {
@@ -1033,10 +1035,10 @@ DataArchive::restartInitialize( const int             index,
     lb->restartInitialize( this, index, timedata.d_ts_path_and_filename, grid );
   }
 
-  // set here instead of the SimCont because we need the DW ID to be set 
-  // before saving particle subsets 
+  // set here instead of the SimCont because we need the DW ID to be set
+  // before saving particle subsets
   dw->setID( ts_indices[index] );
-  
+
   // Make sure to load all the data so we can iterate through it.
   for( int l = 0; l < grid->numLevels(); l++ ) {
     LevelP level = grid->getLevel( l );
@@ -1049,7 +1051,7 @@ DataArchive::restartInitialize( const int             index,
     }
   }
 
-  // Iterate through all entries in the VarData hash table, and load the 
+  // Iterate through all entries in the VarData hash table, and load the
   // variables if that data belongs on this processor.
 
   VarHashMapIterator iter( &timedata.d_datafileInfo );
@@ -1084,9 +1086,9 @@ DataArchive::restartInitialize( const int             index,
           ASSERTEQ(dw->getParticleSubset(matl, patch), particles->getParticleSubset());
         }
       }
-      dw->put( var, label, matl, patch ); 
+      dw->put( var, label, matl, patch );
       delete var; // should have been cloned when it was put
-    }    
+    }
   }
 } // end restartInitialize()
 
@@ -1095,7 +1097,7 @@ DataArchive::restartInitialize( const int             index,
 //  It's only used by the reduceUda component
 void
 DataArchive::reduceUda_ReadUda( const ProcessorGroup * pg,
-                                const int              timeIndex, 
+                                const int              timeIndex,
                                 const GridP          & grid,
                                 const PatchSubset    * patches,
                                       DataWarehouse  * dw,
@@ -1105,31 +1107,31 @@ DataArchive::reduceUda_ReadUda( const ProcessorGroup * pg,
   vector<double> times;
   vector<string> names;
   vector< const TypeDescription *> typeDescriptions;
-  
+
   queryTimesteps(timesteps, times);
   queryVariables(names, typeDescriptions);
-  queryGlobals(  names, typeDescriptions);  
-  
+  queryGlobals(  names, typeDescriptions);
+
   // create varLabels if they don't already exist
   map<string, VarLabel*> varMap;
   for (unsigned i = 0; i < names.size(); i++) {
     VarLabel * vl = VarLabel::find(names[i]);
-    
+
     if( vl == NULL ) {
       vl = VarLabel::create( names[i], typeDescriptions[i], IntVector(0,0,0) );
       d_createdVarLabels[names[i]] = vl;
     }
-    
+
     varMap[names[i]] = vl;
   }
 
   TimeData& timedata = getTimeData( timeIndex );
 
-  // set here instead of the SimCont because we need the DW ID to be set 
+  // set here instead of the SimCont because we need the DW ID to be set
   // before saving particle subsets
   dw->setID( timesteps[timeIndex] );
-  
-  // make sure to load all the data so we can iterate through it 
+
+  // make sure to load all the data so we can iterate through it
   for(int p=0;p<patches->size();p++){
     const Patch* patch = patches->get(p);
     timedata.parsePatch( patch );
@@ -1137,7 +1139,7 @@ DataArchive::reduceUda_ReadUda( const ProcessorGroup * pg,
 
   //__________________________________
   // Iterate through all entries in the VarData hash table, and load the variables.
-  
+
   for( VarHashMapIterator iter(&timedata.d_datafileInfo); iter.ok(); ++iter) {
     VarnameMatlPatch& key = iter.get_key();
     DataFileInfo& data    = iter.get_data();
@@ -1151,9 +1153,9 @@ DataArchive::reduceUda_ReadUda( const ProcessorGroup * pg,
     if (label == 0) {
       continue;
     }
-    
+
     // If this proc does not own this patch
-    // then ignore the variable 
+    // then ignore the variable
     int proc = lb->getPatchwiseProcessorAssignment(patch);
     if ( proc != pg->myrank() ) {
       continue;
@@ -1187,7 +1189,7 @@ DataArchive::queryRestartTimestep( int & timestep )
   //
   //    <restarts/>
   //    <restart from="advect.uda.001" timestep="22"/>
-  // 
+  //
   // I fixed this recently and now they look like this.
   //    <restarts>
   //       <restart from="advect.uda.001" timestep="22"/>
@@ -1208,7 +1210,7 @@ DataArchive::queryRestartTimestep( int & timestep )
       break;
     }
     else if( line.compare( 0, 9, "<restart " ) == 0 ) {
-      
+
       if( restart_ps ) {
         delete restart_ps;
       }
@@ -1303,10 +1305,10 @@ DataArchive::TimeData::init()
 
   FILE * ts_file = fopen( d_ts_path_and_filename.c_str(), "r" );
   FILE * grid_file = fopen( d_grid_path_and_filename.c_str(), "r" );
-    
+
   if( ts_file == NULL ) {
     // FIXME: add more info to exception.
-    throw ProblemSetupException( "Failed to open timestep file.", __FILE__, __LINE__ );    
+    throw ProblemSetupException( "Failed to open timestep file.", __FILE__, __LINE__ );
   }
 
   // Handle endianness and number of bits
@@ -1327,7 +1329,7 @@ DataArchive::TimeData::init()
 
     fclose( ts_file );
 
-    
+
     //// Use the xmlTextReader to parse the file
   xmlTextReaderPtr reader;
   reader = xmlNewTextReaderFilename(d_grid_path_and_filename.c_str());
@@ -1335,7 +1337,7 @@ DataArchive::TimeData::init()
   // If the grid.xml file is not found, then use the timestep.xml file
   if (reader == NULL)
     reader = xmlNewTextReaderFilename(d_ts_path_and_filename.c_str());
-  
+
   int ret;
   if (reader != NULL) {
     while (xmlTextReaderRead(reader)) {
@@ -1376,17 +1378,17 @@ DataArchive::TimeData::init()
 		if (start != string::npos && end != string::npos && end > start && end-start <= 2) {
 		  level = atoi(attribute_value.substr(start+1, end-start).c_str());
 		}
-		    
+
 		if( level >= d_xmlFilenames.size() ) {
 		  d_xmlFilenames.resize( level +1 );
 		  d_xmlParsed.resize(    level + 1 );
 		}
-		   
+
 		string filename = d_ts_directory + attribute_value;
 		d_xmlFilenames[ level ].push_back( filename );
 		d_xmlParsed[    level ].push_back( false );
 	      }
-		
+
 	    } // End of search through attributes
 	  }
 	}
@@ -1439,11 +1441,11 @@ DataArchive::TimeData::init()
       }
       string proc = attributes["proc"];
 
-      // WARNING: QWERTY: READ THIS Dav... 
+      // WARNING: QWERTY: READ THIS Dav...
 
       /* - Remove this check for restarts.  We need to accurately
          determine which patch goes on which proc, and for the moment
-         we need to be able to parse all pxxxx.xml files.  --BJW  
+         we need to be able to parse all pxxxx.xml files.  --BJW
          if (proc != "") {
              int procnum = atoi(proc.c_str());
              if ((procnum % numProcessors) != processor) {
@@ -1465,7 +1467,7 @@ DataArchive::TimeData::init()
         if (start != string::npos && end != string::npos && end > start && end-start <= 2) {
           level = atoi(datafile.substr(start+1, end-start).c_str());
         }
-        
+
         if( level >= d_xmlFilenames.size() ) {
           d_xmlFilenames.resize( level +1 );
           d_xmlParsed.resize(    level + 1 );
@@ -1495,7 +1497,7 @@ DataArchive::TimeData::purgeCache()
   d_grid = 0;
 
   d_datafileInfo.remove_all();
-  d_patchInfo.clear(); 
+  d_patchInfo.clear();
   d_varInfo.clear();
   d_xmlFilenames.clear();
   d_xmlParsed.clear();
@@ -1509,7 +1511,7 @@ DataArchive::TimeData::parseFile( const string & filename, int levelNum, int bas
 {
   // Parse the file.
   ProblemSpecP top = ProblemSpecReader().readInputFile( filename );
-  
+
   // Materials are the same for all patches on a level - only parse them from one file.
   bool addMaterials = levelNum >= 0 && d_matlInfo[levelNum].size() == 0;
 
@@ -1519,17 +1521,17 @@ DataArchive::TimeData::parseFile( const string & filename, int levelNum, int bas
       if( !vnode->get("variable", varname) ) {
         throw InternalError("Cannot get variable name", __FILE__, __LINE__);
       }
-      
+
       int patchid;
       if(!vnode->get("patch", patchid) && !vnode->get("region", patchid)) {
         throw InternalError("Cannot get patch id", __FILE__, __LINE__);
       }
-      
+
       int index;
       if(!vnode->get("index", index)) {
         throw InternalError("Cannot get index", __FILE__, __LINE__);
       }
-      
+
       if (addMaterials) {
         // set the material to existing.  index+1 to use matl -1
         if (index+1 >= (int)d_matlInfo[levelNum].size()) {
@@ -1553,13 +1555,13 @@ DataArchive::TimeData::parseFile( const string & filename, int levelNum, int bas
       if( !vnode->get("end", end) ) {
         throw InternalError("DataArchive::query:Cannot get end", __FILE__, __LINE__);
       }
-      string filename;  
+      string filename;
       if( !vnode->get("filename", filename) ) {
         throw InternalError("DataArchive::query:Cannot get filename", __FILE__, __LINE__);
       }
 
       // Not required
-      string    compressionMode = "";  
+      string    compressionMode = "";
       IntVector boundary(0,0,0);
       int       numParticles = -1;
 
@@ -1584,7 +1586,7 @@ DataArchive::TimeData::parseFile( const string & filename, int levelNum, int bas
         // So we run into a problem is the variable has 0 data the first time it
         // is looked at... The problem there is that it doesn't mark it as being
         // compressed, and therefore the next time we see that variable (eg, in
-        // another material) we (used to) assume it was not compressed... the 
+        // another material) we (used to) assume it was not compressed... the
         // following lines compenstate for this problem:
         VarData& varinfo = d_varInfo[varname];
         varinfo.compression = compressionMode;
@@ -1625,7 +1627,7 @@ void
 DataArchive::TimeData::parsePatch( const Patch * patch )
 {
   ASSERT(d_grid != 0);
-  if( !patch ) { 
+  if( !patch ) {
     proc0cout << "parsePatch called with null patch....\n";
     return;
   }
@@ -1634,7 +1636,7 @@ DataArchive::TimeData::parsePatch( const Patch * patch )
 
   // Make sure the data for this patch has been processed.  Return straightaway if we have already parsed this patch.
   //
-  int levelIndex       = real_patch->getLevel()->getIndex(); 
+  int levelIndex       = real_patch->getLevel()->getIndex();
   int levelBasePatchID = real_patch->getLevel()->getPatch(0)->getID();
   int patchIndex       = real_patch->getLevelIndex();
 
@@ -1699,7 +1701,7 @@ DataArchive::getOldDelt( int restart_index )
 }
 
 //______________________________________________________________________
-// Parses the timestep xml file and skips the <Meta>, <Grid>, and <Data> sections, returning 
+// Parses the timestep xml file and skips the <Meta>, <Grid>, and <Data> sections, returning
 // everything else.  This function assumes that the timestep.xml file was created by us and
 // is in the correct order - in other words, anything after </Data> is component related,
 // and everything before it can be removed.
@@ -1734,14 +1736,14 @@ DataArchive::getTimestepDocForComponent( int restart_index )
   while( true ) {
 
     string line = UintahXML::getLine( fp );
-    
+
     buffer.append( line );
 
     if( line == "</Uintah_timestep>" ) {
       break;
     }
   }
-  
+
   fclose( fp );
 
   ProblemSpec * result = new ProblemSpec( buffer );
@@ -1819,7 +1821,7 @@ DataArchive::exists( const string& varname,
   timedata.parsePatch(patch);
 
   int levelIndex = patch->getLevel()->getIndex();
-  
+
   for (unsigned i = 0; i < timedata.d_matlInfo[levelIndex].size(); i++) {
     // i-1, since the matlInfo is adjusted to allow -1 as entries
     VarnameMatlPatch vmp( varname, i-1, patch->getRealPatch()->getID() );
