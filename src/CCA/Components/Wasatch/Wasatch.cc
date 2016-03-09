@@ -78,9 +78,10 @@
 #include <CCA/Components/Wasatch/Expressions/MMS/Functions.h>
 
 #include <CCA/Components/Wasatch/Transport/ParseEquation.h>
+#include <CCA/Components/Wasatch/Transport/ParseParticleEquations.h>
 #include <CCA/Components/Wasatch/Transport/TransportEquation.h>
 #include <CCA/Components/Wasatch/Transport/EquationBase.h>
-
+#include <CCA/Components/Wasatch/Transport/EquationAdaptors.h>
 #include <CCA/Components/Wasatch/ParseTools.h>
 #include <CCA/Components/Wasatch/FieldClippingTools.h>
 #include <CCA/Components/Wasatch/OldVariable.h>
