@@ -53,9 +53,6 @@ class Task;
 class DetailedTask;
 class TaskRunner;
 
-using clock_type = std::chrono::high_resolution_clock;
-using nanoseconds = std::chrono::nanoseconds;
-
 using TaskPool = Lockfree::Pool< DetailedTask*
                                , uint64_t
                                , 1u
@@ -216,8 +213,7 @@ private:
   DetailedTasks              * m_detailed_tasks{};
 
   TaskPool   m_task_pool{};
-
-  CommPool                    m_comm_requests{REQUEST_SIZE};
+  CommPool   m_comm_requests{REQUEST_SIZE};
 
   // Timers for MPI stats
   Timers::Simple  m_last_exec_timer{};
