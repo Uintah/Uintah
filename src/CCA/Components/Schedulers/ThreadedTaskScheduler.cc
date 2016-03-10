@@ -47,7 +47,7 @@ using namespace Uintah;
 //
 namespace {
 
-DebugStream mpi_stats( "MPIStats"  , false );
+Dout g_mpi_stats( "MPIStats"  , false );
 
 Timers::Simple  s_total_exec_time {};
 std::mutex      s_io_mutex;
@@ -858,7 +858,7 @@ void ThreadedTaskScheduler::copy_restart_flag( int task_graph_num )
 //
 void ThreadedTaskScheduler::printMPIStats()
 {
-  if (mpi_stats.active()) {
+  if (g_mpi_stats) {
     unsigned int total_messages;
     double       total_volume;
     unsigned int max_messages;
@@ -871,8 +871,8 @@ void ThreadedTaskScheduler::printMPIStats()
     MPI_Reduce(&m_message_volume, &max_volume    , 1, MPI_DOUBLE,MPI_MAX  , 0, d_myworld->getComm());
 
     if( d_myworld->myrank() == 0 ) {
-      mpi_stats << "MPIStats: Num Messages (avg): "   << total_messages/(float)d_myworld->size() << " (max):" << max_messages << std::endl;
-      mpi_stats << "MPIStats: Message Volume (avg): " << total_volume/(float)d_myworld->size()   << " (max):" << max_volume   << std::endl;
+      DOUT(true, "MPIStats: Num Messages (avg): "   << total_messages/(float)d_myworld->size() << " (max):" << max_messages);
+      DOUT(true, "MPIStats: Message Volume (avg): " << total_volume/(float)d_myworld->size()   << " (max):" << max_volume);
     }
   }
 }
