@@ -421,8 +421,8 @@ public:
   HOST_DEVICE void deleteSelfOnDevice();
   HOST_DEVICE GPUDataWarehouse* getdevice_ptr(){return d_device_copy;};
   HOST_DEVICE void setDebug(bool s){d_debug=s;}
-  HOST_DEVICE cudaError_t copyDataHostToDevice(char const* indexID, void *cuda_stream);
-  HOST_DEVICE cudaError_t copyDataDeviceToHost(char const* indexID, void *cuda_stream);
+  //HOST_DEVICE cudaError_t copyDataHostToDevice(char const* indexID, void *cuda_stream);
+  //HOST_DEVICE cudaError_t copyDataDeviceToHost(char const* indexID, void *cuda_stream);
   HOST_DEVICE void copyHostContiguousToHost(GPUGridVariableBase& device_var, GridVariableBase* host_var, char const* label, int patchID, int matlIndx, int levelIndx);
 
   //______________________________________________________________________
@@ -507,6 +507,7 @@ private:
   //mutable SCIRun::CrowdMonitor varLock;
   mutable SCIRun::CrowdMonitor *allocateLock;
   mutable SCIRun::CrowdMonitor *varLock;
+  static SCIRun::CrowdMonitor *gpuPoolLock;
   char _internalName[80];
 
   materialItem       d_materialDB[MAX_MATERIALSDB_ITEMS];
@@ -525,10 +526,6 @@ private:
 
   //These STL data structures being here do not pose a problem for the CUDA compiler
 
-
-
-  static double testingd;
-  static int* testing;
   static std::multimap<gpuMemoryPoolItem, gpuMemoryData> *gpuMemoryPool;
 
 

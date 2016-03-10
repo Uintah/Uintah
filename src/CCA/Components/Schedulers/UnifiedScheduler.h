@@ -209,17 +209,15 @@ class UnifiedScheduler : public MPIScheduler  {
 
     bool allGPUVarsProcessingReady( DetailedTask* dtask );
 
-    void reclaimCudaStreams( DetailedTask* dtask );
+    void reclaimCudaStreamsIntoPool( DetailedTask* dtask );
 
-    void addCudaStream(cudaStream_t* stream, int device);
+    void freeCudaStreamsFromPool();
+
+    cudaStream_t* getCudaStreamFromPool(int device);
 
     void addCudaEvent(cudaEvent_t* event, int device);
 
-    void freeCudaStreams();
-
     cudaError_t freeDeviceRequiresMem();
-
-    cudaStream_t* getCudaStream(int device);
 
     cudaError_t freeComputesMem();
 
@@ -256,11 +254,11 @@ class UnifiedScheduler : public MPIScheduler  {
 
     /* thread shared data, needs lock protection when accessed */
     //std::vector<std::queue<cudaStream_t*> >  idleStreams;
-    std::map <unsigned int, queue<cudaStream_t*> > idleStreams;
+    static std::map <unsigned int, queue<cudaStream_t*> > *idleStreams;
     std::vector< std::string >               materialsNames;
 
     // All are multiple reader, single writer locks (pthread_rwlock_t wrapper)
-    mutable CrowdMonitor idleStreamsLock_;
+    static CrowdMonitor idleStreamsLock_;
     /*mutable CrowdMonitor deviceComputesLock_;
     mutable CrowdMonitor hostComputesLock_;
     mutable CrowdMonitor deviceRequiresLock_;

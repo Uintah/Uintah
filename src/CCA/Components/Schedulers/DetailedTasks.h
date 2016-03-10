@@ -328,21 +328,19 @@ namespace Uintah {
     std::map<unsigned int, TaskGpuDataWarehouses> TaskGpuDWs;
 
 
-    //bool queryCUDAStreamCompletion();
+    //bool queryCudaStreamCompletionForThisTask();
 
-    //void setCUDAStream(cudaStream_t* s);
+    //void setCudaStreamForThisTask(cudaStream_t* s);
 
-    void setCUDAStream(unsigned int deviceNum, cudaStream_t* s);
+    void setCudaStreamForThisTask(unsigned int deviceNum, cudaStream_t* s);
 
-    void clearCUDAStreams();
+    void clearCudaStreamsForThisTask();
 
-    bool checkCUDAStreamDone() const;
+    //bool checkCudaStreamDoneForThisTask() const;
 
-    bool checkCUDAStreamDone(unsigned int deviceNum) const;
+    bool checkCudaStreamDoneForThisTask(unsigned int deviceNum) const;
 
-    bool checkAllCUDAStreamsDone() const;
-
-
+    bool checkAllCudaStreamsDoneForThisTask() const;
 
     void setTaskGpuDataWarehouse(unsigned int deviceNum, Task::WhichDW DW, GPUDataWarehouse* TaskDW);
 
@@ -350,7 +348,7 @@ namespace Uintah {
 
     void deleteTaskGpuDataWarehouses();
 
-    cudaStream_t* getCUDAStream(unsigned int deviceNum) const;
+    cudaStream_t* getCudaStreamForThisTask(unsigned int deviceNum) const;
 
     DeviceGridVariables& getDeviceVars() { return deviceVars; }
     DeviceGridVariables& getTaskVars() { return taskVars; }
