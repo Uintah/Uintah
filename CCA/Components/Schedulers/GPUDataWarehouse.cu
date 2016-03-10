@@ -55,10 +55,9 @@ extern SCIRun::Mutex cerrLock;
 
 namespace Uintah {
 
-double GPUDataWarehouse::testingd = 3.14;
-int* GPUDataWarehouse::testing = new int[3];
 std::multimap<GPUDataWarehouse::gpuMemoryPoolItem, GPUDataWarehouse::gpuMemoryData>* GPUDataWarehouse::gpuMemoryPool = new std::multimap<GPUDataWarehouse::gpuMemoryPoolItem, GPUDataWarehouse::gpuMemoryData>;
-
+//TODO, should be deallocated?
+SCIRun::CrowdMonitor * GPUDataWarehouse::gpuPoolLock = new SCIRun::CrowdMonitor("gpu pool lock");
 //______________________________________________________________________
 //
 HOST_DEVICE void
@@ -562,7 +561,8 @@ GPUDataWarehouse::putUnallocatedIfNotExists(char const* label, int patchID, int 
 //
 __host__ void*
 GPUDataWarehouse::allocateCudaSpaceFromPool(int device_id, size_t memSize) {
-  varLock->writeLock();
+
+  gpuPoolLock->writeLock();
 
   void * addr = NULL;
   bool claimedAnItem = false;
@@ -619,7 +619,7 @@ GPUDataWarehouse::allocateCudaSpaceFromPool(int device_id, size_t memSize) {
     gmd.ptr = addr;
     gpuPoolIter = gpuMemoryPool->insert(std::pair<gpuMemoryPoolItem, gpuMemoryData>(gpuItem,gmd));
   }
-  varLock->writeUnlock();
+  gpuPoolLock->writeUnlock();
   return addr;
 }
 
@@ -627,10 +627,10 @@ GPUDataWarehouse::allocateCudaSpaceFromPool(int device_id, size_t memSize) {
 //______________________________________________________________________
 //
 __host__ bool GPUDataWarehouse::freeCudaSpaceFromPool(int device_id, size_t memSize, void* addr){
-//TODO: Needs pool locking.  Right now it's relying on varLock.
-
+  gpuPoolLock->writeLock();
   if (memSize == 0) {
     printf("ERROR:\nGPUDataWarehouse::freeCudaSpaceFromPool(), requesting to free from pool memory of size zero at address %p\n", addr);
+    gpuPoolLock->writeUnlock();
     return false;
   }
   bool foundItem = false;
@@ -683,7 +683,7 @@ __host__ bool GPUDataWarehouse::freeCudaSpaceFromPool(int device_id, size_t memS
       ++gpuPoolIter;
     }
   }
-
+  gpuPoolLock->writeUnlock();
   return foundItem;
 
 }
@@ -1223,35 +1223,36 @@ GPUDataWarehouse::allocate(const char* indexID, size_t size)
 #endif
 }
 
-HOST_DEVICE cudaError_t
-GPUDataWarehouse::copyDataHostToDevice(const char* indexID, void *cuda_stream) {
-#ifdef __CUDA_ARCH__
-  //Should not put from device side as all memory allocation should be done on CPU side through CUDAMalloc()
-  //return something so there is no compiler warning
-  cudaError_t retVal = cudaErrorUnknown;
-  return retVal;
-#else
-  OnDemandDataWarehouse::uintahSetCudaDevice( d_device_id );
-  allocateLock->readLock();
-  //for (std::map<std::string, contiguousArrayInfo>::iterator it = contiguousArrays->begin(); it != contiguousArrays->end(); ++it)
-  //  printf("*** displaying %s\n", it->first.c_str());
-  contiguousArrayInfo *ca = &(contiguousArrays->operator[](indexID));
+//HOST_DEVICE cudaError_t
+//GPUDataWarehouse::copyDataHostToDevice(const char* indexID, void *cuda_stream) {
+//#ifdef __CUDA_ARCH__
+//  //Should not put from device side as all memory allocation should be done on CPU side through CUDAMalloc()
+//  //return something so there is no compiler warning
+//  cudaError_t retVal = cudaErrorUnknown;
+//  return retVal;
+//#else
+//  OnDemandDataWarehouse::uintahSetCudaDevice( d_device_id );
+//  allocateLock->readLock();
+//  //for (std::map<std::string, contiguousArrayInfo>::iterator it = contiguousArrays->begin(); it != contiguousArrays->end(); ++it)
+//  //  printf("*** displaying %s\n", it->first.c_str());
+//  contiguousArrayInfo *ca = &(contiguousArrays->operator[](indexID));
+//
+//
+//  allocateLock->readUnlock();
+//  cudaError_t retVal;
+//  //copy only the initialized data, not the whole thing.
+//  //printf("Copying to device %p from host %p amount %d\n", ca->allocatedDeviceMemory, ca->allocatedHostMemory, ca->copiedOffset);
+//  //cudaError_t retVal = cudaMemcpy(ca->allocatedDeviceMemory, ca->allocatedHostMemory,
+//  //                                     ca->copiedOffset, cudaMemcpyHostToDevice);
+//  CUDA_RT_SAFE_CALL ( retVal = cudaMemcpyAsync(ca->allocatedDeviceMemory, ca->allocatedHostMemory,
+//                                       ca->copiedOffset, cudaMemcpyHostToDevice, *((cudaStream_t*)cuda_stream)) );
+//
+//  return retVal;
+//
+//#endif
+//}
 
-
-  allocateLock->readUnlock();
-  cudaError_t retVal;
-  //copy only the initialized data, not the whole thing.
-  //printf("Copying to device %p from host %p amount %d\n", ca->allocatedDeviceMemory, ca->allocatedHostMemory, ca->copiedOffset);
-  //cudaError_t retVal = cudaMemcpy(ca->allocatedDeviceMemory, ca->allocatedHostMemory,
-  //                                     ca->copiedOffset, cudaMemcpyHostToDevice);
-  CUDA_RT_SAFE_CALL ( retVal = cudaMemcpyAsync(ca->allocatedDeviceMemory, ca->allocatedHostMemory,
-                                       ca->copiedOffset, cudaMemcpyHostToDevice, *((cudaStream_t*)cuda_stream)) );
-
-  return retVal;
-
-#endif
-}
-
+/*
 HOST_DEVICE cudaError_t
 GPUDataWarehouse::copyDataDeviceToHost(const char* indexID, void *cuda_stream) {
 #ifdef __CUDA_ARCH__
@@ -1280,15 +1281,15 @@ GPUDataWarehouse::copyDataDeviceToHost(const char* indexID, void *cuda_stream) {
       //But now we need to copy the computes data back to the host.
       //printf("Copying to host %p from device %p amount %d\n", ca->allocatedHostMemory + ca->copiedOffset, ca->allocatedDeviceMemory + ca->copiedOffset, ca->assignedOffset - ca->copiedOffset);
 
-      //cudaError_t retVal = cudaMemcpyAsync((void*)((uint8_t*)ca.allocatedHostMemory + ca.copiedOffset),
-      //                                      (void*)((uint8_t*)ca.allocatedDeviceMemory + ca.copiedOffset),
-      //                                      ca.assignedOffset - ca.copiedOffset,
-      //                                      cudaMemcpyDeviceToHost,
-      //                                      *((cudaStream_t*)cuda_stream));
-      cudaError_t retVal = cudaMemcpy((void*)((uint8_t*)ca.allocatedHostMemory + ca.copiedOffset),
-                                           (void*)((uint8_t*)ca.allocatedDeviceMemory + ca.copiedOffset),
-                                           ca.assignedOffset - ca.copiedOffset,
-                                           cudaMemcpyDeviceToHost);
+      cudaError_t retVal = cudaMemcpyAsync((void*)((uint8_t*)ca.allocatedHostMemory + ca.copiedOffset),
+                                            (void*)((uint8_t*)ca.allocatedDeviceMemory + ca.copiedOffset),
+                                            ca.assignedOffset - ca.copiedOffset,
+                                            cudaMemcpyDeviceToHost,
+                                            *((cudaStream_t*)cuda_stream));
+      //cudaError_t retVal = cudaMemcpy((void*)((uint8_t*)ca.allocatedHostMemory + ca.copiedOffset),
+      //                                     (void*)((uint8_t*)ca.allocatedDeviceMemory + ca.copiedOffset),
+      //                                     ca.assignedOffset - ca.copiedOffset,
+      //                                     cudaMemcpyDeviceToHost);
 
 
       if (retVal !=  cudaErrorLaunchFailure) {
@@ -1306,6 +1307,7 @@ GPUDataWarehouse::copyDataDeviceToHost(const char* indexID, void *cuda_stream) {
 
 #endif
 }
+*/
 /*
 void GPUDataWarehouse::copyDataHostToDevice(char const* label, int patchID, int matlIndx, int levelIndx, bool staging, int3 low, int3 high) {
   CUDA_RT_SAFE_CALL(
@@ -2026,15 +2028,14 @@ GPUDataWarehouse::init_device(size_t objectSizeInBytes, unsigned int maxdVarDBIt
     OnDemandDataWarehouse::uintahSetCudaDevice( d_device_id );
     void* temp = NULL;
     //CUDA_RT_SAFE_CALL(cudaMalloc(&temp, objectSizeInBytes));
-
     temp = allocateCudaSpaceFromPool(d_device_id, objectSizeInBytes);
     if (gpu_stats.active()) {
       cerrLock.lock();
       {
        gpu_stats << UnifiedScheduler::myRankThread()
            << " GPUDataWarehouse::init_device() -"
-           << " requested GPU space from allocateCudaSpaceFromPool for Task DW " << objectSizeInBytes
-           << " bytes at " <<  d_device_copy
+           << " requested GPU space from allocateCudaSpaceFromPool for Task DW of size " << objectSizeInBytes
+           << " bytes at " << temp
            << " on device " << d_device_id
            << endl;
       }
@@ -2076,7 +2077,7 @@ GPUDataWarehouse::syncto_device(void *cuda_stream)
 
     //This approach does NOT require CUDA pinned memory.
     //unsigned int sizeToCopy = sizeof(GPUDataWarehouse);
-    cudaStream_t* ptr = (cudaStream_t*)(cuda_stream);
+    cudaStream_t* stream = (cudaStream_t*)(cuda_stream);
 
     if (gpu_stats.active()) {
       cerrLock.lock();
@@ -2086,17 +2087,17 @@ GPUDataWarehouse::syncto_device(void *cuda_stream)
             << " sync GPUDW at " << d_device_copy
             << " with description " << _internalName
             << " to device " << d_device_id
-            << " on stream " << ptr
+            << " on stream " << stream
             << endl;
       }
       cerrLock.unlock();
     }
 
-    CUDA_RT_SAFE_CALL (cudaMemcpyAsync( d_device_copy, this, objectSizeInBytes, cudaMemcpyHostToDevice, *ptr));
+    CUDA_RT_SAFE_CALL (cudaMemcpyAsync( d_device_copy, this, objectSizeInBytes, cudaMemcpyHostToDevice, *stream));
     //CUDA_RT_SAFE_CALL (cudaMemcpy( d_device_copy, this, objectSizeInBytes, cudaMemcpyHostToDevice));
 
     //if (d_debug) {
-    //  printf("sync GPUDW %p to device %d on stream %p\n", d_device_copy, d_device_id, ptr);
+    //printf("%s sync GPUDW %p to device %d on stream %p\n", UnifiedScheduler::myRankThread().c_str(), d_device_copy, d_device_id, stream);
     //}
     d_dirty=false;
   }
@@ -3576,7 +3577,7 @@ GPUDataWarehouse::printGetError(const char* msg, char const* label, int levelInd
             msg,  label, levelIndx, patchID, matlIndx);
 
     for (int i = 0; i < d_numVarDBItems; i++) {
-      printf("   Available varDB labels(%i): \"%-15s\" matl: %i, patchID: %i, level: %i\n", d_numVarDBItems, d_varDB[i].label, d_varDB[i].matlIndx,
+      printf("   Available varDB labels(%i of %i): \"%-15s\" matl: %i, patchID: %i, level: %i\n", i, d_numVarDBItems, d_varDB[i].label, d_varDB[i].matlIndx,
              d_varDB[i].domainID, d_varDB[i].levelIndx);
     }
     __syncthreads();

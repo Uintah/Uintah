@@ -307,7 +307,6 @@ void UnifiedSchedulerTest::timeAdvanceUnified(Task::CallBackEvent event,
 
     } // end patch for loop
   } //end GPU
-  if (event == Task::postGPU) {
     /*
     int numPatches = patches->size();
         for (int p = 0; p < numPatches; p++) {
@@ -358,7 +357,6 @@ void UnifiedSchedulerTest::timeAdvanceUnified(Task::CallBackEvent event,
 
           //printf("Finished unifiedSchedulerTestKernel for (%d,%d,%d) to (%d,%d,%d) with device variable at %p on stream %p on threadID %d\n", patchNodeLowIndex.x,patchNodeLowIndex.y,patchNodeLowIndex.z, patchNodeHighIndex.x, patchNodeHighIndex.y, patchNodeHighIndex.z, device_ptr, stream, SCIRun::Thread::self()->myid());
     }*/
-  }
 }
 
 //______________________________________________________________________

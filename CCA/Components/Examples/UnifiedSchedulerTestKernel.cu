@@ -146,7 +146,6 @@ launchUnifiedSchedulerTestKernel( dim3               dimGrid,
                                   GPUDataWarehouse * old_gpudw,
                                   GPUDataWarehouse * new_gpudw)
 {
-
   unifiedSchedulerTestKernel<<< dimGrid, dimBlock, 0, *stream>>>( patchID,
                                                                   patchNodeLowIndex,
                                                                   patchNodeHighIndex,
