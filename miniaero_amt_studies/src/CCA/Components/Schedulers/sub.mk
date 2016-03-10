@@ -38,7 +38,7 @@ SRCS += \
         $(SRCDIR)/MPIScheduler.cc             \
         $(SRCDIR)/OnDemandDataWarehouse.cc    \
         $(SRCDIR)/Relocate.cc                 \
-        $(SRCDIR)/RuntimeStats.cc                 \
+        $(SRCDIR)/RuntimeStats.cc             \
         $(SRCDIR)/SchedulerCommon.cc          \
         $(SRCDIR)/SchedulerFactory.cc         \
         $(SRCDIR)/SendState.cc                \
@@ -47,9 +47,6 @@ SRCS += \
         $(SRCDIR)/ThreadedMPIScheduler.cc     \
         $(SRCDIR)/ThreadedTaskScheduler.cc    \
         $(SRCDIR)/UnifiedScheduler.cc         \
-        $(SRCDIR)/Util.cc                     \
-        \
-        $(SRCDIR)/templates.cc
         
 ifeq ($(HAVE_CUDA),yes)
   SRCS += $(SRCDIR)/GPUDataWarehouse.cu       \

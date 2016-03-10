@@ -145,7 +145,7 @@ class MPIScheduler : public SchedulerCommon {
     };
 
     ReductionInfoMapper< TimingStat, double > mpi_info_;
-    
+
     void computeNetRunTimeStats(InfoMapper< SimulationState::RunTimeStat, double >& runTimeStats);
 
     MPIScheduler*       parentScheduler_;

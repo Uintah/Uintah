@@ -201,9 +201,6 @@ private:
 
   void copy_restart_flag( int task_graph_num );
 
-  void output_timing_stats( const char* label );
-
-
 
   // Methods for TaskRunner management
   void select_tasks();
@@ -219,6 +216,8 @@ private:
   DetailedTasks              * m_detailed_tasks{};
 
   TaskPool   m_task_pool{};
+
+  CommPool                    m_comm_requests{REQUEST_SIZE};
 
   // Timers for MPI stats
   Timers::Simple  m_last_exec_timer{};
@@ -247,12 +246,7 @@ private:
 
   const Output              * m_output_port;
 
-  CommPool                    m_comm_requests{REQUEST_SIZE};
-
   ReductionInfoMapper< TimingStat, double >     m_mpi_info;
-
-  std::map<std::string, std::atomic<uint64_t> > waittimes{};
-  std::map<std::string, std::atomic<uint64_t> > exectimes{};
 
 };
 

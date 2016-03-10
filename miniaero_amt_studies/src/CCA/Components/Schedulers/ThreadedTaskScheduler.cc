@@ -48,9 +48,6 @@ using namespace Uintah;
 namespace {
 
 DebugStream mpi_stats( "MPIStats"  , false );
-DebugStream timeout(   "TimeOut"   , false );
-DebugStream waitout(   "WaitTimes" , false );
-DebugStream execout(   "ExecTimes" , false );
 
 Timers::Simple  s_total_exec_time {};
 std::mutex      s_io_mutex;
@@ -199,18 +196,6 @@ ThreadedTaskScheduler::ThreadedTaskScheduler( const ProcessorGroup        * mywo
   : SchedulerCommon( myworld, oport )
   , m_output_port{ oport }
 {
-  if (timeout.active()) {
-    char filename[64];
-    sprintf(filename, "m_timings_stats.%d", d_myworld->myrank());
-    m_timings_stats.open(filename);
-    if (d_myworld->myrank() == 0) {
-      sprintf(filename, "m_timings_stats.avg");
-      m_avg_stats.open(filename);
-      sprintf(filename, "m_timings_stats.max");
-      m_max_stats.open(filename);
-    }
-  }
-
   std::string timeStr("seconds");
 
   m_mpi_info.insert( TotalReduce,    std::string("TotalReduce"),    timeStr, 0 );
@@ -230,13 +215,7 @@ ThreadedTaskScheduler::ThreadedTaskScheduler( const ProcessorGroup        * mywo
 //
 ThreadedTaskScheduler::~ThreadedTaskScheduler()
 {
-  if (timeout.active()) {
-    m_timings_stats.close();
-    if (d_myworld->myrank() == 0) {
-      m_avg_stats.close();
-      m_max_stats.close();
-    }
-  }
+
 }
 
 
@@ -325,7 +304,9 @@ void ThreadedTaskScheduler::execute(  int tgnum /*=0*/ , int iteration /*=0*/ )
     dws[dwmap[Task::OldDW]]->exchangeParticleQuantities(m_detailed_tasks, getLoadBalancer(), reloc_new_posLabel_, iteration);
   }
 
-  // clear & resize task phase bookkeeping data structures
+  // clear & resize task phase, etc bookkeeping data structures
+  m_num_messages   = 0;
+  m_message_volume = 0;
   m_mpi_info.reset( 0 );
   m_num_tasks_done.store(0, std::memory_order_relaxed);
   m_abort          = false;
@@ -435,8 +416,6 @@ void ThreadedTaskScheduler::execute(  int tgnum /*=0*/ , int iteration /*=0*/ )
   copy_restart_flag(tgnum);
 
   finalizeTimestep();
-
-  output_timing_stats("ThreadedTaskScheduler");
 
   emit_net_MPI_stats();
 
@@ -743,10 +722,6 @@ void ThreadedTaskScheduler::run_task( DetailedTask * task, int iteration )
 {
   RuntimeStats::ExecTimer total_exec_timer;
 
-  if (waitout.active()) {
-    waittimes[task->getTask()->getName()].fetch_add( Timers::ThreadTrip< TotalWaitMPITag >::total_nanoseconds(), std::memory_order_relaxed );
-  }
-
   if (trackingVarsPrintLocation_ & SchedulerCommon::PRINT_BEFORE_EXEC) {
     printTrackedVars(task, SchedulerCommon::PRINT_BEFORE_EXEC);
   }
@@ -842,29 +817,6 @@ void ThreadedTaskScheduler::emit_net_MPI_stats()
   Timers::ThreadTrip< TotalRecvMPITag >::reset_tag();
   Timers::ThreadTrip< TotalTaskTag >::reset_tag();
   Timers::ThreadTrip< TotalTestMPITag >::reset_tag();
-
-
-  if (timeout.active()) {
-
-    m_labels.clear();
-    m_times.clear();
-
-    emit_time("Total task time"      , m_mpi_info[TotalTask]);
-    emit_time("MPI Send time"        , m_mpi_info[TotalSendMPI]);
-    emit_time("MPI Recv time"        , m_mpi_info[TotalRecvMPI]);
-    emit_time("MPI TestSome time"    , m_mpi_info[TotalTestMPI]);
-    emit_time("MPI Wait time"        , m_mpi_info[TotalWaitMPI]);
-    emit_time("MPI reduce time"      , m_mpi_info[TotalReduceMPI]);
-    emit_time("Total reduction time" , m_mpi_info[TotalReduce] - m_mpi_info[TotalReduceMPI]);
-    emit_time("Total send time"      , m_mpi_info[TotalSend]   - m_mpi_info[TotalSendMPI] - m_mpi_info[TotalTestMPI]);
-    emit_time("Total recv time"      , m_mpi_info[TotalRecv]   - m_mpi_info[TotalRecvMPI] - m_mpi_info[TotalWaitMPI]);
-    emit_time("Total comm time"      , m_mpi_info[TotalRecv]   + m_mpi_info[TotalSend]    + m_mpi_info[TotalReduce]);
-
-    double totalexec = m_last_exec_timer.seconds();
-    m_last_exec_timer.reset();
-
-    emit_time("Other execution time", totalexec - m_mpi_info[TotalSend] - m_mpi_info[TotalRecv] - m_mpi_info[TotalTask] - m_mpi_info[TotalReduce]);
-  }
 }
 
 
@@ -897,165 +849,6 @@ void ThreadedTaskScheduler::copy_restart_flag( int task_graph_num )
       if (dws[0]) {
         dws[0]->setRestarted();
       }
-    }
-  }
-}
-
-
-//______________________________________________________________________
-//
-void ThreadedTaskScheduler::output_timing_stats( const char* label )
-{
-  // add number of cells, patches, and particles
-  int numCells = 0, numParticles = 0;
-  OnDemandDataWarehouseP dw = dws[dws.size() - 1];
-  const GridP grid(const_cast<Grid*>(dw->getGrid()));
-  const PatchSubset* myPatches = getLoadBalancer()->getPerProcessorPatchSet(grid)->getSubset(d_myworld->myrank());
-  for (int p = 0; p < myPatches->size(); p++) {
-    const Patch* patch = myPatches->get(p);
-    IntVector range = patch->getExtraCellHighIndex() - patch->getExtraCellLowIndex();
-    numCells += range.x() * range.y() * range.z();
-
-    // go through all materials since getting an MPMMaterial correctly would depend on MPM
-    for (int m = 0; m < d_sharedState->getNumMatls(); m++) {
-      if (dw->haveParticleSubset(m, patch))
-        numParticles += dw->getParticleSubset(m, patch)->numParticles();
-    }
-  }
-
-  emit_time("NumPatches"  , myPatches->size());
-  emit_time("NumCells"    , numCells);
-  emit_time("NumParticles", numParticles);
-
-  std::vector<double> total_times(m_times.size());
-  std::vector<double> max_times(m_times.size());
-  std::vector<double> avg_times(m_times.size());
-
-  double avgTask = -1, maxTask = -1;
-  double avgComm = -1, maxComm = -1;
-  double avgCell = -1, maxCell = -1;
-
-  MPI_Comm comm = d_myworld->getComm();
-  MPI_Reduce(&m_times[0], &total_times[0], static_cast<int>(m_times.size()), MPI_DOUBLE, MPI_SUM, 0, comm);
-  MPI_Reduce(&m_times[0], &max_times[0],   static_cast<int>(m_times.size()), MPI_DOUBLE, MPI_MAX, 0, comm);
-
-  double total = 0, avgTotal = 0, maxTotal = 0;
-  for (int i = 0; i < (int)total_times.size(); i++) {
-    avg_times[i] = total_times[i] / d_myworld->size();
-    if (strcmp(m_labels[i], "Total task time") == 0) {
-      avgTask = avg_times[i];
-      maxTask = max_times[i];
-    }
-    else if (strcmp(m_labels[i], "Total comm time") == 0) {
-      avgComm = avg_times[i];
-      maxComm = max_times[i];
-    }
-    else if (strncmp(m_labels[i], "Num", 3) == 0) {
-      if (strcmp(m_labels[i], "NumCells") == 0) {
-        avgCell = avg_times[i];
-        maxCell = max_times[i];
-      }
-      // these are independent stats - not to be summed
-      continue;
-    }
-
-    total    += m_times[i];
-    avgTotal += avg_times[i];
-    maxTotal += max_times[i];
-  }
-
-  // do not duplicate the code
-  std::vector<std::ofstream*> files;
-  std::vector<std::vector<double>*> data;
-  files.push_back(&m_timings_stats);
-  data.push_back(&m_times);
-
-  int me = d_myworld->myrank();
-
-  if (me == 0) {
-    files.push_back(&m_avg_stats);
-    files.push_back(&m_max_stats);
-    data.push_back(&avg_times);
-    data.push_back(&max_times);
-  }
-
-  for (unsigned file = 0; file < files.size(); file++) {
-    std::ofstream& out = *files[file];
-    out << "Timestep " << d_sharedState->getCurrentTopLevelTimeStep() << std::endl;
-    for (int i = 0; i < (int)(*data[file]).size(); i++) {
-      out << label << ": " << m_labels[i] << ": ";
-      int len = static_cast<int>(strlen(m_labels[i]) + strlen("MPIScheduler: ") + strlen(": "));
-      for (int j = len; j < 55; j++)
-        out << ' ';
-      double percent;
-      if (strncmp(m_labels[i], "Num", 3) == 0) {
-        percent = total_times[i] == 0 ? 100 : (*data[file])[i] / total_times[i] * 100;
-      }
-      else {
-        percent = (*data[file])[i] / total * 100;
-      }
-      out << (*data[file])[i] << " (" << percent << "%)\n";
-    }
-    out << std::endl << std::endl;
-  }
-
-  if (me == 0) {
-    timeout << "  Avg. exec: " << avgTask << ", max exec: " << maxTask << " = " << (1 - avgTask / maxTask) * 100 << " load imbalance (exec)%\n";
-    timeout << "  Avg. comm: " << avgComm << ", max comm: " << maxComm << " = " << (1 - avgComm / maxComm) * 100 << " load imbalance (comm)%\n";
-    timeout << "  Avg.  vol: " << avgCell << ", max  vol: " << maxCell << " = " << (1 - avgCell / maxCell) * 100 << " load imbalance (theoretical)%\n";
-  }
-
-  if (execout.active()) {
-    static int count = 0;
-
-    // only output the exec times every 10 timesteps
-    if (++count % 10 == 0) {
-      std::ofstream fout;
-      char filename[100];
-      sprintf(filename, "exectimes.%d.%d", d_myworld->size(), d_myworld->myrank());
-      fout.open(filename);
-
-      // Report which timesteps TaskExecTime values have been accumulated over
-      fout << "Reported values are cumulative over 10 timesteps ("
-           << d_sharedState->getCurrentTopLevelTimeStep()-9
-           << " through "
-           << d_sharedState->getCurrentTopLevelTimeStep()
-           << ")" << std::endl;
-
-      for (std::map<std::string, std::atomic<uint64_t> >::iterator iter = exectimes.begin(); iter != exectimes.end(); iter++) {
-        fout << std::fixed << d_myworld->myrank() << ": TaskExecTime(s): " << iter->second << " Task:" << iter->first << std::endl;
-      }
-      fout.close();
-      exectimes.clear();
-    }
-  }
-
-  if (waitout.active()) {
-    static int count = 0;
-
-    // only output the exec times every 10 timesteps
-    if (++count % 10 == 0) {
-
-      if (d_myworld->myrank() == 0 || d_myworld->myrank() == d_myworld->size() / 2 || d_myworld->myrank() == d_myworld->size() - 1) {
-
-        std::ofstream wout;
-        char fname[100];
-        sprintf(fname, "waittimes.%d.%d", d_myworld->size(), d_myworld->myrank());
-        wout.open(fname);
-
-        for (std::map<std::string, std::atomic<uint64_t> >::iterator iter = waittimes.begin(); iter != waittimes.end(); iter++) {
-          wout << std::fixed << d_myworld->myrank() << ":   TaskWaitTime(TO): " << iter->second << " Task:" << iter->first << std::endl;
-        }
-
-        for (std::map<std::string, double>::iterator iter = DependencyBatch::waittimes.begin(); iter != DependencyBatch::waittimes.end();
-            iter++) {
-          wout << std::fixed << d_myworld->myrank() << ": TaskWaitTime(FROM): " << iter->second << " Task:" << iter->first << std::endl;
-        }
-        wout.close();
-      }
-
-      waittimes.clear();
-      DependencyBatch::waittimes.clear();
     }
   }
 }
