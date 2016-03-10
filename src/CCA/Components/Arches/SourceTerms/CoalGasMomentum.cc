@@ -19,10 +19,10 @@
 #undef  USE_FUNCTOR 
 
 #ifdef USE_FUNCTOR
-#include <Core/Grid/Variables/BlockRange.h>
-#ifdef UINTAH_ENABLE_KOKKOS
-#include <Kokkos_Core.hpp>
-#endif //UINTAH_ENABLE_KOKKOS
+#  include <Core/Grid/Variables/BlockRange.h>
+#  ifdef UINTAH_ENABLE_KOKKOS
+#    include <Kokkos_Core.hpp>
+#  endif //UINTAH_ENABLE_KOKKOS
 #endif
 
 using namespace std;
