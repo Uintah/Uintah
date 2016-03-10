@@ -36,17 +36,12 @@ class ProcessorGroup;
 // A CommunicationRecord (CommRecMPI) keeps track of MPI_Requests and
 // an AfterCommunicationHandler for each of these requests.  By calling
 // testsome, waitsome or waitall, it will call finishedCommunication(pg)
-// on the handlers of all finish requests and then delete these
-// handlers.
+// on the handlers of all finish requests and then delete these handlers.
 
 class CommRecMPI {
 
   public:
     CommRecMPI() : groupIDDefault_(0), totalBytes_(0) {}
-
-    // Returns true while there are more tests to wait for.
-    // bool waitsome(MPI_Comm comm, int me); // return false when all done
-    // bool testsome(MPI_Comm comm, int me); // return false when all done
 
     bool waitsome( const ProcessorGroup * pg,
                          std::list<int> * finishedGroups = 0 );

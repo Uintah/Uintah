@@ -24,21 +24,21 @@
 
 #include <CCA/Components/Schedulers/CommRecMPI.h>
 
-#include <Core/Thread/Mutex.h>
-#include <Core/Util/DebugStream.h>
 #include <Core/Util/FancyAssert.h>
 #include <Core/Parallel/ProcessorGroup.h>
-#include <Core/Thread/Time.h>
+#include <Core/Util/DOUT.hpp>
+#include <Core/Util/Timers/Timers.hpp>
 
-using namespace std;
 using namespace Uintah;
-using namespace SCIRun;
 
-// sync cerr so it's readable when output by multiple threads
-extern SCIRun::Mutex       cerrLock;
-extern SCIRun::DebugStream mixedDebug;
+namespace {
 
-static DebugStream dbg( "RecvTiming", false );
+Dout g_commrec_dbg{ "CommRecMPI", false };
+
+Timers::Simple g_wait_timer{};
+Timers::Simple g_test_timer{};
+
+}
 
 double CommRecMPI::WaitTimePerMessage = 0;
 
@@ -48,11 +48,11 @@ double CommRecMPI::WaitTimePerMessage = 0;
 //______________________________________________________________________
 
 void
-CommRecMPI::add(       MPI_Request                 id, 
-                       int                         bytes, 
-                       AfterCommunicationHandler * handler, 
-                 const string                    & var, 
-                       int                         message, 
+CommRecMPI::add(       MPI_Request                 id,
+                       int                         bytes,
+                       AfterCommunicationHandler * handler,
+                 const std::string               & var,
+                       int                         message,
                        int                         groupID )
 {
   ids_.push_back( id );
@@ -63,7 +63,7 @@ CommRecMPI::add(       MPI_Request                 id,
   messageNums_.push_back( message );
   totalBytes_ += bytes;
 
-  map<int, int>::iterator countIter = groupWaitCount_.find( groupID );
+  std::map<int, int>::iterator countIter = groupWaitCount_.find( groupID );
 
   if (countIter == groupWaitCount_.end()) {
     groupWaitCount_[groupID] = 1;
@@ -80,8 +80,9 @@ CommRecMPI::add(       MPI_Request                 id,
 void
 CommRecMPI::print( const ProcessorGroup * pg )
 {
-  for( unsigned int i = 0; i < ids_.size(); i++ ) {
-    cout << pg->myrank() << " Message: " << byteCounts_[i] << " vars: " << " num " << messageNums_[i] << " Vars: " << vars_[i] << "\n";
+  for( unsigned int i = 0; i < ids_.size(); ++i ) {
+    DOUT(true, pg->myrank() << " Message: " << byteCounts_[i] << " vars: " << " num "
+              << messageNums_[i] << " Vars: " << vars_[i]);
   }
 }
 
@@ -90,8 +91,8 @@ CommRecMPI::print( const ProcessorGroup * pg )
 //______________________________________________________________________
 
 bool
-CommRecMPI::waitsome( const ProcessorGroup * pg, 
-                            list<int>      * finishedGroups /* = 0 */ )
+CommRecMPI::waitsome( const ProcessorGroup * pg,
+                            std::list<int> * finishedGroups /* = 0 */ )
 {
   if( ids_.size() == 0 ) {
     return false; // no more to test
@@ -101,21 +102,21 @@ CommRecMPI::waitsome( const ProcessorGroup * pg,
   indices.resize( ids_.size() );
 
   // debugging
-  if (mixedDebug.active()) {
+  if (g_commrec_dbg) {
     int me = pg->myrank();
-    mixedDebug << me << " Waitsome: " << ids_.size() << " waiters:\n";
-
-    for (unsigned i = 0; i < messageNums_.size(); i++) {
-      mixedDebug << me << "  Num: " << messageNums_[i] << " size: " << byteCounts_[i] << "\n";
+    DOUT(true, me << " Waitsome: " << ids_.size() << " waiters:");
+    for (unsigned i = 0; i < messageNums_.size(); ++i) {
+      DOUT(true, me << "  Num: " << messageNums_[i] << " size: " << byteCounts_[i]);
     }
   }
 
   int     donecount;
-  clock_t start = clock();
-  
+  g_wait_timer.reset();
+
   MPI_Waitsome( (int)ids_.size(), &ids_[0], &donecount, &indices[0], &statii[0] );
-  
-  WaitTimePerMessage = (clock() - start) / (double)CLOCKS_PER_SEC / donecount;
+
+  double total_wait_time = g_wait_timer.seconds();
+  WaitTimePerMessage = total_wait_time / donecount;
 
   return donesome( pg, donecount, statii, finishedGroups );
 }
@@ -125,9 +126,9 @@ CommRecMPI::waitsome( const ProcessorGroup * pg,
 //______________________________________________________________________
 
 bool
-CommRecMPI::waitsome( const ProcessorGroup * pg, 
+CommRecMPI::waitsome( const ProcessorGroup * pg,
                             CommRecMPI     & cr,
-                            list<int>      * finishedGroups /* = 0 */ )
+                            std::list<int> * finishedGroups /* = 0 */ )
 {
   int size = ids_.size() + cr.ids_.size();
   if( size == 0 ) {
@@ -135,72 +136,67 @@ CommRecMPI::waitsome( const ProcessorGroup * pg,
   }
 
   // Create a new vector for indices, as we will split it into
-  // the indices for this as well as for cr.  We need to be certain 
+  // the indices for this as well as for cr.  We need to be certain
   // that *this's ids come befor cr's to split them later.
   // Since we don't really use the statii in donesome, we'll just use *this's
   statii.resize(size);
 
-  vector<MPI_Request> combinedIDs;
-  vector<MPI_Status> mystatii, crstatii;
-  vector<int> combinedIndices(size);
-  int                 donecount;
+  std::vector<MPI_Request> combinedIDs;
+  std::vector<MPI_Status>  mystatii;
+  std::vector<MPI_Status>  crstatii;
+  std::vector<int>         combinedIndices(size);
+  int                      donecount;
 
   indices.clear();
   cr.indices.clear();
-  
-  for( unsigned int i = 0; i < ids_.size(); i++ ) {
-    combinedIDs.push_back( ids_[i] );
+
+  for (unsigned int i = 0; i < ids_.size(); ++i) {
+    combinedIDs.push_back(ids_[i]);
   }
 
-  for( unsigned int i = 0; i < cr.ids_.size(); i++ ) {
-    combinedIDs.push_back( cr.ids_[i] );
+  for (unsigned int i = 0; i < cr.ids_.size(); ++i) {
+    combinedIDs.push_back(cr.ids_[i]);
   }
-
-  // if (!pg->myrank()) {
-  //    cout << "Size: " << size << ", thissize: " << ids.size() 
-  //         << ", crsize: " << cr.ids.size() << ", combinedsize: "
-  //         << combinedIDs.size() << endl;
-  // }
 
   //__________________________________
   // debugging output
-  int me = pg->myrank();
+  if (g_commrec_dbg) {
+    int me = pg->myrank();
 
-  mixedDebug << me << " Calling combined waitsome with " << ids_.size() << " and " << cr.ids_.size() << " waiters\n";
+    DOUT(true, me << " Calling combined waitsome with " << ids_.size() << " and " << cr.ids_.size() << " waiters");
+    DOUT(true, me << " Comb Waitsome: " << ids_.size() << " and " << cr.ids_.size() << " waiters:");
 
-  if (mixedDebug.active()) {
-    mixedDebug << me << " Comb Waitsome: " << ids_.size() << " and " << cr.ids_.size() << " waiters:\n";
-
-    for( unsigned int i = 0; i < messageNums_.size(); i++) {
-      mixedDebug << me << "  Num: " << messageNums_[i] << ", vars: " << vars_[i] << endl;
+    for( unsigned int i = 0; i < messageNums_.size(); ++i) {
+      DOUT(true, me << "  Num: " << messageNums_[i] << ", vars: " << vars_[i]);
     }
-    for( unsigned int i = 0; i < cr.messageNums_.size(); i++) {
-      mixedDebug << me << "  Num: " << cr.messageNums_[i] << ", vars: " << cr.vars_[i] << endl;
+
+    for( unsigned int i = 0; i < cr.messageNums_.size(); ++i) {
+      DOUT(true, me << "  Num: " << cr.messageNums_[i] << ", vars: " << cr.vars_[i]);
     }
   }
 
-  
-  clock_t start = clock();
+
+  g_wait_timer.reset();
 
   MPI_Waitsome( size, &combinedIDs[0], &donecount, &combinedIndices[0], &statii[0] );
 
-  WaitTimePerMessage = (clock() - start) / (double)CLOCKS_PER_SEC / donecount;
+  double total_wait_time = g_wait_timer.seconds();
+  WaitTimePerMessage = total_wait_time / donecount;
 
-  mixedDebug << "after combined waitsome\n";
+  DOUT(g_commrec_dbg, "after combined waitsome");
 
   // now split combinedIndices and donecount into the two cr's
   int myDonecount = 0;
   int crDonecount = 0;
 
-  int mySize = ids_.size();
-  for (int i = 0; i < donecount; i++) {
-    if (combinedIndices[i] < mySize) {
+  int num_ids = ids_.size();
+  for (int i = 0; i < donecount; ++i) {
+    if (combinedIndices[i] < num_ids) {
       indices.push_back(combinedIndices[i]);
       mystatii.push_back(statii[i]);
       myDonecount++;
-    }
-    else {
-      cr.indices.push_back(combinedIndices[i] - mySize);
+    } else {
+      cr.indices.push_back(combinedIndices[i] - num_ids);
       crstatii.push_back(statii[i]);
       crDonecount++;
     }
@@ -219,31 +215,28 @@ CommRecMPI::waitsome( const ProcessorGroup * pg,
 //______________________________________________________________________
 
 bool
-CommRecMPI::testsome( const ProcessorGroup * pg, 
-                            list<int>      * finishedGroups /* = 0 */ )
+CommRecMPI::testsome( const ProcessorGroup * pg,
+                            std::list<int> * finishedGroups /* = 0 */ )
 {
   if (ids_.size() == 0) {
     return false;  // no more to test
   }
   statii.resize(  ids_.size() );
   indices.resize( ids_.size() );
-  int me = pg->myrank();
 
-  // debugging
-  if (mixedDebug.active()) {
-    cerrLock.lock();
-    mixedDebug << me << " Calling testsome with " << ids_.size() << " waiters\n";
-    cerrLock.unlock();
-  }
+  DOUT(true, pg->myrank() << " Calling testsome with " << ids_.size() << " waiters");
 
   int     donecount;
-  clock_t start = clock();
-  
+  g_test_timer.reset();
+
   MPI_Testsome( (int)ids_.size(), &ids_[0], &donecount, &indices[0], &statii[0] );
-  
-  if( donecount>0 ){
-    WaitTimePerMessage = (clock() - start) / (double)CLOCKS_PER_SEC / donecount;
+
+  double total_test_time = g_test_timer.seconds();
+
+  if (donecount > 0) {
+    WaitTimePerMessage = total_test_time / donecount;
   }
+
   return donesome( pg, donecount,statii, finishedGroups );
 }
 
@@ -252,30 +245,26 @@ CommRecMPI::testsome( const ProcessorGroup * pg,
 //______________________________________________________________________
 
 bool
-CommRecMPI::donesome( const ProcessorGroup     * pg, 
-                            int                  donecount, 
-                            vector<MPI_Status> & statii,
-                            list<int>          * finishedGroups )
+CommRecMPI::donesome( const ProcessorGroup          * pg,
+                            int                       donecount,
+                            std::vector<MPI_Status> & statii,
+                            std::list<int>          * finishedGroups )
 {
   bool anyFinished = false;
-  int  numReceived = 0;
-  int  volReceived = 0;
+  int numReceived  = 0;
+  int volReceived  = 0;
 
   ASSERT(donecount != MPI_UNDEFINED);
 
-  for( int i = 0; i < donecount; i++ ) {
+  for (int i = 0; i < donecount; ++i) {
     int idx = indices[i];
 
-    if( handlers_[idx] ) {
+    if (handlers_[idx]) {
 
-      if (mixedDebug.active()) {
-        cerrLock.lock();
-        mixedDebug << "Actually received " << idx << "\n";
-        cerrLock.unlock();
-      }
+      DOUT(g_commrec_dbg, "Actually received " << idx);
 
-      handlers_[idx]->finishedCommunication( pg, statii[i] );
-      ASSERT( handlers_[idx] != 0 );
+      handlers_[idx]->finishedCommunication(pg, statii[i]);
+      ASSERT(handlers_[idx] != 0);
 
       delete handlers_[idx];
       handlers_[idx] = 0;
@@ -299,12 +288,9 @@ CommRecMPI::donesome( const ProcessorGroup     * pg,
     }
   }
 
-  if (dbg.active() && numReceived > 0) {
+  if (numReceived > 0) {
     if (pg->myrank() == pg->size() / 2) {
-      cerrLock.lock();
-      dbg << pg->myrank() << " Time: " << Time::currentSeconds() << " , NumReceived= " << numReceived << " , VolReceived: "
-          << volReceived << endl;
-      cerrLock.unlock();
+      DOUT(g_commrec_dbg, pg->myrank() << "NumReceived: " << numReceived << " , VolReceived: " << volReceived);
     }
   }
 
@@ -321,7 +307,7 @@ CommRecMPI::donesome( const ProcessorGroup     * pg,
 
   // remove finished requests
   int j = 0;
-  for (int i = 0; i < (int)ids_.size(); i++) {
+  for (int i = 0; i < (int)ids_.size(); ++i) {
     if (ids_[i] != MPI_REQUEST_NULL) {
       ids_[j] = ids_[i];
       groupIDs_[j] = groupIDs_[i];
@@ -332,7 +318,7 @@ CommRecMPI::donesome( const ProcessorGroup     * pg,
       ++j;
     }
   }
-  ASSERT( (int )ids_.size() - donecount == j );
+  ASSERT((int )ids_.size() - donecount == j);
 
   ids_.resize(j);
   groupIDs_.resize(j);
@@ -351,23 +337,27 @@ CommRecMPI::donesome( const ProcessorGroup     * pg,
 void
 CommRecMPI::waitall( const ProcessorGroup * pg )
 {
-  if( ids_.size() == 0 ) {
+  if (ids_.size() == 0) {
     return;
   }
 
-  statii.resize( ids_.size() );
-//    mixedDebug << me << " Calling waitall with " << ids.size() << " waiters\n";
-  clock_t start = clock();
+  statii.resize(ids_.size());
+
+  DOUT(g_commrec_dbg, pg->myrank() << " Calling waitall with " << ids_.size() << " waiters");
+
+  g_wait_timer.reset();
 
   MPI_Waitall((int)ids_.size(), &ids_[0], &statii[0]);
 
-  WaitTimePerMessage = (clock() - start) / (double)CLOCKS_PER_SEC / ids_.size();
-  //  mixedDebug << me << " Done calling waitall with " << ids_.size() << " waiters\n";
+  double total_wait_time = g_wait_timer.seconds();
+  WaitTimePerMessage = total_wait_time / ids_.size();
 
-  for (int i = 0; i < (int)ids_.size(); i++) {
-    if( handlers_[i] ) {
-      handlers_[i]->finishedCommunication( pg, statii[i] );
-      ASSERT( handlers_[i] != 0 );
+  DOUT(g_commrec_dbg, pg->myrank() << " Done calling waitall with " << ids_.size() << " waiters");
+
+  for (int i = 0; i < (int)ids_.size(); ++i) {
+    if (handlers_[i]) {
+      handlers_[i]->finishedCommunication(pg, statii[i]);
+      ASSERT(handlers_[i] != 0);
       delete handlers_[i];
       handlers_[i] = 0;
     }

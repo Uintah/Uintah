@@ -36,6 +36,7 @@
 #include <Core/Thread/Mutex.h>
 #include <Core/Util/DebugStream.h>
 #include <Core/Util/ProgressiveWarning.h>
+#include <Core/Util/DOUT.hpp>
 
 #include <sci_defs/config_defs.h>
 #include <sci_defs/cuda_defs.h>
@@ -45,7 +46,7 @@ using namespace Uintah;
 // sync cout/cerr so they are readable when output by multiple threads
 extern SCIRun::Mutex cerrLock;
 extern SCIRun::Mutex coutLock;
-extern DebugStream mixedDebug;
+
 extern DebugStream mpidbg;
 
 namespace {
@@ -56,6 +57,9 @@ DebugStream messagedbg(  "MessageTags",   false);
 DebugStream internaldbg( "InternalDeps",  false);
 DebugStream dwdbg(       "DetailedDWDBG", false);
 DebugStream waitout(     "WaitTimes",     false);
+
+Dout g_detailed_dbg{ "DetailedTasksDBG", false };
+
 std::string dbgScrubVar   = ""; // for debugging - set the var name to watch one in the scrubout
 int         dbgScrubPatch = -1;
 
@@ -241,9 +245,9 @@ DetailedTasks::computeLocalTasks( int me )
       if (task->areInternalDependenciesSatisfied()) {
         initiallyReadyTasks_.push(task);
 
-        if (mixedDebug.active()) {
+        if (dbg.active()) {
           cerrLock.lock();
-          mixedDebug << "Initially Ready Task: " << task->getTask()->getName() << "\n";
+          dbg << "Initially Ready Task: " << task->getTask()->getName() << "\n";
           cerrLock.unlock();
         }
       }
@@ -306,17 +310,17 @@ DetailedTask::doit( const ProcessorGroup*                 pg,
                     std::vector<DataWarehouseP>&         dws,
                           Task::CallBackEvent             event /* = Task::CPU */ )
 {
-  if (mixedDebug.active()) {
+  if (dbg.active()) {
     cerrLock.lock();
-    mixedDebug << "DetailedTask " << this << " begin doit()\n";
-    mixedDebug << " task is " << task << "\n";
-    mixedDebug << "   num Pending Deps: " << numPendingInternalDependencies << "\n";
-    mixedDebug << "   Originally needed deps (" << internalDependencies.size() << "):\n";
+    dbg << "DetailedTask " << this << " begin doit()\n";
+    dbg << " task is " << task << "\n";
+    dbg << "   num Pending Deps: " << numPendingInternalDependencies << "\n";
+    dbg << "   Originally needed deps (" << internalDependencies.size() << "):\n";
 
     std::list<InternalDependency>::iterator iter = internalDependencies.begin();
 
     for (int i = 0; iter != internalDependencies.end(); iter++, i++) {
-      mixedDebug << i << ":    " << *((*iter).prerequisiteTask->getTask()) << "\n";
+      dbg << i << ":    " << *((*iter).prerequisiteTask->getTask()) << "\n";
     }
     cerrLock.unlock();
   }
@@ -375,8 +379,8 @@ DetailedTasks::initializeScrubs( std::vector<OnDemandDataWarehouseP>& dws,
     // TODO APH - clean this up (01/31/15)
 //    if (dw != 0) dw->copyKeyDB(varKeyDB, levelKeyDB);
     if (dw != 0 && dw->getScrubMode() == DataWarehouse::ScrubComplete) {
-      // only a OldDW or a CoarseOldDW will have scrubComplete 
-      //   But we know a future taskgraph (in a w-cycle) will need the vars if there are fine dws 
+      // only a OldDW or a CoarseOldDW will have scrubComplete
+      //   But we know a future taskgraph (in a w-cycle) will need the vars if there are fine dws
       //   between New and Old.  In this case, the scrub count needs to be complemented with CoarseOldDW
       int tgtype = getTaskGraph()->getType();
       if (!initialized[dwmap[i]] || tgtype == Scheduler::IntermediateTaskGraph) {
@@ -831,10 +835,10 @@ DetailedTasks::findMatchingDetailedDep(       DependencyBatch*  batch,
  * This function will create the detailed dependency for the
  * parameters passed in.  If a similar detailed dependency
  * already exists it will combine those dependencies into a single
- * dependency.  
+ * dependency.
  *
- * Dependencies are ordered from oldest to newest in a linked list.  It is vital that 
- * this order is maintained.  Failure to maintain this order can cause messages to be combined 
+ * Dependencies are ordered from oldest to newest in a linked list.  It is vital that
+ * this order is maintained.  Failure to maintain this order can cause messages to be combined
  * inconsistently across different tasks causing various problems.  New dependencies are added
  * to the end of the list.  If a dependency was combined then the extended dependency is added
  * at the same location that i was first combined.  This is to ensure all future dependencies
@@ -1430,7 +1434,7 @@ DetailedTasks::getOldDWSendTask( int proc )
     std::cout << d_myworld->myrank() << " Error trying to get oldDWSendTask for processor: " << proc << " but it does not exist\n";
     throw InternalError("oldDWSendTask does not exist", __FILE__, __LINE__);
   }
-#endif 
+#endif
   return tasks_[sendoldmap_[proc]];
 }
 
@@ -1724,10 +1728,10 @@ DetailedTask::done( std::vector<OnDemandDataWarehouseP>& dws )
   // Important to scrub first, before dealing with the internal dependencies
   scrub(dws);
 
-  if (mixedDebug.active()) {
+  if (dbg.active()) {
     cerrLock.lock();
-    mixedDebug << "This: " << this << " is done with task: " << task << "\n";
-    mixedDebug << "Name is: " << task->getName() << " which has (" << internalDependents.size() << ") tasks waiting on it:\n";
+    dbg << "This: " << this << " is done with task: " << task << "\n";
+    dbg << "Name is: " << task->getName() << " which has (" << internalDependents.size() << ") tasks waiting on it:\n";
     cerrLock.unlock();
   }
 
@@ -1761,9 +1765,9 @@ DetailedTask::dependencySatisfied( InternalDependency* dep )
     dep->satisfiedGeneration = currentGeneration;
     numPendingInternalDependencies--;
 
-    if (mixedDebug.active()) {
+    if (dbg.active()) {
       cerrLock.lock();
-      mixedDebug << *(dep->dependentTask->getTask()) << " has " << numPendingInternalDependencies << " left.\n";
+      dbg << *(dep->dependentTask->getTask()) << " has " << numPendingInternalDependencies << " left.\n";
       cerrLock.unlock();
     }
 
@@ -1838,7 +1842,7 @@ operator<<(       std::ostream& out,
 //      out << std::hex << " using CUDA stream " << task.getCUDAStream() << std::dec;
 //    }
 //#endif
-    
+
   }
   coutLock.unlock();
 
@@ -1876,9 +1880,9 @@ DetailedTasks::internalDependenciesSatisfied( DetailedTask* task )
   {
     readyTasks_.push(task);
 
-    if (mixedDebug.active()) {
+    if (dbg.active()) {
       cerrLock.lock();
-      mixedDebug << *task << " satisfied.  Now " << readyTasks_.size() << " ready.\n";
+      dbg << *task << " satisfied.  Now " << readyTasks_.size() << " ready.\n";
       cerrLock.unlock();
     }
   }
@@ -2273,12 +2277,12 @@ DependencyBatch::received( const ProcessorGroup * pg )
 {
   received_ = true;
 
-  if (mixedDebug.active()) {
+  if (dbg.active()) {
     cerrLock.lock();
-    mixedDebug << "Received batch message " << messageTag << " from task " << *fromTask << "\n";
+    dbg << "Received batch message " << messageTag << " from task " << *fromTask << "\n";
 
     for (DetailedDep* dep = head; dep != 0; dep = dep->next) {
-      mixedDebug << "\tSatisfying " << *dep << "\n";
+      dbg << "\tSatisfying " << *dep << "\n";
     }
     cerrLock.unlock();
   }

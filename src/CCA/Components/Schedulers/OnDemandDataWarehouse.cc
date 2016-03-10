@@ -83,7 +83,6 @@ using namespace Uintah;
 extern SCIRun::Mutex cerrLock;
 extern SCIRun::Mutex coutLock;
 
-extern DebugStream mixedDebug;
 
 #ifdef HAVE_CUDA
   extern DebugStream use_single_device;
@@ -942,9 +941,9 @@ OnDemandDataWarehouse::reduceMPI( const VarLabel       * label,
 
   std::vector<char> recvbuf( packsize );
 
-  if( mixedDebug.active() ) {
+  if( mpidbg.active() ) {
     coutLock.lock();
-    mixedDebug << "calling MPI_Allreduce\n";
+    mpidbg << "calling MPI_Allreduce\n";
     coutLock.unlock();
   }
 
@@ -964,9 +963,9 @@ OnDemandDataWarehouse::reduceMPI( const VarLabel       * label,
            << (level ? level->getID() : -1) << std::endl;
   }
 
-  if( mixedDebug.active() ) {
+  if( mpidbg.active() ) {
     coutLock.lock();
-    mixedDebug << "done with MPI_Allreduce (" << label->getName() << ")\n";
+    mpidbg << "done with MPI_Allreduce (" << label->getName() << ")\n";
     coutLock.unlock();
   }
 

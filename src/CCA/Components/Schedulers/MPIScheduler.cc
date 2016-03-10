@@ -963,7 +963,7 @@ MPIScheduler::execute( int tgnum     /* = 0 */,
     emitTime("Other execution time", totalexec - mpi_info_[TotalSend] - mpi_info_[TotalRecv] - mpi_info_[TotalTask] - mpi_info_[TotalReduce]);
   }
 
-  if( !parentScheduler_ ) { // If this scheduler is the root scheduler...    
+  if( !parentScheduler_ ) { // If this scheduler is the root scheduler...
     computeNetRunTimeStats(d_sharedState->d_runTimeStats);
   }
 
@@ -1185,7 +1185,7 @@ void MPIScheduler::computeNetRunTimeStats(InfoMapper< SimulationState::RunTimeSt
 {
     runTimeStats[SimulationState::TaskExecTime]       += mpi_info_[TotalTask] - runTimeStats[SimulationState::OutputFileIOTime]  // don't count output time or bytes
                                                                               - runTimeStats[SimulationState::OutputFileIORate];
-     
+
     runTimeStats[SimulationState::TaskLocalCommTime]  += mpi_info_[TotalRecv] + mpi_info_[TotalSend];
     runTimeStats[SimulationState::TaskWaitCommTime]   += mpi_info_[TotalWaitMPI];
     runTimeStats[SimulationState::TaskGlobalCommTime] += mpi_info_[TotalReduce];
