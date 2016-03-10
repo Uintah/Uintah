@@ -224,7 +224,7 @@ CommRecMPI::testsome( const ProcessorGroup * pg,
   statii.resize(  ids_.size() );
   indices.resize( ids_.size() );
 
-  DOUT(true, pg->myrank() << " Calling testsome with " << ids_.size() << " waiters");
+  DOUT(g_commrec_dbg, pg->myrank() << " Calling testsome with " << ids_.size() << " waiters");
 
   int     donecount;
   g_test_timer.reset();
