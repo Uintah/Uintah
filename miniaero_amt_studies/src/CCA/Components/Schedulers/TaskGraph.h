@@ -46,7 +46,7 @@ namespace Uintah {
 
 CLASS
    TaskGraph
-   
+
    During the TaskGraph compilation, the task graph does its work in
    the createDetailedTasks function.  The first portion is to sort the tasks,
    by adding edges between computing tasks and requiring tasks,
@@ -84,7 +84,7 @@ GENERAL INFORMATION
    University of Utah
 
    Center for the Simulation of Accidental Fires and Explosions (C-SAFE)
-  
+
 
 KEYWORDS
    TaskGraph, CompTable
@@ -103,7 +103,7 @@ DESCRIPTION
 struct GraphSortInfo {  // this is so we can keep tasks independent of taskgraph
 
     GraphSortInfo()
-      : m_visited{ false}
+      : m_visited{ false }
       , m_sorted{ false }
     {}
 
