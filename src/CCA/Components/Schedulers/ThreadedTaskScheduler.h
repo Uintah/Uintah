@@ -213,9 +213,6 @@ private:
   TaskPool   m_task_pool{};
   CommPool   m_comm_requests{REQUEST_SIZE};
 
-  // Timers for MPI stats
-  Timers::Simple  m_last_exec_timer{};
-
   bool     m_abort{ false };
   int      m_current_iteration{ 0 };
   int      m_num_tasks{ 0 };
@@ -266,8 +263,8 @@ class TaskRunner {
 
     ThreadedTaskScheduler*  m_scheduler{ nullptr };
 
-    Timers::Simple            m_task_wait_time{};
-    Timers::Simple            m_task_exec_time{};
+    Timers::Simple          m_task_wait_time{};
+    Timers::Simple          m_task_exec_time{};
 
 
     TaskRunner( const TaskRunner & )            = delete;

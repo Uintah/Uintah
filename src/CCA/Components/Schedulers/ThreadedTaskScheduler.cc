@@ -49,8 +49,6 @@ namespace {
 
 Dout g_mpi_stats( "MPIStats"  , false );
 
-Timers::Simple  s_total_exec_time {};
-std::mutex      s_io_mutex;
 std::mutex      s_lb_mutex;
 
 thread_local CommPool::handle t_emplace{};
