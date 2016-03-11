@@ -24,8 +24,15 @@
 
 #include <CCA/Components/Schedulers/RuntimeStats.hpp>
 #include <Core/Util/DOUT.hpp>
+#include <Core/Util/Timers/Timers.hpp>
 
 #include <iomanip>
+
+#include <streambuf>
+#include <iostream>
+#include <sstream>
+
+#include <algorithm>
 
 namespace Uintah {
 
@@ -34,15 +41,16 @@ namespace {
 Dout g_exec_times{"ExecTimes", false};
 Dout g_wait_times{"WaitTimes", false};
 
-size_t g_num_global_task_ids{0};
-std::unique_ptr< std::string[] >          g_task_names{nullptr};
+size_t g_num_tasks{0};
+
+std::vector< std::string > g_task_names;
 std::unique_ptr< std::atomic<int64_t>[] > g_task_exec_times{nullptr};
 std::unique_ptr< std::atomic<int64_t>[] > g_task_wait_times{nullptr};
 
-// TODO implement a globally consisent task id
 size_t impl_get_global_id( DetailedTask const* t)
 {
-  return ~static_cast<size_t>(0);
+  auto const itr = std::lower_bound( g_task_names.begin(), g_task_names.end(), t->getTask()->getName() );
+  return itr - g_task_names.begin();
 }
 
 } // unnamed namespace
@@ -51,6 +59,8 @@ std::map< std::string, std::function<int64_t()> > RuntimeStats::s_allocators{};
 std::map< std::string, std::function<int64_t()> > RuntimeStats::s_timers{};
 std::vector< std::function<void()> >              RuntimeStats::s_reset_timers{};
 
+std::mutex RuntimeStats::s_register_mutex{};
+
 
 std::atomic<int64_t> * RuntimeStats::get_atomic_exec_ptr( DetailedTask const* t)
 {
@@ -58,7 +68,7 @@ std::atomic<int64_t> * RuntimeStats::get_atomic_exec_ptr( DetailedTask const* t)
 
   const size_t id = impl_get_global_id(t);
 
-  return id < g_num_global_task_ids ?
+  return id < g_num_tasks ?
            & g_task_exec_times[ id ] : nullptr ;
 }
 
@@ -68,7 +78,7 @@ std::atomic<int64_t> * RuntimeStats::get_atomic_wait_ptr( DetailedTask const* t)
 
   const size_t id = impl_get_global_id(t);
 
-  return id < g_num_global_task_ids ?
+  return id < g_num_tasks ?
            & g_task_wait_times[ id ] : nullptr ;
 }
 
@@ -79,16 +89,100 @@ void RuntimeStats::reset_timers()
 
   constexpr int64_t zero = 0;
 
-  for (size_t i=0; i<g_num_global_task_ids; ++i) {
+  for (size_t i=0; i<g_num_tasks; ++i) {
     g_task_exec_times[i].store( zero, std::memory_order_relaxed );
     g_task_wait_times[i].store( zero, std::memory_order_relaxed );
   }
 }
 
-void RuntimeStats::initialize_timestep( std::vector<TaskGraph *> const &  /*graph*/ )
+namespace {
+
+struct MemBuf: public std::streambuf {
+    MemBuf(char const* base, size_t size) {
+        char* p(const_cast<char*>(base));
+        this->setg(p, p, p + size);
+    }
+};
+
+void sort_and_unique_task_impl( char const * in, char * inout, size_t len )
+{
+  MemBuf a_buf{in, len};
+  MemBuf b_buf{inout, len};
+
+  std::istream a_in(&a_buf);
+  std::istream b_in(&b_buf);
+
+  std::string a, b;
+
+  bool a_ok = static_cast<bool>(std::getline(a_in, a));
+  bool b_ok = static_cast<bool>(std::getline(b_in, b));
+
+  std::ostringstream out;
+
+  bool output_endl = false;
+
+  while (a_ok && b_ok) {
+    if ( output_endl ) {
+      out << std::endl;
+    }
+    else {
+      output_endl = true;
+    }
+    if (a < b) {                     // a < b
+      out << a;
+      a_ok = static_cast<bool>(std::getline(a_in, a));
+    } else if (b < a) {              // b < a
+      out << b;
+      b_ok = static_cast<bool>(std::getline(b_in, b));
+    }
+    else {                           // a == b
+      out << a;
+      a_ok = static_cast<bool>(std::getline(a_in, a));
+      b_ok = static_cast<bool>(std::getline(b_in, b));
+    }
+  }
+
+  while (a_ok) {
+    if ( output_endl ) {
+      out << std::endl;
+    }
+    else {
+      output_endl = true;
+    }
+    out << a;
+    a_ok = static_cast<bool>(std::getline(a_in, a));
+  }
+
+  while (b_ok) {
+    if ( output_endl ) {
+      out << std::endl;
+    }
+    else {
+      output_endl = true;
+    }
+    out << b;
+    b_ok = static_cast<bool>(std::getline(b_in, b));
+  }
+
+  std::strncpy( inout, out.str().c_str(), len );
+}
+
+extern "C" void sort_and_unique_task( void * in, void * inout, int * len, MPI_Datatype * type )
+{
+  sort_and_unique_task_impl( reinterpret_cast<char*>(in), reinterpret_cast<char*>(inout), *len);
+}
+
+MPI_Op sort_and_unique_task_op;
+
+
+} // namespace
+
+void RuntimeStats::initialize_timestep( MPI_Comm comm, std::vector<TaskGraph *> const &  graphs )
 {
   static bool first_init = true;
   if (first_init) {
+
+    MPI_Op_create( sort_and_unique_task, true, &sort_and_unique_task_op );
 
     register_timer_tag( TaskExecTag{}, "Task Exec", Max );
     register_timer_tag( TaskWaitTag{}, "Task Wait", Min );
@@ -107,12 +201,61 @@ void RuntimeStats::initialize_timestep( std::vector<TaskGraph *> const &  /*grap
 
     first_init = false;
   }
-  // TODO
-  // init
-  // g_num_global_task_ids
-  // g_task_names
-  // g_task_exec_times
-  // g_task_wait_times
+
+  if ( g_exec_times || g_wait_times ) {
+    std::set<std::string> local_task_names;
+    for (auto const tg : graphs) {
+      const int tg_size = tg->getNumTasks();
+      for (int i=0; i < tg_size; ++i) {
+        Task * t = tg->getTask(i);
+        local_task_names.insert( t->getName() );
+      }
+    }
+
+    std::ostringstream tasks;
+    {
+      bool output_endl = false;
+      for (auto const & s : local_task_names) {
+        if (output_endl) {
+          tasks << std::endl;
+        }
+        else {
+          output_endl = true;
+        }
+        tasks << s;
+      }
+    }
+
+
+    const int buffer_size = 2 << 20;  // 2 MB buffer
+
+    std::vector<char> local_tasks(buffer_size, '\0');
+    std::vector<char> global_tasks(buffer_size, '\0');
+
+    std::strncpy(local_tasks.data(), tasks.str().c_str(), buffer_size);
+
+    MPI_Allreduce( local_tasks.data(), global_tasks.data(), buffer_size, MPI_BYTE, sort_and_unique_task_op, comm);
+
+    MemBuf tasks_buf{global_tasks.data(), buffer_size};
+    std::istream tasks_in(&tasks_buf);
+    std::string tmp;
+
+    while (std::getline( tasks_in, tmp )) {
+      g_task_names.push_back( std::move(tmp) );
+    }
+
+    g_num_tasks = g_task_names.size();
+
+    if (g_exec_times) {
+      g_task_exec_times.reset();
+      g_task_exec_times = std::unique_ptr< std::atomic<int64_t>[] >( new std::atomic<int64_t>[g_num_tasks]{} );
+    }
+
+    if (g_wait_times) {
+      g_task_wait_times.reset();
+      g_task_wait_times = std::unique_ptr< std::atomic<int64_t>[] >( new std::atomic<int64_t>[g_num_tasks]{} );
+    }
+  }
 }
 
 
@@ -185,8 +328,7 @@ inline std::string nanoseconds_to_string( double ns )
 
 enum { RANK=0, SUM, MIN, MAX };
 
-template <typename T>
-void rank_sum_min_max_impl( T const * in, T * inout, int len )
+void rank_sum_min_max_impl( int64_t const * in, int64_t * inout, int len )
 {
   const int size = len/4;
   for (int i=0; i<size; ++i) {
@@ -230,11 +372,11 @@ void RuntimeStats::report( MPI_Comm comm, InfoStats & stats )
   int num_timers = static_cast<int>(s_timers.size());
 
   if( g_exec_times ) {
-    num_timers += (int)g_num_global_task_ids;
+    num_timers += (int)g_num_tasks;
   }
 
   if( g_wait_times ) {
-    num_timers += (int)g_num_global_task_ids;
+    num_timers += (int)g_num_tasks;
   }
 
   const int num_allocators = static_cast<int>(s_allocators.size());
@@ -270,7 +412,7 @@ void RuntimeStats::report( MPI_Comm comm, InfoStats & stats )
   }
 
   if (g_exec_times) {
-    for (size_t i=0; i<g_num_global_task_ids; ++i) {
+    for (size_t i=0; i<g_num_tasks; ++i) {
       if (prank==0) {
         names.push_back( g_task_names[i] );
       }
@@ -284,7 +426,7 @@ void RuntimeStats::report( MPI_Comm comm, InfoStats & stats )
   }
 
   if (g_wait_times) {
-    for (size_t i=0; i<g_num_global_task_ids; ++i) {
+    for (size_t i=0; i<g_num_tasks; ++i) {
       if (prank==0) {
         names.push_back( g_task_names[i] );
       }
@@ -368,19 +510,38 @@ void RuntimeStats::report( MPI_Comm comm, InfoStats & stats )
 
       const double load = max != 0 ? (100.0 * (1.0 - (avg / max))) : 0.0;
 
-      printf("%*s:%*s%*s%*s%*s%*d          %6.1f%6.1f%6.1f%6.1f%8.1f\n"
-          , w_desc-1, names[i].c_str()
-          , w_num, ( i < num_timers ? nanoseconds_to_string( total ) : bytes_to_string( total )).c_str()
-          , w_num, ( i < num_timers ? nanoseconds_to_string( avg ) : bytes_to_string( avg )).c_str()
-          , w_num, ( i < num_timers ? nanoseconds_to_string( min ) : bytes_to_string( min )).c_str()
-          , w_num, ( i < num_timers ? nanoseconds_to_string( max ) : bytes_to_string( max )).c_str()
-          , w_num, max_rank
-          , q1
-          , q2
-          , q3
-          , q4
-          , load
-          );
+      if (names[i].size() < w_desc) {
+        printf("%*s:%*s%*s%*s%*s%*d          %6.1f%6.1f%6.1f%6.1f%8.1f\n"
+            , w_desc-1, names[i].c_str()
+            , w_num, ( i < num_timers ? nanoseconds_to_string( total ) : bytes_to_string( total )).c_str()
+            , w_num, ( i < num_timers ? nanoseconds_to_string( avg ) : bytes_to_string( avg )).c_str()
+            , w_num, ( i < num_timers ? nanoseconds_to_string( min ) : bytes_to_string( min )).c_str()
+            , w_num, ( i < num_timers ? nanoseconds_to_string( max ) : bytes_to_string( max )).c_str()
+            , w_num, max_rank
+            , q1
+            , q2
+            , q3
+            , q4
+            , load
+            );
+      }
+      else {
+        printf("%s\n", names[i].c_str());
+        printf("%*s:%*s%*s%*s%*s%*d          %6.1f%6.1f%6.1f%6.1f%8.1f\n"
+            , w_desc-1, ""
+            , w_num, ( i < num_timers ? nanoseconds_to_string( total ) : bytes_to_string( total )).c_str()
+            , w_num, ( i < num_timers ? nanoseconds_to_string( avg ) : bytes_to_string( avg )).c_str()
+            , w_num, ( i < num_timers ? nanoseconds_to_string( min ) : bytes_to_string( min )).c_str()
+            , w_num, ( i < num_timers ? nanoseconds_to_string( max ) : bytes_to_string( max )).c_str()
+            , w_num, max_rank
+            , q1
+            , q2
+            , q3
+            , q4
+            , load
+            );
+
+      }
 
     }
     printf("\n");
