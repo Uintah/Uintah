@@ -116,36 +116,6 @@ public:
 
   virtual void printMPIStats();
 
-  // timing statistics to test the MPI functionality
-  enum TimingStat
-  {
-    TotalReduce,
-    TotalSend,
-    TotalRecv,
-    TotalTask,
-    TotalReduceMPI,
-    TotalSendMPI,
-    TotalRecvMPI,
-    TotalTestMPI,
-    TotalWaitMPI,
-    MAX_TIMING_STATS
-  };
-
-  struct TotalReduceTag{};
-  struct TotalReduceMPITag{};
-
-  struct TotalSendTag{};
-  struct TotalSendMPITag{};
-
-  struct TotalRecvTag{};
-  struct TotalRecvMPITag{};
-
-  struct TotalTestMPITag{};
-  struct TotalTaskTag{};
-
-  struct TotalWaitTag{};
-  struct TotalWaitMPITag{};
-
   friend class TaskRunner;
 
 
@@ -209,11 +179,7 @@ private:
 
   void run_reduction_task( DetailedTask* task );
 
-  void emit_net_MPI_stats();
-
   void emit_time( const char * label, double dt );
-
-  void compute_net_runtime_stats( InfoMapper< SimulationState::RunTimeStat, double > & runTimeStats );
 
   void copy_restart_flag( int task_graph_num );
 
@@ -258,8 +224,6 @@ private:
 
   const Output              * m_output_port;
 
-  ReductionInfoMapper< TimingStat, double >     m_mpi_info;
-
 };
 
 
@@ -271,8 +235,6 @@ class TaskRunner {
 
     TaskRunner( ThreadedTaskScheduler* scheduler )
       : m_scheduler{ scheduler }
-      , m_task_wait_time{}
-      , m_task_exec_time{}
     {}
 
     ~TaskRunner() {};
@@ -283,10 +245,6 @@ class TaskRunner {
   private:
 
     ThreadedTaskScheduler*  m_scheduler{ nullptr };
-
-    Timers::Simple          m_task_wait_time{};
-    Timers::Simple          m_task_exec_time{};
-
 
     TaskRunner( const TaskRunner & )            = delete;
     TaskRunner& operator=( const TaskRunner & ) = delete;
