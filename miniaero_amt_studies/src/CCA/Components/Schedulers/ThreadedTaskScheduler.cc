@@ -23,6 +23,7 @@
  */
 
 #include <CCA/Components/Schedulers/ThreadedTaskScheduler.h>
+
 #include <CCA/Components/Schedulers/RuntimeStats.hpp>
 #include <CCA/Components/Schedulers/TaskGraph.h>
 #include <CCA/Components/Schedulers/OnDemandDataWarehouse.h>
@@ -380,7 +381,7 @@ void ThreadedTaskScheduler::execute(  int tgnum /*=0*/ , int iteration /*=0*/ )
     else if (m_detailed_tasks->numExternalReadyTasks() > 0) {
       DetailedTask* task = m_detailed_tasks->getNextExternalReadyTask();
       ASSERTEQ(task->getExternalDepCount(), 0);
-      insert_handle = m_task_pool.insert(insert_handle, task);
+      insert_handle = m_task_pool.insert(insert_handle, TaskHandle(task));
     }
     else { // nothing to do process MPI
       process_MPI_requests();
@@ -716,12 +717,13 @@ bool ThreadedTaskScheduler::process_MPI_requests()
 
 //______________________________________________________________________
 //
-void ThreadedTaskScheduler::run_task( DetailedTask * task, int iteration )
+void ThreadedTaskScheduler::run_task( TaskHandle task_handle, int iteration )
 {
   RuntimeStats::ExecTimer total_exec_timer;
 
+  DetailedTask* dtask = task_handle.m_detailed_task;
   if (trackingVarsPrintLocation_ & SchedulerCommon::PRINT_BEFORE_EXEC) {
-    printTrackedVars(task, SchedulerCommon::PRINT_BEFORE_EXEC);
+    printTrackedVars(dtask, SchedulerCommon::PRINT_BEFORE_EXEC);
   }
 
   std::vector<DataWarehouseP> plain_old_dws(dws.size());
@@ -731,33 +733,33 @@ void ThreadedTaskScheduler::run_task( DetailedTask * task, int iteration )
 
   double total_task_time;
   {
-    RuntimeStats::TaskExecTimer exec_timer(task, total_exec_timer);
-    task->doit(d_myworld, dws, plain_old_dws);
+    RuntimeStats::TaskExecTimer exec_timer(dtask, total_exec_timer);
+    task_handle.doit(d_myworld, dws, plain_old_dws);
     total_task_time = exec_timer.seconds();
   }
 
 
   if (trackingVarsPrintLocation_ & SchedulerCommon::PRINT_AFTER_EXEC) {
-    printTrackedVars(task, SchedulerCommon::PRINT_AFTER_EXEC);
+    printTrackedVars(dtask, SchedulerCommon::PRINT_AFTER_EXEC);
   }
 
   std::lock_guard<std::mutex> lb_guard(s_lb_mutex);
   {
     // if I do not have a sub scheduler
-    if (!task->getTask()->getHasSubScheduler()) {
+    if (!dtask->getTask()->getHasSubScheduler()) {
       //add my task time to the total time
-      if (!d_sharedState->isCopyDataTimestep() && task->getTask()->getType() != Task::Output) {
+      if (!d_sharedState->isCopyDataTimestep() && dtask->getTask()->getType() != Task::Output) {
         //add contribution for patchlist
-        SchedulerCommon::getLoadBalancer()->addContribution(task, total_task_time);
+        SchedulerCommon::getLoadBalancer()->addContribution(dtask, total_task_time);
       }
     }
   }
 
-  post_MPI_sends(task, iteration);
+  post_MPI_sends(dtask, iteration);
 
-  task->done(dws);
+  dtask->done(dws);
 
-  SchedulerCommon::emitNode(task, 0, total_task_time, 0);
+  SchedulerCommon::emitNode(dtask, 0, total_task_time, 0);
 
 }  // end runTask()
 
@@ -885,11 +887,11 @@ void ThreadedTaskScheduler::select_tasks()
     TaskPool::iterator iter = m_task_pool.find_any(find_handle);
     if (iter) {
       find_handle = iter;
-      DetailedTask* ready_task = *iter;
-      run_task(ready_task, m_current_iteration);
+      TaskHandle handle = *iter;
+      run_task(handle, m_current_iteration);
       m_task_pool.erase(iter);
       m_num_tasks_done.fetch_add(1, std::memory_order_relaxed);
-      m_phase_tasks_done[ready_task->getTask()->d_phase].fetch_add(1, std::memory_order_relaxed);
+      m_phase_tasks_done[handle.m_detailed_task->getTask()->d_phase].fetch_add(1, std::memory_order_relaxed);
     }
   }
 }
