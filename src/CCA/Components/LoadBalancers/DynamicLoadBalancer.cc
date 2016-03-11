@@ -1044,23 +1044,26 @@ DynamicLoadBalancer::possiblyDynamicallyReallocate( const GridP & grid, int stat
       //__________________________________
       //  Debugging output
       if (lb.active()) {
-        int myrank = d_myworld->myrank();
-        LevelP curLevel = grid->getLevel(0);
-        Level::const_patchIterator iter = curLevel->patchesBegin();
-        DOUT(true,  "  Possibly changing the Load Balance");
-        for (unsigned int i = 0; i < d_processorAssignment.size(); i++) {
-          if (d_oldAssignment[i] != d_processorAssignment[i]) {
-            DOUT(true, "Rank: " << myrank << " patch: " << i << " ID: " << (*iter)->getID()
-                << " migration from proc: " << d_oldAssignment[i] << " to proc: " << d_processorAssignment[i]
-                << " patch size: " << (*iter)->getNumExtraCells() << " cells");
-            iter++;
-            if (iter == curLevel->patchesEnd() && i + 1 < d_processorAssignment.size()) {
-              curLevel = curLevel->getFinerLevel();
-              iter = curLevel->patchesBegin();
+        if (d_myworld->myrank() == 0) {
+          LevelP curLevel = grid->getLevel(0);
+          Level::const_patchIterator iter = curLevel->patchesBegin();
+          DOUT(true, "  Possibly changing the Load Balance");
+          for (unsigned int i = 0; i < d_processorAssignment.size(); i++) {
+            if (d_oldAssignment[i] != d_processorAssignment[i]) {
+              DOUT(true, "Patch: " << i << " ID: " << (*iter)->getID()
+                   << ", migration from proc: " << d_oldAssignment[i]
+                   << " to proc: " << d_processorAssignment[i]
+                   << " patch size: " << (*iter)->getNumExtraCells() << " cells");
+              iter++;
+              if (iter == curLevel->patchesEnd() && i + 1 < d_processorAssignment.size()) {
+                curLevel = curLevel->getFinerLevel();
+                iter = curLevel->patchesBegin();
+              }
             }
           }
-        }
-      }  // lb.active
+        } // rank 0 reporting
+      } // lb.active
+
     }
   }  // != restart
 
