@@ -89,13 +89,12 @@ void RuntimeStats::reset_timers()
 
   constexpr int64_t zero = 0;
 
-  for (size_t i=0; i<g_num_tasks; ++i) {
-    if (g_exec_times) {
-      g_task_exec_times[i].store( zero, std::memory_order_relaxed );
-    }
-    if (g_wait_times) {
-      g_task_wait_times[i].store( zero, std::memory_order_relaxed );
-    }
+  if (g_exec_times) {
+    g_task_exec_times.reset();
+  }
+
+  if (g_wait_times) {
+    g_task_exec_times.reset();
   }
 }
 
@@ -183,10 +182,12 @@ MPI_Op sort_and_unique_task_op;
 
 void RuntimeStats::initialize_timestep( MPI_Comm comm, std::vector<TaskGraph *> const &  graphs )
 {
+  struct InitTag{};
+  TripTimer<InitTag> init_timer;
+  register_timer_tag(InitTag{}, "Init Timestep", Max);
+
   static bool first_init = true;
   if (first_init) {
-
-    MPI_Op_create( sort_and_unique_task, true, &sort_and_unique_task_op );
 
     register_timer_tag( TaskExecTag{}, "Task Exec", Max );
     register_timer_tag( TaskWaitTag{}, "Task Wait", Min );
@@ -207,47 +208,21 @@ void RuntimeStats::initialize_timestep( MPI_Comm comm, std::vector<TaskGraph *> 
   }
 
   if ( g_exec_times || g_wait_times ) {
-    std::set<std::string> local_task_names;
+    std::set<std::string> task_names;
     for (auto const tg : graphs) {
       const int tg_size = tg->getNumTasks();
       for (int i=0; i < tg_size; ++i) {
         Task * t = tg->getTask(i);
-        local_task_names.insert( t->getName() );
+        task_names.insert( t->getName() );
       }
     }
 
-    std::ostringstream tasks;
-    {
-      bool output_endl = false;
-      for (auto const & s : local_task_names) {
-        if (output_endl) {
-          tasks << std::endl;
-        }
-        else {
-          output_endl = true;
-        }
-        tasks << s;
-      }
+    g_task_names.clear();
+    g_task_names.resize( task_names.size() );
+
+    for (auto const & n : task_names) {
+      g_task_names.push_back( n );
     }
-
-
-    const int buffer_size = 2 << 20;  // 2 MB buffer
-
-    std::vector<char> local_tasks(buffer_size, '\0');
-    std::vector<char> global_tasks(buffer_size, '\0');
-
-    std::strncpy(local_tasks.data(), tasks.str().c_str(), buffer_size);
-
-    MPI_Allreduce( local_tasks.data(), global_tasks.data(), buffer_size, MPI_BYTE, sort_and_unique_task_op, comm);
-
-    MemBuf tasks_buf{global_tasks.data(), buffer_size};
-    std::istream tasks_in(&tasks_buf);
-    std::string tmp;
-
-    while (std::getline( tasks_in, tmp )) {
-      g_task_names.push_back( std::move(tmp) );
-    }
-
     g_num_tasks = g_task_names.size();
 
     if (g_exec_times) {
@@ -417,7 +392,7 @@ void RuntimeStats::report( MPI_Comm comm, InfoStats & stats )
   }
 
   // Tag Allocators
-  size_t alloc_offset = !s_allocators.empty() ? names.size() : ~0ull;
+  int alloc_offset = !s_allocators.empty() ? static_cast<int>(names.size()) : ~0;
   for ( auto const& p : s_allocators ) {
     if (prank==0) {
       names.push_back( p.first );
@@ -431,7 +406,7 @@ void RuntimeStats::report( MPI_Comm comm, InfoStats & stats )
   }
 
   // Exec Times
-  size_t exec_offset = ~0ull;
+  int exec_offset = ~0;
   if (g_exec_times) {
     exec_offset = names.size();
     for (size_t i=0; i<g_num_tasks; ++i) {
@@ -448,7 +423,7 @@ void RuntimeStats::report( MPI_Comm comm, InfoStats & stats )
   }
 
   // Wait Times
-  size_t wait_offset = ~0ull;
+  int wait_offset = ~0;
   if (g_wait_times) {
     wait_offset = names.size();
     for (size_t i=0; i<g_num_tasks; ++i) {
