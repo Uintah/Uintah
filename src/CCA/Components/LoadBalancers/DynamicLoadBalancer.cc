@@ -44,6 +44,7 @@
 #include <Core/Thread/Time.h>
 #include <Core/Util/FancyAssert.h>
 #include <Core/Util/DebugStream.h>
+#include <Core/Util/DOUT.hpp>
 #include <Core/Util/Timers/Timers.hpp>
 
 #include <iostream> // debug only
@@ -73,7 +74,7 @@ DynamicLoadBalancer::DynamicLoadBalancer( const ProcessorGroup * myworld )
   d_lastLbTimestep = 0;
   d_checkAfterRestart = false;
 
-  d_dynamicAlgorithm = patch_factor_lb;  
+  d_dynamicAlgorithm = patch_factor_lb;
   d_collectParticles = false;
 
   d_do_AMR = false;
@@ -111,7 +112,7 @@ DynamicLoadBalancer::collectParticlesForRegrid( const Grid                     *
     particles[i].resize(newGridRegions[i].size());
     num_patches += newGridRegions[i].size();
   }
-  
+
   if( !d_collectParticles ) {
     return;
   }
@@ -288,7 +289,7 @@ DynamicLoadBalancer::collectParticles( const Grid                  * grid,
   // along with the patch number in particleList.
   for(int l=0;l<grid->numLevels();l++) {
     const LevelP& level = grid->getLevel(l);
-    for (Level::const_patchIterator iter = level->patchesBegin(); 
+    for (Level::const_patchIterator iter = level->patchesBegin();
         iter != level->patchesEnd(); iter++) {
       Patch *patch = *iter;
       int id = patch->getGridIndex();
@@ -332,7 +333,7 @@ DynamicLoadBalancer::collectParticles( const Grid                  * grid,
 
     MPI_Allgatherv(&particleList[0], particleList.size()*sizeof(PatchInfo),  MPI_BYTE,
                    &all_particles[0], &recvcounts[0], &displs[0], MPI_BYTE, d_myworld->getComm());
-        
+
     if (dbg.active() && d_myworld->myrank() == 0) {
       for (unsigned i = 0; i < all_particles.size(); i++) {
         PatchInfo& pi = all_particles[i];
@@ -361,7 +362,7 @@ DynamicLoadBalancer::collectParticles( const Grid                  * grid,
 }
 
 //______________________________________________________________________
-//  
+//
 bool
 DynamicLoadBalancer::assignPatchesFactor( const GridP & grid, bool force )
 {
@@ -495,7 +496,7 @@ DynamicLoadBalancer::assignPatchesFactor( const GridP & grid, bool force )
           //subtract currentProc's cost from remaining cost
           remainingCost -= (currentProcCosts[currentProc] + previousProcCosts[currentProc]);
 
-          // move to next proc 
+          // move to next proc
           currentProc++;
 
           //if currentProc to large then load balance is invalid so break out
@@ -721,10 +722,10 @@ DynamicLoadBalancer::thresholdExceeded( const vector< vector<double> >& patch_co
   // and for the temp assignment, then calculate the standard deviation
   // for both.  If (curStdDev / tmpStdDev) > threshold, return true,
   // and have possiblyDynamicallyRelocate change the load balancing
-  
+
   int num_procs = d_myworld->size();
   int num_levels = patch_costs.size();
-  
+
   vector<vector<double> > currentProcCosts(num_levels);
   vector<vector<double> > tempProcCosts(num_levels);
 
@@ -735,17 +736,17 @@ DynamicLoadBalancer::thresholdExceeded( const vector< vector<double> >& patch_co
 
     currentProcCosts[l].assign(num_procs,0);
     tempProcCosts[l].assign(num_procs,0);
-    
+
     for(int p=0;p<(int)patch_costs[l].size();p++,i++)
     {
       currentProcCosts[l][d_processorAssignment[i]] += patch_costs[l][p];
       tempProcCosts[l][d_tempAssignment[i]] += patch_costs[l][p];
     }
   }
-  
+
   double total_max_current=0, total_avg_current=0;
   double total_max_temp=0, total_avg_temp=0;
-  
+
   if(d_levelIndependent) {
     double avg_current = 0;
     double max_current = 0;
@@ -757,9 +758,9 @@ DynamicLoadBalancer::thresholdExceeded( const vector< vector<double> >& patch_co
       avg_temp = 0;
       max_temp = 0;
       for (int i = 0; i < d_myworld->size(); i++) {
-        if (currentProcCosts[l][i] > max_current) 
+        if (currentProcCosts[l][i] > max_current)
           max_current = currentProcCosts[l][i];
-        if (tempProcCosts[l][i] > max_temp) 
+        if (tempProcCosts[l][i] > max_temp)
           max_temp = tempProcCosts[l][i];
         avg_current += currentProcCosts[l][i];
         avg_temp += tempProcCosts[l][i];
@@ -793,7 +794,7 @@ DynamicLoadBalancer::thresholdExceeded( const vector< vector<double> >& patch_co
     total_avg_current/=d_myworld->size();
     total_avg_temp/=d_myworld->size();
   }
-    
+
   if (d_myworld->myrank() == 0) {
     stats << "Total:"  << " maxCur:" << total_max_current << " maxTemp:"  << total_max_temp << " avgCur:" << total_avg_current << " avgTemp:" << total_avg_temp <<endl;
   }
@@ -823,7 +824,7 @@ DynamicLoadBalancer::assignPatchesRandom( const GridP &, bool force )
   if (d_myworld->myrank() == 0) {
     seed = (int)Time::currentSeconds();
   }
- 
+
   MPI_Bcast(&seed, 1, MPI_INT,0,d_myworld->getComm());
 
   srand( seed );
@@ -873,9 +874,9 @@ DynamicLoadBalancer::assignPatchesCyclic(const GridP&, bool force)
 
 //______________________________________________________________________
 //
-bool 
+bool
 DynamicLoadBalancer::needRecompile(       double /*time*/,
-                                          double /*delt*/, 
+                                          double /*delt*/,
                                     const GridP & grid )
 {
   double time = d_sharedState->getElapsedTime();
@@ -900,11 +901,11 @@ DynamicLoadBalancer::needRecompile(       double /*time*/,
 #endif
 
   if (dbg.active() && d_myworld->myrank() == 0){
-    dbg << d_myworld->myrank() << " DLB::NeedRecompile: do_check: " << do_check << ", timestep: " << timestep 
-        << ", LB:timestepInterval: " << d_lbTimestepInterval << ", time[s]: " << time << ", LB:Interval: " << d_lbInterval 
+    dbg << d_myworld->myrank() << " DLB::NeedRecompile: do_check: " << do_check << ", timestep: " << timestep
+        << ", LB:timestepInterval: " << d_lbTimestepInterval << ", time[s]: " << time << ", LB:Interval: " << d_lbInterval
         << ", Last LB timestep: " << d_lastLbTimestep << ", Last LB time[s]: " << d_lastLbTime << endl;
   }
-  
+
   // if it determines we need to re-load-balance, recompile
   if (do_check && possiblyDynamicallyReallocate(grid, LoadBalancer::check)) {
     doing << d_myworld->myrank() << " DLB - scheduling recompile " <<endl;
@@ -915,7 +916,7 @@ DynamicLoadBalancer::needRecompile(       double /*time*/,
     d_oldAssignmentBasePatch = d_assignmentBasePatch;
     return false;
   }
-} 
+}
 //______________________________________________________________________
 //
 // If it is not a regrid the patch information is stored in grid, if it is during a regrid the patch information is stored in patches.
@@ -923,7 +924,7 @@ void
 DynamicLoadBalancer::getCosts( const Grid * grid, vector< vector<double> > & costs )
 {
   costs.clear();
-    
+
   vector<vector<int> > num_particles;
 
   DataWarehouse* olddw = d_scheduler->get_dw(0);
@@ -953,7 +954,7 @@ DynamicLoadBalancer::getCosts( const Grid * grid, vector< vector<double> > & cos
   else { //otherwise just use a simple cost model (this happens on the first timestep when profiling data doesn't exist)
     CostModeler(d_patchCost,d_cellCost,d_extraCellCost,d_particleCost).getWeights(grid,num_particles,costs);
   }
-  
+
   //__________________________________
   //  Debugging output
   if (dbg.active() && d_myworld->myrank() == 0) {
@@ -981,7 +982,7 @@ DynamicLoadBalancer::possiblyDynamicallyReallocate( const GridP & grid, int stat
   bool changed = false;
   bool force = false;
 
-  // don't do on a restart unless procs changed between runs.  For restarts, this is 
+  // don't do on a restart unless procs changed between runs.  For restarts, this is
   // called mainly to update the perProc Patch sets (at the bottom)
   if (state != LoadBalancer::restart) {
     if (state != LoadBalancer::check) {
@@ -993,12 +994,12 @@ DynamicLoadBalancer::possiblyDynamicallyReallocate( const GridP & grid, int stat
         d_lastLbTime = d_sharedState->getElapsedTime();
       }
     }
-    
+
     d_oldAssignment = d_processorAssignment;
     d_oldAssignmentBasePatch = d_assignmentBasePatch;
-    
+
     bool dynamicAllocate = false;
-    
+
     //__________________________________
     //  temp assignment can be set if the regridder has already called the load balancer
     if (d_tempAssignment.empty()) {
@@ -1043,39 +1044,36 @@ DynamicLoadBalancer::possiblyDynamicallyReallocate( const GridP & grid, int stat
       //__________________________________
       //  Debugging output
       if (lb.active()) {
-        // int num_procs = (int)d_myworld->size();
         int myrank = d_myworld->myrank();
-        if (myrank == 0) {
-          LevelP curLevel = grid->getLevel(0);
-          Level::const_patchIterator iter = curLevel->patchesBegin();
-          lb << "  Changing the Load Balance\n";
-
-          for (unsigned int i = 0; i < d_processorAssignment.size(); i++) {
-            lb << myrank << " patch " << i << " (real " << (*iter)->getID() << ") -> proc " << d_processorAssignment[i] << " (old "
-               << d_oldAssignment[i] << ") patch size: " << (*iter)->getNumExtraCells() << " low:"
-               << (*iter)->getExtraCellLowIndex() << " high: " << (*iter)->getExtraCellHighIndex() << "\n";
-            IntVector range = ((*iter)->getExtraCellHighIndex() - (*iter)->getExtraCellLowIndex());
+        LevelP curLevel = grid->getLevel(0);
+        Level::const_patchIterator iter = curLevel->patchesBegin();
+        DOUT(true,  "  Possibly changing the Load Balance");
+        for (unsigned int i = 0; i < d_processorAssignment.size(); i++) {
+          if (d_oldAssignment[i] != d_processorAssignment[i]) {
+            DOUT(true, "Rank: " << myrank << " patch: " << i << " ID: " << (*iter)->getID()
+                << " migration from proc: " << d_oldAssignment[i] << " to proc: " << d_processorAssignment[i]
+                << " patch size: " << (*iter)->getNumExtraCells() << " cells");
             iter++;
             if (iter == curLevel->patchesEnd() && i + 1 < d_processorAssignment.size()) {
               curLevel = curLevel->getFinerLevel();
               iter = curLevel->patchesBegin();
             }
           }
-        }  // rank 0
+        }
       }  // lb.active
-    } 
+    }
   }  // != restart
-  
+
   d_tempAssignment.resize(0);
-  
+
   int flag = LoadBalancer::check;
   if ( changed || state == LoadBalancer::restart){
     flag = LoadBalancer::regrid;
   }
-  
+
   // this must be called here (it creates the new per-proc patch sets) even if DLB does nothing.  Don't move or return earlier.
   LoadBalancerCommon::possiblyDynamicallyReallocate(grid, flag);
-  
+
   double lb_total_time = lb_timer.seconds();
   d_sharedState->d_runTimeStats[SimulationState::LoadBalancerTime] += lb_total_time;
   //------------------------------< end load balancer timing >------------------------------
@@ -1120,7 +1118,7 @@ DynamicLoadBalancer::problemSetup( ProblemSpecP & pspec, GridP & grid,  Simulati
     p->getWithDefault("gainThreshold",    threshold, 0.05);
     p->getWithDefault("doSpaceCurve",     spaceCurve, true);
     p->getWithDefault("hasParticles",     d_collectParticles, false);
-    
+
     string costAlgo="ModelLS";
     p->get("costAlgorithm",costAlgo);
     if(costAlgo=="ModelLS") {
@@ -1146,7 +1144,7 @@ DynamicLoadBalancer::problemSetup( ProblemSpecP & pspec, GridP & grid,  Simulati
     else {
       throw InternalError("Invalid CostAlgorithm in Dynamic Load Balancer\n",__FILE__,__LINE__);
     }
-   
+
     p->getWithDefault("levelIndependent",d_levelIndependent,true);
   }
 
