@@ -34,6 +34,7 @@
 #include <Core/Geometry/IntVector.h>
 #include <Core/Grid/Level.h>
 #include <Core/Grid/Patch.h>
+#include <Core/Parallel/Parallel.h>
 
 #include <PIDX.h>
 #include <iomanip>             // setw()
@@ -93,7 +94,8 @@ class PIDXOutputContext {
         //__________________________________
         // debugging
         void print(){
-          std::cout << "PIDXFlags: " << std::setw(26) <<"outputRawIO: " <<  outputRawIO 
+          std::cout << Parallel::getMPIRank()
+                    << "PIDXFlags: " << std::setw(26) <<"outputRawIO: " <<  outputRawIO 
                     << ", compressionType: "<< getCompressTypeName(compressionType)
                     << ", outputPatchSize: " << outputPatchSize << std::endl;
         }  
@@ -122,7 +124,8 @@ class PIDXOutputContext {
 
       // debugging
       void print(std::ostream& out){
-        out  << "patchExtents: patchOffset: " << patchOffset << " patchSize: " << patchSize << ", totalCells_EC " << totalCells_EC 
+        out  << Parallel::getMPIRank()
+             << " patchExtents: patchOffset: " << patchOffset << " patchSize: " << patchSize << ", totalCells_EC " << totalCells_EC 
              << ", lo_EC: " << lo_EC << ", hi_EC: " << hi_EC << std::endl; 
       }
     };
