@@ -82,6 +82,7 @@ Level::Level(       Grid      * grid,
   d_finalized   = false;
   d_extraCells  = IntVector(0,0,0);
   d_totalCells  = 0;
+  d_nCellsPatch_max  = IntVector(0,0,0);
 
   if( d_id == -1 ) {
     d_id = ids++;
@@ -375,7 +376,12 @@ long Level::totalCells() const
 {
   return d_totalCells;
 }
-
+//______________________________________________________________________
+//
+IntVector Level::nCellsPatch_max() const       // used by PIDX
+{
+  return d_nCellsPatch_max;
+}
 //______________________________________________________________________
 //
 
@@ -631,6 +637,18 @@ void Level::finalizeLevel()
   for(int i=0;i<(int)d_realPatches.size();i++){
     d_totalCells+=d_realPatches[i]->getNumExtraCells();
   }
+
+  //compute the max number of cells over all patches  Needed by PIDX
+  d_nCellsPatch_max = IntVector(0,0,0);
+  int nCells = 0;
+  for(int i=0;i<(int)d_realPatches.size();i++){
+  
+    if( d_realPatches[i]->getNumExtraCells() > nCells){
+      IntVector lo = d_realPatches[i]->getExtraCellLowIndex();
+      IntVector hi = d_realPatches[i]->getExtraCellHighIndex();
+      d_nCellsPatch_max = hi - lo;
+    }
+  }
   
   //compute and store the spatial ranges now that BCTypes are set
   for(int i=0;i<(int)d_realPatches.size();i++){
@@ -720,7 +738,20 @@ void Level::finalizeLevel(bool periodicX, bool periodicY, bool periodicZ)
   for(int i=0;i<(int)d_realPatches.size();i++){
     d_totalCells+=d_realPatches[i]->getNumExtraCells();
   }
+
+  //compute the max number of cells over all patches  Needed by PIDX
+  d_nCellsPatch_max = IntVector(0,0,0);
+  int nCells = 0;
   
+  for(int i=0;i<(int)d_realPatches.size();i++){
+    if( d_realPatches[i]->getNumExtraCells() > nCells){
+      IntVector lo = d_realPatches[i]->getExtraCellLowIndex();
+      IntVector hi = d_realPatches[i]->getExtraCellHighIndex();
+      
+      d_nCellsPatch_max = hi - lo;
+    }
+  }
+
   //compute and store the spatial ranges now that BCTypes are set
   for(int i=0;i<(int)d_realPatches.size();i++){
     Patch* r = d_realPatches[i];

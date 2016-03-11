@@ -171,39 +171,11 @@ PIDXOutputContext::computeBoxSize( const PatchSubset* patches,
   const Level* level = patches->get(0)->getLevel();
 
   //__________________________________
-  //  1) compute a patch size
-  // WARNING:  this can produce inconsistent patch sizes and subsequent box sizes.  
-  //           This is a place holder 
-  
-  
-  IntVector extraCells = level->getExtraCells();
-  IntVector hi_EC;
-  IntVector lo_EC;
-  IntVector boundaryLayer(0,0,0);
+  //  compute a patch size over all patches on this level
+  IntVector nCells = level->nCellsPatch_max();
+  int nPatchCells  = nCells.x() * nCells.y() * nCells.z();
 
-  patch->computeVariableExtents( TypeDescription::NCVariable, boundaryLayer, Ghost::None, 0, lo_EC, hi_EC);
-  hi_EC -= IntVector(1,1,1);
-  
-  //__________________________________
-  // add "extraCells to any interior patch so all patches are NEARLY the same
-  // size on a level
-  IntVector neighborsLo = patch->neighborsLow();
-  IntVector neighborsHi = patch->neighborsHigh();
-
-  for ( int i=0; i<3; i++ ){
-    if( neighborsLo[i] ){ 
-      lo_EC[i] += extraCells[i];
-    }
-    if( neighborsHi[i] ){
-      hi_EC[i] += extraCells[i];
-    }
-  }
-
-  //__________________________________
-  //  compute the number of cells in that patch
-  IntVector nCells = hi_EC - lo_EC;
-  int nPatchCells = nCells.x() * nCells.y() * nCells.z();
-
+  const int cubed16  = 16*16*16;
   const int cubed32  = 32*32*32;
   const int cubed64  = 64*64*64;
   const int cubed128 = 128*128*128;
@@ -212,7 +184,8 @@ PIDXOutputContext::computeBoxSize( const PatchSubset* patches,
   //__________________________________
   // logic for adjusting the box
   IntVector box(64,64,64);    // default value
-  if (nPatchCells <=  cubed32) {
+  if (nPatchCells <=  cubed16) {
+  } else if (nPatchCells >  cubed16  && nPatchCells <= cubed32) {
     box = IntVector(32,32,32);
   } else if ( nPatchCells >  cubed32  && nPatchCells <= cubed64 ) {
     box = IntVector(64,64,64);
@@ -226,12 +199,11 @@ PIDXOutputContext::computeBoxSize( const PatchSubset* patches,
   //  override the logic if user specifies somthing
   if ( flags.outputPatchSize != IntVector(-9,-9,-9) ){
     box = flags.outputPatchSize;
-    cout << " overriding box logic " << endl;
   }
   
   if (flags.debugOutput){
-    cout << " PIDX box size: Level- "<< level->getIndex() << " box: " << box 
-         << " Patchsize: " << nCells << " nPatchCells: " << nPatchCells << endl;
+    cout << Parallel::getMPIRank() << " PIDX outputPatchSize: Level- "<< level->getIndex() << " box: " << box  
+         << " Patchsize: " << nCells << " nPatchCells: " << nPatchCells  << endl;
   }
   PIDX_set_point_5D(newBox, box.x(), box.y(), box.z(), 1, 1);
 }
