@@ -56,6 +56,8 @@ class RuntimeStats
   static std::atomic<int64_t> * get_atomic_exec_ptr( DetailedTask const* t );
   static std::atomic<int64_t> * get_atomic_wait_ptr( DetailedTask const* t );
 
+  static std::mutex s_register_mutex;
+
   static void reset_timers();
 public:
 
@@ -67,10 +69,11 @@ public:
   enum TimerType {Total, Min, Max};
 
 
-  // NOT THREAD SAFE -- should only be called from the master thread
   template <typename Tag>
   static void register_timer_tag( Tag, std::string const& name, TimerType t )
   {
+    std::unique_lock<std::mutex> lck(s_register_mutex);
+
     auto const itr = s_timers.find(name);
     if (itr == s_timers.end()) {
 
@@ -88,10 +91,11 @@ public:
 
   enum AllocatorType { Current, HighWater };
 
-  // NOT THREAD SAFE -- should only be called from the master thread
   template <typename Tag>
   static void register_allocator_tag( Tag, std::string const& name, AllocatorType t )
   {
+    std::unique_lock<std::mutex> lck(s_register_mutex);
+
     auto const itr = s_allocators.find(name);
     if (itr == s_allocators.end()) {
       if (t == Current) {
@@ -104,7 +108,7 @@ public:
 
   // NOT THREAD SAFE -- should only be called from the master thread
   // by the parent scheduler
-  static void initialize_timestep( std::vector<TaskGraph *> const & graphs );
+  static void initialize_timestep( MPI_Comm comm, std::vector<TaskGraph *> const & graphs );
 
 
   // NOT THREAD SAFE -- should only be called from the master thread

@@ -277,7 +277,7 @@ void ThreadedTaskScheduler::execute(  int tgnum /*=0*/ , int iteration /*=0*/ )
 
   ASSERTRANGE(tgnum, 0, static_cast<int>(graphs.size()));
 
-  RuntimeStats::initialize_timestep(graphs);
+  RuntimeStats::initialize_timestep(d_myworld->getComm(), graphs);
 
   TaskGraph* tg = graphs[tgnum];
   tg->setIteration(iteration);
