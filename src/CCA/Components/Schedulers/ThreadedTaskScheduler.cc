@@ -195,18 +195,7 @@ ThreadedTaskScheduler::ThreadedTaskScheduler( const ProcessorGroup        * mywo
   : SchedulerCommon( myworld, oport )
   , m_output_port{ oport }
 {
-  std::string timeStr("seconds");
 
-  m_mpi_info.insert( TotalReduce,    std::string("TotalReduce"),    timeStr, 0 );
-  m_mpi_info.insert( TotalSend,      std::string("TotalSend"),      timeStr, 0 );
-  m_mpi_info.insert( TotalRecv,      std::string("TotalRecv"),      timeStr, 0 );
-  m_mpi_info.insert( TotalTask,      std::string("TotalTask"),      timeStr, 0 );
-  m_mpi_info.insert( TotalReduceMPI, std::string("TotalReduceMPI"), timeStr, 0 );
-  m_mpi_info.insert( TotalSendMPI,   std::string("TotalSendMPI"),   timeStr, 0 );
-  m_mpi_info.insert( TotalRecvMPI,   std::string("TotalRecvMPI"),   timeStr, 0 );
-  m_mpi_info.insert( TotalTestMPI,   std::string("TotalTestMPI"),   timeStr, 0 );
-  m_mpi_info.insert( TotalWaitMPI,   std::string("TotalWaitMPI"),   timeStr, 0 );
-  m_mpi_info.validate( MAX_TIMING_STATS );
 }
 
 
@@ -306,7 +295,6 @@ void ThreadedTaskScheduler::execute(  int tgnum /*=0*/ , int iteration /*=0*/ )
   // clear & resize task phase, etc bookkeeping data structures
   m_num_messages   = 0;
   m_message_volume = 0;
-  m_mpi_info.reset( 0 );
   m_num_tasks_done.store(0, std::memory_order_relaxed);
   m_abort          = false;
   m_abort_point    = 987654;
@@ -331,10 +319,7 @@ void ThreadedTaskScheduler::execute(  int tgnum /*=0*/ , int iteration /*=0*/ )
   // activate TaskRunners
   //------------------------------------------------------------------------------------------------
   Impl::g_run_tasks = 1;
-
-  // reset per-thread wait times and activate
   for (int i = 1; i < m_num_threads; ++i) {
-    Impl::g_runners[i]->m_task_wait_time.reset();
     Impl::g_thread_states[i] = Impl::ThreadState::Active;
   }
   //------------------------------------------------------------------------------------------------
@@ -361,6 +346,11 @@ void ThreadedTaskScheduler::execute(  int tgnum /*=0*/ , int iteration /*=0*/ )
         task->checkExternalDepCount();
       }
     }
+    else if (m_detailed_tasks->numExternalReadyTasks() > 0) {
+      DetailedTask* task = m_detailed_tasks->getNextExternalReadyTask();
+      ASSERTEQ(task->getExternalDepCount(), 0);
+      insert_handle = m_task_pool.insert(insert_handle, TaskHandle(task));
+    }
     // if it is time to run reduction or once-per-proc task
     else if ((m_phase_sync_tasks[m_current_phase] != nullptr) && (m_phase_tasks_done[m_current_phase].load(std::memory_order_relaxed) == m_phase_tasks[m_current_phase] - 1)) {
       DetailedTask* sync_task = m_phase_sync_tasks[m_current_phase];
@@ -377,11 +367,6 @@ void ThreadedTaskScheduler::execute(  int tgnum /*=0*/ , int iteration /*=0*/ )
       ASSERT(sync_task->getTask()->d_phase == m_current_phase);
       m_num_tasks_done.fetch_add(1, std::memory_order_relaxed);
       m_phase_tasks_done[sync_task->getTask()->d_phase].fetch_add(1, std::memory_order_relaxed);
-    }
-    else if (m_detailed_tasks->numExternalReadyTasks() > 0) {
-      DetailedTask* task = m_detailed_tasks->getNextExternalReadyTask();
-      ASSERTEQ(task->getExternalDepCount(), 0);
-      insert_handle = m_task_pool.insert(insert_handle, TaskHandle(task));
     }
     else { // nothing to do process MPI
       process_MPI_requests();
@@ -401,22 +386,10 @@ void ThreadedTaskScheduler::execute(  int tgnum /*=0*/ , int iteration /*=0*/ )
   }
   //------------------------------------------------------------------------------------------------
 
-  // compute the net timings and add in wait times for all TaskRunner threads
-  if (d_sharedState != 0) {
-    compute_net_runtime_stats(d_sharedState->d_runTimeStats);
-    double thread_wait_time = 0.0;
-    for (int i = 1; i < m_num_threads; ++i) {
-      thread_wait_time += Impl::g_runners[i]->m_task_wait_time.seconds();
-    }
-    d_sharedState->d_runTimeStats[SimulationState::TaskWaitThreadTime] += (thread_wait_time / (m_num_threads - 1) );
-  }
-
   // Copy the restart flag to all processors
   copy_restart_flag(tgnum);
 
   finalizeTimestep();
-
-  emit_net_MPI_stats();
 
   RuntimeStats::report(d_myworld->getComm(), d_sharedState->d_runTimeStats);
 
@@ -791,45 +764,6 @@ void ThreadedTaskScheduler::emit_time( const char* label, double dt )
 {
   m_labels.push_back(label);
   m_times.push_back(dt);
-}
-
-
-//______________________________________________________________________
-//
-void ThreadedTaskScheduler::emit_net_MPI_stats()
-{
-  m_mpi_info[TotalWaitMPI]    = Timers::ThreadTrip< TotalWaitMPITag >::total_seconds();
-  m_mpi_info[TotalReduce]     = Timers::ThreadTrip< TotalReduceTag >::total_seconds();
-  m_mpi_info[TotalReduceMPI]  = Timers::ThreadTrip< TotalReduceTag >::total_seconds();
-  m_mpi_info[TotalSend]       = Timers::ThreadTrip< TotalSendTag >::total_seconds();
-  m_mpi_info[TotalSendMPI]    = Timers::ThreadTrip< TotalSendMPITag >::total_seconds();
-  m_mpi_info[TotalRecv]       = Timers::ThreadTrip< TotalRecvTag >::total_seconds();
-  m_mpi_info[TotalRecvMPI]    = Timers::ThreadTrip< TotalRecvMPITag >::total_seconds();
-  m_mpi_info[TotalTask]       = Timers::ThreadTrip< TotalTaskTag >::total_seconds();
-  m_mpi_info[TotalTestMPI]    = Timers::ThreadTrip< TotalTestMPITag >::total_seconds();
-
-  Timers::ThreadTrip< TotalWaitMPITag >::reset_tag();
-  Timers::ThreadTrip< TotalReduceTag >::reset_tag();
-  Timers::ThreadTrip< TotalReduceTag >::reset_tag();
-  Timers::ThreadTrip< TotalSendTag >::reset_tag();
-  Timers::ThreadTrip< TotalSendMPITag >::reset_tag();
-  Timers::ThreadTrip< TotalRecvTag >::reset_tag();
-  Timers::ThreadTrip< TotalRecvMPITag >::reset_tag();
-  Timers::ThreadTrip< TotalTaskTag >::reset_tag();
-  Timers::ThreadTrip< TotalTestMPITag >::reset_tag();
-}
-
-
-//______________________________________________________________________
-//  Take the various timers and compute the net results
-void ThreadedTaskScheduler::compute_net_runtime_stats( InfoMapper< SimulationState::RunTimeStat, double >& runTimeStats )
-{
-    runTimeStats[SimulationState::TaskExecTime]       += m_mpi_info[TotalTask] - runTimeStats[SimulationState::OutputFileIOTime]  // don't count output time or bytes
-                                                                               - runTimeStats[SimulationState::OutputFileIORate];
-
-    runTimeStats[SimulationState::TaskLocalCommTime]  += m_mpi_info[TotalRecv] + m_mpi_info[TotalSend];
-    runTimeStats[SimulationState::TaskWaitCommTime]   += m_mpi_info[TotalWaitMPI];
-    runTimeStats[SimulationState::TaskGlobalCommTime] += m_mpi_info[TotalReduce];
 }
 
 
