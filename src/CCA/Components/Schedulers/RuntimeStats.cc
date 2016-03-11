@@ -90,8 +90,12 @@ void RuntimeStats::reset_timers()
   constexpr int64_t zero = 0;
 
   for (size_t i=0; i<g_num_tasks; ++i) {
-    g_task_exec_times[i].store( zero, std::memory_order_relaxed );
-    g_task_wait_times[i].store( zero, std::memory_order_relaxed );
+    if (g_exec_times) {
+      g_task_exec_times[i].store( zero, std::memory_order_relaxed );
+    }
+    if (g_wait_times) {
+      g_task_wait_times[i].store( zero, std::memory_order_relaxed );
+    }
   }
 }
 
@@ -399,6 +403,7 @@ void RuntimeStats::report( MPI_Comm comm, InfoStats & stats )
     names.reserve( num_values );
   }
 
+  // Tag Timers
   for( auto const& p : s_timers ) {
     if (prank==0) {
       names.push_back( p.first );
@@ -411,7 +416,24 @@ void RuntimeStats::report( MPI_Comm comm, InfoStats & stats )
     data.push_back(ns); // max
   }
 
+  // Tag Allocators
+  size_t alloc_offset = !s_allocators.empty() ? names.size() : ~0ull;
+  for ( auto const& p : s_allocators ) {
+    if (prank==0) {
+      names.push_back( p.first );
+    }
+    const int64_t bytes = p.second();
+    local_data.push_back(bytes);
+    data.push_back(prank); // rank
+    data.push_back(bytes); // total
+    data.push_back(bytes); // min
+    data.push_back(bytes); // max
+  }
+
+  // Exec Times
+  size_t exec_offset = ~0ull;
   if (g_exec_times) {
+    exec_offset = names.size();
     for (size_t i=0; i<g_num_tasks; ++i) {
       if (prank==0) {
         names.push_back( g_task_names[i] );
@@ -425,7 +447,10 @@ void RuntimeStats::report( MPI_Comm comm, InfoStats & stats )
     }
   }
 
+  // Wait Times
+  size_t wait_offset = ~0ull;
   if (g_wait_times) {
+    wait_offset = names.size();
     for (size_t i=0; i<g_num_tasks; ++i) {
       if (prank==0) {
         names.push_back( g_task_names[i] );
@@ -439,17 +464,6 @@ void RuntimeStats::report( MPI_Comm comm, InfoStats & stats )
     }
   }
 
-  for ( auto const& p : s_allocators ) {
-    if (prank==0) {
-      names.push_back( p.first );
-    }
-    const int64_t bytes = p.second();
-    local_data.push_back(bytes);
-    data.push_back(prank); // rank
-    data.push_back(bytes); // total
-    data.push_back(bytes); // min
-    data.push_back(bytes); // max
-  }
 
 
   global_data.resize(data_size);
@@ -478,21 +492,10 @@ void RuntimeStats::report( MPI_Comm comm, InfoStats & stats )
 
   if (mpi_report && prank == 0) {
 
-    const int w_desc = 12;
+    const int w_desc = 14;
     const int w_num  = 10;
     const int w_hist = 35;
     const int w_load = 18;
-
-    printf( "%*s%*s%*s%*s%*s%*s%*s%*s\n"
-        ,w_desc, "Description:"
-        ,w_num,  "Total:"
-        ,w_num,  "Avg:"
-        ,w_num,  "Min:"
-        ,w_num,  "Max:"
-        ,w_num,  "Mrank:"
-        ,w_hist, "Hist \% [  Q1 |  Q2 |  Q3 |  Q4 ]:"
-        ,w_load, "\%Load Imbalance"
-    );
 
     for (int i=0; i<num_values; ++i) {
       const int off = 4*i;
@@ -510,37 +513,100 @@ void RuntimeStats::report( MPI_Comm comm, InfoStats & stats )
 
       const double load = max != 0 ? (100.0 * (1.0 - (avg / max))) : 0.0;
 
-      if (names[i].size() < w_desc) {
-        printf("%*s:%*s%*s%*s%*s%*d          %6.1f%6.1f%6.1f%6.1f%8.1f\n"
-            , w_desc-1, names[i].c_str()
-            , w_num, ( i < num_timers ? nanoseconds_to_string( total ) : bytes_to_string( total )).c_str()
-            , w_num, ( i < num_timers ? nanoseconds_to_string( avg ) : bytes_to_string( avg )).c_str()
-            , w_num, ( i < num_timers ? nanoseconds_to_string( min ) : bytes_to_string( min )).c_str()
-            , w_num, ( i < num_timers ? nanoseconds_to_string( max ) : bytes_to_string( max )).c_str()
-            , w_num, max_rank
-            , q1
-            , q2
-            , q3
-            , q4
-            , load
-            );
+      if ( i == 0 ) {
+        printf("\n--------------------------------------------------------------------------------\n");
+        printf("TIMERS\n");
+        printf("--------------------------------------------------------------------------------\n");
+        printf( "%*s%*s%*s%*s%*s%*s%*s%*s\n"
+            ,w_desc, "Description:"
+            ,w_num,  "Total:"
+            ,w_num,  "Avg:"
+            ,w_num,  "Min:"
+            ,w_num,  "Max:"
+            ,w_num,  "Mrank:"
+            ,w_hist, "Hist \% [  Q1 |  Q2 |  Q3 |  Q4 ]:"
+            ,w_load, "\%Load Imbalance"
+        );
       }
-      else {
-        printf("%s\n", names[i].c_str());
-        printf("%*s:%*s%*s%*s%*s%*d          %6.1f%6.1f%6.1f%6.1f%8.1f\n"
-            , w_desc-1, ""
-            , w_num, ( i < num_timers ? nanoseconds_to_string( total ) : bytes_to_string( total )).c_str()
-            , w_num, ( i < num_timers ? nanoseconds_to_string( avg ) : bytes_to_string( avg )).c_str()
-            , w_num, ( i < num_timers ? nanoseconds_to_string( min ) : bytes_to_string( min )).c_str()
-            , w_num, ( i < num_timers ? nanoseconds_to_string( max ) : bytes_to_string( max )).c_str()
-            , w_num, max_rank
-            , q1
-            , q2
-            , q3
-            , q4
-            , load
-            );
+      else if ( i== alloc_offset ) {
+        printf("\n--------------------------------------------------------------------------------\n");
+        printf("ALLOCATORS\n");
+        printf("--------------------------------------------------------------------------------\n");
+        printf( "%*s%*s%*s%*s%*s%*s%*s%*s\n"
+            ,w_desc, "Description:"
+            ,w_num,  "Total:"
+            ,w_num,  "Avg:"
+            ,w_num,  "Min:"
+            ,w_num,  "Max:"
+            ,w_num,  "Mrank:"
+            ,w_hist, "Hist \% [  Q1 |  Q2 |  Q3 |  Q4 ]:"
+            ,w_load, "\%Load Imbalance"
+        );
+      }
+      else if (i == exec_offset) {
+        printf("\n--------------------------------------------------------------------------------\n");
+        printf("TASK EXEC TIMES\n");
+        printf("--------------------------------------------------------------------------------\n");
+        printf( "%*s%*s%*s%*s%*s%*s%*s%*s\n"
+            ,w_desc, "Description:"
+            ,w_num,  "Total:"
+            ,w_num,  "Avg:"
+            ,w_num,  "Min:"
+            ,w_num,  "Max:"
+            ,w_num,  "Mrank:"
+            ,w_hist, "Hist \% [  Q1 |  Q2 |  Q3 |  Q4 ]:"
+            ,w_load, "\%Load Imbalance"
+        );
+      }
+      else if (i == wait_offset) {
+        printf("\n--------------------------------------------------------------------------------\n");
+        printf("TASK WAIT TIMES\n");
+        printf("--------------------------------------------------------------------------------\n");
+        printf( "%*s%*s%*s%*s%*s%*s%*s%*s\n"
+            ,w_desc, "Description:"
+            ,w_num,  "Total:"
+            ,w_num,  "Avg:"
+            ,w_num,  "Min:"
+            ,w_num,  "Max:"
+            ,w_num,  "Mrank:"
+            ,w_hist, "Hist \% [  Q1 |  Q2 |  Q3 |  Q4 ]:"
+            ,w_load, "\%Load Imbalance"
+        );
+      }
 
+      if ( total > 0) {
+        if (names[i].size() < w_desc) {
+          printf("%*s:%*s%*s%*s%*s%*d          %6.1f%6.1f%6.1f%6.1f%8.1f\n"
+              , w_desc-1, names[i].c_str()
+              , w_num, ( i < num_timers ? nanoseconds_to_string( total ) : bytes_to_string( total )).c_str()
+              , w_num, ( i < num_timers ? nanoseconds_to_string( avg ) : bytes_to_string( avg )).c_str()
+              , w_num, ( i < num_timers ? nanoseconds_to_string( min ) : bytes_to_string( min )).c_str()
+              , w_num, ( i < num_timers ? nanoseconds_to_string( max ) : bytes_to_string( max )).c_str()
+              , w_num, max_rank
+              , q1
+              , q2
+              , q3
+              , q4
+              , load
+              );
+        }
+        else {
+          printf("%s\n", names[i].c_str());
+          printf("%*s:%*s%*s%*s%*s%*d          %6.1f%6.1f%6.1f%6.1f%8.1f\n"
+              , w_desc-1, ""
+              , w_num, ( i < num_timers ? nanoseconds_to_string( total ) : bytes_to_string( total )).c_str()
+              , w_num, ( i < num_timers ? nanoseconds_to_string( avg ) : bytes_to_string( avg )).c_str()
+              , w_num, ( i < num_timers ? nanoseconds_to_string( min ) : bytes_to_string( min )).c_str()
+              , w_num, ( i < num_timers ? nanoseconds_to_string( max ) : bytes_to_string( max )).c_str()
+              , w_num, max_rank
+              , q1
+              , q2
+              , q3
+              , q4
+              , load
+              );
+
+        }
       }
 
     }
