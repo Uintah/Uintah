@@ -24,9 +24,9 @@
 
 #include <CCA/Components/Schedulers/CommRecMPI.h>
 
-#include <Core/Util/FancyAssert.h>
 #include <Core/Parallel/ProcessorGroup.h>
 #include <Core/Util/DOUT.hpp>
+#include <Core/Util/FancyAssert.h>
 #include <Core/Util/Timers/Timers.hpp>
 
 using namespace Uintah;

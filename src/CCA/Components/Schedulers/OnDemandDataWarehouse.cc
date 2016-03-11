@@ -869,6 +869,7 @@ OnDemandDataWarehouse::reduceMPI( const VarLabel       * label,
                                   const int              nComm )
 {
   RuntimeStats::CollectiveTimer rt;
+
   const MaterialSubset* matls;
   if( !inmatls ) {
     MaterialSubset* tmpmatls = scinew MaterialSubset();

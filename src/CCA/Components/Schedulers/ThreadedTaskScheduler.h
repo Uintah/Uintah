@@ -28,6 +28,7 @@
 #include <CCA/Components/Schedulers/SchedulerCommon.h>
 #include <CCA/Components/Schedulers/DetailedTasks.h>
 #include <CCA/Components/Schedulers/OnDemandDataWarehouseP.h>
+#include <CCA/Components/Schedulers/RuntimeStats.hpp>
 #include <CCA/Ports/DataWarehouseP.h>
 
 #include <Core/Grid/Task.h>
@@ -47,17 +48,9 @@
 
 namespace Uintah {
 
-class Task;
-class DetailedTask;
-class TaskRunner;
-
-using TaskPool = Lockfree::Pool< DetailedTask*
-                               , uint64_t
-                               , 1u
-                               , Uintah::MallocAllocator      // allocator
-                               , Uintah::MallocAllocator      // size_type allocator
-                               >;
-
+class  Task;
+class  DetailedTask;
+class  TaskRunner;
 
 /**************************************
 
@@ -171,6 +164,34 @@ private:
   ThreadedTaskScheduler( ThreadedTaskScheduler && )                 = delete;
   ThreadedTaskScheduler& operator=( ThreadedTaskScheduler && )      = delete;
 
+
+  struct TaskHandle {
+   DetailedTask* m_detailed_task;
+   char buf[sizeof(RuntimeStats::TaskWaitTimer)];
+
+   TaskHandle(DetailedTask* dtask)
+     : m_detailed_task{dtask}
+   {
+     new (reinterpret_cast<RuntimeStats::TaskWaitTimer*>(buf)) RuntimeStats::TaskWaitTimer(dtask);
+   }
+
+   void doit( const ProcessorGroup                      * pg
+            ,       std::vector<OnDemandDataWarehouseP> & oddws
+            ,       std::vector<DataWarehouseP>         & dws
+            )
+   {
+     reinterpret_cast<RuntimeStats::TaskWaitTimer*>(buf)->~TaskWaitTimer();
+     m_detailed_task->doit(pg, oddws, dws);
+   }
+  };
+
+  using TaskPool = Lockfree::Pool< TaskHandle
+                                 , uint64_t
+                                 , 1u
+                                 , Uintah::MallocAllocator      // allocator
+                                 , Uintah::MallocAllocator      // size_type allocator
+                                 >;
+
   enum : size_t {
       REQUEST_COLLECTIVE
     , REQUEST_RECV
@@ -184,7 +205,7 @@ private:
 
   bool process_MPI_requests();
 
-  void run_task( DetailedTask * task, int iteration );
+  void run_task( TaskHandle task_handle, int iteration );
 
   void run_reduction_task( DetailedTask* task );
 
