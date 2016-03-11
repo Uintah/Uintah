@@ -87,8 +87,6 @@ void RuntimeStats::reset_timers()
 {
   for (auto & f : s_reset_timers) { f(); }
 
-  constexpr int64_t zero = 0;
-
   if (g_exec_times) {
     g_task_exec_times.reset();
   }
@@ -98,87 +96,6 @@ void RuntimeStats::reset_timers()
   }
 }
 
-namespace {
-
-struct MemBuf: public std::streambuf {
-    MemBuf(char const* base, size_t size) {
-        char* p(const_cast<char*>(base));
-        this->setg(p, p, p + size);
-    }
-};
-
-void sort_and_unique_task_impl( char const * in, char * inout, size_t len )
-{
-  MemBuf a_buf{in, len};
-  MemBuf b_buf{inout, len};
-
-  std::istream a_in(&a_buf);
-  std::istream b_in(&b_buf);
-
-  std::string a, b;
-
-  bool a_ok = static_cast<bool>(std::getline(a_in, a));
-  bool b_ok = static_cast<bool>(std::getline(b_in, b));
-
-  std::ostringstream out;
-
-  bool output_endl = false;
-
-  while (a_ok && b_ok) {
-    if ( output_endl ) {
-      out << std::endl;
-    }
-    else {
-      output_endl = true;
-    }
-    if (a < b) {                     // a < b
-      out << a;
-      a_ok = static_cast<bool>(std::getline(a_in, a));
-    } else if (b < a) {              // b < a
-      out << b;
-      b_ok = static_cast<bool>(std::getline(b_in, b));
-    }
-    else {                           // a == b
-      out << a;
-      a_ok = static_cast<bool>(std::getline(a_in, a));
-      b_ok = static_cast<bool>(std::getline(b_in, b));
-    }
-  }
-
-  while (a_ok) {
-    if ( output_endl ) {
-      out << std::endl;
-    }
-    else {
-      output_endl = true;
-    }
-    out << a;
-    a_ok = static_cast<bool>(std::getline(a_in, a));
-  }
-
-  while (b_ok) {
-    if ( output_endl ) {
-      out << std::endl;
-    }
-    else {
-      output_endl = true;
-    }
-    out << b;
-    b_ok = static_cast<bool>(std::getline(b_in, b));
-  }
-
-  std::strncpy( inout, out.str().c_str(), len );
-}
-
-extern "C" void sort_and_unique_task( void * in, void * inout, int * len, MPI_Datatype * type )
-{
-  sort_and_unique_task_impl( reinterpret_cast<char*>(in), reinterpret_cast<char*>(inout), *len);
-}
-
-MPI_Op sort_and_unique_task_op;
-
-
-} // namespace
 
 void RuntimeStats::initialize_timestep( MPI_Comm comm, std::vector<TaskGraph *> const &  graphs )
 {
