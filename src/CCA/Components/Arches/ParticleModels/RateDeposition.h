@@ -66,6 +66,8 @@ public:
 private: 
     int _Nenv;
     double _Tmelt;
+    double _MgO;    double _AlO;double _CaO; double _SiO; 
+
     std::string _ParticleTemperature_base_name;
     std::string _MaxParticleTemperature_base_name;
     std::string _ProbParticleX_base_name;    
@@ -126,8 +128,18 @@ private:
                                        SpatialOps::SpatFldPtr<SpatialOps::SVolField> Tvol, 
                                        SpatialOps::SpatFldPtr<SpatialOps::SVolField> MaxTvol, 
                                        SpatialOps::SpatFldPtr<velT> ProbStick)
-  { 
-     const double Aprepontional= 2.1*pow(10,-13);  const double Bactivational= 47800;
+  { // Urbain model 1981
+     //double CaO=26.49/100;const double MgO=4.47/100; double AlO=14.99/100;const double SiO=38.9/100; //const double alpha=0; 
+     double CaO=_CaO;double MgO=_MgO; double AlO=_AlO;double SiO=_SiO; //const double alpha=0; 
+    // const double B0=0; const doulbe B1=0; const double B3=0;
+     CaO=CaO/(CaO+MgO+AlO+SiO);AlO=AlO/(CaO+MgO+AlO+SiO);
+     const double alpha=CaO/(AlO+CaO);
+     const double B0=13.8+39.9355*alpha-44.049*alpha*alpha;
+     const double B1=30.481-117.1505*alpha+129.9978*alpha*alpha;
+     const double B2=-40.9429+234.0486*alpha-300.04*alpha*alpha;
+     const double B3= 60.7619-153.9276*alpha+211.1616*alpha*alpha;
+     const double Bactivational=B0+B1*SiO+B2*SiO*SiO+B3*SiO*SiO*SiO;
+     const double Aprepontional=exp(-(0.2693*Bactivational+11.6725));  //const double Bactivational= 47800;
      const double ReferVisc=10000;
     
     //interp the XVol to XSurf
@@ -176,11 +188,11 @@ private:
                             (0 );
    
    //compute the viscosity probability
-    *ProbVisc_temp <<= Aprepontional* max(*Tvol_temp,273.0) * exp(Bactivational /(max(*Tvol_temp,273.0)) );
+    *ProbVisc_temp <<= 0.1*Aprepontional* max(*Tvol_temp,273.0) * exp(1000*Bactivational /(max(*Tvol_temp,273.0)) );
     *ProbVisc_temp <<= cond( ReferVisc/(*ProbVisc_temp) > 1, 1  )
                            ( ReferVisc/(*ProbVisc_temp));
     *ProbStick <<= (*interp_xf_to_xv)((1-*areaFraction_face) * *ProbVisc_temp * *ProbMelt_temp); 
-     
+    *ProbStick<<= min(*ProbStick,1 ) ; 
   }
   //-------------------------------------------------------------------------------------
    template <class faceT, class velT> void

@@ -39,6 +39,10 @@ RateDeposition::problemSetup( ProblemSpecP& db ){
 
   const ProblemSpecP db_root = db->getRootNode();
   db->require("Melting_Temperature",_Tmelt);
+  db->getWithDefault("CaO",_CaO,26.49/100.0);
+  db->getWithDefault("MgO",_MgO,4.47/100.0);
+  db->getWithDefault("AlO",_AlO,14.99/100.0);
+  db->getWithDefault("SiO",_SiO,38.9/100.0);
 
   _ParticleTemperature_base_name  = ParticleTools::parse_for_role_to_label(db,"temperature");
   _MaxParticleTemperature_base_name= ParticleTools::parse_for_role_to_label(db,"max_temperature");

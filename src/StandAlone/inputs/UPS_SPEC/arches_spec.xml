@@ -1113,6 +1113,14 @@
             <!-- deposition model -->
             <Melting_Temperature        spec="REQUIRED DOUBLE 'positive'"
                                         need_applies_to="type rate_deposition"/>       <!-- temperature where probability of melting is 1 -->
+            <CaO                        spec="OPTIONAL DOUBLE 'positive'"
+                                        need_applies_to="type rate_deposition"/>       <!-- CaO mass fraction-->
+            <MgO                        spec="OPTIONAL DOUBLE 'positive'"
+                                        need_applies_to="type rate_deposition"/>       <!-- MgO mass fraction -->
+            <AlO                        spec="OPTIONAL DOUBLE 'positive'"
+                                        need_applies_to="type rate_deposition"/>       <!-- AlO mass fraction-->
+            <SiO                        spec="OPTIONAL DOUBLE 'positive'"
+                                        need_applies_to="type rate_deposition"/>       <!-- SiO mass fraction-->
             <!-- deposition model -->
             <t_interval                 spec="REQUIRED DOUBLE 'positive'"
                                         need_applies_to="type deposition_velocity"/>       <!-- simulation time interval required for a steady-state thermal profile -->
