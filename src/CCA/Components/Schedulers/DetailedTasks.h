@@ -62,7 +62,7 @@ class SchedulerCommon;
 
   using ParticleExchangeVar = std::map<int, std::set<PSPatchMatlGhostRange> >;
   using ScrubCountTable     = SCIRun::FastHashTable<ScrubItem>;
-  
+
 
   //_______________________________________________________________________________________________
   enum ProfileType {
@@ -155,7 +155,7 @@ class SchedulerCommon;
     IntVector                  high;
     int                        matl;
 
-    // this is to satisfy a need created by the DynamicLoadBalancer.  To keep it unrestricted on when it can perform, and 
+    // this is to satisfy a need created by the DynamicLoadBalancer.  To keep it unrestricted on when it can perform, and
     // to avoid a costly second recompile on the next timestep, we add a comm condition which will send/recv data based
     // on whether some condition is met at run time - in this case whether it is the first execution or not.
     CommCondition condition;
@@ -214,12 +214,12 @@ class SchedulerCommon;
     void reset();
 
     //Add invalid variables to the dependency batch.  These variables will be marked
-    //as valid when MPI completes. 
+    //as valid when MPI completes.
     void addVar( Variable* var ) { toVars.push_back(var); }
 
     void addReceiveListener( int mpiSignal );
 
-    
+
     DependencyBatch          * comp_next;
     DetailedTask             * fromTask;
     std::list<DetailedTask*>   toTasks;
@@ -242,7 +242,7 @@ class SchedulerCommon;
     DependencyBatch& operator=( const DependencyBatch & ) = delete;
     DependencyBatch( DependencyBatch && )                 = delete;
     DependencyBatch& operator=( DependencyBatch && )      = delete;
-    
+
     std::vector<Variable*> toVars;
 
   }; // DependencyBatch
@@ -270,7 +270,7 @@ class SchedulerCommon;
     }
 
     void addVarLabel( const VarLabel* var ) { vars.insert(var); }
-    
+
     DetailedTask * prerequisiteTask;
     DetailedTask * dependentTask;
 
@@ -301,14 +301,14 @@ class SchedulerCommon;
 
   public:
 
-    DetailedTask(      Task            * task
+    DetailedTask(       Task           * task
                 , const PatchSubset    * patches
                 , const MaterialSubset * matls
                 ,       DetailedTasks  * taskGroup
                 );
 
     ~DetailedTask();
-   
+
     void setProfileType( ProfileType type ) { d_profileType=type; }
 
     ProfileType getProfileType() { return d_profileType; }
@@ -325,7 +325,7 @@ class SchedulerCommon;
     void done( std::vector<OnDemandDataWarehouseP>& dws );
 
     std::string getName() const;
-    
+
     const Task* getTask() const { return task; }
 
     const PatchSubset* getPatches() const { return patches; }
@@ -335,21 +335,21 @@ class SchedulerCommon;
     void assignResource(int idx) { resourceIndex = idx; }
 
     int getAssignedResourceIndex() const { return resourceIndex; }
-    
+
     void assignStaticOrder( int i ) { staticOrder = i; }
 
     int getStaticOrder() const { return staticOrder; }
- 
+
     DetailedTasks* getTaskGroup() const { return taskGroup; }
 
     std::map<DependencyBatch*, DependencyBatch*>& getRequires() { return reqs; }
 
-    std::map<DependencyBatch*, DependencyBatch*>& getInternalRequires() { return internal_reqs; }  
-  
+    std::map<DependencyBatch*, DependencyBatch*>& getInternalRequires() { return internal_reqs; }
+
     DependencyBatch* getComputes() const { return comp_head; }
 
     DependencyBatch* getInternalComputes() const { return internal_comp_head; }
-    
+
     void findRequiringTasks( const VarLabel* var, std::list<DetailedTask*>& requiringTasks );
 
     void emitEdges( ProblemSpecP edgesElement );
@@ -365,9 +365,11 @@ class SchedulerCommon;
     void addInternalDependency( DetailedTask* prerequisiteTask, const VarLabel* var );
 
     // external dependencies will count how many messages this task
-    // is waiting for.  When it hits 0, we can add it to the 
+    // is waiting for.  When it hits 0, we can add it to the
     // DetailedTasks::mpiCompletedTasks list.
     void resetDependencyCounts();
+
+    bool isInitiated() const { return initiated_; }
 
     void markInitiated() { initiated_ = true; }
 
@@ -466,26 +468,26 @@ class SchedulerCommon;
 
     // Internal dependencies are dependencies within the same process.
     std::list<InternalDependency> internalDependencies;
-    
+
     // internalDependents will point to InternalDependency's in the
     // internalDependencies list of the requiring DetailedTasks.
     std::map<DetailedTask*, InternalDependency*> internalDependents;
-    
+
     unsigned long   numPendingInternalDependencies;
     std::mutex      internalDependencyLock;
-    
+
     int resourceIndex;
     int staticOrder;
 
     DetailedTask( const Task& );
     DetailedTask& operator=( const Task& );
-    
+
     // specifies the type of task this is:
     //   * normal executes on either the patches cells or the patches coarse cells
     //   * fine executes on the patches fine cells (for example coarsening)
-    
+
     bool operator<( const DetailedTask& other );
-    
+
     ProfileType d_profileType;
 
 #ifdef HAVE_CUDA
@@ -557,7 +559,7 @@ class SchedulerCommon;
     void add( DetailedTask* task );
 
     void makeDWKeyDatabase();
-    
+
     void copyoutDWKeyDatabase( OnDemandDataWarehouseP dws ) { dws->copyKeyDB(varKeyDB, levelKeyDB); }
 
     int numTasks() const { return (int)tasks_.size(); }
@@ -585,7 +587,7 @@ class SchedulerCommon;
     void logMemoryUse( std::ostream& out, unsigned long& total, const std::string& tag );
 
     void initTimestep();
-    
+
     void computeLocalTasks( int me );
 
     int numLocalTasks() const { return (int)localtasks_.size(); }
@@ -621,7 +623,7 @@ class SchedulerCommon;
     ParticleExchangeVar& getParticleSends() { return particleSends_; }
 
     ParticleExchangeVar& getParticleRecvs() { return particleRecvs_; }
-    
+
     void setTaskPriorityAlg( QueueAlg alg ) { taskPriorityAlg_=alg; }
 
     QueueAlg getTaskPriorityAlg() { return taskPriorityAlg_; }
@@ -731,7 +733,7 @@ class SchedulerCommon;
     std::vector<DetailedTask*>    tasks_;
     KeyDatabase<Patch>            varKeyDB;
     KeyDatabase<Level>            levelKeyDB;
-    
+
     // TODO - FIXME: Figure out why this was commented out long ago - APH 02/12/16
     #if 0
         std::vector<DetailedReq*>  initreqs_;
@@ -751,7 +753,7 @@ class SchedulerCommon;
     // but that probably isn't a good way to do unless you make it a breadth
     // first topological order.
     QueueAlg taskPriorityAlg_;
-    
+
     using TaskQueue  = std::queue<DetailedTask*>;
     using TaskPQueue = std::priority_queue<DetailedTask*, std::vector<DetailedTask*>, DetailedTaskPriorityComparison>;
 
@@ -766,7 +768,7 @@ class SchedulerCommon;
 
     // for logging purposes - how much extra comm is going on
     int extraCommunication_;
-    
+
     std::mutex  readyQueueLock_;
     std::mutex  mpiCompletedQueueLock_;
 
