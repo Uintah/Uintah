@@ -142,6 +142,7 @@ private:
    TaskHandle(DetailedTask* dtask)
      : m_detailed_task{dtask}
    {
+     // to avoid potentially many small allocations
      new (reinterpret_cast<RuntimeStats::TaskWaitTimer*>(buf)) RuntimeStats::TaskWaitTimer(dtask);
    }
 
@@ -150,6 +151,7 @@ private:
             ,       std::vector<DataWarehouseP>         & dws
             )
    {
+     // use RAII timer to capture wait time (destroyed but not deallocated)
      reinterpret_cast<RuntimeStats::TaskWaitTimer*>(buf)->~TaskWaitTimer();
      m_detailed_task->doit(pg, oddws, dws);
    }
@@ -185,7 +187,7 @@ private:
 
 
   // Methods for TaskRunner management
-  void select_tasks();
+  void select_tasks( int iteration, TaskPool::handle & find_handle );
 
   void thread_fence();
 
@@ -203,12 +205,12 @@ private:
   bool     m_abort{ false };
   int      m_current_iteration{ 0 };
   int      m_num_tasks{ 0 };
-  int      m_current_phase{ 0 };
   int      m_num_phases{ 0 };
   int      m_abort_point{ 0 };
   int      m_num_threads{ 0 };
 
   using atomic_int_array = std::unique_ptr<std::atomic<int>[]>;
+  std::atomic<int>            m_current_phase;
   std::atomic<int>            m_num_tasks_done;
   atomic_int_array            m_phase_tasks_done;
 
