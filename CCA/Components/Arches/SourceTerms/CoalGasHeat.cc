@@ -12,6 +12,16 @@
 #include <CCA/Components/Arches/TransportEqns/DQMOMEqn.h>
 
 //===========================================================================
+//
+#define USE_FUNCTOR 1
+#undef  USE_FUNCTOR 
+
+#ifdef USE_FUNCTOR
+#  include <Core/Grid/Variables/BlockRange.h>
+#  ifdef UINTAH_ENABLE_KOKKOS
+#    include <Kokkos_Core.hpp>
+#  endif //UINTAH_ENABLE_KOKKOS
+#endif
 
 using namespace std;
 using namespace Uintah; 
@@ -85,6 +95,34 @@ CoalGasHeat::sched_computeSource( const LevelP& level, SchedulerP& sched, int ti
   sched->addTask(tsk, level->eachPatch(), _shared_state->allArchesMaterials()); 
 
 }
+
+struct sumEnthalpyGasSource{
+       sumEnthalpyGasSource(constCCVariable<double>& _qn_gas_enthalpy,
+                           CCVariable<double>& _enthalpySrc) :
+#ifdef UINTAH_ENABLE_KOKKOS
+                           qn_gas_enthalpy(_qn_gas_enthalpy.getKokkosView()),
+                           enthalpySrc(_enthalpySrc.getKokkosView())
+#else
+                           qn_gas_enthalpy(_qn_gas_enthalpy),
+                           enthalpySrc(_enthalpySrc)
+#endif
+                           {  }
+
+  void operator()(int i , int j, int k ) const { 
+   enthalpySrc(i,j,k) += qn_gas_enthalpy(i,j,k); 
+  }
+
+  private:
+#ifdef UINTAH_ENABLE_KOKKOS
+   KokkosView3<const double> qn_gas_enthalpy; 
+   KokkosView3<double>  enthalpySrc; 
+#else
+   constCCVariable<double>& qn_gas_enthalpy;
+   CCVariable<double>& enthalpySrc; 
+#endif
+};
+
+
 //---------------------------------------------------------------------------
 // Method: Actually compute the source term 
 //---------------------------------------------------------------------------
@@ -134,10 +172,19 @@ CoalGasHeat::computeSource( const ProcessorGroup* pc,
  
       new_dw->get( qn_gas_heat, gasModelLabel, matlIndex, patch, gn, 0 );
 
+#ifdef USE_FUNCTOR
+      Uintah::BlockRange range(patch->getCellLowIndex(),patch->getCellHighIndex());
+
+      sumEnthalpyGasSource doSumEnthalpySource(qn_gas_heat, 
+                                               heatSrc);
+
+      Uintah::parallel_for(range, doSumEnthalpySource);
+#else
       for (CellIterator iter=patch->getCellIterator(); !iter.done(); iter++){
         IntVector c = *iter;
         heatSrc[c] += qn_gas_heat[c];
       }
+#endif
     }
   }
 }

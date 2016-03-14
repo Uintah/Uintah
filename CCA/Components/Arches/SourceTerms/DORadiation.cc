@@ -452,7 +452,6 @@ DORadiation::initialize( const ProcessorGroup* pc,
       new_dw->allocateAndPut(temp_var, *iter, matlIndex, patch ); 
       temp_var.initialize(0.0);
     }
-
   }
 }
 
