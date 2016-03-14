@@ -3435,7 +3435,14 @@ DataArchiver::setupSharedFileSystem()
       throw ErrnoException( "fclose", errno, __FILE__, __LINE__ );
     }
 
-    const char* outbuf = test_filename_stream.str().c_str();
+    // While the following has never before been necessary, it turns out that
+    // the "str()" operator on an ostringstream creates a temporary buffer
+    // that can be deleted at any time and so using ".c_str()" on it may return
+    // garbage.  To avoid this, we need to copy the ".str()" output into our
+    // own string, and then use the ".c_str()" on that non-temporary string.
+    const string temp_string = test_filename_stream.str();
+
+    const char* outbuf = temp_string.c_str();
     int         outlen = (int)strlen( outbuf );
 
     // Broadcast test filename length, and then broadcast the actual name.
