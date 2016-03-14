@@ -332,6 +332,17 @@ using SCIRun::Mutex;
        //! add saved global (reduction) variables to index.xml
        void indexAddGlobals();
 
+       // setupLocalFileSystems() and setupSharedFileSystem() are used to 
+       // create the UDA (versioned) directory.  setupLocalFileSystems() is
+       // old method of determining which ranks should output UDA
+       // metadata and handles the case when each node has its own local file system
+       // (as opposed to a shared file system across all nodes). setupLocalFileSystems()
+       // will only be used if specifically turned on via a
+       // command line arg to sus when running using MPI.
+       void setupLocalFileSystems();
+       void setupSharedFileSystem(); // Verifies that all ranks see a shared FS.
+       void saveSVNinfo();
+
        //! string for uda dir (actual dir will have postpended numbers
        //! i.e., filebase.000
        std::string d_filebase;

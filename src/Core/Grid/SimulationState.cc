@@ -119,7 +119,9 @@ SimulationState::SimulationState(ProblemSpecP &ps)
   d_isCopyDataTimestep = 0;
   d_recompileTaskGraph = false;
   d_switchState        = false;
-  d_activeDims[0] = d_activeDims[1] = d_activeDims[2] = 0;
+  d_activeDims[0]      = d_activeDims[1] = d_activeDims[2] = 0;
+
+  d_usingLocalFileSystems = false;
   
   //initialize the overhead percentage
   overheadIndex=0;

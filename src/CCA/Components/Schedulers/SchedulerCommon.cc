@@ -76,22 +76,22 @@ extern DebugStream simulate_multiple_gpus;
 char* SchedulerCommon::start_addr = NULL;
 
 
-SchedulerCommon::SchedulerCommon(const ProcessorGroup* myworld,
-                                 const Output*         oport)
-  : UintahParallelComponent(myworld),
-    m_outPort(oport),
-    trackingVarsPrintLocation_(0),
-    d_maxMemUse(0),
-    m_graphDoc(NULL),
-    m_nodes(NULL)
+SchedulerCommon::SchedulerCommon( const ProcessorGroup* myworld,
+                                  const Output*         oport )
+  : UintahParallelComponent( myworld ),
+    m_outPort_( oport ),
+    trackingVarsPrintLocation_( 0 ),
+    d_maxMemUse( 0 ),
+    m_graphDoc_( NULL ),
+    m_nodes_( NULL )
 {
   d_generation = 0;
   numOldDWs    = 0;
 
-  emit_taskgraph     = false;
+  emit_taskgraph_    = false;
   d_useSmallMessages = true;
   restartable        = false;
-  memlogfile         = 0;
+  memlogfile_        = NULL;
 
   for (int i = 0; i < Task::TotalDWs; i++) {
     dwmap[i] = Task::InvalidDW;
@@ -119,8 +119,9 @@ SchedulerCommon::SchedulerCommon(const ProcessorGroup* myworld,
 
 SchedulerCommon::~SchedulerCommon()
 {
-  if(memlogfile)
-    delete memlogfile;
+  if( memlogfile_ ) {
+    delete memlogfile_;
+  }
 
   // list of vars used for AMR regridding
   for (unsigned i = 0; i < label_matls_.size(); i++)
@@ -192,25 +193,25 @@ void
 SchedulerCommon::makeTaskGraphDoc(const DetailedTasks* /* dt*/,
                                         int            rank)
 {
-  if (!emit_taskgraph) {
+  if ( !emit_taskgraph_ ) {
     return;
   }
 
-  if (!m_outPort->isOutputTimestep()){
+  if ( !m_outPort_->isOutputTimestep() ){
     return;
   }
 
   // make sure to release this DOMDocument after finishing emitting the nodes
-  m_graphDoc = ProblemSpec::createDocument("Uintah_TaskGraph");
+  m_graphDoc_ = ProblemSpec::createDocument( "Uintah_TaskGraph" );
   
-  ProblemSpecP meta = m_graphDoc->appendChild("Meta");
+  ProblemSpecP meta = m_graphDoc_->appendChild( "Meta" );
   meta->appendElement("username", getenv("LOGNAME"));
   time_t t = time(NULL);
   meta->appendElement("date", ctime(&t));
   
-  m_nodes = m_graphDoc->appendChild("Nodes");
+  m_nodes_ = m_graphDoc_->appendChild("Nodes");
   
-  ProblemSpecP edgesElement = m_graphDoc->appendChild("Edges");
+  ProblemSpecP edgesElement = m_graphDoc_->appendChild("Edges");
   
   for (unsigned i = 0; i < graphs.size(); i++) {
     DetailedTasks* dts = graphs[i]->getDetailedTasks();
@@ -226,8 +227,8 @@ SchedulerCommon::makeTaskGraphDoc(const DetailedTasks* /* dt*/,
 bool
 SchedulerCommon::useInternalDeps()
 {
-  // keep track of internal dependencies only if it will emit the taskgraphs (by default).
-  return emit_taskgraph;
+  // Keep track of internal dependencies only if it will emit the taskgraphs (by default).
+  return emit_taskgraph_;
 }
 
 //______________________________________________________________________
@@ -239,12 +240,12 @@ SchedulerCommon::emitNode( const DetailedTask * task,
                                  double         duration,
                                  double         execution_duration )
 {  
-  if (m_nodes == 0) {
+  if ( m_nodes_ == 0 ) {
     return;
   }
 
-  ProblemSpecP node = m_nodes->appendChild("node");
-  //m_nodes->appendChild(node);
+  ProblemSpecP node = m_nodes_->appendChild( "node" );
+  //m_nodes_->appendChild( node );
 
   node->appendElement("name", task->getName());
   node->appendElement("start", start);
@@ -259,24 +260,24 @@ SchedulerCommon::emitNode( const DetailedTask * task,
 //
 
 void
-SchedulerCommon::finalizeNodes(int process /* = 0*/)
+SchedulerCommon::finalizeNodes( int process /* = 0 */ )
 {
-    if (m_graphDoc == 0){
+    if ( m_graphDoc_ == 0 ){
       return;
     }
 
-    if (m_outPort->isOutputTimestep()) {
-      string timestep_dir(m_outPort->getLastTimestepOutputLocation());
+    if ( m_outPort_->isOutputTimestep() ) {
+      string timestep_dir( m_outPort_->getLastTimestepOutputLocation() );
       
       ostringstream fname;
       fname << "/taskgraph_" << setw(5) << setfill('0') << process << ".xml";
-      string file_name(timestep_dir + fname.str());
-      m_graphDoc->output(file_name.c_str());
+      string file_name( timestep_dir + fname.str() );
+      m_graphDoc_->output(file_name.c_str());
     }
     
-    //m_graphDoc->releaseDocument();
-    //m_graphDoc = NULL;
-    //m_nodes = NULL;
+    //m_graphDoc_->releaseDocument();
+    //m_graphDoc_ = NULL;
+    //m_nodes_ = NULL;
 }
 
 //______________________________________________________________________
@@ -1096,16 +1097,16 @@ SchedulerCommon::getSuperPatchExtents( const VarLabel*        label,
 void
 SchedulerCommon::logMemoryUse()
 {
-  if (!memlogfile) {
+  if ( !memlogfile_ ) {
     ostringstream fname;
     fname << "uintah_memuse.log.p" << setw(5) << setfill('0') << d_myworld->myrank() << "." << d_myworld->size();
-    memlogfile = scinew ofstream(fname.str().c_str());
-    if (!*memlogfile) {
+    memlogfile_ = scinew ofstream(fname.str().c_str());
+    if ( !memlogfile_ ) {
       cerr << "Error opening file: " << fname.str() << '\n';
     }
   }
 
-  *memlogfile << '\n';
+  *memlogfile_ << '\n';
   unsigned long total = 0;
 
   for (int i = 0; i < (int)dws.size(); i++) {
@@ -1121,7 +1122,7 @@ SchedulerCommon::logMemoryUse()
     }
 
     if (dws[i]) {
-      dws[i]->logMemoryUse(*memlogfile, total, name);
+      dws[i]->logMemoryUse( *memlogfile_, total, name );
     }
 
   }
@@ -1129,12 +1130,12 @@ SchedulerCommon::logMemoryUse()
   for (unsigned i = 0; i < graphs.size(); i++) {
     DetailedTasks* dts = graphs[i]->getDetailedTasks();
     if (dts) {
-      dts->logMemoryUse(*memlogfile, total, "Taskgraph");
+      dts->logMemoryUse( *memlogfile_, total, "Taskgraph" );
     }
   }
 
-  *memlogfile << "Total: " << total << '\n';
-  memlogfile->flush();
+  *memlogfile_ << "Total: " << total << '\n';
+  memlogfile_->flush();
 }
 
 //______________________________________________________________________
@@ -1157,11 +1158,12 @@ SchedulerCommon::makeVarLabelMaterialMap()
 void
 SchedulerCommon::doEmitTaskGraphDocs()
 {
-  emit_taskgraph=true;
+  emit_taskgraph_ = true;
 }
 
 //______________________________________________________________________
 //
+
 void
 SchedulerCommon::compile()
 {
@@ -1557,9 +1559,9 @@ SchedulerCommon::scheduleAndDoDataCopy( const GridP&               grid,
   d_sharedState->d_runTimeStats[SimulationState::RegriddingCompilationTime] += Time::currentSeconds() - start;
 
   // save these and restore them, since the next execute will append the scheduler's, and we don't want to.
-  double executeTime = d_sharedState->d_runTimeStats[SimulationState::TaskExecTime];
+  double executeTime    = d_sharedState->d_runTimeStats[SimulationState::TaskExecTime];
   double globalCommTime = d_sharedState->d_runTimeStats[SimulationState::TaskGlobalCommTime];
-  double localCommTime = d_sharedState->d_runTimeStats[SimulationState::TaskLocalCommTime];
+  double localCommTime  = d_sharedState->d_runTimeStats[SimulationState::TaskLocalCommTime];
 
   start = Time::currentSeconds();
   this->execute();

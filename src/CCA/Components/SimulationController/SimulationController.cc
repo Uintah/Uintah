@@ -100,6 +100,7 @@ SimulationController::SimulationController( const ProcessorGroup * myworld,
   d_restarting             = false;
   d_reduceUda              = false;
   d_doMultiTaskgraphing    = false;
+  d_usingLocalFileSystems  = false;
   d_archive                = NULL;
   d_sim                    = 0;
 
@@ -265,6 +266,15 @@ SimulationController::setReduceUdaFlags( const string & fromDir )
 //
 
 void
+SimulationController::setUseLocalFileSystems()
+{
+  d_usingLocalFileSystems = true;
+}
+
+//______________________________________________________________________
+//
+
+void
 SimulationController::doRestart( const string & restartFromDir, int timestep,
                                  bool fromScratch, bool removeOldDir )
 {
@@ -281,8 +291,10 @@ SimulationController::doRestart( const string & restartFromDir, int timestep,
 void
 SimulationController::preGridSetup( void )
 {
-  d_sharedState = scinew SimulationState(d_ups);
-    
+  d_sharedState = scinew SimulationState( d_ups );
+
+  d_sharedState->d_usingLocalFileSystems = d_usingLocalFileSystems;
+
   d_output = dynamic_cast<Output*>(getPort("output"));
     
   Scheduler* sched = dynamic_cast<Scheduler*>(getPort("scheduler"));
@@ -305,7 +317,7 @@ SimulationController::preGridSetup( void )
   d_sharedState->d_simTime = d_timeinfo;
 
 #ifdef HAVE_VISIT
-  d_sharedState->SetVisIt( d_doVisIt );
+  d_sharedState->setVisIt( d_doVisIt );
 #endif
 }
 

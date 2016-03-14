@@ -68,21 +68,20 @@ extern SCIRun::Mutex cerrLock;
 #include <Core/Math/Expon.h>
 #include <Core/Util/DebugStream.h>
 
-#include   <vector>
-#include   <sstream>
-#include   <iostream>
+#include <vector>
+#include <sstream>
+#include <iostream>
 
 #include <cfloat>
 #include <sci_defs/hypre_defs.h>
 #include <sci_defs/visit_defs.h>
 
 #ifdef HAVE_HYPRE
-#include <CCA/Components/Solvers/HypreSolver.h>
+#  include <CCA/Components/Solvers/HypreSolver.h>
 #endif
 
 #ifdef HAVE_CUDA
-#include <CCA/Components/Schedulers/UnifiedScheduler.h>
-
+#  include <CCA/Components/Schedulers/UnifiedScheduler.h>
 #endif
 
 #define SET_CFI_BC 0
@@ -562,10 +561,9 @@ void ICE::problemSetup(const ProblemSpecP& prob_spec,
   if(!d_with_mpm){
     d_analysisModules = AnalysisModuleFactory::create(prob_spec, sharedState, dataArchiver);
 
-    if(d_analysisModules.size() != 0){
+    if( d_analysisModules.size() != 0 ) {
       vector<AnalysisModule*>::iterator iter;
-      for( iter  = d_analysisModules.begin();
-           iter != d_analysisModules.end(); iter++){
+      for( iter  = d_analysisModules.begin(); iter != d_analysisModules.end(); iter++) {
         AnalysisModule* am = *iter;
         am->problemSetup(prob_spec, restart_prob_spec, grid, sharedState);
       }
@@ -574,8 +572,7 @@ void ICE::problemSetup(const ProblemSpecP& prob_spec,
   
 #ifdef HAVE_VISIT
   // Running with VisIt add in the variable that the user change modify.
-  if( d_sharedState->GetVisIt() )
-  {
+  if( d_sharedState->getVisIt() ) {
     // variable 1
     SimulationState::interactiveVar var;
     var.name     = "ICE-OrderOfAdvection";
