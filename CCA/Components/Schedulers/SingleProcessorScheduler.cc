@@ -59,9 +59,9 @@ SingleProcessorScheduler::~SingleProcessorScheduler()
 SchedulerP
 SingleProcessorScheduler::createSubScheduler()
 {
-  SingleProcessorScheduler* subsched = scinew SingleProcessorScheduler(d_myworld, m_outPort, this);
-  UintahParallelPort* lbp = getPort("load balancer");
-  subsched->attachPort("load balancer", lbp);
+  SingleProcessorScheduler * subsched = scinew SingleProcessorScheduler( d_myworld, m_outPort_, this );
+  UintahParallelPort       * lbp      = getPort("load balancer");
+  subsched->attachPort( "load balancer", lbp );
   subsched->d_sharedState = d_sharedState;
   return subsched;
 }

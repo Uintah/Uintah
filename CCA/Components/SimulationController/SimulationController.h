@@ -101,6 +101,10 @@ public:
   //  sets simulationController flags
   void setReduceUdaFlags( const std::string& fromDir );
      
+  // Tells sim controller that we are running with each MPI node having a separate file system.
+  // (Simulation defaults to running on a shared file system.)
+  void setUseLocalFileSystems();
+
   ProblemSpecP         getProblemSpecP() { return d_ups; }
   ProblemSpecP         getGridProblemSpecP() { return d_grid_ps; }
   SimulationStateP     getSimulationStateP() { return d_sharedState; }
@@ -149,6 +153,8 @@ protected:
 
   bool d_doAMR;
   bool d_doMultiTaskgraphing;
+
+  bool d_usingLocalFileSystems; // Whether Uintah is running on a shared or local file systems.
 
   /* For restarting */
   bool        d_restarting;
@@ -213,8 +219,8 @@ private:
 
 #ifdef HAVE_VISIT
 public:
-  void SetVisIt( bool val ) { d_doVisIt = val; }
-  bool GetVisIt() { return d_doVisIt; }
+  void setVisIt( bool val ) { d_doVisIt = val; }
+  bool getVisIt() { return d_doVisIt; }
   
 private:
   bool d_doVisIt;

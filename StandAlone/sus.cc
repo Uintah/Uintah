@@ -76,6 +76,7 @@
 #include <Core/Exceptions/InternalError.h>
 #include <Core/Exceptions/InvalidGrid.h>
 #include <Core/Exceptions/ProblemSetupException.h>
+#include <Core/Grid/SimulationState.h>
 #include <Core/Malloc/Allocator.h>
 #include <Core/OS/ProcessInfo.h>
 #include <Core/Parallel/Parallel.h>
@@ -183,6 +184,7 @@ usage(const std::string& message, const std::string& badarg, const std::string& 
 #endif
     cerr << "-nthreads <#>        : number of threads per MPI process, requires multi-threaded Unified scheduler\n";
     cerr << "-layout NxMxO        : Eg: 2x1x1.  MxNxO must equal number tof boxes you are using.\n";
+    cerr << "-local_filesystem    : If using MPI, use this flag if each node has a local disk.\n";
     cerr << "-emit_taskgraphs     : Output taskgraph information\n";
     cerr << "-restart             : Give the checkpointed uda directory as the input file\n";
     cerr << "-reduce_uda          : Reads <uda-dir>/input.xml file and removes unwanted labels (see FAQ).\n";
@@ -268,6 +270,7 @@ main( int argc, char *argv[], char *env[] )
    */
   bool   do_AMR              = false;
   bool   emit_graphs         = false;
+  bool   local_filesystem    = false;
   bool   restart             = false;
   bool   reduce_uda          = false;
   bool   do_svnDiff          = false;
@@ -353,6 +356,9 @@ main( int argc, char *argv[], char *env[] )
     }
     else if (arg == "-emit_taskgraphs") {
       emit_graphs = true;
+    }
+    else if (arg == "-local_filesystem") {
+      local_filesystem = true;
     }
     else if (arg == "-restart") {
       restart = true;
@@ -699,8 +705,11 @@ main( int argc, char *argv[], char *env[] )
     SimulationController* ctl = scinew AMRSimulationController( world, do_AMR, ups );
 
 #ifdef HAVE_VISIT
-    ctl->SetVisIt( do_VisIt );
+    ctl->setVisIt( do_VisIt );
 #endif
+    if( local_filesystem ) {
+      ctl->setUseLocalFileSystems();
+    }
 
     RegridderCommon* reg = 0;
     if(do_AMR) {
@@ -744,7 +753,7 @@ main( int argc, char *argv[], char *env[] )
 
     //__________________________________
     // Load balancer
-    LoadBalancerCommon* lbc = LoadBalancerFactory::create(ups, world);
+    LoadBalancerCommon* lbc = LoadBalancerFactory::create( ups, world );
     lbc->attachPort("sim", sim);
     if(reg) {
       reg->attachPort("load balancer", lbc);
@@ -753,12 +762,12 @@ main( int argc, char *argv[], char *env[] )
     
     //__________________________________
     // Output
-    DataArchiver* dataarchiver = scinew DataArchiver(world, udaSuffix);
-    Output* output = dataarchiver;
-    ctl->attachPort("output", dataarchiver);
-    dataarchiver->attachPort("load balancer", lbc);
-    comp->attachPort("output", dataarchiver);
-    dataarchiver->attachPort("sim", sim);
+    DataArchiver * dataarchiver = scinew DataArchiver( world, udaSuffix );
+    Output       * output       = dataarchiver;
+    ctl->attachPort( "output", dataarchiver );
+    dataarchiver->attachPort( "load balancer", lbc );
+    comp->attachPort( "output", dataarchiver );
+    dataarchiver->attachPort( "sim", sim );
     
     //__________________________________
     // Scheduler

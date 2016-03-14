@@ -154,7 +154,6 @@ AMRSimulationController::run()
   d_scheduler->setInitTimestep( true );
   
   bool first = true;
-  bool last  = false;
   
   if (d_restarting) {
     d_scheduler->setRestartInitTimestep(first);
@@ -196,7 +195,7 @@ AMRSimulationController::run()
 #ifdef HAVE_VISIT
   visit_simulation_data visitSimData;
 
-  if( d_sharedState->GetVisIt() )
+  if( d_sharedState->getVisIt() )
   {
     visitSimData.simController = this;
 
@@ -276,7 +275,7 @@ AMRSimulationController::run()
     // Note: this code is not explicit to VisIt but it is currently
     // the only component that is making use of the ability to
     // overirde adjusting delta T.
-    if( d_sharedState->GetVisIt() && d_sharedState->adjustDelT() == false )
+    if( d_sharedState->getVisIt() && d_sharedState->adjustDelT() == false )
     {
       d_sharedState->adjustDelT(true);
     }
@@ -474,11 +473,15 @@ AMRSimulationController::run()
     
     calcWallTime();
 
+#ifdef HAVE_VISIT
+    bool last  = false;
+
     // Check to see if at the last iteration
     last = ( (time >= d_timeinfo->maxTime) ||
 	     (iterations >= d_timeinfo->maxTimestep) ||
 	     (d_timeinfo->max_wall_time != 0 &&
 	      getWallTime() >= d_timeinfo->max_wall_time) );
+#endif
     
 
     // Get and reduce the performace run time stats
@@ -510,7 +513,7 @@ AMRSimulationController::run()
     // anything needs to be done.
 
 #ifdef HAVE_VISIT
-    if( d_sharedState->GetVisIt() )
+    if( d_sharedState->getVisIt() )
     {
       // Get the new delt so the user can change the value.
       d_scheduler->getLastDW()->get(delt_var, d_sharedState->get_delt_label());

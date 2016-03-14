@@ -298,7 +298,7 @@ class SchedulerCommon : public Scheduler, public UintahParallelComponent {
     std::vector<OnDemandDataWarehouseP> dws;
     int                                 numOldDWs;
     int                                 dwmap[Task::TotalDWs];
-    const Output*                       m_outPort;
+    const Output*                       m_outPort_;
     bool                                restartable;
 
     //! These are so we can track certain variables over the taskgraph's execution.
@@ -340,10 +340,11 @@ class SchedulerCommon : public Scheduler, public UintahParallelComponent {
     // Maximum memory use as sampled across a given timestep.
     unsigned long d_maxMemUse;
 
-    ProblemSpecP                m_graphDoc;
-    ProblemSpecP                m_nodes;
-    std::ofstream*              memlogfile;
-    bool                        emit_taskgraph;
+    ProblemSpecP                m_graphDoc_;
+    ProblemSpecP                m_nodes_;
+    std::ofstream*              memlogfile_;
+    bool                        emit_taskgraph_;
+
     LocallyComputedPatchVarMap* m_locallyComputedPatchVarMap;
     Relocate                    reloc1_;
     Relocate                    reloc2_;

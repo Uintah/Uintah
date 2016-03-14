@@ -200,9 +200,10 @@ ThreadedMPIScheduler::problemSetup( const ProblemSpecP&     prob_spec,
 SchedulerP
 ThreadedMPIScheduler::createSubScheduler()
 {
-  ThreadedMPIScheduler* subsched = scinew ThreadedMPIScheduler(d_myworld, m_outPort, this);
-  UintahParallelPort* lbp = getPort("load balancer");
-  subsched->attachPort("load balancer", lbp);
+  UintahParallelPort   * lbp       = getPort( "load balancer" );
+  ThreadedMPIScheduler * subsched = scinew ThreadedMPIScheduler( d_myworld, m_outPort_, this );
+
+  subsched->attachPort( "load balancer", lbp );
   subsched->d_sharedState = d_sharedState;
   subsched->numThreads_ = Uintah::Parallel::getNumThreads() - 1;
 

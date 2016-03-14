@@ -150,10 +150,10 @@ DynamicMPIScheduler::problemSetup( const ProblemSpecP&     prob_spec,
 SchedulerP
 DynamicMPIScheduler::createSubScheduler()
 {
-  DynamicMPIScheduler* newsched = scinew DynamicMPIScheduler(d_myworld, m_outPort, this);
+  UintahParallelPort  * lbp      = getPort("load balancer");
+  DynamicMPIScheduler * newsched = scinew DynamicMPIScheduler( d_myworld, m_outPort_, this );
   newsched->d_sharedState = d_sharedState;
-  UintahParallelPort* lbp = getPort("load balancer");
-  newsched->attachPort("load balancer", lbp);
+  newsched->attachPort( "load balancer", lbp );
   newsched->d_sharedState = d_sharedState;
   return newsched;
 }
