@@ -1475,22 +1475,14 @@ bool DetailedTask::addInternalRequires(DependencyBatch* req)
 void
 DetailedTask::checkExternalDepCount()
 {
-  if (mpidbg.active()) {
-    cerrLock.lock();
-    mpidbg << "Rank-" << Parallel::getMPIRank() << " Task " << this->getTask()->getName() << " external deps: " << externalDependencyCount_
-           << " internal deps: " << numPendingInternalDependencies << "\n";
-    cerrLock.unlock();
-  }
+  DOUT(mpidbg.active(), "Rank-" << Parallel::getMPIRank() << " Task " << this->getTask()->getName() << " external deps: " << externalDependencyCount_
+                                << " internal deps: " << numPendingInternalDependencies);
 
   if (externalDependencyCount_ == 0 && taskGroup->sc_->useInternalDeps() && initiated_ && !task->usesMPI()) {
     taskGroup->mpiCompletedQueueLock_.lock();
-    if (mpidbg.active()) {
-      cerrLock.lock();
-      mpidbg << "Rank-" << Parallel::getMPIRank() << " Task " << this->getTask()->getName()
-             << " MPI requirements satisfied, placing into external ready queue\n";
-      cerrLock.unlock();
-    }
 
+    DOUT(mpidbg.active(), "Rank-" << Parallel::getMPIRank() << " Task " << this->getTask()->getName()
+                                  << " MPI requirements satisfied, placing into external ready queue");
     if (externallyReady_ == false) {
       taskGroup->mpiCompletedTasks_.push(this);
       externallyReady_ = true;
