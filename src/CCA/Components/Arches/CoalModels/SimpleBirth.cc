@@ -14,6 +14,13 @@
 
 //===========================================================================
 
+#define USE_FUNCTOR 1
+#undef  USE_FUNCTOR 
+
+#include <Core/Grid/Variables/BlockRange.h>
+#ifdef UINTAH_ENABLE_KOKKOS
+#  include <Kokkos_Core.hpp>
+#endif //UINTAH_ENABLE_KOKKOS
 using namespace std;
 using namespace Uintah; 
 
@@ -195,6 +202,53 @@ SimpleBirth::sched_computeModel( const LevelP& level, SchedulerP& sched, int tim
   sched->addTask(tsk, level->eachPatch(), d_sharedState->allArchesMaterials()); 
 
 }
+    
+struct computeBirth{
+       computeBirth(double _vol,
+                    double _dt,
+                    double _small_weight,
+                    double _a_scale,
+                    bool _is_weight,
+                    constCCVariable<double> &_w, 
+                    constCCVariable<double> &_w_rhs, 
+                    constCCVariable<double> &_a, 
+                    constCCVariable<double> _vol_fraction,
+                    CCVariable<double> &_model) :
+                    vol(_vol),
+                    dt(_dt),
+                    small_weight(_small_weight),
+                    a_scale(_a_scale),
+                    is_weight(_is_weight),
+                    w(_w),
+                    w_rhs(_w_rhs),
+                    a(_a),
+                    vol_fraction(_vol_fraction),
+                    model(_model) {  }
+
+  void operator()(int i , int j, int k ) const { 
+
+    if ( vol_fraction(i,j,k) > 0. ){ 
+
+        model(i,j,k) = std::max(( small_weight - w(i,j,k) ) / dt - w_rhs(i,j,k) / vol ,0.0);
+        model(i,j,k)*= vol_fraction(i,j,k); 
+        model(i,j,k)*= is_weight ? 1.0 : a(i,j,k)/a_scale;
+
+    }  
+  }
+
+  private:
+      double vol;
+      double dt;
+      double small_weight;
+      double a_scale;
+      double is_weight;
+      constCCVariable<double> &w; 
+      constCCVariable<double> &w_rhs; 
+      constCCVariable<double> &a; 
+      constCCVariable<double> &vol_fraction;
+      CCVariable<double> &model; 
+};
+
 //---------------------------------------------------------------------------
 // Method: Actually compute the source term 
 //---------------------------------------------------------------------------
@@ -233,6 +287,7 @@ SimpleBirth::computeModel( const ProcessorGroup* pc,
     } else { 
       new_dw->getModifiable( model, d_modelLabel, matlIndex, patch ); 
       new_dw->getModifiable( gas_source, d_gasLabel, matlIndex, patch ); 
+      gas_source.initialize(0.0);
       which_dw = new_dw; 
     }
 
@@ -248,6 +303,16 @@ SimpleBirth::computeModel( const ProcessorGroup* pc,
       which_dw->get( a, _abscissa_label, matlIndex, patch, Ghost::None, 0 ); 
     }
 
+#ifdef USE_FUNCTOR              
+  Uintah::BlockRange range(patch->getCellLowIndex(),patch->getCellHighIndex());
+  computeBirth doBirth(vol, dt, _small_weight, _a_scale, _is_weight,
+                       w, 
+                       w_rhs, 
+                       a, 
+                       vol_fraction,
+                       model);
+      Uintah::parallel_for( range, doBirth );
+#else
     for (CellIterator iter=patch->getCellIterator(); !iter.done(); iter++){
 
       IntVector c = *iter;
@@ -267,15 +332,8 @@ SimpleBirth::computeModel( const ProcessorGroup* pc,
           model[c] = a[c]/_a_scale * balance; 
 
         }
-
-      } else { 
-
-        model[c] = 0.0; 
-
-      }
-
-      gas_source[c] = 0.0;
-
+      } 
     }
+#endif
   }
 }
