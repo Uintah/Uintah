@@ -48,7 +48,8 @@ using namespace Uintah;
 //
 namespace {
 
-Dout g_mpi_stats( "MPIStats"  , false );
+Dout g_mpi_stats( "MPIStats", false );
+Dout g_mpi_dbg(   "MPIDBG"  , false );
 
 std::mutex      s_lb_mutex;
 
@@ -364,6 +365,7 @@ void ThreadedTaskScheduler::execute(  int tgnum /*=0*/ , int iteration /*=0*/ )
       m_num_tasks_done.fetch_add(1, std::memory_order_relaxed);
       m_phase_tasks_done[sync_task->getTask()->d_phase].fetch_add(1, std::memory_order_relaxed);
     } else {
+//      process_MPI_requests();
       select_tasks(iteration, find_handle);
     }
   }
@@ -419,6 +421,21 @@ void ThreadedTaskScheduler::verifyChecksum()
           numSpatialTasks++;
         }
       }
+    }
+
+    // Spatial tasks don't count against the global checksum
+    checksum -= numSpatialTasks;
+
+    DOUT(g_mpi_dbg, d_myworld->myrank() << " (MPI_Allreduce) Checking checksum of " << checksum);
+
+    int result_checksum;
+    MPI_Allreduce(&checksum, &result_checksum, 1, MPI_INT, MPI_MIN, d_myworld->getComm());
+
+    if (checksum != result_checksum) {
+      DOUT(g_mpi_dbg, "Failed task checksum comparison! Not all processes are executing the same taskgraph\n"
+            << "  Rank-" << d_myworld->myrank() << " of " << d_myworld->size() - 1 << ": has sum " << checksum
+            << "  and global is " << result_checksum);
+      MPI_Abort(d_myworld->getComm(), 1);
     }
   }
 #endif
@@ -819,6 +836,7 @@ void ThreadedTaskScheduler::select_tasks( int iteration, TaskPool::handle & find
       flag = 1;
     }
     else if (th.m_detailed_task->getExternalDepCount() == 0 &&
+             th.m_detailed_task->isInitiated() &&
              th.m_detailed_task->getTask()->d_phase == m_current_phase.load(std::memory_order_relaxed)) {
       flag = 2;
     }

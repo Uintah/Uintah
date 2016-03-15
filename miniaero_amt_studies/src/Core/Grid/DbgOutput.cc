@@ -21,10 +21,12 @@
  * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
  * IN THE SOFTWARE.
  */
+
 #include <Core/Grid/DbgOutput.h>
 #include <Core/Parallel/Parallel.h>
+#include <Core/Util/DOUT.hpp>
 
-using namespace std;
+#include <iomanip>
 
 namespace Uintah{
 
@@ -32,88 +34,59 @@ namespace Uintah{
 //
 void printSchedule( const PatchSet      * patches,
                     SCIRun::DebugStream & dbg,
-                    const string        & where )
+                    const std::string   & where )
 {
-  if (dbg.active()){
-    dbg << Uintah::Parallel::getMPIRank() << " ";
-    dbg << left;
-    dbg.width(50);
-    dbg << where << "L-"
-        << getLevel(patches)->getIndex()<< endl;
-  }  
-}
-//__________________________________
-//
-void printSchedule( const LevelP        & level,
-                    SCIRun::DebugStream & dbg,
-                    const string        & where )
-{
-  if (dbg.active()){
-    dbg << Uintah::Parallel::getMPIRank() << " ";
-    dbg << left;
-    dbg.width(50);
-    dbg << where << "L-"
-        << level->getIndex()<< endl;
-  }  
-}
-//__________________________________
-//
-void printTask(const PatchSubset* patches,
-               const Patch* patch,
-               SCIRun::DebugStream& dbg,
-               const string& where)
-{
-  if (dbg.active()){
-    dbg << Uintah::Parallel::getMPIRank() << " ";
-    dbg << left;
-    dbg.width(50);
-    dbg << where << "  \tL-"
-        << getLevel(patches)->getIndex()
-        << " patch " << patch->getGridIndex()<< endl;
-  }  
-}
-//__________________________________
-//
-void printTask(const PatchSubset* patches,
-               SCIRun::DebugStream& dbg,
-               const string& where)
-{
-  if (dbg.active()){
-    dbg << Uintah::Parallel::getMPIRank() << " ";
-    dbg << left;
-    dbg.width(50);
-    dbg << where << "  \tL-"
-        << getLevel(patches)->getIndex()
-        << " patches " << *patches << endl;
-  }  
-}
-//__________________________________
-//
-void printTask(const Patch* patch,
-               SCIRun::DebugStream& dbg,
-               const string& where)
-{
-  if (dbg.active()){
-    dbg << Uintah::Parallel::getMPIRank()  << " ";
-    dbg << left;
-    dbg.width(50);
-    dbg << where << " \tL-"
-        << patch->getLevel()->getIndex()
-        << " patch " << patch->getGridIndex()<< endl;
-  }  
+  DOUT(dbg.active(), Uintah::Parallel::getMPIRank() << " " << std::left << std::setw(50)
+       << "where L-" << getLevel(patches)->getIndex());
 }
 
 //__________________________________
 //
-void printTask(SCIRun::DebugStream& dbg,
-               const string& where)
+void printSchedule( const LevelP        & level,
+                    SCIRun::DebugStream & dbg,
+                    const std::string   & where )
 {
-  if (dbg.active()){
-    dbg << Uintah::Parallel::getMPIRank()  << " ";
-    dbg << left;
-    dbg.width(50);
-    dbg << where << " \tAll Patches" << endl;
-  }  
+  DOUT(dbg.active(), Uintah::Parallel::getMPIRank() << " " << std::left << std::setw(50)
+       << "where L-" << level->getIndex());
+}
+
+//__________________________________
+//
+void printTask( const PatchSubset   * patches,
+                const Patch         * patch,
+                SCIRun::DebugStream & dbg,
+                const std::string   & where )
+{
+  DOUT(dbg.active(), Uintah::Parallel::getMPIRank() << " " << std::left << std::setw(50)
+       << "where \tL-" << getLevel(patches)->getIndex() << " patch " << patch->getGridIndex());
+}
+
+//__________________________________
+//
+void printTask(const PatchSubset   * patches,
+               SCIRun::DebugStream & dbg,
+               const std::string   & where )
+{
+  DOUT(dbg.active(), Uintah::Parallel::getMPIRank() << " " << std::left << std::setw(50)
+       << "where \tL-" << getLevel(patches)->getIndex() << " patches " << *patches);
+}
+
+//__________________________________
+//
+void printTask(const Patch         * patch,
+               SCIRun::DebugStream & dbg,
+               const std::string   & where )
+{
+  DOUT(dbg.active(), Uintah::Parallel::getMPIRank() << " " << std::left << std::setw(50)
+       << "where \tL-" << patch->getLevel()->getIndex() << " patch " << patch->getGridIndex());
+}
+
+//__________________________________
+//
+void printTask(SCIRun::DebugStream & dbg,
+               const std::string   & where )
+{
+  DOUT(dbg.active(), Uintah::Parallel::getMPIRank() << " " << std::left << std::setw(50) << "where \tAll Patches");
 }
 
 } // End namespace Uintah

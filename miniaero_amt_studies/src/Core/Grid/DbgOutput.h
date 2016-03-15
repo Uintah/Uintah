@@ -22,12 +22,13 @@
  * IN THE SOFTWARE.
  */
 
-#ifndef Uintah_CORE_GRID_DBGOUTPUT_H
-#define Uintah_CORE_GRID_DBGOUTPUT_H
+#ifndef CORE_GRID_DBGOUTPUT_H
+#define CORE_GRID_DBGOUTPUT_H
 
 #include <Core/Util/DebugStream.h>
 #include <Core/Grid/LevelP.h>
 #include <Core/Grid/Patch.h>
+
 #include <string>
 
 namespace Uintah{
@@ -58,4 +59,4 @@ void printTask( SCIRun::DebugStream & dbg,
 
 } // End namespace Uintah
 
-#endif
+#endif // end CORE_GRID_DBGOUTPUT_H
