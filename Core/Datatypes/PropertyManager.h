@@ -42,7 +42,6 @@
 #include <Core/Datatypes/TypeName.h>
 #include <Core/Datatypes/builtin.h>
 #include <Core/Datatypes/Datatype.h>
-#include <Core/Persistent/PersistentSTL.h>
 #include <iostream>
 #include <map>
 

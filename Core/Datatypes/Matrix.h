@@ -38,7 +38,6 @@
 #define SCI_project_Matrix_h 1
 
 #include <Core/Datatypes/PropertyManager.h>
-#include <Core/Geometry/Transform.h>
 #include <Core/Containers/LockingHandle.h>
 #include <iosfwd>
 
@@ -120,7 +119,6 @@ public:
   virtual MatrixHandle submatrix(int r1, int c1, int r2, int c2) = 0;
 
   void scalar_multiply(double s);
-  Transform toTransform();
   DenseMatrix *direct_inverse();
   DenseMatrix *iterative_inverse();
   int cg_solve(const ColumnMatrix& rhs, ColumnMatrix& lhs,
