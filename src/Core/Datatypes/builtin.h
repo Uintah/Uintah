@@ -77,15 +77,6 @@ typedef ScalarType<long long> LongLong;
 typedef ScalarType<float>  Float;
 typedef ScalarType<double> Double;
 
-inline void Pio(Piostream& stream, Char& d)  {Pio(stream,d.val_);}
-inline void Pio(Piostream& stream, UChar& d) {Pio(stream,d.val_);}
-inline void Pio(Piostream& stream, Short& d) {Pio(stream,d.val_);}
-inline void Pio(Piostream& stream, UShort& d){Pio(stream,d.val_);}
-inline void Pio(Piostream& stream, Int& d)   {Pio(stream,d.val_);}
-inline void Pio(Piostream& stream, UInt& d)  {Pio(stream,d.val_);}
-inline void Pio(Piostream& stream, Float& d) {Pio(stream,d.val_);}
-inline void Pio(Piostream& stream, Double& d){Pio(stream,d.val_);}
-inline void Pio(Piostream& stream, LongLong& d){Pio(stream,d.val_);}
 
 inline const std::string find_type_name(Char*)  {return find_type_name((char *)0);}
 inline const std::string find_type_name(UChar*) {return find_type_name((unsigned char *)0);}

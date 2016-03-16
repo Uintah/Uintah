@@ -155,15 +155,6 @@ Point::InInterval( Point a, double epsilon )
     return 0;
 }
 
-void Pio(Piostream& stream, Point& p)
-{
-
-    stream.begin_cheap_delim();
-    Pio(stream, p.x_);
-    Pio(stream, p.y_);
-    Pio(stream, p.z_);
-    stream.end_cheap_delim();
-}
 
 const string& 
 Point::get_h_file_path() {

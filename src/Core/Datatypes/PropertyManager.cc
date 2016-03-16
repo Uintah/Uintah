@@ -287,56 +287,5 @@ PropertyManager::clear_transient()
 }
 
 
-#define PROPERTYMANAGER_VERSION 2
-
-void
-PropertyManager::io(Piostream &stream)
-{
-  bool bc = stream.backwards_compat_id();
-  stream.set_backwards_compat_id(false);
-
-  const int version =
-    stream.begin_class("PropertyManager", PROPERTYMANAGER_VERSION);
-  if ( stream.writing() )
-  {
-    pmlock_.lock();
-    unsigned int nprop = nproperties();
-    Pio(stream, nprop);
-    map_type::iterator i = properties_.begin(); 
-    while ( i != properties_.end() )
-    {
-      string name = i->first;
-      Pio(stream, name);
-      Persistent *p = i->second;
-      stream.io( p, PropertyBase::type_id );
-      ++i;
-    }
-    pmlock_.unlock();
-  }
-  else
-  {
-    unsigned int size;
-    Pio( stream, size );
-    pmlock_.lock();
-
-    string name;
-    Persistent *p = 0;
-    for (unsigned int i=0; i<size; i++ )
-    {
-      Pio(stream, name );
-      stream.io( p, PropertyBase::type_id );
-      properties_[name] = static_cast<PropertyBase *>(p);
-      if (version < 2 && name == "minmax")
-      {
-	properties_[name]->set_transient(true);
-      }
-    }
-    pmlock_.unlock();
-  }
-
-  stream.end_class();
-  stream.set_backwards_compat_id(bc);
-}
-
 
 } // namespace Uintah

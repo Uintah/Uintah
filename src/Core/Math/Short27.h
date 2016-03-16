@@ -88,7 +88,7 @@ namespace Uintah {
               void                    swapbytes( Uintah::Short27 & s );
   template<>  const std::string       find_type_name( Uintah::Short27 * );
               const TypeDescription * get_type_description( Uintah::Short27 * );
-              void                    Pio( Piostream &, Uintah::Short27 & );
+
 
 } // namespace Uintah
 

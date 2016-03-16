@@ -118,7 +118,7 @@ public:
 
   friend inline double Dot(const Quaternion&, const Quaternion&);
   friend std::ostream& operator<<(std::ostream&, const Quaternion&);
-  friend void Pio(Piostream&, Quaternion&);
+
 };
 
 inline void Quaternion::normalize(){

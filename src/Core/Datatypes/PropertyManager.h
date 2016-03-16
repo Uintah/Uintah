@@ -57,7 +57,7 @@ public:
     ASSERTFAIL("PropertyBase clone called");
   }
 
-  virtual void io(Piostream &) {}
+
   static  PersistentTypeID type_id;
 
   bool transient() const { return transient_; }
@@ -91,7 +91,6 @@ public:
   { return scinew Property(obj_, transient()); }
 
   static const std::string type_name(int n = -1);
-  virtual void io(Piostream &stream);
   static  PersistentTypeID type_id;
 
   virtual bool operator==(PropertyBase &pb) const {
@@ -113,7 +112,6 @@ public:
   }
 
 protected:
-  // Only Pio should use this constructor.
   // Default is for objects read in to be non-transient.
   Property() : PropertyBase(false) {}
 
@@ -162,24 +160,6 @@ Property<T>::maker()
   return scinew Property<T>();
 }
 
-template<class T>
-void
-Property<T>::io( Piostream &stream)
-{
-  const int version = stream.begin_class( type_name(-1), PROPERTY_VERSION);
-  if (version > 1)
-  {
-    Pio(stream, transient_);
-  }
-  //else
-  //{
-    //cout << "Warning: Possible bad transient flag in property '"
-    //<< type_name(-1) << "'\n";
-  //}
-  Pio(stream, obj_);
-  stream.end_class();
-}
-
 
 /*
  * PropertyManager
@@ -219,7 +199,6 @@ public:
   void remove_property( const std::string & );
   size_t nproperties() const { return properties_.size(); }
 
-  void    io(Piostream &stream);
   static  PersistentTypeID type_id;
 
   void set_name(std::string& name) 

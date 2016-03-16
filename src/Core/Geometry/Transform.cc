@@ -869,45 +869,7 @@ Transform::operator=(const Transform& copy)
 
 const int TRANSFORM_VERSION = 1;
 
-void 
-Transform::io(Piostream& stream) {
-  
-  stream.begin_class("Transform", TRANSFORM_VERSION);
-  for (int i=0; i<4; i++)
-    for (int j=0; j<4; j++){
-      Pio(stream, mat[i][j]);
-      Pio(stream, imat[i][j]);
-    }
- 
-  Pio(stream, inverse_valid);
-  
-  stream.end_class();
-}
 
-void
-Uintah::Pio_old(Piostream& stream, Transform& obj) {
-  stream.begin_cheap_delim();
-  for (int i=0; i<4; i++) {
-    for (int j=0; j<4; j++) {
-      Pio(stream, obj.mat[i][j]);
-      Pio(stream, obj.imat[i][j]);
-    }
-  }
- 
-  Pio(stream, obj.inverse_valid);
-  
-  stream.end_cheap_delim();
-}
-
-void
-Uintah::Pio(Piostream& stream, Transform*& obj)
-{
-  Uintah::Persistent* pobj=obj;
-  stream.io(pobj, Transform::type_id);
-  if(stream.reading()) {
-    obj=(Transform*)pobj;
-  }
-}
 
 const string& 
 Transform::get_h_file_path() {

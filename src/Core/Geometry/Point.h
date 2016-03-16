@@ -48,7 +48,6 @@ namespace Uintah {
     
 class TypeDescription;
 class RigorousTest;
-class Piostream;
 class Vector;
 
 class Point {
@@ -111,7 +110,6 @@ public:
 					      const Point&, double);
   friend Point AffineCombination(const Point&, double,
 					      const Point&, double);
-  friend void Pio( Piostream&, Point& );
 
 
 
@@ -135,7 +133,6 @@ Point AffineCombination(const Point&, double, const Point&, double,
                                  const Point&, double, const Point&, double);
 Point AffineCombination(const Point&, double, const Point&, double, const Point&, double);
 Point AffineCombination(const Point&, double, const Point&, double);
-void Pio( Piostream&, Point& );
 
 std::ostream& operator<<(std::ostream& os, const Point& p);
 std::istream& operator>>(std::istream& os, Point& p);

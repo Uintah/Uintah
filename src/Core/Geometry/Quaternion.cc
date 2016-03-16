@@ -179,17 +179,6 @@ bool Quaternion::operator==(const Quaternion& q){
   return (Abs(this->a- q.a)<10e-7  && this->v == q.v);
 }
 
-#define VIEW_VERSION 1
-
-  /* To be implemented
-void Pio(Piostream& stream, Quaternion& q){
-  
-  stream.begin_class("Quaternion", VIEW_VERSION);
-  Pio(stream, q.a);
-  Pio(stream, q.v);
-  stream.end_class();
-}
- */
 
 Quaternion Pow(const Quaternion& q, double p){  
   if (q.v.length()> NUM_ZERO){

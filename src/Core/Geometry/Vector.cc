@@ -156,16 +156,6 @@ int Vector::operator!=(const Vector& v) const
     return v.x_ != x_ || v.y_ != y_ || v.z_ != z_;
 }
 
-void
-Pio(Piostream& stream, Vector& p)
-{
-
-    stream.begin_cheap_delim();
-    Pio(stream, p.x_);
-    Pio(stream, p.y_);
-    Pio(stream, p.z_);
-    stream.end_cheap_delim();
-}
 
 void
 Vector::rotz90(const int c)

@@ -42,10 +42,11 @@
 
 #include <Core/Util/FancyAssert.h>
 #include <Core/Malloc/Allocator.h>
+#include <Core/Persistent/Persistent.h>
 
 #include <string>
 
-namespace Uintah {
+namespace SCIRun {
 
 class RigorousTest;
 
@@ -117,9 +118,7 @@ WARNING
 ****************************************/
 
 
-template <class Key, class Data> class HashTable;
-template <class Key, class Data> 
-void Pio(Piostream& stream, HashTable<Key, Data>& t);
+
 
 // The hashtable itself
 template<class Key, class Data> class HashTable {
@@ -234,8 +233,6 @@ template<class Key, class Data> class HashKey {
   HashKey();
   HashKey(const Key&, const Data&, HashKey<Key, Data>*);
   HashKey(const HashKey<Key, Data>&, int deep=0);
-  friend void TEMPLATE_TAG Pio TEMPLATE_BOX (Piostream&, 
-					     HashTable<Key, Data>&);
 };
 
 // Create a hashtable
@@ -472,10 +469,8 @@ HashKey<Key, Data>::HashKey(const HashKey<Key, Data>& copy, int deep)
 }
 
 
-#define HASHTABLE_VERSION 1
 
-
-} // End namespace Uintah
+} // End namespace SCIRun
 
 #endif
 

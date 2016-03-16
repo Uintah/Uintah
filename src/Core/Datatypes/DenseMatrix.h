@@ -132,7 +132,7 @@ public:
   
   //! Persistent representation...
   virtual std::string type_name() { return "DenseMatrix"; }
-  virtual void io(Piostream&);
+
   static PersistentTypeID type_id;
 
   //! Friend functions
