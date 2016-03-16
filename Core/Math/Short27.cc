@@ -27,7 +27,6 @@
 #include <Core/Math/Short27.h>
 #include <Core/Math/CubeRoot.h>
 #include <Core/Disclosure/TypeDescription.h>
-#include <Core/Util/TypeDescription.h>
 #include <Core/Util/FancyAssert.h>
 #include <Core/Malloc/Allocator.h>
 #include <Core/Util/Assert.h>
@@ -39,19 +38,6 @@
 using namespace Uintah;
 using namespace std;
 
-
-namespace SCIRun {
-
-  const SCIRun::STypeDescription* get_type_description(Short27*)
-  {
-    static SCIRun::STypeDescription* td = 0;
-    if(!td){
-      td = scinew SCIRun::STypeDescription("Short27");
-    }
-    return td;
-  }
-
-}
 
 // Added for compatibility with Core types
 namespace Uintah {

@@ -34,7 +34,6 @@
  *
  */
 
-#include <Core/Util/TypeDescription.h>
 #include <Core/Geometry/Point.h>
 #include <Core/Geometry/Vector.h>
 #include <Core/Util/Assert.h>
@@ -159,16 +158,3 @@ Point::InInterval( Point a, double epsilon )
 
 } // End namespace Uintah
 
-
-namespace SCIRun {
-
-  const SCIRun::STypeDescription* get_type_description(Uintah::Point*)
-  {
-    static SCIRun::STypeDescription* td = 0;
-    if(!td){
-      td = scinew SCIRun::STypeDescription("Point",STypeDescription::DATA_E);
-    }
-    return td;
-  }
-
-}

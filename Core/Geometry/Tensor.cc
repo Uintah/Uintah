@@ -36,7 +36,6 @@
 
 #include <Core/Geometry/Tensor.h>
 #include <Core/Containers/Array1.h>
-#include <Core/Util/TypeDescription.h>
 #include <Core/Util/Assert.h>
 #include <Core/Math/MiscMath.h>
 #include <iostream>
@@ -370,14 +369,3 @@ istream& operator>>( istream& is, Tensor& t)
 
 } // End namespace Uintah
 
-namespace SCIRun {
-
-  const STypeDescription* get_type_description(Uintah::Tensor*)
-  {
-    static STypeDescription* td = 0;
-    if(!td){
-      td = scinew STypeDescription("Tensor", STypeDescription::DATA_E);
-    }
-    return td;
-  }
-}

@@ -23,7 +23,6 @@
  */
 
 #include <Core/Geometry/IntVector.h>
-#include <Core/Util/TypeDescription.h>
 #include <Core/Util/XMLUtils.h>
 
 #include <stdlib.h>
@@ -33,23 +32,8 @@
 using namespace std;
 using namespace Uintah::UintahXML;
 
-namespace SCIRun {
-
-  const SCIRun::STypeDescription*  get_type_description(Uintah::IntVector*)
-  {
-    static SCIRun::STypeDescription* td = 0;
-    if(!td){
-      td = scinew SCIRun::STypeDescription("IntVector");
-    }
-    return td;
-  }
-
-}
 
 namespace Uintah{
-
-
-
 
 ostream&
 operator<<(std::ostream& out, const Uintah::IntVector& v)

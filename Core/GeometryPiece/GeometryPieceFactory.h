@@ -67,7 +67,7 @@ namespace Uintah {
     
     /*
      *  \brief Finds and returns a reference to a vector that contains the points inside the 
-     geomPieceName on the specified patch. The points are of type SCIRun::Point.
+     geomPieceName on the specified patch. The points are of type Uintah::Point.
      If no points are found, then an empty vector is store. If points were already
      found by previous call, then this returns a reference to the points that were already found
      (which avoids additional computation).

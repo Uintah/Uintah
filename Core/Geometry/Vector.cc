@@ -39,7 +39,6 @@
 #include <Core/Math/Expon.h>
 #include <Core/Math/MiscMath.h>
 #include <Core/Util/Assert.h>
-#include <Core/Util/TypeDescription.h>
 #include <Core/Util/XMLUtils.h>
 
 #include <iostream>
@@ -193,15 +192,3 @@ Vector::rotz90(const int c)
 } // End namespace Uintah
 
 
-namespace SCIRun {
-
-  const STypeDescription* get_type_description(Uintah::Vector*)
-  {
-    static STypeDescription* td = 0;
-    if(!td){
-      td = scinew STypeDescription("Vector", STypeDescription::DATA_E);
-    }
-    return td;
-  }
-
-}

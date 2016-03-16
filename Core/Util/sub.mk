@@ -44,9 +44,9 @@ SRCS += \
         $(SRCDIR)/soloader.cc           \
         $(SRCDIR)/StringUtil.cc         \
         $(SRCDIR)/Timer.cc              \
-        $(SRCDIR)/TypeDescription.cc    \
         $(SRCDIR)/XMLUtils.cc           \
-        $(SRCDIR)/Util.cc               
+        $(SRCDIR)/Util.cc
+
 
 SRCS += $(REFCOUNT_IMPL)
 
