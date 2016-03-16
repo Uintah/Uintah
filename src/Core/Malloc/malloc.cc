@@ -103,6 +103,8 @@ namespace Uintah {
 
 } // end namespace Uintah
 
+using namespace Uintah;
+
 void*
 malloc(size_t size) THROWCLAUSE
 {
