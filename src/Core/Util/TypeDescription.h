@@ -62,12 +62,6 @@ public:
   //! default is "<" and "> "
   std::string get_name(const std::string & type_sep_start = "<",
 		  const std::string & type_sep_end = "> ") const;
-  std::string get_similar_name(const std::string &substitute,
-			  const int pos,
-			  const std::string & type_sep_start = "<",
-			  const std::string & type_sep_end = "> ") const;
-
-  std::string get_filename() const;
 
 
   struct Register {
@@ -75,9 +69,6 @@ public:
     ~Register();
   };
 
-
-
-  static const STypeDescription* lookup_type(const std::string&);
 
 private:
   td_vec                     *subtype_;
