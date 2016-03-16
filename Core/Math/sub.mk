@@ -71,11 +71,9 @@ SRCS += \
         $(SRCDIR)/TangentModulusTensor.cc  \
 	\
         Core/Geometry/BBox.cc \
-        Core/Geometry/CompGeom.cc \
         Core/Geometry/IntVector.cc \
         Core/Geometry/Plane.cc \
         Core/Geometry/Point.cc \
-        Core/Geometry/Polygon.cc \
         Core/Geometry/Tensor.cc \
         Core/Geometry/Vector.cc \
 	\
