@@ -76,9 +76,7 @@ SRCS += \
         Core/Geometry/Plane.cc \
         Core/Geometry/Point.cc \
         Core/Geometry/Polygon.cc \
-        Core/Geometry/Quaternion.cc \
         Core/Geometry/Tensor.cc \
-        Core/Geometry/Transform.cc \
         Core/Geometry/Vector.cc \
 	\
         Core/Disclosure/TypeDescription.cc \

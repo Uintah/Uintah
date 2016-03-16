@@ -64,7 +64,7 @@ template<class T, class S> const std::string find_type_name( std::pair<T,S> *);
  class IntVector;
  class Vector;
  class Point;
-class Transform;
+
 class Matrix;
 class NrrdData;
 class Field;
@@ -86,7 +86,7 @@ template<> const std::string find_type_name(bool*);
  template<> const std::string find_type_name(Vector*);
 template<> const std::string find_type_name(IntVector*);
  template<> const std::string find_type_name(Point*);
-template<> const std::string find_type_name(Transform*);
+
 template<> const std::string find_type_name(std::string*);
 
 template<> const std::string find_type_name(LockingHandle<Matrix> *);

@@ -34,7 +34,6 @@ include $(SCIRUN_SCRIPTS)/smallso_prologue.mk
 SRCDIR   := Core/Persistent
 
 SRCS     += $(SRCDIR)/Persistent.cc     \
-	    $(SRCDIR)/PersistentSTL.cc  \
 	    $(SRCDIR)/Pstreams.cc 
 
 PSELIBS := Core/Containers Core/Exceptions Core/Thread Core/Util

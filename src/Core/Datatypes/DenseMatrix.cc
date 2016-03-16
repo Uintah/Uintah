@@ -117,22 +117,6 @@ DenseMatrix::DenseMatrix(const DenseMatrix& m) :
 }
 
 
-DenseMatrix::DenseMatrix(const Transform& t) :
-  Matrix(4, 4)
-{
-  double dummy[16];
-  t.get(dummy);
-  data = scinew double*[nrows_];
-  double* tmp = scinew double[nrows_ * ncols_];
-  dataptr_ = tmp;
-  double* p=&(dummy[0]);
-  for (int i=0; i<nrows_; i++){
-    data[i] = tmp;
-    for (int j=0; j<ncols_; j++){
-      *tmp++ = *p++;
-    }
-  }
-}
 
 
 DenseMatrix *

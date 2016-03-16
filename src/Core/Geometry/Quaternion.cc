@@ -34,11 +34,8 @@
  */
 
 #include <Core/Geometry/Quaternion.h>
-
-#include <Core/Geometry/Transform.h>
 #include <Core/Geometry/Point.h>
 #include <Core/Geometry/Vector.h>
-#include <Core/Persistent/Persistent.h>
 #include <Core/Util/Assert.h>
 
 #include <iostream>

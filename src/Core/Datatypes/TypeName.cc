@@ -165,11 +165,6 @@ template<> const string find_type_name(Point*)
   return name;
 }
 
-template<> const string find_type_name(Transform*)
-{
-  static const string name = "Transform";
-  return name;
-}
 
 template<> const string find_type_name(string*)
 {

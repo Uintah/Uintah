@@ -144,7 +144,6 @@ public:
   static const std::string& get_h_file_path();
 
   friend class Point;
-  friend class Transform;
     
   friend inline Vector Interpolate(const Vector&, const Vector&, double);
     

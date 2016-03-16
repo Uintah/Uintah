@@ -38,7 +38,6 @@
 #define SCI_project_DenseMatrix_h 1
 
 #include <Core/Datatypes/Matrix.h>
-#include <Core/Geometry/Transform.h>
 #include <Core/Math/MiscMath.h>
 #include <vector>
 
@@ -54,7 +53,6 @@ public:
   DenseMatrix();
   DenseMatrix(int r, int c);
   DenseMatrix(const DenseMatrix&);
-  DenseMatrix(const Transform &t);
   //! Destructor
   virtual ~DenseMatrix();
   

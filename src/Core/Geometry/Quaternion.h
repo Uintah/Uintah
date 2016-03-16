@@ -63,7 +63,6 @@ POSSIBLE REVISIONS
 #define Geometry_Quaternion_h 1
 
 #include <Core/Geometry/Vector.h>
-#include <Core/Geometry/Transform.h>
 #include <Core/Geometry/Point.h>
 
 #include <cmath>
@@ -141,10 +140,6 @@ inline double Quaternion::norm() const{
     return 0;
 }
 
-inline void Quaternion::from_matrix(const Transform& m){
-  const double (&matr)[4][4]=m.mat;
-  from_matrix(matr);
-}
 
 inline Quaternion& Quaternion::operator+=(const Quaternion& q){
   a+=q.a;
