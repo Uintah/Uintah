@@ -31,7 +31,6 @@ SRCDIR := Core/Util
 
 SRCS += \
         $(SRCDIR)/DebugStream.cc        \
-        $(SRCDIR)/DynamicLoader.cc      \
         $(SRCDIR)/Endian.cc             \
         $(SRCDIR)/Environment.cc        \
         $(SRCDIR)/FileUtils.cc          \

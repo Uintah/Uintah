@@ -59,12 +59,6 @@ using namespace std;
 
 namespace Uintah {
 
-static Persistent* maker()
-{
-  return scinew DenseColMajMatrix;
-}
-
-PersistentTypeID DenseColMajMatrix::type_id("DenseColMajMatrix", "Matrix", maker);
 
 DenseColMajMatrix*
 DenseColMajMatrix::clone()

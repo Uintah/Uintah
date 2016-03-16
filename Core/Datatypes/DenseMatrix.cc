@@ -63,12 +63,7 @@ using namespace std;
 
 namespace Uintah {
 
-static Persistent* maker()
-{
-  return scinew DenseMatrix;
-}
 
-PersistentTypeID DenseMatrix::type_id("DenseMatrix", "Matrix", maker);
 
 DenseMatrix*
 DenseMatrix::clone()

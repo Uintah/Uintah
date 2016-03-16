@@ -38,7 +38,6 @@
 #include <Core/Geometry/Vector.h>
 #include <Core/Math/Expon.h>
 #include <Core/Math/MiscMath.h>
-#include <Core/Persistent/Persistent.h>
 #include <Core/Util/Assert.h>
 #include <Core/Util/TypeDescription.h>
 #include <Core/Util/XMLUtils.h>

@@ -38,6 +38,7 @@
 #define SCI_project_DenseMatrix_h 1
 
 #include <Core/Datatypes/Matrix.h>
+#include <Core/Containers/Array1.h>
 #include <Core/Math/MiscMath.h>
 #include <vector>
 
@@ -128,10 +129,8 @@ public:
   virtual void    print() const;
   virtual void    print(std::ostream&) const;
   
-  //! Persistent representation...
   virtual std::string type_name() { return "DenseMatrix"; }
 
-  static PersistentTypeID type_id;
 
   //! Friend functions
   

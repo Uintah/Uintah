@@ -38,7 +38,6 @@
 #include <Core/Geometry/Point.h>
 #include <Core/Geometry/Vector.h>
 #include <Core/Util/Assert.h>
-#include <Core/Persistent/Persistent.h>
 #include <Core/Math/MinMax.h>
 #include <Core/Math/MiscMath.h>
 #include <iostream>

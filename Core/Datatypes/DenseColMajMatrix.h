@@ -125,8 +125,6 @@ public:
   virtual void    print() const;
   virtual void    print(std::ostream&) const;
   
-  //! Persistent representation...
-  static PersistentTypeID type_id;
 };
 
 

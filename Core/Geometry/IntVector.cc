@@ -23,7 +23,6 @@
  */
 
 #include <Core/Geometry/IntVector.h>
-#include <Core/Persistent/Persistent.h>
 #include <Core/Util/TypeDescription.h>
 #include <Core/Util/XMLUtils.h>
 

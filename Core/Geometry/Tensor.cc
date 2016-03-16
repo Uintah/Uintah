@@ -38,7 +38,6 @@
 #include <Core/Containers/Array1.h>
 #include <Core/Util/TypeDescription.h>
 #include <Core/Util/Assert.h>
-#include <Core/Persistent/Persistent.h>
 #include <Core/Math/MiscMath.h>
 #include <iostream>
 

@@ -118,9 +118,8 @@ public:
   virtual void print() const;
   virtual void print(std::ostream&) const;
  
-  //! Persistent representation...
   virtual std::string type_name() { return "SparseRowMatrix"; }
-  static PersistentTypeID type_id;
+
 
 
   friend SparseRowMatrix *AddSparse(const SparseRowMatrix &a,
@@ -129,7 +128,6 @@ public:
                                     const SparseRowMatrix &b);
 
 
-  static Persistent *maker();
 };
 
 } // End namespace Uintah

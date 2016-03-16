@@ -37,8 +37,9 @@
 #ifndef SCI_project_Matrix_h
 #define SCI_project_Matrix_h 1
 
-#include <Core/Datatypes/PropertyManager.h>
+#include <Core/Datatypes/Datatype.h>
 #include <Core/Containers/LockingHandle.h>
+#include <string>
 #include <iosfwd>
 
 namespace Uintah {
@@ -51,7 +52,7 @@ class DenseColMajMatrix;
 class Matrix;
 typedef LockingHandle<Matrix> MatrixHandle;
 
-class Matrix : public PropertyManager
+class Matrix : public Datatype
 {
 public:
   Matrix(int nrows = 0, int ncols = 0) :
@@ -157,9 +158,7 @@ public:
   virtual void print(std::ostream&) const {}
   virtual void print() const {}
 
-  // Persistent representation.
   virtual std::string type_name() { return "Matrix"; }
-  static PersistentTypeID type_id;
 
 protected:
   int          nrows_;

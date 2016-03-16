@@ -39,6 +39,7 @@
 #include <Core/Datatypes/DenseMatrix.h>
 #include <Core/Datatypes/SparseRowMatrix.h>
 #include <Core/Datatypes/MatrixOperations.h>
+#include <Core/Malloc/Allocator.h>
 
 
 namespace Uintah {

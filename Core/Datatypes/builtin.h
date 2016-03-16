@@ -37,7 +37,6 @@
 #define builtin_h
 
 #include <Core/Datatypes/TypeName.h>
-#include <Core/Persistent/Persistent.h>
 
 namespace Uintah {
 
