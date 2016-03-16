@@ -41,15 +41,6 @@
     printf("%s\n",msg.str().c_str()); \
   }
 
-#define DDOUT( cond, ... )            \
-  if (cond) {                         \
-    std::ostringstream msg;           \
-    msg << __FILE__ << ":";           \
-    msg << __LINE__ << " : ";         \
-    msg << __VA_ARGS__;               \
-    printf("%s\n",msg.str().c_str()); \
-  }
-
 #define POUT( ... )                   \
   {                                   \
     std::ostringstream msg;           \
@@ -65,19 +56,35 @@ namespace Uintah {
 class Dout
 {
 public:
+
+  Dout() = default;
+  Dout( const Dout & ) = default;
+  Dout( Dout && ) = default;
+
+  Dout & operator=( const Dout & ) = default;
+  Dout & operator=( Dout && ) = default;
+
   Dout( std::string const & name, bool default_active )
-    : m_name{ ',' + name + ':' }
-    , m_active{ is_active(default_active) }
+    : m_active{ is_active(name, default_active) }
+    , m_name{ name + (m_active ? ":+" : ":-") }
   {}
 
   explicit operator bool() const { return m_active; }
 
+  const std::string & name () const { return m_name ; }
+
+  friend bool operator<(const Dout & a, const Dout &b )
+  {
+    return a.m_name < b.m_name;
+  }
+
 private:
-  bool is_active( bool default_active ) const
+  static bool is_active( std::string const& arg_name,  bool default_active )
   {
     const char * sci_debug = std::getenv("SCI_DEBUG");
-    const char * name = m_name.c_str();
-    size_t n = m_name.size();
+    const std::string tmp = "," + arg_name + ":";
+    const char * name = tmp.c_str();
+    size_t n = tmp.size();
 
     if ( !sci_debug ) return default_active;
 
@@ -92,32 +99,9 @@ private:
   }
 
 private:
-  const std::string m_name;
-  const bool        m_active;
-
-private:
-  Dout( const Dout & ) = delete;
-  Dout & operator=( const Dout & ) = delete;
-  Dout( Dout && ) = delete;
-  Dout & operator=( Dout && ) = delete;
+  bool        m_active {false};
+  std::string m_name   {""};
 };
-
-class TimerOut
-{
-public:
-  TimerOut( std::string const & name = "Timer" )
-    : m_name{ name }
-  {}
-
-  ~TimerOut()
-  {
-    DOUT(true, m_name << " : " << m_simple().seconds() << " seconds");
-  }
-private:
-  std::string    m_name;
-  Timers::Simple m_simple{};
-};
-
 
 } //namespace Uintah
 

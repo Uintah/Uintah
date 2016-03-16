@@ -25,98 +25,55 @@
 #ifndef CCA_COMPONENTS_SCHEDULERS_RUNTIME_STATS_HPP
 #define CCA_COMPONENTS_SCHEDULERS_RUNTIME_STATS_HPP
 
+#include <Core/Util/DOUT.hpp>
 #include <Core/Util/Timers/Timers.hpp>
 #include <Core/Util/InfoMapper.h>
 #include <Core/Grid/SimulationState.h>
 #include <Core/Malloc/Allocators/TrackingAllocator.hpp>
 
-#include <CCA/Components/Schedulers/TaskGraph.h>
-#include <CCA/Components/Schedulers/DetailedTasks.h>
 
 #include <sci_defs/mpi_defs.h> // For MPIPP_H on SGI
 
 #include <string>
-#include <map>
 #include <vector>
 #include <memory>
 #include <atomic>
-#include <mutex>
 #include <functional>
 
 
 namespace Uintah {
 
+class DetailedTask;
+class TaskGraph;
+
 class RuntimeStats
 {
-  static std::map< std::string, std::function<int64_t()> > s_allocators;
-  static std::map< std::string, std::function<int64_t()> > s_timers;
-
-  static std::vector< std::function<void()> >              s_reset_timers;
-
   static std::atomic<int64_t> * get_atomic_exec_ptr( DetailedTask const* t );
   static std::atomic<int64_t> * get_atomic_wait_ptr( DetailedTask const* t );
 
-  static std::mutex s_register_mutex;
-
-  static void reset_timers();
 public:
+
+  enum ValueType { Count, Time, Memory };
+
+  static void register_report( Dout const& dout
+                             , std::string const & name
+                             , ValueType type
+                             , std::function<int64_t()> get_value
+                             , std::function<void()> clear_value = [](){}
+                             );
 
   // used to declare timers
   template <typename Tag> using TripTimer = Timers::ThreadTrip< Tag >;
 
   using InfoStats = InfoMapper< SimulationState::RunTimeStat, double >;
 
-  enum TimerType {Total, Min, Max};
-
-  template <typename Tag>
-  static void register_timer_tag( Tag, std::string const& name, TimerType t )
-  {
-    std::unique_lock<std::mutex> lck(s_register_mutex);
-
-    auto const itr = s_timers.find(name);
-    if (itr == s_timers.end()) {
-
-      if (t == Total) {
-        s_timers[ name ] = []()->int64_t { return TripTimer<Tag>::total(); };
-      } else if (t == Min) {
-        s_timers[ name ] = []()->int64_t { return TripTimer<Tag>::min(); };
-      } else if (t == Max) {
-        s_timers[ name ] = []()->int64_t { return TripTimer<Tag>::max(); };
-      }
-
-      s_reset_timers.emplace_back( [](){ TripTimer<Tag>::reset_tag(); } );
-    }
-  }
-
-  enum AllocatorType { Current, HighWater };
-
-  template <typename Tag>
-  static void register_allocator_tag( Tag, std::string const& name, AllocatorType t )
-  {
-    std::unique_lock<std::mutex> lck(s_register_mutex);
-
-    auto const itr = s_allocators.find(name);
-    if (itr == s_allocators.end()) {
-      if (t == Current) {
-        s_allocators[ name ] = []()->int64_t { return Allocators::TagStats< Tag >::alloc_size(); };
-      } else if (t == HighWater) {
-        s_allocators[ name ] = []()->int64_t { return Allocators::TagStats< Tag >::high_water(); };
-      }
-    }
-  }
-
   // NOT THREAD SAFE -- should only be called from the master thread
   // by the parent scheduler
   static void initialize_timestep( std::vector<TaskGraph *> const & graphs );
 
-  using Counts = std::vector< std::pair<std::string,int64_t> >;
-
   // NOT THREAD SAFE -- should only be called from the master thread
   // by the parent scheduler
-  static void report( MPI_Comm comm
-                    , Counts const& counts
-                    , InfoStats & info_stats
-                    );
+  static void report( MPI_Comm comm, InfoStats & info_stats );
 
   struct TaskExecTag {};       // Total Task Exec
   struct TaskWaitTag {};       // Total Task Wait
@@ -137,53 +94,71 @@ public:
   using SendTimer       = TripTimer< SendTag >;
   using TestTimer       = TripTimer< TestTag >;
   using WaitTimer       = TripTimer< WaitTag >;
+  using ExecTimer       = TripTimer< TaskExecTag >;
 
   using CollectiveMPITimer = TripTimer< CollectiveMPITag >;
   using RecvMPITimer       = TripTimer< RecvMPITag >;
   using SendMPITimer       = TripTimer< SendMPITag >;
 
-  using ExecTimer = TripTimer< TaskExecTag >;
 
   struct TaskExecTimer
-    : public ExecTimer
+    : public Timers::Simple
   {
     template <typename... ExcludeTimers>
     TaskExecTimer( DetailedTask const* t, ExcludeTimers&... exclude_timers )
-      : ExecTimer{ exclude_timers... }
-    {
-      m_task_time = get_atomic_exec_ptr(t);
-    }
+      : Timers::Simple{ exclude_timers... }
+      , m_task{t}
+    {}
 
     ~TaskExecTimer()
     {
-      if (m_task_time) {
-        m_task_time->fetch_add( (*this)(), std::memory_order_relaxed );
+      stop();
+    }
+
+    bool stop()
+    {
+      if(Timers::Simple::stop()) {
+        std::atomic<int64_t> * task_time = get_atomic_exec_ptr(m_task);
+        if (task_time) {
+          task_time->fetch_add( (*this)(), std::memory_order_relaxed );
+        }
+        return true;
       }
+      return false;
     }
 
   private:
-    std::atomic<int64_t> * m_task_time{nullptr};
+    DetailedTask const * m_task;
   };
 
   struct TaskWaitTimer
-    : public TripTimer< TaskWaitTag >
+    : public Timers::Simple
   {
     template <typename... ExcludeTimers>
     TaskWaitTimer( DetailedTask const* t, ExcludeTimers&... exclude_timers )
-      : TripTimer< TaskWaitTag >{ exclude_timers... }
-    {
-      m_task_time = get_atomic_wait_ptr(t);
-    }
+      : Timers::Simple{ exclude_timers... }
+      , m_task{t}
+    {}
 
     ~TaskWaitTimer()
     {
-      if (m_task_time) {
-        m_task_time->fetch_add( (*this)(), std::memory_order_relaxed );
+      stop();
+    }
+
+    bool stop()
+    {
+      if(Timers::Simple::stop()) {
+        std::atomic<int64_t> * task_time = get_atomic_wait_ptr(m_task);
+        if (task_time) {
+          task_time->fetch_add( (*this)(), std::memory_order_relaxed );
+        }
+        return true;
       }
+      return false;
     }
 
   private:
-    std::atomic<int64_t> * m_task_time{nullptr};
+    DetailedTask const * m_task;
   };
 
 };
