@@ -3,8 +3,8 @@
 
 #include <CCA/Components/Arches/Task/TaskInterface.h>
 
-#define USE_FUNCTOR 1
-#undef  USE_FUNCTOR 
+#include <CCA/Components/Arches/FunctorSwitch.h>
+ 
 namespace Uintah{ 
 
   class Operators; 
