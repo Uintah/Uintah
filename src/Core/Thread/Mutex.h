@@ -37,7 +37,7 @@
 #ifndef Core_Thread_Mutex_h
 #define Core_Thread_Mutex_h
 
-namespace SCIRun {
+namespace Uintah {
 
 struct Mutex_private;
 
@@ -98,7 +98,7 @@ class Mutex {
 };
 
 }
-  // End namespace SCIRun
+  // End namespace Uintah
 
 #endif
 

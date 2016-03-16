@@ -39,7 +39,7 @@
 
 #define TOLERANCE_MIN 1.0e-12
 
-namespace SCIRun {
+namespace Uintah {
 
 double
 distance_to_line2(const Point &p, const Point &a, const Point &b)

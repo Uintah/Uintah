@@ -31,7 +31,6 @@
 #include <Core/Malloc/Allocator.h>
 
 using namespace Uintah;
-using namespace SCIRun;
 
 static const int    NLOCKS=1024;
 static       Mutex* locks[NLOCKS];

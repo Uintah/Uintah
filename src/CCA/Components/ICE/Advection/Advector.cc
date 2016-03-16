@@ -119,11 +119,11 @@ namespace Uintah {
 
 //______________________________________________________________________
 //  
-namespace SCIRun {
+namespace Uintah {
 
   void swapbytes( Uintah::fflux& f) {
     double *p = f.d_fflux;
     SWAP_8(*p); SWAP_8(*++p); SWAP_8(*++p);
     SWAP_8(*++p); SWAP_8(*++p); SWAP_8(*++p);
   }
-} // namespace SCIRun
+} // namespace Uintah

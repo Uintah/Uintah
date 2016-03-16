@@ -55,7 +55,7 @@ int main()
       double cube_ans;
       start=clock();
       for(int i=0;i<ITERS;i++)
-        cube_ans=1.0/SCIRun::cubeRoot(n,guess);  
+        cube_ans=1.0/Uintah::cubeRoot(n,guess);  
       finish=clock();
       
       cube_root_time+=(finish-start)/double(CLOCKS_PER_SEC);

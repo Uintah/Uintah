@@ -29,7 +29,7 @@
 
 #include <complex>
 
-using namespace SCIRun;
+using namespace Uintah;
 
 template<class T>
 LinearArray3<T>::LinearArray3()
@@ -127,11 +127,11 @@ void LinearArray3<T>::initialize( const T& t )
   }
 }
 
-namespace SCIRun {
+namespace Uintah {
 
 // Explicit template instantiations:
 template class LinearArray3<double> ;
 template class LinearArray3<std::complex<double> > ;
 template class LinearArray3<Uintah::Matrix3> ;
-template class LinearArray3<SCIRun::Vector> ;
+template class LinearArray3<Uintah::Vector> ;
 }

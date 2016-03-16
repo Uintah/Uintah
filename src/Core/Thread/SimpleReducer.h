@@ -39,7 +39,7 @@
 
 #include <Core/Thread/Barrier.h>
 
-namespace SCIRun {
+namespace Uintah {
 
 /**************************************
  
@@ -119,7 +119,7 @@ class SimpleReducer : public Barrier {
     SimpleReducer& operator=(const SimpleReducer&);
 };
 
-} // End namespace SCIRun
+} // End namespace Uintah
 
 #endif
 

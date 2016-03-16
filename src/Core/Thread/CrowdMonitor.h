@@ -37,7 +37,7 @@
 #ifndef Core_Thread_CrowdMonitor_h
 #define Core_Thread_CrowdMonitor_h
 
-namespace SCIRun {
+namespace Uintah {
 
   struct CrowdMonitor_private;
 /**************************************
@@ -133,7 +133,7 @@ class CrowdMonitor {
 };
 
 }
-  // End namespace SCIRun
+  // End namespace Uintah
 
 #endif
 

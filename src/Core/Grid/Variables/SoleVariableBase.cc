@@ -28,7 +28,6 @@
 #include <Core/Exceptions/InternalError.h>
 
 using namespace Uintah;
-using namespace SCIRun;
 
 SoleVariableBase::~SoleVariableBase()
 {

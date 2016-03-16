@@ -43,7 +43,6 @@
 #include <dirent.h>
 
 using namespace std;
-using namespace SCIRun;
 
 //______________________________________________________________________
 //

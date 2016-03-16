@@ -43,7 +43,7 @@
 
 #include <errno.h>
 
-namespace SCIRun {
+namespace Uintah {
 
 class ErrnoException : public Exception {
 
@@ -64,6 +64,6 @@ private:
   ErrnoException& operator=( const ErrnoException & );
 };
 
-} // End namespace SCIRun
+} // End namespace Uintah
 
 #endif

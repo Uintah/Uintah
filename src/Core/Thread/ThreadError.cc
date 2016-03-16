@@ -35,7 +35,7 @@
  */
 
 #include <Core/Thread/ThreadError.h>
-namespace SCIRun {
+namespace Uintah {
 
 
 ThreadError::ThreadError(const std::string& message)
@@ -65,4 +65,4 @@ ThreadError::type() const
 }
 
 
-} // End namespace SCIRun
+} // End namespace Uintah

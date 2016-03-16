@@ -42,7 +42,7 @@
 #include <Core/Math/MiscMath.h>
 #include <vector>
 
-namespace SCIRun {
+namespace Uintah {
 
 class DenseColMajMatrix : public Matrix
 {
@@ -132,6 +132,6 @@ public:
 };
 
 
-} // End namespace SCIRun
+} // End namespace Uintah
 
 #endif

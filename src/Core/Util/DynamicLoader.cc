@@ -46,7 +46,7 @@
 
 using namespace std;
 
-namespace SCIRun {
+namespace Uintah {
 
 
 #ifdef __APPLE__
@@ -67,7 +67,7 @@ namespace SCIRun {
   Mutex matrixIEPluginMutex("Matrix Import/Export Plugin Table Lock");
 
 DynamicLoader *DynamicLoader::scirun_loader_ = 0;
-Mutex DynamicLoader::scirun_loader_init_lock_("SCIRun loader init lock");
+Mutex DynamicLoader::scirun_loader_init_lock_("Uintah loader init lock");
 
 
 string remove_vowels(const string &s)
@@ -599,7 +599,7 @@ DynamicLoader::compile_so(const CompileInfo &info, ProgressReporter *pr)
   command += " > " + info.filename_ + "log 2>&1";
   const int status = sci_system(command.c_str());
   if (status != 0) {
-    pr->remark("DynamicLoader::compile_so() syscal error " + SCIRun::to_string(status) + ": command was '" + command + "'.");
+    pr->remark("DynamicLoader::compile_so() syscal error " + Uintah::to_string(status) + ": command was '" + command + "'.");
     result = false;
   }
   pipe = fopen(string(otf_dir() + "/" + info.filename_ + "log").c_str(), "r");
@@ -737,4 +737,4 @@ DynamicLoader::otf_dir()
   return string(sci_getenv("SCIRUN_ON_THE_FLY_LIBS_DIR"));
 }
 
-} // End namespace SCIRun
+} // End namespace Uintah

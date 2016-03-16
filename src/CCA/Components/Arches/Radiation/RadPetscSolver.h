@@ -37,7 +37,6 @@
 #include <Core/Grid/Patch.h>
 #include <Core/Grid/Variables/VarLabel.h>
 
-#include <Core/Containers/Array1.h>
 
 #ifdef HAVE_PETSC
 

@@ -37,7 +37,7 @@
 #ifndef Core_Thread_Semaphore_h
 #define Core_Thread_Semaphore_h
 
-namespace SCIRun {
+namespace Uintah {
 
 struct Semaphore_private;
 
@@ -100,7 +100,7 @@ class Semaphore {
   Semaphore& operator=(const Semaphore&);
 };
 
-} // End namespace SCIRun
+} // End namespace Uintah
 
 #endif
 

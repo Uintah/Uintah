@@ -41,7 +41,7 @@
 #  include <iostream>
 #endif
 
-namespace SCIRun {
+namespace Uintah {
 
 AssertionFailed::AssertionFailed(const char* message,
 				 const char* file,
@@ -77,4 +77,4 @@ const char* AssertionFailed::type() const
     return "AssertionFailed";
 }
 
-} // End namespace SCIRun
+} // End namespace Uintah

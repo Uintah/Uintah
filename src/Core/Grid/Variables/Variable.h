@@ -31,9 +31,6 @@
 #include <Core/ProblemSpec/ProblemSpec.h>
 #include <sci_defs/pidx_defs.h>
 
-namespace SCIRun {
-  class IntVector;
-}
 
 namespace Uintah {
 

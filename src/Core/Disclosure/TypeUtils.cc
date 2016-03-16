@@ -25,6 +25,7 @@
 
 #include <Core/Disclosure/TypeUtils.h>
 #include <Core/Disclosure/TypeDescription.h>
+#include <Core/Util/TypeDescription.h>
 
 #include <Core/Util/FancyAssert.h>
 #include <Core/Geometry/Point.h>
@@ -37,10 +38,20 @@
 #include <cfloat>
 #include <climits>
 
-using namespace SCIRun;
 using namespace std;
 
 namespace SCIRun {
+  const STypeDescription* get_type_description(Uintah::long64*)
+  {
+    static STypeDescription* td = 0;
+    if(!td){
+      td = scinew STypeDescription("long64", "builtin", "builtin");
+    }
+    return td;
+  }
+}
+
+namespace Uintah {
 
 
 #if !defined(STATIC_BUILD)
@@ -50,17 +61,9 @@ template<> const string find_type_name(Uintah::long64*)
   return name;
 }
 
-const TypeDescription* get_type_description(Uintah::long64*)
-{
-  static TypeDescription* td = 0;
-  if(!td){
-    td = scinew TypeDescription("long64", "builtin", "builtin");
-  }
-  return td;
-}
 #endif
 
-} // namespace SCIRun
+} // namespace Uintah
 
 
 namespace Uintah {

@@ -68,7 +68,7 @@ POSSIBLE REVISIONS
 
 #include <cmath>
 
-namespace SCIRun {
+namespace Uintah {
 
 #define NUM_ZERO 10e-9
 
@@ -210,7 +210,7 @@ inline Quaternion operator+(const Quaternion& first, const Quaternion& second){
   return Quaternion(first.a+second.a, first.v+second.v);
 }
 
-} // End namespace SCIRun
+} // End namespace Uintah
 
 #endif  //Geometry_Quaternion_h
 

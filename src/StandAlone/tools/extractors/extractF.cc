@@ -39,7 +39,6 @@
 #include <Core/Grid/Box.h>
 #include <Core/Disclosure/TypeDescription.h>
 
-#include <Core/Containers/Array3.h>
 #include <Core/Geometry/Point.h>
 #include <Core/Math/MinMax.h>
 #include <Core/OS/Dir.h>
@@ -58,7 +57,6 @@
 #include <cmath>
 #include <ctime>
 
-using namespace SCIRun;
 using namespace std;
 using namespace Uintah;
 

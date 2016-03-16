@@ -26,7 +26,7 @@
 #include <CCA/Components/Schedulers/UnifiedScheduler.h>
 extern DebugStream gpu_stats;
 
-extern SCIRun::Mutex cerrLock;
+extern Uintah::Mutex cerrLock;
 
 DeviceGridVariableInfo::DeviceGridVariableInfo(Variable* var,
             GpuUtilities::DeviceVarDestination dest,

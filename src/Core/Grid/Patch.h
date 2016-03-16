@@ -56,7 +56,7 @@
 
 namespace Uintah {
   
-  using SCIRun::IntVector;
+  using Uintah::IntVector;
   
   class NodeIterator;
   class CellIterator;
@@ -1060,7 +1060,7 @@ namespace Uintah {
         case zplus:
           return IntVector(0,0,1);
         default:
-          throw SCIRun::InternalError("Invalid FaceIteratorType Specified", __FILE__, __LINE__);
+          throw Uintah::InternalError("Invalid FaceIteratorType Specified", __FILE__, __LINE__);
 #if !WARNS_ABOUT_UNREACHABLE_STATEMENTS
           return IntVector(0,0,0);
 #endif
@@ -1087,7 +1087,7 @@ namespace Uintah {
         case zplus:
           return static_cast<BCType>(d_patchState.zplus);
         default:
-          throw SCIRun::InternalError("Invalid FaceType Specified", __FILE__, __LINE__);
+          throw Uintah::InternalError("Invalid FaceType Specified", __FILE__, __LINE__);
 #if !WARNS_ABOUT_UNREACHABLE_STATEMENTS
           return None;
 #endif
@@ -1212,7 +1212,7 @@ namespace Uintah {
         case zminus: case zplus:
           return IntVector(2,0,1);
         default:
-          throw SCIRun::InternalError("Invalid FaceType Specified", __FILE__, __LINE__);
+          throw Uintah::InternalError("Invalid FaceType Specified", __FILE__, __LINE__);
 #if !WARNS_ABOUT_UNREACHABLE_STATEMENTS
           return IntVector(0,0,0);
 #endif
@@ -1257,7 +1257,7 @@ namespace Uintah {
      d_patchState.zplus=newbc;
      break;
      default:
-     throw SCIRun::InternalError("Invalid FaceType Specified", __FILE__, __LINE__);
+     throw Uintah::InternalError("Invalid FaceType Specified", __FILE__, __LINE__);
      }
      }
      */
@@ -1265,7 +1265,7 @@ namespace Uintah {
     /**
      * Returns the cell spacing Vector(dx,dy,dz)
      */
-    inline SCIRun::Vector dCell() const
+    inline Uintah::Vector dCell() const
     {
       // This will need to change for stretched grids
       return getLevel()->dCell();
@@ -1322,7 +1322,7 @@ namespace Uintah {
     /**
      * Returns the domain coordinates of the node idx
      */
-    inline SCIRun::Point getNodePosition(const IntVector& idx) const
+    inline Uintah::Point getNodePosition(const IntVector& idx) const
     {
       return getLevel()->getNodePosition(idx);
     }
@@ -1330,7 +1330,7 @@ namespace Uintah {
     /**
      * Returns the domain coordinates of the cell idx
      */
-    inline SCIRun::Point getCellPosition(const IntVector& idx) const
+    inline Uintah::Point getCellPosition(const IntVector& idx) const
     {
       return getLevel()->getCellPosition(idx);
     }
@@ -1338,7 +1338,7 @@ namespace Uintah {
     /**
      * Returns the cell index of the coordinate pos
      */
-    inline IntVector getCellIndex(const SCIRun::Point& pos) const
+    inline IntVector getCellIndex(const Uintah::Point& pos) const
     {
       return getLevel()->getCellIndex(pos);
     }
@@ -1348,18 +1348,18 @@ namespace Uintah {
     /**
      * Returns the 8 nodes found around the point pos
      */
-    void findCellNodes(const SCIRun::Point& pos, IntVector ni[8]) const;
+    void findCellNodes(const Uintah::Point& pos, IntVector ni[8]) const;
     
     /**
      * Returns the 27 nodes found around the point pos
      */
-    void findCellNodes27(const SCIRun::Point& pos, IntVector ni[27]) const;
+    void findCellNodes27(const Uintah::Point& pos, IntVector ni[27]) const;
     
     /**
      * Returns true if the point p is contained within the patch
      * including extra cells
      */
-    inline bool containsPointInExtraCells(const SCIRun::Point& p) const {
+    inline bool containsPointInExtraCells(const Uintah::Point& p) const {
       IntVector l(getExtraCellLowIndex());
       IntVector h(getExtraCellHighIndex());
       IntVector c=getLevel()->getCellIndex(p);
@@ -1369,7 +1369,7 @@ namespace Uintah {
      * Returns true if the point p is contained within the patch
      * excluding extra cells
      */
-    inline bool containsPoint(const SCIRun::Point& p) const {
+    inline bool containsPoint(const Uintah::Point& p) const {
       IntVector l(getCellLowIndex());
       IntVector h(getCellHighIndex());
       IntVector c=getLevel()->getCellIndex(p);
@@ -1390,7 +1390,7 @@ namespace Uintah {
     /**
      * Returns the cell that contains the point pos
      */
-    inline bool findCell(const SCIRun::Point& pos, IntVector& ci) const
+    inline bool findCell(const Uintah::Point& pos, IntVector& ci) const
     {
       ci=getLevel()->getCellIndex(pos);
       return containsCell(ci);
@@ -1470,10 +1470,10 @@ namespace Uintah {
      * Returns the closest node to the point pos.  This node
      * is not guarenteed to be owned by this patch.
      */
-    inline IntVector findClosestNode(const SCIRun::Point& pos) const
+    inline IntVector findClosestNode(const Uintah::Point& pos) const
     {
       IntVector idx = getLevel()->getCellIndex(pos);
-      SCIRun::Point cellP = getLevel()->getCellPosition(idx);
+      Uintah::Point cellP = getLevel()->getCellPosition(idx);
       for(int i=0;i<3;++i) {
         if( pos(i)>cellP(i) ) {
           idx[i]++;
@@ -1610,12 +1610,12 @@ namespace Uintah {
     /**
      * Returns the position of the node idx in domain coordinates.
      */
-    SCIRun::Point nodePosition(const IntVector& idx) const;
+    Uintah::Point nodePosition(const IntVector& idx) const;
     
     /**
      * Returns the position of the cell idx in domain coordinates.
      */
-    SCIRun::Point cellPosition(const IntVector& idx) const;
+    Uintah::Point cellPosition(const IntVector& idx) const;
     
     /**
      * Returns the next face.  Alternativly the ++ operator also
@@ -1800,7 +1800,7 @@ namespace Uintah {
      * Returns the offset between the virtual patch and the real patch
      * in domain coordinates.
      */
-    SCIRun::Vector getVirtualOffsetVector() const
+    Uintah::Vector getVirtualOffsetVector() const
     { return cellPosition(getCellLowIndex()) -
       cellPosition(getRealPatch()->getCellLowIndex());
     }
@@ -2072,11 +2072,11 @@ namespace Uintah {
      use the other more descriptive queries.
      *********************/
     
-    friend struct SCIRun::InternalAreaSuperBoxEvaluator<const Uintah::Patch*, int>;
-    friend class SCIRun::SuperBox<const Patch*, IntVector, int, int,
-    SCIRun::InternalAreaSuperBoxEvaluator<const Patch*, int> >;
-    friend class SCIRun::BasicBox<const Patch*, IntVector, int, int,
-    SCIRun::InternalAreaSuperBoxEvaluator<const Patch*, int> >;
+    friend struct Uintah::InternalAreaSuperBoxEvaluator<const Uintah::Patch*, int>;
+    friend class Uintah::SuperBox<const Patch*, IntVector, int, int,
+    Uintah::InternalAreaSuperBoxEvaluator<const Patch*, int> >;
+    friend class Uintah::BasicBox<const Patch*, IntVector, int, int,
+    Uintah::InternalAreaSuperBoxEvaluator<const Patch*, int> >;
     
     /**
      * Returns the low index including extra cells

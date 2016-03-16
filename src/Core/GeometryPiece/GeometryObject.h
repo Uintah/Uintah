@@ -42,7 +42,6 @@ namespace Uintah {
 
 class GeometryPiece;
 
-using namespace SCIRun;
 
 /**************************************
 	

@@ -33,7 +33,6 @@
 #include <vector>
 #include <sstream>
 
-using namespace SCIRun;
 using namespace Uintah;
 using namespace std;
 

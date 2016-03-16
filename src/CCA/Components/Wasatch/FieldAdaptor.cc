@@ -95,7 +95,7 @@ namespace WasatchCore{
     std::vector<Uintah::Patch::FaceType> faces;
     patch->getNeighborFaces(faces);
     for( std::vector<Uintah::Patch::FaceType>::const_iterator i=faces.begin(); i!=faces.end(); ++i ){
-      SCIRun::IntVector dir = patch->getFaceDirection(*i);
+      Uintah::IntVector dir = patch->getFaceDirection(*i);
       for( int j=0; j<3; ++j ){
         if( dir[j] == -1 ) bcMinus[j]=0;
         if( dir[j] ==  1 ) bcPlus [j]=0;
@@ -112,7 +112,7 @@ namespace WasatchCore{
     so::IntVec bcMinus, bcPlus;
     get_bc_logicals( patch, bcMinus, bcPlus );
 
-    const SCIRun::IntVector gs = patch->getCellHighIndex(0) - patch->getCellLowIndex(0);
+    const Uintah::IntVector gs = patch->getCellHighIndex(0) - patch->getCellLowIndex(0);
 
     const int nGhost = get_n_ghost<FieldT>();
     const so::IntVec glob( gs[0] + nGhost*2 + (bcPlus[0] ? FieldT::Location::BCExtra::X : 0),
@@ -142,7 +142,7 @@ namespace WasatchCore{
     so::IntVec bcMinus, bcPlus;
     get_bc_logicals( patch, bcMinus, bcPlus );
     
-    const SCIRun::IntVector gs = patch->getCellHighIndex(0) - patch->getCellLowIndex(0);
+    const Uintah::IntVector gs = patch->getCellHighIndex(0) - patch->getCellLowIndex(0);
     
     const int nGhost = get_n_ghost<FieldT>();
     const so::IntVec glob( gs[0] + nGhost*2 + (bcPlus[0] ? FieldT::Location::BCExtra::X : 0),

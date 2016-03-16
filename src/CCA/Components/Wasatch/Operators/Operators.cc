@@ -39,37 +39,37 @@ using namespace SpatialOps;
 namespace WasatchCore{
   
   template<typename FieldT>
-  const SCIRun::Point get_low_position(const Uintah::Patch& patch);
+  const Uintah::Point get_low_position(const Uintah::Patch& patch);
   
   template<>
-  const SCIRun::Point get_low_position<SVolField>(const Uintah::Patch& patch)
+  const Uintah::Point get_low_position<SVolField>(const Uintah::Patch& patch)
   {
     return patch.getCellPosition(patch.getCellLowIndex());
   }
     
   template<>
-  const SCIRun::Point get_low_position<XVolField>(const Uintah::Patch& patch)
+  const Uintah::Point get_low_position<XVolField>(const Uintah::Patch& patch)
   {
     const Uintah::Vector spacing = patch.dCell();
-    SCIRun::Point low = patch.getCellPosition(patch.getCellLowIndex());
+    Uintah::Point low = patch.getCellPosition(patch.getCellLowIndex());
     low.x( low.x() - spacing[0]/2.0 );
     return low;
   }
   
   template<>
-  const SCIRun::Point get_low_position<YVolField>(const Uintah::Patch& patch)
+  const Uintah::Point get_low_position<YVolField>(const Uintah::Patch& patch)
   {
     const Uintah::Vector spacing = patch.dCell();
-    SCIRun::Point low = patch.getCellPosition(patch.getCellLowIndex());
+    Uintah::Point low = patch.getCellPosition(patch.getCellLowIndex());
     low.y( low.y() - spacing[1]/2.0 );
     return low;
   }
   
   template<>
-  const SCIRun::Point get_low_position<ZVolField>(const Uintah::Patch& patch)
+  const Uintah::Point get_low_position<ZVolField>(const Uintah::Patch& patch)
   {
     const Uintah::Vector spacing = patch.dCell();
-    SCIRun::Point low = patch.getCellPosition(patch.getCellLowIndex());
+    Uintah::Point low = patch.getCellPosition(patch.getCellLowIndex());
     low.z( low.z() - spacing[2]/2.0 );
     return low;
   }
@@ -79,7 +79,7 @@ namespace WasatchCore{
   typedef SpatialOps::Particle::CellToParticle<VOLT> C2P;                                               \
   typedef SpatialOps::Particle::ParticleToCell<VOLT> P2C;                                               \
   typedef SpatialOps::Particle::ParticlesPerCell<VOLT> PPerC;                                               \
-  const SCIRun::Point low = get_low_position<VOLT>(patch);                                               \
+  const Uintah::Point low = get_low_position<VOLT>(patch);                                               \
   opDB.register_new_operator<C2P>(scinew C2P(spacing[0], low.x(), spacing[1], low.y(), spacing[2], low.z()) );\
   opDB.register_new_operator<P2C>(scinew P2C(spacing[0], low.x(), spacing[1], low.y(), spacing[2], low.z()) );\
   opDB.register_new_operator<PPerC>(scinew PPerC(spacing[0], low.x(), spacing[1], low.y(), spacing[2], low.z()) );\
@@ -114,7 +114,7 @@ namespace WasatchCore{
   void build_operators( const Uintah::Patch& patch,
                         SpatialOps::OperatorDatabase& opDB )
   {
-    const SCIRun::IntVector udim = patch.getCellHighIndex() - patch.getCellLowIndex();
+    const Uintah::IntVector udim = patch.getCellHighIndex() - patch.getCellLowIndex();
 
     std::vector<int> dim(3,1);
     for( size_t i=0; i<3; ++i ){ dim[i] = udim[i];}

@@ -43,7 +43,7 @@
 #include <vector>
 #include <string>
 
-namespace SCIRun {
+namespace Uintah {
 
 
 /**************************************
@@ -140,7 +140,7 @@ private:
 
 std::ostream& operator<<(std::ostream& os, const Polygon& p);
 
-} // End namespace SCIRun
+} // End namespace Uintah
 
 #endif //ifndef Geometry_Polygon_h
 

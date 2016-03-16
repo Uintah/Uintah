@@ -34,7 +34,6 @@
 
 namespace Uintah {
 
-  using SCIRun::IntVector;
 
   /**************************************
 

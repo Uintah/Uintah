@@ -1728,10 +1728,10 @@ fun_getTypeDescription(ViscoScramStateData*)
 
 } // End namespace Uintah
 
-namespace SCIRun {
+namespace Uintah {
 void swapbytes( Uintah::ViscoScramStateData& d)
 {
   for (int i = 0; i < 5; i++) swapbytes(d.DevStress[i]);
 }
   
-} // namespace SCIRun
+} // namespace Uintah

@@ -42,7 +42,7 @@
 #include <Core/Containers/Array1.h>
 #include <Core/Geometry/Point.h>
 
-namespace SCIRun {
+namespace Uintah {
 
 
 typedef struct Pair{
@@ -132,7 +132,7 @@ template <class T> bool Linear3DPWI<T>::set_data(const Array1<double>& pts, cons
   }
 }
 
-} // End namespace SCIRun
+} // End namespace Uintah
 
 #endif //SCI_LINEARPWI_H__
 

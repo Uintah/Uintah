@@ -34,8 +34,7 @@
 #include <Core/Grid/Variables/BaseIterator.h>
 namespace Uintah {
 
-  using SCIRun::IntVector;
-
+  
   /**************************************
 
     CLASS

@@ -39,7 +39,7 @@
 #include <algorithm>
 
 
-namespace SCIRun {
+namespace Uintah {
 
 typedef std::pair<CleanupManagerCallback, void *> CMCPair;
 
@@ -118,5 +118,5 @@ CleanupManager::call_callbacks()
 }
 
 
-} // End namespace SCIRun
+} // End namespace Uintah
 

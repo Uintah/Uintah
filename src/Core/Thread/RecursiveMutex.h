@@ -39,7 +39,7 @@
 
 #include <Core/Thread/Mutex.h>
 
-namespace SCIRun {
+namespace Uintah {
 
 struct RecursiveMutex_private;
 /**************************************
@@ -90,7 +90,7 @@ private:
   RecursiveMutex(const RecursiveMutex&);
   RecursiveMutex& operator=(const RecursiveMutex&);
 };
-} // End namespace SCIRun
+} // End namespace Uintah
 
 #endif
 

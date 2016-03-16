@@ -38,7 +38,7 @@
 #include <Core/Math/Weibull.h>
 #include <Core/Math/MusilRNG.h>
 
-namespace SCIRun {
+namespace Uintah {
 
 Weibull::Weibull(double WeibMean,
                  double WeibMod,
@@ -57,4 +57,4 @@ Weibull::~Weibull() {
   delete mr_;
 }
 
-} // End namespace SCIRun
+} // End namespace Uintah

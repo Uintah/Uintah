@@ -47,7 +47,7 @@
 #include <Core/Util/FancyAssert.h>
 #include <Core/Util/Assert.h>
 
-namespace SCIRun {
+namespace Uintah {
 
   template<class T> class LinearArray3 {
 
@@ -230,7 +230,7 @@ namespace SCIRun {
 
   }; // end class LinearArray3
 
-} // end namespace SCIRun
+} // end namespace Uintah
 
 #endif // end #ifndef CORE_CONTAINERS_LINEARARRAY3_h
 

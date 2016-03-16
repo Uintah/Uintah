@@ -30,7 +30,6 @@
 #include <iostream>
 
 using namespace Uintah;
-using namespace SCIRun;
 
 using std::cout;
 

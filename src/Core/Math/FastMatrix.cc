@@ -53,7 +53,6 @@
 
 using std::vector;
 using namespace Uintah;
-using namespace SCIRun;
 
 FastMatrix::FastMatrix(int rows, int cols)
   : rows(rows), cols(cols)

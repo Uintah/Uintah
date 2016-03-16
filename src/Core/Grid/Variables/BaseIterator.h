@@ -30,7 +30,7 @@
 
 namespace Uintah {
 
-  using SCIRun::IntVector;
+  using Uintah::IntVector;
 
   /**************************************
 

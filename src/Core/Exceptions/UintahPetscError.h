@@ -42,7 +42,7 @@
 
 namespace Uintah {
 
-  class UintahPetscError : public SCIRun::Exception {
+  class UintahPetscError : public Uintah::Exception {
   public:
     UintahPetscError(int petsc_code, const std::string&, const char* file, int line);
     UintahPetscError(const UintahPetscError&);

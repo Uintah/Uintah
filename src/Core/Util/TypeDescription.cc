@@ -46,9 +46,9 @@ KillMap::KillMap()
 {
 }
 
-static map<string, const TypeDescription*>* types = 0;
-static vector<const TypeDescription*>* typelist=0;
-static Mutex typelist_lock("TypeDescription::typelist lock");
+  static map<string, const SCIRun::STypeDescription*>* types = 0;
+  static vector<const SCIRun::STypeDescription*>* typelist=0;
+  static Uintah::Mutex typelist_lock("TypeDescription::typelist lock");
 static bool killed=false;
 
 KillMap::~KillMap()
@@ -59,7 +59,7 @@ KillMap::~KillMap()
     return;
   }
   killed=true;
-  vector<const TypeDescription*>::iterator iter = typelist->begin();
+  vector<const SCIRun::STypeDescription*>::iterator iter = typelist->begin();
   for(;iter != typelist->end();iter++)
     delete *iter;
   delete types;
@@ -70,7 +70,7 @@ KillMap killit;
 
 
 void
-TypeDescription::register_type()
+SCIRun::STypeDescription::register_type()
 {
   typelist_lock.lock();
   if (!types)
@@ -83,12 +83,12 @@ TypeDescription::register_type()
     // and typelist.
     if (!types)
     {
-      types = scinew map<string, const TypeDescription*>;
-      typelist = scinew vector<const TypeDescription*>;
+      types = scinew map<string, const SCIRun::STypeDescription*>;
+      typelist = scinew vector<const STypeDescription*>;
     }
   }
 
-  map<string, const TypeDescription*>::iterator iter = types->find(get_name());
+  map<string, const STypeDescription*>::iterator iter = types->find(get_name());
   if (iter == types->end())
   {
     (*types)[get_name()] = this;
@@ -99,7 +99,7 @@ TypeDescription::register_type()
 }
 
 
-TypeDescription::TypeDescription(const string &name, 
+STypeDescription::STypeDescription(const string &name, 
 				 const string &path,
 				 const string &namesp, 
 				 category_e c) : 
@@ -112,7 +112,7 @@ TypeDescription::TypeDescription(const string &name,
   register_type();
 }
 
-TypeDescription::TypeDescription(const string &name, 
+STypeDescription::STypeDescription(const string &name, 
 				 td_vec* sub, 
 				 const string &path,
 				 const string &namesp,
@@ -126,13 +126,13 @@ TypeDescription::TypeDescription(const string &name,
   register_type();
 }
 
-TypeDescription::~TypeDescription()
+STypeDescription::~STypeDescription()
 {
   if (subtype_) delete subtype_;
 }
 
 string 
-TypeDescription::get_name( const string & type_sep_start /* = "<"  */, 
+STypeDescription::get_name( const string & type_sep_start /* = "<"  */, 
 			   const string & type_sep_end   /* = "> " */ ) const
 {
   const string comma(",");
@@ -160,7 +160,7 @@ TypeDescription::get_name( const string & type_sep_start /* = "<"  */,
 
 // substitute one of the subtype names with the name provided.
 string 
-TypeDescription::get_similar_name(const string &substitute,
+STypeDescription::get_similar_name(const string &substitute,
 				  const int pos,
 				  const string &type_sep_start, 
 				  const string &type_sep_end) const 
@@ -196,7 +196,7 @@ TypeDescription::get_similar_name(const string &substitute,
 
 
 string 
-TypeDescription::get_filename() const
+STypeDescription::get_filename() const
 {
   string s = get_name();
   string result;
@@ -211,7 +211,7 @@ TypeDescription::get_filename() const
 }
 
 void 
-TypeDescription::fill_compile_info(CompileInfo *ci) const
+STypeDescription::fill_compile_info(Uintah::CompileInfo *ci) const
 {
   switch (category_) {
   case DATA_E:
@@ -244,32 +244,32 @@ TypeDescription::fill_compile_info(CompileInfo *ci) const
   }
 }
 
-const TypeDescription* 
-TypeDescription::lookup_type(const std::string& t)
+const STypeDescription* 
+STypeDescription::lookup_type(const std::string& t)
 {
   if(!types) {
     typelist_lock.lock();
     if (!types) {
-      types=scinew map<string, const TypeDescription*>;
-      typelist=new vector<const TypeDescription*>;
+      types=scinew map<string, const STypeDescription*>;
+      typelist=new vector<const STypeDescription*>;
     }
     typelist_lock.unlock();
   }
   
-  map<string, const TypeDescription*>::iterator iter = types->find(t);
+  map<string, const STypeDescription*>::iterator iter = types->find(t);
    if(iter == types->end())
       return 0;
    return iter->second;
 }
 
-string TypeDescription::cc_to_h(const string &dot_cc)
+string STypeDescription::cc_to_h(const string &dot_cc)
 {
   const unsigned int len = dot_cc.length();
   string dot_h;
   if (len > 3 && dot_cc.substr(len-3, len) == ".cc") {
     dot_h = dot_cc.substr(0, len-3) + ".h";
   } else {
-    cerr << "Warning: TypeDescription::cc_to_h input does not end in .cc" 
+    cerr << "Warning: STypeDescription::cc_to_h input does not end in .cc" 
 	 << endl << "the string: '" << dot_cc << "'" << endl;
     dot_h = dot_cc;
   }
@@ -277,112 +277,112 @@ string TypeDescription::cc_to_h(const string &dot_cc)
 }
 
 
-TypeDescription::Register::Register(const TypeDescription* /* td*/)
+STypeDescription::Register::Register(const STypeDescription* /* td*/)
 {
   // Registration happens in CTOR
 }
 
-TypeDescription::Register::~Register()
+STypeDescription::Register::~Register()
 {
 }
 
-const TypeDescription* get_type_description(double*)
+const STypeDescription* get_type_description(double*)
 {
-  static TypeDescription* td = 0;
+  static STypeDescription* td = 0;
   if(!td){
-    td = scinew TypeDescription("double", "builtin", "builtin");
+    td = scinew STypeDescription("double", "builtin", "builtin");
   }
   return td;
 }
 
-const TypeDescription* get_type_description(long*)
+const STypeDescription* get_type_description(long*)
 {
-  static TypeDescription* td = 0;
+  static STypeDescription* td = 0;
   if(!td){
-    td = scinew TypeDescription("long", "builtin", "builtin");
+    td = scinew STypeDescription("long", "builtin", "builtin");
   }
   return td;
 }
 
-const TypeDescription* get_type_description(float*)
+const STypeDescription* get_type_description(float*)
 {
-  static TypeDescription* td = 0;
+  static STypeDescription* td = 0;
   if(!td){
-    td = scinew TypeDescription("float", "builtin", "builtin");
+    td = scinew STypeDescription("float", "builtin", "builtin");
   }
   return td;
 }
 
-const TypeDescription* get_type_description(short*)
+const STypeDescription* get_type_description(short*)
 {
-  static TypeDescription* td = 0;
+  static STypeDescription* td = 0;
   if(!td){
-    td = scinew TypeDescription("short", "builtin", "builtin");
+    td = scinew STypeDescription("short", "builtin", "builtin");
   }
   return td;
 }
 
-const TypeDescription* get_type_description(unsigned short*)
+const STypeDescription* get_type_description(unsigned short*)
 {
-  static TypeDescription* td = 0;
+  static STypeDescription* td = 0;
   if(!td){
-    td = scinew TypeDescription("unsigned short", "builtin", "builtin");
+    td = scinew STypeDescription("unsigned short", "builtin", "builtin");
   }
   return td;
 }
 
-const TypeDescription* get_type_description(int*)
+const STypeDescription* get_type_description(int*)
 {
-  static TypeDescription* td = 0;
+  static STypeDescription* td = 0;
   if(!td){
-    td = scinew TypeDescription("int", "builtin", "builtin");
+    td = scinew STypeDescription("int", "builtin", "builtin");
   }
   return td;
 }
 
-const TypeDescription* get_type_description(unsigned int*)
+const STypeDescription* get_type_description(unsigned int*)
 {
-  static TypeDescription* td = 0;
+  static STypeDescription* td = 0;
   if(!td){
-    td = scinew TypeDescription("unsigned int", "builtin", "builtin");
+    td = scinew STypeDescription("unsigned int", "builtin", "builtin");
   }
   return td;
 }
 
-const TypeDescription* get_type_description(char*)
+const STypeDescription* get_type_description(char*)
 {
-  static TypeDescription* td = 0;
+  static STypeDescription* td = 0;
   if(!td){
-    td = scinew TypeDescription("char", "builtin", "builtin");
+    td = scinew STypeDescription("char", "builtin", "builtin");
   }
   return td;
 }
 
-const TypeDescription* get_type_description(unsigned char*)
+const STypeDescription* get_type_description(unsigned char*)
 {
-  static TypeDescription* td = 0;
+  static STypeDescription* td = 0;
   if(!td){
-    td = scinew TypeDescription("unsigned char", "builtin", "builtin");
+    td = scinew STypeDescription("unsigned char", "builtin", "builtin");
   }
   return td;
 }
 
-const TypeDescription* get_type_description(string*)
+const STypeDescription* get_type_description(string*)
 {
-  static TypeDescription* td = 0;
+  static STypeDescription* td = 0;
   if(!td){
-    td = scinew TypeDescription("string", "std::string", "std");
+    td = scinew STypeDescription("string", "std::string", "std");
   }
   return td;
 }
 
-const TypeDescription* get_type_description(unsigned long*)
+const STypeDescription* get_type_description(unsigned long*)
 {
-  static TypeDescription* td = 0;
+  static STypeDescription* td = 0;
   if(!td){
-    td = scinew TypeDescription("unsigned long", "builtin", "builtin");
+    td = scinew STypeDescription("unsigned long", "builtin", "builtin");
   }
   return td;
 }
 
-} // end namespace SCIRun
+} // end namespace Uintah

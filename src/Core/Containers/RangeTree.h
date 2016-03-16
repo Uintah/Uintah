@@ -32,7 +32,7 @@
 #include <climits>
 #include <cmath>
 
-namespace SCIRun {
+namespace Uintah {
 /**************************************
 
 CLASS
@@ -1798,6 +1798,6 @@ setDiagonalDirections()
   }
 }
 
-} // End namespace SCIRun
+} // End namespace Uintah
 
 #endif // ndef Core_Containers_RangeTree_h

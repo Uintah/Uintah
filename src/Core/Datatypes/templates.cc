@@ -36,7 +36,6 @@
 
 #include <Datatypes/Particles/ParticleGridReader.h>
 
-using namespace SCIRun;
 using namespace Uintah;
 
 template void Pio<>(Piostream&, LockingHandle<ParticleGridReader>&);

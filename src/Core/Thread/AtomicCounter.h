@@ -37,7 +37,7 @@
 #ifndef Core_Thread_AtomicCounter_h
 #define Core_Thread_AtomicCounter_h
 
-namespace SCIRun {
+namespace Uintah {
 
 struct AtomicCounter_private;
 
@@ -121,7 +121,7 @@ class AtomicCounter {
 };
 
 }
-  // End namespace SCIRun
+  // End namespace Uintah
 
 #endif
 

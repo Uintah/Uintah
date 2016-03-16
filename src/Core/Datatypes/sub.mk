@@ -32,25 +32,15 @@ include $(SCIRUN_SCRIPTS)/smallso_prologue.mk
 
 SRCDIR := Core/Datatypes
 
-SRCS += $(SRCDIR)/Color.cc                      \
-        $(SRCDIR)/ColumnMatrix.cc               \
+SRCS += $(SRCDIR)/ColumnMatrix.cc               \
         $(SRCDIR)/Datatype.cc                   \
         $(SRCDIR)/DenseColMajMatrix.cc          \
         $(SRCDIR)/DenseMatrix.cc                \
-        $(SRCDIR)/Image.cc                      \
         $(SRCDIR)/Matrix.cc                     \
         $(SRCDIR)/MatrixOperations.cc           \
         $(SRCDIR)/PropertyManager.cc            \
-        $(SRCDIR)/SearchGrid.cc                 \
         $(SRCDIR)/SparseRowMatrix.cc            \
-        $(SRCDIR)/String.cc                     \
         $(SRCDIR)/TypeName.cc                   \
-        $(SRCDIR)/Archive.cc	                \
-        $(SRCDIR)/ScalarParticles.cc 		\
-        $(SRCDIR)/VectorParticles.cc 		\
-        $(SRCDIR)/TensorParticles.cc 		\
-        $(SRCDIR)/PSet.cc 			\
-        $(SRCDIR)/VariableCache.cc 		
 
 
 PSELIBS := \

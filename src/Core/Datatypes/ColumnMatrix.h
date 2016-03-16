@@ -43,7 +43,7 @@
 
 #include <iosfwd>  // Forward declarations for KCC C++ I/O routines
 
-namespace SCIRun {
+namespace Uintah {
 
 class ColumnMatrix : public Matrix {
   double* data;
@@ -150,6 +150,6 @@ public:
 };
 
 
-} // End namespace SCIRun
+} // End namespace Uintah
 
 #endif

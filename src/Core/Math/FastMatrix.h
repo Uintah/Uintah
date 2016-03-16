@@ -66,7 +66,7 @@ namespace Uintah {
     // Warning - this do not do any pivoting...
     void destructiveSolve(double* b);
     void destructiveSolve(double* b1, double* b2);
-    void destructiveSolve(SCIRun::Vector* b);
+    void destructiveSolve(Uintah::Vector* b);
 
     void transpose(const FastMatrix& transpose);
     void multiply(const std::vector<double>& b, std::vector<double>& X) const;
@@ -90,7 +90,7 @@ namespace Uintah {
     void big_destructiveInvert(FastMatrix& inverse);
     void big_destructiveSolve(double* b);
     void big_destructiveSolve(double* b1, double* b2);
-    void big_destructiveSolve(SCIRun::Vector* b);
+    void big_destructiveSolve(Uintah::Vector* b);
 
     FastMatrix(const FastMatrix&);
     FastMatrix& operator=(const FastMatrix&);

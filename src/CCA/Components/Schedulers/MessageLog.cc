@@ -35,12 +35,11 @@
 #include <sstream>
 
 using namespace Uintah;
-using namespace SCIRun;
 using namespace std;
 
 // Debug: Used to sync cerr so it is readable (when output by
 // multiple threads at the same time)  From sus.cc:
-extern SCIRun::Mutex       cerrLock;
+extern Uintah::Mutex       cerrLock;
 
 MessageLog::MessageLog( const ProcessorGroup * myworld, const Output * oport ) :
   d_enabled(false), d_myworld(myworld), d_oport(oport)

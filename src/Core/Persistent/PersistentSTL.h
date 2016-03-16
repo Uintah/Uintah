@@ -40,7 +40,7 @@
 #include <vector>
 #include <list>
 
-namespace SCIRun {
+namespace Uintah {
 
 #define MAP_VERSION 1
 
@@ -205,7 +205,7 @@ void Pio(Piostream& stream, std::pair<T,S>& data)
   stream.end_class();  
 }
 
-} // End namespace SCIRun
+} // End namespace Uintah
 
 #endif // SCI_project_PersistentSTL_h
 

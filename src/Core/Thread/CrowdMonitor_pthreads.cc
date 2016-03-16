@@ -40,7 +40,7 @@
 
 /*** WARNING: THIS IMPLEMENTATION HAS NOT BEEN TESTED - 3/6/2002 ***/
 
-namespace SCIRun {
+namespace Uintah {
 
 struct CrowdMonitor_private {
   pthread_rwlock_t lock_;
@@ -137,4 +137,4 @@ CrowdMonitor::writeUnlock()
   pthread_rwlock_unlock(&priv_->lock_);  
 }
 
-} // End namespace SCIRun
+} // End namespace 

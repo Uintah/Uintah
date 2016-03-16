@@ -34,7 +34,6 @@ using namespace std;
 #define ONEDIM_DIM 2
 
 namespace Uintah {
-  using namespace SCIRun;
   
   TextOpts::TextOpts(Args & args)
   {

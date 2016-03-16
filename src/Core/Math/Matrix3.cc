@@ -47,16 +47,15 @@
 
 using namespace Uintah;
 using namespace std;
-using SCIRun::Vector;
 
 const string& 
 Matrix3::get_h_file_path() {
-  static const string path(SCIRun::TypeDescription::cc_to_h(__FILE__));
+  static const string path(SCIRun::STypeDescription::cc_to_h(__FILE__));
   return path;
 }
 
 // Added for compatibility with Core types
-namespace SCIRun {
+namespace Uintah {
 
   using std::string;
 
@@ -66,11 +65,11 @@ namespace SCIRun {
     return name;
   }
 
-  const TypeDescription* get_type_description(Matrix3*)
+  const SCIRun::STypeDescription* get_type_description(Matrix3*)
   {
-    static TypeDescription* td = 0;
+    static SCIRun::STypeDescription* td = 0;
     if(!td){
-      td = scinew TypeDescription("Matrix3", Matrix3::get_h_file_path(), "Uintah");
+      td = scinew SCIRun::STypeDescription("Matrix3", Matrix3::get_h_file_path(), "Uintah");
     }
     return td;
   }
@@ -93,7 +92,7 @@ namespace SCIRun {
     SWAP_8(*++p); SWAP_8(*++p); SWAP_8(*++p);
   }
 
-} // namespace SCIRun
+} // namespace Uintah
 
 
 
@@ -197,7 +196,7 @@ inline void swap(double& v1, double& v2)
 // any row has zeroes in every other row and a one in that row.
 // If rhs == NULL, then the rhs is assumed to be
 // the zero vector and thus will not need to change.
-void Matrix3::triangularReduce(Matrix3& A, SCIRun::Vector* rhs, int& num_zero_rows,
+void Matrix3::triangularReduce(Matrix3& A, Uintah::Vector* rhs, int& num_zero_rows,
                                double relative_scale)
 {
   int i, j, k, pivot;
@@ -289,7 +288,7 @@ void Matrix3::triangularReduce(Matrix3& A, SCIRun::Vector* rhs, int& num_zero_ro
 // {{0, 1, c} {0, 0, 0} {0, 0, 0}}, plane solution 
 // {{0, 0, 1} {0, 0, 0} {0, 0, 0}}, plane solution 
 // {{0, 0, 0} {0, 0, 0} {0, 0, 0}} -> solution only iff rhs = {0, 0, 0} 
-bool Matrix3::solveParticularReduced(const SCIRun::Vector& rhs, SCIRun::Vector& xp,
+bool Matrix3::solveParticularReduced(const Uintah::Vector& rhs, Uintah::Vector& xp,
                                      int num_zero_rows) const
 {
   double x, y, z;
@@ -329,7 +328,7 @@ bool Matrix3::solveParticularReduced(const SCIRun::Vector& rhs, SCIRun::Vector& 
       x = rhs[0]; // x + c*(z=0) = rhs[0] -> x = rhs[0]
     }
 
-    xp = SCIRun::Vector(x, y, z);
+    xp = Uintah::Vector(x, y, z);
     return true;
 
   case 2:
@@ -347,14 +346,14 @@ bool Matrix3::solveParticularReduced(const SCIRun::Vector& rhs, SCIRun::Vector& 
     // make xp(i) (first non-zero column) non-zero and
     // the other two 0 because that is perfectly valid and
     // for simplicity.
-    xp = SCIRun::Vector(0, 0, 0);
+    xp = Uintah::Vector(0, 0, 0);
     xp[i] = rhs[0];
 
     return true;
   case 3:
     // solution only if rhs == 0 (in which case everywhere is a solution)
-    if (rhs == SCIRun::Vector(0, 0, 0)) {
-      xp = SCIRun::Vector(0, 0, 0); // arbitrarily choose {0, 0, 0}
+    if (rhs == Uintah::Vector(0, 0, 0)) {
+      xp = Uintah::Vector(0, 0, 0); // arbitrarily choose {0, 0, 0}
       return true;
     }
     else
@@ -365,18 +364,18 @@ bool Matrix3::solveParticularReduced(const SCIRun::Vector& rhs, SCIRun::Vector& 
 }
  
 // solveHomogenous for a Matrix that has already by triangularReduced.
-std::vector<SCIRun::Vector> Matrix3::solveHomogenousReduced(int num_zero_rows) const
+std::vector<Uintah::Vector> Matrix3::solveHomogenousReduced(int num_zero_rows) const
 {
-  std::vector<SCIRun::Vector> basis_vectors;
+  std::vector<Uintah::Vector> basis_vectors;
 
   basis_vectors.resize(num_zero_rows);
   
   switch (num_zero_rows) {
   case 3:
     // Solutions everywhere : A = 0 matrix
-    basis_vectors[0] = SCIRun::Vector(1, 0, 0);
-    basis_vectors[1] = SCIRun::Vector(0, 1, 0);
-    basis_vectors[2] = SCIRun::Vector(0, 0, 1);
+    basis_vectors[0] = Uintah::Vector(1, 0, 0);
+    basis_vectors[1] = Uintah::Vector(0, 1, 0);
+    basis_vectors[2] = Uintah::Vector(0, 0, 1);
     break;
 
   case 1:
@@ -385,7 +384,7 @@ std::vector<SCIRun::Vector> Matrix3::solveHomogenousReduced(int num_zero_rows) c
       // do backwards substition, using value of 1 arbitrarily
       // if a variable is not constrained
 
-      SCIRun::Vector v;
+      Uintah::Vector v;
       if (mat3[1][1] == 0) {
         // A = {{a, b, c} {0, 0, 1} {0, 0, 0}
         v[2] = 0; // e*z = 0, e != 0 -> z = 0
@@ -437,18 +436,18 @@ std::vector<SCIRun::Vector> Matrix3::solveHomogenousReduced(int num_zero_rows) c
 
     if (max_index == 0) {
       // |a| largest, use line2 and line3
-      basis_vectors[0] = SCIRun::Vector(mat3[0][2], 0, -mat3[0][0]); // {c, 0, -a}
-      basis_vectors[1] = SCIRun::Vector(mat3[0][1], -mat3[0][0], 0); // {b, -a, 0}
+      basis_vectors[0] = Uintah::Vector(mat3[0][2], 0, -mat3[0][0]); // {c, 0, -a}
+      basis_vectors[1] = Uintah::Vector(mat3[0][1], -mat3[0][0], 0); // {b, -a, 0}
     }
     else if (max_index == 1) {
       // |b| largest, use line1 and line3
-      basis_vectors[0] = SCIRun::Vector(0, mat3[0][2], -mat3[0][1]); // {0, c, -b}
-      basis_vectors[1] = SCIRun::Vector(mat3[0][1], -mat3[0][0], 0); // {b, -a, 0}
+      basis_vectors[0] = Uintah::Vector(0, mat3[0][2], -mat3[0][1]); // {0, c, -b}
+      basis_vectors[1] = Uintah::Vector(mat3[0][1], -mat3[0][0], 0); // {b, -a, 0}
     }
     else {
       // |c| largest, use line1 and line2
-      basis_vectors[0] = SCIRun::Vector(0, mat3[0][2], -mat3[0][1]); // {0, c, -b}
-      basis_vectors[1] = SCIRun::Vector(mat3[0][2], 0, -mat3[0][0]); // {c, 0, -a}
+      basis_vectors[0] = Uintah::Vector(0, mat3[0][2], -mat3[0][1]); // {0, c, -b}
+      basis_vectors[1] = Uintah::Vector(mat3[0][2], 0, -mat3[0][0]); // {c, 0, -a}
     }
   }
 
@@ -873,7 +872,7 @@ namespace Uintah {
 }
 
 void
-Matrix3::eigen(SCIRun::Vector& eval, Matrix3& evec)
+Matrix3::eigen(Uintah::Vector& eval, Matrix3& evec)
 {
   // Convert the current matrix into a 2x2 TNT Array
   TNT::Array2D<double> A = toTNTArray2D();

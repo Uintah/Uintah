@@ -42,7 +42,7 @@
 #include <string>
 
 namespace Uintah {
-  class InvalidState : public SCIRun::Exception {
+  class InvalidState : public Uintah::Exception {
   public:
     InvalidState(const std::string&, const char* file, int line);
     InvalidState(const InvalidState&);

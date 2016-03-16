@@ -40,7 +40,6 @@
 #include <iostream>
 
 using namespace Uintah;
-using namespace SCIRun;
 using namespace std;
 
 const int SIZE_DEFAULT = 80;

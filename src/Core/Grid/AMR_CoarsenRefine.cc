@@ -30,12 +30,11 @@
 #include <Core/Grid/Level.h>
 #include <Core/Util/DebugStream.h>
 
-using SCIRun::IntVector;
 using namespace std;
 
 namespace Uintah {
 
-static SCIRun::DebugStream cout_dbg("AMR_CoarsenRefine", false);
+static Uintah::DebugStream cout_dbg("AMR_CoarsenRefine", false);
 //______________________________________________________________________
 //
 template<typename T>

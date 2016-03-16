@@ -37,10 +37,6 @@
 
 using namespace Uintah;
 
-using SCIRun::Thread;
-using SCIRun::Time;
-using SCIRun::InternalError;
-
 using std::cerr;
 using std::cout;
 using std::string;

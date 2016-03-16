@@ -48,7 +48,7 @@
 const int MAXCONNECTIONS = 25;
 const int MAXRECV = 1024;
 
-namespace SCIRun {
+namespace Uintah {
 
 using namespace std;
 
@@ -258,4 +258,4 @@ Socket::getSocketInfo()
   return info.str();
 }
 
-} //namespace SCIRun
+} //namespace Uintah

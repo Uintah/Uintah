@@ -31,7 +31,7 @@ namespace Uintah{
 //__________________________________
 //
 void printSchedule( const PatchSet      * patches,
-                    SCIRun::DebugStream & dbg,
+                    Uintah::DebugStream & dbg,
                     const string        & where )
 {
   if (dbg.active()){
@@ -45,7 +45,7 @@ void printSchedule( const PatchSet      * patches,
 //__________________________________
 //
 void printSchedule( const LevelP        & level,
-                    SCIRun::DebugStream & dbg,
+                    Uintah::DebugStream & dbg,
                     const string        & where )
 {
   if (dbg.active()){
@@ -60,7 +60,7 @@ void printSchedule( const LevelP        & level,
 //
 void printTask(const PatchSubset* patches,
                const Patch* patch,
-               SCIRun::DebugStream& dbg,
+               Uintah::DebugStream& dbg,
                const string& where)
 {
   if (dbg.active()){
@@ -75,7 +75,7 @@ void printTask(const PatchSubset* patches,
 //__________________________________
 //
 void printTask(const PatchSubset* patches,
-               SCIRun::DebugStream& dbg,
+               Uintah::DebugStream& dbg,
                const string& where)
 {
   if (dbg.active()){
@@ -90,7 +90,7 @@ void printTask(const PatchSubset* patches,
 //__________________________________
 //
 void printTask(const Patch* patch,
-               SCIRun::DebugStream& dbg,
+               Uintah::DebugStream& dbg,
                const string& where)
 {
   if (dbg.active()){
@@ -105,7 +105,7 @@ void printTask(const Patch* patch,
 
 //__________________________________
 //
-void printTask(SCIRun::DebugStream& dbg,
+void printTask(Uintah::DebugStream& dbg,
                const string& where)
 {
   if (dbg.active()){

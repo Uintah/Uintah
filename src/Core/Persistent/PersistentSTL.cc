@@ -34,7 +34,7 @@
 #include <Core/Persistent/Persistent.h>
 #include <Core/Persistent/PersistentSTL.h>
 
-namespace SCIRun {
+namespace Uintah {
 
 using std::vector;
 
@@ -141,4 +141,4 @@ void Pio(Piostream& stream, vector<double>& data)
 }
 
 
-} // End namespace SCIRun
+} // End namespace Uintah

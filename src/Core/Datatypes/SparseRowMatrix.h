@@ -41,7 +41,7 @@
 #include <Core/Datatypes/Matrix.h>
 #include <Core/Containers/Array1.h>
 
-namespace SCIRun {
+namespace Uintah {
 
 class SparseRowMatrix : public Matrix {
 private:
@@ -133,6 +133,6 @@ public:
   static Persistent *maker();
 };
 
-} // End namespace SCIRun
+} // End namespace Uintah
 
 #endif

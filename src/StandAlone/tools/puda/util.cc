@@ -44,7 +44,7 @@ Uintah::findTimestep_loopLimits( const bool tslow_set,
     cerr << "\n";
     cerr << "ERROR: 'timesteplow' must be between 0 and " << times.size()-1 << ".  You had " << time_step_lower << ".\n";
     cerr << "\n";
-    SCIRun::Thread::exitAll( 2 );
+    Uintah::Thread::exitAll( 2 );
   }
   if( !tsup_set ) {
     time_step_upper = times.size() - 1;
@@ -53,6 +53,6 @@ Uintah::findTimestep_loopLimits( const bool tslow_set,
     cerr << "\n";
     cerr << "Error: 'timestephigh' must be between 0 and " << times.size()-1 << ".  You had " << time_step_upper << ".\n";
     cerr << "\n";
-    SCIRun::Thread::exitAll( 2 );
+    Uintah::Thread::exitAll( 2 );
   }
 }

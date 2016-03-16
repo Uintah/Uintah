@@ -32,7 +32,6 @@
 
 using namespace std;
 using namespace Uintah;
-using namespace SCIRun;
   
 Args::Args(int argc, char ** argv)
 {

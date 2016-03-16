@@ -46,7 +46,6 @@
 
 using namespace std;
 using namespace Uintah;
-using namespace SCIRun;
 
 
 struct StretchSpec {

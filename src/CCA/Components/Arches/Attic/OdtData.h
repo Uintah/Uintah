@@ -61,7 +61,7 @@ namespace Uintah {
 
 } // End namespace Uintah
   
-namespace SCIRun {
+namespace Uintah {
   void swapbytes( Uintah::odtData& d);
 }       
 

@@ -54,11 +54,6 @@
 
 namespace Uintah {
 
-  using SCIRun::Min;
-  using SCIRun::Max;
-  using SCIRun::Mutex;
-  using SCIRun::Semaphore;
-  using SCIRun::FastHashTable;
 
   class ProcessorGroup;
   class DataWarehouse;

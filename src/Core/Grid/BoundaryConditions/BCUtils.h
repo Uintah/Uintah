@@ -210,21 +210,21 @@ namespace Uintah {
                       T& value,
                       const Vector& cell_dx)
   {
-    SCIRun::IntVector oneCell = patch->faceDirection(face);
-    SCIRun::IntVector dir= patch->getFaceAxes(face);
+    Uintah::IntVector oneCell = patch->faceDirection(face);
+    Uintah::IntVector dir= patch->getFaceAxes(face);
     double dx = cell_dx[dir[0]];
     
     int nCells = 0;
     
     if (value == T(0)) {   //    Z E R O  N E U M A N N
       for (bound_ptr.reset(); !bound_ptr.done(); bound_ptr++) {
-        SCIRun::IntVector adjCell = *bound_ptr - oneCell;
+        Uintah::IntVector adjCell = *bound_ptr - oneCell;
         var[*bound_ptr] = var[adjCell];
       }
       nCells += bound_ptr.size();;
     }else{                //    N E U M A N N  First Order differencing
       for (bound_ptr.reset(); !bound_ptr.done(); bound_ptr++) {
-        SCIRun::IntVector adjCell = *bound_ptr - oneCell;
+        Uintah::IntVector adjCell = *bound_ptr - oneCell;
         var[*bound_ptr] = var[adjCell] - value * dx;
       }
       nCells += bound_ptr.size();;

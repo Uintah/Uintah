@@ -38,7 +38,7 @@
 #include <Core/Math/MusilRNG.h>
 #include <vector>
 
-namespace SCIRun {
+namespace Uintah {
 
 
 // Compute the distance squared from the point to the given line,
@@ -99,4 +99,4 @@ uniform_sample_tetrahedra(Point &p, const Point &p0, const Point &p1,
                           MusilRNG &rng);
 
 
-} // namespace SCIRun
+} // namespace Uintah

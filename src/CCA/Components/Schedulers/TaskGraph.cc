@@ -55,8 +55,6 @@
 #include <unistd.h>
 
 using namespace Uintah;
-
-using namespace SCIRun;
 using namespace std;
 
 static DebugStream tgdbg(       "TaskGraph",         false);

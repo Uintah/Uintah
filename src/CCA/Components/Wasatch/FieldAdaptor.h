@@ -336,13 +336,13 @@ namespace WasatchCore{
      */
     namespace so = SpatialOps;
 
-    using SCIRun::IntVector;
+    using Uintah::IntVector;
 
-    const SCIRun::IntVector lowIx       = uintahVar.getLowIndex();
-    const SCIRun::IntVector highIx      = uintahVar.getHighIndex();
-    const SCIRun::IntVector fieldSize   = uintahVar.getWindow()->getData()->size();
-    const SCIRun::IntVector fieldOffset = uintahVar.getWindow()->getOffset();
-    const SCIRun::IntVector fieldExtent = highIx - lowIx;
+    const Uintah::IntVector lowIx       = uintahVar.getLowIndex();
+    const Uintah::IntVector highIx      = uintahVar.getHighIndex();
+    const Uintah::IntVector fieldSize   = uintahVar.getWindow()->getData()->size();
+    const Uintah::IntVector fieldOffset = uintahVar.getWindow()->getOffset();
+    const Uintah::IntVector fieldExtent = highIx - lowIx;
     
     const so::IntVec   size(   fieldSize[0],   fieldSize[1],   fieldSize[2] );
     const so::IntVec extent( fieldExtent[0], fieldExtent[1], fieldExtent[2] );
@@ -355,7 +355,7 @@ namespace WasatchCore{
     // one must change the ghostData to reflect this discrepancy. The general rule is that, at physical boundaries,
     // the number of extra cells superseeds the number of ghost cells. At processor boundaries, then number
     // of ghost cells takes over.
-    const SCIRun::IntVector extraCells = ainfo.patch->getExtraCells(); // get the extra cells associated with this patch
+    const Uintah::IntVector extraCells = ainfo.patch->getExtraCells(); // get the extra cells associated with this patch
     SpatialOps::GhostData newGData = ghostData; // copy ghost data
     so::IntVec gMinus = ghostData.get_minus();
     so::IntVec gPlus = ghostData.get_plus();

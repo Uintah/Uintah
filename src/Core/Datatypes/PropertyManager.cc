@@ -40,7 +40,7 @@
 
 using namespace std;
 
-namespace SCIRun {
+namespace Uintah {
 
 
 PersistentTypeID 
@@ -339,4 +339,4 @@ PropertyManager::io(Piostream &stream)
 }
 
 
-} // namespace SCIRun
+} // namespace Uintah

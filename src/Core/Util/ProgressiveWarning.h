@@ -52,7 +52,7 @@
 #include <iostream>
 #include <string>
 
-namespace SCIRun {
+namespace Uintah {
 
 /**************************************
 
@@ -97,6 +97,6 @@ class ProgressiveWarning {
    std::ostream * d_out;
 };
 
-} // ends namespace SCIRun
+} // ends namespace Uintah
 
 #endif

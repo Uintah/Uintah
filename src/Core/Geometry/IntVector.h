@@ -43,7 +43,7 @@
 #include <Core/Geometry/Vector.h>
 #include <Core/Geometry/Point.h>
 
-namespace SCIRun {
+namespace Uintah {
 
 class Piostream;
 
@@ -212,7 +212,7 @@ public:
 
   friend void Pio( Piostream&, IntVector& );
 
-  friend std::ostream& operator<<(std::ostream&, const SCIRun::IntVector&);
+  friend std::ostream& operator<<(std::ostream&, const Uintah::IntVector&);
 
 private:
 
@@ -267,6 +267,6 @@ inline IntVector roundNearest(const Vector& v)
    return ret;
 }
 
-} // End namespace SCIRun
+} // End namespace Uintah
 
 #endif

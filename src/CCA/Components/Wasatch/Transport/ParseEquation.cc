@@ -216,7 +216,7 @@ namespace WasatchCore{
     const Expr::Tag rhsTag = parse_nametag( poissonEqParams->findBlock("PoissonRHS")->findBlock("NameTag"));
     bool useRefPoint = false;
     double refValue = 0.0;
-    SCIRun::IntVector refLocation(0,0,0);
+    Uintah::IntVector refLocation(0,0,0);
     
     if( poissonEqParams->findBlock("ReferenceValue") ){
       useRefPoint = true;

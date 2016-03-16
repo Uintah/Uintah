@@ -13,7 +13,6 @@
 
 #include "mpi.h"
 
-using namespace SCIRun;
 using namespace Uintah;
 
 int

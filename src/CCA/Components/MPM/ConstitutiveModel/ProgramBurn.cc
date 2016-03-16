@@ -39,7 +39,7 @@
 
 using namespace std;
 using namespace Uintah;
-using namespace SCIRun;
+
 
 ProgramBurn::ProgramBurn(ProblemSpecP& ps, MPMFlags* Mflag)
   : ConstitutiveModel(Mflag)

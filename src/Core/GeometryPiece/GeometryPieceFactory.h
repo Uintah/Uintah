@@ -72,14 +72,14 @@ namespace Uintah {
      found by previous call, then this returns a reference to the points that were already found
      (which avoids additional computation).
      */
-    const static std::vector<SCIRun::Point>& getInsidePoints(const std::string geomPieceName,
+    const static std::vector<Point>& getInsidePoints(const std::string geomPieceName,
                                                              const Uintah::Patch* const patch);
 
     /*
      *  \brief Finds and returns a reference to a vector that contains the points inside ALL
     the named geometries that live on patch.
      */
-    const static std::vector<SCIRun::Point>& getInsidePoints(const Uintah::Patch* const patch);
+    const static std::vector<Point>& getInsidePoints(const Uintah::Patch* const patch);
 
   private:
     // This variable records all named GeometryPieces, so that if they
@@ -91,8 +91,8 @@ namespace Uintah {
     // be locked...
     static std::map<std::string,GeometryPieceP> namedPieces_;
     static std::vector<GeometryPieceP>          unnamedPieces_;
-    static std::map<std::string, std::map<int, std::vector<SCIRun::Point> > > insidePointsMap_; // geompiece name -> (patchID, inside points vector)
-    static std::map< int, std::vector<SCIRun::Point> > allInsidePointsMap_; // patchID -> insidePoints. returns ALL points inside geometries for a given patch
+    static std::map<std::string, std::map<int, std::vector<Point> > > insidePointsMap_; // geompiece name -> (patchID, inside points vector)
+    static std::map< int, std::vector<Point> > allInsidePointsMap_; // patchID -> insidePoints. returns ALL points inside geometries for a given patch
     /*
      *  \brief A private helper function to check whether we already looked for the inside points
      for this patch and geometry or not.

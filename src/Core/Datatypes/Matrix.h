@@ -38,12 +38,11 @@
 #define SCI_project_Matrix_h 1
 
 #include <Core/Datatypes/PropertyManager.h>
-#include <Core/Containers/Array1.h>
 #include <Core/Geometry/Transform.h>
 #include <Core/Containers/LockingHandle.h>
 #include <iosfwd>
 
-namespace SCIRun {
+namespace Uintah {
 
 
 class SparseRowMatrix;
@@ -175,6 +174,6 @@ protected:
 
 void Mult(ColumnMatrix&, const Matrix&, const ColumnMatrix&);
 
-} // End namespace SCIRun
+} // End namespace Uintah
 
 #endif

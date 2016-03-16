@@ -41,12 +41,25 @@ using namespace std;
 
 const string& 
 Short27::get_h_file_path() {
-  static const string path(SCIRun::TypeDescription::cc_to_h(__FILE__));
+  static const string path(SCIRun::STypeDescription::cc_to_h(__FILE__));
   return path;
 }
 
-// Added for compatibility with Core types
 namespace SCIRun {
+
+  const SCIRun::STypeDescription* get_type_description(Short27*)
+  {
+    static SCIRun::STypeDescription* td = 0;
+    if(!td){
+      td = scinew SCIRun::STypeDescription("Short27", Short27::get_h_file_path(), "Uintah");
+    }
+    return td;
+  }
+
+}
+
+// Added for compatibility with Core types
+namespace Uintah {
 
 using std::string;
 
@@ -56,15 +69,7 @@ template<> const string find_type_name(Short27*)
   return name;
 }
 
-const TypeDescription* get_type_description(Short27*)
-{
-  static TypeDescription* td = 0;
-  if(!td){
-    td = scinew TypeDescription("Short27", Short27::get_h_file_path(), "Uintah");
-  }
-  return td;
-}
-
+ 
 void
 Pio(Piostream& stream, Short27& s)
 {
@@ -95,7 +100,7 @@ void swapbytes( Uintah::Short27& s){
   SWAP_2(*++p); SWAP_2(*++p); SWAP_2(*++p);
 }
 
-} // namespace SCIRun
+} // namespace Uintah
 
 namespace Uintah {
 MPI_Datatype makeMPI_Short27()

@@ -36,8 +36,8 @@
 
 namespace Uintah {
 
-using SCIRun::Point;
-using SCIRun::Vector;
+using Uintah::Point;
+using Uintah::Vector;
 
 class  Matrix3;
 class  Short27;
@@ -102,13 +102,13 @@ typedef int64_t long64;
 
 #if !defined( STATIC_BUILD )
 
-namespace SCIRun {
+namespace Uintah {
 
   template<>  const std::string find_type_name(Uintah::long64*);
 
    const TypeDescription* get_type_description(Uintah::long64*);
 
-} // namespace SCIRun 
+} // namespace Uintah 
 #endif // STATIC_BUILD
 
 #endif

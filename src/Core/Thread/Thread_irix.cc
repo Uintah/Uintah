@@ -100,7 +100,7 @@ extern "C" int __ateachexit(void(*)());
 
 #define N_POOLMUTEX 301
 
-namespace SCIRun {
+namespace Uintah {
 
 struct Thread_private {
   Thread* thread;
@@ -1477,4 +1477,4 @@ ConditionVariable::conditionBroadcast()
   }
 }
 
-} // End namespace SCIRun
+} // End namespace Uintah

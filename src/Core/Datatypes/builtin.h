@@ -39,7 +39,7 @@
 #include <Core/Datatypes/TypeName.h>
 #include <Core/Persistent/Persistent.h>
 
-namespace SCIRun {
+namespace Uintah {
 
 class Scalar {
 public:
@@ -107,6 +107,6 @@ template<> inline bool is_scalar<float>() { return true; }
 template<> inline bool is_scalar<double>() { return true; }
 
 
-} // end namespace SCIRun
+} // end namespace Uintah
 
 #endif // builtin_h

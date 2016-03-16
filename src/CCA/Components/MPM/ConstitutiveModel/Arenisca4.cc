@@ -398,7 +398,7 @@ void Arenisca4::initializeCMData(const Patch* patch,
     int patch_div_32 = patchID/32;
     patchID = patchID%32;
     unsigned int unique_seed = ((wdist.WeibSeed+patch_div_32+1) << patchID);
-    SCIRun::Weibull weibGen(wdist.WeibMed,wdist.WeibMod,wdist.WeibRefVol,
+    Weibull weibGen(wdist.WeibMed,wdist.WeibMod,wdist.WeibRefVol,
                             unique_seed,wdist.WeibMod);
     //proc0cout << "Weibull Variables for PEAKI1I: (initialize CMData)\n"
     //          << "Median:            " << wdist.WeibMed

@@ -46,13 +46,12 @@
 #include <Core/Malloc/AllocPriv.h>
 #include <new>
 
-using namespace SCIRun;
 
 #ifdef DISABLE_SCI_MALLOC
 
 // These stubs are needed when your code uses these functions but
 // DISABLE_SCI_MALLOC is set.
-namespace SCIRun {
+namespace Uintah {
 
 const
 char*
@@ -72,13 +71,13 @@ void AllocatorResetDefaultTag() {}
 int AllocatorSetDefaultTagLineNumber(int line_number) { return line_number; }
 void AllocatorResetDefaultTagLineNumber() {}
 
-} // end namespace SCIRun
+} // end namespace Uintah
 
 #ifndef MALLOC_TRACE
 
 void*
 operator
-new( size_t size, Allocator*, const char*, int )
+new( size_t size, Uintah::Allocator*, const char*, int )
 {
   void* mem = new char[size];
 #ifdef INITIALIZE_MEMORY
@@ -91,7 +90,7 @@ new( size_t size, Allocator*, const char*, int )
 
 void*
 operator
-new[]( size_t size, Allocator*, const char*, int )
+new[]( size_t size, Uintah::Allocator*, const char*, int )
 {
   void* mem = new char[size];
 
@@ -105,14 +104,14 @@ new[]( size_t size, Allocator*, const char*, int )
 
 void
 operator
-delete(void* ptr, Allocator*, const char*, int)
+delete(void* ptr, Uintah::Allocator*, const char*, int)
 {
   free(ptr);
 }
 
 void
 operator
-delete[](void* ptr, Allocator*, const char*, int)
+delete[](void* ptr, Uintah::Allocator*, const char*, int)
 {
   free(ptr);
 }
@@ -128,7 +127,7 @@ static const char* default_new_array_tag = "Unknown - operator new[]";
 //
 int default_tag_line_number = 0;
 
-namespace SCIRun {
+namespace Uintah {
 
 const
 char*
@@ -176,7 +175,7 @@ AllocatorResetDefaultTagLineNumber()
   default_tag_line_number = 0;
 }
 
-} // end namespace SCIRun
+} // end namespace Uintah
 
 void*
 operator

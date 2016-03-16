@@ -44,7 +44,7 @@
 #include   <string>
 #include   <iosfwd>
 
-namespace SCIRun {
+namespace Uintah {
     
 class TypeDescription;
 class RigorousTest;
@@ -149,12 +149,12 @@ Point operator+(const Vector &v, const Point &p) {
   return p+v;
 }
 
-} // End namespace SCIRun
+} // End namespace Uintah
 
 // This cannot be above due to circular dependencies
 #include <Core/Geometry/Vector.h>
 
-namespace SCIRun {
+namespace Uintah {
 
 inline Point::Point(const Vector& v)
     : x_(v.x_), y_(v.y_), z_(v.z_)
@@ -333,7 +333,7 @@ inline double Dot(const Point& p1, const Point& p2)
 
 const TypeDescription* get_type_description(Point*);
 
-} // End namespace SCIRun
+} // End namespace Uintah
 
 
 

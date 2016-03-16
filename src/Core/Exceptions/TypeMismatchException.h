@@ -41,7 +41,7 @@
 
 namespace Uintah {
 
-   class TypeMismatchException : public SCIRun::Exception {
+   class TypeMismatchException : public Uintah::Exception {
    public:
       TypeMismatchException(const std::string& msg, const char* file, int line);
       TypeMismatchException(const TypeMismatchException&);

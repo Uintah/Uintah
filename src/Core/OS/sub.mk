@@ -40,11 +40,9 @@ ifeq ($(HAVE_BOOST),yes)
 else
    SRCS += $(SRCDIR)/Dir.cc
 endif
-   SRCS += $(SRCDIR)/sock.cc
 
 
 PSELIBS := Core/Exceptions Core/Parallel
-LIBS := $(SOCKET_LIBRARY)
 
 ifeq ($(HAVE_BOOST),yes)
   LIBS := $(LIBS) $(BOOST_LIBRARY) 

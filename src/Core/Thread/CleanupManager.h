@@ -78,7 +78,7 @@
 #include <Core/Thread/Mutex.h>
 #include <vector>
 
-namespace SCIRun {
+namespace Uintah {
 
 typedef void (*CleanupManagerCallback)(void *);
 
@@ -105,7 +105,7 @@ protected:
   static Mutex * lock_;
 };
 
-} // End namespace SCIRun
+} // End namespace Uintah
 
 
 #endif /* SCI_project_CleanupManager_h */

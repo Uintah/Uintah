@@ -51,7 +51,7 @@
     return td;
   }
 
-namespace SCIRun {
+namespace Uintah {
 
   void swapbytes( Uintah::odtData& d) {
     double *p = d.x_x;

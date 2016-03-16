@@ -42,7 +42,6 @@
 #include "GV_TaskGraph.h"
 
 using namespace std;
-using namespace SCIRun;
 
 static ostream& operator<<(ostream& out, const GV_Task* task);
 static string readline(int fd);
@@ -76,7 +75,7 @@ DaVinci::run()
 
   pid_t pid = fork();
   if (pid == -1)
-    throw ErrnoException("fork() failed", errno, __FILE__, __LINE__);
+    throw Uintah::ErrnoException("fork() failed", errno, __FILE__, __LINE__);
   else if (pid == 0) {
     // child
 
@@ -138,7 +137,7 @@ DaVinci::~DaVinci()
 	
     // just throw away the response; we need to do the read in case
     // davinci blocks forever trying to write
-  } catch (Exception&) {}
+  } catch (Uintah::Exception&) {}
 
   while ((waitpid(m_PID, 0, 0) == -1) && (errno == EINTR))
     ;
@@ -370,7 +369,7 @@ readline(int fd)
 	*eol = '\0';
       line << buf;
     } else if (len == -1)
-      throw ErrnoException("read() error", errno, __FILE__, __LINE__);
+      throw Uintah::ErrnoException("read() error", errno, __FILE__, __LINE__);
   } while (need_more);
     
   return line.str();
@@ -389,7 +388,7 @@ writeline(int fd, string str)
       written += len;
     else if ((len == -1) && (errno != EINTR))
       //	  cerr << "write() error: " << errno << endl;
-      throw ErrnoException("write() error", errno, __FILE__, __LINE__);
+      throw Uintah::ErrnoException("write() error", errno, __FILE__, __LINE__);
     else {
       std::stringstream s;
       s << "Unexpected write() return code " << len << endl;

@@ -30,7 +30,7 @@
 
 using namespace std;
 
-static SCIRun::DebugStream BC_CC("ICE_BC_CC", false);
+static Uintah::DebugStream BC_CC("ICE_BC_CC", false);
 namespace Uintah {
 /* ______________________________________________________________________
  Purpose~   -returns (true) if the inletVel BC is specified on any face,
@@ -268,7 +268,7 @@ int  set_inletVelocity_BC(const Patch* patch,
         
         vel_CC[c]    = U_infinity;             // set the components that are not normal to the face           
         double ratio = (h - d)/height;
-        ratio = SCIRun::Clamp(ratio,0.0,1.0);
+        ratio = Clamp(ratio,0.0,1.0);
         
         if( h > d && h < height){
           vel_CC[c][nDir] = U_infinity[nDir] * pow(ratio, n);

@@ -42,7 +42,7 @@
 #include <Core/Containers/Sort.h>
 #include <iostream>
 
-namespace SCIRun {
+namespace Uintah {
 
 template <class T> class PiecewiseInterp
 {
@@ -126,7 +126,7 @@ template<class T> inline bool PiecewiseInterp<T>::fill_data(const Array1<double>
   return true;
 }
 
-} // End namespace SCIRun
+} // End namespace Uintah
 
 #endif //SCI_INTERPOLATION_H__
 

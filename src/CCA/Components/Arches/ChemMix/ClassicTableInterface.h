@@ -140,7 +140,7 @@ public:
     const std::vector< std::vector <double> >&  indep;
     const std::vector< std::vector <double > >&  ind_1;
 
-    //SCIRun::Mutex d_interpLock; // For synchronization in find_val() functions
+    //Uintah::Mutex d_interpLock; // For synchronization in find_val() functions
 
   };
 

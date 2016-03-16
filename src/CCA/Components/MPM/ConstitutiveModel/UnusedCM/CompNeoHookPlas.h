@@ -34,10 +34,10 @@ namespace Uintah {
 }
 
 #include <Core/Util/Endian.h>
-namespace SCIRun {
+namespace Uintah {
   inline void swapbytes( Uintah::CompNeoHookPlasStateData& d)
     { swapbytes(d.Alpha); }
-} // namespace SCIRun
+} // namespace Uintah
 
 #include "ConstitutiveModel.h"  
 #include <cmath>

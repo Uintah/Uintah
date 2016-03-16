@@ -503,11 +503,11 @@ private:
 
   std::map<labelPatchMatlLevel, allVarPointersInfo> *varPointers;
 
-  //mutable SCIRun::CrowdMonitor allocateLock;
-  //mutable SCIRun::CrowdMonitor varLock;
-  mutable SCIRun::CrowdMonitor *allocateLock;
-  mutable SCIRun::CrowdMonitor *varLock;
-  static SCIRun::CrowdMonitor *gpuPoolLock;
+  //mutable Uintah::CrowdMonitor allocateLock;
+  //mutable Uintah::CrowdMonitor varLock;
+  mutable Uintah::CrowdMonitor *allocateLock;
+  mutable Uintah::CrowdMonitor *varLock;
+  static Uintah::CrowdMonitor *gpuPoolLock;
   char _internalName[80];
 
   materialItem       d_materialDB[MAX_MATERIALSDB_ITEMS];

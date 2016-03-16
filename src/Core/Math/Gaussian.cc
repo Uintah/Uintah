@@ -38,7 +38,7 @@
 #include <Core/Math/Gaussian.h>
 #include <Core/Math/MusilRNG.h>
 
-namespace SCIRun {
+namespace Uintah {
 
 Gaussian::Gaussian(double mean, double sigma, int seed,
                    double refVol, double exponent)
@@ -50,7 +50,7 @@ Gaussian::~Gaussian() {
   delete mr_;
 }
 
-} // End namespace SCIRun
+} // End namespace Uintah
 
 
 

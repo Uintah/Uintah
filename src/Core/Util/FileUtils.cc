@@ -45,7 +45,7 @@
 
 using namespace std;
 
-namespace SCIRun {
+namespace Uintah {
 
 ////////////////////////////////////////////////////////////
 //
@@ -75,7 +75,7 @@ InsertStringInFile(char* filename, const char* match, const char* add_text)
   if( ifile == NULL ) {
     printf( "ERROR: In Core/Util/FileUtils.cc: InsertStringInFile:\n" );
     printf("        File '%s' does not exist!\n", filename );
-    printf( "       There is something seriously wrong with your SCIRun installation.\n");
+    printf( "       There is something seriously wrong with your Uintah installation.\n");
     printf( "       Please contact scirun@sci.utah.edu.\n");
     exit( 1 );
   }
@@ -594,5 +594,5 @@ changeExtension( const string & filename, const string &extension)
 }
 
 
-} // End namespace SCIRun
+} // End namespace Uintah
 

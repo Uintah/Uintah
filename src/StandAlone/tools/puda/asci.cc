@@ -38,7 +38,6 @@
 
 using namespace std;
 using namespace Uintah;
-using namespace SCIRun;
 
 void
 Uintah::asci( DataArchive *   da,

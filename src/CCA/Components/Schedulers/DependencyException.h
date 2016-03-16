@@ -46,7 +46,6 @@
 
 namespace Uintah {
 
-  using SCIRun::Exception;
 
   class DependencyException : public Exception {
 

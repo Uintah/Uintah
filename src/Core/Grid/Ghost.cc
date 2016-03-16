@@ -25,7 +25,6 @@
 #include <Core/Grid/Ghost.h>
 
 using namespace Uintah;
-using namespace SCIRun;
 
 
 std::string Ghost::names[numGhostTypes] =

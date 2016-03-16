@@ -43,14 +43,14 @@
 #include <Core/Persistent/Persistent.h>
 #endif
 
-namespace SCIRun {
+namespace Uintah {
 
 class RigorousTest;
 
 template<class T> class Array2;
 #ifndef SCI_NOPERSISTENT
-template<class T> void Pio(Piostream& stream, Array2<T>& data);
-template<class T> void Pio(Piostream& stream, Array2<T>*& data);
+template<class T> void Pio(Uintah::Piostream& stream, Array2<T>& data);
+template<class T> void Pio(Uintah::Piostream& stream, Array2<T>*& data);
 #endif // #ifndef SCI_NOPERSISTENT
 
 /**************************************
@@ -138,12 +138,12 @@ public:
 #ifndef SCI_NOPERSISTENT
 #if defined(_AIX)
   template <typename Type> 
-  friend void TEMPLATE_TAG Pio TEMPLATE_BOX (Piostream&, Array2<Type>&);
+  friend void TEMPLATE_TAG Pio TEMPLATE_BOX (Uintah::Piostream&, Array2<Type>&);
   template <typename Type> 
-  friend void TEMPLATE_TAG Pio TEMPLATE_BOX (Piostream&, Array2<Type>*&);
+  friend void TEMPLATE_TAG Pio TEMPLATE_BOX (Uintah::Piostream&, Array2<Type>*&);
 #else
-  friend void TEMPLATE_TAG Pio TEMPLATE_BOX (Piostream&, Array2<T>&);
-  friend void TEMPLATE_TAG Pio TEMPLATE_BOX (Piostream&, Array2<T>*&);
+  friend void TEMPLATE_TAG Pio TEMPLATE_BOX (Uintah::Piostream&, Array2<T>&);
+  friend void TEMPLATE_TAG Pio TEMPLATE_BOX (Uintah::Piostream&, Array2<T>*&);
 #endif
 #endif // #ifndef SCI_NOPERSISTENT
 };
@@ -231,7 +231,7 @@ void Array2<T>::copy(const Array2<T> &copy)
 #ifndef SCI_NOPERSISTENT
 
 template<class T>
-void Pio(Piostream& stream, Array2<T>& data)
+void Pio(Uintah::Piostream& stream, Array2<T>& data)
 {
   stream.begin_class("Array2", Array2_VERSION);
   if(stream.reading()){
@@ -253,7 +253,7 @@ void Pio(Piostream& stream, Array2<T>& data)
 }
 
 template<class T>
-void Pio(Piostream& stream, Array2<T>*& data) {
+void Pio(Uintah::Piostream& stream, Array2<T>*& data) {
   if (stream.reading()) {
     data=new Array2<T>;
   }
@@ -261,7 +261,7 @@ void Pio(Piostream& stream, Array2<T>*& data) {
 }
 #endif // #ifndef SCI_NOPERSISTENT
 
-} // End namespace SCIRun
+} // End namespace Uintah
 
 #endif
 

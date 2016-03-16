@@ -60,7 +60,7 @@ namespace WasatchCore{
   {
     UintahPatchContainer* patchContainer_;
     int idir_; // x = 0, y = 1, z = 2
-    SCIRun::Vector shift_; // shift spacing by -dx/2 for staggered fields
+    Uintah::Vector shift_; // shift spacing by -dx/2 for staggered fields
     Coordinates(const int idir);
     
   public:

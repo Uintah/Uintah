@@ -51,7 +51,7 @@
 using namespace Uintah;
 using namespace std;
 
-namespace SCIRun {
+namespace Uintah {
 
 string
 Vector::get_string() const
@@ -201,20 +201,24 @@ Vector::rotz90(const int c)
 
 const string& 
 Vector::get_h_file_path() {
-  static const string path(TypeDescription::cc_to_h(__FILE__));
+  static const string path(SCIRun::STypeDescription::cc_to_h(__FILE__));
   return path;
 }
 
-const TypeDescription* get_type_description(Vector*)
-{
-  static TypeDescription* td = 0;
-  if(!td){
-    td = scinew TypeDescription("Vector", Vector::get_h_file_path(), "SCIRun", 
-				TypeDescription::DATA_E);
+
+} // End namespace Uintah
+
+
+namespace SCIRun {
+
+  const STypeDescription* get_type_description(Uintah::Vector*)
+  {
+    static STypeDescription* td = 0;
+    if(!td){
+      td = scinew STypeDescription("Vector", Vector::get_h_file_path(), "Uintah", 
+				  STypeDescription::DATA_E);
+    }
+    return td;
   }
-  return td;
+
 }
-
-} // End namespace SCIRun
-
-

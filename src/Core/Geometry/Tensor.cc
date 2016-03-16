@@ -48,7 +48,7 @@ using namespace std;
 #include <Core/Exceptions/InternalError.h>
 
 
-namespace SCIRun {
+namespace Uintah {
 
 Tensor::Tensor() : have_eigens_(0)
 {
@@ -375,20 +375,10 @@ void Pio(Piostream& stream, Tensor& t){
 
 const string& 
 Tensor::get_h_file_path() {
-  static const string path(TypeDescription::cc_to_h(__FILE__));
+  static const string path(SCIRun::STypeDescription::cc_to_h(__FILE__));
   return path;
 }
 
-const TypeDescription* get_type_description(Tensor*)
-{
-  static TypeDescription* td = 0;
-  if(!td){
-    td = scinew TypeDescription("Tensor", Tensor::get_h_file_path(), 
-				"SCIRun", 
-				TypeDescription::DATA_E);
-  }
-  return td;
-}
 
 
 ostream& operator<<( ostream& os, const Tensor& t )
@@ -411,4 +401,18 @@ istream& operator>>( istream& is, Tensor& t)
 }
 
 
-} // End namespace SCIRun
+} // End namespace Uintah
+
+namespace SCIRun {
+
+  const STypeDescription* get_type_description(Uintah::Tensor*)
+  {
+    static STypeDescription* td = 0;
+    if(!td){
+      td = scinew STypeDescription("Tensor", Uintah::Tensor::get_h_file_path(), 
+				  "Uintah", 
+				  STypeDescription::DATA_E);
+    }
+    return td;
+  }
+}

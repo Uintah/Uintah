@@ -41,8 +41,8 @@
 #include <Core/Persistent/Persistent.h>
 #include <cstdlib>
 
-using namespace SCIRun;
 using namespace std;
+using namespace Uintah;
 
 BBox::BBox()
 {
@@ -208,7 +208,7 @@ bool BBox::intersect(const Point& origin, const Vector& dir,
   }
 }
 
-namespace SCIRun {
+namespace Uintah {
 
   void Pio(Piostream & stream, BBox & box)
   {
@@ -235,4 +235,4 @@ namespace SCIRun {
     return out;
   }
 
-} // End namespace SCIRun
+} // End namespace Uintah

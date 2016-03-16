@@ -37,7 +37,7 @@
 #ifndef Core_Thread_Runnable_h
 #define Core_Thread_Runnable_h
 
-namespace SCIRun {
+namespace Uintah {
 
   class Thread;
 
@@ -97,7 +97,7 @@ class Runnable {
     Runnable& operator=(const Runnable&);
 };
 }
-  // End namespace SCIRun
+  // End namespace Uintah
 
 #endif
 

@@ -323,9 +323,9 @@ WARNING
 
 } // End namespace Uintah
       
-namespace SCIRun {
+namespace Uintah {
   void swapbytes( Uintah::ViscoScramForBinder::Statedata& d);
-} // namespace SCIRun
+} // namespace Uintah
 
 #endif  // __VISCOSCRAM_FOR_BINDER_H__ 
 

@@ -47,7 +47,7 @@
 
 using namespace std;
 
-namespace SCIRun {
+namespace Uintah {
 
 static Persistent* maker()
 {
@@ -529,6 +529,6 @@ ColumnMatrix::exterior(const ColumnMatrix &m) const
   return ret;
 }
 
-} // End namespace SCIRun
+} // End namespace Uintah
 
 

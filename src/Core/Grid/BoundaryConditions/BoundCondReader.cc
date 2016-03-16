@@ -494,9 +494,8 @@ BCGeomBase* BoundCondReader::createBoundaryConditionFace(ProblemSpecP& face_ps,
 
 //-------------------------------------------------------------------------------------------------
 
-SCIRun::Point moveToClosestNode(const Uintah::LevelP level, const int facedir, const int plusMinusFaces, const SCIRun::Point& p0)
+Uintah::Point moveToClosestNode(const Uintah::LevelP level, const int facedir, const int plusMinusFaces, const Uintah::Point& p0)
 {
-  using namespace SCIRun;
   using namespace Uintah;
   //
   // now find the closest node

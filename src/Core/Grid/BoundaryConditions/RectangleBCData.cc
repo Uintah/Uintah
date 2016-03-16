@@ -29,7 +29,7 @@
 #include <Core/Malloc/Allocator.h>
 #include <Core/Util/DebugStream.h>
 #include <iostream>
-using namespace SCIRun;
+
 using namespace Uintah;
 using std::cout;
 using std::endl;

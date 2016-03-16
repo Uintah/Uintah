@@ -36,7 +36,7 @@
 
 #include <Core/Thread/SimpleReducer.h>
 #include <Core/Thread/ThreadGroup.h>
-namespace SCIRun {
+namespace Uintah {
 
 
 SimpleReducer::SimpleReducer(const char* name)
@@ -141,4 +141,4 @@ SimpleReducer::min(int proc, int n, double mymin)
 }
 
 
-} // End namespace SCIRun
+} // End namespace Uintah

@@ -191,8 +191,8 @@ class PIDXOutputContext {
     void printBuffer(const std::string & desc,
                      const std::string & format,
                      int samples_per_value,
-                     SCIRun::IntVector& lo_EC,
-                     SCIRun::IntVector& hi_EC,
+                     Uintah::IntVector& lo_EC,
+                     Uintah::IntVector& hi_EC,
                      unsigned char* dataPIDX,
                      size_t arraySize );
                      

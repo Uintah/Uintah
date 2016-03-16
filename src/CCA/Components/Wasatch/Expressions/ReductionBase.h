@@ -15,7 +15,7 @@
 #include <Core/Util/DebugStream.h>
 
 // reduction diagnostics
-static SCIRun::DebugStream dbgr("WASATCH_REDUCTIONS", false);
+static Uintah::DebugStream dbgr("WASATCH_REDUCTIONS", false);
 #define dbg_reduction_on  dbgr.active()
 #define dbg_red  if( dbg_reduction_on  ) dbgr
 

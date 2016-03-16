@@ -31,7 +31,6 @@
 #include <CCA/Components/Arches/PetscCommon.h>
 #include <CCA/Ports/DataWarehouseP.h>
 #include <CCA/Ports/SchedulerP.h>
-#include <Core/Containers/Array1.h>
 #include <Core/Grid/LevelP.h>
 #include <Core/Grid/Patch.h>
 #include <Core/Grid/Variables/Array3.h>

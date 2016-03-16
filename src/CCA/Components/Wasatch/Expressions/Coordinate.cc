@@ -43,7 +43,7 @@ namespace WasatchCore {
   Coordinates<FieldT>::Coordinates(const int idir)
   : Expr::Expression<FieldT>(),
     idir_(idir),
-  shift_(SCIRun::Vector(0,0,0))
+  shift_(Uintah::Vector(0,0,0))
   {}
   
   //--------------------------------------------------------------------
@@ -71,7 +71,7 @@ namespace WasatchCore {
     FieldT& phi = this->value();
 
     const Uintah::Patch* patch = patchContainer_->get_uintah_patch();
-    const SCIRun::Vector spacing = patch->dCell();
+    const Uintah::Vector spacing = patch->dCell();
     const Direction stagLoc = get_staggered_location<FieldT>();
     switch (stagLoc) {
       case XDIR:
@@ -102,7 +102,7 @@ namespace WasatchCore {
     for(Uintah::CellIterator iter(patch->getExtraCellIterator(1)); !iter.done(); iter++)
     {
       Uintah::IntVector iCell = *iter;
-      const SCIRun::Point xyz( patch->getCellPosition(iCell) );
+      const Uintah::Point xyz( patch->getCellPosition(iCell) );
       const Uintah::IntVector localUintahIJK = iCell - patchCellOffset;
       // now go to local indexing
       const SpatialOps::IntVec localIJK(localUintahIJK[0], localUintahIJK[1], localUintahIJK[2]);

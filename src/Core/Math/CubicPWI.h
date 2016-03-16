@@ -36,7 +36,7 @@
 
 #include   <iostream>
 
-namespace SCIRun {
+namespace Uintah {
 
 enum EndCondition {natural_ends, clamped_ends, bessel_ends, quadratic_ends};
 
@@ -243,7 +243,7 @@ operator<<(std::ostream& out, Array1<T> a){
 }
 
 
-} // End namespace SCIRun
+} // End namespace Uintah
 
 #endif //SCI_CUBICPWI_H__
 

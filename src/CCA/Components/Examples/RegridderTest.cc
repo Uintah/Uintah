@@ -44,12 +44,9 @@
 #include <Core/Geometry/Point.h>
 #include <Core/Geometry/Vector.h>
 
-using SCIRun::Point;
-using SCIRun::Vector;
-using SCIRun::DebugStream;
 using namespace std;
 
-static DebugStream dbg("RegridderTest", false);
+static Uintah::DebugStream dbg("RegridderTest", false);
 
 namespace Uintah
 {

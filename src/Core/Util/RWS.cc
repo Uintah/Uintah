@@ -30,7 +30,7 @@
 
 #include <Core/Util/notset.h>
 
-namespace SCIRun {
+namespace Uintah {
 using std::string;
 
 const char _NOTSET_[] = "(null string)";

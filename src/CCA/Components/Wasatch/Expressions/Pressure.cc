@@ -60,7 +60,7 @@ Pressure::Pressure( const std::string& pressureName,
                     const bool hasMovingGeometry,
                     const bool       useRefPressure,
                     const double     refPressureValue,
-                    const SCIRun::IntVector refPressureLocation,
+                    const Uintah::IntVector refPressureLocation,
                     const bool       use3DLaplacian,
                     const bool       enforceSolvability,
                     const bool isConstDensity,
@@ -261,8 +261,8 @@ Pressure::setup_matrix( const SVolField* const volfrac )
   // n: north, s: south, e: east, w: west, t: top, b: bottom coefficient
   double w = 0.0, s = 0.0, b = 0.0;
   
-  const SCIRun::IntVector l    = patch_->getCellLowIndex();
-  const SCIRun::IntVector h    = patch_->getCellHighIndex();
+  const Uintah::IntVector l    = patch_->getCellLowIndex();
+  const Uintah::IntVector h    = patch_->getCellHighIndex();
   const Uintah::Vector spacing = patch_->dCell();
   
   if ( doX_ || use3DLaplacian_ ) {
@@ -286,7 +286,7 @@ Pressure::setup_matrix( const SVolField* const volfrac )
     // definite matrix. For the Laplacian on a structured grid, the matrix A corresponding
     // to the Laplacian operator is not positive definite - but "- A" is. Hence,
     // we multiply all coefficients by -1.
-    SCIRun::IntVector iCell = *iter;
+    Uintah::IntVector iCell = *iter;
     Uintah::Stencil7&  coefs = matrix_[iCell];
     coefs.w = -w;
     coefs.e = -w;
@@ -319,8 +319,8 @@ Pressure::setup_matrix( const SVolField* const rhoStar,
   // n: north, s: south, e: east, w: west, t: top, b: bottom coefficient
   double w = 0.0, s = 0.0, b = 0.0;
   using namespace SpatialOps;
-  const SCIRun::IntVector l    = patch_->getCellLowIndex();
-  const SCIRun::IntVector h    = patch_->getCellHighIndex();
+  const Uintah::IntVector l    = patch_->getCellLowIndex();
+  const Uintah::IntVector h    = patch_->getCellHighIndex();
   const Uintah::Vector spacing = patch_->dCell();
   
   if ( doX_ || use3DLaplacian_ ) {
@@ -339,16 +339,16 @@ Pressure::setup_matrix( const SVolField* const rhoStar,
   const SVolField& r = *rhoStar;
 
   const int ng = get_n_ghost<SVolField>();
-  const SCIRun::IntVector patchCellOffset = patch_->getExtraCellLowIndex(ng);
+  const Uintah::IntVector patchCellOffset = patch_->getExtraCellLowIndex(ng);
   for( Uintah::CellIterator iter(patch_->getCellIterator()); !iter.done(); iter++ ){
     // NOTE: for the conjugate gradient solver in Hypre, we must pass a positive
     // definite matrix. For the Laplacian on a structured grid, the matrix A corresponding
     // to the Laplacian operator is not positive definite - but "- A" is. Hence,
     // we multiply all coefficients by -1.
-    SCIRun::IntVector iCell = *iter;
+    Uintah::IntVector iCell = *iter;
     Uintah::Stencil7&  coefs = matrix_[iCell];
 
-    SCIRun::IntVector iCellOffset = iCell - patchCellOffset;
+    Uintah::IntVector iCellOffset = iCell - patchCellOffset;
     
     // interior
     const IntVec intCellIJK( iCellOffset[0],
@@ -475,7 +475,7 @@ void Pressure::process_embedded_boundaries( const SVolField& volfrac )
 
   // cell offset used to calculate local cell index with respect to patch.
   const int ng = get_n_ghost<SVolField>();
-  const SCIRun::IntVector patchCellOffset = patch_->getExtraCellLowIndex(ng);
+  const Uintah::IntVector patchCellOffset = patch_->getExtraCellLowIndex(ng);
 
   if( !didMatrixUpdate_ || hasMovingGeometry_ ){
     
@@ -484,10 +484,10 @@ void Pressure::process_embedded_boundaries( const SVolField& volfrac )
     didMatrixUpdate_ = true;
     
     for(Uintah::CellIterator iter(patch_->getCellIterator()); !iter.done(); iter++){
-      SCIRun::IntVector iCell = *iter;
+      Uintah::IntVector iCell = *iter;
       Uintah::Stencil7&  coefs = matrix_[iCell];
       
-      const SCIRun::IntVector iCellOffset = iCell - patchCellOffset;
+      const Uintah::IntVector iCellOffset = iCell - patchCellOffset;
       
       // interior
       const IntVec intCellIJK( iCellOffset[0],
@@ -604,7 +604,7 @@ Pressure::Builder::Builder( const Expr::TagList& result,
                             const bool hasMovingGeometry,
                             const bool       userefpressure,
                             const double     refPressureValue,
-                            const SCIRun::IntVector refPressureLocation,
+                            const Uintah::IntVector refPressureLocation,
                             const bool       use3dlaplacian,
                             const bool       enforceSolvability,
                             const bool       isConstDensity,

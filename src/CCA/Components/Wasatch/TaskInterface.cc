@@ -99,8 +99,8 @@ typedef std::map<int,TreePtr> TreeMap;
 
  */
 
-static SCIRun::DebugStream dbgt("WASATCH_TASKS", false);  // task diagnostics
-static SCIRun::DebugStream dbgf("WASATCH_FIELDS", false); // field diagnostics
+static Uintah::DebugStream dbgt("WASATCH_TASKS", false);  // task diagnostics
+static Uintah::DebugStream dbgf("WASATCH_FIELDS", false); // field diagnostics
 #define dbg_tasks_on  dbgt.active() && Uintah::Parallel::getMPIRank() == 0
 #define dbg_fields_on dbgf.active() && Uintah::Parallel::getMPIRank() == 0
 #define dbg_tasks  if( dbg_tasks_on  ) dbgt

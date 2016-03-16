@@ -43,8 +43,8 @@
 #include <cstring>
 #include <cstdio>
 
-using namespace SCIRun;
 using namespace std;
+using namespace Uintah;
 
 Persistent* transform_maker() {
   return new Transform();
@@ -885,7 +885,7 @@ Transform::io(Piostream& stream) {
 }
 
 void
-SCIRun::Pio_old(Piostream& stream, Transform& obj) {
+Uintah::Pio_old(Piostream& stream, Transform& obj) {
   stream.begin_cheap_delim();
   for (int i=0; i<4; i++) {
     for (int j=0; j<4; j++) {
@@ -900,9 +900,9 @@ SCIRun::Pio_old(Piostream& stream, Transform& obj) {
 }
 
 void
-SCIRun::Pio(Piostream& stream, Transform*& obj)
+Uintah::Pio(Piostream& stream, Transform*& obj)
 {
-  SCIRun::Persistent* pobj=obj;
+  Uintah::Persistent* pobj=obj;
   stream.io(pobj, Transform::type_id);
   if(stream.reading()) {
     obj=(Transform*)pobj;
@@ -911,23 +911,13 @@ SCIRun::Pio(Piostream& stream, Transform*& obj)
 
 const string& 
 Transform::get_h_file_path() {
-  static const string path(TypeDescription::cc_to_h(__FILE__));
+  static const string path(SCIRun::STypeDescription::cc_to_h(__FILE__));
   return path;
 }
 
-const TypeDescription*
-SCIRun::get_type_description(Transform*)
-{
-  static TypeDescription* td = 0;
-  if(!td){
-    td = scinew TypeDescription("Transform", Transform::get_h_file_path(), 
-                                "SCIRun");
-  }
-  return td;
-}
 
 Point
-SCIRun::operator*(Transform &t, const Point &d)
+Uintah::operator*(Transform &t, const Point &d)
 {
   float result[4], tmp[4];
   result[0] = result[1] = result[2] = result[3] = 0;
@@ -949,7 +939,7 @@ SCIRun::operator*(Transform &t, const Point &d)
 }
 
 Vector
-SCIRun::operator*(Transform &t, const Vector &d)
+Uintah::operator*(Transform &t, const Vector &d)
 {
   float result[4], tmp[4];
   result[0] = result[1] = result[2] = result[3] = 0;
@@ -968,4 +958,18 @@ SCIRun::operator*(Transform &t, const Vector &d)
   }
 
   return Vector(result[0], result[1], result[2]);
+}
+
+namespace SCIRun {
+
+  const STypeDescription* get_type_description(Uintah::Transform*)
+  {
+    static STypeDescription* td = 0;
+    if(!td){
+      td = scinew STypeDescription("Transform", Transform::get_h_file_path(), 
+				  "SCIRun");
+    }
+    return td;
+  }
+
 }

@@ -34,7 +34,6 @@
 #include <vector>
 
 
-using namespace SCIRun;
 using namespace Uintah;
 using namespace std;
 
@@ -48,7 +47,7 @@ BCGeomBase::BCGeomBase()
   d_bndtype         = "None";
   d_particleBndSpec = ParticleBndSpec(ParticleBndSpec::NOTSET, ParticleBndSpec::ELASTIC, 0.0, 0.0);
   d_surfaceArea     = 0.0;
-  d_origin          = SCIRun::Point(0,0,0);
+  d_origin          = Uintah::Point(0,0,0);
 }
 
 //--------------------------------------------------------------------------------------------------
@@ -211,18 +210,18 @@ void BCGeomBase::determineInteriorBndIteratorLimits( const Patch::FaceType   fac
   // find the nearest cell to the plus or minus side of this interior boundary.
   Point nearestCell = origin + plusOrMinus * patch->dCell()/2.0;
   
-  SCIRun::IntVector nearestCellIdx = patch->getCellIndex(nearestCell);
+  Uintah::IntVector nearestCellIdx = patch->getCellIndex(nearestCell);
   // Find how far away from the patch boundary the layer of nearest cells is. The purpose here is
   // to find the layer of cells that are near this interior boundary and figure out which cells
   // straddle the interior boundary.
-  SCIRun::IntVector offset;
+  Uintah::IntVector offset;
   if (plusOrMinus == -1) { // minus side
     offset = nearestCellIdx - patch->getExtraCellLowIndex();
   } else {
     offset = patch->getExtraCellHighIndex() - nearestCellIdx;
     offset[pdir] -= 1;
   }
-  SCIRun::IntVector lpts,hpts;
+  Uintah::IntVector lpts,hpts;
   // Get the layer of cells that are on either the plus or minus side of this interior boundary
   patch->getFaceCells(face,-offset[pdir],lpts,hpts);
   std::vector<Point> test_pts;

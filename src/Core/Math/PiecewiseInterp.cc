@@ -37,7 +37,7 @@
 #include <Core/Math/PiecewiseInterp.h>
 #include <Core/Containers/Array1.h>
 
-namespace SCIRun {
+namespace Uintah {
 
 
 // PiecewiseInterp::PiecewiseInterp()
@@ -48,4 +48,4 @@ namespace SCIRun {
 // {
 // }
 
-} // End namespace SCIRun
+} // End namespace Uintah

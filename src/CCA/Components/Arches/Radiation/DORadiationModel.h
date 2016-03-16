@@ -162,7 +162,7 @@ private:
       template<class TYPE> 
       void computeScatteringIntensities(int direction,
                                         constCCVariable<double> &scatkt,
-                                        SCIRun::StaticArray< TYPE > &Intensities,
+                                        StaticArray< TYPE > &Intensities,
                                         CCVariable<double> &scatIntensitySource,
                                         constCCVariable<double> &asymmetryFactor,
                                         const Patch* patch);
@@ -170,11 +170,11 @@ private:
 
 
       void computeIntensitySource( const Patch* patch,
-              SCIRun::StaticArray <constCCVariable<double> >&abskp,
-             SCIRun::StaticArray <constCCVariable<double> > &pTemp,
-                           constCCVariable<double>  &abskg,
-                           constCCVariable<double>  &gTemp,
-                         CCVariable<double> &b_sourceArray);
+				   StaticArray <constCCVariable<double> >&abskp,
+				   StaticArray <constCCVariable<double> > &pTemp,
+				   constCCVariable<double>  &abskg,
+				   constCCVariable<double>  &gTemp,
+				   CCVariable<double> &b_sourceArray);
 
       // variables needed for particles
       std::vector<std::string> _temperature_name_vector;
