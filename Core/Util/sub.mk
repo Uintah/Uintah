@@ -35,12 +35,10 @@ SRCS += \
         $(SRCDIR)/Environment.cc        \
         $(SRCDIR)/FileUtils.cc          \
         $(SRCDIR)/ProgressiveWarning.cc \
-        $(SRCDIR)/ProgressReporter.cc   \
         $(SRCDIR)/RWS.cc                \
         $(SRCDIR)/sci_system.cc         \
         $(SRCDIR)/SizeTypeConvert.cc    \
         $(SRCDIR)/Signals.cc            \
-        $(SRCDIR)/Socket.cc             \
         $(SRCDIR)/soloader.cc           \
         $(SRCDIR)/StringUtil.cc         \
         $(SRCDIR)/Timer.cc              \
