@@ -41,7 +41,7 @@
 
 namespace Uintah {
 
-static SCIRun::DebugStream visitdbg( "VisItLibSim", true );
+static Uintah::DebugStream visitdbg( "VisItLibSim", true );
 
 #define VISIT_COMMAND_PROCESS 0
 #define VISIT_COMMAND_SUCCESS 1

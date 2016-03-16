@@ -8747,7 +8747,7 @@ $as_echo "$M_LIB" >&6; }
 ##      HAVE_M_H         => yes or no
 
 if test 9 != 9; then
-     as_fn_error $? "Wrong number of parameters (9) for SCI-TRY-LINK for math library and header.  This is an internal SCIRun configure error and should be reported to scirun-develop@sci.utah.edu." "$LINENO" 5
+     as_fn_error $? "Wrong number of parameters (9) for SCI-TRY-LINK for math library and header.  This is an internal Uintah configure error and should be reported to scirun-develop@sci.utah.edu." "$LINENO" 5
 fi
 
 
@@ -8762,7 +8762,7 @@ _sci_includes=
 
 if test "required" != "optional" -a "required" != "required" -a "required" != "specific"; then
      echo
-     as_fn_error $? "Last parameter of SCI-TRY-LINK for math library and header must be: optional or required or specific.  (You had required.)  This is an internal SCIRun configure error and should be reported to scirun-develop@sci.utah.edu." "$LINENO" 5
+     as_fn_error $? "Last parameter of SCI-TRY-LINK for math library and header must be: optional or required or specific.  (You had required.)  This is an internal Uintah configure error and should be reported to scirun-develop@sci.utah.edu." "$LINENO" 5
 fi
 
 # If  (the -I paths) is blank, do nothing, else do the for statement.
@@ -8879,7 +8879,7 @@ if test "required" = "specific"; then
     fi
   done
   if test $__sci_pass != "true"; then
-       as_fn_error $? "For specific SCI-TRY-LINK test for M only one library path may be specified for arg 6 (you had: $M_LIB_DIR).  This is an internal SCIRun configure error and should be reported to scirun-develop@sci.utah.edu." "$LINENO" 5
+       as_fn_error $? "For specific SCI-TRY-LINK test for M only one library path may be specified for arg 6 (you had: $M_LIB_DIR).  This is an internal Uintah configure error and should be reported to scirun-develop@sci.utah.edu." "$LINENO" 5
   fi
   # and only one include path:
   ### Determine if there is only one item in
@@ -8897,7 +8897,7 @@ if test "required" = "specific"; then
     fi
   done
   if test -n "" && test $__sci_pass != "true"; then
-       as_fn_error $? "For specific SCI-TRY-LINK test for M only one include path may be specified for arg 4 (you had: ).  This is an internal SCIRun configure error and should be reported to scirun-develop@sci.utah.edu." "$LINENO" 5
+       as_fn_error $? "For specific SCI-TRY-LINK test for M only one include path may be specified for arg 4 (you had: ).  This is an internal Uintah configure error and should be reported to scirun-develop@sci.utah.edu." "$LINENO" 5
   fi
 fi
 
@@ -9158,7 +9158,7 @@ _sci_includes=''
 ##      HAVE_RT_H         => yes or no
 
 if test 9 != 9; then
-     as_fn_error $? "Wrong number of parameters (9) for SCI-TRY-LINK for rt library.  This is an internal SCIRun configure error and should be reported to scirun-develop@sci.utah.edu." "$LINENO" 5
+     as_fn_error $? "Wrong number of parameters (9) for SCI-TRY-LINK for rt library.  This is an internal Uintah configure error and should be reported to scirun-develop@sci.utah.edu." "$LINENO" 5
 fi
 
 
@@ -9173,7 +9173,7 @@ _sci_includes=
 
 if test "optional" != "optional" -a "optional" != "required" -a "optional" != "specific"; then
      echo
-     as_fn_error $? "Last parameter of SCI-TRY-LINK for rt library must be: optional or required or specific.  (You had optional.)  This is an internal SCIRun configure error and should be reported to scirun-develop@sci.utah.edu." "$LINENO" 5
+     as_fn_error $? "Last parameter of SCI-TRY-LINK for rt library must be: optional or required or specific.  (You had optional.)  This is an internal Uintah configure error and should be reported to scirun-develop@sci.utah.edu." "$LINENO" 5
 fi
 
 # If  (the -I paths) is blank, do nothing, else do the for statement.
@@ -9290,7 +9290,7 @@ if test "optional" = "specific"; then
     fi
   done
   if test $__sci_pass != "true"; then
-       as_fn_error $? "For specific SCI-TRY-LINK test for RT only one library path may be specified for arg 6 (you had: ).  This is an internal SCIRun configure error and should be reported to scirun-develop@sci.utah.edu." "$LINENO" 5
+       as_fn_error $? "For specific SCI-TRY-LINK test for RT only one library path may be specified for arg 6 (you had: ).  This is an internal Uintah configure error and should be reported to scirun-develop@sci.utah.edu." "$LINENO" 5
   fi
   # and only one include path:
   ### Determine if there is only one item in
@@ -9308,7 +9308,7 @@ if test "optional" = "specific"; then
     fi
   done
   if test -n "" && test $__sci_pass != "true"; then
-       as_fn_error $? "For specific SCI-TRY-LINK test for RT only one include path may be specified for arg 4 (you had: ).  This is an internal SCIRun configure error and should be reported to scirun-develop@sci.utah.edu." "$LINENO" 5
+       as_fn_error $? "For specific SCI-TRY-LINK test for RT only one include path may be specified for arg 4 (you had: ).  This is an internal Uintah configure error and should be reported to scirun-develop@sci.utah.edu." "$LINENO" 5
   fi
 fi
 
@@ -9609,7 +9609,7 @@ case $threads in
 ##      HAVE_PTHREAD_H         => yes or no
 
 if test 9 != 9; then
-     as_fn_error $? "Wrong number of parameters (9) for SCI-TRY-LINK for pthread library and headers.  This is an internal SCIRun configure error and should be reported to scirun-develop@sci.utah.edu." "$LINENO" 5
+     as_fn_error $? "Wrong number of parameters (9) for SCI-TRY-LINK for pthread library and headers.  This is an internal Uintah configure error and should be reported to scirun-develop@sci.utah.edu." "$LINENO" 5
 fi
 
 
@@ -9624,7 +9624,7 @@ _sci_includes=
 
 if test "required" != "optional" -a "required" != "required" -a "required" != "specific"; then
      echo
-     as_fn_error $? "Last parameter of SCI-TRY-LINK for pthread library and headers must be: optional or required or specific.  (You had required.)  This is an internal SCIRun configure error and should be reported to scirun-develop@sci.utah.edu." "$LINENO" 5
+     as_fn_error $? "Last parameter of SCI-TRY-LINK for pthread library and headers must be: optional or required or specific.  (You had required.)  This is an internal Uintah configure error and should be reported to scirun-develop@sci.utah.edu." "$LINENO" 5
 fi
 
 # If  (the -I paths) is blank, do nothing, else do the for statement.
@@ -9741,7 +9741,7 @@ if test "required" = "specific"; then
     fi
   done
   if test $__sci_pass != "true"; then
-       as_fn_error $? "For specific SCI-TRY-LINK test for PTHREAD only one library path may be specified for arg 6 (you had: ).  This is an internal SCIRun configure error and should be reported to scirun-develop@sci.utah.edu." "$LINENO" 5
+       as_fn_error $? "For specific SCI-TRY-LINK test for PTHREAD only one library path may be specified for arg 6 (you had: ).  This is an internal Uintah configure error and should be reported to scirun-develop@sci.utah.edu." "$LINENO" 5
   fi
   # and only one include path:
   ### Determine if there is only one item in
@@ -9759,7 +9759,7 @@ if test "required" = "specific"; then
     fi
   done
   if test -n "" && test $__sci_pass != "true"; then
-       as_fn_error $? "For specific SCI-TRY-LINK test for PTHREAD only one include path may be specified for arg 4 (you had: ).  This is an internal SCIRun configure error and should be reported to scirun-develop@sci.utah.edu." "$LINENO" 5
+       as_fn_error $? "For specific SCI-TRY-LINK test for PTHREAD only one include path may be specified for arg 4 (you had: ).  This is an internal Uintah configure error and should be reported to scirun-develop@sci.utah.edu." "$LINENO" 5
   fi
 fi
 
@@ -10121,7 +10121,7 @@ sci_defs_files="$sci_defs_files include/sci_defs/thread_testdefs.h"
 ##      HAVE_GCCSYNC_H         => yes or no
 
 if test 9 != 9; then
-     as_fn_error $? "Wrong number of parameters (9) for SCI-TRY-LINK for gcc style atomic operations .  This is an internal SCIRun configure error and should be reported to scirun-develop@sci.utah.edu." "$LINENO" 5
+     as_fn_error $? "Wrong number of parameters (9) for SCI-TRY-LINK for gcc style atomic operations .  This is an internal Uintah configure error and should be reported to scirun-develop@sci.utah.edu." "$LINENO" 5
 fi
 
 
@@ -10136,7 +10136,7 @@ _sci_includes=
 
 if test "optional" != "optional" -a "optional" != "required" -a "optional" != "specific"; then
      echo
-     as_fn_error $? "Last parameter of SCI-TRY-LINK for gcc style atomic operations  must be: optional or required or specific.  (You had optional.)  This is an internal SCIRun configure error and should be reported to scirun-develop@sci.utah.edu." "$LINENO" 5
+     as_fn_error $? "Last parameter of SCI-TRY-LINK for gcc style atomic operations  must be: optional or required or specific.  (You had optional.)  This is an internal Uintah configure error and should be reported to scirun-develop@sci.utah.edu." "$LINENO" 5
 fi
 
 # If  (the -I paths) is blank, do nothing, else do the for statement.
@@ -10253,7 +10253,7 @@ if test "optional" = "specific"; then
     fi
   done
   if test $__sci_pass != "true"; then
-       as_fn_error $? "For specific SCI-TRY-LINK test for GCCSYNC only one library path may be specified for arg 6 (you had: ).  This is an internal SCIRun configure error and should be reported to scirun-develop@sci.utah.edu." "$LINENO" 5
+       as_fn_error $? "For specific SCI-TRY-LINK test for GCCSYNC only one library path may be specified for arg 6 (you had: ).  This is an internal Uintah configure error and should be reported to scirun-develop@sci.utah.edu." "$LINENO" 5
   fi
   # and only one include path:
   ### Determine if there is only one item in
@@ -10271,7 +10271,7 @@ if test "optional" = "specific"; then
     fi
   done
   if test -n "" && test $__sci_pass != "true"; then
-       as_fn_error $? "For specific SCI-TRY-LINK test for GCCSYNC only one include path may be specified for arg 4 (you had: ).  This is an internal SCIRun configure error and should be reported to scirun-develop@sci.utah.edu." "$LINENO" 5
+       as_fn_error $? "For specific SCI-TRY-LINK test for GCCSYNC only one include path may be specified for arg 4 (you had: ).  This is an internal Uintah configure error and should be reported to scirun-develop@sci.utah.edu." "$LINENO" 5
   fi
 fi
 
@@ -10655,7 +10655,7 @@ ac_compiler_gnu=$ac_cv_cxx_compiler_gnu
 ##      HAVE_VISIT_H         => yes or no
 
 if test 9 != 9; then
-     as_fn_error $? "Wrong number of parameters (9) for SCI-TRY-LINK for VISIT libraries and headers.  This is an internal SCIRun configure error and should be reported to scirun-develop@sci.utah.edu." "$LINENO" 5
+     as_fn_error $? "Wrong number of parameters (9) for SCI-TRY-LINK for VISIT libraries and headers.  This is an internal Uintah configure error and should be reported to scirun-develop@sci.utah.edu." "$LINENO" 5
 fi
 
 
@@ -10670,7 +10670,7 @@ _sci_includes=
 
 if test "$_sci_optional" != "optional" -a "$_sci_optional" != "required" -a "$_sci_optional" != "specific"; then
      echo
-     as_fn_error $? "Last parameter of SCI-TRY-LINK for VISIT libraries and headers must be: optional or required or specific.  (You had $_sci_optional.)  This is an internal SCIRun configure error and should be reported to scirun-develop@sci.utah.edu." "$LINENO" 5
+     as_fn_error $? "Last parameter of SCI-TRY-LINK for VISIT libraries and headers must be: optional or required or specific.  (You had $_sci_optional.)  This is an internal Uintah configure error and should be reported to scirun-develop@sci.utah.edu." "$LINENO" 5
 fi
 
 # If $_sci_inc (the -I paths) is blank, do nothing, else do the for statement.
@@ -10828,7 +10828,7 @@ if test "$_sci_optional" = "specific"; then
     fi
   done
   if test $__sci_pass != "true"; then
-       as_fn_error $? "For specific SCI-TRY-LINK test for VISIT only one library path may be specified for arg 6 (you had: $_sci_lib).  This is an internal SCIRun configure error and should be reported to scirun-develop@sci.utah.edu." "$LINENO" 5
+       as_fn_error $? "For specific SCI-TRY-LINK test for VISIT only one library path may be specified for arg 6 (you had: $_sci_lib).  This is an internal Uintah configure error and should be reported to scirun-develop@sci.utah.edu." "$LINENO" 5
   fi
   # and only one include path:
   ### Determine if there is only one item in $_sci_inc
@@ -10846,7 +10846,7 @@ if test "$_sci_optional" = "specific"; then
     fi
   done
   if test -n "$_sci_inc" && test $__sci_pass != "true"; then
-       as_fn_error $? "For specific SCI-TRY-LINK test for VISIT only one include path may be specified for arg 4 (you had: $_sci_inc).  This is an internal SCIRun configure error and should be reported to scirun-develop@sci.utah.edu." "$LINENO" 5
+       as_fn_error $? "For specific SCI-TRY-LINK test for VISIT only one include path may be specified for arg 4 (you had: $_sci_inc).  This is an internal Uintah configure error and should be reported to scirun-develop@sci.utah.edu." "$LINENO" 5
   fi
 fi
 
@@ -11181,7 +11181,7 @@ if test "$with_ofed"; then
 ##      HAVE_OFED_H         => yes or no
 
 if test 9 != 9; then
-     as_fn_error $? "Wrong number of parameters (9) for SCI-TRY-LINK for Infiniband stuff (for MPI).  This is an internal SCIRun configure error and should be reported to scirun-develop@sci.utah.edu." "$LINENO" 5
+     as_fn_error $? "Wrong number of parameters (9) for SCI-TRY-LINK for Infiniband stuff (for MPI).  This is an internal Uintah configure error and should be reported to scirun-develop@sci.utah.edu." "$LINENO" 5
 fi
 
 
@@ -11196,7 +11196,7 @@ _sci_includes=
 
 if test "required" != "optional" -a "required" != "required" -a "required" != "specific"; then
      echo
-     as_fn_error $? "Last parameter of SCI-TRY-LINK for Infiniband stuff (for MPI) must be: optional or required or specific.  (You had required.)  This is an internal SCIRun configure error and should be reported to scirun-develop@sci.utah.edu." "$LINENO" 5
+     as_fn_error $? "Last parameter of SCI-TRY-LINK for Infiniband stuff (for MPI) must be: optional or required or specific.  (You had required.)  This is an internal Uintah configure error and should be reported to scirun-develop@sci.utah.edu." "$LINENO" 5
 fi
 
 # If  (the -I paths) is blank, do nothing, else do the for statement.
@@ -11313,7 +11313,7 @@ if test "required" = "specific"; then
     fi
   done
   if test $__sci_pass != "true"; then
-       as_fn_error $? "For specific SCI-TRY-LINK test for OFED only one library path may be specified for arg 6 (you had: $dir).  This is an internal SCIRun configure error and should be reported to scirun-develop@sci.utah.edu." "$LINENO" 5
+       as_fn_error $? "For specific SCI-TRY-LINK test for OFED only one library path may be specified for arg 6 (you had: $dir).  This is an internal Uintah configure error and should be reported to scirun-develop@sci.utah.edu." "$LINENO" 5
   fi
   # and only one include path:
   ### Determine if there is only one item in
@@ -11331,7 +11331,7 @@ if test "required" = "specific"; then
     fi
   done
   if test -n "" && test $__sci_pass != "true"; then
-       as_fn_error $? "For specific SCI-TRY-LINK test for OFED only one include path may be specified for arg 4 (you had: ).  This is an internal SCIRun configure error and should be reported to scirun-develop@sci.utah.edu." "$LINENO" 5
+       as_fn_error $? "For specific SCI-TRY-LINK test for OFED only one include path may be specified for arg 4 (you had: ).  This is an internal Uintah configure error and should be reported to scirun-develop@sci.utah.edu." "$LINENO" 5
   fi
 fi
 
@@ -11640,7 +11640,7 @@ if test "$with_mx"; then
 ##      HAVE_MX_H         => yes or no
 
 if test 9 != 9; then
-     as_fn_error $? "Wrong number of parameters (9) for SCI-TRY-LINK for Myrinet stuff (for MPI).  This is an internal SCIRun configure error and should be reported to scirun-develop@sci.utah.edu." "$LINENO" 5
+     as_fn_error $? "Wrong number of parameters (9) for SCI-TRY-LINK for Myrinet stuff (for MPI).  This is an internal Uintah configure error and should be reported to scirun-develop@sci.utah.edu." "$LINENO" 5
 fi
 
 
@@ -11655,7 +11655,7 @@ _sci_includes=
 
 if test "required" != "optional" -a "required" != "required" -a "required" != "specific"; then
      echo
-     as_fn_error $? "Last parameter of SCI-TRY-LINK for Myrinet stuff (for MPI) must be: optional or required or specific.  (You had required.)  This is an internal SCIRun configure error and should be reported to scirun-develop@sci.utah.edu." "$LINENO" 5
+     as_fn_error $? "Last parameter of SCI-TRY-LINK for Myrinet stuff (for MPI) must be: optional or required or specific.  (You had required.)  This is an internal Uintah configure error and should be reported to scirun-develop@sci.utah.edu." "$LINENO" 5
 fi
 
 # If  (the -I paths) is blank, do nothing, else do the for statement.
@@ -11772,7 +11772,7 @@ if test "required" = "specific"; then
     fi
   done
   if test $__sci_pass != "true"; then
-       as_fn_error $? "For specific SCI-TRY-LINK test for MX only one library path may be specified for arg 6 (you had: $dir).  This is an internal SCIRun configure error and should be reported to scirun-develop@sci.utah.edu." "$LINENO" 5
+       as_fn_error $? "For specific SCI-TRY-LINK test for MX only one library path may be specified for arg 6 (you had: $dir).  This is an internal Uintah configure error and should be reported to scirun-develop@sci.utah.edu." "$LINENO" 5
   fi
   # and only one include path:
   ### Determine if there is only one item in
@@ -11790,7 +11790,7 @@ if test "required" = "specific"; then
     fi
   done
   if test -n "" && test $__sci_pass != "true"; then
-       as_fn_error $? "For specific SCI-TRY-LINK test for MX only one include path may be specified for arg 4 (you had: ).  This is an internal SCIRun configure error and should be reported to scirun-develop@sci.utah.edu." "$LINENO" 5
+       as_fn_error $? "For specific SCI-TRY-LINK test for MX only one include path may be specified for arg 4 (you had: ).  This is an internal Uintah configure error and should be reported to scirun-develop@sci.utah.edu." "$LINENO" 5
   fi
 fi
 
@@ -12050,7 +12050,7 @@ fi
 ##      HAVE_DL_H         => yes or no
 
 if test 9 != 9; then
-     as_fn_error $? "Wrong number of parameters (9) for SCI-TRY-LINK for dlopen in libc.  This is an internal SCIRun configure error and should be reported to scirun-develop@sci.utah.edu." "$LINENO" 5
+     as_fn_error $? "Wrong number of parameters (9) for SCI-TRY-LINK for dlopen in libc.  This is an internal Uintah configure error and should be reported to scirun-develop@sci.utah.edu." "$LINENO" 5
 fi
 
 
@@ -12065,7 +12065,7 @@ _sci_includes=
 
 if test "optional" != "optional" -a "optional" != "required" -a "optional" != "specific"; then
      echo
-     as_fn_error $? "Last parameter of SCI-TRY-LINK for dlopen in libc must be: optional or required or specific.  (You had optional.)  This is an internal SCIRun configure error and should be reported to scirun-develop@sci.utah.edu." "$LINENO" 5
+     as_fn_error $? "Last parameter of SCI-TRY-LINK for dlopen in libc must be: optional or required or specific.  (You had optional.)  This is an internal Uintah configure error and should be reported to scirun-develop@sci.utah.edu." "$LINENO" 5
 fi
 
 # If  (the -I paths) is blank, do nothing, else do the for statement.
@@ -12182,7 +12182,7 @@ if test "optional" = "specific"; then
     fi
   done
   if test $__sci_pass != "true"; then
-       as_fn_error $? "For specific SCI-TRY-LINK test for DL only one library path may be specified for arg 6 (you had: ).  This is an internal SCIRun configure error and should be reported to scirun-develop@sci.utah.edu." "$LINENO" 5
+       as_fn_error $? "For specific SCI-TRY-LINK test for DL only one library path may be specified for arg 6 (you had: ).  This is an internal Uintah configure error and should be reported to scirun-develop@sci.utah.edu." "$LINENO" 5
   fi
   # and only one include path:
   ### Determine if there is only one item in
@@ -12200,7 +12200,7 @@ if test "optional" = "specific"; then
     fi
   done
   if test -n "" && test $__sci_pass != "true"; then
-       as_fn_error $? "For specific SCI-TRY-LINK test for DL only one include path may be specified for arg 4 (you had: ).  This is an internal SCIRun configure error and should be reported to scirun-develop@sci.utah.edu." "$LINENO" 5
+       as_fn_error $? "For specific SCI-TRY-LINK test for DL only one include path may be specified for arg 4 (you had: ).  This is an internal Uintah configure error and should be reported to scirun-develop@sci.utah.edu." "$LINENO" 5
   fi
 fi
 
@@ -12461,7 +12461,7 @@ else
 ##      HAVE_DL_H         => yes or no
 
 if test 9 != 9; then
-     as_fn_error $? "Wrong number of parameters (9) for SCI-TRY-LINK for dlopen in libdl.  This is an internal SCIRun configure error and should be reported to scirun-develop@sci.utah.edu." "$LINENO" 5
+     as_fn_error $? "Wrong number of parameters (9) for SCI-TRY-LINK for dlopen in libdl.  This is an internal Uintah configure error and should be reported to scirun-develop@sci.utah.edu." "$LINENO" 5
 fi
 
 
@@ -12476,7 +12476,7 @@ _sci_includes=
 
 if test "required" != "optional" -a "required" != "required" -a "required" != "specific"; then
      echo
-     as_fn_error $? "Last parameter of SCI-TRY-LINK for dlopen in libdl must be: optional or required or specific.  (You had required.)  This is an internal SCIRun configure error and should be reported to scirun-develop@sci.utah.edu." "$LINENO" 5
+     as_fn_error $? "Last parameter of SCI-TRY-LINK for dlopen in libdl must be: optional or required or specific.  (You had required.)  This is an internal Uintah configure error and should be reported to scirun-develop@sci.utah.edu." "$LINENO" 5
 fi
 
 # If $sci_thirdparty_include (the -I paths) is blank, do nothing, else do the for statement.
@@ -12634,7 +12634,7 @@ if test "required" = "specific"; then
     fi
   done
   if test $__sci_pass != "true"; then
-       as_fn_error $? "For specific SCI-TRY-LINK test for DL only one library path may be specified for arg 6 (you had: $sci_thirdparty_lib).  This is an internal SCIRun configure error and should be reported to scirun-develop@sci.utah.edu." "$LINENO" 5
+       as_fn_error $? "For specific SCI-TRY-LINK test for DL only one library path may be specified for arg 6 (you had: $sci_thirdparty_lib).  This is an internal Uintah configure error and should be reported to scirun-develop@sci.utah.edu." "$LINENO" 5
   fi
   # and only one include path:
   ### Determine if there is only one item in $sci_thirdparty_include
@@ -12652,7 +12652,7 @@ if test "required" = "specific"; then
     fi
   done
   if test -n "$sci_thirdparty_include" && test $__sci_pass != "true"; then
-       as_fn_error $? "For specific SCI-TRY-LINK test for DL only one include path may be specified for arg 4 (you had: $sci_thirdparty_include).  This is an internal SCIRun configure error and should be reported to scirun-develop@sci.utah.edu." "$LINENO" 5
+       as_fn_error $? "For specific SCI-TRY-LINK test for DL only one include path may be specified for arg 4 (you had: $sci_thirdparty_include).  This is an internal Uintah configure error and should be reported to scirun-develop@sci.utah.edu." "$LINENO" 5
   fi
 fi
 
@@ -12909,7 +12909,7 @@ _sci_includes=''
 ##      HAVE_DL_H         => yes or no
 
 if test 9 != 9; then
-     as_fn_error $? "Wrong number of parameters (9) for SCI-TRY-LINK for dlopen in libdl.  This is an internal SCIRun configure error and should be reported to scirun-develop@sci.utah.edu." "$LINENO" 5
+     as_fn_error $? "Wrong number of parameters (9) for SCI-TRY-LINK for dlopen in libdl.  This is an internal Uintah configure error and should be reported to scirun-develop@sci.utah.edu." "$LINENO" 5
 fi
 
 
@@ -12924,7 +12924,7 @@ _sci_includes=
 
 if test "required" != "optional" -a "required" != "required" -a "required" != "specific"; then
      echo
-     as_fn_error $? "Last parameter of SCI-TRY-LINK for dlopen in libdl must be: optional or required or specific.  (You had required.)  This is an internal SCIRun configure error and should be reported to scirun-develop@sci.utah.edu." "$LINENO" 5
+     as_fn_error $? "Last parameter of SCI-TRY-LINK for dlopen in libdl must be: optional or required or specific.  (You had required.)  This is an internal Uintah configure error and should be reported to scirun-develop@sci.utah.edu." "$LINENO" 5
 fi
 
 # If  (the -I paths) is blank, do nothing, else do the for statement.
@@ -13041,7 +13041,7 @@ if test "required" = "specific"; then
     fi
   done
   if test $__sci_pass != "true"; then
-       as_fn_error $? "For specific SCI-TRY-LINK test for DL only one library path may be specified for arg 6 (you had: ).  This is an internal SCIRun configure error and should be reported to scirun-develop@sci.utah.edu." "$LINENO" 5
+       as_fn_error $? "For specific SCI-TRY-LINK test for DL only one library path may be specified for arg 6 (you had: ).  This is an internal Uintah configure error and should be reported to scirun-develop@sci.utah.edu." "$LINENO" 5
   fi
   # and only one include path:
   ### Determine if there is only one item in
@@ -13059,7 +13059,7 @@ if test "required" = "specific"; then
     fi
   done
   if test -n "" && test $__sci_pass != "true"; then
-       as_fn_error $? "For specific SCI-TRY-LINK test for DL only one include path may be specified for arg 4 (you had: ).  This is an internal SCIRun configure error and should be reported to scirun-develop@sci.utah.edu." "$LINENO" 5
+       as_fn_error $? "For specific SCI-TRY-LINK test for DL only one include path may be specified for arg 4 (you had: ).  This is an internal Uintah configure error and should be reported to scirun-develop@sci.utah.edu." "$LINENO" 5
   fi
 fi
 
@@ -13328,7 +13328,7 @@ ac_ext="cc"
 ##      HAVE_STAT64_H         => yes or no
 
 if test 9 != 9; then
-     as_fn_error $? "Wrong number of parameters (9) for SCI-TRY-LINK for sys/stat.h.  This is an internal SCIRun configure error and should be reported to scirun-develop@sci.utah.edu." "$LINENO" 5
+     as_fn_error $? "Wrong number of parameters (9) for SCI-TRY-LINK for sys/stat.h.  This is an internal Uintah configure error and should be reported to scirun-develop@sci.utah.edu." "$LINENO" 5
 fi
 
 
@@ -13343,7 +13343,7 @@ _sci_includes=
 
 if test "optional" != "optional" -a "optional" != "required" -a "optional" != "specific"; then
      echo
-     as_fn_error $? "Last parameter of SCI-TRY-LINK for sys/stat.h must be: optional or required or specific.  (You had optional.)  This is an internal SCIRun configure error and should be reported to scirun-develop@sci.utah.edu." "$LINENO" 5
+     as_fn_error $? "Last parameter of SCI-TRY-LINK for sys/stat.h must be: optional or required or specific.  (You had optional.)  This is an internal Uintah configure error and should be reported to scirun-develop@sci.utah.edu." "$LINENO" 5
 fi
 
 # If  (the -I paths) is blank, do nothing, else do the for statement.
@@ -13460,7 +13460,7 @@ if test "optional" = "specific"; then
     fi
   done
   if test $__sci_pass != "true"; then
-       as_fn_error $? "For specific SCI-TRY-LINK test for STAT64 only one library path may be specified for arg 6 (you had: ).  This is an internal SCIRun configure error and should be reported to scirun-develop@sci.utah.edu." "$LINENO" 5
+       as_fn_error $? "For specific SCI-TRY-LINK test for STAT64 only one library path may be specified for arg 6 (you had: ).  This is an internal Uintah configure error and should be reported to scirun-develop@sci.utah.edu." "$LINENO" 5
   fi
   # and only one include path:
   ### Determine if there is only one item in
@@ -13478,7 +13478,7 @@ if test "optional" = "specific"; then
     fi
   done
   if test -n "" && test $__sci_pass != "true"; then
-       as_fn_error $? "For specific SCI-TRY-LINK test for STAT64 only one include path may be specified for arg 4 (you had: ).  This is an internal SCIRun configure error and should be reported to scirun-develop@sci.utah.edu." "$LINENO" 5
+       as_fn_error $? "For specific SCI-TRY-LINK test for STAT64 only one include path may be specified for arg 4 (you had: ).  This is an internal Uintah configure error and should be reported to scirun-develop@sci.utah.edu." "$LINENO" 5
   fi
 fi
 
@@ -13745,7 +13745,7 @@ sci_defs_files="$sci_defs_files include/sci_defs/stat64_testdefs.h"
 ##      HAVE_STD_HDRS_H         => yes or no
 
 if test 9 != 9; then
-     as_fn_error $? "Wrong number of parameters (9) for SCI-TRY-LINK for standard headers.  This is an internal SCIRun configure error and should be reported to scirun-develop@sci.utah.edu." "$LINENO" 5
+     as_fn_error $? "Wrong number of parameters (9) for SCI-TRY-LINK for standard headers.  This is an internal Uintah configure error and should be reported to scirun-develop@sci.utah.edu." "$LINENO" 5
 fi
 
 
@@ -13760,7 +13760,7 @@ _sci_includes=
 
 if test "required" != "optional" -a "required" != "required" -a "required" != "specific"; then
      echo
-     as_fn_error $? "Last parameter of SCI-TRY-LINK for standard headers must be: optional or required or specific.  (You had required.)  This is an internal SCIRun configure error and should be reported to scirun-develop@sci.utah.edu." "$LINENO" 5
+     as_fn_error $? "Last parameter of SCI-TRY-LINK for standard headers must be: optional or required or specific.  (You had required.)  This is an internal Uintah configure error and should be reported to scirun-develop@sci.utah.edu." "$LINENO" 5
 fi
 
 # If  (the -I paths) is blank, do nothing, else do the for statement.
@@ -13877,7 +13877,7 @@ if test "required" = "specific"; then
     fi
   done
   if test $__sci_pass != "true"; then
-       as_fn_error $? "For specific SCI-TRY-LINK test for STD_HDRS only one library path may be specified for arg 6 (you had: ).  This is an internal SCIRun configure error and should be reported to scirun-develop@sci.utah.edu." "$LINENO" 5
+       as_fn_error $? "For specific SCI-TRY-LINK test for STD_HDRS only one library path may be specified for arg 6 (you had: ).  This is an internal Uintah configure error and should be reported to scirun-develop@sci.utah.edu." "$LINENO" 5
   fi
   # and only one include path:
   ### Determine if there is only one item in
@@ -13895,7 +13895,7 @@ if test "required" = "specific"; then
     fi
   done
   if test -n "" && test $__sci_pass != "true"; then
-       as_fn_error $? "For specific SCI-TRY-LINK test for STD_HDRS only one include path may be specified for arg 4 (you had: ).  This is an internal SCIRun configure error and should be reported to scirun-develop@sci.utah.edu." "$LINENO" 5
+       as_fn_error $? "For specific SCI-TRY-LINK test for STD_HDRS only one include path may be specified for arg 4 (you had: ).  This is an internal Uintah configure error and should be reported to scirun-develop@sci.utah.edu." "$LINENO" 5
   fi
 fi
 
@@ -14152,7 +14152,7 @@ case $host in
 ##      HAVE_STD_HDRS_H         => yes or no
 
 if test 9 != 9; then
-     as_fn_error $? "Wrong number of parameters (9) for SCI-TRY-LINK for standard headers-2.  This is an internal SCIRun configure error and should be reported to scirun-develop@sci.utah.edu." "$LINENO" 5
+     as_fn_error $? "Wrong number of parameters (9) for SCI-TRY-LINK for standard headers-2.  This is an internal Uintah configure error and should be reported to scirun-develop@sci.utah.edu." "$LINENO" 5
 fi
 
 
@@ -14167,7 +14167,7 @@ _sci_includes=
 
 if test "required" != "optional" -a "required" != "required" -a "required" != "specific"; then
      echo
-     as_fn_error $? "Last parameter of SCI-TRY-LINK for standard headers-2 must be: optional or required or specific.  (You had required.)  This is an internal SCIRun configure error and should be reported to scirun-develop@sci.utah.edu." "$LINENO" 5
+     as_fn_error $? "Last parameter of SCI-TRY-LINK for standard headers-2 must be: optional or required or specific.  (You had required.)  This is an internal Uintah configure error and should be reported to scirun-develop@sci.utah.edu." "$LINENO" 5
 fi
 
 # If  (the -I paths) is blank, do nothing, else do the for statement.
@@ -14284,7 +14284,7 @@ if test "required" = "specific"; then
     fi
   done
   if test $__sci_pass != "true"; then
-       as_fn_error $? "For specific SCI-TRY-LINK test for STD_HDRS only one library path may be specified for arg 6 (you had: ).  This is an internal SCIRun configure error and should be reported to scirun-develop@sci.utah.edu." "$LINENO" 5
+       as_fn_error $? "For specific SCI-TRY-LINK test for STD_HDRS only one library path may be specified for arg 6 (you had: ).  This is an internal Uintah configure error and should be reported to scirun-develop@sci.utah.edu." "$LINENO" 5
   fi
   # and only one include path:
   ### Determine if there is only one item in
@@ -14302,7 +14302,7 @@ if test "required" = "specific"; then
     fi
   done
   if test -n "" && test $__sci_pass != "true"; then
-       as_fn_error $? "For specific SCI-TRY-LINK test for STD_HDRS only one include path may be specified for arg 4 (you had: ).  This is an internal SCIRun configure error and should be reported to scirun-develop@sci.utah.edu." "$LINENO" 5
+       as_fn_error $? "For specific SCI-TRY-LINK test for STD_HDRS only one include path may be specified for arg 4 (you had: ).  This is an internal Uintah configure error and should be reported to scirun-develop@sci.utah.edu." "$LINENO" 5
   fi
 fi
 
@@ -14558,7 +14558,7 @@ _sci_includes=''
 ##      HAVE_STD_HDRS_H         => yes or no
 
 if test 9 != 9; then
-     as_fn_error $? "Wrong number of parameters (9) for SCI-TRY-LINK for standard headers-2.  This is an internal SCIRun configure error and should be reported to scirun-develop@sci.utah.edu." "$LINENO" 5
+     as_fn_error $? "Wrong number of parameters (9) for SCI-TRY-LINK for standard headers-2.  This is an internal Uintah configure error and should be reported to scirun-develop@sci.utah.edu." "$LINENO" 5
 fi
 
 
@@ -14573,7 +14573,7 @@ _sci_includes=
 
 if test "required" != "optional" -a "required" != "required" -a "required" != "specific"; then
      echo
-     as_fn_error $? "Last parameter of SCI-TRY-LINK for standard headers-2 must be: optional or required or specific.  (You had required.)  This is an internal SCIRun configure error and should be reported to scirun-develop@sci.utah.edu." "$LINENO" 5
+     as_fn_error $? "Last parameter of SCI-TRY-LINK for standard headers-2 must be: optional or required or specific.  (You had required.)  This is an internal Uintah configure error and should be reported to scirun-develop@sci.utah.edu." "$LINENO" 5
 fi
 
 # If  (the -I paths) is blank, do nothing, else do the for statement.
@@ -14690,7 +14690,7 @@ if test "required" = "specific"; then
     fi
   done
   if test $__sci_pass != "true"; then
-       as_fn_error $? "For specific SCI-TRY-LINK test for STD_HDRS only one library path may be specified for arg 6 (you had: ).  This is an internal SCIRun configure error and should be reported to scirun-develop@sci.utah.edu." "$LINENO" 5
+       as_fn_error $? "For specific SCI-TRY-LINK test for STD_HDRS only one library path may be specified for arg 6 (you had: ).  This is an internal Uintah configure error and should be reported to scirun-develop@sci.utah.edu." "$LINENO" 5
   fi
   # and only one include path:
   ### Determine if there is only one item in
@@ -14708,7 +14708,7 @@ if test "required" = "specific"; then
     fi
   done
   if test -n "" && test $__sci_pass != "true"; then
-       as_fn_error $? "For specific SCI-TRY-LINK test for STD_HDRS only one include path may be specified for arg 4 (you had: ).  This is an internal SCIRun configure error and should be reported to scirun-develop@sci.utah.edu." "$LINENO" 5
+       as_fn_error $? "For specific SCI-TRY-LINK test for STD_HDRS only one include path may be specified for arg 4 (you had: ).  This is an internal Uintah configure error and should be reported to scirun-develop@sci.utah.edu." "$LINENO" 5
   fi
 fi
 
@@ -14977,7 +14977,7 @@ ac_compiler_gnu=$ac_cv_cxx_compiler_gnu
 ##      HAVE_STL_HEADERS_H         => yes or no
 
 if test 9 != 9; then
-     as_fn_error $? "Wrong number of parameters (9) for SCI-TRY-LINK for standard template library headers.  This is an internal SCIRun configure error and should be reported to scirun-develop@sci.utah.edu." "$LINENO" 5
+     as_fn_error $? "Wrong number of parameters (9) for SCI-TRY-LINK for standard template library headers.  This is an internal Uintah configure error and should be reported to scirun-develop@sci.utah.edu." "$LINENO" 5
 fi
 
 
@@ -14992,7 +14992,7 @@ _sci_includes=
 
 if test "required" != "optional" -a "required" != "required" -a "required" != "specific"; then
      echo
-     as_fn_error $? "Last parameter of SCI-TRY-LINK for standard template library headers must be: optional or required or specific.  (You had required.)  This is an internal SCIRun configure error and should be reported to scirun-develop@sci.utah.edu." "$LINENO" 5
+     as_fn_error $? "Last parameter of SCI-TRY-LINK for standard template library headers must be: optional or required or specific.  (You had required.)  This is an internal Uintah configure error and should be reported to scirun-develop@sci.utah.edu." "$LINENO" 5
 fi
 
 # If  (the -I paths) is blank, do nothing, else do the for statement.
@@ -15109,7 +15109,7 @@ if test "required" = "specific"; then
     fi
   done
   if test $__sci_pass != "true"; then
-       as_fn_error $? "For specific SCI-TRY-LINK test for STL_HEADERS only one library path may be specified for arg 6 (you had: ).  This is an internal SCIRun configure error and should be reported to scirun-develop@sci.utah.edu." "$LINENO" 5
+       as_fn_error $? "For specific SCI-TRY-LINK test for STL_HEADERS only one library path may be specified for arg 6 (you had: ).  This is an internal Uintah configure error and should be reported to scirun-develop@sci.utah.edu." "$LINENO" 5
   fi
   # and only one include path:
   ### Determine if there is only one item in
@@ -15127,7 +15127,7 @@ if test "required" = "specific"; then
     fi
   done
   if test -n "" && test $__sci_pass != "true"; then
-       as_fn_error $? "For specific SCI-TRY-LINK test for STL_HEADERS only one include path may be specified for arg 4 (you had: ).  This is an internal SCIRun configure error and should be reported to scirun-develop@sci.utah.edu." "$LINENO" 5
+       as_fn_error $? "For specific SCI-TRY-LINK test for STL_HEADERS only one include path may be specified for arg 4 (you had: ).  This is an internal Uintah configure error and should be reported to scirun-develop@sci.utah.edu." "$LINENO" 5
   fi
 fi
 
@@ -15494,7 +15494,7 @@ $as_echo "$as_me: WARNING: Using $_sci_lib/../bin/xml2-config to set libxml2 var
 ##      HAVE_XML2_H         => yes or no
 
 if test 9 != 9; then
-     as_fn_error $? "Wrong number of parameters (9) for SCI-TRY-LINK for xml2 library and headers.  This is an internal SCIRun configure error and should be reported to scirun-develop@sci.utah.edu." "$LINENO" 5
+     as_fn_error $? "Wrong number of parameters (9) for SCI-TRY-LINK for xml2 library and headers.  This is an internal Uintah configure error and should be reported to scirun-develop@sci.utah.edu." "$LINENO" 5
 fi
 
 
@@ -15509,7 +15509,7 @@ _sci_includes=
 
 if test "required" != "optional" -a "required" != "required" -a "required" != "specific"; then
      echo
-     as_fn_error $? "Last parameter of SCI-TRY-LINK for xml2 library and headers must be: optional or required or specific.  (You had required.)  This is an internal SCIRun configure error and should be reported to scirun-develop@sci.utah.edu." "$LINENO" 5
+     as_fn_error $? "Last parameter of SCI-TRY-LINK for xml2 library and headers must be: optional or required or specific.  (You had required.)  This is an internal Uintah configure error and should be reported to scirun-develop@sci.utah.edu." "$LINENO" 5
 fi
 
 # If $includes (the -I paths) is blank, do nothing, else do the for statement.
@@ -15667,7 +15667,7 @@ if test "required" = "specific"; then
     fi
   done
   if test $__sci_pass != "true"; then
-       as_fn_error $? "For specific SCI-TRY-LINK test for XML2 only one library path may be specified for arg 6 (you had: $XML2_LIB_PATH).  This is an internal SCIRun configure error and should be reported to scirun-develop@sci.utah.edu." "$LINENO" 5
+       as_fn_error $? "For specific SCI-TRY-LINK test for XML2 only one library path may be specified for arg 6 (you had: $XML2_LIB_PATH).  This is an internal Uintah configure error and should be reported to scirun-develop@sci.utah.edu." "$LINENO" 5
   fi
   # and only one include path:
   ### Determine if there is only one item in $includes
@@ -15685,7 +15685,7 @@ if test "required" = "specific"; then
     fi
   done
   if test -n "$includes" && test $__sci_pass != "true"; then
-       as_fn_error $? "For specific SCI-TRY-LINK test for XML2 only one include path may be specified for arg 4 (you had: $includes).  This is an internal SCIRun configure error and should be reported to scirun-develop@sci.utah.edu." "$LINENO" 5
+       as_fn_error $? "For specific SCI-TRY-LINK test for XML2 only one include path may be specified for arg 4 (you had: $includes).  This is an internal Uintah configure error and should be reported to scirun-develop@sci.utah.edu." "$LINENO" 5
   fi
 fi
 
@@ -15983,7 +15983,7 @@ ac_compiler_gnu=$ac_cv_cxx_compiler_gnu
 ##      HAVE_SSTREAM_H         => yes or no
 
 if test 9 != 9; then
-     as_fn_error $? "Wrong number of parameters (9) for SCI-TRY-LINK for sstream header.  This is an internal SCIRun configure error and should be reported to scirun-develop@sci.utah.edu." "$LINENO" 5
+     as_fn_error $? "Wrong number of parameters (9) for SCI-TRY-LINK for sstream header.  This is an internal Uintah configure error and should be reported to scirun-develop@sci.utah.edu." "$LINENO" 5
 fi
 
 
@@ -15998,7 +15998,7 @@ _sci_includes=
 
 if test "optional" != "optional" -a "optional" != "required" -a "optional" != "specific"; then
      echo
-     as_fn_error $? "Last parameter of SCI-TRY-LINK for sstream header must be: optional or required or specific.  (You had optional.)  This is an internal SCIRun configure error and should be reported to scirun-develop@sci.utah.edu." "$LINENO" 5
+     as_fn_error $? "Last parameter of SCI-TRY-LINK for sstream header must be: optional or required or specific.  (You had optional.)  This is an internal Uintah configure error and should be reported to scirun-develop@sci.utah.edu." "$LINENO" 5
 fi
 
 # If  (the -I paths) is blank, do nothing, else do the for statement.
@@ -16115,7 +16115,7 @@ if test "optional" = "specific"; then
     fi
   done
   if test $__sci_pass != "true"; then
-       as_fn_error $? "For specific SCI-TRY-LINK test for SSTREAM only one library path may be specified for arg 6 (you had: ).  This is an internal SCIRun configure error and should be reported to scirun-develop@sci.utah.edu." "$LINENO" 5
+       as_fn_error $? "For specific SCI-TRY-LINK test for SSTREAM only one library path may be specified for arg 6 (you had: ).  This is an internal Uintah configure error and should be reported to scirun-develop@sci.utah.edu." "$LINENO" 5
   fi
   # and only one include path:
   ### Determine if there is only one item in
@@ -16133,7 +16133,7 @@ if test "optional" = "specific"; then
     fi
   done
   if test -n "" && test $__sci_pass != "true"; then
-       as_fn_error $? "For specific SCI-TRY-LINK test for SSTREAM only one include path may be specified for arg 4 (you had: ).  This is an internal SCIRun configure error and should be reported to scirun-develop@sci.utah.edu." "$LINENO" 5
+       as_fn_error $? "For specific SCI-TRY-LINK test for SSTREAM only one include path may be specified for arg 4 (you had: ).  This is an internal Uintah configure error and should be reported to scirun-develop@sci.utah.edu." "$LINENO" 5
   fi
 fi
 
@@ -16336,7 +16336,7 @@ _sci_includes=''
 if test "$HAVE_SSTREAM" = "yes"; then
    SSTREAM_COMPAT="no"
 else
-   # Use SCIRun sstream compatibility files...
+   # Use Uintah sstream compatibility files...
    SSTREAM_COMPAT="yes"
 fi
 
@@ -16463,7 +16463,7 @@ fi
 ##      HAVE_Z_H         => yes or no
 
 if test 9 != 9; then
-     as_fn_error $? "Wrong number of parameters (9) for SCI-TRY-LINK for zlib library and header.  This is an internal SCIRun configure error and should be reported to scirun-develop@sci.utah.edu." "$LINENO" 5
+     as_fn_error $? "Wrong number of parameters (9) for SCI-TRY-LINK for zlib library and header.  This is an internal Uintah configure error and should be reported to scirun-develop@sci.utah.edu." "$LINENO" 5
 fi
 
 
@@ -16478,7 +16478,7 @@ _sci_includes=
 
 if test "$_sci_optional" != "optional" -a "$_sci_optional" != "required" -a "$_sci_optional" != "specific"; then
      echo
-     as_fn_error $? "Last parameter of SCI-TRY-LINK for zlib library and header must be: optional or required or specific.  (You had $_sci_optional.)  This is an internal SCIRun configure error and should be reported to scirun-develop@sci.utah.edu." "$LINENO" 5
+     as_fn_error $? "Last parameter of SCI-TRY-LINK for zlib library and header must be: optional or required or specific.  (You had $_sci_optional.)  This is an internal Uintah configure error and should be reported to scirun-develop@sci.utah.edu." "$LINENO" 5
 fi
 
 # If $_sci_inc (the -I paths) is blank, do nothing, else do the for statement.
@@ -16636,7 +16636,7 @@ if test "$_sci_optional" = "specific"; then
     fi
   done
   if test $__sci_pass != "true"; then
-       as_fn_error $? "For specific SCI-TRY-LINK test for Z only one library path may be specified for arg 6 (you had: $_sci_lib).  This is an internal SCIRun configure error and should be reported to scirun-develop@sci.utah.edu." "$LINENO" 5
+       as_fn_error $? "For specific SCI-TRY-LINK test for Z only one library path may be specified for arg 6 (you had: $_sci_lib).  This is an internal Uintah configure error and should be reported to scirun-develop@sci.utah.edu." "$LINENO" 5
   fi
   # and only one include path:
   ### Determine if there is only one item in $_sci_inc
@@ -16654,7 +16654,7 @@ if test "$_sci_optional" = "specific"; then
     fi
   done
   if test -n "$_sci_inc" && test $__sci_pass != "true"; then
-       as_fn_error $? "For specific SCI-TRY-LINK test for Z only one include path may be specified for arg 4 (you had: $_sci_inc).  This is an internal SCIRun configure error and should be reported to scirun-develop@sci.utah.edu." "$LINENO" 5
+       as_fn_error $? "For specific SCI-TRY-LINK test for Z only one include path may be specified for arg 4 (you had: $_sci_inc).  This is an internal Uintah configure error and should be reported to scirun-develop@sci.utah.edu." "$LINENO" 5
   fi
 fi
 
@@ -16940,7 +16940,7 @@ fi
 ##      HAVE_JPEG_H         => yes or no
 
 if test 9 != 9; then
-     as_fn_error $? "Wrong number of parameters (9) for SCI-TRY-LINK for jpeg library.  This is an internal SCIRun configure error and should be reported to scirun-develop@sci.utah.edu." "$LINENO" 5
+     as_fn_error $? "Wrong number of parameters (9) for SCI-TRY-LINK for jpeg library.  This is an internal Uintah configure error and should be reported to scirun-develop@sci.utah.edu." "$LINENO" 5
 fi
 
 
@@ -16955,7 +16955,7 @@ _sci_includes=
 
 if test "$_sci_optional" != "optional" -a "$_sci_optional" != "required" -a "$_sci_optional" != "specific"; then
      echo
-     as_fn_error $? "Last parameter of SCI-TRY-LINK for jpeg library must be: optional or required or specific.  (You had $_sci_optional.)  This is an internal SCIRun configure error and should be reported to scirun-develop@sci.utah.edu." "$LINENO" 5
+     as_fn_error $? "Last parameter of SCI-TRY-LINK for jpeg library must be: optional or required or specific.  (You had $_sci_optional.)  This is an internal Uintah configure error and should be reported to scirun-develop@sci.utah.edu." "$LINENO" 5
 fi
 
 # If $_sci_inc (the -I paths) is blank, do nothing, else do the for statement.
@@ -17113,7 +17113,7 @@ if test "$_sci_optional" = "specific"; then
     fi
   done
   if test $__sci_pass != "true"; then
-       as_fn_error $? "For specific SCI-TRY-LINK test for JPEG only one library path may be specified for arg 6 (you had: $_sci_lib).  This is an internal SCIRun configure error and should be reported to scirun-develop@sci.utah.edu." "$LINENO" 5
+       as_fn_error $? "For specific SCI-TRY-LINK test for JPEG only one library path may be specified for arg 6 (you had: $_sci_lib).  This is an internal Uintah configure error and should be reported to scirun-develop@sci.utah.edu." "$LINENO" 5
   fi
   # and only one include path:
   ### Determine if there is only one item in $_sci_inc
@@ -17131,7 +17131,7 @@ if test "$_sci_optional" = "specific"; then
     fi
   done
   if test -n "$_sci_inc" && test $__sci_pass != "true"; then
-       as_fn_error $? "For specific SCI-TRY-LINK test for JPEG only one include path may be specified for arg 4 (you had: $_sci_inc).  This is an internal SCIRun configure error and should be reported to scirun-develop@sci.utah.edu." "$LINENO" 5
+       as_fn_error $? "For specific SCI-TRY-LINK test for JPEG only one include path may be specified for arg 4 (you had: $_sci_inc).  This is an internal Uintah configure error and should be reported to scirun-develop@sci.utah.edu." "$LINENO" 5
   fi
 fi
 
@@ -17402,7 +17402,7 @@ fi
 ##      HAVE_TIFF_H         => yes or no
 
 if test 9 != 9; then
-     as_fn_error $? "Wrong number of parameters (9) for SCI-TRY-LINK for tiff library.  This is an internal SCIRun configure error and should be reported to scirun-develop@sci.utah.edu." "$LINENO" 5
+     as_fn_error $? "Wrong number of parameters (9) for SCI-TRY-LINK for tiff library.  This is an internal Uintah configure error and should be reported to scirun-develop@sci.utah.edu." "$LINENO" 5
 fi
 
 
@@ -17417,7 +17417,7 @@ _sci_includes=
 
 if test "$_sci_optional" != "optional" -a "$_sci_optional" != "required" -a "$_sci_optional" != "specific"; then
      echo
-     as_fn_error $? "Last parameter of SCI-TRY-LINK for tiff library must be: optional or required or specific.  (You had $_sci_optional.)  This is an internal SCIRun configure error and should be reported to scirun-develop@sci.utah.edu." "$LINENO" 5
+     as_fn_error $? "Last parameter of SCI-TRY-LINK for tiff library must be: optional or required or specific.  (You had $_sci_optional.)  This is an internal Uintah configure error and should be reported to scirun-develop@sci.utah.edu." "$LINENO" 5
 fi
 
 # If $_sci_inc (the -I paths) is blank, do nothing, else do the for statement.
@@ -17575,7 +17575,7 @@ if test "$_sci_optional" = "specific"; then
     fi
   done
   if test $__sci_pass != "true"; then
-       as_fn_error $? "For specific SCI-TRY-LINK test for TIFF only one library path may be specified for arg 6 (you had: $_sci_lib).  This is an internal SCIRun configure error and should be reported to scirun-develop@sci.utah.edu." "$LINENO" 5
+       as_fn_error $? "For specific SCI-TRY-LINK test for TIFF only one library path may be specified for arg 6 (you had: $_sci_lib).  This is an internal Uintah configure error and should be reported to scirun-develop@sci.utah.edu." "$LINENO" 5
   fi
   # and only one include path:
   ### Determine if there is only one item in $_sci_inc
@@ -17593,7 +17593,7 @@ if test "$_sci_optional" = "specific"; then
     fi
   done
   if test -n "$_sci_inc" && test $__sci_pass != "true"; then
-       as_fn_error $? "For specific SCI-TRY-LINK test for TIFF only one include path may be specified for arg 4 (you had: $_sci_inc).  This is an internal SCIRun configure error and should be reported to scirun-develop@sci.utah.edu." "$LINENO" 5
+       as_fn_error $? "For specific SCI-TRY-LINK test for TIFF only one include path may be specified for arg 4 (you had: $_sci_inc).  This is an internal Uintah configure error and should be reported to scirun-develop@sci.utah.edu." "$LINENO" 5
   fi
 fi
 
@@ -17935,7 +17935,7 @@ if test "$with_fortran" != "no"; then
 ##      HAVE_F_H         => yes or no
 
 if test 9 != 9; then
-     as_fn_error $? "Wrong number of parameters (9) for SCI-TRY-LINK for fortran libraries (pgf77).  This is an internal SCIRun configure error and should be reported to scirun-develop@sci.utah.edu." "$LINENO" 5
+     as_fn_error $? "Wrong number of parameters (9) for SCI-TRY-LINK for fortran libraries (pgf77).  This is an internal Uintah configure error and should be reported to scirun-develop@sci.utah.edu." "$LINENO" 5
 fi
 
 
@@ -17950,7 +17950,7 @@ _sci_includes=
 
 if test "$_sci_optional" != "optional" -a "$_sci_optional" != "required" -a "$_sci_optional" != "specific"; then
      echo
-     as_fn_error $? "Last parameter of SCI-TRY-LINK for fortran libraries (pgf77) must be: optional or required or specific.  (You had $_sci_optional.)  This is an internal SCIRun configure error and should be reported to scirun-develop@sci.utah.edu." "$LINENO" 5
+     as_fn_error $? "Last parameter of SCI-TRY-LINK for fortran libraries (pgf77) must be: optional or required or specific.  (You had $_sci_optional.)  This is an internal Uintah configure error and should be reported to scirun-develop@sci.utah.edu." "$LINENO" 5
 fi
 
 # If  (the -I paths) is blank, do nothing, else do the for statement.
@@ -18067,7 +18067,7 @@ if test "$_sci_optional" = "specific"; then
     fi
   done
   if test $__sci_pass != "true"; then
-       as_fn_error $? "For specific SCI-TRY-LINK test for F only one library path may be specified for arg 6 (you had: $_sci_lib).  This is an internal SCIRun configure error and should be reported to scirun-develop@sci.utah.edu." "$LINENO" 5
+       as_fn_error $? "For specific SCI-TRY-LINK test for F only one library path may be specified for arg 6 (you had: $_sci_lib).  This is an internal Uintah configure error and should be reported to scirun-develop@sci.utah.edu." "$LINENO" 5
   fi
   # and only one include path:
   ### Determine if there is only one item in
@@ -18085,7 +18085,7 @@ if test "$_sci_optional" = "specific"; then
     fi
   done
   if test -n "" && test $__sci_pass != "true"; then
-       as_fn_error $? "For specific SCI-TRY-LINK test for F only one include path may be specified for arg 4 (you had: ).  This is an internal SCIRun configure error and should be reported to scirun-develop@sci.utah.edu." "$LINENO" 5
+       as_fn_error $? "For specific SCI-TRY-LINK test for F only one include path may be specified for arg 4 (you had: ).  This is an internal Uintah configure error and should be reported to scirun-develop@sci.utah.edu." "$LINENO" 5
   fi
 fi
 
@@ -18340,7 +18340,7 @@ _sci_includes=''
 ##      HAVE_F_H         => yes or no
 
 if test 9 != 9; then
-     as_fn_error $? "Wrong number of parameters (9) for SCI-TRY-LINK for fortran libraries (gfortran).  This is an internal SCIRun configure error and should be reported to scirun-develop@sci.utah.edu." "$LINENO" 5
+     as_fn_error $? "Wrong number of parameters (9) for SCI-TRY-LINK for fortran libraries (gfortran).  This is an internal Uintah configure error and should be reported to scirun-develop@sci.utah.edu." "$LINENO" 5
 fi
 
 
@@ -18355,7 +18355,7 @@ _sci_includes=
 
 if test "$_sci_optional" != "optional" -a "$_sci_optional" != "required" -a "$_sci_optional" != "specific"; then
      echo
-     as_fn_error $? "Last parameter of SCI-TRY-LINK for fortran libraries (gfortran) must be: optional or required or specific.  (You had $_sci_optional.)  This is an internal SCIRun configure error and should be reported to scirun-develop@sci.utah.edu." "$LINENO" 5
+     as_fn_error $? "Last parameter of SCI-TRY-LINK for fortran libraries (gfortran) must be: optional or required or specific.  (You had $_sci_optional.)  This is an internal Uintah configure error and should be reported to scirun-develop@sci.utah.edu." "$LINENO" 5
 fi
 
 # If  (the -I paths) is blank, do nothing, else do the for statement.
@@ -18472,7 +18472,7 @@ if test "$_sci_optional" = "specific"; then
     fi
   done
   if test $__sci_pass != "true"; then
-       as_fn_error $? "For specific SCI-TRY-LINK test for F only one library path may be specified for arg 6 (you had: $_sci_lib).  This is an internal SCIRun configure error and should be reported to scirun-develop@sci.utah.edu." "$LINENO" 5
+       as_fn_error $? "For specific SCI-TRY-LINK test for F only one library path may be specified for arg 6 (you had: $_sci_lib).  This is an internal Uintah configure error and should be reported to scirun-develop@sci.utah.edu." "$LINENO" 5
   fi
   # and only one include path:
   ### Determine if there is only one item in
@@ -18490,7 +18490,7 @@ if test "$_sci_optional" = "specific"; then
     fi
   done
   if test -n "" && test $__sci_pass != "true"; then
-       as_fn_error $? "For specific SCI-TRY-LINK test for F only one include path may be specified for arg 4 (you had: ).  This is an internal SCIRun configure error and should be reported to scirun-develop@sci.utah.edu." "$LINENO" 5
+       as_fn_error $? "For specific SCI-TRY-LINK test for F only one include path may be specified for arg 4 (you had: ).  This is an internal Uintah configure error and should be reported to scirun-develop@sci.utah.edu." "$LINENO" 5
   fi
 fi
 
@@ -18746,7 +18746,7 @@ _sci_includes=''
 ##      HAVE_F_H         => yes or no
 
 if test 9 != 9; then
-     as_fn_error $? "Wrong number of parameters (9) for SCI-TRY-LINK for fortran libraries (xlf).  This is an internal SCIRun configure error and should be reported to scirun-develop@sci.utah.edu." "$LINENO" 5
+     as_fn_error $? "Wrong number of parameters (9) for SCI-TRY-LINK for fortran libraries (xlf).  This is an internal Uintah configure error and should be reported to scirun-develop@sci.utah.edu." "$LINENO" 5
 fi
 
 
@@ -18761,7 +18761,7 @@ _sci_includes=
 
 if test "optional" != "optional" -a "optional" != "required" -a "optional" != "specific"; then
      echo
-     as_fn_error $? "Last parameter of SCI-TRY-LINK for fortran libraries (xlf) must be: optional or required or specific.  (You had optional.)  This is an internal SCIRun configure error and should be reported to scirun-develop@sci.utah.edu." "$LINENO" 5
+     as_fn_error $? "Last parameter of SCI-TRY-LINK for fortran libraries (xlf) must be: optional or required or specific.  (You had optional.)  This is an internal Uintah configure error and should be reported to scirun-develop@sci.utah.edu." "$LINENO" 5
 fi
 
 # If  (the -I paths) is blank, do nothing, else do the for statement.
@@ -18878,7 +18878,7 @@ if test "optional" = "specific"; then
     fi
   done
   if test $__sci_pass != "true"; then
-       as_fn_error $? "For specific SCI-TRY-LINK test for F only one library path may be specified for arg 6 (you had: $_sci_lib).  This is an internal SCIRun configure error and should be reported to scirun-develop@sci.utah.edu." "$LINENO" 5
+       as_fn_error $? "For specific SCI-TRY-LINK test for F only one library path may be specified for arg 6 (you had: $_sci_lib).  This is an internal Uintah configure error and should be reported to scirun-develop@sci.utah.edu." "$LINENO" 5
   fi
   # and only one include path:
   ### Determine if there is only one item in
@@ -18896,7 +18896,7 @@ if test "optional" = "specific"; then
     fi
   done
   if test -n "" && test $__sci_pass != "true"; then
-       as_fn_error $? "For specific SCI-TRY-LINK test for F only one include path may be specified for arg 4 (you had: ).  This is an internal SCIRun configure error and should be reported to scirun-develop@sci.utah.edu." "$LINENO" 5
+       as_fn_error $? "For specific SCI-TRY-LINK test for F only one include path may be specified for arg 4 (you had: ).  This is an internal Uintah configure error and should be reported to scirun-develop@sci.utah.edu." "$LINENO" 5
   fi
 fi
 
@@ -19151,7 +19151,7 @@ _sci_includes=''
 ##      HAVE_F_H         => yes or no
 
 if test 9 != 9; then
-     as_fn_error $? "Wrong number of parameters (9) for SCI-TRY-LINK for fortran libraries (ifort).  This is an internal SCIRun configure error and should be reported to scirun-develop@sci.utah.edu." "$LINENO" 5
+     as_fn_error $? "Wrong number of parameters (9) for SCI-TRY-LINK for fortran libraries (ifort).  This is an internal Uintah configure error and should be reported to scirun-develop@sci.utah.edu." "$LINENO" 5
 fi
 
 
@@ -19166,7 +19166,7 @@ _sci_includes=
 
 if test "$_sci_optional" != "optional" -a "$_sci_optional" != "required" -a "$_sci_optional" != "specific"; then
      echo
-     as_fn_error $? "Last parameter of SCI-TRY-LINK for fortran libraries (ifort) must be: optional or required or specific.  (You had $_sci_optional.)  This is an internal SCIRun configure error and should be reported to scirun-develop@sci.utah.edu." "$LINENO" 5
+     as_fn_error $? "Last parameter of SCI-TRY-LINK for fortran libraries (ifort) must be: optional or required or specific.  (You had $_sci_optional.)  This is an internal Uintah configure error and should be reported to scirun-develop@sci.utah.edu." "$LINENO" 5
 fi
 
 # If  (the -I paths) is blank, do nothing, else do the for statement.
@@ -19283,7 +19283,7 @@ if test "$_sci_optional" = "specific"; then
     fi
   done
   if test $__sci_pass != "true"; then
-       as_fn_error $? "For specific SCI-TRY-LINK test for F only one library path may be specified for arg 6 (you had: $_sci_lib).  This is an internal SCIRun configure error and should be reported to scirun-develop@sci.utah.edu." "$LINENO" 5
+       as_fn_error $? "For specific SCI-TRY-LINK test for F only one library path may be specified for arg 6 (you had: $_sci_lib).  This is an internal Uintah configure error and should be reported to scirun-develop@sci.utah.edu." "$LINENO" 5
   fi
   # and only one include path:
   ### Determine if there is only one item in
@@ -19301,7 +19301,7 @@ if test "$_sci_optional" = "specific"; then
     fi
   done
   if test -n "" && test $__sci_pass != "true"; then
-       as_fn_error $? "For specific SCI-TRY-LINK test for F only one include path may be specified for arg 4 (you had: ).  This is an internal SCIRun configure error and should be reported to scirun-develop@sci.utah.edu." "$LINENO" 5
+       as_fn_error $? "For specific SCI-TRY-LINK test for F only one include path may be specified for arg 4 (you had: ).  This is an internal Uintah configure error and should be reported to scirun-develop@sci.utah.edu." "$LINENO" 5
   fi
 fi
 
@@ -19556,7 +19556,7 @@ _sci_includes=''
 ##      HAVE_F_H         => yes or no
 
 if test 9 != 9; then
-     as_fn_error $? "Wrong number of parameters (9) for SCI-TRY-LINK for fortran libraries (ftn).  This is an internal SCIRun configure error and should be reported to scirun-develop@sci.utah.edu." "$LINENO" 5
+     as_fn_error $? "Wrong number of parameters (9) for SCI-TRY-LINK for fortran libraries (ftn).  This is an internal Uintah configure error and should be reported to scirun-develop@sci.utah.edu." "$LINENO" 5
 fi
 
 
@@ -19571,7 +19571,7 @@ _sci_includes=
 
 if test "$_sci_optional" != "optional" -a "$_sci_optional" != "required" -a "$_sci_optional" != "specific"; then
      echo
-     as_fn_error $? "Last parameter of SCI-TRY-LINK for fortran libraries (ftn) must be: optional or required or specific.  (You had $_sci_optional.)  This is an internal SCIRun configure error and should be reported to scirun-develop@sci.utah.edu." "$LINENO" 5
+     as_fn_error $? "Last parameter of SCI-TRY-LINK for fortran libraries (ftn) must be: optional or required or specific.  (You had $_sci_optional.)  This is an internal Uintah configure error and should be reported to scirun-develop@sci.utah.edu." "$LINENO" 5
 fi
 
 # If  (the -I paths) is blank, do nothing, else do the for statement.
@@ -19688,7 +19688,7 @@ if test "$_sci_optional" = "specific"; then
     fi
   done
   if test $__sci_pass != "true"; then
-       as_fn_error $? "For specific SCI-TRY-LINK test for F only one library path may be specified for arg 6 (you had: $_sci_lib).  This is an internal SCIRun configure error and should be reported to scirun-develop@sci.utah.edu." "$LINENO" 5
+       as_fn_error $? "For specific SCI-TRY-LINK test for F only one library path may be specified for arg 6 (you had: $_sci_lib).  This is an internal Uintah configure error and should be reported to scirun-develop@sci.utah.edu." "$LINENO" 5
   fi
   # and only one include path:
   ### Determine if there is only one item in
@@ -19706,7 +19706,7 @@ if test "$_sci_optional" = "specific"; then
     fi
   done
   if test -n "" && test $__sci_pass != "true"; then
-       as_fn_error $? "For specific SCI-TRY-LINK test for F only one include path may be specified for arg 4 (you had: ).  This is an internal SCIRun configure error and should be reported to scirun-develop@sci.utah.edu." "$LINENO" 5
+       as_fn_error $? "For specific SCI-TRY-LINK test for F only one include path may be specified for arg 4 (you had: ).  This is an internal Uintah configure error and should be reported to scirun-develop@sci.utah.edu." "$LINENO" 5
   fi
 fi
 
@@ -19961,7 +19961,7 @@ _sci_includes=''
 ##      HAVE_F_H         => yes or no
 
 if test 9 != 9; then
-     as_fn_error $? "Wrong number of parameters (9) for SCI-TRY-LINK for fortran libraries (other).  This is an internal SCIRun configure error and should be reported to scirun-develop@sci.utah.edu." "$LINENO" 5
+     as_fn_error $? "Wrong number of parameters (9) for SCI-TRY-LINK for fortran libraries (other).  This is an internal Uintah configure error and should be reported to scirun-develop@sci.utah.edu." "$LINENO" 5
 fi
 
 
@@ -19976,7 +19976,7 @@ _sci_includes=
 
 if test "$_sci_optional" != "optional" -a "$_sci_optional" != "required" -a "$_sci_optional" != "specific"; then
      echo
-     as_fn_error $? "Last parameter of SCI-TRY-LINK for fortran libraries (other) must be: optional or required or specific.  (You had $_sci_optional.)  This is an internal SCIRun configure error and should be reported to scirun-develop@sci.utah.edu." "$LINENO" 5
+     as_fn_error $? "Last parameter of SCI-TRY-LINK for fortran libraries (other) must be: optional or required or specific.  (You had $_sci_optional.)  This is an internal Uintah configure error and should be reported to scirun-develop@sci.utah.edu." "$LINENO" 5
 fi
 
 # If  (the -I paths) is blank, do nothing, else do the for statement.
@@ -20093,7 +20093,7 @@ if test "$_sci_optional" = "specific"; then
     fi
   done
   if test $__sci_pass != "true"; then
-       as_fn_error $? "For specific SCI-TRY-LINK test for F only one library path may be specified for arg 6 (you had: $_sci_lib).  This is an internal SCIRun configure error and should be reported to scirun-develop@sci.utah.edu." "$LINENO" 5
+       as_fn_error $? "For specific SCI-TRY-LINK test for F only one library path may be specified for arg 6 (you had: $_sci_lib).  This is an internal Uintah configure error and should be reported to scirun-develop@sci.utah.edu." "$LINENO" 5
   fi
   # and only one include path:
   ### Determine if there is only one item in
@@ -20111,7 +20111,7 @@ if test "$_sci_optional" = "specific"; then
     fi
   done
   if test -n "" && test $__sci_pass != "true"; then
-       as_fn_error $? "For specific SCI-TRY-LINK test for F only one include path may be specified for arg 4 (you had: ).  This is an internal SCIRun configure error and should be reported to scirun-develop@sci.utah.edu." "$LINENO" 5
+       as_fn_error $? "For specific SCI-TRY-LINK test for F only one include path may be specified for arg 4 (you had: ).  This is an internal Uintah configure error and should be reported to scirun-develop@sci.utah.edu." "$LINENO" 5
   fi
 fi
 
@@ -20368,7 +20368,7 @@ _sci_includes=''
 ##      HAVE_F_H         => yes or no
 
 if test 9 != 9; then
-     as_fn_error $? "Wrong number of parameters (9) for SCI-TRY-LINK for fortran libraries (dec).  This is an internal SCIRun configure error and should be reported to scirun-develop@sci.utah.edu." "$LINENO" 5
+     as_fn_error $? "Wrong number of parameters (9) for SCI-TRY-LINK for fortran libraries (dec).  This is an internal Uintah configure error and should be reported to scirun-develop@sci.utah.edu." "$LINENO" 5
 fi
 
 
@@ -20383,7 +20383,7 @@ _sci_includes=
 
 if test "$_sci_optional" != "optional" -a "$_sci_optional" != "required" -a "$_sci_optional" != "specific"; then
      echo
-     as_fn_error $? "Last parameter of SCI-TRY-LINK for fortran libraries (dec) must be: optional or required or specific.  (You had $_sci_optional.)  This is an internal SCIRun configure error and should be reported to scirun-develop@sci.utah.edu." "$LINENO" 5
+     as_fn_error $? "Last parameter of SCI-TRY-LINK for fortran libraries (dec) must be: optional or required or specific.  (You had $_sci_optional.)  This is an internal Uintah configure error and should be reported to scirun-develop@sci.utah.edu." "$LINENO" 5
 fi
 
 # If  (the -I paths) is blank, do nothing, else do the for statement.
@@ -20500,7 +20500,7 @@ if test "$_sci_optional" = "specific"; then
     fi
   done
   if test $__sci_pass != "true"; then
-       as_fn_error $? "For specific SCI-TRY-LINK test for F only one library path may be specified for arg 6 (you had: $_sci_lib).  This is an internal SCIRun configure error and should be reported to scirun-develop@sci.utah.edu." "$LINENO" 5
+       as_fn_error $? "For specific SCI-TRY-LINK test for F only one library path may be specified for arg 6 (you had: $_sci_lib).  This is an internal Uintah configure error and should be reported to scirun-develop@sci.utah.edu." "$LINENO" 5
   fi
   # and only one include path:
   ### Determine if there is only one item in
@@ -20518,7 +20518,7 @@ if test "$_sci_optional" = "specific"; then
     fi
   done
   if test -n "" && test $__sci_pass != "true"; then
-       as_fn_error $? "For specific SCI-TRY-LINK test for F only one include path may be specified for arg 4 (you had: ).  This is an internal SCIRun configure error and should be reported to scirun-develop@sci.utah.edu." "$LINENO" 5
+       as_fn_error $? "For specific SCI-TRY-LINK test for F only one include path may be specified for arg 4 (you had: ).  This is an internal Uintah configure error and should be reported to scirun-develop@sci.utah.edu." "$LINENO" 5
   fi
 fi
 
@@ -20775,7 +20775,7 @@ _sci_includes=''
 ##      HAVE_F_H         => yes or no
 
 if test 9 != 9; then
-     as_fn_error $? "Wrong number of parameters (9) for SCI-TRY-LINK for Mac fortran library (xlf) - xlf90.  This is an internal SCIRun configure error and should be reported to scirun-develop@sci.utah.edu." "$LINENO" 5
+     as_fn_error $? "Wrong number of parameters (9) for SCI-TRY-LINK for Mac fortran library (xlf) - xlf90.  This is an internal Uintah configure error and should be reported to scirun-develop@sci.utah.edu." "$LINENO" 5
 fi
 
 
@@ -20790,7 +20790,7 @@ _sci_includes=
 
 if test "$_sci_optional" != "optional" -a "$_sci_optional" != "required" -a "$_sci_optional" != "specific"; then
      echo
-     as_fn_error $? "Last parameter of SCI-TRY-LINK for Mac fortran library (xlf) - xlf90 must be: optional or required or specific.  (You had $_sci_optional.)  This is an internal SCIRun configure error and should be reported to scirun-develop@sci.utah.edu." "$LINENO" 5
+     as_fn_error $? "Last parameter of SCI-TRY-LINK for Mac fortran library (xlf) - xlf90 must be: optional or required or specific.  (You had $_sci_optional.)  This is an internal Uintah configure error and should be reported to scirun-develop@sci.utah.edu." "$LINENO" 5
 fi
 
 # If $_sci_inc (the -I paths) is blank, do nothing, else do the for statement.
@@ -20948,7 +20948,7 @@ if test "$_sci_optional" = "specific"; then
     fi
   done
   if test $__sci_pass != "true"; then
-       as_fn_error $? "For specific SCI-TRY-LINK test for F only one library path may be specified for arg 6 (you had: $_sci_lib).  This is an internal SCIRun configure error and should be reported to scirun-develop@sci.utah.edu." "$LINENO" 5
+       as_fn_error $? "For specific SCI-TRY-LINK test for F only one library path may be specified for arg 6 (you had: $_sci_lib).  This is an internal Uintah configure error and should be reported to scirun-develop@sci.utah.edu." "$LINENO" 5
   fi
   # and only one include path:
   ### Determine if there is only one item in $_sci_inc
@@ -20966,7 +20966,7 @@ if test "$_sci_optional" = "specific"; then
     fi
   done
   if test -n "$_sci_inc" && test $__sci_pass != "true"; then
-       as_fn_error $? "For specific SCI-TRY-LINK test for F only one include path may be specified for arg 4 (you had: $_sci_inc).  This is an internal SCIRun configure error and should be reported to scirun-develop@sci.utah.edu." "$LINENO" 5
+       as_fn_error $? "For specific SCI-TRY-LINK test for F only one include path may be specified for arg 4 (you had: $_sci_inc).  This is an internal Uintah configure error and should be reported to scirun-develop@sci.utah.edu." "$LINENO" 5
   fi
 fi
 
@@ -21220,7 +21220,7 @@ _sci_includes=''
 ##      HAVE_F_H         => yes or no
 
 if test 9 != 9; then
-     as_fn_error $? "Wrong number of parameters (9) for SCI-TRY-LINK for 2 - Mac fortran library (gfortran) - gfortran.  This is an internal SCIRun configure error and should be reported to scirun-develop@sci.utah.edu." "$LINENO" 5
+     as_fn_error $? "Wrong number of parameters (9) for SCI-TRY-LINK for 2 - Mac fortran library (gfortran) - gfortran.  This is an internal Uintah configure error and should be reported to scirun-develop@sci.utah.edu." "$LINENO" 5
 fi
 
 
@@ -21235,7 +21235,7 @@ _sci_includes=
 
 if test "optional" != "optional" -a "optional" != "required" -a "optional" != "specific"; then
      echo
-     as_fn_error $? "Last parameter of SCI-TRY-LINK for 2 - Mac fortran library (gfortran) - gfortran must be: optional or required or specific.  (You had optional.)  This is an internal SCIRun configure error and should be reported to scirun-develop@sci.utah.edu." "$LINENO" 5
+     as_fn_error $? "Last parameter of SCI-TRY-LINK for 2 - Mac fortran library (gfortran) - gfortran must be: optional or required or specific.  (You had optional.)  This is an internal Uintah configure error and should be reported to scirun-develop@sci.utah.edu." "$LINENO" 5
 fi
 
 # If $_sci_inc (the -I paths) is blank, do nothing, else do the for statement.
@@ -21393,7 +21393,7 @@ if test "optional" = "specific"; then
     fi
   done
   if test $__sci_pass != "true"; then
-       as_fn_error $? "For specific SCI-TRY-LINK test for F only one library path may be specified for arg 6 (you had: $_sci_lib).  This is an internal SCIRun configure error and should be reported to scirun-develop@sci.utah.edu." "$LINENO" 5
+       as_fn_error $? "For specific SCI-TRY-LINK test for F only one library path may be specified for arg 6 (you had: $_sci_lib).  This is an internal Uintah configure error and should be reported to scirun-develop@sci.utah.edu." "$LINENO" 5
   fi
   # and only one include path:
   ### Determine if there is only one item in $_sci_inc
@@ -21411,7 +21411,7 @@ if test "optional" = "specific"; then
     fi
   done
   if test -n "$_sci_inc" && test $__sci_pass != "true"; then
-       as_fn_error $? "For specific SCI-TRY-LINK test for F only one include path may be specified for arg 4 (you had: $_sci_inc).  This is an internal SCIRun configure error and should be reported to scirun-develop@sci.utah.edu." "$LINENO" 5
+       as_fn_error $? "For specific SCI-TRY-LINK test for F only one include path may be specified for arg 4 (you had: $_sci_inc).  This is an internal Uintah configure error and should be reported to scirun-develop@sci.utah.edu." "$LINENO" 5
   fi
 fi
 
@@ -21670,7 +21670,7 @@ _sci_includes=''
 ##      HAVE_F_H         => yes or no
 
 if test 9 != 9; then
-     as_fn_error $? "Wrong number of parameters (9) for SCI-TRY-LINK for 3 - Mac fortran library (gfortran in /usr/local/lib) - gfortran.  This is an internal SCIRun configure error and should be reported to scirun-develop@sci.utah.edu." "$LINENO" 5
+     as_fn_error $? "Wrong number of parameters (9) for SCI-TRY-LINK for 3 - Mac fortran library (gfortran in /usr/local/lib) - gfortran.  This is an internal Uintah configure error and should be reported to scirun-develop@sci.utah.edu." "$LINENO" 5
 fi
 
 
@@ -21685,7 +21685,7 @@ _sci_includes=
 
 if test "optional" != "optional" -a "optional" != "required" -a "optional" != "specific"; then
      echo
-     as_fn_error $? "Last parameter of SCI-TRY-LINK for 3 - Mac fortran library (gfortran in /usr/local/lib) - gfortran must be: optional or required or specific.  (You had optional.)  This is an internal SCIRun configure error and should be reported to scirun-develop@sci.utah.edu." "$LINENO" 5
+     as_fn_error $? "Last parameter of SCI-TRY-LINK for 3 - Mac fortran library (gfortran in /usr/local/lib) - gfortran must be: optional or required or specific.  (You had optional.)  This is an internal Uintah configure error and should be reported to scirun-develop@sci.utah.edu." "$LINENO" 5
 fi
 
 # If $_sci_inc (the -I paths) is blank, do nothing, else do the for statement.
@@ -21843,7 +21843,7 @@ if test "optional" = "specific"; then
     fi
   done
   if test $__sci_pass != "true"; then
-       as_fn_error $? "For specific SCI-TRY-LINK test for F only one library path may be specified for arg 6 (you had: $_sci_lib).  This is an internal SCIRun configure error and should be reported to scirun-develop@sci.utah.edu." "$LINENO" 5
+       as_fn_error $? "For specific SCI-TRY-LINK test for F only one library path may be specified for arg 6 (you had: $_sci_lib).  This is an internal Uintah configure error and should be reported to scirun-develop@sci.utah.edu." "$LINENO" 5
   fi
   # and only one include path:
   ### Determine if there is only one item in $_sci_inc
@@ -21861,7 +21861,7 @@ if test "optional" = "specific"; then
     fi
   done
   if test -n "$_sci_inc" && test $__sci_pass != "true"; then
-       as_fn_error $? "For specific SCI-TRY-LINK test for F only one include path may be specified for arg 4 (you had: $_sci_inc).  This is an internal SCIRun configure error and should be reported to scirun-develop@sci.utah.edu." "$LINENO" 5
+       as_fn_error $? "For specific SCI-TRY-LINK test for F only one include path may be specified for arg 4 (you had: $_sci_inc).  This is an internal Uintah configure error and should be reported to scirun-develop@sci.utah.edu." "$LINENO" 5
   fi
 fi
 
@@ -22117,7 +22117,7 @@ _sci_includes=''
 ##      HAVE_F_H         => yes or no
 
 if test 9 != 9; then
-     as_fn_error $? "Wrong number of parameters (9) for SCI-TRY-LINK for 4 - Mac fortran library (g2c) - g2c.  This is an internal SCIRun configure error and should be reported to scirun-develop@sci.utah.edu." "$LINENO" 5
+     as_fn_error $? "Wrong number of parameters (9) for SCI-TRY-LINK for 4 - Mac fortran library (g2c) - g2c.  This is an internal Uintah configure error and should be reported to scirun-develop@sci.utah.edu." "$LINENO" 5
 fi
 
 
@@ -22132,7 +22132,7 @@ _sci_includes=
 
 if test "$_sci_optional" != "optional" -a "$_sci_optional" != "required" -a "$_sci_optional" != "specific"; then
      echo
-     as_fn_error $? "Last parameter of SCI-TRY-LINK for 4 - Mac fortran library (g2c) - g2c must be: optional or required or specific.  (You had $_sci_optional.)  This is an internal SCIRun configure error and should be reported to scirun-develop@sci.utah.edu." "$LINENO" 5
+     as_fn_error $? "Last parameter of SCI-TRY-LINK for 4 - Mac fortran library (g2c) - g2c must be: optional or required or specific.  (You had $_sci_optional.)  This is an internal Uintah configure error and should be reported to scirun-develop@sci.utah.edu." "$LINENO" 5
 fi
 
 # If $_sci_inc (the -I paths) is blank, do nothing, else do the for statement.
@@ -22290,7 +22290,7 @@ if test "$_sci_optional" = "specific"; then
     fi
   done
   if test $__sci_pass != "true"; then
-       as_fn_error $? "For specific SCI-TRY-LINK test for F only one library path may be specified for arg 6 (you had: $_sci_lib).  This is an internal SCIRun configure error and should be reported to scirun-develop@sci.utah.edu." "$LINENO" 5
+       as_fn_error $? "For specific SCI-TRY-LINK test for F only one library path may be specified for arg 6 (you had: $_sci_lib).  This is an internal Uintah configure error and should be reported to scirun-develop@sci.utah.edu." "$LINENO" 5
   fi
   # and only one include path:
   ### Determine if there is only one item in $_sci_inc
@@ -22308,7 +22308,7 @@ if test "$_sci_optional" = "specific"; then
     fi
   done
   if test -n "$_sci_inc" && test $__sci_pass != "true"; then
-       as_fn_error $? "For specific SCI-TRY-LINK test for F only one include path may be specified for arg 4 (you had: $_sci_inc).  This is an internal SCIRun configure error and should be reported to scirun-develop@sci.utah.edu." "$LINENO" 5
+       as_fn_error $? "For specific SCI-TRY-LINK test for F only one include path may be specified for arg 4 (you had: $_sci_inc).  This is an internal Uintah configure error and should be reported to scirun-develop@sci.utah.edu." "$LINENO" 5
   fi
 fi
 
@@ -22566,7 +22566,7 @@ _sci_includes=''
 ##      HAVE_F_H         => yes or no
 
 if test 9 != 9; then
-     as_fn_error $? "Wrong number of parameters (9) for SCI-TRY-LINK for fortran libraries (pc-mingw).  This is an internal SCIRun configure error and should be reported to scirun-develop@sci.utah.edu." "$LINENO" 5
+     as_fn_error $? "Wrong number of parameters (9) for SCI-TRY-LINK for fortran libraries (pc-mingw).  This is an internal Uintah configure error and should be reported to scirun-develop@sci.utah.edu." "$LINENO" 5
 fi
 
 
@@ -22581,7 +22581,7 @@ _sci_includes=
 
 if test "$_sci_optional" != "optional" -a "$_sci_optional" != "required" -a "$_sci_optional" != "specific"; then
      echo
-     as_fn_error $? "Last parameter of SCI-TRY-LINK for fortran libraries (pc-mingw) must be: optional or required or specific.  (You had $_sci_optional.)  This is an internal SCIRun configure error and should be reported to scirun-develop@sci.utah.edu." "$LINENO" 5
+     as_fn_error $? "Last parameter of SCI-TRY-LINK for fortran libraries (pc-mingw) must be: optional or required or specific.  (You had $_sci_optional.)  This is an internal Uintah configure error and should be reported to scirun-develop@sci.utah.edu." "$LINENO" 5
 fi
 
 # If  (the -I paths) is blank, do nothing, else do the for statement.
@@ -22698,7 +22698,7 @@ if test "$_sci_optional" = "specific"; then
     fi
   done
   if test $__sci_pass != "true"; then
-       as_fn_error $? "For specific SCI-TRY-LINK test for F only one library path may be specified for arg 6 (you had: $_sci_lib).  This is an internal SCIRun configure error and should be reported to scirun-develop@sci.utah.edu." "$LINENO" 5
+       as_fn_error $? "For specific SCI-TRY-LINK test for F only one library path may be specified for arg 6 (you had: $_sci_lib).  This is an internal Uintah configure error and should be reported to scirun-develop@sci.utah.edu." "$LINENO" 5
   fi
   # and only one include path:
   ### Determine if there is only one item in
@@ -22716,7 +22716,7 @@ if test "$_sci_optional" = "specific"; then
     fi
   done
   if test -n "" && test $__sci_pass != "true"; then
-       as_fn_error $? "For specific SCI-TRY-LINK test for F only one include path may be specified for arg 4 (you had: ).  This is an internal SCIRun configure error and should be reported to scirun-develop@sci.utah.edu." "$LINENO" 5
+       as_fn_error $? "For specific SCI-TRY-LINK test for F only one include path may be specified for arg 4 (you had: ).  This is an internal Uintah configure error and should be reported to scirun-develop@sci.utah.edu." "$LINENO" 5
   fi
 fi
 
@@ -22971,7 +22971,7 @@ _sci_includes=''
 ##      HAVE_F_H         => yes or no
 
 if test 9 != 9; then
-     as_fn_error $? "Wrong number of parameters (9) for SCI-TRY-LINK for fortran libraries (other).  This is an internal SCIRun configure error and should be reported to scirun-develop@sci.utah.edu." "$LINENO" 5
+     as_fn_error $? "Wrong number of parameters (9) for SCI-TRY-LINK for fortran libraries (other).  This is an internal Uintah configure error and should be reported to scirun-develop@sci.utah.edu." "$LINENO" 5
 fi
 
 
@@ -22986,7 +22986,7 @@ _sci_includes=
 
 if test "$_sci_optional" != "optional" -a "$_sci_optional" != "required" -a "$_sci_optional" != "specific"; then
      echo
-     as_fn_error $? "Last parameter of SCI-TRY-LINK for fortran libraries (other) must be: optional or required or specific.  (You had $_sci_optional.)  This is an internal SCIRun configure error and should be reported to scirun-develop@sci.utah.edu." "$LINENO" 5
+     as_fn_error $? "Last parameter of SCI-TRY-LINK for fortran libraries (other) must be: optional or required or specific.  (You had $_sci_optional.)  This is an internal Uintah configure error and should be reported to scirun-develop@sci.utah.edu." "$LINENO" 5
 fi
 
 # If  (the -I paths) is blank, do nothing, else do the for statement.
@@ -23103,7 +23103,7 @@ if test "$_sci_optional" = "specific"; then
     fi
   done
   if test $__sci_pass != "true"; then
-       as_fn_error $? "For specific SCI-TRY-LINK test for F only one library path may be specified for arg 6 (you had: $_sci_lib).  This is an internal SCIRun configure error and should be reported to scirun-develop@sci.utah.edu." "$LINENO" 5
+       as_fn_error $? "For specific SCI-TRY-LINK test for F only one library path may be specified for arg 6 (you had: $_sci_lib).  This is an internal Uintah configure error and should be reported to scirun-develop@sci.utah.edu." "$LINENO" 5
   fi
   # and only one include path:
   ### Determine if there is only one item in
@@ -23121,7 +23121,7 @@ if test "$_sci_optional" = "specific"; then
     fi
   done
   if test -n "" && test $__sci_pass != "true"; then
-       as_fn_error $? "For specific SCI-TRY-LINK test for F only one include path may be specified for arg 4 (you had: ).  This is an internal SCIRun configure error and should be reported to scirun-develop@sci.utah.edu." "$LINENO" 5
+       as_fn_error $? "For specific SCI-TRY-LINK test for F only one include path may be specified for arg 4 (you had: ).  This is an internal Uintah configure error and should be reported to scirun-develop@sci.utah.edu." "$LINENO" 5
   fi
 fi
 
@@ -23409,7 +23409,7 @@ if test "$with_electric_fence"; then
 ##      HAVE_ELECTRIC_FENCE_H         => yes or no
 
 if test 9 != 9; then
-     as_fn_error $? "Wrong number of parameters (9) for SCI-TRY-LINK for electric fence library.  This is an internal SCIRun configure error and should be reported to scirun-develop@sci.utah.edu." "$LINENO" 5
+     as_fn_error $? "Wrong number of parameters (9) for SCI-TRY-LINK for electric fence library.  This is an internal Uintah configure error and should be reported to scirun-develop@sci.utah.edu." "$LINENO" 5
 fi
 
 
@@ -23424,7 +23424,7 @@ _sci_includes=
 
 if test "required" != "optional" -a "required" != "required" -a "required" != "specific"; then
      echo
-     as_fn_error $? "Last parameter of SCI-TRY-LINK for electric fence library must be: optional or required or specific.  (You had required.)  This is an internal SCIRun configure error and should be reported to scirun-develop@sci.utah.edu." "$LINENO" 5
+     as_fn_error $? "Last parameter of SCI-TRY-LINK for electric fence library must be: optional or required or specific.  (You had required.)  This is an internal Uintah configure error and should be reported to scirun-develop@sci.utah.edu." "$LINENO" 5
 fi
 
 # If  (the -I paths) is blank, do nothing, else do the for statement.
@@ -23541,7 +23541,7 @@ if test "required" = "specific"; then
     fi
   done
   if test $__sci_pass != "true"; then
-       as_fn_error $? "For specific SCI-TRY-LINK test for ELECTRIC_FENCE only one library path may be specified for arg 6 (you had: ).  This is an internal SCIRun configure error and should be reported to scirun-develop@sci.utah.edu." "$LINENO" 5
+       as_fn_error $? "For specific SCI-TRY-LINK test for ELECTRIC_FENCE only one library path may be specified for arg 6 (you had: ).  This is an internal Uintah configure error and should be reported to scirun-develop@sci.utah.edu." "$LINENO" 5
   fi
   # and only one include path:
   ### Determine if there is only one item in
@@ -23559,7 +23559,7 @@ if test "required" = "specific"; then
     fi
   done
   if test -n "" && test $__sci_pass != "true"; then
-       as_fn_error $? "For specific SCI-TRY-LINK test for ELECTRIC_FENCE only one include path may be specified for arg 4 (you had: ).  This is an internal SCIRun configure error and should be reported to scirun-develop@sci.utah.edu." "$LINENO" 5
+       as_fn_error $? "For specific SCI-TRY-LINK test for ELECTRIC_FENCE only one include path may be specified for arg 4 (you had: ).  This is an internal Uintah configure error and should be reported to scirun-develop@sci.utah.edu." "$LINENO" 5
   fi
 fi
 
@@ -23813,7 +23813,7 @@ _sci_includes=''
 ##      HAVE_ELECTRIC_FENCE_H         => yes or no
 
 if test 9 != 9; then
-     as_fn_error $? "Wrong number of parameters (9) for SCI-TRY-LINK for electric fence library.  This is an internal SCIRun configure error and should be reported to scirun-develop@sci.utah.edu." "$LINENO" 5
+     as_fn_error $? "Wrong number of parameters (9) for SCI-TRY-LINK for electric fence library.  This is an internal Uintah configure error and should be reported to scirun-develop@sci.utah.edu." "$LINENO" 5
 fi
 
 
@@ -23828,7 +23828,7 @@ _sci_includes=
 
 if test "specific" != "optional" -a "specific" != "required" -a "specific" != "specific"; then
      echo
-     as_fn_error $? "Last parameter of SCI-TRY-LINK for electric fence library must be: optional or required or specific.  (You had specific.)  This is an internal SCIRun configure error and should be reported to scirun-develop@sci.utah.edu." "$LINENO" 5
+     as_fn_error $? "Last parameter of SCI-TRY-LINK for electric fence library must be: optional or required or specific.  (You had specific.)  This is an internal Uintah configure error and should be reported to scirun-develop@sci.utah.edu." "$LINENO" 5
 fi
 
 # If  (the -I paths) is blank, do nothing, else do the for statement.
@@ -23945,7 +23945,7 @@ if test "specific" = "specific"; then
     fi
   done
   if test $__sci_pass != "true"; then
-       as_fn_error $? "For specific SCI-TRY-LINK test for ELECTRIC_FENCE only one library path may be specified for arg 6 (you had: $with_electric_fence).  This is an internal SCIRun configure error and should be reported to scirun-develop@sci.utah.edu." "$LINENO" 5
+       as_fn_error $? "For specific SCI-TRY-LINK test for ELECTRIC_FENCE only one library path may be specified for arg 6 (you had: $with_electric_fence).  This is an internal Uintah configure error and should be reported to scirun-develop@sci.utah.edu." "$LINENO" 5
   fi
   # and only one include path:
   ### Determine if there is only one item in
@@ -23963,7 +23963,7 @@ if test "specific" = "specific"; then
     fi
   done
   if test -n "" && test $__sci_pass != "true"; then
-       as_fn_error $? "For specific SCI-TRY-LINK test for ELECTRIC_FENCE only one include path may be specified for arg 4 (you had: ).  This is an internal SCIRun configure error and should be reported to scirun-develop@sci.utah.edu." "$LINENO" 5
+       as_fn_error $? "For specific SCI-TRY-LINK test for ELECTRIC_FENCE only one include path may be specified for arg 4 (you had: ).  This is an internal Uintah configure error and should be reported to scirun-develop@sci.utah.edu." "$LINENO" 5
   fi
 fi
 
@@ -24255,7 +24255,7 @@ if test "$with_acml"; then
 ##      HAVE_BLAS_H         => yes or no
 
 if test 9 != 9; then
-     as_fn_error $? "Wrong number of parameters (9) for SCI-TRY-LINK for acml version of (blas/lapack) libraries and headers.  This is an internal SCIRun configure error and should be reported to scirun-develop@sci.utah.edu." "$LINENO" 5
+     as_fn_error $? "Wrong number of parameters (9) for SCI-TRY-LINK for acml version of (blas/lapack) libraries and headers.  This is an internal Uintah configure error and should be reported to scirun-develop@sci.utah.edu." "$LINENO" 5
 fi
 
 
@@ -24270,7 +24270,7 @@ _sci_includes=
 
 if test "$_sci_optional" != "optional" -a "$_sci_optional" != "required" -a "$_sci_optional" != "specific"; then
      echo
-     as_fn_error $? "Last parameter of SCI-TRY-LINK for acml version of (blas/lapack) libraries and headers must be: optional or required or specific.  (You had $_sci_optional.)  This is an internal SCIRun configure error and should be reported to scirun-develop@sci.utah.edu." "$LINENO" 5
+     as_fn_error $? "Last parameter of SCI-TRY-LINK for acml version of (blas/lapack) libraries and headers must be: optional or required or specific.  (You had $_sci_optional.)  This is an internal Uintah configure error and should be reported to scirun-develop@sci.utah.edu." "$LINENO" 5
 fi
 
 # If $_sci_inc (the -I paths) is blank, do nothing, else do the for statement.
@@ -24428,7 +24428,7 @@ if test "$_sci_optional" = "specific"; then
     fi
   done
   if test $__sci_pass != "true"; then
-       as_fn_error $? "For specific SCI-TRY-LINK test for BLAS only one library path may be specified for arg 6 (you had: $_sci_lib).  This is an internal SCIRun configure error and should be reported to scirun-develop@sci.utah.edu." "$LINENO" 5
+       as_fn_error $? "For specific SCI-TRY-LINK test for BLAS only one library path may be specified for arg 6 (you had: $_sci_lib).  This is an internal Uintah configure error and should be reported to scirun-develop@sci.utah.edu." "$LINENO" 5
   fi
   # and only one include path:
   ### Determine if there is only one item in $_sci_inc
@@ -24446,7 +24446,7 @@ if test "$_sci_optional" = "specific"; then
     fi
   done
   if test -n "$_sci_inc" && test $__sci_pass != "true"; then
-       as_fn_error $? "For specific SCI-TRY-LINK test for BLAS only one include path may be specified for arg 4 (you had: $_sci_inc).  This is an internal SCIRun configure error and should be reported to scirun-develop@sci.utah.edu." "$LINENO" 5
+       as_fn_error $? "For specific SCI-TRY-LINK test for BLAS only one include path may be specified for arg 4 (you had: $_sci_inc).  This is an internal Uintah configure error and should be reported to scirun-develop@sci.utah.edu." "$LINENO" 5
   fi
 fi
 
@@ -24763,7 +24763,7 @@ if test "$with_mkl"; then
 ##      HAVE_BLAS_H         => yes or no
 
 if test 9 != 9; then
-     as_fn_error $? "Wrong number of parameters (9) for SCI-TRY-LINK for ${num} - mkl version of (blas/lapack) libraries and headers.  This is an internal SCIRun configure error and should be reported to scirun-develop@sci.utah.edu." "$LINENO" 5
+     as_fn_error $? "Wrong number of parameters (9) for SCI-TRY-LINK for ${num} - mkl version of (blas/lapack) libraries and headers.  This is an internal Uintah configure error and should be reported to scirun-develop@sci.utah.edu." "$LINENO" 5
 fi
 
 
@@ -24778,7 +24778,7 @@ _sci_includes=
 
 if test "optional" != "optional" -a "optional" != "required" -a "optional" != "specific"; then
      echo
-     as_fn_error $? "Last parameter of SCI-TRY-LINK for ${num} - mkl version of (blas/lapack) libraries and headers must be: optional or required or specific.  (You had optional.)  This is an internal SCIRun configure error and should be reported to scirun-develop@sci.utah.edu." "$LINENO" 5
+     as_fn_error $? "Last parameter of SCI-TRY-LINK for ${num} - mkl version of (blas/lapack) libraries and headers must be: optional or required or specific.  (You had optional.)  This is an internal Uintah configure error and should be reported to scirun-develop@sci.utah.edu." "$LINENO" 5
 fi
 
 # If $_sci_inc (the -I paths) is blank, do nothing, else do the for statement.
@@ -24936,7 +24936,7 @@ if test "optional" = "specific"; then
     fi
   done
   if test $__sci_pass != "true"; then
-       as_fn_error $? "For specific SCI-TRY-LINK test for BLAS only one library path may be specified for arg 6 (you had: $_sci_lib).  This is an internal SCIRun configure error and should be reported to scirun-develop@sci.utah.edu." "$LINENO" 5
+       as_fn_error $? "For specific SCI-TRY-LINK test for BLAS only one library path may be specified for arg 6 (you had: $_sci_lib).  This is an internal Uintah configure error and should be reported to scirun-develop@sci.utah.edu." "$LINENO" 5
   fi
   # and only one include path:
   ### Determine if there is only one item in $_sci_inc
@@ -24954,7 +24954,7 @@ if test "optional" = "specific"; then
     fi
   done
   if test -n "$_sci_inc" && test $__sci_pass != "true"; then
-       as_fn_error $? "For specific SCI-TRY-LINK test for BLAS only one include path may be specified for arg 4 (you had: $_sci_inc).  This is an internal SCIRun configure error and should be reported to scirun-develop@sci.utah.edu." "$LINENO" 5
+       as_fn_error $? "For specific SCI-TRY-LINK test for BLAS only one include path may be specified for arg 4 (you had: $_sci_inc).  This is an internal Uintah configure error and should be reported to scirun-develop@sci.utah.edu." "$LINENO" 5
   fi
 fi
 
@@ -25268,7 +25268,7 @@ if test "$with_essl"; then
 ##      HAVE_BLAS_H         => yes or no
 
 if test 9 != 9; then
-     as_fn_error $? "Wrong number of parameters (9) for SCI-TRY-LINK for ${num} - essl version of (blas/lapack) libraries and headers ($the_libs).  This is an internal SCIRun configure error and should be reported to scirun-develop@sci.utah.edu." "$LINENO" 5
+     as_fn_error $? "Wrong number of parameters (9) for SCI-TRY-LINK for ${num} - essl version of (blas/lapack) libraries and headers ($the_libs).  This is an internal Uintah configure error and should be reported to scirun-develop@sci.utah.edu." "$LINENO" 5
 fi
 
 
@@ -25283,7 +25283,7 @@ _sci_includes=
 
 if test "optional" != "optional" -a "optional" != "required" -a "optional" != "specific"; then
      echo
-     as_fn_error $? "Last parameter of SCI-TRY-LINK for ${num} - essl version of (blas/lapack) libraries and headers ($the_libs) must be: optional or required or specific.  (You had optional.)  This is an internal SCIRun configure error and should be reported to scirun-develop@sci.utah.edu." "$LINENO" 5
+     as_fn_error $? "Last parameter of SCI-TRY-LINK for ${num} - essl version of (blas/lapack) libraries and headers ($the_libs) must be: optional or required or specific.  (You had optional.)  This is an internal Uintah configure error and should be reported to scirun-develop@sci.utah.edu." "$LINENO" 5
 fi
 
 # If $_sci_inc (the -I paths) is blank, do nothing, else do the for statement.
@@ -25441,7 +25441,7 @@ if test "optional" = "specific"; then
     fi
   done
   if test $__sci_pass != "true"; then
-       as_fn_error $? "For specific SCI-TRY-LINK test for BLAS only one library path may be specified for arg 6 (you had: /usr/local/tools/toolchain-4.7.2/gnu-linux-4.7.2/powerpc64-bgq-linux/lib $_sci_lib).  This is an internal SCIRun configure error and should be reported to scirun-develop@sci.utah.edu." "$LINENO" 5
+       as_fn_error $? "For specific SCI-TRY-LINK test for BLAS only one library path may be specified for arg 6 (you had: /usr/local/tools/toolchain-4.7.2/gnu-linux-4.7.2/powerpc64-bgq-linux/lib $_sci_lib).  This is an internal Uintah configure error and should be reported to scirun-develop@sci.utah.edu." "$LINENO" 5
   fi
   # and only one include path:
   ### Determine if there is only one item in $_sci_inc
@@ -25459,7 +25459,7 @@ if test "optional" = "specific"; then
     fi
   done
   if test -n "$_sci_inc" && test $__sci_pass != "true"; then
-       as_fn_error $? "For specific SCI-TRY-LINK test for BLAS only one include path may be specified for arg 4 (you had: $_sci_inc).  This is an internal SCIRun configure error and should be reported to scirun-develop@sci.utah.edu." "$LINENO" 5
+       as_fn_error $? "For specific SCI-TRY-LINK test for BLAS only one include path may be specified for arg 4 (you had: $_sci_inc).  This is an internal Uintah configure error and should be reported to scirun-develop@sci.utah.edu." "$LINENO" 5
   fi
 fi
 
@@ -25756,7 +25756,7 @@ if test ! "$HAVE_BLAS"; then
 ##      HAVE_BLAS_H         => yes or no
 
 if test 9 != 9; then
-     as_fn_error $? "Wrong number of parameters (9) for SCI-TRY-LINK for atlas version of libraries and headers.  This is an internal SCIRun configure error and should be reported to scirun-develop@sci.utah.edu." "$LINENO" 5
+     as_fn_error $? "Wrong number of parameters (9) for SCI-TRY-LINK for atlas version of libraries and headers.  This is an internal Uintah configure error and should be reported to scirun-develop@sci.utah.edu." "$LINENO" 5
 fi
 
 
@@ -25771,7 +25771,7 @@ _sci_includes=
 
 if test "$_sci_optional" != "optional" -a "$_sci_optional" != "required" -a "$_sci_optional" != "specific"; then
      echo
-     as_fn_error $? "Last parameter of SCI-TRY-LINK for atlas version of libraries and headers must be: optional or required or specific.  (You had $_sci_optional.)  This is an internal SCIRun configure error and should be reported to scirun-develop@sci.utah.edu." "$LINENO" 5
+     as_fn_error $? "Last parameter of SCI-TRY-LINK for atlas version of libraries and headers must be: optional or required or specific.  (You had $_sci_optional.)  This is an internal Uintah configure error and should be reported to scirun-develop@sci.utah.edu." "$LINENO" 5
 fi
 
 # If $_sci_inc (the -I paths) is blank, do nothing, else do the for statement.
@@ -25929,7 +25929,7 @@ if test "$_sci_optional" = "specific"; then
     fi
   done
   if test $__sci_pass != "true"; then
-       as_fn_error $? "For specific SCI-TRY-LINK test for BLAS only one library path may be specified for arg 6 (you had: $_sci_lib).  This is an internal SCIRun configure error and should be reported to scirun-develop@sci.utah.edu." "$LINENO" 5
+       as_fn_error $? "For specific SCI-TRY-LINK test for BLAS only one library path may be specified for arg 6 (you had: $_sci_lib).  This is an internal Uintah configure error and should be reported to scirun-develop@sci.utah.edu." "$LINENO" 5
   fi
   # and only one include path:
   ### Determine if there is only one item in $_sci_inc
@@ -25947,7 +25947,7 @@ if test "$_sci_optional" = "specific"; then
     fi
   done
   if test -n "$_sci_inc" && test $__sci_pass != "true"; then
-       as_fn_error $? "For specific SCI-TRY-LINK test for BLAS only one include path may be specified for arg 4 (you had: $_sci_inc).  This is an internal SCIRun configure error and should be reported to scirun-develop@sci.utah.edu." "$LINENO" 5
+       as_fn_error $? "For specific SCI-TRY-LINK test for BLAS only one include path may be specified for arg 4 (you had: $_sci_inc).  This is an internal Uintah configure error and should be reported to scirun-develop@sci.utah.edu." "$LINENO" 5
   fi
 fi
 
@@ -26240,7 +26240,7 @@ if test "$HAVE_BLAS" != "yes"; then
 ##      HAVE_BLAS_H         => yes or no
 
 if test 9 != 9; then
-     as_fn_error $? "Wrong number of parameters (9) for SCI-TRY-LINK for blas and cblas libraries-darwin (yosemite+).  This is an internal SCIRun configure error and should be reported to scirun-develop@sci.utah.edu." "$LINENO" 5
+     as_fn_error $? "Wrong number of parameters (9) for SCI-TRY-LINK for blas and cblas libraries-darwin (yosemite+).  This is an internal Uintah configure error and should be reported to scirun-develop@sci.utah.edu." "$LINENO" 5
 fi
 
 
@@ -26255,7 +26255,7 @@ _sci_includes=
 
 if test "optional" != "optional" -a "optional" != "required" -a "optional" != "specific"; then
      echo
-     as_fn_error $? "Last parameter of SCI-TRY-LINK for blas and cblas libraries-darwin (yosemite+) must be: optional or required or specific.  (You had optional.)  This is an internal SCIRun configure error and should be reported to scirun-develop@sci.utah.edu." "$LINENO" 5
+     as_fn_error $? "Last parameter of SCI-TRY-LINK for blas and cblas libraries-darwin (yosemite+) must be: optional or required or specific.  (You had optional.)  This is an internal Uintah configure error and should be reported to scirun-develop@sci.utah.edu." "$LINENO" 5
 fi
 
 # If $_sci_inc (the -I paths) is blank, do nothing, else do the for statement.
@@ -26413,7 +26413,7 @@ if test "optional" = "specific"; then
     fi
   done
   if test $__sci_pass != "true"; then
-       as_fn_error $? "For specific SCI-TRY-LINK test for BLAS only one library path may be specified for arg 6 (you had: $_sci_lib).  This is an internal SCIRun configure error and should be reported to scirun-develop@sci.utah.edu." "$LINENO" 5
+       as_fn_error $? "For specific SCI-TRY-LINK test for BLAS only one library path may be specified for arg 6 (you had: $_sci_lib).  This is an internal Uintah configure error and should be reported to scirun-develop@sci.utah.edu." "$LINENO" 5
   fi
   # and only one include path:
   ### Determine if there is only one item in $_sci_inc
@@ -26431,7 +26431,7 @@ if test "optional" = "specific"; then
     fi
   done
   if test -n "$_sci_inc" && test $__sci_pass != "true"; then
-       as_fn_error $? "For specific SCI-TRY-LINK test for BLAS only one include path may be specified for arg 4 (you had: $_sci_inc).  This is an internal SCIRun configure error and should be reported to scirun-develop@sci.utah.edu." "$LINENO" 5
+       as_fn_error $? "For specific SCI-TRY-LINK test for BLAS only one include path may be specified for arg 4 (you had: $_sci_inc).  This is an internal Uintah configure error and should be reported to scirun-develop@sci.utah.edu." "$LINENO" 5
   fi
 fi
 
@@ -26695,7 +26695,7 @@ _sci_includes=''
 ##      HAVE_BLAS_H         => yes or no
 
 if test 9 != 9; then
-     as_fn_error $? "Wrong number of parameters (9) for SCI-TRY-LINK for blas and cblas libraries-darwin.  This is an internal SCIRun configure error and should be reported to scirun-develop@sci.utah.edu." "$LINENO" 5
+     as_fn_error $? "Wrong number of parameters (9) for SCI-TRY-LINK for blas and cblas libraries-darwin.  This is an internal Uintah configure error and should be reported to scirun-develop@sci.utah.edu." "$LINENO" 5
 fi
 
 
@@ -26710,7 +26710,7 @@ _sci_includes=
 
 if test "optional" != "optional" -a "optional" != "required" -a "optional" != "specific"; then
      echo
-     as_fn_error $? "Last parameter of SCI-TRY-LINK for blas and cblas libraries-darwin must be: optional or required or specific.  (You had optional.)  This is an internal SCIRun configure error and should be reported to scirun-develop@sci.utah.edu." "$LINENO" 5
+     as_fn_error $? "Last parameter of SCI-TRY-LINK for blas and cblas libraries-darwin must be: optional or required or specific.  (You had optional.)  This is an internal Uintah configure error and should be reported to scirun-develop@sci.utah.edu." "$LINENO" 5
 fi
 
 # If $_sci_inc (the -I paths) is blank, do nothing, else do the for statement.
@@ -26868,7 +26868,7 @@ if test "optional" = "specific"; then
     fi
   done
   if test $__sci_pass != "true"; then
-       as_fn_error $? "For specific SCI-TRY-LINK test for BLAS only one library path may be specified for arg 6 (you had: $_sci_lib).  This is an internal SCIRun configure error and should be reported to scirun-develop@sci.utah.edu." "$LINENO" 5
+       as_fn_error $? "For specific SCI-TRY-LINK test for BLAS only one library path may be specified for arg 6 (you had: $_sci_lib).  This is an internal Uintah configure error and should be reported to scirun-develop@sci.utah.edu." "$LINENO" 5
   fi
   # and only one include path:
   ### Determine if there is only one item in $_sci_inc
@@ -26886,7 +26886,7 @@ if test "optional" = "specific"; then
     fi
   done
   if test -n "$_sci_inc" && test $__sci_pass != "true"; then
-       as_fn_error $? "For specific SCI-TRY-LINK test for BLAS only one include path may be specified for arg 4 (you had: $_sci_inc).  This is an internal SCIRun configure error and should be reported to scirun-develop@sci.utah.edu." "$LINENO" 5
+       as_fn_error $? "For specific SCI-TRY-LINK test for BLAS only one include path may be specified for arg 4 (you had: $_sci_inc).  This is an internal Uintah configure error and should be reported to scirun-develop@sci.utah.edu." "$LINENO" 5
   fi
 fi
 
@@ -27152,7 +27152,7 @@ _sci_includes=''
 ##      HAVE_BLAS_H         => yes or no
 
 if test 9 != 9; then
-     as_fn_error $? "Wrong number of parameters (9) for SCI-TRY-LINK for cxml library.  This is an internal SCIRun configure error and should be reported to scirun-develop@sci.utah.edu." "$LINENO" 5
+     as_fn_error $? "Wrong number of parameters (9) for SCI-TRY-LINK for cxml library.  This is an internal Uintah configure error and should be reported to scirun-develop@sci.utah.edu." "$LINENO" 5
 fi
 
 
@@ -27167,7 +27167,7 @@ _sci_includes=
 
 if test "required" != "optional" -a "required" != "required" -a "required" != "specific"; then
      echo
-     as_fn_error $? "Last parameter of SCI-TRY-LINK for cxml library must be: optional or required or specific.  (You had required.)  This is an internal SCIRun configure error and should be reported to scirun-develop@sci.utah.edu." "$LINENO" 5
+     as_fn_error $? "Last parameter of SCI-TRY-LINK for cxml library must be: optional or required or specific.  (You had required.)  This is an internal Uintah configure error and should be reported to scirun-develop@sci.utah.edu." "$LINENO" 5
 fi
 
 # If  (the -I paths) is blank, do nothing, else do the for statement.
@@ -27284,7 +27284,7 @@ if test "required" = "specific"; then
     fi
   done
   if test $__sci_pass != "true"; then
-       as_fn_error $? "For specific SCI-TRY-LINK test for BLAS only one library path may be specified for arg 6 (you had: $_sci_lib).  This is an internal SCIRun configure error and should be reported to scirun-develop@sci.utah.edu." "$LINENO" 5
+       as_fn_error $? "For specific SCI-TRY-LINK test for BLAS only one library path may be specified for arg 6 (you had: $_sci_lib).  This is an internal Uintah configure error and should be reported to scirun-develop@sci.utah.edu." "$LINENO" 5
   fi
   # and only one include path:
   ### Determine if there is only one item in
@@ -27302,7 +27302,7 @@ if test "required" = "specific"; then
     fi
   done
   if test -n "" && test $__sci_pass != "true"; then
-       as_fn_error $? "For specific SCI-TRY-LINK test for BLAS only one include path may be specified for arg 4 (you had: ).  This is an internal SCIRun configure error and should be reported to scirun-develop@sci.utah.edu." "$LINENO" 5
+       as_fn_error $? "For specific SCI-TRY-LINK test for BLAS only one include path may be specified for arg 4 (you had: ).  This is an internal Uintah configure error and should be reported to scirun-develop@sci.utah.edu." "$LINENO" 5
   fi
 fi
 
@@ -27559,7 +27559,7 @@ _sci_includes=''
 ##      HAVE_BLAS_H         => yes or no
 
 if test 9 != 9; then
-     as_fn_error $? "Wrong number of parameters (9) for SCI-TRY-LINK for blas and cblas libraries-1.  This is an internal SCIRun configure error and should be reported to scirun-develop@sci.utah.edu." "$LINENO" 5
+     as_fn_error $? "Wrong number of parameters (9) for SCI-TRY-LINK for blas and cblas libraries-1.  This is an internal Uintah configure error and should be reported to scirun-develop@sci.utah.edu." "$LINENO" 5
 fi
 
 
@@ -27574,7 +27574,7 @@ _sci_includes=
 
 if test "optional" != "optional" -a "optional" != "required" -a "optional" != "specific"; then
      echo
-     as_fn_error $? "Last parameter of SCI-TRY-LINK for blas and cblas libraries-1 must be: optional or required or specific.  (You had optional.)  This is an internal SCIRun configure error and should be reported to scirun-develop@sci.utah.edu." "$LINENO" 5
+     as_fn_error $? "Last parameter of SCI-TRY-LINK for blas and cblas libraries-1 must be: optional or required or specific.  (You had optional.)  This is an internal Uintah configure error and should be reported to scirun-develop@sci.utah.edu." "$LINENO" 5
 fi
 
 # If $_sci_inc (the -I paths) is blank, do nothing, else do the for statement.
@@ -27732,7 +27732,7 @@ if test "optional" = "specific"; then
     fi
   done
   if test $__sci_pass != "true"; then
-       as_fn_error $? "For specific SCI-TRY-LINK test for BLAS only one library path may be specified for arg 6 (you had: $_sci_lib).  This is an internal SCIRun configure error and should be reported to scirun-develop@sci.utah.edu." "$LINENO" 5
+       as_fn_error $? "For specific SCI-TRY-LINK test for BLAS only one library path may be specified for arg 6 (you had: $_sci_lib).  This is an internal Uintah configure error and should be reported to scirun-develop@sci.utah.edu." "$LINENO" 5
   fi
   # and only one include path:
   ### Determine if there is only one item in $_sci_inc
@@ -27750,7 +27750,7 @@ if test "optional" = "specific"; then
     fi
   done
   if test -n "$_sci_inc" && test $__sci_pass != "true"; then
-       as_fn_error $? "For specific SCI-TRY-LINK test for BLAS only one include path may be specified for arg 4 (you had: $_sci_inc).  This is an internal SCIRun configure error and should be reported to scirun-develop@sci.utah.edu." "$LINENO" 5
+       as_fn_error $? "For specific SCI-TRY-LINK test for BLAS only one include path may be specified for arg 4 (you had: $_sci_inc).  This is an internal Uintah configure error and should be reported to scirun-develop@sci.utah.edu." "$LINENO" 5
   fi
 fi
 
@@ -28012,7 +28012,7 @@ _sci_includes=''
 ##      HAVE_BLAS_H         => yes or no
 
 if test 9 != 9; then
-     as_fn_error $? "Wrong number of parameters (9) for SCI-TRY-LINK for blas and scs libraries-2.  This is an internal SCIRun configure error and should be reported to scirun-develop@sci.utah.edu." "$LINENO" 5
+     as_fn_error $? "Wrong number of parameters (9) for SCI-TRY-LINK for blas and scs libraries-2.  This is an internal Uintah configure error and should be reported to scirun-develop@sci.utah.edu." "$LINENO" 5
 fi
 
 
@@ -28027,7 +28027,7 @@ _sci_includes=
 
 if test "optional" != "optional" -a "optional" != "required" -a "optional" != "specific"; then
      echo
-     as_fn_error $? "Last parameter of SCI-TRY-LINK for blas and scs libraries-2 must be: optional or required or specific.  (You had optional.)  This is an internal SCIRun configure error and should be reported to scirun-develop@sci.utah.edu." "$LINENO" 5
+     as_fn_error $? "Last parameter of SCI-TRY-LINK for blas and scs libraries-2 must be: optional or required or specific.  (You had optional.)  This is an internal Uintah configure error and should be reported to scirun-develop@sci.utah.edu." "$LINENO" 5
 fi
 
 # If $_sci_inc (the -I paths) is blank, do nothing, else do the for statement.
@@ -28185,7 +28185,7 @@ if test "optional" = "specific"; then
     fi
   done
   if test $__sci_pass != "true"; then
-       as_fn_error $? "For specific SCI-TRY-LINK test for BLAS only one library path may be specified for arg 6 (you had: $_sci_lib).  This is an internal SCIRun configure error and should be reported to scirun-develop@sci.utah.edu." "$LINENO" 5
+       as_fn_error $? "For specific SCI-TRY-LINK test for BLAS only one library path may be specified for arg 6 (you had: $_sci_lib).  This is an internal Uintah configure error and should be reported to scirun-develop@sci.utah.edu." "$LINENO" 5
   fi
   # and only one include path:
   ### Determine if there is only one item in $_sci_inc
@@ -28203,7 +28203,7 @@ if test "optional" = "specific"; then
     fi
   done
   if test -n "$_sci_inc" && test $__sci_pass != "true"; then
-       as_fn_error $? "For specific SCI-TRY-LINK test for BLAS only one include path may be specified for arg 4 (you had: $_sci_inc).  This is an internal SCIRun configure error and should be reported to scirun-develop@sci.utah.edu." "$LINENO" 5
+       as_fn_error $? "For specific SCI-TRY-LINK test for BLAS only one include path may be specified for arg 4 (you had: $_sci_inc).  This is an internal Uintah configure error and should be reported to scirun-develop@sci.utah.edu." "$LINENO" 5
   fi
 fi
 
@@ -28464,7 +28464,7 @@ _sci_includes=''
 ##      HAVE_BLAS_H         => yes or no
 
 if test 9 != 9; then
-     as_fn_error $? "Wrong number of parameters (9) for SCI-TRY-LINK for blas and cblas libraries-2.  This is an internal SCIRun configure error and should be reported to scirun-develop@sci.utah.edu." "$LINENO" 5
+     as_fn_error $? "Wrong number of parameters (9) for SCI-TRY-LINK for blas and cblas libraries-2.  This is an internal Uintah configure error and should be reported to scirun-develop@sci.utah.edu." "$LINENO" 5
 fi
 
 
@@ -28479,7 +28479,7 @@ _sci_includes=
 
 if test "optional" != "optional" -a "optional" != "required" -a "optional" != "specific"; then
      echo
-     as_fn_error $? "Last parameter of SCI-TRY-LINK for blas and cblas libraries-2 must be: optional or required or specific.  (You had optional.)  This is an internal SCIRun configure error and should be reported to scirun-develop@sci.utah.edu." "$LINENO" 5
+     as_fn_error $? "Last parameter of SCI-TRY-LINK for blas and cblas libraries-2 must be: optional or required or specific.  (You had optional.)  This is an internal Uintah configure error and should be reported to scirun-develop@sci.utah.edu." "$LINENO" 5
 fi
 
 # If $_sci_inc (the -I paths) is blank, do nothing, else do the for statement.
@@ -28637,7 +28637,7 @@ if test "optional" = "specific"; then
     fi
   done
   if test $__sci_pass != "true"; then
-       as_fn_error $? "For specific SCI-TRY-LINK test for BLAS only one library path may be specified for arg 6 (you had: $_sci_lib).  This is an internal SCIRun configure error and should be reported to scirun-develop@sci.utah.edu." "$LINENO" 5
+       as_fn_error $? "For specific SCI-TRY-LINK test for BLAS only one library path may be specified for arg 6 (you had: $_sci_lib).  This is an internal Uintah configure error and should be reported to scirun-develop@sci.utah.edu." "$LINENO" 5
   fi
   # and only one include path:
   ### Determine if there is only one item in $_sci_inc
@@ -28655,7 +28655,7 @@ if test "optional" = "specific"; then
     fi
   done
   if test -n "$_sci_inc" && test $__sci_pass != "true"; then
-       as_fn_error $? "For specific SCI-TRY-LINK test for BLAS only one include path may be specified for arg 4 (you had: $_sci_inc).  This is an internal SCIRun configure error and should be reported to scirun-develop@sci.utah.edu." "$LINENO" 5
+       as_fn_error $? "For specific SCI-TRY-LINK test for BLAS only one include path may be specified for arg 4 (you had: $_sci_inc).  This is an internal Uintah configure error and should be reported to scirun-develop@sci.utah.edu." "$LINENO" 5
   fi
 fi
 
@@ -28917,7 +28917,7 @@ _sci_includes=''
 ##      HAVE_BLAS_H         => yes or no
 
 if test 9 != 9; then
-     as_fn_error $? "Wrong number of parameters (9) for SCI-TRY-LINK for blas library.  This is an internal SCIRun configure error and should be reported to scirun-develop@sci.utah.edu." "$LINENO" 5
+     as_fn_error $? "Wrong number of parameters (9) for SCI-TRY-LINK for blas library.  This is an internal Uintah configure error and should be reported to scirun-develop@sci.utah.edu." "$LINENO" 5
 fi
 
 
@@ -28932,7 +28932,7 @@ _sci_includes=
 
 if test "optional" != "optional" -a "optional" != "required" -a "optional" != "specific"; then
      echo
-     as_fn_error $? "Last parameter of SCI-TRY-LINK for blas library must be: optional or required or specific.  (You had optional.)  This is an internal SCIRun configure error and should be reported to scirun-develop@sci.utah.edu." "$LINENO" 5
+     as_fn_error $? "Last parameter of SCI-TRY-LINK for blas library must be: optional or required or specific.  (You had optional.)  This is an internal Uintah configure error and should be reported to scirun-develop@sci.utah.edu." "$LINENO" 5
 fi
 
 # If  (the -I paths) is blank, do nothing, else do the for statement.
@@ -29049,7 +29049,7 @@ if test "optional" = "specific"; then
     fi
   done
   if test $__sci_pass != "true"; then
-       as_fn_error $? "For specific SCI-TRY-LINK test for BLAS only one library path may be specified for arg 6 (you had: $_sci_lib).  This is an internal SCIRun configure error and should be reported to scirun-develop@sci.utah.edu." "$LINENO" 5
+       as_fn_error $? "For specific SCI-TRY-LINK test for BLAS only one library path may be specified for arg 6 (you had: $_sci_lib).  This is an internal Uintah configure error and should be reported to scirun-develop@sci.utah.edu." "$LINENO" 5
   fi
   # and only one include path:
   ### Determine if there is only one item in
@@ -29067,7 +29067,7 @@ if test "optional" = "specific"; then
     fi
   done
   if test -n "" && test $__sci_pass != "true"; then
-       as_fn_error $? "For specific SCI-TRY-LINK test for BLAS only one include path may be specified for arg 4 (you had: ).  This is an internal SCIRun configure error and should be reported to scirun-develop@sci.utah.edu." "$LINENO" 5
+       as_fn_error $? "For specific SCI-TRY-LINK test for BLAS only one include path may be specified for arg 4 (you had: ).  This is an internal Uintah configure error and should be reported to scirun-develop@sci.utah.edu." "$LINENO" 5
   fi
 fi
 
@@ -29321,7 +29321,7 @@ _sci_includes=''
 ##      HAVE_BLAS_H         => yes or no
 
 if test 9 != 9; then
-     as_fn_error $? "Wrong number of parameters (9) for SCI-TRY-LINK for optional fblas library.  This is an internal SCIRun configure error and should be reported to scirun-develop@sci.utah.edu." "$LINENO" 5
+     as_fn_error $? "Wrong number of parameters (9) for SCI-TRY-LINK for optional fblas library.  This is an internal Uintah configure error and should be reported to scirun-develop@sci.utah.edu." "$LINENO" 5
 fi
 
 
@@ -29336,7 +29336,7 @@ _sci_includes=
 
 if test "optional" != "optional" -a "optional" != "required" -a "optional" != "specific"; then
      echo
-     as_fn_error $? "Last parameter of SCI-TRY-LINK for optional fblas library must be: optional or required or specific.  (You had optional.)  This is an internal SCIRun configure error and should be reported to scirun-develop@sci.utah.edu." "$LINENO" 5
+     as_fn_error $? "Last parameter of SCI-TRY-LINK for optional fblas library must be: optional or required or specific.  (You had optional.)  This is an internal Uintah configure error and should be reported to scirun-develop@sci.utah.edu." "$LINENO" 5
 fi
 
 # If  (the -I paths) is blank, do nothing, else do the for statement.
@@ -29453,7 +29453,7 @@ if test "optional" = "specific"; then
     fi
   done
   if test $__sci_pass != "true"; then
-       as_fn_error $? "For specific SCI-TRY-LINK test for BLAS only one library path may be specified for arg 6 (you had: $_sci_lib).  This is an internal SCIRun configure error and should be reported to scirun-develop@sci.utah.edu." "$LINENO" 5
+       as_fn_error $? "For specific SCI-TRY-LINK test for BLAS only one library path may be specified for arg 6 (you had: $_sci_lib).  This is an internal Uintah configure error and should be reported to scirun-develop@sci.utah.edu." "$LINENO" 5
   fi
   # and only one include path:
   ### Determine if there is only one item in
@@ -29471,7 +29471,7 @@ if test "optional" = "specific"; then
     fi
   done
   if test -n "" && test $__sci_pass != "true"; then
-       as_fn_error $? "For specific SCI-TRY-LINK test for BLAS only one include path may be specified for arg 4 (you had: ).  This is an internal SCIRun configure error and should be reported to scirun-develop@sci.utah.edu." "$LINENO" 5
+       as_fn_error $? "For specific SCI-TRY-LINK test for BLAS only one include path may be specified for arg 4 (you had: ).  This is an internal Uintah configure error and should be reported to scirun-develop@sci.utah.edu." "$LINENO" 5
   fi
 fi
 
@@ -29727,7 +29727,7 @@ _sci_includes=''
 ##      HAVE_BLAS_H         => yes or no
 
 if test 9 != 9; then
-     as_fn_error $? "Wrong number of parameters (9) for SCI-TRY-LINK for blas library.  This is an internal SCIRun configure error and should be reported to scirun-develop@sci.utah.edu." "$LINENO" 5
+     as_fn_error $? "Wrong number of parameters (9) for SCI-TRY-LINK for blas library.  This is an internal Uintah configure error and should be reported to scirun-develop@sci.utah.edu." "$LINENO" 5
 fi
 
 
@@ -29742,7 +29742,7 @@ _sci_includes=
 
 if test "specific" != "optional" -a "specific" != "required" -a "specific" != "specific"; then
      echo
-     as_fn_error $? "Last parameter of SCI-TRY-LINK for blas library must be: optional or required or specific.  (You had specific.)  This is an internal SCIRun configure error and should be reported to scirun-develop@sci.utah.edu." "$LINENO" 5
+     as_fn_error $? "Last parameter of SCI-TRY-LINK for blas library must be: optional or required or specific.  (You had specific.)  This is an internal Uintah configure error and should be reported to scirun-develop@sci.utah.edu." "$LINENO" 5
 fi
 
 # If  (the -I paths) is blank, do nothing, else do the for statement.
@@ -29859,7 +29859,7 @@ if test "specific" = "specific"; then
     fi
   done
   if test $__sci_pass != "true"; then
-       as_fn_error $? "For specific SCI-TRY-LINK test for BLAS only one library path may be specified for arg 6 (you had: $_sci_lib).  This is an internal SCIRun configure error and should be reported to scirun-develop@sci.utah.edu." "$LINENO" 5
+       as_fn_error $? "For specific SCI-TRY-LINK test for BLAS only one library path may be specified for arg 6 (you had: $_sci_lib).  This is an internal Uintah configure error and should be reported to scirun-develop@sci.utah.edu." "$LINENO" 5
   fi
   # and only one include path:
   ### Determine if there is only one item in
@@ -29877,7 +29877,7 @@ if test "specific" = "specific"; then
     fi
   done
   if test -n "" && test $__sci_pass != "true"; then
-       as_fn_error $? "For specific SCI-TRY-LINK test for BLAS only one include path may be specified for arg 4 (you had: ).  This is an internal SCIRun configure error and should be reported to scirun-develop@sci.utah.edu." "$LINENO" 5
+       as_fn_error $? "For specific SCI-TRY-LINK test for BLAS only one include path may be specified for arg 4 (you had: ).  This is an internal Uintah configure error and should be reported to scirun-develop@sci.utah.edu." "$LINENO" 5
   fi
 fi
 
@@ -30180,7 +30180,7 @@ if test "$HAVE_LAPACK" != "yes"; then
 ##      HAVE_LAPACK_H         => yes or no
 
 if test 9 != 9; then
-     as_fn_error $? "Wrong number of parameters (9) for SCI-TRY-LINK for Mac Accelerate lapack version of libraries and headers.  This is an internal SCIRun configure error and should be reported to scirun-develop@sci.utah.edu." "$LINENO" 5
+     as_fn_error $? "Wrong number of parameters (9) for SCI-TRY-LINK for Mac Accelerate lapack version of libraries and headers.  This is an internal Uintah configure error and should be reported to scirun-develop@sci.utah.edu." "$LINENO" 5
 fi
 
 
@@ -30195,7 +30195,7 @@ _sci_includes=
 
 if test "optional" != "optional" -a "optional" != "required" -a "optional" != "specific"; then
      echo
-     as_fn_error $? "Last parameter of SCI-TRY-LINK for Mac Accelerate lapack version of libraries and headers must be: optional or required or specific.  (You had optional.)  This is an internal SCIRun configure error and should be reported to scirun-develop@sci.utah.edu." "$LINENO" 5
+     as_fn_error $? "Last parameter of SCI-TRY-LINK for Mac Accelerate lapack version of libraries and headers must be: optional or required or specific.  (You had optional.)  This is an internal Uintah configure error and should be reported to scirun-develop@sci.utah.edu." "$LINENO" 5
 fi
 
 # If  (the -I paths) is blank, do nothing, else do the for statement.
@@ -30312,7 +30312,7 @@ if test "optional" = "specific"; then
     fi
   done
   if test $__sci_pass != "true"; then
-       as_fn_error $? "For specific SCI-TRY-LINK test for LAPACK only one library path may be specified for arg 6 (you had: ).  This is an internal SCIRun configure error and should be reported to scirun-develop@sci.utah.edu." "$LINENO" 5
+       as_fn_error $? "For specific SCI-TRY-LINK test for LAPACK only one library path may be specified for arg 6 (you had: ).  This is an internal Uintah configure error and should be reported to scirun-develop@sci.utah.edu." "$LINENO" 5
   fi
   # and only one include path:
   ### Determine if there is only one item in
@@ -30330,7 +30330,7 @@ if test "optional" = "specific"; then
     fi
   done
   if test -n "" && test $__sci_pass != "true"; then
-       as_fn_error $? "For specific SCI-TRY-LINK test for LAPACK only one include path may be specified for arg 4 (you had: ).  This is an internal SCIRun configure error and should be reported to scirun-develop@sci.utah.edu." "$LINENO" 5
+       as_fn_error $? "For specific SCI-TRY-LINK test for LAPACK only one include path may be specified for arg 4 (you had: ).  This is an internal Uintah configure error and should be reported to scirun-develop@sci.utah.edu." "$LINENO" 5
   fi
 fi
 
@@ -30587,7 +30587,7 @@ _sci_includes=''
 ##      HAVE_LAPACK_H         => yes or no
 
 if test 9 != 9; then
-     as_fn_error $? "Wrong number of parameters (9) for SCI-TRY-LINK for Old Mac lapack version of libraries and headers.  This is an internal SCIRun configure error and should be reported to scirun-develop@sci.utah.edu." "$LINENO" 5
+     as_fn_error $? "Wrong number of parameters (9) for SCI-TRY-LINK for Old Mac lapack version of libraries and headers.  This is an internal Uintah configure error and should be reported to scirun-develop@sci.utah.edu." "$LINENO" 5
 fi
 
 
@@ -30602,7 +30602,7 @@ _sci_includes=
 
 if test "optional" != "optional" -a "optional" != "required" -a "optional" != "specific"; then
      echo
-     as_fn_error $? "Last parameter of SCI-TRY-LINK for Old Mac lapack version of libraries and headers must be: optional or required or specific.  (You had optional.)  This is an internal SCIRun configure error and should be reported to scirun-develop@sci.utah.edu." "$LINENO" 5
+     as_fn_error $? "Last parameter of SCI-TRY-LINK for Old Mac lapack version of libraries and headers must be: optional or required or specific.  (You had optional.)  This is an internal Uintah configure error and should be reported to scirun-develop@sci.utah.edu." "$LINENO" 5
 fi
 
 # If  (the -I paths) is blank, do nothing, else do the for statement.
@@ -30719,7 +30719,7 @@ if test "optional" = "specific"; then
     fi
   done
   if test $__sci_pass != "true"; then
-       as_fn_error $? "For specific SCI-TRY-LINK test for LAPACK only one library path may be specified for arg 6 (you had: ).  This is an internal SCIRun configure error and should be reported to scirun-develop@sci.utah.edu." "$LINENO" 5
+       as_fn_error $? "For specific SCI-TRY-LINK test for LAPACK only one library path may be specified for arg 6 (you had: ).  This is an internal Uintah configure error and should be reported to scirun-develop@sci.utah.edu." "$LINENO" 5
   fi
   # and only one include path:
   ### Determine if there is only one item in
@@ -30737,7 +30737,7 @@ if test "optional" = "specific"; then
     fi
   done
   if test -n "" && test $__sci_pass != "true"; then
-       as_fn_error $? "For specific SCI-TRY-LINK test for LAPACK only one include path may be specified for arg 4 (you had: ).  This is an internal SCIRun configure error and should be reported to scirun-develop@sci.utah.edu." "$LINENO" 5
+       as_fn_error $? "For specific SCI-TRY-LINK test for LAPACK only one include path may be specified for arg 4 (you had: ).  This is an internal Uintah configure error and should be reported to scirun-develop@sci.utah.edu." "$LINENO" 5
   fi
 fi
 
@@ -30996,7 +30996,7 @@ _sci_includes=''
 ##      HAVE_LAPACK_H         => yes or no
 
 if test 9 != 9; then
-     as_fn_error $? "Wrong number of parameters (9) for SCI-TRY-LINK for lapack library.  This is an internal SCIRun configure error and should be reported to scirun-develop@sci.utah.edu." "$LINENO" 5
+     as_fn_error $? "Wrong number of parameters (9) for SCI-TRY-LINK for lapack library.  This is an internal Uintah configure error and should be reported to scirun-develop@sci.utah.edu." "$LINENO" 5
 fi
 
 
@@ -31011,7 +31011,7 @@ _sci_includes=
 
 if test "optional" != "optional" -a "optional" != "required" -a "optional" != "specific"; then
      echo
-     as_fn_error $? "Last parameter of SCI-TRY-LINK for lapack library must be: optional or required or specific.  (You had optional.)  This is an internal SCIRun configure error and should be reported to scirun-develop@sci.utah.edu." "$LINENO" 5
+     as_fn_error $? "Last parameter of SCI-TRY-LINK for lapack library must be: optional or required or specific.  (You had optional.)  This is an internal Uintah configure error and should be reported to scirun-develop@sci.utah.edu." "$LINENO" 5
 fi
 
 # If  (the -I paths) is blank, do nothing, else do the for statement.
@@ -31128,7 +31128,7 @@ if test "optional" = "specific"; then
     fi
   done
   if test $__sci_pass != "true"; then
-       as_fn_error $? "For specific SCI-TRY-LINK test for LAPACK only one library path may be specified for arg 6 (you had: $_sci_lib).  This is an internal SCIRun configure error and should be reported to scirun-develop@sci.utah.edu." "$LINENO" 5
+       as_fn_error $? "For specific SCI-TRY-LINK test for LAPACK only one library path may be specified for arg 6 (you had: $_sci_lib).  This is an internal Uintah configure error and should be reported to scirun-develop@sci.utah.edu." "$LINENO" 5
   fi
   # and only one include path:
   ### Determine if there is only one item in
@@ -31146,7 +31146,7 @@ if test "optional" = "specific"; then
     fi
   done
   if test -n "" && test $__sci_pass != "true"; then
-       as_fn_error $? "For specific SCI-TRY-LINK test for LAPACK only one include path may be specified for arg 4 (you had: ).  This is an internal SCIRun configure error and should be reported to scirun-develop@sci.utah.edu." "$LINENO" 5
+       as_fn_error $? "For specific SCI-TRY-LINK test for LAPACK only one include path may be specified for arg 4 (you had: ).  This is an internal Uintah configure error and should be reported to scirun-develop@sci.utah.edu." "$LINENO" 5
   fi
 fi
 
@@ -31403,7 +31403,7 @@ _sci_includes=''
 ##      HAVE_LAPACK_H         => yes or no
 
 if test 9 != 9; then
-     as_fn_error $? "Wrong number of parameters (9) for SCI-TRY-LINK for flapack library.  This is an internal SCIRun configure error and should be reported to scirun-develop@sci.utah.edu." "$LINENO" 5
+     as_fn_error $? "Wrong number of parameters (9) for SCI-TRY-LINK for flapack library.  This is an internal Uintah configure error and should be reported to scirun-develop@sci.utah.edu." "$LINENO" 5
 fi
 
 
@@ -31418,7 +31418,7 @@ _sci_includes=
 
 if test "optional" != "optional" -a "optional" != "required" -a "optional" != "specific"; then
      echo
-     as_fn_error $? "Last parameter of SCI-TRY-LINK for flapack library must be: optional or required or specific.  (You had optional.)  This is an internal SCIRun configure error and should be reported to scirun-develop@sci.utah.edu." "$LINENO" 5
+     as_fn_error $? "Last parameter of SCI-TRY-LINK for flapack library must be: optional or required or specific.  (You had optional.)  This is an internal Uintah configure error and should be reported to scirun-develop@sci.utah.edu." "$LINENO" 5
 fi
 
 # If  (the -I paths) is blank, do nothing, else do the for statement.
@@ -31535,7 +31535,7 @@ if test "optional" = "specific"; then
     fi
   done
   if test $__sci_pass != "true"; then
-       as_fn_error $? "For specific SCI-TRY-LINK test for LAPACK only one library path may be specified for arg 6 (you had: $_sci_lib).  This is an internal SCIRun configure error and should be reported to scirun-develop@sci.utah.edu." "$LINENO" 5
+       as_fn_error $? "For specific SCI-TRY-LINK test for LAPACK only one library path may be specified for arg 6 (you had: $_sci_lib).  This is an internal Uintah configure error and should be reported to scirun-develop@sci.utah.edu." "$LINENO" 5
   fi
   # and only one include path:
   ### Determine if there is only one item in
@@ -31553,7 +31553,7 @@ if test "optional" = "specific"; then
     fi
   done
   if test -n "" && test $__sci_pass != "true"; then
-       as_fn_error $? "For specific SCI-TRY-LINK test for LAPACK only one include path may be specified for arg 4 (you had: ).  This is an internal SCIRun configure error and should be reported to scirun-develop@sci.utah.edu." "$LINENO" 5
+       as_fn_error $? "For specific SCI-TRY-LINK test for LAPACK only one include path may be specified for arg 4 (you had: ).  This is an internal Uintah configure error and should be reported to scirun-develop@sci.utah.edu." "$LINENO" 5
   fi
 fi
 
@@ -32026,7 +32026,7 @@ $as_echo "$as_me: checking for required MPI components......" >&6;}
 ##      HAVE_MPI_H         => yes or no
 
 if test 9 != 9; then
-     as_fn_error $? "Wrong number of parameters (9) for SCI-TRY-LINK for ${num}: mpi library and header ($the_libs).  This is an internal SCIRun configure error and should be reported to scirun-develop@sci.utah.edu." "$LINENO" 5
+     as_fn_error $? "Wrong number of parameters (9) for SCI-TRY-LINK for ${num}: mpi library and header ($the_libs).  This is an internal Uintah configure error and should be reported to scirun-develop@sci.utah.edu." "$LINENO" 5
 fi
 
 
@@ -32041,7 +32041,7 @@ _sci_includes=
 
 if test "optional" != "optional" -a "optional" != "required" -a "optional" != "specific"; then
      echo
-     as_fn_error $? "Last parameter of SCI-TRY-LINK for ${num}: mpi library and header ($the_libs) must be: optional or required or specific.  (You had optional.)  This is an internal SCIRun configure error and should be reported to scirun-develop@sci.utah.edu." "$LINENO" 5
+     as_fn_error $? "Last parameter of SCI-TRY-LINK for ${num}: mpi library and header ($the_libs) must be: optional or required or specific.  (You had optional.)  This is an internal Uintah configure error and should be reported to scirun-develop@sci.utah.edu." "$LINENO" 5
 fi
 
 # If $_sci_inc (the -I paths) is blank, do nothing, else do the for statement.
@@ -32199,7 +32199,7 @@ if test "optional" = "specific"; then
     fi
   done
   if test $__sci_pass != "true"; then
-       as_fn_error $? "For specific SCI-TRY-LINK test for MPI only one library path may be specified for arg 6 (you had: $_sci_lib $MPI_EXTRA_LIB_DIR).  This is an internal SCIRun configure error and should be reported to scirun-develop@sci.utah.edu." "$LINENO" 5
+       as_fn_error $? "For specific SCI-TRY-LINK test for MPI only one library path may be specified for arg 6 (you had: $_sci_lib $MPI_EXTRA_LIB_DIR).  This is an internal Uintah configure error and should be reported to scirun-develop@sci.utah.edu." "$LINENO" 5
   fi
   # and only one include path:
   ### Determine if there is only one item in $_sci_inc
@@ -32217,7 +32217,7 @@ if test "optional" = "specific"; then
     fi
   done
   if test -n "$_sci_inc" && test $__sci_pass != "true"; then
-       as_fn_error $? "For specific SCI-TRY-LINK test for MPI only one include path may be specified for arg 4 (you had: $_sci_inc).  This is an internal SCIRun configure error and should be reported to scirun-develop@sci.utah.edu." "$LINENO" 5
+       as_fn_error $? "For specific SCI-TRY-LINK test for MPI only one include path may be specified for arg 4 (you had: $_sci_inc).  This is an internal Uintah configure error and should be reported to scirun-develop@sci.utah.edu." "$LINENO" 5
   fi
 fi
 
@@ -32508,7 +32508,7 @@ $as_echo "$as_me: WARNING: Found libmpi but not in requested directory: $_sci_li
 ##      HAVE_MPI_H         => yes or no
 
 if test 9 != 9; then
-     as_fn_error $? "Wrong number of parameters (9) for SCI-TRY-LINK for ${num}: mpi library and header (mpi.h hack) ($the_libs).  This is an internal SCIRun configure error and should be reported to scirun-develop@sci.utah.edu." "$LINENO" 5
+     as_fn_error $? "Wrong number of parameters (9) for SCI-TRY-LINK for ${num}: mpi library and header (mpi.h hack) ($the_libs).  This is an internal Uintah configure error and should be reported to scirun-develop@sci.utah.edu." "$LINENO" 5
 fi
 
 
@@ -32523,7 +32523,7 @@ _sci_includes=
 
 if test "optional" != "optional" -a "optional" != "required" -a "optional" != "specific"; then
      echo
-     as_fn_error $? "Last parameter of SCI-TRY-LINK for ${num}: mpi library and header (mpi.h hack) ($the_libs) must be: optional or required or specific.  (You had optional.)  This is an internal SCIRun configure error and should be reported to scirun-develop@sci.utah.edu." "$LINENO" 5
+     as_fn_error $? "Last parameter of SCI-TRY-LINK for ${num}: mpi library and header (mpi.h hack) ($the_libs) must be: optional or required or specific.  (You had optional.)  This is an internal Uintah configure error and should be reported to scirun-develop@sci.utah.edu." "$LINENO" 5
 fi
 
 # If $_sci_inc (the -I paths) is blank, do nothing, else do the for statement.
@@ -32681,7 +32681,7 @@ if test "optional" = "specific"; then
     fi
   done
   if test $__sci_pass != "true"; then
-       as_fn_error $? "For specific SCI-TRY-LINK test for MPI only one library path may be specified for arg 6 (you had: $_sci_lib $MPI_EXTRA_LIB_DIR).  This is an internal SCIRun configure error and should be reported to scirun-develop@sci.utah.edu." "$LINENO" 5
+       as_fn_error $? "For specific SCI-TRY-LINK test for MPI only one library path may be specified for arg 6 (you had: $_sci_lib $MPI_EXTRA_LIB_DIR).  This is an internal Uintah configure error and should be reported to scirun-develop@sci.utah.edu." "$LINENO" 5
   fi
   # and only one include path:
   ### Determine if there is only one item in $_sci_inc
@@ -32699,7 +32699,7 @@ if test "optional" = "specific"; then
     fi
   done
   if test -n "$_sci_inc" && test $__sci_pass != "true"; then
-       as_fn_error $? "For specific SCI-TRY-LINK test for MPI only one include path may be specified for arg 4 (you had: $_sci_inc).  This is an internal SCIRun configure error and should be reported to scirun-develop@sci.utah.edu." "$LINENO" 5
+       as_fn_error $? "For specific SCI-TRY-LINK test for MPI only one include path may be specified for arg 4 (you had: $_sci_inc).  This is an internal Uintah configure error and should be reported to scirun-develop@sci.utah.edu." "$LINENO" 5
   fi
 fi
 
@@ -33164,7 +33164,7 @@ $as_echo "$as_me: WARNING: Looking for PETSc arch: $PETSC_ARCH" >&2;}
 ##      HAVE_PETSC_H         => yes or no
 
 if test 9 != 9; then
-     as_fn_error $? "Wrong number of parameters (9) for SCI-TRY-LINK for petsc libraries and headers - multi-lib version.  This is an internal SCIRun configure error and should be reported to scirun-develop@sci.utah.edu." "$LINENO" 5
+     as_fn_error $? "Wrong number of parameters (9) for SCI-TRY-LINK for petsc libraries and headers - multi-lib version.  This is an internal Uintah configure error and should be reported to scirun-develop@sci.utah.edu." "$LINENO" 5
 fi
 
 
@@ -33179,7 +33179,7 @@ _sci_includes=
 
 if test "optional" != "optional" -a "optional" != "required" -a "optional" != "specific"; then
      echo
-     as_fn_error $? "Last parameter of SCI-TRY-LINK for petsc libraries and headers - multi-lib version must be: optional or required or specific.  (You had optional.)  This is an internal SCIRun configure error and should be reported to scirun-develop@sci.utah.edu." "$LINENO" 5
+     as_fn_error $? "Last parameter of SCI-TRY-LINK for petsc libraries and headers - multi-lib version must be: optional or required or specific.  (You had optional.)  This is an internal Uintah configure error and should be reported to scirun-develop@sci.utah.edu." "$LINENO" 5
 fi
 
 # If $_sci_inc (the -I paths) is blank, do nothing, else do the for statement.
@@ -33337,7 +33337,7 @@ if test "optional" = "specific"; then
     fi
   done
   if test $__sci_pass != "true"; then
-       as_fn_error $? "For specific SCI-TRY-LINK test for PETSC only one library path may be specified for arg 6 (you had: $_sci_lib_dir).  This is an internal SCIRun configure error and should be reported to scirun-develop@sci.utah.edu." "$LINENO" 5
+       as_fn_error $? "For specific SCI-TRY-LINK test for PETSC only one library path may be specified for arg 6 (you had: $_sci_lib_dir).  This is an internal Uintah configure error and should be reported to scirun-develop@sci.utah.edu." "$LINENO" 5
   fi
   # and only one include path:
   ### Determine if there is only one item in $_sci_inc
@@ -33355,7 +33355,7 @@ if test "optional" = "specific"; then
     fi
   done
   if test -n "$_sci_inc" && test $__sci_pass != "true"; then
-       as_fn_error $? "For specific SCI-TRY-LINK test for PETSC only one include path may be specified for arg 4 (you had: $_sci_inc).  This is an internal SCIRun configure error and should be reported to scirun-develop@sci.utah.edu." "$LINENO" 5
+       as_fn_error $? "For specific SCI-TRY-LINK test for PETSC only one include path may be specified for arg 4 (you had: $_sci_inc).  This is an internal Uintah configure error and should be reported to scirun-develop@sci.utah.edu." "$LINENO" 5
   fi
 fi
 
@@ -33622,7 +33622,7 @@ _sci_includes=''
 ##      HAVE_PETSC_H         => yes or no
 
 if test 9 != 9; then
-     as_fn_error $? "Wrong number of parameters (9) for SCI-TRY-LINK for petsc library and header - try $num ($the_libs).  This is an internal SCIRun configure error and should be reported to scirun-develop@sci.utah.edu." "$LINENO" 5
+     as_fn_error $? "Wrong number of parameters (9) for SCI-TRY-LINK for petsc library and header - try $num ($the_libs).  This is an internal Uintah configure error and should be reported to scirun-develop@sci.utah.edu." "$LINENO" 5
 fi
 
 
@@ -33637,7 +33637,7 @@ _sci_includes=
 
 if test "optional" != "optional" -a "optional" != "required" -a "optional" != "specific"; then
      echo
-     as_fn_error $? "Last parameter of SCI-TRY-LINK for petsc library and header - try $num ($the_libs) must be: optional or required or specific.  (You had optional.)  This is an internal SCIRun configure error and should be reported to scirun-develop@sci.utah.edu." "$LINENO" 5
+     as_fn_error $? "Last parameter of SCI-TRY-LINK for petsc library and header - try $num ($the_libs) must be: optional or required or specific.  (You had optional.)  This is an internal Uintah configure error and should be reported to scirun-develop@sci.utah.edu." "$LINENO" 5
 fi
 
 # If $_sci_inc (the -I paths) is blank, do nothing, else do the for statement.
@@ -33795,7 +33795,7 @@ if test "optional" = "specific"; then
     fi
   done
   if test $__sci_pass != "true"; then
-       as_fn_error $? "For specific SCI-TRY-LINK test for PETSC only one library path may be specified for arg 6 (you had: $_sci_lib_dir).  This is an internal SCIRun configure error and should be reported to scirun-develop@sci.utah.edu." "$LINENO" 5
+       as_fn_error $? "For specific SCI-TRY-LINK test for PETSC only one library path may be specified for arg 6 (you had: $_sci_lib_dir).  This is an internal Uintah configure error and should be reported to scirun-develop@sci.utah.edu." "$LINENO" 5
   fi
   # and only one include path:
   ### Determine if there is only one item in $_sci_inc
@@ -33813,7 +33813,7 @@ if test "optional" = "specific"; then
     fi
   done
   if test -n "$_sci_inc" && test $__sci_pass != "true"; then
-       as_fn_error $? "For specific SCI-TRY-LINK test for PETSC only one include path may be specified for arg 4 (you had: $_sci_inc).  This is an internal SCIRun configure error and should be reported to scirun-develop@sci.utah.edu." "$LINENO" 5
+       as_fn_error $? "For specific SCI-TRY-LINK test for PETSC only one include path may be specified for arg 4 (you had: $_sci_inc).  This is an internal Uintah configure error and should be reported to scirun-develop@sci.utah.edu." "$LINENO" 5
   fi
 fi
 
@@ -34216,7 +34216,7 @@ ac_compiler_gnu=$ac_cv_cxx_compiler_gnu
 ##      HAVE_PAPI_H         => yes or no
 
 if test 9 != 9; then
-     as_fn_error $? "Wrong number of parameters (9) for SCI-TRY-LINK for PAPI libraries and headers.  This is an internal SCIRun configure error and should be reported to scirun-develop@sci.utah.edu." "$LINENO" 5
+     as_fn_error $? "Wrong number of parameters (9) for SCI-TRY-LINK for PAPI libraries and headers.  This is an internal Uintah configure error and should be reported to scirun-develop@sci.utah.edu." "$LINENO" 5
 fi
 
 
@@ -34231,7 +34231,7 @@ _sci_includes=
 
 if test "$_sci_optional" != "optional" -a "$_sci_optional" != "required" -a "$_sci_optional" != "specific"; then
      echo
-     as_fn_error $? "Last parameter of SCI-TRY-LINK for PAPI libraries and headers must be: optional or required or specific.  (You had $_sci_optional.)  This is an internal SCIRun configure error and should be reported to scirun-develop@sci.utah.edu." "$LINENO" 5
+     as_fn_error $? "Last parameter of SCI-TRY-LINK for PAPI libraries and headers must be: optional or required or specific.  (You had $_sci_optional.)  This is an internal Uintah configure error and should be reported to scirun-develop@sci.utah.edu." "$LINENO" 5
 fi
 
 # If $_sci_inc (the -I paths) is blank, do nothing, else do the for statement.
@@ -34389,7 +34389,7 @@ if test "$_sci_optional" = "specific"; then
     fi
   done
   if test $__sci_pass != "true"; then
-       as_fn_error $? "For specific SCI-TRY-LINK test for PAPI only one library path may be specified for arg 6 (you had: $_sci_lib).  This is an internal SCIRun configure error and should be reported to scirun-develop@sci.utah.edu." "$LINENO" 5
+       as_fn_error $? "For specific SCI-TRY-LINK test for PAPI only one library path may be specified for arg 6 (you had: $_sci_lib).  This is an internal Uintah configure error and should be reported to scirun-develop@sci.utah.edu." "$LINENO" 5
   fi
   # and only one include path:
   ### Determine if there is only one item in $_sci_inc
@@ -34407,7 +34407,7 @@ if test "$_sci_optional" = "specific"; then
     fi
   done
   if test -n "$_sci_inc" && test $__sci_pass != "true"; then
-       as_fn_error $? "For specific SCI-TRY-LINK test for PAPI only one include path may be specified for arg 4 (you had: $_sci_inc).  This is an internal SCIRun configure error and should be reported to scirun-develop@sci.utah.edu." "$LINENO" 5
+       as_fn_error $? "For specific SCI-TRY-LINK test for PAPI only one include path may be specified for arg 4 (you had: $_sci_inc).  This is an internal Uintah configure error and should be reported to scirun-develop@sci.utah.edu." "$LINENO" 5
   fi
 fi
 
@@ -34758,7 +34758,7 @@ ac_compiler_gnu=$ac_cv_cxx_compiler_gnu
 ##      HAVE_GPERFTOOLS_H         => yes or no
 
 if test 9 != 9; then
-     as_fn_error $? "Wrong number of parameters (9) for SCI-TRY-LINK for Google Perftools libraries and headers.  This is an internal SCIRun configure error and should be reported to scirun-develop@sci.utah.edu." "$LINENO" 5
+     as_fn_error $? "Wrong number of parameters (9) for SCI-TRY-LINK for Google Perftools libraries and headers.  This is an internal Uintah configure error and should be reported to scirun-develop@sci.utah.edu." "$LINENO" 5
 fi
 
 
@@ -34773,7 +34773,7 @@ _sci_includes=
 
 if test "$_sci_optional" != "optional" -a "$_sci_optional" != "required" -a "$_sci_optional" != "specific"; then
      echo
-     as_fn_error $? "Last parameter of SCI-TRY-LINK for Google Perftools libraries and headers must be: optional or required or specific.  (You had $_sci_optional.)  This is an internal SCIRun configure error and should be reported to scirun-develop@sci.utah.edu." "$LINENO" 5
+     as_fn_error $? "Last parameter of SCI-TRY-LINK for Google Perftools libraries and headers must be: optional or required or specific.  (You had $_sci_optional.)  This is an internal Uintah configure error and should be reported to scirun-develop@sci.utah.edu." "$LINENO" 5
 fi
 
 # If $_sci_inc (the -I paths) is blank, do nothing, else do the for statement.
@@ -34931,7 +34931,7 @@ if test "$_sci_optional" = "specific"; then
     fi
   done
   if test $__sci_pass != "true"; then
-       as_fn_error $? "For specific SCI-TRY-LINK test for GPERFTOOLS only one library path may be specified for arg 6 (you had: $_sci_lib).  This is an internal SCIRun configure error and should be reported to scirun-develop@sci.utah.edu." "$LINENO" 5
+       as_fn_error $? "For specific SCI-TRY-LINK test for GPERFTOOLS only one library path may be specified for arg 6 (you had: $_sci_lib).  This is an internal Uintah configure error and should be reported to scirun-develop@sci.utah.edu." "$LINENO" 5
   fi
   # and only one include path:
   ### Determine if there is only one item in $_sci_inc
@@ -34949,7 +34949,7 @@ if test "$_sci_optional" = "specific"; then
     fi
   done
   if test -n "$_sci_inc" && test $__sci_pass != "true"; then
-       as_fn_error $? "For specific SCI-TRY-LINK test for GPERFTOOLS only one include path may be specified for arg 4 (you had: $_sci_inc).  This is an internal SCIRun configure error and should be reported to scirun-develop@sci.utah.edu." "$LINENO" 5
+       as_fn_error $? "For specific SCI-TRY-LINK test for GPERFTOOLS only one include path may be specified for arg 4 (you had: $_sci_inc).  This is an internal Uintah configure error and should be reported to scirun-develop@sci.utah.edu." "$LINENO" 5
   fi
 fi
 
@@ -35291,7 +35291,7 @@ ac_compiler_gnu=$ac_cv_cxx_compiler_gnu
 ##      HAVE_IPM_H         => yes or no
 
 if test 9 != 9; then
-     as_fn_error $? "Wrong number of parameters (9) for SCI-TRY-LINK for IPM library.  This is an internal SCIRun configure error and should be reported to scirun-develop@sci.utah.edu." "$LINENO" 5
+     as_fn_error $? "Wrong number of parameters (9) for SCI-TRY-LINK for IPM library.  This is an internal Uintah configure error and should be reported to scirun-develop@sci.utah.edu." "$LINENO" 5
 fi
 
 
@@ -35306,7 +35306,7 @@ _sci_includes=
 
 if test "$_sci_optional" != "optional" -a "$_sci_optional" != "required" -a "$_sci_optional" != "specific"; then
      echo
-     as_fn_error $? "Last parameter of SCI-TRY-LINK for IPM library must be: optional or required or specific.  (You had $_sci_optional.)  This is an internal SCIRun configure error and should be reported to scirun-develop@sci.utah.edu." "$LINENO" 5
+     as_fn_error $? "Last parameter of SCI-TRY-LINK for IPM library must be: optional or required or specific.  (You had $_sci_optional.)  This is an internal Uintah configure error and should be reported to scirun-develop@sci.utah.edu." "$LINENO" 5
 fi
 
 # If  (the -I paths) is blank, do nothing, else do the for statement.
@@ -35423,7 +35423,7 @@ if test "$_sci_optional" = "specific"; then
     fi
   done
   if test $__sci_pass != "true"; then
-       as_fn_error $? "For specific SCI-TRY-LINK test for IPM only one library path may be specified for arg 6 (you had: $_sci_lib).  This is an internal SCIRun configure error and should be reported to scirun-develop@sci.utah.edu." "$LINENO" 5
+       as_fn_error $? "For specific SCI-TRY-LINK test for IPM only one library path may be specified for arg 6 (you had: $_sci_lib).  This is an internal Uintah configure error and should be reported to scirun-develop@sci.utah.edu." "$LINENO" 5
   fi
   # and only one include path:
   ### Determine if there is only one item in
@@ -35441,7 +35441,7 @@ if test "$_sci_optional" = "specific"; then
     fi
   done
   if test -n "" && test $__sci_pass != "true"; then
-       as_fn_error $? "For specific SCI-TRY-LINK test for IPM only one include path may be specified for arg 4 (you had: ).  This is an internal SCIRun configure error and should be reported to scirun-develop@sci.utah.edu." "$LINENO" 5
+       as_fn_error $? "For specific SCI-TRY-LINK test for IPM only one include path may be specified for arg 4 (you had: ).  This is an internal Uintah configure error and should be reported to scirun-develop@sci.utah.edu." "$LINENO" 5
   fi
 fi
 
@@ -36305,7 +36305,7 @@ ac_compiler_gnu=$ac_cv_cxx_compiler_gnu
 ##      HAVE_MAGMA_H         => yes or no
 
 if test 9 != 9; then
-     as_fn_error $? "Wrong number of parameters (9) for SCI-TRY-LINK for MAGMA libraries and headers.  This is an internal SCIRun configure error and should be reported to scirun-develop@sci.utah.edu." "$LINENO" 5
+     as_fn_error $? "Wrong number of parameters (9) for SCI-TRY-LINK for MAGMA libraries and headers.  This is an internal Uintah configure error and should be reported to scirun-develop@sci.utah.edu." "$LINENO" 5
 fi
 
 
@@ -36320,7 +36320,7 @@ _sci_includes=
 
 if test "$_sci_optional" != "optional" -a "$_sci_optional" != "required" -a "$_sci_optional" != "specific"; then
      echo
-     as_fn_error $? "Last parameter of SCI-TRY-LINK for MAGMA libraries and headers must be: optional or required or specific.  (You had $_sci_optional.)  This is an internal SCIRun configure error and should be reported to scirun-develop@sci.utah.edu." "$LINENO" 5
+     as_fn_error $? "Last parameter of SCI-TRY-LINK for MAGMA libraries and headers must be: optional or required or specific.  (You had $_sci_optional.)  This is an internal Uintah configure error and should be reported to scirun-develop@sci.utah.edu." "$LINENO" 5
 fi
 
 # If $_magma_inc $_cuda_inc (the -I paths) is blank, do nothing, else do the for statement.
@@ -36478,7 +36478,7 @@ if test "$_sci_optional" = "specific"; then
     fi
   done
   if test $__sci_pass != "true"; then
-       as_fn_error $? "For specific SCI-TRY-LINK test for MAGMA only one library path may be specified for arg 6 (you had: $_magma_lib $_cuda_lib).  This is an internal SCIRun configure error and should be reported to scirun-develop@sci.utah.edu." "$LINENO" 5
+       as_fn_error $? "For specific SCI-TRY-LINK test for MAGMA only one library path may be specified for arg 6 (you had: $_magma_lib $_cuda_lib).  This is an internal Uintah configure error and should be reported to scirun-develop@sci.utah.edu." "$LINENO" 5
   fi
   # and only one include path:
   ### Determine if there is only one item in $_magma_inc $_cuda_inc
@@ -36496,7 +36496,7 @@ if test "$_sci_optional" = "specific"; then
     fi
   done
   if test -n "$_magma_inc $_cuda_inc" && test $__sci_pass != "true"; then
-       as_fn_error $? "For specific SCI-TRY-LINK test for MAGMA only one include path may be specified for arg 4 (you had: $_magma_inc $_cuda_inc).  This is an internal SCIRun configure error and should be reported to scirun-develop@sci.utah.edu." "$LINENO" 5
+       as_fn_error $? "For specific SCI-TRY-LINK test for MAGMA only one include path may be specified for arg 4 (you had: $_magma_inc $_cuda_inc).  This is an internal Uintah configure error and should be reported to scirun-develop@sci.utah.edu." "$LINENO" 5
   fi
 fi
 
@@ -36850,7 +36850,7 @@ $as_echo "$as_me: WARNING: ViSUS is already required - you do not need to specif
 ##      HAVE_VISUS_H         => yes or no
 
 if test 9 != 9; then
-     as_fn_error $? "Wrong number of parameters (9) for SCI-TRY-LINK for visus library and headers.  This is an internal SCIRun configure error and should be reported to scirun-develop@sci.utah.edu." "$LINENO" 5
+     as_fn_error $? "Wrong number of parameters (9) for SCI-TRY-LINK for visus library and headers.  This is an internal Uintah configure error and should be reported to scirun-develop@sci.utah.edu." "$LINENO" 5
 fi
 
 
@@ -36865,7 +36865,7 @@ _sci_includes=
 
 if test "$_sci_optional" != "optional" -a "$_sci_optional" != "required" -a "$_sci_optional" != "specific"; then
      echo
-     as_fn_error $? "Last parameter of SCI-TRY-LINK for visus library and headers must be: optional or required or specific.  (You had $_sci_optional.)  This is an internal SCIRun configure error and should be reported to scirun-develop@sci.utah.edu." "$LINENO" 5
+     as_fn_error $? "Last parameter of SCI-TRY-LINK for visus library and headers must be: optional or required or specific.  (You had $_sci_optional.)  This is an internal Uintah configure error and should be reported to scirun-develop@sci.utah.edu." "$LINENO" 5
 fi
 
 # If $_sci_inc (the -I paths) is blank, do nothing, else do the for statement.
@@ -37023,7 +37023,7 @@ if test "$_sci_optional" = "specific"; then
     fi
   done
   if test $__sci_pass != "true"; then
-       as_fn_error $? "For specific SCI-TRY-LINK test for VISUS only one library path may be specified for arg 6 (you had: $_sci_lib).  This is an internal SCIRun configure error and should be reported to scirun-develop@sci.utah.edu." "$LINENO" 5
+       as_fn_error $? "For specific SCI-TRY-LINK test for VISUS only one library path may be specified for arg 6 (you had: $_sci_lib).  This is an internal Uintah configure error and should be reported to scirun-develop@sci.utah.edu." "$LINENO" 5
   fi
   # and only one include path:
   ### Determine if there is only one item in $_sci_inc
@@ -37041,7 +37041,7 @@ if test "$_sci_optional" = "specific"; then
     fi
   done
   if test -n "$_sci_inc" && test $__sci_pass != "true"; then
-       as_fn_error $? "For specific SCI-TRY-LINK test for VISUS only one include path may be specified for arg 4 (you had: $_sci_inc).  This is an internal SCIRun configure error and should be reported to scirun-develop@sci.utah.edu." "$LINENO" 5
+       as_fn_error $? "For specific SCI-TRY-LINK test for VISUS only one include path may be specified for arg 4 (you had: $_sci_inc).  This is an internal Uintah configure error and should be reported to scirun-develop@sci.utah.edu." "$LINENO" 5
   fi
 fi
 
@@ -37379,7 +37379,7 @@ $as_echo "$as_me: WARNING: PIDX is already required - you do not need to specify
 ##      HAVE_PIDX_H         => yes or no
 
 if test 9 != 9; then
-     as_fn_error $? "Wrong number of parameters (9) for SCI-TRY-LINK for pidx library and headers.  This is an internal SCIRun configure error and should be reported to scirun-develop@sci.utah.edu." "$LINENO" 5
+     as_fn_error $? "Wrong number of parameters (9) for SCI-TRY-LINK for pidx library and headers.  This is an internal Uintah configure error and should be reported to scirun-develop@sci.utah.edu." "$LINENO" 5
 fi
 
 
@@ -37394,7 +37394,7 @@ _sci_includes=
 
 if test "$_sci_optional" != "optional" -a "$_sci_optional" != "required" -a "$_sci_optional" != "specific"; then
      echo
-     as_fn_error $? "Last parameter of SCI-TRY-LINK for pidx library and headers must be: optional or required or specific.  (You had $_sci_optional.)  This is an internal SCIRun configure error and should be reported to scirun-develop@sci.utah.edu." "$LINENO" 5
+     as_fn_error $? "Last parameter of SCI-TRY-LINK for pidx library and headers must be: optional or required or specific.  (You had $_sci_optional.)  This is an internal Uintah configure error and should be reported to scirun-develop@sci.utah.edu." "$LINENO" 5
 fi
 
 # If $_sci_inc $INC_MPI_H (the -I paths) is blank, do nothing, else do the for statement.
@@ -37552,7 +37552,7 @@ if test "$_sci_optional" = "specific"; then
     fi
   done
   if test $__sci_pass != "true"; then
-       as_fn_error $? "For specific SCI-TRY-LINK test for PIDX only one library path may be specified for arg 6 (you had: $MPI_LIB_DIR_FLAG $_sci_lib).  This is an internal SCIRun configure error and should be reported to scirun-develop@sci.utah.edu." "$LINENO" 5
+       as_fn_error $? "For specific SCI-TRY-LINK test for PIDX only one library path may be specified for arg 6 (you had: $MPI_LIB_DIR_FLAG $_sci_lib).  This is an internal Uintah configure error and should be reported to scirun-develop@sci.utah.edu." "$LINENO" 5
   fi
   # and only one include path:
   ### Determine if there is only one item in $_sci_inc $INC_MPI_H
@@ -37570,7 +37570,7 @@ if test "$_sci_optional" = "specific"; then
     fi
   done
   if test -n "$_sci_inc $INC_MPI_H" && test $__sci_pass != "true"; then
-       as_fn_error $? "For specific SCI-TRY-LINK test for PIDX only one include path may be specified for arg 4 (you had: $_sci_inc $INC_MPI_H).  This is an internal SCIRun configure error and should be reported to scirun-develop@sci.utah.edu." "$LINENO" 5
+       as_fn_error $? "For specific SCI-TRY-LINK test for PIDX only one include path may be specified for arg 4 (you had: $_sci_inc $INC_MPI_H).  This is an internal Uintah configure error and should be reported to scirun-develop@sci.utah.edu." "$LINENO" 5
   fi
 fi
 
@@ -37897,7 +37897,7 @@ if test "$with_boost" -o "$with_boost_library"; then
 ##      HAVE_BOOST_H         => yes or no
 
 if test 9 != 9; then
-     as_fn_error $? "Wrong number of parameters (9) for SCI-TRY-LINK for boost library (mt version) and include headers.  This is an internal SCIRun configure error and should be reported to scirun-develop@sci.utah.edu." "$LINENO" 5
+     as_fn_error $? "Wrong number of parameters (9) for SCI-TRY-LINK for boost library (mt version) and include headers.  This is an internal Uintah configure error and should be reported to scirun-develop@sci.utah.edu." "$LINENO" 5
 fi
 
 
@@ -37912,7 +37912,7 @@ _sci_includes=
 
 if test "optional" != "optional" -a "optional" != "required" -a "optional" != "specific"; then
      echo
-     as_fn_error $? "Last parameter of SCI-TRY-LINK for boost library (mt version) and include headers must be: optional or required or specific.  (You had optional.)  This is an internal SCIRun configure error and should be reported to scirun-develop@sci.utah.edu." "$LINENO" 5
+     as_fn_error $? "Last parameter of SCI-TRY-LINK for boost library (mt version) and include headers must be: optional or required or specific.  (You had optional.)  This is an internal Uintah configure error and should be reported to scirun-develop@sci.utah.edu." "$LINENO" 5
 fi
 
 # If $BOOST_INCLUDE_DIR (the -I paths) is blank, do nothing, else do the for statement.
@@ -38070,7 +38070,7 @@ if test "optional" = "specific"; then
     fi
   done
   if test $__sci_pass != "true"; then
-       as_fn_error $? "For specific SCI-TRY-LINK test for BOOST only one library path may be specified for arg 6 (you had: $BOOST_LIBRARY_DIR).  This is an internal SCIRun configure error and should be reported to scirun-develop@sci.utah.edu." "$LINENO" 5
+       as_fn_error $? "For specific SCI-TRY-LINK test for BOOST only one library path may be specified for arg 6 (you had: $BOOST_LIBRARY_DIR).  This is an internal Uintah configure error and should be reported to scirun-develop@sci.utah.edu." "$LINENO" 5
   fi
   # and only one include path:
   ### Determine if there is only one item in $BOOST_INCLUDE_DIR
@@ -38088,7 +38088,7 @@ if test "optional" = "specific"; then
     fi
   done
   if test -n "$BOOST_INCLUDE_DIR" && test $__sci_pass != "true"; then
-       as_fn_error $? "For specific SCI-TRY-LINK test for BOOST only one include path may be specified for arg 4 (you had: $BOOST_INCLUDE_DIR).  This is an internal SCIRun configure error and should be reported to scirun-develop@sci.utah.edu." "$LINENO" 5
+       as_fn_error $? "For specific SCI-TRY-LINK test for BOOST only one include path may be specified for arg 4 (you had: $BOOST_INCLUDE_DIR).  This is an internal Uintah configure error and should be reported to scirun-develop@sci.utah.edu." "$LINENO" 5
   fi
 fi
 
@@ -38351,7 +38351,7 @@ $as_echo "$as_me: WARNING: Boost was found, but not in the right place... trying
 ##      HAVE_BOOST_H         => yes or no
 
 if test 9 != 9; then
-     as_fn_error $? "Wrong number of parameters (9) for SCI-TRY-LINK for boost library (non-mt) and include headers.  This is an internal SCIRun configure error and should be reported to scirun-develop@sci.utah.edu." "$LINENO" 5
+     as_fn_error $? "Wrong number of parameters (9) for SCI-TRY-LINK for boost library (non-mt) and include headers.  This is an internal Uintah configure error and should be reported to scirun-develop@sci.utah.edu." "$LINENO" 5
 fi
 
 
@@ -38366,7 +38366,7 @@ _sci_includes=
 
 if test "optional" != "optional" -a "optional" != "required" -a "optional" != "specific"; then
      echo
-     as_fn_error $? "Last parameter of SCI-TRY-LINK for boost library (non-mt) and include headers must be: optional or required or specific.  (You had optional.)  This is an internal SCIRun configure error and should be reported to scirun-develop@sci.utah.edu." "$LINENO" 5
+     as_fn_error $? "Last parameter of SCI-TRY-LINK for boost library (non-mt) and include headers must be: optional or required or specific.  (You had optional.)  This is an internal Uintah configure error and should be reported to scirun-develop@sci.utah.edu." "$LINENO" 5
 fi
 
 # If $BOOST_INCLUDE_DIR (the -I paths) is blank, do nothing, else do the for statement.
@@ -38524,7 +38524,7 @@ if test "optional" = "specific"; then
     fi
   done
   if test $__sci_pass != "true"; then
-       as_fn_error $? "For specific SCI-TRY-LINK test for BOOST only one library path may be specified for arg 6 (you had: $BOOST_LIBRARY_DIR).  This is an internal SCIRun configure error and should be reported to scirun-develop@sci.utah.edu." "$LINENO" 5
+       as_fn_error $? "For specific SCI-TRY-LINK test for BOOST only one library path may be specified for arg 6 (you had: $BOOST_LIBRARY_DIR).  This is an internal Uintah configure error and should be reported to scirun-develop@sci.utah.edu." "$LINENO" 5
   fi
   # and only one include path:
   ### Determine if there is only one item in $BOOST_INCLUDE_DIR
@@ -38542,7 +38542,7 @@ if test "optional" = "specific"; then
     fi
   done
   if test -n "$BOOST_INCLUDE_DIR" && test $__sci_pass != "true"; then
-       as_fn_error $? "For specific SCI-TRY-LINK test for BOOST only one include path may be specified for arg 4 (you had: $BOOST_INCLUDE_DIR).  This is an internal SCIRun configure error and should be reported to scirun-develop@sci.utah.edu." "$LINENO" 5
+       as_fn_error $? "For specific SCI-TRY-LINK test for BOOST only one include path may be specified for arg 4 (you had: $BOOST_INCLUDE_DIR).  This is an internal Uintah configure error and should be reported to scirun-develop@sci.utah.edu." "$LINENO" 5
   fi
 fi
 
@@ -38817,7 +38817,7 @@ _sci_includes=''
 ##      HAVE_BOOST_FS_V3_H         => yes or no
 
 if test 9 != 9; then
-     as_fn_error $? "Wrong number of parameters (9) for SCI-TRY-LINK for check for boost filesystem v3 namespace....  This is an internal SCIRun configure error and should be reported to scirun-develop@sci.utah.edu." "$LINENO" 5
+     as_fn_error $? "Wrong number of parameters (9) for SCI-TRY-LINK for check for boost filesystem v3 namespace....  This is an internal Uintah configure error and should be reported to scirun-develop@sci.utah.edu." "$LINENO" 5
 fi
 
 
@@ -38832,7 +38832,7 @@ _sci_includes=
 
 if test "optional" != "optional" -a "optional" != "required" -a "optional" != "specific"; then
      echo
-     as_fn_error $? "Last parameter of SCI-TRY-LINK for check for boost filesystem v3 namespace... must be: optional or required or specific.  (You had optional.)  This is an internal SCIRun configure error and should be reported to scirun-develop@sci.utah.edu." "$LINENO" 5
+     as_fn_error $? "Last parameter of SCI-TRY-LINK for check for boost filesystem v3 namespace... must be: optional or required or specific.  (You had optional.)  This is an internal Uintah configure error and should be reported to scirun-develop@sci.utah.edu." "$LINENO" 5
 fi
 
 # If $BOOST_INCLUDE_DIR (the -I paths) is blank, do nothing, else do the for statement.
@@ -38990,7 +38990,7 @@ if test "optional" = "specific"; then
     fi
   done
   if test $__sci_pass != "true"; then
-       as_fn_error $? "For specific SCI-TRY-LINK test for BOOST_FS_V3 only one library path may be specified for arg 6 (you had: ).  This is an internal SCIRun configure error and should be reported to scirun-develop@sci.utah.edu." "$LINENO" 5
+       as_fn_error $? "For specific SCI-TRY-LINK test for BOOST_FS_V3 only one library path may be specified for arg 6 (you had: ).  This is an internal Uintah configure error and should be reported to scirun-develop@sci.utah.edu." "$LINENO" 5
   fi
   # and only one include path:
   ### Determine if there is only one item in $BOOST_INCLUDE_DIR
@@ -39008,7 +39008,7 @@ if test "optional" = "specific"; then
     fi
   done
   if test -n "$BOOST_INCLUDE_DIR" && test $__sci_pass != "true"; then
-       as_fn_error $? "For specific SCI-TRY-LINK test for BOOST_FS_V3 only one include path may be specified for arg 4 (you had: $BOOST_INCLUDE_DIR).  This is an internal SCIRun configure error and should be reported to scirun-develop@sci.utah.edu." "$LINENO" 5
+       as_fn_error $? "For specific SCI-TRY-LINK test for BOOST_FS_V3 only one include path may be specified for arg 4 (you had: $BOOST_INCLUDE_DIR).  This is an internal Uintah configure error and should be reported to scirun-develop@sci.utah.edu." "$LINENO" 5
   fi
 fi
 
@@ -39731,7 +39731,7 @@ ac_compiler_gnu=$ac_cv_cxx_compiler_gnu
 ##      HAVE_HYPRE_H         => yes or no
 
 if test 9 != 9; then
-     as_fn_error $? "Wrong number of parameters (9) for SCI-TRY-LINK for HYPRE libraries and headers.  This is an internal SCIRun configure error and should be reported to scirun-develop@sci.utah.edu." "$LINENO" 5
+     as_fn_error $? "Wrong number of parameters (9) for SCI-TRY-LINK for HYPRE libraries and headers.  This is an internal Uintah configure error and should be reported to scirun-develop@sci.utah.edu." "$LINENO" 5
 fi
 
 
@@ -39746,7 +39746,7 @@ _sci_includes=
 
 if test "optional" != "optional" -a "optional" != "required" -a "optional" != "specific"; then
      echo
-     as_fn_error $? "Last parameter of SCI-TRY-LINK for HYPRE libraries and headers must be: optional or required or specific.  (You had optional.)  This is an internal SCIRun configure error and should be reported to scirun-develop@sci.utah.edu." "$LINENO" 5
+     as_fn_error $? "Last parameter of SCI-TRY-LINK for HYPRE libraries and headers must be: optional or required or specific.  (You had optional.)  This is an internal Uintah configure error and should be reported to scirun-develop@sci.utah.edu." "$LINENO" 5
 fi
 
 # If $_sci_inc (the -I paths) is blank, do nothing, else do the for statement.
@@ -39904,7 +39904,7 @@ if test "optional" = "specific"; then
     fi
   done
   if test $__sci_pass != "true"; then
-       as_fn_error $? "For specific SCI-TRY-LINK test for HYPRE only one library path may be specified for arg 6 (you had: $_sci_lib).  This is an internal SCIRun configure error and should be reported to scirun-develop@sci.utah.edu." "$LINENO" 5
+       as_fn_error $? "For specific SCI-TRY-LINK test for HYPRE only one library path may be specified for arg 6 (you had: $_sci_lib).  This is an internal Uintah configure error and should be reported to scirun-develop@sci.utah.edu." "$LINENO" 5
   fi
   # and only one include path:
   ### Determine if there is only one item in $_sci_inc
@@ -39922,7 +39922,7 @@ if test "optional" = "specific"; then
     fi
   done
   if test -n "$_sci_inc" && test $__sci_pass != "true"; then
-       as_fn_error $? "For specific SCI-TRY-LINK test for HYPRE only one include path may be specified for arg 4 (you had: $_sci_inc).  This is an internal SCIRun configure error and should be reported to scirun-develop@sci.utah.edu." "$LINENO" 5
+       as_fn_error $? "For specific SCI-TRY-LINK test for HYPRE only one include path may be specified for arg 4 (you had: $_sci_inc).  This is an internal Uintah configure error and should be reported to scirun-develop@sci.utah.edu." "$LINENO" 5
   fi
 fi
 
@@ -40177,7 +40177,7 @@ _sci_includes=''
 ##      HAVE_HYPRE_H         => yes or no
 
 if test 9 != 9; then
-     as_fn_error $? "Wrong number of parameters (9) for SCI-TRY-LINK for HYPRE libraries and headers.  This is an internal SCIRun configure error and should be reported to scirun-develop@sci.utah.edu." "$LINENO" 5
+     as_fn_error $? "Wrong number of parameters (9) for SCI-TRY-LINK for HYPRE libraries and headers.  This is an internal Uintah configure error and should be reported to scirun-develop@sci.utah.edu." "$LINENO" 5
 fi
 
 
@@ -40192,7 +40192,7 @@ _sci_includes=
 
 if test "optional" != "optional" -a "optional" != "required" -a "optional" != "specific"; then
      echo
-     as_fn_error $? "Last parameter of SCI-TRY-LINK for HYPRE libraries and headers must be: optional or required or specific.  (You had optional.)  This is an internal SCIRun configure error and should be reported to scirun-develop@sci.utah.edu." "$LINENO" 5
+     as_fn_error $? "Last parameter of SCI-TRY-LINK for HYPRE libraries and headers must be: optional or required or specific.  (You had optional.)  This is an internal Uintah configure error and should be reported to scirun-develop@sci.utah.edu." "$LINENO" 5
 fi
 
 # If $_sci_inc (the -I paths) is blank, do nothing, else do the for statement.
@@ -40350,7 +40350,7 @@ if test "optional" = "specific"; then
     fi
   done
   if test $__sci_pass != "true"; then
-       as_fn_error $? "For specific SCI-TRY-LINK test for HYPRE only one library path may be specified for arg 6 (you had: $_sci_lib).  This is an internal SCIRun configure error and should be reported to scirun-develop@sci.utah.edu." "$LINENO" 5
+       as_fn_error $? "For specific SCI-TRY-LINK test for HYPRE only one library path may be specified for arg 6 (you had: $_sci_lib).  This is an internal Uintah configure error and should be reported to scirun-develop@sci.utah.edu." "$LINENO" 5
   fi
   # and only one include path:
   ### Determine if there is only one item in $_sci_inc
@@ -40368,7 +40368,7 @@ if test "optional" = "specific"; then
     fi
   done
   if test -n "$_sci_inc" && test $__sci_pass != "true"; then
-       as_fn_error $? "For specific SCI-TRY-LINK test for HYPRE only one include path may be specified for arg 4 (you had: $_sci_inc).  This is an internal SCIRun configure error and should be reported to scirun-develop@sci.utah.edu." "$LINENO" 5
+       as_fn_error $? "For specific SCI-TRY-LINK test for HYPRE only one include path may be specified for arg 4 (you had: $_sci_inc).  This is an internal Uintah configure error and should be reported to scirun-develop@sci.utah.edu." "$LINENO" 5
   fi
 fi
 

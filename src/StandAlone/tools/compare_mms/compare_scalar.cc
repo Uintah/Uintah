@@ -73,7 +73,7 @@ is_equal(double num1, double num2, double tol = 1000 * DBL_EPSILON)
 }
 
 //__________________________________
-// Finds out if two SCIRun::Vectors are equal within the given tolerance
+// Finds out if two Uintah::Vectors are equal within the given tolerance
 
 bool
 is_equal(Vector num1, Vector num2, double tol = 1000 * DBL_EPSILON)

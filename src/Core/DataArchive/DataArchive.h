@@ -117,8 +117,8 @@ namespace Uintah {
         std::string datafilename;
       };
 
-      typedef SCIRun::HashTable<VarnameMatlPatch, DataFileInfo> VarHashMap;
-      typedef SCIRun::HashTableIter<VarnameMatlPatch, DataFileInfo> VarHashMapIterator;
+      typedef Uintah::HashTable<VarnameMatlPatch, DataFileInfo> VarHashMap;
+      typedef Uintah::HashTableIter<VarnameMatlPatch, DataFileInfo> VarHashMapIterator;
 
       //! Top of DataArchive structure for storing hash maps of variable data
       //! - containing data for each time step.
