@@ -134,30 +134,7 @@ private:
   ThreadedTaskScheduler( ThreadedTaskScheduler && )                 = delete;
   ThreadedTaskScheduler& operator=( ThreadedTaskScheduler && )      = delete;
 
-
-  struct TaskHandle {
-   DetailedTask* m_detailed_task;
-   char buf[sizeof(RuntimeStats::TaskWaitTimer)];
-
-   TaskHandle(DetailedTask* dtask)
-     : m_detailed_task{dtask}
-   {
-     // to avoid potentially many small allocations
-     new (reinterpret_cast<RuntimeStats::TaskWaitTimer*>(buf)) RuntimeStats::TaskWaitTimer(dtask);
-   }
-
-   void doit( const ProcessorGroup                      * pg
-            ,       std::vector<OnDemandDataWarehouseP> & oddws
-            ,       std::vector<DataWarehouseP>         & dws
-            )
-   {
-     // use RAII timer to capture wait time (destroyed but not deallocated)
-     reinterpret_cast<RuntimeStats::TaskWaitTimer*>(buf)->~TaskWaitTimer();
-     m_detailed_task->doit(pg, oddws, dws);
-   }
-  };
-
-  using TaskPool = Lockfree::Pool< TaskHandle
+  using TaskPool = Lockfree::Pool< DetailedTask *
                                  , uint64_t
                                  , 1u
                                  , Uintah::MallocAllocator      // allocator
@@ -177,7 +154,7 @@ private:
 
   bool process_MPI_requests();
 
-  void run_task( TaskHandle task_handle, int iteration );
+  void run_task( DetailedTask * dtask, int iteration );
 
   void run_reduction_task( DetailedTask* task );
 

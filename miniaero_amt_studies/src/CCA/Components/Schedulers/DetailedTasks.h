@@ -27,6 +27,7 @@
 
 #include <CCA/Components/Schedulers/DWDatabase.h>
 #include <CCA/Components/Schedulers/OnDemandDataWarehouse.h>
+#include <CCA/Components/Schedulers/RuntimeStats.hpp>
 
 #include <Core/Containers/FastHashTable.h>
 #include <Core/Grid/Patch.h>
@@ -371,7 +372,11 @@ class SchedulerCommon;
 
     bool isInitiated() const { return initiated_; }
 
-    void markInitiated() { initiated_ = true; }
+    void markInitiated()
+    {
+      m_wait_timer.start();
+      initiated_ = true;
+    }
 
     void incrementExternalDepCount() { externalDependencyCount_++; }
 
@@ -382,6 +387,10 @@ class SchedulerCommon;
     int getExternalDepCount() { return externalDependencyCount_; }
 
     bool areInternalDependenciesSatisfied() { return (numPendingInternalDependencies == 0); }
+
+    double task_wait_time() const { return m_wait_timer().seconds(); }
+
+    double task_exec_time() const { return m_exec_timer().seconds(); }
 
 
 #ifdef HAVE_CUDA
@@ -479,10 +488,8 @@ class SchedulerCommon;
     int resourceIndex;
     int staticOrder;
 
-    DetailedTask( const Task& ) = delete;
-    DetailedTask& operator=( const Task& ) = delete;
-    DetailedTask( Task&& ) = delete;
-    DetailedTask& operator=( Task&& ) = delete;
+    RuntimeStats::TaskExecTimer m_exec_timer{this};
+    RuntimeStats::TaskWaitTimer m_wait_timer{this};
 
     // specifies the type of task this is:
     //   * normal executes on either the patches cells or the patches coarse cells

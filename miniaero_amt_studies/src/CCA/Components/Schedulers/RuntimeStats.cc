@@ -23,8 +23,17 @@
  */
 
 #include <CCA/Components/Schedulers/RuntimeStats.hpp>
+
+#include <CCA/Components/Schedulers/DetailedTasks.h>
+#include <CCA/Components/Schedulers/TaskGraph.h>
+
 #include <Core/Util/DOUT.hpp>
 #include <Core/Util/Timers/Timers.hpp>
+
+#include <mutex>
+
+#include <set>
+#include <map>
 
 #include <iomanip>
 
@@ -33,16 +42,43 @@
 #include <sstream>
 
 #include <algorithm>
+#include <functional>
 
 namespace Uintah {
 
+
 namespace {
 
-Dout g_exec_times{"ExecTimes", false};
-Dout g_wait_times{"WaitTimes", false};
+struct ReportValue
+{
+  ReportValue() = default;
+  ReportValue( const ReportValue &) = default;
+  ReportValue( ReportValue &&) = default;
 
-size_t g_num_tasks{0};
+  ReportValue & operator=( const ReportValue & ) = default;
+  ReportValue & operator=( ReportValue && ) = default;
 
+  ReportValue( RuntimeStats::ValueType  type
+             , std::function<int64_t()> get
+             , std::function<void()>    clear = [](){}
+             )
+    : m_type{type}
+    , m_get{get}
+    , m_clear{clear}
+  {}
+
+  RuntimeStats::ValueType  m_type{};
+  std::function<int64_t()> m_get{};
+  std::function<void()>    m_clear{};
+  int m_index{-1};
+};
+
+std::mutex g_report_lock{};
+
+// [Dout][value_name] = ReportValue
+std::map< Dout, std::map< std::string, ReportValue> > g_report_values;
+
+size_t g_num_tasks;
 std::vector< std::string > g_task_names;
 std::unique_ptr< std::atomic<int64_t>[] > g_task_exec_times{nullptr};
 std::unique_ptr< std::atomic<int64_t>[] > g_task_wait_times{nullptr};
@@ -53,102 +89,175 @@ size_t impl_get_global_id( DetailedTask const* t)
   return itr - g_task_names.begin();
 }
 
-} // unnamed namespace
+} // namespace
 
-std::map< std::string, std::function<int64_t()> > RuntimeStats::s_allocators{};
-std::map< std::string, std::function<int64_t()> > RuntimeStats::s_timers{};
-std::vector< std::function<void()> >              RuntimeStats::s_reset_timers{};
 
-std::mutex RuntimeStats::s_register_mutex{};
+
+void RuntimeStats::register_report( Dout const& dout
+                                  , std::string const& name
+                                  , ValueType type
+                                  , std::function<int64_t()> get_value
+                                  , std::function<void()>    clear_value
+                                  )
+{
+  Dout mpi_report{ "MPIReport", false};
+  if ( mpi_report && dout) {
+    std::unique_lock<std::mutex> lock(g_report_lock);
+    ReportValue value{type, get_value, clear_value };
+    g_report_values[dout][name] = value;
+  }
+}
 
 
 std::atomic<int64_t> * RuntimeStats::get_atomic_exec_ptr( DetailedTask const* t)
 {
-  if (!g_exec_times) { return nullptr; }
+  Dout mpi_report{ "MPIReport", false};
+  Dout exec_times{ "ExecTimes", false };
 
-  const size_t id = impl_get_global_id(t);
-
-  return id < g_num_tasks ?
-           & g_task_exec_times[ id ] : nullptr ;
+  if (mpi_report && exec_times) {
+    const size_t id = impl_get_global_id(t);
+    return id < g_num_tasks ? & g_task_exec_times[ id ] : nullptr ;
+  }
+  return nullptr;
 }
 
 std::atomic<int64_t> * RuntimeStats::get_atomic_wait_ptr( DetailedTask const* t)
 {
-  if (!g_wait_times) { return nullptr; }
+  Dout mpi_report{ "MPIReport", false};
+  Dout wait_times{ "WaitTimes", false };
 
-  const size_t id = impl_get_global_id(t);
-
-  return id < g_num_tasks ?
-           & g_task_wait_times[ id ] : nullptr ;
-}
-
-
-void RuntimeStats::reset_timers()
-{
-  for (auto & f : s_reset_timers) { f(); }
-
-  if (g_exec_times) {
-    g_task_exec_times.reset();
+  if (mpi_report && wait_times) {
+    const size_t id = impl_get_global_id(t);
+    return id < g_num_tasks ? & g_task_wait_times[ id ] : nullptr ;
   }
-
-  if (g_wait_times) {
-    g_task_exec_times.reset();
-  }
+  return nullptr;
 }
-
 
 void RuntimeStats::initialize_timestep( std::vector<TaskGraph *> const &  graphs )
 {
-  static bool first_init = true;
-  if (first_init) {
+  Dout mpi_report{ "MPIReport", false};
 
-    register_timer_tag( TaskExecTag{}, "Task Exec", Max );
-    register_timer_tag( TaskWaitTag{}, "Task Wait", Min );
+  if (mpi_report) {
+    {
+      std::unique_lock<std::mutex> lock(g_report_lock);
+      g_report_values.clear();
+    }
 
-    register_timer_tag( CollectiveTag{}, "Total Coll", Total);
-    register_timer_tag( RecvTag{}, "Total Recv", Total);
-    register_timer_tag( SendTag{}, "Total Send", Total);
-    register_timer_tag( TestTag{}, "Total Test", Total);
-    register_timer_tag( WaitTag{}, "Total Wait", Total);
+    Dout mpi_stats{"MPIStats", true};
+    if (mpi_stats) {
+      register_report( mpi_stats
+                     , "MPI Coll"
+                     , RuntimeStats::Time
+                     , []() { return CollectiveMPITimer::total(); }
+                     , []() { CollectiveMPITimer::reset_tag(); }
+                     );
+      register_report( mpi_stats
+                     , "MPI Send"
+                     , RuntimeStats::Time
+                     , []() { return SendMPITimer::total(); }
+                     , []() { SendMPITimer::reset_tag(); }
+                     );
+      register_report( mpi_stats
+                     , "MPI Recv"
+                     , RuntimeStats::Time
+                     , []() { return RecvMPITimer::total(); }
+                     , []() { RecvMPITimer::reset_tag(); }
+                     );
+    }
 
-    register_timer_tag( CollectiveMPITag{}, "MPI Coll", Total);
-    register_timer_tag( RecvMPITag{}, "MPI Recv", Total);
-    register_timer_tag( SendMPITag{}, "MPI Send", Total);
+    Dout task_stats{"TaskStats", true};
 
-    reset_timers();
+    if (task_stats) {
+      register_report( task_stats
+                     , "Coll"
+                     , RuntimeStats::Time
+                     , []() { return CollectiveTimer::max(); }
+                     , []() { CollectiveTimer::reset_tag(); }
+                     );
+      register_report( task_stats
+                     , "Send"
+                     , RuntimeStats::Time
+                     , []() { return SendTimer::max(); }
+                     , []() { SendTimer::reset_tag(); }
+                     );
+      register_report( task_stats
+                     , "Recv"
+                     , RuntimeStats::Time
+                     , []() { return RecvTimer::max(); }
+                     , []() { RecvTimer::reset_tag(); }
+                     );
+      register_report( task_stats
+                     , "Test"
+                     , RuntimeStats::Time
+                     , []() { return TestTimer::max(); }
+                     , []() { TestTimer::reset_tag(); }
+                     );
+      register_report( task_stats
+                     , "Wait"
+                     , RuntimeStats::Time
+                     , []() { return WaitTimer::max(); }
+                     , []() { WaitTimer::reset_tag(); }
+                     );
+      register_report( task_stats
+                     , "Exec"
+                     , RuntimeStats::Time
+                     , []() { return ExecTimer::max(); }
+                     , []() { ExecTimer::reset_tag(); }
+                     );
+    }
 
-    first_init = false;
-  }
+    Dout exec_times{ "ExecTimes", false };
+    Dout wait_times{ "WaitTimes", false };
+    if (exec_times || wait_times) {
 
-  if ( g_exec_times || g_wait_times ) {
-    std::set<std::string> task_names;
-    for (auto const tg : graphs) {
-      const int tg_size = tg->getNumTasks();
-      for (int i=0; i < tg_size; ++i) {
-        Task * t = tg->getTask(i);
-        task_names.insert( t->getName() );
+      std::unique_lock<std::mutex> lock(g_report_lock);
+
+      std::set<std::string> task_names;
+      for (auto const tg : graphs) {
+        const int tg_size = tg->getNumTasks();
+        for (int i=0; i < tg_size; ++i) {
+          Task * t = tg->getTask(i);
+          task_names.insert( t->getName() );
+        }
+      }
+
+      g_task_names.clear();
+      g_task_names.insert( g_task_names.begin(), task_names.begin(), task_names.end() );
+
+      g_num_tasks = g_task_names.size();
+
+      if (exec_times) {
+        g_task_exec_times.reset();
+        g_task_exec_times = std::unique_ptr< std::atomic<int64_t>[] >( new std::atomic<int64_t>[g_num_tasks]{} );
+
+        auto & exec_time_report = g_report_values[exec_times];
+        exec_time_report.clear();
+
+        for (size_t i=0; i<g_num_tasks; ++i) {
+          exec_time_report[g_task_names[i]] = ReportValue{ RuntimeStats::Time
+                                                         , [i]() { return g_task_exec_times[i].load( std::memory_order_relaxed ); }
+                                                         };
+        }
+      }
+
+      if (wait_times) {
+        g_task_wait_times.reset();
+        g_task_wait_times = std::unique_ptr< std::atomic<int64_t>[] >( new std::atomic<int64_t>[g_num_tasks]{} );
+
+        auto & wait_time_report = g_report_values[wait_times];
+        wait_time_report.clear();
+
+        for (size_t i=0; i<g_num_tasks; ++i) {
+          wait_time_report[g_task_names[i]] = ReportValue{ RuntimeStats::Time
+                                                         , [i]() { return g_task_wait_times[i].load( std::memory_order_relaxed ); }
+                                                         };
+        }
       }
     }
-
-    g_task_names.clear();
-    g_task_names.resize( task_names.size() );
-
-    for (auto const & n : task_names) {
-      g_task_names.push_back( n );
-    }
-    g_num_tasks = g_task_names.size();
-
-    if (g_exec_times) {
-      g_task_exec_times.reset();
-      g_task_exec_times = std::unique_ptr< std::atomic<int64_t>[] >( new std::atomic<int64_t>[g_num_tasks]{} );
-    }
-
-    if (g_wait_times) {
-      g_task_wait_times.reset();
-      g_task_wait_times = std::unique_ptr< std::atomic<int64_t>[] >( new std::atomic<int64_t>[g_num_tasks]{} );
-    }
   }
+
 }
+
 
 
 
@@ -235,11 +344,13 @@ MPI_Op rank_sum_min_max_op;
 } // unnamed namespace
 
 
-void RuntimeStats::report( MPI_Comm comm
-                         , Counts const& counts
-                         , InfoStats & stats
-                         )
+void RuntimeStats::report( MPI_Comm comm, InfoStats & stats )
 {
+  Dout mpi_report("MPIReport", false);
+  if (!mpi_report) return;
+
+  std::unique_lock<std::mutex> lock(g_report_lock);
+
   {
     static bool init = false;
     if (!init) {
@@ -248,143 +359,114 @@ void RuntimeStats::report( MPI_Comm comm
     }
   }
 
-  enum class DataType { Counts
-                      , Time
-                      , Bytes
-                      , ExecTime
-                      , WaitTime
-                      };
-
-
   int psize;
   int prank;
 
   MPI_Comm_size( comm, &psize );
   MPI_Comm_rank( comm, &prank );
 
-  int num_timers = static_cast<int>(s_timers.size());
+  int  num_report_values = 0;
+  // count
+  {
+    int i = 0;
+    int g = 0;
+    for (auto & group : g_report_values) {
 
-  if( g_exec_times ) {
-    num_timers += (int)g_num_tasks;
-  }
+      // group.first Dout, group.second map< string, ReportValue>
+      num_report_values += static_cast<int>(group.second.size());
 
-  if( g_wait_times ) {
-    num_timers += (int)g_num_tasks;
-  }
-
-  const int num_allocators = static_cast<int>(s_allocators.size());
-
-  const int num_values = num_timers + num_allocators + counts.size();; // num_patches, num_cells, num_particles
-
-  const int data_size = num_values * 4;
-
-
-  std::vector<int64_t>     local_data;
-  std::vector<int64_t>     data;
-  std::vector<int64_t>     histograms;
-  std::vector<int64_t>     global_data;
-  std::vector<int64_t>     global_histograms;
-  std::vector< std::pair<std::string, DataType> > names;
-
-  local_data.reserve( num_values );
-  data.reserve( data_size );
-
-  auto push_data = [&](const std::string & name, DataType t, int64_t value) {
-    if (prank==0) {
-      names.emplace_back( name, t );
-    }
-    local_data.push_back(value);
-    data.push_back(prank); // rank
-    data.push_back(value); // total
-    data.push_back(value); // min
-    data.push_back(value); // max
-  };
-
-  if (prank==0) {
-    names.reserve( num_values );
-  }
-
-  // Counts
-  for (auto const & c : counts ) {
-    push_data(c.first, DataType::Counts, c.second);
-  }
-
-  // Tag Timers
-  for( auto const& p : s_timers ) {
-    push_data( p.first, DataType::Time, p.second() );
-  }
-
-  // Tag Allocators
-  for ( auto const& p : s_allocators ) {
-    push_data( p.first, DataType::Bytes, p.second() );
-  }
-
-  // Exec Times
-  if (g_exec_times) {
-    for (size_t i=0; i<g_num_tasks; ++i) {
-      const int64_t ns = g_task_exec_times[i].load( std::memory_order_relaxed );
-      push_data( g_task_names[i], DataType::ExecTime, ns );
+      for (auto & value : group.second ) {
+        value.second.m_index = i++;
+      }
     }
   }
 
-  // Wait Times
-  if (g_wait_times) {
-    for (size_t i=0; i<g_num_tasks; ++i) {
-      const int64_t ns = g_task_exec_times[i].load( std::memory_order_relaxed );
-      push_data( g_task_names[i], DataType::WaitTime, ns );
+  const int data_size = num_report_values*4;
+
+  std::vector<int64_t>     data(data_size,0);
+  std::vector<int64_t>     global_data(data_size,0);
+
+  // fill
+  {
+    for (auto & group : g_report_values) {
+      // group.first Dout, group.second map< string, ReportValue>
+      for (auto & value : group.second ) {
+        int64_t i = 4 * value.second.m_index;
+        const int64_t v = value.second.m_get();
+        data[i+RANK] = prank; // rank
+        data[i+SUM] = v;     // total
+        data[i+MIN] = v;     // min
+        data[i+MAX] = v;     // max
+      }
     }
   }
 
   global_data.resize(data_size);
   MPI_Allreduce( data.data(), global_data.data(), data_size, MPI_INT64_T, rank_sum_min_max_op, comm);
 
-  histograms.resize( data_size, 0 );
-  global_histograms.resize( data_size, 0 );
+  std::vector<int64_t>     histograms(data_size,0);
+  std::vector<int64_t>     global_histograms(data_size,0);
 
-  for( int i=0; i<num_values; ++i ) {
-    const int off = 4*i;
-    const int64_t min = global_data[off+MIN];
-    const int64_t max = global_data[off+MAX];
-    const int64_t mag = max - min;
+  // histogram
+  {
+    for (auto & group : g_report_values) {
+      // group.first Dout, group.second map< string, ReportValue>
+      for (auto & value : group.second ) {
+        const int64_t i = 4 * value.second.m_index;
+        const int64_t min = global_data[i+MIN];
+        const int64_t max = global_data[i+MAX];
+        const int64_t mag = max - min;
+        const int64_t t =   value.second.m_get() - min;
 
-    const int64_t t = local_data[i] - min;
+        int bin = (0 < mag) ? 4*t / mag : 0;
+        bin = bin < 4 ? bin : 3;
+        histograms[i+bin] = 1;
 
-    int bin = 0 < mag ? 4*t / mag : 0;
-    bin = bin < 4 ? bin : 3;
-
-    histograms[off+bin] = 1;
+        // clear the value to avoid another loop
+        value.second.m_clear();
+      }
+    }
   }
 
   MPI_Reduce(histograms.data(), global_histograms.data(), data_size, MPI_INT64_T, MPI_SUM, 0, comm);
 
-  Dout mpi_report("MPIReport", false);
+  if (prank == 0) {
 
-  if (mpi_report && prank == 0) {
+    auto to_string = [](ValueType t, double v)->std::string {
+      std::string result;
+      switch(t) {
+      case Count:
+        {
+          std::ostringstream out;
+          out << std::setprecision(3) << v;
+          result = out.str();
+        }
+        break;
+      case Time:
+        result = nanoseconds_to_string(v);
+        break;
+      case Memory:
+        result = bytes_to_string(v);
+        break;
+      }
+      return result;
+    };
 
-    const int w_desc = 14;
     const int w_num  = 13;
     const int w_hist = 35;
     const int w_load = 18;
 
-    auto print_header = [=](DataType t) {
-      printf("\n--------------------------------------------------------------------------------\n");
-      switch(t) {
-      case DataType::Counts:
-        printf("COUNTS\n");
-        break;
-      case DataType::Time:
-        printf("TIMERS (wall)\n");
-        break;
-      case DataType::Bytes:
-        printf("ALLOCATORS\n");
-        break;
-      case DataType::ExecTime:
-        printf("TASK EXEC TIME (compute)\n");
-        break;
-      case DataType::WaitTime:
-        printf("TASK WAIT TIME (compute)\n");
-        break;
+    for (auto const& group : g_report_values) {
+
+      int w_desc = 14;
+      for (auto const& value : group.second ) {
+        const int s = static_cast<int>(value.first.size()) + 1;
+        w_desc = s < w_desc ? w_desc : s;
       }
+
+      const std::string & group_name = group.first.name();
+      printf("\n--------------------------------------------------------------------------------\n");
+      printf("%s\n", group_name.c_str() );
       printf("--------------------------------------------------------------------------------\n");
       printf( "%*s%*s%*s%*s%*s%*s%*s%*s\n"
           ,w_desc, "Name:"
@@ -396,57 +478,31 @@ void RuntimeStats::report( MPI_Comm comm
           ,w_hist, "Hist \% [  Q1 |  Q2 |  Q3 |  Q4 ]:"
           ,w_load, "\%Load Imbalance"
       );
-    };
 
-    auto to_string = [](DataType t, double v)->std::string {
-      std::string result;
-      switch(t) {
-      case DataType::Counts:
-        {
-          std::ostringstream out;
-          out << std::setprecision(3) << v;
-          result = out.str();
-        }
-        break;
-      case DataType::Time:
-        result = nanoseconds_to_string(v);
-        break;
-      case DataType::Bytes:
-        result = bytes_to_string(v);
-        break;
-      case DataType::ExecTime:
-        result = nanoseconds_to_string(v);
-        break;
-      case DataType::WaitTime:
-        result = nanoseconds_to_string(v);
-        break;
-      }
-      return result;
-    };
+      for (auto const& value : group.second ) {
 
-    auto print_row = [&](int i) {
-      const int off = 4*i;
-      const int max_rank  = global_data[off+RANK];
-      const int64_t total = global_data[off+SUM];
-      const int64_t min   = global_data[off+MIN];
-      const int64_t max   = global_data[off+MAX];
+        const int64_t i = 4 * value.second.m_index;
 
-      const double avg = static_cast<double>(total) / psize;
+        const int max_rank  = global_data[i+RANK];
+        const int64_t total = global_data[i+SUM];
+        const int64_t min   = global_data[i+MIN];
+        const int64_t max   = global_data[i+MAX];
+        const double avg = static_cast<double>(total) / psize;
 
-      const double q1 = static_cast<double>(100 * global_histograms[off+Q1]) / psize;
-      const double q2 = static_cast<double>(100 * global_histograms[off+Q2]) / psize;
-      const double q3 = static_cast<double>(100 * global_histograms[off+Q3]) / psize;
-      const double q4 = static_cast<double>(100 * global_histograms[off+Q4]) / psize;
+        const double q1 = static_cast<double>(100 * global_histograms[i+Q1]) / psize;
+        const double q2 = static_cast<double>(100 * global_histograms[i+Q2]) / psize;
+        const double q3 = static_cast<double>(100 * global_histograms[i+Q3]) / psize;
+        const double q4 = static_cast<double>(100 * global_histograms[i+Q4]) / psize;
 
-      const double load = max != 0 ? (100.0 * (1.0 - (avg / max))) : 0.0;
+        const double load = max != 0 ? (100.0 * (1.0 - (avg / max))) : 0.0;
 
-      const std::string & name = names[i].first;
-      DataType t =  names[i].second;
+        const std::string & value_name = value.first;
 
-      if ( total > 0) {
-        if (name.size() < w_desc) {
+        const RuntimeStats::ValueType t = value.second.m_type;
+
+        if ( total > 0) {
           printf("%*s:%*s%*s%*s%*s%*d          %6.1f%6.1f%6.1f%6.1f%8.1f\n"
-              , w_desc-1, name.c_str()
+              , w_desc-1, value_name.c_str()
               , w_num, to_string(t, total).c_str()
               , w_num, to_string(t, avg).c_str()
               , w_num, to_string(t, min).c_str()
@@ -459,35 +515,12 @@ void RuntimeStats::report( MPI_Comm comm
               , load
               );
         }
-        else {
-          printf("%s\n", name.c_str());
-          printf("%*s:%*s%*s%*s%*s%*d          %6.1f%6.1f%6.1f%6.1f%8.1f\n"
-              , w_desc-1, ""
-              , w_num, to_string(t, total).c_str()
-              , w_num, to_string(t, avg).c_str()
-              , w_num, to_string(t, min).c_str()
-              , w_num, to_string(t, max).c_str()
-              , w_num, max_rank
-              , q1
-              , q2
-              , q3
-              , q4
-              , load
-              );
 
-        }
       }
-    };
-
-    for (int i=0; i<num_values; ++i) {
-      if (i==0 || names[i-1].second != names[i].second) {
-        print_header( names[i].second );
-      }
-      print_row(i);
     }
     printf("\n");
-  }
 
+  }
 
 
   // update SimulationState
@@ -498,7 +531,8 @@ void RuntimeStats::report( MPI_Comm comm
   stats[SimulationState::TaskWaitCommTime]   += TestTimer::total().seconds() + WaitTimer::total().seconds();
   stats[SimulationState::TaskGlobalCommTime] += CollectiveTimer::total().seconds();
 
-  reset_timers();
+  // clear the registered report values
+  g_report_values.clear();
 }
 
 } // namespace Uintah

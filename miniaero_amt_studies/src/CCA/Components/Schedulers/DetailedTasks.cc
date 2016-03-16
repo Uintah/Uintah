@@ -310,20 +310,9 @@ DetailedTask::doit( const ProcessorGroup*                 pg,
                     std::vector<DataWarehouseP>&         dws,
                           Task::CallBackEvent             event /* = Task::CPU */ )
 {
-  if (dbg.active()) {
-    cerrLock.lock();
-    dbg << "DetailedTask " << this << " begin doit()\n";
-    dbg << " task is " << task << "\n";
-    dbg << "   num Pending Deps: " << numPendingInternalDependencies << "\n";
-    dbg << "   Originally needed deps (" << internalDependencies.size() << "):\n";
+  m_wait_timer.stop();
+  m_exec_timer.start();
 
-    std::list<InternalDependency>::iterator iter = internalDependencies.begin();
-
-    for (int i = 0; iter != internalDependencies.end(); iter++, i++) {
-      dbg << i << ":    " << *((*iter).prerequisiteTask->getTask()) << "\n";
-    }
-    cerrLock.unlock();
-  }
   for (int i = 0; i < (int)dws.size(); i++) {
     if (oddws[i] != 0) {
       oddws[i]->pushRunningTask(task, &oddws);
@@ -1499,6 +1488,9 @@ DetailedTask::resetDependencyCounts()
   externalDependencyCount_ = 0;
   externallyReady_ = false;
   initiated_ = false;
+
+  m_wait_timer.reset();
+  m_exec_timer.reset();
 }
 
 //_____________________________________________________________________________
@@ -1720,13 +1712,6 @@ DetailedTask::done( std::vector<OnDemandDataWarehouseP>& dws )
   // Important to scrub first, before dealing with the internal dependencies
   scrub(dws);
 
-  if (dbg.active()) {
-    cerrLock.lock();
-    dbg << "This: " << this << " is done with task: " << task << "\n";
-    dbg << "Name is: " << task->getName() << " which has (" << internalDependents.size() << ") tasks waiting on it:\n";
-    cerrLock.unlock();
-  }
-
   int cnt = 1000;
   std::map<DetailedTask*, InternalDependency*>::iterator iter;
   for (iter = internalDependents.begin(); iter != internalDependents.end(); iter++) {
@@ -1739,6 +1724,8 @@ DetailedTask::done( std::vector<OnDemandDataWarehouseP>& dws )
     dep->dependentTask->dependencySatisfied(dep);
     cnt++;
   }
+
+  m_exec_timer.stop();
 }
 
 //_____________________________________________________________________________

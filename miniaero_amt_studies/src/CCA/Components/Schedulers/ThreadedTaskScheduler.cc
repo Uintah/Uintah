@@ -388,7 +388,6 @@ void ThreadedTaskScheduler::execute(  int tgnum /*=0*/ , int iteration /*=0*/ )
 
   finalizeTimestep();
 
-  RuntimeStats::Counts counts;
   {
     int64_t num_patches = 0;
     int64_t num_cells = 0;
@@ -413,12 +412,28 @@ void ThreadedTaskScheduler::execute(  int tgnum /*=0*/ , int iteration /*=0*/ )
       }
     }
 
-    counts.emplace_back( "Patches", num_patches );
-    counts.emplace_back( "Cells", num_cells );
-    counts.emplace_back( "Particles", num_particles );
+    Dout grid_stats{"GridStats", true};
+    if (grid_stats) {
+
+      RuntimeStats::register_report( grid_stats
+                                   , "Patches"
+                                   , RuntimeStats::Count
+                                   , [num_patches]() { return num_patches; }
+                                   );
+      RuntimeStats::register_report( grid_stats
+                                   , "Cells"
+                                   , RuntimeStats::Count
+                                   , [num_cells]() { return num_cells; }
+                                   );
+      RuntimeStats::register_report( grid_stats
+                                   , "Particles"
+                                   , RuntimeStats::Count
+                                   , [num_particles]() { return num_particles; }
+                                   );
+    }
   }
 
-  RuntimeStats::report(d_myworld->getComm(), counts, d_sharedState->d_runTimeStats);
+  RuntimeStats::report(d_myworld->getComm(), d_sharedState->d_runTimeStats);
 
 } // end execute()
 
@@ -732,31 +747,23 @@ bool ThreadedTaskScheduler::process_MPI_requests()
 
 //______________________________________________________________________
 //
-void ThreadedTaskScheduler::run_task( TaskHandle task_handle, int iteration )
+void ThreadedTaskScheduler::run_task( DetailedTask * dtask, int iteration )
 {
-  RuntimeStats::ExecTimer total_exec_timer;
-
-  DetailedTask* dtask = task_handle.m_detailed_task;
-  if (trackingVarsPrintLocation_ & SchedulerCommon::PRINT_BEFORE_EXEC) {
-    printTrackedVars(dtask, SchedulerCommon::PRINT_BEFORE_EXEC);
-  }
+  // measure per thread exec_time
+  RuntimeStats::ExecTimer exec_timer;
 
   std::vector<DataWarehouseP> plain_old_dws(dws.size());
   for (int i = 0; i < (int)dws.size(); i++) {
     plain_old_dws[i] = dws[i].get_rep();
   }
 
-  double total_task_time;
-  {
-    RuntimeStats::TaskExecTimer exec_timer(dtask, total_exec_timer);
-    task_handle.doit(d_myworld, dws, plain_old_dws);
-    total_task_time = exec_timer().seconds();
-  }
+  dtask->doit(d_myworld, dws, plain_old_dws);
 
-  if (trackingVarsPrintLocation_ & SchedulerCommon::PRINT_AFTER_EXEC) {
-    printTrackedVars(dtask, SchedulerCommon::PRINT_AFTER_EXEC);
-  }
+  post_MPI_sends(dtask, iteration);
 
+  dtask->done(dws);
+
+  // TODO clean up DJS 3/16/16
   std::lock_guard<std::mutex> lb_guard(s_lb_mutex);
   {
     // if I do not have a sub scheduler
@@ -764,16 +771,12 @@ void ThreadedTaskScheduler::run_task( TaskHandle task_handle, int iteration )
       //add my task time to the total time
       if (!d_sharedState->isCopyDataTimestep() && dtask->getTask()->getType() != Task::Output) {
         //add contribution for patchlist
-        SchedulerCommon::getLoadBalancer()->addContribution(dtask, total_task_time);
+        SchedulerCommon::getLoadBalancer()->addContribution(dtask, dtask->task_exec_time() );
       }
     }
   }
 
-  post_MPI_sends(dtask, iteration);
-
-  dtask->done(dws);
-
-  SchedulerCommon::emitNode(dtask, 0, total_task_time, 0);
+  SchedulerCommon::emitNode(dtask, 0, dtask->task_exec_time(), 0);
 
 }  // end runTask()
 
@@ -859,15 +862,15 @@ void ThreadedTaskScheduler::select_tasks( int iteration, TaskPool::handle & find
 {
   int flag = 0;
 
-  auto find_task = [&](TaskHandle const & th) {
+  auto find_task = [&](DetailedTask * dtask) {
     flag = 0;
-    if (!th.m_detailed_task->isInitiated() &&
-         th.m_detailed_task->getTask()->d_phase == m_current_phase.load(std::memory_order_relaxed)) {
+    if (!dtask->isInitiated() &&
+         dtask->getTask()->d_phase == m_current_phase.load(std::memory_order_relaxed)) {
       flag = 1;
     }
-    else if (th.m_detailed_task->getExternalDepCount() == 0 &&
-             th.m_detailed_task->isInitiated() &&
-             th.m_detailed_task->getTask()->d_phase == m_current_phase.load(std::memory_order_relaxed)) {
+    else if (dtask->getExternalDepCount() == 0 &&
+             dtask->isInitiated() &&
+             dtask->getTask()->d_phase == m_current_phase.load(std::memory_order_relaxed)) {
       flag = 2;
     }
     return flag > 0;
@@ -877,18 +880,16 @@ void ThreadedTaskScheduler::select_tasks( int iteration, TaskPool::handle & find
   TaskPool::iterator iter = m_task_pool.find_any(find_handle, find_task);
   if (iter) {
     find_handle = iter;
-    TaskHandle handle = *iter;
-    DetailedTask* dtask = handle.m_detailed_task;
-
+    DetailedTask * dtask = *iter;
     if (flag == 1) {
       post_MPI_recvs(dtask, m_abort, m_abort_point, iteration);
       dtask->markInitiated();
       dtask->checkExternalDepCount();
     } else if (flag == 2) {
-      run_task(handle, m_current_iteration);
+      run_task(dtask, m_current_iteration);
       m_task_pool.erase(iter);
       m_num_tasks_done.fetch_add(1, std::memory_order_relaxed);
-      m_phase_tasks_done[handle.m_detailed_task->getTask()->d_phase].fetch_add(1, std::memory_order_relaxed);
+      m_phase_tasks_done[dtask->getTask()->d_phase].fetch_add(1, std::memory_order_relaxed);
     }
     iter.clear();
   } else {
