@@ -378,7 +378,7 @@ DynamicLoadBalancer::assignPatchesFactor( const GridP & grid, bool force )
 
   Timers::Simple individual_lb_times;
 
-  lbtimes[0] += individual_lb_times.seconds();
+  lbtimes[0] += individual_lb_times().seconds();
   individual_lb_times.reset();
 
   static int lbiter = -1;  //counter to identify which regrid
@@ -388,7 +388,7 @@ DynamicLoadBalancer::assignPatchesFactor( const GridP & grid, bool force )
 
   getCosts(grid.get_rep(), patch_costs);
 
-  lbtimes[1] += individual_lb_times.seconds();
+  lbtimes[1] += individual_lb_times().seconds();
   individual_lb_times.reset();
 
   int level_offset = 0;
@@ -417,7 +417,7 @@ DynamicLoadBalancer::assignPatchesFactor( const GridP & grid, bool force )
       useSFC(level, &order[0]);
     }
 
-    lbtimes[2] += individual_lb_times.seconds();
+    lbtimes[2] += individual_lb_times().seconds();
     individual_lb_times.reset();
 
     //hard maximum cost for assigning a patch to a processor
@@ -565,7 +565,7 @@ DynamicLoadBalancer::assignPatchesFactor( const GridP & grid, bool force )
       iter++;
     }
 
-    lbtimes[3] += individual_lb_times.seconds();
+    lbtimes[3] += individual_lb_times().seconds();
     individual_lb_times.reset();
 
     if (minProcLoc != -1 && num_procs > 1) {
@@ -640,7 +640,7 @@ DynamicLoadBalancer::assignPatchesFactor( const GridP & grid, bool force )
     }
 
     level_offset += num_patches;
-    lbtimes[4] += individual_lb_times.seconds();
+    lbtimes[4] += individual_lb_times().seconds();
     individual_lb_times.reset();
   }
 
@@ -702,7 +702,7 @@ DynamicLoadBalancer::assignPatchesFactor( const GridP & grid, bool force )
   //
   bool doLoadBalancing = force || thresholdExceeded(patch_costs);
 
-  double total_lb_time = lb_total_timer.seconds();
+  double total_lb_time = lb_total_timer().seconds();
   //------------------------------< end load balance timing >------------------------------
 
   if (d_myworld->myrank() == 0) {
@@ -1077,7 +1077,7 @@ DynamicLoadBalancer::possiblyDynamicallyReallocate( const GridP & grid, int stat
   // this must be called here (it creates the new per-proc patch sets) even if DLB does nothing.  Don't move or return earlier.
   LoadBalancerCommon::possiblyDynamicallyReallocate(grid, flag);
 
-  double lb_total_time = lb_timer.seconds();
+  double lb_total_time = lb_timer().seconds();
   d_sharedState->d_runTimeStats[SimulationState::LoadBalancerTime] += lb_total_time;
   //------------------------------< end load balancer timing >------------------------------
 

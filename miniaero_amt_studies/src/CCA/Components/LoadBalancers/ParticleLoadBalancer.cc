@@ -20,7 +20,7 @@
  * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
  * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
  * IN THE SOFTWARE.
- */  
+ */
 
 #include <CCA/Components/LoadBalancers/ParticleLoadBalancer.h>
 
@@ -94,7 +94,7 @@ ParticleLoadBalancer::collectParticlesForRegrid( const Grid* oldGrid, const vect
     particles[i].resize(newGridRegions[i].size());
     num_patches += newGridRegions[i].size();
   }
-  
+
   vector<int> recvcounts(numProcs,0); // init the counts to 0
   int totalsize = 0;
 
@@ -255,7 +255,7 @@ void ParticleLoadBalancer::collectParticles(const Grid* grid, vector<vector<int>
   // along with the patch number in particleList
   for(int l=0;l<grid->numLevels();l++) {
     const LevelP& level = grid->getLevel(l);
-    for (Level::const_patchIterator iter = level->patchesBegin(); 
+    for (Level::const_patchIterator iter = level->patchesBegin();
         iter != level->patchesEnd(); iter++) {
       Patch *patch = *iter;
       int id = patch->getGridIndex();
@@ -337,8 +337,8 @@ ParticleLoadBalancer::assignPatches( const vector<double> &previousProcCosts, co
   //resize vectors to appropriate size
   assignments.resize(patches.size());
 
-  double totalCost=0; //the total amount of work 
-  
+  double totalCost=0; //the total amount of work
+
   //add previous assignment costs to total cost
   for(size_t p=0;p<previousProcCosts.size();p++)
     totalCost+=previousProcCosts[p];
@@ -358,10 +358,10 @@ ParticleLoadBalancer::assignPatches( const vector<double> &previousProcCosts, co
   assignments.resize(patches.size());
   do
   {
-    double currentMaxCost=0;  
+    double currentMaxCost=0;
     //give each processor a different max to try to achieve
     double myMaxCost =bestMaxCost-(bestMaxCost-avgCostPerProc)/d_myworld->size()*(double)d_myworld->myrank();
-    
+
     vector<double> currentProcCosts(numProcs,0);
     double remainingCost=totalCost;
     int currentProc=0;
@@ -387,11 +387,11 @@ ParticleLoadBalancer::assignPatches( const vector<double> &previousProcCosts, co
 
         //subtract currentProc's cost from remaining cost
         remainingCost -= (currentProcCosts[currentProc]+previousProcCosts[currentProc]);
-        
 
-        // move to next proc 
+
+        // move to next proc
         currentProc++;
-        
+
         //update average (this ensures we don't over/under fill to much)
         avgCostPerProc = remainingCost / (numProcs-currentProc);
 
@@ -425,7 +425,7 @@ ParticleLoadBalancer::assignPatches( const vector<double> &previousProcCosts, co
     //gather the maxes
     //change to all reduce with loc
     if(numProcs>1)
-      MPI_Allreduce(&maxInfo,&min,1,MPI_DOUBLE_INT,MPI_MINLOC,d_myworld->getComm());    
+      MPI_Allreduce(&maxInfo,&min,1,MPI_DOUBLE_INT,MPI_MINLOC,d_myworld->getComm());
     else
       min=maxInfo;
 
@@ -440,8 +440,8 @@ ParticleLoadBalancer::assignPatches( const vector<double> &previousProcCosts, co
     }
 
     //compute max on proc
-  } while (improvement>0); 
-    
+  } while (improvement>0);
+
   if(minProcLoc!=-1 && numProcs>1)
   {
     //broadcast load balance
@@ -496,11 +496,11 @@ bool ParticleLoadBalancer::loadBalanceGrid(const GridP& grid, bool force)
 
     vector<double> procCosts(numProcs);
     vector<int> assignments;
-    
+
     //assign particlePatches
     assignPatches( procCosts, particleCosts[l], particlePatches,assignments);
     //for each particlePatch
-    
+
     for(size_t p=0;p<particlePatches.size();p++)
     {
       int patch=particlePatches[p];
@@ -512,7 +512,7 @@ bool ParticleLoadBalancer::loadBalanceGrid(const GridP& grid, bool force)
     }
 
     assignments.clear();
-    
+
     //assign cellPatches
     assignPatches( procCosts, cellCosts[l], cellPatches, assignments);
     //for each cellPatch
@@ -536,7 +536,7 @@ bool ParticleLoadBalancer::loadBalanceGrid(const GridP& grid, bool force)
     partImb=computeImbalance(particleCosts);
 
     stats << "Load Imbalance, cellImb: " << cellImb << " partImb: " << partImb << endl;
-  }  
+  }
 
   //need to rewrite thresholdExceeded to take into account cells and particles
   bool doLoadBalancing = force || thresholdExceeded(cellCosts,particleCosts);
@@ -549,7 +549,7 @@ double ParticleLoadBalancer::computeImbalance(const vector<vector<double> >& cos
   int numProcs = d_myworld->size();
   int numLevels = costs.size();
   vector<vector<double> > tempProcCosts(numLevels);
-  
+
   //compute the assignment costs
   int i=0;
   for(int l=0;l<numLevels;l++)
@@ -599,7 +599,7 @@ double ParticleLoadBalancer::computePercentImprovement(const vector<vector<doubl
 
   vector<vector<double> > currentProcCosts(numLevels);
   vector<vector<double> > tempProcCosts(numLevels);
-  
+
   //compute the assignment costs
   int i=0;
   for(int l=0;l<numLevels;l++)
@@ -616,7 +616,7 @@ double ParticleLoadBalancer::computePercentImprovement(const vector<vector<doubl
       tempProcCosts[l][d_tempAssignment[i]] += costs[l][p];
     }
   }
-  
+
   double total_max_current=0, total_avg_current=0;
   double total_max_temp=0, total_avg_temp=0;
 
@@ -651,7 +651,7 @@ bool ParticleLoadBalancer::thresholdExceeded(const vector<vector<double> >& cell
   double cellMax=0, cellAvg=0, partMax=0, partAvg=0;
   double cellImp=computePercentImprovement(cellCosts,cellAvg,cellMax);
   double partImp=computePercentImprovement(partCosts,partAvg,partMax);
-  
+
   if (d_myworld->myrank() == 0)
     stats << "Total:"  << " Load Balance:  Cell Improvement:" << cellImp << " Particle Improvement:"  << partImp << endl;
 
@@ -666,8 +666,8 @@ bool ParticleLoadBalancer::thresholdExceeded(const vector<vector<double> >& cell
 
 }
 
-bool 
-ParticleLoadBalancer::needRecompile(double /*time*/, double /*delt*/, 
+bool
+ParticleLoadBalancer::needRecompile(double /*time*/, double /*delt*/,
                                     const GridP& grid)
 {
   double time = d_sharedState->getElapsedTime();
@@ -704,7 +704,7 @@ ParticleLoadBalancer::needRecompile(double /*time*/, double /*delt*/,
     d_oldAssignmentBasePatch = d_assignmentBasePatch;
     return false;
   }
-} 
+}
 
 //if it is not a regrid the patch information is stored in grid, if it is during a regrid the patch information is stored in patches
 void ParticleLoadBalancer::getCosts(const Grid* grid, vector<vector<double> >&particle_costs, vector<vector<double> > &cell_costs)
@@ -712,7 +712,7 @@ void ParticleLoadBalancer::getCosts(const Grid* grid, vector<vector<double> >&pa
   MALLOC_TRACE_TAG_SCOPE("ParticleLoadBalancer::getCosts");
   particle_costs.clear();
   cell_costs.clear();
-    
+
   vector<vector<int> > num_particles;
 
   DataWarehouse* olddw = d_scheduler->get_dw(0);
@@ -738,12 +738,12 @@ void ParticleLoadBalancer::getCosts(const Grid* grid, vector<vector<double> >&pa
   }
 
   //for each patch set the costs equal to the number of cells and number of particles
-  for (int l = 0; l < grid->numLevels(); l++) 
+  for (int l = 0; l < grid->numLevels(); l++)
   {
     LevelP level=grid->getLevel(l);
     cell_costs.push_back(vector<double>());
     particle_costs.push_back(vector<double>());
-    for (int p = 0; p < grid->getLevel(l)->numPatches(); p++) 
+    for (int p = 0; p < grid->getLevel(l)->numPatches(); p++)
     {
       cell_costs[l].push_back(level->getPatch(p)->getNumCells()*d_cellCost);
       particle_costs[l].push_back(num_particles[l][p]*d_particleCost);
@@ -752,13 +752,13 @@ void ParticleLoadBalancer::getCosts(const Grid* grid, vector<vector<double> >&pa
     if(d_myworld->myrank()==0)
     {
       cout << " Level: " << l << " cellCosts: ";
-      for (int p = 0; p < grid->getLevel(l)->numPatches(); p++) 
+      for (int p = 0; p < grid->getLevel(l)->numPatches(); p++)
       {
         cout << cell_costs[l][p] << " ";
       }
       cout << endl;
       cout << " Level: " << l << " particleCosts: ";
-      for (int p = 0; p < grid->getLevel(l)->numPatches(); p++) 
+      for (int p = 0; p < grid->getLevel(l)->numPatches(); p++)
       {
         cout << particle_costs[l][p] << " ";
       }
@@ -781,7 +781,7 @@ bool ParticleLoadBalancer::possiblyDynamicallyReallocate(const GridP& grid, int 
   bool changed = false;
   bool force = false;
 
-  // don't do on a restart unless procs changed between runs.  For restarts, this is 
+  // don't do on a restart unless procs changed between runs.  For restarts, this is
   // called mainly to update the perProc Patch sets (at the bottom)
   if (state != LoadBalancer::restart) {
     if (state != LoadBalancer::check) {
@@ -795,7 +795,7 @@ bool ParticleLoadBalancer::possiblyDynamicallyReallocate(const GridP& grid, int 
     }
     d_oldAssignment = d_processorAssignment;
     d_oldAssignmentBasePatch = d_assignmentBasePatch;
-    
+
     bool dynamicAllocate = false;
     //temp assignment can be set if the regridder has already called the load balancer
     if(d_tempAssignment.empty())
@@ -805,9 +805,9 @@ bool ParticleLoadBalancer::possiblyDynamicallyReallocate(const GridP& grid, int 
         const LevelP& level = grid->getLevel(l);
         num_patches += level->numPatches();
       }
-    
+
       d_tempAssignment.resize(num_patches);
-      dynamicAllocate = loadBalanceGrid(grid, force); 
+      dynamicAllocate = loadBalanceGrid(grid, force);
     }
     else  //regridder has called dynamic load balancer so we must dynamically Allocate
     {
@@ -825,14 +825,14 @@ bool ParticleLoadBalancer::possiblyDynamicallyReallocate(const GridP& grid, int 
         d_oldAssignment = d_processorAssignment;
         d_oldAssignmentBasePatch = d_assignmentBasePatch;
       }
-        
+
       if (lb.active()) {
         int myrank = d_myworld->myrank();
         if (myrank == 0) {
           LevelP curLevel = grid->getLevel(0);
           Level::const_patchIterator iter = curLevel->patchesBegin();
           lb << "  Changing the Load Balance\n";
-          
+
           for (size_t i = 0; i < d_processorAssignment.size(); i++) {
             lb << myrank << " patch " << i << " (real " << (*iter)->getID() << ") -> proc " << d_processorAssignment[i] << " (old " << d_oldAssignment[i] << ") patch size: "  << (*iter)->getNumExtraCells() << " low:" << (*iter)->getExtraCellLowIndex() << " high: " << (*iter)->getExtraCellHighIndex() <<"\n";
             IntVector range = ((*iter)->getExtraCellHighIndex() - (*iter)->getExtraCellLowIndex());
@@ -847,17 +847,17 @@ bool ParticleLoadBalancer::possiblyDynamicallyReallocate(const GridP& grid, int 
     }
   }
   d_tempAssignment.resize(0);
-  
+
   // logic to setting flag
   int flag = LoadBalancer::check;
   if ( changed || state == LoadBalancer::restart){
     flag = LoadBalancer::regrid;
   }
-  
+
   // this must be called here (it creates the new per-proc patch sets) even if DLB does nothing.  Don't move or return earlier.
   LoadBalancerCommon::possiblyDynamicallyReallocate( grid, flag );
 
-  double lb_time = lb_timer.seconds();
+  double lb_time = lb_timer().seconds();
   d_sharedState->d_runTimeStats[SimulationState::LoadBalancerTime] += lb_time;
   //------------------------------< end load balancer timing >------------------------------
 
@@ -870,7 +870,7 @@ ParticleLoadBalancer::problemSetup(ProblemSpecP& pspec, GridP& grid,  Simulation
   proc0cout << "Warning the ParticleLoadBalancer is experimental, use at your own risk\n";
 
   LoadBalancerCommon::problemSetup( pspec, grid, state );
-  
+
   ProblemSpecP p = pspec->findBlock("LoadBalancer");
   double interval = 0;
   int timestepInterval = 10;
@@ -887,7 +887,7 @@ ParticleLoadBalancer::problemSetup(ProblemSpecP& pspec, GridP& grid,  Simulation
     p->getWithDefault("doSpaceCurve", spaceCurve, true);
     p->getWithDefault("particleCost",d_particleCost, 2);
     p->getWithDefault("cellCost",d_cellCost, 1);
-   
+
   }
 
   d_lbTimestepInterval = timestepInterval;

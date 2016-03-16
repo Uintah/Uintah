@@ -479,8 +479,10 @@ class SchedulerCommon;
     int resourceIndex;
     int staticOrder;
 
-    DetailedTask( const Task& );
-    DetailedTask& operator=( const Task& );
+    DetailedTask( const Task& ) = delete;
+    DetailedTask& operator=( const Task& ) = delete;
+    DetailedTask( Task&& ) = delete;
+    DetailedTask& operator=( Task&& ) = delete;
 
     // specifies the type of task this is:
     //   * normal executes on either the patches cells or the patches coarse cells
