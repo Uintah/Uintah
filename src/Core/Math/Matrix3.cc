@@ -48,11 +48,6 @@
 using namespace Uintah;
 using namespace std;
 
-const string& 
-Matrix3::get_h_file_path() {
-  static const string path(SCIRun::STypeDescription::cc_to_h(__FILE__));
-  return path;
-}
 
 // Added for compatibility with Core types
 namespace Uintah {
@@ -69,7 +64,7 @@ namespace Uintah {
   {
     static SCIRun::STypeDescription* td = 0;
     if(!td){
-      td = scinew SCIRun::STypeDescription("Matrix3", Matrix3::get_h_file_path(), "Uintah");
+      td = scinew SCIRun::STypeDescription("Matrix3");
     }
     return td;
   }

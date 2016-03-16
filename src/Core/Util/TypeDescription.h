@@ -49,13 +49,9 @@ public:
   typedef std::vector<const STypeDescription*> td_vec;
 
   STypeDescription(const std::string& name,
-		  const std::string& path,
-		  const std::string& namesp,
 		  category_e c = OTHER_E);
   STypeDescription(const std::string& name,
 		  td_vec *sub, // this takes ownership of the memory. 
-		  const std::string& path,
-		  const std::string& namesp,
 		  category_e c = OTHER_E);
   ~STypeDescription();
      
@@ -73,8 +69,6 @@ public:
 
   std::string get_filename() const;
 
-  std::string get_h_file_path() const { return h_file_path_; }
-  std::string get_namespace() const { return namespace_; }
 
   struct Register {
     Register(const STypeDescription*);
@@ -82,16 +76,12 @@ public:
   };
 
 
-  //! convert a string that ends in .cc to end in .h
-  static std::string cc_to_h(const std::string &dot_cc);
 
   static const STypeDescription* lookup_type(const std::string&);
 
 private:
   td_vec                     *subtype_;
   std::string                     name_;
-  std::string                     h_file_path_;
-  std::string                     namespace_;
   category_e                 category_;
   // Hide these methods
   STypeDescription(const STypeDescription&);
@@ -122,8 +112,7 @@ const STypeDescription* get_type_description(std::vector<T>*)
     const STypeDescription *sub = SCIRun::get_type_description((T*)0);
     STypeDescription::td_vec *subs = scinew STypeDescription::td_vec(1);
     (*subs)[0] = sub;
-    td = scinew STypeDescription("vector", subs, "std::vector", "std",
-				STypeDescription::CONTAINER_E);
+    td = scinew STypeDescription("vector", subs, STypeDescription::CONTAINER_E);
   }
   return td;
 }
@@ -138,8 +127,7 @@ const STypeDescription* get_type_description (std::pair<T1,T2> *)
     STypeDescription::td_vec *subs = scinew STypeDescription::td_vec(2);
     (*subs)[0] = sub1;
     (*subs)[1] = sub2;
-    td = scinew STypeDescription("pair", subs, "std::utility", "std",
-				STypeDescription::CONTAINER_E);
+    td = scinew STypeDescription("pair", subs, STypeDescription::CONTAINER_E);
   }
   return td;
 
