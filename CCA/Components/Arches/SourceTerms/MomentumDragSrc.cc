@@ -13,8 +13,8 @@
 
 //===========================================================================
 
-#define USE_FUNCTOR 1
-#undef  USE_FUNCTOR 
+#include <CCA/Components/Arches/FunctorSwitch.h>
+ 
 #include <Core/Grid/Variables/BlockRange.h>
 #ifdef UINTAH_ENABLE_KOKKOS
 #  include <Kokkos_Core.hpp>

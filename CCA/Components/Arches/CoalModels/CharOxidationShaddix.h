@@ -12,8 +12,8 @@
 #include <string>
 
 #include <Core/Containers/StaticArray.h>
-#define USE_FUNCTOR 1
-#undef  USE_FUNCTOR 
+#include <CCA/Components/Arches/FunctorSwitch.h>
+ 
 namespace Uintah{
 
 //---------------------------------------------------------------------------

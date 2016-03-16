@@ -12,8 +12,7 @@
 
 //===========================================================================
 
-#define USE_FUNCTOR 1
-#undef  USE_FUNCTOR 
+#include <CCA/Components/Arches/FunctorSwitch.h>
 
 #ifdef USE_FUNCTOR
 #  include <Core/Grid/Variables/BlockRange.h>

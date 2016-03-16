@@ -14,8 +14,7 @@
 
 //===========================================================================
 
-#define USE_FUNCTOR 1
-#undef  USE_FUNCTOR 
+#include <CCA/Components/Arches/FunctorSwitch.h>
 
 #include <Core/Grid/Variables/BlockRange.h>
 #ifdef UINTAH_ENABLE_KOKKOS
@@ -212,7 +211,7 @@ struct computeBirth{
                     constCCVariable<double> &_w, 
                     constCCVariable<double> &_w_rhs, 
                     constCCVariable<double> &_a, 
-                    constCCVariable<double> _vol_fraction,
+                    constCCVariable<double> &_vol_fraction,
                     CCVariable<double> &_model) :
                     vol(_vol),
                     dt(_dt),
