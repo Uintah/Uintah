@@ -771,8 +771,6 @@ void
 UnifiedScheduler::runTasks( int thread_id )
 {
 
-  int me = d_myworld->myrank();
-
   while( numTasksDone < ntasks ) {
 
     DetailedTask* readyTask = NULL;
@@ -1148,7 +1146,7 @@ UnifiedScheduler::runTasks( int thread_id )
           //which can be even costlier overall.  So we do the check here.)
           //So check everything, except for ouputVariables tasks when it's not an output timestep.
 
-          if ((m_outPort->isOutputTimestep())
+          if ((m_outPort_->isOutputTimestep())
               || ((readyTask->getTask()->getName() != "DataArchiver::outputVariables")
                   && (readyTask->getTask()->getName() != "DataArchiver::outputVariables(checkpoint)"))) {
             assignDevicesAndStreams(readyTask);
