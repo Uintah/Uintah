@@ -869,6 +869,7 @@ void ThreadedTaskScheduler::select_tasks( int iteration, TaskPool::handle & find
       flag = 1;
     }
     else if (dtask->getExternalDepCount() == 0 &&
+             dtask->areInternalDependenciesSatisfied() &&
              dtask->isInitiated() &&
              dtask->getTask()->d_phase == m_current_phase.load(std::memory_order_relaxed)) {
       flag = 2;

@@ -1489,6 +1489,8 @@ DetailedTask::resetDependencyCounts()
   externallyReady_ = false;
   initiated_ = false;
 
+  numPendingInternalDependencies = internalDependencies.size();
+
   m_wait_timer.reset();
   m_exec_timer.reset();
 }
@@ -1506,10 +1508,6 @@ DetailedTask::addInternalDependency(       DetailedTask* prerequisiteTask,
       internalDependencies.push_back(InternalDependency(prerequisiteTask, this, var, 0/* not satisfied */));
       prerequisiteTask->internalDependents[this] = &internalDependencies.back();
       numPendingInternalDependencies = internalDependencies.size();
-      if (internaldbg.active()) {
-        internaldbg << Parallel::getMPIRank() << " Adding dependency between " << *this << " and " << *prerequisiteTask << "\n";
-      }
-
     }
     else {
       foundIt->second->addVarLabel(var);
@@ -1742,23 +1740,10 @@ DetailedTask::dependencySatisfied( InternalDependency* dep )
     ASSERT(dep->satisfiedGeneration < currentGeneration);
 
     dep->satisfiedGeneration = currentGeneration;
-    numPendingInternalDependencies--;
-
-    if (dbg.active()) {
-      cerrLock.lock();
-      dbg << *(dep->dependentTask->getTask()) << " has " << numPendingInternalDependencies << " left.\n";
-      cerrLock.unlock();
-    }
-
-    if (internaldbg.active()) {
-      internaldbg << Parallel::getMPIRank() << " satisfying dependency: prereq: " << *dep->prerequisiteTask << " dep: "
-                  << *dep->dependentTask << " numPending: " << numPendingInternalDependencies << "\n";
-    }
+    --numPendingInternalDependencies;
 
     if (numPendingInternalDependencies == 0) {
       taskGroup->internalDependenciesSatisfied(this);
-      // reset for next timestep
-      numPendingInternalDependencies = internalDependencies.size();
     }
   }
   internalDependencyLock.unlock();
@@ -1858,12 +1843,6 @@ DetailedTasks::internalDependenciesSatisfied( DetailedTask* task )
   readyQueueLock_.lock();
   {
     readyTasks_.push(task);
-
-    if (dbg.active()) {
-      cerrLock.lock();
-      dbg << *task << " satisfied.  Now " << readyTasks_.size() << " ready.\n";
-      cerrLock.unlock();
-    }
   }
   readyQueueLock_.unlock();
 }
