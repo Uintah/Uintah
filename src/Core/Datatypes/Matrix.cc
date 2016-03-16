@@ -40,12 +40,9 @@
 #include <Core/Datatypes/ColumnMatrix.h>
 #include <Core/Math/MiscMath.h>
 #include <Core/Util/Assert.h>
+#include <Core/Malloc/Allocator.h>
 
 namespace Uintah {
-
-PersistentTypeID Matrix::type_id("Matrix", "PropertyManager", 0);
-
-#define MATRIX_VERSION 3
 
 
 Matrix::~Matrix()

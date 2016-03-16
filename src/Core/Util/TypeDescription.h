@@ -29,7 +29,6 @@
 #define Disclosure_TypeDescription_h
 
 #include <Core/Malloc/Allocator.h>
-#include <Core/Util/DynamicLoader.h>
 
 #include <vector>
 #include <string>
@@ -82,7 +81,6 @@ public:
     ~Register();
   };
 
-  void fill_compile_info(Uintah::CompileInfo *ci) const;
 
   //! convert a string that ends in .cc to end in .h
   static std::string cc_to_h(const std::string &dot_cc);

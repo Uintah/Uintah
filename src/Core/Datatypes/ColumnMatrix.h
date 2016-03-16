@@ -38,9 +38,11 @@
 
 #include <Core/Datatypes/Datatype.h>
 #include <Core/Containers/LockingHandle.h>
+#include <Core/Containers/Array1.h>
 #include <Core/Util/FancyAssert.h>
 #include <Core/Datatypes/Matrix.h>
 
+#include <vector>
 #include <iosfwd>  // Forward declarations for KCC C++ I/O routines
 
 namespace Uintah {
@@ -108,10 +110,8 @@ public:
   virtual void print() const;
   virtual void print(std::ostream&) const;
   
-  // Persistent representation...
   virtual std::string type_name() { return "ColumnMatrix"; }
 
-  static PersistentTypeID type_id;
 
 
   friend void Mult(ColumnMatrix&, const ColumnMatrix&, double s);

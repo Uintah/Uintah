@@ -77,8 +77,6 @@ public:
 
     inline T*** get_dataptr() {return objs;}
 
-    // Persistent representation...
-    static PersistentTypeID type_id;
 };
 
 } // End namespace Uintah

@@ -38,7 +38,6 @@ SRCS += $(SRCDIR)/ColumnMatrix.cc               \
         $(SRCDIR)/DenseMatrix.cc                \
         $(SRCDIR)/Matrix.cc                     \
         $(SRCDIR)/MatrixOperations.cc           \
-        $(SRCDIR)/PropertyManager.cc            \
         $(SRCDIR)/SparseRowMatrix.cc            \
         $(SRCDIR)/TypeName.cc                   \
 
@@ -50,10 +49,9 @@ PSELIBS := \
         Core/Geometry     \
         Core/Grid         \
         Core/Math         \
-        Core/Persistent   \
 	Core/ProblemSpec  \
         Core/Thread       \
-        Core/Util         
+        Core/Util
 
 LIBS := $(M_LIBRARY) $(F_LIBRARY)           \
         $(LAPACK_LIBRARY) $(BLAS_LIBRARY) $(THREAD_LIBRARY) \

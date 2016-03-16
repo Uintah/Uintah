@@ -87,8 +87,7 @@ PSELIBS := \
         Core/Geometry                   \
         Core/Thread                     \
         Core/Disclosure                 \
-	\
-	Core/Persistent
+
 
 LIBS := $(M_LIBRARY) $(DL_LIBRARY) $(LAPACK_LIBRARY) $(BLAS_LIBRARY) \
 	$(MAGMA_LIBRARY) $(F_LIBRARY) $(XML2_LIBRARY) $(MPI_LIBRARY) 

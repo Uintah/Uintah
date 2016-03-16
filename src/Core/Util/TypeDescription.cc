@@ -26,7 +26,6 @@
 //    Date   : Mon May 14 10:20:21 2001
 
 #include <Core/Util/TypeDescription.h>
-#include <Core/Util/DynamicLoader.h>
 #include <Core/Malloc/Allocator.h>
 #include <Core/Exceptions/InternalError.h>
 #include <Core/Util/Assert.h>
@@ -210,39 +209,6 @@ STypeDescription::get_filename() const
   return result;
 }
 
-void 
-STypeDescription::fill_compile_info(Uintah::CompileInfo *ci) const
-{
-  switch (category_) {
-  case DATA_E:
-    ci->add_data_include(get_h_file_path());
-    break;
-  case BASIS_E:
-    ci->add_basis_include(get_h_file_path());
-    break;
-  case MESH_E:
-    ci->add_mesh_include(get_h_file_path());
-    break;
-  case CONTAINER_E:
-    ci->add_container_include(get_h_file_path());
-    break;
-  case FIELD_E:
-    ci->add_field_include(get_h_file_path());
-    break;
-  default:
-    ci->add_include(get_h_file_path());
-  }
-
-
-  ci->add_namespace(get_namespace());
-  if(subtype_) {
-    td_vec::iterator iter = subtype_->begin();
-    while (iter != subtype_->end()) {
-      (*iter)->fill_compile_info(ci);
-      ++iter;
-    }
-  }
-}
 
 const STypeDescription* 
 STypeDescription::lookup_type(const std::string& t)

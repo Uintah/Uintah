@@ -49,12 +49,6 @@ using namespace std;
 
 namespace Uintah {
 
-static Persistent* maker()
-{
-    return scinew ColumnMatrix(0);
-}
-
-PersistentTypeID ColumnMatrix::type_id("ColumnMatrix", "Matrix", maker);
 
 ColumnMatrix::ColumnMatrix(int rows) :
   Matrix(rows, 1)

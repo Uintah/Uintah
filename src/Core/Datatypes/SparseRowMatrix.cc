@@ -54,15 +54,6 @@ using namespace std;
 
 namespace Uintah {
 
-Persistent*
-SparseRowMatrix::maker()
-{
-  return scinew SparseRowMatrix;
-}
-
-
-PersistentTypeID SparseRowMatrix::type_id("SparseRowMatrix", "Matrix",
-					  SparseRowMatrix::maker);
 
 
 SparseRowMatrix*
