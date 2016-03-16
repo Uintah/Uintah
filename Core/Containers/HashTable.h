@@ -45,7 +45,7 @@
 
 #include <string>
 
-namespace SCIRun {
+namespace Uintah {
 
 class RigorousTest;
 
@@ -469,7 +469,7 @@ HashKey<Key, Data>::HashKey(const HashKey<Key, Data>& copy, int deep)
 
 
 
-} // End namespace SCIRun
+} // End namespace Uintah
 
 #endif
 

@@ -2386,7 +2386,7 @@ SCI_TRY_LINK(SSTREAM,sstream header,sstream,,,,,,optional)
 if test "$HAVE_SSTREAM" = "yes"; then
    SSTREAM_COMPAT="no"
 else
-   # Use SCIRun sstream compatibility files...
+   # Use Uintah sstream compatibility files...
    SSTREAM_COMPAT="yes"
 fi
 

@@ -12,7 +12,7 @@
 #  To check all MPMLabels:
 #  cd <to components>
 #  set files = ( MPM/SerialMPM.cc MPMICE/MPMICE.cc MPMArches/MPMArches.cc `find . -name "*.cc" | grep Constitutive` )
-#  SCIRun/src/Packages/Uintah/tools/checkForUnusedVarLabels MPM/MPMLabel.cc $files
+#  Uintah/src/Packages/Uintah/tools/checkForUnusedVarLabels MPM/MPMLabel.cc $files
 #
 #
 #  NOTE: This script need gnu grep to work.  Simply

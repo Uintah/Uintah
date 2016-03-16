@@ -48,7 +48,7 @@
 
 #define ALL_LEVELS 99
 
-static SCIRun::DebugStream visitdbg( "VisItLibSim", true );
+static Uintah::DebugStream visitdbg( "VisItLibSim", true );
 
 static std::string simFileName( "Uintah" );
 static std::string simExecName;

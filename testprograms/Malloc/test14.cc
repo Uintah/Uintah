@@ -49,9 +49,9 @@ X::~X()
 
 #if 0
 
-void* operator new(size_t, SCIRun::Allocator*, const char*);
+void* operator new(size_t, Uintah::Allocator*, const char*);
 #ifdef _BOOL
-void* operator new[](size_t, SCIRun::Allocator*, const char*);
+void* operator new[](size_t, Uintah::Allocator*, const char*);
 #endif
 
 #endif
