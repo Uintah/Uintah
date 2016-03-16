@@ -2246,7 +2246,7 @@ DataArchiver::outputVariables(const ProcessorGroup * pg,
     //__________________________________
     // bulletproofing
     if( patches->size() > 1 ){
-      throw SCIRun::InternalError("ERROR: (PIDX:outputVariables) Only 1 patch per MPI process is currently supported.", __FILE__, __LINE__);
+      throw Uintah::InternalError("ERROR: (PIDX:outputVariables) Only 1 patch per MPI process is currently supported.", __FILE__, __LINE__);
     }
   
     //__________________________________

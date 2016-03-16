@@ -50,8 +50,8 @@ struct computeCharOxidation{
                       constCCVariable<double>& _den,
                       constCCVariable<double>& _temperature,
                       constCCVariable<double>& _particle_temperature,
-                      SCIRun::StaticArray< constCCVariable<double> >& _length,
-                      SCIRun::StaticArray< constCCVariable<double> >& _weight,
+                      Uintah::StaticArray< constCCVariable<double> >& _length,
+                      Uintah::StaticArray< constCCVariable<double> >& _weight,
                       constCCVariable<double>& _rawcoal_mass,
                       constCCVariable<double>& _char_mass,
                       constCCVariable<double>& _rawcoal_weighted_scaled, 
@@ -283,8 +283,8 @@ struct computeCharOxidation{
        constCCVariable<double>& den;
        constCCVariable<double>& temperature;
        constCCVariable<double>& particle_temperature;
-       SCIRun::StaticArray< constCCVariable<double> >& length; 
-       SCIRun::StaticArray< constCCVariable<double> >& weight;
+       Uintah::StaticArray< constCCVariable<double> >& length; 
+       Uintah::StaticArray< constCCVariable<double> >& weight;
        constCCVariable<double>& rawcoal_mass;
        constCCVariable<double>& char_mass;
        constCCVariable<double>& rawcoal_weighted_scaled; 
