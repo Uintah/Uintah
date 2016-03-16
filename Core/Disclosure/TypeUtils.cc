@@ -45,7 +45,7 @@ namespace SCIRun {
   {
     static STypeDescription* td = 0;
     if(!td){
-      td = scinew STypeDescription("long64", "builtin", "builtin");
+      td = scinew STypeDescription("long64");
     }
     return td;
   }

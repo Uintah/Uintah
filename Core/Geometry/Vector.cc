@@ -188,11 +188,6 @@ Vector::rotz90(const int c)
     }
 }
 
-const string& 
-Vector::get_h_file_path() {
-  static const string path(SCIRun::STypeDescription::cc_to_h(__FILE__));
-  return path;
-}
 
 
 } // End namespace Uintah
@@ -204,8 +199,7 @@ namespace SCIRun {
   {
     static STypeDescription* td = 0;
     if(!td){
-      td = scinew STypeDescription("Vector", Vector::get_h_file_path(), "Uintah", 
-				  STypeDescription::DATA_E);
+      td = scinew STypeDescription("Vector", STypeDescription::DATA_E);
     }
     return td;
   }

@@ -345,11 +345,6 @@ void Tensor::set_outside_eigens(const Vector &e1, const Vector &e2,
 }
 
 
-const string& 
-Tensor::get_h_file_path() {
-  static const string path(SCIRun::STypeDescription::cc_to_h(__FILE__));
-  return path;
-}
 
 
 
@@ -381,9 +376,7 @@ namespace SCIRun {
   {
     static STypeDescription* td = 0;
     if(!td){
-      td = scinew STypeDescription("Tensor", Uintah::Tensor::get_h_file_path(), 
-				  "Uintah", 
-				  STypeDescription::DATA_E);
+      td = scinew STypeDescription("Tensor", STypeDescription::DATA_E);
     }
     return td;
   }

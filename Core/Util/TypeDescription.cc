@@ -98,28 +98,17 @@ SCIRun::STypeDescription::register_type()
 }
 
 
-STypeDescription::STypeDescription(const string &name, 
-				 const string &path,
-				 const string &namesp, 
-				 category_e c) : 
+STypeDescription::STypeDescription(const string &name, category_e c) : 
   subtype_(0), 
   name_(name),
-  h_file_path_(path),
-  namespace_(namesp),
   category_(c)
 {
   register_type();
 }
 
-STypeDescription::STypeDescription(const string &name, 
-				 td_vec* sub, 
-				 const string &path,
-				 const string &namesp,
-				 category_e c) : 
+STypeDescription::STypeDescription(const string &name, td_vec* sub, category_e c) : 
   subtype_(sub),
   name_(name),
-  h_file_path_(path),
-  namespace_(namesp),
   category_(c)
 {
   register_type();
@@ -228,19 +217,6 @@ STypeDescription::lookup_type(const std::string& t)
    return iter->second;
 }
 
-string STypeDescription::cc_to_h(const string &dot_cc)
-{
-  const unsigned int len = dot_cc.length();
-  string dot_h;
-  if (len > 3 && dot_cc.substr(len-3, len) == ".cc") {
-    dot_h = dot_cc.substr(0, len-3) + ".h";
-  } else {
-    cerr << "Warning: STypeDescription::cc_to_h input does not end in .cc" 
-	 << endl << "the string: '" << dot_cc << "'" << endl;
-    dot_h = dot_cc;
-  }
-  return dot_h;
-}
 
 
 STypeDescription::Register::Register(const STypeDescription* /* td*/)
@@ -256,7 +232,7 @@ const STypeDescription* get_type_description(double*)
 {
   static STypeDescription* td = 0;
   if(!td){
-    td = scinew STypeDescription("double", "builtin", "builtin");
+    td = scinew STypeDescription("double");
   }
   return td;
 }
@@ -265,7 +241,7 @@ const STypeDescription* get_type_description(long*)
 {
   static STypeDescription* td = 0;
   if(!td){
-    td = scinew STypeDescription("long", "builtin", "builtin");
+    td = scinew STypeDescription("long");
   }
   return td;
 }
@@ -274,7 +250,7 @@ const STypeDescription* get_type_description(float*)
 {
   static STypeDescription* td = 0;
   if(!td){
-    td = scinew STypeDescription("float", "builtin", "builtin");
+    td = scinew STypeDescription("float");
   }
   return td;
 }
@@ -283,7 +259,7 @@ const STypeDescription* get_type_description(short*)
 {
   static STypeDescription* td = 0;
   if(!td){
-    td = scinew STypeDescription("short", "builtin", "builtin");
+    td = scinew STypeDescription("short");
   }
   return td;
 }
@@ -292,7 +268,7 @@ const STypeDescription* get_type_description(unsigned short*)
 {
   static STypeDescription* td = 0;
   if(!td){
-    td = scinew STypeDescription("unsigned short", "builtin", "builtin");
+    td = scinew STypeDescription("unsigned short");
   }
   return td;
 }
@@ -301,7 +277,7 @@ const STypeDescription* get_type_description(int*)
 {
   static STypeDescription* td = 0;
   if(!td){
-    td = scinew STypeDescription("int", "builtin", "builtin");
+    td = scinew STypeDescription("int");
   }
   return td;
 }
@@ -310,7 +286,7 @@ const STypeDescription* get_type_description(unsigned int*)
 {
   static STypeDescription* td = 0;
   if(!td){
-    td = scinew STypeDescription("unsigned int", "builtin", "builtin");
+    td = scinew STypeDescription("unsigned int");
   }
   return td;
 }
@@ -319,7 +295,7 @@ const STypeDescription* get_type_description(char*)
 {
   static STypeDescription* td = 0;
   if(!td){
-    td = scinew STypeDescription("char", "builtin", "builtin");
+    td = scinew STypeDescription("char");
   }
   return td;
 }
@@ -328,7 +304,7 @@ const STypeDescription* get_type_description(unsigned char*)
 {
   static STypeDescription* td = 0;
   if(!td){
-    td = scinew STypeDescription("unsigned char", "builtin", "builtin");
+    td = scinew STypeDescription("unsigned char");
   }
   return td;
 }
@@ -337,7 +313,7 @@ const STypeDescription* get_type_description(string*)
 {
   static STypeDescription* td = 0;
   if(!td){
-    td = scinew STypeDescription("string", "std::string", "std");
+    td = scinew STypeDescription("string");
   }
   return td;
 }
@@ -346,7 +322,7 @@ const STypeDescription* get_type_description(unsigned long*)
 {
   static STypeDescription* td = 0;
   if(!td){
-    td = scinew STypeDescription("unsigned long", "builtin", "builtin");
+    td = scinew STypeDescription("unsigned long");
   }
   return td;
 }

@@ -155,11 +155,6 @@ Point::InInterval( Point a, double epsilon )
 }
 
 
-const string& 
-Point::get_h_file_path() {
-  static const string path(SCIRun::STypeDescription::cc_to_h(__FILE__));
-  return path;
-}
 
 
 } // End namespace Uintah
@@ -171,8 +166,7 @@ namespace SCIRun {
   {
     static SCIRun::STypeDescription* td = 0;
     if(!td){
-      td = scinew SCIRun::STypeDescription("Point", Uintah::Point::get_h_file_path(), 
-					   "Uintah", STypeDescription::DATA_E);
+      td = scinew SCIRun::STypeDescription("Point",STypeDescription::DATA_E);
     }
     return td;
   }

@@ -39,7 +39,7 @@ namespace SCIRun {
   {
     static SCIRun::STypeDescription* td = 0;
     if(!td){
-      td = scinew SCIRun::STypeDescription("IntVector", Uintah::IntVector::get_h_file_path(), "Uintah");
+      td = scinew SCIRun::STypeDescription("IntVector");
     }
     return td;
   }
@@ -49,11 +49,6 @@ namespace SCIRun {
 namespace Uintah{
 
 
-const string& 
-IntVector::get_h_file_path() {
-  static const string path(SCIRun::STypeDescription::cc_to_h(__FILE__));
-  return path;
-}
 
 
 ostream&
