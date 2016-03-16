@@ -48,15 +48,12 @@ $(TARGDIR)/fnscanner.cc: $(FNSRCDIR)/fnscanner.l $(TARGDIR)/fnparser.cc
 	$(LEX) -Pfn -o$(TARGDIR)/fnscanner.cc $(FNSRCDIR)/fnscanner.l
 
 SRCS += \
-        $(SRCDIR)/CubicPWI.cc          \
         $(SRCDIR)/Gaussian.cc          \
         $(SRCDIR)/Weibull.cc           \
         $(SRCDIR)/LinAlg.c             \
-        $(SRCDIR)/LinearPWI.cc         \
         $(SRCDIR)/Mat.c                \
         $(SRCDIR)/MiscMath.cc          \
         $(SRCDIR)/MusilRNG.cc          \
-        $(SRCDIR)/PiecewiseInterp.cc   \
         $(SRCDIR)/TrigTable.cc         \
         $(SRCDIR)/sci_lapack.cc        \
         $(SRCDIR)/fft.c                \
