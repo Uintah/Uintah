@@ -61,7 +61,7 @@ PIDXOutputContext::PIDX_flags::str2CompressType( const std::string& me)
     ostringstream warn;
     warn<< "ERROR:PIDXOutput:: the compression type ("<<ME<<") is not supported."
         << " Valid options are: NONE, CHUNKING, CHUNKING_ZFP";
-    throw SCIRun::InternalError(warn.str(), __FILE__, __LINE__);
+    throw Uintah::InternalError(warn.str(), __FILE__, __LINE__);
   }
   return compressMap[ME];
 }
