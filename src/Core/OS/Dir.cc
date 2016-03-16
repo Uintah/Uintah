@@ -43,6 +43,7 @@
 #include <dirent.h>
 
 using namespace std;
+using namespace Uintah;
 
 //______________________________________________________________________
 //
