@@ -111,7 +111,7 @@ public:
 
   ~TimerOut()
   {
-    DOUT(true, m_name << " : " << m_simple.seconds() << " seconds");
+    DOUT(true, m_name << " : " << m_simple().seconds() << " seconds");
   }
 private:
   std::string    m_name;

@@ -68,7 +68,6 @@ public:
 
   enum TimerType {Total, Min, Max};
 
-
   template <typename Tag>
   static void register_timer_tag( Tag, std::string const& name, TimerType t )
   {
@@ -78,11 +77,11 @@ public:
     if (itr == s_timers.end()) {
 
       if (t == Total) {
-        s_timers[ name ] = []()->int64_t { return TripTimer<Tag>::total_nanoseconds(); };
+        s_timers[ name ] = []()->int64_t { return TripTimer<Tag>::total(); };
       } else if (t == Min) {
-        s_timers[ name ] = []()->int64_t { return TripTimer<Tag>::min_nanoseconds(); };
+        s_timers[ name ] = []()->int64_t { return TripTimer<Tag>::min(); };
       } else if (t == Max) {
-        s_timers[ name ] = []()->int64_t { return TripTimer<Tag>::max_nanoseconds(); };
+        s_timers[ name ] = []()->int64_t { return TripTimer<Tag>::max(); };
       }
 
       s_reset_timers.emplace_back( [](){ TripTimer<Tag>::reset_tag(); } );
@@ -108,12 +107,16 @@ public:
 
   // NOT THREAD SAFE -- should only be called from the master thread
   // by the parent scheduler
-  static void initialize_timestep( MPI_Comm comm, std::vector<TaskGraph *> const & graphs );
+  static void initialize_timestep( std::vector<TaskGraph *> const & graphs );
 
+  using Counts = std::vector< std::pair<std::string,int64_t> >;
 
   // NOT THREAD SAFE -- should only be called from the master thread
   // by the parent scheduler
-  static void report( MPI_Comm comm, InfoStats & info_stats );
+  static void report( MPI_Comm comm
+                    , Counts const& counts
+                    , InfoStats & info_stats
+                    );
 
   struct TaskExecTag {};       // Total Task Exec
   struct TaskWaitTag {};       // Total Task Wait
@@ -154,7 +157,7 @@ public:
     ~TaskExecTimer()
     {
       if (m_task_time) {
-        m_task_time->fetch_add( this->nanoseconds(), std::memory_order_relaxed );
+        m_task_time->fetch_add( (*this)(), std::memory_order_relaxed );
       }
     }
 
@@ -175,7 +178,7 @@ public:
     ~TaskWaitTimer()
     {
       if (m_task_time) {
-        m_task_time->fetch_add( this->nanoseconds(), std::memory_order_relaxed );
+        m_task_time->fetch_add( (*this)(), std::memory_order_relaxed );
       }
     }
 

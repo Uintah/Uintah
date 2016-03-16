@@ -30,18 +30,53 @@
 #include <vector>
 #include <memory>
 
+#include <ostream>
 namespace Timers {
 
 //------------------------------------------------------------------------------
 
+struct nanoseconds
+{
+  // convert from int64_t
+  constexpr nanoseconds() {};
+  constexpr nanoseconds( nanoseconds const& ns ) : m_value{ns.m_value} {}
+  constexpr nanoseconds( nanoseconds && ns ) : m_value{ns.m_value} {}
+  nanoseconds & operator=( nanoseconds const& ns )
+  {
+    m_value=ns.m_value;
+    return *this;
+  }
+  nanoseconds & operator=( nanoseconds && ns )
+  {
+    m_value=ns.m_value;
+    return *this;
+  }
 
-struct ConvertTo{
-static constexpr double microseconds( int64_t nano ) { return nano * 1e-3; }
-static constexpr double milliseconds( int64_t nano ) { return nano * 1e-6; }
-static constexpr double seconds( int64_t nano )      { return nano * 1e-9; }
-static constexpr double minutes( int64_t nano )      { return nano * (1e-9/60.0); }
-static constexpr double hours( int64_t nano )        { return nano * (1e-9/3600.0); }
+  constexpr nanoseconds( int64_t ns )  : m_value{ns} {}
+  constexpr nanoseconds( uint64_t ns ) : m_value{static_cast<int64_t>(ns)} {}
+  constexpr nanoseconds( double ns )   : m_value{static_cast<int64_t>(ns)} {}
+
+  constexpr operator int64_t()  const { return m_value; }
+
+  explicit constexpr operator bool()     const { return m_value != 0; }
+  explicit constexpr operator uint64_t() const { return static_cast<uint64_t>(m_value); }
+  explicit constexpr operator double()   const { return static_cast<double>(m_value); }
+
+  constexpr double microseconds() const { return m_value * 1e-3; }
+  constexpr double milliseconds() const { return m_value * 1e-6; }
+  constexpr double seconds()      const { return m_value * 1e-9; }
+  constexpr double minutes()      const { return m_value * (1e-9/60.0); }
+  constexpr double hours()        const { return m_value * (1e-9/3600.0); }
+
+
+  friend std::ostream & operator<<(std::ostream & out, const nanoseconds & ns)
+  {
+    return out << ns.m_value << "ns";
+  }
+
+  int64_t m_value{};
 };
+
 
 //------------------------------------------------------------------------------
 
@@ -49,17 +84,20 @@ static constexpr double hours( int64_t nano )        { return nano * (1e-9/3600.
 struct Simple
 {
   using clock_type  = std::chrono::high_resolution_clock;
+  using time_point  = clock_type::time_point;
 
   Simple() = default;
 
   template <typename... ExcludeTimers>
   Simple( ExcludeTimers&... exclude_timers )
-    : m_excludes{ std::addressof(exclude_timers)... }
-  {}
+    : m_excludes{ sizeof...(ExcludeTimers) > 0 ? new Simple*[sizeof...(ExcludeTimers)+1]{} : nullptr }
+  {
+    set_excludes(0, std::addressof(exclude_timers)...);
+  }
 
   ~Simple()
   {
-    exclude();
+    stop();
   }
 
   // disable copy, assignment
@@ -68,47 +106,85 @@ struct Simple
   Simple & operator=( const Simple & ) = delete;
   Simple & operator=( Simple && ) = delete;
 
+
   /// reset the timer
   void reset()
   {
-    m_start = clock_type::now();
+    m_start = m_finish = clock_type::now();
     m_offset = 0;
+    m_excluded = 0;
   }
 
-  /// reset the timer
-  void exclude_and_reset()
+  // stop the timer
+  bool stop()
   {
-    exclude();
-    m_start = clock_type::now();
-    m_offset = 0;
+    if (m_finish <= m_start) {
+      m_finish = clock_type::now();
+      const int64_t t = std::chrono::duration_cast<std::chrono::nanoseconds>(m_finish-m_start).count();
+      m_offset += t;
+      exclude( t );
+      return true;
+    }
+    return false;
   }
 
-  /// number of nanosecond since construction or reset
-  int64_t nanoseconds() const
+  // start or restart the timer
+  void start()
   {
-    return std::chrono::duration_cast<std::chrono::nanoseconds>( clock_type::now() - m_start ).count() - m_offset;
+    m_start = m_finish = clock_type::now();
   }
 
-  double microseconds() const { return ConvertTo::microseconds(nanoseconds()); }
-  double milliseconds() const { return ConvertTo::milliseconds(nanoseconds()); }
-  double seconds()      const { return ConvertTo::seconds(nanoseconds()); }
-  double minutes()      const { return ConvertTo::minutes(nanoseconds()); }
-  double hours()        const { return ConvertTo::hours(nanoseconds()); }
+  // lap the timer
+  nanoseconds lap()
+  {
+    const int64_t tmp = m_offset;
+    if (stop()) {
+      start();
+    }
+    return m_offset - tmp;
+  }
+
+
+  // number of nanoseconds since construction, start, or reset
+  nanoseconds operator()() const
+  {
+    return std::chrono::duration_cast<std::chrono::nanoseconds>( (m_start < m_finish) ?
+             (m_finish - m_start) : (clock_type::now() - m_start) ).count()
+           + m_offset
+           - m_excluded;
+  }
 
 private:
-
-  void exclude()
+  template <typename... ExcludeTimers>
+  void set_excludes(int i, Simple* e, ExcludeTimers... exclude_timers)
   {
-    const int64_t t = nanoseconds();
-    for (auto p : m_excludes) {
-      p->m_offset += t;
+    m_excludes[i] = e;
+    set_excludes(i+1, exclude_timers...);
+  }
+
+  void set_excludes(int i, Simple* e)
+  {
+    m_excludes[i] = e;
+    m_excludes[i+1] = nullptr;
+  }
+
+  void set_excludes(int) {}
+
+  void exclude(int64_t t)
+  {
+    if (m_excludes) {
+      for( int i=0; m_excludes[i] != nullptr; ++i) {
+        m_excludes[i]->m_excluded += t;
+      }
     }
   }
 
   // member
-  clock_type::time_point m_start{ clock_type::now() };
-  int64_t                m_offset{0};
-  std::vector<Simple *>  m_excludes{};
+  time_point                 m_start    {clock_type::now()};
+  time_point                 m_finish   {m_start};
+  int64_t                    m_offset   {0};
+  int64_t                    m_excluded {0};
+  std::unique_ptr<Simple*[]> m_excludes {};
 };
 
 //------------------------------------------------------------------------------
@@ -135,19 +211,29 @@ struct Trip : public Simple
 
   ~Trip()
   {
-    const int64_t tmp = this->nanoseconds();
-    s_total.fetch_add( tmp, std::memory_order_relaxed );
+    Trip::stop();
+  }
 
-    int64_t old;
+  bool stop()
+  {
+    if (Simple::stop()) {
+      const int64_t tmp = (*this)();
+      s_total.fetch_add( tmp, std::memory_order_relaxed );
 
-    old = s_min.load( std::memory_order_relaxed );
-    while ( tmp < old && s_min.compare_exchange_weak( old, tmp, std::memory_order_relaxed, std::memory_order_relaxed) ) {}
+      int64_t old;
 
-    old = s_max.load( std::memory_order_relaxed );
-    while ( old < tmp && !s_max.compare_exchange_weak( old, tmp, std::memory_order_relaxed, std::memory_order_relaxed) ) {}
+      old = s_min.load( std::memory_order_relaxed );
+      while ( tmp < old && s_min.compare_exchange_weak( old, tmp, std::memory_order_relaxed, std::memory_order_relaxed) ) {}
 
-    constexpr int64_t one = 1u;
-    s_trips.fetch_add( one, std::memory_order_relaxed );
+      old = s_max.load( std::memory_order_relaxed );
+      while ( old < tmp && !s_max.compare_exchange_weak( old, tmp, std::memory_order_relaxed, std::memory_order_relaxed) ) {}
+
+      constexpr int64_t one = 1u;
+      s_trips.fetch_add( one, std::memory_order_relaxed );
+
+      return true;
+    }
+    return false;
   }
 
   // disable copy, assignment, and move
@@ -166,27 +252,9 @@ struct Trip : public Simple
   }
 
   static int64_t trips() { return s_trips.load( std::memory_order_relaxed ); }
-
-  static int64_t total_nanoseconds()  { return s_total.load( std::memory_order_relaxed ); }
-  static double  total_microseconds() { return ConvertTo::microseconds(total_nanoseconds()); }
-  static double  total_milliseconds() { return ConvertTo::milliseconds(total_nanoseconds()); }
-  static double  total_seconds()      { return ConvertTo::seconds(total_nanoseconds()); }
-  static double  total_minutes()      { return ConvertTo::minutes(total_nanoseconds()); }
-  static double  total_hours()        { return ConvertTo::hours(total_nanoseconds()); }
-
-  static int64_t min_nanoseconds()  { return s_min.load( std::memory_order_relaxed ); }
-  static double  min_microseconds() { return ConvertTo::microseconds(min_nanoseconds()); }
-  static double  min_milliseconds() { return ConvertTo::milliseconds(min_nanoseconds()); }
-  static double  min_seconds()      { return ConvertTo::seconds(min_nanoseconds()); }
-  static double  min_minutes()      { return ConvertTo::minutes(min_nanoseconds()); }
-  static double  min_hours()        { return ConvertTo::hours(min_nanoseconds()); }
-
-  static int64_t max_nanoseconds()  { return s_max.load( std::memory_order_relaxed ); }
-  static double  max_microseconds() { return ConvertTo::microseconds(max_nanoseconds()); }
-  static double  max_milliseconds() { return ConvertTo::milliseconds(max_nanoseconds()); }
-  static double  max_seconds()      { return ConvertTo::seconds(max_nanoseconds()); }
-  static double  max_minutes()      { return ConvertTo::minutes(max_nanoseconds()); }
-  static double  max_hours()        { return ConvertTo::hours(max_nanoseconds()); }
+  static nanoseconds total()  { return s_total.load( std::memory_order_relaxed ); }
+  static nanoseconds min()  { return s_min.load( std::memory_order_relaxed ); }
+  static nanoseconds max()  { return s_max.load( std::memory_order_relaxed ); }
 
 private:
   static std::atomic<int64_t> s_trips;
@@ -205,15 +273,12 @@ template <typename Tag> std::atomic<int64_t> Trip<Tag>::s_max{0};
 
 namespace Impl {
 
-struct tid
+inline int tid()
 {
-  static int get()
-  {
-    static std::atomic<int> count{0};
-    const static thread_local int id = count.fetch_add( 1, std::memory_order_relaxed );
-    return id;
-  }
-};
+  static std::atomic<int> count{0};
+  const static thread_local int id = count.fetch_add( 1, std::memory_order_relaxed );
+  return id;
+}
 
 }
 
@@ -226,6 +291,8 @@ struct ThreadTrip : public Simple
   using tag = Tag;
 
   static constexpr int size = MaxThreads;
+
+  static int tid() { return Impl::tid(); }
 
 
   ThreadTrip() = default;
@@ -243,8 +310,17 @@ struct ThreadTrip : public Simple
 
   ~ThreadTrip()
   {
-    s_total[ Impl::tid::get() % size ] += this->nanoseconds();
-    s_used[  Impl::tid::get() % size ] = true;
+    stop();
+  }
+
+  bool stop()
+  {
+    if( Simple::stop()) {
+      s_total[ tid() % size ] += (*this)();
+      s_used[  tid() % size ] = true;
+      return true;
+    }
+    return false;
   }
 
   // NOT thread safe
@@ -256,7 +332,8 @@ struct ThreadTrip : public Simple
     }
   }
 
-  static int64_t total_nanoseconds()
+  // total time among all threads
+  static nanoseconds total()
   {
     int64_t result = 0;
     for (int i=0; i<size; ++i) {
@@ -265,43 +342,30 @@ struct ThreadTrip : public Simple
     return result;
   }
 
-  static double total_microseconds() { return ConvertTo::microseconds(total_nanoseconds()); }
-  static double total_milliseconds() { return ConvertTo::milliseconds(total_nanoseconds()); }
-  static double total_seconds()      { return ConvertTo::seconds(total_nanoseconds()); }
-  static double total_minutes()      { return ConvertTo::minutes(total_nanoseconds()); }
-  static double total_hours()        { return ConvertTo::hours(total_nanoseconds()); }
-
-  static int64_t min_nanoseconds()
+  // min time among all threads
+  static nanoseconds min()
   {
     int64_t result = std::numeric_limits<int64_t>::max();
     for (int i=0; i<size; ++i) {
       result = (s_used[i] && s_total[i] < result) ? s_total[i] : result ;
     }
-
     return result != std::numeric_limits<int64_t>::max() ? result : 0 ;
   }
-  static double min_microseconds() { return ConvertTo::microseconds(min_nanoseconds()); }
-  static double min_milliseconds() { return ConvertTo::milliseconds(min_nanoseconds()); }
-  static double min_seconds()      { return ConvertTo::seconds(min_nanoseconds()); }
-  static double min_minutes()      { return ConvertTo::minutes(min_nanoseconds()); }
-  static double min_hours()        { return ConvertTo::hours(min_nanoseconds()); }
 
-  static int64_t max_nanoseconds()
+  // max time among all threads
+  static nanoseconds max()
   {
     int64_t result = std::numeric_limits<int64_t>::min();
     for (int i=0; i<size; ++i) {
       result = (s_used[i] && result < s_total[i]) ? s_total[i] : result ;
     }
-
     return result != std::numeric_limits<int64_t>::min() ? result : 0 ;
   }
-  static double max_microseconds() { return ConvertTo::microseconds(max_nanoseconds()); }
-  static double max_milliseconds() { return ConvertTo::milliseconds(max_nanoseconds()); }
-  static double max_seconds()      { return ConvertTo::seconds(max_nanoseconds()); }
-  static double max_minutes()      { return ConvertTo::minutes(max_nanoseconds()); }
-  static double max_hours()        { return ConvertTo::hours(max_nanoseconds()); }
 
-  static int threads()
+  // time given thread
+  static nanoseconds thread(int t)  { return s_total[ t ]; }
+
+  static int num_threads()
   {
     int result = 0;
     for (int i=0; i<size; ++i) {

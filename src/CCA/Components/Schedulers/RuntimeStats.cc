@@ -97,12 +97,8 @@ void RuntimeStats::reset_timers()
 }
 
 
-void RuntimeStats::initialize_timestep( MPI_Comm comm, std::vector<TaskGraph *> const &  graphs )
+void RuntimeStats::initialize_timestep( std::vector<TaskGraph *> const &  graphs )
 {
-  struct InitTag{};
-  TripTimer<InitTag> init_timer;
-  register_timer_tag(InitTag{}, "Init Timestep", Max);
-
   static bool first_init = true;
   if (first_init) {
 
@@ -160,7 +156,7 @@ namespace {
 
 
 /// convert a bytes to human readable string
-inline std::string bytes_to_string( int64_t bytes )
+inline std::string bytes_to_string( double bytes )
 {
   constexpr int64_t one = 1;
   constexpr int64_t KB = one << 10;
@@ -175,34 +171,19 @@ inline std::string bytes_to_string( int64_t bytes )
     out << bytes << " B";
   }
   else if ( bytes < MB ) {
-    out << std::setprecision(3) << (static_cast<double>(bytes) / KB) << " KB";
+    out << std::setprecision(3) << (bytes / KB) << " KB";
   }
   else if ( bytes < GB ) {
-    out << std::setprecision(3) << (static_cast<double>(bytes) / MB) << " MB";
+    out << std::setprecision(3) << (bytes / MB) << " MB";
   }
   else if ( bytes < TB ) {
-    out << std::setprecision(3) << (static_cast<double>(bytes) / GB) << " GB";
+    out << std::setprecision(3) << (bytes / GB) << " GB";
   }
   else if ( bytes < PB ) {
-    out << std::setprecision(3) << (static_cast<double>(bytes) / TB) << " TB";
+    out << std::setprecision(3) << (bytes / TB) << " TB";
   }
   else {
-    out << std::setprecision(3) << (static_cast<double>(bytes) / PB) << " PB";
-  }
-
-  return out.str();
-}
-
-/// convert a nanoseconds to human readable string
-inline std::string nanoseconds_to_string( int64_t ns )
-{
-  std::ostringstream out;
-
-  if ( (double)ns < 1.0e8) {
-    out << std::setprecision(3) << (ns * 1.0e-6) << " ms";
-  }
-  else {
-    out << std::setprecision(3) << (ns * 1.0e-9) << " s ";
+    out << std::setprecision(3) << (bytes / PB) << " PB";
   }
 
   return out.str();
@@ -213,16 +194,23 @@ inline std::string nanoseconds_to_string( double ns )
 {
   std::ostringstream out;
 
-  if ( ns < 1.0e8) {
-    out << std::setprecision(3) << (ns * 1.0e-6) << " ms";
+  constexpr double to_milli = 1.0e-6;
+  constexpr double to_sec   = 1.0e-9;
+
+  if ( ns < 1.0e4) {
+    out << std::setprecision(3) << ns << " ns";
+  } else if ( ns < 1.0e8) {
+    out << std::setprecision(3) << (ns * to_milli) << " ms";
   } else {
-    out << std::setprecision(3) << (ns * 1.0e-9) << " s ";
+    out << std::setprecision(3) << (ns * to_sec) << " s ";
   }
 
   return out.str();
 }
 
-enum { RANK=0, SUM, MIN, MAX };
+enum { RANK, SUM, MIN, MAX };
+enum { Q1, Q2, Q3, Q4,  };
+
 
 void rank_sum_min_max_impl( int64_t const * in, int64_t * inout, int len )
 {
@@ -243,21 +231,30 @@ extern "C" void rank_sum_min_max( void * in, void * inout, int * len, MPI_Dataty
 
 MPI_Op rank_sum_min_max_op;
 
-enum { Q1=0, Q2, Q3, Q4 };
 
 } // unnamed namespace
 
 
-void RuntimeStats::report( MPI_Comm comm, InfoStats & stats )
+void RuntimeStats::report( MPI_Comm comm
+                         , Counts const& counts
+                         , InfoStats & stats
+                         )
 {
   {
     static bool init = false;
     if (!init) {
       MPI_Op_create( rank_sum_min_max, true, &rank_sum_min_max_op );
-
       init = true;
     }
   }
+
+  enum class DataType { Counts
+                      , Time
+                      , Bytes
+                      , ExecTime
+                      , WaitTime
+                      };
+
 
   int psize;
   int prank;
@@ -277,86 +274,66 @@ void RuntimeStats::report( MPI_Comm comm, InfoStats & stats )
 
   const int num_allocators = static_cast<int>(s_allocators.size());
 
-  const int num_values = num_timers + num_allocators;
+  const int num_values = num_timers + num_allocators + counts.size();; // num_patches, num_cells, num_particles
 
   const int data_size = num_values * 4;
+
 
   std::vector<int64_t>     local_data;
   std::vector<int64_t>     data;
   std::vector<int64_t>     histograms;
   std::vector<int64_t>     global_data;
   std::vector<int64_t>     global_histograms;
-  std::vector<std::string> names;
+  std::vector< std::pair<std::string, DataType> > names;
 
   local_data.reserve( num_values );
   data.reserve( data_size );
+
+  auto push_data = [&](const std::string & name, DataType t, int64_t value) {
+    if (prank==0) {
+      names.emplace_back( name, t );
+    }
+    local_data.push_back(value);
+    data.push_back(prank); // rank
+    data.push_back(value); // total
+    data.push_back(value); // min
+    data.push_back(value); // max
+  };
 
   if (prank==0) {
     names.reserve( num_values );
   }
 
+  // Counts
+  for (auto const & c : counts ) {
+    push_data(c.first, DataType::Counts, c.second);
+  }
+
   // Tag Timers
   for( auto const& p : s_timers ) {
-    if (prank==0) {
-      names.push_back( p.first );
-    }
-    const int64_t ns = p.second();
-    local_data.push_back(ns);
-    data.push_back(prank); // rank
-    data.push_back(ns); // total
-    data.push_back(ns); // min
-    data.push_back(ns); // max
+    push_data( p.first, DataType::Time, p.second() );
   }
 
   // Tag Allocators
-  int alloc_offset = !s_allocators.empty() ? static_cast<int>(names.size()) : ~0;
   for ( auto const& p : s_allocators ) {
-    if (prank==0) {
-      names.push_back( p.first );
-    }
-    const int64_t bytes = p.second();
-    local_data.push_back(bytes);
-    data.push_back(prank); // rank
-    data.push_back(bytes); // total
-    data.push_back(bytes); // min
-    data.push_back(bytes); // max
+    push_data( p.first, DataType::Bytes, p.second() );
   }
 
   // Exec Times
-  int exec_offset = ~0;
   if (g_exec_times) {
-    exec_offset = names.size();
     for (size_t i=0; i<g_num_tasks; ++i) {
-      if (prank==0) {
-        names.push_back( g_task_names[i] );
-      }
       const int64_t ns = g_task_exec_times[i].load( std::memory_order_relaxed );
-      local_data.push_back(ns);
-      data.push_back(prank); // rank
-      data.push_back(ns); // total
-      data.push_back(ns); // min
-      data.push_back(ns); // max
+      push_data( g_task_names[i], DataType::ExecTime, ns );
     }
   }
 
   // Wait Times
-  int wait_offset = ~0;
   if (g_wait_times) {
-    wait_offset = names.size();
     for (size_t i=0; i<g_num_tasks; ++i) {
-      if (prank==0) {
-        names.push_back( g_task_names[i] );
-      }
-      const int64_t ns = g_task_wait_times[i].load( std::memory_order_relaxed );
-      local_data.push_back(ns);
-      data.push_back(prank); // rank
-      data.push_back(ns); // total
-      data.push_back(ns); // min
-      data.push_back(ns); // max
+      const int64_t ns = g_task_exec_times[i].load( std::memory_order_relaxed );
+      push_data( g_task_names[i], DataType::WaitTime, ns );
     }
   }
-
-
 
   global_data.resize(data_size);
   MPI_Allreduce( data.data(), global_data.data(), data_size, MPI_INT64_T, rank_sum_min_max_op, comm);
@@ -385,11 +362,69 @@ void RuntimeStats::report( MPI_Comm comm, InfoStats & stats )
   if (mpi_report && prank == 0) {
 
     const int w_desc = 14;
-    const int w_num  = 10;
+    const int w_num  = 13;
     const int w_hist = 35;
     const int w_load = 18;
 
-    for (int i=0; i<num_values; ++i) {
+    auto print_header = [=](DataType t) {
+      printf("\n--------------------------------------------------------------------------------\n");
+      switch(t) {
+      case DataType::Counts:
+        printf("COUNTS\n");
+        break;
+      case DataType::Time:
+        printf("TIMERS (wall)\n");
+        break;
+      case DataType::Bytes:
+        printf("ALLOCATORS\n");
+        break;
+      case DataType::ExecTime:
+        printf("TASK EXEC TIME (compute)\n");
+        break;
+      case DataType::WaitTime:
+        printf("TASK WAIT TIME (compute)\n");
+        break;
+      }
+      printf("--------------------------------------------------------------------------------\n");
+      printf( "%*s%*s%*s%*s%*s%*s%*s%*s\n"
+          ,w_desc, "Name:"
+          ,w_num,  "Total:"
+          ,w_num,  "Avg:"
+          ,w_num,  "Min:"
+          ,w_num,  "Max:"
+          ,w_num,  "Max rank:"
+          ,w_hist, "Hist \% [  Q1 |  Q2 |  Q3 |  Q4 ]:"
+          ,w_load, "\%Load Imbalance"
+      );
+    };
+
+    auto to_string = [](DataType t, double v)->std::string {
+      std::string result;
+      switch(t) {
+      case DataType::Counts:
+        {
+          std::ostringstream out;
+          out << std::setprecision(3) << v;
+          result = out.str();
+        }
+        break;
+      case DataType::Time:
+        result = nanoseconds_to_string(v);
+        break;
+      case DataType::Bytes:
+        result = bytes_to_string(v);
+        break;
+      case DataType::ExecTime:
+        result = nanoseconds_to_string(v);
+        break;
+      case DataType::WaitTime:
+        result = nanoseconds_to_string(v);
+        break;
+      }
+      return result;
+    };
+
+    auto print_row = [&](int i) {
       const int off = 4*i;
       const int max_rank  = global_data[off+RANK];
       const int64_t total = global_data[off+SUM];
@@ -405,75 +440,17 @@ void RuntimeStats::report( MPI_Comm comm, InfoStats & stats )
 
       const double load = max != 0 ? (100.0 * (1.0 - (avg / max))) : 0.0;
 
-      if ( i == 0 ) {
-        printf("\n--------------------------------------------------------------------------------\n");
-        printf("TIMERS\n");
-        printf("--------------------------------------------------------------------------------\n");
-        printf( "%*s%*s%*s%*s%*s%*s%*s%*s\n"
-            ,w_desc, "Description:"
-            ,w_num,  "Total:"
-            ,w_num,  "Avg:"
-            ,w_num,  "Min:"
-            ,w_num,  "Max:"
-            ,w_num,  "Mrank:"
-            ,w_hist, "Hist \% [  Q1 |  Q2 |  Q3 |  Q4 ]:"
-            ,w_load, "\%Load Imbalance"
-        );
-      }
-      else if ( i== alloc_offset ) {
-        printf("\n--------------------------------------------------------------------------------\n");
-        printf("ALLOCATORS\n");
-        printf("--------------------------------------------------------------------------------\n");
-        printf( "%*s%*s%*s%*s%*s%*s%*s%*s\n"
-            ,w_desc, "Description:"
-            ,w_num,  "Total:"
-            ,w_num,  "Avg:"
-            ,w_num,  "Min:"
-            ,w_num,  "Max:"
-            ,w_num,  "Mrank:"
-            ,w_hist, "Hist \% [  Q1 |  Q2 |  Q3 |  Q4 ]:"
-            ,w_load, "\%Load Imbalance"
-        );
-      }
-      else if (i == exec_offset) {
-        printf("\n--------------------------------------------------------------------------------\n");
-        printf("TASK EXEC TIMES\n");
-        printf("--------------------------------------------------------------------------------\n");
-        printf( "%*s%*s%*s%*s%*s%*s%*s%*s\n"
-            ,w_desc, "Description:"
-            ,w_num,  "Total:"
-            ,w_num,  "Avg:"
-            ,w_num,  "Min:"
-            ,w_num,  "Max:"
-            ,w_num,  "Mrank:"
-            ,w_hist, "Hist \% [  Q1 |  Q2 |  Q3 |  Q4 ]:"
-            ,w_load, "\%Load Imbalance"
-        );
-      }
-      else if (i == wait_offset) {
-        printf("\n--------------------------------------------------------------------------------\n");
-        printf("TASK WAIT TIMES\n");
-        printf("--------------------------------------------------------------------------------\n");
-        printf( "%*s%*s%*s%*s%*s%*s%*s%*s\n"
-            ,w_desc, "Description:"
-            ,w_num,  "Total:"
-            ,w_num,  "Avg:"
-            ,w_num,  "Min:"
-            ,w_num,  "Max:"
-            ,w_num,  "Mrank:"
-            ,w_hist, "Hist \% [  Q1 |  Q2 |  Q3 |  Q4 ]:"
-            ,w_load, "\%Load Imbalance"
-        );
-      }
+      const std::string & name = names[i].first;
+      DataType t =  names[i].second;
 
       if ( total > 0) {
-        if (names[i].size() < w_desc) {
+        if (name.size() < w_desc) {
           printf("%*s:%*s%*s%*s%*s%*d          %6.1f%6.1f%6.1f%6.1f%8.1f\n"
-              , w_desc-1, names[i].c_str()
-              , w_num, ( i < num_timers ? nanoseconds_to_string( total ) : bytes_to_string( total )).c_str()
-              , w_num, ( i < num_timers ? nanoseconds_to_string( avg ) : bytes_to_string( avg )).c_str()
-              , w_num, ( i < num_timers ? nanoseconds_to_string( min ) : bytes_to_string( min )).c_str()
-              , w_num, ( i < num_timers ? nanoseconds_to_string( max ) : bytes_to_string( max )).c_str()
+              , w_desc-1, name.c_str()
+              , w_num, to_string(t, total).c_str()
+              , w_num, to_string(t, avg).c_str()
+              , w_num, to_string(t, min).c_str()
+              , w_num, to_string(t, max).c_str()
               , w_num, max_rank
               , q1
               , q2
@@ -483,13 +460,13 @@ void RuntimeStats::report( MPI_Comm comm, InfoStats & stats )
               );
         }
         else {
-          printf("%s\n", names[i].c_str());
+          printf("%s\n", name.c_str());
           printf("%*s:%*s%*s%*s%*s%*d          %6.1f%6.1f%6.1f%6.1f%8.1f\n"
               , w_desc-1, ""
-              , w_num, ( i < num_timers ? nanoseconds_to_string( total ) : bytes_to_string( total )).c_str()
-              , w_num, ( i < num_timers ? nanoseconds_to_string( avg ) : bytes_to_string( avg )).c_str()
-              , w_num, ( i < num_timers ? nanoseconds_to_string( min ) : bytes_to_string( min )).c_str()
-              , w_num, ( i < num_timers ? nanoseconds_to_string( max ) : bytes_to_string( max )).c_str()
+              , w_num, to_string(t, total).c_str()
+              , w_num, to_string(t, avg).c_str()
+              , w_num, to_string(t, min).c_str()
+              , w_num, to_string(t, max).c_str()
               , w_num, max_rank
               , q1
               , q2
@@ -500,7 +477,13 @@ void RuntimeStats::report( MPI_Comm comm, InfoStats & stats )
 
         }
       }
+    };
 
+    for (int i=0; i<num_values; ++i) {
+      if (i==0 || names[i-1].second != names[i].second) {
+        print_header( names[i].second );
+      }
+      print_row(i);
     }
     printf("\n");
   }
@@ -508,12 +491,12 @@ void RuntimeStats::report( MPI_Comm comm, InfoStats & stats )
 
 
   // update SimulationState
-  stats[SimulationState::TaskExecTime]       += TripTimer< TaskExecTag >::max_seconds()
+  stats[SimulationState::TaskExecTime]       += TripTimer< TaskExecTag >::max().seconds()
                                                 - stats[SimulationState::OutputFileIOTime]  // don't count output time or bytes
                                                 - stats[SimulationState::OutputFileIORate];
-  stats[SimulationState::TaskLocalCommTime]  += RecvTimer::total_seconds() + SendTimer::total_seconds();
-  stats[SimulationState::TaskWaitCommTime]   += TestTimer::total_seconds() + WaitTimer::total_seconds();
-  stats[SimulationState::TaskGlobalCommTime] += CollectiveTimer::total_seconds();
+  stats[SimulationState::TaskLocalCommTime]  += RecvTimer::total().seconds() + SendTimer::total().seconds();
+  stats[SimulationState::TaskWaitCommTime]   += TestTimer::total().seconds() + WaitTimer::total().seconds();
+  stats[SimulationState::TaskGlobalCommTime] += CollectiveTimer::total().seconds();
 
   reset_timers();
 }

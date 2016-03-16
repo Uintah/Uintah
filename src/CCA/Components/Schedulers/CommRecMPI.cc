@@ -115,7 +115,7 @@ CommRecMPI::waitsome( const ProcessorGroup * pg,
 
   MPI_Waitsome( (int)ids_.size(), &ids_[0], &donecount, &indices[0], &statii[0] );
 
-  double total_wait_time = g_wait_timer.seconds();
+  double total_wait_time = g_wait_timer().seconds();
   WaitTimePerMessage = total_wait_time / donecount;
 
   return donesome( pg, donecount, statii, finishedGroups );
@@ -180,7 +180,7 @@ CommRecMPI::waitsome( const ProcessorGroup * pg,
 
   MPI_Waitsome( size, &combinedIDs[0], &donecount, &combinedIndices[0], &statii[0] );
 
-  double total_wait_time = g_wait_timer.seconds();
+  double total_wait_time = g_wait_timer().seconds();
   WaitTimePerMessage = total_wait_time / donecount;
 
   DOUT(g_commrec_dbg, "after combined waitsome");
@@ -231,7 +231,7 @@ CommRecMPI::testsome( const ProcessorGroup * pg,
 
   MPI_Testsome( (int)ids_.size(), &ids_[0], &donecount, &indices[0], &statii[0] );
 
-  double total_test_time = g_test_timer.seconds();
+  double total_test_time = g_test_timer().seconds();
 
   if (donecount > 0) {
     WaitTimePerMessage = total_test_time / donecount;
@@ -349,7 +349,7 @@ CommRecMPI::waitall( const ProcessorGroup * pg )
 
   MPI_Waitall((int)ids_.size(), &ids_[0], &statii[0]);
 
-  double total_wait_time = g_wait_timer.seconds();
+  double total_wait_time = g_wait_timer().seconds();
   WaitTimePerMessage = total_wait_time / ids_.size();
 
   DOUT(g_commrec_dbg, pg->myrank() << " Done calling waitall with " << ids_.size() << " waiters");
