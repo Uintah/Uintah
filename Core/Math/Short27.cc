@@ -70,21 +70,6 @@ template<> const string find_type_name(Short27*)
 }
 
  
-void
-Pio(Piostream& stream, Short27& s)
-{
-    stream.begin_cheap_delim();
-    Pio(stream, s[0]); Pio(stream, s[1]); Pio(stream, s[2]);
-    Pio(stream, s[3]); Pio(stream, s[4]); Pio(stream, s[5]);
-    Pio(stream, s[6]); Pio(stream, s[7]); Pio(stream, s[8]);
-    Pio(stream, s[9]); Pio(stream,s[10]); Pio(stream,s[11]);
-    Pio(stream,s[12]); Pio(stream,s[13]); Pio(stream,s[14]);
-    Pio(stream,s[15]); Pio(stream,s[16]); Pio(stream,s[17]);
-    Pio(stream,s[18]); Pio(stream,s[19]); Pio(stream,s[20]);
-    Pio(stream,s[21]); Pio(stream,s[22]); Pio(stream,s[23]);
-    Pio(stream,s[24]); Pio(stream,s[25]); Pio(stream,s[26]);
-    stream.end_cheap_delim();
-}
 
 // needed for bigEndian/littleEndian conversion
 void swapbytes( Uintah::Short27& s){

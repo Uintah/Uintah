@@ -345,33 +345,6 @@ void Tensor::set_outside_eigens(const Vector &e1, const Vector &e2,
   have_eigens_ = 1;
 }
 
-void Pio(Piostream& stream, Tensor& t){
-  
-  stream.begin_cheap_delim();
- 
-  Pio(stream, t.mat_[0][0]);
-  Pio(stream, t.mat_[0][1]);
-  Pio(stream, t.mat_[0][2]);
-  Pio(stream, t.mat_[1][1]);
-  Pio(stream, t.mat_[1][2]);
-  Pio(stream, t.mat_[2][2]);
-
-  t.mat_[1][0]=t.mat_[0][1];
-  t.mat_[2][0]=t.mat_[0][2];
-  t.mat_[2][1]=t.mat_[1][2];
-
-  Pio(stream, t.have_eigens_);
-  if (t.have_eigens_) {
-    Pio(stream, t.e1_);
-    Pio(stream, t.e2_);
-    Pio(stream, t.e3_);
-    Pio(stream, t.l1_);
-    Pio(stream, t.l2_);
-    Pio(stream, t.l3_);
-  }
-
-  stream.end_cheap_delim();
-}
 
 const string& 
 Tensor::get_h_file_path() {

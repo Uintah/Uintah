@@ -161,7 +161,6 @@ public:
 
   // Persistent representation.
   virtual std::string type_name() { return "Matrix"; }
-  virtual void io(Piostream&);
   static PersistentTypeID type_id;
 
 protected:

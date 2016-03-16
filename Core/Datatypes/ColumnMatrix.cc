@@ -301,32 +301,6 @@ void ColumnMatrix::mult_transpose(const ColumnMatrix&, ColumnMatrix&,
   ASSERTFAIL("Error - called mult_transpose on a columnmatrix.\n");
 }
 
-#define COLUMNMATRIX_VERSION 2
-
-void ColumnMatrix::io(Piostream& stream)
-{
-    int version=stream.begin_class("ColumnMatrix", COLUMNMATRIX_VERSION);
-    
-    if (version > 1)
-    {
-      // New version inherits from Matrix
-      Matrix::io(stream);
-    }
-
-    stream.io(nrows_);
-
-    if (stream.reading())
-    {
-      data = scinew double[nrows_];
-    }
-
-    if (!stream.block_io(data, sizeof(double), nrows_))
-    {
-      for (int i=0; i<nrows_; i++)
-        stream.io(data[i]);
-    }
-    stream.end_class();
-}
 
 void Mult(ColumnMatrix& result, const ColumnMatrix& a, const ColumnMatrix& b)
 {

@@ -44,7 +44,6 @@
 namespace Uintah {
 
 template<class T> class Array1;
-class Piostream;
 
 class Tensor {
 private:
@@ -103,7 +102,6 @@ public:
   //! support dynamic compilation
   static const std::string& get_h_file_path();
 
-  friend void Pio(Piostream&, Tensor&);
 };
 
 inline bool operator<(Tensor t1, Tensor t2)

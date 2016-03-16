@@ -52,19 +52,6 @@ Matrix::~Matrix()
 {
 }
 
-void
-Matrix::io(Piostream& stream)
-{
-  int version = stream.begin_class("Matrix", MATRIX_VERSION);
-  if (version < 2) {
-    int tmpsym;
-    stream.io(tmpsym);
-  }
-  if (version > 2) {
-    PropertyManager::io(stream);
-  }
-  stream.end_class();
-}
 
 
 void

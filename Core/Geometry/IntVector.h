@@ -45,7 +45,6 @@
 
 namespace Uintah {
 
-class Piostream;
 
 class IntVector {
 public:
@@ -210,7 +209,6 @@ public:
   //! support dynamic compilation
   static const std::string& get_h_file_path();
 
-  friend void Pio( Piostream&, IntVector& );
 
   friend std::ostream& operator<<(std::ostream&, const Uintah::IntVector&);
 

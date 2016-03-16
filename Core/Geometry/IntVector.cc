@@ -49,15 +49,6 @@ namespace SCIRun {
 
 namespace Uintah{
 
-void
-Pio(Piostream& stream, IntVector& p)
-{
-  stream.begin_cheap_delim();
-  Pio(stream, p.value_[0]);
-  Pio(stream, p.value_[1]);
-  Pio(stream, p.value_[2]);
-  stream.end_cheap_delim();
-}
 
 const string& 
 IntVector::get_h_file_path() {

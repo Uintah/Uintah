@@ -31,12 +31,12 @@
  * a lot of different modules, we instantiate them here to avoid bloat
  */
 
-#include <Persistent/Persistent.h>
+
 #include <Containers/LockingHandle.h>
 
 #include <Datatypes/Particles/ParticleGridReader.h>
 
 using namespace Uintah;
 
-template void Pio<>(Piostream&, LockingHandle<ParticleGridReader>&);
+
 

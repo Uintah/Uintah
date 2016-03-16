@@ -46,7 +46,6 @@
 
 namespace Uintah {
 
-class Piostream;
 class Point;
 class TypeDescription;
 
@@ -152,7 +151,6 @@ public:
   void find_orthogonal(Vector&, Vector&) const;
   bool check_find_orthogonal(Vector&, Vector&) const;
 
-  friend void Pio( Piostream&, Vector& );
 
   inline const Point &point() const;
   inline Point &asPoint() const;
@@ -197,7 +195,7 @@ public:
 
 // Actual declarations of these functions as 'friend' above doesn't
 // (depending on the compiler) actually declare them.
-void Pio( Piostream&, Vector& );
+
 std::ostream& operator<<(std::ostream& os, const Vector& p);
 std::istream& operator>>(std::istream& os, Vector& p);
   

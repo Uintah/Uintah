@@ -257,7 +257,7 @@ namespace Uintah {
     /*! Return a TNT Array2D */
     inline TNT::Array2D<double> toTNTArray2D() const;
 
-    //  friend void Pio( Piostream&, Matrix3& );
+
   private:
     // Reduce the matrix and rhs, representing the equation system:
     // A*x = y = rhs, to a matrix in upper triangular form with
@@ -737,12 +737,10 @@ namespace SCIRun {
 
 namespace Uintah {
 
-  class Piostream;
 
    void swapbytes( Uintah::Matrix3& m);
    template<>  const std::string find_type_name(Uintah::Matrix3*);
  
-   void Pio( Piostream&, Uintah::Matrix3& );
 } // namespace Uintah
 
 

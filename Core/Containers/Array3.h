@@ -50,9 +50,7 @@
 #include <unistd.h>
 #include <Core/Util/Assert.h>
 
-#ifndef SCI_NOPERSISTENT
-#include <Core/Persistent/Persistent.h>
-#endif // #ifndef SCI_NOPERSISTENT
+
 
 
 namespace Uintah {
@@ -60,11 +58,7 @@ namespace Uintah {
 class RigorousTest;
 
 template<class T> class Array3;
-#ifndef SCI_NOPERSISTENT
-template<class T> void Pio(Piostream& stream, Array3<T>& array);
-template<class T> void Pio(Piostream& stream, Array3<T>& array, const std::string&);
-template<class T> void Pio(Piostream& stream, Array3<T>*& array);
-#endif // #ifndef SCI_NOPERSISTENT
+
 
 /**************************************
 
@@ -162,22 +156,7 @@ public:
   int input( const std::string& );
   int output( const std::string&);
 
-#ifndef SCI_NOPERSISTENT
-#if defined(_AIX)
-  template <typename type>
-  friend void TEMPLATE_TAG Pio TEMPLATE_BOX (Piostream&, Array3<type>&);
-  template <typename type>
-  friend void TEMPLATE_TAG Pio TEMPLATE_BOX (Piostream&, Array3<type>&,
-					     const std::string &);
-  template <typename type>
-  friend void TEMPLATE_TAG Pio TEMPLATE_BOX (Piostream&, Array3<type>*&);
-#else
-  friend void TEMPLATE_TAG Pio TEMPLATE_BOX (Piostream&, Array3<T>&);
-  friend void TEMPLATE_TAG Pio TEMPLATE_BOX (Piostream&, Array3<T>&, 
-					     const std::string &);
-  friend void TEMPLATE_TAG Pio TEMPLATE_BOX (Piostream&, Array3<T>*&);
-#endif
-#endif // #ifndef SCI_NOPERSISTENT
+
 };
 
 template<class T>
@@ -289,77 +268,6 @@ Array3<T>::get_onedim_byte( unsigned char *v )
 	v[index++] = objs[i][j][k];
 }
 
-#define ARRAY3_VERSION 1
-
-#ifndef SCI_NOPERSISTENT
-
-template<class T>
-void Pio(Piostream& stream, Array3<T>& data)
-{
-#ifdef __GNUG__
-#else
-#endif
-
-  /*int version=*/stream.begin_class("Array3", ARRAY3_VERSION);
-  if(stream.reading()){
-    // Allocate the array...
-    int d1, d2, d3;
-    Pio(stream, d1);
-    Pio(stream, d2);
-    Pio(stream, d3);
-    data.resize(d1, d2, d3);
-  } else {
-    Pio(stream, data.dm1);
-    Pio(stream, data.dm2);
-    Pio(stream, data.dm3);
-  }
-  for(int i=0;i<data.dm1;i++){
-    for(int j=0;j<data.dm2;j++){
-      for(int k=0;k<data.dm3;k++){
-	Pio(stream, data.objs[i][j][k]);
-      }
-    }
-  }
-  stream.end_class();
-}
-
-
-
-template<class T>
-void Pio(Piostream& stream, Array3<T>*& data) {
-  if (stream.reading()) {
-    data=new Array3<T>;
-  }
-  Pio(stream, *data);
-}
-
-template<class T>
-void Pio(Piostream& stream, Array3<T>& data, 
-         const std::string& filename)
-{
-#ifdef __GNUG__
-#else
-#endif
-
-  /*int version=*/stream.begin_class("Array3", ARRAY3_VERSION);
-  if(stream.reading()){
-    // Allocate the array...
-    int d1, d2, d3;
-    Pio(stream, d1);
-    Pio(stream, d2);
-    Pio(stream, d3);
-    data.resize(d1, d2, d3);
-    data.input( filename );
-  } else {
-    Pio(stream, data.dm1);
-    Pio(stream, data.dm2);
-    Pio(stream, data.dm3);
-    data.output( filename );
-  }
-    
-  stream.end_class();
-}
-#endif // #ifndef SCI_NOPERSISTENT
 
 template<class T>
 int

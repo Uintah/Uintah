@@ -120,7 +120,6 @@ public:
  
   //! Persistent representation...
   virtual std::string type_name() { return "SparseRowMatrix"; }
-  virtual void io(Piostream&);
   static PersistentTypeID type_id;
 
 

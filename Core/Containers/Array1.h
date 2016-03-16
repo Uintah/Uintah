@@ -37,10 +37,7 @@
 #ifndef SCI_Containers_Array1_h
 #define SCI_Containers_Array1_h 1
 
-#ifndef SCI_NOPERSISTENT
 #include <sci_defs/template_defs.h>
-#include <Core/Persistent/Persistent.h>
-#endif // #ifndef SCI_NOPERSISTENT
 #include <Core/Util/Assert.h>
 
 namespace Uintah {
@@ -48,9 +45,6 @@ namespace Uintah {
 class RigorousTest;
 
 template<class T> class Array1;
-#ifndef SCI_NOPERSISTENT
- template<class T> void Pio(Uintah::Piostream& stream, Array1<T>& array);
-#endif // #ifndef SCI_NOPERSISTENT
 
 /**************************************
 
@@ -185,14 +179,6 @@ public:
   // Get the array information
   T* get_objs();
 
-#ifndef SCI_NOPERSISTENT
-#if defined(_AIX)
-  template <typename Type> 
-    friend void TEMPLATE_TAG Pio TEMPLATE_BOX (Uintah::Piostream&, Array1<Type>&);
-#else
-  friend void TEMPLATE_TAG Pio TEMPLATE_BOX (Uintah::Piostream&, Array1<T>&);
-#endif
-#endif // #ifndef SCI_NOPERSISTENT
 };
 
 template<class T>
@@ -395,31 +381,6 @@ T* Array1<T>::get_objs()
   return objs;
 }
 
-#define ARRAY1_VERSION 2
-
-#ifndef SCI_NOPERSISTENT
-template<class T>
-  void Pio(Uintah::Piostream& stream, Array1<T>& array)
-{
-  /* int version= */stream.begin_class("Array1", ARRAY1_VERSION);
-  int size=array._size;
-  Pio(stream, size);
-  if(stream.reading()){
-    array.remove_all();
-    array.grow(size);
-  }
-  for(int i=0;i<size;i++)
-    Pio(stream, array.objs[i]);
-  stream.end_class();
-}
-
-template<class T>
-void Pio(Uintah::Piostream& stream, Array1<T>*& array) {
-  if (stream.reading())
-    array=new Array1<T>;
-  Pio(stream, *array);
-}
-#endif // #ifndef SCI_NOPERSISTENT
 
 } // End namespace Uintah
 

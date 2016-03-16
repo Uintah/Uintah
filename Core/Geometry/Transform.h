@@ -34,13 +34,11 @@ namespace Uintah {
 class Vector;
 class Point;
 class Quaternion;
-class Piostream;
 class Plane;
 class Transform;
 class TypeDescription;
 
-void Pio_old(Piostream&, Transform&);
-void Pio(Piostream&, Transform*&);
+
 
 class Transform  : public Persistent
 {
@@ -73,9 +71,6 @@ public:
 
   //! Persistent I/O.
   static PersistentTypeID type_id;
-  virtual void io(Piostream &stream);
-  friend void Pio_old(Piostream&, Transform&);
-  friend void Pio(Piostream&, Transform*&);
 
   void load_basis(const Point&,const Vector&, const Vector&, const Vector&);
   void load_frame(const Point&,const Vector&, const Vector&, const Vector&);

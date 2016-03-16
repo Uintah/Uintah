@@ -127,7 +127,6 @@ public:
   virtual void    print(std::ostream&) const;
   
   //! Persistent representation...
-  virtual void io(Piostream&);
   static PersistentTypeID type_id;
 };
 

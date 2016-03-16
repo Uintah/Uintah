@@ -52,12 +52,10 @@
 namespace Uintah {
 
   class Vector;
-  class Piostream;
 
   class BBox {
     
   protected:
-    friend void Pio( Piostream &, BBox& );
 
   public:
     BBox();

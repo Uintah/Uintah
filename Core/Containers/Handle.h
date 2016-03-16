@@ -38,9 +38,6 @@
 #define SCI_Containers_Handle_h 1
 
 #include <Core/Util/Assert.h>
-#ifndef SCI_NOPERSISTENT
-#include <Core/Persistent/Persistent.h>
-#endif
 
 namespace SCIRun {
 
@@ -71,9 +68,6 @@ namespace SCIRun {
 ****************************************/
 
 template<class T> class Handle;
-#ifndef SCI_NOPERSISTENT
- template<class T> void Pio(Uintah::Piostream& stream, Handle<T>& data);
-#endif
 
 template<class T> class Handle {
   T* rep;
@@ -212,19 +206,7 @@ void Handle<T>::detach()
     rep->ref_cnt++;
 }
 
-#ifndef SCI_NOPERSISTENT
-template<class T>
-  void Pio(Uintah::Piostream& stream, Handle<T>& data)
-{
-    stream.begin_cheap_delim();
-    Uintah::Persistent* trep=data.get_rep();
-    stream.io(trep, T::type_id);
-    if(stream.reading()){
-	data =(T*)trep;
-    }
-    stream.end_cheap_delim();
-}
-#endif
+
 
 } // End namespace SCIRun
 

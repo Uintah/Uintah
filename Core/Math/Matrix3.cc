@@ -74,15 +74,6 @@ namespace Uintah {
     return td;
   }
 
-  void
-  Pio(Piostream& stream, Matrix3& mat)
-  {
-    stream.begin_cheap_delim();
-    Pio(stream, mat(0,0)); Pio(stream, mat(0,1)); Pio(stream, mat(0,2));
-    Pio(stream, mat(1,0)); Pio(stream, mat(1,1)); Pio(stream, mat(1,2));
-    Pio(stream, mat(2,0)); Pio(stream, mat(2,1)); Pio(stream, mat(2,2));
-    stream.end_cheap_delim();
-  }
 
   // needed for bigEndian/littleEndian conversion
   void swapbytes( Uintah::Matrix3& m){
