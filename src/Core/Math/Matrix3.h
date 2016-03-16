@@ -726,14 +726,8 @@ namespace Uintah {
 
 // Added for compatibility with core types
 #include <Core/Datatypes/TypeName.h>
-#include <Core/Util/TypeDescription.h>
 #include <string>
 
-namespace SCIRun {
-
-    const STypeDescription* get_type_description(Uintah::Matrix3*);
-
-}
 
 namespace Uintah {
 

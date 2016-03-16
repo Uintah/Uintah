@@ -31,7 +31,6 @@
 #include <Core/Math/Matrix3.h>
 #include <Core/Math/CubeRoot.h>
 #include <Core/Disclosure/TypeDescription.h>
-#include <Core/Util/TypeDescription.h>
 #include <Core/Util/FancyAssert.h>
 #include <Core/Malloc/Allocator.h>
 #include <Core/Util/Assert.h>
@@ -58,15 +57,6 @@ namespace Uintah {
   {
     static const string name = "Matrix3";
     return name;
-  }
-
-  const SCIRun::STypeDescription* get_type_description(Matrix3*)
-  {
-    static SCIRun::STypeDescription* td = 0;
-    if(!td){
-      td = scinew SCIRun::STypeDescription("Matrix3");
-    }
-    return td;
   }
 
 

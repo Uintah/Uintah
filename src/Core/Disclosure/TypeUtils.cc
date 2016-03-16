@@ -25,7 +25,6 @@
 
 #include <Core/Disclosure/TypeUtils.h>
 #include <Core/Disclosure/TypeDescription.h>
-#include <Core/Util/TypeDescription.h>
 
 #include <Core/Util/FancyAssert.h>
 #include <Core/Geometry/Point.h>
@@ -40,16 +39,6 @@
 
 using namespace std;
 
-namespace SCIRun {
-  const STypeDescription* get_type_description(Uintah::long64*)
-  {
-    static STypeDescription* td = 0;
-    if(!td){
-      td = scinew STypeDescription("long64");
-    }
-    return td;
-  }
-}
 
 namespace Uintah {
 
