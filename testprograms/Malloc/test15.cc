@@ -40,7 +40,6 @@
 
 #include <pthread.h>
 
-using namespace SCIRun;
 
 /*
   This program is designed to test a weird race condition dealing with

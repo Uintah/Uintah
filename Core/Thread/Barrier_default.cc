@@ -37,7 +37,7 @@
 #include <Core/Thread/ConditionVariable.h>
 #include <Core/Thread/Mutex.h>
 
-namespace SCIRun {
+namespace Uintah {
 struct Barrier_private {
   Mutex mutex;
   ConditionVariable cond0;
@@ -49,8 +49,8 @@ struct Barrier_private {
 };
 }
 
-using SCIRun::Barrier_private;
-using SCIRun::Barrier;
+using Uintah::Barrier_private;
+using Uintah::Barrier;
 
 Barrier_private::Barrier_private()
     : mutex("Barrier lock"),

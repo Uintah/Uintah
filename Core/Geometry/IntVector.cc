@@ -34,7 +34,20 @@
 using namespace std;
 using namespace Uintah::UintahXML;
 
-namespace SCIRun{
+namespace SCIRun {
+
+  const SCIRun::STypeDescription*  get_type_description(Uintah::IntVector*)
+  {
+    static SCIRun::STypeDescription* td = 0;
+    if(!td){
+      td = scinew SCIRun::STypeDescription("IntVector", Uintah::IntVector::get_h_file_path(), "Uintah");
+    }
+    return td;
+  }
+
+}
+
+namespace Uintah{
 
 void
 Pio(Piostream& stream, IntVector& p)
@@ -48,22 +61,13 @@ Pio(Piostream& stream, IntVector& p)
 
 const string& 
 IntVector::get_h_file_path() {
-  static const string path(TypeDescription::cc_to_h(__FILE__));
+  static const string path(SCIRun::STypeDescription::cc_to_h(__FILE__));
   return path;
 }
 
-const TypeDescription*
-get_type_description(IntVector*)
-{
-  static TypeDescription* td = 0;
-  if(!td){
-    td = scinew TypeDescription("IntVector", IntVector::get_h_file_path(), "SCIRun");
-  }
-  return td;
-}
 
 ostream&
-operator<<(std::ostream& out, const SCIRun::IntVector& v)
+operator<<(std::ostream& out, const Uintah::IntVector& v)
 {
   out << "[int " << v.x() << ", " << v.y() << ", " << v.z() << ']';
   return out;
@@ -96,5 +100,5 @@ IntVector::fromString( const string & source )
   return result;
 }
 
-} //end namespace SCIRun
+} //end namespace Uintah
 

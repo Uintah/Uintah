@@ -78,7 +78,7 @@ private:
     IntVector d_centerTimes2;
   };
 
-  SCIRun::RangeTree<BoxPoint, int>* d_rangeTree;  
+  Uintah::RangeTree<BoxPoint, int>* d_rangeTree;  
   IntVector d_maxBoxDimensions;
 
   // BoxPoint's vector is kept here mostly for memory management
@@ -112,7 +112,7 @@ BoxRangeQuerier::BoxRangeQuerier(BoxPIterator begin, BoxPIterator end)
     }
   }
 
-  d_rangeTree = scinew SCIRun::RangeTree<BoxPoint, int>(pointList, 3 /*dimensions*/);
+  d_rangeTree = scinew Uintah::RangeTree<BoxPoint, int>(pointList, 3 /*dimensions*/);
 }
   
 } // end namespace Uintah

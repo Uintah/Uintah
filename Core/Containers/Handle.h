@@ -72,7 +72,7 @@ namespace SCIRun {
 
 template<class T> class Handle;
 #ifndef SCI_NOPERSISTENT
-template<class T> void Pio(Piostream& stream, Handle<T>& data);
+ template<class T> void Pio(Uintah::Piostream& stream, Handle<T>& data);
 #endif
 
 template<class T> class Handle {
@@ -131,7 +131,7 @@ public:
 
 };
 
-} // End namespace SCIRun
+} // End namespace Uintah
 
 ////////////////////////////////////////////////////////////
 // Start of included Handle.cc
@@ -214,10 +214,10 @@ void Handle<T>::detach()
 
 #ifndef SCI_NOPERSISTENT
 template<class T>
-void Pio(Piostream& stream, Handle<T>& data)
+  void Pio(Uintah::Piostream& stream, Handle<T>& data)
 {
     stream.begin_cheap_delim();
-    Persistent* trep=data.get_rep();
+    Uintah::Persistent* trep=data.get_rep();
     stream.io(trep, T::type_id);
     if(stream.reading()){
 	data =(T*)trep;

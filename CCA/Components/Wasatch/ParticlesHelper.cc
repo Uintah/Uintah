@@ -160,7 +160,7 @@ namespace Uintah {
     
     pPosLabel_ = VarLabel::create(pPosName_,
                                   ParticleVariable<Uintah::Point>::getTypeDescription(),
-                                  SCIRun::IntVector(0,0,0),
+                                  Uintah::IntVector(0,0,0),
                                   VarLabel::PositionVariable );
     pIDLabel_ = Uintah::VarLabel::create("p.particleID",
                                          ParticleVariable<long64>::getTypeDescription());
@@ -692,7 +692,6 @@ namespace Uintah {
                                                 Uintah::DataWarehouse* old_dw, Uintah::DataWarehouse* new_dw )
   {
     using namespace std;
-    using namespace SCIRun;
     using namespace Uintah;
     
     // loop over the material subset
@@ -811,7 +810,6 @@ namespace Uintah {
   void ParticlesHelper::parse_boundary_conditions( const Uintah::PatchSet* const localPatches)
   {
     using namespace std;
-    using namespace SCIRun;
     using namespace Uintah;
 
     // loop over the material set
@@ -983,8 +981,8 @@ namespace Uintah {
                 const unsigned int nVars = needsBC_.size();
                 std::vector< Uintah::VarLabel* > needsBCLabels; // vector of varlabels that need bcs
 
-                SCIRun::StaticArray< ParticleVariable<double> > allVars(nVars);
-                SCIRun::StaticArray< ParticleVariable<double> > tmpVars(nVars);
+                Uintah::StaticArray< ParticleVariable<double> > allVars(nVars);
+                Uintah::StaticArray< ParticleVariable<double> > tmpVars(nVars);
                 for( size_t i=0; i<needsBC_.size(); ++i ){
                   needsBCLabels.push_back( VarLabel::find(needsBC_[i]) );
                   new_dw->getModifiable( allVars[(unsigned)i], needsBCLabels[i], pset );

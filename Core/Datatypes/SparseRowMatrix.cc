@@ -52,7 +52,7 @@ using namespace std;
 #include <cstdio>
 #include <memory.h>
 
-namespace SCIRun {
+namespace Uintah {
 
 Persistent*
 SparseRowMatrix::maker()
@@ -972,5 +972,5 @@ SparseRowMatrix::identity(int size)
   return scinew SparseRowMatrix(size, size, r, c, size, d);
 }
 
-} // End namespace SCIRun
+} // End namespace Uintah
 

@@ -33,7 +33,7 @@
 //-- Uintah Includes --//
 #include <Core/Grid/Patch.h>
 #include <Core/Grid/Variables/Iterator.h>
-#include <Core/Grid/Variables/CellIterator.h> // SCIRun::Iterator
+#include <Core/Grid/Variables/CellIterator.h> // Uintah::Iterator
 #include <Core/Exceptions/ProblemSetupException.h>
 #include <Core/Grid/BoundaryConditions/BoundCond.h>
 #include <Core/Grid/BoundaryConditions/BCGeomBase.h>
@@ -380,7 +380,7 @@ namespace WasatchCore {
               dynamic_cast<BoundaryConditionBase<FieldT>&>( factory.retrieve_modifier_expression( modTag, patchID, false ) );
               
               // the following is needed for bc expressions that require global uintah indexing, e.g. TurbulentInletBC
-              const SCIRun::IntVector sciPatchCellOffset = patch->getExtraCellLowIndex(1);
+              const Uintah::IntVector sciPatchCellOffset = patch->getExtraCellLowIndex(1);
               const IntVecT patchCellOffset(sciPatchCellOffset.x(), sciPatchCellOffset.y(), sciPatchCellOffset.z());
               modExpr.set_patch_cell_offset(patchCellOffset);
               

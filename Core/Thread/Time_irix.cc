@@ -48,7 +48,6 @@
 #include <sys/time.h>
 #include <cerrno>
 
-using namespace SCIRun;
 
 static int timer_32bit;
 unsigned int iotimer_high;

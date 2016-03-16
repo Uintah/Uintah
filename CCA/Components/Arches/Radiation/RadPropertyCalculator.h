@@ -252,13 +252,13 @@ namespace Uintah {
 
           virtual void computeComplexIndex( const Patch* patch,
                                             constCCVariable<double>& VolFractionBC,
-                                            SCIRun::StaticArray < constCCVariable<double> > &composition,
-                                            SCIRun::StaticArray < CCVariable<double> > &complexReal )=0;
+                                            StaticArray < constCCVariable<double> > &composition,
+                                            StaticArray < CCVariable<double> > &complexReal )=0;
 
           virtual void computeAsymmetryFactor( const Patch* patch,
                                                constCCVariable<double>& VolFractionBC,
-                                               SCIRun::StaticArray < CCVariable<double> > &scatktQuad,
-                                               SCIRun::StaticArray < constCCVariable<double> > &composition, 
+                                               StaticArray < CCVariable<double> > &scatktQuad,
+                                               StaticArray < constCCVariable<double> > &composition, 
                                                CCVariable<double>& scatkt,  
                                                CCVariable<double>  &asymmetryParam )=0;
 
@@ -266,15 +266,15 @@ namespace Uintah {
                                       RadCalcSpeciesList size, RadCalcSpeciesList pT, 
                                       RadCalcSpeciesList weights, 
                                       const int Nqn, CCVariable<double>& abskpt, 
-                                      SCIRun::StaticArray < CCVariable<double> >  &abskp,
-                                      SCIRun::StaticArray < CCVariable<double> >  &complexReal)=0;
+                                      StaticArray < CCVariable<double> >  &abskp,
+                                      StaticArray < CCVariable<double> >  &complexReal)=0;
 
           virtual void compute_scatkt( const Patch* patch,  constCCVariable<double>& VolFractionBC,  
                                        RadCalcSpeciesList size, RadCalcSpeciesList pT, 
                                        RadCalcSpeciesList weights, 
                                        const int Nqn, CCVariable<double>& scatkt, 
-                                       SCIRun::StaticArray < CCVariable<double> > &scatktQuad, 
-                                       SCIRun::StaticArray < CCVariable<double> > &complexReal)=0;
+                                       StaticArray < CCVariable<double> > &scatktQuad, 
+                                       StaticArray < CCVariable<double> > &complexReal)=0;
 
 
           //virtual std::vector<std::string> get_sp() = 0;
@@ -329,14 +329,14 @@ namespace Uintah {
 
           void computeComplexIndex( const Patch* patch,
                                     constCCVariable<double>& VolFractionBC,
-                                    SCIRun::StaticArray<constCCVariable<double> > &composition, 
-                                    SCIRun::StaticArray < CCVariable<double> > &complexReal);
+                                    StaticArray<constCCVariable<double> > &composition, 
+                                    StaticArray < CCVariable<double> > &complexReal);
 
 
           void computeAsymmetryFactor( const Patch* patch,
                                        constCCVariable<double>& VolFractionBC,
-                                       SCIRun::StaticArray < CCVariable<double> > &scatktQuad, 
-                                       SCIRun::StaticArray < constCCVariable<double> > &composition,
+                                       StaticArray < CCVariable<double> > &scatktQuad, 
+                                       StaticArray < constCCVariable<double> > &composition,
                                        CCVariable<double>& scatkt,
                                        CCVariable<double>  &asymmetryParam);
 
@@ -344,15 +344,15 @@ namespace Uintah {
                                       RadCalcSpeciesList size, RadCalcSpeciesList pT, 
                                       RadCalcSpeciesList weights, 
                                       const int Nqn, CCVariable<double>& abskpt, 
-                                      SCIRun::StaticArray < CCVariable<double> >  &abskp,
-                                      SCIRun::StaticArray < CCVariable<double> >  &complexReal);
+                                      StaticArray < CCVariable<double> >  &abskp,
+                                      StaticArray < CCVariable<double> >  &complexReal);
 
           virtual void compute_scatkt( const Patch* patch,  constCCVariable<double>& VolFractionBC,  
                                        RadCalcSpeciesList size, RadCalcSpeciesList pT, 
                                        RadCalcSpeciesList weights, 
                                        const int Nqn, CCVariable<double>& scatkt, 
-                                       SCIRun::StaticArray < CCVariable<double> > &scatktQuad, 
-                                       SCIRun::StaticArray < CCVariable<double> > &complexReal);
+                                       StaticArray < CCVariable<double> > &scatktQuad, 
+                                       StaticArray < CCVariable<double> > &complexReal);
 
 
 
@@ -392,14 +392,14 @@ namespace Uintah {
 
           void computeComplexIndex( const Patch* patch,
                                     constCCVariable<double>& VolFractionBC,
-                                    SCIRun::StaticArray<constCCVariable<double> > &composition, 
-                                    SCIRun::StaticArray < CCVariable<double> > &complexReal);
+                                    StaticArray<constCCVariable<double> > &composition, 
+                                    StaticArray < CCVariable<double> > &complexReal);
 
 
           void computeAsymmetryFactor( const Patch* patch,
                                        constCCVariable<double>& VolFractionBC,
-                                       SCIRun::StaticArray < CCVariable<double> > &scatktQuad, 
-                                       SCIRun::StaticArray < constCCVariable<double> > &composition,
+                                       StaticArray < CCVariable<double> > &scatktQuad, 
+                                       StaticArray < constCCVariable<double> > &composition,
                                        CCVariable<double>& scatkt,
                                        CCVariable<double>  &asymmetryParam);
 
@@ -407,15 +407,15 @@ namespace Uintah {
                                       RadCalcSpeciesList size, RadCalcSpeciesList pT,  
                                       RadCalcSpeciesList weights, 
                                       const int Nqn, CCVariable<double>& abskpt, 
-                                      SCIRun::StaticArray < CCVariable<double> >  &abskp,
-                                      SCIRun::StaticArray < CCVariable<double> >  &complexReal);
+                                      StaticArray < CCVariable<double> >  &abskp,
+                                      StaticArray < CCVariable<double> >  &complexReal);
 
           virtual void compute_scatkt( const Patch* patch,  constCCVariable<double>& VolFractionBC,  
                                        RadCalcSpeciesList size, RadCalcSpeciesList pT, 
                                        RadCalcSpeciesList weights, 
                                        const int Nqn, CCVariable<double>& scatkt, 
-                                       SCIRun::StaticArray < CCVariable<double> > &scatktQuad, 
-                                       SCIRun::StaticArray < CCVariable<double> > &complexReal);
+                                       StaticArray < CCVariable<double> > &scatktQuad, 
+                                       StaticArray < CCVariable<double> > &complexReal);
 
 
 
@@ -434,14 +434,14 @@ namespace Uintah {
 
           void computeComplexIndex( const Patch* patch,
                                     constCCVariable<double>& VolFractionBC,
-                                    SCIRun::StaticArray<constCCVariable<double> > &composition, 
-                                    SCIRun::StaticArray < CCVariable<double> > &complexReal);
+                                    StaticArray<constCCVariable<double> > &composition, 
+                                    StaticArray < CCVariable<double> > &complexReal);
 
 
           void computeAsymmetryFactor( const Patch* patch,
                                        constCCVariable<double>& VolFractionBC,
-                                       SCIRun::StaticArray < CCVariable<double> > &scatktQuad, 
-                                       SCIRun::StaticArray < constCCVariable<double> > &composition,
+                                       StaticArray < CCVariable<double> > &scatktQuad, 
+                                       StaticArray < constCCVariable<double> > &composition,
                                        CCVariable<double>& scatkt,
                                        CCVariable<double>  &asymmetryParam);
 
@@ -449,15 +449,15 @@ namespace Uintah {
                                       RadCalcSpeciesList size, RadCalcSpeciesList pT, 
                                       RadCalcSpeciesList weights, 
                                       const int Nqn, CCVariable<double>& abskpt, 
-                                      SCIRun::StaticArray < CCVariable<double> >  &abskp,
-                                      SCIRun::StaticArray < CCVariable<double> >  &complexReal);
+                                      StaticArray < CCVariable<double> >  &abskp,
+                                      StaticArray < CCVariable<double> >  &complexReal);
 
           virtual void compute_scatkt( const Patch* patch,  constCCVariable<double>& VolFractionBC,  
                                        RadCalcSpeciesList size, RadCalcSpeciesList pT, 
                                        RadCalcSpeciesList weights, 
                                        const int Nqn, CCVariable<double>& scatkt, 
-                                       SCIRun::StaticArray < CCVariable<double> > &scatktQuad, 
-                                       SCIRun::StaticArray < CCVariable<double> > &complexReal);
+                                       StaticArray < CCVariable<double> > &scatktQuad, 
+                                       StaticArray < CCVariable<double> > &complexReal);
 
 
 

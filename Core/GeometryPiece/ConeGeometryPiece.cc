@@ -36,7 +36,6 @@
 
 
 using namespace Uintah;
-using namespace SCIRun;
 using namespace std;
 
 const string ConeGeometryPiece::TYPE_NAME = "cone";

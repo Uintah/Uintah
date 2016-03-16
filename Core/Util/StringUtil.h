@@ -40,7 +40,7 @@
 #include <string>
 #include <vector>
 
-namespace SCIRun {
+namespace Uintah {
 
 bool string_to_int(const std::string &str, int &result);
 bool string_to_double(const std::string &str, double &result);
@@ -89,6 +89,6 @@ bool ends_with( const std::string & str, const std::string & substr );
 // Returns the number of 'substr' in 'str'.  (ie: if str is 'aaaa' and substr is 'aaa', then 2 is returned.)
 unsigned int count_substrs( const std::string & str, const std::string & substr );
 
-} // End namespace SCIRun
+} // End namespace Uintah
 
 #endif

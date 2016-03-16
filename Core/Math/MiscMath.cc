@@ -45,7 +45,7 @@ using namespace std;
 #  include <fp_class.h>
 #endif
 
-namespace SCIRun {
+namespace Uintah {
 
 double MakeReal(double value)
 {
@@ -144,5 +144,5 @@ double cubeRoot(double a, double guess)
     return xnew;
 }
 
-} // End namespace SCIRun
+} // End namespace Uintah
 

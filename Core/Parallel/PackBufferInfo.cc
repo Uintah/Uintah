@@ -86,7 +86,7 @@ PackBufferInfo::get_type( void*&,
                           MPI_Datatype& )
 {
   // Should use other overload for a PackBufferInfo
-  SCI_THROW(SCIRun::InternalError("get_type(void*&, int&, MPI_Datatype&) should not be called on PackBufferInfo objects", __FILE__, __LINE__));
+  SCI_THROW(Uintah::InternalError("get_type(void*&, int&, MPI_Datatype&) should not be called on PackBufferInfo objects", __FILE__, __LINE__));
 }
 
 void

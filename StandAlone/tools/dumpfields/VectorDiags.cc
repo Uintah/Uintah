@@ -32,7 +32,6 @@
 using namespace std;
 
 namespace Uintah {
-  using namespace SCIRun;
   
   VectorDiag::~VectorDiag() {}
   
@@ -289,7 +288,7 @@ namespace Uintah {
   
   list<Uintah::VectorDiag const *> 
   createVectorDiags(const Uintah::TypeDescription * fldtype, 
-                    const SCIRun::FieldSelection & fldselection,
+                    const Uintah::FieldSelection & fldselection,
                     const Uintah::TensorDiag * preop)
   {
     list<VectorDiag const *>  res;

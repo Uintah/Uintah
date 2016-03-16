@@ -45,7 +45,6 @@
 
 using std::cout;
 using std::endl;
-using namespace SCIRun;
 
 #ifdef MALLOC_TRACE
 #include "MallocTraceMPIOff.h"

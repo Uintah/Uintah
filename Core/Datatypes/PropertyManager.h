@@ -46,7 +46,7 @@
 #include <iostream>
 #include <map>
 
-namespace SCIRun {
+namespace Uintah {
 
 
 class PropertyBase : public Datatype {
@@ -283,6 +283,6 @@ PropertyManager::get_property(const std::string &name, T &ref)
 } 
 
 
-} // namespace SCIRun
+} // namespace Uintah
 
 #endif // SCI_project_PropertyManager_h

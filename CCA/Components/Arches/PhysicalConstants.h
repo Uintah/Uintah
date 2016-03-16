@@ -54,10 +54,10 @@ public:
   void problemSetup(const ProblemSpecP& params);
 
   /** @brief return gravity vecotr **/ 
-  const SCIRun::Vector& getGravity(){ return d_gravity; }
+  const Vector& getGravity(){ return d_gravity; }
 
   /** @brief get reference point i,j,k **/ 
-  const SCIRun::IntVector& getRefPoint(){ return d_ref_point; }
+  const IntVector& getRefPoint(){ return d_ref_point; }
 
   /** @brief return only one component of the gravity vector **/ 
   double getGravity(int index){
@@ -84,8 +84,8 @@ private:
 
 private:
 
-  SCIRun::Vector d_gravity;
-  SCIRun::IntVector d_ref_point;
+  Vector d_gravity;
+  IntVector d_ref_point;
   double d_viscosity;
     
 }; // end class PhysicalConstants

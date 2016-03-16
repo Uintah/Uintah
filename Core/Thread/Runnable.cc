@@ -37,7 +37,7 @@
 #include <Core/Thread/Runnable.h>
 #include <Core/Thread/Thread.h>
 #include <Core/Thread/ThreadError.h>
-namespace SCIRun {
+namespace Uintah {
 
 
 Runnable::Runnable(bool delete_on_exit)
@@ -54,4 +54,4 @@ Runnable::~Runnable()
 }
 
 
-} // End namespace SCIRun
+} // End namespace Uintah

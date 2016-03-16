@@ -1511,8 +1511,8 @@ class Task {
     bool hasRequires(const VarLabel* var,
                      int matlIndex,
                      const Patch* patch,
-                     SCIRun::IntVector lowOffset,
-                     SCIRun::IntVector highOffset,
+                     Uintah::IntVector lowOffset,
+                     Uintah::IntVector highOffset,
                      WhichDW dw) const;
 
     // finds if it modifies var

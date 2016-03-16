@@ -52,21 +52,21 @@
    if(c1 != c2){ \
       std::ostringstream msg; \
       msg << #c1 << "(value=" << c1 << ") == " << #c2 << "(value=" << c2 << ")"; \
-      SCI_THROW(SCIRun::AssertionFailed(msg.str().c_str(), __FILE__, __LINE__)); \
+      SCI_THROW(Uintah::AssertionFailed(msg.str().c_str(), __FILE__, __LINE__)); \
    }
 
 #define ASSERTNE(c1, c2) \
    if(c1 != c2){ \
       std::ostringstream msg; \
       msg << #c1 << "(value=" << c1 << ") != " << #c2 << "(value=" << c2 << ")"; \
-      SCI_THROW(SCIRun::AssertionFailed(msg.str().c_str(), __FILE__, __LINE__)); \
+      SCI_THROW(Uintah::AssertionFailed(msg.str().c_str(), __FILE__, __LINE__)); \
    }
 
 #define ASSERTRANGE(c, l, h) \
    if(c < l || c >= h){ \
       std::ostringstream msg; \
       msg << #l "(value=" << l << ") <= " #c << "(value=" << c << ") < " << #h << "(value=" << h << ")"; \
-      SCI_THROW(SCIRun::AssertionFailed(msg.str().c_str(), __FILE__, __LINE__)); \
+      SCI_THROW(Uintah::AssertionFailed(msg.str().c_str(), __FILE__, __LINE__)); \
    }
 #else
 #define ASSERTEQ(c1, c2)

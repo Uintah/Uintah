@@ -54,7 +54,6 @@
 
 namespace Uintah {
 
-  using namespace SCIRun;
 
   class VarLabel;
   class DataWarehouse;
@@ -491,7 +490,7 @@ namespace Uintah {
                             int              levelIndex,
                             double           startTime,
                             double           endTime ) {
-    double call_start = SCIRun::Time::currentSeconds();
+    double call_start = Uintah::Time::currentSeconds();
 
     std::vector<int> index;
     std::vector<double> times;
@@ -547,7 +546,7 @@ namespace Uintah {
       values.push_back(var[idx]);
 
     }
-    dbg << "DataArchive::query(values) completed in " << (SCIRun::Time::currentSeconds() - call_start) << " seconds\n";
+    dbg << "DataArchive::query(values) completed in " << (Uintah::Time::currentSeconds() - call_start) << " seconds\n";
   }  
 //______________________________________________________________________
 //
@@ -560,7 +559,7 @@ namespace Uintah {
                             double           startTime,
                             double           endTime,
                             int              levelIndex /* = -1 */ ) {
-    double call_start = SCIRun::Time::currentSeconds();
+    double call_start = Uintah::Time::currentSeconds();
 
     std::vector<int> index;
     std::vector<double> times;
@@ -707,7 +706,7 @@ namespace Uintah {
     }
 
     dbg << "DataArchive::query(values) completed in "
-        << (SCIRun::Time::currentSeconds() - call_start) << " seconds\n";
+        << (Uintah::Time::currentSeconds() - call_start) << " seconds\n";
   }
   
 } // end namespace Uintah

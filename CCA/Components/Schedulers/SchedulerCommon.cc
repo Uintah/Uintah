@@ -66,7 +66,6 @@
 #include <time.h>
 
 using namespace Uintah;
-using namespace SCIRun;
 using namespace std;
 
 static DebugStream schedulercommon_dbg("SchedulerCommon_DBG", false);

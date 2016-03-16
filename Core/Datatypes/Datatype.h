@@ -40,7 +40,7 @@
 #include <Core/Persistent/Persistent.h>
 #include <Core/Thread/Mutex.h>
 
-namespace SCIRun {
+namespace Uintah {
 
 
 class Datatype : public Persistent {
@@ -59,7 +59,7 @@ public:
   static int compute_new_generation();
 };
 
-} // End namespace SCIRun
+} // End namespace Uintah
 
 
 #endif /* SCI_project_Datatype_h */

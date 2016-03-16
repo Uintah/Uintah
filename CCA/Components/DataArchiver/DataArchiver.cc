@@ -87,7 +87,6 @@
 
 using namespace Uintah;
 using namespace std;
-using namespace SCIRun;
 
 static DebugStream dbg("DataArchiver", false);
 static DebugStream dbgPIDX ("DataArchiverPIDX", false);

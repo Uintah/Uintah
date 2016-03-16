@@ -33,7 +33,7 @@
 // Specializations of the DefaultRunLengthSequencer, to override the
 // EqualElementSequencer version with the EqualIntervalSequencer
 
-namespace SCIRun {
+namespace Uintah {
 
   // specialize for the Matrix3 class
   template<>

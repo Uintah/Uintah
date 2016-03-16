@@ -60,8 +60,8 @@
 using namespace Uintah;
 
 // Used to sync cout/cerr so it is readable when output by multiple threads
-extern SCIRun::Mutex coutLock;
-extern SCIRun::Mutex cerrLock;
+extern Uintah::Mutex coutLock;
+extern Uintah::Mutex cerrLock;
 
 static DebugStream dbg(          "MPIScheduler_DBG",        false );
 static DebugStream dbgst(        "SendTiming",              false );

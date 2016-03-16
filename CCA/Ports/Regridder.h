@@ -119,7 +119,7 @@ WARNING
 
     virtual bool useDynamicDilation() = 0;
 
-    virtual std::vector<SCIRun::IntVector> getMinPatchSize() = 0;
+    virtual std::vector<Uintah::IntVector> getMinPatchSize() = 0;
   private:
     Regridder(const Regridder&);
     Regridder& operator=(const Regridder&);

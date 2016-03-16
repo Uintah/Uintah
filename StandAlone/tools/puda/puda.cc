@@ -35,7 +35,6 @@
 
 #include <StandAlone/tools/puda/puda.h>
 
-#include <Core/Containers/Array3.h>
 #include <Core/DataArchive/DataArchive.h>
 #include <Core/Disclosure/TypeDescription.h>
 #include <Core/Geometry/Point.h>
@@ -77,7 +76,6 @@
 #include <string>
 #include <vector>
 
-using namespace SCIRun;
 using namespace std;
 using namespace Uintah;
 

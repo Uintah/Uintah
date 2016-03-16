@@ -47,8 +47,8 @@ using namespace Uintah;
 using namespace std;
 
 // sync cout/cerr so they are readable when output by multiple threads
-extern SCIRun::Mutex cerrLock;
-extern SCIRun::Mutex coutLock;
+extern Uintah::Mutex cerrLock;
+extern Uintah::Mutex coutLock;
 
 extern DebugStream mixedDebug;
 extern DebugStream mpidbg;

@@ -40,7 +40,7 @@
 #include <Core/Exceptions/Exception.h>
 #include <string>
 
-namespace SCIRun {
+namespace Uintah {
 /**************************************
  
 CLASS
@@ -84,7 +84,7 @@ DESCRIPTION
 
 	    ThreadError& operator=(const ThreadError&);
 	};
-} // End namespace SCIRun
+} // End namespace Uintah
 
 #endif
 

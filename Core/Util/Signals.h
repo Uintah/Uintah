@@ -41,7 +41,7 @@
 #include <vector>
 #include <Core/Thread/Mutex.h>
 
-namespace SCIRun {
+namespace Uintah {
 
 /*
  * SlotBase & SignalBase
@@ -634,7 +634,7 @@ bool disconnect( Signal4<Arg1, Arg2, Arg3, Arg4> &s,
   return s.rem( StaticSlot4<Arg1, Arg2, Arg3, Arg4>( fun ) );
 }
 
-} // namespace SCIRun
+} // namespace Uintah
 
 
 #endif // Signals_h

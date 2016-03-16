@@ -29,7 +29,6 @@
 #include <vector>
 
 using namespace std;
-using namespace SCIRun;
 using namespace Uintah;
 
 //______________________________________________________________________
@@ -154,7 +153,7 @@ PIDXOutputContext::getDirectoryName(TypeDescription::Type TD)
         return "SFCZVars";
         break;
       default:
-         throw SCIRun::InternalError("  PIDXOutputContext::getDirectoryName type description not supported", __FILE__, __LINE__);
+         throw Uintah::InternalError("  PIDXOutputContext::getDirectoryName type description not supported", __FILE__, __LINE__);
   }
 }
 //______________________________________________________________________

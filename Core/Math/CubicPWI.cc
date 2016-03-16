@@ -36,7 +36,7 @@
 #include <Core/Math/CubicPWI.h>
 #include <Core/Containers/Array1.h>
 
-namespace SCIRun {
+namespace Uintah {
 
 
 CubicPWI::CubicPWI()
@@ -201,7 +201,7 @@ CubicPWI::set_data( const Array1<double>& pts, const Array1<double>& vals ) {
   return data_valid;
 }
 
-} // End namespace SCIRun
+} // End namespace Uintah
 
 
 

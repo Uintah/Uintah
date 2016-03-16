@@ -33,7 +33,7 @@
 #include <Core/Util/DebugStream.h>
 #include <Core/GeometryPiece/GeometryPiece.h>
 
-using SCIRun::DebugStream;
+using Uintah::DebugStream;
 
 namespace Uintah
 {

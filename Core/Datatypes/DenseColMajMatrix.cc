@@ -57,7 +57,7 @@
 
 using namespace std;
 
-namespace SCIRun {
+namespace Uintah {
 
 static Persistent* maker()
 {
@@ -773,4 +773,4 @@ DenseColMajMatrix::eigenvectors(ColumnMatrix& R, ColumnMatrix& I, DenseColMajMat
 #endif
 
 #endif
-} // End namespace SCIRun
+} // End namespace Uintah

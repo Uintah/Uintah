@@ -52,7 +52,8 @@
 namespace bsys = boost::system;
 
 using namespace std;
-using namespace SCIRun;
+using namespace Uintah;
+
 //______________________________________________________________________
 //
 Dir

@@ -35,7 +35,7 @@
  */
 
 #include <Core/Thread/MutexPool.h>
-namespace SCIRun {
+namespace Uintah {
 
 
 MutexPool::MutexPool(const char* name, int size)
@@ -83,4 +83,4 @@ void MutexPool::unlockMutex(int idx)
 }
 
 
-} // End namespace SCIRun
+} // End namespace Uintah

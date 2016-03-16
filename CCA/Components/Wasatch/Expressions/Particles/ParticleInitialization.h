@@ -90,7 +90,7 @@ get_cell_size(const Uintah::Patch* const patch, const std::string& coord)
  *  \param cellPosition  A Uintah::Point denoting the cell position (cell center).
  */
 double
-get_cell_position_offset(const Uintah::Patch* const patch, const std::string& coord, const SCIRun::Point& cellPosition)
+get_cell_position_offset(const Uintah::Patch* const patch, const std::string& coord, const Uintah::Point& cellPosition)
 {
   if     ( coord == "X" ) return cellPosition.x() - patch->dCell().x()/2.0;
   else if( coord == "Y" ) return cellPosition.y() - patch->dCell().y()/2.0;
@@ -174,7 +174,7 @@ public:
 
     //________________________________________________
     // collect the grid points that live inside the geometry
-    const std::vector<SCIRun::Point>& insidePoints = GeometryPieceFactory::getInsidePoints(patch);
+    const std::vector<Uintah::Point>& insidePoints = GeometryPieceFactory::getInsidePoints(patch);
 
     ParticleField::iterator phiIter = result.begin();
     ParticleField::iterator phiIterEnd = result.end();
@@ -189,7 +189,7 @@ public:
       // now iterate over the inside points and fill in the particles
       while( phiIter < phiIterEnd ){
         const int idx = boost_rand_int();
-        SCIRun::Point insidePoint = insidePoints[idx];
+        Uintah::Point insidePoint = insidePoints[idx];
         const double offset = get_cell_position_offset(patch, coord_, insidePoint);
         *phiIter = boost_rand() + offset;
         ++phiIter;

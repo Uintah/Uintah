@@ -61,7 +61,7 @@
 
 using namespace std;
 
-namespace SCIRun {
+namespace Uintah {
 
 static Persistent* maker()
 {
@@ -1243,4 +1243,4 @@ DenseMatrix::eigenvectors(ColumnMatrix& R, ColumnMatrix& I, DenseMatrix& Vecs)
 
 #endif
 
-} // End namespace SCIRun
+} // End namespace Uintah

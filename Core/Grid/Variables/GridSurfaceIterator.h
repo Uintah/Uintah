@@ -33,7 +33,6 @@
 #include <Core/Grid/Variables/GridIterator.h>
 namespace Uintah {
 
-using SCIRun::IntVector;
 
 /**************************************
 

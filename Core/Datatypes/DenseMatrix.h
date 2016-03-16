@@ -42,7 +42,7 @@
 #include <Core/Math/MiscMath.h>
 #include <vector>
 
-namespace SCIRun {
+namespace Uintah {
 
 
 class DenseMatrix : public Matrix {
@@ -152,6 +152,6 @@ void Mult_X_trans(DenseMatrix&, const DenseMatrix&, const DenseMatrix&);
 void Concat_rows(DenseMatrix&, const DenseMatrix&, const DenseMatrix&); // Added by Saeed Babaeizadeh, Jan. 2006
 void Concat_cols(DenseMatrix&, const DenseMatrix&, const DenseMatrix&); // Added by Saeed Babaeizadeh, Jan. 2006
 
-} // End namespace SCIRun
+} // End namespace Uintah
 
 #endif

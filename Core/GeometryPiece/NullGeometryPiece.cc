@@ -30,7 +30,6 @@
 #include <fstream>
 
 using namespace Uintah;
-using namespace SCIRun;
 using namespace std;
 
 const string NullGeometryPiece::TYPE_NAME = "null";

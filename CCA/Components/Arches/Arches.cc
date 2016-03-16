@@ -74,7 +74,7 @@ using namespace Uintah;
 static DebugStream dbg("ARCHES", false);
 
 // Used to sync std::cout when output by multiple threads
-extern SCIRun::Mutex coutLock;
+extern Uintah::Mutex coutLock;
 
 const int Arches::NDIM = 3;
 

@@ -54,7 +54,7 @@
 
 using namespace std;
 
-namespace SCIRun {
+namespace Uintah {
 
 // BinaryPiostream -- portable
 BinaryPiostream::BinaryPiostream(const string& filename, Direction dir,
@@ -153,7 +153,7 @@ BinaryPiostream::BinaryPiostream(int fd, Direction dir, const int& v,
     fp_ = fdopen (fd, "rb");
     if (!fp_)
     {
-      reporter_->error("Error opening socket " + SCIRun::to_string(fd) +
+      reporter_->error("Error opening socket " + Uintah::to_string(fd) +
                        " for reading.");
       err = true;
       return;
@@ -190,7 +190,7 @@ BinaryPiostream::BinaryPiostream(int fd, Direction dir, const int& v,
     fp_ = fdopen(fd, "wb");
     if (!fp_)
     {
-      reporter_->error("Error opening socket " + SCIRun::to_string(fd) +
+      reporter_->error("Error opening socket " + Uintah::to_string(fd) +
                        " for writing.");
       err = true;
       return;
@@ -990,9 +990,9 @@ TextPiostream::begin_class(const string& classname, int current_version)
   {
     err = true;
     reporter_->error("File too new.  " + classname + " has version " +
-                     SCIRun::to_string(version) +
+                     Uintah::to_string(version) +
                      ", but this scirun build is at version " +
-                     SCIRun::to_string(current_version) + ".");
+                     Uintah::to_string(current_version) + ".");
   }
 
   return version;
@@ -1616,7 +1616,7 @@ FastPiostream::FastPiostream(int fd, Direction dir, ProgressReporter *pr)
     fp_ = fdopen (fd, "rb");
     if (!fp_)
     {
-      reporter_->error("Error opening socket: " + SCIRun::to_string(fd) +
+      reporter_->error("Error opening socket: " + Uintah::to_string(fd) +
                        " for reading.");
       err = true;
       return;
@@ -1626,7 +1626,7 @@ FastPiostream::FastPiostream(int fd, Direction dir, ProgressReporter *pr)
     if (chars_read != 12)
     {
       reporter_->error("Error reading header from socket: " + 
-          SCIRun::to_string(fd) + ".");
+          Uintah::to_string(fd) + ".");
       err = true;
       return;
     }
@@ -1637,7 +1637,7 @@ FastPiostream::FastPiostream(int fd, Direction dir, ProgressReporter *pr)
     fp_=fdopen(fd, "wb");
     if (!fp_)
     {
-      reporter_->error("Error opening socket: " + SCIRun::to_string(fd) +
+      reporter_->error("Error opening socket: " + Uintah::to_string(fd) +
                        " for writing.");
       err = true;
       return;
@@ -1654,7 +1654,7 @@ FastPiostream::FastPiostream(int fd, Direction dir, ProgressReporter *pr)
       size_t wrote = fwrite(hdr, sizeof(char), 16, fp_);
       if (wrote != 16)
       {
-	reporter_->error("Error writing header to: " + SCIRun::to_string(fd) + ".");
+	reporter_->error("Error writing header to: " + Uintah::to_string(fd) + ".");
 	err = true;
 	return;
       }
@@ -1668,7 +1668,7 @@ FastPiostream::FastPiostream(int fd, Direction dir, ProgressReporter *pr)
       if (wrote != 12)
       {
 	reporter_->error("Error writing header to socket: " +
-	                 SCIRun::to_string(fd) + ".");
+	                 Uintah::to_string(fd) + ".");
 	err = true;
 	return;
       }
@@ -1876,6 +1876,6 @@ FastPiostream::block_io(void *data, size_t s, size_t nmemb)
 }
 
 
-} // End namespace SCIRun
+} // End namespace Uintah
 
 

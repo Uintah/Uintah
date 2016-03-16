@@ -33,7 +33,7 @@
 //-- Uintah Includes --//
 #include <Core/Grid/Patch.h>
 #include <Core/Grid/Variables/Iterator.h>
-#include <Core/Grid/Variables/CellIterator.h> // SCIRun::Iterator
+#include <Core/Grid/Variables/CellIterator.h> // Uintah::Iterator
 #include <Core/Exceptions/ProblemSetupException.h>
 #include <Core/Grid/BoundaryConditions/BoundCond.h>
 #include <Core/Grid/BoundaryConditions/BCGeomBase.h>
@@ -55,7 +55,7 @@
 //-- Debug Stream --//
 #include <Core/Util/DebugStream.h>
 
-static SCIRun::DebugStream dbgbc("WASATCH_BC", false);
+static Uintah::DebugStream dbgbc("WASATCH_BC", false);
 #define DBC_BC_ON  dbgbc.active()
 #define DBGBC  if( DBC_BC_ON  ) dbgbc
 

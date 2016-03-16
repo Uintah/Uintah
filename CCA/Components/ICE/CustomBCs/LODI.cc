@@ -42,8 +42,8 @@ namespace Uintah {
 //__________________________________
 //  To turn on couts
 //  setenv SCI_DEBUG "LODI_DOING_COUT:+, LODI_DBG_COUT:+"
-static SCIRun::DebugStream cout_doing("LODI_DOING_COUT", false);
-static SCIRun::DebugStream cout_dbg("LODI_DBG_COUT", false);
+static Uintah::DebugStream cout_doing("LODI_DOING_COUT", false);
+static Uintah::DebugStream cout_dbg("LODI_DBG_COUT", false);
 
 /* ---------------------------------------------------------------------
  Function~  read_LODI_BC_inputs--   

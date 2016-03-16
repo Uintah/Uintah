@@ -89,7 +89,7 @@ if __name__ == '__main__' :
     out.write("#include <Core/Datatypes/" + f + ".h>\n")
   out.write("\n")
   out.write("\n")
-  out.write("using namespace SCIRun;\n")
+  out.write("using namespace Uintah;\n")
   out.write("\n")
   out.write("\n")
 

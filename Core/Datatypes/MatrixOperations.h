@@ -39,7 +39,7 @@
 
 #include <Core/Datatypes/Matrix.h>
 
-namespace SCIRun {
+namespace Uintah {
 
 
 MatrixHandle operator+(MatrixHandle A, MatrixHandle B);
@@ -48,6 +48,6 @@ MatrixHandle operator*(MatrixHandle A, MatrixHandle B);
 MatrixHandle operator*(double a, MatrixHandle B);
 MatrixHandle operator*(MatrixHandle A, double b);
 
-} // End namespace SCIRun
+} // End namespace Uintah
 
 #endif

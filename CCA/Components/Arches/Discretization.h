@@ -39,7 +39,7 @@
 #include <CCA/Components/Arches/ArchesConstVariables.h>
 #include <CCA/Components/Arches/Filter.h>
 
-#include <Core/Containers/Array1.h>
+
 namespace Uintah {
   class ProcessorGroup;
   class PhysicalConstants;

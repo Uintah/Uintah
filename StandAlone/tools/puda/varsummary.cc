@@ -43,10 +43,9 @@
 #include <string>
 
 using namespace Uintah;
-using namespace SCIRun;
 using namespace std;
 
-namespace SCIRun {
+namespace Uintah {
 
 // Need these min/max functions for Matrix3 in order for the templated findMinMax functions to work.
 //

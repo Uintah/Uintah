@@ -45,7 +45,7 @@
 
 namespace Uintah {
 
-  using SCIRun::Vector;
+  using Uintah::Vector;
   using TNT::Array2D;
 
   class Matrix3 {
@@ -726,18 +726,24 @@ namespace Uintah {
 
 // Added for compatibility with core types
 #include <Core/Datatypes/TypeName.h>
+#include <Core/Util/TypeDescription.h>
 #include <string>
 
 namespace SCIRun {
 
-  class TypeDescription;
+    const STypeDescription* get_type_description(Uintah::Matrix3*);
+
+}
+
+namespace Uintah {
+
   class Piostream;
 
    void swapbytes( Uintah::Matrix3& m);
-  template<>  const std::string find_type_name(Uintah::Matrix3*);
-   const TypeDescription* get_type_description(Uintah::Matrix3*);
+   template<>  const std::string find_type_name(Uintah::Matrix3*);
+ 
    void Pio( Piostream&, Uintah::Matrix3& );
-} // namespace SCIRun
+} // namespace Uintah
 
 
 #endif  // __MATRIX3_H__

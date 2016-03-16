@@ -52,7 +52,6 @@
 
 using namespace std;
 using namespace Uintah;
-using namespace SCIRun;
 
 static AtomicCounter ids("Level ID counter",0);
 static Mutex         ids_init("ID init");

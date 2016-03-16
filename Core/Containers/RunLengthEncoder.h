@@ -40,7 +40,7 @@
 #include <Core/Util/Endian.h>
 #include <Core/Util/SizeTypeConvert.h>
 
-namespace SCIRun {
+namespace Uintah {
 
   //  template <class T> class list;
   
@@ -811,14 +811,14 @@ long RunLengthEncoder<T, Sequencer>::readPriv(std::istream& in, bool swapBytes,
     std::vector<T>& data = (*groupIter).data_;
     if ((*groupIter).isRun()) {
       in.read((char*)&data[0], sizeof(T));
-      if (needConversion && swapBytes) SCIRun::swapbytes(data[0]);
+      if (needConversion && swapBytes) Uintah::swapbytes(data[0]);
       if (Sequencer::needRule()) {
 	if (usesDefaultRule[i])
 	  (*groupIter).sequenceRule_ = Sequencer::defaultSequenceRule;
 	else {
 	  in.read((char*)&(*groupIter).sequenceRule_, ruleStorageSize(false));
 	  if (needConversion && swapBytes)
-	    SCIRun::swapbytes((*groupIter).sequenceRule_);
+	    Uintah::swapbytes((*groupIter).sequenceRule_);
 	}
       }
     }
@@ -828,7 +828,7 @@ long RunLengthEncoder<T, Sequencer>::readPriv(std::istream& in, bool swapBytes,
       in.read((char*)&data[0], (long)(sizeof(T) * data.size()));
       if (needConversion && swapBytes) {
 	for (unsigned long index = 0; index < data.size(); index++) {
-	  SCIRun::swapbytes(data[index]);
+	  Uintah::swapbytes(data[index]);
 	}
       }
     }
@@ -874,7 +874,7 @@ T RunLengthEncoder<T, Sequencer>::seekPriv(int fd, unsigned long index,
     mid = (high + low) / 2;
     pread(fd, &group_start_index, nByteMode,
 	  start + mid * header_item_size + nByteMode);
-    if (needConversion && swapBytes) SCIRun::swapbytes(group_start_index);
+    if (needConversion && swapBytes) Uintah::swapbytes(group_start_index);
     
     if (index < group_start_index)
       high = mid; // counts mid out
@@ -908,7 +908,7 @@ T RunLengthEncoder<T, Sequencer>::seekPriv(int fd, unsigned long index,
     // the group is a run
     lseek(fd, start + data_start, SEEK_SET);
     ::read(fd, &item, sizeof(T));
-    if (needConversion && swapBytes) SCIRun::swapbytes(item);
+    if (needConversion && swapBytes) Uintah::swapbytes(item);
     typename Sequencer::SequenceRule rule;
     if (Sequencer::needRule()) {
       if (data_end - data_start == sizeof(T))
@@ -916,7 +916,7 @@ T RunLengthEncoder<T, Sequencer>::seekPriv(int fd, unsigned long index,
 	rule = Sequencer::defaultSequenceRule;
       else {
 	::read(fd, &rule, ruleStorageSize(false));
-	if (needConversion && swapBytes) SCIRun::swapbytes(rule);
+	if (needConversion && swapBytes) Uintah::swapbytes(rule);
       }
     }
     // rule should be unused below if needRule is false
@@ -925,7 +925,7 @@ T RunLengthEncoder<T, Sequencer>::seekPriv(int fd, unsigned long index,
   else {
     // the group is not a run
     pread(fd, &item, sizeof(T), start + data_start + group_index * sizeof(T));
-    if (needConversion && swapBytes) SCIRun::swapbytes(item);
+    if (needConversion && swapBytes) Uintah::swapbytes(item);
     return item;
   }
 }
@@ -1004,6 +1004,6 @@ RunLengthEncoder<T, Sequencer>::iterator::operator--()
   return *this;
 }
 
-} // End namespace SCIRun
+} // End namespace Uintah
 
 #endif

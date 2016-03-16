@@ -49,7 +49,7 @@ using namespace std;
 
 #define DEBUG 0
 
-namespace SCIRun {
+namespace Uintah {
 
 static Piostream::MapStringPersistentTypeID* table = 0;  
 const int Piostream::PERSISTENT_VERSION = 2;
@@ -251,9 +251,9 @@ Piostream::begin_class(const string& classname, int current_version)
   {
     err = true;
     reporter_->error("File too new.  " + classname + " has version " +
-                     SCIRun::to_string(version) +
+                     Uintah::to_string(version) +
                      ", but this scirun build is at version " +
-                     SCIRun::to_string(current_version) + ".");
+                     Uintah::to_string(current_version) + ".");
   }
 
   return version;
@@ -552,8 +552,8 @@ auto_istream(const string& filename, ProgressReporter *pr)
   if (version > Piostream::PERSISTENT_VERSION)
   {
     const string errmsg = "File '" + filename + "' has version " +
-      SCIRun::to_string(version) + ", this build only supports up to version " +
-      SCIRun::to_string(Piostream::PERSISTENT_VERSION) + ".";
+      Uintah::to_string(version) + ", this build only supports up to version " +
+      Uintah::to_string(Piostream::PERSISTENT_VERSION) + ".";
     if (pr) pr->error(errmsg);
     else cerr << "ERROR - " + errmsg;
     return 0;
@@ -708,6 +708,6 @@ Piostream::readHeader( ProgressReporter *pr,
   return true;
 }
 
-} // End namespace SCIRun
+} // End namespace Uintah
 
 

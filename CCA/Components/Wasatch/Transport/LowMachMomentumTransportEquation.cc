@@ -155,7 +155,7 @@ namespace WasatchCore{
         
         bool usePressureRefPoint = false;
         double refPressureValue = 0.0;
-        SCIRun::IntVector refPressureLocation(0,0,0);
+        Uintah::IntVector refPressureLocation(0,0,0);
         if (pressureParams->findBlock("ReferencePressure")) {
           usePressureRefPoint = true;
           Uintah::ProblemSpecP refPressureParams = pressureParams->findBlock("ReferencePressure");

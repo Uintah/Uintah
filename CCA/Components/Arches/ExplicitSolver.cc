@@ -134,7 +134,7 @@ using namespace Uintah;
 
 static DebugStream dbg("ARCHES", false);
 
-extern SCIRun::Mutex coutLock;
+extern Uintah::Mutex coutLock;
 
 // ****************************************************************************
 // Default constructor for ExplicitSolver

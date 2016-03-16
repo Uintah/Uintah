@@ -37,7 +37,7 @@
 #include <Core/Thread/ThreadLock.h>
 #include <Core/Util/Assert.h>
 
-namespace SCIRun {
+namespace Uintah {
   
 ThreadLock::ThreadLock(const char *name) :
   mutex_(name),
@@ -89,5 +89,5 @@ ThreadLock::try_lock()
 }
 
 
-} // End namespace SCIRun
+} // End namespace Uintah
 

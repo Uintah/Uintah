@@ -41,7 +41,7 @@
 
 namespace Uintah {
 
-  class InvalidCompressionMode : public SCIRun::Exception {
+  class InvalidCompressionMode : public Uintah::Exception {
   public:
     InvalidCompressionMode(const std::string& invalidmode,
 			   const std::string& vartype,

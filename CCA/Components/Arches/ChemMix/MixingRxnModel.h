@@ -69,7 +69,7 @@
 namespace Uintah {
 
   // setenv SCI_DEBUG TABLE_DEBUG:+ 
-  static SCIRun::DebugStream cout_tabledbg("TABLE_DEBUG",false);
+  static DebugStream cout_tabledbg("TABLE_DEBUG",false);
 
   class ArchesLabel; 
   class TimeIntegratorLabel; 

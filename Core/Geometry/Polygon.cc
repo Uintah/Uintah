@@ -27,7 +27,7 @@
 
 using namespace std;
 
-namespace SCIRun {
+namespace Uintah {
 
 
 
@@ -133,4 +133,4 @@ std::ostream& operator<<(std::ostream& os, const Polygon& p)
 
 
 
-} // End namespace SCIRun
+} // End namespace Uintah

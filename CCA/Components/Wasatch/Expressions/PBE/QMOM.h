@@ -33,7 +33,7 @@
 #include <sci_defs/uintah_defs.h>
 
 //set up a debug stream for qmom without ifdef compiler commands
-static SCIRun::DebugStream dbgqmom("WASATCH_QMOM_DBG", false);  //qmom debugging
+static Uintah::DebugStream dbgqmom("WASATCH_QMOM_DBG", false);  //qmom debugging
 #define dbg_qmom_on dbgqmom.active() && Uintah::Parallel::getMPIRank() == 0
 #define dbg_qmom  if( dbg_qmom_on ) dbgqmom
 

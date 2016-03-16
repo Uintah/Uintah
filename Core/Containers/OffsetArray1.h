@@ -38,15 +38,15 @@
 #define SCI_Containers_OffsetArray1_h 1
 
 #include <sci_defs/template_defs.h>
-#include <Core/Persistent/Persistent.h>
+#include <Core/Util/Assert.h>
 
-namespace SCIRun {
+namespace Uintah {
 
-class Piostream;
+
 class RigorousTest;
 
 template<class T> class OffsetArray1;
-template<class T> void Pio(Piostream& stream, OffsetArray1<T>& array);
+
 
 
 /**************************************
@@ -131,7 +131,6 @@ public:
   // Get the array information
   T* get_objs();
 
-  friend void TEMPLATE_TAG Pio TEMPLATE_BOX (Piostream&, OffsetArray1<T>&);
 };
 
 template<class T>
@@ -214,30 +213,8 @@ T* OffsetArray1<T>::get_objs()
 
 #define OFFSETARRAY1_VERSION 1
 
-template<class T>
-void Pio(Piostream& stream, OffsetArray1<T>& array)
-{
-  /* int version= */stream.begin_class("OffsetArray1", OFFSETARRAY1_VERSION);
-  int l=array.low();
-  int h=array.high();
-  Pio(stream, l);
-  Pio(stream, h);
-  if(stream.reading()){
-    array.resize(l, h);
-  }
-  for(int i=l;i<h;i++)
-    Pio(stream, array.objs[i]);
-  stream.end_class();
-}
 
-template<class T>
-void Pio(Piostream& stream, OffsetArray1<T>*& array) {
-  if (stream.reading())
-    array=new OffsetArray1<T>;
-  Pio(stream, *array);
-}
-
-} // End namespace SCIRun
+} // End namespace Uintah
 
 
 #endif /* SCI_Containers_OffsetArray1_h */

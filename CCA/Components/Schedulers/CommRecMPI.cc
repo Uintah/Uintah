@@ -32,11 +32,10 @@
 
 using namespace std;
 using namespace Uintah;
-using namespace SCIRun;
 
 // sync cerr so it's readable when output by multiple threads
-extern SCIRun::Mutex       cerrLock;
-extern SCIRun::DebugStream mixedDebug;
+extern Uintah::Mutex       cerrLock;
+extern Uintah::DebugStream mixedDebug;
 
 static DebugStream dbg( "RecvTiming", false );
 

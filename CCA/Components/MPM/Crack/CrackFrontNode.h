@@ -36,8 +36,6 @@
 
 namespace Uintah {
 
-using SCIRun::Vector;
-using SCIRun::Point;
 
 class CrackFrontNode
 {

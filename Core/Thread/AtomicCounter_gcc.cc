@@ -23,12 +23,12 @@
  */
 #include <Core/Thread/AtomicCounter.h>
 
-namespace SCIRun {
+namespace Uintah {
 struct AtomicCounter_private {
 };
 }
  
-using SCIRun::AtomicCounter;
+using Uintah::AtomicCounter;
 
 AtomicCounter::AtomicCounter(const char* name)
     : name_(name)

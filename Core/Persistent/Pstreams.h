@@ -45,7 +45,7 @@
 #include <iosfwd>
 
 
-namespace SCIRun {
+namespace Uintah {
 
 class BinaryPiostream : public Piostream {
 protected:
@@ -192,7 +192,7 @@ public:
 };
 
 
-} // End namespace SCIRun
+} // End namespace Uintah
 
 
 #endif

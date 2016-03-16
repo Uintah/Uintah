@@ -66,15 +66,14 @@
 
 #define AVERAGE_WINDOW 10
 
-using namespace SCIRun;
 using namespace std;
 
-static DebugStream dbg(     "SimulationStats",            true  );
-static DebugStream dbgTime( "SimulationTimeStats",        false );
-static DebugStream simdbg(  "SimulationController",       false );
-static DebugStream stats(   "ComponentTimings",           false );
-static DebugStream istats(  "IndividualComponentTimings", false );
-extern DebugStream amrout;
+static Uintah::DebugStream dbg(     "SimulationStats",            true  );
+static Uintah::DebugStream dbgTime( "SimulationTimeStats",        false );
+static Uintah::DebugStream simdbg(  "SimulationController",       false );
+static Uintah::DebugStream stats(   "ComponentTimings",           false );
+static Uintah::DebugStream istats(  "IndividualComponentTimings", false );
+extern Uintah::DebugStream amrout;
 
 namespace Uintah {
 

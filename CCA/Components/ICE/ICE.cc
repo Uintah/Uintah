@@ -23,7 +23,7 @@
  */
 #include <Core/Thread/Mutex.h>
 #include <Core/Thread/Thread.h>
-extern SCIRun::Mutex cerrLock;
+extern Uintah::Mutex cerrLock;
 #ifdef __APPLE__
 // This is a hack.  gcc 3.3 #undefs isnan in the cmath header, which
 // make the isnan function not work.  This define makes the cmath header

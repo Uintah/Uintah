@@ -55,7 +55,7 @@
 #endif // #ifndef SCI_NOPERSISTENT
 
 
-namespace SCIRun {
+namespace Uintah {
 
 class RigorousTest;
 
@@ -434,7 +434,7 @@ Array3<T>::output( const std::string &filename )
   return 1;
 } 
 
-} // End namespace SCIRun
+} // End namespace Uintah
 
 
 #endif

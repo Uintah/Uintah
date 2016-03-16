@@ -49,7 +49,7 @@ using namespace std;
 
 extern DebugStream gpu_stats;
 
-extern SCIRun::Mutex cerrLock;
+extern Uintah::Mutex cerrLock;
 
 
 
@@ -57,7 +57,7 @@ namespace Uintah {
 
 std::multimap<GPUDataWarehouse::gpuMemoryPoolItem, GPUDataWarehouse::gpuMemoryData>* GPUDataWarehouse::gpuMemoryPool = new std::multimap<GPUDataWarehouse::gpuMemoryPoolItem, GPUDataWarehouse::gpuMemoryData>;
 //TODO, should be deallocated?
-SCIRun::CrowdMonitor * GPUDataWarehouse::gpuPoolLock = new SCIRun::CrowdMonitor("gpu pool lock");
+Uintah::CrowdMonitor * GPUDataWarehouse::gpuPoolLock = new Uintah::CrowdMonitor("gpu pool lock");
 //______________________________________________________________________
 //
 HOST_DEVICE void
@@ -1984,8 +1984,8 @@ GPUDataWarehouse::init(int id, std::string internalName)
   objectSizeInBytes = 0;
   maxdVarDBItems = 0;
   //this->placementNewBuffer = placementNewBuffer;
-  allocateLock = new SCIRun::CrowdMonitor("allocate lock");
-  varLock = new SCIRun::CrowdMonitor("var lock");
+  allocateLock = new Uintah::CrowdMonitor("allocate lock");
+  varLock = new Uintah::CrowdMonitor("var lock");
   varPointers = new std::map<labelPatchMatlLevel, allVarPointersInfo>;
   contiguousArrays = new std::map<std::string, contiguousArrayInfo>;
 

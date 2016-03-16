@@ -42,7 +42,6 @@
 #include <Core/Thread/Time.h>    // for currentSeconds()
 #include <Core/Util/FileUtils.h> // for testFilesystem()
 
-using namespace SCIRun;
 using std::stringstream;
 using std::cout;
 using std::endl;
@@ -228,13 +227,13 @@ testme(int (*testfunc)(void),const char* name)
 
   double startTime = -1, endTime = -1;
   if( rank == 0) {
-    startTime = Time::currentSeconds();
+    startTime = Uintah::Time::currentSeconds();
   }
 
   int pass = testfunc();
 
   if( rank == 0) {
-    endTime   = Time::currentSeconds();  
+    endTime   = Uintah::Time::currentSeconds();  
   }
 
   int all_pass = false;
@@ -369,16 +368,16 @@ fileSystem_test()
 
   if( host == "inf" ) {
     // On inferno, test the raid disks, and the FS the code is being run from...
-    bool raid1 = testFilesystem( "/usr/csafe/raid1", error_stream, rank );
-    bool raid2 = testFilesystem( "/usr/csafe/raid2", error_stream, rank );
-    bool raid3 = testFilesystem( "/usr/csafe/raid3", error_stream, rank );
-    bool raid4 = testFilesystem( "/usr/csafe/raid4", error_stream, rank );
-    bool home  = testFilesystem( ".",                error_stream, rank );
+    bool raid1 = Uintah::testFilesystem( "/usr/csafe/raid1", error_stream, rank );
+    bool raid2 = Uintah::testFilesystem( "/usr/csafe/raid2", error_stream, rank );
+    bool raid3 = Uintah::testFilesystem( "/usr/csafe/raid3", error_stream, rank );
+    bool raid4 = Uintah::testFilesystem( "/usr/csafe/raid4", error_stream, rank );
+    bool home  = Uintah::testFilesystem( ".",                error_stream, rank );
     pass = raid1 && raid2 && raid3 && raid4 && home;
   } 
   else {
     // On other systems, (at least for now) just check the file system of the current dir.
-    pass = testFilesystem( ".", error_stream, rank );
+    pass = Uintah::testFilesystem( ".", error_stream, rank );
   }
   
   if( args.verbose ) {
@@ -400,7 +399,7 @@ fileSystem_test()
 
       double startTime = -1, curTime = -1;
 
-      startTime = Time::currentSeconds();
+      startTime = Uintah::Time::currentSeconds();
 
       int          totalPassed = (int)pass, totalFailed = (int)(!pass);
       int          numCompleted = -1;
@@ -440,7 +439,7 @@ fileSystem_test()
         }
         else {
           const double secsToWait = 30.0;
-          curTime = Time::currentSeconds();
+          curTime = Uintah::Time::currentSeconds();
           
           if( curTime > (startTime + (secsToWait*generation)) ) { // Give it 'secsToWait' seconds, then print some info
             if( rank == 0 ) {
@@ -534,7 +533,7 @@ point2pointasync_test()
 
   double startTime = -1, curTime = -1, lastTime = -1 ;
   
-  lastTime = startTime = Time::currentSeconds();
+  lastTime = startTime = Uintah::Time::currentSeconds();
   
   while( !done ) {
 
@@ -545,9 +544,9 @@ point2pointasync_test()
 
     //reset timer if progress is made
     if(numCompleted>0)
-      lastTime=Time::currentSeconds();
+      lastTime=Uintah::Time::currentSeconds();
     
-    curTime = Time::currentSeconds();
+    curTime = Uintah::Time::currentSeconds();
 
     double secsToWait = 100.0;
     if( curTime - lastTime > secsToWait ) { // Give it 'secsToWait' seconds to finish

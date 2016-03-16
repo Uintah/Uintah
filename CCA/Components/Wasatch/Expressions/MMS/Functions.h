@@ -260,7 +260,7 @@ evaluate()
     for (int k=0; k<nz; k++) {
       for (int j=0; j<ny; j++) {
         for (int i=0; i<nx; i++) {
-          SCIRun::IntVector p(i,j,k);
+          Uintah::IntVector p(i,j,k);
           val = Uintah::getDouble(inputFile);
           const bool containsCell = patch->containsIndex(patch->getCellLowIndex(), patch->getCellHighIndex(), p);
           if( containsCell && phiiter != phi.interior_end() ) {

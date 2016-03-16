@@ -37,9 +37,9 @@ void doStringInitTests(Suite* suite);
 void doIntersectTests(Suite* suite);
 void doUnionTests(Suite* suite);
 
-bool equalSets(SCIRun::ConsecutiveRangeSet& set, const int* array, int arraySize,
+bool equalSets(Uintah::ConsecutiveRangeSet& set, const int* array, int arraySize,
 	       bool& sameSize);
-bool equalSets(SCIRun::ConsecutiveRangeSet& set, std::list<int>& intList, bool& sameSize);
+bool equalSets(Uintah::ConsecutiveRangeSet& set, std::list<int>& intList, bool& sameSize);
 
 SuiteTree* ConsecutiveRangeSetTestTree()
 {
@@ -74,7 +74,7 @@ void doListInitTests(Suite* suite)
   
   for (i = 0; i < 100; i++) {
     intList = getRandomList(i, -100, 100);
-    SCIRun::ConsecutiveRangeSet set(intList);
+    Uintah::ConsecutiveRangeSet set(intList);
     compareTest->setResults(equalSets(set, intList, sameSize));
     sizeTest->setResults(sameSize);
     intList.clear();
@@ -86,7 +86,7 @@ void doListInitTests(Suite* suite)
   for (i = 0; i < TestSetSize; i++)
     intList.push_back(testSet[i]);
   
-  SCIRun::ConsecutiveRangeSet set(intList);
+  Uintah::ConsecutiveRangeSet set(intList);
   groupTest->setResults(set.getNumRanges() == 4);  
   compareTest->setResults(equalSets(set, sortedTestSet, TestSetSize,
 				    sameSize));
@@ -106,7 +106,7 @@ void doAddInOrderTests(Suite* suite)
   for (i = 0; i < 100; i++) {
     intList = getRandomList(i, -100, 100);
     intList.sort();
-    SCIRun::ConsecutiveRangeSet set;
+    Uintah::ConsecutiveRangeSet set;
     for (it = intList.begin(); it != intList.end(); it++)
        set.addInOrder(*it);
     compareTest->setResults(equalSets(set, intList, sameSize));
@@ -122,17 +122,17 @@ void doAddInOrderTests(Suite* suite)
     intList.push_back(testSet[i]);
   
   try {
-     SCIRun::ConsecutiveRangeSet set;
+     Uintah::ConsecutiveRangeSet set;
      for (it = intList.begin(); it != intList.end(); it++)
 	set.addInOrder(*it);
      suite->addTest("Not in order", false);
   }
-  catch (SCIRun::ConsecutiveRangeSetException) {
+  catch (Uintah::ConsecutiveRangeSetException) {
      suite->addTest("Not in order", true);
   }
 
   intList.sort();
-  SCIRun::ConsecutiveRangeSet set;
+  Uintah::ConsecutiveRangeSet set;
   for (it = intList.begin(); it != intList.end(); it++)
      set.addInOrder(*it);
   groupTest->setResults(set.getNumRanges() == 4);  
@@ -176,17 +176,17 @@ void doStringInitTests(Suite* suite)
 
   Test* exceptionTest = suite->addTest("Parse Exception");
   try {
-    SCIRun::ConsecutiveRangeSet set("1-,3-9");
+    Uintah::ConsecutiveRangeSet set("1-,3-9");
     exceptionTest->setResults(false);
   }
-  catch (SCIRun::ConsecutiveRangeSetException) {
+  catch (Uintah::ConsecutiveRangeSetException) {
     exceptionTest->setResults(true);
   }
   try {
-    SCIRun::ConsecutiveRangeSet set("#$%");
+    Uintah::ConsecutiveRangeSet set("#$%");
     exceptionTest->setResults(false);
   }
-  catch (SCIRun::ConsecutiveRangeSetException) {
+  catch (Uintah::ConsecutiveRangeSetException) {
     exceptionTest->setResults(true);
   }
 }
@@ -197,7 +197,7 @@ void doStringInitTest(Suite* suite, std::string testname, std::string setstr,
 		      int numgroups, std::string expectedout)
 {
   bool sameSize;
-  SCIRun::ConsecutiveRangeSet set(setstr);
+  Uintah::ConsecutiveRangeSet set(setstr);
   Test* test = suite->addTest(testname + ": " + setstr);
   test->setResults(set.getNumRanges() == numgroups);
   test->setResults(equalSets(set, expectedset, expectedset_size, sameSize));
@@ -210,15 +210,15 @@ void doStringInitTest(Suite* suite, std::string testname, std::string setstr,
 
 void doIntersectTests(Suite* suite)
 {
-  const SCIRun::ConsecutiveRangeSet& empty = SCIRun::ConsecutiveRangeSet::empty;
-  const SCIRun::ConsecutiveRangeSet& all = SCIRun::ConsecutiveRangeSet::all;
-  SCIRun::ConsecutiveRangeSet testset("1-4, 10-12");
-  SCIRun::ConsecutiveRangeSet singlet("-1");
-  SCIRun::ConsecutiveRangeSet nonoverlap("5-9");
-  SCIRun::ConsecutiveRangeSet overlap("4-10");
-  SCIRun::ConsecutiveRangeSet overlap_result("4, 10");
-  SCIRun::ConsecutiveRangeSet overlap2("4-13");
-  SCIRun::ConsecutiveRangeSet overlap2_result("4, 10-12");
+  const Uintah::ConsecutiveRangeSet& empty = Uintah::ConsecutiveRangeSet::empty;
+  const Uintah::ConsecutiveRangeSet& all = Uintah::ConsecutiveRangeSet::all;
+  Uintah::ConsecutiveRangeSet testset("1-4, 10-12");
+  Uintah::ConsecutiveRangeSet singlet("-1");
+  Uintah::ConsecutiveRangeSet nonoverlap("5-9");
+  Uintah::ConsecutiveRangeSet overlap("4-10");
+  Uintah::ConsecutiveRangeSet overlap_result("4, 10");
+  Uintah::ConsecutiveRangeSet overlap2("4-13");
+  Uintah::ConsecutiveRangeSet overlap2_result("4, 10-12");
 
   suite->addTest("with empty", testset.intersected(empty) == empty &&
 		 empty.intersected(testset) == empty);
@@ -239,17 +239,17 @@ void doIntersectTests(Suite* suite)
 
 void doUnionTests(Suite* suite)
 {
-  const SCIRun::ConsecutiveRangeSet& empty = SCIRun::ConsecutiveRangeSet::empty;
-  const SCIRun::ConsecutiveRangeSet& all = SCIRun::ConsecutiveRangeSet::all;
-  SCIRun::ConsecutiveRangeSet testset("1-4, 10-12");
-  SCIRun::ConsecutiveRangeSet nonoverlap("5-9");
-  SCIRun::ConsecutiveRangeSet joined("1-12");
-  SCIRun::ConsecutiveRangeSet overlap("4-10");
-  SCIRun::ConsecutiveRangeSet overlap2("4-15");
-  SCIRun::ConsecutiveRangeSet joined_extended("1-15");
-  SCIRun::ConsecutiveRangeSet nonjoin("5, 8, 13, 15-20");
-  SCIRun::ConsecutiveRangeSet nonjoined("1-5, 8, 10-13, 15-20");
-  SCIRun::ConsecutiveRangeSet singlet("-1");
+  const Uintah::ConsecutiveRangeSet& empty = Uintah::ConsecutiveRangeSet::empty;
+  const Uintah::ConsecutiveRangeSet& all = Uintah::ConsecutiveRangeSet::all;
+  Uintah::ConsecutiveRangeSet testset("1-4, 10-12");
+  Uintah::ConsecutiveRangeSet nonoverlap("5-9");
+  Uintah::ConsecutiveRangeSet joined("1-12");
+  Uintah::ConsecutiveRangeSet overlap("4-10");
+  Uintah::ConsecutiveRangeSet overlap2("4-15");
+  Uintah::ConsecutiveRangeSet joined_extended("1-15");
+  Uintah::ConsecutiveRangeSet nonjoin("5, 8, 13, 15-20");
+  Uintah::ConsecutiveRangeSet nonjoined("1-5, 8, 10-13, 15-20");
+  Uintah::ConsecutiveRangeSet singlet("-1");
 
   suite->addTest("with empty", testset.unioned(empty) == testset &&
 		 empty.unioned(testset) == testset);
@@ -269,7 +269,7 @@ void doUnionTests(Suite* suite)
   suite->addTest("same singlet", singlet.unioned(singlet) == singlet);
 }
 
-bool equalSets(SCIRun::ConsecutiveRangeSet& set, const int* array, int arraySize,
+bool equalSets(Uintah::ConsecutiveRangeSet& set, const int* array, int arraySize,
 	       bool& sameSize)
 {
   if (arraySize != (int)set.size()) {
@@ -278,14 +278,14 @@ bool equalSets(SCIRun::ConsecutiveRangeSet& set, const int* array, int arraySize
   }
   sameSize = true;
   
-  SCIRun::ConsecutiveRangeSet::iterator it = set.begin();
+  Uintah::ConsecutiveRangeSet::iterator it = set.begin();
   for (int i = 0; it != set.end(); it++, i++)
     if (*it != array[i])
       return false;
   return true;
 }
 
-bool equalSets(SCIRun::ConsecutiveRangeSet& set, std::list<int>& intList, bool& sameSize)
+bool equalSets(Uintah::ConsecutiveRangeSet& set, std::list<int>& intList, bool& sameSize)
 {
   intList.sort();
   intList.unique();
@@ -296,7 +296,7 @@ bool equalSets(SCIRun::ConsecutiveRangeSet& set, std::list<int>& intList, bool& 
   }
   sameSize = true;
   
-  SCIRun::ConsecutiveRangeSet::iterator setIt = set.begin();
+  Uintah::ConsecutiveRangeSet::iterator setIt = set.begin();
   std::list<int>::iterator listIt = intList.begin();
   
   for ( ; setIt != set.end(); setIt++, listIt++)

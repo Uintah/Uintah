@@ -44,7 +44,7 @@
 #include   <string>
 #include   <iosfwd>
 
-namespace SCIRun {
+namespace Uintah {
 
 class Piostream;
 class Point;
@@ -201,12 +201,12 @@ void Pio( Piostream&, Vector& );
 std::ostream& operator<<(std::ostream& os, const Vector& p);
 std::istream& operator>>(std::istream& os, Vector& p);
   
-} // End namespace SCIRun
+} // End namespace Uintah
 
 // This cannot be above due to circular dependencies
 #include <Core/Geometry/Point.h>
 
-namespace SCIRun {
+namespace Uintah {
 
 
 inline Vector::Vector(const Point& p)
@@ -516,7 +516,7 @@ inline Vector Max(const Vector &v1, const Vector &v2)
 
 const TypeDescription* get_type_description(Vector*);
 
-} // End namespace SCIRun
+} // End namespace Uintah
 
 
 #endif

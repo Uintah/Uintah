@@ -27,7 +27,7 @@
 
 #include <sci_defs/cuda_defs.h>
 
-namespace SCIRun {
+namespace Uintah {
 
 class gpuIntVector : public int3 {
   public:
@@ -80,6 +80,6 @@ class gpuPoint : public double3 {
     HOST_DEVICE gpuPoint(const double3& copy) : double3(copy) {}
 };
 
-} // end namespace SCIRun
+} // end namespace Uintah
 
 #endif // end #ifndef CORE_GEOMETRY_GPUVECTOR_H

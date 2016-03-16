@@ -41,7 +41,7 @@
 #include <Core/Exceptions/Exception.h>
 #include <string>
 
-namespace SCIRun {
+namespace Uintah {
   class InternalError : public Exception {
   public:
     InternalError(const std::string&, const char* file, int line);
@@ -54,7 +54,7 @@ namespace SCIRun {
     std::string message_;
     InternalError& operator=(const InternalError&);
   };
-} // End namespace SCIRun
+} // End namespace Uintah
 
 #endif
 

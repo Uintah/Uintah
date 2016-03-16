@@ -43,7 +43,6 @@
 
 using namespace std;
 using namespace Uintah;
-using namespace SCIRun;
 
 JWLppMPM::JWLppMPM(ProblemSpecP& ps, MPMFlags* Mflag)
   : ConstitutiveModel(Mflag)

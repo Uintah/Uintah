@@ -40,7 +40,7 @@
 
 #include <sci_defs/template_defs.h>
 
-namespace SCIRun {
+namespace Uintah {
 
 template <class T, int CAPACITY>
 class StackVector {
@@ -76,7 +76,7 @@ public:
   ~StackVector() {}
 };
 
-} // End namespace SCIRun
+} // End namespace Uintah
 
 
 #endif /* SCI_Containers_StackVector_h */

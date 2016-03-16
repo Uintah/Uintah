@@ -45,7 +45,7 @@
 
 #define MAX_THREADS 64
 
-namespace SCIRun {
+namespace Uintah {
 
   struct Thread_private;
   class  ParallelBase;
@@ -108,7 +108,7 @@ DESCRIPTION
     // otherwise the system will hang.
     //
     // WARNING: This has not been tested on a highly threaded system.
-    // If you plan to use this in SCIRun (or another stand alone
+    // If you plan to use this in Uintah (or another stand alone
     // threaded code built using this thread library) you will need to
     // verify that it really works.  The issue is with how exitAll())
     // works.  I believe that all threads will eventaully call
@@ -405,6 +405,6 @@ DESCRIPTION
     Thread(const Thread&);
     Thread& operator=(const Thread&);
   };	
-} // End namespace SCIRun
+} // End namespace Uintah
 
 #endif

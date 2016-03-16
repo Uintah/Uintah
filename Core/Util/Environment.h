@@ -38,7 +38,7 @@
 
 #include <string>
 
-namespace SCIRun {
+namespace Uintah {
 
   void create_sci_environment(char **env, char *execname, bool beSilent = false );
 
@@ -67,6 +67,6 @@ namespace SCIRun {
   //
   void show_env();
 
-} // end namespace SCIRun
+} // end namespace Uintah
 
 #endif // #ifndef Core_Util_Environment_h

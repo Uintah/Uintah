@@ -70,7 +70,7 @@ namespace Uintah {
 
   };
 #define crashout CrashPad::d_messages
-} // End namespace SCIRun
+} // End namespace Uintah
 
 #endif
 

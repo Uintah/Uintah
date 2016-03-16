@@ -40,7 +40,7 @@
 #include <Core/Thread/AtomicCounter.h>
 #include <Core/Thread/Mutex.h>
 
-namespace SCIRun {
+namespace Uintah {
 
 /**************************************
  
@@ -105,7 +105,7 @@ class MutexPool {
 };
 
 }
-  // End namespace SCIRun
+  // End namespace Uintah
 
 #endif
 

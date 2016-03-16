@@ -40,7 +40,7 @@
 #include <cstring>
 #include <iostream>
 
-namespace SCIRun {
+namespace Uintah {
 
 using namespace std;
 
@@ -85,4 +85,4 @@ int ErrnoException::getErrno() const
    return err_;
 }
 
-} // End namespace SCIRun
+} // End namespace Uintah

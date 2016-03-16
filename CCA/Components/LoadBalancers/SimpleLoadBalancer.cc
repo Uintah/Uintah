@@ -38,8 +38,8 @@ using namespace Uintah;
 
 // Debug: Used to sync cerr so it is readable (when output by
 // multiple threads at the same time)  From sus.cc:
-extern SCIRun::Mutex cerrLock;
-extern SCIRun::DebugStream lbDebug;
+extern Uintah::Mutex cerrLock;
+extern Uintah::DebugStream lbDebug;
 
 SimpleLoadBalancer::SimpleLoadBalancer( const ProcessorGroup * myworld ) :
   LoadBalancerCommon( myworld )

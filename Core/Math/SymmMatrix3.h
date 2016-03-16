@@ -30,7 +30,6 @@
 
 namespace Uintah {
 
-  using SCIRun::Vector;
   using TNT::Array2D;
 
   /*! \class SymmMatrix3

@@ -45,7 +45,7 @@
 using std::cout;
 using std::endl;
 
-namespace SCIRun {
+namespace Uintah {
 
 #define Abs(x) ((x>0)?x:-x)
 #define MSG(m) cout << m << endl;
@@ -367,7 +367,7 @@ void test_quat(){
   }
 }
 
-} // End namespace SCIRun
+} // End namespace Uintah
 
 
 

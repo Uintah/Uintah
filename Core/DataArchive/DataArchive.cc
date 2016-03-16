@@ -58,7 +58,7 @@
 
 using namespace std;
 using namespace Uintah;
-using namespace SCIRun;
+
 
 DebugStream DataArchive::dbg("DataArchive", false);
 //______________________________________________________________________
@@ -1322,7 +1322,7 @@ DataArchive::TimeData::init()
     throw ProblemSetupException( "endianness and/or numbits missing", __FILE__, __LINE__ );
   }
 
-  d_swapBytes = endianness != string(SCIRun::endianness());
+  d_swapBytes = endianness != string(Uintah::endianness());
   d_nBytes    = numbits / 8;
 
 #if 0

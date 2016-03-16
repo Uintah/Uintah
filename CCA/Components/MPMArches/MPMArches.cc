@@ -4706,7 +4706,7 @@ namespace Uintah {
 
 //______________________________________________________________________
 //
-namespace SCIRun {
+namespace Uintah {
 
   void swapbytes( Uintah::cutcell& c) {
     double *p = c.d_cutcell;
@@ -4717,4 +4717,4 @@ namespace SCIRun {
     SWAP_8(*++p);
   }
 
-} // namespace SCIRun
+} // namespace Uintah

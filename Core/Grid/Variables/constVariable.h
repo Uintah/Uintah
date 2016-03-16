@@ -25,7 +25,6 @@
 #define UINTAH_HOMEBREW_CONSTVARIABLE_H
 
 #include <Core/Grid/Variables/constVariableBase.h>
-#include <Core/Grid/Variables/Array3.h>
 #include <Core/Util/Assert.h>
 
 namespace Uintah {

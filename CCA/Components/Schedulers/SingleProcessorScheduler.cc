@@ -36,7 +36,6 @@
 #include <Core/Util/FancyAssert.h>
 
 using namespace Uintah;
-using namespace SCIRun;
 
 extern DebugStream taskdbg;
 extern DebugStream taskLevel_dbg;

@@ -37,7 +37,7 @@
 #include <Core/Containers/Sort.h>
 #include <Core/Containers/Array1.h>
 
-namespace SCIRun {
+namespace Uintah {
 
 
 LinearPWI::LinearPWI()
@@ -65,4 +65,4 @@ bool LinearPWI::set_data(const Array1<double>& pts, const Array1<double>& vals){
     }
 }
 
-} // End namespace SCIRun
+} // End namespace Uintah

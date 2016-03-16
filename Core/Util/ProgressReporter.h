@@ -43,7 +43,7 @@
 #include <Core/Util/Timer.h>
 #include <Core/Thread/AtomicCounter.h>
 
-namespace SCIRun {
+namespace Uintah {
 
 class ProgressReporter
 {
@@ -79,6 +79,6 @@ protected:
 };
 
 
-} // Namespace SCIRun
+} // Namespace Uintah
 
 #endif

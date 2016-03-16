@@ -28,9 +28,8 @@
 #include <algorithm>
 #include <iostream>
 
-namespace SCIRun {
+namespace Uintah {
   using namespace std;
-  using namespace Uintah;
   
   FieldSelection::FieldSelection(Args & args, const vector<string> & allfields)
   {

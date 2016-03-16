@@ -43,13 +43,13 @@
 #endif // #ifndef SCI_NOPERSISTENT
 #include <Core/Util/Assert.h>
 
-namespace SCIRun {
+namespace Uintah {
 
 class RigorousTest;
 
 template<class T> class Array1;
 #ifndef SCI_NOPERSISTENT
-template<class T> void Pio(Piostream& stream, Array1<T>& array);
+ template<class T> void Pio(Uintah::Piostream& stream, Array1<T>& array);
 #endif // #ifndef SCI_NOPERSISTENT
 
 /**************************************
@@ -188,9 +188,9 @@ public:
 #ifndef SCI_NOPERSISTENT
 #if defined(_AIX)
   template <typename Type> 
-  friend void TEMPLATE_TAG Pio TEMPLATE_BOX (Piostream&, Array1<Type>&);
+    friend void TEMPLATE_TAG Pio TEMPLATE_BOX (Uintah::Piostream&, Array1<Type>&);
 #else
-  friend void TEMPLATE_TAG Pio TEMPLATE_BOX (Piostream&, Array1<T>&);
+  friend void TEMPLATE_TAG Pio TEMPLATE_BOX (Uintah::Piostream&, Array1<T>&);
 #endif
 #endif // #ifndef SCI_NOPERSISTENT
 };
@@ -399,7 +399,7 @@ T* Array1<T>::get_objs()
 
 #ifndef SCI_NOPERSISTENT
 template<class T>
-void Pio(Piostream& stream, Array1<T>& array)
+  void Pio(Uintah::Piostream& stream, Array1<T>& array)
 {
   /* int version= */stream.begin_class("Array1", ARRAY1_VERSION);
   int size=array._size;
@@ -414,14 +414,14 @@ void Pio(Piostream& stream, Array1<T>& array)
 }
 
 template<class T>
-void Pio(Piostream& stream, Array1<T>*& array) {
+void Pio(Uintah::Piostream& stream, Array1<T>*& array) {
   if (stream.reading())
     array=new Array1<T>;
   Pio(stream, *array);
 }
 #endif // #ifndef SCI_NOPERSISTENT
 
-} // End namespace SCIRun
+} // End namespace Uintah
 
 
 #endif /* SCI_Containers_Array1_h */

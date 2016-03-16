@@ -3,12 +3,12 @@
 #include <Core/Grid/Region.h>
 #include <vector>
 
-using SCIRun::IntVector;
+using Uintah::IntVector;
 
 class TiledRegridder
 {
   public:
- TiledRegridder(IntVector patch_size,IntVector rr) : rr(rr),mps(patch_size)
+ TiledRegridder(Uintah::IntVector patch_size,Uintah::IntVector rr) : rr(rr),mps(patch_size)
     {
     };
 
@@ -31,8 +31,8 @@ void TiledRegridder::regrid(const std::vector<Uintah::Region> &cp, const std::ve
     //compute patch extents
     //compute possible tile index's
     
-    IntVector tileLow(cp[patch].getLow()*rr/mps);
-    IntVector tileHigh(cp[patch].getHigh()*rr/mps);
+    Uintah::IntVector tileLow(cp[patch].getLow()*rr/mps);
+    Uintah::IntVector tileHigh(cp[patch].getHigh()*rr/mps);
 
     //cout << "Tiles: " << tileLow << " " << tileHigh << endl; 
     //cout << "window: " << (*flags[patch]).getWindow()->getLowIndex() << " " << (*flags[patch]).getWindow()->getHighIndex()  << endl;

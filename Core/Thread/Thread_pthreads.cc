@@ -168,13 +168,13 @@ typedef void (*SIG_HANDLER_T)(int);
 
 #include <Core/Thread/CrowdMonitor_pthreads.cc>
 
-using SCIRun::ConditionVariable;
-using SCIRun::Mutex;
-using SCIRun::RecursiveMutex;
-using SCIRun::Semaphore;
-using SCIRun::Thread;
-using SCIRun::ThreadError;
-using SCIRun::ThreadGroup;
+using Uintah::ConditionVariable;
+using Uintah::Mutex;
+using Uintah::RecursiveMutex;
+using Uintah::Semaphore;
+using Uintah::Thread;
+using Uintah::ThreadError;
+using Uintah::ThreadGroup;
 
 static bool exiting = false;
 
@@ -186,7 +186,7 @@ static bool exiting = false;
 
 #define MAXTHREADS 4000
 
-namespace SCIRun {
+namespace Uintah {
 struct Thread_private {
   Thread_private(bool stopped);
 
@@ -201,11 +201,11 @@ struct Thread_private {
   bool is_blocked;
   bool ismain;
 };
-} // end namespace SCIRun
+} // end namespace 
 
 static const char* bstack_init = "Unused block stack entry";
 
-using SCIRun::Thread_private;
+using Uintah::Thread_private;
 
 static Thread_private* active[MAXTHREADS];
 static int numActive = 0;
@@ -713,7 +713,7 @@ handle_abort_signals(int sig, SigContext ctx)
   if(print)
     fprintf(stderr, "%c%c%cThread \"%s\"(pid %d) caught signal %s\n", 7,7,7,tname, getpid(), signam);
 
-  SCIRun::WAIT_FOR_DEBUGGER(true);
+  Uintah::WAIT_FOR_DEBUGGER(true);
 
   Thread::niceAbort(NULL,print);
   
@@ -795,7 +795,7 @@ handle_quit(int sig, SigContext /*ctx*/)
   if( print ) {
     fprintf(stderr, "Thread \"%s\"(pid %d) caught signal %s\n", tname, pid, signam);
   }
-  SCIRun::WAIT_FOR_DEBUGGER(true);
+  Uintah::WAIT_FOR_DEBUGGER(true);
 
   Thread::niceAbort(NULL, print); // Enter the monitor
   control_c_sema.up();
@@ -955,11 +955,11 @@ Thread::migrate(int /*proc*/)
 }
 
 
-namespace SCIRun {
+namespace Uintah {
 struct Mutex_private {
   pthread_mutex_t mutex;
 };
-} // namespace SCIRun
+} // namespace Uintah
 
 
 Mutex::Mutex(const char* name)
@@ -1101,11 +1101,11 @@ Mutex::tryLock()
 }
 
 
-namespace SCIRun {
+namespace Uintah {
 struct RecursiveMutex_private {
   pthread_mutex_t mutex;
 };
-} // namespace SCIRun
+} // namespace Uintah
 
 
 RecursiveMutex::RecursiveMutex(const char* name)
@@ -1202,7 +1202,7 @@ RecursiveMutex::lock()
 }
 
 
-namespace SCIRun {
+namespace Uintah {
 #if defined (__APPLE__)
 struct Semaphore_private {
   Semaphore_private(const char *name, int value);
@@ -1223,7 +1223,7 @@ struct Semaphore_private {
   sem_type sem;
 };
 #endif
-} // namespace SCIRun
+} // namespace Uintah
 
 
 
@@ -1377,11 +1377,11 @@ Semaphore::tryDown()
 
 #endif
 
-namespace SCIRun {
+namespace Uintah {
 struct ConditionVariable_private {
   pthread_cond_t cond;
 };
-} // namespace SCIRun
+} // namespace Uintah
 
 
 ConditionVariable::ConditionVariable(const char* name)
@@ -1468,9 +1468,9 @@ ConditionVariable::conditionBroadcast()
 
 #ifdef __ia64__
 
-using SCIRun::Barrier;
+using Uintah::Barrier;
 
-namespace SCIRun {
+namespace Uintah {
 struct Barrier_private {
   Barrier_private();
 
@@ -1481,10 +1481,10 @@ struct Barrier_private {
   volatile int flag;
   char pad2[128];
 };
-} // namespace SCIRun
+} // namespace Uintah
 
 
-using SCIRun::Barrier_private;
+using Uintah::Barrier_private;
 
 
 Barrier_private::Barrier_private()
@@ -1536,10 +1536,10 @@ Barrier::wait(int n)
 }
 
 
-using SCIRun::AtomicCounter;
+using Uintah::AtomicCounter;
 
 
-namespace SCIRun {
+namespace Uintah {
 struct AtomicCounter_private {
   AtomicCounter_private();
 
@@ -1549,9 +1549,9 @@ struct AtomicCounter_private {
   __int64 amo_val;
   char pad1[128];
 };
-} // namespace SCIRun
+} // namespace Uintah
 
-using SCIRun::AtomicCounter_private;
+using Uintah::AtomicCounter_private;
 
 
 AtomicCounter_private::AtomicCounter_private()

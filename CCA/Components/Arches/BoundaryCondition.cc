@@ -74,7 +74,7 @@ using namespace std;
 using namespace Uintah;
 
 // Used to sync std::cout when output by multiple threads
-extern SCIRun::Mutex coutLock;
+extern Uintah::Mutex coutLock;
 
 #include <CCA/Components/Arches/fortran/mmbcvelocity_fort.h>
 #include <CCA/Components/Arches/fortran/mm_computevel_fort.h>

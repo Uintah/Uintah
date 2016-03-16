@@ -26,7 +26,7 @@
 #include <sci_defs/bits_defs.h> // for SCI_32BITS
 #include <sci_defs/osx_defs.h>  // for OSX_SNOW_LEOPARD_OR_LATER
 
-namespace SCIRun {
+namespace Uintah {
 
 #if !defined( SCI_32BITS )
 void swapbytes( long long& i ) { LONG_LONG_SWAP(i); }
@@ -78,4 +78,4 @@ std::string endianness()
   }
 }
 
-} // end namespace SCIRun
+} // end namespace Uintah

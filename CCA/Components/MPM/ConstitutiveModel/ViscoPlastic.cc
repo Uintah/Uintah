@@ -400,7 +400,7 @@ ViscoPlastic::initializeCMData(const Patch* patch,
   new_dw->allocateAndPut(pFailureVariable, pFailureVariableLabel, pset);
 
   // Initialize a gaussian random number generator
-  SCIRun::Gaussian gaussGen(d_varf.mean, d_varf.std, 0, 1, DBL_MAX);
+  Gaussian gaussGen(d_varf.mean, d_varf.std, 0, 1, DBL_MAX);
 
 
   for(ParticleSubset::iterator iter = pset->begin();iter != pset->end();iter++){

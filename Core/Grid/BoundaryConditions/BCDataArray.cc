@@ -39,7 +39,6 @@
 #include <vector>
 #include <functional>
 
-using namespace SCIRun;
 using namespace Uintah;
 using namespace std;
 
@@ -131,7 +130,7 @@ BCDataArray* BCDataArray::clone()
 void BCDataArray::determineIteratorLimits(Patch::FaceType face,
                                           const Patch* patch)
 {
-  SCIRun::IntVector lpts,hpts;
+  IntVector lpts,hpts;
   patch->getFaceCells(face,-1,lpts,hpts);
   std::vector<Point> test_pts;
   

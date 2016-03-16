@@ -30,7 +30,6 @@
 
 
 using namespace Uintah;
-using SCIRun::Thread;
 
 ProcessorGroup::ProcessorGroup( const ProcessorGroup* parent,
 			                                MPI_Comm comm,

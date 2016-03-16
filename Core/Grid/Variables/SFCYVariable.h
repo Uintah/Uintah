@@ -30,7 +30,7 @@
 #include <Core/Grid/Patch.h>
 namespace Uintah {
 
-  using SCIRun::InternalError;
+  using Uintah::InternalError;
 
   class TypeDescription;
 

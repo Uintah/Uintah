@@ -261,7 +261,7 @@ namespace Uintah {
 
       for(int m = 0; m < matls->size(); m++){
         int matl = matls->get(m);
-        double tstart = SCIRun::Time::currentSeconds();
+        double tstart = Uintah::Time::currentSeconds();
         
        
         // Initialize the preconditioner and solver
@@ -291,7 +291,7 @@ namespace Uintah {
         // Solve the linear system
       
         cout_dbg << mpiRank << " Solving the linear system" << "\n";
-        double solve_start = SCIRun::Time::currentSeconds();
+        double solve_start = Uintah::Time::currentSeconds();
         // Setup & solve phases
         int timeSolve = hypre_InitializeTiming("Solver Setup");
         hypre_BeginTiming(timeSolve);
@@ -305,7 +305,7 @@ namespace Uintah {
         hypre_ClearTiming();
         timeSolve = 0; 
         
-        double solve_dt = SCIRun::Time::currentSeconds()-solve_start;
+        double solve_dt = Uintah::Time::currentSeconds()-solve_start;
         
         //__________________________________
         // Check if converged,
@@ -336,7 +336,7 @@ namespace Uintah {
         getSolution_CC(matl);
         printSolution("Solution");
                 
-        double dt = SCIRun::Time::currentSeconds()-tstart;
+        double dt = Uintah::Time::currentSeconds()-tstart;
         if(pg->myrank() == 0){
           std::cerr << "Solve of " << _X_label->getName() 
                     << " on level " << _level->getIndex()

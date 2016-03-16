@@ -29,29 +29,28 @@
 #include <Core/Grid/Variables/VarLabel.h>
 #include <CCA/Ports/DataWarehouseP.h>
 
-namespace SCIRun{ class IntVector; }
 
 namespace Uintah {
 
   class Level;
 
   template<typename T>                                 
-    void coarsenDriver_std(const SCIRun::IntVector& cl,
-                           const SCIRun::IntVector& ch,
-                           const SCIRun::IntVector& fl,
-                           const SCIRun::IntVector& fh,
-                           const SCIRun::IntVector& refinementRatio,
+    void coarsenDriver_std(const Uintah::IntVector& cl,
+                           const Uintah::IntVector& ch,
+                           const Uintah::IntVector& fl,
+                           const Uintah::IntVector& fh,
+                           const Uintah::IntVector& refinementRatio,
                            const double ratio,
                            const Level* coarseLevel,
                            constCCVariable<T>& fine_q_CC,
                            CCVariable<T>& coarse_q_CC );
 
   template<typename T>
-    void coarsenDriver_massWeighted( const SCIRun::IntVector & cl,
-                                     const SCIRun::IntVector & ch,
-                                     const SCIRun::IntVector & fl,
-                                     const SCIRun::IntVector & fh,
-                                     const SCIRun::IntVector & refinementRatio,
+    void coarsenDriver_massWeighted( const Uintah::IntVector & cl,
+                                     const Uintah::IntVector & ch,
+                                     const Uintah::IntVector & fl,
+                                     const Uintah::IntVector & fh,
+                                     const Uintah::IntVector & refinementRatio,
                                      const Level* coarseLevel,
                                      constCCVariable<double>& cMass,
                                      constCCVariable<T>& fine_q_CC,

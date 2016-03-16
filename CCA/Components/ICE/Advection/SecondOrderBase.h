@@ -220,8 +220,6 @@ SecondOrderBase::q_CCMaxMin(const CCVariable<T>& q_CC,
                                CCVariable<T>& q_CC_max, 
                                CCVariable<T>& q_CC_min)
 {  
-  using SCIRun::Max;
-  using SCIRun::Min;
   int NGC =1;  // number of ghostCells
   for(CellIterator iter = patch->getCellIterator(NGC); !iter.done(); iter++) {  
 
@@ -405,8 +403,6 @@ void SecondOrderBase::limitedGradient(const CCVariable<T>& q_CC,
                                           CCVariable<T>& q_grad_y,
                                           CCVariable<T>& q_grad_z)
 {
-  using SCIRun::Max;
-  using SCIRun::Min;
   T  frac,temp, zero(0.);
   T  gradLim_max, gradLim_min;
   T unit = T(1.0);

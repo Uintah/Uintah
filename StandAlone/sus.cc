@@ -118,13 +118,12 @@
 #include <sys/stat.h>
 #include <time.h>
 
-using namespace SCIRun;
 using namespace Uintah;
 using namespace std;
 
 #if defined( USE_LENNY_HACK )
   // See Core/Malloc/Allocator.cc for more info.
-  namespace SCIRun {
+  namespace Uintah {
     extern void shutdown();
   };
 #endif
@@ -245,7 +244,7 @@ int
 main( int argc, char *argv[], char *env[] )
 {
 #if defined( USE_LENNY_HACK )
-  atexit( SCIRun::shutdown );
+  atexit( Uintah::shutdown );
 #endif
 
   sanityChecks();

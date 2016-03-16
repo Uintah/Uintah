@@ -29,15 +29,14 @@
 #define Disclosure_TypeDescription_h
 
 #include <Core/Malloc/Allocator.h>
+#include <Core/Util/DynamicLoader.h>
 
 #include <vector>
 #include <string>
 
 namespace SCIRun {
 
-struct CompileInfo;
-
-class TypeDescription {
+class STypeDescription {
 public:
   enum category_e {
     DATA_E,
@@ -48,18 +47,18 @@ public:
     OTHER_E
   }; 
 
-  typedef std::vector<const TypeDescription*> td_vec;
+  typedef std::vector<const STypeDescription*> td_vec;
 
-  TypeDescription(const std::string& name,
+  STypeDescription(const std::string& name,
 		  const std::string& path,
 		  const std::string& namesp,
 		  category_e c = OTHER_E);
-  TypeDescription(const std::string& name,
+  STypeDescription(const std::string& name,
 		  td_vec *sub, // this takes ownership of the memory. 
 		  const std::string& path,
 		  const std::string& namesp,
 		  category_e c = OTHER_E);
-  ~TypeDescription();
+  ~STypeDescription();
      
   td_vec* get_sub_type() const {
     return subtype_;
@@ -79,16 +78,16 @@ public:
   std::string get_namespace() const { return namespace_; }
 
   struct Register {
-    Register(const TypeDescription*);
+    Register(const STypeDescription*);
     ~Register();
   };
 
-  void fill_compile_info(CompileInfo *ci) const;
+  void fill_compile_info(Uintah::CompileInfo *ci) const;
 
   //! convert a string that ends in .cc to end in .h
   static std::string cc_to_h(const std::string &dot_cc);
 
-  static const TypeDescription* lookup_type(const std::string&);
+  static const STypeDescription* lookup_type(const std::string&);
 
 private:
   td_vec                     *subtype_;
@@ -97,52 +96,52 @@ private:
   std::string                     namespace_;
   category_e                 category_;
   // Hide these methods
-  TypeDescription(const TypeDescription&);
-  TypeDescription& operator=(const TypeDescription&);
+  STypeDescription(const STypeDescription&);
+  STypeDescription& operator=(const STypeDescription&);
 
   void register_type();
 };
 
 
-const TypeDescription* get_type_description(double*);
-const TypeDescription* get_type_description(long*);
-const TypeDescription* get_type_description(float*);
-const TypeDescription* get_type_description(short*);
-const TypeDescription* get_type_description(unsigned short*);
-const TypeDescription* get_type_description(int*);
-const TypeDescription* get_type_description(unsigned int*);
-const TypeDescription* get_type_description(char*);
-const TypeDescription* get_type_description(unsigned char*);
-const TypeDescription* get_type_description(bool*);
-const TypeDescription* get_type_description(std::string*);
-const TypeDescription* get_type_description(unsigned long*);
+const STypeDescription* get_type_description(double*);
+const STypeDescription* get_type_description(long*);
+const STypeDescription* get_type_description(float*);
+const STypeDescription* get_type_description(short*);
+const STypeDescription* get_type_description(unsigned short*);
+const STypeDescription* get_type_description(int*);
+const STypeDescription* get_type_description(unsigned int*);
+const STypeDescription* get_type_description(char*);
+const STypeDescription* get_type_description(unsigned char*);
+const STypeDescription* get_type_description(bool*);
+const STypeDescription* get_type_description(std::string*);
+const STypeDescription* get_type_description(unsigned long*);
 
 template <class T>
-const TypeDescription* get_type_description(std::vector<T>*)
+const STypeDescription* get_type_description(std::vector<T>*)
 {
-  static TypeDescription* td = 0;
+  static STypeDescription* td = 0;
   if(!td){
-    const TypeDescription *sub = SCIRun::get_type_description((T*)0);
-    TypeDescription::td_vec *subs = scinew TypeDescription::td_vec(1);
+    const STypeDescription *sub = SCIRun::get_type_description((T*)0);
+    STypeDescription::td_vec *subs = scinew STypeDescription::td_vec(1);
     (*subs)[0] = sub;
-    td = scinew TypeDescription("vector", subs, "std::vector", "std",
-				TypeDescription::CONTAINER_E);
+    td = scinew STypeDescription("vector", subs, "std::vector", "std",
+				STypeDescription::CONTAINER_E);
   }
   return td;
 }
 
 template <class T1, class T2>
-const TypeDescription* get_type_description (std::pair<T1,T2> *)
+const STypeDescription* get_type_description (std::pair<T1,T2> *)
 {
-  static TypeDescription* td = 0;
+  static STypeDescription* td = 0;
   if(!td){
-    const TypeDescription *sub1 = SCIRun::get_type_description((T1*)0);
-    const TypeDescription *sub2 = SCIRun::get_type_description((T2*)0);
-    TypeDescription::td_vec *subs = scinew TypeDescription::td_vec(2);
+    const STypeDescription *sub1 = SCIRun::get_type_description((T1*)0);
+    const STypeDescription *sub2 = SCIRun::get_type_description((T2*)0);
+    STypeDescription::td_vec *subs = scinew STypeDescription::td_vec(2);
     (*subs)[0] = sub1;
     (*subs)[1] = sub2;
-    td = scinew TypeDescription("pair", subs, "std::utility", "std",
-				TypeDescription::CONTAINER_E);
+    td = scinew STypeDescription("pair", subs, "std::utility", "std",
+				STypeDescription::CONTAINER_E);
   }
   return td;
 
@@ -150,5 +149,5 @@ const TypeDescription* get_type_description (std::pair<T1,T2> *)
 
 } // End namespace SCIRun
 
-#endif //Disclosure_TypeDescription_h
+#endif //Disclosure_STypeDescription_h
 

@@ -37,8 +37,6 @@
 #include <Core/ProblemSpec/ProblemSpec.h>
 #include <CCA/Ports/Scheduler.h>
 #include <CCA/Ports/LoadBalancer.h>
-#include <Core/Containers/Array1.h>
-#include <Core/Containers/Array2.h>
 #include <Core/Geometry/IntVector.h>
 #include <Core/Math/MiscMath.h>
 #include <Core/Math/MinMax.h>

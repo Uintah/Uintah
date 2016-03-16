@@ -42,7 +42,7 @@ bool PetscLinearSolve(Mat& A,
                       const int maxIter,
                       const ProcessorGroup* myworld)
 {
-  double solve_start = SCIRun::Time::currentSeconds();
+  double solve_start = Uintah::Time::currentSeconds();
   KSP solver;
   PC preConditioner;
 
@@ -264,7 +264,7 @@ bool PetscLinearSolve(Mat& A,
     throw UintahPetscError(ierr, "VecNorm", __FILE__, __LINE__);
     
   if(me == 0) {
-    cerr << "KSPSolve: Norm of error: " << norm << ", iterations: " << its << ", solver time: " << SCIRun::Time::currentSeconds()-solve_start << " seconds\n";
+    cerr << "KSPSolve: Norm of error: " << norm << ", iterations: " << its << ", solver time: " << Uintah::Time::currentSeconds()-solve_start << " seconds\n";
     cerr << "Init Norm: " << init_norm << " Error reduced by: " << norm/(init_norm+1.0e-20) << endl;
     cerr << "Sum of RHS vector: " << sum_b << endl;
   }

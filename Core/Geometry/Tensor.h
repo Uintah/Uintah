@@ -41,7 +41,7 @@
 #include <iosfwd>
 #include <vector>
 
-namespace SCIRun {
+namespace Uintah {
 
 template<class T> class Array1;
 class Piostream;
@@ -135,6 +135,6 @@ const TypeDescription* get_type_description(Tensor*);
 std::ostream& operator<<(std::ostream& os, const Tensor& t);
 std::istream& operator>>(std::istream& os, Tensor& t);
 
-} // End namespace SCIRun
+} // End namespace Uintah
 
 #endif // Geometry_Tensor_h

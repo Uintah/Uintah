@@ -42,7 +42,7 @@
 #include <Core/Util/Assert.h>
 #include <Core/Util/ProgressReporter.h>
 
-namespace SCIRun {
+namespace Uintah {
 
 class Persistent;
 
@@ -84,7 +84,7 @@ public:
   void flag_error() { err = 1; }
   
 protected:
-  Piostream(Direction, int, const std::string &, ProgressReporter *pr);
+  Piostream(Direction, int, const std::string &, Uintah::ProgressReporter *pr);
 
   Direction dir;
   int version_;
@@ -99,11 +99,11 @@ protected:
   bool have_peekname_;
   std::string peekname_;
 
-  ProgressReporter *reporter_;
+  Uintah::ProgressReporter *reporter_;
   bool own_reporter_;
   bool backwards_compat_id_;
   virtual void emit_pointer(int& have_data, int& pointer_id);
-  static bool readHeader(ProgressReporter *pr,
+  static bool readHeader(Uintah::ProgressReporter *pr,
                          const std::string& filename, char* hdr,
 			 const char* type, int& version, int& endian);
 
@@ -148,15 +148,15 @@ public:
   virtual bool block_io(void*, size_t, size_t) { return false; }
 
   friend Piostream* auto_istream(const std::string& filename,
-                                 ProgressReporter *pr);
+                                 Uintah::ProgressReporter *pr);
   friend Piostream* auto_ostream(const std::string& filename, const std::string& type,
-                                 ProgressReporter *pr);
+                                 Uintah::ProgressReporter *pr);
 };
 
   Piostream* auto_istream(const std::string& filename,
-                                   ProgressReporter *pr = 0);
+			  Uintah::ProgressReporter *pr = 0);
   Piostream* auto_ostream(const std::string& filename, const std::string& type,
-                                   ProgressReporter *pr = 0);
+			  Uintah::ProgressReporter *pr = 0);
 
 
 //----------------------------------------------------------------------
@@ -186,6 +186,6 @@ inline void Pio(Piostream& stream, Persistent& data) { data.io(stream); }
 
 
 
-} // End namespace SCIRun
+} // End namespace Uintah
 
 #endif

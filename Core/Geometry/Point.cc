@@ -46,7 +46,7 @@
 
 using namespace std;
 
-namespace SCIRun {
+namespace Uintah {
 
 
 Point Interpolate(const Point& p1, const Point& p2, double w)
@@ -167,18 +167,24 @@ void Pio(Piostream& stream, Point& p)
 
 const string& 
 Point::get_h_file_path() {
-  static const string path(TypeDescription::cc_to_h(__FILE__));
+  static const string path(SCIRun::STypeDescription::cc_to_h(__FILE__));
   return path;
 }
 
-const TypeDescription* get_type_description(Point*)
-{
-  static TypeDescription* td = 0;
-  if(!td){
-    td = scinew TypeDescription("Point", Point::get_h_file_path(), 
-				"SCIRun", TypeDescription::DATA_E);
-  }
-  return td;
-}
 
-} // End namespace SCIRun
+} // End namespace Uintah
+
+
+namespace SCIRun {
+
+  const SCIRun::STypeDescription* get_type_description(Uintah::Point*)
+  {
+    static SCIRun::STypeDescription* td = 0;
+    if(!td){
+      td = scinew SCIRun::STypeDescription("Point", Uintah::Point::get_h_file_path(), 
+					   "Uintah", STypeDescription::DATA_E);
+    }
+    return td;
+  }
+
+}

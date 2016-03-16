@@ -42,7 +42,7 @@
 #include <Core/Thread/ThreadGroup.h>
 #include <cstdio>
 
-namespace SCIRun {
+namespace Uintah {
 
 class ThreadPoolHelper : public Runnable {
   const ParallelBase* helper;
@@ -123,4 +123,4 @@ ThreadPool::parallel(const ParallelBase& helper, int nthreads)
   lock_.unlock();
 }
 
-} // End namespace SCIRun
+} // End namespace Uintah

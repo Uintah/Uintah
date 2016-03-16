@@ -49,13 +49,13 @@ namespace Uintah {
 template<class T>
   void piecewiseConstantInterpolation(constCCVariable<T>& q_CL,// course level
                            const Level* fineLevel,
-                           const SCIRun::IntVector& fl,
-                           const SCIRun::IntVector& fh,
+                           const Uintah::IntVector& fl,
+                           const Uintah::IntVector& fh,
                            CCVariable<T>& q_FineLevel)
 {
   for(CellIterator iter(fl,fh); !iter.done(); iter++){
-    SCIRun::IntVector f_cell = *iter;
-    SCIRun::IntVector c_cell = fineLevel->mapCellToCoarser(f_cell);
+    Uintah::IntVector f_cell = *iter;
+    Uintah::IntVector c_cell = fineLevel->mapCellToCoarser(f_cell);
     q_FineLevel[f_cell] = q_CL[c_cell];
   }
 }
@@ -107,9 +107,9 @@ template<class T>
   void linearInterpolation(constCCVariable<T>& q_CL,// course level
                            const Level* coarseLevel,
                            const Level* fineLevel,
-                           const SCIRun::IntVector& refineRatio,
-                           const SCIRun::IntVector& fl,
-                           const SCIRun::IntVector& fh,
+                           const Uintah::IntVector& refineRatio,
+                           const Uintah::IntVector& fl,
+                           const Uintah::IntVector& fh,
                            CCVariable<T>& q_FineLevel)
 {
   // compute the normalized distance between the fine and coarse cell centers
@@ -121,12 +121,12 @@ template<class T>
   normalizedDistance_CC(refineRatio.z(),norm_dist_z);
 
   for(CellIterator iter(fl,fh); !iter.done(); iter++){
-    SCIRun::IntVector f_cell = *iter;
-    SCIRun::IntVector c_cell = fineLevel->mapCellToCoarser(f_cell);
+    Uintah::IntVector f_cell = *iter;
+    Uintah::IntVector c_cell = fineLevel->mapCellToCoarser(f_cell);
     //__________________________________
     // compute the index of the fine cell, relative to the
     // coarse cell center.
-    SCIRun::IntVector relativeIndx = f_cell - (c_cell * refineRatio);
+    Uintah::IntVector relativeIndx = f_cell - (c_cell * refineRatio);
 
     Vector dist;  // normalized distance
     dist.x(norm_dist_x[relativeIndx.x()]);
@@ -136,13 +136,13 @@ template<class T>
     //__________________________________
     // Offset for coarse level surrounding cells:
     // determine the direction to the surrounding interpolation cells
-    int i = SCIRun::Sign(dist.x());   // returns +/- 1.0
-    int j = SCIRun::Sign(dist.y());
-    int k = SCIRun::Sign(dist.z());
+    int i = Uintah::Sign(dist.x());   // returns +/- 1.0
+    int j = Uintah::Sign(dist.y());
+    int k = Uintah::Sign(dist.z());
 
-    i *= SCIRun::RoundUp(fabs(dist.x()));  // if dist.x,y,z() = 0 then set (i,j,k) = 0
-    j *= SCIRun::RoundUp(fabs(dist.y()));  // Only need surrounding coarse cell data if dist != 0
-    k *= SCIRun::RoundUp(fabs(dist.z()));  // This is especially true for 1D and 2D problems
+    i *= Uintah::RoundUp(fabs(dist.x()));  // if dist.x,y,z() = 0 then set (i,j,k) = 0
+    j *= Uintah::RoundUp(fabs(dist.y()));  // Only need surrounding coarse cell data if dist != 0
+    k *= Uintah::RoundUp(fabs(dist.z()));  // This is especially true for 1D and 2D problems
 
     //__________________________________
     //  Find the weights
@@ -157,15 +157,15 @@ template<class T>
 
     T q_XY_Plane_1   // X-Y plane closest to the fine level cell
         = w0 * q_CL[c_cell]
-        + w1 * q_CL[c_cell + SCIRun::IntVector( i, 0, 0)]
-        + w2 * q_CL[c_cell + SCIRun::IntVector( 0, j, 0)]
-        + w3 * q_CL[c_cell + SCIRun::IntVector( i, j, 0)];
+        + w1 * q_CL[c_cell + Uintah::IntVector( i, 0, 0)]
+        + w2 * q_CL[c_cell + Uintah::IntVector( 0, j, 0)]
+        + w3 * q_CL[c_cell + Uintah::IntVector( i, j, 0)];
 
     T q_XY_Plane_2   // X-Y plane furthest from the fine level cell
-        = w0 * q_CL[c_cell + SCIRun::IntVector( 0, 0, k)]
-        + w1 * q_CL[c_cell + SCIRun::IntVector( i, 0, k)]
-        + w2 * q_CL[c_cell + SCIRun::IntVector( 0, j, k)]
-        + w3 * q_CL[c_cell + SCIRun::IntVector( i, j, k)];
+        = w0 * q_CL[c_cell + Uintah::IntVector( 0, 0, k)]
+        + w1 * q_CL[c_cell + Uintah::IntVector( i, 0, k)]
+        + w2 * q_CL[c_cell + Uintah::IntVector( 0, j, k)]
+        + w3 * q_CL[c_cell + Uintah::IntVector( i, j, k)];
 
     // interpolate the two X-Y planes in the k direction
     q_FineLevel[f_cell] = (1.0 - z) * q_XY_Plane_1 + z * q_XY_Plane_2;
@@ -173,7 +173,7 @@ template<class T>
     //__________________________________
     //  Debugging
 #if 0
-      SCIRun::IntVector half  = (fh - fl )/SCIRun::IntVector(2,2,2) + fl;
+      Uintah::IntVector half  = (fh - fl )/Uintah::IntVector(2,2,2) + fl;
       if ((f_cell.y() == half.y() && f_cell.z() == half.z())){
        cout.setf(ios::scientific,ios::floatfield);
        cout.precision(5);
@@ -181,13 +181,13 @@ template<class T>
        cout << " relative indx " << relativeIndx  << endl;
        cout << "dist "<< dist << " dir " << dir <<  endl;
        cout << " q_CL[c_cell]                       "                           << q_CL[c_cell]                       << " w0 " << w0 << endl;
-       cout << " q_CL[c_cell + SCIRun::IntVector( " << i << ", 0, 0)] "                 << q_CL[c_cell + SCIRun::IntVector( i, 0, 0)] << " w1 " << w1 << endl;
-       cout << " q_CL[c_cell + SCIRun::IntVector( 0, " << j << ", 0)] "                 << q_CL[c_cell + SCIRun::IntVector( 0, j, 0)] << " w2 " << w2 << endl;
-       cout << " q_CL[c_cell + SCIRun::IntVector( "<< i << ", " << j << ", 0)] "        << q_CL[c_cell + SCIRun::IntVector( i, j, 0)] << " w3 " << w3 << endl;
-       cout << " q_CL[c_cell + SCIRun::IntVector( 0, 0, "<<k<<")] "                     << q_CL[c_cell + SCIRun::IntVector( 0, 0, k)] << " w0 " << w0 << endl;
-       cout << " q_CL[c_cell + SCIRun::IntVector( "<< i << ", 0, "<<k<<")] "            << q_CL[c_cell + SCIRun::IntVector( i, 0, k)] << " w1 " << w1 << endl;
-       cout << " q_CL[c_cell + SCIRun::IntVector( 0, "<< j <<", "<<k<<")] "             << q_CL[c_cell + SCIRun::IntVector( 0, j, k)] << " w2 " << w2 << endl;
-       cout << " q_CL[c_cell + SCIRun::IntVector( "<< i << ", " << j << ", "<< k <<")] " << q_CL[c_cell + SCIRun::IntVector( i, j, k)] << " w3 " << w3 <<endl;
+       cout << " q_CL[c_cell + Uintah::IntVector( " << i << ", 0, 0)] "                 << q_CL[c_cell + Uintah::IntVector( i, 0, 0)] << " w1 " << w1 << endl;
+       cout << " q_CL[c_cell + Uintah::IntVector( 0, " << j << ", 0)] "                 << q_CL[c_cell + Uintah::IntVector( 0, j, 0)] << " w2 " << w2 << endl;
+       cout << " q_CL[c_cell + Uintah::IntVector( "<< i << ", " << j << ", 0)] "        << q_CL[c_cell + Uintah::IntVector( i, j, 0)] << " w3 " << w3 << endl;
+       cout << " q_CL[c_cell + Uintah::IntVector( 0, 0, "<<k<<")] "                     << q_CL[c_cell + Uintah::IntVector( 0, 0, k)] << " w0 " << w0 << endl;
+       cout << " q_CL[c_cell + Uintah::IntVector( "<< i << ", 0, "<<k<<")] "            << q_CL[c_cell + Uintah::IntVector( i, 0, k)] << " w1 " << w1 << endl;
+       cout << " q_CL[c_cell + Uintah::IntVector( 0, "<< j <<", "<<k<<")] "             << q_CL[c_cell + Uintah::IntVector( 0, j, k)] << " w2 " << w2 << endl;
+       cout << " q_CL[c_cell + Uintah::IntVector( "<< i << ", " << j << ", "<< k <<")] " << q_CL[c_cell + Uintah::IntVector( i, j, k)] << " w3 " << w3 <<endl;
        cout << " q_XY_Plane_1 " << q_XY_Plane_1 << " q_XY_Plane_2 " << q_XY_Plane_2 << " q_FineLevel[f_cell] "<< q_FineLevel[f_cell] << endl;
     }
 #endif
@@ -240,15 +240,15 @@ template<class T>
   void quadraticInterpolation(constCCVariable<T>& q_CL,// course level
                              const Level* coarseLevel,
                              const Level* fineLevel,
-                             const SCIRun::IntVector& refineRatio,
-                             const SCIRun::IntVector& fl,
-                             const SCIRun::IntVector& fh,
+                             const Uintah::IntVector& refineRatio,
+                             const Uintah::IntVector& fl,
+                             const Uintah::IntVector& fh,
                              CCVariable<T>& q_FineLevel)
 {
-  SCIRun::IntVector gridLo, gridHi;
+  Uintah::IntVector gridLo, gridHi;
   coarseLevel->findCellIndexRange(gridLo,gridHi);
 
-  gridHi -= SCIRun::IntVector(1,1,1);
+  gridHi -= Uintah::IntVector(1,1,1);
 
   // compute the normalized distance between the fine and coarse cell centers
   std::vector<double> norm_dist_x(refineRatio.x());
@@ -259,14 +259,14 @@ template<class T>
   normalizedDistance_CC(refineRatio.z(),norm_dist_z);
 
   for(CellIterator iter(fl,fh); !iter.done(); iter++){
-    SCIRun::IntVector f_cell = *iter;
-    SCIRun::IntVector c_cell = fineLevel->mapCellToCoarser(f_cell);
-    SCIRun::IntVector baseCell = c_cell;
+    Uintah::IntVector f_cell = *iter;
+    Uintah::IntVector c_cell = fineLevel->mapCellToCoarser(f_cell);
+    Uintah::IntVector baseCell = c_cell;
 
     //__________________________________
     // At the edge of the computational Domain
     // shift base/origin coarse cell inward one cell
-    SCIRun::IntVector shift(0,0,0);
+    Uintah::IntVector shift(0,0,0);
 
     for (int d =0; d<3; d++){
       if( (c_cell[d] - gridLo[d]) == 0 ) {  // (x,y,z)minus
@@ -282,7 +282,7 @@ template<class T>
     // compute the index of the fine cell, relative to the
     // coarse cell center.  Find the distance the normalized distance between
     // the coarse and fine cell-centers
-    SCIRun::IntVector relativeIndx = f_cell - (baseCell * refineRatio);
+    Uintah::IntVector relativeIndx = f_cell - (baseCell * refineRatio);
 
     Vector dist;
     dist.x(norm_dist_x[relativeIndx.x()]);
@@ -322,15 +322,15 @@ template<class T>
       k += 1;
 
       q_XY_Plane[p]   // X-Y plane
-        = w(0,0) * q_CL[baseCell + SCIRun::IntVector( -1, -1, k)]
-        + w(1,0) * q_CL[baseCell + SCIRun::IntVector(  0, -1, k)]
-        + w(2,0) * q_CL[baseCell + SCIRun::IntVector(  1, -1, k)]
-        + w(0,1) * q_CL[baseCell + SCIRun::IntVector( -1,  0, k)]
-        + w(1,1) * q_CL[baseCell + SCIRun::IntVector(  0,  0, k)]
-        + w(2,1) * q_CL[baseCell + SCIRun::IntVector(  1,  0, k)]
-        + w(0,2) * q_CL[baseCell + SCIRun::IntVector( -1,  1, k)]
-        + w(1,2) * q_CL[baseCell + SCIRun::IntVector(  0,  1, k)]
-        + w(2,2) * q_CL[baseCell + SCIRun::IntVector(  1,  1, k)];
+        = w(0,0) * q_CL[baseCell + Uintah::IntVector( -1, -1, k)]
+        + w(1,0) * q_CL[baseCell + Uintah::IntVector(  0, -1, k)]
+        + w(2,0) * q_CL[baseCell + Uintah::IntVector(  1, -1, k)]
+        + w(0,1) * q_CL[baseCell + Uintah::IntVector( -1,  0, k)]
+        + w(1,1) * q_CL[baseCell + Uintah::IntVector(  0,  0, k)]
+        + w(2,1) * q_CL[baseCell + Uintah::IntVector(  1,  0, k)]
+        + w(0,2) * q_CL[baseCell + Uintah::IntVector( -1,  1, k)]
+        + w(1,2) * q_CL[baseCell + Uintah::IntVector(  0,  1, k)]
+        + w(2,2) * q_CL[baseCell + Uintah::IntVector(  1,  1, k)];
     }
 
     // interpolate the 3 X-Y planes
@@ -347,15 +347,15 @@ template<class T>
       #if 0
       for (k = -1; k< 2; k++){
         std::cout << " baseCell " << baseCell << " f_cell " << f_cell << " x " << x << " y " << y << " z " << z << "\n";
-        std::cout << " q_CL[baseCell + SCIRunCIRun::IntVector( -1, -1, k)] " << q_CL[baseCell + SCIRun::IntVector( -1, -1, k)]<< " w(0,0) " << w(0,0) << "\n";
-        std::cout << " q_CL[baseCell + SCIRun::IntVector(  0, -1, k)] " << q_CL[baseCell + SCIRun::IntVector(  0, -1, k)]<< " w(1,0) " << w(1,0) << "\n";
-        std::cout << " q_CL[baseCell + SCIRun::IntVector(  1, -1, k)] " << q_CL[baseCell + SCIRun::IntVector(  1, -1, k)]<< " w(2,0) " << w(2,0) << "\n";
-        std::cout << " q_CL[baseCell + SCIRun::IntVector( -1,  0, k)] " << q_CL[baseCell + SCIRun::IntVector(  1, -1, k)]<< " w(0,1) " << w(0,1) << "\n";
-        std::cout << " q_CL[baseCell + SCIRun::IntVector(  0,  0, k)] " << q_CL[baseCell + SCIRun::IntVector(  0,  0, k)]<< " w(1,1) " << w(1,1) << "\n";
-        std::cout << " q_CL[baseCell + SCIRun::IntVector(  1,  0, k)] " << q_CL[baseCell + SCIRun::IntVector(  1,  0, k)]<< " w(2,1) " << w(2,1) << "\n";
-        std::cout << " q_CL[baseCell + SCIRun::IntVector( -1,  1, k)] " << q_CL[baseCell + SCIRun::IntVector( -1,  1, k)]<< " w(0,2) " << w(0,2) << "\n";
-        std::cout << " q_CL[baseCell + SCIRun::IntVector(  0,  1, k)] " << q_CL[baseCell + SCIRun::IntVector(  0,  1, k)]<< " w(1,2) " << w(1,2) << "\n";
-        std::cout << " q_CL[baseCell + SCIRun::IntVector(  1,  1, k)] " << q_CL[baseCell + SCIRun::IntVector(  1,  1, k)]<< " w(2,2) " << w(2,2) << "\n";
+        std::cout << " q_CL[baseCell + UintahCIRun::IntVector( -1, -1, k)] " << q_CL[baseCell + Uintah::IntVector( -1, -1, k)]<< " w(0,0) " << w(0,0) << "\n";
+        std::cout << " q_CL[baseCell + Uintah::IntVector(  0, -1, k)] " << q_CL[baseCell + Uintah::IntVector(  0, -1, k)]<< " w(1,0) " << w(1,0) << "\n";
+        std::cout << " q_CL[baseCell + Uintah::IntVector(  1, -1, k)] " << q_CL[baseCell + Uintah::IntVector(  1, -1, k)]<< " w(2,0) " << w(2,0) << "\n";
+        std::cout << " q_CL[baseCell + Uintah::IntVector( -1,  0, k)] " << q_CL[baseCell + Uintah::IntVector(  1, -1, k)]<< " w(0,1) " << w(0,1) << "\n";
+        std::cout << " q_CL[baseCell + Uintah::IntVector(  0,  0, k)] " << q_CL[baseCell + Uintah::IntVector(  0,  0, k)]<< " w(1,1) " << w(1,1) << "\n";
+        std::cout << " q_CL[baseCell + Uintah::IntVector(  1,  0, k)] " << q_CL[baseCell + Uintah::IntVector(  1,  0, k)]<< " w(2,1) " << w(2,1) << "\n";
+        std::cout << " q_CL[baseCell + Uintah::IntVector( -1,  1, k)] " << q_CL[baseCell + Uintah::IntVector( -1,  1, k)]<< " w(0,2) " << w(0,2) << "\n";
+        std::cout << " q_CL[baseCell + Uintah::IntVector(  0,  1, k)] " << q_CL[baseCell + Uintah::IntVector(  0,  1, k)]<< " w(1,2) " << w(1,2) << "\n";
+        std::cout << " q_CL[baseCell + Uintah::IntVector(  1,  1, k)] " << q_CL[baseCell + Uintah::IntVector(  1,  1, k)]<< " w(2,2) " << w(2,2) << "\n";
         std::cout << " q_XY_Plane " << q_XY_Plane[k+1] << "\n";
       }
       #endif
@@ -431,16 +431,16 @@ template<class T>
                              Patch::FaceType patchFace,
                              const Level* coarseLevel,
                              const Level* fineLevel,
-                             const SCIRun::IntVector& refineRatio,
-                             const SCIRun::IntVector& fl,
-                             const SCIRun::IntVector& fh,
+                             const Uintah::IntVector& refineRatio,
+                             const Uintah::IntVector& fl,
+                             const Uintah::IntVector& fh,
                              CCVariable<T>& q_FineLevel)
 {
-  SCIRun::IntVector gridLo, gridHi;
+  Uintah::IntVector gridLo, gridHi;
   coarseLevel->findCellIndexRange(gridLo,gridHi);
-  gridHi -= SCIRun::IntVector(1,1,1);  // we need the inclusive gridHi
+  gridHi -= Uintah::IntVector(1,1,1);  // we need the inclusive gridHi
 
-  SCIRun::IntVector dir = finePatch->getFaceAxes(patchFace);        // face axes
+  Uintah::IntVector dir = finePatch->getFaceAxes(patchFace);        // face axes
   int p_dir = dir[0];                                    // normal direction
   int y = dir[1];             // Orthogonal to the patch face
   int z = dir[2];
@@ -461,12 +461,12 @@ template<class T>
 
   //__________________________________
   // define the offsets for the CC data on the coarse Level
-  std::vector<SCIRun::IntVector> offset(9);
+  std::vector<Uintah::IntVector> offset(9);
   int counter = 0;
 
   for(int j = -1; j <=1; j++){
     for(int k = -1; k <=1; k++){
-      SCIRun::IntVector tmp(0,0,0);
+      Uintah::IntVector tmp(0,0,0);
       tmp[p_dir] = 0;
       tmp[y]     = j;     // -1, 0, 1
       tmp[z]     = k;     // -1, 0, 1
@@ -484,14 +484,14 @@ template<class T>
   double w2_x = 2.0/((d_CL + 1) * d_CL);
 
   for(CellIterator iter(fl,fh); !iter.done(); iter++){
-    SCIRun::IntVector f_cell = *iter;
-    SCIRun::IntVector c_cell = fineLevel->mapCellToCoarser(f_cell);
-    SCIRun::IntVector baseCell = c_cell;
+    Uintah::IntVector f_cell = *iter;
+    Uintah::IntVector c_cell = fineLevel->mapCellToCoarser(f_cell);
+    Uintah::IntVector baseCell = c_cell;
 
     //__________________________________
     // At the edge of the computational Domain
     // shift base/origin coarse cell inward one cell
-    SCIRun::IntVector shift(0,0,0);
+    Uintah::IntVector shift(0,0,0);
     for (int d =0; d<3; d++){
       if( (c_cell[d] - gridLo[d]) == 0 ) {  // (x,y,z)minus
         shift[d] = 1;
@@ -507,7 +507,7 @@ template<class T>
     // compute the index of the fine cell, relative to the
     // coarse cell center.  Find the distance the normalized distance between
     // the coarse and fine cell-centers
-    SCIRun::IntVector relativeIndx = f_cell - (baseCell * refineRatio);
+    Uintah::IntVector relativeIndx = f_cell - (baseCell * refineRatio);
 
     Vector dist(-9);
     dist.y(norm_dist_y[relativeIndx[y]]);
@@ -558,9 +558,9 @@ template<class T>
     //
     //  x2=d_CL = (refine_ratio.x + 1)/2
     //  See notes dated 09/16/06 for derivation
-    SCIRun::IntVector dir = finePatch->faceDirection(patchFace);
-    SCIRun::IntVector x0 = f_cell;
-    SCIRun::IntVector x1 = f_cell;
+    Uintah::IntVector dir = finePatch->faceDirection(patchFace);
+    Uintah::IntVector x0 = f_cell;
+    Uintah::IntVector x1 = f_cell;
     x0[p_dir] -= 2*dir[p_dir];
     x1[p_dir] -=   dir[p_dir];
 
@@ -570,7 +570,7 @@ template<class T>
     //__________________________________
     //  debugging
 #if 0
-    SCIRun::IntVector half  = (fh - fl )/SCIRun::IntVector(2,2,2) + fl;
+    Uintah::IntVector half  = (fh - fl )/Uintah::IntVector(2,2,2) + fl;
     half = fineLevel->mapCellToCoarser(half);
     if( (baseCell[y] == half[y] && baseCell[z] == half[z]) &&is_rightFace(name)){
 
@@ -610,9 +610,9 @@ template<class T>
                           const int orderOfInterpolation,
                           const Level* coarseLevel,
                           const Level* fineLevel,
-                          const SCIRun::IntVector& refineRatio,
-                          const SCIRun::IntVector& fl,
-                          const SCIRun::IntVector& fh,
+                          const Uintah::IntVector& refineRatio,
+                          const Uintah::IntVector& fl,
+                          const Uintah::IntVector& fh,
                           CCVariable<T>& q_FineLevel)
 {
   switch(orderOfInterpolation){
@@ -644,9 +644,9 @@ template<class T>
                           const int orderOfInterpolation,
                           const Level* coarseLevel,
                           const Level* fineLevel,
-                          const SCIRun::IntVector& refineRatio,
-                          const SCIRun::IntVector& fl,
-                          const SCIRun::IntVector& fh,
+                          const Uintah::IntVector& refineRatio,
+                          const Uintah::IntVector& fl,
+                          const Uintah::IntVector& fh,
                           const Patch* finePatch,
                           Patch::FaceType patchFace,
                           CCVariable<T>& q_FineLevel)
@@ -689,13 +689,13 @@ template<class T>
                                  const std::string& desc,
                                  const int test,
                                  const Level* level,
-                                 const SCIRun::IntVector& l,
-                                 const SCIRun::IntVector& h)
+                                 const Uintah::IntVector& l,
+                                 const Uintah::IntVector& h)
 {
   int ncell = 0;
   T error(0);
   for(CellIterator iter(l,h); !iter.done(); iter++){
-    SCIRun::IntVector c = *iter;
+    Uintah::IntVector c = *iter;
 
     Point cell_pos = level->getCellPosition(c);
 
@@ -762,7 +762,7 @@ template<class T>
 
   //__________________________________
   //  define iterator
-  SCIRun::IntVector fl, fh;
+  Uintah::IntVector fl, fh;
   if(testDomain == "wholeDomain"){
     fl = finePatch->getCellLowIndex();
     fh = finePatch->getCellHighIndex();
@@ -773,7 +773,7 @@ template<class T>
     fh = iter_tmp.end();
   }
 
-  SCIRun::IntVector refineRatio(fineLevel->getRefinementRatio());
+  Uintah::IntVector refineRatio(fineLevel->getRefinementRatio());
   std::cout << "testInterpolators:Interpolation Order = " <<orderOfInterpolation << " " << testDomain<<std::endl;
   std::cout << "------------------------------------" <<  finePatch->getFaceName(patchFace) << std::endl;
 
@@ -794,8 +794,8 @@ template<class T>
     for(int i=0;i<coarsePatches.size();i++){
       const Patch* coarsePatch = coarsePatches[i];
       new_dw->allocateTemporary(q_CoarseLevel, coarsePatch);
-      SCIRun::IntVector cl = coarsePatch->getExtraCellLowIndex();
-      SCIRun::IntVector ch = coarsePatch->getExtraCellHighIndex();
+      Uintah::IntVector cl = coarsePatch->getExtraCellLowIndex();
+      Uintah::IntVector ch = coarsePatch->getExtraCellHighIndex();
       interpolationTest_helper( q_FineLevel, q_CoarseLevel,
                                 "initialize", t, coarseLevel,cl,ch);
     }
@@ -818,8 +818,8 @@ template<class T>
     // colella's quadratic over just the CFI
     if(orderOfInterpolation == 2 && testDomain == "CFI"){
 
-      SCIRun::IntVector ffl = finePatch->getExtraCellLowIndex();
-      SCIRun::IntVector ffh = finePatch->getExtraCellHighIndex();
+      Uintah::IntVector ffl = finePatch->getExtraCellLowIndex();
+      Uintah::IntVector ffh = finePatch->getExtraCellHighIndex();
       interpolationTest_helper( q_FineLevel, q_FineLevel,
                               "initialize", t, fineLevel,ffl,ffh);
 
@@ -844,22 +844,22 @@ template<class T>
 // (we need the finePatch, as the fine level might not entirely overlap the coarse)
 // also get the coarse range to iterate over
  void getFineLevelRange( const Patch* coarsePatch, const Patch* finePatch,
-                         SCIRun::IntVector& cl, SCIRun::IntVector& ch,
-                         SCIRun::IntVector& fl, SCIRun::IntVector& fh);
+                         Uintah::IntVector& cl, Uintah::IntVector& ch,
+                         Uintah::IntVector& fl, Uintah::IntVector& fh);
 
 // As above, but do the same for nodes, and include fine patch padding cell requirements
  void getFineLevelRangeNodes( const Patch* coarsePatch,
                               const Patch* finePatch,
-                              SCIRun::IntVector& cl, SCIRun::IntVector& ch,
-                              SCIRun::IntVector& fl, SCIRun::IntVector& fh,
-                              SCIRun::IntVector padding );
+                              Uintah::IntVector& cl, Uintah::IntVector& ch,
+                              Uintah::IntVector& fl, Uintah::IntVector& fh,
+                              Uintah::IntVector padding );
 
 // find the range of values to get from the coarseLevel that coincides with coarsePatch
 // ngc is the number of ghost cells to get at the fine level
  void getCoarseLevelRange( const Patch* finePatch, const Level* coarseLevel,
-                           SCIRun::IntVector& cl, SCIRun::IntVector& ch,
-                           SCIRun::IntVector& fl, SCIRun::IntVector& fh,
-                           SCIRun::IntVector boundaryLayer,
+                           Uintah::IntVector& cl, Uintah::IntVector& ch,
+                           Uintah::IntVector& fl, Uintah::IntVector& fh,
+                           Uintah::IntVector boundaryLayer,
                            int ngc,
                            const bool returnExclusiveRange);
  
@@ -870,10 +870,10 @@ template<class T>
                               Patch::FaceType face,
                               Patch::FaceIteratorType domain,
                               const int nCells,
-                              SCIRun::IntVector& cl,
-                              SCIRun::IntVector& ch,
-                              SCIRun::IntVector& fl,
-                              SCIRun::IntVector& fh );
+                              Uintah::IntVector& cl,
+                              Uintah::IntVector& ch,
+                              Uintah::IntVector& fl,
+                              Uintah::IntVector& fh );
 
  void coarseLevel_CFI_NodeIterator( Patch::FaceType patchFace,
                                     const Patch* coarsePatch,

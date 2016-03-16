@@ -37,7 +37,6 @@
 
 using namespace std;
 using namespace Uintah;
-using namespace SCIRun;
 
 MaterialSubset* Task::globalMatlSubset = 0;
 
@@ -835,7 +834,7 @@ getComputeSubsetUnderDomain(string domString, Task::MaterialDomainSpec dom,
   case Task::FineLevel:      
     return getOtherLevelComputeSubset(dom, subset, domainSubset);
   default:
-    SCI_THROW(InternalError(string("Unknown ") + domString + " type "+SCIRun::to_string(static_cast<int>(dom)),
+    SCI_THROW(InternalError(string("Unknown ") + domString + " type "+Uintah::to_string(static_cast<int>(dom)),
                             __FILE__, __LINE__));
   }
 }
@@ -853,7 +852,7 @@ Task::Dependency::getPatchesUnderDomain(const PatchSubset* domainPatches) const
   case Task::FineLevel:      
     return getOtherLevelPatchSubset(patches_dom, level_offset, patches, domainPatches, numGhostCells);
   default:
-    SCI_THROW(InternalError(string("Unknown patch domain ") + " type "+SCIRun::to_string(static_cast<int>(patches_dom)),
+    SCI_THROW(InternalError(string("Unknown patch domain ") + " type "+Uintah::to_string(static_cast<int>(patches_dom)),
                             __FILE__, __LINE__));
   }
 }
@@ -868,7 +867,7 @@ Task::Dependency::getMaterialsUnderDomain(const MaterialSubset* domainMaterials)
   case Task::OutOfDomain:
     return matls;
   default:
-    SCI_THROW(InternalError(string("Unknown matl domain ") + " type "+SCIRun::to_string(static_cast<int>(matls_dom)),
+    SCI_THROW(InternalError(string("Unknown matl domain ") + " type "+Uintah::to_string(static_cast<int>(matls_dom)),
                             __FILE__, __LINE__));
   }
 }

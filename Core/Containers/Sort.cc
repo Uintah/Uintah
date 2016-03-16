@@ -34,7 +34,7 @@
 #include <cstdlib>
 using std::cerr;
 
-namespace SCIRun {
+namespace Uintah {
 
 const unsigned int KEY_SIZE=8;       // #bits for the Key
 const int K = 1<<KEY_SIZE;  // size of psum table
@@ -586,6 +586,6 @@ void main(int argc, char* argv)
 
 #endif
 
-} // End namespace SCIRun
+} // End namespace Uintah
 
 

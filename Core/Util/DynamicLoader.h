@@ -40,7 +40,7 @@
 #include <string>
 #include <iostream>
 
-namespace SCIRun {
+namespace Uintah {
 
 struct CompileInfo
 {
@@ -84,7 +84,7 @@ public:
   int       ref_cnt;
 };
 
-typedef Handle<CompileInfo> CompileInfoHandle;
+ typedef SCIRun::Handle<CompileInfo> CompileInfoHandle;
 
 
 
@@ -146,6 +146,6 @@ private:
   
 };
 
-} // End namespace SCIRun
+} // End namespace Uintah
 
 #endif //Disclosure_DynamicLoader_h
