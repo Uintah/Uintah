@@ -45,7 +45,7 @@
 
 #include <Core/Malloc/AllocPriv.h>
 #include <new>
-
+using namespace Uintah;
 
 #ifdef DISABLE_SCI_MALLOC
 
