@@ -793,8 +793,9 @@ DQMOMEqn::buildTransportEqn( const ProcessorGroup* pc,
     new_dw->get( uu, d_face_pvel_x, matlIndex, patch, gac, 1 );
     new_dw->get( vv, d_face_pvel_y, matlIndex, patch, gac, 1 );
     new_dw->get( ww, d_face_pvel_z, matlIndex, patch, gac, 1 );
-#ifdef DO_KOKKOS
     which_dw->get(phi, d_transportVarLabel, matlIndex, patch, gac, 2);
+    
+#ifdef DO_KOKKOS
     new_dw->getModifiable(flux_x, d_X_flux_label, matlIndex, patch);
     new_dw->getModifiable(flux_y, d_Y_flux_label, matlIndex, patch);
     new_dw->getModifiable(flux_z, d_Z_flux_label, matlIndex, patch);
