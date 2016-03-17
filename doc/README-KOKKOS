@@ -53,3 +53,4 @@ How to build and run a kokkos enabled example.
 
   make -j sus
 
+NOTE: When using this directory structure, the Kokkos Programming Guide can be found in the "KOKKOS_PATH/doc/" directory.
