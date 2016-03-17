@@ -1,0 +1,20 @@
+Running the Order of Accuracy tests
+
+This assumes that the code and all of the utilities 
+(timeextract, lineextract, puda) have been compiled.
+
+__________________________________
+Setup:
+-  cd opt/StandAlone
+
+-  Create a symbolic link to the orderAccuracy directory:
+          make link_orderAccuracy
+
+-  Edit the components.xml file and uncomment the component you wish to test.
+    vim orderAccuracy/test_config_files/components.xml
+
+Run the tests:
+-  orderAccuracy/runTests
+
+To examine the results look in the directory:
+    order_of_accuracy/<component>/<test>

@@ -1,0 +1,257 @@
+<?xml version='1.0' encoding='ISO-8859-1' ?>
+<!-- <!DOCTYPE Uintah_specification SYSTEM "input.dtd"> -->
+<!-- @version: Updated 8/2/2005-->
+<!-- Units: length in um; time in us; weight in ug-->
+
+<Uintah_specification>
+
+   <Meta>
+       <title>SIF calculation for polishing simulation</title>
+   </Meta>
+
+   <SimulationComponent type="mpmf" />
+
+   <Time>
+       <maxTime>400.0e-3</maxTime>
+       <initTime>0.0</initTime>
+       <delt_min>0.0</delt_min>
+       <delt_max>8.0e-3</delt_max>
+       <timestep_multiplier>0.8</timestep_multiplier>
+   </Time>
+   <DataArchiver>
+        <filebase>NF.uda</filebase>
+       <outputInterval>8.0e-3</outputInterval>
+        <save label = "p.x"/>
+        <save label = "p.volume"/>
+       <!--<save label = "p.stress"/>
+        <save label = "KineticEnergy"/>
+       <save label = "TotalMass"/>
+       <save label = "StrainEnergy"/>
+       <save label = "CenterOfMassPosition"/>
+       <save label = "TotalMomentum"/>
+        <save label = "p.particleID"/>
+       <save label = "g.mass"/>
+       <save label = "g.stressFS"/>-->
+        <save_crack_geometry>true</save_crack_geometry>
+
+       <checkpoint cycle = "2" interval = "80.0e-3"/>
+   </DataArchiver>
+
+    <MPM>
+       <time_integrator>fracture</time_integrator>
+        <use_load_curves> true </use_load_curves>
+        <calculate_fracture_parameters>true</calculate_fracture_parameters>
+        <use_volume_integral>false</use_volume_integral>
+        <do_crack_propagation>false</do_crack_propagation>
+    </MPM>
+
+    <PhysicalConstants>
+       <gravity>[0,0,0]</gravity>
+    </PhysicalConstants>
+
+    <MaterialProperties>
+       <MPM>
+           <material>
+              <density>3.5e-6</density>
+              <constitutive_model type="hypo_elastic"> 
+                 <G>385.417</G>
+                 <K>513.889</K>
+               </constitutive_model>
+              <thermal_conductivity>1.0e-3</thermal_conductivity>
+              <specific_heat>5</specific_heat>
+              <geom_object>
+                  <cylinder label = "particle">
+                        <bottom> [4.0, 24.0, 0.0]   </bottom>
+                        <top>    [4.0, 24.0, 1.0]   </top>
+                        <radius> 4.0 </radius>
+                  </cylinder>
+                  <res>[2,2,2]</res>
+                  <velocity>[100.0, 0.0, 0.0]</velocity>
+                  <temperature>0</temperature>
+               </geom_object>
+            </material>
+
+            <material>
+                <density>2.201e-6</density>
+                <constitutive_model type="hypo_elastic">
+                   <G>31.336</G>
+                   <K>35.637</K>
+                   <fracture_toughness_curve>
+                     <crack_propagation_criterion>empirical_criterion</crack_propagation_criterion>
+                     <p>2.</p>
+                     <q>2.</q>
+                     <r>0.817</r>
+                     <point>
+                       <Vc>0.</Vc>
+                       <KIc>0.125</KIc>
+                     </point>
+                   </fracture_toughness_curve>
+                </constitutive_model>
+                <thermal_conductivity>1.0e-3</thermal_conductivity>
+                <specific_heat>5</specific_heat>
+                <geom_object>
+                    <box label = "glass">
+                        <min> [0.0,   0.0, 0.0] </min>
+                        <max> [44.0, 20.0, 1.0] </max>
+                    </box>
+                    <res>[2,2,2]</res>
+                    <velocity>[0.0, 0.0, 0.0]</velocity>
+                    <temperature>12</temperature>
+                </geom_object>
+                <crack>
+                   <type>friction</type>
+                   <mu>0.0</mu>
+                   <crack_segments>
+                      <curved_quad>
+                        <p1> [9.1, 17.1, -0.25]  </p1>
+                        <p2> [9.1, 17.1,  1.25]  </p2>
+                        <p3> [12.1, 20.1, 1.25] </p3>
+                        <p4> [12.1, 20.1,-0.25] </p4>
+                        <resolution_straight_sides>1</resolution_straight_sides>
+                        <points_curved_side2>
+                           <point><val>[ 9.6,  17.33, 1.25]</val></point>
+                           <point><val>[10.1,  17.66, 1.25]</val></point>
+                           <point><val>[10.6,  18.05, 1.25]</val></point>
+                           <point><val>[11.05, 18.465,1.25]</val></point>
+                           <point><val>[11.287,18.78, 1.25]</val></point>
+                           <point><val>[11.6,  19.19, 1.25]</val></point>
+                           <point><val>[11.84, 19.6,  1.25]</val></point>
+                        </points_curved_side2>
+                        <points_curved_side4>
+                           <point><val>[ 9.6,  17.33, -.25]</val></point>
+                           <point><val>[10.1,  17.66, -.25]</val></point>
+                           <point><val>[10.6,  18.05, -.25]</val></point>
+                           <point><val>[11.05, 18.465,-.25]</val></point>
+                           <point><val>[11.287,18.78, -.25]</val></point>
+                           <point><val>[11.6,  19.19, -.25]</val></point>
+                           <point><val>[11.84, 19.6,  -.25]</val></point>
+                        </points_curved_side4>
+                        <crack_front_sides>YNNN</crack_front_sides>
+                        <repetition>5</repetition>
+                        <offset>[6.0, 0.0, 0.0]</offset>
+                      </curved_quad>
+                   </crack_segments>
+                </crack>
+           </material>
+
+           <contact>
+             <type>friction</type>
+              <mu>0.1</mu>
+             <materials>[0]</materials>
+           </contact>
+       </MPM>
+
+    </MaterialProperties>
+       
+    <Grid>
+        <Level>
+            <Box label = "1">
+                <lower>[-4.0, 0.0, -2.0]</lower>
+                <upper>[48.0, 36.0, 3.0]</upper>
+                <resolution>[52,36,5]</resolution>
+                <patches>[4,4,1]</patches>
+            </Box>
+        </Level>
+        <BoundaryConditions>
+           <Face side = "x-">
+                  <BCType id = "all" var = "Dirichlet" label = "Velocity">
+                        <value> [0.0,0.0,0.0] </value>
+                   </BCType>
+           </Face>
+           <Face side = "x+">
+                  <BCType id = "all" var = "Dirichlet" label = "Velocity">
+                      <value> [0.0,0.0,0.0] </value>
+                  </BCType>
+           </Face>
+           <Face side = "y-">
+                  <BCType id = "all" var = "Dirichlet" label = "Velocity">
+                      <value> [0.0,0.0,0.0] </value>
+                  </BCType>
+           </Face>
+           <Face side = "y+">
+                  <BCType id = "all" var = "Dirichlet" label = "Velocity">
+                      <value> [0.0,0.0,0.0] </value>
+                 </BCType>
+           </Face>
+           <Face side = "z-">
+             <BCType id = "all" var = "symmetry" label = "Symmetric"> </BCType>
+           </Face>
+           <Face side = "z+">
+             <BCType id = "all" var = "symmetry" label = "Symmetric"> </BCType>
+           </Face>
+        </BoundaryConditions>
+    </Grid>
+
+    <PhysicalBC>
+       <MPM>
+       <pressure>
+         <geom_object>
+           <box label = "top">
+             <min> [2.0, 28.0,    0.0] </min>
+             <max> [6.0, 28.0001, 1.0] </max>
+           </box>
+         </geom_object>
+         <load_curve>
+           <id>1</id>
+           <time_point>
+             <time> 0.0 </time>
+             <load> 0.0 </load>
+           </time_point>
+           <time_point>
+             <time> 25.0e-3 </time>
+             <load> -62.5e-3 </load>
+           </time_point>
+           <time_point>
+             <time> 50.0e-3 </time>
+             <load> -100.0e-3 </load>
+           </time_point>
+           <time_point>
+             <time> 70.0e-3 </time>
+             <load> -125.0e-3 </load>
+           </time_point>
+           <time_point>
+             <time> 400.0e-3 </time>
+             <load> -125.0e-3 </load>
+           </time_point>
+         </load_curve>
+       </pressure>
+       <pressure>
+         <geom_object>
+           <box label = "left">
+             <min> [0.0,    22.0, 0.0] </min>
+             <max> [0.0001, 26.0, 1.0] </max>
+           </box>
+         </geom_object>
+         <load_curve>
+           <id>2</id>
+           <time_point>
+             <time> 0 </time>
+             <load> 0 </load>
+           </time_point>
+           <time_point>
+             <time> 70.0e-3 </time>
+             <load> 0.0 </load>
+           </time_point>
+           <time_point>
+             <time> 80.0e-3 </time>
+             <load> 6.25e-3 </load>
+           </time_point>
+           <time_point>
+             <time> 90.0e-3 </time>
+             <load> 10.0e-3 </load>
+           </time_point>
+           <time_point>
+             <time> 100.0e-3 </time>
+             <load> 12.5e-3 </load>
+           </time_point>
+           <time_point>
+             <time> 400.0e-3 </time>
+             <load> 12.5e-3 </load>
+           </time_point>
+         </load_curve>
+       </pressure>
+       </MPM>
+    </PhysicalBC>
+    
+</Uintah_specification>
+

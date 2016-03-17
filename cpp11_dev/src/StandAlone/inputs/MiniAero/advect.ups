@@ -1,0 +1,174 @@
+<?xml version="1.0" encoding="iso-8859-1"?>
+
+
+
+<Uintah_specification> 
+<!--Please use a consistent set of units, (mks, cgs,...)-->
+
+   <Meta>
+       <title>Advection test</title>
+   </Meta>
+   
+   <SimulationComponent type="miniaero" />
+   
+   <!-- <Scheduler type="Unified"/> -->
+   <Scheduler type="MPI"/>
+
+    <!--____________________________________________________________________-->
+    <!--      T  I  M  E     V  A  R  I  A  B  L  E  S                      -->
+    <!--____________________________________________________________________-->
+   <Time>
+       <maxTime>            0.01        </maxTime>
+       <initTime>           0.0         </initTime>
+       <delt_min>           1e-5         </delt_min>
+       <delt_max>           1.0         </delt_max>
+       <delt_init>          1.0e-9      </delt_init>
+       <timestep_multiplier>1.0         </timestep_multiplier>
+   </Time>
+   
+    <!--____________________________________________________________________-->
+    <!--      G  R  I  D     V  A  R  I  A  B  L  E  S                      -->
+    <!--____________________________________________________________________-->
+  <Grid>
+  
+  <BoundaryConditions>
+      <Face side = "x-">
+        <BCType id = "0"   label = "Pressure"     var = "Neumann"> 
+                            <value> 0. </value> 
+        </BCType> 
+        <BCType id = "0"   label = "Velocity"     var = "Neumann">
+                              <value> [0.,0.,0.] </value>
+        </BCType>
+        <BCType id = "0" 
+                           label = "Temperature"  var = "Neumann"> 
+                            <value> 0.0 </value>
+        </BCType>
+        <BCType id = "0"   label = "Density"      var = "Neumann">
+                              <value> 0.0 </value>
+        </BCType>
+      </Face>
+      <Face side = "x+">
+        <BCType id = "0"   label = "Pressure"     var = "Neumann">
+                              <value> 0. </value>                
+        </BCType>
+        <BCType id = "0"   label = "Velocity"     var = "Neumann">
+                              <value> [0.,0.,0.] </value>
+        </BCType>
+        <BCType id = "0"   label = "Temperature"  var = "Neumann">
+                              <value> 0.0 </value>
+        </BCType>
+        <BCType id = "0"   label = "Density"      var = "Neumann">
+                              <value> 0.0 </value>
+        </BCType>
+      </Face>
+      <Face side = "y-">
+        <BCType id = "0"   label = "Pressure"     var = "Neumann">
+                              <value> 0. </value>
+        </BCType>
+        <BCType id = "0"   label = "Velocity"     var = "Neumann">
+                              <value> [0.,0.,0.] </value>
+        </BCType>
+        <BCType id = "0"   label = "Temperature"  var = "Neumann">
+                              <value> 0.0 </value>
+        </BCType>
+        <BCType id = "0"   label = "Density"      var = "Neumann">
+                              <value> 0.0 </value>
+        </BCType>
+      </Face>                  
+      <Face side = "y+">
+        <BCType id = "0"   label = "Pressure"     var = "Neumann">
+                              <value> 0. </value>
+        </BCType>
+        <BCType id = "0"   label = "Velocity"     var = "Neumann">
+                              <value> [0.,0.,0.] </value>
+        </BCType>
+        <BCType id = "0"   label = "Temperature"  var = "Neumann">
+                              <value> 0.0 </value>
+        </BCType>
+        <BCType id = "0"   label = "Density"      var = "Neumann">
+                              <value> 0.0 </value>       
+        </BCType>
+      </Face>
+      <Face side = "z-">
+        <BCType id = "0"   label = "Pressure"     var = "Neumann">
+                              <value> 0. </value>
+        </BCType>
+        <BCType id = "0"   label = "Velocity"     var = "Neumann">
+                              <value> [0.,0.,0.] </value>
+        </BCType>
+        <BCType id = "0"   label = "Temperature"  var = "Neumann">
+                              <value> 0.0 </value>
+        </BCType>
+        <BCType id = "0"   label = "Density"      var = "Neumann">
+                              <value> 0.0 </value>       
+        </BCType>
+      </Face>
+      <Face side = "z+">
+        <BCType id = "0"   label = "Pressure"     var = "Neumann">
+                              <value> 0. </value>
+        </BCType>
+        <BCType id = "0"   label = "Velocity"     var = "Neumann">
+                              <value> [0.,0.,0.] </value>
+        </BCType>
+        <BCType id = "0"   label = "Temperature"  var = "Neumann">
+                              <value> 0.0 </value>
+        </BCType>
+        <BCType id = "0"   label = "Density"      var = "Neumann">
+                              <value> 0.0 </value>       
+        </BCType>
+      </Face> 
+    </BoundaryConditions> 
+   
+       <Level>
+           <Box label="1">
+              <lower>        [0,0,0]    </lower>
+              <upper>        [5,5,5]    </upper>
+              <extraCells>   [1,1,1]    </extraCells>
+              <patches>      [1,1,1]    </patches>
+           </Box>
+           <spacing>         [1,1,1]    </spacing>
+       </Level>
+    </Grid>    
+    <!--____________________________________________________________________-->
+    <!--      O  U  P  U  T     V  A  R  I  A  B  L  E  S                   -->
+    <!--____________________________________________________________________-->
+   <DataArchiver>
+      <filebase>advect.uda</filebase>
+      <outputInitTimestep/>
+      <outputTimestepInterval>1</outputTimestepInterval>
+      
+      <save label="velocity"/>
+      <save label="temperature"/> 
+      <save label="density"/>
+      <save label="pressure"/>
+      <save label="flux_mass"/>
+      <save label="flux_mom"/>
+      <save label="flux_energy"/>
+      <checkpoint interval="0.005" cycle="2"/> 
+   </DataArchiver>
+
+    
+    
+    <!--____________________________________________________________________-->
+    <!--      material Properties and Initial Conditions                    -->
+    <!--____________________________________________________________________-->                      
+         <MiniAero>
+           <gamma>              1.4                     </gamma>
+           <R>                287.0                     </R>
+           <CFL>                0.5                     </CFL>
+           <Is_visc_flow>      false                    </Is_visc_flow>
+           <Is_second_order>      false                 </Is_second_order>
+           <RKSteps>            1                       </RKSteps>
+           <geom_object>
+                <box label="wholeDomain">
+                    <min>       [ 0.0, 0.0, 0.0 ]       </min>
+                    <max>       [ 6.0, 6.0, 6.0 ]       </max>
+                </box>
+               <res>                 [2,2,2]            </res>
+               <velocity>      [1.,1.,1.]               </velocity>
+               <density>       1.1792946927374306000e+00</density>
+               <pressure>      101325.0                 </pressure>     
+               <temperature>   300.0                    </temperature>
+           </geom_object>
+         </MiniAero>
+</Uintah_specification>
