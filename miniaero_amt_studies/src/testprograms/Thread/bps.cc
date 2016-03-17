@@ -37,13 +37,13 @@
 #include <unistd.h>
 
 using std::cerr;
+using namespace Uintah;
 
-using namespace SCIRun;
 
-Mutex io("io lock");
+Uintah::Mutex io("io lock");
 
-class BPS : public Runnable {
-    Barrier* barrier;
+class BPS : public Uintah::Runnable {
+  Uintah::Barrier* barrier;
     int count;
     int proc;
     int np;

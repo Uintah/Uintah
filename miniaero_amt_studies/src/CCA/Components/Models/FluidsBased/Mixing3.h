@@ -150,7 +150,7 @@ WARNING
     double dpress;
     double dmf;
     double dtfactor;
-    SCIRun::FastHashTable<M3Key> table;
+    Uintah::FastHashTable<M3Key> table;
     double lookup(int nsp, int idt, int itemp, int ipress, int* imf, double* outmf);
     long nlook;
     long nmiss;

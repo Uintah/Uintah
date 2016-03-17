@@ -108,7 +108,6 @@ ALL_PSE_LIBS =             \
         Core/Math          \
         Core/OS            \
         Core/Parallel      \
-        Core/Persistent    \
         Core/ProblemSpec   \
         Core/Thread        \
         Core/Util          \
@@ -172,7 +171,6 @@ ALL_STATIC_PSE_LIBS =                   \
     Core/Disclosure                     \
     Core/Util                           \
     Core/Thread                         \
-    Core/Persistent                     \
     Core/Geometry                       \
     Core/IO                             \
     Core/Exceptions                     \

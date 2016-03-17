@@ -28,7 +28,6 @@
 #include <Core/Malloc/Allocator.h>
 #include <Core/Math/MiscMath.h>
 
-using namespace SCIRun;
 using namespace Uintah;
 using namespace std;
     

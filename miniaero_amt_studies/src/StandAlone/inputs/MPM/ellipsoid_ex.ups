@@ -56,16 +56,28 @@
               <thermal_conductivity>1.0</thermal_conductivity>
               <specific_heat>5</specific_heat>
               <geom_object>
-                  <ellipsoid label = "gp1">
+                  <ellipsoid label = "aligned">
                      <origin>[0.5,0.5,0.5]</origin>
                      <rx> 0.2 </rx>
                      <ry> 0.3 </ry>
                      <rz> 0.5 </rz>
                   </ellipsoid>
                   <res>[2,2,2]</res>
-                  <velocity>[2.0,2.0,0]</velocity>
+                  <velocity>[2.0,2.0,2.0]</velocity>
                   <temperature>12</temperature>
                   <color>             0               </color>
+               </geom_object>
+              <geom_object>
+                  <ellipsoid label = "skewed">
+                     <origin>[1.5,1.5,1.5]</origin>
+                     <v1>[ 0.2,-0.4, 0.25]</v1>
+                     <v2>[ 0.4, 0.2, 0.0]</v2>
+                     <v3>[-0.1, 0.2, 0.4]</v3>
+                  </ellipsoid>
+                  <res>[2,2,2]</res>
+                  <velocity>[-2.0,-2.0,-2.0]</velocity>
+                  <temperature>12</temperature>
+                  <color>             1               </color>
                </geom_object>
            </material>
 
@@ -73,9 +85,7 @@
              <type>null</type>
            </contact>
        </MPM>
-
     </MaterialProperties>
-       
     <Grid>
        <BoundaryConditions>
           <Face side = "x-">
@@ -108,7 +118,7 @@
        <Level>
            <Box label = "1">
               <lower>[0,0,0]</lower>
-              <upper>[1.0,1.0,1.0]</upper>
+              <upper>[2.0,2.0,2.0]</upper>
               <resolution>[40,40,40]</resolution>
               <patches>[2,2,2]</patches>
               <extraCells> [1,1,1]            </extraCells>

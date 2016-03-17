@@ -54,8 +54,8 @@ using namespace std;
 using namespace Uintah;
 
 // sync cout/cerr so they are readable when output by multiple threads
-extern SCIRun::Mutex coutLock;
-extern SCIRun::Mutex cerrLock;
+extern Uintah::Mutex coutLock;
+extern Uintah::Mutex cerrLock;
 
 extern DebugStream taskdbg;
 extern DebugStream waitout;
@@ -81,6 +81,16 @@ DebugStream simulate_multiple_gpus("GPUSimulateMultiple", false);
 DebugStream gpudbg("GPUDataWarehouse", false);
 #endif
 
+
+#ifdef HAVE_CUDA
+
+  //TODO, should be deallocated
+  std::map <unsigned int, queue<cudaStream_t*> > * UnifiedScheduler::idleStreams = new std::map <unsigned int, queue<cudaStream_t*> >;
+
+  CrowdMonitor UnifiedScheduler::idleStreamsLock_("CUDA streams lock");
+#endif
+//std::multimap<GPUDataWarehouse::gpuMemoryPoolItem, GPUDataWarehouse::gpuMemoryData>* GPUDataWarehouse::gpuMemoryPool = new std::multimap<GPUDataWarehouse::gpuMemoryPoolItem, GPUDataWarehouse::gpuMemoryData>;
+
 //______________________________________________________________________
 //
 
@@ -89,9 +99,6 @@ UnifiedScheduler::UnifiedScheduler(const ProcessorGroup* myworld,
     MPIScheduler(myworld, oport, parentScheduler),
     d_nextsignal("next condition"), d_nextmutex("next mutex"),
     schedulerLock("scheduler lock")
-#ifdef HAVE_CUDA
-    , idleStreamsLock_("CUDA streams lock")
-#endif
 {
 #ifdef HAVE_CUDA
   if (Uintah::Parallel::usingDevice()) {
@@ -99,7 +106,7 @@ UnifiedScheduler::UnifiedScheduler(const ProcessorGroup* myworld,
 
     // we need one of these for each GPU, as each device will have it's own CUDA context
     for (int i = 0; i < numDevices_; i++) {
-      getCudaStream(i);
+      getCudaStreamFromPool(i);
     }
 
     // disable memory windowing on variables.  This will ensure that
@@ -172,7 +179,7 @@ UnifiedScheduler::~UnifiedScheduler()
     }
   }
 #ifdef HAVE_CUDA
-  freeCudaStreams();
+  //freeCudaStreams();
 #endif
 }
 
@@ -349,9 +356,10 @@ UnifiedScheduler::problemSetup( const ProblemSpecP&     prob_spec,
 SchedulerP
 UnifiedScheduler::createSubScheduler()
 {
-  UnifiedScheduler* subsched = scinew UnifiedScheduler(d_myworld, m_outPort, this);
-  UintahParallelPort* lbp = getPort("load balancer");
-  subsched->attachPort("load balancer", lbp);
+  UintahParallelPort * lbp      = getPort("load balancer");
+  UnifiedScheduler   * subsched = scinew UnifiedScheduler( d_myworld, m_outPort_, this );
+
+  subsched->attachPort( "load balancer", lbp );
   subsched->d_sharedState = d_sharedState;
   subsched->numThreads_ = Uintah::Parallel::getNumThreads() - 1;
 
@@ -405,43 +413,48 @@ UnifiedScheduler::runTask( DetailedTask*         task,
     waittimesLock.unlock();
   }
 
-  // -------------------------< begin task execution timing >-------------------------
-  double task_start_time = Time::currentSeconds();
+  //Only execute CPU or GPU tasks.  Don't execute postGPU tasks a second time.
+  if ( event == Task::CPU || event == Task::GPU) {
+    // -------------------------< begin task execution timing >-------------------------
+    double task_start_time = Time::currentSeconds();
 
-  if (trackingVarsPrintLocation_ & SchedulerCommon::PRINT_BEFORE_EXEC) {
-    printTrackedVars(task, SchedulerCommon::PRINT_BEFORE_EXEC);
-  }
-
-  std::vector<DataWarehouseP> plain_old_dws(dws.size());
-  for (int i = 0; i < (int)dws.size(); i++) {
-    plain_old_dws[i] = dws[i].get_rep();
-  }
-  task->doit(d_myworld, dws, plain_old_dws, event);
-
-  if (trackingVarsPrintLocation_ & SchedulerCommon::PRINT_AFTER_EXEC) {
-    printTrackedVars(task, SchedulerCommon::PRINT_AFTER_EXEC);
-  }
-
-  double total_task_time = Time::currentSeconds() - task_start_time;
-  // -------------------------< end task execution timing >-------------------------
-
-  dlbLock.lock();
-  {
-    if (execout.active()) {
-      exectimes[task->getTask()->getName()] += total_task_time;
+    if (trackingVarsPrintLocation_ & SchedulerCommon::PRINT_BEFORE_EXEC) {
+      printTrackedVars(task, SchedulerCommon::PRINT_BEFORE_EXEC);
     }
 
-    // If I do not have a sub scheduler
-    if (!task->getTask()->getHasSubScheduler()) {
-      //add my task time to the total time
-      mpi_info_[TotalTask] += total_task_time;
-      if (!d_sharedState->isCopyDataTimestep() && task->getTask()->getType() != Task::Output) {
-        // add contribution of task execution time to load balancer
-        getLoadBalancer()->addContribution(task, total_task_time);
+    std::vector<DataWarehouseP> plain_old_dws(dws.size());
+    for (int i = 0; i < (int)dws.size(); i++) {
+      plain_old_dws[i] = dws[i].get_rep();
+    }
+
+    task->doit(d_myworld, dws, plain_old_dws, event);
+
+
+    if (trackingVarsPrintLocation_ & SchedulerCommon::PRINT_AFTER_EXEC) {
+      printTrackedVars(task, SchedulerCommon::PRINT_AFTER_EXEC);
+    }
+
+    double total_task_time = Time::currentSeconds() - task_start_time;
+    // -------------------------< end task execution timing >-------------------------
+
+    dlbLock.lock();
+    {
+      if (execout.active()) {
+        exectimes[task->getTask()->getName()] += total_task_time;
+      }
+
+      // If I do not have a sub scheduler
+      if (!task->getTask()->getHasSubScheduler()) {
+        //add my task time to the total time
+        mpi_info_[TotalTask] += total_task_time;
+        if (!d_sharedState->isCopyDataTimestep() && task->getTask()->getType() != Task::Output) {
+          // add contribution of task execution time to load balancer
+          getLoadBalancer()->addContribution(task, total_task_time);
+        }
       }
     }
+    dlbLock.unlock();
   }
-  dlbLock.unlock();
 
   // For CPU and postGPU task runs, post MPI sends and call task->done;
   if (event == Task::CPU || event == Task::postGPU) {
@@ -887,7 +900,7 @@ UnifiedScheduler::runTasks( int thread_id )
        */
       else if (usingDevice == true
           && dts->numVerifyDataTransferCompletion() > 0
-          && dts->peekNextVerifyDataTransferCompletionTask()->checkCUDAStreamDone()) {
+          && dts->peekNextVerifyDataTransferCompletionTask()->checkAllCudaStreamsDoneForThisTask()) {
           readyTask = dts->getNextVerifyDataTransferCompletionTask();
           gpuVerifyDataTransferCompletion = true;
           havework = true;
@@ -907,7 +920,7 @@ UnifiedScheduler::runTasks( int thread_id )
        */
       else if (usingDevice == true
           && dts->numFinalizeDevicePreparation() > 0
-          && dts->peekNextFinalizeDevicePreparationTask()->checkCUDAStreamDone()) {
+          && dts->peekNextFinalizeDevicePreparationTask()->checkAllCudaStreamsDoneForThisTask()) {
           readyTask = dts->getNextFinalizeDevicePreparationTask();
           gpuFinalizeDevicePreparation = true;
           havework = true;
@@ -924,7 +937,7 @@ UnifiedScheduler::runTasks( int thread_id )
        */
       else if (usingDevice == true
           && dts->numInitiallyReadyDeviceTasks() > 0
-          && dts->peekNextInitiallyReadyDeviceTask()->checkCUDAStreamDone()) {
+          && dts->peekNextInitiallyReadyDeviceTask()->checkAllCudaStreamsDoneForThisTask()) {
 
         // printf("Ghost cell copies done...\n");
         // All of this task's h2d copies is complete, so add it to the completion
@@ -946,7 +959,7 @@ UnifiedScheduler::runTasks( int thread_id )
        */
       else if (usingDevice == true
           && dts->numFinalizeHostPreparation() > 0
-          && dts->peekNextFinalizeHostPreparationTask()->checkCUDAStreamDone()) {
+          && dts->peekNextFinalizeHostPreparationTask()->checkAllCudaStreamsDoneForThisTask()) {
           readyTask = dts->getNextFinalizeHostPreparationTask();
           cpuFinalizeHostPreparation = true;
           havework = true;
@@ -963,12 +976,14 @@ UnifiedScheduler::runTasks( int thread_id )
        */
       else if (usingDevice == true
                && dts->numInitiallyReadyHostTasks() > 0
-               && dts->peekNextInitiallyReadyHostTask()->checkAllCUDAStreamsDone()) {
-
+               && dts->peekNextInitiallyReadyHostTask()->checkAllCudaStreamsDoneForThisTask()) {
 
         readyTask = dts->getNextInitiallyReadyHostTask();
+
         markTaskConsumed(numTasksDone, currphase, numPhases, readyTask);
-        reclaimCudaStreams(readyTask);
+
+        reclaimCudaStreamsIntoPool(readyTask);
+
         cpuRunReady = true;
         havework = true;
         break;
@@ -985,7 +1000,7 @@ UnifiedScheduler::runTasks( int thread_id )
        */
       else if (usingDevice == true
           && dts->numCompletionPendingDeviceTasks() > 0
-          && dts->peekNextCompletionPendingDeviceTask()->checkCUDAStreamDone()) {
+          && dts->peekNextCompletionPendingDeviceTask()->checkAllCudaStreamsDoneForThisTask()) {
 
         readyTask = dts->getNextCompletionPendingDeviceTask();
         havework = true;
@@ -1051,6 +1066,7 @@ UnifiedScheduler::runTasks( int thread_id )
         //Ghost cells from GPU other device to variable already on GPU -> new MPI code, then initiateH2DCopies(), and copied with performInternalGhostCellCopies()
         //Ghost cells from GPU same device to variable not yet on GPU -> managed in initiateH2DCopies(), and copied with performInternalGhostCellCopies()
         //Ghost cells from GPU same device to variable already on GPU -> Managed in initiateH2DCopies()?
+        assignDevicesAndStreams(readyTask);
         initiateH2DCopies(readyTask);
         syncTaskGpuDWs(readyTask);
 
@@ -1088,13 +1104,10 @@ UnifiedScheduler::runTasks( int thread_id )
           //So jump to the gpuRunReady step.
           dts->addInitiallyReadyDeviceTask(readyTask);
         }
-
-
       } else if (gpuRunReady) {
         runTask(readyTask, currentIteration, thread_id, Task::GPU);
         dts->addCompletionPendingDeviceTask(readyTask);
       } else if (gpuPending) {
-
         //The GPU task has completed. All of the computes data is now valid and should be marked as such.
 
         //Go through all computes for the task. Mark them as valid.
@@ -1103,11 +1116,11 @@ UnifiedScheduler::runTasks( int thread_id )
         //The Task GPU Datawarehouses are no longer needed.  Delete them on the host and device.
         readyTask->deleteTaskGpuDataWarehouses();
 
-        // run post GPU part of task
-        // Note: This is very likely to not be needed anymore.
+        // Run post GPU part of task.  It won't actually rerun the task
+        // But it will run post computation management logic if needed.
         runTask(readyTask, currentIteration, thread_id, Task::postGPU);
         // recycle this task's stream
-        reclaimCudaStreams(readyTask);
+        reclaimCudaStreamsIntoPool(readyTask);
       }
 #endif
       else {
@@ -1121,38 +1134,26 @@ UnifiedScheduler::runTasks( int thread_id )
           //which can be even costlier overall.  So we do the check here.)
           //So check everything, except for ouputVariables tasks when it's not an output timestep.
 
-          //TODO, this logic could be put into the scheduler up above, not here.  It could also save some stream assignments...
-
-          assignDevicesAndStreams(readyTask);
-          if ((m_outPort->isOutputTimestep())
+          if ((m_outPort_->isOutputTimestep())
               || ((readyTask->getTask()->getName() != "DataArchiver::outputVariables")
                   && (readyTask->getTask()->getName() != "DataArchiver::outputVariables(checkpoint)"))) {
-          //  if (readyTask->getTask()->getName()
-          //      == "DataArchiver::outputVariables(checkpoint)") {
-          //    cerr
-          //        << "WARNING: A bug in the unified scheduler means checkpoint DataArchiver can conflict with regular data archiving."
-          //        << endl;
-          // }
-
+            assignDevicesAndStreams(readyTask);
             initiateD2H(readyTask);
+
           }
           dts->addFinalizeHostPreparation(readyTask);
         } else if (cpuFinalizeHostPreparation) {
-          //See comment above why this exists
-          //if (Uintah::Parallel::usingDevice()
-          //    && (m_outPort->isOutputTimestep()
-          //        || ((readyTask->getTask()->getName() != "DataArchiver::outputVariables")
-          //            && (readyTask->getTask()->getName() != "DataArchiver::outputVariables(checkpoint)")))) {
-          //  cout << myRankThread() << " for Task() " << readyTask->getName()
-          //       << " markHostRequiresDataAsValid " << cpuTaskReadyToRun << endl;
           markHostRequiresDataAsValid(readyTask);
           if (!allHostVarsProcessingReady(readyTask)) {
             //Some vars aren't valid and ready,  We must be waiting on another task to finish
             //copying in some of the variables we need.
             dts->addFinalizeHostPreparation(readyTask);
           }  else {
+            reclaimCudaStreamsIntoPool(readyTask);
             dts->addInitiallyReadyHostTask(readyTask);
           }
+
+
         } else if (cpuRunReady) {
 #endif
           //run CPU task.
@@ -1719,11 +1720,11 @@ void UnifiedScheduler::postH2DCopies(DetailedTask* dtask) {
    << std::setw(10) << "Bytes: "  << std::dec << host_bytes <<", "
    << std::setw(10) << "nCells [" << nCells.x <<","<<nCells.y <<"," << nCells.z <<"]"
    << " from " << std::hex << host_ptr << " to " << std::hex <<  device_ptr
-   << ", using stream " << std::hex << dtask->getCUDAStream()  << std::endl;
+   << ", using stream " << std::hex << dtask->getCudaStreamForThisTask()  << std::endl;
    }
    cerrLock.unlock();
    }
-   cudaStream_t stream = *(dtask->getCUDAStream());
+   cudaStream_t stream = *(dtask->getCudaStreamForThisTask());
    CUDA_RT_SAFE_CALL(retVal = cudaMemcpyAsync(device_ptr, host_ptr, host_bytes, cudaMemcpyHostToDevice, stream));
    } //lock
    h2dRequiresLock_.writeUnlock();
@@ -1777,11 +1778,11 @@ void UnifiedScheduler::postH2DCopies(DetailedTask* dtask) {
    << " Post H2D copy of REQUIRES (" << std::setw(26) << reqVarName <<  "), L-" << levelID << ", patch: " << patchID<< ", "
    << "Bytes = "  << std::dec << host_bytes
    << " from " << std::hex << host_ptr << " to " << std::hex <<  device_ptr
-   << ", using stream " << std::hex << dtask->getCUDAStream() << std::endl;
+   << ", using stream " << std::hex << dtask->getCudaStreamForThisTask() << std::endl;
    }
    cerrLock.unlock();
    }
-   cudaStream_t stream = *(dtask->getCUDAStream());
+   cudaStream_t stream = *(dtask->getCudaStreamForThisTask());
    CUDA_RT_SAFE_CALL(retVal = cudaMemcpyAsync(device_var.getPointer(), host_ptr, host_bytes, cudaMemcpyHostToDevice, stream));
    }
    h2dRequiresLock_.writeUnlock();
@@ -1833,11 +1834,11 @@ void UnifiedScheduler::postH2DCopies(DetailedTask* dtask) {
    << " Post H2D copy of REQUIRES (" << std::setw(26) << reqVarName <<  "), L-" << levelID << ", patch: " << patchID<< ", "
    << "Bytes: "  << std::dec << host_bytes
    << " from " << std::hex << host_ptr << " to " << std::hex <<  device_ptr
-   << ", using stream " << std::hex << dtask->getCUDAStream()  << std::endl;
+   << ", using stream " << std::hex << dtask->getCudaStreamForThisTask()  << std::endl;
    }
    cerrLock.unlock();
    }
-   cudaStream_t stream = *(dtask->getCUDAStream());
+   cudaStream_t stream = *(dtask->getCudaStreamForThisTask());
    CUDA_RT_SAFE_CALL(retVal = cudaMemcpyAsync(device_var.getPointer(), host_ptr, host_bytes, cudaMemcpyHostToDevice, stream));
    }
    h2dRequiresLock_.writeUnlock();
@@ -1980,7 +1981,7 @@ void UnifiedScheduler::preallocateDeviceMemory(DetailedTask* dtask) {
    <<  std::setw(10) << "Bytes: " << std::dec << num_bytes << ", "
    <<  std::setw(10) << " nCells [" << nCells.x <<","<<nCells.y <<"," << nCells.z <<"], "
    << " at " << std::hex << device_ptr << " on device " << std::dec << dtask->getDeviceNum()
-   << ", using stream " << std::hex << dtask->getCUDAStream()  << std::endl;
+   << ", using stream " << std::hex << dtask->getCudaStreamForThisTask()  << std::endl;
    }
    cerrLock.unlock();
    }
@@ -2007,7 +2008,7 @@ void UnifiedScheduler::preallocateDeviceMemory(DetailedTask* dtask) {
    << " Allocated device memory for COMPUTES (" << std::setw(26) << compVarName << "), L-" << levelID << ", patch: " << patchID
    << ", Bytes: " << std::dec << num_bytes
    << " at " << std::hex << device_ptr << " on device " << std::dec << dtask->getDeviceNum()
-   << ", using stream " << std::hex << dtask->getCUDAStream()  << std::endl;
+   << ", using stream " << std::hex << dtask->getCudaStreamForThisTask()  << std::endl;
    }
    cerrLock.unlock();
    }
@@ -2033,7 +2034,7 @@ void UnifiedScheduler::preallocateDeviceMemory(DetailedTask* dtask) {
    << " Allocated device memory for COMPUTES (" << std::setw(26) << compVarName << "), L-" << levelID << ", patch: " << patchID
    << ", Bytes: " << std::dec << num_bytes
    << " at " << std::hex << device_ptr << " on device " << std::dec << dtask->getDeviceNum()
-   << ", using stream " << std::hex << dtask->getCUDAStream()  << std::endl;
+   << ", using stream " << std::hex << dtask->getCudaStreamForThisTask()  << std::endl;
    }
    cerrLock.unlock();
    }
@@ -2184,11 +2185,11 @@ void UnifiedScheduler::postD2HCopies(DetailedTask* dtask) {
    << std::setw(10) << "Bytes: " << std::dec << host_bytes << ", "
    << std::setw(10) << "nCells [" << nCells.x <<","<<nCells.y <<"," << nCells.z <<"]"
    << ", from " << std::hex << device_ptr << " to " << std::hex << host_ptr
-   << ", using stream " << std::hex << dtask->getCUDAStream() << std::endl;
+   << ", using stream " << std::hex << dtask->getCudaStreamForThisTask() << std::endl;
    }
    cerrLock.unlock();
    }
-   CUDA_RT_SAFE_CALL(retVal = cudaMemcpyAsync(host_ptr, device_ptr, host_bytes, cudaMemcpyDeviceToHost, *dtask->getCUDAStream()));
+   CUDA_RT_SAFE_CALL(retVal = cudaMemcpyAsync(host_ptr, device_ptr, host_bytes, cudaMemcpyDeviceToHost, *dtask->getCudaStreamForThisTask()));
    if (retVal == cudaErrorLaunchFailure) {
    SCI_THROW(InternalError("Detected CUDA kernel execution failure on Task: "+ dtask->getName(), __FILE__, __LINE__));
    } else {
@@ -2228,11 +2229,11 @@ void UnifiedScheduler::postD2HCopies(DetailedTask* dtask) {
    << " Post D2H copy of COMPUTES (" << std::setw(26) << compVarName << "), L-" << levelID << ", patch: " << patchID<< ", "
    << std::setw(10) << "Bytes: " << std::dec << host_bytes
    << " from " << std::hex << device_ptr << " to " << std::hex << host_ptr
-   << ", using stream " << std::hex << dtask->getCUDAStream()<< std::endl;
+   << ", using stream " << std::hex << dtask->getCudaStreamForThisTask()<< std::endl;
    }
    cerrLock.unlock();
    }
-   CUDA_RT_SAFE_CALL(retVal = cudaMemcpyAsync(host_ptr, device_ptr, host_bytes, cudaMemcpyDeviceToHost, *dtask->getCUDAStream()));
+   CUDA_RT_SAFE_CALL(retVal = cudaMemcpyAsync(host_ptr, device_ptr, host_bytes, cudaMemcpyDeviceToHost, *dtask->getCudaStreamForThisTask()));
    if (retVal == cudaErrorLaunchFailure) {
    SCI_THROW(InternalError("Detected CUDA kernel execution failure on Task: "+ dtask->getName(), __FILE__, __LINE__));
    } else {
@@ -2271,11 +2272,11 @@ void UnifiedScheduler::postD2HCopies(DetailedTask* dtask) {
    << "Post D2H copy of COMPUTES ("<< std::setw(26) << compVarName << "), L-" << levelID << ", patch: " << patchID<< ", "
    << std::setw(10) << "Bytes: " << std::dec << host_bytes
    << " from " << std::hex << device_ptr << " to " << std::hex << host_ptr
-   << ", using stream " << std::hex << dtask->getCUDAStream() << std::endl;
+   << ", using stream " << std::hex << dtask->getCudaStreamForThisTask() << std::endl;
    }
    cerrLock.unlock();
    }
-   CUDA_RT_SAFE_CALL(retVal = cudaMemcpyAsync(host_ptr, device_ptr, host_bytes, cudaMemcpyDeviceToHost, *dtask->getCUDAStream()));
+   CUDA_RT_SAFE_CALL(retVal = cudaMemcpyAsync(host_ptr, device_ptr, host_bytes, cudaMemcpyDeviceToHost, *dtask->getCudaStreamForThisTask()));
    if (retVal == cudaErrorLaunchFailure) {
    SCI_THROW(InternalError("Detected CUDA kernel execution failure on Task: "+ dtask->getName(), __FILE__, __LINE__));
    } else {
@@ -3146,11 +3147,6 @@ void UnifiedScheduler::initiateH2DCopies(DetailedTask* dtask) {
 
   // We've now gathered up all possible things that need to go on the device.  Copy it over.
 
-  //Create the data warehouses that will be for this task and sent
-  //to the GPU.  This starts by allocating and sizing them.
-  //gpu_stats << myRankThread() << " Calling assignDevicesAndStreams for " << dtask->getName() << endl;
-  assignDevicesAndStreams(dtask);
-
   //gpu_stats << myRankThread() << " Calling createTaskGpuDWs for " << dtask->getName() << endl;
   createTaskGpuDWs(dtask);
 
@@ -3275,7 +3271,7 @@ void UnifiedScheduler::prepareDeviceVars(DetailedTask* dtask) {
                     "ERROR: GPU variable's device pointer was NULL",
                     __FILE__, __LINE__);
               }
-              cudaStream_t* stream = dtask->getCUDAStream(whichGPU);
+              cudaStream_t* stream = dtask->getCudaStreamForThisTask(whichGPU);
               OnDemandDataWarehouse::uintahSetCudaDevice(whichGPU);
               switch (it->second.dep->var->typeDescription()->getType()) {
               case TypeDescription::PerPatch: {
@@ -3534,7 +3530,7 @@ void UnifiedScheduler::prepareDeviceVars(DetailedTask* dtask) {
              //copy it to the device.  Any data warehouse that has requires should be doing copies here.
              //copyDataHostToDevice knows how to copy only the initialized portion of the array, and not
              //everything including the uninitialized garbage data in the array.
-             cudaError_t retVal = dws[dwIndex]->getGPUDW()->copyDataHostToDevice(taskID.c_str(), dtask->getCUDAStream());
+             cudaError_t retVal = dws[dwIndex]->getGPUDW()->copyDataHostToDevice(taskID.c_str(), dtask->getCudaStreamForThisTask());
              if (retVal != cudaSuccess) {
              SCI_THROW(InternalError("Detected CUDA kernel execution failure on Task: "+ dtask->getName(), __FILE__, __LINE__));
              }
@@ -4148,9 +4144,6 @@ void UnifiedScheduler::initiateD2H(DetailedTask* dtask) {
 
   const Task* task = dtask->getTask();
   dtask->clearPreparationCollections();
-
-  assignDevicesAndStreams(dtask);
-
   //The only thing we need to process is the requires.
 
   //Gather up all possible dependents and remove duplicate (we don't want to transfer some variables twice)
@@ -4249,7 +4242,7 @@ void UnifiedScheduler::initiateD2H(DetailedTask* dtask) {
     unsigned int deviceNum = GpuUtilities::getGpuIndexForPatch(patch);
     GPUDataWarehouse * gpudw = dw->getGPUDW(deviceNum);
     OnDemandDataWarehouse::uintahSetCudaDevice(deviceNum);
-    cudaStream_t* stream = dtask->getCUDAStream(deviceNum);
+    cudaStream_t* stream = dtask->getCudaStreamForThisTask(deviceNum);
 
     if (gpudw != NULL) {
       //gpu_stats << myRankThread() << "Checking status for var " << dependantVar->var->getName() << " patchID " << patchID
@@ -4561,7 +4554,7 @@ void UnifiedScheduler::initiateD2H(DetailedTask* dtask) {
   //CUDA_RT_SAFE_CALL(retVal = OnDemandDataWarehouse::uintahSetCudaDevice(device);
 
   //string taskID = dtask->getName();
-  //retVal = dws[dwmap[Task::NewDW]]->getGPUDW()->copyDataDeviceToHost(taskID.c_str(), dtask->getCUDAStream());
+  //retVal = dws[dwmap[Task::NewDW]]->getGPUDW()->copyDataDeviceToHost(taskID.c_str(), dtask->getCudaStreamForThisTask());
   //if (retVal != cudaSuccess) {
   //   printf("Error code is %d\n", retVal);
   //   SCI_THROW(InternalError("Detected CUDA kernel execution failure on Task: "+ dtask->getName(), __FILE__, __LINE__));
@@ -4603,13 +4596,13 @@ void UnifiedScheduler::copyAllDataD2H(DetailedTask* dtask) {
       int deviceNum = GpuUtilities::getGpuIndexForPatch(patches->get(i));
       OnDemandDataWarehouse::uintahSetCudaDevice(deviceNum);
 
-      cudaStream_t* stream = dtask->getCUDAStream(deviceNum);
+      cudaStream_t* stream = dtask->getCudaStreamForThisTask(deviceNum);
 
       //TODO: This should never set a CUDA stream.  Allocating streams should be
       //determined previously.
       if (stream == NULL) {
-        stream = getCudaStream(deviceNum);
-        dtask->setCUDAStream(deviceNum, stream);
+        stream = getCudaStreamFromPool(deviceNum);
+        dtask->setCudaStreamForThisTask(deviceNum, stream);
       }
 
       for (int j = 0; j < numMatls; j++) {
@@ -4710,7 +4703,7 @@ void UnifiedScheduler::copyAllDataD2H(DetailedTask* dtask) {
                         << "\", size = " << std::dec << host_bytes << " to "
                         << std::hex << host_ptr << " from " << std::hex
                         << device_ptr << ", using stream " << std::hex
-                        << dtask->getCUDAStream(0) << std::dec << endl;
+                        << dtask->getCudaStreamForThisTask(0) << std::dec << endl;
                   }
                   cerrLock.unlock();
                 }
@@ -4718,7 +4711,7 @@ void UnifiedScheduler::copyAllDataD2H(DetailedTask* dtask) {
 
                 //TODO: Get the correct stream for multi-GPU scenarios.
                 CUDA_RT_SAFE_CALL(retVal = cudaMemcpyAsync(host_ptr, device_ptr, host_bytes,
-                        cudaMemcpyDeviceToHost, *dtask->getCUDAStream(0)));
+                        cudaMemcpyDeviceToHost, *dtask->getCudaStreamForThisTask(0)));
                 if (retVal == cudaErrorLaunchFailure) {
                   SCI_THROW(
                       InternalError("Detected CUDA kernel execution failure on Task: "+ dtask->getName(), __FILE__, __LINE__));
@@ -4753,7 +4746,7 @@ void UnifiedScheduler::copyAllDataD2H(DetailedTask* dtask) {
   string taskID = dtask->getName();
 
   retVal = dws[dwmap[Task::NewDW]]->getGPUDW()->copyDataDeviceToHost(
-      taskID.c_str(), dtask->getCUDAStream(0));
+      taskID.c_str(), dtask->getCudaStreamForThisTask(0));
   if (retVal != cudaSuccess) {
     printf("Error code is %d\n", retVal);
     SCI_THROW(
@@ -4880,7 +4873,7 @@ void UnifiedScheduler::processD2HCopies(DetailedTask* dtask) {
 //    for (int j = 0; j < numStreams; j++) {
 //      cudaStream_t* stream = (cudaStream_t*) malloc(sizeof(cudaStream_t));
 //      CUDA_RT_SAFE_CALL(retVal = cudaStreamCreate(&(*stream)));
-//      idleStreams[device].push(stream);
+//      idleStreams->operator[](device).push(stream);
 //
 //      if (gpu_stats.active()) {
 //        cerrLock.lock();
@@ -4901,51 +4894,53 @@ void UnifiedScheduler::processD2HCopies(DetailedTask* dtask) {
 //______________________________________________________________________
 //
 
-void UnifiedScheduler::freeCudaStreams() {
+void UnifiedScheduler::freeCudaStreamsFromPool() {
   cudaError_t retVal;
 
 
   idleStreamsLock_.writeLock();
-  cerrLock.lock();
-   gpu_stats << myRankThread() << " locking freeCudaStreams" << std::endl;
-  cerrLock.unlock();
-  {
-    unsigned int totalStreams = 0;
-    for (map<unsigned int, queue<cudaStream_t*> >::const_iterator it=idleStreams.begin(); it!=idleStreams.end(); ++it) {
-      totalStreams += it->second.size();
-      if (gpu_stats.active()) {
-        cerrLock.lock();
-        {
-          gpu_stats << myRankThread() << " Preparing to deallocate " << it->second.size()
-              << " CUDA stream(s) for device #" << it->first
-              << std::endl;
-        }
-        cerrLock.unlock();
+  if (gpu_stats.active()) {
+    cerrLock.lock();
+    gpu_stats << myRankThread() << " locking freeCudaStreams" << std::endl;
+    cerrLock.unlock();
+  }
+
+  unsigned int totalStreams = 0;
+  for (map<unsigned int, queue<cudaStream_t*> >::const_iterator it=idleStreams->begin(); it!=idleStreams->end(); ++it) {
+    totalStreams += it->second.size();
+    if (gpu_stats.active()) {
+      cerrLock.lock();
+      {
+        gpu_stats << myRankThread() << " Preparing to deallocate " << it->second.size()
+            << " CUDA stream(s) for device #" << it->first
+            << std::endl;
       }
-    }
-
-
-    for (map<unsigned int, queue<cudaStream_t*> >::const_iterator it=idleStreams.begin(); it!=idleStreams.end(); ++it) {
-      unsigned int device = it->first;
-      OnDemandDataWarehouse::uintahSetCudaDevice(device);
-
-      while (!idleStreams[device].empty()) {
-        cudaStream_t* stream = idleStreams[device].front();
-        idleStreams[device].pop();
-        if (gpu_stats.active()) {
-          cerrLock.lock();
-          gpu_stats << myRankThread() << " Performing cudaStreamDestroy for stream "
-                      << stream << " on device " << device
-                      << std::endl;
-          cerrLock.unlock();
-        }
-        CUDA_RT_SAFE_CALL(retVal = cudaStreamDestroy(*stream));
-        free(stream);
-      }
+      cerrLock.unlock();
     }
   }
+
+
+  for (map<unsigned int, queue<cudaStream_t*> >::const_iterator it=idleStreams->begin(); it!=idleStreams->end(); ++it) {
+    unsigned int device = it->first;
+    OnDemandDataWarehouse::uintahSetCudaDevice(device);
+
+    while (!idleStreams->operator[](device).empty()) {
+      cudaStream_t* stream = idleStreams->operator[](device).front();
+      idleStreams->operator[](device).pop();
+      if (gpu_stats.active()) {
+        cerrLock.lock();
+        gpu_stats << myRankThread() << " Performing cudaStreamDestroy for stream "
+                    << stream << " on device " << device
+                    << std::endl;
+        cerrLock.unlock();
+      }
+      CUDA_RT_SAFE_CALL(retVal = cudaStreamDestroy(*stream));
+      free(stream);
+    }
+  }
+
   cerrLock.lock();
-   gpu_stats << myRankThread() << " unlocking freeCudaStreams " << std::endl;
+    gpu_stats << myRankThread() << " unlocking freeCudaStreams " << std::endl;
   cerrLock.unlock();
   idleStreamsLock_.writeUnlock();
 }
@@ -4954,18 +4949,15 @@ void UnifiedScheduler::freeCudaStreams() {
 //
 
 cudaStream_t *
-UnifiedScheduler::getCudaStream(int device) {
+UnifiedScheduler::getCudaStreamFromPool(int device) {
   cudaError_t retVal;
   cudaStream_t* stream;
 
   idleStreamsLock_.writeLock();
-  //cerrLock.lock();
-  // gpu_stats << myRankThread() << " locking getCudaStream " << std::endl;
-  //cerrLock.unlock();
   {
-    if (idleStreams[device].size() > 0) {
-      stream = idleStreams[device].front();
-      idleStreams[device].pop();
+    if (idleStreams->operator[](device).size() > 0) {
+      stream = idleStreams->operator[](device).front();
+      idleStreams->operator[](device).pop();
       if (gpu_stats.active()) {
         cerrLock.lock();
         {
@@ -4991,40 +4983,47 @@ UnifiedScheduler::getCudaStream(int device) {
       }
     }
   }
-  //cerrLock.lock();
-  // gpu_stats << myRankThread() << " unlocking getCudaStream" << std::endl;
-  //cerrLock.unlock();
   idleStreamsLock_.writeUnlock();
 
   return stream;
 }
 
-void UnifiedScheduler::reclaimCudaStreams(DetailedTask* dtask) {
+void UnifiedScheduler::reclaimCudaStreamsIntoPool(DetailedTask* dtask) {
 
+
+  if (gpu_stats.active()) {
+    cerrLock.lock();
+    {
+      gpu_stats << myRankThread()
+                << " Seeing if we need to reclaim any CUDA streams for task " << dtask->getName() << " at " << &dtask << std::endl;
+    }
+    cerrLock.unlock();
+  }
 
   // reclaim DetailedTask streams
   std::set<unsigned int> deviceNums = dtask->getDeviceNums();
   for (std::set<unsigned int>::iterator iter = deviceNums.begin();
       iter != deviceNums.end(); ++iter) {
     //printf("For task %s reclaiming stream for deviceNum %d\n", dtask->getName().c_str(), *iter);
-    cudaStream_t* stream = dtask->getCUDAStream(*iter);
+    cudaStream_t* stream = dtask->getCudaStreamForThisTask(*iter);
     if (stream != NULL) {
 
       idleStreamsLock_.writeLock();
-      idleStreams[*iter].push(stream);
+      idleStreams->operator[](*iter).push(stream);
       idleStreamsLock_.writeUnlock();
       if (gpu_stats.active()) {
         cerrLock.lock();
         {
           gpu_stats << myRankThread() << " Reclaimed CUDA stream " << std::hex
-              << stream << " on device " << std::dec << *iter << std::endl;
+              << stream << " on device " << std::dec << *iter
+              << " for task " << dtask->getName() << " at " << &dtask << std::endl;
         }
         cerrLock.unlock();
       }
 
       //It seems that task objects persist between timesteps.  So make sure we remove
       //all knowledge of any formerly used streams.
-      dtask->clearCUDAStreams();
+      dtask->clearCudaStreamsForThisTask();
     }
   }
 }
@@ -5106,7 +5105,6 @@ void UnifiedScheduler::createTaskGpuDWs(DetailedTask * dtask) {
       new_taskGpuDW->setDebug(gpudbg.active());
       new_taskGpuDW->init_device(objectSizeInBytes, numItemsInDW);
 
-      //printf("%s setting a task gpu dw at %p for device %d\n", myRankThread().c_str(), new_taskGpuDW, currentDevice);
       dtask->setTaskGpuDataWarehouse(currentDevice, Task::NewDW, new_taskGpuDW);
 
       if (gpu_stats.active()) {
@@ -5139,22 +5137,28 @@ void UnifiedScheduler::assignDevicesAndStreams(DetailedTask* dtask) {
     const Patch* patch = dtask->getPatches()->get(i);
     int index = GpuUtilities::getGpuIndexForPatch(patch);
     if (index >= 0) {
-      dtask->assignDevice(index);
-      cudaStream_t* stream = getCudaStream(index);
-      cerrLock.lock();
-      {
-        gpu_stats << myRankThread() << " Assigning for CPU task " << dtask->getName()
-                << " stream " << std::hex << stream << std::dec
-                << " for device " << index
-                << std::endl;
+      //See if this task doesn't yet have a stream for this GPU device.
+      if (dtask->getCudaStreamForThisTask(index) == NULL) {
+        dtask->assignDevice(index);
+        cudaStream_t* stream = getCudaStreamFromPool(index);
+        cerrLock.lock();
+        {
+          gpu_stats << myRankThread() << " Assigning for CPU task " << dtask->getName() << " at " << &dtask
+                  << " stream " << std::hex << stream << std::dec
+                  << " for device " << index
+                  << std::endl;
+        }
+        cerrLock.unlock();
+        if (dtask->getName() == "DataArchiver::outputVariables(checkpoint) (Patches: 0 - 7) (Matls: 0)") {
+          printf("Break here\n");
+        }
+        dtask->setCudaStreamForThisTask(index, stream);
       }
-      cerrLock.unlock();
-
-      dtask->setCUDAStream(index, stream);
     } else {
       cerrLock.lock();
-      cerr << "Could not find the assigned GPU for this patch." << endl;
+      cerr << "ERROR: Could not find the assigned GPU for this patch." << endl;
       cerrLock.unlock();
+      exit(-1);
       //For some reason, this patch wasn't assigned a GPU.  Give it the zeroth GPU.
       //readyTask->assignDevice(0);
     }
@@ -5166,8 +5170,11 @@ void UnifiedScheduler::assignDevicesAndStreamsFromGhostVars(DetailedTask* dtask)
   //Go through the ghostVars collection and look at the patch where all ghost cells are going.
   set<unsigned int> & destinationDevices = dtask->getGhostVars().getDestinationDevices();
   for (set<unsigned int>::iterator iter=destinationDevices.begin(); iter != destinationDevices.end(); ++iter) {
-    dtask->assignDevice(*iter);
-    dtask->setCUDAStream(*iter, getCudaStream(*iter));
+    //see if this task was already assigned a stream.
+    if (dtask->getCudaStreamForThisTask(*iter) == NULL) {
+      dtask->assignDevice(*iter);
+      dtask->setCudaStreamForThisTask(*iter, getCudaStreamFromPool(*iter));
+    }
   }
 }
 
@@ -5334,12 +5341,12 @@ void UnifiedScheduler::syncTaskGpuDWs(DetailedTask* dtask) {
     const unsigned int currentDevice = *deviceNums_it;
     taskgpudw = dtask->getTaskGpuDataWarehouse(currentDevice,Task::OldDW);
     if (taskgpudw) {
-      taskgpudw->syncto_device(dtask->getCUDAStream(currentDevice));
+      taskgpudw->syncto_device(dtask->getCudaStreamForThisTask(currentDevice));
     }
 
     taskgpudw = dtask->getTaskGpuDataWarehouse(currentDevice,Task::NewDW);
     if (taskgpudw) {
-      taskgpudw->syncto_device(dtask->getCUDAStream(currentDevice));
+      taskgpudw->syncto_device(dtask->getCudaStreamForThisTask(currentDevice));
     }
   }
 }
@@ -5356,7 +5363,7 @@ void UnifiedScheduler::performInternalGhostCellCopies(DetailedTask* dtask) {
     const unsigned int currentDevice = *deviceNums_it;
     if (dtask->getTaskGpuDataWarehouse(currentDevice, Task::OldDW) != NULL
         && dtask->getTaskGpuDataWarehouse(currentDevice, Task::OldDW)->ghostCellCopiesNeeded()) {
-      dtask->getTaskGpuDataWarehouse(currentDevice, Task::OldDW)->copyGpuGhostCellsToGpuVarsInvoker(dtask->getCUDAStream(currentDevice));
+      dtask->getTaskGpuDataWarehouse(currentDevice, Task::OldDW)->copyGpuGhostCellsToGpuVarsInvoker(dtask->getCudaStreamForThisTask(currentDevice));
     } else {
       if (gpu_stats.active()) {
         cerrLock.lock();
@@ -5370,7 +5377,7 @@ void UnifiedScheduler::performInternalGhostCellCopies(DetailedTask* dtask) {
     }
     if (dtask->getTaskGpuDataWarehouse(currentDevice, Task::NewDW) != NULL
         && dtask->getTaskGpuDataWarehouse(currentDevice, Task::NewDW)->ghostCellCopiesNeeded()) {
-      dtask->getTaskGpuDataWarehouse(currentDevice, Task::NewDW)->copyGpuGhostCellsToGpuVarsInvoker(dtask->getCUDAStream(currentDevice));
+      dtask->getTaskGpuDataWarehouse(currentDevice, Task::NewDW)->copyGpuGhostCellsToGpuVarsInvoker(dtask->getCudaStreamForThisTask(currentDevice));
     } else {
       if (gpu_stats.active()) {
         cerrLock.lock();
@@ -5448,7 +5455,7 @@ void UnifiedScheduler::copyAllGpuToGpuDependences(DetailedTask* dtask) {
              << std::dec << memSize << " from ptr " << std::hex
              << device_source_ptr << " to ptr " << std::hex << device_dest_ptr
              << ", using stream " << std::hex
-             << dtask->getCUDAStream(it->second.sourceDeviceNum) << std::dec << endl;
+             << dtask->getCudaStreamForThisTask(it->second.sourceDeviceNum) << std::dec << endl;
         }
         cerrLock.unlock();
       }
@@ -5462,7 +5469,7 @@ void UnifiedScheduler::copyAllGpuToGpuDependences(DetailedTask* dtask) {
       //destiantion stream can then process.
       //Note: If we move to UVA, then we could just do a straight memcpy
 
-      cudaStream_t* stream = dtask->getCUDAStream(it->second.destDeviceNum);
+      cudaStream_t* stream = dtask->getCudaStreamForThisTask(it->second.destDeviceNum);
       OnDemandDataWarehouse::uintahSetCudaDevice(it->second.destDeviceNum);
 
       if (simulate_multiple_gpus.active()) {
@@ -5555,7 +5562,7 @@ void UnifiedScheduler::copyAllExtGpuDependenciesToHost(DetailedTask* dtask) {
 
           //Since we know we need a stream, obtain one.
 
-          cudaStream_t* stream = dtask->getCUDAStream(it->second.sourceDeviceNum);
+          cudaStream_t* stream = dtask->getCudaStreamForThisTask(it->second.sourceDeviceNum);
           OnDemandDataWarehouse::uintahSetCudaDevice(it->second.sourceDeviceNum);
           if (gpu_stats.active()) {
             cerrLock.lock();
@@ -5566,7 +5573,7 @@ void UnifiedScheduler::copyAllExtGpuDependenciesToHost(DetailedTask* dtask) {
                   << std::dec << host_bytes << " to " << std::hex
                   << host_ptr << " from " << std::hex << device_ptr
                   << ", using stream " << std::hex
-                  << dtask->getCUDAStream(it->second.sourceDeviceNum) << std::dec << endl;
+                  << dtask->getCudaStreamForThisTask(it->second.sourceDeviceNum) << std::dec << endl;
             }
             cerrLock.unlock();
           }
@@ -5599,7 +5606,7 @@ void UnifiedScheduler::copyAllExtGpuDependenciesToHost(DetailedTask* dtask) {
     //Wait until all streams are done
     //Further optimization could be to check each stream one by one and make copies before waiting for other streams to complete.
     //TODO: There's got to be a better way to do this.
-    while (!dtask->checkAllCUDAStreamsDone()) {
+    while (!dtask->checkAllCudaStreamsDoneForThisTask()) {
       //sleep?
       //printf("Sleeping\n");
     }

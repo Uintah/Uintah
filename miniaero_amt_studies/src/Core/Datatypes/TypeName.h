@@ -38,14 +38,13 @@
 #include <string>
 #include <vector>
 #include <map>
-#include <Core/Datatypes/FieldIndex.h>
 #include <Core/Containers/LockingHandle.h>
 
 #ifndef TYPENAME_H
 #define TYPENAME_H
 
-namespace SCIRun {
-
+namespace Uintah {
+  
 static const char FTNS = '<';
 static const char FTNM = ',';
 static const char FTNE = '>';
@@ -61,10 +60,11 @@ template <class T> const std::string find_type_name(T*)
 
 template<class T, class S> const std::string find_type_name( std::pair<T,S> *);
 
-class Vector;
-class IntVector;
-class Point;
-class Transform;
+
+ class IntVector;
+ class Vector;
+ class Point;
+
 class Matrix;
 class NrrdData;
 class Field;
@@ -83,10 +83,10 @@ template<> const std::string find_type_name(unsigned long long*);
 template<> const std::string find_type_name(char*);
 template<> const std::string find_type_name(unsigned char*);
 template<> const std::string find_type_name(bool*);
-template<> const std::string find_type_name(Vector*);
+ template<> const std::string find_type_name(Vector*);
 template<> const std::string find_type_name(IntVector*);
-template<> const std::string find_type_name(Point*);
-template<> const std::string find_type_name(Transform*);
+ template<> const std::string find_type_name(Point*);
+
 template<> const std::string find_type_name(std::string*);
 
 template<> const std::string find_type_name(LockingHandle<Matrix> *);
@@ -122,6 +122,6 @@ template<class T, class S> const std::string find_type_name( std::pair<T,S> *)
   return name;
 }
 
-} // namespace SCIRun
+} // namespace Uintah
 
 #endif

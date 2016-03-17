@@ -43,7 +43,7 @@
 
 namespace Uintah {
 
-  class ConvergenceFailure : public SCIRun::Exception {
+  class ConvergenceFailure : public Uintah::Exception {
   public:
     ConvergenceFailure(const std::string& msg,
 		       int numiterations, double final_residual,

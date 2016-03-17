@@ -12,6 +12,14 @@
 #include <CCA/Components/Arches/TransportEqns/DQMOMEqn.h>
 
 //===========================================================================
+#include <CCA/Components/Arches/FunctorSwitch.h>
+  
+#ifdef USE_FUNCTOR
+#  include <Core/Grid/Variables/BlockRange.h>
+#  ifdef UINTAH_ENABLE_KOKKOS
+#    include <Kokkos_Core.hpp>
+#  endif //UINTAH_ENABLE_KOKKOS
+#endif
 
 using namespace std;
 using namespace Uintah; 
@@ -76,6 +84,34 @@ CoalGasOxi::sched_computeSource( const LevelP& level, SchedulerP& sched, int tim
   sched->addTask(tsk, level->eachPatch(), _shared_state->allArchesMaterials()); 
 
 }
+
+struct sumCharOxyGasSource{
+       sumCharOxyGasSource(constCCVariable<double>& _qn_gas_oxi,
+                           CCVariable<double>& _oxiSrc) :
+#ifdef UINTAH_ENABLE_KOKKOS
+                           qn_gas_oxi(_qn_gas_oxi.getKokkosView()),
+                           oxiSrc(_oxiSrc.getKokkosView())
+#else
+                           qn_gas_oxi(_qn_gas_oxi),
+                           oxiSrc(_oxiSrc)
+#endif
+                           {  }
+
+  void operator()(int i , int j, int k ) const { 
+   oxiSrc(i,j,k) += qn_gas_oxi(i,j,k); // All the work is performed in Char Oxidation model
+  }
+
+  private:
+#ifdef UINTAH_ENABLE_KOKKOS
+   KokkosView3<const double> qn_gas_oxi; 
+   KokkosView3<double>  oxiSrc; 
+#else
+   constCCVariable<double>& qn_gas_oxi;
+   CCVariable<double>& oxiSrc; 
+#endif
+};
+
+
 //---------------------------------------------------------------------------
 // Method: Actually compute the source term 
 //---------------------------------------------------------------------------
@@ -126,13 +162,25 @@ CoalGasOxi::computeSource( const ProcessorGroup* pc,
  
       new_dw->get( qn_gas_oxi, gasModelLabel, matlIndex, patch, gn, 0 );
 
+#ifdef USE_FUNCTOR
+      Uintah::BlockRange range(patch->getCellLowIndex(),patch->getCellHighIndex());
+
+      sumCharOxyGasSource doSumOxyGas(qn_gas_oxi, 
+                                      oxiSrc);
+
+      Uintah::parallel_for(range, doSumOxyGas);
+#else
+
       for (CellIterator iter=patch->getCellIterator(); !iter.done(); iter++){
               IntVector c = *iter;
         oxiSrc[c] += qn_gas_oxi[c]; // All the work is performed in Char Oxidation model
       }
+#endif
     }
   }
 }
+
+
 //---------------------------------------------------------------------------
 // Method: Schedule initialization
 //---------------------------------------------------------------------------

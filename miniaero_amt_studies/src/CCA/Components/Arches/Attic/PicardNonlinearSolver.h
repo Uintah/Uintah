@@ -61,7 +61,7 @@ WARNING
 #include <CCA/Ports/SolverInterface.h>
 
 namespace Uintah {
-  using namespace SCIRun;
+
 class PressureSolver;
 class MomentumSolver;
 class ScalarSolver;

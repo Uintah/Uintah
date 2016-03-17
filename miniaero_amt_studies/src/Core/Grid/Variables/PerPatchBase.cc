@@ -27,7 +27,6 @@
 #include <Core/Exceptions/InternalError.h>
 
 using namespace Uintah;
-using namespace SCIRun;
 
 
 PerPatchBase::~PerPatchBase()

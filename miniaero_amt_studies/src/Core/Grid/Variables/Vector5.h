@@ -31,6 +31,7 @@
 #include <iostream>
 
 namespace Uintah {
+
   class TypeDescription;
   
   struct Vector5 {
@@ -54,12 +55,10 @@ namespace Uintah {
     }
   };
 
+  void swapbytes( Uintah::Vector5& );
+
   std::ostream & operator << (std::ostream &out, const Uintah::Vector5 &a);
 
 }
-
-namespace SCIRun {
-   void swapbytes( Uintah::Vector5& );
-} // namespace SCIRun
 
 #endif

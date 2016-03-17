@@ -88,7 +88,7 @@ public:
       std::stringstream msg;
       msg << "Requesting an undefined key (" << key << ") ";
       
-      throw SCIRun::InternalError( msg.str(), __FUNCTION__, __LINE__);
+      throw Uintah::InternalError( msg.str(), __FUNCTION__, __LINE__);
     }
   };
 
@@ -117,7 +117,7 @@ public:
 	  << (unsigned int) lastKey << " values. But added "
 	  << d_values.size() << " values.";
       
-      throw SCIRun::InternalError(msg.str(), __FILE__, __LINE__);
+      throw Uintah::InternalError(msg.str(), __FILE__, __LINE__);
     }
   };
   
@@ -137,7 +137,7 @@ public:
       msg << "Adding a key (" << key << ") with name, " 
 	  << name << " that already exists.";
 
-      throw SCIRun::InternalError( msg.str(), __FUNCTION__, __LINE__);
+      throw Uintah::InternalError( msg.str(), __FUNCTION__, __LINE__);
     }
   };
   
@@ -158,7 +158,7 @@ public:
   //   {
   //     std::stringstream msg;
   //     msg << "Trying to delete a key (" << key << ") that does not exist.";
-  //     throw SCIRun::InternalError( msg.str(), __FUNCTION__, __LINE__);
+  //     throw Uintah::InternalError( msg.str(), __FUNCTION__, __LINE__);
   //   }
   // }
 

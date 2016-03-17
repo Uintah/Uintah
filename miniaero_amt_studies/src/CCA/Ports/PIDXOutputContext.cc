@@ -24,16 +24,89 @@
 #include <CCA/Ports/PIDXOutputContext.h>
 
 #if HAVE_PIDX
-
-#include <Core/Exceptions/InternalError.h>
-#include <iostream>
+#include <PIDX_compression.h>
+#include <Core/Util/StringUtil.h>
 #include <vector>
 
 using namespace std;
-using namespace SCIRun;
 using namespace Uintah;
 
-PIDXOutputContext::PIDXOutputContext() 
+//______________________________________________________________________
+//                P I D X _ F L A G S   C L A S S
+//______________________________________________________________________
+//
+PIDXOutputContext::PIDX_flags::PIDX_flags()
+{
+  compressMap["NONE"]              = PIDX_NO_COMPRESSION;
+  compressMap["CHUNKING"]          = PIDX_CHUNKING_ONLY;
+  compressMap["PIDX_CHUNKING_ZFP"] = PIDX_CHUNKING_ZFP;
+  
+  outputRawIO    = false;
+  debugOutput    = false;
+  outputPatchSize = IntVector(-9,-9,-9);
+  compressionType = PIDX_NO_COMPRESSION;
+}
+
+
+PIDXOutputContext::PIDX_flags::~PIDX_flags(){};
+
+
+//______________________________________________________________________
+//  Utility:  returns the the compression type from input string
+unsigned int 
+PIDXOutputContext::PIDX_flags::str2CompressType( const std::string& me)
+{
+  string ME = string_toupper( me );  // convert to upper case  
+  if ( compressMap.count(ME) == 0){
+    ostringstream warn;
+    warn<< "ERROR:PIDXOutput:: the compression type ("<<ME<<") is not supported."
+        << " Valid options are: NONE, CHUNKING, CHUNKING_ZFP";
+    throw Uintah::InternalError(warn.str(), __FILE__, __LINE__);
+  }
+  return compressMap[ME];
+}
+
+//______________________________________________________________________
+//   Utility:  returns the name of the compression type
+std::string  
+PIDXOutputContext::PIDX_flags::getCompressTypeName( const int me )
+{
+  std::map< std::string, int >::const_iterator it;
+  std::string key = "NULL";
+  for (it = compressMap.begin(); it!= compressMap.end(); ++it){
+    if( it->second == me){
+      key = it->first;
+      return key;
+    }
+  }
+  return key;
+}
+
+//______________________________________________________________________
+//  Parses the ups file and set flags
+void
+PIDXOutputContext::PIDX_flags::problemSetup( const ProblemSpecP& DA_ps )
+{
+  ProblemSpecP pidx_ps = DA_ps->findBlock("PIDX");
+
+  if( pidx_ps != 0 ) {
+  
+    string me;
+    pidx_ps->getWithDefault( "compressionType",  me, "NONE");
+    
+    compressionType = str2CompressType( me );
+    pidx_ps->get( "debugOutput",     debugOutput );
+    pidx_ps->get( "outputRawIO",     outputRawIO );
+    pidx_ps->get( "outputPatchSize", outputPatchSize );
+  }
+}
+
+//______________________________________________________________________
+//         P I D X O U T P U T C O N T E X T   C L A S S
+//______________________________________________________________________
+
+
+PIDXOutputContext::PIDXOutputContext()
 {
   d_isInitialized = false;
   d_outputDoubleAsFloat = false;
@@ -80,37 +153,133 @@ PIDXOutputContext::getDirectoryName(TypeDescription::Type TD)
         return "SFCZVars";
         break;
       default:
-         throw SCIRun::InternalError("  PIDXOutputContext::getDirectoryName type description not supported", __FILE__, __LINE__);
+         throw Uintah::InternalError("  PIDXOutputContext::getDirectoryName type description not supported", __FILE__, __LINE__);
   }
-} 
- 
+}
+//______________________________________________________________________
+//    Logic for determinine the size of the box
+void
+PIDXOutputContext::computeBoxSize( const PatchSubset* patches, 
+                                   const PIDX_flags flags,
+                                   PIDX_point& newBox )
+{
+  ASSERT(patches->size() != 0);
+  ASSERT(patches->get(0) != 0);
+    
+  const Patch* patch = patches->get(0);
+  const Level* level = patches->get(0)->getLevel();
+
+  //__________________________________
+  //  compute a patch size over all patches on this level
+  IntVector nCells = level->nCellsPatch_max();
+  int nPatchCells  = nCells.x() * nCells.y() * nCells.z();
+
+  const int cubed16  = 16*16*16;
+  const int cubed32  = 32*32*32;
+  const int cubed64  = 64*64*64;
+  const int cubed128 = 128*128*128;
+  const int cubed256 = 256*256*256;
+  
+  //__________________________________
+  // logic for adjusting the box
+  IntVector box(64,64,64);    // default value
+  if (nPatchCells <=  cubed16) {
+  } else if (nPatchCells >  cubed16  && nPatchCells <= cubed32) {
+    box = IntVector(32,32,32);
+  } else if ( nPatchCells >  cubed32  && nPatchCells <= cubed64 ) {
+    box = IntVector(64,64,64);
+  } else if ( nPatchCells >  cubed64  && nPatchCells <= cubed128 ){
+    box = IntVector(128,128,128);
+  } else if ( nPatchCells >  cubed128 && nPatchCells <= cubed256 ){
+    box = IntVector(256,256,256);
+  }
+  
+  //__________________________________
+  //  override the logic if user specifies somthing
+  if ( flags.outputPatchSize != IntVector(-9,-9,-9) ){
+    box = flags.outputPatchSize;
+  }
+  
+  if (flags.debugOutput){
+    cout << Parallel::getMPIRank() << " PIDX outputPatchSize: Level- "<< level->getIndex() << " box: " << box  
+         << " Patchsize: " << nCells << " nPatchCells: " << nPatchCells  << endl;
+  }
+  PIDX_set_point_5D(newBox, box.x(), box.y(), box.z(), 1, 1);
+}
+
+
+
 //______________________________________________________________________
 //
 void
 PIDXOutputContext::initialize( string filename, 
                                unsigned int timeStep,
-                               MPI_Comm comm )
+                               MPI_Comm comm,
+                               PIDX_flags flags,
+                               const PatchSubset* patches,
+                               const int typeOutput)
 {
   this->filename = filename;
   this->timestep = timeStep;
   this->comm = comm; 
+  string desc = "PIDXOutputContext::initialize";
+  //__________________________________
+  //
+  int rc = PIDX_create_access(&(this->access));
+  checkReturnCode( rc, desc+" - PIDX_create_access", __FILE__, __LINE__);
+  
+  if(comm != NULL){
+    PIDX_set_mpi_access( this->access, this->comm );
+    checkReturnCode( rc, desc+" - PIDX_set_mpi_access", __FILE__, __LINE__);
+  }
+  
+  PIDX_file_create( filename.c_str(), PIDX_MODE_CREATE, access, &(this->file) );
+  checkReturnCode( rc, desc+" - PIDX_file_create", __FILE__, __LINE__);
+  
+  //__________________________________
+  if ( flags.debugOutput ){
+    PIDX_debug_output( (this->file) );
+  }
 
-  PIDX_create_access(&(this->access));
-  PIDX_set_mpi_access(this->access, this->comm);
-
-  PIDX_file_create(filename.c_str(), PIDX_MODE_CREATE, access, &(this->file));
-
-  int64_t restructured_box_size[5] = {64, 64, 64, 1, 1};
-  PIDX_set_restructuring_box(file, restructured_box_size);
-
+  //__________________________________
+  if ( flags.outputRawIO ){
+    PIDX_enable_raw_io(this->file);  //Possible performance improvement at low core counts
+    checkReturnCode( rc, desc+" - PIDX_enable_raw_io", __FILE__, __LINE__);
+  }
+  
+  
+  //__________________________________
+  //
+  PIDX_point new_box_size;
+  computeBoxSize( patches, flags, new_box_size );
+  
+  PIDX_set_restructuring_box(file, new_box_size);
+  checkReturnCode( rc, desc+" - PIDX_set_restructuring_box", __FILE__, __LINE__);
+  
+  PIDX_set_block_size(this->file,  16);
+  checkReturnCode( rc, desc+" - PIDX_set_block_size", __FILE__, __LINE__);
+  
+  PIDX_set_block_count(this->file, 128);
+  checkReturnCode( rc, desc+" - PIDX_set_block_count", __FILE__, __LINE__);
   //PIDX_set_resolution(this->file, 0, 2);
   
+  //__________________________________
+  //  
   PIDX_set_current_time_step(this->file, timeStep);
-  PIDX_set_block_size(this->file, 16);
-  PIDX_set_block_count(this->file, 128);
-    
-  //PIDX_set_compression_type(this->file, PIDX_CHUNKING_ZFP);
-  //PIDX_set_lossy_compression_bit_rate(this->file, 8);
+  checkReturnCode( rc, desc+" - PIDX_set_current_time_step", __FILE__, __LINE__);
+
+  //__________________________________
+  // Set compresssion settings
+  if( typeOutput == CHECKPOINT){
+    PIDX_set_compression_type(this->file, PIDX_NO_COMPRESSION);
+    checkReturnCode( rc, desc+" - PIDX_set_compression_type", __FILE__, __LINE__);
+  } else {
+    PIDX_set_compression_type(this->file, flags.compressionType);
+    checkReturnCode( rc, desc+" - PIDX_set_compression_type", __FILE__, __LINE__);
+    //  PIDX_set_lossy_compression_bit_rate(this->file, 8);                // What to do here?
+  }
+
+
   d_isInitialized = true;
 }
 
@@ -297,5 +466,4 @@ template void PIDXOutputContext::printBuffer<double>( const string & desc,
                                                       IntVector& hi_EC,
                                                       unsigned char* dataPIDX,
                                                       size_t arraySize );
-
-#endif // HAVE_PIDX
+#endif

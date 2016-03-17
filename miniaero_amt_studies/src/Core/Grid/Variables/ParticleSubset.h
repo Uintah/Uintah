@@ -74,14 +74,14 @@ WARNING
     ParticleSubset( const unsigned int        num_particles,
                     const int                 matlIndex,
                     const Patch             * patch,
-                    const SCIRun::IntVector & low,
-                    const SCIRun::IntVector & high);
+                    const Uintah::IntVector & low,
+                    const Uintah::IntVector & high);
 
     ParticleSubset( const unsigned int                   num_particles,
                     const int                            matlIndex,
                     const Patch                        * patch,
-                    const SCIRun::IntVector            & low,
-                    const SCIRun::IntVector            & high,
+                    const Uintah::IntVector            & low,
+                    const Uintah::IntVector            & high,
                     const std::vector<const Patch*>    & neighbors,
                     const std::vector<ParticleSubset*> & subsets);
     ParticleSubset();
@@ -136,17 +136,17 @@ WARNING
       d_particles[idx] = value;
     }
 
-    void setLow(const SCIRun::IntVector low) {
+    void setLow(const Uintah::IntVector low) {
       d_low=low;
     }
-    void setHigh(const SCIRun::IntVector high) {
+    void setHigh(const Uintah::IntVector high) {
       d_high=high;
     }
 
-    SCIRun::IntVector getLow() const {
+    Uintah::IntVector getLow() const {
       return d_low;
     }
-    SCIRun::IntVector getHigh() const {
+    Uintah::IntVector getHigh() const {
       return d_high;
     }
     const Patch* getPatch() const {
@@ -179,7 +179,7 @@ WARNING
 
     int                 d_matlIndex;
     const Patch       * d_patch;
-    SCIRun::IntVector   d_low, d_high;
+    Uintah::IntVector   d_low, d_high;
 
     std::vector<const Patch*>    neighbors;
     std::vector<ParticleSubset*> neighbor_subsets;

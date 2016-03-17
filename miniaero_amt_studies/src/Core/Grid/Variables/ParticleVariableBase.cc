@@ -34,7 +34,6 @@
 using namespace std;
 
 using namespace Uintah;
-using namespace SCIRun;
 
 
 ParticleVariableBase::~ParticleVariableBase()

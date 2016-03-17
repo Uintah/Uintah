@@ -31,7 +31,6 @@
 #include <Core/Thread/Mutex.h>
 
 using namespace Uintah;
-using namespace SCIRun;
 
 
 void GridVariableBase::getMPIBuffer(BufferInfo& buffer,

@@ -60,7 +60,6 @@
 
 using namespace std;
 using namespace Uintah;
-using namespace SCIRun;
 using std::vector;
 
 NodalSVFContact:: NodalSVFContact( const ProcessorGroup*       myworld,

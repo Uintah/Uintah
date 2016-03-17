@@ -45,7 +45,7 @@
 
 #include <sci_defs/mpi_defs.h> // For MPIPP_H on SGI
 
-namespace SCIRun {
+namespace Uintah {
 class Thread;
 }
 
@@ -61,10 +61,10 @@ inline const Level* getRealDomain(const Level* level)
   return level;
 }
 
-using SCIRun::CrowdMonitor;
-using SCIRun::Max;
-using SCIRun::Thread;
-using SCIRun::FastHashTable;
+using Uintah::CrowdMonitor;
+using Uintah::Max;
+using Uintah::Thread;
+using Uintah::FastHashTable;
 
 class BufferInfo;
 class DependencyBatch;

@@ -25,7 +25,7 @@
 #ifndef Core_Util_notset_h
 #define Core_Util_notset_h 1
 
-namespace SCIRun {
+namespace Uintah {
 
 extern const char _NOTSET_[]; // = "(null string)";
 

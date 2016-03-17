@@ -34,27 +34,27 @@
 namespace Uintah{
 
 void printSchedule( const PatchSet       * patches,
-                    SCIRun::DebugStream  & dbg,
+                    Uintah::DebugStream  & dbg,
                     const std::string    & where );
 
 void printSchedule( const LevelP        & level,
-                    SCIRun::DebugStream & dbg,
+                    Uintah::DebugStream & dbg,
                     const std::string   & where );
 
 void printTask( const PatchSubset   * patches,
                 const Patch         * patch,
-                SCIRun::DebugStream & dbg,
+                Uintah::DebugStream & dbg,
                 const std::string   & where );
                 
 void printTask( const PatchSubset   * patches,
-                SCIRun::DebugStream & dbg,
+                Uintah::DebugStream & dbg,
                 const std::string   & where );
 
 void printTask( const Patch         * patch,
-                SCIRun::DebugStream & dbg,
+                Uintah::DebugStream & dbg,
                 const std::string   & where );
                 
-void printTask( SCIRun::DebugStream & dbg,
+void printTask( Uintah::DebugStream & dbg,
                 const std::string   & where );
 
 } // End namespace Uintah

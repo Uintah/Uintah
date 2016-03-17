@@ -44,8 +44,8 @@
 using namespace Uintah;
 
 // sync cout/cerr so they are readable when output by multiple threads
-extern SCIRun::Mutex cerrLock;
-extern SCIRun::Mutex coutLock;
+extern Uintah::Mutex cerrLock;
+extern Uintah::Mutex coutLock;
 
 extern DebugStream mpidbg;
 
@@ -331,7 +331,7 @@ DetailedTask::doit( const ProcessorGroup*                 pg,
       task->doit(event, pg, patches, matls, dws,
                  getTaskGpuDataWarehouse(currentDevice, Task::OldDW),
                  getTaskGpuDataWarehouse(currentDevice, Task::NewDW),
-                 getCUDAStream(currentDevice), currentDevice);
+                 getCudaStreamForThisTask(currentDevice), currentDevice);
     }
   }
   else {
@@ -1535,12 +1535,12 @@ std::set<unsigned int> DetailedTask::getDeviceNums() const
 }
 
 /*
-cudaStream_t* DetailedTask::getCUDAStream() const
+cudaStream_t* DetailedTask::getCudaStreamForThisTask() const
 {
-  return getCUDAStream(0);
+  return getThisTasksCudaStream(0);
 }*/
 
-cudaStream_t* DetailedTask::getCUDAStream(unsigned int deviceNum) const
+cudaStream_t* DetailedTask::getCudaStreamForThisTask(unsigned int deviceNum) const
 {
   std::map <unsigned int, cudaStream_t*>::const_iterator it;
   it = d_cudaStreams.find(deviceNum);
@@ -1551,34 +1551,43 @@ cudaStream_t* DetailedTask::getCUDAStream(unsigned int deviceNum) const
 }
 
 
-//void DetailedTask::setCUDAStream(cudaStream_t* s)
+//void DetailedTask::setCudaStreamForThisTask(cudaStream_t* s)
 //{
 //  //d_cudaStream = s;
-//  setCUDAStream(0, s);
+//  setCudaStreamForThisTask(0, s);
 //};
 
-void DetailedTask::setCUDAStream(unsigned int deviceNum, cudaStream_t* s)
+void DetailedTask::setCudaStreamForThisTask(unsigned int deviceNum, cudaStream_t* s)
 {
   if (s == NULL) {
-    d_cudaStreams.erase(deviceNum);
+    printf("ERROR! - DetailedTask::setCudaStreamForThisTask() - A request was made to assign a stream at address NULL into this task %s\n", getName().c_str());
+    SCI_THROW(InternalError("A request was made to assign a stream at address NULL into this task :"+ getName() , __FILE__, __LINE__));
   } else {
-    //printf("For device %d inserting stream at %p\n", deviceNum, s);
-    //TODO: Needs a write lock.
-    d_cudaStreams.insert(std::pair<unsigned int, cudaStream_t*>(deviceNum,s));
+    if (d_cudaStreams.find(deviceNum) == d_cudaStreams.end()) {
+      d_cudaStreams.insert(std::pair<unsigned int, cudaStream_t*>(deviceNum,s));
+    } else {
+      printf("ERROR! - DetailedTask::setCudaStreamForThisTask() - This task %s already had a stream assigned for device %d\n", getName().c_str(), deviceNum);
+      SCI_THROW(InternalError("Detected CUDA kernel execution failure on task: "+ getName() , __FILE__, __LINE__));
+
+    }
   }
 };
 
-void DetailedTask::clearCUDAStreams() {
+void DetailedTask::clearCudaStreamsForThisTask() {
   d_cudaStreams.clear();
 }
-
-bool DetailedTask::checkCUDAStreamDone() const
+/*
+bool DetailedTask::checkCudaStreamDoneForThisTask() const
 {
   //Check all
   cudaError_t retVal;
   for (std::map<unsigned int, cudaStream_t*>::const_iterator it = d_cudaStreams.begin(); it != d_cudaStreams.end(); ++it) {
-
     OnDemandDataWarehouse::uintahSetCudaDevice(it->first);
+    if (it->second == NULL) {
+      printf("ERROR! - DetailedTask::checkCudaStreamDoneForThisTask() - Stream pointer with NULL address for task %s\n", getName().c_str());
+      SCI_THROW(InternalError("Stream pointer with NULL address for task: " + getName() , __FILE__, __LINE__));
+      return false;
+    }
     retVal = cudaStreamQuery(*(it->second));
     if (retVal == cudaSuccess) {
     //  cout << "checking cuda stream " << d_cudaStream << "ready" << endl;
@@ -1589,11 +1598,11 @@ bool DetailedTask::checkCUDAStreamDone() const
       return false;
     }
     else if (retVal ==  cudaErrorLaunchFailure) {
-      printf("ERROR! - DetailedTask::checkCUDAStreamDone() - CUDA kernel execution failure on Task: %s\n", getName().c_str());
+      printf("ERROR! - DetailedTask::checkCudaStreamDoneForThisTask() - CUDA kernel execution failure on Task: %s\n", getName().c_str());
       SCI_THROW(InternalError("Detected CUDA kernel execution failure on Task:"+ getName() , __FILE__, __LINE__));
       return false;
     } else { //other error
-      printf("ERROR! - DetailedTask::checkCUDAStreamDone() - The stream %p had this error code %d.  This could mean that something else in the stream just hit an error.\n",  it->second, retVal);
+      printf("ERROR! - DetailedTask::checkCudaStreamDoneForThisTask() - The stream %p had this error code %d.  This could mean that something else in the stream just hit an error.\n",  it->second, retVal);
       SCI_THROW(InternalError("ERROR! - Invalid stream query", __FILE__, __LINE__));
       return false;
     }
@@ -1601,13 +1610,26 @@ bool DetailedTask::checkCUDAStreamDone() const
   }
   return true;
 }
+*/
 
-bool DetailedTask::checkCUDAStreamDone(unsigned int deviceNum_) const
+bool DetailedTask::checkCudaStreamDoneForThisTask(unsigned int deviceNum_) const
 {
+
   // sets the CUDA context, for the call to cudaEventQuery()
   cudaError_t retVal;
   OnDemandDataWarehouse::uintahSetCudaDevice(deviceNum_);
   std::map<unsigned int, cudaStream_t*>::const_iterator it= d_cudaStreams.find(deviceNum_);
+  if (it == d_cudaStreams.end()) {
+    printf("ERROR! - DetailedTask::checkCudaStreamDoneForThisTask() - Request for stream information for device %d, but this task wasn't assigned any streams for this device.  For task %s\n", deviceNum_,  getName().c_str());
+    SCI_THROW(InternalError("Request for stream information for a device, but it wasn't assigned any streams for that device.  For task: " + getName() , __FILE__, __LINE__));
+    return false;
+  }
+  if (it->second == NULL) {
+    printf("ERROR! - DetailedTask::checkCudaStreamDoneForThisTask() - Stream pointer with NULL address for task %s\n", getName().c_str());
+    SCI_THROW(InternalError("Stream pointer with NULL address for task: " + getName() , __FILE__, __LINE__));
+    return false;
+  }
+
   retVal = cudaStreamQuery(*(it->second));
   if (retVal == cudaSuccess) {
 //  cout << "checking cuda stream " << d_cudaStream << "ready" << endl;
@@ -1617,7 +1639,8 @@ bool DetailedTask::checkCUDAStreamDone(unsigned int deviceNum_) const
     return false;
   }
   else if (retVal ==  cudaErrorLaunchFailure) {
-    SCI_THROW(InternalError("Detected CUDA kernel execution failure on Task:"+ getName() , __FILE__, __LINE__));
+    printf("ERROR! - DetailedTask::checkCudaStreamDoneForThisTask(%d) - CUDA kernel execution failure on Task: %s\n", deviceNum_, getName().c_str());
+    SCI_THROW(InternalError("Detected CUDA kernel execution failure on Task: " + getName() , __FILE__, __LINE__));
     return false;
   } else { //other error
     printf("Waiting for 60\n");
@@ -1627,18 +1650,18 @@ bool DetailedTask::checkCUDAStreamDone(unsigned int deviceNum_) const
   }
 }
 
-bool DetailedTask::checkAllCUDAStreamsDone() const
+bool DetailedTask::checkAllCudaStreamsDoneForThisTask() const
 {
-
   // sets the CUDA context, for the call to cudaEventQuery()
   bool retVal = false;
 
   for (std::map<unsigned int ,cudaStream_t*>::const_iterator it=d_cudaStreams.begin(); it!=d_cudaStreams.end(); ++it){
-    retVal = checkCUDAStreamDone(it->first);
+    retVal = checkCudaStreamDoneForThisTask(it->first);
     if (retVal == false) {
       return retVal;
     }
   }
+
   return true;
 }
 
@@ -1802,8 +1825,8 @@ operator<<(       std::ostream& out,
       out << task.getAssignedResourceIndex();
     }
 //#ifdef HAVE_CUDA
-//    if( task.getCUDAStream() ){
-//      out << std::hex << " using CUDA stream " << task.getCUDAStream() << std::dec;
+//    if( task.getCudaStreamForThisTask() ){
+//      out << std::hex << " using CUDA stream " << task.getCudaStreamForThisTask() << std::dec;
 //    }
 //#endif
 

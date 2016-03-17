@@ -43,12 +43,12 @@
 
 namespace Uintah {
   
-  class VariableNotFoundInGrid : public SCIRun::Exception {
+  class VariableNotFoundInGrid : public Uintah::Exception {
   public:
     VariableNotFoundInGrid(const std::string& varname, long particleID,
 			   int matlIndex, const std::string& extramsg, 
                            const char* file, int line);
-    VariableNotFoundInGrid(const std::string& varname, SCIRun::IntVector loc,
+    VariableNotFoundInGrid(const std::string& varname, IntVector loc,
 			   int matlIndex, const std::string& extramsg,
                            const char* file, int line);
     VariableNotFoundInGrid(const std::string& varname,

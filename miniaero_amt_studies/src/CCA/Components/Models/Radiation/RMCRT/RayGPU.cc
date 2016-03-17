@@ -296,7 +296,7 @@ void Ray::rayTraceDataOnionGPU( Task::CallBackEvent event,
       LevelP level = new_dw->getGrid()->getLevel(l);      
       levelP[l].hasFinerLevel = level->hasFinerLevel();
 
-      SCIRun::Vector dx = level->dCell();
+      Uintah::Vector dx = level->dCell();
       levelP[l].Dx    = GPUVector(make_double3(dx.x(), dx.y(), dx.z()));
       levelP[l].DyDx  = dx.y() / dx.x();
       levelP[l].DzDx  = dx.z() / dx.x();

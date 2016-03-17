@@ -289,7 +289,7 @@ void UnifiedSchedulerTest::timeAdvanceUnified(Task::CallBackEvent event,
         //void* device_ptr = NULL;
         //device_var.getArray3(device_offset, device_size, device_ptr);
         //device_ptr = device_var.getPointer();
-        //printf("Calling unifiedSchedulerTestKernel for (%d,%d,%d) to (%d,%d,%d) with device variable at %p on stream %p on threadID %d\n", patchNodeLowIndex.x,patchNodeLowIndex.y,patchNodeLowIndex.z, patchNodeHighIndex.x, patchNodeHighIndex.y, patchNodeHighIndex.z, device_ptr, stream, SCIRun::Thread::self()->myid());
+        //printf("Calling unifiedSchedulerTestKernel for (%d,%d,%d) to (%d,%d,%d) with device variable at %p on stream %p on threadID %d\n", patchNodeLowIndex.x,patchNodeLowIndex.y,patchNodeLowIndex.z, patchNodeHighIndex.x, patchNodeHighIndex.y, patchNodeHighIndex.z, device_ptr, stream, Uintah::Thread::self()->myid());
 
       launchUnifiedSchedulerTestKernel(dimGrid,
                                        dimBlock,
@@ -307,7 +307,6 @@ void UnifiedSchedulerTest::timeAdvanceUnified(Task::CallBackEvent event,
 
     } // end patch for loop
   } //end GPU
-  if (event == Task::postGPU) {
     /*
     int numPatches = patches->size();
         for (int p = 0; p < numPatches; p++) {
@@ -356,9 +355,8 @@ void UnifiedSchedulerTest::timeAdvanceUnified(Task::CallBackEvent event,
             //device_var.getArray3(device_offset, device_size, device_ptr);
             //device_ptr = device_var.getPointer();
 
-          //printf("Finished unifiedSchedulerTestKernel for (%d,%d,%d) to (%d,%d,%d) with device variable at %p on stream %p on threadID %d\n", patchNodeLowIndex.x,patchNodeLowIndex.y,patchNodeLowIndex.z, patchNodeHighIndex.x, patchNodeHighIndex.y, patchNodeHighIndex.z, device_ptr, stream, SCIRun::Thread::self()->myid());
+          //printf("Finished unifiedSchedulerTestKernel for (%d,%d,%d) to (%d,%d,%d) with device variable at %p on stream %p on threadID %d\n", patchNodeLowIndex.x,patchNodeLowIndex.y,patchNodeLowIndex.z, patchNodeHighIndex.x, patchNodeHighIndex.y, patchNodeHighIndex.z, device_ptr, stream, Uintah::Thread::self()->myid());
     }*/
-  }
 }
 
 //______________________________________________________________________

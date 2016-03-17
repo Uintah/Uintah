@@ -8,7 +8,6 @@
 #include <vector>
 
 using namespace Uintah;
-using namespace SCIRun;
 using namespace std;
 
 ////////////////////////////////////////////////////////////////////////

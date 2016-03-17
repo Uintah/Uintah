@@ -39,7 +39,7 @@
 
 #include <string>
 
-namespace SCIRun {
+namespace Uintah {
 
 
   class ProcessInfo {
@@ -69,7 +69,7 @@ namespace SCIRun {
   }; // class ProcessInfo {
 
 
-} // namespace SCIRun {
+} // namespace Uintah {
 
 
 #endif // #ifndef Core_OS_ProcessInfo_h

@@ -387,7 +387,7 @@ void customInitialization(const Patch* patch,
 
       vel_CC[c]    = U_infinity;             // set the components that are not normal to the face           
       double ratio = (h - d)/height;
-      ratio = SCIRun::Clamp(ratio,0.0,1.0);
+      ratio = Clamp(ratio,0.0,1.0);
 
       if( h > d && h < height){
         vel_CC[c] = U_infinity * pow(ratio, n);

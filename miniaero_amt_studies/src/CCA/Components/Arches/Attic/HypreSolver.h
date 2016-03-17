@@ -39,7 +39,6 @@ namespace Uintah {
 
 class ProcessorGroup;
 
-using namespace SCIRun;
 
 /**************************************
 CLASS

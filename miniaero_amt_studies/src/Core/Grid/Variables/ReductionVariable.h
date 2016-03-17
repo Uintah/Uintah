@@ -97,12 +97,12 @@ WARNING
     virtual void readNormal(std::istream& in, bool swapBytes)
     {
       in.read((char*)&value, sizeof(double));
-      if (swapBytes) SCIRun::swapbytes(value);
+      if (swapBytes) Uintah::swapbytes(value);
     }
      
     virtual void allocate(const Patch*, const IntVector& /*boundary*/)
     {
-      SCI_THROW(SCIRun::InternalError("Should not call ReductionVariable<T, Op>"
+      SCI_THROW(Uintah::InternalError("Should not call ReductionVariable<T, Op>"
                                       "::allocate(const Patch*)", __FILE__, __LINE__)); 
     }
 

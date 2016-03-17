@@ -33,7 +33,6 @@
 #include <sstream>
 
 using namespace Uintah;
-using namespace SCIRun;
 
 using std::map;
 using std::ostream;

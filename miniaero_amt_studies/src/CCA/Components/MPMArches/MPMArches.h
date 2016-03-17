@@ -65,7 +65,7 @@ namespace Uintah {
  struct cutcell { double d_cutcell[13]; }; //centroids/surface normals/areafractions
 } 
 
-namespace SCIRun {
+namespace Uintah {
 
   void swapbytes( Uintah::cutcell& );
 
@@ -84,7 +84,6 @@ namespace SCIRun {
 
 namespace Uintah {
 
-using namespace SCIRun;
 
 
  const TypeDescription* fun_getTypeDescription(cutcell*);

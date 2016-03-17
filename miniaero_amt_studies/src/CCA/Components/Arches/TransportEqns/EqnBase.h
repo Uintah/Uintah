@@ -21,7 +21,7 @@
 #include <Core/Exceptions/ParameterNotFound.h>
 #include <CCA/Components/Arches/Directives.h>
 
-extern SCIRun::Mutex cerrLock;
+extern Uintah::Mutex cerrLock;
 
 //========================================================================
 

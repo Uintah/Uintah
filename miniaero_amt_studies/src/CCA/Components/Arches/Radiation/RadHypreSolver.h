@@ -34,7 +34,6 @@
 #include <Core/Grid/Patch.h>
 #include <Core/Grid/Variables/VarLabel.h>
 
-#include <Core/Containers/Array1.h>
 
 #include <_hypre_utilities.h>
 #include <HYPRE_struct_ls.h>

@@ -61,7 +61,6 @@ WARNING
 #include <Core/Grid/Variables/CCVariable.h>
 #include <Core/Grid/Variables/Array3.h>
 namespace Uintah {
-  using namespace SCIRun;
 
 struct CutCellInfo : public RefCounted {
 

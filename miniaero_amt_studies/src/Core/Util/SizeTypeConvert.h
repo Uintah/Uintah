@@ -43,11 +43,11 @@
 #  include <inttypes.h>
 #endif
 
-namespace SCIRun{
+namespace Uintah {
 
   // pass in a pointer to a 64-bit int, but depending upon nByteMode it may
   // be treated as a 32-bit int (the last half wouldn't get touched).
   unsigned long convertSizeType(uint64_t* ssize, bool swapBytes, int nByteMode);
 
-} //end namespace SCIRun
+} //end namespace Uintah
 #endif

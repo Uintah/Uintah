@@ -235,7 +235,7 @@ CNHDamage::initializeCMData(const Patch* patch,
 
   if (d_epsf.dist == "gauss"){
     // Initialize a gaussian random number generator
-    SCIRun::Gaussian gaussGen(d_epsf.mean, d_epsf.std, 0);
+    Uintah::Gaussian gaussGen(d_epsf.mean, d_epsf.std, 0);
 
     for(;iter != pset->end();iter++){
       pBeBar[*iter] = Id;
@@ -244,7 +244,7 @@ CNHDamage::initializeCMData(const Patch* patch,
     }
   } else if (d_epsf.dist == "weibull"){
     // Initialize a weibull random number generator
-    SCIRun::Weibull weibGen(d_epsf.mean, d_epsf.std, d_epsf.scale, d_epsf.seed);
+    Uintah::Weibull weibGen(d_epsf.mean, d_epsf.std, d_epsf.scale, d_epsf.seed);
 
     for(;iter != pset->end();iter++){
       pBeBar[*iter] = Id;

@@ -11,7 +11,7 @@
 #include <Core/Exceptions/VariableNotFoundInGrid.h>
 #include <Core/Grid/Variables/VarTypes.h>
 
-extern SCIRun::Mutex coutLock; // Debug: Used to sync cout so it is readable (when output by  multiple threads)
+extern Uintah::Mutex coutLock; // Debug: Used to sync cout so it is readable (when output by  multiple threads)
 
 using namespace Uintah; 
 using namespace std;

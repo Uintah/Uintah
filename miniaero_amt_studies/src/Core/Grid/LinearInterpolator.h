@@ -35,7 +35,6 @@
 
 namespace Uintah {
 
-  using namespace SCIRun;
 
   class LinearInterpolator : public ParticleInterpolator {
     

@@ -41,7 +41,7 @@
 #include <Core/Datatypes/Matrix.h>
 #include <Core/Containers/Array1.h>
 
-namespace SCIRun {
+namespace Uintah {
 
 class SparseRowMatrix : public Matrix {
 private:
@@ -118,10 +118,8 @@ public:
   virtual void print() const;
   virtual void print(std::ostream&) const;
  
-  //! Persistent representation...
   virtual std::string type_name() { return "SparseRowMatrix"; }
-  virtual void io(Piostream&);
-  static PersistentTypeID type_id;
+
 
 
   friend SparseRowMatrix *AddSparse(const SparseRowMatrix &a,
@@ -130,9 +128,8 @@ public:
                                     const SparseRowMatrix &b);
 
 
-  static Persistent *maker();
 };
 
-} // End namespace SCIRun
+} // End namespace Uintah
 
 #endif

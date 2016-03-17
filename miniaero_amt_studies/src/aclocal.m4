@@ -360,7 +360,7 @@ AC_DEFUN([SCI_TRY_LINK], [
 ##      HAVE_$1_H         => yes or no
 
 if test $# != 9; then
-     AC_MSG_ERROR(Wrong number of parameters ($#) for SCI-TRY-LINK for $2.  This is an internal SCIRun configure error and should be reported to scirun-develop@sci.utah.edu.)
+     AC_MSG_ERROR(Wrong number of parameters ($#) for SCI-TRY-LINK for $2.  This is an internal Uintah configure error and should be reported to scirun-develop@sci.utah.edu.)
 fi
 
 ifelse([$1],[],[AC_FATAL(must provide a test name in arg 1)],)dnl
@@ -375,7 +375,7 @@ _sci_includes=
 
 if test "$9" != "optional" -a "$9" != "required" -a "$9" != "specific"; then
      echo
-     AC_MSG_ERROR(Last parameter of SCI-TRY-LINK for $2 must be: optional or required or specific.  (You had $9.)  This is an internal SCIRun configure error and should be reported to scirun-develop@sci.utah.edu.)
+     AC_MSG_ERROR(Last parameter of SCI-TRY-LINK for $2 must be: optional or required or specific.  (You had $9.)  This is an internal Uintah configure error and should be reported to scirun-develop@sci.utah.edu.)
 fi
 
 # If $4 (the -I paths) is blank, do nothing, else do the for statement.
@@ -531,7 +531,7 @@ if test "$9" = "specific"; then
     fi
   done
   if test $__sci_pass != "true"; then
-       AC_MSG_ERROR(For specific SCI-TRY-LINK test for $1 only one library path may be specified for arg 6 (you had: $6).  This is an internal SCIRun configure error and should be reported to scirun-develop@sci.utah.edu.)
+       AC_MSG_ERROR(For specific SCI-TRY-LINK test for $1 only one library path may be specified for arg 6 (you had: $6).  This is an internal Uintah configure error and should be reported to scirun-develop@sci.utah.edu.)
   fi
   # and only one include path:
   ### Determine if there is only one item in $4
@@ -549,7 +549,7 @@ if test "$9" = "specific"; then
     fi
   done
   if test -n "$4" && test $__sci_pass != "true"; then
-       AC_MSG_ERROR(For specific SCI-TRY-LINK test for $1 only one include path may be specified for arg 4 (you had: $4).  This is an internal SCIRun configure error and should be reported to scirun-develop@sci.utah.edu.)
+       AC_MSG_ERROR(For specific SCI-TRY-LINK test for $1 only one include path may be specified for arg 4 (you had: $4).  This is an internal Uintah configure error and should be reported to scirun-develop@sci.utah.edu.)
   fi
 fi
 
@@ -1006,7 +1006,7 @@ AC_DEFUN(SCI_REMOVE_MINUS_L,
    libs="$3"
 
    if test -z "$dirs" || test -z "$libs"; then
-       AC_MSG_ERROR(The dirs '$dirs' and/or libs '$libs' parameters of SCI-REMOVE-MINUS-L are empty.  This is an internal SCIRun configure error and should be reported to scirun-develop@sci.utah.edu.)
+       AC_MSG_ERROR(The dirs '$dirs' and/or libs '$libs' parameters of SCI-REMOVE-MINUS-L are empty.  This is an internal Uintah configure error and should be reported to scirun-develop@sci.utah.edu.)
    else
 
      sci_temp_lib=

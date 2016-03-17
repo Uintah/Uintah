@@ -45,7 +45,7 @@
 #include <CCA/Components/Wasatch/ConvectiveInterpolationMethods.h>
 
 #include <CCA/Components/Wasatch/Transport/ScalarTransportEquation.h>
-#include <CCA/Components/Wasatch/Transport/ParseEquation.h>
+#include <CCA/Components/Wasatch/Transport/ParseEquationHelper.h>
 
 #include <CCA/Components/Wasatch/Expressions/ExprAlgebra.h>
 #include <CCA/Components/Wasatch/BCHelper.h>

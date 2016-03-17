@@ -31,7 +31,6 @@
 
 using namespace std;
 using namespace Uintah;
-using namespace SCIRun;
 
 SendState::SendState()
 : d_lock("SendState Lock")

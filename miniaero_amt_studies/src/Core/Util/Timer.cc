@@ -50,7 +50,7 @@
 
 #include <time.h>
 using namespace std;
-using namespace SCIRun;
+
 
 
 using std::cerr;
@@ -209,8 +209,8 @@ void TimeThrottle::wait_for_time(double endtime)
     return;
   }
   timespec delay, remaining;
-  remaining.tv_sec = SCIRun::Floor(delta);
-  remaining.tv_nsec = SCIRun::Floor((delta - SCIRun::Floor(delta)) * 1000000000);
+  remaining.tv_sec = Uintah::Floor(delta);
+  remaining.tv_nsec = Uintah::Floor((delta - Uintah::Floor(delta)) * 1000000000);
   do {
     delay = remaining;
   } while (nanosleep(&delay, &remaining) != 0);
@@ -238,15 +238,15 @@ MultiThreadedTimer::~MultiThreadedTimer() {
 }
 void MultiThreadedTimer::start() {
 
-  int threadID = SCIRun::Thread::self()->myid();
+  int threadID = Uintah::Thread::self()->myid();
   timers[threadID].start();
 }
 
 void MultiThreadedTimer::stop(){
-  timers[SCIRun::Thread::self()->myid()].stop();
+  timers[Uintah::Thread::self()->myid()].stop();
 }
 void MultiThreadedTimer::clear(){
-  int threadID = SCIRun::Thread::self()->myid();
+  int threadID = Uintah::Thread::self()->myid();
   accumulatedTimes[threadID] += time();
   timers[threadID].clear();
 }
@@ -263,17 +263,17 @@ void MultiThreadedTimer::clearAll(){
 
 double MultiThreadedTimer::time(){
   //timerLock.writeLock();
-  return timers[SCIRun::Thread::self()->myid()].time();
+  return timers[Uintah::Thread::self()->myid()].time();
   //timerLock.writeUnlock();
 }
 
 double MultiThreadedTimer::getElapsedSeconds(){
-  int threadID = SCIRun::Thread::self()->myid();
+  int threadID = Uintah::Thread::self()->myid();
   return timers[threadID].time();
 }
 
 double MultiThreadedTimer::getElapsedAccumulatedSeconds(){
-  int threadID = SCIRun::Thread::self()->myid();
+  int threadID = Uintah::Thread::self()->myid();
   return accumulatedTimes[threadID] + timers[threadID].time();
 }
 

@@ -31,7 +31,6 @@
 
 #include <iostream>
 
-using namespace SCIRun;
 using namespace Uintah;
 
 class PatchRangeQuerier {

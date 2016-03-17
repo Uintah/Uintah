@@ -66,15 +66,15 @@
 
 #define AVERAGE_WINDOW 10
 
-extern SCIRun::DebugStream amrout;
+extern Uintah::DebugStream amrout;
 
 namespace {
 
-SCIRun::DebugStream dbg(     "SimulationStats",            true  );
-SCIRun::DebugStream dbgTime( "SimulationTimeStats",        false );
-SCIRun::DebugStream simdbg(  "SimulationController",       false );
-SCIRun::DebugStream stats(   "ComponentTimings",           false );
-SCIRun::DebugStream istats(  "IndividualComponentTimings", false );
+Uintah::DebugStream dbg(     "SimulationStats",            true  );
+Uintah::DebugStream dbgTime( "SimulationTimeStats",        false );
+Uintah::DebugStream simdbg(  "SimulationController",       false );
+Uintah::DebugStream stats(   "ComponentTimings",           false );
+Uintah::DebugStream istats(  "IndividualComponentTimings", false );
 
 }
 
@@ -273,6 +273,15 @@ SimulationController::setReduceUdaFlags( const std::string & fromDir )
 //______________________________________________________________________
 //
 void
+SimulationController::setUseLocalFileSystems()
+{
+  d_usingLocalFileSystems = true;
+}
+
+//______________________________________________________________________
+//
+
+void
 SimulationController::doRestart( const std::string & restartFromDir, int timestep,
                                  bool fromScratch, bool removeOldDir )
 {
@@ -289,6 +298,8 @@ void
 SimulationController::preGridSetup( void )
 {
   d_sharedState = scinew SimulationState(d_ups);
+
+  d_sharedState->d_usingLocalFileSystems = d_usingLocalFileSystems;
 
   d_output = dynamic_cast<Output*>(getPort("output"));
 
@@ -312,7 +323,7 @@ SimulationController::preGridSetup( void )
   d_sharedState->d_simTime = d_timeinfo;
 
 #ifdef HAVE_VISIT
-  d_sharedState->SetVisIt( d_doVisIt );
+  d_sharedState->setVisIt( d_doVisIt );
 #endif
 }
 

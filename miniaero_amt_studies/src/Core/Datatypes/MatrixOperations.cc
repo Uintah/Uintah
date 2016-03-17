@@ -39,9 +39,10 @@
 #include <Core/Datatypes/DenseMatrix.h>
 #include <Core/Datatypes/SparseRowMatrix.h>
 #include <Core/Datatypes/MatrixOperations.h>
+#include <Core/Malloc/Allocator.h>
 
 
-namespace SCIRun {
+namespace Uintah {
 
 
 MatrixHandle
@@ -190,4 +191,4 @@ operator*(MatrixHandle A, double b)
 }
 
 
-} // End namespace SCIRun
+} // End namespace Uintah

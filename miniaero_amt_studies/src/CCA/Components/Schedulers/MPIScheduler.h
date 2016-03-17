@@ -193,8 +193,8 @@ class MPIScheduler : public SchedulerCommon {
     // multiple reader, single writer lock (pthread_rwlock_t wrapper)
     mutable CrowdMonitor        recvLock;               // CommRecMPI recvs lock
     mutable CrowdMonitor        sendLock;               // CommRecMPI sends lock
-    SCIRun::Mutex               dlbLock;                // load balancer lock
-    SCIRun::Mutex               waittimesLock;          // MPI wait times lock
+    Uintah::Mutex               dlbLock;                // load balancer lock
+    Uintah::Mutex               waittimesLock;          // MPI wait times lock
 
   private:
 

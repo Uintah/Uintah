@@ -23,8 +23,8 @@
   *
   */
 
-#define USE_FUNCTOR 1
-#undef  USE_FUNCTOR 
+#include <CCA/Components/Arches/FunctorSwitch.h>
+ 
 namespace Uintah{
 
 //---------------------------------------------------------------------------
@@ -138,7 +138,6 @@ struct computeEnthalpySource{
          // velocities
          Vector gas_velocity = gasVel(i,j,k);
          Vector particle_velocity = partVel(i,j,k);
-
 
          double FSum = 0.0;
 

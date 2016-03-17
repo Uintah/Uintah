@@ -13,7 +13,6 @@
 #include <ostream>
 #include <fstream>
 
-using namespace SCIRun;
 using namespace Uintah;
 
 int

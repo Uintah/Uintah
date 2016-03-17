@@ -49,7 +49,7 @@
 
 namespace Uintah {
 
-  using SCIRun::InternalError;
+  using Uintah::InternalError;
 
   class ProcessorGroup;
   class TypeDescription;
@@ -551,7 +551,7 @@ template<class T>
     }
     else {
       // emit in runlength encoded format
-      SCIRun::RunLengthEncoder<T> rle;
+      Uintah::RunLengthEncoder<T> rle;
       ParticleSubset::iterator iter = d_pset->begin();
       for ( ; iter != d_pset->end(); iter++)
         rle.addItem((*this)[*iter]);
@@ -583,7 +583,7 @@ template<class T>
         in.read((char*)&(*this)[start], size);
         if (swapBytes) {
           for (particleIndex idx = start; idx != end; idx++) {
-            SCIRun::swapbytes((*this)[idx]);
+            Uintah::swapbytes((*this)[idx]);
           }
         }
       }
@@ -599,10 +599,10 @@ template<class T>
       SCI_THROW(InternalError("Cannot yet read non-flat objects!\n", __FILE__, __LINE__));
     }
     else {
-      SCIRun::RunLengthEncoder<T> rle;
+      Uintah::RunLengthEncoder<T> rle;
       rle.read(in, swapBytes, nByteMode);
       ParticleSubset::iterator iter = d_pset->begin();
-      typename SCIRun::RunLengthEncoder<T>::iterator rle_iter = rle.begin();
+      typename Uintah::RunLengthEncoder<T>::iterator rle_iter = rle.begin();
       for ( ; iter != d_pset->end() && rle_iter != rle.end();
             iter++, rle_iter++)
         (*this)[*iter] = *rle_iter;

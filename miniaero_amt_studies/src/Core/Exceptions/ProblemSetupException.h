@@ -43,7 +43,7 @@
 
 namespace Uintah {
 
-  class ProblemSetupException : public SCIRun::Exception {
+  class ProblemSetupException : public Uintah::Exception {
   public:
     ProblemSetupException(const std::string& msg, const char* file, int line, bool ignoreWait=false);
     ProblemSetupException(const ProblemSetupException&);

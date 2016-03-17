@@ -48,7 +48,6 @@ class BoundaryCondition;
 class LinearSolver;
 class TimeIntegratorLabel;
 
-using namespace SCIRun;
 
 /**************************************
 

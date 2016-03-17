@@ -182,7 +182,7 @@ class DWDatabase {
     // add means increment the scrub count instead of setting it.  This is for when a DW
     // can act as a CoarseOldDW as well as an OldDW
     void initializeScrubs(int dwid,
-                          const SCIRun::FastHashTable<ScrubItem>* scrubcounts,
+                          const FastHashTable<ScrubItem>* scrubcounts,
                           bool add);
 
     void logMemoryUse(std::ostream& out,
@@ -356,7 +356,7 @@ DWDatabase<DomainType>::scrub(const VarLabel* label, int matlIndex, const Domain
 //
 template<class DomainType>
 void
-DWDatabase<DomainType>::initializeScrubs(int dwid, const SCIRun::FastHashTable<ScrubItem>* scrubcounts, bool add)
+DWDatabase<DomainType>::initializeScrubs(int dwid, const FastHashTable<ScrubItem>* scrubcounts, bool add)
 {
   // loop over each variable, probing the scrubcount map. Set the
   // scrubcount appropriately.  if the variable has no entry in

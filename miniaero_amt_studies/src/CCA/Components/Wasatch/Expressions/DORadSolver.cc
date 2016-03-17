@@ -267,7 +267,7 @@ namespace WasatchCore {
 
     for( Uintah::CellIterator iter(patch_->getCellIterator()); !iter.done(); iter++ ){
 
-      const SCIRun::IntVector iCell = *iter;
+      const Uintah::IntVector iCell = *iter;
       Uintah::Stencil7& coefs = matrix_[iCell];
 
       // jcs the absCoef_ and scatCoef_ fields are SpatialFields. We need to index them appropriately.
@@ -299,7 +299,7 @@ namespace WasatchCore {
          5. For each child, get the cell faces and set appropriate boundary conditions
        */
       using SpatialOps::IntVec;
-      const SCIRun::IntVector uintahPatchDim = patch_->getCellHighIndex();
+      const Uintah::IntVector uintahPatchDim = patch_->getCellHighIndex();
       const IntVec patchDim( uintahPatchDim[0], uintahPatchDim[1], uintahPatchDim[2] );
 
       std::vector<Uintah::Patch::FaceType> bndFaces;
@@ -317,10 +317,10 @@ namespace WasatchCore {
           Uintah::Iterator nu;
 //          const Uintah::BoundCondBase* const bc = patch_->getArrayBCValues( face, materialID_, temperatureTag_.name(), boundPtr, nu, child );
 
-//          const bool hasExtraCells = ( patch_->getExtraCells() != SCIRun::IntVector(0,0,0) );
+//          const bool hasExtraCells = ( patch_->getExtraCells() != Uintah::IntVector(0,0,0) );
 
           // cell offset used to calculate local cell index with respect to patch.
-          const SCIRun::IntVector patchCellOffset = patch_->getCellLowIndex(0);
+          const Uintah::IntVector patchCellOffset = patch_->getCellLowIndex(0);
 
           for( boundPtr.reset(); !boundPtr.done(); boundPtr++ ) {
 
@@ -328,7 +328,7 @@ namespace WasatchCore {
             // be taking that into account properly...?  This would require changes
             // to the coefficient values in the matrix and would also require
             // a bit more work on the RHS to determine the appropriate temperature.
-            SCIRun::IntVector bcPointIndex(*boundPtr);
+            Uintah::IntVector bcPointIndex(*boundPtr);
             Uintah::Stencil7& coefs = matrix_[bcPointIndex];
             coefs.n = 0.0;  coefs.s = 0.0;
             coefs.e = 0.0;  coefs.w = 0.0;

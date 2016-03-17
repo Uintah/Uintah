@@ -48,7 +48,7 @@
 #include <string>
 
 
-namespace SCIRun{
+namespace Uintah{
 
 #define SWAP_2(u2)/* IronDoc macro to swap two byte quantity */ \
   { unsigned char* _p = (unsigned char*)(&(u2)); \
@@ -92,5 +92,5 @@ std::string endianness();
 
 
 
-} //end namespace SCIRun
+} //end namespace Uintah
 #endif

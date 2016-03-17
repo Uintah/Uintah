@@ -104,7 +104,7 @@ private:
   WallClockTimer* timers;
   double* accumulatedTimes;
   int numberOfThreads;
-  mutable SCIRun::CrowdMonitor timerLock;
+  mutable Uintah::CrowdMonitor timerLock;
 };
 
 #endif /* SCI_Containers_Timer_h */

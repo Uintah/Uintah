@@ -31,11 +31,7 @@
 
 //-- Wasatch includes --//
 #include <CCA/Components/Wasatch/GraphHelperTools.h>
-#include <CCA/Components/Wasatch/Transport/TransportEquation.h>
-#include <CCA/Components/Wasatch/ConvectiveInterpolationMethods.h>
 #include <CCA/Components/Wasatch/Expressions/Turbulence/TurbulenceParameters.h>
-
-#include <CCA/Components/Wasatch/Expressions/RHSTerms.h>
 
 /**
  *  \file ParseEquation.h
@@ -43,37 +39,8 @@
  */
 
 namespace WasatchCore{
-
-  class TimeStepper;
+  
   class EquationBase;
-
-  /** \addtogroup WasatchParser
-   *  @{
-   */
-
-  /**
-   *  \class EqnTimestepAdaptorBase
-   *  \author James C. Sutherland, Tony Saad, Amir Biglari
-   *  \date June, 2010
-   *
-   *  This serves as a means to have a container of adaptors.  These
-   *  adaptors will plug a strongly typed transport equation into a
-   *  time integrator, preserving the type information which is
-   *  required for use by the integrator.
-   */
-  class EqnTimestepAdaptorBase
-  {
-  protected:
-    EqnTimestepAdaptorBase( EquationBase* eqn);
-    EquationBase* const eqn_;
-
-  public:
-    virtual ~EqnTimestepAdaptorBase();
-    virtual void hook( TimeStepper& ts ) const = 0;
-    EquationBase* equation(){ return eqn_; }
-    const EquationBase* equation() const{ return eqn_; }
-  };
-
 
   /**
    *  \brief Build the transport equation specified by "params"
@@ -210,78 +177,6 @@ namespace WasatchCore{
                                                                          const bool isConstDensity,
                                                                          GraphCategories& gc);
 
-  template<typename GasVel1T, typename GasVel2T, typename GasVel3T>
-  std::vector<EqnTimestepAdaptorBase*>
-  parse_particle_transport_equations( Uintah::ProblemSpecP particleSpec,
-                                      Uintah::ProblemSpecP wasatchSpec,
-                                      const bool useAdaptiveDt,
-                                      GraphCategories& gc);
-
-
-  /**
-   * \brief Register diffusive flux calculation, \f$J_\phi = -\rho \Gamma_\phi \nabla \phi\f$,
-   *        for the scalar quantity \f$ \phi \f$.
-   * \param diffFluxParams Parser block "DiffusiveFlux"
-   * \param densityTag the mixture mass density
-   * \param primVarTag The primitive variable, \f$\phi\f$.
-   * \param turbDiffTag The scalar turbulent diffusivity
-   * \param suffix a string containing the "_*" suffix or not, according to whether we
-   *        want to calculate the convection term at time step "n+1" or the current time step 
-   * \param factory the factory to register the resulting expression on
-   * \param info the FieldTagInfo object that will be populated with the appropriate convective flux entry.
-   */
-  template< typename FieldT>
-  void setup_diffusive_flux_expression( Uintah::ProblemSpecP diffFluxParams,
-                                        const Expr::Tag densityTag,
-                                        const Expr::Tag primVarTag,
-                                        const Expr::Tag turbDiffTag, 
-                                        Expr::ExpressionFactory& factory,
-                                        FieldTagInfo& info );
-  template< typename FieldT>
-  void setup_diffusive_velocity_expression( Uintah::ProblemSpecP diffVelParams,
-                                            const Expr::Tag primVarTag,
-                                            const Expr::Tag turbDiffTag,  
-                                            Expr::ExpressionFactory& factory,
-                                            FieldTagInfo& info );
-
-  /**
-   * \brief Build the convective flux expression
-   * \param dir the direction that this flux is associated with
-   * \param solnVarTag the solution variable tag
-   * \param convFluxTag the convective flux tag - leave empty to assemble a
-   *        flux, populate it to use a flux expression that already exists.
-   * \param convMethod the upwind method to use
-   * \param advVelocityTag the advecting velocity, which lives at staggered cell centers
-   * \param suffix a string containing the "_*" suffix or not, according to whether we
-   *        want to calculate the convection term at time step "n+1" or the current time step 
-   * \param factory the factory to associate the convective flux expression with
-   * \param info this will be populated for use in the ScalarRHS expression if needed.
-   */
-  template< typename FieldT >
-  void setup_convective_flux_expression( const std::string& dir,
-                                         const Expr::Tag& solnVarTag,
-                                         Expr::Tag convFluxTag,
-                                         const ConvInterpMethods convMethod,
-                                         const Expr::Tag& advVelocityTag,
-                                         Expr::ExpressionFactory& factory,
-                                         FieldTagInfo& info );
-
-  /**
-   * \brief Register convective flux calculation for the given scalar quantity
-   * \param convFluxParams Parser block "ConvectiveFlux"
-   * \param solnVarTag the solution variable to be advected
-   * \param suffix a string containing the "_*" suffix or not, according to whether we
-   *        want to calculate the convection term at time step "n+1" or the current time step 
-   * \param factory the factory to register the resulting expression on
-   * \param info the FieldTagInfo object that will be populated with the appropriate convective flux entry.
-   */
-  template< typename FieldT >
-  void setup_convective_flux_expression( Uintah::ProblemSpecP convFluxParams,
-                                         const Expr::Tag& solnVarTag,
-                                         Expr::ExpressionFactory& factory,
-                                         FieldTagInfo& info );
-
-  /** @} */
 
 }// namespace WasatchCore
 

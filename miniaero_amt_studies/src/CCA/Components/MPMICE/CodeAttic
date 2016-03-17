@@ -501,7 +501,6 @@ void MPMICE::interpolateCCToNC(const ProcessorGroup*,
 #include <Packages/Uintah/Core/Grid/Variables/VarTypes.h>
 #include <Packages/Uintah/Core/Labels/MPMICELabel.h>
 
-using namespace SCIRun;
 using namespace Uintah;
 
 

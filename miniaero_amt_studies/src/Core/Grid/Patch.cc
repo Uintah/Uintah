@@ -45,13 +45,12 @@
 #include <map>
 
 using namespace std;
-using namespace SCIRun;
 using namespace Uintah;
 
 
 static AtomicCounter ids("Patch ID counter",0);
 static Mutex ids_init("ID init");
-extern SCIRun::Mutex coutLock; // Used to sync (when output by multiple threads)
+extern Uintah::Mutex coutLock; // Used to sync (when output by multiple threads)
 
 Patch::Patch(const Level* level,
              const IntVector& lowIndex, const IntVector& highIndex,
@@ -1018,7 +1017,7 @@ Patch::getEdgeCellIterator(const FaceType& face0,
       patchExtraLow=IntVector(0,0,0);
       patchExtraHigh=IntVector(0,0,0);
 
-      throw SCIRun::InternalError("Invalid EdgeIteratorType Specified", __FILE__, __LINE__);
+      throw Uintah::InternalError("Invalid EdgeIteratorType Specified", __FILE__, __LINE__);
   };
   vector<IntVector>loPt(2), hiPt(2); 
 

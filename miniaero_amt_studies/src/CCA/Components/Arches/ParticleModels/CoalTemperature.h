@@ -3,8 +3,8 @@
 
 #include <CCA/Components/Arches/Task/TaskInterface.h>
 
-#define USE_FUNCTOR 1
-#undef  USE_FUNCTOR 
+#include <CCA/Components/Arches/FunctorSwitch.h>
+ 
 namespace Uintah{ 
 
   class Operators; 
@@ -24,6 +24,17 @@ namespace Uintah{
                              CoalTemperature* theClassAbove ) :
                              dt(_dt),
                              ix(_ix),
+#ifdef UINTAH_ENABLE_KOKKOS
+                             gas_temperature(_gas_temperature.getKokkosView()),
+                             vol_frac(_vol_frac.getKokkosView()),
+                             rcmass(_rcmass.getKokkosView()), 
+                             charmass(_charmass.getKokkosView()),
+                             enthalpy(_enthalpy.getKokkosView()),
+                             temperatureold(_temperatureold.getKokkosView()), 
+                             diameter(_diameter.getKokkosView()),
+                             temperature(_temperature.getKokkosView()),
+                             dTdt(_dTdt.getKokkosView()),
+#else
                              gas_temperature(_gas_temperature),
                              vol_frac(_vol_frac),
                              rcmass(_rcmass), 
@@ -33,6 +44,7 @@ namespace Uintah{
                              diameter(_diameter),
                              temperature(_temperature),
                              dTdt(_dTdt),
+#endif
                              TCA(theClassAbove){ }
 
       void operator()(int i , int j, int k ) const {
@@ -132,6 +144,18 @@ namespace Uintah{
       private:
       double dt;
       int    ix;
+
+#ifdef UINTAH_ENABLE_KOKKOS
+      KokkosView3<const double> gas_temperature;
+      KokkosView3<const double> vol_frac;
+      KokkosView3<const double> rcmass; 
+      KokkosView3<const double> charmass;
+      KokkosView3<const double> enthalpy;
+      KokkosView3<const double> temperatureold; 
+      KokkosView3<const double> diameter;
+      KokkosView3<double> temperature; 
+      KokkosView3<double> dTdt;
+#else
       constCCVariable<double>& gas_temperature;
       constCCVariable<double>& vol_frac;
       constCCVariable<double>& rcmass; 
@@ -141,6 +165,7 @@ namespace Uintah{
       constCCVariable<double>& diameter;
       CCVariable<double>& temperature; 
       CCVariable<double>& dTdt;
+#endif
       CoalTemperature* TCA;     
     };
 

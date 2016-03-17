@@ -89,7 +89,7 @@ public:
     }
   }
 private:
-  SCIRun::WorkQueue   work;
+  Uintah::WorkQueue   work;
   int       * buffer;
   int         buff_size;
   int         np;
@@ -127,12 +127,12 @@ main(int argc, char *argv[])
   std::cout <<"np = "<<np<<", buff_size = "<<buff_size<<", granularity = "<<granularity<<std::endl;
   
   ParallelWorker worker(buff_size,np,granularity);
-  SCIRun::ThreadNS::Parallel<ParallelWorker> phelper(&worker, &ParallelWorker::do_work);
-  SCIRun::Thread::parallel(phelper, np, true);
+  Uintah::ThreadNS::Parallel<ParallelWorker> phelper(&worker, &ParallelWorker::do_work);
+  Uintah::Thread::parallel(phelper, np, true);
 
   worker.print_test();
   std::cerr << "Program end\n";
-  SCIRun::Thread::exitAll(0);
+  Uintah::Thread::exitAll(0);
 
   return 0;
 }

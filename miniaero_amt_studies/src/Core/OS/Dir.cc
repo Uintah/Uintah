@@ -43,7 +43,7 @@
 #include <dirent.h>
 
 using namespace std;
-using namespace SCIRun;
+using namespace Uintah;
 
 //______________________________________________________________________
 //

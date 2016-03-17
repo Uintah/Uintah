@@ -76,12 +76,11 @@
 #include <thread>
 #include <vector>
 
-using namespace SCIRun;
 using namespace Uintah;
 
 // Debug: Used to sync cerr/cout so it is readable when output by multiple threads
-extern SCIRun::Mutex cerrLock;
-extern SCIRun::Mutex coutLock;
+extern Uintah::Mutex cerrLock;
+extern Uintah::Mutex coutLock;
 
 
 #ifdef HAVE_CUDA

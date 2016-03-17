@@ -732,7 +732,7 @@ void UCNH::initializeCMData(const Patch* patch,
       patchID = patchID%32;
       unsigned int unique_seed = ((d_epsf.seed+patch_div_32+1) << patchID);
 
-     SCIRun::Gaussian gaussGen(d_epsf.mean,d_epsf.std,unique_seed,
+     Gaussian gaussGen(d_epsf.mean,d_epsf.std,unique_seed,
                                 d_epsf.refVol,d_epsf.exponent);
       
       for(;iter != pset->end();iter++){
@@ -751,7 +751,7 @@ void UCNH::initializeCMData(const Patch* patch,
       patchID = patchID%32;
       unsigned int unique_seed = ((d_epsf.seed+patch_div_32+1) << patchID);
 
-      SCIRun::Weibull weibGen(d_epsf.mean,d_epsf.std,d_epsf.refVol,
+      Weibull weibGen(d_epsf.mean,d_epsf.std,d_epsf.refVol,
                               unique_seed,d_epsf.exponent);
       
       for(;iter != pset->end();iter++){

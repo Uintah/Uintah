@@ -1,28 +1,29 @@
 #! /usr/bin/env python
+
 import os
+
+# bulletproofing
+if os.sys.version_info <= (2,7):
+  print( "" )
+  print( "ERROR: Your python version [" + str( os.sys.version_info ) + "] is too old.\n" + \
+        "       You must use version 2.7 or greater (but NOT version 3.x!). \n" + \
+        "       If you're using either ember or updraft please add the following to your shell rc script: \n" + \
+        "           csh/tcsh:  source /uufs/chpc.utah.edu/sys/pkg/python/2.6.5/etc/python.csh \n" + \
+        "           bash:      source /uufs/chpc.utah.edu/sys/pkg/python/2.6.5/etc/python.sh\n\n" )
+  print( "" )
+  exit( 1 )
+
 import shutil
 import platform
 import socket
 import resource
-import subprocess #needed to accurately get return codes
+import subprocess # needed to accurately get return codes
+
 from optparse import OptionParser
 from sys import argv, exit
 from string import upper
-from subprocess import check_output #needed to get full pathname 
-                                    #response from which command
 
-# bulletproofing
-if os.sys.version_info <= (2,5):
-  print ""
-  print "ERROR: Your python version [" + str( os.sys.version_info ) + "] is too old.\n" + \
-        "       You must use version 2.5 or greater (but NOT version 3.x!). \n" + \
-        "       If you're using either ember or updraft please add the following to your shell rc script: \n" + \
-        "           csh/tcsh:  source /uufs/chpc.utah.edu/sys/pkg/python/2.6.5/etc/python.csh \n" + \
-        "           bash:      source /uufs/chpc.utah.edu/sys/pkg/python/2.6.5/etc/python.sh\n\n"
-  print ""
-  exit( 1 )
-
-import subprocess
+#from subprocess import check_output # needed to get full pathname response from which command
 
 from helpers.runSusTests import nameoftest, testOS, input, num_processes, testOS, setGeneratingGoldStandards, userFlags
 
@@ -76,11 +77,11 @@ parser.add_option( "-v", action="store_true", dest="verbose", help="Enable verbo
 ####################################################################################
 
 def error( error_msg ) :
-    print ""
-    print "ERROR: " + error_msg
-    print ""
+    print( "" )
+    print( "ERROR: " + error_msg )
+    print( "" )
     parser.print_help()
-    print ""
+    print( "" )
     exit( 1 )
 
 ####################################################################################
@@ -153,7 +154,7 @@ def generateGS() :
     try :
         (options, leftover_args ) = parser.parse_args()
     except :
-        print "" # Print an extra newline at end of output for clarity
+        print( "" ) # Print an extra newline at end of output for clarity
         exit( 1 )
 
     validateArgs( options, leftover_args )
@@ -181,15 +182,15 @@ def generateGS() :
         MPIRUN = check_output(["which", "mpirun"])
         MPIRUN = MPIRUN[:-1] # get rid of carriage return at the end of check_output
       except:
-        print "ERROR:generateGoldStandards.py "
-        print "      mpirun command was not found and the environmental variable MPIRUN was not set."
-        print "      You must either add mpirun to your path, or set the 'MPIRUN' environment variable."
+        print( "ERROR:generateGoldStandards.py ")
+        print( "      mpirun command was not found and the environmental variable MPIRUN was not set." )
+        print( "      You must either add mpirun to your path, or set the 'MPIRUN' environment variable." )
         exit (1)
-    print "Using mpirun: %s " % MPIRUN
-    print "If this is not the correct MPIRUN, please indicate the desired one with the MPIRUN environment variable"
+    print( "Using mpirun: %s " % MPIRUN )
+    print( "If this is not the correct MPIRUN, please indicate the desired one with the MPIRUN environment variable" )
         
     if options.verbose :
-        print "Building Gold Standards in " + os.getcwd()
+        print( "Building Gold Standards in " + os.getcwd() )
 
     ##############################################################
     # Determine if the code has been modified (svn stat)
@@ -201,17 +202,17 @@ def generateGS() :
     if result != 0 :
         answer = ""
         while answer != "n" and answer != "y" :
-            print ""
-            print "WARNING:  SVN 'stat' failed to run correctly, so generateGoldStandards.py cannot tell"
-            print "          if your tree is 'up to date'.  Are you sure you want to continue generating"
-            print "          new gold standards at this time? [y/n]"
-            print ""
+            print( "" )
+            print( "WARNING:  SVN 'stat' failed to run correctly, so generateGoldStandards.py cannot tell" )
+            print( "          if your tree is 'up to date'.  Are you sure you want to continue generating" )
+            print( "          new gold standards at this time? [y/n]" )
+            print( "" )
 
             answer = os.sys.stdin.readline()[:-1]
             if answer == "n" :
-                print ""
-                print "Goodbye."
-                print ""
+                print( "" )
+                print( "Goodbye." )
+                print( "" )
                 exit( 0 )
     #
     # !!!FIXME!!!: if svn fails to run, or returns differences, then
@@ -247,7 +248,7 @@ def generateGS() :
       components.append( c )
       componentTests.append( t )
     
-    print "\nComponents (%s), tests(%s) " % (components,componentTests)
+    print( "\nComponents (%s), tests(%s) " % (components,componentTests) )
     
 
     # Exit if the component hasn't been compiled.  Note, not all components
@@ -258,7 +259,7 @@ def generateGS() :
       searchString = "BUILD_%s=no" % upper(component)  # search for BUILD_<COMPONENT>=no
       for line in open(configVars):
         if searchString in line:
-          print "\n ERROR: the component (%s) was not compiled.  You must compile it before you can generate the gold standards\n" % component
+          print( "\n ERROR: the component (%s) was not compiled.  You must compile it before you can generate the gold standards\n" % component )
           exit( 1 ) 
 
     # Warn user if directories already exist
@@ -268,27 +269,27 @@ def generateGS() :
         if os.path.isdir( component ) :
             if not some_dirs_already_exist :
                 some_dirs_already_exist = True
-                print ""
-                print "Note, the following gold standards already exist: ",
+                print( "" )
+                print( "Note, the following gold standards already exist: " )
             else :
-                print ", ",
+                print( ", " )
             os.sys.stdout.write( component )
 
     if some_dirs_already_exist :
         answer = ""
         while answer != "n" and answer != "y" :
-            print ""
-            print "Delete existing gold standards?  (If 'no', script will exit.) [y/n]"
+            print( "" )
+            print( "Delete existing gold standards?  (If 'no', script will exit.) [y/n]" )
             answer = os.sys.stdin.readline()[:-1]
             if answer == "n" :
-                print ""
-                print "Goodbye."
-                print ""
+                print( "" )
+                print( "Goodbye." )
+                print( "" )
                 exit( 0 )
 
         for component in components :
             if os.path.isdir( component ) :
-                print "Deleting " + component
+                print( "Deleting " + component )
                 shutil.rmtree( component )
     
     counter = -1;
@@ -298,15 +299,15 @@ def generateGS() :
         # Pull the list of tests from the the 'component's python module's 'TESTS' variable:
         # (Need to 'import' the module first.)
         if options.verbose :
-            print "Python importing " + component + ".py"
+            print( "Python importing " + component + ".py" )
 
         try :
           THE_COMPONENT = __import__( component )
         except :
-          print ""
-          print "Error: loading the component '%s'." % component
-          print "       Either that python file does not exist or there is a syntax error in the tests that have been defined.  Goodbye."
-          print ""
+          print( "" )
+          print( "Error: loading the component '%s'." % component )
+          print( "       Either that python file does not exist or there is a syntax error in the tests that have been defined.  Goodbye." )
+          print( "" )
           exit( -1 )
 
         os.mkdir( component )
@@ -321,9 +322,9 @@ def generateGS() :
         tests = THE_COMPONENT.getTestList( componentTests[counter] )
                   
         if options.verbose :
-            print ""
-            print "______________________________________________________________________"
-            print "About to run tests for component: " + component
+            print( "" )
+            print( "______________________________________________________________________" )
+            print( "About to run tests for component: " + component )
 
         for test in tests :
             if testOS( test ) != upper( OS ) and testOS( test ) != "ALL":
@@ -338,7 +339,7 @@ def generateGS() :
             # override defaults if the flags have been specified
             if len(test) == 5:
               flags = userFlags(test)
-              print "User Flags:"
+              print( "User Flags:" )
 
               #  parse the user flags
               for i in range(len(flags)):
@@ -348,25 +349,25 @@ def generateGS() :
                 tmp = flags[i].rsplit('=')
                 if tmp[0] == "sus_options":
                   sus_options = tmp[1]
-                  print "\n sus_option: %s \n"%(sus_options)
+                  print( "\n sus_option: %s \n"%(sus_options) )
 
             if do_gpu == 1:
             
-              print "Running command to see if GPU is active: " + sus + " -gpucheck"
+              print( "Running command to see if GPU is active: " + sus + " -gpucheck" )
 
               child = subprocess.Popen( [sus, "-gpucheck"], stdout=subprocess.PIPE)
               streamdata = child.communicate()[0]
               rc = child.returncode
               if rc == 1:
-                print "GPU found!"
+                print( "GPU found!" )
                 has_gpu = 1
               else:
                 has_gpu = 0
-                print "\nWARNING: skipping this test.  This machine is not configured to run gpu tests\n"
+                print( "\nWARNING: skipping this test.  This machine is not configured to run gpu tests\n" )
                 continue
               
             # FIXME: NOT SURE IF THIS IS RIGHT, BUT IT APPEARS TO MATCH WHAT THE RUN TESTS SCRIPT NEEDS:
-            print "About to run test: " + nameoftest( test )
+            print( "About to run test: " + nameoftest( test ) )
             os.mkdir( nameoftest( test ) )
             os.chdir( nameoftest( test ) )
 
@@ -383,11 +384,11 @@ def generateGS() :
 
             if debug_build :
                 if no_sci_malloc :
-                    print ""
-                    print "WARNING!!! The build was not built with SCI Malloc on...  Memory tests will not be run."
-                    print "WARNING!!! If you wish to perform memory checks, you must re-configure your debug build"
-                    print "WARNING!!! with '--enable-sci-malloc', run 'make cleanreally', and re-compile everything."
-                    print ""
+                    print( "" )
+                    print( "WARNING!!! The build was not built with SCI Malloc on...  Memory tests will not be run." )
+                    print( "WARNING!!! If you wish to perform memory checks, you must re-configure your debug build" )
+                    print( "WARNING!!! with '--enable-sci-malloc', run 'make cleanreally', and re-compile everything." )
+                    print( "" )
                 else :
                     os.environ['MALLOC_STRICT'] = "set"
                     os.environ['MALLOC_STATS'] = "malloc_stats"
@@ -404,20 +405,20 @@ def generateGS() :
             else :
                 command = sus + SVN_FLAGS + " " + sus_options + " " + inputs + "/" + component + "/" + input( test )  + " >  sus_log.txt 2>&1" 
 
-            print "Running command: " + command
+            print( "Running command: " + command )
 
             rc = os.system( command )
             
             
-            print "\t*** Test return code %i" % rc
+            print( "\t*** Test return code %i" % rc )
             # catch if sus doesn't run to completion
             
             if rc == 35072 or rc == 36608 :
-              print "\t*** Test exceeded maximum allowable run time ***"
-              print 
+              print( "\t*** Test exceeded maximum allowable run time ***" )
+              print( "" )
             
             if rc != 0:
-              print "\nERROR: %s: Test (%s) failed to complete\n" % (component,test)
+              print( "\nERROR: %s: Test (%s) failed to complete\n" % (component,test) )
             
             os.chdir( ".." ) # Back to the component (eg: 'ICE') directory
 

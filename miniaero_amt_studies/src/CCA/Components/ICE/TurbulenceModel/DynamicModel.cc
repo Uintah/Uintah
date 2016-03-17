@@ -140,8 +140,8 @@ template void DynamicModel::applyFilter< CCVariable<double>, double >(      cons
   Purpose~ Calculate the filtered values
   -----------------------------------------------------------------------  */
 void DynamicModel::applyFilter(const Patch* patch, 
-                               SCIRun::StaticArray<CCVariable<double> >& var,
-                               SCIRun::StaticArray<CCVariable<double> >& var_hat)
+                               StaticArray<CCVariable<double> >& var,
+                               StaticArray<CCVariable<double> >& var_hat)
 { 
   int NGC =1;  // number of ghostCells
   for(CellIterator iter = patch->getCellIterator(NGC); !iter.done(); iter++) { 

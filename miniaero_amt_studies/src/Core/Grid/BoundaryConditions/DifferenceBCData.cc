@@ -36,7 +36,6 @@
 
 using std::endl;
 
-using namespace SCIRun;
 using namespace Uintah;
 
 // export SCI_DEBUG="BC_dbg:+"

@@ -60,8 +60,8 @@
 using namespace Uintah;
 
 // Used to sync cout/cerr so it is readable when output by multiple threads
-extern SCIRun::Mutex coutLock;
-extern SCIRun::Mutex cerrLock;
+extern Uintah::Mutex coutLock;
+extern Uintah::Mutex cerrLock;
 
 static DebugStream dbg(          "MPIScheduler_DBG",        false );
 static DebugStream dbgst(        "SendTiming",              false );
@@ -157,10 +157,10 @@ MPIScheduler::~MPIScheduler()
 SchedulerP
 MPIScheduler::createSubScheduler()
 {
-  MPIScheduler* newsched = scinew MPIScheduler(d_myworld, m_outPort, this);
-  UintahParallelPort* lbp = getPort("load balancer");
-  newsched->attachPort("load balancer", lbp);
-  newsched->d_sharedState=d_sharedState;
+  UintahParallelPort * lbp      = getPort("load balancer");
+  MPIScheduler       * newsched = scinew MPIScheduler( d_myworld, m_outPort_, this );
+  newsched->attachPort( "load balancer", lbp );
+  newsched->d_sharedState = d_sharedState;
   return newsched;
 }
 

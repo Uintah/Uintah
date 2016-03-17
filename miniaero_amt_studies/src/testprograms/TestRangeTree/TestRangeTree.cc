@@ -37,19 +37,19 @@ std::list<Point*> doLinearQuery(std::list<Point*> points,
 			   const Point& low, const Point& high);
 std::list<Point*> doLinearSphereQuery(std::list<Point*> points,
 				 const Point& p, int radius);
-void doRangeQueryTests(Suite* suite, SCIRun::RangeTree<Point, int>* rangeTree,
+void doRangeQueryTests(Suite* suite, Uintah::RangeTree<Point, int>* rangeTree,
 		       std::list<Point*>& points,
 		       const Point& low, const Point& high, bool verbose);
-void doSphereRangeQueryTests(Suite* suite, SCIRun::RangeTree<Point, int>* rangeTree,
+void doSphereRangeQueryTests(Suite* suite, Uintah::RangeTree<Point, int>* rangeTree,
 			     std::list<Point*>& points,
 			     const Point& p, int radius, bool verbose);
 Point* doLinearNearestL1Query(std::list<Point*> points, const Point& p);
 Point* doLinearNearestQuery(std::list<Point*> points, const Point& p);
 
-void doNearestQueryTests(Suite* suite, SCIRun::RangeTree<Point, int, true>* rangeTree,
+void doNearestQueryTests(Suite* suite, Uintah::RangeTree<Point, int, true>* rangeTree,
 			 std::list<Point*>& points, const Point& p, bool verbose);
 void doNearestQueryAtPointsTest(Suite* suite,
-				SCIRun::RangeTree<Point, int, true>* rangeTree,
+				Uintah::RangeTree<Point, int, true>* rangeTree,
 				std::list<Point*>& points, bool verbose);
 
 void printList(std::list<Point*>& points);
@@ -124,7 +124,7 @@ SuiteTree* RangeTreeTestTree(bool verbose /*= false*/, int n /* = 100000 */,
   
   timeval start, end;
   gettimeofday(&start, 0);
-  SCIRun::RangeTree<Point, int>* rangeTree = scinew SCIRun::RangeTree<Point, int>(points, 3);
+  Uintah::RangeTree<Point, int>* rangeTree = scinew Uintah::RangeTree<Point, int>(points, 3);
   gettimeofday(&end, 0);
   if (verbose) {
     std::cout << "Built tree in ";
@@ -149,8 +149,8 @@ SuiteTree* RangeTreeTestTree(bool verbose /*= false*/, int n /* = 100000 */,
   
   // build a range tree for nearest neighbor searches
   gettimeofday(&start, 0);
-  SCIRun::RangeTree<Point, int, true>* nearestCapabableRangeTree =
-    scinew SCIRun::RangeTree<Point, int, true>(points, 3);
+  Uintah::RangeTree<Point, int, true>* nearestCapabableRangeTree =
+    scinew Uintah::RangeTree<Point, int, true>(points, 3);
   gettimeofday(&end, 0);
   if (verbose) {
     std::cout << "Built nearest query enabled tree in ";
@@ -198,7 +198,7 @@ SuiteTree* RangeTreeTestTree(bool verbose /*= false*/, int n /* = 100000 */,
   return topSuite;
 } 
 
-void doRangeQueryTests(Suite* suite, SCIRun::RangeTree<Point, int>* rangeTree,
+void doRangeQueryTests(Suite* suite, Uintah::RangeTree<Point, int>* rangeTree,
 		       std::list<Point*>& points,
 		       const Point& low, const Point& high, bool verbose)
 {
@@ -264,7 +264,7 @@ void doRangeQueryTests(Suite* suite, SCIRun::RangeTree<Point, int>* rangeTree,
   }
 }
 
-void doSphereRangeQueryTests(Suite* suite, SCIRun::RangeTree<Point, int>* rangeTree,
+void doSphereRangeQueryTests(Suite* suite, Uintah::RangeTree<Point, int>* rangeTree,
 			     std::list<Point*>& points,
 			     const Point& p, int radius, bool verbose)
 {   
@@ -331,7 +331,7 @@ void doSphereRangeQueryTests(Suite* suite, SCIRun::RangeTree<Point, int>* rangeT
   }
 }
 
-void doNearestQueryTests(Suite* suite, SCIRun::RangeTree<Point, int, true>* rangeTree,
+void doNearestQueryTests(Suite* suite, Uintah::RangeTree<Point, int, true>* rangeTree,
 			 std::list<Point*>& points, const Point& p, bool verbose)
 {
   timeval start, end;
@@ -396,7 +396,7 @@ void doNearestQueryTests(Suite* suite, SCIRun::RangeTree<Point, int, true>* rang
 }
 
 void doNearestQueryAtPointsTest(Suite* suite,
-				SCIRun::RangeTree<Point, int, true>* rangeTree,
+				Uintah::RangeTree<Point, int, true>* rangeTree,
 				std::list<Point*>& points, bool verbose)
 { 
   timeval start, end;

@@ -771,7 +771,7 @@ void SecondOrderAdvector::q_FC_fluxes(const CCVariable<T>& /*q_CC*/,
         cout <<" patchFace " << name << " " ;
 
         IntVector shift = patch->faceDirection(patchFace);
-        shift = SCIRun::Max(IntVector(0,0,0), shift);  // set -1 values to 0
+        shift = Uintah::Max(IntVector(0,0,0), shift);  // set -1 values to 0
         
         Patch::FaceIteratorType IFC = Patch::InteriorFaceCells;
         

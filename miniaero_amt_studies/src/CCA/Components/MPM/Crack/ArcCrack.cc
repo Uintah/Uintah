@@ -32,7 +32,6 @@ using std::endl;
 using std::vector;
 
 using namespace Uintah;
-using namespace SCIRun;
 
 
 ArcCrack::ArcCrack(ProblemSpecP& ps)

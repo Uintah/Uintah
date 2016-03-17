@@ -37,10 +37,10 @@
 #include <cfloat>
 #include <climits>
 
-using namespace SCIRun;
 using namespace std;
 
-namespace SCIRun {
+
+namespace Uintah {
 
 
 #if !defined(STATIC_BUILD)
@@ -50,17 +50,9 @@ template<> const string find_type_name(Uintah::long64*)
   return name;
 }
 
-const TypeDescription* get_type_description(Uintah::long64*)
-{
-  static TypeDescription* td = 0;
-  if(!td){
-    td = scinew TypeDescription("long64", "builtin", "builtin");
-  }
-  return td;
-}
 #endif
 
-} // namespace SCIRun
+} // namespace Uintah
 
 
 namespace Uintah {

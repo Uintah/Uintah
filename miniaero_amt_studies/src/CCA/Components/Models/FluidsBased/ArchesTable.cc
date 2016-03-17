@@ -41,7 +41,6 @@
 
 using namespace std;
 using namespace Uintah;
-using namespace SCIRun;
 
 static DebugStream cerr_dbg("ARCHES_TABLE", true);
 

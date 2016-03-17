@@ -34,7 +34,6 @@
 #include <CCA/Components/ProblemSpecification/ProblemSpecReader.h>
 
 using namespace std;
-using namespace SCIRun;
 using namespace Uintah;
 
 float safePercent(double num, double denom)
