@@ -19,7 +19,9 @@
     <max_Timesteps>10</max_Timesteps>
     <initTime>0.0</initTime>
     <delt_min>1e-9</delt_min>
-    <delt_max>1e-3</delt_max>
+    <!-- originalOFC -->
+    <!--<delt_max>1e-3</delt_max>-->
+    <delt_max>4e-4</delt_max>
     <timestep_multiplier>0.3</timestep_multiplier>
   </Time>
   <DataArchiver>
@@ -1844,53 +1846,57 @@
       <BoundaryConditions>
         <wall_csmag>0.0</wall_csmag>
         <intrusions>
-          <intrusion label="pipe_wall">
-            <constant_temperature T="1250.0"/>
-            <geom_object>
-              <difference>
-                <cylinder label="primary_out">
-                  <bottom>[-0.01, 0.3, 0.3]</bottom>
-                  <top>   [0.02, 0.3, 0.3]</top>
-                  <radius>0.012</radius>
-                  <cylinder_end>false</cylinder_end>
-                  <axisymmetric_end>false</axisymmetric_end>
-                  <axisymmetric_side>false</axisymmetric_side>
-                </cylinder>
-                <cylinder label="primary_inner">
-                  <bottom>[-0.01, 0.3, 0.3]</bottom>
-                  <top>   [0.02, 0.3, 0.3]</top>
-                  <radius>0.009</radius>
-                  <cylinder_end>false</cylinder_end>
-                  <axisymmetric_end>false</axisymmetric_end>
-                  <axisymmetric_side>false</axisymmetric_side>
-                </cylinder>
-              </difference>
-            </geom_object>
-          </intrusion>
+          <!-- originalOFC -->
+          <!--<intrusion label="pipe_wall">-->
+            <!--<constant_temperature T="1250.0"/>-->
+            <!--<geom_object>-->
+              <!--<difference>-->
+                <!--<cylinder label="primary_out">-->
+                  <!--<bottom>[-0.01, 0.3, 0.3]</bottom>-->
+                  <!--<top>   [0.02, 0.3, 0.3]</top>-->
+                  <!--<radius>0.012</radius>-->
+                  <!--<cylinder_end>false</cylinder_end>-->
+                  <!--<axisymmetric_end>false</axisymmetric_end>-->
+                  <!--<axisymmetric_side>false</axisymmetric_side>-->
+                <!--</cylinder>-->
+                <!--<cylinder label="primary_inner">-->
+                  <!--<bottom>[-0.01, 0.3, 0.3]</bottom>-->
+                  <!--<top>   [0.02, 0.3, 0.3]</top>-->
+                  <!--<radius>0.009</radius>-->
+                  <!--<cylinder_end>false</cylinder_end>-->
+                  <!--<axisymmetric_end>false</axisymmetric_end>-->
+                  <!--<axisymmetric_side>false</axisymmetric_side>-->
+                <!--</cylinder>-->
+              <!--</difference>-->
+            <!--</geom_object>-->
+          <!--</intrusion>-->
           <intrusion label="FurnaceWall">
             <constant_temperature T="1250.0"/>
             <geom_object>
-              <difference>
-                <cylinder label="secondary_out">
-                  <bottom>[-0.01, 0.3, 0.3]</bottom>
-                  <top>   [0.02, 0.3, 0.3]</top>
-                  <radius>0.6</radius>
-                  <cylinder_end>false</cylinder_end>
-                  <axisymmetric_end>false</axisymmetric_end>
-                  <axisymmetric_side>false</axisymmetric_side>
-                </cylinder>
-                <cylinder label="secondary_inner">
-                  <bottom>[-0.01, 0.3, 0.3]</bottom>
-                  <top>   [0.02, 0.3, 0.3]</top>
-                  <radius>0.018</radius>
-                  <cylinder_end>false</cylinder_end>
-                  <axisymmetric_end>false</axisymmetric_end>
-                  <axisymmetric_side>false</axisymmetric_side>
-                </cylinder>
-              </difference>
+              <!-- originalOFC -->
+              <!--<difference>-->
+                <!--<cylinder label="secondary_out">-->
+                  <!--<bottom>[-0.01, 0.3, 0.3]</bottom>-->
+                  <!--<top>   [0.02, 0.3, 0.3]</top>-->
+                  <!--<radius>0.6</radius>-->
+                  <!--<cylinder_end>false</cylinder_end>-->
+                  <!--<axisymmetric_end>false</axisymmetric_end>-->
+                  <!--<axisymmetric_side>false</axisymmetric_side>-->
+                <!--</cylinder>-->
+                <!--<cylinder label="secondary_inner">-->
+                  <!--<bottom>[-0.01, 0.3, 0.3]</bottom>-->
+                  <!--<top>   [0.02, 0.3, 0.3]</top>-->
+                  <!--<radius>0.018</radius>-->
+                  <!--<cylinder_end>false</cylinder_end>-->
+                  <!--<axisymmetric_end>false</axisymmetric_end>-->
+                  <!--<axisymmetric_side>false</axisymmetric_side>-->
+                <!--</cylinder>-->
+              <!--</difference>-->
               <difference>
                 <cylinder label="furnace_out">
-                  <bottom>[0.02, 0.3, 0.3]</bottom>
+                  <!-- originalOFC -->
+                  <!--<bottom>[0.02, 0.3, 0.3]</bottom>-->
+                  <bottom>[0.00, 0.3, 0.3]</bottom>
                   <top>   [1.22, 0.3, 0.3]</top>
                   <radius>0.6</radius>
                   <cylinder_end>false</cylinder_end>
@@ -1898,7 +1904,9 @@
                   <axisymmetric_side>false</axisymmetric_side>
                 </cylinder>
                 <cylinder label="furnace_inner">
-                  <bottom>[0.02, 0.3, 0.3]</bottom>
+                  <!-- originalOFC -->
+                  <!--<bottom>[0.02, 0.3, 0.3]</bottom>-->
+                  <bottom>[0.00, 0.3, 0.3]</bottom>
                   <top>   [1.22, 0.3, 0.3]</top>
                   <radius>0.3</radius>
                   <cylinder_end>false</cylinder_end>
