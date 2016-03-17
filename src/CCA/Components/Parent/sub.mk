@@ -52,7 +52,6 @@ PSELIBS := \
         $(ARCHES)                          \
         $(MPMARCHES)                       \
         $(ICE)                             \
-        $(MINIAERO)                        \
         $(MPM)                             \
         $(MPMICE)                          \
         $(COMPONENTS)/Examples             \
