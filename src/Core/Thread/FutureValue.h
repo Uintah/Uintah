@@ -40,7 +40,7 @@
 #include <Core/Thread/Semaphore.h>
 #include <Core/Thread/Thread.h>
 
-namespace SCIRun {
+namespace Uintah {
 /**************************************
  
   CLASS
@@ -114,7 +114,7 @@ FutureValue<Item>::receive()
   sema.down();
   Thread::couldBlockDone(s);
   return value;
-} // End namespace SCIRun
+} // End namespace Uintah
 
 template<class Item>
 void
@@ -123,7 +123,7 @@ FutureValue<Item>::send(const Item& reply)
   value=reply;
   sema.up();
 }
-} // End namespace SCIRun
+} // End namespace Uintah
 
 #endif
 

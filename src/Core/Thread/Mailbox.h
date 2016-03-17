@@ -43,7 +43,7 @@
 #include <Core/Thread/Thread.h>
 #include <vector>
 
-namespace SCIRun {
+namespace Uintah {
 /**************************************
 
   CLASS
@@ -311,7 +311,7 @@ int
 Mailbox<Item>::size() const
 {
     return max_;
-} // End namespace SCIRun
+} // End namespace Uintah
 
 template<class Item>
 int
@@ -320,7 +320,7 @@ Mailbox<Item>::numItems() const
     return len_;
 }
 
-} // End namespace SCIRun
+} // End namespace Uintah
 #endif
 
 

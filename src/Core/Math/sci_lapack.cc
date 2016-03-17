@@ -47,7 +47,7 @@
 
 // Functions to switch between Fortran and C style matrices
 
-namespace SCIRun {
+namespace Uintah {
 
 double *ctof(double **c, int rows, int cols)
 {
@@ -401,4 +401,4 @@ void lapackeigen(double **H, int n, double *Er, double *Ei, double **Evecs)
 
 #endif
 
-} // End namespace SCIRun
+} // End namespace Uintah

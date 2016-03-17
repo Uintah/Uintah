@@ -40,7 +40,7 @@
 #include <Core/Thread/ParallelBase.h>
 #include <Core/Thread/Semaphore.h>
 
-namespace SCIRun {
+namespace Uintah {
 
   // There is already a class named Parallel in the Uintah namespace (Core/Parallel/Parallel.h)... 
   // Need to 'hide' this one, so put it in a sub-namespace.
@@ -100,7 +100,7 @@ Parallel<T>::Parallel(T* obj, void (T::*pmf)(int))
     : obj_(obj), pmf_(pmf)
 {
     wait_=0; // This may be set by Thread::parallel
-} // End namespace SCIRun
+} // End namespace Uintah
 
 template<class T>
 Parallel<T>::~Parallel()
@@ -108,7 +108,7 @@ Parallel<T>::~Parallel()
 }
 
   } // End namespace ThreadNS
-} // End namespace SCIRun
+} // End namespace Uintah
 
 #endif
 

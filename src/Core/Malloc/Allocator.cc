@@ -89,7 +89,7 @@ const int ALIGN=16;
 #    define UCONV "%u"
 #  endif
 
-namespace SCIRun {
+namespace Uintah {
 
 // Dd: For AIX
 #  ifdef STATSIZE
@@ -1477,6 +1477,6 @@ void Allocator::noninline_unlock()
   unlock();
 }
 
-} // End namespace SCIRun
+} // End namespace Uintah
 
 #endif // !defined( DISABLE_SCI_MALLOC )

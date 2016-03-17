@@ -47,7 +47,7 @@
 #include <vector>
 #include <algorithm>
 
-namespace SCIRun {
+namespace Uintah {
 
 // Needed template class properties:
 //
@@ -1694,7 +1694,7 @@ operator()(BoxPIterator beginBoxes, BoxPIterator endBoxes,
   return value;
 }
 
-} // End namespace SCIRun
+} // End namespace Uintah
 
 #endif // ndef Core_Containers_BoxGrouper_h
 

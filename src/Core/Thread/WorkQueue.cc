@@ -36,7 +36,7 @@
 
 
 #include <Core/Thread/WorkQueue.h>
-namespace SCIRun {
+namespace Uintah {
 
 WorkQueue::WorkQueue(const char* name)
   : name_(name),
@@ -125,4 +125,4 @@ WorkQueue::fill()
 }
 
 
-} // End namespace SCIRun
+} // End namespace Uintah

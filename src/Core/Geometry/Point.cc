@@ -34,11 +34,9 @@
  *
  */
 
-#include <Core/Util/TypeDescription.h>
 #include <Core/Geometry/Point.h>
 #include <Core/Geometry/Vector.h>
 #include <Core/Util/Assert.h>
-#include <Core/Persistent/Persistent.h>
 #include <Core/Math/MinMax.h>
 #include <Core/Math/MiscMath.h>
 #include <iostream>
@@ -46,7 +44,7 @@
 
 using namespace std;
 
-namespace SCIRun {
+namespace Uintah {
 
 
 Point Interpolate(const Point& p1, const Point& p2, double w)
@@ -155,30 +153,8 @@ Point::InInterval( Point a, double epsilon )
     return 0;
 }
 
-void Pio(Piostream& stream, Point& p)
-{
 
-    stream.begin_cheap_delim();
-    Pio(stream, p.x_);
-    Pio(stream, p.y_);
-    Pio(stream, p.z_);
-    stream.end_cheap_delim();
-}
 
-const string& 
-Point::get_h_file_path() {
-  static const string path(TypeDescription::cc_to_h(__FILE__));
-  return path;
-}
 
-const TypeDescription* get_type_description(Point*)
-{
-  static TypeDescription* td = 0;
-  if(!td){
-    td = scinew TypeDescription("Point", Point::get_h_file_path(), 
-				"SCIRun", TypeDescription::DATA_E);
-  }
-  return td;
-}
+} // End namespace Uintah
 
-} // End namespace SCIRun

@@ -36,7 +36,7 @@
 
 #include <Core/Thread/CrowdMonitor.h>
 
-namespace SCIRun {
+namespace Uintah {
 
 struct CrowdMonitor_private {
   ConditionVariable write_waiters;
@@ -173,4 +173,4 @@ CrowdMonitor::writeUnlock()
   priv_->lock.unlock();
 }
 
-} // End namespace SCIRun
+} // End namespace Uintah

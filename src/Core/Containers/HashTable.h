@@ -42,11 +42,10 @@
 
 #include <Core/Util/FancyAssert.h>
 #include <Core/Malloc/Allocator.h>
-#include <Core/Persistent/Persistent.h>
 
 #include <string>
 
-namespace SCIRun {
+namespace Uintah {
 
 class RigorousTest;
 
@@ -118,9 +117,7 @@ WARNING
 ****************************************/
 
 
-template <class Key, class Data> class HashTable;
-template <class Key, class Data> 
-void Pio(Piostream& stream, HashTable<Key, Data>& t);
+
 
 // The hashtable itself
 template<class Key, class Data> class HashTable {
@@ -158,9 +155,6 @@ public:
   // Returns how many items are stored in the hash table
   int size() const;
 
-  //////////
-  // Persistent io
-  friend void TEMPLATE_TAG Pio TEMPLATE_BOX (Piostream&, HashTable<Key, Data>&);
 };
 
 
@@ -238,8 +232,6 @@ template<class Key, class Data> class HashKey {
   HashKey();
   HashKey(const Key&, const Data&, HashKey<Key, Data>*);
   HashKey(const HashKey<Key, Data>&, int deep=0);
-  friend void TEMPLATE_TAG Pio TEMPLATE_BOX (Piostream&, 
-					     HashTable<Key, Data>&);
 };
 
 // Create a hashtable
@@ -476,58 +468,8 @@ HashKey<Key, Data>::HashKey(const HashKey<Key, Data>& copy, int deep)
 }
 
 
-#define HASHTABLE_VERSION 1
 
-// Persistent IO for hash tables
-template <class Key, class Data>
-void Pio(Piostream& stream, HashTable<Key, Data>& t)
-{
-#ifdef __GNUG__
-#else
-#endif
-
-  stream.begin_class("HashTable", HASHTABLE_VERSION);
-  Pio(stream, t.nelems);
-  Pio(stream, t.hash_size);
-  if(stream.reading())
-    t.table=new HashKey<Key,Data>*[t.hash_size];
-  for(int i=0;i<t.hash_size;i++){
-    stream.begin_cheap_delim();
-    int count;
-    if(stream.writing()){
-      count=0;
-      for(HashKey<Key, Data>* p=t.table[i];p!=0;p=p->next)
-	count++;
-    } else {
-      t.table[i]=0;
-    }
-    Pio(stream, count);
-    HashKey<Key, Data>* p=0;
-    for(int ii=0;ii<count;ii++){
-      if(stream.reading()){
-	HashKey<Key, Data>* tmp=scinew HashKey<Key, Data>;
-	tmp->next=0;
-	if(ii==0)
-	  t.table[i]=tmp;
-	else
-	  p->next=tmp;
-	p=tmp;
-      } else {
-	if(ii==0){
-	  p=t.table[i];
-	}
-	else
-	  p=p->next;
-      }
-      Pio(stream, p->key);
-      Pio(stream, p->data);
-    }
-    stream.end_cheap_delim();
-  }
-  stream.end_class();
-}
-
-} // End namespace SCIRun
+} // End namespace Uintah
 
 #endif
 

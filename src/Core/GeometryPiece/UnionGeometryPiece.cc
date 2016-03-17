@@ -29,7 +29,6 @@
 #include <Core/Malloc/Allocator.h>
 #include <Core/ProblemSpec/ProblemSpec.h>
 
-using namespace SCIRun;
 using namespace Uintah;
 using namespace std;
 

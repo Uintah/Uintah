@@ -33,7 +33,6 @@
 #endif
 
 using namespace Uintah;
-using namespace SCIRun;
 using namespace std;
 
 const string BoxGeometryPiece::TYPE_NAME = "box";

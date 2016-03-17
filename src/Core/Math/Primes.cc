@@ -25,7 +25,6 @@
 
 #include <Core/Math/Primes.h>
 #include <Core/Exceptions/InternalError.h>
-using namespace SCIRun;
 
 // From the primes FAQ
 // http://www.utm.edu/research/primes/lists/small/1000.txt

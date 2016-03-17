@@ -81,12 +81,11 @@
 
 #ifndef DISABLE_SCI_MALLOC
 
-using namespace SCIRun;
 
 static const char* default_malloc_tag = "Unknown - malloc";
 extern int default_tag_line_number;  // defined in new.cc
 
-namespace SCIRun {
+namespace Uintah {
 
   const char*
   AllocatorSetDefaultTagMalloc(const char* tag)
@@ -102,7 +101,9 @@ namespace SCIRun {
     default_malloc_tag = "Unknown - malloc";
   }
 
-} // end namespace SCIRun
+} // end namespace Uintah
+
+using namespace Uintah;
 
 void*
 malloc(size_t size) THROWCLAUSE

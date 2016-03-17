@@ -35,11 +35,6 @@
 #include <string>
 #include <vector>
 
-namespace SCIRun {
-  class TypeDescription;
-  class Piostream;
-}
-
 #include <Core/Math/TntJama/tnt.h>
 
 namespace Uintah {
@@ -88,13 +83,13 @@ inline short & Short27::operator [] (int i)
 // Added for compatibility with core types
 #include <Core/Datatypes/TypeName.h>
 
-namespace SCIRun {
+namespace Uintah {
 
               void                    swapbytes( Uintah::Short27 & s );
   template<>  const std::string       find_type_name( Uintah::Short27 * );
               const TypeDescription * get_type_description( Uintah::Short27 * );
-              void                    Pio( Piostream &, Uintah::Short27 & );
 
-} // namespace SCIRun
+
+} // namespace Uintah
 
 #endif  // __SHORT27_H__

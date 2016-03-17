@@ -37,7 +37,7 @@
 #ifndef Core_Thread_Barrier_h
 #define Core_Thread_Barrier_h
 
-namespace SCIRun {
+namespace Uintah {
 
 struct Barrier_private;
 
@@ -94,7 +94,7 @@ class Barrier {
 };
 
 }
-  // End namespace SCIRun
+  // End namespace Uintah
 
 #endif
 

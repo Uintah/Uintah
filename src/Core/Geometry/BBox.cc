@@ -38,11 +38,10 @@
 #include <Core/Geometry/Vector.h>
 #include <Core/Util/Assert.h>
 #include <Core/Math/MinMax.h>
-#include <Core/Persistent/Persistent.h>
 #include <cstdlib>
 
-using namespace SCIRun;
 using namespace std;
+using namespace Uintah;
 
 BBox::BBox()
 {
@@ -208,24 +207,8 @@ bool BBox::intersect(const Point& origin, const Vector& dir,
   }
 }
 
-namespace SCIRun {
+namespace Uintah {
 
-  void Pio(Piostream & stream, BBox & box)
-  {
-    stream.begin_cheap_delim();
-    
-    // Store the valid flag as an int, because old files did and we
-    // must be backward compatible
-    int tmp = box.is_valid;
-    Pio(stream, tmp);
-    if(stream.reading())
-      box.is_valid = tmp;
-    if (box.is_valid) {
-      Pio(stream, box.cmin);
-      Pio(stream, box.cmax);
-    }
-    stream.end_cheap_delim();
-  }
 
 
   ostream&
@@ -235,4 +218,4 @@ namespace SCIRun {
     return out;
   }
 
-} // End namespace SCIRun
+} // End namespace Uintah

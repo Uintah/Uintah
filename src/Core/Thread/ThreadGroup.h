@@ -40,7 +40,7 @@
 #include <Core/Thread/Mutex.h>
 #include <vector>
 
-namespace SCIRun {
+namespace Uintah {
 
 class Thread;
 
@@ -128,7 +128,7 @@ class ThreadGroup {
     ThreadGroup& operator=(const ThreadGroup&);
 };
 
-}  // End namespace SCIRun
+}  // End namespace Uintah
 
 #endif
 

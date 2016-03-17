@@ -37,7 +37,7 @@
 #include <Core/Thread/RecursiveMutex.h>
 #include <Core/Thread/Thread.h>
 
-namespace SCIRun {
+namespace Uintah {
 
 struct RecursiveMutex_private {
   Mutex mylock;
@@ -99,5 +99,5 @@ RecursiveMutex::unlock()
   }
 }
 
-} // End namespace SCIRun
+} // End namespace Uintah
 

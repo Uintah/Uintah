@@ -37,7 +37,7 @@
 #ifndef Core_Thread_Time_h
 #define Core_Thread_Time_h
 
-namespace SCIRun {
+namespace Uintah {
 /**************************************
 
  CLASS
@@ -98,7 +98,7 @@ class Time {
 };
 
 }
-  // End namespace SCIRun
+  // End namespace Uintah
 
 #endif
 

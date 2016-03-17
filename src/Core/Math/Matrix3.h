@@ -45,7 +45,7 @@
 
 namespace Uintah {
 
-  using SCIRun::Vector;
+  using Uintah::Vector;
   using TNT::Array2D;
 
   class Matrix3 {
@@ -257,7 +257,7 @@ namespace Uintah {
     /*! Return a TNT Array2D */
     inline TNT::Array2D<double> toTNTArray2D() const;
 
-    //  friend void Pio( Piostream&, Matrix3& );
+
   private:
     // Reduce the matrix and rhs, representing the equation system:
     // A*x = y = rhs, to a matrix in upper triangular form with
@@ -728,16 +728,14 @@ namespace Uintah {
 #include <Core/Datatypes/TypeName.h>
 #include <string>
 
-namespace SCIRun {
 
-  class TypeDescription;
-  class Piostream;
+namespace Uintah {
+
 
    void swapbytes( Uintah::Matrix3& m);
-  template<>  const std::string find_type_name(Uintah::Matrix3*);
-   const TypeDescription* get_type_description(Uintah::Matrix3*);
-   void Pio( Piostream&, Uintah::Matrix3& );
-} // namespace SCIRun
+   template<>  const std::string find_type_name(Uintah::Matrix3*);
+ 
+} // namespace Uintah
 
 
 #endif  // __MATRIX3_H__

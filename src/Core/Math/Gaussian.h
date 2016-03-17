@@ -42,7 +42,7 @@
 
 #include <cmath>
 
-namespace SCIRun {
+namespace Uintah {
 
 //   http://mathworld.wolfram.com/GaussianDistribution.html
 class Gaussian {
@@ -81,6 +81,6 @@ public:
   }
 };
 
-} // End namespace SCIRun
+} // End namespace Uintah
 
 #endif //SCI_GAUSSIAN_H__

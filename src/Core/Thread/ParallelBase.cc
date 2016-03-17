@@ -35,7 +35,7 @@
  */
 
 #include <Core/Thread/ParallelBase.h>
-namespace SCIRun {
+namespace Uintah {
 
 
 ParallelBase::ParallelBase()
@@ -47,4 +47,4 @@ ParallelBase::~ParallelBase()
 }
 
 
-} // End namespace SCIRun
+} // End namespace Uintah

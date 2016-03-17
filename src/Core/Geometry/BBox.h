@@ -49,22 +49,20 @@
 #  undef max
 #endif
 
-namespace SCIRun {
+namespace Uintah {
 
   class Vector;
-  class Piostream;
 
   class BBox {
     
   protected:
-    friend void Pio( Piostream &, BBox& );
 
   public:
     BBox();
     ~BBox();
     BBox(const BBox&);
     BBox& operator=(const BBox&);
-    BBox(const Point& min, const Point& max);
+    BBox(const Uintah::Point& min, const Point& max);
     inline int valid() const {return is_valid;}
     void reset();
 
@@ -113,7 +111,7 @@ namespace SCIRun {
     Point cmax;
     bool is_valid;
   };
-} // End namespace SCIRun
+} // End namespace Uintah
 
 
 #endif

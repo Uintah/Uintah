@@ -40,7 +40,7 @@
 #include <cstdlib>
 #include <cstring>
 
-namespace SCIRun {
+namespace Uintah {
 
 ThreadGroup* ThreadGroup::s_default_group;
 
@@ -156,4 +156,4 @@ ThreadGroup::addme(Thread* t)
 }
 
 
-} // End namespace SCIRun
+} // End namespace Uintah
