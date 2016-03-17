@@ -34,7 +34,7 @@
 //
 #define isProc0_macro ( Uintah::Parallel::getMPIRank() == 0 &&           \
 			( ( Uintah::Parallel::getNumThreads() > 1 &&	\
-			    SCIRun::Thread::self()->myid() == 0 ) ||	\
+			    Uintah::Thread::self()->myid() == 0 ) ||	\
 			  ( Uintah::Parallel::getNumThreads() <= 1 ) ) )
 
 #define proc0cout if( isProc0_macro ) std::cout

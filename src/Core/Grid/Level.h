@@ -53,12 +53,12 @@
 
 namespace Uintah {
 
-  using SCIRun::Vector;
-  using SCIRun::Point;
-  using SCIRun::IntVector;
-  using SCIRun::BBox;
-  using SCIRun::OffsetArray1;
-  using SCIRun::CrowdMonitor;
+  using Uintah::Vector;
+  using Uintah::Point;
+  using Uintah::IntVector;
+  using Uintah::BBox;
+  using Uintah::OffsetArray1;
+  using Uintah::CrowdMonitor;
 
   class PatchBVH;
   class BoundCondBase;
@@ -155,6 +155,7 @@ public:
       
   int numPatches() const;
   long totalCells() const;
+  IntVector nCellsPatch_max() const;
 
   void getSpatialRange(BBox& b) const {b.extend(d_spatial_range);};
   void getInteriorSpatialRange(BBox& b) const {b.extend(d_int_spatial_range);};
@@ -284,6 +285,7 @@ private:
 
   long      d_totalCells;
   IntVector d_extraCells;
+  IntVector d_nCellsPatch_max;
 
   std::vector<Patch*> d_realPatches; // only real patches
   std::vector<Patch*> d_virtualAndRealPatches; // real and virtual

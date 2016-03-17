@@ -27,7 +27,7 @@
 
 #include <iostream>
 
-namespace SCIRun {
+namespace Uintah {
 
 
 static DebugStream dbg("ProgressiveWarning", true);
@@ -90,4 +90,4 @@ ProgressiveWarning::showWarning()
   (*d_out) << "  This warning has occurred " << d_numOccurences << " times.\n";
 }
 
-} // end namespace SCIRun
+} // end namespace Uintah

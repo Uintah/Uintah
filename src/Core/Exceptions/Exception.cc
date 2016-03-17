@@ -62,7 +62,7 @@
 #  include <strings.h>
 #endif
 
-namespace SCIRun {
+namespace Uintah {
 
 using namespace std;
 using namespace Uintah;
@@ -288,4 +288,4 @@ WAIT_FOR_DEBUGGER(bool useFlag)
   }; 
 }
 
-} // End namespace SCIRun
+} // End namespace Uintah

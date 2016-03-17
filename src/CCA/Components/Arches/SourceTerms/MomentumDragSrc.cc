@@ -13,6 +13,13 @@
 
 //===========================================================================
 
+#include <CCA/Components/Arches/FunctorSwitch.h>
+ 
+#include <Core/Grid/Variables/BlockRange.h>
+#ifdef UINTAH_ENABLE_KOKKOS
+#  include <Kokkos_Core.hpp>
+#endif //UINTAH_ENABLE_KOKKOS
+
 using namespace std;
 using namespace Uintah;
 
@@ -93,6 +100,36 @@ MomentumDragSrc::sched_computeSource( const LevelP& level, SchedulerP& sched, in
 
   sched->addTask(tsk, level->eachPatch(), _shared_state->allArchesMaterials());
 }
+
+struct sumGasDrag{                                    
+       sumGasDrag( std::string _base_x_drag, 
+                   std::string _base_y_drag, 
+                   std::string _base_z_drag, 
+                   constCCVariable<double> &_gas_xdrag,
+                   constCCVariable<double> &_gas_ydrag,
+                   constCCVariable<double> &_gas_zdrag,
+                   CCVariable<Vector> &_dragSrc) : 
+                   gas_xdrag(_gas_xdrag),
+                   gas_ydrag(_gas_ydrag),
+                   gas_zdrag(_gas_zdrag),
+                   dragSrc(_dragSrc)
+                   { sumX=(_base_x_drag != "none");     
+                     sumY=(_base_y_drag != "none");     
+                     sumZ=(_base_z_drag != "none");}
+                    
+      void operator()(int i , int j, int k ) const { 
+         dragSrc(i,j,k) += Vector(sumX ? gas_xdrag(i,j,k) : 0.0,sumY ? gas_ydrag(i,j,k): 0.0, sumZ ? gas_zdrag(i,j,k): 0.0);
+      }
+
+     private:
+      bool sumX;
+      bool sumY;
+      bool sumZ;
+      constCCVariable<double> &gas_xdrag;
+      constCCVariable<double> &gas_ydrag;
+      constCCVariable<double> &gas_zdrag;
+      CCVariable<Vector> &dragSrc;
+};
 //---------------------------------------------------------------------------
 // Method: Actually compute the source term
 //---------------------------------------------------------------------------
@@ -160,7 +197,20 @@ MomentumDragSrc::computeSource( const ProcessorGroup* pc,
         const VarLabel* tempLabel = VarLabel::find( model_name );
         old_dw->get( gas_zdrag, tempLabel, matlIndex, patch, gn, 0);
       }
-      
+
+#ifdef USE_FUNCTOR
+  Uintah::BlockRange range(patch->getCellLowIndex(),patch->getCellHighIndex());
+
+  sumGasDrag doSumGas(_base_x_drag, 
+                      _base_y_drag, 
+                      _base_z_drag, 
+                      gas_xdrag,
+                      gas_ydrag,
+                      gas_zdrag,
+                      dragSrc);
+
+  Uintah::parallel_for(range, doSumGas);
+#else
       for (CellIterator iter=patch->getCellIterator(); !iter.done(); iter++){
         IntVector c = *iter;
         
@@ -175,6 +225,7 @@ MomentumDragSrc::computeSource( const ProcessorGroup* pc,
         dragSrc[c] += gas_drag;
         
       }
+#endif
     }
   }
 }

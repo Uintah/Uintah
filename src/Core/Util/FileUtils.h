@@ -37,7 +37,7 @@
 #include <string>
 #include <vector>
 
-namespace SCIRun {
+namespace Uintah {
 
 ////////////////////////////////////
 // InsertStringInFile()
@@ -98,7 +98,7 @@ int deleteDir( const std::string & filename);
 // Replaces the existing extension of the filename with the value of ext
 std::string changeExtension( const std::string & filename, const std::string &ext );
 
-} // End namespace SCIRun
+} // End namespace Uintah
 
 #endif // FILEUTILS_H
 

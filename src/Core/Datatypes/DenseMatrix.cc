@@ -61,14 +61,9 @@
 
 using namespace std;
 
-namespace SCIRun {
+namespace Uintah {
 
-static Persistent* maker()
-{
-  return scinew DenseMatrix;
-}
 
-PersistentTypeID DenseMatrix::type_id("DenseMatrix", "Matrix", maker);
 
 DenseMatrix*
 DenseMatrix::clone()
@@ -117,22 +112,6 @@ DenseMatrix::DenseMatrix(const DenseMatrix& m) :
 }
 
 
-DenseMatrix::DenseMatrix(const Transform& t) :
-  Matrix(4, 4)
-{
-  double dummy[16];
-  t.get(dummy);
-  data = scinew double*[nrows_];
-  double* tmp = scinew double[nrows_ * ncols_];
-  dataptr_ = tmp;
-  double* p=&(dummy[0]);
-  for (int i=0; i<nrows_; i++){
-    data[i] = tmp;
-    for (int j=0; j<ncols_; j++){
-      *tmp++ = *p++;
-    }
-  }
-}
 
 
 DenseMatrix *
@@ -693,102 +672,6 @@ DenseMatrix::submatrix(int r1, int c1, int r2, int c2)
 }
 
 
-#define DENSEMATRIX_VERSION 3
-
-void
-DenseMatrix::io(Piostream& stream)
-{
-
-  int version=stream.begin_class("DenseMatrix", DENSEMATRIX_VERSION);
-  // Do the base class first...
-  Matrix::io(stream);
-
-  stream.io(nrows_);
-  stream.io(ncols_);
-  if(stream.reading())
-  {
-    data=scinew double*[nrows_];
-    double* tmp=scinew double[nrows_ * ncols_];
-    dataptr_=tmp;
-    for (int i=0; i<nrows_; i++)
-    {
-      data[i] = tmp;
-      tmp += ncols_;
-    }
-  }
-  stream.begin_cheap_delim();
-
-  int split;
-  if (stream.reading())
-  {
-    if (version > 2)
-    {
-      Pio(stream, separate_raw_);
-      if (separate_raw_)
-      {
-        Pio(stream, raw_filename_);
-        FILE *f=fopen(raw_filename_.c_str(), "r");
-        if (f)
-        {
-          fread(data[0], sizeof(double), nrows_ * ncols_, f);
-          fclose(f);
-        }
-        else
-        {
-          const string errmsg = "Error reading separated file '" +
-            raw_filename_ + "'";
-          std::cerr << errmsg << "\n";
-          throw FileNotFound(errmsg, __FILE__, __LINE__);
-        }
-      }
-    }
-    else
-    {
-      separate_raw_ = false;
-    }
-    split = separate_raw_;
-  }
-  else
-  {     // writing
-    string filename = raw_filename_;
-    split = separate_raw_;
-    if (split)
-    {
-      if (filename == "")
-      {
-        if (stream.file_name.c_str())
-        {
-          char *tmp=strdup(stream.file_name.c_str());
-          char *dot = strrchr( tmp, '.' );
-          if (!dot ) dot = strrchr( tmp, 0);
-          filename = stream.file_name.substr(0,dot-tmp) + ".raw";
-          delete tmp;
-        } else split=0;
-      }
-    }
-    Pio(stream, split);
-    if (split)
-    {
-      Pio(stream, filename);
-      FILE *f = fopen(filename.c_str(), "w");
-      fwrite(data[0], sizeof(double), nrows_ * ncols_, f);
-      fclose(f);
-    }
-  }
-
-  if (!split)
-  {
-    if (!stream.block_io(dataptr_, sizeof(double), (size_t)(nrows_ * ncols_)))
-    {
-      for (size_t i = 0; i < (size_t)(nrows_ * ncols_); i++)
-      {
-        stream.io(dataptr_[i]);
-      }
-    }
-  }
-  stream.end_cheap_delim();
-  stream.end_class();
-}
 
 
 bool
@@ -1243,4 +1126,4 @@ DenseMatrix::eigenvectors(ColumnMatrix& R, ColumnMatrix& I, DenseMatrix& Vecs)
 
 #endif
 
-} // End namespace SCIRun
+} // End namespace Uintah

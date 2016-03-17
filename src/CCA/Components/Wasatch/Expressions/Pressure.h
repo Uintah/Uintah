@@ -82,7 +82,7 @@ class Pressure
   int  rkStage_;
   const bool useRefPressure_;
   const double refPressureValue_;
-  const SCIRun::IntVector refPressureLocation_;
+  const Uintah::IntVector refPressureLocation_;
   const bool use3DLaplacian_;
   const bool enforceSolvability_;
   const bool isConstDensity_;
@@ -140,7 +140,7 @@ class Pressure
             const bool hasMovingGeometry,
             const bool       userefpressure,
             const double     refPressureValue,
-            const SCIRun::IntVector refPressureLocation,
+            const Uintah::IntVector refPressureLocation,
             const bool       use3dlaplacian,
             const bool       enforceSolvability,
             const bool       isConstDensity,
@@ -155,7 +155,7 @@ public:
     const bool hasMovingGeometry_;
     const bool userefpressure_;
     const double refpressurevalue_;
-    const SCIRun::IntVector refpressurelocation_;
+    const Uintah::IntVector refpressurelocation_;
     const bool use3dlaplacian_;
     const bool enforceSolvability_;
     const bool isConstDensity_;
@@ -174,7 +174,7 @@ public:
              const bool hasMovingGeometry,
              const bool       useRefPressure,
              const double     refPressureValue,
-             const SCIRun::IntVector refPressureLocation,
+             const Uintah::IntVector refPressureLocation,
              const bool       use3DLaplacian,
              const bool       enforceSolvability,
              const bool       isConstDensity,

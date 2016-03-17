@@ -52,7 +52,7 @@ int main(int argc, char* argv[])
     b[i] = b2[i] = drand48();
   std::vector<double> x(size);
   std::vector<double> x2(size);
-  double start = SCIRun::Time::currentSeconds();
+  double start = Uintah::Time::currentSeconds();
 #if 0
   for(int i=0;i<reps;i++){
     minv.destructiveInvert(m);
@@ -64,7 +64,7 @@ int main(int argc, char* argv[])
     minv.destructiveSolve(&b[0], &b[1]);
   }
 #endif
-  double dt = SCIRun::Time::currentSeconds()-start;
+  double dt = Uintah::Time::currentSeconds()-start;
   std::cerr << reps << " in " << dt << " seconds, " << dt/reps*1000000 << " us/rep\n";
   exit(0);
 }

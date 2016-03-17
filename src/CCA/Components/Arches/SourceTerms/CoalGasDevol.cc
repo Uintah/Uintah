@@ -12,6 +12,15 @@
 
 //===========================================================================
 
+#include <CCA/Components/Arches/FunctorSwitch.h>
+
+#ifdef USE_FUNCTOR
+#  include <Core/Grid/Variables/BlockRange.h>
+#  ifdef UINTAH_ENABLE_KOKKOS
+#    include <Kokkos_Core.hpp>
+#  endif //UINTAH_ENABLE_KOKKOS
+#endif
+
 using namespace std;
 using namespace Uintah; 
 
@@ -75,6 +84,31 @@ CoalGasDevol::sched_computeSource( const LevelP& level, SchedulerP& sched, int t
   sched->addTask(tsk, level->eachPatch(), _shared_state->allArchesMaterials()); 
 
 }
+struct sumDevolGasSource{
+       sumDevolGasSource(constCCVariable<double>& _qn_gas_devol,
+                           CCVariable<double>& _devolSrc) :
+#ifdef UINTAH_ENABLE_KOKKOS
+                           qn_gas_devol(_qn_gas_devol.getKokkosView()),
+                           devolSrc(_devolSrc.getKokkosView())
+#else
+                           qn_gas_devol(_qn_gas_devol),
+                           devolSrc(_devolSrc)
+#endif
+                           {  }
+
+  void operator()(int i , int j, int k ) const { 
+   devolSrc(i,j,k) += qn_gas_devol(i,j,k); 
+  }
+
+  private:
+#ifdef UINTAH_ENABLE_KOKKOS
+   KokkosView3<const double> qn_gas_devol; 
+   KokkosView3<double>  devolSrc; 
+#else
+   constCCVariable<double>& qn_gas_devol;
+   CCVariable<double>& devolSrc; 
+#endif
+};
 //---------------------------------------------------------------------------
 // Method: Actually compute the source term 
 //---------------------------------------------------------------------------
@@ -124,10 +158,19 @@ CoalGasDevol::computeSource( const ProcessorGroup* pc,
  
       new_dw->get( qn_gas_devol, gasModelLabel, matlIndex, patch, gn, 0 );
 
+#ifdef USE_FUNCTOR
+      Uintah::BlockRange range(patch->getCellLowIndex(),patch->getCellHighIndex());
+
+      sumDevolGasSource doSumDevolGas(qn_gas_devol, 
+                                      devolSrc);
+
+      Uintah::parallel_for(range, doSumDevolGas);
+#else
       for (CellIterator iter=patch->getCellIterator(); !iter.done(); iter++){
               IntVector c = *iter;
         devolSrc[c] += qn_gas_devol[c]; // All the work is performed in Devol model
       }
+#endif
     }
   }
 }

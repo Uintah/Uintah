@@ -28,7 +28,6 @@
 #include <iomanip>
 using namespace std;
 using namespace Uintah;
-using namespace SCIRun;
 
 static DebugStream stats("ProfileStats",false);
 static DebugStream stats2("ProfileStats2",false);

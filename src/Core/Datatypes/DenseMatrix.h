@@ -38,11 +38,11 @@
 #define SCI_project_DenseMatrix_h 1
 
 #include <Core/Datatypes/Matrix.h>
-#include <Core/Geometry/Transform.h>
+#include <Core/Containers/Array1.h>
 #include <Core/Math/MiscMath.h>
 #include <vector>
 
-namespace SCIRun {
+namespace Uintah {
 
 
 class DenseMatrix : public Matrix {
@@ -54,7 +54,6 @@ public:
   DenseMatrix();
   DenseMatrix(int r, int c);
   DenseMatrix(const DenseMatrix&);
-  DenseMatrix(const Transform &t);
   //! Destructor
   virtual ~DenseMatrix();
   
@@ -130,10 +129,8 @@ public:
   virtual void    print() const;
   virtual void    print(std::ostream&) const;
   
-  //! Persistent representation...
   virtual std::string type_name() { return "DenseMatrix"; }
-  virtual void io(Piostream&);
-  static PersistentTypeID type_id;
+
 
   //! Friend functions
   
@@ -152,6 +149,6 @@ void Mult_X_trans(DenseMatrix&, const DenseMatrix&, const DenseMatrix&);
 void Concat_rows(DenseMatrix&, const DenseMatrix&, const DenseMatrix&); // Added by Saeed Babaeizadeh, Jan. 2006
 void Concat_cols(DenseMatrix&, const DenseMatrix&, const DenseMatrix&); // Added by Saeed Babaeizadeh, Jan. 2006
 
-} // End namespace SCIRun
+} // End namespace Uintah
 
 #endif

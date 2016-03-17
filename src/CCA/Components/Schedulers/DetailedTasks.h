@@ -62,7 +62,7 @@ class SchedulerCommon;
 
 
   using ParticleExchangeVar = std::map<int, std::set<PSPatchMatlGhostRange> >;
-  using ScrubCountTable     = SCIRun::FastHashTable<ScrubItem>;
+  using ScrubCountTable     = Uintah::FastHashTable<ScrubItem>;
 
 
   //_______________________________________________________________________________________________
@@ -130,10 +130,10 @@ class SchedulerCommon;
 
       USE_IF_ASSERTS_ON( Patch::VariableBasis basis = Patch::translateTypeToBasis(req->var->typeDescription()->getType(), true); )
 
-      ASSERT(fromPatch == 0 || (SCIRun::Min(low, fromPatch->getExtraLowIndex(basis, req->var->getBoundaryLayer())) ==
+      ASSERT(fromPatch == 0 || (Uintah::Min(low, fromPatch->getExtraLowIndex(basis, req->var->getBoundaryLayer())) ==
 				     fromPatch->getExtraLowIndex(basis, req->var->getBoundaryLayer())));
 
-      ASSERT(fromPatch == 0 || (SCIRun::Max(high, fromPatch->getExtraHighIndex(basis, req->var->getBoundaryLayer())) ==
+      ASSERT(fromPatch == 0 || (Uintah::Max(high, fromPatch->getExtraHighIndex(basis, req->var->getBoundaryLayer())) ==
 				     fromPatch->getExtraHighIndex(basis, req->var->getBoundaryLayer())));
 
       toTasks.push_back(toTask);
@@ -407,21 +407,19 @@ class SchedulerCommon;
     std::map<unsigned int, TaskGpuDataWarehouses> TaskGpuDWs;
 
 
-    //bool queryCUDAStreamCompletion();
+    //bool queryCudaStreamCompletionForThisTask();
 
-    //void setCUDAStream(cudaStream_t* s);
+    //void setCudaStreamForThisTask(cudaStream_t* s);
 
-    void setCUDAStream(unsigned int deviceNum, cudaStream_t* s);
+    void setCudaStreamForThisTask(unsigned int deviceNum, cudaStream_t* s);
 
-    void clearCUDAStreams();
+    void clearCudaStreamsForThisTask();
 
-    bool checkCUDAStreamDone() const;
+    //bool checkCudaStreamDoneForThisTask() const;
 
-    bool checkCUDAStreamDone(unsigned int deviceNum) const;
+    bool checkCudaStreamDoneForThisTask(unsigned int deviceNum) const;
 
-    bool checkAllCUDAStreamsDone() const;
-
-
+    bool checkAllCudaStreamsDoneForThisTask() const;
 
     void setTaskGpuDataWarehouse(unsigned int deviceNum, Task::WhichDW DW, GPUDataWarehouse* TaskDW);
 
@@ -429,7 +427,7 @@ class SchedulerCommon;
 
     void deleteTaskGpuDataWarehouses();
 
-    cudaStream_t* getCUDAStream(unsigned int deviceNum) const;
+    cudaStream_t* getCudaStreamForThisTask(unsigned int deviceNum) const;
 
     DeviceGridVariables& getDeviceVars() { return deviceVars; }
     DeviceGridVariables& getTaskVars() { return taskVars; }

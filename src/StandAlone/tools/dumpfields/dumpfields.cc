@@ -55,7 +55,6 @@
 #include <Core/Disclosure/TypeDescription.h>
 #include <Core/Geometry/Vector.h>
 #include <Core/OS/Dir.h>
-#include <Core/Containers/Array3.h>
 
 #include <iostream>
 #include <string>
@@ -83,7 +82,6 @@
 #include "DXDumper.h"
 */
 
-using namespace SCIRun;
 using namespace std;
 using namespace Uintah;
 

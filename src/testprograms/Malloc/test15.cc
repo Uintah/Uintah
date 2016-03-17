@@ -40,7 +40,7 @@
 
 #include <pthread.h>
 
-using namespace SCIRun;
+using namespace Uintah;
 
 /*
   This program is designed to test a weird race condition dealing with
@@ -69,9 +69,6 @@ public:
   }
 };
 
-#ifdef __digital__
-#define __environ environ
-#endif
 
 #define WAITPID_CANNOT_BLOCK_SIGCHLD
 #define NO_WAITPID

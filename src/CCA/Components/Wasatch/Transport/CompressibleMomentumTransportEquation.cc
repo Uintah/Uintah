@@ -27,7 +27,7 @@
 #include <expression/Expression.h>
 
 #include <CCA/Components/Wasatch/Transport/CompressibleMomentumTransportEquation.h>
-#include <CCA/Components/Wasatch/Transport/ParseEquation.h>
+#include <CCA/Components/Wasatch/Transport/ParseEquationHelper.h>
 #include <CCA/Components/Wasatch/Expressions/MomentumRHS.h>
 #include <CCA/Components/Wasatch/Expressions/BoundaryConditions/BoundaryConditionBase.h>
 #include <CCA/Components/Wasatch/Expressions/BoundaryConditions/BoundaryConditions.h>

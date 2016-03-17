@@ -204,7 +204,7 @@ namespace WasatchCore {
             IntVector iCell = *iter;
             // loop over all geometry objects
             geomIter = geomObjects.begin();
-            SCIRun::Point p = patch->getCellPosition(iCell);
+            Uintah::Point p = patch->getCellPosition(iCell);
             while( geomIter != geomObjects.end() ){
               isInside = (*geomIter)->inside(p);
               if( isInside ) nCells++;

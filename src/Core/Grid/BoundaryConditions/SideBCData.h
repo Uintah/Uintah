@@ -49,7 +49,6 @@ namespace Uintah {
 
   */
 
-  using namespace SCIRun;
  
   class SideBCData : public BCGeomBase {
 

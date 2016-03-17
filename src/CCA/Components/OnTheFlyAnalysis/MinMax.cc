@@ -275,8 +275,9 @@ void MinMax::problemSetup(const ProblemSpecP& prob_spec,
     
     d_analyzeVars.push_back(me);
 #ifdef HAVE_VISIT
-    if( sharedState->GetVisIt() )
+    if( sharedState->getVisIt() ) {
       d_sharedState->d_analysisVars.push_back(me);
+    }
 #endif
   }
   

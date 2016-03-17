@@ -325,6 +325,32 @@ public:
 
   };
 
+  struct gpuMemoryData {
+    int            status;  //0 for available, 1 for in use.
+    unsigned int   timestep;
+    void*          ptr;
+  };
+  struct gpuMemoryPoolItem {
+
+     unsigned int  device_id;
+     size_t        deviceSize;
+
+     gpuMemoryPoolItem(unsigned int device_id, size_t deviceSize) {
+       this->device_id = device_id;
+       this->deviceSize = deviceSize;
+     }
+     //This so it can be used in an STL map
+     bool operator<(const gpuMemoryPoolItem& right) const {
+       if (this->device_id < right.device_id) {
+         return true;
+       } else if ((this->device_id == right.device_id) && (this->deviceSize < right.deviceSize)) {
+         return true;
+       } else {
+         return false;
+       }
+     }
+   };
+
   //______________________________________________________________________
   // GPU GridVariable methods
   HOST_DEVICE void get(const GPUGridVariableBase& var, char const* label, int patchID, int matlIndx, int levelIndx);
@@ -395,8 +421,8 @@ public:
   HOST_DEVICE void deleteSelfOnDevice();
   HOST_DEVICE GPUDataWarehouse* getdevice_ptr(){return d_device_copy;};
   HOST_DEVICE void setDebug(bool s){d_debug=s;}
-  HOST_DEVICE cudaError_t copyDataHostToDevice(char const* indexID, void *cuda_stream);
-  HOST_DEVICE cudaError_t copyDataDeviceToHost(char const* indexID, void *cuda_stream);
+  //HOST_DEVICE cudaError_t copyDataHostToDevice(char const* indexID, void *cuda_stream);
+  //HOST_DEVICE cudaError_t copyDataDeviceToHost(char const* indexID, void *cuda_stream);
   HOST_DEVICE void copyHostContiguousToHost(GPUGridVariableBase& device_var, GridVariableBase* host_var, char const* label, int patchID, int matlIndx, int levelIndx);
 
   //______________________________________________________________________
@@ -472,12 +498,16 @@ private:
   HOST_DEVICE void printGetError( const char* msg, char const* label, int patchID, int matlIndx, int levelIndx);
   HOST_DEVICE void printGetLevelError(const char* msg, char const* label, int levelIndx, int matlIndx);
 
+  __host__ void* allocateCudaSpaceFromPool(int device_id, size_t memSize);
+  __host__ bool freeCudaSpaceFromPool(int device_id, size_t memSize, void* addr);
 
+  std::map<labelPatchMatlLevel, allVarPointersInfo> *varPointers;
 
-  //mutable SCIRun::CrowdMonitor allocateLock;
-  //mutable SCIRun::CrowdMonitor varLock;
-  mutable SCIRun::CrowdMonitor *allocateLock;
-  mutable SCIRun::CrowdMonitor *varLock;
+  //mutable Uintah::CrowdMonitor allocateLock;
+  //mutable Uintah::CrowdMonitor varLock;
+  mutable Uintah::CrowdMonitor *allocateLock;
+  mutable Uintah::CrowdMonitor *varLock;
+  static Uintah::CrowdMonitor *gpuPoolLock;
   char _internalName[80];
 
   materialItem       d_materialDB[MAX_MATERIALSDB_ITEMS];
@@ -495,11 +525,8 @@ private:
                                                 //So we create a buffer, and keep track of the start of that buffer here.
 
   //These STL data structures being here do not pose a problem for the CUDA compiler
-  std::map<labelPatchMatlLevel, allVarPointersInfo> *varPointers; //For the host side.  The variable database.
-                                                   //Holds the host ptr, the device ptr, and a staging
-                                                   //contiguous host ptr var location.  This is not part
-                                                   //of d_varDB because the device doesn't need to know about
-                                                   //the host pointers.  Being a map makes this much faster.
+
+  static std::multimap<gpuMemoryPoolItem, gpuMemoryData> *gpuMemoryPool;
 
 
   std::map<std::string, contiguousArrayInfo> *contiguousArrays;
@@ -530,6 +557,7 @@ private:
                                                   //managing virtual functions (10.3) and virtual base classes (10.1)."
 
 };
+
 
 
 } // end namespace Uintah

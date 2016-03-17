@@ -83,7 +83,6 @@
 #include <string>
 #include <vector>
 
-using namespace SCIRun;
 using namespace std;
 using namespace Uintah;
 

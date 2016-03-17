@@ -29,7 +29,6 @@
 #include <iostream>
 
 using namespace Uintah;
-using namespace SCIRun;
 
 ConvergenceFailure::ConvergenceFailure(const std::string& message,
 				       int numiterations,

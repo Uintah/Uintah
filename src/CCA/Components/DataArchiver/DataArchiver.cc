@@ -28,9 +28,6 @@
 #include <CCA/Ports/DataWarehouse.h>
 #include <CCA/Ports/LoadBalancer.h>
 #include <CCA/Ports/OutputContext.h>
-#if HAVE_PIDX
-#include <CCA/Ports/PIDXOutputContext.h>
-#endif
 #include <CCA/Ports/Scheduler.h>
 #include <CCA/Ports/SimulationInterface.h>
 
@@ -90,7 +87,6 @@
 
 using namespace Uintah;
 using namespace std;
-using namespace SCIRun;
 
 static DebugStream dbg("DataArchiver", false);
 static DebugStream dbgPIDX ("DataArchiverPIDX", false);
@@ -145,17 +141,9 @@ DataArchiver::problemSetup( const ProblemSpecP    & params,
   p->getAttribute("type", type);
   if(type == "pidx" || type == "PIDX"){
     d_outputFileFormat= PIDX;
+    d_PIDX_flags.problemSetup(p);
+    d_PIDX_flags.print();
   }
-  
-  // bulletproofing
-#ifndef HAVE_PIDX
-  if( d_outputFileFormat == PIDX ){
-    ostringstream warn;
-    warn << " ERROR:  To output with the PIDX file format, you must use the following in your configure line..." << endl;
-    warn << "                 --with-pidx=<path to PIDX installation>" << endl;
-    throw ProblemSetupException(warn.str(), __FILE__, __LINE__);
-  }
-#endif
 
   d_outputDoubleAsFloat = p->findBlock("outputDoubleAsFloat") != 0;
 
@@ -335,10 +323,6 @@ DataArchiver::problemSetup( const ProblemSpecP    & params,
     throw ProblemSetupException("<checkpoint walltimeStart must have a corresponding walltimeInterval",
                                 __FILE__, __LINE__);
   }
-  // Set walltimeStart to walltimeInterval if not specified.
-  if (d_checkpointWalltimeInterval != 0 && d_checkpointWalltimeStart == 0) {
-    d_checkpointWalltimeStart = d_checkpointWalltimeInterval;
-  }
 
   d_lastTimestepLocation   = "invalid";
   d_isOutputTimestep       = false;
@@ -349,232 +333,101 @@ DataArchiver::problemSetup( const ProblemSpecP    & params,
   d_nextCheckpointTime     = d_checkpointInterval; 
   d_nextCheckpointTimestep = d_checkpointTimestepInterval+1;
 
-  proc0cout << "Next checkpoint time is " << d_checkpointInterval << "\n";
-
   if (d_checkpointWalltimeInterval > 0) {
-    d_nextCheckpointWalltime = d_checkpointWalltimeStart + (int) Time::currentSeconds();
+    d_nextCheckpointWalltime = d_checkpointWalltimeStart + d_checkpointWalltimeInterval;
+
     if( Parallel::usingMPI() ) {
       // Make sure we are all writing at same time.  When node clocks disagree,
       // make decision based on processor zero time.
       MPI_Bcast(&d_nextCheckpointWalltime, 1, MPI_INT, 0, d_myworld->getComm());
     }
   }
-  else { 
-    d_nextCheckpointWalltime = 0;
+  
+  //__________________________________
+  // 
+  if ( d_checkpointInterval > 0 ){
+    proc0cout << "Checkpointing:"<< std::setw(16)<< " Every "<<  d_checkpointInterval << " physical seconds.\n";
+  }
+  if  ( d_checkpointTimestepInterval > 0 ){
+    proc0cout << "Checkpointing:"<< std::setw(16)<< " Every "<<  d_checkpointTimestepInterval << " timesteps.\n";
+  }
+  if  ( d_checkpointWalltimeInterval > 0 ){
+    proc0cout << "Checkpointing:"<< std::setw(16)<< " Every "<<  d_checkpointWalltimeInterval << " wall clock seconds,"
+              << " starting time:" << d_checkpointWalltimeStart << " sec.\n";
   }
 }
 //______________________________________________________________________
 //
 void
-DataArchiver::initializeOutput(const ProblemSpecP& params) 
+DataArchiver::initializeOutput( const ProblemSpecP & params )
 {
-   if( d_outputInterval == 0.0 && 
-       d_outputTimestepInterval == 0 && 
-       d_checkpointInterval == 0.0 && 
-       d_checkpointTimestepInterval == 0 && 
-       d_checkpointWalltimeInterval == 0) {
-     return;
-   }
+  if( d_outputInterval             == 0.0 && 
+      d_outputTimestepInterval     == 0   && 
+      d_checkpointInterval         == 0.0 && 
+      d_checkpointTimestepInterval == 0   && 
+      d_checkpointWalltimeInterval == 0 ) {
+    return;
+  }
 
-   if( Parallel::usingMPI() ) {
-     // See how many shared filesystems that we have
-     double start=Time::currentSeconds();
-     string basename;
-     if(d_myworld->myrank() == 0) {
-       // Create a unique string, using hostname+pid
-       char* base = strdup(d_filebase.c_str());
-       char* p = base+strlen(base);
-       for(;p>=base;p--) {
-         if(*p == '/') {
-           *++p=0; // keep trailing slash
-           break;
-         }
-       }
+  if( Parallel::usingMPI() ) {
 
-       if(*base) {
-         free(base);
-         base = strdup(".");
-       }
+    if( d_sharedState->d_usingLocalFileSystems ) {
+      setupLocalFileSystems();
+    }
+    else {
+      setupSharedFileSystem();
+    }
+    // Wait for all ranks to finish verifying shared file system....
+    MPI_Barrier(d_myworld->getComm());
+  }
+  else {
+    // Not using MPI...
+    makeVersionedDir();
+    d_writeMeta = true;
+  }
 
-       char hostname[MAXHOSTNAMELEN];
-       if(gethostname(hostname, MAXHOSTNAMELEN) != 0)
-         strcpy(hostname, "unknown???");
-       ostringstream ts;
-       ts << base << "-" << hostname << "-" << getpid();
-       if (*base)
-         free(base);
+  if (d_writeMeta) {
 
-       string test_string = ts.str();
-       const char* outbuf = test_string.c_str();
-       int outlen = (int)strlen(outbuf);
+    saveSVNinfo();
+    // Create index.xml:
+    string inputname = d_dir.getName()+"/input.xml";
+    params->output( inputname.c_str() );
 
-       MPI_Bcast(&outlen, 1, MPI_INT, 0, d_myworld->getComm());
-       MPI_Bcast(const_cast<char*>(outbuf), outlen, MPI_CHAR, 0,
-                 d_myworld->getComm());
-       basename = test_string;
-     } else {
-       int inlen;
-       MPI_Bcast(&inlen, 1, MPI_INT, 0, d_myworld->getComm());
-       char* inbuf = scinew char[inlen+1];
-       MPI_Bcast(inbuf, inlen, MPI_CHAR, 0, d_myworld->getComm());
-       inbuf[inlen]='\0';
-       basename=inbuf;
-       delete[] inbuf;       
-     }
-     // Create a file, of the name p0_hostname-p0_pid-processor_number
-     ostringstream myname;
-     myname << basename << "-" << d_myworld->myrank() << ".tmp";
-     string fname = myname.str();
+    dynamic_cast<SimulationInterface*>( getPort("sim") )->outputPS( d_dir );
 
-     // This will be an empty file, everything is encoded in the name anyway
-     FILE* tmpout = fopen(fname.c_str(), "w");
-     if(!tmpout)
-       throw ErrnoException("fopen failed for " + fname, errno, __FILE__, __LINE__);
-     fprintf(tmpout, "\n");
-     if(fflush(tmpout) != 0)
-       throw ErrnoException("fflush", errno, __FILE__, __LINE__);
-     if(fsync(fileno(tmpout)) != 0)
-       throw ErrnoException("fsync", errno, __FILE__, __LINE__);
-     if(fclose(tmpout) != 0)
-       throw ErrnoException("fclose", errno, __FILE__, __LINE__);
-     MPI_Barrier(d_myworld->getComm());
-     // See who else we can see
-     d_writeMeta=true;
-     int i;
-     for(i=0;i<d_myworld->myrank();i++) {
-       ostringstream name;
-       name << basename << "-" << i << ".tmp";
-       struct stat st;
-       int s=stat(name.str().c_str(), &st);
-       if(s == 0 && S_ISREG(st.st_mode)) {
-         // File exists, we do NOT need to emit metadata
-         d_writeMeta=false;
-         break;
-       } else if(errno != ENOENT) {
-         cerr << "Cannot stat file: " << name.str() << ", errno=" << errno << '\n';
-         throw ErrnoException("stat", errno, __FILE__, __LINE__);
-       }
-     }
-     MPI_Barrier(d_myworld->getComm());
-     if(d_writeMeta) {
-       makeVersionedDir();
-       string fname = myname.str();
-       FILE* tmpout = fopen(fname.c_str(), "w");
-       if(!tmpout) {
-         throw ErrnoException("fopen", errno, __FILE__, __LINE__);
-       }
-       string dirname = d_dir.getName();
-       fprintf(tmpout, "%s\n", dirname.c_str());
-       if(fflush(tmpout) != 0) {
-         throw ErrnoException("fflush", errno, __FILE__, __LINE__);
-       }
-#if defined(__APPLE__)
-       if(fsync(fileno(tmpout)) != 0) {
-         throw ErrnoException("fsync", errno, __FILE__, __LINE__);
-       }
-#elif !defined(__bgq__) // __bgq__ is defined on Blue Gene Q computers...
-       if(fdatasync(fileno(tmpout)) != 0) {
-         throw ErrnoException("fdatasync", errno, __FILE__, __LINE__);
-       }
-#endif
-       if(fclose(tmpout) != 0) {
-         throw ErrnoException("fclose", errno, __FILE__, __LINE__);
-       }
-     }
-     MPI_Barrier(d_myworld->getComm());
-     if(!d_writeMeta) {
-       ostringstream name;
-       name << basename << "-" << i << ".tmp";
-       ifstream in(name.str().c_str()); 
-       if (!in) {
-         throw InternalError("DataArchiver::initializeOutput(): The file \"" + \
-                             name.str() + "\" not found on second pass for filesystem discovery!",
-                             __FILE__, __LINE__);
-       }
-       string dirname;
-       in >> dirname;
-       d_dir=Dir(dirname);
-     }
-     int count=d_writeMeta?1:0;
-     int nunique;
-     // This is an AllReduce, not a reduce.  This is necessary to
-     // ensure that all processors wait before they remove the tmp files
-     MPI_Allreduce(&count, &nunique, 1, MPI_INT, MPI_SUM,
-                   d_myworld->getComm());
-     if(d_myworld->myrank() == 0) {
-       double dt=Time::currentSeconds()-start;
-       cerr << "Discovered " << nunique << " unique filesystems in " << dt << " seconds\n";
-     }
-     // Remove the tmp files...
-     int s = unlink(myname.str().c_str());
-     if(s != 0) {
-       cerr << "Cannot unlink file: " << myname.str() << '\n';
-       throw ErrnoException("unlink", errno, __FILE__, __LINE__);
-     }
-   } else {
-      makeVersionedDir();
-      d_writeMeta = true;
-   }
+    /////////////////////////////////////////////////////////
+    // Save the original .ups file in the UDA...
+    //     FIXME: might want to avoid using 'system' copy which the below uses...
+    //     If so, we will need to write our own (simple) file reader and writer
+    //     routine.
 
-   if (d_writeMeta) {
+    cout << "Saving original .ups file in UDA...\n";
+    Dir ups_location( pathname( params->getFile() ) );
+    ups_location.copy( basename( params->getFile() ), d_dir );
 
-     string svn_diff_file = string( sci_getenv("SCIRUN_OBJDIR") ) + "/svn_diff.txt";
-     if( !validFile( svn_diff_file ) ) {
-       cout << "\n";
-       cout << "WARNING: 'svn diff' file '" << svn_diff_file << "' does not appear to exist!\n";
-       cout << "\n";
-     } 
-     else {
-       string svn_diff_out = d_dir.getName() + "/svn_diff.txt";
-       string svn_diff_on = string( sci_getenv("SCIRUN_OBJDIR") ) + "/.do_svn_diff";
-       if( !validFile( svn_diff_on ) ) {
-         cout << "\n";
-         cout << "WARNING: Adding 'svn diff' file to UDA, but AUTO DIFF TEXT CREATION is OFF!\n";
-         cout << "         svn_diff.txt may be out of date!  Saving as 'possible_svn_diff.txt'.\n";
-         cout << "\n";
-         svn_diff_out = d_dir.getName() + "/possible_svn_diff.txt";
-       }
-       copyFile( svn_diff_file, svn_diff_out );
-     }
+    //
+    /////////////////////////////////////////////////////////
 
-      // create index.xml 
-      string inputname = d_dir.getName()+"/input.xml";
-      params->output(inputname.c_str());
-
-      dynamic_cast<SimulationInterface*>(getPort("sim"))->outputPS(d_dir);
-
-      /////////////////////////////////////////////////////////
-      // Save the original .ups file in the UDA...
-      //     FIXME: might want to avoid using 'system' copy which the below uses...
-      //     If so, we will need to write our own (simple) file reader and writer
-      //     routine.
-
-      cout << "Saving original .ups file in UDA...\n";
-      Dir ups_location( pathname( params->getFile() ) );
-      ups_location.copy( basename( params->getFile() ), d_dir );
-
-      //
-      /////////////////////////////////////////////////////////
-
-      createIndexXML(d_dir);
+    createIndexXML(d_dir);
    
-      // create checkpoints/index.xml (if we are saving checkpoints)
-      if (d_checkpointInterval != 0.0 || d_checkpointTimestepInterval != 0 ||
-          d_checkpointWalltimeInterval != 0) {
-         d_checkpointsDir = d_dir.createSubdir("checkpoints");
-         createIndexXML(d_checkpointsDir);
-      }
-   }
-   else {
-      d_checkpointsDir = d_dir.getSubdir("checkpoints");
-   }
+    // create checkpoints/index.xml (if we are saving checkpoints)
+    if ( d_checkpointInterval         != 0.0 || 
+         d_checkpointTimestepInterval != 0   || 
+         d_checkpointWalltimeInterval != 0) {
+      d_checkpointsDir = d_dir.createSubdir("checkpoints");
+      createIndexXML(d_checkpointsDir);
+    }
+  }
+  else {
+    d_checkpointsDir = d_dir.getSubdir("checkpoints");
+  }
 
-   //sync up before every rank can use the base dir
-   if (Parallel::usingMPI()) { 
-       MPI_Barrier(d_myworld->getComm());
-   }
+  // Sync up before every rank can use the base dir.
+  if (Parallel::usingMPI()) { 
+    MPI_Barrier(d_myworld->getComm());
+  }
+
 } // end initializeOutput()
-
 
 //______________________________________________________________________
 // to be called after problemSetup and initializeOutput get called
@@ -2386,14 +2239,14 @@ DataArchiver::outputVariables(const ProcessorGroup * pg,
   //      Fix ints issue in PIDX (Sidharth)
   //      Do we need the memset calls?
   //      Is Variable::emitPIDX() and Variable::readPIDX() efficient? 
-  //      Should we be using calloc() instead of malloc+memset?
+  //      Should we be using calloc() instead of malloc+memset
   //
   if ( d_outputFileFormat == PIDX && type != CHECKPOINT_REDUCTION){
   
     //__________________________________
     // bulletproofing
     if( patches->size() > 1 ){
-      throw SCIRun::InternalError("ERROR: (PIDX:outputVariables) Only 1 patch per MPI process is currently supported.", __FILE__, __LINE__);
+      throw Uintah::InternalError("ERROR: (PIDX:outputVariables) Only 1 patch per MPI process is currently supported.", __FILE__, __LINE__);
     }
   
     //__________________________________
@@ -2503,7 +2356,7 @@ DataArchiver::saveLabels_PIDX(std::vector< SaveItem >& saveLabels,
   unsigned int timeStep = d_sharedState->getCurrentTopLevelTimeStep();
   
   // Can this be run in serial without doing a MPI initialize
-  pidx.initialize(full_idxFilename, timeStep, d_myworld->getComm());
+  pidx.initialize(full_idxFilename, timeStep, d_myworld->getComm(), d_PIDX_flags, patches, type);
 
   //__________________________________
   // define the level extents for this variable type
@@ -2859,7 +2712,7 @@ DataArchiver::makeVersionedDir()
   //
   // This routine has been re-written to not use the Dir class because
   // the Dir class throws exceptions and exceptions (under SGI CC) add
-  // a huge memory penalty in one (same penalty if more than) are
+  // a huge memory penalty if one (same penalty if more than) is
   // thrown.  This causes memory usage to change if the very first
   // directory (000) can be created (because no exception is thrown
   // and thus no memory is allocated for exceptions).
@@ -2888,7 +2741,7 @@ DataArchiver::makeVersionedDir()
     }
   }
 
-  // if that didn't work, go ahead with the real algorithm
+  // If that didn't work, go ahead with the real algorithm
 
   while (!dirCreated) {
     ostringstream name;
@@ -3515,4 +3368,310 @@ DataArchiver::checkpointTimestep( double time,
 
   d_isOutputTimestep = false;
   d_isCheckpointTimestep = false;
+}
+
+//______________________________________________________________________
+//
+//
+void
+DataArchiver::saveSVNinfo()
+{
+  string svn_diff_file = string( sci_getenv("SCIRUN_OBJDIR") ) + "/svn_diff.txt";
+  if( !validFile( svn_diff_file ) ) {
+    cout << "\n";
+    cout << "WARNING: 'svn diff' file '" << svn_diff_file << "' does not appear to exist!\n";
+    cout << "\n";
+  } 
+  else {
+    string svn_diff_out = d_dir.getName() + "/svn_diff.txt";
+    string svn_diff_on = string( sci_getenv("SCIRUN_OBJDIR") ) + "/.do_svn_diff";
+    if( !validFile( svn_diff_on ) ) {
+      cout << "\n";
+      cout << "WARNING: Adding 'svn diff' file to UDA, but AUTO DIFF TEXT CREATION is OFF!\n";
+      cout << "         svn_diff.txt may be out of date!  Saving as 'possible_svn_diff.txt'.\n";
+      cout << "\n";
+      svn_diff_out = d_dir.getName() + "/possible_svn_diff.txt";
+    }
+    copyFile( svn_diff_file, svn_diff_out );
+  }
+}
+
+//______________________________________________________________________
+//
+// Verifyies that all processes can see the same file system (as rank 0).
+//
+void
+DataArchiver::setupSharedFileSystem()
+{
+  double start = Time::currentSeconds();
+  // Verify that all MPI processes can see the common file system (with rank 0).
+  string fs_test_file_name;
+  if( d_myworld->myrank() == 0 ) {
+
+    d_writeMeta = true;
+    // Create a unique file name, using hostname + pid
+    char hostname[ MAXHOSTNAMELEN ];
+    if( gethostname( hostname, MAXHOSTNAMELEN ) != 0 ) {
+      strcpy( hostname, "hostname-unknown" );
+    }
+
+    ostringstream test_filename_stream;
+    test_filename_stream << "sus_filesystem_test-" << hostname << "-" << getpid();
+
+    // Create the test file...
+    FILE * tmpout = fopen( test_filename_stream.str().c_str(), "w" );
+    if( !tmpout ) {
+      throw ErrnoException("fopen failed for " + test_filename_stream.str(), errno, __FILE__, __LINE__ );
+    }
+    fprintf( tmpout, "\n" ); // Test writing to file...
+    if( fflush( tmpout ) != 0 ) {
+      throw ErrnoException( "fflush", errno, __FILE__, __LINE__ );
+    }
+    if( fsync( fileno( tmpout ) ) != 0 ) { // Test syncing a file.
+      throw ErrnoException( "fsync", errno, __FILE__, __LINE__ );
+    }
+    if( fclose(tmpout) != 0) { // Test closing the file.
+      throw ErrnoException( "fclose", errno, __FILE__, __LINE__ );
+    }
+
+    // While the following has never before been necessary, it turns out that
+    // the "str()" operator on an ostringstream creates a temporary buffer
+    // that can be deleted at any time and so using ".c_str()" on it may return
+    // garbage.  To avoid this, we need to copy the ".str()" output into our
+    // own string, and then use the ".c_str()" on that non-temporary string.
+    const string temp_string = test_filename_stream.str();
+
+    const char* outbuf = temp_string.c_str();
+    int         outlen = (int)strlen( outbuf );
+
+    // Broadcast test filename length, and then broadcast the actual name.
+    MPI_Bcast( &outlen, 1, MPI_INT, 0, d_myworld->getComm() );
+    MPI_Bcast( const_cast<char*>(outbuf), outlen, MPI_CHAR, 0, d_myworld->getComm() );
+    fs_test_file_name = test_filename_stream.str();
+  } 
+  else {
+    d_writeMeta = false; // Only rank 0 will emit meta data...
+
+    // All other ranks receive from rank 0 (code above) the length, and then name
+    // of the file that we are going to look for...
+    int inlen;
+    MPI_Bcast( &inlen, 1, MPI_INT, 0, d_myworld->getComm() );
+    char * inbuf = scinew char[ inlen + 1 ];
+    MPI_Bcast( inbuf, inlen, MPI_CHAR, 0, d_myworld->getComm() );
+    inbuf[ inlen ]='\0';
+    fs_test_file_name = inbuf;
+
+    delete[] inbuf;       
+  }
+
+  if( d_myworld->myrank() != 0 ) { // Make sure everyone else can see the temp file...
+
+    struct stat st;
+    int s = stat( fs_test_file_name.c_str(), &st );
+
+    if( ( s != 0 ) || !S_ISREG( st.st_mode ) ) {
+      cerr << "Stat'ing of file: " << fs_test_file_name << " failed with errno = " << errno << "\n";
+      throw ErrnoException( "stat", errno, __FILE__, __LINE__ );
+    }
+  }
+
+  MPI_Barrier(d_myworld->getComm()); // Wait until everyone has check for the file before proceeding.
+
+  if( d_writeMeta ) {
+
+    int s = unlink( fs_test_file_name.c_str() ); // Remove the tmp file...
+    if(s != 0) {
+      cerr << "Cannot unlink file: " << fs_test_file_name << '\n';
+      throw ErrnoException("unlink", errno, __FILE__, __LINE__);
+    }
+
+    makeVersionedDir();
+    // Send UDA name to all other ranks.
+    string udadirname = d_dir.getName();
+    
+    // Broadcast uda dir name length, and then broadcast the actual name.
+    const char* outbuf = udadirname.c_str();
+    int         outlen = (int)strlen(outbuf);
+
+    MPI_Bcast( &outlen, 1, MPI_INT, 0, d_myworld->getComm() );
+    MPI_Bcast( const_cast<char*>(outbuf), outlen, MPI_CHAR, 0, d_myworld->getComm() );
+  }
+  else {
+
+    // Receive the name of the UDA from rank 0...
+    int inlen;
+    MPI_Bcast( &inlen, 1, MPI_INT, 0, d_myworld->getComm() );
+    char * inbuf = scinew char[ inlen+1 ];
+    MPI_Bcast( inbuf, inlen, MPI_CHAR, 0, d_myworld->getComm() );
+    inbuf[ inlen ]='\0';
+
+    d_dir = Dir( inbuf );
+    delete[] inbuf;
+  }
+
+  if( d_myworld->myrank() == 0 ) {
+    double delta_time = Time::currentSeconds() - start;
+    cerr << "Verified shared file system in " << delta_time << " seconds.\n";
+  }
+
+} // end setupSharedFileSystem()
+
+//______________________________________________________________________
+//
+// setupLocalFileSystems()
+//
+// This is the old method of checking for shared vs local file systems
+// and determining which node(s) will write the UDA meta data.  Rank 0
+// creates a file name, sends it to all other ranks.  All other ranks
+// use that basename to create subsequent files ("basename-rank").
+// Then all ranks (except 0) start looking for these files in order
+// (starting one past their rank).  If a file is found, it means that
+// the rank is on a node that has another (lower) rank - and that
+// lower rank will do the writing.
+//
+void
+DataArchiver::setupLocalFileSystems()
+{
+  double start = Time::currentSeconds();
+
+  // See how many shared filesystems that we have
+  string basename;
+  if( d_myworld->myrank() == 0 ) {
+    // Create a unique string, using hostname+pid
+    char* base = strdup(d_filebase.c_str());
+    char* p = base+strlen(base);
+    for(;p>=base;p--) {
+      if(*p == '/') {
+        *++p=0; // keep trailing slash
+        break;
+      }
+    }
+
+    if(*base) {
+      free(base);
+      base = strdup(".");
+    }
+
+    char hostname[MAXHOSTNAMELEN];
+    if(gethostname(hostname, MAXHOSTNAMELEN) != 0)
+      strcpy(hostname, "unknown???");
+    ostringstream ts;
+    ts << base << "-" << hostname << "-" << getpid();
+    if (*base) {
+      free(base);
+    }
+
+    string test_string = ts.str();
+    const char* outbuf = test_string.c_str();
+    int outlen = (int)strlen(outbuf);
+
+    MPI_Bcast(&outlen, 1, MPI_INT, 0, d_myworld->getComm());
+    MPI_Bcast(const_cast<char*>(outbuf), outlen, MPI_CHAR, 0,
+              d_myworld->getComm());
+    basename = test_string;
+  }
+  else {
+    int inlen;
+    MPI_Bcast(&inlen, 1, MPI_INT, 0, d_myworld->getComm());
+    char* inbuf = scinew char[inlen+1];
+    MPI_Bcast(inbuf, inlen, MPI_CHAR, 0, d_myworld->getComm());
+    inbuf[inlen]='\0';
+    basename=inbuf;
+    delete[] inbuf;       
+  }
+  // Create a file, of the name p0_hostname-p0_pid-processor_number
+  ostringstream myname;
+  myname << basename << "-" << d_myworld->myrank() << ".tmp";
+  string fname = myname.str();
+
+  // This will be an empty file, everything is encoded in the name anyway
+  FILE* tmpout = fopen(fname.c_str(), "w");
+  if(!tmpout) {
+    throw ErrnoException("fopen failed for " + fname, errno, __FILE__, __LINE__);
+  }
+  fprintf(tmpout, "\n");
+  if(fflush(tmpout) != 0) {
+    throw ErrnoException("fflush", errno, __FILE__, __LINE__);
+  }
+  if(fsync(fileno(tmpout)) != 0) {
+    throw ErrnoException("fsync", errno, __FILE__, __LINE__);
+  }
+  if(fclose(tmpout) != 0) {
+    throw ErrnoException("fclose", errno, __FILE__, __LINE__);
+  }
+  MPI_Barrier(d_myworld->getComm());
+  // See who else we can see
+  d_writeMeta=true;
+  int i;
+  for(i=0;i<d_myworld->myrank();i++) {
+    ostringstream name;
+    name << basename << "-" << i << ".tmp";
+    struct stat st;
+    int s=stat(name.str().c_str(), &st);
+    if(s == 0 && S_ISREG(st.st_mode)) {
+      // File exists, we do NOT need to emit metadata
+      d_writeMeta=false;
+      break;
+    }
+    else if(errno != ENOENT) {
+      cerr << "Cannot stat file: " << name.str() << ", errno=" << errno << '\n';
+      throw ErrnoException("stat", errno, __FILE__, __LINE__);
+    }
+  }
+  MPI_Barrier(d_myworld->getComm());
+  if(d_writeMeta) {
+    makeVersionedDir();
+    string fname = myname.str();
+    FILE* tmpout = fopen(fname.c_str(), "w");
+    if(!tmpout) {
+      throw ErrnoException("fopen", errno, __FILE__, __LINE__);
+    }
+    string dirname = d_dir.getName();
+    fprintf(tmpout, "%s\n", dirname.c_str());
+    if(fflush(tmpout) != 0) {
+      throw ErrnoException("fflush", errno, __FILE__, __LINE__);
+    }
+#if defined(__APPLE__)
+    if(fsync(fileno(tmpout)) != 0) {
+      throw ErrnoException("fsync", errno, __FILE__, __LINE__);
+    }
+#elif !defined(__bgq__) // __bgq__ is defined on Blue Gene Q computers...
+    if(fdatasync(fileno(tmpout)) != 0) {
+      throw ErrnoException("fdatasync", errno, __FILE__, __LINE__);
+    }
+#endif
+    if(fclose(tmpout) != 0) {
+      throw ErrnoException("fclose", errno, __FILE__, __LINE__);
+    }
+  }
+  MPI_Barrier(d_myworld->getComm());
+  if(!d_writeMeta) {
+    ostringstream name;
+    name << basename << "-" << i << ".tmp";
+    ifstream in(name.str().c_str()); 
+    if (!in) {
+      throw InternalError("DataArchiver::initializeOutput(): The file \"" + \
+                          name.str() + "\" not found on second pass for filesystem discovery!",
+                          __FILE__, __LINE__);
+    }
+    string dirname;
+    in >> dirname;
+    d_dir=Dir(dirname);
+  }
+  int count=d_writeMeta?1:0;
+  int nunique;
+  // This is an AllReduce, not a reduce.  This is necessary to
+  // ensure that all processors wait before they remove the tmp files
+  MPI_Allreduce(&count, &nunique, 1, MPI_INT, MPI_SUM,
+                d_myworld->getComm());
+  if(d_myworld->myrank() == 0) {
+    double dt=Time::currentSeconds()-start;
+    cerr << "Discovered " << nunique << " unique filesystems in " << dt << " seconds\n";
+  }
+  // Remove the tmp files...
+  int s = unlink(myname.str().c_str());
+  if(s != 0) {
+    cerr << "Cannot unlink file: " << myname.str() << '\n';
+    throw ErrnoException("unlink", errno, __FILE__, __LINE__);
+  }
 }

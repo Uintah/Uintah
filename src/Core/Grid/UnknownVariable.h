@@ -42,7 +42,7 @@
 
 namespace Uintah {
 
-  using SCIRun::Exception;
+  using Uintah::Exception;
 
   class Level; 
   class Patch;

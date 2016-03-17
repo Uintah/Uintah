@@ -10,8 +10,7 @@
 
 
 
-#define USE_FUNCTOR 1
-#undef  USE_FUNCTOR 
+#include <CCA/Components/Arches/FunctorSwitch.h>
 
 #ifdef USE_FUNCTOR
 #include <boost/math/special_functions/erf.hpp>

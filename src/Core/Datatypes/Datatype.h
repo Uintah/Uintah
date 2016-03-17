@@ -37,13 +37,12 @@
 #ifndef SCI_project_Datatype_h
 #define SCI_project_Datatype_h 1
 
-#include <Core/Persistent/Persistent.h>
 #include <Core/Thread/Mutex.h>
 
-namespace SCIRun {
+namespace Uintah {
 
 
-class Datatype : public Persistent {
+class Datatype {
 public:
   //! needed for our smart pointers -- LockingHandle<T>
   int ref_cnt;
@@ -59,7 +58,7 @@ public:
   static int compute_new_generation();
 };
 
-} // End namespace SCIRun
+} // End namespace Uintah
 
 
 #endif /* SCI_project_Datatype_h */

@@ -35,7 +35,6 @@
 #include <CCA/Ports/Scheduler.h>
 #include <CCA/Ports/SimulationInterface.h>
 
-#include <Core/Containers/Array3.h>
 #include <Core/Exceptions/ProblemSetupException.h>
 #include <Core/Geometry/IntVector.h>
 #include <Core/Geometry/Vector.h>
@@ -81,16 +80,16 @@
 
 using namespace Uintah;
 
-SCIRun::DebugStream amrout(       "AMR"                    , false);
+Uintah::DebugStream amrout(       "AMR"                    , false);
 
 namespace {
 
-SCIRun::DebugStream dbg(          "AMRSimulationController", false);
-SCIRun::DebugStream dbg_barrier(  "MPIBarriers"            ,false);
-SCIRun::DebugStream dbg_dwmem(    "LogDWMemory"            ,false);
-SCIRun::DebugStream gprofile(     "CPUProfiler"            ,false);
-SCIRun::DebugStream gheapprofile( "HeapProfiler"           ,false);
-SCIRun::DebugStream gheapchecker( "HeapChecker"            ,false);
+Uintah::DebugStream dbg(          "AMRSimulationController", false);
+Uintah::DebugStream dbg_barrier(  "MPIBarriers"            , false);
+Uintah::DebugStream dbg_dwmem(    "LogDWMemory"            , false);
+Uintah::DebugStream gprofile(     "CPUProfiler"            , false);
+Uintah::DebugStream gheapprofile( "HeapProfiler"           , false);
+Uintah::DebugStream gheapchecker( "HeapChecker"            , false);
 
 }
 
@@ -199,7 +198,7 @@ AMRSimulationController::run()
 #ifdef HAVE_VISIT
   visit_simulation_data visitSimData;
 
-  if( d_sharedState->GetVisIt() )
+  if( d_sharedState->getVisIt() )
   {
     visitSimData.simController = this;
 
@@ -279,7 +278,7 @@ AMRSimulationController::run()
     // Note: this code is not explicit to VisIt but it is currently
     // the only component that is making use of the ability to
     // overirde adjusting delta T.
-    if( d_sharedState->GetVisIt() && d_sharedState->adjustDelT() == false )
+    if( d_sharedState->getVisIt() && d_sharedState->adjustDelT() == false )
     {
       d_sharedState->adjustDelT(true);
     }
@@ -478,6 +477,18 @@ AMRSimulationController::run()
 
     calcWallTime();
 
+#ifdef HAVE_VISIT
+    bool last  = false;
+
+
+    // Check to see if at the last iteration
+    last = ( (time >= d_timeinfo->maxTime) ||
+	     (iterations >= d_timeinfo->maxTimestep) ||
+	     (d_timeinfo->max_wall_time != 0 &&
+	      getWallTime() >= d_timeinfo->max_wall_time) );
+#endif
+    
+
     // Get and reduce the performace run time stats
     getMemoryStats( d_sharedState->getCurrentTopLevelTimeStep() );
     getPAPIStats( );
@@ -503,7 +514,7 @@ AMRSimulationController::run()
     // anything needs to be done.
 
 #ifdef HAVE_VISIT
-    if( d_sharedState->GetVisIt() )
+    if( d_sharedState->getVisIt() )
     {
       // Check to see if at the last iteration
       bool last = ( (time >= d_timeinfo->maxTime) || (iterations >= d_timeinfo->maxTimestep) ||

@@ -26,7 +26,6 @@
 #include <CCA/Components/Schedulers/DetailedTasks.h>
 #include <Core/Util/DebugStream.h>
 using namespace Uintah;
-using namespace SCIRun;
 using namespace std;
 //______________________________________________________________________
 //

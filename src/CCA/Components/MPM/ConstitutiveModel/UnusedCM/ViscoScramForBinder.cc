@@ -1103,7 +1103,7 @@ fun_getTypeDescription(ViscoScramForBinder::Statedata*)
 
 } // End namespace Uintah
 
-namespace SCIRun {
+namespace Uintah {
 void swapbytes(Uintah::ViscoScramForBinder::Statedata& d)
 {
   //for (int i = 0; i < (int) d.numElements; i++) 
@@ -1111,4 +1111,4 @@ void swapbytes(Uintah::ViscoScramForBinder::Statedata& d)
   //swapbytes(d.numElements);
 }
   
-} // namespace SCIRun
+} // namespace Uintah

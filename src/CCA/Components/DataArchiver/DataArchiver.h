@@ -26,6 +26,7 @@
 #define UINTAH_HOMEBREW_DataArchiver_H
 
 #include <CCA/Ports/Output.h>
+#include <CCA/Ports/PIDXOutputContext.h>
 #include <Core/Parallel/UintahParallelComponent.h>
 #include <Core/Grid/Level.h>
 #include <Core/Grid/Variables/MaterialSetP.h>
@@ -38,8 +39,8 @@
 
 namespace Uintah {
 class DataWarehouse;
-using SCIRun::ConsecutiveRangeSet;
-using SCIRun::Mutex;
+using Uintah::ConsecutiveRangeSet;
+using Uintah::Mutex;
 
 
    /**************************************
@@ -266,7 +267,8 @@ using SCIRun::Mutex;
       void createPIDX_dirs( std::vector< SaveItem >& saveLabels,
                             Dir& levelDir );
                             
-                            
+      
+       PIDXOutputContext::PIDX_flags d_PIDX_flags;    // contains the knobs & switches                      
        
        //__________________________________
        //! returns a ProblemSpecP reading the xml file xmlName.
@@ -329,6 +331,17 @@ using SCIRun::Mutex;
 
        //! add saved global (reduction) variables to index.xml
        void indexAddGlobals();
+
+       // setupLocalFileSystems() and setupSharedFileSystem() are used to 
+       // create the UDA (versioned) directory.  setupLocalFileSystems() is
+       // old method of determining which ranks should output UDA
+       // metadata and handles the case when each node has its own local file system
+       // (as opposed to a shared file system across all nodes). setupLocalFileSystems()
+       // will only be used if specifically turned on via a
+       // command line arg to sus when running using MPI.
+       void setupLocalFileSystems();
+       void setupSharedFileSystem(); // Verifies that all ranks see a shared FS.
+       void saveSVNinfo();
 
        //! string for uda dir (actual dir will have postpended numbers
        //! i.e., filebase.000

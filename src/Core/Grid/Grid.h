@@ -89,8 +89,8 @@ WARNING
     
     //////////
     // Adds a level to the grid.
-    Level* addLevel( const SCIRun::Point  & anchor,
-                     const SCIRun::Vector & dcell, int id = -1 );
+    Level* addLevel( const Uintah::Point  & anchor,
+                     const Uintah::Vector & dcell, int id = -1 );
 
     // Reads in XML data line by line to create a level...
     void readLevelsFromFile( FILE * fp, std::vector< std::vector<int> > & procMap );
@@ -100,7 +100,7 @@ WARNING
 
     //////////
     // Computes the physical boundaries for the grid (including extra cells)
-    void getSpatialRange(SCIRun::BBox& b) const;
+    void getSpatialRange(Uintah::BBox& b) const;
 
     const Patch* getPatchByID(int id, int startLevel) const;
 
@@ -108,11 +108,11 @@ WARNING
     // Returns the boundary of the grid exactly (without
     // extra cells).  The value returned is the same value
     // as found in the .ups file.
-    void getInteriorSpatialRange(SCIRun::BBox& b) const;
+    void getInteriorSpatialRange(Uintah::BBox& b) const;
     
     //////////
     // Computes the length of the grid
-    void getLength(       SCIRun::Vector & length,
+    void getLength( Uintah::Vector & length,
                     const std::string    & flag = "plusExtraCells" ) const;
     
     //////////

@@ -47,6 +47,8 @@
 using namespace std;
 using namespace Uintah;
 
+#include <Core/Grid/Variables/BlockRange.h>
+
 #ifdef divergenceconstraint
 #include <CCA/Components/Arches/fortran/prescoef_var_fort.h>
 #endif
@@ -64,6 +66,14 @@ using namespace Uintah;
 #include <CCA/Components/Arches/fortran/wvelcoef_central_fort.h>
 #include <CCA/Components/Arches/fortran/wvelcoef_upwind_fort.h>
 #include <CCA/Components/Arches/fortran/wvelcoef_mixed_fort.h>
+
+
+#include <CCA/Components/Arches/FunctorSwitch.h>
+
+#include <Core/Grid/Variables/BlockRange.h>
+#ifdef UINTAH_ENABLE_KOKKOS
+#include <Kokkos_Core.hpp>
+#endif //UINTAH_ENABLE_KOKKOS
 
 //****************************************************************************
 // Default constructor for Discretization
@@ -494,6 +504,43 @@ Discretization::compute_Ap_stencilMatrix(CellIterator iter,
   }
 }
 
+template<class T>
+struct computeADiagonal{
+
+       computeADiagonal(T &_A_east,
+                        T &_A_west,
+                        T &_A_north,
+                        T &_A_south,
+                        T &_A_top,
+                        T &_A_bot,
+                        T &_A_diag, //or A_center
+                        T &_source) :
+                        A_east(_A_east),
+                        A_west(_A_west),
+                        A_north(_A_north),
+                        A_south(_A_south),
+                        A_top(_A_top),
+                        A_bot(_A_bot),
+                        A_diag(_A_diag),
+                        source(_source)  {  }
+
+       void operator()(int i , int j, int k ) const {
+       A_diag(i,j,k) = A_east(i,j,k)  + A_west(i,j,k) 
+                     + A_north(i,j,k) + A_south(i,j,k) 
+                     + A_top(i,j,k)   + A_bot(i,j,k)- source(i,j,k);
+       }
+
+  private:
+       T &A_east;
+       T &A_west;
+       T &A_north;
+       T &A_south;
+       T &A_top;
+       T &A_bot;
+       T &A_diag;
+       T &source;    
+};
+
 //****************************************************************************
 // Calculate the diagonal terms (velocity)
 //****************************************************************************
@@ -501,6 +548,42 @@ void
 Discretization::calculateVelDiagonal(const Patch* patch,
                                      ArchesVariables* coeff_vars)
 {
+
+#ifdef USE_FUNCTOR              
+  Uintah::BlockRange rangex(patch->getSFCXLowIndex(),patch->getSFCXHighIndex());
+  Uintah::BlockRange rangey(patch->getSFCYLowIndex(),patch->getSFCYHighIndex());
+  Uintah::BlockRange rangez(patch->getSFCZLowIndex(),patch->getSFCZHighIndex());
+
+  computeADiagonal<SFCXVariable<double> >  doADiagonalX(coeff_vars->uVelocityCoeff[Arches::AE],
+                                                        coeff_vars->uVelocityCoeff[Arches::AW],
+                                                        coeff_vars->uVelocityCoeff[Arches::AN],
+                                                        coeff_vars->uVelocityCoeff[Arches::AS],
+                                                        coeff_vars->uVelocityCoeff[Arches::AT],
+                                                        coeff_vars->uVelocityCoeff[Arches::AB],
+                                                        coeff_vars->uVelocityCoeff[Arches::AP],
+                                                        coeff_vars->uVelLinearSrc);
+  computeADiagonal<SFCYVariable<double> >  doADiagonalY(coeff_vars->vVelocityCoeff[Arches::AE],
+                                                        coeff_vars->vVelocityCoeff[Arches::AW],
+                                                        coeff_vars->vVelocityCoeff[Arches::AN],
+                                                        coeff_vars->vVelocityCoeff[Arches::AS],
+                                                        coeff_vars->vVelocityCoeff[Arches::AT],
+                                                        coeff_vars->vVelocityCoeff[Arches::AB],
+                                                        coeff_vars->vVelocityCoeff[Arches::AP],
+                                                        coeff_vars->vVelLinearSrc);
+  computeADiagonal<SFCZVariable<double> >  doADiagonalZ(coeff_vars->wVelocityCoeff[Arches::AE],
+                                                        coeff_vars->wVelocityCoeff[Arches::AW],
+                                                        coeff_vars->wVelocityCoeff[Arches::AN],
+                                                        coeff_vars->wVelocityCoeff[Arches::AS],
+                                                        coeff_vars->wVelocityCoeff[Arches::AT],
+                                                        coeff_vars->wVelocityCoeff[Arches::AB],
+                                                        coeff_vars->wVelocityCoeff[Arches::AP],
+                                                        coeff_vars->wVelLinearSrc);
+  Uintah::parallel_for( rangex, doADiagonalX);
+  Uintah::parallel_for( rangey, doADiagonalY);
+  Uintah::parallel_for( rangez, doADiagonalZ);
+#else
+
+
   CellIterator iter = patch->getSFCXIterator();
   compute_Ap_stencilMatrix<SFCXVariable<double> >(iter,coeff_vars->uVelocityCoeff,
                                                        coeff_vars->uVelLinearSrc);
@@ -512,6 +595,7 @@ Discretization::calculateVelDiagonal(const Patch* patch,
   iter = patch->getSFCZIterator();
   compute_Ap_stencilMatrix<SFCZVariable<double> >(iter,coeff_vars->wVelocityCoeff,
                                                        coeff_vars->wVelLinearSrc);
+#endif
 }
 
 //****************************************************************************

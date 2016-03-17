@@ -61,7 +61,7 @@
 #include <string>
 #include <iostream>
 
-namespace SCIRun {
+namespace Uintah {
 
     class DebugStream;
     class DebugBuf;
@@ -108,6 +108,6 @@ namespace SCIRun {
       std::ostream *outstream;
     };
     
-} // End namespace SCIRun
+} // End namespace Uintah
 
 #endif

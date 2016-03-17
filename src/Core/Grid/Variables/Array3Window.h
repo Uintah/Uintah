@@ -140,7 +140,7 @@ template<class T> class Array3Window : public RefCounted {
             std::ostringstream ostr;
             ostr << "Index not in range of window (on get): index: " << idx << " window low "
                  << lowIndex << " window high " << highIndex;
-            throw SCIRun::InternalError(ostr.str(), __FILE__, __LINE__);
+            throw Uintah::InternalError(ostr.str(), __FILE__, __LINE__);
           }
 #endif
          return data->get(idx-offset);
@@ -262,7 +262,7 @@ template<class T> class Array3Window : public RefCounted {
             std::ostringstream ostr;
             ostr << "Data not in range of new window: data size: " << data->size() << " window low "
                  << lowIndex << " window high " << highIndex;
-            throw SCIRun::InternalError(ostr.str(), __FILE__, __LINE__);
+            throw Uintah::InternalError(ostr.str(), __FILE__, __LINE__);
           }
 #endif
           data->addReference();

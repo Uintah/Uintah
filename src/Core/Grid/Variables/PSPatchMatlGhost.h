@@ -29,7 +29,6 @@
 #include <Core/Grid/Patch.h>
 #include <Core/Geometry/IntVector.h>
 
-using SCIRun::IntVector;
 
 namespace Uintah {
 

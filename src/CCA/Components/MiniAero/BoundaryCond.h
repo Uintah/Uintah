@@ -43,8 +43,6 @@
 namespace Uintah {
 namespace MiniAeroNS {
 
-  using namespace SCIRun;
-  
   static DebugStream BC_dbg("BC_dbg", false);
   static DebugStream BC_CC("BC_CC", false);
   static DebugStream BC_FC("BC_FC", false);

@@ -53,8 +53,8 @@ using namespace Uintah;
 namespace {
 
 std::atomic<int> ids{0};
-SCIRun::DebugStream   bcout("BCTypes", false);
-SCIRun::DebugStream   rgtimes("RGTimes",false);
+DebugStream   bcout("BCTypes", false);
+DebugStream   rgtimes("RGTimes",false);
 
 }
 
@@ -82,6 +82,7 @@ Level::Level(       Grid      * grid,
   d_finalized   = false;
   d_extraCells  = IntVector(0,0,0);
   d_totalCells  = 0;
+  d_nCellsPatch_max  = IntVector(0,0,0);
 
   if( d_id == -1 ) {
     d_id = ids.fetch_add(1, std::memory_order_relaxed);
@@ -376,7 +377,12 @@ long Level::totalCells() const
 {
   return d_totalCells;
 }
-
+//______________________________________________________________________
+//
+IntVector Level::nCellsPatch_max() const       // used by PIDX
+{
+  return d_nCellsPatch_max;
+}
 //______________________________________________________________________
 //
 
@@ -406,11 +412,11 @@ Level::getRelativeLevel( int offset ) const
 
 //______________________________________________________________________
 //
-SCIRun::Point
+Uintah::Point
 Level::getNodePosition( const IntVector & v ) const
 {
   if( d_stretched ) {
-    return SCIRun::Point(d_facePosition[0][v.x()], d_facePosition[1][v.y()], d_facePosition[2][v.z()]);
+    return Uintah::Point(d_facePosition[0][v.x()], d_facePosition[1][v.y()], d_facePosition[2][v.z()]);
   }
   else {
     return d_anchor+d_dcell*v;
@@ -420,11 +426,11 @@ Level::getNodePosition( const IntVector & v ) const
 //______________________________________________________________________
 //
 
-SCIRun::Point
+Uintah::Point
 Level::getCellPosition( const IntVector & v ) const
 {
   if( d_stretched ) {
-    return SCIRun::Point((d_facePosition[0][v.x()]+d_facePosition[0][v.x()+1])*0.5,
+    return Uintah::Point((d_facePosition[0][v.x()]+d_facePosition[0][v.x()+1])*0.5,
                          (d_facePosition[1][v.y()]+d_facePosition[1][v.y()+1])*0.5,
                          (d_facePosition[2][v.z()]+d_facePosition[2][v.z()+1])*0.5);
   }
@@ -473,7 +479,7 @@ Level::getCellIndex( const Point & p ) const
 //______________________________________________________________________
 //
 
-SCIRun::Point
+Uintah::Point
 Level::positionToIndex( const Point & p ) const
 {
   if(d_stretched){
@@ -632,6 +638,18 @@ void Level::finalizeLevel()
     d_totalCells+=d_realPatches[i]->getNumExtraCells();
   }
 
+  //compute the max number of cells over all patches  Needed by PIDX
+  d_nCellsPatch_max = IntVector(0,0,0);
+  int nCells = 0;
+  for(int i=0;i<(int)d_realPatches.size();i++){
+  
+    if( d_realPatches[i]->getNumExtraCells() > nCells){
+      IntVector lo = d_realPatches[i]->getExtraCellLowIndex();
+      IntVector hi = d_realPatches[i]->getExtraCellHighIndex();
+      d_nCellsPatch_max = hi - lo;
+    }
+  }
+
   //compute and store the spatial ranges now that BCTypes are set
   for(int i=0;i<(int)d_realPatches.size();i++){
     Patch* r = d_realPatches[i];
@@ -719,6 +737,19 @@ void Level::finalizeLevel(bool periodicX, bool periodicY, bool periodicZ)
   d_totalCells=0;
   for(int i=0;i<(int)d_realPatches.size();i++){
     d_totalCells+=d_realPatches[i]->getNumExtraCells();
+  }
+
+  //compute the max number of cells over all patches  Needed by PIDX
+  d_nCellsPatch_max = IntVector(0,0,0);
+  int nCells = 0;
+
+  for(int i=0;i<(int)d_realPatches.size();i++){
+    if( d_realPatches[i]->getNumExtraCells() > nCells){
+      IntVector lo = d_realPatches[i]->getExtraCellLowIndex();
+      IntVector hi = d_realPatches[i]->getExtraCellHighIndex();
+      
+      d_nCellsPatch_max = hi - lo;
+    }
   }
 
   //compute and store the spatial ranges now that BCTypes are set

@@ -33,6 +33,7 @@
 using namespace Uintah;
 
 namespace Uintah {
+
   static MPI_Datatype makeMPI_Vector5()
   {
     ASSERTEQ(sizeof(Vector5), sizeof(double)*7);
@@ -53,6 +54,14 @@ namespace Uintah {
     return td;
   }
   
+  void swapbytes( Vector5& a) {
+    SWAP_8(a.rho);
+    SWAP_8(a.momX);
+    SWAP_8(a.momY);
+    SWAP_8(a.momZ);
+    SWAP_8(a.eng);
+  }
+
   std::ostream & operator << (std::ostream &out, const Uintah::Vector5 &a) {
     out << "A.rho: "   << a.rho   << " A.momX: " << a.momX << " A.momY: " << a.momY 
         << " A.momZ: " << a.momZ  << " A.eng: "  << a.eng;
@@ -60,16 +69,5 @@ namespace Uintah {
   }
 
 
-}
+} // namespace Uintah
 
-namespace SCIRun {
-
-void swapbytes( Vector5& a) {
-  SWAP_8(a.rho);
-  SWAP_8(a.momX);
-  SWAP_8(a.momY);
-  SWAP_8(a.momZ);
-  SWAP_8(a.eng);
-}
-
-} // namespace SCIRun

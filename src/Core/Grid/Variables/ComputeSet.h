@@ -38,7 +38,7 @@
 
 namespace Uintah {
 
-  using SCIRun::InternalError;
+  using Uintah::InternalError;
 
   /**************************************
 

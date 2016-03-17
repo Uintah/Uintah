@@ -30,7 +30,7 @@
 
 #include <sys/stat.h>
 
-namespace SCIRun {
+namespace Uintah {
    
 /**************************************
      
@@ -108,7 +108,7 @@ private:
   std::string name_;
 };
 
-} // End namespace SCIRun
+} // End namespace Uintah
 
 #define MKDIR(dir, perm) mkdir(dir, perm)
 #define LSTAT(file, buf) lstat(file, buf)

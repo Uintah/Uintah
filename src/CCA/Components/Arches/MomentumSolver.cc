@@ -49,6 +49,14 @@
 #include <CCA/Components/Arches/SourceTerms/SourceTermFactory.h>
 #include <CCA/Components/Arches/SourceTerms/SourceTermBase.h>
 #include <CCA/Components/Arches/SourceTerms/ConstSrcTerm.h>
+#include <Core/Containers/StaticArray.h>
+
+#include <CCA/Components/Arches/FunctorSwitch.h>
+
+#include <Core/Grid/Variables/BlockRange.h>
+#ifdef UINTAH_ENABLE_KOKKOS
+#include <Kokkos_Core.hpp>
+#endif //UINTAH_ENABLE_KOKKOS
 using namespace Uintah;
 using namespace std;
 
@@ -542,6 +550,31 @@ MomentumSolver::sched_buildLinearMatrixVelHat(SchedulerP& sched,
 
 
 
+struct sumNonlinearSources{ 
+       sumNonlinearSources(double _vol,
+                           SFCXVariable<double> &_uNonlinearSrc, 
+                           SFCYVariable<double> &_vNonlinearSrc, 
+                           SFCZVariable<double> &_wNonlinearSrc, 
+                           constCCVariable<Vector> &_vectorSource)  :
+                           vol(_vol),
+                           uNonlinearSrc(_uNonlinearSrc),
+                           vNonlinearSrc(_vNonlinearSrc),
+                           wNonlinearSrc(_wNonlinearSrc),
+                           vectorSource(_vectorSource){ }
+                            
+       void operator()(int i , int j, int k ) const {
+         uNonlinearSrc(i,j,k)  += vectorSource(i,j,k).x()*vol;
+         vNonlinearSrc(i,j,k)  += vectorSource(i,j,k).y()*vol;
+         wNonlinearSrc(i,j,k)  += vectorSource(i,j,k).z()*vol;
+       }
+
+  private:
+       double vol;
+       SFCXVariable<double> &uNonlinearSrc; 
+       SFCYVariable<double> &vNonlinearSrc; 
+       SFCZVariable<double> &wNonlinearSrc; 
+       constCCVariable<Vector> &vectorSource;
+};
 
 // ***********************************************************************
 // Actual build of linear matrices for momentum components
@@ -855,12 +888,23 @@ MomentumSolver::buildLinearMatrixVelHat(const ProcessorGroup* pc,
           { new_dw->get( velocityVars.otherVectorSource, srcLabel, indx, patch, Ghost::None, 0);
           Vector Dx  = patch->dCell();
           double vol = Dx.x()*Dx.y()*Dx.z();
+             
+#ifdef USE_FUNCTOR              
+          Uintah::BlockRange range(patch->getCellLowIndex(),patch->getCellHighIndex());
+          sumNonlinearSources doSumSrc(vol,velocityVars.uVelNonlinearSrc,
+                                           velocityVars.vVelNonlinearSrc,
+                                           velocityVars.wVelNonlinearSrc,
+                                           velocityVars.otherVectorSource);
+          Uintah::parallel_for( range, doSumSrc);
+#else                                           
           for (CellIterator iter=patch->getCellIterator(); !iter.done(); iter++){
             IntVector c = *iter;
             velocityVars.uVelNonlinearSrc[c]  += velocityVars.otherVectorSource[c].x()*vol;
             velocityVars.vVelNonlinearSrc[c]  += velocityVars.otherVectorSource[c].y()*vol;
             velocityVars.wVelNonlinearSrc[c]  += velocityVars.otherVectorSource[c].z()*vol;
-          }}
+          }
+#endif
+          }
           break;
         case SourceTermBase::FX_SRC:
           { new_dw->get( velocityVars.otherFxSource, srcLabel, indx, patch, Ghost::None, 0);

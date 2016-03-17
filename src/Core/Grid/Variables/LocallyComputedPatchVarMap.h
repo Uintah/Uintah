@@ -42,11 +42,11 @@ namespace Uintah {
   inline int getVolume(const IntVector& low, const IntVector& high)
   { return Patch::getVolume(low, high); }
 
-  typedef SCIRun::SuperBox<const Patch*, IntVector, int, int,
-    SCIRun::InternalAreaSuperBoxEvaluator<const Patch*, int> > SuperPatch;
+  typedef Uintah::SuperBox<const Patch*, IntVector, int, int,
+    Uintah::InternalAreaSuperBoxEvaluator<const Patch*, int> > SuperPatch;
 
-  typedef SCIRun::SuperBoxSet<const Patch*, IntVector, int, int,
-    SCIRun::InternalAreaSuperBoxEvaluator<const Patch*, int> > SuperPatchSet;
+  typedef Uintah::SuperBoxSet<const Patch*, IntVector, int, int,
+    Uintah::InternalAreaSuperBoxEvaluator<const Patch*, int> > SuperPatchSet;
   typedef SuperPatchSet::SuperBoxContainer SuperPatchContainer;
 
   class LocallyComputedPatchVarMap {

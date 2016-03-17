@@ -46,7 +46,6 @@
 #define OVERHEAD_WINDOW 40
 namespace Uintah {
 
-using namespace SCIRun;
 
 class VarLabel;
 class Material; 
@@ -248,17 +247,19 @@ public:
   std::vector<std::vector<const VarLabel* > > d_cohesiveZoneState;
   std::vector<std::vector<const VarLabel* > > d_cohesiveZoneState_preReloc;
 
-  bool d_switchState;
+  bool   d_switchState;
   double d_prev_delt;
   double d_current_delt;
 
-  SimulationTime* d_simTime;
+  SimulationTime * d_simTime;
 
   bool d_adjustDelT;
   bool d_lockstepAMR;
   bool d_updateCheckpointInterval;
   bool d_updateOutputInterval;
   bool d_recompileTaskGraph;
+
+  bool d_usingLocalFileSystems;  // Denotes whether each MPI node has a separate file system.
 
   void resetStats();
   
@@ -300,14 +301,14 @@ public:
 
   ReductionInfoMapper< RunTimeStat, double > d_runTimeStats;
 
-  //percent time in overhead samples
+  // Percent time in overhead samples
   double overhead[OVERHEAD_WINDOW];
   double overheadWeights[OVERHEAD_WINDOW];
-  //next sample to write to
-  int overheadIndex;
+  // Next sample to write to
+  int    overheadIndex;
   double overheadAvg;
 
-  // timing statistics to test load balance
+  // Timing statistics to test load balance
   enum AnalysisType
   {
     MinMax = 0,
@@ -325,11 +326,11 @@ public:
   
 private:
 
-  void registerMaterial(Material*);
-  void registerMaterial(Material*,unsigned int index);
+  void registerMaterial( Material* );
+  void registerMaterial( Material*, unsigned int index );
 
-  SimulationState(const SimulationState&);
-  SimulationState& operator=(const SimulationState&);
+  SimulationState( const SimulationState& );
+  SimulationState& operator=( const SimulationState& );
       
   const VarLabel* delt_label;
   const VarLabel* refineFlag_label;
@@ -411,10 +412,10 @@ public:
   };
   
   std::vector< interactiveVar > d_interactiveVars;
-  std::vector< analysisVar > d_analysisVars;
+  std::vector< analysisVar >    d_analysisVars;
 
-  void SetVisIt( bool val ) { d_doVisIt = val; }
-  bool GetVisIt() { return d_doVisIt; }
+  void setVisIt( bool val ) { d_doVisIt = val; }
+  bool getVisIt() { return d_doVisIt; }
   
 private:
   bool d_doVisIt;

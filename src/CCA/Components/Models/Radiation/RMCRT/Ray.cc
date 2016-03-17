@@ -72,9 +72,9 @@ ______________________________________________________________________*/
 //
 using namespace Uintah;
 using namespace std;
-static SCIRun::DebugStream dbg("RAY",       false);
-static SCIRun::DebugStream dbg2("RAY_DEBUG",false);
-static SCIRun::DebugStream dbg_BC("RAY_BC", false);
+static Uintah::DebugStream dbg("RAY",       false);
+static Uintah::DebugStream dbg2("RAY_DEBUG",false);
+static Uintah::DebugStream dbg_BC("RAY_BC", false);
 
 
 //---------------------------------------------------------------------------

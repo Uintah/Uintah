@@ -70,7 +70,7 @@ SimulationTime::SimulationTime(const ProblemSpecP& params)
       std::cerr << "\n";
       std::cerr << "The 'max_iterations' flag (in the .ups file) is deprecated.  Please use the 'max_Timesteps' flag instead..\n";
       std::cerr << "\n";
-      SCIRun::Thread::exitAll(1);
+      Uintah::Thread::exitAll(1);      
     }
   }
 
@@ -99,7 +99,7 @@ SimulationTime::SimulationTime(const ProblemSpecP& params)
 //  This only called by the switcher component
 void SimulationTime::problemSetup(const ProblemSpecP& params)
 {
-  proc0cout << "  Reading <Time> section from: " << SCIRun::basename(params->getFile()) << "\n";
+  proc0cout << "  Reading <Time> section from: " << Uintah::basename(params->getFile()) << "\n";
   ProblemSpecP time_ps = params->findBlock("Time");
   time_ps->require("delt_min", delt_min);
   time_ps->require("delt_max", delt_max);

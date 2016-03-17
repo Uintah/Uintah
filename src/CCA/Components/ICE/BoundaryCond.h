@@ -46,9 +46,9 @@
 #include <time.h>
 
 
-static SCIRun::DebugStream BC_dbg(  "ICE_BC_DBG", false);
-static SCIRun::DebugStream cout_BC_CC("ICE_BC_CC", false);
-static SCIRun::DebugStream cout_BC_FC("ICE_BC_FC", false);
+static Uintah::DebugStream BC_dbg(  "ICE_BC_DBG", false);
+static Uintah::DebugStream cout_BC_CC("ICE_BC_CC", false);
+static Uintah::DebugStream cout_BC_FC("ICE_BC_FC", false);
 namespace Uintah {
   class DataWarehouse;
  

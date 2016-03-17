@@ -74,7 +74,8 @@ SRCS +=                                                \
         $(SRCDIR)/EnthalpyTransportEquation.cc         \
         $(SRCDIR)/ScalabilityTestTransportEquation.cc  \
         $(SRCDIR)/ScalarTransportEquation.cc           \
-        $(SRCDIR)/TransportEquation.cc                 
+        $(SRCDIR)/TransportEquation.cc                 \
+        $(SRCDIR)/ParseEquationHelper.cc
 
 ########################################################################
 #

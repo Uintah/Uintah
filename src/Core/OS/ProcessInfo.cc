@@ -53,7 +53,7 @@
 #  include <spi/include/kernel/memory.h>
 #endif
 
-namespace SCIRun {
+namespace Uintah {
 
 bool
 ProcessInfo::isSupported ( int info_type )
@@ -241,4 +241,4 @@ ProcessInfo::toHumanUnits( unsigned long value )
   return tmp;
 }
 
-} // namespace SCIRun
+} // namespace Uintah

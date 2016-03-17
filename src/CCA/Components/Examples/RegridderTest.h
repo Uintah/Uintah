@@ -119,13 +119,13 @@ WARNING
     VarLabel* d_oldDensityLabel;
     VarLabel* d_densityLabel;
     VarLabel* d_currentAngleLabel;
-    SCIRun::Vector d_gridMax;
-    SCIRun::Vector d_gridMin;
+    Vector d_gridMax;
+    Vector d_gridMin;
 
     // Fake cylinder
-    SCIRun::Vector d_centerOfBall;
-    SCIRun::Vector d_centerOfDomain;
-    SCIRun::Vector d_oldCenterOfBall;
+    Vector d_centerOfBall;
+    Vector d_centerOfDomain;
+    Vector d_oldCenterOfBall;
     double         d_radiusOfBall;
     double         d_radiusOfOrbit;
     double         d_angularVelocity;

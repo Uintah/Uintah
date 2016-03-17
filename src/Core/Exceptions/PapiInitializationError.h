@@ -39,7 +39,7 @@
 #include <Core/Exceptions/Exception.h>
 #include <string>
 
-namespace SCIRun {
+namespace Uintah {
   class PapiInitializationError : public Exception {
 
   public:
@@ -55,7 +55,7 @@ namespace SCIRun {
     std::string message_;
     PapiInitializationError& operator=(const PapiInitializationError&);
   };
-} // End namespace SCIRun
+} // End namespace Uintah
 
 #endif
 

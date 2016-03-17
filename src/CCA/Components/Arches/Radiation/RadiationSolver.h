@@ -34,7 +34,6 @@
 #include <CCA/Components/Arches/ArchesVariables.h>
 #include <CCA/Components/Arches/ArchesConstVariables.h>
 
-#include <Core/Containers/Array1.h>
 
 namespace Uintah {
 

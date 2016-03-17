@@ -47,16 +47,10 @@ SUBDIRS := \
 	$(SRCDIR)/Math          \
 	$(SRCDIR)/OS            \
 	$(SRCDIR)/Parallel      \
-	$(SRCDIR)/Persistent    \
 	$(SRCDIR)/ProblemSpec   \
 	$(SRCDIR)/Thread        \
 	$(SRCDIR)/Util          \
-#	$(SRCDIR)/ICom \
-#	$(SRCDIR)/2d \
-#	$(SRCDIR)/Util/Comm \
-#	$(SRCDIR)/Parts \
-#	$(SRCDIR)/PartsGui \
-#[INSERT NEW CATEGORY DIR HERE]
+
 
 
 

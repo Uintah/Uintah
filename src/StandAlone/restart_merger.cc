@@ -58,7 +58,6 @@
 #include <sstream>
 #include <iomanip>
 
-using namespace SCIRun;
 using namespace std;
 using namespace Uintah;
 

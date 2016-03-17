@@ -73,11 +73,11 @@ namespace Uintah {
   
   // list of requested tensor diagnostics
   std::list<const Uintah::TensorDiag*> createTensorDiags(const Uintah::TypeDescription * fldtype, 
-                                                         const SCIRun::FieldSelection & fldselection,
+                                                         const Uintah::FieldSelection & fldselection,
                                                          const Uintah::TensorDiag * preop=0);
   
   // create single tensor op, or null if none requested
-  const TensorDiag * createTensorOp(const SCIRun::FieldSelection & fldselection);
+  const TensorDiag * createTensorOp(const Uintah::FieldSelection & fldselection);
   
 }
 

@@ -50,7 +50,6 @@ namespace Uintah {
 
   */
 
-  using SCIRun::Point;
    
 
   class BCGeomBase {

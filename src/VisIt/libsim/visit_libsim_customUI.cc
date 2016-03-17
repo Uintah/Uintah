@@ -39,7 +39,7 @@
 
 #define ALL_LEVELS 99
 
-static SCIRun::DebugStream visitdbg( "VisItLibSim", true );
+static Uintah::DebugStream visitdbg( "VisItLibSim", true );
 
 namespace Uintah {
 

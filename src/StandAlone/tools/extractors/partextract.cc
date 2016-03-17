@@ -38,8 +38,7 @@
 #  define _ISOC99_SOURCE
 #endif
 
-#include <Core/Containers/Array3.h>
-#include <Core/DataArchive/DataArchive.h>
+
 #include <Core/Disclosure/TypeDescription.h>
 #include <Core/Geometry/Point.h>
 #include <Core/Geometry/Vector.h>
@@ -52,6 +51,7 @@
 #include <Core/Math/SymmMatrix3.h>
 #include <Core/OS/Dir.h>
 #include <Core/Parallel/Parallel.h>
+#include <Core/DataArchive/DataArchive.h>
 
 #include <algorithm>
 #include <cmath>
@@ -64,7 +64,6 @@
 
 #include <stdlib.h> // for strtoll
 
-using namespace SCIRun;
 using namespace std;
 using namespace Uintah;
 

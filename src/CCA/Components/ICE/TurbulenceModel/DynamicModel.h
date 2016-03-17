@@ -75,8 +75,8 @@ namespace Uintah {
                      CCVariable<V>& var_hat);      
        
     void applyFilter(const Patch* patch,
-                     SCIRun::StaticArray<CCVariable<double> >& var,           
-                     SCIRun::StaticArray<CCVariable<double> >& var_hat);      
+                     StaticArray<CCVariable<double> >& var,           
+                     StaticArray<CCVariable<double> >& var_hat);      
                                                                 
     Smagorinsky_Model d_smag;
     

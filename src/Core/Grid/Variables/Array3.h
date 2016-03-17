@@ -377,7 +377,7 @@ namespace Uintah {
             in.read((char*)&(*this)[IntVector(l.x(),y,z)], linesize);
             if (swapBytes) {
               for (int x=l.x();x<h.x();x++) {
-                SCIRun::swapbytes((*this)[IntVector(x,y,z)]);
+                Uintah::swapbytes((*this)[IntVector(x,y,z)]);
               }
             }
           }
@@ -464,8 +464,8 @@ namespace Uintah {
       }
       else {
         // will have to re-allocate and copy
-        IntVector encompassingLow = SCIRun::Min(lowIndex, oldWindow->getLowIndex());
-        IntVector encompassingHigh = SCIRun::Max(highIndex, oldWindow->getHighIndex());
+        IntVector encompassingLow = Uintah::Min(lowIndex, oldWindow->getLowIndex());
+        IntVector encompassingHigh = Uintah::Max(highIndex, oldWindow->getHighIndex());
 
         Array3Data<T>* newData =
           new Array3Data<T>(encompassingHigh - encompassingLow);

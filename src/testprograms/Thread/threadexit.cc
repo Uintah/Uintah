@@ -40,14 +40,14 @@
 class Globals {
 public:
   Globals(): group(0), work(0), mutex(0), np(0), exit_everybody(false) {}
-  Globals(SCIRun::ThreadGroup *group, SCIRun::WorkQueue *work, SCIRun::Mutex *mutex, SCIRun::Barrier *barrier,
+  Globals(Uintah::ThreadGroup *group, Uintah::WorkQueue *work, Uintah::Mutex *mutex, Uintah::Barrier *barrier,
 	  const int np):
     group(group), work(work), mutex(mutex), barrier(barrier), np(np),
     exit_everybody(false) {}
-  SCIRun::ThreadGroup *group;
-  SCIRun::WorkQueue *work;
-  SCIRun::Mutex *mutex;
-  SCIRun::Barrier *barrier;
+  Uintah::ThreadGroup *group;
+  Uintah::WorkQueue *work;
+  Uintah::Mutex *mutex;
+  Uintah::Barrier *barrier;
   int np;
 
   // exit stuff
@@ -63,7 +63,7 @@ public:
 
 class Display;
 
-class Worker: public SCIRun::Runnable {
+class Worker: public Uintah::Runnable {
 public:
   Worker(const int procID, Display *dpy, Globals *globals):
     procID(procID), dpy(dpy), globals(globals)
@@ -75,7 +75,7 @@ public:
   void run();
 };
 
-class Display: public SCIRun::Runnable {
+class Display: public Uintah::Runnable {
 public:
   Display(const int buff_size, Globals *globals, const int stopper) :
     buff_size(buff_size), 
@@ -124,7 +124,7 @@ public:
       globals->barrier->wait(globals->np + 1);
       if (globals->stop_execution()){
         //        for(;;) {}
-        //        SCIRun::Thread::exit();
+        //        Uintah::Thread::exit();
         return;
       }
 
@@ -140,7 +140,7 @@ public:
       print_test();
 
       if (i == stopper) {
-	//	SCIRun::Thread::exitAll(0);
+	//	Uintah::Thread::exitAll(0);
 	globals->exit_clean(0);
       }
     }
@@ -153,7 +153,7 @@ void Worker::run() {
     globals->barrier->wait(globals->np + 1);
     if (globals->stop_execution()){
       //      for(;;) {}
-      //      SCIRun::Thread::exit();
+      //      Uintah::Thread::exit();
       return;
     }
     // let the display refill the work queue
@@ -197,17 +197,17 @@ int main(int argc, char *argv[]) {
   if (buff_size < 1) buff_size = 100;
   std::cout <<"np = "<<np<<", buff_size = "<<buff_size<<std::endl;
 
-  SCIRun::ThreadGroup *group = new SCIRun::ThreadGroup("threadexit group");
-  SCIRun::WorkQueue *work = new SCIRun::WorkQueue("threadexit workqueue");
-  SCIRun::Mutex *mutex = new SCIRun::Mutex("threadexit mutex");
-  SCIRun::Barrier *barrier = new SCIRun::Barrier("threadexit barrier");
+  Uintah::ThreadGroup *group = new Uintah::ThreadGroup("threadexit group");
+  Uintah::WorkQueue *work = new Uintah::WorkQueue("threadexit workqueue");
+  Uintah::Mutex *mutex = new Uintah::Mutex("threadexit mutex");
+  Uintah::Barrier *barrier = new Uintah::Barrier("threadexit barrier");
   Globals *globals = new Globals(group, work, mutex, barrier, np);
   Display *dpy = new Display(buff_size, globals, stopper);
-  new SCIRun::Thread(dpy, "Display thread", group);
+  new Uintah::Thread(dpy, "Display thread", group);
   for(int i = 0; i < np; i++) {
     char buf[100];
     sprintf(buf, "worker %d", i);
-    new SCIRun::Thread(new Worker(i, dpy, globals), buf, group);
+    new Uintah::Thread(new Worker(i, dpy, globals), buf, group);
   }
 #if 0
   group->detach();

@@ -572,7 +572,7 @@ ElasticPlasticHP::initializeCMData(const Patch* patch,
   //               At present only Gaussian available.
   if (d_porosity.porosityDist != "constant") {
 
-    SCIRun::Gaussian gaussGen(d_porosity.f0, d_porosity.f0_std, 0, 1, DBL_MAX);
+    Gaussian gaussGen(d_porosity.f0, d_porosity.f0_std, 0, 1, DBL_MAX);
     ParticleSubset::iterator iter = pset->begin();
     for(;iter != pset->end();iter++){
 
@@ -584,7 +584,7 @@ ElasticPlasticHP::initializeCMData(const Patch* patch,
 
   if (d_scalarDam.scalarDamageDist != "constant") {
 
-    SCIRun::Gaussian gaussGen(d_scalarDam.D0, d_scalarDam.D0_std, 0, 1,DBL_MAX);
+    Gaussian gaussGen(d_scalarDam.D0, d_scalarDam.D0_std, 0, 1,DBL_MAX);
     ParticleSubset::iterator iter = pset->begin();
     for(;iter != pset->end();iter++){
 

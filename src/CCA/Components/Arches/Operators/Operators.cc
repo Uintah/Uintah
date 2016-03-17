@@ -38,7 +38,7 @@ using namespace Uintah;
 {                                                                                                       \
   typedef SpatialOps::Particle::CellToParticle<VOLT> C2P;                                               \
   typedef SpatialOps::Particle::ParticleToCell<VOLT> P2C;                                               \
-  const SCIRun::Point low = arches_get_low_position<VOLT>(*patch);                                               \
+  const Uintah::Point low = arches_get_low_position<VOLT>(*patch);                                               \
   pi._sodb.register_new_operator<C2P>(scinew C2P(Dx.x(), low.x(), Dx.y(), low.y(), Dx.z(), low.z()) );\
   pi._sodb.register_new_operator<P2C>(scinew P2C(Dx.x(), low.x(), Dx.y(), low.y(), Dx.z(), low.z()) );\
 }
@@ -68,37 +68,37 @@ Operators::delete_patch_set()
 } 
 
 template<typename FieldT>
-const SCIRun::Point arches_get_low_position(const Uintah::Patch& patch);
+const Point arches_get_low_position(const Uintah::Patch& patch);
 
 template<>
-const SCIRun::Point arches_get_low_position<SpatialOps::SVolField>(const Uintah::Patch& patch)
+const Point arches_get_low_position<SpatialOps::SVolField>(const Uintah::Patch& patch)
 {
   return patch.getCellPosition(patch.getCellLowIndex());
 }
   
 template<>
-const SCIRun::Point arches_get_low_position<SpatialOps::XVolField>(const Uintah::Patch& patch)
+const Point arches_get_low_position<SpatialOps::XVolField>(const Uintah::Patch& patch)
 {
   const Uintah::Vector spacing = patch.dCell();
-  SCIRun::Point low = patch.getCellPosition(patch.getCellLowIndex());
+  Point low = patch.getCellPosition(patch.getCellLowIndex());
   low.x( low.x() - spacing[0]/2.0 );
   return low;
 }
 
 template<>
-const SCIRun::Point arches_get_low_position<SpatialOps::YVolField>(const Uintah::Patch& patch)
+const Point arches_get_low_position<SpatialOps::YVolField>(const Uintah::Patch& patch)
 {
   const Uintah::Vector spacing = patch.dCell();
-  SCIRun::Point low = patch.getCellPosition(patch.getCellLowIndex());
+  Point low = patch.getCellPosition(patch.getCellLowIndex());
   low.y( low.y() - spacing[1]/2.0 );
   return low;
 }
 
 template<>
-const SCIRun::Point arches_get_low_position<SpatialOps::ZVolField>(const Uintah::Patch& patch)
+const Point arches_get_low_position<SpatialOps::ZVolField>(const Uintah::Patch& patch)
 {
   const Uintah::Vector spacing = patch.dCell();
-  SCIRun::Point low = patch.getCellPosition(patch.getCellLowIndex());
+  Point low = patch.getCellPosition(patch.getCellLowIndex());
   low.z( low.z() - spacing[2]/2.0 );
   return low;
 }

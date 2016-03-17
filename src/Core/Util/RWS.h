@@ -28,7 +28,7 @@
 #include <Core/Util/notset.h>
 #include <string>
 
-namespace SCIRun {
+namespace Uintah {
 
 //!remove leading and trailing white space from a char*
 // returns _NOTSET_ if the std::string is or becomes zero length

@@ -62,7 +62,7 @@ namespace Uintah {
 
 }
 
-namespace SCIRun {
+namespace Uintah {
 
 void swapbytes( Stencil7& a) {
   SWAP_8(a.p);
@@ -74,4 +74,4 @@ void swapbytes( Stencil7& a) {
   SWAP_8(a.b);
 }
 
-} // namespace SCIRun
+} // namespace Uintah

@@ -73,7 +73,7 @@ namespace Uintah {
          numGhostTypes // 7
       };
 
-     static SCIRun::IntVector getGhostTypeDir(Ghost::GhostType gtype)
+     static Uintah::IntVector getGhostTypeDir(Ghost::GhostType gtype)
      {
        int index = (int)gtype;
        CHECKARRAYBOUNDS(index, 0, numGhostTypes);
@@ -91,7 +91,7 @@ namespace Uintah {
       Ghost(const Ghost&);
       Ghost& operator=(const Ghost&);
 
-     static SCIRun::IntVector directions[numGhostTypes];
+     static Uintah::IntVector directions[numGhostTypes];
      static std::string names[numGhostTypes];
 #ifdef __GNUG__
    public:

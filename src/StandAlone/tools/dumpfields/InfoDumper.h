@@ -35,7 +35,7 @@ namespace Uintah {
   
   class InfoOpts {
   public:
-    InfoOpts(SCIRun::Args & args);
+    InfoOpts(Uintah::Args & args);
     
     bool  showeachmat;
     

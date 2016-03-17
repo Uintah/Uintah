@@ -39,7 +39,7 @@
 
 #include <Core/Exceptions/Exception.h>
 
-namespace SCIRun {
+namespace Uintah {
 	class ArrayIndexOutOfBounds : public Exception {
 	public:
 	    ArrayIndexOutOfBounds(long value, long lower, long upper, 
@@ -55,7 +55,7 @@ namespace SCIRun {
 
 	    ArrayIndexOutOfBounds& operator=(const ArrayIndexOutOfBounds);
 	};
-} // End namespace SCIRun
+} // End namespace Uintah
 
 #endif
 

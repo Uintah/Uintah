@@ -51,10 +51,8 @@
 #include <Core/Parallel/ProcessorGroup.h>
 
 using namespace std;
-using SCIRun::Point;
-using SCIRun::Vector;
 
-static SCIRun::DebugStream dbg("RMCRT_Test", false);
+static Uintah::DebugStream dbg("RMCRT_Test", false);
 
 
 namespace Uintah

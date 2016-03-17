@@ -40,31 +40,15 @@
 #include <Core/Datatypes/ColumnMatrix.h>
 #include <Core/Math/MiscMath.h>
 #include <Core/Util/Assert.h>
+#include <Core/Malloc/Allocator.h>
 
-namespace SCIRun {
-
-PersistentTypeID Matrix::type_id("Matrix", "PropertyManager", 0);
-
-#define MATRIX_VERSION 3
+namespace Uintah {
 
 
 Matrix::~Matrix()
 {
 }
 
-void
-Matrix::io(Piostream& stream)
-{
-  int version = stream.begin_class("Matrix", MATRIX_VERSION);
-  if (version < 2) {
-    int tmpsym;
-    stream.io(tmpsym);
-  }
-  if (version > 2) {
-    PropertyManager::io(stream);
-  }
-  stream.end_class();
-}
 
 
 void
@@ -78,22 +62,6 @@ Matrix::scalar_multiply(double s)
   }
 }
 
-
-Transform Matrix::toTransform() {
-  Transform t;
-  if (nrows() != 4 || ncols() != 4) {
-    std::cerr << "Error - can't make a transform from this matrix.\n";
-    return t;
-  }
-  double dummy[16];
-  int cnt=0;
-  for (int i=0; i<4; i++) 
-    for (int j=0; j<4; j++, cnt++)
-      dummy[cnt] = get(i,j);
-  t.set(dummy);
-  return t;
-}
-  
 
 void
 Mult(ColumnMatrix& result, const Matrix& mat, const ColumnMatrix& v)
@@ -406,4 +374,4 @@ Matrix::as_dense_col_maj()
 }
 
 
-} // End namespace SCIRun
+} // End namespace Uintah

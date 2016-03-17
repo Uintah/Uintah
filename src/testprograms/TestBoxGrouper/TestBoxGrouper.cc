@@ -27,14 +27,13 @@
 #include <testprograms/TestBoxGrouper/BoxRangeQuerier.h>
 #include <Core/Containers/SuperBox.h>
 
-using namespace SCIRun;
 
 namespace Uintah {
 
 typedef SuperBox<const Box*, IntVector, int, int,
-  InternalAreaSuperBoxEvaluator<const Box*, int> > SuperBox;
+  InternalAreaSuperBoxEvaluator<const Box*, int> > ISuperBox;
 typedef SuperBoxSet<const Box*, IntVector, int, int,
-  InternalAreaSuperBoxEvaluator<const Box*, int> > SuperBoxSet;
+  InternalAreaSuperBoxEvaluator<const Box*, int> > ISuperBoxSet;
 
 void doSimpleExampleTests(Suite* suite, bool verbose);
 void doGridTests(Suite* suite, int n, int numTakeAway, bool verbose);
@@ -42,7 +41,7 @@ void doGridTests(Suite* suite, int n, int numTakeAway, bool verbose);
 // test if superBoxSet is null, and that superBoxes in the superBoxSet
 // are disjoint and complete (with respect to boxes).
 void performStandardSuperBoxSetTests(Suite* suite,
-				     const SuperBoxSet* superBoxSet,
+				     const ISuperBoxSet* superBoxSet,
 				     const std::set<const Box*>& boxes);
 
 template <class BoxPIterator>
@@ -74,8 +73,8 @@ void doSimpleExampleTests(Suite* suite, bool verbose)
   boxes.insert(scinew Box(IntVector(16, 1, 0), IntVector(20, 5, 0), 8));
 
   BoxRangeQuerier rangeQuerier(boxes.begin(), boxes.end());
-  SuperBoxSet* superBoxSet =
-    SuperBoxSet::makeOptimalSuperBoxSet(boxes.begin(), boxes.end(),
+  ISuperBoxSet* superBoxSet =
+    ISuperBoxSet::makeOptimalSuperBoxSet(boxes.begin(), boxes.end(),
 					rangeQuerier);
   if (verbose) {
     std::cerr << "\nSuperBoxSet:\n";
@@ -131,8 +130,8 @@ void doGridTests(Suite* suite, int n, int numTakeAway, bool verbose)
   SuperBoxSet::biggerBoxCount = 0;
   SuperBoxSet::minBiggerBoxCount = 0;
 #endif
-  SuperBoxSet* superBoxSet =
-    SuperBoxSet::makeOptimalSuperBoxSet(boxes.begin(), boxes.end(),
+  ISuperBoxSet* superBoxSet =
+    ISuperBoxSet::makeOptimalSuperBoxSet(boxes.begin(), boxes.end(),
 					    rangeQuerier);
   if (verbose) {
 #ifdef SUPERBOX_PERFORMANCE_TESTING  
@@ -150,8 +149,8 @@ void doGridTests(Suite* suite, int n, int numTakeAway, bool verbose)
     suite->addTest("Value", superBoxSet->getValue() == 3*n*n*(n-1));
   }
   else {
-    SuperBoxSet* nearOptimalSuperBoxSet =
-      SuperBoxSet::makeNearOptimalSuperBoxSet(boxes.begin(), boxes.end(),
+    ISuperBoxSet* nearOptimalSuperBoxSet =
+      ISuperBoxSet::makeNearOptimalSuperBoxSet(boxes.begin(), boxes.end(),
 					      rangeQuerier);
     if (verbose) {
       std::cerr << "\nNear Optimal (heuristic) SuperBoxSet:\n";
@@ -167,7 +166,7 @@ void doGridTests(Suite* suite, int n, int numTakeAway, bool verbose)
 }
 
 void performStandardSuperBoxSetTests(Suite* suite,
-				     const SuperBoxSet* superBoxSet,
+				     const ISuperBoxSet* superBoxSet,
 				     const std::set<const Box*>& boxes)
 {
   suite->addTest("not null", superBoxSet != 0);
@@ -176,7 +175,7 @@ void performStandardSuperBoxSetTests(Suite* suite,
 
   std::set<const Box*> superSetBoxes;
   int count = 0;
-  std::vector<SuperBox*>::const_iterator iter;
+  std::vector<ISuperBox*>::const_iterator iter;
   for (iter = superBoxSet->getSuperBoxes().begin();
        iter != superBoxSet->getSuperBoxes().end(); iter++) {
     const std::vector<const Box*>& superBoxBoxes = (*iter)->getBoxes();

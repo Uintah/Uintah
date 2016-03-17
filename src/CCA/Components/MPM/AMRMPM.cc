@@ -3981,13 +3981,13 @@ void AMRMPM::addParticles(const ProcessorGroup*,
       // Put refinement criteria here
       const unsigned int origNParticles = pset->addParticles(0);
       for( unsigned int pp=0; pp<origNParticles; ++pp ){
-        prefOld[pp] = pref[pp];
-        // Conditions to refine particle based on physical state
-        // TODO:  Check below, should be < or <= in first conditional
-        bool splitCriteria=false;
-        //__________________________________
-        // Only set the refinement flags for certain materials
-        for(int i = 0; i< (int)d_thresholdVars.size(); i++ ){
+       prefOld[pp] = pref[pp];
+       // Conditions to refine particle based on physical state
+       // TODO:  Check below, should be < or <= in first conditional
+       bool splitCriteria=false;
+       //__________________________________
+       // Only set the refinement flags for certain materials
+       for(int i = 0; i< (int)d_thresholdVars.size(); i++ ){
           thresholdVar data = d_thresholdVars[i];
           string name  = data.name;
           double thresholdValue = data.value;
@@ -4026,27 +4026,27 @@ void AMRMPM::addParticles(const ProcessorGroup*,
                 pSplitR1R2R3[pp]=1;
               } else if (R1_R2_ratSq < tV_invSq) {
                 pSplitR1R2R3[pp]=-1;
-              } else if (R1_R3_ratSq > tVSq){
+              } else if (R1_R3_ratSq > tVSq && d_ndim==3){
                 pSplitR1R2R3[pp]=2;
-              } else if (R1_R3_ratSq < tV_invSq){
+              } else if (R1_R3_ratSq < tV_invSq && d_ndim==3){
                 pSplitR1R2R3[pp]=-2;
-              } else if (R2_R3_ratSq > tVSq){
+              } else if (R2_R3_ratSq > tVSq && d_ndim==3){
                  pSplitR1R2R3[pp]=3;
-              } else if (R2_R3_ratSq < tV_invSq){
+              } else if (R2_R3_ratSq < tV_invSq && d_ndim==3){
                  pSplitR1R2R3[pp]=-3;
               } else {
                  pSplitR1R2R3[pp]=0;
               }
   
               if(pSplitR1R2R3[pp]){
-                cout << "pSplit = " << pSplitR1R2R3[pp] << endl;
+                //cout << "pSplit = " << pSplitR1R2R3[pp] << endl;
                 splitCriteria  = true;
                 splitForStretch = true;
                 splitForAny = true;
               }
-            }
-          } // if this matl is in the list
-        } // loop over criteria
+           }
+         } // if this matl is in the list
+       } // loop over criteria
 
         if((pref[pp]< levelIndex && splitCriteria && numLevels > 1 ) ||
            (pref[pp]<=levelIndex && splitCriteria && numLevels == 1)){
@@ -4289,6 +4289,9 @@ void AMRMPM::addParticles(const ProcessorGroup*,
           pvoltmp[new_idx]    = fourthOrEighth*pvolume[idx];
           pmasstmp[new_idx]   = fourthOrEighth*pmass[idx];
           pveltmp[new_idx]    = pvelocity[idx];
+          if (flags->d_useLoadCurves) {
+            pLoadCIDtmp[new_idx]  = pLoadCID[idx];
+          }
           if(fourOrEight==8){
             pSFtmp[new_idx]     = 0.5*pscalefac[idx];
             psizetmp[new_idx]   = 0.5*pSize[idx];
@@ -4353,17 +4356,17 @@ void AMRMPM::addParticles(const ProcessorGroup*,
               } else {
                 if(pxtmp[new_idx].asVector().length2() >
                    pxtmp[last_index].asVector().length2()){
-                  pareatmp[last_index]  = 0.0;
-                  pareatmp[new_idx]     = pArea[idx];
+                  pareatmp[last_index]     = 0.0;
+                  pareatmp[new_idx]        = pArea[idx];
+                  pLoadCIDtmp[last_index]  = 0;
+                  pLoadCIDtmp[new_idx]     = pLoadCID[idx];
                 } else{
-                  pareatmp[new_idx]  = 0.0;
+                  pareatmp[new_idx]        = 0.0;
+                  pLoadCIDtmp[new_idx]     = 0;
                 } // if pxtmp
               } // if i==0
             } // if pArea
           } // if diffusion
-          if (flags->d_useLoadCurves) {
-            pLoadCIDtmp[new_idx]  = pLoadCID[idx];
-          }
           ptemptmp[new_idx]   = ptemp[idx];
           ptempPtmp[new_idx]  = ptempP[idx];
           preftmp[new_idx]    = pref[idx];
@@ -5482,12 +5485,12 @@ void AMRMPM::applyExternalScalarFlux(const ProcessorGroup* ,
         pbcP.push_back(pbc);
 
         // Calculate the force per particle at current time
-        fluxPerPart.push_back(pbc->fluxPerParticle(time));
+//        fluxPerPart.push_back(pbc->fluxPerParticle(time));
       }
     }
   }
 
-  // Loop thru patches to update external force vector
+  // Loop thru patches to update scalar flux
   for(int p=0;p<patches->size();p++){
     const Patch* patch = patches->get(p);
     printTask(patches, patch,cout_doing,"Doing applyExternalScalarFlux");

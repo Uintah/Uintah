@@ -37,7 +37,7 @@ usage()
   echo ""
   echo "You could run this script like this:"
   echo ""
-  echo "cd .../SCIRun/<bin>"
+  echo "cd .../Uintah/<bin>"
   echo "../src/build_scripts/repair.sh Thirdparty/1.20"
   echo ""
   echo "And then run your 'gmake' again."

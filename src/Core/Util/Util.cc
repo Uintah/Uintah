@@ -27,8 +27,8 @@
 #include <Core/Thread/Mutex.h>
 #include <Core/Util/DebugStream.h>
 
-using SCIRun::Mutex;
+using Uintah::Mutex;
 Mutex coutLock( "cout lock" );
 Mutex cerrLock( "cerr lock" );
 
-SCIRun::DebugStream dbg_barrier("MPIBarriers",false);
+Uintah::DebugStream dbg_barrier("MPIBarriers",false);

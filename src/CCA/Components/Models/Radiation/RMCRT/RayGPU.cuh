@@ -38,9 +38,9 @@
 
 namespace Uintah {
 
-typedef SCIRun::gpuIntVector GPUIntVector;
-typedef SCIRun::gpuVector    GPUVector;
-typedef SCIRun::gpuPoint     GPUPoint;
+typedef Uintah::gpuIntVector GPUIntVector;
+typedef Uintah::gpuVector    GPUVector;
+typedef Uintah::gpuPoint     GPUPoint;
 
 //______________________________________________________________________
 //

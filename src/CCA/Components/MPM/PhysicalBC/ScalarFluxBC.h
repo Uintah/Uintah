@@ -80,9 +80,10 @@ WARNING
 
       virtual void outputProblemSpec(ProblemSpecP& ps);
 
-      // Locate and flag the material points to which this scalar flux BC is
-      // to be applied. 
-      bool flagMaterialPoint(const Point& p, const Vector& dxpp, int& areacomp);
+      // Locate and flag the material points to
+      // which this scalar flux BC is to be applied. 
+      bool flagMaterialPoint(const Point& p, const Vector& dxpp,
+                                             Vector& areavec);
       
       // Get the load curve number for this scalar flux BC
       inline int loadCurveID() const {return d_loadCurve->getID();}
@@ -99,17 +100,19 @@ WARNING
       // Get the number of material points on the surface
       inline long numMaterialPoints() const {return d_numMaterialPoints;}
 
-      // Get the area of the surface
-      double getSurfaceArea() const;
-
       // Get the load curve 
       inline LoadCurve<double>* getLoadCurve() const {return d_loadCurve;}
 
       // Get the applied scalar flux at time t
       inline double ScalarFlux(double t) const {return d_loadCurve->getLoad(t);}
 
+#if 0
+      // Get the area of the surface
+      double getSurfaceArea() const;
+
       // Get the flux per particle at time t
       double fluxPerParticle(double time) const;
+#endif
 
       // Get the flux for a particle at time t, given its area
       double fluxPerParticle(double time, double area) const;

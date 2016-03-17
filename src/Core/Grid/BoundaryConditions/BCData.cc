@@ -33,7 +33,6 @@
 #include <typeinfo> // for typeid
 
 using namespace Uintah;
-using namespace SCIRun;
 using std::cerr;
 using std::endl;
 using std::vector;

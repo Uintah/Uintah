@@ -38,11 +38,10 @@
 #define SCI_project_DenseColMajMatrix_h 1
 
 #include <Core/Datatypes/Matrix.h>
-#include <Core/Geometry/Transform.h>
 #include <Core/Math/MiscMath.h>
 #include <vector>
 
-namespace SCIRun {
+namespace Uintah {
 
 class DenseColMajMatrix : public Matrix
 {
@@ -126,12 +125,9 @@ public:
   virtual void    print() const;
   virtual void    print(std::ostream&) const;
   
-  //! Persistent representation...
-  virtual void io(Piostream&);
-  static PersistentTypeID type_id;
 };
 
 
-} // End namespace SCIRun
+} // End namespace Uintah
 
 #endif

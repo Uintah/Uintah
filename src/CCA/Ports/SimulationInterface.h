@@ -37,7 +37,6 @@
 
 namespace Uintah {
 
-  using SCIRun::Dir;
 /**************************************
 
 CLASS

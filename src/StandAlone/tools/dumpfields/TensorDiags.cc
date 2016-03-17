@@ -29,7 +29,6 @@
 #include <list>
 
 using namespace std;
-using namespace SCIRun;
 
 namespace Uintah {
   

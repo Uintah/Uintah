@@ -81,7 +81,7 @@ namespace WasatchCore{
     int  rkStage_;
     const bool useRefPhi_;
     const double refPhiValue_;
-    const SCIRun::IntVector refPhiLocation_;
+    const Uintah::IntVector refPhiLocation_;
     const bool use3DLaplacian_;
     
     const Uintah::SolverParameters& solverParams_;
@@ -105,7 +105,7 @@ namespace WasatchCore{
                        const Expr::Tag& phirhstag,
                        const bool       useRefPhi,
                        const double     refPhiValue,
-                       const SCIRun::IntVector refPhiLocation,
+                       const Uintah::IntVector refPhiLocation,
                        const bool       use3dlaplacian,
                        const Uintah::SolverParameters& solverParams,
                        Uintah::SolverInterface& solver );
@@ -117,7 +117,7 @@ namespace WasatchCore{
       const Expr::Tag phirhst_;
       const bool userefphi_;
       const double refphivalue_;
-      const SCIRun::IntVector refphilocation_;
+      const Uintah::IntVector refphilocation_;
       const bool use3dlaplacian_;
       const Uintah::SolverParameters& sparams_;
       Uintah::SolverInterface& solver_;
@@ -126,7 +126,7 @@ namespace WasatchCore{
               const Expr::Tag& phirhst,
               const bool       useRefPhi,
               const double     refPhiValue,
-              const SCIRun::IntVector refPhiLocation,
+              const Uintah::IntVector refPhiLocation,
               const bool       use3DLaplacian,            
               const Uintah::SolverParameters& sparams,
               Uintah::SolverInterface& solver );

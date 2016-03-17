@@ -40,8 +40,8 @@
 using namespace Uintah;
 
 // sync cout/cerr so they are readable when output by multiple threads
-extern SCIRun::Mutex coutLock;
-extern SCIRun::Mutex cerrLock;
+extern Uintah::Mutex coutLock;
+extern Uintah::Mutex cerrLock;
 
 extern DebugStream taskdbg;
 extern DebugStream mpidbg;
@@ -199,9 +199,10 @@ ThreadedMPIScheduler::problemSetup( const ProblemSpecP&     prob_spec,
 SchedulerP
 ThreadedMPIScheduler::createSubScheduler()
 {
-  ThreadedMPIScheduler* subsched = scinew ThreadedMPIScheduler(d_myworld, m_outPort, this);
-  UintahParallelPort* lbp = getPort("load balancer");
-  subsched->attachPort("load balancer", lbp);
+  UintahParallelPort   * lbp       = getPort( "load balancer" );
+  ThreadedMPIScheduler * subsched = scinew ThreadedMPIScheduler( d_myworld, m_outPort_, this );
+
+  subsched->attachPort( "load balancer", lbp );
   subsched->d_sharedState = d_sharedState;
   subsched->numThreads_ = Uintah::Parallel::getNumThreads() - 1;
 

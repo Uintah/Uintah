@@ -50,7 +50,7 @@ namespace WasatchCore {
                                         const Expr::Tag& phiRHSTag,
                                         const bool       useRefPhi,
                                         const double     refPhiValue,
-                                        const SCIRun::IntVector refPhiLocation,
+                                        const Uintah::IntVector refPhiLocation,
                                         const bool       use3DLaplacian,
                                         const Uintah::SolverParameters& solverParams,
                                         Uintah::SolverInterface& solver )
@@ -176,8 +176,8 @@ namespace WasatchCore {
     // n: north, s: south, e: east, w: west, t: top, b: bottom coefficient
     double w = 0.0, s = 0.0, b = 0.0;
 
-    const SCIRun::IntVector l    = patch_->getCellLowIndex();
-    const SCIRun::IntVector h    = patch_->getCellHighIndex();
+    const Uintah::IntVector l    = patch_->getCellLowIndex();
+    const Uintah::IntVector h    = patch_->getCellHighIndex();
     const Uintah::Vector spacing = patch_->dCell();
 
     if ( doX_ || use3DLaplacian_ ) {
@@ -201,7 +201,7 @@ namespace WasatchCore {
       // definite matrix. For the Laplacian on a structured grid, the matrix A corresponding
       // to the Laplacian operator is not positive definite - but "- A" is. Hence,
       // we multiply all coefficients by -1.
-      SCIRun::IntVector iCell = *iter;
+      Uintah::IntVector iCell = *iter;
       Uintah::Stencil7&  coefs = matrix_[iCell];
       coefs.w = -w;
       coefs.e = -w;
@@ -279,7 +279,7 @@ namespace WasatchCore {
                                        const Expr::Tag& phiRHSTag,
                                        const bool       useRefPhi,
                                        const double     refPhiValue,
-                                       const SCIRun::IntVector refPhiLocation,
+                                       const Uintah::IntVector refPhiLocation,
                                        const bool       use3dlaplacian,
                                        const Uintah::SolverParameters& sparams,
                                        Uintah::SolverInterface& solver )
