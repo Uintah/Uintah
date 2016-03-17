@@ -26,7 +26,6 @@
 #define CCA_COMPONENTS_SCHEDULERS_MPISCHEDULER_H
 
 #include <CCA/Components/Schedulers/SchedulerCommon.h>
-#include <CCA/Components/Schedulers/MessageLog.h>
 #include <CCA/Components/Schedulers/CommRecMPI.h>
 #include <CCA/Components/Schedulers/DetailedTasks.h>
 #include <CCA/Components/Schedulers/OnDemandDataWarehouseP.h>
@@ -171,7 +170,6 @@ class MPIScheduler : public SchedulerCommon {
 
     void outputTimingStats( const char* label );
 
-    MessageLog                  log;
     const Output*               oport_;
     CommRecMPI                  sends_[MAX_THREADS];
     CommRecMPI                  recvs_;

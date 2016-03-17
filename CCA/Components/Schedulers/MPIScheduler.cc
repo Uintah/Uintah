@@ -87,7 +87,6 @@ MPIScheduler::MPIScheduler( const ProcessorGroup* myworld,
                                   MPIScheduler*   parentScheduler)
   : SchedulerCommon(myworld, oport),
     parentScheduler_(parentScheduler),
-    log(myworld, oport),
     oport_(oport),
     numMessages_(0),
     messageVolume_(0),
@@ -134,7 +133,6 @@ void
 MPIScheduler::problemSetup( const ProblemSpecP&     prob_spec,
                                   SimulationStateP& state )
 {
-  log.problemSetup(prob_spec);
   SchedulerCommon::problemSetup(prob_spec, state);
 }
 
@@ -989,7 +987,6 @@ MPIScheduler::execute( int tgnum     /* = 0 */,
   }
 
   finalizeTimestep();
-  log.finishTimestep();
 
   if ( !parentScheduler_ && (execout.active() || timeout.active() || waitout.active()) ) {  // only do on toplevel scheduler
     outputTimingStats("MPIScheduler");

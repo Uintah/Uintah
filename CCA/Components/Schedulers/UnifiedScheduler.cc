@@ -316,7 +316,6 @@ UnifiedScheduler::problemSetup( const ProblemSpecP&     prob_spec,
     t_thread[i] = t;
   }
 
-  log.problemSetup(prob_spec);
   SchedulerCommon::problemSetup(prob_spec, state);
 
 #ifdef HAVE_CUDA
@@ -715,8 +714,6 @@ UnifiedScheduler::execute( int tgnum     /* = 0 */,
   }
 
   finalizeTimestep();
-
-  log.finishTimestep();
 
   if ( (execout.active() || emit_timings) && !parentScheduler_) {  // only do on toplevel scheduler
     outputTimingStats("UnifiedScheduler");
