@@ -29,15 +29,12 @@
 
 #undef None
 
-#include   <string>
-#include   <vector>
-#include   <iosfwd>
-#include   <iostream>
-
+#include <string>
+#include <vector>
+#include <iosfwd>
+#include <iostream>
 
 namespace Uintah {
-
-  using Uintah::IntVector;
 
 /**************************************
       

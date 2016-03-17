@@ -43,10 +43,6 @@ namespace Uintah {
 
 class TypeDescription;
 
-using Uintah::IntVector;
-using Uintah::Vector;
-using Uintah::Point;
-
 // This is the "base" problem spec.  There should be ways of breaking
 // this up
 

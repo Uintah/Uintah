@@ -32,8 +32,6 @@
 
 namespace Uintah {
 
-  using Uintah::IntVector;
-
   /**************************************
 
     CLASS
@@ -202,7 +200,7 @@ namespace Uintah {
         IntVector d_s,d_e;
         int d_ix, d_iy, d_iz;
         
-        friend std::ostream& operator<<(std::ostream& out, const Uintah::NodeIterator& b);
+        friend std::ostream& operator<<( std::ostream& out, const NodeIterator& b );
     }; // end class NodeIterator
 
 } // End namespace Uintah

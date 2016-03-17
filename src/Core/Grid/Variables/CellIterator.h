@@ -1,3 +1,6 @@
+#ifndef UINTAH_HOMEBREW_CellIterator_H
+#define UINTAH_HOMEBREW_CellIterator_H
+
 /*
  * The MIT License
  *
@@ -22,10 +25,6 @@
  * IN THE SOFTWARE.
  */
 
-
-#ifndef UINTAH_HOMEBREW_CellIterator_H
-#define UINTAH_HOMEBREW_CellIterator_H
-
 #include <Core/Geometry/IntVector.h>
 #include <Core/Util/Assert.h>
 #include <iterator>
@@ -33,8 +32,6 @@
 #include <Core/Grid/Variables/BaseIterator.h>
 
 namespace Uintah {
-
-using Uintah::IntVector;
 
 /**************************************
 
@@ -160,7 +157,7 @@ WARNING
      {
        return begin()!=o.begin() || end()!=o.end() || d_cur!=o.d_cur;
      }
-     friend std::ostream& operator<<(std::ostream& out, const Uintah::CellIterator& b);
+     friend std::ostream& operator<<( std::ostream& out, const CellIterator& b );
 
      friend class GridIterator;
 
