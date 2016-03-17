@@ -3731,6 +3731,15 @@ BoundaryCondition::readInputFile( std::string file_name, BoundaryCondition::FFIn
 
   std::map<IntVector, double> values;
 
+  int is=0; int js=0; int ks = 0;
+  if ( index == 0 ){
+      is = 1;
+  } else if ( index == 1 ){
+      js = 1;
+  } else {
+      ks = 1;
+  }
+
   for ( int i = 0; i < num_points; i++ ) {
     int I = getInt( file );
     int J = getInt( file );
@@ -3743,6 +3752,10 @@ BoundaryCondition::readInputFile( std::string file_name, BoundaryCondition::FFIn
     IntVector C(I,J,K);
 
     values.insert( make_pair( C, v[index] ));
+
+    IntVector C2(I-is, J-js, K-ks);
+
+    values.insert( make_pair( C2, v[index] ));
 
   }
 
@@ -4252,7 +4265,8 @@ BoundaryCondition::checkMomBCs( const ProcessorGroup* pc,
       int numChildren = patch->getBCDataArray(face)->getNumberChildren(matlIndex);
       for (int child = 0; child < numChildren; child++) {
 
-        for ( std::vector<std::string>::iterator iname = d_all_v_inlet_names.begin(); iname != d_all_v_inlet_names.end(); iname++ ) {
+        for ( std::vector<std::string>::iterator iname = d_all_v_inlet_names.begin();
+              iname != d_all_v_inlet_names.end(); iname++ ) {
 
           std::string bc_s_value = "NA";
 
@@ -4372,7 +4386,7 @@ BoundaryCondition::checkMomBCs( const ProcessorGroup* pc,
                 CellToValue::iterator check_iter = i_uvel_bc_storage->second.values.find( mod_bound_ptr - i_uvel_bc_storage->second.relative_ijk );
                 if ( check_iter == i_uvel_bc_storage->second.values.end() ) {
                   std::stringstream out;
-                  out << "Vel BC: " << *iname << " - No UINTAH boundary cell " << mod_bound_ptr - i_uvel_bc_storage->second.relative_ijk << " in the handoff file." << endl;
+                  out << "Vel BC: " << *iname << " - No UINTAH boundary cell " << mod_bound_ptr - i_uvel_bc_storage->second.relative_ijk << " (relative) " << mod_bound_ptr << " (absolute) in the handoff file." << endl;
                   if ( !file_is_open ) {
                     file_is_open = true;
                     outputfile.open(fname.str().c_str());
@@ -4394,7 +4408,7 @@ BoundaryCondition::checkMomBCs( const ProcessorGroup* pc,
                 CellToValue::iterator check_iter = i_vvel_bc_storage->second.values.find( mod_bound_ptr - i_vvel_bc_storage->second.relative_ijk );
                 if ( check_iter == i_vvel_bc_storage->second.values.end() ) {
                   std::stringstream out;
-                  out << "Vel BC: " << *iname << " - No UINTAH boundary cell " << mod_bound_ptr - i_vvel_bc_storage->second.relative_ijk << " in the handoff file." << endl;
+                  out << "Vel BC: " << *iname << " - No UINTAH boundary cell " << mod_bound_ptr - i_vvel_bc_storage->second.relative_ijk << " (relative) " << mod_bound_ptr << " (absolute) in the handoff file." << endl;
                   if ( !file_is_open ) {
                     file_is_open = true;
                     outputfile.open(fname.str().c_str());
@@ -4416,7 +4430,7 @@ BoundaryCondition::checkMomBCs( const ProcessorGroup* pc,
                 CellToValue::iterator check_iter = i_wvel_bc_storage->second.values.find( mod_bound_ptr - i_wvel_bc_storage->second.relative_ijk );
                 if ( check_iter == i_wvel_bc_storage->second.values.end() ) {
                   std::stringstream out;
-                  out << "Vel BC: " << *iname << " - No UINTAH boundary cell " << mod_bound_ptr - i_wvel_bc_storage->second.relative_ijk << " in the handoff file." << endl;
+                  out << "Vel BC: " << *iname << " - No UINTAH boundary cell " << mod_bound_ptr - i_wvel_bc_storage->second.relative_ijk << " (relative) " << mod_bound_ptr << " (absolute) in the handoff file." << endl;
                   if ( !file_is_open ) {
                     file_is_open = true;
                     outputfile.open(fname.str().c_str());
@@ -4492,7 +4506,7 @@ BoundaryCondition::checkMomBCs( const ProcessorGroup* pc,
                 }
                 if ( !found_it && patch->containsCell(check_iter->first + i_uvel_bc_storage->second.relative_ijk) ) {
                   std::stringstream out;
-                  out << "Vel BC: " << *iname << " - No HANDOFF cell " << check_iter->first << " (relative) in the Uintah geometry object." << endl;
+                  out << "Vel BC: " << *iname << " - No HANDOFF cell " << check_iter->first << " (relative), " << check_iter->first + i_uvel_bc_storage->second.relative_ijk << " (absolute) in the Uintah geometry object." << endl;
                   if ( !file_is_open ) {
                     file_is_open = true;
                     outputfile.open(fname.str().c_str());
@@ -4501,7 +4515,6 @@ BoundaryCondition::checkMomBCs( const ProcessorGroup* pc,
                     outputfile << " high = " << patch->getCellHighIndex() << "\n";
                     outputfile << out.str();
                   } else {
-                    std::stringstream out;
                     outputfile << out.str();
                   }
                 }
@@ -4567,7 +4580,7 @@ BoundaryCondition::checkMomBCs( const ProcessorGroup* pc,
                 }
                 if ( !found_it && patch->containsCell(check_iter->first + i_vvel_bc_storage->second.relative_ijk) ) {
                   std::stringstream out;
-                  out << "Vel BC: " << *iname << " - No HANDOFF cell " << check_iter->first << " (relative) in the Uintah geometry object." << endl;
+                  out << "Vel BC: " << *iname << " - No HANDOFF cell " << check_iter->first << " (relative), " << check_iter->first + i_vvel_bc_storage->second.relative_ijk << " (absolute) in the Uintah geometry object." << endl;
                   if ( !file_is_open ) {
                     file_is_open = true;
                     outputfile.open(fname.str().c_str());
@@ -4576,7 +4589,6 @@ BoundaryCondition::checkMomBCs( const ProcessorGroup* pc,
                     outputfile << " high = " << patch->getCellHighIndex() << "\n";
                     outputfile << out.str();
                   } else {
-                    std::stringstream out;
                     outputfile << out.str();
                   }
                 }
@@ -4642,7 +4654,7 @@ BoundaryCondition::checkMomBCs( const ProcessorGroup* pc,
                 }
                 if ( !found_it && patch->containsCell(check_iter->first + i_wvel_bc_storage->second.relative_ijk) ) {
                   std::stringstream out;
-                  out << "Vel BC: " << *iname << " - No HANDOFF cell " << check_iter->first << " (relative) in the Uintah geometry object." << endl;
+                  out << "Vel BC: " << *iname << " - No HANDOFF cell " << check_iter->first << " (relative), " << check_iter->first + i_wvel_bc_storage->second.relative_ijk << " (absolute) in the Uintah geometry object." << endl;
                   if ( !file_is_open ) {
                     file_is_open = true;
                     outputfile.open(fname.str().c_str());
@@ -4651,7 +4663,6 @@ BoundaryCondition::checkMomBCs( const ProcessorGroup* pc,
                     outputfile << " high = " << patch->getCellHighIndex() << "\n";
                     outputfile << out.str();
                   } else {
-                    std::stringstream out;
                     outputfile << out.str();
                   }
                 }

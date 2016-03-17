@@ -24,7 +24,7 @@
   */
 
 #include <CCA/Components/Arches/FunctorSwitch.h>
- 
+
 namespace Uintah{
 
 //---------------------------------------------------------------------------
@@ -32,41 +32,41 @@ namespace Uintah{
 
 class EnthalpyShaddixBuilder: public ModelBuilder
 {
-public: 
+public:
   EnthalpyShaddixBuilder( const std::string          & modelName,
                           const std::vector<std::string>  & reqICLabelNames,
                           const std::vector<std::string>  & reqScalarLabelNames,
                           ArchesLabel                * fieldLabels,
                           SimulationStateP           & sharedState,
-                          Properties                 * props, 
+                          Properties                 * props,
                           int qn );
 
-  ~EnthalpyShaddixBuilder(); 
+  ~EnthalpyShaddixBuilder();
 
-  ModelBase* build(); 
+  ModelBase* build();
 
 private:
 
-  Properties* d_props; 
+  Properties* d_props;
 
-}; 
+};
 
 // End Builder
 //---------------------------------------------------------------------------
 
 class EnthalpyShaddix: public HeatTransfer {
 
-struct computeEnthalpySource{  
+struct computeEnthalpySource{
        computeEnthalpySource(  double _dt,
                                constCCVariable<double> &_weight,
                                constCCVariable<double> &_rawcoal_mass,
                                constCCVariable<double> &_char_mass,
                                constCCVariable<double> &_particle_temperature,
-                               constCCVariable<double> &_temperature,               
+                               constCCVariable<double> &_temperature,
                                constCCVariable<double> &_specific_heat,
                                constCCVariable<double> &_radiationVolqIN,
                                constCCVariable<double> &_abskp,
-                               constCCVariable<double> &_rad_particle_temperature, 
+                               constCCVariable<double> &_rad_particle_temperature,
                                constCCVariable<double> &_den,
                                constCCVariable<double> &_devol_gas_source,
                                constCCVariable<double> &_chargas_source,
@@ -85,11 +85,11 @@ struct computeEnthalpySource{
                                 rawcoal_mass(_rawcoal_mass),
                                 char_mass(_char_mass),
                                 particle_temperature(_particle_temperature),
-                                temperature(_temperature),               
+                                temperature(_temperature),
                                 specific_heat(_specific_heat),
                                 radiationVolqIN(_radiationVolqIN),
                                 abskp(_abskp),
-                                rad_particle_temperature(_rad_particle_temperature), 
+                                rad_particle_temperature(_rad_particle_temperature),
                                 den(_den),
                                 devol_gas_source(_devol_gas_source),
                                 chargas_source(_chargas_source),
@@ -101,8 +101,8 @@ struct computeEnthalpySource{
                                 heat_rate(_heat_rate),
                                 gas_heat_rate(_gas_heat_rate),
                                 qconv(_qconv),
-                                qrad(_qrad), 
-                                TCA(theClassAbove) {  } 
+                                qrad(_qrad),
+                                TCA(theClassAbove) {  }
 
 
        void operator()(int i , int j, int k ) const {
@@ -205,7 +205,7 @@ struct computeEnthalpySource{
                                constCCVariable<double>& rawcoal_mass;
                                constCCVariable<double>& char_mass;
                                constCCVariable<double>& particle_temperature;
-                               constCCVariable<double>& temperature;               
+                               constCCVariable<double>& temperature;
                                constCCVariable<double>& specific_heat;
                                constCCVariable<double>& radiationVolqIN;
                                constCCVariable<double>& abskp;
@@ -221,21 +221,21 @@ struct computeEnthalpySource{
                                CCVariable<double>& heat_rate;
                                CCVariable<double>& gas_heat_rate;
                                CCVariable<double>& qconv;
-                               CCVariable<double>& qrad; 
+                               CCVariable<double>& qrad;
                                EnthalpyShaddix* TCA;
 
 };
 
-public: 
+public:
 
-       
+
 
   friend struct computeEnthalpySource;
 
   typedef std::map< std::string, CharOxidation*> CharOxiModelMap;
   typedef std::map< std::string, Devolatilization*> DevolModelMap;
 
-  EnthalpyShaddix( std::string modelName, 
+  EnthalpyShaddix( std::string modelName,
                    SimulationStateP& shared_state,
                    ArchesLabel* fieldLabels,
                    std::vector<std::string> reqICLabelNames,
@@ -250,32 +250,32 @@ public:
   /////////////////////////////////////////
   // Initialization methods
 
-  /** @brief Interface for the inputfile and set constants */ 
+  /** @brief Interface for the inputfile and set constants */
   void problemSetup(const ProblemSpecP& db, int qn);
 
   /** @brief Schedule the initialization of some special/local variables */
   void sched_initVars( const LevelP& level, SchedulerP& sched );
 
   /** @brief  Actually initialize some special/local variables */
-  void initVars( const ProcessorGroup * pc, 
-                 const PatchSubset    * patches, 
-                 const MaterialSubset * matls, 
-                 DataWarehouse        * old_dw, 
+  void initVars( const ProcessorGroup * pc,
+                 const PatchSubset    * patches,
+                 const MaterialSubset * matls,
+                 DataWarehouse        * old_dw,
                  DataWarehouse        * new_dw );
 
   /////////////////////////////////////////////
   // Model computation methods
 
-  /** @brief Schedule the calculation of the source term */ 
-  void sched_computeModel( const LevelP& level, SchedulerP& sched, 
+  /** @brief Schedule the calculation of the source term */
+  void sched_computeModel( const LevelP& level, SchedulerP& sched,
                             int timeSubStep );
 
-  /** @brief Actually compute the source term */ 
-  void computeModel( const ProcessorGroup* pc, 
-                     const PatchSubset* patches, 
-                     const MaterialSubset* matls, 
-                     DataWarehouse* old_dw, 
-                     DataWarehouse* new_dw, 
+  /** @brief Actually compute the source term */
+  void computeModel( const ProcessorGroup* pc,
+                     const PatchSubset* patches,
+                     const MaterialSubset* matls,
+                     DataWarehouse* old_dw,
+                     DataWarehouse* new_dw,
                      const int timeSubStep );
 
   // FIXME: add Glacier computation methods
@@ -308,7 +308,7 @@ public:
   double calcEnthalpyChangeParticle() {
     return 0; }
 
-  
+
 private:
 
   //////////////////////////////////////////////////
@@ -317,7 +317,7 @@ private:
 
   /** @brief  Calculate gas properties of N2 at atmospheric pressure (see Holman, p. 505) */
   double props(double Tg, double Tp);
-  
+
   /** @brief  Compute cp using Merricks method (1982) */
   double cp_c(double Tp);
   double cp_ash(double Tp);
@@ -335,25 +335,25 @@ private:
   const VarLabel* _char_varlabel;
   const VarLabel* _abskg_varlabel;
   const VarLabel* _abskp_varlabel;
-  const VarLabel* _charoxiTemp_varlabel; 
+  const VarLabel* _charoxiTemp_varlabel;
   const VarLabel* _surfacerate_varlabel;
   const VarLabel* _chargas_varlabel;
   const VarLabel* _devolgas_varlabel;
 
-  Properties* d_props; 
+  Properties* d_props;
 
   // variables used in problem setup
   double yelem[5];              ///< Fractions of each element in coal (C, H, N, O, S respectively)
   double total_rc;
-    struct CoalAnalysis{ 
+    struct CoalAnalysis{
       double C;
-      double H; 
-      double O; 
-      double N; 
-      double S; 
-      double CHAR; 
-      double ASH; 
-      double H2O; 
+      double H;
+      double O;
+      double N;
+      double S;
+      double CHAR;
+      double ASH;
+      double H2O;
     };
 
 
@@ -371,7 +371,7 @@ private:
   double _rhop_o;
   double _enthalpy_scaling_constant;
   double _weight_scaling_constant;
-  double _weight_small;   ///< small weight 
+  double _weight_small;   ///< small weight
   bool   _radiationOn;
   int   _nQuadNode;
   std::string _weight_name;

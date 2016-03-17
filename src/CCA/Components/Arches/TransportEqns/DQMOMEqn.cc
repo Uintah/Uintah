@@ -9,6 +9,7 @@
 #include <Core/Exceptions/InvalidValue.h>
 #include <Core/Exceptions/ProblemSetupException.h>
 #include <Core/Parallel/Parallel.h>
+#include <CCA/Components/Arches/ConvectionHelper.h>
 
 using namespace std;
 using namespace Uintah;
@@ -25,7 +26,8 @@ DQMOMEqnBuilderBase( fieldLabels, timeIntegrator, eqnName ), d_quadNode(quadNode
   d_ic_name = ic_name;
 }
 DQMOMEqnBuilder::~DQMOMEqnBuilder()
-{}
+{
+}
 
 EqnBase*
 DQMOMEqnBuilder::build(){
@@ -84,7 +86,7 @@ DQMOMEqn::problemSetup( const ProblemSpecP& inputdb )
 
   // NOTE: some of this may be better off in the EqnBase.cc class
   ProblemSpecP db = inputdb;
-  
+
   d_boundaryCond->problemSetup( db, d_eqnName );
 
   ProblemSpecP db_root = db->getRootNode();
@@ -123,6 +125,18 @@ DQMOMEqn::problemSetup( const ProblemSpecP& inputdb )
   db->getWithDefault( "molecular_diffusivity", d_mol_diff, 0.0);
   if ( !d_weight ){
     db->require( "nominal_values", d_nominal );
+  }
+
+  if ( d_convScheme == "upwind" ){
+    d_which_limiter = UPWIND;
+  } else if ( d_convScheme == "super_bee" ){
+    d_which_limiter = SUPERBEE;
+  } else if ( d_convScheme == "vanleer" ){
+    d_which_limiter = VANLEER;
+  } else if ( d_convScheme == "roe_minmod"){
+    d_which_limiter = ROE;
+  } else {
+  throw InvalidValue("Error: Limiter choice not recognized for eqn: "+d_eqnName, __FILE__, __LINE__);
   }
 
   // Models (source terms):
@@ -367,8 +381,15 @@ DQMOMEqn::sched_evalTransportEqn( const LevelP& level,
     sched_computeSources( level, sched, timeSubStep );
   }
 
+#ifdef DO_KOKKOS
+  sched_computePsi( level, sched );
+#endif
+
   sched_buildTransportEqn( level, sched, timeSubStep );
 
+#ifdef DO_KOKKOS
+  sched_buildRHS( level, sched );
+#endif
 
 }
 
@@ -403,6 +424,19 @@ DQMOMEqn::sched_initializeVariables( const LevelP& level, SchedulerP& sched )
   tsk->computes(d_RHSLabel);
   tsk->computes(d_FconvLabel);
   tsk->computes(d_FdiffLabel);
+  tsk->computes(d_X_flux_label);
+  tsk->computes(d_Y_flux_label);
+  tsk->computes(d_Z_flux_label);
+  tsk->computes(d_X_psi_label);
+  tsk->computes(d_Y_psi_label);
+  tsk->computes(d_Z_psi_label);
+
+  std::string name = ParticleTools::append_env( "face_pvel_x", d_quadNode );
+  d_face_pvel_x = VarLabel::find(name);
+  name = ParticleTools::append_env( "face_pvel_y", d_quadNode );
+  d_face_pvel_y = VarLabel::find(name);
+  name = ParticleTools::append_env( "face_pvel_z", d_quadNode );
+  d_face_pvel_z = VarLabel::find(name);
 
   //Old
   tsk->requires(Task::OldDW, d_transportVarLabel, gn, 0);
@@ -452,8 +486,119 @@ void DQMOMEqn::initializeVariables( const ProcessorGroup* pc,
     Fconv.initialize(0.0);
     RHS.initialize(0.0);
 
+    SFCXVariable<double> x_flux;
+    SFCYVariable<double> y_flux;
+    SFCZVariable<double> z_flux;
+    new_dw->allocateAndPut( x_flux, d_X_flux_label, matlIndex, patch );
+    new_dw->allocateAndPut( y_flux, d_Y_flux_label, matlIndex, patch );
+    new_dw->allocateAndPut( z_flux, d_Z_flux_label, matlIndex, patch );
+    x_flux.initialize(0.0);
+    y_flux.initialize(0.0);
+    z_flux.initialize(0.0);
+
+    SFCXVariable<double> x_psi;
+    SFCYVariable<double> y_psi;
+    SFCZVariable<double> z_psi;
+    new_dw->allocateAndPut( x_psi, d_X_psi_label, matlIndex, patch );
+    new_dw->allocateAndPut( y_psi, d_Y_psi_label, matlIndex, patch );
+    new_dw->allocateAndPut( z_psi, d_Z_psi_label, matlIndex, patch );
+    x_psi.initialize(1.0);
+    y_psi.initialize(1.0);
+    z_psi.initialize(1.0);
+
+    d_boundaryCond->checkBCs( patch, d_eqnName, matlIndex );
+
   }
 }
+
+//---------------------------------------------------------------------------
+// Method: Schedule compute for psi
+// Probably not needed for DQMOM EQN
+//---------------------------------------------------------------------------
+void
+DQMOMEqn::sched_computePsi( const LevelP& level, SchedulerP& sched )
+{
+
+  string taskname = "DQMOMEqn::computePsi";
+
+  Task* tsk = scinew Task( taskname, this, &DQMOMEqn::computePsi );
+
+  tsk->modifies(d_X_psi_label);
+  tsk->modifies(d_Y_psi_label);
+  tsk->modifies(d_Z_psi_label);
+
+  tsk->requires(Task::NewDW, d_transportVarLabel, Ghost::AroundCells, 2);
+  tsk->requires(Task::NewDW, d_face_pvel_x, Ghost::AroundCells, 1);
+  tsk->requires(Task::NewDW, d_face_pvel_y, Ghost::AroundCells, 1);
+  tsk->requires(Task::NewDW, d_face_pvel_z, Ghost::AroundCells, 1);
+  tsk->requires(Task::OldDW, d_fieldLabels->d_areaFractionFXLabel, Ghost::AroundCells, 2);
+  tsk->requires(Task::OldDW, d_fieldLabels->d_areaFractionFYLabel, Ghost::AroundCells, 2);
+  tsk->requires(Task::OldDW, d_fieldLabels->d_areaFractionFZLabel, Ghost::AroundCells, 2);
+
+  sched->addTask(tsk, level->eachPatch(), d_fieldLabels->d_sharedState->allArchesMaterials());
+
+}
+void
+DQMOMEqn::computePsi( const ProcessorGroup* pc,
+                      const PatchSubset* patches,
+                      const MaterialSubset* matls,
+                      DataWarehouse* old_dw,
+                      DataWarehouse* new_dw )
+{
+  //patch loop
+  for (int p=0; p < patches->size(); p++){
+
+    const Patch* patch = patches->get(p);
+    int archIndex = 0;
+    int matlIndex = d_fieldLabels->d_sharedState->getArchesMaterial(archIndex)->getDWIndex();
+    Vector Dx = patch->dCell();
+
+    Ghost::GhostType  gac = Ghost::AroundCells;
+
+    SFCXVariable<double> psi_x;
+    SFCYVariable<double> psi_y;
+    SFCZVariable<double> psi_z;
+
+    new_dw->getModifiable(psi_x, d_X_psi_label, matlIndex, patch);
+    new_dw->getModifiable(psi_y, d_Y_psi_label, matlIndex, patch);
+    new_dw->getModifiable(psi_z, d_Z_psi_label, matlIndex, patch);
+
+    constSFCXVariable<double> u;
+    constSFCYVariable<double> v;
+    constSFCZVariable<double> w;
+
+    new_dw->get( u, d_face_pvel_x, matlIndex, patch, gac, 1 );
+    new_dw->get( v, d_face_pvel_y, matlIndex, patch, gac, 1 );
+    new_dw->get( w, d_face_pvel_z, matlIndex, patch, gac, 1 );
+
+    constCCVariable<double> phi;
+
+    new_dw->get( phi, d_transportVarLabel, matlIndex, patch, gac, 2 );
+
+    constSFCXVariable<double> af_x;
+    constSFCYVariable<double> af_y;
+    constSFCZVariable<double> af_z;
+
+    old_dw->get( af_x, d_fieldLabels->d_areaFractionFXLabel, matlIndex, patch, gac, 2 );
+    old_dw->get( af_y, d_fieldLabels->d_areaFractionFYLabel, matlIndex, patch, gac, 2 );
+    old_dw->get( af_z, d_fieldLabels->d_areaFractionFZLabel, matlIndex, patch, gac, 2 );
+
+    if ( d_which_limiter == UPWIND ){
+      DQMOM_CONV(UPWIND);
+    } else if ( d_which_limiter == SUPERBEE ){
+      DQMOM_CONV(SUPERBEE);
+    } else if ( d_which_limiter == ROE ){
+      DQMOM_CONV(ROE);
+    } else if ( d_which_limiter == CENTRAL ){
+      DQMOM_CONV(CENTRAL);
+    } else if ( d_which_limiter == VANLEER ){
+      DQMOM_CONV(VANLEER);
+    }
+
+  }
+}
+
+
 //---------------------------------------------------------------------------
 // Method: Schedule compute the sources.
 // Probably not needed for DQMOM EQN
@@ -471,6 +616,63 @@ DQMOMEqn::sched_computeSources( const LevelP& level, SchedulerP& sched, int time
 
   }
 }
+
+//---------------------------------------------------------------------------
+// Method: Schedule build RHS
+//---------------------------------------------------------------------------
+void
+DQMOMEqn::sched_buildRHS( const LevelP& level, SchedulerP& sched )
+{
+
+  string taskname = "DQMOMEqn::buildRHS";
+
+  Task* tsk = scinew Task( taskname, this, &DQMOMEqn::buildRHS );
+
+  tsk->modifies(d_RHSLabel);
+
+  tsk->requires(Task::OldDW, d_X_flux_label, Ghost::AroundCells, 1);
+  tsk->requires(Task::OldDW, d_Y_flux_label, Ghost::AroundCells, 1);
+  tsk->requires(Task::OldDW, d_Z_flux_label, Ghost::AroundCells, 1);
+
+  sched->addTask(tsk, level->eachPatch(), d_fieldLabels->d_sharedState->allArchesMaterials());
+
+}
+void
+DQMOMEqn::buildRHS( const ProcessorGroup* pc,
+                    const PatchSubset* patches,
+                    const MaterialSubset* matls,
+                    DataWarehouse* old_dw,
+                    DataWarehouse* new_dw )
+{
+  //patch loop
+  for (int p=0; p < patches->size(); p++){
+
+    const Patch* patch = patches->get(p);
+    int archIndex = 0;
+    int matlIndex = d_fieldLabels->d_sharedState->getArchesMaterial(archIndex)->getDWIndex();
+    Vector Dx = patch->dCell();
+
+    Ghost::GhostType  gac = Ghost::AroundCells;
+
+    constSFCXVariable<double> flux_x;
+    constSFCYVariable<double> flux_y;
+    constSFCZVariable<double> flux_z;
+
+    new_dw->get( flux_x, d_X_flux_label, matlIndex, patch, gac, 1 );
+    new_dw->get( flux_y, d_Y_flux_label, matlIndex, patch, gac, 1 );
+    new_dw->get( flux_z, d_Z_flux_label, matlIndex, patch, gac, 1 );
+
+    CCVariable<double> rhs;
+    new_dw->getModifiable( rhs, d_RHSLabel, matlIndex, patch );
+
+    Uintah::BlockRange range(patch->getCellLowIndex(), patch->getCellHighIndex());
+
+    IntegrateFlux integrator( rhs, flux_x, flux_y, flux_z, Dx );
+    Uintah::parallel_for( range, integrator );
+
+  }
+}
+
 //---------------------------------------------------------------------------
 // Method: Schedule build the transport equation.
 //---------------------------------------------------------------------------
@@ -490,15 +692,30 @@ DQMOMEqn::sched_buildTransportEqn( const LevelP& level, SchedulerP& sched, const
   } else {
     which_dw = Task::NewDW;
   }
+
   tsk->requires(which_dw, d_transportVarLabel, Ghost::AroundCells, 2);
   tsk->requires(Task::NewDW, pvel_iter->second, Ghost::AroundCells, 1);
+  tsk->requires(Task::NewDW, d_face_pvel_x, Ghost::AroundCells, 1);
+  tsk->requires(Task::NewDW, d_face_pvel_y, Ghost::AroundCells, 1);
+  tsk->requires(Task::NewDW, d_face_pvel_z, Ghost::AroundCells, 1);
+
+  tsk->modifies(d_X_flux_label);
+  tsk->modifies(d_Y_flux_label);
+  tsk->modifies(d_Z_flux_label);
 
   tsk->modifies(d_FdiffLabel);
   tsk->modifies(d_FconvLabel);
   tsk->modifies(d_RHSLabel);
 
   tsk->requires(Task::OldDW, d_fieldLabels->d_areaFractionLabel, Ghost::AroundCells, 2);
+  tsk->requires(Task::OldDW, d_fieldLabels->d_areaFractionFXLabel, Ghost::AroundCells, 2);
+  tsk->requires(Task::OldDW, d_fieldLabels->d_areaFractionFYLabel, Ghost::AroundCells, 2);
+  tsk->requires(Task::OldDW, d_fieldLabels->d_areaFractionFZLabel, Ghost::AroundCells, 2);
   tsk->requires(Task::OldDW, d_fieldLabels->d_viscosityCTSLabel, Ghost::AroundCells, 1);
+
+  tsk->requires(Task::NewDW, d_X_psi_label, Ghost::None, 0);
+  tsk->requires(Task::NewDW, d_Y_psi_label, Ghost::None, 0);
+  tsk->requires(Task::NewDW, d_Z_psi_label, Ghost::None, 0);
 
   if( !d_weight ) {
     tsk->requires(which_dw, d_weightLabel, Ghost::AroundCells, 0);
@@ -556,13 +773,41 @@ DQMOMEqn::buildTransportEqn( const ProcessorGroup* pc,
     CCVariable<double> Fdiff;
     CCVariable<double> Fconv;
     CCVariable<double> RHS;
+    constSFCXVariable<double> af_x;
+    constSFCYVariable<double> af_y;
+    constSFCZVariable<double> af_z;
+    constSFCXVariable<double> uu;
+    constSFCYVariable<double> vv;
+    constSFCZVariable<double> ww;
+#ifdef DO_KOKKOS
+    constSFCXVariable<double> psi_x;
+    constSFCYVariable<double> psi_y;
+    constSFCZVariable<double> psi_z;
+    SFCXVariable<double> flux_x;
+    SFCYVariable<double> flux_y;
+    SFCZVariable<double> flux_z;
+#endif
 
     ArchesLabel::PartVelMap::iterator pvel_iter = d_fieldLabels->partVel.find(d_quadNode);
     new_dw->get( partVel, pvel_iter->second, matlIndex, patch, gac, 1 );
+    new_dw->get( uu, d_face_pvel_x, matlIndex, patch, gac, 1 );
+    new_dw->get( vv, d_face_pvel_y, matlIndex, patch, gac, 1 );
+    new_dw->get( ww, d_face_pvel_z, matlIndex, patch, gac, 1 );
+#ifdef DO_KOKKOS
     which_dw->get(phi, d_transportVarLabel, matlIndex, patch, gac, 2);
+    new_dw->getModifiable(flux_x, d_X_flux_label, matlIndex, patch);
+    new_dw->getModifiable(flux_y, d_Y_flux_label, matlIndex, patch);
+    new_dw->getModifiable(flux_z, d_Z_flux_label, matlIndex, patch);
+    new_dw->get( psi_x, d_X_psi_label, matlIndex, patch, gn, 0 );
+    new_dw->get( psi_y, d_Y_psi_label, matlIndex, patch, gn, 0 );
+    new_dw->get( psi_z, d_Z_psi_label, matlIndex, patch, gn, 0 );
+#endif
 
-    old_dw->get(mu_t         , d_fieldLabels->d_viscosityCTSLabel  , matlIndex , patch , gac , 1);
-    old_dw->get(areaFraction , d_fieldLabels->d_areaFractionLabel  , matlIndex , patch , gac , 2);
+    old_dw->get(mu_t         ,  d_fieldLabels->d_viscosityCTSLabel  , matlIndex , patch , gac , 1);
+    old_dw->get(areaFraction ,  d_fieldLabels->d_areaFractionLabel  , matlIndex , patch , gac , 2);
+    old_dw->get(af_x, d_fieldLabels->d_areaFractionFXLabel, matlIndex, patch, gac, 2);
+    old_dw->get(af_y, d_fieldLabels->d_areaFractionFYLabel, matlIndex, patch, gac, 2);
+    old_dw->get(af_z, d_fieldLabels->d_areaFractionFZLabel, matlIndex, patch, gac, 2);
 
     double vol = Dx.x();
 #ifdef YDIM
@@ -585,14 +830,23 @@ DQMOMEqn::buildTransportEqn( const ProcessorGroup* pc,
     }
 
     //----CONVECTION
-    if (d_doConv){
+    if ( d_doConv ){
+
+#ifdef DO_KOKKOS
+      Uintah::BlockRange range(patch->getCellLowIndex(), patch->getExtraCellHighIndex());
+      ComputeConvectiveFlux get_flux( phi, uu, vv, ww, psi_x, psi_y, psi_z,
+                                      flux_x, flux_y, flux_z, af_x, af_y, af_z );
+
+      Uintah::parallel_for( range, get_flux );
+#else
 
       d_disc->computeConv( patch, Fconv, phi, partVel, areaFraction, d_convScheme );
-      // look for and add contribution from intrusions.
+
+#endif
+
       if ( _using_new_intrusion ) {
         _intrusions->addScalarRHS( patch, Dx, d_eqnName, RHS );
       }
-
     }
 
     //----DIFFUSION
@@ -604,32 +858,23 @@ DQMOMEqn::buildTransportEqn( const ProcessorGroup* pc,
 
       IntVector c = *iter;
 
+#ifndef DO_KOKKOS
       RHS[c] += Fdiff[c] - Fconv[c];
+#endif
 
-      //if (d_addSources) {
+      if (d_addExtraSources) {
 
-        //// Right now, no source term for weights. The conditional statement prevents errors coming from solving Ax=b,
-        //// it should be removed if the source term for weights isn't zero.
-        //if(!d_weight){
-          //if(w[c] > d_w_small){
-            //RHS[c] += src[c]*vol;
-          //}
-        //}
+        // Get the factory of source terms
+        SourceTermFactory& src_factory = SourceTermFactory::self();
+        for (vector<std::string>::iterator src_iter = d_sources.begin(); src_iter != d_sources.end(); src_iter++){
+         //constCCVariable<double> extra_src;
+         SourceTermBase& temp_src = src_factory.retrieve_source_term( *src_iter );
+         new_dw->get(extra_src, temp_src.getSrcLabel(), matlIndex, patch, gn, 0);
 
-        if (d_addExtraSources) {
-
-          // Get the factory of source terms
-          SourceTermFactory& src_factory = SourceTermFactory::self();
-          for (vector<std::string>::iterator src_iter = d_sources.begin(); src_iter != d_sources.end(); src_iter++){
-           //constCCVariable<double> extra_src;
-           SourceTermBase& temp_src = src_factory.retrieve_source_term( *src_iter );
-           new_dw->get(extra_src, temp_src.getSrcLabel(), matlIndex, patch, gn, 0);
-
-           // Add to the RHS
-           RHS[c] += extra_src[c]*vol;
-          }
+         // Add to the RHS
+         RHS[c] += extra_src[c]*vol;
         }
-     // }
+      }
     }
   }
 }
@@ -772,7 +1017,8 @@ DQMOMEqn::solveTransportEqn( const ProcessorGroup* pc,
         // weights being clipped inside this function call
         d_timeIntegrator->timeAvePhi( patch, phi, rk1_phi, timeSubStep,
             clip.tol, clip.do_low, clip.low, clip.do_high, clip.high, vol_fraction );
-    }else{
+    } else {
+
         constCCVariable<double> w;
         new_dw->get(w, d_weightLabel, matlIndex, patch, gn, 0);
         // weighted abscissa being clipped inside this function call
@@ -827,7 +1073,6 @@ DQMOMEqn::getUnscaledValues( const ProcessorGroup* pc,
     const Patch* patch = patches->get(p);
     int archIndex = 0;
     int matlIndex = d_fieldLabels->d_sharedState->getArchesMaterial(archIndex)->getDWIndex();
-
 
     if( d_weight ) {
       CCVariable<double> w;

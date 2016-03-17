@@ -2,6 +2,10 @@
 #define Uintah_Component_Arches_DISCRETIZATIONTOOLS_h
 
 #include <Core/Exceptions/InvalidValue.h>
+#include <Core/Grid/Variables/BlockRange.h>
+#ifdef UINTAH_ENABLE_KOKKOS
+#include <Kokkos_Core.hpp>
+#endif //UINTAH_ENABLE_KOKKOS
 
 /** @class DiscretizationTools
     @author J. Thornock
@@ -15,112 +19,58 @@
 namespace Uintah{
 
   enum DIR {XDIR, YDIR, ZDIR};
-  enum LIMITER {CENTRAL, UPWIND, SUPERBEE, ROE, VANLEER};
 
-// IDIR, JDIR, KDIR are relative to the CC variable.
-#define IDIR \
-      IntVector c(i,j,k); \
-      IntVector cm(i-1,j,k); \
-      IntVector cp(i+1,j,k); \
-      IntVector cmm(i-2,j,k); \
-      IntVector cpp(i+2,j,k);
+#define STENCIL3_1D( dir ) \
+  const int ip  = dir == 0 ? i+1 : i; \
+  const int im  = dir == 0 ? i-1 : i; \
+  const int jp  = dir == 1 ? j+1 : j; \
+  const int jm  = dir == 1 ? j-1 : j; \
+  const int kp  = dir == 2 ? k+1 : k; \
+  const int km  = dir == 2 ? k-1 : k; \
 
-#define JDIR \
-      IntVector c(i,j,k); \
-      IntVector cm(i,j-1,k); \
-      IntVector cp(i,j+1,k); \
-      IntVector cmm(i,j-2,k); \
-      IntVector cpp(i,j+2,k);
+#define STENCIL5_1D( dir ) \
+  const int ip  = dir == 0 ? i+1 : i; \
+  const int ipp = dir == 0 ? i+2 : i; \
+  const int im  = dir == 0 ? i-1 : i; \
+  const int imm = dir == 0 ? i-2 : i; \
+  const int jp  = dir == 1 ? j+1 : j; \
+  const int jpp = dir == 1 ? j+2 : j; \
+  const int jm  = dir == 1 ? j-1 : j; \
+  const int jmm = dir == 1 ? j-2 : j; \
+  const int kp  = dir == 2 ? k+1 : k; \
+  const int kpp = dir == 2 ? k+2 : k; \
+  const int km  = dir == 2 ? k-1 : k; \
+  const int kmm = dir == 2 ? k-2 : k
 
-#define KDIR \
-      IntVector c(i,j,k); \
-      IntVector cm(i,j,k-1); \
-      IntVector cp(i,j,k+1); \
-      IntVector cmm(i,j,k-2); \
-      IntVector cpp(i,j,k+2);
+#define C_    i,   j,   k
+#define CP_   ip,  jp,  kp
+#define CPP_  ipp, jpp, kpp
+#define CM_   im,  jm,  km
+#define CMM_  imm, jmm, kmm
 
-// Offsets for the staggered cells. We have ABDIR where A=staggered cell direction and
-// I is the compass direction for the differencing.
-#define XIDIR \
-      IntVector c(i,j,k); \
-      IntVector cm(i-1,j,k); \
-      IntVector cp(i+1,j,k); \
-      IntVector cu_w(i,j,k); \
-      IntVector cu_w2(i-1,j,k); \
-      IntVector cu_e(i,j,k); \
-      IntVector cu_e2(i+1,j,k);
+//Staggered rotation
+#define CE_ i+ioff, j+joff, k+koff
+#define CW_ i-ioff, j-joff, k-koff
+#define CN_ i+koff, j+ioff, k+joff
+#define CS_ i-koff, j-ioff, k-joff
+#define CT_ i+joff, j+koff, k+ioff
+#define CB_ i-joff, j-koff, k-ioff
+#define CNE_ i+idt1,j+jdt1,k+kdt1
+#define CNW_ i+inw,j+jnw,k+knw
+#define CSE_ i-idt1,j-jdt1,k-kdt1
+#define CSW_ i-isw,j-jsw,k-ksw
+#define CTE_ i+idt2,j+jdt2,k+kdt2
+#define CTW_ i+itw,j+jtw,k+ktw
+#define CBE_ i-idt2,j-jdt2,k-kdt2
+#define CBW_ i-ibw,j-jbw,k-kbw
+#define C2E_ i+i2off, j+j2off, k+k2off
+#define C2W_ i-i2off, j-j2off, k-k2off
 
-#define XJDIR \
-      IntVector c(i,j,k); \
-      IntVector cm(i,j-1,k); \
-      IntVector cp(i,j+1,k); \
-      IntVector cu_w(i,j,k); \
-      IntVector cu_w2(i-1,j,k); \
-      IntVector cu_e(i,j+1,k); \
-      IntVector cu_e2(i-1,j+1,k);
+#define PRINT_CURR_REFERENCE(i,j,k,string) \
+  std::cout << "Location " << string << " = (" << i << "," << j << "," << k << ")" << std::endl;
 
-#define XKDIR \
-      IntVector c(i,j,k); \
-      IntVector cm(i,j,k-1); \
-      IntVector cp(i,j,k+1); \
-      IntVector cu_w(i,j,k); \
-      IntVector cu_w2(i-1,j,k); \
-      IntVector cu_e(i,j,k+1); \
-      IntVector cu_e2(i-1,j,k+1);
-
-#define YIDIR \
-      IntVector c(i,j,k); \
-      IntVector cm(i-1,j,k); \
-      IntVector cp(i+1,j,k); \
-      IntVector cu_w(i,j,k); \
-      IntVector cu_w2(i,j-1,k); \
-      IntVector cu_e(i+1,j,k); \
-      IntVector cu_e2(i+1,j-1,k);
-
-#define YJDIR \
-      IntVector c(i,j,k); \
-      IntVector cm(i,j-1,k); \
-      IntVector cp(i,j+1,k); \
-      IntVector cu_w(i,j,k); \
-      IntVector cu_w2(i,j-1,k); \
-      IntVector cu_e(i,j,k); \
-      IntVector cu_e2(i,j+1,k);
-
-#define YKDIR \
-      IntVector c(i,j,k); \
-      IntVector cm(i,j,k-1); \
-      IntVector cp(i,j,k+1); \
-      IntVector cu_w(i,j,k); \
-      IntVector cu_w2(i,j-1,k); \
-      IntVector cu_e(i,j,k+1); \
-      IntVector cu_e2(i,j-1,k+1);
-
-#define ZIDIR \
-      IntVector c(i,j,k); \
-      IntVector cm(i-1,j,k); \
-      IntVector cp(i+1,j,k); \
-      IntVector cu_w(i,j,k); \
-      IntVector cu_w2(i,j,k-1); \
-      IntVector cu_e(i+1,j,k); \
-      IntVector cu_e2(i+1,j,k-1);
-
-#define ZJDIR \
-      IntVector c(i,j,k); \
-      IntVector cm(i,j-1,k); \
-      IntVector cp(i,j+1,k); \
-      IntVector cu_w(i,j,k); \
-      IntVector cu_w2(i,j,k-1); \
-      IntVector cu_e(i,j+1,k); \
-      IntVector cu_e2(i,j+1,k-1);
-
-#define ZKDIR \
-      IntVector c(i,j,k); \
-      IntVector cm(i,j,k-1); \
-      IntVector cp(i,j,k+1); \
-      IntVector cu_w(i,j,k); \
-      IntVector cu_w2(i,j,k-1); \
-      IntVector cu_e(i,j,k); \
-      IntVector cu_e2(i,j,k+1);
+#define STAGGERED_INDEX(dir) \
+  const int ioff = dir == 0 ? 1 : 0;
 
   /**
       @struct VariableHelper
@@ -139,6 +89,11 @@ namespace Uintah{
     typedef SFCXVariable<double> XFaceType;
     typedef SFCYVariable<double> YFaceType;
     typedef SFCZVariable<double> ZFaceType;
+    typedef constSFCXVariable<double> ConstXFaceType;
+    typedef constSFCYVariable<double> ConstYFaceType;
+    typedef constSFCZVariable<double> ConstZFaceType;
+    int dir;
+    VariableHelper():dir(999){}
   };
 
   template <>
@@ -148,6 +103,21 @@ namespace Uintah{
     typedef CCVariable<double> XFaceType;
     typedef SFCYVariable<double> YFaceType;
     typedef SFCZVariable<double> ZFaceType;
+    typedef constCCVariable<double> ConstXFaceType;
+    typedef constSFCYVariable<double> ConstYFaceType;
+    typedef constSFCZVariable<double> ConstZFaceType;
+    DIR dir;
+    const int ioff;
+    const int joff;
+    const int koff;
+    const int idt1;
+    const int idt2;
+    const int jdt1;
+    const int jdt2;
+    const int kdt1;
+    const int kdt2;
+    VariableHelper():dir(XDIR), ioff(1), joff(0), koff(0),
+    idt1(koff), idt2(joff), jdt1(ioff), jdt2(koff), kdt1(joff), kdt2(ioff){}
   };
 
   template <>
@@ -157,6 +127,21 @@ namespace Uintah{
     typedef SFCXVariable<double> XFaceType;
     typedef CCVariable<double> YFaceType;
     typedef SFCZVariable<double> ZFaceType;
+    typedef constSFCXVariable<double> ConstXFaceType;
+    typedef constCCVariable<double> ConstYFaceType;
+    typedef constSFCZVariable<double> ConstZFaceType;
+    DIR dir;
+    const int ioff;
+    const int joff;
+    const int koff;
+    const int idt1;
+    const int idt2;
+    const int jdt1;
+    const int jdt2;
+    const int kdt1;
+    const int kdt2;
+    VariableHelper():dir(XDIR), ioff(1), joff(0), koff(0),
+    idt1(koff), idt2(joff), jdt1(ioff), jdt2(koff), kdt1(joff), kdt2(ioff){}
   };
 
   template <>
@@ -166,60 +151,25 @@ namespace Uintah{
     typedef SFCXVariable<double> XFaceType;
     typedef SFCYVariable<double> YFaceType;
     typedef CCVariable<double> ZFaceType;
+    typedef constSFCXVariable<double> ConstXFaceType;
+    typedef constSFCYVariable<double> ConstYFaceType;
+    typedef constCCVariable<double> ConstZFaceType;
+    DIR dir;
+    const int ioff;
+    const int joff;
+    const int koff;
+    const int idt1;
+    const int idt2;
+    const int jdt1;
+    const int jdt2;
+    const int kdt1;
+    const int kdt2;
+    VariableHelper():dir(XDIR), ioff(1), joff(0), koff(0),
+    idt1(koff), idt2(joff), jdt1(ioff), jdt2(koff), kdt1(joff), kdt2(ioff){}
   };
 
   //------------------------------------------------------------------------------------------------
   // These stucts below need a good home:
-
-  /**
-      @struct VariableConstantInitializeFunctor
-      @details Initialize a grid variable to a constant
-      This doesn't have a good home at the moment so it resides here.
-  **/
-  template <typename T>
-  struct VariableConstantInitializeFunctor{
-
-    T& var;
-    double value;
-
-    VariableConstantInitializeFunctor( T& var, double value )
-      : var(var), value(value){}
-
-    void operator()(int i, int j, int k) const{
-
-      const IntVector c(i,j,k);
-
-      var[c] = value;
-
-    }
-  };
-
-  /**
-      @struct VariableStepInitializeFunctor
-      @details Initialize a grid variable to a step constant.
-      This doesn't have a good home at the moment so it resides here.
-  **/
-  template <typename T>
-  struct VariableStepInitializeFunctor{
-
-    T& var;
-    constCCVariable<double>& gridX;
-    double value;
-
-    VariableStepInitializeFunctor( T& var, constCCVariable<double>& gridX, double value )
-      : var(var), gridX(gridX), value(value){}
-
-    void operator()(int i, int j, int k) const{
-
-      const IntVector c(i,j,k);
-      double start = 0.5;
-
-      double value_assign = (gridX[c] > start) ? 0.0 : value;
-
-      var[c] = value_assign;
-
-    }
-  };
 
   /**
       @struct ComputeDiffusion

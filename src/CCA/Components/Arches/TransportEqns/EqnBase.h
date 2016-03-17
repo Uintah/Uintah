@@ -241,6 +241,12 @@ protected:
   const VarLabel* d_FconvLabel;           ///< Label for convection term of this equation object
   const VarLabel* d_RHSLabel;             ///< Label for RHS of this equation object
   const VarLabel* d_mol_D_label;          ///< Molecular diffusivity label (computed elsewhere)
+  const VarLabel* d_X_flux_label;         ///< Flux in the X-direction 
+  const VarLabel* d_Y_flux_label;         ///< Flux in the Y-direction 
+  const VarLabel* d_Z_flux_label;         ///< Flux in the Z-direction 
+  const VarLabel* d_X_psi_label;          ///< Psi from flux limiter in the X-direction 
+  const VarLabel* d_Y_psi_label;          ///< Psi from flux limiter in the Y-direction 
+  const VarLabel* d_Z_psi_label;          ///< Psi from flux limiter in the Z-direction 
 
   bool d_doConv;                          ///< Boolean: do convection for this equation object?
   bool d_doDiff;                          ///< Boolean: do diffusion for this equation object?
