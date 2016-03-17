@@ -4348,7 +4348,10 @@ void AMRMPM::addParticles(const ProcessorGroup*,
             pconcpretmp[new_idx]  = pconcpre[idx];
             pconcgradtmp[new_idx] = pconcgrad[idx];
             pESFtmp[new_idx]      = pESF[idx];
-            if(pArea[idx][comp]<1.e-12){
+            if((fabs(pArea[idx].x()) > 0.0 && fabs(pArea[idx].y()) > 0.0) || 
+               (fabs(pArea[idx].x()) > 0.0 && fabs(pArea[idx].z()) > 0.0) ||
+               (fabs(pArea[idx].y()) > 0.0 && fabs(pArea[idx].z()) > 0.0) ||
+               (fabs(pArea[idx][comp])<1.e-12)) {
               pareatmp[new_idx]     = fourthOrEighth*pArea[idx];
             } else {
               if(i==0){
