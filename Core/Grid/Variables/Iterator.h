@@ -1,3 +1,6 @@
+#ifndef UINTAH_HOMEBREW_Iterator_H
+#define UINTAH_HOMEBREW_Iterator_H
+
 /*
  * The MIT License
  *
@@ -22,17 +25,11 @@
  * IN THE SOFTWARE.
  */
 
-
-#ifndef UINTAH_HOMEBREW_Iterator_H
-#define UINTAH_HOMEBREW_Iterator_H
-
 #include <Core/Geometry/IntVector.h>
 #include <Core/Util/Assert.h>
 #include <Core/Grid/Variables/BaseIterator.h>
 
 namespace Uintah {
-
-  using Uintah::IntVector;
 
   /**************************************
 
@@ -203,8 +200,7 @@ namespace Uintah {
         }
 
     private:
-      friend std::ostream& operator<<(std::ostream& out, 
-                                      const Uintah::Iterator& b);
+      friend std::ostream& operator<<( std::ostream& out, const Iterator& b );
       
       inline std::ostream& put(std::ostream& out) const { iter_->put(out); return out;}
       

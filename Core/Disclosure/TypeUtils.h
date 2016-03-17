@@ -36,9 +36,6 @@
 
 namespace Uintah {
 
-using Uintah::Point;
-using Uintah::Vector;
-
 class  Matrix3;
 class  Short27;
 class  TypeDescription;

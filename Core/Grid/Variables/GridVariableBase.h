@@ -28,11 +28,10 @@
 #include <Core/Grid/Variables/Variable.h>
 #include <Core/Parallel/BufferInfo.h>
 #include <Core/Geometry/IntVector.h>
+
 namespace Uintah {
 
-  using Uintah::IntVector;
-
-  /**************************************
+/**************************************
 
 CLASS
    GridVariable

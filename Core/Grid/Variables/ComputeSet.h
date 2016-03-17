@@ -38,8 +38,6 @@
 
 namespace Uintah {
 
-  using Uintah::InternalError;
-
   /**************************************
 
     CLASS
@@ -244,17 +242,17 @@ namespace Uintah {
         ComputeSet(const ComputeSet&);
         ComputeSet& operator=(const ComputeSet&);
 
-        friend std::ostream& operator<<(std::ostream& out, const Uintah::PatchSet&);
-        friend std::ostream& operator<<(std::ostream& out, const Uintah::MaterialSet&);
-        friend std::ostream& operator<<(std::ostream& out, const Uintah::PatchSubset&);
-        friend std::ostream& operator<<(std::ostream& out, const Uintah::MaterialSubset&);
+        friend std::ostream& operator<<(std::ostream& out, const PatchSet&);
+        friend std::ostream& operator<<(std::ostream& out, const MaterialSet&);
+        friend std::ostream& operator<<(std::ostream& out, const PatchSubset&);
+        friend std::ostream& operator<<(std::ostream& out, const MaterialSubset&);
 
     };  // end class ComputeSet
 
-   std::ostream& operator<<(std::ostream& out, const Uintah::PatchSet&);
-   std::ostream& operator<<(std::ostream& out, const Uintah::MaterialSet&);
-   std::ostream& operator<<(std::ostream& out, const Uintah::PatchSubset&);
-   std::ostream& operator<<(std::ostream& out, const Uintah::MaterialSubset&);
+   std::ostream& operator<<(std::ostream& out, const PatchSet&);
+   std::ostream& operator<<(std::ostream& out, const MaterialSet&);
+   std::ostream& operator<<(std::ostream& out, const PatchSubset&);
+   std::ostream& operator<<(std::ostream& out, const MaterialSubset&);
 
   template<class T>
     ComputeSet<T>::ComputeSet()
