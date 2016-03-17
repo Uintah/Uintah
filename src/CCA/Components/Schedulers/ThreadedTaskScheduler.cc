@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2014 The University of Utah
+ * Copyright (c) 1997-2017 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -23,19 +23,16 @@
  */
 
 #include <CCA/Components/Schedulers/ThreadedTaskScheduler.h>
-
+#include <CCA/Components/Schedulers/OnDemandDataWarehouse.h>
 #include <CCA/Components/Schedulers/RuntimeStats.hpp>
 #include <CCA/Components/Schedulers/TaskGraph.h>
-#include <CCA/Components/Schedulers/OnDemandDataWarehouse.h>
 #include <CCA/Ports/Output.h>
 
-#include <Core/Parallel/CommunicationList.h>
 #include <Core/Exceptions/ProblemSetupException.h>
+#include <Core/Parallel/CommunicationList.h>
 #include <Core/Util/DOUT.hpp>
 
 #include <atomic>
-#include <chrono>
-#include <cstring>
 #include <thread>
 
 #include <sched.h>
@@ -51,7 +48,7 @@ namespace {
 Dout g_mpi_stats( "MPIStats", false );
 Dout g_mpi_dbg(   "MPIDBG"  , false );
 
-std::mutex      s_lb_mutex;
+std::mutex      g_lb_mutex;
 
 thread_local CommPool::handle t_emplace{};
 thread_local CommPool::handle t_find{};
@@ -64,7 +61,9 @@ thread_local CommPool::handle t_find{};
 namespace Uintah { namespace Impl {
 
 namespace {
+
 thread_local int       t_tid = 0;
+
 }
 
 namespace {
@@ -212,10 +211,6 @@ ThreadedTaskScheduler::~ThreadedTaskScheduler()
 //
 void ThreadedTaskScheduler::problemSetup( const ProblemSpecP & prob_spec, SimulationStateP & state )
 {
-  std::string taskQueueAlg = "MostMessages"; // default taskReadyQueueAlg
-
-  proc0cout << "   Using \"" << taskQueueAlg << "\" task queue priority algorithm" << std::endl;
-
   m_num_threads = Uintah::Parallel::getNumThreads();
 
   m_task_pool = TaskPool{ static_cast<size_t>(m_num_threads) };
@@ -297,10 +292,10 @@ void ThreadedTaskScheduler::execute(  int tgnum /*=0*/ , int iteration /*=0*/ )
   }
 
   // clear & resize task phase, etc bookkeeping data structures
-  m_num_messages   = 0;
-  m_message_volume = 0;
-  m_abort          = false;
-  m_abort_point    = 987654;
+  m_num_messages      = 0;
+  m_message_volume    = 0;
+  m_abort             = false;
+  m_abort_point       = 987654;
   m_current_iteration = iteration;
   m_num_tasks_done.store(0, std::memory_order_relaxed);
   m_current_phase.store(0, std::memory_order_relaxed);
@@ -309,7 +304,6 @@ void ThreadedTaskScheduler::execute(  int tgnum /*=0*/ , int iteration /*=0*/ )
   m_phase_tasks.resize(m_num_phases, 0);
   m_phase_sync_tasks.clear();
   m_phase_sync_tasks.resize(m_num_phases, nullptr);
-
   m_phase_tasks_done.release();
   m_phase_tasks_done = atomic_int_array(new std::atomic<int>[m_num_phases]{});
 
@@ -365,11 +359,11 @@ void ThreadedTaskScheduler::execute(  int tgnum /*=0*/ , int iteration /*=0*/ )
       m_num_tasks_done.fetch_add(1, std::memory_order_relaxed);
       m_phase_tasks_done[sync_task->getTask()->d_phase].fetch_add(1, std::memory_order_relaxed);
     } else {
-//      process_MPI_requests();
       select_tasks(iteration, find_handle);
     }
   }
 
+  ASSERT(m_task_pool.empty());
 
   //------------------------------------------------------------------------------------------------
   // deactivate TaskRunners
@@ -506,10 +500,6 @@ void ThreadedTaskScheduler::post_MPI_recvs( DetailedTask * task
                                           )
 {
   RuntimeStats::RecvTimer recv_timer;
-
-  if (trackingVarsPrintLocation_ & SchedulerCommon::PRINT_BEFORE_COMM) {
-    printTrackedVars(task, SchedulerCommon::PRINT_BEFORE_COMM);
-  }
 
   // sort the requires, so in case there is a particle send we receive it with the right message tag
   std::vector<DependencyBatch*> sorted_reqs;
@@ -763,22 +753,15 @@ void ThreadedTaskScheduler::run_task( DetailedTask * dtask, int iteration )
 
   dtask->done(dws);
 
-  // TODO clean up DJS 3/16/16
-  std::lock_guard<std::mutex> lb_guard(s_lb_mutex);
-  {
-    // if I do not have a sub scheduler
-    if (!dtask->getTask()->getHasSubScheduler()) {
-      //add my task time to the total time
-      if (!d_sharedState->isCopyDataTimestep() && dtask->getTask()->getType() != Task::Output) {
-        //add contribution for patchlist
-        SchedulerCommon::getLoadBalancer()->addContribution(dtask, dtask->task_exec_time() );
-      }
-    }
+  // add my task time to the total time
+  if (!d_sharedState->isCopyDataTimestep() && dtask->getTask()->getType() != Task::Output) {
+    // add contribution for patchlist
+    std::lock_guard<std::mutex> lb_guard(g_lb_mutex);
+    SchedulerCommon::getLoadBalancer()->addContribution(dtask, dtask->task_exec_time());
   }
 
   SchedulerCommon::emitNode(dtask, 0, dtask->task_exec_time(), 0);
-
-}  // end runTask()
+}
 
 
 //______________________________________________________________________
