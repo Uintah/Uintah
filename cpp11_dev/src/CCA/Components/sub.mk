@@ -61,9 +61,6 @@ endif
 ifeq ($(BUILD_ICE),yes)
   ICE      := $(SRCDIR)/ICE
 endif
-ifeq ($(BUILD_MINIAERO),yes)
-  MINIAERO := $(SRCDIR)/MiniAero
-endif
 ifeq ($(BUILD_ARCHES),yes)
   ARCHES   := $(SRCDIR)/Arches
 	ifeq ($(BUILD_MPM),yes)
@@ -74,7 +71,6 @@ endif
 SUBDIRS := \
         $(MPM)                         \
         $(ICE)                         \
-        $(MINIAERO)                    \
         $(MPMICE)                      \
         $(ARCHES)                      \
         $(MPMARCHES)                   \

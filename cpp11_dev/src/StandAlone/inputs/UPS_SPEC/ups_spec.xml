@@ -365,7 +365,7 @@
     <SimulationComponent          spec="REQUIRED NO_DATA"
                                     attribute1="type REQUIRED STRING
                                                 'arches, 
-                                                ice, miniaero,
+                                                ice,
                                                 impm, mpm,
                                                 mpmarches, 
                                                 mpmf, mpmice, amrmpm, wasatch, reduce_uda,
@@ -679,8 +679,6 @@
 
   </CFD>
   
-  <include href="miniAero_spec.xml"    section="MiniAero" />
-
   <!--__________________________________-->
 
   <DataAnalysis                         spec="OPTIONAL NO_DATA" >
@@ -1014,10 +1012,5 @@
 
   <!-- Wasatch Component -->
   <include href="wasatch_spec.xml" section="" />
-  
-  <!-- MiniAero         -->
-  <MiniAero                   spec="OPTIONAL NO_DATA">
-    <delt                     spec="REQUIRED DOUBLE 'positive'" />
-  </MiniAero>
 
 </Uintah_specification>
