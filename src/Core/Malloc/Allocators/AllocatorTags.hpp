@@ -1,0 +1,184 @@
+/*
+ * The MIT License
+ *
+ * Copyright (c) 1997-2015 The University of Utah
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to
+ * deal in the Software without restriction, including without limitation the
+ * rights to use, copy, modify, merge, publish, distribute, sublicense, and/or
+ * sell copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in
+ * all copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+ * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
+ * IN THE SOFTWARE.
+ */
+
+#ifndef CORE_MALLOC_ALLOCATORTAGS_HPP
+#define CORE_MALLOC_ALLOCATORTAGS_HPP
+
+#include <Core/Malloc/Allocators/AlignedAllocator.hpp>
+#include <Core/Malloc/Allocators/HybridAllocator.hpp>
+#include <Core/Malloc/Allocators/MallocAllocator.hpp>
+#include <Core/Malloc/Allocators/MMapAllocator.hpp>
+#include <Core/Malloc/Allocators/TrackingAllocator.hpp>
+
+#include <sci_defs/mpi_defs.h>
+
+#include <vector>
+#include <string>
+
+namespace Uintah { namespace Impl {
+
+struct TagData
+{
+    const char* name;
+    unsigned long long alloc_size;
+    unsigned long long high_water;
+    unsigned long long num_alloc;
+    unsigned long long num_dealloc;
+    unsigned long long h0;
+    unsigned long long h1;
+    unsigned long long h2;
+    unsigned long long h3;
+};
+
+
+struct TagBase
+{
+    virtual TagData data() const = 0;
+
+    template < typename Tag >
+    static bool register_tag()
+    {
+      static Tag t;
+      static bool ok = ( s_tags.push_back(&t) , (s_tags.back() == &t) );
+      return ok;
+    }
+
+    static std::vector<TagBase*> s_tags;
+};
+
+
+struct MallocStats
+{
+    static FILE* file();
+
+    static bool is_tag_enabled(const TagBase*);
+
+    static bool is_enabled();
+
+  private:
+
+    static const std::vector<std::string> s_malloc_stats;
+
+};
+
+
+}} // end namespace Uintah::Impl
+
+#define UINTAH_CREATE_TAG(TagName)                                    \
+  struct TagName : public ::Uintah::Impl::TagBase                     \
+  {                                                                   \
+    static constexpr const char* const name()                         \
+    { return #TagName; }                                              \
+    virtual ::Uintah::Impl::TagData data() const                      \
+    {                                                                 \
+      ::Uintah::Impl::TagData d;                                      \
+      d.name = name();                                                \
+      d.alloc_size  = ::Allocators::TagStats<TagName>::alloc_size();  \
+      d.high_water  = ::Allocators::TagStats<TagName>::high_water();  \
+      d.num_alloc   = ::Allocators::TagStats<TagName>::num_alloc();   \
+      d.num_dealloc = ::Allocators::TagStats<TagName>::num_dealloc(); \
+      d.h0          = ::Allocators::TagStats<TagName>::histogram(0);  \
+      d.h1          = ::Allocators::TagStats<TagName>::histogram(1);  \
+      d.h2          = ::Allocators::TagStats<TagName>::histogram(2);  \
+      d.h3          = ::Allocators::TagStats<TagName>::histogram(3);  \
+      return d;                                                       \
+    }                                                                 \
+  }
+
+#define UINTAH_REGISTER_TAG(TagName)                                         \
+    bool impl_##TagName = ::Uintah::Impl::TagBase::register_tag<TagName>()
+
+namespace Uintah { namespace Tags {
+
+// create default tags first
+UINTAH_CREATE_TAG(Global);
+UINTAH_CREATE_TAG(MMap);
+UINTAH_CREATE_TAG(Malloc);
+
+// -------------------------------------
+
+// Remember to register tags in AllocatorTags.cc
+// create custom tags here
+UINTAH_CREATE_TAG(CommList);
+UINTAH_CREATE_TAG(PackedBuffer);
+UINTAH_CREATE_TAG(Array3Data);
+
+}} // end namspace Uintah::Tags
+
+namespace Uintah {
+
+template < typename T, typename Tag, template< typename > class BaseAllocator >
+using TrackingAllocator = Allocators::TrackingAllocator< T, Tag, BaseAllocator >;
+
+namespace Impl {
+
+template < typename T >
+using MMapAllocator = TrackingAllocator<   T
+                                         , Tags::Global
+                                         , Allocators::MMapAllocator
+                                       >;
+
+template < typename T >
+using MallocAllocator = TrackingAllocator<   T
+                                           , Tags::Global
+                                           , Allocators::MallocAllocator
+                                         >;
+} // end namespace Impl
+
+
+template < typename T >
+using MMapAllocator = TrackingAllocator<   T
+                                         , Tags::MMap
+                                         , Impl::MMapAllocator
+                                       >;
+
+template < typename T >
+using MallocAllocator = TrackingAllocator<   T
+                                           , Tags::Malloc
+                                           , Impl::MallocAllocator
+                                         >;
+
+template < typename T >
+using HybridAllocator = Allocators::HybridAllocator<   T
+                                                   , 4096ull * 8
+                                                   , Uintah::MallocAllocator
+                                                   , Uintah::MMapAllocator
+                                                 >;
+
+
+//----------------------------------------------------------------------------------
+// NOTE:
+// for every new Tag, update print_malloc_stats
+//----------------------------------------------------------------------------------
+
+// the reduction operations
+void print_malloc_stats(MPI_Comm comm, int time_step, int root = 0);
+
+template < typename T > using TagStats = Allocators::TagStats< T >;
+
+using GlobalStats = Allocators::TagStats<Tags::Global>;
+
+} // end namespace Uintah
+
+#endif // end CORE_MALLOC_ALLOCATOR_TAGS_HPP

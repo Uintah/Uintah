@@ -1,0 +1,189 @@
+<?xml version='1.0' encoding='ISO-8859-1' ?>
+<Uintah_specification>
+   <Meta>
+       <title>Colliding Plates</title>
+   </Meta>
+   <SimulationComponent type="mpm" />
+   <Time>
+       <maxTime>1.5</maxTime>
+       <initTime>0.0</initTime>
+       <delt_min>0.0</delt_min>
+       <delt_max>2.0</delt_max>
+       <timestep_multiplier>0.3</timestep_multiplier>
+   </Time>
+   <Grid>
+      <BoundaryConditions>
+         <Face side = "x-">
+           <BCType id = "all" var = "symmetry" label = "Symmetric"> </BCType>
+         </Face>
+         <Face side = "x+">
+           <BCType id = "all" var = "Neumann" label = "Velocity">
+               <value> [0.0,0.0,0.0] </value>
+           </BCType>
+         </Face>
+         <Face side = "y-">
+           <BCType id = "all" var = "Neumann" label = "Velocity">
+               <value> [0.0,0.0,0.0] </value>
+           </BCType>
+         </Face>
+         <Face side = "y+">
+           <BCType id = "all" var = "Neumann" label = "Velocity">
+               <value> [0.0,0.0,0.0] </value>
+           </BCType>
+         </Face>
+         <Face side = "z-">
+           <BCType id = "all" var = "symmetry" label = "Symmetric"> </BCType>
+         </Face>
+         <Face side = "z+">
+           <BCType id = "all" var = "symmetry" label = "Symmetric"> </BCType>
+         </Face>
+      </BoundaryConditions>
+      <Level>
+         <Box label = "1">
+            <lower>[0.0,-.26, 0.0]</lower>
+            <upper>[0.5,1.00,0.001]</upper>
+            <resolution>[100,252,1]</resolution>
+            <extraCells>[1,1,1]</extraCells>
+            <patches>[1,1,1]</patches>
+         </Box>
+      </Level>
+   </Grid>
+   <DataArchiver>
+      <filebase>CPCont40.uda</filebase>
+      <outputInterval>0.02</outputInterval>
+      <save label = "p.x"/>
+      <save label = "p.color"/>
+      <save label = "p.velocity"/>
+      <save label = "p.particleID"/>
+      <save label = "p.stress"/>
+      <save label = "TotalMomentum"/>
+      <checkpoint cycle = "2" timestepInterval = "100"/>
+   </DataArchiver>
+
+   <MPM>
+     <time_integrator>             explicit </time_integrator>
+     <interpolator>                cpdi     </interpolator>
+     <use_load_curves>             false    </use_load_curves>
+     <minimum_particle_mass>       1.0e-15  </minimum_particle_mass>
+     <maximum_particle_velocity>   1.0e5    </maximum_particle_velocity>
+     <artificial_damping_coeff>    0.0      </artificial_damping_coeff>
+     <artificial_viscosity>        true     </artificial_viscosity>
+     <artificial_viscosity_heating>false    </artificial_viscosity_heating>
+     <do_contact_friction_heating> false    </do_contact_friction_heating>
+     <create_new_particles>        false    </create_new_particles>
+     <UseMomentumForm>             false    </UseMomentumForm>
+     <withColor>                   true     </withColor>
+     <erosion algorithm = "none"/>
+     <axisymmetric>true</axisymmetric>
+   </MPM>
+
+   <PhysicalConstants>
+      <gravity>[0,0,0]</gravity>
+   </PhysicalConstants>
+
+   <MaterialProperties>
+
+    <MPM>
+
+      <material name="Tungsten">
+        <density>19235.e3</density>
+        <melt_temp>3695.0</melt_temp>
+        <room_temp>294.0</room_temp>
+        <thermal_conductivity>174.0e-7</thermal_conductivity>
+        <specific_heat>134.0e-8</specific_heat>
+
+        <constitutive_model type="elastic_plastic_hp">
+        <shear_modulus>156.e4</shear_modulus>
+        <bulk_modulus>303.e4</bulk_modulus>
+        <shear_modulus_model type="constant_shear">
+        </shear_modulus_model>
+        <melting_temp_model type="constant_Tm">
+        </melting_temp_model>
+        <equation_of_state type="mie_gruneisen">
+            <C_0>.3980</C_0>
+            <Gamma_0>1.72</Gamma_0>
+            <S_alpha>1.24</S_alpha>
+        </equation_of_state>
+        <yield_condition type="vonMises">
+        </yield_condition>
+        <flow_model type="johnson_cook">
+            <A>1.50696e4</A>
+            <B>1.7664e4</B>
+            <C>0.016</C>
+            <n>0.12</n>
+            <m>1.</m>
+            <epdot_0>1.0</epdot_0>
+            <T_m>3695.</T_m>
+        </flow_model>
+        </constitutive_model>
+
+        <geom_object>
+         <parallelepiped label = "Plate1">
+           <p1>[0.0,    0.1,   0.0]  </p1>
+           <p2>[0.0,    0.1,   0.001]</p2>
+           <p3>[0.5,    0.1,   0.0]  </p3>
+           <p4>[0.0,    0.0,   0.0]  </p4>
+         </parallelepiped>
+         <!-- The following 4 vectors are the input set for the affine transformation,
+               which create conforming particle distributions to be used in the
+               conforming CPDI simulations. The input vectors are optional and if you
+               do not liketo use afine transformation, just do not define them in the
+               input file.
+             "In geometry, an affine transformation or affine map or an affinity
+               (from the Latin, affinis, "connected with") is a transformation  which
+               preserves straight lines (i.e., all points lying on a line initially
+               still lie on a line after transformation) and ratios of distances between
+               points lying on a straight line (e.g., the midpoint of a line segment
+               remains the midpoint after transformation). It does not necessarily
+               preserve angles or lengths.
+              Translation, geometric contraction, expansion, dilation, reflection,
+               rotation, shear, similarity transformations, and spiral similarities are
+               all affine transformations, as are their combinations.
+              An affine transformation is equivalent to a linear transformation followed
+               by a translation." from http://en.wikipedia.org/wiki/Affine_transformation
+              ut = A * u + b
+               in which "u" and "ut" are the original and transformed vectors respectively,
+               and A(3x3) and b(3) are the matrix and vector, which define the transformation.
+              Below, the first three vectors defines the rows of A so, affineTransformation_A0
+               is the first row of A and so on.
+         -->
+         <affineTransformation_A0>[0.6428,-0.7660,0.0]</affineTransformation_A0>
+         <affineTransformation_A1>[0.7660, 0.6428,0.0]</affineTransformation_A1>
+         <affineTransformation_A2>[0.0,    0.0,   1.0]</affineTransformation_A2>
+         <affineTransformation_b> [0.0766,0.0357, 0.0]</affineTransformation_b>
+         <!--  -->
+         <res>[2,2,1]</res>
+         <velocity>[-.1040288,0.08729,0.0]</velocity>
+         <temperature>294</temperature>
+         <color>0</color>
+        </geom_object>
+
+      </material>
+
+      <contact>
+        <type>null</type>
+        <materials>[0]</materials>
+        <mu>0.1</mu>
+      </contact>
+
+    </MPM>
+
+   </MaterialProperties>
+
+    <DataAnalysis>
+       <Module name="particleExtract">
+        <material>Tungsten</material>
+        <samplingFrequency> 100 </samplingFrequency>
+        <timeStart>           0  </timeStart>
+        <timeStop>           10  </timeStop>
+        <colorThreshold>      0  </colorThreshold>
+        <Variables>
+          <analyze label="p.velocity"/>
+          <analyze label="p.stress"/>
+          <analyze label="p.mass"/>
+          <analyze label="p.volume"/>
+        </Variables>
+      </Module>
+    </DataAnalysis>
+
+</Uintah_specification>

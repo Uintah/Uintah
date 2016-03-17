@@ -1,0 +1,423 @@
+<!-- @version: -->
+<Uintah_specification>
+
+  <Meta>
+    <title>QMOM Batch</title>
+  </Meta>
+
+  <SimulationComponent type="wasatch"/>
+
+  <Solver type="hypre"/>
+
+  <Time>
+    <maxTime>1.0</maxTime>
+    <initTime>0.0</initTime>
+    <delt_min>0.0000001</delt_min>
+    <delt_max>0.0000001</delt_max>
+    <timestep_multiplier>0.35</timestep_multiplier>
+   <max_Timesteps> 100 </max_Timesteps>
+  </Time>
+
+  <DataArchiver>
+    <filebase> MultEnvTest_2Poly.uda </filebase>
+    <outputInitTimestep/>
+    <outputTimestepInterval>1</outputTimestepInterval>
+
+    <!-- Moments transported in Wasatch -->
+    <save label="m_Calcite_0"/>
+    <save label="m_Calcite_1"/>
+    <save label="m_Calcite_2"/>
+    <save label="m_Calcite_3"/>    
+    <save label="m_CalcMult_0"/>
+
+    <save label="m_CalcMult_0_ave"/>
+    <save label="m_CalcMult_0_mixing_source"/>
+    <save label="w_MultiEnv_0"/>
+    <save label="w_MultiEnv_1"/>
+    <save label="w_MultiEnv_2"/>
+    <save label="dwdt_MultiEnv_0"/>
+    <save label="dwdt_MultiEnv_1"/>
+    <save label="dwdt_MultiEnv_2"/>
+
+    <save label="m_CalcMult_1"/>
+    <save label="m_CalcMult_2"/>
+    <save label="m_CalcMult_3"/>    
+
+    <save label="mixfrac"/>
+    <save label="scalarvar"/>
+    <save label="scalardiss"/>
+
+    <!-- Intermidiate Moment Calculations -->
+    <save label="BirthCoefficient_Calcite"/>
+    <save label="BirthCoefficient_CalcMult"/>
+    <save label="GrowthCoefficient_Calcite"/>
+    <save label="GrowthCoefficient_CalcMult"/>
+    <save label="RStarExpr_Calcite"/>
+    <save label="RStarExpr_CalcMult"/>
+    <save label="m_Calcite_3_birth_POINT"/>
+    <save label="m_CalcMult_3_birth_POINT"/>
+    <save label="m_Calcite_3_growth_BULK_DIFFUSION"/>
+    <save label="m_CalcMult_3_growth_BULK_DIFFUSION"/>
+    <save label="m_Calcite_3_rhs"/>
+    <save label="m_CalcMult_3_rhs"/>
+
+    <!-- Rxn Extent Sources -->
+    <save label="rxn_src_expr"/>
+
+    <save label="rxn_extent"/>
+    <save label="S"/>
+    <save label="Eq-CaCO3"/>
+
+    <checkpoint cycle="2" interval="0.02"/>
+    <compression>gzip</compression>
+  </DataArchiver>
+
+  <Grid>
+    <BoundaryConditions>
+      <DefaultMaterial>all</DefaultMaterial>
+      <!-- BOUNDARY CONDITIONS -->
+      <Face side="x-">
+        <BCType label="rxn_extent" var="Dirichlet" value="0.0"/>
+      </Face>
+      <Face side="x+">
+        <BCType label="rxn_extent" var="Neumann" value="0.0"/>
+      </Face>
+      <Face side="y-">
+        <BCType label="rxn_extent" var="Dirichlet" value="0.0"/>
+      </Face>
+      <Face side="y+">
+        <BCType label="rxn_extent" var="Dirichlet" value="0.0"/>
+      </Face>
+      <Face side="z-">
+        <BCType label="rxn_extent" var="Dirichlet" value="0.0"/>
+      </Face>
+      <Face side="z+">
+        <BCType label="rxn_extent" var="Dirichlet" value="0.0"/>
+      </Face>
+      </BoundaryConditions>
+    <Level>
+      <Box label="1">
+        <lower>[0, 0, 0]</lower>
+        <upper>[1, 1, 1]</upper>
+        <resolution>[10, 10, 10]</resolution>
+        <!--extraCells>[1,1,1]</extraCells-->
+        <patches>[1,1,1]</patches>
+      </Box>
+    </Level>
+
+  </Grid>
+
+  <PhysicalConstants>
+    <gravity>[-9.8,0,0]</gravity>
+    <reference_point>[-1,-1,-1]</reference_point>
+    <viscosity>0.001000</viscosity>
+  </PhysicalConstants>
+
+  <Wasatch>
+
+    <TimeIntegrator> RK3SSP </TimeIntegrator>
+    <Density method="CONSTANT">
+      <Constant value="1.0" name="density"/>
+    </Density>
+
+<!-- remove this section for arches-wasatch problems -->
+<!-- SuperSaturation Value, w/o table make it linear in rxn_ext space -->
+    <BasicExpression type="SVOL">
+      <TaskList>initialization</TaskList>
+      <NameTag name="S"/>
+      <Constant> 2000 </Constant>
+    </BasicExpression>
+
+    <BasicExpression type="SVOL">
+      <TaskList>advance_solution</TaskList>
+      <NameTag name="S"/>
+      <LinearFunction slope="-1999" intercept="2000">    
+        <NameTag name="rxn_extent"/>
+      </LinearFunction>
+    </BasicExpression>
+
+    <BasicExpression type="SVOL">
+      <TaskList>advance_solution</TaskList>
+      <NameTag name="Eq-CaCO3"/>
+      <Constant> 0.001 </Constant>
+    </BasicExpression>
+
+    <BasicExpression type="SVOL">
+      <TaskList>initialization</TaskList>
+      <NameTag name="rxn_extent"/>
+      <Constant> 0 </Constant>
+    </BasicExpression>
+
+    <BasicExpression type="SVOL">
+      <TaskList> initialization </TaskList>
+      <NameTag name="mixfrac"/>
+      <Constant> 0 </Constant>
+    </BasicExpression>
+
+    <BasicExpression type="SVOL">
+      <TaskList> advance_solution </TaskList>
+      <NameTag name="mixfrac"/>
+      <LinearFunction slope="1" intercept="0.0">
+        <NameTag name="XSVOL"/>
+      </LinearFunction>
+    </BasicExpression> 
+
+    <BasicExpression type="SVOL">
+      <TaskList> initialization </TaskList>
+      <NameTag name="scalarvar"/>
+      <Constant> 0 </Constant>
+    </BasicExpression>
+
+    <BasicExpression type="SVOL">
+      <TaskList> advance_solution </TaskList>
+      <NameTag name="scalarvar"/>
+      <LinearFunction slope="-.01" intercept="0.01">
+        <NameTag name="YSVOL"/>
+      </LinearFunction>
+    </BasicExpression>
+
+    <BasicExpression type="SVOL">
+      <TaskList> initialization </TaskList>
+      <NameTag name="scalardiss"/>
+      <Constant> 0.0 </Constant>
+    </BasicExpression>
+
+    <BasicExpression type="SVOL">
+      <TaskList> advance_solution </TaskList>
+      <NameTag name="scalardiss"/>
+      <LinearFunction slope="0.1" intercept="0.0">
+        <NameTag name="scalarvar"/>
+      </LinearFunction>
+    </BasicExpression>
+
+<!-- create scalar with no conv/diff for rxn extent in wasatch -->
+    <TransportEquation equation="generic">
+      <SolutionVariable> rxn_extent </SolutionVariable>
+      <SourceTermExpression>
+        <NameTag name="rxn_src_expr"/>
+      </SourceTermExpression>
+    </TransportEquation>
+
+<!-- Initialized Moments -->
+
+    <MomentInitialization>
+      <PopulationName> Calcite </PopulationName>
+      <Values> 
+        1.0e-10,
+        5.0e-8,
+        3.333333333333e-5,
+        0.025
+      </Values>
+    </MomentInitialization>
+
+    <MomentInitialization>
+      <PopulationName> CalcMult </PopulationName>
+      <Values>
+        1.0e-10,
+        5.0e-8,
+        3.333333333333e-5,
+        0.025
+      </Values>
+    </MomentInitialization>
+
+<!-- RXN Extent Source Calculations-->
+    <BasicExpression type="SVOL">
+      <TaskList> advance_solution </TaskList>
+      <NameTag name="max_mols"/>
+      <Constant> 0.1 </Constant>
+    </BasicExpression>
+
+    <PrecipitationBasicExpression type="SVOL">
+      <TaskList> advance_solution </TaskList>
+      <NameTag name="rxn_src_expr"/>
+      <PrecipitationSource>
+        <EtaScale>
+          <NameTag name="max_mols"/>
+        </EtaScale>
+        <Density>
+          <NameTag name="density"/>
+        </Density>
+      </PrecipitationSource>
+    </PrecipitationBasicExpression>
+
+    <BasicExpression type="SVOL">
+      <TaskList>initialization</TaskList>
+      <NameTag name="rxn_src_expr"/>
+      <Constant>0</Constant>
+    </BasicExpression>
+
+<!-- Calcite Physics Parameters -->
+    <PrecipitationBasicExpression type="SVOL">
+      <TaskList> advance_solution </TaskList>
+      <NameTag name="GrowthCoefficient_Calcite"/>
+      <PrecipitationBulkDiffusionCoefficient Molec_Vol="3.693e-5" Diff_Coef="1e-9">
+        <Supersaturation>
+          <NameTag name="S"/>  
+        </Supersaturation>
+        <EquilibriumConcentration>
+          <NameTag name="Eq-CaCO3"/>
+        </EquilibriumConcentration>
+      </PrecipitationBulkDiffusionCoefficient>
+    </PrecipitationBasicExpression>
+
+    <PrecipitationBasicExpression type="SVOL">
+      <TaskList> advance_solution </TaskList>
+      <NameTag name="BirthCoefficient_Calcite"/>
+      <PrecipitationClassicNucleationCoefficient Molec_Vol="3.693e-5" Surf_Eng="0.16" Temperature="298">
+        <Supersaturation>
+          <NameTag name="S"/>  
+        </Supersaturation> 
+      </PrecipitationClassicNucleationCoefficient>
+    </PrecipitationBasicExpression>
+
+    <PrecipitationBasicExpression type="SVOL">
+      <TaskList> advance_solution </TaskList>
+      <NameTag name="RStarExpr_Calcite"/>
+      <PrecipitationClassicRStarValue Surf_Eng="0.16" Molec_Vol="3.693e-5" Temperature="298" Conversion_Fac="1e9">
+        <Supersaturation>
+          <NameTag name="S"/>
+        </Supersaturation>
+      </PrecipitationClassicRStarValue>
+    </PrecipitationBasicExpression>
+
+<!-- CalcMult Physics Parameters -->
+
+    <BasicExpression type="SVOL">
+      <TaskList>initialization</TaskList>
+      <NameTag name="S_CalcMult"/>
+      <Constant>0</Constant> 
+    </BasicExpression> 
+
+    <BasicExpression type="SVOL">
+      <TaskList>advance_solution</TaskList>
+      <NameTag name="S_CalcMult"/>
+        <LinearFunction slope="1.0" intercept="0.0">    <!-- this slope is = K_calc/k_acc-->
+          <NameTag name="S"/>
+        </LinearFunction>
+    </BasicExpression>
+
+    <PrecipitationBasicExpression type="SVOL">
+      <TaskList> advance_solution </TaskList>
+      <NameTag name="GrowthCoefficient_CalcMult"/>
+      <PrecipitationBulkDiffusionCoefficient Molec_Vol="3.693e-5" Diff_Coef="1e-9">
+        <Supersaturation>
+          <NameTag name="S_CalcMult"/>  
+        </Supersaturation>
+        <EquilibriumConcentration>
+          <NameTag name="Eq-CaCO3"/>
+        </EquilibriumConcentration>
+      </PrecipitationBulkDiffusionCoefficient>
+    </PrecipitationBasicExpression>
+
+    <PrecipitationBasicExpression type="SVOL">
+      <TaskList> advance_solution </TaskList>
+      <NameTag name="BirthCoefficient_CalcMult"/>
+      <PrecipitationClassicNucleationCoefficient Molec_Vol="3.693e-5" Surf_Eng="0.16" Temperature="298">
+        <Supersaturation>
+          <NameTag name="S_CalcMult"/>  
+        </Supersaturation> 
+      </PrecipitationClassicNucleationCoefficient>
+    </PrecipitationBasicExpression>
+
+    <PrecipitationBasicExpression type="SVOL">
+      <TaskList> advance_solution </TaskList>
+      <NameTag name="RStarExpr_CalcMult"/>
+      <PrecipitationClassicRStarValue Surf_Eng="0.16" Molec_Vol="3.693e-5" Temperature="298" Conversion_Fac="1e9">
+        <Supersaturation>
+          <NameTag name="S_CalcMult"/>
+        </Supersaturation>
+      </PrecipitationClassicRStarValue>
+    </PrecipitationBasicExpression>
+
+    <PrecipitationBasicExpression type="SVOL">
+      <TaskList> advance_solution </TaskList>
+      <NameTag name="MultiEnv"/>
+      <MultiEnvMixingModel>
+        <MixtureFraction>
+          <NameTag name="mixfrac"/>
+        </MixtureFraction>
+        <ScalarVariance>
+          <NameTag name="scalarvar"/>
+        </ScalarVariance>
+        <ScalarDissipation>
+          <NameTag name="scalardiss"/>
+        </ScalarDissipation>
+      </MultiEnvMixingModel>
+    </PrecipitationBasicExpression>
+
+
+<!-- Calcite Moment Transport -->
+    <MomentTransportEquation>
+      <PopulationName> Calcite </PopulationName>
+      <NumberOfEnvironments>2</NumberOfEnvironments>
+      <MolecVol> 3.693e-5 </MolecVol>
+
+      <GrowthExpression>
+        <GrowthModel>BULK_DIFFUSION</GrowthModel>
+        <!-- conv factor as pregrowth -->
+        <PreGrowthCoefficient>1.0e13</PreGrowthCoefficient>
+       
+        <GrowthCoefficientExpression>
+           <NameTag name="GrowthCoefficient_Calcite"/> 
+        </GrowthCoefficientExpression> 
+      </GrowthExpression> 
+        
+      <BirthExpression>
+        <BirthModel> POINT </BirthModel>
+        <PreBirthCoefficient> 1.0e30 </PreBirthCoefficient>
+        <BirthCoefficientExpression>
+          <NameTag name="BirthCoefficient_Calcite"/>
+        </BirthCoefficientExpression> 
+        <RStarExpression>
+          <NameTag name="RStarExpr_Calcite"/>
+        </RStarExpression> 
+      </BirthExpression>
+
+    </MomentTransportEquation>
+
+<!-- CalcMult Moment Transport-->
+    <MomentTransportEquation>
+      <PopulationName> CalcMult </PopulationName>
+      <NumberOfEnvironments>2</NumberOfEnvironments>
+      <MolecVol> 3.693e-5 </MolecVol>
+
+      <GrowthExpression>
+        <GrowthModel>BULK_DIFFUSION</GrowthModel>
+        <!-- conv factor as pregrowth -->
+        <PreGrowthCoefficient>1.0e13</PreGrowthCoefficient>
+       
+        <GrowthCoefficientExpression>
+           <NameTag name="GrowthCoefficient_CalcMult"/> 
+        </GrowthCoefficientExpression> 
+      </GrowthExpression> 
+        
+      <BirthExpression>
+        <BirthModel> POINT </BirthModel>
+        <PreBirthCoefficient> 1.0e30 </PreBirthCoefficient>
+        <BirthCoefficientExpression>
+          <NameTag name="BirthCoefficient_CalcMult"/>
+        </BirthCoefficientExpression> 
+        <RStarExpression>
+          <NameTag name="RStarExpr_CalcMult"/>
+        </RStarExpression> 
+      </BirthExpression>
+
+      <MultiEnvMixingModel>
+        <NameTag name="MultiEnv"/>
+      </MultiEnvMixingModel>
+
+    </MomentTransportEquation>
+
+<!-- ForceONGraph to use as Arches Source -->
+
+
+<!--    <ForceOnGraph tasklist="initialization">
+      <NameTag name="rxn_src_expr"  />
+    </ForceOnGraph> 
+-->
+     <ForceOnGraph tasklist="advance_solution">
+         <NameTag name="m_CalcMult_0_ave"/>
+    </ForceOnGraph>
+  </Wasatch>
+
+</Uintah_specification>

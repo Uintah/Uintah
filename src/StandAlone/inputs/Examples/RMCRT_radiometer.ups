@@ -1,0 +1,140 @@
+<?xml version="1.0" encoding="iso-8859-1"?>
+
+<Uintah_specification>
+
+  <Meta>
+      <title>RMCRT</title>
+  </Meta>
+
+  <SimulationComponent type="RMCRT_Test" />
+  
+  <!--__________________________________-->
+  <!-- run for 5 timesteps for RT memory -->
+  <!-- and checkpoint testing             -->
+  <Time>
+    <maxTime>       5.0      </maxTime>
+    <initTime>      0.0       </initTime>
+    <delt_min>      0.00001   </delt_min>
+    <delt_max>      1         </delt_max>
+    <max_Timesteps> 50         </max_Timesteps>
+    <timestep_multiplier>  1  </timestep_multiplier>
+  </Time>
+
+  <!--____________________________________________________________________-->
+  <!--      G  R  I  D     V  A  R  I  A  B  L  E  S                      -->
+  <!--____________________________________________________________________-->
+  <Grid>
+    <BoundaryConditions>
+      <Face side = "x-">
+        <BCType id = "0"   label = "color"     var = "Dirichlet"> 
+                            <value> 0. </value> 
+        </BCType> 
+        <BCType id = "0"   label = "abskg"     var = "Dirichlet">
+                            <value> 1. </value>
+        </BCType>
+        <BCType id = "0"   label = "cellType"   var = "Dirichlet" type = "int">
+                           <value> 8 </value>
+        </BCType>
+      </Face>
+      <Face side = "x+">
+        <BCType id = "0"   label = "color"     var = "Dirichlet">
+                           <value> 0. </value>                
+        </BCType>
+        <BCType id = "0"   label = "abskg"     var = "Dirichlet">
+                           <value> 1. </value>
+        </BCType>
+        <BCType id = "0"   label = "cellType"   var = "Dirichlet" type = "int">
+                           <value> 8 </value>
+        </BCType>
+      </Face>
+      <Face side = "y-">
+        <BCType id = "0"   label = "color"     var = "Dirichlet">
+                           <value> 0. </value>
+        </BCType>
+        <BCType id = "0"   label = "abskg"     var = "Dirichlet">
+                           <value> 1. </value>
+        </BCType>
+        <BCType id = "0"   label = "cellType"   var = "Dirichlet" type = "int">
+                           <value> 8 </value>
+        </BCType> 
+      </Face>               
+      <Face side = "y+">
+        <BCType id = "0"   label = "color"     var = "Dirichlet">
+                            <value> 0. </value>
+        </BCType>
+        <BCType id = "0"   label = "abskg"     var = "Dirichlet">
+                           <value> 1. </value>
+        </BCType>
+        <BCType id = "0"   label = "cellType"   var = "Dirichlet" type = "int">
+                           <value> 8 </value>
+        </BCType>
+      </Face>
+      <Face side = "z-">
+        <BCType id = "0"   label = "color"     var = "Dirichlet">
+                           <value> 0. </value>
+        </BCType>
+        <BCType id = "0"   label = "abskg"     var = "Dirichlet">
+                           <value> 1. </value>
+        </BCType>
+        <BCType id = "0"   label = "cellType"   var = "Dirichlet" type = "int">
+                           <value> 8 </value>
+        </BCType>
+      </Face>
+      <Face side = "z+">
+        <BCType id = "0"   label = "color"     var = "Dirichlet">
+                           <value> 0. </value>
+        </BCType>
+        <BCType id = "0"   label = "abskg"     var = "Dirichlet">
+                           <value> 1. </value>
+        </BCType>
+        <BCType id = "0"   label = "cellType"   var = "Dirichlet" type = "int">
+                           <value> 8 </value>
+        </BCType>
+      </Face>
+    </BoundaryConditions>
+
+    <Level>
+      <Box label = "0">                              
+         <lower>      [0,0,0]     </lower>         
+         <upper>      [1, 1, 1]   </upper>         
+         <resolution> [41,41,41]  </resolution>    
+         <patches>    [3,3,3]     </patches> 
+         <extraCells> [1,1,1]     </extraCells>
+      </Box>                                 
+    </Level>
+  </Grid>
+  <!--__________________________________-->
+  <DataArchiver>
+  <filebase>radiometer.uda</filebase>
+      <outputTimestepInterval>1</outputTimestepInterval>
+      <save label = "color"   />
+      <save label = "abskg"   />
+      <save label = "sigmaT4" />
+      <save label = "VRFlux" />
+      <checkpoint cycle = "2" timestepInterval = "2"/>
+  </DataArchiver>
+
+  <!--__________________________________ -->
+  <Temperature>       64.804         </Temperature>
+  <abskg>             999            </abskg>
+  <benchmark>         1              </benchmark>
+  <calc_frequency>    10             </calc_frequency>
+      
+  <!--__________________________________-->
+  <!-- Only compute VRFlux at the radiometer locations -->    
+  <RMCRT type = "double">
+     <algorithm type="radiometerOnly"/> 
+    <randomSeed>        false       </randomSeed>
+    <Threshold>         0.05        </Threshold>
+    <sigmaScat>         0           </sigmaScat>
+
+    <Radiometer>
+      <VRViewAngle>       3                   </VRViewAngle>
+      <VROrientation>     [-1,0,0]            </VROrientation>
+      <VRLocationsMin>    [0.999, 0.0, 0.5]   </VRLocationsMin>
+      <VRLocationsMax>    [1.0,   1.0, 0.52]  </VRLocationsMax>
+      <nRadRays>          50                  </nRadRays>
+    </Radiometer>
+    
+  </RMCRT>
+</Uintah_specification>

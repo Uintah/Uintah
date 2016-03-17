@@ -1,0 +1,18 @@
+<?xml version='1.0' encoding='ISO-8859-1' ?>
+<Uintah_Include>
+  <EOS type="JWL">
+    <!-- PBX RX-26-AF Product Parameters
+         From: 
+          C.M. Tarver, L.M. Erickson and N.L. Parker, Shock Initiation, Detonation Wave 
+          Propagation and Metal Acceleration Measurements and Calculatsion for RX-26-AF. 
+          Shock Waves in Condensed Matter - 1983, J.R. Asay, R.A. Graham, G.K. Straub, eds. 
+     -->
+     <A> 801.8e9   </A>
+     <B> 52.64e9   </B>
+     <Cv> 1.0e6    </Cv>
+     <R1> 5.0      </R1>
+     <R2> 2.1      </R2>
+     <om> 0.34     </om>
+     <rho0> 1838   </rho0>
+  </EOS>
+</Uintah_Include>

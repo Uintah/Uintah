@@ -1,0 +1,123 @@
+<Uintah_specification>
+
+  <Meta>
+    <title>2D Taylor-Green Vortex in the (x,z) Plane</title>
+  </Meta>
+
+  <SimulationComponent type="wasatch"/>
+   <Solver type="hypre"/>
+  <Wasatch>
+
+    <Density method="CONSTANT">
+      <Constant value="1.0" name="density"/>
+    </Density>
+
+    <!-- Set the initial condition expression for x-momentum -->
+    <TaylorVortexMMS type="XVOL">
+      <TaskList>initialization</TaskList>
+      <NameTag name="x-mom"/>
+      <VelocityX amplitude="1.0" viscosity="0.0">
+        <XCoordinate> <NameTag name="XXVOL"/> </XCoordinate>
+        <YCoordinate> <NameTag name="ZXVOL"/> </YCoordinate>
+      </VelocityX>
+    </TaylorVortexMMS>
+
+    <!-- Set the initial condition for y-momentum -->
+    <TaylorVortexMMS type="ZVOL">
+      <TaskList>initialization</TaskList>
+      <NameTag name="z-mom"/>
+      <VelocityY amplitude="1.0" viscosity="0.0">
+        <XCoordinate> <NameTag name="XZVOL"/> </XCoordinate>
+        <YCoordinate> <NameTag name="ZZVOL"/> </YCoordinate>
+      </VelocityY>
+    </TaylorVortexMMS>
+                
+    <BasicExpression type="SVOL">
+      <TaskList>advance_solution</TaskList>
+      <NameTag name="viscosity"/>
+      <Constant>0.001</Constant>
+    </BasicExpression>
+
+    <!-- Momentum transport equations -->
+    <MomentumEquations>
+ 	
+      <X-Velocity>u</X-Velocity>
+      <X-Momentum>x-mom</X-Momentum>
+      <Z-Velocity>w</Z-Velocity>
+      <Z-Momentum>z-mom</Z-Momentum>
+      <Viscosity>
+        <NameTag name="viscosity"/>
+      </Viscosity>
+      
+      <Pressure>
+        <!-- ReferencePressure value="0.0">
+              <ReferenceCell>[0,0,0]</ReferenceCell>
+        </ReferencePressure -->
+        <Use3DLaplacian>    false</Use3DLaplacian>
+        <Parameters>
+ 	 	 	 	 	 	 <skip>1</skip>
+            <solver>         cg      </solver>
+            <preconditioner> pfmg    </preconditioner>
+            <tolerance>      1.e-13  </tolerance>
+            <maxiterations>  1000    </maxiterations>
+            <relax_type> 2 </relax_type>
+           </Parameters>
+
+      </Pressure>
+    </MomentumEquations>
+
+
+  </Wasatch>
+
+
+  <Time>
+    <maxTime>0.01</maxTime>
+    <initTime>0.0</initTime>
+    <delt_min>0.001</delt_min>
+    <delt_max>0.001</delt_max>
+    <max_Timesteps> 4 </max_Timesteps>            
+    <timestep_multiplier>1.0</timestep_multiplier>
+  </Time>
+
+
+  <DataArchiver>
+    <filebase>taylor-green-vortex-2d-xz.uda</filebase>
+    <outputTimestepInterval>1</outputTimestepInterval>
+    <outputInitTimestep/>
+    <checkpoint cycle="2" interval="0.001"/>
+    <compression>gzip</compression>
+    <save label="x-mom"/>
+    <save label="z-mom"/>
+    <save label="u"/>
+    <save label="w"/>
+    <save label="pressure"/>
+    <save label="x-mom_convFlux_x"/>
+    <save label="x-mom_convFlux_z"/>
+    <save label="z-mom_convFlux_x"/>
+    <save label="z-mom_convFlux_z"/>
+    <save label="dilatation"/>
+    <save label="density"/>
+    <save label="strain_xx"/>
+    <save label="strain_xz"/>
+    <save label="strain_zz"/>
+    <save label="strain_zx"/>
+    <save label="x-mom_rhs_partial"/>
+    <save label="z-mom_rhs_partial"/>
+    <save label="x-mom_rhs"/>
+    <save label="z-mom_rhs"/>
+
+  </DataArchiver> 
+
+  <Grid>
+      <Level>
+      <Box label="1">
+        <lower>[0,0,0]</lower>
+        <upper>[1,1,1]</upper>
+        <resolution>[64,1,64]</resolution>
+        <patches>[2,1,2]</patches>
+      </Box>
+      <periodic>[1,1,1]</periodic>
+    </Level>
+  </Grid>
+
+</Uintah_specification>

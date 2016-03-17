@@ -1,0 +1,191 @@
+<Uintah_specification>
+
+  <Meta>
+    <title>Test TabProps interface for Wasatch</title>
+  </Meta>
+
+  <SimulationComponent type="wasatch"/>
+  
+  <!--__________________________________ -->
+  <RMCRT>
+    <randomSeed>         false     </randomSeed>
+    <Temperature>       64.804     </Temperature>
+    <abskg>             999        </abskg>
+    <nDivQRays>          3          </nDivQRays>
+    <Threshold>         0.05       </Threshold>
+    <StefanBoltzmann>   5.67051e-8 </StefanBoltzmann>
+    <solveBoundaryFlux> false      </solveBoundaryFlux>
+    <CCRays>            false      </CCRays>
+  </RMCRT>
+
+  <Wasatch>
+
+    <Density method="CONSTANT">
+      <Constant value="1.0" name="density"/>
+    </Density>
+
+    <BasicExpression type="SVOL">
+      <TaskList>initialization</TaskList>
+      <NameTag name="mixture fraction" state="STATE_DYNAMIC"/>
+      <GaussianFunction amplitude="1.0" deviation="0.25" mean="0.0" baseline="0.0">
+        <NameTag name="XSVOL"/>
+      </GaussianFunction> 
+    </BasicExpression>
+
+    <!-- Set up a tabular property evaluation -->
+    <TabProps>
+      <FileNamePrefix>inputs/Wasatch/AdEquilCH4</FileNamePrefix>
+      <TaskList>advance_solution</TaskList>
+      <IndependentVariable>
+        <NameTag name="mixture fraction" state="STATE_DYNAMIC"/>
+        <NameInTable>MixtureFraction</NameInTable>
+      </IndependentVariable>
+      <ExtractVariable>
+        <NameInTable>Temperature</NameInTable>
+        <NameTag name="temperature"/>
+        <Type>SVOL</Type>
+      </ExtractVariable>
+      <ExtractVariable>
+        <NameInTable>CO2_molefrac</NameInTable>
+        <NameTag name="CO2"/>
+        <Type>SVOL</Type>
+      </ExtractVariable>
+      <ExtractVariable>
+        <NameInTable>H2O_molefrac</NameInTable>
+        <NameTag name="H2O"/>
+        <Type>SVOL</Type>
+      </ExtractVariable>
+    </TabProps>
+    
+    <RadProps>
+      <GreyGasAbsCoef>
+        <FileName>inputs/Wasatch/AbsCoefCH4.txt</FileName>
+        <NameTag name="AbsCoef"/>
+        <SpeciesMoleFraction name="CO2"><NameTag name="CO2"/></SpeciesMoleFraction>    
+        <SpeciesMoleFraction name="H2O"><NameTag name="H2O"/></SpeciesMoleFraction>
+        <Temperature><NameTag name="temperature"/></Temperature>    
+      </GreyGasAbsCoef>  
+    </RadProps>
+
+    <ForceOnGraph tasklist="advance_solution">
+      <NameTag name="AbsCoef"/>
+    </ForceOnGraph>
+
+
+    <!-- Build a scalar transport equation -->
+    <TransportEquation equation="generic">
+      <SolutionVariable>mixture fraction</SolutionVariable>
+      <DiffusiveFlux direction="X" coefficient="0.025"/>
+      <DiffusiveFlux direction="Y" coefficient="0.025"/>
+      <DiffusiveFlux direction="Z" coefficient="0.025"/>
+    </TransportEquation>
+    </Wasatch>
+
+  <Time>
+    <maxTime>0.02</maxTime>
+    <initTime>0.0</initTime>
+    <delt_min>0.001</delt_min>
+    <delt_max>0.001</delt_max>
+    <timestep_multiplier>1.0</timestep_multiplier>
+  </Time>
+
+  <DataArchiver>
+    <filebase>rmcrt-test.uda</filebase>
+    <outputTimestepInterval>1</outputTimestepInterval>
+    <outputInitTimestep/>
+    <checkpoint cycle="2" interval="0.01"/>
+    <compression>gzip</compression>
+    <save label="mixture fraction"/>
+    <save label="AbsCoef"/>
+    <save label="temperature"/>    
+    <save label="CO2"/>        
+    <save label="H2O"/>            
+    <save label="RadiationSource"/>            
+        <save label="CellType"/>            
+    <save label="sigmaT4"/>
+<!--     <save label="CellType"/>        -->
+  </DataArchiver>
+
+  <Grid>
+  
+      <BoundaryConditions>
+      <Face side="x-">
+        <BCType id="0" label="temperature" var="Dirichlet"> 
+                            <value> 400 </value> 
+        </BCType> 
+        <BCType id="0" label="AbsCoef" var="Dirichlet">
+                            <value> 1. </value>
+        </BCType>
+        <BCType id="0" label="CellType" var="Dirichlet" type="int">
+                           <value> 8 </value>
+        </BCType>
+      </Face>
+      <Face side="x+">
+        <BCType id="0" label="temperature" var="Dirichlet">
+                           <value> 400</value>                
+        </BCType>
+        <BCType id="0" label="AbsCoef" var="Dirichlet">
+                           <value> 1. </value>
+        </BCType>
+        <BCType id="0" label="CellType" var="Dirichlet" type="int">
+                           <value> 8 </value>
+        </BCType>
+      </Face>
+      <Face side="y-">
+        <BCType id="0" label="temperature" var="Dirichlet">
+                           <value> 400 </value>
+        </BCType>
+        <BCType id="0" label="AbsCoef" var="Dirichlet">
+                           <value> 1. </value>
+        </BCType>
+        <BCType id="0" label="CellType" var="Dirichlet" type="int">
+                           <value> 8 </value>
+        </BCType> 
+      </Face>               
+      <Face side="y+">
+        <BCType id="0" label="temperature" var="Dirichlet">
+                            <value> 400 </value>
+        </BCType>
+        <BCType id="0" label="AbsCoef" var="Dirichlet">
+                           <value> 1. </value>
+        </BCType>
+        <BCType id="0" label="CellType" var="Dirichlet" type="int">
+                           <value> 8 </value>
+        </BCType>
+      </Face>
+      <Face side="z-">
+        <BCType id="0" label="temperature" var="Dirichlet">
+                           <value>400 </value>
+        </BCType>
+        <BCType id="0" label="AbsCoef" var="Dirichlet">
+                           <value> 1. </value>
+        </BCType>
+        <BCType id="0" label="CellType" var="Dirichlet" type="int">
+                           <value> 8 </value>
+        </BCType>
+      </Face>
+      <Face side="z+">
+        <BCType id="0" label="temperature" var="Dirichlet">
+                           <value> 400 </value>
+        </BCType>
+        <BCType id="0" label="AbsCoef" var="Dirichlet">
+                           <value> 1. </value>
+        </BCType>
+        <BCType id="0" label="CellType" var="Dirichlet" type="int">
+                           <value> 8 </value>
+        </BCType>
+      </Face>
+    </BoundaryConditions>
+
+    <Level>
+      <Box label="1">
+        <lower>[-5,-1,-1]</lower>
+        <upper>[5,1,1]</upper>
+        <resolution>[40,40,40]</resolution>
+        <patches>[2,2,2]</patches>
+      </Box>
+      <periodic>[0,0,0]</periodic>
+    </Level>
+  </Grid>
+
+</Uintah_specification>

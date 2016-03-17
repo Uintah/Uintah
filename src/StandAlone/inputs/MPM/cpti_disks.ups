@@ -1,0 +1,150 @@
+<?xml version='1.0' encoding='ISO-8859-1' ?>
+<!-- <!DOCTYPE Uintah_specification SYSTEM "input.dtd"> -->
+<!-- @version: Updated 7/31/00-->
+<!--
+     File:         cpti_disks.ups
+
+     Revisions:    150605 Initial setup
+
+     Author:       Brian Leavy  (Brian.Leavy@utah.edu)
+
+     Description:  Two cylinders moving at +/-2 m/s in the x-direction, impact each other and rebound.  
+                   The convected particle tetrahedral domain integration (CPTI) technique is used to 
+                   more accurately describe geometries with the particle domains.  The particle centroids and 
+                   corresponding domain description were created using abaqus mesh files that were converted 
+                   to particles (*.pts) and then imported using the file geometry import option in Uintah. 
+                   Mesh conversion and visualization tools are available upon request for Uintah simulations.
+
+                   Before running, the Uintah particle file splitter (PFS) is run on this file to partition 
+                   the particles properly.
+-->
+<Uintah_specification>
+   <Meta>
+       <title>CPTI Colliding Disks</title>
+   </Meta>
+   <SimulationComponent type="mpm" />
+   <Time>
+       <maxTime>0.4</maxTime>
+       <initTime>0.0</initTime>
+       <delt_min>0.0001</delt_min>
+       <delt_max>0.005</delt_max>
+       <timestep_multiplier>0.6</timestep_multiplier>
+   </Time>
+   <DataArchiver>
+       <filebase>cpti_disks.uda</filebase>
+       <outputInterval>0.005</outputInterval>
+       <save label = "KineticEnergy"/>
+       <save label = "TotalMass"/>
+       <save label = "StrainEnergy"/>
+       <save label = "CenterOfMassPosition"/>
+       <save label = "TotalMomentum"/>
+       <save label = "p.x"/>
+       <save label = "p.mass"/>
+       <save label = "p.volume"/>
+       <save label = "p.velocity"/>
+       <save label = "p.stress"/>
+       <save label = "p.scalefactor"/>
+       <save label = "p.size"/>
+       <save label = "p.deformationMeasure"/>
+       <save label = "p.particleID"/>
+       <save label = "g.mass"/>
+       <save label = "g.velocity"/>
+       <save label = "g.stressFS"/>
+       <checkpoint cycle = "2" interval = "0.02"/>
+   </DataArchiver>
+    <MPM>
+       <time_integrator>explicit</time_integrator>
+       <interpolator>cpti</interpolator>
+       <withColor>true</withColor>
+    </MPM>
+    <PhysicalConstants>
+       <gravity>[0,0,0]</gravity>
+    </PhysicalConstants>
+    <MaterialProperties>
+       <MPM>
+           <material name="disk1">
+              <density>1000.0</density>
+              <constitutive_model type="comp_mooney_rivlin"> 
+                 <he_constant_1>100000.0</he_constant_1>
+                 <he_constant_2>20000.0</he_constant_2>
+                 <he_PR>0.49</he_PR>
+               </constitutive_model>
+              <thermal_conductivity>1.0</thermal_conductivity>
+              <specific_heat>5</specific_heat>
+              <geom_object>
+                <file>
+                  <name>cpti_disks_mat1.pts</name>
+                  <var>p.rvec1</var>
+                  <var>p.rvec2</var>
+                  <var>p.rvec3</var>
+                </file>
+                <res>[1,1,1]</res>
+                <velocity>[2.0,0.0,0]</velocity>
+                <temperature>12</temperature>
+                <color>1</color>
+              </geom_object>
+           </material>
+           <material name="disk2">
+              <density>1000.0</density>
+              <constitutive_model type="comp_mooney_rivlin"> 
+                 <he_constant_1>100000.0</he_constant_1>
+                 <he_constant_2>20000.0</he_constant_2>
+                 <he_PR>0.49</he_PR>
+              </constitutive_model>
+              <thermal_conductivity>1.0</thermal_conductivity>
+              <specific_heat>5</specific_heat>
+              <geom_object>
+                <file>
+                  <name>cpti_disks_mat2.pts</name>
+                  <var>p.rvec1</var>
+                  <var>p.rvec2</var>
+                  <var>p.rvec3</var>
+                </file>
+                <res>[1,1,1]</res>
+                 <velocity>[-2.0,0.0,0]</velocity>
+                 <temperature>12</temperature>
+                 <color>2</color>
+              </geom_object>
+           </material>
+           <contact>
+             <type>single_velocity</type>
+           </contact>
+       </MPM>
+    </MaterialProperties>
+    <Grid>
+       <BoundaryConditions>
+          <Face side = "x-">
+            <BCType id = "all" var = "Dirichlet" label = "Velocity">
+            </BCType>
+          </Face>
+          <Face side = "x+">
+            <BCType id = "all" var = "Dirichlet" label = "Velocity">
+            </BCType>
+          </Face>
+          <Face side = "y-">
+            <BCType id = "all" var = "Dirichlet" label = "Velocity">
+            </BCType>
+          </Face>                  
+          <Face side = "y+">
+            <BCType id = "all" var = "Dirichlet" label = "Velocity">
+            </BCType>
+          </Face>
+          <Face side = "z-">
+             <BCType id = "all" var = "symmetry" label = "Symmetric"> </BCType>
+          </Face>
+          <Face side = "z+">
+             <BCType id = "all" var = "symmetry" label = "Symmetric"> </BCType>
+          </Face>                           
+       </BoundaryConditions>
+       <Level>
+           <Box label = "1">
+              <lower>[-0.8,-0.3,-0.1]</lower>
+              <upper>[0.8,0.3,0.1]</upper>
+              <resolution>[16,6,2]</resolution>
+              <patches>[1,1,1]</patches>
+              <extraCells>[1,1,1]</extraCells>
+           </Box>
+       </Level>
+    </Grid>
+</Uintah_specification>
+

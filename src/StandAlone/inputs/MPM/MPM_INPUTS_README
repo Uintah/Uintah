@@ -1,0 +1,126 @@
+This is a brief description of the input files in inputs/MPM:
+
+Constitutive model test suite.  Two particle problems designed 
+to generate uniaxial stress/strain response of the various 
+constitutive models.  The individual files are:
+
+	const_test_cmr.ups  Compressible Mooney Rivlen
+	const_test_hypo.ups Hypoelasticity
+	const_test_nh.ups   Neo Hookean
+	const_test_nhp.ups  Neo Hookean Plasticity
+	const_test_vs.ups   ViscoScram
+
+Also here is the gnuplot batch file const_test.gnp, which will
+plot Stress/Time (Time is approximately equal to strain) for
+these runs.
+
+Disks test suite
+
+  disks.ups:  2 Compressible Mooney Rivlin disks collide in a single
+  velocity field.  This is a single material calculation but with 
+  two parts (the disks).
+
+  disks_fracture.ups:  Same as disks, but with fracture.
+
+  disks2mat.ups:  Same as disks, but with the two disks represented as
+  distinct (but identical) materials.  Contact is single velocity field. 
+  Output should be identical to that for disks.
+
+  disks2mat4patch.ups:  Same as disks2mat, but with 4 patches.  Output
+  should be identical to that for disks.
+
+  disks2mat_fc.ups:  Same as disks2mat, but with frictional contact.
+
+  disks_complex.ups:  1 Compressible Mooney Rivlen disk, 1 HypoElastic (2
+  materials) and frictional contact.  Uses 4 patches.  Add fracture when
+  available.
+
+Also here is the gnuplot batch file disks.gnp, which will
+plot various integrated quantities for these runs with indications
+of which runs should be identical.
+
+heatcond.ups  Problem to test heat conduction in a bar, with one side
+hot, one side cold.  They should go to equilibrium over time.
+
+heatcond2mat.ups  Same as heatcond.ups, but uses separate 
+materials, and thus temperature fields for the hot and cold sides.
+This exercises the thermal contact algorithm.
+
+inclined_plane_sphere.ups  Sphere rolling down and inclined plane.
+This exercises the frictional contact algorithm.  X-position in
+CenterOfMassPosition.dat should compare well with the function
+17408.*(2.+2.525*t**2), where t is time.
+
+rigidbillet.ups  The compression of an elastic cylinder by a
+rigid piston.  Tests the rigid body contact algorithm.  Material
+0 is always the rigid one.
+
+twomatburn.ups  Two adjacent materials, one burnable, the other inert.
+The first starts at 0 degrees, the latter at 100.  The second material
+is next to a 300 degree wall, as heat conducts through it, and into
+the first material, via the thermal contact algorithm, the first material
+ignites and burns away.
+
+Bigger runs:
+
+These granular compaction problems all use ug(micrograms, 10^-6 g), 
+cm, us (10^-6 s) units.
+
+10grains.ups 10 stationary grains compacted by a heavy rectangular 
+piston with an initial velocity of .01 cm/us = 100 m/s. Frictional
+contact between grains.  Discretized into 8000 cells, 27000 particles.
+
+10grains_2m.ups  Same geometry as 10grains, but has all grains
+one material (velocity field) and the piston a second material.  Uses
+rigid contact algorithm
+
+1000grains.ups 999 stationary grains compacted by a heavy rectangular 
+piston with an initial velocity of .01 cm/us = 100 m/s. Frictional
+contact between grains.  Discretized into 64000 cells, 400000 particles.
+
+1000grains_svcontact.ups  Same as 1000grains, but uses single velocity
+field contact algorithm.
+
+1000grains_2m_svcontact.ups  Same geometry as 1000grains, but has all grains
+one material (velocity field) and the piston a second material.  Uses
+single velocity field contact algorithm
+
+What to Expect:
+
+There is a bit of a problem in that correctness is only somewhat
+rigorous.  The dat files are generally the most useful, but all the
+plotting routines I've used require you to strip out the brackets in
+CenterOfMassPosition.dat and CenterOfMassVelocity.dat, where each row 
+of data is:
+time [Vector.x() Vector.y() Vector.z()].
+
+The disks problem is a collision problem.  For those one would expect
+the momemta of the individual disks to change sign and have the same
+or reduced in magnitude after the collision.  The default output
+(CenterOfMassVelocity.dat) is the sum for both disks, so that should
+be approximately zero.  During the collision the kinetic energy should
+drop as the disks come to rest and then increase again.  The strain
+energy should spike during collision.  Total Mass should be conserved.
+All the different disks inputs will give somewhat different results
+except for a) disks and disks_4patch and b) disks2mat and
+disks2mat4patch, which should be identical to machine precision.
+
+The heat conduction problems pretty much require firing up the pse and
+looking at temperature contours.  For these one side is hot, the other
+cold, and over time the temperatures should become more uniform.  It's
+not useful to look at the dat files for these, as far as I know
+(expect possibly for TotalMass, which should be constant).
+
+The inclined_plane_sphere problem is a sphere rolling down an inclined
+plane.  The CenterOfMassPostion.dat should be parabolic, see the
+readme file in inputs/MPM.  TotalMass should be constant.
+
+For twomatburn, I think you want to fire up the pse and look at
+particle masses.  For this case TotalMass should be decreasing.
+
+10grains and 1000grains run, at least serially.  They are much bigger
+runs, that can be submitted for MPI runs to test efficiency.  The
+basic idea in both is that a piston (flat plate) compresses a box full
+of spheres, and that can be seen plotting particles with the pse, but
+give yourself plenty of wait time.
+
