@@ -49,7 +49,7 @@
 static bool initialized=false;
 static struct timeval start_time;
 
-using namespace SCIRun;
+using namespace Uintah;
 
 void
 Time::initialize()

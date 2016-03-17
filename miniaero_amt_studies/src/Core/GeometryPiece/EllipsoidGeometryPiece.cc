@@ -31,7 +31,6 @@
 #include <Core/Math/Matrix3.h>
 
 using namespace Uintah;
-using namespace SCIRun;
 using namespace std;
 
 const string EllipsoidGeometryPiece::TYPE_NAME = "ellipsoid";
@@ -187,9 +186,9 @@ void EllipsoidGeometryPiece::initializeEllipsoidData()
      d_v2.length() > 0.0 &&
      d_v3.length() > 0.0){
     // Check for orthagonality
-    if((abs(Dot(d_v1,d_v2)) >= 1e-12) ||
-       (abs(Dot(d_v2,d_v3)) >= 1e-12) ||
-       (abs(Dot(d_v3,d_v1)) >= 1e-12) )
+    if((fabs(Dot(d_v1,d_v2)) >= 1e-12) ||
+       (fabs(Dot(d_v2,d_v3)) >= 1e-12) ||
+       (fabs(Dot(d_v3,d_v1)) >= 1e-12) )
     {
       throw ProblemSetupException("Input File Error: (Ellipsoid initialization) input vectors (v1,v2,v3) are not orthagonal to within 1e-12 or each other", __FILE__, __LINE__, false);
     }

@@ -41,7 +41,7 @@
 #include <Core/Thread/Mutex.h>
 #include <Core/Thread/Thread.h>
 
-namespace SCIRun {
+namespace Uintah {
 struct AtomicCounter_private {
   Mutex lock;
   long long value;
@@ -50,8 +50,8 @@ struct AtomicCounter_private {
 };
 }
 
-using SCIRun::AtomicCounter_private;
-using SCIRun::AtomicCounter;
+using Uintah::AtomicCounter_private;
+using Uintah::AtomicCounter;
 
 AtomicCounter_private::AtomicCounter_private()
     : lock("AtomicCounter lock")

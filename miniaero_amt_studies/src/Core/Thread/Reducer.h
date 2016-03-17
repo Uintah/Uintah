@@ -39,7 +39,7 @@
 
 #include <Core/Thread/Barrier.h>
 
-namespace SCIRun {
+namespace Uintah {
 
 /**************************************
  
@@ -163,7 +163,7 @@ Reducer<T>::reduce(int proc, int n, const T& myresult)
 {
     if(n != array_size_){
         collectiveResize(proc, n);
-} // End namespace SCIRun
+} // End namespace Uintah
     if(n<=1)
 	return myresult;
 

@@ -37,20 +37,14 @@
 #ifndef SCI_Containers_LockingHandle_h
 #define SCI_Containers_LockingHandle_h 1
 
-#ifndef SCI_NOPERSISTENT
 #include <sci_defs/template_defs.h>
-#include <Core/Persistent/Persistent.h>
-#endif
+#include <Core/Util/Assert.h>
 
-namespace SCIRun {
+namespace Uintah {
 
 
 template<class T>
 class LockingHandle;
-#ifndef SCI_NOPERSISTENT
-template<class T>
-void Pio(Piostream& stream, LockingHandle<T>& data);
-#endif
 
 template<class T>
 class LockingHandle {
@@ -76,14 +70,7 @@ public:
   inline T* get_rep() const { return rep; }
 
 
-#ifndef SCI_NOPERSISTENT
-#if defined(_AIX)
-  template <typename Type> 
-  friend void TEMPLATE_TAG Pio TEMPLATE_BOX (Piostream& stream,LockingHandle<Type>& data);
-#else
-  friend void TEMPLATE_TAG Pio TEMPLATE_BOX (Piostream& stream,LockingHandle<T>& data);
-#endif
-#endif
+
 };
 
 template<class T>
@@ -205,23 +192,8 @@ void LockingHandle<T>::detach()
     rep->ref_cnt++;
 }
 
-#ifndef SCI_NOPERSISTENT
-template<class T>
-void Pio(Piostream& stream, LockingHandle<T>& data)
-{
-    stream.begin_cheap_delim();
-    Persistent* trep=data.rep;
-    stream.io(trep, T::type_id);
-    if(stream.reading()){
-	data.rep=(T*)trep;
-	if(data.rep)
-	    data.rep->ref_cnt++;
-    }
-    stream.end_cheap_delim();
-}
-#endif
 
-} // End namespace SCIRun
+} // End namespace Uintah
 
 
 #endif

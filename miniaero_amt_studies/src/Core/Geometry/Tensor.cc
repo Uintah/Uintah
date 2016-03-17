@@ -36,9 +36,7 @@
 
 #include <Core/Geometry/Tensor.h>
 #include <Core/Containers/Array1.h>
-#include <Core/Util/TypeDescription.h>
 #include <Core/Util/Assert.h>
-#include <Core/Persistent/Persistent.h>
 #include <Core/Math/MiscMath.h>
 #include <iostream>
 
@@ -48,7 +46,7 @@ using namespace std;
 #include <Core/Exceptions/InternalError.h>
 
 
-namespace SCIRun {
+namespace Uintah {
 
 Tensor::Tensor() : have_eigens_(0)
 {
@@ -345,50 +343,8 @@ void Tensor::set_outside_eigens(const Vector &e1, const Vector &e2,
   have_eigens_ = 1;
 }
 
-void Pio(Piostream& stream, Tensor& t){
-  
-  stream.begin_cheap_delim();
- 
-  Pio(stream, t.mat_[0][0]);
-  Pio(stream, t.mat_[0][1]);
-  Pio(stream, t.mat_[0][2]);
-  Pio(stream, t.mat_[1][1]);
-  Pio(stream, t.mat_[1][2]);
-  Pio(stream, t.mat_[2][2]);
 
-  t.mat_[1][0]=t.mat_[0][1];
-  t.mat_[2][0]=t.mat_[0][2];
-  t.mat_[2][1]=t.mat_[1][2];
 
-  Pio(stream, t.have_eigens_);
-  if (t.have_eigens_) {
-    Pio(stream, t.e1_);
-    Pio(stream, t.e2_);
-    Pio(stream, t.e3_);
-    Pio(stream, t.l1_);
-    Pio(stream, t.l2_);
-    Pio(stream, t.l3_);
-  }
-
-  stream.end_cheap_delim();
-}
-
-const string& 
-Tensor::get_h_file_path() {
-  static const string path(TypeDescription::cc_to_h(__FILE__));
-  return path;
-}
-
-const TypeDescription* get_type_description(Tensor*)
-{
-  static TypeDescription* td = 0;
-  if(!td){
-    td = scinew TypeDescription("Tensor", Tensor::get_h_file_path(), 
-				"SCIRun", 
-				TypeDescription::DATA_E);
-  }
-  return td;
-}
 
 
 ostream& operator<<( ostream& os, const Tensor& t )
@@ -411,4 +367,5 @@ istream& operator>>( istream& is, Tensor& t)
 }
 
 
-} // End namespace SCIRun
+} // End namespace Uintah
+

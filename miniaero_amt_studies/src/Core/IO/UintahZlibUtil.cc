@@ -229,7 +229,7 @@ gzipInflate( const string & filename,
   ifstream table_file( filename.c_str(), std::ios::binary );
 
   if( !table_file.is_open() ) {
-    throw SCIRun::ErrnoException( "Failed to open file: " + filename, errno, __FILE__, __LINE__ );
+    throw ErrnoException( "Failed to open file: " + filename, errno, __FILE__, __LINE__ );
   }
 
   stringstream table_buffer;

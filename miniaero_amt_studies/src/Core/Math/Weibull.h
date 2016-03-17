@@ -45,7 +45,7 @@
 
 #include <cmath>
 
-namespace SCIRun {
+namespace Uintah {
 
 class Weibull {
 public:
@@ -103,6 +103,6 @@ public:
   }
 };
 
-} // End namespace SCIRun
+} // End namespace Uintah
 
 #endif //SCI_WEIBULL_H__

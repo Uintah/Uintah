@@ -44,9 +44,8 @@
 #include   <string>
 #include   <iosfwd>
 
-namespace SCIRun {
+namespace Uintah {
 
-class Piostream;
 class Point;
 class TypeDescription;
 
@@ -145,14 +144,12 @@ public:
   static const std::string& get_h_file_path();
 
   friend class Point;
-  friend class Transform;
     
   friend inline Vector Interpolate(const Vector&, const Vector&, double);
     
   void find_orthogonal(Vector&, Vector&) const;
   bool check_find_orthogonal(Vector&, Vector&) const;
 
-  friend void Pio( Piostream&, Vector& );
 
   inline const Point &point() const;
   inline Point &asPoint() const;
@@ -197,16 +194,16 @@ public:
 
 // Actual declarations of these functions as 'friend' above doesn't
 // (depending on the compiler) actually declare them.
-void Pio( Piostream&, Vector& );
+
 std::ostream& operator<<(std::ostream& os, const Vector& p);
 std::istream& operator>>(std::istream& os, Vector& p);
   
-} // End namespace SCIRun
+} // End namespace Uintah
 
 // This cannot be above due to circular dependencies
 #include <Core/Geometry/Point.h>
 
-namespace SCIRun {
+namespace Uintah {
 
 
 inline Vector::Vector(const Point& p)
@@ -516,7 +513,7 @@ inline Vector Max(const Vector &v1, const Vector &v2)
 
 const TypeDescription* get_type_description(Vector*);
 
-} // End namespace SCIRun
+} // End namespace Uintah
 
 
 #endif

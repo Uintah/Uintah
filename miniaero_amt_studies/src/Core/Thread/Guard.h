@@ -37,7 +37,7 @@
 #ifndef Core_Thread_Guard_h
 #define Core_Thread_Guard_h
 
-namespace SCIRun {
+namespace Uintah {
 
 class Mutex;
 class CrowdMonitor;
@@ -96,7 +96,7 @@ private:
   Guard(const Guard&);
   Guard& operator=(const Guard&);
 };
-} // End namespace SCIRun
+} // End namespace Uintah
 
 #endif
 

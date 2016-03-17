@@ -69,11 +69,11 @@
 // provide "C" interface to exitAll
 extern "C" { 
   void exit_all_threads(int rc) {
-    SCIRun::Thread::exitAll(rc);
+    Uintah::Thread::exitAll(rc);
   }
 }
 
-namespace SCIRun {
+namespace Uintah {
 
 class ParallelHelper : public Runnable {
   ParallelBase &helper_;
@@ -449,4 +449,4 @@ Thread::getStateString(ThreadState state)
   }
 }
 
-} // End namespace SCIRun
+} // End namespace Uintah

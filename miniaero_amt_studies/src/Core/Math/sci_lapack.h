@@ -36,7 +36,7 @@
 #ifndef SCI_Math_sci_lapack_h
 #define SCI_Math_sci_lapack_h 1
 
-namespace SCIRun {
+namespace Uintah {
 
 bool lapackinvert(double *A, int n);  
 
@@ -45,6 +45,6 @@ void lapacksvd(double **A, int m, int n, double *S, double **U, double **VT);
 void lapackeigen(double **A, int n, double *EigReal, double *EigImag,
 		 double **EigVect=0);
 
-} // End namespace SCIRun
+} // End namespace Uintah
 
 #endif /* SCI_Math_sci_lapack_h */

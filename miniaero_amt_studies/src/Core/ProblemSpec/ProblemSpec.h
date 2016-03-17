@@ -43,9 +43,9 @@ namespace Uintah {
 
 class TypeDescription;
 
-using SCIRun::IntVector;
-using SCIRun::Vector;
-using SCIRun::Point;
+using Uintah::IntVector;
+using Uintah::Vector;
+using Uintah::Point;
 
 // This is the "base" problem spec.  There should be ways of breaking
 // this up

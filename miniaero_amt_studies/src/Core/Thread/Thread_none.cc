@@ -90,7 +90,7 @@ extern "C" int __ateachexit(void(*)());
 
 #define N_POOLMUTEX 301
 
-namespace SCIRun {
+namespace Uintah {
 
 static Thread *mainthread=0;
 static void install_signal_handlers();
@@ -536,4 +536,4 @@ ConditionVariable::conditionBroadcast()
 {
 }
 
-} // End namespace SCIRun
+} // End namespace Uintah

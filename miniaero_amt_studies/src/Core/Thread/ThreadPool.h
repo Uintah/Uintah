@@ -45,7 +45,7 @@
 #include <Core/Thread/Parallel3.h>
 #include <vector>
 
-namespace SCIRun {
+namespace Uintah {
   class ThreadGroup;
 class   ThreadPoolHelper;
 /**************************************
@@ -130,7 +130,7 @@ private:
   ThreadPool(const ThreadPool&);
   ThreadPool& operator=(const ThreadPool&);
 };
-} // End namespace SCIRun
+} // End namespace Uintah
 
 #endif
 

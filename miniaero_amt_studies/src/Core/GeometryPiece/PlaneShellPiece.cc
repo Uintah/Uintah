@@ -33,7 +33,6 @@
 
 using namespace std;
 using namespace Uintah;
-using namespace SCIRun;
 
 const string PlaneShellPiece::TYPE_NAME = "plane_shell";
 

@@ -34,7 +34,6 @@
 
 #include <Core/Util/Assert.h>
 
-using namespace SCIRun;
 
 namespace Uintah {
 

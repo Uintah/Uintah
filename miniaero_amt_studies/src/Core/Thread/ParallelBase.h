@@ -37,7 +37,7 @@
 #ifndef Core_Thread_ParallelBase_h
 #define Core_Thread_ParallelBase_h
 
-namespace SCIRun {
+namespace Uintah {
 
 class Semaphore;
 /**************************************
@@ -73,7 +73,7 @@ class ParallelBase {
   ParallelBase& operator=(const ParallelBase&);
 };
 }
-  // End namespace SCIRun
+  // End namespace Uintah
 
 #endif
 

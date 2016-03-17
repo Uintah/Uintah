@@ -39,7 +39,7 @@
 #include <Core/Thread/Mutex.h>
 #include <Core/Thread/Thread.h>
 
-namespace SCIRun {
+namespace Uintah {
 
 class ThreadLock {
 
@@ -55,6 +55,6 @@ class ThreadLock {
     int      count_;
 };
 
-}  // End namespace SCIRun
+}  // End namespace Uintah
 
 #endif // SCIRun_Core_Thread_ThreadLock_h

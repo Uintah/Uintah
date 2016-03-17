@@ -40,7 +40,7 @@
 #include <Core/Thread/ParallelBase.h>
 #include <Core/Thread/Semaphore.h>
 
-namespace SCIRun {
+namespace Uintah {
 /**************************************
  
  CLASS
@@ -99,14 +99,14 @@ Parallel2<T, Arg1, Arg2>::Parallel2(T* obj,
     : obj_(obj), pmf_(pmf), a1(a1), a2(a2)
 {
     wait_=0; // This may be set by Thread::parallel
-} // End namespace SCIRun
+} // End namespace Uintah
 
 template<class T, class Arg1, class Arg2>
 Parallel2<T, Arg1, Arg2>::~Parallel2()
 {
 }
 
-} //End namespace SCIRun
+} //End namespace Uintah
 #endif
 
 

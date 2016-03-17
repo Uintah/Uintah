@@ -38,20 +38,14 @@
 #define SCI_Containers_Array2_h 1
 
 #include <Core/Util/Assert.h>
-#ifndef SCI_NOPERSISTENT
 #include <sci_defs/template_defs.h>
-#include <Core/Persistent/Persistent.h>
-#endif
 
-namespace SCIRun {
+namespace Uintah {
 
 class RigorousTest;
 
 template<class T> class Array2;
-#ifndef SCI_NOPERSISTENT
-template<class T> void Pio(Piostream& stream, Array2<T>& data);
-template<class T> void Pio(Piostream& stream, Array2<T>*& data);
-#endif // #ifndef SCI_NOPERSISTENT
+
 
 /**************************************
 
@@ -135,17 +129,7 @@ public:
 
   inline T** get_dataptr() {return objs;}
 
-#ifndef SCI_NOPERSISTENT
-#if defined(_AIX)
-  template <typename Type> 
-  friend void TEMPLATE_TAG Pio TEMPLATE_BOX (Piostream&, Array2<Type>&);
-  template <typename Type> 
-  friend void TEMPLATE_TAG Pio TEMPLATE_BOX (Piostream&, Array2<Type>*&);
-#else
-  friend void TEMPLATE_TAG Pio TEMPLATE_BOX (Piostream&, Array2<T>&);
-  friend void TEMPLATE_TAG Pio TEMPLATE_BOX (Piostream&, Array2<T>*&);
-#endif
-#endif // #ifndef SCI_NOPERSISTENT
+
 };
 
 template<class T>
@@ -226,42 +210,8 @@ void Array2<T>::copy(const Array2<T> &copy)
       objs[i][j] = copy.objs[i][j];
 }
 
-#define Array2_VERSION 1
 
-#ifndef SCI_NOPERSISTENT
-
-template<class T>
-void Pio(Piostream& stream, Array2<T>& data)
-{
-  stream.begin_class("Array2", Array2_VERSION);
-  if(stream.reading()){
-    // Allocate the array...
-    int d1, d2;
-    Pio(stream, d1);
-    Pio(stream, d2);
-    data.resize(d1, d2);
-  } else {
-    Pio(stream, data.dm1);
-    Pio(stream, data.dm2);
-  }
-  for(int i=0;i<data.dm1;i++){
-    for(int j=0;j<data.dm2;j++){
-      Pio(stream, data.objs[i][j]);
-    }
-  }
-  stream.end_class();
-}
-
-template<class T>
-void Pio(Piostream& stream, Array2<T>*& data) {
-  if (stream.reading()) {
-    data=new Array2<T>;
-  }
-  Pio(stream, *data);
-}
-#endif // #ifndef SCI_NOPERSISTENT
-
-} // End namespace SCIRun
+} // End namespace Uintah
 
 #endif
 

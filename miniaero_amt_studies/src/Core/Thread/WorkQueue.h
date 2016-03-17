@@ -40,7 +40,7 @@
 #include <Core/Thread/AtomicCounter.h>
 #include <vector>
 
-namespace SCIRun {
+namespace Uintah {
 
 	struct WorkQueue_private;
 	
@@ -109,7 +109,7 @@ class WorkQueue {
   WorkQueue& operator=(const WorkQueue&);
 };
 
-} // End namespace SCIRun
+} // End namespace Uintah
 
 #endif
 

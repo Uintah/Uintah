@@ -38,9 +38,7 @@
 #include <Core/Geometry/Vector.h>
 #include <Core/Math/Expon.h>
 #include <Core/Math/MiscMath.h>
-#include <Core/Persistent/Persistent.h>
 #include <Core/Util/Assert.h>
-#include <Core/Util/TypeDescription.h>
 #include <Core/Util/XMLUtils.h>
 
 #include <iostream>
@@ -51,7 +49,7 @@
 using namespace Uintah;
 using namespace std;
 
-namespace SCIRun {
+namespace Uintah {
 
 string
 Vector::get_string() const
@@ -156,16 +154,6 @@ int Vector::operator!=(const Vector& v) const
     return v.x_ != x_ || v.y_ != y_ || v.z_ != z_;
 }
 
-void
-Pio(Piostream& stream, Vector& p)
-{
-
-    stream.begin_cheap_delim();
-    Pio(stream, p.x_);
-    Pio(stream, p.y_);
-    Pio(stream, p.z_);
-    stream.end_cheap_delim();
-}
 
 void
 Vector::rotz90(const int c)
@@ -199,22 +187,8 @@ Vector::rotz90(const int c)
     }
 }
 
-const string& 
-Vector::get_h_file_path() {
-  static const string path(TypeDescription::cc_to_h(__FILE__));
-  return path;
-}
 
-const TypeDescription* get_type_description(Vector*)
-{
-  static TypeDescription* td = 0;
-  if(!td){
-    td = scinew TypeDescription("Vector", Vector::get_h_file_path(), "SCIRun", 
-				TypeDescription::DATA_E);
-  }
-  return td;
-}
 
-} // End namespace SCIRun
+} // End namespace Uintah
 
 

@@ -12,7 +12,7 @@
 
 //
 // Note: The mem_init.h file is placed on the binary side of the tree, eg:
-//       ...SCIRun/<bin>/Core/Malloc/mem_init.h
+//       ...Uintah/<bin>/Core/Malloc/mem_init.h
 //
 // Author: J. Davison de St. Germain
 // Date:   Apr 2, 2008

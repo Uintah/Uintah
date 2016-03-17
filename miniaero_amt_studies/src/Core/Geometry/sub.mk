@@ -47,7 +47,7 @@ SRCS += \
         $(SRCDIR)/dummy.cc
 
 PSELIBS :=
-# Core/Persistent Core/Containers \
+#           Core/Containers \
 #           Core/Exceptions Core/Util \
 #           Core/Exceptions Core/Util Core/Math
 

@@ -37,7 +37,7 @@
 #include <Core/Thread/Guard.h>
 #include <Core/Thread/CrowdMonitor.h>
 #include <Core/Thread/Mutex.h>
-namespace SCIRun {
+namespace Uintah {
 
 //using Guard;
 
@@ -67,4 +67,4 @@ Guard::~Guard()
 }
 
 
-} // End namespace SCIRun
+} // End namespace Uintah

@@ -42,7 +42,7 @@
 
 struct timespec;
 
-namespace SCIRun {
+namespace Uintah {
 
 struct ConditionVariable_private;
 struct CrowdMonitor_private;
@@ -121,7 +121,7 @@ class ConditionVariable {
     ConditionVariable& operator=(const ConditionVariable&);
 };
 
-}  // End namespace SCIRun
+}  // End namespace Uintah
 
 #endif
 
