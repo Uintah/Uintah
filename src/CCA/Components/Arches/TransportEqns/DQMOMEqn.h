@@ -11,8 +11,6 @@
 #include <Core/Grid/Variables/SFCZVariable.h>
 #include <CCA/Components/Arches/Directives.h>
 
-//#define DO_KOKKOS
-
 #define DQMOM_CONV(my_limiter) \
     IntVector low = patch->getCellLowIndex(); \
     IntVector high = patch->getCellHighIndex(); \

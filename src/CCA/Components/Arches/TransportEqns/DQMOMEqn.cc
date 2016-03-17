@@ -10,6 +10,7 @@
 #include <Core/Exceptions/ProblemSetupException.h>
 #include <Core/Parallel/Parallel.h>
 #include <CCA/Components/Arches/ConvectionHelper.h>
+#include <CCA/Components/Arches/FunctorSwitch.h>
 
 using namespace std;
 using namespace Uintah;
@@ -381,13 +382,13 @@ DQMOMEqn::sched_evalTransportEqn( const LevelP& level,
     sched_computeSources( level, sched, timeSubStep );
   }
 
-#ifdef DO_KOKKOS
+#ifdef USE_FUNCTOR
   sched_computePsi( level, sched );
 #endif
 
   sched_buildTransportEqn( level, sched, timeSubStep );
 
-#ifdef DO_KOKKOS
+#ifdef USE_FUNCTOR
   sched_buildRHS( level, sched );
 #endif
 
@@ -779,7 +780,7 @@ DQMOMEqn::buildTransportEqn( const ProcessorGroup* pc,
     constSFCXVariable<double> uu;
     constSFCYVariable<double> vv;
     constSFCZVariable<double> ww;
-#ifdef DO_KOKKOS
+#ifdef USE_FUNCTOR
     constSFCXVariable<double> psi_x;
     constSFCYVariable<double> psi_y;
     constSFCZVariable<double> psi_z;
@@ -794,8 +795,8 @@ DQMOMEqn::buildTransportEqn( const ProcessorGroup* pc,
     new_dw->get( vv, d_face_pvel_y, matlIndex, patch, gac, 1 );
     new_dw->get( ww, d_face_pvel_z, matlIndex, patch, gac, 1 );
     which_dw->get(phi, d_transportVarLabel, matlIndex, patch, gac, 2);
-    
-#ifdef DO_KOKKOS
+
+#ifdef USE_FUNCTOR
     new_dw->getModifiable(flux_x, d_X_flux_label, matlIndex, patch);
     new_dw->getModifiable(flux_y, d_Y_flux_label, matlIndex, patch);
     new_dw->getModifiable(flux_z, d_Z_flux_label, matlIndex, patch);
@@ -833,7 +834,7 @@ DQMOMEqn::buildTransportEqn( const ProcessorGroup* pc,
     //----CONVECTION
     if ( d_doConv ){
 
-#ifdef DO_KOKKOS
+#ifdef USE_FUNCTOR
       Uintah::BlockRange range(patch->getCellLowIndex(), patch->getExtraCellHighIndex());
       ComputeConvectiveFlux get_flux( phi, uu, vv, ww, psi_x, psi_y, psi_z,
                                       flux_x, flux_y, flux_z, af_x, af_y, af_z );
@@ -859,7 +860,7 @@ DQMOMEqn::buildTransportEqn( const ProcessorGroup* pc,
 
       IntVector c = *iter;
 
-#ifndef DO_KOKKOS
+#ifndef USE_FUNCTOR
       RHS[c] += Fdiff[c] - Fconv[c];
 #endif
 
