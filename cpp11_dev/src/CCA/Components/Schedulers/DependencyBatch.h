@@ -49,13 +49,13 @@ public:
                  , DetailedTask* fromTask
                  , DetailedTask* toTask
                  )
-    : comp_next(0)
-    , fromTask(fromTask)
-    , head(0), messageTag(-1)
-    , to(to), received_(false)
-    , madeMPIRequest_(false)
+    : m_comp_next(0)
+    , m_from_task(fromTask)
+    , m_head(0), m_message_tag(-1)
+    , m_to_rank(to), m_received(false)
+    , m_made_mpi_request(false)
   {
-    toTasks.push_back(toTask);
+    m_to_tasks.push_back(toTask);
   }
 
   ~DependencyBatch();
@@ -68,7 +68,7 @@ public:
   // awakens anybody blocked in makeMPIRequest().
   void received( const ProcessorGroup * pg );
 
-  bool wasReceived() { return received_; }
+  bool wasReceived() { return m_received; }
 
   // Initialize receiving information for makeMPIRequest() and received()
   // so that it can receive again.
@@ -76,26 +76,26 @@ public:
 
   //Add invalid variables to the dependency batch.  These variables will be marked
   //as valid when MPI completes.
-  void addVar( Variable* var ) { toVars.push_back(var); }
+  void addVar( Variable* var ) { m_to_vars.push_back(var); }
 
   void addReceiveListener( int mpiSignal );
 
-  DependencyBatch          * comp_next;
-  DetailedTask             * fromTask;
-  std::list<DetailedTask*>   toTasks;
-  DetailedDep              * head;
-  int                        messageTag;
-  int                        to;
+  DependencyBatch          * m_comp_next;
+  DetailedTask             * m_from_task;
+  std::list<DetailedTask*>   m_to_tasks;
+  DetailedDep              * m_head;
+  int                        m_message_tag;
+  int                        m_to_rank;
 
   //scratch pad to store wait times for debugging
   static std::map<std::string,double> waittimes;
 
 private:
 
-  volatile bool  received_;
-  volatile bool  madeMPIRequest_;
-  std::mutex     lock_;
-  std::set<int>  receiveListeners_;
+  volatile bool  m_received;
+  volatile bool  m_made_mpi_request;
+  std::mutex     m_lock;
+  std::set<int>  m_receive_listeners;
 
   // eliminate copy, assignment and move
   DependencyBatch( const DependencyBatch & )            = delete;
@@ -103,7 +103,7 @@ private:
   DependencyBatch( DependencyBatch && )                 = delete;
   DependencyBatch& operator=( DependencyBatch && )      = delete;
 
-  std::vector<Variable*> toVars;
+  std::vector<Variable*> m_to_vars;
 
 }; // DependencyBatch
 
@@ -115,20 +115,20 @@ struct InternalDependency {
                     , const VarLabel* var
                     , long satisfiedGeneration
                     )
-    : prerequisiteTask(prerequisiteTask)
-    , dependentTask(dependentTask)
-    , satisfiedGeneration(satisfiedGeneration)
+    : m_prerequisite_task(prerequisiteTask)
+    , m_dependent_task(dependentTask)
+    , m_satisfied_generation(satisfiedGeneration)
   {
     addVarLabel(var);
   }
 
-  void addVarLabel( const VarLabel* var ) { vars.insert(var); }
+  void addVarLabel( const VarLabel* var ) { m_var_labels.insert(var); }
 
-  DetailedTask * prerequisiteTask;
-  DetailedTask * dependentTask;
-  unsigned long  satisfiedGeneration;
+  DetailedTask * m_prerequisite_task;
+  DetailedTask * m_dependent_task;
+  unsigned long  m_satisfied_generation;
 
-  std::set<const VarLabel*, VarLabel::Compare>  vars;
+  std::set<const VarLabel*, VarLabel::Compare>  m_var_labels;
 
 }; // InternalDependency
 

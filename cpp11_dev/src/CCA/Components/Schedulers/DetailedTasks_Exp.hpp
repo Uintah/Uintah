@@ -298,11 +298,6 @@ private:
   KeyDatabase<Patch>            varKeyDB;
   KeyDatabase<Level>            levelKeyDB;
 
-  // TODO - FIXME: Figure out why this was commented out long ago - APH 02/12/16
-#if 0
-  std::vector<DetailedReq*>  initreqs_;
-#endif
-
   const TaskGraph               * taskgraph_;
   Task                          * stask_;
   std::vector<DetailedTask*>      localtasks_;

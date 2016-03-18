@@ -368,7 +368,7 @@ MPIScheduler::postMPISends( DetailedTask* task,
   int volSend = 0;
 
   // Send data to dependents
-  for (DependencyBatch* batch = task->getComputes(); batch != 0; batch = batch->comp_next) {
+  for (DependencyBatch* batch = task->getComputes(); batch != 0; batch = batch->m_comp_next) {
 
     // Prepare to send a message
 #ifdef USE_PACKING
@@ -377,13 +377,13 @@ MPIScheduler::postMPISends( DetailedTask* task,
     BufferInfo mpibuff;
 #endif
     // Create the MPI type
-    int to = batch->toTasks.front()->getAssignedResourceIndex();
+    int to = batch->m_to_tasks.front()->getAssignedResourceIndex();
     ASSERTRANGE(to, 0, d_myworld->size());
 
     std::ostringstream ostr;
     ostr.clear();
 
-    for (DetailedDep* req = batch->head; req != 0; req = req->next) {
+    for (DetailedDep* req = batch->m_head; req != 0; req = req->next) {
 
       ostr << *req << ' '; // for CommRecMPI::add()
 
@@ -454,7 +454,7 @@ MPIScheduler::postMPISends( DetailedTask* task,
 
     // Post the send
     if (mpibuff.count() > 0) {
-      ASSERT(batch->messageTag > 0);
+      ASSERT(batch->m_message_tag > 0);
       double start = Time::currentSeconds();
       void* buf;
       int count;
@@ -475,7 +475,7 @@ MPIScheduler::postMPISends( DetailedTask* task,
 
       if (mpidbg.active()) {
         cerrLock.lock();
-        mpidbg << "Rank-" << me << " Posting send for message number " << batch->messageTag << " to   rank-" << to << ", length: " << count
+        mpidbg << "Rank-" << me << " Posting send for message number " << batch->m_message_tag << " to   rank-" << to << ", length: " << count
                << " (bytes)\n";
         cerrLock.unlock();
       }
@@ -489,7 +489,7 @@ MPIScheduler::postMPISends( DetailedTask* task,
       volSend += count * typeSize;
 
       MPI_Request requestid;
-      MPI_Isend(buf, count, datatype, to, batch->messageTag, d_myworld->getComm(), &requestid);
+      MPI_Isend(buf, count, datatype, to, batch->m_message_tag, d_myworld->getComm(), &requestid);
       int bytes = count;
 
       // with multi-threaded schedulers (derived from MPIScheduler), this is written per thread
@@ -503,7 +503,7 @@ MPIScheduler::postMPISends( DetailedTask* task,
       // APH - 01/24/15
       //
       sendLock.writeLock();
-      sends_[thread_id].add(requestid, bytes, mpibuff.takeSendlist(), ostr.str(), batch->messageTag);
+      sends_[thread_id].add(requestid, bytes, mpibuff.takeSendlist(), ostr.str(), batch->m_message_tag);
       sendLock.writeUnlock();
 
       mpi_info_[TotalSendMPI] += Time::currentSeconds() - start;
@@ -543,7 +543,7 @@ struct CompareDep {
     bool operator()( DependencyBatch* a,
                      DependencyBatch* b )
     {
-      return a->messageTag < b->messageTag;
+      return a->m_message_tag < b->m_message_tag;
     }
 };
 
@@ -603,12 +603,12 @@ void MPIScheduler::postMPIRecvs( DetailedTask* task,
 
       if (only_old_recvs) {
         if (dbg_active) {
-          dbg << "abort analysis: " << batch->fromTask->getTask()->getName() << ", so="
-              << batch->fromTask->getTask()->getSortedOrder() << ", abort_point=" << abort_point << '\n';
-          if (batch->fromTask->getTask()->getSortedOrder() <= abort_point)
-            dbg << "posting MPI recv for pre-abort message " << batch->messageTag << '\n';
+          dbg << "abort analysis: " << batch->m_from_task->getTask()->getName() << ", so="
+              << batch->m_from_task->getTask()->getSortedOrder() << ", abort_point=" << abort_point << '\n';
+          if (batch->m_from_task->getTask()->getSortedOrder() <= abort_point)
+            dbg << "posting MPI recv for pre-abort message " << batch->m_message_tag << '\n';
         }
-        if (!(batch->fromTask->getTask()->getSortedOrder() <= abort_point)) {
+        if (!(batch->m_from_task->getTask()->getSortedOrder() <= abort_point)) {
           continue;
         }
       }
@@ -628,7 +628,7 @@ void MPIScheduler::postMPIRecvs( DetailedTask* task,
       ostr.clear();
 
       // Create the MPI type
-      for (DetailedDep* req = batch->head; req != 0; req = req->next) {
+      for (DetailedDep* req = batch->m_head; req != 0; req = req->next) {
 
         ostr << *req << ' ';  // for CommRecMPI::add()
 
@@ -697,7 +697,7 @@ void MPIScheduler::postMPIRecvs( DetailedTask* task,
       // Post the receive
       if (mpibuff.count() > 0) {
 
-        ASSERT(batch->messageTag > 0);
+        ASSERT(batch->m_message_tag > 0);
         double start = Time::currentSeconds();
         void* buf;
         int count;
@@ -714,20 +714,20 @@ void MPIScheduler::postMPIRecvs( DetailedTask* task,
         //if(count>0)
         //{
 
-        int from = batch->fromTask->getAssignedResourceIndex();
+        int from = batch->m_from_task->getAssignedResourceIndex();
         ASSERTRANGE(from, 0, d_myworld->size());
         MPI_Request requestid;
 
         if (mpidbg.active()) {
         cerrLock.lock();
-        mpidbg << "Rank-" << d_myworld->myrank() << " Posting recv for message number " << batch->messageTag << " from rank-" << from
+        mpidbg << "Rank-" << d_myworld->myrank() << " Posting recv for message number " << batch->m_message_tag << " from rank-" << from
                << ", length: " << count << " (bytes)\n";
         cerrLock.unlock();
         }
 
-        MPI_Irecv(buf, count, datatype, from, batch->messageTag, d_myworld->getComm(), &requestid);
+        MPI_Irecv(buf, count, datatype, from, batch->m_message_tag, d_myworld->getComm(), &requestid);
         int bytes = count;
-        recvs_.add(requestid, bytes, scinew ReceiveHandler(p_mpibuff, pBatchRecvHandler), ostr.str(), batch->messageTag);
+        recvs_.add(requestid, bytes, scinew ReceiveHandler(p_mpibuff, pBatchRecvHandler), ostr.str(), batch->m_message_tag);
         mpi_info_[TotalRecvMPI] += Time::currentSeconds() - start;
 
         /*}
@@ -1165,16 +1165,10 @@ MPIScheduler::outputTimingStats(const char* label)
         for (std::map<std::string, double>::iterator iter = waittimes.begin(); iter != waittimes.end(); iter++) {
           wout << std::fixed << d_myworld->myrank() << ":   TaskWaitTime(TO): " << iter->second << " Task:" << iter->first << std::endl;
         }
-
-        for (std::map<std::string, double>::iterator iter = DependencyBatch::waittimes.begin(); iter != DependencyBatch::waittimes.end();
-            iter++) {
-          wout << std::fixed << d_myworld->myrank() << ": TaskWaitTime(FROM): " << iter->second << " Task:" << iter->first << std::endl;
-        }
         wout.close();
       }
 
       waittimes.clear();
-      DependencyBatch::waittimes.clear();
     }
   }
 }

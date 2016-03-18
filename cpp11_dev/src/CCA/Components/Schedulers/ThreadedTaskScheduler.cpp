@@ -487,7 +487,7 @@ void ThreadedTaskScheduler::verifyChecksum()
 struct CompareDep {
     bool operator()( DependencyBatch* a,  DependencyBatch* b )
     {
-      return a->messageTag < b->messageTag;
+      return a->m_message_tag < b->m_message_tag;
     }
 };
 
@@ -525,7 +525,7 @@ void ThreadedTaskScheduler::post_MPI_recvs( DetailedTask * task
     }
 
     if (only_old_recvs) {
-      if (!(batch->fromTask->getTask()->getSortedOrder() <= abort_point)) {
+      if (!(batch->m_from_task->getTask()->getSortedOrder() <= abort_point)) {
         continue;
       }
     }
@@ -542,7 +542,7 @@ void ThreadedTaskScheduler::post_MPI_recvs( DetailedTask * task
 #endif
 
     // Create the MPI type
-    for (DetailedDep* req = batch->head; req != 0; req = req->next) {
+    for (DetailedDep* req = batch->m_head; req != 0; req = req->next) {
 
       OnDemandDataWarehouse* dw = m_dws[req->req->mapDataWarehouse()].get_rep();
       if ((req->condition == DetailedDep::FirstIteration && iteration > 0) || (req->condition == DetailedDep::SubsequentIterations
@@ -581,7 +581,7 @@ void ThreadedTaskScheduler::post_MPI_recvs( DetailedTask * task
     // Post the receive
     if (mpibuff.count() > 0) {
 
-      ASSERT(batch->messageTag > 0);
+      ASSERT(batch->m_message_tag > 0);
 
       void* buf;
       int count;
@@ -593,14 +593,14 @@ void ThreadedTaskScheduler::post_MPI_recvs( DetailedTask * task
       mpibuff.get_type(buf, count, datatype);
 #endif
 
-      int from = batch->fromTask->getAssignedResourceIndex();
+      int from = batch->m_from_task->getAssignedResourceIndex();
       ASSERTRANGE(from, 0, d_myworld->size());
 
       CommPool::iterator iter = m_comm_requests.emplace(t_emplace, REQUEST_RECV, new RecvHandle(p_mpibuff, pBatchRecvHandler));
       t_emplace = iter;
 
       RuntimeStats::RecvMPITimer mpi_recv_timer;
-      MPI_Irecv(buf, count, datatype, from, batch->messageTag, d_myworld->getComm(), iter->request());
+      MPI_Irecv(buf, count, datatype, from, batch->m_message_tag, d_myworld->getComm(), iter->request());
 
     } else {
       // Nothing really need to be received, but let everyone else know that it has what is needed (nothing).
@@ -627,7 +627,7 @@ void ThreadedTaskScheduler::post_MPI_sends( DetailedTask * task, int iteration )
   int volume_sends = 0;
 
   // Send data to dependents
-  for (DependencyBatch* batch = task->getComputes(); batch != 0; batch = batch->comp_next) {
+  for (DependencyBatch* batch = task->getComputes(); batch != 0; batch = batch->m_comp_next) {
 
     // Prepare to send a message
 #ifdef USE_PACKING
@@ -636,10 +636,10 @@ void ThreadedTaskScheduler::post_MPI_sends( DetailedTask * task, int iteration )
     BufferInfo mpibuff;
 #endif
     // Create the MPI type
-    int to = batch->toTasks.front()->getAssignedResourceIndex();
+    int to = batch->m_to_tasks.front()->getAssignedResourceIndex();
     ASSERTRANGE(to, 0, d_myworld->size());
 
-    for (DetailedDep* req = batch->head; req != 0; req = req->next) {
+    for (DetailedDep* req = batch->m_head; req != 0; req = req->next) {
 
       if ((req->condition == DetailedDep::FirstIteration && iteration > 0) || (req->condition == DetailedDep::SubsequentIterations
           && iteration == 0) || (m_not_copy_data_vars.count(req->req->var->getName()) > 0)) {
@@ -679,7 +679,7 @@ void ThreadedTaskScheduler::post_MPI_sends( DetailedTask * task, int iteration )
 
     // Post the send
     if (mpibuff.count() > 0) {
-      ASSERT(batch->messageTag > 0);
+      ASSERT(batch->m_message_tag > 0);
 
       void* buf;
       int count;
@@ -704,7 +704,7 @@ void ThreadedTaskScheduler::post_MPI_sends( DetailedTask * task, int iteration )
       t_emplace = iter;
 
       RuntimeStats::SendMPITimer mpi_send_timer;
-      MPI_Isend(buf, count, datatype, to, batch->messageTag, d_myworld->getComm(), iter->request());
+      MPI_Isend(buf, count, datatype, to, batch->m_message_tag, d_myworld->getComm(), iter->request());
     }
   }  // end for (DependencyBatch* batch = task->getComputes())
 

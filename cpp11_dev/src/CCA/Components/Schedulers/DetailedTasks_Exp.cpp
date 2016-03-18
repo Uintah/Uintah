@@ -42,7 +42,6 @@
 
 namespace Uintah {
 
-
 namespace {
 
 Dout mpidbg{         "MPIDBG"          , false };
@@ -50,34 +49,36 @@ Dout dbg{            "DetailedTasks"   , false };
 Dout g_detailed_dbg{ "DetailedTasksDBG", false };
 
 std::string dbgScrubVar   = ""; // for debugging - set the var name to watch one in the scrubout
-int         dbgScrubPatch = -1;
 
 } // namespace
 
 
 //_____________________________________________________________________________
 //
-DetailedTasks::DetailedTasks(       SchedulerCommon* sc,
-                              const ProcessorGroup*  pg,
-                                    DetailedTasks*   first,
-                              const TaskGraph*       taskgraph,
-                              const std::set<int>&        neighborhood_processors,
-                                    bool             mustConsiderInternalDependencies /* = false */ ) :
-  sc_(sc),
-  d_myworld(pg),
-  first(first),
-  taskgraph_(taskgraph),
-  mustConsiderInternalDependencies_(mustConsiderInternalDependencies),
-  currentDependencyGeneration_(1),
-  extraCommunication_(0)
+DetailedTasks::DetailedTasks(       SchedulerCommon * sc
+                            , const ProcessorGroup  * pg
+                            ,       DetailedTasks   * first
+                            , const TaskGraph       * taskgraph
+                            , const std::set<int>   & neighborhood_processors
+                            ,       bool              mustConsiderInternalDependencies /* = false */
+                            )
+  : sc_{sc}
+  , d_myworld{pg}
+  , first{first}
+  , taskgraph_{taskgraph}
+  , mustConsiderInternalDependencies_{mustConsiderInternalDependencies}
+  , currentDependencyGeneration_{1}
+  , initreq_{nullptr}
+  , taskPriorityAlg_{QueueAlg::MostMessages}
+  , extraCommunication_{0}
 #ifdef HAVE_CUDA
   ,
-  deviceVerifyDataTransferCompletionQueueLock_("DetailedTasks Device Verify Data Transfer Queue"),
-  deviceFinalizePreparationQueueLock_("DetailedTasks Device Finalize Preparation Queue"),
-  deviceReadyQueueLock_("DetailedTasks Device Ready Queue"),
-  deviceCompletedQueueLock_("DetailedTasks Device Completed Queue"),
-  hostFinalizePreparationQueueLock_("DetailedTasks Host Finalize Preparation Queue"),
-  hostReadyQueueLock_("DetailedTasks Host Ready Queue")
+  , deviceVerifyDataTransferCompletionQueueLock_("DetailedTasks Device Verify Data Transfer Queue")
+  , deviceFinalizePreparationQueueLock_("DetailedTasks Device Finalize Preparation Queue")
+  , deviceReadyQueueLock_("DetailedTasks Device Ready Queue")
+  , deviceCompletedQueueLock_("DetailedTasks Device Completed Queue")
+  , hostFinalizePreparationQueueLock_("DetailedTasks Host Finalize Preparation Queue")
+  , hostReadyQueueLock_("DetailedTasks Host Ready Queue")
 #endif
 {
   // Set up mappings for the initial send tasks
@@ -129,15 +130,15 @@ DetailedTasks::assignMessageTags( int me )
 
   for (int i = 0; i < (int)batches_.size(); i++) {
     DependencyBatch* batch = batches_[i];
-    int from = batch->fromTask->getAssignedResourceIndex();
+    int from = batch->m_from_task->getAssignedResourceIndex();
     ASSERTRANGE(from, 0, d_myworld->size());
-    int to = batch->to;
+    int to = batch->m_to_rank;
     ASSERTRANGE(to, 0, d_myworld->size());
 
     if (from == me || to == me) {
       // Easier to go in reverse order now, instead of reinitializing perPairBatchIndices.
       std::pair<int, int> fromToPair = std::make_pair(from, to);
-      batches_[i]->messageTag = ++perPairBatchIndices[fromToPair];  // start with one
+      batches_[i]->m_message_tag = ++perPairBatchIndices[fromToPair];  // start with one
     }
   }
 }  // end assignMessageTags()
@@ -376,7 +377,7 @@ DetailedTasks::findMatchingDetailedDep(       DependencyBatch*  batch,
 {
   totalLow = low;
   totalHigh = high;
-  DetailedDep* dep = batch->head;
+  DetailedDep* dep = batch->m_head;
 
   parent_dep = 0;
   DetailedDep* last_dep = 0;
@@ -515,7 +516,7 @@ DetailedTasks::possiblyCreateDependency(       DetailedTask*              from,
     if (fromresource == d_myworld->myrank() && fromresource == toresource) {
       if (fromPatch != toPatch) {
         //printf("In DetailedTasks::createInternalDependencyBatch creating internal dependency from patch %d to patch %d, from task %p to task %p\n", fromPatch->getID(), toPatch->getID(), from, to);
-        createInternalDependencyBatch(from, comp, fromPatch, to, req, toPatch, matl, low, high, cond);
+        createInternalDependencyBatch(from, comp, fromPatch, m_to_rank, req, toPatch, matl, low, high, cond);
       }
       return; //We've got all internal dependency information for the GPU, now we can return.
     }
@@ -529,8 +530,8 @@ DetailedTasks::possiblyCreateDependency(       DetailedTask*              from,
   DependencyBatch* batch = from->getComputes();
 
   //find dependency batch that is to the same processor as this dependency
-  for (; batch != 0; batch = batch->comp_next) {
-    if (batch->to == toresource) {
+  for (; batch != 0; batch = batch->m_comp_next) {
+    if (batch->m_to_rank == toresource) {
       break;
     }
   }
@@ -543,21 +544,21 @@ DetailedTasks::possiblyCreateDependency(       DetailedTask*              from,
 #if SCI_ASSERTION_LEVEL >= 2
     bool newRequireBatch = to->addRequires(batch);
 #else
-    to->addRequires(batch);
+    m_to_rank->addRequires(batch);
 #endif
     ASSERTL2(newRequireBatch);
   }
   else if (mustConsiderInternalDependencies_) {  // i.e. threaded mode
     if (to->addRequires(batch)) {
       // this is a new requires batch for this task, so add to the batch's toTasks.
-      batch->toTasks.push_back(to);
+      batch->m_to_tasks.push_back(to);
     }
   }
 
   IntVector varRangeLow(INT_MAX, INT_MAX, INT_MAX), varRangeHigh(INT_MIN, INT_MIN, INT_MIN);
 
   // create the new dependency
-  DetailedDep* new_dep = scinew DetailedDep(batch->head, comp, req, to, fromPatch, matl, low, high, cond);
+  DetailedDep* new_dep = scinew DetailedDep(batch->m_head, comp, req, to, fromPatch, matl, low, high, cond);
 
   // search for a dependency that can be combined with this dependency
 
@@ -618,7 +619,7 @@ DetailedTasks::possiblyCreateDependency(       DetailedTask*              from,
 
     //remove the matching_dep from the batch list
     if (parent_dep == NULL) {
-      batch->head = matching_dep->next;
+      batch->m_head = matching_dep->next;
     }
     else {
       parent_dep->next = matching_dep->next;
@@ -644,7 +645,7 @@ DetailedTasks::possiblyCreateDependency(       DetailedTask*              from,
 
   if (insert_dep == NULL) {
     //no dependencies are in the list so add it to the head
-    batch->head = new_dep;
+    batch->m_head = new_dep;
     new_dep->next = NULL;
   }
   else {
@@ -688,7 +689,7 @@ DetailedTasks::possiblyCreateDependency(       DetailedTask*              from,
 void DetailedTasks::createInternalDependencyBatch(DetailedTask* from,
     Task::Dependency* comp,
     const Patch* fromPatch,
-    DetailedTask* to,
+    DetailedTask* m_to_rank,
     Task::Dependency* req,
     const Patch *toPatch,
     int matl,
@@ -697,33 +698,33 @@ void DetailedTasks::createInternalDependencyBatch(DetailedTask* from,
     DetailedDep::CommCondition cond) {
   //get dependancy batch
   DependencyBatch* batch = from->getInternalComputes();
-  int toresource = to->getAssignedResourceIndex();
+  int toresource = m_to_rank->getAssignedResourceIndex();
   int fromresource = from->getAssignedResourceIndex();
   //find dependency batch that is to the same processor as this dependency
-  for (; batch != 0; batch = batch->comp_next) {
-    if (batch->to == toresource)
+  for (; batch != 0; batch = batch->m_comp_next) {
+    if (batch->m_to_rank == toresource)
       break;
   }
 
   //if batch doesn't exist then create it
   if (!batch) {
-    batch = scinew DependencyBatch(toresource, from, to);
+    batch = scinew DependencyBatch(toresource, from, m_to_rank);
     batches_.push_back(batch);  //Should be fine to push this batch on here, at worst
                                 //MPI message tags are created for these which won't get used.
     from->addInternalComputes(batch);
 #if SCI_ASSERTION_LEVEL >= 2
-    bool newRequireBatch = to->addInternalRequires(batch);
+    bool newRequireBatch = m_to_rank->addInternalRequires(batch);
 #else
-    to->addInternalRequires(batch);
+    m_to_rank->addInternalRequires(batch);
 #endif
     ASSERTL2(newRequireBatch);
     if (dbg.active())
       dbg << d_myworld->myrank() << "          NEW BATCH!\n";
   } else if (mustConsiderInternalDependencies_) {  // i.e. threaded mode
-    if (to->addInternalRequires(batch)) {
+    if (m_to_rank->addInternalRequires(batch)) {
       // this is a new requires batch for this task, so add
       // to the batch's toTasks.
-      batch->toTasks.push_back(to);
+      batch->m_to_tasks.push_back(m_to_rank);
     }
     if (dbg.active())
       dbg << d_myworld->myrank() << "          USING PREVIOUSLY CREATED BATCH!\n";
@@ -732,14 +733,14 @@ void DetailedTasks::createInternalDependencyBatch(DetailedTask* from,
   IntVector varRangeLow(INT_MAX, INT_MAX, INT_MAX), varRangeHigh(INT_MIN, INT_MIN, INT_MIN);
 
   //create the new dependency
-  DetailedDep* new_dep = scinew DetailedDep(batch->head, comp, req, to, fromPatch, matl, low, high, cond);
+  DetailedDep* new_dep = scinew DetailedDep(batch->m_head, comp, req, m_to_rank, fromPatch, matl, low, high, cond);
 
   //search for a dependency that can be combined with this dependency
 
   //location of parent dependency
   DetailedDep* parent_dep;
 
-  DetailedDep* matching_dep = findMatchingInternalDetailedDep(batch, to, req, fromPatch, matl, new_dep->low, new_dep->high, varRangeLow,
+  DetailedDep* matching_dep = findMatchingInternalDetailedDep(batch, m_to_rank, req, fromPatch, matl, new_dep->low, new_dep->high, varRangeLow,
                                                       varRangeHigh, parent_dep);
 
   //This is set to either the parent of the first matching dep or when there is no matching deps the last dep in the list.
@@ -775,7 +776,7 @@ void DetailedTasks::createInternalDependencyBatch(DetailedTask* from,
 
 
     //copy matching dependencies toTasks to the new dependency
-    new_dep->toTasks.splice(new_dep->toTasks.begin(), matching_dep->toTasks);
+    new_dep->m_to_tasks.splice(new_dep->m_to_tasks.begin(), matching_dep->m_to_tasks);
 
     //erase particle sends/recvs
     if (req->var->typeDescription()->getType() == TypeDescription::ParticleVariable && req->whichdw == Task::OldDW) {
@@ -811,7 +812,7 @@ void DetailedTasks::createInternalDependencyBatch(DetailedTask* from,
 
     //remove the matching_dep from the batch list
     if (parent_dep == NULL) {
-      batch->head = matching_dep->next;
+      batch->m_head = matching_dep->next;
     } else {
       parent_dep->next = matching_dep->next;
     }
@@ -820,7 +821,7 @@ void DetailedTasks::createInternalDependencyBatch(DetailedTask* from,
     delete matching_dep;
 
     //search for another matching detailed deps
-    matching_dep = findMatchingInternalDetailedDep(batch, to, req, fromPatch, matl, new_dep->low, new_dep->high, varRangeLow, varRangeHigh,
+    matching_dep = findMatchingInternalDetailedDep(batch, m_to_rank, req, fromPatch, matl, new_dep->low, new_dep->high, varRangeLow, varRangeHigh,
                                            parent_dep);
 
     //if the matching dep is the current insert dep then we must move the insert dep to the new parent dep
@@ -838,7 +839,7 @@ void DetailedTasks::createInternalDependencyBatch(DetailedTask* from,
 
   if (insert_dep == NULL) {
     //no dependencies are in the list so add it to the head
-    batch->head = new_dep;
+    batch->m_head = new_dep;
     new_dep->next = NULL;
   } else {
     //depedencies already exist so add it at the insert location.
@@ -901,7 +902,7 @@ DetailedDep* DetailedTasks::findMatchingInternalDetailedDep(DependencyBatch* bat
 {
   totalLow = low;
   totalHigh = high;
-  DetailedDep* dep = batch->head;
+  DetailedDep* dep = batch->m_head;
 
   parent_dep = 0;
   DetailedDep* last_dep = 0;
@@ -1363,7 +1364,7 @@ DetailedTasks::logMemoryUse(       std::ostream&       out,
   logMemory(out, total, tag, "batches", "DependencyBatch", 0, -1, elems2.str(), batches_.size() * sizeof(DependencyBatch), 0);
   int ndeps = 0;
   for (int i = 0; i < (int)batches_.size(); i++) {
-    for (DetailedDep* p = batches_[i]->head; p != 0; p = p->next) {
+    for (DetailedDep* p = batches_[i]->m_head; p != 0; p = p->next) {
       ndeps++;
     }
   }
@@ -1393,7 +1394,7 @@ DetailedTask::emitEdges( ProblemSpecP edgesElement )
 {
   std::map<DependencyBatch*, DependencyBatch*>::iterator req_iter;
   for (req_iter = reqs.begin(); req_iter != reqs.end(); req_iter++) {
-    DetailedTask* fromTask = (*req_iter).first->fromTask;
+    DetailedTask* fromTask = (*req_iter).first->m_from_task;
     ProblemSpecP edge = edgesElement->appendChild("edge");
     edge->appendElement("source", fromTask->getName());
     edge->appendElement("target", getName());
@@ -1401,7 +1402,7 @@ DetailedTask::emitEdges( ProblemSpecP edgesElement )
 
   std::list<InternalDependency>::iterator iter;
   for (iter = internalDependencies.begin(); iter != internalDependencies.end(); iter++) {
-    DetailedTask* fromTask = (*iter).prerequisiteTask;
+    DetailedTask* fromTask = (*iter).m_prerequisite_task;
     if (getTask()->isReductionTask() && fromTask->getTask()->isReductionTask()) {
       // Ignore internal links between reduction tasks because they
       // are only needed for logistic reasons
@@ -1537,13 +1538,13 @@ DetailedTaskPriorityComparison::operator()( DetailedTask*& ltask,
   else if (alg == MostMessages || alg == LeastMessages) {
     int lmsg = 0;
     int rmsg = 0;
-    for (DependencyBatch* batch = ltask->getComputes(); batch != 0; batch = batch->comp_next) {
-      for (DetailedDep* dep = batch->head; dep != 0; dep = dep->next) {
+    for (DependencyBatch* batch = ltask->getComputes(); batch != 0; batch = batch->m_comp_next) {
+      for (DetailedDep* dep = batch->m_head; dep != 0; dep = dep->next) {
         lmsg++;
       }
     }
-    for (DependencyBatch* batch = rtask->getComputes(); batch != 0; batch = batch->comp_next) {
-      for (DetailedDep* dep = batch->head; dep != 0; dep = dep->next) {
+    for (DependencyBatch* batch = rtask->getComputes(); batch != 0; batch = batch->m_comp_next) {
+      for (DetailedDep* dep = batch->m_head; dep != 0; dep = dep->next) {
         rmsg++;
       }
     }

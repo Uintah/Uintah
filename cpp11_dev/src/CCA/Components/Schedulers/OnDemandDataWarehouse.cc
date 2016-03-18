@@ -548,7 +548,7 @@ OnDemandDataWarehouse::sendMPI(       DependencyBatch*       batch,
       ParticleVariableBase* var = dynamic_cast<ParticleVariableBase*>( d_varDB.get( label, matlIndex, patch ) );
       printDebuggingGetInfo( label, matlIndex, patch, __LINE__ );
 
-      int dest = batch->toTasks.front()->getAssignedResourceIndex();
+      int dest = batch->m_to_tasks.front()->getAssignedResourceIndex();
       ASSERTRANGE( dest, 0, d_myworld->size() );
 
       ParticleSubset* sendset = 0;
