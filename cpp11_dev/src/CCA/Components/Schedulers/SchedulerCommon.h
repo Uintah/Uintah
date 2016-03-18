@@ -112,16 +112,18 @@ class SchedulerCommon : public Scheduler, public UintahParallelComponent {
     /// For more complicated models 
     virtual void addTaskGraph(tgType type);
 
-    virtual int getNumTaskGraphs() { return graphs.size(); }
+    virtual int getNumTaskGraphs() { return m_graphs.size(); }
 
     virtual void addTask( Task* t, const PatchSet*, const MaterialSet* );
 
-    virtual bool useSmallMessages() { return d_useSmallMessages; }
+    virtual bool useSmallMessages() { return m_use_small_messages; }
 
     /// Get all of the requires needed from the old data warehouse (carried forward).
-    virtual const std::vector<const Task::Dependency*>&         getInitialRequires() const     { return d_initRequires; }
-    virtual const std::set<const VarLabel*, VarLabel::Compare>& getInitialRequiredVars() const { return d_initRequiredVars; }
-    virtual const std::set<const VarLabel*, VarLabel::Compare>& getComputedVars() const        { return d_computedVars; }
+    virtual const std::vector<const Task::Dependency*>&         getInitialRequires() const     { return m_init_requires; }
+
+    virtual const std::set<const VarLabel*, VarLabel::Compare>& getInitialRequiredVars() const { return m_init_requires_vars; }
+
+    virtual const std::set<const VarLabel*, VarLabel::Compare>& getComputedVars() const        { return m_computed_vars; }
 
     virtual LoadBalancer* getLoadBalancer();
 
@@ -151,7 +153,7 @@ class SchedulerCommon : public Scheduler, public UintahParallelComponent {
     // for the given label and patch and find the largest extents encompassing
     // the expected ghost cells (requiredLow, requiredHigh) and the requested
     // ghost cells as well (requestedLow, requestedHigh) for each of the
-    // patches.  Required and requested will besame if requestedNumGCells = 0.
+    // patches.  Required and requested will be the same if requestedNumGCells = 0.
     virtual const std::vector<const Patch*>*
     getSuperPatchExtents(const VarLabel* label,
                                int matlIndex,
@@ -175,10 +177,7 @@ class SchedulerCommon : public Scheduler, public UintahParallelComponent {
 
     // Only called by the SimulationController, and only once, and only
     // if the simulation has been "restarted."
-    virtual void setGeneration( int id ) { d_generation = id; }
-
-//    virtual const MaterialSet* getMaterialSet() const {cout << "BEING CALLED"
-// << endl; return reloc_.getMaterialSet();}
+    virtual void setGeneration( int id ) { m_generation = id; }
 
     // This function will copy the data from the old grid to the new grid.
     // The PatchSubset structure will contain a patch on the new grid.
@@ -214,7 +213,7 @@ class SchedulerCommon : public Scheduler, public UintahParallelComponent {
                                             const VarLabel* particleIDLabel,
                                             const MaterialSet* matls);
     
-    virtual void setPositionVar(const VarLabel* posLabel) { reloc_new_posLabel_ = posLabel; }
+    virtual void setPositionVar(const VarLabel* posLabel) { m_reloc_new_posLabel = posLabel; }
 
     virtual void scheduleAndDoDataCopy( const GridP& grid, SimulationInterface* sim );
 
@@ -226,17 +225,17 @@ class SchedulerCommon : public Scheduler, public UintahParallelComponent {
                                           bool notCopyData = false,
                                           bool notCheckpoint = false);
 
-    const std::set<std::string>& getNoScrubVars() { return noScrubVars_;}
+    const std::set<std::string>& getNoScrubVars()     { return m_no_scrub_vars;}
 
-    const std::set<std::string>& getCopyDataVars() { return copyDataVars_;}
+    const std::set<std::string>& getCopyDataVars()    { return m_copy_data_vars;}
 
-    const std::set<std::string>& getNotCopyDataVars() { return notCopyDataVars_;}
+    const std::set<std::string>& getNotCopyDataVars() { return m_not_copy_data_vars;}
 
-    virtual const std::set<std::string>& getNotCheckPointVars() const { return notCheckpointVars_;}
+    virtual const std::set<std::string>& getNotCheckPointVars() const { return m_not_checkpoint_vars;}
 
     virtual bool useInternalDeps();
     
-    const VarLabel* reloc_new_posLabel_;
+    const VarLabel* m_reloc_new_posLabel;
 
     // TODO replace after Mira DDT problem is debugged (APH - 03/24/15)
     int getMaxGhost()       {return maxGhost;}
@@ -244,13 +243,13 @@ class SchedulerCommon : public Scheduler, public UintahParallelComponent {
 //    const std::map<int, int>& getMaxGhostCells() { return maxGhostCells; }
 //    const std::map<int, int>& getMaxLevelOffsets() { return maxLevelOffsets; }
 
-    bool isCopyDataTimestep() { return d_sharedState->isCopyDataTimestep() || d_isInitTimestep; }
+    bool isCopyDataTimestep() { return m_shared_state->isCopyDataTimestep() || m_is_init_timestep; }
 
-    void setInitTimestep( bool isInitTimestep ) { d_isInitTimestep = isInitTimestep; }
+    void setInitTimestep( bool isInitTimestep ) { m_is_init_timestep = isInitTimestep; }
 
-    void setRestartInitTimestep( bool isRestartInitTimestep ) { d_isRestartInitTimestep = isRestartInitTimestep; }
+    void setRestartInitTimestep( bool isRestartInitTimestep ) { m_is_restart_init_timestep = isRestartInitTimestep; }
 
-    virtual bool isRestartInitTimestep() { return d_isRestartInitTimestep; }
+    virtual bool isRestartInitTimestep() { return m_is_restart_init_timestep; }
 
 
     typedef std::map<VarLabelMatl<Level>, Task*> ReductionTasksMap;
@@ -270,8 +269,8 @@ class SchedulerCommon : public Scheduler, public UintahParallelComponent {
 
     void printTrackedVars(DetailedTask* dt, int when);
     
-    bool d_isInitTimestep;
-    bool d_isRestartInitTimestep;
+    bool m_is_init_timestep;
+    bool m_is_restart_init_timestep;
    
     /**
     * output the task name and the level it's executing on.
@@ -290,79 +289,81 @@ class SchedulerCommon : public Scheduler, public UintahParallelComponent {
     
     virtual void verifyChecksum() = 0;
 
-    std::vector<TaskGraph*>             graphs;
-    int                                 currentTG_;
-    int                                 numTasks_;
-    int                                 d_generation;
-    SimulationStateP                    d_sharedState;
-    std::vector<OnDemandDataWarehouseP> dws;
-    int                                 numOldDWs;
-    int                                 dwmap[Task::TotalDWs];
-    const Output*                       m_outPort_;
-    bool                                restartable;
+    std::vector<TaskGraph*>             m_graphs;
+    int                                 m_currentTG;
+    int                                 m_num_tasks;
+    int                                 m_generation;
+    SimulationStateP                    m_shared_state;
+    std::vector<OnDemandDataWarehouseP> m_dws;
+    int                                 m_num_old_dws;
+    int                                 m_dw_map[Task::TotalDWs];
+    const Output*                       m_output_port;
+    bool                                m_restartable;
 
     //! These are so we can track certain variables over the taskgraph's execution.
-    std::vector<std::string>   trackingVars_;
-    std::vector<std::string>   trackingTasks_;
-    std::vector<Task::WhichDW> trackingDWs_;
-    int                        trackingVarsPrintLocation_;
-    int                        trackingPatchID_;
-    double                     trackingStartTime_;
-    double                     trackingEndTime_;
-    int                        trackingLevel_;
-    IntVector                  trackingStartIndex_;
-    IntVector                  trackingEndIndex_;
-    int                        numParticleGhostCells_;
-    Ghost::GhostType           particleGhostType_;
+    std::vector<std::string>   m_tracking_vars;
+    std::vector<std::string>   m_tracking_tasks;
+    std::vector<Task::WhichDW> m_tracking_dws;
+    int                        m_tracking_vars_print_location;
+    int                        m_tracking_patch_id;
+    double                     m_tracking_start_time;
+    double                     m_tracking_end_time;
+    int                        m_tracking_level;
+    IntVector                  m_tracking_start_index;
+    IntVector                  m_tracking_end_index;
+    int                        m_num_particle_ghost_cells;
+    Ghost::GhostType           m_particle_ghost_type;
 
     // so we can manually copy vars between AMR levels
-    std::set<std::string> copyDataVars_;
+    std::set<std::string> m_copy_data_vars;
 
     // ignore copying these vars between AMR levels
-    std::set<std::string> notCopyDataVars_;
+    std::set<std::string> m_not_copy_data_vars;
 
     // vars manually set not to scrub (normally when needed between a normal taskgraph
     // and the regridding phase)
-    std::set<std::string> noScrubVars_;
+    std::set<std::string> m_no_scrub_vars;
 
     // treat variable as an "old" var - will be checkpointed, copied, and only scrubbed from an OldDW
-    std::set<std::string> treatAsOldVars_;
+    std::set<std::string> m_treat_as_old_vars;
     
     // do not checkpoint these variables
-    std::set<std::string> notCheckpointVars_;
+    std::set<std::string> m_not_checkpoint_vars;
 
   private:
 
-    // Disable copy and assignment
-    SchedulerCommon( const SchedulerCommon& );
-    SchedulerCommon& operator=( const SchedulerCommon& );
+    // eliminate copy, assignment and move
+    SchedulerCommon( const SchedulerCommon & )            = delete;
+    SchedulerCommon& operator=( const SchedulerCommon & ) = delete;
+    SchedulerCommon( SchedulerCommon && )                 = delete;
+    SchedulerCommon& operator=( SchedulerCommon && )      = delete;
 
     // Maximum memory use as sampled across a given timestep.
-    unsigned long d_maxMemUse;
+    unsigned long                m_max_mem_use;
 
-    ProblemSpecP                m_graphDoc_;
-    ProblemSpecP                m_nodes_;
-    std::ofstream*              memlogfile_;
-    bool                        emit_taskgraph_;
+    ProblemSpecP                 m_graph_doc;
+    ProblemSpecP                 m_nodes;
+    std::ofstream              * m_memlog_file;
+    bool                         m_emit_taskgraph;
 
-    LocallyComputedPatchVarMap* m_locallyComputedPatchVarMap;
-    Relocate                    reloc1_;
-    Relocate                    reloc2_;
+    LocallyComputedPatchVarMap * m_locally_computed_patchvar_map;
+    Relocate                     m_reloc_1;
+    Relocate                     m_reloc_2;
 
     // whether or not to send a small message (takes more work to organize)
     // or a larger one (more communication time)
-    bool d_useSmallMessages;
+    bool m_use_small_messages;
 
     //! These are to store which vars we have to copy to the new grid
     //! in a copy data task.  Set in scheduleDataCopy and used in
     //! copyDataToNewGrid.
     typedef std::map<const VarLabel*, MaterialSubset*, VarLabel::Compare> label_matl_map;
-    std::vector<label_matl_map> label_matls_;
+    std::vector<label_matl_map> m_label_matls;
 
     //! set in addTask - can be used until initialize is called...
-    std::vector<const Task::Dependency*>         d_initRequires;
-    std::set<const VarLabel*, VarLabel::Compare> d_initRequiredVars;
-    std::set<const VarLabel*, VarLabel::Compare> d_computedVars;
+    std::vector<const Task::Dependency*>         m_init_requires;
+    std::set<const VarLabel*, VarLabel::Compare> m_init_requires_vars;
+    std::set<const VarLabel*, VarLabel::Compare> m_computed_vars;
 
     // TODO replace after Mira DDT problem is debugged (APH - 03/24/15)
     //max ghost cells of all tasks - will be used for loadbalancer to create neighborhood

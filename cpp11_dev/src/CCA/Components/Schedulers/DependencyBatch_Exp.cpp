@@ -22,16 +22,8 @@
  * IN THE SOFTWARE.
  */
 
-#define UINTAH_USING_EXPERIMENTAL
-
-#ifdef UINTAH_USING_EXPERIMENTAL
-
-#include <CCA/Components/Schedulers/DependencyBatch_Exp.cpp>
-
-#else
-
-#include <CCA/Components/Schedulers/DependencyBatch.h>
-#include <CCA/Components/Schedulers/DetailedTasks.h>
+#include <CCA/Components/Schedulers/DependencyBatch_Exp.hpp>
+#include <CCA/Components/Schedulers/DetailedTasks_Exp.hpp>
 
 namespace Uintah {
 
@@ -128,5 +120,3 @@ void DependencyBatch::received( const ProcessorGroup * pg )
 }
 
 } // namespace Uintah
-
-#endif // UINTAH_USING_EXPERIMENTAL

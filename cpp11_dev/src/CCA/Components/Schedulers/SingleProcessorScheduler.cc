@@ -47,7 +47,7 @@ SingleProcessorScheduler::SingleProcessorScheduler( const ProcessorGroup        
                                                           SingleProcessorScheduler * parent )
   : SchedulerCommon(myworld, oport)
 {
-  d_generation = 0;
+  m_generation = 0;
   m_parent     = parent;
 }
 
@@ -58,10 +58,10 @@ SingleProcessorScheduler::~SingleProcessorScheduler()
 SchedulerP
 SingleProcessorScheduler::createSubScheduler()
 {
-  SingleProcessorScheduler * subsched = scinew SingleProcessorScheduler( d_myworld, m_outPort_, this );
+  SingleProcessorScheduler * subsched = scinew SingleProcessorScheduler( d_myworld, m_output_port, this );
   UintahParallelPort       * lbp      = getPort("load balancer");
   subsched->attachPort( "load balancer", lbp );
-  subsched->d_sharedState = d_sharedState;
+  subsched->m_shared_state = m_shared_state;
   return subsched;
 }
 
@@ -76,16 +76,16 @@ void
 SingleProcessorScheduler::execute( int tgnum     /*=0*/,
                                    int iteration /*=0*/ )
 {
-  ASSERTRANGE(tgnum, 0, (int)graphs.size());
-  TaskGraph* tg = graphs[tgnum];
+  ASSERTRANGE(tgnum, 0, (int)m_graphs.size());
+  TaskGraph* tg = m_graphs[tgnum];
   tg->setIteration(iteration);
-  currentTG_ = tgnum;
+  m_currentTG = tgnum;
   DetailedTasks* dts = tg->getDetailedTasks();
 
-  if (graphs.size() > 1) {
+  if (m_graphs.size() > 1) {
     // tg model is the multi TG model, where each graph is going to need to
     // have its dwmap reset here (even with the same tgnum)
-    tg->remapTaskDWs(dwmap);
+    tg->remapTaskDWs(m_dw_map);
   }
 
   if (dts == 0) {
@@ -98,31 +98,31 @@ SingleProcessorScheduler::execute( int tgnum     /*=0*/,
     std::cerr << "WARNING: Scheduler executed, but no tasks\n";
   }
 
-  ASSERT(dws.size()>=2);
-  std::vector<DataWarehouseP> plain_old_dws(dws.size());
-  for (unsigned int i = 0; i < dws.size(); i++) {
-    plain_old_dws[i] = dws[i].get_rep();
+  ASSERT(m_dws.size()>=2);
+  std::vector<DataWarehouseP> plain_old_dws(m_dws.size());
+  for (unsigned int i = 0; i < m_dws.size(); i++) {
+    plain_old_dws[i] = m_dws[i].get_rep();
   }
 
   if (dbg.active()) {
     dbg << "Executing " << ntasks << " tasks, ";
-    for (int i = 0; i < numOldDWs; i++) {
+    for (int i = 0; i < m_num_old_dws; i++) {
       dbg << "from DWs: ";
-      if (dws[i]) {
-        dbg << dws[i]->getID() << ", ";
+      if (m_dws[i]) {
+        dbg << m_dws[i]->getID() << ", ";
       }
       else {
         dbg << "Null, ";
       }
     }
-    if (dws.size() - numOldDWs > 1) {
+    if (m_dws.size() - m_num_old_dws > 1) {
       dbg << "intermediate DWs: ";
-      for (unsigned int i = numOldDWs; i < dws.size() - 1; i++) {
-        dbg << dws[i]->getID() << ", ";
+      for (unsigned int i = m_num_old_dws; i < m_dws.size() - 1; i++) {
+        dbg << m_dws[i]->getID() << ", ";
       }
     }
-    if (dws[dws.size() - 1]) {
-      dbg << " to DW: " << dws[dws.size() - 1]->getID();
+    if (m_dws[m_dws.size() - 1]) {
+      dbg << " to DW: " << m_dws[m_dws.size() - 1]->getID();
     }
     else {
       dbg << " to DW: Null";
@@ -132,7 +132,7 @@ SingleProcessorScheduler::execute( int tgnum     /*=0*/,
 
   makeTaskGraphDoc(dts);
 
-  dts->initializeScrubs(dws, dwmap);
+  dts->initializeScrubs(m_dws, m_dw_map);
 
   for (int i = 0; i < ntasks; i++) {
     double start = Time::currentSeconds();
@@ -142,17 +142,17 @@ SingleProcessorScheduler::execute( int tgnum     /*=0*/,
     printTask(taskdbg, task);
     taskdbg << '\n';
 
-    if (trackingVarsPrintLocation_ & SchedulerCommon::PRINT_BEFORE_EXEC) {
+    if (m_tracking_vars_print_location & SchedulerCommon::PRINT_BEFORE_EXEC) {
       printTrackedVars(task, SchedulerCommon::PRINT_BEFORE_EXEC);
     }
 
-    task->doit(d_myworld, dws, plain_old_dws);
+    task->doit(d_myworld, m_dws, plain_old_dws);
 
-    if (trackingVarsPrintLocation_ & SchedulerCommon::PRINT_AFTER_EXEC) {
+    if (m_tracking_vars_print_location & SchedulerCommon::PRINT_AFTER_EXEC) {
       printTrackedVars(task, SchedulerCommon::PRINT_AFTER_EXEC);
     }
 
-    task->done(dws);
+    task->done(m_dws);
 
     if (taskdbg.active()) {
       taskdbg << d_myworld->myrank() << " SPS: Completed:  ";
@@ -162,7 +162,7 @@ SingleProcessorScheduler::execute( int tgnum     /*=0*/,
     }
 
     double delT = Time::currentSeconds() - start;
-    if (dws[dws.size() - 1] && dws[dws.size() - 1]->timestepAborted()) {
+    if (m_dws[m_dws.size() - 1] && m_dws[m_dws.size() - 1]->timestepAborted()) {
       dbg << "Aborting timestep after task: " << *task->getTask() << '\n';
       break;
     }

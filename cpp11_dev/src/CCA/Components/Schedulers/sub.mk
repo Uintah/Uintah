@@ -48,7 +48,7 @@ SRCS += \
         $(SRCDIR)/SingleProcessorScheduler.cc \
         $(SRCDIR)/TaskGraph.cc                \
         $(SRCDIR)/ThreadedMPIScheduler.cc     \
-        $(SRCDIR)/ThreadedTaskScheduler.cc    \
+        $(SRCDIR)/ThreadedTaskScheduler.cpp   \
         $(SRCDIR)/UnifiedScheduler.cc         \
         
 ifeq ($(HAVE_CUDA),yes)

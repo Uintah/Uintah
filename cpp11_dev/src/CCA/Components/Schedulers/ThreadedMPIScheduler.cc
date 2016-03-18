@@ -200,10 +200,10 @@ SchedulerP
 ThreadedMPIScheduler::createSubScheduler()
 {
   UintahParallelPort   * lbp       = getPort( "load balancer" );
-  ThreadedMPIScheduler * subsched = scinew ThreadedMPIScheduler( d_myworld, m_outPort_, this );
+  ThreadedMPIScheduler * subsched = scinew ThreadedMPIScheduler( d_myworld, m_output_port, this );
 
   subsched->attachPort( "load balancer", lbp );
-  subsched->d_sharedState = d_sharedState;
+  subsched->m_shared_state = m_shared_state;
   subsched->numThreads_ = Uintah::Parallel::getNumThreads() - 1;
 
   if (subsched->numThreads_ > 0) {
@@ -247,22 +247,22 @@ ThreadedMPIScheduler::execute( int tgnum     /* = 0 */,
                                int iteration /* = 0 */ )
 {
   // copy data timestep must be single threaded for now
-  if (d_sharedState->isCopyDataTimestep()) {
+  if (m_shared_state->isCopyDataTimestep()) {
     MPIScheduler::execute(tgnum, iteration);
     return;
   }
 
   MALLOC_TRACE_TAG_SCOPE("ThreadedMPIScheduler::execute");
 
-  ASSERTRANGE(tgnum, 0, static_cast<int>(graphs.size()));
-  TaskGraph* tg = graphs[tgnum];
+  ASSERTRANGE(tgnum, 0, static_cast<int>(m_graphs.size()));
+  TaskGraph* tg = m_graphs[tgnum];
   tg->setIteration(iteration);
-  currentTG_ = tgnum;
+  m_currentTG = tgnum;
 
-  if (graphs.size() > 1) {
+  if (m_graphs.size() > 1) {
     // tg model is the multi TG model, where each graph is going to need to
     // have its dwmap reset here (even with the same tgnum)
-    tg->remapTaskDWs(dwmap);
+    tg->remapTaskDWs(m_dw_map);
   }
 
   DetailedTasks* dts = tg->getDetailedTasks();
@@ -273,7 +273,7 @@ ThreadedMPIScheduler::execute( int tgnum     /* = 0 */,
   }
 
   int ntasks = dts->numLocalTasks();
-  dts->initializeScrubs(dws, dwmap);
+  dts->initializeScrubs(m_dws, m_dw_map);
   dts->initTimestep();
 
   for (int i = 0; i < ntasks; i++) {
@@ -300,8 +300,8 @@ ThreadedMPIScheduler::execute( int tgnum     /* = 0 */,
   bool abort = false;
   int abort_point = 987654;
 
-  if (reloc_new_posLabel_ && dws[dwmap[Task::OldDW]] != 0) {
-    dws[dwmap[Task::OldDW]]->exchangeParticleQuantities(dts, getLoadBalancer(), reloc_new_posLabel_, iteration);
+  if (m_reloc_new_posLabel && m_dws[m_dw_map[Task::OldDW]] != 0) {
+    m_dws[m_dw_map[Task::OldDW]]->exchangeParticleQuantities(dts, getLoadBalancer(), m_reloc_new_posLabel, iteration);
   }
 
   int currphase = 0;
@@ -510,29 +510,29 @@ ThreadedMPIScheduler::execute( int tgnum     /* = 0 */,
   }
   
   // compute the net timings
-  if (d_sharedState != 0) {
+  if (m_shared_state != 0) {
       
-    computeNetRunTimeStats(d_sharedState->d_runTimeStats);
+    computeNetRunTimeStats(m_shared_state->d_runTimeStats);
     
     for (int i = 0; i < numThreads_; i++) {
-      d_sharedState->d_runTimeStats[SimulationState::TaskWaitThreadTime] +=
+      m_shared_state->d_runTimeStats[SimulationState::TaskWaitThreadTime] +=
           t_worker[i]->getWaittime();
     }
   }
 
   //if(timeout.active())
   //emitTime("final wait");
-  if (restartable && tgnum == (int)graphs.size() - 1) {
+  if (m_restartable && tgnum == (int)m_graphs.size() - 1) {
     // Copy the restart flag to all processors
-    int myrestart = dws[dws.size() - 1]->timestepRestarted();
+    int myrestart = m_dws[m_dws.size() - 1]->timestepRestarted();
     int netrestart;
 
     MPI_Allreduce(&myrestart, &netrestart, 1, MPI_INT, MPI_LOR, d_myworld->getComm());
 
     if (netrestart) {
-      dws[dws.size() - 1]->restartTimestep();
-      if (dws[0]) {
-        dws[0]->setRestarted();
+      m_dws[m_dws.size() - 1]->restartTimestep();
+      if (m_dws[0]) {
+        m_dws[0]->setRestarted();
       }
     }
   }

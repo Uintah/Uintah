@@ -22,17 +22,8 @@
  * IN THE SOFTWARE.
  */
 
-#define UINTAH_USING_EXPERIMENTAL
+#include <CCA/Components/Schedulers/DetailedTasks_Exp.hpp>
 
-#ifdef UINTAH_USING_EXPERIMENTAL
-
-#include <CCA/Components/Schedulers/DetailedTask_Exp.cpp>
-
-#else
-
-#include <CCA/Components/Schedulers/DetailedTasks.h>
-#include <CCA/Components/Schedulers/CommRecMPI.h>
-#include <CCA/Components/Schedulers/MemoryLog.h>
 #include <CCA/Components/Schedulers/OnDemandDataWarehouse.h>
 #include <CCA/Components/Schedulers/SchedulerCommon.h>
 #include <CCA/Components/Schedulers/TaskGraph.h>
@@ -40,43 +31,28 @@
 #include <Core/Containers/ConsecutiveRangeSet.h>
 #include <Core/Grid/Grid.h>
 #include <Core/Grid/Variables/PSPatchMatlGhostRange.h>
-#include <Core/Parallel/Parallel.h>
-#include <Core/Thread/Mutex.h>
-#include <Core/Util/DebugStream.h>
-#include <Core/Util/ProgressiveWarning.h>
 #include <Core/Util/DOUT.hpp>
 
 #include <sci_defs/config_defs.h>
 #include <sci_defs/cuda_defs.h>
 
-extern Uintah::Mutex cerrLock;
-extern Uintah::Mutex coutLock;
 
 namespace Uintah {
 
 namespace {
 
-Dout mpidbg(             "MPIDBG",        false );
-DebugStream dbg(         "DetailedTasks", false );
-DebugStream scrubout(    "Scrubbing",     false );
-DebugStream messagedbg(  "MessageTags",   false );
-DebugStream internaldbg( "InternalDeps",  false );
-DebugStream dwdbg(       "DetailedDWDBG", false );
-DebugStream waitout(     "WaitTimes",     false );
+Dout mpidbg{      "MPIDBG",        false };
 
-Dout g_detailed_dbg{ "DetailedTasksDBG", false };
-
-std::string dbgScrubVar   = ""; // for debugging - set the var name to watch one in the scrubout
-int         dbgScrubPatch = -1;
 
 } // namespace
 
 
 
-DetailedTask::DetailedTask(       Task*           task,
-                            const PatchSubset*    patches,
-                            const MaterialSubset* matls,
-                                  DetailedTasks*  taskGroup )
+DetailedTask::DetailedTask(       Task            * task
+                          ,  const PatchSubset    * patches
+                          ,  const MaterialSubset * matls
+                          ,        DetailedTasks  * taskGroup
+                          )
   :   task(task),
       patches(patches),
       matls(matls),
@@ -98,11 +74,13 @@ DetailedTask::DetailedTask(       Task*           task,
     ASSERT( std::is_sorted(matls->getVector().begin(), matls->getVector().end()) );
     matls->addReference();
   }
+
 #ifdef HAVE_CUDA
   deviceExternallyReady_ = false;
   completed_             = false;
   deviceNum_             = -1;
 #endif
+
 }
 
 
@@ -167,9 +145,6 @@ void DetailedTask::doit( const ProcessorGroup*                 pg,
 
 void DetailedTask::scrub( std::vector<OnDemandDataWarehouseP>& dws )
 {
-  if (scrubout.active()) {
-    scrubout << Parallel::getMPIRank() << " Starting scrub after task: " << *this << '\n';
-  }
   const Task* task = getTask();
 
   const std::set<const VarLabel*, VarLabel::Compare>& initialRequires = taskGroup->getSchedulerCommon()->getInitialRequiredVars();
@@ -229,17 +204,10 @@ void DetailedTask::scrub( std::vector<OnDemandDataWarehouseP>& dws )
             }
 
             for (int m = 0; m < matls->size(); m++) {
-              int count;
               try {
                 // there are a few rare cases in an AMR framework where you require from an OldDW, but only
                 // ones internal to the W-cycle (and not the previous timestep) which can have variables not exist in the OldDW.
-                count = dws[dw]->decrementScrubCount(req->var, matls->get(m), neighbor);
-                if (scrubout.active() && (req->var->getName() == dbgScrubVar || dbgScrubVar == "")
-                    && (neighbor->getID() == dbgScrubPatch || dbgScrubPatch == -1)) {
-                  scrubout << Parallel::getMPIRank() << "   decrementing scrub count for requires of " << dws[dw]->getID() << "/"
-                           << neighbor->getID() << "/" << matls->get(m) << "/" << req->var->getName() << ": " << count
-                           << (count == 0 ? " - scrubbed\n" : "\n");
-                }
+                dws[dw]->decrementScrubCount(req->var, matls->get(m), neighbor);
               }
               catch (UnknownVariable& e) {
                 std::cout << "   BAD BOY FROM Task : " << *this << " scrubbing " << *req << " PATCHES: " << *patches.get_rep() << std::endl;
@@ -269,12 +237,7 @@ void DetailedTask::scrub( std::vector<OnDemandDataWarehouseP>& dws )
         for (int i = 0; i < patches->size(); i++) {
           const Patch* patch = patches->get(i);
           for (int m = 0; m < matls->size(); m++) {
-            int count = dws[dw]->decrementScrubCount(mod->var, matls->get(m), patch);
-            if (scrubout.active() && (mod->var->getName() == dbgScrubVar || dbgScrubVar == "")
-                && (patch->getID() == dbgScrubPatch || dbgScrubPatch == -1))
-              scrubout << Parallel::getMPIRank() << "   decrementing scrub count for modifies of " << dws[dw]->getID() << "/"
-              << patch->getID() << "/" << matls->get(m) << "/" << mod->var->getName() << ": " << count
-              << (count == 0 ? " - scrubbed\n" : "\n");
+            dws[dw]->decrementScrubCount(mod->var, matls->get(m), patch);
           }
         }
       }
@@ -303,20 +266,10 @@ void DetailedTask::scrub( std::vector<OnDemandDataWarehouseP>& dws )
             int matl = matls->get(m);
             int count;
             if (taskGroup->getScrubCount(comp->var, matl, patch, whichdw, count)) {
-              if (scrubout.active() && (comp->var->getName() == dbgScrubVar || dbgScrubVar == "")
-                  && (patch->getID() == dbgScrubPatch || dbgScrubPatch == -1)) {
-                scrubout << Parallel::getMPIRank() << "   setting scrub count for computes of " << dws[dw]->getID() << "/"
-                         << patch->getID() << "/" << matls->get(m) << "/" << comp->var->getName() << ": " << count << '\n';
-              }
               dws[dw]->setScrubCount(comp->var, matl, patch, count);
             }
             else {
               // Not in the scrub map, must be never needed...
-              if (scrubout.active() && (comp->var->getName() == dbgScrubVar || dbgScrubVar == "")
-                  && (patch->getID() == dbgScrubPatch || dbgScrubPatch == -1)) {
-                scrubout << Parallel::getMPIRank() << "   trashing variable immediately after compute: " << dws[dw]->getID() << "/"
-                         << patch->getID() << "/" << matls->get(m) << "/" << comp->var->getName() << '\n';
-              }
               dws[dw]->scrub(comp->var, matl, patch);
             }
           }
@@ -383,7 +336,7 @@ void DetailedTask::checkExternalDepCount()
                                 << " internal deps: " << numPendingInternalDependencies);
 
   if (externalDependencyCount_ == 0 && taskGroup->sc_->useInternalDeps() && initiated_ && !task->usesMPI()) {
-    taskGroup->mpiCompletedQueueLock_.writeLock();
+    taskGroup->mpiCompletedQueueLock_.lock();
 
     DOUT(mpidbg, "Rank-" << Parallel::getMPIRank() << " Task " << this->getTask()->getName()
                                   << " MPI requirements satisfied, placing into external ready queue");
@@ -391,7 +344,7 @@ void DetailedTask::checkExternalDepCount()
       taskGroup->mpiCompletedTasks_.push(this);
       externallyReady_ = true;
     }
-    taskGroup->mpiCompletedQueueLock_.writeUnlock();
+    taskGroup->mpiCompletedQueueLock_.unlock();
   }
 }
 
@@ -645,10 +598,6 @@ void DetailedTask::done( std::vector<OnDemandDataWarehouseP>& dws )
   for (iter = internalDependents.begin(); iter != internalDependents.end(); iter++) {
     InternalDependency* dep = (*iter).second;
 
-    if (internaldbg.active()) {
-      internaldbg << Parallel::getMPIRank() << " Dependency satisfied between " << *dep->dependentTask << " and " << *this << "\n";
-    }
-
     dep->dependentTask->dependencySatisfied(dep);
     cnt++;
   }
@@ -678,7 +627,8 @@ void DetailedTask::dependencySatisfied( InternalDependency* dep )
 
 std::ostream& operator<<( std::ostream& out, const DetailedTask& task )
 {
-  coutLock.lock();
+  std::mutex lock;
+  std::lock_guard<std::mutex> lock_guard(lock);
   {
     out << task.getTask()->getName();
     const PatchSubset* patches = task.getPatches();
@@ -725,11 +675,7 @@ std::ostream& operator<<( std::ostream& out, const DetailedTask& task )
       out << task.getAssignedResourceIndex();
     }
   }
-  coutLock.unlock();
-
   return out;
 }
 
 } // namespace Uintah
-
-#endif // UINTAH_USING_EXPERIMENTAL
