@@ -25,6 +25,9 @@
 #ifndef UINTAH_HOMEBREW_BLOCK_RANGE_H
 #define UINTAH_HOMEBREW_BLOCK_RANGE_H
 
+#include <cstdint>
+#include <type_traits>
+
 namespace Uintah {
 
 class BlockRange
@@ -52,6 +55,34 @@ public:
       result *= m_dim[i];
     }
     return result;
+  }
+
+  // populate the multi-index associated with the given linear index
+  //   0 <= x < size()
+  //   range(x, i, j, k);
+  template <typename... Indices>
+  inline __attribute__((always_inline))
+  void operator()(int64_t x, Indices &... indices) const
+  {
+    static_assert( sizeof...(Indices) == rank
+                  ,"Error: The number of indices does not equal the rank" );
+    apply(0, x, indices...);
+  }
+
+private:
+
+  template <typename... Indices>
+  inline __attribute__((always_inline))
+  void apply(int d, int64_t x, int & idx, Indices &... indices) const
+  {
+    idx = (x % m_dim[d]) + m_offset[d];
+    apply( d+1, x/m_dim[d], indices...);
+  }
+
+  inline __attribute__((always_inline))
+  void apply(int d, int64_t x, int & idx) const
+  {
+    idx = x + m_offset[d];
   }
 
 private:
