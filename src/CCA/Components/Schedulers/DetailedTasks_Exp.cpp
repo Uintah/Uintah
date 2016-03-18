@@ -66,10 +66,10 @@ DetailedTasks::DetailedTasks(       SchedulerCommon * sc
   , d_myworld{pg}
   , first{first}
   , taskgraph_{taskgraph}
-  , mustConsiderInternalDependencies_{mustConsiderInternalDependencies}
-  , currentDependencyGeneration_{1}
   , initreq_{nullptr}
+  , mustConsiderInternalDependencies_{mustConsiderInternalDependencies}
   , taskPriorityAlg_{QueueAlg::MostMessages}
+  , currentDependencyGeneration_{1}
   , extraCommunication_{0}
 #ifdef HAVE_CUDA
   ,
@@ -384,21 +384,21 @@ DetailedTasks::findMatchingDetailedDep(       DependencyBatch*  batch,
   DetailedDep* valid_dep = 0;
 
   //search each dep
-  for (; dep != 0; dep = dep->next) {
+  for (; dep != 0; dep = dep->m_next) {
     //if deps are equivalent
-    if (fromPatch == dep->fromPatch && matl == dep->matl
-        && (req == dep->req || (req->var->equals(dep->req->var) && req->mapDataWarehouse() == dep->req->mapDataWarehouse()))) {
+    if (fromPatch == dep->m_from_patch && matl == dep->m_matl
+        && (req == dep->m_req || (req->var->equals(dep->m_req->var) && req->mapDataWarehouse() == dep->m_req->mapDataWarehouse()))) {
 
       // total range - the same var in each dep needs to have the same patchlow/high
-      dep->patchLow = totalLow = Min(totalLow, dep->patchLow);
-      dep->patchHigh = totalHigh = Max(totalHigh, dep->patchHigh);
+      dep->m_patch_low = totalLow = Min(totalLow, dep->m_patch_low);
+      dep->m_patch_high = totalHigh = Max(totalHigh, dep->m_patch_high);
 
-      int ngcDiff = req->numGhostCells > dep->req->numGhostCells ? (req->numGhostCells - dep->req->numGhostCells) : 0;
-      IntVector new_l = Min(low, dep->low);
-      IntVector new_h = Max(high, dep->high);
+      int ngcDiff = req->numGhostCells > dep->m_req->numGhostCells ? (req->numGhostCells - dep->m_req->numGhostCells) : 0;
+      IntVector new_l = Min(low, dep->m_low);
+      IntVector new_h = Max(high, dep->m_high);
       IntVector newRange = new_h - new_l;
       IntVector requiredRange = high - low;
-      IntVector oldRange = dep->high - dep->low + IntVector(ngcDiff, ngcDiff, ngcDiff);
+      IntVector oldRange = dep->m_high - dep->m_low + IntVector(ngcDiff, ngcDiff, ngcDiff);
       int newSize = newRange.x() * newRange.y() * newRange.z();
       int requiredSize = requiredRange.x() * requiredRange.y() * requiredRange.z();
       int oldSize = oldRange.x() * oldRange.y() * oldRange.z();
@@ -416,7 +416,7 @@ DetailedTasks::findMatchingDetailedDep(       DependencyBatch*  batch,
         if (!extraComm) {
           //combining does not create extra communication so take possibly this dep;
           //first check if the dep completely includes this dep
-          if (dep->low == new_l && dep->high == new_h) {
+          if (dep->m_low == new_l && dep->m_high == new_h) {
             //take this dep
             parent_dep = last_dep;
             valid_dep = dep;
@@ -514,9 +514,9 @@ DetailedTasks::possiblyCreateDependency(       DetailedTask*              from,
 #ifdef HAVE_CUDA
   if (Uintah::Parallel::usingDevice()) {
     if (fromresource == d_myworld->myrank() && fromresource == toresource) {
-      if (fromPatch != toPatch) {
+      if (m_from_patch != toPatch) {
         //printf("In DetailedTasks::createInternalDependencyBatch creating internal dependency from patch %d to patch %d, from task %p to task %p\n", fromPatch->getID(), toPatch->getID(), from, to);
-        createInternalDependencyBatch(from, comp, fromPatch, m_to_rank, req, toPatch, matl, low, high, cond);
+        createInternalDependencyBatch(from, comp, m_from_patch, m_to_rank, m_req, toPatch, m_matl, m_low, m_high, cond);
       }
       return; //We've got all internal dependency information for the GPU, now we can return.
     }
@@ -565,7 +565,7 @@ DetailedTasks::possiblyCreateDependency(       DetailedTask*              from,
   // location of parent dependency
   DetailedDep* parent_dep;
 
-  DetailedDep* matching_dep = findMatchingDetailedDep(batch, to, req, fromPatch, matl, new_dep->low, new_dep->high, varRangeLow,
+  DetailedDep* matching_dep = findMatchingDetailedDep(batch, to, req, fromPatch, matl, new_dep->m_low, new_dep->m_high, varRangeLow,
                                                       varRangeHigh, parent_dep);
 
   // This is set to either the parent of the first matching dep or when there is no matching deps the last dep in the list.
@@ -575,8 +575,8 @@ DetailedTasks::possiblyCreateDependency(       DetailedTask*              from,
   while (matching_dep != 0) {
 
     // extend the dependency range
-    new_dep->low = Min(new_dep->low, matching_dep->low);
-    new_dep->high = Max(new_dep->high, matching_dep->high);
+    new_dep->m_low = Min(new_dep->m_low, matching_dep->m_low);
+    new_dep->m_high = Max(new_dep->m_high, matching_dep->m_high);
 
     // TODO APH - figure this out and clean up (01/31/15)
     /*
@@ -589,11 +589,11 @@ DetailedTasks::possiblyCreateDependency(       DetailedTask*              from,
      */
 
     // copy matching dependencies toTasks to the new dependency
-    new_dep->toTasks.splice(new_dep->toTasks.begin(), matching_dep->toTasks);
+    new_dep->m_to_tasks.splice(new_dep->m_to_tasks.begin(), matching_dep->m_to_tasks);
 
     // erase particle sends/recvs
     if (req->var->typeDescription()->getType() == TypeDescription::ParticleVariable && req->whichdw == Task::OldDW) {
-      PSPatchMatlGhostRange pmg(fromPatch, matl, matching_dep->low, matching_dep->high, (int)cond);
+      PSPatchMatlGhostRange pmg(fromPatch, matl, matching_dep->m_low, matching_dep->m_high, (int)cond);
 
       if (fromresource == d_myworld->myrank()) {
         std::set<PSPatchMatlGhostRange>::iterator iter = particleSends_[toresource].find(pmg);
@@ -619,17 +619,17 @@ DetailedTasks::possiblyCreateDependency(       DetailedTask*              from,
 
     //remove the matching_dep from the batch list
     if (parent_dep == NULL) {
-      batch->m_head = matching_dep->next;
+      batch->m_head = matching_dep->m_next;
     }
     else {
-      parent_dep->next = matching_dep->next;
+      parent_dep->m_next = matching_dep->m_next;
     }
 
     //delete matching dep
     delete matching_dep;
 
     //search for another matching detailed deps
-    matching_dep = findMatchingDetailedDep(batch, to, req, fromPatch, matl, new_dep->low, new_dep->high,
+    matching_dep = findMatchingDetailedDep(batch, to, req, fromPatch, matl, new_dep->m_low, new_dep->m_high,
                                            varRangeLow, varRangeHigh, parent_dep);
 
     //if the matching dep is the current insert dep then we must move the insert dep to the new parent dep
@@ -640,24 +640,24 @@ DetailedTasks::possiblyCreateDependency(       DetailedTask*              from,
 
   // the total range of my dep and any deps later in the list with the same var/fromPatch/matl/dw
   // (to set the next one, which will be the head of the list, you only need to see the following one)
-  new_dep->patchLow = varRangeLow;
-  new_dep->patchHigh = varRangeHigh;
+  new_dep->m_patch_low = varRangeLow;
+  new_dep->m_patch_high = varRangeHigh;
 
   if (insert_dep == NULL) {
     //no dependencies are in the list so add it to the head
     batch->m_head = new_dep;
-    new_dep->next = NULL;
+    new_dep->m_next = NULL;
   }
   else {
     //dependencies already exist so add it at the insert location.
-    new_dep->next = insert_dep->next;
-    insert_dep->next = new_dep;
+    new_dep->m_next = insert_dep->m_next;
+    insert_dep->m_next = new_dep;
   }
 
   //add communication for particle data
   // these are to post all the particle quantities up front - sort them in TG::createDetailedDepenedencies
   if (req->var->typeDescription()->getType() == TypeDescription::ParticleVariable && req->whichdw == Task::OldDW) {
-    PSPatchMatlGhostRange pmg = PSPatchMatlGhostRange(fromPatch, matl, new_dep->low, new_dep->high, (int)cond, 1);
+    PSPatchMatlGhostRange pmg = PSPatchMatlGhostRange(fromPatch, matl, new_dep->m_low, new_dep->m_high, (int)cond, 1);
 
     if (fromresource == d_myworld->myrank()) {
       std::set<PSPatchMatlGhostRange>::iterator iter = particleSends_[toresource].find(pmg);
@@ -688,13 +688,13 @@ DetailedTasks::possiblyCreateDependency(       DetailedTask*              from,
 
 void DetailedTasks::createInternalDependencyBatch(DetailedTask* from,
     Task::Dependency* comp,
-    const Patch* fromPatch,
+    const Patch* m_from_patch,
     DetailedTask* m_to_rank,
-    Task::Dependency* req,
+    Task::Dependency* m_req,
     const Patch *toPatch,
-    int matl,
-    const IntVector& low,
-    const IntVector& high,
+    int m_matl,
+    const IntVector& m_low,
+    const IntVector& m_high,
     DetailedDep::CommCondition cond) {
   //get dependancy batch
   DependencyBatch* batch = from->getInternalComputes();
@@ -733,14 +733,14 @@ void DetailedTasks::createInternalDependencyBatch(DetailedTask* from,
   IntVector varRangeLow(INT_MAX, INT_MAX, INT_MAX), varRangeHigh(INT_MIN, INT_MIN, INT_MIN);
 
   //create the new dependency
-  DetailedDep* new_dep = scinew DetailedDep(batch->m_head, comp, req, m_to_rank, fromPatch, matl, low, high, cond);
+  DetailedDep* new_dep = scinew DetailedDep(batch->m_head, comp, m_req, m_to_rank, m_from_patch, m_matl, m_low, m_high, cond);
 
   //search for a dependency that can be combined with this dependency
 
   //location of parent dependency
   DetailedDep* parent_dep;
 
-  DetailedDep* matching_dep = findMatchingInternalDetailedDep(batch, m_to_rank, req, fromPatch, matl, new_dep->low, new_dep->high, varRangeLow,
+  DetailedDep* matching_dep = findMatchingInternalDetailedDep(batch, m_to_rank, m_req, m_from_patch, m_matl, new_dep->m_low, new_dep->m_high, varRangeLow,
                                                       varRangeHigh, parent_dep);
 
   //This is set to either the parent of the first matching dep or when there is no matching deps the last dep in the list.
@@ -758,10 +758,10 @@ void DetailedTasks::createInternalDependencyBatch(DetailedTask* from,
 
     //debugging output
     if (dbg.active()) {
-      dbg << d_myworld->myrank() << "            EXTENDED from " << new_dep->low << " " << new_dep->high << " to "
-          << Min(new_dep->low, matching_dep->low) << " " << Max(new_dep->high, matching_dep->high) << "\n";
-      dbg << *req->var << '\n';
-      dbg << *new_dep->req->var << '\n';
+      dbg << d_myworld->myrank() << "            EXTENDED from " << new_dep->m_low << " " << new_dep->m_high << " to "
+          << Min(new_dep->m_low, matching_dep->m_low) << " " << Max(new_dep->m_high, matching_dep->m_high) << "\n";
+      dbg << *m_req->var << '\n';
+      dbg << *new_dep->m_req->var << '\n';
       if (comp)
         dbg << *comp->var << '\n';
       if (new_dep->comp)
@@ -771,21 +771,21 @@ void DetailedTasks::createInternalDependencyBatch(DetailedTask* from,
 
 
     //extend the dependency range
-    new_dep->low = Min(new_dep->low, matching_dep->low);
-    new_dep->high = Max(new_dep->high, matching_dep->high);
+    new_dep->m_low = Min(new_dep->m_low, matching_dep->m_low);
+    new_dep->m_high = Max(new_dep->m_high, matching_dep->m_high);
 
 
     //copy matching dependencies toTasks to the new dependency
     new_dep->m_to_tasks.splice(new_dep->m_to_tasks.begin(), matching_dep->m_to_tasks);
 
     //erase particle sends/recvs
-    if (req->var->typeDescription()->getType() == TypeDescription::ParticleVariable && req->whichdw == Task::OldDW) {
-      PSPatchMatlGhostRange pmg(fromPatch, matl, matching_dep->low, matching_dep->high, (int)cond);
+    if (m_req->var->typeDescription()->getType() == TypeDescription::ParticleVariable && m_req->whichdw == Task::OldDW) {
+      PSPatchMatlGhostRange pmg(m_from_patch, m_matl, matching_dep->m_low, matching_dep->m_high, (int)cond);
 
-      if (req->var->getName() == "p.x")
-        dbg << d_myworld->myrank() << " erasing particles from " << fromresource << " to " << toresource << " var " << *req->var
-            << " on patch " << fromPatch->getID() << " matl " << matl << " range " << matching_dep->low << " " << matching_dep->high
-            << " cond " << cond << " dw " << req->mapDataWarehouse() << std::endl;
+      if (m_req->var->getName() == "p.x")
+        dbg << d_myworld->myrank() << " erasing particles from " << fromresource << " to " << toresource << " var " << *m_req->var
+            << " on patch " << m_from_patch->getID() << " matl " << m_matl << " range " << matching_dep->m_low << " " << matching_dep->m_high
+            << " cond " << cond << " dw " << m_req->mapDataWarehouse() << std::endl;
 
       if (fromresource == d_myworld->myrank()) {
         std::set<PSPatchMatlGhostRange>::iterator iter = particleSends_[toresource].find(pmg);
@@ -812,16 +812,16 @@ void DetailedTasks::createInternalDependencyBatch(DetailedTask* from,
 
     //remove the matching_dep from the batch list
     if (parent_dep == NULL) {
-      batch->m_head = matching_dep->next;
+      batch->m_head = matching_dep->m_next;
     } else {
-      parent_dep->next = matching_dep->next;
+      parent_dep->m_next = matching_dep->m_next;
     }
 
     //delete matching dep
     delete matching_dep;
 
     //search for another matching detailed deps
-    matching_dep = findMatchingInternalDetailedDep(batch, m_to_rank, req, fromPatch, matl, new_dep->low, new_dep->high, varRangeLow, varRangeHigh,
+    matching_dep = findMatchingInternalDetailedDep(batch, m_to_rank, m_req, m_from_patch, m_matl, new_dep->m_low, new_dep->m_high, varRangeLow, varRangeHigh,
                                            parent_dep);
 
     //if the matching dep is the current insert dep then we must move the insert dep to the new parent dep
@@ -833,24 +833,24 @@ void DetailedTasks::createInternalDependencyBatch(DetailedTask* from,
 
   // the total range of my dep and any deps later in the list with the same var/fromPatch/matl/dw
   // (to set the next one, which will be the head of the list, you only need to see the following one)
-  new_dep->patchLow = varRangeLow;
-  new_dep->patchHigh = varRangeHigh;
+  new_dep->m_patch_low = varRangeLow;
+  new_dep->m_patch_high = varRangeHigh;
 
 
   if (insert_dep == NULL) {
     //no dependencies are in the list so add it to the head
     batch->m_head = new_dep;
-    new_dep->next = NULL;
+    new_dep->m_next = NULL;
   } else {
     //depedencies already exist so add it at the insert location.
-    new_dep->next = insert_dep->next;
-    insert_dep->next = new_dep;
+    new_dep->m_next = insert_dep->m_next;
+    insert_dep->m_next = new_dep;
   }
 
   //add communication for particle data
   // these are to post all the particle quantities up front - sort them in TG::createDetailedDepenedencies
-  if (req->var->typeDescription()->getType() == TypeDescription::ParticleVariable && req->whichdw == Task::OldDW) {
-    PSPatchMatlGhostRange pmg = PSPatchMatlGhostRange(fromPatch, matl, new_dep->low, new_dep->high, (int)cond, 1);
+  if (m_req->var->typeDescription()->getType() == TypeDescription::ParticleVariable && m_req->whichdw == Task::OldDW) {
+    PSPatchMatlGhostRange pmg = PSPatchMatlGhostRange(m_from_patch, m_matl, new_dep->m_low, new_dep->m_high, (int)cond, 1);
 
     if (fromresource == d_myworld->myrank()) {
       std::set<PSPatchMatlGhostRange>::iterator iter = particleSends_[toresource].find(pmg);
@@ -873,16 +873,16 @@ void DetailedTasks::createInternalDependencyBatch(DetailedTask* from,
       }
 
     }
-    if (req->var->getName() == "p.x")
+    if (m_req->var->getName() == "p.x")
       dbg << d_myworld->myrank() << " scheduling particles from " << fromresource << " to " << toresource << " on patch "
-          << fromPatch->getID() << " matl " << matl << " range " << low << " " << high << " cond " << cond << " dw "
-          << req->mapDataWarehouse() << std::endl;
+          << m_from_patch->getID() << " matl " << m_matl << " range " << m_low << " " << m_high << " cond " << cond << " dw "
+          << m_req->mapDataWarehouse() << std::endl;
   }
 
   if (dbg.active()) {
-    dbg << d_myworld->myrank() << "            ADDED " << low << " " << high << ", fromPatch = ";
-    if (fromPatch)
-      dbg << fromPatch->getID() << '\n';
+    dbg << d_myworld->myrank() << "            ADDED " << m_low << " " << m_high << ", fromPatch = ";
+    if (m_from_patch)
+      dbg << m_from_patch->getID() << '\n';
     else
       dbg << "NULL\n";
   }
@@ -891,17 +891,17 @@ void DetailedTasks::createInternalDependencyBatch(DetailedTask* from,
 
 DetailedDep* DetailedTasks::findMatchingInternalDetailedDep(DependencyBatch* batch,
                                                     DetailedTask* toTask,
-                                                    Task::Dependency* req,
-                                                    const Patch* fromPatch,
-                                                    int matl,
-                                                    IntVector low,
-                                                    IntVector high,
+                                                    Task::Dependency* m_req,
+                                                    const Patch* m_from_patch,
+                                                    int m_matl,
+                                                    IntVector m_low,
+                                                    IntVector m_high,
                                                     IntVector& totalLow,
                                                     IntVector& totalHigh,
                                                     DetailedDep* &parent_dep)
 {
-  totalLow = low;
-  totalHigh = high;
+  totalLow = m_low;
+  totalHigh = m_high;
   DetailedDep* dep = batch->m_head;
 
   parent_dep = 0;
@@ -911,7 +911,7 @@ DetailedDep* DetailedTasks::findMatchingInternalDetailedDep(DependencyBatch* bat
   //for scenarios where one source ghost cell var can handle more than one destination patch.
 
   //search each dep
-  for (; dep != 0; dep = dep->next) {
+  for (; dep != 0; dep = dep->m_next) {
     //Temporarily disable feature of merging source ghost cells in the same patch into
     //a larger var (so instead of two transfers, it can be done as one transfer)
     /*
@@ -1364,7 +1364,7 @@ DetailedTasks::logMemoryUse(       std::ostream&       out,
   logMemory(out, total, tag, "batches", "DependencyBatch", 0, -1, elems2.str(), batches_.size() * sizeof(DependencyBatch), 0);
   int ndeps = 0;
   for (int i = 0; i < (int)batches_.size(); i++) {
-    for (DetailedDep* p = batches_[i]->m_head; p != 0; p = p->next) {
+    for (DetailedDep* p = batches_[i]->m_head; p != 0; p = p->m_next) {
       ndeps++;
     }
   }
@@ -1539,12 +1539,12 @@ DetailedTaskPriorityComparison::operator()( DetailedTask*& ltask,
     int lmsg = 0;
     int rmsg = 0;
     for (DependencyBatch* batch = ltask->getComputes(); batch != 0; batch = batch->m_comp_next) {
-      for (DetailedDep* dep = batch->m_head; dep != 0; dep = dep->next) {
+      for (DetailedDep* dep = batch->m_head; dep != 0; dep = dep->m_next) {
         lmsg++;
       }
     }
     for (DependencyBatch* batch = rtask->getComputes(); batch != 0; batch = batch->m_comp_next) {
-      for (DetailedDep* dep = batch->m_head; dep != 0; dep = dep->next) {
+      for (DetailedDep* dep = batch->m_head; dep != 0; dep = dep->m_next) {
         rmsg++;
       }
     }

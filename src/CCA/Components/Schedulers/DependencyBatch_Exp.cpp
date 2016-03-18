@@ -39,7 +39,7 @@ DependencyBatch::~DependencyBatch()
 {
   DetailedDep* dep = m_head;
   while (dep) {
-    DetailedDep* tmp = dep->next;
+    DetailedDep* tmp = dep->m_next;
     delete dep;
     dep = tmp;
   }

@@ -542,15 +542,15 @@ void ThreadedTaskScheduler::post_MPI_recvs( DetailedTask * task
 #endif
 
     // Create the MPI type
-    for (DetailedDep* req = batch->m_head; req != 0; req = req->next) {
+    for (DetailedDep* req = batch->m_head; req != 0; req = req->m_next) {
 
-      OnDemandDataWarehouse* dw = m_dws[req->req->mapDataWarehouse()].get_rep();
-      if ((req->condition == DetailedDep::FirstIteration && iteration > 0) || (req->condition == DetailedDep::SubsequentIterations
-                          && iteration == 0) || (m_not_copy_data_vars.count(req->req->var->getName()) > 0)) {
+      OnDemandDataWarehouse* dw = m_dws[req->m_req->mapDataWarehouse()].get_rep();
+      if ((req->m_comm_condition == DetailedDep::FirstIteration && iteration > 0) || (req->m_comm_condition == DetailedDep::SubsequentIterations
+                          && iteration == 0) || (m_not_copy_data_vars.count(req->m_req->var->getName()) > 0)) {
         continue;
       }
       // if we send/recv to an output task, don't send/recv if not an output timestep
-      if (req->toTasks.front()->getTask()->getType() == Task::Output && !m_output_port->isOutputTimestep() && !m_output_port->isCheckpointTimestep()) {
+      if (req->m_to_tasks.front()->getTask()->getType() == Task::Output && !m_output_port->isOutputTimestep() && !m_output_port->isCheckpointTimestep()) {
         continue;
       }
 
@@ -560,13 +560,13 @@ void ThreadedTaskScheduler::post_MPI_recvs( DetailedTask * task
       // pass it in if the particle data is on the old dw
       LoadBalancer* lb = 0;
       if (!m_reloc_new_posLabel) {
-        posDW = m_dws[req->req->task->mapDataWarehouse(Task::ParentOldDW)].get_rep();
+        posDW = m_dws[req->m_req->task->mapDataWarehouse(Task::ParentOldDW)].get_rep();
       } else {
         // on an output task (and only on one) we require particle variables from the NewDW
-        if (req->toTasks.front()->getTask()->getType() == Task::Output) {
-          posDW = m_dws[req->req->task->mapDataWarehouse(Task::NewDW)].get_rep();
+        if (req->m_to_tasks.front()->getTask()->getType() == Task::Output) {
+          posDW = m_dws[req->m_req->task->mapDataWarehouse(Task::NewDW)].get_rep();
         } else {
-          posDW = m_dws[req->req->task->mapDataWarehouse(Task::OldDW)].get_rep();
+          posDW = m_dws[req->m_req->task->mapDataWarehouse(Task::OldDW)].get_rep();
           lb = getLoadBalancer();
         }
       }
@@ -574,7 +574,7 @@ void ThreadedTaskScheduler::post_MPI_recvs( DetailedTask * task
       dw->recvMPI(batch, mpibuff, posDW, req, lb);
 
       if (!req->isNonDataDependency()) {
-        m_graphs[m_currentTG]->getDetailedTasks()->setScrubCount(req->req, req->matl, req->fromPatch, m_dws);
+        m_graphs[m_currentTG]->getDetailedTasks()->setScrubCount(req->m_req, req->m_matl, req->m_from_patch, m_dws);
       }
     }
 
@@ -639,19 +639,19 @@ void ThreadedTaskScheduler::post_MPI_sends( DetailedTask * task, int iteration )
     int to = batch->m_to_tasks.front()->getAssignedResourceIndex();
     ASSERTRANGE(to, 0, d_myworld->size());
 
-    for (DetailedDep* req = batch->m_head; req != 0; req = req->next) {
+    for (DetailedDep* req = batch->m_head; req != 0; req = req->m_next) {
 
-      if ((req->condition == DetailedDep::FirstIteration && iteration > 0) || (req->condition == DetailedDep::SubsequentIterations
-          && iteration == 0) || (m_not_copy_data_vars.count(req->req->var->getName()) > 0)) {
+      if ((req->m_comm_condition == DetailedDep::FirstIteration && iteration > 0) || (req->m_comm_condition == DetailedDep::SubsequentIterations
+          && iteration == 0) || (m_not_copy_data_vars.count(req->m_req->var->getName()) > 0)) {
         continue;
       }
 
       // if we send/recv to an output task, don't send/recv if not an output timestep
-      if (req->toTasks.front()->getTask()->getType() == Task::Output && !m_output_port->isOutputTimestep() && !m_output_port->isCheckpointTimestep()) {
+      if (req->m_to_tasks.front()->getTask()->getType() == Task::Output && !m_output_port->isOutputTimestep() && !m_output_port->isCheckpointTimestep()) {
         continue;
       }
 
-      OnDemandDataWarehouse* dw = m_dws[req->req->mapDataWarehouse()].get_rep();
+      OnDemandDataWarehouse* dw = m_dws[req->m_req->mapDataWarehouse()].get_rep();
 
       // the load balancer is used to determine where data was in the old dw on the prev timestep -
       // pass it in if the particle data is on the old dw
@@ -660,15 +660,15 @@ void ThreadedTaskScheduler::post_MPI_sends( DetailedTask * task, int iteration )
       LoadBalancer* lb = 0;
 
       if( !m_reloc_new_posLabel) {
-        posDW = m_dws[req->req->task->mapDataWarehouse(Task::ParentOldDW)].get_rep();
+        posDW = m_dws[req->m_req->task->mapDataWarehouse(Task::ParentOldDW)].get_rep();
       }
       else {
         // on an output task (and only on one) we require particle variables from the NewDW
-        if (req->toTasks.front()->getTask()->getType() == Task::Output) {
-          posDW = m_dws[req->req->task->mapDataWarehouse(Task::NewDW)].get_rep();
+        if (req->m_to_tasks.front()->getTask()->getType() == Task::Output) {
+          posDW = m_dws[req->m_req->task->mapDataWarehouse(Task::NewDW)].get_rep();
         }
         else {
-          posDW = m_dws[req->req->task->mapDataWarehouse(Task::OldDW)].get_rep();
+          posDW = m_dws[req->m_req->task->mapDataWarehouse(Task::OldDW)].get_rep();
           lb = getLoadBalancer();
         }
         posLabel = m_reloc_new_posLabel;
