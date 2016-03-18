@@ -1393,7 +1393,7 @@ void
 DetailedTask::emitEdges( ProblemSpecP edgesElement )
 {
   std::map<DependencyBatch*, DependencyBatch*>::iterator req_iter;
-  for (req_iter = reqs.begin(); req_iter != reqs.end(); req_iter++) {
+  for (req_iter = m_reqs.begin(); req_iter != m_reqs.end(); req_iter++) {
     DetailedTask* fromTask = (*req_iter).first->m_from_task;
     ProblemSpecP edge = edgesElement->appendChild("edge");
     edge->appendElement("source", fromTask->getName());
@@ -1401,7 +1401,7 @@ DetailedTask::emitEdges( ProblemSpecP edgesElement )
   }
 
   std::list<InternalDependency>::iterator iter;
-  for (iter = internalDependencies.begin(); iter != internalDependencies.end(); iter++) {
+  for (iter = m_internal_dependencies.begin(); iter != m_internal_dependencies.end(); iter++) {
     DetailedTask* fromTask = (*iter).m_prerequisite_task;
     if (getTask()->isReductionTask() && fromTask->getTask()->isReductionTask()) {
       // Ignore internal links between reduction tasks because they
@@ -1455,25 +1455,19 @@ class PatchIDIterator {
 std::string
 DetailedTask::getName() const
 {
-  if (name_ != "") {
-    return name_;
-  }
-
-  name_ = std::string(task->getName());
-
-  if (patches != 0) {
+  if (m_patches != 0) {
     ConsecutiveRangeSet patchIDs;
-    patchIDs.addInOrder(PatchIDIterator(patches->getVector().begin()), PatchIDIterator(patches->getVector().end()));
-    name_ += std::string(" (Patches: ") + patchIDs.toString() + ")";
+    patchIDs.addInOrder(PatchIDIterator(m_patches->getVector().begin()), PatchIDIterator(m_patches->getVector().end()));
+    m_name += std::string(" (Patches: ") + patchIDs.toString() + ")";
   }
 
-  if (matls != 0) {
+  if (m_matls != 0) {
     ConsecutiveRangeSet matlSet;
-    matlSet.addInOrder(matls->getVector().begin(), matls->getVector().end());
-    name_ += std::string(" (Matls: ") + matlSet.toString() + ")";
+    matlSet.addInOrder(m_matls->getVector().begin(), m_matls->getVector().end());
+    m_name += std::string(" (Matls: ") + matlSet.toString() + ")";
   }
 
-  return name_;
+  return m_name;
 }
 
 //_____________________________________________________________________________
