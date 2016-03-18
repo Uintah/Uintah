@@ -369,7 +369,6 @@ void RuntimeStats::report( MPI_Comm comm, InfoStats & stats )
   // count
   {
     int i = 0;
-    int g = 0;
     for (auto & group : g_report_values) {
 
       // group.first Dout, group.second map< string, ReportValue>

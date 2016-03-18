@@ -1182,7 +1182,7 @@ struct CompareDep {
   bool operator()( DependencyBatch* a,
                    DependencyBatch* b )
   {
-    return a->messageTag < b->messageTag;
+    return a->m_message_tag < b->m_message_tag;
   }
 };
 

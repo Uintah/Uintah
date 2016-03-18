@@ -287,8 +287,8 @@ void DetailedTask::findRequiringTasks( const VarLabel*            var,
   // find requiring tasks
 
   // find external requires
-  for (DependencyBatch* batch = getComputes(); batch != 0; batch = batch->comp_next) {
-    for (DetailedDep* dep = batch->head; dep != 0; dep = dep->next) {
+  for (DependencyBatch* batch = getComputes(); batch != 0; batch = batch->m_comp_next) {
+    for (DetailedDep* dep = batch->m_head; dep != 0; dep = dep->next) {
       if (dep->req->var == var) {
         requiringTasks.insert(requiringTasks.end(), dep->toTasks.begin(), dep->toTasks.end());
       }
@@ -298,7 +298,7 @@ void DetailedTask::findRequiringTasks( const VarLabel*            var,
   // find internal requires
   std::map<DetailedTask*, InternalDependency*>::iterator internalDepIter;
   for (internalDepIter = internalDependents.begin(); internalDepIter != internalDependents.end(); ++internalDepIter) {
-    if (internalDepIter->second->vars.find(var) != internalDepIter->second->vars.end()) {
+    if (internalDepIter->second->m_var_labels.find(var) != internalDepIter->second->m_var_labels.end()) {
       requiringTasks.push_back(internalDepIter->first);
     }
   }
@@ -307,7 +307,7 @@ void DetailedTask::findRequiringTasks( const VarLabel*            var,
 
 void DetailedTask::addComputes( DependencyBatch* comp )
 {
-  comp->comp_next = comp_head;
+  comp->m_comp_next = comp_head;
   comp_head = comp;
 }
 
@@ -319,7 +319,7 @@ bool DetailedTask::addRequires( DependencyBatch* req )
 
 void DetailedTask::addInternalComputes(DependencyBatch* comp)
 {
-  comp->comp_next = internal_comp_head;
+  comp->m_comp_next = internal_comp_head;
   internal_comp_head = comp;
 }
 
@@ -598,7 +598,7 @@ void DetailedTask::done( std::vector<OnDemandDataWarehouseP>& dws )
   for (iter = internalDependents.begin(); iter != internalDependents.end(); iter++) {
     InternalDependency* dep = (*iter).second;
 
-    dep->dependentTask->dependencySatisfied(dep);
+    dep->m_dependent_task->dependencySatisfied(dep);
     cnt++;
   }
 
@@ -613,9 +613,9 @@ void DetailedTask::dependencySatisfied( InternalDependency* dep )
     unsigned long currentGeneration = taskGroup->getCurrentDependencyGeneration();
 
     // if false, then the dependency has already been satisfied
-    ASSERT(dep->satisfiedGeneration < currentGeneration);
+    ASSERT(dep->m_satisfied_generation < currentGeneration);
 
-    dep->satisfiedGeneration = currentGeneration;
+    dep->m_satisfied_generation = currentGeneration;
     --numPendingInternalDependencies;
 
     if (numPendingInternalDependencies == 0) {

@@ -25,14 +25,19 @@
 #include <CCA/Components/Schedulers/DependencyBatch_Exp.hpp>
 #include <CCA/Components/Schedulers/DetailedTasks_Exp.hpp>
 
+namespace {
+
+std::mutex m_lock;
+
+}
+
 namespace Uintah {
 
-std::map<std::string, double> DependencyBatch::waittimes;
-
-
+//______________________________________________________________________
+//
 DependencyBatch::~DependencyBatch()
 {
-  DetailedDep* dep = head;
+  DetailedDep* dep = m_head;
   while (dep) {
     DetailedDep* tmp = dep->next;
     delete dep;
@@ -40,24 +45,29 @@ DependencyBatch::~DependencyBatch()
   }
 }
 
+//______________________________________________________________________
+//
 void DependencyBatch::reset()
 {
-  received_ = false;
-  madeMPIRequest_ = false;
+  m_received         = false;
+  m_made_mpi_request = false;
 }
 
+//______________________________________________________________________
+//
 bool DependencyBatch::makeMPIRequest()
 {
-  if (toTasks.size() > 1) {
-    if (!madeMPIRequest_) {
-      lock_.lock();
-      if (!madeMPIRequest_) {
-        madeMPIRequest_ = true;
-        lock_.unlock();
+  // TODO - remove lock, cleanup  conditional APH, 03/18/16
+  if (m_to_tasks.size() > 1) {
+    if (!m_made_mpi_request) {
+      m_lock.lock();
+      if (!m_made_mpi_request) {
+        m_made_mpi_request = true;
+        m_lock.unlock();
         return true;  // first to make the request
       }
       else {
-        lock_.unlock();
+        m_lock.unlock();
         return false;  // got beat out -- request already made
       }
     }
@@ -65,58 +75,30 @@ bool DependencyBatch::makeMPIRequest()
   }
   else {
     // only 1 requiring task -- don't worry about competing with another thread
-    ASSERT(!madeMPIRequest_);
-    madeMPIRequest_ = true;
+    ASSERT(!m_made_mpi_request);
+    m_made_mpi_request = true;
     return true;
   }
 }
 
-void DependencyBatch::addReceiveListener( int mpiSignal )
-{
-  ASSERT(toTasks.size() > 1);  // only needed when multiple tasks need a batch
-  lock_.lock();
-  {
-    receiveListeners_.insert(mpiSignal);
-  }
-  lock_.unlock();
-}
+//______________________________________________________________________
+//
 
 void DependencyBatch::received( const ProcessorGroup * pg )
 {
-  received_ = true;
+  m_received = true;
 
   //set all the toVars to valid, meaning the mpi has been completed
-  for (std::vector<Variable*>::iterator iter = toVars.begin(); iter != toVars.end(); iter++) {
+  for (std::vector<Variable*>::iterator iter = m_to_vars.begin(); iter != m_to_vars.end(); iter++) {
     (*iter)->setValid();
   }
-  for (std::list<DetailedTask*>::iterator iter = toTasks.begin(); iter != toTasks.end(); iter++) {
-    // if the count is 0, the task will add itself to the external ready queue
-    //cout << pg->myrank() << "  Dec: " << *fromTask << " for " << *(*iter) << endl;
+  for (std::list<DetailedTask*>::iterator iter = m_to_tasks.begin(); iter != m_to_tasks.end(); iter++) {
     (*iter)->decrementExternalDepCount();
-    //cout << Parallel::getMPIRank() << "   task " << **(iter) << " received a message, remaining count " << (*iter)->getExternalDepCount() << endl;
     (*iter)->checkExternalDepCount();
   }
 
   //clear the variables that have outstanding MPI as they are completed now.
-  toVars.clear();
-
-  // TODO APH - Figure this out and clean up (01/31/15)
-#if 0
-  if (!receiveListeners_.empty()) {
-    // only needed when multiple tasks need a batch
-    ASSERT(toTasks.size() > 1);
-    ASSERT(lock_ != 0);
-    lock_->lock();
-    {
-      for (set<int>::iterator iter = receiveListeners_.begin(); iter != receiveListeners_.end(); ++iter) {
-        // send WakeUp messages to threads on the same processor
-        MPI_Send(0, 0, MPI_INT, pg->myrank(), *iter, pg->getComm());
-      }
-      receiveListeners_.clear();
-    }
-    lock_->unlock();
-  }
-#endif
+  m_to_vars.clear();
 }
 
 } // namespace Uintah
