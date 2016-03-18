@@ -55,15 +55,15 @@ public:
              , const IntVector          & high
              , CommCondition              cond
              )
-    : next(next)
-    , comp(comp)
-    , req(req)
-    , fromPatch(fromPatch)
-    , low(low), high(high)
-    , matl(matl)
-    , condition(cond)
-    , patchLow(low)
-    , patchHigh(high)
+    : m_next(next)
+    , m_comp(comp)
+    , m_req(req)
+    , m_from_patch(fromPatch)
+    , m_low(low), m_high(high)
+    , m_matl(matl)
+    , m_comm_condition(cond)
+    , m_patch_low(low)
+    , m_patch_high(high)
   {
     ASSERT(Min(high - low, IntVector(1, 1, 1)) == IntVector(1, 1, 1));
 
@@ -75,7 +75,7 @@ public:
     ASSERT(fromPatch == 0 || (Uintah::Max(high, fromPatch->getExtraHighIndex(basis, req->var->getBoundaryLayer())) ==
           fromPatch->getExtraHighIndex(basis, req->var->getBoundaryLayer())));
 
-    toTasks.push_back(toTask);
+    m_to_tasks.push_back(toTask);
   }
 
 
@@ -84,25 +84,25 @@ public:
   // that requires the data (from ghost cells in particular) before it is
   // modified preventing the possibility of modifying data while it is being
   // used.
-  bool isNonDataDependency() const { return (fromPatch == nullptr); }
+  bool isNonDataDependency() const { return (m_from_patch == nullptr); }
 
-  DetailedDep              * next;
-  Task::Dependency         * comp;
-  Task::Dependency         * req;
-  std::list<DetailedTask*>   toTasks;
-  const Patch              * fromPatch;
-  IntVector                  low;
-  IntVector                  high;
-  int                        matl;
+  DetailedDep              * m_next;
+  Task::Dependency         * m_comp;
+  Task::Dependency         * m_req;
+  std::list<DetailedTask*>   m_to_tasks;
+  const Patch              * m_from_patch;
+  IntVector                  m_low;
+  IntVector                  m_high;
+  int                        m_matl;
 
   // this is to satisfy a need created by the DynamicLoadBalancer.  To keep it unrestricted on when it can perform, and
   // to avoid a costly second recompile on the next timestep, we add a comm condition which will send/recv data based
   // on whether some condition is met at run time - in this case whether it is the first execution or not.
-  CommCondition condition;
+  CommCondition m_comm_condition;
 
   // for SmallMessages - if we don't copy the complete patch, we need to know the range so we can store all segments properly
-  IntVector patchLow;
-  IntVector patchHigh;
+  IntVector m_patch_low;
+  IntVector m_patch_high;
 
   // eliminate copy, assignment and move
   DetailedDep( const DetailedDep & )            = delete;

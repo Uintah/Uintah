@@ -288,9 +288,9 @@ void DetailedTask::findRequiringTasks( const VarLabel*            var,
 
   // find external requires
   for (DependencyBatch* batch = getComputes(); batch != 0; batch = batch->m_comp_next) {
-    for (DetailedDep* dep = batch->m_head; dep != 0; dep = dep->next) {
-      if (dep->req->var == var) {
-        requiringTasks.insert(requiringTasks.end(), dep->toTasks.begin(), dep->toTasks.end());
+    for (DetailedDep* dep = batch->m_head; dep != 0; dep = dep->m_next) {
+      if (dep->m_req->var == var) {
+        requiringTasks.insert(requiringTasks.end(), dep->m_to_tasks.begin(), dep->m_to_tasks.end());
       }
     }
   }
