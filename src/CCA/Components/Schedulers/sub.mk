@@ -30,12 +30,15 @@ SRCDIR := CCA/Components/Schedulers
 
 SRCS += \
         $(SRCDIR)/CommRecMPI.cc               \
+        $(SRCDIR)/DependencyBatch.cc          \
         $(SRCDIR)/DependencyException.cc      \
+        $(SRCDIR)/DetailedDep.cc              \
+        $(SRCDIR)/DetailedTask.cc             \
         $(SRCDIR)/DetailedTasks.cc            \
         $(SRCDIR)/DynamicMPIScheduler.cc      \
         $(SRCDIR)/IncorrectAllocation.cc      \
-        $(SRCDIR)/MemoryLog.cc                \
         $(SRCDIR)/MPIScheduler.cc             \
+        $(SRCDIR)/MemoryLog.cc                \
         $(SRCDIR)/OnDemandDataWarehouse.cc    \
         $(SRCDIR)/Relocate.cc                 \
         $(SRCDIR)/RuntimeStats.cc             \
