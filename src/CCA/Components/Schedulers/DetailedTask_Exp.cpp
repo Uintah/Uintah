@@ -43,26 +43,30 @@ namespace {
 
 Dout mpidbg{      "MPIDBG",        false };
 
-
 } // namespace
 
 
-
+//_____________________________________________________________________________
+//
 DetailedTask::DetailedTask(       Task            * task
                           ,  const PatchSubset    * patches
                           ,  const MaterialSubset * matls
                           ,        DetailedTasks  * taskGroup
                           )
-  :   task(task),
-      patches(patches),
-      matls(matls),
-      comp_head(0),
-      internal_comp_head(0),
-      taskGroup(taskGroup),
-      numPendingInternalDependencies(0),
-      resourceIndex(-1),
-      staticOrder(-1),
-      d_profileType(Normal)
+  : m_task{task}
+  , m_patches{patches}
+  , m_matls{matls}
+  , m_comp_head{0}
+  , m_internal_comp_head{0}
+  , m_task_group{taskGroup}
+  , m_initiated{false}
+  , m_externally_ready{false}
+  , m_external_dependency_count{-1}
+  , m_name{task->getName()}
+  , m_num_pending_internal_dependencies{0}
+  , m_resource_index{-1}
+  , m_static_order{-1}
+  , m_profile_type{Normal}
 {
   if (patches) {
     // patches and matls must be sorted
@@ -83,72 +87,73 @@ DetailedTask::DetailedTask(       Task            * task
 
 }
 
-
+//_____________________________________________________________________________
+//
 DetailedTask::~DetailedTask()
 {
-  if (patches && patches->removeReference()) {
-    delete patches;
+  if (m_patches && m_patches->removeReference()) {
+    delete m_patches;
   }
-  if (matls && matls->removeReference()) {
-    delete matls;
+  if (m_matls && m_matls->removeReference()) {
+    delete m_matls;
   }
 }
 
-
-
-void DetailedTask::doit( const ProcessorGroup*                 pg,
-                    std::vector<OnDemandDataWarehouseP>& oddws,
-                    std::vector<DataWarehouseP>&         dws,
-                          Task::CallBackEvent             event /* = Task::CPU */ )
+//_____________________________________________________________________________
+//
+void DetailedTask::doit( const ProcessorGroup                      * pg
+                       ,       std::vector<OnDemandDataWarehouseP> & oddws
+                       ,       std::vector<DataWarehouseP>         & dws
+                       ,       Task::CallBackEvent                   event /* = Task::CPU */
+                       )
 {
   m_wait_timer.stop();
   m_exec_timer.start();
 
   for (int i = 0; i < (int)dws.size(); i++) {
     if (oddws[i] != 0) {
-      oddws[i]->pushRunningTask(task, &oddws);
+      oddws[i]->pushRunningTask(m_task, &oddws);
     }
   }
 
 #ifdef HAVE_CUDA
   // determine if task will be executed on CPU or device, e.g. GPU or MIC
-  if (task->usesDevice()) {
+  if (m_task->usesDevice()) {
     //Run the GPU task.  Technically the engine has structure to run one task on multiple devices if
     //that task had patches on multiple devices.  So run the task once per device.  As often as possible,
     //we want to design tasks so each task runs on only once device, instead of a one to many relationship.
     for (std::set<unsigned int>::const_iterator deviceNums_it = deviceNums_.begin(); deviceNums_it != deviceNums_.end(); ++deviceNums_it) {
       const unsigned int currentDevice = *deviceNums_it;
       OnDemandDataWarehouse::uintahSetCudaDevice(currentDevice);
-      task->doit(event, pg, patches, matls, dws,
+      m_task->doit(event, pg, m_patches, m_matls, dws,
                  getTaskGpuDataWarehouse(currentDevice, Task::OldDW),
                  getTaskGpuDataWarehouse(currentDevice, Task::NewDW),
                  getCudaStreamForThisTask(currentDevice), currentDevice);
     }
   }
   else {
-    task->doit(event, pg, patches, matls, dws, NULL, NULL, NULL, -1);
+    m_task->doit(event, pg, m_patches, m_matls, dws, NULL, NULL, NULL, -1);
   }
 #else
-  task->doit(event, pg, patches, matls, dws, NULL, NULL, NULL, -1);
+  m_task->doit(event, pg, m_patches, m_matls, dws, NULL, NULL, NULL, -1);
 #endif
 
   for (int i = 0; i < (int)dws.size(); i++) {
     if (oddws[i] != 0) {
-      oddws[i]->checkTasksAccesses(patches, matls);
+      oddws[i]->checkTasksAccesses(m_patches, m_matls);
       oddws[i]->popRunningTask();
     }
   }
 }
 
-
-
-
+//_____________________________________________________________________________
+//
 void DetailedTask::scrub( std::vector<OnDemandDataWarehouseP>& dws )
 {
   const Task* task = getTask();
 
-  const std::set<const VarLabel*, VarLabel::Compare>& initialRequires = taskGroup->getSchedulerCommon()->getInitialRequiredVars();
-  const std::set<std::string>& unscrubbables = taskGroup->getSchedulerCommon()->getNoScrubVars();
+  const std::set<const VarLabel*, VarLabel::Compare>& initialRequires = m_task_group->getSchedulerCommon()->getInitialRequiredVars();
+  const std::set<std::string>& unscrubbables = m_task_group->getSchedulerCommon()->getNoScrubVars();
 
   // Decrement the scrub count for each of the required variables
   for (const Task::Dependency* req = task->getRequires(); req != 0; req = req->next) {
@@ -158,8 +163,8 @@ void DetailedTask::scrub( std::vector<OnDemandDataWarehouseP>& dws )
       int dw = req->mapDataWarehouse();
 
       DataWarehouse::ScrubMode scrubmode = dws[dw]->getScrubMode();
-      if (scrubmode == DataWarehouse::ScrubComplete
-          || (scrubmode == DataWarehouse::ScrubNonPermanent && initialRequires.find(req->var) == initialRequires.end())) {
+      if (scrubmode == DataWarehouse::ScrubComplete || (scrubmode == DataWarehouse::ScrubNonPermanent
+          && initialRequires.find(req->var) == initialRequires.end())) {
 
         if (unscrubbables.find(req->var->getName()) != unscrubbables.end())
           continue;
@@ -210,7 +215,8 @@ void DetailedTask::scrub( std::vector<OnDemandDataWarehouseP>& dws )
                 dws[dw]->decrementScrubCount(req->var, matls->get(m), neighbor);
               }
               catch (UnknownVariable& e) {
-                std::cout << "   BAD BOY FROM Task : " << *this << " scrubbing " << *req << " PATCHES: " << *patches.get_rep() << std::endl;
+                std::cout << "   BAD BOY FROM Task : " << *this << " scrubbing " << *req << " PATCHES: " << *patches.get_rep()
+                          << std::endl;
                 throw e;
               }
             }
@@ -224,8 +230,8 @@ void DetailedTask::scrub( std::vector<OnDemandDataWarehouseP>& dws )
   for (const Task::Dependency* mod = task->getModifies(); mod != 0; mod = mod->next) {
     int dw = mod->mapDataWarehouse();
     DataWarehouse::ScrubMode scrubmode = dws[dw]->getScrubMode();
-    if (scrubmode == DataWarehouse::ScrubComplete
-        || (scrubmode == DataWarehouse::ScrubNonPermanent && initialRequires.find(mod->var) == initialRequires.end())) {
+    if (scrubmode == DataWarehouse::ScrubComplete || (scrubmode == DataWarehouse::ScrubNonPermanent
+        && initialRequires.find(mod->var) == initialRequires.end())) {
 
       if (unscrubbables.find(mod->var->getName()) != unscrubbables.end())
         continue;
@@ -251,8 +257,8 @@ void DetailedTask::scrub( std::vector<OnDemandDataWarehouseP>& dws )
       int whichdw = comp->whichdw;
       int dw = comp->mapDataWarehouse();
       DataWarehouse::ScrubMode scrubmode = dws[dw]->getScrubMode();
-      if (scrubmode == DataWarehouse::ScrubComplete
-          || (scrubmode == DataWarehouse::ScrubNonPermanent && initialRequires.find(comp->var) == initialRequires.end())) {
+      if (scrubmode == DataWarehouse::ScrubComplete || (scrubmode == DataWarehouse::ScrubNonPermanent
+          && initialRequires.find(comp->var) == initialRequires.end())) {
         constHandle<PatchSubset> patches = comp->getPatchesUnderDomain(getPatches());
         constHandle<MaterialSubset> matls = comp->getMaterialsUnderDomain(getMaterials());
 
@@ -265,7 +271,7 @@ void DetailedTask::scrub( std::vector<OnDemandDataWarehouseP>& dws )
           for (int m = 0; m < matls->size(); m++) {
             int matl = matls->get(m);
             int count;
-            if (taskGroup->getScrubCount(comp->var, matl, patch, whichdw, count)) {
+            if (m_task_group->getScrubCount(comp->var, matl, patch, whichdw, count)) {
               dws[dw]->setScrubCount(comp->var, matl, patch, count);
             }
             else {
@@ -279,13 +285,12 @@ void DetailedTask::scrub( std::vector<OnDemandDataWarehouseP>& dws )
   }
 }  // end scrub()
 
-
-
-void DetailedTask::findRequiringTasks( const VarLabel*            var,
-                                  std::list<DetailedTask*>& requiringTasks )
+//_____________________________________________________________________________
+//
+void DetailedTask::findRequiringTasks( const VarLabel                 * var,
+                                             std::list<DetailedTask*> & requiringTasks
+                                     )
 {
-  // find requiring tasks
-
   // find external requires
   for (DependencyBatch* batch = getComputes(); batch != 0; batch = batch->m_comp_next) {
     for (DetailedDep* dep = batch->m_head; dep != 0; dep = dep->m_next) {
@@ -297,85 +302,193 @@ void DetailedTask::findRequiringTasks( const VarLabel*            var,
 
   // find internal requires
   std::map<DetailedTask*, InternalDependency*>::iterator internalDepIter;
-  for (internalDepIter = internalDependents.begin(); internalDepIter != internalDependents.end(); ++internalDepIter) {
+  for (internalDepIter = m_internal_dependents.begin(); internalDepIter != m_internal_dependents.end(); ++internalDepIter) {
     if (internalDepIter->second->m_var_labels.find(var) != internalDepIter->second->m_var_labels.end()) {
       requiringTasks.push_back(internalDepIter->first);
     }
   }
 }
 
-
+//_____________________________________________________________________________
+//
 void DetailedTask::addComputes( DependencyBatch* comp )
 {
-  comp->m_comp_next = comp_head;
-  comp_head = comp;
+  comp->m_comp_next = m_comp_head;
+  m_comp_head = comp;
 }
 
+//_____________________________________________________________________________
+//
 bool DetailedTask::addRequires( DependencyBatch* req )
 {
   // return true if it is adding a new batch
-  return reqs.insert(std::make_pair(req, req)).second;
+  return m_reqs.insert(std::make_pair(req, req)).second;
 }
 
-void DetailedTask::addInternalComputes(DependencyBatch* comp)
+void DetailedTask::addInternalComputes( DependencyBatch* comp )
 {
-  comp->m_comp_next = internal_comp_head;
-  internal_comp_head = comp;
+  comp->m_comp_next = m_internal_comp_head;
+  m_internal_comp_head = comp;
 }
 
-bool DetailedTask::addInternalRequires(DependencyBatch* req)
+//_____________________________________________________________________________
+//
+bool DetailedTask::addInternalRequires ( DependencyBatch* req )
 {
   // return true if it is adding a new batch
-  return internal_reqs.insert(std::make_pair(req, req)).second;
+  return m_internal_reqs.insert(std::make_pair(req, req)).second;
 }
 
+//_____________________________________________________________________________
+//
 // can be called in one of two places - when the last MPI Recv has completed, or from MPIScheduler
 void DetailedTask::checkExternalDepCount()
 {
-  DOUT(mpidbg, "Rank-" << Parallel::getMPIRank() << " Task " << this->getTask()->getName() << " external deps: " << externalDependencyCount_
-                                << " internal deps: " << numPendingInternalDependencies);
+  DOUT(mpidbg, "Rank-" << Parallel::getMPIRank() << " Task " << this->getTask()->getName() << " external deps: " << m_external_dependency_count
+                       << " internal deps: " << m_num_pending_internal_dependencies);
 
-  if (externalDependencyCount_ == 0 && taskGroup->sc_->useInternalDeps() && initiated_ && !task->usesMPI()) {
-    taskGroup->mpiCompletedQueueLock_.lock();
+  if (m_external_dependency_count == 0 && m_task_group->sc_->useInternalDeps() && m_initiated && !m_task->usesMPI()) {
+    m_task_group->mpiCompletedQueueLock_.lock();
 
     DOUT(mpidbg, "Rank-" << Parallel::getMPIRank() << " Task " << this->getTask()->getName()
-                                  << " MPI requirements satisfied, placing into external ready queue");
-    if (externallyReady_ == false) {
-      taskGroup->mpiCompletedTasks_.push(this);
-      externallyReady_ = true;
+                         << " MPI requirements satisfied, placing into external ready queue");
+    if (m_externally_ready == false) {
+      m_task_group->mpiCompletedTasks_.push(this);
+      m_externally_ready = true;
     }
-    taskGroup->mpiCompletedQueueLock_.unlock();
+    m_task_group->mpiCompletedQueueLock_.unlock();
   }
 }
 
+//_____________________________________________________________________________
+//
 void DetailedTask::resetDependencyCounts()
 {
-  externalDependencyCount_ = 0;
-  externallyReady_ = false;
-  initiated_ = false;
+  m_external_dependency_count = 0;
+  m_externally_ready = false;
+  m_initiated = false;
 
-  numPendingInternalDependencies = internalDependencies.size();
+  m_num_pending_internal_dependencies = m_internal_dependencies.size();
 
   m_wait_timer.reset();
   m_exec_timer.reset();
 }
 
-void DetailedTask::addInternalDependency(       DetailedTask* prerequisiteTask,
-                                     const VarLabel*     var )
+//_____________________________________________________________________________
+//
+void DetailedTask::addInternalDependency(       DetailedTask * prerequisiteTask
+                                        , const VarLabel     * var )
 {
-  if (taskGroup->mustConsiderInternalDependencies()) {
+  if (m_task_group->mustConsiderInternalDependencies()) {
     // Avoid unnecessary multiple internal dependency links between tasks.
-    std::map<DetailedTask*, InternalDependency*>::iterator foundIt = prerequisiteTask->internalDependents.find(this);
-    if (foundIt == prerequisiteTask->internalDependents.end()) {
-      internalDependencies.push_back(InternalDependency(prerequisiteTask, this, var, 0/* not satisfied */));
-      prerequisiteTask->internalDependents[this] = &internalDependencies.back();
-      numPendingInternalDependencies = internalDependencies.size();
+    std::map<DetailedTask*, InternalDependency*>::iterator foundIt = prerequisiteTask->m_internal_dependents.find(this);
+    if (foundIt == prerequisiteTask->m_internal_dependents.end()) {
+      m_internal_dependencies.push_back(InternalDependency(prerequisiteTask, this, var, 0/* not satisfied */));
+      prerequisiteTask->m_internal_dependents[this] = &m_internal_dependencies.back();
+      m_num_pending_internal_dependencies = m_internal_dependencies.size();
     }
     else {
       foundIt->second->addVarLabel(var);
     }
   }
 }
+
+//_____________________________________________________________________________
+//
+void DetailedTask::done( std::vector<OnDemandDataWarehouseP>& dws )
+{
+  // Important to scrub first, before dealing with the internal dependencies
+  scrub(dws);
+
+  int cnt = 1000;
+  std::map<DetailedTask*, InternalDependency*>::iterator iter;
+  for (iter = m_internal_dependents.begin(); iter != m_internal_dependents.end(); iter++) {
+    InternalDependency* dep = (*iter).second;
+
+    dep->m_dependent_task->dependencySatisfied(dep);
+    cnt++;
+  }
+
+  m_exec_timer.stop();
+}
+
+//_____________________________________________________________________________
+//
+void DetailedTask::dependencySatisfied( InternalDependency* dep )
+{
+  m_internal_dependency_lock.lock();
+  {
+    ASSERT(m_num_pending_internal_dependencies > 0);
+    unsigned long currentGeneration = m_task_group->getCurrentDependencyGeneration();
+
+    // if false, then the dependency has already been satisfied
+    ASSERT(dep->m_satisfied_generation < currentGeneration);
+
+    dep->m_satisfied_generation = currentGeneration;
+    --m_num_pending_internal_dependencies;
+
+    if (m_num_pending_internal_dependencies == 0) {
+      m_task_group->internalDependenciesSatisfied(this);
+    }
+  }
+  m_internal_dependency_lock.unlock();
+}
+
+//_____________________________________________________________________________
+//
+std::ostream& operator<<( std::ostream& out, const DetailedTask& task )
+{
+  std::mutex lock;
+  std::lock_guard<std::mutex> lock_guard(lock);
+  {
+    out << task.getTask()->getName();
+    const PatchSubset* patches = task.getPatches();
+    if (patches) {
+
+      out << ", on patch";
+      if (patches->size() > 1) {
+        out << "es";
+      }
+      out << " ";
+      for (int i = 0; i < patches->size(); i++) {
+        if (i > 0) {
+          out << ",";
+        }
+        out << patches->get(i)->getID();
+      }
+      // a once-per-proc task is liable to have multiple levels, and thus calls to getLevel(patches) will fail
+      if (task.getTask()->getType() == Task::OncePerProc) {
+        out << ", on multiple levels";
+      }
+      else {
+        out << ", Level " << getLevel(patches)->getIndex();
+      }
+    }
+    const MaterialSubset* matls = task.getMaterials();
+    if (matls) {
+      out << ", on material";
+      if (matls->size() > 1) {
+        out << "s";
+      }
+      out << " ";
+      for (int i = 0; i < matls->size(); i++) {
+        if (i > 0) {
+          out << ",";
+        }
+        out << matls->get(i);
+      }
+    }
+    out << ", resource (rank): ";
+    if (task.getAssignedResourceIndex() == -1) {
+      out << "unassigned";
+    }
+    else {
+      out << task.getAssignedResourceIndex();
+    }
+  }
+  return out;
+}
+
 
 
 #ifdef HAVE_CUDA
@@ -588,94 +701,5 @@ void DetailedTask::clearPreparationCollections(){
 }
 #endif // HAVE_CUDA
 
-void DetailedTask::done( std::vector<OnDemandDataWarehouseP>& dws )
-{
-  // Important to scrub first, before dealing with the internal dependencies
-  scrub(dws);
-
-  int cnt = 1000;
-  std::map<DetailedTask*, InternalDependency*>::iterator iter;
-  for (iter = internalDependents.begin(); iter != internalDependents.end(); iter++) {
-    InternalDependency* dep = (*iter).second;
-
-    dep->m_dependent_task->dependencySatisfied(dep);
-    cnt++;
-  }
-
-  m_exec_timer.stop();
-}
-
-void DetailedTask::dependencySatisfied( InternalDependency* dep )
-{
-  internalDependencyLock.lock();
-  {
-    ASSERT(numPendingInternalDependencies > 0);
-    unsigned long currentGeneration = taskGroup->getCurrentDependencyGeneration();
-
-    // if false, then the dependency has already been satisfied
-    ASSERT(dep->m_satisfied_generation < currentGeneration);
-
-    dep->m_satisfied_generation = currentGeneration;
-    --numPendingInternalDependencies;
-
-    if (numPendingInternalDependencies == 0) {
-      taskGroup->internalDependenciesSatisfied(this);
-    }
-  }
-  internalDependencyLock.unlock();
-}
-
-std::ostream& operator<<( std::ostream& out, const DetailedTask& task )
-{
-  std::mutex lock;
-  std::lock_guard<std::mutex> lock_guard(lock);
-  {
-    out << task.getTask()->getName();
-    const PatchSubset* patches = task.getPatches();
-    if (patches) {
-
-      out << ", on patch";
-      if (patches->size() > 1) {
-        out << "es";
-      }
-      out << " ";
-      for (int i = 0; i < patches->size(); i++) {
-        if (i > 0) {
-          out << ",";
-        }
-        out << patches->get(i)->getID();
-      }
-      // a once-per-proc task is liable to have multiple levels, and thus calls to getLevel(patches) will fail
-      if (task.getTask()->getType() == Task::OncePerProc) {
-        out << ", on multiple levels";
-      }
-      else {
-        out << ", Level " << getLevel(patches)->getIndex();
-      }
-    }
-    const MaterialSubset* matls = task.getMaterials();
-    if (matls) {
-      out << ", on material";
-      if (matls->size() > 1) {
-        out << "s";
-      }
-      out << " ";
-      for (int i = 0; i < matls->size(); i++) {
-        if (i > 0) {
-          out << ",";
-        }
-        out << matls->get(i);
-      }
-    }
-    out << ", resource (rank): ";
-    if (task.getAssignedResourceIndex() == -1) {
-      out << "unassigned";
-    }
-    else {
-      out << task.getAssignedResourceIndex();
-    }
-  }
-  return out;
-}
 
 } // namespace Uintah

@@ -1074,11 +1074,11 @@ TaskGraph::createDetailedDependencies()
 
     if (detaileddbg.active()) {
       detaileddbg << m_proc_group->myrank() << " createDetailedDependencies (collect comps) for:\n";
-      task->task->displayAll(detaileddbg);
+      task->m_task->displayAll(detaileddbg);
     }
 
-    remembercomps(task, task->task->getComputes(), ct);
-    remembercomps(task, task->task->getModifies(), ct);
+    remembercomps(task, task->m_task->getComputes(), ct);
+    remembercomps(task, task->m_task->getModifies(), ct);
   }
 
   // Assign task phase number based on the reduction tasks so a mixed thread/mpi
@@ -1087,15 +1087,15 @@ TaskGraph::createDetailedDependencies()
   int currcomm = 0;
   for (int i = 0; i < m_detailed_tasks->numTasks(); i++) {
     DetailedTask* task = m_detailed_tasks->getTask(i);
-    task->task->d_phase = currphase;
+    task->m_task->d_phase = currphase;
     if (tgphasedbg.active()) {
       tgphasedbg << "Rank-" << m_proc_group->myrank() << " Task: " << *task << " phase: " << currphase << "\n";
     }
-    if (task->task->getType() == Task::Reduction) {
-      task->task->d_comm = currcomm;
+    if (task->m_task->getType() == Task::Reduction) {
+      task->m_task->d_comm = currcomm;
       currcomm++;
       currphase++;
-    } else if (task->task->usesMPI()) {
+    } else if (task->m_task->usesMPI()) {
       currphase++;
     }
   }
@@ -1106,17 +1106,17 @@ TaskGraph::createDetailedDependencies()
   for (int i = 0; i < m_detailed_tasks->numTasks(); i++) {
     DetailedTask* task = m_detailed_tasks->getTask(i);
 
-    if (detaileddbg.active() && (task->task->getRequires() != 0)) {
+    if (detaileddbg.active() && (task->m_task->getRequires() != 0)) {
       detaileddbg << m_proc_group->myrank() << " Looking at requires of detailed task: " << *task << "\n";
     }
 
-    createDetailedDependencies(task, task->task->getRequires(), ct, false);
+    createDetailedDependencies(task, task->m_task->getRequires(), ct, false);
 
-    if (detaileddbg.active() && (task->task->getModifies() != 0)) {
+    if (detaileddbg.active() && (task->m_task->getModifies() != 0)) {
       detaileddbg << m_proc_group->myrank() << " Looking at modifies of detailed task: " << *task << "\n";
     }
 
-    createDetailedDependencies(task, task->task->getModifies(), ct, true);
+    createDetailedDependencies(task, task->m_task->getModifies(), ct, true);
   }
 
   if (detaileddbg.active()) {
@@ -1149,17 +1149,17 @@ TaskGraph::remembercomps( DetailedTask     * task
 
       //if the patch pointer on both the dep and the task have not changed then use the 
       //cached result
-      if (task->patches == cached_task_patches && comp->patches == cached_comp_patches) {
+      if (task->m_patches == cached_task_patches && comp->patches == cached_comp_patches) {
         patches = cached_patches;
       } else {
         //compute the intersection 
-        patches = comp->getPatchesUnderDomain(task->patches);
+        patches = comp->getPatchesUnderDomain(task->m_patches);
         //cache the result for the next iteration
         cached_patches = patches;
-        cached_task_patches = task->patches;
+        cached_task_patches = task->m_patches;
         cached_comp_patches = comp->patches;
       }
-      constHandle<MaterialSubset> matls = comp->getMaterialsUnderDomain(task->matls);
+      constHandle<MaterialSubset> matls = comp->getMaterialsUnderDomain(task->m_matls);
       if (!patches->empty() && !matls->empty()) {
         ct.remembercomp(task, comp, patches.get_rep(), matls.get_rep(), m_proc_group);
       }
@@ -1251,12 +1251,12 @@ TaskGraph::createDetailedDependencies( DetailedTask     * task
       detaileddbg << m_proc_group->myrank() << "  req: " << *req << "\n";
     }
 
-    constHandle<PatchSubset> patches = req->getPatchesUnderDomain(task->patches);
+    constHandle<PatchSubset> patches = req->getPatchesUnderDomain(task->m_patches);
     if (req->var->typeDescription()->isReductionVariable() && m_sched->isNewDW(req->mapDataWarehouse())) {
       // make sure newdw reduction variable requires link up to the reduction tasks.
       patches = 0;
     }
-    constHandle<MaterialSubset> matls = req->getMaterialsUnderDomain(task->matls);
+    constHandle<MaterialSubset> matls = req->getMaterialsUnderDomain(task->m_matls);
 
     // this section is just to find the low and the high of the patch that will use the other
     // level's data.  Otherwise, we have to use the entire set of patches (and ghost patches if 
@@ -1267,9 +1267,9 @@ TaskGraph::createDetailedDependencies( DetailedTask     * task
     if (req->patches_dom == Task::CoarseLevel || req->patches_dom == Task::FineLevel) {
       // the requires should have been done with Task::CoarseLevel or FineLevel, with null patches
       // and the task->patches should be size one (so we don't have to worry about overlapping regions)
-      origPatch = task->patches->get(0);
+      origPatch = task->m_patches->get(0);
       ASSERT(req->patches == NULL);
-      ASSERT(task->patches->size() == 1);
+      ASSERT(task->m_patches->size() == 1);
       ASSERT(req->level_offset > 0);
       const Level* origLevel = origPatch->getLevel();
       if (req->patches_dom == Task::CoarseLevel) {
@@ -1479,8 +1479,8 @@ TaskGraph::createDetailedDependencies( DetailedTask     * task
                   if (prevReqTask == task) {
                     continue;
                   }
-                  if (prevReqTask->task == task->task) {
-                    if (!task->task->getHasSubScheduler()) {
+                  if (prevReqTask->m_task == task->m_task) {
+                    if (!task->m_task->getHasSubScheduler()) {
                       std::ostringstream message;
                       message << " WARNING - task (" << task->getName()
                               << ") requires with Ghost cells *and* modifies and may not be correct" << std::endl;
@@ -1592,8 +1592,8 @@ TaskGraph::createDetailedDependencies( DetailedTask     * task
       std::ostringstream desc;
       desc << "TaskGraph::createDetailedDependencies, task dependency not supported without patches and materials"
            << " \n Trying to require or modify " << *req << " in Task " << task->getTask()->getName() << "\n\n";
-      if (task->matls) {
-        desc << "task materials:" << *task->matls << "\n";
+      if (task->m_matls) {
+        desc << "task materials:" << *task->m_matls << "\n";
       } else {
         desc << "no task materials\n";
       }
@@ -1603,8 +1603,8 @@ TaskGraph::createDetailedDependencies( DetailedTask     * task
         desc << "no req materials\n";
         desc << "domain materials: " << *matls.get_rep() << "\n";
       }
-      if (task->patches) {
-        desc << "task patches:" << *task->patches << "\n";
+      if (task->m_patches) {
+        desc << "task patches:" << *task->m_patches << "\n";
       } else {
         desc << "no task patches\n";
       }

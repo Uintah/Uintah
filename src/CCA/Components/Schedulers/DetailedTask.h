@@ -82,9 +82,9 @@ public:
 
   ~DetailedTask();
 
-  void setProfileType( ProfileType type ) { d_profileType=type; }
+  void setProfileType( ProfileType type ) { m_profile_type=type; }
 
-  ProfileType getProfileType() { return d_profileType; }
+  ProfileType getProfileType() { return m_profile_type; }
 
   void doit( const ProcessorGroup                      * pg
       ,       std::vector<OnDemandDataWarehouseP> & oddws
@@ -99,29 +99,29 @@ public:
 
   std::string getName() const;
 
-  const Task* getTask() const { return task; }
+  const Task* getTask() const { return m_task; }
 
-  const PatchSubset* getPatches() const { return patches; }
+  const PatchSubset* getPatches() const { return m_patches; }
 
-  const MaterialSubset* getMaterials() const { return matls; }
+  const MaterialSubset* getMaterials() const { return m_matls; }
 
-  void assignResource(int idx) { resourceIndex = idx; }
+  void assignResource(int idx) { m_resource_index = idx; }
 
-  int getAssignedResourceIndex() const { return resourceIndex; }
+  int getAssignedResourceIndex() const { return m_resource_index; }
 
-  void assignStaticOrder( int i ) { staticOrder = i; }
+  void assignStaticOrder( int i ) { m_static_order = i; }
 
-  int getStaticOrder() const { return staticOrder; }
+  int getStaticOrder() const { return m_static_order; }
 
-  DetailedTasks* getTaskGroup() const { return taskGroup; }
+  DetailedTasks* getTaskGroup() const { return m_task_group; }
 
-  std::map<DependencyBatch*, DependencyBatch*>& getRequires() { return reqs; }
+  std::map<DependencyBatch*, DependencyBatch*>& getRequires() { return m_reqs; }
 
-  std::map<DependencyBatch*, DependencyBatch*>& getInternalRequires() { return internal_reqs; }
+  std::map<DependencyBatch*, DependencyBatch*>& getInternalRequires() { return m_internal_reqs; }
 
-  DependencyBatch* getComputes() const { return comp_head; }
+  DependencyBatch* getComputes() const { return m_comp_head; }
 
-  DependencyBatch* getInternalComputes() const { return internal_comp_head; }
+  DependencyBatch* getInternalComputes() const { return m_internal_comp_head; }
 
   void findRequiringTasks( const VarLabel* var, std::list<DetailedTask*>& requiringTasks );
 
@@ -142,23 +142,23 @@ public:
   // DetailedTasks::mpiCompletedTasks list.
   void resetDependencyCounts();
 
-  bool isInitiated() const { return initiated_; }
+  bool isInitiated() const { return m_initiated; }
 
   void markInitiated()
   {
     m_wait_timer.start();
-    initiated_ = true;
+    m_initiated = true;
   }
 
-  void incrementExternalDepCount() { externalDependencyCount_++; }
+  void incrementExternalDepCount() { m_external_dependency_count++; }
 
-  void decrementExternalDepCount() { externalDependencyCount_--; }
+  void decrementExternalDepCount() { m_external_dependency_count--; }
 
   void checkExternalDepCount();
 
-  int getExternalDepCount() { return externalDependencyCount_; }
+  int getExternalDepCount() { return m_external_dependency_count; }
 
-  bool areInternalDependenciesSatisfied() { return (numPendingInternalDependencies == 0); }
+  bool areInternalDependenciesSatisfied() { return (m_num_pending_internal_dependencies == 0); }
 
   double task_wait_time() const { return m_wait_timer().seconds(); }
 
@@ -227,36 +227,36 @@ private:
   DetailedTask( DetailedTask && )                 = delete;
   DetailedTask& operator=( DetailedTask && )      = delete;
 
-  Task                                         * task;
-  const PatchSubset                            *  patches;
-  const MaterialSubset                         * matls;
-  std::map<DependencyBatch*, DependencyBatch*>   reqs;
-  std::map<DependencyBatch*, DependencyBatch*>   internal_reqs;
-  DependencyBatch                              * comp_head;
-  DependencyBatch                              *  internal_comp_head;
-  DetailedTasks                                * taskGroup;
+  Task                                         * m_task;
+  const PatchSubset                            *  m_patches;
+  const MaterialSubset                         * m_matls;
+  std::map<DependencyBatch*, DependencyBatch*>   m_reqs;
+  std::map<DependencyBatch*, DependencyBatch*>   m_internal_reqs;
+  DependencyBatch                              * m_comp_head;
+  DependencyBatch                              *  m_internal_comp_head;
+  DetailedTasks                                * m_task_group;
 
-  bool initiated_;
-  bool externallyReady_;
-  int  externalDependencyCount_;
+  bool m_initiated;
+  bool m_externally_ready;
+  int  m_external_dependency_count;
 
-  mutable std::string name_; // doesn't get set until getName() is called the first time.
+  mutable std::string m_name; // doesn't get set until getName() is called the first time.
 
   // Called when prerequisite tasks (dependencies) call done.
   void dependencySatisfied( InternalDependency* dep );
 
   // Internal dependencies are dependencies within the same process.
-  std::list<InternalDependency> internalDependencies;
+  std::list<InternalDependency> m_internal_dependencies;
 
   // internalDependents will point to InternalDependency's in the
   // internalDependencies list of the requiring DetailedTasks.
-  std::map<DetailedTask*, InternalDependency*> internalDependents;
+  std::map<DetailedTask*, InternalDependency*> m_internal_dependents;
 
-  unsigned long   numPendingInternalDependencies;
-  std::mutex      internalDependencyLock;
+  unsigned long   m_num_pending_internal_dependencies;
+  std::mutex      m_internal_dependency_lock;
 
-  int resourceIndex;
-  int staticOrder;
+  int m_resource_index;
+  int m_static_order;
 
   RuntimeStats::TaskExecTimer m_exec_timer{this};
   RuntimeStats::TaskWaitTimer m_wait_timer{this};
@@ -267,7 +267,7 @@ private:
 
   bool operator<( const DetailedTask& other );
 
-  ProfileType d_profileType;
+  ProfileType m_profile_type;
 
 #ifdef HAVE_CUDA
   bool deviceExternallyReady_;
