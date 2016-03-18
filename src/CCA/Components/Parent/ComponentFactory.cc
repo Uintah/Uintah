@@ -22,6 +22,8 @@
  * IN THE SOFTWARE.
  */
 
+#include <CCA/Components/Parent/ComponentFactory.h>
+
 #include <CCA/Components/Examples/AMRWave.h>
 #include <CCA/Components/Examples/Benchmark.h>
 #include <CCA/Components/Examples/Burger.h>
@@ -44,7 +46,6 @@
 #include <CCA/Components/MPM/SerialMPM.h>
 #include <CCA/Components/MPM/ShellMPM.h>
 #include <CCA/Components/MPMICE/MPMICE.h>
-#include <CCA/Components/Parent/ComponentFactory.h>
 #include <CCA/Components/Parent/Switcher.h>
 #include <CCA/Components/ReduceUda/UdaReducer.h>
 #include <Core/Exceptions/ProblemSetupException.h>

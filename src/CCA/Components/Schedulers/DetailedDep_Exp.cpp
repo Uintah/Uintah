@@ -22,15 +22,7 @@
  * IN THE SOFTWARE.
  */
 
-#define UINTAH_USING_EXPERIMENTAL
-
-#ifdef UINTAH_USING_EXPERIMENTAL
-
-#include <CCA/Components/Schedulers/DetailedDep_Exp.cpp>
-
-#else
-
-#include <CCA/Components/Schedulers/DetailedDep.h>
+#include <CCA/Components/Schedulers/DetailedDep_Exp.hpp>
 
 #include <sstream>
 
@@ -55,4 +47,3 @@ std::ostream& operator<<( std::ostream& arg_out, const DetailedDep&  dep )
 
 } // end namespace Uintah
 
-#endif // UINTAH_USING_EXPERIMENTAL

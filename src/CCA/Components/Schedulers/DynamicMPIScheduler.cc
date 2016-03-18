@@ -150,10 +150,10 @@ SchedulerP
 DynamicMPIScheduler::createSubScheduler()
 {
   UintahParallelPort  * lbp      = getPort("load balancer");
-  DynamicMPIScheduler * newsched = scinew DynamicMPIScheduler( d_myworld, m_outPort_, this );
-  newsched->d_sharedState = d_sharedState;
+  DynamicMPIScheduler * newsched = scinew DynamicMPIScheduler( d_myworld, m_output_port, this );
+  newsched->m_shared_state = m_shared_state;
   newsched->attachPort( "load balancer", lbp );
-  newsched->d_sharedState = d_sharedState;
+  newsched->m_shared_state = m_shared_state;
   return newsched;
 }
 
@@ -163,22 +163,22 @@ void
 DynamicMPIScheduler::execute( int tgnum     /*=0*/,
                               int iteration /*=0*/ )
 {
-  if (d_sharedState->isCopyDataTimestep()) {
+  if (m_shared_state->isCopyDataTimestep()) {
     MPIScheduler::execute(tgnum, iteration);
     return;
   }
 
   MALLOC_TRACE_TAG_SCOPE("DynamicMPIScheduler::execute");
 
-  ASSERTRANGE(tgnum, 0, (int)graphs.size());
-  TaskGraph* tg = graphs[tgnum];
+  ASSERTRANGE(tgnum, 0, (int)m_graphs.size());
+  TaskGraph* tg = m_graphs[tgnum];
   tg->setIteration(iteration);
-  currentTG_ = tgnum;
+  m_currentTG = tgnum;
 
-  if (graphs.size() > 1) {
+  if (m_graphs.size() > 1) {
     // tg model is the multi TG model, where each graph is going to need to
     // have its dwmap reset here (even with the same tgnum)
-    tg->remapTaskDWs(dwmap);
+    tg->remapTaskDWs(m_dw_map);
   }
 
   DetailedTasks* dts = tg->getDetailedTasks();
@@ -191,7 +191,7 @@ DynamicMPIScheduler::execute( int tgnum     /*=0*/,
   }
   
   int ntasks = dts->numLocalTasks();
-  dts->initializeScrubs(dws, dwmap);
+  dts->initializeScrubs(m_dws, m_dw_map);
   dts->initTimestep();
 
   for (int i = 0; i < ntasks; i++) {
@@ -218,14 +218,14 @@ DynamicMPIScheduler::execute( int tgnum     /*=0*/,
 
   int i = 0;
 
-  if (reloc_new_posLabel_ && dws[dwmap[Task::OldDW]] != 0) {
-    dws[dwmap[Task::OldDW]]->exchangeParticleQuantities(dts, getLoadBalancer(), reloc_new_posLabel_, iteration);
+  if (m_reloc_new_posLabel && m_dws[m_dw_map[Task::OldDW]] != 0) {
+    m_dws[m_dw_map[Task::OldDW]]->exchangeParticleQuantities(dts, getLoadBalancer(), m_reloc_new_posLabel, iteration);
   }
 
   // TODO  - figure out if we can remove this #if - APH 09/10/15
 #if 0
   // hook to post all the messages up front
-  if (useDynamicScheduling_ && !d_sharedState->isCopyDataTimestep()) {
+  if (useDynamicScheduling_ && !m_shared_state->isCopyDataTimestep()) {
     // post the receives in advance
     for (int i = 0; i < ntasks; i++) {
       initiateTask( dts->localTask(i), abort, abort_point, iteration );
@@ -389,7 +389,7 @@ DynamicMPIScheduler::execute( int tgnum     /*=0*/,
       }
     }
 
-    if (!abort && dws[dws.size() - 1] && dws[dws.size() - 1]->timestepAborted()) {
+    if (!abort && m_dws[m_dws.size() - 1] && m_dws[m_dws.size() - 1]->timestepAborted()) {
       // TODO - abort might not work with external queue...
       abort = true;
       abort_point = task->getTask()->getSortedOrder();
@@ -432,24 +432,24 @@ DynamicMPIScheduler::execute( int tgnum     /*=0*/,
   }
 
   // compute the net timings
-  if (d_sharedState != 0) {  // subschedulers don't have a sharedState
-    computeNetRunTimeStats(d_sharedState->d_runTimeStats);
+  if (m_shared_state != 0) {  // subschedulers don't have a sharedState
+    computeNetRunTimeStats(m_shared_state->d_runTimeStats);
   }
 
   sends_[0].waitall(d_myworld);
   ASSERT(sends_[0].numRequests() == 0);
 
-  if (restartable && tgnum == (int)graphs.size() - 1) {
+  if (m_restartable && tgnum == (int)m_graphs.size() - 1) {
     // Copy the restart flag to all processors
-    int myrestart = dws[dws.size() - 1]->timestepRestarted();
+    int myrestart = m_dws[m_dws.size() - 1]->timestepRestarted();
     int netrestart;
 
     MPI_Allreduce(&myrestart, &netrestart, 1, MPI_INT, MPI_LOR, d_myworld->getComm());
 
     if (netrestart) {
-      dws[dws.size() - 1]->restartTimestep();
-      if (dws[0]) {
-        dws[0]->setRestarted();
+      m_dws[m_dws.size() - 1]->restartTimestep();
+      if (m_dws[0]) {
+        m_dws[0]->setRestarted();
       }
     }
   }

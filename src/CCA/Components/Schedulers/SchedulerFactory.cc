@@ -28,7 +28,7 @@
 #include <CCA/Components/Schedulers/MPIScheduler.h>
 #include <CCA/Components/Schedulers/DynamicMPIScheduler.h>
 #include <CCA/Components/Schedulers/ThreadedMPIScheduler.h>
-#include <CCA/Components/Schedulers/ThreadedTaskScheduler.h>
+#include <CCA/Components/Schedulers/ThreadedTaskScheduler.hpp>
 #include <CCA/Components/Schedulers/UnifiedScheduler.h>
 
 #include <Core/Exceptions/ProblemSetupException.h>

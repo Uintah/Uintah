@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2017 The University of Utah
+ * Copyright (c) 1997-2016 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -22,7 +22,8 @@
  * IN THE SOFTWARE.
  */
 
-#include <CCA/Components/Schedulers/ThreadedTaskScheduler.h>
+#include <CCA/Components/Schedulers/ThreadedTaskScheduler.hpp>
+
 #include <CCA/Components/Schedulers/OnDemandDataWarehouse.h>
 #include <CCA/Components/Schedulers/RuntimeStats.hpp>
 #include <CCA/Components/Schedulers/TaskGraph.h>
@@ -259,21 +260,21 @@ void ThreadedTaskScheduler::execute(  int tgnum /*=0*/ , int iteration /*=0*/ )
 //    return;
 //  }
 
-  ASSERTRANGE(tgnum, 0, static_cast<int>(graphs.size()));
+  ASSERTRANGE(tgnum, 0, static_cast<int>(m_graphs.size()));
 
-  RuntimeStats::initialize_timestep(graphs);
+  RuntimeStats::initialize_timestep(m_graphs);
 
-  TaskGraph* tg = graphs[tgnum];
+  TaskGraph* tg = m_graphs[tgnum];
   tg->setIteration(iteration);
-  currentTG_ = tgnum;
+  m_currentTG = tgnum;
 
   // for multi TG model, where each graph is going to need to have its dwmap reset here (even with the same tgnum)
-  if (graphs.size() > 1) {
-    tg->remapTaskDWs(dwmap);
+  if (m_graphs.size() > 1) {
+    tg->remapTaskDWs(m_dw_map);
   }
 
   m_detailed_tasks = tg->getDetailedTasks();
-  m_detailed_tasks->initializeScrubs(dws, dwmap);
+  m_detailed_tasks->initializeScrubs(m_dws, m_dw_map);
   m_detailed_tasks->initTimestep();
   m_num_tasks = m_detailed_tasks->numLocalTasks();
 
@@ -287,8 +288,8 @@ void ThreadedTaskScheduler::execute(  int tgnum /*=0*/ , int iteration /*=0*/ )
 
   makeTaskGraphDoc(m_detailed_tasks, d_myworld->myrank());
 
-  if (reloc_new_posLabel_ && dws[dwmap[Task::OldDW]] != 0) {
-    dws[dwmap[Task::OldDW]]->exchangeParticleQuantities(m_detailed_tasks, getLoadBalancer(), reloc_new_posLabel_, iteration);
+  if (m_reloc_new_posLabel && m_dws[m_dw_map[Task::OldDW]] != 0) {
+    m_dws[m_dw_map[Task::OldDW]]->exchangeParticleQuantities(m_detailed_tasks, getLoadBalancer(), m_reloc_new_posLabel, iteration);
   }
 
   // clear & resize task phase, etc bookkeeping data structures
@@ -389,7 +390,7 @@ void ThreadedTaskScheduler::execute(  int tgnum /*=0*/ , int iteration /*=0*/ )
 
     // collect local grid information
     {
-      OnDemandDataWarehouseP dw = dws[dws.size() - 1];
+      OnDemandDataWarehouseP dw = m_dws[m_dws.size() - 1];
       const GridP grid(const_cast<Grid*>(dw->getGrid()));
       const PatchSubset* myPatches = getLoadBalancer()->getPerProcessorPatchSet(grid)->getSubset(d_myworld->myrank());
       num_patches = myPatches->size();
@@ -399,7 +400,7 @@ void ThreadedTaskScheduler::execute(  int tgnum /*=0*/ , int iteration /*=0*/ )
         num_cells += range.x() * range.y() * range.z();
 
         // go through all materials since getting an MPMMaterial correctly would depend on MPM
-        for (int m = 0; m < d_sharedState->getNumMatls(); m++) {
+        for (int m = 0; m < m_shared_state->getNumMatls(); m++) {
           if (dw->haveParticleSubset(m, patch))
             num_particles += dw->getParticleSubset(m, patch)->numParticles();
         }
@@ -427,7 +428,7 @@ void ThreadedTaskScheduler::execute(  int tgnum /*=0*/ , int iteration /*=0*/ )
     }
   }
 
-  RuntimeStats::report(d_myworld->getComm(), d_sharedState->d_runTimeStats);
+  RuntimeStats::report(d_myworld->getComm(), m_shared_state->d_runTimeStats);
 
 } // end execute()
 
@@ -445,14 +446,14 @@ void ThreadedTaskScheduler::verifyChecksum()
     //  - make the checksum more sophisticated
     int checksum = 0;
     int numSpatialTasks = 0;
-    for (unsigned i = 0; i < graphs.size(); i++) {
-      checksum += graphs[i]->getTasks().size();
+    for (unsigned i = 0; i < m_graphs.size(); i++) {
+      checksum += m_graphs[i]->getTasks().size();
 
       // This begins addressing the issue of making the global checksum more sophisticated:
       //   check if any tasks were spatially scheduled - TaskType::Spatial, meaning no computes, requires or modifies
       //     e.g. RMCRT radiometer task, which is not scheduled on all patches
       //          these Spatial tasks won't count toward the global checksum
-      std::vector<Task*> tasks = graphs[i]->getTasks();
+      std::vector<Task*> tasks = m_graphs[i]->getTasks();
       std::vector<Task*>::const_iterator tasks_iter = tasks.begin();
       for (; tasks_iter != tasks.end(); ++tasks_iter) {
         Task* task = *tasks_iter;
@@ -543,9 +544,9 @@ void ThreadedTaskScheduler::post_MPI_recvs( DetailedTask * task
     // Create the MPI type
     for (DetailedDep* req = batch->head; req != 0; req = req->next) {
 
-      OnDemandDataWarehouse* dw = dws[req->req->mapDataWarehouse()].get_rep();
+      OnDemandDataWarehouse* dw = m_dws[req->req->mapDataWarehouse()].get_rep();
       if ((req->condition == DetailedDep::FirstIteration && iteration > 0) || (req->condition == DetailedDep::SubsequentIterations
-                          && iteration == 0) || (notCopyDataVars_.count(req->req->var->getName()) > 0)) {
+                          && iteration == 0) || (m_not_copy_data_vars.count(req->req->var->getName()) > 0)) {
         continue;
       }
       // if we send/recv to an output task, don't send/recv if not an output timestep
@@ -558,14 +559,14 @@ void ThreadedTaskScheduler::post_MPI_recvs( DetailedTask * task
       // the load balancer is used to determine where data was in the old dw on the prev timestep
       // pass it in if the particle data is on the old dw
       LoadBalancer* lb = 0;
-      if (!reloc_new_posLabel_) {
-        posDW = dws[req->req->task->mapDataWarehouse(Task::ParentOldDW)].get_rep();
+      if (!m_reloc_new_posLabel) {
+        posDW = m_dws[req->req->task->mapDataWarehouse(Task::ParentOldDW)].get_rep();
       } else {
         // on an output task (and only on one) we require particle variables from the NewDW
         if (req->toTasks.front()->getTask()->getType() == Task::Output) {
-          posDW = dws[req->req->task->mapDataWarehouse(Task::NewDW)].get_rep();
+          posDW = m_dws[req->req->task->mapDataWarehouse(Task::NewDW)].get_rep();
         } else {
-          posDW = dws[req->req->task->mapDataWarehouse(Task::OldDW)].get_rep();
+          posDW = m_dws[req->req->task->mapDataWarehouse(Task::OldDW)].get_rep();
           lb = getLoadBalancer();
         }
       }
@@ -573,7 +574,7 @@ void ThreadedTaskScheduler::post_MPI_recvs( DetailedTask * task
       dw->recvMPI(batch, mpibuff, posDW, req, lb);
 
       if (!req->isNonDataDependency()) {
-        graphs[currentTG_]->getDetailedTasks()->setScrubCount(req->req, req->matl, req->fromPatch, dws);
+        m_graphs[m_currentTG]->getDetailedTasks()->setScrubCount(req->req, req->matl, req->fromPatch, m_dws);
       }
     }
 
@@ -641,7 +642,7 @@ void ThreadedTaskScheduler::post_MPI_sends( DetailedTask * task, int iteration )
     for (DetailedDep* req = batch->head; req != 0; req = req->next) {
 
       if ((req->condition == DetailedDep::FirstIteration && iteration > 0) || (req->condition == DetailedDep::SubsequentIterations
-          && iteration == 0) || (notCopyDataVars_.count(req->req->var->getName()) > 0)) {
+          && iteration == 0) || (m_not_copy_data_vars.count(req->req->var->getName()) > 0)) {
         continue;
       }
 
@@ -650,7 +651,7 @@ void ThreadedTaskScheduler::post_MPI_sends( DetailedTask * task, int iteration )
         continue;
       }
 
-      OnDemandDataWarehouse* dw = dws[req->req->mapDataWarehouse()].get_rep();
+      OnDemandDataWarehouse* dw = m_dws[req->req->mapDataWarehouse()].get_rep();
 
       // the load balancer is used to determine where data was in the old dw on the prev timestep -
       // pass it in if the particle data is on the old dw
@@ -658,19 +659,19 @@ void ThreadedTaskScheduler::post_MPI_sends( DetailedTask * task, int iteration )
       OnDemandDataWarehouse* posDW;
       LoadBalancer* lb = 0;
 
-      if( !reloc_new_posLabel_) {
-        posDW = dws[req->req->task->mapDataWarehouse(Task::ParentOldDW)].get_rep();
+      if( !m_reloc_new_posLabel) {
+        posDW = m_dws[req->req->task->mapDataWarehouse(Task::ParentOldDW)].get_rep();
       }
       else {
         // on an output task (and only on one) we require particle variables from the NewDW
         if (req->toTasks.front()->getTask()->getType() == Task::Output) {
-          posDW = dws[req->req->task->mapDataWarehouse(Task::NewDW)].get_rep();
+          posDW = m_dws[req->req->task->mapDataWarehouse(Task::NewDW)].get_rep();
         }
         else {
-          posDW = dws[req->req->task->mapDataWarehouse(Task::OldDW)].get_rep();
+          posDW = m_dws[req->req->task->mapDataWarehouse(Task::OldDW)].get_rep();
           lb = getLoadBalancer();
         }
-        posLabel = reloc_new_posLabel_;
+        posLabel = m_reloc_new_posLabel;
       }
 
       dw->sendMPI(batch, posLabel, mpibuff, posDW, req, lb);
@@ -742,19 +743,19 @@ void ThreadedTaskScheduler::run_task( DetailedTask * dtask, int iteration )
   // measure per thread exec_time
   RuntimeStats::ExecTimer exec_timer;
 
-  std::vector<DataWarehouseP> plain_old_dws(dws.size());
-  for (int i = 0; i < (int)dws.size(); i++) {
-    plain_old_dws[i] = dws[i].get_rep();
+  std::vector<DataWarehouseP> plain_old_dws(m_dws.size());
+  for (int i = 0; i < (int)m_dws.size(); i++) {
+    plain_old_dws[i] = m_dws[i].get_rep();
   }
 
-  dtask->doit(d_myworld, dws, plain_old_dws);
+  dtask->doit(d_myworld, m_dws, plain_old_dws);
 
   post_MPI_sends(dtask, iteration);
 
-  dtask->done(dws);
+  dtask->done(m_dws);
 
   // add my task time to the total time
-  if (!d_sharedState->isCopyDataTimestep() && dtask->getTask()->getType() != Task::Output) {
+  if (!m_shared_state->isCopyDataTimestep() && dtask->getTask()->getType() != Task::Output) {
     // add contribution for patchlist
     std::lock_guard<std::mutex> lb_guard(g_lb_mutex);
     SchedulerCommon::getLoadBalancer()->addContribution(dtask, dtask->task_exec_time());
@@ -773,13 +774,13 @@ void ThreadedTaskScheduler::run_reduction_task( DetailedTask * task )
     const Task::Dependency* mod = task->getTask()->getModifies();
     ASSERT(!mod->next);
 
-    OnDemandDataWarehouse* dw = dws[mod->mapDataWarehouse()].get_rep();
+    OnDemandDataWarehouse* dw = m_dws[mod->mapDataWarehouse()].get_rep();
     ASSERT(task->getTask()->d_comm >= 0);
 
     dw->reduceMPI(mod->var, mod->reductionLevel, mod->matls, task->getTask()->d_comm);
   }
 
-  task->done(dws);
+  task->done(m_dws);
 
   SchedulerCommon::emitNode(task, 0.0, simple().seconds(), 0);
 }
@@ -798,17 +799,17 @@ void ThreadedTaskScheduler::emit_time( const char* label, double dt )
 //
 void ThreadedTaskScheduler::copy_restart_flag( int task_graph_num )
 {
-  if (restartable && task_graph_num == static_cast<int>(graphs.size() - 1)) {
+  if (m_restartable && task_graph_num == static_cast<int>(m_graphs.size() - 1)) {
     // Copy the restart flag to all processors
-    int myrestart = dws[dws.size() - 1]->timestepRestarted();
+    int myrestart = m_dws[m_dws.size() - 1]->timestepRestarted();
     int netrestart;
 
     MPI_Allreduce(&myrestart, &netrestart, 1, MPI_INT, MPI_LOR, d_myworld->getComm());
 
     if (netrestart) {
-      dws[dws.size() - 1]->restartTimestep();
-      if (dws[0]) {
-        dws[0]->setRestarted();
+      m_dws[m_dws.size() - 1]->restartTimestep();
+      if (m_dws[0]) {
+        m_dws[0]->setRestarted();
       }
     }
   }
