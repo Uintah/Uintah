@@ -80,19 +80,19 @@ public:
   //as valid when MPI completes.
   void addVar( Variable* var ) { m_to_vars.push_back(var); }
 
-  DependencyBatch          * m_comp_next;
-  DetailedTask             * m_from_task;
-  std::list<DetailedTask*>   m_to_tasks;
-  DetailedDep              * m_head;
-  int                        m_message_tag;
-  int                        m_to_rank;
+  DependencyBatch          * m_comp_next{};
+  DetailedTask             * m_from_task{};
+  std::list<DetailedTask*>   m_to_tasks{};
+  DetailedDep              * m_head{};
+  int                        m_message_tag{};
+  int                        m_to_rank{};
 
 
 private:
 
-  volatile bool           m_received;
-  volatile bool           m_made_mpi_request;
-  std::vector<Variable*>  m_to_vars;
+  volatile bool           m_received{};
+  volatile bool           m_made_mpi_request{};
+  std::vector<Variable*>  m_to_vars{};
 
   // eliminate copy, assignment and move
   DependencyBatch( const DependencyBatch & )            = delete;
