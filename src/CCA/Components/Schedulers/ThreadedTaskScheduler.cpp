@@ -24,13 +24,13 @@
 
 #include <CCA/Components/Schedulers/ThreadedTaskScheduler.hpp>
 
+#include <CCA/Components/Schedulers/CommunicationList.hpp>
 #include <CCA/Components/Schedulers/OnDemandDataWarehouse.h>
 #include <CCA/Components/Schedulers/RuntimeStats.hpp>
 #include <CCA/Components/Schedulers/TaskGraph.h>
 #include <CCA/Ports/Output.h>
 
 #include <Core/Exceptions/ProblemSetupException.h>
-#include <Core/Parallel/CommunicationList.h>
 #include <Core/Util/DOUT.hpp>
 
 #include <atomic>

@@ -26,6 +26,8 @@
 #define CCA_COMPONENTS_SCHEDULERS_THREADEDTASKSCHEDULER_H
 
 #include <CCA/Components/Schedulers/SchedulerCommon.h>
+
+#include <CCA/Components/Schedulers/CommunicationList.hpp>
 #include <CCA/Components/Schedulers/DetailedTasks.h>
 #include <CCA/Components/Schedulers/OnDemandDataWarehouseP.h>
 #include <CCA/Components/Schedulers/RuntimeStats.hpp>
@@ -35,7 +37,6 @@
 #include <Core/Lockfree/Lockfree_Pool.hpp>
 #include <Core/Malloc/Allocators/AllocatorTags.hpp>
 #include <Core/Parallel/BufferInfo.h>
-#include <Core/Parallel/CommunicationList.h>
 #include <Core/Parallel/PackBufferInfo.h>
 #include <Core/Util/InfoMapper.h>
 #include <Core/Util/Timers/Timers.hpp>
