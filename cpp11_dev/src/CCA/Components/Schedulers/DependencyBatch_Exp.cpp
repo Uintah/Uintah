@@ -58,6 +58,7 @@ void DependencyBatch::reset()
 bool DependencyBatch::makeMPIRequest()
 {
   // TODO - remove lock, cleanup  conditional APH, 03/18/16
+  //      - m_to_tasks may have a race condition where DependencyBatches are used in the schedulers
   if (m_to_tasks.size() > 1) {
     if (!m_made_mpi_request) {
       m_lock.lock();
