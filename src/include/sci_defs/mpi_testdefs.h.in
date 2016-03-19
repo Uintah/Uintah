@@ -216,7 +216,7 @@ public:
 
   static constexpr int64_t H0 = 64;       // cacheline
   static constexpr int64_t H1 = 4096;     // page
-  static constexpr int64_t H2 = 1 << 20;  // huge page
+  static constexpr int64_t H2 = 2 << 20;  // huge page
 
 
   static void apply( int64_t count, MPI_Datatype d ) noexcept

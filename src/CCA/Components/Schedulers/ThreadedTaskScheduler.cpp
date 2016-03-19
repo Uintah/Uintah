@@ -599,7 +599,6 @@ void ThreadedTaskScheduler::post_MPI_recvs( DetailedTask * task
       CommPool::iterator iter = m_comm_requests.emplace(t_emplace, REQUEST_RECV, new RecvHandle(p_mpibuff, pBatchRecvHandler));
       t_emplace = iter;
 
-      RuntimeStats::RecvMPITimer mpi_recv_timer;
       MPI::Irecv(buf, count, datatype, from, batch->m_message_tag, d_myworld->getComm(), iter->request());
 
     } else {
@@ -703,7 +702,6 @@ void ThreadedTaskScheduler::post_MPI_sends( DetailedTask * task, int iteration )
       CommPool::iterator iter = m_comm_requests.emplace(t_emplace, REQUEST_SEND, new SendHandle(mpibuff.takeSendlist()));
       t_emplace = iter;
 
-      RuntimeStats::SendMPITimer mpi_send_timer;
       MPI::Isend(buf, count, datatype, to, batch->m_message_tag, d_myworld->getComm(), iter->request());
     }
   }  // end for (DependencyBatch* batch = task->getComputes())
