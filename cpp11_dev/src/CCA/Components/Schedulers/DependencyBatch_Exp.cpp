@@ -25,21 +25,16 @@
 #include <CCA/Components/Schedulers/DependencyBatch_Exp.hpp>
 #include <CCA/Components/Schedulers/DetailedTasks_Exp.hpp>
 
-namespace {
-
-std::mutex m_lock;
-
-}
-
 namespace Uintah {
+
 
 //______________________________________________________________________
 //
 DependencyBatch::~DependencyBatch()
 {
-  DetailedDep* dep = m_head;
+  DetailedDependency* dep = m_head;
   while (dep) {
-    DetailedDep* tmp = dep->m_next;
+    DetailedDependency* tmp = dep->m_next;
     delete dep;
     dep = tmp;
   }
@@ -47,7 +42,8 @@ DependencyBatch::~DependencyBatch()
 
 //______________________________________________________________________
 //
-void DependencyBatch::reset()
+void
+DependencyBatch::reset()
 {
   m_received         = false;
   m_made_mpi_request = false;
@@ -55,10 +51,9 @@ void DependencyBatch::reset()
 
 //______________________________________________________________________
 //
-bool DependencyBatch::makeMPIRequest()
+bool
+DependencyBatch::makeMPIRequest()
 {
-  // TODO - remove lock, cleanup  conditional APH, 03/18/16
-  //      - m_to_tasks may have a race condition where DependencyBatches are used in the schedulers
   if (m_to_tasks.size() > 1) {
     if (!m_made_mpi_request) {
       m_lock.lock();
@@ -78,22 +73,24 @@ bool DependencyBatch::makeMPIRequest()
     // only 1 requiring task -- don't worry about competing with another thread
     ASSERT(!m_made_mpi_request);
     m_made_mpi_request = true;
+
     return true;
   }
 }
 
 //______________________________________________________________________
 //
-
-void DependencyBatch::received( const ProcessorGroup * pg )
+void
+DependencyBatch::received( const ProcessorGroup * pg )
 {
   m_received = true;
 
-  //set all the toVars to valid, meaning the mpi has been completed
+  //set all the m_to_vars to valid, meaning the MPI has been completed
   for (std::vector<Variable*>::iterator iter = m_to_vars.begin(); iter != m_to_vars.end(); iter++) {
     (*iter)->setValid();
   }
   for (std::list<DetailedTask*>::iterator iter = m_to_tasks.begin(); iter != m_to_tasks.end(); iter++) {
+    // if the count is 0, the task will add itself to the external ready queue
     (*iter)->decrementExternalDepCount();
     (*iter)->checkExternalDepCount();
   }
@@ -103,3 +100,4 @@ void DependencyBatch::received( const ProcessorGroup * pg )
 }
 
 } // namespace Uintah
+

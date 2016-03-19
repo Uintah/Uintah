@@ -1528,20 +1528,20 @@ TaskGraph::createDetailedDependencies( DetailedTask     * task
                       }
                     }
                     m_detailed_tasks->possiblyCreateDependency(prevReqTask, 0, 0, task, req, 0, matl, from_l, from_h,
-                                                               DetailedDep::Always);
+                                                               DetailedDependency::Always);
                   }
                 }
               }
 
-              DetailedDep::CommCondition cond = DetailedDep::Always;
+              DetailedDependency::CommCondition cond = DetailedDependency::Always;
               if (proc != -1 && req->patches_dom != Task::OtherGridDomain) {
                 // for OldDW tasks - see comment in class DetailedDep by CommCondition
                 int subsequentProc = findVariableLocation(req, fromNeighbor, matl, 1);
                 if (subsequentProc != proc) {
-                  cond = DetailedDep::FirstIteration;  // change outer cond from always to first-only
+                  cond = DetailedDependency::FirstIteration;  // change outer cond from always to first-only
                   DetailedTask* subsequentCreator = m_detailed_tasks->getOldDWSendTask(subsequentProc);
                   m_detailed_tasks->possiblyCreateDependency(subsequentCreator, comp, fromNeighbor, task, req, patch, matl, from_l,
-                                                             from_h, DetailedDep::SubsequentIterations);
+                                                             from_h, DetailedDependency::SubsequentIterations);
                   detaileddbg << m_proc_group->myrank() << "   Adding condition reqs for " << *req->var << " task : " << *creator
                               << "  to " << *task << "\n";
                 }

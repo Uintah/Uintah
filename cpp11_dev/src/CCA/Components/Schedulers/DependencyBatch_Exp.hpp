@@ -25,12 +25,10 @@
 #ifndef CCA_COMPONENTS_SCHEDULERS_DEPENDENCY_BATCH_EXP_H
 #define CCA_COMPONENTS_SCHEDULERS_DEPENDENCY_BATCH_EXP_H
 
-#include <CCA/Components/Schedulers/DetailedDep_Exp.hpp>
-
+#include <CCA/Components/Schedulers/DetailedDependency_Exp.hpp>
 #include <Core/Grid/Variables/Variable.h>
 
 #include <list>
-#include <map>
 #include <mutex>
 #include <vector>
 
@@ -50,20 +48,21 @@ public:
                  , DetailedTask * fromTask
                  , DetailedTask * toTask
                  )
-    : m_comp_next{0}
-    , m_from_task{fromTask}
-    , m_head{0}
-    , m_message_tag{-1}
-    , m_to_rank{to}
-    , m_received{false}
-    , m_made_mpi_request{false}
+  : m_comp_next{nullptr}
+  , m_from_task{fromTask}
+  , m_head{nullptr}
+  , m_message_tag{-1}
+  , m_to_proc{to}
+  , m_received{false}
+  , m_made_mpi_request{false}
   {
     m_to_tasks.push_back(toTask);
   }
 
   ~DependencyBatch();
 
-  // The first thread calling this will return true, all others will return false.
+  // The first thread calling this will return true, all others
+  // will return false.
   bool makeMPIRequest();
 
   // Tells this batch that it has actually been received and
@@ -76,29 +75,31 @@ public:
   // so that it can receive again.
   void reset();
 
-  //Add invalid variables to the dependency batch.  These variables will be marked
-  //as valid when MPI completes.
+  // Add invalid variables to the dependency batch.
+  // These variables will be marked as valid when MPI completes.
   void addVar( Variable* var ) { m_to_vars.push_back(var); }
 
   DependencyBatch          * m_comp_next{};
   DetailedTask             * m_from_task{};
   std::list<DetailedTask*>   m_to_tasks{};
-  DetailedDep              * m_head{};
+  DetailedDependency       * m_head{};
   int                        m_message_tag{};
-  int                        m_to_rank{};
+  int                        m_to_proc{};
 
 
 private:
-
-  volatile bool           m_received{};
-  volatile bool           m_made_mpi_request{};
-  std::vector<Variable*>  m_to_vars{};
 
   // eliminate copy, assignment and move
   DependencyBatch( const DependencyBatch & )            = delete;
   DependencyBatch& operator=( const DependencyBatch & ) = delete;
   DependencyBatch( DependencyBatch && )                 = delete;
   DependencyBatch& operator=( DependencyBatch && )      = delete;
+
+  volatile bool  m_received{};
+  volatile bool  m_made_mpi_request{};
+  std::mutex     m_lock{};
+  std::set<int>  m_receive_listeners{};
+  std::vector<Variable*> m_to_vars{};
 
 }; // DependencyBatch
 
@@ -110,9 +111,9 @@ struct InternalDependency {
                     , const VarLabel      * var
                     ,       unsigned long   satisfiedGeneration
                     )
-    : m_prerequisite_task{prerequisiteTask}
-    , m_dependent_task{dependentTask}
-    , m_satisfied_generation{satisfiedGeneration}
+  : m_prerequisite_task{prerequisiteTask}
+  , m_dependent_task{dependentTask}
+  , m_satisfied_generation{satisfiedGeneration}
   {
     addVarLabel(var);
   }

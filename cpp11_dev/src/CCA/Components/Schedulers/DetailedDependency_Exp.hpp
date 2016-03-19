@@ -22,8 +22,8 @@
  * IN THE SOFTWARE.
  */
 
-#ifndef CCA_COMPONENTS_SCHEDULERS_DETAILED_DEP_EXP_H
-#define CCA_COMPONENTS_SCHEDULERS_DETAILED_DEP_EXP_H
+#ifndef CCA_COMPONENTS_SCHEDULERS_DETAILED_DEPENDENCY_EXP_H
+#define CCA_COMPONENTS_SCHEDULERS_DETAILED_DEPENDENCY_EXP_H
 
 #include <Core/Grid/Patch.h>
 #include <Core/Grid/Task.h>
@@ -34,7 +34,7 @@ namespace Uintah {
 
 class DetailedTask;
 
-class DetailedDep
+class DetailedDependency
 {
 
 public:
@@ -45,33 +45,33 @@ public:
   , SubsequentIterations
   };
 
-  DetailedDep(       DetailedDep        * next
-             ,       Task::Dependency   * comp
-             ,       Task::Dependency   * req
-             ,       DetailedTask       * toTask
-             , const Patch              * fromPatch
-             ,       int                  matl
-             , const IntVector          & low
-             , const IntVector          & high
-             ,       CommCondition        cond
-             )
-    : m_next{next}
-    , m_comp{comp}
-    , m_req{req}
-    , m_from_patch{fromPatch}
-    , m_low{low}
-    , m_high{high}
-    , m_matl{matl}
-    , m_comm_condition{cond}
-    , m_patch_low{low}
-    , m_patch_high{high}
+  DetailedDependency(       DetailedDependency * next
+                    ,       Task::Dependency   * comp
+                    ,       Task::Dependency   * req
+                    ,       DetailedTask       * toTask
+                    , const Patch              * fromPatch
+                    ,       int                  matl
+                    , const IntVector          & low
+                    , const IntVector          & high
+                    , CommCondition              cond
+                    )
+  : m_next{next}
+  , m_comp{comp}
+  , m_req{req}
+  , m_from_patch{fromPatch}
+  , m_low{low}
+  , m_high{high}
+  , m_matl{matl}
+  , m_comm_condition{cond}
+  , m_patch_low{low}
+  , m_patch_high{high}
   {
     ASSERT(Min(high - low, IntVector(1, 1, 1)) == IntVector(1, 1, 1));
 
     USE_IF_ASSERTS_ON( Patch::VariableBasis basis = Patch::translateTypeToBasis(req->var->typeDescription()->getType(), true); )
 
-      ASSERT(fromPatch == 0 || (Uintah::Min(low, fromPatch->getExtraLowIndex(basis, req->var->getBoundaryLayer())) ==
-             fromPatch->getExtraLowIndex(basis, req->var->getBoundaryLayer())));
+    ASSERT(fromPatch == 0 || (Uintah::Min(low, fromPatch->getExtraLowIndex(basis, req->var->getBoundaryLayer())) ==
+           fromPatch->getExtraLowIndex(basis, req->var->getBoundaryLayer())));
 
     ASSERT(fromPatch == 0 || (Uintah::Max(high, fromPatch->getExtraHighIndex(basis, req->var->getBoundaryLayer())) ==
            fromPatch->getExtraHighIndex(basis, req->var->getBoundaryLayer())));
@@ -87,14 +87,20 @@ public:
   // used.
   bool isNonDataDependency() const { return (m_from_patch == nullptr); }
 
-  DetailedDep              * m_next;
-  Task::Dependency         * m_comp;
-  Task::Dependency         * m_req;
-  std::list<DetailedTask*>   m_to_tasks;
-  const Patch              * m_from_patch;
-  IntVector                  m_low;
-  IntVector                  m_high;
-  int                        m_matl;
+  // eliminate copy, assignment and move
+  DetailedDependency( const DetailedDependency & )            = delete;
+  DetailedDependency& operator=( const DetailedDependency & ) = delete;
+  DetailedDependency( DetailedDependency && )                 = delete;
+  DetailedDependency& operator=( DetailedDependency && )      = delete;
+
+  DetailedDependency       * m_next{};
+  Task::Dependency         * m_comp{};
+  Task::Dependency         * m_req{};
+  std::list<DetailedTask*>   m_to_tasks{};
+  const Patch              * m_from_patch{};
+  IntVector                  m_low{};
+  IntVector                  m_high{};
+  int                        m_matl{};
 
   // this is to satisfy a need created by the DynamicLoadBalancer.  To keep it unrestricted on when it can perform, and
   // to avoid a costly second recompile on the next timestep, we add a comm condition which will send/recv data based
@@ -105,19 +111,12 @@ public:
   IntVector m_patch_low;
   IntVector m_patch_high;
 
-  // eliminate copy, assignment and move
-  DetailedDep( const DetailedDep & )            = delete;
-  DetailedDep& operator=( const DetailedDep & ) = delete;
-  DetailedDep( DetailedDep && )                 = delete;
-  DetailedDep& operator=( DetailedDep && )      = delete;
+}; // DetailedDependency
 
-
-}; // DetailedDep
-
-std::ostream& operator<<( std::ostream& out, const DetailedDep& task );
+std::ostream& operator<<( std::ostream& out, const Uintah::DetailedDependency& task );
 
 } // namespace Uintah
 
-#endif // CCA_COMPONENTS_SCHEDULERS_DETAILED_DEP_EXP_H
+#endif // CCA_COMPONENTS_SCHEDULERS_DETAILED_DEPENDENCY_EXP_H
 
 

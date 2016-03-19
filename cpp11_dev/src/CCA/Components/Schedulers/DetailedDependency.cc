@@ -22,13 +22,19 @@
  * IN THE SOFTWARE.
  */
 
-#include <CCA/Components/Schedulers/DetailedDep_Exp.hpp>
+#ifdef UINTAH_USING_EXPERIMENTAL
+
+#include <CCA/Components/Schedulers/DetailedDependency_Exp.cpp>
+
+#else
+
+#include <CCA/Components/Schedulers/DetailedDependency.h>
 
 #include <sstream>
 
 namespace Uintah {
 
-std::ostream& operator<<( std::ostream& arg_out, const DetailedDep&  dep )
+std::ostream& operator<<( std::ostream& arg_out, const DetailedDependency&  dep )
 {
   std::ostringstream out;
   out << dep.m_req->var->getName();
@@ -47,3 +53,4 @@ std::ostream& operator<<( std::ostream& arg_out, const DetailedDep&  dep )
 
 } // end namespace Uintah
 
+#endif // UINTAH_USING_EXPERIMENTAL

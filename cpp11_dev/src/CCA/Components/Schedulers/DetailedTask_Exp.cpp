@@ -23,27 +23,19 @@
  */
 
 #include <CCA/Components/Schedulers/DetailedTasks_Exp.hpp>
-
 #include <CCA/Components/Schedulers/OnDemandDataWarehouse.h>
 #include <CCA/Components/Schedulers/SchedulerCommon.h>
-#include <CCA/Components/Schedulers/TaskGraph.h>
 
-#include <Core/Containers/ConsecutiveRangeSet.h>
-#include <Core/Grid/Grid.h>
-#include <Core/Grid/Variables/PSPatchMatlGhostRange.h>
+#include <Core/Parallel/Parallel.h>
 #include <Core/Util/DOUT.hpp>
+
+#include <mutex>
 
 #include <sci_defs/config_defs.h>
 #include <sci_defs/cuda_defs.h>
 
 
 namespace Uintah {
-
-namespace {
-
-Dout mpidbg{      "MPIDBG",        false };
-
-} // namespace
 
 
 //_____________________________________________________________________________
@@ -56,35 +48,32 @@ DetailedTask::DetailedTask(       Task            * task
   : m_task{task}
   , m_patches{patches}
   , m_matls{matls}
-  , m_comp_head{0}
-  , m_internal_comp_head{0}
+  , m_comp_head{nullptr}
+  , m_internal_comp_head{nullptr}
   , m_task_group{taskGroup}
   , m_initiated{false}
   , m_externally_ready{false}
   , m_external_dependency_count{-1}
-  , m_name{task->getName()}
   , m_num_pending_internal_dependencies{0}
   , m_resource_index{-1}
   , m_static_order{-1}
-  , m_profile_type{Normal}
+  , m_profile_type{ProfileType::Normal}
 {
   if (patches) {
     // patches and matls must be sorted
-    ASSERT(std::is_sorted(patches->getVector().begin(), patches->getVector().end(), Patch::Compare()) );
+    ASSERT(std::is_sorted(patches->getVector().begin(), patches->getVector().end(), Patch::Compare()));
     patches->addReference();
   }
   if (matls) {
     // patches and matls must be sorted
-    ASSERT( std::is_sorted(matls->getVector().begin(), matls->getVector().end()) );
+    ASSERT(std::is_sorted(matls->getVector().begin(), matls->getVector().end()));
     matls->addReference();
   }
-
 #ifdef HAVE_CUDA
   deviceExternallyReady_ = false;
   completed_             = false;
   deviceNum_             = -1;
 #endif
-
 }
 
 //_____________________________________________________________________________
@@ -101,11 +90,12 @@ DetailedTask::~DetailedTask()
 
 //_____________________________________________________________________________
 //
-void DetailedTask::doit( const ProcessorGroup                      * pg
-                       ,       std::vector<OnDemandDataWarehouseP> & oddws
-                       ,       std::vector<DataWarehouseP>         & dws
-                       ,       Task::CallBackEvent                   event /* = Task::CPU */
-                       )
+void
+DetailedTask::doit( const ProcessorGroup                      * pg
+                  ,       std::vector<OnDemandDataWarehouseP> & oddws
+                  ,       std::vector<DataWarehouseP>         & dws
+                  ,       Task::CallBackEvent                   event /* = Task::CPU */
+                  )
 {
   m_wait_timer.stop();
   m_exec_timer.start();
@@ -148,11 +138,13 @@ void DetailedTask::doit( const ProcessorGroup                      * pg
 
 //_____________________________________________________________________________
 //
-void DetailedTask::scrub( std::vector<OnDemandDataWarehouseP>& dws )
+void
+DetailedTask::scrub( std::vector<OnDemandDataWarehouseP> & dws )
 {
   const Task* task = getTask();
 
-  const std::set<const VarLabel*, VarLabel::Compare>& initialRequires = m_task_group->getSchedulerCommon()->getInitialRequiredVars();
+  const std::set<const VarLabel*, VarLabel::Compare>& initialRequires =
+      m_task_group->getSchedulerCommon()->getInitialRequiredVars();
   const std::set<std::string>& unscrubbables = m_task_group->getSchedulerCommon()->getNoScrubVars();
 
   // Decrement the scrub count for each of the required variables
@@ -287,13 +279,14 @@ void DetailedTask::scrub( std::vector<OnDemandDataWarehouseP>& dws )
 
 //_____________________________________________________________________________
 //
-void DetailedTask::findRequiringTasks( const VarLabel                 * var,
-                                             std::list<DetailedTask*> & requiringTasks
-                                     )
+void
+DetailedTask::findRequiringTasks( const VarLabel                 * var
+                                ,       std::list<DetailedTask*> & requiringTasks
+                                )
 {
   // find external requires
   for (DependencyBatch* batch = getComputes(); batch != 0; batch = batch->m_comp_next) {
-    for (DetailedDep* dep = batch->m_head; dep != 0; dep = dep->m_next) {
+    for (DetailedDependency* dep = batch->m_head; dep != 0; dep = dep->m_next) {
       if (dep->m_req->var == var) {
         requiringTasks.insert(requiringTasks.end(), dep->m_to_tasks.begin(), dep->m_to_tasks.end());
       }
@@ -311,7 +304,8 @@ void DetailedTask::findRequiringTasks( const VarLabel                 * var,
 
 //_____________________________________________________________________________
 //
-void DetailedTask::addComputes( DependencyBatch* comp )
+void
+DetailedTask::addComputes( DependencyBatch * comp )
 {
   comp->m_comp_next = m_comp_head;
   m_comp_head = comp;
@@ -319,13 +313,17 @@ void DetailedTask::addComputes( DependencyBatch* comp )
 
 //_____________________________________________________________________________
 //
-bool DetailedTask::addRequires( DependencyBatch* req )
+bool
+DetailedTask::addRequires( DependencyBatch * req )
 {
   // return true if it is adding a new batch
-  return m_reqs.insert(std::make_pair(req, req)).second;
+  return m_requires.insert(std::make_pair(req, req)).second;
 }
 
-void DetailedTask::addInternalComputes( DependencyBatch* comp )
+//_____________________________________________________________________________
+//
+void
+DetailedTask::addInternalComputes( DependencyBatch * comp )
 {
   comp->m_comp_next = m_internal_comp_head;
   m_internal_comp_head = comp;
@@ -333,36 +331,33 @@ void DetailedTask::addInternalComputes( DependencyBatch* comp )
 
 //_____________________________________________________________________________
 //
-bool DetailedTask::addInternalRequires ( DependencyBatch* req )
+bool
+DetailedTask::addInternalRequires( DependencyBatch * req )
 {
   // return true if it is adding a new batch
-  return m_internal_reqs.insert(std::make_pair(req, req)).second;
+  return m_internal_requires.insert(std::make_pair(req, req)).second;
 }
 
 //_____________________________________________________________________________
 //
 // can be called in one of two places - when the last MPI Recv has completed, or from MPIScheduler
-void DetailedTask::checkExternalDepCount()
+void
+DetailedTask::checkExternalDepCount()
 {
-  DOUT(mpidbg, "Rank-" << Parallel::getMPIRank() << " Task " << this->getTask()->getName() << " external deps: " << m_external_dependency_count
-                       << " internal deps: " << m_num_pending_internal_dependencies);
-
-  if (m_external_dependency_count == 0 && m_task_group->sc_->useInternalDeps() && m_initiated && !m_task->usesMPI()) {
-    m_task_group->mpiCompletedQueueLock_.lock();
-
-    DOUT(mpidbg, "Rank-" << Parallel::getMPIRank() << " Task " << this->getTask()->getName()
-                         << " MPI requirements satisfied, placing into external ready queue");
+  if (m_external_dependency_count == 0 && m_task_group->m_scheduler->useInternalDeps() && m_initiated && !m_task->usesMPI()) {
+    m_task_group->m_mpi_completed_queue_lock.lock();
     if (m_externally_ready == false) {
-      m_task_group->mpiCompletedTasks_.push(this);
+      m_task_group->m_mpi_completed_tasks.push(this);
       m_externally_ready = true;
     }
-    m_task_group->mpiCompletedQueueLock_.unlock();
+    m_task_group->m_mpi_completed_queue_lock.unlock();
   }
 }
 
 //_____________________________________________________________________________
 //
-void DetailedTask::resetDependencyCounts()
+void
+DetailedTask::resetDependencyCounts()
 {
   m_external_dependency_count = 0;
   m_externally_ready = false;
@@ -376,8 +371,10 @@ void DetailedTask::resetDependencyCounts()
 
 //_____________________________________________________________________________
 //
-void DetailedTask::addInternalDependency(       DetailedTask * prerequisiteTask
-                                        , const VarLabel     * var )
+void
+DetailedTask::addInternalDependency(       DetailedTask * prerequisiteTask
+                                   , const VarLabel     * var
+                                   )
 {
   if (m_task_group->mustConsiderInternalDependencies()) {
     // Avoid unnecessary multiple internal dependency links between tasks.
@@ -395,7 +392,8 @@ void DetailedTask::addInternalDependency(       DetailedTask * prerequisiteTask
 
 //_____________________________________________________________________________
 //
-void DetailedTask::done( std::vector<OnDemandDataWarehouseP>& dws )
+void
+DetailedTask::done( std::vector<OnDemandDataWarehouseP> & dws )
 {
   // Important to scrub first, before dealing with the internal dependencies
   scrub(dws);
@@ -404,7 +402,6 @@ void DetailedTask::done( std::vector<OnDemandDataWarehouseP>& dws )
   std::map<DetailedTask*, InternalDependency*>::iterator iter;
   for (iter = m_internal_dependents.begin(); iter != m_internal_dependents.end(); iter++) {
     InternalDependency* dep = (*iter).second;
-
     dep->m_dependent_task->dependencySatisfied(dep);
     cnt++;
   }
@@ -414,7 +411,8 @@ void DetailedTask::done( std::vector<OnDemandDataWarehouseP>& dws )
 
 //_____________________________________________________________________________
 //
-void DetailedTask::dependencySatisfied( InternalDependency* dep )
+void
+DetailedTask::dependencySatisfied( InternalDependency* dep )
 {
   m_internal_dependency_lock.lock();
   {
@@ -438,8 +436,8 @@ void DetailedTask::dependencySatisfied( InternalDependency* dep )
 //
 std::ostream& operator<<( std::ostream& out, const DetailedTask& task )
 {
-  std::mutex lock;
-  std::lock_guard<std::mutex> lock_guard(lock);
+  std::mutex cout_lock;
+  std::lock_guard<std::mutex> cout_guard(cout_lock);
   {
     out << task.getTask()->getName();
     const PatchSubset* patches = task.getPatches();
@@ -486,10 +484,9 @@ std::ostream& operator<<( std::ostream& out, const DetailedTask& task )
       out << task.getAssignedResourceIndex();
     }
   }
+
   return out;
 }
-
-
 
 #ifdef HAVE_CUDA
 
@@ -701,5 +698,5 @@ void DetailedTask::clearPreparationCollections(){
 }
 #endif // HAVE_CUDA
 
-
 } // namespace Uintah
+

@@ -137,57 +137,127 @@ void RuntimeStats::initialize_timestep( std::vector<TaskGraph *> const &  graphs
 {
   Dout mpi_report{ "MPIReport", false};
 
-  if (!mpi_report)  return;
-
-  Dout exec_times{ "ExecTimes", false };
-  Dout wait_times{ "WaitTimes", false };
-  if (exec_times || wait_times) {
-
-    std::unique_lock<std::mutex> lock(g_report_lock);
-
-    std::set<std::string> task_names;
-    for (auto const tg : graphs) {
-      const int tg_size = tg->getNumTasks();
-      for (int i=0; i < tg_size; ++i) {
-        Task * t = tg->getTask(i);
-        task_names.insert( t->getName() );
-      }
+  if (mpi_report) {
+    {
+      std::unique_lock<std::mutex> lock(g_report_lock);
+      g_report_values.clear();
     }
 
-    g_task_names.clear();
-    g_task_names.insert( g_task_names.begin(), task_names.begin(), task_names.end() );
-
-    g_num_tasks = g_task_names.size();
-
-    if (exec_times) {
-      g_task_exec_times.reset();
-      g_task_exec_times = std::unique_ptr< std::atomic<int64_t>[] >( new std::atomic<int64_t>[g_num_tasks]{} );
-
-      auto & exec_time_report = g_report_values[exec_times];
-      exec_time_report.clear();
-
-      for (size_t i=0; i<g_num_tasks; ++i) {
-        exec_time_report[g_task_names[i]] = ReportValue{ RuntimeStats::Time
-                                                       , [i]() { return g_task_exec_times[i].load( std::memory_order_relaxed ); }
-                                                       };
-      }
+    Dout mpi_stats{"MPIStats", true};
+    if (mpi_stats) {
+      register_report( mpi_stats
+                     , "MPI Coll"
+                     , RuntimeStats::Time
+                     , []() { return CollectiveMPITimer::total(); }
+                     , []() { CollectiveMPITimer::reset_tag(); }
+                     );
+      register_report( mpi_stats
+                     , "MPI Send"
+                     , RuntimeStats::Time
+                     , []() { return SendMPITimer::total(); }
+                     , []() { SendMPITimer::reset_tag(); }
+                     );
+      register_report( mpi_stats
+                     , "MPI Recv"
+                     , RuntimeStats::Time
+                     , []() { return RecvMPITimer::total(); }
+                     , []() { RecvMPITimer::reset_tag(); }
+                     );
     }
 
-    if (wait_times) {
-      g_task_wait_times.reset();
-      g_task_wait_times = std::unique_ptr< std::atomic<int64_t>[] >( new std::atomic<int64_t>[g_num_tasks]{} );
+    Dout task_stats{"TaskStats", true};
 
-      auto & wait_time_report = g_report_values[wait_times];
-      wait_time_report.clear();
+    if (task_stats) {
+      register_report( task_stats
+                     , "Coll"
+                     , RuntimeStats::Time
+                     , []() { return CollectiveTimer::max(); }
+                     , []() { CollectiveTimer::reset_tag(); }
+                     );
+      register_report( task_stats
+                     , "Send"
+                     , RuntimeStats::Time
+                     , []() { return SendTimer::max(); }
+                     , []() { SendTimer::reset_tag(); }
+                     );
+      register_report( task_stats
+                     , "Recv"
+                     , RuntimeStats::Time
+                     , []() { return RecvTimer::max(); }
+                     , []() { RecvTimer::reset_tag(); }
+                     );
+      register_report( task_stats
+                     , "Test"
+                     , RuntimeStats::Time
+                     , []() { return TestTimer::max(); }
+                     , []() { TestTimer::reset_tag(); }
+                     );
+      register_report( task_stats
+                     , "Wait"
+                     , RuntimeStats::Time
+                     , []() { return WaitTimer::max(); }
+                     , []() { WaitTimer::reset_tag(); }
+                     );
+      register_report( task_stats
+                     , "Exec"
+                     , RuntimeStats::Time
+                     , []() { return ExecTimer::max(); }
+                     , []() { ExecTimer::reset_tag(); }
+                     );
+    }
 
-      for (size_t i=0; i<g_num_tasks; ++i) {
-        wait_time_report[g_task_names[i]] = ReportValue{ RuntimeStats::Time
-                                                       , [i]() { return g_task_wait_times[i].load( std::memory_order_relaxed ); }
-                                                       };
+    Dout exec_times{ "ExecTimes", false };
+    Dout wait_times{ "WaitTimes", false };
+    if (exec_times || wait_times) {
+
+      std::unique_lock<std::mutex> lock(g_report_lock);
+
+      std::set<std::string> task_names;
+      for (auto const tg : graphs) {
+        const int tg_size = tg->getNumTasks();
+        for (int i=0; i < tg_size; ++i) {
+          Task * t = tg->getTask(i);
+          task_names.insert( t->getName() );
+        }
+      }
+
+      g_task_names.clear();
+      g_task_names.insert( g_task_names.begin(), task_names.begin(), task_names.end() );
+
+      g_num_tasks = g_task_names.size();
+
+      if (exec_times) {
+        g_task_exec_times.reset();
+        g_task_exec_times = std::unique_ptr< std::atomic<int64_t>[] >( new std::atomic<int64_t>[g_num_tasks]{} );
+
+        auto & exec_time_report = g_report_values[exec_times];
+        exec_time_report.clear();
+
+        for (size_t i=0; i<g_num_tasks; ++i) {
+          exec_time_report[g_task_names[i]] = ReportValue{ RuntimeStats::Time
+                                                         , [i]() { return g_task_exec_times[i].load( std::memory_order_relaxed ); }
+                                                         };
+        }
+      }
+
+      if (wait_times) {
+        g_task_wait_times.reset();
+        g_task_wait_times = std::unique_ptr< std::atomic<int64_t>[] >( new std::atomic<int64_t>[g_num_tasks]{} );
+
+        auto & wait_time_report = g_report_values[wait_times];
+        wait_time_report.clear();
+
+        for (size_t i=0; i<g_num_tasks; ++i) {
+          wait_time_report[g_task_names[i]] = ReportValue{ RuntimeStats::Time
+                                                         , [i]() { return g_task_wait_times[i].load( std::memory_order_relaxed ); }
+                                                         };
+        }
       }
     }
   }
+
 }
+
 
 
 
@@ -276,6 +346,11 @@ MPI_Op rank_sum_min_max_op;
 
 void RuntimeStats::report( MPI_Comm comm, InfoStats & stats )
 {
+  Dout mpi_report("MPIReport", false);
+  if (!mpi_report) return;
+
+  std::unique_lock<std::mutex> lock(g_report_lock);
+
   {
     static bool init = false;
     if (!init) {
@@ -283,167 +358,6 @@ void RuntimeStats::report( MPI_Comm comm, InfoStats & stats )
       init = true;
     }
   }
-
-  Dout mpi_report("MPIReport", false);
-  if (!mpi_report) return;
-
-  std::unique_lock<std::mutex> lock(g_report_lock);
-
-  Dout mpi_stats{"MPIStats", true};
-  if (mpi_stats) {
-    register_report( mpi_stats
-                   , "MPI Coll"
-                   , RuntimeStats::Time
-                   , []() { return MPI::Impl::CollTimer::max(); }
-                   , []() { MPI::Impl::CollTimer::reset_tag(); }
-                   );
-    register_report( mpi_stats
-                   , "MPI Coll Count"
-                   , RuntimeStats::Count
-                   , []() { return MPI::Impl::CollTimer::count(); }
-                   );
-    register_report( mpi_stats
-                   , "MPI Send"
-                   , RuntimeStats::Time
-                   , []() { return MPI::Impl::SendTimer::max(); }
-                   , []() { MPI::Impl::SendTimer::reset_tag(); }
-                   );
-    register_report( mpi_stats
-                   , "MPI Send Count"
-                   , RuntimeStats::Time
-                   , []() { return MPI::Impl::SendTimer::count(); }
-                   );
-    register_report( mpi_stats
-                   , "MPI Recv"
-                   , RuntimeStats::Time
-                   , []() { return MPI::Impl::RecvTimer::max(); }
-                   , []() { MPI::Impl::RecvTimer::reset_tag(); }
-                   );
-    register_report( mpi_stats
-                   , "MPI Recv Count"
-                   , RuntimeStats::Time
-                   , []() { return MPI::Impl::RecvTimer::count(); }
-                   );
-    register_report( mpi_stats
-                   , "MPI Wait"
-                   , RuntimeStats::Time
-                   , []() { return MPI::Impl::WaitTimer::min(); }
-                   , []() { MPI::Impl::WaitTimer::reset_tag(); }
-                   );
-    register_report( mpi_stats
-                   , "MPI Wait Count"
-                   , RuntimeStats::Time
-                   , []() { return MPI::Impl::WaitTimer::count(); }
-                   );
-    register_report( mpi_stats
-                   , "MPI Test"
-                   , RuntimeStats::Time
-                   , []() { return MPI::Impl::TestTimer::min(); }
-                   , []() { MPI::Impl::TestTimer::reset_tag(); }
-                   );
-    register_report( mpi_stats
-                   , "MPI Test Count"
-                   , RuntimeStats::Time
-                   , []() { return MPI::Impl::TestTimer::count(); }
-                   );
-
-    register_report( mpi_stats
-                   , "MPI Send Volume"
-                   , RuntimeStats::Memory
-                   , []() { return MPI::Impl::SendStats::get(MPI::Impl::COMM_SIZE); }
-                   , []() { return MPI::Impl::SendStats::clear(); }
-                   );
-    register_report( mpi_stats
-                   , "MPI Send Volume0 <= Cacheline"
-                   , RuntimeStats::Count
-                   , []() { return MPI::Impl::SendStats::get(MPI::Impl::COMM_HISTOGRAM_0); }
-                   );
-    register_report( mpi_stats
-                   , "MPI Send Volume1 <= Page"
-                   , RuntimeStats::Count
-                   , []() { return MPI::Impl::SendStats::get(MPI::Impl::COMM_HISTOGRAM_1); }
-                   );
-    register_report( mpi_stats
-                   , "MPI Send Volume2 <= HugePage"
-                   , RuntimeStats::Count
-                   , []() { return MPI::Impl::SendStats::get(MPI::Impl::COMM_HISTOGRAM_2); }
-                   );
-    register_report( mpi_stats
-                   , "MPI Send Volume3 > HugePage"
-                   , RuntimeStats::Count
-                   , []() { return MPI::Impl::SendStats::get(MPI::Impl::COMM_HISTOGRAM_3); }
-                   );
-    register_report( mpi_stats
-                   , "MPI Recv Volume"
-                   , RuntimeStats::Memory
-                   , []() { return MPI::Impl::RecvStats::get(MPI::Impl::COMM_SIZE); }
-                   , []() { return MPI::Impl::RecvStats::clear(); }
-                   );
-    register_report( mpi_stats
-                   , "MPI Recv Volume0 <= Cacheline"
-                   , RuntimeStats::Count
-                   , []() { return MPI::Impl::RecvStats::get(MPI::Impl::COMM_HISTOGRAM_0); }
-                   );
-    register_report( mpi_stats
-                   , "MPI Recv Volume1 <= Page"
-                   , RuntimeStats::Count
-                   , []() { return MPI::Impl::RecvStats::get(MPI::Impl::COMM_HISTOGRAM_1); }
-                   );
-    register_report( mpi_stats
-                   , "MPI Recv Volume2 <= HugePage"
-                   , RuntimeStats::Count
-                   , []() { return MPI::Impl::RecvStats::get(MPI::Impl::COMM_HISTOGRAM_2); }
-                   );
-    register_report( mpi_stats
-                   , "MPI Recv Volume3 > HugePage"
-                   , RuntimeStats::Count
-                   , []() { return MPI::Impl::RecvStats::get(MPI::Impl::COMM_HISTOGRAM_3); }
-                   );
-  }
-
-
-  Dout task_stats{"TaskStats", true};
-  if (task_stats) {
-    register_report( task_stats
-                   , "Coll"
-                   , RuntimeStats::Time
-                   , []() { return CollectiveTimer::max(); }
-                   , []() { CollectiveTimer::reset_tag(); }
-                   );
-    register_report( task_stats
-                   , "Send"
-                   , RuntimeStats::Time
-                   , []() { return SendTimer::max(); }
-                   , []() { SendTimer::reset_tag(); }
-                   );
-    register_report( task_stats
-                   , "Recv"
-                   , RuntimeStats::Time
-                   , []() { return RecvTimer::max(); }
-                   , []() { RecvTimer::reset_tag(); }
-                   );
-    register_report( task_stats
-                   , "Test"
-                   , RuntimeStats::Time
-                   , []() { return TestTimer::max(); }
-                   , []() { TestTimer::reset_tag(); }
-                   );
-    register_report( task_stats
-                   , "Wait"
-                   , RuntimeStats::Time
-                   , []() { return WaitTimer::max(); }
-                   , []() { WaitTimer::reset_tag(); }
-                   );
-    register_report( task_stats
-                   , "Exec"
-                   , RuntimeStats::Time
-                   , []() { return ExecTimer::max(); }
-                   , []() { ExecTimer::reset_tag(); }
-                   );
-  }
-
-
-
 
   int psize;
   int prank;
@@ -501,7 +415,7 @@ void RuntimeStats::report( MPI_Comm comm, InfoStats & stats )
         const int64_t min = global_data[i+MIN];
         const int64_t max = global_data[i+MAX];
         const int64_t mag = max - min;
-        const int64_t t =   data[i+SUM] - min;
+        const int64_t t =   value.second.m_get() - min;
 
         int bin = (0 < mag) ? 4*t / mag : 0;
         bin = bin < 4 ? bin : 3;
@@ -612,9 +526,9 @@ void RuntimeStats::report( MPI_Comm comm, InfoStats & stats )
   stats[SimulationState::TaskExecTime]       += TripTimer< TaskExecTag >::max().seconds()
                                                 - stats[SimulationState::OutputFileIOTime]  // don't count output time or bytes
                                                 - stats[SimulationState::OutputFileIORate];
-  stats[SimulationState::TaskLocalCommTime]  += 1.0e-9 * (MPI::Impl::RecvTimer::total() + MPI::Impl::SendTimer::total());
-  stats[SimulationState::TaskWaitCommTime]   += 1.0e-9 * (MPI::Impl::TestTimer::total() + MPI::Impl::WaitTimer::total());
-  stats[SimulationState::TaskGlobalCommTime] += 1.0e-9 * MPI::Impl::CollTimer::total();
+  stats[SimulationState::TaskLocalCommTime]  += RecvTimer::total().seconds() + SendTimer::total().seconds();
+  stats[SimulationState::TaskWaitCommTime]   += TestTimer::total().seconds() + WaitTimer::total().seconds();
+  stats[SimulationState::TaskGlobalCommTime] += CollectiveTimer::total().seconds();
 
   // clear the registered report values
   g_report_values.clear();

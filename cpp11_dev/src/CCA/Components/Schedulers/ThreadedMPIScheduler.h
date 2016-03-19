@@ -85,7 +85,7 @@ class ThreadedMPIScheduler : public MPIScheduler {
 
     virtual void execute( int tgnum = 0, int iteration = 0 ) ;
 
-    virtual bool useInternalDeps() { return !m_shared_state->isCopyDataTimestep(); }
+    virtual bool useInternalDeps() { return !d_sharedState->isCopyDataTimestep(); }
 
     friend class TaskWorker;
 

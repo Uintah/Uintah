@@ -25,8 +25,8 @@
 #ifndef CCA_COMPONENTS_SCHEDULERS_DETAILEDTASK_H
 #define CCA_COMPONENTS_SCHEDULERS_DETAILEDTASK_H
 
-#include <CCA/Components/Schedulers/DetailedDep.h>
 #include <CCA/Components/Schedulers/DependencyBatch.h>
+#include <CCA/Components/Schedulers/DetailedDependency.h>
 #include <CCA/Components/Schedulers/RuntimeStats.hpp>
 
 #include <CCA/Components/Schedulers/DWDatabase.h>
@@ -64,11 +64,6 @@ public:
 #endif
 
 
-enum ProfileType {
-   Normal
- , Fine
-};
-
 
 class DetailedTask {
 
@@ -81,6 +76,15 @@ public:
               );
 
   ~DetailedTask();
+
+
+  // specifies the type of task this is:
+  //   * normal executes on either the patches cells or the patches coarse cells
+  //   * fine executes on the patches fine cells (for example coarsening)
+  enum ProfileType {
+     Normal
+   , Fine
+  };
 
   void setProfileType( ProfileType type ) { m_profile_type=type; }
 
@@ -115,9 +119,9 @@ public:
 
   DetailedTasks* getTaskGroup() const { return m_task_group; }
 
-  std::map<DependencyBatch*, DependencyBatch*>& getRequires() { return m_reqs; }
+  std::map<DependencyBatch*, DependencyBatch*>& getRequires() { return m_requires; }
 
-  std::map<DependencyBatch*, DependencyBatch*>& getInternalRequires() { return m_internal_reqs; }
+  std::map<DependencyBatch*, DependencyBatch*>& getInternalRequires() { return m_internal_requires; }
 
   DependencyBatch* getComputes() const { return m_comp_head; }
 
@@ -228,12 +232,12 @@ private:
   DetailedTask& operator=( DetailedTask && )      = delete;
 
   Task                                         * m_task;
-  const PatchSubset                            *  m_patches;
+  const PatchSubset                            * m_patches;
   const MaterialSubset                         * m_matls;
-  std::map<DependencyBatch*, DependencyBatch*>   m_reqs;
-  std::map<DependencyBatch*, DependencyBatch*>   m_internal_reqs;
+  std::map<DependencyBatch*, DependencyBatch*>   m_requires;
+  std::map<DependencyBatch*, DependencyBatch*>   m_internal_requires;
   DependencyBatch                              * m_comp_head;
-  DependencyBatch                              *  m_internal_comp_head;
+  DependencyBatch                              * m_internal_comp_head;
   DetailedTasks                                * m_task_group;
 
   bool m_initiated;
@@ -249,7 +253,7 @@ private:
   std::list<InternalDependency> m_internal_dependencies;
 
   // internalDependents will point to InternalDependency's in the
-  // internalDependencies list of the requiring DetailedTasks.
+  // m_internal_dependencies list of the requiring DetailedTasks.
   std::map<DetailedTask*, InternalDependency*> m_internal_dependents;
 
   unsigned long   m_num_pending_internal_dependencies;
@@ -260,10 +264,6 @@ private:
 
   RuntimeStats::TaskExecTimer m_exec_timer{this};
   RuntimeStats::TaskWaitTimer m_wait_timer{this};
-
-  // specifies the type of task this is:
-  //   * normal executes on either the patches cells or the patches coarse cells
-  //   * fine executes on the patches fine cells (for example coarsening)
 
   bool operator<( const DetailedTask& other );
 

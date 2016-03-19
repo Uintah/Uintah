@@ -23,73 +23,93 @@
  */
 
 
-#ifndef UINTAH_HOMEBREW_PSPatchMatlGhostRange_H
-#define UINTAH_HOMEBREW_PSPatchMatlGhostRange_H
+#ifndef CORE_GRID_VARIABLES_PSPATCHMATLGHOSTRANGE_H
+#define CORE_GRID_VARIABLES_PSPATCHMATLGHOSTRANGE_H
 
-#include <Core/Grid/Patch.h>
 #include <Core/Geometry/IntVector.h>
+#include <Core/Grid/Patch.h>
 
 namespace Uintah {
 
+/**************************************
 
-    /**************************************
-      
-      struct
-        PSPatchMatlGhostRange
-      
-        Patch, Material, Ghost, Range info
-        
-      
-      GENERAL INFORMATION
-      
-        PSPatchMatlGhostRange.h
-      
-        Bryan Worthen
-        Department of Computer Science
-        University of Utah
-      
-        Center for the Simulation of Accidental Fires and Explosions (C-SAFE)
-      
-      
-      KEYWORDS
-        Patch, Material, Ghost, Range
-      
-      DESCRIPTION
-        Has all the important information for identifying a particle subset
-          patch, material, and ghost properties
-      
-      WARNING
-      
-      ****************************************/
+ struct
+ PSPatchMatlGhostRange
 
-struct  PSPatchMatlGhostRange {
-  PSPatchMatlGhostRange(const Patch* patch, int matl, 
-                   IntVector low, IntVector high, int dwid, int count=1)
-    : patch_(patch), matl_(matl), low_(low), high_(high), dwid_(dwid), count_(count)
+ Patch, Material, Ghost, Range info
+
+
+ GENERAL INFORMATION
+
+ PSPatchMatlGhostRange.h
+
+ Bryan Worthen
+ Department of Computer Science
+ University of Utah
+
+ Center for the Simulation of Accidental Fires and Explosions (C-SAFE)
+
+
+ KEYWORDS
+ Patch, Material, Ghost, Range
+
+ DESCRIPTION
+ Has all the important information for identifying a particle subset
+ patch, material, and ghost properties
+
+ WARNING
+
+ ****************************************/
+
+struct  PSPatchMatlGhostRange
+{
+  PSPatchMatlGhostRange( const Patch     * patch
+                       ,       int         matl
+                       ,       IntVector   low
+                       ,       IntVector   high
+                       ,       int         dwid
+                       ,       int         count = 1
+                       )
+  : m_patch(patch)
+  , m_matl(matl)
+  , m_low(low)
+  , m_high(high)
+  , m_dw_id(dwid)
+  , m_count(count)
   {}
+
   PSPatchMatlGhostRange(const PSPatchMatlGhostRange& copy)
-    : patch_(copy.patch_), matl_(copy.matl_), low_(copy.low_), 
-       high_(copy.high_), dwid_(copy.dwid_), count_(copy.count_)
+  : m_patch(copy.m_patch)
+  , m_matl(copy.m_matl)
+  , m_low(copy.m_low)
+  , m_high(copy.m_high)
+  , m_dw_id(copy.m_dw_id)
+  , m_count(copy.m_count)
   {}
   
   bool operator<(const PSPatchMatlGhostRange& other) const;
+
   bool operator==(const PSPatchMatlGhostRange& other) const
   {
-    return patch_==other.patch_ && matl_ == other.matl_ && low_ == other.low_ && high_ == other.high_ && dwid_ == other.dwid_;
+    return m_patch==other.m_patch && m_matl == other.m_matl && m_low == other.m_low && m_high == other.m_high && m_dw_id == other.m_dw_id;
   }
+
   bool operator!=(const PSPatchMatlGhostRange& other) const
   {
     return !operator==(other);
   }
-  const Patch* patch_;
-  int matl_;
-  IntVector low_;
-  IntVector high_;
-  int dwid_;
-  mutable int count_; //a count of how many times this has been created
+
+  const Patch * m_patch;
+  int           m_matl;
+  IntVector     m_low;
+  IntVector     m_high;
+  int           m_dw_id;
+  mutable int   m_count; // a count of how many times this has been created
+
 };  
 
 std::ostream& operator<<(std::ostream &out, const PSPatchMatlGhostRange &pmg);
-} // End namespace Uintah
 
-#endif
+} // end namespace Uintah
+
+#endif // CORE_GRID_VARIABLES_PSPATCHMATLGHOSTRANGE_H

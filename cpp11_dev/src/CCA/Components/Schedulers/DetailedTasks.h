@@ -26,7 +26,7 @@
 #define CCA_COMPONENTS_SCHEDULERS_DETAILEDTASKS_H
 
 #include <CCA/Components/Schedulers/DetailedTask.h>
-#include <CCA/Components/Schedulers/DetailedDep.h>
+#include <CCA/Components/Schedulers/DetailedDependency.h>
 #include <CCA/Components/Schedulers/DependencyBatch.h>
 
 #include <CCA/Components/Schedulers/DWDatabase.h>
@@ -125,11 +125,11 @@ public:
 
   void makeDWKeyDatabase();
 
-  void copyoutDWKeyDatabase( OnDemandDataWarehouseP dws ) { dws->copyKeyDB(varKeyDB, levelKeyDB); }
+  void copyoutDWKeyDatabase( OnDemandDataWarehouseP dws ) { dws->copyKeyDB(m_var_key_DB, m_level_key_DB); }
 
-  int numTasks() const { return (int)tasks_.size(); }
+  int numTasks() const { return (int)m_tasks.size(); }
 
-  DetailedTask* getTask( int i ) { return tasks_[i]; }
+  DetailedTask* getTask( int i ) { return m_tasks[i]; }
 
   void assignMessageTags( int me );
 
@@ -144,7 +144,7 @@ public:
       ,        int                                  matl
       ,  const IntVector                          & low
       ,  const IntVector                          & high
-      ,        DetailedDep::CommCondition           cond
+      ,        DetailedDependency::CommCondition           cond
       );
 
   DetailedTask* getOldDWSendTask(int proc);
@@ -155,9 +155,9 @@ public:
 
   void computeLocalTasks( int me );
 
-  int numLocalTasks() const { return (int)localtasks_.size(); }
+  int numLocalTasks() const { return (int)m_local_tasks.size(); }
 
-  DetailedTask* localTask( int idx ) { return localtasks_[idx]; }
+  DetailedTask* localTask( int idx ) { return m_local_tasks[idx]; }
 
   void emitEdges( ProblemSpecP edgesElement, int rank );
 
@@ -171,11 +171,11 @@ public:
 
   void createScrubCounts();
 
-  bool mustConsiderInternalDependencies() { return mustConsiderInternalDependencies_; }
+  bool mustConsiderInternalDependencies() { return m_must_consider_internal_deps; }
 
-  unsigned long getCurrentDependencyGeneration() { return currentDependencyGeneration_; }
+  unsigned long getCurrentDependencyGeneration() { return m_current_dependency_generation; }
 
-  const TaskGraph* getTaskGraph() const { return taskgraph_; }
+  const TaskGraph* getTaskGraph() const { return m_task_graph; }
 
   void setScrubCount( const Task::Dependency                     * req
       ,        int                                   matl
@@ -183,15 +183,15 @@ public:
       ,        std::vector<OnDemandDataWarehouseP> & dws
       );
 
-  int getExtraCommunication() { return extraCommunication_; }
+  int getExtraCommunication() { return m_extra_communication; }
 
-  ParticleExchangeVar& getParticleSends() { return particleSends_; }
+  ParticleExchangeVar& getParticleSends() { return m_particle_sends; }
 
-  ParticleExchangeVar& getParticleRecvs() { return particleRecvs_; }
+  ParticleExchangeVar& getParticleRecvs() { return m_particle_recvs; }
 
-  void setTaskPriorityAlg( QueueAlg alg ) { taskPriorityAlg_=alg; }
+  void setTaskPriorityAlg( QueueAlg alg ) { m_task_priority_alg=alg; }
 
-  QueueAlg getTaskPriorityAlg() { return taskPriorityAlg_; }
+  QueueAlg getTaskPriorityAlg() { return m_task_priority_alg; }
 
 
 #ifdef HAVE_CUDA
@@ -232,11 +232,11 @@ public:
       int matl,
       const IntVector& low,
       const IntVector& high,
-      DetailedDep::CommCondition cond);
+      DetailedDependency::CommCondition cond);
   // helper of possiblyCreateDependency
-  DetailedDep* findMatchingInternalDetailedDep(DependencyBatch* batch, DetailedTask* toTask, Task::Dependency* req,
+  DetailedDependency* findMatchingInternalDetailedDep(DependencyBatch* batch, DetailedTask* toTask, Task::Dependency* req,
       const Patch* fromPatch, int matl, IntVector low, IntVector high,
-      IntVector& totalLow, IntVector& totalHigh, DetailedDep* &parent_dep);
+      IntVector& totalLow, IntVector& totalHigh, DetailedDependency* &parent_dep);
 #endif
 
 protected:
@@ -245,7 +245,7 @@ protected:
 
   void internalDependenciesSatisfied( DetailedTask* task );
 
-  SchedulerCommon* getSchedulerCommon() { return sc_; }
+  SchedulerCommon* getSchedulerCommon() { return m_scheduler; }
 
 private:
 
@@ -260,7 +260,7 @@ private:
   void incrementDependencyGeneration();
 
   // helper of possiblyCreateDependency
-  DetailedDep* findMatchingDetailedDep(       DependencyBatch    * batch
+  DetailedDependency* findMatchingDetailedDep(       DependencyBatch    * batch
       ,       DetailedTask       * toTask
       ,       Task::Dependency   * req
       , const Patch              * fromPatch
@@ -269,7 +269,7 @@ private:
       ,       IntVector             high
       ,       IntVector           & totalLow
       ,       IntVector           & totalHigh
-      ,       DetailedDep        *& parent_dep
+      ,       DetailedDependency        *& parent_dep
       );
 
 
@@ -287,57 +287,52 @@ private:
       ,       int      & count
       );
 
-  std::map<int,int>   sendoldmap_;
-  ParticleExchangeVar particleSends_;
-  ParticleExchangeVar particleRecvs_;
+  std::map<int,int>   m_send_old_map;
+  ParticleExchangeVar m_particle_sends;
+  ParticleExchangeVar m_particle_recvs;
 
-  SchedulerCommon             * sc_;
-  const ProcessorGroup        * d_myworld;
+  SchedulerCommon             * m_scheduler;
+  const ProcessorGroup        * m_proc_group;
   // store the first so we can share the scrubCountTable
-  DetailedTasks               * first;
-  std::vector<DetailedTask*>    tasks_;
-  KeyDatabase<Patch>            varKeyDB;
-  KeyDatabase<Level>            levelKeyDB;
+  DetailedTasks               * m_first;
+  std::vector<DetailedTask*>    m_tasks;
+  KeyDatabase<Patch>            m_var_key_DB;
+  KeyDatabase<Level>            m_level_key_DB;
 
-  // TODO - FIXME: Figure out why this was commented out long ago - APH 02/12/16
-#if 0
-  std::vector<DetailedReq*>  initreqs_;
-#endif
-
-  const TaskGraph               * taskgraph_;
-  Task                          * stask_;
-  std::vector<DetailedTask*>      localtasks_;
-  std::vector<DependencyBatch*>   batches_;
-  DetailedDep                   * initreq_;
+  const TaskGraph               * m_task_graph;
+  Task                          * m_send_old_data_task;
+  std::vector<DetailedTask*>      m_local_tasks;
+  std::vector<DependencyBatch*>   m_dependency_batches;
+  DetailedDependency            * m_initial_requires;
 
   // True for mixed scheduler which needs to keep track of internal dependencies.
-  bool mustConsiderInternalDependencies_;
+  bool m_must_consider_internal_deps;
 
   // In the future, we may want to prioritize tasks for the MixedScheduler
   // to run.  I implemented this using topological sort order as the priority
   // but that probably isn't a good way to do unless you make it a breadth
   // first topological order.
-  QueueAlg taskPriorityAlg_;
+  QueueAlg m_task_priority_alg;
 
   using TaskQueue  = std::queue<DetailedTask*>;
   using TaskPQueue = std::priority_queue<DetailedTask*, std::vector<DetailedTask*>, DetailedTaskPriorityComparison>;
 
-  TaskQueue   readyTasks_;
-  TaskQueue   initiallyReadyTasks_;
-  TaskPQueue  mpiCompletedTasks_;
+  TaskQueue   m_ready_tasks;
+  TaskQueue   m_initially_ready_tasks;
+  TaskPQueue  m_mpi_completed_tasks;
 
   // This "generation" number is to keep track of which InternalDependency
   // links have been satisfied in the current timestep and avoids the
   // need to traverse all InternalDependency links to reset values.
-  unsigned long currentDependencyGeneration_;
+  unsigned long m_current_dependency_generation;
 
   // for logging purposes - how much extra comm is going on
-  int extraCommunication_;
+  int m_extra_communication;
 
-  mutable CrowdMonitor  readyQueueLock_;
-  mutable CrowdMonitor  mpiCompletedQueueLock_;
+  std::mutex  m_ready_queue_lock;
+  std::mutex  m_mpi_completed_queue_lock;
 
-  ScrubCountTable scrubCountTable_;
+  ScrubCountTable m_scrub_count_table;
 
 
 #ifdef HAVE_CUDA
@@ -358,7 +353,7 @@ private:
 
 
   friend std::ostream& operator<<( std::ostream& out, const Uintah::DetailedTask& task );
-  friend std::ostream& operator<<( std::ostream& out, const Uintah::DetailedDep& task );
+  friend std::ostream& operator<<( std::ostream& out, const Uintah::DetailedDependency& task );
 
 }; // DetailedTasks
 //_______________________________________________________________________________________________

@@ -522,7 +522,7 @@ OnDemandDataWarehouse::sendMPI(       DependencyBatch*       batch,
                                 const VarLabel*              pos_var,
                                       BufferInfo&            buffer,
                                       OnDemandDataWarehouse* old_dw,
-                                const DetailedDep*           dep,
+                                const DetailedDependency*           dep,
                                       LoadBalancer*          lb )
 {
   if( dep->isNonDataDependency() ) {
@@ -663,41 +663,41 @@ OnDemandDataWarehouse::exchangeParticleQuantities(       DetailedTasks* dts,
       int i = 0;
       for( std::set<PSPatchMatlGhostRange>::iterator siter = s.begin(); siter != s.end(); siter++, i++ ) {
         const PSPatchMatlGhostRange& pmg = *siter;
-        if( (pmg.dwid_ == DetailedDep::FirstIteration && iteration > 0)
-            || (pmg.dwid_ == DetailedDep::SubsequentIterations && iteration == 0) ) {
+        if( (pmg.m_dw_id == DetailedDependency::FirstIteration && iteration > 0)
+            || (pmg.m_dw_id == DetailedDependency::SubsequentIterations && iteration == 0) ) {
           // not used
           data[i] = -2;
         }
-        else if( pmg.dwid_ == DetailedDep::FirstIteration && iteration == 0
-            && lb->getOldProcessorAssignment( pmg.patch_ ) == iter->first ) {
+        else if( pmg.m_dw_id == DetailedDependency::FirstIteration && iteration == 0
+            && lb->getOldProcessorAssignment( pmg.m_patch ) == iter->first ) {
           // signify that the recving proc already has this data.  Only use for the FirstIteration after a LB
           // send -1 rather than force the recving end above to iterate through its set
           data[i] = -1;
         }
         else {
-          if( !d_varDB.exists( pos_var, pmg.matl_, pmg.patch_ ) ) {
-            std::cout << d_myworld->myrank() << "  Naughty: patch " << pmg.patch_->getID() << " matl "
-                 << pmg.matl_ << " id " << pmg.dwid_ << std::endl;
-            SCI_THROW( UnknownVariable(pos_var->getName(), getID(), pmg.patch_, pmg.matl_,
+          if( !d_varDB.exists( pos_var, pmg.m_matl, pmg.m_patch ) ) {
+            std::cout << d_myworld->myrank() << "  Naughty: patch " << pmg.m_patch->getID() << " matl "
+                 << pmg.m_matl << " id " << pmg.m_dw_id << std::endl;
+            SCI_THROW( UnknownVariable(pos_var->getName(), getID(), pmg.m_patch, pmg.m_matl,
                                        "in exchangeParticleQuantities", __FILE__, __LINE__) );
           }
           // Make sure sendset is unique...
-          ASSERT( !ss_.find_sendset( iter->first, pmg.patch_, pmg.matl_, pmg.low_, pmg.high_, d_generation ) );
-          ParticleSubset* sendset = scinew ParticleSubset( 0, pmg.matl_, pmg.patch_, pmg.low_, pmg.high_ );
+          ASSERT( !ss_.find_sendset( iter->first, pmg.m_patch, pmg.m_matl, pmg.m_low, pmg.m_high, d_generation ) );
+          ParticleSubset* sendset = scinew ParticleSubset( 0, pmg.m_matl, pmg.m_patch, pmg.m_low, pmg.m_high );
           constParticleVariable<Point> pos;
-          get( pos, pos_var, pmg.matl_, pmg.patch_ );
+          get( pos, pos_var, pmg.m_matl, pmg.m_patch );
           ParticleSubset* pset = pos.getParticleSubset();
           for( ParticleSubset::iterator piter = pset->begin(); piter != pset->end(); piter++ ) {
-            if( Patch::containsIndex( pmg.low_, pmg.high_, pmg.patch_->getCellIndex( pos[*piter] ) ) ) {
+            if( Patch::containsIndex( pmg.m_low, pmg.m_high, pmg.m_patch->getCellIndex( pos[*piter] ) ) ) {
               sendset->addParticle( *piter );
             }
           }
-          ss_.add_sendset( sendset, iter->first, pmg.patch_, pmg.matl_, pmg.low_, pmg.high_, d_generation );
+          ss_.add_sendset( sendset, iter->first, pmg.m_patch, pmg.m_matl, pmg.m_low, pmg.m_high, d_generation );
           data[i] = sendset->numParticles();
         }
         particles2 << d_myworld->myrank() << " Sending PARTICLES to proc " << iter->first
-                   << ": patch " << pmg.patch_->getID() << " matl " << pmg.matl_ << " low "
-                   << pmg.low_ << " high " << pmg.high_ << " index " << i << ": "
+                   << ": patch " << pmg.m_patch->getID() << " matl " << pmg.m_matl << " low "
+                   << pmg.m_low << " high " << pmg.m_high << " index " << i << ": "
                    << senddata[data_index][i] << " particles\n";
       }
       // particles << d_myworld->myrank() << " Sending PARTICLES: " << s.size() << " subsets to proc "
@@ -725,20 +725,20 @@ OnDemandDataWarehouse::exchangeParticleQuantities(       DetailedTasks* dts,
           riter++, i++ ) {
         const PSPatchMatlGhostRange& pmg = *riter;
         particles2 << d_myworld->myrank() << " Recving PARTICLES from proc " << iter->first
-                   << ": patch " << pmg.patch_->getID() << " matl " << pmg.matl_ << " low "
-                   << pmg.low_ << " high " << pmg.high_ << ": " << data[i] << "\n";
+                   << ": patch " << pmg.m_patch->getID() << " matl " << pmg.m_matl << " low "
+                   << pmg.m_low << " high " << pmg.m_high << ": " << data[i] << "\n";
         if( data[i] == -2 ) {
           continue;
         }
         if( data[i] == -1 ) {
-          ASSERT( pmg.dwid_ == DetailedDep::FirstIteration && iteration == 0
-                  && haveParticleSubset( pmg.matl_, pmg.patch_ ) );
+          ASSERT( pmg.m_dw_id == DetailedDependency::FirstIteration && iteration == 0
+                  && haveParticleSubset( pmg.m_matl, pmg.m_patch ) );
           continue;
         }
 
-        int & foreign_particles = d_foreignParticleQuantities[std::make_pair( pmg.matl_, pmg.patch_ )];
-        ParticleSubset* subset = createParticleSubset( data[i], pmg.matl_, pmg.patch_, pmg.low_,
-                                                       pmg.high_ );
+        int & foreign_particles = d_foreignParticleQuantities[std::make_pair( pmg.m_matl, pmg.m_patch )];
+        ParticleSubset* subset = createParticleSubset( data[i], pmg.m_matl, pmg.m_patch, pmg.m_low,
+                                                       pmg.m_high );
 
         // make room for other multiple subsets pointing into one variable - additional subsets
         // referenced at the index above the last index of the previous subset
@@ -763,7 +763,7 @@ void
 OnDemandDataWarehouse::recvMPI(       DependencyBatch*       batch,
                                       BufferInfo&            buffer,
                                       OnDemandDataWarehouse* old_dw,
-                                const DetailedDep*           dep,
+                                const DetailedDependency*           dep,
                                       LoadBalancer*          lb )
 {
   if( dep->isNonDataDependency() ) {
@@ -958,6 +958,7 @@ OnDemandDataWarehouse::reduceMPI( const VarLabel       * label,
 
   int error;
   {
+    RuntimeStats::CollectiveMPITimer rt;
     error = MPI::Allreduce( &sendbuf[0], &recvbuf[0], count, datatype, op, d_myworld->getgComm( nComm ) );
   }
 
