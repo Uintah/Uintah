@@ -194,8 +194,8 @@ DynamicLoadBalancer::collectParticlesForRegrid( const Grid                     *
   if (d_myworld->size() > 1) {
     //construct a mpi datatype for the PatchInfo
     MPI_Datatype particletype;
-    MPI_Type_contiguous(2, MPI_INT, &particletype);
-    MPI_Type_commit(&particletype);
+    MPI::Type_contiguous(2, MPI_INT, &particletype);
+    MPI::Type_commit(&particletype);
 
     vector<PatchInfo> recvbuf(totalsize);
     vector<int> displs(num_procs,0);
@@ -203,7 +203,7 @@ DynamicLoadBalancer::collectParticlesForRegrid( const Grid                     *
       displs[i] = displs[i-1]+recvcounts[i-1];
     }
 
-    MPI_Gatherv(&subpatchParticles[0], recvcounts[d_myworld->myrank()], particletype, &recvbuf[0],
+    MPI::Gatherv(&subpatchParticles[0], recvcounts[d_myworld->myrank()], particletype, &recvbuf[0],
         &recvcounts[0], &displs[0], particletype, 0, d_myworld->getComm());
 
     if ( d_myworld->myrank() == 0) {
@@ -213,8 +213,8 @@ DynamicLoadBalancer::collectParticlesForRegrid( const Grid                     *
       }
     }
     // combine all the subpatches results
-    MPI_Bcast(&num_particles[0], num_particles.size(), MPI_INT,0,d_myworld->getComm());
-    MPI_Type_free(&particletype);
+    MPI::Bcast(&num_particles[0], num_particles.size(), MPI_INT,0,d_myworld->getComm());
+    MPI::Type_free(&particletype);
   }
   else {
     for (unsigned i = 0; i < subpatchParticles.size(); i++) {
@@ -330,7 +330,7 @@ DynamicLoadBalancer::collectParticles( const Grid                  * grid,
     }
 
 
-    MPI_Allgatherv(&particleList[0], particleList.size()*sizeof(PatchInfo),  MPI_BYTE,
+    MPI::Allgatherv(&particleList[0], particleList.size()*sizeof(PatchInfo),  MPI_BYTE,
                    &all_particles[0], &recvcounts[0], &displs[0], MPI_BYTE, d_myworld->getComm());
 
     if (dbg.active() && d_myworld->myrank() == 0) {
@@ -540,7 +540,7 @@ DynamicLoadBalancer::assignPatchesFactor( const GridP & grid, bool force )
       //gather the maxes
       //change to all reduce with loc
       if (num_procs > 1) {
-        MPI_Allreduce(&maxInfo, &min, 1, MPI_DOUBLE_INT, MPI_MINLOC, d_myworld->getComm());
+        MPI::Allreduce(&maxInfo, &min, 1, MPI_DOUBLE_INT, MPI_MINLOC, d_myworld->getComm());
       } else {
         min = maxInfo;
       }
@@ -569,7 +569,7 @@ DynamicLoadBalancer::assignPatchesFactor( const GridP & grid, bool force )
 
     if (minProcLoc != -1 && num_procs > 1) {
       //broadcast load balance
-      MPI_Bcast(&d_tempAssignment[0], d_tempAssignment.size(), MPI_INT, minProcLoc, d_myworld->getComm());
+      MPI::Bcast(&d_tempAssignment[0], d_tempAssignment.size(), MPI_INT, minProcLoc, d_myworld->getComm());
     }
 
     if (!d_levelIndependent) {
@@ -673,7 +673,7 @@ DynamicLoadBalancer::assignPatchesFactor( const GridP & grid, bool force )
   if (times.active()) {
     double avg[5] = { 0 };
 
-    MPI_Reduce(lbtimes, avg, 5, MPI_DOUBLE, MPI_SUM, 0, d_myworld->getComm());
+    MPI::Reduce(lbtimes, avg, 5, MPI_DOUBLE, MPI_SUM, 0, d_myworld->getComm());
 
     if (d_myworld->myrank() == 0) {
       cout << "LoadBalance Avg Times: ";
@@ -686,7 +686,7 @@ DynamicLoadBalancer::assignPatchesFactor( const GridP & grid, bool force )
 
     double max[5] = { 0 };
 
-    MPI_Reduce(lbtimes, max, 5, MPI_DOUBLE, MPI_MAX, 0, d_myworld->getComm());
+    MPI::Reduce(lbtimes, max, 5, MPI_DOUBLE, MPI_MAX, 0, d_myworld->getComm());
 
     if (d_myworld->myrank() == 0) {
       cout << "LoadBalance Max Times: ";
@@ -824,7 +824,7 @@ DynamicLoadBalancer::assignPatchesRandom( const GridP &, bool force )
     seed = (int)Time::currentSeconds();
   }
 
-  MPI_Bcast(&seed, 1, MPI_INT,0,d_myworld->getComm());
+  MPI::Bcast(&seed, 1, MPI_INT,0,d_myworld->getComm());
 
   srand( seed );
 

@@ -478,8 +478,8 @@ static MPI_Datatype makeMPI_CMData()
 {
    ASSERTEQ(sizeof(ElasticConstitutiveModel::CMData), sizeof(double)*2);
    MPI_Datatype mpitype;
-   MPI_Type_vector(1, 2, 2, MPI_DOUBLE, &mpitype);
-   MPI_Type_commit(&mpitype);
+   MPI::Type_vector(1, 2, 2, MPI_DOUBLE, &mpitype);
+   MPI::Type_commit(&mpitype);
    return mpitype;
 }
 

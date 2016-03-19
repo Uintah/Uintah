@@ -113,7 +113,7 @@ CommRecMPI::waitsome( const ProcessorGroup * pg,
   int     donecount;
   g_wait_timer.reset();
 
-  MPI_Waitsome( (int)ids_.size(), &ids_[0], &donecount, &indices[0], &statii[0] );
+  MPI::Waitsome( (int)ids_.size(), &ids_[0], &donecount, &indices[0], &statii[0] );
 
   double total_wait_time = g_wait_timer().seconds();
   WaitTimePerMessage = total_wait_time / donecount;
@@ -178,7 +178,7 @@ CommRecMPI::waitsome( const ProcessorGroup * pg,
 
   g_wait_timer.reset();
 
-  MPI_Waitsome( size, &combinedIDs[0], &donecount, &combinedIndices[0], &statii[0] );
+  MPI::Waitsome( size, &combinedIDs[0], &donecount, &combinedIndices[0], &statii[0] );
 
   double total_wait_time = g_wait_timer().seconds();
   WaitTimePerMessage = total_wait_time / donecount;
@@ -229,7 +229,7 @@ CommRecMPI::testsome( const ProcessorGroup * pg,
   int     donecount;
   g_test_timer.reset();
 
-  MPI_Testsome( (int)ids_.size(), &ids_[0], &donecount, &indices[0], &statii[0] );
+  MPI::Testsome( (int)ids_.size(), &ids_[0], &donecount, &indices[0], &statii[0] );
 
   double total_test_time = g_test_timer().seconds();
 
@@ -347,7 +347,7 @@ CommRecMPI::waitall( const ProcessorGroup * pg )
 
   g_wait_timer.reset();
 
-  MPI_Waitall((int)ids_.size(), &ids_[0], &statii[0]);
+  MPI::Waitall((int)ids_.size(), &ids_[0], &statii[0]);
 
   double total_wait_time = g_wait_timer().seconds();
   WaitTimePerMessage = total_wait_time / ids_.size();

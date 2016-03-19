@@ -511,18 +511,18 @@ RMCRTsolver(const int& i_n, const int& j_n, const int& k_n,
   //  cin >> casePlates;
 
 //   // starting up MPI
-//   MPI_Init(&argc, &argv);
-//   MPI_Barrier(MPI_COMM_WORLD);
+//   MPI::Init(&argc, &argv);
+//   MPI::Barrier(MPI_COMM_WORLD);
   
-//   precision = MPI_Wtick();
+//   precision = MPI::Wtick();
   
-//   time1 = MPI_Wtime();
+//   time1 = MPI::Wtime();
   
 //   // Find out process rank
-//    MPI_Comm_rank(MPI_COMM_WORLD, &my_rank);
+//    MPI::Comm_rank(MPI_COMM_WORLD, &my_rank);
 
 //   // Find out number of processes
-//   MPI_Comm_size(MPI_COMM_WORLD, &np);
+//   MPI::Comm_size(MPI_COMM_WORLD, &np);
 
 
   int rayNoSurface, rayNoVol;
@@ -565,17 +565,17 @@ RMCRTsolver(const int& i_n, const int& j_n, const int& k_n,
   Lz = 1;
 
   
-//   MPI_Barrier (MPI_COMM_WORLD);  
-//   MPI_Bcast(&rayNoSurface, 1, MPI_INT, 0, MPI_COMM_WORLD);
-//   MPI_Bcast(&rayNoVol, 1, MPI_INT, 0, MPI_COMM_WORLD);
-//   MPI_Bcast(&Ncx, 1, MPI_INT, 0, MPI_COMM_WORLD);
-//   MPI_Bcast(&Ncy, 1, MPI_INT, 0, MPI_COMM_WORLD);
-//   MPI_Bcast(&Ncz, 1, MPI_INT, 0, MPI_COMM_WORLD);
-//   MPI_Bcast(&ratioBCx, 1, MPI_DOUBLE, 0, MPI_COMM_WORLD);
-//   MPI_Bcast(&ratioBCy, 1, MPI_DOUBLE, 0, MPI_COMM_WORLD);  
-//   MPI_Bcast(&ratioBCz, 1, MPI_DOUBLE, 0, MPI_COMM_WORLD);
+//   MPI::Barrier (MPI_COMM_WORLD);  
+//   MPI::Bcast(&rayNoSurface, 1, MPI_INT, 0, MPI_COMM_WORLD);
+//   MPI::Bcast(&rayNoVol, 1, MPI_INT, 0, MPI_COMM_WORLD);
+//   MPI::Bcast(&Ncx, 1, MPI_INT, 0, MPI_COMM_WORLD);
+//   MPI::Bcast(&Ncy, 1, MPI_INT, 0, MPI_COMM_WORLD);
+//   MPI::Bcast(&Ncz, 1, MPI_INT, 0, MPI_COMM_WORLD);
+//   MPI::Bcast(&ratioBCx, 1, MPI_DOUBLE, 0, MPI_COMM_WORLD);
+//   MPI::Bcast(&ratioBCy, 1, MPI_DOUBLE, 0, MPI_COMM_WORLD);  
+//   MPI::Bcast(&ratioBCz, 1, MPI_DOUBLE, 0, MPI_COMM_WORLD);
 
-//   MPI_Barrier (MPI_COMM_WORLD);
+//   MPI::Barrier (MPI_COMM_WORLD);
 
 
   // numbers of grid points

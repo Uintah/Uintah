@@ -648,7 +648,7 @@ OnDemandDataWarehouse::exchangeParticleQuantities(       DetailedTasks* dts,
       // particles << d_myworld->myrank() << " Posting PARTICLES receives for " << r.size()
       //           << " subsets from proc " << iter->first << " index " << data_index <<  endl;
       MPI_Request req;
-      MPI_Irecv(&(recvdata[data_index][0]), r.size(), MPI_INT, iter->first, 16666, d_myworld->getComm(), &req);
+      MPI::Irecv(&(recvdata[data_index][0]), r.size(), MPI_INT, iter->first, 16666, d_myworld->getComm(), &req);
       recvrequests.push_back( req );
       data_index++;
     }
@@ -704,15 +704,15 @@ OnDemandDataWarehouse::exchangeParticleQuantities(       DetailedTasks* dts,
       //           << iter->first << " index " << data_index << endl;
 
       MPI_Request req;
-      MPI_Isend( &(senddata[data_index][0]), s.size(), MPI_INT, iter->first, 16666, d_myworld->getComm(), &req );
+      MPI::Isend( &(senddata[data_index][0]), s.size(), MPI_INT, iter->first, 16666, d_myworld->getComm(), &req );
 
       sendrequests.push_back( req );
       data_index++;
     }
   }
 
-  MPI_Waitall( recvrequests.size(), &recvrequests[0], MPI_STATUSES_IGNORE );
-  MPI_Waitall( sendrequests.size(), &sendrequests[0], MPI_STATUSES_IGNORE );
+  MPI::Waitall( recvrequests.size(), &recvrequests[0], MPI_STATUSES_IGNORE );
+  MPI::Waitall( sendrequests.size(), &sendrequests[0], MPI_STATUSES_IGNORE );
 
   // create particle subsets from recvs
   data_index = 0;
@@ -925,7 +925,7 @@ OnDemandDataWarehouse::reduceMPI( const VarLabel       * label,
 
   }
   int packsize;
-  MPI_Pack_size( count, datatype, d_myworld->getgComm( nComm ), &packsize );
+  MPI::Pack_size( count, datatype, d_myworld->getgComm( nComm ), &packsize );
   std::vector<char> sendbuf( packsize );
 
   int packindex = 0;
@@ -947,7 +947,7 @@ OnDemandDataWarehouse::reduceMPI( const VarLabel       * label,
 
   if( mpidbg.active() ) {
     coutLock.lock();
-    mpidbg << "calling MPI_Allreduce\n";
+    mpidbg << "calling MPI::Allreduce\n";
     coutLock.unlock();
   }
 
@@ -959,7 +959,7 @@ OnDemandDataWarehouse::reduceMPI( const VarLabel       * label,
   int error;
   {
     RuntimeStats::CollectiveMPITimer rt;
-    error = MPI_Allreduce( &sendbuf[0], &recvbuf[0], count, datatype, op, d_myworld->getgComm( nComm ) );
+    error = MPI::Allreduce( &sendbuf[0], &recvbuf[0], count, datatype, op, d_myworld->getgComm( nComm ) );
   }
 
   if( mpidbg.active() ) {
@@ -969,13 +969,13 @@ OnDemandDataWarehouse::reduceMPI( const VarLabel       * label,
 
   if( mpidbg.active() ) {
     coutLock.lock();
-    mpidbg << "done with MPI_Allreduce (" << label->getName() << ")\n";
+    mpidbg << "done with MPI::Allreduce (" << label->getName() << ")\n";
     coutLock.unlock();
   }
 
   if( error ) {
     cerrLock.lock();
-    std::cerr << "reduceMPI: MPI_Allreduce error: " << error << "\n";
+    std::cerr << "reduceMPI: MPI::Allreduce error: " << error << "\n";
     cerrLock.unlock();
     SCI_THROW( InternalError("reduceMPI: MPI error", __FILE__, __LINE__) );
   }

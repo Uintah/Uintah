@@ -899,8 +899,8 @@ namespace Uintah {
     ASSERTEQ(sizeof(Matrix3), sizeof(double)*9);
 
     MPI_Datatype mpitype;
-    MPI_Type_vector(1, 9, 9, MPI_DOUBLE, &mpitype);
-    MPI_Type_commit(&mpitype);
+    MPI::Type_vector(1, 9, 9, MPI_DOUBLE, &mpitype);
+    MPI::Type_commit(&mpitype);
 
     return mpitype;
   }

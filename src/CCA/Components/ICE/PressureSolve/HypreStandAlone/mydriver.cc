@@ -236,10 +236,10 @@ main(int argc, char *argv[]) {
    *-----------------------------------------------------------*/
   /* Initialize MPI */
   int numProcs, myid;
-  MPI_Init(&argc, &argv);
-  MPI_Comm_size(MPI_COMM_WORLD, &numProcs);
+  MPI::Init(&argc, &argv);
+  MPI::Comm_size(MPI_COMM_WORLD, &numProcs);
   param->numProcs = numProcs;
-  MPI_Comm_rank(MPI_COMM_WORLD, &myid);
+  MPI::Comm_rank(MPI_COMM_WORLD, &myid);
   MYID = myid;
 #if DRIVER_DEBUG
   hypre_InitMemoryDebug(myid);

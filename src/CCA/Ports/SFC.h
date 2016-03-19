@@ -456,7 +456,7 @@ void SFC<LOCS>::ProfileMergeParameters(int repeat)
     median=(times[mid-1]+times[mid])/2;                                                             \
    else                                                                                             \
     median=times[mid];                                                                              \
-    MPI_Allreduce(&median,&median_sum,1,MPI_FLOAT,MPI_SUM,Comm);                                    \
+    MPI::Allreduce(&median,&median_sum,1,MPI_FLOAT,MPI_SUM,Comm);                                    \
     median=median_sum/P;                                                                            \
 }
 
@@ -475,7 +475,7 @@ void SFC<LOCS>::ProfileMergeParametersT(int repeat)
   int blocks=1;
   float sample_size=.15;
 
-  MPI_Allreduce(&n,&max_block_size,1,MPI_UNSIGNED,MPI_MAX,Comm);
+  MPI::Allreduce(&n,&max_block_size,1,MPI_UNSIGNED,MPI_MAX,Comm);
   std::vector<History<BITS> > rbuf(max_block_size), mbuf(max_block_size);
   std::vector<History<BITS> > histories(max_block_size);
   std::vector<History<BITS> > histories_original(max_block_size);
@@ -999,7 +999,7 @@ void SFC<LOCS>::CalculateHistogramsAndCuts(std::vector<BITS> &histograms, std::v
     ComputeLocalHistogram<BITS>(&histograms[ rank*(buckets) ],histories);
 
     //all gather histograms
-    MPI_Allgather(&histograms[rank*(buckets)],buckets*sizeof(BITS),MPI_BYTE,&histograms[0],buckets*sizeof(BITS),MPI_BYTE,Comm);
+    MPI::Allgather(&histograms[rank*(buckets)],buckets*sizeof(BITS),MPI_BYTE,&histograms[0],buckets*sizeof(BITS),MPI_BYTE,Comm);
 
     //sum histogram
     BITS *sum=&histograms[P*buckets];
@@ -1282,11 +1282,11 @@ void SFC<LOCS>::Parallel3()
         MPI_Request request;
 
         //start send
-        MPI_Isend(&sum_histogram[0],(buckets+next_group.size+1)*sizeof(BITS),MPI_BYTE,next_partner_rank,0,Comm,&request);
+        MPI::Isend(&sum_histogram[0],(buckets+next_group.size+1)*sizeof(BITS),MPI_BYTE,next_partner_rank,0,Comm,&request);
         hsreqs.push_back(request);
         //start recv
         //start send
-        MPI_Irecv(&next_recv_histogram[0],(buckets+next_partner_group.size+1)*sizeof(BITS),MPI_BYTE,next_partner_rank,0,Comm,&rreq);
+        MPI::Irecv(&next_recv_histogram[0],(buckets+next_partner_group.size+1)*sizeof(BITS),MPI_BYTE,next_partner_rank,0,Comm,&rreq);
       }
       else
       {
@@ -1296,7 +1296,7 @@ void SFC<LOCS>::Parallel3()
         //recieve from rank 0 in partner group
         //std::cout << rank << ": recieving from: " << next_partner_group.start_rank << std::endl;
         //start send
-        MPI_Irecv(&next_recv_histogram[0],(buckets+next_partner_group.size+1)*sizeof(BITS),MPI_BYTE,next_partner_group.start_rank,0,Comm,&rreq);
+        MPI::Irecv(&next_recv_histogram[0],(buckets+next_partner_group.size+1)*sizeof(BITS),MPI_BYTE,next_partner_group.start_rank,0,Comm,&rreq);
       }
 
       if(next_group.size<next_partner_group.size && next_local_rank==0)
@@ -1305,7 +1305,7 @@ void SFC<LOCS>::Parallel3()
         //send to last one in partner group
         //std::cout << rank << ": sending additional to: " << next_partner_group.start_rank+next_partner_group.size-1 << std::endl;
         //start send
-        MPI_Isend(&sum_histogram[0],(buckets+next_group.size+1)*sizeof(BITS),MPI_BYTE,next_partner_group.start_rank+next_partner_group.size-1,0,Comm,&request);
+        MPI::Isend(&sum_histogram[0],(buckets+next_group.size+1)*sizeof(BITS),MPI_BYTE,next_partner_group.start_rank+next_partner_group.size-1,0,Comm,&request);
         hsreqs.push_back(request);
       }
     }
@@ -1355,8 +1355,8 @@ void SFC<LOCS>::Parallel3()
       start=timer->currentSeconds();
 #endif
       //wait for histogram communiation to complete
-      MPI_Wait(&rreq,&status);
-      MPI_Waitall(hsreqs.size(),&hsreqs[0],MPI_STATUSES_IGNORE);
+      MPI::Wait(&rreq,&status);
+      MPI::Waitall(hsreqs.size(),&hsreqs[0],MPI_STATUSES_IGNORE);
       hsreqs.clear();
 
 #ifdef _TIMESFC_
@@ -1439,10 +1439,10 @@ void SFC<LOCS>::Parallel3()
         MPI_Request request;
 
         //start send
-        MPI_Isend(&sum_histogram[0],(buckets+next_group.size+1)*sizeof(BITS),MPI_BYTE,next_partner_rank,0,Comm,&request);
+        MPI::Isend(&sum_histogram[0],(buckets+next_group.size+1)*sizeof(BITS),MPI_BYTE,next_partner_rank,0,Comm,&request);
         hsreqs.push_back(request);
         //start recv
-        MPI_Irecv(&next_recv_histogram[0],(buckets+next_partner_group.size+1)*sizeof(BITS),MPI_BYTE,next_partner_rank,0,Comm,&rreq);
+        MPI::Irecv(&next_recv_histogram[0],(buckets+next_partner_group.size+1)*sizeof(BITS),MPI_BYTE,next_partner_rank,0,Comm,&rreq);
       }
       else
       {
@@ -1452,7 +1452,7 @@ void SFC<LOCS>::Parallel3()
         //recieve from rank 0 in partner group
         //std::cout << rank << ": recieving from: " << next_partner_group.start_rank << std::endl;
         //start send
-        MPI_Irecv(&next_recv_histogram[0],(buckets+next_partner_group.size+1)*sizeof(BITS),MPI_BYTE,next_partner_group.start_rank,0,Comm,&rreq);
+        MPI::Irecv(&next_recv_histogram[0],(buckets+next_partner_group.size+1)*sizeof(BITS),MPI_BYTE,next_partner_group.start_rank,0,Comm,&rreq);
       }
 
       if(next_group.size<next_partner_group.size && next_local_rank==0)
@@ -1461,7 +1461,7 @@ void SFC<LOCS>::Parallel3()
         //send to last one in partner group
         //std::cout << rank << ": sending additional to: " << next_partner_group.start_rank+next_partner_group.size-1 << std::endl;
         //start send
-        MPI_Isend(&sum_histogram[0],(buckets+next_group.size+1)*sizeof(BITS),MPI_BYTE,next_partner_group.start_rank+next_partner_group.size-1,0,Comm,&request);
+        MPI::Isend(&sum_histogram[0],(buckets+next_group.size+1)*sizeof(BITS),MPI_BYTE,next_partner_group.start_rank+next_partner_group.size-1,0,Comm,&request);
         hsreqs.push_back(request);
       }
     }
@@ -1622,7 +1622,7 @@ void SFC<LOCS>::Parallel3()
           spartners[i].remaining-=msg.size;
 
           //start send
-          MPI_Isend(msg.buffer,msg.size*sizeof(History<BITS>),MPI_BYTE,spartners[i].rank,1,Comm,&msg.request);
+          MPI::Isend(msg.buffer,msg.size*sizeof(History<BITS>),MPI_BYTE,spartners[i].rank,1,Comm,&msg.request);
 
           //add msg to in transit queue
           spartners[i].in_transit.push(msg);
@@ -1645,7 +1645,7 @@ void SFC<LOCS>::Parallel3()
           rpartners[i].remaining-=msg.size;
 
           //start send
-          MPI_Irecv(msg.buffer,msg.size*sizeof(History<BITS>),MPI_BYTE,rpartners[i].rank,1,Comm,&msg.request);
+          MPI::Irecv(msg.buffer,msg.size*sizeof(History<BITS>),MPI_BYTE,rpartners[i].rank,1,Comm,&msg.request);
 
           //add msg to in transit queue
           rpartners[i].in_transit.push(msg);
@@ -1700,7 +1700,7 @@ void SFC<LOCS>::Parallel3()
           start=timer->currentSeconds();
 #endif
           //testsome on sends
-          MPI_Testsome(sreqs.size(),&sreqs[0],&completed,&sindices[0],MPI_STATUSES_IGNORE);
+          MPI::Testsome(sreqs.size(),&sreqs[0],&completed,&sindices[0],MPI_STATUSES_IGNORE);
 #ifdef _TIMESFC_
           finish=timer->currentSeconds();
           timers[5]+=finish-start;
@@ -1726,7 +1726,7 @@ void SFC<LOCS>::Parallel3()
               partner.remaining-=new_msg.size;
 
               //start send
-              MPI_Isend(new_msg.buffer,new_msg.size*sizeof(History<BITS>),MPI_BYTE,partner.rank,1,Comm,&new_msg.request);
+              MPI::Isend(new_msg.buffer,new_msg.size*sizeof(History<BITS>),MPI_BYTE,partner.rank,1,Comm,&new_msg.request);
 
               //add msg to in transit queue
               partner.in_transit.push(new_msg);
@@ -1755,7 +1755,7 @@ void SFC<LOCS>::Parallel3()
           start=timer->currentSeconds();
 #endif
           //testsome on recvs
-          MPI_Testsome(rreqs.size(),&rreqs[0],&completed,&rindices[0],MPI_STATUSES_IGNORE);
+          MPI::Testsome(rreqs.size(),&rreqs[0],&completed,&rindices[0],MPI_STATUSES_IGNORE);
 #ifdef _TIMESFC_
           finish=timer->currentSeconds();
           timers[5]+=finish-start;
@@ -1783,7 +1783,7 @@ void SFC<LOCS>::Parallel3()
               partner.remaining-=new_msg.size;
 
               //start recv
-              MPI_Irecv(new_msg.buffer,new_msg.size*sizeof(History<BITS>),MPI_BYTE,partner.rank,1,Comm,&new_msg.request);
+              MPI::Irecv(new_msg.buffer,new_msg.size*sizeof(History<BITS>),MPI_BYTE,partner.rank,1,Comm,&new_msg.request);
 
               //add msg to in transit queue
               partner.in_transit.push(new_msg);
@@ -1882,8 +1882,8 @@ void SFC<LOCS>::Parallel3()
 #if 0
   double avg_recvs=double(total_recvs)/num_recvs;
   double sum,max;
-  MPI_Reduce(&avg_recvs,&sum,1,MPI_DOUBLE,MPI_SUM,0,Comm);
-  MPI_Reduce(&avg_recvs,&max,1,MPI_DOUBLE,MPI_MAX,0,Comm);
+  MPI::Reduce(&avg_recvs,&sum,1,MPI_DOUBLE,MPI_SUM,0,Comm);
+  MPI::Reduce(&avg_recvs,&max,1,MPI_DOUBLE,MPI_MAX,0,Comm);
   avg_recvs=sum/P;
 
   if(rank==0)
@@ -2029,11 +2029,11 @@ void SFC<LOCS>::Parallel2()
         MPI_Request request;
 
         //start send
-        MPI_Isend(&sum_histogram[0],(buckets+next_group.size+1)*sizeof(BITS),MPI_BYTE,next_partner_rank,stages,Comm,&request);
+        MPI::Isend(&sum_histogram[0],(buckets+next_group.size+1)*sizeof(BITS),MPI_BYTE,next_partner_rank,stages,Comm,&request);
         hsreqs.push_back(request);
         //start recv
         //start send
-        MPI_Irecv(&next_recv_histogram[0],(buckets+next_partner_group.size+1)*sizeof(BITS),MPI_BYTE,next_partner_rank,stages,Comm,&rreq);
+        MPI::Irecv(&next_recv_histogram[0],(buckets+next_partner_group.size+1)*sizeof(BITS),MPI_BYTE,next_partner_rank,stages,Comm,&rreq);
       }
       else
       {
@@ -2043,7 +2043,7 @@ void SFC<LOCS>::Parallel2()
         //recieve from rank 0 in partner group
         //std::cout << rank << ": recieving from: " << next_partner_group.start_rank << std::endl;
         //start send
-        MPI_Irecv(&next_recv_histogram[0],(buckets+next_partner_group.size+1)*sizeof(BITS),MPI_BYTE,next_partner_group.start_rank,stages,Comm,&rreq);
+        MPI::Irecv(&next_recv_histogram[0],(buckets+next_partner_group.size+1)*sizeof(BITS),MPI_BYTE,next_partner_group.start_rank,stages,Comm,&rreq);
       }
 
       if(next_group.size<next_partner_group.size && next_local_rank==0)
@@ -2052,7 +2052,7 @@ void SFC<LOCS>::Parallel2()
         //send to last one in partner group
         //std::cout << rank << ": sending additional to: " << next_partner_group.start_rank+next_partner_group.size-1 << std::endl;
         //start send
-        MPI_Isend(&sum_histogram[0],(buckets+next_group.size+1)*sizeof(BITS),MPI_BYTE,next_partner_group.start_rank+next_partner_group.size-1,stages,Comm,&request);
+        MPI::Isend(&sum_histogram[0],(buckets+next_group.size+1)*sizeof(BITS),MPI_BYTE,next_partner_group.start_rank+next_partner_group.size-1,stages,Comm,&request);
         hsreqs.push_back(request);
       }
     }
@@ -2101,8 +2101,8 @@ void SFC<LOCS>::Parallel2()
       start=timer->currentSeconds();
 #endif
       //wait for histogram communiation to complete
-      MPI_Wait(&rreq,&status);
-      MPI_Waitall(hsreqs.size(),&hsreqs[0],MPI_STATUSES_IGNORE);
+      MPI::Wait(&rreq,&status);
+      MPI::Waitall(hsreqs.size(),&hsreqs[0],MPI_STATUSES_IGNORE);
       hsreqs.clear();
 
 #ifdef _TIMESFC_
@@ -2185,10 +2185,10 @@ void SFC<LOCS>::Parallel2()
         MPI_Request request;
 
         //start send
-        MPI_Isend(&sum_histogram[0],(buckets+next_group.size+1)*sizeof(BITS),MPI_BYTE,next_partner_rank,stage-1,Comm,&request);
+        MPI::Isend(&sum_histogram[0],(buckets+next_group.size+1)*sizeof(BITS),MPI_BYTE,next_partner_rank,stage-1,Comm,&request);
         hsreqs.push_back(request);
         //start recv
-        MPI_Irecv(&next_recv_histogram[0],(buckets+next_partner_group.size+1)*sizeof(BITS),MPI_BYTE,next_partner_rank,stage-1,Comm,&rreq);
+        MPI::Irecv(&next_recv_histogram[0],(buckets+next_partner_group.size+1)*sizeof(BITS),MPI_BYTE,next_partner_rank,stage-1,Comm,&rreq);
       }
       else
       {
@@ -2198,7 +2198,7 @@ void SFC<LOCS>::Parallel2()
         //recieve from rank 0 in partner group
         //std::cout << rank << ": recieving from: " << next_partner_group.start_rank << std::endl;
         //start send
-        MPI_Irecv(&next_recv_histogram[0],(buckets+next_partner_group.size+1)*sizeof(BITS),MPI_BYTE,next_partner_group.start_rank,stage-1,Comm,&rreq);
+        MPI::Irecv(&next_recv_histogram[0],(buckets+next_partner_group.size+1)*sizeof(BITS),MPI_BYTE,next_partner_group.start_rank,stage-1,Comm,&rreq);
       }
 
       if(next_group.size<next_partner_group.size && next_local_rank==0)
@@ -2207,7 +2207,7 @@ void SFC<LOCS>::Parallel2()
         //send to last one in partner group
         //std::cout << rank << ": sending additional to: " << next_partner_group.start_rank+next_partner_group.size-1 << std::endl;
         //start send
-        MPI_Isend(&sum_histogram[0],(buckets+next_group.size+1)*sizeof(BITS),MPI_BYTE,next_partner_group.start_rank+next_partner_group.size-1,stage-1,Comm,&request);
+        MPI::Isend(&sum_histogram[0],(buckets+next_group.size+1)*sizeof(BITS),MPI_BYTE,next_partner_group.start_rank+next_partner_group.size-1,stage-1,Comm,&request);
         hsreqs.push_back(request);
       }
     }
@@ -2341,7 +2341,7 @@ void SFC<LOCS>::Parallel2()
           {
             std::cout << rank << ": error sending, send size is bigger than buffer\n";
           }
-          MPI_Isend(&myhistories[senddisp[p]],sendcounts[p]*sizeof(History<BITS>),MPI_BYTE,parent_group.start_rank+p,2*stages+stage,Comm,&request);
+          MPI::Isend(&myhistories[senddisp[p]],sendcounts[p]*sizeof(History<BITS>),MPI_BYTE,parent_group.start_rank+p,2*stages+stage,Comm,&request);
           sreqs.push_back(request);
         }
 
@@ -2353,7 +2353,7 @@ void SFC<LOCS>::Parallel2()
           {
             std::cout << rank << ": error reciving, recieve size is bigger than buffer\n";
           }
-          MPI_Irecv(&recv_histories[recvdisp[p]],recvcounts[p]*sizeof(History<BITS>),MPI_BYTE,parent_group.start_rank+p,2*stages+stage,Comm,&request);
+          MPI::Irecv(&recv_histories[recvdisp[p]],recvcounts[p]*sizeof(History<BITS>),MPI_BYTE,parent_group.start_rank+p,2*stages+stage,Comm,&request);
           rreqs.push_back(request);
         }
 
@@ -2389,7 +2389,7 @@ void SFC<LOCS>::Parallel2()
        start=timer->currentSeconds();
 #endif
        //wait any
-       MPI_Waitany(rreqs.size(),&rreqs[0],&index,&status);
+       MPI::Waitany(rreqs.size(),&rreqs[0],&index,&status);
 #ifdef _TIMESFC_
        finish=timer->currentSeconds();
        timers[5]+=finish-start;
@@ -2419,8 +2419,8 @@ void SFC<LOCS>::Parallel2()
         start=timer->currentSeconds();
 #endif
         //wait any
-        // MPI_Waitany(rreqs.size(),&rreqs[0],&index,&status);
-        MPI_Waitsome(rreqs.size(),&rreqs[0],&completed,&indices[0],&statuses[0]);
+        // MPI::Waitany(rreqs.size(),&rreqs[0],&index,&status);
+        MPI::Waitsome(rreqs.size(),&rreqs[0],&completed,&indices[0],&statuses[0]);
 #ifdef _TIMESFC_
         finish=timer->currentSeconds();
         timers[5]+=finish-start;
@@ -2472,7 +2472,7 @@ void SFC<LOCS>::Parallel2()
 
       //wait for sends
       if(sreqs.size()>0)
-        MPI_Waitall(sreqs.size(), &sreqs[0], MPI_STATUSES_IGNORE);
+        MPI::Waitall(sreqs.size(), &sreqs[0], MPI_STATUSES_IGNORE);
 
 #ifdef _TIMESFC_
       finish=timer->currentSeconds();
@@ -2505,8 +2505,8 @@ void SFC<LOCS>::Parallel2()
 #if 0
   double avg_recvs=double(total_recvs)/num_recvs;
   double sum,max;
-  MPI_Reduce(&avg_recvs,&sum,1,MPI_DOUBLE,MPI_SUM,0,Comm);
-  MPI_Reduce(&avg_recvs,&max,1,MPI_DOUBLE,MPI_MAX,0,Comm);
+  MPI::Reduce(&avg_recvs,&sum,1,MPI_DOUBLE,MPI_SUM,0,Comm);
+  MPI::Reduce(&avg_recvs,&max,1,MPI_DOUBLE,MPI_MAX,0,Comm);
   avg_recvs=sum/P;
 
   if(rank==0)
@@ -2614,7 +2614,7 @@ void SFC<LOCS>::Parallel1()
       recvdisp[p]*=sizeof(History<BITS>);
     }
     //std::cout << rank << ": all to all\n";
-    MPI_Alltoallv(&myhistories[0],&sendcounts[0],&senddisp[0],MPI_BYTE,
+    MPI::Alltoallv(&myhistories[0],&sendcounts[0],&senddisp[0],MPI_BYTE,
                  &mergefrom[0],&recvcounts[0],&recvdisp[0],MPI_BYTE,Comm);
 #ifdef _TIMESFC_
     finish=timer->currentSeconds();
@@ -2718,7 +2718,7 @@ void SFC<LOCS>::Parallel1()
       {
         //std::cout << rank << " sending " << sendcounts[p] << " to rank " << p << std::endl;
         sreqs.push_back(empty);
-        MPI_Isend(&myhistories[senddisp[p]],sendcounts[p]*sizeof(History<BITS>),MPI_BYTE,p,0,Comm,&sreqs.back());
+        MPI::Isend(&myhistories[senddisp[p]],sendcounts[p]*sizeof(History<BITS>),MPI_BYTE,p,0,Comm,&sreqs.back());
       }
     }
     //start recieves
@@ -2728,7 +2728,7 @@ void SFC<LOCS>::Parallel1()
       {
         //std::cout << rank << " recving " << recvcounts[p] << " from rank " << p << std::endl;
         rreqs.push_back(empty);
-        MPI_Irecv(&recvbuf[recvdisp[p]],recvcounts[p]*sizeof(History<BITS>),MPI_BYTE,p,0,Comm,&rreqs.back());
+        MPI::Irecv(&recvbuf[recvdisp[p]],recvcounts[p]*sizeof(History<BITS>),MPI_BYTE,p,0,Comm,&rreqs.back());
       }
     }
 #ifdef _TIMESFC_
@@ -2753,7 +2753,7 @@ void SFC<LOCS>::Parallel1()
   timers[2]+=finish-start;
   start=timer->currentSeconds();
 #endif
-        MPI_Waitany(rreqs.size(),&rreqs[0],&index,&status);
+        MPI::Waitany(rreqs.size(),&rreqs[0],&index,&status);
 #ifdef _TIMESFC_
   finish=timer->currentSeconds();
   timers[3]+=finish-start;
@@ -2802,7 +2802,7 @@ void SFC<LOCS>::Parallel1()
   start=timer->currentSeconds();
 #endif
         //wait any
-        MPI_Waitany(rreqs.size(),&rreqs[0],&index,&status);
+        MPI::Waitany(rreqs.size(),&rreqs[0],&index,&status);
 #ifdef _TIMESFC_
   finish=timer->currentSeconds();
   timers[3]+=finish-start;
@@ -2874,7 +2874,7 @@ void SFC<LOCS>::Parallel1()
     for(unsigned int i=0;i<sreqs.size();i++)
     {
      MPI_Status status;
-     MPI_Wait(&sreqs[i],&status);
+     MPI::Wait(&sreqs[i],&status);
     }
   }
 #ifdef _TIMESFC_
@@ -2995,10 +2995,10 @@ int SFC<LOCS>::MergeExchange(int to,std::vector<History<BITS> > &sendbuf, std::v
     myinfo.max=sendbuf[n-1].bits;
   }
 
-  MPI_Isend(&myinfo,sizeof(MergeInfo<BITS>),MPI_BYTE,to,0,Comm,&srequest);
-  MPI_Irecv(&theirinfo,sizeof(MergeInfo<BITS>),MPI_BYTE,to,0,Comm,&rrequest);
-  MPI_Wait(&rrequest,&status);
-  MPI_Wait(&srequest,&status);
+  MPI::Isend(&myinfo,sizeof(MergeInfo<BITS>),MPI_BYTE,to,0,Comm,&srequest);
+  MPI::Irecv(&theirinfo,sizeof(MergeInfo<BITS>),MPI_BYTE,to,0,Comm,&rrequest);
+  MPI::Wait(&rrequest,&status);
+  MPI::Wait(&srequest,&status);
 
   if(myinfo.n==0 || theirinfo.n==0)
   {
@@ -3032,11 +3032,11 @@ int SFC<LOCS>::MergeExchange(int to,std::vector<History<BITS> > &sendbuf, std::v
       }
 
        //send the elements to be merged
-       MPI_Isend(&sendbuf[send_offset],sendn*sizeof(History<BITS>),MPI_BYTE,to,0,Comm,&srequest);
+       MPI::Isend(&sendbuf[send_offset],sendn*sizeof(History<BITS>),MPI_BYTE,to,0,Comm,&srequest);
        //recv the elements to be merged
-       MPI_Irecv(&mergebuf[0],sendn*sizeof(History<BITS>),MPI_BYTE,to,0,Comm,&rrequest);
-       MPI_Wait(&rrequest,&status);
-       MPI_Wait(&srequest,&status);
+       MPI::Irecv(&mergebuf[0],sendn*sizeof(History<BITS>),MPI_BYTE,to,0,Comm,&rrequest);
+       MPI::Wait(&rrequest,&status);
+       MPI::Wait(&srequest,&status);
        sendbuf.swap(mergebuf);
        return 1;
     }
@@ -3070,11 +3070,11 @@ int SFC<LOCS>::MergeExchange(int to,std::vector<History<BITS> > &sendbuf, std::v
       }
 
       //send the elements to be merged
-      MPI_Isend(&sendbuf[0],sendn*sizeof(History<BITS>),MPI_BYTE,to,0,Comm,&srequest);
+      MPI::Isend(&sendbuf[0],sendn*sizeof(History<BITS>),MPI_BYTE,to,0,Comm,&srequest);
       //recv the elements to be merged
-      MPI_Irecv(&mergebuf[send_offset],sendn*sizeof(History<BITS>),MPI_BYTE,to,0,Comm,&rrequest);
-      MPI_Wait(&rrequest,&status);
-      MPI_Wait(&srequest,&status);
+      MPI::Irecv(&mergebuf[send_offset],sendn*sizeof(History<BITS>),MPI_BYTE,to,0,Comm,&rrequest);
+      MPI::Wait(&rrequest,&status);
+      MPI::Wait(&srequest,&status);
       sendbuf.swap(mergebuf);
       return 1;
     }
@@ -3101,11 +3101,11 @@ int SFC<LOCS>::MergeExchange(int to,std::vector<History<BITS> > &sendbuf, std::v
     //position buffers
 
     //communicate lists
-    MPI_Irecv(rbuf,nrecv*sizeof(History<BITS>),MPI_BYTE,to,1,Comm,&rrequest);
-    MPI_Isend(sbuf,nsend*sizeof(History<BITS>),MPI_BYTE,to,1,Comm,&srequest);
+    MPI::Irecv(rbuf,nrecv*sizeof(History<BITS>),MPI_BYTE,to,1,Comm,&rrequest);
+    MPI::Isend(sbuf,nsend*sizeof(History<BITS>),MPI_BYTE,to,1,Comm,&srequest);
 
     //wait for recieve
-    MPI_Wait(&rrequest,&status);
+    MPI::Wait(&rrequest,&status);
 
     //merge lists
 
@@ -3123,7 +3123,7 @@ int SFC<LOCS>::MergeExchange(int to,std::vector<History<BITS> > &sendbuf, std::v
     }
 
     //wait for send
-    MPI_Wait(&srequest,&status);
+    MPI::Wait(&srequest,&status);
 
   }
   else
@@ -3134,11 +3134,11 @@ int SFC<LOCS>::MergeExchange(int to,std::vector<History<BITS> > &sendbuf, std::v
     //position buffers
 
     //communicate lists
-    MPI_Irecv(rbuf,nrecv*sizeof(History<BITS>),MPI_BYTE,to,1,Comm,&rrequest);
-    MPI_Isend(sbuf,nsend*sizeof(History<BITS>),MPI_BYTE,to,1,Comm,&srequest);
+    MPI::Irecv(rbuf,nrecv*sizeof(History<BITS>),MPI_BYTE,to,1,Comm,&rrequest);
+    MPI::Isend(sbuf,nsend*sizeof(History<BITS>),MPI_BYTE,to,1,Comm,&srequest);
 
     //wait for recieve
-    MPI_Wait(&rrequest,&status);
+    MPI::Wait(&rrequest,&status);
 
     //merge lists
 
@@ -3155,7 +3155,7 @@ int SFC<LOCS>::MergeExchange(int to,std::vector<History<BITS> > &sendbuf, std::v
     }
 
     //wait for send
-    MPI_Wait(&srequest,&status);
+    MPI::Wait(&srequest,&status);
   }
 #if 0
   std::cout << rank << " list before: ";
@@ -3198,10 +3198,10 @@ int SFC<LOCS>::MergeExchange(int to,std::vector<History<BITS> > &sendbuf, std::v
   }
   //std::cout << rank << " n:" << n << " min:" << (int)myinfo.min << "max:" << (int)myinfo.max << std::endl;
 
-  MPI_Isend(&myinfo,sizeof(myinfo),MPI_BYTE,to,0,Comm,&srequest);
-  MPI_Irecv(&theirinfo,sizeof(theirinfo),MPI_BYTE,to,0,Comm,&rrequest);
-  MPI_Wait(&rrequest,&status);
-  MPI_Wait(&srequest,&status);
+  MPI::Isend(&myinfo,sizeof(myinfo),MPI_BYTE,to,0,Comm,&srequest);
+  MPI::Irecv(&theirinfo,sizeof(theirinfo),MPI_BYTE,to,0,Comm,&rrequest);
+  MPI::Wait(&rrequest,&status);
+  MPI::Wait(&srequest,&status);
 
   if(myinfo.n==0 || theirinfo.n==0)
   {
@@ -3217,10 +3217,10 @@ int SFC<LOCS>::MergeExchange(int to,std::vector<History<BITS> > &sendbuf, std::v
     else if(myinfo.min>=theirinfo.max) //full exchange needed
     {
        mergebuf.resize(theirinfo.n);
-       MPI_Isend(&sendbuf[0],n*sizeof(History<BITS>),MPI_BYTE,to,0,Comm,&srequest);
-       MPI_Irecv(&mergebuf[0],theirinfo.n*sizeof(History<BITS>),MPI_BYTE,to,0,Comm,&rrequest);
-       MPI_Wait(&rrequest,&status);
-       MPI_Wait(&srequest,&status);
+       MPI::Isend(&sendbuf[0],n*sizeof(History<BITS>),MPI_BYTE,to,0,Comm,&srequest);
+       MPI::Irecv(&mergebuf[0],theirinfo.n*sizeof(History<BITS>),MPI_BYTE,to,0,Comm,&rrequest);
+       MPI::Wait(&rrequest,&status);
+       MPI::Wait(&srequest,&status);
        sendbuf.swap(mergebuf);
        mergebuf.resize(theirinfo.n);
        n=theirinfo.n;
@@ -3234,10 +3234,10 @@ int SFC<LOCS>::MergeExchange(int to,std::vector<History<BITS> > &sendbuf, std::v
     else if(myinfo.max<=theirinfo.min) //full exchange needed
     {
        mergebuf.resize(theirinfo.n);
-       MPI_Isend(&sendbuf[0],n*sizeof(History<BITS>),MPI_BYTE,to,0,Comm,&srequest);
-       MPI_Irecv(&mergebuf[0],theirinfo.n*sizeof(History<BITS>),MPI_BYTE,to,0,Comm,&rrequest);
-       MPI_Wait(&rrequest,&status);
-       MPI_Wait(&srequest,&status);
+       MPI::Isend(&sendbuf[0],n*sizeof(History<BITS>),MPI_BYTE,to,0,Comm,&srequest);
+       MPI::Irecv(&mergebuf[0],theirinfo.n*sizeof(History<BITS>),MPI_BYTE,to,0,Comm,&rrequest);
+       MPI::Wait(&rrequest,&status);
+       MPI::Wait(&srequest,&status);
        sendbuf.swap(mergebuf);
        mergebuf.resize(theirinfo.n);
        n=theirinfo.n;
@@ -3287,11 +3287,11 @@ int SFC<LOCS>::MergeExchange(int to,std::vector<History<BITS> > &sendbuf, std::v
     }
 //    std::cout << "exchanging samples\n";
     //exchange samples
-    MPI_Isend(mysample,sample_size*sizeof(BITS),MPI_BYTE,to,1,Comm,&srequest);
-    MPI_Irecv(theirsample,sample_size*sizeof(BITS),MPI_BYTE,to,1,Comm,&rrequest);
+    MPI::Isend(mysample,sample_size*sizeof(BITS),MPI_BYTE,to,1,Comm,&srequest);
+    MPI::Irecv(theirsample,sample_size*sizeof(BITS),MPI_BYTE,to,1,Comm,&rrequest);
 
-    MPI_Wait(&rrequest,&status);
-    MPI_Wait(&srequest,&status);
+    MPI::Wait(&rrequest,&status);
+    MPI::Wait(&srequest,&status);
 
 //    std::cout << "done exchanging samples\n";
     //merge samples
@@ -3353,7 +3353,7 @@ int SFC<LOCS>::MergeExchange(int to,std::vector<History<BITS> > &sendbuf, std::v
       {
         int send=std::min(sremaining,(int)comm_block_size);
         sbuf-=send;
-        MPI_Isend(sbuf,send*sizeof(History<BITS>),MPI_BYTE,to,1,Comm,&srequest);
+        MPI::Isend(sbuf,send*sizeof(History<BITS>),MPI_BYTE,to,1,Comm,&srequest);
         squeue.push(srequest);
         sent+=send;
         sremaining-=send;
@@ -3363,7 +3363,7 @@ int SFC<LOCS>::MergeExchange(int to,std::vector<History<BITS> > &sendbuf, std::v
       if(rremaining>0)
       {
         int recv=std::min(rremaining,(int)comm_block_size);
-        MPI_Irecv(rbuf+recvd,recv*sizeof(History<BITS>),MPI_BYTE,to,1,Comm,&rrequest);
+        MPI::Irecv(rbuf+recvd,recv*sizeof(History<BITS>),MPI_BYTE,to,1,Comm,&rrequest);
         rqueue.push(rrequest);
         recvd+=recv;
         rremaining-=recv;
@@ -3373,7 +3373,7 @@ int SFC<LOCS>::MergeExchange(int to,std::vector<History<BITS> > &sendbuf, std::v
     }
     while(!rqueue.empty())
     {
-      MPI_Wait(&(rqueue.front()),&status);
+      MPI::Wait(&(rqueue.front()),&status);
 
       //start next communication
       //send next block
@@ -3381,7 +3381,7 @@ int SFC<LOCS>::MergeExchange(int to,std::vector<History<BITS> > &sendbuf, std::v
       {
         int send=std::min(sremaining,(int)comm_block_size);
         sbuf-=send;
-        MPI_Isend(sbuf,send*sizeof(History<BITS>),MPI_BYTE,to,1,Comm,&srequest);
+        MPI::Isend(sbuf,send*sizeof(History<BITS>),MPI_BYTE,to,1,Comm,&srequest);
         squeue.push(srequest);
         sent+=send;
         sremaining-=send;
@@ -3390,7 +3390,7 @@ int SFC<LOCS>::MergeExchange(int to,std::vector<History<BITS> > &sendbuf, std::v
       if(rremaining>0)
       {
         int recv=std::min(rremaining,(int)comm_block_size);
-        MPI_Irecv(rbuf+recvd,recv*sizeof(History<BITS>),MPI_BYTE,to,1,Comm,&rrequest);
+        MPI::Irecv(rbuf+recvd,recv*sizeof(History<BITS>),MPI_BYTE,to,1,Comm,&rrequest);
         rqueue.push(rrequest);
         recvd+=recv;
         rremaining-=recv;
@@ -3398,7 +3398,7 @@ int SFC<LOCS>::MergeExchange(int to,std::vector<History<BITS> > &sendbuf, std::v
 
       rqueue.pop();
 
-      MPI_Get_count(&status,MPI_BYTE,&b);
+      MPI::Get_count(&status,MPI_BYTE,&b);
       b=int(b*inv_denom);
       end2+=b;
 
@@ -3442,7 +3442,7 @@ int SFC<LOCS>::MergeExchange(int to,std::vector<History<BITS> > &sendbuf, std::v
 
 
       //wait for a send, it should be done now
-      MPI_Wait(&(squeue.front()),&status);
+      MPI::Wait(&(squeue.front()),&status);
       squeue.pop();
     }
     int rem=outend-out;
@@ -3472,7 +3472,7 @@ int SFC<LOCS>::MergeExchange(int to,std::vector<History<BITS> > &sendbuf, std::v
       if(sremaining>0)
       {
         int send=std::min(sremaining,(int)comm_block_size);
-        MPI_Isend(sbuf+sent,send*sizeof(History<BITS>),MPI_BYTE,to,1,Comm,&srequest);
+        MPI::Isend(sbuf+sent,send*sizeof(History<BITS>),MPI_BYTE,to,1,Comm,&srequest);
         squeue.push(srequest);
         sent+=send;
         sremaining-=send;
@@ -3482,7 +3482,7 @@ int SFC<LOCS>::MergeExchange(int to,std::vector<History<BITS> > &sendbuf, std::v
       {
         int recv=std::min(rremaining,(int)comm_block_size);
         rbuf-=recv;
-        MPI_Irecv(rbuf,recv*sizeof(History<BITS>),MPI_BYTE,to,1,Comm,&rrequest);
+        MPI::Irecv(rbuf,recv*sizeof(History<BITS>),MPI_BYTE,to,1,Comm,&rrequest);
         rqueue.push(rrequest);
         recvd+=recv;
         rremaining-=recv;
@@ -3491,13 +3491,13 @@ int SFC<LOCS>::MergeExchange(int to,std::vector<History<BITS> > &sendbuf, std::v
     }
     while(!rqueue.empty())
     {
-      MPI_Wait(&(rqueue.front()),&status);
+      MPI::Wait(&(rqueue.front()),&status);
 
       //start next communication
       if(sremaining>0)
       {
         int send=std::min(sremaining,(int)comm_block_size);
-        MPI_Isend(sbuf+sent,send*sizeof(History<BITS>),MPI_BYTE,to,1,Comm,&srequest);
+        MPI::Isend(sbuf+sent,send*sizeof(History<BITS>),MPI_BYTE,to,1,Comm,&srequest);
         squeue.push(srequest);
         sent+=send;
         sremaining-=send;
@@ -3506,7 +3506,7 @@ int SFC<LOCS>::MergeExchange(int to,std::vector<History<BITS> > &sendbuf, std::v
       {
         int recv=std::min(rremaining,(int)comm_block_size);
         rbuf-=recv;
-        MPI_Irecv(rbuf,recv*sizeof(History<BITS>),MPI_BYTE,to,1,Comm,&rrequest);
+        MPI::Irecv(rbuf,recv*sizeof(History<BITS>),MPI_BYTE,to,1,Comm,&rrequest);
         rqueue.push(rrequest);
         recvd+=recv;
         rremaining-=recv;
@@ -3514,7 +3514,7 @@ int SFC<LOCS>::MergeExchange(int to,std::vector<History<BITS> > &sendbuf, std::v
 
       rqueue.pop();
 
-      MPI_Get_count(&status,MPI_BYTE,&b);
+      MPI::Get_count(&status,MPI_BYTE,&b);
       b=int(b*inv_denom);
 
       end2-=b;
@@ -3555,7 +3555,7 @@ int SFC<LOCS>::MergeExchange(int to,std::vector<History<BITS> > &sendbuf, std::v
       }
 
 
-      MPI_Wait(&(squeue.front()),&status);
+      MPI::Wait(&(squeue.front()),&status);
       squeue.pop();
     }
 
@@ -3576,13 +3576,13 @@ int SFC<LOCS>::MergeExchange(int to,std::vector<History<BITS> > &sendbuf, std::v
   }
   while(!rqueue.empty())
   {
-    MPI_Wait(&(rqueue.front()),&status);
+    MPI::Wait(&(rqueue.front()),&status);
     rqueue.pop();
 //    std::cout << rank << " recieved left over block\n";
   }
   while(!squeue.empty())
   {
-    MPI_Wait(&(squeue.front()),&status);
+    MPI::Wait(&(squeue.front()),&status);
     squeue.pop();
 //    std::cout << rank << " sent left over block\n";
   }
@@ -3785,7 +3785,7 @@ void SFC<LOCS>::Linear(std::vector<History<BITS> > &histories, std::vector<Histo
 
     if(i%mod==0)
     {
-      MPI_Allreduce(&val,&c,1,MPI_INT,MPI_MAX,Comm);
+      MPI::Allreduce(&val,&c,1,MPI_INT,MPI_MAX,Comm);
     }
     iter+=2;
   }

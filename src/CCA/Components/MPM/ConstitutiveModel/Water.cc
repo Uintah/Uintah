@@ -411,8 +411,8 @@ namespace Uintah {
   {
     ASSERTEQ(sizeof(Water::StateData), sizeof(double)*0);
     MPI_Datatype mpitype;
-    MPI_Type_vector(1, 0, 0, MPI_DOUBLE, &mpitype);
-    MPI_Type_commit(&mpitype);
+    MPI::Type_vector(1, 0, 0, MPI_DOUBLE, &mpitype);
+    MPI::Type_commit(&mpitype);
     return mpitype;
   }
   

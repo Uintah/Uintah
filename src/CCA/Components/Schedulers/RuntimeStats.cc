@@ -354,7 +354,7 @@ void RuntimeStats::report( MPI_Comm comm, InfoStats & stats )
   {
     static bool init = false;
     if (!init) {
-      MPI_Op_create( rank_sum_min_max, true, &rank_sum_min_max_op );
+      MPI::Op_create( rank_sum_min_max, true, &rank_sum_min_max_op );
       init = true;
     }
   }
@@ -362,8 +362,8 @@ void RuntimeStats::report( MPI_Comm comm, InfoStats & stats )
   int psize;
   int prank;
 
-  MPI_Comm_size( comm, &psize );
-  MPI_Comm_rank( comm, &prank );
+  MPI::Comm_size( comm, &psize );
+  MPI::Comm_rank( comm, &prank );
 
   int  num_report_values = 0;
   // count
@@ -401,7 +401,7 @@ void RuntimeStats::report( MPI_Comm comm, InfoStats & stats )
   }
 
   global_data.resize(data_size);
-  MPI_Allreduce( data.data(), global_data.data(), data_size, MPI_INT64_T, rank_sum_min_max_op, comm);
+  MPI::Allreduce( data.data(), global_data.data(), data_size, MPI_INT64_T, rank_sum_min_max_op, comm);
 
   std::vector<int64_t>     histograms(data_size,0);
   std::vector<int64_t>     global_histograms(data_size,0);
@@ -427,7 +427,7 @@ void RuntimeStats::report( MPI_Comm comm, InfoStats & stats )
     }
   }
 
-  MPI_Reduce(histograms.data(), global_histograms.data(), data_size, MPI_INT64_T, MPI_SUM, 0, comm);
+  MPI::Reduce(histograms.data(), global_histograms.data(), data_size, MPI_INT64_T, MPI_SUM, 0, comm);
 
   if (prank == 0) {
 

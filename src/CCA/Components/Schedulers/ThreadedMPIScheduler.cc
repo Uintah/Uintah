@@ -483,7 +483,7 @@ ThreadedMPIScheduler::execute( int tgnum     /* = 0 */,
     float queuelength = lengthsum / totaltasks;
     float allqueuelength = 0;
 
-    MPI_Reduce(&queuelength, &allqueuelength, 1, MPI_FLOAT, MPI_SUM, 0, d_myworld->getComm());
+    MPI::Reduce(&queuelength, &allqueuelength, 1, MPI_FLOAT, MPI_SUM, 0, d_myworld->getComm());
 
     proc0cout << "average queue length:" << allqueuelength / d_myworld->size() << std::endl;
   }
@@ -527,7 +527,7 @@ ThreadedMPIScheduler::execute( int tgnum     /* = 0 */,
     int myrestart = m_dws[m_dws.size() - 1]->timestepRestarted();
     int netrestart;
 
-    MPI_Allreduce(&myrestart, &netrestart, 1, MPI_INT, MPI_LOR, d_myworld->getComm());
+    MPI::Allreduce(&myrestart, &netrestart, 1, MPI_INT, MPI_LOR, d_myworld->getComm());
 
     if (netrestart) {
       m_dws[m_dws.size() - 1]->restartTimestep();

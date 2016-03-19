@@ -118,7 +118,7 @@ void DependencyBatch::received( const ProcessorGroup * pg )
     {
       for (set<int>::iterator iter = receiveListeners_.begin(); iter != receiveListeners_.end(); ++iter) {
         // send WakeUp messages to threads on the same processor
-        MPI_Send(0, 0, MPI_INT, pg->myrank(), *iter, pg->getComm());
+        MPI::Send(0, 0, MPI_INT, pg->myrank(), *iter, pg->getComm());
       }
       receiveListeners_.clear();
     }

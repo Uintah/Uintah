@@ -576,7 +576,7 @@ Relocate::exchangeParticles(const ProcessorGroup* pg,
 
     // Go through once to calc the size of the message
     int psize;
-    MPI_Pack_size(1, MPI_INT, pg->getComm(), &psize);
+    MPI::Pack_size(1, MPI_INT, pg->getComm(), &psize);
     int sendsize  = psize; // One for the count of active patches
     int numactive = 0;
     vector<int> datasizes;
@@ -597,7 +597,7 @@ Relocate::exchangeParticles(const ProcessorGroup* pg,
           numactive++;
           int psize;
 
-          MPI_Pack_size(4, MPI_INT, pg->getComm(), &psize);
+          MPI::Pack_size(4, MPI_INT, pg->getComm(), &psize);
           sendsize += psize; // Patch ID, matl #, # particles, datasize
           int orig_sendsize = sendsize;
           ScatterRecord* record = pr.first->second;
@@ -627,7 +627,7 @@ Relocate::exchangeParticles(const ProcessorGroup* pg,
 
     // And go through it again to pack the message
     int idx=0;
-    MPI_Pack(&numactive, 1, MPI_INT, buf, sendsize, &position, pg->getComm());
+    MPI::Pack(&numactive, 1, MPI_INT, buf, sendsize, &position, pg->getComm());
 
     for(patchestype::iterator it = procRecord->patches.begin();it != procRecord->patches.end(); it++){
       const Patch* toPatch = *it;
@@ -641,19 +641,19 @@ Relocate::exchangeParticles(const ProcessorGroup* pg,
 
         for(;pr.first != pr.second; pr.first++){
           int patchid = toPatch->getID();
-          MPI_Pack(&patchid, 1, MPI_INT, buf, sendsize, &position, pg->getComm());
-          MPI_Pack(&matl,    1, MPI_INT, buf, sendsize, &position, pg->getComm());
+          MPI::Pack(&patchid, 1, MPI_INT, buf, sendsize, &position, pg->getComm());
+          MPI::Pack(&matl,    1, MPI_INT, buf, sendsize, &position, pg->getComm());
 
           ScatterRecord* record = pr.first->second;
           int totalParticles = record->send_pset->numParticles();
 
-          MPI_Pack(&totalParticles, 1, MPI_INT, buf, sendsize, &position, pg->getComm());
+          MPI::Pack(&totalParticles, 1, MPI_INT, buf, sendsize, &position, pg->getComm());
 
           total_reloc[1]+=totalParticles;
           int datasize   = datasizes[idx];
           ASSERT(datasize>0);
 
-          MPI_Pack(&datasize, 1, MPI_INT, buf, sendsize, &position, pg->getComm());
+          MPI::Pack(&datasize, 1, MPI_INT, buf, sendsize, &position, pg->getComm());
 
           int start = position;
           ParticleSubset* pset         = old_dw->getParticleSubset(matl, record->fromPatch);
@@ -671,7 +671,7 @@ Relocate::exchangeParticles(const ProcessorGroup* pg,
             // reason, mpich does this all the time.  We must pad...
             int diff=datasize-size;
             char* junk = scinew char[diff];
-            MPI_Pack(junk, diff, MPI_CHAR, buf, sendsize, &position, pg->getComm());
+            MPI::Pack(junk, diff, MPI_CHAR, buf, sendsize, &position, pg->getComm());
 
             ASSERTEQ(position, start+datasize);
             delete[] junk;
@@ -688,7 +688,7 @@ Relocate::exchangeParticles(const ProcessorGroup* pg,
     int to=iter->first;
 
     mpidbg << pg->myrank() << " Send relocate msg size " << sendsize << " tag " << RELOCATE_TAG << " to " << to << endl;
-    MPI_Isend(buf, sendsize, MPI_PACKED, to, RELOCATE_TAG, pg->getComm(), &rid);
+    MPI::Isend(buf, sendsize, MPI_PACKED, to, RELOCATE_TAG, pg->getComm(), &rid);
     mpidbg << pg->myrank() << " done Sending relocate msg size " << sendsize << " tag " << RELOCATE_TAG << " to " << to << endl;
 
     sendbuffers.push_back(buf);
@@ -711,28 +711,28 @@ Relocate::exchangeParticles(const ProcessorGroup* pg,
     }
 
     MPI_Status status;
-    MPI_Probe(iter->first, RELOCATE_TAG, pg->getComm(), &status);
+    MPI::Probe(iter->first, RELOCATE_TAG, pg->getComm(), &status);
     //ASSERT(status.MPI_ERROR == 0);
 
     int size;
-    MPI_Get_count(&status, MPI_PACKED, &size);
+    MPI::Get_count(&status, MPI_PACKED, &size);
     ASSERT(size != 0);
 
     char* buf = scinew char[size];
     recvbuffers[idx]=buf;
     mpidbg << pg->myrank() << " Recv relocate msg size " << size << " tag " << RELOCATE_TAG << " from " << iter->first << endl;
-    MPI_Recv(recvbuffers[idx], size, MPI_PACKED, iter->first, RELOCATE_TAG, pg->getComm(), &status);
+    MPI::Recv(recvbuffers[idx], size, MPI_PACKED, iter->first, RELOCATE_TAG, pg->getComm(), &status);
 
     mpidbg << pg->myrank() << " Done Recving relocate msg size " << size << " tag " << RELOCATE_TAG << " from " << iter->first << endl;
     // Partially unpack
     int position=0;
     int numrecords;
 
-    MPI_Unpack(buf, size, &position, &numrecords,    1, MPI_INT, pg->getComm());
+    MPI::Unpack(buf, size, &position, &numrecords,    1, MPI_INT, pg->getComm());
 
     for(int i=0;i<numrecords;i++){
       int patchid;
-      MPI_Unpack(buf, size, &position, &patchid,     1, MPI_INT, pg->getComm());
+      MPI::Unpack(buf, size, &position, &patchid,     1, MPI_INT, pg->getComm());
 
       // find the patch from the id
       const Patch* toPatch = grid->getPatchByID(patchid, coarsestLevel->getIndex());;
@@ -740,13 +740,13 @@ Relocate::exchangeParticles(const ProcessorGroup* pg,
       ASSERT(toPatch != 0 && toPatch->getID() == patchid);
 
       int matl;
-      MPI_Unpack(buf, size, &position, &matl,        1, MPI_INT, pg->getComm());
+      MPI::Unpack(buf, size, &position, &matl,        1, MPI_INT, pg->getComm());
 
       int numParticles;
-      MPI_Unpack(buf, size, &position, &numParticles,1, MPI_INT, pg->getComm());
+      MPI::Unpack(buf, size, &position, &numParticles,1, MPI_INT, pg->getComm());
 
       int datasize;
-      MPI_Unpack(buf, size, &position, &datasize,    1, MPI_INT, pg->getComm());
+      MPI::Unpack(buf, size, &position, &datasize,    1, MPI_INT, pg->getComm());
 
       char* databuf=buf+position;
       ASSERTEQ(lb->getPatchwiseProcessorAssignment(toPatch), me);
@@ -765,7 +765,7 @@ void Relocate::finalizeCommunication()
   // Wait to make sure that all of the sends completed
   int numsends = (int)sendrequests.size();
   vector<MPI_Status> statii(numsends);
-  MPI_Waitall(numsends, &sendrequests[0], &statii[0]);
+  MPI::Waitall(numsends, &sendrequests[0], &statii[0]);
 
   // delete the buffers
   for(int i=0;i<(int)sendbuffers.size();i++){
@@ -1309,7 +1309,7 @@ Relocate::relocateParticlesModifies(const ProcessorGroup* pg,
     //if (!lb->isDynamic() && level->getGrid()->numLevels() == 1 && level->numPatches() >= pg->size() && pg->size() > 1) {
     if (pg->size() > 1) {
       mpidbg << pg->myrank() << " Relocate reduce\n";
-      MPI_Reduce(total_reloc, alltotal, 3, MPI_INT, MPI_SUM, 0, pg->getComm());
+      MPI::Reduce(total_reloc, alltotal, 3, MPI_INT, MPI_SUM, 0, pg->getComm());
       mpidbg << pg->myrank() << " Done Relocate reduce\n";
     }
     if(pg->myrank() == 0){
@@ -1773,7 +1773,7 @@ Relocate::relocateParticles(const ProcessorGroup* pg,
     //if (!lb->isDynamic() && level->getGrid()->numLevels() == 1 && level->numPatches() >= pg->size() && pg->size() > 1) {
     if (pg->size() > 1) {
       mpidbg << pg->myrank() << " Relocate reduce\n";
-      MPI_Reduce(total_reloc, alltotal, 3, MPI_INT, MPI_SUM, 0, pg->getComm());
+      MPI::Reduce(total_reloc, alltotal, 3, MPI_INT, MPI_SUM, 0, pg->getComm());
       mpidbg << pg->myrank() << " Done Relocate reduce\n";
     }
     if(pg->myrank() == 0){

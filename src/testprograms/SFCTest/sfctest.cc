@@ -134,7 +134,7 @@ int main(int argc, char** argv)
   if(rank==0)
     cout << " Generating curve in parallel\n";
 
-  MPI_Barrier(Comm);
+  MPI::Barrier(Comm);
   
   double start=Time::currentSeconds();
   mycurve.GenerateCurve();
@@ -142,7 +142,7 @@ int main(int argc, char** argv)
   
   cout << rank << ": Time to generate curve:" << finish-start << endl;
 
-  MPI_Barrier(Comm);
+  MPI::Barrier(Comm);
 
   orderss.resize(N);
   mycurve.SetLocalSize(N);
@@ -151,7 +151,7 @@ int main(int argc, char** argv)
   
   if(rank==0)
     cout << " Generating curve in serial\n";
-  MPI_Barrier(Comm);
+  MPI::Barrier(Comm);
 
   start=Time::currentSeconds();
   mycurve.GenerateCurve(true);
@@ -159,7 +159,7 @@ int main(int argc, char** argv)
   
   cout << rank << ": Time to generate curve:" << finish-start << endl;
 
-  MPI_Barrier(Comm);
+  MPI::Barrier(Comm);
 
   if(rank==0)
   {
@@ -196,7 +196,7 @@ int main(int argc, char** argv)
       else
         r=n;
 
-      MPI_Recv(&orders[0],r*sizeof(DistributedIndex),MPI_BYTE,p,0,d_myworld->getComm(), &status);
+      MPI::Recv(&orders[0],r*sizeof(DistributedIndex),MPI_BYTE,p,0,d_myworld->getComm(), &status);
       for(unsigned int i=0;i<r;i++)
       {
 	      if(orders[i].p<rem)
@@ -219,7 +219,7 @@ int main(int argc, char** argv)
   }
   else
   {
-    MPI_Send(&orders[0],n*sizeof(DistributedIndex),MPI_BYTE,0,0,d_myworld->getComm());
+    MPI::Send(&orders[0],n*sizeof(DistributedIndex),MPI_BYTE,0,0,d_myworld->getComm());
   }
 
 	Uintah::Parallel::finalizeManager();

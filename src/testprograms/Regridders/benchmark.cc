@@ -25,9 +25,9 @@ outputTime(double time, int alg);
 int
 main(int argc, char** argv)
 {
-  MPI_Init(&argc, &argv);
-  MPI_Comm_size(MPI_COMM_WORLD, &num_procs);
-  MPI_Comm_rank(MPI_COMM_WORLD, &rank);
+  MPI::Init(&argc, &argv);
+  MPI::Comm_size(MPI_COMM_WORLD, &num_procs);
+  MPI::Comm_rank(MPI_COMM_WORLD, &rank);
 
   if (argc != 5) {
     if (rank == 0) {
@@ -38,7 +38,7 @@ main(int argc, char** argv)
       }
       std::cout << std::endl;
     }
-    MPI_Finalize();
+    MPI::Finalize();
     return 1;
   }
 
@@ -159,7 +159,7 @@ main(int argc, char** argv)
   double time;
 
 #if 1
-  MPI_Barrier(MPI_COMM_WORLD );
+  MPI::Barrier(MPI_COMM_WORLD );
   start = clock();
   for (int i = 0; i < REPEAT2; i++) {
     tiled.regrid(patches, flags, fine_patches);
@@ -170,7 +170,7 @@ main(int argc, char** argv)
 
 #if 1
   std::vector<IntVector> tmpflags;
-  MPI_Barrier(MPI_COMM_WORLD );
+  MPI::Barrier(MPI_COMM_WORLD );
   start = clock();
   for (int i = 0; i < REPEAT2; i++) {
     makeFlagsList(patches, flags, tmpflags);
@@ -180,7 +180,7 @@ main(int argc, char** argv)
 #endif
 
 #if 1
-  MPI_Barrier(MPI_COMM_WORLD );
+  MPI::Barrier(MPI_COMM_WORLD );
   start = clock();
   for (int i = 0; i < REPEAT2; i++) {
     gatherPatches(fine_patches, global_patches);
@@ -190,7 +190,7 @@ main(int argc, char** argv)
 #endif
 
 #if 1
-  MPI_Barrier(MPI_COMM_WORLD );
+  MPI::Barrier(MPI_COMM_WORLD );
   start = clock();
   for (int i = 0; i < REPEAT2; i++) {
     splitPatches(fine_patches, global_patches, .25);
@@ -199,15 +199,15 @@ main(int argc, char** argv)
   outputTime(time, 4);
 #endif
 
-  MPI_Finalize();
+  MPI::Finalize();
 }
 
 void
 getTime(double time, double &mint, double &maxt, double &avgt)
 {
-  MPI_Allreduce(&time, &mint, 1, MPI_DOUBLE, MPI_MIN, MPI_COMM_WORLD );
-  MPI_Allreduce(&time, &maxt, 1, MPI_DOUBLE, MPI_MAX, MPI_COMM_WORLD );
-  MPI_Allreduce(&time, &avgt, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD );
+  MPI::Allreduce(&time, &mint, 1, MPI_DOUBLE, MPI_MIN, MPI_COMM_WORLD );
+  MPI::Allreduce(&time, &maxt, 1, MPI_DOUBLE, MPI_MAX, MPI_COMM_WORLD );
+  MPI::Allreduce(&time, &avgt, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD );
   avgt /= num_procs;
 }
 
