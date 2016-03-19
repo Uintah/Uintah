@@ -144,8 +144,8 @@ void ProfileDriver::outputError(const GridP currentGrid)
     //allreduce sum weights
     if(d_myworld->size()>1)
     {
-      MPI_Allreduce(&predicted[0],&predicted_sum[l][0],predicted.size(),MPI_DOUBLE,MPI_SUM,d_myworld->getComm());
-      MPI_Allreduce(&measured[0],&measured_sum[l][0],measured.size(),MPI_DOUBLE,MPI_SUM,d_myworld->getComm());
+      MPI::Allreduce(&predicted[0],&predicted_sum[l][0],predicted.size(),MPI_DOUBLE,MPI_SUM,d_myworld->getComm());
+      MPI::Allreduce(&measured[0],&measured_sum[l][0],measured.size(),MPI_DOUBLE,MPI_SUM,d_myworld->getComm());
     }
 
     //__________________________________
@@ -301,7 +301,7 @@ void ProfileDriver::outputError(const GridP currentGrid)
     }
     for(int p=0;p<d_myworld->size();p++)
     {
-      MPI_Barrier(d_myworld->getComm());
+      MPI::Barrier(d_myworld->getComm());
       if(p==d_myworld->myrank())
         stats << str.str();
     }
@@ -423,7 +423,7 @@ void ProfileDriver::getWeights(int l, const vector<Region> &regions, vector<doub
 
   //allreduce sum weights
   if(d_myworld->size()>1){
-    MPI_Allreduce(&partial_weights[0],&weights[0],weights.size(),MPI_DOUBLE,MPI_SUM,d_myworld->getComm());
+    MPI::Allreduce(&partial_weights[0],&weights[0],weights.size(),MPI_DOUBLE,MPI_SUM,d_myworld->getComm());
   }
 }
 
@@ -514,7 +514,7 @@ void ProfileDriver::initializeWeights(const Grid* oldgrid, const Grid* newgrid)
 
     //gather new regions counts
     if(d_myworld->size()>1)
-      MPI_Allgather(&mysize,1,MPI_INT,&recvs[0],1,MPI_INT,d_myworld->getComm());
+      MPI::Allgather(&mysize,1,MPI_INT,&recvs[0],1,MPI_INT,d_myworld->getComm());
     else
       recvs[0]=mysize;
 
@@ -537,7 +537,7 @@ void ProfileDriver::initializeWeights(const Grid* oldgrid, const Grid* newgrid)
     //gather the regions
     if(d_myworld->size()>1)
     {
-      MPI_Allgatherv(&new_regions_partial[0], recvs[d_myworld->myrank()], MPI_BYTE,
+      MPI::Allgatherv(&new_regions_partial[0], recvs[d_myworld->myrank()], MPI_BYTE,
                      &new_regions[0], &recvs[0], &displs[0], MPI_BYTE, d_myworld->getComm());
     }
     else

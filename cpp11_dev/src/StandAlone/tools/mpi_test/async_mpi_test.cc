@@ -63,12 +63,12 @@ main(int argc, char** argv)
   int numprocs = 99;
   int tag = 1;
   
-  MPI_Init_thread(&argc, &argv, MPI_THREAD_FUNNELED, &thread_supported);
+  MPI::Init_thread(&argc, &argv, MPI_THREAD_FUNNELED, &thread_supported);
 #ifdef debug_main
   cout<<"Thread supported is "<<thread_supported<<endl;
 #endif
-  MPI_Comm_size(MPI_COMM_WORLD, &numprocs);
-  MPI_Comm_rank(MPI_COMM_WORLD, &myid);
+  MPI::Comm_size(MPI_COMM_WORLD, &numprocs);
+  MPI::Comm_rank(MPI_COMM_WORLD, &myid);
   
   srand(myid*10);
 
@@ -94,26 +94,26 @@ main(int argc, char** argv)
   
   if (myid == 1){
     sprintf((char*)send_buf, "this a message sent from myid1, signed Bruce R. Kanobi");
-    MPI_Isend(send_buf, message_size, MPI_CHAR, dest, tag, MPI_COMM_WORLD, &rq1);
+    MPI::Isend(send_buf, message_size, MPI_CHAR, dest, tag, MPI_COMM_WORLD, &rq1);
     sprintf((char*)send_buf2, "this a 2nd message sent from myid1, signed Bruce R. Kanobi");
-    MPI_Isend(send_buf2, message_size, MPI_CHAR, dest, tag+5, MPI_COMM_WORLD, &rq2);
+    MPI::Isend(send_buf2, message_size, MPI_CHAR, dest, tag+5, MPI_COMM_WORLD, &rq2);
   }
   else{
-    MPI_Recv(recv_buf, message_size, MPI_CHAR, dest, tag, MPI_COMM_WORLD, &st1);
+    MPI::Recv(recv_buf, message_size, MPI_CHAR, dest, tag, MPI_COMM_WORLD, &st1);
     cout<<"0 Got message "<<recv_buf<<endl;
   }
 
   do_some_work(myid);
 
   if (myid == 1){
-    MPI_Recv(recv_buf, message_size, MPI_CHAR, dest, tag, MPI_COMM_WORLD,&st2);
+    MPI::Recv(recv_buf, message_size, MPI_CHAR, dest, tag, MPI_COMM_WORLD,&st2);
     cout<<"1 Got message "<<recv_buf<<endl;
   }
   else{
     sprintf(send_buf, "this a message sent from myid0, signed Thomas S. Duku");
-    MPI_Isend(send_buf, message_size, MPI_CHAR, dest, tag, MPI_COMM_WORLD, &rq3);
+    MPI::Isend(send_buf, message_size, MPI_CHAR, dest, tag, MPI_COMM_WORLD, &rq3);
 
-    MPI_Recv(recv_buf2, message_size, MPI_CHAR, dest, tag+5, MPI_COMM_WORLD,&st3);
+    MPI::Recv(recv_buf2, message_size, MPI_CHAR, dest, tag+5, MPI_COMM_WORLD,&st3);
     cout<<"0 Got message "<<recv_buf2<<endl;
   }
   
@@ -121,14 +121,14 @@ main(int argc, char** argv)
 
   //MPI_Status status2[1];
   //int* probe_flag = new int(0);
-  //MPI_Iprobe(MPI_ANY_SOURCE,MPI_ANY_TAG,MPI_COMM_WORLD,probe_flag,status2);
+  //MPI::Iprobe(MPI_ANY_SOURCE,MPI_ANY_TAG,MPI_COMM_WORLD,probe_flag,status2);
   //if (*probe_flag){
   //  cout<<"myid"<<myid<<" has outstading communications"<<endl;
   //}
 #ifdef debug_main
   //cout<<"myid"<<myid<<" mpiCallQueue"<<MPICommObj.mpiCallQueue.size()<<endl;
 #endif
-  MPI_Finalize();
+  MPI::Finalize();
 
   return 0;
 }

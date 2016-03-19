@@ -466,16 +466,16 @@ void ThreadedTaskScheduler::verifyChecksum()
     // Spatial tasks don't count against the global checksum
     checksum -= numSpatialTasks;
 
-    DOUT(g_mpi_dbg, d_myworld->myrank() << " (MPI_Allreduce) Checking checksum of " << checksum);
+    DOUT(g_mpi_dbg, d_myworld->myrank() << " (MPI::Allreduce) Checking checksum of " << checksum);
 
     int result_checksum;
-    MPI_Allreduce(&checksum, &result_checksum, 1, MPI_INT, MPI_MIN, d_myworld->getComm());
+    MPI::Allreduce(&checksum, &result_checksum, 1, MPI_INT, MPI_MIN, d_myworld->getComm());
 
     if (checksum != result_checksum) {
       DOUT(g_mpi_dbg, "Failed task checksum comparison! Not all processes are executing the same taskgraph\n"
             << "  Rank-" << d_myworld->myrank() << " of " << d_myworld->size() - 1 << ": has sum " << checksum
             << "  and global is " << result_checksum);
-      MPI_Abort(d_myworld->getComm(), 1);
+      MPI::Abort(d_myworld->getComm(), 1);
     }
   }
 #endif
@@ -600,7 +600,7 @@ void ThreadedTaskScheduler::post_MPI_recvs( DetailedTask * task
       t_emplace = iter;
 
       RuntimeStats::RecvMPITimer mpi_recv_timer;
-      MPI_Irecv(buf, count, datatype, from, batch->m_message_tag, d_myworld->getComm(), iter->request());
+      MPI::Irecv(buf, count, datatype, from, batch->m_message_tag, d_myworld->getComm(), iter->request());
 
     } else {
       // Nothing really need to be received, but let everyone else know that it has what is needed (nothing).
@@ -696,7 +696,7 @@ void ThreadedTaskScheduler::post_MPI_sends( DetailedTask * task, int iteration )
       ++num_sends;
       int typeSize;
 
-      MPI_Type_size(datatype, &typeSize);
+      MPI::Type_size(datatype, &typeSize);
       m_message_volume += count * typeSize;
       volume_sends += count * typeSize;
 
@@ -704,7 +704,7 @@ void ThreadedTaskScheduler::post_MPI_sends( DetailedTask * task, int iteration )
       t_emplace = iter;
 
       RuntimeStats::SendMPITimer mpi_send_timer;
-      MPI_Isend(buf, count, datatype, to, batch->m_message_tag, d_myworld->getComm(), iter->request());
+      MPI::Isend(buf, count, datatype, to, batch->m_message_tag, d_myworld->getComm(), iter->request());
     }
   }  // end for (DependencyBatch* batch = task->getComputes())
 
@@ -804,7 +804,7 @@ void ThreadedTaskScheduler::copy_restart_flag( int task_graph_num )
     int myrestart = m_dws[m_dws.size() - 1]->timestepRestarted();
     int netrestart;
 
-    MPI_Allreduce(&myrestart, &netrestart, 1, MPI_INT, MPI_LOR, d_myworld->getComm());
+    MPI::Allreduce(&myrestart, &netrestart, 1, MPI_INT, MPI_LOR, d_myworld->getComm());
 
     if (netrestart) {
       m_dws[m_dws.size() - 1]->restartTimestep();
@@ -827,10 +827,10 @@ void ThreadedTaskScheduler::printMPIStats()
     double        max_volume;
 
     // do SUM and MAX reduction for m_num_messages and m_message_volume
-    MPI_Reduce(&m_num_messages  , &total_messages, 1, MPI_UNSIGNED, MPI_SUM, 0, d_myworld->getComm());
-    MPI_Reduce(&m_message_volume, &total_volume  , 1, MPI_DOUBLE,   MPI_SUM, 0, d_myworld->getComm());
-    MPI_Reduce(&m_num_messages  , &max_messages  , 1, MPI_UNSIGNED, MPI_MAX, 0, d_myworld->getComm());
-    MPI_Reduce(&m_message_volume, &max_volume    , 1, MPI_DOUBLE   ,MPI_MAX, 0, d_myworld->getComm());
+    MPI::Reduce(&m_num_messages  , &total_messages, 1, MPI_UNSIGNED, MPI_SUM, 0, d_myworld->getComm());
+    MPI::Reduce(&m_message_volume, &total_volume  , 1, MPI_DOUBLE,   MPI_SUM, 0, d_myworld->getComm());
+    MPI::Reduce(&m_num_messages  , &max_messages  , 1, MPI_UNSIGNED, MPI_MAX, 0, d_myworld->getComm());
+    MPI::Reduce(&m_message_volume, &max_volume    , 1, MPI_DOUBLE   ,MPI_MAX, 0, d_myworld->getComm());
 
     if( d_myworld->myrank() == 0 ) {
       DOUT(true, "MPIStats: Num Messages (avg): "   << total_messages/(float)d_myworld->size() << " (max):" << max_messages);

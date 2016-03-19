@@ -83,7 +83,7 @@
 #include <algorithm>                                     // for max, min
 #include <cmath>                                         // for cbrt, isinf, isnan
 #include <iostream>                                      // for operator<<, basic_ostream, etc
-#include <mpi.h>                                         // for MPI_Pack_size
+#include <mpi.h>                                         // for MPI::Pack_size
 #include <stdlib.h>                                      // for abs
 #include <string>                                        // for string, operator==, etc
 

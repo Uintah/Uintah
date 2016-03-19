@@ -161,13 +161,13 @@ public:
   bool test() const
   {
     int flag;
-    MPI_Test(request(), &flag, MPI_STATUS_IGNORE);
+    MPI::Test(request(), &flag, MPI_STATUS_IGNORE);
     return flag;
   }
 
   bool wait() const
   {
-    MPI_Wait(request(), MPI_STATUS_IGNORE);
+    MPI::Wait(request(), MPI_STATUS_IGNORE);
     return true;
   }
 

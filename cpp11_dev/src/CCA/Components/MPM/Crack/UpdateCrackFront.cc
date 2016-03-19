@@ -77,8 +77,8 @@ void Crack::CrackFrontNodeSubset(const ProcessorGroup*,
   for(int p=0; p<patches->size(); p++){
     const Patch* patch = patches->get(p);
     int pid,patch_size;
-    MPI_Comm_rank(mpi_crack_comm, &pid);
-    MPI_Comm_size(mpi_crack_comm, &patch_size);
+    MPI::Comm_rank(mpi_crack_comm, &pid);
+    MPI::Comm_size(mpi_crack_comm, &patch_size);
 
     int numMPMMatls=d_sharedState->getNumMPMMatls();
     for(int m=0; m<numMPMMatls; m++) {
@@ -90,17 +90,17 @@ void Crack::CrackFrontNodeSubset(const ProcessorGroup*,
           if(patch->containsPointInExtraCells(cx[m][node]))
             cfnset[m][pid].push_back(j);
         }
-        MPI_Barrier(mpi_crack_comm);
+        MPI::Barrier(mpi_crack_comm);
 
         // Broadcast cfnset to all the ranks
         for(int i=0; i<patch_size; i++) {
           int num; // number of crack-front nodes in patch i
           if(i==pid) num=cfnset[m][i].size();
-          MPI_Bcast(&num,1,MPI_INT,i,mpi_crack_comm);
+          MPI::Bcast(&num,1,MPI_INT,i,mpi_crack_comm);
           cfnset[m][i].resize(num);
-          MPI_Bcast(&cfnset[m][i][0],num,MPI_INT,i,mpi_crack_comm);
+          MPI::Bcast(&cfnset[m][i][0],num,MPI_INT,i,mpi_crack_comm);
         }
-        MPI_Barrier(mpi_crack_comm);
+        MPI::Barrier(mpi_crack_comm);
 
         // cfsset - subset of crack-front segment center in each patch
         cfsset[m][pid].clear();
@@ -114,15 +114,15 @@ void Crack::CrackFrontNodeSubset(const ProcessorGroup*,
           } 
         }
 
-        MPI_Barrier(mpi_crack_comm);
+        MPI::Barrier(mpi_crack_comm);
         
         // Broadcast cfsset to all the ranks
         for(int i=0; i<patch_size; i++) {
           int num; // number of crack-front segments in patch i
           if(i==pid) num=cfsset[m][i].size();
-          MPI_Bcast(&num,1,MPI_INT,i,mpi_crack_comm);
+          MPI::Bcast(&num,1,MPI_INT,i,mpi_crack_comm);
           cfsset[m][i].resize(num);
-          MPI_Bcast(&cfsset[m][i][0],num,MPI_INT,i,mpi_crack_comm);
+          MPI::Bcast(&cfsset[m][i][0],num,MPI_INT,i,mpi_crack_comm);
         }
       } 
     } // End of loop over matls
@@ -157,8 +157,8 @@ void Crack::RecollectCrackFrontSegments(const ProcessorGroup*,
     Vector dx = patch->dCell();
 
     int pid,patch_size;
-    MPI_Comm_rank(mpi_crack_comm, &pid);
-    MPI_Comm_size(mpi_crack_comm, &patch_size);
+    MPI::Comm_rank(mpi_crack_comm, &pid);
+    MPI::Comm_size(mpi_crack_comm, &patch_size);
 
     int numMPMMatls=d_sharedState->getNumMPMMatls();
     for(int m=0; m<numMPMMatls; m++) {
@@ -216,7 +216,7 @@ void Crack::RecollectCrackFrontSegments(const ProcessorGroup*,
             } 
           } 
 
-          MPI_Bcast(&inMat[0],num,MPI_SHORT,i,mpi_crack_comm);
+          MPI::Bcast(&inMat[0],num,MPI_SHORT,i,mpi_crack_comm);
 
           for(int j=0; j<num; j++) {
             int idx=cfnset[m][i][j];
@@ -225,7 +225,7 @@ void Crack::RecollectCrackFrontSegments(const ProcessorGroup*,
           delete [] inMat;
         } // End of loop over patches
 
-        MPI_Barrier(mpi_crack_comm);
+        MPI::Barrier(mpi_crack_comm);
 
         
         // Task 2: Detect if the centers of crack-front segments
@@ -261,7 +261,7 @@ void Crack::RecollectCrackFrontSegments(const ProcessorGroup*,
             } 
           } 
 
-          MPI_Bcast(&inMat[0],num,MPI_SHORT,i,mpi_crack_comm);
+          MPI::Bcast(&inMat[0],num,MPI_SHORT,i,mpi_crack_comm);
 
           for(int j=0; j<num; j++) {
             int idx=cfsset[m][i][j];
@@ -270,7 +270,7 @@ void Crack::RecollectCrackFrontSegments(const ProcessorGroup*,
           delete [] inMat;
         } // End of loop over patches
 
-        MPI_Barrier(mpi_crack_comm);
+        MPI::Barrier(mpi_crack_comm);
 
         
         // Task 3: Recollect crack-front segments, discarding the 

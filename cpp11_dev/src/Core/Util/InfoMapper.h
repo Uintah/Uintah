@@ -291,13 +291,13 @@ public:
 
       if( allReduce )
       {
-	MPI_Allreduce( &toReduce[0],    &d_average[0], nStats, MPI_DOUBLE,     MPI_SUM,    myWorld->getComm() );
-	MPI_Allreduce( &toReduceMax[0], &d_maximum[0], nStats, MPI_DOUBLE_INT, MPI_MAXLOC, myWorld->getComm() );
+	MPI::Allreduce( &toReduce[0],    &d_average[0], nStats, MPI_DOUBLE,     MPI_SUM,    myWorld->getComm() );
+	MPI::Allreduce( &toReduceMax[0], &d_maximum[0], nStats, MPI_DOUBLE_INT, MPI_MAXLOC, myWorld->getComm() );
       }
       else
       {
-	MPI_Reduce( &toReduce[0],    &d_average[0], nStats, MPI_DOUBLE,     MPI_SUM,    0, myWorld->getComm() );
-	MPI_Reduce( &toReduceMax[0], &d_maximum[0], nStats, MPI_DOUBLE_INT, MPI_MAXLOC, 0, myWorld->getComm() );
+	MPI::Reduce( &toReduce[0],    &d_average[0], nStats, MPI_DOUBLE,     MPI_SUM,    0, myWorld->getComm() );
+	MPI::Reduce( &toReduceMax[0], &d_maximum[0], nStats, MPI_DOUBLE_INT, MPI_MAXLOC, 0, myWorld->getComm() );
       }
 
       // make sums averages

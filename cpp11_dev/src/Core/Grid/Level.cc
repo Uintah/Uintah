@@ -882,9 +882,9 @@ void Level::setBCTypes()
   if(numProcs>1){
     //allgather bctypes
     if(mybctypes.size()==0){
-      MPI_Allgatherv(0,0,MPI_UNSIGNED,&bctypes[0],&recvcounts[0],&displacements[0],MPI_UNSIGNED,myworld->getComm());
+      MPI::Allgatherv(0,0,MPI_UNSIGNED,&bctypes[0],&recvcounts[0],&displacements[0],MPI_UNSIGNED,myworld->getComm());
     } else {
-      MPI_Allgatherv(&mybctypes[0],mybctypes.size(),MPI_UNSIGNED,&bctypes[0],&recvcounts[0],&displacements[0],MPI_UNSIGNED,myworld->getComm());
+      MPI::Allgatherv(&mybctypes[0],mybctypes.size(),MPI_UNSIGNED,&bctypes[0],&recvcounts[0],&displacements[0],MPI_UNSIGNED,myworld->getComm());
     }
   }else{
      bctypes.swap(mybctypes);
@@ -950,7 +950,7 @@ void Level::setBCTypes()
 
   if(rgtimes.active()){
     double avg[3]={0};
-    MPI_Reduce(rtimes,avg,3,MPI_DOUBLE,MPI_SUM,0,myworld->getComm());
+    MPI::Reduce(rtimes,avg,3,MPI_DOUBLE,MPI_SUM,0,myworld->getComm());
 
     if(myworld->myrank()==0) {
 
@@ -963,7 +963,7 @@ void Level::setBCTypes()
     }
 
     double max[3]={0};
-    MPI_Reduce(rtimes,max,3,MPI_DOUBLE,MPI_MAX,0,myworld->getComm());
+    MPI::Reduce(rtimes,max,3,MPI_DOUBLE,MPI_MAX,0,myworld->getComm());
 
     if(myworld->myrank()==0) {
       std::cout << "SetBCType Max Times: ";

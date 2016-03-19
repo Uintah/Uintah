@@ -61,7 +61,7 @@ PackBufferInfo::get_type( void*&         out_buf,
     int total_packed_size = 0;
     for( unsigned int i = 0; i < d_startbufs.size(); i++ ) {
       if( d_counts[i] > 0 ) {
-        MPI_Pack_size( d_counts[i], d_datatypes[i], comm, &packed_size );
+        MPI::Pack_size( d_counts[i], d_datatypes[i], comm, &packed_size );
         total_packed_size += packed_size;
       }
     }
@@ -102,7 +102,7 @@ PackBufferInfo::pack( MPI_Comm   comm,
   for( unsigned int i = 0; i < d_startbufs.size(); i++ ) {
     //pack into a contiguous buffer
     if( d_counts[i] > 0 ) {
-      MPI_Pack( d_startbufs[i], d_counts[i], d_datatypes[i], buf, bufsize, &position, comm );
+      MPI::Pack( d_startbufs[i], d_counts[i], d_datatypes[i], buf, bufsize, &position, comm );
     }
   }
 
@@ -127,7 +127,7 @@ PackBufferInfo::unpack( MPI_Comm     comm,
   int position = 0;
   for( unsigned int i = 0; i < d_startbufs.size(); i++ ) {
     if( d_counts[i] > 0 ) {
-      MPI_Unpack( buf, bufsize, &position, d_startbufs[i], d_counts[i], d_datatypes[i], comm );
+      MPI::Unpack( buf, bufsize, &position, d_startbufs[i], d_counts[i], d_datatypes[i], comm );
     }
   }
 }

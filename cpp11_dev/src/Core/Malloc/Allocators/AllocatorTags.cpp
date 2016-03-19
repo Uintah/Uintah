@@ -144,12 +144,12 @@ void print_malloc_stats(MPI_Comm comm, int time_step, int root)
     std::vector<unsigned long long> global_stats(local_stats.size());
     std::vector<unsigned long long> global_high_water(local_high_water.size());
 
-    MPI_Reduce(  &local_stats[0], &global_stats[0]
+    MPI::Reduce(  &local_stats[0], &global_stats[0]
                , static_cast<int>(local_stats.size())
                , MPI_UNSIGNED_LONG_LONG
                , MPI_SUM, root, comm);
 
-    MPI_Reduce(  &local_high_water[0], &global_high_water[0]
+    MPI::Reduce(  &local_high_water[0], &global_high_water[0]
                , static_cast<int>(local_high_water.size())
                , MPI_UNSIGNED_LONG_LONG
                , MPI_MAX, root, comm);

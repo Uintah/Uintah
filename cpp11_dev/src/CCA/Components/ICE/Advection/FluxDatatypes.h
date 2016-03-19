@@ -46,8 +46,8 @@ namespace Uintah {
     ASSERTEQ(sizeof(facedata<T>), sizeof(T)*6);
     const TypeDescription* td = fun_getTypeDescription((T*)0);
     MPI_Datatype mpitype;
-    MPI_Type_vector(1, 6, 6, td->getMPIType(), &mpitype);
-    MPI_Type_commit(&mpitype);
+    MPI::Type_vector(1, 6, 6, td->getMPIType(), &mpitype);
+    MPI::Type_commit(&mpitype);
     return mpitype;
   }
   
@@ -78,8 +78,8 @@ namespace Uintah {
     ASSERTEQ(sizeof(vertex<T>), sizeof(T)*8);
     const TypeDescription* td = fun_getTypeDescription((T*)0);
     MPI_Datatype mpitype;
-    MPI_Type_vector(1, 8, 8, td->getMPIType(), &mpitype);
-    MPI_Type_commit(&mpitype);
+    MPI::Type_vector(1, 8, 8, td->getMPIType(), &mpitype);
+    MPI::Type_commit(&mpitype);
     return mpitype;
   }
   
