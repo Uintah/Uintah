@@ -34,7 +34,7 @@ namespace Uintah {
 
 class DetailedTask;
 
-class DetailedDep
+class DetailedDependency
 {
 
 public:
@@ -45,7 +45,7 @@ public:
   , SubsequentIterations
   };
 
-  DetailedDep(       DetailedDep * next
+  DetailedDependency(       DetailedDependency * next
              ,       Task::Dependency   * comp
              ,       Task::Dependency   * req
              ,       DetailedTask       * toTask
@@ -86,7 +86,7 @@ public:
   // used.
   bool isNonDataDependency() const { return (m_from_patch == nullptr); }
 
-  DetailedDep              * m_next;
+  DetailedDependency              * m_next;
   Task::Dependency         * m_comp;
   Task::Dependency         * m_req;
   std::list<DetailedTask*>   m_to_tasks;
@@ -105,15 +105,15 @@ public:
   IntVector m_patch_high;
 
   // eliminate copy, assignment and move
-  DetailedDep( const DetailedDep & )            = delete;
-  DetailedDep& operator=( const DetailedDep & ) = delete;
-  DetailedDep( DetailedDep && )                 = delete;
-  DetailedDep& operator=( DetailedDep && )      = delete;
+  DetailedDependency( const DetailedDependency & )            = delete;
+  DetailedDependency& operator=( const DetailedDependency & ) = delete;
+  DetailedDependency( DetailedDependency && )                 = delete;
+  DetailedDependency& operator=( DetailedDependency && )      = delete;
 
 
 }; // DetailedDep
 
-std::ostream& operator<<( std::ostream& out, const Uintah::DetailedDep& task );
+std::ostream& operator<<( std::ostream& out, const Uintah::DetailedDependency& task );
 
 } // namespace Uintah
 

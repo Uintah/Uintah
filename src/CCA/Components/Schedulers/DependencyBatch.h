@@ -25,15 +25,14 @@
 #ifndef CCA_COMPONENTS_SCHEDULERS_DEPENDENCY_BATCH_H
 #define CCA_COMPONENTS_SCHEDULERS_DEPENDENCY_BATCH_H
 
-#include <CCA/Components/Schedulers/DetailedDep.h>
-
+#include <CCA/Components/Schedulers/DetailedDependency.h>
 #include <Core/Grid/Variables/Variable.h>
 
 #include <list>
 #include <map>
+#include <mutex>
 #include <vector>
 
-#include <mutex>
 
 namespace Uintah {
 
@@ -43,6 +42,7 @@ class ProcessorGroup;
 
 class DependencyBatch
 {
+
 public:
 
   DependencyBatch( int to
@@ -52,7 +52,7 @@ public:
     : m_comp_next(0)
     , m_from_task(fromTask)
     , m_head(0), m_message_tag(-1)
-    , m_to_rank(to), m_received(false)
+    , m_to_proc(to), m_received(false)
     , m_made_mpi_request(false)
   {
     m_to_tasks.push_back(toTask);
@@ -78,17 +78,13 @@ public:
   //as valid when MPI completes.
   void addVar( Variable* var ) { m_to_vars.push_back(var); }
 
-  void addReceiveListener( int mpiSignal );
-
   DependencyBatch          * m_comp_next;
   DetailedTask             * m_from_task;
   std::list<DetailedTask*>   m_to_tasks;
-  DetailedDep              * m_head;
+  DetailedDependency              * m_head;
   int                        m_message_tag;
-  int                        m_to_rank;
+  int                        m_to_proc;
 
-  //scratch pad to store wait times for debugging
-  static std::map<std::string,double> waittimes;
 
 private:
 

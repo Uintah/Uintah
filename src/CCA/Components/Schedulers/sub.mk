@@ -31,12 +31,10 @@ SRCDIR := CCA/Components/Schedulers
 SRCS += \
         $(SRCDIR)/CommRecMPI.cc               \
         $(SRCDIR)/DependencyBatch.cc          \
-        $(SRCDIR)/DependencyException.cc      \
-        $(SRCDIR)/DetailedDep.cc              \
+        $(SRCDIR)/DetailedDependency.cc       \
         $(SRCDIR)/DetailedTask.cc             \
         $(SRCDIR)/DetailedTasks.cc            \
         $(SRCDIR)/DynamicMPIScheduler.cc      \
-        $(SRCDIR)/IncorrectAllocation.cc      \
         $(SRCDIR)/MPIScheduler.cc             \
         $(SRCDIR)/MemoryLog.cc                \
         $(SRCDIR)/OnDemandDataWarehouse.cc    \
@@ -47,8 +45,8 @@ SRCS += \
         $(SRCDIR)/SendState.cc                \
         $(SRCDIR)/SingleProcessorScheduler.cc \
         $(SRCDIR)/TaskGraph.cc                \
-        $(SRCDIR)/ThreadedMPIScheduler.cc     \
-        $(SRCDIR)/ThreadedTaskScheduler.cpp   \
+        $(SRCDIR)/ThreadedMPIScheduler.cpp    \
+        $(SRCDIR)/ThreadedTaskScheduler.cc    \
         $(SRCDIR)/UnifiedScheduler.cc         \
         
 ifeq ($(HAVE_CUDA),yes)

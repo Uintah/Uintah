@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2016 The University of Utah
+ * Copyright (c) 1997-2017 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -26,7 +26,6 @@
 #define CCA_COMPONENTS_SCHEDULERS_THREADEDTASKSCHEDULER_H
 
 #include <CCA/Components/Schedulers/SchedulerCommon.h>
-
 #include <CCA/Components/Schedulers/CommunicationList.hpp>
 #include <CCA/Components/Schedulers/DetailedTasks.h>
 #include <CCA/Components/Schedulers/OnDemandDataWarehouseP.h>
@@ -104,7 +103,7 @@ public:
 
   virtual void execute( int tgnum = 0, int iteration = 0);
 
-  virtual bool useInternalDeps() { return !m_shared_state->isCopyDataTimestep(); }
+  virtual bool useInternalDeps() { return !d_sharedState->isCopyDataTimestep(); }
 
   const ProcessorGroup* getProcessorGroup() { return d_myworld; }
 

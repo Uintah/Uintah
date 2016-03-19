@@ -25,11 +25,11 @@
 #ifndef CCA_COMPONENTS_SCHEDULERS_DETAILEDTASK_EXP_H
 #define CCA_COMPONENTS_SCHEDULERS_DETAILEDTASK_EXP_H
 
-#include <CCA/Components/Schedulers/DetailedDep_Exp.hpp>
 #include <CCA/Components/Schedulers/DependencyBatch_Exp.hpp>
+#include <CCA/Components/Schedulers/DetailedDependency_Exp.hpp>
 #include <CCA/Components/Schedulers/DWDatabase.h>
-#include <CCA/Components/Schedulers/OnDemandDataWarehouse.h>
 #include <CCA/Components/Schedulers/RuntimeStats.hpp>
+#include <CCA/Components/Schedulers/OnDemandDataWarehouse.h>
 
 #include <Core/Grid/Patch.h>
 #include <Core/Grid/Task.h>
@@ -39,19 +39,20 @@
 #ifdef HAVE_CUDA
 #include <CCA/Components/Schedulers/GPUGridVariableGhosts.h>
 #include <CCA/Components/Schedulers/GPUGridVariableInfo.h>
+#include <set>
 #endif
 
 #include <list>
 #include <map>
 #include <mutex>
-#include <set>
+#include <string>
 #include <vector>
 
 namespace Uintah {
 
-class DetailedTasks;
 class ProcessorGroup;
 class TaskGraph;
+class DetailedTasks;
 
 #ifdef HAVE_CUDA
 struct TaskGpuDataWarehouses{
@@ -62,17 +63,10 @@ public:
 #endif
 
 
+
 class DetailedTask {
 
 public:
-
-  // specifies the type of task this is:
-  //   * normal executes on either the patches cells or the patches coarse cells
-  //   * fine executes on the patches fine cells (for example coarsening)
-  enum ProfileType {
-     Normal
-   , Fine
-  };
 
   DetailedTask(       Task           * task
               , const PatchSubset    * patches
@@ -82,7 +76,16 @@ public:
 
   ~DetailedTask();
 
-  void setProfileType( ProfileType type ) { m_profile_type = type; }
+
+  // specifies the type of task this is:
+  //   * normal executes on either the patches cells or the patches coarse cells
+  //   * fine executes on the patches fine cells (for example coarsening)
+  enum ProfileType {
+     Normal
+   , Fine
+  };
+
+  void setProfileType( ProfileType type ) { m_profile_type=type; }
 
   ProfileType getProfileType() { return m_profile_type; }
 
@@ -92,8 +95,9 @@ public:
            ,       Task::CallBackEvent                   event = Task::CPU
            );
 
-  // Called after doit() and MPI data sent (packed in buffers) finishes.
-  // Handles internal dependencies and scrubbing - called after doit() finishes.
+  // Called after doit and mpi data sent (packed in buffers) finishes.
+  // Handles internal dependencies and scrubbing.
+  // Called after doit finishes.
   void done( std::vector<OnDemandDataWarehouseP>& dws );
 
   std::string getName() const;
@@ -114,9 +118,9 @@ public:
 
   DetailedTasks* getTaskGroup() const { return m_task_group; }
 
-  std::map<DependencyBatch*, DependencyBatch*>& getRequires() { return m_reqs; }
+  std::map<DependencyBatch*, DependencyBatch*>& getRequires() { return m_requires; }
 
-  std::map<DependencyBatch*, DependencyBatch*>& getInternalRequires() { return m_internal_reqs; }
+  std::map<DependencyBatch*, DependencyBatch*>& getInternalRequires() { return m_internal_requires; }
 
   DependencyBatch* getComputes() const { return m_comp_head; }
 
@@ -136,9 +140,6 @@ public:
 
   void addInternalDependency( DetailedTask* prerequisiteTask, const VarLabel* var );
 
-  // external dependencies will count how many messages this task
-  // is waiting for.  When it hits 0, we can add it to the
-  // DetailedTasks::mpiCompletedTasks list.
   void resetDependencyCounts();
 
   bool isInitiated() const { return m_initiated; }
@@ -153,6 +154,8 @@ public:
 
   void decrementExternalDepCount() { m_external_dependency_count--; }
 
+  // external dependencies will count how many messages this task is waiting for.
+  // When it hits 0, it is ready to run
   void checkExternalDepCount();
 
   int getExternalDepCount() { return m_external_dependency_count; }
@@ -217,23 +220,23 @@ protected:
 
 private:
 
-  // eliminate copy, assignment and move
-  DetailedTask( const DetailedTask & )            = delete;
-  DetailedTask& operator=( const DetailedTask & ) = delete;
-  DetailedTask( DetailedTask && )                 = delete;
-  DetailedTask& operator=( DetailedTask && )      = delete;
-
   // called by done()
   void scrub( std::vector<OnDemandDataWarehouseP>& );
 
   // Called when prerequisite tasks (dependencies) call done.
   void dependencySatisfied( InternalDependency* dep );
 
+  // eliminate copy, assignment and move
+  DetailedTask( const DetailedTask & )            = delete;
+  DetailedTask& operator=( const DetailedTask & ) = delete;
+  DetailedTask( DetailedTask && )                 = delete;
+  DetailedTask& operator=( DetailedTask && )      = delete;
+
   Task                                         * m_task{};
   const PatchSubset                            * m_patches{};
   const MaterialSubset                         * m_matls{};
-  std::map<DependencyBatch*, DependencyBatch*>   m_reqs{};
-  std::map<DependencyBatch*, DependencyBatch*>   m_internal_reqs{};
+  std::map<DependencyBatch*, DependencyBatch*>   m_requires{};
+  std::map<DependencyBatch*, DependencyBatch*>   m_internal_requires{};
   DependencyBatch                              * m_comp_head{};
   DependencyBatch                              * m_internal_comp_head{};
   DetailedTasks                                * m_task_group{};
@@ -242,27 +245,27 @@ private:
   bool m_externally_ready{};
   int  m_external_dependency_count{};
 
-  mutable std::string m_name{};
+  mutable std::string m_name; // doesn't get set until getName() is called the first time.
 
   // Internal dependencies are dependencies within the same process.
   std::list<InternalDependency> m_internal_dependencies{};
 
   // internalDependents will point to InternalDependency's in the
-  // internalDependencies list of the requiring DetailedTasks.
+  // m_internal_dependencies list of the requiring DetailedTasks.
   std::map<DetailedTask*, InternalDependency*> m_internal_dependents{};
 
   unsigned long   m_num_pending_internal_dependencies{};
   std::mutex      m_internal_dependency_lock{};
 
-  int m_resource_index{};
-  int m_static_order{};
+  int m_resource_index;
+  int m_static_order;
 
   RuntimeStats::TaskExecTimer m_exec_timer{this};
   RuntimeStats::TaskWaitTimer m_wait_timer{this};
 
-  ProfileType m_profile_type{};
-
   bool operator<( const DetailedTask& other );
+
+  ProfileType m_profile_type{};
 
 #ifdef HAVE_CUDA
   bool deviceExternallyReady_;
@@ -297,4 +300,4 @@ std::ostream& operator<<( std::ostream& out, const Uintah::DetailedTask& task );
 
 } // namespace Uintah
 
-#endif  // CCA_COMPONENTS_SCHEDULERS_DETAILEDTASK_EXP_H
+#endif // CCA_COMPONENTS_SCHEDULERS_DETAILEDTASK_EXP_H

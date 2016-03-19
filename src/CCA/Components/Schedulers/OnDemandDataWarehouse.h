@@ -69,7 +69,7 @@ using Uintah::FastHashTable;
 class BufferInfo;
 class DependencyBatch;
 class DetailedTasks;
-class DetailedDep;
+class DetailedDependency;
 class TypeDescription;
 class Patch;
 class ProcessorGroup;
@@ -425,13 +425,13 @@ class OnDemandDataWarehouse : public DataWarehouse {
                  const VarLabel* pos_var,
                  BufferInfo& buffer,
                  OnDemandDataWarehouse* old_dw,
-                 const DetailedDep* dep,
+                 const DetailedDependency* dep,
                  LoadBalancer* lb);
 
     void recvMPI(DependencyBatch* batch,
                  BufferInfo& buffer,
                  OnDemandDataWarehouse* old_dw,
-                 const DetailedDep* dep,
+                 const DetailedDependency* dep,
                  LoadBalancer* lb);
 
     void reduceMPI(const VarLabel* label,

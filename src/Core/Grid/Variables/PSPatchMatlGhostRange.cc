@@ -28,32 +28,45 @@
 
 using namespace Uintah;
 
-bool PSPatchMatlGhostRange::operator<(const PSPatchMatlGhostRange& other) const
+//_____________________________________________________________________________
+//
+bool PSPatchMatlGhostRange::operator<( const PSPatchMatlGhostRange & other ) const
 {
-  if (matl_ == other.matl_)
-    if (patch_->getID() == other.patch_->getID())
-      if (low_ == other.low_)
-        if (high_ == other.high_)
-          return dwid_ < other.dwid_;
-        else
-          return high_ < other.high_;
-      else
-        return low_ < other.low_;
-    else
-      return patch_->getID() < other.patch_->getID();
-  else
-    return matl_ < other.matl_;
+  if (m_matl == other.m_matl) {
+    if (m_patch->getID() == other.m_patch->getID()) {
+      if (m_low == other.m_low) {
+        if (m_high == other.m_high) {
+          return m_dw_id < other.m_dw_id;
+        }
+        else {
+          return m_high < other.m_high;
+        }
+      }
+      else {
+        return m_low < other.m_low;
+      }
+    }
+    else {
+      return m_patch->getID() < other.m_patch->getID();
+    }
+  }
+  else {
+    return m_matl < other.m_matl;
+  }
 }
+
+//_____________________________________________________________________________
+//
 namespace Uintah
 {
-  std::ostream& operator<<(std::ostream &out, const PSPatchMatlGhostRange &pmg)
+  std::ostream& operator<<( std::ostream &out, const PSPatchMatlGhostRange &pmg)
   {
-    out << "Patch: " << *pmg.patch_ << " ";
-    out << "Matl: " << pmg.matl_ << " ";
-    out << "low: " << pmg.low_ << " ";
-    out << "high: " << pmg.high_ << " ";
-    out << "dwid: " << pmg.dwid_ << " ";
-    out << "count: " << pmg.count_ << " ";
+    out << "Patch: " << *pmg.m_patch << " ";
+    out << "Matl: "  << pmg.m_matl   << " ";
+    out << "low: "   << pmg.m_low    << " ";
+    out << "high: "  << pmg.m_high   << " ";
+    out << "dwid: "  << pmg.m_dw_id   << " ";
+    out << "count: " << pmg.m_count  << " ";
     return out;
   }
 }

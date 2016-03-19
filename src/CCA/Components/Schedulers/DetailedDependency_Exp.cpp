@@ -22,31 +22,25 @@
  * IN THE SOFTWARE.
  */
 
-#define UINTAH_USING_EXPERIMENTAL
-
-#ifdef UINTAH_USING_EXPERIMENTAL
-
-#include <CCA/Components/Schedulers/DetailedDep_Exp.cpp>
-
-#else
-
-#include <CCA/Components/Schedulers/DetailedDep.h>
+#include <CCA/Components/Schedulers/DetailedDependency_Exp.hpp>
 
 #include <sstream>
 
 namespace Uintah {
 
-std::ostream& operator<<( std::ostream& arg_out, const DetailedDep&  dep )
+//______________________________________________________________________
+//
+std::ostream& operator<<( std::ostream& arg_out, const DetailedDependency&  dep )
 {
   std::ostringstream out;
-  out << dep.req->var->getName();
+  out << dep.m_req->var->getName();
   if (dep.isNonDataDependency()) {
     out << " non-data dependency";
   }
   else {
-    out << " on patch " << dep.fromPatch->getID();
+    out << " on patch " << dep.m_from_patch->getID();
   }
-  out << ", matl " << dep.matl << ", low=" << dep.low << ", high=" << dep.high;
+  out << ", matl " << dep.m_matl << ", low=" << dep.m_low << ", high=" << dep.m_high;
 
   arg_out << out.str();
 
@@ -55,4 +49,3 @@ std::ostream& operator<<( std::ostream& arg_out, const DetailedDep&  dep )
 
 } // end namespace Uintah
 
-#endif // UINTAH_USING_EXPERIMENTAL
