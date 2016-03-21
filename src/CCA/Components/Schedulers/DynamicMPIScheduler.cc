@@ -24,6 +24,7 @@
 
 #include <CCA/Components/Schedulers/DynamicMPIScheduler.h>
 #include <CCA/Components/Schedulers/OnDemandDataWarehouse.h>
+#include <CCA/Components/Schedulers/RuntimeStats.hpp>
 #include <CCA/Components/Schedulers/TaskGraph.h>
 
 #include <Core/Exceptions/ProblemSetupException.h>
@@ -168,6 +169,8 @@ DynamicMPIScheduler::execute( int tgnum     /*=0*/,
     return;
   }
 
+  RuntimeStats::initialize_timestep(graphs);
+
   MALLOC_TRACE_TAG_SCOPE("DynamicMPIScheduler::execute");
 
   ASSERTRANGE(tgnum, 0, (int)graphs.size());
@@ -189,7 +192,7 @@ DynamicMPIScheduler::execute( int tgnum     /*=0*/,
     }
     return;
   }
-  
+
   int ntasks = dts->numLocalTasks();
   dts->initializeScrubs(dws, dwmap);
   dts->initTimestep();
@@ -242,7 +245,7 @@ DynamicMPIScheduler::execute( int tgnum     /*=0*/,
   for (int i = 0; i < ntasks; i++) {
     phaseTasks[dts->localTask(i)->getTask()->d_phase]++;
   }
-  
+
   if (dynamicmpi_dbg.active()) {
     cerrLock.lock();
     dynamicmpi_dbg << me << " Executing " << dts->numTasks() << " tasks (" << ntasks << " local)";
@@ -260,7 +263,7 @@ DynamicMPIScheduler::execute( int tgnum     /*=0*/,
   while( numTasksDone < ntasks ) {
     i++;
 
-    // 
+    //
     // The following checkMemoryUse() is commented out to allow for
     // maintaining the same functionality as before this commit...
     // In other words, so that memory highwater checking is only done
@@ -279,7 +282,7 @@ DynamicMPIScheduler::execute( int tgnum     /*=0*/,
     DetailedTask * task = 0;
 
     // if we have an internally-ready task, initiate its recvs
-    while(dts->numInternalReadyTasks() > 0) { 
+    while(dts->numInternalReadyTasks() > 0) {
       DetailedTask * task = dts->getNextInternalReadyTask();
 
       if ((task->getTask()->getType() == Task::Reduction) || (task->getTask()->usesMPI())) {  //save the reduction task for later
@@ -306,7 +309,7 @@ DynamicMPIScheduler::execute( int tgnum     /*=0*/,
         }
         histogram[dts->numExternalReadyTasks()]++;
       }
-     
+
       DetailedTask * task = dts->getNextExternalReadyTask();
 
       if (taskdbg.active()) {
@@ -329,7 +332,7 @@ DynamicMPIScheduler::execute( int tgnum     /*=0*/,
         }
       }
       phaseTasksDone[task->getTask()->d_phase]++;
-    } 
+    }
 
     if ((phaseSyncTask.find(currphase) != phaseSyncTask.end()) && (phaseTasksDone[currphase] == phaseTasks[currphase] - 1)) {  //if it is time to run the reduction task
       if (dynamicmpi_queuelength.active()) {
@@ -411,7 +414,7 @@ DynamicMPIScheduler::execute( int tgnum     /*=0*/,
 
     proc0cout << "average queue length:" << allqueuelength / d_myworld->size() << std::endl;
   }
-  
+
   if (dynamicmpi_timeout.active()) {
     emitTime("MPI send time", mpi_info_[TotalSendMPI]);
     emitTime("MPI Testsome time", mpi_info_[TotalTestMPI]);
@@ -455,7 +458,7 @@ DynamicMPIScheduler::execute( int tgnum     /*=0*/,
   }
 
   finalizeTimestep();
-  
+
 
   if( ( execout.active() || dynamicmpi_timeout.active() ) && !parentScheduler_ ) {  // only do on toplevel scheduler
     outputTimingStats("DynamicMPIScheduler");
@@ -466,5 +469,52 @@ DynamicMPIScheduler::execute( int tgnum     /*=0*/,
     dynamicmpi_dbg << me << " DynamicMPIScheduler finished\n";
     coutLock.unlock();
   }
+
+  {
+    int64_t num_patches = 0;
+    int64_t num_cells = 0;
+    int64_t num_particles = 0;
+
+    // collect local grid information
+    {
+      OnDemandDataWarehouseP dw = dws[dws.size() - 1];
+      const GridP grid(const_cast<Grid*>(dw->getGrid()));
+      const PatchSubset* myPatches = getLoadBalancer()->getPerProcessorPatchSet(grid)->getSubset(d_myworld->myrank());
+      num_patches = myPatches->size();
+      for (int p = 0; p < myPatches->size(); p++) {
+        const Patch* patch = myPatches->get(p);
+        IntVector range = patch->getExtraCellHighIndex() - patch->getExtraCellLowIndex();
+        num_cells += range.x() * range.y() * range.z();
+
+        // go through all materials since getting an MPMMaterial correctly would depend on MPM
+        for (int m = 0; m < d_sharedState->getNumMatls(); m++) {
+          if (dw->haveParticleSubset(m, patch))
+            num_particles += dw->getParticleSubset(m, patch)->numParticles();
+        }
+      }
+    }
+
+    Dout grid_stats{"GridStats", true};
+    if (grid_stats) {
+
+      RuntimeStats::register_report( grid_stats
+                                   , "Patches"
+                                   , RuntimeStats::Count
+                                   , [num_patches]() { return num_patches; }
+                                   );
+      RuntimeStats::register_report( grid_stats
+                                   , "Cells"
+                                   , RuntimeStats::Count
+                                   , [num_cells]() { return num_cells; }
+                                   );
+      RuntimeStats::register_report( grid_stats
+                                   , "Particles"
+                                   , RuntimeStats::Count
+                                   , [num_particles]() { return num_particles; }
+                                   );
+    }
+  }
+
+  RuntimeStats::report(d_myworld->getComm(), d_sharedState->d_runTimeStats);
 }
 

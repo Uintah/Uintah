@@ -24,6 +24,7 @@
 
 #include <CCA/Components/Schedulers/UnifiedScheduler.h>
 #include <CCA/Components/Schedulers/OnDemandDataWarehouse.h>
+#include <CCA/Components/Schedulers/RuntimeStats.hpp>
 #include <CCA/Components/Schedulers/TaskGraph.h>
 #include <CCA/Ports/Output.h>
 
@@ -545,6 +546,8 @@ UnifiedScheduler::execute( int tgnum     /* = 0 */,
     return;
   }
 
+  RuntimeStats::initialize_timestep(graphs);
+
   ASSERTRANGE(tgnum, 0, (int )graphs.size());
   TaskGraph* tg = graphs[tgnum];
   tg->setIteration(iteration);
@@ -714,6 +717,54 @@ UnifiedScheduler::execute( int tgnum     /* = 0 */,
   if (unified_dbg.active()) {
     unified_dbg << "Rank-" << d_myworld->myrank() << " - UnifiedScheduler finished" << std::endl;
   }
+
+  {
+    int64_t num_patches = 0;
+    int64_t num_cells = 0;
+    int64_t num_particles = 0;
+
+    // collect local grid information
+    {
+      OnDemandDataWarehouseP dw = dws[dws.size() - 1];
+      const GridP grid(const_cast<Grid*>(dw->getGrid()));
+      const PatchSubset* myPatches = getLoadBalancer()->getPerProcessorPatchSet(grid)->getSubset(d_myworld->myrank());
+      num_patches = myPatches->size();
+      for (int p = 0; p < myPatches->size(); p++) {
+        const Patch* patch = myPatches->get(p);
+        IntVector range = patch->getExtraCellHighIndex() - patch->getExtraCellLowIndex();
+        num_cells += range.x() * range.y() * range.z();
+
+        // go through all materials since getting an MPMMaterial correctly would depend on MPM
+        for (int m = 0; m < d_sharedState->getNumMatls(); m++) {
+          if (dw->haveParticleSubset(m, patch))
+            num_particles += dw->getParticleSubset(m, patch)->numParticles();
+        }
+      }
+    }
+
+    Dout grid_stats{"GridStats", true};
+    if (grid_stats) {
+
+      RuntimeStats::register_report( grid_stats
+                                   , "Patches"
+                                   , RuntimeStats::Count
+                                   , [num_patches]() { return num_patches; }
+                                   );
+      RuntimeStats::register_report( grid_stats
+                                   , "Cells"
+                                   , RuntimeStats::Count
+                                   , [num_cells]() { return num_cells; }
+                                   );
+      RuntimeStats::register_report( grid_stats
+                                   , "Particles"
+                                   , RuntimeStats::Count
+                                   , [num_particles]() { return num_particles; }
+                                   );
+    }
+  }
+
+  RuntimeStats::report(d_myworld->getComm(), d_sharedState->d_runTimeStats);
+
 } // end execute()
 
 
@@ -5731,7 +5782,7 @@ void UnifiedScheduler::copyAllExtGpuDependenciesToHost(DetailedTask* dtask) {
 
 //______________________________________________________________________
 //  generate string   <MPI rank>.<Thread ID>
-//  useful to see who running what    
+//  useful to see who running what
 std::string
 UnifiedScheduler::myRankThread()
 {
