@@ -140,7 +140,7 @@ Parallel::forceNoMPI()
   usingMPI_             = false;
 }
 
-bool 
+bool
 Parallel::isInitialized()
 {
   return initialized_;
@@ -165,9 +165,9 @@ Parallel::determineIfRunningUnderMPI( int argc, char** argv )
       throw InternalError( "PSE_MAX_THREADS is out of range 1..16\n", __FILE__, __LINE__ );
     }
   }
-  
+
   // Try to automatically determine if we are running under MPI (many MPIs set environment variables
-  // that can be used for this.) 
+  // that can be used for this.)
   if(getenv("MPI_ENVIRONMENT")){                                  // Look for SGI MPI
     usingMPI_ =true;
   }
@@ -227,7 +227,7 @@ Parallel::initializeManager(int& argc, char**& argv)
   int provided = -1;
   int required = MPI_THREAD_SINGLE;
 #endif
-  if( usingMPI_ ){     
+  if( usingMPI_ ){
 #ifdef THREADED_MPI_AVAILABLE
     if( numThreads_ > 0 ) {
       required = MPI_THREAD_MULTIPLE;
@@ -237,9 +237,6 @@ Parallel::initializeManager(int& argc, char**& argv)
 #endif
 
     int status;
-#if ( !defined( DISABLE_SCI_MALLOC ) || defined( SCI_MALLOC_TRACE ) )
-    const char* oldtag = Uintah::AllocatorSetDefaultTagMalloc("MPI initialization");
-#endif
 #ifdef THREADED_MPI_AVAILABLE
     if( ( status = MPI::Init_thread( &argc, &argv, required, &provided ) ) != MPI_SUCCESS) {
 #else
@@ -265,10 +262,6 @@ Parallel::initializeManager(int& argc, char**& argv)
       MpiError(const_cast<char*>("MPI::Comm_rank"), status);
     }
 
-#if ( !defined( DISABLE_SCI_MALLOC ) || defined( SCI_MALLOC_TRACE ) )
-    Uintah::AllocatorSetDefaultTagMalloc(oldtag);
-    Uintah::AllocatorMallocStatsAppendNumber( worldRank_ );
-#endif
     rootContext_ = new ProcessorGroup( 0, Uintah::worldComm_, true, worldRank_, worldSize_, numThreads_ );
 
     if(rootContext_->myrank() == 0) {

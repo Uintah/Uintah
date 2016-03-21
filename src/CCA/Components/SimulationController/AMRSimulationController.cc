@@ -188,10 +188,6 @@ AMRSimulationController::run()
 
   initSimulationStatsVars();
 
-#ifndef DISABLE_SCI_MALLOC
-  AllocatorSetDefaultTagLineNumber(d_sharedState->getCurrentTopLevelTimeStep());
-#endif
-
   // If VisIt has been included into the build, initialize the lib sim
   // so that a user can connect to the simulation via VisIt.
 #ifdef HAVE_VISIT
@@ -288,18 +284,6 @@ AMRSimulationController::run()
       newDW->override(delt_vartype(delt), d_sharedState->get_delt_label());
     }
 
-    if(log_dw_mem){
-      // Remember, this isn't logged if DISABLE_SCI_MALLOC is set
-      // (So usually in optimized mode this will not be run.)
-      d_scheduler->logMemoryUse();
-      std::ostringstream fn;
-      fn << "alloc." << std::setw(5) << std::setfill('0') << d_myworld->myrank() << ".out";
-      std::string filename(fn.str());
-#if !defined( DISABLE_SCI_MALLOC )
-      DumpAllocator(DefaultAllocator(), filename.c_str());
-#endif
-    }
-
     if (dbg_barrier.active()) {
       Timers::Simple barrier_timer;
       MPI::Barrier(d_myworld->getComm());
@@ -324,9 +308,6 @@ AMRSimulationController::run()
     // number so components can tell what timestep they are on.
     d_sharedState->setElapsedTime( time );
     d_sharedState->incrementCurrentTopLevelTimeStep();
-#ifndef DISABLE_SCI_MALLOC
-    AllocatorSetDefaultTagLineNumber(d_sharedState->getCurrentTopLevelTimeStep());
-#endif
     // Each component has their own init_delt specified.  On a switch
     // from one component to the next, we need to adjust the delt to
     // that specified in the input file.  To detect the switch of components,
@@ -485,7 +466,7 @@ AMRSimulationController::run()
 	     (d_timeinfo->max_wall_time != 0 &&
 	      getWallTime() >= d_timeinfo->max_wall_time) );
 #endif
-    
+
 
     // Get and reduce the performace run time stats
     getMemoryStats( d_sharedState->getCurrentTopLevelTimeStep() );

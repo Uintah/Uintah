@@ -553,10 +553,6 @@ DataArchive::query(       Variable     & var,
 {
   double tstart = Time::currentSeconds();
 
-#if !defined( DISABLE_SCI_MALLOC )
-  const char* tag = AllocatorSetDefaultTag("QUERY");
-#endif
-
   d_lock.lock();
   TimeData& timedata = getTimeData(timeIndex);
   d_lock.unlock();
@@ -728,7 +724,7 @@ DataArchive::query(       Variable     & var,
     //  Creating access
     PIDX_access access;
     PIDX_create_access(&access);
-    
+
     if( Parallel::usingMPI() ) {
       MPI_Comm comm = Parallel::getRootProcessorGroup()->getComm();
       PIDX_set_mpi_access(access, comm);
@@ -833,9 +829,6 @@ DataArchive::query(       Variable     & var,
   }
   #endif
 
-#if !defined( DISABLE_SCI_MALLOC )
-  AllocatorSetDefaultTag(tag);
-#endif
   dbg << "DataArchive::query() completed in " << Time::currentSeconds()-tstart << " seconds\n";
 }
 //______________________________________________________________________

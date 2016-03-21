@@ -128,7 +128,7 @@ using namespace std;
   };
 #endif
 
-// If we are using MPICH version 1, 
+// If we are using MPICH version 1,
 // we must call MPI::Init() before parsing args
 #if defined(HAVE_MPICH) && (MPI_VERSION < 2)
 #  define HAVE_MPICH_OLD
@@ -212,26 +212,6 @@ usage(const std::string& message, const std::string& badarg, const std::string& 
 void
 sanityChecks()
 {
-#if defined( DISABLE_SCI_MALLOC )
-  if (getenv("MALLOC_STATS")) {
-    printf("\nERROR:\n");
-    printf("ERROR: Environment variable MALLOC_STATS set, but  --enable-sci-malloc was not configured...\n");
-    printf("ERROR:\n\n");
-    Thread::exitAll(1);
-  }
-  if (getenv("MALLOC_TRACE")) {
-    printf("\nERROR:\n");
-    printf("ERROR: Environment variable MALLOC_TRACE set, but  --enable-sci-malloc was not configured...\n");
-    printf("ERROR:\n\n");
-    Thread::exitAll(1);
-  }
-  if (getenv("MALLOC_STRICT")) {
-    printf("\nERROR:\n");
-    printf("ERROR: Environment variable MALLOC_STRICT set, but --enable-sci-malloc  was not configured...\n");
-    printf("ERROR:\n\n");
-    Thread::exitAll(1);
-  }
-#endif
 }
 
 void
@@ -251,11 +231,11 @@ main( int argc, char *argv[], char *env[] )
 
   string oldTag;
 
-  // Turn off Thread asking so sus can cleanly exit on abortive behavior.  
+  // Turn off Thread asking so sus can cleanly exit on abortive behavior.
   // Can override this behavior with the environment variable SCI_SIGNALMODE
   Thread::setDefaultAbortMode("exit");
   Thread::self()->setCleanupFunction( &abortCleanupFunc );
-  
+
 #if HAVE_IEEEFP_H
   fpsetmask(FP_X_OFL|FP_X_DZ|FP_X_INV);
 #endif
@@ -306,7 +286,7 @@ main( int argc, char *argv[], char *env[] )
   // NOTE: The main problem with calling initializeManager() before
   // parsing the args is that we don't know if thread MPI is going to
   // However, MPICH veriosn 1 does not support Thread safety, so we will just dis-allow that.
-  
+
   Uintah::Parallel::initializeManager( argc, argv );
 #endif
   /*
@@ -492,7 +472,7 @@ main( int argc, char *argv[], char *env[] )
       }
     }
   }
- 
+
   // Pass the env into the sci env so it can be used there...
   create_sci_environment( env, 0, true );
 
@@ -571,7 +551,7 @@ main( int argc, char *argv[], char *env[] )
       cout << "Assertion level: " << SCI_ASSERTION_LEVEL << "\n";
       cout << "CFLAGS: " << CFLAGS << "\n";
 
-      // Run svn commands on Packages/Uintah 
+      // Run svn commands on Packages/Uintah
       if (do_svnDiff || do_svnStat) {
         cout << "____SVN_____________________________________________________________\n";
         string sdir = string(sci_getenv("SCIRUN_SRCDIR"));
@@ -649,28 +629,28 @@ main( int argc, char *argv[], char *env[] )
       // No user defined comment so use the ups sim meta data title.
       if( !have_comment )
       {
-	// Find the meta data and the title. 
+	// Find the meta data and the title.
 	std::string title;
-	
+
 	if( ups->findBlock( "Meta" ) )
 	  ups->findBlock( "Meta" )->require( "title", title );
-	
+
 	if( title.size() )
 	{
-	  // Have the title so pass that into the libsim 
+	  // Have the title so pass that into the libsim
 	  char **new_argv = (char **) malloc((argc + 2) * sizeof(*new_argv));
-	  
+
 	  if (new_argv != NULL)
 	  {
 	    memmove(new_argv, argv, sizeof(*new_argv) * argc);
-	    
+
 	    argv = new_argv;
-	    
+
 	    argv[argc] =
 	      (char*) malloc( (strlen("-visit_comment")+1) * sizeof(char) );
 	    strcpy( argv[argc], "-visit_comment" );
 	    ++argc;
-	    
+
 	    argv[argc] =
 	      (char*) malloc( (title.size()+1) * sizeof(char) );
 	    strcpy( argv[argc], title.c_str() );
@@ -679,7 +659,7 @@ main( int argc, char *argv[], char *env[] )
 	}
       }
 
-      visit_LibSimArguments( argc, argv );      
+      visit_LibSimArguments( argc, argv );
     }
 #endif
 
@@ -696,7 +676,7 @@ main( int argc, char *argv[], char *env[] )
     if(reduce_uda){
       do_AMR = false;
     }
-    
+
     const ProcessorGroup* world = Uintah::Parallel::getRootProcessorGroup();
 
     SimulationController* ctl = new AMRSimulationController( world, do_AMR, ups );
@@ -739,7 +719,7 @@ main( int argc, char *argv[], char *env[] )
     ctl->attachPort("sim", sim);
     comp->attachPort("solver", solve);
     comp->attachPort("regridder", reg);
-    
+
 #ifndef NO_ICE
     //__________________________________
     //  Model
@@ -755,7 +735,7 @@ main( int argc, char *argv[], char *env[] )
       reg->attachPort("load balancer", lbc);
       lbc->attachPort("regridder",reg);
     }
-    
+
     //__________________________________
     // Output
     DataArchiver * dataarchiver = new DataArchiver( world, udaSuffix );
@@ -764,7 +744,7 @@ main( int argc, char *argv[], char *env[] )
     dataarchiver->attachPort( "load balancer", lbc );
     comp->attachPort( "output", dataarchiver );
     dataarchiver->attachPort( "sim", sim );
-    
+
     //__________________________________
     // Scheduler
     SchedulerCommon* sched = SchedulerFactory::create(ups, world, output);
@@ -774,7 +754,7 @@ main( int argc, char *argv[], char *env[] )
     comp->attachPort("scheduler", sched);
 
     sched->setStartAddr( start_addr );
-    
+
     if (reg) {
       reg->attachPort("scheduler", sched);
     }
@@ -790,7 +770,7 @@ main( int argc, char *argv[], char *env[] )
     if (restart) {
       ctl->doRestart(udaDir, restartTimestep, restartFromScratch, restartRemoveOldDir);
     }
-    
+
     // This gives memory held by the 'ups' back before the simulation starts... Assuming
     // no one else is holding on to it...
     ups = 0;
@@ -869,7 +849,7 @@ main( int argc, char *argv[], char *env[] )
     cerrLock.unlock();
     thrownException = true;
   }
-  
+
   Uintah::TypeDescription::deleteAll();
 
   /*
