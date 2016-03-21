@@ -958,7 +958,6 @@ OnDemandDataWarehouse::reduceMPI( const VarLabel       * label,
 
   int error;
   {
-    RuntimeStats::CollectiveMPITimer rt;
     error = MPI::Allreduce( &sendbuf[0], &recvbuf[0], count, datatype, op, d_myworld->getgComm( nComm ) );
   }
 

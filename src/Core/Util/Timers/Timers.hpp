@@ -277,6 +277,19 @@ private:
       s_head = this;
     }
 
+    ~Node()
+    {
+      std::unique_lock<std::mutex> lock(s_lock);
+      if (s_head == this) {
+        s_head = m_next;
+      }
+      else {
+        Node * curr = s_head;
+        while (curr->m_next != this) { curr = curr->m_next; }
+        curr->m_next = m_next;
+      }
+    }
+
 
     template <typename Functor>
     static void apply( Functor && f )

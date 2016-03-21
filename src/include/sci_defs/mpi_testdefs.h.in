@@ -91,28 +91,31 @@ struct Timer
   using clock_type  = std::chrono::high_resolution_clock;
   using time_point  = clock_type::time_point;
 
-  static constexpr int64_t one = 1;
-  static constexpr int64_t zero = 0;
-
   Timer() = default;
 
   ~Timer()
   {
-    t_node.m_value  +=
+    t_node.m_values[0]  +=
       std::chrono::duration_cast<std::chrono::nanoseconds>(clock_type::now() - m_start).count();
+    ++t_node.m_values[1];
+
   }
 
   // NOT thread safe
   static void reset_tag()
   {
-    Node::apply( [](volatile int64_t & v) { v = 0; } );
+    Node::apply( [](volatile int64_t values[]) {
+      for (int i=0; i<SIZE; ++i) {
+        values[i] = 0;
+      }
+    });
   }
 
   // total time among all threads since last reset
   static int64_t total()
   {
     int64_t result = 0;
-    Node::apply( [&result](volatile int64_t const& v ) { result += v; } );
+    Node::apply( [&result](volatile const int64_t values[]  ) { result += values[TIME]; } );
     return result;
   }
 
@@ -120,7 +123,7 @@ struct Timer
   static int64_t min()
   {
     int64_t result = std::numeric_limits<int64_t>::max();
-    Node::apply( [&result]( volatile int64_t const& v ) { result = result <  v ? result : v; } );
+    Node::apply( [&result]( volatile const int64_t values[] ) { result = result <  values[TIME] ? result : values[TIME]; } );
     return result != std::numeric_limits<int64_t>::max() ? result : 0 ;
   }
 
@@ -128,12 +131,12 @@ struct Timer
   static int64_t max()
   {
     int64_t result = std::numeric_limits<int64_t>::min();
-    Node::apply( [&result]( volatile int64_t const& v ) { result = v <  result ? result : v; } );
+    Node::apply( [&result]( volatile const int64_t values[] ) { result = values[TIME] <  result ? result : values[TIME]; } );
     return result != std::numeric_limits<int64_t>::min() ? result : 0 ;
   }
 
   // time on given thread since last reset
-  static int64_t thread()  { return t_node.m_value; }
+  static int64_t thread()  { return t_node.m_values[TIME]; }
 
   // number of threads that used the timer since last reset
   static int num_threads()
@@ -143,7 +146,16 @@ struct Timer
     return result;
   }
 
+  static int64_t count()
+  {
+    int64_t result = 0;
+    Node::apply( [&result](volatile const int64_t values[]  ) { result += values[COUNT]; } );
+    return result;
+  }
+
 private:
+  enum { TIME, COUNT, SIZE };
+
   struct Node
   {
     Node()
@@ -153,6 +165,19 @@ private:
       s_head = this;
     }
 
+    ~Node()
+    {
+      std::unique_lock<std::mutex> lock(s_lock);
+      if (s_head == this) {
+        s_head = m_next;
+      }
+      else {
+        Node * curr = s_head;
+        while (curr->m_next != this) { curr = curr->m_next; }
+        curr->m_next = m_next;
+      }
+    }
+
 
     template <typename Functor>
     static void apply( Functor && f )
@@ -160,12 +185,12 @@ private:
       Node * curr = s_head;
 
       while (curr) {
-        f(curr->m_value);
+        f(curr->m_values);
         curr = curr->m_next;
       }
     }
 
-    int64_t  m_value{0};
+    int64_t  m_values[SIZE] {};
     Node   * m_next{nullptr};
 
     static Node *     s_head;
@@ -219,6 +244,36 @@ public:
   static constexpr int64_t H2 = 2 << 20;  // huge page
 
 
+  CommStats( int64_t count, MPI_Datatype d ) noexcept
+  {
+    apply(count, d);
+  }
+
+  CommStats( const int * counts, MPI_Datatype d, MPI_Comm c ) noexcept
+  {
+    apply(counts, d, c);
+  }
+
+  static void clear()
+  {
+    Node::apply( []( int64_t values[] ) {
+      for (int i=0; i<COMM_STAT_SIZE; ++i) {
+        values[i] = 0;
+      }
+    });
+  }
+
+  static int64_t get(CommStatsType i)
+  {
+    int64_t result = 0;
+    Node::apply( [&result, i]( const volatile int64_t values[] ) {
+      result += values[i];
+    });
+    return result;
+  }
+
+
+private:
   static void apply( int64_t count, MPI_Datatype d ) noexcept
   {
     int s;
@@ -249,25 +304,6 @@ public:
     apply( count, d );
   }
 
-  static void clear()
-  {
-    Node::apply( []( int64_t values[] ) {
-      for (int i=0; i<COMM_STAT_SIZE; ++i) {
-        values[i] = 0;
-      }
-    });
-  }
-
-  static int64_t get(CommStatsType i)
-  {
-    int64_t result = 0;
-    Node::apply( [&result, i]( const volatile int64_t values[] ) {
-      result += values[i];
-    });
-    return result;
-  }
-
-
 private:
   struct Node
   {
@@ -276,6 +312,19 @@ private:
       std::unique_lock<std::mutex> lock(s_lock);
       m_next = s_head;
       s_head = this;
+    }
+
+    ~Node()
+    {
+      std::unique_lock<std::mutex> lock(s_lock);
+      if (s_head == this) {
+        s_head = m_next;
+      }
+      else {
+        Node * curr = s_head;
+        while (curr->m_next != this) { curr = curr->m_next; }
+        curr->m_next = m_next;
+      }
     }
 
     template <typename Functor>
@@ -355,7 +404,7 @@ inline int Abort( MPI_Comm comm , int errorcode )
 inline int Accumulate( const void *origin_addr , int origin_count , MPI_Datatype origin_datatype , int target_rank , MPI_Aint target_disp , int target_count , MPI_Datatype target_datatype , MPI_Op op , MPI_Win win )
 {
   Impl::OneSidedTimer timer;
-  Impl::OneSidedStats::apply( origin_count, origin_datatype);
+  Impl::OneSidedStats( origin_count, origin_datatype);
   return Impl::mpi_check_err(MPI_Accumulate( origin_addr , origin_count , origin_datatype , target_rank , target_disp , target_count , target_datatype , op , win ));
 }
 inline int Add_error_class( int *errorclass )
@@ -377,15 +426,15 @@ inline int Address( const void *location , MPI_Aint *address )
 inline int Allgather( const void *sendbuf , int sendcount , MPI_Datatype sendtype , void *recvbuf , int recvcount , MPI_Datatype recvtype , MPI_Comm comm )
 {
   Impl::CollTimer timer;
-  Impl::SendStats::apply( sendcount, sendtype );
-  Impl::RecvStats::apply( recvcount * Impl::psize(comm), recvtype );
+  Impl::SendStats( sendcount, sendtype );
+  Impl::RecvStats( recvcount * Impl::psize(comm), recvtype );
   return Impl::mpi_check_err(MPI_Allgather( sendbuf , sendcount , sendtype , recvbuf , recvcount , recvtype , comm ));
 }
 inline int Allgatherv( const void *sendbuf , int sendcount , MPI_Datatype sendtype , void *recvbuf , const int *recvcounts , const int *displs , MPI_Datatype recvtype , MPI_Comm comm )
 {
   Impl::CollTimer timer;
-  Impl::SendStats::apply( sendcount, sendtype );
-  Impl::RecvStats::apply( recvcounts, recvtype, comm );
+  Impl::SendStats( sendcount, sendtype );
+  Impl::RecvStats( recvcounts, recvtype, comm );
   return Impl::mpi_check_err(MPI_Allgatherv( sendbuf , sendcount , sendtype , recvbuf , recvcounts , displs , recvtype , comm ));
 }
 inline int Alloc_mem( MPI_Aint size , MPI_Info info , void *baseptr )
@@ -395,22 +444,22 @@ inline int Alloc_mem( MPI_Aint size , MPI_Info info , void *baseptr )
 inline int Allreduce( const void *sendbuf , void *recvbuf , int count , MPI_Datatype datatype , MPI_Op op , MPI_Comm comm )
 {
   Impl::CollTimer timer;
-  Impl::SendStats::apply( count, datatype );
-  Impl::RecvStats::apply( count, datatype );
+  Impl::SendStats( count, datatype );
+  Impl::RecvStats( count, datatype );
   return Impl::mpi_check_err(MPI_Allreduce( sendbuf , recvbuf , count , datatype , op , comm ));
 }
 inline int Alltoall( const void *sendbuf , int sendcount , MPI_Datatype sendtype , void *recvbuf , int recvcount , MPI_Datatype recvtype , MPI_Comm comm )
 {
   Impl::CollTimer timer;
-  Impl::SendStats::apply( sendcount, sendtype );
-  Impl::RecvStats::apply( recvcount * Impl::psize(comm), recvtype );
+  Impl::SendStats( sendcount, sendtype );
+  Impl::RecvStats( recvcount * Impl::psize(comm), recvtype );
   return Impl::mpi_check_err(MPI_Alltoall( sendbuf , sendcount , sendtype , recvbuf , recvcount , recvtype , comm ));
 }
 inline int Alltoallv( const void *sendbuf , const int *sendcounts , const int *sdispls , MPI_Datatype sendtype , void *recvbuf , const int *recvcounts , const int *rdispls , MPI_Datatype recvtype , MPI_Comm comm )
 {
   Impl::CollTimer timer;
-  Impl::SendStats::apply( sendcounts, sendtype, comm );
-  Impl::RecvStats::apply( recvcounts, recvtype, comm );
+  Impl::SendStats( sendcounts, sendtype, comm );
+  Impl::RecvStats( recvcounts, recvtype, comm );
   return Impl::mpi_check_err(MPI_Alltoallv( sendbuf , sendcounts , sdispls , sendtype , recvbuf , recvcounts , rdispls , recvtype , comm ));
 }
 inline int Alltoallw( const void *sendbuf , const int sendcounts[] , const int sdispls[] , const MPI_Datatype sendtypes[] , void *recvbuf , const int recvcounts[] , const int rdispls[] , const MPI_Datatype recvtypes[] , MPI_Comm comm )
@@ -424,8 +473,8 @@ inline int Alltoallw( const void *sendbuf , const int sendcounts[] , const int s
     scounts += sendcounts[i];
     rcounts += recvcounts[i];
   }
-  Impl::SendStats::apply( scounts, sendtypes[0] );
-  Impl::RecvStats::apply( rcounts, recvtypes[0] );
+  Impl::SendStats( scounts, sendtypes[0] );
+  Impl::RecvStats( rcounts, recvtypes[0] );
   return Impl::mpi_check_err(MPI_Alltoallw( sendbuf , sendcounts , sdispls , sendtypes , recvbuf , recvcounts , rdispls , recvtypes , comm ));
 }
 inline int Attr_delete( MPI_Comm comm , int keyval )
@@ -449,17 +498,17 @@ inline int Bcast( void *buffer , int count , MPI_Datatype datatype , int root , 
 {
   Impl::CollTimer timer;
   if (Impl::prank(comm) == root) {
-    Impl::SendStats::apply( count, datatype );
+    Impl::SendStats( count, datatype );
   }
   else {
-    Impl::RecvStats::apply( count, datatype );
+    Impl::RecvStats( count, datatype );
   }
   return Impl::mpi_check_err(MPI_Bcast( buffer , count , datatype , root , comm ));
 }
 inline int Bsend( const void *buf , int count , MPI_Datatype datatype , int dest , int tag , MPI_Comm comm )
 {
   Impl::SendTimer timer;
-  Impl::SendStats::apply( count, datatype );
+  Impl::SendStats( count, datatype );
   return Impl::mpi_check_err(MPI_Bsend( buf , count , datatype , dest , tag , comm ));
 }
 inline int Bsend_init( const void *buf , int count , MPI_Datatype datatype , int dest , int tag , MPI_Comm comm , MPI_Request *request )
@@ -686,7 +735,7 @@ inline int Comm_test_inter( MPI_Comm comm , int *flag )
 inline int Compare_and_swap( const void *origin_addr , const void *compare_addr , void *result_addr , MPI_Datatype datatype , int target_rank , MPI_Aint target_disp , MPI_Win win )
 {
   Impl::OneSidedTimer timer;
-  Impl::OneSidedStats::apply( 1, datatype);
+  Impl::OneSidedStats( 1, datatype);
   return Impl::mpi_check_err(MPI_Compare_and_swap( origin_addr , compare_addr , result_addr , datatype , target_rank , target_disp , win ));
 }
 inline int Dims_create( int nnodes , int ndims , int dims[] )
@@ -741,14 +790,14 @@ inline int Error_string( int errorcode , char *string , int *resultlen )
 inline int Exscan( const void *sendbuf , void *recvbuf , int count , MPI_Datatype datatype , MPI_Op op , MPI_Comm comm )
 {
   Impl::CollTimer timer;
-  Impl::SendStats::apply( count, datatype );
-  Impl::RecvStats::apply( count, datatype );
+  Impl::SendStats( count, datatype );
+  Impl::RecvStats( count, datatype );
   return Impl::mpi_check_err(MPI_Exscan( sendbuf , recvbuf , count , datatype , op , comm ));
 }
 inline int Fetch_and_op( const void *origin_addr , void *result_addr , MPI_Datatype datatype , int target_rank , MPI_Aint target_disp , MPI_Op op , MPI_Win win )
 {
   Impl::OneSidedTimer timer;
-  Impl::OneSidedStats::apply( 1, datatype);
+  Impl::OneSidedStats( 1, datatype);
   return Impl::mpi_check_err(MPI_Fetch_and_op( origin_addr , result_addr , datatype , target_rank , target_disp , op , win ));
 }
 inline int File_call_errhandler( MPI_File fh , int errorcode )
@@ -782,31 +831,31 @@ inline int Free_mem( void *base )
 inline int Gather( const void *sendbuf , int sendcount , MPI_Datatype sendtype , void *recvbuf , int recvcount , MPI_Datatype recvtype , int root , MPI_Comm comm )
 {
   Impl::CollTimer timer;
-  Impl::SendStats::apply( sendcount, sendtype );
+  Impl::SendStats( sendcount, sendtype );
   if ( root == Impl::prank(comm) ) {
-    Impl::RecvStats::apply( recvcount * Impl::psize(comm), recvtype );
+    Impl::RecvStats( recvcount * Impl::psize(comm), recvtype );
   }
   return Impl::mpi_check_err(MPI_Gather( sendbuf , sendcount , sendtype , recvbuf , recvcount , recvtype , root , comm ));
 }
 inline int Gatherv( const void *sendbuf , int sendcount , MPI_Datatype sendtype , void *recvbuf , const int *recvcounts , const int *displs , MPI_Datatype recvtype , int root , MPI_Comm comm )
 {
   Impl::CollTimer timer;
-  Impl::SendStats::apply( sendcount, sendtype );
+  Impl::SendStats( sendcount, sendtype );
   if ( root == Impl::prank(comm) ) {
-    Impl::RecvStats::apply( recvcounts, recvtype, comm );
+    Impl::RecvStats( recvcounts, recvtype, comm );
   }
   return Impl::mpi_check_err(MPI_Gatherv( sendbuf , sendcount , sendtype , recvbuf , recvcounts , displs , recvtype , root , comm ));
 }
 inline int Get( void *origin_addr , int origin_count , MPI_Datatype origin_datatype , int target_rank , MPI_Aint target_disp , int target_count , MPI_Datatype target_datatype , MPI_Win win )
 {
   Impl::OneSidedTimer timer;
-  Impl::OneSidedStats::apply( origin_count, origin_datatype);
+  Impl::OneSidedStats( origin_count, origin_datatype);
   return Impl::mpi_check_err(MPI_Get( origin_addr , origin_count , origin_datatype , target_rank , target_disp , target_count , target_datatype , win ));
 }
 inline int Get_accumulate( const void *origin_addr , int origin_count , MPI_Datatype origin_datatype , void *result_addr , int result_count , MPI_Datatype result_datatype , int target_rank , MPI_Aint target_disp , int target_count , MPI_Datatype target_datatype , MPI_Op op , MPI_Win win )
 {
   Impl::OneSidedTimer timer;
-  Impl::OneSidedStats::apply( origin_count, origin_datatype);
+  Impl::OneSidedStats( origin_count, origin_datatype);
   return Impl::mpi_check_err(MPI_Get_accumulate( origin_addr , origin_count , origin_datatype , result_addr , result_count , result_datatype , target_rank , target_disp , target_count , target_datatype , op , win ));
 }
 inline int Get_address( const void *location , MPI_Aint *address )
@@ -926,36 +975,36 @@ inline int Group_union( MPI_Group group1 , MPI_Group group2 , MPI_Group *newgrou
 inline int Iallgather( const void *sendbuf , int sendcount , MPI_Datatype sendtype , void *recvbuf , int recvcount , MPI_Datatype recvtype , MPI_Comm comm , MPI_Request *request )
 {
   Impl::CollTimer timer;
-  Impl::SendStats::apply( sendcount, sendtype );
-  Impl::RecvStats::apply( recvcount * Impl::psize(comm), recvtype );
+  Impl::SendStats( sendcount, sendtype );
+  Impl::RecvStats( recvcount * Impl::psize(comm), recvtype );
   return Impl::mpi_check_err(MPI_Iallgather( sendbuf , sendcount , sendtype , recvbuf , recvcount , recvtype , comm , request ));
 }
 inline int Iallgatherv( const void *sendbuf , int sendcount , MPI_Datatype sendtype , void *recvbuf , const int recvcounts[] , const int displs[] , MPI_Datatype recvtype , MPI_Comm comm , MPI_Request *request )
 {
   Impl::CollTimer timer;
-  Impl::SendStats::apply( sendcount, sendtype );
-  Impl::RecvStats::apply( recvcounts, recvtype, comm );
+  Impl::SendStats( sendcount, sendtype );
+  Impl::RecvStats( recvcounts, recvtype, comm );
   return Impl::mpi_check_err(MPI_Iallgatherv( sendbuf , sendcount , sendtype , recvbuf , recvcounts , displs , recvtype , comm , request ));
 }
 inline int Iallreduce( const void *sendbuf , void *recvbuf , int count , MPI_Datatype datatype , MPI_Op op , MPI_Comm comm , MPI_Request *request )
 {
   Impl::CollTimer timer;
-  Impl::SendStats::apply( count, datatype );
-  Impl::RecvStats::apply( count, datatype );
+  Impl::SendStats( count, datatype );
+  Impl::RecvStats( count, datatype );
   return Impl::mpi_check_err(MPI_Iallreduce( sendbuf , recvbuf , count , datatype , op , comm , request ));
 }
 inline int Ialltoall( const void *sendbuf , int sendcount , MPI_Datatype sendtype , void *recvbuf , int recvcount , MPI_Datatype recvtype , MPI_Comm comm , MPI_Request *request )
 {
   Impl::CollTimer timer;
-  Impl::SendStats::apply( sendcount, sendtype );
-  Impl::RecvStats::apply( recvcount * Impl::psize(comm), recvtype );
+  Impl::SendStats( sendcount, sendtype );
+  Impl::RecvStats( recvcount * Impl::psize(comm), recvtype );
   return Impl::mpi_check_err(MPI_Ialltoall( sendbuf , sendcount , sendtype , recvbuf , recvcount , recvtype , comm , request ));
 }
 inline int Ialltoallv( const void *sendbuf , const int sendcounts[] , const int sdispls[] , MPI_Datatype sendtype , void *recvbuf , const int recvcounts[] , const int rdispls[] , MPI_Datatype recvtype , MPI_Comm comm , MPI_Request *request )
 {
   Impl::CollTimer timer;
-  Impl::SendStats::apply( sendcounts, sendtype, comm );
-  Impl::RecvStats::apply( recvcounts, recvtype, comm );
+  Impl::SendStats( sendcounts, sendtype, comm );
+  Impl::RecvStats( recvcounts, recvtype, comm );
   return Impl::mpi_check_err(MPI_Ialltoallv( sendbuf , sendcounts , sdispls , sendtype , recvbuf , recvcounts , rdispls , recvtype , comm , request ));
 }
 inline int Ialltoallw( const void *sendbuf , const int sendcounts[] , const int sdispls[] , const MPI_Datatype sendtypes[] , void *recvbuf , const int recvcounts[] , const int rdispls[] , const MPI_Datatype recvtypes[] , MPI_Comm comm , MPI_Request *request )
@@ -969,8 +1018,8 @@ inline int Ialltoallw( const void *sendbuf , const int sendcounts[] , const int 
     scounts += sendcounts[i];
     rcounts += recvcounts[i];
   }
-  Impl::SendStats::apply( scounts, sendtypes[0] );
-  Impl::RecvStats::apply( rcounts, recvtypes[0] );
+  Impl::SendStats( scounts, sendtypes[0] );
+  Impl::RecvStats( rcounts, recvtypes[0] );
   return Impl::mpi_check_err(MPI_Ialltoallw( sendbuf , sendcounts , sdispls , sendtypes , recvbuf , recvcounts , rdispls , recvtypes , comm , request ));
 }
 inline int Ibarrier( MPI_Comm comm , MPI_Request *request )
@@ -982,38 +1031,38 @@ inline int Ibcast( void *buffer , int count , MPI_Datatype datatype , int root ,
 {
   Impl::CollTimer timer;
   if (Impl::prank(comm) == root) {
-    Impl::SendStats::apply( count, datatype );
+    Impl::SendStats( count, datatype );
   }
   else {
-    Impl::RecvStats::apply( count, datatype );
+    Impl::RecvStats( count, datatype );
   }
   return Impl::mpi_check_err(MPI_Ibcast( buffer , count , datatype , root , comm , request ));
 }
 inline int Ibsend( const void *buf , int count , MPI_Datatype datatype , int dest , int tag , MPI_Comm comm , MPI_Request *request )
 {
   Impl::SendTimer timer;
-  Impl::SendStats::apply( count, datatype );
+  Impl::SendStats( count, datatype );
   return Impl::mpi_check_err(MPI_Ibsend( buf , count , datatype , dest , tag , comm , request ));
 }
 inline int Iexscan( const void *sendbuf , void *recvbuf , int count , MPI_Datatype datatype , MPI_Op op , MPI_Comm comm , MPI_Request *request )
 {
   Impl::CollTimer timer;
-  Impl::SendStats::apply( count, datatype );
-  Impl::RecvStats::apply( count, datatype );
+  Impl::SendStats( count, datatype );
+  Impl::RecvStats( count, datatype );
   return Impl::mpi_check_err(MPI_Iexscan( sendbuf , recvbuf , count , datatype , op , comm , request ));
 }
 inline int Igather( const void *sendbuf , int sendcount , MPI_Datatype sendtype , void *recvbuf , int recvcount , MPI_Datatype recvtype , int root , MPI_Comm comm , MPI_Request *request )
 {
   Impl::CollTimer timer;
-  Impl::SendStats::apply( sendcount, sendtype );
+  Impl::SendStats( sendcount, sendtype );
   return Impl::mpi_check_err(MPI_Igather( sendbuf , sendcount , sendtype , recvbuf , recvcount , recvtype , root , comm , request ));
 }
 inline int Igatherv( const void *sendbuf , int sendcount , MPI_Datatype sendtype , void *recvbuf , const int recvcounts[] , const int displs[] , MPI_Datatype recvtype , int root , MPI_Comm comm , MPI_Request *request )
 {
   Impl::CollTimer timer;
-  Impl::SendStats::apply( sendcount, sendtype );
+  Impl::SendStats( sendcount, sendtype );
   if ( root == Impl::prank(comm) ) {
-    Impl::RecvStats::apply( recvcounts, recvtype, comm );
+    Impl::RecvStats( recvcounts, recvtype, comm );
   }
   return Impl::mpi_check_err(MPI_Igatherv( sendbuf , sendcount , sendtype , recvbuf , recvcounts , displs , recvtype , root , comm , request ));
 }
@@ -1024,33 +1073,33 @@ inline int Improbe( int source , int tag , MPI_Comm comm , int *flag , MPI_Messa
 inline int Imrecv( void *buf , int count , MPI_Datatype datatype , MPI_Message *message , MPI_Request *request )
 {
   Impl::RecvTimer timer;
-  Impl::RecvStats::apply( count, datatype );
+  Impl::RecvStats( count, datatype );
   return Impl::mpi_check_err(MPI_Imrecv( buf , count , datatype , message , request ));
 }
 inline int Ineighbor_allgather( const void *sendbuf , int sendcount , MPI_Datatype sendtype , void *recvbuf , int recvcount , MPI_Datatype recvtype , MPI_Comm comm , MPI_Request *request )
 {
   Impl::CollTimer timer;
-  Impl::SendStats::apply( sendcount, sendtype );
-  Impl::RecvStats::apply( recvcount * Impl::num_neighbors(comm), recvtype );
+  Impl::SendStats( sendcount, sendtype );
+  Impl::RecvStats( recvcount * Impl::num_neighbors(comm), recvtype );
   return Impl::mpi_check_err(MPI_Ineighbor_allgather( sendbuf , sendcount , sendtype , recvbuf , recvcount , recvtype , comm , request ));
 }
 inline int Ineighbor_allgatherv( const void *sendbuf , int sendcount , MPI_Datatype sendtype , void *recvbuf , const int recvcounts[] , const int displs[] , MPI_Datatype recvtype , MPI_Comm comm , MPI_Request *request )
 {
   Impl::CollTimer timer;
-  Impl::SendStats::apply( sendcount, sendtype );
+  Impl::SendStats( sendcount, sendtype );
   const int nn = Impl::num_neighbors(comm);
   int64_t rcounts = 0;
   for (int i=0; i<nn; ++i) {
     rcounts += recvcounts[i];
   }
-  Impl::RecvStats::apply( rcounts, recvtype );
+  Impl::RecvStats( rcounts, recvtype );
   return Impl::mpi_check_err(MPI_Ineighbor_allgatherv( sendbuf , sendcount , sendtype , recvbuf , recvcounts , displs , recvtype , comm , request ));
 }
 inline int Ineighbor_alltoall( const void *sendbuf , int sendcount , MPI_Datatype sendtype , void *recvbuf , int recvcount , MPI_Datatype recvtype , MPI_Comm comm , MPI_Request *request )
 {
   Impl::CollTimer timer;
-  Impl::SendStats::apply( sendcount, sendtype );
-  Impl::RecvStats::apply( recvcount * Impl::num_neighbors(comm), recvtype );
+  Impl::SendStats( sendcount, sendtype );
+  Impl::RecvStats( recvcount * Impl::num_neighbors(comm), recvtype );
   return Impl::mpi_check_err(MPI_Ineighbor_alltoall( sendbuf , sendcount , sendtype , recvbuf , recvcount , recvtype , comm , request ));
 }
 inline int Ineighbor_alltoallv( const void *sendbuf , const int sendcounts[] , const int sdispls[] , MPI_Datatype sendtype , void *recvbuf , const int recvcounts[] , const int rdispls[] , MPI_Datatype recvtype , MPI_Comm comm , MPI_Request *request )
@@ -1063,8 +1112,8 @@ inline int Ineighbor_alltoallv( const void *sendbuf , const int sendcounts[] , c
     scounts += sendcounts[i];
     rcounts += recvcounts[i];
   }
-  Impl::SendStats::apply( scounts, sendtype );
-  Impl::RecvStats::apply( rcounts, recvtype );
+  Impl::SendStats( scounts, sendtype );
+  Impl::RecvStats( rcounts, recvtype );
   return Impl::mpi_check_err(MPI_Ineighbor_alltoallv( sendbuf , sendcounts , sdispls , sendtype , recvbuf , recvcounts , rdispls , recvtype , comm , request ));
 }
 inline int Ineighbor_alltoallw( const void *sendbuf , const int sendcounts[] , const MPI_Aint sdispls[] , const MPI_Datatype sendtypes[] , void *recvbuf , const int recvcounts[] , const MPI_Aint rdispls[] , const MPI_Datatype recvtypes[] , MPI_Comm comm , MPI_Request *request )
@@ -1078,8 +1127,8 @@ inline int Ineighbor_alltoallw( const void *sendbuf , const int sendcounts[] , c
     scounts += sendcounts[i];
     rcounts += recvcounts[i];
   }
-  Impl::SendStats::apply( scounts, sendtypes[0] );
-  Impl::RecvStats::apply( rcounts, recvtypes[0] );
+  Impl::SendStats( scounts, sendtypes[0] );
+  Impl::RecvStats( rcounts, recvtypes[0] );
   return Impl::mpi_check_err(MPI_Ineighbor_alltoallw( sendbuf , sendcounts , sdispls , sendtypes , recvbuf , recvcounts , rdispls , recvtypes , comm , request ));
 }
 inline int Info_create( MPI_Info *info )
@@ -1147,15 +1196,15 @@ inline int Iprobe( int source , int tag , MPI_Comm comm , int *flag , MPI_Status
 inline int Irecv( void *buf , int count , MPI_Datatype datatype , int source , int tag , MPI_Comm comm , MPI_Request *request )
 {
   Impl::RecvTimer timer;
-  Impl::RecvStats::apply( count, datatype );
+  Impl::RecvStats( count, datatype );
   return Impl::mpi_check_err(MPI_Irecv( buf , count , datatype , source , tag , comm , request ));
 }
 inline int Ireduce( const void *sendbuf , void *recvbuf , int count , MPI_Datatype datatype , MPI_Op op , int root , MPI_Comm comm , MPI_Request *request )
 {
   Impl::CollTimer timer;
-  Impl::SendStats::apply( count, datatype );
+  Impl::SendStats( count, datatype );
   if ( root == Impl::prank(comm) ) {
-    Impl::RecvStats::apply( count, datatype );
+    Impl::RecvStats( count, datatype );
   }
   return Impl::mpi_check_err(MPI_Ireduce( sendbuf , recvbuf , count , datatype , op , root , comm , request ));
 }
@@ -1167,21 +1216,21 @@ inline int Ireduce_scatter( const void *sendbuf , void *recvbuf , const int recv
   for (int i=0; i<psize; ++i) {
     counts += recvcounts[i];
   }
-  Impl::SendStats::apply( counts, datatype );
-  Impl::RecvStats::apply( counts, datatype );
+  Impl::SendStats( counts, datatype );
+  Impl::RecvStats( counts, datatype );
   return Impl::mpi_check_err(MPI_Ireduce_scatter( sendbuf , recvbuf , recvcounts , datatype , op , comm , request ));
 }
 inline int Ireduce_scatter_block( const void *sendbuf , void *recvbuf , int recvcount , MPI_Datatype datatype , MPI_Op op , MPI_Comm comm , MPI_Request *request )
 {
   Impl::CollTimer timer;
-  Impl::SendStats::apply( recvcount, datatype );
-  Impl::RecvStats::apply( recvcount, datatype );
+  Impl::SendStats( recvcount, datatype );
+  Impl::RecvStats( recvcount, datatype );
   return Impl::mpi_check_err(MPI_Ireduce_scatter_block( sendbuf , recvbuf , recvcount , datatype , op , comm , request ));
 }
 inline int Irsend( const void *buf , int count , MPI_Datatype datatype , int dest , int tag , MPI_Comm comm , MPI_Request *request )
 {
   Impl::SendTimer timer;
-  Impl::SendStats::apply( count, datatype );
+  Impl::SendStats( count, datatype );
   return Impl::mpi_check_err(MPI_Irsend( buf , count , datatype , dest , tag , comm , request ));
 }
 inline int Is_thread_main( int *flag )
@@ -1191,38 +1240,38 @@ inline int Is_thread_main( int *flag )
 inline int Iscan( const void *sendbuf , void *recvbuf , int count , MPI_Datatype datatype , MPI_Op op , MPI_Comm comm , MPI_Request *request )
 {
   Impl::CollTimer timer;
-  Impl::SendStats::apply( count, datatype );
-  Impl::RecvStats::apply( count, datatype );
+  Impl::SendStats( count, datatype );
+  Impl::RecvStats( count, datatype );
   return Impl::mpi_check_err(MPI_Iscan( sendbuf , recvbuf , count , datatype , op , comm , request ));
 }
 inline int Iscatter( const void *sendbuf , int sendcount , MPI_Datatype sendtype , void *recvbuf , int recvcount , MPI_Datatype recvtype , int root , MPI_Comm comm , MPI_Request *request )
 {
   Impl::CollTimer timer;
-  Impl::RecvStats::apply( recvcount, recvtype );
+  Impl::RecvStats( recvcount, recvtype );
   if ( root == Impl::prank(comm) ) {
-    Impl::SendStats::apply( sendcount, sendtype );
+    Impl::SendStats( sendcount, sendtype );
   }
   return Impl::mpi_check_err(MPI_Iscatter( sendbuf , sendcount , sendtype , recvbuf , recvcount , recvtype , root , comm , request ));
 }
 inline int Iscatterv( const void *sendbuf , const int sendcounts[] , const int displs[] , MPI_Datatype sendtype , void *recvbuf , int recvcount , MPI_Datatype recvtype , int root , MPI_Comm comm , MPI_Request *request )
 {
   Impl::CollTimer timer;
-  Impl::RecvStats::apply( recvcount, recvtype);
+  Impl::RecvStats( recvcount, recvtype);
   if ( root == Impl::prank(comm) ) {
-    Impl::SendStats::apply( sendcounts, sendtype, comm );
+    Impl::SendStats( sendcounts, sendtype, comm );
   }
   return Impl::mpi_check_err(MPI_Iscatterv( sendbuf , sendcounts , displs , sendtype , recvbuf , recvcount , recvtype , root , comm , request ));
 }
 inline int Isend( const void *buf , int count , MPI_Datatype datatype , int dest , int tag , MPI_Comm comm , MPI_Request *request )
 {
   Impl::SendTimer timer;
-  Impl::SendStats::apply( count, datatype );
+  Impl::SendStats( count, datatype );
   return Impl::mpi_check_err(MPI_Isend( buf , count , datatype , dest , tag , comm , request ));
 }
 inline int Issend( const void *buf , int count , MPI_Datatype datatype , int dest , int tag , MPI_Comm comm , MPI_Request *request )
 {
   Impl::SendTimer timer;
-  Impl::SendStats::apply( count, datatype );
+  Impl::SendStats( count, datatype );
   return Impl::mpi_check_err(MPI_Issend( buf , count , datatype , dest , tag , comm , request ));
 }
 inline int Keyval_create( MPI_Copy_function *copy_fn , MPI_Delete_function *delete_fn , int *keyval , void *extra_state )
@@ -1244,20 +1293,20 @@ inline int Mprobe( int source , int tag , MPI_Comm comm , MPI_Message *message ,
 inline int Mrecv( void *buf , int count , MPI_Datatype datatype , MPI_Message *message , MPI_Status *status )
 {
   Impl::RecvTimer timer;
-  Impl::RecvStats::apply( count, datatype );
+  Impl::RecvStats( count, datatype );
   return Impl::mpi_check_err(MPI_Mrecv( buf , count , datatype , message , status ));
 }
 inline int Neighbor_allgather( const void *sendbuf , int sendcount , MPI_Datatype sendtype , void *recvbuf , int recvcount , MPI_Datatype recvtype , MPI_Comm comm )
 {
   Impl::CollTimer timer;
-  Impl::SendStats::apply( sendcount, sendtype );
-  Impl::RecvStats::apply( recvcount * Impl::num_neighbors(comm), recvtype );
+  Impl::SendStats( sendcount, sendtype );
+  Impl::RecvStats( recvcount * Impl::num_neighbors(comm), recvtype );
   return Impl::mpi_check_err(MPI_Neighbor_allgather( sendbuf , sendcount , sendtype , recvbuf , recvcount , recvtype , comm ));
 }
 inline int Neighbor_allgatherv( const void *sendbuf , int sendcount , MPI_Datatype sendtype , void *recvbuf , const int recvcounts[] , const int displs[] , MPI_Datatype recvtype , MPI_Comm comm )
 {
   Impl::CollTimer timer;
-  Impl::SendStats::apply( sendcount, sendtype );
+  Impl::SendStats( sendcount, sendtype );
   const int nn = Impl::num_neighbors(comm);
   int64_t rcounts = 0;
   for (int i=0; i<nn; ++i) {
@@ -1268,8 +1317,8 @@ inline int Neighbor_allgatherv( const void *sendbuf , int sendcount , MPI_Dataty
 inline int Neighbor_alltoall( const void *sendbuf , int sendcount , MPI_Datatype sendtype , void *recvbuf , int recvcount , MPI_Datatype recvtype , MPI_Comm comm )
 {
   Impl::CollTimer timer;
-  Impl::SendStats::apply( sendcount, sendtype );
-  Impl::RecvStats::apply( recvcount * Impl::num_neighbors(comm), recvtype );
+  Impl::SendStats( sendcount, sendtype );
+  Impl::RecvStats( recvcount * Impl::num_neighbors(comm), recvtype );
   return Impl::mpi_check_err(MPI_Neighbor_alltoall( sendbuf , sendcount , sendtype , recvbuf , recvcount , recvtype , comm ));
 }
 inline int Neighbor_alltoallv( const void *sendbuf , const int sendcounts[] , const int sdispls[] , MPI_Datatype sendtype , void *recvbuf , const int recvcounts[] , const int rdispls[] , MPI_Datatype recvtype , MPI_Comm comm )
@@ -1282,8 +1331,8 @@ inline int Neighbor_alltoallv( const void *sendbuf , const int sendcounts[] , co
     scounts += sendcounts[i];
     rcounts += recvcounts[i];
   }
-  Impl::SendStats::apply( scounts, sendtype );
-  Impl::RecvStats::apply( rcounts, recvtype );
+  Impl::SendStats( scounts, sendtype );
+  Impl::RecvStats( rcounts, recvtype );
   return Impl::mpi_check_err(MPI_Neighbor_alltoallv( sendbuf , sendcounts , sdispls , sendtype , recvbuf , recvcounts , rdispls , recvtype , comm ));
 }
 inline int Neighbor_alltoallw( const void *sendbuf , const int sendcounts[] , const MPI_Aint sdispls[] , const MPI_Datatype sendtypes[] , void *recvbuf , const int recvcounts[] , const MPI_Aint rdispls[] , const MPI_Datatype recvtypes[] , MPI_Comm comm )
@@ -1297,8 +1346,8 @@ inline int Neighbor_alltoallw( const void *sendbuf , const int sendcounts[] , co
     scounts += sendcounts[i];
     rcounts += recvcounts[i];
   }
-  Impl::SendStats::apply( scounts, sendtypes[0] );
-  Impl::RecvStats::apply( rcounts, recvtypes[0] );
+  Impl::SendStats( scounts, sendtypes[0] );
+  Impl::RecvStats( rcounts, recvtypes[0] );
   return Impl::mpi_check_err(MPI_Neighbor_alltoallw( sendbuf , sendcounts , sdispls , sendtypes , recvbuf , recvcounts , rdispls , recvtypes , comm ));
 }
 inline int Op_commutative( MPI_Op op , int *commute )
@@ -1344,7 +1393,7 @@ inline int Publish_name( const char *service_name , MPI_Info info , const char *
 inline int Put( const void *origin_addr , int origin_count , MPI_Datatype origin_datatype , int target_rank , MPI_Aint target_disp , int target_count , MPI_Datatype target_datatype , MPI_Win win )
 {
   Impl::OneSidedTimer timer;
-  Impl::OneSidedStats::apply( origin_count, origin_datatype);
+  Impl::OneSidedStats( origin_count, origin_datatype);
   return Impl::mpi_check_err(MPI_Put( origin_addr , origin_count , origin_datatype , target_rank , target_disp , target_count , target_datatype , win ));
 }
 inline int Query_thread( int *provided )
@@ -1354,13 +1403,13 @@ inline int Query_thread( int *provided )
 inline int Raccumulate( const void *origin_addr , int origin_count , MPI_Datatype origin_datatype , int target_rank , MPI_Aint target_disp , int target_count , MPI_Datatype target_datatype , MPI_Op op , MPI_Win win , MPI_Request *request )
 {
   Impl::OneSidedTimer timer;
-  Impl::OneSidedStats::apply( origin_count, origin_datatype);
+  Impl::OneSidedStats( origin_count, origin_datatype);
   return Impl::mpi_check_err(MPI_Raccumulate( origin_addr , origin_count , origin_datatype , target_rank , target_disp , target_count , target_datatype , op , win , request ));
 }
 inline int Recv( void *buf , int count , MPI_Datatype datatype , int source , int tag , MPI_Comm comm , MPI_Status *status )
 {
   Impl::RecvTimer timer;
-  Impl::RecvStats::apply( count, datatype );
+  Impl::RecvStats( count, datatype );
   return Impl::mpi_check_err(MPI_Recv( buf , count , datatype , source , tag , comm , status ));
 }
 inline int Recv_init( void *buf , int count , MPI_Datatype datatype , int source , int tag , MPI_Comm comm , MPI_Request *request )
@@ -1370,7 +1419,7 @@ inline int Recv_init( void *buf , int count , MPI_Datatype datatype , int source
 inline int Reduce( const void *sendbuf , void *recvbuf , int count , MPI_Datatype datatype , MPI_Op op , int root , MPI_Comm comm )
 {
   Impl::CollTimer timer;
-  Impl::SendStats::apply( count, datatype );
+  Impl::SendStats( count, datatype );
   return Impl::mpi_check_err(MPI_Reduce( sendbuf , recvbuf , count , datatype , op , root , comm ));
 }
 inline int Reduce_local( const void *inbuf , void *inoutbuf , int count , MPI_Datatype datatype , MPI_Op op )
@@ -1385,15 +1434,15 @@ inline int Reduce_scatter( const void *sendbuf , void *recvbuf , const int recvc
   for (int i=0; i<psize; ++i) {
     counts += recvcounts[i];
   }
-  Impl::SendStats::apply( counts, datatype );
-  Impl::RecvStats::apply( counts, datatype );
+  Impl::SendStats( counts, datatype );
+  Impl::RecvStats( counts, datatype );
   return Impl::mpi_check_err(MPI_Reduce_scatter( sendbuf , recvbuf , recvcounts , datatype , op , comm ));
 }
 inline int Reduce_scatter_block( const void *sendbuf , void *recvbuf , int recvcount , MPI_Datatype datatype , MPI_Op op , MPI_Comm comm )
 {
   Impl::CollTimer timer;
-  Impl::SendStats::apply( recvcount, datatype );
-  Impl::RecvStats::apply( recvcount, datatype );
+  Impl::SendStats( recvcount, datatype );
+  Impl::RecvStats( recvcount, datatype );
   return Impl::mpi_check_err(MPI_Reduce_scatter_block( sendbuf , recvbuf , recvcount , datatype , op , comm ));
 }
 inline int Request_free( MPI_Request *request )
@@ -1407,25 +1456,25 @@ inline int Request_get_status( MPI_Request request , int *flag , MPI_Status *sta
 inline int Rget( void *origin_addr , int origin_count , MPI_Datatype origin_datatype , int target_rank , MPI_Aint target_disp , int target_count , MPI_Datatype target_datatype , MPI_Win win , MPI_Request *request )
 {
   Impl::OneSidedTimer timer;
-  Impl::OneSidedStats::apply( origin_count, origin_datatype);
+  Impl::OneSidedStats( origin_count, origin_datatype);
   return Impl::mpi_check_err(MPI_Rget( origin_addr , origin_count , origin_datatype , target_rank , target_disp , target_count , target_datatype , win , request ));
 }
 inline int Rget_accumulate( const void *origin_addr , int origin_count , MPI_Datatype origin_datatype , void *result_addr , int result_count , MPI_Datatype result_datatype , int target_rank , MPI_Aint target_disp , int target_count , MPI_Datatype target_datatype , MPI_Op op , MPI_Win win , MPI_Request *request )
 {
   Impl::OneSidedTimer timer;
-  Impl::OneSidedStats::apply( origin_count, origin_datatype);
+  Impl::OneSidedStats( origin_count, origin_datatype);
   return Impl::mpi_check_err(MPI_Rget_accumulate( origin_addr , origin_count , origin_datatype , result_addr , result_count , result_datatype , target_rank , target_disp , target_count , target_datatype , op , win , request ));
 }
 inline int Rput( const void *origin_addr , int origin_count , MPI_Datatype origin_datatype , int target_rank , MPI_Aint target_disp , int target_count , MPI_Datatype target_datatype , MPI_Win win , MPI_Request *request )
 {
   Impl::OneSidedTimer timer;
-  Impl::OneSidedStats::apply( origin_count, origin_datatype);
+  Impl::OneSidedStats( origin_count, origin_datatype);
   return Impl::mpi_check_err(MPI_Rput( origin_addr , origin_count , origin_datatype , target_rank , target_disp , target_count , target_datatype , win , request ));
 }
 inline int Rsend( const void *buf , int count , MPI_Datatype datatype , int dest , int tag , MPI_Comm comm )
 {
   Impl::SendTimer timer;
-  Impl::SendStats::apply( count, datatype );
+  Impl::SendStats( count, datatype );
   return Impl::mpi_check_err(MPI_Rsend( buf , count , datatype , dest , tag , comm ));
 }
 inline int Rsend_init( const void *buf , int count , MPI_Datatype datatype , int dest , int tag , MPI_Comm comm , MPI_Request *request )
@@ -1435,32 +1484,32 @@ inline int Rsend_init( const void *buf , int count , MPI_Datatype datatype , int
 inline int Scan( const void *sendbuf , void *recvbuf , int count , MPI_Datatype datatype , MPI_Op op , MPI_Comm comm )
 {
   Impl::CollTimer timer;
-  Impl::SendStats::apply( count, datatype );
-  Impl::RecvStats::apply( count, datatype );
+  Impl::SendStats( count, datatype );
+  Impl::RecvStats( count, datatype );
   return Impl::mpi_check_err(MPI_Scan( sendbuf , recvbuf , count , datatype , op , comm ));
 }
 inline int Scatter( const void *sendbuf , int sendcount , MPI_Datatype sendtype , void *recvbuf , int recvcount , MPI_Datatype recvtype , int root , MPI_Comm comm )
 {
   Impl::CollTimer timer;
-  Impl::RecvStats::apply( recvcount, recvtype );
+  Impl::RecvStats( recvcount, recvtype );
   if ( root == Impl::prank(comm) ) {
-    Impl::SendStats::apply( sendcount, sendtype );
+    Impl::SendStats( sendcount, sendtype );
   }
   return Impl::mpi_check_err(MPI_Scatter( sendbuf , sendcount , sendtype , recvbuf , recvcount , recvtype , root , comm ));
 }
 inline int Scatterv( const void *sendbuf , const int *sendcounts , const int *displs , MPI_Datatype sendtype , void *recvbuf , int recvcount , MPI_Datatype recvtype , int root , MPI_Comm comm )
 {
   Impl::CollTimer timer;
-  Impl::RecvStats::apply( recvcount, recvtype);
+  Impl::RecvStats( recvcount, recvtype);
   if ( root == Impl::prank(comm) ) {
-    Impl::SendStats::apply( sendcounts, sendtype, comm );
+    Impl::SendStats( sendcounts, sendtype, comm );
   }
   return Impl::mpi_check_err(MPI_Scatterv( sendbuf , sendcounts , displs , sendtype , recvbuf , recvcount , recvtype , root , comm ));
 }
 inline int Send( const void *buf , int count , MPI_Datatype datatype , int dest , int tag , MPI_Comm comm )
 {
   Impl::SendTimer timer;
-  Impl::SendStats::apply( count, datatype );
+  Impl::SendStats( count, datatype );
   return Impl::mpi_check_err(MPI_Send( buf , count , datatype , dest , tag , comm ));
 }
 inline int Send_init( const void *buf , int count , MPI_Datatype datatype , int dest , int tag , MPI_Comm comm , MPI_Request *request )
@@ -1471,22 +1520,22 @@ inline int Sendrecv( const void *sendbuf , int sendcount , MPI_Datatype sendtype
 {
   Impl::SendTimer stimer;
   Impl::RecvTimer rtimer;
-  Impl::SendStats::apply( sendcount, sendtype );
-  Impl::RecvStats::apply( recvcount, recvtype );
+  Impl::SendStats( sendcount, sendtype );
+  Impl::RecvStats( recvcount, recvtype );
   return Impl::mpi_check_err(MPI_Sendrecv( sendbuf , sendcount , sendtype , dest , sendtag , recvbuf , recvcount , recvtype , source , recvtag , comm , status ));
 }
 inline int Sendrecv_replace( void *buf , int count , MPI_Datatype datatype , int dest , int sendtag , int source , int recvtag , MPI_Comm comm , MPI_Status *status )
 {
   Impl::SendTimer stimer;
   Impl::RecvTimer rtimer;
-  Impl::SendStats::apply( count, datatype );
-  Impl::RecvStats::apply( count, datatype );
+  Impl::SendStats( count, datatype );
+  Impl::RecvStats( count, datatype );
   return Impl::mpi_check_err(MPI_Sendrecv_replace( buf , count , datatype , dest , sendtag , source , recvtag , comm , status ));
 }
 inline int Ssend( const void *buf , int count , MPI_Datatype datatype , int dest , int tag , MPI_Comm comm )
 {
   Impl::SendTimer timer;
-  Impl::SendStats::apply( count, datatype );
+  Impl::SendStats( count, datatype );
   return Impl::mpi_check_err(MPI_Ssend( buf , count , datatype , dest , tag , comm ));
 }
 inline int Ssend_init( const void *buf , int count , MPI_Datatype datatype , int dest , int tag , MPI_Comm comm , MPI_Request *request )
