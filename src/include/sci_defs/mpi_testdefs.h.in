@@ -286,11 +286,9 @@ private:
                   n <= H2 ? 2 : 3;
 
 
-    Node::apply( [n, i]( int64_t values[] ) {
-      ++values[COMM_COUNT];
-      ++values[COMM_HISTOGRAM_0 + i];
-      values[COMM_SIZE]  += n;
-    });
+    ++t_node.m_values[COMM_COUNT];
+    ++t_node.m_values[COMM_HISTOGRAM_0 + i];
+    t_node.m_values[COMM_SIZE] += n;
   }
 
   static void apply( const int * counts, MPI_Datatype d, MPI_Comm c ) noexcept
