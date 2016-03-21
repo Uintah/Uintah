@@ -83,9 +83,6 @@ public:
   struct SendTag {};       // Total Send
   struct TestTag {};       // Total Test
   struct WaitTag {};       // Total Wait
-  struct CollectiveMPITag {}; // Total Reduce
-  struct RecvMPITag {};       // Total Recv
-  struct SendMPITag {};       // Total Send
 
   // RAII timer types
 
@@ -96,9 +93,6 @@ public:
   using WaitTimer       = TripTimer< WaitTag >;
   using ExecTimer       = TripTimer< TaskExecTag >;
 
-  using CollectiveMPITimer = TripTimer< CollectiveMPITag >;
-  using RecvMPITimer       = TripTimer< RecvMPITag >;
-  using SendMPITimer       = TripTimer< SendMPITag >;
 
 
   struct TaskExecTimer
