@@ -59,7 +59,7 @@ cptiInterpolator::~cptiInterpolator()
 
 cptiInterpolator* cptiInterpolator::clone(const Patch* patch)
 {
-  return scinew cptiInterpolator(patch, d_lcrit);
+  return new cptiInterpolator(patch, d_lcrit);
 }
     
 void cptiInterpolator::findCellAndWeights(const Point& pos,          // input: physical coordinates of a particle

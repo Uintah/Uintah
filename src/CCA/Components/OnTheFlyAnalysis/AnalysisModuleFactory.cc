@@ -70,25 +70,25 @@ AnalysisModuleFactory::create(const ProblemSpecP& prob_spec,
       module = attributes["name"];
 
       if ( module == "lineExtract" ) {
-        modules.push_back (scinew lineExtract(          module_ps, sharedState, dataArchiver ) );
+        modules.push_back (new lineExtract(          module_ps, sharedState, dataArchiver ) );
       } else if ( module == "planeExtract" ) {
-        modules.push_back ( scinew planeExtract(        module_ps, sharedState, dataArchiver ) );
+        modules.push_back ( new planeExtract(        module_ps, sharedState, dataArchiver ) );
       } else if ( module == "containerExtract" ) {
-        modules.push_back ( scinew containerExtract(    module_ps, sharedState, dataArchiver ) );
+        modules.push_back ( new containerExtract(    module_ps, sharedState, dataArchiver ) );
       } else if ( module == "momentumAnalysis" ) {
-        modules.push_back ( scinew momentumAnalysis(    module_ps, sharedState, dataArchiver ) );
+        modules.push_back ( new momentumAnalysis(    module_ps, sharedState, dataArchiver ) );
       } else if ( module == "particleExtract" ) {
-        modules.push_back ( scinew particleExtract(     module_ps, sharedState, dataArchiver) );
+        modules.push_back ( new particleExtract(     module_ps, sharedState, dataArchiver) );
       } else if ( module == "vorticity" ) {
-        modules.push_back ( scinew vorticity(           module_ps, sharedState, dataArchiver) );
+        modules.push_back ( new vorticity(           module_ps, sharedState, dataArchiver) );
       } else if ( module == "flatPlate_heatFlux" ) {
-        modules.push_back ( scinew flatPlate_heatFlux(  module_ps, sharedState, dataArchiver) );
+        modules.push_back ( new flatPlate_heatFlux(  module_ps, sharedState, dataArchiver) );
       } else if ( module == "firstLawThermo" ) {
-        modules.push_back ( scinew FirstLawThermo(      module_ps, sharedState, dataArchiver) );
+        modules.push_back ( new FirstLawThermo(      module_ps, sharedState, dataArchiver) );
       } else if ( module == "minMax" ) {
-        modules.push_back ( scinew MinMax(              module_ps, sharedState, dataArchiver) );
+        modules.push_back ( new MinMax(              module_ps, sharedState, dataArchiver) );
       } else if ( module == "radiometer" ) {
-        modules.push_back ( scinew OnTheFly_radiometer( module_ps, sharedState, dataArchiver) );
+        modules.push_back ( new OnTheFly_radiometer( module_ps, sharedState, dataArchiver) );
       }else {
         throw ProblemSetupException("\nERROR:<DataAnalysis> Unknown analysis module.  "+module,__FILE__, __LINE__);
       }

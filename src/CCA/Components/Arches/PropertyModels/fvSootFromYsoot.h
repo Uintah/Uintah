@@ -55,7 +55,7 @@ namespace Uintah{
           ~Builder(){}; 
 
           fvSootFromYsoot* build()
-          { return scinew fvSootFromYsoot( _name, _shared_state ); };
+          { return new fvSootFromYsoot( _name, _shared_state ); };
 
         private: 
 

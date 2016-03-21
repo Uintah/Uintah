@@ -122,7 +122,7 @@ delete[](void* ptr, Uintah::Allocator*, const char*, int)
 static const char* default_new_tag = "Unknown - operator new";
 static const char* default_new_array_tag = "Unknown - operator new[]";
 
-// The line number is an optional tag (on if configured with --enable-scinew-line-numbers)
+// The line number is an optional tag (on if configured with --enable-new-line-numbers)
 // that can also show some information (like an iteration or timestep) for each tag.
 //
 int default_tag_line_number = 0;

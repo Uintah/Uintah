@@ -48,7 +48,7 @@ RefCounted::RefCounted()
     initlock.lock();
     if(!initialized){
       for(int i=0;i<NLOCKS;i++)
-	locks[i] = scinew Mutex("RefCounted Mutex");
+	locks[i] = new Mutex("RefCounted Mutex");
       nextIndex=new AtomicCounter("RefCounted nextIndex count", 0);
       freeIndex=new AtomicCounter("RefCounted freeIndex count", 0);
       initialized=true;

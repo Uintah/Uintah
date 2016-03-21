@@ -44,7 +44,7 @@ CrackGeometry* CrackGeometryFactory::create(ProblemSpecP& ps)
 {
   ProblemSpecP child = ps->findBlock("crack");
   if(!child)
-    return scinew NullCrack(ps);
+    return new NullCrack(ps);
 
   for (ProblemSpecP crack_segment_ps = child->findBlock(); 
        crack_segment_ps != 0; 
@@ -52,22 +52,22 @@ CrackGeometry* CrackGeometryFactory::create(ProblemSpecP& ps)
     string crack_type = crack_segment_ps->getNodeName();
 
     if (crack_type == "quad")
-      return scinew QuadCrack(crack_segment_ps);
+      return new QuadCrack(crack_segment_ps);
 
     else if (crack_type == "curved_quad")
-      return scinew CurvedQuadCrack(crack_segment_ps);
+      return new CurvedQuadCrack(crack_segment_ps);
 
     else if (crack_type == "triangle")
-      return scinew TriangularCrack(crack_segment_ps);
+      return new TriangularCrack(crack_segment_ps);
 
     else if (crack_type == "arc")
-      return scinew ArcCrack(crack_segment_ps);
+      return new ArcCrack(crack_segment_ps);
 
     else if (crack_type == "ellipse")
-      return scinew EllipticCrack(crack_segment_ps);
+      return new EllipticCrack(crack_segment_ps);
 
     else if (crack_type == "partial_ellipse")
-      return scinew PartialEllipticCrack(crack_segment_ps);
+      return new PartialEllipticCrack(crack_segment_ps);
 
     else 
       throw ProblemSetupException("Unknown Crack Segment Type R ("+crack_type+")", __FILE__, __LINE__);

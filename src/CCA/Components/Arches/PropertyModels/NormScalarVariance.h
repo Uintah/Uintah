@@ -56,7 +56,7 @@ namespace Uintah{
       ~Builder(){}; 
       
       NormScalarVariance* build()
-      { return scinew NormScalarVariance( _name, _shared_state ); };
+      { return new NormScalarVariance( _name, _shared_state ); };
       
     private: 
       

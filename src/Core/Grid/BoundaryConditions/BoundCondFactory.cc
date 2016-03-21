@@ -96,23 +96,23 @@ void BoundCondFactory::create(ProblemSpecP& child,BoundCondBase* &bc,
       {
         if( bc_attr["type"] == "int" ){ // integer ONLY if the tag 'type = "int"' is added
           child->getAttribute( "value", i_value);
-          bc = scinew BoundCond<int> ( bc_attr["label"], bc_attr["var"], i_value, face_label, BoundCondBase::INT_TYPE );
+          bc = new BoundCond<int> ( bc_attr["label"], bc_attr["var"], i_value, face_label, BoundCondBase::INT_TYPE );
         }else{ // double (default)
           child->getAttribute( "value", d_value );
-          bc = scinew BoundCond<double>( bc_attr["label"], bc_attr["var"], d_value, face_label, BoundCondBase::DOUBLE_TYPE );
+          bc = new BoundCond<double>( bc_attr["label"], bc_attr["var"], d_value, face_label, BoundCondBase::DOUBLE_TYPE );
         }
       }
         break;
       case ProblemSpec::VECTOR_TYPE:
         child->getAttribute( "value", v_value );
-        bc = scinew BoundCond<Vector>( bc_attr["label"], bc_attr["var"], v_value, face_label, BoundCondBase::VECTOR_TYPE );
+        bc = new BoundCond<Vector>( bc_attr["label"], bc_attr["var"], v_value, face_label, BoundCondBase::VECTOR_TYPE );
         break;
       case ProblemSpec::STRING_TYPE:
-        bc = scinew BoundCond<std::string>( bc_attr["label"], bc_attr["var"], valAttribute, face_label, BoundCondBase::STRING_TYPE );
+        bc = new BoundCond<std::string>( bc_attr["label"], bc_attr["var"], valAttribute, face_label, BoundCondBase::STRING_TYPE );
         break;
       case ProblemSpec::UNKNOWN_TYPE:
       default:
-        bc = scinew BoundCond<NoValue>( bc_attr["label"], bc_attr["var"] );
+        bc = new BoundCond<NoValue>( bc_attr["label"], bc_attr["var"] );
         break;
     }
   } else if( valuePS ) { // Found <value> tag.
@@ -123,26 +123,26 @@ void BoundCondFactory::create(ProblemSpecP& child,BoundCondBase* &bc,
       case ProblemSpec::NUMBER_TYPE:
         if( bc_attr["type"] == "int" ){                  // integer ONLY if the tag 'type = "int"' is added
           child->get( "value", i_value);
-          bc = scinew BoundCond<int> ( bc_attr["label"], bc_attr["var"], i_value, face_label, BoundCondBase::INT_TYPE );
+          bc = new BoundCond<int> ( bc_attr["label"], bc_attr["var"], i_value, face_label, BoundCondBase::INT_TYPE );
         }else{                                           // double (default)
           child->get( "value", d_value );
-          bc = scinew BoundCond<double>( bc_attr["label"], bc_attr["var"], d_value, face_label, BoundCondBase::DOUBLE_TYPE );
+          bc = new BoundCond<double>( bc_attr["label"], bc_attr["var"], d_value, face_label, BoundCondBase::DOUBLE_TYPE );
         }
         break;
       case ProblemSpec::VECTOR_TYPE:
         child->get( "value", v_value );
-        bc = scinew BoundCond<Vector>( bc_attr["label"], bc_attr["var"], v_value, face_label, BoundCondBase::VECTOR_TYPE );
+        bc = new BoundCond<Vector>( bc_attr["label"], bc_attr["var"], v_value, face_label, BoundCondBase::VECTOR_TYPE );
         break;
       case ProblemSpec::STRING_TYPE:
-        bc = scinew BoundCond<std::string>( bc_attr["label"], bc_attr["var"], s_value, face_label, BoundCondBase::STRING_TYPE );
+        bc = new BoundCond<std::string>( bc_attr["label"], bc_attr["var"], s_value, face_label, BoundCondBase::STRING_TYPE );
         break;
       case ProblemSpec::UNKNOWN_TYPE:
       default:
-        bc = scinew BoundCond<NoValue>( bc_attr["label"], bc_attr["var"] );
+        bc = new BoundCond<NoValue>( bc_attr["label"], bc_attr["var"] );
         break;
     }
   } else {
-    bc = scinew BoundCond<NoValue>( bc_attr["label"], bc_attr["var"] );
+    bc = new BoundCond<NoValue>( bc_attr["label"], bc_attr["var"] );
   }
 }
 
@@ -150,15 +150,15 @@ void BoundCondFactory::create(ProblemSpecP& child,BoundCondBase* &bc,
 
 void BoundCondFactory::customBC(BoundCondBase* &bc, 
     int mat_id, const std::string face_label, double value ,const std::string label,const std::string var){
-      bc = scinew BoundCond<double>( label, var, value, face_label, BoundCondBase::DOUBLE_TYPE );
+      bc = new BoundCond<double>( label, var, value, face_label, BoundCondBase::DOUBLE_TYPE );
 }
 
 void BoundCondFactory::customBC(BoundCondBase* &bc, 
     int mat_id, const std::string face_label,const Vector value ,const std::string label,const std::string var){
-      bc = scinew BoundCond<Vector>( label, var, value, face_label, BoundCondBase::VECTOR_TYPE );
+      bc = new BoundCond<Vector>( label, var, value, face_label, BoundCondBase::VECTOR_TYPE );
 }
 
 void BoundCondFactory::customBC(BoundCondBase* &bc, 
     int mat_id, const std::string face_label,const std::string value ,const std::string label,const std::string var){
-      bc = scinew BoundCond<std::string>( label, var, value, face_label, BoundCondBase::STRING_TYPE );
+      bc = new BoundCond<std::string>( label, var, value, face_label, BoundCondBase::STRING_TYPE );
 }

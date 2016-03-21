@@ -107,7 +107,7 @@ ParticleCreator::ParticleCreator(MPMMaterial* matl,
                                  MPMFlags* flags)
 :d_lock("Particle Creator lock")
 {
-  d_lb = scinew MPMLabel();
+  d_lb = new MPMLabel();
   d_useLoadCurves = flags->d_useLoadCurves;
   d_with_color = flags->d_with_color;
   d_artificial_viscosity = flags->d_artificial_viscosity;

@@ -30,7 +30,7 @@ public:
       ~Builder(){}
 
       FEUpdate* build()
-      { return scinew FEUpdate<T>( _task_name, _matl_index, _eqn_names ); }
+      { return new FEUpdate<T>( _task_name, _matl_index, _eqn_names ); }
 
       private:
 

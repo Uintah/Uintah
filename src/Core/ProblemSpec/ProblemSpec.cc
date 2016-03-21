@@ -68,7 +68,7 @@ ProblemSpec::findBlock() const
      return 0;
   }
   else {
-     return scinew ProblemSpec( child, false );
+     return new ProblemSpec( child, false );
   }
 }
 
@@ -109,7 +109,7 @@ ProblemSpec::findBlock( const string & name ) const
     //    string child_name(to_char_ptr(child->name));
     string child_name((const char *)(child->name));
     if (name == child_name) {
-      return scinew ProblemSpec( child, false );
+      return new ProblemSpec( child, false );
     }
     child = child->next;
   }
@@ -178,7 +178,7 @@ ProblemSpecP ProblemSpec::findNextBlock() const
      return 0;
   }
   else {
-     return scinew ProblemSpec( found_node, false );
+     return new ProblemSpec( found_node, false );
   }
 }
 
@@ -206,7 +206,7 @@ ProblemSpec::findNextBlock(const string& name) const
      return 0;
   }
   else {
-     return scinew ProblemSpec( found_node, false );
+     return new ProblemSpec( found_node, false );
   }
 }
 
@@ -219,7 +219,7 @@ ProblemSpec::findTextBlock()
    for (xmlNode* child = d_node->children; child != 0;
         child = child->next) {
      if (child->type == XML_TEXT_NODE) {
-       return scinew ProblemSpec( child, false );
+       return new ProblemSpec( child, false );
       }
    }
    return NULL;
@@ -250,7 +250,7 @@ ProblemSpec::importNode(ProblemSpecP src, bool deep)
   MALLOC_TRACE_TAG_SCOPE("ProblemSpec::ImportNode()");
   xmlNode* d = xmlDocCopyNode(src->d_node, d_node->doc, deep ? 1 : 0);
   if (d)
-    return scinew ProblemSpec(d, false );
+    return new ProblemSpec(d, false );
   else
     return 0;
 }
@@ -272,7 +272,7 @@ ProblemSpec::makeComment( string comment )
 {
   MALLOC_TRACE_TAG_SCOPE("ProblemSpec::makeComment()");
   xmlNodePtr commentNode = xmlNewComment(BAD_CAST comment.c_str());
-  return scinew ProblemSpec( commentNode, false );
+  return new ProblemSpec( commentNode, false );
 }
 
 //______________________________________________________________________
@@ -1046,7 +1046,7 @@ ProblemSpec::appendElement(const char* name, const string& value)
 {
   MALLOC_TRACE_TAG_SCOPE("ProblemSpec::appendElement()");
   xmlNode* newnode = xmlNewChild(d_node, 0, BAD_CAST name, BAD_CAST value.c_str());
-  return scinew ProblemSpec( newnode, false );
+  return new ProblemSpec( newnode, false );
 }
 
 //______________________________________________________________________
@@ -1563,7 +1563,7 @@ ProblemSpec::getFirstChild()
   MALLOC_TRACE_TAG_SCOPE("ProblemSpec::getFirstChild()");
   xmlNode* d = d_node->children;
   if (d) {
-    return scinew ProblemSpec( d, false );
+    return new ProblemSpec( d, false );
   }
   else {
     return 0;
@@ -1578,7 +1578,7 @@ ProblemSpec::getNextSibling()
   MALLOC_TRACE_TAG_SCOPE("ProblemSpec::getNextSibling()");
   xmlNode* d = d_node->next;
   if( d ) {
-    return scinew ProblemSpec( d, false );
+    return new ProblemSpec( d, false );
   }
   else {
     return 0;
@@ -1610,7 +1610,7 @@ ProblemSpec::appendChild( const char *str )
   MALLOC_TRACE_TAG_SCOPE("ProblemSpec::appendChild()");
   xmlNode* elt = xmlNewChild(d_node, 0, BAD_CAST str, 0);
   
-  return scinew ProblemSpec( elt, false );
+  return new ProblemSpec( elt, false );
 }
 
 //______________________________________________________________________
@@ -1650,7 +1650,7 @@ ProblemSpec::getRootNode()
 {
   MALLOC_TRACE_TAG_SCOPE("ProblemSpec::getRootNode()");
   xmlNode* root_node = xmlDocGetRootElement(d_node->doc);
-  return scinew ProblemSpec( root_node, false ); // don't mark as toplevel as this is just a copy
+  return new ProblemSpec( root_node, false ); // don't mark as toplevel as this is just a copy
 }
 
 //______________________________________________________________________
@@ -1674,7 +1674,7 @@ ProblemSpec::createDocument( const string & name )
 
   xmlDocSetRootElement(doc, node);
 
-  return scinew ProblemSpec(node, true );
+  return new ProblemSpec(node, true );
 }
 
 string

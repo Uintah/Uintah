@@ -114,7 +114,7 @@ void TongeRameshPTR::outputProblemSpec(ProblemSpecP& ps, bool output_cm_tag)
 
 TongeRameshPTR* TongeRameshPTR::clone()
 {
-	return scinew TongeRameshPTR(*this);
+	return new TongeRameshPTR(*this);
 }
 
 TongeRameshPTR::~TongeRameshPTR()
@@ -1390,7 +1390,7 @@ namespace Uintah
   {
   static TypeDescription* td = 0;
   if(!td){
-  td = scinew TypeDescription(TypeDescription::Other,
+  td = new TypeDescription(TypeDescription::Other,
   "TongeRamesh::double",
   true, &makeMPI_CMData);
   }

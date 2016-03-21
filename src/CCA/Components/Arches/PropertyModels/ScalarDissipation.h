@@ -51,7 +51,7 @@ namespace Uintah{
       ~Builder(){}; 
       
       ScalarDissipation* build()
-      { return scinew ScalarDissipation( _name, _shared_state ); };
+      { return new ScalarDissipation( _name, _shared_state ); };
       
     private: 
       

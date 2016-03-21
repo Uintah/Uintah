@@ -50,7 +50,7 @@ axiCptiInterpolator::~axiCptiInterpolator()
 
 axiCptiInterpolator* axiCptiInterpolator::clone(const Patch* patch)
 {
-  return scinew axiCptiInterpolator(patch);
+  return new axiCptiInterpolator(patch);
 }
     
 void axiCptiInterpolator::findCellAndWeights(const Point& pos,

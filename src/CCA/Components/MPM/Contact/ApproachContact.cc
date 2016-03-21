@@ -531,10 +531,10 @@ void ApproachContact::addComputesAndRequiresInterpolated(SchedulerP & sched,
                                              const PatchSet* patches,
                                              const MaterialSet* ms) 
 {
-  Task * t = scinew Task("ApproachContact::exMomInterpolated", 
+  Task * t = new Task("ApproachContact::exMomInterpolated", 
                       this, &ApproachContact::exMomInterpolated);
 
-  MaterialSubset* z_matl = scinew MaterialSubset();
+  MaterialSubset* z_matl = new MaterialSubset();
   z_matl->add(0);
   z_matl->addReference();
   
@@ -563,10 +563,10 @@ void ApproachContact::addComputesAndRequiresIntegrated(SchedulerP & sched,
                                              const PatchSet* patches,
                                              const MaterialSet* ms) 
 {
-  Task * t = scinew Task("ApproachContact::exMomIntegrated", 
+  Task * t = new Task("ApproachContact::exMomIntegrated", 
                       this, &ApproachContact::exMomIntegrated);
 
-  MaterialSubset* z_matl = scinew MaterialSubset();
+  MaterialSubset* z_matl = new MaterialSubset();
   z_matl->add(0);
   z_matl->addReference();
   

@@ -58,7 +58,7 @@ public:
       ~Builder(){}
 
       VariableStats* build()
-      { return scinew VariableStats( _task_name, _matl_index ); }
+      { return new VariableStats( _task_name, _matl_index ); }
 
       private:
 

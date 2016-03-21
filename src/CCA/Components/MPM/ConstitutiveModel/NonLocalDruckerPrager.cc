@@ -143,7 +143,7 @@ void NonLocalDruckerPrager::outputProblemSpec(ProblemSpecP& ps,bool output_cm_ta
 
 NonLocalDruckerPrager* NonLocalDruckerPrager::clone()
 {
-  return scinew NonLocalDruckerPrager(*this);
+  return new NonLocalDruckerPrager(*this);
 }
 
 void 

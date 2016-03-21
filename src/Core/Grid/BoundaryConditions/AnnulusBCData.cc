@@ -68,7 +68,7 @@ bool AnnulusBCData::operator==(const BCGeomBase& rhs) const
 
 AnnulusBCData* AnnulusBCData::clone()
 {
-  return scinew AnnulusBCData(*this);
+  return new AnnulusBCData(*this);
 }
 
 void AnnulusBCData::addBCData(BCData& bc) 

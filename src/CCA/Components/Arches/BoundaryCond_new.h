@@ -371,7 +371,7 @@ public:
           const SpatialOps::MemoryWindow window = BoundaryCondition_new::get_mem_win_for_masks<FieldT>( patch, nGhosts );
           //SpatialOps::SpatialMask<FieldT>* mask = new SpatialOps::SpatialMask<FieldT>(window, bcInfo, gd, ijk);
 
-          boost::shared_ptr<SpatialOps::SpatialMask<FieldT> > ptr( scinew SpatialOps::SpatialMask<FieldT>(window, bcInfo, gd, ijk)); 
+          boost::shared_ptr<SpatialOps::SpatialMask<FieldT> > ptr( new SpatialOps::SpatialMask<FieldT>(window, bcInfo, gd, ijk)); 
          
           //_mask_storage.insert(std::make_pair( bc_mask_type, ptr)); 
 

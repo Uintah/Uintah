@@ -574,7 +574,7 @@ OnDemandDataWarehouse::sendMPI(       DependencyBatch*       batch,
         // already knows about it.
         ASSERT( old_dw != this );
         ParticleSubset* pset = var->getParticleSubset();
-        sendset = scinew ParticleSubset( 0, matlIndex, patch, low, high );
+        sendset = new ParticleSubset( 0, matlIndex, patch, low, high );
         constParticleVariable<Point> pos;
         old_dw->get( pos, pos_var, pset );
         for( ParticleSubset::iterator iter = pset->begin(); iter != pset->end(); iter++ ) {
@@ -683,7 +683,7 @@ OnDemandDataWarehouse::exchangeParticleQuantities(       DetailedTasks* dts,
           }
           // Make sure sendset is unique...
           ASSERT( !ss_.find_sendset( iter->first, pmg.m_patch, pmg.m_matl, pmg.m_low, pmg.m_high, d_generation ) );
-          ParticleSubset* sendset = scinew ParticleSubset( 0, pmg.m_matl, pmg.m_patch, pmg.m_low, pmg.m_high );
+          ParticleSubset* sendset = new ParticleSubset( 0, pmg.m_matl, pmg.m_patch, pmg.m_low, pmg.m_high );
           constParticleVariable<Point> pos;
           get( pos, pos_var, pmg.m_matl, pmg.m_patch );
           ParticleSubset* pset = pos.getParticleSubset();
@@ -875,7 +875,7 @@ OnDemandDataWarehouse::reduceMPI( const VarLabel       * label,
 
   const MaterialSubset* matls;
   if( !inmatls ) {
-    MaterialSubset* tmpmatls = scinew MaterialSubset();
+    MaterialSubset* tmpmatls = new MaterialSubset();
     tmpmatls->add( -1 );
     matls = tmpmatls;
   }
@@ -1090,7 +1090,7 @@ OnDemandDataWarehouse::createParticleSubset(       particleIndex numParticles,
 
   ASSERT(!patch->isVirtual());
 
-  ParticleSubset* psubset = scinew ParticleSubset(numParticles, matlIndex, patch, low, high);
+  ParticleSubset* psubset = new ParticleSubset(numParticles, matlIndex, patch, low, high);
   insertPSetRecord(d_psetDB, patch, low, high, matlIndex, psubset);
 
   return psubset;
@@ -1237,7 +1237,7 @@ OnDemandDataWarehouse::queryPSetDB(       psetDBType& subsetDB,
   ASSERT(subset!=0);
   get(pos, pos_var, subset);
 
-  ParticleSubset* newsubset=scinew ParticleSubset(0, matlIndex, patch->getRealPatch(),low,high);
+  ParticleSubset* newsubset=new ParticleSubset(0, matlIndex, patch->getRealPatch(),low,high);
 
   for(ParticleSubset::iterator iter = subset->begin();iter != subset->end(); iter++){
     particleIndex idx = *iter;
@@ -1424,7 +1424,7 @@ OnDemandDataWarehouse::getParticleSubset(       int       matlIndex,
   }
 
   //create a new subset
-  ParticleSubset* newsubset = scinew ParticleSubset(totalParticles, matlIndex, relPatch,
+  ParticleSubset* newsubset = new ParticleSubset(totalParticles, matlIndex, relPatch,
                                                     lowIndex, highIndex, vneighbors, subsets);
   return newsubset;
 }
@@ -3590,8 +3590,8 @@ OnDemandDataWarehouse::checkAccesses(       RunningTaskInfo*  currentTaskInfo,
 //
 //  VarAccessMap& currentTaskAccesses = currentTaskInfo->d_accesses;
 //
-//  Handle<PatchSubset> default_patches = scinew PatchSubset();
-//  Handle<MaterialSubset> default_matls = scinew MaterialSubset();
+//  Handle<PatchSubset> default_patches = new PatchSubset();
+//  Handle<MaterialSubset> default_matls = new MaterialSubset();
 //  default_patches->add(0);
 //  default_matls->add(-1);
 //

@@ -58,11 +58,11 @@ Simple_Burn::Simple_Burn(const ProcessorGroup* myworld,
   : ModelInterface(myworld), d_params(params), d_prob_spec(prob_spec)
 {
   mymatls = 0;
-  Mlb  = scinew MPMLabel();
-  Ilb  = scinew ICELabel();
-  MIlb  = scinew MPMICELabel();
+  Mlb  = new MPMLabel();
+  Ilb  = new ICELabel();
+  MIlb  = new MPMICELabel();
   
-  d_saveConservedVars = scinew saveConservedVars();
+  d_saveConservedVars = new saveConservedVars();
   //__________________________________
   //  diagnostic labels
   onSurfaceLabel   = VarLabel::create("Simple_Burn::onSurface",
@@ -115,7 +115,7 @@ void Simple_Burn::problemSetup(GridP&, SimulationStateP& sharedState,
 
   //__________________________________
   //  define the materialSet
-  mymatls = scinew MaterialSet();
+  mymatls = new MaterialSet();
 
   vector<int> m;
   m.push_back(0);                                // needed for the pressure and NC_CCWeight
@@ -184,7 +184,7 @@ void Simple_Burn::scheduleComputeModelSources(SchedulerP& sched,
     return;
   }  
  
-  Task* t = scinew Task("Simple_Burn::computeModelSources",this, 
+  Task* t = new Task("Simple_Burn::computeModelSources",this, 
                         &Simple_Burn::computeModelSources, mi);
                                             
   cout_doing << "SIMPLE_BURN::scheduleComputeModelSources "<<  endl;  
@@ -193,7 +193,7 @@ void Simple_Burn::scheduleComputeModelSources(SchedulerP& sched,
   Ghost::GhostType  gn  = Ghost::None;
   const MaterialSubset* react_matl = matl0->thisMaterial();
   const MaterialSubset* prod_matl  = matl1->thisMaterial();
-  MaterialSubset* one_matl     = scinew MaterialSubset();
+  MaterialSubset* one_matl     = new MaterialSubset();
   one_matl->add(0);
   one_matl->addReference();
   MaterialSubset* press_matl   = one_matl;

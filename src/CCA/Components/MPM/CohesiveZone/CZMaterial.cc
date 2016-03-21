@@ -39,11 +39,11 @@ using namespace Uintah;
 CZMaterial::CZMaterial(ProblemSpecP& ps, SimulationStateP& ss,MPMFlags* flags)
   : Material(ps), d_cohesive_zone(0)
 {
-  d_lb = scinew MPMLabel();
+  d_lb = new MPMLabel();
   // The standard set of initializations needed
   standardInitialization(ps,flags);
   
-  d_cohesive_zone = scinew CohesiveZone(this,flags,ss);
+  d_cohesive_zone = new CohesiveZone(this,flags,ss);
 }
 
 void
@@ -61,7 +61,7 @@ CZMaterial::standardInitialization(ProblemSpecP& ps, MPMFlags* flags)
 // Default constructor
 CZMaterial::CZMaterial() : d_cohesive_zone(0)
 {
-  d_lb = scinew MPMLabel();
+  d_lb = new MPMLabel();
 }
 
 CZMaterial::~CZMaterial()
@@ -101,7 +101,7 @@ CZMaterial::copyWithoutGeom(ProblemSpecP& ps,const CZMaterial* mat,
   d_cz_filename = mat->d_cz_filename;
   d_do_rotation = mat->d_do_rotation;
 
-//  d_cohesive_zone = scinew CohesiveZone(this,flags);
+//  d_cohesive_zone = new CohesiveZone(this,flags);
 }
 
 CohesiveZone* CZMaterial::getCohesiveZone()

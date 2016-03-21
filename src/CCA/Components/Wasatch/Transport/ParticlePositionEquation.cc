@@ -84,7 +84,7 @@ namespace WasatchCore{
     }
 
     typedef ParticlePositionRHS::Builder RHSBuilder;
-    return factory.register_expression( scinew RHSBuilder(rhsTag_, pVelTag ) );    
+    return factory.register_expression( new RHSBuilder(rhsTag_, pVelTag ) );    
   }
   
   //------------------------------------------------------------------

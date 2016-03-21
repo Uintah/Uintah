@@ -123,7 +123,7 @@ WARNING
   {
     static TypeDescription* td;
     if(!td){
-      td = scinew TypeDescription(TypeDescription::SoleVariable,
+      td = new TypeDescription(TypeDescription::SoleVariable,
                                   "SoleVariable", &maker,
                                   fun_getTypeDescription((int*)0));
     }
@@ -132,7 +132,7 @@ WARNING
 
   template<class T> Variable*  SoleVariable<T>::maker()
   {
-    //    return scinew SoleVariable<T>();
+    //    return new SoleVariable<T>();
     return 0;
   }
    
@@ -142,7 +142,7 @@ WARNING
 
   template<class T> SoleVariableBase*  SoleVariable<T>::clone() const
   {
-    return scinew SoleVariable<T>(*this);
+    return new SoleVariable<T>(*this);
   }
 
   template<class T> void 

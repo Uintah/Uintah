@@ -42,24 +42,24 @@ PropertyModelFactoryV2::register_all_tasks( ProblemSpecP& db )
 
       if ( type == "wall_heatflux_variable" ){
 
-        TaskInterface::TaskBuilder* tsk = scinew WallHFVariable::Builder( name, 0, _shared_state );
+        TaskInterface::TaskBuilder* tsk = new WallHFVariable::Builder( name, 0, _shared_state );
         register_task( name, tsk );
         _pre_update_property_tasks.push_back( name );
 
       } else if ( type == "variable_stats" ){
 
-        TaskInterface::TaskBuilder* tsk = scinew VariableStats::Builder( name, 0 );
+        TaskInterface::TaskBuilder* tsk = new VariableStats::Builder( name, 0 );
         register_task( name, tsk );
         _var_stats_tasks.push_back( name );
 
       } else if ( type == "density_predictor" ) {
 
-        TaskInterface::TaskBuilder* tsk = scinew DensityPredictor::Builder( name, 0 );
+        TaskInterface::TaskBuilder* tsk = new DensityPredictor::Builder( name, 0 );
         register_task( name, tsk );
 
       } else if ( type == "CO" ) {
 
-        TaskInterface::TaskBuilder* tsk = scinew CO::Builder( name, 0 );
+        TaskInterface::TaskBuilder* tsk = new CO::Builder( name, 0 );
         register_task( name, tsk );
         _finalize_property_tasks.push_back( name );
 
@@ -109,24 +109,24 @@ PropertyModelFactoryV2::add_task( ProblemSpecP& db )
 
       if ( type == "wall_heatflux_variable" ){
 
-        TaskInterface::TaskBuilder* tsk = scinew WallHFVariable::Builder( name, 0, _shared_state );
+        TaskInterface::TaskBuilder* tsk = new WallHFVariable::Builder( name, 0, _shared_state );
         register_task( name, tsk );
         _pre_update_property_tasks.push_back( name );
 
       } else if ( type == "variable_stats" ){
 
-        TaskInterface::TaskBuilder* tsk = scinew VariableStats::Builder( name, 0 );
+        TaskInterface::TaskBuilder* tsk = new VariableStats::Builder( name, 0 );
         register_task( name, tsk );
         _finalize_property_tasks.push_back( name );
 
       } else if ( type == "density_predictor" ) {
 
-        TaskInterface::TaskBuilder* tsk = scinew DensityPredictor::Builder( name, 0 );
+        TaskInterface::TaskBuilder* tsk = new DensityPredictor::Builder( name, 0 );
         register_task( name, tsk );
 
       } else if ( type == "CO" ) {
 
-        TaskInterface::TaskBuilder* tsk = scinew CO::Builder( name, 0 );
+        TaskInterface::TaskBuilder* tsk = new CO::Builder( name, 0 );
         register_task( name, tsk );
         _finalize_property_tasks.push_back( name );
 

@@ -136,7 +136,7 @@ void
 CQMOMSourceWrapper::sched_initializeVariables( const LevelP& level, SchedulerP& sched )
 {
   string taskname = "CQMOMSourceWrapper::initializeVariables";
-  Task* tsk = scinew Task(taskname, this, &CQMOMSourceWrapper::initializeVariables);
+  Task* tsk = new Task(taskname, this, &CQMOMSourceWrapper::initializeVariables);
 
   //New
   for ( int i = 0; i < nMoments*nSources; i++ ) {
@@ -178,7 +178,7 @@ void
 CQMOMSourceWrapper::sched_buildSourceTerm( const LevelP& level, SchedulerP& sched, int timeSubStep )
 {
   string taskname = "CQMOMSourceWrapper::buildSourceTerm";
-  Task* tsk = scinew Task(taskname, this, &CQMOMSourceWrapper::buildSourceTerm);
+  Task* tsk = new Task(taskname, this, &CQMOMSourceWrapper::buildSourceTerm);
 
   //----NEW----
   for ( int i = 0; i < nMoments*nSources; i++ ) {
@@ -238,7 +238,7 @@ CQMOMSourceWrapper::buildSourceTerm( const ProcessorGroup* pc,
     //allocate/modify all the source terms
     vector<CCVariable<double>* > srcs;
     for ( int i = 0; i < nMoments*nSources; i++ ) {
-      CCVariable<double>* tempCCVar = scinew CCVariable<double>;
+      CCVariable<double>* tempCCVar = new CCVariable<double>;
       if (new_dw->exists(d_sourceLabels[i], matlIndex, patch) ) {
         new_dw->getModifiable( *tempCCVar, d_sourceLabels[i], matlIndex, patch );
       } else {

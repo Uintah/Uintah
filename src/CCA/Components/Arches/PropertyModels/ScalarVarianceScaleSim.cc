@@ -14,7 +14,7 @@ ScalarVarianceScaleSim::ScalarVarianceScaleSim( std::string prop_name, Simulatio
   // Evaluated before or after table lookup: 
   _before_table_lookup = true; 
 
-  _boundary_condition = scinew BoundaryCondition_new( shared_state->getArchesMaterial(0)->getDWIndex() ); 
+  _boundary_condition = new BoundaryCondition_new( shared_state->getArchesMaterial(0)->getDWIndex() ); 
 
 }
 
@@ -56,7 +56,7 @@ void ScalarVarianceScaleSim::problemSetup( const ProblemSpecP& inputdb )
   int filter_width=3; 
   db->getWithDefault("filter_width",filter_width,3);
 
-  _filter = scinew Filter( use_old_filter, filter_type, filter_width );
+  _filter = new Filter( use_old_filter, filter_type, filter_width );
 
 }
 
@@ -66,7 +66,7 @@ void ScalarVarianceScaleSim::problemSetup( const ProblemSpecP& inputdb )
 void ScalarVarianceScaleSim::sched_computeProp( const LevelP& level, SchedulerP& sched, int time_substep )
 {
   std::string taskname = "ScalarVarianceScaleSim::computeProp"; 
-  Task* tsk = scinew Task( taskname, this, &ScalarVarianceScaleSim::computeProp, time_substep ); 
+  Task* tsk = new Task( taskname, this, &ScalarVarianceScaleSim::computeProp, time_substep ); 
 
   _density_label = 0; 
   _mf_label = 0; 
@@ -217,7 +217,7 @@ void ScalarVarianceScaleSim::sched_initialize( const LevelP& level, SchedulerP& 
 {
   std::string taskname = "ScalarVarianceScaleSim::initialize"; 
 
-  Task* tsk = scinew Task(taskname, this, &ScalarVarianceScaleSim::initialize);
+  Task* tsk = new Task(taskname, this, &ScalarVarianceScaleSim::initialize);
   tsk->computes(_prop_label); 
 
   sched->addTask(tsk, level->eachPatch(), _shared_state->allArchesMaterials());

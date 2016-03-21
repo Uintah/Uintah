@@ -96,7 +96,7 @@ GUVSphereShellPiece::outputHelper( ProblemSpecP & ps ) const
 GeometryPieceP
 GUVSphereShellPiece::clone() const
 {
-  return scinew GUVSphereShellPiece(*this);
+  return new GUVSphereShellPiece(*this);
 }
 
 bool 

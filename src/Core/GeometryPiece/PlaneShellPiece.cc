@@ -80,7 +80,7 @@ void PlaneShellPiece::outputHelper( ProblemSpecP & plane_ps ) const
 GeometryPieceP
 PlaneShellPiece::clone() const
 {
-  return scinew PlaneShellPiece(*this);
+  return new PlaneShellPiece(*this);
 }
 
 //////////

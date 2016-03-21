@@ -121,7 +121,7 @@ void P_Alpha::outputProblemSpec(ProblemSpecP& ps,bool output_cm_tag)
 
 P_Alpha* P_Alpha::clone()
 {
-  return scinew P_Alpha(*this);
+  return new P_Alpha(*this);
 }
 
 void P_Alpha::addInitialComputesAndRequires(Task* task,

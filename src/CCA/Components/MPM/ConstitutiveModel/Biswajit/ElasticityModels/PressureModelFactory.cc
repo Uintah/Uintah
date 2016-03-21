@@ -51,11 +51,11 @@ PressureModel* PressureModelFactory::create(ProblemSpecP& ps)
    }
    
    if (model_type == "linear_elastic")
-      return(scinew LinearElasticPressure(child));
+      return(new LinearElasticPressure(child));
    else if (model_type == "hyperelastic")
-      return(scinew DefaultHyperelasticPressure(child));
+      return(new DefaultHyperelasticPressure(child));
    else if (model_type == "borja")
-      return(scinew BorjaHyperelasticPressure(child));
+      return(new BorjaHyperelasticPressure(child));
    else {
       ostringstream msg;
       msg << "Unknown type in <pressure_model type=" << model_type << "> in input file." << endl;
@@ -67,11 +67,11 @@ PressureModel*
 PressureModelFactory::createCopy(const PressureModel* smm)
 {
    if (dynamic_cast<const LinearElasticPressure*>(smm))
-      return(scinew LinearElasticPressure(dynamic_cast<const LinearElasticPressure*>(smm)));
+      return(new LinearElasticPressure(dynamic_cast<const LinearElasticPressure*>(smm)));
    else if (dynamic_cast<const DefaultHyperelasticPressure*>(smm))
-      return(scinew DefaultHyperelasticPressure(dynamic_cast<const DefaultHyperelasticPressure*>(smm)));
+      return(new DefaultHyperelasticPressure(dynamic_cast<const DefaultHyperelasticPressure*>(smm)));
    else if (dynamic_cast<const BorjaHyperelasticPressure*>(smm))
-      return(scinew BorjaHyperelasticPressure(dynamic_cast<const BorjaHyperelasticPressure*>(smm)));
+      return(new BorjaHyperelasticPressure(dynamic_cast<const BorjaHyperelasticPressure*>(smm)));
    else {
       ostringstream msg;
       msg << "The type in <pressure_model type=" << model_type << "> does not exist." << endl;

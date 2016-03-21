@@ -75,7 +75,7 @@ Matrix::direct_inverse()
 {
   if (nrows() != ncols()) return 0;
   DenseMatrix *A=dense();
-  if (is_dense()) A=scinew DenseMatrix(*A);
+  if (is_dense()) A=new DenseMatrix(*A);
   A->invert();
   return A;
 }
@@ -87,7 +87,7 @@ Matrix::iterative_inverse()
   int n=nrows();
   SparseRowMatrix* B(SparseRowMatrix::identity(n));
   DenseMatrix *D = B->dense();
-  DenseMatrix *X = scinew DenseMatrix(n,n);
+  DenseMatrix *X = new DenseMatrix(n,n);
   bicg_solve(*D, *X);
   delete D;
   delete B;

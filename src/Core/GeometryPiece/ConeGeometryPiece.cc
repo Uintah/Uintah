@@ -99,7 +99,7 @@ ConeGeometryPiece::~ConeGeometryPiece()
 GeometryPieceP
 ConeGeometryPiece::clone() const
 {
-  return scinew ConeGeometryPiece(*this);
+  return new ConeGeometryPiece(*this);
 }
 
 void

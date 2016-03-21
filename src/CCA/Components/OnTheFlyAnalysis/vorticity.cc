@@ -58,8 +58,8 @@ vorticity::vorticity(ProblemSpecP& module_spec,
   d_prob_spec = module_spec;
   d_dataArchiver = dataArchiver;
   d_matl_set = 0;
-  v_lb = scinew vorticityLabel();
-  I_lb  = scinew ICELabel();
+  v_lb = new vorticityLabel();
+  I_lb  = new ICELabel();
 }
 
 //__________________________________
@@ -94,7 +94,7 @@ void vorticity::problemSetup(const ProblemSpecP& prob_spec,
   
   vector<int> m(1);
   m[0] = d_matl->getDWIndex();
-  d_matl_set = scinew MaterialSet();
+  d_matl_set = new MaterialSet();
   d_matl_set->addAll(m);
   d_matl_set->addReference();
   d_matl_sub = d_matl_set->getUnion();
@@ -124,7 +124,7 @@ void vorticity::scheduleDoAnalysis(SchedulerP& sched,
                                    const LevelP& level)
 {
   cout_doing << "vorticity::scheduleDoAnalysis " << endl;
-  Task* t = scinew Task("vorticity::doAnalysis", 
+  Task* t = new Task("vorticity::doAnalysis", 
                    this,&vorticity::doAnalysis);
   
   Ghost::GhostType gac = Ghost::AroundCells;

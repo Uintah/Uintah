@@ -33,7 +33,7 @@ KobayashiSarofimDevolBuilder::KobayashiSarofimDevolBuilder( const std::string   
 KobayashiSarofimDevolBuilder::~KobayashiSarofimDevolBuilder(){}
 
 ModelBase* KobayashiSarofimDevolBuilder::build() {
-  return scinew KobayashiSarofimDevol( d_modelName, d_sharedState, d_fieldLabels, d_icLabels, d_scalarLabels, d_quadNode );
+  return new KobayashiSarofimDevol( d_modelName, d_sharedState, d_fieldLabels, d_icLabels, d_scalarLabels, d_quadNode );
 }
 // End Builder
 //---------------------------------------------------------------------------
@@ -176,7 +176,7 @@ void
 KobayashiSarofimDevol::sched_computeModel( const LevelP& level, SchedulerP& sched, int timeSubStep )
 {
   std::string taskname = "KobayashiSarofimDevol::computeModel";
-  Task* tsk = scinew Task(taskname, this, &KobayashiSarofimDevol::computeModel);
+  Task* tsk = new Task(taskname, this, &KobayashiSarofimDevol::computeModel);
 
   Ghost::GhostType gn = Ghost::None;
 

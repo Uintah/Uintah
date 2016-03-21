@@ -68,7 +68,7 @@ namespace Uintah {
 DenseMatrix*
 DenseMatrix::clone()
 {
-  return scinew DenseMatrix(*this);
+  return new DenseMatrix(*this);
 }
 
 
@@ -83,8 +83,8 @@ DenseMatrix::DenseMatrix() :
 DenseMatrix::DenseMatrix(int r, int c) :
   Matrix(r, c)
 {
-  data = scinew double*[nrows_];
-  double* tmp = scinew double[nrows_ * ncols_];
+  data = new double*[nrows_];
+  double* tmp = new double[nrows_ * ncols_];
   dataptr_ = tmp;
   for (int i=0; i<nrows_; i++)
   {
@@ -97,8 +97,8 @@ DenseMatrix::DenseMatrix(int r, int c) :
 DenseMatrix::DenseMatrix(const DenseMatrix& m) :
   Matrix(m.nrows_, m.ncols_)
 {
-  data = scinew double*[nrows_];
-  double* tmp = scinew double[nrows_ * ncols_];
+  data = new double*[nrows_];
+  double* tmp = new double[nrows_ * ncols_];
   dataptr_ = tmp;
   for (int i=0; i<nrows_; i++)
   {
@@ -124,7 +124,7 @@ DenseMatrix::dense()
 DenseColMajMatrix *
 DenseMatrix::dense_col_maj()
 {
-  DenseColMajMatrix *dm = scinew DenseColMajMatrix(nrows_, ncols_);
+  DenseColMajMatrix *dm = new DenseColMajMatrix(nrows_, ncols_);
   for (int i = 0; i < nrows_; i++)
   {
     for (int j = 0; j < ncols_; j++)
@@ -139,7 +139,7 @@ DenseMatrix::dense_col_maj()
 ColumnMatrix *
 DenseMatrix::column()
 {
-  ColumnMatrix *cm = scinew ColumnMatrix(nrows_);
+  ColumnMatrix *cm = new ColumnMatrix(nrows_);
   for (int i=0; i<nrows_; i++)
     (*cm)[i] = data[i][0];
   return cm;
@@ -151,13 +151,13 @@ DenseMatrix::sparse()
 {
   int nnz = 0;
   int r, c;
-  int *rows = scinew int[nrows_ + 1];
+  int *rows = new int[nrows_ + 1];
   for (r=0; r<nrows_; r++)
     for (c=0; c<ncols_; c++)
       if (data[r][c] != 0) nnz++;
 
-  int *columns = scinew int[nnz];
-  double *a = scinew double[nnz];
+  int *columns = new int[nnz];
+  double *a = new double[nnz];
 
   int count = 0;
   for (r=0; r<nrows_; r++)
@@ -173,7 +173,7 @@ DenseMatrix::sparse()
   }
   rows[nrows_] = count;
 
-  return scinew SparseRowMatrix(nrows_, ncols_, rows, columns, nnz, a);
+  return new SparseRowMatrix(nrows_, ncols_, rows, columns, nnz, a);
 }
 
 
@@ -207,8 +207,8 @@ DenseMatrix::operator=(const DenseMatrix& m)
   if (data) { delete[] data; }
   nrows_ = m.nrows_;
   ncols_ = m.ncols_;
-  data = scinew double*[nrows_];
-  double* tmp = scinew double[nrows_ * ncols_];
+  data = new double*[nrows_];
+  double* tmp = new double[nrows_ * ncols_];
   dataptr_ = tmp;
   for (int i=0; i<nrows_; i++)
   {
@@ -253,7 +253,7 @@ DenseMatrix::add(int r, int c, double d)
 DenseMatrix *
 DenseMatrix::transpose()
 {
-  DenseMatrix *m=scinew DenseMatrix(ncols_, nrows_);
+  DenseMatrix *m=new DenseMatrix(ncols_, nrows_);
   double *mptr = &((*m)[0][0]);
   for (int c=0; c<ncols_; c++)
     for (int r=0; r<nrows_; r++)
@@ -264,7 +264,7 @@ DenseMatrix::transpose()
 void
 DenseMatrix::gettranspose(DenseMatrix& out)
 {
-  //DenseMatrix *m = scinew DenseMatrix(ncols_, nrows_);
+  //DenseMatrix *m = new DenseMatrix(ncols_, nrows_);
   //out->zero();
   for (int c=0; c<ncols_; c++)
     for (int r=0; r<nrows_; r++)
@@ -610,7 +610,7 @@ DenseMatrix::mult_transpose(const ColumnMatrix& x, ColumnMatrix& b,
 DenseMatrix *
 DenseMatrix::identity(int size)
 {
-  DenseMatrix *result = scinew DenseMatrix(size, size);
+  DenseMatrix *result = new DenseMatrix(size, size);
   result->zero();
   for (int i = 0; i < size; i++)
   {
@@ -663,7 +663,7 @@ DenseMatrix::submatrix(int r1, int c1, int r2, int c2)
   ASSERTRANGE(r2, r1, nrows_);
   ASSERTRANGE(c1, 0, c2+1);
   ASSERTRANGE(c2, c1, ncols_);
-  DenseMatrix *mat = scinew DenseMatrix(r2 - r1 + 1, c2 - c1 + 1);
+  DenseMatrix *mat = new DenseMatrix(r2 - r1 + 1, c2 - c1 + 1);
   for (int i=r1; i <= r2; i++)
   {
     memcpy(mat->data[i-r1], data[i] + c1, (c2 - c1 + 1) * sizeof(double));
@@ -681,8 +681,8 @@ DenseMatrix::invert()
 #if defined(HAVE_LAPACK)
   return lapackinvert(dataptr_, nrows_);
 #else
-  double** newdata=scinew double*[nrows_];
-  double* tmp=scinew double[nrows_ * ncols_];
+  double** newdata=new double*[nrows_];
+  double* tmp=new double[nrows_ * ncols_];
   double* newdataptr_=tmp;
 
   int i;
@@ -1070,8 +1070,8 @@ DenseMatrix::eigenvalues(ColumnMatrix& R, ColumnMatrix& I)
   ASSERTEQ(R.nrows(), I.nrows());
   ASSERTEQ(ncols_, R.nrows());
 
-  double *Er = scinew double[nrows_];
-  double *Ei = scinew double[nrows_];
+  double *Er = new double[nrows_];
+  double *Ei = new double[nrows_];
 
   lapackeigen(data, nrows_, Er, Ei);
 
@@ -1091,8 +1091,8 @@ DenseMatrix::eigenvectors(ColumnMatrix& R, ColumnMatrix& I, DenseMatrix& Vecs)
   ASSERTEQ(R.nrows(), I.nrows());
   ASSERTEQ(ncols_, R.nrows());
 
-  double *Er = scinew double[nrows_];
-  double *Ei = scinew double[nrows_];
+  double *Er = new double[nrows_];
+  double *Ei = new double[nrows_];
 
   lapackeigen(data, nrows_, Er, Ei, Vecs.data);
 

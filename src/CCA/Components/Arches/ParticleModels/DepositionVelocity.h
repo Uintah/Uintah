@@ -56,7 +56,7 @@ public:
       ~Builder(){}
 
       DepositionVelocity* build()
-      { return scinew DepositionVelocity( _task_name, _matl_index, _Nenv, _shared_state ); }
+      { return new DepositionVelocity( _task_name, _matl_index, _Nenv, _shared_state ); }
 
       private: 
 

@@ -76,7 +76,7 @@ UnionGeometryPiece::outputHelper( ProblemSpecP & ps ) const
 GeometryPieceP
 UnionGeometryPiece::clone() const
 {
-  return scinew UnionGeometryPiece(*this);
+  return new UnionGeometryPiece(*this);
 }
 
 bool

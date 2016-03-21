@@ -80,9 +80,9 @@ namespace WasatchCore{
   typedef SpatialOps::Particle::ParticleToCell<VOLT> P2C;                                               \
   typedef SpatialOps::Particle::ParticlesPerCell<VOLT> PPerC;                                               \
   const Uintah::Point low = get_low_position<VOLT>(patch);                                               \
-  opDB.register_new_operator<C2P>(scinew C2P(spacing[0], low.x(), spacing[1], low.y(), spacing[2], low.z()) );\
-  opDB.register_new_operator<P2C>(scinew P2C(spacing[0], low.x(), spacing[1], low.y(), spacing[2], low.z()) );\
-  opDB.register_new_operator<PPerC>(scinew PPerC(spacing[0], low.x(), spacing[1], low.y(), spacing[2], low.z()) );\
+  opDB.register_new_operator<C2P>(new C2P(spacing[0], low.x(), spacing[1], low.y(), spacing[2], low.z()) );\
+  opDB.register_new_operator<P2C>(new P2C(spacing[0], low.x(), spacing[1], low.y(), spacing[2], low.z()) );\
+  opDB.register_new_operator<PPerC>(new PPerC(spacing[0], low.x(), spacing[1], low.y(), spacing[2], low.z()) );\
 }
 
 #define BUILD_UPWIND( VOLT )                                            \
@@ -90,9 +90,9 @@ namespace WasatchCore{
   typedef UpwindInterpolant<VOLT,FaceTypes<VOLT>::XFace> OpX;         \
   typedef UpwindInterpolant<VOLT,FaceTypes<VOLT>::YFace> OpY;         \
   typedef UpwindInterpolant<VOLT,FaceTypes<VOLT>::ZFace> OpZ;         \
-  opDB.register_new_operator<OpX>( scinew OpX() );                    \
-  opDB.register_new_operator<OpY>( scinew OpY() );                    \
-  opDB.register_new_operator<OpZ>( scinew OpZ() );                    \
+  opDB.register_new_operator<OpX>( new OpX() );                    \
+  opDB.register_new_operator<OpY>( new OpY() );                    \
+  opDB.register_new_operator<OpZ>( new OpZ() );                    \
 }
   
 #define BUILD_UPWIND_LIMITER( VOLT )                                    \
@@ -100,15 +100,15 @@ namespace WasatchCore{
   typedef FluxLimiterInterpolant<VOLT,FaceTypes<VOLT>::XFace> OpX;    \
   typedef FluxLimiterInterpolant<VOLT,FaceTypes<VOLT>::YFace> OpY;    \
   typedef FluxLimiterInterpolant<VOLT,FaceTypes<VOLT>::ZFace> OpZ;    \
-  opDB.register_new_operator<OpX>( scinew OpX(dim,bcPlus,bcMinus) );          \
-  opDB.register_new_operator<OpY>( scinew OpY(dim,bcPlus,bcMinus) );          \
-  opDB.register_new_operator<OpZ>( scinew OpZ(dim,bcPlus,bcMinus) );          \
+  opDB.register_new_operator<OpX>( new OpX(dim,bcPlus,bcMinus) );          \
+  opDB.register_new_operator<OpY>( new OpY(dim,bcPlus,bcMinus) );          \
+  opDB.register_new_operator<OpZ>( new OpZ(dim,bcPlus,bcMinus) );          \
 }
   
 #define BUILD_EXTRAPOLANT( VOLT )                    \
 {                                                    \
   typedef Extrapolant<VOLT> OpVol;                     \
-  opDB.register_new_operator<OpVol>( scinew OpVol(bcMinus, bcPlus) ); \
+  opDB.register_new_operator<OpVol>( new OpVol(bcMinus, bcPlus) ); \
 }
 
   void build_operators( const Uintah::Patch& patch,

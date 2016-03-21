@@ -48,7 +48,7 @@ fastAxiCpdiInterpolator::~fastAxiCpdiInterpolator()
 
 fastAxiCpdiInterpolator* fastAxiCpdiInterpolator::clone(const Patch* patch)
 {
-  return scinew fastAxiCpdiInterpolator(patch);
+  return new fastAxiCpdiInterpolator(patch);
 }
 
 void fastAxiCpdiInterpolator::findCellAndWeights(const Point& pos,

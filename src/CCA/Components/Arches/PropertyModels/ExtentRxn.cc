@@ -51,7 +51,7 @@ void ExtentRxn::problemSetup( const ProblemSpecP& inputdb )
 void ExtentRxn::sched_computeProp( const LevelP& level, SchedulerP& sched, int time_substep )
 {
   std::string taskname = "ExtentRxn::computeProp"; 
-  Task* tsk = scinew Task( taskname, this, &ExtentRxn::computeProp, time_substep ); 
+  Task* tsk = new Task( taskname, this, &ExtentRxn::computeProp, time_substep ); 
 
   if ( time_substep == 0 ) {
     
@@ -143,7 +143,7 @@ void ExtentRxn::sched_initialize( const LevelP& level, SchedulerP& sched )
 {
   std::string taskname = "ExtentRxn::initialize"; 
 
-  Task* tsk = scinew Task(taskname, this, &ExtentRxn::initialize);
+  Task* tsk = new Task(taskname, this, &ExtentRxn::initialize);
   tsk->computes(_prop_label); 
   tsk->computes(_strip_label); 
 

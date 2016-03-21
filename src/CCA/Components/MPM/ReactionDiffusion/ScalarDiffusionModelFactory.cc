@@ -46,13 +46,13 @@ ScalarDiffusionModel* ScalarDiffusionModelFactory::create(ProblemSpecP& ps,
     throw ProblemSetupException("No type for scalar_diffusion_model", __FILE__, __LINE__);
 
   if (diffusion_type == "jg")
-    return(scinew JGConcentrationDiffusion(child, ss, flags, diffusion_type));
+    return(new JGConcentrationDiffusion(child, ss, flags, diffusion_type));
 
   else if (diffusion_type == "rf1")
-    return(scinew RFConcDiffusion1MPM(child, ss, flags, diffusion_type));
+    return(new RFConcDiffusion1MPM(child, ss, flags, diffusion_type));
 
   else if (diffusion_type == "non_linear1")
-    return(scinew NonLinearDiff1(child, ss, flags, diffusion_type));
+    return(new NonLinearDiff1(child, ss, flags, diffusion_type));
 
   else
     throw ProblemSetupException("Unknown Scalar Diffusion Type ("+diffusion_type+")", __FILE__, __LINE__);

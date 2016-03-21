@@ -21,8 +21,8 @@ b_stepUsesCellLocation(false), b_stepUsesPhysicalLocation(false),
 d_constant_init(0.0), d_step_dir("x"), d_step_start(0.0), d_step_end(0.0), d_step_cellstart(0), d_step_cellend(0), d_step_value(0.0), 
 d_use_constant_D(false)
 {
-  d_boundaryCond = scinew BoundaryCondition_new( d_fieldLabels->d_sharedState->getArchesMaterial(0)->getDWIndex() ); 
-  d_disc = scinew Discretization_new(); 
+  d_boundaryCond = new BoundaryCondition_new( d_fieldLabels->d_sharedState->getArchesMaterial(0)->getDWIndex() ); 
+  d_disc = new Discretization_new(); 
   _using_new_intrusion = false; 
   _table_init = false; 
   _stage = 1;  //uses density after first table lookup  
@@ -236,7 +236,7 @@ void
 EqnBase::sched_checkBCs( const LevelP& level, SchedulerP& sched )
 {
   string taskname = "EqnBase::checkBCs"; 
-  Task* tsk = scinew Task(taskname, this, &EqnBase::checkBCs); 
+  Task* tsk = new Task(taskname, this, &EqnBase::checkBCs); 
   
    // We want tasks in boundarycondition.cc to run before this task. We use the following dummy label to achieve this.
    const VarLabel* DummyLabel = VarLabel::find("ForceTaskExecutionOrder");
@@ -457,7 +457,7 @@ EqnBase::sched_tableInitialization( const LevelP& level, SchedulerP& sched )
 {
 
   std::string taskname = "EqnBase::tableInitialization";
-  Task* tsk = scinew Task(taskname, this, &EqnBase::tableInitialization); 
+  Task* tsk = new Task(taskname, this, &EqnBase::tableInitialization); 
 
   MixingRxnModel::VarMap ivVarMap = _table->getIVVars();
 

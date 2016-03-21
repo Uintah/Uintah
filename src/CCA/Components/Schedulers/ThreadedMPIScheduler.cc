@@ -183,10 +183,10 @@ ThreadedMPIScheduler::problemSetup( const ProblemSpecP&     prob_spec,
   // Create the TaskWorkers here (pinned to cores in TaskWorker::run())
   char name[1024];
   for (int i = 0; i < numThreads_; i++) {
-    TaskWorker* worker = scinew TaskWorker(this, i);
+    TaskWorker* worker = new TaskWorker(this, i);
     t_worker[i] = worker;
     sprintf(name, "Computing Worker %d-%d", Parallel::getRootProcessorGroup()->myrank(), i);
-    Thread* t = scinew Thread(worker, name);
+    Thread* t = new Thread(worker, name);
     t_thread[i] = t;
   }
 
@@ -200,7 +200,7 @@ SchedulerP
 ThreadedMPIScheduler::createSubScheduler()
 {
   UintahParallelPort   * lbp       = getPort( "load balancer" );
-  ThreadedMPIScheduler * subsched = scinew ThreadedMPIScheduler( d_myworld, m_outPort_, this );
+  ThreadedMPIScheduler * subsched = new ThreadedMPIScheduler( d_myworld, m_outPort_, this );
 
   subsched->attachPort( "load balancer", lbp );
   subsched->d_sharedState = d_sharedState;
@@ -227,10 +227,10 @@ ThreadedMPIScheduler::createSubScheduler()
     char name[1024];
     ThreadGroup* subGroup = new ThreadGroup("subscheduler-group", 0);  // 0 is main/parent thread group
     for (int i = 0; i < subsched->numThreads_; i++) {
-      TaskWorker* worker = scinew TaskWorker(subsched, i);
+      TaskWorker* worker = new TaskWorker(subsched, i);
       subsched->t_worker[i] = worker;
       sprintf(name, "Task Compute Thread ID: %d", i + subsched->numThreads_);
-      Thread* t = scinew Thread(worker, name, subGroup);
+      Thread* t = new Thread(worker, name, subGroup);
       subsched->t_thread[i] = t;
     }
   }

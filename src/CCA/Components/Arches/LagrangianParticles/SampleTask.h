@@ -39,7 +39,7 @@ public:
       ~Builder(){}
 
       SampleTask* build()
-      { return scinew SampleTask( _task_name, _matl_index ); }
+      { return new SampleTask( _task_name, _matl_index ); }
 
       private: 
 

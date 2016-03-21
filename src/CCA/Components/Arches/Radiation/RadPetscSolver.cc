@@ -128,7 +128,7 @@ RadPetscSolver::problemSetup(const ProblemSpecP& params)
   }
   int argc = 4;
   char** argv;
-  argv = scinew  char*[argc];
+  argv = new  char*[argc];
   argv[0] = const_cast<char*>("RadPetscSolver::problemSetup");
   argv[1] = const_cast<char*>("-no_signal_handler");
   argv[2] = const_cast<char*>("-log_exclude_actions");

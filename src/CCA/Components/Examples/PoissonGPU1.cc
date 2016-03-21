@@ -66,14 +66,14 @@ void PoissonGPU1::problemSetup(const ProblemSpecP& params,
 
   poisson->require("delt", delt_);
 
-  mymat_ = scinew SimpleMaterial();
+  mymat_ = new SimpleMaterial();
   sharedState->registerSimpleMaterial(mymat_);
 }
 //______________________________________________________________________
 //
 void PoissonGPU1::scheduleInitialize(const LevelP& level, SchedulerP& sched) {
                                     
-  Task * task = scinew Task("PoissonGPU1::initialize", this, &PoissonGPU1::initialize);
+  Task * task = new Task("PoissonGPU1::initialize", this, &PoissonGPU1::initialize);
 
   task->computes(phi_label);
   task->computes(residual_label);
@@ -89,7 +89,7 @@ void PoissonGPU1::scheduleRestartInitialize(const LevelP& level,
 //
 void PoissonGPU1::scheduleComputeStableTimestep(const LevelP& level, SchedulerP& sched) {
                                                
-  Task * task = scinew Task("PoissonGPU1::computeStableTimestep", this, &PoissonGPU1::computeStableTimestep);
+  Task * task = new Task("PoissonGPU1::computeStableTimestep", this, &PoissonGPU1::computeStableTimestep);
 
   task->requires(Task::NewDW, residual_label);
   task->computes(sharedState_->get_delt_label(), level.get_rep());
@@ -99,7 +99,7 @@ void PoissonGPU1::scheduleComputeStableTimestep(const LevelP& level, SchedulerP&
 //
 void PoissonGPU1::scheduleTimeAdvance(const LevelP& level, SchedulerP& sched) {
 
-  Task * task = scinew Task("PoissonGPU1::timeAdvanceGPU", this, &PoissonGPU1::timeAdvanceGPU);
+  Task * task = new Task("PoissonGPU1::timeAdvanceGPU", this, &PoissonGPU1::timeAdvanceGPU);
 
   task->requires(Task::OldDW, phi_label, Ghost::AroundNodes, 1);
   task->computes(phi_label);

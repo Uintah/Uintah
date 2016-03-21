@@ -68,7 +68,7 @@ namespace WasatchCore{
     typedef typename std::set< TimeStepper::FieldInfo<FieldT> > Fields;
     for( typename Fields::const_iterator ifld = fields.begin(); ifld!=fields.end(); ++ifld ){
       if (!gh->exprFactory->have_entry(ifld->solnVarTag)) {
-        const Expr::ExpressionID id = gh->exprFactory->register_expression( scinew TimeAdvBuilder(ifld->solnVarTag, ifld->rhsTag, timeInt ) );
+        const Expr::ExpressionID id = gh->exprFactory->register_expression( new TimeAdvBuilder(ifld->solnVarTag, ifld->rhsTag, timeInt ) );
         gh->rootIDs.insert(id);
         //      gh->exprFactory->cleave_from_children(id);
       }
@@ -138,7 +138,7 @@ namespace WasatchCore{
         create_time_advance_expressions<ParticleField>( particleFields_, solnGraphHelper_, timeInt_ );
       }
       
-      TaskInterface* rhsTask = scinew TaskInterface( solnGraphHelper_->rootIDs,
+      TaskInterface* rhsTask = new TaskInterface( solnGraphHelper_->rootIDs,
                                                      "rhs_" + strRKStage.str(),
                                                      *(solnGraphHelper_->exprFactory),
                                                      level, sched, patches, materials,

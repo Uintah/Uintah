@@ -182,7 +182,7 @@ main( int argc, char *argv[] )
   }
   //__________________________________
   //
-  DataArchive* da1 = scinew DataArchive(udaFileName);
+  DataArchive* da1 = new DataArchive(udaFileName);
   cout.setf(ios::scientific,ios::floatfield);
   cout.precision(16);
 

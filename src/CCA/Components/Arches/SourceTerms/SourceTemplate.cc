@@ -74,7 +74,7 @@ void
 CLASSNAME::sched_computeSource( const LevelP& level, SchedulerP& sched, int timeSubStep )
 {
   std::string taskname = "CLASSNAME::eval";
-  Task* tsk = scinew Task(taskname, this, &CLASSNAME::computeSource, timeSubStep);
+  Task* tsk = new Task(taskname, this, &CLASSNAME::computeSource, timeSubStep);
 
   if (timeSubStep == 0) {
     
@@ -126,7 +126,7 @@ CLASSNAME::sched_initialize( const LevelP& level, SchedulerP& sched )
 {
   string taskname = "CLASSNAME::initialize"; 
 
-  Task* tsk = scinew Task(taskname, this, &CLASSNAME::initialize);
+  Task* tsk = new Task(taskname, this, &CLASSNAME::initialize);
 
   tsk->computes(_src_label);
 

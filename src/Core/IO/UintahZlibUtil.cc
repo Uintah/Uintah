@@ -249,7 +249,7 @@ gzipInflate( const string & filename,
   unsigned half_length = compressedBytes.size() / 2;  
   
   unsigned uncompLength = full_length ;  
-  char* uncomp = scinew char[uncompLength];
+  char* uncomp = new char[uncompLength];
   
   z_stream strm;  
   strm.next_in = (Bytef *) compressedBytes.c_str();  
@@ -267,7 +267,7 @@ gzipInflate( const string & filename,
     // If our output buffer is too small  
     if (strm.total_out >= uncompLength ) {  
       // Increase size of output buffer  
-      char* uncomp2 = scinew char[uncompLength + half_length];  
+      char* uncomp2 = new char[uncompLength + half_length];  
       memcpy( uncomp2, uncomp, uncompLength );
       uncompLength += half_length ;  
       delete[] uncomp ;  

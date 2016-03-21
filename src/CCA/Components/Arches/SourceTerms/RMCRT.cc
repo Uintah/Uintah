@@ -37,7 +37,7 @@ RMCRT_Radiation::RMCRT_Radiation( std::string src_name,
 
   _FLT_DBL = TypeDescription::double_type;        // HARDWIRED: double;
 
-   _RMCRT = scinew Ray( _FLT_DBL );
+   _RMCRT = new Ray( _FLT_DBL );
 
   //Declare the source type:
   _source_grid_type = CC_SRC; // or FX_SRC, or FY_SRC, or FZ_SRC, or CCVECTOR_SRC
@@ -391,7 +391,7 @@ RMCRT_Radiation::sched_initialize( const LevelP& level,
     ostringstream taskname;
     taskname << "RMCRT_Radiation::sched_initialize_L-" << L_ID;
 
-    Task* tsk = scinew Task( taskname.str(), this, &RMCRT_Radiation::initialize );
+    Task* tsk = new Task( taskname.str(), this, &RMCRT_Radiation::initialize );
     printSchedule( level, dbg, taskname.str() );
 
     //  only schedule src on arches level
@@ -475,7 +475,7 @@ RMCRT_Radiation::sched_RestartInitialize( const LevelP& level,
     printSchedule(level,dbg,"RMCRT_Radiation::sched_RestartInitialize");
     //__________________________________
     //  As the name implies this is a hack
-    Task* t1 = scinew Task("RMCRT_Radiation::restartInitializeHack", this,
+    Task* t1 = new Task("RMCRT_Radiation::restartInitializeHack", this,
                            &RMCRT_Radiation::restartInitializeHack);
         
     //  Only schedule if radFlux*_Label are in the checkpoint uda                   
@@ -552,10 +552,10 @@ RMCRT_Radiation::sched_setBoundaryConditions( const LevelP& level,
   Task* tsk = NULL;
   if( _FLT_DBL == TypeDescription::double_type ){
 
-    tsk= scinew Task( taskname, this, &RMCRT_Radiation::setBoundaryConditions< double >,
+    tsk= new Task( taskname, this, &RMCRT_Radiation::setBoundaryConditions< double >,
                       temp_dw, radCalc_freq, backoutTemp );
   } else {
-    tsk= scinew Task( taskname, this, &RMCRT_Radiation::setBoundaryConditions< float >,
+    tsk= new Task( taskname, this, &RMCRT_Radiation::setBoundaryConditions< float >,
                       temp_dw, radCalc_freq, backoutTemp );
   }
 
@@ -699,7 +699,7 @@ RMCRT_Radiation::sched_stencilToDBLs( const LevelP& level,
   }
 
   if(_RMCRT->d_solveBoundaryFlux) {
-    Task* tsk = scinew Task( "RMCRT_Radiation::stencilToDBLs", this, 
+    Task* tsk = new Task( "RMCRT_Radiation::stencilToDBLs", this, 
                              &RMCRT_Radiation::stencilToDBLs );
                              
     printSchedule( level, dbg, "RMCRT_Radiation::sched_stencilToDBLs" );
@@ -728,7 +728,7 @@ RMCRT_Radiation::sched_fluxInit( const LevelP& level,
   }
 
   if(_RMCRT->d_solveBoundaryFlux) {
-    Task* tsk = scinew Task( "RMCRT_Radiation::fluxInit", this, 
+    Task* tsk = new Task( "RMCRT_Radiation::fluxInit", this, 
                              &RMCRT_Radiation::fluxInit );
                              
     printSchedule( level, dbg, "RMCRT_Radiation::sched_stencilToDBLs" );
@@ -825,7 +825,7 @@ RMCRT_Radiation::sched_DBLsToStencil( const LevelP& level,
   }
 
   if(_RMCRT->d_solveBoundaryFlux) {
-    Task* tsk = scinew Task( "RMCRT_Radiation::DBLsToStencil", this, &RMCRT_Radiation::DBLsToStencil );
+    Task* tsk = new Task( "RMCRT_Radiation::DBLsToStencil", this, &RMCRT_Radiation::DBLsToStencil );
     printSchedule( level, dbg, "RMCRT_Radiation::sched_DBLsToStencil" );
 
     //  only schedule task on arches level

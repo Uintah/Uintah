@@ -84,7 +84,7 @@ namespace Uintah{
           ~Builder(){}; 
 
           EmpSoot* build()
-          { return scinew EmpSoot( _name, _shared_state ); };
+          { return new EmpSoot( _name, _shared_state ); };
 
         private: 
 

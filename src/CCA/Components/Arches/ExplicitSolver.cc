@@ -154,7 +154,7 @@ ExplicitSolver(SimulationStateP& sharedState,
                d_hypreSolver(hypreSolver)
 {
 
-  d_lab  = scinew ArchesLabel();
+  d_lab  = new ArchesLabel();
   d_lab->setSharedState(sharedState);
   d_props = 0;
   d_turbModel = 0;
@@ -239,7 +239,7 @@ ExplicitSolver::problemSetup( const ProblemSpecP & params,
 
   //------------------------------------------------------------------------------------------------
   //create a time integrator.
-  d_timeIntegrator = scinew ExplicitTimeInt(d_lab);
+  d_timeIntegrator = new ExplicitTimeInt(d_lab);
   ProblemSpecP time_db = db->findBlock("TimeIntegrator");
   if (time_db) {
     string time_order;
@@ -358,14 +358,14 @@ ExplicitSolver::problemSetup( const ProblemSpecP & params,
   //Radiation Properties:
   ProblemSpecP rad_properties_db = db->findBlock("RadiationProperties");
   int matl_index = d_lab->d_sharedState->getArchesMaterial(0)->getDWIndex();
-  d_rad_prop_calc = scinew RadPropertyCalculator(matl_index);
+  d_rad_prop_calc = new RadPropertyCalculator(matl_index);
   if ( rad_properties_db ) {
     d_rad_prop_calc->problemSetup(rad_properties_db);
   }
 
   // read properties
   // d_MAlab = multimaterial arches common labels
-  d_props = scinew Properties(d_lab, d_MAlab, d_physicalConsts, d_myworld);
+  d_props = new Properties(d_lab, d_MAlab, d_physicalConsts, d_myworld);
 
   d_props->problemSetup(db);
 
@@ -404,7 +404,7 @@ ExplicitSolver::problemSetup( const ProblemSpecP & params,
   }
 
   // read boundary condition information
-  d_boundaryCondition = scinew BoundaryCondition(d_lab, d_MAlab, d_physicalConsts,
+  d_boundaryCondition = new BoundaryCondition(d_lab, d_MAlab, d_physicalConsts,
                                                  d_props );
 
   // send params, boundary type defined at the level of Grid
@@ -417,17 +417,17 @@ ExplicitSolver::problemSetup( const ProblemSpecP & params,
   }
 
   if ( whichTurbModel == "smagorinsky") {
-    d_turbModel = scinew SmagorinskyModel(d_lab, d_MAlab, d_physicalConsts,
+    d_turbModel = new SmagorinskyModel(d_lab, d_MAlab, d_physicalConsts,
                                           d_boundaryCondition);
   }else if ( whichTurbModel == "dynamicprocedure") {
-    d_turbModel = scinew IncDynamicProcedure(d_lab, d_MAlab, d_physicalConsts,
+    d_turbModel = new IncDynamicProcedure(d_lab, d_MAlab, d_physicalConsts,
                                              d_boundaryCondition);
   }else if ( whichTurbModel == "compdynamicprocedure") {
-    d_turbModel = scinew CompDynamicProcedure(d_lab, d_MAlab, d_physicalConsts,
+    d_turbModel = new CompDynamicProcedure(d_lab, d_MAlab, d_physicalConsts,
                                               d_boundaryCondition);
   } else if ( whichTurbModel == "none" ) {
     proc0cout << "\n Notice: Turbulence model specificied as: none. Running without momentum closure. \n";
-    d_turbModel = scinew TurbulenceModelPlaceholder(d_lab, d_MAlab, d_physicalConsts,
+    d_turbModel = new TurbulenceModelPlaceholder(d_lab, d_MAlab, d_physicalConsts,
                                                     d_boundaryCondition);
   } else {
     proc0cout << "\n Notice: No Turbulence model found. \n" << endl;
@@ -437,7 +437,7 @@ ExplicitSolver::problemSetup( const ProblemSpecP & params,
 
   d_turbModel->setMixedModel(d_mixedModel);
   if (d_mixedModel) {
-    d_scaleSimilarityModel=scinew ScaleSimilarityModel(d_lab, d_MAlab, d_physicalConsts,
+    d_scaleSimilarityModel=new ScaleSimilarityModel(d_lab, d_MAlab, d_physicalConsts,
                                                        d_boundaryCondition);
     d_scaleSimilarityModel->problemSetup(db);
 
@@ -482,7 +482,7 @@ ExplicitSolver::problemSetup( const ProblemSpecP & params,
     ExplicitSolver::registerModels(dqmom_db);
 
     // Create a velocity model
-    d_partVel = scinew PartVel( d_lab );
+    d_partVel = new PartVel( d_lab );
     d_partVel->problemSetup( dqmom_db );
     // Do through and initialze all DQMOM equations and call their respective problem setups.
     const int numQuadNodes = eqn_factory.get_quad_nodes();
@@ -551,7 +551,7 @@ ExplicitSolver::problemSetup( const ProblemSpecP & params,
     }
 
     // set up the linear solver:
-    d_dqmomSolver = scinew DQMOM( d_lab, d_which_dqmom );
+    d_dqmomSolver = new DQMOM( d_lab, d_which_dqmom );
     d_dqmomSolver->problemSetup( dqmom_db );
 
   }
@@ -565,7 +565,7 @@ ExplicitSolver::problemSetup( const ProblemSpecP & params,
     cqmom_db->getAttribute( "partvel", usePartVel );
 
     //set up source terms and pass to explicit solver
-    d_cqmomSource = scinew CQMOMSourceWrapper( d_lab );
+    d_cqmomSource = new CQMOMSourceWrapper( d_lab );
     d_cqmomSource->problemSetup( cqmom_db );
 
     //register all equations.
@@ -605,11 +605,11 @@ ExplicitSolver::problemSetup( const ProblemSpecP & params,
     }
 
     // set up the linear solver:
-    d_cqmomSolver = scinew CQMOM( d_lab, usePartVel );
+    d_cqmomSolver = new CQMOM( d_lab, usePartVel );
     d_cqmomSolver->problemSetup( cqmom_db );
 
     // set up convection
-    d_cqmomConvect = scinew CQMOM_Convection( d_lab );
+    d_cqmomConvect = new CQMOM_Convection( d_lab );
     if (usePartVel ) {
       d_cqmomConvect->problemSetup( cqmom_db );
     }
@@ -681,19 +681,19 @@ ExplicitSolver::problemSetup( const ProblemSpecP & params,
   if ( db->findBlock("BoundaryConditions") ){
     if ( db->findBlock("BoundaryConditions")->findBlock( "WallHT" ) ){
       ProblemSpecP db_wall_ht = db->findBlock("BoundaryConditions")->findBlock( "WallHT" );
-      d_wall_ht_models = scinew WallModelDriver( d_lab->d_sharedState );
+      d_wall_ht_models = new WallModelDriver( d_lab->d_sharedState );
       d_wall_ht_models->problemSetup( db_wall_ht );
     }
   }
 
 
-  d_pressSolver = scinew PressureSolver( d_lab, d_MAlab,
+  d_pressSolver = new PressureSolver( d_lab, d_MAlab,
                                          d_boundaryCondition,
                                          d_physicalConsts, d_myworld,
                                          d_hypreSolver );
   d_pressSolver->problemSetup( db_es, state );
 
-  d_momSolver = scinew MomentumSolver(d_lab, d_MAlab,
+  d_momSolver = new MomentumSolver(d_lab, d_MAlab,
                                       d_turbModel, d_boundaryCondition,
                                       d_physicalConsts);
 
@@ -728,39 +728,39 @@ ExplicitSolver::problemSetup( const ProblemSpecP & params,
   }
 
   if (d_timeIntegratorType == "FE") {
-    d_timeIntegratorLabels.push_back(scinew TimeIntegratorLabel(d_lab,
+    d_timeIntegratorLabels.push_back(new TimeIntegratorLabel(d_lab,
                                      TimeIntegratorStepType::FE));
     numTimeIntegratorLevels = 1;
   }
   else if (d_timeIntegratorType == "RK2") {
-    d_timeIntegratorLabels.push_back(scinew TimeIntegratorLabel(d_lab,
+    d_timeIntegratorLabels.push_back(new TimeIntegratorLabel(d_lab,
                                      TimeIntegratorStepType::OldPredictor));
-    d_timeIntegratorLabels.push_back(scinew TimeIntegratorLabel(d_lab,
+    d_timeIntegratorLabels.push_back(new TimeIntegratorLabel(d_lab,
                                      TimeIntegratorStepType::OldCorrector));
     numTimeIntegratorLevels = 2;
   }
   else if (d_timeIntegratorType == "RK2SSP") {
-    d_timeIntegratorLabels.push_back(scinew TimeIntegratorLabel(d_lab,
+    d_timeIntegratorLabels.push_back(new TimeIntegratorLabel(d_lab,
                                      TimeIntegratorStepType::Predictor));
-    d_timeIntegratorLabels.push_back(scinew TimeIntegratorLabel(d_lab,
+    d_timeIntegratorLabels.push_back(new TimeIntegratorLabel(d_lab,
                                      TimeIntegratorStepType::Corrector));
     numTimeIntegratorLevels = 2;
   }
   else if (d_timeIntegratorType == "RK3SSP") {
-    d_timeIntegratorLabels.push_back(scinew TimeIntegratorLabel(d_lab,
+    d_timeIntegratorLabels.push_back(new TimeIntegratorLabel(d_lab,
                                      TimeIntegratorStepType::Predictor));
-    d_timeIntegratorLabels.push_back(scinew TimeIntegratorLabel(d_lab,
+    d_timeIntegratorLabels.push_back(new TimeIntegratorLabel(d_lab,
                                      TimeIntegratorStepType::Intermediate));
-    d_timeIntegratorLabels.push_back(scinew TimeIntegratorLabel(d_lab,
+    d_timeIntegratorLabels.push_back(new TimeIntegratorLabel(d_lab,
                                      TimeIntegratorStepType::CorrectorRK3));
     numTimeIntegratorLevels = 3;
   }
   else if (d_timeIntegratorType == "BEEmulation") {
-    d_timeIntegratorLabels.push_back(scinew TimeIntegratorLabel(d_lab,
+    d_timeIntegratorLabels.push_back(new TimeIntegratorLabel(d_lab,
                                      TimeIntegratorStepType::BEEmulation1));
-    d_timeIntegratorLabels.push_back(scinew TimeIntegratorLabel(d_lab,
+    d_timeIntegratorLabels.push_back(new TimeIntegratorLabel(d_lab,
                                      TimeIntegratorStepType::BEEmulation2));
-    d_timeIntegratorLabels.push_back(scinew TimeIntegratorLabel(d_lab,
+    d_timeIntegratorLabels.push_back(new TimeIntegratorLabel(d_lab,
                                      TimeIntegratorStepType::BEEmulation3));
     numTimeIntegratorLevels = 3;
   }
@@ -788,7 +788,7 @@ ExplicitSolver::problemSetup( const ProblemSpecP & params,
   d_mixedModel=d_turbModel->getMixedModel();
 
   bool check_calculator;
-  d_eff_calculator = scinew EfficiencyCalculator( d_boundaryCondition, d_lab );
+  d_eff_calculator = new EfficiencyCalculator( d_boundaryCondition, d_lab );
   check_calculator = d_eff_calculator->problemSetup( db );
 
   if ( !check_calculator ){
@@ -924,7 +924,7 @@ ExplicitSolver::initialize( const LevelP& level,
   d_props->doTableMatching();
   d_props->sched_computeProps( level, sched, initialize_it, modify_ref_den, time_substep );
 
-  d_init_timelabel = scinew TimeIntegratorLabel(d_lab, TimeIntegratorStepType::FE);
+  d_init_timelabel = new TimeIntegratorLabel(d_lab, TimeIntegratorStepType::FE);
 
   for ( PropertyModelFactory::PropMap::iterator iprop = all_prop_models.begin();
         iprop != all_prop_models.end(); iprop++) {
@@ -1026,7 +1026,7 @@ ExplicitSolver::sched_initializeVariables( const LevelP& level,
                                            SchedulerP& sched )
 {
 
-  Task* tsk = scinew Task( "ExplicitSolver", this, &ExplicitSolver::initializeVariables);
+  Task* tsk = new Task( "ExplicitSolver", this, &ExplicitSolver::initializeVariables);
 
   tsk->computes(d_lab->d_cellInfoLabel);
   tsk->computes(d_lab->d_uVelocitySPBCLabel);
@@ -1125,7 +1125,7 @@ ExplicitSolver::initializeVariables(const ProcessorGroup* ,
 
     // Initialize cellInformation
     PerPatch<CellInformationP> cellInfoP;
-    cellInfoP.setData(scinew CellInformation(patch));
+    cellInfoP.setData(new CellInformation(patch));
     new_dw->put(cellInfoP, d_lab->d_cellInfoLabel, indx, patch);
 
     //total KE:
@@ -1857,7 +1857,7 @@ ExplicitSolver::sched_setInitialGuess(SchedulerP& sched,
 {
   //copies old db to new_db and then uses non-linear
   //solver to compute new values
-  Task* tsk = scinew Task( "ExplicitSolver::setInitialGuess",this,
+  Task* tsk = new Task( "ExplicitSolver::setInitialGuess",this,
                            &ExplicitSolver::setInitialGuess);
 
   Ghost::GhostType  gn = Ghost::None;
@@ -1912,7 +1912,7 @@ ExplicitSolver::sched_interpolateFromFCToCC(SchedulerP& sched,
   {
     string taskname =  "ExplicitSolver::interpFCToCC" +
                      timelabels->integrator_step_name;
-    Task* tsk = scinew Task(taskname, this,
+    Task* tsk = new Task(taskname, this,
                          &ExplicitSolver::interpolateFromFCToCC, timelabels, curr_level);
 
     Ghost::GhostType  gac = Ghost::AroundCells;
@@ -1977,7 +1977,7 @@ ExplicitSolver::sched_interpolateFromFCToCC(SchedulerP& sched,
   {
     string taskname =  "ExplicitSolver::computeVorticity" +
                      timelabels->integrator_step_name;
-    Task* tsk = scinew Task(taskname, this,
+    Task* tsk = new Task(taskname, this,
                          &ExplicitSolver::computeVorticity, timelabels);
 
     Ghost::GhostType  gac = Ghost::AroundCells;
@@ -2447,7 +2447,7 @@ ExplicitSolver::setInitialGuess(const ProcessorGroup* ,
     PerPatch<CellInformationP> cellInfoP;
     if (!(d_MAlab))
     {
-      cellInfoP.setData(scinew CellInformation(patch));
+      cellInfoP.setData(new CellInformation(patch));
       new_dw->put(cellInfoP, d_lab->d_cellInfoLabel, indx, patch);
     }
     else
@@ -2504,7 +2504,7 @@ ExplicitSolver::sched_printTotalKE( SchedulerP& sched,
 
 {
   string taskname =  "ExplicitSolver::printTotalKE";
-  Task* tsk = scinew Task( taskname,
+  Task* tsk = new Task( taskname,
                            this, &ExplicitSolver::printTotalKE );
 
   tsk->requires(Task::NewDW, d_lab->d_totalKineticEnergyLabel);
@@ -2538,7 +2538,7 @@ ExplicitSolver::sched_saveTempCopies(SchedulerP& sched,
 {
   string taskname =  "ExplicitSolver::saveTempCopies" +
                      timelabels->integrator_step_name;
-  Task* tsk = scinew Task(taskname, this,
+  Task* tsk = new Task(taskname, this,
                           &ExplicitSolver::saveTempCopies,
                           timelabels);
 
@@ -2584,7 +2584,7 @@ ExplicitSolver::sched_getDensityGuess(SchedulerP& sched,
   string taskname =  "ExplicitSolver::getDensityGuess" +
                      timelabels->integrator_step_name;
 
-  Task* tsk = scinew Task(taskname, this,
+  Task* tsk = new Task(taskname, this,
                           &ExplicitSolver::getDensityGuess,
                           timelabels);
 
@@ -2833,7 +2833,7 @@ ExplicitSolver::sched_checkDensityGuess(SchedulerP& sched,
   string taskname =  "ExplicitSolver::checkDensityGuess" +
                      timelabels->integrator_step_name;
 
-  Task* tsk = scinew Task(taskname, this,
+  Task* tsk = new Task(taskname, this,
                           &ExplicitSolver::checkDensityGuess,
                           timelabels);
 
@@ -2921,7 +2921,7 @@ ExplicitSolver::sched_updateDensityGuess(SchedulerP& sched,
 {
   string taskname =  "ExplicitSolver::updateDensityGuess" +
                      timelabels->integrator_step_name;
-  Task* tsk = scinew Task(taskname, this,
+  Task* tsk = new Task(taskname, this,
                           &ExplicitSolver::updateDensityGuess,
                           timelabels);
 
@@ -2967,7 +2967,7 @@ ExplicitSolver::sched_computeDensityLag(SchedulerP& sched,
 {
   string taskname =  "ExplicitSolver::computeDensityLag" +
                      timelabels->integrator_step_name;
-  Task* tsk = scinew Task(taskname, this,
+  Task* tsk = new Task(taskname, this,
                           &ExplicitSolver::computeDensityLag,
                           timelabels, after_average);
   Ghost::GhostType  gn = Ghost::None;
@@ -3047,7 +3047,7 @@ ExplicitSolver::sched_checkDensityLag(SchedulerP& sched,
 {
   string taskname =  "ExplicitSolver::checkDensityLag" +
                      timelabels->integrator_step_name;
-  Task* tsk = scinew Task(taskname, this,
+  Task* tsk = new Task(taskname, this,
                           &ExplicitSolver::checkDensityLag,
                           timelabels, after_average);
 
@@ -3109,7 +3109,7 @@ ExplicitSolver::sched_setInitVelCond( const LevelP& level,
                                       const MaterialSet* matls ){
 
   string taskname = "ExplicitSolver::setInitVelCond";
-  Task* tsk = scinew Task( taskname, this, &ExplicitSolver::setInitVelCond );
+  Task* tsk = new Task( taskname, this, &ExplicitSolver::setInitVelCond );
 
   tsk->requires( Task::NewDW, d_lab->d_densityCPLabel, Ghost::AroundCells, 1 );
   tsk->modifies( d_lab->d_uVelocitySPBCLabel );
@@ -3154,7 +3154,7 @@ void ExplicitSolver::sched_computeKE( SchedulerP& sched,
                                        const MaterialSet* matls )
 {
   string taskname = "ExplicitSolver::computeKE";
-  Task* tsk = scinew Task( taskname, this, &ExplicitSolver::computeKE );
+  Task* tsk = new Task( taskname, this, &ExplicitSolver::computeKE );
 
   tsk->computes(d_lab->d_totalKineticEnergyLabel);
   tsk->computes(d_lab->d_kineticEnergyLabel);
@@ -3227,7 +3227,7 @@ void
 ExplicitSolver::sched_weightInit( const LevelP& level,
                           SchedulerP& sched )
 {
-  Task* tsk = scinew Task( "ExplicitSolver::weightInit",
+  Task* tsk = new Task( "ExplicitSolver::weightInit",
                            this, &ExplicitSolver::weightInit);
 
   // DQMOM weight transport vars
@@ -3320,7 +3320,7 @@ void
 ExplicitSolver::sched_weightedAbsInit( const LevelP& level,
                                SchedulerP& sched )
 {
-  Task* tsk = scinew Task( "ExplicitSolver::weightedAbsInit",
+  Task* tsk = new Task( "ExplicitSolver::weightedAbsInit",
                            this, &ExplicitSolver::weightedAbsInit);
   // DQMOM transport vars
   DQMOMEqnFactory& dqmomFactory = DQMOMEqnFactory::self();
@@ -3441,7 +3441,7 @@ void
 ExplicitSolver::sched_momentInit( const LevelP& level,
                           SchedulerP& sched )
 {
-  Task* tsk = scinew Task( "ExplicitSolver::momentInit",
+  Task* tsk = new Task( "ExplicitSolver::momentInit",
                            this, &ExplicitSolver::momentInit);
 
   // CQMOM moment transport vars
@@ -3523,7 +3523,7 @@ void
 ExplicitSolver::sched_scalarInit( const LevelP& level,
                           SchedulerP& sched )
 {
-  Task* tsk = scinew Task( "ExplicitSolver::scalarInit",
+  Task* tsk = new Task( "ExplicitSolver::scalarInit",
                            this, &ExplicitSolver::scalarInit);
 
   EqnFactory& eqnFactory = EqnFactory::self();
@@ -3599,7 +3599,7 @@ ExplicitSolver::scalarInit( const ProcessorGroup*,
 void
 ExplicitSolver::sched_getCCVelocities(const LevelP& level, SchedulerP& sched)
 {
-  Task* tsk = scinew Task("ExplicitSolver::getCCVelocities", this,
+  Task* tsk = new Task("ExplicitSolver::getCCVelocities", this,
                           &ExplicitSolver::getCCVelocities);
 
   Ghost::GhostType gaf = Ghost::AroundFaces;
@@ -3851,46 +3851,46 @@ void ExplicitSolver::registerModels(ProblemSpecP& db)
 
         if ( model_type == "ConstantModel" ) {
           // Model term G = constant (G = 1)
-          ModelBuilder* modelBuilder = scinew ConstantModelBuilder(temp_model_name, requiredICVarLabels, requiredScalarVarLabels, d_lab, d_lab->d_sharedState, iqn);
+          ModelBuilder* modelBuilder = new ConstantModelBuilder(temp_model_name, requiredICVarLabels, requiredScalarVarLabels, d_lab, d_lab->d_sharedState, iqn);
           model_factory.register_model( temp_model_name, modelBuilder );
         } else if ( model_type == "KobayashiSarofimDevol" ) {
           // Kobayashi Sarofim devolatilization model
-          ModelBuilder* modelBuilder = scinew KobayashiSarofimDevolBuilder(temp_model_name, requiredICVarLabels, requiredScalarVarLabels, d_lab, d_lab->d_sharedState, iqn);
+          ModelBuilder* modelBuilder = new KobayashiSarofimDevolBuilder(temp_model_name, requiredICVarLabels, requiredScalarVarLabels, d_lab, d_lab->d_sharedState, iqn);
           model_factory.register_model( temp_model_name, modelBuilder );
         } else if ( model_type == "RichardsFletcherDevol" ) {
           // Richards Fletcher devolatilization model
-          ModelBuilder* modelBuilder = scinew RichardsFletcherDevolBuilder(temp_model_name, requiredICVarLabels, requiredScalarVarLabels, d_lab, d_lab->d_sharedState, iqn);
+          ModelBuilder* modelBuilder = new RichardsFletcherDevolBuilder(temp_model_name, requiredICVarLabels, requiredScalarVarLabels, d_lab, d_lab->d_sharedState, iqn);
           model_factory.register_model( temp_model_name, modelBuilder );
         } else if ( model_type == "FOWYDevol" ) {
           // Biagini Tognotti devolatilization model
-          ModelBuilder* modelBuilder = scinew FOWYDevolBuilder(temp_model_name, requiredICVarLabels, requiredScalarVarLabels, d_lab, d_lab->d_sharedState, iqn);
+          ModelBuilder* modelBuilder = new FOWYDevolBuilder(temp_model_name, requiredICVarLabels, requiredScalarVarLabels, d_lab, d_lab->d_sharedState, iqn);
           model_factory.register_model( temp_model_name, modelBuilder );
         } else if ( model_type == "YamamotoDevol" ) {
-          ModelBuilder* modelBuilder = scinew YamamotoDevolBuilder(temp_model_name, requiredICVarLabels, requiredScalarVarLabels, d_lab, d_lab->d_sharedState, iqn);
+          ModelBuilder* modelBuilder = new YamamotoDevolBuilder(temp_model_name, requiredICVarLabels, requiredScalarVarLabels, d_lab, d_lab->d_sharedState, iqn);
           model_factory.register_model( temp_model_name, modelBuilder );
         } else if ( model_type == "CharOxidationShaddix" ) {
-          ModelBuilder* modelBuilder = scinew CharOxidationShaddixBuilder(temp_model_name, requiredICVarLabels, requiredScalarVarLabels, d_lab, d_lab->d_sharedState, iqn);
+          ModelBuilder* modelBuilder = new CharOxidationShaddixBuilder(temp_model_name, requiredICVarLabels, requiredScalarVarLabels, d_lab, d_lab->d_sharedState, iqn);
           model_factory.register_model( temp_model_name, modelBuilder );
         } else if ( model_type == "CharOxidationSmith" ) {
-          ModelBuilder* modelBuilder = scinew CharOxidationSmithBuilder(temp_model_name, requiredICVarLabels, requiredScalarVarLabels, d_lab, d_lab->d_sharedState, iqn);
+          ModelBuilder* modelBuilder = new CharOxidationSmithBuilder(temp_model_name, requiredICVarLabels, requiredScalarVarLabels, d_lab, d_lab->d_sharedState, iqn);
           model_factory.register_model( temp_model_name, modelBuilder );
         } else if ( model_type == "EnthalpyShaddix" ) {
-          ModelBuilder* modelBuilder = scinew EnthalpyShaddixBuilder(temp_model_name, requiredICVarLabels, requiredScalarVarLabels, d_lab, d_lab->d_sharedState, d_props, iqn);
+          ModelBuilder* modelBuilder = new EnthalpyShaddixBuilder(temp_model_name, requiredICVarLabels, requiredScalarVarLabels, d_lab, d_lab->d_sharedState, d_props, iqn);
           model_factory.register_model( temp_model_name, modelBuilder );
         } else if ( model_type == "MaximumTemperature" ) {
-          ModelBuilder* modelBuilder = scinew MaximumTemperatureBuilder(temp_model_name, requiredICVarLabels, requiredScalarVarLabels, d_lab, d_lab->d_sharedState, iqn);
+          ModelBuilder* modelBuilder = new MaximumTemperatureBuilder(temp_model_name, requiredICVarLabels, requiredScalarVarLabels, d_lab, d_lab->d_sharedState, iqn);
           model_factory.register_model( temp_model_name, modelBuilder );
         } else if ( model_type == "Thermophoresis" ) {
-          ModelBuilder* modelBuilder = scinew ThermophoresisBuilder(temp_model_name, requiredICVarLabels, requiredScalarVarLabels, d_lab, d_lab->d_sharedState, iqn);
+          ModelBuilder* modelBuilder = new ThermophoresisBuilder(temp_model_name, requiredICVarLabels, requiredScalarVarLabels, d_lab, d_lab->d_sharedState, iqn);
           model_factory.register_model( temp_model_name, modelBuilder );
         } else if ( model_type == "Drag" ) {
-          ModelBuilder* modelBuilder = scinew DragModelBuilder(temp_model_name, requiredICVarLabels, requiredScalarVarLabels, d_lab, d_lab->d_sharedState, iqn);
+          ModelBuilder* modelBuilder = new DragModelBuilder(temp_model_name, requiredICVarLabels, requiredScalarVarLabels, d_lab, d_lab->d_sharedState, iqn);
           model_factory.register_model( temp_model_name, modelBuilder );
         } else if ( model_type == "SimpleBirth" ) {
-          ModelBuilder* modelBuilder = scinew SimpleBirthBuilder(temp_model_name, requiredICVarLabels, requiredScalarVarLabels, d_lab, d_lab->d_sharedState, iqn);
+          ModelBuilder* modelBuilder = new SimpleBirthBuilder(temp_model_name, requiredICVarLabels, requiredScalarVarLabels, d_lab, d_lab->d_sharedState, iqn);
           model_factory.register_model( temp_model_name, modelBuilder );
         } else if ( model_type == "Deposition" ) {
-          ModelBuilder* modelBuilder = scinew DepositionBuilder(temp_model_name, requiredICVarLabels, requiredScalarVarLabels, d_lab, d_lab->d_sharedState, iqn);
+          ModelBuilder* modelBuilder = new DepositionBuilder(temp_model_name, requiredICVarLabels, requiredScalarVarLabels, d_lab, d_lab->d_sharedState, iqn);
           model_factory.register_model( temp_model_name, modelBuilder );
         } else {
           proc0cout << "For model named: " << temp_model_name << endl;
@@ -3933,7 +3933,7 @@ void ExplicitSolver::registerTransportEqns(ProblemSpecP& db)
       // The keys are currently strings which might be something we want to change if this becomes inefficient
       if ( eqn_type == "CCscalar" ) {
 
-        EqnBuilder* scalarBuilder = scinew CCScalarEqnBuilder( d_lab, d_timeIntegrator, eqn_name );
+        EqnBuilder* scalarBuilder = new CCScalarEqnBuilder( d_lab, d_timeIntegrator, eqn_name );
         eqnFactory.register_scalar_eqn( eqn_name, scalarBuilder );
 
         // ADD OTHER OPTIONS HERE if ( eqn_type == ....
@@ -4101,7 +4101,7 @@ void ExplicitSolver::registerCQMOMEqns(ProblemSpecP& db)
       moment_name += mIndex;
       proc0cout << moment_name << endl;
 
-      CQMOMEqnBuilderBase* eqnBuilder = scinew CQMOMEqnBuilder( d_lab, d_timeIntegrator, moment_name );
+      CQMOMEqnBuilderBase* eqnBuilder = new CQMOMEqnBuilder( d_lab, d_timeIntegrator, moment_name );
       cqmom_eqnFactory.register_scalar_eqn( moment_name, eqnBuilder );
       nMoments++;
     }

@@ -114,7 +114,7 @@ HypoElasticFortran::outputProblemSpec( ProblemSpecP& ps,bool output_cm_tag )
 HypoElasticFortran*
 HypoElasticFortran::clone()
 {
-  return scinew HypoElasticFortran(*this);
+  return new HypoElasticFortran(*this);
 }
 
 void

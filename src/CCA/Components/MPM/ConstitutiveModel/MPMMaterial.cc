@@ -56,7 +56,7 @@ using namespace Uintah;
 MPMMaterial::MPMMaterial(ProblemSpecP& ps, SimulationStateP& ss,MPMFlags* flags)
   : Material(ps), d_cm(0),  d_particle_creator(0)
 {
-  d_lb = scinew MPMLabel();
+  d_lb = new MPMLabel();
   // The standard set of initializations needed
   standardInitialization(ps,ss,flags);
   
@@ -159,20 +159,20 @@ MPMMaterial::standardInitialization(ProblemSpecP& ps, SimulationStateP& ss, MPMF
     if(pieces.size() == 0){
       throw ParameterNotFound("No piece specified in geom_object", __FILE__, __LINE__);
     } else if(pieces.size() > 1){
-      mainpiece = scinew UnionGeometryPiece(pieces);
+      mainpiece = new UnionGeometryPiece(pieces);
     } else {
       mainpiece = pieces[0];
     }
 
     //    piece_num++;
-    d_geom_objs.push_back(scinew GeometryObject(mainpiece, geom_obj_ps, geom_obj_data));
+    d_geom_objs.push_back(new GeometryObject(mainpiece, geom_obj_ps, geom_obj_data));
   }
 }
 
 // Default constructor
 MPMMaterial::MPMMaterial() : d_cm(0), d_particle_creator(0)
 {
-  d_lb = scinew MPMLabel();
+  d_lb = new MPMLabel();
 }
 
 MPMMaterial::~MPMMaterial()

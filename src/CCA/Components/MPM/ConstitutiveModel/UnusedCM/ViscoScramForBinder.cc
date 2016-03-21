@@ -63,9 +63,9 @@ ViscoScramForBinder::ViscoScramForBinder(ProblemSpecP& ps,
   d_initialData.numMaxwellElements = 22;
   ps->get("num_maxwell_elements", d_initialData.numMaxwellElements);
   int nn = d_initialData.numMaxwellElements;
-  d_initialData.shearModulus = scinew double[nn];
+  d_initialData.shearModulus = new double[nn];
   for (int ii = 0; ii < nn; ++ii) {
-    char* buf = scinew char[16];
+    char* buf = new char[16];
     sprintf(buf,"shear_modulus%.2d",(ii+1));
     string shear(buf);
     ps->require(shear, d_initialData.shearModulus[ii]); 
@@ -129,7 +129,7 @@ ViscoScramForBinder::ViscoScramForBinder(const ViscoScramForBinder* cm)
   d_initialData.bulkModulus = cm->d_initialData.bulkModulus;
   d_initialData.numMaxwellElements = cm->d_initialData.numMaxwellElements;
   int nn = d_initialData.numMaxwellElements;
-  d_initialData.shearModulus = scinew double[nn];
+  d_initialData.shearModulus = new double[nn];
   for (int ii = 0; ii < nn; ++ii) {
     d_initialData.shearModulus[ii] = cm->d_initialData.shearModulus[ii];
   }
@@ -197,7 +197,7 @@ ViscoScramForBinder::initializeCMData(const Patch* patch,
   for(;iter != pset->end();iter++){
     // Initialize state data
     //pStatedata[*iter].numElements = d_initialData.numMaxwellElements;
-    //pStatedata[*iter].sigDev = scinew Matrix3[d_initialData.numMaxwellElements];
+    //pStatedata[*iter].sigDev = new Matrix3[d_initialData.numMaxwellElements];
     for(int ii = 0; ii < d_initialData.numMaxwellElements; ii++){
       pStatedata[*iter].sigDev[ii] = zero;
     }
@@ -261,7 +261,7 @@ ViscoScramForBinder::allocateCMDataAdd(DataWarehouse* new_dw,
   for (o=delset->begin(); o != delset->end(); o++, n++) {
     // Initialize state data
     //pStatedata[*iter].numElements = d_initialData.numMaxwellElements;
-    //pStatedata[*iter].sigDev = scinew Matrix3[d_initialData.numMaxwellElements];
+    //pStatedata[*iter].sigDev = new Matrix3[d_initialData.numMaxwellElements];
     for(int ii = 0; ii < d_initialData.numMaxwellElements; ii++){
       pStatedata[*n].sigDev[ii] = o_Statedata[*o].sigDev[ii];
     }
@@ -351,7 +351,7 @@ ViscoScramForBinder::computeStressTensor(const PatchSubset* patches,
   // similar to that in the Mas et al. and Bennett et al. papers.
   int NN = d_initialData.numMaxwellElements;
   double kk =  d_initialData.bulkModulus;
-  double* G_n = scinew double[NN];
+  double* G_n = new double[NN];
   double GG = 0.0;
   for (int ii = 0; ii < NN; ++ii) {
     G_n[ii] = d_initialData.shearModulus[ii]; 
@@ -497,7 +497,7 @@ ViscoScramForBinder::computeStressTensor(const PatchSubset* patches,
 
       // Then calculate relaxation times and store in an array
       // (Note that shear moduli are already in the array Gi)
-      double* RTau_n = scinew double[NN];
+      double* RTau_n = new double[NN];
       for (int ii = 0; ii < NN; ++ii) {
         RTau_n[ii] = 1.0/(B1*a_T*pow(10.0, (B2-ii)));
         cout << "Tau["<<ii<<"]="<<1.0/RTau_n[ii]<<" ";
@@ -506,7 +506,7 @@ ViscoScramForBinder::computeStressTensor(const PatchSubset* patches,
 
       // Store the deviatoric stress in each element in an array
       // and calculate the sum
-      Matrix3* S_n = scinew Matrix3[NN];
+      Matrix3* S_n = new Matrix3[NN];
       Matrix3 sigPrime(0.0);
       for (int ii = 0; ii < NN; ++ii) {
         S_n[ii] = pStatedata[idx].sigDev[ii];
@@ -529,7 +529,7 @@ ViscoScramForBinder::computeStressTensor(const PatchSubset* patches,
       double p = -onethird * pStress[idx].Trace();
 
       // Deviatoric stress integration
-      Matrix3* S_n_new = scinew Matrix3[NN];
+      Matrix3* S_n_new = new Matrix3[NN];
       if (d_doCrack) {
 
         // Calculate updated crack radius
@@ -555,7 +555,7 @@ ViscoScramForBinder::computeStressTensor(const PatchSubset* patches,
         double KK = sqrt(M_PI*cc)*sigma;
         double KPrime = K0*sqrt(1.0+2.0/mm);
         double cDot = 0.0;
-        double* rkc = scinew double[4];
+        double* rkc = new double[4];
         for (int ii = 0; ii < 4; ++ii) rkc[ii] = 0.0;
         if (KK < KPrime) {
           double K1 = KPrime*pow((1.0+mm/2.0), (1.0/mm));
@@ -580,7 +580,7 @@ ViscoScramForBinder::computeStressTensor(const PatchSubset* patches,
       } else {
 
         // Deviatoric stress integration
-        //double* rkc = scinew double[4];
+        //double* rkc = new double[4];
         //for (int ii = 0; ii < 4; ++ii) rkc[ii] = 0.0;
         //doRungeKuttaForStressAlt(&ViscoScramForBinder::stressEqnWithoutCrack,
         //                    S_n, (double) delT, rkc, 0.0,
@@ -729,22 +729,22 @@ ViscoScramForBinder::doRungeKuttaForStress(void (ViscoScramForBinder::*fptr)
 
   for (int ii = 0; ii < n; ++ii) y_rk[ii] = y_n[ii];
   c_rk = c; 
-  Matrix3* k1 = scinew Matrix3[n];
+  Matrix3* k1 = new Matrix3[n];
   ((this->*fptr)(y_rk, c_rk, G_n, RTau_n, DPrime, cDot, k1));
 
   for (int ii = 0; ii < n; ++ii) y_rk[ii] = y_n[ii]+k1[ii]*(0.5*h);
   c_rk = c + 0.5*h*rkc[0];
-  Matrix3* k2 = scinew Matrix3[n];
+  Matrix3* k2 = new Matrix3[n];
   ((this->*fptr)(y_rk, c_rk, G_n, RTau_n, DPrime, cDot, k2));
 
   for (int ii = 0; ii < n; ++ii) y_rk[ii] = y_n[ii]+k2[ii]*(0.5*h);
   c_rk = c + 0.5*h*rkc[1];
-  Matrix3* k3 = scinew Matrix3[n];
+  Matrix3* k3 = new Matrix3[n];
   ((this->*fptr)(y_rk, c_rk, G_n, RTau_n, DPrime, cDot, k3));
 
   for (int ii = 0; ii < n; ++ii) y_rk[ii] = y_n[ii]+k3[ii]*h;
   c_rk = c + 0.5*h*rkc[2];
-  Matrix3* k4 = scinew Matrix3[n];
+  Matrix3* k4 = new Matrix3[n];
   ((this->*fptr)(y_rk, c_rk, G_n, RTau_n, DPrime, cDot, k4));
 
   for (int ii = 0; ii < n; ++ii) 
@@ -1095,7 +1095,7 @@ fun_getTypeDescription(ViscoScramForBinder::Statedata*)
 {
    static Uintah::TypeDescription* td = 0;
    if(!td){
-      td = scinew Uintah::TypeDescription(TypeDescription::Other,
+      td = new Uintah::TypeDescription(TypeDescription::Other,
         "ViscoScramForBinder::Statedata", true, &makeMPI_CMData);
    }
    return td;

@@ -64,7 +64,7 @@ planeExtract::planeExtract(ProblemSpecP& module_spec,
   d_dataArchiver = dataArchiver;
   d_matl_set = 0;
   d_zero_matl = 0;
-  ps_lb = scinew planeExtractLabel();
+  ps_lb = new planeExtractLabel();
 }
 
 //__________________________________
@@ -144,7 +144,7 @@ void planeExtract::problemSetup(const ProblemSpecP& prob_spec,
   
   m.push_back(0);            // matl for FileInfo label
   m.push_back(defaultMatl);
-  d_matl_set = scinew MaterialSet();
+  d_matl_set = new MaterialSet();
   map<string,string> attribute;
     
   for (ProblemSpecP var_spec = vars_ps->findBlock("analyze"); var_spec != 0; 
@@ -331,7 +331,7 @@ void planeExtract::problemSetup(const ProblemSpecP& prob_spec,
       throw ProblemSetupException( warn.str(), __FILE__, __LINE__);
     }
     // put input variables into the global struct
-    plane* p = scinew plane;
+    plane* p = new plane;
     p->name      = name;
     p->startPt   = start;
     p->endPt     = end;
@@ -347,7 +347,7 @@ void planeExtract::scheduleInitialize(SchedulerP& sched,
                                       const LevelP& level)
 {
   cout_doing << "planeExtract::scheduleInitialize " << endl;
-  Task* t = scinew Task("planeExtract::initialize", 
+  Task* t = new Task("planeExtract::initialize", 
                   this, &planeExtract::initialize);
   
   t->computes(ps_lb->lastWriteTimeLabel);
@@ -395,7 +395,7 @@ void planeExtract::scheduleDoAnalysis(SchedulerP& sched,
                                       const LevelP& level)
 {
   cout_doing << "planeExtract::scheduleDoAnalysis " << endl;
-  Task* t = scinew Task("planeExtract::doAnalysis", 
+  Task* t = new Task("planeExtract::doAnalysis", 
                    this,&planeExtract::doAnalysis);
                         
   t->requires(Task::OldDW, ps_lb->lastWriteTimeLabel);
@@ -409,7 +409,7 @@ void planeExtract::scheduleDoAnalysis(SchedulerP& sched,
                           + name , __FILE__, __LINE__);
     }
     
-    MaterialSubset* matSubSet = scinew MaterialSubset();
+    MaterialSubset* matSubSet = new MaterialSubset();
     matSubSet->add(d_varMatl[i]);
     matSubSet->addReference();
     

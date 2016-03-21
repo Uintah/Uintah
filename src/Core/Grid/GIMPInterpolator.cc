@@ -49,7 +49,7 @@ GIMPInterpolator::~GIMPInterpolator()
 
 GIMPInterpolator* GIMPInterpolator::clone(const Patch* patch)
 {
-  return scinew GIMPInterpolator(patch);
+  return new GIMPInterpolator(patch);
 }
     
 void GIMPInterpolator::findCellAndWeights(const Point& pos,

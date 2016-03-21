@@ -73,31 +73,31 @@ namespace WasatchCore{
     proc0cout << "------------------------------------------------" << std::endl;
     
     proc0cout << "Setting up particle x-coordinate equation" << std::endl;
-    EquationBase* pxeq = scinew ParticlePositionEquation( pxname,
+    EquationBase* pxeq = new ParticlePositionEquation( pxname,
                                                          XDIR,
                                                          pPosTags,
                                                          pSizeTag,
                                                          particleSpec,
                                                          gc );
-    adaptors.push_back( scinew EqnTimestepAdaptor<ParticleField>(pxeq) );
+    adaptors.push_back( new EqnTimestepAdaptor<ParticleField>(pxeq) );
     
     proc0cout << "Setting up particle y-coordinate equation" << std::endl;
-    EquationBase* pyeq = scinew ParticlePositionEquation( pyname,
+    EquationBase* pyeq = new ParticlePositionEquation( pyname,
                                                          YDIR,
                                                          pPosTags,
                                                          pSizeTag,
                                                          particleSpec,
                                                          gc );
-    adaptors.push_back( scinew EqnTimestepAdaptor<ParticleField>(pyeq) );
+    adaptors.push_back( new EqnTimestepAdaptor<ParticleField>(pyeq) );
     
     proc0cout << "Setting up particle z-coordinate equation" << std::endl;
-    EquationBase* pzeq = scinew ParticlePositionEquation( pzname,
+    EquationBase* pzeq = new ParticlePositionEquation( pzname,
                                                          ZDIR,
                                                          pPosTags,
                                                          pSizeTag,
                                                          particleSpec,
                                                          gc );
-    adaptors.push_back( scinew EqnTimestepAdaptor<ParticleField>(pzeq) );
+    adaptors.push_back( new EqnTimestepAdaptor<ParticleField>(pzeq) );
     
     
     std::string puname,pvname,pwname;
@@ -112,56 +112,56 @@ namespace WasatchCore{
     const Expr::Tag pMassTag    = parse_nametag(particleSpec->findBlock("ParticleMass"));
     const std::string pMassName = pMassTag.name();
     proc0cout << "Setting up particle mass equation" << std::endl;
-    EquationBase* pmeq = scinew ParticleMassEquation( pMassName,
+    EquationBase* pmeq = new ParticleMassEquation( pMassName,
                                                      NODIR,
                                                      pPosTags,
                                                      pSizeTag,
                                                      particleSpec,
                                                      gc );
-    adaptors.push_back( scinew EqnTimestepAdaptor<ParticleField>(pmeq) );
+    adaptors.push_back( new EqnTimestepAdaptor<ParticleField>(pmeq) );
     
     //___________________________________________________________________________
     // resolve the momentum equation to be solved and create the adaptor for it.
     //
     Expr::ExpressionFactory& factory = *(gc[ADVANCE_SOLUTION]->exprFactory);
     proc0cout << "Setting up particle x-momentum equation" << std::endl;
-    EquationBase* pueq = scinew ParticleMomentumEquation<GasVel1T,GasVel2T,GasVel3T>( puname,
+    EquationBase* pueq = new ParticleMomentumEquation<GasVel1T,GasVel2T,GasVel3T>( puname,
                                                                                      XDIR,
                                                                                      pPosTags,
                                                                                      pSizeTag,
                                                                                      particleSpec,
                                                                                      gc );
-    adaptors.push_back( scinew EqnTimestepAdaptor<ParticleField>(pueq) );
+    adaptors.push_back( new EqnTimestepAdaptor<ParticleField>(pueq) );
     
     proc0cout << "Setting up particle y-momentum equation" << std::endl;
-    EquationBase* pveq = scinew ParticleMomentumEquation<GasVel1T,GasVel2T,GasVel3T>( pvname,
+    EquationBase* pveq = new ParticleMomentumEquation<GasVel1T,GasVel2T,GasVel3T>( pvname,
                                                                                      YDIR,
                                                                                      pPosTags,
                                                                                      pSizeTag,
                                                                                      particleSpec,
                                                                                      gc );
-    adaptors.push_back( scinew EqnTimestepAdaptor<ParticleField>(pveq) );
+    adaptors.push_back( new EqnTimestepAdaptor<ParticleField>(pveq) );
     
     proc0cout << "Setting up particle z-momentum equation" << std::endl;
-    EquationBase* pweq = scinew ParticleMomentumEquation<GasVel1T,GasVel2T,GasVel3T>( pwname,
+    EquationBase* pweq = new ParticleMomentumEquation<GasVel1T,GasVel2T,GasVel3T>( pwname,
                                                                                      ZDIR,
                                                                                      pPosTags,
                                                                                      pSizeTag,
                                                                                      particleSpec,
                                                                                      gc );
-    adaptors.push_back( scinew EqnTimestepAdaptor<ParticleField>(pweq) );
+    adaptors.push_back( new EqnTimestepAdaptor<ParticleField>(pweq) );
     
     //___________________________________________________________________________
     // resolve the particle size equation to be solved and create the adaptor for it.
     //
     proc0cout << "Setting up particle size equation" << std::endl;
-    EquationBase* psizeeq = scinew ParticleSizeEquation( pSizeName,
+    EquationBase* psizeeq = new ParticleSizeEquation( pSizeName,
                                                         NODIR,
                                                         pPosTags,
                                                         pSizeTag,
                                                         particleSpec,
                                                         gc );
-    adaptors.push_back( scinew EqnTimestepAdaptor<ParticleField>(psizeeq) );
+    adaptors.push_back( new EqnTimestepAdaptor<ParticleField>(psizeeq) );
     
     //___________________________________________________________________________
     // Two way coupling between particles and the gas phase
@@ -180,21 +180,21 @@ namespace WasatchCore{
         if (doxmom) {
           typedef ParticleGasMomentumSrc<XVolField>::Builder XMomSrcT;
           const Expr::Tag xMomRHSTag (xmomname + "_rhs_partial", Expr::STATE_NONE);
-          factory.register_expression( scinew XMomSrcT( tNames.pmomsrcx, tNames.pdragx, pMassTag, pSizeTag, pPosTags ));
+          factory.register_expression( new XMomSrcT( tNames.pmomsrcx, tNames.pdragx, pMassTag, pSizeTag, pPosTags ));
           factory.attach_dependency_to_expression(tNames.pmomsrcx, xMomRHSTag);
         }
         
         if (doymom) {
           typedef ParticleGasMomentumSrc<YVolField>::Builder YMomSrcT;
           const Expr::Tag yMomRHSTag (ymomname + "_rhs_partial", Expr::STATE_NONE);
-          factory.register_expression( scinew YMomSrcT( tNames.pmomsrcy, tNames.pdragy, pMassTag, pSizeTag, pPosTags ));
+          factory.register_expression( new YMomSrcT( tNames.pmomsrcy, tNames.pdragy, pMassTag, pSizeTag, pPosTags ));
           factory.attach_dependency_to_expression(tNames.pmomsrcy, yMomRHSTag);
         }
         
         if (dozmom) {
           typedef ParticleGasMomentumSrc<ZVolField>::Builder ZMomSrcT;
           const Expr::Tag zMomRHSTag (zmomname + "_rhs_partial", Expr::STATE_NONE);
-          factory.register_expression( scinew ZMomSrcT( tNames.pmomsrcz, tNames.pdragz, pMassTag, pSizeTag, pPosTags ));
+          factory.register_expression( new ZMomSrcT( tNames.pmomsrcz, tNames.pdragz, pMassTag, pSizeTag, pPosTags ));
           factory.attach_dependency_to_expression(tNames.pmomsrcz, zMomRHSTag);
         }
       }
@@ -252,7 +252,7 @@ namespace WasatchCore{
         const Expr::Tag pvTag = Expr::Tag(pvname, Expr::STATE_DYNAMIC);
         const Expr::Tag pwTag = Expr::Tag(pwname, Expr::STATE_DYNAMIC);
         
-        const Expr::ExpressionID stabDtID = factory.register_expression(scinew StableTimestep::Builder( TagNames::self().stableTimestep,
+        const Expr::ExpressionID stabDtID = factory.register_expression(new StableTimestep::Builder( TagNames::self().stableTimestep,
                                                                                                        densityTag,
                                                                                                        viscTag,
                                                                                                        xVelTag,yVelTag,zVelTag, puTag, pvTag, pwTag ), true);

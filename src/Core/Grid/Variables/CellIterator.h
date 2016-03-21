@@ -180,7 +180,7 @@ WARNING
 
      CellIterator* clone() const
      {
-       return scinew CellIterator(*this);
+       return new CellIterator(*this);
      }
 
      std::ostream& put(std::ostream& out) const

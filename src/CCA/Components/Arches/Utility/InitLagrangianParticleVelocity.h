@@ -46,7 +46,7 @@ public:
       ~Builder(){}
 
       InitLagrangianParticleVelocity* build()
-      { return scinew InitLagrangianParticleVelocity( _task_name, _matl_index ); }
+      { return new InitLagrangianParticleVelocity( _task_name, _matl_index ); }
 
       private: 
 

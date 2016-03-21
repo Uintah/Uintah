@@ -114,7 +114,7 @@ void addRequires_MMS(Task* t,
   
   Ghost::GhostType  gn  = Ghost::None;
   Task::MaterialDomainSpec oims = Task::OutOfDomain;  //outside of ice matlSet.
-  MaterialSubset* press_matl = scinew MaterialSubset();
+  MaterialSubset* press_matl = new MaterialSubset();
   press_matl->add(0);
   press_matl->addReference();
   

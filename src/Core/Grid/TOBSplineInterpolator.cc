@@ -49,7 +49,7 @@ TOBSplineInterpolator::~TOBSplineInterpolator()
 
 TOBSplineInterpolator* TOBSplineInterpolator::clone(const Patch* patch)
 {
-  return scinew TOBSplineInterpolator(patch);
+  return new TOBSplineInterpolator(patch);
 }
 
 void TOBSplineInterpolator::findNodeComponents(const int& ix, int* xn, int& count,

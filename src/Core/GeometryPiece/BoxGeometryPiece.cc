@@ -84,7 +84,7 @@ BoxGeometryPiece::outputHelper( ProblemSpecP& ps ) const
 GeometryPieceP
 BoxGeometryPiece::clone() const
 {
-  return scinew BoxGeometryPiece(*this);
+  return new BoxGeometryPiece(*this);
 }
 
 bool

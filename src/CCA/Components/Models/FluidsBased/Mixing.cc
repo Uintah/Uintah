@@ -108,7 +108,7 @@ void Mixing::problemSetup(GridP&, SimulationStateP& sharedState,
 
   vector<int> m(1);
   m[0] = matl->getDWIndex();
-  mymatls = scinew MaterialSet();
+  mymatls = new MaterialSet();
   mymatls->addAll(m);
   mymatls->addReference();
 
@@ -116,7 +116,7 @@ void Mixing::problemSetup(GridP&, SimulationStateP& sharedState,
   int index = 0;
   for (ProblemSpecP child = params->findBlock("stream"); child != 0;
        child = child->findNextBlock("stream")) {
-    Stream* stream = scinew Stream();
+    Stream* stream = new Stream();
     stream->index = index++;
     child->getAttribute("name", stream->name);
     string mfname = "massFraction-"+stream->name;
@@ -137,12 +137,12 @@ void Mixing::problemSetup(GridP&, SimulationStateP& sharedState,
       if(pieces.size() == 0){
         throw ParameterNotFound("No piece specified in geom_object", __FILE__, __LINE__);
       } else if(pieces.size() > 1){
-        mainpiece = scinew UnionGeometryPiece(pieces);
+        mainpiece = new UnionGeometryPiece(pieces);
       } else {
         mainpiece = pieces[0];
       }
 
-      stream->regions.push_back(scinew Region(mainpiece, geom_obj_ps));
+      stream->regions.push_back(new Region(mainpiece, geom_obj_ps));
       count++;
     }
     if(count == 0)
@@ -159,7 +159,7 @@ void Mixing::problemSetup(GridP&, SimulationStateP& sharedState,
 
   for (ProblemSpecP child = params->findBlock("reaction"); child != 0;
        child = child->findNextBlock("reaction")) {
-    Reaction* rxn = scinew Reaction();
+    Reaction* rxn = new Reaction();
     string from;
     child->require("from", from);
     vector<Stream*>::iterator iter = streams.begin();
@@ -194,7 +194,7 @@ void Mixing::scheduleInitialize(SchedulerP& sched,
                                 const LevelP& level,
                                 const ModelInfo*)
 {
-  Task* t = scinew Task("Mixing::initialize",
+  Task* t = new Task("Mixing::initialize",
                         this, &Mixing::initialize);
   for(vector<Stream*>::iterator iter = streams.begin();
       iter != streams.end(); iter++){
@@ -267,7 +267,7 @@ void Mixing::scheduleComputeModelSources(SchedulerP& sched,
                                               const LevelP& level,
                                               const ModelInfo* mi)
 {
-  Task* t = scinew Task("Mixing::computeModelSources",this, 
+  Task* t = new Task("Mixing::computeModelSources",this, 
                         &Mixing::computeModelSources, mi);
   t->modifies(mi->modelEng_srcLabel);
   t->requires(Task::OldDW, mi->rho_CCLabel, Ghost::None);

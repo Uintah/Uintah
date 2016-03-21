@@ -32,7 +32,7 @@ DepositionBuilder::DepositionBuilder( const std::string         & modelName,
 DepositionBuilder::~DepositionBuilder(){}
 
 ModelBase* DepositionBuilder::build(){
-  return scinew Deposition( d_modelName, d_sharedState, d_fieldLabels, d_icLabels, d_scalarLabels, d_quadNode );
+  return new Deposition( d_modelName, d_sharedState, d_fieldLabels, d_icLabels, d_scalarLabels, d_quadNode );
 }
 
 // End Builder
@@ -150,7 +150,7 @@ void
 Deposition::sched_initVars( const LevelP& level, SchedulerP& sched )
 {
   string taskname = "Deposition::initVars"; 
-  Task* tsk = scinew Task(taskname, this, &Deposition::initVars);
+  Task* tsk = new Task(taskname, this, &Deposition::initVars);
 
   tsk->computes(d_modelLabel);
   tsk->computes(d_gasLabel);
@@ -193,7 +193,7 @@ void
 Deposition::sched_computeModel( const LevelP& level, SchedulerP& sched, int timeSubStep )
 {
   std::string taskname = "Deposition::computeModel";
-  Task* tsk = scinew Task(taskname, this, &Deposition::computeModel, timeSubStep );
+  Task* tsk = new Task(taskname, this, &Deposition::computeModel, timeSubStep );
 
   Ghost::GhostType gn = Ghost::None;
   Ghost::GhostType  gaf = Ghost::AroundFaces;

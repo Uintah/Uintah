@@ -1983,7 +1983,7 @@ namespace Uintah {
     ~Patch();
     
     Patch* createVirtualPatch(const IntVector& offset) const
-    { return scinew Patch(this, offset); }
+    { return new Patch(this, offset); }
   private:
     /**
      * This struct will tightly store data that the patch needs

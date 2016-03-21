@@ -223,7 +223,7 @@ public:
       ~Builder(){}
 
       CoalTemperature* build()
-      { return scinew CoalTemperature( _task_name, _matl_index, _Nenv ); }
+      { return new CoalTemperature( _task_name, _matl_index, _Nenv ); }
 
       private: 
 

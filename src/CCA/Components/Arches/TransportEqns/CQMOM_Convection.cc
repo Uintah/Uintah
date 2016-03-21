@@ -118,9 +118,9 @@ CQMOM_Convection::problemSetup(const ProblemSpecP& params)
   
   //make interpolant object
   if (d_convScheme == "first" ) {
-    _opr = scinew FirstOrderInterpolant();
+    _opr = new FirstOrderInterpolant();
   } else if (d_convScheme == "second" ) {
-    _opr = scinew SecondOrderInterpolant();
+    _opr = new SecondOrderInterpolant();
   } else {
     throw InvalidValue("Error: Convection scheme not recognized. Check UPS file and try again.", __FILE__, __LINE__);
   }
@@ -157,7 +157,7 @@ void
 CQMOM_Convection::sched_initializeVariables( const LevelP& level, SchedulerP& sched )
 {
   string taskname = "CQMOM_Convection::initializeVariables";
-  Task* tsk = scinew Task(taskname, this, &CQMOM_Convection::initializeVariables);
+  Task* tsk = new Task(taskname, this, &CQMOM_Convection::initializeVariables);
   
   for ( int i = 0; i < nMoments; i++ ) {
     tsk->computes( convLabels[i] );
@@ -214,7 +214,7 @@ void
 CQMOM_Convection::sched_solveCQMOMConvection( const LevelP& level, SchedulerP& sched, int timeSubStep )
 {
   string taskname = "CQMOM_Convection::solveCQMOMConvection";
-  Task* tsk = scinew Task(taskname, this, &CQMOM_Convection::solveCQMOMConvection);
+  Task* tsk = new Task(taskname, this, &CQMOM_Convection::solveCQMOMConvection);
   
   
   tsk->requires(Task::OldDW, d_fieldLabels->d_volFractionLabel, Ghost::AroundCells, 1);
@@ -290,10 +290,10 @@ CQMOM_Convection::solveCQMOMConvection( const ProcessorGroup* pc,
     vector<CCVariable<double>* > FconvZ;
 
     for (int i = 0; i < nMoments; i++ ) {
-      CCVariable<double>* tempCCVar = scinew CCVariable<double>;
-      CCVariable<double>* xTempCCVar = scinew CCVariable<double>;
-      CCVariable<double>* yTempCCVar = scinew CCVariable<double>;
-      CCVariable<double>* zTempCCVar = scinew CCVariable<double>;
+      CCVariable<double>* tempCCVar = new CCVariable<double>;
+      CCVariable<double>* xTempCCVar = new CCVariable<double>;
+      CCVariable<double>* yTempCCVar = new CCVariable<double>;
+      CCVariable<double>* zTempCCVar = new CCVariable<double>;
       
       if( new_dw->exists(convLabels[i], matlIndex, patch) ) {
         new_dw->getModifiable(*tempCCVar, convLabels[i], matlIndex, patch);
@@ -950,7 +950,7 @@ void
 CQMOM_Convection::sched_initializeWalls( const LevelP& level, SchedulerP& sched, int timeSubStep)
 {
   string taskname = "CQMOM_Convection::intializeWalls";
-  Task* tsk = scinew Task(taskname, this, &CQMOM_Convection::initializeWalls);
+  Task* tsk = new Task(taskname, this, &CQMOM_Convection::initializeWalls);
   
   tsk->requires(Task::OldDW, d_fieldLabels->d_volFractionLabel, Ghost::AroundCells, 1);
   

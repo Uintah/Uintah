@@ -275,49 +275,49 @@ GeometryPieceFactory::create( const ProblemSpecP& ps,
     GeometryPiece * newGeomPiece = NULL;
 
     if ( go_type == BoxGeometryPiece::TYPE_NAME ) {
-      newGeomPiece = scinew BoxGeometryPiece(child);
+      newGeomPiece = new BoxGeometryPiece(child);
     }
     else if ( go_type == NaaBoxGeometryPiece::TYPE_NAME ){
-      newGeomPiece = scinew NaaBoxGeometryPiece(child);
+      newGeomPiece = new NaaBoxGeometryPiece(child);
     }
     else if ( go_type == SphereGeometryPiece::TYPE_NAME ) {
-      newGeomPiece = scinew SphereGeometryPiece(child);
+      newGeomPiece = new SphereGeometryPiece(child);
     }
     else if ( go_type == SphereMembraneGeometryPiece::TYPE_NAME ) {
-      newGeomPiece = scinew SphereMembraneGeometryPiece(child);
+      newGeomPiece = new SphereMembraneGeometryPiece(child);
     }
     else if ( go_type == CylinderGeometryPiece::TYPE_NAME ) {
-      newGeomPiece = scinew CylinderGeometryPiece(child);
+      newGeomPiece = new CylinderGeometryPiece(child);
     }
     else if ( go_type == TorusGeometryPiece::TYPE_NAME ) {
-      newGeomPiece = scinew TorusGeometryPiece(child);
+      newGeomPiece = new TorusGeometryPiece(child);
     }
     else if ( go_type ==  SmoothCylGeomPiece::TYPE_NAME ) {
-      newGeomPiece = scinew SmoothCylGeomPiece(child);
+      newGeomPiece = new SmoothCylGeomPiece(child);
     }
     else if ( go_type == EllipsoidGeometryPiece::TYPE_NAME ) {
-      newGeomPiece = scinew EllipsoidGeometryPiece(child);
+      newGeomPiece = new EllipsoidGeometryPiece(child);
     }
     else if ( go_type == ConeGeometryPiece::TYPE_NAME ) {
-      newGeomPiece = scinew ConeGeometryPiece(child);
+      newGeomPiece = new ConeGeometryPiece(child);
     }
     else if ( go_type == TriGeometryPiece::TYPE_NAME ) {
-      newGeomPiece = scinew TriGeometryPiece(child);
+      newGeomPiece = new TriGeometryPiece(child);
     }
     else if ( go_type == UnionGeometryPiece::TYPE_NAME ) {
-      newGeomPiece = scinew UnionGeometryPiece(child);
+      newGeomPiece = new UnionGeometryPiece(child);
     }
     else if ( go_type == DifferenceGeometryPiece::TYPE_NAME ) {
-      newGeomPiece = scinew DifferenceGeometryPiece(child);
+      newGeomPiece = new DifferenceGeometryPiece(child);
     }
     else if ( go_type == FileGeometryPiece::TYPE_NAME ) {
-      newGeomPiece = scinew FileGeometryPiece(child);
+      newGeomPiece = new FileGeometryPiece(child);
     }
     else if ( go_type == IntersectionGeometryPiece::TYPE_NAME ) {
-      newGeomPiece = scinew IntersectionGeometryPiece(child);
+      newGeomPiece = new IntersectionGeometryPiece(child);
     }
     else if ( go_type == NullGeometryPiece::TYPE_NAME ) {
-      newGeomPiece = scinew NullGeometryPiece(child);
+      newGeomPiece = new NullGeometryPiece(child);
     }
     else if (go_type == "res"         || go_type == "velocity" || 
              go_type == "temperature" || go_type == "comment"  ||

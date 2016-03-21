@@ -65,7 +65,7 @@ PartVel::schedInitPartVel( const LevelP& level, SchedulerP& sched )
 {
  
   string taskname = "PartVel::InitPartVel";
-  Task* tsk = scinew Task(taskname, this, &PartVel::InitPartVel);
+  Task* tsk = new Task(taskname, this, &PartVel::InitPartVel);
 
   // actual velocity we will compute
   for (ArchesLabel::PartVelMap::iterator i = d_fieldLabels->partVel.begin(); 
@@ -89,7 +89,7 @@ PartVel::schedComputePartVel( const LevelP& level, SchedulerP& sched, const int 
 {
  
   string taskname = "PartVel::ComputePartVel";
-  Task* tsk = scinew Task(taskname, this, &PartVel::ComputePartVel, rkStep);
+  Task* tsk = new Task(taskname, this, &PartVel::ComputePartVel, rkStep);
 
   Ghost::GhostType gn = Ghost::None;
 

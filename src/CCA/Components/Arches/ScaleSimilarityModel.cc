@@ -107,7 +107,7 @@ ScaleSimilarityModel::sched_reComputeTurbSubmodel(SchedulerP& sched,
 
   string taskname =  "ScaleSimilarityModel::ReTurbSubmodel" +
                      timelabels->integrator_step_name;
-    Task* tsk = scinew Task(taskname, this,
+    Task* tsk = new Task(taskname, this,
                             &ScaleSimilarityModel::reComputeTurbSubmodel,
                             timelabels);
 

@@ -291,7 +291,7 @@ void Arenisca3::outputProblemSpec(ProblemSpecP& ps,bool output_cm_tag)
 
 Arenisca3* Arenisca3::clone()
 {
-  return scinew Arenisca3(*this);
+  return new Arenisca3(*this);
 }
 
 void Arenisca3::initializeCMData(const Patch* patch,

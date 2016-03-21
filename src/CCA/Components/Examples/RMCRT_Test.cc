@@ -109,7 +109,7 @@ void RMCRT_Test::problemSetup(const ProblemSpecP& prob_spec,
                               SimulationStateP& state )
 {
   d_sharedState = state;
-  d_material = scinew SimpleMaterial();
+  d_material = new SimpleMaterial();
   d_sharedState->registerSimpleMaterial( d_material );
 
 
@@ -157,9 +157,9 @@ void RMCRT_Test::problemSetup(const ProblemSpecP& prob_spec,
     string isFloat = type["type"];
     
     if( isFloat == "float" ){
-      d_RMCRT = scinew Ray( TypeDescription::float_type );
+      d_RMCRT = new Ray( TypeDescription::float_type );
     } else {
-      d_RMCRT = scinew Ray( TypeDescription::double_type );
+      d_RMCRT = new Ray( TypeDescription::double_type );
     }
 
     d_RMCRT->registerVarLabels(0,d_compAbskgLabel,
@@ -205,7 +205,7 @@ void RMCRT_Test::problemSetup(const ProblemSpecP& prob_spec,
   //  Read in initalizeUsingUda section
   ProblemSpecP uda_ps = prob_spec->findBlock("initalizeUsingUda");
   if(uda_ps){
-    d_old_uda = scinew useOldUdaData();
+    d_old_uda = new useOldUdaData();
     uda_ps->get( "uda_name"  ,          d_old_uda->udaName );
     uda_ps->get( "timestep"  ,          d_old_uda->timestep );
     uda_ps->get( "abskg_varName"  ,     d_old_uda->abskgName );
@@ -242,7 +242,7 @@ void RMCRT_Test::problemSetup(const ProblemSpecP& prob_spec,
   //__________________________________
   // usingOldUda bullet proofing
   if(d_old_uda){
-    DataArchive* archive = scinew DataArchive(d_old_uda->udaName);
+    DataArchive* archive = new DataArchive(d_old_uda->udaName);
 
     // does the user specified timestep exist?
     vector<int> index;
@@ -308,10 +308,10 @@ void RMCRT_Test::scheduleInitialize ( const LevelP& level,
 
   Task* task = NULL;
   if (!d_old_uda) {
-    task = scinew Task( "RMCRT_Test::initialize", this,
+    task = new Task( "RMCRT_Test::initialize", this,
                         &RMCRT_Test::initialize );
   } else {
-    task = scinew Task( "RMCRT_Test::initializeWithUda", this,
+    task = new Task( "RMCRT_Test::initializeWithUda", this,
                         &RMCRT_Test::initializeWithUda );
   }
 
@@ -336,7 +336,7 @@ void RMCRT_Test::scheduleComputeStableTimestep ( const LevelP& level, SchedulerP
 {
   printSchedule(level,dbg,"RMCRT_Test::scheduleComputeStableTimestep");
 
-  Task* task = scinew Task( "RMCRT_Test::computeStableTimestep", this,
+  Task* task = new Task( "RMCRT_Test::computeStableTimestep", this,
                             &RMCRT_Test::computeStableTimestep );
 
   task->computes( d_sharedState->get_delt_label(),level.get_rep() );
@@ -743,7 +743,7 @@ void RMCRT_Test::initializeWithUda (const ProcessorGroup*,
 {
   //__________________________________
   // retreive data from uda
-  DataArchive* archive = scinew DataArchive( d_old_uda->udaName );
+  DataArchive* archive = new DataArchive( d_old_uda->udaName );
   vector<int> index;
   vector<double> times;
   archive->queryTimesteps(index, times);

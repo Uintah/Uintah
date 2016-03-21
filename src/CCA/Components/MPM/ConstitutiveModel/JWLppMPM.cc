@@ -212,7 +212,7 @@ void JWLppMPM::outputProblemSpec(ProblemSpecP& ps,bool output_cm_tag)
 
 JWLppMPM* JWLppMPM::clone()
 {
-  return scinew JWLppMPM(*this);
+  return new JWLppMPM(*this);
 }
 
 void JWLppMPM::initializeCMData(const Patch* patch,

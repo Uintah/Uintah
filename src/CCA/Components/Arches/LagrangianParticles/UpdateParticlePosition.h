@@ -46,7 +46,7 @@ public:
       ~Builder(){}
 
       UpdateParticlePosition* build()
-      { return scinew UpdateParticlePosition( _task_name, _matl_index ); }
+      { return new UpdateParticlePosition( _task_name, _matl_index ); }
 
       private: 
 

@@ -63,7 +63,7 @@ void Burger::problemSetup(const ProblemSpecP& params,
   sharedState_ = sharedState;
   ProblemSpecP burger = params->findBlock("Burger");
   burger->require("delt", delt_);
-  mymat_ = scinew SimpleMaterial();
+  mymat_ = new SimpleMaterial();
   sharedState->registerSimpleMaterial(mymat_);
 }
  
@@ -72,7 +72,7 @@ void Burger::problemSetup(const ProblemSpecP& params,
 void Burger::scheduleInitialize(const LevelP& level,
                                    SchedulerP& sched)
 {
-  Task* task = scinew Task("Burger::initialize",
+  Task* task = new Task("Burger::initialize",
                      this, &Burger::initialize);
   task->computes(u_label);
   sched->addTask(task, level->eachPatch(), sharedState_->allMaterials());
@@ -89,7 +89,7 @@ void Burger::scheduleRestartInitialize(const LevelP& level,
 void Burger::scheduleComputeStableTimestep(const LevelP& level,
                                           SchedulerP& sched)
 {
-  Task* task = scinew Task("Burger::computeStableTimestep",
+  Task* task = new Task("Burger::computeStableTimestep",
                      this, &Burger::computeStableTimestep);
                      
   task->computes(sharedState_->get_delt_label(),level.get_rep());
@@ -100,7 +100,7 @@ void Burger::scheduleComputeStableTimestep(const LevelP& level,
 void  Burger::scheduleTimeAdvance( const LevelP& level, 
                                    SchedulerP& sched)
 {
-  Task* task = scinew Task("Burger::timeAdvance",
+  Task* task = new Task("Burger::timeAdvance",
                      this, &Burger::timeAdvance);
                      
   task->requires(Task::OldDW, u_label, Ghost::AroundNodes, 1);

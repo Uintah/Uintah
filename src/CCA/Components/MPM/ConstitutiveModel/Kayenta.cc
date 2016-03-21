@@ -295,7 +295,7 @@ void Kayenta::outputProblemSpec(ProblemSpecP& ps,bool output_cm_tag)
 }
 Kayenta* Kayenta::clone()
 {
-  return scinew Kayenta(*this);
+  return new Kayenta(*this);
 }
 void Kayenta::initializeCMData(const Patch* patch,
                                const MPMMaterial* matl,

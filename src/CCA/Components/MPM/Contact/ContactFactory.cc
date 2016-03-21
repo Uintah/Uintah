@@ -52,7 +52,7 @@ Contact* ContactFactory::create(const ProcessorGroup* myworld,
     throw ProblemSetupException(warn, __FILE__, __LINE__);
    }
    
-   CompositeContact * contact_list = scinew CompositeContact(myworld, lb, flag);
+   CompositeContact * contact_list = new CompositeContact(myworld, lb, flag);
    
    for (ProblemSpecP child = mpm_ps->findBlock("contact"); child != 0;
         child = child->findNextBlock("contact")) {
@@ -61,23 +61,23 @@ Contact* ContactFactory::create(const ProcessorGroup* myworld,
      child->getWithDefault("type",con_type, "null");
      
       if (con_type == "null")
-        contact_list->add(scinew NullContact(myworld,ss,lb,flag));
+        contact_list->add(new NullContact(myworld,ss,lb,flag));
       
       else if (con_type == "single_velocity")
-        contact_list->add(scinew SingleVelContact(myworld,child,ss,lb,flag));
+        contact_list->add(new SingleVelContact(myworld,child,ss,lb,flag));
       
       else if (con_type == "nodal_svf")
-        contact_list->add(scinew NodalSVFContact(myworld,child,ss,lb,flag));
+        contact_list->add(new NodalSVFContact(myworld,child,ss,lb,flag));
       
       else if (con_type == "friction")
-        contact_list->add(scinew FrictionContact(myworld,child,ss,lb,flag));
+        contact_list->add(new FrictionContact(myworld,child,ss,lb,flag));
       
       else if (con_type == "approach")
-        contact_list->add(scinew ApproachContact(myworld,child,ss,lb,flag));
+        contact_list->add(new ApproachContact(myworld,child,ss,lb,flag));
       
       else if (con_type == "specified_velocity" || con_type == "specified"
                || con_type == "rigid"  )
-        contact_list->add(scinew SpecifiedBodyContact(myworld,child,ss,lb,
+        contact_list->add(new SpecifiedBodyContact(myworld,child,ss,lb,
                                                       flag));
       
       else {
@@ -89,7 +89,7 @@ Contact* ContactFactory::create(const ProcessorGroup* myworld,
    // 
    if(contact_list->size()==0) {
      proc0cout << "no contact - using null" << endl;
-     contact_list->add(scinew NullContact(myworld,ss,lb,flag));
+     contact_list->add(new NullContact(myworld,ss,lb,flag));
    }
    
    return contact_list;

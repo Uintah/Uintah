@@ -74,7 +74,7 @@ void HypoElasticImplicit::outputProblemSpec(ProblemSpecP& ps,
 
 HypoElasticImplicit* HypoElasticImplicit::clone()
 {
-  return scinew HypoElasticImplicit(*this);
+  return new HypoElasticImplicit(*this);
 }
 
 void HypoElasticImplicit::initializeCMData(const Patch* patch,
@@ -510,7 +510,7 @@ namespace Uintah {
   {
     static TypeDescription* td = 0;
     if(!td){
-      td = scinew TypeDescription(TypeDescription::Other,
+      td = new TypeDescription(TypeDescription::Other,
                                   "HypoElasticImplicit::StateData", true, 
                                   &makeMPI_CMData);
     }

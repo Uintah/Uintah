@@ -63,14 +63,14 @@ void doSimpleExampleTests(Suite* suite, bool verbose)
 {
   // just some example I drew on my whiteboard
   std::set<const Box*> boxes;
-  boxes.insert(scinew Box(IntVector(6, 1, 0), IntVector(15, 5, 0), 1));
-  boxes.insert(scinew Box(IntVector(6, 6, 0), IntVector(10, 10, 0), 2));
-  boxes.insert(scinew Box(IntVector(11, 6, 0), IntVector(15, 15, 0), 3));
-  boxes.insert(scinew Box(IntVector(6, 11, 0), IntVector(10, 15, 0), 4));
-  boxes.insert(scinew Box(IntVector(1, 6, 0), IntVector(5, 10, 0), 5));
-  boxes.insert(scinew Box(IntVector(1, 11, 0), IntVector(5, 20, 0), 6));
-  boxes.insert(scinew Box(IntVector(6, 16, 0), IntVector(15, 20, 0), 7));  
-  boxes.insert(scinew Box(IntVector(16, 1, 0), IntVector(20, 5, 0), 8));
+  boxes.insert(new Box(IntVector(6, 1, 0), IntVector(15, 5, 0), 1));
+  boxes.insert(new Box(IntVector(6, 6, 0), IntVector(10, 10, 0), 2));
+  boxes.insert(new Box(IntVector(11, 6, 0), IntVector(15, 15, 0), 3));
+  boxes.insert(new Box(IntVector(6, 11, 0), IntVector(10, 15, 0), 4));
+  boxes.insert(new Box(IntVector(1, 6, 0), IntVector(5, 10, 0), 5));
+  boxes.insert(new Box(IntVector(1, 11, 0), IntVector(5, 20, 0), 6));
+  boxes.insert(new Box(IntVector(6, 16, 0), IntVector(15, 20, 0), 7));  
+  boxes.insert(new Box(IntVector(16, 1, 0), IntVector(20, 5, 0), 8));
 
   BoxRangeQuerier rangeQuerier(boxes.begin(), boxes.end());
   ISuperBoxSet* superBoxSet =
@@ -111,7 +111,7 @@ void doGridTests(Suite* suite, int n, int numTakeAway, bool verbose)
 	  id = i;
 	if (takeAwayRandIter == takeAwayRands.end() ||
 	    i < *takeAwayRandIter) {
-	  boxes.insert(scinew Box(IntVector(x, y, z), IntVector(x, y, z), id));
+	  boxes.insert(new Box(IntVector(x, y, z), IntVector(x, y, z), id));
 	}
 	else {
 	  ++takeAwayRandIter;

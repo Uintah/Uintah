@@ -63,8 +63,8 @@ SolidReactionModel::SolidReactionModel(const ProcessorGroup* myworld, ProblemSpe
    : ModelInterface(myworld), d_params(params), d_prob_spec(prob_spec)
 {
     mymatls = 0;
-    Ilb  = scinew ICELabel();
-    d_saveConservedVars = scinew saveConservedVars(); 
+    Ilb  = new ICELabel();
+    d_saveConservedVars = new saveConservedVars(); 
 
     // Labels
     reactedFractionLabel   = VarLabel::create("F",
@@ -131,28 +131,28 @@ void SolidReactionModel::problemSetup(GridP& grid, SimulationStateP& sharedState
     if(!rateConstChild->getAttribute("type", modelType))
       throw ProblemSetupException("SolidReactionModel: Cannot find type for RateConstantModel", __FILE__, __LINE__);
     if(modelType == "Arrhenius")
-      rateConstant = scinew Arrhenius(rateConstChild);    
+      rateConstant = new Arrhenius(rateConstChild);    
     if(modelType == "ModifiedArrhenius")
-      rateConstant = scinew ModifiedArrhenius(rateConstChild);    
+      rateConstant = new ModifiedArrhenius(rateConstChild);    
 
 
     // Create the rate model  
     if(!rateModelChild->getAttribute("type", modelType))
       throw ProblemSetupException("SolidReactionModel: Cannot find type for RateModel", __FILE__, __LINE__);
     if(modelType == "AvaramiErofeev")
-      rateModel = scinew AvaramiErofeevModel(rateModelChild);
+      rateModel = new AvaramiErofeevModel(rateModelChild);
     if(modelType == "ContractingCylinder")
-      rateModel = scinew ContractingCylinderModel(rateModelChild);
+      rateModel = new ContractingCylinderModel(rateModelChild);
     if(modelType == "ContractingSphere")
-      rateModel = scinew ContractingSphereModel(rateModelChild);
+      rateModel = new ContractingSphereModel(rateModelChild);
     if(modelType == "Diffusion")
-      rateModel = scinew DiffusionModel(rateModelChild);
+      rateModel = new DiffusionModel(rateModelChild);
     if(modelType == "Power")
-      rateModel = scinew PowerModel(rateModelChild);
+      rateModel = new PowerModel(rateModelChild);
     if(modelType == "ProutTompkins")
-      rateModel = scinew ProutTompkinsModel(rateModelChild);    
+      rateModel = new ProutTompkinsModel(rateModelChild);    
     if(modelType == "NthOrder")
-      rateModel = scinew NthOrderModel(rateModelChild);    
+      rateModel = new NthOrderModel(rateModelChild);    
 
     //__________________________________
     //  Are we saving the total burned mass and total burned energy
@@ -176,7 +176,7 @@ void SolidReactionModel::problemSetup(GridP& grid, SimulationStateP& sharedState
 
     //__________________________________
     //  define the materialSet
-    mymatls = scinew MaterialSet();
+    mymatls = new MaterialSet();
 
     vector<int> m;
     m.push_back(0);                       // needed for the pressure and NC_CCWeight
@@ -206,14 +206,14 @@ void SolidReactionModel::scheduleComputeModelSources(SchedulerP& sched,
                                                      const LevelP& level,
                                                      const ModelInfo* mi)
 {
-  Task* t = scinew Task("SolidReactionModel::computeModelSources", this,
+  Task* t = new Task("SolidReactionModel::computeModelSources", this,
                         &SolidReactionModel::computeModelSources, mi);
   cout_doing << "SolidReactionModel::scheduleComputeModelSources "<<  endl;
 
   Ghost::GhostType  gn  = Ghost::None;
   const MaterialSubset* react_matl = reactant->thisMaterial();
   const MaterialSubset* prod_matl  = product->thisMaterial();
-  MaterialSubset* one_matl     = scinew MaterialSubset();
+  MaterialSubset* one_matl     = new MaterialSubset();
   one_matl->add(0);
   one_matl->addReference();
   MaterialSubset* press_matl   = one_matl;

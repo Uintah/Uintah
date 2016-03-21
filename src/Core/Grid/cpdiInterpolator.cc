@@ -59,7 +59,7 @@ cpdiInterpolator::~cpdiInterpolator()
 
 cpdiInterpolator* cpdiInterpolator::clone(const Patch* patch)
 {
-  return scinew cpdiInterpolator(patch, d_lcrit);
+  return new cpdiInterpolator(patch, d_lcrit);
 }
     
 void cpdiInterpolator::findCellAndWeights(const Point& pos,

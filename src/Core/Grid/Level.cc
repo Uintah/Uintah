@@ -174,7 +174,7 @@ Level::addPatch( const IntVector & lowIndex,
                  const IntVector & inHighIndex,
                        Grid      * grid )
 {
-  Patch* r = scinew Patch( this, lowIndex,highIndex,inLowIndex, inHighIndex, getIndex() );
+  Patch* r = new Patch( this, lowIndex,highIndex,inLowIndex, inHighIndex, getIndex() );
   r->setGrid(grid);
   d_realPatches.push_back(r);
   d_virtualAndRealPatches.push_back(r);
@@ -198,7 +198,7 @@ Level::addPatch( const IntVector & lowIndex,
                        Grid      * grid,
                        int         ID )
 {
-  Patch* r = scinew Patch( this, lowIndex,highIndex,inLowIndex, inHighIndex, getIndex(), ID );
+  Patch* r = new Patch( this, lowIndex,highIndex,inLowIndex, inHighIndex, getIndex(), ID );
   r->setGrid(grid);
   d_realPatches.push_back(r);
   d_virtualAndRealPatches.push_back(r);
@@ -606,7 +606,7 @@ void Level::finalizeLevel()
 {
   MALLOC_TRACE_TAG_SCOPE("Level::finalizeLevel");
 
-  d_each_patch = scinew PatchSet();
+  d_each_patch = new PatchSet();
   d_each_patch->addReference();
 
   // The compute set requires an array const Patch*, we must copy d_realPatches
@@ -617,7 +617,7 @@ void Level::finalizeLevel()
 
   d_each_patch->addEach(tmp_patches);
 
-  d_all_patches = scinew PatchSet();
+  d_all_patches = new PatchSet();
   d_all_patches->addReference();
   d_all_patches->addAll(tmp_patches);
 
@@ -666,7 +666,7 @@ void Level::finalizeLevel(bool periodicX, bool periodicY, bool periodicZ)
   MALLOC_TRACE_TAG_SCOPE("Level::finalizeLevel(periodic)");
 
   // set each_patch and all_patches before creating virtual patches
-  d_each_patch = scinew PatchSet();
+  d_each_patch = new PatchSet();
   d_each_patch->addReference();
 
   // The compute set requires an array const Patch*, we must copy d_realPatches
@@ -678,7 +678,7 @@ void Level::finalizeLevel(bool periodicX, bool periodicY, bool periodicZ)
 
   d_each_patch->addEach(tmp_patches);
 
-  d_all_patches = scinew PatchSet();
+  d_all_patches = new PatchSet();
   d_all_patches->addReference();
   d_all_patches->addAll(tmp_patches);
 
@@ -774,7 +774,7 @@ void Level::setBCTypes()
     delete d_bvh;
   }
 
-  d_bvh = scinew PatchBVH(d_virtualAndRealPatches);
+  d_bvh = new PatchBVH(d_virtualAndRealPatches);
 
   rtimes[0] += level_bc_timer().seconds();
   level_bc_timer.reset();
@@ -978,7 +978,7 @@ void Level::setBCTypes()
   if (d_bvh != NULL){
     delete d_bvh;
   }
-  d_bvh = scinew PatchBVH(d_virtualAndRealPatches);
+  d_bvh = new PatchBVH(d_virtualAndRealPatches);
 
 }
 

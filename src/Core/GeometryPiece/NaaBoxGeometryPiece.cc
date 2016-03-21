@@ -147,7 +147,7 @@ NaaBoxGeometryPiece::outputHelper( ProblemSpecP & ps ) const {
 GeometryPieceP
 NaaBoxGeometryPiece::clone() const
 {
-  return scinew NaaBoxGeometryPiece(*this);
+  return new NaaBoxGeometryPiece(*this);
 }
 
 //______________________________________________________________________

@@ -88,7 +88,7 @@ CompNeoHookImplicit::outputProblemSpec(ProblemSpecP& ps,bool output_cm_tag)
 
 CompNeoHookImplicit* CompNeoHookImplicit::clone()
 {
-  return scinew CompNeoHookImplicit(*this);
+  return new CompNeoHookImplicit(*this);
 }
 
 void CompNeoHookImplicit::initializeCMData(const Patch* patch,
@@ -606,7 +606,7 @@ namespace Uintah {
   {
     static TypeDescription* td = 0;
     if(!td){
-      td = scinew TypeDescription(TypeDescription::Other,
+      td = new TypeDescription(TypeDescription::Other,
                                   "CompNeoHookImplicit::StateData", true, 
                                   &makeMPI_CMData);
     }

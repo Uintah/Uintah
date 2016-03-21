@@ -101,86 +101,86 @@ ConstitutiveModel* ConstitutiveModelFactory::create(ProblemSpecP& ps,
   }
 
   if (mat_type == "rigid")
-    return(scinew RigidMaterial(child,flags));
+    return(new RigidMaterial(child,flags));
 
   else if (mat_type == "comp_mooney_rivlin")
-    return(scinew CompMooneyRivlin(child,flags));
+    return(new CompMooneyRivlin(child,flags));
   else if (mat_type == "nonlocal_drucker_prager")
-    return(scinew NonLocalDruckerPrager(child,flags));
+    return(new NonLocalDruckerPrager(child,flags));
   else if (mat_type == "Arenisca")
-    return(scinew Arenisca(child,flags));
+    return(new Arenisca(child,flags));
   else if (mat_type == "Arenisca3")
-    return(scinew Arenisca3(child,flags));
+    return(new Arenisca3(child,flags));
   else if (mat_type == "Arenisca4")
-    return(scinew Arenisca4(child,flags));
+    return(new Arenisca4(child,flags));
 //  else if (mat_type == "arena")
-//    return(scinew Arena(child,flags));
+//    return(new Arena(child,flags));
 
   else if (mat_type ==  "comp_neo_hook") {
     if (flags->d_integrator_type == "explicit" ||
         flags->d_integrator_type == "fracture")
-      return(scinew UCNH(child,flags,false,false));
+      return(new UCNH(child,flags,false,false));
     else if (flags->d_integrator_type == "implicit")
-      return(scinew UCNH(child,flags));
+      return(new UCNH(child,flags));
   }
   else if (mat_type ==  "cnh_damage")
-    return(scinew UCNH(child,flags,false,true));
+    return(new UCNH(child,flags,false,true));
 
   else if (mat_type ==  "UCNH")
-    return(scinew UCNH(child,flags));
+    return(new UCNH(child,flags));
 
   else if (mat_type ==  "cnh_mms")
-    return(scinew CNH_MMS(child,flags));
+    return(new CNH_MMS(child,flags));
 
   else if (mat_type ==  "cnhp_damage")
-    return(scinew UCNH(child,flags,true,true));
+    return(new UCNH(child,flags,true,true));
 
   else if (mat_type ==  "trans_iso_hyper") {
     if (flags->d_integrator_type == "explicit" ||
         flags->d_integrator_type == "fracture")
-      return(scinew TransIsoHyper(child,flags));
+      return(new TransIsoHyper(child,flags));
     else if (flags->d_integrator_type == "implicit")
-      return(scinew TransIsoHyperImplicit(child,flags));
+      return(new TransIsoHyperImplicit(child,flags));
   }
 
   else if (mat_type ==  "visco_trans_iso_hyper") {
     if (flags->d_integrator_type == "explicit" ||
         flags->d_integrator_type == "fracture")
-      return(scinew ViscoTransIsoHyper(child,flags));
+      return(new ViscoTransIsoHyper(child,flags));
     else if (flags->d_integrator_type == "implicit")
-    return(scinew ViscoTransIsoHyperImplicit(child,flags));
+    return(new ViscoTransIsoHyperImplicit(child,flags));
   }
 
   else if (mat_type ==  "ideal_gas")
-    return(scinew IdealGasMP(child,flags));
+    return(new IdealGasMP(child,flags));
 
   else if (mat_type ==  "p_alpha")
-    return(scinew P_Alpha(child,flags));
+    return(new P_Alpha(child,flags));
 
   else if (mat_type ==  "water")
-    return(scinew Water(child,flags));
+    return(new Water(child,flags));
 
   else if (mat_type ==  "TH_water")
-    return(scinew TH_Water(child,flags));
+    return(new TH_Water(child,flags));
 
   else if (mat_type == "comp_neo_hook_plastic")
-    return(scinew UCNH(child,flags,true,false));
+    return(new UCNH(child,flags,true,false));
 
   else if (mat_type ==  "visco_scram"){
     if (flags->d_integrator_type == "explicit" ||
         flags->d_integrator_type == "fracture")
-      return(scinew ViscoScram(child,flags));
+      return(new ViscoScram(child,flags));
     else if (flags->d_integrator_type == "implicit")
-      return(scinew ViscoScramImplicit(child,flags));
+      return(new ViscoScramImplicit(child,flags));
   }
 
   else if (mat_type ==  "viscoSCRAM_hs")
-    return(scinew ViscoSCRAMHotSpot(child,flags));
+    return(new ViscoSCRAMHotSpot(child,flags));
 
   else if (mat_type ==  "hypo_elastic") {
     if (flags->d_integrator_type == "explicit" ||
         flags->d_integrator_type == "fracture")
-      return(scinew HypoElastic(child,flags));
+      return(new HypoElastic(child,flags));
     else if (flags->d_integrator_type == "implicit"){
       if(!flags->d_doGridReset){
          ostringstream msg;
@@ -188,60 +188,60 @@ ConstitutiveModel* ConstitutiveModelFactory::create(ProblemSpecP& ps,
              << " <do_grid_reset>false</do_grid_reset> \n";
          throw ProblemSetupException(msg.str(),__FILE__, __LINE__);
       }
-      return(scinew HypoElasticImplicit(child,flags));
+      return(new HypoElasticImplicit(child,flags));
     }
   }
 
 #if !defined(NO_FORTRAN)
   else if (mat_type == "hypo_elastic_fortran")
-    return(scinew HypoElasticFortran(child,flags));
+    return(new HypoElasticFortran(child,flags));
 
   else if (mat_type == "kayenta")
-    return(scinew Kayenta(child,flags));
+    return(new Kayenta(child,flags));
 
   else if (mat_type == "diamm")
-    return(scinew Diamm(child,flags));
+    return(new Diamm(child,flags));
 #endif
 
   else if (mat_type ==  "mw_visco_elastic")
-    return(scinew MWViscoElastic(child,flags));
+    return(new MWViscoElastic(child,flags));
 
   else if (mat_type ==  "murnaghanMPM")
-    return(scinew MurnaghanMPM(child,flags));
+    return(new MurnaghanMPM(child,flags));
 
   else if (mat_type ==  "program_burn")
-    return(scinew ProgramBurn(child,flags));
+    return(new ProgramBurn(child,flags));
 
   else if (mat_type ==  "shell_CNH")
-    return(scinew ShellMaterial(child,flags));
+    return(new ShellMaterial(child,flags));
 
   else if (mat_type ==  "elastic_plastic")
-    return(scinew ElasticPlasticHP(child,flags));
+    return(new ElasticPlasticHP(child,flags));
 
   else if (mat_type ==  "elastic_plastic_hp")
-    return(scinew ElasticPlasticHP(child,flags));
+    return(new ElasticPlasticHP(child,flags));
 
   else if (mat_type ==  "soil_foam")
-    return(scinew SoilFoam(child,flags));
+    return(new SoilFoam(child,flags));
 
   else if (mat_type ==  "visco_plastic")
-    return(scinew ViscoPlastic(child,flags));
+    return(new ViscoPlastic(child,flags));
 
   else if (mat_type ==  "murnaghanMPM")
-    return(scinew MurnaghanMPM(child,flags));
+    return(new MurnaghanMPM(child,flags));
 
   else if (mat_type ==  "jwlpp_mpm")
-    return(scinew JWLppMPM(child,flags));
+    return(new JWLppMPM(child,flags));
 
 //  else if (mat_type ==  "camclay")
-//    return(scinew CamClay(child,flags));
+//    return(new CamClay(child,flags));
 
   else if (mat_type ==  "rf_elastic_plastic")
-    return(scinew RFElasticPlastic(child,flags));
+    return(new RFElasticPlastic(child,flags));
 
   else if (mat_type ==  "TongeRameshPTR") {
     if (flags->d_integrator_type == "explicit"){
-      return(scinew TongeRameshPTR(child,flags));
+      return(new TongeRameshPTR(child,flags));
     } else {
       ostringstream msg;
       msg << "\n ERROR: One may not use TongeRameshPTR along with \n"

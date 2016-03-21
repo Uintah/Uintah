@@ -224,11 +224,11 @@ DORadiationModel::problemSetup( ProblemSpecP& params )
 
   if (linear_sol == "petsc"){
 
-    d_linearSolver = scinew RadPetscSolver(d_myworld);
+    d_linearSolver = new RadPetscSolver(d_myworld);
 
   } else if (linear_sol == "hypre"){
 
-    d_linearSolver = scinew RadHypreSolver(d_myworld);
+    d_linearSolver = new RadHypreSolver(d_myworld);
 
   }
 

@@ -95,7 +95,7 @@ bool DifferenceBCData::operator==(const BCGeomBase& rhs) const
 
 DifferenceBCData* DifferenceBCData::clone()
 {
-  return scinew DifferenceBCData(*this);
+  return new DifferenceBCData(*this);
 }
 
 void DifferenceBCData::addBCData(BCData& bc)

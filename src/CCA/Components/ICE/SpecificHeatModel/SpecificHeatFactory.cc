@@ -56,13 +56,13 @@ SpecificHeat* SpecificHeatFactory::create(ProblemSpecP& ps)
       throw ProblemSetupException("No model for specific_heat", __FILE__, __LINE__);
     }
     if (cv_model == "Debye"){
-      return(scinew DebyeCv(cv_ps));
+      return(new DebyeCv(cv_ps));
     }else if (cv_model == "Component"){
-      return(scinew ComponentCv(cv_ps));
+      return(new ComponentCv(cv_ps));
     }else if (cv_model == "NASAPolynomial"){
-      return(scinew NASAPolynomialCv(cv_ps));
+      return(new NASAPolynomialCv(cv_ps));
     }else if (cv_model == "Polynomial"){
-      return(scinew PolynomialCv(cv_ps));
+      return(new PolynomialCv(cv_ps));
     }else{
       ostringstream warn;
       warn << "ERROR ICE: Unknown specific heat model ("<< cv_model << " )\n"

@@ -54,7 +54,7 @@ public:
       ~Builder(){}
 
       WallHFVariable* build()
-      { return scinew WallHFVariable( _task_name, _matl_index, _shared_state ); }
+      { return new WallHFVariable( _task_name, _matl_index, _shared_state ); }
 
       private:
 

@@ -34,7 +34,7 @@ SDInterfaceModel::SDInterfaceModel(ProblemSpecP& ps, SimulationStateP& sS, MPMFl
   d_Mflag = Mflag;
   d_sharedState = sS;
 
-  d_lb = scinew MPMLabel;
+  d_lb = new MPMLabel;
 
   if(d_Mflag->d_8or27==8){
     NGP=1;

@@ -44,7 +44,7 @@ EnthalpyShaddixBuilder::EnthalpyShaddixBuilder( const std::string         & mode
 EnthalpyShaddixBuilder::~EnthalpyShaddixBuilder(){}
 
 ModelBase* EnthalpyShaddixBuilder::build() {
-  return scinew EnthalpyShaddix( d_modelName, d_sharedState, d_fieldLabels, d_icLabels, d_scalarLabels, d_props, d_quadNode );
+  return new EnthalpyShaddix( d_modelName, d_sharedState, d_fieldLabels, d_icLabels, d_scalarLabels, d_props, d_quadNode );
 }
 // End Builder
 //---------------------------------------------------------------------------
@@ -282,7 +282,7 @@ void
 EnthalpyShaddix::sched_initVars( const LevelP& level, SchedulerP& sched )
 {
   string taskname = "EnthalpyShaddix::initVars"; 
-  Task* tsk = scinew Task(taskname, this, &EnthalpyShaddix::initVars);
+  Task* tsk = new Task(taskname, this, &EnthalpyShaddix::initVars);
 
   tsk->computes(d_modelLabel);
   tsk->computes(d_gasLabel); 
@@ -332,7 +332,7 @@ void
 EnthalpyShaddix::sched_computeModel( const LevelP& level, SchedulerP& sched, int timeSubStep )
 {
   std::string taskname = "EnthalpyShaddix::computeModel";
-  Task* tsk = scinew Task(taskname, this, &EnthalpyShaddix::computeModel, timeSubStep);
+  Task* tsk = new Task(taskname, this, &EnthalpyShaddix::computeModel, timeSubStep);
 
   Ghost::GhostType  gn  = Ghost::None;
 

@@ -56,7 +56,7 @@ public:
       ~Builder(){}
 
       RateDeposition* build()
-      { return scinew RateDeposition( _task_name, _matl_index , _Nenv ); }
+      { return new RateDeposition( _task_name, _matl_index , _Nenv ); }
       private: 
       std::string _task_name; 
       int _matl_index; 

@@ -50,7 +50,7 @@ void CNH_MMS::outputProblemSpec(ProblemSpecP& ps,bool output_cm_tag)
 
 CNH_MMS* CNH_MMS::clone()
 {
-  return scinew CNH_MMS(*this);
+  return new CNH_MMS(*this);
 }
 
 void CNH_MMS::initializeCMData(const Patch* patch,

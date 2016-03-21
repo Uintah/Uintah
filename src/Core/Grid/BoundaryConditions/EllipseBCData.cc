@@ -70,7 +70,7 @@ bool EllipseBCData::operator==(const BCGeomBase& rhs) const
 
 EllipseBCData* EllipseBCData::clone()
 {
-  return scinew EllipseBCData(*this);
+  return new EllipseBCData(*this);
 }
 
 void EllipseBCData::addBCData(BCData& bc) 

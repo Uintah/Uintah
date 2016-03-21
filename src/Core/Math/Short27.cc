@@ -84,7 +84,7 @@ const TypeDescription* fun_getTypeDescription(Short27*)
 {
   static TypeDescription* td = 0;
   if(!td){
-    td = scinew TypeDescription(TypeDescription::Short27, "Short27", true,
+    td = new TypeDescription(TypeDescription::Short27, "Short27", true,
                                 &makeMPI_Short27);
   }
   return td;

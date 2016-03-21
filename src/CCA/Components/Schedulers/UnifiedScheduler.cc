@@ -310,10 +310,10 @@ UnifiedScheduler::problemSetup( const ProblemSpecP&     prob_spec,
   // Create the UnifiedWorkers here (pinned to cores in UnifiedSchedulerWorker::run())
   char name[1024];
   for (int i = 0; i < numThreads_; i++) {
-    UnifiedSchedulerWorker* worker = scinew UnifiedSchedulerWorker(this, i);
+    UnifiedSchedulerWorker* worker = new UnifiedSchedulerWorker(this, i);
     t_worker[i] = worker;
     sprintf(name, "Computing Worker %d-%d", Parallel::getRootProcessorGroup()->myrank(), i);
-    Thread* t = scinew Thread(worker, name);
+    Thread* t = new Thread(worker, name);
     t_thread[i] = t;
   }
 
@@ -358,7 +358,7 @@ SchedulerP
 UnifiedScheduler::createSubScheduler()
 {
   UintahParallelPort * lbp      = getPort("load balancer");
-  UnifiedScheduler   * subsched = scinew UnifiedScheduler( d_myworld, m_outPort_, this );
+  UnifiedScheduler   * subsched = new UnifiedScheduler( d_myworld, m_outPort_, this );
 
   subsched->attachPort( "load balancer", lbp );
   subsched->d_sharedState = d_sharedState;
@@ -383,10 +383,10 @@ UnifiedScheduler::createSubScheduler()
     char name[1024];
     ThreadGroup* subGroup = new ThreadGroup("subscheduler-group", 0);  // 0 is main/parent thread group
     for (int i = 0; i < subsched->numThreads_; i++) {
-      UnifiedSchedulerWorker* worker = scinew UnifiedSchedulerWorker(subsched, i);
+      UnifiedSchedulerWorker* worker = new UnifiedSchedulerWorker(subsched, i);
       subsched->t_worker[i] = worker;
       sprintf(name, "Task Compute Thread ID: %d", i + subsched->numThreads_);
-      Thread* t = scinew Thread(worker, name, subGroup);
+      Thread* t = new Thread(worker, name, subGroup);
       subsched->t_thread[i] = t;
     }
   }

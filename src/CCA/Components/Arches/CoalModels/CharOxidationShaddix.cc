@@ -40,7 +40,7 @@ CharOxidationShaddixBuilder::CharOxidationShaddixBuilder( const std::string     
 CharOxidationShaddixBuilder::~CharOxidationShaddixBuilder(){}
 
 ModelBase* CharOxidationShaddixBuilder::build() {
-  return scinew CharOxidationShaddix( d_modelName, d_sharedState, d_fieldLabels, d_icLabels, d_scalarLabels, d_quadNode );
+  return new CharOxidationShaddix( d_modelName, d_sharedState, d_fieldLabels, d_icLabels, d_scalarLabels, d_quadNode );
 }
 // End Builder
 //---------------------------------------------------------------------------
@@ -212,7 +212,7 @@ void
 CharOxidationShaddix::sched_initVars( const LevelP& level, SchedulerP& sched )
 {
   string taskname = "CharOxidationShaddix::initVars"; 
-  Task* tsk = scinew Task(taskname, this, &CharOxidationShaddix::initVars);
+  Task* tsk = new Task(taskname, this, &CharOxidationShaddix::initVars);
 
   tsk->computes(d_modelLabel);
   tsk->computes(d_gasLabel);
@@ -305,7 +305,7 @@ CharOxidationShaddix::sched_computeModel( const LevelP& level, SchedulerP& sched
   }
 
   std::string taskname = "CharOxidationShaddix::sched_computeModel";
-  Task* tsk = scinew Task(taskname, this, &CharOxidationShaddix::computeModel, timeSubStep );
+  Task* tsk = new Task(taskname, this, &CharOxidationShaddix::computeModel, timeSubStep );
 
   Ghost::GhostType  gn  = Ghost::None;
 

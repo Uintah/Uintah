@@ -36,12 +36,12 @@ using namespace Uintah;
 
 ImplicitCM::ImplicitCM()
 {
-  d_lb = scinew MPMLabel();
+  d_lb = new MPMLabel();
 }
 
 ImplicitCM::ImplicitCM(const ImplicitCM* cm)
 {
-  d_lb = scinew MPMLabel();
+  d_lb = new MPMLabel();
 }
 
 ImplicitCM::~ImplicitCM()

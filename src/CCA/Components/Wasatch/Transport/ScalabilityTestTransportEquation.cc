@@ -64,17 +64,17 @@ namespace WasatchCore{
 
     if( dir=="X" ){
       typedef typename DiffusiveVelocity<typename FaceTypes<FieldT>::XFace>::Builder XFlux;
-      builder = scinew XFlux( diffFluxTag,  phiTag, 1.0 );
+      builder = new XFlux( diffFluxTag,  phiTag, 1.0 );
       fs = DIFFUSIVE_FLUX_X;
     }
     else if( dir=="Y" ){
       typedef typename DiffusiveVelocity<typename FaceTypes<FieldT>::YFace>::Builder YFlux;
-      builder = scinew YFlux( diffFluxTag, phiTag, 1.0 );
+      builder = new YFlux( diffFluxTag, phiTag, 1.0 );
       fs = DIFFUSIVE_FLUX_Y;
     }
     else if( dir=="Z" ){
       typedef typename DiffusiveVelocity<typename FaceTypes<FieldT>::ZFace>::Builder ZFlux;
-      builder = scinew ZFlux( diffFluxTag, phiTag, 1.0 );
+      builder = new ZFlux( diffFluxTag, phiTag, 1.0 );
       fs = DIFFUSIVE_FLUX_Z;
     }
     else{
@@ -205,10 +205,10 @@ namespace WasatchCore{
         params_->get( "SolutionVariable", basePhiName );
         const Expr::Tag basePhiTag ( basePhiName, Expr::STATE_DYNAMIC );        
         typedef typename ScalabilityTestSrc<FieldT>::Builder coupledSrcTerm;
-        factory.register_expression( scinew coupledSrcTerm( srcTag, basePhiTag, nEqs) );
+        factory.register_expression( new coupledSrcTerm( srcTag, basePhiTag, nEqs) );
       } else {
         typedef typename ScalabilityTestSrcUncoupled<FieldT>::Builder uncoupledSrcTerm;
-        factory.register_expression( scinew uncoupledSrcTerm( srcTag, this->solution_variable_tag()) );
+        factory.register_expression( new uncoupledSrcTerm( srcTag, this->solution_variable_tag()) );
       }
     }
     info[SOURCE_TERM] = srcTag;
@@ -227,9 +227,9 @@ namespace WasatchCore{
     if( monolithic ){
       proc0cout << "ScalabilityTestTransportEquation " << solnVarName_ << " MONOLITHIC RHS ACTIVE - diffusion is always on!" << endl;
       const Expr::Tag dcoefTag( solnVarName_+"DiffCoeff", Expr::STATE_NONE );
-      factory.register_expression( scinew typename Expr::ConstantExpr<FieldT>::Builder( dcoefTag, 1.0 ) );
+      factory.register_expression( new typename Expr::ConstantExpr<FieldT>::Builder( dcoefTag, 1.0 ) );
       return factory.register_expression(
-          scinew typename MonolithicRHS<FieldT>::
+          new typename MonolithicRHS<FieldT>::
           Builder( Expr::Tag(solnVarName_+"_rhs", Expr::STATE_NONE),
                    dcoefTag,
                    info.find(CONVECTIVE_FLUX_X)->second,
@@ -243,9 +243,9 @@ namespace WasatchCore{
       const bool tempConstDens = false;
       Expr::Tag srcTag = info.find(SOURCE_TERM)->second;
       if (srcTag == Expr::Tag()) {
-        return factory.register_expression( scinew typename ScalarRHS<FieldT>::Builder( rhsTag_, info, densT, tempConstDens) );
+        return factory.register_expression( new typename ScalarRHS<FieldT>::Builder( rhsTag_, info, densT, tempConstDens) );
       } else {
-        return factory.register_expression( scinew typename ScalarRHS<FieldT>::Builder( rhsTag_, info, tag_list(srcTag), densT, tempConstDens) );
+        return factory.register_expression( new typename ScalarRHS<FieldT>::Builder( rhsTag_, info, tag_list(srcTag), densT, tempConstDens) );
       }
     }
   }

@@ -50,8 +50,8 @@
 
 #if defined( MALLOC_TRACE )
 
-//define define scinew to new so MallocTrace catches the calls
-#  define scinew new
+//define define new to new so MallocTrace catches the calls
+#  define new new
 
 //include malloc trace functions
 #include "MallocTrace.h"
@@ -147,12 +147,12 @@ void DumpAllocator(Allocator*, const char* filename = "alloc.dump");
 
    void* operator new(size_t, Uintah::Allocator*, const char*, int);
    void* operator new[](size_t, Uintah::Allocator*, const char*, int);
-#  define scinew new(Uintah::default_allocator, __FILE__, __LINE__)
+#  define new new(Uintah::default_allocator, __FILE__, __LINE__)
 
 #else  // MALLOC_TRACE
 
    // Not tracing and not using sci malloc...
-#  define scinew new
+#  define new new
 
 //set these macros to be blank so everything will compile without MallocTrace
 #define MALLOC_TRACE_TAG_SCOPE(tag) ;

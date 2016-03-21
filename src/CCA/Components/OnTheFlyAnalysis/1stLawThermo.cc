@@ -70,9 +70,9 @@ FirstLawThermo::FirstLawThermo(ProblemSpecP& module_spec,
   d_zeroPatch    = 0;
   d_conversion   = 1.0/1000.;     // in SI units this is J/KJ
   
-  FL_lb = scinew FL_Labels();
-  I_lb  = scinew ICELabel();
-  M_lb  = scinew MPMLabel();
+  FL_lb = new FL_Labels();
+  I_lb  = new ICELabel();
+  M_lb  = new MPMLabel();
   
   FL_lb->lastCompTimeLabel    = VarLabel::create( "lastCompTime",     max_vartype::getTypeDescription() );
   FL_lb->fileVarsStructLabel  = VarLabel::create( "FileInfo_1stLaw",  PerPatch<FileInfoP>::getTypeDescription() );
@@ -126,17 +126,17 @@ void FirstLawThermo::problemSetup(const ProblemSpecP&,
   d_prob_spec->require( "timeStop",          d_StopTime );
   d_prob_spec->get(     "engy_convt_factor", d_conversion );   // energy conversion factor in SI it KJ->J   
   
-  d_zeroMatl = scinew MaterialSubset();
+  d_zeroMatl = new MaterialSubset();
   d_zeroMatl->add(0);
   d_zeroMatl->addReference();
   
-  d_zeroMatlSet = scinew MaterialSet();
+  d_zeroMatlSet = new MaterialSet();
   d_zeroMatlSet->add(0);
   d_zeroMatlSet->addReference();
 
   // one patch
   const Patch* p = grid->getPatchByID(0,0);
-  d_zeroPatch = scinew PatchSet();
+  d_zeroPatch = new PatchSet();
   d_zeroPatch->add(p);
   d_zeroPatch->addReference(); 
 
@@ -171,7 +171,7 @@ void FirstLawThermo::problemSetup(const ProblemSpecP&,
       type = entireFace;
     }
     // put the input variables into the global struct
-    cv_face* cvFace   = scinew cv_face;
+    cv_face* cvFace   = new cv_face;
     cvFace->p_dir     = p_dir;
     cvFace->normalDir = norm;
     cvFace->face      = type;
@@ -216,7 +216,7 @@ void FirstLawThermo::scheduleInitialize(SchedulerP& sched,
 {
   printSchedule(level,cout_doing,"FirstLawThermo::scheduleInitialize");
   
-  Task* t = scinew Task("FirstLawThermo::initialize",
+  Task* t = new Task("FirstLawThermo::initialize",
                   this, &FirstLawThermo::initialize);
   
   t->computes(FL_lb->lastCompTimeLabel);
@@ -240,7 +240,7 @@ void FirstLawThermo::initialize(const ProcessorGroup*,
     //__________________________________
     //  initialize fileInfo struct
     PerPatch<FileInfoP> fileInfo;
-    FileInfo* myFileInfo = scinew FileInfo();
+    FileInfo* myFileInfo = new FileInfo();
     fileInfo.get() = myFileInfo;
     
     new_dw->put(fileInfo,    FL_lb->fileVarsStructLabel, 0, patch);
@@ -277,7 +277,7 @@ void FirstLawThermo::scheduleDoAnalysis(SchedulerP& sched,
   //  compute the ICE contributions
   printSchedule( level,cout_doing,"FirstLawThermo::scheduleDoAnalysis" );
   
-  Task* t0 = scinew Task( "FirstLawThermo::compute_ICE_Contributions", 
+  Task* t0 = new Task( "FirstLawThermo::compute_ICE_Contributions", 
                      this,&FirstLawThermo::compute_ICE_Contributions );
 
   Ghost::GhostType  gn  = Ghost::None;
@@ -303,7 +303,7 @@ void FirstLawThermo::scheduleDoAnalysis(SchedulerP& sched,
   
   //__________________________________
   //  compute the MPM contributions
-  Task* t1 = scinew Task( "FirstLawThermo::compute_MPM_Contributions", 
+  Task* t1 = new Task( "FirstLawThermo::compute_MPM_Contributions", 
                      this,&FirstLawThermo::compute_MPM_Contributions );
 
   const MaterialSet* mpm_matls = d_sharedState->allMPMMaterials();
@@ -319,7 +319,7 @@ void FirstLawThermo::scheduleDoAnalysis(SchedulerP& sched,
 
   //__________________________________
   //  output the contributions
-  Task* t2 = scinew Task("FirstLawThermo::doAnalysis", 
+  Task* t2 = new Task("FirstLawThermo::doAnalysis", 
                     this,&FirstLawThermo::doAnalysis );
                     
   t2->requires( Task::OldDW, FL_lb->lastCompTimeLabel );
@@ -660,7 +660,7 @@ void FirstLawThermo::doAnalysis(const ProcessorGroup* pg,
       if( old_dw->exists( FL_lb->fileVarsStructLabel, 0, patch ) ){
         old_dw->get(fileInfo, FL_lb->fileVarsStructLabel, 0, patch);
       }else{  
-        FileInfo* myFileInfo = scinew FileInfo();
+        FileInfo* myFileInfo = new FileInfo();
         fileInfo.get() = myFileInfo;
       }
       

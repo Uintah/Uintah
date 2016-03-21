@@ -58,7 +58,7 @@ void TimestepNumber::scheduleSwitchTest(const LevelP& level, SchedulerP& sched)
 {
   printSchedule(level,dbg,"Switchinng Criteria:TimestepNumber::scheduleSwitchTest");
   
-  Task* t = scinew Task("switchTest", this, &TimestepNumber::switchTest);
+  Task* t = new Task("switchTest", this, &TimestepNumber::switchTest);
 
   t->computes(d_sharedState->get_switch_label());
   sched->addTask(t, level->eachPatch(),d_sharedState->allMaterials());

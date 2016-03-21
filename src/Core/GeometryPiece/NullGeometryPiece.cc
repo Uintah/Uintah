@@ -57,7 +57,7 @@ NullGeometryPiece::outputHelper( ProblemSpecP & ps ) const
 GeometryPieceP
 NullGeometryPiece::clone() const
 {
-  return scinew NullGeometryPiece(*this);
+  return new NullGeometryPiece(*this);
 }
 
 bool

@@ -47,7 +47,7 @@ YieldCondition* YieldConditionFactory::create(ProblemSpecP& ps, const bool using
     throw ProblemSetupException("MPM::ConstitutiveModel:No type for yield condition.", __FILE__, __LINE__);
 
   if (mat_type == "vonMises")
-    return(scinew VonMisesYield(child));
+    return(new VonMisesYield(child));
   else if (mat_type == "gurson"){
     if( usingRR ){
       ostringstream warn;
@@ -59,7 +59,7 @@ YieldCondition* YieldConditionFactory::create(ProblemSpecP& ps, const bool using
            
       throw ProblemSetupException(warn.str(), __FILE__, __LINE__);
     }
-    return(scinew GursonYield(child));
+    return(new GursonYield(child));
   }
   else 
     throw ProblemSetupException("MPM::ConstitutiveModel:Unknown Yield Condition ("+mat_type+")",
@@ -70,10 +70,10 @@ YieldCondition*
 YieldConditionFactory::createCopy(const YieldCondition* yc)
 {
    if (dynamic_cast<const VonMisesYield*>(yc))
-      return(scinew VonMisesYield(dynamic_cast<const VonMisesYield*>(yc)));
+      return(new VonMisesYield(dynamic_cast<const VonMisesYield*>(yc)));
 
    else if (dynamic_cast<const GursonYield*>(yc))
-      return(scinew GursonYield(dynamic_cast<const GursonYield*>(yc)));
+      return(new GursonYield(dynamic_cast<const GursonYield*>(yc)));
 
    else 
       throw ProblemSetupException("Cannot create copy of unknown yield condition", __FILE__, __LINE__);

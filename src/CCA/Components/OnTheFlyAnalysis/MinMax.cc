@@ -80,7 +80,7 @@ MinMax::MinMax(ProblemSpecP& module_spec,
   d_dataArchiver = dataArchiver;
   d_matl_set = 0;
   d_zero_matl = 0;
-  d_lb = scinew MinMaxLabel();
+  d_lb = new MinMaxLabel();
 }
 
 //__________________________________
@@ -289,12 +289,12 @@ void MinMax::problemSetup(const ProblemSpecP& prob_spec,
   m.erase(it, m.end());
 
   //Construct the matl_set
-  d_matl_set = scinew MaterialSet();
+  d_matl_set = new MaterialSet();
   d_matl_set->addAll(m);
   d_matl_set->addReference();
 
   // for fileInfo variable
-  d_zero_matl = scinew MaterialSubset();
+  d_zero_matl = new MaterialSubset();
   d_zero_matl->add(0);
   d_zero_matl->addReference();
 }
@@ -304,7 +304,7 @@ void MinMax::scheduleInitialize(SchedulerP& sched,
                                 const LevelP& level)
 {  
   printSchedule(level,cout_doing,"minMax::scheduleInitialize");
-  Task* t = scinew Task("MinMax::initialize", 
+  Task* t = new Task("MinMax::initialize", 
                   this, &MinMax::initialize);
   
   t->computes(d_lb->lastCompTimeLabel );
@@ -328,7 +328,7 @@ void MinMax::initialize(const ProcessorGroup*,
     //__________________________________
     //  initialize fileInfo struct
     PerPatch<FileInfoP> fileInfo;
-    FileInfo* myFileInfo = scinew FileInfo();
+    FileInfo* myFileInfo = new FileInfo();
     fileInfo.get() = myFileInfo;
     
     new_dw->put(fileInfo,    d_lb->fileVarsStructLabel, 0, patch);
@@ -370,7 +370,7 @@ void MinMax::scheduleDoAnalysis(SchedulerP& sched,
   
   //__________________________________
   //  computeMinMax task;     
-  Task* t0 = scinew Task( "MinMax::computeMinMax", 
+  Task* t0 = new Task( "MinMax::computeMinMax", 
                      this,&MinMax::computeMinMax );
                         
   t0->requires( Task::OldDW, d_lb->lastCompTimeLabel );
@@ -389,7 +389,7 @@ void MinMax::scheduleDoAnalysis(SchedulerP& sched,
                            + name , __FILE__, __LINE__);
       }
 
-      MaterialSubset* matSubSet = scinew MaterialSubset();
+      MaterialSubset* matSubSet = new MaterialSubset();
       matSubSet->add( d_analyzeVars[i].matl );
       matSubSet->addReference();
 
@@ -411,7 +411,7 @@ void MinMax::scheduleDoAnalysis(SchedulerP& sched,
   //  Write min/max to a  file
   // Only write data on patch 0 on each level
 
-  Task* t1 = scinew Task( "MinMax::doAnalysis", 
+  Task* t1 = new Task( "MinMax::doAnalysis", 
                        this,&MinMax::doAnalysis );      
                             
   t1->requires( Task::OldDW, d_lb->lastCompTimeLabel );
@@ -432,7 +432,7 @@ void MinMax::scheduleDoAnalysis(SchedulerP& sched,
   
   // first patch on this level
   const Patch* p = level->getPatch(0);
-  PatchSet* zeroPatch = scinew PatchSet();
+  PatchSet* zeroPatch = new PatchSet();
   zeroPatch->add(p);
   zeroPatch->addReference();
   
@@ -600,7 +600,7 @@ void MinMax::doAnalysis(const ProcessorGroup* pg,
     if( old_dw->exists( d_lb->fileVarsStructLabel, 0, patch ) ){
       old_dw->get( fileInfo, d_lb->fileVarsStructLabel, 0, patch );
     }else{  
-      FileInfo* myFileInfo = scinew FileInfo();
+      FileInfo* myFileInfo = new FileInfo();
       fileInfo.get() = myFileInfo;
     }
     

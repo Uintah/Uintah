@@ -46,7 +46,7 @@ using namespace Uintah;
 ParticleTest1::ParticleTest1(const ProcessorGroup* myworld)
   : UintahParallelComponent(myworld)
 {
-  lb_ = scinew ExamplesLabel();
+  lb_ = new ExamplesLabel();
 }
 
 ParticleTest1::~ParticleTest1()
@@ -64,7 +64,7 @@ void ParticleTest1::problemSetup(const ProblemSpecP& params,
   pt1->getWithDefault("doOutput", doOutput_, 0);
   pt1->getWithDefault("doGhostCells", doGhostCells_ , 0);
   
-  mymat_ = scinew SimpleMaterial();
+  mymat_ = new SimpleMaterial();
   sharedState_->registerSimpleMaterial(mymat_);
 
 }
@@ -72,7 +72,7 @@ void ParticleTest1::problemSetup(const ProblemSpecP& params,
 void ParticleTest1::scheduleInitialize(const LevelP& level,
                                SchedulerP& sched)
 {
-  Task* task = scinew Task("initialize",
+  Task* task = new Task("initialize",
                            this, &ParticleTest1::initialize);
   task->computes(lb_->pXLabel);
   task->computes(lb_->pMassLabel);
@@ -88,7 +88,7 @@ void ParticleTest1::scheduleRestartInitialize(const LevelP& level,
 void ParticleTest1::scheduleComputeStableTimestep(const LevelP& level,
                                           SchedulerP& sched)
 {
-  Task* task = scinew Task("computeStableTimestep",
+  Task* task = new Task("computeStableTimestep",
                            this, &ParticleTest1::computeStableTimestep);
   task->computes(sharedState_->get_delt_label(),level.get_rep());
   sched->addTask(task, level->eachPatch(), sharedState_->allMaterials());
@@ -100,7 +100,7 @@ ParticleTest1::scheduleTimeAdvance( const LevelP& level, SchedulerP& sched)
 {
   const MaterialSet* matls = sharedState_->allMaterials();
 
-  Task* task = scinew Task("timeAdvance",
+  Task* task = new Task("timeAdvance",
                            this, &ParticleTest1::timeAdvance);
 
   // set this in problemSetup.  0 is no ghost cells, 1 is all with 1 ghost
@@ -203,7 +203,7 @@ void ParticleTest1::timeAdvance(const ProcessorGroup*,
     for( int m = 0; m<matls->size(); ++m ){
       int matl = matls->get(m);
       ParticleSubset* pset = old_dw->getParticleSubset(matl, patch);
-      ParticleSubset* delset = scinew ParticleSubset(0,matl,patch);
+      ParticleSubset* delset = new ParticleSubset(0,matl,patch);
 
       // Get the arrays of particle values to be changed
       constParticleVariable<Point> px;

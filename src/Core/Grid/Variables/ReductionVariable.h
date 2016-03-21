@@ -163,7 +163,7 @@ WARNING
   {
     if(!td){
       T* junk=0;
-      td = scinew TypeDescription(TypeDescription::ReductionVariable,
+      td = new TypeDescription(TypeDescription::ReductionVariable,
                                   "ReductionVariable", &maker,
                                   fun_getTypeDescription(junk));
     }
@@ -175,7 +175,7 @@ WARNING
   ReductionVariable<T, Op>::maker()
   {
           
-     return scinew ReductionVariable<T, Op>();
+     return new ReductionVariable<T, Op>();
   }
    
   template<class T, class Op>
@@ -194,7 +194,7 @@ WARNING
   ReductionVariableBase*
   ReductionVariable<T, Op>::clone() const
   {
-    return scinew ReductionVariable<T, Op>(*this);
+    return new ReductionVariable<T, Op>(*this);
   }
 
   template<class T, class Op>

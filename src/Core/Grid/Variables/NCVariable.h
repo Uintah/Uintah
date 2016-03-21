@@ -79,7 +79,7 @@ WARNING
     virtual GridVariableBase* clone();
     virtual const GridVariableBase* clone() const;
     virtual GridVariableBase* cloneType() const
-    { return scinew NCVariable<T>(); }
+    { return new NCVariable<T>(); }
     
     // allocate(IntVector, IntVector) is hidden without this
     using GridVariable<T>::allocate;
@@ -116,7 +116,7 @@ WARNING
   NCVariable<T>::getTypeDescription()
   {
     if(!td){
-      td = scinew TypeDescription(TypeDescription::NCVariable,
+      td = new TypeDescription(TypeDescription::NCVariable,
                                   "NCVariable", &maker,
                                   fun_getTypeDescription((T*)0));
     }
@@ -127,7 +127,7 @@ WARNING
   Variable*
   NCVariable<T>::maker()
   {
-    return scinew NCVariable<T>();
+    return new NCVariable<T>();
   }
    
   template<class T>
@@ -139,14 +139,14 @@ WARNING
   GridVariableBase*
   NCVariable<T>::clone()
   {
-    return scinew NCVariable<T>(*this);
+    return new NCVariable<T>(*this);
   }
 
   template<class T>
   const GridVariableBase*
   NCVariable<T>::clone() const
   {
-    return scinew NCVariable<T>(*this);
+    return new NCVariable<T>(*this);
   }
 
   template<class T>

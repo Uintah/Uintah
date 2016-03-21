@@ -76,8 +76,8 @@ TypeDescription::register_type()
     ASSERT( !killed );
     ASSERT( !typelist )
 
-    types    = scinew map<string, const TypeDescription*>;
-    typelist = scinew vector<const TypeDescription*>;
+    types    = new map<string, const TypeDescription*>;
+    typelist = new vector<const TypeDescription*>;
   }
   
   map<string, const TypeDescription*>::iterator iter = types->find( getName() );

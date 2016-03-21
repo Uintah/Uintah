@@ -44,7 +44,7 @@ void fvSootFromYsoot::problemSetup( const ProblemSpecP& inputdb )
 void fvSootFromYsoot::sched_computeProp( const LevelP& level, SchedulerP& sched, int time_substep )
 {
   std::string taskname = "fvSootFromYsoot::computeProp"; 
-  Task* tsk = scinew Task( taskname, this, &fvSootFromYsoot::computeProp, time_substep ); 
+  Task* tsk = new Task( taskname, this, &fvSootFromYsoot::computeProp, time_substep ); 
   Ghost::GhostType  gn  = Ghost::None;
 
   _den_label    = VarLabel::find( _den_label_name );
@@ -143,7 +143,7 @@ void fvSootFromYsoot::sched_initialize( const LevelP& level, SchedulerP& sched )
     throw InvalidValue("Error: Cannot find Ys label in the fv soot function with name: "+_Ys_label_name,__FILE__,__LINE__); 
   }
 
-  Task* tsk = scinew Task(taskname, this, &fvSootFromYsoot::initialize);
+  Task* tsk = new Task(taskname, this, &fvSootFromYsoot::initialize);
   tsk->computes(_prop_label); 
 
   sched->addTask(tsk, level->eachPatch(), _shared_state->allArchesMaterials());

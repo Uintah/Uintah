@@ -46,7 +46,7 @@ LinearInterpolator::~LinearInterpolator()
 
 LinearInterpolator* LinearInterpolator::clone(const Patch* patch)
 {
-  return scinew LinearInterpolator(patch);
+  return new LinearInterpolator(patch);
  }
     
 //__________________________________

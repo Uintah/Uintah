@@ -32,7 +32,7 @@ ParticleConvectionBuilder::ParticleConvectionBuilder( const std::string         
 ParticleConvectionBuilder::~ParticleConvectionBuilder(){}
 
 ModelBase* ParticleConvectionBuilder::build(){
-  return scinew ParticleConvection( d_modelName, d_sharedState, d_fieldLabels, d_icLabels, d_scalarLabels, d_quadNode );
+  return new ParticleConvection( d_modelName, d_sharedState, d_fieldLabels, d_icLabels, d_scalarLabels, d_quadNode );
 }
 
 // End Builder
@@ -101,7 +101,7 @@ void
 ParticleConvection::sched_computeModel( const LevelP& level, SchedulerP& sched, int timeSubStep )
 {
   std::string taskname = "ParticleConvection::computeModel";
-  Task* tsk = scinew Task(taskname, this, &ParticleConvection::computeModel, timeSubStep );
+  Task* tsk = new Task(taskname, this, &ParticleConvection::computeModel, timeSubStep );
 
   if (d_timeSubStep == 0) {
     tsk->computes(d_modelLabel);

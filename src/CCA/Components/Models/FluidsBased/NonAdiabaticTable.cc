@@ -68,7 +68,7 @@ NonAdiabaticTable::NonAdiabaticTable(const ProcessorGroup* myworld,
 {
   d_scalar = 0;
   d_matl_set = 0;
-  lb  = scinew ICELabel();
+  lb  = new ICELabel();
   cumulativeEnergyReleased_CCLabel = VarLabel::create("cumulativeEnergyReleased", CCVariable<double>::getTypeDescription());
   cumulativeEnergyReleased_src_CCLabel = VarLabel::create("cumulativeEnergyReleased_src", CCVariable<double>::getTypeDescription());
 }
@@ -124,7 +124,7 @@ void NonAdiabaticTable::problemSetup(GridP&, SimulationStateP& in_state,
 
   vector<int> m(1);
   m[0] = d_matl->getDWIndex();
-  d_matl_set = scinew MaterialSet();
+  d_matl_set = new MaterialSet();
   d_matl_set->addAll(m);
   d_matl_set->addReference();
 
@@ -143,7 +143,7 @@ void NonAdiabaticTable::problemSetup(GridP&, SimulationStateP& in_state,
   
   for (ProblemSpecP child = params->findBlock("tableValue"); child != 0;
        child = child->findNextBlock("tableValue")) {
-    TableValue* tv = scinew TableValue;
+    TableValue* tv = new TableValue;
     child->get(tv->name);
     tv->index = table->addDependentVariable(tv->name);
     string labelname = tv->name;
@@ -207,7 +207,7 @@ void NonAdiabaticTable::problemSetup(GridP&, SimulationStateP& in_state,
   // - Let ICE know that this model computes the 
   //   thermoTransportProperties.
   // - register the scalar to be transported
-  d_scalar = scinew Scalar();
+  d_scalar = new Scalar();
   d_scalar->index = 0;
   d_scalar->name  = "f";
   
@@ -263,12 +263,12 @@ void NonAdiabaticTable::problemSetup(GridP&, SimulationStateP& in_state,
     if(pieces.size() == 0){
      throw ParameterNotFound("No piece specified in geom_object", __FILE__, __LINE__);
     } else if(pieces.size() > 1){
-     mainpiece = scinew UnionGeometryPiece(pieces);
+     mainpiece = new UnionGeometryPiece(pieces);
     } else {
      mainpiece = pieces[0];
     }
 
-    d_scalar->regions.push_back(scinew Region(mainpiece, geom_obj_ps));
+    d_scalar->regions.push_back(new Region(mainpiece, geom_obj_ps));
   }
   if(d_scalar->regions.size() == 0) {
     throw ProblemSetupException("Variable: scalar-f does not have any initial value regions", __FILE__, __LINE__);
@@ -304,7 +304,7 @@ void NonAdiabaticTable::scheduleInitialize(SchedulerP& sched,
                                    const ModelInfo*)
 {
   cout_doing << "ADIABATIC_TABLE::scheduleInitialize " << endl;
-  Task* t = scinew Task("NonAdiabaticTable::initialize", this, 
+  Task* t = new Task("NonAdiabaticTable::initialize", this, 
                         &NonAdiabaticTable::initialize);
 
   t->modifies(lb->sp_vol_CCLabel);
@@ -452,7 +452,7 @@ void NonAdiabaticTable::scheduleModifyThermoTransportProperties(SchedulerP& sche
 {
   cout_doing << "ADIABATIC_TABLE::scheduleModifyThermoTransportProperties" << endl;
 
-  Task* t = scinew Task("NonAdiabaticTable::modifyThermoTransportProperties", 
+  Task* t = new Task("NonAdiabaticTable::modifyThermoTransportProperties", 
                    this,&NonAdiabaticTable::modifyThermoTransportProperties);
                    
   t->requires(Task::OldDW, d_scalar->scalar_CCLabel, Ghost::None,0);  
@@ -587,7 +587,7 @@ void NonAdiabaticTable::scheduleComputeModelSources(SchedulerP& sched,
                                                  const ModelInfo* mi)
 {
   cout_doing << "ADIABATIC_TABLE::scheduleComputeModelSources " << endl;
-  Task* t = scinew Task("NonAdiabaticTable::computeModelSources", 
+  Task* t = new Task("NonAdiabaticTable::computeModelSources", 
                    this,&NonAdiabaticTable::computeModelSources, mi);
                     
   Ghost::GhostType  gn = Ghost::None;  
@@ -832,7 +832,7 @@ void NonAdiabaticTable::scheduleTestConservation(SchedulerP& sched,
 {
   if(d_test_conservation){
     cout_doing << "ADIABATICTABLE::scheduleTestConservation " << endl;
-    Task* t = scinew Task("NonAdiabaticTable::testConservation", 
+    Task* t = new Task("NonAdiabaticTable::testConservation", 
                      this,&NonAdiabaticTable::testConservation, mi);
 
     Ghost::GhostType  gn = Ghost::None;

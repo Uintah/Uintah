@@ -111,7 +111,7 @@ main(int argc, char *argv[])
     const ProcessorGroup* world = Uintah::Parallel::getRootProcessorGroup();
     
     // Setup the initial grid
-    GridP grid=scinew Grid();
+    GridP grid=new Grid();
     IntVector extraCells(0,0,0);
 
     // save and remove the extra cells before the problem setup

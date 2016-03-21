@@ -528,11 +528,11 @@ void ThreadedTaskScheduler::post_MPI_recvs( DetailedTask * task
     }
 
     // Prepare to receive a message
-    BatchReceiveHandler* pBatchRecvHandler = scinew BatchReceiveHandler(batch);
+    BatchReceiveHandler* pBatchRecvHandler = new BatchReceiveHandler(batch);
     PackBufferInfo* p_mpibuff = 0;
 
 #ifdef USE_PACKING
-    p_mpibuff = scinew PackBufferInfo();
+    p_mpibuff = new PackBufferInfo();
     PackBufferInfo& mpibuff = *p_mpibuff;
 #else
     BufferInfo mpibuff;

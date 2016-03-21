@@ -85,7 +85,7 @@ void CNHPDamage::outputProblemSpec(ProblemSpecP& ps,bool output_cm_tag)
 
 CNHPDamage* CNHPDamage::clone()
 {
-  return scinew CNHPDamage(*this);
+  return new CNHPDamage(*this);
 }
 
 void 

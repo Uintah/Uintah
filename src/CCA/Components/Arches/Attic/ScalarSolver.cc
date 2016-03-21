@@ -89,7 +89,7 @@ ScalarSolver::problemSetup(const ProblemSpecP& params)
 {
   ProblemSpecP db = params->findBlock("MixtureFractionSolver");
 
-  d_discretize = scinew Discretization();
+  d_discretize = new Discretization();
 
   string conv_scheme;
   db->getWithDefault("convection_scheme",conv_scheme,"central-upwind");
@@ -148,12 +148,12 @@ ScalarSolver::problemSetup(const ProblemSpecP& params)
   }
 
   // make source and boundary_condition objects
-  d_source = scinew Source(d_physicalConsts);
+  d_source = new Source(d_physicalConsts);
   
   if (d_doMMS){
     d_source->problemSetup(db);
   }
-  d_rhsSolver = scinew RHSSolver();
+  d_rhsSolver = new RHSSolver();
 
   d_dynScalarModel = d_turbModel->getDynScalarModel();
   double model_turbPrNo;
@@ -228,7 +228,7 @@ ScalarSolver::sched_buildLinearMatrix(SchedulerP& sched,
   string taskname =  "ScalarSolver::BuildCoeff" +
                      timelabels->integrator_step_name;
 
-  Task* tsk = scinew Task(taskname, this,
+  Task* tsk = new Task(taskname, this,
                           &ScalarSolver::buildLinearMatrix,
                           timelabels);
 
@@ -626,7 +626,7 @@ ScalarSolver::sched_scalarLinearSolve(SchedulerP& sched,
   string taskname =  "ScalarSolver::ScalarLinearSolve" + 
                      timelabels->integrator_step_name;
 
-  Task* tsk = scinew Task(taskname, this,
+  Task* tsk = new Task(taskname, this,
                           &ScalarSolver::scalarLinearSolve,
                           timelabels);
   

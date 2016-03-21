@@ -82,7 +82,7 @@ CylinderShellPiece::outputHelper( ProblemSpecP & ps ) const
 GeometryPieceP
 CylinderShellPiece::clone() const
 {
-  return scinew CylinderShellPiece(*this);
+  return new CylinderShellPiece(*this);
 }
 
 ///////////

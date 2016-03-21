@@ -109,11 +109,11 @@ DORadiationModel::problemSetup(const ProblemSpecP& params)
 
     if ( calculator_type == "constant" ){ 
 
-      _props_calculator = scinew ConstantProperties(); 
+      _props_calculator = new ConstantProperties(); 
 
     } else if ( calculator_type == "burns_christon" ){ 
 
-      _props_calculator = scinew BurnsChriston(); 
+      _props_calculator = new BurnsChriston(); 
 
     } else { 
 
@@ -191,15 +191,15 @@ DORadiationModel::problemSetup(const ProblemSpecP& params)
   db->findBlock("LinearSolver")->getAttribute("type",linear_sol);
 
   if (linear_sol == "petsc"){ 
-    d_linearSolver = scinew RadPetscSolver(d_myworld);
+    d_linearSolver = new RadPetscSolver(d_myworld);
 #ifdef HAVE_HYPRE
   }else if (linear_sol == "hypre"){ 
-    d_linearSolver = scinew RadHypreSolver(d_myworld);
+    d_linearSolver = new RadHypreSolver(d_myworld);
 #endif
   }
   
 
-//  d_linearSolver = scinew RadPetscSolver(d_myworld);
+//  d_linearSolver = new RadPetscSolver(d_myworld);
   d_linearSolver->problemSetup(db);
 
   ffield = -1;

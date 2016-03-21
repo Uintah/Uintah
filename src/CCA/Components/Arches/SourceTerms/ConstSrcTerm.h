@@ -48,7 +48,7 @@ public:
       ~Builder(){}; 
 
       ConstSrcTerm* build()
-      { return scinew ConstSrcTerm( _name, _shared_state, _required_label_names, _type ); };
+      { return new ConstSrcTerm( _name, _shared_state, _required_label_names, _type ); };
 
     private: 
 

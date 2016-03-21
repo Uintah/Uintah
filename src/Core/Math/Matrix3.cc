@@ -909,7 +909,7 @@ namespace Uintah {
   {
     static TypeDescription* td = 0;
     if(!td){
-      td = scinew TypeDescription(TypeDescription::Matrix3, "Matrix3", true,
+      td = new TypeDescription(TypeDescription::Matrix3, "Matrix3", true,
                                   &makeMPI_Matrix3);
     }
     return td;

@@ -130,7 +130,7 @@ void CompNeoHookPlas::outputProblemSpec(ProblemSpecP& ps,bool output_cm_tag)
 
 CompNeoHookPlas* CompNeoHookPlas::clone()
 {
-  return scinew CompNeoHookPlas(*this);
+  return new CompNeoHookPlas(*this);
 }
 
 void CompNeoHookPlas::initializeCMData(const Patch* patch,
@@ -680,7 +680,7 @@ const TypeDescription* fun_getTypeDescription(CompNeoHookPlas::StateData*)
 {
    static TypeDescription* td = 0;
    if(!td){
-      td = scinew TypeDescription(TypeDescription::Other,
+      td = new TypeDescription(TypeDescription::Other,
                           "CompNeoHookPlas::StateData", true, &makeMPI_CMData);
    }
    return td;   

@@ -284,7 +284,7 @@ void SimulationState::finalizeMaterials()
   if (all_mpm_matls && all_mpm_matls->removeReference()){
     delete all_mpm_matls;
   }
-  all_mpm_matls = scinew MaterialSet();
+  all_mpm_matls = new MaterialSet();
   all_mpm_matls->addReference();
   vector<int> tmp_mpm_matls(mpm_matls.size());
   for( int i=0; i<(int)mpm_matls.size(); i++ ) {
@@ -296,7 +296,7 @@ void SimulationState::finalizeMaterials()
   if (all_cz_matls && all_cz_matls->removeReference()){
     delete all_cz_matls;
   }
-  all_cz_matls = scinew MaterialSet();
+  all_cz_matls = new MaterialSet();
   all_cz_matls->addReference();
   vector<int> tmp_cz_matls(cz_matls.size());
   for( int i=0; i<(int)cz_matls.size(); i++ ) {
@@ -308,7 +308,7 @@ void SimulationState::finalizeMaterials()
   if (all_arches_matls && all_arches_matls->removeReference()){
     delete all_arches_matls;
   }
-  all_arches_matls = scinew MaterialSet();
+  all_arches_matls = new MaterialSet();
   all_arches_matls->addReference();
   vector<int> tmp_arches_matls(arches_matls.size());
   for (int i = 0; i<(int)arches_matls.size();i++){
@@ -320,7 +320,7 @@ void SimulationState::finalizeMaterials()
   if (all_ice_matls && all_ice_matls->removeReference()){
     delete all_ice_matls;
   }
-  all_ice_matls = scinew MaterialSet();
+  all_ice_matls = new MaterialSet();
   all_ice_matls->addReference();
   vector<int> tmp_ice_matls(ice_matls.size());
   for(int i=0;i<(int)ice_matls.size();i++) {
@@ -332,7 +332,7 @@ void SimulationState::finalizeMaterials()
   if (all_wasatch_matls && all_wasatch_matls->removeReference()){
     delete all_wasatch_matls;
   }
-  all_wasatch_matls = scinew MaterialSet();
+  all_wasatch_matls = new MaterialSet();
   all_wasatch_matls->addReference();
   vector<int> tmp_wasatch_matls(wasatch_matls.size());
 
@@ -345,7 +345,7 @@ void SimulationState::finalizeMaterials()
   if (all_matls && all_matls->removeReference()){
     delete all_matls;
   }
-  all_matls = scinew MaterialSet();
+  all_matls = new MaterialSet();
   all_matls->addReference();
   vector<int> tmp_matls(matls.size());
   
@@ -355,7 +355,7 @@ void SimulationState::finalizeMaterials()
   all_matls->addAll(tmp_matls);
 
   if (orig_all_matls == 0) {
-    orig_all_matls = scinew MaterialSet();
+    orig_all_matls = new MaterialSet();
     orig_all_matls->addReference();
     orig_all_matls->addAll(tmp_matls);
   }
@@ -363,7 +363,7 @@ void SimulationState::finalizeMaterials()
   if (allInOneMatl && allInOneMatl->removeReference()){
     delete allInOneMatl;
   }
-  allInOneMatl = scinew MaterialSubset();
+  allInOneMatl = new MaterialSubset();
   allInOneMatl->addReference();
   // a material that represents all materials 
   // (i.e. summed over all materials -- the whole enchilada)
@@ -371,7 +371,7 @@ void SimulationState::finalizeMaterials()
 
   //refine matl subset, only done on matl 0 (matl independent)
   if (!refine_flag_matls) {
-    refine_flag_matls = scinew MaterialSubset();
+    refine_flag_matls = new MaterialSubset();
     refine_flag_matls->addReference();
     refine_flag_matls->add(0);
   }

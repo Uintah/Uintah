@@ -206,7 +206,7 @@ void
 RMCRTRadiationModel::sched_solve( const LevelP& level, SchedulerP& sched, const TimeIntegratorLabel* timeLabels )
 {
   const string taskname = "RMCRTRadiationModel::solve"; 
-  Task* tsk = scinew Task(taskname, this, &RMCRTRadiationModel::solve, timeLabels); 
+  Task* tsk = new Task(taskname, this, &RMCRTRadiationModel::solve, timeLabels); 
 
   //Variables needed from DW
   Ghost::GhostType  gac = Ghost::AroundCells;

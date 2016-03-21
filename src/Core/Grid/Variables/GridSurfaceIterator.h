@@ -220,7 +220,7 @@ WARNING
 
      GridSurfaceIterator* clone() const
      {
-       return scinew GridSurfaceIterator(*this);
+       return new GridSurfaceIterator(*this);
      }
 
      std::ostream& put(std::ostream& out) const

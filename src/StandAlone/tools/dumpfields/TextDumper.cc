@@ -63,7 +63,7 @@ namespace Uintah {
   TextDumper::Step * 
   TextDumper::addStep(int timestep, double time, int index)
   {
-    return scinew Step(this->archive(), this->dirName(time, index), 
+    return new Step(this->archive(), this->dirName(time, index), 
                        timestep, time, index, opts_, flds_);
   }  
 

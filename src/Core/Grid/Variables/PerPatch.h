@@ -132,7 +132,7 @@ WARNING
      Variable*
      PerPatch<T>::maker()
      {
-       return scinew PerPatch<T>();
+       return new PerPatch<T>();
      }
 
 
@@ -146,7 +146,7 @@ WARNING
           // var for some functions the perpatches are used in (i.e., task->computes).
           // Since they're not fully-qualified variables, maker
           // would fail anyway.  And since most instances use Handle, it would be difficult.
-          td = scinew TypeDescription(TypeDescription::PerPatch,
+          td = new TypeDescription(TypeDescription::PerPatch,
                                       "PerPatch", &maker,
                                       fun_getTypeDescription((int*)0));
         }
@@ -163,8 +163,8 @@ WARNING
       {
         if(!td){
           TypeDescription* sub_td;
-          sub_td = scinew TypeDescription(TypeDescription::int_type, "int", true, MPI_INT);
-          td = scinew TypeDescription(TypeDescription::PerPatch, "PerPatch", &maker, sub_td);
+          sub_td = new TypeDescription(TypeDescription::int_type, "int", true, MPI_INT);
+          td = new TypeDescription(TypeDescription::PerPatch, "PerPatch", &maker, sub_td);
         }
         return td;
       }
@@ -175,8 +175,8 @@ WARNING
       {
         if(!td){
           TypeDescription* sub_td;
-          sub_td = scinew TypeDescription(TypeDescription::double_type, "double", true, MPI_DOUBLE);
-          td = scinew TypeDescription(TypeDescription::PerPatch, "PerPatch", &maker, sub_td);
+          sub_td = new TypeDescription(TypeDescription::double_type, "double", true, MPI_DOUBLE);
+          td = new TypeDescription(TypeDescription::PerPatch, "PerPatch", &maker, sub_td);
         }
         return td;
       }
@@ -188,8 +188,8 @@ WARNING
       {
         if(!td){
           TypeDescription* sub_td;
-          sub_td = scinew TypeDescription(TypeDescription::Other, "double*", true, MPI_DOUBLE);
-          td = scinew TypeDescription(TypeDescription::PerPatch, "PerPatch", &maker, sub_td);
+          sub_td = new TypeDescription(TypeDescription::Other, "double*", true, MPI_DOUBLE);
+          td = new TypeDescription(TypeDescription::PerPatch, "PerPatch", &maker, sub_td);
         }
         return td;
       }
@@ -203,7 +203,7 @@ WARNING
       PerPatchBase*
       PerPatch<T>::clone() const
       {
-         return scinew PerPatch<T>(*this);
+         return new PerPatch<T>(*this);
       }
    
    template<class T>

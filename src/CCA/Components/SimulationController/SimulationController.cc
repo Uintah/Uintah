@@ -174,7 +174,7 @@ SimulationController::SimulationController( const ProcessorGroup * myworld
   d_papiErrorCodes.insert(pair<int, string>(-23, "Too many events or attributes"));
   d_papiErrorCodes.insert(pair<int, string>(-24, "Bad combination of features"));
 
-  d_eventValues = scinew long long[d_papiEvents.size()];
+  d_eventValues = new long long[d_papiEvents.size()];
   d_eventSet = PAPI_NULL;
   int retp = -1;
 
@@ -297,7 +297,7 @@ SimulationController::doRestart( const std::string & restartFromDir, int timeste
 void
 SimulationController::preGridSetup( void )
 {
-  d_sharedState = scinew SimulationState(d_ups);
+  d_sharedState = new SimulationState(d_ups);
 
   d_sharedState->d_usingLocalFileSystems = d_usingLocalFileSystems;
 
@@ -319,7 +319,7 @@ SimulationController::preGridSetup( void )
   }
 
   // Parse time struct
-  d_timeinfo = scinew SimulationTime(d_ups);
+  d_timeinfo = new SimulationTime(d_ups);
   d_sharedState->d_simTime = d_timeinfo;
 
 #ifdef HAVE_VISIT
@@ -342,7 +342,7 @@ SimulationController::gridSetup( void )
 
     Dir restartFromDir( d_fromDir );
     Dir checkpointRestartDir = restartFromDir.getSubdir( "checkpoints" );
-    d_archive = scinew DataArchive( checkpointRestartDir.getName(),
+    d_archive = new DataArchive( checkpointRestartDir.getName(),
                                     d_myworld->myrank(), d_myworld->size() );
 
     std::vector<int>    indices;
@@ -391,7 +391,7 @@ SimulationController::gridSetup( void )
   }
 
   if( !d_restarting ) {
-    grid = scinew Grid;
+    grid = new Grid;
     d_sim = dynamic_cast<SimulationInterface*>(getPort("sim"));
     if( !d_sim ) {
       throw InternalError("No simulation component", __FILE__, __LINE__);
@@ -884,11 +884,11 @@ SimulationController::getMemoryStats ( int timestep, bool create )
 
       if ( create )
       {
-        mallocPerProcStream = scinew std::ofstream( filename, std::ios::out | std::ios::trunc );
+        mallocPerProcStream = new std::ofstream( filename, std::ios::out | std::ios::trunc );
       }
       else
       {
-        mallocPerProcStream = scinew std::ofstream( filename, std::ios::out | std::ios::app );
+        mallocPerProcStream = new std::ofstream( filename, std::ios::out | std::ios::app );
       }
 
       if ( !mallocPerProcStream )
