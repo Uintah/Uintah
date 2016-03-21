@@ -291,112 +291,86 @@ void RuntimeStats::report( MPI_Comm comm, InfoStats & stats )
   Dout mpi_stats{"MPIStats", true};
   if (mpi_stats) {
     register_report( mpi_stats
-                   , "Time: MPI Coll"
+                   , "Time: Coll"
                    , RuntimeStats::Time
                    , []() { return MPI::Impl::CollTimer::max(); }
                    , []() { MPI::Impl::CollTimer::reset_tag(); }
                    );
     register_report( mpi_stats
-                   , "Count: MPI Coll"
+                   , "Count: Coll"
                    , RuntimeStats::Count
                    , []() { return MPI::Impl::CollTimer::count(); }
                    );
     register_report( mpi_stats
-                   , "Time: MPI Send"
+                   , "Time: Send"
                    , RuntimeStats::Time
                    , []() { return MPI::Impl::SendTimer::max(); }
                    , []() { MPI::Impl::SendTimer::reset_tag(); }
                    );
     register_report( mpi_stats
-                   , "Count: MPI Send"
+                   , "Count: Send"
                    , RuntimeStats::Count
                    , []() { return MPI::Impl::SendTimer::count(); }
                    );
     register_report( mpi_stats
-                   , "Time: MPI Recv"
+                   , "Time: Recv"
                    , RuntimeStats::Time
                    , []() { return MPI::Impl::RecvTimer::max(); }
                    , []() { MPI::Impl::RecvTimer::reset_tag(); }
                    );
     register_report( mpi_stats
-                   , "Count: MPI Recv"
+                   , "Count: Recv"
                    , RuntimeStats::Count
                    , []() { return MPI::Impl::RecvTimer::count(); }
                    );
     register_report( mpi_stats
-                   , "Time: MPI Wait"
+                   , "Time: Wait"
                    , RuntimeStats::Time
                    , []() { return MPI::Impl::WaitTimer::min(); }
                    , []() { MPI::Impl::WaitTimer::reset_tag(); }
                    );
     register_report( mpi_stats
-                   , "Count: MPI Wait"
+                   , "Count: Wait"
                    , RuntimeStats::Count
                    , []() { return MPI::Impl::WaitTimer::count(); }
                    );
     register_report( mpi_stats
-                   , "Time: MPI Test"
+                   , "Time: Test"
                    , RuntimeStats::Time
                    , []() { return MPI::Impl::TestTimer::min(); }
                    , []() { MPI::Impl::TestTimer::reset_tag(); }
                    );
     register_report( mpi_stats
-                   , "Count: MPI Test"
+                   , "Count: Test"
                    , RuntimeStats::Count
                    , []() { return MPI::Impl::TestTimer::count(); }
                    );
 
     register_report( mpi_stats
-                   , "Volume: MPI Send"
+                   , "Volume Total         "
                    , RuntimeStats::Memory
-                   , []() { return MPI::Impl::SendStats::get(MPI::Impl::COMM_SIZE); }
-                   , []() { return MPI::Impl::SendStats::clear(); }
+                   , []() { return MPI::Impl::VolumeStats::get(MPI::Impl::COMM_SIZE); }
+                   , []() { return MPI::Impl::VolumeStats::clear(); }
                    );
     register_report( mpi_stats
-                   , "Volume: MPI Send0 <= Cacheline"
+                   , "Volume0: <= Cacheline"
                    , RuntimeStats::Count
-                   , []() { return MPI::Impl::SendStats::get(MPI::Impl::COMM_HISTOGRAM_0); }
+                   , []() { return MPI::Impl::VolumeStats::get(MPI::Impl::COMM_HISTOGRAM_0); }
                    );
     register_report( mpi_stats
-                   , "Volume: MPI Send 1 <= Page"
+                   , "Volume1: <= Page     "
                    , RuntimeStats::Count
-                   , []() { return MPI::Impl::SendStats::get(MPI::Impl::COMM_HISTOGRAM_1); }
+                   , []() { return MPI::Impl::VolumeStats::get(MPI::Impl::COMM_HISTOGRAM_1); }
                    );
     register_report( mpi_stats
-                   , "Volume: MPI Send 2 <= HugePage"
+                   , "Volume2: <= HugePage "
                    , RuntimeStats::Count
-                   , []() { return MPI::Impl::SendStats::get(MPI::Impl::COMM_HISTOGRAM_2); }
+                   , []() { return MPI::Impl::VolumeStats::get(MPI::Impl::COMM_HISTOGRAM_2); }
                    );
     register_report( mpi_stats
-                   , "Volume: MPI Send 3 > HugePage"
+                   , "Volume3: >  HugePage "
                    , RuntimeStats::Count
-                   , []() { return MPI::Impl::SendStats::get(MPI::Impl::COMM_HISTOGRAM_3); }
-                   );
-    register_report( mpi_stats
-                   , "Volume: MPI Recv"
-                   , RuntimeStats::Memory
-                   , []() { return MPI::Impl::RecvStats::get(MPI::Impl::COMM_SIZE); }
-                   , []() { return MPI::Impl::RecvStats::clear(); }
-                   );
-    register_report( mpi_stats
-                   , "Volume: MPI Recv 0 <= Cacheline"
-                   , RuntimeStats::Count
-                   , []() { return MPI::Impl::RecvStats::get(MPI::Impl::COMM_HISTOGRAM_0); }
-                   );
-    register_report( mpi_stats
-                   , "Volume: MPI Recv 1 <= Page"
-                   , RuntimeStats::Count
-                   , []() { return MPI::Impl::RecvStats::get(MPI::Impl::COMM_HISTOGRAM_1); }
-                   );
-    register_report( mpi_stats
-                   , "Volume: MPI Recv 2 <= HugePage"
-                   , RuntimeStats::Count
-                   , []() { return MPI::Impl::RecvStats::get(MPI::Impl::COMM_HISTOGRAM_2); }
-                   );
-    register_report( mpi_stats
-                   , "Volume: MPI Recv 3 > HugePage"
-                   , RuntimeStats::Count
-                   , []() { return MPI::Impl::RecvStats::get(MPI::Impl::COMM_HISTOGRAM_3); }
+                   , []() { return MPI::Impl::VolumeStats::get(MPI::Impl::COMM_HISTOGRAM_3); }
                    );
   }
 
