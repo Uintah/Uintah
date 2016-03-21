@@ -254,12 +254,6 @@ SchedulerP ThreadedTaskScheduler::createSubScheduler()
 //
 void ThreadedTaskScheduler::execute(  int tgnum /*=0*/ , int iteration /*=0*/ )
 {
-//  // copy data timestep must be single threaded for now
-//  if (d_sharedState->isCopyDataTimestep()) {
-//    MPIScheduler::execute(tgnum, iteration);
-//    return;
-//  }
-
   ASSERTRANGE(tgnum, 0, static_cast<int>(graphs.size()));
 
   RuntimeStats::initialize_timestep(graphs);
@@ -327,9 +321,11 @@ void ThreadedTaskScheduler::execute(  int tgnum /*=0*/ , int iteration /*=0*/ )
   //------------------------------------------------------------------------------------------------
   // activate TaskRunners
   //------------------------------------------------------------------------------------------------
-  Impl::g_run_tasks = 1;
-  for (int i = 1; i < m_num_threads; ++i) {
-    Impl::g_thread_states[i] = Impl::ThreadState::Active;
+  if (!d_sharedState->isCopyDataTimestep()) {
+    Impl::g_run_tasks = 1;
+    for (int i = 1; i < m_num_threads; ++i) {
+      Impl::g_thread_states[i] = Impl::ThreadState::Active;
+    }
   }
   //------------------------------------------------------------------------------------------------
 
@@ -369,12 +365,14 @@ void ThreadedTaskScheduler::execute(  int tgnum /*=0*/ , int iteration /*=0*/ )
   //------------------------------------------------------------------------------------------------
   // deactivate TaskRunners
   //------------------------------------------------------------------------------------------------
-  Impl::g_run_tasks = 0;
+  if (!d_sharedState->isCopyDataTimestep()) {
+    Impl::g_run_tasks = 0;
 
-  Impl::thread_fence();
+    Impl::thread_fence();
 
-  for (int i = 1; i < m_num_threads; ++i) {
-    Impl::g_thread_states[i] = Impl::ThreadState::Inactive;
+    for (int i = 1; i < m_num_threads; ++i) {
+      Impl::g_thread_states[i] = Impl::ThreadState::Inactive;
+    }
   }
   //------------------------------------------------------------------------------------------------
 
