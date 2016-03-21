@@ -724,9 +724,9 @@ DetailedTasks::possiblyCreateDependency(       DetailedTask*              from,
         std::set<PSPatchMatlGhostRange>::iterator iter = m_particle_sends[toresource].find(pmg);
         ASSERT(iter != m_particle_sends[toresource].end());
         //subtract one from the count
-        iter->count_--;
+        iter->m_count--;
         //if the count is zero erase it from the sends list
-        if (iter->count_ == 0) {
+        if (iter->m_count == 0) {
           m_particle_sends[toresource].erase(iter);
 //          particleSends_[toresource].erase(pmg);
         }
@@ -735,9 +735,9 @@ DetailedTasks::possiblyCreateDependency(       DetailedTask*              from,
         std::set<PSPatchMatlGhostRange>::iterator iter = m_particle_recvs[fromresource].find(pmg);
         ASSERT(iter != m_particle_recvs[fromresource].end());
         //subtract one from the count
-        iter->count_--;
+        iter->m_count--;
         //if the count is zero erase it from the recvs list
-        if (iter->count_ == 0) {
+        if (iter->m_count == 0) {
           m_particle_recvs[fromresource].erase(iter);
 //          particleRecvs_[fromresource].erase(pmg);
         }
@@ -794,7 +794,7 @@ DetailedTasks::possiblyCreateDependency(       DetailedTask*              from,
       }
       else {
         //increment count
-        iter->count_++;
+        iter->m_count++;
       }
     }
     else if (toresource == m_proc_group->myrank()) {
@@ -805,7 +805,7 @@ DetailedTasks::possiblyCreateDependency(       DetailedTask*              from,
       }
       else {
         //increment the count
-        iter->count_++;
+        iter->m_count++;
       }
 
     }
@@ -933,9 +933,9 @@ void DetailedTasks::createInternalDependencyBatch(DetailedTask* from,
         std::set<PSPatchMatlGhostRange>::iterator iter = m_particle_sends[toresource].find(pmg);
         ASSERT(iter!=m_particle_sends[toresource].end());
         //subtract one from the count
-        iter->count_--;
+        iter->m_count--;
         //if the count is zero erase it from the sends list
-        if (iter->count_ == 0) {
+        if (iter->m_count == 0) {
           m_particle_sends[toresource].erase(iter);
           //particleSends_[toresource].erase(pmg);
         }
@@ -943,9 +943,9 @@ void DetailedTasks::createInternalDependencyBatch(DetailedTask* from,
         std::set<PSPatchMatlGhostRange>::iterator iter = m_particle_recvs[fromresource].find(pmg);
         ASSERT(iter!=m_particle_recvs[fromresource].end());
         //subtract one from the count
-        iter->count_--;
+        iter->m_count--;
         //if the count is zero erase it from the recvs list
-        if (iter->count_ == 0) {
+        if (iter->m_count == 0) {
           m_particle_recvs[fromresource].erase(iter);
           //particleRecvs_[fromresource].erase(pmg);
         }
@@ -1002,7 +1002,7 @@ void DetailedTasks::createInternalDependencyBatch(DetailedTask* from,
         m_particle_sends[toresource].insert(pmg);
       } else {
         //increment count
-        iter->count_++;
+        iter->m_count++;
       }
     } else if (toresource == m_proc_group->myrank()) {
       std::set<PSPatchMatlGhostRange>::iterator iter = m_particle_recvs[fromresource].find(pmg);
@@ -1011,7 +1011,7 @@ void DetailedTasks::createInternalDependencyBatch(DetailedTask* from,
         m_particle_recvs[fromresource].insert(pmg);
       } else {
         //increment the count
-        iter->count_++;
+        iter->m_count++;
       }
 
     }
