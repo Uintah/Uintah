@@ -65,7 +65,7 @@ bool SideBCData::operator==(const BCGeomBase& rhs) const
 
 SideBCData* SideBCData::clone()
 {
-  return scinew SideBCData(*this);
+  return new SideBCData(*this);
 
 }
 void SideBCData::addBCData(BCData& bc)

@@ -84,7 +84,7 @@ namespace Uintah{
               ~Builder(){}; 
 
               IntrusionInlet<sT>* build()
-              { return scinew IntrusionInlet<sT>( _name, _shared_state, _required_label_names, _type ); };
+              { return new IntrusionInlet<sT>( _name, _shared_state, _required_label_names, _type ); };
 
             private: 
 
@@ -194,7 +194,7 @@ namespace Uintah{
     void IntrusionInlet<sT>::sched_computeSource( const LevelP& level, SchedulerP& sched, int timeSubStep )
     {
       std::string taskname = "IntrusionInlet::eval";
-      Task* tsk = scinew Task(taskname, this, &IntrusionInlet::computeSource, timeSubStep);
+      Task* tsk = new Task(taskname, this, &IntrusionInlet::computeSource, timeSubStep);
 
       if (timeSubStep == 0 ) {
 
@@ -335,7 +335,7 @@ namespace Uintah{
     {
     std::string taskname = "IntrusionInlet::initialize";
 
-      Task* tsk = scinew Task(taskname, this, &IntrusionInlet::initialize);
+      Task* tsk = new Task(taskname, this, &IntrusionInlet::initialize);
 
       tsk->computes(_src_label);
 

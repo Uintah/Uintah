@@ -59,10 +59,10 @@ MesoBurn::MesoBurn(const ProcessorGroup* myworld,
                    const ProblemSpecP& prob_spec)
   : ModelInterface(myworld), d_params(params), d_prob_spec(prob_spec) { 
   mymatls = 0;
-  Mlb  = scinew MPMLabel();
-  Ilb  = scinew ICELabel();
-  MIlb = scinew MPMICELabel();
-  d_saveConservedVars = scinew saveConservedVars();
+  Mlb  = new MPMLabel();
+  Ilb  = new ICELabel();
+  MIlb = new MPMICELabel();
+  d_saveConservedVars = new saveConservedVars();
 
   //  Diagnostic labels
   BurningCellLabel = VarLabel::create("MesoBurn.BurningCell",
@@ -183,7 +183,7 @@ void MesoBurn::problemSetup(GridP&,
   
   //__________________________________
   //  define the materialSet
-  mymatls = scinew MaterialSet();
+  mymatls = new MaterialSet();
 
   vector<int> m;
   m.push_back(0);                                 // needed for the pressure and NC_CCWeight
@@ -238,7 +238,7 @@ void MesoBurn::scheduleInitialize(SchedulerP& sched,
                                   const ModelInfo*){
   printSchedule(level, cout_doing,"MesoBurn::scheduleInitialize");
   
-  Task* t = scinew Task("MesoBurn::initialize", this, &MesoBurn::initialize);                        
+  Task* t = new Task("MesoBurn::initialize", this, &MesoBurn::initialize);                        
   const MaterialSubset* react_matl = matl0->thisMaterial();
   t->computes(TsLabel, react_matl);
   t->computes(inductionTimeLabel, react_matl);
@@ -308,7 +308,7 @@ void MesoBurn::scheduleComputeModelSources(SchedulerP& sched,
   Ghost::GhostType  gn  = Ghost::None;
   const MaterialSubset* react_matl = matl0->thisMaterial();  
 
-  Task* t1 = scinew Task("MesoBurn::computeParticleVariables", this, 
+  Task* t1 = new Task("MesoBurn::computeParticleVariables", this, 
                          &MesoBurn::computeParticleVariables, mi);
 
   printSchedule(level, cout_doing,"MesoBurn::scheduleComputeParticleVariables");  
@@ -330,7 +330,7 @@ void MesoBurn::scheduleComputeModelSources(SchedulerP& sched,
 
 
   //__________________________________
-  Task* t = scinew Task("MesoBurn::computeModelSources", this, 
+  Task* t = new Task("MesoBurn::computeModelSources", this, 
                         &MesoBurn::computeModelSources, mi);
 
   printSchedule(level,cout_doing,"MesoBurn::scheduleComputeModelSources");  
@@ -340,7 +340,7 @@ void MesoBurn::scheduleComputeModelSources(SchedulerP& sched,
   const MaterialSet* all_matls = d_sharedState->allMaterials();
   const MaterialSubset* all_matls_sub = all_matls->getUnion();
   
-  MaterialSubset* one_matl     = scinew MaterialSubset();
+  MaterialSubset* one_matl     = new MaterialSubset();
   one_matl->add(0);
   one_matl->addReference();
   

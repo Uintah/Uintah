@@ -70,7 +70,7 @@ lineExtract::lineExtract(ProblemSpecP& module_spec,
   d_dataArchiver = dataArchiver;
   d_matl_set = 0;
   d_zero_matl = 0;
-  ps_lb = scinew lineExtractLabel();
+  ps_lb = new lineExtractLabel();
 }
 
 //__________________________________
@@ -150,7 +150,7 @@ void lineExtract::problemSetup(const ProblemSpecP& prob_spec,
   
   m.push_back(0);            // matl for FileInfo label
   m.push_back(defaultMatl);
-  d_matl_set = scinew MaterialSet();
+  d_matl_set = new MaterialSet();
   map<string,string> attribute;
     
   for (ProblemSpecP var_spec = vars_ps->findBlock("analyze"); var_spec != 0; 
@@ -182,7 +182,7 @@ void lineExtract::problemSetup(const ProblemSpecP& prob_spec,
   d_matl_set->addReference();
 
   // for fileInfo variable
-  d_zero_matl = scinew MaterialSubset();
+  d_zero_matl = new MaterialSubset();
   d_zero_matl->add(0);
   d_zero_matl->addReference();
   
@@ -326,7 +326,7 @@ void lineExtract::problemSetup(const ProblemSpecP& prob_spec,
     }
     
     // put input variables into the global struct
-    line* l = scinew line;
+    line* l = new line;
     l->name     = name;
     l->startPt  = start;
     l->endPt    = end;
@@ -341,7 +341,7 @@ void lineExtract::scheduleInitialize(SchedulerP& sched,
                                      const LevelP& level)
 {
   cout_doing << "lineExtract::scheduleInitialize " << endl;
-  Task* t = scinew Task("lineExtract::initialize", 
+  Task* t = new Task("lineExtract::initialize", 
                   this, &lineExtract::initialize);
   
   t->computes(ps_lb->lastWriteTimeLabel);
@@ -365,7 +365,7 @@ void lineExtract::initialize(const ProcessorGroup*,
     //__________________________________
     //  initialize fileInfo struct
     PerPatch<FileInfoP> fileInfo;
-    FileInfo* myFileInfo = scinew FileInfo();
+    FileInfo* myFileInfo = new FileInfo();
     fileInfo.get() = myFileInfo;
     
     new_dw->put(fileInfo,    ps_lb->fileVarsStructLabel, 0, patch);
@@ -396,7 +396,7 @@ void lineExtract::scheduleDoAnalysis(SchedulerP& sched,
                                      const LevelP& level)
 {
   cout_doing << "lineExtract::scheduleDoAnalysis " << endl;
-  Task* t = scinew Task("lineExtract::doAnalysis", 
+  Task* t = new Task("lineExtract::doAnalysis", 
                    this,&lineExtract::doAnalysis);
    
   // Tell the scheduler to not copy this variable to a new AMR grid and 
@@ -418,7 +418,7 @@ void lineExtract::scheduleDoAnalysis(SchedulerP& sched,
                           + name , __FILE__, __LINE__);
     }
     
-    MaterialSubset* matSubSet = scinew MaterialSubset();
+    MaterialSubset* matSubSet = new MaterialSubset();
     matSubSet->add(d_varMatl[i]);
     matSubSet->addReference();
     
@@ -474,7 +474,7 @@ void lineExtract::doAnalysis(const ProcessorGroup* pg,
     if( old_dw->exists( ps_lb->fileVarsStructLabel, 0, patch ) ){
       old_dw->get(fileInfo, ps_lb->fileVarsStructLabel, 0, patch);
     }else{  
-      FileInfo* myFileInfo = scinew FileInfo();
+      FileInfo* myFileInfo = new FileInfo();
       fileInfo.get() = myFileInfo;
     }
     

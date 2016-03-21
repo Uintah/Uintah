@@ -68,7 +68,7 @@ bool RectangleBCData::operator==(const BCGeomBase& rhs) const
 
 RectangleBCData* RectangleBCData::clone()
 {
-  return scinew RectangleBCData(*this);
+  return new RectangleBCData(*this);
 }
 
 void RectangleBCData::addBCData(BCData& bc)

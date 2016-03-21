@@ -29,7 +29,7 @@ public:
       ~Builder(){}
 
       URHS* build()
-      { return scinew URHS<UT>(_task_name, _matl_index, _u_name, _v_name, _w_name ); }
+      { return new URHS<UT>(_task_name, _matl_index, _u_name, _v_name, _w_name ); }
 
     private:
 

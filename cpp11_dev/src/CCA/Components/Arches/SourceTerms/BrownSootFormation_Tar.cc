@@ -55,7 +55,7 @@ void
 BrownSootFormation_Tar::sched_computeSource( const LevelP& level, SchedulerP& sched, int timeSubStep )
 {
   std::string taskname = "BrownSootFormation_Tar::eval";
-  Task* tsk = scinew Task(taskname, this, &BrownSootFormation_Tar::computeSource, timeSubStep);
+  Task* tsk = new Task(taskname, this, &BrownSootFormation_Tar::computeSource, timeSubStep);
 
   Task::WhichDW which_dw;
   if (timeSubStep == 0) {
@@ -232,7 +232,7 @@ BrownSootFormation_Tar::sched_initialize( const LevelP& level, SchedulerP& sched
 {
   string taskname = "BrownSootFormation_Tar::initialize"; 
 
-  Task* tsk = scinew Task(taskname, this, &BrownSootFormation_Tar::initialize);
+  Task* tsk = new Task(taskname, this, &BrownSootFormation_Tar::initialize);
 
   tsk->computes(_src_label);
 

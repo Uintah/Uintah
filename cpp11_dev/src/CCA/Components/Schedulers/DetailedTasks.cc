@@ -106,13 +106,13 @@ DetailedTasks::DetailedTasks(       SchedulerCommon* sc,
   dwmap[Task::OldDW] = 0;
   dwmap[Task::NewDW] = Task::NoDW;
 
-  m_send_old_data_task = scinew Task( "send old data", Task::InitialSend );
+  m_send_old_data_task = new Task( "send old data", Task::InitialSend );
   m_send_old_data_task->d_phase = 0;
   m_send_old_data_task->setMapping( dwmap );
 
   // Create a send old detailed task for every processor in my neighborhood.
   for (std::set<int>::iterator iter = neighborhood_processors.begin(); iter != neighborhood_processors.end(); iter++) {
-    DetailedTask* newtask = scinew DetailedTask( m_send_old_data_task, 0, 0, this );
+    DetailedTask* newtask = new DetailedTask( m_send_old_data_task, 0, 0, this );
     newtask->assignResource(*iter);
     //use a map because the processors in this map are likely to be sparse
     m_send_old_map[*iter] = m_tasks.size();
@@ -312,7 +312,7 @@ DetailedTasks::addScrubCount( const VarLabel* var,
   ScrubItem* result;
   result = (m_first ? m_first->m_scrub_count_table : m_scrub_count_table).lookup(&key);
   if (!result) {
-    result = scinew ScrubItem(var, matlindex, patch, dw);
+    result = new ScrubItem(var, matlindex, patch, dw);
     (m_first ? m_first->m_scrub_count_table : m_scrub_count_table).insert(result);
   }
   result->count++;
@@ -637,7 +637,7 @@ DetailedTasks::possiblyCreateDependency(       DetailedTask*              from,
 
   //if batch doesn't exist then create it
   if (!batch) {
-    batch = scinew DependencyBatch(toresource, from, to);
+    batch = new DependencyBatch(toresource, from, to);
     m_dependency_batches.push_back(batch);
     from->addComputes(batch);
 #if SCI_ASSERTION_LEVEL >= 2
@@ -663,7 +663,7 @@ DetailedTasks::possiblyCreateDependency(       DetailedTask*              from,
   IntVector varRangeLow(INT_MAX, INT_MAX, INT_MAX), varRangeHigh(INT_MIN, INT_MIN, INT_MIN);
 
   // create the new dependency
-  DetailedDependency* new_dep = scinew DetailedDependency(batch->m_head, comp, req, to, fromPatch, matl, low, high, cond);
+  DetailedDependency* new_dep = new DetailedDependency(batch->m_head, comp, req, to, fromPatch, matl, low, high, cond);
 
   // search for a dependency that can be combined with this dependency
 
@@ -850,7 +850,7 @@ void DetailedTasks::createInternalDependencyBatch(DetailedTask* from,
 
   //if batch doesn't exist then create it
   if (!batch) {
-    batch = scinew DependencyBatch(toresource, from, m_to_proc);
+    batch = new DependencyBatch(toresource, from, m_to_proc);
     m_dependency_batches.push_back(batch);  //Should be fine to push this batch on here, at worst
                                 //MPI message tags are created for these which won't get used.
     from->addInternalComputes(batch);
@@ -875,7 +875,7 @@ void DetailedTasks::createInternalDependencyBatch(DetailedTask* from,
   IntVector varRangeLow(INT_MAX, INT_MAX, INT_MAX), varRangeHigh(INT_MIN, INT_MIN, INT_MIN);
 
   //create the new dependency
-  DetailedDependency* new_dep = scinew DetailedDependency(batch->m_head, m_comp, m_req, m_to_proc, m_from_patch, m_matl, m_low, m_high, cond);
+  DetailedDependency* new_dep = new DetailedDependency(batch->m_head, m_comp, m_req, m_to_proc, m_from_patch, m_matl, m_low, m_high, cond);
 
   //search for a dependency that can be combined with this dependency
 

@@ -119,7 +119,7 @@ CylinderGeometryPiece::outputHelper( ProblemSpecP & ps ) const
 GeometryPieceP
 CylinderGeometryPiece::clone() const
 {
-  return scinew CylinderGeometryPiece(*this);
+  return new CylinderGeometryPiece(*this);
 }
 
 bool

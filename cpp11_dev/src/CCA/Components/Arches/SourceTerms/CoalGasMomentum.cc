@@ -58,7 +58,7 @@ void
 CoalGasMomentum::sched_computeSource( const LevelP& level, SchedulerP& sched, int timeSubStep )
 { 
   std::string taskname = "CoalGasMomentum::eval";
-  Task* tsk = scinew Task(taskname, this, &CoalGasMomentum::computeSource, timeSubStep);
+  Task* tsk = new Task(taskname, this, &CoalGasMomentum::computeSource, timeSubStep);
 
   if (timeSubStep == 0 ) { 
     tsk->computes(_src_label);
@@ -226,7 +226,7 @@ CoalGasMomentum::sched_initialize( const LevelP& level, SchedulerP& sched )
 {
   string taskname = "CoalGasMomentum::initialize"; 
 
-  Task* tsk = scinew Task(taskname, this, &CoalGasMomentum::initialize);
+  Task* tsk = new Task(taskname, this, &CoalGasMomentum::initialize);
 
   tsk->computes(_src_label);
 

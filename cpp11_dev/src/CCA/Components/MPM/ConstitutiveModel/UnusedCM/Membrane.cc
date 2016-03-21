@@ -119,7 +119,7 @@ void Membrane::outputProblemSpec(ProblemSpecP& ps,bool output_cm_tag)
 
 Membrane* Membrane::clone()
 {
-  return scinew Membrane(*this);
+  return new Membrane(*this);
 }
 
 void Membrane::initializeCMData(const Patch* patch,
@@ -602,7 +602,7 @@ const TypeDescription* fun_getTypeDescription(Membrane::StateData*)
 {
    static TypeDescription* td = 0;
    if(!td){
-      td = scinew TypeDescription(TypeDescription::Other,
+      td = new TypeDescription(TypeDescription::Other,
                                "Membrane::StateData", true, &makeMPI_CMData);
    }
    return td;

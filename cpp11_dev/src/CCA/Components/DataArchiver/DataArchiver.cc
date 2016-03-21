@@ -951,7 +951,7 @@ DataArchiver::sched_allOutputTasks(double delt,
   if ( (d_outputInterval != 0.0 || d_outputTimestepInterval != 0) &&
        (delt != 0 || d_outputInitTimestep)) {
     
-    Task* t = scinew Task("DataArchiver::outputReductionVars",this, 
+    Task* t = new Task("DataArchiver::outputReductionVars",this, 
                           &DataArchiver::outputReductionVars);
     
     for(int i=0;i<(int)d_saveReductionLabels.size();i++) {
@@ -975,7 +975,7 @@ DataArchiver::sched_allOutputTasks(double delt,
   if (delt != 0 && d_checkpointCycle>0 &&
       (d_checkpointInterval>0 || d_checkpointTimestepInterval>0 || d_checkpointWalltimeInterval>0 ) ) {
     // output checkpoint timestep
-    Task* t = scinew Task("DataArchiver::outputVariables (CheckpointReduction)",this, 
+    Task* t = new Task("DataArchiver::outputVariables (CheckpointReduction)",this, 
                           &DataArchiver::outputVariables, CHECKPOINT_REDUCTION);
     
     for(int i=0;i<(int)d_checkpointReductionLabels.size();i++) {
@@ -1790,7 +1790,7 @@ DataArchiver::scheduleOutputTimestep(vector<DataArchiver::SaveItem>& saveLabels,
      taskName += "(checkpoint)";
     }
     
-    Task* t = scinew Task(taskName, this, &DataArchiver::outputVariables, isThisCheckpoint?CHECKPOINT:OUTPUT);
+    Task* t = new Task(taskName, this, &DataArchiver::outputVariables, isThisCheckpoint?CHECKPOINT:OUTPUT);
     
     //__________________________________
     //
@@ -2171,7 +2171,7 @@ DataArchiver::outputVariables(const ProcessorGroup * pg,
             // Pad appropriately
             if(cur%PADSIZE != 0) {
               long pad = PADSIZE-cur%PADSIZE;
-              char* zero = scinew char[pad];
+              char* zero = new char[pad];
               memset(zero, 0, pad);
               int err = (int)write(fd, zero, pad);
               if (err != pad) {
@@ -2996,7 +2996,7 @@ DataArchiver::SaveItem::setMaterials(int level,
   }
   else {
     MaterialSetP& m = matlSet[level];
-    m = scinew MaterialSet();
+    m = new MaterialSet();
     vector<int> matlVec;
     matlVec.reserve(matls.size());
     for (ConsecutiveRangeSet::iterator iter = matls.begin();
@@ -3456,7 +3456,7 @@ DataArchiver::setupSharedFileSystem()
     // of the file that we are going to look for...
     int inlen;
     MPI::Bcast( &inlen, 1, MPI_INT, 0, d_myworld->getComm() );
-    char * inbuf = scinew char[ inlen + 1 ];
+    char * inbuf = new char[ inlen + 1 ];
     MPI::Bcast( inbuf, inlen, MPI_CHAR, 0, d_myworld->getComm() );
     inbuf[ inlen ]='\0';
     fs_test_file_name = inbuf;
@@ -3501,7 +3501,7 @@ DataArchiver::setupSharedFileSystem()
     // Receive the name of the UDA from rank 0...
     int inlen;
     MPI::Bcast( &inlen, 1, MPI_INT, 0, d_myworld->getComm() );
-    char * inbuf = scinew char[ inlen+1 ];
+    char * inbuf = new char[ inlen+1 ];
     MPI::Bcast( inbuf, inlen, MPI_CHAR, 0, d_myworld->getComm() );
     inbuf[ inlen ]='\0';
 
@@ -3573,7 +3573,7 @@ DataArchiver::setupLocalFileSystems()
   else {
     int inlen;
     MPI::Bcast(&inlen, 1, MPI_INT, 0, d_myworld->getComm());
-    char* inbuf = scinew char[inlen+1];
+    char* inbuf = new char[inlen+1];
     MPI::Bcast(inbuf, inlen, MPI_CHAR, 0, d_myworld->getComm());
     inbuf[inlen]='\0';
     basename=inbuf;

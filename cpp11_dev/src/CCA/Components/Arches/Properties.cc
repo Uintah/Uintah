@@ -125,19 +125,19 @@ Properties::problemSetup(const ProblemSpecP& params)
 
   if (mixModel == "ClassicTable") { 
     // New Classic interface
-    d_mixingRxnTable = scinew ClassicTableInterface( d_lab, d_MAlab ); 
+    d_mixingRxnTable = new ClassicTableInterface( d_lab, d_MAlab ); 
     d_mixingRxnTable->problemSetup( db ); 
   } else if (mixModel == "ColdFlow") {
-    d_mixingRxnTable = scinew ColdFlow( d_lab, d_MAlab ); 
+    d_mixingRxnTable = new ColdFlow( d_lab, d_MAlab ); 
     d_mixingRxnTable->problemSetup( db ); 
   } else if (mixModel == "ConstantProps" ) { 
-    d_mixingRxnTable = scinew ConstantProps( d_lab, d_MAlab ); 
+    d_mixingRxnTable = new ConstantProps( d_lab, d_MAlab ); 
     d_mixingRxnTable->problemSetup( db ); 
   }
 #if HAVE_TABPROPS
   else if (mixModel == "TabProps") {
     // New TabPropsInterface stuff...
-    d_mixingRxnTable = scinew TabPropsInterface( d_lab, d_MAlab );
+    d_mixingRxnTable = new TabPropsInterface( d_lab, d_MAlab );
     d_mixingRxnTable->problemSetup( db ); 
   }
 #endif 
@@ -156,7 +156,7 @@ Properties::sched_averageRKProps( SchedulerP& sched, const PatchSet* patches,
 {
   string taskname =  "Properties::averageRKProps" +
                      timelabels->integrator_step_name;
-  Task* tsk = scinew Task(taskname, this,
+  Task* tsk = new Task(taskname, this,
                           &Properties::averageRKProps,
                           timelabels);
                           
@@ -250,7 +250,7 @@ Properties::sched_saveTempDensity(SchedulerP& sched,
 {
   string taskname =  "Properties::saveTempDensity" +
                      timelabels->integrator_step_name;
-  Task* tsk = scinew Task(taskname, this,
+  Task* tsk = new Task(taskname, this,
                           &Properties::saveTempDensity,
                           timelabels);
 
@@ -294,7 +294,7 @@ Properties::sched_computeDrhodt(SchedulerP& sched,
   string taskname =  "Properties::computeDrhodt" +
                      timelabels->integrator_step_name;
   
-  Task* tsk = scinew Task(taskname, this,
+  Task* tsk = new Task(taskname, this,
                           &Properties::computeDrhodt,
                           timelabels);
 

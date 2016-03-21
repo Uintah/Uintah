@@ -245,7 +245,7 @@ template<class Key>
 FastHashTable<Key>::FastHashTable(const FastHashTable<Key>& copy)
   : hash_size(copy.hash_size), nelems(copy.nelems)
 {
-  table=scinew Key*[hash_size];
+  table=new Key*[hash_size];
   for(int i=0;i<hash_size;i++){
     Key* p=copy.table[i];
     Key* prev=0;
@@ -306,7 +306,7 @@ void FastHashTable<Key>::rehash(int newsize)
 {
   if(newsize<11)newsize=11;
   Key** oldtab=table;
-  table=scinew Key*[newsize];
+  table=new Key*[newsize];
   for(int ii=0;ii<newsize;ii++){
     table[ii]=0;
   }

@@ -1199,7 +1199,7 @@ AMRSimulationController::scheduleComputeStableTimestep( const GridP& grid,
     d_sim->scheduleComputeStableTimestep(grid->getLevel(i), sched);
   }
 
-  Task* task = scinew Task("reduceSysVar", this, &AMRSimulationController::reduceSysVar);
+  Task* task = new Task("reduceSysVar", this, &AMRSimulationController::reduceSysVar);
 
   //coarsenDelT task requires that delT is computed on every level, even if no tasks are
   // run on that level.  I think this is a bug.  --Todd

@@ -1124,24 +1124,24 @@ DynamicLoadBalancer::problemSetup( ProblemSpecP & pspec, GridP & grid,  Simulati
     string costAlgo="ModelLS";
     p->get("costAlgorithm",costAlgo);
     if(costAlgo=="ModelLS") {
-      d_costForecaster= scinew CostModelForecaster(d_myworld,this,d_patchCost,d_cellCost,d_extraCellCost,d_particleCost);
+      d_costForecaster= new CostModelForecaster(d_myworld,this,d_patchCost,d_cellCost,d_extraCellCost,d_particleCost);
     }
     else if(costAlgo=="Kalman") {
       int timestepWindow;
       p->getWithDefault("profileTimestepWindow",timestepWindow,10);
-      d_costForecaster=scinew CostProfiler(d_myworld,ProfileDriver::KALMAN,this);
+      d_costForecaster=new CostProfiler(d_myworld,ProfileDriver::KALMAN,this);
       d_costForecaster->setTimestepWindow(timestepWindow);
       d_collectParticles=false;
     }
     else if(costAlgo=="Memory") {
       int timestepWindow;
       p->getWithDefault("profileTimestepWindow",timestepWindow,10);
-      d_costForecaster=scinew CostProfiler(d_myworld,ProfileDriver::MEMORY,this);
+      d_costForecaster=new CostProfiler(d_myworld,ProfileDriver::MEMORY,this);
       d_costForecaster->setTimestepWindow(timestepWindow);
       d_collectParticles=false;
     }
     else if(costAlgo=="Model") {
-      d_costForecaster=scinew CostModeler(d_patchCost,d_cellCost,d_extraCellCost,d_particleCost);
+      d_costForecaster=new CostModeler(d_patchCost,d_cellCost,d_extraCellCost,d_particleCost);
     }
     else {
       throw InternalError("Invalid CostAlgorithm in Dynamic Load Balancer\n",__FILE__,__LINE__);

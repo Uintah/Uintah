@@ -276,7 +276,7 @@ namespace Uintah {
     void ComputeSet<T>::addAll(const std::vector<T>& sub)
     {
       ASSERT(!un);
-      ComputeSubset<T>* subset = scinew ComputeSubset<T>(sub);
+      ComputeSubset<T>* subset = new ComputeSubset<T>(sub);
       subset->sort();
       subset->addReference();
       set.push_back(subset);
@@ -296,7 +296,7 @@ namespace Uintah {
       }
       
       ASSERT(!un);
-      ComputeSubset<T>* subset = scinew ComputeSubset<T>(sub_unique);
+      ComputeSubset<T>* subset = new ComputeSubset<T>(sub_unique);
       subset->sort();
       subset->addReference();
       set.push_back(subset);
@@ -307,7 +307,7 @@ namespace Uintah {
     {
       ASSERT(!un);
       for(int i=0;i<(int)sub.size();i++){
-        ComputeSubset<T>* subset = scinew ComputeSubset<T>(1);
+        ComputeSubset<T>* subset = new ComputeSubset<T>(1);
         subset->addReference();
         (*subset)[0]=sub[i];
         set.push_back(subset);
@@ -318,7 +318,7 @@ namespace Uintah {
     void ComputeSet<T>::add(const T& item)
     {
       ASSERT(!un);
-      ComputeSubset<T>* subset = scinew ComputeSubset<T>(1);
+      ComputeSubset<T>* subset = new ComputeSubset<T>(1);
       subset->addReference();
       (*subset)[0]=item;
       set.push_back(subset);
@@ -338,7 +338,7 @@ namespace Uintah {
     {
       ASSERT(!un);
       for(int i=0;i<n;i++){
-        ComputeSubset<T>* subset = scinew ComputeSubset<T>(0);
+        ComputeSubset<T>* subset = new ComputeSubset<T>(0);
         subset->addReference();
         set.push_back(subset);
       }
@@ -347,7 +347,7 @@ namespace Uintah {
   template<class T>
     const ComputeSubset<T>* ComputeSet<T>::getUnion() const {
       if(!un){
-        un = scinew ComputeSubset<T>;
+        un = new ComputeSubset<T>;
         un->addReference();
         for(int i=0;i<(int)set.size();i++){
           ComputeSubset<T>* ss = set[i];
@@ -412,7 +412,7 @@ namespace Uintah {
       if (s2->size() == 0)
         return s2; // return an empty set
 
-      Handle< ComputeSubset<T> > intersection = scinew ComputeSubset<T>;
+      Handle< ComputeSubset<T> > intersection = new ComputeSubset<T>;
 
 #if SCI_ASSERTION_LEVEL>0
       if (!s1->is_sorted()) {
@@ -461,7 +461,7 @@ namespace Uintah {
     {
       if (s1 == s2) {
         // for efficiency -- expedite when s1 and s2 point to the same thing 
-        setDifference1 = setDifference2 = scinew ComputeSubset<T>(0);
+        setDifference1 = setDifference2 = new ComputeSubset<T>(0);
         return s1;
       }
 
@@ -484,12 +484,12 @@ namespace Uintah {
       if (s2->size() == 0)
         return s2; // return an empty set
 
-      Handle< ComputeSubset<T> > intersection = scinew ComputeSubset<T>;
+      Handle< ComputeSubset<T> > intersection = new ComputeSubset<T>;
       Handle< ComputeSubset<T> > s1_minus_s2, s2_minus_s1;        
 
       if (passBackDifferences) {      
-        setDifference1 = s1_minus_s2 = scinew ComputeSubset<T>;
-        setDifference2 = s2_minus_s1 = scinew ComputeSubset<T>;
+        setDifference1 = s1_minus_s2 = new ComputeSubset<T>;
+        setDifference2 = s2_minus_s1 = new ComputeSubset<T>;
       }
 
 #if SCI_ASSERTION_LEVEL>0
@@ -568,7 +568,7 @@ namespace Uintah {
     {
       if (s1 == s2 || !s1 || !s2) {
         // for efficiency -- expedite when s1 and s2 point to the same thing or are null
-        return Handle< ComputeSubset<T> >(scinew ComputeSubset<T>);
+        return Handle< ComputeSubset<T> >(new ComputeSubset<T>);
       }
 
       if (s1->size() == 0 || s1->size()==0 || s2->size()==0) 
@@ -596,7 +596,7 @@ namespace Uintah {
       }
 #endif
       
-      Handle< ComputeSubset<T> > diff = scinew ComputeSubset<T>;
+      Handle< ComputeSubset<T> > diff = new ComputeSubset<T>;
 
       int i1=0;
       int i2=0;

@@ -61,7 +61,7 @@ namespace WasatchCore{
    to access Uintah patches internally through the bind_operators callback. This structure is
    to be registered in an operators database using:
    (given a: const Uintah::Patch* const patch)
-   register_new_operator<UintahPatchContainer>( scinew UintahPatchContainer(patch) )
+   register_new_operator<UintahPatchContainer>( new UintahPatchContainer(patch) )
    Then, for expressions that require access to a patch, declare a private member
    UintahPatchContainer* patchContainer_
    and then in bind_operators use:

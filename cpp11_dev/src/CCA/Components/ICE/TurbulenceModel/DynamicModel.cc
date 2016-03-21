@@ -390,7 +390,7 @@ void DynamicModel::scheduleComputeVariance(SchedulerP& sched,
   if(filterScalars.size() > 0){
     for(int i=0;i<static_cast<int>(filterScalars.size());i++){
       FilterScalar* s = filterScalars[i];
-      Task* task = scinew Task("DynamicModel::computeVariance",this, 
+      Task* task = new Task("DynamicModel::computeVariance",this, 
                                &DynamicModel::computeVariance, s);
                                
       task->requires(Task::OldDW, s->scalar, Ghost::AroundCells, 1);

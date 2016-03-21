@@ -83,7 +83,7 @@ void CompNeoHook::outputProblemSpec(ProblemSpecP& ps,bool output_cm_tag)
 
 CompNeoHook* CompNeoHook::clone()
 {
-  return scinew CompNeoHook(*this);
+  return new CompNeoHook(*this);
 }
 
 void CompNeoHook::initializeCMData(const Patch* patch,
@@ -501,7 +501,7 @@ namespace Uintah {
   {
     static TypeDescription* td = 0;
     if(!td){
-      td = scinew TypeDescription(TypeDescription::Other,
+      td = new TypeDescription(TypeDescription::Other,
                                   "CompNeoHook::StateData", 
                                   true, &makeMPI_CMData);
     }

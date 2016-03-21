@@ -71,7 +71,7 @@ public:
       ~Builder(){}; 
 
       BowmanNOx* build()
-      { return scinew BowmanNOx( _name, _field_labels, _required_label_names, _type ); };
+      { return new BowmanNOx( _name, _field_labels, _required_label_names, _type ); };
 
     private: 
 

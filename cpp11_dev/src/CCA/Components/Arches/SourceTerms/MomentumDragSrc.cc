@@ -54,7 +54,7 @@ void
 MomentumDragSrc::sched_computeSource( const LevelP& level, SchedulerP& sched, int timeSubStep )
 {
   std::string taskname = "MomentumDragSrc::eval";
-  Task* tsk = scinew Task(taskname, this, &MomentumDragSrc::computeSource, timeSubStep);
+  Task* tsk = new Task(taskname, this, &MomentumDragSrc::computeSource, timeSubStep);
   
   if (timeSubStep == 0 ) {
     tsk->computes(_src_label);
@@ -237,7 +237,7 @@ MomentumDragSrc::sched_initialize( const LevelP& level, SchedulerP& sched )
 {
   string taskname = "MomentumDragSrc::initialize";
   
-  Task* tsk = scinew Task(taskname, this, &MomentumDragSrc::initialize);
+  Task* tsk = new Task(taskname, this, &MomentumDragSrc::initialize);
   
   tsk->computes(_src_label);
   

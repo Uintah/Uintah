@@ -68,7 +68,7 @@ void CLASSNAME::problemSetup( const ProblemSpecP& inputdb )
 void CLASSNAME::sched_computeProp( const LevelP& level, SchedulerP& sched, int time_substep )
 {
   std::string taskname = "CLASSNAME::computeProp"; 
-  Task* tsk = scinew Task( taskname, this, &CLASSNAME::computeProp, time_substep ); 
+  Task* tsk = new Task( taskname, this, &CLASSNAME::computeProp, time_substep ); 
 
   if ( time_substep == 0 ) {
     
@@ -126,7 +126,7 @@ void CLASSNAME::sched_initialize( const LevelP& level, SchedulerP& sched )
 {
   std::string taskname = "CLASSNAME::initialize"; 
 
-  Task* tsk = scinew Task(taskname, this, &CLASSNAME::initialize);
+  Task* tsk = new Task(taskname, this, &CLASSNAME::initialize);
   tsk->computes(_prop_label); 
 
   sched->addTask(tsk, level->eachPatch(), _shared_state->allArchesMaterials());

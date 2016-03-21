@@ -207,7 +207,7 @@ void Diamm::outputProblemSpec(ProblemSpecP& ps,bool output_cm_tag)
 
 Diamm* Diamm::clone()
 {
-  return scinew Diamm(*this);
+  return new Diamm(*this);
 }
 
 void Diamm::initializeCMData(const Patch* patch,

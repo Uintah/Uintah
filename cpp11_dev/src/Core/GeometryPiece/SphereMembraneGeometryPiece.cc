@@ -73,7 +73,7 @@ SphereMembraneGeometryPiece::outputHelper( ProblemSpecP & ps ) const
 GeometryPieceP
 SphereMembraneGeometryPiece::clone() const
 {
-  return scinew SphereMembraneGeometryPiece(*this);
+  return new SphereMembraneGeometryPiece(*this);
 }
 
 bool

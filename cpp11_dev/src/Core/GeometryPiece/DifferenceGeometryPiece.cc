@@ -99,7 +99,7 @@ DifferenceGeometryPiece::outputHelper( ProblemSpecP & ps ) const
 GeometryPieceP
 DifferenceGeometryPiece::clone() const
 {
-  return scinew DifferenceGeometryPiece(*this);
+  return new DifferenceGeometryPiece(*this);
 }
 
 bool

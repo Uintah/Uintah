@@ -49,7 +49,7 @@ AxiGIMPInterpolator::~AxiGIMPInterpolator()
 
 AxiGIMPInterpolator* AxiGIMPInterpolator::clone(const Patch* patch)
 {
-  return scinew AxiGIMPInterpolator(patch);
+  return new AxiGIMPInterpolator(patch);
 }
 
 void AxiGIMPInterpolator::findCellAndWeights(const Point& pos,

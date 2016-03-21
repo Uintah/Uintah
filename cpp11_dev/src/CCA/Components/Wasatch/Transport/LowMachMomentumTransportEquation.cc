@@ -242,7 +242,7 @@ namespace WasatchCore{
 
     Expr::ExpressionFactory& factory = *this->gc_[ADVANCE_SOLUTION]->exprFactory;
     typedef typename MomRHS<FieldT, SpatialOps::NODIR>::Builder RHS;
-    return factory.register_expression( scinew RHS( this->rhsTag_,
+    return factory.register_expression( new RHS( this->rhsTag_,
                                                     (enablePressureSolve ? this->pressureTag_ : Expr::Tag()),
                                                     rhs_part_tag(this->solnVarTag_),
                                                     volFracTag ) );
@@ -399,8 +399,8 @@ namespace WasatchCore{
             // register outflow functor for this boundary. we'll register one functor per boundary
             const Expr::Tag outBCTag(bndName + "_outflow_bc", Expr::STATE_NONE);
             typedef typename OutflowBC<FieldT>::Builder Builder;
-            //bcHelper.register_functor_expression( scinew Builder( outBCTag, this->thisVelTag_ ), ADVANCE_SOLUTION );
-            advSlnFactory.register_expression( scinew Builder( outBCTag, this->solution_variable_tag() ) );
+            //bcHelper.register_functor_expression( new Builder( outBCTag, this->thisVelTag_ ), ADVANCE_SOLUTION );
+            advSlnFactory.register_expression( new Builder( outBCTag, this->solution_variable_tag() ) );
             BndCondSpec rhsPartBCSpec = {(rhs_part_tag(this->solution_variable_tag())).name(),outBCTag.name(), 0.0, DIRICHLET,FUNCTOR_TYPE};
             bcHelper.add_boundary_condition(bndName, rhsPartBCSpec);
             
@@ -427,7 +427,7 @@ namespace WasatchCore{
             // register pressurebc functor for this boundary. we'll register one functor per boundary
             const Expr::Tag openBCTag(bndName + "_open_bc", Expr::STATE_NONE);
             typedef typename OpenBC<FieldT>::Builder Builder;
-            advSlnFactory.register_expression( scinew Builder( openBCTag, this->solution_variable_tag() ) );
+            advSlnFactory.register_expression( new Builder( openBCTag, this->solution_variable_tag() ) );
             BndCondSpec rhsPartBCSpec = {(rhs_part_tag(this->solution_variable_tag())).name(),openBCTag.name(), 0.0, DIRICHLET,FUNCTOR_TYPE};
             bcHelper.add_boundary_condition(bndName, rhsPartBCSpec);
           }
@@ -534,7 +534,7 @@ namespace WasatchCore{
     if( icFactory.have_entry( this->thisVelTag_ ) ) {
       typedef typename InterpolateExpression<SVolField, FieldT>::Builder Builder;
       Expr::Tag interpolatedDensityTag(this->densityTag_.name() +"_interp_" + this->dir_name(), Expr::STATE_NONE);
-      icFactory.register_expression(scinew Builder(interpolatedDensityTag, Expr::Tag(this->densityTag_.name(),Expr::STATE_NONE)));
+      icFactory.register_expression(new Builder(interpolatedDensityTag, Expr::Tag(this->densityTag_.name(),Expr::STATE_NONE)));
       
       // register expression to calculate the momentum initial condition from the initial conditions on
       // velocity and density in the cases that we are initializing velocity in the input file

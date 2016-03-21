@@ -44,7 +44,7 @@ using namespace std;
 
 ConstitutiveModel::ConstitutiveModel(MPMFlags* Mflag)
 {
-  lb = scinew MPMLabel();
+  lb = new MPMLabel();
   flag = Mflag;
   if(flag->d_8or27==8){
     NGN=1;
@@ -55,7 +55,7 @@ ConstitutiveModel::ConstitutiveModel(MPMFlags* Mflag)
 
 ConstitutiveModel::ConstitutiveModel(const ConstitutiveModel* cm)
 {
-  lb = scinew MPMLabel();
+  lb = new MPMLabel();
   flag = cm->flag;
   NGN = cm->NGN;
   NGP = cm->NGP;

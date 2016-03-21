@@ -60,14 +60,14 @@ ScalarFluxBC::ScalarFluxBC(ProblemSpecP& ps, const GridP& grid,
   std::string go_type = child->getNodeName();
   //std::cerr << "ScalarFluxBC::go_type = " << go_type << endl;
   if (go_type == "box") {
-    d_surface = scinew BoxGeometryPiece(child);
+    d_surface = new BoxGeometryPiece(child);
     //Box box = d_surface->getBoundingBox();
     d_surfaceType = "box";
   } else if (go_type == "sphere") {
-    d_surface = scinew SphereGeometryPiece(child);
+    d_surface = new SphereGeometryPiece(child);
     d_surfaceType = "sphere";
   } else if (go_type == "cylinder") {
-    d_surface = scinew CylinderGeometryPiece(child);
+    d_surface = new CylinderGeometryPiece(child);
     d_surfaceType = "cylinder";
     CylinderGeometryPiece* cgp =dynamic_cast<CylinderGeometryPiece*>(d_surface);
     d_cylinder_end=cgp->cylinder_end();
@@ -89,7 +89,7 @@ ScalarFluxBC::ScalarFluxBC(ProblemSpecP& ps, const GridP& grid,
   ps->get("numberOfParticlesOnLoadSurface",d_numMaterialPoints);
 
   // Read and save the load curve information
-  d_loadCurve = scinew LoadCurve<double>(ps);
+  d_loadCurve = new LoadCurve<double>(ps);
 
   //__________________________________
   //   Bulletproofing
@@ -164,7 +164,7 @@ ScalarFluxBC::flagMaterialPoint(const Point& p,
   if (d_surfaceType == "box") {
     // Create box that is min-dxpp, max+dxpp;
     Box box = d_surface->getBoundingBox();
-    GeometryPiece* volume = scinew BoxGeometryPiece(box.lower()-dxpp, 
+    GeometryPiece* volume = new BoxGeometryPiece(box.lower()-dxpp, 
                                                     box.upper()+dxpp);
 
     if (volume->inside(p)){
@@ -186,14 +186,14 @@ ScalarFluxBC::flagMaterialPoint(const Point& p,
 
     if(!d_cylinder_end && !d_axisymmetric_end){  // Not a cylinder end
       // Create a cylindrical annulus with radius-|dxpp|, radius+|dxpp|
-      GeometryPiece* outer = scinew CylinderGeometryPiece(cgp->top(), 
+      GeometryPiece* outer = new CylinderGeometryPiece(cgp->top(), 
                                                        cgp->bottom(), 
                                                        cgp->radius()+tol);
-      GeometryPiece* inner = scinew CylinderGeometryPiece(cgp->top(), 
+      GeometryPiece* inner = new CylinderGeometryPiece(cgp->top(), 
                                                        cgp->bottom(), 
                                                        cgp->radius()-tol);
 
-      GeometryPiece* volume = scinew DifferenceGeometryPiece(outer, inner);
+      GeometryPiece* volume = new DifferenceGeometryPiece(outer, inner);
 
       if (volume->inside(p)){
         flag = true;
@@ -208,7 +208,7 @@ ScalarFluxBC::flagMaterialPoint(const Point& p,
       Vector add_ends = tol*(cgp->top()-cgp->bottom())
                            /(cgp->top()-cgp->bottom()).length();
 
-      GeometryPiece* end = scinew CylinderGeometryPiece(cgp->top()   +add_ends, 
+      GeometryPiece* end = new CylinderGeometryPiece(cgp->top()   +add_ends, 
                                                         cgp->bottom()-add_ends,
                                                         cgp->radius());
       if (end->inside(p)){
@@ -221,11 +221,11 @@ ScalarFluxBC::flagMaterialPoint(const Point& p,
     // Create a spherical shell with radius-|dxpp|, radius+|dxpp|
     double tol = dxpp.length();
     SphereGeometryPiece* sgp = dynamic_cast<SphereGeometryPiece*>(d_surface);
-    GeometryPiece* outer = scinew SphereGeometryPiece(sgp->origin(), 
+    GeometryPiece* outer = new SphereGeometryPiece(sgp->origin(), 
                                                    sgp->radius()+tol);
-    GeometryPiece* inner = scinew SphereGeometryPiece(sgp->origin(), 
+    GeometryPiece* inner = new SphereGeometryPiece(sgp->origin(), 
                                                    sgp->radius()-tol);
-    GeometryPiece* volume = scinew DifferenceGeometryPiece(outer, inner);
+    GeometryPiece* volume = new DifferenceGeometryPiece(outer, inner);
     if (volume->inside(p)) flag = true;
     areacomps = Vector(1.0,0.0,0.0); // Area normal to the radial direction
     delete volume;

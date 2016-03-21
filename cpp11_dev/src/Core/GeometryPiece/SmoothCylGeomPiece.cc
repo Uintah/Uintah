@@ -135,7 +135,7 @@ SmoothCylGeomPiece::outputHelper( ProblemSpecP & ps ) const
 GeometryPieceP
 SmoothCylGeomPiece::clone() const
 {
-  return scinew SmoothCylGeomPiece(*this);
+  return new SmoothCylGeomPiece(*this);
 }
 
 /////////////////////////////////////////////////////////////////////////////

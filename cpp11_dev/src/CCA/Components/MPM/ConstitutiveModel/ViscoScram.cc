@@ -342,7 +342,7 @@ void ViscoScram::outputProblemSpec(ProblemSpecP& ps,bool output_cm_tag)
 ViscoScram*
 ViscoScram::clone()
 {
-  return scinew ViscoScram(*this);
+  return new ViscoScram(*this);
 }
 
 void 
@@ -1720,7 +1720,7 @@ fun_getTypeDescription(ViscoScramStateData*)
 {
    static Uintah::TypeDescription* td = 0;
    if(!td){
-      td = scinew Uintah::TypeDescription(TypeDescription::Other,
+      td = new Uintah::TypeDescription(TypeDescription::Other,
                                "ViscoScramStateData", true, &makeMPI_CMData);
    }
    return td;

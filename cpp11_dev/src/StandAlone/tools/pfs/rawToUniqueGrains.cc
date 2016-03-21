@@ -310,7 +310,7 @@ int main(int argc, char *argv[])
     //  Read the image file
     unsigned int nPixels = res[0]*res[1]*res[2];
 
-    pixel* pimg = scinew pixel[nPixels];
+    pixel* pimg = new pixel[nPixels];
 
     if (ReadImage(imgname.c_str(), nPixels, pimg, endianness) == false) {
       cout << "FATAL ERROR : Failed reading image data" << endl;
@@ -459,7 +459,7 @@ int main(int argc, char *argv[])
                 curPatch = level->selectPatchForCellIndex(level->getCellIndex(pt));
                 int patchID = curPatch->getID();
                 
-                dataPoint* dp = scinew dataPoint;
+                dataPoint* dp = new dataPoint;
                 dp->px      = pt;
                 
                 // if auxilary variable is being used
@@ -557,7 +557,7 @@ int main(int argc, char *argv[])
 GridP CreateGrid(ProblemSpecP ups)
 {
     // Setup the initial grid
-    GridP grid=scinew Grid();
+    GridP grid=new Grid();
     IntVector extraCells(0,0,0);
 
     // save and remove the extra cells before the problem setup

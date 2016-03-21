@@ -347,7 +347,7 @@ void ElasticPlasticHP::outputProblemSpec(ProblemSpecP& ps,bool output_cm_tag)
 
 ElasticPlasticHP* ElasticPlasticHP::clone()
 {
-  return scinew ElasticPlasticHP(*this);
+  return new ElasticPlasticHP(*this);
 }
 
 //______________________________________________________________________
@@ -902,7 +902,7 @@ ElasticPlasticHP::computeStressTensor(const PatchSubset* patches,
       double temperature = pTemperature[idx];
 
       // Set up the PlasticityState (for t_n+1)
-      PlasticityState* state = scinew PlasticityState();
+      PlasticityState* state = new PlasticityState();
       //state->plasticStrainRate = pStrainRate_new[idx];
       //state->plasticStrain     = pPlasticStrain[idx];
       //state->plasticStrainRate = sqrtTwoThird*tensorEta.Norm();
@@ -950,7 +950,7 @@ ElasticPlasticHP::computeStressTensor(const PatchSubset* patches,
       // This is simply the previous timestep deviatoric stress plus a
       // deviatoric elastic increment based on the shear modulus supplied by
       // the strength routine in use.
-      DeformationState* defState = scinew DeformationState();
+      DeformationState* defState = new DeformationState();
       defState->tensorD    = tensorD;
       defState->tensorEta  = tensorEta;
       defState->viscoElasticWorkRate = 0.0;
@@ -1819,7 +1819,7 @@ ElasticPlasticHP::computeStressTensorImplicit(const PatchSubset* patches,
       Matrix3 tensorS = sigma - One*pressure;
       
       // Set up the PlasticityState
-      PlasticityState* state   = scinew PlasticityState();
+      PlasticityState* state   = new PlasticityState();
       state->strainRate        = pStrainRate_new[idx];
       state->plasticStrainRate = pPlasticStrainRate[idx];
       state->plasticStrain     = pPlasticStrain[idx];
@@ -1861,7 +1861,7 @@ ElasticPlasticHP::computeStressTensorImplicit(const PatchSubset* patches,
       // of the rate of deformation tensor
       Matrix3 tensorEta = tensorD - One*(tensorD.Trace()/3.0);
 
-      DeformationState* defState = scinew DeformationState();
+      DeformationState* defState = new DeformationState();
       defState->tensorD   = tensorD;
       defState->tensorEta = tensorEta;
       
@@ -2211,7 +2211,7 @@ ElasticPlasticHP::computeStressTensorImplicit(const PatchSubset* patches,
       Matrix3 tensorS = sigma - One*pressure;
       
       // Set up the PlasticityState
-      PlasticityState* state    = scinew PlasticityState();
+      PlasticityState* state    = new PlasticityState();
       state->strainRate         = pStrainRate_new;
       state->plasticStrainRate  = pPlasticStrainRate[idx];
       state->plasticStrain      = pPlasticStrain[idx];
@@ -2252,7 +2252,7 @@ ElasticPlasticHP::computeStressTensorImplicit(const PatchSubset* patches,
       // of the rate of deformation tensor
       Matrix3 tensorEta = tensorD - One*(tensorD.Trace()/3.0);
 
-      DeformationState* defState = scinew DeformationState();
+      DeformationState* defState = new DeformationState();
       defState->tensorD   = tensorD;
       defState->tensorEta = tensorEta;
       

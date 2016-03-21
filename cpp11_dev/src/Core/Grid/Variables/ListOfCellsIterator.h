@@ -136,7 +136,7 @@ namespace Uintah {
      */
     ListOfCellsIterator* clone() const
     {
-      return scinew ListOfCellsIterator(*this);
+      return new ListOfCellsIterator(*this);
 
     };
     

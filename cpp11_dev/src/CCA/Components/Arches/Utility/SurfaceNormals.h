@@ -53,7 +53,7 @@ public:
       ~Builder(){}
 
       SurfaceNormals* build()
-      { return scinew SurfaceNormals( _task_name, _matl_index ); }
+      { return new SurfaceNormals( _task_name, _matl_index ); }
 
       private:
 

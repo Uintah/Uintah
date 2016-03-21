@@ -48,7 +48,7 @@ public:
       ~Builder(){}; 
 
       ShunnMoinMMSMF* build()
-      { return scinew ShunnMoinMMSMF( _name, _shared_state, _required_label_names, _type ); };
+      { return new ShunnMoinMMSMF( _name, _shared_state, _required_label_names, _type ); };
 
     private: 
 

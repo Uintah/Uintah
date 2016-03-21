@@ -283,7 +283,7 @@ Grid* TiledRegridder::CreateGrid(Grid* oldGrid, std::vector<std::vector<IntVecto
 
   MALLOC_TRACE_TAG_SCOPE("TiledRegridd::CreateGrid");
 
-  Grid* newGrid = scinew Grid();
+  Grid* newGrid = new Grid();
   Vector spacing = oldGrid->getLevel(0)->dCell();
   Point anchor =   oldGrid->getLevel(0)->getAnchor();
   IntVector extraCells = oldGrid->getLevel(0)->getExtraCells();

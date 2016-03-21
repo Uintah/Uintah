@@ -76,7 +76,7 @@ SphereGeometryPiece::outputHelper( ProblemSpecP & ps ) const
 GeometryPieceP
 SphereGeometryPiece::clone() const
 {
-  return scinew SphereGeometryPiece(*this);
+  return new SphereGeometryPiece(*this);
 }
 
 bool

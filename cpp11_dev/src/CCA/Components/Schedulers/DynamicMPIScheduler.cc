@@ -151,7 +151,7 @@ SchedulerP
 DynamicMPIScheduler::createSubScheduler()
 {
   UintahParallelPort  * lbp      = getPort("load balancer");
-  DynamicMPIScheduler * newsched = scinew DynamicMPIScheduler( d_myworld, m_outPort_, this );
+  DynamicMPIScheduler * newsched = new DynamicMPIScheduler( d_myworld, m_outPort_, this );
   newsched->d_sharedState = d_sharedState;
   newsched->attachPort( "load balancer", lbp );
   newsched->d_sharedState = d_sharedState;

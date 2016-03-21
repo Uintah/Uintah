@@ -63,7 +63,7 @@ Edge* GV_Task::addDependency(GV_Task* task)
       return 0;
   }
 
-  Edge* newEdge = scinew Edge(task, this);
+  Edge* newEdge = new Edge(task, this);
   
   m_dependencyEdges.push_back(newEdge);
   task->m_dependentEdges.push_back(newEdge); 
@@ -103,7 +103,7 @@ GV_TaskGraph::inflate(string xmlDir)
 
   list<ProblemSpecP> docs;
 
-  GV_TaskGraph* pGraph = scinew GV_TaskGraph();
+  GV_TaskGraph* pGraph = new GV_TaskGraph();
   
   int process = 0;
   string xmlFileName;
@@ -165,7 +165,7 @@ void GV_TaskGraph::readNodes(ProblemSpecP xmlDoc)
       task->testSetDuration(task_duration); 
     }
     else {
-      task = scinew GV_Task(task_name, task_duration, this);
+      task = new GV_Task(task_name, task_duration, this);
       m_tasks.push_back(task);
       m_taskMap[task_name] = task;
     }

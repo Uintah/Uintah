@@ -67,14 +67,14 @@ void Poisson2::problemSetup(const ProblemSpecP& params,
   ProblemSpecP poisson = params->findBlock("Poisson");
   poisson->require("delt", delt_);
   poisson->require("maxresidual", maxresidual_);
-  mymat_ = scinew SimpleMaterial();
+  mymat_ = new SimpleMaterial();
   sharedState->registerSimpleMaterial(mymat_);
 }
  
 void Poisson2::scheduleInitialize(const LevelP& level,
                                SchedulerP& sched)
 {
-  Task* task = scinew Task("initialize",
+  Task* task = new Task("initialize",
                            this, &Poisson2::initialize);
   task->computes(phi_label);
   sched->addTask(task, level->eachPatch(), sharedState_->allMaterials());
@@ -88,7 +88,7 @@ void Poisson2::scheduleRestartInitialize(const LevelP& level,
 void Poisson2::scheduleComputeStableTimestep(const LevelP& level,
                                           SchedulerP& sched)
 {
-  Task* task = scinew Task("computeStableTimestep",
+  Task* task = new Task("computeStableTimestep",
                            this, &Poisson2::computeStableTimestep);
   task->computes(sharedState_->get_delt_label(),level.get_rep());
   sched->addTask(task, level->eachPatch(), sharedState_->allMaterials());
@@ -97,7 +97,7 @@ void Poisson2::scheduleComputeStableTimestep(const LevelP& level,
 void
 Poisson2::scheduleTimeAdvance( const LevelP& level, SchedulerP& sched)
 {
-  Task* task = scinew Task("timeAdvance",
+  Task* task = new Task("timeAdvance",
                            this, &Poisson2::timeAdvance,
                            level, sched.get_rep());
   task->hasSubScheduler();
@@ -176,7 +176,7 @@ void Poisson2::timeAdvance(const ProcessorGroup* pg,
   GridP grid = level->getGrid();
 
   // Create the tasks
-  Task* task = scinew Task("iterate",
+  Task* task = new Task("iterate",
                            this, &Poisson2::iterate);
   task->requires(Task::OldDW, phi_label, Ghost::AroundNodes, 1);
   task->computes(phi_label);

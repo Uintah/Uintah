@@ -89,7 +89,7 @@ namespace WasatchCore{
           typename OperatorTypeBuilder<Interpolant,FieldT,   XFace>::type, // scalar interp type
           typename OperatorTypeBuilder<Interpolant,SVolField,XFace>::type  // velocity interp type
           >::Builder ConvFluxLim;
-          builder = scinew ConvFluxLim( convFluxTag, solnVarTag, advVelocityTag, convMethod, info[VOLUME_FRAC] );
+          builder = new ConvFluxLim( convFluxTag, solnVarTag, advVelocityTag, convMethod, info[VOLUME_FRAC] );
         } else {
           typedef typename ConvectiveFluxLimiter<
           typename Ops::InterpC2FXLimiter,
@@ -97,7 +97,7 @@ namespace WasatchCore{
           typename OperatorTypeBuilder<Interpolant,FieldT,   XFace>::type, // scalar interp type
           typename OperatorTypeBuilder<Interpolant,XVolField,XFace>::type  // velocity interp type
           >::Builder ConvFluxLim;
-          builder = scinew ConvFluxLim( convFluxTag, solnVarTag, advVelocityTag, convMethod, info[VOLUME_FRAC] );
+          builder = new ConvFluxLim( convFluxTag, solnVarTag, advVelocityTag, convMethod, info[VOLUME_FRAC] );
         }
         
       }
@@ -110,7 +110,7 @@ namespace WasatchCore{
           typename OperatorTypeBuilder<Interpolant,FieldT,   YFace>::type, // scalar interp type
           typename OperatorTypeBuilder<Interpolant,SVolField,YFace>::type  // velocity interp type
           >::Builder ConvFluxLim;
-          builder = scinew ConvFluxLim( convFluxTag, solnVarTag, advVelocityTag, convMethod, info[VOLUME_FRAC] );
+          builder = new ConvFluxLim( convFluxTag, solnVarTag, advVelocityTag, convMethod, info[VOLUME_FRAC] );
         } else {
           typedef typename ConvectiveFluxLimiter<
           typename Ops::InterpC2FYLimiter,
@@ -118,7 +118,7 @@ namespace WasatchCore{
           typename OperatorTypeBuilder<Interpolant,FieldT,   YFace>::type, // scalar interp type
           typename OperatorTypeBuilder<Interpolant,YVolField,YFace>::type  // velocity interp type
           >::Builder ConvFluxLim;
-          builder = scinew ConvFluxLim( convFluxTag, solnVarTag, advVelocityTag, convMethod, info[VOLUME_FRAC] );
+          builder = new ConvFluxLim( convFluxTag, solnVarTag, advVelocityTag, convMethod, info[VOLUME_FRAC] );
         }
         
       }
@@ -131,7 +131,7 @@ namespace WasatchCore{
           typename OperatorTypeBuilder<Interpolant,FieldT,   ZFace>::type, // scalar interp type
           typename OperatorTypeBuilder<Interpolant,SVolField,ZFace>::type  // velocity interp type
           >::Builder ConvFluxLim;
-          builder = scinew ConvFluxLim( convFluxTag, solnVarTag, advVelocityTag, convMethod, info[VOLUME_FRAC] );
+          builder = new ConvFluxLim( convFluxTag, solnVarTag, advVelocityTag, convMethod, info[VOLUME_FRAC] );
         } else {
           typedef typename ConvectiveFluxLimiter<
           typename Ops::InterpC2FZLimiter,
@@ -139,7 +139,7 @@ namespace WasatchCore{
           typename OperatorTypeBuilder<Interpolant,FieldT,   ZFace>::type, // scalar interp type
           typename OperatorTypeBuilder<Interpolant,ZVolField,ZFace>::type  // velocity interp type
           >::Builder ConvFluxLim;
-          builder = scinew ConvFluxLim( convFluxTag, solnVarTag, advVelocityTag, convMethod, info[VOLUME_FRAC] );
+          builder = new ConvFluxLim( convFluxTag, solnVarTag, advVelocityTag, convMethod, info[VOLUME_FRAC] );
         }
       }
       
@@ -213,8 +213,8 @@ namespace WasatchCore{
     if( diffFluxParams->findAttribute("coefficient") ){
       double coef;
       diffFluxParams->getAttribute("coefficient",coef);
-      if (isDiffusiveVelocity) return scinew typename DiffusiveVelocity<FluxT>::Builder( diffFluxTag, primVarTag, coef, turbDiffTag );
-      return scinew Flux( diffFluxTag, primVarTag, coef, turbDiffTag, densityTag );
+      if (isDiffusiveVelocity) return new typename DiffusiveVelocity<FluxT>::Builder( diffFluxTag, primVarTag, coef, turbDiffTag );
+      return new Flux( diffFluxTag, primVarTag, coef, turbDiffTag, densityTag );
     }
     else if( diffFluxParams->findBlock("DiffusionCoefficient") ){
       /**
@@ -227,8 +227,8 @@ namespace WasatchCore{
        *        coefficient...  Arrrgghh.
        */
       const Expr::Tag coef = parse_nametag( diffFluxParams->findBlock("DiffusionCoefficient")->findBlock("NameTag") );
-      if (isDiffusiveVelocity) return scinew typename DiffusiveVelocity<FluxT>::Builder( diffFluxTag, primVarTag, coef, turbDiffTag );
-      return scinew Flux( diffFluxTag, primVarTag, coef, turbDiffTag, densityTag );
+      if (isDiffusiveVelocity) return new typename DiffusiveVelocity<FluxT>::Builder( diffFluxTag, primVarTag, coef, turbDiffTag );
+      return new Flux( diffFluxTag, primVarTag, coef, turbDiffTag, densityTag );
     }
     else {
       std::ostringstream msg;
@@ -328,7 +328,7 @@ namespace WasatchCore{
     if( diffVelParams->findAttribute("coefficient") ){
       double coef;
       diffVelParams->getAttribute("coefficient",coef);
-      return scinew Velocity( diffVelTag, primVarTag, coef, turbDiffTag );
+      return new Velocity( diffVelTag, primVarTag, coef, turbDiffTag );
     }
     else if( diffVelParams->findBlock("DiffusionCoefficient") ){
       /**
@@ -341,7 +341,7 @@ namespace WasatchCore{
        *        coefficient...  Arrrgghh.
        */
       const Expr::Tag coef = parse_nametag( diffVelParams->findBlock("DiffusionCoefficient")->findBlock("NameTag") );
-      return scinew Velocity( diffVelTag, primVarTag, coef, turbDiffTag );
+      return new Velocity( diffVelTag, primVarTag, coef, turbDiffTag );
     }
     return NULL;
   }

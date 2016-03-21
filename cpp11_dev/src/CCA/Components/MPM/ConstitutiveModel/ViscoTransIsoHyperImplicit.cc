@@ -219,7 +219,7 @@ void ViscoTransIsoHyperImplicit::outputProblemSpec(ProblemSpecP& ps,
 
 ViscoTransIsoHyperImplicit* ViscoTransIsoHyperImplicit::clone()
 {
-  return scinew ViscoTransIsoHyperImplicit(*this);
+  return new ViscoTransIsoHyperImplicit(*this);
 }
 
 void ViscoTransIsoHyperImplicit::initializeCMData(const Patch* patch,
@@ -1238,7 +1238,7 @@ namespace Uintah {
   {
     static TypeDescription* td = 0;
     if(!td){
-      td = scinew TypeDescription(TypeDescription::Other,
+      td = new TypeDescription(TypeDescription::Other,
                                   "ViscoTransIsoHyperImplicit::StateData", true,
                                   &makeMPI_CMData);
     }

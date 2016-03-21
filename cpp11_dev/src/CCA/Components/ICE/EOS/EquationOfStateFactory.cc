@@ -74,27 +74,27 @@ EquationOfState* EquationOfStateFactory::create(ProblemSpecP& ps)
   
   
   if (EOS == "ideal_gas") 
-    return(scinew IdealGas(EOS_ps));
+    return(new IdealGas(EOS_ps));
   else if (EOS == "hard_sphere_gas") 
-    return(scinew HardSphereGas(EOS_ps));
+    return(new HardSphereGas(EOS_ps));
   else if (EOS == "TST") 
-    return(scinew TST(EOS_ps));
+    return(new TST(EOS_ps));
   else if (EOS == "JWL") 
-    return(scinew JWL(EOS_ps));
+    return(new JWL(EOS_ps));
   else if (EOS == "JWLC") 
-    return(scinew JWLC(EOS_ps));
+    return(new JWLC(EOS_ps));
   else if (EOS == "Murnaghan") 
-    return(scinew Murnaghan(EOS_ps));
+    return(new Murnaghan(EOS_ps));
   else if (EOS == "BirchMurnaghan") 
-    return(scinew BirchMurnaghan(EOS_ps));
+    return(new BirchMurnaghan(EOS_ps));
   else if (EOS == "Gruneisen") 
-    return(scinew Gruneisen(EOS_ps));
+    return(new Gruneisen(EOS_ps));
   else if (EOS == "Tillotson") 
-    return(scinew Tillotson(EOS_ps));    
+    return(new Tillotson(EOS_ps));    
   else if (EOS == "Thomsen_Hartka_water") 
-    return(scinew Thomsen_Hartka_water(EOS_ps));    
+    return(new Thomsen_Hartka_water(EOS_ps));    
   else if (EOS == "KnaussSeaWater") 
-    return(scinew KnaussSeaWater(EOS_ps));    
+    return(new KnaussSeaWater(EOS_ps));    
   else{
     ostringstream warn;
     warn << "ERROR ICE: Unknown Equation of State ("<< EOS << " )\n"

@@ -40,7 +40,7 @@ ShearModulusModel* ShearModulusModelFactory::create(Uintah::ProblemSpecP& ps)
    ProblemSpecP child = ps->findBlock("elastic_shear_modulus_model");
    if(!child) {
       cerr << "**WARNING** Creating default (constant shear modulus) model" << endl;
-      return(scinew ShearModulus_Constant());
+      return(new ShearModulus_Constant());
    }
    string mat_type;
    if(!child->getAttribute("type", mat_type))
@@ -48,14 +48,14 @@ ShearModulusModel* ShearModulusModelFactory::create(Uintah::ProblemSpecP& ps)
                                   __FILE__, __LINE__);
    
    if (mat_type == "constant_shear")
-      return(scinew ShearModulus_Constant(child));
+      return(new ShearModulus_Constant(child));
    else if (mat_type == "np_shear")
-      return(scinew ShearModulus_Nadal(child));
+      return(new ShearModulus_Nadal(child));
    else if (mat_type == "borja_shear_modulus")
-      return(scinew ShearModulus_Borja(child));
+      return(new ShearModulus_Borja(child));
    else {
       cerr << "**WARNING** Creating default (constant shear modulus) model" << endl;
-      return(scinew ShearModulus_Constant(child));
+      return(new ShearModulus_Constant(child));
    }
 }
 
@@ -63,13 +63,13 @@ ShearModulusModel*
 ShearModulusModelFactory::createCopy(const ShearModulusModel* smm)
 {
    if (dynamic_cast<const ShearModulus_Constant*>(smm))
-      return(scinew ShearModulus_Constant(dynamic_cast<const ShearModulus_Constant*>(smm)));
+      return(new ShearModulus_Constant(dynamic_cast<const ShearModulus_Constant*>(smm)));
    else if (dynamic_cast<const ShearModulus_Nadal*>(smm))
-      return(scinew ShearModulus_Nadal(dynamic_cast<const ShearModulus_Nadal*>(smm)));
+      return(new ShearModulus_Nadal(dynamic_cast<const ShearModulus_Nadal*>(smm)));
    else if (dynamic_cast<const ShearModulus_Borja*>(smm))
-      return(scinew ShearModulus_Borja(dynamic_cast<const ShearModulus_Borja*>(smm)));
+      return(new ShearModulus_Borja(dynamic_cast<const ShearModulus_Borja*>(smm)));
    else {
       cerr << "**WARNING** Creating copy of default (constant shear modulus) model" << endl;
-      return(scinew ShearModulus_Constant(dynamic_cast<const ShearModulus_Constant*>(smm)));
+      return(new ShearModulus_Constant(dynamic_cast<const ShearModulus_Constant*>(smm)));
    }
 }

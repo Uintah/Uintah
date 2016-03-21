@@ -432,7 +432,7 @@ ConstitutiveModel* ViscoElasticDamage::readRestartParametersAndCreate(ProblemSpe
 
 ConstitutiveModel* ViscoElasticDamage::create(double *p_array)
 {
-  return(scinew ViscoElasticDamage(p_array[0],p_array[1],p_array[2],p_array[3],
+  return(new ViscoElasticDamage(p_array[0],p_array[1],p_array[2],p_array[3],
                 p_array[4],p_array[5],p_array[6]));
 }
 
@@ -472,7 +472,7 @@ void ViscoElasticDamage::addComputesAndRequires(Task* task,
 
 ConstitutiveModel* ViscoElasticDamage::copy() const
 {
-  return( scinew ViscoElasticDamage(*this) );
+  return( new ViscoElasticDamage(*this) );
 }
 
 int ViscoElasticDamage::getSize() const

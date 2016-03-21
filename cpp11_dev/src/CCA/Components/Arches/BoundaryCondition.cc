@@ -155,7 +155,7 @@ BoundaryCondition::problemSetup(const ProblemSpecP& params)
   ProblemSpecP db_params = params;
   ProblemSpecP db = params->findBlock("BoundaryConditions");
 
-  d_newBC = scinew BoundaryCondition_new( d_lab->d_sharedState->getArchesMaterial(0)->getDWIndex() );
+  d_newBC = new BoundaryCondition_new( d_lab->d_sharedState->getArchesMaterial(0)->getDWIndex() );
 
   if ( db->findBlock("check_for_inlet_obstructions") ) {
     d_check_inlet_obstructions = true;
@@ -173,7 +173,7 @@ BoundaryCondition::problemSetup(const ProblemSpecP& params)
 
     if ( db->findBlock("intrusions") ) {
 
-      _intrusionBC = scinew IntrusionBC( d_lab, d_MAlab, d_props, BoundaryCondition::INTRUSION );
+      _intrusionBC = new IntrusionBC( d_lab, d_MAlab, d_props, BoundaryCondition::INTRUSION );
       ProblemSpecP db_new_intrusion = db->findBlock("intrusions");
       _using_new_intrusion = true;
 
@@ -1782,7 +1782,7 @@ void BoundaryCondition::sched_setAreaFraction( SchedulerP& sched,
                                                const bool reinitialize )
 {
 
-  Task* tsk = scinew Task( "BoundaryCondition::setAreaFraction",this, &BoundaryCondition::setAreaFraction, timesubstep, reinitialize );
+  Task* tsk = new Task( "BoundaryCondition::setAreaFraction",this, &BoundaryCondition::setAreaFraction, timesubstep, reinitialize );
 
   if ( timesubstep == 0 ) {
 
@@ -2028,7 +2028,7 @@ BoundaryCondition::setupBCs( ProblemSpecP& db )
           db_BCType->require("value", my_info.velocity);
           found_bc = true;
 
-          my_info.TurbIn = scinew DigitalFilterInlet( );
+          my_info.TurbIn = new DigitalFilterInlet( );
           my_info.TurbIn->problemSetup( db_BCType );
 
         } else if ( type == "MassFlowInlet" ) {
@@ -2310,7 +2310,7 @@ BoundaryCondition::sched_cellTypeInit(SchedulerP& sched,
   level->findInteriorCellIndexRange(lo,hi);
 
   // cell type initialization
-  Task* tsk = scinew Task("BoundaryCondition::cellTypeInit",
+  Task* tsk = new Task("BoundaryCondition::cellTypeInit",
                           this, &BoundaryCondition::cellTypeInit, lo, hi);
 
   tsk->computes(d_lab->d_cellTypeLabel);
@@ -2490,7 +2490,7 @@ BoundaryCondition::sched_computeBCArea( SchedulerP& sched,
   level->findInteriorCellIndexRange(lo,hi);
 
   // cell type initialization
-  Task* tsk = scinew Task("BoundaryCondition::computeBCArea",
+  Task* tsk = new Task("BoundaryCondition::computeBCArea",
                           this, &BoundaryCondition::computeBCArea, lo, hi);
 
   for ( BCInfoMap::iterator bc_iter = d_bc_information.begin();
@@ -2635,7 +2635,7 @@ BoundaryCondition::sched_setupBCInletVelocities(SchedulerP& sched,
                                                      bool doing_restart )
 {
   // cell type initialization
-  Task* tsk = scinew Task("BoundaryCondition::setupBCInletVelocities",
+  Task* tsk = new Task("BoundaryCondition::setupBCInletVelocities",
                           this, &BoundaryCondition::setupBCInletVelocities, doing_restart );
 
   for ( BCInfoMap::iterator bc_iter = d_bc_information.begin();
@@ -2840,7 +2840,7 @@ BoundaryCondition::sched_setInitProfile(SchedulerP& sched,
                                              const MaterialSet* matls)
 {
   // cell type initialization
-  Task* tsk = scinew Task("BoundaryCondition::setInitProfile",
+  Task* tsk = new Task("BoundaryCondition::setInitProfile",
                           this, &BoundaryCondition::setInitProfile);
 
   tsk->modifies(d_lab->d_uVelocitySPBCLabel);
@@ -4030,7 +4030,7 @@ BoundaryCondition::sched_setIntrusionDensity( SchedulerP& sched,
                                               const LevelP& level,
                                               const MaterialSet* matls )
 {
-  Task* tsk = scinew Task( "BoundaryCondition::setIntrusionDensity",
+  Task* tsk = new Task( "BoundaryCondition::setIntrusionDensity",
                            this, &BoundaryCondition::setIntrusionDensity);
   tsk->modifies( d_lab->d_densityCPLabel );
   sched->addTask( tsk, level->eachPatch(), matls );
@@ -4220,7 +4220,7 @@ void
 BoundaryCondition::sched_checkMomBCs( SchedulerP& sched, const LevelP& level, const MaterialSet* matls )
 {
   string taskname = "BoundaryCondition::checkMomBCs";
-  Task* tsk = scinew Task(taskname, this, &BoundaryCondition::checkMomBCs );
+  Task* tsk = new Task(taskname, this, &BoundaryCondition::checkMomBCs );
 
   sched->addTask( tsk, level->eachPatch(), matls );
 }
@@ -4683,7 +4683,7 @@ BoundaryCondition::sched_create_radiation_temperature( SchedulerP& sched, const 
 
   if ( radiation ) {
     string taskname = "BoundaryCondition::create_radiation_temperature";
-    Task* tsk = scinew Task(taskname, this, &BoundaryCondition::create_radiation_temperature, use_old_dw );
+    Task* tsk = new Task(taskname, this, &BoundaryCondition::create_radiation_temperature, use_old_dw );
 
     //WARNING! HACK HERE FOR CONSTANT TEMPERATURE NAME
     d_temperature_label = VarLabel::find("temperature");

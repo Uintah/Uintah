@@ -44,10 +44,10 @@ MPMEquationOfState* MPMEquationOfStateFactory::create(ProblemSpecP& ps)
    if(!child) {
 
       proc0cout << "**WARNING** Creating default hyperelastic equation of state" << endl;
-      return(scinew HyperElasticEOS(child));
+      return(new HyperElasticEOS(child));
 
       //cerr << "**WARNING** Creating default linear equation of state" << endl;
-      //return(scinew DefaultHypoElasticEOS(child));
+      //return(new DefaultHypoElasticEOS(child));
       //throw ProblemSetupException("Cannot find equation_of_state tag", __FILE__, __LINE__);
    }
    string mat_type;
@@ -55,14 +55,14 @@ MPMEquationOfState* MPMEquationOfStateFactory::create(ProblemSpecP& ps)
       throw ProblemSetupException("No type for equation_of_state", __FILE__, __LINE__);
    
    if (mat_type == "mie_gruneisen")
-      return(scinew MieGruneisenEOSEnergy(child));
+      return(new MieGruneisenEOSEnergy(child));
    else if (mat_type == "default_hypo")
-      return(scinew DefaultHypoElasticEOS(child));
+      return(new DefaultHypoElasticEOS(child));
    else if (mat_type == "default_hyper")
-      return(scinew HyperElasticEOS(child));
+      return(new HyperElasticEOS(child));
    else {
       proc0cout << "**WARNING** Creating default hyperelastic equation of state" << endl;
-      return(scinew HyperElasticEOS(child));
+      return(new HyperElasticEOS(child));
       //throw ProblemSetupException("Unknown MPMEquation of State Model ("+mat_type+")", __FILE__, __LINE__);
    }
  
@@ -74,14 +74,14 @@ MPMEquationOfState*
 MPMEquationOfStateFactory::createCopy(const MPMEquationOfState* eos)
 {
    if (dynamic_cast<const MieGruneisenEOSEnergy*>(eos))
-      return(scinew MieGruneisenEOSEnergy(dynamic_cast<const MieGruneisenEOSEnergy*>(eos)));
+      return(new MieGruneisenEOSEnergy(dynamic_cast<const MieGruneisenEOSEnergy*>(eos)));
 
    else if (dynamic_cast<const DefaultHypoElasticEOS*>(eos))
-      return(scinew DefaultHypoElasticEOS(dynamic_cast<const DefaultHypoElasticEOS*>(eos)));
+      return(new DefaultHypoElasticEOS(dynamic_cast<const DefaultHypoElasticEOS*>(eos)));
 
    else {
       proc0cout << "**WARNING** Creating a copy of the default hyperelastic equation of state" << endl;
-      return(scinew HyperElasticEOS(dynamic_cast<const HyperElasticEOS*>(eos)));
+      return(new HyperElasticEOS(dynamic_cast<const HyperElasticEOS*>(eos)));
       //throw ProblemSetupException("Cannot create copy of unknown MPM EOS", __FILE__, __LINE__);
    }
 

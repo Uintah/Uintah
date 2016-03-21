@@ -72,7 +72,7 @@ void UnifiedSchedulerTest::problemSetup(const ProblemSpecP& params,
   sharedState_ = sharedState;
   ProblemSpecP unifiedSchedTest = params->findBlock("UnifiedSchedulerTest");
   unifiedSchedTest->require("delt", delt_);
-  simpleMaterial_ = scinew SimpleMaterial();
+  simpleMaterial_ = new SimpleMaterial();
   sharedState->registerSimpleMaterial(simpleMaterial_);
 }
 //______________________________________________________________________
@@ -80,7 +80,7 @@ void UnifiedSchedulerTest::problemSetup(const ProblemSpecP& params,
 void UnifiedSchedulerTest::scheduleInitialize(const LevelP& level,
                                               SchedulerP& sched)
 {
-  Task* multiTask = scinew Task("UnifiedSchedulerTest::initialize", this, &UnifiedSchedulerTest::initialize);
+  Task* multiTask = new Task("UnifiedSchedulerTest::initialize", this, &UnifiedSchedulerTest::initialize);
 
   multiTask->computesWithScratchGhost(phi_label, NULL, Uintah::Task::NormalDomain, Ghost::AroundNodes, 1);
   //multiTask->computes(phi_label);
@@ -98,7 +98,7 @@ void UnifiedSchedulerTest::scheduleRestartInitialize(const LevelP& level,
 void UnifiedSchedulerTest::scheduleComputeStableTimestep(const LevelP& level,
                                                          SchedulerP& sched)
 {
-  Task* task = scinew Task("UnifiedSchedulerTest::computeStableTimestep", this, &UnifiedSchedulerTest::computeStableTimestep);
+  Task* task = new Task("UnifiedSchedulerTest::computeStableTimestep", this, &UnifiedSchedulerTest::computeStableTimestep);
 
   task->requires(Task::NewDW, residual_label);
   task->computes(sharedState_->get_delt_label(), level.get_rep());
@@ -109,10 +109,10 @@ void UnifiedSchedulerTest::scheduleComputeStableTimestep(const LevelP& level,
 void UnifiedSchedulerTest::scheduleTimeAdvance(const LevelP& level,
                                                SchedulerP& sched)
 {
-  Task* task = scinew Task("UnifiedSchedulerTest::timeAdvanceUnified", this, &UnifiedSchedulerTest::timeAdvanceUnified);
-  //Task* task = scinew Task("UnifiedSchedulerTest::timeAdvanceCPU", this, &UnifiedSchedulerTest::timeAdvanceCPU);
-  //Task* task = scinew Task("UnifiedSchedulerTest::timeAdvance1DP", this, &UnifiedSchedulerTest::timeAdvance1DP);
-  //Task* task = scinew Task("UnifiedSchedulerTest::timeAdvance3DP", this, &UnifiedSchedulerTest::timeAdvance3DP);
+  Task* task = new Task("UnifiedSchedulerTest::timeAdvanceUnified", this, &UnifiedSchedulerTest::timeAdvanceUnified);
+  //Task* task = new Task("UnifiedSchedulerTest::timeAdvanceCPU", this, &UnifiedSchedulerTest::timeAdvanceCPU);
+  //Task* task = new Task("UnifiedSchedulerTest::timeAdvance1DP", this, &UnifiedSchedulerTest::timeAdvance1DP);
+  //Task* task = new Task("UnifiedSchedulerTest::timeAdvance3DP", this, &UnifiedSchedulerTest::timeAdvance3DP);
 
 #ifdef HAVE_CUDA
   if (Uintah::Parallel::usingDevice()) {

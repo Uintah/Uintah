@@ -81,7 +81,7 @@ void Water::outputProblemSpec(ProblemSpecP& ps,bool output_cm_tag)
 
 Water* Water::clone()
 {
-  return scinew Water(*this);
+  return new Water(*this);
 }
 
 void Water::initializeLocalMPMLabels()
@@ -420,7 +420,7 @@ namespace Uintah {
   {
     static TypeDescription* td = 0;
     if(!td){
-      td = scinew TypeDescription(TypeDescription::Other,
+      td = new TypeDescription(TypeDescription::Other,
                                   "Water::StateData", 
                                   true, &makeMPI_CMData);
     }

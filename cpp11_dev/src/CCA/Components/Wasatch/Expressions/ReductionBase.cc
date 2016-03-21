@@ -58,7 +58,7 @@ schedule_set_reduction_vars( const Uintah::LevelP& level,
 {
   dbg_red << "scheduling set reduction vars for RK Stage: " << RKStage << std::endl;
   // create a Uintah task to populate the reduction variable with values calculated by this expression
-  Uintah::Task* reductionVarTask = scinew Uintah::Task( "set reduction variables", this, &ReductionBase::populate_reduction_variable, RKStage );
+  Uintah::Task* reductionVarTask = new Uintah::Task( "set reduction variables", this, &ReductionBase::populate_reduction_variable, RKStage );
   // we require this perpatch variable
   reductionVarTask->requires( Uintah::Task::NewDW, thisVarLabel_,
                               WasatchCore::get_uintah_ghost_type<so::SingleValueField>() );
@@ -71,7 +71,7 @@ schedule_set_reduction_vars( const Uintah::LevelP& level,
   dbg_red << "scheduling get reduction vars \n";
   // create a uintah task to get the reduced variables and put them back into this expression
   Uintah::Task* getReductionVarTask =
-      scinew Uintah::Task( "get reduction variables",
+      new Uintah::Task( "get reduction variables",
                            this, &ReductionBase::get_reduction_variable,
                            RKStage );
   // get the reduction variable value
@@ -105,9 +105,9 @@ populate_reduction_variable( const Uintah::ProcessorGroup* const pg,
         Uintah::ReductionVariableBase* redcVar = NULL;
         
         switch (reductionName_) {
-          case ReduceMin: redcVar = scinew UintahReduceMin(*val); break;
-          case ReduceMax: redcVar = scinew UintahReduceMax(*val); break;
-          case ReduceSum: redcVar = scinew UintahReduceSum(*val); break;
+          case ReduceMin: redcVar = new UintahReduceMin(*val); break;
+          case ReduceMax: redcVar = new UintahReduceMax(*val); break;
+          case ReduceSum: redcVar = new UintahReduceSum(*val); break;
           default: break;
         }
         

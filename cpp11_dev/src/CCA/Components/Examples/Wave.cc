@@ -116,7 +116,7 @@ void Wave::problemSetup(const ProblemSpecP& params,
   wave->require("integration", integration);
   if(integration != "Euler" && integration != "RK4")
     throw ProblemSetupException("Unknown integration method for Wave", __FILE__, __LINE__);
-  mymat_ = scinew SimpleMaterial();
+  mymat_ = new SimpleMaterial();
   sharedState->registerSimpleMaterial(mymat_);
 
 }
@@ -125,7 +125,7 @@ void Wave::problemSetup(const ProblemSpecP& params,
 void Wave::scheduleInitialize(const LevelP& level,
                                SchedulerP& sched)
 {
-  Task* task = scinew Task("initialize",
+  Task* task = new Task("initialize",
                            this, &Wave::initialize);
   task->computes(phi_label);
   task->computes(pi_label);
@@ -143,7 +143,7 @@ void Wave::scheduleRestartInitialize(const LevelP& level,
 void Wave::scheduleComputeStableTimestep(const LevelP& level,
                                           SchedulerP& sched)
 {
-  Task* task = scinew Task("computeStableTimestep",
+  Task* task = new Task("computeStableTimestep",
                            this, &Wave::computeStableTimestep);
   task->computes(sharedState_->get_delt_label(),level.get_rep());
   sched->addTask(task, level->eachPatch(), sharedState_->allMaterials());
@@ -154,7 +154,7 @@ void
 Wave::scheduleTimeAdvance( const LevelP& level, SchedulerP& sched)
 {
   if(integration == "Euler"){
-    Task* task = scinew Task("timeAdvance",
+    Task* task = new Task("timeAdvance",
                              this, &Wave::timeAdvanceEuler);
     task->requires(Task::OldDW, phi_label, Ghost::AroundCells, 1);
     task->requires(Task::OldDW, pi_label,  Ghost::None, 0);
@@ -166,7 +166,7 @@ Wave::scheduleTimeAdvance( const LevelP& level, SchedulerP& sched)
     task->computes(pi_label);
     sched->addTask(task, level->eachPatch(), sharedState_->allMaterials());
   } else if(integration == "RK4"){
-    Task* task = scinew Task("setupRK4",
+    Task* task = new Task("setupRK4",
                              this, &Wave::setupRK4);
     task->requires(Task::OldDW, phi_label, Ghost::AroundCells, 1);
     task->requires(Task::OldDW, pi_label,  Ghost::None, 0);
@@ -180,7 +180,7 @@ Wave::scheduleTimeAdvance( const LevelP& level, SchedulerP& sched)
 
     for(int i=0;i<4;i++){
       Step* s = &rk4steps[i];
-      Task* task = scinew Task("timeAdvance",
+      Task* task = new Task("timeAdvance",
                                this, &Wave::timeAdvanceRK4, s);
                                
       task->requires(Task::OldDW, sharedState_->get_delt_label(), level.get_rep());

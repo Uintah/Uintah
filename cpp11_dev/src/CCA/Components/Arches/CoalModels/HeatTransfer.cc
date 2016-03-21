@@ -170,7 +170,7 @@ void
 HeatTransfer::sched_initVars( const LevelP& level, SchedulerP& sched )
 {
   std::string taskname = "HeatTransfer::initVars";
-  Task* tsk = scinew Task(taskname, this, &HeatTransfer::initVars);
+  Task* tsk = new Task(taskname, this, &HeatTransfer::initVars);
 
   sched->addTask(tsk, level->eachPatch(), d_sharedState->allArchesMaterials()); 
 }

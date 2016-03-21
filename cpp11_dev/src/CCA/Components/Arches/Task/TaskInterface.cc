@@ -204,10 +204,10 @@ void TaskInterface::schedule_task( const LevelP& level,
 
   if ( task_type == STANDARD_TASK ){
     register_timestep_eval( variable_registry, time_substep );
-    tsk = scinew Task( _task_name, this, &TaskInterface::do_task, variable_registry, time_substep );
+    tsk = new Task( _task_name, this, &TaskInterface::do_task, variable_registry, time_substep );
   } else if ( task_type == BC_TASK ) {
     register_compute_bcs( variable_registry, time_substep );
-    tsk = scinew Task( _task_name+"_bc_task", this, &TaskInterface::do_bcs, variable_registry, time_substep );
+    tsk = new Task( _task_name+"_bc_task", this, &TaskInterface::do_bcs, variable_registry, time_substep );
   } else
     throw InvalidValue("Error: Task type not recognized.",__FILE__,__LINE__);
 
@@ -265,9 +265,9 @@ void TaskInterface::schedule_init( const LevelP& level,
 
   Task* tsk;
   if ( is_restart ) {
-    tsk = scinew Task( _task_name+"_restart_initialize", this, &TaskInterface::do_restart_init, variable_registry );
+    tsk = new Task( _task_name+"_restart_initialize", this, &TaskInterface::do_restart_init, variable_registry );
   } else {
-    tsk = scinew Task( _task_name+"_initialize", this, &TaskInterface::do_init, variable_registry );
+    tsk = new Task( _task_name+"_initialize", this, &TaskInterface::do_init, variable_registry );
   }
 
   int counter = 0;
@@ -312,7 +312,7 @@ void TaskInterface::schedule_timestep_init( const LevelP& level,
 
   register_timestep_init( variable_registry );
 
-  Task* tsk = scinew Task( _task_name+"_timestep_initialize", this, &TaskInterface::do_timestep_init, variable_registry );
+  Task* tsk = new Task( _task_name+"_timestep_initialize", this, &TaskInterface::do_timestep_init, variable_registry );
 
   int counter = 0;
 
@@ -365,7 +365,7 @@ void TaskInterface::do_task( const ProcessorGroup* pc,
 
     const WasatchCore::AllocInfo ainfo( old_dw, new_dw, _matl_index, patch, pc );
 
-    ArchesFieldContainer* field_container = scinew ArchesFieldContainer(ainfo, patch, _matl_index, variable_registry, old_dw, new_dw);
+    ArchesFieldContainer* field_container = new ArchesFieldContainer(ainfo, patch, _matl_index, variable_registry, old_dw, new_dw);
 
     SchedToTaskInfo info;
 
@@ -375,7 +375,7 @@ void TaskInterface::do_task( const ProcessorGroup* pc,
     info.dt = DT;
     info.time_substep = time_substep;
 
-    ArchesTaskInfoManager* tsk_info_mngr = scinew ArchesTaskInfoManager(variable_registry, patch, info);
+    ArchesTaskInfoManager* tsk_info_mngr = new ArchesTaskInfoManager(variable_registry, patch, info);
 
     //this makes the "getting" of the grid variables easier from the user side (ie, only need a string name )
     tsk_info_mngr->set_field_container( field_container );
@@ -406,7 +406,7 @@ void TaskInterface::do_bcs( const ProcessorGroup* pc,
 
     const WasatchCore::AllocInfo ainfo( old_dw, new_dw, _matl_index, patch, pc );
 
-    ArchesFieldContainer* field_container = scinew ArchesFieldContainer(ainfo, patch, _matl_index, variable_registry, old_dw, new_dw);
+    ArchesFieldContainer* field_container = new ArchesFieldContainer(ainfo, patch, _matl_index, variable_registry, old_dw, new_dw);
 
     SchedToTaskInfo info;
 
@@ -419,7 +419,7 @@ void TaskInterface::do_bcs( const ProcessorGroup* pc,
     // info.dt = DT;
     info.time_substep = time_substep;
 
-    ArchesTaskInfoManager* tsk_info_mngr = scinew ArchesTaskInfoManager(variable_registry, patch, info);
+    ArchesTaskInfoManager* tsk_info_mngr = new ArchesTaskInfoManager(variable_registry, patch, info);
 
     //this makes the "getting" of the grid variables easier from the user side (ie, only need a string name )
     tsk_info_mngr->set_field_container( field_container );
@@ -449,7 +449,7 @@ void TaskInterface::do_init( const ProcessorGroup* pc,
 
     const WasatchCore::AllocInfo ainfo( old_dw, new_dw, _matl_index, patch, pc );
 
-    ArchesFieldContainer* field_container = scinew ArchesFieldContainer(ainfo, patch, _matl_index, variable_registry, old_dw, new_dw);
+    ArchesFieldContainer* field_container = new ArchesFieldContainer(ainfo, patch, _matl_index, variable_registry, old_dw, new_dw);
 
     SchedToTaskInfo info;
 
@@ -457,7 +457,7 @@ void TaskInterface::do_init( const ProcessorGroup* pc,
     info.dt = 0;
     info.time_substep = 0;
 
-    ArchesTaskInfoManager* tsk_info_mngr = scinew ArchesTaskInfoManager(variable_registry, patch, info);
+    ArchesTaskInfoManager* tsk_info_mngr = new ArchesTaskInfoManager(variable_registry, patch, info);
 
     //this makes the "getting" of the grid variables easier from the user side (ie, only need a string name )
     tsk_info_mngr->set_field_container( field_container );
@@ -487,7 +487,7 @@ void TaskInterface::do_restart_init( const ProcessorGroup* pc,
 
     const WasatchCore::AllocInfo ainfo( old_dw, new_dw, _matl_index, patch, pc );
 
-    ArchesFieldContainer* field_container = scinew ArchesFieldContainer(ainfo, patch, _matl_index, variable_registry, old_dw, new_dw );
+    ArchesFieldContainer* field_container = new ArchesFieldContainer(ainfo, patch, _matl_index, variable_registry, old_dw, new_dw );
 
     SchedToTaskInfo info;
 
@@ -495,7 +495,7 @@ void TaskInterface::do_restart_init( const ProcessorGroup* pc,
     info.dt = 0;
     info.time_substep = 0;
 
-    ArchesTaskInfoManager* tsk_info_mngr = scinew ArchesTaskInfoManager(variable_registry, patch, info);
+    ArchesTaskInfoManager* tsk_info_mngr = new ArchesTaskInfoManager(variable_registry, patch, info);
 
     //this makes the "getting" of the grid variables easier from the user side (ie, only need a string name )
     tsk_info_mngr->set_field_container( field_container );
@@ -525,7 +525,7 @@ void TaskInterface::do_timestep_init( const ProcessorGroup* pc,
 
     const WasatchCore::AllocInfo ainfo( old_dw, new_dw, _matl_index, patch, pc );
 
-    ArchesFieldContainer* field_container = scinew ArchesFieldContainer(ainfo, patch, _matl_index, variable_registry, old_dw, new_dw );
+    ArchesFieldContainer* field_container = new ArchesFieldContainer(ainfo, patch, _matl_index, variable_registry, old_dw, new_dw );
 
     SchedToTaskInfo info;
 
@@ -535,7 +535,7 @@ void TaskInterface::do_timestep_init( const ProcessorGroup* pc,
     info.dt = DT;
     info.time_substep = 0;
 
-    ArchesTaskInfoManager* tsk_info_mngr = scinew ArchesTaskInfoManager(variable_registry, patch, info);
+    ArchesTaskInfoManager* tsk_info_mngr = new ArchesTaskInfoManager(variable_registry, patch, info);
 
     //this makes the "getting" of the grid variables easier from the user side (ie, only need a string name )
     tsk_info_mngr->set_field_container( field_container );

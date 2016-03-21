@@ -58,7 +58,7 @@ operator+(MatrixHandle A, MatrixHandle B)
   {
     ColumnMatrix *ac = A->as_column();
     ColumnMatrix *bc = B->as_column();
-    ColumnMatrix *cc = scinew ColumnMatrix(ac->nrows());
+    ColumnMatrix *cc = new ColumnMatrix(ac->nrows());
     Add(*cc, *ac, *bc);
     return cc;
   }
@@ -73,7 +73,7 @@ operator+(MatrixHandle A, MatrixHandle B)
   {
     DenseMatrix *ad = A->dense();
     DenseMatrix *bd = B->dense();
-    DenseMatrix *cd = scinew DenseMatrix(ad->nrows(), bd->ncols());
+    DenseMatrix *cd = new DenseMatrix(ad->nrows(), bd->ncols());
     Add(*cd, *ad, *bd);
     if (!(A->is_dense())) { delete ad; }
     if (!(B->is_dense())) { delete bd; }
@@ -96,7 +96,7 @@ operator-(MatrixHandle A, MatrixHandle B)
   {
     ColumnMatrix *ac = A->as_column();
     ColumnMatrix *bc = B->as_column();
-    ColumnMatrix *cc = scinew ColumnMatrix(ac->nrows());
+    ColumnMatrix *cc = new ColumnMatrix(ac->nrows());
     Sub(*cc, *ac, *bc);
     return cc;
   }
@@ -111,7 +111,7 @@ operator-(MatrixHandle A, MatrixHandle B)
   {
     DenseMatrix *ad = A->dense();
     DenseMatrix *bd = B->dense();
-    DenseMatrix *cd = scinew DenseMatrix(ad->nrows(), bd->ncols());
+    DenseMatrix *cd = new DenseMatrix(ad->nrows(), bd->ncols());
     Sub(*cd, *ad, *bd);
     if (!(A->is_dense())) { delete ad; }
     if (!(B->is_dense())) { delete bd; }
@@ -130,7 +130,7 @@ operator*(MatrixHandle A, MatrixHandle B)
 
   if (B->is_column())
   {
-    ColumnMatrix *cd = scinew ColumnMatrix(A->nrows());
+    ColumnMatrix *cd = new ColumnMatrix(A->nrows());
     Mult(*cd, *(A.get_rep()), *(B->column()));
     return cd;
   }
@@ -144,7 +144,7 @@ operator*(MatrixHandle A, MatrixHandle B)
   {
     SparseRowMatrix *ad = A->sparse();
     DenseMatrix *bd = B->dense();
-    DenseMatrix *cd = scinew DenseMatrix(ad->nrows(), bd->ncols());
+    DenseMatrix *cd = new DenseMatrix(ad->nrows(), bd->ncols());
     ad->sparse_mult(*bd, *cd);
     if (!(B->is_dense())) { delete bd; }
     return cd;
@@ -153,7 +153,7 @@ operator*(MatrixHandle A, MatrixHandle B)
   {
     DenseMatrix *ad = A->dense();
     SparseRowMatrix *bst = B->sparse()->transpose();
-    DenseMatrix *cd = scinew DenseMatrix(A->nrows(), B->ncols());
+    DenseMatrix *cd = new DenseMatrix(A->nrows(), B->ncols());
     bst->sparse_mult_transXB(*ad, *cd);
     if (!A->is_dense()) { delete ad; }
     delete bst;
@@ -163,7 +163,7 @@ operator*(MatrixHandle A, MatrixHandle B)
   {
     DenseMatrix *ad = A->dense();
     DenseMatrix *bd = B->dense();
-    DenseMatrix *cd = scinew DenseMatrix(ad->nrows(), bd->ncols());
+    DenseMatrix *cd = new DenseMatrix(ad->nrows(), bd->ncols());
     Mult(*cd, *ad, *bd);
 
     if (!(A->is_dense())) { delete ad; }

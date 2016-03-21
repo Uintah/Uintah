@@ -108,7 +108,7 @@ TorusGeometryPiece::outputHelper( ProblemSpecP & ps ) const
 GeometryPieceP
 TorusGeometryPiece::clone() const
 {
-  return scinew TorusGeometryPiece(*this);
+  return new TorusGeometryPiece(*this);
 }
 
 bool

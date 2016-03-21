@@ -47,9 +47,9 @@ InternalVariableModel* InternalVariableModelFactory::create(ProblemSpecP& ps)
    if(!child->getAttribute("type", mat_type))
       throw ProblemSetupException("No type for internal_var_model", __FILE__, __LINE__);
    if (mat_type == "borja_consolidation_pressure")
-      return(scinew InternalVar_BorjaPressure(child));
+      return(new InternalVar_BorjaPressure(child));
    else if (mat_type == "arena_kappa")
-      return(scinew InternalVar_ArenaKappa(child));
+      return(new InternalVar_ArenaKappa(child));
    else {
       throw ProblemSetupException("Unknown InternalVariable Model ("+mat_type+")", __FILE__, __LINE__);
    }
@@ -59,10 +59,10 @@ InternalVariableModel*
 InternalVariableModelFactory::createCopy(const InternalVariableModel* pm)
 {
    if (dynamic_cast<const InternalVar_BorjaPressure*>(pm))
-      return(scinew InternalVar_BorjaPressure(dynamic_cast<const InternalVar_BorjaPressure*>(pm)));
+      return(new InternalVar_BorjaPressure(dynamic_cast<const InternalVar_BorjaPressure*>(pm)));
 
    else if (dynamic_cast<const InternalVar_ArenaKappa*>(pm))
-      return(scinew InternalVar_ArenaKappa(dynamic_cast<const InternalVar_ArenaKappa*>(pm)));
+      return(new InternalVar_ArenaKappa(dynamic_cast<const InternalVar_ArenaKappa*>(pm)));
 
    else {
       throw Uintah::ProblemSetupException("Cannot create copy of unknown internal var model", __FILE__, __LINE__);

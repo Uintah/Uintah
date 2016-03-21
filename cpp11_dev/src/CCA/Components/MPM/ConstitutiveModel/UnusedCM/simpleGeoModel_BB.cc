@@ -138,7 +138,7 @@ void simpleGeoModel_BB::outputProblemSpec(ProblemSpecP& ps,bool output_cm_tag)
 
 simpleGeoModel_BB* simpleGeoModel_BB::clone()
 {
-  return scinew simpleGeoModel_BB(*this);
+  return new simpleGeoModel_BB(*this);
 }
 
 void simpleGeoModel_BB::initializeCMData(const Patch* patch,

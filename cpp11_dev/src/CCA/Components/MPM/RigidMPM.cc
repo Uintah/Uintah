@@ -120,7 +120,7 @@ void RigidMPM::scheduleComputeInternalForce(SchedulerP& sched,
                            getLevel(patches)->getGrid()->numLevels()))
     return;
 
-  Task* t = scinew Task("MPM::computeInternalForce",
+  Task* t = new Task("MPM::computeInternalForce",
                     this, &RigidMPM::computeInternalForce);
 
   // require pStress so it will be saved in a checkpoint, 
@@ -157,7 +157,7 @@ void RigidMPM::scheduleComputeAndIntegrateAcceleration(SchedulerP& sched,
 
   printSchedule(patches,cout_doing,"MPM::scheduleComputeAndIntegrateAcceleration");
 
-  Task* t = scinew Task("MPM::computeAndIntegrateAcceleration",
+  Task* t = new Task("MPM::computeAndIntegrateAcceleration",
                         this, &RigidMPM::computeAndIntegrateAcceleration);
 
   t->requires(Task::OldDW, d_sharedState->get_delt_label() );
@@ -214,7 +214,7 @@ void RigidMPM::scheduleInterpolateToParticlesAndUpdate(SchedulerP& sched,
                            getLevel(patches)->getGrid()->numLevels()))
     return;
 
-  Task* t=scinew Task("MPM::interpolateToParticlesAndUpdate",
+  Task* t=new Task("MPM::interpolateToParticlesAndUpdate",
                       this, &RigidMPM::interpolateToParticlesAndUpdate);
 
   t->requires(Task::OldDW, d_sharedState->get_delt_label() );
@@ -263,7 +263,7 @@ void RigidMPM::scheduleInterpolateToParticlesAndUpdate(SchedulerP& sched,
     t->computes(lb->pColorLabel_preReloc);
   }
 
-  MaterialSubset* z_matl = scinew MaterialSubset();
+  MaterialSubset* z_matl = new MaterialSubset();
   z_matl->add(0);
   z_matl->addReference();
   t->requires(Task::OldDW, lb->NC_CCweightLabel, z_matl, Ghost::None);
@@ -454,7 +454,7 @@ void RigidMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
         pColor_new.copyData(pColor);
       }    
 
-      ParticleSubset* delset = scinew ParticleSubset(0, dwi, patch);
+      ParticleSubset* delset = new ParticleSubset(0, dwi, patch);
       new_dw->deleteParticles(delset);      
     }
 

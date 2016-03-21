@@ -30,7 +30,7 @@ public:
       ~Builder(){}
 
       ExampleParticleModel* build()
-      { return scinew ExampleParticleModel<IT, DT>( _task_name, _matl_index, _base_var_name, _N ); }
+      { return new ExampleParticleModel<IT, DT>( _task_name, _matl_index, _base_var_name, _N ); }
 
       private:
 

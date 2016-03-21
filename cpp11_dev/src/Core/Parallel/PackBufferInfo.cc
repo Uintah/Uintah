@@ -66,7 +66,7 @@ PackBufferInfo::get_type( void*&         out_buf,
       }
     }
 
-    packedBuffer = scinew PackedBuffer(total_packed_size);
+    packedBuffer = new PackedBuffer(total_packed_size);
     packedBuffer->addReference();
 
     datatype = MPI_PACKED;

@@ -74,7 +74,7 @@ VarLabel::create( const string                  & name,
     label = dup;
   }
   else {
-    label = scinew VarLabel(name, td, boundaryLayer, vartype);
+    label = new VarLabel(name, td, boundaryLayer, vartype);
     allLabels[name]=label;
     dbg << "Created VarLabel: " << label->d_name << " [address = " << label << "\n";
   }

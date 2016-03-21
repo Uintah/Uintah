@@ -105,14 +105,14 @@ namespace Uintah {
     switch (interface) {
     case HypreStruct: 
       {
-        return scinew HypreDriverStruct
+        return new HypreDriverStruct
           (level, matlset, A, which_A_dw,
            x, modifies_x, b, which_b_dw, guess, 
            which_guess_dw, params, perProcPatches, interface);
       }
     case HypreSStruct:
       {
-        return scinew HypreDriverSStruct
+        return new HypreDriverSStruct
           (level, matlset, A, which_A_dw,
            x, modifies_x, b, which_b_dw, guess, 
            which_guess_dw, params, perProcPatches, interface);

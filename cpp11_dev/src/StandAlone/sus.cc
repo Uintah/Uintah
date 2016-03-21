@@ -701,7 +701,7 @@ main( int argc, char *argv[], char *env[] )
     
     const ProcessorGroup* world = Uintah::Parallel::getRootProcessorGroup();
 
-    SimulationController* ctl = scinew AMRSimulationController( world, do_AMR, ups );
+    SimulationController* ctl = new AMRSimulationController( world, do_AMR, ups );
 
 #ifdef HAVE_VISIT
     ctl->setVisIt( do_VisIt );
@@ -746,7 +746,7 @@ main( int argc, char *argv[], char *env[] )
 #ifndef NO_ICE
     //__________________________________
     //  Model
-    ModelMaker* modelmaker = scinew ModelFactory(world);
+    ModelMaker* modelmaker = new ModelFactory(world);
     comp->attachPort("modelmaker", modelmaker);
 #endif
 
@@ -761,7 +761,7 @@ main( int argc, char *argv[], char *env[] )
     
     //__________________________________
     // Output
-    DataArchiver * dataarchiver = scinew DataArchiver( world, udaSuffix );
+    DataArchiver * dataarchiver = new DataArchiver( world, udaSuffix );
     Output       * output       = dataarchiver;
     ctl->attachPort( "output", dataarchiver );
     dataarchiver->attachPort( "load balancer", lbc );

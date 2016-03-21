@@ -460,7 +460,7 @@ main(int argc, char** argv)
   }
 
   try {
-    DataArchive* da = scinew DataArchive( clf.filebase );
+    DataArchive* da = new DataArchive( clf.filebase );
     //__________________________________
     //  LIST TIMESTEPS
     if(clf.do_timesteps){

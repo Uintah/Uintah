@@ -49,7 +49,7 @@ void NormScalarVariance::problemSetup( const ProblemSpecP& inputdb )
 void NormScalarVariance::sched_computeProp( const LevelP& level, SchedulerP& sched, int time_substep )
 {
   std::string taskname = "NormScalarVariance::computeProp"; 
-  Task* tsk = scinew Task( taskname, this, &NormScalarVariance::computeProp, time_substep ); 
+  Task* tsk = new Task( taskname, this, &NormScalarVariance::computeProp, time_substep ); 
   
   _mf_label = 0; 
   _mf_m2_label = 0;
@@ -156,7 +156,7 @@ void NormScalarVariance::sched_initialize( const LevelP& level, SchedulerP& sche
 {
   std::string taskname = "NormScalarVariance::initialize"; 
 
-  Task* tsk = scinew Task(taskname, this, &NormScalarVariance::initialize);
+  Task* tsk = new Task(taskname, this, &NormScalarVariance::initialize);
   tsk->computes(_prop_label); 
   
   sched->addTask(tsk, level->eachPatch(), _shared_state->allArchesMaterials());

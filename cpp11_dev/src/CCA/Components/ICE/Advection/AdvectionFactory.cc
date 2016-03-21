@@ -79,11 +79,11 @@ Advector* AdvectionFactory::create(ProblemSpecP& ps,
   // Find the advection operator type
   if (advect_options["type"] == "FirstOrder"){
     d_OrderOfAdvection = 1;
-    return(scinew FirstOrderAdvector());
+    return(new FirstOrderAdvector());
   } 
   else if (advect_options["type"] == "SecondOrder"){
     d_OrderOfAdvection = 2;
-    return(scinew SecondOrderAdvector());
+    return(new SecondOrderAdvector());
   }
   else {
     throw ProblemSetupException("Unknown advection Type R ("+advect_options["type"]+")",

@@ -119,7 +119,7 @@ IncDynamicProcedure::sched_reComputeTurbSubmodel( SchedulerP& sched,
 {
   string taskname =  "IncDynamicProcedure::reComputeTurbSubmodel" +
                      timelabels->integrator_step_name;
-  Task* tsk = scinew Task(taskname, this,
+  Task* tsk = new Task(taskname, this,
                           &IncDynamicProcedure::reComputeTurbSubmodel,
                           timelabels);
 
@@ -152,7 +152,7 @@ IncDynamicProcedure::sched_reComputeTurbSubmodel( SchedulerP& sched,
   //__________________________________
   taskname =  "IncDynamicProcedure::reComputeFilterValues" +
                      timelabels->integrator_step_name;
-  tsk = scinew Task(taskname, this,
+  tsk = new Task(taskname, this,
                     &IncDynamicProcedure::reComputeFilterValues,
                     timelabels);
 
@@ -186,7 +186,7 @@ IncDynamicProcedure::sched_reComputeTurbSubmodel( SchedulerP& sched,
   //__________________________________
   taskname =  "IncDynamicProcedure::reComputeSmagCoeff" +
                timelabels->integrator_step_name;
-  tsk = scinew Task(taskname, this,
+  tsk = new Task(taskname, this,
                     &IncDynamicProcedure::reComputeSmagCoeff,
                     timelabels);
 

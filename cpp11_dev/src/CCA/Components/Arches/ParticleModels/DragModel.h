@@ -60,7 +60,7 @@ namespace Uintah{
       ~Builder(){}
 
       DragModel* build()
-      { return scinew DragModel<IT, DT>( _task_name, _matl_index, _base_var_name, _N ); }
+      { return new DragModel<IT, DT>( _task_name, _matl_index, _base_var_name, _N ); }
 
     private:
 

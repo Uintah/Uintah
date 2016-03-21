@@ -80,7 +80,7 @@ void MurnaghanMPM::outputProblemSpec(ProblemSpecP& ps,bool output_cm_tag)
 
 MurnaghanMPM* MurnaghanMPM::clone()
 {
-  return scinew MurnaghanMPM(*this);
+  return new MurnaghanMPM(*this);
 }
 
 void MurnaghanMPM::initializeCMData(const Patch* patch,
@@ -350,7 +350,7 @@ namespace Uintah {
   {
     static TypeDescription* td = 0;
     if(!td){
-      td = scinew TypeDescription(TypeDescription::Other,
+      td = new TypeDescription(TypeDescription::Other,
                                   "MurnaghanMPM::StateData", 
                                   true, &makeMPI_CMData);
     }

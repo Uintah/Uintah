@@ -250,7 +250,7 @@ main(int argc, char** argv)
   }
 
   try {
-    DataArchive* archive = scinew DataArchive(input_uda_name);
+    DataArchive* archive = new DataArchive(input_uda_name);
 
     if (!storeXML){
       archive->turnOffXMLCaching();

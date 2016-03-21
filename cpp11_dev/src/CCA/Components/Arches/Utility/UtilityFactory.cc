@@ -22,11 +22,11 @@ UtilityFactory::register_all_tasks( ProblemSpecP& db )
 
   //GRID INFORMATION
   std::string tname = "grid_info";
-  TaskInterface::TaskBuilder* tsk = scinew GridInfo::Builder( tname, 0 );
+  TaskInterface::TaskBuilder* tsk = new GridInfo::Builder( tname, 0 );
   register_task( tname, tsk );
 
   tname = "surface_normals";
-  tsk = scinew SurfaceNormals::Builder( tname, 0 );
+  tsk = new SurfaceNormals::Builder( tname, 0 );
   register_task( tname, tsk );
 
   ProblemSpecP db_all_util = db->findBlock("Utilities");
@@ -45,7 +45,7 @@ UtilityFactory::register_all_tasks( ProblemSpecP& db )
 
         //Assume all SVOl for now:
         //otherwise would need to determine or parse for the variable types
-        TaskInterface::TaskBuilder* tsk = scinew TaskAlgebra<SVol,SVol,SVol>::Builder( name, 0 );
+        TaskInterface::TaskBuilder* tsk = new TaskAlgebra<SVol,SVol,SVol>::Builder( name, 0 );
         register_task(name, tsk);
 
       } else {
@@ -84,7 +84,7 @@ UtilityFactory::add_task( ProblemSpecP& db ){
 
         //Assume all SVOl for now:
         //otherwise would need to determine or parse for the variable types
-        TaskInterface::TaskBuilder* tsk_builder = scinew TaskAlgebra<SVol,SVol,SVol>::Builder( name, 0 );
+        TaskInterface::TaskBuilder* tsk_builder = new TaskAlgebra<SVol,SVol,SVol>::Builder( name, 0 );
         register_task(name, tsk_builder);
 
         //also must build it here:

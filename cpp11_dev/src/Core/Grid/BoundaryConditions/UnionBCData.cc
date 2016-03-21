@@ -100,7 +100,7 @@ bool UnionBCData::operator==(const BCGeomBase& rhs) const
 
 UnionBCData* UnionBCData::clone()
 {
-  return scinew UnionBCData(*this);
+  return new UnionBCData(*this);
 }
 
 void UnionBCData::addBCData(BCData& bc)

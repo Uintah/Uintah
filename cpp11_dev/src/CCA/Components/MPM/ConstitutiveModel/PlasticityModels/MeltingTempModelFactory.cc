@@ -42,7 +42,7 @@ MeltingTempModel* MeltingTempModelFactory::create(ProblemSpecP& ps)
    ProblemSpecP child = ps->findBlock("melting_temp_model");
    if(!child) {
       proc0cout << "**WARNING** Creating default (constant melting temperature) model" << endl;
-      return(scinew ConstantMeltTemp());
+      return(new ConstantMeltTemp());
       //throw ProblemSetupException("MPM::ConstitutiveModel:Cannot find melting temp model.", __FILE__, __LINE__);
    }
    string mat_type;
@@ -50,16 +50,16 @@ MeltingTempModel* MeltingTempModelFactory::create(ProblemSpecP& ps)
       throw ProblemSetupException("MPM::ConstitutiveModel:No type for melting temp model.", __FILE__, __LINE__);
    
    if (mat_type == "constant_Tm")
-      return(scinew ConstantMeltTemp(child));
+      return(new ConstantMeltTemp(child));
    else if (mat_type == "linear_Tm")
-      return(scinew LinearMeltTemp(child));
+      return(new LinearMeltTemp(child));
    else if (mat_type == "scg_Tm")
-      return(scinew SCGMeltTemp(child));
+      return(new SCGMeltTemp(child));
    else if (mat_type == "bps_Tm")
-      return(scinew BPSMeltTemp(child));
+      return(new BPSMeltTemp(child));
    else {
       proc0cout << "**WARNING** Creating default (constant melting temperature) model" << endl;
-      return(scinew ConstantMeltTemp(child));
+      return(new ConstantMeltTemp(child));
       //throw ProblemSetupException("MPM::ConstitutiveModel:Unknown Melting Temp Model ("+mat_type+")",
       //                            __FILE__, __LINE__);
    }
@@ -69,16 +69,16 @@ MeltingTempModel*
 MeltingTempModelFactory::createCopy(const MeltingTempModel* mtm)
 {
    if (dynamic_cast<const ConstantMeltTemp*>(mtm))
-      return(scinew ConstantMeltTemp(dynamic_cast<const ConstantMeltTemp*>(mtm)));
+      return(new ConstantMeltTemp(dynamic_cast<const ConstantMeltTemp*>(mtm)));
    else if (dynamic_cast<const LinearMeltTemp*>(mtm))
-      return(scinew LinearMeltTemp(dynamic_cast<const LinearMeltTemp*>(mtm)));
+      return(new LinearMeltTemp(dynamic_cast<const LinearMeltTemp*>(mtm)));
    else if (dynamic_cast<const SCGMeltTemp*>(mtm))
-      return(scinew SCGMeltTemp(dynamic_cast<const SCGMeltTemp*>(mtm)));
+      return(new SCGMeltTemp(dynamic_cast<const SCGMeltTemp*>(mtm)));
    else if (dynamic_cast<const BPSMeltTemp*>(mtm))
-      return(scinew BPSMeltTemp(dynamic_cast<const BPSMeltTemp*>(mtm)));
+      return(new BPSMeltTemp(dynamic_cast<const BPSMeltTemp*>(mtm)));
    else {
       proc0cout << "**WARNING** Creating copy of default (constant melting temperature) model" << endl;
-      return(scinew ConstantMeltTemp(dynamic_cast<const ConstantMeltTemp*>(mtm)));
+      return(new ConstantMeltTemp(dynamic_cast<const ConstantMeltTemp*>(mtm)));
       //throw ProblemSetupException("Cannot create copy of unknown melting temp model", __FILE__, __LINE__);
    }
 }

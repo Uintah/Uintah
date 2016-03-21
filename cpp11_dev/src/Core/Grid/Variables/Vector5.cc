@@ -47,7 +47,7 @@ namespace Uintah {
   {
     static TypeDescription* td = 0;
     if(!td){
-      td = scinew TypeDescription(TypeDescription::Vector5,
+      td = new TypeDescription(TypeDescription::Vector5,
                                   "Vector5", true, 
                                   &makeMPI_Vector5);
     }

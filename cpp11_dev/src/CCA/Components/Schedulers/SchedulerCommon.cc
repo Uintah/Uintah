@@ -102,7 +102,7 @@ SchedulerCommon::SchedulerCommon(const ProcessorGroup* myworld,
   d_isInitTimestep = false;
   d_isRestartInitTimestep = false;
 
-  m_locallyComputedPatchVarMap = scinew LocallyComputedPatchVarMap;
+  m_locallyComputedPatchVarMap = new LocallyComputedPatchVarMap;
   reloc_new_posLabel_ = 0;
 
   // TODO replace after MiraDDT problem is debugged (APH - 03/24/15)
@@ -704,7 +704,7 @@ void
 SchedulerCommon::addTaskGraph( Scheduler::tgType type )
 {
   MALLOC_TRACE_TAG_SCOPE("SchedulerCommon::addTaskGraph");
-  TaskGraph* tg = scinew TaskGraph(this, d_myworld, type);
+  TaskGraph* tg = new TaskGraph(this, d_myworld, type);
   tg->initialize();
   graphs.push_back(tg);
 }
@@ -808,7 +808,7 @@ SchedulerCommon::addTask(       Task        * task,
       std::ostringstream taskname;
       taskname << "Reduction: " << dep->var->getName() << ", level " << levelidx << ", dw " << dw;
 
-      Task* newtask = scinew Task(taskname.str(), Task::Reduction);
+      Task* newtask = new Task(taskname.str(), Task::Reduction);
 
       int dwmap[Task::TotalDWs];
 
@@ -976,7 +976,7 @@ SchedulerCommon::advanceDataWarehouse( const GridP& grid,
   if (dws.size() == 2 && dws[0] == 0) {
     // first datawarehouse -- indicate that it is the "initialization" dw.
     int generation = d_generation++;
-    dws[1] = scinew OnDemandDataWarehouse(d_myworld, this, generation, grid, true /* initialization dw */);
+    dws[1] = new OnDemandDataWarehouse(d_myworld, this, generation, grid, true /* initialization dw */);
   }
   else {
     for (int i = numOldDWs; i < static_cast<int>(dws.size()); i++) {
@@ -1006,7 +1006,7 @@ SchedulerCommon::replaceDataWarehouse(       int index,
                                        const GridP& grid,
                                              bool initialization /*=false*/)
 {
-  dws[index] = scinew OnDemandDataWarehouse(d_myworld, this, d_generation++, grid, initialization );
+  dws[index] = new OnDemandDataWarehouse(d_myworld, this, d_generation++, grid, initialization );
   if (initialization) {
     return;
   }
@@ -1102,7 +1102,7 @@ SchedulerCommon::logMemoryUse()
     std::ostringstream fname;
     fname << "uintah_memuse.log.p" << std::setw(5) << std::setfill('0') << d_myworld->myrank()
           << "." << d_myworld->size();
-    memlogfile_ = scinew std::ofstream(fname.str().c_str());
+    memlogfile_ = new std::ofstream(fname.str().c_str());
     if (!*memlogfile_) {
       std::cerr << "Error opening file: " << fname.str() << '\n';
     }
@@ -1148,7 +1148,7 @@ SchedulerCommon::logMemoryUse()
 Scheduler::VarLabelMaterialMap*
 SchedulerCommon::makeVarLabelMaterialMap()
 {
-  VarLabelMaterialMap* result = scinew VarLabelMaterialMap;
+  VarLabelMaterialMap* result = new VarLabelMaterialMap;
   for (unsigned i = 0; i < graphs.size(); i++) {
     graphs[i]->makeVarLabelMaterialMap(result);
   }
@@ -1351,7 +1351,7 @@ SchedulerCommon::scheduleAndDoDataCopy( const GridP&               grid,
           const MaterialSubset * matSubset = ( dep->matls != 0 ) ? dep->matls : dep->task->getMaterialSet()->getUnion();
 
           // if var was already found, make a union of the materials
-          MaterialSubset* matls = scinew MaterialSubset( matSubset->getVector() );
+          MaterialSubset* matls = new MaterialSubset( matSubset->getVector() );
           matls->addReference();
 
           MaterialSubset* union_matls;
@@ -1405,13 +1405,13 @@ SchedulerCommon::scheduleAndDoDataCopy( const GridP&               grid,
       if (L >= oldGrid->numLevels()) {
         // new level - refine everywhere
         refinePatchSets[L] = const_cast<PatchSet*>(newLevel->eachPatch());
-        copyPatchSets[L] = scinew PatchSet;
+        copyPatchSets[L] = new PatchSet;
       }
 
       // Find patches with new space - but temporarily, refine everywhere...
       else if (L < oldGrid->numLevels()) {
-        refinePatchSets[L] = scinew PatchSet;
-        copyPatchSets[L] = scinew PatchSet;
+        refinePatchSets[L] = new PatchSet;
+        copyPatchSets[L] = new PatchSet;
 
         std::vector<int> myPatchIDs;
         LevelP oldLevel = oldDataWarehouse->getGrid()->getLevel(L);
@@ -1507,14 +1507,14 @@ SchedulerCommon::scheduleAndDoDataCopy( const GridP&               grid,
 
     }
     else {
-      refinePatchSets[L] = scinew PatchSet;
+      refinePatchSets[L] = new PatchSet;
       copyPatchSets[L] = const_cast<PatchSet*>(newLevel->eachPatch());
     }
 
     //__________________________________
     //  Scheduling for copyDataToNewGrid
     if (copyPatchSets[L]->size() > 0) {
-      dataTasks.push_back(scinew Task("SchedulerCommon::copyDataToNewGrid", this, &SchedulerCommon::copyDataToNewGrid));
+      dataTasks.push_back(new Task("SchedulerCommon::copyDataToNewGrid", this, &SchedulerCommon::copyDataToNewGrid));
 
       for (label_matl_map::iterator iter = label_matls_[L].begin(); iter != label_matls_[L].end(); iter++) {
         const VarLabel* var = iter->first;
@@ -1531,7 +1531,7 @@ SchedulerCommon::scheduleAndDoDataCopy( const GridP&               grid,
     //__________________________________
     //  Scheduling for modifyDataOnNewGrid
     if (refinePatchSets[L]->size() > 0) {
-      dataTasks.push_back(scinew Task("SchedulerCommon::modifyDataOnNewGrid", this, &SchedulerCommon::copyDataToNewGrid));
+      dataTasks.push_back(new Task("SchedulerCommon::modifyDataOnNewGrid", this, &SchedulerCommon::copyDataToNewGrid));
 
       for (label_matl_map::iterator iter = label_matls_[L].begin(); iter != label_matls_[L].end(); iter++) {
         const VarLabel* var = iter->first;
@@ -1822,7 +1822,7 @@ SchedulerCommon::copyDataToNewGrid( const ProcessorGroup*,
             oldDataWarehouse->get(*var, label, oldsub);
 
             // reset the bounds of the old var's data so copyData doesn't complain
-            ParticleSubset* tempset = scinew ParticleSubset(oldsub->numParticles(), matl, newPatch,
+            ParticleSubset* tempset = new ParticleSubset(oldsub->numParticles(), matl, newPatch,
                                                             newPatch->getExtraCellLowIndex(), newPatch->getExtraCellHighIndex());
             const_cast<ParticleVariableBase*>(&var->getBaseRep())->setParticleSubset(tempset);
             newv->copyData(&var->getBaseRep());

@@ -284,7 +284,7 @@ void HypoElasticPlastic::outputProblemSpec(ProblemSpecP& ps,bool output_cm_tag)
 
 HypoElasticPlastic* HypoElasticPlastic::clone()
 {
-  return scinew HypoElasticPlastic(*this);
+  return new HypoElasticPlastic(*this);
 }
 
 void
@@ -832,7 +832,7 @@ HypoElasticPlastic::computeStressTensor(const PatchSubset* patches,
       double C_p = matl->getSpecificHeat();
 
       // Set up the PlasticityState
-      PlasticityState* state = scinew PlasticityState();
+      PlasticityState* state = new PlasticityState();
       state->strainRate = pStrainRate_new[idx];
       state->plasticStrainRate = epdot;
       state->plasticStrain = ep;
@@ -1502,7 +1502,7 @@ HypoElasticPlastic::computeStressTensorImplicit(const PatchSubset* patches,
       double C_p = matl->getSpecificHeat();
 
       // Set up the PlasticityState
-      PlasticityState* state = scinew PlasticityState();
+      PlasticityState* state = new PlasticityState();
       state->strainRate = pStrainRate_new[idx];
       state->plasticStrainRate = 0.0;
       state->plasticStrain = pPlasticStrain[idx];
@@ -1855,7 +1855,7 @@ HypoElasticPlastic::computeStressTensor(const PatchSubset* patches,
       //Matrix3 devStressOld = oldStress - One*pressure;
       
       // Set up the PlasticityState
-      PlasticityState* state = scinew PlasticityState();
+      PlasticityState* state = new PlasticityState();
       state->strainRate = pStrainRate_new;
       state->plasticStrainRate = 0.0;
       state->plasticStrain = pPlasticStrain[idx];

@@ -193,7 +193,7 @@ FileGeometryPiece::outputHelper( ProblemSpecP & ps ) const
 GeometryPieceP
 FileGeometryPiece::clone() const
 {
-  return scinew FileGeometryPiece(*this);
+  return new FileGeometryPiece(*this);
 }
 //______________________________________________________________________
 //

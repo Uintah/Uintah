@@ -89,7 +89,7 @@ int main(int argc, char** argv)
   cout.precision(8);
 
   try {
-    DataArchive* da = scinew DataArchive(filebase);
+    DataArchive* da = new DataArchive(filebase);
     
     //______________________________________________________________________
     //              V A R S U M M A R Y   O P T I O N

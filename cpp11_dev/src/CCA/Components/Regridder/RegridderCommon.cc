@@ -530,10 +530,10 @@ RegridderCommon::GetFlaggedCells(const GridP& oldGrid, int levelIdx, DataWarehou
     maxIdx = Max(maxIdx, patch->getExtraCellHighIndex());
   }
 
-  d_flaggedCells[levelIdx] = scinew CCVariable<int>;
-  d_dilatedCellsStability[levelIdx] = scinew CCVariable<int>;
-  d_dilatedCellsRegrid[levelIdx] = scinew CCVariable<int>;
-  d_dilatedCellsDeleted[levelIdx] = scinew CCVariable<int>;
+  d_flaggedCells[levelIdx] = new CCVariable<int>;
+  d_dilatedCellsStability[levelIdx] = new CCVariable<int>;
+  d_dilatedCellsRegrid[levelIdx] = new CCVariable<int>;
+  d_dilatedCellsDeleted[levelIdx] = new CCVariable<int>;
 
   d_flaggedCells[levelIdx]->rewindow(minIdx, maxIdx);
   d_dilatedCellsStability[levelIdx]->rewindow(minIdx, maxIdx);
@@ -656,18 +656,18 @@ RegridderCommon::scheduleDilation(const LevelP& level)
 
   //create filters if needed
   if (filters.find(stability_depth) == filters.end()) {
-    filters[stability_depth] = scinew CCVariable<int>;
+    filters[stability_depth] = new CCVariable<int>;
     initFilter(*filters[stability_depth], d_filterType, stability_depth);
   }
 
   if (filters.find(regrid_depth) == filters.end()) {
-    filters[regrid_depth] = scinew CCVariable<int>;
+    filters[regrid_depth] = new CCVariable<int>;
     initFilter(*filters[regrid_depth], d_filterType, regrid_depth);
   }
   /*
    if(filters.find(delete_depth)==filters.end())
    {
-   filters[delete_depth]=scinew CCVariable<int>;
+   filters[delete_depth]=new CCVariable<int>;
    initFilter(*filters[delete_depth], d_filterType, delete_depth);
    }
    */
@@ -677,10 +677,10 @@ RegridderCommon::scheduleDilation(const LevelP& level)
   const MaterialSet* all_matls = d_sharedState->allMaterials();
 
   // dilate flagged cells on this level
-  Task* dilate_stability_task = scinew Task("RegridderCommon::Dilate Stability", this, &RegridderCommon::Dilate,
+  Task* dilate_stability_task = new Task("RegridderCommon::Dilate Stability", this, &RegridderCommon::Dilate,
                                             d_dilatedCellsStabilityLabel, filters[stability_depth], stability_depth);
 
-  Task* dilate_regrid_task = scinew Task("RegridderCommon::Dilate Regrid", this, &RegridderCommon::Dilate,
+  Task* dilate_regrid_task = new Task("RegridderCommon::Dilate Regrid", this, &RegridderCommon::Dilate,
                                          d_dilatedCellsRegridLabel, filters[regrid_depth], regrid_depth);
 
   int ngc_stability = Max(stability_depth.x(), stability_depth.y());
@@ -827,7 +827,7 @@ RegridderCommon::Dilate(const ProcessorGroup*,
 void
 RegridderCommon::scheduleInitializeErrorEstimate(const LevelP& level)
 {
-  Task* task = scinew Task("RegridderCommon::initializeErrorEstimate", this, &RegridderCommon::initializeErrorEstimate);
+  Task* task = new Task("RegridderCommon::initializeErrorEstimate", this, &RegridderCommon::initializeErrorEstimate);
 
   task->computes(d_sharedState->get_refineFlag_label(), d_sharedState->refineFlagMaterials());
   task->computes(d_sharedState->get_oldRefineFlag_label(), d_sharedState->refineFlagMaterials());

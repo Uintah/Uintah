@@ -50,7 +50,7 @@ fastCpdiInterpolator::~fastCpdiInterpolator()
 
 fastCpdiInterpolator* fastCpdiInterpolator::clone(const Patch* patch)
 {
-  return scinew fastCpdiInterpolator(patch);
+  return new fastCpdiInterpolator(patch);
 }
     
 void fastCpdiInterpolator::findCellAndWeights(const Point& pos,

@@ -48,7 +48,7 @@ using namespace Uintah;
 DOSweep::DOSweep(const ProcessorGroup* myworld)
   : UintahParallelComponent(myworld)
 {
-  lb_ = scinew ExamplesLabel();
+  lb_ = new ExamplesLabel();
 }
 //__________________________________
 //
@@ -93,7 +93,7 @@ void DOSweep::problemSetup(const ProblemSpecP& prob_spec,
   if (!x_laplacian && !y_laplacian && !z_laplacian)
     throw ProblemSetupException("DOSweep: Must specify one of X_Laplacian, Y_Laplacian, or Z_Laplacian",
                                 __FILE__, __LINE__);
-  mymat_ = scinew SimpleMaterial();
+  mymat_ = new SimpleMaterial();
   sharedState->registerSimpleMaterial(mymat_);
 }
 //__________________________________
@@ -114,7 +114,7 @@ void DOSweep::scheduleRestartInitialize(const LevelP& level,
 void DOSweep::scheduleComputeStableTimestep(const LevelP& level,
                                             SchedulerP& sched)
 {
-  Task* task = scinew Task("computeStableTimestep",this, 
+  Task* task = new Task("computeStableTimestep",this, 
                            &DOSweep::computeStableTimestep);
   task->computes(sharedState_->get_delt_label(),level.get_rep());
   sched->addTask(task, level->eachPatch(), sharedState_->allMaterials());
@@ -124,7 +124,7 @@ void DOSweep::scheduleComputeStableTimestep(const LevelP& level,
 void
 DOSweep::scheduleTimeAdvance( const LevelP& level, SchedulerP& sched)
 {
-  Task* task = scinew Task("timeAdvance",
+  Task* task = new Task("timeAdvance",
                            this, &DOSweep::timeAdvance,
                            level, sched.get_rep());
   task->computes(lb_->pressure_matrix);

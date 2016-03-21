@@ -114,7 +114,7 @@ void FractureMPM::problemSetup(const ProblemSpecP& prob_spec,
 
   // for FractureMPM
   dataArchiver = dynamic_cast<Output*>(getPort("output"));
-  crackModel =  scinew Crack(prob_spec,sharedState,dataArchiver,lb,flags);
+  crackModel =  new Crack(prob_spec,sharedState,dataArchiver,lb,flags);
 
 }
 
@@ -131,7 +131,7 @@ FractureMPM::materialProblemSetup(const ProblemSpecP& prob_spec,
        ps = ps->findNextBlock("material") ) {
 
     //Create and register as an MPM material
-    MPMMaterial *mat = scinew MPMMaterial(ps, sharedState, flags);
+    MPMMaterial *mat = new MPMMaterial(ps, sharedState, flags);
     sharedState->registerMPMMaterial(mat);
   }
 }
@@ -139,10 +139,10 @@ FractureMPM::materialProblemSetup(const ProblemSpecP& prob_spec,
 void FractureMPM::scheduleInitialize(const LevelP& level,
                                      SchedulerP& sched)
 {
-  Task* t = scinew Task("FractureMPM::actuallyInitialize",
+  Task* t = new Task("FractureMPM::actuallyInitialize",
                         this, &FractureMPM::actuallyInitialize);
 
-  MaterialSubset* zeroth_matl = scinew MaterialSubset();
+  MaterialSubset* zeroth_matl = new MaterialSubset();
   zeroth_matl->add(0);
   zeroth_matl->addReference();
 
@@ -199,7 +199,7 @@ void FractureMPM::scheduleInitialize(const LevelP& level,
   schedulePrintParticleCount(level,sched);
     
   // for FractureMPM: Descritize crack plane into triangular elements
-  t = scinew Task("Crack:CrackDiscretization",
+  t = new Task("Crack:CrackDiscretization",
                    crackModel, &Crack::CrackDiscretization);
   crackModel->addComputesAndRequiresCrackDiscretization(t,
                   level->eachPatch(), d_sharedState->allMPMMaterials());
@@ -219,7 +219,7 @@ void FractureMPM::scheduleInitialize(const LevelP& level,
 void FractureMPM::scheduleInitializePressureBCs(const LevelP& level,
                                               SchedulerP& sched)
 {
-  MaterialSubset* loadCurveIndex = scinew MaterialSubset();
+  MaterialSubset* loadCurveIndex = new MaterialSubset();
   int nofPressureBCs = 0;
   for (int ii = 0; ii<(int)MPMPhysicalBCFactory::mpmPhysicalBCs.size(); ii++){
     string bcs_type = MPMPhysicalBCFactory::mpmPhysicalBCs[ii]->getType();
@@ -229,7 +229,7 @@ void FractureMPM::scheduleInitializePressureBCs(const LevelP& level,
 
     // Create a task that calculates the total number of particles
     // associated with each load curve.
-    Task* t = scinew Task("FractureMPM::countMaterialPointsPerLoadCurve",
+    Task* t = new Task("FractureMPM::countMaterialPointsPerLoadCurve",
                           this, &FractureMPM::countMaterialPointsPerLoadCurve);
     t->requires(Task::NewDW, lb->pLoadCurveIDLabel, Ghost::None);
     t->computes(lb->materialPointsPerLoadCurveLabel, loadCurveIndex,
@@ -238,7 +238,7 @@ void FractureMPM::scheduleInitializePressureBCs(const LevelP& level,
 
     // Create a task that calculates the force to be associated with
     // each particle based on the pressure BCs
-    t = scinew Task("FractureMPM::initializePressureBC",
+    t = new Task("FractureMPM::initializePressureBC",
                     this, &FractureMPM::initializePressureBC);
     t->requires(Task::NewDW, lb->pXLabel, Ghost::None);
     t->requires(Task::NewDW, lb->pLoadCurveIDLabel, Ghost::None);
@@ -305,7 +305,7 @@ void FractureMPM::scheduleApplyExternalLoads(SchedulerP& sched,
   * applyExternalLoads
   *   in(p.externalForce, p.externalheatrate)
   *   out(p.externalForceNew, p.externalheatrateNew) */
-  Task* t=scinew Task("FractureMPM::applyExternalLoads",
+  Task* t=new Task("FractureMPM::applyExternalLoads",
                     this, &FractureMPM::applyExternalLoads);
 
   t->requires(Task::OldDW, lb->pExternalForceLabel,    Ghost::None);
@@ -326,7 +326,7 @@ void FractureMPM::scheduleParticleVelocityField(SchedulerP& sched,
                                                   const PatchSet* patches,
                                                   const MaterialSet* matls)
 {
-  Task* t = scinew Task("Crack::ParticleVelocityField", crackModel,
+  Task* t = new Task("Crack::ParticleVelocityField", crackModel,
                         &Crack::ParticleVelocityField);
 
   crackModel->addComputesAndRequiresParticleVelocityField(t, patches, matls);
@@ -344,7 +344,7 @@ void FractureMPM::scheduleInterpolateParticlesToGrid(SchedulerP& sched,
    *   out(G.MASS, G.VELOCITY) */
 
 
-  Task* t = scinew Task("FractureMPM::interpolateParticlesToGrid",
+  Task* t = new Task("FractureMPM::interpolateParticlesToGrid",
                         this,&FractureMPM::interpolateParticlesToGrid);
 
  
@@ -412,7 +412,7 @@ void FractureMPM::scheduleComputeHeatExchange(SchedulerP& sched,
   if (cout_doing.active())
     cout_doing << getpid() << " Doing FractureMPM::ThermalContact::computeHeatExchange " << endl;
 
-  Task* t = scinew Task("ThermalContact::computeHeatExchange",
+  Task* t = new Task("ThermalContact::computeHeatExchange",
                         thermalContactModel,
                         &ThermalContact::computeHeatExchange);
 
@@ -425,7 +425,7 @@ void FractureMPM::scheduleAdjustCrackContactInterpolated(SchedulerP& sched,
                                             const PatchSet* patches,
                                             const MaterialSet* matls)
 {
-  Task* t = scinew Task("Crack::AdjustCrackContactInterpolated",
+  Task* t = new Task("Crack::AdjustCrackContactInterpolated",
                     crackModel,&Crack::AdjustCrackContactInterpolated);
 
   crackModel->addComputesAndRequiresAdjustCrackContactInterpolated(t,
@@ -453,7 +453,7 @@ void FractureMPM::scheduleComputeStressTensor(SchedulerP& sched,
   scheduleComputeParticleTempFromGrid(sched, patches, matls);
 
   int numMatls = d_sharedState->getNumMPMMatls();
-  Task* t = scinew Task("FractureMPM::computeStressTensor",
+  Task* t = new Task("FractureMPM::computeStressTensor",
                     this, &FractureMPM::computeStressTensor);
   for(int m = 0; m < numMatls; m++){
     MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial(m);
@@ -484,7 +484,7 @@ void FractureMPM::scheduleComputeParticleTempFromGrid(SchedulerP& sched,
 {
   Ghost::GhostType gac = Ghost::AroundCells;
   Ghost::GhostType gan = Ghost::AroundNodes;
-  Task* t = scinew Task("FractureMPM::computeParticleTempFromGrid",
+  Task* t = new Task("FractureMPM::computeParticleTempFromGrid",
                         this, &FractureMPM::computeParticleTempFromGrid);
   t->requires(Task::OldDW, lb->pXLabel,                 gan, NGP);
   t->requires(Task::OldDW, lb->pSizeLabel,              gan, NGP);
@@ -501,7 +501,7 @@ void FractureMPM::scheduleComputeAccStrainEnergy(SchedulerP& sched,
                                                  const PatchSet* patches,
                                                  const MaterialSet* matls)
 {
-  Task* t = scinew Task("FractureMPM::computeAccStrainEnergy",
+  Task* t = new Task("FractureMPM::computeAccStrainEnergy",
                         this, &FractureMPM::computeAccStrainEnergy);
   t->requires(Task::OldDW, lb->AccStrainEnergyLabel);
   t->requires(Task::NewDW, lb->StrainEnergyLabel);
@@ -513,7 +513,7 @@ void FractureMPM::scheduleComputeArtificialViscosity(SchedulerP& sched,
                                                    const PatchSet* patches,
                                                    const MaterialSet* matls)
 {
-  Task* t = scinew Task("FractureMPM::computeArtificialViscosity",
+  Task* t = new Task("FractureMPM::computeArtificialViscosity",
                     this, &FractureMPM::computeArtificialViscosity);
 
   Ghost::GhostType  gac = Ghost::AroundCells;
@@ -536,7 +536,7 @@ void FractureMPM::scheduleComputeContactArea(SchedulerP& sched,
   /*
    * computeContactArea */
   if(d_bndy_traction_faces.size()>0) {
-    Task* t = scinew Task("FractureMPM::computeContactArea",
+    Task* t = new Task("FractureMPM::computeContactArea",
                           this, &FractureMPM::computeContactArea);
 
     Ghost::GhostType  gnone = Ghost::None;
@@ -563,7 +563,7 @@ void FractureMPM::scheduleComputeInternalForce(SchedulerP& sched,
   *   shape functions)
   * out(G.F_INTERNAL) */
 
-  Task* t = scinew Task("FractureMPM::computeInternalForce",
+  Task* t = new Task("FractureMPM::computeInternalForce",
                     this, &FractureMPM::computeInternalForce);
 
 
@@ -636,7 +636,7 @@ void FractureMPM::scheduleComputeAndIntegrateAcceleration(SchedulerP& sched,
 
   printSchedule(patches,cout_doing,"MPM::scheduleComputeAndIntegrateAcceleration");
 
-  Task* t = scinew Task("MPM::computeAndIntegrateAcceleration",
+  Task* t = new Task("MPM::computeAndIntegrateAcceleration",
                         this, &FractureMPM::computeAndIntegrateAcceleration);
 
   t->requires(Task::OldDW, d_sharedState->get_delt_label() );
@@ -672,7 +672,7 @@ void FractureMPM::scheduleAdjustCrackContactIntegrated(SchedulerP& sched,
                                             const PatchSet* patches,
                                             const MaterialSet* matls)
 { 
-  Task* t = scinew Task("Crack::AdjustCrackContactIntegrated",
+  Task* t = new Task("Crack::AdjustCrackContactIntegrated",
                     crackModel,&Crack::AdjustCrackContactIntegrated);
   
   crackModel->addComputesAndRequiresAdjustCrackContactIntegrated(t,
@@ -692,7 +692,7 @@ void FractureMPM::scheduleSetGridBoundaryConditions(SchedulerP& sched,
                                                        const MaterialSet* matls)
 
 {
-  Task* t=scinew Task("FractureMPM::setGridBoundaryConditions",
+  Task* t=new Task("FractureMPM::setGridBoundaryConditions",
                     this, &FractureMPM::setGridBoundaryConditions);
                   
   const MaterialSubset* mss = matls->getUnion();
@@ -722,7 +722,7 @@ void FractureMPM::scheduleInterpolateToParticlesAndUpdate(SchedulerP& sched,
   *   integrate these to get new particle velocity and position)
   * out(P.VELOCITY, P.X, P.NAT_X) */
 
-  Task* t=scinew Task("FractureMPM::interpolateToParticlesAndUpdate",
+  Task* t=new Task("FractureMPM::interpolateToParticlesAndUpdate",
                       this, &FractureMPM::interpolateToParticlesAndUpdate);
 
 
@@ -795,19 +795,19 @@ void FractureMPM::scheduleCalculateFractureParameters(SchedulerP& sched,
                                     const MaterialSet* matls)
 {
   // Get nodal solutions
-  Task* t = scinew Task("Crack::GetNodalSolutions", crackModel,
+  Task* t = new Task("Crack::GetNodalSolutions", crackModel,
                         &Crack::GetNodalSolutions);
   crackModel->addComputesAndRequiresGetNodalSolutions(t,patches, matls);
   sched->addTask(t, patches, matls);
 
   // cfnset & cfsset
-  t = scinew Task("Crack::CrackFrontNodeSubset", crackModel,
+  t = new Task("Crack::CrackFrontNodeSubset", crackModel,
                         &Crack::CrackFrontNodeSubset);
   crackModel->addComputesAndRequiresCrackFrontNodeSubset(t,patches, matls);
   sched->addTask(t, patches, matls);
   
   // Compute fracture parameters (J, K,...)
-  t = scinew Task("Crack::CalculateFractureParameters", crackModel,
+  t = new Task("Crack::CalculateFractureParameters", crackModel,
                         &Crack::CalculateFractureParameters);
   crackModel->addComputesAndRequiresCalculateFractureParameters(t, 
                                                     patches, matls);
@@ -820,14 +820,14 @@ void FractureMPM::scheduleDoCrackPropagation(SchedulerP& sched,
                                     const MaterialSet* matls)
 {           
   // Propagate crack-front points
-  Task* t = scinew Task("Crack::PropagateCrackFrontPoints", crackModel,
+  Task* t = new Task("Crack::PropagateCrackFrontPoints", crackModel,
                   &Crack::PropagateCrackFrontPoints);
   crackModel->addComputesAndRequiresPropagateCrackFrontPoints(t, patches, matls);
   sched->addTask(t, patches, matls);
 
   // Construct the new crack-front elems and new crack-front segments.
   // The new crack-front is temporary, and will be updated after moving cracks
-  t = scinew Task("Crack::ConstructNewCrackFrontElems", crackModel,
+  t = new Task("Crack::ConstructNewCrackFrontElems", crackModel,
                   &Crack::ConstructNewCrackFrontElems);
   crackModel->addComputesAndRequiresConstructNewCrackFrontElems(t, patches, matls);
   sched->addTask(t, patches, matls);
@@ -838,13 +838,13 @@ void FractureMPM::scheduleMoveCracks(SchedulerP& sched,
                                     const MaterialSet* matls)
 {
   // Set up cpset -- crack node subset in each patch
-  Task* t = scinew Task("Crack::CrackPointSubset", crackModel,
+  Task* t = new Task("Crack::CrackPointSubset", crackModel,
                         &Crack::CrackPointSubset);
   crackModel->addComputesAndRequiresCrackPointSubset(t, patches, matls);
   sched->addTask(t, patches, matls);
 
   // Move crack points
-  t = scinew Task("Crack::MoveCracks", crackModel,
+  t = new Task("Crack::MoveCracks", crackModel,
                         &Crack::MoveCracks);
   crackModel->addComputesAndRequiresMoveCracks(t, patches, matls);
   sched->addTask(t, patches, matls);
@@ -856,14 +856,14 @@ void FractureMPM::scheduleUpdateCrackFront(SchedulerP& sched,
 {
   // Set up cfnset & cfsset -- subset for the temporary crack-front
   // and crack-front segment subset for each patch
-  Task* t = scinew Task("Crack::CrackFrontNodeSubset", crackModel,
+  Task* t = new Task("Crack::CrackFrontNodeSubset", crackModel,
                         &Crack::CrackFrontNodeSubset);
   crackModel->addComputesAndRequiresCrackFrontNodeSubset(t, patches, matls);
   sched->addTask(t, patches, matls);
 
   // Recollect crack-front segments, discarding the dead segments,
   // calculating normals, indexes and so on
-  t = scinew Task("Crack::RecollectCrackFrontSegments", crackModel,
+  t = new Task("Crack::RecollectCrackFrontSegments", crackModel,
                         &Crack::RecollectCrackFrontSegments);
   crackModel->addComputesAndRequiresRecollectCrackFrontSegments(t, patches, matls);
   sched->addTask(t, patches, matls);
@@ -872,7 +872,7 @@ void FractureMPM::scheduleUpdateCrackFront(SchedulerP& sched,
 void FractureMPM::scheduleRefine(const PatchSet* patches,
                                  SchedulerP& sched)
 {
-  Task* task = scinew Task("FractureMPM::refine", this, &FractureMPM::refine);
+  Task* task = new Task("FractureMPM::refine", this, &FractureMPM::refine);
   sched->addTask(task, patches, d_sharedState->allMPMMaterials());
   // do nothing for now
 }
@@ -905,7 +905,7 @@ void FractureMPM::scheduleErrorEstimate(const LevelP& coarseLevel,
   // Estimate error - this should probably be in it's own schedule,
   // and the simulation controller should not schedule it every time step
   Ghost::GhostType  gac = Ghost::AroundCells;
-  Task* task = scinew Task("errorEstimate", this, &FractureMPM::errorEstimate);
+  Task* task = new Task("errorEstimate", this, &FractureMPM::errorEstimate);
 
   // if the finest level, compute flagged cells
   if (coarseLevel->getIndex() == coarseLevel->getGrid()->numLevels()-1) {
@@ -933,7 +933,7 @@ void FractureMPM::scheduleInitialErrorEstimate(const LevelP& coarseLevel,
   // Estimate error - this should probably be in it's own schedule,
   // and the simulation controller should not schedule it every time step
   Ghost::GhostType  gac = Ghost::AroundCells;
-  Task* task = scinew Task("errorEstimate", this, &FractureMPM::initialErrorEstimate);
+  Task* task = new Task("errorEstimate", this, &FractureMPM::initialErrorEstimate);
   task->requires(Task::NewDW, lb->pXLabel,     gac, 0);
 
   task->modifies(d_sharedState->get_refineFlag_label(), d_sharedState->refineFlagMaterials());
@@ -2249,7 +2249,7 @@ void FractureMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
       // for thermal stress analysis
       new_dw->allocateAndPut(pTempPreNew, lb->pTempPreviousLabel_preReloc, pset);
 
-      ParticleSubset* delset = scinew ParticleSubset(0, dwi, patch);
+      ParticleSubset* delset = new ParticleSubset(0, dwi, patch);
 
       pids_new.copyData(pids);
       old_dw->get(psize,               lb->pSizeLabel,                 pset);

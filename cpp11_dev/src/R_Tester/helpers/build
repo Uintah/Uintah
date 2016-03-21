@@ -21,7 +21,7 @@ if [ "$OS" = "Linux" ]; then
   DBG_CONFIGURE="    --enable-debug \\
       --enable-64bit \\
       --enable-sci-malloc \\
-      --enable-scinew-line-numbers \\"
+      --enable-new-line-numbers \\"
   
   OPT_CONFIGURE="    --enable-64bit \\
       --enable-assertion-level=0 \\

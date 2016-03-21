@@ -271,7 +271,7 @@ void HashTable<Key, Data>::insert(const Key& k, const Data& d)
   }
   int h=Hash(k, hash_size);
   HashKey<Key, Data>* bin=table[h];
-  HashKey<Key, Data>* p=scinew HashKey<Key, Data>(k, d, bin);
+  HashKey<Key, Data>* p=new HashKey<Key, Data>(k, d, bin);
   table[h]=p;
 }
 
@@ -343,7 +343,7 @@ template<class Key, class Data>
 void HashTable<Key, Data>::rehash(int newsize)
 {
   HashKey<Key, Data>** oldtab=table;
-  table=scinew HashKey<Key, Data>*[newsize];
+  table=new HashKey<Key, Data>*[newsize];
   for(int ii=0;ii<newsize;ii++){
     table[ii]=0;
   }
@@ -449,10 +449,10 @@ HashTable<Key, Data>::HashTable(const HashTable<Key, Data>& copy)
   if (hash_size == 0)
     table = 0;
   else {
-    table=scinew HashKey<Key, Data>*[hash_size];
+    table=new HashKey<Key, Data>*[hash_size];
     for(int i=0;i<hash_size;i++){
       if(copy.table[i])
-	table[i]= scinew HashKey<Key, Data>(*copy.table[i], 1); // Deep copy
+	table[i]= new HashKey<Key, Data>(*copy.table[i], 1); // Deep copy
       else
 	table[i]=0;
     }
@@ -463,7 +463,7 @@ HashTable<Key, Data>::HashTable(const HashTable<Key, Data>& copy)
 template<class Key, class Data>
 HashKey<Key, Data>::HashKey(const HashKey<Key, Data>& copy, int deep)
   : key(copy.key), data(copy.data),
-    next((deep && copy.next)?scinew HashKey<Key, Data>(*copy.next, 1):0)
+    next((deep && copy.next)?new HashKey<Key, Data>(*copy.next, 1):0)
 {
 }
 

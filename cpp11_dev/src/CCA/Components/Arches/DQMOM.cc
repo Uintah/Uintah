@@ -230,7 +230,7 @@ void DQMOM::problemSetup(const ProblemSpecP& params)
       if(db_optimize){
         b_optimize = true;
         db_optimize->get("Optimal_abscissas",d_opt_abscissas);
-        AAopt = scinew DenseMatrix((N_xi+1)*N_,(N_xi+1)*N_);
+        AAopt = new DenseMatrix((N_xi+1)*N_,(N_xi+1)*N_);
         AAopt->zero();
         //if(d_unweighted == true){
           constructAopt_unw( AAopt, d_opt_abscissas );
@@ -320,7 +320,7 @@ void
 DQMOM::sched_solveLinearSystem( const LevelP& level, SchedulerP& sched, int timeSubStep )
 { 
   string taskname = "DQMOM::solveLinearSystem";
-  Task* tsk = scinew Task(taskname, this, &DQMOM::solveLinearSystem, timeSubStep);
+  Task* tsk = new Task(taskname, this, &DQMOM::solveLinearSystem, timeSubStep);
 
   CoalModelFactory& model_factory = CoalModelFactory::self();
   Task::WhichDW which_dw; 
@@ -557,7 +557,7 @@ DQMOM::solveLinearSystem( const ProcessorGroup* pc,
     for( vector<DQMOMEqn*>::iterator iEqn = weightEqns.begin();
          iEqn != weightEqns.end(); ++iEqn ) {
       const VarLabel* source_label = (*iEqn)->getSourceLabel();
-      CCVariable<double>* tempCCVar = scinew CCVariable<double>;
+      CCVariable<double>* tempCCVar = new CCVariable<double>;
       if( new_dw->exists(source_label, matlIndex, patch) ) {
         new_dw->getModifiable(*tempCCVar, source_label, matlIndex, patch);
       } else {
@@ -570,7 +570,7 @@ DQMOM::solveLinearSystem( const ProcessorGroup* pc,
     for( vector<DQMOMEqn*>::iterator iEqn = weightedAbscissaEqns.begin();
          iEqn != weightedAbscissaEqns.end(); ++iEqn) {
       const VarLabel* source_label = (*iEqn)->getSourceLabel();
-      CCVariable<double>* tempCCVar = scinew CCVariable<double>;
+      CCVariable<double>* tempCCVar = new CCVariable<double>;
       if (new_dw->exists(source_label, matlIndex, patch)) {
         new_dw->getModifiable(*tempCCVar, source_label, matlIndex, patch);
       } else {
@@ -627,8 +627,8 @@ DQMOM::solveLinearSystem( const ProcessorGroup* pc,
       int dimension = (N_xi+1)*N_; 
         
       if (b_optimize == true) {
-        ColumnMatrix* BB = scinew ColumnMatrix( dimension );
-        ColumnMatrix* XX = scinew ColumnMatrix( dimension );
+        ColumnMatrix* BB = new ColumnMatrix( dimension );
+        ColumnMatrix* XX = new ColumnMatrix( dimension );
         BB->zero();
         double start_AXBConstructionTime = Time::currentSeconds();
         //if(d_unweighted == true){
@@ -959,10 +959,10 @@ DQMOM::solveLinearSystem( const ProcessorGroup* pc,
         ///////////////////////////////////////////////////////
         // Use the DenseMatrix solver (which uses LAPACK)
   
-        DenseMatrix* AA = scinew DenseMatrix( dimension, dimension );
-        ColumnMatrix* BB = scinew ColumnMatrix( dimension );               
-        ColumnMatrix* XX = scinew ColumnMatrix( dimension );               
-        ColumnMatrix* RR = scinew ColumnMatrix( dimension );               
+        DenseMatrix* AA = new DenseMatrix( dimension, dimension );
+        ColumnMatrix* BB = new ColumnMatrix( dimension );               
+        ColumnMatrix* XX = new ColumnMatrix( dimension );               
+        ColumnMatrix* RR = new ColumnMatrix( dimension );               
   
         AA->zero();
         BB->zero();
@@ -985,19 +985,19 @@ DQMOM::solveLinearSystem( const ProcessorGroup* pc,
           DenseMatrix* AAsvd = AA->clone();
 
           // create rr and cc for singular values SparseRowMatrix
-          int *cols = scinew int[dimension];
-          int *rows = scinew int[dimension+1];
-          double *a = scinew double[dimension];
+          int *cols = new int[dimension];
+          int *rows = new int[dimension+1];
+          double *a = new double[dimension];
 
-          DenseMatrix* U = scinew DenseMatrix( dimension, dimension );
-          SparseRowMatrix* S = scinew SparseRowMatrix( dimension, dimension, rows, cols, dimension, a); // makes an identity matrix
-          DenseMatrix* V = scinew DenseMatrix( dimension, dimension );
+          DenseMatrix* U = new DenseMatrix( dimension, dimension );
+          SparseRowMatrix* S = new SparseRowMatrix( dimension, dimension, rows, cols, dimension, a); // makes an identity matrix
+          DenseMatrix* V = new DenseMatrix( dimension, dimension );
 
-          DenseMatrix* Ut = scinew DenseMatrix( dimension, dimension );
-          DenseMatrix* Sinv = scinew DenseMatrix( dimension, dimension );
-          DenseMatrix* Vt = scinew DenseMatrix( dimension, dimension );
-          ColumnMatrix* XXsvd = scinew ColumnMatrix( dimension );
-          ColumnMatrix* XXsvd2 = scinew ColumnMatrix( dimension );
+          DenseMatrix* Ut = new DenseMatrix( dimension, dimension );
+          DenseMatrix* Sinv = new DenseMatrix( dimension, dimension );
+          DenseMatrix* Vt = new DenseMatrix( dimension, dimension );
+          ColumnMatrix* XXsvd = new ColumnMatrix( dimension );
+          ColumnMatrix* XXsvd2 = new ColumnMatrix( dimension );
           Sinv->zero();
 
           double start_SolveTime = Time::currentSeconds(); //timing
@@ -1088,13 +1088,13 @@ DQMOM::solveLinearSystem( const ProcessorGroup* pc,
             DenseMatrix* AAsvd = AA->clone();
 
             // create rr and cc for singular values SparseRowMatrix
-            int *cols = scinew int[dimension];
-            int *rows = scinew int[dimension+1];
-            double *a = scinew double[dimension];
+            int *cols = new int[dimension];
+            int *rows = new int[dimension+1];
+            double *a = new double[dimension];
 
-            DenseMatrix* U = scinew DenseMatrix( dimension, dimension );
-            SparseRowMatrix* S = scinew SparseRowMatrix( dimension, dimension, rows, cols, dimension, a); // makes an identity matrix
-            DenseMatrix* V = scinew DenseMatrix( dimension, dimension );
+            DenseMatrix* U = new DenseMatrix( dimension, dimension );
+            SparseRowMatrix* S = new SparseRowMatrix( dimension, dimension, rows, cols, dimension, a); // makes an identity matrix
+            DenseMatrix* V = new DenseMatrix( dimension, dimension );
 
             double start_SVDTime = Time::currentSeconds(); //timing
             AAsvd->svd( *U, *S, *V );
@@ -1896,7 +1896,7 @@ void
 DQMOM::sched_calculateMoments( const LevelP& level, SchedulerP& sched, int timeSubStep )
 { 
   //string taskname = "DQMOM::calculateMoments";
-  //Task* tsk = scinew Task(taskname, this, &DQMOM::calculateMoments);
+  //Task* tsk = new Task(taskname, this, &DQMOM::calculateMoments);
 
   //if( timeSubStep == 0 )
     //proc0cout << "Requesting DQMOM moment labels" << endl;
@@ -2113,35 +2113,35 @@ DQMOM::verifyLinearSolver()
   LU verification_A(vls_dimension);
   getMatrixFromFile( verification_A, vls_file_A );
 
-  DenseMatrix* verification_AA = scinew DenseMatrix( vls_dimension, vls_dimension );
+  DenseMatrix* verification_AA = new DenseMatrix( vls_dimension, vls_dimension );
   getMatrixFromFile( verification_AA, vls_dimension, vls_file_A );
 
   // assemble B
   vector<double> verification_B(vls_dimension);
   getVectorFromFile( verification_B, vls_file_B );
 
-  ColumnMatrix* verification_BB = scinew ColumnMatrix( vls_dimension );
+  ColumnMatrix* verification_BB = new ColumnMatrix( vls_dimension );
   getVectorFromFile( verification_BB, vls_dimension, vls_file_B );
 
   // assemble actual solution
   vector<double> verification_X(vls_dimension);
   getVectorFromFile( verification_X, vls_file_X );
 
-  ColumnMatrix* verification_XX = scinew ColumnMatrix( vls_dimension );
+  ColumnMatrix* verification_XX = new ColumnMatrix( vls_dimension );
   getVectorFromFile( verification_XX, vls_dimension, vls_file_X );
 
   // assemble actual residual
   vector<double> verification_R(vls_dimension);
   getVectorFromFile( verification_R, vls_file_R );
 
-  ColumnMatrix* verification_RR = scinew ColumnMatrix( vls_dimension );
+  ColumnMatrix* verification_RR = new ColumnMatrix( vls_dimension );
   getVectorFromFile( verification_RR, vls_dimension, vls_file_R );
 
   // assemble actual normalized residual
   vector<double> verification_normR(vls_dimension);
   getVectorFromFile( verification_normR, vls_file_normR );
 
-  ColumnMatrix* verification_normalizedRR = scinew ColumnMatrix( vls_dimension );
+  ColumnMatrix* verification_normalizedRR = new ColumnMatrix( vls_dimension );
   getVectorFromFile( verification_normalizedRR, vls_dimension, vls_file_normR);
 
   // assemble norms (determinant, normRes, normResNormalized, normX)
@@ -2298,7 +2298,7 @@ DQMOM::verifyLinearSolver()
   proc0cout << "Step 2B: DenseMatrix::solve()" << endl;
   proc0cout << "Comparing calculated solution to verification solution..." << endl;
   proc0cout << "---------------------------------------------------------" << endl;
-  ColumnMatrix* XX = scinew ColumnMatrix( vls_dimension );
+  ColumnMatrix* XX = new ColumnMatrix( vls_dimension );
   verification_AA->solve( (*verification_BB), (*XX), 1 );
   compare( verification_XX, XX, vls_dimension, tol );
 
@@ -2331,7 +2331,7 @@ DQMOM::verifyLinearSolver()
   proc0cout << "Step 4B: Verifying ColumnMatrix residual calculation      " << endl;
   proc0cout << "Comparing calculated residual to verification residual..." << endl;
   proc0cout << "---------------------------------------------------------" << endl;
-  ColumnMatrix* RR = scinew ColumnMatrix( vls_dimension );
+  ColumnMatrix* RR = new ColumnMatrix( vls_dimension );
   int tflops, tmemrefs;
   AAorig->mult( (*XX), (*RR), tflops, tmemrefs );
   Sub( (*RR), (*verification_BB), (*RR) );
@@ -2481,14 +2481,14 @@ DQMOM::verifyABConstruction()
   LU verification_A( vab_dimension );
   getMatrixFromFile( verification_A, vab_file_A );
 
-  DenseMatrix* verification_AA = scinew DenseMatrix( vab_dimension, vab_dimension );
+  DenseMatrix* verification_AA = new DenseMatrix( vab_dimension, vab_dimension );
   getMatrixFromFile( verification_AA, vab_dimension, vab_file_A );
 
   // assemble B
   vector<double> verification_B(vab_dimension);
   getVectorFromFile( verification_B, vab_file_B );
 
-  ColumnMatrix* verification_BB = scinew ColumnMatrix( vab_dimension );
+  ColumnMatrix* verification_BB = new ColumnMatrix( vab_dimension );
   getVectorFromFile( verification_BB, vab_dimension, vab_file_B );
 
   // assemble inputs 
@@ -2611,8 +2611,8 @@ DQMOM::verifyABConstruction()
   vector<double> B( vab_dimension );
   constructLinearSystem( A, B, weights, weightedAbscissas, models );
 
-  DenseMatrix* AA = scinew DenseMatrix( vab_dimension, vab_dimension );
-  ColumnMatrix* BB = scinew ColumnMatrix( vab_dimension );
+  DenseMatrix* AA = new DenseMatrix( vab_dimension, vab_dimension );
+  ColumnMatrix* BB = new ColumnMatrix( vab_dimension );
   constructLinearSystem( AA, BB, weights, weightedAbscissas, models );
 
   // --------------------------------------------------------------

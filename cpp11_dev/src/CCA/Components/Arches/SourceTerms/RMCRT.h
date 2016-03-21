@@ -101,7 +101,7 @@ public:
 
       RMCRT_Radiation* build()
       {
-        return scinew RMCRT_Radiation( _name, _labels, _MAlab, _required_label_names, _my_world, _type );
+        return new RMCRT_Radiation( _name, _labels, _MAlab, _required_label_names, _my_world, _type );
       }
 
     private:

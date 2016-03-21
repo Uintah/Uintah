@@ -67,7 +67,7 @@ namespace Uintah{
       ~Builder(){};
       
       MomentumDragSrc* build()
-      { return scinew MomentumDragSrc( _name, _shared_state, _required_label_names, _type ); };
+      { return new MomentumDragSrc( _name, _shared_state, _required_label_names, _type ); };
       
     private:
       

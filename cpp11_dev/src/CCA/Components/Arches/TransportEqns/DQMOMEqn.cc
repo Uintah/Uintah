@@ -29,7 +29,7 @@ DQMOMEqnBuilder::~DQMOMEqnBuilder()
 
 EqnBase*
 DQMOMEqnBuilder::build(){
-  return scinew DQMOMEqn(d_fieldLabels, d_timeIntegrator, d_eqnName, d_ic_name, d_quadNode);
+  return new DQMOMEqn(d_fieldLabels, d_timeIntegrator, d_eqnName, d_ic_name, d_quadNode);
 }
 // End Builder
 //---------------------------------------------------------------------------
@@ -394,7 +394,7 @@ void
 DQMOMEqn::sched_initializeVariables( const LevelP& level, SchedulerP& sched )
 {
   string taskname = "DQMOMEqn::initializeVariables";
-  Task* tsk = scinew Task(taskname, this, &DQMOMEqn::initializeVariables);
+  Task* tsk = new Task(taskname, this, &DQMOMEqn::initializeVariables);
   Ghost::GhostType gn = Ghost::None;
 
   //New
@@ -480,7 +480,7 @@ DQMOMEqn::sched_buildTransportEqn( const LevelP& level, SchedulerP& sched, const
 
   string taskname = "DQMOMEqn::buildTransportEqn";
 
-  Task* tsk = scinew Task(taskname, this, &DQMOMEqn::buildTransportEqn, timeSubStep);
+  Task* tsk = new Task(taskname, this, &DQMOMEqn::buildTransportEqn, timeSubStep);
 
   Task::WhichDW which_dw;
 
@@ -639,7 +639,7 @@ DQMOMEqn::sched_addSources( const LevelP& level, SchedulerP& sched, const int ti
 
   string taskname = "DQMOMEqn::addSources";
 
-  Task* tsk = scinew Task(taskname, this, &DQMOMEqn::addSources, timeSubStep);
+  Task* tsk = new Task(taskname, this, &DQMOMEqn::addSources, timeSubStep);
 
   Task::WhichDW which_dw;
   if ( timeSubStep == 0 ){
@@ -717,7 +717,7 @@ DQMOMEqn::sched_solveTransportEqn( const LevelP& level, SchedulerP& sched, int t
 {
   string taskname = "DQMOMEqn::solveTransportEqn";
 
-  Task* tsk = scinew Task(taskname, this, &DQMOMEqn::solveTransportEqn, timeSubStep);
+  Task* tsk = new Task(taskname, this, &DQMOMEqn::solveTransportEqn, timeSubStep);
 
   //New
   tsk->modifies(d_transportVarLabel);
@@ -795,7 +795,7 @@ DQMOMEqn::sched_getUnscaledValues( const LevelP& level, SchedulerP& sched )
 {
   string taskname = "DQMOMEqn::getUnscaledValues";
 
-  Task* tsk = scinew Task(taskname, this, &DQMOMEqn::getUnscaledValues);
+  Task* tsk = new Task(taskname, this, &DQMOMEqn::getUnscaledValues);
 
   //NEW
   tsk->modifies(d_icLabel);

@@ -47,26 +47,26 @@ void MPMPhysicalBCFactory::create(const ProblemSpecP& ps, const GridP& grid, con
 
     for(ProblemSpecP child = current_ps->findBlock("force"); child != 0;
         child = child->findNextBlock("force") ) {
-       mpmPhysicalBCs.push_back(scinew ForceBC(child));
+       mpmPhysicalBCs.push_back(new ForceBC(child));
     }
 
     for(ProblemSpecP child = current_ps->findBlock("pressure"); child != 0;
         child = child->findNextBlock("pressure") ) {
-       mpmPhysicalBCs.push_back(scinew PressureBC(child, grid, flags));
+       mpmPhysicalBCs.push_back(new PressureBC(child, grid, flags));
     }
 
     for(ProblemSpecP child = current_ps->findBlock("scalar_flux"); child != 0;
         child = child->findNextBlock("scalar_flux") ) {
-       mpmPhysicalBCs.push_back(scinew ScalarFluxBC(child, grid, flags));
+       mpmPhysicalBCs.push_back(new ScalarFluxBC(child, grid, flags));
     }
 
     for(ProblemSpecP child = current_ps->findBlock("heat_flux"); child != 0;
         child = child->findNextBlock("heat_flux") ) {
-       mpmPhysicalBCs.push_back(scinew HeatFluxBC(child, grid));
+       mpmPhysicalBCs.push_back(new HeatFluxBC(child, grid));
     }
     for(ProblemSpecP child = current_ps->findBlock("arches_heat_flux"); 
         child != 0; child = child->findNextBlock("arches_heat_flux") ) {
-       mpmPhysicalBCs.push_back(scinew ArchesHeatFluxBC(child,grid));
+       mpmPhysicalBCs.push_back(new ArchesHeatFluxBC(child,grid));
     }
   }
 }

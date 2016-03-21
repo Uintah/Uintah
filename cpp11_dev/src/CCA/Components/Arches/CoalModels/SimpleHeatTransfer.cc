@@ -33,7 +33,7 @@ SimpleHeatTransferBuilder::SimpleHeatTransferBuilder( const std::string         
 SimpleHeatTransferBuilder::~SimpleHeatTransferBuilder(){}
 
 ModelBase* SimpleHeatTransferBuilder::build() {
-  return scinew SimpleHeatTransfer( d_modelName, d_sharedState, d_fieldLabels, d_icLabels, d_scalarLabels, d_quadNode );
+  return new SimpleHeatTransfer( d_modelName, d_sharedState, d_fieldLabels, d_icLabels, d_scalarLabels, d_quadNode );
 }
 // End Builder
 //---------------------------------------------------------------------------
@@ -235,7 +235,7 @@ void
 SimpleHeatTransfer::sched_initVars( const LevelP& level, SchedulerP& sched )
 {
   std::string taskname = "SimpleHeatTransfer::initVars";
-  Task* tsk = scinew Task(taskname, this, &SimpleHeatTransfer::initVars);
+  Task* tsk = new Task(taskname, this, &SimpleHeatTransfer::initVars);
 
   sched->addTask(tsk, level->eachPatch(), d_sharedState->allArchesMaterials()); 
 }
@@ -268,7 +268,7 @@ void
 SimpleHeatTransfer::sched_computeModel( const LevelP& level, SchedulerP& sched, int timeSubStep )
 {
   std::string taskname = "SimpleHeatTransfer::computeModel";
-  Task* tsk = scinew Task(taskname, this, &SimpleHeatTransfer::computeModel);
+  Task* tsk = new Task(taskname, this, &SimpleHeatTransfer::computeModel);
 
   d_timeSubStep = timeSubStep; 
 

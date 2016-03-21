@@ -35,7 +35,7 @@ ThermophoresisBuilder::ThermophoresisBuilder( const std::string         & modelN
 ThermophoresisBuilder::~ThermophoresisBuilder(){}
 
 ModelBase* ThermophoresisBuilder::build() {
-  return scinew Thermophoresis( d_modelName, d_sharedState, d_fieldLabels, d_icLabels, d_scalarLabels, d_quadNode );
+  return new Thermophoresis( d_modelName, d_sharedState, d_fieldLabels, d_icLabels, d_scalarLabels, d_quadNode );
 }
 // End Builder
 //---------------------------------------------------------------------------
@@ -172,7 +172,7 @@ void
 Thermophoresis::sched_initVars( const LevelP& level, SchedulerP& sched )
 {
   string taskname = "Thermophoresis::initVars"; 
-  Task* tsk = scinew Task(taskname, this, &Thermophoresis::initVars);
+  Task* tsk = new Task(taskname, this, &Thermophoresis::initVars);
 
   tsk->computes(d_modelLabel);
 
@@ -210,7 +210,7 @@ void
 Thermophoresis::sched_computeModel( const LevelP& level, SchedulerP& sched, int timeSubStep )
 {
   std::string taskname = "Thermophoresis::computeModel";
-  Task* tsk = scinew Task(taskname, this, &Thermophoresis::computeModel, timeSubStep);
+  Task* tsk = new Task(taskname, this, &Thermophoresis::computeModel, timeSubStep);
 
   Ghost::GhostType gn = Ghost::None;
   Ghost::GhostType  gac = Ghost::AroundCells;

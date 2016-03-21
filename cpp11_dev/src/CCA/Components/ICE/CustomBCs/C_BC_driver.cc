@@ -77,7 +77,7 @@ void preprocess_CustomBCs(const string& where,
   //__________________________________
   //   LODI
   if( gv->usingLodi ){  
-    lv->lodi = scinew Lodi_localVars();
+    lv->lodi = new Lodi_localVars();
     
     preprocess_Lodi_BCs( old_dw, new_dw, lb, patch, where,
                        indx,  
@@ -89,7 +89,7 @@ void preprocess_CustomBCs(const string& where,
   //__________________________________
   //  micro slip boundary conditions
   if( gv->usingMicroSlipBCs ){  
-    lv->slip = scinew slip_localVars();
+    lv->slip = new slip_localVars();
     
     preprocess_MicroSlip_BCs( old_dw, new_dw, lb, patch, where,
                               indx,  
@@ -101,7 +101,7 @@ void preprocess_CustomBCs(const string& where,
   //__________________________________
   //  method of manufactured solutions boundary conditions
   if( gv->using_MMS_BCs ){  
-    lv->mms = scinew mms_localVars();
+    lv->mms = new mms_localVars();
     lv->mms->delT = (double)delT;
     preprocess_MMS_BCs( new_dw,old_dw, lb,indx,patch, where,
                         lv->set_MMS_BCs, 
@@ -110,7 +110,7 @@ void preprocess_CustomBCs(const string& where,
   //__________________________________
   //  Sine boundary conditions
   if( gv->using_Sine_BCs ){  
-    lv->sine = scinew sine_localVars();
+    lv->sine = new sine_localVars();
     lv->sine->delT = (double)delT;
     gv->sine->delT= (double)delT;
     preprocess_Sine_BCs( new_dw,old_dw, lb,indx,patch, where,
@@ -121,7 +121,7 @@ void preprocess_CustomBCs(const string& where,
   //__________________________________
   //  inletVelocity conditions
   if( gv->using_inletVel_BCs ){
-    lv->inletVel = scinew inletVel_localVars();
+    lv->inletVel = new inletVel_localVars();
     preprocess_inletVelocity_BCs(  old_dw, lb, indx, patch, where, 
                                    lv->set_inletVel_BCs,
                                    lv->recursiveTask,

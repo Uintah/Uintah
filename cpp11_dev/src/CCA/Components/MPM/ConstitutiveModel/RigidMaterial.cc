@@ -70,7 +70,7 @@ void RigidMaterial::outputProblemSpec(ProblemSpecP& ps,bool output_cm_tag)
 
 RigidMaterial* RigidMaterial::clone()
 {
-  return scinew RigidMaterial(*this);
+  return new RigidMaterial(*this);
 }
 
 

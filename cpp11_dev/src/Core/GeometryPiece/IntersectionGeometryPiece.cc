@@ -80,7 +80,7 @@ IntersectionGeometryPiece::outputHelper( ProblemSpecP & ps) const
 GeometryPieceP
 IntersectionGeometryPiece::clone() const
 {
-  return scinew IntersectionGeometryPiece(*this);
+  return new IntersectionGeometryPiece(*this);
 }
 
 bool

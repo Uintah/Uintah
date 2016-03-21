@@ -65,7 +65,7 @@ ClassicTableInterface::ClassicTableInterface( ArchesLabel* labels, const MPMArch
   MixingRxnModel( labels, MAlabels ), d_depVarIndexMapLock("ARCHES d_depVarIndexMap lock"),
   d_enthalpyVarIndexMapLock("ARCHES d_enthalpyVarIndexMap lock")
 {
-  _boundary_condition = scinew BoundaryCondition_new( labels->d_sharedState->getArchesMaterial(0)->getDWIndex() ); 
+  _boundary_condition = new BoundaryCondition_new( labels->d_sharedState->getArchesMaterial(0)->getDWIndex() ); 
 }
 
 //--------------------------------------------------------------------------- 
@@ -119,7 +119,7 @@ ClassicTableInterface::problemSetup( const ProblemSpecP& propertiesParameters )
       Parallel::getRootProcessorGroup()->getComm());
 
   if (mpi_rank != 0) {
-    table_contents = scinew char[table_size];
+    table_contents = new char[table_size];
   }
 
   MPI::Bcast(table_contents, table_size, MPI_CHAR, 0, 
@@ -261,7 +261,7 @@ ClassicTableInterface::problemSetup( const ProblemSpecP& propertiesParameters )
 
   //Automatically adding density_old to the table lookup because this 
   //is needed for scalars that aren't solved on stage 1: 
-  ChemHelper::TableLookup* extra_lookup = scinew ChemHelper::TableLookup;
+  ChemHelper::TableLookup* extra_lookup = new ChemHelper::TableLookup;
   extra_lookup->lookup.insert(std::make_pair("density",ChemHelper::TableLookup::OLD));
   d_lab->add_species_struct( extra_lookup );
   delete extra_lookup; 
@@ -291,7 +291,7 @@ ClassicTableInterface::sched_getState( const LevelP& level,
   string taskname = "ClassicTableInterface::getState"; 
   Ghost::GhostType  gn = Ghost::None;
 
-  Task* tsk = scinew Task(taskname, this, &ClassicTableInterface::getState, time_substep, initialize_me, modify_ref_den );
+  Task* tsk = new Task(taskname, this, &ClassicTableInterface::getState, time_substep, initialize_me, modify_ref_den );
 
   // independent variables :: these must have been computed previously 
   for ( MixingRxnModel::VarMap::iterator i = d_ivVarMap.begin(); i != d_ivVarMap.end(); ++i ) {
@@ -412,7 +412,7 @@ ClassicTableInterface::getState( const ProcessorGroup* pc,
 
         DepVarCont storage;
 
-        storage.var = scinew CCVariable<double>; 
+        storage.var = new CCVariable<double>; 
         new_dw->allocateAndPut( *storage.var, i->second, matlIndex, patch ); 
         (*storage.var).initialize(0.0);
 
@@ -457,7 +457,7 @@ ClassicTableInterface::getState( const ProcessorGroup* pc,
 
         DepVarCont storage;
 
-        storage.var = scinew CCVariable<double>; 
+        storage.var = new CCVariable<double>; 
         new_dw->getModifiable( *storage.var, i->second, matlIndex, patch ); 
 
         IndexMap::iterator i_index = d_depVarIndexMap.find( i->first ); 
@@ -1048,15 +1048,15 @@ ClassicTableInterface::loadMixingTable(stringstream& table_stream,
 
 
   if (d_indepvarscount == 1) {
-    ND_interp = scinew Interp1(d_allIndepVarNum, table, i1);
+    ND_interp = new Interp1(d_allIndepVarNum, table, i1);
   } else if (d_indepvarscount == 2) {
-    ND_interp = scinew Interp2(d_allIndepVarNum, table, indep_headers, i1);
+    ND_interp = new Interp2(d_allIndepVarNum, table, indep_headers, i1);
   } else if (d_indepvarscount == 3) {
-    ND_interp = scinew Interp3(d_allIndepVarNum, table, indep_headers, i1);
+    ND_interp = new Interp3(d_allIndepVarNum, table, indep_headers, i1);
   } else if (d_indepvarscount == 4) {
-    ND_interp = scinew Interp4(d_allIndepVarNum, table, indep_headers, i1);
+    ND_interp = new Interp4(d_allIndepVarNum, table, indep_headers, i1);
   } else {  //IV > 4
-    ND_interp = scinew InterpN(d_allIndepVarNum, table, indep_headers, i1, d_indepvarscount);
+    ND_interp = new InterpN(d_allIndepVarNum, table, indep_headers, i1, d_indepvarscount);
   }
 
   proc0cout << "Table successfully loaded into memory!" << endl;

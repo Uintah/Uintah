@@ -225,7 +225,7 @@ void ViscoTransIsoHyperImplicit::outputProblemSpec(ProblemSpecP& ps,
 
 ViscoTransIsoHyperImplicit* ViscoTransIsoHyperImplicit::clone()
 {
-  return scinew ViscoTransIsoHyperImplicit(*this);
+  return new ViscoTransIsoHyperImplicit(*this);
 }
 
 void ViscoTransIsoHyperImplicit::initializeCMData(const Patch* patch,
@@ -406,7 +406,7 @@ ViscoTransIsoHyperImplicit::computeStressTensor(const PatchSubset* patches,
     Matrix3 shear;
     Vector deformed_fiber_vector;
 
-    LinearInterpolator* interpolator = scinew LinearInterpolator(patch);
+    LinearInterpolator* interpolator = new LinearInterpolator(patch);
     vector<IntVector> ni(8);
     vector<Vector> d_S(8);
 
@@ -1088,7 +1088,7 @@ ViscoTransIsoHyperImplicit::computeStressTensor(const PatchSubset* patches,
      double dWdI4tilde;
      Vector deformed_fiber_vector;
 
-     LinearInterpolator* interpolator = scinew LinearInterpolator(patch);
+     LinearInterpolator* interpolator = new LinearInterpolator(patch);
      vector<IntVector> ni(8);
      vector<Vector> d_S(8);
 
@@ -1564,7 +1564,7 @@ namespace Uintah {
   {
     static TypeDescription* td = 0;
     if(!td){
-      td = scinew TypeDescription(TypeDescription::Other,
+      td = new TypeDescription(TypeDescription::Other,
                                   "ViscoTransIsoHyperImplicit::StateData", true,
                                   &makeMPI_CMData);
     }

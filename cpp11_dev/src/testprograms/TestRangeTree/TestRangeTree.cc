@@ -124,7 +124,7 @@ SuiteTree* RangeTreeTestTree(bool verbose /*= false*/, int n /* = 100000 */,
   
   timeval start, end;
   gettimeofday(&start, 0);
-  Uintah::RangeTree<Point, int>* rangeTree = scinew Uintah::RangeTree<Point, int>(points, 3);
+  Uintah::RangeTree<Point, int>* rangeTree = new Uintah::RangeTree<Point, int>(points, 3);
   gettimeofday(&end, 0);
   if (verbose) {
     std::cout << "Built tree in ";
@@ -150,7 +150,7 @@ SuiteTree* RangeTreeTestTree(bool verbose /*= false*/, int n /* = 100000 */,
   // build a range tree for nearest neighbor searches
   gettimeofday(&start, 0);
   Uintah::RangeTree<Point, int, true>* nearestCapabableRangeTree =
-    scinew Uintah::RangeTree<Point, int, true>(points, 3);
+    new Uintah::RangeTree<Point, int, true>(points, 3);
   gettimeofday(&end, 0);
   if (verbose) {
     std::cout << "Built nearest query enabled tree in ";

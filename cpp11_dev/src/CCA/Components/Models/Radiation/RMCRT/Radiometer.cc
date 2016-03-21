@@ -248,9 +248,9 @@ Radiometer::sched_initializeRadVars( const LevelP& level,
 
   Task* tsk = NULL;
   if ( RMCRTCommon::d_FLT_DBL == TypeDescription::double_type ){
-    tsk= scinew Task( taskname, this, &Radiometer::initializeRadVars< double >, radCalc_freq );
+    tsk= new Task( taskname, this, &Radiometer::initializeRadVars< double >, radCalc_freq );
   }else{
-    tsk= scinew Task( taskname, this, &Radiometer::initializeRadVars< float >, radCalc_freq );
+    tsk= new Task( taskname, this, &Radiometer::initializeRadVars< float >, radCalc_freq );
   }
   
   printSchedule(level,dbg,taskname);
@@ -336,9 +336,9 @@ Radiometer::sched_radiometer( const LevelP& level,
   Task *tsk;
 
   if ( RMCRTCommon::d_FLT_DBL == TypeDescription::double_type ){
-    tsk = scinew Task( taskname, this, &Radiometer::radiometer< double >, abskg_dw, sigma_dw, celltype_dw, radCalc_freq, hasRadiometers );
+    tsk = new Task( taskname, this, &Radiometer::radiometer< double >, abskg_dw, sigma_dw, celltype_dw, radCalc_freq, hasRadiometers );
   } else {
-    tsk = scinew Task( taskname, this, &Radiometer::radiometer< float >, abskg_dw, sigma_dw, celltype_dw, radCalc_freq, hasRadiometers );
+    tsk = new Task( taskname, this, &Radiometer::radiometer< float >, abskg_dw, sigma_dw, celltype_dw, radCalc_freq, hasRadiometers );
   }
 
   printSchedule( level,dbg,"Radiometer::sched_radiometer" );
@@ -394,9 +394,9 @@ Radiometer::sched_radiometer( const LevelP& level,
     Task *tsk;
 
     if ( RMCRTCommon::d_FLT_DBL == TypeDescription::double_type ){
-      tsk = scinew Task( taskname, this, &Radiometer::radiometer< double >, abskg_dw, sigma_dw, celltype_dw, radCalc_freq, hasRadiometers );
+      tsk = new Task( taskname, this, &Radiometer::radiometer< double >, abskg_dw, sigma_dw, celltype_dw, radCalc_freq, hasRadiometers );
     } else {
-      tsk = scinew Task( taskname, this, &Radiometer::radiometer< float >, abskg_dw, sigma_dw, celltype_dw, radCalc_freq, hasRadiometers );
+      tsk = new Task( taskname, this, &Radiometer::radiometer< float >, abskg_dw, sigma_dw, celltype_dw, radCalc_freq, hasRadiometers );
     }
 
     tsk->setType(Task::Spatial);
@@ -422,7 +422,7 @@ Radiometer::sched_radiometer( const LevelP& level,
     // only schedule on the patches that contain radiometers
     // Spatial task scheduling
     PatchSet* radiometerPatchSet;
-    radiometerPatchSet = scinew PatchSet();
+    radiometerPatchSet = new PatchSet();
     radiometerPatchSet->addReference();
 
     radiometerPatchSet->addAll( myPatches );

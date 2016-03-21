@@ -100,9 +100,9 @@ LockArray3<T>::LockArray3()
 template<class T>
 void LockArray3<T>::allocate()
 {
-    objs=scinew T**[dm1];
-    T** p=scinew T*[dm1*dm2];
-    T* pp=scinew T[dm1*dm2*dm3];
+    objs=new T**[dm1];
+    T** p=new T*[dm1*dm2];
+    T* pp=new T[dm1*dm2*dm3];
     for(int i=0;i<dm1;i++){
 	objs[i]=p;
 	p+=dm2;
@@ -169,7 +169,7 @@ template<class T>
 T* LockArray3<T>::get_onedim()
 {
   int i,j,k, index;
-  T* a = scinew T[dm1*dm2*dm3];
+  T* a = new T[dm1*dm2*dm3];
   
   for( i=0; i<dm1; i++)
     for( j=0; j<dm2; j++ )

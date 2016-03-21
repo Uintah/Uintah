@@ -237,7 +237,7 @@ namespace Uintah{
         }
 
         VariableInformation ivar = get_variable_information( name, true );
-        T* field = scinew T;
+        T* field = new T;
         if ( ivar.dw == OLDDW ){
           _old_dw->get( *field, ivar.label, _matl_index, _patch, ivar.ghost_type, ivar.nGhost );
         } else {
@@ -266,7 +266,7 @@ namespace Uintah{
         }
 
         VariableInformation ivar = get_variable_information( name, true, which_dw );
-        T* field = scinew T;
+        T* field = new T;
         if ( ivar.dw == OLDDW ){
           _old_dw->get( *field, ivar.label, _matl_index, _patch, ivar.ghost_type, ivar.nGhost );
         } else {
@@ -293,7 +293,7 @@ namespace Uintah{
 
         VariableInformation ivar = get_variable_information( name, false );
 
-        T* field = scinew T;
+        T* field = new T;
 
         if ( ivar.depend == MODIFIES ){
           _new_dw->getModifiable( *field, ivar.label, _matl_index, _patch );
@@ -324,7 +324,7 @@ namespace Uintah{
              *(icheck->second.get_field<MY_TYPE>()), this->_wasatch_ainfo, 0 );
         }
 
-        MY_TYPE* field = scinew MY_TYPE;
+        MY_TYPE* field = new MY_TYPE;
 
         if ( ivar.depend == MODIFIES ){
           _new_dw->getModifiable( *field, ivar.label, _matl_index, _patch );
@@ -355,7 +355,7 @@ namespace Uintah{
              *(icheck->second.get_field<MY_TYPE>()), this->_wasatch_ainfo, nGhost );
         }
 
-        MY_TYPE* field = scinew MY_TYPE;
+        MY_TYPE* field = new MY_TYPE;
 
         if ( ivar.dw == OLDDW ){
           _old_dw->get( *field, ivar.label, _matl_index, _patch, ivar.ghost_type, nGhost );
@@ -389,7 +389,7 @@ namespace Uintah{
              *(icheck->second.get_field<MY_TYPE>()), this->_wasatch_ainfo, nGhost );
         }
 
-        MY_TYPE* field = scinew MY_TYPE;
+        MY_TYPE* field = new MY_TYPE;
 
         if ( ivar.dw == OLDDW ){
           _old_dw->get( *field, ivar.label, _matl_index, _patch, ivar.ghost_type, nGhost );
@@ -419,7 +419,7 @@ namespace Uintah{
 
         /// \TODO Resolve the old_dw vs. new_dw for the particle subset. What does Tony say?
         ParticleSubset* subset;
-        ParticleVariable<double>* pvar = scinew ParticleVariable<double>;
+        ParticleVariable<double>* pvar = new ParticleVariable<double>;
 
         if ( _new_dw->haveParticleSubset(_matl_index, _patch) ){
           subset = _new_dw->getParticleSubset( _matl_index, _patch );
@@ -455,7 +455,7 @@ namespace Uintah{
             *(icheck->second.get_field()), this->_wasatch_ainfo, ivar.nGhost );
         }
 
-        constParticleVariable<double>* pvar = scinew constParticleVariable<double>;
+        constParticleVariable<double>* pvar = new constParticleVariable<double>;
 
         if ( ivar.dw == OLDDW ){
           ParticleSubset* subset = _old_dw->getParticleSubset( _matl_index, _patch );
@@ -491,7 +491,7 @@ namespace Uintah{
             *(icheck->second.get_field()), this->_wasatch_ainfo, ivar.nGhost );
         }
 
-        constParticleVariable<double>* pvar = scinew constParticleVariable<double>;
+        constParticleVariable<double>* pvar = new constParticleVariable<double>;
 
         if ( ivar.dw == OLDDW ){
           ParticleSubset* subset = _old_dw->getParticleSubset( _matl_index, _patch );

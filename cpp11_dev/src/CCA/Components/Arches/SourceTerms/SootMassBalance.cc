@@ -58,7 +58,7 @@ void
 SootMassBalance::sched_computeSource( const LevelP& level, SchedulerP& sched, int timeSubStep )
 {
   std::string taskname = "SootMassBalance::eval";
-  Task* tsk = scinew Task(taskname, this, &SootMassBalance::computeSource, timeSubStep);
+  Task* tsk = new Task(taskname, this, &SootMassBalance::computeSource, timeSubStep);
 
   Task::WhichDW which_dw;
   if (timeSubStep == 0) {
@@ -270,7 +270,7 @@ SootMassBalance::sched_initialize( const LevelP& level, SchedulerP& sched )
 {
   string taskname = "SootMassBalance::initialize"; 
 
-  Task* tsk = scinew Task(taskname, this, &SootMassBalance::initialize);
+  Task* tsk = new Task(taskname, this, &SootMassBalance::initialize);
 
   tsk->computes(_src_label);
 

@@ -64,17 +64,17 @@ LagrangianParticleFactory::register_all_tasks( ProblemSpecP& db )
 
     //UPDATE PARTICLE POSITION
     std::string task_name = "update_particle_position";
-    TaskInterface::TaskBuilder* tsk = scinew UpdateParticlePosition::Builder(task_name, 0);
+    TaskInterface::TaskBuilder* tsk = new UpdateParticlePosition::Builder(task_name, 0);
     register_task( task_name, tsk );
 
     //UPDATE PARTICLE VELOCITY
     task_name = "update_particle_velocity";
-    tsk = scinew UpdateParticleVelocity::Builder(task_name, 0);
+    tsk = new UpdateParticleVelocity::Builder(task_name, 0);
     register_task( task_name, tsk );
 
     //UPDATE PARTICLE SIZE
     task_name = "update_particle_size";
-    tsk = scinew UpdateParticleSize::Builder(task_name, 0);
+    tsk = new UpdateParticleSize::Builder(task_name, 0);
     register_task( task_name, tsk );
 
   }

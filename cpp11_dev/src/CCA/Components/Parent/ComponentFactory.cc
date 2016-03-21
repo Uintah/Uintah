@@ -103,19 +103,19 @@ ComponentFactory::create( ProblemSpecP& ps, const ProcessorGroup* world,
 
 #ifndef NO_MPM
   if (sim_comp == "mpm" || sim_comp == "MPM") {
-    return scinew SerialMPM(world);
+    return new SerialMPM(world);
   } 
   if (sim_comp == "rmpm" || sim_comp == "rigidmpm" || sim_comp == "RIGIDMPM") {
-    return scinew RigidMPM(world);
+    return new RigidMPM(world);
   } 
   if (sim_comp == "amrmpm" || sim_comp == "AMRmpm" || sim_comp == "AMRMPM") {
-    return scinew AMRMPM(world);
+    return new AMRMPM(world);
   } 
   if (sim_comp == "smpm" || sim_comp == "shellmpm" || sim_comp == "SHELLMPM") {
-    return scinew ShellMPM(world);
+    return new ShellMPM(world);
   } 
   if (sim_comp == "impm" || sim_comp == "IMPM") {
-    return scinew ImpMPM(world);
+    return new ImpMPM(world);
   } 
 #else
   turned_off_options += "MPM ";
@@ -129,12 +129,12 @@ ComponentFactory::create( ProblemSpecP& ps, const ProcessorGroup* world,
     
     if (doAMR){
       if(doImplicitSolver){
-        return scinew impAMRICE(world);
+        return new impAMRICE(world);
       }else{
-        return scinew AMRICE(world);
+        return new AMRICE(world);
       }
     }else{
-      return scinew ICE(world);
+      return new ICE(world);
     }
   } 
 #else
@@ -142,13 +142,13 @@ ComponentFactory::create( ProblemSpecP& ps, const ProcessorGroup* world,
 #endif
 #if !defined(NO_MPM) && !defined(NO_ICE)
   if (sim_comp == "mpmice" || sim_comp == "MPMICE") {
-    return scinew MPMICE(world,STAND_MPMICE, doAMR);
+    return new MPMICE(world,STAND_MPMICE, doAMR);
   } 
   if (sim_comp == "smpmice" || sim_comp == "shellmpmice" || sim_comp == "SHELLMPMICE") {
-    return scinew MPMICE(world,SHELL_MPMICE, doAMR);
+    return new MPMICE(world,SHELL_MPMICE, doAMR);
   } 
   if (sim_comp == "rmpmice" || sim_comp == "rigidmpmice" || sim_comp == "RIGIDMPMICE") {
-    return scinew MPMICE(world,RIGID_MPMICE, doAMR);
+    return new MPMICE(world,RIGID_MPMICE, doAMR);
   } 
 #else
   turned_off_options += "MPMICE ";
@@ -158,82 +158,82 @@ ComponentFactory::create( ProblemSpecP& ps, const ProcessorGroup* world,
     if( !Uintah::Parallel::usingMPI() ) {
       throw ProblemSetupException("You must be using MPI when running an arches problem!", __FILE__, __LINE__);
     }
-    return scinew Arches(world,doAMR);
+    return new Arches(world,doAMR);
   } 
 #else
   turned_off_options += "ARCHES ";
 #endif
 #if !defined(NO_MPM) && !defined(NO_ARCHES)
   if (sim_comp == "mpmarches" || sim_comp == "MPMARCHES") {
-    return scinew MPMArches(world, doAMR);
+    return new MPMArches(world, doAMR);
   } 
 #else
   turned_off_options += "MPMARCHES ";
 #endif
   if (sim_comp == "burger" || sim_comp == "BURGER") {
-    return scinew Burger(world);
+    return new Burger(world);
   }
 
   if (sim_comp == "dosweep" || sim_comp == "DOSWEEP") {
-    return scinew DOSweep(world);
+    return new DOSweep(world);
   } 
   if (sim_comp == "wave" || sim_comp == "WAVE") {
     if (doAMR)
-      return scinew AMRWave(world);
+      return new AMRWave(world);
     else
-      return scinew Wave(world);
+      return new Wave(world);
   }
 #ifndef NO_WASATCH
   if (sim_comp == "wasatch") {
-    return scinew WasatchCore::Wasatch(world);
+    return new WasatchCore::Wasatch(world);
   } 
 #endif
   if (sim_comp == "poisson1" || sim_comp == "POISSON1") {
-    return scinew Poisson1(world);
+    return new Poisson1(world);
   }
 
 #ifdef HAVE_CUDA
   if (sim_comp == "poissongpu1" || sim_comp == "POISSONGPU1") {
-    return scinew PoissonGPU1(world);
+    return new PoissonGPU1(world);
   }
   if (sim_comp == "unifiedschedulertest" || sim_comp == "UNIFIEDSCHEDULERTEST") {
-    return scinew UnifiedSchedulerTest(world);
+    return new UnifiedSchedulerTest(world);
   }
 #endif
 
   if (sim_comp == "regriddertest" || sim_comp == "REGRIDDERTEST") {
-    return scinew RegridderTest(world);
+    return new RegridderTest(world);
   } 
   if (sim_comp == "poisson2" || sim_comp == "POISSON2") {
-    return scinew Poisson2(world);
+    return new Poisson2(world);
   } 
   if (sim_comp == "poisson3" || sim_comp == "POISSON3") {
-    return scinew Poisson3(world);
+    return new Poisson3(world);
   } 
   if (sim_comp == "poisson4" || sim_comp == "POISSON4") {
-    return scinew Poisson4(world);
+    return new Poisson4(world);
   }
   if (sim_comp == "benchmark" || sim_comp == "BENCHMARK") {
-    return scinew Benchmark(world);
+    return new Benchmark(world);
   } 
 #ifndef NO_MODELS_RADIATION
   if (sim_comp == "RMCRT_Test") {
-    return scinew RMCRT_Test(world);
+    return new RMCRT_Test(world);
   }
 #else
   turned_off_options += "RMCRT_Test ";
 #endif
   if (sim_comp == "particletest" || sim_comp == "PARTICLETEST") {
-    return scinew ParticleTest1(world);
+    return new ParticleTest1(world);
   } 
   if (sim_comp == "solvertest" || sim_comp == "SOLVERTEST") {
-    return scinew SolverTest1(world);
+    return new SolverTest1(world);
   } 
   if (sim_comp == "switcher" || sim_comp == "SWITCHER") {
-    return scinew Switcher(world, ps, doAMR, uda);
+    return new Switcher(world, ps, doAMR, uda);
   } 
   if (sim_comp == "reduce_uda") {
-    return scinew UdaReducer(world, uda);
+    return new UdaReducer(world, uda);
   } 
 
   throw ProblemSetupException("Unknown simulationComponent ('" + sim_comp + "'). Must specify -arches, -ice, -mpm, "

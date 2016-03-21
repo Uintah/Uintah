@@ -552,7 +552,7 @@ HyperElasticPlastic::computeStressTensor(const PatchSubset* patches,
       double rho_cur = rho_0/J;
 
       // Set up the PlasticityState
-      PlasticityState* state = scinew PlasticityState();
+      PlasticityState* state = new PlasticityState();
       state->plasticStrainRate = plasticStrainRate;
       state->plasticStrain = plasticStrain;
       state->pressure = pressure;

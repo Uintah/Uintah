@@ -64,7 +64,7 @@ namespace Uintah{
       ~Builder(){}; 
       
       SecondMFMoment* build()
-      { return scinew SecondMFMoment( _name, _shared_state, _required_label_names, _type ); };
+      { return new SecondMFMoment( _name, _shared_state, _required_label_names, _type ); };
       
     private: 
       

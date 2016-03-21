@@ -46,7 +46,7 @@ AxiLinearInterpolator::~AxiLinearInterpolator()
 
 AxiLinearInterpolator* AxiLinearInterpolator::clone(const Patch* patch)
 {
-  return scinew AxiLinearInterpolator(patch);
+  return new AxiLinearInterpolator(patch);
  }
     
 //__________________________________

@@ -445,18 +445,18 @@ namespace WasatchCore {
 
     //----------------------------------------------------------
     // kinetic energy
-    solnFactory.register_expression( scinew KineticEnergy<MyFieldT,MyFieldT,MyFieldT,MyFieldT>::Builder( kineticEnergyTag_, velTags[0], velTags[1], velTags[2] ) );
+    solnFactory.register_expression( new KineticEnergy<MyFieldT,MyFieldT,MyFieldT,MyFieldT>::Builder( kineticEnergyTag_, velTags[0], velTags[1], velTags[2] ) );
 
     //----------------------------------------------------------
     // temperature calculation
     typedef TemperaturePurePerfectGas<MyFieldT>::Builder SimpleTemperature;
-    solnFactory.register_expression( scinew SimpleTemperature( temperatureTag, primVarTag_, kineticEnergyTag_ ) );
+    solnFactory.register_expression( new SimpleTemperature( temperatureTag, primVarTag_, kineticEnergyTag_ ) );
 
     //----------------------------------------------------------
     // viscous dissipation
     typedef ViscousDissipation<MyFieldT>::Builder ViscDissip;
     const Expr::Tag visDisTag("viscous_dissipation",Expr::STATE_NONE);
-    solnFactory.register_expression( scinew ViscDissip( visDisTag,
+    solnFactory.register_expression( new ViscDissip( visDisTag,
                                                         velTags, viscTag, dilTag,
                                                         tags.strainxx, tags.strainyx, tags.strainzx,
                                                         tags.strainxy, tags.strainyy, tags.strainzy,
@@ -514,7 +514,7 @@ namespace WasatchCore {
     
     // initial condition for total internal energy
     typedef TotalInternalEnergy_PurePerfectGas_IC<SVolField>::Builder SimpleEnergyIC;
-    icFactory.register_expression( scinew SimpleEnergyIC( primVarTag_, temperatureTag_, velTags_ ) );
+    icFactory.register_expression( new SimpleEnergyIC( primVarTag_, temperatureTag_, velTags_ ) );
     
     // register expression to calculate the momentum initial condition from the initial conditions on
     // velocity and density in the cases that we are initializing velocity in the input file
@@ -559,7 +559,7 @@ namespace WasatchCore {
 
     // create an expression for (\rho e_0 + p), which is what we advect.
     const Expr::Tag combinedVarTag( solnVarName_ + "_and_" + pressureTag_.name(), Expr::STATE_NONE );
-    factory.register_expression( scinew ExprAlgebra<MyFieldT>::Builder( combinedVarTag,
+    factory.register_expression( new ExprAlgebra<MyFieldT>::Builder( combinedVarTag,
                                                                         tag_list(solnVarTag,pressureTag_),
                                                                         ExprAlgebra<MyFieldT>::SUM ) );
 

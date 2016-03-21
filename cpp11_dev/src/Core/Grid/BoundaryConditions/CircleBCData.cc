@@ -67,7 +67,7 @@ bool CircleBCData::operator==(const BCGeomBase& rhs) const
 
 CircleBCData* CircleBCData::clone()
 {
-  return scinew CircleBCData(*this);
+  return new CircleBCData(*this);
 }
 
 void CircleBCData::addBCData(BCData& bc) 

@@ -108,7 +108,7 @@ DORadiation::problemSetup(const ProblemSpecP& inputdb)
   proc0cout << "   -> abskt label:               " << _abskt_label_name << endl;
   proc0cout << " --- end DO Radiation Summary ------ " << endl;
 
-  _DO_model = scinew DORadiationModel( _labels, _MAlab, _my_world ); 
+  _DO_model = new DORadiationModel( _labels, _MAlab, _my_world ); 
   _DO_model->problemSetup( db ); 
 
   for( int ix=0;  ix< _DO_model->getIntOrdinates();ix++){
@@ -129,7 +129,7 @@ void
 DORadiation::sched_computeSource( const LevelP& level, SchedulerP& sched, int timeSubStep )
 {
   std::string taskname = "DORadiation::computeSource";
-  Task* tsk = scinew Task(taskname, this, &DORadiation::computeSource, timeSubStep);
+  Task* tsk = new Task(taskname, this, &DORadiation::computeSource, timeSubStep);
 
   _T_label = VarLabel::find(_T_label_name); 
   if ( _T_label == 0){
@@ -412,7 +412,7 @@ void
 DORadiation::sched_initialize( const LevelP& level, SchedulerP& sched )
 {
   string taskname = "DORadiation::initialize"; 
-  Task* tsk = scinew Task(taskname, this, &DORadiation::initialize);
+  Task* tsk = new Task(taskname, this, &DORadiation::initialize);
 
   tsk->computes(_src_label);
 

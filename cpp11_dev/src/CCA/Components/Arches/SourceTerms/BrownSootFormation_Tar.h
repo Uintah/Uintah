@@ -77,7 +77,7 @@ public:
       ~Builder(){}; 
 
       BrownSootFormation_Tar* build()
-      { return scinew BrownSootFormation_Tar( _name, _field_labels, _required_label_names, _type ); };
+      { return new BrownSootFormation_Tar( _name, _field_labels, _required_label_names, _type ); };
 
     private: 
 

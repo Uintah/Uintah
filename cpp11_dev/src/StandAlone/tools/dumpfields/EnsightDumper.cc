@@ -121,7 +121,7 @@ namespace Uintah {
   EnsightDumper::Step * 
   EnsightDumper::addStep(int timestep, double time, int index)
   {
-    Step * res = scinew Step(&data_, this->dirName(time, index), timestep, time, index, nsteps_);
+    Step * res = new Step(&data_, this->dirName(time, index), timestep, time, index, nsteps_);
     nsteps_++;
     return res;
   }

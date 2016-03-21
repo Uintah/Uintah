@@ -59,7 +59,7 @@ void
 BowmanNOx::sched_computeSource( const LevelP& level, SchedulerP& sched, int timeSubStep )
 {
   std::string taskname = "BowmanNOx::eval";
-  Task* tsk = scinew Task(taskname, this, &BowmanNOx::computeSource, timeSubStep);
+  Task* tsk = new Task(taskname, this, &BowmanNOx::computeSource, timeSubStep);
 
   Ghost::GhostType  gType;
   int nGhosts;
@@ -167,7 +167,7 @@ BowmanNOx::sched_initialize( const LevelP& level, SchedulerP& sched )
 {
   string taskname = "BowmanNOx::initialize"; 
 
-  Task* tsk = scinew Task(taskname, this, &BowmanNOx::initialize);
+  Task* tsk = new Task(taskname, this, &BowmanNOx::initialize);
 
   tsk->computes(_src_label);
 

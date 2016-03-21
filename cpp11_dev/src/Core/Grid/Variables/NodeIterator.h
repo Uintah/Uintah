@@ -188,7 +188,7 @@ namespace Uintah {
 
         NodeIterator* clone() const
         {
-          return scinew NodeIterator(*this);
+          return new NodeIterator(*this);
         }
         
         std::ostream& put(std::ostream& out) const

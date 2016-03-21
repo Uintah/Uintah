@@ -50,7 +50,7 @@ class CoalGasOxi: public SourceTermBase {
       ~Builder(){}; 
 
       CoalGasOxi* build()
-      { return scinew CoalGasOxi( _name, _required_label_names, _shared_state, _type ); };
+      { return new CoalGasOxi( _name, _required_label_names, _shared_state, _type ); };
 
     private: 
 

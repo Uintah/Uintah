@@ -85,7 +85,7 @@ public:
       ~Builder(){}
 
       DORadiation* build()
-      { return scinew DORadiation( _name, _labels, _MAlab, _required_label_names, _my_world, _type ); }
+      { return new DORadiation( _name, _labels, _MAlab, _required_label_names, _my_world, _type ); }
 
     private: 
 

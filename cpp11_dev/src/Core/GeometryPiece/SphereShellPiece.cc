@@ -72,7 +72,7 @@ void SphereShellPiece::outputHelper(ProblemSpecP& sphere_ps) const
 GeometryPieceP
 SphereShellPiece::clone() const
 {
-  return scinew SphereShellPiece(*this);
+  return new SphereShellPiece(*this);
 }
 
 bool 

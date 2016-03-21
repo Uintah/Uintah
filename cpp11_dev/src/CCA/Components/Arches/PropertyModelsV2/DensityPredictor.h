@@ -46,7 +46,7 @@ public:
       ~Builder(){}
 
       DensityPredictor* build()
-      { return scinew DensityPredictor( _task_name, _matl_index ); }
+      { return new DensityPredictor( _task_name, _matl_index ); }
 
       private:
 

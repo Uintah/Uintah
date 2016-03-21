@@ -1155,7 +1155,7 @@ ProblemSpecReader::parseValidationFile()
 
   xmlDocPtr doc; /* the resulting document tree */
   
-  string * valFile = scinew string( string( sci_getenv("SCIRUN_SRCDIR") ) + "/StandAlone/inputs/UPS_SPEC/ups_spec.xml" );
+  string * valFile = new string( string( sci_getenv("SCIRUN_SRCDIR") ) + "/StandAlone/inputs/UPS_SPEC/ups_spec.xml" );
 
   d_upsFilename.push_back( valFile );
 
@@ -2041,7 +2041,7 @@ ProblemSpecReader::readInputFile( const string & filename, const vector<int> & p
     throw ProblemSetupException( "Error parsing .ups file: " + full_filename , __FILE__, __LINE__ );
   }
 
-  ProblemSpecP prob_spec = scinew ProblemSpec( xmlDocGetRootElement(doc), true );
+  ProblemSpecP prob_spec = new ProblemSpec( xmlDocGetRootElement(doc), true );
 
   string * strPtr = new string( full_filename );
 

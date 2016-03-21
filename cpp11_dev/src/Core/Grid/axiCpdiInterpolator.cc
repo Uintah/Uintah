@@ -49,7 +49,7 @@ axiCpdiInterpolator::~axiCpdiInterpolator()
 
 axiCpdiInterpolator* axiCpdiInterpolator::clone(const Patch* patch)
 {
-  return scinew axiCpdiInterpolator(patch);
+  return new axiCpdiInterpolator(patch);
 }
     
 void axiCpdiInterpolator::findCellAndWeights(const Point& pos,

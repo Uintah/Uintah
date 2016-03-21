@@ -37,7 +37,7 @@ class PackedBuffer : public RefCounted {
 
 public:
   PackedBuffer(int bytes) :
-    buf((void*)(scinew char[bytes])), bufsize(bytes) {}
+    buf((void*)(new char[bytes])), bufsize(bytes) {}
   
   ~PackedBuffer() {
     delete[] (char*)buf;

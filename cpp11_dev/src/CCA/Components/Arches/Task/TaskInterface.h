@@ -375,7 +375,7 @@ protected:
     template <typename T>
     void register_new_variable(const std::string name){
 
-      RegisterNewVariableHelper<T>* helper = scinew RegisterNewVariableHelper<T>();
+      RegisterNewVariableHelper<T>* helper = new RegisterNewVariableHelper<T>();
       helper->create_variable( name, _local_labels );
       delete helper;
 

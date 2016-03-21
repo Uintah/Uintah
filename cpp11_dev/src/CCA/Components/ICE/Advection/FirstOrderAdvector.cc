@@ -64,7 +64,7 @@ FirstOrderAdvector* FirstOrderAdvector::clone(DataWarehouse* new_dw,
                                               const Patch* patch,
                                               const bool isNewGrid)
 {
-  return scinew FirstOrderAdvector(new_dw,patch,isNewGrid);
+  return new FirstOrderAdvector(new_dw,patch,isNewGrid);
 }
 
 /* ---------------------------------------------------------------------

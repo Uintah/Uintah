@@ -110,7 +110,7 @@ void EllipsoidGeometryPiece::outputHelper( ProblemSpecP & ps ) const
 
 GeometryPieceP EllipsoidGeometryPiece::clone() const
 {
-  return scinew EllipsoidGeometryPiece(*this);
+  return new EllipsoidGeometryPiece(*this);
 }
 
 bool EllipsoidGeometryPiece::inside(const Point& p) const

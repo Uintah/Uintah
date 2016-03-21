@@ -391,7 +391,7 @@ ConstitutiveModel* HyperElasticDamage::readRestartParametersAndCreate(ProblemSpe
 
 ConstitutiveModel* HyperElasticDamage::create(double *p_array)
 {
-  return(scinew HyperElasticDamage(p_array[0],p_array[1],p_array[2],
+  return(new HyperElasticDamage(p_array[0],p_array[1],p_array[2],
                                 p_array[3],p_array[4]));
 }
 
@@ -421,7 +421,7 @@ void HyperElasticDamage::printParameterNames(ofstream& out) const
 
 ConstitutiveModel* HyperElasticDamage::copy() const
 {
-  return( scinew HyperElasticDamage(*this) );
+  return( new HyperElasticDamage(*this) );
 }
 
 int HyperElasticDamage::getSize() const

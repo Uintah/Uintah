@@ -98,23 +98,23 @@ namespace WasatchCore{
       // OldVariable& oldVar = OldVariable::self();
       Expr::ExpressionID coordID;
       if (coordFieldT == "SVOL") {
-        initgh         .exprFactory->register_expression( scinew Coordinates<SVolField>::Builder( coordTag ) );
-        coordID = slngh.exprFactory->register_expression( scinew Coordinates<SVolField>::Builder( coordTag ) );
+        initgh         .exprFactory->register_expression( new Coordinates<SVolField>::Builder( coordTag ) );
+        coordID = slngh.exprFactory->register_expression( new Coordinates<SVolField>::Builder( coordTag ) );
       }
       
       if (coordFieldT == "XVOL") {
-        initgh         .exprFactory->register_expression( scinew Coordinates<XVolField>::Builder( coordTag ) );
-        coordID = slngh.exprFactory->register_expression( scinew Coordinates<XVolField>::Builder( coordTag ) );
+        initgh         .exprFactory->register_expression( new Coordinates<XVolField>::Builder( coordTag ) );
+        coordID = slngh.exprFactory->register_expression( new Coordinates<XVolField>::Builder( coordTag ) );
       }
       
       if (coordFieldT == "YVOL") {
-        initgh         .exprFactory->register_expression( scinew Coordinates<YVolField>::Builder( coordTag ) );
-        coordID = slngh.exprFactory->register_expression( scinew Coordinates<YVolField>::Builder( coordTag ) );
+        initgh         .exprFactory->register_expression( new Coordinates<YVolField>::Builder( coordTag ) );
+        coordID = slngh.exprFactory->register_expression( new Coordinates<YVolField>::Builder( coordTag ) );
       }
       
       if (coordFieldT == "ZVOL") {
-        initgh         .exprFactory->register_expression( scinew Coordinates<ZVolField>::Builder( coordTag ) );
-        coordID = slngh.exprFactory->register_expression( scinew Coordinates<ZVolField>::Builder( coordTag ) );
+        initgh         .exprFactory->register_expression( new Coordinates<ZVolField>::Builder( coordTag ) );
+        coordID = slngh.exprFactory->register_expression( new Coordinates<ZVolField>::Builder( coordTag ) );
       }
       
       slngh.exprFactory->cleave_from_parents(coordID);

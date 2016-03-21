@@ -72,7 +72,7 @@ void Poisson4::problemSetup(const ProblemSpecP& params,
   
   poisson->require("delt", delt_);
   
-  mymat_ = scinew SimpleMaterial();
+  mymat_ = new SimpleMaterial();
   
   sharedState->registerSimpleMaterial(mymat_);
 }
@@ -81,7 +81,7 @@ void Poisson4::problemSetup(const ProblemSpecP& params,
 void Poisson4::scheduleInitialize(const LevelP& level,
                                   SchedulerP& sched)
 {
-  Task* task = scinew Task("Poisson4::initialize",
+  Task* task = new Task("Poisson4::initialize",
                      this, &Poisson4::initialize);
                      
   task->computes(phi_label);
@@ -99,7 +99,7 @@ void Poisson4::scheduleRestartInitialize(const LevelP& level,
 void Poisson4::scheduleComputeStableTimestep(const LevelP& level,
                                              SchedulerP& sched)
 {
-  Task* task = scinew Task("Poisson4::computeStableTimestep",
+  Task* task = new Task("Poisson4::computeStableTimestep",
                      this, &Poisson4::computeStableTimestep);
                      
   task->requires(Task::NewDW, residual_label);
@@ -112,7 +112,7 @@ void Poisson4::scheduleTimeAdvance0(SchedulerP& sched,
                                     const PatchSet* patches,
                                     const MaterialSet* matls)
 {
-  Task* task = scinew Task("Poisson4::timeAdvance",
+  Task* task = new Task("Poisson4::timeAdvance",
                      this, &Poisson4::timeAdvance);
                      
   task->requires(Task::OldDW, phi_label, Ghost::AroundNodes, 1);
@@ -127,7 +127,7 @@ void Poisson4::scheduleTimeAdvance1(SchedulerP& sched,
                                     const PatchSet* patches,
                                     const MaterialSet* matls)
 {
-  Task* task = scinew Task("Poisson4::timeAdvance",
+  Task* task = new Task("Poisson4::timeAdvance",
                      this, &Poisson4::timeAdvance1);
                      
   //  task->requires(Task::NewDW, phi_label, Ghost::AroundNodes, 1);
@@ -151,7 +151,7 @@ Poisson4::scheduleTimeAdvance( const LevelP& level,
 
 
 #if 0
-  Task* task = scinew Task("Poisson4::timeAdvance",
+  Task* task = new Task("Poisson4::timeAdvance",
                      this, &Poisson4::timeAdvance);
                      
   task->requires(Task::OldDW, phi_label, Ghost::AroundNodes, 1);

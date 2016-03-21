@@ -83,7 +83,7 @@ MPMICE::MPMICE(const ProcessorGroup* myworld,
                MPMType mpmtype, const bool doAMR)
   : UintahParallelComponent(myworld)
 {
-  MIlb = scinew MPMICELabel();
+  MIlb = new MPMICELabel();
  
   d_rigidMPM = false;
   d_doAMR = doAMR;
@@ -92,22 +92,22 @@ MPMICE::MPMICE(const ProcessorGroup* myworld,
   
   switch(mpmtype) {
   case RIGID_MPMICE:
-    d_mpm = scinew RigidMPM(myworld);
+    d_mpm = new RigidMPM(myworld);
     d_rigidMPM = true;
     break;
   case SHELL_MPMICE:
-    d_mpm = scinew ShellMPM(myworld);
+    d_mpm = new ShellMPM(myworld);
     break;
   default:
-    d_mpm = scinew SerialMPM(myworld);
+    d_mpm = new SerialMPM(myworld);
   }
 
   // Don't do AMRICE with MPMICE for now...
   if (d_doAMR) {
-    d_ice  = scinew AMRICE(myworld);
+    d_ice  = new AMRICE(myworld);
   }
   else {
-    d_ice  = scinew ICE(myworld, false);
+    d_ice  = new ICE(myworld, false);
   }
 
   Ilb=d_ice->lb;
@@ -274,7 +274,7 @@ void MPMICE::scheduleInitialize(const LevelP& level,
 
   //__________________________________
   //  What isn't initialized in either ice or mpm
-  Task* t = scinew Task("MPMICE::actuallyInitialize",
+  Task* t = new Task("MPMICE::actuallyInitialize",
                   this, &MPMICE::actuallyInitialize);
                   
   // Get the material subsets
@@ -663,7 +663,7 @@ void MPMICE::scheduleRefinePressCC(SchedulerP& sched,
 {
   printSchedule(patches,cout_doing,"MPMICE::scheduleRefinePressCC");
     
-  MaterialSet* press_matls = scinew MaterialSet();
+  MaterialSet* press_matls = new MaterialSet();
   press_matls->add(0);
   press_matls->addReference();
 
@@ -686,7 +686,7 @@ void MPMICE::scheduleInterpolatePressCCToPressNC(SchedulerP& sched,
     
   printSchedule(patches,cout_doing, "MPMICE::scheduleInterpolatePressCCToPressNC"); 
     
-  Task* t=scinew Task("MPMICE::interpolatePressCCToPressNC",
+  Task* t=new Task("MPMICE::interpolatePressCCToPressNC",
                     this, &MPMICE::interpolatePressCCToPressNC);
 
   Ghost::GhostType  gac = Ghost::AroundCells;
@@ -711,7 +711,7 @@ void MPMICE::scheduleInterpolatePAndGradP(SchedulerP& sched,
 
   printSchedule(patches,cout_doing,"MPMICE::scheduleInterpolatePAndGradP");
  
-  Task* t=scinew Task("MPMICE::interpolatePAndGradP",
+  Task* t=new Task("MPMICE::interpolatePAndGradP",
                       this, &MPMICE::interpolatePAndGradP);
   Ghost::GhostType  gac = Ghost::AroundCells;
   
@@ -740,7 +740,7 @@ void MPMICE::scheduleInterpolateNCToCC_0(SchedulerP& sched,
     printSchedule(patches,cout_doing, "MPMICE::scheduleInterpolateNCToCC_0");
  
     /* interpolateNCToCC */
-    Task* t=scinew Task("MPMICE::interpolateNCToCC_0",
+    Task* t=new Task("MPMICE::interpolateNCToCC_0",
                         this, &MPMICE::interpolateNCToCC_0);
     const MaterialSubset* mss = mpm_matls->getUnion();
     t->requires(Task::NewDW, Mlb->gMassLabel,       Ghost::AroundCells, 1);
@@ -815,7 +815,7 @@ void MPMICE::scheduleComputeLagrangianValuesMPM(SchedulerP& sched,
 
     printSchedule(patches,cout_doing, "MPMICE::scheduleComputeLagrangianValuesMPM");
 
-    Task* t=scinew Task("MPMICE::computeLagrangianValuesMPM",
+    Task* t=new Task("MPMICE::computeLagrangianValuesMPM",
                         this, &MPMICE::computeLagrangianValuesMPM);
 
     const MaterialSubset* mss = mpm_matls->getUnion();
@@ -873,7 +873,7 @@ void MPMICE::scheduleComputeCCVelAndTempRates(SchedulerP& sched,
 {
   printSchedule(patches, cout_doing, "MPMICE::scheduleComputeCCVelAndTempRates");
 
-  Task* t=scinew Task("MPMICE::computeCCVelAndTempRates",
+  Task* t=new Task("MPMICE::computeCCVelAndTempRates",
                       this, &MPMICE::computeCCVelAndTempRates);               
 
   Ghost::GhostType  gn = Ghost::None;
@@ -922,7 +922,7 @@ void MPMICE::scheduleInterpolateCCToNC(SchedulerP& sched,
 
   printSchedule(patches, cout_doing, "MPMICE::scheduleInterpolateCCToNC");  
                                                                                 
-  Task* t=scinew Task("MPMICE::interpolateCCToNC",
+  Task* t=new Task("MPMICE::interpolateCCToNC",
                       this, &MPMICE::interpolateCCToNC);
   const MaterialSubset* mss = mpm_matls->getUnion();
   Ghost::GhostType  gan = Ghost::AroundNodes;
@@ -960,7 +960,7 @@ void MPMICE::scheduleComputePressure(SchedulerP& sched,
 
   printSchedule(patches, cout_doing,"MPMICE::scheduleComputeEquilibrationPressure");
 
-  t = scinew Task("MPMICE::computeEquilibrationPressure",
+  t = new Task("MPMICE::computeEquilibrationPressure",
             this, &MPMICE::computeEquilibrationPressure, press_matl);
   
   t->requires(Task::OldDW, d_sharedState->get_delt_label(),getLevel(patches));
@@ -2080,7 +2080,7 @@ void MPMICE::computeEquilibrationPressure(const ProcessorGroup*,
     //   Don't set Lodi bcs, we already compute Press
     //   in all the extra cells.
     // - make copy of press for implicit calc.
-    customBC_localVars* BC_localVars = scinew customBC_localVars();
+    customBC_localVars* BC_localVars = new customBC_localVars();
     preprocess_CustomBCs("EqPress",old_dw, new_dw, Ilb, patch, 999,
                           d_ice->d_BC_globalVars, BC_localVars);
     
@@ -2384,7 +2384,7 @@ void MPMICE::scheduleRefineInterface(const LevelP& fineLevel,
                << " MPMICE::scheduleRefineInterface \t\t\tL-"
                << fineLevel->getIndex() << endl;
 
-    Task* task = scinew Task("MPMICE::refineCoarseFineInterface",
+    Task* task = new Task("MPMICE::refineCoarseFineInterface",
                              this, &MPMICE::refineCoarseFineInterface);
 
     const MaterialSet* all_matls   = d_sharedState->allMaterials();
@@ -2449,7 +2449,7 @@ void MPMICE::scheduleRefine(const PatchSet* patches,
 
   printSchedule(patches,cout_doing,"MPMICE::scheduleRefine");
 
-  Task* task = scinew Task("MPMICE::refine", this, &MPMICE::refine);
+  Task* task = new Task("MPMICE::refine", this, &MPMICE::refine);
   
   task->computes(Mlb->heatRate_CCLabel);
   task->computes(Ilb->sp_vol_CCLabel);
@@ -2498,11 +2498,11 @@ void MPMICE::scheduleErrorEstimate(const LevelP& coarseLevel,
    switch(variable->typeDescription()->getSubType()->getType()){
    case TypeDescription::double_type:
      func = &MPMICE::refineVariableCC<double>;
-     t=scinew Task(taskName.str().c_str(),this, func, variable);
+     t=new Task(taskName.str().c_str(),this, func, variable);
      break;
    case TypeDescription::Vector:
      func = &MPMICE::refineVariableCC<Vector>;
-     t=scinew Task(taskName.str().c_str(),this, func, variable);
+     t=new Task(taskName.str().c_str(),this, func, variable);
      break;
    default:
      throw InternalError("Unknown variable type for refine", __FILE__, __LINE__);
@@ -2536,7 +2536,7 @@ void MPMICE::scheduleErrorEstimate(const LevelP& coarseLevel,
   taskName << "MPMICE::coarsenVariableCC(" << variable->getName() 
            << (modifies?" modified":"") << ")";
   
-  Task* t=scinew Task(taskName.str().c_str(),this, func, 
+  Task* t=new Task(taskName.str().c_str(),this, func, 
                        variable, defaultValue, modifies, coarsenMethod);
   
   Ghost::GhostType  gn = Ghost::None;
@@ -2579,7 +2579,7 @@ void MPMICE::scheduleErrorEstimate(const LevelP& coarseLevel,
   taskName << "MPMICE::coarsenVariableNC(" << variable->getName() 
            << (modifies?" modified":"") << ")";
 
-  Task* t=scinew Task(taskName.str().c_str(),this, func,
+  Task* t=new Task(taskName.str().c_str(),this, func,
                        variable, defaultValue, modifies, coarsenMethod);
 
   //Ghost::GhostType  gn = Ghost::None;

@@ -89,7 +89,7 @@ void HypoElastic::outputProblemSpec(ProblemSpecP& ps,bool output_cm_tag)
 
 HypoElastic* HypoElastic::clone()
 {
-  return scinew HypoElastic(*this);
+  return new HypoElastic(*this);
 }
 
 void HypoElastic::initializeCMData(const Patch* patch,

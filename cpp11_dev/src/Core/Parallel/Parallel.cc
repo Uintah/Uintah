@@ -269,7 +269,7 @@ Parallel::initializeManager(int& argc, char**& argv)
     Uintah::AllocatorSetDefaultTagMalloc(oldtag);
     Uintah::AllocatorMallocStatsAppendNumber( worldRank_ );
 #endif
-    rootContext_ = scinew ProcessorGroup( 0, Uintah::worldComm_, true, worldRank_, worldSize_, numThreads_ );
+    rootContext_ = new ProcessorGroup( 0, Uintah::worldComm_, true, worldRank_, worldSize_, numThreads_ );
 
     if(rootContext_->myrank() == 0) {
       std::string plural = (rootContext_->size() > 1) ? "processes" : "process" ;
@@ -285,7 +285,7 @@ Parallel::initializeManager(int& argc, char**& argv)
   }
   else {
     worldRank_   = 0;
-    rootContext_ = scinew ProcessorGroup(0, 0, false, 0, 1, 0);
+    rootContext_ = new ProcessorGroup(0, 0, false, 0, 1, 0);
   }
 }
 

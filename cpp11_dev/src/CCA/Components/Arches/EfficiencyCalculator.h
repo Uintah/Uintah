@@ -83,7 +83,7 @@ namespace Uintah {
 
             if ( type == "combustion_efficiency" ){ 
 
-              Calculator* calculator = scinew CombustionEfficiency( name,  _bcs, _a_labs ); 
+              Calculator* calculator = new CombustionEfficiency( name,  _bcs, _a_labs ); 
               check = calculator->problemSetup( calc_db ); 
 
               if ( !check ){ 
@@ -94,7 +94,7 @@ namespace Uintah {
 
             } else if ( type == "mass_balance" ) { 
 
-              Calculator* calculator = scinew MassBalance( name, _bcs, _a_labs );
+              Calculator* calculator = new MassBalance( name, _bcs, _a_labs );
               check = calculator->problemSetup( calc_db ); 
 
               if ( !check ){ 
@@ -273,7 +273,7 @@ namespace Uintah {
                                            SchedulerP& sched ){
         
             const std::string name =  "MassBalance::computeReductionVars";
-            Task* tsk = scinew Task( name, this, 
+            Task* tsk = new Task( name, this, 
                 &MassBalance::computeReductionVars); 
 
             tsk->computes( _IN_label ); 
@@ -615,7 +615,7 @@ namespace Uintah {
           {
           
             const std::string name =  "MassBalance::computeEfficiency";
-            Task* tsk = scinew Task( name, this, 
+            Task* tsk = new Task( name, this, 
                 &MassBalance::computeEfficiency); 
 
             tsk->requires( Task::NewDW, _IN_label ); 
@@ -838,7 +838,7 @@ namespace Uintah {
                                            SchedulerP& sched ){
         
             const std::string name =  "CombustionEfficicency::computeReductionVars";
-            Task* tsk = scinew Task( name, this, 
+            Task* tsk = new Task( name, this, 
                 &CombustionEfficiency::computeReductionVars); 
 
             tsk->computes( _numerator_label ); 
@@ -1085,7 +1085,7 @@ namespace Uintah {
           {
           
             const std::string name =  "CombustionEfficicency::computeEfficiency";
-            Task* tsk = scinew Task( name, this, 
+            Task* tsk = new Task( name, this, 
                 &CombustionEfficiency::computeEfficiency); 
 
             tsk->requires( Task::NewDW, _numerator_label ); 

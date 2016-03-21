@@ -87,7 +87,7 @@ int main(int argc, char *argv[])
 
   // make room to store the image
   int nsize = res[0]*res[1]*res[2];
-  byte* pimg = scinew byte[nsize];
+  byte* pimg = new byte[nsize];
 
   // Initialize pimg to zero
   for(int n=0;n<nsize;n++){
