@@ -148,20 +148,6 @@ SchedulerCommon::checkMemoryUse( unsigned long & memuse,
   highwater = 0;
   memuse    = 0;
 
-#if !defined(DISABLE_SCI_MALLOC)
-  size_t nalloc,  sizealloc, nfree,  sizefree, nfillbin,
-         nmmap, sizemmap, nmunmap, sizemunmap, highwater_alloc,
-         highwater_mmap, bytes_overhead, bytes_free, bytes_fragmented, bytes_inuse, bytes_inhunks;
-
-  GetGlobalStats( DefaultAllocator(),
-                  nalloc, sizealloc, nfree, sizefree,
-                  nfillbin, nmmap, sizemmap, nmunmap,
-                  sizemunmap, highwater_alloc, highwater_mmap,
-                  bytes_overhead, bytes_free, bytes_fragmented, bytes_inuse, bytes_inhunks );
-  memuse = sizealloc - sizefree;
-  highwater = highwater_mmap;
-
-#else
   if ( ProcessInfo::isSupported( ProcessInfo::MEM_SIZE ) ) {
     memuse = ProcessInfo::getMemoryResident();
     //printf("1) memuse is %d (on proc %d)\n", (int)memuse, Uintah::Parallel::getMPIRank() );
@@ -169,7 +155,6 @@ SchedulerCommon::checkMemoryUse( unsigned long & memuse,
     memuse = (char*)sbrk(0)-start_addr;
     // printf("2) memuse is %d (on proc %d)\n", (int)memuse, Uintah::Parallel::getMPIRank() );
   }
-#endif
 
   if( memuse > d_maxMemUse ) {
     // printf("Max memuse increased\n");
@@ -1553,9 +1538,6 @@ SchedulerCommon::scheduleAndDoDataCopy( const GridP&               grid,
   // neighborhood isn't good enough for the copy data timestep
   d_sharedState->setCopyDataTimestep(true);  //-- do we still need this?  - BJW
 
-#if !defined( DISABLE_SCI_MALLOC )
-  const char* tag = AllocatorSetDefaultTag("DoDataCopy");
-#endif
   this->compile();
 
   double total_regrid_time = regrid_timer().seconds();
@@ -1572,10 +1554,6 @@ SchedulerCommon::scheduleAndDoDataCopy( const GridP&               grid,
   regrid_timer.reset();
 
   this->execute();
-
-#if !defined( DISABLE_SCI_MALLOC )
-  AllocatorSetDefaultTag(tag);
-#endif
 
   //__________________________________
   // copy reduction variables to the new_dw

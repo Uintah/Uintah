@@ -37,7 +37,6 @@
 #include <Core/Grid/Variables/VarTypes.h>
 #include <Core/Parallel/ProcessorGroup.h>
 #include <CCA/Ports/Scheduler.h>
-#include <Core/Malloc/Allocator.h>
 #include <Core/Parallel/Parallel.h>
 #include <Core/Malloc/Allocator.h>
 #include <Core/Util/Endian.h>
@@ -48,32 +47,32 @@ using namespace Uintah;
 AdvectSlabs::AdvectSlabs(const ProcessorGroup* myworld)
   : UintahParallelComponent(myworld)
 {
-  mass_label = VarLabel::create("mass", 
+  mass_label = VarLabel::create("mass",
                                CCVariable<double>::getTypeDescription());
-  massAdvected_label = VarLabel::create("massAdvected", 
+  massAdvected_label = VarLabel::create("massAdvected",
                                   CCVariable<double>::getTypeDescription());
-    
+
     //__________________________________
     //  outflux/influx slabs
     OF_slab[RIGHT] = RIGHT;         IF_slab[RIGHT]  = LEFT;
     OF_slab[LEFT]  = LEFT;          IF_slab[LEFT]   = RIGHT;
     OF_slab[TOP]   = TOP;           IF_slab[TOP]    = BOTTOM;
-    OF_slab[BOTTOM]= BOTTOM;        IF_slab[BOTTOM] = TOP;  
+    OF_slab[BOTTOM]= BOTTOM;        IF_slab[BOTTOM] = TOP;
     OF_slab[FRONT] = FRONT;         IF_slab[FRONT]  = BACK;
-    OF_slab[BACK]  = BACK;          IF_slab[BACK]   = FRONT;   
-    
+    OF_slab[BACK]  = BACK;          IF_slab[BACK]   = FRONT;
+
     // Slab adjacent cell
-    S_ac[RIGHT]  =  IntVector( 1, 0, 0);   
-    S_ac[LEFT]   =  IntVector(-1, 0, 0);   
-    S_ac[TOP]    =  IntVector( 0, 1, 0);   
-    S_ac[BOTTOM] =  IntVector( 0,-1, 0);   
-    S_ac[FRONT]  =  IntVector( 0, 0, 1);   
+    S_ac[RIGHT]  =  IntVector( 1, 0, 0);
+    S_ac[LEFT]   =  IntVector(-1, 0, 0);
+    S_ac[TOP]    =  IntVector( 0, 1, 0);
+    S_ac[BOTTOM] =  IntVector( 0,-1, 0);
+    S_ac[FRONT]  =  IntVector( 0, 0, 1);
     S_ac[BACK]   =  IntVector( 0, 0,-1);
 }
 
 AdvectSlabs::~AdvectSlabs()
 {
-    
+
 }
 
 void AdvectSlabs::problemSetup(const ProblemSpecP& params,
@@ -86,7 +85,7 @@ void AdvectSlabs::problemSetup(const ProblemSpecP& params,
   mymat_ = new SimpleMaterial();
   sharedState->registerSimpleMaterial(mymat_);
 }
- 
+
 void AdvectSlabs::scheduleInitialize(const LevelP& level,
                                SchedulerP& sched)
 {
@@ -101,7 +100,7 @@ void AdvectSlabs::scheduleRestartInitialize(const LevelP& level,
                                             SchedulerP& sched)
 {
 }
- 
+
 void AdvectSlabs::scheduleComputeStableTimestep(const LevelP& level,
                                           SchedulerP& sched)
 {
@@ -139,7 +138,7 @@ void AdvectSlabs::initialize(const ProcessorGroup*,
 {
   for(int p=0;p<patches->size();p++){
     const Patch* patch = patches->get(p);
-      
+
     new_dw->allocateTemporary(d_OFS, patch, Ghost::AroundCells,1);
     for(int m = 0;m<matls->size();m++){
       int matl = matls->get(m);
@@ -149,7 +148,7 @@ void AdvectSlabs::initialize(const ProcessorGroup*,
       new_dw->allocateAndPut(massAd, massAdvected_label, matl, patch, Ghost::AroundCells, 2);
       mass.initialize(0.0);
       massAd.initialize(0.0);
-        
+
       for(CellIterator iter = patch->getCellIterator(); !iter.done(); iter++)
       {
         // set initial value for fluxes
@@ -168,11 +167,11 @@ void AdvectSlabs::timeAdvance(const ProcessorGroup* pg,
                                const MaterialSubset* matls,
                                DataWarehouse* old_dw, DataWarehouse* new_dw)
 {
-    struct fflux ff; 
+    struct fflux ff;
     for(int p=0;p<patches->size();p++){
         const Patch* patch = patches->get(p);
-        Vector dx = patch->dCell();            
-        double invvol = 1.0/(dx.x() * dx.y() * dx.z());                     
+        Vector dx = patch->dCell();
+        double invvol = 1.0/(dx.x() * dx.y() * dx.z());
 
 
         d_OFS.initialize(ff);
@@ -184,34 +183,34 @@ void AdvectSlabs::timeAdvance(const ProcessorGroup* pg,
           // variable to get
           constCCVariable<double> mass;
           CCVariable<double>      mass2, massAd;
-        
+
           old_dw->get(mass, mass_label, matl, patch, Ghost::AroundCells, 2);
           new_dw->allocateAndPut(mass2, mass_label, matl, patch, Ghost::AroundCells, 2 );
           new_dw->allocateAndPut(massAd, massAdvected_label, matl, patch, Ghost::AroundCells, 2 );
-          for(CellIterator iter = patch->getCellIterator(); !iter.done(); iter++) { 
-              const IntVector& c = *iter;  
-        
+          for(CellIterator iter = patch->getCellIterator(); !iter.done(); iter++) {
+              const IntVector& c = *iter;
+
               double q_face_flux[6];
               double faceVol[6];
-          
-              double sum_q_face_flux(0.0);   
-              for(int f = TOP; f <= BACK; f++ )  {    
+
+              double sum_q_face_flux(0.0);
+              for(int f = TOP; f <= BACK; f++ )  {
                 //__________________________________
                 //   S L A B S
                 // q_CC: vol_frac, mass, momentum, int_eng....
                 //      for consistent units you need to divide by cell volume
-                // 
+                //
                 IntVector ac = c + S_ac[f];     // slab adjacent cell
 
                 double outfluxVol = d_OFS[c ].d_fflux[OF_slab[f]];
                 double influxVol  = d_OFS[ac].d_fflux[IF_slab[f]];
-                
+
                 double q_faceFlux_tmp  =   mass[ac] * influxVol - mass[c] * outfluxVol;
-            
+
                 faceVol[f]       =  outfluxVol +  influxVol;
-                q_face_flux[f]   = q_faceFlux_tmp; 
+                q_face_flux[f]   = q_faceFlux_tmp;
                 sum_q_face_flux += q_faceFlux_tmp;
-              }  
+              }
               massAd[c] = sum_q_face_flux*invvol;
               mass2[c] = mass[c] - massAd[c];
            }
