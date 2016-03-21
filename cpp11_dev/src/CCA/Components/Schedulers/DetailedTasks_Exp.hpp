@@ -244,8 +244,6 @@ protected:
 
   friend class DetailedTask;
 
-  void internalDependenciesSatisfied( DetailedTask* task );
-
   SchedulerCommon* getSchedulerCommon() { return m_scheduler; }
 
 private:
@@ -314,13 +312,6 @@ private:
   // first topological order.
   QueueAlg m_task_priority_alg{};
 
-  using TaskQueue  = std::queue<DetailedTask*>;
-  using TaskPQueue = std::priority_queue<DetailedTask*, std::vector<DetailedTask*>, DetailedTaskPriorityComparison>;
-
-  TaskQueue   m_ready_tasks{};
-  TaskQueue   m_initially_ready_tasks{};
-  TaskPQueue  m_mpi_completed_tasks{};
-
   // This "generation" number is to keep track of which InternalDependency
   // links have been satisfied in the current timestep and avoids the
   // need to traverse all InternalDependency links to reset values.
@@ -328,9 +319,6 @@ private:
 
   // for logging purposes - how much extra comm is going on
   int m_extra_communication{};
-
-  std::mutex  m_ready_queue_lock{};
-  std::mutex  m_mpi_completed_queue_lock{};
 
   ScrubCountTable m_scrub_count_table{};
 

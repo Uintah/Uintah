@@ -46,7 +46,6 @@ using namespace Uintah;
 //
 namespace {
 
-Dout g_mpi_stats( "MPIStats", false );
 Dout g_mpi_dbg(   "MPIDBG"  , false );
 
 std::mutex      g_lb_mutex;
