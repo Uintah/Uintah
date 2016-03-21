@@ -604,7 +604,6 @@ bool Level::containsCell(const IntVector& idx) const
 //
 void Level::finalizeLevel()
 {
-  MALLOC_TRACE_TAG_SCOPE("Level::finalizeLevel");
 
   d_each_patch = new PatchSet();
   d_each_patch->addReference();
@@ -663,7 +662,6 @@ void Level::finalizeLevel()
 //
 void Level::finalizeLevel(bool periodicX, bool periodicY, bool periodicZ)
 {
-  MALLOC_TRACE_TAG_SCOPE("Level::finalizeLevel(periodic)");
 
   // set each_patch and all_patches before creating virtual patches
   d_each_patch = new PatchSet();
@@ -768,7 +766,6 @@ void Level::setBCTypes()
 
   Timers::Simple level_bc_timer;
 
-  MALLOC_TRACE_TAG_SCOPE("Level::setBCTypes");
 
   if (d_bvh != NULL){
     delete d_bvh;

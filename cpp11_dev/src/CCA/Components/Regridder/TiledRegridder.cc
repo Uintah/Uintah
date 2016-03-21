@@ -158,7 +158,6 @@ double rtimes[20]={0};
 //
 Grid* TiledRegridder::regrid(Grid* oldGrid)
 {
-  MALLOC_TRACE_TAG_SCOPE("TiledRegridder::regrid");
 
   if (rgtimes.active()) {
     for (int i = 0; i < 20; i++)
@@ -281,7 +280,6 @@ Grid* TiledRegridder::regrid(Grid* oldGrid)
 Grid* TiledRegridder::CreateGrid(Grid* oldGrid, std::vector<std::vector<IntVector> > &tiles )
 {
 
-  MALLOC_TRACE_TAG_SCOPE("TiledRegridd::CreateGrid");
 
   Grid* newGrid = new Grid();
   Vector spacing = oldGrid->getLevel(0)->dCell();
@@ -502,7 +500,6 @@ TiledRegridder::problemSetup_BulletProofing( const int L )
 //Create flags on level l-1 where ever tiles exist on level l+1 with boundary layers
 void TiledRegridder::CoarsenFlags(GridP oldGrid, int l, std::vector<IntVector> tiles)
 {
-  MALLOC_TRACE_TAG_SCOPE("TiledRegridder::CoarsenFlags");
 
   ASSERT(l-1>=0);
 

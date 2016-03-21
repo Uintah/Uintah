@@ -250,7 +250,6 @@ main( int argc, char *argv[], char *env[] )
   sanityChecks();
 
   string oldTag;
-  MALLOC_TRACE_TAG_SCOPE("main()");
 
   // Turn off Thread asking so sus can cleanly exit on abortive behavior.  
   // Can override this behavior with the environment variable SCI_SIGNALMODE
@@ -555,7 +554,6 @@ main( int argc, char *argv[], char *env[] )
 #if defined(MALLOC_TRACE)
     ostringstream traceFilename;
     traceFilename << "mallocTrace-" << Uintah::Parallel::getMPIRank();
-    MALLOC_TRACE_LOG_FILE( traceFilename.str().c_str() );
     //mallocTraceInfo.setTracingState( false );
 #endif
 
@@ -724,7 +722,6 @@ main( int argc, char *argv[], char *env[] )
 
     proc0cout << "Implicit Solver: \t" << solve->getName() << "\n";
 
-    MALLOC_TRACE_TAG("main():create components");
     //______________________________________________________________________
     // Create the components
 
@@ -787,7 +784,6 @@ main( int argc, char *argv[], char *env[] )
       sched->doEmitTaskGraphDocs();
     }
 
-    MALLOC_TRACE_TAG(oldTag);
 
     //__________________________________
     // Start the simulation controller

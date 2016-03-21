@@ -54,7 +54,6 @@ PackBufferInfo::get_type( void*&         out_buf,
                           MPI_Datatype&  out_datatype,
                           MPI_Comm       comm )
 {
-  MALLOC_TRACE_TAG_SCOPE("PackBufferInfo::get_type");
   ASSERT(count() > 0);
   if( !d_have_datatype ) {
     int packed_size;
@@ -93,7 +92,6 @@ void
 PackBufferInfo::pack( MPI_Comm   comm,
                       int&       out_count )
 {
-  MALLOC_TRACE_TAG_SCOPE("PackBufferInfo::pack");
   ASSERT( d_have_datatype );
 
   int position = 0;
@@ -119,7 +117,6 @@ void
 PackBufferInfo::unpack( MPI_Comm     comm,
                         MPI_Status&  status )
 {
-  MALLOC_TRACE_TAG_SCOPE("PackBufferInfo::unpack");
   ASSERT( d_have_datatype );
 
   unsigned long bufsize = packedBuffer->getBufSize();

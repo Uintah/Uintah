@@ -107,7 +107,6 @@ double barrier_times[5] = { 0 };
 void
 AMRSimulationController::run()
 {
-  MALLOC_TRACE_TAG_SCOPE("AMRSimulationController::run()");
 
 #ifdef USE_GPERFTOOLS
   if (gprofile.active()){
@@ -229,7 +228,6 @@ AMRSimulationController::run()
     }
 #endif
 
-    MALLOC_TRACE_TAG_SCOPE("AMRSimulationController::run()::control loop");
 
     if (dbg_barrier.active()) {
       for (int i = 0; i < 5; i++) {
@@ -571,7 +569,6 @@ AMRSimulationController::run()
 void
 AMRSimulationController::subCycleCompile(GridP& grid, int startDW, int dwStride, int step, int numLevel)
 {
-  MALLOC_TRACE_TAG_SCOPE("AMRSimulationController::subCycleCompile()");
 
   DOUT(amrout.active(), "Start AMRSimulationController::subCycleCompile, level=" << numLevel);
 
@@ -656,7 +653,6 @@ AMRSimulationController::subCycleCompile(GridP& grid, int startDW, int dwStride,
 void
 AMRSimulationController::subCycleExecute( GridP & grid, int startDW, int dwStride, int levelNum, bool rootCycle )
 {
-  MALLOC_TRACE_TAG_SCOPE("AMRSimulationController::subCycleExecutue()");
 
   // there are 2n+1 taskgraphs, n for the basic timestep, n for intermediate
   // timestep work, and 1 for the errorEstimate and stableTimestep, where n
@@ -768,7 +764,6 @@ AMRSimulationController::needRecompile( double        time,
                                         double        delt,
                                         const GridP & grid )
 {
-  MALLOC_TRACE_TAG_SCOPE("AMRSimulationController::needRecompile()");
 
   // Currently, d_output, d_sim, d_lb, d_regridder can request a recompile.  --bryan
   bool recompile = false;
@@ -788,7 +783,6 @@ AMRSimulationController::needRecompile( double        time,
 void
 AMRSimulationController::doInitialTimestep(GridP& grid, double& t)
 {
-  MALLOC_TRACE_TAG_SCOPE("AMRSimulationController::doInitialTimestep()");
 
   d_scheduler->mapDataWarehouse(Task::OldDW, 0);
   d_scheduler->mapDataWarehouse(Task::NewDW, 1);
@@ -895,7 +889,6 @@ AMRSimulationController::doInitialTimestep(GridP& grid, double& t)
 bool
 AMRSimulationController::doRegridding( GridP & currentGrid, bool initialTimestep )
 {
-  MALLOC_TRACE_TAG_SCOPE("AMRSimulationController::doRegridding()");
 
   Timers::Simple regrid_timer;
 
@@ -1002,7 +995,6 @@ AMRSimulationController::doRegridding( GridP & currentGrid, bool initialTimestep
 void
 AMRSimulationController::recompile(double t, double delt, GridP& currentGrid, int totalFine)
 {
-  MALLOC_TRACE_TAG_SCOPE("AMRSimulationController::Recompile()");
 
   Timers::Simple tg_compile_timer;
 
@@ -1099,7 +1091,6 @@ AMRSimulationController::recompile(double t, double delt, GridP& currentGrid, in
 void
 AMRSimulationController::executeTimestep(double t, double& delt, GridP& currentGrid, int totalFine)
 {
-  MALLOC_TRACE_TAG_SCOPE("AMRSimulationController::executeTimestep()");
 
   // If the timestep needs to be restarted, this loop will execute multiple times.
   bool success = true;
@@ -1193,7 +1184,6 @@ void
 AMRSimulationController::scheduleComputeStableTimestep( const GridP& grid,
                                                         SchedulerP& sched )
 {
-  MALLOC_TRACE_TAG_SCOPE("AMRSimulationController::scheduleComputeStableTimestep()");
 
   for (int i = 0; i < grid->numLevels(); i++) {
     d_sim->scheduleComputeStableTimestep(grid->getLevel(i), sched);
@@ -1230,7 +1220,6 @@ AMRSimulationController::reduceSysVar( const ProcessorGroup *,
                                              DataWarehouse  * /*old_dw*/,
                                              DataWarehouse  *  new_dw )
 {
-  MALLOC_TRACE_TAG_SCOPE("AMRSimulationController::reduceSysVar()");
 
   // the goal of this task is to line up the delt across all levels.  If the coarse one
   // already exists (the one without an associated level), then we must not be doing AMR

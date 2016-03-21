@@ -126,7 +126,6 @@ void SingleLevelRegridder::problemSetup_BulletProofing(const int L)
 // 
 Grid* SingleLevelRegridder::regrid(Grid* oldGrid)
 {
-  MALLOC_TRACE_TAG_SCOPE("SingleLevelRegridder::regrid");
 
   vector< vector<IntVector> > tiles(min(oldGrid->numLevels()+1,d_maxLevels));
 
