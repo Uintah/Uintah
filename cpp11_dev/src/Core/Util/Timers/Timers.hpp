@@ -236,7 +236,7 @@ struct ThreadTrip : public Simple
   static nanoseconds total()
   {
     int64_t result = 0;
-    Node::apply( [&result]( int64_t v ) { result += v; } );
+    Node::apply( [&result](volatile int64_t const& v ) { result += v; } );
     return result;
   }
 
@@ -244,7 +244,7 @@ struct ThreadTrip : public Simple
   static nanoseconds min()
   {
     int64_t result = std::numeric_limits<int64_t>::max();
-    Node::apply( [&result]( int64_t v ) { result = result <  v ? result : v; } );
+    Node::apply( [&result]( volatile int64_t const& v ) { result = result <  v ? result : v; } );
     return result != std::numeric_limits<int64_t>::max() ? result : 0 ;
   }
 
@@ -252,7 +252,7 @@ struct ThreadTrip : public Simple
   static nanoseconds max()
   {
     int64_t result = std::numeric_limits<int64_t>::min();
-    Node::apply( [&result]( int64_t v ) { result = v <  result ? result : v; } );
+    Node::apply( [&result]( volatile int64_t const& v ) { result = v <  result ? result : v; } );
     return result != std::numeric_limits<int64_t>::min() ? result : 0 ;
   }
 

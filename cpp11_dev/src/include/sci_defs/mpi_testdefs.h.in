@@ -38,15 +38,10 @@
 #include <limits>
 #include <cstdint>
 #include <vector>
-#include <atomic>
+#include <mutex>
 
 #ifndef NDEBUG
 #include <stdexcept> // std::runtime_error
-#endif
-
-// TODO set in the configure
-#ifndef MPI_MAX_THREADS
-#define MPI_MAX_THREADS 64
 #endif
 
 namespace MPI {
@@ -89,16 +84,6 @@ inline int mpi_check_err( const int err )
 
 //------------------------------------------------------------------------------
 
-inline int tid()
-{
-  static std::atomic<int> count{0};
-  const static thread_local int id = count.fetch_add( 1, std::memory_order_relaxed );
-  return id;
-}
-
-//------------------------------------------------------------------------------
-//------------------------------------------------------------------------------
-
 // simple RAII timer
 template <typename Tag>
 struct Timer
@@ -113,29 +98,21 @@ struct Timer
 
   ~Timer()
   {
-    s_total[ tid() % MPI_MAX_THREADS ] +=
+    t_node.m_value  +=
       std::chrono::duration_cast<std::chrono::nanoseconds>(clock_type::now() - m_start).count();
-    s_used[ tid() % MPI_MAX_THREADS ] = true;
-    s_count.fetch_add( one, std::memory_order_relaxed );
   }
 
   // NOT thread safe
   static void reset_tag()
   {
-    s_count.store( zero, std::memory_order_relaxed );
-    for (int i=0; i<MPI_MAX_THREADS; ++i) {
-      s_total[i] = 0;
-      s_used[i] = false;
-    }
+    Node::apply( [](volatile int64_t & v) { v = 0; } );
   }
 
   // total time among all threads since last reset
   static int64_t total()
   {
     int64_t result = 0;
-    for (int i=0; i<MPI_MAX_THREADS; ++i) {
-      result = (s_used[i] && result < s_total[i]) ? s_total[i] : result ;
-    }
+    Node::apply( [&result](volatile int64_t const& v ) { result += v; } );
     return result;
   }
 
@@ -143,9 +120,7 @@ struct Timer
   static int64_t min()
   {
     int64_t result = std::numeric_limits<int64_t>::max();
-    for (int i=0; i<MPI_MAX_THREADS; ++i) {
-      result = (s_used[i] && s_total[i] < result) ? s_total[i] : result ;
-    }
+    Node::apply( [&result]( volatile int64_t const& v ) { result = result <  v ? result : v; } );
     return result != std::numeric_limits<int64_t>::max() ? result : 0 ;
   }
 
@@ -153,34 +128,54 @@ struct Timer
   static int64_t max()
   {
     int64_t result = std::numeric_limits<int64_t>::min();
-    for (int i=0; i<MPI_MAX_THREADS; ++i) {
-      result = (s_used[i] && result < s_total[i]) ? s_total[i] : result ;
-    }
+    Node::apply( [&result]( volatile int64_t const& v ) { result = v <  result ? result : v; } );
     return result != std::numeric_limits<int64_t>::min() ? result : 0 ;
   }
 
   // time on given thread since last reset
-  static int64_t thread(int t)  { return s_total[ t % MPI_MAX_THREADS ]; }
+  static int64_t thread()  { return t_node.m_value; }
 
   // number of threads that used the timer since last reset
   static int num_threads()
   {
     int result = 0;
-    for (int i=0; i<MPI_MAX_THREADS; ++i) {
-      result += s_used[i] ? 1 : 0;
-    }
+    Node::apply( [&result](int64_t) { ++result; });
     return result;
   }
 
-  // number of times the timer has been invoked since last reset
-  static int64_t count() { return s_count.load( std::memory_order_relaxed ); }
+private:
+  struct Node
+  {
+    Node()
+    {
+      std::unique_lock<std::mutex> lock(s_lock);
+      m_next = s_head;
+      s_head = this;
+    }
+
+
+    template <typename Functor>
+    static void apply( Functor && f )
+    {
+      Node * curr = s_head;
+
+      while (curr) {
+        f(curr->m_value);
+        curr = curr->m_next;
+      }
+    }
+
+    int64_t  m_value{0};
+    Node   * m_next{nullptr};
+
+    static Node *     s_head;
+    static std::mutex s_lock;
+  };
 
 private:
   time_point m_start {clock_type::now()};
 
-  static std::atomic<int64_t> s_count;
-  static int64_t s_total[MPI_MAX_THREADS];
-  static bool     s_used[MPI_MAX_THREADS];
+  static thread_local Node t_node;
 
   // disable copy, assignment
   Timer( const Timer & ) = delete;
@@ -189,9 +184,14 @@ private:
   Timer & operator=( Timer && ) = delete;
 };
 
-template <typename Tag> std::atomic<int64_t> Timer<Tag>::s_count{0};
-template <typename Tag> int64_t              Timer<Tag>::s_total[MPI_MAX_THREADS] = {};
-template <typename Tag> bool                 Timer<Tag>::s_used[MPI_MAX_THREADS]  = {};
+template<typename Tag>
+typename Timer<Tag>::Node * Timer<Tag>::Node::s_head{nullptr};
+
+template<typename Tag>
+std::mutex Timer<Tag>::Node::s_lock{};
+
+template <typename Tag>
+thread_local typename Timer<Tag>::Node Timer<Tag>::t_node{};
 
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
@@ -221,20 +221,21 @@ public:
 
   static void apply( int64_t count, MPI_Datatype d ) noexcept
   {
-    s_data[COMM_COUNT].fetch_add( one, std::memory_order_relaxed );
-
     int s;
     MPI_Type_size( d, &s );
 
     const int64_t n = count * s;
 
-    s_data[COMM_SIZE].fetch_add( n, std::memory_order_relaxed );
-
     const int i = n <= H0 ? 0 :
                   n <= H1 ? 1 :
                   n <= H2 ? 2 : 3;
 
-    s_data[COMM_HISTOGRAM_0+i].fetch_add( one, std::memory_order_relaxed );
+
+    Node::apply( [n, i]( int64_t values[] ) {
+      ++values[COMM_COUNT];
+      ++values[COMM_HISTOGRAM_0 + i];
+      values[COMM_SIZE]  += n;
+    });
   }
 
   static void apply( const int * counts, MPI_Datatype d, MPI_Comm c ) noexcept
@@ -250,22 +251,63 @@ public:
 
   static void clear()
   {
-    for (int i=0; i<COMM_STAT_SIZE; ++i) {
-      s_data[i].store(zero, std::memory_order_relaxed );
-    }
+    Node::apply( []( int64_t values[] ) {
+      for (int i=0; i<COMM_STAT_SIZE; ++i) {
+        values[i] = 0;
+      }
+    });
   }
 
   static int64_t get(CommStatsType i)
   {
-    return s_data[i].load( std::memory_order_relaxed );
+    int64_t result = 0;
+    Node::apply( [&result, i]( const volatile int64_t values[] ) {
+      result += values[i];
+    });
+    return result;
   }
 
 
 private:
-  static std::atomic<size_t> s_data[COMM_STAT_SIZE];
+  struct Node
+  {
+    Node()
+    {
+      std::unique_lock<std::mutex> lock(s_lock);
+      m_next = s_head;
+      s_head = this;
+    }
+
+    template <typename Functor>
+    static void apply( Functor && f )
+    {
+      Node * curr = s_head;
+
+      while (curr) {
+        f(curr->m_values);
+        curr = curr->m_next;
+      }
+    }
+
+    int64_t  m_values[COMM_STAT_SIZE]{};
+    Node   * m_next{nullptr};
+
+    static Node *     s_head;
+    static std::mutex s_lock;
+  };
+
+  static thread_local Node t_node;
 };
 
-template < typename Tag > std::atomic<size_t> CommStats<Tag>::s_data[COMM_STAT_SIZE] = {};
+template<typename Tag>
+typename CommStats<Tag>::Node * CommStats<Tag>::Node::s_head{nullptr};
+
+template<typename Tag>
+std::mutex CommStats<Tag>::Node::s_lock{};
+
+template <typename Tag>
+thread_local typename CommStats<Tag>::Node CommStats<Tag>::t_node{};
+
 
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
