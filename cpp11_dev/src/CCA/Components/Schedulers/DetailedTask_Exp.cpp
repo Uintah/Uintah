@@ -379,7 +379,7 @@ DetailedTask::addInternalDependency(       DetailedTask * prerequisiteTask
     if (foundIt == prerequisiteTask->m_internal_dependents.end()) {
       m_internal_dependencies.push_back(InternalDependency(prerequisiteTask, this, var, 0/* not satisfied */));
       prerequisiteTask->m_internal_dependents[this] = &m_internal_dependencies.back();
-      m_num_pending_internal_dependencies = m_internal_dependencies.size();
+      m_num_pending_internal_dependencies.store(m_internal_dependencies.size(), std::memory_order_relaxed);
     }
     else {
       foundIt->second->addVarLabel(var);

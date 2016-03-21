@@ -75,7 +75,7 @@ enum class ThreadState : int
   , Exit
 };
 
-TaskRunner *           g_runners[MAX_THREADS]        = {};
+TaskRunner           * g_runners[MAX_THREADS]        = {};
 volatile ThreadState   g_thread_states[MAX_THREADS]  = {};
 int                    g_cpu_affinities[MAX_THREADS] = {};
 int                    g_num_threads                 = 0;
