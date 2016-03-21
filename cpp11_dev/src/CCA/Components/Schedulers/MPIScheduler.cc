@@ -24,6 +24,7 @@
 
 #include <CCA/Components/Schedulers/MPIScheduler.h>
 #include <CCA/Components/Schedulers/OnDemandDataWarehouse.h>
+#include <CCA/Components/Schedulers/RuntimeStats.hpp>
 #include <CCA/Components/Schedulers/SendState.h>
 #include <CCA/Components/Schedulers/CommRecMPI.h>
 #include <CCA/Components/Schedulers/DetailedTasks.h>
@@ -274,6 +275,8 @@ MPIScheduler::runTask( DetailedTask* task,
     waittimesLock.unlock();
   }
 
+  RuntimeStats::ExecTimer exec_timer;
+
   double taskstart = Time::currentSeconds();
 
   if (trackingVarsPrintLocation_ & SchedulerCommon::PRINT_BEFORE_EXEC) {
@@ -304,7 +307,7 @@ MPIScheduler::runTask( DetailedTask* task,
       mpi_info_[TotalTask] += total_task_time;
       if (!d_sharedState->isCopyDataTimestep() && task->getTask()->getType() != Task::Output) {
         //add contribution for patchlist
-        getLoadBalancer()->addContribution(task, total_task_time);
+        getLoadBalancer()->addContribution(task, task->task_exec_time());
       }
     }
   }
@@ -329,7 +332,7 @@ MPIScheduler::runTask( DetailedTask* task,
     mpi_info_.reset(0);
   }
 
-  emitNode(task, taskstart, total_task_time, 0);
+  emitNode(task, taskstart, task->task_exec_time(), 0);
 
 }  // end runTask()
 
@@ -354,6 +357,8 @@ MPIScheduler::postMPISends( DetailedTask* task,
                             int           iteration,
                             int           thread_id  /*=0*/ )
 {
+  RuntimeStats::SendTimer send_timer;
+
   double sendstart = Time::currentSeconds();
   bool dbg_active = dbg.active();
 
@@ -554,6 +559,7 @@ void MPIScheduler::postMPIRecvs( DetailedTask* task,
                                  int           abort_point,
                                  int           iteration )
 {
+  RuntimeStats::RecvTimer mpi_recv_timer;
   double recvstart = Time::currentSeconds();
   bool dbg_active = dbg.active();
 
@@ -714,6 +720,8 @@ void MPIScheduler::postMPIRecvs( DetailedTask* task,
         //if(count>0)
         //{
 
+        RuntimeStats::RecvTimer recv_timer;
+
         int from = batch->m_from_task->getAssignedResourceIndex();
         ASSERTRANGE(from, 0, d_myworld->size());
         MPI_Request requestid;
@@ -773,10 +781,15 @@ void MPIScheduler::processMPIRecvs(int how_much)
   recvLock.writeLock();
   {
     switch (how_much) {
-      case TEST :
+    case TEST :
+      {
+        RuntimeStats::TestTimer test_timer;
         recvs_.testsome(d_myworld);
-        break;
-      case WAIT_ONCE :
+      }
+      break;
+    case WAIT_ONCE :
+      {
+        RuntimeStats::WaitTimer wait_timer;
         coutLock.lock();
         mpidbg << "Rank-" << d_myworld->myrank() << " Start waiting once (WAIT_ONCE)...\n";
         coutLock.unlock();
@@ -786,8 +799,11 @@ void MPIScheduler::processMPIRecvs(int how_much)
         coutLock.lock();
         mpidbg << "Rank-" << d_myworld->myrank() << " Done waiting once (WAIT_ONCE)...\n";
         coutLock.unlock();
-        break;
-      case WAIT_ALL :
+      }
+      break;
+    case WAIT_ALL :
+      {
+        RuntimeStats::WaitTimer wait_timer;
         // This will allow some receives to be "handled" by their
         // AfterCommincationHandler while waiting for others.
         coutLock.lock();
@@ -804,7 +820,8 @@ void MPIScheduler::processMPIRecvs(int how_much)
         coutLock.lock();
         mpidbg << "Rank-" << d_myworld->myrank() << "  Done waiting (WAIT_ALL)...\n";
         coutLock.unlock();
-        break;
+      }
+      break;
     } // end switch
   }
   recvLock.writeUnlock();
@@ -822,6 +839,9 @@ MPIScheduler::execute( int tgnum     /* = 0 */,
                        int iteration /* = 0 */ )
 {
   ASSERTRANGE(tgnum, 0, (int )graphs.size());
+
+  RuntimeStats::initialize_timestep(graphs);
+
   TaskGraph* tg = graphs[tgnum];
   tg->setIteration(iteration);
   currentTG_ = tgnum;
@@ -997,6 +1017,53 @@ MPIScheduler::execute( int tgnum     /* = 0 */,
     dbg << me << " MPIScheduler finished\n";
     coutLock.unlock();
   }
+
+  {
+    int64_t num_patches = 0;
+    int64_t num_cells = 0;
+    int64_t num_particles = 0;
+
+    // collect local grid information
+    {
+      OnDemandDataWarehouseP dw = dws[dws.size() - 1];
+      const GridP grid(const_cast<Grid*>(dw->getGrid()));
+      const PatchSubset* myPatches = getLoadBalancer()->getPerProcessorPatchSet(grid)->getSubset(d_myworld->myrank());
+      num_patches = myPatches->size();
+      for (int p = 0; p < myPatches->size(); p++) {
+        const Patch* patch = myPatches->get(p);
+        IntVector range = patch->getExtraCellHighIndex() - patch->getExtraCellLowIndex();
+        num_cells += range.x() * range.y() * range.z();
+
+        // go through all materials since getting an MPMMaterial correctly would depend on MPM
+        for (int m = 0; m < d_sharedState->getNumMatls(); m++) {
+          if (dw->haveParticleSubset(m, patch))
+            num_particles += dw->getParticleSubset(m, patch)->numParticles();
+        }
+      }
+    }
+
+    Dout grid_stats{"GridStats", true};
+    if (grid_stats) {
+
+      RuntimeStats::register_report( grid_stats
+                                   , "Patches"
+                                   , RuntimeStats::Count
+                                   , [num_patches]() { return num_patches; }
+                                   );
+      RuntimeStats::register_report( grid_stats
+                                   , "Cells"
+                                   , RuntimeStats::Count
+                                   , [num_cells]() { return num_cells; }
+                                   );
+      RuntimeStats::register_report( grid_stats
+                                   , "Particles"
+                                   , RuntimeStats::Count
+                                   , [num_particles]() { return num_particles; }
+                                   );
+    }
+  }
+
+  RuntimeStats::report(d_myworld->getComm(), d_sharedState->d_runTimeStats);
 }
 
 //______________________________________________________________________

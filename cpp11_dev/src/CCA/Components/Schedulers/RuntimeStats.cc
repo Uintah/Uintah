@@ -514,6 +514,7 @@ void RuntimeStats::report( MPI_Comm comm, InfoStats & stats )
     const int w_hist = 35;
     const int w_load = 18;
 
+    printf("\n________________________________________________________________________________");
     for (auto const& group : g_report_values) {
 
       int w_desc = 14;
