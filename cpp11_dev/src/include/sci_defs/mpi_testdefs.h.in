@@ -239,9 +239,9 @@ struct CommStats
 
 public:
 
-  static constexpr int64_t H0 = 64;       // cacheline
-  static constexpr int64_t H1 = 4096;     // page
-  static constexpr int64_t H2 = 2 << 20;  // huge page
+  static constexpr int64_t Cacheline = 64;       // cacheline
+  static constexpr int64_t Page = 4096;     // page
+  static constexpr int64_t HugePage = 2 << 20;  // huge page
 
 
   CommStats( int64_t count, MPI_Datatype d ) noexcept
@@ -281,9 +281,9 @@ private:
 
     const int64_t n = count * s;
 
-    const int i = n <= H0 ? 0 :
-                  n <= H1 ? 1 :
-                  n <= H2 ? 2 : 3;
+    const int i = n <= Cacheline ? 0 :
+                  n <= Page ? 1 :
+                  n <= HugePage ? 2 : 3;
 
 
     ++t_node.m_values[COMM_COUNT];
