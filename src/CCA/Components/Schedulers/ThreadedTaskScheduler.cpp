@@ -814,30 +814,6 @@ void ThreadedTaskScheduler::copy_restart_flag( int task_graph_num )
 
 //______________________________________________________________________
 //
-void ThreadedTaskScheduler::printMPIStats()
-{
-  if (g_mpi_stats) {
-    unsigned int  total_messages;
-    double        total_volume;
-    unsigned int  max_messages;
-    double        max_volume;
-
-    // do SUM and MAX reduction for m_num_messages and m_message_volume
-    MPI::Reduce(&m_num_messages  , &total_messages, 1, MPI_UNSIGNED, MPI_SUM, 0, d_myworld->getComm());
-    MPI::Reduce(&m_message_volume, &total_volume  , 1, MPI_DOUBLE,   MPI_SUM, 0, d_myworld->getComm());
-    MPI::Reduce(&m_num_messages  , &max_messages  , 1, MPI_UNSIGNED, MPI_MAX, 0, d_myworld->getComm());
-    MPI::Reduce(&m_message_volume, &max_volume    , 1, MPI_DOUBLE   ,MPI_MAX, 0, d_myworld->getComm());
-
-    if( d_myworld->myrank() == 0 ) {
-      DOUT(true, "MPIStats: Num Messages (avg): "   << total_messages/(float)d_myworld->size() << " (max):" << max_messages);
-      DOUT(true, "MPIStats: Message Volume (avg): " << total_volume/(float)d_myworld->size()   << " (max):" << max_volume);
-    }
-  }
-}
-
-
-//______________________________________________________________________
-//
 void ThreadedTaskScheduler::select_tasks( int iteration, TaskPool::handle & find_handle)
 {
   int flag = 0;

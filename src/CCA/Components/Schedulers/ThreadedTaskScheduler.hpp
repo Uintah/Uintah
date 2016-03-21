@@ -113,8 +113,6 @@ public:
     SchedulerCommon::compile();
   }
 
-  virtual void printMPIStats();
-
   friend class TaskRunner;
 
 
