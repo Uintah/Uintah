@@ -54,6 +54,7 @@ DetailedTask::DetailedTask(       Task            * task
   , m_initiated{false}
   , m_externally_ready{false}
   , m_external_dependency_count{-1}
+  , m_name{m_task->getName()}
   , m_num_pending_internal_dependencies{0}
   , m_resource_index{-1}
   , m_static_order{-1}
@@ -344,13 +345,8 @@ DetailedTask::addInternalRequires( DependencyBatch * req )
 void
 DetailedTask::checkExternalDepCount()
 {
-  if (m_external_dependency_count == 0 && m_task_group->m_scheduler->useInternalDeps() && m_initiated && !m_task->usesMPI()) {
-    m_task_group->m_mpi_completed_queue_lock.lock();
-    if (m_externally_ready == false) {
-      m_task_group->m_mpi_completed_tasks.push(this);
-      m_externally_ready = true;
-    }
-    m_task_group->m_mpi_completed_queue_lock.unlock();
+  if (m_external_dependency_count.load(std::memory_order_relaxed) == 0 && m_task_group->m_scheduler->useInternalDeps() && m_initiated && !m_task->usesMPI()) {
+    m_externally_ready = true;
   }
 }
 
@@ -359,11 +355,12 @@ DetailedTask::checkExternalDepCount()
 void
 DetailedTask::resetDependencyCounts()
 {
-  m_external_dependency_count = 0;
-  m_externally_ready = false;
-  m_initiated = false;
+  m_external_dependency_count.store(0, std::memory_order_relaxed);
 
-  m_num_pending_internal_dependencies = m_internal_dependencies.size();
+  m_externally_ready = false;
+  m_initiated        = false;
+
+  m_num_pending_internal_dependencies.store(m_internal_dependencies.size(), std::memory_order_relaxed);
 
   m_wait_timer.reset();
   m_exec_timer.reset();
@@ -414,22 +411,76 @@ DetailedTask::done( std::vector<OnDemandDataWarehouseP> & dws )
 void
 DetailedTask::dependencySatisfied( InternalDependency* dep )
 {
+  // TODO - remove this lock, APH 03/21/16
   m_internal_dependency_lock.lock();
   {
-    ASSERT(m_num_pending_internal_dependencies > 0);
+    ASSERT(m_num_pending_internal_dependencies.load(std::memory_order_relaxed) > 0);
     unsigned long currentGeneration = m_task_group->getCurrentDependencyGeneration();
 
     // if false, then the dependency has already been satisfied
     ASSERT(dep->m_satisfied_generation < currentGeneration);
 
     dep->m_satisfied_generation = currentGeneration;
-    --m_num_pending_internal_dependencies;
-
-    if (m_num_pending_internal_dependencies == 0) {
-      m_task_group->internalDependenciesSatisfied(this);
-    }
+    m_num_pending_internal_dependencies.fetch_sub(1, std::memory_order_relaxed);
   }
   m_internal_dependency_lock.unlock();
+}
+
+//_____________________________________________________________________________
+//
+class PatchIDIterator {
+
+  public:
+
+    PatchIDIterator(const std::vector<const Patch*>::const_iterator& iter)
+        : iter_(iter)
+    {}
+
+    PatchIDIterator& operator=(const PatchIDIterator& iter2)
+    {
+      iter_ = iter2.iter_;
+      return *this;
+    }
+
+    int operator*()
+    {
+      const Patch* patch = *iter_;  //vector<Patch*>::iterator::operator*();
+      return patch ? patch->getID() : -1;
+    }
+
+    PatchIDIterator& operator++()
+    {
+      iter_++;
+      return *this;
+    }
+
+    bool operator!=(const PatchIDIterator& iter2)
+    {
+      return iter_ != iter2.iter_;
+    }
+
+  private:
+    std::vector<const Patch*>::const_iterator iter_;
+};
+
+//_____________________________________________________________________________
+//
+std::string
+DetailedTask::getName() const
+{
+  if (m_patches != 0) {
+    ConsecutiveRangeSet patchIDs;
+    patchIDs.addInOrder(PatchIDIterator(m_patches->getVector().begin()), PatchIDIterator(m_patches->getVector().end()));
+    m_name += std::string(" (Patches: ") + patchIDs.toString() + ")";
+  }
+
+  if (m_matls != 0) {
+    ConsecutiveRangeSet matlSet;
+    matlSet.addInOrder(m_matls->getVector().begin(), m_matls->getVector().end());
+    m_name += std::string(" (Matls: ") + matlSet.toString() + ")";
+  }
+
+  return m_name;
 }
 
 //_____________________________________________________________________________

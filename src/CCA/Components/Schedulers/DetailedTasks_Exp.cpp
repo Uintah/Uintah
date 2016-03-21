@@ -29,7 +29,6 @@
 #include <CCA/Components/Schedulers/SchedulerCommon.h>
 #include <CCA/Components/Schedulers/TaskGraph.h>
 
-#include <Core/Containers/ConsecutiveRangeSet.h>
 #include <Core/Grid/Grid.h>
 #include <Core/Grid/Variables/PSPatchMatlGhostRange.h>
 #include <Core/Parallel/Parallel.h>
@@ -180,17 +179,11 @@ DetailedTasks::computeLocalTasks( int me )
   }
 
   int order = 0;
-  m_initially_ready_tasks = TaskQueue();
   for (int i = 0; i < (int)m_tasks.size(); i++) {
     DetailedTask* task = m_tasks[i];
-
     ASSERTRANGE(task->getAssignedResourceIndex(), 0, m_proc_group->size());
     if (task->getAssignedResourceIndex() == me || task->getTask()->getType() == Task::Reduction) {
       m_local_tasks.push_back(task);
-
-      if (task->areInternalDependenciesSatisfied()) {
-        m_initially_ready_tasks.push(task);
-      }
       task->assignStaticOrder(++order);
     }
   }
@@ -693,31 +686,11 @@ DetailedTasks::getOldDWSendTask( int proc )
 
 //_____________________________________________________________________________
 //
-void
-DetailedTasks::internalDependenciesSatisfied( DetailedTask* task )
-{
-  m_ready_queue_lock.lock();
-  {
-    m_ready_tasks.push(task);
-  }
-  m_ready_queue_lock.unlock();
-}
-
-//_____________________________________________________________________________
-//
 DetailedTask*
 DetailedTasks::getNextInternalReadyTask()
 {
-  DetailedTask* nextTask = NULL;
-  m_ready_queue_lock.lock();
-  {
-    if (!m_ready_tasks.empty()) {
-      nextTask = m_ready_tasks.front();
-      m_ready_tasks.pop();
-    }
-  }
-  m_ready_queue_lock.unlock();
-  return nextTask;
+  // experimental does not use queues in DetailedTasks
+  return nullptr;
 }
 
 //_____________________________________________________________________________
@@ -725,13 +698,8 @@ DetailedTasks::getNextInternalReadyTask()
 int
 DetailedTasks::numInternalReadyTasks()
 {
-  int size = 0;
-  m_ready_queue_lock.lock();
-  {
-    size = m_ready_tasks.size();
-  }
-  m_ready_queue_lock.unlock();
-  return size;
+  // experimental does not use queues in DetailedTasks
+  return -1;
 }
 
 //_____________________________________________________________________________
@@ -739,16 +707,8 @@ DetailedTasks::numInternalReadyTasks()
 DetailedTask*
 DetailedTasks::getNextExternalReadyTask()
 {
-  DetailedTask* nextTask = NULL;
-  m_mpi_completed_queue_lock.lock();
-  {
-    if (!m_mpi_completed_tasks.empty()) {
-      nextTask = m_mpi_completed_tasks.top();
-      m_mpi_completed_tasks.pop();
-    }
-  }
-  m_mpi_completed_queue_lock.unlock();
-  return nextTask;
+  // experimental does not use queues in DetailedTasks
+  return nullptr;
 }
 
 //_____________________________________________________________________________
@@ -756,13 +716,8 @@ DetailedTasks::getNextExternalReadyTask()
 int
 DetailedTasks::numExternalReadyTasks()
 {
-  int size = 0;
-  m_mpi_completed_queue_lock.lock();
-  {
-    size = m_mpi_completed_tasks.size();
-  }
-  m_mpi_completed_queue_lock.unlock();
-  return size;
+  // experimental does not use queues in DetailedTasks
+  return -1;
 }
 
 //_____________________________________________________________________________
@@ -770,7 +725,6 @@ DetailedTasks::numExternalReadyTasks()
 void
 DetailedTasks::initTimestep()
 {
-  m_ready_tasks = m_initially_ready_tasks;
   incrementDependencyGeneration();
   initializeBatches();
 }
@@ -862,68 +816,6 @@ DetailedTask::emitEdges( ProblemSpecP edgesElement )
   }
 }
 
-//_____________________________________________________________________________
-//
-class PatchIDIterator {
-
-  public:
-
-    PatchIDIterator(const std::vector<const Patch*>::const_iterator& iter)
-        : iter_(iter)
-    {}
-
-    PatchIDIterator& operator=(const PatchIDIterator& iter2)
-    {
-      iter_ = iter2.iter_;
-      return *this;
-    }
-
-    int operator*()
-    {
-      const Patch* patch = *iter_;  //vector<Patch*>::iterator::operator*();
-      return patch ? patch->getID() : -1;
-    }
-
-    PatchIDIterator& operator++()
-    {
-      iter_++;
-      return *this;
-    }
-
-    bool operator!=(const PatchIDIterator& iter2)
-    {
-      return iter_ != iter2.iter_;
-    }
-
-  private:
-    std::vector<const Patch*>::const_iterator iter_;
-};
-
-//_____________________________________________________________________________
-//
-std::string
-DetailedTask::getName() const
-{
-  if (m_name != "") {
-    return m_name;
-  }
-
-  m_name = std::string(m_task->getName());
-
-  if (m_patches != 0) {
-    ConsecutiveRangeSet patchIDs;
-    patchIDs.addInOrder(PatchIDIterator(m_patches->getVector().begin()), PatchIDIterator(m_patches->getVector().end()));
-    m_name += std::string(" (Patches: ") + patchIDs.toString() + ")";
-  }
-
-  if (m_matls != 0) {
-    ConsecutiveRangeSet matlSet;
-    matlSet.addInOrder(m_matls->getVector().begin(), m_matls->getVector().end());
-    m_name += std::string(" (Matls: ") + matlSet.toString() + ")";
-  }
-
-  return m_name;
-}
 
 //_____________________________________________________________________________
 //

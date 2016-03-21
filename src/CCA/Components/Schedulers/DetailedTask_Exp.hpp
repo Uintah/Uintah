@@ -31,6 +31,7 @@
 #include <CCA/Components/Schedulers/RuntimeStats.hpp>
 #include <CCA/Components/Schedulers/OnDemandDataWarehouse.h>
 
+#include <Core/Containers/ConsecutiveRangeSet.h>
 #include <Core/Grid/Patch.h>
 #include <Core/Grid/Task.h>
 
@@ -150,15 +151,15 @@ public:
     m_initiated = true;
   }
 
-  void incrementExternalDepCount() { m_external_dependency_count++; }
+  void incrementExternalDepCount() { m_external_dependency_count.fetch_add(1, std::memory_order_relaxed); }
 
-  void decrementExternalDepCount() { m_external_dependency_count--; }
+  void decrementExternalDepCount() { m_external_dependency_count.fetch_sub(1, std::memory_order_relaxed); }
 
   // external dependencies will count how many messages this task is waiting for.
   // When it hits 0, it is ready to run
   void checkExternalDepCount();
 
-  int getExternalDepCount() { return m_external_dependency_count; }
+  int getExternalDepCount() { return m_external_dependency_count.load(std::memory_order_relaxed); }
 
   bool areInternalDependenciesSatisfied() { return (m_num_pending_internal_dependencies == 0); }
 
@@ -243,9 +244,10 @@ private:
 
   bool m_initiated{};
   bool m_externally_ready{};
-  int  m_external_dependency_count{};
 
-  mutable std::string m_name; // doesn't get set until getName() is called the first time.
+  std::atomic<int>  m_external_dependency_count{};
+
+  mutable std::string m_name;
 
   // Internal dependencies are dependencies within the same process.
   std::list<InternalDependency> m_internal_dependencies{};
@@ -254,8 +256,8 @@ private:
   // m_internal_dependencies list of the requiring DetailedTasks.
   std::map<DetailedTask*, InternalDependency*> m_internal_dependents{};
 
-  unsigned long   m_num_pending_internal_dependencies{};
-  std::mutex      m_internal_dependency_lock{};
+  std::atomic<unsigned long>   m_num_pending_internal_dependencies{};
+  std::mutex                   m_internal_dependency_lock{};
 
   int m_resource_index;
   int m_static_order;
