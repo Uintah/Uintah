@@ -67,9 +67,6 @@
 #  include   <unistd.h>
 
 //set these macros to be blank so everything will compile without MallocTrace
-#define MALLOC_TRACE_TAG_SCOPE(tag) ;
-#define MALLOC_TRACE_TAG(tag) ;
-#define MALLOC_TRACE_LOG_FILE(file) ;
 
 #include <cstdlib>
 
@@ -155,9 +152,6 @@ void DumpAllocator(Allocator*, const char* filename = "alloc.dump");
 #  define new new
 
 //set these macros to be blank so everything will compile without MallocTrace
-#define MALLOC_TRACE_TAG_SCOPE(tag) ;
-#define MALLOC_TRACE_TAG(tag) ;
-#define MALLOC_TRACE_LOG_FILE(file) ;
 
 #endif // MALLOC_TRACE
 

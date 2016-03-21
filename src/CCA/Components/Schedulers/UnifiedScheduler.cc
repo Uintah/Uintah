@@ -1565,7 +1565,6 @@ void UnifiedScheduler::gpuInitialize(bool reset) {
 //
 void UnifiedScheduler::postH2DCopies(DetailedTask* dtask) {
   /*
-   MALLOC_TRACE_TAG_SCOPE("UnifiedScheduler::postH2DCopies");
    TAU_PROFILE("UnifiedScheduler::postH2DCopies()", " ", TAU_USER);
 
    // set the device and CUDA context
@@ -1922,7 +1921,6 @@ void UnifiedScheduler::postH2DCopies(DetailedTask* dtask) {
 
 void UnifiedScheduler::preallocateDeviceMemory(DetailedTask* dtask) {
   /*
-   MALLOC_TRACE_TAG_SCOPE("UnifiedScheduler::preallocateDeviceMemory");
    TAU_PROFILE("UnifiedScheduler::preallocateDeviceMemory()", " ", TAU_USER);
 
    // NOTE: the device and CUDA context are set in the call: dw->getGPUDW()->allocateAndPut()
@@ -2117,7 +2115,6 @@ void UnifiedScheduler::preallocateDeviceMemory(DetailedTask* dtask) {
 
 void UnifiedScheduler::postD2HCopies(DetailedTask* dtask) {
   /*
-   MALLOC_TRACE_TAG_SCOPE("UnifiedScheduler::postD2HCopies");
    TAU_PROFILE("UnifiedScheduler::postD2HCopies()", " ", TAU_USER);
 
    // set the device and CUDA context
@@ -5230,7 +5227,6 @@ void UnifiedScheduler::assignDevicesAndStreamsFromGhostVars(DetailedTask* dtask)
 }
 
 void UnifiedScheduler::findIntAndExtGpuDependencies(DetailedTask* dtask, int iteration, int t_id) {
-  MALLOC_TRACE_TAG_SCOPE("UnifiedScheduler::findIntAndExtGpuDependencies");
 
   if (gpu_stats.active()) {
     cerrLock.lock();

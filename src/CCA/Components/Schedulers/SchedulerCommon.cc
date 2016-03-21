@@ -703,7 +703,6 @@ SchedulerCommon::getLoadBalancer()
 void
 SchedulerCommon::addTaskGraph( Scheduler::tgType type )
 {
-  MALLOC_TRACE_TAG_SCOPE("SchedulerCommon::addTaskGraph");
   TaskGraph* tg = new TaskGraph(this, d_myworld, type);
   tg->initialize();
   graphs.push_back(tg);
@@ -716,7 +715,6 @@ SchedulerCommon::addTask(       Task        * task,
                           const PatchSet    * patches,
                           const MaterialSet * matls )
 {
-  MALLOC_TRACE_TAG_SCOPE("SchedulerCommon::addTask");
 
   // Save the DW map
   task->setMapping(dwmap);
@@ -991,7 +989,6 @@ SchedulerCommon::advanceDataWarehouse( const GridP& grid,
 void
 SchedulerCommon::fillDataWarehouses( const GridP& grid )
 {
-  MALLOC_TRACE_TAG_SCOPE("SchedulerCommon::fillDatawarehouses");
   for (int i = numOldDWs; i < static_cast<int>(dws.size()); i++) {
     if (!dws[i]) {
       replaceDataWarehouse(i, grid);

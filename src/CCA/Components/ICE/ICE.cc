@@ -838,7 +838,6 @@ _____________________________________________________________________*/
 void
 ICE::scheduleTimeAdvance( const LevelP& level, SchedulerP& sched)
 {
-  MALLOC_TRACE_TAG_SCOPE("ICE::scheduleTimeAdvance()");
   // for AMR, we need to reset the initial Delt otherwise some unsuspecting level will
   // get the init delt when it didn't compute delt on L0.
   

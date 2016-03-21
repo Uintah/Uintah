@@ -252,7 +252,6 @@ ThreadedMPIScheduler::execute( int tgnum     /* = 0 */,
     return;
   }
 
-  MALLOC_TRACE_TAG_SCOPE("ThreadedMPIScheduler::execute");
 
   ASSERTRANGE(tgnum, 0, static_cast<int>(graphs.size()));
   TaskGraph* tg = graphs[tgnum];

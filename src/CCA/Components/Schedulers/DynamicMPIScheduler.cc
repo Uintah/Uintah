@@ -171,7 +171,6 @@ DynamicMPIScheduler::execute( int tgnum     /*=0*/,
 
   RuntimeStats::initialize_timestep(graphs);
 
-  MALLOC_TRACE_TAG_SCOPE("DynamicMPIScheduler::execute");
 
   ASSERTRANGE(tgnum, 0, (int)graphs.size());
   TaskGraph* tg = graphs[tgnum];
