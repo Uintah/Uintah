@@ -643,7 +643,7 @@ DetailedTasks::possiblyCreateDependency(       DetailedTask*              from,
 #if SCI_ASSERTION_LEVEL >= 2
     bool newRequireBatch = to->addRequires(batch);
 #else
-    m_to_proc->addRequires(batch);
+    to->addRequires(batch);
 #endif
     ASSERTL2(newRequireBatch);
     if (dbg.active()) {
