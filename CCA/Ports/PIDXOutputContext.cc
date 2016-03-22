@@ -24,7 +24,6 @@
 #include <CCA/Ports/PIDXOutputContext.h>
 
 #if HAVE_PIDX
-#include <PIDX_compression.h>
 #include <Core/Util/StringUtil.h>
 #include <vector>
 
