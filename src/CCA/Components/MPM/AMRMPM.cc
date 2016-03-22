@@ -508,6 +508,10 @@ void AMRMPM::scheduleInitialize(const LevelP& level, SchedulerP& sched)
     MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial(m);
     ConstitutiveModel* cm = mpm_matl->getConstitutiveModel();
     cm->addInitialComputesAndRequires(t, mpm_matl, patches);
+    if(flags->d_doScalarDiffusion){
+      ScalarDiffusionModel* sdm = mpm_matl->getScalarDiffusionModel();
+      sdm->addInitialComputesAndRequires(t, mpm_matl, patches);
+    }
   }
 
   sched->addTask(t, level->eachPatch(), d_sharedState->allMPMMaterials());
@@ -1756,6 +1760,7 @@ void AMRMPM::actuallyInitialize(const ProcessorGroup*,
       
       if(flags->d_doScalarDiffusion){
     	  mpm_matl->getScalarDiffusionModel()->initializeTimeStep(patch,mpm_matl,new_dw);
+    	  mpm_matl->getScalarDiffusionModel()->initializeSDMData(patch,mpm_matl,new_dw);
       }
       
       //__________________________________
