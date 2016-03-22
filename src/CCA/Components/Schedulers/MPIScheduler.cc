@@ -904,7 +904,7 @@ MPIScheduler::execute( int tgnum     /* = 0 */,
 
   int i = 0;
   while (numTasksDone < ntasks) {
-    i++;
+    ++i;
 
     //
     // The following checkMemoryUse() is commented out to allow for
