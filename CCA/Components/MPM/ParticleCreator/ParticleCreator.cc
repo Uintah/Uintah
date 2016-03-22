@@ -916,6 +916,9 @@ void ParticleCreator::registerPermanentParticleState(MPMMaterial* matl)
 
     particle_state.push_back(d_lb->pConcGradientLabel);
     particle_state_preReloc.push_back(d_lb->pConcGradientLabel_preReloc);
+
+    matl->getScalarDiffusionModel()->addParticleState(particle_state,
+                                                      particle_state_preReloc);
   }
 
   particle_state.push_back(d_lb->pSizeLabel);
