@@ -152,8 +152,7 @@ SchedulerCommon::checkMemoryUse( unsigned long & memuse,
     memuse = ProcessInfo::getMemoryResident();
     //printf("1) memuse is %d (on proc %d)\n", (int)memuse, Uintah::Parallel::getMPIRank() );
   } else {
-    memuse = (char*)sbrk(0)-start_addr;
-    // printf("2) memuse is %d (on proc %d)\n", (int)memuse, Uintah::Parallel::getMPIRank() );
+    memuse = 0;
   }
 
   if( memuse > d_maxMemUse ) {

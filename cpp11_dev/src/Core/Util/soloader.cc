@@ -38,49 +38,25 @@ using namespace std;
 void* GetLibrarySymbolAddress(const char* libname, const char* symbolname)
 {
   LIBRARY_HANDLE LibraryHandle = 0;
-  
+
   ASSERT(Uintah::sci_getenv("SCIRUN_OBJDIR"));
-  string name = string(Uintah::sci_getenv("SCIRUN_OBJDIR")) + "/lib/" + 
+  string name = string(Uintah::sci_getenv("SCIRUN_OBJDIR")) + "/lib/" +
     string(libname);
   LibraryHandle = dlopen(name.c_str(), RTLD_LAZY|RTLD_GLOBAL);
 
-  if( LibraryHandle == 0 ) { 
+  if( LibraryHandle == 0 ) {
     // dlopen of absolute path failed...  Perhaps they have a DYLD_LIBRARY_PATH var set...
     // If so, if we try again without the path, then maybe it will succeed...
     LibraryHandle = dlopen(libname, RTLD_LAZY|RTLD_GLOBAL);
   }
   //#else
   //LibraryHandle = dlopen(libname, RTLD_LAZY|RTLD_GLOBAL);
-  
+
   if (LibraryHandle == 0) {
     return 0;
   }
-  
+
 #if defined __APPLE__
-  //*** Workaround for a bug in 10.4's dyld library ***//
-  // Add a leading underscore to the symbolname for call to mach lib functions
-  // If you don't check against the underscored symbol name NSIsSymbolNameDefined
-  // will never return true.
-  char* underscoredSymbol = 0;
-  asprintf(&underscoredSymbol,"_%s",symbolname);
-  if( NSIsSymbolNameDefined(underscoredSymbol) ) {
-    return dlsym(LibraryHandle,symbolname);
-  } else {
-    return 0;
-  }
-#elif defined __APPLE__
-  //*** Workaround for a bug in 10.4's dyld library ***//
-  // Add a leading underscore to the symbolname for call to mach lib functions
-  // If you don't check against the underscored symbol name NSIsSymbolNameDefined
-  // will never return true.
-  char* underscoredSymbol = 0;
-  asprintf(&underscoredSymbol,"_%s",symbolname);
-  if( NSIsSymbolNameDefined(underscoredSymbol) ) {
-    return dlsym(LibraryHandle,symbolname);
-  } else {
-    return 0;
-  }
-#else
   return dlsym(LibraryHandle,symbolname);
 #endif
 }
@@ -107,7 +83,7 @@ LIBRARY_HANDLE findLib(string lib)
       return handle;
   }
 
-  // if not yet found, try to find it in the rpath 
+  // if not yet found, try to find it in the rpath
   // or the LD_LIBRARY_PATH (last resort)
   handle = GetLibraryHandle(lib.c_str());
   return handle;
@@ -116,30 +92,6 @@ LIBRARY_HANDLE findLib(string lib)
 void* GetHandleSymbolAddress(LIBRARY_HANDLE handle, const char* symbolname)
 {
 #if defined __APPLE__
-  //*** Workaround for a bug in 10.4's dyld library ***//
-  // Add a leading underscore to the symbolname for call to mach lib functions
-  // If you don't check against the underscored symbol name NSIsSymbolNameDefined
-  // will never return true.
-  char* underscoredSymbol = 0;
-  asprintf(&underscoredSymbol,"_%s",symbolname);
-  if( NSIsSymbolNameDefined(underscoredSymbol) ) {
-    return dlsym(handle,symbolname);
-  } else {
-    return 0;
-  }
-#elif defined __APPLE__
-  //*** Workaround for a bug in 10.4's dyld library ***//
-  // Add a leading underscore to the symbolname for call to mach lib functions
-  // If you don't check against the underscored symbol name NSIsSymbolNameDefined
-  // will never return true.
-  char* underscoredSymbol = 0;
-  asprintf(&underscoredSymbol,"_%s",symbolname);
-  if( NSIsSymbolNameDefined(underscoredSymbol) ) {
-    return dlsym(handle,symbolname);
-  } else {
-    return 0;
-  }
-#else
  return dlsym(handle,symbolname);
 #endif
 }
@@ -159,7 +111,7 @@ LIBRARY_HANDLE GetLibraryHandle(const char* libname)
 
   // commented out the following, as it breaks error reporting.  Don't try to
   // load a second time without dlerror being called and reported.
-//   if( lh == 0 ) { 
+//   if( lh == 0 ) {
 //     // dlopen of absolute path failed...  Perhaps they have a DYLD_LIBRARY_PATH var set...
 //     // If so, if we try again without the path, then maybe it will succeed...
 //     lh = dlopen(libname, RTLD_LAZY|RTLD_GLOBAL);
@@ -201,9 +153,9 @@ LIBRARY_HANDLE FindLibInPath(const std::string& lib, const std::string& path)
       return handle;
   }
 
-  // if not yet found, try to find it in the rpath 
+  // if not yet found, try to find it in the rpath
   // or the LD_LIBRARY_PATH (last resort)
   handle = GetLibraryHandle(lib.c_str());
-    
+
   return handle;
 }

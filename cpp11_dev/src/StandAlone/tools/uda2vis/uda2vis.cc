@@ -183,7 +183,7 @@ void closeDataArchive(DataArchive *archive)
 
 /////////////////////////////////////////////////////////////////////
 // Get the grid for the current timestep, so we don't have to query
-// it over and over.  We return a pointer to the GridP since the 
+// it over and over.  We return a pointer to the GridP since the
 // visit plugin doesn't actually know about Grid's (or GridP's), and
 // so the handle doesn't get destructed.
 extern "C"
@@ -205,7 +205,7 @@ void releaseGrid(GridP *grid)
 
 /////////////////////////////////////////////////////////////////////
 // Get the time for each cycle.
-extern "C"
+//extern "C" -- CANNOT be extern "C" with a c++ type DJS 3/23/16
 std::vector<double> getCycleTimes(DataArchive *archive)
 {
 
@@ -217,7 +217,7 @@ std::vector<double> getCycleTimes(DataArchive *archive)
   archive->queryTimesteps(index, times);
 
   return times;
-} 
+}
 
 
 /////////////////////////////////////////////////////////////////////
@@ -358,7 +358,7 @@ static GridDataRaw* readGridData(DataArchive *archive,
   T *p=var.getPointer();
   for (int i=0; i<n; i++)
     copyComponents<T>(&gd->data[i*gd->components], p[i]);
-  
+
   return gd;
 }
 
@@ -638,7 +638,7 @@ ParticleDataRaw* getParticleData(DataArchive *archive,
   }
 }
 
-extern "C"
+//extern "C" -- CANNOT be extern "C" with a c++ type DJS 3/23/16
 std::string getParticlePositionName(DataArchive *archive)
 {
     return archive->getParticlePositionName();
@@ -680,14 +680,14 @@ TimeStepInfo* getTimeStepInfo2(SchedulerP schedulerP,
   for (varIter = varLabels.begin(); varIter != varLabels.end(); ++varIter, ++i )
   {
     VariableInfo &varInfo = stepInfo->varInfo[i];
-      
+
     varInfo.name = (*varIter)->getName();
     varInfo.type = (*varIter)->typeDescription()->getName();
-    
+
     // Loop through all of the materials for this variable
     Scheduler::VarLabelMaterialMap::iterator matMapIter =
       pLabelMatlMap->find( varInfo.name );
-    
+
     std::list< int > &materials = matMapIter->second;
     std::list< int >::iterator matIter;
 
@@ -787,13 +787,13 @@ TimeStepInfo* getTimeStepInfo2(SchedulerP schedulerP,
 //  Purpose:
 //      Translates the global patch identifier to a refinement level and patch
 //      number local to that refinement level.
-//  
+//
 //  Programmer: sshankar, taken from implementation of the plugin, CHOMBO
 //  Creation:   May 20, 2008
 //
 // ****************************************************************************
 void GetLevelAndLocalPatchNumber(TimeStepInfo* stepInfo,
-                                 int global_patch, 
+                                 int global_patch,
                                  int &level, int &local_patch)
 {
   int num_levels = stepInfo->levelInfo.size();
@@ -821,7 +821,7 @@ void GetLevelAndLocalPatchNumber(TimeStepInfo* stepInfo,
 //
 //  Purpose:
 //      Translates the level and local patch number into a global patch id.
-//  
+//
 // ****************************************************************************
 int GetGlobalDomainNumber(TimeStepInfo* stepInfo,
                           int level, int local_patch)
@@ -840,10 +840,10 @@ int GetGlobalDomainNumber(TimeStepInfo* stepInfo,
 //  Method: getBounds
 //
 //  Purpose:
-//   Returns the bounds for the given patch of the specified mesh 
+//   Returns the bounds for the given patch of the specified mesh
 //   based on periodicity and type.
 //
-//  Node centered data uses the same mesh as cell centered, 
+//  Node centered data uses the same mesh as cell centered,
 //  but face centered meshes need an extra value for one axis,
 //  unless they are periodic on that axis.
 //
@@ -856,7 +856,7 @@ void getBounds(int low[3], int high[3],
                int patch_id)
 {
   levelInfo.getBounds(low,high,meshName,patch_id);
-  
+
   // debug5 << "getBounds(" << meshName << ",id=" << patch_id << ")=["
   //     << low[0] << "," << low[1] << "," << low[2] << "] to ["
   //     << high[0] << "," << high[1] << "," << high[2] << "]" << std::endl;
@@ -888,7 +888,7 @@ void CheckNaNs(int num, double *data, int level, int patch)
   // replace nan's with a large negative number
   std::vector<int> nanCells;
 
-  for (int i=0; i<num; i++) 
+  for (int i=0; i<num; i++)
   {
     if (std::isnan(data[i]))
     {
@@ -979,7 +979,7 @@ static GridDataRaw* readGridData(SchedulerP schedulerP,
   const T *p=var.getPointer();
   for (int i=0; i<n; ++i)
     copyComponents<T>(&gd->data[i*gd->components], p[i]);
-  
+
   return gd;
 }
 
@@ -1065,8 +1065,8 @@ GridDataRaw* getGridData2(SchedulerP schedulerP,
   for (varIter = varLabels.begin(); varIter != varLabels.end(); varIter++)
   {
     if ((*varIter)->getName() == variable_name) {
-    
-      varLabel = (*varIter);    
+
+      varLabel = (*varIter);
       maintype = (*varIter)->typeDescription();
       subtype = (*varIter)->typeDescription()->getSubType();
 
@@ -1262,13 +1262,13 @@ ParticleDataRaw* getParticleData2(SchedulerP schedulerP,
   const VarLabel *varLabel;
   const Uintah::TypeDescription* maintype = NULL;
   const Uintah::TypeDescription* subtype = NULL;
-  
+
 
   for (varIter = varLabels.begin(); varIter != varLabels.end(); varIter++)
   {
     if ((*varIter)->getName() == variable_name) {
 
-      varLabel = (*varIter);    
+      varLabel = (*varIter);
       maintype = (*varIter)->typeDescription();
       subtype = (*varIter)->typeDescription()->getSubType();
 
@@ -1311,7 +1311,7 @@ ParticleDataRaw* getParticleData2(SchedulerP schedulerP,
     return readParticleData<Matrix3>(schedulerP, patch, varLabel,
                                      material, timestep);
   default:
-    std::cerr << "Uintah/VisIt Libsim Error: " 
+    std::cerr << "Uintah/VisIt Libsim Error: "
               << "unknown subtype for particle data: " << subtype->getName()
               << " for vairable: " << variable_name << std::endl;
     return NULL;
