@@ -22,15 +22,14 @@
  * IN THE SOFTWARE.
  */
 
-#ifndef CORE_PARALLEL_COMMUNICATIONLIST_H
-#define CORE_PARALLEL_COMMUNICATIONLIST_H
+#ifndef CCA_COMPONENTS_SCHEDULERS_COMMUNICATIONLIST_H
+#define CCA_COMPONENTS_SCHEDULERS_COMMUNICATIONLIST_H
 
 #include <sci_defs/mpi_defs.h> // For MPIPP_H on SGI
 
 #include <CCA/Components/Schedulers/BatchReceiveHandler.h>
 
 #include <Core/Lockfree/Lockfree_LevelPool.hpp>
-#include <Core/Malloc/AllocatorTags.hpp>
 #include <Core/Parallel/BufferInfo.h>
 #include <Core/Parallel/PackBufferInfo.h>
 
@@ -40,6 +39,7 @@ namespace Uintah {
 
 class CommHandle
 {
+
 public:
 
   CommHandle()                                = default;
@@ -188,20 +188,11 @@ private:
 };
 
 
-template < typename T >
-using TrackingListAllocator = Uintah::TrackingAllocator<   T
-                                                         , Tags::CommList
-                                                         , Uintah::HybridAllocator
-                                                       >;
-
-
 using CommPool = Lockfree::LevelPool<  CommRequest
                                     , uint64_t
                                     , 1
-                                    , TrackingListAllocator        // allocator
-                                    , TrackingListAllocator        // size_type allocator
                                     >;
 
 } // end namespace Uintah
 
-#endif // end CORE_PARALLEL_COMMUNICATIONLIST_H
+#endif // end CCA_COMPONENTS_SCHEDULERS_COMMUNICATIONLIST_H

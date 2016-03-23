@@ -34,7 +34,6 @@
 
 #include <Core/Grid/Task.h>
 #include <Core/Lockfree/Lockfree_Pool.hpp>
-#include <Core/Malloc/AllocatorTags.hpp>
 #include <Core/Parallel/BufferInfo.h>
 #include <Core/Parallel/PackBufferInfo.h>
 #include <Core/Util/InfoMapper.h>
@@ -134,8 +133,6 @@ private:
   using TaskPool = Lockfree::Pool< DetailedTask *
                                  , uint64_t
                                  , 1u
-                                 , Uintah::MallocAllocator      // allocator
-                                 , Uintah::MallocAllocator      // size_type allocator
                                  >;
 
   enum : size_t {
@@ -176,12 +173,12 @@ private:
   TaskPool   m_task_pool{};
   CommPool   m_comm_requests{REQUEST_SIZE};
 
-  bool     m_abort{ false };
-  int      m_current_iteration{ 0 };
-  int      m_num_tasks{ 0 };
-  int      m_num_phases{ 0 };
-  int      m_abort_point{ 0 };
-  int      m_num_threads{ 0 };
+  bool       m_abort{ false };
+  int        m_current_iteration{ 0 };
+  int        m_num_tasks{ 0 };
+  int        m_num_phases{ 0 };
+  int        m_abort_point{ 0 };
+  int        m_num_threads{ 0 };
 
   using atomic_int_array = std::unique_ptr<std::atomic<int>[]>;
   std::atomic<int>            m_current_phase;
