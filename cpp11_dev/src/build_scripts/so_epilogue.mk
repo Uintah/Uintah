@@ -85,7 +85,6 @@ TMP_CORE_PSELIBS = $(patsubst SCIRUN%,lib%,$(TMPLIBS))
 CORE_PSELIBS = $(patsubst PACKAGE%,,$(TMP_CORE_PSELIBS))
 TMP_PACK_PSELIBS = $(patsubst PACKAGE%,libPackages_%,$(TMPLIBS))
 PACK_PSELIBS = $(patsubst SCIRUN%,,$(TMP_PACK_PSELIBS))
-COMMON_LIBS = ${MALLOC_TRACE_LIB_DIR_FLAG} ${MALLOC_TRACE_LIB_FLAG} 
 
 $(LIBNAME): $(OBJS) $(patsubst %,$(SCIRUN_LIBDIR)/%,$(CORE_PSELIBS)) $(patsubst %,$(LIBDIR)/%,$(PACK_PSELIBS))
   ifeq ($(SCI_MAKE_BE_QUIET),true)
@@ -104,16 +103,16 @@ $(LIBNAME): $(OBJS) $(patsubst %,$(SCIRUN_LIBDIR)/%,$(CORE_PSELIBS)) $(patsubst 
     ifeq ($(IS_OSX),yes)
       ifeq ($(SCI_MAKE_BE_QUIET),true)
 	@echo "Linking:   $@"
-	@$(CXX) $(SCI_THIRDPARTY_LIBRARY) -single_module $(LDFLAGS) $(SOFLAGS) -install_name $(SCIRUN_LIBDIR_ABS)/$(patsubst lib/%,%,$@) -o $@ $(SONAMEFLAG) $(filter %.$(OBJEXT),$^) $(patsubst $(SCIRUN_LIBDIR)/lib%.so,-l%,$(filter %.$(SO_OR_A_FILE),$^)) $(REPOSITORIES_$@) $($(notdir $@)_LIBS) ${COMMON_LIBS}
+	@$(CXX) $(SCI_THIRDPARTY_LIBRARY) -single_module $(LDFLAGS) $(SOFLAGS) -install_name $(SCIRUN_LIBDIR_ABS)/$(patsubst lib/%,%,$@) -o $@ $(SONAMEFLAG) $(filter %.$(OBJEXT),$^) $(patsubst $(SCIRUN_LIBDIR)/lib%.so,-l%,$(filter %.$(SO_OR_A_FILE),$^)) $(REPOSITORIES_$@) $($(notdir $@)_LIBS)
       else
-	$(CXX) $(SCI_THIRDPARTY_LIBRARY) -single_module $(LDFLAGS) $(SOFLAGS) -install_name $(SCIRUN_LIBDIR_ABS)/$(patsubst lib/%,%,$@) -o $@ $(SONAMEFLAG) $(filter %.$(OBJEXT),$^) $(patsubst $(SCIRUN_LIBDIR)/lib%.so,-l%,$(filter %.$(SO_OR_A_FILE),$^)) $(REPOSITORIES_$@) $($(notdir $@)_LIBS) ${COMMON_LIBS}
+	$(CXX) $(SCI_THIRDPARTY_LIBRARY) -single_module $(LDFLAGS) $(SOFLAGS) -install_name $(SCIRUN_LIBDIR_ABS)/$(patsubst lib/%,%,$@) -o $@ $(SONAMEFLAG) $(filter %.$(OBJEXT),$^) $(patsubst $(SCIRUN_LIBDIR)/lib%.so,-l%,$(filter %.$(SO_OR_A_FILE),$^)) $(REPOSITORIES_$@) $($(notdir $@)_LIBS)
       endif
     else
       ifeq ($(SCI_MAKE_BE_QUIET),true)
 	    @echo "Linking:   $@"
-	    @$(CXX) $(SCI_THIRDPARTY_LIBRARY) $(LDFLAGS) $(SOFLAGS) $(LDRUN_PREFIX)$(LIBDIR_ABS) $(LDRUN_PREFIX)$(SCIRUN_LIBDIR_ABS) -o $@ $(SONAMEFLAG) $(filter %.$(OBJEXT),$^) $(patsubst $(SCIRUN_LIBDIR)/lib%.so,-l%,$(filter %.$(SO_OR_A_FILE),$^)) $(REPOSITORIES_$@) $($(notdir $@)_LIBS) ${COMMON_LIBS}
+	    @$(CXX) $(SCI_THIRDPARTY_LIBRARY) $(LDFLAGS) $(SOFLAGS) $(LDRUN_PREFIX)$(LIBDIR_ABS) $(LDRUN_PREFIX)$(SCIRUN_LIBDIR_ABS) -o $@ $(SONAMEFLAG) $(filter %.$(OBJEXT),$^) $(patsubst $(SCIRUN_LIBDIR)/lib%.so,-l%,$(filter %.$(SO_OR_A_FILE),$^)) $(REPOSITORIES_$@) $($(notdir $@)_LIBS)
       else
-	    $(CXX) $(SCI_THIRDPARTY_LIBRARY) $(LDFLAGS) $(SOFLAGS) $(LDRUN_PREFIX)$(LIBDIR_ABS) $(LDRUN_PREFIX)$(SCIRUN_LIBDIR_ABS) -o $@ $(SONAMEFLAG) $(filter %.$(OBJEXT),$^) $(patsubst $(SCIRUN_LIBDIR)/lib%.so,-l%,$(filter %.$(SO_OR_A_FILE),$^)) $(REPOSITORIES_$@) $($(notdir $@)_LIBS) ${COMMON_LIBS}
+	    $(CXX) $(SCI_THIRDPARTY_LIBRARY) $(LDFLAGS) $(SOFLAGS) $(LDRUN_PREFIX)$(LIBDIR_ABS) $(LDRUN_PREFIX)$(SCIRUN_LIBDIR_ABS) -o $@ $(SONAMEFLAG) $(filter %.$(OBJEXT),$^) $(patsubst $(SCIRUN_LIBDIR)/lib%.so,-l%,$(filter %.$(SO_OR_A_FILE),$^)) $(REPOSITORIES_$@) $($(notdir $@)_LIBS)
       endif
     endif
   endif

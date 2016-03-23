@@ -531,12 +531,6 @@ main( int argc, char *argv[], char *env[] )
       proc0cout << "\n";
     }
 
-#if defined(MALLOC_TRACE)
-    ostringstream traceFilename;
-    traceFilename << "mallocTrace-" << Uintah::Parallel::getMPIRank();
-    //mallocTraceInfo.setTracingState( false );
-#endif
-
     if (Uintah::Parallel::getMPIRank() == 0) {
       // helpful for cleaning out old stale udas
       time_t t = time(NULL);
