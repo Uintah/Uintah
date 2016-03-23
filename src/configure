@@ -849,9 +849,6 @@ OGL_ERR_MACRO
 DEBUG
 THROW_LEVEL
 ASSERTION_LEVEL
-DEF_MALLOC_LINENUMBERS
-DEF_MALLOC
-SCI_MALLOC_ON
 TIME_IMPL
 LARGESOS
 EXENAME
@@ -984,7 +981,6 @@ enable_ray_scatter
 enable_gencode
 enable_exename
 enable_largesos
-enable_sci_malloc
 enable_memory_init
 enable_assertion_level
 enable_scinew_line_numbers
@@ -1648,8 +1644,6 @@ Optional Features:
 --enable-exename=<name> Use name for executable name instead of the default:
                           scirun
 --enable-largesos       Build one .so per directory
---enable-sci-malloc     Use SCI memory allocation/deallocation checks. Note:
-                          you cannot use sci-malloc-trace at the same time.
 --enable-memory-initialization=8_bit_number
                           Force all new'd and malloc'd memory to be initialied
                           to the value given - defaults to 127.
@@ -3927,17 +3921,6 @@ else
 fi
 
   sci_arg_enable_list="$sci_arg_enable_list --enable-largesos --disable-largesos"
-
-
-
-  # Check whether --enable-sci-malloc was given.
-if test "${enable_sci_malloc+set}" = set; then :
-  enableval=$enable_sci_malloc; enable_sci_malloc="$enableval"
-else
-  enable_sci_malloc=${enable_sci_malloc='no'}
-fi
-
-  sci_arg_enable_list="$sci_arg_enable_list --enable-sci-malloc --disable-sci-malloc"
 
 
 
@@ -6420,14 +6403,7 @@ case $host in
            yosemite_plus=yes
         fi
 
-	SO_OR_ARCHIVE_EXTENSION=dylib
-
-        if test "$enable_sci_malloc" = "yes"; then
-           as_fn_error $? "sci_malloc does not work under mac osx. Though you can try to use: --enable-sci-malloc=force" "$LINENO" 5
-           enable_sci_malloc="no"
-        elif test "$enable_sci_malloc" = "force"; then
-           enable_sci_malloc="yes"
-        fi
+	    SO_OR_ARCHIVE_EXTENSION=dylib
 	;;
 
      *)
@@ -6450,29 +6426,10 @@ fi
 
 LARGESOS=$largesos
 
-if test "$enable_sci_malloc" = "yes"; then
-  SCI_MALLOC_ON="yes"
-  DEF_MALLOC=""
-else
-  SCI_MALLOC_ON="no"
-  DEF_MALLOC="#define DISABLE_SCI_MALLOC 1"
-fi
-
-if test "$enable_scinew_line_numbers" = "yes"; then
-  DEF_MALLOC_LINENUMBERS="#define USE_TAG_LINENUM 1"
-else
-  DEF_MALLOC_LINENUMBERS=""
-fi
 
 
 
 
-
-
-
-
-
-sci_defs_files="$sci_defs_files include/sci_defs/malloc_testdefs.h"
 
 
 

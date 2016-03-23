@@ -572,12 +572,6 @@ SCI_ARG_ENABLE(largesos,
   [largesos="$enableval"],
   [largesos=${largesos='no'}])
   
-SCI_ARG_ENABLE(sci-malloc,
-  AC_HELP_STRING(--enable-sci-malloc,
-                 Use SCI memory allocation/deallocation checks.  Note: you cannot use sci-malloc-trace at the same time.),
-  [enable_sci_malloc="$enableval"],
-  [enable_sci_malloc=${enable_sci_malloc='no'}])
-  
 SCI_ARG_ENABLE(memory-init,
   AC_HELP_STRING(--enable-memory-initialization=8_bit_number,
                  Force all new'd and malloc'd memory to be initialied to the value given - defaults to 127.),
@@ -988,14 +982,7 @@ case $host in
            yosemite_plus=yes
         fi
 
-	SO_OR_ARCHIVE_EXTENSION=dylib
-
-        if test "$enable_sci_malloc" = "yes"; then
-           AC_MSG_ERROR(sci_malloc does not work under mac osx. Though you can try to use: --enable-sci-malloc=force)
-           enable_sci_malloc="no"
-        elif test "$enable_sci_malloc" = "force"; then
-           enable_sci_malloc="yes"
-        fi
+	    SO_OR_ARCHIVE_EXTENSION=dylib
 	;;
 	
      *)
@@ -1018,29 +1005,10 @@ fi
 
 LARGESOS=$largesos
 
-if test "$enable_sci_malloc" = "yes"; then
-  SCI_MALLOC_ON="yes"
-  DEF_MALLOC=""
-else
-  SCI_MALLOC_ON="no"
-  DEF_MALLOC="#define DISABLE_SCI_MALLOC 1"
-fi
-
-if test "$enable_scinew_line_numbers" = "yes"; then
-  DEF_MALLOC_LINENUMBERS="#define USE_TAG_LINENUM 1"
-else
-  DEF_MALLOC_LINENUMBERS=""
-fi
-
 AC_SUBST(NOPRINTDIR)
 AC_SUBST(EXENAME)
 AC_SUBST(LARGESOS)
 AC_SUBST(TIME_IMPL)
-
-AC_SUBST(SCI_MALLOC_ON)
-AC_SUBST(DEF_MALLOC)
-AC_SUBST(DEF_MALLOC_LINENUMBERS)
-sci_defs_files="$sci_defs_files include/sci_defs/malloc_testdefs.h"
 
 AC_SUBST(ASSERTION_LEVEL)
 AC_SUBST(THROW_LEVEL)

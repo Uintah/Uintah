@@ -33,7 +33,6 @@ sus           = ""   # full path to sus executable
 inputs        = ""   # full path to src/Standalone/inputs/
 OS            = platform.system()
 debug_build   = ""
-no_sci_malloc = ""
                       # HACK 
                       # 1 for GPU RT machine (albion, aurora), 0 otherwise.
                       #   need to make this generic, perhaps pycuda?
@@ -63,9 +62,6 @@ parser.add_option( "-h", "--help", action="help",             help="Show this he
 
 parser.add_option( "-j", type="int", dest="parallelism",      help="Set make parallelism" )
 
-parser.add_option( "-m", dest="sci_malloc_on",                help="Whether this is build has sci-malloc turned on (use 'yes' or 'no')",
-                   action="store", type="string" )
-
 parser.add_option( "-s", dest="src_directory",                help="Uintah src directory [defaults to .../bin/../src]",
                    action="store", type="string" )
 
@@ -87,7 +83,7 @@ def error( error_msg ) :
 ####################################################################################
 
 def validateArgs( options, args ) :
-    global sus, inputs, debug_build, no_sci_malloc
+    global sus, inputs, debug_build
 
     if len( args ) > 0 :
         error( "Unknown command line args: " + str( args ) )
@@ -110,16 +106,6 @@ def validateArgs( options, args ) :
 
     if not os.path.isfile( sus ) :
         error( "'sus' not here: '" + sus + "'" )
-
-    if not options.sci_malloc_on :
-        error( "Whether this is build has sci-malloc turned on is not specified.  Please use <-m yes/no>." )
-    else :
-        if options.sci_malloc_on == "yes" :
-            no_sci_malloc = False
-        elif options.sci_malloc_on == "no" :
-            no_sci_malloc = True
-        else :
-            error( "-d requires 'yes' or 'no'." )
 
     if not options.is_debug :
         error( "debug/optimized not specified.  Please use <-d yes/no>." )
@@ -150,7 +136,7 @@ def validateArgs( options, args ) :
 
 def generateGS() :
 
-    global sus, inputs, debug_build, no_sci_malloc, has_gpu
+    global sus, inputs, debug_build, has_gpu
     try :
         (options, leftover_args ) = parser.parse_args()
     except :
@@ -379,21 +365,6 @@ def generateGS() :
             np = float( num_processes( test ) )
             mpirun = ""
 
-            
-            MALLOC_FLAG = ""
-
-            if debug_build :
-                if no_sci_malloc :
-                    print( "" )
-                    print( "WARNING!!! The build was not built with SCI Malloc on...  Memory tests will not be run." )
-                    print( "WARNING!!! If you wish to perform memory checks, you must re-configure your debug build" )
-                    print( "WARNING!!! with '--enable-sci-malloc', run 'make cleanreally', and re-compile everything." )
-                    print( "" )
-                else :
-                    os.environ['MALLOC_STRICT'] = "set"
-                    os.environ['MALLOC_STATS'] = "malloc_stats"
-                    MALLOC_FLAG = " -x MALLOC_STATS "
-
             SVN_FLAGS = " -svnStat -svnDiff "
             #SVN_FLAGS = "" # When debugging, if you don't want to spend time waiting for SVN, uncomment this line.
 
@@ -401,7 +372,7 @@ def generateGS() :
                 np = int( np )
                 mpirun = "%s -np %s  " % (MPIRUN,np)
 
-                command = mpirun + MALLOC_FLAG + sus + " -mpi " + SVN_FLAGS + " " + sus_options + " " + inputs + "/" + component + "/" + input( test )  + " > sus_log.txt 2>&1 " 
+                command = mpirun + sus + " -mpi " + SVN_FLAGS + " " + sus_options + " " + inputs + "/" + component + "/" + input( test )  + " > sus_log.txt 2>&1 " 
             else :
                 command = sus + SVN_FLAGS + " " + sus_options + " " + inputs + "/" + component + "/" + input( test )  + " >  sus_log.txt 2>&1" 
 

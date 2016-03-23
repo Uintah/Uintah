@@ -22,7 +22,6 @@
  * IN THE SOFTWARE.
  */
 
-#include <sci_defs/malloc_defs.h>
 #include <sci_defs/papi_defs.h> // for PAPI performance counters
 
 #include <CCA/Components/SimulationController/SimulationController.h>
