@@ -30,7 +30,6 @@ echo "setenv OS $OS"                                       >> "$doTestScript"
 echo "setenv SCI_DEBUG \"\""                               >> "$doTestScript"
 echo "setenv LOCAL_OR_NIGHTLY_TEST $LOCAL_OR_NIGHTLY_TEST" >> "$doTestScript"
 echo "setenv WHICH_TESTS $WHICH_TESTS"                     >> "$doTestScript"
-echo "setenv SCI_MALLOC_ENABLED $is_dbg"                   >> "$doTestScript"
 
 echo "python TestScripts/$componentTest.py susdir inputs goldStandard $mode $PARALLELISM "'$1' >> "$doTestScript"
 

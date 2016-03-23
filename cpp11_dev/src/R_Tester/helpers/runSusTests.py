@@ -294,9 +294,6 @@ def runSusTests(argv, TESTS, ALGO, callback = nullCallback):
     
     if dbg_opt == "opt" : # qwerty: Think this is right now...
       do_memory = 0
-
-    if environ['SCI_MALLOC_ENABLED'] != "yes" :
-      do_memory = 0
       
     if do_gpu == 1 and has_gpu == 1:
       environ['SCI_DEBUG'] = "SingleDevice:+"

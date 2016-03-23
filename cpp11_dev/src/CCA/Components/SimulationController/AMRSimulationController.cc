@@ -60,7 +60,6 @@
 #include <Core/Util/Timers/Timers.hpp>
 
 #include <sci_defs/gperftools_defs.h>
-#include <sci_defs/malloc_defs.h>
 #include <sci_defs/visit_defs.h>
 
 

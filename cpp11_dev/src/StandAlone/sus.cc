@@ -89,7 +89,6 @@
 #include <Core/Util/FileUtils.h>
 
 #include <sci_defs/hypre_defs.h>
-#include <sci_defs/malloc_defs.h>
 #include <sci_defs/mpi_defs.h>
 #include <sci_defs/uintah_defs.h>
 #include <sci_defs/visit_defs.h>
