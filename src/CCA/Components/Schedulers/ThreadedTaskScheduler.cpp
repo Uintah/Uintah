@@ -195,7 +195,9 @@ ThreadedTaskScheduler::ThreadedTaskScheduler( const ProcessorGroup        * mywo
   : SchedulerCommon( myworld, oport )
   , m_output_port{ oport }
 {
-
+  if (Parallel::getNumThreads() < 0) {
+    throw ProblemSetupException("Only ThreadedTaskScheduler may be used in experimental code, please use -nthreads <num>", __FILE__, __LINE__);
+  }
 }
 
 
