@@ -53,7 +53,6 @@ else
       Core/Geometry     \
       Core/Grid         \
       Core/Math         \
-      Core/Malloc       \
       Core/Parallel     \
       Core/ProblemSpec  \
       Core/Thread       \

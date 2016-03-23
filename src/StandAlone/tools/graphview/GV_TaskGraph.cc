@@ -29,7 +29,6 @@
 #include <cstdlib>
 #include <cassert>
 #include "GV_TaskGraph.h"
-#include <Core/Malloc/Allocator.h>
 #include <Core/ProblemSpec/ProblemSpec.h>
 #include <CCA/Components/ProblemSpecification/ProblemSpecReader.h>
 

@@ -36,7 +36,6 @@
 #include <Core/Math/TangentModulusTensor.h> //added this for stiffness
 #include <CCA/Components/MPM/ConstitutiveModel/MPMMaterial.h>
 #include <Core/ProblemSpec/ProblemSpec.h>
-#include <Core/Malloc/Allocator.h>
 //#include <iostream>
 
 using namespace std;

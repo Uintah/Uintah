@@ -38,7 +38,6 @@
 #include <Core/Parallel/ProcessorGroup.h>
 #include <Core/Parallel/Parallel.h>
 #include <Core/Geometry/IntVector.h>
-#include <Core/Malloc/Allocator.h>
 #include <Core/Util/Endian.h>
 
 #include <cstdio>

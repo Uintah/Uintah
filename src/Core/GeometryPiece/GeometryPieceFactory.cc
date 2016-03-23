@@ -46,7 +46,6 @@
 #include <Core/ProblemSpec/ProblemSpecP.h>
 #include <Core/Parallel/Parallel.h>
 
-#include <Core/Malloc/Allocator.h>
 #include <Core/Util/DebugStream.h>
 #include <Core/Util/RWS.h>
 

@@ -31,7 +31,6 @@
 #include <Core/Grid/Patch.h>
 
 #include <Core/Geometry/Vector.h>
-#include <Core/Malloc/Allocator.h>
 
 #include <cmath>
 

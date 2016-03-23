@@ -28,7 +28,6 @@
 #include "ShearModulus_Borja.h"
 #include <Core/Exceptions/ProblemSetupException.h>
 #include <Core/ProblemSpec/ProblemSpec.h>
-#include <Core/Malloc/Allocator.h>
 #include <string>
 
 using namespace std;

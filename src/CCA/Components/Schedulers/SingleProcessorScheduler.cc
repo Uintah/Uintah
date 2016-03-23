@@ -29,7 +29,6 @@
 #include <CCA/Components/Schedulers/TaskGraph.h>
 #include <CCA/Ports/LoadBalancer.h>
 
-#include <Core/Malloc/Allocator.h>
 #include <Core/Parallel/ProcessorGroup.h>
 #include <Core/Thread/Time.h>
 #include <Core/Util/DebugStream.h>

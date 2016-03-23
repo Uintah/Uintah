@@ -32,7 +32,6 @@
 #include <CCA/Components/MPM/Crack/EllipticCrack.h>
 #include <CCA/Components/MPM/Crack/PartialEllipticCrack.h>
 #include <Core/Exceptions/ProblemSetupException.h>
-#include <Core/Malloc/Allocator.h>
 #include <fstream>
 #include <iostream>
 #include <string>

@@ -59,7 +59,6 @@
 #include <Core/Math/FastMatrix.h>
 #include <Core/Math/TangentModulusTensor.h>
 #include <Core/Grid/Variables/VarTypes.h>
-#include <Core/Malloc/Allocator.h>
 #include <Core/Util/DebugStream.h>
 #include <cmath>
 #include <iostream>

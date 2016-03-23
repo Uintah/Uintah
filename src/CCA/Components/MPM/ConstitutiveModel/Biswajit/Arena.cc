@@ -60,7 +60,6 @@ porosity).
 #include <Core/Exceptions/InvalidValue.h>
 #include <Core/Math/MinMax.h>
 #include <Core/Math/Matrix3.h>
-#include <Core/Malloc/Allocator.h>
 #include <Core/ProblemSpec/ProblemSpec.h>
 #include <iostream>
 

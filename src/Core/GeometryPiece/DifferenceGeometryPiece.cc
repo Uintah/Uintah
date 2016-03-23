@@ -26,7 +26,6 @@
 #include <Core/Exceptions/ProblemSetupException.h>
 #include <Core/GeometryPiece/DifferenceGeometryPiece.h>
 #include <Core/GeometryPiece/GeometryPieceFactory.h>
-#include <Core/Malloc/Allocator.h>
 #include <Core/Geometry/Point.h>
 #include <Core/Grid/Box.h>
 

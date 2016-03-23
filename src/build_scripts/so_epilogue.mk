@@ -42,13 +42,6 @@ OBJS := $(patsubst %.cu,%.$(OBJEXT),$(filter %.cu,$(SRCS))) \
 
 LIBNAME := $(LIBDIR)/lib$(subst /,_,$(SRCDIR)).$(SO_OR_A_FILE)
 
-# We always link against the internal Dataflow malloc
-ifneq ($(SRCDIR),Core/Malloc)
-  ifeq ($(LARGESOS),yes)
-    PSELIBS := $(PSELIBS) $(MALLOCLIB)
-  endif
-endif
-
 # The libraries are specified like Core/Thread but get
 # name-mangled to Core_Thread
 PSELIBS := $(subst /,_,$(PSELIBS))

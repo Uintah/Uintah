@@ -29,7 +29,6 @@
 #include <Core/Parallel/BufferInfo.h>
 #include <Core/Util/RefCounted.h>
 #include <Core/Parallel/ProcessorGroup.h>
-#include <Core/Malloc/Allocator.h>
 
 namespace Uintah {
 

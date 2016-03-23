@@ -32,7 +32,6 @@
 #include <Core/GeometryPiece/DifferenceGeometryPiece.h>
 #include <Core/Geometry/BBox.h>
 #include <Core/Grid/Box.h>
-#include <Core/Malloc/Allocator.h>
 #include <iostream>
 
 using namespace Uintah;

@@ -29,7 +29,6 @@
 #include <Core/GeometryPiece/CylinderGeometryPiece.h>
 #include <Core/GeometryPiece/SphereGeometryPiece.h>
 #include <Core/GeometryPiece/DifferenceGeometryPiece.h>
-#include <Core/Malloc/Allocator.h>
 #include <Core/Grid/Box.h>
 #include <Core/Grid/Level.h>
 #include <Core/Geometry/BBox.h>

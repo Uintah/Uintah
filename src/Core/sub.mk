@@ -43,7 +43,6 @@ SUBDIRS := \
 	$(SRCDIR)/Grid          \
 	$(SRCDIR)/Labels        \
 	$(SRCDIR)/IO            \
-	$(SRCDIR)/Malloc        \
 	$(SRCDIR)/Math          \
 	$(SRCDIR)/OS            \
 	$(SRCDIR)/Parallel      \

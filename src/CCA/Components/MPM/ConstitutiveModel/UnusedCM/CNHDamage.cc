@@ -37,7 +37,6 @@
 #include <CCA/Components/MPM/ConstitutiveModel/MPMMaterial.h>
 #include <Core/ProblemSpec/ProblemSpec.h>
 #include <Core/Exceptions/ParameterNotFound.h>
-#include <Core/Malloc/Allocator.h>
 #include <fstream>
 #include <iostream>
 #include <Core/Math/MinMax.h>

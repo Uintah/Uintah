@@ -29,7 +29,6 @@
 #include <Core/Util/FancyAssert.h>
 #include <Core/Geometry/Point.h>
 #include <Core/Geometry/Vector.h>
-#include <Core/Malloc/Allocator.h>
 
 #include <sci_defs/bits_defs.h> // for SCI_32BITS
 #include <sci_defs/osx_defs.h>  // for OSX_SNOW_LEOPARD_OR_LATER

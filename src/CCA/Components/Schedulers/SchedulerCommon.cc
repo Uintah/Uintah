@@ -45,7 +45,6 @@
 #include <Core/Grid/Variables/SFCXVariable.h>
 #include <Core/Grid/Variables/SFCYVariable.h>
 #include <Core/Grid/Variables/SFCZVariable.h>
-#include <Core/Malloc/Allocator.h>
 #include <Core/Parallel/ProcessorGroup.h>
 #include <Core/ProblemSpec/ProblemSpec.h>
 #include <Core/OS/ProcessInfo.h>

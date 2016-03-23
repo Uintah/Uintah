@@ -23,7 +23,6 @@
  */
 
 #include <Core/Grid/AxiLinearInterpolator.h>
-#include <Core/Malloc/Allocator.h>
 
 using namespace Uintah;
 using std::vector;

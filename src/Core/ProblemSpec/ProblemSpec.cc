@@ -29,7 +29,6 @@
 #include <Core/Geometry/IntVector.h>
 #include <Core/Geometry/Vector.h>
 #include <Core/Geometry/Point.h>
-#include <Core/Malloc/Allocator.h>
 #include <Core/Util/XMLUtils.h>
 
 #include <iostream>

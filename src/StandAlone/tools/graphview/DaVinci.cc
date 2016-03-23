@@ -36,7 +36,6 @@
 #include <cstring>
 #include <Core/Exceptions/ErrnoException.h>
 #include <Core/Exceptions/InternalError.h>
-#include <Core/Malloc/Allocator.h>
 #include "DaVinci.h"
 #include "graphview.h"
 #include "GV_TaskGraph.h"

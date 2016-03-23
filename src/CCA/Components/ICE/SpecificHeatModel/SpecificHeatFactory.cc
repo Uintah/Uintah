@@ -30,7 +30,6 @@
 #include <CCA/Components/ICE/SpecificHeatModel/Polynomial.h>
 #include <Core/ProblemSpec/ProblemSpec.h>
 #include <Core/Exceptions/ProblemSetupException.h>
-#include <Core/Malloc/Allocator.h>
 #include <sstream>
 #include <iostream>
 #include <fstream>

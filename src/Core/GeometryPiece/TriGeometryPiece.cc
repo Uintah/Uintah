@@ -28,7 +28,6 @@
 #include <Core/Exceptions/ProblemSetupException.h>
 #include <Core/Exceptions/InternalError.h>
 #include <Core/Geometry/Plane.h>
-#include <Core/Malloc/Allocator.h>
 
 #include   <iostream>
 #include   <fstream>

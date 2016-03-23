@@ -28,7 +28,6 @@
 #include <CCA/Ports/DataWarehouse.h>
 #include <Core/Grid/Variables/ParticleVariable.h>
 #include <Core/Labels/MPMLabel.h>
-#include <Core/Malloc/Allocator.h>
 //#include <iostream>
 
 using namespace Uintah;

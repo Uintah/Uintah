@@ -26,7 +26,6 @@
 #include <Core/Grid/Patch.h>
 #include <Core/Grid/Level.h>
 #include <Core/Parallel/Parallel.h>
-#include <Core/Malloc/Allocator.h>
 #include <Core/Math/MiscMath.h>
 
 using namespace Uintah;

@@ -77,7 +77,6 @@
 #include <Core/Exceptions/InvalidGrid.h>
 #include <Core/Exceptions/ProblemSetupException.h>
 #include <Core/Grid/SimulationState.h>
-#include <Core/Malloc/Allocator.h>
 #include <Core/OS/ProcessInfo.h>
 #include <Core/Parallel/Parallel.h>
 #include <Core/Parallel/ProcessorGroup.h>
@@ -120,12 +119,6 @@
 using namespace Uintah;
 using namespace std;
 
-#if defined( USE_LENNY_HACK )
-  // See Core/Malloc/Allocator.cc for more info.
-  namespace Uintah {
-    extern void shutdown();
-  };
-#endif
 
 // If we are using MPICH version 1,
 // we must call MPI::Init() before parsing args
@@ -222,10 +215,6 @@ abortCleanupFunc()
 int
 main( int argc, char *argv[], char *env[] )
 {
-#if defined( USE_LENNY_HACK )
-  atexit( Uintah::shutdown );
-#endif
-
   sanityChecks();
 
   string oldTag;

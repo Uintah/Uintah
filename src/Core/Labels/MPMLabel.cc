@@ -31,7 +31,6 @@
 #include <Core/Grid/Variables/VarTypes.h>
 #include <Core/Grid/Variables/PerPatch.h>
 #include <Core/Grid/Variables/SoleVariable.h>
-#include <Core/Malloc/Allocator.h>
 #include <iostream>
 using namespace Uintah;
 using namespace std;

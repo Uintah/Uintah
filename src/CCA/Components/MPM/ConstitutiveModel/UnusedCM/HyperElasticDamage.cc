@@ -53,7 +53,6 @@
 #include <Core/Exceptions/InternalError.h>
 #include "ConstitutiveModelFactory.h"
 #include "HyperElasticDamage.h"
-#include <Core/Malloc/Allocator.h>
 #include <fstream>
 #include <iostream>
 using namespace std;

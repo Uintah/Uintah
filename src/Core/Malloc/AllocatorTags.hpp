@@ -25,11 +25,11 @@
 #ifndef CORE_MALLOC_ALLOCATORTAGS_HPP
 #define CORE_MALLOC_ALLOCATORTAGS_HPP
 
-#include <Core/Malloc/Allocators/AlignedAllocator.hpp>
-#include <Core/Malloc/Allocators/HybridAllocator.hpp>
-#include <Core/Malloc/Allocators/MallocAllocator.hpp>
-#include <Core/Malloc/Allocators/MMapAllocator.hpp>
-#include <Core/Malloc/Allocators/TrackingAllocator.hpp>
+#include <Core/Malloc/AlignedAllocator.hpp>
+#include <Core/Malloc/HybridAllocator.hpp>
+#include <Core/Malloc/MallocAllocator.hpp>
+#include <Core/Malloc/MMapAllocator.hpp>
+#include <Core/Malloc/TrackingAllocator.hpp>
 
 #include <sci_defs/mpi_defs.h>
 

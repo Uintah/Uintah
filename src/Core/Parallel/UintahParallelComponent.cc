@@ -24,7 +24,6 @@
 
 
 #include <Core/Parallel/UintahParallelComponent.h>
-#include <Core/Malloc/Allocator.h>
 #include <algorithm>
 
 using namespace Uintah;

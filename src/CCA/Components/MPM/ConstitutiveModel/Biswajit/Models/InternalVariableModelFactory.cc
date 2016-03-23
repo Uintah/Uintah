@@ -25,7 +25,6 @@
 #include "InternalVariableModelFactory.h"                                             
 #include <Core/Exceptions/ProblemSetupException.h>
 #include <Core/ProblemSpec/ProblemSpec.h>
-#include <Core/Malloc/Allocator.h>
 #include <iostream>
 #include <string>
 #include "InternalVar_BorjaPressure.h"

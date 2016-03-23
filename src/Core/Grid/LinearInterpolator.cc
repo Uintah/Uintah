@@ -23,7 +23,6 @@
  */
 
 #include <Core/Grid/LinearInterpolator.h>
-#include <Core/Malloc/Allocator.h>
 
 using namespace Uintah;
 using namespace std;

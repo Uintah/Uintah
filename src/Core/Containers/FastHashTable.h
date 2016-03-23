@@ -39,7 +39,6 @@
 #define SCI_Containers_FastHashTable_h 1
 
 #include <Core/Util/Assert.h>
-#include <Core/Malloc/Allocator.h>
 
 namespace Uintah {
 

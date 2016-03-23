@@ -35,7 +35,6 @@
 #include <Core/Parallel/ProcessorGroup.h>
 #include <Core/Grid/Variables/ParticleSubset.h>
 #include <Core/Grid/Variables/ComputeSet.h>
-#include <Core/Malloc/Allocator.h>
 #include <Core/Thread/Time.h>
 #include <Core/Thread/Mutex.h>
 #include <Core/Util/DebugStream.h>

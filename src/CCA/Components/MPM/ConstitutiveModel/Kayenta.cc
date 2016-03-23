@@ -45,7 +45,6 @@ made.
 #include <Core/Math/Matrix3.h>
 #include <Core/ProblemSpec/ProblemSpec.h>
 #include <Core/Containers/StaticArray.h>
-#include <Core/Malloc/Allocator.h>
 #include <Core/Math/MinMax.h>
 #include <Core/Parallel/Parallel.h>
 #include <sci_defs/uintah_defs.h>

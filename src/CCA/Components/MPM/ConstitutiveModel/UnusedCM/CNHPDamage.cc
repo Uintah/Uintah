@@ -40,7 +40,6 @@
 #include <Core/Grid/Variables/NodeIterator.h> 
 #include <Core/Grid/Variables/VarTypes.h>
 #include <Core/Exceptions/ParameterNotFound.h>
-#include <Core/Malloc/Allocator.h>
 #include <iostream>
 
 

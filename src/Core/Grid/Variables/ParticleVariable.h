@@ -30,7 +30,6 @@
 #include <Core/Exceptions/InternalError.h>
 #include <Core/Util/Assert.h>
 #include <Core/Util/Endian.h>
-#include <Core/Malloc/Allocator.h>
 #include <Core/Grid/Variables/ParticleVariableBase.h>
 #include <Core/Grid/Variables/constGridVariable.h>
 #include <CCA/Ports/InputContext.h>

@@ -28,7 +28,6 @@
 #include <Core/Grid/BoundaryConditions/BoundCondFactory.h>
 #include <Core/Grid/Variables/DifferenceIterator.h>
 #include <Core/Grid/BoundaryConditions/BCDataArray.h>
-#include <Core/Malloc/Allocator.h>
 #include <Core/Util/DebugStream.h>
 #include <set>
 #include <iostream>

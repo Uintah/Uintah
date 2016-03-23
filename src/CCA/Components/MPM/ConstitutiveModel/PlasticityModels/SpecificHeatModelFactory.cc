@@ -28,7 +28,6 @@
 #include "SteelCp.h"
 #include <Core/Exceptions/ProblemSetupException.h>
 #include <Core/ProblemSpec/ProblemSpec.h>
-#include <Core/Malloc/Allocator.h>
 #include <string>
 #include <iostream>
 #include <Core/Parallel/Parallel.h>

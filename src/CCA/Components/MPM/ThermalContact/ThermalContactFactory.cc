@@ -25,7 +25,6 @@
 #include <CCA/Components/MPM/ThermalContact/ThermalContactFactory.h>
 #include <CCA/Components/MPM/ThermalContact/STThermalContact.h>
 #include <CCA/Components/MPM/ThermalContact/NullThermalContact.h>
-#include <Core/Malloc/Allocator.h>
 using std::cerr;
 
 using namespace Uintah;

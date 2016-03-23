@@ -24,7 +24,6 @@
 
 
 #include <Core/Disclosure/TypeDescription.h>
-#include <Core/Malloc/Allocator.h>
 #include <Core/Exceptions/InternalError.h>
 #include <Core/Util/Assert.h>
 #include <Core/Thread/Mutex.h>

@@ -28,7 +28,6 @@
 #include <Core/ProblemSpec/ProblemSpec.h>
 #include <Core/Exceptions/ProblemSetupException.h>
 #include <Core/Grid/Patch.h>
-#include <Core/Malloc/Allocator.h>
 
 using namespace Uintah;
 using namespace std;

@@ -42,7 +42,6 @@
 #include <Core/Math/Matrix3.h>
 #include <CCA/Components/MPM/ConstitutiveModel/MPMMaterial.h>
 #include <Core/ProblemSpec/ProblemSpec.h>
-#include <Core/Malloc/Allocator.h>
 #include <iostream>
 #include <vector>
 #include <stdexcept>

@@ -29,7 +29,7 @@
 #include <Core/Util/Timers/Timers.hpp>
 #include <Core/Util/InfoMapper.h>
 #include <Core/Grid/SimulationState.h>
-#include <Core/Malloc/Allocators/TrackingAllocator.hpp>
+#include <Core/Malloc/TrackingAllocator.hpp>
 
 
 #include <sci_defs/mpi_defs.h> // For MPIPP_H on SGI

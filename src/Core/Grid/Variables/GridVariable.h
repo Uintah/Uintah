@@ -37,7 +37,6 @@
 
 #include <Core/Exceptions/InternalError.h>
 #include <Core/Geometry/Vector.h>
-#include <Core/Malloc/Allocator.h>
 #include <cstring>
 
 namespace Uintah {

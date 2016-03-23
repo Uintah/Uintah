@@ -28,7 +28,6 @@
 #include <CCA/Components/ICE/TurbulenceModel/DynamicModel.h>
 #include <Core/ProblemSpec/ProblemSpec.h>
 #include <Core/Exceptions/ProblemSetupException.h>
-#include <Core/Malloc/Allocator.h>
 
 using namespace Uintah;
 using namespace std;

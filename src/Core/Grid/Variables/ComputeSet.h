@@ -27,7 +27,6 @@
 #define Uintah_Core_Grid_ComputeSet_h
 
 #include <Core/Util/Assert.h>
-#include <Core/Malloc/Allocator.h>
 #include <Core/Exceptions/InternalError.h>
 #include <Core/Util/RefCounted.h>
 #include <Core/Util/constHandle.h>

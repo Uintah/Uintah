@@ -100,7 +100,6 @@ ALL_PSE_LIBS =             \
         Core/GeometryPiece \
         Core/Grid          \
         Core/Labels        \
-        Core/Malloc        \
         Core/Math          \
         Core/OS            \
         Core/Parallel      \
@@ -169,7 +168,6 @@ ALL_STATIC_PSE_LIBS =                   \
     Core/IO                             \
     Core/Exceptions                     \
     Core/Containers                     \
-    Core/Malloc                         \
     Core/OS
 
 ###################################################################################

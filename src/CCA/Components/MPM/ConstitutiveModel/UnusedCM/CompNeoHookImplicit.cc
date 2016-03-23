@@ -23,7 +23,6 @@
  */
 
 #include <CCA/Components/MPM/ConstitutiveModel/CompNeoHookImplicit.h>
-#include <Core/Malloc/Allocator.h>
 #include <Core/Grid/Patch.h>
 #include <CCA/Ports/DataWarehouse.h>
 #include <Core/Grid/Variables/NCVariable.h>
@@ -38,7 +37,6 @@
 #include <Core/ProblemSpec/ProblemSpec.h>
 #include <Core/Exceptions/ParameterNotFound.h>
 #include <Core/Math/MinMax.h>
-#include <Core/Malloc/Allocator.h>
 
 #include <fstream>
 #include <iostream>

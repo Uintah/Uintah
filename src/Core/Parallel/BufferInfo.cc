@@ -22,7 +22,6 @@
  * IN THE SOFTWARE.
  */
 
-#include <Core/Malloc/Allocator.h>
 #include <Core/Parallel/BufferInfo.h>
 #include <Core/Util/RefCounted.h>
 #include <Core/Util/Assert.h>

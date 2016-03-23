@@ -27,7 +27,6 @@
 #define UINTAH_HOMEBREW_NodeIterator_H
 
 #include <Core/Geometry/IntVector.h>
-#include <Core/Malloc/Allocator.h>
 #include <Core/Grid/Variables/BaseIterator.h>
 
 namespace Uintah {

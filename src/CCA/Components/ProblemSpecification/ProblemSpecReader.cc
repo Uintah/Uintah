@@ -25,7 +25,6 @@
 
 #include <Core/Exceptions/InternalError.h>
 #include <Core/Exceptions/ProblemSetupException.h>
-#include <Core/Malloc/Allocator.h>
 #include <Core/Parallel/Parallel.h> // Only used for MPI cerr
 #include <Core/Parallel/ProcessorGroup.h> // process determination
 #include <Core/ProblemSpec/ProblemSpec.h>

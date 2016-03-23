@@ -29,7 +29,6 @@
 #include "HancockMacKenzieDamage.h"
 #include <Core/Exceptions/ProblemSetupException.h>
 #include <Core/ProblemSpec/ProblemSpec.h>
-#include <Core/Malloc/Allocator.h>
 #include <fstream>
 //#include <iostream>
 #include <string>
