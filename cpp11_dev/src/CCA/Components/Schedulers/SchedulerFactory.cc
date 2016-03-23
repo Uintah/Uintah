@@ -22,6 +22,12 @@
  * IN THE SOFTWARE.
  */
 
+#ifdef UINTAH_USING_EXPERIMENTAL
+
+#include <CCA/Components/Schedulers/SchedulerFactory_Exp.cc>
+
+#else
+
 #include <CCA/Components/Schedulers/SchedulerFactory.h>
 #include <CCA/Components/Schedulers/SchedulerCommon.h>
 #include <CCA/Components/Schedulers/SingleProcessorScheduler.h>
@@ -169,3 +175,5 @@ SchedulerFactory::create( const ProblemSpecP   & ps,
   return sch;
 
 }
+
+#endif //UINTAH_USING_EXPERIMENTAL
