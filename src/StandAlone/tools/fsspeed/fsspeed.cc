@@ -26,7 +26,7 @@ int main(int argc,char *argv[])
     return 1;
   }
   stringstream str;
- 
+
   //write argument into stringstream
   str << argv[1];
 
@@ -58,7 +58,7 @@ int main(int argc,char *argv[])
     MPI::Finalize();
     return 1;
   }
-  
+
   long long isize=(long long)size;
   char *buff=new char[isize];
   for(int i=0;i<isize;i++)
@@ -91,16 +91,16 @@ int main(int argc,char *argv[])
 #endif
   MPI::Barrier(MPI_COMM_WORLD);
   finish=MPI::Wtime();
-  
+
   char command[100];
   sprintf(command,"rm -f %s",filename);
-  
-  delete buff;
+
+  delete [] buff;
   if(rank==0)
   {
     cout << "Writing Total Time: " << finish-start << " seconds" << endl;
     cout << "Writing Throughput: " <<  (isize*processors/1048576.0)/(finish-start) << " MB/s" << endl;
-  
+
     cout << "Cleaning up datafiles\n";
   }
   MPI::Barrier(MPI_COMM_WORLD);

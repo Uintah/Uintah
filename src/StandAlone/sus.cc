@@ -502,7 +502,7 @@ main( int argc, char *argv[], char *env[] )
     }
   }
 
-  char * start_addr = (char*)sbrk(0);
+  char * start_addr = 0;
 
   bool thrownException = false;
 
