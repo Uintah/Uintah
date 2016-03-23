@@ -29,7 +29,6 @@
 #include <Core/ProblemSpec/ProblemSpec.h>
 
 #include <Core/Geometry/Point.h>
-#include <Core/Malloc/Allocator.h>
 #include <Core/Util/DebugStream.h>
 
 #include <iostream>

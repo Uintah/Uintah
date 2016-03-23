@@ -29,7 +29,6 @@
 #include <Core/Grid/Variables/NodeIterator.h>
 #include <Core/Grid/BoundaryConditions/BoundCondFactory.h>
 #include <Core/Util/DebugStream.h>
-#include <Core/Malloc/Allocator.h>
 #include <iostream>
 
 using std::endl;

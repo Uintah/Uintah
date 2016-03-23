@@ -35,7 +35,6 @@
 
 #include <Core/Util/Endian.h>
 #include <Core/Geometry/IntVector.h>
-#include <Core/Malloc/Allocator.h>
 #include <Core/Math/MinMax.h>
 
 #include <iosfwd>

@@ -25,7 +25,6 @@
 #include <CCA/Components/ICE/SpecificHeatModel/Debye.h>
 #include <Core/ProblemSpec/ProblemSpec.h>
 #include <Core/Exceptions/ProblemSetupException.h>
-#include <Core/Malloc/Allocator.h>
 #include <cmath>
 #include <iostream>
 

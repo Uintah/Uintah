@@ -54,7 +54,6 @@
 
 #include <Core/Math/MinMax.h>
 #include <Core/Math/Gaussian.h>
-#include <Core/Malloc/Allocator.h>
 #include <Core/Util/DebugStream.h>
 
 #include <math.h>

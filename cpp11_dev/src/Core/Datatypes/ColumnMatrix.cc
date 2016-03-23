@@ -39,7 +39,6 @@
 #include <Core/Datatypes/DenseColMajMatrix.h>
 #include <Core/Datatypes/SparseRowMatrix.h>
 #include <Core/Util/Assert.h>
-#include <Core/Malloc/Allocator.h>
 #include <Core/Math/Expon.h>
 #include <Core/Math/LinAlg.h>
 #include <iostream>

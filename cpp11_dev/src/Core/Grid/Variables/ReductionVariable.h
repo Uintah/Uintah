@@ -31,7 +31,6 @@
 #include <Core/Disclosure/TypeUtils.h>
 #include <Core/Exceptions/TypeMismatchException.h>
 #include <Core/Exceptions/InternalError.h>
-#include <Core/Malloc/Allocator.h>
 #include <Core/Grid/Variables/Reductions.h>
 #include <Core/Util/Endian.h>
 

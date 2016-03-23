@@ -572,23 +572,11 @@ SCI_ARG_ENABLE(largesos,
   [largesos="$enableval"],
   [largesos=${largesos='no'}])
   
-SCI_ARG_ENABLE(memory-init,
-  AC_HELP_STRING(--enable-memory-initialization=8_bit_number,
-                 Force all new'd and malloc'd memory to be initialied to the value given - defaults to 127.),
-  [enable_memory_initialization="$enableval"],
-  [enable_memory_initialization=${enable_memory_initialization='no'}])
-  
 SCI_ARG_ENABLE(assertion-level,
   AC_HELP_STRING(--enable-assertion-level=N,
                  Use assertion level N (0-3) (Where 0 turns off assertions, and 3 turns on all assertions.)),
   [enable_assertion_level="$enableval"],
   [enable_assertion_level=""])
-  
-SCI_ARG_ENABLE(scinew-line-numbers,
-  AC_HELP_STRING(--enable-scinew-line-numbers,
-                 Have SCI malloc store the file and line that calls 'scinew'),
-  [enable_scinew_line_numbers="yes"],
-  [enable_scinew_line_numbers="no"])
   
 SCI_ARG_ENABLE(throw-level,
   AC_HELP_STRING(--enable-throw-level=N,
@@ -678,25 +666,6 @@ BUILD_WASATCH_FOR_ARCHES=no
 if test "$BUILD_ARCHES" = "yes" -a "$BUILD_WASATCH" != "yes"; then
   BUILD_WASATCH_FOR_ARCHES=yes
 fi
-
-if test "$enable_memory_initialization" != "no"; then
-   DEF_MEMORY_INIT="#define INITIALIZE_MEMORY"
-   if test "$enable_memory_initialization" = "yes"; then
-      memory_init=127
-   else
-      val=$enable_memory_initialization
-      if test $val -lt 128 -a $val -gt 0; then
-         memory_init=$val
-      else
-         AC_MSG_ERROR( --enable-memory-initialization's value must be from 0 to 127. )
-      fi
-   fi
-   DEF_MEMORY_INIT_NUMBER="#define MEMORY_INIT_NUMBER $memory_init"
-fi
-
-AC_SUBST(DEF_MEMORY_INIT)
-AC_SUBST(DEF_MEMORY_INIT_NUMBER)
-sci_defs_files="$sci_defs_files Core/Malloc/testmem_init.h"
 
 if test "$enable_rpath" = "no"; then
    AC_MSG_WARN(You have removed the rpath flag from some libraries.)

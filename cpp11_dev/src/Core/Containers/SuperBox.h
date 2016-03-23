@@ -29,7 +29,6 @@
 //#define SUPERBOX_DEBUGGING
 //#define SUPERBOX_PERFORMANCE_TESTING
 
-#include <Core/Malloc/Allocator.h>
 #include <Core/Exceptions/InternalError.h>
 
 #include <sci_hash_map.h>

@@ -40,7 +40,6 @@
 #include <Core/Datatypes/ColumnMatrix.h>
 #include <Core/Math/MiscMath.h>
 #include <Core/Util/Assert.h>
-#include <Core/Malloc/Allocator.h>
 
 namespace Uintah {
 

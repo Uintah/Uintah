@@ -35,7 +35,6 @@
 #include <Core/Parallel/ProcessorGroup.h>
 #include <CCA/Ports/Scheduler.h>
 #include <Core/Util/DebugStream.h>
-#include <Core/Malloc/Allocator.h>
 #include <Core/Grid/BoundaryConditions/BCDataArray.h>
 #include <Core/Grid/BoundaryConditions/BoundCond.h>
 #include <iomanip>

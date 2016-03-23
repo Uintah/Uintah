@@ -25,7 +25,6 @@
 #ifndef UINTAH_HOMEBREW_fixedvector_H
 #define UINTAH_HOMEBREW_fixedvector_H
 
-#include <Core/Malloc/Allocator.h>
 namespace Uintah {
   /**************************************
 

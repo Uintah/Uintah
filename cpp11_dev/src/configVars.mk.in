@@ -205,12 +205,6 @@ MAKE_PARALLELISM := @MAKE_PARALLELISM@
 
 LARGESOS := @LARGESOS@
 
-ifeq ($(LARGESOS),yes)
-  MALLOCLIB := Core
-else
-  MALLOCLIB := Core/Malloc
-endif
-
 # Convenience variables - compounded from above definitions
 
 DL_LIBRARY := @DL_LIB_DIR_FLAG@ @DL_LIB_FLAG@

@@ -48,7 +48,6 @@
 #  include <CCA/Components/Models/SolidReactionModel/SolidReactionModel.h>
 #endif
 
-#include <Core/Malloc/Allocator.h>
 #include <sci_defs/uintah_defs.h>
 
 #include <iostream>

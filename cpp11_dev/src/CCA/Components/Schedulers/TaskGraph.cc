@@ -37,7 +37,6 @@
 #include <Core/Grid/Grid.h>
 #include <Core/Grid/Patch.h>
 #include <Core/Grid/Task.h>
-#include <Core/Malloc/Allocator.h>
 #include <Core/Parallel/ProcessorGroup.h>
 #include <Core/Parallel/Parallel.h>
 #include <Core/Util/DebugStream.h>

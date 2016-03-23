@@ -50,7 +50,6 @@
 #include <Core/Grid/Variables/VarLabel.h>
 #include <Core/Grid/Variables/VarTypes.h>
 #include <Core/Grid/Variables/PSPatchMatlGhost.h>
-#include <Core/Malloc/Allocator.h>
 #include <Core/OS/ProcessInfo.h>
 #include <Core/Parallel/BufferInfo.h>
 #include <Core/Parallel/ProcessorGroup.h>

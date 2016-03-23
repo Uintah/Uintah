@@ -23,7 +23,6 @@
  */
 
 #include <Core/IO/UintahZlibUtil.h>
-#include <Core/Malloc/Allocator.h>
 #include <Core/Exceptions/ErrnoException.h>
 #include <Core/Exceptions/InvalidState.h>
 

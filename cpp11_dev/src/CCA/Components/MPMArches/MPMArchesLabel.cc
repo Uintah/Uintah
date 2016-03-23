@@ -34,7 +34,6 @@
 #include <Core/Grid/Variables/VarLabel.h>
 #include <Core/Grid/Variables/VarTypes.h>
 #include <Core/Grid/Variables/PerPatch.h>
-#include <Core/Malloc/Allocator.h>
 
 using namespace Uintah;
 

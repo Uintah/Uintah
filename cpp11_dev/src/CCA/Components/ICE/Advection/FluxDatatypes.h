@@ -25,7 +25,6 @@
 #include <sci_defs/mpi_defs.h> // For MPIPP_H on SGI
 #include <Core/Disclosure/TypeDescription.h>
 #include <Core/Disclosure/TypeUtils.h>
-#include <Core/Malloc/Allocator.h>
 #include <Core/Util/FancyAssert.h>
 #include <Core/Util/Endian.h> // for other swapbytes() functions.
 namespace Uintah {

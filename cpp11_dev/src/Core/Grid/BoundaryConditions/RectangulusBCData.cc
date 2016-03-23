@@ -26,7 +26,6 @@
 #include <Core/Geometry/Point.h>
 #include <Core/Grid/Box.h>
 #include <Core/Grid/BoundaryConditions/BoundCondFactory.h>
-#include <Core/Malloc/Allocator.h>
 #include <Core/Util/DebugStream.h>
 #include <iostream>
 using namespace Uintah;

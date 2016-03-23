@@ -34,7 +34,7 @@
 
 #include <Core/Grid/Task.h>
 #include <Core/Lockfree/Lockfree_Pool.hpp>
-#include <Core/Malloc/Allocators/AllocatorTags.hpp>
+#include <Core/Malloc/AllocatorTags.hpp>
 #include <Core/Parallel/BufferInfo.h>
 #include <Core/Parallel/PackBufferInfo.h>
 #include <Core/Util/InfoMapper.h>

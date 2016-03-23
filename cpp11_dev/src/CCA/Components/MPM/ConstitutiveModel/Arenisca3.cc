@@ -68,7 +68,6 @@
 #include <Core/Math/MinMax.h>
 #include <Core/Math/Matrix3.h>
 #include <Core/Math/MiscMath.h>
-#include <Core/Malloc/Allocator.h>
 #include <Core/ProblemSpec/ProblemSpec.h>
 #include <Core/Math/Weibull.h> // For variability
 #include <iostream>

@@ -26,7 +26,6 @@
 #include <Core/Geometry/Point.h>
 #include <Core/Grid/Box.h>
 #include <Core/GeometryPiece/GeometryPieceFactory.h>
-#include <Core/Malloc/Allocator.h>
 #include <Core/ProblemSpec/ProblemSpec.h>
 
 using namespace Uintah;

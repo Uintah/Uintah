@@ -38,7 +38,6 @@
 #include <Core/Grid/Variables/VarTypes.h>
 #include <Core/Labels/MPMLabel.h>
 
-#include <Core/Malloc/Allocator.h>
 #include <Core/Util/Endian.h>
 #include <Core/Math/MinMax.h>
 

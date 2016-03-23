@@ -69,7 +69,6 @@
 #include <Core/Grid/Variables/VarLabel.h>                // for VarLabel
 #include <Core/Grid/Variables/VarTypes.h>                // for delt_vartype, etc
 #include <Core/Labels/MPMLabel.h>                        // for MPMLabel
-#include <Core/Malloc/Allocator.h>                       // for new
 #include <Core/Math/Matrix3.h>                           // for Matrix3, swapbytes, etc
 #include <Core/Parallel/Parallel.h>                      // for proc0cout
 #include <Core/Parallel/ProcessorGroup.h>                // for ProcessorGroup

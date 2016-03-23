@@ -27,7 +27,6 @@
 
 #include <Core/Grid/BoundaryConditions/BoundCondBase.h>
 #include <Core/Geometry/Vector.h>
-#include <Core/Malloc/Allocator.h>
 #include <string>
 
 namespace Uintah {

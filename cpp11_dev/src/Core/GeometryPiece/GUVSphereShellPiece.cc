@@ -29,7 +29,6 @@
 #include <Core/ProblemSpec/ProblemSpecP.h>
 #include <Core/Exceptions/ProblemSetupException.h>
 #include <Core/Grid/Patch.h>
-#include <Core/Malloc/Allocator.h>
 
 #include <iostream>
 #include <cmath>

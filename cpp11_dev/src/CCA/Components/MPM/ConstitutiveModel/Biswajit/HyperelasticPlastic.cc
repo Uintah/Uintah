@@ -42,7 +42,6 @@
 #include <Core/Math/MinMax.h>
 #include <Core/Math/Gaussian.h>
 #include <Core/Math/Weibull.h>
-#include <Core/Malloc/Allocator.h>
 #include <iostream>
 
 using namespace std;

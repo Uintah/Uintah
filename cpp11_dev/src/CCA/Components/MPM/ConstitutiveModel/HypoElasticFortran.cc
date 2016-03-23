@@ -40,7 +40,6 @@
 #include <Core/Math/Matrix3.h>
 #include <Core/ProblemSpec/ProblemSpec.h>
 
-#include <Core/Malloc/Allocator.h>
 #include <Core/Math/MinMax.h>
 
 #include <sci_defs/uintah_defs.h>

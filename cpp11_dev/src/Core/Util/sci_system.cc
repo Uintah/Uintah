@@ -54,7 +54,6 @@
 #  include <cstring>
 #  include <pthread.h>
 
-#  include <Core/Malloc/Allocator.h>
 
 /*
  This file is straight out of the glibc-2.2.1 distribution, with the

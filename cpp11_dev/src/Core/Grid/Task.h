@@ -30,7 +30,6 @@
 #include <Core/Grid/Variables/ComputeSet.h>
 #include <CCA/Ports/DataWarehouseP.h>
 #include <Core/Util/constHandle.h>
-#include <Core/Malloc/Allocator.h>
 #include <Core/Geometry/IntVector.h>
 #include <Core/Parallel/Parallel.h>
 

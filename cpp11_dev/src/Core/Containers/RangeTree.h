@@ -25,7 +25,6 @@
 #define Core_Containers_RangeTree_h
 
 #include <Core/Util/Assert.h>
-#include <Core/Malloc/Allocator.h>
 #include <Core/Exceptions/InternalError.h>
 #include <list>
 #include <iostream>

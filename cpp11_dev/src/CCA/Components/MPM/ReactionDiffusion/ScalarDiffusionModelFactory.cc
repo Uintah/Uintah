@@ -28,7 +28,6 @@
 #include <CCA/Components/MPM/ReactionDiffusion/NonLinearDiff1.h>
 #include <Core/Exceptions/ProblemSetupException.h>
 #include <Core/ProblemSpec/ProblemSpec.h>
-#include <Core/Malloc/Allocator.h>
 #include <string>
 
 using namespace std;

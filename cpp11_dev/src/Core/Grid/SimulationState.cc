@@ -34,7 +34,6 @@
 #include <Core/Grid/Variables/ReductionVariable.h>
 #include <Core/Grid/Variables/VarLabel.h>
 #include <Core/Grid/Variables/VarTypes.h>
-#include <Core/Malloc/Allocator.h>
 #include <Core/Util/StringUtil.h>
 
 #include <CCA/Components/Arches/ArchesMaterial.h>

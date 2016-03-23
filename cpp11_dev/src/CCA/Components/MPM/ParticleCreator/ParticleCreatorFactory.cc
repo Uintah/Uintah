@@ -28,7 +28,6 @@
 //#include <CCA/Components/MPM/ParticleCreator/ShellParticleCreator.h>
 #include <CCA/Components/MPM/MPMFlags.h>
 #include <Core/ProblemSpec/ProblemSpec.h>
-#include <Core/Malloc/Allocator.h>
 #include <string>
 
 using namespace std;
