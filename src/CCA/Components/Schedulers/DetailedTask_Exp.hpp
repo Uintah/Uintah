@@ -161,7 +161,7 @@ public:
 
   int getExternalDepCount() { return m_external_dependency_count.load(std::memory_order_relaxed); }
 
-  bool areInternalDependenciesSatisfied() { return (m_num_pending_internal_dependencies == 0); }
+  bool areInternalDependenciesSatisfied() { return (m_num_pending_internal_dependencies.load(std::memory_order_relaxed) == 0); }
 
   double task_wait_time() const { return m_wait_timer().seconds(); }
 

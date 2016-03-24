@@ -188,7 +188,7 @@ private:
 };
 
 
-using CommPool = Lockfree::LevelPool<  CommRequest
+using CommPool = Lockfree::LevelPool< CommRequest
                                     , uint64_t
                                     , 1
                                     >;
