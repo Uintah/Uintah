@@ -25,10 +25,10 @@
 
 #include <chrono>
 #include <limits>
+#include <atomic>
 #include <cstdint>
 #include <vector>
 #include <memory>
-#include <mutex>
 
 #include <ostream>
 
@@ -149,8 +149,8 @@ struct Simple
   // number of nanoseconds since construction, start, or reset
   nanoseconds operator()() const
   {
-    return std::chrono::duration_cast<std::chrono::nanoseconds>( (m_start < m_finish) ?
-             (m_finish - m_start) : (clock_type::now() - m_start) ).count()
+    return static_cast<int64_t>(std::chrono::duration_cast<std::chrono::nanoseconds>( (m_start < m_finish) ?
+             (m_finish - m_start) : (clock_type::now() - m_start) ).count())
            + m_offset
            - m_excluded;
   }
@@ -192,14 +192,26 @@ private:
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
 
+namespace Impl {
+
+inline int tid()
+{
+  static std::atomic<int> count{0};
+  const static thread_local int id = count.fetch_add( 1, std::memory_order_relaxed );
+  return id;
+}
+
+}
+
 // ThreadTrip timer
 //
 // RAII timer
-template <typename Tag>
+template <typename Tag, int MaxThreads=512>
 struct ThreadTrip : public Simple
 {
   using tag = Tag;
 
+  static constexpr int size = MaxThreads;
   ThreadTrip() = default;
 
   template <typename... ExcludeTimers>
@@ -221,7 +233,10 @@ struct ThreadTrip : public Simple
   bool stop()
   {
     if( Simple::stop()) {
-      t_node.m_value += Simple::operator()();
+      const int t = Impl::tid();
+      s_total[ t % size ] += (*this)();
+      s_used[  t % size ] = true;
+      ++s_count[ t % size ];
       return true;
     }
     return false;
@@ -230,14 +245,20 @@ struct ThreadTrip : public Simple
   // NOT thread safe
   static void reset_tag()
   {
-    Node::apply( [](volatile int64_t & v) { v = 0; } );
+    for (int i=0; i<size; ++i) {
+      s_total[i] = 0;
+      s_count[i] = 0;
+      s_used[i] = false;
+    }
   }
 
   // total time among all threads
   static nanoseconds total()
   {
     int64_t result = 0;
-    Node::apply( [&result](volatile int64_t const& v ) { result += v; } );
+    for (int i=0; i<size; ++i) {
+      result = (s_used[i] && result < s_total[i]) ? s_total[i] : result ;
+    }
     return result;
   }
 
@@ -245,7 +266,9 @@ struct ThreadTrip : public Simple
   static nanoseconds min()
   {
     int64_t result = std::numeric_limits<int64_t>::max();
-    Node::apply( [&result]( volatile int64_t const& v ) { result = result <  v ? result : v; } );
+    for (int i=0; i<size; ++i) {
+      result = (s_used[i] && s_total[i] < result) ? s_total[i] : result ;
+    }
     return result != std::numeric_limits<int64_t>::max() ? result : 0 ;
   }
 
@@ -253,74 +276,43 @@ struct ThreadTrip : public Simple
   static nanoseconds max()
   {
     int64_t result = std::numeric_limits<int64_t>::min();
-    Node::apply( [&result]( volatile int64_t const& v ) { result = v <  result ? result : v; } );
+    for (int i=0; i<size; ++i) {
+      result = (s_used[i] && result < s_total[i]) ? s_total[i] : result ;
+    }
     return result != std::numeric_limits<int64_t>::min() ? result : 0 ;
   }
 
   // time given thread
-  static nanoseconds thread()  { return t_node.m_value; }
+  static nanoseconds thread(int t)  { return s_total[ t ]; }
 
   static int num_threads()
   {
     int result = 0;
-    Node::apply( [&result](int64_t) { ++result; });
+    for (int i=0; i<size; ++i) {
+      result += s_used[i] ? 1 : 0;
+    }
+    return result;
+  }
+
+  static int64_t count()
+  {
+    int64_t result = 0;
+    for (int i=0; i<size; ++i) {
+      result = (s_used[i] && result < s_count[i]) ? s_count[i] : result ;
+    }
     return result;
   }
 
 private:
+  static int64_t s_total[size];
+  static int64_t s_count[size];
+  static bool     s_used[size];
 
-  struct Node
-  {
-    Node()
-    {
-      std::unique_lock<std::mutex> lock(s_lock);
-      m_next = s_head;
-      s_head = this;
-    }
-
-    ~Node()
-    {
-      std::unique_lock<std::mutex> lock(s_lock);
-      if (s_head == this) {
-        s_head = m_next;
-      }
-      else {
-        Node * curr = s_head;
-        while (curr->m_next != this) { curr = curr->m_next; }
-        curr->m_next = m_next;
-      }
-    }
-
-
-    template <typename Functor>
-    static void apply( Functor && f )
-    {
-      Node * curr = s_head;
-
-      while (curr) {
-        f(curr->m_value);
-        curr = curr->m_next;
-      }
-    }
-
-    int64_t  m_value{0};
-    Node   * m_next{nullptr};
-
-    static Node *     s_head;
-    static std::mutex s_lock;
-  };
-
-  static thread_local Node t_node;
 };
 
-template<typename Tag>
-typename ThreadTrip<Tag>::Node * ThreadTrip<Tag>::Node::s_head{nullptr};
-
-template<typename Tag>
-std::mutex ThreadTrip<Tag>::Node::s_lock{};
-
-template <typename Tag>
-thread_local typename ThreadTrip<Tag>::Node ThreadTrip<Tag>::t_node{};
+template <typename Tag, int MaxThreads> int64_t ThreadTrip<Tag,MaxThreads>::s_total[size] = {};
+template <typename Tag, int MaxThreads> int64_t ThreadTrip<Tag,MaxThreads>::s_count[size] = {};
+template <typename Tag, int MaxThreads> bool    ThreadTrip<Tag,MaxThreads>::s_used[size] = {};
 
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
