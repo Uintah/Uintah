@@ -53,7 +53,7 @@ DetailedTask::DetailedTask(       Task            * task
   , m_task_group{taskGroup}
   , m_initiated{false}
   , m_externally_ready{false}
-  , m_external_dependency_count{-1}
+  , m_external_dependency_count{0}
   , m_name{m_task->getName()}
   , m_num_pending_internal_dependencies{0}
   , m_resource_index{-1}
