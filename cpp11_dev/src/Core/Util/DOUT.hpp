@@ -34,6 +34,8 @@
 
 #include <Core/Util/Timers/Timers.hpp>
 
+#include <sci_defs/mpi_defs.h>
+
 #define DOUT( cond, ... )             \
   if (cond) {                         \
     std::ostringstream msg;           \
@@ -49,6 +51,14 @@
     msg << __VA_ARGS__;               \
     printf("%s\n",msg.str().c_str()); \
   }
+
+#define TOUT()                            \
+  printf("TOUT:  %d  %d  %s:%d\n"         \
+      , MPI::Impl::prank( MPI_COMM_WORLD )\
+      , MPI::Impl::tid()                  \
+      , __FILE__                          \
+      , __LINE__                          \
+      )
 
 
 namespace Uintah {
