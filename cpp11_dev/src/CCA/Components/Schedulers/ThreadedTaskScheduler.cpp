@@ -50,8 +50,12 @@ Dout g_mpi_dbg(   "MPIDBG"  , false );
 
 std::mutex      g_lb_mutex;
 
-thread_local CommPool::handle t_emplace{};
-thread_local CommPool::handle t_find{};
+__thread CommPool::handle t_comm_emplace{};
+__thread CommPool::handle t_request{};
+
+__thread TaskPool::handle t_task_emplace{};
+__thread TaskPool::handle t_init{};
+__thread TaskPool::handle t_ready{};
 
 } // namespace
 
@@ -62,7 +66,7 @@ namespace Uintah { namespace Impl {
 
 namespace {
 
-thread_local int       t_tid = 0;
+__thread int       t_tid = 0;
 
 }
 
@@ -102,7 +106,7 @@ void set_affinity( const int proc_unit )
 //
 void thread_driver( const int tid )
 {
-  // t_tid is thread_local variable, unique to each std::thread spawned below
+  // t_tid is __thread variable, unique to each std::thread spawned below
   t_tid = tid;
 
   // set each TaskWorker thread's affinity
@@ -215,7 +219,8 @@ void ThreadedTaskScheduler::problemSetup( const ProblemSpecP & prob_spec, Simula
 {
   m_num_threads = Uintah::Parallel::getNumThreads();
 
-  m_task_pool = TaskPool{ static_cast<size_t>(m_num_threads) };
+  m_init_tasks  = TaskPool{ static_cast<size_t>(m_num_threads) };
+  m_ready_tasks = TaskPool{ static_cast<size_t>(m_num_threads) };
 
   if ((m_num_threads < 1) && Uintah::Parallel::usingMPI()) {
     if (d_myworld->myrank() == 0) {
@@ -274,7 +279,6 @@ void ThreadedTaskScheduler::execute(  int tgnum /*=0*/ , int iteration /*=0*/ )
   m_num_tasks = m_detailed_tasks->numLocalTasks();
 
   TaskPool::handle insert_handle;
-  TaskPool::handle find_handle;
 
   for (int i = 0; i < m_num_tasks; ++i) {
     DetailedTask* dtask = m_detailed_tasks->localTask(i);
@@ -309,7 +313,7 @@ void ThreadedTaskScheduler::execute(  int tgnum /*=0*/ , int iteration /*=0*/ )
     if ((dtask->getTask()->getType() == Task::Reduction) || (dtask->getTask()->usesMPI())) {
       m_phase_sync_tasks[dtask->getTask()->d_phase] = dtask;
     } else {
-      insert_handle = m_task_pool.emplace(insert_handle, dtask);
+      insert_handle = m_init_tasks.emplace(insert_handle, dtask);
     }
   }
 
@@ -357,11 +361,13 @@ void ThreadedTaskScheduler::execute(  int tgnum /*=0*/ , int iteration /*=0*/ )
       m_num_tasks_done.fetch_add(1, std::memory_order_relaxed);
       m_phase_tasks_done[sync_task->getTask()->d_phase].fetch_add(1, std::memory_order_relaxed);
     } else {
-      select_tasks(iteration, find_handle);
+      process_tasks(iteration);
     }
   }
 
-  ASSERT(m_task_pool.empty());
+  ASSERT(m_init_tasks.empty());
+  ASSERT(m_ready_tasks.empty());
+  ASSERT(m_comm_requests.empty());
 
   //------------------------------------------------------------------------------------------------
   // deactivate TaskRunners
@@ -595,8 +601,8 @@ void ThreadedTaskScheduler::post_MPI_recvs( DetailedTask * task
       int from = batch->m_from_task->getAssignedResourceIndex();
       ASSERTRANGE(from, 0, d_myworld->size());
 
-      CommPool::iterator iter = m_comm_requests.emplace(t_emplace, REQUEST_RECV, new RecvHandle(p_mpibuff, pBatchRecvHandler));
-      t_emplace = iter;
+      CommPool::iterator iter = m_comm_requests.emplace(t_comm_emplace, REQUEST_RECV, new RecvHandle(p_mpibuff, pBatchRecvHandler));
+      t_comm_emplace = iter;
 
       MPI::Irecv(buf, count, datatype, from, batch->m_message_tag, d_myworld->getComm(), iter->request());
 
@@ -698,8 +704,8 @@ void ThreadedTaskScheduler::post_MPI_sends( DetailedTask * task, int iteration )
       m_message_volume += count * typeSize;
       volume_sends += count * typeSize;
 
-      CommPool::iterator iter = m_comm_requests.emplace(t_emplace, REQUEST_SEND, new SendHandle(mpibuff.takeSendlist()));
-      t_emplace = iter;
+      CommPool::iterator iter = m_comm_requests.emplace(t_comm_emplace, REQUEST_SEND, new SendHandle(mpibuff.takeSendlist()));
+      t_comm_emplace = iter;
 
       MPI::Isend(buf, count, datatype, to, batch->m_message_tag, d_myworld->getComm(), iter->request());
     }
@@ -712,23 +718,23 @@ void ThreadedTaskScheduler::post_MPI_sends( DetailedTask * task, int iteration )
 //
 bool ThreadedTaskScheduler::process_MPI_requests()
 {
-  RuntimeStats::TestTimer mpi_test_timer;
-
+//  RuntimeStats::TestTimer mpi_test_timer;
+//
   if (m_comm_requests.empty()) {
     return false;
   }
-
+//
   bool result = false;
-
-  auto ready_request = [](CommRequest const& r) { return r.test(); };
-  CommPool::iterator iter = m_comm_requests.find_any(t_find, ready_request);
-  if (iter) {
-    t_find = iter;
-    MPI_Status status;
-    iter->finishedCommunication(d_myworld, status);
-    m_comm_requests.erase(iter);
-    result = true;
-  }
+//
+//  auto ready_request = [](CommRequest const& r) { return r.test(); };
+//  CommPool::iterator iter = m_comm_requests.find_any(t_find, ready_request);
+//  if (iter) {
+//    t_find = iter;
+//    MPI_Status status;
+//    iter->finishedCommunication(d_myworld, status);
+//    m_comm_requests.erase(iter);
+//    result = true;
+//  }
   return result;
 }
 
@@ -815,43 +821,51 @@ void ThreadedTaskScheduler::copy_restart_flag( int task_graph_num )
 
 //______________________________________________________________________
 //
-void ThreadedTaskScheduler::select_tasks( int iteration, TaskPool::handle & find_handle)
+void ThreadedTaskScheduler::process_tasks( int iteration )
 {
-  int flag = 0;
-
-  auto find_task = [&](DetailedTask * dtask) {
-    flag = 0;
-    if (!dtask->isInitiated() &&
-         dtask->getTask()->d_phase == m_current_phase.load(std::memory_order_relaxed)) {
-      flag = 1;
-    }
-    else if (dtask->getExternalDepCount() == 0 &&
-             dtask->areInternalDependenciesSatisfied() &&
-             dtask->isInitiated() &&
-             dtask->getTask()->d_phase == m_current_phase.load(std::memory_order_relaxed)) {
-      flag = 2;
-    }
-    return flag > 0;
+  const int phase = m_current_phase.load(std::memory_order_relaxed);
+  auto init_task = [&](DetailedTask * dtask) {
+    POUT("init task Name: " << dtask->getTask()->getName());
+    return !dtask->isInitiated() &&
+            dtask->getTask()->d_phase == phase;
   };
 
-  // initiate tasks, post MPI recvs
-  TaskPool::iterator iter = m_task_pool.find_any(find_handle, find_task);
-  if (iter) {
-    find_handle = iter;
-    DetailedTask * dtask = *iter;
-    if (flag == 1) {
-      post_MPI_recvs(dtask, m_abort, m_abort_point, iteration);
-      dtask->markInitiated();
-      dtask->checkExternalDepCount();
-    } else if (flag == 2) {
-      run_task(dtask, m_current_iteration);
-      m_task_pool.erase(iter);
-      m_num_tasks_done.fetch_add(1, std::memory_order_relaxed);
-      m_phase_tasks_done[dtask->getTask()->d_phase].fetch_add(1, std::memory_order_relaxed);
-    }
-    iter.clear();
-  } else {
-    process_MPI_requests();
+  auto ready_request = [](CommRequest const& r) { return r.test(); };
+
+  auto ready_task = [&](DetailedTask * dtask) {
+    POUT("ready task Name: " << dtask->getTask()->getName());
+    return dtask->getExternalDepCount() == 0         &&
+           dtask->areInternalDependenciesSatisfied() &&
+           dtask->getTask()->d_phase == phase;
+  };
+
+  CommPool::iterator comm_iter;
+  TaskPool::iterator task_iter;
+
+  if (task_iter = m_init_tasks.find_any(t_init, init_task)) {
+    t_init = task_iter;
+    DetailedTask * dtask = *task_iter;
+    post_MPI_recvs(dtask, m_abort, m_abort_point, iteration);
+    dtask->markInitiated();
+    m_ready_tasks.emplace(t_task_emplace, dtask);
+    m_init_tasks.erase(task_iter);
+    m_phase_tasks_done[phase].load(std::memory_order_relaxed);
+  }
+
+  else if (comm_iter = m_comm_requests.find_any(t_request, ready_request)) {
+    t_request = comm_iter;
+    MPI_Status status;
+    comm_iter->finishedCommunication(d_myworld, status);
+    m_comm_requests.erase(comm_iter);
+  }
+
+  else if (task_iter = m_ready_tasks.find_any(t_ready, ready_task)) {
+    t_ready = task_iter;
+    DetailedTask * dtask = *task_iter;
+    run_task(dtask, m_current_iteration);
+    m_ready_tasks.erase(task_iter);
+    m_num_tasks_done.fetch_add(1, std::memory_order_relaxed);
+    m_phase_tasks_done[phase].fetch_add(1, std::memory_order_relaxed);
   }
 }
 
@@ -877,9 +891,8 @@ void ThreadedTaskScheduler::init_threads(ThreadedTaskScheduler * sched, int num_
 //
 void TaskRunner::run() const
 {
-  ThreadedTaskScheduler::TaskPool::handle handle;
   while ( Impl::g_run_tasks ) {
-    m_scheduler->select_tasks(m_scheduler->m_current_iteration, handle);
+    m_scheduler->process_tasks(m_scheduler->m_current_iteration);
   }
 }
 

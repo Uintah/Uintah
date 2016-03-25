@@ -360,7 +360,7 @@ DetailedTask::resetDependencyCounts()
   m_externally_ready = false;
   m_initiated        = false;
 
-  m_num_pending_internal_dependencies.store(m_internal_dependencies.size(), std::memory_order_relaxed);
+  m_num_pending_internal_dependencies = m_internal_dependencies.size();
 
   m_wait_timer.reset();
   m_exec_timer.reset();
@@ -379,7 +379,7 @@ DetailedTask::addInternalDependency(       DetailedTask * prerequisiteTask
     if (foundIt == prerequisiteTask->m_internal_dependents.end()) {
       m_internal_dependencies.push_back(InternalDependency(prerequisiteTask, this, var, 0/* not satisfied */));
       prerequisiteTask->m_internal_dependents[this] = &m_internal_dependencies.back();
-      m_num_pending_internal_dependencies.store(m_internal_dependencies.size(), std::memory_order_relaxed);
+      m_num_pending_internal_dependencies = m_internal_dependencies.size();
     }
     else {
       foundIt->second->addVarLabel(var);
@@ -414,14 +414,14 @@ DetailedTask::dependencySatisfied( InternalDependency* dep )
   // TODO - remove this lock, APH 03/21/16
   m_internal_dependency_lock.lock();
   {
-    ASSERT(m_num_pending_internal_dependencies.load(std::memory_order_relaxed) > 0);
+    ASSERT(m_num_pending_internal_dependencies > 0);
     unsigned long currentGeneration = m_task_group->getCurrentDependencyGeneration();
 
     // if false, then the dependency has already been satisfied
     ASSERT(dep->m_satisfied_generation < currentGeneration);
 
     dep->m_satisfied_generation = currentGeneration;
-    m_num_pending_internal_dependencies.fetch_sub(1, std::memory_order_relaxed);
+    m_num_pending_internal_dependencies--;
   }
   m_internal_dependency_lock.unlock();
 }

@@ -50,6 +50,11 @@ class  Task;
 class  DetailedTask;
 class  TaskRunner;
 
+using TaskPool = Lockfree::Pool< DetailedTask *
+                               , uint64_t
+                               , 1u
+                               >;
+
 /**************************************
 
  CLASS
@@ -130,11 +135,6 @@ private:
   ThreadedTaskScheduler( ThreadedTaskScheduler && )                 = delete;
   ThreadedTaskScheduler& operator=( ThreadedTaskScheduler && )      = delete;
 
-  using TaskPool = Lockfree::Pool< DetailedTask *
-                                 , uint64_t
-                                 , 1u
-                                 >;
-
   enum : size_t {
       REQUEST_COLLECTIVE
     , REQUEST_RECV
@@ -158,7 +158,7 @@ private:
 
 
   // Methods for TaskRunner management
-  void select_tasks( int iteration, TaskPool::handle & find_handle );
+  void process_tasks( int iteration );
 
   void thread_fence();
 
@@ -170,8 +170,9 @@ private:
   std::vector<DetailedTask*>   m_phase_sync_tasks{};
   DetailedTasks              * m_detailed_tasks{};
 
-  TaskPool   m_task_pool{};
   CommPool   m_comm_requests{REQUEST_SIZE};
+  TaskPool   m_init_tasks{};
+  TaskPool   m_ready_tasks{};
 
   bool       m_abort{ false };
   int        m_current_iteration{ 0 };
