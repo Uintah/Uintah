@@ -161,7 +161,7 @@ public:
 
   int getExternalDepCount() { return m_external_dependency_count.load(std::memory_order_relaxed); }
 
-  bool areInternalDependenciesSatisfied() { return (m_num_pending_internal_dependencies.load(std::memory_order_relaxed) == 0); }
+  bool areInternalDependenciesSatisfied() { return (m_num_pending_internal_dependencies == 0); }
 
   double task_wait_time() const { return m_wait_timer().seconds(); }
 
@@ -256,8 +256,8 @@ private:
   // m_internal_dependencies list of the requiring DetailedTasks.
   std::map<DetailedTask*, InternalDependency*> m_internal_dependents{};
 
-  std::atomic<unsigned long>   m_num_pending_internal_dependencies{};
-  std::mutex                   m_internal_dependency_lock{};
+  unsigned long   m_num_pending_internal_dependencies{};
+  std::mutex      m_internal_dependency_lock{};
 
   int m_resource_index;
   int m_static_order;
