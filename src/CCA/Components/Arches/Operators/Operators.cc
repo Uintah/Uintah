@@ -6,7 +6,7 @@
 #include <CCA/Components/Arches/ArchesMaterial.h>
 #include <spatialops/structured/FVStaggered.h>
 #include <spatialops/particles/ParticleFieldTypes.h>
-#include <spatialops/particles/ParticleOperators.h>
+#include <spatialops/particles/ParticleOperatorsImplementation.h>
 #include <CCA/Components/Wasatch/Operators/UpwindInterpolant.h>
 #include <CCA/Components/Wasatch/Operators/FluxLimiterInterpolant.h>
 #include <CCA/Components/Wasatch/ConvectiveInterpolationMethods.h>
