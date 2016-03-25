@@ -38,7 +38,8 @@ SRCDIR   := CCA/Components/Wasatch/Operators
 #
 CUDA_ENABLED_SRCS =             \
         UpwindInterpolant       \
-        FluxLimiterInterpolant  
+        FluxLimiterInterpolant  \
+        Operators
 
 ifeq ($(BUILD_WASATCH_FOR_ARCHES),no)
   CUDA_ENABLED_SRCS += Extrapolant
@@ -60,11 +61,6 @@ else
 
 endif
 
-ifeq ($(BUILD_WASATCH_FOR_ARCHES),no)
-  SRCS += \
-        $(SRCDIR)/Operators.cc
-endif
-
 ########################################################################
 #
 # Rules to copy CUDA enabled source (.cc) files to the binary build tree
@@ -73,6 +69,9 @@ endif
 
 ifeq ($(HAVE_CUDA),yes)
   # If Copy the 'original' .cc files into the binary tree and rename as .cu
+
+  $(OBJTOP_ABS)/$(SRCDIR)/Operators.cu : $(SRCTOP_ABS)/$(SRCDIR)/Operators.cc
+	cp $< $@
 
   $(OBJTOP_ABS)/$(SRCDIR)/FluxLimiterInterpolant.cu : $(SRCTOP_ABS)/$(SRCDIR)/FluxLimiterInterpolant.cc
 	cp $< $@

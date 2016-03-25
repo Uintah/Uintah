@@ -23,7 +23,7 @@
  */
 
 //-- Wasatch includes --//
-#include "ScalabilityTestTransportEquation.h"
+#include <CCA/Components/Wasatch/Transport/ScalabilityTestTransportEquation.h>
 #include <CCA/Components/Wasatch/Operators/OperatorTypes.h>
 #include <CCA/Components/Wasatch/ParseTools.h>
 #include <CCA/Components/Wasatch/TagNames.h>

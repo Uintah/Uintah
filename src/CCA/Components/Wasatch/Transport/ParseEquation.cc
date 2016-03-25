@@ -33,8 +33,8 @@
 
 //-- Add headers for individual transport equations here --//
 #include "TransportEquation.h"
-#include "ScalarTransportEquation.h"
-#include "ScalabilityTestTransportEquation.h"
+#include <CCA/Components/Wasatch/Transport/ScalarTransportEquation.h>
+#include <CCA/Components/Wasatch/Transport/ScalabilityTestTransportEquation.h>
 #include "MomentumTransportEquationBase.h"
 #include "LowMachMomentumTransportEquation.h"
 #include "CompressibleMomentumTransportEquation.h"

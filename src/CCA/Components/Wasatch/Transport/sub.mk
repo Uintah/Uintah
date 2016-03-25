@@ -41,7 +41,8 @@ CUDA_ENABLED_SRCS =                         \
      MomentTransportEquation                \
      MomentumTransportEquationBase          \
      LowMachMomentumTransportEquation       \
-     TotalInternalEnergyTransportEquation
+     TotalInternalEnergyTransportEquation   \
+     ParticleMomentumEquation
 
 ifeq ($(HAVE_CUDA),yes)
 
@@ -68,7 +69,6 @@ SRCS +=                                                \
         $(SRCDIR)/EquationBase.cc                      \
         $(SRCDIR)/ParticleEquationBase.cc              \
         $(SRCDIR)/ParticlePositionEquation.cc          \
-        $(SRCDIR)/ParticleMomentumEquation.cc          \
         $(SRCDIR)/ParticleMassEquation.cc              \
         $(SRCDIR)/ParticleSizeEquation.cc              \
         $(SRCDIR)/EnthalpyTransportEquation.cc         \
@@ -85,6 +85,9 @@ SRCS +=                                                \
 
 ifeq ($(HAVE_CUDA),yes)
   # If Copy the 'original' .cc files into the binary tree and rename as .cu
+
+  $(OBJTOP_ABS)/$(SRCDIR)/ParticleMomentumEquation.cu : $(SRCTOP_ABS)/$(SRCDIR)/ParticleMomentumEquation.cc
+	cp $< $@
 
   $(OBJTOP_ABS)/$(SRCDIR)/MomentTransportEquation.cu : $(SRCTOP_ABS)/$(SRCDIR)/MomentTransportEquation.cc
 	cp $< $@
