@@ -108,9 +108,11 @@ struct Timer
 
   ~Timer()
   {
-    s_total[ tid() % MPI_MAX_THREADS ] +=
+    const int t = tid() % MPI_MAX_THREADS;
+    s_total[t] +=
       std::chrono::duration_cast<std::chrono::nanoseconds>(clock_type::now() - m_start).count();
-    ++s_count[ tid() % MPI_MAX_THREADS ];
+    ++s_count[t];
+    s_used[t] = true;
   }
 
   // NOT thread safe
