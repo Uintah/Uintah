@@ -815,7 +815,7 @@ void ThreadedTaskScheduler::process_tasks( int iteration )
   CommPool::iterator comm_iter;
   TaskPool::iterator task_iter;
 
-  if (task_iter = m_init_tasks.find_any(t_init, init_task)) {
+  if ((task_iter = m_init_tasks.find_any(t_init, init_task))) {
     t_init = task_iter;
     DetailedTask * dtask = *task_iter;
     post_MPI_recvs(dtask, m_abort, m_abort_point, iteration);
@@ -825,14 +825,14 @@ void ThreadedTaskScheduler::process_tasks( int iteration )
     m_phase_tasks_done[phase].load(std::memory_order_relaxed);
   }
 
-  else if (comm_iter = m_comm_requests.find_any(t_request, ready_request)) {
+  else if ((comm_iter = m_comm_requests.find_any(t_request, ready_request))) {
     t_request = comm_iter;
     MPI_Status status;
     comm_iter->finishedCommunication(d_myworld, status);
     m_comm_requests.erase(comm_iter);
   }
 
-  else if (task_iter = m_ready_tasks.find_any(t_ready, ready_task)) {
+  else if ((task_iter = m_ready_tasks.find_any(t_ready, ready_task))) {
     t_ready = task_iter;
     DetailedTask * dtask = *task_iter;
     run_task(dtask, m_current_iteration);
