@@ -27,7 +27,7 @@
 #include <CCA/Components/Schedulers/CommunicationList.hpp>
 #include <CCA/Components/Schedulers/OnDemandDataWarehouse.h>
 #include <CCA/Components/Schedulers/RuntimeStats.hpp>
-#include <CCA/Components/Schedulers/TaskGraph.h>
+#include <CCA/Components/Schedulers/TaskGraph_Exp.hpp>
 #include <CCA/Ports/Output.h>
 
 #include <Core/Exceptions/ProblemSetupException.h>
