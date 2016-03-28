@@ -146,8 +146,6 @@ private:
 
   void post_MPI_sends( DetailedTask * task, int iteration );
 
-  bool process_MPI_requests();
-
   void run_task( DetailedTask * dtask, int iteration );
 
   void run_reduction_task( DetailedTask* task );
@@ -194,7 +192,7 @@ private:
 
   const Output              * m_output_port;
 
-};
+}; // class ThreadedTaskScheduler
 
 
 class TaskRunner {
@@ -223,7 +221,7 @@ class TaskRunner {
 
     friend class ThreadedTaskScheduler;
 
-}; // class ThreadedTaskScheduler
+}; // class TaskRunner
 
 } // namespace Uintah
 

@@ -716,31 +716,6 @@ void ThreadedTaskScheduler::post_MPI_sends( DetailedTask * task, int iteration )
 
 //______________________________________________________________________
 //
-bool ThreadedTaskScheduler::process_MPI_requests()
-{
-//  RuntimeStats::TestTimer mpi_test_timer;
-//
-  if (m_comm_requests.empty()) {
-    return false;
-  }
-//
-  bool result = false;
-//
-//  auto ready_request = [](CommRequest const& r) { return r.test(); };
-//  CommPool::iterator iter = m_comm_requests.find_any(t_find, ready_request);
-//  if (iter) {
-//    t_find = iter;
-//    MPI_Status status;
-//    iter->finishedCommunication(d_myworld, status);
-//    m_comm_requests.erase(iter);
-//    result = true;
-//  }
-  return result;
-}
-
-
-//______________________________________________________________________
-//
 void ThreadedTaskScheduler::run_task( DetailedTask * dtask, int iteration )
 {
   // measure per thread exec_time
@@ -825,7 +800,6 @@ void ThreadedTaskScheduler::process_tasks( int iteration )
 {
   const int phase = m_current_phase.load(std::memory_order_relaxed);
   auto init_task = [&](DetailedTask * dtask) {
-    POUT("init task Name: " << dtask->getTask()->getName());
     return !dtask->isInitiated() &&
             dtask->getTask()->d_phase == phase;
   };
@@ -833,7 +807,6 @@ void ThreadedTaskScheduler::process_tasks( int iteration )
   auto ready_request = [](CommRequest const& r) { return r.test(); };
 
   auto ready_task = [&](DetailedTask * dtask) {
-    POUT("ready task Name: " << dtask->getTask()->getName());
     return dtask->getExternalDepCount() == 0         &&
            dtask->areInternalDependenciesSatisfied() &&
            dtask->getTask()->d_phase == phase;
