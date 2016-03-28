@@ -22,12 +22,6 @@
  * IN THE SOFTWARE.
  */
 
-#ifdef UINTAH_USING_EXPERIMENTAL
-
-#include <CCA/Components/Schedulers/SchedulerCommon_Exp.cpp>
-
-#else
-
 #include <CCA/Components/Schedulers/SchedulerCommon.h>
 
 #include <CCA/Components/Schedulers/DetailedTasks.h>
@@ -1994,5 +1988,3 @@ SchedulerCommon::printTaskLevels( const ProcessorGroup* d_myworld,
     }
   }  // debugstream active
 }
-
-#endif // UINTAH_USING_EXPERIMENTAL
