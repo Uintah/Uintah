@@ -39,7 +39,7 @@ SRCS += \
         $(SRCDIR)/MemoryLog.cc                \
         $(SRCDIR)/OnDemandDataWarehouse.cc    \
         $(SRCDIR)/Relocate.cc                 \
-        $(SRCDIR)/RuntimeStats.cc             \
+        $(SRCDIR)/RuntimeStats.cpp            \
         $(SRCDIR)/SchedulerCommon.cc          \
         $(SRCDIR)/SchedulerFactory.cc         \
         $(SRCDIR)/SendState.cc                \

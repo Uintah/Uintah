@@ -27,7 +27,7 @@
 #include <CCA/Components/Schedulers/MemoryLog.h>
 #include <CCA/Components/Schedulers/OnDemandDataWarehouse.h>
 #include <CCA/Components/Schedulers/SchedulerCommon.h>
-#include <CCA/Components/Schedulers/TaskGraph.h>
+#include <CCA/Components/Schedulers/TaskGraph_Exp.hpp>
 
 #include <Core/Grid/Grid.h>
 #include <Core/Grid/Variables/PSPatchMatlGhostRange.h>
