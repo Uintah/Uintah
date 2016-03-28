@@ -214,6 +214,8 @@ namespace WasatchCore{
       else{
         this->pressureID_ = factory.get_id( this->pressureTag_ );
       }
+    } else if( factory.have_entry( this->pressureTag_ ) ) {
+      this->pressureID_ = factory.get_id( this->pressureTag_ );
     }
     
     this->setup();
@@ -243,7 +245,7 @@ namespace WasatchCore{
     Expr::ExpressionFactory& factory = *this->gc_[ADVANCE_SOLUTION]->exprFactory;
     typedef typename MomRHS<FieldT, SpatialOps::NODIR>::Builder RHS;
     return factory.register_expression( scinew RHS( this->rhsTag_,
-                                                    (enablePressureSolve ? this->pressureTag_ : Expr::Tag()),
+                                                    ( (enablePressureSolve || factory.have_entry( this->pressureTag_ )) ? this->pressureTag_ : Expr::Tag()),
                                                     rhs_part_tag(this->solnVarTag_),
                                                     volFracTag ) );
   }
