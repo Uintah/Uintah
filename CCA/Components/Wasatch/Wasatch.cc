@@ -93,7 +93,7 @@
 #include <CCA/Components/Wasatch/Expressions/CellType.h>
 using std::endl;
 WasatchCore::FlowTreatment WasatchCore::Wasatch::flowTreatment_;
-
+bool WasatchCore::Wasatch::needPressureSolve_ = false;
 namespace WasatchCore{
 
   //--------------------------------------------------------------------
@@ -510,6 +510,7 @@ namespace WasatchCore{
     else if( linSolver_ ){
       proc0cout << "Detected solver: " << linSolver_->getName() << std::endl;
       const bool needPressureSolve = wasatchSpec_->findBlock("MomentumEquations") && !(wasatchSpec_->findBlock("MomentumEquations")->findBlock("DisablePressureSolve"));
+      Wasatch::need_pressure_solve(needPressureSolve);
       if ( (linSolver_->getName()).compare("hypre") != 0 && needPressureSolve) {
         std::ostringstream msg;
         msg << "  Invalid solver specified: "<< linSolver_->getName() << std::endl
@@ -1169,7 +1170,11 @@ namespace WasatchCore{
         
         // pass the bc Helper to pressure expressions on all patches
         if (flow_treatment() != COMPRESSIBLE) {
-          bcHelperMap_[level->getID()]->synchronize_pressure_expression();
+          
+          const bool needPressureSolve = !(wasatchSpec_->findBlock("MomentumEquations")->findBlock("DisablePressureSolve"));
+          if (needPressureSolve) {
+            bcHelperMap_[level->getID()]->synchronize_pressure_expression();
+          }
         }
       }
       
