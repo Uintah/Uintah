@@ -713,6 +713,58 @@ TaskGraph::createDetailedTasks(       bool            useInternalDeps
                               , const GridP         & oldGrid
                               )
 {
+//  {
+//    Task* prev_reduction_task = nullptr;
+//    for (auto task : m_tasks) {
+//
+//      for (const Task::Dependency* dep = task->getComputes(); dep != 0; dep = dep->next) {
+//
+//        if (dep->var->typeDescription()->isReductionVariable()) {
+//          int levelidx = dep->reductionLevel ? dep->reductionLevel->getIndex() : -1;
+//          int dw = dep->mapDataWarehouse();
+//
+//          if (dep->var->allowsMultipleComputes()) {
+//            continue;
+//          }
+//
+//          std::ostringstream taskname;
+//          taskname << "Reduction: " << dep->var->getName() << ", level " << levelidx << ", dw " << dw;
+//
+//          Task* newtask = new Task(taskname.str(), Task::Reduction);
+//
+//          int dwmap[Task::TotalDWs];
+//
+//          for (int i = 0; i < Task::TotalDWs; i++) {
+//            dwmap[i] = Task::InvalidDW;
+//          }
+//
+//          dwmap[Task::OldDW] = Task::NoDW;
+//          dwmap[Task::NewDW] = dw;
+//          newtask->setMapping(dwmap);
+//
+//          if (dep->matls != 0) {
+//            newtask->modifies(dep->var, dep->reductionLevel, dep->matls, Task::OutOfDomain);
+//            for (int i = 0; i < dep->matls->size(); i++) {
+//              int maltIdx = dep->matls->get(i);
+//              VarLabelMatl<Level> key(dep->var, maltIdx, dep->reductionLevel);
+//            }
+//          }
+//          else {
+//            for (int m = 0; m < task->getMaterialSet()->size(); m++) {
+//              newtask->modifies(dep->var, dep->reductionLevel, task->getMaterialSet()->getSubset(m), Task::OutOfDomain);
+//              for (int i = 0; i < task->getMaterialSet()->getSubset(m)->size(); i++) {
+//                int maltIdx = task->getMaterialSet()->getSubset(m)->get(i);
+//                VarLabelMatl<Level> key(dep->var, maltIdx, dep->reductionLevel);
+//              }
+//            }
+//          }
+//        }
+//      }
+//    }
+//  }
+
+
+
   std::vector<Task*> sorted_tasks;
 
   // TODO plz leave this commented line alone, APH 01/07/15

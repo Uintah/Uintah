@@ -23,14 +23,8 @@
  */
 
 
-#ifndef CCA_COMPONENTS_SCHEDULERS_SCHEDULERCOMMON_H
-#define CCA_COMPONENTS_SCHEDULERS_SCHEDULERCOMMON_H
-
-#ifdef UINTAH_USING_EXPERIMENTAL
-
-#include <CCA/Components/Schedulers/SchedulerCommon_Exp.hpp>
-
-#else
+#ifndef CCA_COMPONENTS_SCHEDULERS_SCHEDULERCOMMON_EXP_HPP
+#define CCA_COMPONENTS_SCHEDULERS_SCHEDULERCOMMON_EXP_HPP
 
 #include <CCA/Components/Schedulers/OnDemandDataWarehouseP.h>
 #include <CCA/Components/Schedulers/Relocate.h>
@@ -244,11 +238,9 @@ class SchedulerCommon : public Scheduler, public UintahParallelComponent {
     
     const VarLabel* reloc_new_posLabel_;
 
-    // TODO replace after Mira DDT problem is debugged (APH - 03/24/15)
     int getMaxGhost()       {return maxGhost;}
+
     int getMaxLevelOffset() {return maxLevelOffset;}
-//    const std::map<int, int>& getMaxGhostCells() { return maxGhostCells; }
-//    const std::map<int, int>& getMaxLevelOffsets() { return maxLevelOffsets; }
 
     bool isCopyDataTimestep() { return d_sharedState->isCopyDataTimestep() || d_isInitTimestep; }
 
@@ -370,24 +362,12 @@ class SchedulerCommon : public Scheduler, public UintahParallelComponent {
     std::set<const VarLabel*, VarLabel::Compare> d_initRequiredVars;
     std::set<const VarLabel*, VarLabel::Compare> d_computedVars;
 
-    // TODO replace after Mira DDT problem is debugged (APH - 03/24/15)
     //max ghost cells of all tasks - will be used for loadbalancer to create neighborhood
     int maxGhost;
-    //max level offset of all tasks - will be used for loadbalancer to create neighborhood
     int maxLevelOffset;
-//    // max ghost cells of all tasks (per level) - will be used by loadbalancer to create neighborhood
-//    // map levelIndex to maxGhostCells
-//    //   this is effectively maximum horizontal range considered by the loadbalanceer for the neighborhood creation
-//    std::map<int, int> maxGhostCells;
-//
-//    // max level offset of all tasks (per level) - will be used for loadbalancer to create neighborhood
-//    // map levelIndex to maxLevelOffset
-//    //   this is effectively maximum vertical range considered by the loadbalanceer for the neighborhood creation
-//    std::map<int, int> maxLevelOffsets;
     
   };
 } // namespace Uintah
 
-#endif // UINTAH_USING_EXPERIMENTAL
 
-#endif // CCA_COMPONENTS_SCHEDULERS_SCHEDULERCOMMON_H
+#endif // CCA_COMPONENTS_SCHEDULERS_SCHEDULERCOMMON_EXP_HPP

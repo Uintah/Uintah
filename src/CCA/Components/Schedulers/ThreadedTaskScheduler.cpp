@@ -347,14 +347,14 @@ void ThreadedTaskScheduler::execute(  int tgnum /*=0*/ , int iteration /*=0*/ )
               m_phase_tasks[m_current_phase.load(std::memory_order_relaxed)] - 1)) {
       DetailedTask* sync_task = m_phase_sync_tasks[m_current_phase.load(std::memory_order_relaxed)];
       if (sync_task->getTask()->getType() == Task::Reduction) {
-        ASSERT(sync_task->getRequires().size() == 0)
+        ASSERT(sync_task->getRequires().size() == 0);
         run_reduction_task(sync_task);
       }
       else {  // Task::OncePerProc task
         ASSERT(sync_task->getTask()->usesMPI());
         post_MPI_recvs(sync_task, m_abort, m_abort_point, iteration);
         sync_task->markInitiated();
-        ASSERT(sync_task->getExternalDepCount() == 0)
+        ASSERT(sync_task->getExternalDepCount() == 0);
         run_task(sync_task, iteration);
       }
       ASSERT(sync_task->getTask()->d_phase == m_current_phase.load(std::memory_order_relaxed));
