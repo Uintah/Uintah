@@ -1170,10 +1170,11 @@ namespace WasatchCore{
         
         // pass the bc Helper to pressure expressions on all patches
         if (flow_treatment() != COMPRESSIBLE) {
-          
-          const bool needPressureSolve = !(wasatchSpec_->findBlock("MomentumEquations")->findBlock("DisablePressureSolve"));
-          if (needPressureSolve) {
-            bcHelperMap_[level->getID()]->synchronize_pressure_expression();
+          if (wasatchSpec_->findBlock("MomentumEquations")) {
+            const bool needPressureSolve = !(wasatchSpec_->findBlock("MomentumEquations")->findBlock("DisablePressureSolve"));
+            if (needPressureSolve) {
+              bcHelperMap_[level->getID()]->synchronize_pressure_expression();
+            }
           }
         }
       }
