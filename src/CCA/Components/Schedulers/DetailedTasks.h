@@ -25,6 +25,12 @@
 #ifndef CCA_COMPONENTS_SCHEDULERS_DETAILEDTASKS_H
 #define CCA_COMPONENTS_SCHEDULERS_DETAILEDTASKS_H
 
+#ifdef UINTAH_USING_EXPERIMENTAL
+
+#include <CCA/Components/Schedulers/DetailedTasks_Exp.hpp>
+
+#else
+
 #include <CCA/Components/Schedulers/DetailedTask.h>
 #include <CCA/Components/Schedulers/DetailedDependency.h>
 #include <CCA/Components/Schedulers/DependencyBatch.h>
@@ -360,6 +366,8 @@ private:
 
 
 } // namespace Uintah
+
+#endif // UINTAH_USING_EXPERIMENTAL
 
 #endif // CCA_COMPONENTS_SCHEDULERS_DETAILEDTASKS_H
 

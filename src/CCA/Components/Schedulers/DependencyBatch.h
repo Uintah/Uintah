@@ -25,6 +25,12 @@
 #ifndef CCA_COMPONENTS_SCHEDULERS_DEPENDENCY_BATCH_H
 #define CCA_COMPONENTS_SCHEDULERS_DEPENDENCY_BATCH_H
 
+#ifdef UINTAH_USING_EXPERIMENTAL
+
+#include <CCA/Components/Schedulers/DependencyBatch_Exp.hpp>
+
+#else
+
 #include <CCA/Components/Schedulers/DetailedDependency.h>
 #include <Core/Grid/Variables/Variable.h>
 
@@ -130,5 +136,7 @@ struct InternalDependency {
 
 
 } // namespace Uintah
+
+#endif // UINTAH_USING_EXPERIMENTAL
 
 #endif  //CCA_COMPONENTS_SCHEDULERS_DEPENDENCY_BATCH_H

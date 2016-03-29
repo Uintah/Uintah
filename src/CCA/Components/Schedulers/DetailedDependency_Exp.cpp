@@ -22,7 +22,7 @@
  * IN THE SOFTWARE.
  */
 
-#include <CCA/Components/Schedulers/DetailedDependency_Exp.hpp>
+#include <CCA/Components/Schedulers/DetailedDependency.h>
 
 #include <sstream>
 

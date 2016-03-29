@@ -22,12 +22,12 @@
  * IN THE SOFTWARE.
  */
 
-#ifndef CCA_COMPONENTS_SCHEDULERS_DETAILEDTASKS_H
-#define CCA_COMPONENTS_SCHEDULERS_DETAILEDTASKS_H
+#ifndef CCA_COMPONENTS_SCHEDULERS_DETAILEDTASKS_EXP_HPP
+#define CCA_COMPONENTS_SCHEDULERS_DETAILEDTASKS_EXP_HPP
 
-#include <CCA/Components/Schedulers/DetailedTask_Exp.hpp>
-#include <CCA/Components/Schedulers/DetailedDependency_Exp.hpp>
-#include <CCA/Components/Schedulers/DependencyBatch_Exp.hpp>
+#include <CCA/Components/Schedulers/DetailedTask.h>
+#include <CCA/Components/Schedulers/DetailedDependency.h>
+#include <CCA/Components/Schedulers/DependencyBatch.h>
 
 #include <CCA/Components/Schedulers/DWDatabase.h>
 #include <CCA/Components/Schedulers/OnDemandDataWarehouse.h>
@@ -349,5 +349,5 @@ private:
 
 } // namespace Uintah
 
-#endif // CCA_COMPONENTS_SCHEDULERS_DETAILEDTASKS_H
+#endif // CCA_COMPONENTS_SCHEDULERS_DETAILEDTASKS_EXP_HPP
 

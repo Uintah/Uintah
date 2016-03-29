@@ -22,8 +22,8 @@
  * IN THE SOFTWARE.
  */
 
-#include <CCA/Components/Schedulers/DependencyBatch_Exp.hpp>
-#include <CCA/Components/Schedulers/DetailedTasks_Exp.hpp>
+#include <CCA/Components/Schedulers/DependencyBatch.h>
+#include <CCA/Components/Schedulers/DetailedTasks.h>
 
 namespace Uintah {
 

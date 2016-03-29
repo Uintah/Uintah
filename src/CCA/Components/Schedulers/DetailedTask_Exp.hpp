@@ -25,8 +25,8 @@
 #ifndef CCA_COMPONENTS_SCHEDULERS_DETAILEDTASK_EXP_H
 #define CCA_COMPONENTS_SCHEDULERS_DETAILEDTASK_EXP_H
 
-#include <CCA/Components/Schedulers/DependencyBatch_Exp.hpp>
-#include <CCA/Components/Schedulers/DetailedDependency_Exp.hpp>
+#include <CCA/Components/Schedulers/DependencyBatch.h>
+#include <CCA/Components/Schedulers/DetailedDependency.h>
 #include <CCA/Components/Schedulers/DWDatabase.h>
 #include <CCA/Components/Schedulers/RuntimeStats.hpp>
 #include <CCA/Components/Schedulers/OnDemandDataWarehouse.h>
