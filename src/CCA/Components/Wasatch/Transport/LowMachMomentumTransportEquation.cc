@@ -187,7 +187,7 @@ namespace WasatchCore{
         
         // matrix update in hypre: If we have a moving geometry, then update every timestep.
         // Otherwise, no update is needed since the coefficient matrix is constant
-        const bool setupFrequency = ( !isConstDensity || embedGeom.has_moving_geometry() ) ? 1 : 0;
+        const bool setupFrequency = ( embedGeom.has_moving_geometry() ) ? 1 : 0;
         solverParams_->setSetupFrequency( setupFrequency );
         
         // if pressure expression has not be registered, then register it
