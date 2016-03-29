@@ -21,7 +21,7 @@ C LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
 C FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
 C IN THE SOFTWARE.
 C
-C 
+C
 c*********************************************************************
 c
 c
@@ -82,7 +82,7 @@ c     viscous sources
                VIST = PT25*(VIS(I,J,K)+VIS(I,J,K+1)+
      &              VIS(I-1,J,K)+VIS(I-1,J,K+1))
                VISB = PT25*(VIS(I,J,K)+VIS(I,J,K-1)+
-     &              VIS(I-1,J,K)+VIS(I-1,J,K-1))  
+     &              VIS(I-1,J,K)+VIS(I-1,J,K-1))
                DUDXE  = (UU(I+1,J,K)-UU(I,J,K))/SEW(I)
                DUDXW  = (UU(I,J,K)-UU(I-1,J,K))/SEW(I-1)
                VISEI = CEEU(I)*VISE + CWEU(I)*VISW
@@ -96,8 +96,6 @@ c     viscous sources
                VISTI = CTT(K)*VIST + CBT(K)*VISB
                VISBI = CBB(K)*VISB - CBT(K)*VIST
 
-               print*,I, ' ',J, ' ', K
-               print*,DUDXE
 c
 c   Add all the source terms at one go (don't need as many array searches)
 c
@@ -113,12 +111,12 @@ c     &              old_DEN(I,J,K)*(old_UU(I,J,K)-UU(I,J,K))/
      &              + (PT5*(DEN(I,J,K)+DEN(I-1,J,K))-
      $              pt5*(den_ref(i,j,k)+den_ref(i-1,j,k)))*
      $              GRAV
-     $              )*VOL 
+     $              )*VOL
 
 #if 0
                temp = (PT5*(DEN(I,J,K)+DEN(I-1,J,K))-
      $              pt5*(den_ref(i,j,k)+den_ref(i-1,j,k)))*
-     $              GRAV*VOL 
+     $              GRAV*VOL
 
                temp2 = pt5*(old_DEN(I,J,K)+old_DEN(I-1,J,K))*
      $              (old_UU(I,J,K))/
