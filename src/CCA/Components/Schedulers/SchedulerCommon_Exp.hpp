@@ -120,7 +120,9 @@ class SchedulerCommon : public Scheduler, public UintahParallelComponent {
 
     /// Get all of the requires needed from the old data warehouse (carried forward).
     virtual const std::vector<const Task::Dependency*>&         getInitialRequires() const     { return d_initRequires; }
+
     virtual const std::set<const VarLabel*, VarLabel::Compare>& getInitialRequiredVars() const { return d_initRequiredVars; }
+
     virtual const std::set<const VarLabel*, VarLabel::Compare>& getComputedVars() const        { return d_computedVars; }
 
     virtual LoadBalancer* getLoadBalancer();
@@ -140,12 +142,6 @@ class SchedulerCommon : public Scheduler, public UintahParallelComponent {
     virtual void replaceDataWarehouse( int index, const GridP& grid, bool initialization=false );
 
     virtual void setRestartable( bool restartable );
-
-    // Get the expected extents that may be needed for a particular variable
-    // on a particular patch (which should include expected ghost cells.
-    //virtual void
-    //getExpectedExtents(const VarLabel* label, const Patch* patch,
-    //	       IntVector& lowIndex, IntVector& highIndex) const;
 
     // Get the SuperPatch (set of connected patches making a larger rectangle)
     // for the given label and patch and find the largest extents encompassing
@@ -176,9 +172,6 @@ class SchedulerCommon : public Scheduler, public UintahParallelComponent {
     // Only called by the SimulationController, and only once, and only
     // if the simulation has been "restarted."
     virtual void setGeneration( int id ) { d_generation = id; }
-
-//    virtual const MaterialSet* getMaterialSet() const {cout << "BEING CALLED"
-// << endl; return reloc_.getMaterialSet();}
 
     // This function will copy the data from the old grid to the new grid.
     // The PatchSubset structure will contain a patch on the new grid.
@@ -238,11 +231,9 @@ class SchedulerCommon : public Scheduler, public UintahParallelComponent {
     
     const VarLabel* reloc_new_posLabel_;
 
-    // TODO replace after Mira DDT problem is debugged (APH - 03/24/15)
     int getMaxGhost()       {return maxGhost;}
+
     int getMaxLevelOffset() {return maxLevelOffset;}
-//    const std::map<int, int>& getMaxGhostCells() { return maxGhostCells; }
-//    const std::map<int, int>& getMaxLevelOffsets() { return maxLevelOffsets; }
 
     bool isCopyDataTimestep() { return d_sharedState->isCopyDataTimestep() || d_isInitTimestep; }
 
@@ -364,20 +355,8 @@ class SchedulerCommon : public Scheduler, public UintahParallelComponent {
     std::set<const VarLabel*, VarLabel::Compare> d_initRequiredVars;
     std::set<const VarLabel*, VarLabel::Compare> d_computedVars;
 
-    // TODO replace after Mira DDT problem is debugged (APH - 03/24/15)
-    //max ghost cells of all tasks - will be used for loadbalancer to create neighborhood
     int maxGhost;
-    //max level offset of all tasks - will be used for loadbalancer to create neighborhood
     int maxLevelOffset;
-//    // max ghost cells of all tasks (per level) - will be used by loadbalancer to create neighborhood
-//    // map levelIndex to maxGhostCells
-//    //   this is effectively maximum horizontal range considered by the loadbalanceer for the neighborhood creation
-//    std::map<int, int> maxGhostCells;
-//
-//    // max level offset of all tasks (per level) - will be used for loadbalancer to create neighborhood
-//    // map levelIndex to maxLevelOffset
-//    //   this is effectively maximum vertical range considered by the loadbalanceer for the neighborhood creation
-//    std::map<int, int> maxLevelOffsets;
     
   };
 } // namespace Uintah

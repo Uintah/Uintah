@@ -319,6 +319,6 @@ class TaskGraph {
 
 }; // class TaskGraph
 
-}  // namespace Uintah
+} // namespace Uintah
 
 #endif // CCA_COMPONENTS_SCHEDULERS_TASKGRAPH_EXP_HPP

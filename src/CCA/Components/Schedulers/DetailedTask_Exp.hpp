@@ -22,8 +22,8 @@
  * IN THE SOFTWARE.
  */
 
-#ifndef CCA_COMPONENTS_SCHEDULERS_DETAILEDTASK_EXP_H
-#define CCA_COMPONENTS_SCHEDULERS_DETAILEDTASK_EXP_H
+#ifndef CCA_COMPONENTS_SCHEDULERS_DETAILEDTASK_EXP_HPP
+#define CCA_COMPONENTS_SCHEDULERS_DETAILEDTASK_EXP_HPP
 
 #include <CCA/Components/Schedulers/DependencyBatch.h>
 #include <CCA/Components/Schedulers/DetailedDependency.h>
@@ -302,4 +302,4 @@ std::ostream& operator<<( std::ostream& out, const Uintah::DetailedTask& task );
 
 } // namespace Uintah
 
-#endif // CCA_COMPONENTS_SCHEDULERS_DETAILEDTASK_EXP_H
+#endif // CCA_COMPONENTS_SCHEDULERS_DETAILEDTASK_EXP_HPP
