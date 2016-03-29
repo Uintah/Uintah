@@ -403,6 +403,13 @@ MomentumSolver::buildLinearMatrix(const ProcessorGroup* pc,
     d_boundaryCondition->velocityOutletPressureTangentBC(patch,
                                                          &velocityVars, &constVelocityVars);
 
+    double time_shift = 0.0;
+    time_shift = delta_t * timelabels->time_position_multiplier_before_average;
+    d_boundaryCondition->velRhoHatInletBC(patch,
+                                          &velocityVars, &constVelocityVars,
+                                          indx,
+                                          time_shift);
+
 
   }
 }
@@ -550,18 +557,18 @@ MomentumSolver::sched_buildLinearMatrixVelHat(SchedulerP& sched,
 
 
 
-struct sumNonlinearSources{ 
+struct sumNonlinearSources{
        sumNonlinearSources(double _vol,
-                           SFCXVariable<double> &_uNonlinearSrc, 
-                           SFCYVariable<double> &_vNonlinearSrc, 
-                           SFCZVariable<double> &_wNonlinearSrc, 
+                           SFCXVariable<double> &_uNonlinearSrc,
+                           SFCYVariable<double> &_vNonlinearSrc,
+                           SFCZVariable<double> &_wNonlinearSrc,
                            constCCVariable<Vector> &_vectorSource)  :
                            vol(_vol),
                            uNonlinearSrc(_uNonlinearSrc),
                            vNonlinearSrc(_vNonlinearSrc),
                            wNonlinearSrc(_wNonlinearSrc),
                            vectorSource(_vectorSource){ }
-                            
+
        void operator()(int i , int j, int k ) const {
          uNonlinearSrc(i,j,k)  += vectorSource(i,j,k).x()*vol;
          vNonlinearSrc(i,j,k)  += vectorSource(i,j,k).y()*vol;
@@ -570,9 +577,9 @@ struct sumNonlinearSources{
 
   private:
        double vol;
-       SFCXVariable<double> &uNonlinearSrc; 
-       SFCYVariable<double> &vNonlinearSrc; 
-       SFCZVariable<double> &wNonlinearSrc; 
+       SFCXVariable<double> &uNonlinearSrc;
+       SFCYVariable<double> &vNonlinearSrc;
+       SFCZVariable<double> &wNonlinearSrc;
        constCCVariable<Vector> &vectorSource;
 };
 
@@ -721,12 +728,12 @@ MomentumSolver::buildLinearMatrixVelHat(const ProcessorGroup* pc,
                                           &constVelocityVars, volFraction, d_conv_scheme,
                                           d_re_limit );
 
-//      //__________________________________
-//      //  Compute the sources
-//      d_source->calculateVelocitySource( patch,
-//                                         delta_t,
-//                                         cellinfo, &velocityVars,
-//                                         &constVelocityVars);
+    //  //__________________________________
+    //  //  Compute the sources
+    //  d_source->calculateVelocitySource( patch,
+    //                                     delta_t,
+    //                                     cellinfo, &velocityVars,
+    //                                     &constVelocityVars);
 
     //----------------------------------
     // If not doing MPMArches, then need to
@@ -888,20 +895,20 @@ MomentumSolver::buildLinearMatrixVelHat(const ProcessorGroup* pc,
           { new_dw->get( velocityVars.otherVectorSource, srcLabel, indx, patch, Ghost::None, 0);
           Vector Dx  = patch->dCell();
           double vol = Dx.x()*Dx.y()*Dx.z();
-             
-#ifdef USE_FUNCTOR              
+
+#ifdef USE_FUNCTOR
           Uintah::BlockRange range(patch->getCellLowIndex(),patch->getCellHighIndex());
           sumNonlinearSources doSumSrc(vol,velocityVars.uVelNonlinearSrc,
                                            velocityVars.vVelNonlinearSrc,
                                            velocityVars.wVelNonlinearSrc,
                                            velocityVars.otherVectorSource);
           Uintah::parallel_for( range, doSumSrc);
-#else                                           
+#else
           for (CellIterator iter=patch->getCellIterator(); !iter.done(); iter++){
             IntVector c = *iter;
-            velocityVars.uVelNonlinearSrc[c]  += velocityVars.otherVectorSource[c].x()*vol;
-            velocityVars.vVelNonlinearSrc[c]  += velocityVars.otherVectorSource[c].y()*vol;
-            velocityVars.wVelNonlinearSrc[c]  += velocityVars.otherVectorSource[c].z()*vol;
+            velocityVars.uVelNonlinearSrc[c]  += ( velocityVars.otherVectorSource[c].x() + velocityVars.otherVectorSource[c - IntVector(1,0,0)].x() )*0.5*vol;
+            velocityVars.vVelNonlinearSrc[c]  += ( velocityVars.otherVectorSource[c].y() + velocityVars.otherVectorSource[c - IntVector(0,1,0)].y() )*0.5*vol;
+            velocityVars.wVelNonlinearSrc[c]  += ( velocityVars.otherVectorSource[c].z() + velocityVars.otherVectorSource[c - IntVector(0,0,1)].z() )*0.5*vol;
           }
 #endif
           }
@@ -940,12 +947,12 @@ MomentumSolver::buildLinearMatrixVelHat(const ProcessorGroup* pc,
       }
     }
 
-//      // sets coefs in the direction of the wall to zero
-//      d_boundaryCondition->wallVelocityBC(patch, cellinfo,
-//                                        &velocityVars, &constVelocityVars);
+     // sets coefs in the direction of the wall to zero
+    //  d_boundaryCondition->wallVelocityBC(patch, cellinfo,
+    //                                    &velocityVars, &constVelocityVars);
 
-//      d_source->modifyVelMassSource(patch, volFraction,
-//                                    &velocityVars, &constVelocityVars);
+    //  d_source->modifyVelMassSource(patch, volFraction,
+    //                                &velocityVars, &constVelocityVars);
 
     d_discretize->calculateVelDiagonal(patch,&velocityVars);
 
@@ -1122,7 +1129,7 @@ MomentumSolver::averageRKHatVelocities(const ProcessorGroup*,
 
     //__________________________________
     // Apply boundary conditions
-    d_boundaryCondition->velocityOutletPressureBC( patch, 
+    d_boundaryCondition->velocityOutletPressureBC( patch,
                                                         indx,
                                                         new_uvel, new_vvel, new_wvel,
                                                         old_uvel, old_vvel, old_wvel );
