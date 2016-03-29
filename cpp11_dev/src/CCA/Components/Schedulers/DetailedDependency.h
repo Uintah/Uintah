@@ -25,6 +25,12 @@
 #ifndef CCA_COMPONENTS_SCHEDULERS_DETAILED_DEP_H
 #define CCA_COMPONENTS_SCHEDULERS_DETAILED_DEP_H
 
+#ifdef UINTAH_USING_EXPERIMENTAL
+
+#include <CCA/Components/Schedulers/DetailedDependency_Exp.hpp>
+
+#else
+
 #include <Core/Grid/Patch.h>
 #include <Core/Grid/Task.h>
 
@@ -116,6 +122,8 @@ public:
 std::ostream& operator<<( std::ostream& out, const Uintah::DetailedDependency& task );
 
 } // namespace Uintah
+
+#endif // UINTAH_USING_EXPERIMENTAL
 
 #endif // CCA_COMPONENTS_SCHEDULERS_DETAILED_DEP_H
 

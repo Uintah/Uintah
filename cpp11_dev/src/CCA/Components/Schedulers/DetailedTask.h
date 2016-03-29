@@ -25,6 +25,12 @@
 #ifndef CCA_COMPONENTS_SCHEDULERS_DETAILEDTASK_H
 #define CCA_COMPONENTS_SCHEDULERS_DETAILEDTASK_H
 
+#ifdef UINTAH_USING_EXPERIMENTAL
+
+#include <CCA/Components/Schedulers/DetailedTask_Exp.hpp>
+
+#else
+
 #include <CCA/Components/Schedulers/DependencyBatch.h>
 #include <CCA/Components/Schedulers/DetailedDependency.h>
 #include <CCA/Components/Schedulers/RuntimeStats.hpp>
@@ -302,4 +308,6 @@ std::ostream& operator<<( std::ostream& out, const Uintah::DetailedTask& task );
 
 } // namespace Uintah
 
-#endif  // CCA_COMPONENTS_SCHEDULERS_DETAILEDTASK_H
+#endif // UINTAH_USING_EXPERIMENTAL
+
+#endif // CCA_COMPONENTS_SCHEDULERS_DETAILEDTASK_H

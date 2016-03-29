@@ -25,7 +25,7 @@
 #ifndef CCA_COMPONENTS_SCHEDULERS_DEPENDENCY_BATCH_EXP_H
 #define CCA_COMPONENTS_SCHEDULERS_DEPENDENCY_BATCH_EXP_H
 
-#include <CCA/Components/Schedulers/DetailedDependency_Exp.hpp>
+#include <CCA/Components/Schedulers/DetailedDependency.h>
 #include <Core/Grid/Variables/Variable.h>
 
 #include <list>

@@ -25,6 +25,12 @@
 #ifndef CCA_COMPONENTS_SCHEDULERS_TASKGRAPH_H
 #define CCA_COMPONENTS_SCHEDULERS_TASKGRAPH_H
 
+#ifdef UINTAH_USING_EXPERIMENTAL
+
+#include <CCA/Components/Schedulers/TaskGraph_Exp.hpp>
+
+#else
+
 
 #include <CCA/Ports/Scheduler.h>
 #include <Core/Grid/Grid.h>
@@ -320,5 +326,7 @@ class TaskGraph {
 }; // class TaskGraph
 
 }  // namespace Uintah
+
+#endif // UINTAH_USING_EXPERIMENTAL
 
 #endif // CCA_COMPONENTS_SCHEDULERS_TASKGRAPH_H
