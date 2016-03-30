@@ -341,7 +341,6 @@ DetailedTask::addInternalRequires( DependencyBatch * req )
 
 //_____________________________________________________________________________
 //
-// can be called in one of two places - when the last MPI Recv has completed, or from MPIScheduler
 void
 DetailedTask::checkExternalDepCount()
 {

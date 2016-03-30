@@ -799,15 +799,14 @@ void ThreadedTaskScheduler::process_tasks( int iteration )
 {
   const int phase = m_current_phase.load(std::memory_order_relaxed);
   auto init_task = [&](DetailedTask * dtask) {
-    return !dtask->isInitiated() &&
+    return !dtask->initiated() &&
             dtask->getTask()->d_phase == phase;
   };
 
   auto ready_request = [](CommRequest const& r) { return r.test(); };
 
   auto ready_task = [&](DetailedTask * dtask) {
-    return dtask->getExternalDepCount() == 0         &&
-           dtask->areInternalDependenciesSatisfied() &&
+    return dtask->ready() &&
            dtask->getTask()->d_phase == phase;
   };
 
