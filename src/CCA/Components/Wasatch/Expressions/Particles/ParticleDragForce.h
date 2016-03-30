@@ -116,7 +116,7 @@ ParticleDragForce( const Expr::Tag& gasVelTag,
                    const Expr::TagList& particlePositionTags )
 : Expr::Expression<ParticleField>()
 {
-  this->set_gpu_runnable(false);  // need new particle operators...
+  this->set_gpu_runnable(true);
 
   px_    = this->template create_field_request<ParticleField>(particlePositionTags[0]);
   py_    = this->template create_field_request<ParticleField>(particlePositionTags[1]);

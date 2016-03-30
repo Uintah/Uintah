@@ -23,7 +23,7 @@
  */
 
 #include <CCA/Components/Wasatch/Expressions/PostProcessing/InterpolateExpression.h>
-
+#include <spatialops/particles/ParticleOperatorsImplementation.h>
 #include <spatialops/OperatorDatabase.h>
 #include <spatialops/structured/SpatialFieldStore.h>
 

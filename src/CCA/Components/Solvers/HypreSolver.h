@@ -68,7 +68,6 @@ namespace Uintah {
     int         maxiterations;      // Maximum # iterations allowed
     int         logging;            // Log Hypre solver (using Hypre options)
     bool        restart;            // Allow solver to restart if not converged
-    int         setupFrequency;     // Frequency for calling hypre setup calls
     int         solveFrequency;     // Frequency for solving the linear system. timestep % solveFrequency
     int         relax_type;         // relaxation type
     
@@ -84,14 +83,6 @@ namespace Uintah {
     
     SimulationStateP state;    // simulation state
     
-    void setSetupFrequency(const int freq) {
-      setupFrequency = freq;
-    }
-
-    int getSetupFrequency() const { 
-      return setupFrequency;
-    }
-
     void setSolveFrequency(const int freq) {
       solveFrequency = freq;
     }

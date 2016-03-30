@@ -66,6 +66,7 @@ SRCS += \
         $(SRCDIR)/Sparse.cc            \
         $(SRCDIR)/Short27.cc           \
         $(SRCDIR)/TangentModulusTensor.cc  \
+        $(SRCDIR)/Expon.cc  \
 	\
         Core/Geometry/BBox.cc \
         Core/Geometry/IntVector.cc \

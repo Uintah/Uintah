@@ -1,3 +1,6 @@
+#ifndef UINTAH_BaseIterator_H
+#define UINTAH_BaseIterator_H
+
 /*
  * The MIT License
  *
@@ -22,15 +25,11 @@
  * IN THE SOFTWARE.
  */
 
-
-#ifndef UINTAH_BaseIterator_H
-#define UINTAH_BaseIterator_H
 #include <ostream>
+
 #include <Core/Geometry/IntVector.h>
 
 namespace Uintah {
-
-  using Uintah::IntVector;
 
   /**************************************
 

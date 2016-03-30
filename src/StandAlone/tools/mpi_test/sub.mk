@@ -41,13 +41,14 @@ endif
 PSELIBS := $(GPU_EXTRA_LINK) $(PSELIBS)
 
 ifeq ($(IS_STATIC_BUILD),yes)
-  LIBS := $(CORE_STATIC_LIBS) $(ZOLTAN_LIBRARY)    \
-          $(BOOST_LIBRARY)         \
-          $(EXPRLIB_LIBRARY) $(SPATIALOPS_LIBRARY) \
-          $(TABPROPS_LIBRARY) $(RADPROPS_LIBRARY)  \
-          $(PAPI_LIBRARY) $(M_LIBRARY)
+  LIBS := $(CORE_STATIC_LIBS) $(ZOLTAN_LIBRARY)        \
+          $(BOOST_LIBRARY)                             \
+          $(EXPRLIB_LIBRARY) $(SPATIALOPS_LIBRARY)     \
+          $(TABPROPS_LIBRARY) $(RADPROPS_LIBRARY)      \
+          $(PAPI_LIBRARY) $(M_LIBRARY) $(PIDX_LIBRARY)
 else
-  LIBS := $(XML2_LIBRARY) $(M_LIBRARY) $(MPI_LIBRARY) $(F_LIBRARY) $(CUDA_LIBRARY)
+  LIBS := $(XML2_LIBRARY) $(M_LIBRARY) $(MPI_LIBRARY) $(F_LIBRARY) $(CUDA_LIBRARY) \
+          $(PIDX_LIBRARY)
 endif
 
 ##############################################
@@ -55,7 +56,6 @@ endif
 
 SRCS    := $(SRCDIR)/mpi_hang.cc
 PROGRAM := $(SRCDIR)/mpi_hang
-
 
 include $(SCIRUN_SCRIPTS)/program.mk
 

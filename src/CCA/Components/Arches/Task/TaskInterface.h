@@ -9,7 +9,7 @@
 #include <spatialops/structured/FVStaggered.h>
 #include <spatialops/structured/MemoryWindow.h>
 #include <spatialops/particles/ParticleFieldTypes.h>
-#include <spatialops/particles/ParticleOperators.h>
+#include <spatialops/particles/ParticleOperatorsImplementation.h>
 #include <CCA/Components/Arches/Task/FieldContainer.h>
 #include <CCA/Components/Arches/Operators/Operators.h>
 #include <Core/Grid/Variables/VarLabel.h>

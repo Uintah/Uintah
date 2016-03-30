@@ -4,7 +4,7 @@
 #include <expression/Expression.h>
 
 #include <spatialops/particles/ParticleFieldTypes.h>
-#include <spatialops/particles/ParticleOperators.h>
+#include <spatialops/particles/ParticleOperatorsImplementation.h>
 #include <spatialops/OperatorDatabase.h>
 
 #include<cmath>
@@ -112,7 +112,7 @@ ParticleRe( const Expr::Tag& particleSizeTag,
             const Expr::TagList& gasVelocityTags )
   : Expr::Expression<ParticleField>()
 {
-  this->set_gpu_runnable( false );  // not until we get particle interpolants GPU ready
+  this->set_gpu_runnable( true );
   
   gDensity_ = this->template create_field_request<ScalarT>(gasDensityTag);
   psize_    = this->template create_field_request<ParticleField>(particleSizeTag);

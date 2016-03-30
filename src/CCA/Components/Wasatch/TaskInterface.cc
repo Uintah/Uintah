@@ -280,7 +280,7 @@ namespace WasatchCore{
         // Force everything to CPU for initialization & also for heterogeneous tasks.
         // For heterogeneous graphs, ExprLib will control GPU execution.
         tree->turn_off_gpu_runnable();
-	gpuTurnedOff = true;
+        gpuTurnedOff = true;
 	
         // Get the best device available
         tree->set_device_index( GPULoadBalancer::get_device_index(), *fml_ );
@@ -553,7 +553,7 @@ namespace WasatchCore{
     // jcs eachPatch vs. allPatches (gang schedule vs. independent...)
     scheduler_->addTask( task, patches_, materials_ );
 
-    if( hasPressureExpression_ && Wasatch::flow_treatment() != WasatchCore::COMPRESSIBLE ){
+    if( hasPressureExpression_ && Wasatch::flow_treatment() != WasatchCore::COMPRESSIBLE && Wasatch::need_pressure_solve() ){
       Pressure& pexpr = dynamic_cast<Pressure&>( factory.retrieve_expression( TagNames::self().pressure, patchID, true ) );
       pexpr.declare_uintah_vars( *task, pss, mss, rkStage );
       pexpr.schedule_solver( Uintah::getLevelP(pss), scheduler_, materials_, rkStage );
@@ -664,7 +664,7 @@ namespace WasatchCore{
           AllocInfo ainfo( oldDW, newDW, material, patch, pset, pg, isGPUTask );
           fml_->allocate_fields( ainfo );
 
-          if( hasPressureExpression_ && Wasatch::flow_treatment() != WasatchCore::COMPRESSIBLE  ){
+          if( hasPressureExpression_ && Wasatch::flow_treatment() != WasatchCore::COMPRESSIBLE && Wasatch::need_pressure_solve() ){
             Pressure& pexpr = dynamic_cast<Pressure&>( factory.retrieve_expression( TagNames::self().pressure, patchID, true ) );
             pexpr.bind_uintah_vars( newDW, patch, material, rkStage );
           }

@@ -35,6 +35,10 @@
 #include <include/sci_defs/uintah_testdefs.h.in>
 
 #define DEBUG -9 // 1: divQ, 2: boundFlux, 3: scattering
+
+//#define FAST_EXP   // This uses a fast approximate exp() function that is 
+                   // significantly faster.
+
 //______________________________________________________________________
 //
 using namespace Uintah;
@@ -56,6 +60,7 @@ bool   RMCRTCommon::d_allowReflect;
 int    RMCRTCommon::d_matl;
 string RMCRTCommon::d_abskgBC_tag;
 vector<IntVector> RMCRTCommon::d_dbgCells;
+
 
 
 MaterialSet* RMCRTCommon::d_matlSet = 0;
@@ -91,6 +96,10 @@ RMCRTCommon::RMCRTCommon( TypeDescription::Type FLT_DBL )
   d_gac     = Ghost::AroundCells;
   d_gn      = Ghost::None;
   d_flowCell = -1; //<----HARD CODED FLOW CELL
+  
+#ifdef FAST_EXP  
+  d_fastExp.populateExp_int(-2, 2);
+#endif
 }
 
 //______________________________________________________________________
@@ -318,6 +327,7 @@ RMCRTCommon::sigmaT4( const ProcessorGroup*,
   }
 }
 
+
 //______________________________________________________________________
 //
 //______________________________________________________________________
@@ -429,8 +439,6 @@ RMCRTCommon::updateSumI ( Vector& ray_direction,
                          MTRand& mTwister)
 
 {
-
-
   IntVector cur = origin;
   IntVector prevCell = cur;
   // Step and sign for ray marching
@@ -478,6 +486,7 @@ RMCRTCommon::updateSumI ( Vector& ray_direction,
   double curLength = 0;
 #endif
 
+      
   //+++++++Begin ray tracing+++++++++++++++++++
   //Threshold while loop
   while ( intensity > d_threshold ){
@@ -546,7 +555,37 @@ if( isDbgCell( origin )){
 
       //Eqn 3-15(see below reference) while
       //Third term inside the parentheses is accounted for in Inet. Chi is accounted for in Inet calc.
+
+      
+/*`==========TESTING==========*/
+#ifdef FAST_EXP
+
+      // We need to know the range of optical_thickness before we can select
+      // which implementation to use.
+  
+      double expOpticalThick = d_fastExp.fast_exp(-optical_thickness);
+      //double expOpticalThick = exp(-optical_thickness);
+
+      double S_exp    = d_fastExp.Schraudolph_exp(-optical_thickness);
+      double fast_exp = d_fastExp.fast_exp(-optical_thickness);
+      double exp2     = d_fastExp.exp2(-optical_thickness);
+      double exp3     = d_fastExp.exp3(-optical_thickness);
+      double exp5     = d_fastExp.exp5(-optical_thickness);
+      double exp7     = d_fastExp.exp7(-optical_thickness);
+      double exact    = exp(-optical_thickness);
+      
+      cout << " X: " << -optical_thickness << endl;
+      cout << " Sch_exp error:    " << ((S_exp    - exact)/exact ) * 100 << " S_exp:   " << S_exp    << " exact: " << exact << endl;
+      cout << " fast_exp error:   " << ((fast_exp - exact)/exact ) * 100 << " fast_exp:" << fast_exp << endl;
+      cout << " exp2 error:       " << ((exp2     - exact)/exact ) * 100 << " exp2:    " << exp2    << endl;
+      cout << " exp3 error:       " << ((exp3     - exact)/exact ) * 100 << " exp3:    " << exp3    << endl;
+      cout << " exp5 error:       " << ((exp5     - exact)/exact ) * 100 << " exp5:    " << exp5    << endl;
+      cout << " exp7 error:       " << ((exp7     - exact)/exact ) * 100 << " exp7:    " << exp7    << endl;
+
+#else
       double expOpticalThick = exp(-optical_thickness);
+#endif
+/*===========TESTING==========`*/
 
       sumI += sigmaT4OverPi_prev * ( expOpticalThick_prev - expOpticalThick ) * fs;
 

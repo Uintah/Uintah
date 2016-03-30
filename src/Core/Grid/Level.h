@@ -53,13 +53,6 @@
 
 namespace Uintah {
 
-  using Uintah::Vector;
-  using Uintah::Point;
-  using Uintah::IntVector;
-  using Uintah::BBox;
-  using Uintah::OffsetArray1;
-  using Uintah::CrowdMonitor;
-
   class PatchBVH;
   class BoundCondBase;
   class Box;
@@ -259,7 +252,7 @@ public:
   int getRefinementRatioMaxDim() const;
 
 
-  friend std::ostream& operator<<(std::ostream& out, const Uintah::Level& level);
+  friend std::ostream& operator<<( std::ostream& out, const Level& level );
 private:
 
   Level(const Level&);

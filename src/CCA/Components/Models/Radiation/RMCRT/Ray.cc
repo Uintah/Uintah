@@ -2171,7 +2171,13 @@ void Ray::computeCellType( const ProcessorGroup*,
       optical_thickness += Dx[prevLev].x() * abskg[prevLev][prevCell]*disMin;
       nRaySteps++;
 
+/*`==========TESTING==========*/
+#ifdef FAST_EXP
+      double expOpticalThick = fast_exp(-optical_thickness); 
+#else
       double expOpticalThick = exp(-optical_thickness);
+#endif
+/*===========TESTING==========`*/      
 
       sumI += sigmaT4OverPi[prevLev][prevCell] * ( expOpticalThick_prev - expOpticalThick ) * fs;
 

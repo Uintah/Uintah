@@ -29,6 +29,7 @@
 #include <Core/Grid/SimulationState.h>
 #include <Core/Grid/Variables/VarTypes.h>
 #include <Core/Grid/Variables/CCVariable.h>
+#include <Core/Math/Expon.h>
 #include <Core/Disclosure/TypeDescription.h>
 #include <sci_defs/uintah_defs.h>
 
@@ -214,6 +215,9 @@ namespace Uintah{
       static const VarLabel* d_compTempLabel;       //  temperature
       static const VarLabel* d_compAbskgLabel;      //  Absorption Coefficitne
       static const VarLabel* d_cellTypeLabel;       //  cell type marker
+      
+      fastApproxExponent d_fastExp;
+      
 
   }; // class RMCRTCommon
 

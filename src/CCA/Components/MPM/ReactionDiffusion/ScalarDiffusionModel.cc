@@ -88,10 +88,12 @@ void ScalarDiffusionModel::setIncludeHydroStress(bool value){
 void ScalarDiffusionModel::addInitialComputesAndRequires(Task* task,
                                                    const MPMMaterial* matl,
                                                    const PatchSet* patch) const{
-  const MaterialSubset* matlset = matl->thisMaterial();
-  task->computes(d_lb->pConcentrationLabel, matlset);
-  task->computes(d_lb->pConcPreviousLabel,  matlset);
-  task->computes(d_lb->pConcGradientLabel,  matlset);
+}
+
+void ScalarDiffusionModel::initializeSDMData(const Patch* patch,
+                                             const MPMMaterial* matl,
+                                             DataWarehouse* new_dw)
+{
 }
 
 void ScalarDiffusionModel::initializeTimeStep(const Patch* patch,
@@ -108,13 +110,6 @@ void ScalarDiffusionModel::initializeTimeStep(const Patch* patch,
 void ScalarDiffusionModel::addParticleState(std::vector<const VarLabel*>& from,
                                             std::vector<const VarLabel*>& to)
 {
-  from.push_back(d_lb->pConcentrationLabel);
-  from.push_back(d_lb->pConcPreviousLabel);
-  from.push_back(d_lb->pConcGradientLabel);
-
-  to.push_back(d_lb->pConcentrationLabel_preReloc);
-  to.push_back(d_lb->pConcPreviousLabel_preReloc);
-  to.push_back(d_lb->pConcGradientLabel_preReloc);
 }
 
 void ScalarDiffusionModel::scheduleComputeFlux(Task* task,

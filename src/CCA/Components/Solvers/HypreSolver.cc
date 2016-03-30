@@ -135,7 +135,9 @@ namespace Uintah {
       typedef typename Types::sol_type sol_type;
 
       int timestep = params->state->getCurrentTopLevelTimeStep();
-      
+
+      //________________________________________________________
+      // Solve frequency
       const int solvFreq = params->solveFrequency;
       // note - the first timestep in hypre is timestep 1
       if (solvFreq == 0 || timestep % solvFreq )
@@ -144,8 +146,9 @@ namespace Uintah {
         return;
       }
       
-      int suFreq = params->setupFrequency;
-
+      //________________________________________________________
+      // Matrix setup frequency - this will destroy and recreate a new Hypre matrix at the specified setupFrequency
+      int suFreq = params->getSetupFrequency();
       bool mod_setup = true;
       if (suFreq != 0)
         mod_setup = (timestep % suFreq);
@@ -156,7 +159,14 @@ namespace Uintah {
         do_setup = true;
         firstPassThrough_ = false;
       }
-      
+
+      //________________________________________________________
+      // update coefficient frequency - This will ONLY UPDATE the matrix coefficients without destroying/recreating the Hypre Matrix
+      const int updateCoefFreq = params->getUpdateCoefFrequency();
+      bool modUpdateCoefs = true;
+      if (updateCoefFreq != 0) modUpdateCoefs = (timestep % updateCoefFreq);
+      bool updateCoefs = ( (timestep == 1) || !modUpdateCoefs );
+      //________________________________________________________
       struct hypre_solver_struct* hypre_solver_s = 0;
       bool restart = false;
 
@@ -190,7 +200,6 @@ namespace Uintah {
         new_dw->put(hypre_solverP_,hypre_solver_label);
         restart = true;
       }
-
 
       DataWarehouse* A_dw = new_dw->getOtherDataWarehouse(which_A_dw);
       DataWarehouse* b_dw = new_dw->getOtherDataWarehouse(which_b_dw);
@@ -292,8 +301,8 @@ namespace Uintah {
 
         HYPRE_StructMatrixInitialize(HA);
 #endif
-        // setup the coefficient matrix ONLY on the first timestep, if we are doing a restart, or if we set setupFrequency != 0
-        if (timestep == 1 || restart || do_setup) {
+        // setup the coefficient matrix ONLY on the first timestep, if we are doing a restart, or if we set setupFrequency != 0, or if UpdateCoefFrequency != 0
+        if (timestep == 1 || restart || do_setup || updateCoefs) {
           for(int p=0;p<patches->size();p++){
             const Patch* patch = patches->get(p);
             printTask( patches, patch, cout_doing, "HypreSolver:solve: Create Matrix" );
@@ -1162,7 +1171,9 @@ namespace Uintah {
         string variable;
         if(param->getAttribute("variable", variable) && variable != varname)
           continue;
-          
+        
+        int sFreq;
+        int coefFreq;
         param->getWithDefault ("solver",          p->solvertype,     "smg");      
         param->getWithDefault ("preconditioner",  p->precondtype,    "diagonal"); 
         param->getWithDefault ("tolerance",       p->tolerance,      1.e-10);     
@@ -1172,11 +1183,12 @@ namespace Uintah {
         param->getWithDefault ("skip",            p->skip,           0);          
         param->getWithDefault ("jump",            p->jump,           0);          
         param->getWithDefault ("logging",         p->logging,        0);
-        param->getWithDefault ("setupFrequency",  p->setupFrequency, 1);
+        param->getWithDefault ("setupFrequency",  sFreq,             1);
+        param->getWithDefault ("updateCoefFrequency",  coefFreq,             1);
         param->getWithDefault ("solveFrequency",  p->solveFrequency, 1);
-
         param->getWithDefault ("relax_type",      p->relax_type,     1); 
-        
+        p->setSetupFrequency(sFreq);
+        p->setUpdateCoefFrequency(coefFreq);
         // Options from the HYPRE_ref_manual 2.8
         // npre:   Number of relaxation sweeps before coarse grid correction
         // npost:  Number of relaxation sweeps after coarse grid correction
@@ -1204,7 +1216,8 @@ namespace Uintah {
       p->skip    = 0;
       p->jump    = 0;
       p->logging = 0;
-      p->setupFrequency = 1;
+      p->setSetupFrequency(1);
+      p->setUpdateCoefFrequency(1);
       p->solveFrequency = 1;
       p->relax_type = 1;
     }
