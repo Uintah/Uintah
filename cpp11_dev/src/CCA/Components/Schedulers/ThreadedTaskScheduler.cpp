@@ -524,7 +524,6 @@ void ThreadedTaskScheduler::post_MPI_recvs( DetailedTask * task
 
     // The first thread that calls this on the batch will return true while subsequent
     // threads calling this will block and wait for that first thread to receive the data.
-    task->incrementExternalDepCount();
     if (!batch->makeMPIRequest()) {  // Someone else already receiving it
       continue;
     }

@@ -131,12 +131,6 @@ AMRSimulationController::run()
   }
 #endif
 
-  bool log_dw_mem=false;
-
-  if( dbg_dwmem.active() ) {
-    log_dw_mem = true;
-  }
-
   // Sets up sharedState, timeinfo, output, scheduler, lb.
   preGridSetup();
 
