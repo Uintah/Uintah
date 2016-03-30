@@ -29,7 +29,7 @@
 #include <spatialops/structured/IndexTriplet.h>
 
 //-- Wasatch includes --//
-#include "ScalarTransportEquation.h"
+#include <CCA/Components/Wasatch/Transport/ScalarTransportEquation.h>
 #include <CCA/Components/Wasatch/Operators/OperatorTypes.h>
 #include <CCA/Components/Wasatch/ParseTools.h>
 #include <CCA/Components/Wasatch/TagNames.h>

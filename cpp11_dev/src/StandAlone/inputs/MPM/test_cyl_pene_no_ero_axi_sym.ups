@@ -47,8 +47,9 @@
     <save label = "p.porosity"/>
     <save label = "p.localized"/>
     <save label = "p.temperature"/>
+    <save label = "p.scalefactor"/>
+    <save label = "p.particleID"/>
     <save label = "g.mass"/>
-    <save label = "g.volume"/>
     <save label = "g.stressFS"/>
     <checkpoint cycle = "2" timestepInterval = "20"/>
   </DataArchiver>
@@ -61,6 +62,7 @@
     <artificial_damping_coeff>       0.0        </artificial_damping_coeff>
     <artificial_viscosity>           true       </artificial_viscosity>
     <use_load_curves>                false      </use_load_curves>
+    <DoExplicitHeatConduction>       false      </DoExplicitHeatConduction>
     <ForceBC_force_increment_factor> 1.0        </ForceBC_force_increment_factor>
     <do_contact_friction_heating> false </do_contact_friction_heating>
     <erosion algorithm = "none"/>
@@ -164,9 +166,9 @@
   <Grid>
     <Level>
       <Box label = "1">
-        <lower>[0.0,-6.0e-2,0.0]</lower>
+        <lower>[0.0,-4.0e-2,0.0]</lower>
         <upper>[3.0e-2,4.0e-2,1.5e-3]</upper>
-        <resolution>[20,50,1]</resolution>
+        <resolution>[20,40,1]</resolution>
         <patches>[2,2,1]</patches>
         <extraCells>[1,1,1]</extraCells>
       </Box>

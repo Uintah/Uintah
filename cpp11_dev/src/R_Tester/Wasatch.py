@@ -141,6 +141,7 @@ DEBUGTESTS = [
 NIGHTLYTESTS = [
 #   ("scalar-transport-equation_perf",    scalarequationperf_ups,   1.1,  "Linux",  ["no_uda_comparison","no_restart","do_performance_test"] ),
 #	("particle-test-driven-cavity-upper-half-IC", "particle-test-driven-cavity-upper-half-IC.ups",   4,  "Linux",   ["exactComparison","no_memoryTest"] ),
+  ("compressible-flow-test-3d", "compressible-flow-test-3d.ups",   8,  "All",  ["exactComparison","no_restart","no_memoryTest"] ),
   ("compressible-flow-test-2d", "compressible-flow-test-2d.ups",   4,  "All",  ["exactComparison","no_restart","no_memoryTest"] ),
   ("compressible-flow-test-1d", "compressible-flow-test-1d.ups",   4,  "All",  ["exactComparison","no_restart","no_memoryTest"] ),  
   ("varden-jet-2d",                    "varden-jet-2d.ups",   4,  "All",  ["exactComparison","no_restart","no_memoryTest"] ),
@@ -255,6 +256,7 @@ NIGHTLYTESTS = [
 ]
 
 COMPRESSIBLETESTS=[
+  ("compressible-flow-test-3d", "compressible-flow-test-3d.ups",   8,  "All",  ["exactComparison","no_restart","no_memoryTest"] ),
   ("compressible-flow-test-2d", "compressible-flow-test-2d.ups",   4,  "All",  ["exactComparison","no_restart","no_memoryTest"] ),
   ("compressible-flow-test-1d", "compressible-flow-test-1d.ups",   4,  "All",  ["exactComparison","no_restart","no_memoryTest"] )
 ]
@@ -381,7 +383,7 @@ SCALARTRANSPORTTESTS=[
 
 GPUTESTS=[
   ("BasicScalarTransportEquation", "BasicScalarTransportEquation.ups", 1, "Linux", ["gpu", "no_restart", "no_memoryTest", "sus_options=-gpu -nthreads 2 "]),
-  ("ScalarTransportEquation",      "ScalarTransportEquation.ups",      1, "Linux", ["gpu", "no_restart", "no_memoryTest", "sus_options=-gpu -nthreads 2 "]),
+#  ("ScalarTransportEquation",      "ScalarTransportEquation.ups",      1, "Linux", ["gpu", "no_restart", "no_memoryTest", "sus_options=-gpu -nthreads 2 "]),
   ("bc-test-svol-gpu-x"  , bc_gpu_x_ups,   1, "Linux", ["gpu", "no_restart", "no_memoryTest", "sus_options=-gpu -nthreads 2 "]),  
   ("bc-test-svol-gpu-y"  , bc_gpu_y_ups,   1, "Linux", ["gpu", "no_restart", "no_memoryTest", "sus_options=-gpu -nthreads 2 "]),  
   ("bc-test-svol-gpu-z"  , bc_gpu_z_ups,   1, "Linux", ["gpu", "no_restart", "no_memoryTest", "sus_options=-gpu -nthreads 2 "]),      

@@ -1925,14 +1925,13 @@ void SerialMPM::actuallyInitialize(const ProcessorGroup*,
 
   const Level* level = getLevel(patches);
   IntVector lowNode, highNode;
-  level->findNodeIndexRange(lowNode, highNode);
+  level->findInteriorNodeIndexRange(lowNode, highNode);
   string interp_type = flags->d_interpolator_type;
 
   // Determine dimensionality for particle splitting
+  // To be recognized as 2D, must be in the x-y plane
   d_ndim=3;
-  if((interp_type=="linear" && (highNode.z() - lowNode.z()==2)) ||
-     (interp_type=="gimp"   && (highNode.z() - lowNode.z()==4)) ||
-     (interp_type=="cpdi"   && (highNode.z() - lowNode.z()==4))){
+  if(highNode.z() - lowNode.z()==2) {
      d_ndim=2;
   }
 
@@ -1940,7 +1939,7 @@ void SerialMPM::actuallyInitialize(const ProcessorGroup*,
   // thick in the theta dir.
   if(flags->d_axisymmetric){
     int num_cells_in_theta = (highNode.z() - lowNode.z()) - 1;
-    if(num_cells_in_theta > 1){
+    if(num_cells_in_theta > 1 ){
      ostringstream msg;
       msg << "\n ERROR: When using <axisymmetric>true</axisymmetric> the \n"
           << "grid can only have one cell in the circumferential direction.\n";

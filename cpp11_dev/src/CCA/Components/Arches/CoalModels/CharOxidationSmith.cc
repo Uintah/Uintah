@@ -706,14 +706,14 @@ CharOxidationSmith::computeModel( const ProcessorGroup * pc,
             rh_l[l]=rh_l_new[l];
           }
           // get F and Jacobian -> dF/drh
-          root_function( F, rh_l, co_r, cg, k_r, MW, r_devol_ns, p_diam, Sh, w, p_area, _D_oxid_mix_l );  
+          root_function( F, rh_l, co_r, gas_rho, cg, k_r, MW, r_devol_ns, p_diam, Sh, w, p_area, _D_oxid_mix_l );  
           for (int l=0; l<_NUM_reactions; l++) {
             for (int j=0; j<_NUM_reactions; j++) {
               for (int k=0; k<_NUM_reactions; k++) {
                 rh_l_delta[k] = rh_l[k];
               }
               rh_l_delta[j] = rh_l[j]+delta;
-              root_function( F_delta, rh_l_delta, co_r, cg, k_r, MW, r_devol_ns, p_diam, Sh, w, p_area, _D_oxid_mix_l );  
+              root_function( F_delta, rh_l_delta, co_r, gas_rho, cg, k_r, MW, r_devol_ns, p_diam, Sh, w, p_area, _D_oxid_mix_l );  
               (*dfdrh)[l][j] = (F_delta[l] - F[l]) / delta;
             }
           } 
@@ -790,7 +790,7 @@ CharOxidationSmith::computeModel( const ProcessorGroup * pc,
 }
 
 inline void 
-CharOxidationSmith::root_function( std::vector<double> &F, std::vector<double> &rh_l, std::vector<double> &co_r, double &cg, std::vector<double> &k_r, double &MW, double &r_devol, double &p_diam, std::vector<double> &Sh, double &w, double &p_area, std::vector<double> &_D_oxid_mix_l ){
+CharOxidationSmith::root_function( std::vector<double> &F, std::vector<double> &rh_l, std::vector<double> &co_r, double &gas_rho, double &cg, std::vector<double> &k_r, double &MW, double &r_devol, double &p_diam, std::vector<double> &Sh, double &w, double &p_area, std::vector<double> &_D_oxid_mix_l ){
 
   double rh = 0.0;
   double rtotal = 0.0;
@@ -802,7 +802,7 @@ CharOxidationSmith::root_function( std::vector<double> &F, std::vector<double> &
   for (int l=0; l<_NUM_reactions; l++) {
     rh = std::accumulate(rh_l.begin(), rh_l.end(), 0.0);
     rtotal = rh + r_devol; // [kg/m^3/s]
-    Bjm = std::min( 80.0 , (rtotal/(p_area*w*MW))/( cg * _D_oxid_mix_l[l] / p_diam ) ); // [-] // this is the rate factor N_t / kx,loc from BSL chapter 22
+    Bjm = std::min( 80.0 , (rtotal/w)/( 2 * _pi * _D_oxid_mix_l[l] * p_diam * gas_rho ) ); // [-] // this is the derived for mass flux  BSL chapter 22
     Fac = ( Bjm >= 1e-7 ) ?  Bjm/(exp(Bjm)-1) : 1.0; // also from BSL chapter 22 the mass transfer correction factor.
     mtc_r = (Sh[l] * _D_oxid_mix_l[l] * Fac) / p_diam; // [m/s]
     numerator = pow( p_area * w, 2.0) * _Mh * MW * _phi_l[l] * k_r[l] * mtc_r * _S * co_r[l] * cg; // [(#^2 kg-char kg-mix) / (s^2 m^6)] 

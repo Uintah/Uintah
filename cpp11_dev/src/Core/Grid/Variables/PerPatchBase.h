@@ -32,8 +32,6 @@
 
 namespace Uintah {
 
-  using Uintah::IntVector;
-
   class Patch;
   class RefCounted;
 
@@ -83,12 +81,12 @@ WARNING
       virtual void* getBasePointer() const = 0;
 
       // Only affects grid variables
-      void offsetGrid(const Uintah::IntVector& /*offset*/);
+      void offsetGrid(const IntVector& /*offset*/);
  
-      virtual void emitNormal(std::ostream& out, const Uintah::IntVector& l,
-                              const Uintah::IntVector& h, ProblemSpecP varnode, bool outputDoubleAsFloat );
+      virtual void emitNormal(std::ostream& out, const IntVector& l,
+                              const IntVector& h, ProblemSpecP varnode, bool outputDoubleAsFloat );
       virtual void readNormal(std::istream& in, bool swapbytes);      
-      virtual void allocate(const Patch* patch, const Uintah::IntVector& boundary);
+      virtual void allocate(const Patch* patch, const IntVector& boundary);
 
    protected:
       PerPatchBase(const PerPatchBase&);

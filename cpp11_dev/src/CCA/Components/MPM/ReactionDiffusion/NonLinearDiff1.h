@@ -51,6 +51,10 @@
 #include <Core/Grid/SimulationStateP.h>
 #include <Core/ProblemSpec/ProblemSpecP.h>
 
+#include <vector>
+#include <string>
+using namespace std;
+
 namespace Uintah {
 
   class Task;
@@ -60,6 +64,12 @@ namespace Uintah {
   class DataWarehouse;
   class ProcessorGroup;
 
+
+  enum FluxDirection{
+    fd_in,
+    fd_out,
+    fd_transition
+  };
   
   class NonLinearDiff1 : public ScalarDiffusionModel {
   public:
@@ -83,6 +93,10 @@ namespace Uintah {
     double tuning4;
     double tuning5;
     bool use_pressure;
+    bool use_diff_curve;
+
+    vector<double> time_points;
+    vector<FluxDirection> fd_directions;
 
     NonLinearDiff1(const NonLinearDiff1&);
     NonLinearDiff1& operator=(const NonLinearDiff1&);

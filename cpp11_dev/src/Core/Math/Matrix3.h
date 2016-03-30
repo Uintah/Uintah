@@ -45,7 +45,6 @@
 
 namespace Uintah {
 
-  using Uintah::Vector;
   using TNT::Array2D;
 
   class Matrix3 {
@@ -731,9 +730,8 @@ namespace Uintah {
 
 namespace Uintah {
 
-
-   void swapbytes( Uintah::Matrix3& m);
-   template<>  const std::string find_type_name(Uintah::Matrix3*);
+   void swapbytes( Matrix3& m );
+   template<>  const std::string find_type_name( Matrix3* );
  
 } // namespace Uintah
 

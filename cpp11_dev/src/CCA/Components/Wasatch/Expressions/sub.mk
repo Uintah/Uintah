@@ -51,13 +51,14 @@ CUDA_ENABLED_SRCS =       \
      PrimVar              \
      ScalarRHS            \
      ScalarEOSCoupling    \
-	 SetCurrentTime       \
+     SetCurrentTime       \
      SimpleEmission		  \
      SolnVarEst           \
      Strain               \
      ScalabilityTestSrc   \
      ExprAlgebra   \
-     TimeAdvance
+     TimeAdvance   \
+     DensityCalculator
 
 ifeq ($(HAVE_CUDA),yes)
 
@@ -79,7 +80,6 @@ endif
 # way:
 #
 SRCS += \
-        $(SRCDIR)/DensityCalculator.cc    \
         $(SRCDIR)/DORadSolver.cc          \
         $(SRCDIR)/RadPropsEvaluator.cc    \
         $(SRCDIR)/StableTimestep.cc       \
@@ -178,6 +178,9 @@ ifeq ($(HAVE_CUDA),yes)
 	cp $< $@
 
   $(OBJTOP_ABS)/$(SRCDIR)/TimeAdvance.cu : $(SRCTOP_ABS)/$(SRCDIR)/TimeAdvance.cc
+	cp $< $@
+
+  $(OBJTOP_ABS)/$(SRCDIR)/DensityCalculator.cu : $(SRCTOP_ABS)/$(SRCDIR)/DensityCalculator.cc
 	cp $< $@
 
 endif

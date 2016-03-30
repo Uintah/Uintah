@@ -45,16 +45,16 @@ endif
 PSELIBS := $(GPU_EXTRA_LINK) $(PSELIBS)
 
 ifeq ($(IS_STATIC_BUILD),yes)
-  LIBS := $(CORE_STATIC_LIBS) $(ZOLTAN_LIBRARY)    \
-          $(BOOST_LIBRARY)         \
-          $(EXPRLIB_LIBRARY) $(SPATIALOPS_LIBRARY) \
-          $(TABPROPS_LIBRARY) $(RADPROPS_LIBRARY)  \
-          $(PAPI_LIBRARY) $(M_LIBRARY)
+  LIBS := $(CORE_STATIC_LIBS) $(ZOLTAN_LIBRARY)        \
+          $(BOOST_LIBRARY)                             \
+          $(EXPRLIB_LIBRARY) $(SPATIALOPS_LIBRARY)     \
+          $(TABPROPS_LIBRARY) $(RADPROPS_LIBRARY)      \
+          $(PAPI_LIBRARY) $(M_LIBRARY) $(PIDX_LIBRARY)
 else
   LIBS := $(MPI_LIBRARY) $(BLAS_LIBRARY) $(THREAD_LIBRARY) $(XML2_LIBRARY) \
-          $(EXPRLIB_LIBRARY) $(SPATIALOPS_LIBRARY) \
-          $(TABPROPS_LIBRARY) $(RADPROPS_LIBRARY)  \
-          $(CUDA_LIBRARY) $(BOOST_LIBRARY)
+          $(EXPRLIB_LIBRARY) $(SPATIALOPS_LIBRARY)                         \
+          $(TABPROPS_LIBRARY) $(RADPROPS_LIBRARY)                          \
+          $(CUDA_LIBRARY) $(BOOST_LIBRARY) $(PIDX_LIBRARY)
 endif
 
 SRCS := $(SRCDIR)/compute_Lnorm_udas.cc 

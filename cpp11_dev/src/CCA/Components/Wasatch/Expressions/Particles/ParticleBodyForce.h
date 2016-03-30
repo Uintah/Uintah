@@ -3,7 +3,7 @@
 
 #include <expression/Expression.h>
 #include <spatialops/particles/ParticleFieldTypes.h>
-#include <spatialops/particles/ParticleOperators.h>
+#include <spatialops/particles/ParticleOperatorsImplementation.h>
 #include <spatialops/OperatorDatabase.h>
 
 //==================================================================
@@ -104,7 +104,7 @@ ParticleBodyForce( const Expr::Tag& gasDensityTag,
                    const Expr::TagList& particlePositionTags )
 : Expr::Expression<ParticleField>()
 {
-  this->set_gpu_runnable(false);  // need new particle operators...
+  this->set_gpu_runnable(true);
 
   px_    = this->template create_field_request<ParticleField>(particlePositionTags[0]);
   py_    = this->template create_field_request<ParticleField>(particlePositionTags[1]);

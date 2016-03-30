@@ -922,8 +922,8 @@ BoundaryCondition::velRhoHatInletBC(const Patch* patch,
 
           bound_ptr.reset();
 
-          if ( bc_iter->second.type == VELOCITY_INLET || bc_iter->second.type == MASSFLOW_INLET
-               ) {
+          if ( bc_iter->second.type == VELOCITY_INLET
+            || bc_iter->second.type == MASSFLOW_INLET ) {
 
             setVel( patch, face, vars->uVelRhoHat, vars->vVelRhoHat, vars->wVelRhoHat, constvars->new_density, bound_ptr, bc_iter->second.velocity );
 
@@ -958,7 +958,12 @@ BoundaryCondition::velRhoHatInletBC(const Patch* patch,
 
             setVelFromExtraValue( patch, face, vars->uVelRhoHat, vars->vVelRhoHat, vars->wVelRhoHat, constvars->new_density, bound_ptr, bc_iter->second.velocity );
 
+          } else if ( bc_iter->second.type == WALL ) {
+
+            setVel( patch, face, vars->uVelRhoHat, vars->vVelRhoHat, vars->wVelRhoHat, constvars->new_density, bound_ptr, bc_iter->second.velocity );
+
           }
+
         }
       }
     }
@@ -2975,8 +2980,7 @@ BoundaryCondition::setInitProfile(const ProcessorGroup*,
                       density, bound_ptr, bc_iter->second.velocity, bc_iter->second.swirl_no, bc_iter->second.swirl_cent );
 
                 }
-              }
-              else if ( bc_iter->second.type != TURBULENT_INLET && bc_iter->second.type != STABL ) {
+              } else if ( bc_iter->second.type == MASSFLOW_INLET || bc_iter->second.type == VELOCITY_INLET ){
 
                 setVel( patch, face, uVelocity, vVelocity, wVelocity, density, bound_ptr, bc_iter->second.velocity );
 
@@ -2984,9 +2988,13 @@ BoundaryCondition::setInitProfile(const ProcessorGroup*,
 
                 setStABL( patch, face, uVelocity, vVelocity, wVelocity, &bc_iter->second, bound_ptr );
 
-              } else {
+              } else if ( bc_iter->second.type == TURBULENT_INLET ){
 
                 setTurbInlet( patch, face, uVelocity, vVelocity, wVelocity, density, bound_ptr, bc_iter->second.TurbIn );
+
+              } else if ( bc_iter->second.type == WALL ) {
+
+                setVel( patch, face, uVelocity, vVelocity, wVelocity, density, bound_ptr, bc_iter->second.velocity );
 
               }
 
@@ -3442,8 +3450,8 @@ void BoundaryCondition::setVel( const Patch* patch, const Patch::FaceType& face,
       uVel[c]  = value.x();
       uVel[cp] = value.x();
 
-      vVel[c] = value.y();
-      wVel[c] = value.z();
+      vVel[c] = 2.*value.y() - vVel[cp];
+      wVel[c] = 2.*value.z() - wVel[cp];
 
     }
 
@@ -3453,13 +3461,13 @@ void BoundaryCondition::setVel( const Patch* patch, const Patch::FaceType& face,
     for ( bound_ptr.reset(); !bound_ptr.done(); bound_ptr++ ) {
 
       IntVector c  = *bound_ptr;
-      IntVector cp = *bound_ptr + insideCellDir;
+      IntVector cp = *bound_ptr - insideCellDir;
 
       uVel[cp]  = value.x();
       uVel[c]   = value.x();
 
-      vVel[c] = value.y();
-      wVel[c] = value.z();
+      vVel[c] = 2.0*value.y() - vVel[cp];
+      wVel[c] = 2.0*value.z() - wVel[cp];
 
     }
     break;
@@ -3473,8 +3481,8 @@ void BoundaryCondition::setVel( const Patch* patch, const Patch::FaceType& face,
       vVel[c] = value.y();
       vVel[cp] = value.y();
 
-      uVel[c] = value.x();
-      wVel[c] = value.z();
+      uVel[c] = 2.0 * value.x() - uVel[cp];
+      wVel[c] = 2.0 * value.z() - wVel[cp];
 
     }
     break;
@@ -3483,13 +3491,13 @@ void BoundaryCondition::setVel( const Patch* patch, const Patch::FaceType& face,
     for ( bound_ptr.reset(); !bound_ptr.done(); bound_ptr++ ) {
 
       IntVector c  = *bound_ptr;
-      IntVector cp = *bound_ptr + insideCellDir;
+      IntVector cp = *bound_ptr - insideCellDir;
 
       vVel[cp] = value.y();
       vVel[c] = value.y();
 
-      uVel[c] = value.x();
-      wVel[c] = value.z();
+      uVel[c] = 2.0 * value.x() - uVel[cp];
+      wVel[c] = 2.0 * value.z() - wVel[cp];
 
     }
     break;
@@ -3503,8 +3511,8 @@ void BoundaryCondition::setVel( const Patch* patch, const Patch::FaceType& face,
       wVel[c] = value.z();
       wVel[cp] = value.z();
 
-      uVel[c] = value.x();
-      vVel[c] = value.y();
+      uVel[c] = 2.0 * value.x() - uVel[cp];
+      vVel[c] = 2.0 * value.y() - vVel[cp];
 
     }
     break;
@@ -3513,13 +3521,13 @@ void BoundaryCondition::setVel( const Patch* patch, const Patch::FaceType& face,
     for ( bound_ptr.reset(); !bound_ptr.done(); bound_ptr++ ) {
 
       IntVector c  = *bound_ptr;
-      IntVector cp = *bound_ptr + insideCellDir;
+      IntVector cp = *bound_ptr - insideCellDir;
 
       wVel[cp] = value.z();
       wVel[c] = value.z();
 
-      uVel[c] = value.x();
-      vVel[c] = value.y();
+      uVel[c] = 2.0 * value.x() - uVel[cp];
+      vVel[c] = 2.0 * value.y() - vVel[cp];
 
     }
     break;

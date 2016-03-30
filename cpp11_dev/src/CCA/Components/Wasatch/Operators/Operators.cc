@@ -23,10 +23,11 @@
  */
 
 //-- Wasatch includes --//
-#include "Operators.h"
+#include <CCA/Components/Wasatch/Operators/Operators.h>
 #include <CCA/Components/Wasatch/BCHelper.h>
 #include <CCA/Components/Wasatch/WasatchBCHelper.h>
-#include <spatialops/particles/ParticleOperators.h>
+
+#include <spatialops/particles/ParticleOperatorsImplementation.h>
 #include <CCA/Components/Wasatch/Operators/Extrapolant.h>
 #include <CCA/Components/Wasatch/Operators/UpwindInterpolant.h>
 #include <CCA/Components/Wasatch/Operators/FluxLimiterInterpolant.h>

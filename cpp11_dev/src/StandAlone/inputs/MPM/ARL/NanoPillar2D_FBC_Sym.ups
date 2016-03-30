@@ -94,18 +94,20 @@
       <save label = "p.volume"/>
       <save label = "p.stress"/>
       <save label = "p.concentration"/>
-      <save label = "p.concentrationInterp"/>
-      <save label = "p.pressure_t1"/>
       <save label = "p.displacement"/>
       <save label = "p.scalefactor"/>
       <save label = "p.deformationMeasure"/>
       <save label = "p.velocity"/>
-      <save label = "p.diffusivity"/>
       <save label = "p.externalscalarflux"/>
       <save label = "p.particleID"/>
       <save label = "p.loadCurveID"/>
-      <save label = "p.equivalentStress_t1"/>
       <save label = "g.concentration"/>
+<!--
+      <save label = "p.diffusivity"/>
+      <save label = "p.equivalentStress_t1"/>
+      <save label = "p.concentrationInterp"/>
+      <save label = "p.pressure_t1"/>
+-->
       <checkpoint cycle = "2" interval = "1.0e5"/>
    </DataArchiver>
 
@@ -125,6 +127,7 @@
          <Variable name = "stretchRatio" value = "3.0" matl = "0" />
        </Refinement_Criteria_Thresholds>
      </MPM>
+
      <Regridder type="Tiled">
        <max_levels>1</max_levels>
        <cell_refinement_ratio>    [[2,1,2]]  </cell_refinement_ratio>
@@ -266,7 +269,7 @@
          <lower>        [0.0,-.0025,0.0]   </lower>
          <upper>        [0.5,0.0025,0.2]   </upper>
          <resolution>   [50, 1,  20 ]   </resolution>
-         <patches>      [2,1,1]          </patches>
+         <patches>      [1,1,1]          </patches>
          <extraCells>   [1,1,1]          </extraCells>
        </Box>
      </Level>

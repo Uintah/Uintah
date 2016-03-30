@@ -41,8 +41,6 @@
 
 namespace Uintah {
 
-  using Uintah::InternalError;
-
   class TypeDescription;
 
   /**************************************
@@ -168,8 +166,8 @@ WARNING
     {
       const TypeDescription* td = fun_getTypeDescription((T*)0);
       if(td->isFlat()){
-        Uintah::RunLengthEncoder<T> rle(typename Array3<T>::iterator(this, l),
-                                        typename Array3<T>::iterator(this, h));
+        RunLengthEncoder<T> rle( typename Array3<T>::iterator(this, l),
+                                 typename Array3<T>::iterator(this, h) );
         rle.write(out);
       }
       else
@@ -189,12 +187,13 @@ WARNING
     virtual void readRLE(std::istream& in, bool swapBytes, int nByteMode)
     {
       const TypeDescription* td = fun_getTypeDescription((T*)0);
-      if(td->isFlat()){
-        Uintah::RunLengthEncoder<T> rle(in, swapBytes, nByteMode);
-        rle.copyOut(Array3<T>::begin(), Array3<T>::end());
+      if( td->isFlat() ) {
+        RunLengthEncoder<T> rle( in, swapBytes, nByteMode );
+        rle.copyOut( Array3<T>::begin(), Array3<T>::end() );
       }
-      else
+      else {
         SCI_THROW(InternalError("Cannot yet write non-flat objects!\n", __FILE__, __LINE__));
+      }
     }
 
     virtual RefCounted* getRefCounted() { return this->getWindow(); }

@@ -31,7 +31,6 @@
 #include <Core/Grid/Task.h>
 
 #include <iostream>
-using namespace std;
 using namespace Uintah;
 
 #undef USE_PARTICLE_VALUES
@@ -39,7 +38,15 @@ using namespace Uintah;
 NonLinearDiff1::NonLinearDiff1(ProblemSpecP& ps, SimulationStateP& sS, MPMFlags* Mflag, string diff_type):
   ScalarDiffusionModel(ps, sS, Mflag, diff_type) {
 
+  ProblemSpecP diff_curve = 0;
+  ProblemSpecP time_point = 0;
+
+  double time;
+  string flux_direction;
+
   use_pressure = false;
+  use_diff_curve = false;
+
   ps->require("use_pressure", use_pressure);
   ps->require("tuning1", tuning1);
   ps->require("tuning2", tuning2);
@@ -48,6 +55,26 @@ NonLinearDiff1::NonLinearDiff1(ProblemSpecP& ps, SimulationStateP& sS, MPMFlags*
     ps->require("tuning3", tuning3);
     ps->require("tuning4", tuning4);
     ps->require("tuning5", tuning5);
+  }
+
+  diff_curve = ps->findBlock("diff_curve");
+  if(diff_curve){
+    use_diff_curve = true;
+    cout << "!!!!!!!!!!!!!!!!!!!using diff curve!!!!!!!!!!!!!!!" << endl;
+    for (time_point = diff_curve->findBlock("time_point"); time_point != 0;
+                           time_point = diff_curve->findNextBlock("time_point")) {
+
+      time_point->require("time", time);
+      time_point->require("flux_direction", flux_direction);
+      time_points.push_back(time);
+      if(flux_direction == "in"){
+        fd_directions.push_back(fd_in);
+      }else if(flux_direction == "out"){
+        fd_directions.push_back(fd_out);
+      }else{
+        fd_directions.push_back(fd_transition);
+      }
+    }
   }
 
 }

@@ -3171,9 +3171,20 @@ void UnifiedScheduler::initiateH2DCopies(DetailedTask* dtask) {
           //TODO: Is this even needed?  InitiateD2H seems to create the var when it's needed host side.
           //So what happens if we remove this?
           //I know it crashes if this is removed, but it seems like that crash should be fixed
+	  const bool finalized = dw->isFinalized();
+	  if (finalized) {
+	    dw->unfinalize();
+	  }
+
           dw->allocateAndPut(*gridVar, curDependency->var, matlID,
               patch, curDependency->gtype,
               curDependency->numGhostCells);
+
+
+          if (finalized) {
+            dw->refinalize();
+          }
+
 
           delete gridVar;
           gridVar = NULL;
@@ -3281,6 +3292,7 @@ void UnifiedScheduler::prepareDeviceVars(DetailedTask* dtask) {
 
               GPUGridVariableBase* device_var = OnDemandDataWarehouse::createGPUGridVariable(it->second.sizeOfDataType);
               if (gpudw) {
+
                 gpudw->allocateAndPut(
                     *device_var, it->second.dep->var->getName().c_str(),
                     it->first.patchID, it->first.matlIndx, it->first.levelIndx, it->second.staging,
@@ -3289,6 +3301,8 @@ void UnifiedScheduler::prepareDeviceVars(DetailedTask* dtask) {
                     it->second.sizeOfDataType,
                     (GPUDataWarehouse::GhostType) (it->second.gtype),
                     it->second.numGhostCells);
+
+
               } else {
                 if (gpu_stats.active()) {
                   cerrLock.lock();
@@ -4372,7 +4386,7 @@ void UnifiedScheduler::initiateD2H(DetailedTask* dtask) {
 
             GridVariableBase* gridVar = dynamic_cast<GridVariableBase*>(dependantVar->var->typeDescription()->createInstance());
 
-            bool finalized = dw->isFinalized();
+            const bool finalized = dw->isFinalized();
             if (finalized) {
               dw->unfinalize();
             }
@@ -4489,7 +4503,7 @@ void UnifiedScheduler::initiateD2H(DetailedTask* dtask) {
           if (performCopy) {
 
             PerPatchBase* hostPerPatchVar = dynamic_cast<PerPatchBase*>(dependantVar->var->typeDescription()->createInstance());
-            bool finalized = dw->isFinalized();
+            const bool finalized = dw->isFinalized();
             if (finalized) {
               dw->unfinalize();
             }
@@ -4540,7 +4554,7 @@ void UnifiedScheduler::initiateD2H(DetailedTask* dtask) {
           bool performCopy = gpudw->testAndSetCopyingIntoCPU(dependantVar->var->getName().c_str(), patchID, matlID, levelID);
           if (performCopy) {
             ReductionVariableBase* hostReductionVar = dynamic_cast<ReductionVariableBase*>(dependantVar->var->typeDescription()->createInstance());
-            bool finalized = dw->isFinalized();
+            const bool finalized = dw->isFinalized();
             if (finalized) {
               dw->unfinalize();
             }
@@ -5714,7 +5728,11 @@ void UnifiedScheduler::copyAllExtGpuDependenciesToHost(DetailedTask* dtask) {
         //valid on the host, while the rest of the host var would be invalid.
         //Since we are writing to an old data warehouse (from device to host), we need to
         //temporarily unfinalize it.
-        dw->unfinalize();
+	const bool finalized = dw->isFinalized();
+	if (finalized) {
+	  dw->unfinalize();
+	}
+
         if (!dw->exists(item.dep->var, it->first.matlIndx, it->second.sourcePatchPointer)) {
           dw->allocateAndPut(*gridVar, item.dep->var, it->first.matlIndx,
               it->second.sourcePatchPointer, item.dep->gtype,
@@ -5729,9 +5747,9 @@ void UnifiedScheduler::copyAllExtGpuDependenciesToHost(DetailedTask* dtask) {
         //Do a host-to-host copy to bring the device data now on the host into the host-side variable so
         //that sendMPI can easily find the data as if no GPU were involved at all.
         gridVar->copyPatch(tempGhostVar, ghostLow, ghostHigh );
-
-        dw->refinalize();
-
+	if(finalized) {
+	  dw->refinalize();
+	}
 
 
         //If there's ever a need to manually verify what was copied host-to-host, use this code below.

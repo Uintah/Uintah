@@ -304,7 +304,7 @@ private:
     usePatchBounds_(usePatchBounds),
     isCoordExpr_ ( coord_ != "" )
   {
-    this->set_gpu_runnable( false );  // definitely not GPU ready
+    this->set_gpu_runnable( true ); 
   }
 };
 
@@ -443,7 +443,7 @@ private:
     coord_(coord),
     usePatchBounds_(usePatchBounds)
   {
-    this->set_gpu_runnable( false );
+    this->set_gpu_runnable( true );
   }
 
 };

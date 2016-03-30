@@ -289,6 +289,9 @@ namespace WasatchCore{
       else if (treat == "COMPRESSIBLE") flowTreatment_ = COMPRESSIBLE;
     }
     static FlowTreatment flow_treatment(){return flowTreatment_;}
+
+    static void need_pressure_solve(const bool needPSolve){needPressureSolve_ = needPSolve;}
+    const static bool need_pressure_solve(){return needPressureSolve_;}
         
   private:
     bool buildTimeIntegrator_;   ///< used for Wasatch-Arches coupling
@@ -333,6 +336,7 @@ namespace WasatchCore{
     std::map< int, const Uintah::PatchSet* > patchesForOperators_;
 
     static FlowTreatment flowTreatment_;
+    static bool needPressureSolve_;
     
     Uintah::SchedulerP subsched_; // needed for dualtime
     bool dualTime_;

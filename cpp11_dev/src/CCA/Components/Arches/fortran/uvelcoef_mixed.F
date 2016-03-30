@@ -1,4 +1,4 @@
-C 
+C
 C The MIT License
 C
 C Copyright (c) 1997-2016 The University of Utah
@@ -21,8 +21,8 @@ C LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
 C FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
 C IN THE SOFTWARE.
 C
-C 
-C 
+C
+C
 c*********************************************************************
 c
 c
@@ -56,7 +56,7 @@ c*********************************************************************
       double precision DUDXE, DUDXW
       double precision DVDXN, DVDXS
       double precision DWDXB, DWDXT
-      double precision PT5, PT25, small 
+      double precision PT5, PT25, small
       double precision EPSN, EPSS, EPSE, EPSW, EPST, EPSB
       double precision EPSP
 
@@ -83,12 +83,12 @@ c*********************************************************************
 
       DO 220 K = KSTU,KENDU
          DO 210 J = JSTU,JENDU
-            DO 200 I = ISTU,IENDU  
+            DO 200 I = ISTU,IENDU
 
                flag = 0
                EPSP = eps(I,J,K)*eps(I-1,J,K)
 
-            IF ( EPSP .gt. SMALL ) THEN 
+            IF ( EPSP .gt. SMALL ) THEN
 
               EPSE = eps(I+1,J,K)
               EPSW = eps(I-2,J,K)
@@ -126,7 +126,7 @@ C-----------------------------------------------------------------------
                CBSAV(I,J,K) = CB
 
 C-----------------------------------------------------------------------
-C      UPWIND DIFFERENCING 
+C      UPWIND DIFFERENCING
 C-----------------------------------------------------------------------
                CPE = GP*VOL/dx
                CPW = GP*VOL/dx
@@ -182,20 +182,20 @@ C-----------------------------------------------------------------------
 C-----------------------------------------------------------------------
 C     CONVECTION DIFFERENCING SCHEME SELECTION
 C-----------------------------------------------------------------------
-               IF ( EPSN .lt. PT5 ) THEN 
+               IF ( EPSN .lt. PT5 ) THEN
                 flag = 1
-               ENDIF 
-               IF ( EPSS .lt. PT5 ) THEN 
+               ENDIF
+               IF ( EPSS .lt. PT5 ) THEN
                 flag = 1
-               ENDIF 
-               IF ( EPST .lt. PT5 ) THEN 
+               ENDIF
+               IF ( EPST .lt. PT5 ) THEN
                 flag = 1
-               ENDIF 
-               IF ( EPSB .lt. PT5 ) THEN 
+               ENDIF
+               IF ( EPSB .lt. PT5 ) THEN
                 flag = 1
                ENDIF 
 
-               if ( flag .eq. 1 ) then 
+               if ( flag .eq. 1 ) then
                  AE(I,J,K) = AEC + DE
                  AW(I,J,K) = AWC + DW
                  AN(I,J,K) = ANC + DN
@@ -232,10 +232,10 @@ C-----------------------------------------------------------------------
      $              GRAV )*VOL*EPSP
 
                 SU(I,J,K) = SU(I,J,K) - UU(I,J,K)*(
-     $               CE - CW + CN - CS + CT - CB ) 
+     $               CE - CW + CN - CS + CT - CB )
 
              else
-               
+
                CESAV(I,J,K) = 0.0D0
                CWSAV(I,J,K) = 0.0D0
                CNSAV(I,J,K) = 0.0D0
@@ -250,7 +250,7 @@ C-----------------------------------------------------------------------
                AB(I,J,K) = 0.0D0
                SU(I,J,K) = 0.0D0
 
-             endif 
+             endif
 
 
  200        CONTINUE
@@ -259,4 +259,3 @@ C-----------------------------------------------------------------------
 
       RETURN
       END
-

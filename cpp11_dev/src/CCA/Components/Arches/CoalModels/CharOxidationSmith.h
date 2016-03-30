@@ -87,7 +87,7 @@ public:
 private:
 
   // UDF's 
-  inline void root_function( std::vector<double> &F, std::vector<double> &rh_l, std::vector<double> &co_r, double &cg, std::vector<double> &k_r, double &MW, double &r_devol, double &p_diam, std::vector<double> &Sh, double &w, double &p_area, std::vector<double> &_D_oxid_mix_l);
+  inline void root_function( std::vector<double> &F, std::vector<double> &rh_l, std::vector<double> &co_r, double &gas_rho, double &cg, std::vector<double> &k_r, double &MW, double &r_devol, double &p_diam, std::vector<double> &Sh, double &w, double &p_area, std::vector<double> &_D_oxid_mix_l);
   inline void invert_2_2( DenseMatrix* &dfdrh );
 
   // Particle VarLabels 

@@ -35,9 +35,6 @@ namespace Uintah {
 
   class Patch;
   struct Stencil7;
-  using Uintah::Vector;
-  using Uintah::IntVector;
-  using Uintah::Point;
 
   class ParticleInterpolator {
     

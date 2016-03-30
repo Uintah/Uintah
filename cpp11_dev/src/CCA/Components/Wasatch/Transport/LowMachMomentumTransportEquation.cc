@@ -187,9 +187,9 @@ namespace WasatchCore{
         
         // matrix update in hypre: If we have a moving geometry, then update every timestep.
         // Otherwise, no update is needed since the coefficient matrix is constant
-        const bool setupFrequency = ( !isConstDensity || embedGeom.has_moving_geometry() ) ? 1 : 0;
-        solverParams_->setSetupFrequency( setupFrequency );
-        
+        const bool updateCoefFreq = ( !isConstDensity || embedGeom.has_moving_geometry() ) ? 1 : 0;
+        solverParams_->setSetupFrequency( 0 ); // matrix Sparsity will never change.
+        solverParams_->setUpdateCoefFrequency( updateCoefFreq ); // coefficients may change if we have variable density or moving geometries
         // if pressure expression has not be registered, then register it
         Expr::Tag fxt, fyt, fzt;
         if( doMom[0] )  fxt = rhs_part_tag( xmomname );
@@ -214,6 +214,8 @@ namespace WasatchCore{
       else{
         this->pressureID_ = factory.get_id( this->pressureTag_ );
       }
+    } else if( factory.have_entry( this->pressureTag_ ) ) {
+      this->pressureID_ = factory.get_id( this->pressureTag_ );
     }
     
     this->setup();
@@ -243,7 +245,7 @@ namespace WasatchCore{
     Expr::ExpressionFactory& factory = *this->gc_[ADVANCE_SOLUTION]->exprFactory;
     typedef typename MomRHS<FieldT, SpatialOps::NODIR>::Builder RHS;
     return factory.register_expression( new RHS( this->rhsTag_,
-                                                    (enablePressureSolve ? this->pressureTag_ : Expr::Tag()),
+                                                    ( (enablePressureSolve || factory.have_entry( this->pressureTag_ )) ? this->pressureTag_ : Expr::Tag()),
                                                     rhs_part_tag(this->solnVarTag_),
                                                     volFracTag ) );
   }

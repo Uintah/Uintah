@@ -1,3 +1,6 @@
+#ifndef UINTAH_HOMEBREW_Patch_H
+#define UINTAH_HOMEBREW_Patch_H
+
 /*
  * The MIT License
  *
@@ -22,9 +25,6 @@
  * IN THE SOFTWARE.
  */
 
-#ifndef UINTAH_HOMEBREW_Patch_H
-#define UINTAH_HOMEBREW_Patch_H
-
 #include <Core/Grid/Grid.h>
 #include <Core/Grid/Ghost.h>
 #include <Core/Grid/Level.h>
@@ -42,20 +42,16 @@
 
 #undef None
 
-#include   <string>
-#include   <map>
-#include   <iosfwd>
-#include   <vector>
-
-
+#include <string>
+#include <map>
+#include <iosfwd>
+#include <vector>
 
 #if defined( __PGI )
 #  define WARNS_ABOUT_UNREACHABLE_STATEMENTS 1
 #endif
 
 namespace Uintah {
-  
-  using Uintah::IntVector;
   
   class NodeIterator;
   class CellIterator;
@@ -97,7 +93,7 @@ namespace Uintah {
   class Patch {
   public:
     
-    friend std::ostream& operator<<(std::ostream& out, const Uintah::Patch & r);
+    friend std::ostream& operator<<(std::ostream& out, const Patch & r);
     
     enum BCType {
       None=0,
@@ -1059,7 +1055,7 @@ namespace Uintah {
         case zplus:
           return IntVector(0,0,1);
         default:
-          throw Uintah::InternalError("Invalid FaceIteratorType Specified", __FILE__, __LINE__);
+          throw InternalError("Invalid FaceIteratorType Specified", __FILE__, __LINE__);
 #if !WARNS_ABOUT_UNREACHABLE_STATEMENTS
           return IntVector(0,0,0);
 #endif
@@ -1086,7 +1082,7 @@ namespace Uintah {
         case zplus:
           return static_cast<BCType>(d_patchState.zplus);
         default:
-          throw Uintah::InternalError("Invalid FaceType Specified", __FILE__, __LINE__);
+          throw InternalError("Invalid FaceType Specified", __FILE__, __LINE__);
 #if !WARNS_ABOUT_UNREACHABLE_STATEMENTS
           return None;
 #endif
@@ -1211,7 +1207,7 @@ namespace Uintah {
         case zminus: case zplus:
           return IntVector(2,0,1);
         default:
-          throw Uintah::InternalError("Invalid FaceType Specified", __FILE__, __LINE__);
+          throw InternalError("Invalid FaceType Specified", __FILE__, __LINE__);
 #if !WARNS_ABOUT_UNREACHABLE_STATEMENTS
           return IntVector(0,0,0);
 #endif
@@ -1256,7 +1252,7 @@ namespace Uintah {
      d_patchState.zplus=newbc;
      break;
      default:
-     throw Uintah::InternalError("Invalid FaceType Specified", __FILE__, __LINE__);
+     throw InternalError("Invalid FaceType Specified", __FILE__, __LINE__);
      }
      }
      */
@@ -1264,7 +1260,7 @@ namespace Uintah {
     /**
      * Returns the cell spacing Vector(dx,dy,dz)
      */
-    inline Uintah::Vector dCell() const
+    inline Vector dCell() const
     {
       // This will need to change for stretched grids
       return getLevel()->dCell();
@@ -1283,7 +1279,7 @@ namespace Uintah {
      * Returns the cell area dx*dy. This will not work for stretched grids.
      * Note: This function will throw an exception if the grid is stretched.
      */
-    inline double cellArea(const Uintah::Patch::FaceType face) const
+    inline double cellArea(const Patch::FaceType face) const
     {
       Vector unitNormal(0,0,0);
       switch (face) {
@@ -1321,7 +1317,7 @@ namespace Uintah {
     /**
      * Returns the domain coordinates of the node idx
      */
-    inline Uintah::Point getNodePosition(const IntVector& idx) const
+    inline Point getNodePosition(const IntVector& idx) const
     {
       return getLevel()->getNodePosition(idx);
     }
@@ -1329,7 +1325,7 @@ namespace Uintah {
     /**
      * Returns the domain coordinates of the cell idx
      */
-    inline Uintah::Point getCellPosition(const IntVector& idx) const
+    inline Point getCellPosition(const IntVector& idx) const
     {
       return getLevel()->getCellPosition(idx);
     }
@@ -1337,7 +1333,7 @@ namespace Uintah {
     /**
      * Returns the cell index of the coordinate pos
      */
-    inline IntVector getCellIndex(const Uintah::Point& pos) const
+    inline IntVector getCellIndex(const Point& pos) const
     {
       return getLevel()->getCellIndex(pos);
     }
@@ -1347,18 +1343,18 @@ namespace Uintah {
     /**
      * Returns the 8 nodes found around the point pos
      */
-    void findCellNodes(const Uintah::Point& pos, IntVector ni[8]) const;
+    void findCellNodes(const Point& pos, IntVector ni[8]) const;
     
     /**
      * Returns the 27 nodes found around the point pos
      */
-    void findCellNodes27(const Uintah::Point& pos, IntVector ni[27]) const;
+    void findCellNodes27(const Point& pos, IntVector ni[27]) const;
     
     /**
      * Returns true if the point p is contained within the patch
      * including extra cells
      */
-    inline bool containsPointInExtraCells(const Uintah::Point& p) const {
+    inline bool containsPointInExtraCells(const Point& p) const {
       IntVector l(getExtraCellLowIndex());
       IntVector h(getExtraCellHighIndex());
       IntVector c=getLevel()->getCellIndex(p);
@@ -1368,7 +1364,7 @@ namespace Uintah {
      * Returns true if the point p is contained within the patch
      * excluding extra cells
      */
-    inline bool containsPoint(const Uintah::Point& p) const {
+    inline bool containsPoint(const Point& p) const {
       IntVector l(getCellLowIndex());
       IntVector h(getCellHighIndex());
       IntVector c=getLevel()->getCellIndex(p);
@@ -1389,7 +1385,7 @@ namespace Uintah {
     /**
      * Returns the cell that contains the point pos
      */
-    inline bool findCell(const Uintah::Point& pos, IntVector& ci) const
+    inline bool findCell(const Point& pos, IntVector& ci) const
     {
       ci=getLevel()->getCellIndex(pos);
       return containsCell(ci);
@@ -1469,10 +1465,10 @@ namespace Uintah {
      * Returns the closest node to the point pos.  This node
      * is not guarenteed to be owned by this patch.
      */
-    inline IntVector findClosestNode(const Uintah::Point& pos) const
+    inline IntVector findClosestNode(const Point& pos) const
     {
       IntVector idx = getLevel()->getCellIndex(pos);
-      Uintah::Point cellP = getLevel()->getCellPosition(idx);
+      Point cellP = getLevel()->getCellPosition(idx);
       for(int i=0;i<3;++i) {
         if( pos(i)>cellP(i) ) {
           idx[i]++;
@@ -1609,12 +1605,12 @@ namespace Uintah {
     /**
      * Returns the position of the node idx in domain coordinates.
      */
-    Uintah::Point nodePosition(const IntVector& idx) const;
+    Point nodePosition(const IntVector& idx) const;
     
     /**
      * Returns the position of the cell idx in domain coordinates.
      */
-    Uintah::Point cellPosition(const IntVector& idx) const;
+    Point cellPosition(const IntVector& idx) const;
     
     /**
      * Returns the next face.  Alternativly the ++ operator also
@@ -1799,7 +1795,7 @@ namespace Uintah {
      * Returns the offset between the virtual patch and the real patch
      * in domain coordinates.
      */
-    Uintah::Vector getVirtualOffsetVector() const
+    Vector getVirtualOffsetVector() const
     { return cellPosition(getCellLowIndex()) -
       cellPosition(getRealPatch()->getCellLowIndex());
     }
@@ -2071,11 +2067,11 @@ namespace Uintah {
      use the other more descriptive queries.
      *********************/
     
-    friend struct Uintah::InternalAreaSuperBoxEvaluator<const Uintah::Patch*, int>;
-    friend class Uintah::SuperBox<const Patch*, IntVector, int, int,
-    Uintah::InternalAreaSuperBoxEvaluator<const Patch*, int> >;
-    friend class Uintah::BasicBox<const Patch*, IntVector, int, int,
-    Uintah::InternalAreaSuperBoxEvaluator<const Patch*, int> >;
+    friend struct InternalAreaSuperBoxEvaluator<const Patch*, int>;
+    friend class SuperBox<const Patch*, IntVector, int, int,
+    InternalAreaSuperBoxEvaluator<const Patch*, int> >;
+    friend class BasicBox<const Patch*, IntVector, int, int,
+    InternalAreaSuperBoxEvaluator<const Patch*, int> >;
     
     /**
      * Returns the low index including extra cells

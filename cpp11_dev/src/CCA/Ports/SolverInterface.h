@@ -44,8 +44,14 @@ namespace Uintah {
   class VarLabel;
   class SolverParameters {
   public:
-    SolverParameters() : useStencil4(false), symmetric(true), solveOnExtraCells(false), residualNormalizationFactor(1),
-                        restartableTimestep(false), outputFileName("NULL") {}
+    SolverParameters() : useStencil4(false),
+                         symmetric(true),
+                         solveOnExtraCells(false),
+                         residualNormalizationFactor(1),
+                         restartableTimestep(false),
+                         setupFrequency(1),
+                         updateCoefFrequency(1),
+                         outputFileName("NULL") {}
     
     void setSolveOnExtraCells(bool s) {
       solveOnExtraCells = s;
@@ -99,10 +105,12 @@ namespace Uintah {
       fname.push_back( "x" + outputFileName );
     }
 
-    void setSetupFrequency(const int freq) {}
+    void setSetupFrequency(const int freq) {setupFrequency = freq;}
+    int getSetupFrequency() const { return setupFrequency;}
 
-    int getSetupFrequency() const { return 1;}
-        
+    void setUpdateCoefFrequency(const int freq) {updateCoefFrequency = freq;}
+    int  getUpdateCoefFrequency() const { return updateCoefFrequency;}
+
     virtual ~SolverParameters() {}
 
   private:
@@ -111,6 +119,8 @@ namespace Uintah {
     bool        solveOnExtraCells;
     double      residualNormalizationFactor;
     bool        restartableTimestep;
+    int         setupFrequency;        /// delete matrix and recreate it and update coefficients. Needed if Stencil changes.
+    int         updateCoefFrequency;   /// do not modify matrix stencil/sparsity - only change values of coefficients
     std::string outputFileName;
   };
   
