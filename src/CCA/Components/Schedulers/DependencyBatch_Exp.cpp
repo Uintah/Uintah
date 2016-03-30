@@ -30,6 +30,19 @@ namespace Uintah {
 
 //______________________________________________________________________
 //
+DependencyBatch::DependencyBatch( int            to
+                                , DetailedTask * fromTask
+                                , DetailedTask * toTask
+                                )
+  : m_to_proc{to}
+  , m_from_task{fromTask}
+{
+  toTask->incrementExternalDepCount();
+  m_to_tasks.push_back(toTask);
+}
+
+//______________________________________________________________________
+//
 DependencyBatch::~DependencyBatch()
 {
   DetailedDependency* dep = m_head;

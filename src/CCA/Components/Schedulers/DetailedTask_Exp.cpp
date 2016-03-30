@@ -355,7 +355,7 @@ DetailedTask::checkExternalDepCount()
 void
 DetailedTask::resetDependencyCounts()
 {
-  m_external_dependency_count.store(0, std::memory_order_relaxed);
+  m_external_dependency_count.store(m_requires.size(), std::memory_order_relaxed);
 
   m_externally_ready = false;
   m_initiated        = false;

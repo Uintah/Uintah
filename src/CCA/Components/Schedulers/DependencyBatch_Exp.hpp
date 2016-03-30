@@ -47,17 +47,7 @@ public:
   DependencyBatch( int            to
                  , DetailedTask * fromTask
                  , DetailedTask * toTask
-                 )
-  : m_comp_next{nullptr}
-  , m_from_task{fromTask}
-  , m_head{nullptr}
-  , m_message_tag{-1}
-  , m_to_proc{to}
-  , m_received{false}
-  , m_made_mpi_request{false}
-  {
-    m_to_tasks.push_back(toTask);
-  }
+                 );
 
   ~DependencyBatch();
 
@@ -79,12 +69,13 @@ public:
   // These variables will be marked as valid when MPI completes.
   void addVar( Variable* var ) { m_to_vars.push_back(var); }
 
-  DependencyBatch          * m_comp_next{};
+  int                        m_message_tag{-1};
+  int                        m_to_proc{};
+
+  DependencyBatch          * m_comp_next{nullptr};
   DetailedTask             * m_from_task{};
   std::list<DetailedTask*>   m_to_tasks{};
-  DetailedDependency       * m_head{};
-  int                        m_message_tag{};
-  int                        m_to_proc{};
+  DetailedDependency       * m_head{nullptr};
 
 
 private:
@@ -95,8 +86,8 @@ private:
   DependencyBatch( DependencyBatch && )                 = delete;
   DependencyBatch& operator=( DependencyBatch && )      = delete;
 
-  volatile bool  m_received{};
-  volatile bool  m_made_mpi_request{};
+  volatile bool  m_received{false};
+  volatile bool  m_made_mpi_request{false};
   std::mutex     m_lock{};
   std::set<int>  m_receive_listeners{};
   std::vector<Variable*> m_to_vars{};
