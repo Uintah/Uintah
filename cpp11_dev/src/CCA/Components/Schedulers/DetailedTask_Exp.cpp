@@ -324,24 +324,6 @@ DetailedTask::addRequires( DependencyBatch * req )
 //_____________________________________________________________________________
 //
 void
-DetailedTask::addInternalComputes( DependencyBatch * comp )
-{
-  comp->m_comp_next = m_internal_comp_head;
-  m_internal_comp_head = comp;
-}
-
-//_____________________________________________________________________________
-//
-bool
-DetailedTask::addInternalRequires( DependencyBatch * req )
-{
-  // return true if it is adding a new batch
-  return m_internal_requires.insert(std::make_pair(req, req)).second;
-}
-
-//_____________________________________________________________________________
-//
-void
 DetailedTask::checkExternalDepCount()
 {
   if (m_external_dependency_count.load(std::memory_order_relaxed) == 0 && m_task_group->m_scheduler->useInternalDeps() && m_initiated && !m_task->usesMPI()) {
@@ -746,6 +728,26 @@ void DetailedTask::clearPreparationCollections(){
   varsToBeGhostReady.clear();
   varsBeingCopiedByTask.clear();
 }
+
+
+//_____________________________________________________________________________
+//
+void
+DetailedTask::addInternalComputes( DependencyBatch * comp )
+{
+  comp->m_comp_next = m_internal_comp_head;
+  m_internal_comp_head = comp;
+}
+
+//_____________________________________________________________________________
+//
+bool
+DetailedTask::addInternalRequires( DependencyBatch * req )
+{
+  // return true if it is adding a new batch
+  return m_internal_requires.insert(std::make_pair(req, req)).second;
+}
+
 #endif // HAVE_CUDA
 
 } // namespace Uintah
