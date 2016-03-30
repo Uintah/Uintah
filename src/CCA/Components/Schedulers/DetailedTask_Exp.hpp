@@ -131,10 +131,6 @@ public:
 
   void emitEdges( ProblemSpecP edgesElement );
 
-  bool addInternalRequires( DependencyBatch*);
-
-  void addInternalComputes( DependencyBatch* );
-
   bool addRequires( DependencyBatch* );
 
   void addComputes( DependencyBatch* );
@@ -211,6 +207,9 @@ public:
   DeviceGridVariables& getVarsBeingCopiedByTask() { return varsBeingCopiedByTask; }
   void clearPreparationCollections();
 
+  bool addInternalRequires( DependencyBatch*);
+
+  void addInternalComputes( DependencyBatch* );
 
 #endif
 
