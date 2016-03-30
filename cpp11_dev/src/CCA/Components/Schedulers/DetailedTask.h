@@ -152,7 +152,7 @@ public:
   // DetailedTasks::mpiCompletedTasks list.
   void resetDependencyCounts();
 
-  bool isInitiated() const { return m_initiated; }
+  bool initiated() const { return m_initiated; }
 
   void markInitiated()
   {
@@ -169,6 +169,8 @@ public:
   int getExternalDepCount() { return m_external_dependency_count; }
 
   bool areInternalDependenciesSatisfied() { return (m_num_pending_internal_dependencies == 0); }
+
+  bool ready() { return ( (m_external_dependency_count == 0) && areInternalDependenciesSatisfied() ); }
 
   double task_wait_time() const { return m_wait_timer().seconds(); }
 
