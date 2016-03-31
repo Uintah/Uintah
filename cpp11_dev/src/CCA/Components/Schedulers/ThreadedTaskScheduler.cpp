@@ -294,8 +294,6 @@ void ThreadedTaskScheduler::execute(  int tgnum /*=0*/ , int iteration /*=0*/ )
   // clear & resize task phase, etc bookkeeping data structures
   m_num_messages      = 0;
   m_message_volume    = 0;
-  m_abort             = false;
-  m_abort_point       = 987654;
   m_current_iteration = iteration;
   m_num_tasks_done.store(0, std::memory_order_relaxed);
   m_current_phase.store(0, std::memory_order_relaxed);
@@ -354,7 +352,7 @@ void ThreadedTaskScheduler::execute(  int tgnum /*=0*/ , int iteration /*=0*/ )
       }
       else {  // Task::OncePerProc task
         ASSERT(sync_task->getTask()->usesMPI());
-        post_MPI_recvs(sync_task, m_abort, m_abort_point, iteration);
+        post_MPI_recvs(sync_task, iteration);
         sync_task->markInitiated();
         ASSERT(sync_task->getExternalDepCount() == 0);
         run_task(sync_task, iteration);
@@ -502,8 +500,6 @@ struct CompareDep {
 //______________________________________________________________________
 //
 void ThreadedTaskScheduler::post_MPI_recvs( DetailedTask * task
-                                          ,  bool          only_old_recvs
-                                          ,  int           abort_point
                                           ,  int           iteration
                                           )
 {
@@ -530,11 +526,6 @@ void ThreadedTaskScheduler::post_MPI_recvs( DetailedTask * task
       continue;
     }
 
-    if (only_old_recvs) {
-      if (!(batch->m_from_task->getTask()->getSortedOrder() <= abort_point)) {
-        continue;
-      }
-    }
 
     // Prepare to receive a message
     BatchReceiveHandler* pBatchRecvHandler = new BatchReceiveHandler(batch);
@@ -818,7 +809,7 @@ void ThreadedTaskScheduler::process_tasks( int iteration )
   if ((task_iter = m_init_tasks.find_any(t_init, init_task))) {
     t_init = task_iter;
     DetailedTask * dtask = *task_iter;
-    post_MPI_recvs(dtask, m_abort, m_abort_point, iteration);
+    post_MPI_recvs(dtask, iteration);
     dtask->markInitiated();
     m_ready_tasks.emplace(t_task_emplace, dtask);
     m_init_tasks.erase(task_iter);
