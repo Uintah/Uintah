@@ -356,7 +356,8 @@ get_edges( std::vector<Task *> const & tasks )
 
   out << std::endl;
   for (auto const task : tasks) {
-    out << "TASK: " << task->getName() << std::endl;
+    const bool is_sync = task->getType() == Task::Reduction || task->usesMPI();
+    out << "TASK: " << task->getName() << " : is_sync: " << is_sync << std::endl;
     out << "  COMPUTES:" << std::endl;
     print_deps( task->getComputes() );
     out << "  MODIFIES:" << std::endl;
@@ -381,9 +382,9 @@ TaskGraph::createDetailedTasks(       bool            useInternalDeps
                               , const GridP         & oldGrid
                               )
 {
-  // get_edges(m_tasks);
+   get_edges(m_tasks);
 
-  // std::abort();
+   std::abort();
 
 
 
