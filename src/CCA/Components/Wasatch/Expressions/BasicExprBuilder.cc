@@ -533,7 +533,6 @@ namespace WasatchCore{
           cy = cy0 + ny * wy;
           for (int nx = 0; nx < layout[0]; ++nx) {
             cx = cx0 + nx * wx;
-            std::cout << "center = " << cx << " " << cy << " " << cz << std::endl;
             geomObjects.push_back( scinew Uintah::SphereGeometryPiece(Uintah::Point(cx,cy,cz), r) );
           }
         }
