@@ -113,414 +113,6 @@ TaskGraph::initialize()
   m_current_iteration = 0;
 }
 
-//______________________________________________________________________
-//
-bool
-TaskGraph::overlaps( const Task::Dependency * comp
-                   , const Task::Dependency * req
-                   ) const
-{
-  constHandle<PatchSubset> saveHandle2;
-  const PatchSubset* ps1 = comp->patches;
-  if (!ps1) {
-    if (!comp->task->getPatchSet()) {
-      return false;
-    }
-    ps1 = comp->task->getPatchSet()->getUnion();
-    if (comp->patches_dom == Task::CoarseLevel || comp->patches_dom == Task::FineLevel) {
-      SCI_THROW(InternalError("Should not compute onto another level!", __FILE__, __LINE__));
-      // This may not be a big deal if it were needed, but I didn't
-      // think that it should be allowed - Steve
-      // saveHandle1 = comp->getPatchesUnderDomain(ps1);
-      // ps1 = saveHandle1.get_rep();
-    }
-  }
-
-  const PatchSubset* ps2 = req->patches;
-  if (!ps2) {
-    if (!req->task->getPatchSet()) {
-      return false;
-    }
-    ps2 = req->task->getPatchSet()->getUnion();
-    if (req->patches_dom == Task::CoarseLevel || req->patches_dom == Task::FineLevel) {
-      saveHandle2 = req->getPatchesUnderDomain(ps2);
-      ps2 = saveHandle2.get_rep();
-    }
-  }
-
-  if (!PatchSubset::overlaps(ps1, ps2)) {  // && !(ps1->size() == 0 && (!req->patches || ps2->size() == 0) && comp->task->getType() == Task::OncePerProc))
-    return false;
-  }
-
-  const MaterialSubset* ms1 = comp->matls;
-  if (!ms1) {
-    if (!comp->task->getMaterialSet()) {
-      return false;
-    }
-    ms1 = comp->task->getMaterialSet()->getUnion();
-  }
-  const MaterialSubset* ms2 = req->matls;
-  if (!ms2) {
-    if (!req->task->getMaterialSet()) {
-      return false;
-    }
-    ms2 = req->task->getMaterialSet()->getUnion();
-  }
-  if (!MaterialSubset::overlaps(ms1, ms2)) {
-    return false;
-  }
-  return true;
-}
-
-//______________________________________________________________________
-//
-// setupTaskConnections also adds Reduction Tasks to the graph...
-void
-TaskGraph::setupTaskConnections( GraphSortInfoMap & sortinfo )
-{
-  std::vector<Task*>::iterator iter;
-  // Initialize variables on the tasks
-  for (iter = m_tasks.begin(); iter != m_tasks.end(); iter++) {
-    sortinfo[*iter] = GraphSortInfo();
-  }
-
-  if (m_edges.size() > 0) {
-    return;  // already been done
-  }
-
-  // Look for all of the reduction variables - we must treat those
-  // special.  Create a fake task that performs the reduction
-  // While we are at it, ensure that we aren't producing anything
-  // into an "old" data warehouse
-  ReductionTasksMap reductionTasks;
-  for (iter = m_tasks.begin(); iter != m_tasks.end(); iter++) {
-    Task* task = *iter;
-    if (task->isReductionTask()) {
-      continue;  // already a reduction task so skip it
-    }
-
-    for (Task::Dependency* comp = task->getComputes(); comp != 0; comp = comp->next) {
-      if (m_sched->isOldDW(comp->mapDataWarehouse())) {
-        if (detaileddbg.active()) {
-          detaileddbg << m_proc_group->myrank() << " which = " << comp->whichdw << ", mapped to " << comp->mapDataWarehouse()
-                      << "\n";
-        }
-        SCI_THROW(InternalError("Variable produced in old datawarehouse: " +comp->var->getName(), __FILE__, __LINE__));
-      } else if (comp->var->typeDescription()->isReductionVariable()) {
-        int levelidx = comp->reductionLevel ? comp->reductionLevel->getIndex() : -1;
-        // Look up this variable in the reductionTasks map
-        int dw = comp->mapDataWarehouse();
-        // for reduction var allows multi computes such as delT
-        // do not generate reduction task each time it computes,
-        // instead computes it in a system wide reduction task
-        if (comp->var->allowsMultipleComputes()) {
-          if (detaileddbg.active()) {
-            detaileddbg << m_proc_group->myrank() << " Skipping Reduction task for variable: " << comp->var->getName()
-                        << " on level " << levelidx << ", DW " << dw << "\n";
-          }
-          continue;
-        }
-        ASSERT(comp->patches == 0);
-
-        // use the dw as a 'material', just for the sake of looking it up.
-        // it should only differentiate on AMR W-cycle graphs...
-        VarLabelMatl<Level> key(comp->var, dw, comp->reductionLevel);
-        const MaterialSet* ms = task->getMaterialSet();
-        const Level* level = comp->reductionLevel;
-
-        ReductionTasksMap::iterator it = reductionTasks.find(key);
-        if (it == reductionTasks.end()) {
-          // No reduction task yet, create one
-          if (detaileddbg.active()) {
-            detaileddbg << m_proc_group->myrank() << " creating Reduction task for variable: " << comp->var->getName()
-                        << " on level " << levelidx << ", DW " << dw << "\n";
-          }
-          std::ostringstream taskname;
-          taskname << "Reduction: " << comp->var->getName() << ", level: " << levelidx << ", dw: " << dw;
-          Task* newtask = new Task(taskname.str(), Task::Reduction);
-
-          sortinfo[newtask] = GraphSortInfo();
-
-          int dwmap[Task::TotalDWs];
-          for (int i = 0; i < Task::TotalDWs; i++) {
-            dwmap[i] = Task::InvalidDW;
-          }
-          dwmap[Task::OldDW] = Task::NoDW;
-          dwmap[Task::NewDW] = dw;
-          newtask->setMapping(dwmap);
-
-          // compute and require for all patches but some set of materials
-          // (maybe global material, but not necessarily)
-          if (comp->matls != 0) {
-            // TODO APH - figure this out and clean up - 01/31/15
-            //newtask->computes(comp->var, level, comp->matls, Task::OutOfDomain);
-            //newtask->requires(Task::NewDW, comp->var, level, comp->matls, Task::OutOfDomain);
-            newtask->modifies(comp->var, level, comp->matls, Task::OutOfDomain);
-          } else {
-            for (int m = 0; m < ms->size(); m++) {
-              // TODO - FIXME: figure this out and clean up - APH ß∫02/13/16
-              //newtask->computes(comp->var, level, ms->getSubset(m), Task::OutOfDomain);
-              //newtask->requires(Task::NewDW, comp->var, level, ms->getSubset(m), Task::OutOfDomain);
-              newtask->modifies(comp->var, level, ms->getSubset(m), Task::OutOfDomain);
-            }
-          }
-          reductionTasks[key] = newtask;
-          it = reductionTasks.find(key);
-        }
-      }
-    }
-  }
-
-  // Add the new reduction tasks to the list of tasks
-  for (ReductionTasksMap::iterator it = reductionTasks.begin(); it != reductionTasks.end(); it++) {
-    addTask(it->second, 0, 0);
-  }
-
-  // Gather the comps for the tasks into a map
-  CompMap comps;
-  for (iter = m_tasks.begin(); iter != m_tasks.end(); iter++) {
-    Task* task = *iter;
-    if (detaileddbg.active()) {
-      detaileddbg << m_proc_group->myrank() << " Gathering comps from task: " << *task << "\n";
-    }
-    for (Task::Dependency* comp = task->getComputes(); comp != 0; comp = comp->next) {
-      comps.insert(std::make_pair(comp->var, comp));
-      if (detaileddbg.active()) {
-        detaileddbg << m_proc_group->myrank() << "   Added comp for: " << *comp << "\n";
-      }
-    }
-  }
-
-  // Connect the tasks where the requires/modifies match a comp.
-  // Also, updates the comp map with each modify and doing this in task order
-  // so future modifies/requires find the modified var.  Also do a type check
-  for (iter = m_tasks.begin(); iter != m_tasks.end(); iter++) {
-    Task* task = *iter;
-    if (detaileddbg.active()) {
-      detaileddbg << m_proc_group->myrank() << "   Looking at dependencies for task: " << *task << "\n";
-    }
-    addDependencyEdges(task, sortinfo, task->getRequires(), comps, reductionTasks, false);
-    addDependencyEdges(task, sortinfo, task->getModifies(), comps, reductionTasks, true);
-    // Used here just to warn if a modifies comes before its computes
-    // in the order that tasks were added to the graph.
-    sortinfo.find(task)->second.m_visited = true;
-    task->allChildTasks.clear();
-    if (detaileddbg.active()) {
-      std::cout << m_proc_group->myrank() << "   Looking at dependencies for task: " << *task << "child task num="
-           << task->childTasks.size() << "\n";
-    }
-  }
-
-  //count the all child tasks
-  int nd_task = m_tasks.size();
-  while (nd_task > 0) {
-    nd_task = m_tasks.size();
-    for (iter = m_tasks.begin(); iter != m_tasks.end(); iter++) {
-      Task* task = *iter;
-      if (task->allChildTasks.size() == 0) {
-        if (task->childTasks.size() == 0) {     // leaf task, add itself to the set
-          task->allChildTasks.insert(task);
-          break;
-        }
-        std::set<Task*>::iterator it;
-        for (it = task->childTasks.begin(); it != task->childTasks.end(); it++) {
-          if ((*it)->allChildTasks.size() > 0) {
-            task->allChildTasks.insert((*it)->allChildTasks.begin(), (*it)->allChildTasks.end());
-            task->allChildTasks.insert(*it);
-          }
-          // if child didn't finish computing allChildTasks
-          else {
-            task->allChildTasks.clear();
-            break;
-          }
-        }
-      } else {
-        nd_task--;
-      }
-    }
-  }
-
-  // Initialize variables on the tasks
-  GraphSortInfoMap::iterator sort_iter;
-  for (sort_iter = sortinfo.begin(); sort_iter != sortinfo.end(); sort_iter++) {
-    sort_iter->second.m_visited = false;
-    sort_iter->second.m_sorted = false;
-  }
-} // end setupTaskConnections()
-
-//______________________________________________________________________
-//
-void
-TaskGraph::addDependencyEdges( Task              * task
-                             , GraphSortInfoMap  & sortinfo
-                             , Task::Dependency  * req
-                             , CompMap           & comps
-                             , ReductionTasksMap & reductionTasks
-                             , bool                modifies
-                             )
-{
-  for (; req != 0; req = req->next) {
-    if (detaileddbg.active()) {
-      detaileddbg << m_proc_group->myrank() << "     Checking edge for req: " << *req << ", task: " << *req->task << ", domain: "
-                  << req->patches_dom << "\n";
-    }
-    if (req->whichdw == Task::NewDW) {
-      // If DW is finalized, we assume that we already have it,
-      // or that we will get it sent to us.  Otherwise, we set
-      // up an edge to connect this req to a comp
-
-      std::pair<CompMap::iterator, CompMap::iterator> iters = comps.equal_range(static_cast<const Uintah::VarLabel*>(req->var));
-      int count = 0;
-      for (CompMap::iterator compiter = iters.first; compiter != iters.second; ++compiter) {
-
-        if (req->var->typeDescription() != compiter->first->typeDescription()) {
-          SCI_THROW(TypeMismatchException("Type mismatch for variable: "+req->var->getName(), __FILE__, __LINE__));
-        }
-
-        // determine if we need to add a dependency edge
-        bool add = false;
-        bool requiresReductionTask = false;
-        if (detaileddbg.active()) {
-          detaileddbg << m_proc_group->myrank() << "  Checking edge from comp: " << *compiter->second << ", task: "
-          << *compiter->second->task << ", domain: " << compiter->second->patches_dom << "\n";
-        }
-        if (req->mapDataWarehouse() == compiter->second->mapDataWarehouse()) {
-          if (req->var->typeDescription()->isReductionVariable()) {
-            // Match the level first
-            if (compiter->second->reductionLevel == req->reductionLevel) {
-              add = true;
-            }
-            // with reduction variables, you can modify them up to the Reduction Task, which also modifies
-            // those who don't modify will get the reduced value.
-            if (!modifies && !req->var->allowsMultipleComputes()) {
-              requiresReductionTask = true;
-            }
-          } else if (overlaps(compiter->second, req)) {
-            add = true;
-          }
-        }
-
-        if (!add) {
-          if (detaileddbg.active()) {
-            detaileddbg << m_proc_group->myrank() << "       did NOT create dependency\n";
-          }
-        } else {
-          Task::Dependency* comp;
-          if (requiresReductionTask) {
-            VarLabelMatl<Level> key(req->var, req->mapDataWarehouse(), req->reductionLevel);
-            Task* redTask = reductionTasks[key];
-            ASSERT(redTask != 0);
-            // reduction tasks should have exactly 1 require, and it should be a modify
-            // assign the requiring task's require to it
-            comp = redTask->getModifies();
-            ASSERT(comp != 0);
-            detaileddbg << "  Using Reduction task: " << *redTask << std::endl;
-          } else {
-            comp = compiter->second;
-          }
-
-          if (modifies) {
-            // Add dependency edges to each task that requires the data
-            // before it is modified.
-            for (Task::Edge* otherEdge = comp->req_head; otherEdge != 0; otherEdge = otherEdge->reqNext) {
-              Task::Dependency* priorReq = const_cast<Task::Dependency*>(otherEdge->req);
-              if (priorReq != req) {
-                ASSERT(priorReq->var->equals(req->var));
-                if (priorReq->task != task) {
-                  Task::Edge* edge = new Task::Edge(priorReq, req);
-                  m_edges.push_back(edge);
-                  req->addComp(edge);
-                  priorReq->addReq(edge);
-                  if (detaileddbg.active()) {
-                    detaileddbg << m_proc_group->myrank() << " Creating edge from task: " << *priorReq->task << " to task: "
-                                << *req->task << "\n";
-                    detaileddbg << m_proc_group->myrank() << " Prior Req=" << *priorReq << "\n";
-                    detaileddbg << m_proc_group->myrank() << " Modify=" << *req << "\n";
-                  }
-                }
-              }
-            }
-          }
-
-          // add the edge between the require/modify and compute
-          Task::Edge* edge = new Task::Edge(comp, req);
-          m_edges.push_back(edge);
-          req->addComp(edge);
-          comp->addReq(edge);
-
-          if (!sortinfo.find(edge->comp->task)->second.m_visited && !edge->comp->task->isReductionTask()) {
-            std::cout << "\nWARNING: The task, '" << task->getName() << "', that ";
-            if (modifies) {
-              std::cout << "modifies '";
-            } else {
-              std::cout << "requires '";
-            }
-            std::cout << req->var->getName() << "' was added before the computing task";
-            std::cout << ", '" << edge->comp->task->getName() << "'\n";
-            std::cout << "  Required/modified by: " << *task << "\n";
-            std::cout << "  req: " << *req << "\n";
-            std::cout << "  Computed by: " << *edge->comp->task << "\n";
-            std::cout << "  comp: " << *comp << "\n";
-            std::cout << "\n";
-          }
-          count++;
-          task->childTasks.insert(comp->task);
-          if (detaileddbg.active()) {
-            detaileddbg << m_proc_group->myrank() << "       Creating edge from task: " << *comp->task << " to task: " << *task
-                        << "\n";
-            detaileddbg << m_proc_group->myrank() << "         Req=" << *req << "\n";
-            detaileddbg << m_proc_group->myrank() << "         Comp=" << *comp << "\n";
-          }
-        }
-      }
-
-      // if we cannot find the required variable, throw an exception
-      if (count == 0 && (!req->matls || req->matls->size() > 0) && (!req->patches || req->patches->size() > 0)
-          && !(req->lookInOldTG && m_tg_type == Scheduler::IntermediateTaskGraph)) {
-        // if this is an Intermediate TG and the requested data is done from another TG,
-        // we need to look in this TG first, but don't worry if you don't find it
-
-        std::cout << "ERROR: Cannot find the task that computes the variable (" << req->var->getName() << ")\n";
-
-        std::cout << "The task (" << task->getName() << ") is requesting data from:\n";
-        std::cout << "  Level:           " << getLevel(task->getPatchSet())->getIndex() << "\n";
-        std::cout << "  Task:PatchSet    " << *(task->getPatchSet()) << "\n";
-        std::cout << "  Task:MaterialSet " << *(task->getMaterialSet()) << "\n \n";
-
-        std::cout << "The variable (" << req->var->getName() << ") is requiring data from:\n";
-
-        if (req->patches) {
-          std::cout << "  Level: " << getLevel(req->patches)->getIndex() << "\n";
-          std::cout << "  Patches': " << *(req->patches) << "\n";
-        } else {
-          std::cout << "  Patches:  All \n";
-        }
-
-        if (req->matls) {
-          std::cout << "  Materials: " << *(req->matls) << "\n";
-        } else {
-          std::cout << "  Materials:  All \n";
-        }
-
-        std::cout << "\nTask Details:\n";
-        task->display(std::cout);
-        std::cout << "\nRequirement Details:\n" << *req << "\n";
-
-        SCI_THROW(
-            InternalError("Scheduler could not find  production for variable: "+req->var->getName()+", required for task: "+task->getName(), __FILE__, __LINE__));
-      }
-
-      if (modifies) {
-        // not just requires, but modifies, so the comps map must be
-        // updated so future modifies or requires will link to this one.
-        comps.insert(std::make_pair(req->var, req));
-        if (detaileddbg.active()) {
-          detaileddbg << m_proc_group->myrank() << " Added modified comp for: " << *req << "\n";
-        }
-      }
-    }
-  }
-}
 
 //______________________________________________________________________
 //
@@ -595,53 +187,73 @@ TaskGraph::processDependencies( Task               * task
 //______________________________________________________________________
 //
 
-void
-TaskGraph::nullSort( std::vector<Task*> & tasks )
+std::vector<Task*> TaskGraph::nullSort()
 {
-  std::vector<Task*>::iterator iter;
+  Dout dout{"DbgReduction", false};
 
-  // No longer going to sort them... let the UnifiedScheduler (threaded) take care
-  // of calling the tasks when all dependencies are satisfied.
-  // Sorting the tasks causes problem because now tasks (actually task
-  // groups) run in different orders on different MPI processes.
-  int n = 0;
-  for (iter = m_tasks.begin(); iter != m_tasks.end(); iter++) {
-    // For all reduction tasks filtering out the one that is not in ReductionTasksMap
-    if ((*iter)->getType() == Task::Reduction) {
-      SchedulerCommon::ReductionTasksMap::iterator it;
-      for (it = m_sched->reductionTasks.begin(); it != m_sched->reductionTasks.end(); it++) {
-        if ((*iter) == it->second) {
-          (*iter)->setSortedOrder(n++);
-          tasks.push_back(*iter);
-          break;
+  std::vector<Task *> tasks;
+  tasks.reserve( m_tasks.size() );
+
+  // place non-reduction into tasks in reverse order
+  for (auto itr = m_tasks.rbegin(); itr != m_tasks.rend(); ++itr ) {
+    Task * task = *itr;
+    if ( task->getType() != Task::Reduction ) {
+      tasks.push_back(task);
+    }
+  }
+
+  {
+    Task * reduction_task = nullptr;
+
+    // modifies are also marked as computes
+    // find a compute of the reduction task
+    auto find_computes = [&reduction_task](Task * task)->bool {
+      // get the var, level, and matls of the reduction task
+      const auto reduce_var = reduction_task->getModifies()->var;
+      const auto reduce_level = reduction_task->getModifies()->reductionLevel;
+      for( const Task::Dependency* dep = task->getComputes(); dep != nullptr; dep = dep->next ) {
+        if( dep->var->typeDescription()->isReductionVariable() ) {
+          if ( reduce_var == dep->var &&
+              reduce_level == dep->reductionLevel )
+            return true;
         }
       }
-    } else {
-      (*iter)->setSortedOrder(n++);
-      tasks.push_back(*iter);
+      return false;
+    };
+
+    // place reduction tasks into the correct spot
+    for (auto task : m_sched->m_reductionTasks ) {
+      reduction_task = task;
+      auto itr = std::find_if( tasks.begin(), tasks.end(), find_computes);
+      tasks.insert(itr, task);
     }
   }
-}
 
-//______________________________________________________________________
-//
-void
-TaskGraph::topologicalSort( std::vector<Task*> & sortedTasks )
-{
-  GraphSortInfoMap sortinfo;
+  for ( auto task : tasks ) {
+    DOUTP0( dout, "Reversed task order: " << task->getName() );
+  }
 
-  setupTaskConnections(sortinfo);
+  // reverse the array
+  std::reverse( tasks.begin(), tasks.end() );
 
-  for (std::vector<Task*>::iterator iter = m_tasks.begin(); iter != m_tasks.end(); iter++) {
-    Task* task = *iter;
-    if (!sortinfo.find(task)->second.m_sorted) {
-      processTask(task, sortedTasks, sortinfo);
+  // make sync tasks depend on the previous sync task
+  {
+    // TODO DJS 03/30/16
+    // need to modify class Task to allow a task to require completion of another task
+    // listing all the computes of a task seems to cause deadlock
+  }
+
+  // set the sortedOrder
+  {
+    int n = 0;
+    for ( auto task : tasks ) {
+      task->setSortedOrder(n);
+      ++n;
+      DOUTP0( dout, "Correct task order: " << task->getName() );
     }
   }
-  int n = 0;
-  for (std::vector<Task*>::iterator iter = sortedTasks.begin(); iter != sortedTasks.end(); iter++) {
-    (*iter)->setSortedOrder(n++);
-  }
+
+  return std::move(tasks);
 }
 
 //______________________________________________________________________
@@ -667,18 +279,6 @@ TaskGraph::addTask(       Task        * task
       tgdbg << m_proc_group->myrank() << " Adding task: ";
       task->displayAll(tgdbg);
     }
-
-#if 0
-    // This snippet will find all the tasks that require a label
-    for (Task::Dependency* req = m_task->getRequires(); req != 0; req = req->next) {
-      const VarLabel* label = req->var;
-      string name = label->getName();
-      if (name == "p.size") {
-        cout << "\n" << Parallel::getMPIRank() << "This Task Requires label p.size" << endl;
-        m_task->display(cout);
-      }
-    }
-#endif
   }
 }
 
@@ -713,63 +313,8 @@ TaskGraph::createDetailedTasks(       bool            useInternalDeps
                               , const GridP         & oldGrid
                               )
 {
-//  {
-//    Task* prev_reduction_task = nullptr;
-//    for (auto task : m_tasks) {
-//
-//      for (const Task::Dependency* dep = task->getComputes(); dep != 0; dep = dep->next) {
-//
-//        if (dep->var->typeDescription()->isReductionVariable()) {
-//          int levelidx = dep->reductionLevel ? dep->reductionLevel->getIndex() : -1;
-//          int dw = dep->mapDataWarehouse();
-//
-//          if (dep->var->allowsMultipleComputes()) {
-//            continue;
-//          }
-//
-//          std::ostringstream taskname;
-//          taskname << "Reduction: " << dep->var->getName() << ", level " << levelidx << ", dw " << dw;
-//
-//          Task* newtask = new Task(taskname.str(), Task::Reduction);
-//
-//          int dwmap[Task::TotalDWs];
-//
-//          for (int i = 0; i < Task::TotalDWs; i++) {
-//            dwmap[i] = Task::InvalidDW;
-//          }
-//
-//          dwmap[Task::OldDW] = Task::NoDW;
-//          dwmap[Task::NewDW] = dw;
-//          newtask->setMapping(dwmap);
-//
-//          if (dep->matls != 0) {
-//            newtask->modifies(dep->var, dep->reductionLevel, dep->matls, Task::OutOfDomain);
-//            for (int i = 0; i < dep->matls->size(); i++) {
-//              int maltIdx = dep->matls->get(i);
-//              VarLabelMatl<Level> key(dep->var, maltIdx, dep->reductionLevel);
-//            }
-//          }
-//          else {
-//            for (int m = 0; m < task->getMaterialSet()->size(); m++) {
-//              newtask->modifies(dep->var, dep->reductionLevel, task->getMaterialSet()->getSubset(m), Task::OutOfDomain);
-//              for (int i = 0; i < task->getMaterialSet()->getSubset(m)->size(); i++) {
-//                int maltIdx = task->getMaterialSet()->getSubset(m)->get(i);
-//                VarLabelMatl<Level> key(dep->var, maltIdx, dep->reductionLevel);
-//              }
-//            }
-//          }
-//        }
-//      }
-//    }
-//  }
 
-
-
-  std::vector<Task*> sorted_tasks;
-
-  // TODO plz leave this commented line alone, APH 01/07/15
-  //topologicalSort(sorted_tasks);
-  nullSort(sorted_tasks);
+  std::vector<Task*> sorted_tasks = nullSort();
 
   m_reduction_tasks.clear();
 

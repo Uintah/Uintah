@@ -51,7 +51,7 @@ class LocallyComputedPatchVarMap;
 
 CLASS
    SchedulerCommon
-   
+
 
 GENERAL INFORMATION
 
@@ -62,7 +62,7 @@ GENERAL INFORMATION
    University of Utah
 
    Center for the Simulation of Accidental Fires and Explosions (C-SAFE)
-  
+
 
 KEYWORDS
    SchedulerCommon
@@ -70,9 +70,9 @@ KEYWORDS
 
 DESCRIPTION
 
-  
+
 WARNING
-  
+
 ****************************************/
 
 class SchedulerCommon : public Scheduler, public UintahParallelComponent {
@@ -109,7 +109,7 @@ class SchedulerCommon : public Scheduler, public UintahParallelComponent {
 
     void compile();
 
-    /// For more complicated models 
+    /// For more complicated models
     virtual void addTaskGraph(tgType type);
 
     virtual int getNumTaskGraphs() { return graphs.size(); }
@@ -128,13 +128,13 @@ class SchedulerCommon : public Scheduler, public UintahParallelComponent {
     virtual LoadBalancer* getLoadBalancer();
 
     virtual void releaseLoadBalancer();
-       
+
     virtual DataWarehouse* get_dw( int idx );
 
     virtual DataWarehouse* getLastDW( void );
 
     virtual void logMemoryUse();
-      
+
     virtual void advanceDataWarehouse( const GridP& grid, bool initialization=false );
 
     virtual void fillDataWarehouses( const GridP& grid );
@@ -189,7 +189,7 @@ class SchedulerCommon : public Scheduler, public UintahParallelComponent {
                                             const std::vector<std::vector<const VarLabel*> >& otherLabels,
                                             const MaterialSet* matls);
 
-    
+
     virtual void scheduleParticleRelocation(const LevelP& level,
                                             const VarLabel* old_posLabel,
                                             const std::vector<std::vector<const VarLabel*> >& old_labels,
@@ -206,7 +206,7 @@ class SchedulerCommon : public Scheduler, public UintahParallelComponent {
                                             const std::vector<std::vector<const VarLabel*> >& new_labels,
                                             const VarLabel* particleIDLabel,
                                             const MaterialSet* matls);
-    
+
     virtual void setPositionVar(const VarLabel* posLabel) { reloc_new_posLabel_ = posLabel; }
 
     virtual void scheduleAndDoDataCopy( const GridP& grid, SimulationInterface* sim );
@@ -228,7 +228,7 @@ class SchedulerCommon : public Scheduler, public UintahParallelComponent {
     virtual const std::set<std::string>& getNotCheckPointVars() const { return notCheckpointVars_;}
 
     virtual bool useInternalDeps();
-    
+
     const VarLabel* reloc_new_posLabel_;
 
     int getMaxGhost()       {return maxGhost;}
@@ -243,14 +243,12 @@ class SchedulerCommon : public Scheduler, public UintahParallelComponent {
 
     virtual bool isRestartInitTimestep() { return d_isRestartInitTimestep; }
 
-
-    typedef std::map<VarLabelMatl<Level>, Task*> ReductionTasksMap;
-    ReductionTasksMap reductionTasks;
+    std::vector<Task *> m_reductionTasks{};
 
   protected:
 
     void finalizeTimestep();
-    
+
     void makeTaskGraphDoc( const DetailedTasks* dt, int rank = 0 );
 
     void emitNode( const DetailedTask* dt, double start, double duration, double execution_duration );
@@ -260,16 +258,16 @@ class SchedulerCommon : public Scheduler, public UintahParallelComponent {
     enum { PRINT_BEFORE_COMM = 1, PRINT_BEFORE_EXEC = 2, PRINT_AFTER_EXEC = 4 };
 
     void printTrackedVars(DetailedTask* dt, int when);
-    
+
     bool d_isInitTimestep;
     bool d_isRestartInitTimestep;
-   
+
     /**
     * output the task name and the level it's executing on.
     * and each of the patches
     */
     void printTask( std::ostream& out, DetailedTask* task );
-    
+
     /**
     *  Output the task name and the level it's executing on
     *  only first patch of that level
@@ -277,8 +275,8 @@ class SchedulerCommon : public Scheduler, public UintahParallelComponent {
     void printTaskLevels( const ProcessorGroup* d_myworld,
                                 DebugStream& out,
                                 DetailedTask* task );
-    
-    
+
+
     virtual void verifyChecksum() = 0;
 
     std::vector<TaskGraph*>             graphs;
@@ -318,7 +316,7 @@ class SchedulerCommon : public Scheduler, public UintahParallelComponent {
 
     // treat variable as an "old" var - will be checkpointed, copied, and only scrubbed from an OldDW
     std::set<std::string> treatAsOldVars_;
-    
+
     // do not checkpoint these variables
     std::set<std::string> notCheckpointVars_;
 
@@ -357,7 +355,7 @@ class SchedulerCommon : public Scheduler, public UintahParallelComponent {
 
     int maxGhost;
     int maxLevelOffset;
-    
+
   };
 } // namespace Uintah
 

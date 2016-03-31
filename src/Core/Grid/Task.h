@@ -74,15 +74,15 @@ class ProcessorGroup;
  ****************************************/
 
 class Task {
- 
-  public: 
+
+  public:
   enum CallBackEvent {
       CPU,    // <- normal CPU task, happens when a GPU enabled task runs on CPU
       preGPU, // <- pre GPU kernel callback, happens before CPU->GPU copy (reserved, not implemented yet... )
       GPU,    // <- GPU kernel callback, happens after dw: CPU->GPU copy, kernel launch should be queued in this callback
       postGPU // <- post GPU kernel callback, happens after dw: GPU->CPU copy but before MPI sends.
     };
- 
+
   protected:
 
     // base Action class
@@ -789,6 +789,21 @@ class Task {
       TotalDWs = 6
     };
 
+    friend std::ostream& operator<<(std::ostream & out, WhichDW dw)
+    {
+      switch(dw) {
+      case OldDW: out << "OldDW"; break;
+      case NewDW: out << "NewDW"; break;
+      case CoarseOldDW: out << "CoarseOldDW"; break;
+      case CoarseNewDW: out << "CoarseNewDW"; break;
+      case ParentOldDW: out << "ParentOldDW"; break;
+      case ParentNewDW: out << "ParentNewDW"; break;
+      case TotalDWs: out << "TotalDWs"; break;
+      }
+
+      return out;
+    }
+
     enum {
       NoDW = -1,
       InvalidDW = -2
@@ -801,8 +816,8 @@ class Task {
       OncePerProc,  // make sure to pass a PerProcessorPatchSet to the addTask function
       Output,
       Spatial       // e.g. Radiometer task (spatial scheduling); must call task->setType(Task::Spatial)
-    };  
-    
+    };
+
 
 
     Task(const std::string& taskName, TaskType type)
@@ -1129,7 +1144,7 @@ class Task {
 
     enum MaterialDomainSpec {
       NormalDomain,  // <- Normal/default setting
-      OutOfDomain,   // <- Require things from all material 
+      OutOfDomain,   // <- Require things from all material
     };
 
     enum PatchDomainSpec {
@@ -1201,7 +1216,7 @@ class Task {
                   bool oldTG = false);
 
     //////////
-    // Insert Documentation Here: 
+    // Insert Documentation Here:
     void requires(WhichDW,
                   const VarLabel*,
                   const MaterialSubset* matls,
@@ -1299,14 +1314,14 @@ class Task {
                   Ghost::GhostType gtype,
                   int numGhostCells,
                   bool oldTG = false);
-  
+
     void computesWithScratchGhost(const VarLabel*,
                   const MaterialSubset* matls,
                   MaterialDomainSpec matls_domain,
                   Ghost::GhostType gtype,
                   int numGhostCells,
                   bool oldTG = false);
-  
+
     //////////
     // Most general case
     void modifies(const VarLabel*,

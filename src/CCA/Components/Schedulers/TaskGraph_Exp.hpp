@@ -175,7 +175,7 @@ class TaskGraph {
     /// However, this routine leaves the tasks in the order they were
     /// added, so that reduction tasks are hit in the correct order
     /// by each MPI process.
-    void nullSort( std::vector<Task*> & tasks );
+    std::vector<Task*> nullSort();
 
     int getNumTasks() const;
 

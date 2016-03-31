@@ -774,16 +774,7 @@ SchedulerCommon::addTask(       Task        * task,
       int dw = dep->mapDataWarehouse();
 
       if (dep->var->allowsMultipleComputes()) {
-        if (schedulercommon_dbg.active()) {
-          schedulercommon_dbg << d_myworld->myrank() << " Skipping Reduction task for multi compute variable: "
-                              << dep->var->getName() << " on level " << levelidx << ", DW " << dw << '\n';
-        }
         continue;
-      }
-
-      if (schedulercommon_dbg.active()) {
-        schedulercommon_dbg << d_myworld->myrank() << " Creating Reduction task for variable: " << dep->var->getName()
-                            << " on level " << levelidx << ", DW " << dw << '\n';
       }
 
       std::ostringstream taskname;
@@ -801,22 +792,14 @@ SchedulerCommon::addTask(       Task        * task,
       dwmap[Task::NewDW] = dw;
       newtask->setMapping(dwmap);
 
+      m_reductionTasks.push_back(newtask);
+
       if (dep->matls != 0) {
         newtask->modifies(dep->var, dep->reductionLevel, dep->matls, Task::OutOfDomain);
-        for (int i = 0; i < dep->matls->size(); i++) {
-          int maltIdx = dep->matls->get(i);
-          VarLabelMatl<Level> key(dep->var, maltIdx, dep->reductionLevel);
-          reductionTasks[key] = newtask;
-        }
       }
       else {
         for (int m = 0; m < task->getMaterialSet()->size(); m++) {
           newtask->modifies(dep->var, dep->reductionLevel, task->getMaterialSet()->getSubset(m), Task::OutOfDomain);
-          for (int i = 0; i < task->getMaterialSet()->getSubset(m)->size(); i++) {
-            int maltIdx = task->getMaterialSet()->getSubset(m)->get(i);
-            VarLabelMatl<Level> key(dep->var, maltIdx, dep->reductionLevel);
-            reductionTasks[key] = newtask;
-          }
         }
       }
 
@@ -882,7 +865,7 @@ SchedulerCommon::initialize( int numOldDW /* = 1 */,
 //  maxGhostCells.clear();
 //  maxLevelOffsets.clear();
 
-  reductionTasks.clear();
+  m_reductionTasks.clear();
   addTaskGraph(NormalTaskGraph);
 
 }

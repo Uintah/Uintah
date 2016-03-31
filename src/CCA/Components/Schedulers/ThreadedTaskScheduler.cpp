@@ -337,15 +337,17 @@ void ThreadedTaskScheduler::execute(  int tgnum /*=0*/ , int iteration /*=0*/ )
   // The main task loop
   while (m_num_tasks_done.load(std::memory_order_relaxed) < m_num_tasks) {
 
-    if (m_phase_tasks[m_current_phase.load(std::memory_order_relaxed)] ==
-        m_phase_tasks_done[m_current_phase.load(std::memory_order_relaxed)].load(std::memory_order_relaxed)) {  // this phase done, goto next phase
+    const int curr_phase = m_current_phase.load( std::memory_order_relaxed );
+    if (m_phase_tasks[curr_phase] ==
+        m_phase_tasks_done[curr_phase].load(std::memory_order_relaxed)) {  // this phase done, goto next phase
       m_current_phase.fetch_add(1, std::memory_order_relaxed);
     }
     // if it is time to run reduction or once-per-proc task
-    else if ((m_phase_sync_tasks[m_current_phase.load(std::memory_order_relaxed)] != nullptr) &&
-             (m_phase_tasks_done[m_current_phase].load(std::memory_order_relaxed) ==
-              m_phase_tasks[m_current_phase.load(std::memory_order_relaxed)] - 1)) {
-      DetailedTask* sync_task = m_phase_sync_tasks[m_current_phase.load(std::memory_order_relaxed)];
+    // TODO adjust logic to run sync tasks whenever the phase and internal dependencies are met
+    // DJS 03/30/16
+    else if ((m_phase_sync_tasks[curr_phase] != nullptr) &&
+              m_phase_sync_tasks[curr_phase]->ready() ) {
+      DetailedTask* sync_task = m_phase_sync_tasks[curr_phase];
       if (sync_task->getTask()->getType() == Task::Reduction) {
         ASSERT(sync_task->getRequires().size() == 0);
         run_reduction_task(sync_task);
@@ -357,7 +359,7 @@ void ThreadedTaskScheduler::execute(  int tgnum /*=0*/ , int iteration /*=0*/ )
         ASSERT(sync_task->getExternalDepCount() == 0);
         run_task(sync_task, iteration);
       }
-      ASSERT(sync_task->getTask()->d_phase == m_current_phase.load(std::memory_order_relaxed));
+      ASSERT(sync_task->getTask()->d_phase == curr_phase);
       m_num_tasks_done.fetch_add(1, std::memory_order_relaxed);
       m_phase_tasks_done[sync_task->getTask()->d_phase].fetch_add(1, std::memory_order_relaxed);
     } else {

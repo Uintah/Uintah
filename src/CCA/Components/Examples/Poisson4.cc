@@ -47,9 +47,9 @@ Poisson4::Poisson4(const ProcessorGroup* myworld)
   : UintahParallelComponent(myworld)
 {
 
-  phi_label = VarLabel::create("phi", 
+  phi_label = VarLabel::create("phi",
                                NCVariable<double>::getTypeDescription());
-  residual_label = VarLabel::create("residual", 
+  residual_label = VarLabel::create("residual",
                                     sum_vartype::getTypeDescription());
 
 }
@@ -61,18 +61,18 @@ Poisson4::~Poisson4()
 }
 //______________________________________________________________________
 //
-void Poisson4::problemSetup(const ProblemSpecP& params, 
-                            const ProblemSpecP& restart_prob_spec, 
-                            GridP& /*grid*/, 
+void Poisson4::problemSetup(const ProblemSpecP& params,
+                            const ProblemSpecP& restart_prob_spec,
+                            GridP& /*grid*/,
                             SimulationStateP& sharedState)
 {
   sharedState_ = sharedState;
   ProblemSpecP poisson = params->findBlock("Poisson");
-  
+
   poisson->require("delt", delt_);
-  
+
   mymat_ = new SimpleMaterial();
-  
+
   sharedState->registerSimpleMaterial(mymat_);
 }
 //______________________________________________________________________
@@ -82,7 +82,7 @@ void Poisson4::scheduleInitialize(const LevelP& level,
 {
   Task* task = new Task("Poisson4::initialize",
                      this, &Poisson4::initialize);
-                     
+
   task->computes(phi_label);
   task->computes(residual_label);
   sched->addTask(task, level->eachPatch(), sharedState_->allMaterials());
@@ -100,7 +100,7 @@ void Poisson4::scheduleComputeStableTimestep(const LevelP& level,
 {
   Task* task = new Task("Poisson4::computeStableTimestep",
                      this, &Poisson4::computeStableTimestep);
-                     
+
   task->requires(Task::NewDW, residual_label);
   task->computes(sharedState_->get_delt_label(),level.get_rep());
   sched->addTask(task, level->eachPatch(), sharedState_->allMaterials());
@@ -113,7 +113,7 @@ void Poisson4::scheduleTimeAdvance0(SchedulerP& sched,
 {
   Task* task = new Task("Poisson4::timeAdvance",
                      this, &Poisson4::timeAdvance);
-                     
+
   task->requires(Task::OldDW, phi_label, Ghost::AroundNodes, 1);
   task->computes(phi_label);
   task->computes(residual_label);
@@ -128,7 +128,7 @@ void Poisson4::scheduleTimeAdvance1(SchedulerP& sched,
 {
   Task* task = new Task("Poisson4::timeAdvance",
                      this, &Poisson4::timeAdvance1);
-                     
+
   //  task->requires(Task::NewDW, phi_label, Ghost::AroundNodes, 1);
   task->modifies(phi_label);
   task->modifies(residual_label);
@@ -137,7 +137,7 @@ void Poisson4::scheduleTimeAdvance1(SchedulerP& sched,
 //______________________________________________________________________
 //
 void
-Poisson4::scheduleTimeAdvance( const LevelP& level, 
+Poisson4::scheduleTimeAdvance( const LevelP& level,
                                SchedulerP& sched)
 {
 
@@ -152,7 +152,7 @@ Poisson4::scheduleTimeAdvance( const LevelP& level,
 #if 0
   Task* task = new Task("Poisson4::timeAdvance",
                      this, &Poisson4::timeAdvance);
-                     
+
   task->requires(Task::OldDW, phi_label, Ghost::AroundNodes, 1);
   task->computes(phi_label);
   task->computes(residual_label);
@@ -185,7 +185,7 @@ void Poisson4::initialize(const ProcessorGroup*,
   int matl = 0;
   for(int p=0;p<patches->size();p++){
     const Patch* patch = patches->get(p);
-    
+
     NCVariable<double> phi;
     new_dw->allocateAndPut(phi, phi_label, matl, patch);
     phi.initialize(0.);
@@ -200,12 +200,12 @@ void Poisson4::initialize(const ProcessorGroup*,
         int numChildren = patch->getBCDataArray(face)->getNumberChildren(matl);
         for (int child = 0; child < numChildren; child++) {
           Iterator nbound_ptr, nu;
-          
+
           const BoundCondBase* bcb = patch->getArrayBCValues(face,matl,"Phi",nu,
                                                              nbound_ptr,child);
-          
-          const BoundCond<double>* bc = 
-            dynamic_cast<const BoundCond<double>*>(bcb); 
+
+          const BoundCond<double>* bc =
+            dynamic_cast<const BoundCond<double>*>(bcb);
           double value = bc->getValue();
           for (nbound_ptr.reset(); !nbound_ptr.done();nbound_ptr++) {
 
@@ -217,28 +217,28 @@ void Poisson4::initialize(const ProcessorGroup*,
         }
       }
       for(NodeIterator iter(l, h);!iter.done(); iter++) {
-        cout << "phi" << *iter  << "=" << phi[*iter] << endl;
+        // cout << "phi" << *iter  << "=" << phi[*iter] << endl;
       }
     }
-#endif            
+#endif
 #if 1
     if(patch->getBCType(Patch::xminus) != Patch::Neighbor){
        IntVector l,h;
        patch->getFaceNodes(Patch::xminus, 1, l, h);
- 
+
       for(NodeIterator iter(l,h); !iter.done(); iter++){
         if (phi[*iter] != 1.0) {
-          cout << "phi_old[" << *iter << "]=" << phi[*iter] << endl;
+          // cout << "phi_old[" << *iter << "]=" << phi[*iter] << endl;
         }
          phi[*iter]=1;
       }
     }
-    
+
     IntVector l_e = patch->getExtraNodeLowIndex();
     IntVector h_e = patch->getExtraNodeHighIndex();
-    for (NodeIterator iter(l_e,h_e); !iter.done(); iter++) {
-      cout << "phi[" << *iter << "]=" << phi[*iter] << endl;
-    }
+    // for (NodeIterator iter(l_e,h_e); !iter.done(); iter++) {
+    //   cout << "phi[" << *iter << "]=" << phi[*iter] << endl;
+    // }
   }
 #endif
 
@@ -250,21 +250,21 @@ void Poisson4::initialize(const ProcessorGroup*,
 void Poisson4::timeAdvance(const ProcessorGroup*,
                            const PatchSubset* patches,
                            const MaterialSubset* matls,
-                           DataWarehouse* old_dw, 
+                           DataWarehouse* old_dw,
                            DataWarehouse* new_dw)
 {
   int matl = 0;
   for(int p=0;p<patches->size();p++){
     const Patch* patch = patches->get(p);
     constNCVariable<double> phi;
- 
+
     int ngn=1;
     old_dw->get(phi, phi_label, matl, patch, Ghost::AroundNodes, ngn);
     NCVariable<double> newphi;
- 
+
     new_dw->allocateAndPut(newphi, phi_label, matl, patch);
     newphi.copyPatch(phi, newphi.getLowIndex(), newphi.getHighIndex());
- 
+
     double residual=0;
     IntVector l = patch->getNodeLowIndex();
     IntVector h = patch->getNodeHighIndex();
@@ -272,16 +272,16 @@ void Poisson4::timeAdvance(const ProcessorGroup*,
     IntVector h_ngn = patch->getNodeHighIndex(-ngn);
     IntVector lextra = patch->getExtraNodeLowIndex();
     IntVector hextra = patch->getExtraNodeHighIndex();
- 
+
     l += IntVector(patch->getBCType(Patch::xminus) == Patch::Neighbor?0:1,
                    patch->getBCType(Patch::yminus) == Patch::Neighbor?0:1,
                    patch->getBCType(Patch::zminus) == Patch::Neighbor?0:1);
     h -= IntVector(patch->getBCType(Patch::xplus)  == Patch::Neighbor?0:1,
                    patch->getBCType(Patch::yplus)  == Patch::Neighbor?0:1,
                    patch->getBCType(Patch::zplus)  == Patch::Neighbor?0:1);
-    
+
     //__________________________________
-    //  Stencil 
+    //  Stencil
 
 #define SURFACE_ITERATOR
     //#undef SURFACE_ITERATOR
@@ -297,18 +297,18 @@ void Poisson4::timeAdvance(const ProcessorGroup*,
 #endif
 
 #ifdef SURFACE_ITERATOR
-      cout << "Doing interior iteration" << endl;
+      // cout << "Doing interior iteration" << endl;
       while (!iter_interior.done()) {
         IntVector n = *iter_interior;
 #else
         IntVector n = *iter;
 #endif
-        
+
         newphi[n]=(1./6)*(
                           phi[n+IntVector(1,0,0)] + phi[n+IntVector(-1,0,0)] +
                           phi[n+IntVector(0,1,0)] + phi[n+IntVector(0,-1,0)] +
                           phi[n+IntVector(0,0,1)] + phi[n+IntVector(0,0,-1)]);
-        
+
         double diff = newphi[n] - phi[n];
         residual += diff * diff;
 #ifdef SURFACE_ITERATOR
@@ -318,15 +318,15 @@ void Poisson4::timeAdvance(const ProcessorGroup*,
 #endif
       }
 #ifdef SURFACE_ITERATOR
-      cout << "Doing exterior iteration" << endl;
+      // cout << "Doing exterior iteration" << endl;
       while (!iter_exterior.done()) {
         IntVector n = *iter_exterior;
-        cout << "iterator = " << n << endl;
+        // cout << "iterator = " << n << endl;
         newphi[n]=(1./6)*(
                           phi[n+IntVector(1,0,0)] + phi[n+IntVector(-1,0,0)] +
                           phi[n+IntVector(0,1,0)] + phi[n+IntVector(0,-1,0)] +
                           phi[n+IntVector(0,0,1)] + phi[n+IntVector(0,0,-1)]);
-        
+
         double diff = newphi[n] - phi[n];
         residual += diff * diff;
         iter_exterior++;
@@ -340,21 +340,21 @@ void Poisson4::timeAdvance(const ProcessorGroup*,
 void Poisson4::timeAdvance1(const ProcessorGroup*,
                             const PatchSubset* patches,
                             const MaterialSubset* matls,
-                            DataWarehouse* old_dw, 
+                            DataWarehouse* old_dw,
                             DataWarehouse* new_dw)
 {
   int matl = 0;
   for(int p=0;p<patches->size();p++){
     const Patch* patch = patches->get(p);
     NCVariable<double> phi;
- 
+
     int ngn=1;
     new_dw->getModifiable(phi, phi_label, matl, patch);
     NCVariable<double> newphi;
- 
+
     new_dw->allocateAndPut(newphi, phi_label, matl, patch);
     newphi.copyPatch(phi, newphi.getLowIndex(), newphi.getHighIndex());
- 
+
     double residual=0;
     IntVector l = patch->getNodeLowIndex();
     IntVector h = patch->getNodeHighIndex();
@@ -362,16 +362,16 @@ void Poisson4::timeAdvance1(const ProcessorGroup*,
     IntVector h_ngn = patch->getNodeHighIndex(-ngn);
     IntVector lextra = patch->getExtraNodeLowIndex();
     IntVector hextra = patch->getExtraNodeHighIndex();
- 
+
     l += IntVector(patch->getBCType(Patch::xminus) == Patch::Neighbor?0:1,
                    patch->getBCType(Patch::yminus) == Patch::Neighbor?0:1,
                    patch->getBCType(Patch::zminus) == Patch::Neighbor?0:1);
     h -= IntVector(patch->getBCType(Patch::xplus)  == Patch::Neighbor?0:1,
                    patch->getBCType(Patch::yplus)  == Patch::Neighbor?0:1,
                    patch->getBCType(Patch::zplus)  == Patch::Neighbor?0:1);
-    
+
     //__________________________________
-    //  Stencil 
+    //  Stencil
 
 #define SURFACE_ITERATOR
     //#undef SURFACE_ITERATOR
@@ -387,18 +387,18 @@ void Poisson4::timeAdvance1(const ProcessorGroup*,
 #endif
 
 #ifdef SURFACE_ITERATOR
-      cout << "Doing interior iteration" << endl;
+      // cout << "Doing interior iteration" << endl;
       while (!iter_interior.done()) {
         IntVector n = *iter_interior;
 #else
         IntVector n = *iter;
 #endif
-        
+
         newphi[n]=(1./6)*(
                           phi[n+IntVector(1,0,0)] + phi[n+IntVector(-1,0,0)] +
                           phi[n+IntVector(0,1,0)] + phi[n+IntVector(0,-1,0)] +
                           phi[n+IntVector(0,0,1)] + phi[n+IntVector(0,0,-1)]);
-        
+
         double diff = newphi[n] - phi[n];
         residual += diff * diff;
 #ifdef SURFACE_ITERATOR
@@ -408,15 +408,15 @@ void Poisson4::timeAdvance1(const ProcessorGroup*,
 #endif
       }
 #ifdef SURFACE_ITERATOR
-      cout << "Doing exterior iteration" << endl;
+      // cout << "Doing exterior iteration" << endl;
       while (!iter_exterior.done()) {
         IntVector n = *iter_exterior;
-        cout << "iterator = " << n << endl;
+        // cout << "iterator = " << n << endl;
         newphi[n]=(1./6)*(
                           phi[n+IntVector(1,0,0)] + phi[n+IntVector(-1,0,0)] +
                           phi[n+IntVector(0,1,0)] + phi[n+IntVector(0,-1,0)] +
                           phi[n+IntVector(0,0,1)] + phi[n+IntVector(0,0,-1)]);
-        
+
         double diff = newphi[n] - phi[n];
         residual += diff * diff;
         iter_exterior++;
