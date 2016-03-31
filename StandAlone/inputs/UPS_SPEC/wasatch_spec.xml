@@ -225,7 +225,13 @@
         </Coordinate2>
       </ExponentialVortex>
 
-      <!-- Creates bunch of bubbles in 3D !-->
+      <!-- 
+      Creates bunch of bubbles in 3D 
+      radius: specifies the radius of each bubble
+      insidevalue: specifies the value of the field computed by this expression "inside" the bubbles
+      outsidevalue: specifies the value of the field computed by this expression "outside" the bubbles
+      layout: [nx,ny,nz] - specifies the number of bubbles in the x, y, and z directions, respectively.
+      !-->
       <Bubbles  spec="OPTIONAL NO_DATA"                
                 attribute1="radius REQUIRED DOUBLE"
                 attribute2="insidevalue REQUIRED DOUBLE"
