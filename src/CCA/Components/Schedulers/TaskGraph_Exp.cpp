@@ -253,7 +253,7 @@ std::vector<Task*> TaskGraph::nullSort()
     }
   }
 
-  return std::move(tasks);
+  return tasks;
 }
 
 //______________________________________________________________________
@@ -305,6 +305,74 @@ TaskGraph::createDetailedTask(       Task           * task
 
 //______________________________________________________________________
 //
+namespace {
+
+std::vector< std::pair<Task*, Task *> >
+get_edges( std::vector<Task *> const & tasks )
+{
+  using result_type = std::vector< std::pair<Task*, Task *> >;
+
+  std::ostringstream out;
+
+  auto print_dep = [&out](const Task::Dependency * dep, int i) {
+    out << "    Dependency[" << i <<"]:" << std::endl;
+    out << "      var: ";
+    if (dep->var) {
+      out << dep->var->getName();
+    }
+    else {
+      out << "NULL";
+    }
+    out << std::endl;
+    out << "      materials: ";
+    if (dep->matls) {
+      for (auto const& mat : dep->matls->getVector()) {
+        out << mat << ", ";
+      }
+      out << "\b\b  ";
+    }
+    else {
+      out << "NULL";
+    }
+    out << std::endl;
+    out << "      level: ";
+    if (dep->reductionLevel) {
+      out << *dep->reductionLevel;
+    }
+    else {
+      out << "NULL";
+    }
+    out << std::endl;
+  };
+
+  auto print_deps = [&](const Task::Dependency * head) {
+    int i=0;
+    while (head) {
+      print_dep(head, i++);
+      head = head->next;
+    }
+  };
+
+
+  out << std::endl;
+  for (auto const task : tasks) {
+    out << "TASK: " << task->getName() << std::endl;
+    out << "  COMPUTES:" << std::endl;
+    print_deps( task->getComputes() );
+    out << "  MODIFIES:" << std::endl;
+    print_deps( task->getModifies() );
+    out << "  REQUIRES:" << std::endl;
+    print_deps( task->getRequires() );
+  }
+  out << std::endl;
+
+  printf("%s\n", out.str().c_str());
+
+  return result_type{};
+}
+
+
+} // namespace
 
 DetailedTasks*
 TaskGraph::createDetailedTasks(       bool            useInternalDeps
@@ -313,6 +381,12 @@ TaskGraph::createDetailedTasks(       bool            useInternalDeps
                               , const GridP         & oldGrid
                               )
 {
+  // get_edges(m_tasks);
+
+  // std::abort();
+
+
+
 
   std::vector<Task*> sorted_tasks = nullSort();
 

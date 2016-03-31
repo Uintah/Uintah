@@ -142,7 +142,7 @@ private:
     , REQUEST_SIZE
   };
 
-  void post_MPI_recvs( DetailedTask * task, bool only_old_recvs, int abort_point, int iteration );
+  void post_MPI_recvs( DetailedTask * task, int iteration );
 
   void post_MPI_sends( DetailedTask * task, int iteration );
 
@@ -172,11 +172,9 @@ private:
   TaskPool   m_init_tasks{};
   TaskPool   m_ready_tasks{};
 
-  bool       m_abort{ false };
   int        m_current_iteration{ 0 };
   int        m_num_tasks{ 0 };
   int        m_num_phases{ 0 };
-  int        m_abort_point{ 0 };
   int        m_num_threads{ 0 };
 
   using atomic_int_array = std::unique_ptr<std::atomic<int>[]>;
