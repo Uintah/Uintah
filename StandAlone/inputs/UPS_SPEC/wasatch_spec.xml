@@ -65,7 +65,7 @@
                                 StepFunction,SineTime,ExprAlgebra,
                                 WallDistanceFunction,ReadFromFile,RandomField,
                                 ExponentialVortex,LambsDipole,TimeDerivative,
-                                RayleighTaylor, BurnsChristonAbskg, GeometryBased, ParticlePositionIC)" >
+                                RayleighTaylor, BurnsChristonAbskg, GeometryBased, ParticlePositionIC, Bubbles)" >
                                        
       <TaskList           spec="REQUIRED STRING 'initialization,timestep_size,advance_solution'" />
       <NameTag            spec="REQUIRED" />
@@ -224,6 +224,14 @@
           <NameTag        spec="REQUIRED"/>
         </Coordinate2>
       </ExponentialVortex>
+
+      <!-- Creates bunch of bubbles in 3D !-->
+      <Bubbles  spec="OPTIONAL NO_DATA"                
+                attribute1="radius REQUIRED DOUBLE"
+                attribute2="insidevalue REQUIRED DOUBLE"
+                attribute3="outsidevalue REQUIRED DOUBLE">                
+        <Layout spec="REQUIRED VECTOR"/>
+      </Bubbles>
             
       <!-- Creates an exponential vortex for testing outflow boundary conditions!-->
       <LambsDipole       spec="OPTIONAL NO_DATA"

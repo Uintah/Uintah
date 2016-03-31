@@ -26,7 +26,8 @@
 #include <Core/ProblemSpec/ProblemSpec.h>
 #include <Core/Exceptions/InvalidValue.h>
 #include <Core/Exceptions/ProblemSetupException.h>
-
+#include <Core/GeometryPiece/UnionGeometryPiece.h>
+#include <Core/GeometryPiece/SphereGeometryPiece.h>
 
 //-- Wasatch includes --//
 #include <CCA/Components/Wasatch/Expressions/BasicExprBuilder.h>
@@ -180,7 +181,7 @@ namespace WasatchCore{
   
   template<typename FieldT>
   Expr::ExpressionBuilder*
-  build_basic_expr( Uintah::ProblemSpecP params )
+  build_basic_expr( Uintah::ProblemSpecP params, Uintah::ProblemSpecP uintahSpec  )
   {
     const Expr::Tag tag = parse_nametag( params->findBlock("NameTag") );
     
@@ -488,6 +489,63 @@ namespace WasatchCore{
       }
       builder = scinew typename GeometryBased<FieldT>::Builder(tag, geomObjectsMap, outsideValue);
     }
+    
+    else if ( params->findBlock("Bubbles") ) {
+      std::vector<Uintah::GeometryPieceP> geomObjects;
+      std::multimap <Uintah::GeometryPieceP, double > geomObjectsMap;
+
+      Uintah::ProblemSpecP bubblesSpec = params->findBlock("Bubbles");
+      std::vector<double> layout;
+      bubblesSpec->get("Layout", layout);
+
+      if (layout[0]<= 0 || layout[1]<= 0 || layout[2]<=0) {
+        std::ostringstream msg;
+        msg << __FILE__ << " : " << __LINE__ << std::endl
+        << "ERROR: You cannot set 0 or negative values in the Bubbles layout. Please revise your inputfile." << std::endl;
+        throw std::invalid_argument( msg.str() );
+      }
+      
+      double insideValue;
+      bubblesSpec->getAttribute("insidevalue", insideValue);
+      
+      double outsideValue;
+      bubblesSpec->getAttribute("outsidevalue", outsideValue);
+      
+      double r;
+      bubblesSpec->getAttribute("radius", r);
+      
+      // now get the domain's boundaries
+      std::vector<double> low, high;
+      uintahSpec->findBlock("Grid")->findBlock("Level")->findBlock("Box")->get("lower", low);
+      uintahSpec->findBlock("Grid")->findBlock("Level")->findBlock("Box")->get("upper", high);
+      
+      const double wx = (high[0] - low[0])/layout[0];
+      const double wy = (high[1] - low[1])/layout[1];
+      const double wz = (high[2] - low[2])/layout[2];
+      
+      const double cx0 = low[0] + 0.5*wx;
+      const double cy0 = low[1] + 0.5*wy;
+      const double cz0 = low[2] + 0.5*wz;
+      double cx,cy,cz;
+      for (int nz = 0; nz < layout[2] ; ++nz) {
+        cz = cz0 + nz * wz;
+        for (int ny = 0; ny < layout[1]; ++ny) {
+          cy = cy0 + ny * wy;
+          for (int nx = 0; nx < layout[0]; ++nx) {
+            cx = cx0 + nx * wx;
+            std::cout << "center = " << cx << " " << cy << " " << cz << std::endl;
+            geomObjects.push_back( scinew Uintah::SphereGeometryPiece(Uintah::Point(cx,cy,cz), r) );
+          }
+        }
+      }
+
+      Uintah::UnionGeometryPiece* bubblesUnited = scinew Uintah::UnionGeometryPiece(geomObjects);
+      
+      geomObjectsMap.insert(std::pair<Uintah::GeometryPieceP, double>(bubblesUnited, insideValue)); // set a value inside the geometry object
+      
+      builder = scinew typename GeometryBased<FieldT>::Builder(tag, geomObjectsMap, outsideValue);
+    }
+
 
     return builder;
   }
@@ -1035,11 +1093,12 @@ namespace WasatchCore{
   //------------------------------------------------------------------
   
   void
-  create_expressions_from_input( Uintah::ProblemSpecP parser,
+  create_expressions_from_input( Uintah::ProblemSpecP uintahSpec,
                                  GraphCategories& gc )
   {
     Expr::ExpressionBuilder* builder = NULL;
     
+    Uintah::ProblemSpecP parser = uintahSpec->findBlock("Wasatch");
     //___________________________________
     // parse and build basic expressions
     for( Uintah::ProblemSpecP exprParams = parser->findBlock("BasicExpression");
@@ -1050,10 +1109,10 @@ namespace WasatchCore{
       exprParams->getAttribute("type",fieldType);
       
       switch( get_field_type(fieldType) ){
-        case SVOL : builder = build_basic_expr< SVolField >( exprParams );  break;
-        case XVOL : builder = build_basic_expr< XVolField >( exprParams );  break;
-        case YVOL : builder = build_basic_expr< YVolField >( exprParams );  break;
-        case ZVOL : builder = build_basic_expr< ZVolField >( exprParams );  break;
+        case SVOL : builder = build_basic_expr< SVolField >( exprParams, uintahSpec );  break;
+        case XVOL : builder = build_basic_expr< XVolField >( exprParams, uintahSpec );  break;
+        case YVOL : builder = build_basic_expr< YVolField >( exprParams, uintahSpec );  break;
+        case ZVOL : builder = build_basic_expr< ZVolField >( exprParams, uintahSpec );  break;
         case PARTICLE : builder = build_basic_particle_expr< ParticleField >( exprParams );  break;
         default:
           std::ostringstream msg;

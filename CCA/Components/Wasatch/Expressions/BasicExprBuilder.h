@@ -54,7 +54,7 @@ namespace WasatchCore{
    *  \param gc - the GraphCategories object that this expression should be associated with.
    */
   void
-  create_expressions_from_input( Uintah::ProblemSpecP parser,
+  create_expressions_from_input( Uintah::ProblemSpecP uintahSpec,
                                  GraphCategories& gc );
 
 } // namespace WasatchCore
