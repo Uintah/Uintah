@@ -61,6 +61,16 @@
       )
 
 
+#define DOUTP0( cond, ... )                                 \
+  if ( MPI::Impl::prank( MPI_COMM_WORLD ) == 0 && cond) {   \
+    std::ostringstream msg;                                 \
+    msg << __FILE__ << ":";                                 \
+    msg << __LINE__ << " : ";                               \
+    msg << __VA_ARGS__;                                     \
+    printf("%s\n",msg.str().c_str());                       \
+  }
+
+
 namespace Uintah {
 
 class Dout
