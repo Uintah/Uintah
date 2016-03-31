@@ -211,7 +211,7 @@ namespace WasatchCore{
 
   //--------------------------------------------------------------------
   
-  void check_periodicity_extra_cells( const Uintah::ProblemSpecP& params,
+  void check_periodicity_extra_cells( const Uintah::ProblemSpecP& uintahSpec,
                                       Uintah::IntVector& extraCells,
                                       bool& isPeriodic)
   {
@@ -221,7 +221,7 @@ namespace WasatchCore{
     int nlevels = 0;
     std::ostringstream msg;
     bool foundExtraCells = false;
-    Uintah::ProblemSpecP gridspec = params->findBlock("Grid");
+    Uintah::ProblemSpecP gridspec = uintahSpec->findBlock("Grid");
     for( Uintah::ProblemSpecP level = gridspec->findBlock("Level");
          level != 0;
          level = gridspec->findNextBlock("Level") ){
@@ -331,23 +331,23 @@ namespace WasatchCore{
   //--------------------------------------------------------------------
 
   
-  void Wasatch::preGridProblemSetup(const Uintah::ProblemSpecP& params,
+  void Wasatch::preGridProblemSetup(const Uintah::ProblemSpecP& uintahSpec,
                            Uintah::GridP& grid,
                            Uintah::SimulationStateP& state)
   {
     Uintah::IntVector extraCells;
-    check_periodicity_extra_cells( params, extraCells, isPeriodic_);
+    check_periodicity_extra_cells( uintahSpec, extraCells, isPeriodic_);
     grid->setExtraCells(extraCells);
   }
   
   //--------------------------------------------------------------------
 
-  void Wasatch::problemSetup( const Uintah::ProblemSpecP& params,
-                              const Uintah::ProblemSpecP& ,  /* jcs not sure what this param is for */
+  void Wasatch::problemSetup( const Uintah::ProblemSpecP& uintahSpec,
+                              const Uintah::ProblemSpecP& restartSpec,
                               Uintah::GridP& grid,
                               Uintah::SimulationStateP& sharedState )
   {
-    wasatchSpec_ = params->findBlock("Wasatch");
+    wasatchSpec_ = uintahSpec->findBlock("Wasatch");
     if( !wasatchSpec_ ) return;
 
     //
@@ -357,12 +357,12 @@ namespace WasatchCore{
     if( doParticles_ ){
       particlesHelper_ = scinew WasatchParticlesHelper();
       particlesHelper_->sync_with_wasatch(this);
-      particlesHelper_->problem_setup( params, wasatchSpec_->findBlock("ParticleTransportEquations"), sharedState );
+      particlesHelper_->problem_setup( uintahSpec, wasatchSpec_->findBlock("ParticleTransportEquations"), sharedState );
     }
 
     // setup names for all the boundary condition faces that do NOT have a name or that have duplicate names
-    if( params->findBlock("Grid") ){
-      Uintah::ProblemSpecP bcProbSpec = params->findBlock("Grid")->findBlock("BoundaryConditions");
+    if( uintahSpec->findBlock("Grid") ){
+      Uintah::ProblemSpecP bcProbSpec = uintahSpec->findBlock("Grid")->findBlock("BoundaryConditions");
       assign_unique_boundary_names( bcProbSpec );
     }
     
@@ -371,8 +371,8 @@ namespace WasatchCore{
     // it. it doesn't do anything.
     //    dynamic_cast<Uintah::Scheduler*>(getPort("scheduler"))->setPositionVar(pPosLabel);
     double deltMin, deltMax;
-    params->findBlock("Time")->require("delt_min", deltMin);
-    params->findBlock("Time")->require("delt_max", deltMax);
+    uintahSpec->findBlock("Time")->require("delt_min", deltMin);
+    uintahSpec->findBlock("Time")->require("delt_max", deltMax);
     const bool useAdaptiveDt = std::abs(deltMax - deltMin) > 2.0*std::numeric_limits<double>::epsilon();
     
     // Multithreading in ExprLib and SpatialOps
@@ -445,7 +445,7 @@ namespace WasatchCore{
     }
 
     // PARSE BC FUNCTORS
-    Uintah::ProblemSpecP bcParams = params->findBlock("Grid")->findBlock("BoundaryConditions");
+    Uintah::ProblemSpecP bcParams = uintahSpec->findBlock("Grid")->findBlock("BoundaryConditions");
     if (bcParams) {
       for( Uintah::ProblemSpecP faceBCParams=bcParams->findBlock("Face");
            faceBCParams != 0;
@@ -484,7 +484,7 @@ namespace WasatchCore{
     }
     
     // PARSE IO FIELDS
-    Uintah::ProblemSpecP archiverParams = params->findBlock("DataArchiver");
+    Uintah::ProblemSpecP archiverParams = uintahSpec->findBlock("DataArchiver");
     for( Uintah::ProblemSpecP saveLabelParams=archiverParams->findBlock("save");
          saveLabelParams != 0;
          saveLabelParams=saveLabelParams->findNextBlock("save") )
@@ -549,7 +549,7 @@ namespace WasatchCore{
     // create expressions explicitly defined in the input file.  These
     // are typically associated with, e.g. initial conditions, source terms, or post-processing.
     //
-    create_expressions_from_input( wasatchSpec_, graphCategories_ );
+    create_expressions_from_input( uintahSpec, graphCategories_ );
     
     //
     // setup property evaluations
@@ -715,12 +715,12 @@ namespace WasatchCore{
     }
     
     // radiation
-    if( params->findBlock("RMCRT") ){
+    if( uintahSpec->findBlock("RMCRT") ){
       doRadiation_ = true;
       cellType_ = scinew CellType();
       rmcrt_ = scinew Uintah::Ray( Uintah::TypeDescription::double_type );
 
-      Uintah::ProblemSpecP radSpec = params->findBlock("RMCRT");
+      Uintah::ProblemSpecP radSpec = uintahSpec->findBlock("RMCRT");
       Uintah::ProblemSpecP radPropsSpec=wasatchSpec_->findBlock("RadProps");
       Uintah::ProblemSpecP RMCRTBenchSpec=wasatchSpec_->findBlock("RMCRTBench");
 

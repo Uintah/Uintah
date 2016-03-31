@@ -34,19 +34,24 @@ using namespace std;
 
 const string UnionGeometryPiece::TYPE_NAME = "union";
 
-UnionGeometryPiece::UnionGeometryPiece(ProblemSpecP& ps) 
+//------------------------------------------------------------------
+
+UnionGeometryPiece::UnionGeometryPiece(ProblemSpecP& ps)
 {
   name_ = "Unnamed " + TYPE_NAME + " from PS";
   // Need to loop through all the geometry pieces
   GeometryPieceFactory::create(ps,child_);
-  
 }
+
+//------------------------------------------------------------------
 
 UnionGeometryPiece::UnionGeometryPiece(const vector<GeometryPieceP>& child) :
   child_(child)
 {
   name_ = "Unnamed " + TYPE_NAME + " from vector";
 }
+
+//------------------------------------------------------------------
 
 UnionGeometryPiece&
 UnionGeometryPiece::operator=(const UnionGeometryPiece& rhs){
@@ -63,6 +68,8 @@ UnionGeometryPiece::operator=(const UnionGeometryPiece& rhs){
   return *this;
 }
 
+//------------------------------------------------------------------
+
 void
 UnionGeometryPiece::outputHelper( ProblemSpecP & ps ) const
 {
@@ -72,12 +79,15 @@ UnionGeometryPiece::outputHelper( ProblemSpecP & ps ) const
   }
 }
 
+//------------------------------------------------------------------
 
 GeometryPieceP
 UnionGeometryPiece::clone() const
 {
   return scinew UnionGeometryPiece(*this);
 }
+
+//------------------------------------------------------------------
 
 bool
 UnionGeometryPiece::inside(const Point &p) const 
@@ -89,6 +99,8 @@ UnionGeometryPiece::inside(const Point &p) const
   }
   return false;
 }
+
+//------------------------------------------------------------------
 
 Box UnionGeometryPiece::getBoundingBox() const
 {
@@ -108,3 +120,5 @@ Box UnionGeometryPiece::getBoundingBox() const
 
   return Box(lo,hi);
 }
+
+//------------------------------------------------------------------
