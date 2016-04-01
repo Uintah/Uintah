@@ -252,6 +252,7 @@ struct SimpleDependency
   int                    m_level{-1};
   int                    m_dw{-1};
   std::vector<int>       m_materials{};
+  std::vector<int>       m_patches{};
 
 
   SimpleDependency( const Task::Dependency * dep )
@@ -259,8 +260,8 @@ struct SimpleDependency
               dep->deptype == Task::Modifies ? Modifies : Computes}
     , m_idx{ dep->task->index() }
     , m_var{ dep->var }
-    , m_dw{ dep->whichdw }
     , m_level{ dep->reductionLevel ? dep->reductionLevel->getIndex() : -1 }
+    , m_dw{ dep->whichdw }
   {
     // get the materials
     if (dep->matls) {
@@ -276,6 +277,25 @@ struct SimpleDependency
     }
     if (m_materials.empty()) { m_materials.push_back(-1); }
     std::sort(m_materials.begin(), m_materials.end());
+
+    // get the patches
+    if (dep->patches) {
+      for (auto patch : dep->patches->getVector()) {
+        m_patches.push_back(patch->getID());
+      }
+    } else {
+      auto patchset = dep->task->getPatchSet();
+      if (patchset) {
+        for (auto const& patches : patchset->getVector() ) {
+          for (auto patch : patches->getVector()) {
+            m_patches.push_back(patch->getID());
+          }
+        }
+      }
+    }
+    if (m_patches.empty()) { m_patches.push_back(-1); }
+    std::sort(m_patches.begin(), m_patches.end());
+
   }
 
   SimpleDependency() = default;
@@ -284,6 +304,20 @@ struct SimpleDependency
 
   SimpleDependency & operator=( const SimpleDependency & ) = default;
   SimpleDependency & operator=( SimpleDependency && ) = default;
+
+  bool patches_overlap( SimpleDependency const & rhs ) const
+  {
+
+    if (m_patches[0] == -1 || rhs.m_patches[0] == -1) return true;
+
+    auto find_m = [&rhs](int m) {
+      return std::find( rhs.m_patches.begin(), rhs.m_patches.end(), m ) != rhs.m_patches.end();
+    };
+
+    return std::any_of( m_patches.begin(), m_patches.end()
+                      , find_m
+                      );
+  };
 
   bool materials_overlap( SimpleDependency const & rhs ) const
   {
@@ -307,9 +341,20 @@ struct SimpleDependency
     return true;
   }
 
+  bool new_dw() const
+  {
+    return    m_dw == Task::NewDW
+           || m_dw == Task::CoarseNewDW
+           || m_dw == Task::ParentNewDW;
+  }
+
   bool is_prerequisite( SimpleDependency const & rhs ) const
   {
-    if (m_dw != Task::NewDW || rhs.m_dw != Task::NewDW) return false;
+    // not a new data warehouse
+    if (!new_dw() || !rhs.new_dw()) return false;
+
+    // different data warehouses
+    if (m_dw != rhs.m_dw) return false;
 
     // not same variable
     if (m_var != rhs.m_var) return false;
@@ -322,6 +367,9 @@ struct SimpleDependency
 
     // levels do not overlap
     if ( !levels_overlap(rhs) ) return false;
+
+    // patches do no overlap
+    if ( !patches_overlap(rhs) ) return false;
 
     // computes before modifes or requires
     if ( m_type == Computes && rhs.m_type != Computes ) return true;
@@ -344,10 +392,30 @@ struct SimpleDependency
 std::vector< std::pair<int,int> >
 get_edges( std::vector<Task *> const & tasks )
 {
-
   using DependencyVector = std::vector< SimpleDependency >;
 
-  auto filter_dependencies = [&tasks](DependencyVector & vec) {
+  auto print_dependencies = [&](const DependencyVector & vec) {
+    if (!vec.empty()) {
+      std::cout << "Task[" << vec.front().m_idx << "]: "  << tasks[vec.front().m_idx]->getName() << std::endl;
+      for (auto const& d : vec ) {
+        std::cout << "  :  " << d.m_type
+          << "  :  " << d.m_var->getName()
+          << "  :  level[ " << d.m_level
+          << " ]  :  dw[ " << ( d.new_dw() ? "NewDW" : "OldDW" );
+        std::cout << " ]  :  materials[ ";
+        for (auto m : d.m_materials) {
+          std::cout << m << ",";
+        }
+        std::cout << "\b ]  :  patches[ ";
+        for (auto p : d.m_patches) {
+          std::cout << p << ",";
+        }
+        std::cout << "\b ] " << std::endl;
+      }
+    }
+  };
+
+  auto filter_dependencies = [&](DependencyVector & vec) {
     auto compare = []( const SimpleDependency & a, const SimpleDependency &b )->bool {
       return a.m_dw < b.m_dw ? true  :
              a.m_dw > b.m_dw ? false :
@@ -357,24 +425,18 @@ get_edges( std::vector<Task *> const & tasks )
              a.m_var > b.m_var ? false :
              a.m_level < b.m_level ? true :
              a.m_level > b.m_level ? false :
-             a.m_materials < b.m_materials;
+             a.m_materials < b.m_materials ? true :
+             a.m_materials > b.m_materials ? false :
+             a.m_patches < b.m_patches;
     };
     auto compare_equal = [&compare]( const SimpleDependency & a, const SimpleDependency &b )->bool {
       return !compare(a,b) && !compare(b,a);
     };
     std::sort( vec.begin(), vec.end(), compare );
 
-    if (!vec.empty()) {
-      std::cout << "\nBEFORE UNIQUE" << std::endl;
-      std::cout << "Task: " << tasks[vec.front().m_idx]->getName() << std::endl;
-      for (auto const& d : vec ) {
-        std::cout << "  :  " << d.m_type
-                  << "    " << d.m_var->getName()
-                  << "  :  " << d.m_level
-                  << "  :  " << d.m_dw
-                  << std::endl;
-      }
-    }
+    std::cout << "\nBEFORE UNIQUE" << std::endl;
+    print_dependencies(vec);
+
 
     auto end_itr = std::unique( vec.begin(), vec.end(), compare_equal);
     std::sort( end_itr, vec.end(), compare );
@@ -406,18 +468,9 @@ get_edges( std::vector<Task *> const & tasks )
       }
     }
     vec.erase(end_itr, vec.end());
-    if (!vec.empty()) {
-      std::cout << "AFTER UNIQUE" << std::endl;
-      std::cout << "Task: " << tasks[vec.front().m_idx]->getName() << std::endl;
-      for (auto const& d : vec ) {
-        std::cout << "  :  " << d.m_type
-                  << "    " << d.m_var->getName()
-                  << "  :  " << d.m_level
-                  << "  :  " << d.m_dw
-                  << std::endl;
-      }
-    }
 
+    std::cout << "AFTER UNIQUE" << std::endl;
+    print_dependencies(vec);
   };
 
   auto get_dependencies = [&filter_dependencies](Task * t)->DependencyVector {
