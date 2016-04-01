@@ -1572,6 +1572,10 @@ class Task {
       sortedOrder = order;
     }
 
+    // index in the task graph vector
+    int index() const { return m_index; }
+    void set_index( int i ) { m_index = i; }
+
     void setMapping(int dwmap[TotalDWs]);
 
     void setSets(const PatchSet* patches,
@@ -1622,6 +1626,8 @@ class Task {
 
     int dwmap[TotalDWs];
     int sortedOrder;
+
+    int m_index{-1};
 
     friend std::ostream & operator <<(std::ostream & out,
                                       const Uintah::Task & task);
