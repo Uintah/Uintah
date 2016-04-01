@@ -64,6 +64,9 @@ MPMLabel::MPMLabel()
   pDiffusivityLabel = VarLabel::create( "p.diffusivity",
 			ParticleVariable<double>::getTypeDescription() );
 
+  pDiffusivityLabel_preReloc = VarLabel::create( "p.diffusivity+",
+			ParticleVariable<double>::getTypeDescription() );
+
   // for visualization only
   pScaleFactorLabel = VarLabel::create( "p.scalefactor",
 			ParticleVariable<Matrix3>::getTypeDescription());
@@ -816,6 +819,7 @@ MPMLabel::~MPMLabel()
   VarLabel::destroy(pConcGradientLabel);
   VarLabel::destroy(pConcGradientLabel_preReloc);
   VarLabel::destroy(pDiffusivityLabel);
+  VarLabel::destroy(pDiffusivityLabel_preReloc);
   VarLabel::destroy(pPartitionUnityLabel);
 
   VarLabel::destroy(gAccelerationLabel);

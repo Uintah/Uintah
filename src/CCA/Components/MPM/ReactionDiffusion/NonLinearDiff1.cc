@@ -44,43 +44,84 @@ NonLinearDiff1::NonLinearDiff1(ProblemSpecP& ps, SimulationStateP& sS, MPMFlags*
   double time;
   string flux_direction;
 
-  use_pressure = false;
-  use_diff_curve = false;
+  d_use_pressure = false;
+  d_use_diff_curve = false;
 
-  ps->require("use_pressure", use_pressure);
-  ps->require("tuning1", tuning1);
-  ps->require("tuning2", tuning2);
+  ps->require("use_pressure", d_use_pressure);
+  ps->require("tuning1", d_tuning1);
+  ps->require("tuning2", d_tuning2);
 
-  if(use_pressure){
-    ps->require("tuning3", tuning3);
-    ps->require("tuning4", tuning4);
-    ps->require("tuning5", tuning5);
+  if(d_use_pressure){
+    ps->require("tuning3", d_tuning3);
+    ps->require("tuning4", d_tuning4);
+    ps->require("tuning5", d_tuning5);
   }
 
   diff_curve = ps->findBlock("diff_curve");
   if(diff_curve){
-    use_diff_curve = true;
+    d_use_diff_curve = true;
     cout << "!!!!!!!!!!!!!!!!!!!using diff curve!!!!!!!!!!!!!!!" << endl;
-    for (time_point = diff_curve->findBlock("time_point"); time_point != 0;
-                           time_point = diff_curve->findNextBlock("time_point")) {
+    cout << "This is experimental: diff_curve code still needs error checking" << endl;
+    for (time_point = diff_curve->findBlock("time_point");
+         time_point != 0;
+         time_point = time_point->findNextBlock("time_point")) {
 
       time_point->require("time", time);
       time_point->require("flux_direction", flux_direction);
-      time_points.push_back(time);
+      d_time_points.push_back(time);
       if(flux_direction == "in"){
-        fd_directions.push_back(fd_in);
+        d_fd_directions.push_back(fd_in);
       }else if(flux_direction == "out"){
-        fd_directions.push_back(fd_out);
-      }else{
-        fd_directions.push_back(fd_transition);
+        d_fd_directions.push_back(fd_out);
+      }else if(flux_direction == "transition"){
+        d_fd_directions.push_back(fd_transition);
       }
     }
+    for(unsigned int i =0; i < d_time_points.size(); i++){
+      cout << "Time: " << d_time_points[i] << " Direction: " << d_fd_directions[i] << endl;
+    }
+    d_time_point1 = d_time_points[0];
+    if(d_time_points.size() >= 1){
+       d_time_point2 = d_time_points[1];
+    }else{
+       // needs to be an error for not having enough points
+    }
+    d_flux_direction = d_fd_directions[0];
+    d_diff_curve_index = 0;
   }
 
 }
 
 NonLinearDiff1::~NonLinearDiff1() {
 
+}
+
+void NonLinearDiff1::addInitialComputesAndRequires(Task* task, const MPMMaterial* matl,
+                                                   const PatchSet* patch) const
+{
+  const MaterialSubset* matlset = matl->thisMaterial();
+  task->computes(d_lb->pDiffusivityLabel,   matlset);
+}
+
+void NonLinearDiff1::initializeSDMData(const Patch* patch, const MPMMaterial* matl,
+                                       DataWarehouse* new_dw)
+{
+  ParticleSubset* pset = new_dw->getParticleSubset(matl->getDWIndex(), patch);
+
+  ParticleVariable<double>  pDiffusivity;
+
+  new_dw->allocateAndPut(pDiffusivity, d_lb->pDiffusivityLabel, pset);
+
+  for(ParticleSubset::iterator iter = pset->begin();iter != pset->end();iter++){
+    pDiffusivity[*iter] = diffusivity;
+  }
+}
+
+void NonLinearDiff1::addParticleState(std::vector<const VarLabel*>& from,
+                                            std::vector<const VarLabel*>& to)
+{
+  from.push_back(d_lb->pDiffusivityLabel);
+  to.push_back(d_lb->pDiffusivityLabel_preReloc);
 }
 
 void NonLinearDiff1::scheduleComputeFlux(Task* task, const MPMMaterial* matl, 
@@ -94,6 +135,7 @@ void NonLinearDiff1::scheduleComputeFlux(Task* task, const MPMMaterial* matl,
   task->requires(Task::OldDW, d_lb->pConcentrationLabel,      matlset, gnone);
   task->requires(Task::OldDW, d_lb->pStressLabel,             matlset, gnone);
   task->requires(Task::OldDW, d_lb->pDeformationMeasureLabel, matlset, gnone);
+  task->requires(Task::OldDW, d_lb->pDiffusivityLabel,        matlset, gnone);
 
   task->requires(Task::NewDW, d_lb->pSizeLabel_preReloc,      matlset, gnone);
   task->requires(Task::NewDW, d_lb->gConcentrationLabel,      matlset, gac, NGN);
@@ -101,10 +143,10 @@ void NonLinearDiff1::scheduleComputeFlux(Task* task, const MPMMaterial* matl,
 
   task->computes(d_sharedState->get_delt_label(),getLevel(patch));
 
-  task->computes(d_lb->pFluxLabel,        matlset);
-  task->computes(d_lb->pDiffusivityLabel, matlset);
-  task->computes(d_lb->pPressureLabel_t1, matlset);
-  task->computes(d_lb->pConcInterpLabel,  matlset);
+  task->computes(d_lb->pFluxLabel,                 matlset);
+  task->computes(d_lb->pDiffusivityLabel_preReloc, matlset);
+  task->computes(d_lb->pPressureLabel_t1,          matlset);
+  task->computes(d_lb->pConcInterpLabel,           matlset);
 }
 
 void NonLinearDiff1::computeFlux(const Patch* patch,
@@ -118,6 +160,8 @@ void NonLinearDiff1::computeFlux(const Patch* patch,
   vector<IntVector> ni(interpolator->size());
   vector<double> S(interpolator->size());
 
+  double current_time1 = d_sharedState->getElapsedTime();
+
   int dwi = matl->getDWIndex();
   Vector dx = patch->dCell();
   double comp_diffusivity;
@@ -128,6 +172,7 @@ void NonLinearDiff1::computeFlux(const Patch* patch,
   constParticleVariable<Point>   px;
   constParticleVariable<Matrix3> psize;
   constParticleVariable<Matrix3> pFOld;
+  constParticleVariable<double>  pDiffusivity_old;
 
   constNCVariable<double>  gConcentration;
   constNCVariable<double>  gHydroStress;
@@ -144,22 +189,34 @@ void NonLinearDiff1::computeFlux(const Patch* patch,
   old_dw->get(pConcentration, d_lb->pConcentrationLabel,      pset);
   old_dw->get(pStress,        d_lb->pStressLabel,             pset);
   old_dw->get(pFOld,          d_lb->pDeformationMeasureLabel, pset);
+  old_dw->get(pDiffusivity_old, d_lb->pDiffusivityLabel,      pset);
 
   new_dw->get(psize,          d_lb->pSizeLabel_preReloc,      pset);
 
   new_dw->get(gConcentration, d_lb->gConcentrationLabel,     dwi, patch, gac, NGP);
   new_dw->get(gHydroStress,   d_lb->gHydrostaticStressLabel, dwi, patch, gac, NGP);
 
-  new_dw->allocateAndPut(pFlux,        d_lb->pFluxLabel,        pset);
-  new_dw->allocateAndPut(pDiffusivity, d_lb->pDiffusivityLabel, pset);
-  new_dw->allocateAndPut(pPressure1,   d_lb->pPressureLabel_t1, pset);
-  new_dw->allocateAndPut(pConcInterp,  d_lb->pConcInterpLabel,  pset);
+  new_dw->allocateAndPut(pFlux,        d_lb->pFluxLabel,                 pset);
+  new_dw->allocateAndPut(pDiffusivity, d_lb->pDiffusivityLabel_preReloc, pset);
+  new_dw->allocateAndPut(pPressure1,   d_lb->pPressureLabel_t1,          pset);
+  new_dw->allocateAndPut(pConcInterp,  d_lb->pConcInterpLabel,           pset);
 
   double non_lin_comp;
   double D;
   double timestep = 1.0e99;
   double pressure;
   double concentration;
+
+  if(d_use_diff_curve){
+    if(current_time1 > d_time_point2){
+      d_diff_curve_index++;
+      d_time_point1 = d_time_points[d_diff_curve_index];
+      d_time_point2 = d_time_points[d_diff_curve_index+1];
+      d_flux_direction = d_fd_directions[d_diff_curve_index];
+    }
+    //cout << "Time: " << current_time1 << " t1: " << d_time_point1;
+    //cout << ", t2: " << d_time_point2 << " fd: " << d_flux_direction << endl;
+  }
   for (ParticleSubset::iterator iter = pset->begin(); iter != pset->end();
                                                       iter++){
     particleIndex idx = *iter;
@@ -181,29 +238,49 @@ void NonLinearDiff1::computeFlux(const Patch* patch,
 #endif
 
     comp_diffusivity = computeDiffusivityTerm(concentration, pressure);
-    if(use_pressure){
-      // normalize pressure to on order of 1
-      // Why in heaven's name are you doing this instead of just rolling this
-      // into tuning2?  You are essentially putting units into the code!  JG
-      pressure = pressure*tuning5;
-      // set a floor for the minimum pressure
-      // to be used in the calculation
-      if(pressure < tuning3){
-        pressure = tuning3;
+    if(d_use_diff_curve){
+      if(d_flux_direction == fd_in || d_flux_direction == fd_transition){
+        if(d_use_pressure){
+          pressure = pressure * d_tuning5;
+          if(pressure < d_tuning3){
+            pressure = d_tuning3;
+          }
+          if(pressure > d_tuning4){
+            pressure = d_tuning4;
+          }
+          D = comp_diffusivity*exp(d_tuning1 * concentration)*exp(-d_tuning2 * pressure);
+        }else{
+          non_lin_comp = exp(d_tuning1 * concentration);
+          D = comp_diffusivity * non_lin_comp;
+        }
+      }else if(d_flux_direction == fd_out){
+        D = pDiffusivity_old[idx];
       }
-      // set a cap for the maximum pressure
-      // to be used in the calculation
-      if(pressure > tuning4){
-        pressure = tuning4;
-      }
-      D = comp_diffusivity*exp(tuning1*concentration)*exp(-tuning2*pressure);
-      //cout << "Pressure: " << pressure << ", Concentration: " << concentration << ", Diffusivity: " << D << endl;
-      //cout << "Pressure1: " << pressure1 << ", Pressure2: " << pressure2;
-      //cout << ", Conc1: " << conc1 << ", Conc2: " << conc2 << endl;
     }else{
-      non_lin_comp = exp(tuning1*concentration);
-
-      D = comp_diffusivity * non_lin_comp;
+      if(d_use_pressure){
+        // normalize pressure to on order of 1
+        // Why in heaven's name are you doing this instead of just rolling this
+        // into tuning2?  You are essentially putting units into the code!  JG
+        pressure = pressure * d_tuning5;
+        // set a floor for the minimum pressure
+        // to be used in the calculation
+        if(pressure < d_tuning3){
+          pressure = d_tuning3;
+        }
+        // set a cap for the maximum pressure
+        // to be used in the calculation
+        if(pressure > d_tuning4){
+          pressure = d_tuning4;
+        }
+        D = comp_diffusivity*exp(d_tuning1 * concentration)*exp(-d_tuning2 * pressure);
+        //cout << "Pressure: " << pressure << ", Concentration: " << concentration << ", Diffusivity: " << D << endl;
+        //cout << "Pressure1: " << pressure1 << ", Pressure2: " << pressure2;
+        //cout << ", Conc1: " << conc1 << ", Conc2: " << conc2 << endl;
+      }else{
+        non_lin_comp = exp(d_tuning1 * concentration);
+  
+        D = comp_diffusivity * non_lin_comp;
+      }
     }
 
     pFlux[idx] = D * pConcGrad[idx];
@@ -226,13 +303,17 @@ void NonLinearDiff1::outputProblemSpec(ProblemSpecP& ps, bool output_rdm_tag)
 
   rdm_ps->appendElement("diffusivity",diffusivity);
   rdm_ps->appendElement("max_concentration",max_concentration);
-  rdm_ps->appendElement("use_pressure", use_pressure);
-  rdm_ps->appendElement("tuning1",tuning1);
-  rdm_ps->appendElement("tuning2",tuning2);
+  rdm_ps->appendElement("use_pressure", d_use_pressure);
+  rdm_ps->appendElement("tuning1", d_tuning1);
+  rdm_ps->appendElement("tuning2", d_tuning2);
 
-  if(use_pressure){
-    rdm_ps->appendElement("tuning3", tuning3);
-    rdm_ps->appendElement("tuning4", tuning4);
-    rdm_ps->appendElement("tuning5", tuning5);
+  if(d_use_pressure){
+    rdm_ps->appendElement("tuning3", d_tuning3);
+    rdm_ps->appendElement("tuning4", d_tuning4);
+    rdm_ps->appendElement("tuning5", d_tuning5);
   }
+
+  //*********************************************************
+  // Need to place code outputProblemSpec for diff_curve info
+  //*********************************************************
 }

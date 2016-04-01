@@ -78,6 +78,15 @@ namespace Uintah {
                         std::string diff_type);
     ~NonLinearDiff1();
 
+    virtual void addInitialComputesAndRequires(Task* task, const MPMMaterial* matl,
+                                                   const PatchSet* patch) const;
+
+    virtual void initializeSDMData(const Patch* patch, const MPMMaterial* matl,
+                                    DataWarehouse* new_dw);
+
+    virtual void addParticleState(std::vector<const VarLabel*>& from,
+                                  std::vector<const VarLabel*>& to);
+
     virtual void scheduleComputeFlux(Task* task, const MPMMaterial* matl, 
 		                                      const PatchSet* patch) const;
 
@@ -87,16 +96,20 @@ namespace Uintah {
     virtual void outputProblemSpec(ProblemSpecP& ps,bool output_rdm_tag = true);
 
   private:
-    double tuning1;
-    double tuning2;
-    double tuning3;
-    double tuning4;
-    double tuning5;
-    bool use_pressure;
-    bool use_diff_curve;
+    double d_tuning1;
+    double d_tuning2;
+    double d_tuning3;
+    double d_tuning4;
+    double d_tuning5;
+    bool d_use_pressure;
+    bool d_use_diff_curve;
+    FluxDirection d_flux_direction;
+    double d_time_point1;
+    double d_time_point2;
+    int d_diff_curve_index;
 
-    vector<double> time_points;
-    vector<FluxDirection> fd_directions;
+    vector<double> d_time_points;
+    vector<FluxDirection> d_fd_directions;
 
     NonLinearDiff1(const NonLinearDiff1&);
     NonLinearDiff1& operator=(const NonLinearDiff1&);
