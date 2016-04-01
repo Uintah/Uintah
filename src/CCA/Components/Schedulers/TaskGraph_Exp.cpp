@@ -229,137 +229,191 @@ TaskGraph::createDetailedTask(       Task           * task
 //
 namespace {
 
+struct SimpleDependency
+{
+  enum Type {
+    Computes,
+    Modifies,
+    Requires,
+  };
+
+  Type                   m_type{};
+  int                    m_idx{-1};
+  const VarLabel       * m_var{nullptr};
+  int                    m_level{-1};
+  std::vector<int>       m_materials{};
+
+  SimpleDependency( const Task::Dependency * dep )
+    : m_type{ dep->deptype == Task::Requires ? Requires :
+              dep->deptype == Task::Modifies ? Modifies : Computes}
+    , m_idx{ dep->task->index() }
+    , m_var{ dep->var }
+    , m_level{ dep->reductionLevel ? dep->reductionLevel->getIndex() : -1 }
+  {
+    // get the materials
+    if (dep->matls) {
+      for (int mat : dep->matls->getVector()) {
+        m_materials.push_back(mat);
+      }
+    } else {
+      for (auto const& mats : dep->task->getMaterialSet()->getVector() ) {
+        for (int mat : mats->getVector()) {
+          m_materials.push_back(mat);
+        }
+      }
+    }
+    if (m_materials.empty()) { m_materials.push_back(-1); }
+    std::sort(m_materials.begin(), m_materials.end());
+  }
+
+  SimpleDependency() = default;
+  SimpleDependency( const SimpleDependency & ) = default;
+  SimpleDependency( SimpleDependency && ) = default;
+
+  SimpleDependency & operator=( const SimpleDependency & ) = default;
+  SimpleDependency & operator=( SimpleDependency && ) = default;
+
+  bool materials_overlap( SimpleDependency const & rhs ) const
+  {
+
+    if (m_materials[0] == -1 || rhs.m_materials[0] == -1) return true;
+
+    auto find_m = [&rhs](int m) {
+      return std::find( rhs.m_materials.begin(), rhs.m_materials.end(), m ) != rhs.m_materials.end();
+    };
+
+    return std::any_of( m_materials.begin(), m_materials.end()
+                      , find_m
+                      );
+  };
+
+  bool levels_overlap( SimpleDependency const & rhs ) const
+  {
+    if (m_level != -1 && rhs.m_level != -1) {
+      return m_level == rhs.m_level;
+    }
+    return true;
+  }
+
+  bool is_prerequisite( SimpleDependency const & rhs ) const
+  {
+    // not same variable
+    if (m_var != rhs.m_var) return false;
+
+    // requires are not ordered
+    if (m_type == Requires && rhs.m_type == Requires) return false;
+
+    // materials do not overlap
+    if ( !materials_overlap(rhs) ) return false;
+
+    // levels do not overlap
+    if ( !levels_overlap(rhs) ) return false;
+
+    // computes before modifes or requires
+    if ( m_type == Computes && rhs.m_type != Computes ) return true;
+
+    // modifies before requires
+    if ( m_type == Modifies && rhs.m_type == Requires ) return true;
+
+    // order multiple computes
+    if ( m_type == Computes && rhs.m_type == Computes ) {
+      if ( m_var->allowsMultipleComputes() ) return m_idx < rhs.m_idx;
+      throw std::runtime_error("Multiple computes detected");
+    }
+
+    if ( m_type == Modifies && rhs.m_type == Modifies ) return m_idx < rhs.m_idx;
+
+    return false;
+  }
+};
+
 std::vector< std::pair<int,int> >
 get_edges( std::vector<Task *> const & tasks )
 {
   using result_type = std::vector< std::pair<int,int> >;
 
-  auto materials_overlap = [&](const Task::Dependency * a, const Task::Dependency * b)->bool {
-    std::vector<int> a_mats;
-    if (a->matls) {
-      for (auto const& mat : a->matls->getVector()) {
-        a_mats.push_back(mat);
-      }
-    }
-    else {
-      for (auto const& mats : a->task->getMaterialSet()->getVector() ) {
-        for (auto const& mat : mats->getVector() ) {
-          a_mats.push_back(mat);
+  using DependencyVector = std::vector< SimpleDependency >;
+
+  auto filter_dependencies = [](DependencyVector & vec) {
+    auto compare = []( const SimpleDependency & a, const SimpleDependency &b )->bool {
+      return a.m_idx < b.m_idx ? true  :
+             a.m_idx > b.m_idx ? false :
+             a.m_var < b.m_var ? true  :
+             a.m_var > b.m_var ? false :
+             a.m_level < b.m_level ? true :
+             a.m_level > b.m_level ? false :
+             a.m_materials < b.m_materials;
+    };
+    auto compare_equal = [&compare]( const SimpleDependency & a, const SimpleDependency &b )->bool {
+      return !compare(a,b) && !compare(b,a);
+    };
+    std::sort( vec.begin(), vec.end(), compare );
+    auto end_itr = std::unique( vec.begin(), vec.end(), compare_equal);
+    std::sort( end_itr, vec.end(), compare );
+
+    // update the type
+    // duplicate Modifies --> Modifies
+    // duplicate Computes && dep Requires --> Computes
+    {
+      auto itr = vec.begin();
+      const auto itr_end = end_itr;
+      auto dup_itr = end_itr;
+      const auto dup_end = vec.end();
+
+      while (itr != itr_end && dup_itr != dup_end) {
+        auto & dep = *itr;
+        const auto & dup = *dup_itr;
+        if (compare_equal(dep,dup)) {
+          if (dup.m_type == SimpleDependency::Modifies) {
+            dep.m_type = SimpleDependency::Modifies;
+          } else if (dup.m_type == SimpleDependency::Computes && dep.m_type == SimpleDependency::Requires) {
+            dep.m_type = SimpleDependency::Computes;
+          }
+          ++dup_itr;
+        } else if (compare(dep, dup)) {
+          ++itr;
+        } else {
+          ++dup_itr;
         }
       }
     }
-
-    std::vector<int> b_mats;
-    if (b->matls) {
-      for (auto const& mat : b->matls->getVector()) {
-        b_mats.push_back(mat);
-      }
-    }
-    else {
-      for (auto const& mats : b->task->getMaterialSet()->getVector() ) {
-        for (auto const& mat : mats->getVector() ) {
-          b_mats.push_back(mat);
-        }
-      }
-    }
-
-    // -1 is used to represet all materials
-    // if either 'a' or 'b' is all materials then they overlap
-    if (std::find(a_mats.begin(), a_mats.end(), -1) != a_mats.end() ||
-        std::find(b_mats.begin(), b_mats.end(), -1) != b_mats.end() ) return true;
-
-    return std::any_of( a_mats.begin(), a_mats.end()
-                      , [&b_mats](int m) {
-                          return std::find(b_mats.begin(), b_mats.end(), m) == b_mats.end();
-                        }
-                      );
+    vec.erase(end_itr, vec.end());
   };
 
-  auto levels_overlap = [&](const Task::Dependency * a, const Task::Dependency * b)->bool {
-    // if the levels are explicitly set return true
-    if (a->reductionLevel && b->reductionLevel) {
-      return a->reductionLevel->getIndex() == b->reductionLevel->getIndex();
+  auto get_dependencies = [&filter_dependencies](Task * t)->DependencyVector {
+
+    DependencyVector vec;
+
+    Task::Dependency * head = t->getModifies();
+    while (head) {
+      vec.emplace_back(head);
+      head = head->next;
     }
-    return true;
+    head = t->getComputes();
+    while (head) {
+      vec.emplace_back(head);
+      head = head->next;
+    }
+    head = t->getRequires();
+    while (head) {
+      vec.emplace_back(head);
+      head = head->next;
+    }
+    filter_dependencies( vec );
+    return vec;
   };
 
+  auto is_prerequisite_task = [&](Task * a, Task * b)->bool {
 
-  // is 'a' a prerequisite of 'b'
-  auto is_prerequisite = [&](const Task::Dependency * a, const Task::Dependency * b)->bool {
-    // not same var
-    if (a->var != b->var) return false;
+    const auto a_dependencies = get_dependencies(a);
+    const auto b_dependencies = get_dependencies(b);
 
-    const auto atype = a->deptype;
-    const auto btype = b->deptype;
+    for (auto a_dep : a_dependencies) {
+    for (auto b_dep : b_dependencies) {
+      if ( a_dep.is_prerequisite( b_dep ) ) return true;
+    }}
 
-    const bool multiple_computes = a->var->allowsMultipleComputes();
-
-    // requires are not order
-    if (atype == Task::Requires && btype == Task::Requires ) return false;
-
-    // material do not overlap
-    if (!materials_overlap(a,b)) return false;
-
-    // levels do not overlap
-    if (!levels_overlap(a,b)) return false;
-
-    // modifies before requires
-    if (atype == Task::Modifies && btype == Task::Requires ) return true;
-
-    // computes come before requires or modifies
-    if (atype == Task::Computes && btype != Task::Computes ) return true;
-
-    const auto a_idx = a->task->index();
-    const auto b_idx = b->task->index();
-
-    // Detect multiples computes
-    if (atype == Task::Computes && btype == Task::Computes && multiple_computes) {
-      // same level (or no level given, order by appearance in tasks)
-      return a_idx < b_idx;
-    }
-
-    // Detect multiples modifies
-    if (atype == Task::Modifies && btype == Task::Modifies) {
-      // TODO: this assumes that modifies are implicitly ordered
-      return a_idx < b_idx;
-    }
     return false;
-  };
-
-  auto is_prerequisite_dep = [&](const Task::Dependency *a, const Task::Dependency *b)->bool {
-    while (a) {
-      while (b) {
-        if (is_prerequisite(a,b)) return true;
-        b = b->next;
-      }
-      a = a->next;
-    }
-    return false;
-  };
-
-  auto is_prerequisite_task = [&](const Task * a, const Task * b)->bool {
-
-    const bool a_computes_b_computes = is_prerequisite_dep( a->getComputes(), b->getComputes() );
-    const bool a_computes_b_modifies = is_prerequisite_dep( a->getComputes(), b->getModifies() );
-    const bool a_computes_b_requires = is_prerequisite_dep( a->getComputes(), b->getRequires() );
-
-    const bool a_modifies_b_computes = is_prerequisite_dep( a->getModifies(), b->getComputes() );
-    const bool a_modifies_b_modifies = is_prerequisite_dep( a->getModifies(), b->getModifies() );
-    const bool a_modifies_b_requires = is_prerequisite_dep( a->getModifies(), b->getRequires() );
-
-    const bool a_requires_b_computes = is_prerequisite_dep( a->getRequires(), b->getComputes() );
-    const bool a_requires_b_modifies = is_prerequisite_dep( a->getRequires(), b->getModifies() );
-    const bool a_requires_b_requires = is_prerequisite_dep( a->getRequires(), b->getRequires() );
-
-    return a_computes_b_computes ||
-           a_computes_b_modifies ||
-           a_computes_b_requires ||
-           a_modifies_b_computes ||
-           a_modifies_b_modifies ||
-           a_modifies_b_requires ||
-           a_requires_b_computes ||
-           a_requires_b_modifies ||
-           a_requires_b_requires;
   };
 
   result_type result;
