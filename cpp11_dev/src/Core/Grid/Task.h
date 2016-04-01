@@ -789,21 +789,6 @@ class Task {
       TotalDWs = 6
     };
 
-    friend std::ostream& operator<<(std::ostream & out, WhichDW dw)
-    {
-      switch(dw) {
-      case OldDW: out << "OldDW"; break;
-      case NewDW: out << "NewDW"; break;
-      case CoarseOldDW: out << "CoarseOldDW"; break;
-      case CoarseNewDW: out << "CoarseNewDW"; break;
-      case ParentOldDW: out << "ParentOldDW"; break;
-      case ParentNewDW: out << "ParentNewDW"; break;
-      case TotalDWs: out << "TotalDWs"; break;
-      }
-
-      return out;
-    }
-
     enum {
       NoDW = -1,
       InvalidDW = -2
