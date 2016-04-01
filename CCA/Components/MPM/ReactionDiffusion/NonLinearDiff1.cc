@@ -63,8 +63,7 @@ NonLinearDiff1::NonLinearDiff1(ProblemSpecP& ps, SimulationStateP& sS, MPMFlags*
     cout << "!!!!!!!!!!!!!!!!!!!using diff curve!!!!!!!!!!!!!!!" << endl;
     cout << "This is experimental: diff_curve code still needs error checking" << endl;
     for (time_point = diff_curve->findBlock("time_point");
-         time_point != 0;
-         time_point = time_point->findNextBlock("time_point")) {
+         time_point != 0; time_point = time_point->findNextBlock("time_point")) {
 
       time_point->require("time", time);
       time_point->require("flux_direction", flux_direction);
@@ -296,6 +295,8 @@ void NonLinearDiff1::outputProblemSpec(ProblemSpecP& ps, bool output_rdm_tag)
 {
 
   ProblemSpecP rdm_ps = ps;
+  ProblemSpecP diff_curve_ps = 0;
+  ProblemSpecP time_point_ps = 0;
   if (output_rdm_tag) {
     rdm_ps = ps->appendChild("diffusion_model");
     rdm_ps->setAttribute("type","non_linear1");
@@ -316,4 +317,18 @@ void NonLinearDiff1::outputProblemSpec(ProblemSpecP& ps, bool output_rdm_tag)
   //*********************************************************
   // Need to place code outputProblemSpec for diff_curve info
   //*********************************************************
+  if(d_use_diff_curve){
+    diff_curve_ps = rdm_ps->appendChild("diff_curve");
+    for(unsigned int i =0; i < d_time_points.size(); i++){
+      time_point_ps = diff_curve_ps->appendChild("time_point");
+      time_point_ps->appendElement("time",d_time_points[i]);
+      if(d_fd_directions[i] == fd_in){
+        time_point_ps->appendElement("flux_direction", "in");
+      }else if(d_fd_directions[i] == fd_out){
+        time_point_ps->appendElement("flux_direction", "out");
+      }else if(d_fd_directions[i] == fd_transition){
+        time_point_ps->appendElement("flux_direction", "transition");
+      }
+    }
+  }
 }
