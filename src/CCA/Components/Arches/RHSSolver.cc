@@ -229,7 +229,7 @@ RHSSolver::explicitUpdate_stencilMatrix(CellIterator iter,
                  A[Arches::AT][c] * old_phi[c + IntVector(0,0,1)] +                             
                  A[Arches::AB][c] * old_phi[c - IntVector(0,0,1)] +                             
                  source[c] - A[Arches::AP][c] * old_phi[c];
-
+    std::cout << "AP: " << A[Arches::AP][c] << std::endl;
     rhs *= volFraction[c] * volFraction[c+shift]; 
 
     

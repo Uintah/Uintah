@@ -1049,6 +1049,10 @@ ExplicitSolver::sched_initializeVariables( const LevelP& level,
   tsk->computes(d_lab->d_viscosityCTSLabel);
   tsk->computes(d_lab->d_turbViscosLabel);
   tsk->computes(d_lab->d_oldDeltaTLabel);
+  tsk->computes(d_lab->d_conv_scheme_x_Label);
+  tsk->computes(d_lab->d_conv_scheme_y_Label);
+  tsk->computes(d_lab->d_conv_scheme_z_Label);
+  
   if (d_MAlab) {
     tsk->computes(d_lab->d_pressPlusHydroLabel);
     tsk->computes(d_lab->d_mmgasVolFracLabel);
@@ -1061,6 +1065,7 @@ ExplicitSolver::sched_initializeVariables( const LevelP& level,
   
   if ( VarLabel::find("real_deposit_velocity"))
     tsk->computes(VarLabel::find("real_deposit_velocity"));
+  
  
 sched->addTask(tsk, level->eachPatch(), d_lab->d_sharedState->allArchesMaterials());
 
@@ -1149,6 +1154,9 @@ ExplicitSolver::initializeVariables(const ProcessorGroup* ,
     allocateAndInitializeToZero( d_lab->d_densityCPLabel, new_dw, indx, patch );
     allocateAndInitializeToZero( d_lab->d_viscosityCTSLabel, new_dw, indx, patch );
     allocateAndInitializeToZero( d_lab->d_turbViscosLabel, new_dw, indx, patch );
+    allocateAndInitializeToZero( d_lab->d_conv_scheme_x_Label, new_dw, indx, patch );
+    allocateAndInitializeToZero( d_lab->d_conv_scheme_y_Label, new_dw, indx, patch );
+    allocateAndInitializeToZero( d_lab->d_conv_scheme_z_Label, new_dw, indx, patch );
 
     if ( VarLabel::find("true_wall_temperature")){
       allocateAndInitializeToZero( VarLabel::find("true_wall_temperature"), new_dw, indx, patch );
@@ -1886,6 +1894,9 @@ ExplicitSolver::sched_setInitialGuess(SchedulerP& sched,
   tsk->computes(d_lab->d_densityCPLabel);
   tsk->computes(d_lab->d_viscosityCTSLabel);
   tsk->computes(d_lab->d_turbViscosLabel);
+  tsk->computes(d_lab->d_conv_scheme_x_Label);
+  tsk->computes(d_lab->d_conv_scheme_y_Label);
+  tsk->computes(d_lab->d_conv_scheme_z_Label);
 
   //__________________________________
   if (d_MAlab){
@@ -2490,6 +2501,16 @@ ExplicitSolver::setInitialGuess(const ProcessorGroup* ,
     CCVariable<double> turb_viscosity_new;
     new_dw->allocateAndPut(turb_viscosity_new, d_lab->d_turbViscosLabel, indx, patch);
     turb_viscosity_new.copyData(turb_viscosity); // copy old into new
+    
+    SFCXVariable<double> conv_scheme_x;
+    new_dw->allocateAndPut(conv_scheme_x, d_lab->d_conv_scheme_x_Label, indx, patch);
+    conv_scheme_x.initialize(0.0); // copy old into new
+    SFCYVariable<double> conv_scheme_y;
+    new_dw->allocateAndPut(conv_scheme_y, d_lab->d_conv_scheme_y_Label, indx, patch);
+    conv_scheme_y.initialize(0.0); // copy old into new
+    SFCZVariable<double> conv_scheme_z;
+    new_dw->allocateAndPut(conv_scheme_z, d_lab->d_conv_scheme_z_Label, indx, patch);
+    conv_scheme_z.initialize(0.0); // copy old into new
 
   }
 }

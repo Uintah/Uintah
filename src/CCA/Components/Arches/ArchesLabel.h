@@ -152,6 +152,10 @@ namespace Uintah {
       const VarLabel* d_vMomLabel;
       // WMom Labels
       const VarLabel* d_wMomLabel;
+      // conv_scheme Label
+      const VarLabel* d_conv_scheme_x_Label;
+      const VarLabel* d_conv_scheme_y_Label;
+      const VarLabel* d_conv_scheme_z_Label;
 
       // labels for scalesimilaritymodels
       const VarLabel* d_stressTensorCompLabel;

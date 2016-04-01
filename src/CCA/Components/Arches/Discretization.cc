@@ -58,14 +58,17 @@ using namespace Uintah;
 #include <CCA/Components/Arches/fortran/uvelcoef_central_fort.h>
 #include <CCA/Components/Arches/fortran/uvelcoef_upwind_fort.h>
 #include <CCA/Components/Arches/fortran/uvelcoef_mixed_fort.h>
+#include <CCA/Components/Arches/fortran/uvelcoef_hybrid_fort.h>
 #include <CCA/Components/Arches/fortran/vvelcoef_fort.h>
 #include <CCA/Components/Arches/fortran/vvelcoef_central_fort.h>
 #include <CCA/Components/Arches/fortran/vvelcoef_upwind_fort.h>
 #include <CCA/Components/Arches/fortran/vvelcoef_mixed_fort.h>
+#include <CCA/Components/Arches/fortran/vvelcoef_hybrid_fort.h>
 #include <CCA/Components/Arches/fortran/wvelcoef_fort.h>
 #include <CCA/Components/Arches/fortran/wvelcoef_central_fort.h>
 #include <CCA/Components/Arches/fortran/wvelcoef_upwind_fort.h>
 #include <CCA/Components/Arches/fortran/wvelcoef_mixed_fort.h>
+#include <CCA/Components/Arches/fortran/wvelcoef_hybrid_fort.h>
 
 
 #include <CCA/Components/Arches/FunctorSwitch.h>
@@ -101,7 +104,10 @@ Discretization::calculateVelocityCoeff(const Patch* patch,
                                        CellInformation* cellinfo,
                                        ArchesVariables* coeff_vars,
                                        ArchesConstVariables* coeff_constvars, 
-                                       constCCVariable<double> volFraction, 
+                                       constCCVariable<double>* volFraction, 
+                                       SFCXVariable<double>* conv_scheme_x, 
+                                       SFCYVariable<double>* conv_scheme_y, 
+                                       SFCZVariable<double>* conv_scheme_z, 
                                        MOMCONV conv_scheme, 
                                        double Re_limit)
 {
@@ -147,7 +153,7 @@ Discretization::calculateVelocityCoeff(const Patch* patch,
                              coeff_constvars->density, coeff_constvars->viscosity,
                              coeff_constvars->denRefArray, coeff_vars->uVelNonlinearSrc,
                              coeff_constvars->old_density, coeff_constvars->old_uVelocity, 
-                             volFraction, 
+                             *volFraction, 
                              delta_t, grav, dx, dy, dz,
                              idxLoU, idxHiU );
       break; 
@@ -169,7 +175,7 @@ Discretization::calculateVelocityCoeff(const Patch* patch,
                             coeff_constvars->vVelocity, coeff_constvars->wVelocity,
                             coeff_constvars->density, coeff_constvars->viscosity,
                             coeff_constvars->denRefArray, coeff_vars->uVelNonlinearSrc,
-                            volFraction,
+                            *volFraction,
                             delta_t, grav, dx, dy, dz,
                             idxLoU, idxHiU);
       break; 
@@ -191,7 +197,31 @@ Discretization::calculateVelocityCoeff(const Patch* patch,
                            coeff_constvars->vVelocity, coeff_constvars->wVelocity,
                            coeff_constvars->density, coeff_constvars->viscosity,
                            coeff_constvars->denRefArray, coeff_vars->uVelNonlinearSrc,
-                           volFraction, 
+                           *volFraction, 
+                           delta_t, grav, dx, dy, dz,
+                           wall1, wall2, Re_limit,
+                           idxLoU, idxHiU);
+      break; 
+    case Discretization::HYBRID: 
+      fort_uvelcoef_hybrid( coeff_constvars->uVelocity, coeff_constvars->cellType, 
+                           coeff_vars->uVelocityConvectCoeff[Arches::AE],
+                           coeff_vars->uVelocityConvectCoeff[Arches::AW],
+                           coeff_vars->uVelocityConvectCoeff[Arches::AN],
+                           coeff_vars->uVelocityConvectCoeff[Arches::AS],
+                           coeff_vars->uVelocityConvectCoeff[Arches::AT],
+                           coeff_vars->uVelocityConvectCoeff[Arches::AB],
+                           coeff_vars->uVelocityCoeff[Arches::AP],
+                           coeff_vars->uVelocityCoeff[Arches::AE],
+                           coeff_vars->uVelocityCoeff[Arches::AW],
+                           coeff_vars->uVelocityCoeff[Arches::AN],
+                           coeff_vars->uVelocityCoeff[Arches::AS],
+                           coeff_vars->uVelocityCoeff[Arches::AT],
+                           coeff_vars->uVelocityCoeff[Arches::AB],
+                           coeff_constvars->vVelocity, coeff_constvars->wVelocity,
+                           coeff_constvars->density, coeff_constvars->viscosity,
+                           coeff_constvars->denRefArray, coeff_vars->uVelNonlinearSrc,
+                           *volFraction, 
+                           *conv_scheme_x, 
                            delta_t, grav, dx, dy, dz,
                            wall1, wall2, Re_limit,
                            idxLoU, idxHiU);
@@ -215,7 +245,7 @@ Discretization::calculateVelocityCoeff(const Patch* patch,
                     coeff_constvars->density, coeff_constvars->viscosity,
                     coeff_constvars->denRefArray, coeff_vars->uVelNonlinearSrc,
                     coeff_constvars->old_density, coeff_constvars->old_uVelocity, 
-                    volFraction,
+                    *volFraction,
                     delta_t, grav, lcentral,
                     cellinfo->ceeu, cellinfo->cweu, cellinfo->cwwu,
                     cellinfo->cnn, cellinfo->csn, cellinfo->css,
@@ -264,7 +294,7 @@ Discretization::calculateVelocityCoeff(const Patch* patch,
                              coeff_constvars->uVelocity, coeff_constvars->wVelocity,
                              coeff_constvars->density, coeff_constvars->viscosity,
                              coeff_constvars->denRefArray, coeff_vars->vVelNonlinearSrc,
-                             volFraction, 
+                             *volFraction, 
                              delta_t, grav, dx, dy, dz, 
                              idxLoV, idxHiV);
       break;
@@ -286,7 +316,7 @@ Discretization::calculateVelocityCoeff(const Patch* patch,
                             coeff_constvars->uVelocity, coeff_constvars->wVelocity,
                             coeff_constvars->density, coeff_constvars->viscosity,
                             coeff_constvars->denRefArray, coeff_vars->vVelNonlinearSrc,
-                            volFraction,
+                            *volFraction,
                             delta_t, grav, dx, dy, dz, 
                             idxLoV, idxHiV);
       break; 
@@ -308,7 +338,31 @@ Discretization::calculateVelocityCoeff(const Patch* patch,
                            coeff_constvars->uVelocity, coeff_constvars->wVelocity,
                            coeff_constvars->density, coeff_constvars->viscosity,
                            coeff_constvars->denRefArray, coeff_vars->vVelNonlinearSrc,
-                           volFraction,
+                           *volFraction,
+                           delta_t, grav, dx, dy, dz, 
+                           wall1, wall2, Re_limit,
+                           idxLoV, idxHiV);
+      break; 
+    case Discretization::HYBRID: 
+      fort_vvelcoef_hybrid( coeff_constvars->vVelocity, coeff_constvars->cellType,
+                           coeff_vars->vVelocityConvectCoeff[Arches::AE],
+                           coeff_vars->vVelocityConvectCoeff[Arches::AW],
+                           coeff_vars->vVelocityConvectCoeff[Arches::AN],
+                           coeff_vars->vVelocityConvectCoeff[Arches::AS],
+                           coeff_vars->vVelocityConvectCoeff[Arches::AT],
+                           coeff_vars->vVelocityConvectCoeff[Arches::AB],
+                           coeff_vars->vVelocityCoeff[Arches::AP],
+                           coeff_vars->vVelocityCoeff[Arches::AE],
+                           coeff_vars->vVelocityCoeff[Arches::AW],
+                           coeff_vars->vVelocityCoeff[Arches::AN],
+                           coeff_vars->vVelocityCoeff[Arches::AS],
+                           coeff_vars->vVelocityCoeff[Arches::AT],
+                           coeff_vars->vVelocityCoeff[Arches::AB],
+                           coeff_constvars->uVelocity, coeff_constvars->wVelocity,
+                           coeff_constvars->density, coeff_constvars->viscosity,
+                           coeff_constvars->denRefArray, coeff_vars->vVelNonlinearSrc,
+                           *volFraction,
+                           *conv_scheme_y, 
                            delta_t, grav, dx, dy, dz, 
                            wall1, wall2, Re_limit,
                            idxLoV, idxHiV);
@@ -331,7 +385,7 @@ Discretization::calculateVelocityCoeff(const Patch* patch,
                     coeff_constvars->uVelocity, coeff_constvars->wVelocity,
                     coeff_constvars->density, coeff_constvars->viscosity,
                     coeff_constvars->denRefArray, coeff_vars->vVelNonlinearSrc,
-                    volFraction,
+                    *volFraction,
                     delta_t, grav, lcentral,
                     cellinfo->cee, cellinfo->cwe, cellinfo->cww,
                     cellinfo->cnnv, cellinfo->csnv, cellinfo->cssv,
@@ -379,7 +433,7 @@ Discretization::calculateVelocityCoeff(const Patch* patch,
                              coeff_constvars->uVelocity, coeff_constvars->vVelocity,
                              coeff_constvars->density, coeff_constvars->viscosity,
                              coeff_constvars->denRefArray, coeff_vars->wVelNonlinearSrc,
-                             volFraction, 
+                             *volFraction, 
                              delta_t, grav, dx, dy, dz,
                              idxLoW, idxHiW);
       break;
@@ -401,7 +455,7 @@ Discretization::calculateVelocityCoeff(const Patch* patch,
                             coeff_constvars->uVelocity, coeff_constvars->vVelocity,
                             coeff_constvars->density, coeff_constvars->viscosity,
                             coeff_constvars->denRefArray, coeff_vars->wVelNonlinearSrc,
-                            volFraction,
+                            *volFraction,
                             delta_t, grav, dx, dy, dz,
                             idxLoW, idxHiW);
       break; 
@@ -423,7 +477,31 @@ Discretization::calculateVelocityCoeff(const Patch* patch,
                            coeff_constvars->uVelocity, coeff_constvars->vVelocity,
                            coeff_constvars->density, coeff_constvars->viscosity,
                            coeff_constvars->denRefArray, coeff_vars->wVelNonlinearSrc,
-                           volFraction,
+                           *volFraction,
+                           delta_t, grav, dx, dy, dz,
+                           wall1, wall2, Re_limit, 
+                           idxLoW, idxHiW);
+      break; 
+    case Discretization::HYBRID: 
+      fort_wvelcoef_hybrid( coeff_constvars->wVelocity, coeff_constvars->cellType, 
+                           coeff_vars->wVelocityConvectCoeff[Arches::AE],
+                           coeff_vars->wVelocityConvectCoeff[Arches::AW],
+                           coeff_vars->wVelocityConvectCoeff[Arches::AN],
+                           coeff_vars->wVelocityConvectCoeff[Arches::AS],
+                           coeff_vars->wVelocityConvectCoeff[Arches::AT],
+                           coeff_vars->wVelocityConvectCoeff[Arches::AB],
+                           coeff_vars->wVelocityCoeff[Arches::AP],
+                           coeff_vars->wVelocityCoeff[Arches::AE],
+                           coeff_vars->wVelocityCoeff[Arches::AW],
+                           coeff_vars->wVelocityCoeff[Arches::AN],
+                           coeff_vars->wVelocityCoeff[Arches::AS],
+                           coeff_vars->wVelocityCoeff[Arches::AT],
+                           coeff_vars->wVelocityCoeff[Arches::AB],
+                           coeff_constvars->uVelocity, coeff_constvars->vVelocity,
+                           coeff_constvars->density, coeff_constvars->viscosity,
+                           coeff_constvars->denRefArray, coeff_vars->wVelNonlinearSrc,
+                           *volFraction,
+                           *conv_scheme_z, 
                            delta_t, grav, dx, dy, dz,
                            wall1, wall2, Re_limit, 
                            idxLoW, idxHiW);
@@ -446,7 +524,7 @@ Discretization::calculateVelocityCoeff(const Patch* patch,
                     coeff_constvars->uVelocity, coeff_constvars->vVelocity,
                     coeff_constvars->density, coeff_constvars->viscosity,
                     coeff_constvars->denRefArray, coeff_vars->wVelNonlinearSrc,
-                    volFraction,
+                    *volFraction,
                     delta_t, grav, lcentral,
                     cellinfo->cee, cellinfo->cwe, cellinfo->cww,
                     cellinfo->cnn, cellinfo->csn, cellinfo->css,

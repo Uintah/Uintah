@@ -123,6 +123,9 @@ ArchesLabel::ArchesLabel()
   d_uMomLabel = VarLabel::create("Umom", SFCX_double);
   d_vMomLabel = VarLabel::create("Vmom", SFCY_double);
   d_wMomLabel = VarLabel::create("Wmom", SFCZ_double);
+  d_conv_scheme_x_Label = VarLabel::create("conv_scheme_x", SFCX_double);
+  d_conv_scheme_y_Label = VarLabel::create("conv_scheme_y", SFCY_double);
+  d_conv_scheme_z_Label = VarLabel::create("conv_scheme_z", SFCZ_double);
   
   // labels for ref density and pressure
   d_refDensity_label      =  VarLabel::create("refDensityLabel",      sum_variable); //ref density only used in compdynamicproc
@@ -315,6 +318,9 @@ ArchesLabel::~ArchesLabel()
   VarLabel::destroy(d_uMomLabel);
   VarLabel::destroy(d_vMomLabel);
   VarLabel::destroy(d_wMomLabel);
+  VarLabel::destroy(d_conv_scheme_x_Label);
+  VarLabel::destroy(d_conv_scheme_y_Label);
+  VarLabel::destroy(d_conv_scheme_z_Label);
   VarLabel::destroy(d_refDensity_label);
   VarLabel::destroy(d_refDensityPred_label);
   VarLabel::destroy(d_refPressurePred_label);
