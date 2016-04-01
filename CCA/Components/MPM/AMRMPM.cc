@@ -3800,6 +3800,9 @@ void AMRMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
           }
 
           pConcentrationNew[idx]= pConcentration[idx] + concRate*delT;
+          if(pConcentrationNew[idx] < 0){
+            pConcentrationNew[idx] = 0.0;
+          }
           pConcPreviousNew[idx] = pConcentration[idx];
         }
 /*`==========TESTING==========*/
