@@ -187,78 +187,6 @@ TaskGraph::processDependencies( Task               * task
 //______________________________________________________________________
 //
 
-std::vector<Task*> TaskGraph::nullSort()
-{
-  Dout dout{"DbgReduction", false};
-
-  std::vector<Task *> tasks;
-  tasks.reserve( m_tasks.size() );
-
-  // place non-reduction into tasks in reverse order
-  for (auto itr = m_tasks.rbegin(); itr != m_tasks.rend(); ++itr ) {
-    Task * task = *itr;
-    if ( task->getType() != Task::Reduction ) {
-      tasks.push_back(task);
-    }
-  }
-
-  {
-    Task * reduction_task = nullptr;
-
-    // modifies are also marked as computes
-    // find a compute of the reduction task
-    auto find_computes = [&reduction_task](Task * task)->bool {
-      // get the var, level, and matls of the reduction task
-      const auto reduce_var = reduction_task->getModifies()->var;
-      const auto reduce_level = reduction_task->getModifies()->reductionLevel;
-      for( const Task::Dependency* dep = task->getComputes(); dep != nullptr; dep = dep->next ) {
-        if( dep->var->typeDescription()->isReductionVariable() ) {
-          if ( reduce_var == dep->var &&
-              reduce_level == dep->reductionLevel )
-            return true;
-        }
-      }
-      return false;
-    };
-
-    // place reduction tasks into the correct spot
-    for (auto task : m_sched->m_reductionTasks ) {
-      reduction_task = task;
-      auto itr = std::find_if( tasks.begin(), tasks.end(), find_computes);
-      tasks.insert(itr, task);
-    }
-  }
-
-  for ( auto task : tasks ) {
-    DOUTP0( dout, "Reversed task order: " << task->getName() );
-  }
-
-  // reverse the array
-  std::reverse( tasks.begin(), tasks.end() );
-
-  // make sync tasks depend on the previous sync task
-  {
-    // TODO DJS 03/30/16
-    // need to modify class Task to allow a task to require completion of another task
-    // listing all the computes of a task seems to cause deadlock
-  }
-
-  // set the sortedOrder
-  {
-    int n = 0;
-    for ( auto task : tasks ) {
-      task->setSortedOrder(n);
-      ++n;
-      DOUTP0( dout, "Correct task order: " << task->getName() );
-    }
-  }
-
-  return tasks;
-}
-
-//______________________________________________________________________
-//
-
 void
 TaskGraph::addTask(       Task        * task
                   , const PatchSet    * patchset
@@ -285,7 +213,7 @@ TaskGraph::addTask(       Task        * task
 //______________________________________________________________________
 //
 
-void
+DetailedTask *
 TaskGraph::createDetailedTask(       Task           * task
                              , const PatchSubset    * patches
                              , const MaterialSubset * matls
@@ -293,83 +221,162 @@ TaskGraph::createDetailedTask(       Task           * task
 {
   DetailedTask* dt = new DetailedTask(task, patches, matls, m_detailed_tasks);
 
-  if (task->getType() == Task::Reduction) {
-    Task::Dependency* req = task->getModifies();
-    // reduction tasks should have exactly 1 require, and it should be a modify
-    ASSERT(req != 0);
-    m_reduction_tasks[req->var] = dt;
-  }
-
   m_detailed_tasks->add(dt);
+  return dt;
 }
 
 //______________________________________________________________________
 //
 namespace {
 
-std::vector< std::pair<Task*, Task *> >
+std::vector< std::pair<int,int> >
 get_edges( std::vector<Task *> const & tasks )
 {
-  using result_type = std::vector< std::pair<Task*, Task *> >;
+  using result_type = std::vector< std::pair<int,int> >;
 
-  std::ostringstream out;
-
-  auto print_dep = [&out](const Task::Dependency * dep, int i) {
-    out << "    Dependency[" << i <<"]:" << std::endl;
-    out << "      var: ";
-    if (dep->var) {
-      out << dep->var->getName();
-    }
-    else {
-      out << "NULL";
-    }
-    out << std::endl;
-    out << "      materials: ";
-    if (dep->matls) {
-      for (auto const& mat : dep->matls->getVector()) {
-        out << mat << ", ";
+  auto materials_overlap = [&](const Task::Dependency * a, const Task::Dependency * b)->bool {
+    std::vector<int> a_mats;
+    if (a->matls) {
+      for (auto const& mat : a->matls->getVector()) {
+        a_mats.push_back(mat);
       }
-      out << "\b\b  ";
     }
     else {
-      out << "NULL";
+      for (auto const& mats : a->task->getMaterialSet()->getVector() ) {
+        for (auto const& mat : mats->getVector() ) {
+          a_mats.push_back(mat);
+        }
+      }
     }
-    out << std::endl;
-    out << "      level: ";
-    if (dep->reductionLevel) {
-      out << *dep->reductionLevel;
+
+    std::vector<int> b_mats;
+    if (b->matls) {
+      for (auto const& mat : b->matls->getVector()) {
+        b_mats.push_back(mat);
+      }
     }
     else {
-      out << "NULL";
+      for (auto const& mats : b->task->getMaterialSet()->getVector() ) {
+        for (auto const& mat : mats->getVector() ) {
+          b_mats.push_back(mat);
+        }
+      }
     }
-    out << std::endl;
+
+    // -1 is used to represet all materials
+    // if either 'a' or 'b' is all materials then they overlap
+    if (std::find(a_mats.begin(), a_mats.end(), -1) != a_mats.end() ||
+        std::find(b_mats.begin(), b_mats.end(), -1) != b_mats.end() ) return true;
+
+    return std::any_of( a_mats.begin(), a_mats.end()
+                      , [&b_mats](int m) {
+                          return std::find(b_mats.begin(), b_mats.end(), m) == b_mats.end();
+                        }
+                      );
   };
 
-  auto print_deps = [&](const Task::Dependency * head) {
-    int i=0;
-    while (head) {
-      print_dep(head, i++);
-      head = head->next;
+  auto levels_overlap = [&](const Task::Dependency * a, const Task::Dependency * b)->bool {
+    // if the levels are explicitly set return true
+    if (a->reductionLevel && b->reductionLevel) {
+      return a->reductionLevel->getIndex() == b->reductionLevel->getIndex();
     }
+    return true;
   };
 
 
-  out << std::endl;
-  for (auto const task : tasks) {
-    const bool is_sync = task->getType() == Task::Reduction || task->usesMPI();
-    out << "TASK: " << task->getName() << " : is_sync: " << is_sync << std::endl;
-    out << "  COMPUTES:" << std::endl;
-    print_deps( task->getComputes() );
-    out << "  MODIFIES:" << std::endl;
-    print_deps( task->getModifies() );
-    out << "  REQUIRES:" << std::endl;
-    print_deps( task->getRequires() );
-  }
-  out << std::endl;
+  // is 'a' a prerequisite of 'b'
+  auto is_prerequisite = [&](const Task::Dependency * a, const Task::Dependency * b)->bool {
+    // not same var
+    if (a->var != b->var) return false;
 
-  printf("%s\n", out.str().c_str());
+    const auto atype = a->deptype;
+    const auto btype = b->deptype;
 
-  return result_type{};
+    const bool multiple_computes = a->var->allowsMultipleComputes();
+
+    // requires are not order
+    if (atype == Task::Requires && btype == Task::Requires ) return false;
+
+    // material do not overlap
+    if (!materials_overlap(a,b)) return false;
+
+    // levels do not overlap
+    if (!levels_overlap(a,b)) return false;
+
+    // modifies before requires
+    if (atype == Task::Modifies && btype == Task::Requires ) return true;
+
+    // computes come before requires or modifies
+    if (atype == Task::Computes && btype != Task::Computes ) return true;
+
+    const auto a_idx = a->task->index();
+    const auto b_idx = b->task->index();
+
+    // Detect multiples computes
+    if (atype == Task::Computes && btype == Task::Computes && multiple_computes) {
+      // same level (or no level given, order by appearance in tasks)
+      return a_idx < b_idx;
+    }
+
+    // Detect multiples modifies
+    if (atype == Task::Modifies && btype == Task::Modifies) {
+      // TODO: this assumes that modifies are implicitly ordered
+      return a_idx < b_idx;
+    }
+    return false;
+  };
+
+  auto is_prerequisite_dep = [&](const Task::Dependency *a, const Task::Dependency *b)->bool {
+    while (a) {
+      while (b) {
+        if (is_prerequisite(a,b)) return true;
+        b = b->next;
+      }
+      a = a->next;
+    }
+    return false;
+  };
+
+  auto is_prerequisite_task = [&](const Task * a, const Task * b)->bool {
+
+    const bool a_computes_b_computes = is_prerequisite_dep( a->getComputes(), b->getComputes() );
+    const bool a_computes_b_modifies = is_prerequisite_dep( a->getComputes(), b->getModifies() );
+    const bool a_computes_b_requires = is_prerequisite_dep( a->getComputes(), b->getRequires() );
+
+    const bool a_modifies_b_computes = is_prerequisite_dep( a->getModifies(), b->getComputes() );
+    const bool a_modifies_b_modifies = is_prerequisite_dep( a->getModifies(), b->getModifies() );
+    const bool a_modifies_b_requires = is_prerequisite_dep( a->getModifies(), b->getRequires() );
+
+    const bool a_requires_b_computes = is_prerequisite_dep( a->getRequires(), b->getComputes() );
+    const bool a_requires_b_modifies = is_prerequisite_dep( a->getRequires(), b->getModifies() );
+    const bool a_requires_b_requires = is_prerequisite_dep( a->getRequires(), b->getRequires() );
+
+    return a_computes_b_computes ||
+           a_computes_b_modifies ||
+           a_computes_b_requires ||
+           a_modifies_b_computes ||
+           a_modifies_b_modifies ||
+           a_modifies_b_requires ||
+           a_requires_b_computes ||
+           a_requires_b_modifies ||
+           a_requires_b_requires;
+  };
+
+  result_type result;
+
+  for (auto a : tasks) {
+  for (auto b : tasks) {
+    if (a == b) continue;
+
+    if (is_prerequisite_task( a, b)) {
+      if (is_prerequisite_task(b,a)) {
+        throw std::runtime_error("Circular dependency");
+      }
+      result.emplace_back(a->index(),b->index());
+    }
+  }}
+
+  return result;
 }
 
 
@@ -382,16 +389,150 @@ TaskGraph::createDetailedTasks(       bool            useInternalDeps
                               , const GridP         & oldGrid
                               )
 {
-   get_edges(m_tasks);
+  // set the index on each task
+  {
+    int i = 0;
+    for (auto task : m_tasks) {
+      task->set_index(i++);
+    }
+  }
 
-   std::abort();
+  auto is_sync_task = [](const Task * t)->bool {
+    const bool result = t->getType() == Task::Reduction || t->usesMPI() || t->getType() == Task::OncePerProc;
+    return result;
+  };
 
 
+  auto backward_edges = get_edges(m_tasks);
+
+  using edge_vector = decltype(backward_edges);
+  using pair_type = edge_vector::value_type;
 
 
-  std::vector<Task*> sorted_tasks = nullSort();
+  auto sort_by_second = []( edge_vector & edges ) {
+    auto compare_less = [](const pair_type & a, const pair_type &b)->bool {
+            return a.second < b.second ? true  :
+                   a.second > b.second ? false :
+                   a.first  < b.first;
+    };
+    std::sort( edges.begin(), edges.end(), compare_less );
+    auto itr = std::unique( edges.begin(), edges.end());
+    edges.erase(itr, edges.end());
+  };
 
-  m_reduction_tasks.clear();
+  sort_by_second( backward_edges );
+
+
+  using edge_iterator = edge_vector::const_iterator;
+  using range_type = std::pair< edge_iterator, edge_iterator >;
+
+  using pair_type = decltype(backward_edges)::value_type;
+
+  using range_vector = std::vector< range_type >;
+
+  auto get_backward_range = [this]( edge_vector const& edges )->range_vector {
+    range_vector backward_range;
+    backward_range.reserve( m_tasks.size() );
+
+    // get the edges for each task
+    for (const auto task : m_tasks) {
+      {
+        auto lower = std::lower_bound( edges.begin(), edges.end(), task->index()
+            , [](const pair_type & p, int i)->bool { return p.second < i; });
+        auto upper = std::upper_bound( lower, edges.end(), task->index()
+            , [](int i, const pair_type & p)->bool { return i < p.second; });
+        backward_range.emplace_back(lower, upper);
+      }
+    }
+    return backward_range;
+  };
+
+  auto backward_range = get_backward_range( backward_edges );
+
+
+  // order tasks -- neccessary to add fake edges between sync tasks
+  std::vector<Task *> sorted_tasks;
+  {
+    const size_t n = m_tasks.size();
+
+    std::vector<int> marked( n, 0);
+    size_t visited = 0;
+
+    std::vector<Task *> tasks( m_tasks );
+
+    // stable sort by sync tasks
+    std::stable_sort( tasks.begin(), tasks.end(),
+               [&](const Task * a, const Task * b)->bool {
+                  return is_sync_task(a) < is_sync_task(b);
+               }
+             );
+
+    // push back all empty ranges
+    for (auto task : tasks) {
+      const int i = task->index();
+      const auto & r = backward_range[i];
+      if (r.second - r.first == 0) {
+        sorted_tasks.push_back( task );
+        task->setSortedOrder(visited++);
+        marked[i] = true;
+      }
+    }
+    while (visited < n) {
+      for (auto task : tasks) {
+        const int i = task->index();
+        if (marked[i]) continue;
+        bool parents_marked = true;
+        for ( range_type r = backward_range[i]; parents_marked && r.first != r.second; ++r.first ) {
+          const auto & edge = *r.first;
+          parents_marked = marked[edge.first];
+        }
+        if (parents_marked) {
+          sorted_tasks.push_back( task );
+          task->setSortedOrder(visited++);
+          marked[i] = true;
+        }
+      }
+    }
+  }
+
+  // create fake edges between sync tasks
+  {
+    auto first = std::find_if( sorted_tasks.begin(), sorted_tasks.end(), is_sync_task );
+    if (first != sorted_tasks.end()) {
+      auto second = std::find_if( first+1, sorted_tasks.end(), is_sync_task );
+      while (second != sorted_tasks.end()) {
+        backward_edges.emplace_back( (*first)->index(), (*second)->index() );
+        first = second;
+        second = std::find_if( first+1, sorted_tasks.end(), is_sync_task );
+      }
+    }
+  }
+
+  // re-sort
+  sort_by_second( backward_edges );
+
+  // recompute the ranges for each task
+  backward_range = get_backward_range( backward_edges );
+
+  std::cout << std::endl;
+  std::cout << std::endl;
+  std::cout << "MODIFIED Backward Ranges: " << std::endl;
+  // print ranges
+  for (const auto task : sorted_tasks) {
+    std::cout << task->getSortedOrder() << ": " << task->getName()
+              << ",  IS_SYNC? " << is_sync_task(task)
+              << std::endl;
+    for (range_type r = backward_range[task->index()]; r.first != r.second; ++r.first) {
+      auto edge = *r.first;
+      auto ptask = m_tasks[edge.first];
+      std::cout << "  <--- " << ptask->getSortedOrder() << ": " << ptask->getName()
+                << ",  IS_SYNC? " << is_sync_task(ptask)
+                << std::endl;
+    }
+  }
+  std::cout << std::endl;
+  std::cout << std::endl;
+
 
   ASSERT(grid != 0);
   m_load_balancer->createNeighborhood(grid, oldGrid);
@@ -399,9 +540,10 @@ TaskGraph::createDetailedTasks(       bool            useInternalDeps
   const std::set<int> neighborhood_procs = m_load_balancer->getNeighborhoodProcessors();
   m_detailed_tasks = new DetailedTasks(m_sched, m_proc_group, first, this, neighborhood_procs, useInternalDeps);
 
-  for (int i = 0; i < (int)sorted_tasks.size(); i++) {
+  std::vector< std::vector<DetailedTask * > > dtasks( m_tasks.size() );
 
-    Task* task = sorted_tasks[i];
+  for (auto task : sorted_tasks ) {
+    const int i = task->index();
     const PatchSet* ps = task->getPatchSet();
     const MaterialSet* ms = task->getMaterialSet();
     if (ps && ms) {
@@ -412,7 +554,7 @@ TaskGraph::createDetailedTasks(       bool            useInternalDeps
           const PatchSubset* pss = ps->getSubset(*p);
           for (int m = 0; m < ms->size(); m++) {
             const MaterialSubset* mss = ms->getSubset(m);
-            createDetailedTask(task, pss, mss);
+            dtasks[i].push_back(createDetailedTask(task, pss, mss));
           }
         }
       } else if (task->getType() == Task::Output) {
@@ -426,7 +568,7 @@ TaskGraph::createDetailedTasks(       bool            useInternalDeps
         if (pss->size() > 0) {
           for (int m = 0; m < ms->size(); m++) {
             const MaterialSubset* mss = ms->getSubset(m);
-            createDetailedTask(task, pss, mss);
+            dtasks[i].push_back(createDetailedTask(task, pss, mss));
           }
         }
 
@@ -437,13 +579,13 @@ TaskGraph::createDetailedTasks(       bool            useInternalDeps
           if (m_load_balancer->inNeighborhood(pss) && pss->size() > 0) {
             for (int m = 0; m < ms->size(); m++) {
               const MaterialSubset* mss = ms->getSubset(m);
-              createDetailedTask(task, pss, mss);
+              dtasks[i].push_back(createDetailedTask(task, pss, mss));
             }
           }
         }
       }
     } else if (!ps && !ms) {
-      createDetailedTask(task, 0, 0);
+      dtasks[i].push_back(createDetailedTask(task, 0, 0));
     } else if (!ps) {
       SCI_THROW(InternalError("Task has MaterialSet, but no PatchSet", __FILE__, __LINE__));
     } else {
@@ -451,19 +593,45 @@ TaskGraph::createDetailedTasks(       bool            useInternalDeps
     }
   }
 
-// this can happen if a processor has no patches (which may happen at the beginning of some AMR runs)
-//  if(dts_->numTasks() == 0)
-//    cerr << "WARNING: Compiling scheduler with no tasks\n";
+  // this can happen if a processor has no patches (which may happen at the beginning of some AMR runs)
+  //  if(dts_->numTasks() == 0)
+  //    cerr << "WARNING: Compiling scheduler with no tasks\n";
 
   m_load_balancer->assignResources(*m_detailed_tasks);
 
   // use this, even on a single processor, if for nothing else than to get scrub counts
-  bool doDetailed = Parallel::usingMPI() || useInternalDeps || grid->numLevels() > 1;
+  bool doDetailed = true;
   if (doDetailed) {
     createDetailedDependencies();
     if (m_detailed_tasks->getExtraCommunication() > 0 && m_proc_group->myrank() == 0) {
       std::cout << m_proc_group->myrank() << "  Warning: Extra communication.  This taskgraph on this rank overcommunicates about "
-                << m_detailed_tasks->getExtraCommunication() << " cells\n";
+        << m_detailed_tasks->getExtraCommunication() << " cells\n";
+    }
+  }
+
+  // TODO Fix logic
+  // add internal dependencies to force correct ordering of computes, modifies, requires, and sync tasks
+  for (auto task : m_tasks) {
+    const int i = task->index();
+    // get the backward edges for the current task
+    for (range_type r = backward_range[i]; r.first != r.second; ++r.first) {
+      // r is a pair< edge_iterator, edge_iterator >
+      const int j = r.first->first;
+      if (i == j ) continue;
+      // for (auto child : dtasks[i]) {
+        // for (auto parent : dtasks[j]) {
+         // auto itr = parent->m_internal_dependents.find(child);
+         // if ( itr != parent->m_internal_dependents.end() ) {
+            //std::cout << "ADD parent " << parent->getName() << std::endl;
+            //std::cout << "ADD child  " << child->getName() << std::endl;
+            //std::cout << std::endl;
+
+            //child->m_internal_dependencies.emplace_back( parent, child, nullptr, 0 );
+            //parent->m_internal_dependents[child] = &child->m_internal_dependencies.back();
+            //child->m_num_pending_internal_dependencies.fetch_add(1, std::memory_order_relaxed);
+         // } else { std::cout << "Already exists" << std::endl; }
+       // }
+     // }
     }
   }
 
@@ -473,11 +641,6 @@ TaskGraph::createDetailedTasks(       bool            useInternalDeps
 
   m_detailed_tasks->computeLocalTasks(m_proc_group->myrank());
   m_detailed_tasks->makeDWKeyDatabase();
-
-  if (!doDetailed) {
-    // the createDetailedDependencies will take care of scrub counts, otherwise do it here.
-    m_detailed_tasks->createScrubCounts();
-  }
 
   return m_detailed_tasks;
 } // end TaskGraph::createDetailedTasks
@@ -738,15 +901,12 @@ CompTable::findReductionComps(       Task::Dependency           * req
 void
 TaskGraph::createDetailedDependencies()
 {
+  // TODO this logic needs to change to use the task graph
+
   // Collect all of the computes
   CompTable ct;
   for (int i = 0; i < m_detailed_tasks->numTasks(); i++) {
     DetailedTask* task = m_detailed_tasks->getTask(i);
-
-    if (detaileddbg.active()) {
-      detaileddbg << m_proc_group->myrank() << " createDetailedDependencies (collect comps) for:\n";
-      task->m_task->displayAll(detaileddbg);
-    }
 
     remembercomps(task, task->m_task->getComputes(), ct);
     remembercomps(task, task->m_task->getModifies(), ct);
@@ -759,14 +919,11 @@ TaskGraph::createDetailedDependencies()
   for (int i = 0; i < m_detailed_tasks->numTasks(); i++) {
     DetailedTask* task = m_detailed_tasks->getTask(i);
     task->m_task->d_phase = currphase;
-    if (tgphasedbg.active()) {
-      tgphasedbg << "Rank-" << m_proc_group->myrank() << " Task: " << *task << " phase: " << currphase << "\n";
-    }
     if (task->m_task->getType() == Task::Reduction) {
       task->m_task->d_comm = currcomm;
       currcomm++;
       currphase++;
-    } else if (task->m_task->usesMPI()) {
+    } else if (task->m_task->usesMPI() || task->m_task->getType() == Task::OncePerProc) {
       currphase++;
     }
   }
@@ -777,21 +934,9 @@ TaskGraph::createDetailedDependencies()
   for (int i = 0; i < m_detailed_tasks->numTasks(); i++) {
     DetailedTask* task = m_detailed_tasks->getTask(i);
 
-    if (detaileddbg.active() && (task->m_task->getRequires() != 0)) {
-      detaileddbg << m_proc_group->myrank() << " Looking at requires of detailed task: " << *task << "\n";
-    }
-
     createDetailedDependencies(task, task->m_task->getRequires(), ct, false);
 
-    if (detaileddbg.active() && (task->m_task->getModifies() != 0)) {
-      detaileddbg << m_proc_group->myrank() << " Looking at modifies of detailed task: " << *task << "\n";
-    }
-
     createDetailedDependencies(task, task->m_task->getModifies(), ct, true);
-  }
-
-  if (detaileddbg.active()) {
-    detaileddbg << m_proc_group->myrank() << " Done creating detailed tasks\n";
   }
 }
 
@@ -909,7 +1054,7 @@ TaskGraph::createDetailedDependencies( DetailedTask     * task
 {
   int me = m_proc_group->myrank();
 
-  for (; req != 0; req = req->next) {
+  for (; req != nullptr; req = req->next) {
 
     //if(req->var->typeDescription()->isReductionVariable())
     //  continue;
@@ -918,14 +1063,10 @@ TaskGraph::createDetailedDependencies( DetailedTask     * task
       continue;
     }
 
-    if (detaileddbg.active()) {
-      detaileddbg << m_proc_group->myrank() << "  req: " << *req << "\n";
-    }
-
     constHandle<PatchSubset> patches = req->getPatchesUnderDomain(task->m_patches);
     if (req->var->typeDescription()->isReductionVariable() && m_sched->isNewDW(req->mapDataWarehouse())) {
       // make sure newdw reduction variable requires link up to the reduction tasks.
-      patches = 0;
+      patches = nullptr;
     }
     constHandle<MaterialSubset> matls = req->getMaterialsUnderDomain(task->m_matls);
 
@@ -933,7 +1074,7 @@ TaskGraph::createDetailedDependencies( DetailedTask     * task
     // level's data.  Otherwise, we have to use the entire set of patches (and ghost patches if
     // applicable) that lay above/beneath this patch.
 
-    const Patch* origPatch = 0;
+    const Patch* origPatch = nullptr;
     IntVector otherLevelLow, otherLevelHigh;
     if (req->patches_dom == Task::CoarseLevel || req->patches_dom == Task::FineLevel) {
       // the requires should have been done with Task::CoarseLevel or FineLevel, with null patches
@@ -1244,8 +1385,6 @@ TaskGraph::createDetailedDependencies( DetailedTask     * task
           DetailedTask* creator = creators[i];
           if (task->getAssignedResourceIndex() == creator->getAssignedResourceIndex() && task->getAssignedResourceIndex() == me) {
             task->addInternalDependency(creator, req->var);
-            detaileddbg << m_proc_group->myrank() << "   Created reduction dependency between " << *task << " and " << *creator
-                        << "\n";
           }
         }
       }

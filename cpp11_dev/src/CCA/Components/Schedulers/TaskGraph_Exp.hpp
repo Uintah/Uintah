@@ -269,7 +269,7 @@ class TaskGraph {
 
     /// Makes a DetailedTask from task with given PatchSubset and
     /// MaterialSubset.
-    void createDetailedTask(       Task           * task
+    DetailedTask * createDetailedTask(       Task           * task
                            , const PatchSubset    * patches
                            , const MaterialSubset * matls
                            );

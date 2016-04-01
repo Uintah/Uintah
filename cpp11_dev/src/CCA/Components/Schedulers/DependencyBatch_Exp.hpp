@@ -106,7 +106,9 @@ struct InternalDependency {
   , m_dependent_task{dependentTask}
   , m_satisfied_generation{satisfiedGeneration}
   {
-    addVarLabel(var);
+    if (var) {
+      addVarLabel(var);
+    }
   }
 
   void addVarLabel( const VarLabel* var ) { m_var_labels.insert(var); }

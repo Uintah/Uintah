@@ -308,7 +308,7 @@ void ThreadedTaskScheduler::execute(  int tgnum /*=0*/ , int iteration /*=0*/ )
   for (int i = 0; i < m_num_tasks; ++i) {
     DetailedTask* dtask = m_detailed_tasks->localTask(i);
     // save the reduction task and once per proc task for later execution
-    if ((dtask->getTask()->getType() == Task::Reduction) || (dtask->getTask()->usesMPI())) {
+    if ((dtask->getTask()->getType() == Task::Reduction) || dtask->getTask()->usesMPI() || dtask->getTask()->getType() == Task::OncePerProc) {
       m_phase_sync_tasks[dtask->getTask()->d_phase] = dtask;
     } else {
       insert_handle = m_init_tasks.emplace(insert_handle, dtask);
@@ -351,7 +351,7 @@ void ThreadedTaskScheduler::execute(  int tgnum /*=0*/ , int iteration /*=0*/ )
         run_reduction_task(sync_task);
       }
       else {  // Task::OncePerProc task
-        ASSERT(sync_task->getTask()->usesMPI());
+        ASSERT(sync_task->getTask()->usesMPI() || sync_task->getTask()->getType() == Task::OncePerProc);
         post_MPI_recvs(sync_task, iteration);
         sync_task->markInitiated();
         ASSERT(sync_task->getExternalDepCount() == 0);
