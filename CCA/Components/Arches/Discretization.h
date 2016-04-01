@@ -83,7 +83,7 @@ class Discretization {
 
 public:
 
-  enum MOMCONV { UPWIND, WALLUPWIND, CENTRAL, OLD };
+  enum MOMCONV { UPWIND, WALLUPWIND, HYBRID, CENTRAL, OLD };
 
   Discretization(PhysicalConstants* physConst);
 
@@ -95,7 +95,10 @@ public:
                               CellInformation* cellinfo,
                               ArchesVariables* vars,
                               ArchesConstVariables* constvars, 
-                              constCCVariable<double> volFraction,
+                              constCCVariable<double>* volFraction,
+                              SFCXVariable<double>* conv_scheme_x,
+                              SFCYVariable<double>* conv_scheme_y,
+                              SFCZVariable<double>* conv_scheme_z,
                               MOMCONV scheme, double re_limit);
 
   template<class T>

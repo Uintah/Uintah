@@ -122,6 +122,8 @@ MomentumSolver::problemSetup(const ProblemSpecP& params)
     d_conv_scheme = Discretization::CENTRAL;
   } else if (conv_scheme == "wall_upwind") {
     d_conv_scheme = Discretization::WALLUPWIND;
+  } else if (conv_scheme == "hybrid") {
+    d_conv_scheme = Discretization::HYBRID;
   } else if (conv_scheme == "old_upwind"){
     d_conv_scheme = Discretization::OLD;
   } else if (conv_scheme == "old_central"){
@@ -541,6 +543,9 @@ MomentumSolver::sched_buildLinearMatrixVelHat(SchedulerP& sched,
   tsk->modifies(d_lab->d_uVelRhoHatLabel);
   tsk->modifies(d_lab->d_vVelRhoHatLabel);
   tsk->modifies(d_lab->d_wVelRhoHatLabel);
+  tsk->modifies(d_lab->d_conv_scheme_x_Label);
+  tsk->modifies(d_lab->d_conv_scheme_y_Label);
+  tsk->modifies(d_lab->d_conv_scheme_z_Label);
 
   // Adding new sources from factory:
   SourceTermFactory& factor = SourceTermFactory::self();
@@ -549,7 +554,7 @@ MomentumSolver::sched_buildLinearMatrixVelHat(SchedulerP& sched,
 
     SourceTermBase& src = factor.retrieve_source_term( *iter );
     const VarLabel* srcLabel = src.getSrcLabel();
-    tsk->requires(Task::NewDW, srcLabel, gn, 0);
+    tsk->requires(Task::NewDW, srcLabel, gac, 1);
   }
 
   sched->addTask(tsk, patches, matls);
@@ -705,6 +710,13 @@ MomentumSolver::buildLinearMatrixVelHat(const ProcessorGroup* pc,
     new_dw->getModifiable(velocityVars.uVelRhoHat, d_lab->d_uVelRhoHatLabel,indx, patch);
     new_dw->getModifiable(velocityVars.vVelRhoHat, d_lab->d_vVelRhoHatLabel,indx, patch);
     new_dw->getModifiable(velocityVars.wVelRhoHat, d_lab->d_wVelRhoHatLabel,indx, patch);
+    
+    SFCXVariable<double> conv_scheme_x;
+    new_dw->getModifiable(conv_scheme_x, d_lab->d_conv_scheme_x_Label, indx, patch);
+    SFCYVariable<double> conv_scheme_y;
+    new_dw->getModifiable(conv_scheme_y, d_lab->d_conv_scheme_y_Label, indx, patch);
+    SFCZVariable<double> conv_scheme_z;
+    new_dw->getModifiable(conv_scheme_z, d_lab->d_conv_scheme_z_Label, indx, patch);
 
     //This copy is needed for BCs that are reapplied using the
     //extra cell value.
@@ -725,7 +737,7 @@ MomentumSolver::buildLinearMatrixVelHat(const ProcessorGroup* pc,
     d_discretize->calculateVelocityCoeff( patch,
                                           delta_t, d_central,
                                           cellinfo, &velocityVars,
-                                          &constVelocityVars, volFraction, d_conv_scheme,
+                                          &constVelocityVars, &volFraction, &conv_scheme_x, &conv_scheme_y, &conv_scheme_z, d_conv_scheme,
                                           d_re_limit );
 
     //  //__________________________________
@@ -892,7 +904,7 @@ MomentumSolver::buildLinearMatrixVelHat(const ProcessorGroup* pc,
 
       switch (src_type) {
         case SourceTermBase::CCVECTOR_SRC:
-          { new_dw->get( velocityVars.otherVectorSource, srcLabel, indx, patch, Ghost::None, 0);
+          { new_dw->get( velocityVars.otherVectorSource, srcLabel, indx, patch, Ghost::AroundCells, 1);
           Vector Dx  = patch->dCell();
           double vol = Dx.x()*Dx.y()*Dx.z();
 
