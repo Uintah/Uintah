@@ -237,17 +237,29 @@ struct SimpleDependency
     Requires,
   };
 
+  friend std::ostream & operator<<(std::ostream & out, Type const & t)
+  {
+         if (t == Computes) out << "Computes";
+    else if (t == Modifies) out << "Modifies";
+    else                    out << "Requires";
+
+    return out;
+  }
+
   Type                   m_type{};
   int                    m_idx{-1};
   const VarLabel       * m_var{nullptr};
   int                    m_level{-1};
+  int                    m_dw{-1};
   std::vector<int>       m_materials{};
+
 
   SimpleDependency( const Task::Dependency * dep )
     : m_type{ dep->deptype == Task::Requires ? Requires :
               dep->deptype == Task::Modifies ? Modifies : Computes}
     , m_idx{ dep->task->index() }
     , m_var{ dep->var }
+    , m_dw{ dep->whichdw }
     , m_level{ dep->reductionLevel ? dep->reductionLevel->getIndex() : -1 }
   {
     // get the materials
@@ -297,6 +309,8 @@ struct SimpleDependency
 
   bool is_prerequisite( SimpleDependency const & rhs ) const
   {
+    if (m_dw != Task::NewDW || rhs.m_dw != Task::NewDW) return false;
+
     // not same variable
     if (m_var != rhs.m_var) return false;
 
@@ -330,13 +344,14 @@ struct SimpleDependency
 std::vector< std::pair<int,int> >
 get_edges( std::vector<Task *> const & tasks )
 {
-  using result_type = std::vector< std::pair<int,int> >;
 
   using DependencyVector = std::vector< SimpleDependency >;
 
-  auto filter_dependencies = [](DependencyVector & vec) {
+  auto filter_dependencies = [&tasks](DependencyVector & vec) {
     auto compare = []( const SimpleDependency & a, const SimpleDependency &b )->bool {
-      return a.m_idx < b.m_idx ? true  :
+      return a.m_dw < b.m_dw ? true  :
+             a.m_dw > b.m_dw ? false :
+             a.m_idx < b.m_idx ? true  :
              a.m_idx > b.m_idx ? false :
              a.m_var < b.m_var ? true  :
              a.m_var > b.m_var ? false :
@@ -348,6 +363,19 @@ get_edges( std::vector<Task *> const & tasks )
       return !compare(a,b) && !compare(b,a);
     };
     std::sort( vec.begin(), vec.end(), compare );
+
+    if (!vec.empty()) {
+      std::cout << "\nBEFORE UNIQUE" << std::endl;
+      std::cout << "Task: " << tasks[vec.front().m_idx]->getName() << std::endl;
+      for (auto const& d : vec ) {
+        std::cout << "  :  " << d.m_type
+                  << "    " << d.m_var->getName()
+                  << "  :  " << d.m_level
+                  << "  :  " << d.m_dw
+                  << std::endl;
+      }
+    }
+
     auto end_itr = std::unique( vec.begin(), vec.end(), compare_equal);
     std::sort( end_itr, vec.end(), compare );
 
@@ -378,6 +406,18 @@ get_edges( std::vector<Task *> const & tasks )
       }
     }
     vec.erase(end_itr, vec.end());
+    if (!vec.empty()) {
+      std::cout << "AFTER UNIQUE" << std::endl;
+      std::cout << "Task: " << tasks[vec.front().m_idx]->getName() << std::endl;
+      for (auto const& d : vec ) {
+        std::cout << "  :  " << d.m_type
+                  << "    " << d.m_var->getName()
+                  << "  :  " << d.m_level
+                  << "  :  " << d.m_dw
+                  << std::endl;
+      }
+    }
+
   };
 
   auto get_dependencies = [&filter_dependencies](Task * t)->DependencyVector {
@@ -403,10 +443,16 @@ get_edges( std::vector<Task *> const & tasks )
     return vec;
   };
 
+  // get the dependencies for each task
+  std::vector< DependencyVector > dependencies(tasks.size());
+  for (auto task : tasks) {
+    dependencies[task->index()] = get_dependencies(task);
+  }
+
   auto is_prerequisite_task = [&](Task * a, Task * b)->bool {
 
-    const auto a_dependencies = get_dependencies(a);
-    const auto b_dependencies = get_dependencies(b);
+    const auto & a_dependencies = dependencies[a->index()];
+    const auto & b_dependencies = dependencies[b->index()];
 
     for (auto a_dep : a_dependencies) {
     for (auto b_dep : b_dependencies) {
@@ -416,6 +462,7 @@ get_edges( std::vector<Task *> const & tasks )
     return false;
   };
 
+  using result_type = std::vector< std::pair<int,int> >;
   result_type result;
 
   for (auto a : tasks) {
@@ -429,6 +476,13 @@ get_edges( std::vector<Task *> const & tasks )
       result.emplace_back(a->index(),b->index());
     }
   }}
+
+  std::cout << std::endl;
+  for (auto const & edge : result) {
+    std::cout << "EDGE:" << std::endl
+              << "      " << tasks[edge.first]->getName() << std::endl
+              << " ---> " << tasks[edge.second]->getName() << std::endl;
+  }
 
   return result;
 }

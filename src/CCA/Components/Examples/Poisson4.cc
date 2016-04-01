@@ -111,7 +111,7 @@ void Poisson4::scheduleTimeAdvance0(SchedulerP& sched,
                                     const PatchSet* patches,
                                     const MaterialSet* matls)
 {
-  Task* task = new Task("Poisson4::timeAdvance",
+  Task* task = new Task("Poisson4::timeAdvance0",
                      this, &Poisson4::timeAdvance);
 
   task->requires(Task::OldDW, phi_label, Ghost::AroundNodes, 1);
@@ -126,7 +126,7 @@ void Poisson4::scheduleTimeAdvance1(SchedulerP& sched,
                                     const PatchSet* patches,
                                     const MaterialSet* matls)
 {
-  Task* task = new Task("Poisson4::timeAdvance",
+  Task* task = new Task("Poisson4::timeAdvance1",
                      this, &Poisson4::timeAdvance1);
 
   //  task->requires(Task::NewDW, phi_label, Ghost::AroundNodes, 1);
