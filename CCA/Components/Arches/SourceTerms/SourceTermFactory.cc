@@ -6,6 +6,7 @@
 #include <CCA/Components/Arches/SourceTerms/CoalGasDevol.h>
 #include <CCA/Components/Arches/SourceTerms/CoalGasDevolMom.h>
 #include <CCA/Components/Arches/SourceTerms/CoalGasOxi.h>
+#include <CCA/Components/Arches/SourceTerms/CoalGasOxiMom.h>
 #include <CCA/Components/Arches/SourceTerms/CoalGasHeat.h>
 #include <CCA/Components/Arches/SourceTerms/CoalGasMomentum.h>
 #include <CCA/Components/Arches/SourceTerms/WestbrookDryer.h>
@@ -247,6 +248,11 @@ void SourceTermFactory::registerUDSources(ProblemSpecP& db, ArchesLabel* lab, Bo
       } else if (src_type == "coal_gas_oxi"){
         // Sums up the devol. model terms * weights
         SourceTermBase::Builder* src_builder = scinew CoalGasOxi::Builder(src_name, required_varLabels, shared_state);
+        factory.register_source_term( src_name, src_builder );
+      
+      } else if (src_type == "coal_gas_oxi_mom"){
+        // Sums up the devol. model terms * weights
+        SourceTermBase::Builder* src_builder = scinew CoalGasOxiMom::Builder(src_name, required_varLabels, lab, shared_state);
         factory.register_source_term( src_name, src_builder );
 
       } else if (src_type == "coal_gas_heat"){

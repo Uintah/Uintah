@@ -8,6 +8,7 @@ SRCS += \
 				$(SRCDIR)/CoalGasDevol.cc \
 				$(SRCDIR)/CoalGasDevolMom.cc \
 				$(SRCDIR)/CoalGasOxi.cc \
+				$(SRCDIR)/CoalGasOxiMom.cc \
 				$(SRCDIR)/CoalGasHeat.cc \
 				$(SRCDIR)/ConstSrcTerm.cc \
 				$(SRCDIR)/UnweightedSrcTerm.cc \
