@@ -213,65 +213,69 @@ namespace Uintah {
         //__________________________________
         // Setup grid
         HYPRE_StructGrid grid;
-        HYPRE_StructGridCreate(pg->getComm(), 3, &grid);
-        
-        for(int p=0;p<patches->size();p++){
-          const Patch* patch = patches->get(p);
-          Patch::VariableBasis basis = Patch::translateTypeToBasis(sol_type::getTypeDescription()->getType(), true);
-
-          IntVector l,h1;
-          if(params->getSolveOnExtraCells()) {
-            l  = patch->getExtraLowIndex(basis, IntVector(0,0,0));
-            h1 = patch->getExtraHighIndex(basis, IntVector(0,0,0))-IntVector(1,1,1);
-          } else {
-            l = patch->getLowIndex(basis);
-            h1 = patch->getHighIndex(basis)-IntVector(1,1,1);
+        if (timestep == 1 || do_setup || restart) {
+          HYPRE_StructGridCreate(pg->getComm(), 3, &grid);
+          
+          for(int p=0;p<patches->size();p++){
+            const Patch* patch = patches->get(p);
+            Patch::VariableBasis basis = Patch::translateTypeToBasis(sol_type::getTypeDescription()->getType(), true);
+            
+            IntVector l,h1;
+            if(params->getSolveOnExtraCells()) {
+              l  = patch->getExtraLowIndex(basis, IntVector(0,0,0));
+              h1 = patch->getExtraHighIndex(basis, IntVector(0,0,0))-IntVector(1,1,1);
+            } else {
+              l = patch->getLowIndex(basis);
+              h1 = patch->getHighIndex(basis)-IntVector(1,1,1);
+            }
+            
+            HYPRE_StructGridSetExtents(grid, l.get_pointer(), h1.get_pointer());
           }
           
-          HYPRE_StructGridSetExtents(grid, l.get_pointer(), h1.get_pointer());
+          // Periodic boundaries
+          const Level* level = getLevel(patches);
+          IntVector periodic_vector = level->getPeriodicBoundaries();
+          
+          IntVector low, high;
+          level->findCellIndexRange(low, high);
+          IntVector range = high-low;
+          
+          int periodic[3];
+          periodic[0] = periodic_vector.x() * range.x();
+          periodic[1] = periodic_vector.y() * range.y();
+          periodic[2] = periodic_vector.z() * range.z();
+          HYPRE_StructGridSetPeriodic(grid, periodic);
+          
+          // Assemble the grid
+          HYPRE_StructGridAssemble(grid);
         }
-        
-        // Periodic boundaries
-        const Level* level = getLevel(patches);
-        IntVector periodic_vector = level->getPeriodicBoundaries();
-        
-        IntVector low, high;
-        level->findCellIndexRange(low, high);
-        IntVector range = high-low;
-        
-        int periodic[3];
-        periodic[0] = periodic_vector.x() * range.x();
-        periodic[1] = periodic_vector.y() * range.y();
-        periodic[2] = periodic_vector.z() * range.z();
-        HYPRE_StructGridSetPeriodic(grid, periodic);
-        
-        // Assemble the grid
-        HYPRE_StructGridAssemble(grid);
 
         //__________________________________
         // Create the stencil
         HYPRE_StructStencil stencil;
-        if(params->getSymmetric()){
-          
-          HYPRE_StructStencilCreate(3, 4, &stencil);
-          int offsets[4][3] = {{0,0,0},
-                               {-1,0,0},
-                               {0,-1,0},
-                               {0,0,-1}};
-          for(int i=0;i<4;i++) {
-            HYPRE_StructStencilSetElement(stencil, i, offsets[i]);
-          }
-          
-        } else {
-          
-          HYPRE_StructStencilCreate(3, 7, &stencil);
-          int offsets[7][3] = {{0,0,0},
-                               {1,0,0}, {-1,0,0},
-                               {0,1,0}, {0,-1,0},
-                               {0,0,1}, {0,0,-1}};
-                               
-          for(int i=0;i<7;i++){
-            HYPRE_StructStencilSetElement(stencil, i, offsets[i]);
+        if ( timestep == 1 || do_setup || restart) {
+          if(params->getSymmetric()){
+            
+            HYPRE_StructStencilCreate(3, 4, &stencil);
+            int offsets[4][3] = {{0,0,0},
+              {-1,0,0},
+              {0,-1,0},
+              {0,0,-1}};
+            for(int i=0;i<4;i++) {
+              HYPRE_StructStencilSetElement(stencil, i, offsets[i]);
+            }
+            
+          } else {
+            
+            HYPRE_StructStencilCreate(3, 7, &stencil);
+            int offsets[7][3] = {{0,0,0},
+              {1,0,0}, {-1,0,0},
+              {0,1,0}, {0,-1,0},
+              {0,0,1}, {0,0,-1}};
+            
+            for(int i=0;i<7;i++){
+              HYPRE_StructStencilSetElement(stencil, i, offsets[i]);
+            }
           }
         }
 
@@ -303,7 +307,7 @@ namespace Uintah {
 #endif
         // setup the coefficient matrix ONLY on the first timestep, if we are doing a restart, or if we set setupFrequency != 0, or if UpdateCoefFrequency != 0
         if (timestep == 1 || restart || do_setup || updateCoefs) {
-          for(int p=0;p<patches->size();p++){
+          for(int p=0;p<patches->size();p++) {
             const Patch* patch = patches->get(p);
             printTask( patches, patch, cout_doing, "HypreSolver:solve: Create Matrix" );
             //__________________________________
@@ -1003,8 +1007,10 @@ namespace Uintah {
         HYPRE_StructVectorDestroy(HB);
         HYPRE_StructVectorDestroy(HX);
 #endif
-        HYPRE_StructStencilDestroy(stencil);
-        HYPRE_StructGridDestroy(grid);
+        if ( timestep == 1 || do_setup || restart) {
+          HYPRE_StructStencilDestroy(stencil);
+          HYPRE_StructGridDestroy(grid);
+        }
 
         double dt=Time::currentSeconds()-tstart;
         if(pg->myrank() == 0){
@@ -1015,7 +1021,7 @@ namespace Uintah {
                << " s (solve only: " << solve_dt << " s, ";
           if (timestep > 2) {
             // alpha = 2/(N+1)
-            // averaging window is 10.
+            // averaging window is 10 timesteps.
             double alpha = 2.0/(std::min(timestep - 2, 10) + 1);
             movingAverage_ = alpha*solve_dt + (1-alpha)*movingAverage_;
             cout << "mean: " <<  movingAverage_ << " s, ";

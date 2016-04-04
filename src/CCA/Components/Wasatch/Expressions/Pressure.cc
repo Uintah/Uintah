@@ -190,8 +190,6 @@ Pressure::bind_uintah_vars( Uintah::DataWarehouse* const dw,
   rkStage_ = RKStage;
 
   if( didAllocateMatrix_ ){
-    // Todd: instead of checking for allocation - check for new timestep or some other ingenious solution
-    // check for transferfrom - transfer matrix from old to new DW
     if (RKStage==1 ) dw->put( matrix_, matrixLabel_, materialID_, patch );
     else             dw->getModifiable( matrix_, matrixLabel_, materialID_, patch );
   }
