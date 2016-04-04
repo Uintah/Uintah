@@ -1286,6 +1286,7 @@
                                         attribute2="type REQUIRED STRING  'constant_src,
                                                                            westbrook_dryer,
                                                                            coal_gas_oxi,
+                                                                           coal_gas_oxi_mom,
                                                                            coal_gas_heat,
                                                                            coal_gas_devol,
                                                                            coal_gas_devol_mom,
