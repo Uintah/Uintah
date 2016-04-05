@@ -17,12 +17,7 @@
 
 #include <CCA/Components/Arches/FunctorSwitch.h>
 
-#ifdef USE_FUNCTOR
-#  include <Core/Grid/Variables/BlockRange.h>
-#  ifdef UINTAH_ENABLE_KOKKOS
-#    include <Kokkos_Core.hpp>
-#  endif //UINTAH_ENABLE_KOKKOS
-#endif
+#include <Core/Grid/Variables/BlockRange.h>
 
 using namespace std;
 using namespace Uintah; 
@@ -91,30 +86,25 @@ CoalGasOxiMom::sched_computeSource( const LevelP& level, SchedulerP& sched, int 
   sched->addTask(tsk, level->eachPatch(), _shared_state->allArchesMaterials()); 
 
 }
-struct sumCharOxyGasSource{
-       sumCharOxyGasSource(constCCVariable<double>& _qn_gas_oxi,
-                           CCVariable<double>& _oxiSrc) :
-#ifdef UINTAH_ENABLE_KOKKOS
-                           qn_gas_oxi(_qn_gas_oxi.getKokkosView()),
-                           oxiSrc(_oxiSrc.getKokkosView())
-#else
+struct sumCharOxyGasSourceMom{
+       sumCharOxyGasSourceMom(constCCVariable<double>& _qn_gas_oxi,
+                           constCCVariable<Vector> &_part_vel,
+                           CCVariable<Vector>& _oxiSrc) :
                            qn_gas_oxi(_qn_gas_oxi),
+                           part_vel(_part_vel),
                            oxiSrc(_oxiSrc)
-#endif
                            {  }
 
   void operator()(int i , int j, int k ) const { 
-   oxiSrc(i,j,k) += qn_gas_oxi(i,j,k); // All the work is performed in Char Oxidation model
+   Vector part_vel_t = part_vel(i,j,k); 
+   oxiSrc(i,j,k) += Vector(qn_gas_oxi(i,j,k)*part_vel_t.x(),qn_gas_oxi(i,j,k)*part_vel_t.y(),qn_gas_oxi(i,j,k)*part_vel_t.z()); 
   }
 
   private:
-#ifdef UINTAH_ENABLE_KOKKOS
-   KokkosView3<const double> qn_gas_oxi; 
-   KokkosView3<double>  oxiSrc; 
-#else
    constCCVariable<double>& qn_gas_oxi;
-   CCVariable<double>& oxiSrc; 
-#endif
+   constCCVariable<Vector>& part_vel;
+   Vector part_vel_t;
+   CCVariable<Vector>& oxiSrc; 
 
 
 };
@@ -132,8 +122,6 @@ CoalGasOxiMom::computeSource( const ProcessorGroup* pc,
   //patch loop
   for (int p=0; p < patches->size(); p++){
 
-    //Ghost::GhostType  gaf = Ghost::AroundFaces;
-    //Ghost::GhostType  gac = Ghost::AroundCells;
     Ghost::GhostType  gn  = Ghost::None;
 
     const Patch* patch = patches->get(p);
@@ -172,21 +160,11 @@ CoalGasOxiMom::computeSource( const ProcessorGroup* pc,
       ArchesLabel::PartVelMap::const_iterator iter = _field_labels->partVel.find(iqn);
       new_dw->get(partVel, iter->second, matlIndex, patch, gn, 0);
       
-#ifdef USE_FUNCTOR
       Uintah::BlockRange range(patch->getCellLowIndex(),patch->getCellHighIndex());
 
-      sumCharOxyGasSource doSumOxyGas(qn_gas_oxi, 
-                                      oxiSrc);
+      sumCharOxyGasSourceMom doSumOxyGasMom(qn_gas_oxi, partVel, oxiSrc);
 
-      Uintah::parallel_for(range, doSumOxyGas);
-#else
-      for (CellIterator iter=patch->getCellIterator(); !iter.done(); iter++){
-        IntVector c = *iter;
-        Vector part_vel = partVel[c]; 
-        momentum_oxi_tmp = Vector(part_vel.x()*qn_gas_oxi[c],part_vel.y()*qn_gas_oxi[c],part_vel.z()*qn_gas_oxi[c]);
-        oxiSrc[c] += momentum_oxi_tmp;
-      }
-#endif
+      Uintah::parallel_for(range, doSumOxyGasMom);
     }
   }
 }

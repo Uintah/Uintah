@@ -15,12 +15,7 @@
 
 #include <CCA/Components/Arches/FunctorSwitch.h>
 
-#ifdef USE_FUNCTOR
-#  include <Core/Grid/Variables/BlockRange.h>
-#  ifdef UINTAH_ENABLE_KOKKOS
-#    include <Kokkos_Core.hpp>
-#  endif //UINTAH_ENABLE_KOKKOS
-#endif
+#include <Core/Grid/Variables/BlockRange.h>
 
 using namespace std;
 using namespace Uintah; 
@@ -89,30 +84,25 @@ CoalGasDevolMom::sched_computeSource( const LevelP& level, SchedulerP& sched, in
   sched->addTask(tsk, level->eachPatch(), _shared_state->allArchesMaterials()); 
 
 }
-struct sumDevolGasSource{
-       sumDevolGasSource(constCCVariable<double>& _qn_gas_devol,
-                           CCVariable<double>& _devolSrc) :
-#ifdef UINTAH_ENABLE_KOKKOS
-                           qn_gas_devol(_qn_gas_devol.getKokkosView()),
-                           devolSrc(_devolSrc.getKokkosView())
-#else
+struct sumDevolGasSourceMom{
+       sumDevolGasSourceMom(constCCVariable<double>& _qn_gas_devol,
+                           constCCVariable<Vector> &_part_vel,
+                           CCVariable<Vector>& _devolSrc) :
                            qn_gas_devol(_qn_gas_devol),
+                           part_vel(_part_vel),
                            devolSrc(_devolSrc)
-#endif
                            {  }
 
   void operator()(int i , int j, int k ) const { 
-   devolSrc(i,j,k) += qn_gas_devol(i,j,k); 
+   Vector part_vel_t = part_vel(i,j,k); 
+   devolSrc(i,j,k) += Vector(qn_gas_devol(i,j,k)*part_vel_t.x(),qn_gas_devol(i,j,k)*part_vel_t.y(),qn_gas_devol(i,j,k)*part_vel_t.z()); 
   }
 
   private:
-#ifdef UINTAH_ENABLE_KOKKOS
-   KokkosView3<const double> qn_gas_devol; 
-   KokkosView3<double>  devolSrc; 
-#else
    constCCVariable<double>& qn_gas_devol;
-   CCVariable<double>& devolSrc; 
-#endif
+   constCCVariable<Vector>& part_vel;
+   Vector part_vel_t;
+   CCVariable<Vector>& devolSrc; 
 
 
 };
@@ -130,8 +120,6 @@ CoalGasDevolMom::computeSource( const ProcessorGroup* pc,
   //patch loop
   for (int p=0; p < patches->size(); p++){
 
-    //Ghost::GhostType  gaf = Ghost::AroundFaces;
-    //Ghost::GhostType  gac = Ghost::AroundCells;
     Ghost::GhostType  gn  = Ghost::None;
 
     const Patch* patch = patches->get(p);
@@ -167,25 +155,14 @@ CoalGasDevolMom::computeSource( const ProcessorGroup* pc,
       const VarLabel* gasModelLabel = model.getGasSourceLabel(); 
  
       new_dw->get( qn_gas_devol, gasModelLabel, matlIndex, patch, gn, 0 );
-      
       ArchesLabel::PartVelMap::const_iterator iter = _field_labels->partVel.find(iqn);
       new_dw->get(partVel, iter->second, matlIndex, patch, gn, 0);
       
-#ifdef USE_FUNCTOR
       Uintah::BlockRange range(patch->getCellLowIndex(),patch->getCellHighIndex());
 
-      sumDevolGasSource doSumDevolGas(qn_gas_devol, 
-                                      devolSrc);
+      sumDevolGasSourceMom doSumDevolGasMom(qn_gas_devol, partVel, devolSrc);
 
-      Uintah::parallel_for(range, doSumDevolGas);
-#else
-      for (CellIterator iter=patch->getCellIterator(); !iter.done(); iter++){
-        IntVector c = *iter;
-        Vector part_vel = partVel[c]; 
-        momentum_devol_tmp = Vector(part_vel.x()*qn_gas_devol[c],part_vel.y()*qn_gas_devol[c],part_vel.z()*qn_gas_devol[c]);
-        devolSrc[c] += momentum_devol_tmp; 
-      }
-#endif
+      Uintah::parallel_for(range, doSumDevolGasMom);
     }
   }
 }
@@ -206,10 +183,10 @@ CoalGasDevolMom::sched_initialize( const LevelP& level, SchedulerP& sched )
 }
 void 
 CoalGasDevolMom::initialize( const ProcessorGroup* pc, 
-                          const PatchSubset* patches, 
-                          const MaterialSubset* matls, 
-                          DataWarehouse* old_dw, 
-                          DataWarehouse* new_dw )
+                        const PatchSubset* patches, 
+                        const MaterialSubset* matls, 
+                        DataWarehouse* old_dw, 
+                        DataWarehouse* new_dw )
 {
   //patch loop
   for (int p=0; p < patches->size(); p++){
