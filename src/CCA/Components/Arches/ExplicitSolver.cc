@@ -237,6 +237,8 @@ ExplicitSolver::problemSetup( const ProblemSpecP & params,
 
   commonProblemSetup( db_es );
 
+  d_archesLevelIndex = grid->numLevels()-1; // this is the finest level
+
   //------------------------------------------------------------------------------------------------
   //create a time integrator.
   d_timeIntegrator = scinew ExplicitTimeInt(d_lab);
@@ -812,6 +814,223 @@ ExplicitSolver::problemSetup( const ProblemSpecP & params,
 
 }
 
+//--------------------------------------------------------------------------------------------------
+void
+ExplicitSolver::computeTimestep(const LevelP& level, SchedulerP& sched)
+{
+  // primitive variable initialization
+  Task* tsk = scinew Task( "ExplicitSolver::computeStableTimeStep",this,
+                           &ExplicitSolver::computeStableTimeStep);
+
+  //printSchedule(level,dbg, "ExplicitSolver::computeStableTimeStep");
+
+  if(level->getIndex() == d_archesLevelIndex) {
+
+    Ghost::GhostType gac = Ghost::AroundCells;
+    Ghost::GhostType gaf = Ghost::AroundFaces;
+    Ghost::GhostType gn = Ghost::None;
+
+    //NOTE: Hardcoding the labels for now. In the future, these can be made generic.
+    d_x_vel_label = VarLabel::find("uVelocitySPBC");
+    d_y_vel_label = VarLabel::find("vVelocitySPBC");
+    d_z_vel_label = VarLabel::find("wVelocitySPBC");
+    d_rho_label = VarLabel::find("densityCP");
+    d_viscos_label = VarLabel::find("viscosityCTS");
+    d_celltype_label = VarLabel::find("cellType");
+
+    tsk->requires(Task::NewDW, d_x_vel_label, gaf, 1);
+    tsk->requires(Task::NewDW, d_y_vel_label, gaf, 1);
+    tsk->requires(Task::NewDW, d_z_vel_label, gaf, 1);
+    tsk->requires(Task::NewDW, d_rho_label,     gac, 1);
+    tsk->requires(Task::NewDW, d_viscos_label,  gn,  0);
+    tsk->requires(Task::NewDW, d_celltype_label,  gac, 1);
+  }
+
+  tsk->computes(d_sharedState->get_delt_label(),level.get_rep());
+  sched->addTask(tsk, level->eachPatch(), d_sharedState->allArchesMaterials());
+
+}
+
+//--------------------------------------------------------------------------------------------------
+void
+ExplicitSolver::computeStableTimeStep(const ProcessorGroup*,
+                                      const PatchSubset* patches,
+                                      const MaterialSubset*,
+                                      DataWarehouse* old_dw,
+                                      DataWarehouse* new_dw)
+{
+  const Level* level = getLevel(patches);
+  // You have to compute it on every level but
+  // only computethe real delT on the archesLevel
+  if( level->getIndex() == d_archesLevelIndex ) {
+
+    for (int p = 0; p < patches->size(); p++) {
+      const Patch* patch = patches->get(p);
+      int archIndex = 0; // only one arches material
+      int indx = d_sharedState->getArchesMaterial(archIndex)->getDWIndex();
+
+      constSFCXVariable<double> uVelocity;
+      constSFCYVariable<double> vVelocity;
+      constSFCZVariable<double> wVelocity;
+      constCCVariable<double> den;
+      constCCVariable<double> visc;
+      constCCVariable<int> cellType;
+
+      Ghost::GhostType gac = Ghost::AroundCells;
+      Ghost::GhostType gaf = Ghost::AroundFaces;
+      Ghost::GhostType gn = Ghost::None;
+
+      new_dw->get(uVelocity, d_x_vel_label, indx, patch, gaf, 1);
+      new_dw->get(vVelocity, d_y_vel_label, indx, patch, gaf, 1);
+      new_dw->get(wVelocity, d_z_vel_label, indx, patch, gaf, 1);
+      new_dw->get(den, d_rho_label,           indx, patch, gac, 1);
+      new_dw->get(visc, d_viscos_label,       indx, patch, gn,  0);
+      new_dw->get(cellType, d_celltype_label, indx, patch, gac, 1);
+
+      Vector DX = patch->dCell();
+
+      IntVector indexLow = patch->getFortranCellLowIndex();
+      IntVector indexHigh = patch->getFortranCellHighIndex();
+      bool xminus = patch->getBCType(Patch::xminus) != Patch::Neighbor;
+      bool xplus =  patch->getBCType(Patch::xplus) != Patch::Neighbor;
+      bool yminus = patch->getBCType(Patch::yminus) != Patch::Neighbor;
+      bool yplus =  patch->getBCType(Patch::yplus) != Patch::Neighbor;
+      bool zminus = patch->getBCType(Patch::zminus) != Patch::Neighbor;
+      bool zplus =  patch->getBCType(Patch::zplus) != Patch::Neighbor;
+
+      int press_celltypeval = BoundaryCondition::PRESSURE;
+      int out_celltypeval = BoundaryCondition::OUTLET;
+      if ((xminus)&&((cellType[indexLow - IntVector(1,0,0)]==press_celltypeval)
+                     ||(cellType[indexLow - IntVector(1,0,0)]==out_celltypeval))) {
+        indexLow = indexLow - IntVector(1,0,0);
+      }
+
+      if ((yminus)&&((cellType[indexLow - IntVector(0,1,0)]==press_celltypeval)
+                     ||(cellType[indexLow - IntVector(0,1,0)]==out_celltypeval))) {
+        indexLow = indexLow - IntVector(0,1,0);
+      }
+
+      if ((zminus)&&((cellType[indexLow - IntVector(0,0,1)]==press_celltypeval)
+                     ||(cellType[indexLow - IntVector(0,0,1)]==out_celltypeval))) {
+        indexLow = indexLow - IntVector(0,0,1);
+      }
+
+      if (xplus) {
+        indexHigh = indexHigh + IntVector(1,0,0);
+      }
+      if (yplus) {
+        indexHigh = indexHigh + IntVector(0,1,0);
+      }
+      if (zplus) {
+        indexHigh = indexHigh + IntVector(0,0,1);
+      }
+
+      double delta_t = d_initial_dt;
+      double small_num = 1e-30;
+      double delta_t2 = delta_t;
+
+      for (int colZ = indexLow.z(); colZ <= indexHigh.z(); colZ++) {
+        for (int colY = indexLow.y(); colY <= indexHigh.y(); colY++) {
+          for (int colX = indexLow.x(); colX <= indexHigh.x(); colX++) {
+            IntVector currCell(colX, colY, colZ);
+            double tmp_time;
+
+//            if (d_MAlab) {
+            int flag = 1;
+            int colXm = colX - 1;
+            int colXp = colX + 1;
+            int colYm = colY - 1;
+            int colYp = colY + 1;
+            int colZm = colZ - 1;
+            int colZp = colZ + 1;
+            if (colXm < indexLow.x()) colXm = indexLow.x();
+            if (colXp > indexHigh.x()) colXp = indexHigh.x();
+            if (colYm < indexLow.y()) colYm = indexLow.y();
+            if (colYp > indexHigh.y()) colYp = indexHigh.y();
+            if (colZm < indexLow.z()) colZm = indexLow.z();
+            if (colZp > indexHigh.z()) colZp = indexHigh.z();
+            IntVector xMinusCell(colXm,colY,colZ);
+            IntVector xPlusCell(colXp,colY,colZ);
+            IntVector yMinusCell(colX,colYm,colZ);
+            IntVector yPlusCell(colX,colYp,colZ);
+            IntVector zMinusCell(colX,colY,colZm);
+            IntVector zPlusCell(colX,colY,colZp);
+            double uvel = uVelocity[currCell];
+            double vvel = vVelocity[currCell];
+            double wvel = wVelocity[currCell];
+
+            if (den[xMinusCell] < 1.0e-12) uvel=uVelocity[xPlusCell];
+            if (den[yMinusCell] < 1.0e-12) vvel=vVelocity[yPlusCell];
+            if (den[zMinusCell] < 1.0e-12) wvel=wVelocity[zPlusCell];
+            if (den[currCell] < 1.0e-12) flag = 0;
+            if ((den[xMinusCell] < 1.0e-12)&&(den[xPlusCell] < 1.0e-12)) flag = 0;
+            if ((den[yMinusCell] < 1.0e-12)&&(den[yPlusCell] < 1.0e-12)) flag = 0;
+            if ((den[zMinusCell] < 1.0e-12)&&(den[zPlusCell] < 1.0e-12)) flag = 0;
+
+            tmp_time=1.0;
+            if (flag != 0) {
+              tmp_time=Abs(uvel)/(DX.x())+
+                        Abs(vvel)/(DX.y())+
+                        Abs(wvel)/(DX.z())+
+                        (visc[currCell]/den[currCell])*
+                        (1.0/(DX.x()*DX.x()) +
+                         1.0/(DX.y()*DX.y()) +
+                         1.0/(DX.z()*DX.z()) ) +
+                        small_num;
+            }
+
+            delta_t2=Min(1.0/tmp_time, delta_t2);
+          }
+        }
+      }
+
+      if (d_underflow) {
+        indexLow = patch->getFortranCellLowIndex();
+        indexHigh = patch->getFortranCellHighIndex();
+
+        for (int colZ = indexLow.z(); colZ <= indexHigh.z(); colZ++) {
+          for (int colY = indexLow.y(); colY <= indexHigh.y(); colY++) {
+            for (int colX = indexLow.x(); colX <= indexHigh.x(); colX++) {
+              IntVector currCell(colX, colY, colZ);
+              IntVector xplusCell(colX+1, colY, colZ);
+              IntVector yplusCell(colX, colY+1, colZ);
+              IntVector zplusCell(colX, colY, colZ+1);
+              IntVector xminusCell(colX-1, colY, colZ);
+              IntVector yminusCell(colX, colY-1, colZ);
+              IntVector zminusCell(colX, colY, colZ-1);
+              double tmp_time;
+
+              tmp_time = 0.5* (
+                ((den[currCell]+den[xplusCell])*Max(uVelocity[xplusCell],0.0) -
+                 (den[currCell]+den[xminusCell])*Min(uVelocity[currCell],0.0)) /
+                DX.x() +
+                ((den[currCell]+den[yplusCell])*Max(vVelocity[yplusCell],0.0) -
+                 (den[currCell]+den[yminusCell])*Min(vVelocity[currCell],0.0)) /
+                DX.y() +
+                ((den[currCell]+den[zplusCell])*Max(wVelocity[zplusCell],0.0) -
+                 (den[currCell]+den[zminusCell])*Min(wVelocity[currCell],0.0)) /
+                DX.z());
+
+              if (den[currCell] > 0.0) {
+                delta_t2=Min(den[currCell]/tmp_time, delta_t2);
+              }
+            }
+          }
+        }
+      }
+
+
+      delta_t = delta_t2;
+      new_dw->put(delt_vartype(delta_t),  d_sharedState->get_delt_label(), level);
+
+    }
+  } else { // if not on the arches level
+
+    new_dw->put(delt_vartype(9e99),  d_sharedState->get_delt_label(),level);
+
+  }
+}
+
 void
 ExplicitSolver::initialize( const LevelP& level,
                             SchedulerP& sched,
@@ -1052,7 +1271,7 @@ ExplicitSolver::sched_initializeVariables( const LevelP& level,
   tsk->computes(d_lab->d_conv_scheme_x_Label);
   tsk->computes(d_lab->d_conv_scheme_y_Label);
   tsk->computes(d_lab->d_conv_scheme_z_Label);
-  
+
   if (d_MAlab) {
     tsk->computes(d_lab->d_pressPlusHydroLabel);
     tsk->computes(d_lab->d_mmgasVolFracLabel);
@@ -1062,11 +1281,11 @@ ExplicitSolver::sched_initializeVariables( const LevelP& level,
 
   if ( VarLabel::find("deposit_thickness"))
     tsk->computes(VarLabel::find("deposit_thickness"));
-  
+
   if ( VarLabel::find("real_deposit_velocity"))
     tsk->computes(VarLabel::find("real_deposit_velocity"));
-  
- 
+
+
 sched->addTask(tsk, level->eachPatch(), d_lab->d_sharedState->allArchesMaterials());
 
 }
@@ -1164,7 +1383,7 @@ ExplicitSolver::initializeVariables(const ProcessorGroup* ,
 
     if ( VarLabel::find("deposit_thickness"))
       allocateAndInitializeToZero( VarLabel::find("deposit_thickness"), new_dw, indx, patch );
-    
+
     if ( VarLabel::find("real_deposit_velocity"))
       allocateAndInitializeToZero( VarLabel::find("real_deposit_velocity"), new_dw, indx, patch );
 
@@ -1835,8 +2054,8 @@ int ExplicitSolver::nonlinearSolve(const LevelP& level,
   }
 
   //Variable stats stuff
-  std::vector<std::string> stats_tasks 
-    = i_property_models->second->retrieve_task_subset("variable_stat_models"); 
+  std::vector<std::string> stats_tasks
+    = i_property_models->second->retrieve_task_subset("variable_stat_models");
   for ( std::vector<std::string>::iterator itsk = stats_tasks.begin();
         itsk != stats_tasks.end(); itsk++ ){
 
@@ -2501,7 +2720,7 @@ ExplicitSolver::setInitialGuess(const ProcessorGroup* ,
     CCVariable<double> turb_viscosity_new;
     new_dw->allocateAndPut(turb_viscosity_new, d_lab->d_turbViscosLabel, indx, patch);
     turb_viscosity_new.copyData(turb_viscosity); // copy old into new
-    
+
     SFCXVariable<double> conv_scheme_x;
     new_dw->allocateAndPut(conv_scheme_x, d_lab->d_conv_scheme_x_Label, indx, patch);
     conv_scheme_x.initialize(0.0); // copy old into new

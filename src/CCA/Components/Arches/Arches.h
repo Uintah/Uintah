@@ -154,12 +154,6 @@ private:
 
   Arches& operator=(const Arches&);
 
-  void computeStableTimeStep(const ProcessorGroup* ,
-                             const PatchSubset* patches,
-                             const MaterialSubset* matls,
-                             DataWarehouse* ,
-                             DataWarehouse* new_dw);
-
   void create_patch_operators( const ProcessorGroup* pg,
                                const PatchSubset* patches,
                                const MaterialSubset* matls,
