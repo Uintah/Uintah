@@ -159,6 +159,15 @@ public:
                              const PatchSet* patches,
                              const MaterialSet* matls);
 
+  /** @brief Schedule compute of a stable timestep **/
+  void computeTimestep(const LevelP& level, SchedulerP& sched);
+
+  void computeStableTimeStep( const ProcessorGroup*,
+                              const PatchSubset* patches,
+                              const MaterialSubset*,
+                              DataWarehouse* old_dw,
+                              DataWarehouse* new_dw );
+
   /** @brief Check the momentum boundary conditions for errors (and do some other stuff too)**/
   void checkMomBCs( SchedulerP&,
                     const LevelP& level,
@@ -474,6 +483,14 @@ public:
   //Diagnostics
   bool d_printTotalKE;
   double d_ke_limit;
+
+  const VarLabel* d_x_vel_label;
+  const VarLabel* d_y_vel_label;
+  const VarLabel* d_z_vel_label;
+  const VarLabel* d_viscos_label;
+  const VarLabel* d_rho_label;
+  const VarLabel* d_celltype_label;
+  int d_archesLevelIndex;
 
 
 }; // End class ExplicitSolver

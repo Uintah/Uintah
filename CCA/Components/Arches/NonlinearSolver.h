@@ -73,6 +73,8 @@ public:
   virtual int nonlinearSolve( const LevelP& level,
                               SchedulerP& sched ) = 0;
 
+  virtual void computeTimestep( const LevelP& level, SchedulerP& sched ) = 0;
+
   virtual double recomputeTimestep(double current_dt) = 0;
 
   virtual bool restartableTimesteps() = 0;
@@ -80,7 +82,8 @@ public:
   virtual void initialize( const LevelP& lvl, SchedulerP& sched, const bool doing_restart ) = 0;
 
   virtual void sched_restartInitialize( const LevelP& level, SchedulerP& sched ) = 0;
-  virtual void sched_restartInitializeTimeAdvance( const LevelP& level, SchedulerP& sched ) = 0; 
+
+  virtual void sched_restartInitializeTimeAdvance( const LevelP& level, SchedulerP& sched ) = 0;
 
   class NLSolverBuilder {
 
