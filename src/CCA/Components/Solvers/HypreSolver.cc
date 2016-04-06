@@ -50,11 +50,13 @@
 #include <iomanip>
 
 // hypre includes
-//#define HYPRE_TIMING
 #include <_hypre_struct_mv.h>
 #include <_hypre_utilities.h>
 #include <HYPRE_struct_ls.h>
 #include <krylov.h>
+
+//#define PRINTSYSTEM
+
 #ifndef HYPRE_TIMING
 #ifndef hypre_ClearTiming
 // This isn't in utilities.h for some reason...
@@ -62,10 +64,9 @@
 #endif
 #endif
 
-//#define PRINTSYSTEM
-
 using namespace std;
 using namespace Uintah;
+
 //__________________________________
 //  To turn on normal output
 //  setenv SCI_DEBUG "HYPRE_DOING_COUT:+"
@@ -74,21 +75,11 @@ static DebugStream cout_doing("HYPRE_DOING_COUT", false);
 
 namespace Uintah {
 
-  HypreSolver2::HypreSolver2(const ProcessorGroup* myworld)
-    : UintahParallelComponent(myworld)
-  {
-    hypre_solver_label = VarLabel::create("hypre_solver_label",
-                   SoleVariable<hypre_solver_structP>::getTypeDescription());
-
-  }
-
-  HypreSolver2::~HypreSolver2()
-  {
-    VarLabel::destroy(hypre_solver_label);
-
-  }
-  //__________________________________
+  //==============================================================================
   //
+  // Class HypreStencil7
+  //
+  //==============================================================================
   template<class Types>
   class HypreStencil7 : public RefCounted {
   public:
@@ -119,12 +110,14 @@ namespace Uintah {
       movingAverage_    = 0.0;
     }
 
+    //---------------------------------------------------------------------------------------------
+    
     virtual ~HypreStencil7() {
       VarLabel::destroy(hypre_solver_label);
     }
 
+    //---------------------------------------------------------------------------------------------
 
-    //______________________________________________________________________
     void solve(const ProcessorGroup* pg, 
                const PatchSubset* patches,
                const MaterialSubset* matls,
@@ -133,7 +126,13 @@ namespace Uintah {
                Handle<HypreStencil7<Types> >)
     {
       typedef typename Types::sol_type sol_type;
-
+      
+      tHypreAll_ = hypre_InitializeTiming("Total Hypre time");
+      hypre_BeginTiming(tHypreAll_);
+      
+      tMatVecSetup_ = hypre_InitializeTiming("Matrix + Vector setup");
+      tSolveOnly_   = hypre_InitializeTiming("Solve time");
+      
       int timestep = params->state->getCurrentTopLevelTimeStep();
 
       //________________________________________________________
@@ -210,6 +209,7 @@ namespace Uintah {
       for(int m = 0;m<matls->size();m++){
         int matl = matls->get(m);
 
+        hypre_BeginTiming(tMatVecSetup_);
         //__________________________________
         // Setup grid
         HYPRE_StructGrid grid;
@@ -526,21 +526,21 @@ namespace Uintah {
           }  // initialGuess
         } // patch loop
         HYPRE_StructVectorAssemble(*HX);
-        
+        hypre_EndTiming(tMatVecSetup_);
         //__________________________________
         //  Dynamic tolerances  Arches uses this
         double precond_tolerance = 0.0;
 
         double solve_start = Time::currentSeconds();
+        hypre_BeginTiming(tSolveOnly_);
+        
         int num_iterations;
         double final_res_norm;
         
         //______________________________________________________________________
         // Solve the system
         if (params->solvertype == "SMG" || params->solvertype == "smg"){
-          int time_index = hypre_InitializeTiming("SMG Setup");
-          hypre_BeginTiming(time_index);
-
+          
           HYPRE_StructSolver* solver =  hypre_solver_s->solver;
           if (timestep == 1 || restart) {
             HYPRE_StructSMGCreate(pg->getComm(), solver);
@@ -564,21 +564,7 @@ namespace Uintah {
           if (do_setup) 
             HYPRE_StructSMGSetup          (*solver,  *HA, *HB, *HX);           
 
-
-          hypre_EndTiming(time_index);
-          hypre_PrintTiming("Setup phase times", pg->getComm());
-          hypre_FinalizeTiming(time_index);
-          hypre_ClearTiming();
-
-          time_index = hypre_InitializeTiming("SMG Solve");
-          hypre_BeginTiming(time_index);
-
           HYPRE_StructSMGSolve(*solver, *HA, *HB, *HX);
-
-          hypre_EndTiming(time_index);
-          hypre_PrintTiming("Solve phase times", pg->getComm());
-          hypre_FinalizeTiming(time_index);
-          hypre_ClearTiming();
    
           HYPRE_StructSMGGetNumIterations(*solver, &num_iterations);
           HYPRE_StructSMGGetFinalRelativeResidualNorm(*solver, &final_res_norm);
@@ -586,9 +572,6 @@ namespace Uintah {
           HYPRE_StructSMGDestroy(solver);
 #endif
         } else if(params->solvertype == "PFMG" || params->solvertype == "pfmg"){
-
-          int time_index = hypre_InitializeTiming("PFMG Setup");
-          hypre_BeginTiming(time_index);
 
           HYPRE_StructSolver* solver =  hypre_solver_s->solver;
 
@@ -616,24 +599,10 @@ namespace Uintah {
           HYPRE_StructPFMGSetLogging     (*solver,  params->logging);          
           
           if (do_setup)
-            HYPRE_StructPFMGSetup          (*solver,  *HA, *HB,  *HX);  
-
-
-          hypre_EndTiming     (time_index);
-          hypre_PrintTiming   ("Setup phase times", pg->getComm());
-          hypre_FinalizeTiming(time_index);
-          hypre_ClearTiming();
-
-          time_index = hypre_InitializeTiming("PFMG Solve");
-          hypre_BeginTiming(time_index);
+            HYPRE_StructPFMGSetup          (*solver,  *HA, *HB,  *HX);
 
           HYPRE_StructPFMGSolve(*solver, *HA, *HB, *HX);
-        
-          hypre_EndTiming     (time_index);
-          hypre_PrintTiming   ("Solve phase times", pg->getComm());
-          hypre_FinalizeTiming(time_index);
-          hypre_ClearTiming();
-      
+          
           HYPRE_StructPFMGGetNumIterations(*solver, &num_iterations);
           HYPRE_StructPFMGGetFinalRelativeResidualNorm(*solver, 
                                                        &final_res_norm);
@@ -642,8 +611,6 @@ namespace Uintah {
 #endif
 
         } else if(params->solvertype == "SparseMSG" || params->solvertype == "sparsemsg"){
-          int time_index = hypre_InitializeTiming("SparseMSG Setup");
-          hypre_BeginTiming(time_index);
 
           HYPRE_StructSolver* solver = hypre_solver_s->solver;
           if (timestep == 1 || restart) {
@@ -670,20 +637,7 @@ namespace Uintah {
           if (do_setup)
             HYPRE_StructSparseMSGSetup(*solver, *HA, *HB,  *HX);  
 
-          hypre_EndTiming     (time_index);
-          hypre_PrintTiming   ("Setup phase times", pg->getComm());
-          hypre_FinalizeTiming(time_index);
-          hypre_ClearTiming();
-
-          time_index = hypre_InitializeTiming("SparseMSG Solve");
-          hypre_BeginTiming(time_index);
-
           HYPRE_StructSparseMSGSolve(*solver, *HA, *HB, *HX);
-
-          hypre_EndTiming(time_index);
-          hypre_PrintTiming("Solve phase times", pg->getComm());
-          hypre_FinalizeTiming(time_index);
-          hypre_ClearTiming();
    
           HYPRE_StructSparseMSGGetNumIterations(*solver, &num_iterations);
           HYPRE_StructSparseMSGGetFinalRelativeResidualNorm(*solver, 
@@ -697,8 +651,6 @@ namespace Uintah {
                   || params->solvertype == "conjugategradient" 
                   || params->solvertype == "PCG" 
                   || params->solvertype == "cg"){
-          int time_index = hypre_InitializeTiming("PCG Setup");
-          hypre_BeginTiming(time_index);
 
           HYPRE_StructSolver* solver =  hypre_solver_s->solver;
 
@@ -747,21 +699,8 @@ namespace Uintah {
           if (do_setup) {
             HYPRE_StructPCGSetup(*solver, *HA,*HB, *HX);
           }
-                          
-          hypre_EndTiming     (time_index);
-          hypre_PrintTiming   ("Setup phase times", pg->getComm());
-          hypre_FinalizeTiming(time_index);
-          hypre_ClearTiming();
-   
-          time_index = hypre_InitializeTiming("PCG Solve");
-          hypre_BeginTiming(time_index);
-
+          
           HYPRE_StructPCGSolve(*solver, *HA, *HB, *HX);
-
-          hypre_EndTiming     (time_index);
-          hypre_PrintTiming   ("Solve phase times", pg->getComm());
-          hypre_FinalizeTiming(time_index);
-          hypre_ClearTiming();
 
           HYPRE_StructPCGGetNumIterations(*solver, &num_iterations);
           HYPRE_StructPCGGetFinalRelativeResidualNorm(*solver,&final_res_norm);
@@ -775,10 +714,6 @@ namespace Uintah {
           /*-----------------------------------------------------------
            * Solve the system using Hybrid
            *-----------------------------------------------------------*/
-
-          int time_index = hypre_InitializeTiming("Hybrid Setup");
-          hypre_BeginTiming(time_index);
-
           HYPRE_StructSolver* solver =  hypre_solver_s->solver;
 
           if (timestep == 1 || restart) {
@@ -833,20 +768,7 @@ namespace Uintah {
             HYPRE_StructHybridSetup(*solver, *HA, *HB, *HX);
           }
 
-          hypre_EndTiming     (time_index);
-          hypre_PrintTiming   ("Setup phase times", pg->getComm());
-          hypre_FinalizeTiming(time_index);
-          hypre_ClearTiming();
-   
-          time_index = hypre_InitializeTiming("Hybrid Solve");
-          hypre_BeginTiming(time_index);
-
           HYPRE_StructHybridSolve(*solver, *HA, *HB, *HX);
-
-          hypre_EndTiming     (time_index);
-          hypre_PrintTiming   ("Solve phase times", pg->getComm());
-          hypre_FinalizeTiming(time_index);
-          hypre_ClearTiming();
 
           HYPRE_StructHybridGetNumIterations(*solver,&num_iterations);
           HYPRE_StructHybridGetFinalRelativeResidualNorm(*solver,
@@ -859,9 +781,7 @@ namespace Uintah {
           //
         } else if(params->solvertype == "GMRES" 
                   || params->solvertype == "gmres"){
-          int time_index = hypre_InitializeTiming("GMRES Setup");
-          hypre_BeginTiming(time_index);
-
+          
           HYPRE_StructSolver* solver =  hypre_solver_s->solver;
 
           if (timestep == 1 || restart) {
@@ -908,20 +828,7 @@ namespace Uintah {
             HYPRE_StructGMRESSetup(*solver,*HA,*HB,*HX);
           }
           
-          hypre_EndTiming     (time_index);
-          hypre_PrintTiming   ("Setup phase times", pg->getComm());
-          hypre_FinalizeTiming(time_index);
-          hypre_ClearTiming();
-   
-          time_index = hypre_InitializeTiming("GMRES Solve");
-          hypre_BeginTiming(time_index);
-
           HYPRE_StructGMRESSolve(*solver,*HA,*HB,*HX);
-
-          hypre_EndTiming     (time_index);
-          hypre_PrintTiming   ("Solve phase times", pg->getComm());
-          hypre_FinalizeTiming(time_index);
-          hypre_ClearTiming();
 
           HYPRE_StructGMRESGetNumIterations(*solver, &num_iterations);
           HYPRE_StructGMRESGetFinalRelativeResidualNorm(*solver, 
@@ -962,10 +869,12 @@ namespace Uintah {
                                      params->tolerance,__FILE__,__LINE__);
           }
         }
+        
+        double solve_dt = Time::currentSeconds()-solve_start;
+        hypre_EndTiming (tSolveOnly_);
+        
         //__________________________________
         // Push the solution into Uintah data structure
-        double solve_dt = Time::currentSeconds()-solve_start;
-
         for(int p=0;p<patches->size();p++){
           const Patch* patch = patches->get(p);
           printTask( patches, patch, cout_doing, "HypreSolver:solve: copy solution" );
@@ -1012,6 +921,14 @@ namespace Uintah {
           HYPRE_StructGridDestroy(grid);
         }
 
+        hypre_EndTiming (tHypreAll_);
+        
+        hypre_PrintTiming   ("Hypre Timings:", pg->getComm());
+        hypre_FinalizeTiming(tMatVecSetup_);
+        hypre_FinalizeTiming(tSolveOnly_);
+        hypre_FinalizeTiming(tHypreAll_);
+        hypre_ClearTiming();
+
         double dt=Time::currentSeconds()-tstart;
         if(pg->myrank() == 0){
 
@@ -1033,7 +950,8 @@ namespace Uintah {
       }
     }
     
-    //______________________________________________________________________
+    //---------------------------------------------------------------------------------------------
+    
     void setupPrecond(const ProcessorGroup* pg,
                       HYPRE_PtrToStructSolverFcn& precond,
                       HYPRE_PtrToStructSolverFcn& pcsetup,
@@ -1126,6 +1044,9 @@ namespace Uintah {
         throw InternalError("Unknown preconditionertype: "+params->precondtype, __FILE__, __LINE__);
       }
     }
+    
+    //---------------------------------------------------------------------------------------------
+    
     void destroyPrecond(HYPRE_StructSolver precond_solver){
       if(params->precondtype        == "SMG"       || params->precondtype == "smg"){
         HYPRE_StructSMGDestroy(precond_solver);
@@ -1141,7 +1062,9 @@ namespace Uintah {
         throw InternalError("Unknown preconditionertype in destroyPrecond: "+params->precondtype, __FILE__, __LINE__);
       }
     }
-  //______________________________________________________________________
+
+    //---------------------------------------------------------------------------------------------
+
   private:
 
     const Level*       level;
@@ -1161,10 +1084,39 @@ namespace Uintah {
     SoleVariable<hypre_solver_structP> d_hypre_solverP_;
     bool   firstPassThrough_;
     double movingAverage_;
-  };
+    
+    // hypre timers
+    int tHypreAll_;    // measures overall time spent in Hypre = matrix/vector setup & assembly + solve time.
+    int tSolveOnly_;   // measures time taken by hypre to solve the system of equations
+    int tMatVecSetup_; // measures the time taken by uintah/hypre to allocate and set matrix and vector box vaules
+    
+  }; // class HypreStencil7
   
-  //______________________________________________________________________
-  SolverParameters* HypreSolver2::readParameters(ProblemSpecP& params, 
+  //==============================================================================
+  //
+  // HypreSolver2 Implementation
+  //
+  //==============================================================================
+
+  HypreSolver2::HypreSolver2(const ProcessorGroup* myworld)
+  : UintahParallelComponent(myworld)
+  {
+    hypre_solver_label = VarLabel::create("hypre_solver_label",
+                                          SoleVariable<hypre_solver_structP>::getTypeDescription());
+    
+  }
+
+  //---------------------------------------------------------------------------------------------
+  
+  HypreSolver2::~HypreSolver2()
+  {
+    VarLabel::destroy(hypre_solver_label);
+    
+  }
+
+  //---------------------------------------------------------------------------------------------
+  
+  SolverParameters* HypreSolver2::readParameters(ProblemSpecP& params,
                                                  const string& varname,
                                                  SimulationStateP& state)
   {
@@ -1231,6 +1183,7 @@ namespace Uintah {
     return p;
   }
 
+  //---------------------------------------------------------------------------------------------
   
   void HypreSolver2::scheduleInitialize(const LevelP& level,SchedulerP& sched,
                                         const MaterialSet* matls)
@@ -1245,6 +1198,8 @@ namespace Uintah {
 
   }
 
+  //---------------------------------------------------------------------------------------------
+  
   void HypreSolver2::allocateHypreMatrices(DataWarehouse* new_dw)
   {
 
@@ -1264,6 +1219,8 @@ namespace Uintah {
 
   }
 
+  //---------------------------------------------------------------------------------------------
+
   void
   HypreSolver2::initialize( const ProcessorGroup *,
                             const PatchSubset    * patches,
@@ -1274,8 +1231,8 @@ namespace Uintah {
     allocateHypreMatrices( new_dw );
   } 
 
+  //---------------------------------------------------------------------------------------------
 
-  //______________________________________________________________________
   void
   HypreSolver2::scheduleSolve( const LevelP           & level,
                                      SchedulerP       & sched,
@@ -1393,10 +1350,11 @@ namespace Uintah {
     sched->addTask(task, lb->getPerProcessorPatchSet(level), matls);
   }
 
+  //---------------------------------------------------------------------------------------------
   
-
-string HypreSolver2::getName(){
-  return "hypre";
-}
-
+  string HypreSolver2::getName(){
+    return "hypre";
+  }
+  
+  //---------------------------------------------------------------------------------------------
 } // end namespace Uintah
