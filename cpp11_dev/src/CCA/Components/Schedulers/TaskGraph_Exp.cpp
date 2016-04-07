@@ -284,14 +284,15 @@ struct SimpleDependency
         m_patches.push_back(patch->getID());
       }
     } else {
-      auto patchset = dep->task->getPatchSet();
-      if (patchset) {
-        for (auto const& patches : patchset->getVector() ) {
-          for (auto patch : patches->getVector()) {
-            m_patches.push_back(patch->getID());
-          }
-        }
-      }
+      m_patches.push_back(-1);
+      //auto patchset = dep->task->getPatchSet();
+      //if (patchset) {
+      //  for (auto const& patches : patchset->getVector() ) {
+      //    for (auto patch : patches->getVector()) {
+      //      m_patches.push_back(patch->getID());
+      //    }
+      //  }
+      //}
     }
     if (m_patches.empty()) { m_patches.push_back(-1); }
     std::sort(m_patches.begin(), m_patches.end());
@@ -393,11 +394,13 @@ std::vector< std::pair<int,int> >
 get_edges( std::vector<Task *> const & tasks )
 {
   using DependencyVector = std::vector< SimpleDependency >;
+  using DependencyIterator = DependencyVector::const_iterator;
 
-  auto print_dependencies = [&](const DependencyVector & vec) {
-    if (!vec.empty()) {
-      std::cout << "Task[" << vec.front().m_idx << "]: "  << tasks[vec.front().m_idx]->getName() << std::endl;
-      for (auto const& d : vec ) {
+  auto print_dependencies = [&](DependencyIterator b, const DependencyIterator e) {
+    if (b != e) {
+      std::cout << "Task[" << b->m_idx << "]: "  << tasks[b->m_idx]->getName() << std::endl;
+      for (; b != e; ++b) {
+        auto d = *b;
         std::cout << "  :  " << d.m_type
           << "  :  " << d.m_var->getName()
           << "  :  level[ " << d.m_level
@@ -434,43 +437,40 @@ get_edges( std::vector<Task *> const & tasks )
     };
     std::sort( vec.begin(), vec.end(), compare );
 
-    std::cout << "\nBEFORE UNIQUE" << std::endl;
-    print_dependencies(vec);
-
-
     auto end_itr = std::unique( vec.begin(), vec.end(), compare_equal);
-    std::sort( end_itr, vec.end(), compare );
 
-    // update the type
-    // duplicate Modifies --> Modifies
-    // duplicate Computes && dep Requires --> Computes
-    {
-      auto itr = vec.begin();
-      const auto itr_end = end_itr;
-      auto dup_itr = end_itr;
-      const auto dup_end = vec.end();
+    if ( end_itr != vec.end() ) {
+      std::sort( end_itr, vec.end(), compare );
 
-      while (itr != itr_end && dup_itr != dup_end) {
-        auto & dep = *itr;
-        const auto & dup = *dup_itr;
-        if (compare_equal(dep,dup)) {
-          if (dup.m_type == SimpleDependency::Modifies) {
-            dep.m_type = SimpleDependency::Modifies;
-          } else if (dup.m_type == SimpleDependency::Computes && dep.m_type == SimpleDependency::Requires) {
-            dep.m_type = SimpleDependency::Computes;
+      // update the type
+      // *dup_itr Modifies --> *itr Modifies
+      // *dup_itr Computes && *itr Requires --> Computes
+      {
+        auto itr = vec.begin();
+        const auto itr_end = end_itr;
+        auto dup_itr = end_itr;
+        const auto dup_end = vec.end();
+
+        while (itr != itr_end && dup_itr != dup_end) {
+          auto & dep = *itr;
+          const auto & dup = *dup_itr;
+          if (compare_equal(dep,dup)) {
+            if (dup.m_type == SimpleDependency::Modifies) {
+              dep.m_type = SimpleDependency::Modifies;
+            } else if (dup.m_type == SimpleDependency::Computes && dep.m_type == SimpleDependency::Requires) {
+              dep.m_type = SimpleDependency::Computes;
+            }
+            ++dup_itr;
+          } else if (compare(dep, dup)) {
+            ++itr;
+          } else {
+            ++dup_itr;
           }
-          ++dup_itr;
-        } else if (compare(dep, dup)) {
-          ++itr;
-        } else {
-          ++dup_itr;
         }
       }
+      vec.erase(end_itr, vec.end());
     }
-    vec.erase(end_itr, vec.end());
-
-    std::cout << "AFTER UNIQUE" << std::endl;
-    print_dependencies(vec);
+    print_dependencies(vec.begin(), vec.end());
   };
 
   auto get_dependencies = [&filter_dependencies](Task * t)->DependencyVector {
@@ -529,13 +529,6 @@ get_edges( std::vector<Task *> const & tasks )
       result.emplace_back(a->index(),b->index());
     }
   }}
-
-  std::cout << std::endl;
-  for (auto const & edge : result) {
-    std::cout << "EDGE:" << std::endl
-              << "      " << tasks[edge.first]->getName() << std::endl
-              << " ---> " << tasks[edge.second]->getName() << std::endl;
-  }
 
   return result;
 }
@@ -621,7 +614,7 @@ TaskGraph::createDetailedTasks(       bool            useInternalDeps
 
     std::vector<Task *> tasks( m_tasks );
 
-    // stable sort by sync tasks
+    //stable sort by sync tasks
     std::stable_sort( tasks.begin(), tasks.end(),
                [&](const Task * a, const Task * b)->bool {
                   return is_sync_task(a) < is_sync_task(b);
