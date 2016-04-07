@@ -70,19 +70,19 @@ void PTR_umat_stressUpdate_SCD(double STRESS[6], double STATEV[], double DDSDDE[
  *     test to run a 2D problem will cause incorrect memory access issues.
  *
  * The function arguments are:
- *IO  STRESS  - Cauchy stress 11,22,33,12,13,23 
+ *IO  STRESS  - Cauchy stress 11,22,33,12,13,23
  *IO  STATEV  - Array of internal state variables (PTR_FLAWHIST_OFFSET+3*NumFlawFamilies)
  *O   DDSDDE  - Stiffness matrix - This is the ELASTIC stiffness matrix and
  *              does not include the effects of plasticity or damage, it is
  *              unlikely to converge when used in implicit analysis.
  *IO  SSE     - Strain energy per unit mass
  *O   SPD     - Total dissipation due to granular flow and lattice plasticity
- *U   SCD     - Creep dissipation 
+ *U   SCD     - Creep dissipation
  *O   RPL     - Heating rate due to thermoelasticity and plastic work
  *U   DDSDDT  - derivitive of stress with temperature
  *U   DRPLDE  - derivitive of plastic work with strain
  *U   DRPLDT  - derivitive of heating rate with temperature
- *I   STRAN   - Logrithmic strain 
+ *I   STRAN   - Logrithmic strain
  *I   DSTRAN  - Increment in strain
  *I   TIME    - Beginning and ending time for timestep (only ending is used)
  *I   DTIME   - Time increment for the timestep
@@ -192,9 +192,9 @@ void PTR_umat_stressUpdate(double STRESS[6], double STATEV[], double DDSDDE[6][6
       Rinc.set(i,j,DROT[j][i]); // I/O Marticies use FORTRAN ordering not C.
     }
   }
-  
-  double IEl = STATEV[0];                         // Indicator of volume preserving deformation 
-  double damage = STATEV[1];                      // damage variable 
+
+  double IEl = STATEV[0];                         // Indicator of volume preserving deformation
+  double damage = STATEV[1];                      // damage variable
   double JGP    = STATEV[2];                      // Volume change ratio from granular flow
   double GP_strain = STATEV[3];                   // Magnitude of the accumulated deviatoric component of granular flow
   double GP_energy = STATEV[4];                   // Energy dissipated by granular flow
@@ -226,7 +226,7 @@ void PTR_umat_stressUpdate(double STRESS[6], double STATEV[], double DDSDDE[6][6
     msg << "  File: " << __FILE__ << ", Line: " << __LINE__ << "\n";
     msg << "debugging information:\n"
         << "Reported Number of state Variables (NSTATV): " << *NSTATV << "\n";
-    throw std::runtime_error(msg.str()); 
+    throw std::runtime_error(msg.str());
   }
   const int numFlaws = (*NSTATV-PTR_FLAWHIST_OFFSET)/3;
   assert(numFlaws == PROPS[13]);
@@ -249,8 +249,8 @@ void PTR_umat_stressUpdate(double STRESS[6], double STATEV[], double DDSDDE[6][6
     // If damage < 0 extract the random bits from that value (it should be in the range
     // 0 > damage > -1.0)
     double urandomSeed = std::abs(STATEV[1]) - std::floor(std::abs(STATEV[1]));
-    unsigned long artViscSeed = static_cast<unsigned long>(static_cast<double>(ULONG_MAX)*urandomSeed);
-    unsigned long seedArray[6] = {static_cast<unsigned long>(flawDistData.randomSeed), artViscSeed, static_cast<unsigned long>(*NOEL), static_cast<unsigned long>(*NPT), static_cast<unsigned long>(*LAYER), static_cast<unsigned long>(*KSPT)};
+    uint32_t artViscSeed = static_cast<uint32_t>(static_cast<double>(ULONG_MAX)*urandomSeed);
+    uint32_t seedArray[6] = {static_cast<uint32_t>(flawDistData.randomSeed), artViscSeed, static_cast<uint32_t>(*NOEL), static_cast<uint32_t>(*NPT), static_cast<uint32_t>(*LAYER), static_cast<uint32_t>(*KSPT)};
     damage = PTR::initalizeFlawDist(flawSize.data(), flawNumber.data(), flawDistData, *CELENT, seedArray, 6);
     damage = brittle_damage.incInitialDamage ? damage : 0.0;
   }
@@ -263,7 +263,7 @@ void PTR_umat_stressUpdate(double STRESS[6], double STATEV[], double DDSDDE[6][6
   double p_q     = 0;                             // Artificial viscous pressure
   double pdTdt   = 0.0;                           // Time Rate of change of temperature
   double c_dil   = 0.0;                           // Dilatational wave speed
-  
+
   PTR::advanceTimeSigmaL(
                          flags, initialData, flawDistData, brittle_damage, gpData,
                          artViscData, &eos,
@@ -437,7 +437,7 @@ void PTR_umat_repairAdvect(double STRESS[6], double STATEV[], double DDSDDE[6][6
     msg << "  File: " << __FILE__ << ", Line: " << __LINE__ << "\n";
     msg << "debugging information:\n"
         << "Reported Number of state Variables (NSTATV): " << *NSTATV << "\n";
-    throw std::runtime_error(msg.str()); 
+    throw std::runtime_error(msg.str());
   }
   const int numFlaws = (*NSTATV-PTR_FLAWHIST_OFFSET)/3;
   assert(numFlaws == PROPS[13]);
@@ -457,7 +457,7 @@ void PTR_umat_repairAdvect(double STRESS[6], double STATEV[], double DDSDDE[6][6
   double pEnergy = (*SSE)*rho_orig;
   double p_q     = 0;
   double pdTdt   = 0.0;
-  
+
   PTR::postAdvectionFixup(
                       flags, initialData, flawDistData, brittle_damage, gpData,
                       artViscData, &eos,
@@ -631,7 +631,7 @@ void PTR_umat_getInitialValues(const int nHistVar, double histVar[], const int n
   }
   std::vector<double> flawSize(flawDistData.numCrackFamilies);
   std::vector<double> flawNumber(flawDistData.numCrackFamilies);
-  std::vector<unsigned long> seedArray2(numSeedVals+1);
+  std::vector<uint32_t> seedArray2(numSeedVals+1);
   for(int i=0; i<numSeedVals; ++i){
     seedArray2[i] = seedArray[i];
   }
