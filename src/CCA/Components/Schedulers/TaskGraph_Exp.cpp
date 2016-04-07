@@ -252,15 +252,12 @@ struct SimpleDependency
   int                    m_level{-1};
   int                    m_dw{-1};
   std::vector<int>       m_materials{};
-  std::vector<int>       m_patches{};
-
 
   SimpleDependency( const Task::Dependency * dep )
     : m_type{ dep->deptype == Task::Requires ? Requires :
               dep->deptype == Task::Modifies ? Modifies : Computes}
     , m_idx{ dep->task->index() }
     , m_var{ dep->var }
-    , m_level{ dep->reductionLevel ? dep->reductionLevel->getIndex() : -1 }
     , m_dw{ dep->whichdw }
   {
     // get the materials
@@ -278,24 +275,20 @@ struct SimpleDependency
     if (m_materials.empty()) { m_materials.push_back(-1); }
     std::sort(m_materials.begin(), m_materials.end());
 
-    // get the patches
-    if (dep->patches) {
-      for (auto patch : dep->patches->getVector()) {
-        m_patches.push_back(patch->getID());
-      }
+    //TODO get level
+
+    // get task type
+    auto task_type = dep->task->getType();
+    if (task_type == Task::Reduction || task_type == Task::OncePerProc) {
+      m_level = dep->reductionLevel ? dep->reductionLevel->getIndex() : -1;
+    } else if (dep->deptype != Task::Requires) {
+      // modifies and computes level is the task level
+      m_level = getLevel(dep->task->getPatchSet())->getIndex();
     } else {
-      m_patches.push_back(-1);
-      //auto patchset = dep->task->getPatchSet();
-      //if (patchset) {
-      //  for (auto const& patches : patchset->getVector() ) {
-      //    for (auto patch : patches->getVector()) {
-      //      m_patches.push_back(patch->getID());
-      //    }
-      //  }
-      //}
+      auto level = dep->patches ? getLevel(dep->patches) : getLevel(dep->task->getPatchSet());
+      int offset = dep->patches_dom == Task::CoarseLevel ? -dep->level_offset : dep->level_offset;
+      m_level = level->getRelativeLevel(offset)->getIndex();
     }
-    if (m_patches.empty()) { m_patches.push_back(-1); }
-    std::sort(m_patches.begin(), m_patches.end());
 
   }
 
@@ -305,20 +298,6 @@ struct SimpleDependency
 
   SimpleDependency & operator=( const SimpleDependency & ) = default;
   SimpleDependency & operator=( SimpleDependency && ) = default;
-
-  bool patches_overlap( SimpleDependency const & rhs ) const
-  {
-
-    if (m_patches[0] == -1 || rhs.m_patches[0] == -1) return true;
-
-    auto find_m = [&rhs](int m) {
-      return std::find( rhs.m_patches.begin(), rhs.m_patches.end(), m ) != rhs.m_patches.end();
-    };
-
-    return std::any_of( m_patches.begin(), m_patches.end()
-                      , find_m
-                      );
-  };
 
   bool materials_overlap( SimpleDependency const & rhs ) const
   {
@@ -334,14 +313,6 @@ struct SimpleDependency
                       );
   };
 
-  bool levels_overlap( SimpleDependency const & rhs ) const
-  {
-    if (m_level != -1 && rhs.m_level != -1) {
-      return m_level == rhs.m_level;
-    }
-    return true;
-  }
-
   bool new_dw() const
   {
     return    m_dw == Task::NewDW
@@ -355,7 +326,8 @@ struct SimpleDependency
     if (!new_dw() || !rhs.new_dw()) return false;
 
     // different data warehouses
-    if (m_dw != rhs.m_dw) return false;
+    // TODO - may not need this
+//    if (m_dw != rhs.m_dw) return false;
 
     // not same variable
     if (m_var != rhs.m_var) return false;
@@ -367,12 +339,9 @@ struct SimpleDependency
     if ( !materials_overlap(rhs) ) return false;
 
     // levels do not overlap
-    if ( !levels_overlap(rhs) ) return false;
+    if (m_level != rhs.m_level ) return false;
 
-    // patches do no overlap
-    if ( !patches_overlap(rhs) ) return false;
-
-    // computes before modifes or requires
+    // computes before modifies or requires
     if ( m_type == Computes && rhs.m_type != Computes ) return true;
 
     // modifies before requires
@@ -384,6 +353,7 @@ struct SimpleDependency
       throw std::runtime_error("Multiple computes detected");
     }
 
+    // TODO - may need to consider task type, e.g. OPP, reduction
     if ( m_type == Modifies && rhs.m_type == Modifies ) return m_idx < rhs.m_idx;
 
     return false;
@@ -409,16 +379,14 @@ get_edges( std::vector<Task *> const & tasks )
         for (auto m : d.m_materials) {
           std::cout << m << ",";
         }
-        std::cout << "\b ]  :  patches[ ";
-        for (auto p : d.m_patches) {
-          std::cout << p << ",";
-        }
         std::cout << "\b ] " << std::endl;
       }
     }
   };
 
   auto filter_dependencies = [&](DependencyVector & vec) {
+    print_dependencies(vec.begin(), vec.end());
+    // TODO compare dependencies
     auto compare = []( const SimpleDependency & a, const SimpleDependency &b )->bool {
       return a.m_dw < b.m_dw ? true  :
              a.m_dw > b.m_dw ? false :
@@ -428,9 +396,7 @@ get_edges( std::vector<Task *> const & tasks )
              a.m_var > b.m_var ? false :
              a.m_level < b.m_level ? true :
              a.m_level > b.m_level ? false :
-             a.m_materials < b.m_materials ? true :
-             a.m_materials > b.m_materials ? false :
-             a.m_patches < b.m_patches;
+             a.m_materials < b.m_materials;
     };
     auto compare_equal = [&compare]( const SimpleDependency & a, const SimpleDependency &b )->bool {
       return !compare(a,b) && !compare(b,a);
@@ -515,6 +481,7 @@ get_edges( std::vector<Task *> const & tasks )
     return false;
   };
 
+  // pair<parentIndex,childIndex>
   using result_type = std::vector< std::pair<int,int> >;
   result_type result;
 
@@ -604,7 +571,7 @@ TaskGraph::createDetailedTasks(       bool            useInternalDeps
   auto backward_range = get_backward_range( backward_edges );
 
 
-  // order tasks -- neccessary to add fake edges between sync tasks
+  // order tasks -- necessary to add fake edges between sync tasks
   std::vector<Task *> sorted_tasks;
   {
     const size_t n = m_tasks.size();
