@@ -27,14 +27,14 @@ void ssmult(int beg, int end, int* rows, int* columns,
 {
     int i, j;
     for(i=beg;i<end;i++){
-	register double sum=0;
+	double sum=0;
 	int row_idx=rows[i];
 	int next_idx=rows[i+1];
 	for(j=row_idx;j<next_idx;j++){
 	    sum+=a[j]*xp[columns[j]];
 	}
 	bp[i]=sum;
-   
+
     }
 }
 
@@ -48,11 +48,11 @@ void ssmult_upper(int beg, int end, int* rows, int* columns,
     for(i=beg;i<end;i++){
 	int row_idx=rows[i];
 	int next_idx=rows[i+1];
-	register double r=xp[i];
-	register double sum=bp[i]+a[row_idx]*xp[columns[row_idx]];
+	double r=xp[i];
+	double sum=bp[i]+a[row_idx]*xp[columns[row_idx]];
 	for(j=row_idx+1;j<next_idx;j++){
-	    register double aj=a[j];
-	    register int cj=columns[j];
+	    double aj=a[j];
+	    int cj=columns[j];
 	    sum+=aj*xp[cj];
 	    bp[cj]+=aj*r;
 	}
@@ -103,10 +103,10 @@ void ssmult_uppersub(int nrows, int beg, int end, int* rows, int* columns,
 	int row_idx=rows[i];
 	int next_idx=rows[i+1];
 	/*register double r=xp[i];*/
-	register double sum=bp[i]+a[row_idx]*xp[columns[row_idx]];
+	double sum=bp[i]+a[row_idx]*xp[columns[row_idx]];
 	for(j=row_idx+1;j<next_idx;j++){
-	    register double aj=a[j];
-	    register int cj=columns[j];
+	    double aj=a[j];
+	    int cj=columns[j];
 	    sum+=aj*xp[cj];
 	}
 	bp[i]=sum;
