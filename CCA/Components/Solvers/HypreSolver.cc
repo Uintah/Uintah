@@ -1022,7 +1022,6 @@ namespace Uintah {
         HYPRE_StructJacobiSetMaxIter  (precond_solver,   2);                       
         HYPRE_StructJacobiSetTol      (precond_solver,   precond_tolerance);                     
         HYPRE_StructJacobiSetZeroGuess(precond_solver);                            
-
         
         precond = HYPRE_StructJacobiSolve;
         pcsetup = HYPRE_StructJacobiSetup;
@@ -1085,10 +1084,12 @@ namespace Uintah {
     bool   firstPassThrough_;
     double movingAverage_;
     
-    // hypre timers
-    int tHypreAll_;    // measures overall time spent in Hypre = matrix/vector setup & assembly + solve time.
-    int tSolveOnly_;   // measures time taken by hypre to solve the system of equations
-    int tMatVecSetup_; // measures the time taken by uintah/hypre to allocate and set matrix and vector box vaules
+    // hypre timers - note that these variables do NOT store timings - rather, each corresponds to
+    // a different timer index that is managed by Hypre. To enable the use and reporting of these
+    // hypre timings, #define HYPRE_TIMING in HypreSolver.h
+    int tHypreAll_;    // Tracks overall time spent in Hypre = matrix/vector setup & assembly + solve time.
+    int tSolveOnly_;   // Tracks time taken by hypre to solve the system of equations
+    int tMatVecSetup_; // Tracks the time taken by uintah/hypre to allocate and set matrix and vector box vaules
     
   }; // class HypreStencil7
   
