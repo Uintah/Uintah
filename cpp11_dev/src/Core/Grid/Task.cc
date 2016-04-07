@@ -801,6 +801,19 @@ Task::Dependency::Dependency(DepType deptype,
   reductionLevel(0), patches_dom(patches_dom), matls_dom(matls_dom),
   gtype(gtype), whichdw(whichdw), numGhostCells(numGhostCells), level_offset(level_offset)
 {
+  // get task type
+  auto task_type = task->getType();
+  if (task_type == Task::Reduction || task_type == Task::OncePerProc) {
+    m_level_idx = reductionLevel ? reductionLevel->getIndex() : -1;
+  } else if (deptype != Task::Requires) {
+    // modifies and computes level is the task level
+    m_level_idx = getLevel(task->getPatchSet())->getIndex();
+  } else {
+    auto level = patches ? getLevel(patches) : getLevel(task->getPatchSet());
+    int offset = patches_dom == Task::CoarseLevel ? -level_offset : level_offset;
+    m_level_idx = level->getRelativeLevel(offset)->getIndex();
+  }
+
   if (var){
     var->addReference();
   }
@@ -828,6 +841,19 @@ Task::Dependency::Dependency(DepType deptype,
   reductionLevel(reductionLevel), patches_dom(ThisLevel),
   matls_dom(matls_dom), gtype(Ghost::None), whichdw(whichdw), numGhostCells(0), level_offset(0)
 {
+  // get task type
+  auto task_type = task->getType();
+  if (task_type == Task::Reduction || task_type == Task::OncePerProc) {
+    m_level_idx = reductionLevel ? reductionLevel->getIndex() : -1;
+  } else if (deptype != Task::Requires) {
+    // modifies and computes level is the task level
+    m_level_idx = getLevel(task->getPatchSet())->getIndex();
+  } else {
+    auto level = patches ? getLevel(patches) : getLevel(task->getPatchSet());
+    int offset = patches_dom == Task::CoarseLevel ? -level_offset : level_offset;
+    m_level_idx = level->getRelativeLevel(offset)->getIndex();
+  }
+
   if (var){
     var->addReference();
   }
