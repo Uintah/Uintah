@@ -165,37 +165,37 @@ C               AT(I,J,K) = dMAX1(-CT,DT-PT5*CT,0.0D0)
                  CVSX(I,J,K) = CVSX(I,J,K) + 1.0d0/6.0d0
                  AE(I,J,K) = DE - PT5*CE
                else
-                 AE(I,J,K) = DE + dMAX1(0.0D0,-CE)
+                 AE(I,J,K) = dMAX1(0.0D0,-CE)
                endif
                IF (REW.LT.Relimit) then
                  CVSX(I,J,K) = CVSX(I,J,K) + 1.0d0/6.0d0
                  AW(I,J,K) = DW + PT5*CW
                else
-                 AW(I,J,K) = DW + dMAX1(0.0D0,CW)
+                 AW(I,J,K) = dMAX1(0.0D0,CW)
                endif
                IF (REN.LT.Relimit) then
                  CVSX(I,J,K) = CVSX(I,J,K) + 1.0d0/6.0d0
                  AN(I,J,K) = DN - PT5*CN
                else
-                 AN(I,J,K) = DN + dMAX1(0.0D0,-CN)
+                 AN(I,J,K) = dMAX1(0.0D0,-CN)
                endif
                IF (RES.LT.Relimit) then
                  CVSX(I,J,K) = CVSX(I,J,K) + 1.0d0/6.0d0
                  AS(I,J,K) = DS + PT5*CS
                else
-                 AS(I,J,K) = DS + dMAX1(0.0D0,CS)
+                 AS(I,J,K) = dMAX1(0.0D0,CS)
                endif
                IF (RET.LT.Relimit) then
                  CVSX(I,J,K) = CVSX(I,J,K) + 1.0d0/6.0d0
                  AT(I,J,K) = DT - PT5*CT
                else
-                 AT(I,J,K) = DT + dMAX1(0.0D0,-CT)
+                 AT(I,J,K) = dMAX1(0.0D0,-CT)
                endif
                IF (REB.LT.Relimit) then
                  CVSX(I,J,K) = CVSX(I,J,K) + 1.0d0/6.0d0
                  AB(I,J,K) = DB + PT5*CB
                else
-                 AB(I,J,K) = DB + dMAX1(0.0D0,CB)
+                 AB(I,J,K) = dMAX1(0.0D0,CB)
                endif
 
 
