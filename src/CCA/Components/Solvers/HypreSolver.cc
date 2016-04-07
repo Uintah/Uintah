@@ -1030,12 +1030,6 @@ namespace Uintah {
       } else if(params->precondtype == "Diagonal" || params->precondtype == "diagonal"){
         /* use diagonal scaling as preconditioner */
         precond_solver_type = diagonal;
-#ifdef HYPRE_USE_PTHREADS
-        for (i = 0; i < hypre_NumThreads; i++)
-          precond[i] = NULL;
-#else
-        precond = NULL;
-#endif
         precond = HYPRE_StructDiagScale;
         pcsetup = HYPRE_StructDiagScaleSetup;
       } else {
@@ -1283,7 +1277,6 @@ namespace Uintah {
       }
     }
     
-
     switch(domtype){
     case TypeDescription::SFCXVariable:
       {
