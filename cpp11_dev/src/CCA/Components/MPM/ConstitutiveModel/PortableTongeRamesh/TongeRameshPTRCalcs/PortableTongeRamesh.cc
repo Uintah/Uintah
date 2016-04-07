@@ -53,7 +53,7 @@
 #include "PState.h"
 
 // GFMS headers (Granular Flow Multi Stage)
-#include "GFMS_full.h" 
+#include "GFMS_full.h"
 
 namespace PTR	// Portable TongeRamesh
 {
@@ -71,7 +71,7 @@ namespace PTR	// Portable TongeRamesh
     }
     return histVarName;
   }
-  
+
   std::string getMatParamName(const int paramNumber){
     std::string paramName("unknown");
     if(paramNumber<PTR_NUM_MAT_PARAMS){
@@ -247,8 +247,8 @@ namespace PTR	// Portable TongeRamesh
   double initalizeFlawDist( double flawSize[],
                             double flawNumber[],
                             const flawDistributionData flawDistData,
-                            const double dx_ave, unsigned long seedArray[],
-                            unsigned long nSeedValues
+                            const double dx_ave, uint32_t seedArray[],
+                            uint32_t nSeedValues
                             )
   {
     MTRand randGen(seedArray, nSeedValues);
@@ -302,7 +302,7 @@ namespace PTR	// Portable TongeRamesh
 
               double meanEta = eta/flawDistData.numCrackFamilies;
               double stdEta = sqrt(meanEta/(dx_ave*dx_ave*dx_ave));
-            
+
               // Generate a Pareto distribution of internal flaws:
               for (int i = 0; i < flawDistData.numCrackFamilies; i++){
                 // Calculate the flaw size for the bin:
@@ -320,7 +320,7 @@ namespace PTR	// Portable TongeRamesh
                 // Transform standard normal Z to the distribution that I need:
                 double flawNum = Z*stdEta+meanEta; // Select from a normal dist centered at meanEta
                 flawNum = flawNum<0 ? 0 : flawNum; // Do not allow negitive flaw number densties
-            
+
                 // Assign values:
                 flawNumber[i] = flawNum;
                 flawSize[i] = s;
@@ -343,7 +343,7 @@ namespace PTR	// Portable TongeRamesh
               double a = flawDistData.exponent;
               double s_mid;
               double s;
-                                        
+
               // Generate a Pareto distribution of internal flaws:
               for (int i = 0; i < flawDistData.numCrackFamilies; i++){
                 // Calculate the flaw size for the bin:
@@ -351,12 +351,12 @@ namespace PTR	// Portable TongeRamesh
                 s = smax - (i + randGen.rand53())*binWidth;
                 // Calculate the flaw denstiy in the bin:
                 pdfValue = a * pow(smin, a) * pow(s_mid, -a-1.0) / (1-pow(smin/smax,a));
-            
+
                 // Assign values:
                 flawNumber[i] = eta*pdfValue*binWidth;
                 flawSize[i] = s;
               } // End loop through flaw families
-              
+
               break;
             }
           case 2:
@@ -384,7 +384,7 @@ namespace PTR	// Portable TongeRamesh
                 pdfValue = a * pow(smin, a) * pow(s, -a-1.0) / (1-pow(smin/smax,a));
                 meanEta = eta*pdfValue*binWidth;
                 stdEta = sqrt(meanEta/(dx_ave*dx_ave*dx_ave));
-                
+
                 double x = randGen.rand53();
                 double y = randGen.rand53();
                 double Z = sqrt(-2*log(x))*cos(2*M_PI*y);
@@ -397,7 +397,7 @@ namespace PTR	// Portable TongeRamesh
                 flawNumber[i] = flawNum;
                 flawSize[i] = s;
               } // End loop through flaw families
-              
+
               break;
             }
           case 3:
@@ -408,7 +408,7 @@ namespace PTR	// Portable TongeRamesh
               double smin = flawDistData.minFlawSize;
               double smax = flawDistData.maxFlawSize;
               double a = flawDistData.exponent;
-                
+
               int numFlaws = 1;
               double u_cur, u_old, delU_cur, delU_old;
               double invVol = 1.0/(dx_ave*dx_ave*dx_ave);
@@ -421,7 +421,7 @@ namespace PTR	// Portable TongeRamesh
               flawSize[0] =
                 pareto_invCDF( u_cur + ( randGen.rand53()- 0.5 ) * delU_cur,
                                smin, smax, a);
-               
+
               for(int i = 1; i<flawDistData.numCrackFamilies; ++i){
                 // Copy current to old:
                 delU_old = delU_cur;
@@ -446,7 +446,7 @@ namespace PTR	// Portable TongeRamesh
               double smin = flawDistData.minFlawSize;
               double smax = flawDistData.maxFlawSize;
               double a = flawDistData.exponent;
-                                
+
               int numFlaws = 1;
               double u_cur, delU_cur, s_l, s_h;
               double invVol = 1.0/(dx_ave*dx_ave*dx_ave);
@@ -456,12 +456,12 @@ namespace PTR	// Portable TongeRamesh
               u_cur = 1-delU_cur; // CDF value at the minimum flaw size for the bin.
               s_h = smax;    // Upper bound on flaw size for the bin.
               s_l = pareto_invCDF( u_cur, smin, smax, a); // Lower bound on flaw size for the bin
-                
+
               flawNumber[0] = invVol;
               // Rescale the distribution to achieve more accurate sampeling from within
               // the bin.
               flawSize[0] = pareto_invCDF( randGen.rand53(), s_l, s_h, a);
-                
+
               for(int i = 1; i<flawDistData.numCrackFamilies; ++i){
                 // Copy current to old:
                 s_h = s_l;
@@ -492,7 +492,7 @@ namespace PTR	// Portable TongeRamesh
               double a = flawDistData.exponent;
               double s, s_l(s_max), s_h(s_max), meanBinFlaws, binOmega;
               double poissonThreshold = 20;
-                                        
+
               // Generate a Pareto distribution of internal flaws:
               for (int i = 0; i < flawDistData.numCrackFamilies; i++){
                 s_h = s_l;
@@ -524,7 +524,7 @@ namespace PTR	// Portable TongeRamesh
                     binOmega = 0.0;
                   }
                 }
-                    
+
                 // Assign values:
                 flawNumber[i] = binOmega;
                 flawSize[i] = s;
@@ -642,7 +642,7 @@ namespace PTR	// Portable TongeRamesh
                 xi_l = 1.0;
                 del_xi = 1.0/flawDistData.numCrackFamilies;
               }
-                                        
+
               // Generate a Pareto distribution of internal flaws:
               for (int i = 0; i < flawDistData.numCrackFamilies; i++){
                 s_h = s_l;
@@ -789,7 +789,7 @@ namespace PTR	// Portable TongeRamesh
 	flawDistData.sizeFilename = "N/A";
     return flawDistData;
   }
-  
+
   void unpackMatParams(const double matParamArray[PTR_NUM_MAT_PARAMS],
                        Flags *flags,
                        ModelData *initialData,
@@ -920,8 +920,8 @@ namespace PTR	// Portable TongeRamesh
   }
   // int checkmatparams(const double matParamArray[PTR_NUM_MAT_PARAMS]);
 
-  double artificialBulkViscosity(	double Dkk, 
-                                    double c_bulk, 
+  double artificialBulkViscosity(	double Dkk,
+                                    double c_bulk,
                                     double rho,
                                     double dx,
                                     const ArtificialViscosity av
@@ -944,7 +944,7 @@ namespace PTR	// Portable TongeRamesh
   double calc_yeildFunc_g_gs_gp(	const granularPlasticityData gpData,
                                     const double sigma_s,
                                     const double sigma_p,
-                                    double *gs, 
+                                    double *gs,
                                     double *gp){
     double A = gpData.A;
     double B = gpData.B;
@@ -1414,7 +1414,7 @@ namespace PTR	// Portable TongeRamesh
     const double sinPhi = sin(phi);
     const double cos2Phi = cos(2.0*phi);
     const double sin2Phi = sin(2.0*phi);
-    
+
     for(int i=0; i<nBins; ++i){
       if(N[i] >0 ) {
         if( (old_L[i]+s[i])*(old_L[i]+s[i])*(old_L[i]+s[i]) < 1.0/N[i] ) {
@@ -1573,7 +1573,7 @@ namespace PTR	// Portable TongeRamesh
           g_test       = 0.0;
           S_hat       *= 0.0;
         }
-       
+
         int stepNum;
 
         for(stepNum=0; stepNum<100; ++stepNum) {
@@ -1618,7 +1618,7 @@ namespace PTR	// Portable TongeRamesh
           tauDev=(tauDevTrial+ tauBar*inv_timeConst*delT)/(1+delT*inv_timeConst);
 
           p_target = (p_trial + delT*inv_timeConst*p_bar)/(1+delT*inv_timeConst);
-        } 
+        }
         // Now that I have the updated stress calculate the updated history variables:
 
         // switch to the cauchy stress:
@@ -1639,14 +1639,14 @@ namespace PTR	// Portable TongeRamesh
         double IEl_tr(IEl);
         // update IEl based on the ratio of effective strain energies:
         if(tauDevTrial.normSquared()>tauDev.normSquared()){
-          IEl = (IEl_tr - 1) * (tauDev.normSquared()/(sTnorm*sTnorm)) + 1;         
-        } 
+          IEl = (IEl_tr - 1) * (tauDev.normSquared()/(sTnorm*sTnorm)) + 1;
+        }
         *bElBar_new     = tauDev/state->shearModulus + identity*IEl;
         *pGP_strain    += delT*devPlasticStrainRate.norm();
 
         // Compute the changes in energy:
         double del_Thermal = state->specificHeat * delT * rho_orig *
-          eos->computeIsentropicTemperatureRate(	pTemperature, 
+          eos->computeIsentropicTemperatureRate(	pTemperature,
                                                 rho_orig,
                                                 state->density,
                                                 (JGP - pGPJ_old)*invDelT/(JGP)
@@ -1654,9 +1654,9 @@ namespace PTR	// Portable TongeRamesh
         double trial_U(eos->computeStrainEnergy(rho_orig,rho_orig * pGPJ_old/J));
         double del_U = trial_U - eos->computeStrainEnergy(rho_orig,rho_orig * JGP/J)+del_Thermal ;
         del_U *= state->bulkModulus/state->initialBulkModulus;
-            
+
         double del_W = 0.5*state->shearModulus * 3.0 *(IEl_tr - IEl); // Note IEl is 1/3* tr(be)
-            
+
         if(del_U + del_W < 0 && del_U<0){
           for (int i = 0; i<110; i++){
             tr_d_p *= 0.9;
@@ -1668,16 +1668,16 @@ namespace PTR	// Portable TongeRamesh
             p_new = flags.useDamage ?
               computePressure(eos, identity * cbrt(JEL), (*state), pDamage_new) :
               computePressure(eos, identity*cbrt(JEL), (*state), 0);
-						
+
             del_Thermal = state->specificHeat * delT * rho_orig *
-              eos->computeIsentropicTemperatureRate(	pTemperature, 
+              eos->computeIsentropicTemperatureRate(	pTemperature,
                                                     rho_orig,
                                                     state->density,
                                                     (JGP - pGPJ_old)*invDelT/(JGP)
                                                     );
             del_U = trial_U - eos->computeStrainEnergy(rho_orig,rho_orig * JGP/J)+del_Thermal ;
             del_U *= state->bulkModulus/state->initialBulkModulus;
-            
+
             del_W = 0.5*state->shearModulus * 3.0 *(IEl_tr - IEl); // Note IEl is 1/3* tr(be)
 
             if(del_U + del_W >= 0){
@@ -1696,7 +1696,7 @@ namespace PTR	// Portable TongeRamesh
                 computePressure(eos, identity*cbrt(JEL), (*state), 0);
               break;
             }
-          } // End of  for(int i = 0; i<110; i++) 
+          } // End of  for(int i = 0; i<110; i++)
         }   // End of  if(del_U + del_W < 0 && p_trial < 0)
 
         if(del_U + del_W < 0){
@@ -1719,7 +1719,7 @@ namespace PTR	// Portable TongeRamesh
             if(flags.useDamage){
               desc << "Damage:\t" << pDamage_new<< std::endl;
             }
-              
+
             desc << "Return State:\n"
                  << "p_new:\t" << p_new << "\t p_target:\t" << p_target << "\n"
                  << "J:\t" << J << "\t pGPJ:\t" << JGP << "\n"
@@ -1912,7 +1912,7 @@ namespace PTR	// Portable TongeRamesh
                                     const granularPlasticityData gpData,
                                     const ArtificialViscosity artificialViscosity,
                                     const PortableMieGruneisenEOSTemperature *eos,
-                
+
                                     // Input Matrices
                                     const Matrix3x3 pDefGrad,
                                     const Matrix3x3 pDefGrad_new,
@@ -1943,7 +1943,7 @@ namespace PTR	// Portable TongeRamesh
                                     const double K,
                                     const double flow,
                                     const double delT,
-                
+
                                     // Output double
                                     double *pGP_strain,
                                     double *pPlasticStrain,
@@ -1964,11 +1964,11 @@ namespace PTR	// Portable TongeRamesh
                                     // Input int
                                     const int pLocalized,
                                     const long long pParticleID,
-                
+
                                     // Output int
                                     long long *totalLocalizedParticle,
                                     int *pLocalized_new,
-                
+
                                     // Input std::vector
                                     const std::vector<double> *pWingLength_array,
                                     const std::vector<double> *pFlawNumber_array,
@@ -2107,10 +2107,10 @@ namespace PTR	// Portable TongeRamesh
         }
         msg << "\n";
       }
-    
+
       throw std::runtime_error(msg.str());
     }
-    
+
     double c_dil;
     double dx_ave = (dx.x() + dx.y() + dx.z())/3.0;
     double pIEl(bElBar->trace()/3.0);
@@ -2363,7 +2363,7 @@ namespace PTR	// Portable TongeRamesh
     const Matrix3x3 pDeformRate = (velGrad + velGrad.transpose())*0.5;
     Matrix3x3 Rinc(true), pStress_tmp(*pStress), Vinc_tmp(pDefGradInc);
     // If the incomming tensors are rotated, then the incomming velocity gradient
-    // should actually be the rate of deformation. 
+    // should actually be the rate of deformation.
     if(!assumeRotatedTensors){
       pDefGradInc.polarRotationRMB(&Rinc);               // Compute the incremental rotation
       *pStress_qs  = Rinc*((*pStress_qs)*Rinc.transpose()); // Rotate the reference stress forward.
@@ -2473,7 +2473,7 @@ namespace PTR	// Portable TongeRamesh
         }
         msg << "\n";
       }
-    
+
       throw std::runtime_error(msg.str());
     }
 #endif
@@ -2518,7 +2518,7 @@ namespace PTR	// Portable TongeRamesh
     double p_old = pStress_old.trace()/3.0;
     const double IEl_old = *pIEl;
     // bElBar has been rotated to the current frame:
-    const Matrix3x3 bElBar = (pStress_old-identity*p_old)*J_old/state.shearModulus + identity*IEl_old; 
+    const Matrix3x3 bElBar = (pStress_old-identity*p_old)*J_old/state.shearModulus + identity*IEl_old;
 
     state.bulkModulus         = state.initialBulkModulus;
     state.initialShearModulus = initialData.tauDev;
@@ -2545,7 +2545,7 @@ namespace PTR	// Portable TongeRamesh
       }
     }
     Matrix3x3 bElBar_new = bElBarTrial;
-    
+
     // Step 1: Compute Plastic flow --------------------------------------
     if(flags.usePlasticity) {
       double muBar = IEl*state.shearModulus;
@@ -2588,7 +2588,7 @@ namespace PTR	// Portable TongeRamesh
         *pdTdt_out      += delgamma*tauDevTrial.norm()*invDelT/(rho_orig * state.specificHeat);
       }
     }
-    
+
     // Step 2: Compute damage growth -------------------------------------
     if(flags.useDamage) {
       // if using damage calculate the new bulk and shear modulus
@@ -2721,7 +2721,7 @@ namespace PTR	// Portable TongeRamesh
         break;
       case SingleSurface:
         // This model is written for the Cauchy stress
-        
+
         // Call the granular flow model that I have been working on:
         // Assign history variables and material parameters:
         double JEL_old = J_old/pGPJ_old;
@@ -2763,7 +2763,7 @@ namespace PTR	// Portable TongeRamesh
 
         SymMat3::SymMatrix3 dSigma(sigma_tr-sigma_0);
         D = (dSigma.isotropic()/(3.0*GFMatParams.bulkMod) + dSigma.deviatoric()/(2.0*GFMatParams.shearMod))*invDelT;
-        
+
         sigma_0qs.set(0,0,pStress_qs->get(0,0));
         sigma_0qs.set(1,1,pStress_qs->get(1,1));
         sigma_0qs.set(2,2,pStress_qs->get(2,2));
@@ -2836,7 +2836,7 @@ namespace PTR	// Portable TongeRamesh
           double IEl(IEl_tr);
           if(tauDevTrial.normSquared()>tauDev.normSquared()){
             IEl = (IEl_tr-1.0)*(tauDev.normSquared()/tauDevTrial.normSquared()) + 1.0;
-          } 
+          }
           bElBar_new = (tauDev)/(state.shearModulus) + identity*IEl;
           // Compute the changes in energy:
           double delEnergy = GFMSIncPlasWork*J;
@@ -2968,7 +2968,7 @@ namespace PTR	// Portable TongeRamesh
 
     // compute the total stress (volumetric + deviatoric)
     *pStress = (identity*p + tauDev)/J;
-    
+
     // Compute the increment in strain energy due to the deviatoric
     double U = 0;
     double W = 0;
@@ -2987,7 +2987,7 @@ namespace PTR	// Portable TongeRamesh
       tr_d_el -= ((*pGPJ-pGPJ_old)/(*pGPJ)) * invDelT;
     }
     heatRate += (state.bulkModulus / state.initialBulkModulus) *
-      eos->computeIsentropicTemperatureRate(pTemperature, 
+      eos->computeIsentropicTemperatureRate(pTemperature,
                                             rho_orig,
                                             state.density,
                                             tr_d_el
@@ -3134,7 +3134,7 @@ namespace PTR	// Portable TongeRamesh
         }
         msg << "\n";
       }
-    
+
       throw std::runtime_error(msg.str());
     }
 #endif
@@ -3158,7 +3158,7 @@ namespace PTR	// Portable TongeRamesh
                          // Input/Output double
                          double *pIEl, // update
                          double *pPlasticStrain, // Unused
-                         double *pPlasticEnergy, 
+                         double *pPlasticEnergy,
                          double *pDamage,
                          double *pGPJ,
                          double *pGP_strain,
@@ -3252,7 +3252,7 @@ namespace PTR	// Portable TongeRamesh
     state.initialShearModulus = initialData.tauDev;
     state.bulkModulus  = calculateBulkPrefactor(*pDamage, state, JEL)*state.initialBulkModulus;
     state.shearModulus = calculateShearPrefactor(*pDamage, state)*state.initialShearModulus;
-    
+
     double p = computePressure(eos, identity*cbrt(JEL), state, *pDamage);
     SymMat3::SymMatrix3 bElBarDev(false);
     double sigma_m_in = pStress->trace()/3.0;

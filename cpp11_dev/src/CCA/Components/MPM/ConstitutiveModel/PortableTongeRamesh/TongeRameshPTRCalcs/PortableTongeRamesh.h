@@ -38,6 +38,9 @@
 
 #include "GFMS_full.h"          // GFMS::solParam GFMS::matParam
 #include "PTR_defs.h"
+
+#include <cstdint>
+
 namespace PTR                   // Portable TongeRamesh
 {
 
@@ -54,12 +57,12 @@ namespace PTR                   // Portable TongeRamesh
 	bool useOldStress;
 	bool artificialViscosity;
 	bool artificialViscosityHeating;
-	
+
 	// Erosion Algorithms
 	bool doErosion;
 	bool allowNoTension;
 	bool allowNoShear;
-	
+
 	bool setStressToZero;
   };
 
@@ -181,30 +184,30 @@ namespace PTR                   // Portable TongeRamesh
                          double *pGP_energy,
                          double *pdTdt
                          );
-  
-  double computePressure(const PortableMieGruneisenEOSTemperature *eos, 
-                         const Matrix3x3 F, 
-                         const PState state, 
+
+  double computePressure(const PortableMieGruneisenEOSTemperature *eos,
+                         const Matrix3x3 F,
+                         const PState state,
                          const double currentDamage
                          );
 
-  double calculateBulkPrefactor( const double currentDamage, 
+  double calculateBulkPrefactor( const double currentDamage,
                                  const PState state,
                                  const double J = 1.0
                                  );
 
-  double calculateShearPrefactor(	const double currentDamage, 
+  double calculateShearPrefactor(	const double currentDamage,
                                     const PState state
                                     );
 
   double calc_yeildFunc_g_gs_gp(	const granularPlasticityData gpData,
                                     const double sigma_s,
                                     const double sigma_p,
-                                    double *gs, 
+                                    double *gs,
                                     double *gp);
 
-  double artificialBulkViscosity(	const double Dkk, 
-                                    const double c_bulk, 
+  double artificialBulkViscosity(	const double Dkk,
+                                    const double c_bulk,
                                     const double rho,
                                     const double dx,
                                     const ArtificialViscosity av
@@ -215,7 +218,7 @@ namespace PTR                   // Portable TongeRamesh
                                 const Vector3 dx,
                                 const double pMass,
                                 const double pVolume);
-								
+
   void ComputeStressTensorInnerLoop(
                                     // Data Structures
                                     const Flags flags,
@@ -225,7 +228,7 @@ namespace PTR                   // Portable TongeRamesh
                                     const granularPlasticityData gpData,
                                     const ArtificialViscosity artificialViscosity,
                                     const PortableMieGruneisenEOSTemperature *eos,
-                
+
                                     // Input Matrices
                                     const Matrix3x3 pDefGrad,
                                     const Matrix3x3 pDefGrad_new,
@@ -256,7 +259,7 @@ namespace PTR                   // Portable TongeRamesh
                                     const double K,
                                     const double flow,
                                     const double delT,
-                
+
                                     // Output double
                                     double *pGP_strain,
                                     double *pPlasticStrain,
@@ -277,11 +280,11 @@ namespace PTR                   // Portable TongeRamesh
                                     // Input int
                                     const int pLocalized,
                                     const long long pParticleID,
-                
+
                                     // Output int
                                     long long *totalLocalizedParticle,
                                     int *pLocalized_new,
-                
+
                                     // Input std::vector
                                     const std::vector<double> *pWingLength_array,
                                     const std::vector<double> *pFlawNumber_array,
@@ -358,7 +361,7 @@ namespace PTR                   // Portable TongeRamesh
                           // Input/Output double
                           double *pIEl, // update
                           double *pPlasticStrain, // Unused
-                          double *pPlasticEnergy, 
+                          double *pPlasticEnergy,
                           double *pDamage,
                           double *pGPJ,
                           double *pGP_strain,
@@ -397,9 +400,9 @@ namespace PTR                   // Portable TongeRamesh
   double initalizeFlawDist( double flawSize[],
                             double flawNumber[],
                             const flawDistributionData flawDistData,
-                            const double dx_ave, unsigned long seedArray[],
-                            unsigned long nSeedValues
+                            const double dx_ave, uint32_t seedArray[],
+                            uint32_t nSeedValues
                             );
 }	// end namespace PTR
 
-#endif /* TONGERAMESHPORTABLE_H */ 
+#endif /* TONGERAMESHPORTABLE_H */

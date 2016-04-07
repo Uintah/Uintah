@@ -22,18 +22,18 @@
  * IN THE SOFTWARE.
  */
 /*______________________________________________________________________
- *  particle2tiff.cc: 
+ *  particle2tiff.cc:
  *
- *  A post processing utility for udas containing particle data.  
- *  The utility, tools/extractors/particle2tiff, averages particle data to the cell center and writes 
- *  this data to a 32-bit tiff file.  The tiff file contains 'slices' where each slice corresponds 
- *  to a plane in the z-direction.  The grayscale value of each pixel represents the 
- *  averaged value for that computational cell.  You can use the 
- *  image processing tool 'imageJ' to further analyze the tiffs.  Note, not all 
- *  tools can handle 32-bit images.  Currently, particle variables of type 
- *  double, Vector and Matrix3 are supported.  The equations for averaging 
+ *  A post processing utility for udas containing particle data.
+ *  The utility, tools/extractors/particle2tiff, averages particle data to the cell center and writes
+ *  this data to a 32-bit tiff file.  The tiff file contains 'slices' where each slice corresponds
+ *  to a plane in the z-direction.  The grayscale value of each pixel represents the
+ *  averaged value for that computational cell.  You can use the
+ *  image processing tool 'imageJ' to further analyze the tiffs.  Note, not all
+ *  tools can handle 32-bit images.  Currently, particle variables of type
+ *  double, Vector and Matrix3 are supported.  The equations for averaging
  *  these data are:
- * 
+ *
  * cc_ave = sum( double[p].         ) /( # particles in cell )
  * cc_ave = sum( Vector[p].length() ) /( # particles in cell )
  * cc_ave = sum( Matrix3[p].Norm()  ) /( # particles in cell )
@@ -47,13 +47,13 @@
  *
  *  Written by:
  *   Todd Harman
- *   Department of Mechancial Engineering 
+ *   Department of Mechancial Engineering
  *   by stealing lineextract from:
  *   University of Utah
  *   May 2012
  *
  *______________________________________________________________________*/
- 
+
 
 #include <Core/DataArchive/DataArchive.h>
 #include <Core/Disclosure/TypeDescription.h>
@@ -82,6 +82,7 @@
 #include <sstream>
 #include <string>
 #include <vector>
+#include <cstdint>
 
 using namespace std;
 using namespace Uintah;
@@ -97,7 +98,7 @@ struct clampVals{
 
 // contains all tiff flags
 struct tiffFlags{
-  uint16 orientation;  // currently not used
+  uint16_t orientation;  // currently not used
 };
 
 
@@ -108,14 +109,14 @@ class Bits{
     virtual void fillSlice(CCVariable<double>& ave,
                            bool doVerification,
                            const IntVector& lo,
-                           uint32 page ) = 0;
+                           uint32_t page ) = 0;
 
-    virtual void verifySlice(TIFF* out, 
+    virtual void verifySlice(TIFF* out,
                              tsize_t size,
                              tsize_t imageSize) = 0;
-                           
+
     virtual tsize_t writeRawStrip(TIFF* out, tsize_t imageSize ) = 0;
-    
+
     virtual ~Bits(){};
 };
 
@@ -124,71 +125,71 @@ class Bits{
 class eightBit  : public Bits
 {
   public:
-    eightBit(uint32 height, uint32 width){
+    eightBit(uint32_t height, uint32_t width){
       d_height = height;
       d_width = width;
-      d_slice = (uint8*) malloc(height * width * sizeof(uint8));
-      
+      d_slice = (uint8_t*) malloc(height * width * sizeof(uint8_t));
+
     }
-    
+
     ~eightBit(){}
-    
+
     //__________________________________
     //
     void fillSlice(CCVariable<double>& ave,
                    bool doVerification,
                    const IntVector& lo,
-                   uint32 page ){
-      
+                   uint32_t page ){
+
       if( doVerification ) {      // create test image
-        for (uint32 j = 0; j < d_height; j++){
-          for(uint32 i = 0; i < d_width; i++){
-            d_slice[j * d_width + i] = (uint8) j + (uint8) i;
+        for (uint32_t j = 0; j < d_height; j++){
+          for(uint32_t i = 0; i < d_width; i++){
+            d_slice[j * d_width + i] = (uint8_t) j + (uint8_t) i;
           }
         }
       } else {                    // actual data
         for ( int j = d_height-1; j != -1; j-- ){  // invert the image
           int y = (d_height-1) - j;                // so the orientation is correct in most viewers
-          
-          for( uint32 i = 0; i < d_width; i++ ){
+
+          for( uint32_t i = 0; i < d_width; i++ ){
             IntVector c = IntVector(i,y, page) + lo;
-            d_slice[j * d_width + i] = (uint8)ave[c];
+            d_slice[j * d_width + i] = (uint8_t)ave[c];
           }
         }
-      } 
+      }
     }
 
     //__________________________________
-    // read the image back in and verify that 
+    // read the image back in and verify that
     // it's correct
-    void verifySlice(TIFF* out, 
+    void verifySlice(TIFF* out,
                      tsize_t size,
                      tsize_t imageSize){
- 
+
       tsize_t nStrips   = TIFFNumberOfStrips (out);
-      cout  << "    Bytes Written: "<< size << " number of strips " << nStrips << endl; 
+      cout  << "    Bytes Written: "<< size << " number of strips " << nStrips << endl;
       cout  << "    Now reading in slice and verify data: ";
 
-      uint8 buffer[d_height * d_width];
-      
+      uint8_t buffer[d_height * d_width];
+
       long result;
       if((result = TIFFReadRawStrip (out, (tstrip_t) 0, buffer, imageSize)) == -1){
         fprintf(stderr, "Read error on input strip number %d\n", 0);
         exit(42);
       }
 
-      for (uint32 j = 0; j < d_height; j++){
-        for(uint32 i = 0; i < d_width; i++){
+      for (uint32_t j = 0; j < d_height; j++){
+        for(uint32_t i = 0; i < d_width; i++){
           if (buffer[j * d_width + i] != d_slice[j * d_width + i]  ){
             cout << " ERROR:  ["<<i << "," << j << "] "
-                 << " input pixel " <<   buffer[j * d_width + i] 
+                 << " input pixel " <<   buffer[j * d_width + i]
                  << " output pixel " << d_slice[j * d_width + i] << endl;
           }
         }
       }
-      cout << " PASSED " << endl;    
+      cout << " PASSED " << endl;
     }
-    
+
     //__________________________________
     //
     tsize_t writeRawStrip(TIFF* out, tsize_t imageSize ){
@@ -197,11 +198,11 @@ class eightBit  : public Bits
     }
 
     private:
-      uint32 d_height;
-      uint32 d_width;
+      uint32_t d_height;
+      uint32_t d_width;
 
-      uint8* d_slice;
-      uint8* d_buffer;
+      uint8_t* d_slice;
+      uint8_t* d_buffer;
 };
 
 //______________________________________________________________________
@@ -209,69 +210,69 @@ class eightBit  : public Bits
 class sixteenBit  : public Bits
 {
   public:
-    sixteenBit(uint32 height, uint32 width){
+    sixteenBit(uint32_t height, uint32_t width){
       d_height = height;
       d_width = width;
-      d_slice = (uint16*) malloc(height * width * sizeof(uint16));
+      d_slice = (uint16_t*) malloc(height * width * sizeof(uint16_t));
     }
-    
+
     ~sixteenBit(){}
-    
+
     //__________________________________
     //
     void fillSlice(CCVariable<double>& ave,
                    bool doVerification,
                    const IntVector& lo,
-                   uint32 page ){
-      
+                   uint32_t page ){
+
       if( doVerification ) {      // create test image
-        for (uint32 j = 0; j < d_height; j++){
-          for(uint32 i = 0; i < d_width; i++){
-            d_slice[j * d_width + i] = (uint16) j * (uint16) i;
+        for (uint32_t j = 0; j < d_height; j++){
+          for(uint32_t i = 0; i < d_width; i++){
+            d_slice[j * d_width + i] = (uint16_t) j * (uint16_t) i;
           }
         }
       } else {                    // actual data
         for ( int j = d_height-1; j != -1; j-- ){  // invert the image
           int y = (d_height-1) - j;                // so the orientation is correct in most viewers
-          
-          for(uint32 i = 0; i < d_width; i++){
+
+          for(uint32_t i = 0; i < d_width; i++){
             IntVector c = IntVector(i,y,page) + lo;
-            d_slice[j * d_width + i] = (uint16) ave[c];
+            d_slice[j * d_width + i] = (uint16_t) ave[c];
           }
         }
       }
     }
-    
+
     //__________________________________
-    // read the image back in and verify that 
+    // read the image back in and verify that
     // it's correct
-    void verifySlice(TIFF* out, 
+    void verifySlice(TIFF* out,
                      tsize_t size,
                      tsize_t imageSize){
-    
+
       tsize_t nStrips   = TIFFNumberOfStrips (out);
-      cout  << "    Bytes Written: "<< size << " number of strips " << nStrips << endl; 
+      cout  << "    Bytes Written: "<< size << " number of strips " << nStrips << endl;
       cout  << "    Now reading in slice and verify data: ";
 
-      uint16  buffer[d_height * d_width];
-      
+      uint16_t  buffer[d_height * d_width];
+
       long result;
       if((result = TIFFReadRawStrip (out, (tstrip_t) 0, buffer, imageSize)) == -1){
         fprintf(stderr, "Read error on input strip number %d\n", 0);
         exit(42);
       }
 
-      for (uint32 j = 0; j < d_height; j++){
-        for(uint32 i = 0; i < d_width; i++){
+      for (uint32_t j = 0; j < d_height; j++){
+        for(uint32_t i = 0; i < d_width; i++){
           if (buffer[j * d_width + i] != d_slice[j * d_width + i]  ){
             cout << " ERROR:  ["<<i << "," << j << "] "
-                 << " input pixel " <<   buffer[j * d_width + i] 
+                 << " input pixel " <<   buffer[j * d_width + i]
                  << " output pixel " << d_slice[j * d_width + i] << endl;
           }
         }
       }
-      cout << " PASSED " << endl;    
-    }    
+      cout << " PASSED " << endl;
+    }
     //__________________________________
     //
     tsize_t writeRawStrip(TIFF* out, tsize_t imageSize ){
@@ -280,11 +281,11 @@ class sixteenBit  : public Bits
     }
 
     private:
-      uint32 d_height;
-      uint32 d_width;
+      uint32_t d_height;
+      uint32_t d_width;
 
-      uint16* d_slice;
-      uint16* d_buffer;
+      uint16_t* d_slice;
+      uint16_t* d_buffer;
 };
 
 //______________________________________________________________________
@@ -292,88 +293,88 @@ class sixteenBit  : public Bits
 class thirtytwoBit  : public Bits
 {
   public:
-    thirtytwoBit(uint32 height, uint32 width){
+    thirtytwoBit(uint32_t height, uint32_t width){
       d_height = height;
       d_width = width;
       d_slice = (float*) malloc(height * width * sizeof(float));
     }
-    
+
     ~thirtytwoBit(){}
-    
+
     //__________________________________
     //
     void fillSlice(CCVariable<double>& ave,
                    bool doVerification,
                    const IntVector& lo,
-                   uint32 page ){
+                   uint32_t page ){
 
       if( doVerification ) {      // create test image
-        for (uint32 j = 0; j < d_height; j++){
-          for(uint32 i = 0; i < d_width; i++){
+        for (uint32_t j = 0; j < d_height; j++){
+          for(uint32_t i = 0; i < d_width; i++){
             d_slice[j * d_width + i] = (float) j * (float) i;
           }
         }
       } else {                    // actual data
         for ( int j = d_height-1; j != -1; j-- ){   // invert the image
           int y = (d_height-1) - j;                 // so the orientation is correct in most viewers
-          
-          for(uint32 i = 0; i < d_width; i++){
+
+          for(uint32_t i = 0; i < d_width; i++){
             IntVector c = IntVector(i,y,page) + lo;
             d_slice[j * d_width + i] = ave[c];
           }
         }
-      }      
+      }
     }
 
     //__________________________________
-    // read the image back in and verify that 
+    // read the image back in and verify that
     // it's correct
-    void verifySlice(TIFF* out, 
+    void verifySlice(TIFF* out,
                      tsize_t size,
                      tsize_t imageSize){
-    
+
       tsize_t nStrips   = TIFFNumberOfStrips (out);
-      cout  << "    Bytes Written: "<< size << " number of strips " << nStrips << endl; 
+      cout  << "    Bytes Written: "<< size << " number of strips " << nStrips << endl;
       cout  << "    Now reading in slice and verify data: ";
 
       float buffer[d_height * d_width];
-      
+
       long result;
       if((result = TIFFReadRawStrip (out, (tstrip_t) 0, buffer, imageSize)) == -1){
         fprintf(stderr, "Read error on input strip number %d\n", 0);
         exit(42);
       }
 
-      for (uint32 j = 0; j < d_height; j++){
-        for(uint32 i = 0; i < d_width; i++){
+      for (uint32_t j = 0; j < d_height; j++){
+        for(uint32_t i = 0; i < d_width; i++){
           if (buffer[j * d_width + i] != d_slice[j * d_width + i]  ){
             cout << " ERROR:  ["<<i << "," << j << "] "
-                 << " input pixel " <<   buffer[j * d_width + i] 
+                 << " input pixel " <<   buffer[j * d_width + i]
                  << " output pixel " << d_slice[j * d_width + i] << endl;
           }
         }
       }
-      cout << " PASSED " << endl;    
+      cout << " PASSED " << endl;
     }
-    
+
     //__________________________________
     //
     tsize_t writeRawStrip(TIFF* out, tsize_t imageSize ){
-    
+
       tsize_t size = TIFFWriteRawStrip(out, (tstrip_t) 0, d_slice, imageSize);
       return size;
     }
 
     private:
-      uint32 d_height;
-      uint32 d_width;
+      uint32_t d_height;
+      uint32_t d_width;
 
       float* d_slice;
-};                        
+};
 
 
 //______________________________________________________________________
-//  
+//
 void
 usage(const std::string& badarg, const std::string& progname)
 {
@@ -386,22 +387,22 @@ usage(const std::string& badarg, const std::string& progname)
     cerr << "  -v,        --variable:      [string] variable name\n";
     cerr << "  -m,        --material:      [int or string 'a, all'] material index [defaults to 0]\n\n";
     cerr << "  -max                        [double] (maximum clamp value)\n";
-    cerr << "  -min                        [double] (minimum clamp value)\n";    
+    cerr << "  -min                        [double] (minimum clamp value)\n";
     cerr << "  -verify                     [none]   (output test image 256x256x5) \n";
     cerr << "  -nBits                      [int]    (number of bits/pixel in output images) [defaults to 8] \n";
     cerr << "  -asVolume                   [none]   (save all slices in 1 tiff file) [default] \n";
-    cerr << "  -asSlices                   [none]   (save slices as separate files) \n";    
+    cerr << "  -asSlices                   [none]   (save slices as separate files) \n";
     cerr << "  -tlow,     --timesteplow:   [int] (start output timestep) [defaults to 0]\n";
     cerr << "  -thigh,    --timestephigh:  [int] (sets end output timestep) [defaults to last timestep]\n";
     cerr << "  -timestep, --timestep:      [int] (only outputs timestep)  [defaults to 0]\n\n";
-    
+
     cerr << "  -istart,   --indexs:        <i> <j> <k> [ints] starting point cell index  [defaults to 0 0 0]\n";
     cerr << "  -iend,     --indexe:        <i> <j> <k> [ints] end-point cell index [defaults to 0 0 0]\n";
     cerr << "  -startPt                    <x> <y> <z> [doubles] starting point in physical coordinates\n";
-    cerr << "  -endPt                      <x> <y> <z> [doubles] end-point in physical coordinates\n\n"; 
-     
+    cerr << "  -endPt                      <x> <y> <z> [doubles] end-point in physical coordinates\n\n";
+
     cerr << "  -l,        --level:         [int] (level index to query range from) [defaults to 0]\n";
-    cerr << "  -d,        --dir:           output directory name [none]\n"; 
+    cerr << "  -d,        --dir:           output directory name [none]\n";
     cerr << "  --cellIndexFile:            <filename> (file that contains a list of cell indices)\n";
     cerr << "                                   [int 100, 43, 0]\n";
     cerr << "                                   [int 101, 43, 0]\n";
@@ -415,20 +416,20 @@ usage(const std::string& badarg, const std::string& progname)
 //
 
 void set_tiff_options(TIFF* out,
-                      const uint32 imageWidth,
-                      const uint32 imageHeight,
-                      const uint16 depth,
+                      const uint32_t imageWidth,
+                      const uint32_t imageHeight,
+                      const uint16_t depth,
                       const tiffFlags* flags){
     float xres = 150;
     float yres = 150;
-    uint16 spp = 1;                       // samples per pixel 1 for black & white or gray and 3 for color
-    uint16 photo =  PHOTOMETRIC_MINISBLACK;
-    
-    uint16 format = SAMPLEFORMAT_UINT;          // sample format
+    uint16_t spp = 1;                       // samples per pixel 1 for black & white or gray and 3 for color
+    uint16_t photo =  PHOTOMETRIC_MINISBLACK;
+
+    uint16_t format = SAMPLEFORMAT_UINT;          // sample format
     if(depth == TIFFDataWidth(TIFF_FLOAT) ){    // if 32-bit
       format = SAMPLEFORMAT_IEEEFP;
     }
-      
+
     // We need to set some values for basic tags before we can add any data
     TIFFSetField(out, TIFFTAG_IMAGEWIDTH,       imageWidth*spp );         // set the width of the image
     TIFFSetField(out, TIFFTAG_IMAGELENGTH,      imageHeight );            // set the height of the image
@@ -440,8 +441,8 @@ void set_tiff_options(TIFF* out,
     TIFFSetField(out, TIFFTAG_ORIENTATION,      ORIENTATION_BOTLEFT);     // set the origin of the image.
 
   //=  TIFFSetField(out, TIFFTAG_COMPRESSION,      COMPRESSION_DEFLATE);
-    TIFFSetField(out, TIFFTAG_PHOTOMETRIC,      photo);  
-        
+    TIFFSetField(out, TIFFTAG_PHOTOMETRIC,      photo);
+
     TIFFSetField(out, TIFFTAG_FILLORDER,        FILLORDER_MSB2LSB);
     TIFFSetField(out, TIFFTAG_PLANARCONFIG,     PLANARCONFIG_CONTIG);
 
@@ -461,24 +462,24 @@ void write_tiff_volume(const tiffFlags* flags,
                        const bool doVerification,
                        const int nBits){
 
-  uint32 imageWidth = hi.x() - lo.x();
-  uint32 imageHeight= hi.y() - lo.y();
-  uint32 imageDepth = hi.z() - lo.z();
-  
+  uint32_t imageWidth = hi.x() - lo.x();
+  uint32_t imageHeight= hi.y() - lo.y();
+  uint32_t imageDepth = hi.z() - lo.z();
+
   if(doVerification){
     imageWidth =256;
     imageHeight=256;
     imageDepth = 5;
-  }                       
-  uint16 depth = -9;                         // bytes per pixel;
-  
+  }
+  uint16_t depth = -9;                         // bytes per pixel;
+
   //__________________________________
   //  Create the objects that create the slices
   //  and write the data
   Bits* whichBit = NULL;
-  
+
   if(nBits == 8){
-    depth = TIFFDataWidth(TIFF_BYTE); 
+    depth = TIFFDataWidth(TIFF_BYTE);
     whichBit = new eightBit(imageHeight, imageWidth);
     cout << "  Writing 8-bit images " << endl;
   } else if (nBits == 16){
@@ -490,17 +491,17 @@ void write_tiff_volume(const tiffFlags* flags,
     whichBit = new thirtytwoBit(imageHeight, imageWidth);
     cout << "  Writing 32-bit images " << endl;
   }
-  
+
   tsize_t imageSize = imageHeight * imageWidth * depth;
-  
+
   // remove existing file
   if ( validFile( tname.str() ) ) {
     ostringstream cmd;
     cmd  << "rm -rf " << tname.str();
     system( cmd.str().c_str() );
     cout << "  removed existing file: " << tname.str() << endl;
-  }  
-  
+  }
+
   // Open the TIFF file
   TIFF *out;
   if((out = TIFFOpen(tname.str().c_str(), "w")) == NULL){
@@ -510,32 +511,32 @@ void write_tiff_volume(const tiffFlags* flags,
 
   //__________________________________
   //  loop over slices in z direction
-  for (uint32 page = 0; page < imageDepth; page++) {
-  
-  
-    
+  for (uint32_t page = 0; page < imageDepth; page++) {
+
+
+
     // fill the slice with data
     whichBit->fillSlice( ave, doVerification, lo, page);
-    
-    
+
+
     set_tiff_options(out, imageWidth, imageHeight, depth, flags);
 
     // We are writing a page of the multi page file
     TIFFSetField(out, TIFFTAG_SUBFILETYPE, FILETYPE_PAGE);
 
-    // slice number 
+    // slice number
     TIFFSetField(out, TIFFTAG_PAGENUMBER, page, imageDepth);
 
     tsize_t size = whichBit->writeRawStrip(out, imageSize );
-    
+
     cout << "  writing slice: [" << page << "/"<< imageDepth << "]" << " width: " << imageWidth << " height " << imageHeight << endl;
 
     if( doVerification ){
       whichBit->verifySlice( out, size, imageSize);
     }
-       
+
     TIFFWriteDirectory(out);
-   
+
   }  // page loop
   TIFFClose(out);
   delete whichBit;
@@ -552,24 +553,24 @@ void write_tiff_slices(const tiffFlags* flags,
                        const bool doVerification,
                        const int nBits){
 
-  uint32 imageWidth = hi.x() - lo.x();
-  uint32 imageHeight= hi.y() - lo.y();
-  uint32 imageDepth = hi.z() - lo.z();
-  
+  uint32_t imageWidth = hi.x() - lo.x();
+  uint32_t imageHeight= hi.y() - lo.y();
+  uint32_t imageDepth = hi.z() - lo.z();
+
   if(doVerification){
     imageWidth =256;
     imageHeight=256;
     imageDepth = 5;
-  }                       
-  uint16 depth = -9;                         // bytes per pixel;
-  
+  }
+  uint16_t depth = -9;                         // bytes per pixel;
+
   //__________________________________
   //  Create the objects that create the slices
   //  and write the data
   Bits* whichBit = NULL;
-  
+
   if(nBits == 8){
-    depth = TIFFDataWidth(TIFF_BYTE); 
+    depth = TIFFDataWidth(TIFF_BYTE);
     whichBit = new eightBit(imageHeight, imageWidth);
     cout << "  Writing 8-bit images " << endl;
   } else if (nBits == 16){
@@ -581,13 +582,13 @@ void write_tiff_slices(const tiffFlags* flags,
     whichBit = new thirtytwoBit(imageHeight, imageWidth);
     cout << "  Writing 32-bit images " << endl;
   }
-  
+
   tsize_t imageSize = imageHeight * imageWidth * depth;
-  
+
 
   //__________________________________
   //  loop over slices in z direction
-  for (uint32 page = 0; page < imageDepth; page++) {
+  for (uint32_t page = 0; page < imageDepth; page++) {
     ostringstream sliceName;
     sliceName << sliceBaseName.str()<<page<<".tif";
 
@@ -597,25 +598,25 @@ void write_tiff_slices(const tiffFlags* flags,
       cout << "Could not open " << sliceName << " for writing\n";
       exit(1);
     }
-  
+
     // fill the slice with data
     whichBit->fillSlice( ave, doVerification, lo, page);
-    
+
     set_tiff_options(out, imageWidth, imageHeight, depth, flags);
 
-    // slice number 
+    // slice number
     TIFFSetField(out, TIFFTAG_PAGENUMBER, page, imageDepth);
 
     tsize_t size = whichBit->writeRawStrip(out, imageSize );
-    
+
     cout << "  writing slice: [" << page << "/"<< imageDepth << "]" << " width: " << imageWidth << " height " << imageHeight << endl;
 
     if( doVerification ){
       whichBit->verifySlice( out, size, imageSize);
     }
-       
+
     TIFFClose(out);
-   
+
   }  // page loop
   delete whichBit;
 }
@@ -630,19 +631,19 @@ compute_ave( vector<int>                         & matls,
              vector< ParticleVariable<double>* > & var,
              CCVariable<double>                  & ave,
              vector< ParticleVariable<Point>* >  & pos,
-             const Patch                         * patch ) 
+             const Patch                         * patch )
 {
   IntVector lo = patch->getExtraCellLowIndex();
   IntVector hi = patch->getExtraCellHighIndex();
-  
+
   ave.allocate(lo,hi);
   ave.initialize(0.0);
-  
+
   double initValue = 0.0;           // set the minimum value to the clamp value if it exists
   if(clamp->minVal != -DBL_MAX){
     initValue = clamp->minVal;
   }
-  
+
   CCVariable<double> count;
   count.allocate(lo,hi);
   count.initialize(0.0);
@@ -650,27 +651,27 @@ compute_ave( vector<int>                         & matls,
   vector<int>::iterator iter;
   for (iter = matls.begin(); iter < matls.end(); iter++) {
     int m = *iter;
-    
+
     ParticleSubset* pset = var[m]->getParticleSubset();
-    
+
     //cout << " m: " << m << " *pset " << *pset << endl;
-    
+
     if(pset->numParticles() > 0){
       ParticleSubset::iterator iter = pset->begin();
       for( ;iter != pset->end(); iter++ ){
         IntVector c;
         patch->findCell((*pos[m])[*iter], c);
         ave[c]    = ave[c] + (*var[m])[*iter];
-        count[c] += 1;  
+        count[c] += 1;
       }
     }
   }
-  
+
   // apply clamps to data only in cells where there are particles
   // otherwise just set it.
   for(CellIterator iter=patch->getCellIterator(); !iter.done(); iter++){
     IntVector c = *iter;
-    
+
     if(count[c] > 0.0){
       ave[c] = ave[c]/(count[c] );
       ave[c] = min(ave[c], clamp->maxVal);
@@ -682,7 +683,7 @@ compute_ave( vector<int>                         & matls,
 }
 
 //__________________________________
-//      V E C T O R   V E R S I O N  
+//      V E C T O R   V E R S I O N
 void compute_ave( vector<int>                         & matls,
                   const clampVals                     * clamp,
                   vector< ParticleVariable<Vector>* > & var,
@@ -692,25 +693,25 @@ void compute_ave( vector<int>                         & matls,
 {
   IntVector lo = patch->getExtraCellLowIndex();
   IntVector hi = patch->getExtraCellHighIndex();
-  
+
   ave.allocate(lo,hi);
   ave.initialize(0.0);
-  
+
   double initValue = 0.0;           // set the minimum value to the clamp value if it exists
   if(clamp->minVal != -DBL_MAX){
     initValue = clamp->minVal;
   }
-  
+
   CCVariable<double> count;
   count.allocate(lo,hi);
   count.initialize(0.0);
-  
+
   vector<int>::iterator iter;
   for (iter = matls.begin(); iter < matls.end(); iter++) {
     int m = *iter;
-  
+
     ParticleSubset* pset = var[m]->getParticleSubset();
-    
+
     if(pset->numParticles() > 0){
       ParticleSubset::iterator iter = pset->begin();
 
@@ -718,16 +719,16 @@ void compute_ave( vector<int>                         & matls,
         IntVector c;
         patch->findCell((*pos[m])[*iter], c);
         ave[c]    = ave[c] + (*var[m])[*iter].length();
-        count[c] += 1; 
+        count[c] += 1;
       }
     }
   }
-  
+
   // apply clamps to data only in cells where there are particles
   // otherwise just set it.
   for(CellIterator iter=patch->getCellIterator(); !iter.done(); iter++){
     IntVector c = *iter;
-    
+
     if(count[c] > 0.0){
       ave[c] = ave[c]/(count[c] );
       ave[c] = min(ave[c], clamp->maxVal);
@@ -739,7 +740,7 @@ void compute_ave( vector<int>                         & matls,
 }
 
 //__________________________________
-//       M A T R I X 3   V E R S I O N  
+//       M A T R I X 3   V E R S I O N
 void compute_ave( vector<int>                          & matls,
                   const clampVals                      * clamp,
                   vector< ParticleVariable<Matrix3>* > & var,
@@ -749,7 +750,7 @@ void compute_ave( vector<int>                          & matls,
 {
   IntVector lo = patch->getExtraCellLowIndex();
   IntVector hi = patch->getExtraCellHighIndex();
-  
+
   ave.allocate(lo,hi);
   ave.initialize(0.0);
 
@@ -757,17 +758,17 @@ void compute_ave( vector<int>                          & matls,
   if(clamp->minVal != -DBL_MAX){
     initValue = clamp->minVal;
   }
-    
+
   CCVariable<double> count;
   count.allocate(lo,hi);
   count.initialize(0.0);
-  
+
   vector<int>::iterator iter;
   for (iter = matls.begin(); iter < matls.end(); iter++) {
-    int m = *iter;    
-  
+    int m = *iter;
+
     ParticleSubset* pset = var[m]->getParticleSubset();
-    
+
     if(pset->numParticles() > 0){
       ParticleSubset::iterator iter = pset->begin();
 
@@ -775,7 +776,7 @@ void compute_ave( vector<int>                          & matls,
         IntVector c;
         patch->findCell((*pos[m])[*iter], c);
         ave[c]    = ave[c] + (*var[m])[*iter].Norm();
-        count[c] += 1;      
+        count[c] += 1;
       }
     }
   }
@@ -784,7 +785,7 @@ void compute_ave( vector<int>                          & matls,
   // otherwise just set it.
   for(CellIterator iter=patch->getCellIterator(); !iter.done(); iter++){
     IntVector c = *iter;
-    
+
     if(count[c] > 0.0){
       ave[c] = ave[c]/(count[c] );
       ave[c] = min(ave[c], clamp->maxVal);
@@ -797,16 +798,16 @@ void compute_ave( vector<int>                          & matls,
 
 
 //______________________________________________________________________
-//  scale the pixel 
+//  scale the pixel
 // 8-bit:   0->255
 // 16-bit:  0->65535
 void scaleImage( const int nBits,
                  const IntVector& lo,
                  const IntVector& hi,
                  CCVariable<double>& ave ) {
-                 
+
   if( nBits == 8 || nBits == 16 ){
-   
+
     double maxVal = -DBL_MAX;
     double minVal = DBL_MAX;
     double scale = pow( 2.0, nBits ) - 1.0;
@@ -829,15 +830,15 @@ void scaleImage( const int nBits,
 //______________________________________________________________________
 // Compute the average over all cell & patches in a level
 template<class T>
-void find_CC_ave( DataArchive                   * archive, 
-                  string                        & variable_name, 
+void find_CC_ave( DataArchive                   * archive,
+                  string                        & variable_name,
                   const Uintah::TypeDescription * subtype,
-                  vector<int>                   & matls, 
+                  vector<int>                   & matls,
                   const bool                      use_cellIndex_file,
                   const clampVals               * clampVals,
                   int                             levelIndex,
-                  IntVector                     & var_start, 
-                  IntVector                     & var_end, 
+                  IntVector                     & var_start,
+                  IntVector                     & var_end,
                   vector<IntVector>               cells,
                   unsigned long                   time_step,
                   CCVariable<double>            & aveLevel )
@@ -845,7 +846,7 @@ void find_CC_ave( DataArchive                   * archive,
   //__________________________________
   //  does the requested level exist
   bool levelExists = false;
-  GridP grid = archive->queryGrid(time_step); 
+  GridP grid = archive->queryGrid(time_step);
   int numLevels = grid->numLevels();
 
   for (int L = 0;L < numLevels; L++) {
@@ -867,18 +868,18 @@ void find_CC_ave( DataArchive                   * archive,
     level->selectPatches(var_start, var_end + IntVector(1,1,1), patches,true);
     if( patches.size() == 0){
       cerr << " Could not find any patches on Level " << level->getIndex()
-           << " that contain cells: " << var_start << " and " << var_end 
+           << " that contain cells: " << var_start << " and " << var_end
            << " Double check the starting and ending indices "<< endl;
       exit(1);
     }
-    
+
     // determing the max matl index
     int max_matl = -9;
     vector<int>::iterator m_it;
     for (m_it = matls.begin(); m_it < matls.end(); m_it++) {
       max_matl = max(max_matl, *m_it);
     }
-    
+
     //__________________________________
     // query all the data and compute the average over all the patches
     vector<CCVariable<double>*> ave(patches.size());
@@ -890,35 +891,35 @@ void find_CC_ave( DataArchive                   * archive,
       vector<int>::iterator iter;
       for (iter = matls.begin(); iter < matls.end(); iter++) {
         int m = *iter;
-      
+
         pVar[m] = new ParticleVariable<T>;
         pos[m]  = new ParticleVariable<Point>;
 
-        archive->query( *(ParticleVariable<T>*)pVar[m], variable_name, 
+        archive->query( *(ParticleVariable<T>*)pVar[m], variable_name,
                         m, patch, time_step);
-        
-        archive->query( *(ParticleVariable<Point>*)pos[m], "p.x", 
+
+        archive->query( *(ParticleVariable<Point>*)pos[m], "p.x",
                         m, patch, time_step);
-                        
-          
+
+
       }
       ave[p] = new CCVariable<double>;
 
       compute_ave( matls, clampVals, pVar, *ave[p], pos, patch );
-      
+
      // cleanup
       for (iter = matls.begin(); iter < matls.end(); iter++) {
         int m = *iter;
         delete pVar[m];
         delete pos[m];
       }
-                  
+
     }  // patches loop
-    
-    
+
+
     //__________________________________
     //  copy the computed average into the level array
-    // User input starting and ending indicies    
+    // User input starting and ending indicies
     if(!use_cellIndex_file) {
 
       for (CellIterator iter(var_start, var_end ); !iter.done(); iter++) {
@@ -931,22 +932,22 @@ void find_CC_ave( DataArchive                   * archive,
           IntVector low  = patches[p]->getExtraCellLowIndex();
           IntVector high = patches[p]->getExtraCellHighIndex();
 
-          if (c.x() >= low.x() && c.y() >= low.y() && c.z() >= low.z() && 
+          if (c.x() >= low.x() && c.y() >= low.y() && c.z() >= low.z() &&
               c.x() < high.x() && c.y() < high.y() && c.z() < high.z())
             break;
         }
         if (p == patches.size()) {
           continue;
         }
-        
-       aveLevel[c] = (*dynamic_cast<CCVariable<double>*>(ave[p]))[c]; 
+
+       aveLevel[c] = (*dynamic_cast<CCVariable<double>*>(ave[p]))[c];
       }
     }
 
     //__________________________________
-    // If the cell indicies were read from a file. 
+    // If the cell indicies were read from a file.
     if(use_cellIndex_file) {
-      
+
       for (int i = 0; i<(int) cells.size(); i++) {
         IntVector c = cells[i];
         int p = 0;
@@ -955,7 +956,7 @@ void find_CC_ave( DataArchive                   * archive,
           IntVector low  = patches[p]->getExtraCellLowIndex();
           IntVector high = patches[p]->getExtraCellHighIndex();
 
-          if (c.x() >= low.x() && c.y() >= low.y() && c.z() >= low.z() && 
+          if (c.x() >= low.x() && c.y() >= low.y() && c.z() >= low.z() &&
               c.x() < high.x() && c.y() < high.y() && c.z() < high.z())
             break;
         }
@@ -975,7 +976,7 @@ void find_CC_ave( DataArchive                   * archive,
  Purpose: reads in a list of cell indicies
 _______________________________________________________________________ */
 void readCellIndicies(const string& filename, vector<IntVector>& cells)
-{ 
+{
   // open the file
   ifstream fp(filename.c_str());
   if (!fp){
@@ -983,8 +984,8 @@ void readCellIndicies(const string& filename, vector<IntVector>& cells)
   }
   char c;
   int i,j,k;
-  string text, comma;  
-  
+  string text, comma;
+
   while (fp >> c) {
     fp >> text>>i >> comma >> j >> comma >> k;
     IntVector indx(i,j,k);
@@ -1012,26 +1013,26 @@ main( int argc, char** argv )
 
   unsigned long time_start = 0;
   unsigned long time_end = (unsigned long)-1;
-  
-  string input_uda_name;  
+
+  string input_uda_name;
   string input_file_cellIndices;
 
   string base_dir_name("-");
-  
+
   IntVector var_start(0,0,0);
   IntVector var_end(0,0,0);
-  
+
   Point     start_pt(-9,-9,-9);
   Point     end_pt(-9,-9,-9);
-  
+
   int levelIndex = 0;
   vector<IntVector> cells;
   string variable_name;
-  
+
   clampVals* clamps = new clampVals();
   clamps->minVal = -DBL_MAX;
   clamps->maxVal = DBL_MAX;
-  
+
   tiffFlags* flags = new tiffFlags();  // currently not used.
 
   unsigned int nBits     = 8;
@@ -1045,11 +1046,11 @@ main( int argc, char** argv )
   for(int i=1;i<argc;i++){
     string s  =argv[i];
     //cout << " s " << s << endl;  // debugging
-    
+
     if(s == "-v" || s == "--variable") {
       variable_name = string(argv[++i]);
     } else if ( s == "-m" || s == "--material") {
-      
+
       string me = string(argv[++i]);
       matls.clear();
       if( me == "a" || me == "all" ){        // all matls
@@ -1063,7 +1064,7 @@ main( int argc, char** argv )
           int m;
           rc = sscanf( argv[++i], "%d",&m);  // read in a int
 
-          if (rc){                            
+          if (rc){
             matls.push_back(m);              // put int into vector
           }
         } while (rc);
@@ -1086,7 +1087,7 @@ main( int argc, char** argv )
       int x = atoi(argv[++i]);
       int y = atoi(argv[++i]);
       int z = atoi(argv[++i]);
-      
+
       findCellIndices = false;
       var_end = IntVector(x,y,z);
     } else if ( s == "-startPt" ) {
@@ -1141,16 +1142,16 @@ main( int argc, char** argv )
     cerr << "\n\nInvalid nBits (" << nBits <<") specified, now exiting....\n";
     usage("", argv[0]);
   }
-  
+
   // remove any duplicate matls
   sort(matls.begin(), matls.end());
   vector<int>::iterator it;
   it = unique(matls.begin(), matls.end());
-  matls.erase(it, matls.end()); 
+  matls.erase(it, matls.end());
 
   try {
     DataArchive* archive = new DataArchive(input_uda_name);
-    
+
     vector<string> vars;
     vector<const Uintah::TypeDescription*> types;
 
@@ -1165,7 +1166,7 @@ main( int argc, char** argv )
         break;
       }
     }
-    
+
     //__________________________________
     // bulletproofing
     if (!var_found) {
@@ -1200,9 +1201,9 @@ main( int argc, char** argv )
     }
 
     //__________________________________
-    // bullet proofing 
+    // bullet proofing
     if (time_end >= times.size() || time_end < time_start) {
-      cout << "timestephigh("<<time_end<<") must be greater than " << time_start 
+      cout << "timestephigh("<<time_end<<") must be greater than " << time_start
            << " and less than " << times.size()-1 << endl;
       exit(1);
     }
@@ -1210,10 +1211,10 @@ main( int argc, char** argv )
       cout << "timestep must be between 0 and " << times.size()-1 << endl;
       exit(1);
     }
-    
+
     Dir base_dir = Dir(base_dir_name);                      // base output directory
-    
-    
+
+
     // create directory if it doesn't exist
     if( !base_dir.exists() ){
       base_dir = Dir::create(base_dir_name);
@@ -1236,16 +1237,16 @@ main( int argc, char** argv )
       //__________________________________
       //  find indices to extract for
       if(findCellIndices) {
-        if( level  ){ 
+        if( level  ){
           if (start_pt != Point(-9,-9,-9) ) {
             var_start=level->getCellIndex(start_pt);
-            var_end  =level->getCellIndex(end_pt); 
+            var_end  =level->getCellIndex(end_pt);
           } else{
             level->findInteriorCellIndexRange(var_start, var_end);
           }
         }
       }
-      
+
       //__________________________________
       //  find the number of matls at this timestep
       if(matls.back() == 999){       // all matls
@@ -1253,27 +1254,27 @@ main( int argc, char** argv )
         matls.clear();
         const Patch* patch = *(level->patchesBegin());
         int numMatls = archive->queryNumMaterials( patch, time_step);
-        
+
         for (int m = 0; m< numMatls; m++ ){
           matls.push_back(m);
         }
       }
 
-      cout << "  " << vars[var_index] << ": " << types[var_index]->getName() 
+      cout << "  " << vars[var_index] << ": " << types[var_index]->getName()
            << " being extracted and averaged for material(s): ";
-           
+
       vector<int>::iterator m;
       for (m = matls.begin(); m < matls.end(); m++) {
-        cout << *m << ", "; 
+        cout << *m << ", ";
       }
       cout  <<" between cells "<<var_start << " and " << var_end <<endl;
- 
+
       //__________________________________
       // read in cell indices from a file
       if ( use_cellIndex_file) {
         readCellIndicies(input_file_cellIndices, cells);
       }
-      
+
       //__________________________________
       //  Array containing the average over all patches
       CCVariable<double> aveLevel;
@@ -1281,9 +1282,9 @@ main( int argc, char** argv )
       level->findInteriorCellIndexRange(lo, hi);
       aveLevel.allocate(lo,hi);
       aveLevel.initialize(0.0);
-         
+
       //__________________________________
-      //  P A R T I C L E   V A R I A B L E  
+      //  P A R T I C L E   V A R I A B L E
       if(td->getType() == Uintah::TypeDescription::ParticleVariable){
         switch (subtype->getType()) {
         case Uintah::TypeDescription::double_type:
@@ -1321,23 +1322,23 @@ main( int argc, char** argv )
       if (sliceFormat == asVolume) {
         ostringstream tname;
         tname << base_dir_name<<"/t" << setw(5) << setfill('0') << time_step << ".tif";
-        
+
         write_tiff_volume(flags,tname, var_start, var_end, aveLevel, doVerification, nBits);            // write the tiff out
       }
-      
+
       //__________________________________
       //  Write each tiff slice as a individual files
       if (sliceFormat == asIndividualSlices) {
-        
+
         ostringstream tname;
         tname << base_dir_name<<"/t" << setw(5) << setfill('0') << time_step;
-        
+
         // remove existing directory
         if( validDir( tname.str() ) ) {
           Dir::removeDir( tname.str().c_str() );
           cout << "  Removed existing directory: "<<tname.str()<<"\n";
         }
-        
+
         // open directory
         Dir timestep_dir = Dir::create( tname.str() );
 
@@ -1347,15 +1348,15 @@ main( int argc, char** argv )
           cout << "Failed creating  base output directory: "<<tname<<"\n";
           exit(1);
         }
-        
+
         ostringstream sliceName;
         sliceName << tname.str() << "/";
         write_tiff_slices(flags,sliceName, var_start, var_end, aveLevel, doVerification, nBits);            // write the tiff out
-        
+
       }
-      
-    }  // timestep loop     
-    
+
+    }  // timestep loop
+
   } catch (Exception& e) {
     cerr << "Caught exception: " << e.message() << endl;
     exit(1);
@@ -1363,9 +1364,9 @@ main( int argc, char** argv )
     cerr << "Caught unknown exception\n";
     exit(1);
   }
-  
+
   // cleanup
   delete clamps;
   delete flags;
-  
+
 }
