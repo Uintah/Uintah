@@ -298,13 +298,6 @@ namespace Uintah {
           HYPRE_StructMatrixInitialize(*HA);
         }
 
-#if 0
-        HYPRE_StructMatrixSetSymmetric(HA, params->getSymmetric());
-        int ghost[] = {1,1,1,1,1,1};
-        HYPRE_StructMatrixSetNumGhost(HA, ghost);
-
-        HYPRE_StructMatrixInitialize(HA);
-#endif
         // setup the coefficient matrix ONLY on the first timestep, if we are doing a restart, or if we set setupFrequency != 0, or if UpdateCoefFrequency != 0
         if (timestep == 1 || restart || do_setup || updateCoefs) {
           for(int p=0;p<patches->size();p++) {
@@ -568,9 +561,7 @@ namespace Uintah {
    
           HYPRE_StructSMGGetNumIterations(*solver, &num_iterations);
           HYPRE_StructSMGGetFinalRelativeResidualNorm(*solver, &final_res_norm);
-#if 0
-          HYPRE_StructSMGDestroy(solver);
-#endif
+
         } else if(params->solvertype == "PFMG" || params->solvertype == "pfmg"){
 
           HYPRE_StructSolver* solver =  hypre_solver_s->solver;
@@ -606,9 +597,6 @@ namespace Uintah {
           HYPRE_StructPFMGGetNumIterations(*solver, &num_iterations);
           HYPRE_StructPFMGGetFinalRelativeResidualNorm(*solver, 
                                                        &final_res_norm);
-#if 0
-          HYPRE_StructPFMGDestroy(solver);
-#endif
 
         } else if(params->solvertype == "SparseMSG" || params->solvertype == "sparsemsg"){
 
@@ -642,9 +630,7 @@ namespace Uintah {
           HYPRE_StructSparseMSGGetNumIterations(*solver, &num_iterations);
           HYPRE_StructSparseMSGGetFinalRelativeResidualNorm(*solver, 
                                                             &final_res_norm);
-#if 0
-          HYPRE_StructSparseMSGDestroy(solver);
-#endif
+
           //__________________________________
           //
         } else if(params->solvertype == "CG" || params->solvertype == "cg" 
@@ -704,10 +690,6 @@ namespace Uintah {
 
           HYPRE_StructPCGGetNumIterations(*solver, &num_iterations);
           HYPRE_StructPCGGetFinalRelativeResidualNorm(*solver,&final_res_norm);
-#if 0
-          HYPRE_StructPCGDestroy(solver);
-          destroyPrecond(precond_solver);
-#endif
 
         } else if(params->solvertype == "Hybrid" 
                   || params->solvertype == "hybrid"){
@@ -773,10 +755,6 @@ namespace Uintah {
           HYPRE_StructHybridGetNumIterations(*solver,&num_iterations);
           HYPRE_StructHybridGetFinalRelativeResidualNorm(*solver,
                                                          &final_res_norm);
-#if 0
-          HYPRE_StructHybridDestroy(solver);
-          destroyPrecond(precond_solver);
-#endif
           //__________________________________
           //
         } else if(params->solvertype == "GMRES" 
@@ -833,10 +811,7 @@ namespace Uintah {
           HYPRE_StructGMRESGetNumIterations(*solver, &num_iterations);
           HYPRE_StructGMRESGetFinalRelativeResidualNorm(*solver, 
                                                         &final_res_norm);
-#if 0
-          HYPRE_StructGMRESDestroy(solver);
-          destroyPrecond(precond_solver);
-#endif
+
         } else {
           throw InternalError("Unknown solver type: "+params->solvertype, __FILE__, __LINE__);
         }
@@ -911,11 +886,6 @@ namespace Uintah {
         }
         //__________________________________
         // clean up
-#if 0
-        HYPRE_StructMatrixDestroy(HA);
-        HYPRE_StructVectorDestroy(HB);
-        HYPRE_StructVectorDestroy(HX);
-#endif
         if ( timestep == 1 || do_setup || restart) {
           HYPRE_StructStencilDestroy(stencil);
           HYPRE_StructGridDestroy(grid);
