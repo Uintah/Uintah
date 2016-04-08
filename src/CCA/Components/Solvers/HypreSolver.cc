@@ -418,7 +418,7 @@ namespace Uintah {
               delete[] values;
             }
           }
-          HYPRE_StructMatrixAssemble(*HA);
+          if (timestep == 1 || restart || do_setup) HYPRE_StructMatrixAssemble(*HA);
         }
 
         //__________________________________
@@ -467,7 +467,7 @@ namespace Uintah {
             }
           }
         }
-        HYPRE_StructVectorAssemble(*HB);
+        if (timestep == 1 || restart || do_setup) HYPRE_StructVectorAssemble(*HB);
 
         //__________________________________
         // Create the solution vector
@@ -518,7 +518,7 @@ namespace Uintah {
             }
           }  // initialGuess
         } // patch loop
-        HYPRE_StructVectorAssemble(*HX);
+        if (timestep == 1 || restart || do_setup) HYPRE_StructVectorAssemble(*HX);
         hypre_EndTiming(tMatVecSetup_);
         //__________________________________
         //  Dynamic tolerances  Arches uses this
