@@ -42,6 +42,7 @@
  *  @author Steve Parker
  *  @author Todd Haraman
  *  @author John Schmidt
+ *  @author Tony Saad
  *  @author James Sutherland
  *  @author Oren Livne
  *  @brief  Uintah hypre solver interface.
