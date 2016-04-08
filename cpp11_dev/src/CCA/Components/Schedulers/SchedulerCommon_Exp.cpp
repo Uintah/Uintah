@@ -770,7 +770,8 @@ SchedulerCommon::addTask(       Task        * task,
   for( const Task::Dependency* dep = task->getComputes(); dep != 0; dep = dep->next ) {
 
     if( dep->var->typeDescription()->isReductionVariable() ) {
-      int levelidx = dep->reductionLevel ? dep->reductionLevel->getIndex() : -1;
+      auto level = dep->reductionLevel ? dep->reductionLevel : getLevel(task->getPatchSet());
+      int levelidx = level ? level->getIndex() : -1;
       int dw = dep->mapDataWarehouse();
 
       if (dep->var->allowsMultipleComputes()) {
@@ -795,11 +796,11 @@ SchedulerCommon::addTask(       Task        * task,
       m_reductionTasks.push_back(newtask);
 
       if (dep->matls != 0) {
-        newtask->modifies(dep->var, dep->reductionLevel, dep->matls, Task::OutOfDomain);
+        newtask->modifies(dep->var, level, dep->matls, Task::OutOfDomain);
       }
       else {
         for (int m = 0; m < task->getMaterialSet()->size(); m++) {
-          newtask->modifies(dep->var, dep->reductionLevel, task->getMaterialSet()->getSubset(m), Task::OutOfDomain);
+          newtask->modifies(dep->var, level, task->getMaterialSet()->getSubset(m), Task::OutOfDomain);
         }
       }
 

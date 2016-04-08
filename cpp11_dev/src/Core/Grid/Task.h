@@ -1401,7 +1401,6 @@ class Task {
         const PatchSubset* patches;
         const MaterialSubset* matls;
         const Level* reductionLevel;
-        int   m_level_idx;
         Edge* req_head;   // Used in compiling the task graph.
         Edge* req_tail;
         Edge* comp_head;
