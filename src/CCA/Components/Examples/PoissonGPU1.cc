@@ -72,7 +72,7 @@ void PoissonGPU1::problemSetup(const ProblemSpecP& params,
 //______________________________________________________________________
 //
 void PoissonGPU1::scheduleInitialize(const LevelP& level, SchedulerP& sched) {
-                                    
+
   Task * task = scinew Task("PoissonGPU1::initialize", this, &PoissonGPU1::initialize);
 
   task->computes(phi_label);
@@ -88,7 +88,7 @@ void PoissonGPU1::scheduleRestartInitialize(const LevelP& level,
 //______________________________________________________________________
 //
 void PoissonGPU1::scheduleComputeStableTimestep(const LevelP& level, SchedulerP& sched) {
-                                               
+
   Task * task = scinew Task("PoissonGPU1::computeStableTimestep", this, &PoissonGPU1::computeStableTimestep);
 
   task->requires(Task::NewDW, residual_label);
@@ -318,9 +318,6 @@ void PoissonGPU1::timeAdvance3DP(const ProcessorGroup*,
 
     //__________________________________
     //  3D-Pointer Stencil
-    double*** phi_data = (double***)phi.getWindow()->getData()->get3DPointer();
-    double*** newphi_data = (double***)newphi.getWindow()->getData()->get3DPointer();
-
     int zhigh = h.z();
     int yhigh = h.y();
     int xhigh = h.x();
@@ -329,16 +326,16 @@ void PoissonGPU1::timeAdvance3DP(const ProcessorGroup*,
       for (int j = l.y(); j < yhigh; j++) {
         for (int k = l.x(); k < xhigh; k++) {
 
-          double xminus = phi_data[i-1][j][k];
-          double xplus  = phi_data[i+1][j][k];
-          double yminus = phi_data[i][j-1][k];
-          double yplus  = phi_data[i][j+1][k];
-          double zminus = phi_data[i][j][k-1];
-          double zplus  = phi_data[i][j][k+1];
+          double xminus = phi(i-1,j,k);
+          double xplus  = phi(i+1,j,k);
+          double yminus = phi(i,j-1,k);
+          double yplus  = phi(i,j+1,k);
+          double zminus = phi(i,j,k-1);
+          double zplus  = phi(i,j,k+1);
 
-          newphi_data[i][j][k] = (1. / 6) * (xminus + xplus + yminus + yplus + zminus + zplus);
+          newphi(i,j,k) = (1. / 6) * (xminus + xplus + yminus + yplus + zminus + zplus);
 
-          double diff = newphi_data[i][j][k] - phi_data[i][j][k];
+          double diff = newphi(i,j,k) - phi(i,j,k);
           residual += diff * diff;
         }
       }
@@ -417,7 +414,7 @@ void PoissonGPU1::timeAdvanceGPU(const ProcessorGroup*,
         patch->getBCType(Patch::yplus) == Patch::Neighbor ? 0 : 1,
         patch->getBCType(Patch::zplus) == Patch::Neighbor ? 0 : 1);
 
-    // Check if we need to reallocate due to a change in patch size 
+    // Check if we need to reallocate due to a change in patch size
     if (size != previousPatchSize) {
       if (previousPatchSize != 0) {
         cudaFree(phi_device);
@@ -463,7 +460,7 @@ void PoissonGPU1::timeAdvanceGPU(const ProcessorGroup*,
     if(error!=cudaSuccess) {
       fprintf(stderr,"ERROR: %s\n", cudaGetErrorString(error) );
       exit(-1);
-    } 
+    }
 
     // device->host memcopy
     CUDA_RT_SAFE_CALL( cudaDeviceSynchronize() );
@@ -479,6 +476,6 @@ void PoissonGPU1::timeAdvanceGPU(const ProcessorGroup*,
   if (unifiedAddressing) {
     CUDA_RT_SAFE_CALL( cudaFreeHost(residual_host) );
   }
-  
+
 }
 

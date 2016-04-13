@@ -346,13 +346,6 @@ namespace Uintah {
         return (d_window->getPointer());
       }
 
-      inline T*** get3DPointer() {
-        return d_window->get3DPointer();
-      }
-      inline T*** get3DPointer() const {
-        return d_window->get3DPointer();
-      }
-
       inline void write(std::ostream& out, const IntVector& l, const IntVector& h, bool /*outputDoubleAsFloat*/ )
       {
         // This could be optimized...

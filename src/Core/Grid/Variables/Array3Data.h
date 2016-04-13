@@ -109,13 +109,6 @@ using KokkosData = Kokkos::View<T***, Kokkos::LayoutLeft, Kokkos::MemoryTraits<K
         return d_data;
       }
 
-      inline T*** get3DPointer() {
-        return d_data3;
-      }
-      inline T*** get3DPointer() const {
-        return d_data3;
-      }
-
 #ifdef UINTAH_ENABLE_KOKKOS
       inline KokkosData<T> getKokkosData() const {
         return KokkosData<T>(d_data, d_size.x(), d_size.y(), d_size.z());

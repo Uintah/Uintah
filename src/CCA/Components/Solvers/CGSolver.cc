@@ -62,7 +62,7 @@ void Mult(Array3<double>& B, const Array3<Stencil7>& A,
 {
   if(cout_doing.active())
     cout_doing << "CGSolver::Mult" << endl;
-  
+
   for(; !iter.done(); ++iter){
     IntVector idx = *iter;
     const Stencil7& AA = A[idx];
@@ -228,22 +228,12 @@ CGSolver::~CGSolver()
 {
 }
 
-double*** get3DPointer(const Array3<double>& X)
-{
-  return X.get3DPointer();
-}
-
-Stencil7*** get3DPointer(const Array3<Stencil7>& X)
-{
-  return X.get3DPointer();
-}
-
 class CGSolverParams : public SolverParameters {
 public:
   double tolerance;
   double initial_tolerance;
   int maxiterations;
-  
+
   enum Norm {
     L1, L2, LInfinity
   };
@@ -312,17 +302,17 @@ public:
     d_label     = VarLabel::create(A->getName()+" d", sum_vartype::getTypeDescription());
     aden_label = VarLabel::create(A->getName()+" aden", sum_vartype::getTypeDescription());
     diag_label = VarLabel::create(A->getName()+" inverse diagonal", sol_type::getTypeDescription());
-    
+
     tolerance_label = VarLabel::create("tolerance", sum_vartype::getTypeDescription());
-    
+
     VarLabel* tmp_flop_label = VarLabel::create(A->getName()+" flops", sumlong_vartype::getTypeDescription());
     tmp_flop_label->allowMultipleComputes();
     flop_label = tmp_flop_label;
-    
+
     VarLabel* tmp_memref_label = VarLabel::create(A->getName()+" memrefs", sumlong_vartype::getTypeDescription());
     tmp_memref_label->allowMultipleComputes();
     memref_label = tmp_memref_label;
-    
+
     switch(params->norm){
     case CGSolverParams::L1:
       err_label = VarLabel::create(A->getName()+" err", sum_vartype::getTypeDescription());
@@ -345,7 +335,7 @@ public:
     VarLabel::destroy(flop_label);
     VarLabel::destroy(memref_label);
     VarLabel::destroy(tolerance_label);
-    
+
     if(err_label != d_label)
       VarLabel::destroy(err_label);
     VarLabel::destroy(aden_label);
@@ -477,7 +467,7 @@ public:
         double dnew = ::Dot(Q, Rnew, iter, flops, memrefs);
 
         // Calculate error term
-        
+
         switch(params->norm){
         case CGSolverParams::L1:
           {
@@ -565,7 +555,7 @@ public:
       const Patch* patch = patches->get(p);
       if(cout_doing.active())
         cout_doing << "CGSolver::setup on patch " << patch->getID()<< endl;
-        
+
       for(int m = 0;m<matls->size();m++){
         int matl = matls->get(m);
         typedef typename Types::sol_type sol_type;
@@ -631,11 +621,11 @@ public:
         double dnew = ::Dot(R, D, iter, flops, memrefs);
         new_dw->put(sum_vartype(dnew), d_label);
         new_dw->put( sum_vartype(params->tolerance), tolerance_label );
-        
-        
+
+
         // Calculate error term
-        double residualNormalization = params->getResidualNormalizationFactor();       
-        
+        double residualNormalization = params->getResidualNormalizationFactor();
+
         switch(params->norm){
         case CGSolverParams::L1:
           {
@@ -655,7 +645,7 @@ public:
           }
           break;
         }
-        
+
         new_dw->put(sumlong_vartype(flops), flop_label);
         new_dw->put(sumlong_vartype(memrefs), memref_label);
       }
@@ -681,7 +671,7 @@ public:
     subsched->mapDataWarehouse(Task::ParentNewDW, 1);
     subsched->mapDataWarehouse(Task::OldDW, 2);
     subsched->mapDataWarehouse(Task::NewDW, 3);
-  
+
     GridP grid = level->getGrid();
     IntVector l, h;
     level->findCellIndexRange(l, h);
@@ -715,14 +705,14 @@ public:
 
     subsched->compile();
     subsched->get_dw(3)->setScrubbing(DataWarehouse::ScrubNone);
-    subsched->execute();    
-    
+    subsched->execute();
+
     //__________________________________
     double tolerance=0;
     sum_vartype tol;
     subsched->get_dw(3)->get(tol, tolerance_label);
     tolerance=tol;
-    
+
     double e=0;
     switch(params->norm){
     case CGSolverParams::L1:
@@ -757,7 +747,7 @@ public:
       subsched->mapDataWarehouse(Task::ParentNewDW, 1);
       subsched->mapDataWarehouse(Task::OldDW, 2);
       subsched->mapDataWarehouse(Task::NewDW, 3);
-  
+
       //__________________________________
       // Step 1 - requires A(parent), D(old, 1 ghost) computes aden(new)
       if(cout_doing.active())
@@ -795,7 +785,7 @@ public:
       }
       subsched->addTask(task, level->eachPatch(), matlset);
 
-      
+
       //__________________________________
       // schedule
       // Step 3 - requires D(old), Q(new), d(new), d(old), computes D
@@ -811,7 +801,7 @@ public:
       task->modifies(memref_label);
       subsched->addTask(task, level->eachPatch(), matlset);
       subsched->compile();
-      
+
       //__________________________________
       //  Main iteration
       while(niter < params->maxiterations && !(e < tolerance)){
@@ -820,7 +810,7 @@ public:
         subsched->get_dw(2)->setScrubbing(DataWarehouse::ScrubComplete);
         subsched->get_dw(3)->setScrubbing(DataWarehouse::ScrubNonPermanent);
         subsched->execute();
-        
+
         //__________________________________
         switch(params->norm){
         case CGSolverParams::L1:
@@ -894,12 +884,12 @@ public:
     double memrate = (double(memrefs)*1.e-9)/dt;
     if(pg->myrank() == 0){
       if(niter < params->maxiterations) {
-        cout << "Solve of " << X_label->getName() 
+        cout << "Solve of " << X_label->getName()
               << " on level " << level->getIndex()
              << " completed in "
              << dt << " seconds ("
              << niter << " iterations, "
-             << e << " residual, " 
+             << e << " residual, "
               << mflops<< " MFLOPS, " << memrate << " GB/sec)\n";
       }else{
         if(params->getRestartTimestepOnFailure()){
@@ -909,14 +899,14 @@ public:
           new_dw->abortTimestep();
           new_dw->restartTimestep();
         }else {
-        throw ConvergenceFailure("CGSolve variable: "+X_label->getName(), 
+        throw ConvergenceFailure("CGSolve variable: "+X_label->getName(),
                           niter, e, tolerance,__FILE__,__LINE__);
         }
       }
     }
   }
 //______________________________________________________________________
-//    
+//
 private:
   Scheduler* sched;
   const ProcessorGroup* world;
@@ -947,7 +937,7 @@ private:
 };
 //______________________________________________________________________
 //
-SolverParameters* CGSolver::readParameters(ProblemSpecP& params, 
+SolverParameters* CGSolver::readParameters(ProblemSpecP& params,
                                            const string& varname,
                                            SimulationStateP& state)
 {
@@ -959,11 +949,11 @@ SolverParameters* CGSolver::readParameters(ProblemSpecP& params,
       string variable;
       if(param->getAttribute("variable", variable) && variable != varname)
         continue;
-      
+
       param->get("initial_tolerance", p->initial_tolerance);
       param->get("tolerance", p->tolerance);
       param->getWithDefault ("maxiterations",   p->maxiterations,  75);
-      
+
       string norm;
       if(param->get("norm", norm)){
         if(norm == "L1" || norm == "l1") {
@@ -988,7 +978,7 @@ SolverParameters* CGSolver::readParameters(ProblemSpecP& params,
       }
     }
   }
-  
+
   if(p->norm == CGSolverParams::L2)
     p->tolerance *= p->tolerance;
   return p;
@@ -998,10 +988,10 @@ SolverParameters* CGSolver::readParameters(ProblemSpecP& params,
 //
 void CGSolver::scheduleSolve(const LevelP& level, SchedulerP& sched,
                              const MaterialSet* matls,
-                             const VarLabel* A,    Task::WhichDW which_A_dw,  
+                             const VarLabel* A,    Task::WhichDW which_A_dw,
                              const VarLabel* x,
                              bool modifies_x,
-                             const VarLabel* b,    Task::WhichDW which_b_dw,  
+                             const VarLabel* b,    Task::WhichDW which_b_dw,
                              const VarLabel* guess,Task::WhichDW which_guess_dw,
                              const SolverParameters* params,
                              bool modifies_hypre)

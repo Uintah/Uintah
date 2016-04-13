@@ -473,9 +473,6 @@ void UnifiedSchedulerTest::timeAdvance3DP(const ProcessorGroup*,
 
     //__________________________________
     //  3D-Pointer Stencil
-    double*** phi_data = (double***)phi.getWindow()->getData()->get3DPointer();
-    double*** newphi_data = (double***)newphi.getWindow()->getData()->get3DPointer();
-
     int zhigh = h.z();
     int yhigh = h.y();
     int xhigh = h.x();
@@ -483,17 +480,16 @@ void UnifiedSchedulerTest::timeAdvance3DP(const ProcessorGroup*,
     for (int i = l.z(); i < zhigh; i++) {
       for (int j = l.y(); j < yhigh; j++) {
         for (int k = l.x(); k < xhigh; k++) {
+          double xminus = phi(i-1,j,k);
+          double xplus  = phi(i+1,j,k);
+          double yminus = phi(i,j-1,k);
+          double yplus  = phi(i,j+1,k);
+          double zminus = phi(i,j,k-1);
+          double zplus  = phi(i,j,k+1);
 
-          double xminus = phi_data[i - 1][j][k];
-          double xplus = phi_data[i + 1][j][k];
-          double yminus = phi_data[i][j - 1][k];
-          double yplus = phi_data[i][j + 1][k];
-          double zminus = phi_data[i][j][k - 1];
-          double zplus = phi_data[i][j][k + 1];
+          newphi(i,j,k) = (1. / 6) * (xminus + xplus + yminus + yplus + zminus + zplus);
 
-          newphi_data[i][j][k] = (1. / 6) * (xminus + xplus + yminus + yplus + zminus + zplus);
-
-          double diff = newphi_data[i][j][k] - phi_data[i][j][k];
+          double diff = newphi(i,j,k) - phi(i,j,k);
           residual += diff * diff;
         }
       }
