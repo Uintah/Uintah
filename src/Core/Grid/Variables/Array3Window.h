@@ -178,13 +178,6 @@ template<class T> class Array3Window : public RefCounted {
         return (data->getPointer());
       }
 
-      inline T*** get3DPointer() {
-        return data ? data->get3DPointer():0;
-      }
-      inline T*** get3DPointer() const {
-        return data ? data->get3DPointer():0;
-      }
-
    private:
 
       Array3Data<T>* data;
