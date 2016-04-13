@@ -83,6 +83,7 @@ private:
       std::string _new_time_name;
       double _t_interval; // the time interval required for a steady-state thermal profile.
       double _new_time;
+      double _user_specified_rho;
 
   };
 }
