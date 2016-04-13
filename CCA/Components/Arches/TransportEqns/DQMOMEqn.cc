@@ -507,8 +507,6 @@ void DQMOMEqn::initializeVariables( const ProcessorGroup* pc,
     y_psi.initialize(1.0);
     z_psi.initialize(1.0);
 
-    d_boundaryCond->checkBCs( patch, d_eqnName, matlIndex );
-
   }
 }
 
