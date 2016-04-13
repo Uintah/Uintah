@@ -152,15 +152,43 @@ C-----------------------------------------------------------------------
                RET = ABS(CT)/DT
                REB = ABS(CB)/DB
                CVSY(I,J,K) = 0.0d0
-               
-C               This is the actual hybrid scheme.
-C               AW(I,J,K) = dMAX1(CW,DW+PT5*CW,0.0D0)
-C               AE(I,J,K) = dMAX1(-CE,DE-PT5*CE,0.0D0)
-C               AS(I,J,K) = dMAX1(CS,DS+PT5*CS,0.0D0)
-C               AN(I,J,K) = dMAX1(-CN,DN-PT5*CN,0.0D0)
-C               AB(I,J,K) = dMAX1(CB,DB+PT5*CB,0.0D0)
-C               AT(I,J,K) = dMAX1(-CT,DT-PT5*CT,0.0D0)
 
+C If the current cell borders a wall (EPS < 1) then we are going to
+C upwind. 
+               IF ( EPSE .lt. PT5 ) THEN 
+                 REE = Relimit + 1
+                 REW = Relimit + 1
+                 REN = Relimit + 1
+                 RES = Relimit + 1
+                 RET = Relimit + 1
+                 REB = Relimit + 1
+               ENDIF 
+               IF ( EPSW .lt. PT5 ) THEN 
+                 REE = Relimit + 1
+                 REW = Relimit + 1
+                 REN = Relimit + 1
+                 RES = Relimit + 1
+                 RET = Relimit + 1
+                 REB = Relimit + 1
+               ENDIF 
+               IF ( EPST .lt. PT5 ) THEN 
+                 REE = Relimit + 1
+                 REW = Relimit + 1
+                 REN = Relimit + 1
+                 RES = Relimit + 1
+                 RET = Relimit + 1
+                 REB = Relimit + 1
+               ENDIF 
+               IF ( EPSB .lt. PT5 ) THEN 
+                 REE = Relimit + 1
+                 REW = Relimit + 1
+                 REN = Relimit + 1
+                 RES = Relimit + 1
+                 RET = Relimit + 1
+                 REB = Relimit + 1
+               ENDIF 
+
+C If Re < Re_min we central difference, otherwise upwind.
                IF (REE.LT.Relimit) then
                  CVSY(I,J,K) = CVSY(I,J,K) + 1.0d0/6.0d0
                  AE(I,J,K) = DE - PT5*CE
