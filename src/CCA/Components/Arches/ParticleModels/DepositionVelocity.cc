@@ -34,6 +34,7 @@ DepositionVelocity::problemSetup( ProblemSpecP& db ){
   } else {
     throw ProblemSetupException("Error: DepositionVelocity.cc time-averaging start time not specified.", __FILE__, __LINE__);
   }
+  db->getWithDefault("ash_density",_user_specified_rho,-1.0);
   _d.push_back(IntVector(1,0,0)); // cell center located +x
   _d.push_back(IntVector(-1,0,0)); // cell center located -x
   _d.push_back(IntVector(0,1,0)); // cell center located +y
@@ -312,6 +313,9 @@ DepositionVelocity::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info,
             } else {
               flux = std::abs(dep_z[c+_fd[container_flux_ind[pp]]]);
               rhoi = rhop[c+_d[container_flux_ind[pp]]];
+            }
+            if (_user_specified_rho > 0) {
+              rhoi = _user_specified_rho;
             }
             // volumetric flow rate for particle i:
             d_velocity += (flux/rhoi) * area_face[container_flux_ind[pp]];
