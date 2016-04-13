@@ -1323,6 +1323,14 @@ ExplicitSolver::sched_restartInitializeTimeAdvance( const LevelP& level, Schedul
     eqn->sched_checkBCs( level, sched );
   }
 
+  // check to make sure that all dqmom equations have BCs set.
+  DQMOMEqnFactory& dqmom_factory = DQMOMEqnFactory::self();
+  DQMOMEqnFactory::EqnMap& dqmom_eqns = dqmom_factory.retrieve_all_eqns();
+  for (DQMOMEqnFactory::EqnMap::iterator ieqn=dqmom_eqns.begin(); ieqn != dqmom_eqns.end(); ieqn++) {
+    EqnBase* eqn = ieqn->second;
+    eqn->sched_checkBCs( level, sched );
+  }
+
   checkMomBCs( sched, level, matls );
 
   d_boundaryCondition->sched_setupNewIntrusionCellType( sched, level, matls, doingRestart );
