@@ -49,7 +49,7 @@ NIGHTLYTESTS = [
                   ("test_gurson_beckerdrucker_mts",       "test_gurson_beckerdrucker_mts.ups",       1,  "Linux", ["exactComparison"] ),
                   ("test_hypoviscoelastic_radial_return", "test_hypoviscoelastic_rad_ret.ups",       1,  "Linux", ["exactComparison"] ),
                   ("Charpy",                              "Charpy.ups",                              8,  "Linux", ["exactComparison"] ),
-#                    ("NanoPillar", "ARL/NanoPillar2D_FBC_Sym.ups",                                   1,  "Linux", ["exactComparison"] ),
+                    ("NanoPillar", "ARL/NanoPillar2D_FBC_Sym.ups",                                   1,  "Linux", ["exactComparison"] ),
                   #("AreniscaTest_01_UniaxialStrainRotate",                  "./Arenisca/AreniscaTest_01_UniaxialStrainRotate.ups",                  1,  "Linux", ["exactComparison"] ),
                   #("AreniscaTest_02_VertexTreatment",                       "./Arenisca/AreniscaTest_02_VertexTreatment.ups",                       1,  "Linux", ["exactComparison"] ),
                   #("AreniscaTest_03a_UniaxialStrain_NoHardening",           "./Arenisca/AreniscaTest_03a_UniaxialStrain_NoHardening.ups",           1,  "Linux", ["exactComparison"] ),
