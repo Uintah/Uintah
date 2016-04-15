@@ -117,10 +117,6 @@ public:
 
   MPI_Datatype getMPIType() const;
 
-  struct  Register {
-    Register(const TypeDescription*);
-    ~Register();
-  };
   static const TypeDescription* lookupType(const std::string&);
 
   Variable* createInstance() const;

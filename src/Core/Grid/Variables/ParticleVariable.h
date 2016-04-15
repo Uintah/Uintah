@@ -208,15 +208,11 @@ private:
   Vector offset_; // only used when T is Point
 
   static const ParticleVariable<T>& castFromBase(const ParticleVariableBase* srcptr);
-  static TypeDescription::Register registerMe;
   static Variable* maker();
 };
 
   template<class T>
   TypeDescription* ParticleVariable<T>::td = 0;
-
-  template<class T>
-  TypeDescription::Register ParticleVariable<T>::registerMe(getTypeDescription());
 
   template<class T>
   const TypeDescription*
