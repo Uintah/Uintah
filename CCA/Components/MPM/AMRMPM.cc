@@ -302,7 +302,7 @@ void AMRMPM::problemSetup(const ProblemSpecP& prob_spec,
   mpm_ps->get("CFI_interpolator", d_CFI_interpolator );
   
   if(d_CFI_interpolator != flags->d_interpolator_type ){
-    proc0cout << "______________________________________________________________________\n" 
+    proc0cout << "______________________________________________________\n" 
               << "          AMRMPM:  WARNING\n"
               << "  The particle to grid interpolator at the CFI is (" << d_CFI_interpolator
               << "), however the over rest of the domain it is: " << flags->d_interpolator_type
@@ -1430,6 +1430,7 @@ void AMRMPM::scheduleAddParticles(SchedulerP& sched,
     t->modifies(lb->pScaleFactorLabel_preReloc);
     t->modifies(lb->pLastLevelLabel_preReloc);
     t->modifies(lb->pVelGradLabel_preReloc);
+    t->modifies(lb->pDiffusivityLabel_preReloc);
     t->modifies(lb->MPMRefineCellLabel, d_one_matl);
 
     t->requires(Task::OldDW, lb->pCellNAPIDLabel, d_one_matl, Ghost::None);
@@ -3946,7 +3947,7 @@ void AMRMPM::addParticles(const ProcessorGroup*,
       ParticleVariable<Matrix3> pF,pSize,pstress,pvelgrad,pscalefac;
       ParticleVariable<long64> pids;
       ParticleVariable<double> pvolume,pmass,ptemp,ptempP,pcolor,pconc,pconcpre;
-      ParticleVariable<double> pESF;
+      ParticleVariable<double> pESF,pD;
       ParticleVariable<Vector> pvelocity,pextforce,pdisp,pconcgrad,pArea;
       ParticleVariable<int> pref,ploc,plal,prefOld,pLoadCID,pSplitR1R2R3;
       new_dw->getModifiable(px,       lb->pXLabel_preReloc,            pset);
@@ -3965,6 +3966,7 @@ void AMRMPM::addParticles(const ProcessorGroup*,
       new_dw->getModifiable(plal,     lb->pLastLevelLabel_preReloc,    pset);
       new_dw->getModifiable(ploc,     lb->pLocalizedMPMLabel_preReloc, pset);
       new_dw->getModifiable(pvelgrad, lb->pVelGradLabel_preReloc,      pset);
+      new_dw->getModifiable(pD,       lb->pDiffusivityLabel_preReloc,  pset);
       new_dw->getModifiable(pF,  lb->pDeformationMeasureLabel_preReloc,pset);
       if (flags->d_with_color) {
         new_dw->getModifiable(pcolor,   lb->pColorLabel_preReloc,        pset);
@@ -4083,6 +4085,7 @@ void AMRMPM::addParticles(const ProcessorGroup*,
           numNewPartNeeded++;
         }
       }  // Loop over original particles
+
       int fourOrEight=pow(2,d_ndim);
       if(splitForStretch){
         fourOrEight=4;
@@ -4119,7 +4122,7 @@ void AMRMPM::addParticles(const ProcessorGroup*,
       ParticleVariable<Matrix3> pFtmp,psizetmp,pstrstmp,pvgradtmp,pSFtmp;
       ParticleVariable<long64> pidstmp;
       ParticleVariable<double> pvoltmp, pmasstmp,ptemptmp,ptempPtmp,pESFtmp;
-      ParticleVariable<double> pcolortmp, pconctmp, pconcpretmp;
+      ParticleVariable<double> pcolortmp, pconctmp, pconcpretmp,pDtmp;
       ParticleVariable<Vector> pveltmp,pextFtmp,pdisptmp,pconcgradtmp,pareatmp;
       ParticleVariable<int> preftmp,ploctmp,plaltmp,pLoadCIDtmp;
       new_dw->allocateTemporary(pidstmp,  pset);
@@ -4152,6 +4155,7 @@ void AMRMPM::addParticles(const ProcessorGroup*,
       new_dw->allocateTemporary(plaltmp,  pset);
       new_dw->allocateTemporary(ploctmp,  pset);
       new_dw->allocateTemporary(pvgradtmp,pset);
+      new_dw->allocateTemporary(pDtmp,    pset);
 
       // copy data from old variables for particle IDs and the position vector
       for( unsigned int pp=0; pp<oldNumPar; ++pp ){
@@ -4179,7 +4183,6 @@ void AMRMPM::addParticles(const ProcessorGroup*,
         ploctmp[pp]  = ploc[pp];
         pvgradtmp[pp]= pvelgrad[pp];
       }
-      // copy data from old variables for particle IDs and the position vector
 
       if(flags->d_doScalarDiffusion){
        for( unsigned int pp=0; pp<oldNumPar; ++pp ){
@@ -4188,6 +4191,7 @@ void AMRMPM::addParticles(const ProcessorGroup*,
          pconcgradtmp[pp]= pconcgrad[pp];
          pESFtmp[pp]     = pESF[pp];
          pareatmp[pp]    = pArea[pp];
+         pDtmp[pp]       = pD[pp];
        }
       }
 
@@ -4384,6 +4388,7 @@ void AMRMPM::addParticles(const ProcessorGroup*,
           plaltmp[new_idx]    = plal[idx];
           ploctmp[new_idx]    = ploc[idx];
           pvgradtmp[new_idx]  = pvelgrad[idx];
+          pDtmp[new_idx]      = pD[idx];
           NAPID_new[c_orig]++;
           last_index=new_idx;
         }
@@ -4395,7 +4400,6 @@ void AMRMPM::addParticles(const ProcessorGroup*,
       cm->splitCMSpecificParticleData(patch, dwi, fourOrEight, prefOld, pref,
                                       oldNumPar, numNewPartNeeded,
                                       old_dw, new_dw);
-
 
       // put back temporary data
       new_dw->put(pidstmp,  lb->pParticleIDLabel_preReloc,           true);
@@ -4428,6 +4432,7 @@ void AMRMPM::addParticles(const ProcessorGroup*,
       new_dw->put(plaltmp,  lb->pLastLevelLabel_preReloc,            true);
       new_dw->put(ploctmp,  lb->pLocalizedMPMLabel_preReloc,         true);
       new_dw->put(pvgradtmp,lb->pVelGradLabel_preReloc,              true);
+      new_dw->put(pDtmp,    lb->pDiffusivityLabel_preReloc,          true);
     }  // for matls
   }    // for patches
 }
