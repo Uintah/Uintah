@@ -571,9 +571,13 @@ void ICE::problemSetup(const ProblemSpecP& prob_spec,
   }  // mpm
   
 #ifdef HAVE_VISIT
-  // Running with VisIt add in the variable that the user change modify.
-  if( d_sharedState->getVisIt() ) {
-    // variable 1
+  static bool initialized = false;
+
+  // Running with VisIt so add in the variables that the user can
+  // modify.
+  if( d_sharedState->getVisIt() & !initialized ) {
+    // variable 1 - Must start with the component name and have NO
+    // spaces in the var name
     SimulationState::interactiveVar var;
     var.name     = "ICE-OrderOfAdvection";
     var.type     = Uintah::TypeDescription::int_type;
@@ -583,7 +587,8 @@ void ICE::problemSetup(const ProblemSpecP& prob_spec,
     var.modified   = false;
     d_sharedState->d_interactiveVars.push_back( var );
 
-    // variable 2
+    // variable 2 - Must start with the component name and have NO
+    // spaces in the var name
     var.name     = "ICE-gravity";
     var.type     = Uintah::TypeDescription::Vector;
     var.Vvalue   = &d_gravity;
@@ -591,6 +596,8 @@ void ICE::problemSetup(const ProblemSpecP& prob_spec,
     var.recompile  = false;
     var.modified   = false;
     d_sharedState->d_interactiveVars.push_back( var );
+
+    initialized = true;
   }
 #endif
 }

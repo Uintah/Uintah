@@ -18,6 +18,9 @@
 #include <numeric>
 #include <Core/Containers/StaticArray.h>
 #include <spatialops/util/TimeLogger.h>
+
+#include <sci_defs/visit_defs.h>
+
 using namespace std;
 using namespace Uintah; 
 
@@ -300,6 +303,36 @@ CharOxidationSmith::problemSetup(const ProblemSpecP& params, int qn)
     throw InvalidValue("ERROR: CharOxidationSmith: problemSetup(): can't find gas phase mixture_molecular_weight.",__FILE__,__LINE__);
   }
 
+#ifdef HAVE_VISIT
+  static bool initialized = false;
+
+  // Running with VisIt so add in the variables that the user can
+  // modify.
+  if( d_sharedState->getVisIt() & !initialized ) {
+    // variable 1 - Must start with the component name and have NO
+    // spaces in the var name.
+    SimulationState::interactiveVar var;
+    var.name     = "Arches-CharOx-PreExp-Factor-O2";
+    var.type     = Uintah::TypeDescription::double_type;
+    var.Dvalue   = &(_a_l[0]);
+    var.modifiable = true;
+    var.recompile  = false;
+    var.modified   = false;
+    d_sharedState->d_interactiveVars.push_back( var );
+
+    // variable 2 - Must start with the component name and have NO
+    // spaces in the var name.
+    var.name     = "Arches-CharOx-Activation-Energy-O2";
+    var.type     = Uintah::TypeDescription::double_type;
+    var.Dvalue   = &(_e_l[0]);
+    var.modifiable = true;
+    var.recompile  = false;
+    var.modified   = false;
+    d_sharedState->d_interactiveVars.push_back( var );
+
+    initialized = true;
+  }
+#endif
 }
 
 
