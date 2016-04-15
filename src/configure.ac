@@ -1924,7 +1924,7 @@ fi
 AC_MSG_RESULT($have_cxx11)
 AC_SUBST(DEF_CXX11)
 
-######AX_CXX_COMPILE_STDCXX_11
+AX_CXX_COMPILE_STDCXX_11
 
 ##  ----------------------------------------------------------------------
 ##  ----------  required checks for required libraries and headers  ------
@@ -2473,7 +2473,16 @@ AC_SUBST(HAVE_TIFF)
 
 ##  --  check if exceptions work properly --------------------------------
 
-AC_MSG_CHECKING(for working exceptions.)
+AC_MSG_CHECKING(for working exceptions)
+
+
+  case `hostname` in
+    titan* )
+      AC_MSG_RESULT(Titan cross compiles so cannot make this check - assuming it works.)
+      enable_exceptions_crash=0
+      EXCEPTIONS_CRASH_DEF=""
+      ;;
+    *)
 cat > conftest-exc.cc <<EOF
 
     #include <stdio.h>
@@ -2487,20 +2496,21 @@ cat > conftest-exc.cc <<EOF
       }
     }
 EOF
-    $CXX $CFLAGS -o conftest-exc conftest-exc.cc $LDFLAGS
-    ./conftest-exc > /dev/null 2>&1 
+      $CXX $CFLAGS -o conftest-exc conftest-exc.cc $LDFLAGS
+      ./conftest-exc > /dev/null 2>&1 
 
-    if test "$?" != "0"; then
-       AC_MSG_RESULT(not found)
-       enable_exceptions_crash=1
-       EXCEPTIONS_CRASH_DEF="#define EXCEPTIONS_CRASH 1"
-    else
-       AC_MSG_RESULT(yes)
-       enable_exceptions_crash=0
-       EXCEPTIONS_CRASH_DEF=""
-    fi
+      if test "$?" != "0"; then
+         AC_MSG_RESULT(not found)
+         enable_exceptions_crash=1
+         EXCEPTIONS_CRASH_DEF="#define EXCEPTIONS_CRASH 1"
+      else
+         AC_MSG_RESULT(yes)
+         enable_exceptions_crash=0
+         EXCEPTIONS_CRASH_DEF=""
+      fi
 
-    rm -f conftest-exc.cc conftest-exc
+      rm -f conftest-exc.cc conftest-exc
+  esac
 AC_SUBST(EXCEPTIONS_CRASH_DEF)
 
 ##  --  search for scisock --------------------------------------
@@ -3112,7 +3122,32 @@ fi
 sci_required_mpi="yes"
 if test "$with_mpi" = "built-in"; then
   HAVE_MPI=yes
-  AC_MSG_WARN( MPI specified as built-in... not checking for it... )
+  AC_MSG_CHECKING(for location of mpi.h (as MPI was specified as built-in_))
+
+  ########################################################################
+  ## Determine mpi.h location (it is needed by nvcc)
+  cat > conftest-uintah-mpi.cc <<EOF
+#include <mpi.h>
+int main(int argc, char **argv)
+{
+  char * s = MPICH_VERSION;
+  return 0;
+}
+EOF
+  $CC -c $CC_DEPEND_REGEN  conftest-uintah-mpi.cc > /dev/null 2>&1
+  if test -f conftest-uintah-mpi.d; then
+    mpi_h=`grep -u mpi.h conftest-uintah-mpi.d | head -1 | cut -f2 -d" "`
+    mpi_h_dir=`dirname $mpi_h`
+    if test -d $mpi_h_dir; then
+      INC_MPI_H_NVCC=-I$mpi_h_dir
+      AC_MSG_RESULT($INC_MPI_H_NVCC)
+    else
+      AC_MSG_RESULT(WARNING: Found bad mpi.h location of: $mpi_h_dir -- nvcc may have issues!)
+    fi
+  else
+    AC_MSG_RESULT(WARNING: Could not determine location of mpi.h -- nvcc may have issues!)
+  fi
+  rm -rf conftest-uintah-mpi*
 fi
 if test "$sci_required_mpi" = "yes" -a "$with_mpi" != "built-in"; then
   echo
@@ -3327,6 +3362,7 @@ fi #end sci_required_mpi
 AC_SUBST(HAVE_MPI)
 AC_SUBST(DEF_MPI)
 AC_SUBST(INC_MPI_H)
+AC_SUBST(INC_MPI_H_NVCC)
 AC_SUBST(MPI_LIB_FLAG)
 AC_SUBST(MPI_LIB_DIR_FLAG)
 sci_defs_files="$sci_defs_files include/sci_defs/mpi_testdefs.h"
@@ -3729,12 +3765,12 @@ int main(int argc, char **argv) {
 }
 EOF
 
-# for a static build, use the static CUDA runtime lib
-if test "$static" != "no" -o "$SO_OR_ARCHIVE_EXTENSION" = "a"; then
-   _cudart_lib="cudart_static dl pthread rt"
-else
-   _cudart_lib="cudart"
-fi
+  # for a static build, use the static CUDA runtime lib
+  if test "$static" != "no" -o "$SO_OR_ARCHIVE_EXTENSION" = "a"; then
+     _cudart_lib="cudart_static dl pthread rt"
+  else
+     _cudart_lib="cudart"
+  fi
 
   SCI_CUDA_COMPILE_LINK_TEST(CUDA,
                              CUDA libraries and headers,
@@ -3747,28 +3783,21 @@ fi
                              optional,
                              yes)
 
-rm -rf cuda_conf_test*
-echo
+  rm -rf cuda_conf_test*
 
-#[aph] - debug
-#echo
-#echo "HAVE_CUDA         = " $HAVE_CUDA
-#echo "HAVE_CUDA_H       = " $HAVE_CUDA_H
-#echo "INC_CUDA_H        = " $INC_CUDA_H
-#echo "CUDA_LIB_FLAG     = " $CUDA_LIB_FLAG
-#echo "CUDA_LIB_DIR      = " $CUDA_LIB_DIR
-#echo "CUDA_LIB_DIR_FLAG = " $CUDA_LIB_DIR_FLAG
-#echo "NVCC_CFLAGS       = " $NVCC_CFLAGS
-#echo "NVCC_CXXFLAGS     = " $NVCC_CXXFLAGS
-#echo "NVCC_LDFLAGS      = " $NVCC_LDFLAGS
-#echo "NVCC_LIBS         = " $NVCC_LIBS
-#echo "CC                = " $CC
-#echo "NVCC              = " $NVCC
-#echo "LIBS              = " $LIBS
-#echo "LDFLAGS           = " $LDFLAGS
-#echo "CFLAGS            = " $CFLAGS
-#echo "CXXFLAGS          = " $CXXFLAGS
-#echo
+  # Currently CUDA on Titan causes issues with Boost.  To work around these
+  # issues, we need to add: -DBOOST_NO_CXX11_VARIADIC_TEMPLATES -DBOOST_RESULT_OF_USE_TR1
+  # to the NVCC_CXXFLAGS.  In theory, when/if Titan upgrades to CUDA 7.5 this
+  # won't be necessary and this test can be removed.
+  #
+  case `hostname` in
+    titan* )
+      AC_MSG_WARN(Adding BOOST hack defines to allow build on Titan)
+      NVCC_CXXFLAGS="$NVCC_CXXFLAGS -DBOOST_NO_CXX11_VARIADIC_TEMPLATES -DBOOST_RESULT_OF_USE_TR1"
+      
+      add_important_warning "!!! Adding BOOST Hack -D defines for Titan build to support CUDA 7.0 !!!"
+      ;;
+  esac
 
 fi #end sci_required_cuda
 

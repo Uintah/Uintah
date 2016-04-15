@@ -1155,21 +1155,34 @@ ProblemSpecReader::parseValidationFile()
 
   xmlDocPtr doc; /* the resulting document tree */
   
-  string * valFile = scinew string( string( sci_getenv("SCIRUN_SRCDIR") ) + "/StandAlone/inputs/UPS_SPEC/ups_spec.xml" );
+  string valFileName = string( sci_getenv("SCIRUN_SRCDIR") ) + "/StandAlone/inputs/UPS_SPEC/ups_spec.xml";
 
-  d_upsFilename.push_back( valFile );
+  doc = xmlReadFile( valFileName.c_str(), 0, XML_PARSE_PEDANTIC );
 
-  doc = xmlReadFile( valFile->c_str(), 0, XML_PARSE_PEDANTIC );
+  if ( doc == 0 ) {
 
-  if (doc == 0) {
-    throw ProblemSetupException( "Error opening .ups validation specification file: " + *valFile, __FILE__, __LINE__ );
+    proc0cout << "During .ups validation: Unable to load 'ups_spec.xml' from source directory...\n" <<
+                 "Will now try current directory.  If this fails, an Exception will be raised.\n";
+    // If the UPS_SPEC can't be read from the source directory, try looking for it in the 'inputs/' directory in the current directory.
+    // This happens on some systems where you have to copy the sus executable to a different filesystem for running, and the original
+    // file system is not visible.
+    valFileName = "./inputs/UPS_SPEC/ups_spec.xml";
+
+    doc = xmlReadFile( valFileName.c_str(), 0, XML_PARSE_PEDANTIC );
+    if ( doc == 0 ) {
+      throw ProblemSetupException( "Error opening .ups validation specification file (tried both source directory and current directory): " +
+                                   valFileName, __FILE__, __LINE__ );
+    }
   }
+                               
+  string * valFileNamePtr = scinew string( valFileName );
+  d_upsFilename.push_back( valFileNamePtr );
 
   xmlNode * root = xmlDocGetRootElement( doc );
 
   // FYI, We are hijacking the '_private' to be used as application data... specifically the name of the file
   // that this node came from.
-  root->_private = (void*)valFile;
+  root->_private = (void*)valFileNamePtr;
   resolveIncludes( root->children, root );
 
   uintahSpec_g = new Tag( "Uintah_specification", REQUIRED, NO_DATA, "", NULL, root );
@@ -1179,7 +1192,7 @@ ProblemSpecReader::parseValidationFile()
   string tagName = (const char *)( root->name );
 
   if( tagName != "Uintah_specification" ) {
-    throw ProblemSetupException( *valFile + " does not appear to be valid... First tag should be\n" +
+    throw ProblemSetupException( valFileName + " does not appear to be valid... First tag should be\n" +
                                  + "<Uintah_specification>, but found: " + tagName,
                                  __FILE__, __LINE__ );
   }
@@ -2050,10 +2063,7 @@ ProblemSpecReader::readInputFile( const string & filename, const vector<int> & p
 
   resolveIncludes( prob_spec->getNode()->children, prob_spec->getNode() );
 
-  // Debugging prints:
-  //   cout << "------------------------------------------------------------------\n";
-  //   printDoc( prob_spec->getNode(), 0 );
-  if( validate ) {
+  if( Parallel::getMPIRank() == 0 && validate ) { // Only validate the UPS on proc 0...
     validateProblemSpec( prob_spec );
   }
 

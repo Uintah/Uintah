@@ -172,15 +172,6 @@ TypeDescription::lookupType( const std::string & t )
   return iter->second;
 }
 
-TypeDescription::Register::Register(const TypeDescription*/* td*/)
-{
-  // Registration happens in CTOR
-}
-
-TypeDescription::Register::~Register()
-{
-}
-
 MPI_Datatype
 TypeDescription::getMPIType() const
 {

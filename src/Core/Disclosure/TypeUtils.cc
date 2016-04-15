@@ -39,9 +39,7 @@
 
 using namespace std;
 
-
 namespace Uintah {
-
 
 #if !defined(STATIC_BUILD)
 template<> const string find_type_name(Uintah::long64*)
@@ -49,62 +47,51 @@ template<> const string find_type_name(Uintah::long64*)
   static const string name = "long64";
   return name;
 }
-
 #endif
-
-} // namespace Uintah
-
-
-namespace Uintah {
 
 const TypeDescription* fun_getTypeDescription(double*)
 {
-   static TypeDescription* td;
-   if(!td){
-      td = scinew TypeDescription(TypeDescription::double_type,
-				  "double", true, MPI_DOUBLE);
-   }
-   return td;
+  static TypeDescription* td;
+  if(!td){
+    td = scinew TypeDescription( TypeDescription::double_type, "double", true, MPI_DOUBLE );
+  }
+  return td;
 }
 
 const TypeDescription* fun_getTypeDescription(float*)
 {
-   static TypeDescription* td;
-   if(!td){
-      td = scinew TypeDescription(TypeDescription::float_type,
-				  "float", true, MPI_FLOAT);
-   }
-   return td;
+  static TypeDescription* td;
+  if(!td){
+    td = scinew TypeDescription( TypeDescription::float_type, "float", true, MPI_FLOAT );
+  }
+  return td;
 }
 
 const TypeDescription* fun_getTypeDescription(int*)
 {
-   static TypeDescription* td;
-   if(!td){
-      td = scinew TypeDescription(TypeDescription::int_type,
-				  "int", true, MPI_INT);
-   }
-   return td;
+  static TypeDescription* td;
+  if(!td){
+    td = scinew TypeDescription( TypeDescription::int_type, "int", true, MPI_INT );
+  }
+  return td;
 }
 
 const TypeDescription* fun_getTypeDescription(short int*)
 {
-   static TypeDescription* td;
-   if(!td){
-      td = scinew TypeDescription(TypeDescription::short_int_type,
-				  "short int", true, MPI_INT);
-   }
-   return td;
+  static TypeDescription* td;
+  if(!td){
+    td = scinew TypeDescription( TypeDescription::short_int_type, "short int", true, MPI_INT );
+  }
+  return td;
 }
 
 const TypeDescription* fun_getTypeDescription(FILE**)
 {
-   static TypeDescription* td;
-   if(!td){
-      td = scinew TypeDescription(TypeDescription::ParticleVariable,
-                               "filePointer",true, MPI_BYTE);
-   }
-   return td;
+  static TypeDescription* td;
+  if(!td){
+    td = scinew TypeDescription( TypeDescription::ParticleVariable, "filePointer", true, MPI_BYTE );
+  }
+  return td;
 }
 
 //  const TypeDescription* fun_getTypeDescription(long*)
