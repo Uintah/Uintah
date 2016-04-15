@@ -834,6 +834,10 @@ DORadiationModel::intensitysolve(const ProcessorGroup* pg,
 
       bool converged =  d_linearSolver->radLinearSolve( direcn, d_print_all_info );
 
+      if(_usePreviousIntensity){
+        vars->cenint.initialize(0.0); // Extra cells of intensity solution are not set when using non-zero initial guess.  Reset field to initialize extra cells 
+      }
+
       if (converged) {
         d_linearSolver->copyRadSoln(patch, vars);
       }else {
