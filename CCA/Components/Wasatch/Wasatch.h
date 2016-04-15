@@ -290,8 +290,8 @@ namespace WasatchCore{
     }
     static FlowTreatment flow_treatment(){return flowTreatment_;}
 
-    static void need_pressure_solve(const bool needPSolve){needPressureSolve_ = needPSolve;}
-    const static bool need_pressure_solve(){return needPressureSolve_;}
+    static void need_pressure_solve( const bool needPSolve ){ needPressureSolve_ = needPSolve; }
+    static bool need_pressure_solve(){ return needPressureSolve_; }
         
   private:
     bool buildTimeIntegrator_;   ///< used for Wasatch-Arches coupling

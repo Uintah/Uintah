@@ -21,8 +21,10 @@
  * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
  * IN THE SOFTWARE.
  */
+
 #include <fstream>
 #include <limits>
+
 //-- Uintah framework includes --//
 #include <sci_defs/uintah_defs.h>
 #include <CCA/Ports/Scheduler.h>
@@ -50,8 +52,8 @@
 
 #include <spatialops/structured/FVStaggered.h>
 #ifdef ENABLE_THREADS
-#include <spatialops/SpatialOpsTools.h>
-#include <expression/SchedulerBase.h>
+#  include <spatialops/SpatialOpsTools.h>
+#  include <expression/SchedulerBase.h>
 #endif
 
 //-- ExprLib includes --//

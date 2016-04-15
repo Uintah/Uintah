@@ -52,6 +52,7 @@ SRCS += \
         $(SRCDIR)/ReductionVariableBase.cc      \
         $(SRCDIR)/ReductionVariable_special.cc  \
         $(SRCDIR)/SoleVariableBase.cc           \
+        $(SRCDIR)/StaticInstantiate.cc          \
         $(SRCDIR)/Stencil7.cc                   \
         $(SRCDIR)/Stencil4.cc                   \
         $(SRCDIR)/Utils.cc                      \

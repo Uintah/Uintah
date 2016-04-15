@@ -28,8 +28,9 @@
 #include <CCA/Ports/InputContext.h>
 #include <CCA/Ports/DataWarehouseP.h>
 #include <CCA/Ports/DataWarehouse.h>
+
 #if HAVE_PIDX
-#include <CCA/Ports/PIDXOutputContext.h>
+#  include <CCA/Ports/PIDXOutputContext.h>
 #endif
 
 #include <Core/Exceptions/InternalError.h>
@@ -38,6 +39,7 @@
 #include <Core/Grid/Grid.h>
 #include <Core/Grid/Level.h>
 #include <Core/Grid/UnknownVariable.h>
+#include <Core/Grid/Variables/StaticInstantiate.h>
 #include <Core/Grid/Variables/VarLabel.h>
 #include <Core/Math/MiscMath.h>
 #include <Core/Parallel/Parallel.h>
@@ -59,14 +61,19 @@
 using namespace std;
 using namespace Uintah;
 
+//______________________________________________________________________
+// Initialize class static variables:
 
-DebugStream DataArchive::dbg("DataArchive", false);
+DebugStream DataArchive::dbg( "DataArchive", false );
+bool        DataArchive::d_types_initialized = false;
+
 //______________________________________________________________________
 //
+
 DataArchive::DataArchive( const string & filebase,
-                                int      processor     /* = 0 */,
-                                int      numProcessors /* = 1 */,
-                                bool     verbose       /* = true */ ) :
+                          const int      processor     /* = 0 */,
+                          const int      numProcessors /* = 1 */,
+                          const bool     verbose       /* = true */ ) :
   ref_cnt(0),
   lock("DataArchive ref_cnt lock"),
   timestep_cache_size(10),
@@ -78,6 +85,16 @@ DataArchive::DataArchive( const string & filebase,
   d_lock("DataArchive lock"),
   d_particlePositionName("p.x")
 {
+#ifdef STATIC_BUILD
+  if( !d_types_initialized ) {
+    d_types_initialized = true;
+    // For static builds, sometimes the Uintah types (CCVariable, etc) do not get automatically
+    // registered to the Uintah type system... this call forces that to happen.
+    proc0cout << "Loading Uintah var types into type system (static build).\n";
+    instantiateVariableTypes();
+  }
+#endif  
+
   if( d_filebase == "" ) {
     throw InternalError("DataArchive::DataArchive 'filebase' cannot be empty (\"\").", __FILE__, __LINE__);
   }

@@ -89,8 +89,6 @@ WARNING
       GridVariable<T>::allocate(l, h);
     }
 
-    static TypeDescription::Register registerMe;
-
   protected:
     SFCXVariable(const SFCXVariable<T>&);
 
@@ -105,10 +103,6 @@ WARNING
   template<class T>
   TypeDescription* SFCXVariable<T>::td = 0;
 
-  template<class T>
-  TypeDescription::Register
-  SFCXVariable<T>::registerMe(getTypeDescription());
-   
   template<class T>
   const TypeDescription*
   SFCXVariable<T>::getTypeDescription()

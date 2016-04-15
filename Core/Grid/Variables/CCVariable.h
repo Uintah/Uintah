@@ -70,14 +70,12 @@ WARNING
       
     //////////
     // Insert Documentation Here:
-    const TypeDescription* virtualGetTypeDescription() const 
-    { return getTypeDescription(); }
+    const TypeDescription* virtualGetTypeDescription() const { return getTypeDescription(); }
     static const TypeDescription* getTypeDescription();
     
     virtual GridVariableBase* clone();
     virtual const GridVariableBase* clone() const;
-    virtual GridVariableBase* cloneType() const
-    { return scinew CCVariable<T>(); }
+    virtual GridVariableBase* cloneType() const { return scinew CCVariable<T>(); }
     
     // allocate(IntVector, IntVector) is hidden without this
     using GridVariable<T>::allocate;
@@ -88,8 +86,6 @@ WARNING
                                     Ghost::None, 0, l, h);
       GridVariable<T>::allocate(l, h);
     }
-
-    static TypeDescription::Register registerMe;
 
   protected:
     CCVariable(const CCVariable<T>&);
@@ -105,10 +101,6 @@ WARNING
   template<class T>
   TypeDescription* CCVariable<T>::td = 0;
 
-  template<class T>
-  TypeDescription::Register
-  CCVariable<T>::registerMe(getTypeDescription());
-   
   template<class T>
   const TypeDescription*
   CCVariable<T>::getTypeDescription()

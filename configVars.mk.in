@@ -264,8 +264,8 @@ AS              := @AS@
 LD              := @LD@
 CFLAGS          := @CFLAGS@ $(CFLAGS) @WOFF_STRING@
 CXXFLAGS        := @CXXFLAGS@ $(CXXFLAGS) @WOFF_STRING@
-NVCC_CFLAGS     := @NVCC_CFLAGS@
-NVCC_CXXFLAGS   := @NVCC_CXXFLAGS@
+NVCC_CFLAGS     := @NVCC_CFLAGS@ @INC_MPI_H_NVCC@
+NVCC_CXXFLAGS   := @NVCC_CXXFLAGS@ @INC_MPI_H_NVCC@
 SOFLAGS         := $(CFLAGS) @SOFLAGS@ -L$(LIBDIR)
 LDFLAGS         := $(CXXFLAGS) @LDFLAGS@ -L$(LIBDIR) $(ELECTRIC_FENCE)
 NVCC_LDFLAGS    := $(NVCC_CXXFLAGS) @NVCC_LDFLAGS@
@@ -419,11 +419,14 @@ endif
 ifeq ($(SCI_MAKE_BE_QUIET),true)
 	@echo "Compiling CUDA file: $<"
 	@$(NVCC) $(NVCC_CXXFLAGS) $(INCLUDES) -Xcompiler $(CC_DEPEND_REGEN) $(call repository,$@) -c -dc $< -o $@
-	@rm -f $(basename $@).$(CC_DEPEND_EXT)
+        # FIXME: this should only be done on Titan... probably
+	@rm -f *.d
 	@$(NVCC) $(NVCC_CXXFLAGS) $(INCLUDES) -M $< | sed 's,^$(notdir $@),$@,g' > $(basename $@).$(CC_DEPEND_EXT)
 else
 	$(NVCC) $(NVCC_CXXFLAGS) $(INCLUDES) -Xcompiler $(CC_DEPEND_REGEN) $(call repository,$@) -c -dc $< -o $@
-	@rm -f $(basename $@).$(CC_DEPEND_EXT)
+        # On Titan, remove temporary .d files from the top level bin directory.
+        #   FIXME: perhaps should verify that we are on Titan? Though it should not hurt anything...
+	rm -f *.d 
 	$(NVCC) $(NVCC_CXXFLAGS) $(INCLUDES) -M $< | sed 's,^$(notdir $@),$@,g' > $(basename $@).$(CC_DEPEND_EXT)
 endif
 

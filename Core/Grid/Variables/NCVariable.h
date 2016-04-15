@@ -89,8 +89,6 @@ WARNING
       GridVariable<T>::allocate(l, h);
     }
 
-    static TypeDescription::Register registerMe;
-
   protected:
     NCVariable(const NCVariable<T>&);
 
@@ -105,10 +103,6 @@ WARNING
   template<class T>
   TypeDescription* NCVariable<T>::td = 0;
 
-  template<class T>
-  TypeDescription::Register
-  NCVariable<T>::registerMe(getTypeDescription());
-   
   template<class T>
   const TypeDescription*
   NCVariable<T>::getTypeDescription()

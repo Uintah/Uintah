@@ -48,9 +48,10 @@ ErrnoException::ErrnoException( const string & message, int err, const char* fil
    : err_(err)
 {
    ostringstream str;
-   const char* s = strerror(err);
-   if(!s)
-      s="(none)";
+   const char* s = strerror( err );
+   if( !s ) {
+     s = "(none)";
+   }
    str << "An ErrnoException was thrown.\n"
        << file << ":" << line << "\n"
        << message << " (errno=" << err << ": " << s << ")";

@@ -89,8 +89,6 @@ WARNING
       this->allocate(l, h);
     }
 
-    static TypeDescription::Register registerMe;
-
   protected:
     SFCYVariable(const SFCYVariable<T>&);
 
@@ -105,10 +103,6 @@ WARNING
   template<class T>
   TypeDescription* SFCYVariable<T>::td = 0;
 
-  template<class T>
-  TypeDescription::Register
-  SFCYVariable<T>::registerMe(getTypeDescription());
-   
   template<class T>
   const TypeDescription*
   SFCYVariable<T>::getTypeDescription()
