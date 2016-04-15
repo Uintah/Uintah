@@ -98,11 +98,13 @@ if test "$MACHINE" = "Ash"; then
      echo "ERROR: hostname did not return ash... Goodbye."
      exit
   fi
+  #COMP=icc-16.0.0
+  COMP=gcc-4.9.2
   NAME="ash.peaks"
   NAME2="Ash"
   TPI=thirdparty-install
   INSTALL_BASE=/uufs/$NAME/sys/pkg/uintah/$TPI$PHOENIXEXT/$NAME2/Wasatch3P
-  BOOST_LOC=/uufs/$NAME/sys/pkg/boost/1.54.0_mvapich2-1.9
+  BOOST_LOC=/uufs/chpc.utah.edu/sys/installdir/boost/1.59.0-4.9.2g
 else
 if test "$MACHINE" = "Mapache"; then
   if [[ $host != mp-fe* ]]; then
