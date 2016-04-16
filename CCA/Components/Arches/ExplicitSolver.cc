@@ -1282,10 +1282,6 @@ ExplicitSolver::sched_initializeVariables( const LevelP& level,
   if ( VarLabel::find("deposit_thickness"))
     tsk->computes(VarLabel::find("deposit_thickness"));
 
-  if ( VarLabel::find("real_deposit_velocity"))
-    tsk->computes(VarLabel::find("real_deposit_velocity"));
-
-
 sched->addTask(tsk, level->eachPatch(), d_lab->d_sharedState->allArchesMaterials());
 
 }
@@ -1391,9 +1387,6 @@ ExplicitSolver::initializeVariables(const ProcessorGroup* ,
 
     if ( VarLabel::find("deposit_thickness"))
       allocateAndInitializeToZero( VarLabel::find("deposit_thickness"), new_dw, indx, patch );
-
-    if ( VarLabel::find("real_deposit_velocity"))
-      allocateAndInitializeToZero( VarLabel::find("real_deposit_velocity"), new_dw, indx, patch );
 
     if ( d_MAlab ){
       allocateAndInitializeToZero( d_lab->d_pressPlusHydroLabel, new_dw, indx, patch );
