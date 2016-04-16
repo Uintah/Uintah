@@ -39,51 +39,51 @@ using namespace std;
 static Mutex tdLock("TypeDescription::getMPIType lock");
 static CrowdMonitor tpLock("TypeDescription type lock"); 
 
-static map<string, const TypeDescription*>* types = 0;
-static vector<const TypeDescription*>* typelist=0;
+static map<string, const TypeDescription*>* types_g    = NULL;
+static vector<const TypeDescription*>*      typelist_g = NULL;
 static bool killed=false;
 
 void
 TypeDescription::deleteAll()
 {
-  if(!types){
-    ASSERT(!killed);
-    ASSERT(!typelist);
+  if( !types_g ) {
+    ASSERT( !killed );
+    ASSERT( !typelist_g );
     return;
   }
 
   killed = true;
-  vector<const TypeDescription*>::iterator iter = typelist->begin();
+  vector<const TypeDescription*>::iterator iter = typelist_g->begin();
 
-  for(;iter != typelist->end();iter++) {
+  for(;iter != typelist_g->end();iter++) {
     delete *iter;
   }
 
-  delete types;
-  delete typelist;
+  delete types_g;
+  delete typelist_g;
 
-  types = 0;
-  typelist = 0;
+  types_g    = NULL;
+  typelist_g = NULL;
 }
 
 void
 TypeDescription::register_type()
 {
   tpLock.writeLock(); 
-  if( !types ) {
+  if( !types_g ) {
     ASSERT( !killed );
-    ASSERT( !typelist )
+    ASSERT( !typelist_g )
 
-    types    = scinew map<string, const TypeDescription*>;
-    typelist = scinew vector<const TypeDescription*>;
+    types_g    = scinew map<string, const TypeDescription*>;
+    typelist_g = scinew vector<const TypeDescription*>;
   }
   
-  map<string, const TypeDescription*>::iterator iter = types->find( getName() );
+  map<string, const TypeDescription*>::iterator iter = types_g->find( getName() );
 
-  if( iter == types->end() ){
-    (*types)[ getName() ] = this;
+  if( iter == types_g->end() ){
+    (*types_g)[ getName() ] = this;
   }
-  typelist->push_back( this );
+  typelist_g->push_back( this );
   tpLock.writeUnlock(); 
 }
 
@@ -159,17 +159,27 @@ const TypeDescription *
 TypeDescription::lookupType( const std::string & t )
 {
   tpLock.readLock(); 
-  if( !types ){
+  if( !types_g ){
     tpLock.readUnlock();
     return 0;
   }
-  map<string, const TypeDescription*>::iterator iter = types->find( t );
-  if( iter == types->end() ){
+  map<string, const TypeDescription*>::iterator iter = types_g->find( t );
+  if( iter == types_g->end() ){
     tpLock.readUnlock();
     return 0;
   }
   tpLock.readUnlock();
   return iter->second;
+}
+
+TypeDescription::Register::Register( const TypeDescription * td )
+{
+  // Actual registration of the Variable Type happens when of the 'td' variable 
+  // is originally created.
+}
+
+TypeDescription::Register::~Register()
+{
 }
 
 MPI_Datatype

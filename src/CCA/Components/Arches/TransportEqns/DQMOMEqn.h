@@ -152,7 +152,7 @@ public:
   /** @brief Apply boundary conditions */
   template <class phiType> void computeBCs( const Patch* patch, std::string varName, phiType& phi ){
     d_boundaryCond->setScalarValueBC( 0, patch, phi, varName );
-  };
+  }
 
   /** @brief Time averaging method required by base class. This method is empty (not needed) at the moment */
   void sched_timeAve( const LevelP& level, SchedulerP& sched, int timeSubStep ){};

@@ -157,7 +157,7 @@ namespace Uintah{
     /** @brief Apply boundary conditions */
     template <class phiType> void computeBCs( const Patch* patch, std::string varName, phiType& phi ){
       d_boundaryCond->setScalarValueBC( 0, patch, phi, varName );
-    };
+    }
     
     /** @brief Schedule the cleanup after this equation. */
     void sched_cleanUp( const LevelP&, SchedulerP& sched );

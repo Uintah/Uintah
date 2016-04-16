@@ -117,6 +117,15 @@ public:
 
   MPI_Datatype getMPIType() const;
 
+  // Our main variables (CCVariables, etc) create a static variable of 
+  // this type.  This is used to 'register' the variable type (eg: NCVariable<int>)
+  // with the TypeDescription system when the Variable classes are originally
+  // loaded (usually at program start up).
+  struct Register {
+    Register( const TypeDescription* );
+    ~Register();
+  };
+
   static const TypeDescription* lookupType(const std::string&);
 
   Variable* createInstance() const;

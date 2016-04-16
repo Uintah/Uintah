@@ -89,6 +89,12 @@ WARNING
       this->allocate(l, h);
     }
 
+    // Static variable whose entire purpose is to cause the (instantiated) type of this
+    // class to be registered with the Core/Disclosure/TypeDescription class when this
+    // class' object code is originally loaded from the shared library.  The 'registerMe'
+    // variable is not used for anything else in the program.
+    static TypeDescription::Register registerMe;
+
   protected:
     SFCYVariable(const SFCYVariable<T>&);
 
@@ -103,6 +109,14 @@ WARNING
   template<class T>
   TypeDescription* SFCYVariable<T>::td = 0;
 
+  // The following line is the initialization (creation) of the 'registerMe' static variable
+  // (for each version of CCVariable (double, int, etc)).  Note, the 'registerMe' variable
+  // is created when the object code is initially loaded (usually during intial program load
+  // by the operating system).
+  template<class T>
+  TypeDescription::Register
+  SFCYVariable<T>::registerMe( getTypeDescription() );
+   
   template<class T>
   const TypeDescription*
   SFCYVariable<T>::getTypeDescription()

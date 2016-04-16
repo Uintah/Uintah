@@ -340,9 +340,8 @@ protected:
     virtual void compute_bcs( const Patch* patch, ArchesTaskInfoManager* tsk_info_mngr,
                               SpatialOps::OperatorDatabase& opr ) = 0;
 
-
-    std::string _task_name;
-    const int _matl_index;
+    std::string                  _task_name;
+    const int                    _matl_index;
     std::vector<const VarLabel*> _local_labels;
 
     /** @brief A helper struct for creating new varlabels as requested by the task **/
@@ -370,7 +369,6 @@ protected:
       }
     };
 
-
     /** @brief Register a local varlabel for this task **/
     template <typename T>
     void register_new_variable(const std::string name){
@@ -379,9 +377,7 @@ protected:
       helper->create_variable( name, _local_labels );
       delete helper;
 
-    };
-
-private:
+    }
 
   };
 
