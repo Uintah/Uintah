@@ -68,7 +68,7 @@ public:
     };
 
 private: 
-
+      bool _averaging_update;
       int _Nenv;
       SimulationStateP _shared_state;
       std::vector<IntVector> _d; 
