@@ -280,7 +280,6 @@ namespace Uintah{
       inline double getFlux( const double area, FaceData1D den, FaceData1D vel, 
           FaceData1D phi, constCCVariable<Vector>& areaFraction, IntVector coord, IntVector c )
       {
-        double F; 
         FaceData1D areaFrac;
         IntVector cp = c + coord; 
         Vector curr_areaFrac = areaFraction[c]; 
@@ -296,15 +295,13 @@ namespace Uintah{
         areaFrac.plus  = plus_areaFrac[dim];
         areaFrac.minus = curr_areaFrac[dim]; 
 
-        return F = area * (  areaFrac.plus * den.plus * vel.plus * phi.plus 
-            - areaFrac.minus * den.minus * vel.minus * phi.minus ); 
+        return area * (  areaFrac.plus * den.plus * vel.plus * phi.plus - areaFrac.minus * den.minus * vel.minus * phi.minus ); 
       }
       /** @brief Computes the flux term, \f$ int_A div{u \phi} \cdot dA \f$, where u is the velocity
        *          in the normal (coord) direction.  Note version does not have density. */
       inline double getFlux( const double area, FaceData1D vel, FaceData1D phi, 
           constCCVariable<Vector>& areaFraction, IntVector coord, IntVector c )
       {
-        double F; 
         FaceData1D areaFrac;
         IntVector cp = c + coord; 
         Vector curr_areaFrac = areaFraction[c]; 
@@ -320,8 +317,7 @@ namespace Uintah{
         areaFrac.plus  = plus_areaFrac[dim];
         areaFrac.minus = curr_areaFrac[dim]; 
 
-        return F = area * (  areaFrac.plus * vel.plus * phi.plus 
-            - areaFrac.minus * vel.minus * phi.minus ); 
+        return area * (  areaFrac.plus * vel.plus * phi.plus - areaFrac.minus * vel.minus * phi.minus ); 
       }
 
       //---------------------------------------------------------------------------

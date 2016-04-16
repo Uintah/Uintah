@@ -28,23 +28,52 @@ include $(SCIRUN_SCRIPTS)/smallso_prologue.mk
 
 SRCDIR := CCA/Components/Arches
 
-SRCS += $(SRCDIR)/Arches.cc                    \
-        $(SRCDIR)/ArchesConstVariables.cc      \
+#
+# CUDA_ENABLED_SRCS are files that if CUDA is enabled (via configure), must be
+# compiled using the nvcc compiler.
+#
+# WARNING: If you add a file to the list of CUDA_SRCS, you must add a
+# corresponding rule at the end of this file!
+#
+# Also, do not put the .cc on this list of files as the .cc or .cu
+# will be added automatically as needed.
+#
+CUDA_ENABLED_SRCS =          \
+       Arches                \
+       BoundaryCondition     \
+       BoundaryCond_new      \
+       CQMOM                 \
+       Discretization        \
+       DQMOM                 \
+       ExplicitSolver        \
+       KokkosSolver          \
+       Properties            
+
+ifeq ($(HAVE_CUDA),yes)
+
+   # CUDA enabled files, listed here (and with a rule at the end of
+   # this sub.mk) are copied to the binary side and renamed with a .cu
+   # extension (.cc replaced with .cu) so that they can be compiled
+   # using the nvcc compiler.
+
+   SRCS += $(foreach var,$(CUDA_ENABLED_SRCS),$(OBJTOP_ABS)/$(SRCDIR)/$(var).cu)
+   DLINK_FILES := $(DLINK_FILES) $(foreach var,$(CUDA_ENABLED_SRCS),$(SRCDIR)/$(var).o)
+
+else
+
+   SRCS += $(foreach var,$(CUDA_ENABLED_SRCS),$(SRCDIR)/$(var).cc)
+
+endif
+
+SRCS += $(SRCDIR)/ArchesConstVariables.cc      \
         $(SRCDIR)/ArchesLabel.cc               \
         $(SRCDIR)/ArchesMaterial.cc            \
         $(SRCDIR)/ArchesParticlesHelper.cc     \
-        $(SRCDIR)/ArchesBCHelper.cc     \
+        $(SRCDIR)/ArchesBCHelper.cc            \
         $(SRCDIR)/ArchesVariables.cc           \
-        $(SRCDIR)/BoundaryCondition.cc         \
-        $(SRCDIR)/BoundaryCond_new.cc          \
         $(SRCDIR)/CellInformation.cc           \
         $(SRCDIR)/CompDynamicProcedure.cc      \
-        $(SRCDIR)/CQMOM.cc                     \
-        $(SRCDIR)/Discretization.cc            \
-        $(SRCDIR)/DQMOM.cc                     \
-        $(SRCDIR)/ExplicitSolver.cc            \
         $(SRCDIR)/ExplicitTimeInt.cc           \
-        $(SRCDIR)/KokkosSolver.cc              \
         $(SRCDIR)/IncDynamicProcedure.cc       \
         $(SRCDIR)/IntrusionBC.cc               \
         $(SRCDIR)/LU.cc                        \
@@ -52,7 +81,6 @@ SRCS += $(SRCDIR)/Arches.cc                    \
         $(SRCDIR)/NonlinearSolver.cc           \
         $(SRCDIR)/PhysicalConstants.cc         \
         $(SRCDIR)/PressureSolverV2.cc          \
-        $(SRCDIR)/Properties.cc                \
         $(SRCDIR)/RHSSolver.cc                 \
         $(SRCDIR)/ScaleSimilarityModel.cc      \
         $(SRCDIR)/SmagorinskyModel.cc          \
@@ -105,42 +133,8 @@ LIBS := $(LIBS) $(XML2_LIBRARY) $(F_LIBRARY) $(MPI_LIBRARY) $(M_LIBRARY) \
         $(BOOST_LIBRARY) $(Z_LIBRARY) \
         $(SPATIALOPS_LIBRARY)
 
-INCLUDES := $(INCLUDES) $(BOOST_INCLUDE) $(TABPROPS_INCLUDE) $(RADPROPS_INCLUDE) $(SPATIALOPS_INCLUDE)
-
-#### Handle subdirs (These files are just 'included' into the build of libCCA_Components_Arches.so)
-
-SUBDIRS := $(SRCDIR)/ChemMix             \
-           $(SRCDIR)/CoalModels          \
-           $(SRCDIR)/CoalModels/fortran  \
-           $(SRCDIR)/DigitalFilter       \
-           $(SRCDIR)/LagrangianParticles \
-           $(SRCDIR)/Operators           \
-           $(SRCDIR)/ParticleModels      \
-           $(SRCDIR)/PropertyModels      \
-           $(SRCDIR)/PropertyModelsV2    \
-           $(SRCDIR)/Radiation           \
-           $(SRCDIR)/Radiation/fortran   \
-           $(SRCDIR)/SourceTerms         \
-           $(SRCDIR)/Task                \
-           $(SRCDIR)/Transport           \
-           $(SRCDIR)/TransportEqns       \
-           $(SRCDIR)/Utility             \
-           $(SRCDIR)/WallHTModels
-
-
-include $(SCIRUN_SCRIPTS)/recurse.mk
-#### End handle subdirs
-
-include $(SCIRUN_SCRIPTS)/smallso_epilogue.mk
-
-#### Handle subdirs that are their OWN SHARED LIBRARIES
-# I don't know of any reason that these are actually made into separate libraries...
-# perhaps just for historical reasons.  It would be just as easy to fold them into
-# libArches if there ever was a reason to...
-SUBDIRS := $(SRCDIR)/fortran
-
-include $(SCIRUN_SCRIPTS)/recurse.mk
-#### End handle subdirs
+INCLUDES := $(INCLUDES) $(BOOST_INCLUDE) \
+            $(EXPRLIB_INCLUDE) $(TABPROPS_INCLUDE) $(RADPROPS_INCLUDE) $(SPATIALOPS_INCLUDE)
 
 $(SRCDIR)/BoundaryCondition.$(OBJEXT) : $(SRCDIR)/fortran/mmbcvelocity_fort.h
 $(SRCDIR)/BoundaryCondition.$(OBJEXT) : $(SRCDIR)/fortran/mm_computevel_fort.h
@@ -177,3 +171,67 @@ $(SRCDIR)/Source.$(OBJEXT)            : $(SRCDIR)/fortran/wvelsrc_fort.h
 # See build specification in .../src/StandAlone/sub.mk
 
 ##############################################
+
+########################################################################
+#
+# Rules to copy CUDA enabled source (.cc) files to the binary build tree
+# and rename with a .cu extension.
+#
+
+ifeq ($(HAVE_CUDA),yes)
+  # If Copy the 'original' .cc files into the binary tree and rename as .cu
+
+  $(OBJTOP_ABS)/$(SRCDIR)/Arches.cu : $(SRCTOP_ABS)/$(SRCDIR)/Arches.cc
+	cp $< $@
+  $(OBJTOP_ABS)/$(SRCDIR)/BoundaryCondition.cu : $(SRCTOP_ABS)/$(SRCDIR)/BoundaryCondition.cc
+	cp $< $@
+  $(OBJTOP_ABS)/$(SRCDIR)/BoundaryCond_new.cu : $(SRCTOP_ABS)/$(SRCDIR)/BoundaryCond_new.cc
+	cp $< $@
+  $(OBJTOP_ABS)/$(SRCDIR)/CQMOM.cu : $(SRCTOP_ABS)/$(SRCDIR)/CQMOM.cc
+	cp $< $@
+  $(OBJTOP_ABS)/$(SRCDIR)/Discretization.cu : $(SRCTOP_ABS)/$(SRCDIR)/Discretization.cc
+	cp $< $@
+  $(OBJTOP_ABS)/$(SRCDIR)/DQMOM.cu : $(SRCTOP_ABS)/$(SRCDIR)/DQMOM.cc
+	cp $< $@
+  $(OBJTOP_ABS)/$(SRCDIR)/ExplicitSolver.cu : $(SRCTOP_ABS)/$(SRCDIR)/ExplicitSolver.cc
+	cp $< $@
+  $(OBJTOP_ABS)/$(SRCDIR)/KokkosSolver.cu : $(SRCTOP_ABS)/$(SRCDIR)/KokkosSolver.cc
+	cp $< $@
+  $(OBJTOP_ABS)/$(SRCDIR)/Properties.cu : $(SRCTOP_ABS)/$(SRCDIR)/Properties.cc
+	cp $< $@
+
+endif
+
+#### Handle subdirs (These files are just 'included' into the build of libCCA_Components_Arches.so)
+
+SUBDIRS := $(SRCDIR)/ChemMix             \
+           $(SRCDIR)/CoalModels          \
+           $(SRCDIR)/CoalModels/fortran  \
+           $(SRCDIR)/DigitalFilter       \
+           $(SRCDIR)/LagrangianParticles \
+           $(SRCDIR)/Operators           \
+           $(SRCDIR)/ParticleModels      \
+           $(SRCDIR)/PropertyModels      \
+           $(SRCDIR)/PropertyModelsV2    \
+           $(SRCDIR)/Radiation           \
+           $(SRCDIR)/Radiation/fortran   \
+           $(SRCDIR)/SourceTerms         \
+           $(SRCDIR)/Task                \
+           $(SRCDIR)/Transport           \
+           $(SRCDIR)/TransportEqns       \
+           $(SRCDIR)/Utility             \
+           $(SRCDIR)/WallHTModels
+
+
+include $(SCIRUN_SCRIPTS)/recurse.mk
+include $(SCIRUN_SCRIPTS)/smallso_epilogue.mk
+
+#### Handle subdirs that are their OWN SHARED LIBRARIES
+# I don't know of any reason that these are actually made into separate libraries...
+# perhaps just for historical reasons.  It would be just as easy to fold them into
+# libArches if there ever was a reason to...
+SUBDIRS := $(SRCDIR)/fortran
+
+include $(SCIRUN_SCRIPTS)/recurse.mk
+#### End handle subdirs
+

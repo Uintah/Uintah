@@ -1850,14 +1850,13 @@ namespace Uintah {
     /** @brief Computes the flux term of the cell based on summatino of face values */
     inline double getFlux( const double area, cqFaceData1D GPhi, const IntVector c, constCCVariable<double>& volFrac )
     {
-      double F;
-      
       //Not using the areafraction here allows for flux to come from an intrusion cell into the domain as
       //the particles bounce, but requires checking celltype to prevent flux into intrusion cells
       if ( volFrac[c] == 1.0 ) {
-        return F = area * ( GPhi.plus - GPhi.minus );
-      } else {
-        return F = 0.0;
+        return area * ( GPhi.plus - GPhi.minus );
+      }
+      else {
+        return 0.0;
       }
     }
     

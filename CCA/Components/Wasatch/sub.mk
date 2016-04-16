@@ -39,8 +39,10 @@ SRCDIR := CCA/Components/Wasatch
 # corresponding rule at the end of this file!
 #
 
+# If only building Arches required files, then we don't need these...
 ifeq ($(BUILD_WASATCH_FOR_ARCHES),no)
-  # If only building Arches required files, then we don't need these...
+  # Do not put the extension on files in this list as the .cc or .cu will
+  # be added automatically as needed.
   CUDA_ENABLED_SRCS =  \
 	TimeStepper    \
 	Wasatch
