@@ -1417,6 +1417,7 @@ void AMRMPM::scheduleAddParticles(SchedulerP& sched,
       t->modifies(lb->pConcGradientLabel_preReloc);
       t->modifies(lb->pExternalScalarFluxLabel);
       t->modifies(lb->pAreaLabel_preReloc);
+      t->modifies(lb->pDiffusivityLabel_preReloc);
     }
     if (flags->d_useLoadCurves) {
       t->modifies(lb->pLoadCurveIDLabel_preReloc);
@@ -1430,7 +1431,6 @@ void AMRMPM::scheduleAddParticles(SchedulerP& sched,
     t->modifies(lb->pScaleFactorLabel_preReloc);
     t->modifies(lb->pLastLevelLabel_preReloc);
     t->modifies(lb->pVelGradLabel_preReloc);
-    t->modifies(lb->pDiffusivityLabel_preReloc);
     t->modifies(lb->MPMRefineCellLabel, d_one_matl);
 
     t->requires(Task::OldDW, lb->pCellNAPIDLabel, d_one_matl, Ghost::None);
@@ -3966,7 +3966,6 @@ void AMRMPM::addParticles(const ProcessorGroup*,
       new_dw->getModifiable(plal,     lb->pLastLevelLabel_preReloc,    pset);
       new_dw->getModifiable(ploc,     lb->pLocalizedMPMLabel_preReloc, pset);
       new_dw->getModifiable(pvelgrad, lb->pVelGradLabel_preReloc,      pset);
-      new_dw->getModifiable(pD,       lb->pDiffusivityLabel_preReloc,  pset);
       new_dw->getModifiable(pF,  lb->pDeformationMeasureLabel_preReloc,pset);
       if (flags->d_with_color) {
         new_dw->getModifiable(pcolor,   lb->pColorLabel_preReloc,        pset);
@@ -3977,6 +3976,7 @@ void AMRMPM::addParticles(const ProcessorGroup*,
         new_dw->getModifiable(pconcgrad,lb->pConcGradientLabel_preReloc, pset);
         new_dw->getModifiable(pESF,     lb->pExternalScalarFluxLabel,    pset);
         new_dw->getModifiable(pArea,    lb->pAreaLabel_preReloc,         pset);
+        new_dw->getModifiable(pD,       lb->pDiffusivityLabel_preReloc,  pset);
       }
       if (flags->d_useLoadCurves) {
         new_dw->getModifiable(pLoadCID, lb->pLoadCurveIDLabel_preReloc,  pset);
@@ -4146,6 +4146,7 @@ void AMRMPM::addParticles(const ProcessorGroup*,
         new_dw->allocateTemporary(pconcpretmp,  pset);
         new_dw->allocateTemporary(pconcgradtmp, pset);
         new_dw->allocateTemporary(pESFtmp,      pset);
+        new_dw->allocateTemporary(pDtmp,        pset);
       }
       if (flags->d_useLoadCurves) {
         new_dw->allocateTemporary(pLoadCIDtmp,  pset);
@@ -4155,7 +4156,6 @@ void AMRMPM::addParticles(const ProcessorGroup*,
       new_dw->allocateTemporary(plaltmp,  pset);
       new_dw->allocateTemporary(ploctmp,  pset);
       new_dw->allocateTemporary(pvgradtmp,pset);
-      new_dw->allocateTemporary(pDtmp,    pset);
 
       // copy data from old variables for particle IDs and the position vector
       for( unsigned int pp=0; pp<oldNumPar; ++pp ){
@@ -4360,6 +4360,7 @@ void AMRMPM::addParticles(const ProcessorGroup*,
             pconcpretmp[new_idx]  = pconcpre[idx];
             pconcgradtmp[new_idx] = pconcgrad[idx];
             pESFtmp[new_idx]      = pESF[idx];
+            pDtmp[new_idx]        = pD[idx];
             if((fabs(pArea[idx].x()) > 0.0 && fabs(pArea[idx].y()) > 0.0) || 
                (fabs(pArea[idx].x()) > 0.0 && fabs(pArea[idx].z()) > 0.0) ||
                (fabs(pArea[idx].y()) > 0.0 && fabs(pArea[idx].z()) > 0.0) ||
@@ -4388,7 +4389,6 @@ void AMRMPM::addParticles(const ProcessorGroup*,
           plaltmp[new_idx]    = plal[idx];
           ploctmp[new_idx]    = ploc[idx];
           pvgradtmp[new_idx]  = pvelgrad[idx];
-          pDtmp[new_idx]      = pD[idx];
           NAPID_new[c_orig]++;
           last_index=new_idx;
         }
@@ -4423,6 +4423,7 @@ void AMRMPM::addParticles(const ProcessorGroup*,
         new_dw->put(pconcgradtmp, lb->pConcGradientLabel_preReloc,   true);
         new_dw->put(pESFtmp,      lb->pExternalScalarFluxLabel,      true);
         new_dw->put(pareatmp,     lb->pAreaLabel_preReloc,           true);
+        new_dw->put(pDtmp,        lb->pDiffusivityLabel_preReloc,    true);
       }
       if (flags->d_useLoadCurves) {
         new_dw->put(pLoadCIDtmp,lb->pLoadCurveIDLabel_preReloc,      true);
@@ -4432,7 +4433,6 @@ void AMRMPM::addParticles(const ProcessorGroup*,
       new_dw->put(plaltmp,  lb->pLastLevelLabel_preReloc,            true);
       new_dw->put(ploctmp,  lb->pLocalizedMPMLabel_preReloc,         true);
       new_dw->put(pvgradtmp,lb->pVelGradLabel_preReloc,              true);
-      new_dw->put(pDtmp,    lb->pDiffusivityLabel_preReloc,          true);
     }  // for matls
   }    // for patches
 }
