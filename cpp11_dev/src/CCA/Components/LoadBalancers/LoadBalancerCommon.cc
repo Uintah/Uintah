@@ -38,8 +38,6 @@
 #include <Core/Thread/Mutex.h>
 #include <Core/Util/DebugStream.h>
 #include <Core/Util/FancyAssert.h>
-#include <Core/Util/NotFinished.h>
-
 #include <sci_values.h>
 #include <sstream>
 

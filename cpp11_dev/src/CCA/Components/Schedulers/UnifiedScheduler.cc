@@ -381,12 +381,11 @@ UnifiedScheduler::createSubScheduler()
 
     // Create UnifiedWorker threads for the subscheduler
     char name[1024];
-    ThreadGroup* subGroup = new ThreadGroup("subscheduler-group", 0);  // 0 is main/parent thread group
     for (int i = 0; i < subsched->numThreads_; i++) {
       UnifiedSchedulerWorker* worker = new UnifiedSchedulerWorker(subsched, i);
       subsched->t_worker[i] = worker;
       sprintf(name, "Task Compute Thread ID: %d", i + subsched->numThreads_);
-      Thread* t = new Thread(worker, name, subGroup);
+      Thread* t = new Thread(worker, name, nullptr);
       subsched->t_thread[i] = t;
     }
   }

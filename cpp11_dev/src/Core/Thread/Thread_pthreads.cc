@@ -74,7 +74,6 @@
 #include <Core/Thread/Semaphore.h>
 #include <Core/Thread/ThreadError.h>
 #include <Core/Thread/ThreadGroup.h>
-#include <Core/Thread/WorkQueue.h>
 #include <Core/Thread/Thread_unix.h>
 #include <Core/Util/Assert.h>
 #include <Core/Thread/CrashPad.h>

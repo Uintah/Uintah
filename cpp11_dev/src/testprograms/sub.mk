@@ -28,7 +28,6 @@ SRCDIR := testprograms
 
 SUBDIRS := \
         $(SRCDIR)/Malloc                  \
-        $(SRCDIR)/Thread                  \
         $(SRCDIR)/TestSuite               \
         $(SRCDIR)/TestFastMatrix          \
         $(SRCDIR)/TestMatrix3             \

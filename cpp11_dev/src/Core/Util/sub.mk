@@ -38,10 +38,8 @@ SRCS += \
         $(SRCDIR)/RWS.cc                \
         $(SRCDIR)/sci_system.cc         \
         $(SRCDIR)/SizeTypeConvert.cc    \
-        $(SRCDIR)/Signals.cc            \
         $(SRCDIR)/soloader.cc           \
         $(SRCDIR)/StringUtil.cc         \
-        $(SRCDIR)/Timer.cc              \
         $(SRCDIR)/XMLUtils.cc           \
         $(SRCDIR)/Util.cc
 
