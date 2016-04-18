@@ -350,8 +350,6 @@ void HeatLoss::initialize( const ProcessorGroup* pc,
     vector<Patch::FaceType> bf;
     vector<Patch::FaceType>::const_iterator bf_iter;
     patch->getBoundaryFaces(bf);
-    double dx=0;
-    double dy=0;
 
     //check the BCs + initialize BC
     _boundary_condition->checkBCs( patch, _prop_name, matlIndex );
