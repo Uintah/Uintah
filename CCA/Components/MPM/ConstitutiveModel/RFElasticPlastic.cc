@@ -567,10 +567,10 @@ RFElasticPlastic::computeStressTensor(const PatchSubset* patches,
   //********** Concentration Component****************************
   
   double totalStrainEnergy = 0.0;
-  double include_AV_heating=0.0;
-  if (flag->d_artificial_viscosity_heating) {
-    include_AV_heating=1.0;
-  }
+//  double include_AV_heating=0.0;
+//  if (flag->d_artificial_viscosity_heating) {
+//    include_AV_heating=1.0;
+//  }
 
   // Loop thru patches
   for(int patchIndex=0; patchIndex<patches->size(); patchIndex++){
@@ -1127,10 +1127,10 @@ RFElasticPlastic::computeStressTensor(const PatchSubset* patches,
                                         avgVolume*delT/pMass[idx];
 
         // Compute rate of change of specific volume
-        double Vdot = (pVolume_deformed[idx] - pVolume[idx])/(pMass[idx]*delT);
+//      double Vdot = (pVolume_deformed[idx] - pVolume[idx])/(pMass[idx]*delT);
 
-        pEnergy_new[idx] = pEnergy[idx] + pSpecificStrainEnergy 
-                                        - p_q[idx]*Vdot*delT*include_AV_heating;
+        pEnergy_new[idx] = pEnergy[idx] + pSpecificStrainEnergy;
+//                                      - p_q[idx]*Vdot*delT*include_AV_heating;
 
         totalStrainEnergy += pSpecificStrainEnergy*pMass[idx];
       }else{
