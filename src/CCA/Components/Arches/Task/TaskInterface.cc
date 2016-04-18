@@ -155,7 +155,7 @@ TaskInterface::register_variable_work( std::string name,
   the_label = VarLabel::find( name );
 
   if ( the_label == NULL ){
-    throw InvalidValue("Error: The variable named: "+name+" does not exist for task "+_task_name,__FILE__,__LINE__);
+    throw InvalidValue("Error: The variable named: "+name+" does not exist for task:"+_task_name,__FILE__,__LINE__);
   } else {
     info.label = the_label;
   }
