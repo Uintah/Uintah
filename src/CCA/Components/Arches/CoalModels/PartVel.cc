@@ -348,8 +348,6 @@ void PartVel::ComputePartVel( const ProcessorGroup* pc,
 
       partVel.initialize(Vector(0,0,0));
 
-      double noise = 1e-10;
-
       // now loop over all cells
       for (CellIterator iter=patch->getCellIterator(0); !iter.done(); iter++){
 
@@ -414,10 +412,6 @@ void PartVel::ComputePartVel( const ProcessorGroup* pc,
           double u = 2. * bc_u - cc_uvel[ci];
           double v = 2. * bc_v - cc_vvel[ci];
           double w = 2. * bc_w - cc_wvel[ci];
-
-          if ( c == IntVector(1,-1,1)){
-            int iii = 1;
-          }
 
           partVel[c] = Vector(u, v, w);
 

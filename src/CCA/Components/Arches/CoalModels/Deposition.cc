@@ -15,12 +15,12 @@
 //===========================================================================
 
 using namespace std;
-using namespace Uintah; 
+using namespace Uintah;
 
 //---------------------------------------------------------------------------
 // Builder:
 
-DepositionBuilder::DepositionBuilder( const std::string         & modelName, 
+DepositionBuilder::DepositionBuilder( const std::string         & modelName,
                                         const vector<std::string> & reqICLabelNames,
                                         const vector<std::string> & reqScalarLabelNames,
                                         ArchesLabel         * fieldLabels,
@@ -38,12 +38,12 @@ ModelBase* DepositionBuilder::build(){
 // End Builder
 //---------------------------------------------------------------------------
 
-Deposition::Deposition( std::string           modelName, 
+Deposition::Deposition( std::string           modelName,
                           SimulationStateP    & sharedState,
                           ArchesLabel   * fieldLabels,
-                          vector<std::string>   icLabelNames, 
+                          vector<std::string>   icLabelNames,
                           vector<std::string>   scalarLabelNames,
-                          int qn ) 
+                          int qn )
 : ModelBase(modelName, sharedState, fieldLabels, icLabelNames, scalarLabelNames, qn)
 {
   // Create a label for this model
@@ -65,79 +65,78 @@ Deposition::~Deposition()
 //---------------------------------------------------------------------------
 // Method: Problem Setup
 //---------------------------------------------------------------------------
-void 
+void
 Deposition::problemSetup(const ProblemSpecP& inputdb, int qn)
 {
 
-  ProblemSpecP db = inputdb; 
+  ProblemSpecP db = inputdb;
 
-  if ( db->findBlock("is_weight")){ 
-    _is_weight = true; 
+  if ( db->findBlock("is_weight")){
+    _is_weight = true;
   }
 
   DQMOMEqnFactory& dqmomFactory = DQMOMEqnFactory::self();
-  if ( !_is_weight ){ 
+  if ( !_is_weight ){
 
-    if ( db->findBlock("abscissa") ){ 
+    if ( db->findBlock("abscissa") ){
       db->findBlock("abscissa")->getAttribute( "label", _abscissa_name );
-    } else { 
+    } else {
       throw ProblemSetupException("Error: Must specify an abscissa label for this model.",__FILE__,__LINE__);
     }
 
-    std::string a_name = ParticleTools::append_qn_env( _abscissa_name, d_quadNode ); 
-    EqnBase& a_eqn = dqmomFactory.retrieve_scalar_eqn( a_name ); 
-    _a_scale = a_eqn.getScalingConstant(d_quadNode); 
+    std::string a_name = ParticleTools::append_qn_env( _abscissa_name, d_quadNode );
+    EqnBase& a_eqn = dqmomFactory.retrieve_scalar_eqn( a_name );
+    _a_scale = a_eqn.getScalingConstant(d_quadNode);
 
   }
 
-  std::string w_name = ParticleTools::append_qn_env( "w", d_quadNode ); 
+  std::string w_name = ParticleTools::append_qn_env( "w", d_quadNode );
   EqnBase& temp_eqn = dqmomFactory.retrieve_scalar_eqn(w_name);
-  _w_scale = temp_eqn.getScalingConstant(d_quadNode); 
+  _w_scale = temp_eqn.getScalingConstant(d_quadNode);
   DQMOMEqn& eqn = dynamic_cast<DQMOMEqn&>(temp_eqn);
-  double weight_clip = eqn.getSmallClip();
 
   _w_label = VarLabel::find(w_name);
 
-  if ( _w_label == 0 ){ 
-    throw InvalidValue("Error:Weight not found: "+w_name, __FILE__, __LINE__); 
+  if ( _w_label == 0 ){
+    throw InvalidValue("Error:Weight not found: "+w_name, __FILE__, __LINE__);
   }
-  
+
   // check to see if rate_deposition model is active
-  bool missing_rate_depostion = true; 
+  bool missing_rate_depostion = true;
   const ProblemSpecP params_root = db->getRootNode();
   ProblemSpecP db_PM = params_root->findBlock("CFD")->findBlock("ARCHES")->findBlock("ParticleModels");
-  for ( ProblemSpecP db_var = db_PM->findBlock("model"); db_var != 0; db_var = db_var->findNextBlock("model")){ 
+  for ( ProblemSpecP db_var = db_PM->findBlock("model"); db_var != 0; db_var = db_var->findNextBlock("model")){
 
     std::string type;
-    std::string role_found; 
+    std::string role_found;
     db_var->getAttribute("type", type);
-    if ( type == "rate_deposition" ){ 
-      missing_rate_depostion = false; 
+    if ( type == "rate_deposition" ){
+      missing_rate_depostion = false;
     }
-  } 
-  if ( missing_rate_depostion ){ 
-    throw InvalidValue("Error: Deposition model requires a rate_deposition model in ParticleModels.", __FILE__, __LINE__); 
+  }
+  if ( missing_rate_depostion ){
+    throw InvalidValue("Error: Deposition model requires a rate_deposition model in ParticleModels.", __FILE__, __LINE__);
   }
   // create rate_deposition model base names
   std::string rate_dep_base_nameX = "RateDepositionX";
   std::string rate_dep_base_nameY = "RateDepositionY";
   std::string rate_dep_base_nameZ = "RateDepositionZ";
-  std::string rate_dep_X = ParticleTools::append_env( rate_dep_base_nameX, d_quadNode ); 
-  std::string rate_dep_Y = ParticleTools::append_env( rate_dep_base_nameY, d_quadNode ); 
-  std::string rate_dep_Z = ParticleTools::append_env( rate_dep_base_nameZ, d_quadNode ); 
+  std::string rate_dep_X = ParticleTools::append_env( rate_dep_base_nameX, d_quadNode );
+  std::string rate_dep_Y = ParticleTools::append_env( rate_dep_base_nameY, d_quadNode );
+  std::string rate_dep_Z = ParticleTools::append_env( rate_dep_base_nameZ, d_quadNode );
   _rate_depX_varlabel = VarLabel::find(rate_dep_X);
   _rate_depY_varlabel = VarLabel::find(rate_dep_Y);
   _rate_depZ_varlabel = VarLabel::find(rate_dep_Z);
-  
-  // Need a size IC: 
-  std::string length_root = ParticleTools::parse_for_role_to_label(db, "size"); 
-  std::string length_name = ParticleTools::append_env( length_root, d_quadNode ); 
-  _length_varlabel = VarLabel::find(length_name); 
-  
+
+  // Need a size IC:
+  std::string length_root = ParticleTools::parse_for_role_to_label(db, "size");
+  std::string length_name = ParticleTools::append_env( length_root, d_quadNode );
+  _length_varlabel = VarLabel::find(length_name);
+
   // Need a density
-  std::string density_root = ParticleTools::parse_for_role_to_label(db, "density"); 
-  std::string density_name = ParticleTools::append_env( density_root, d_quadNode ); 
-  _particle_density_varlabel = VarLabel::find(density_name); 
+  std::string density_root = ParticleTools::parse_for_role_to_label(db, "density");
+  std::string density_name = ParticleTools::append_env( density_root, d_quadNode );
+  _particle_density_varlabel = VarLabel::find(density_name);
 
   _pi = acos(-1.0);
 
@@ -146,10 +145,10 @@ Deposition::problemSetup(const ProblemSpecP& inputdb, int qn)
 //---------------------------------------------------------------------------
 // Method: Schedule the initialization of special variables unique to model
 //---------------------------------------------------------------------------
-void 
+void
 Deposition::sched_initVars( const LevelP& level, SchedulerP& sched )
 {
-  string taskname = "Deposition::initVars"; 
+  string taskname = "Deposition::initVars";
   Task* tsk = scinew Task(taskname, this, &Deposition::initVars);
 
   tsk->computes(d_modelLabel);
@@ -162,21 +161,21 @@ Deposition::sched_initVars( const LevelP& level, SchedulerP& sched )
 // Method: Initialize special variables unique to the model
 //-------------------------------------------------------------------------
 void
-Deposition::initVars( const ProcessorGroup * pc, 
-                            const PatchSubset    * patches, 
-                            const MaterialSubset * matls, 
-                            DataWarehouse        * old_dw, 
+Deposition::initVars( const ProcessorGroup * pc,
+                            const PatchSubset    * patches,
+                            const MaterialSubset * matls,
+                            DataWarehouse        * old_dw,
                             DataWarehouse        * new_dw )
 {
   //patch loop
   for (int p=0; p < patches->size(); p++){
     const Patch* patch = patches->get(p);
     int archIndex = 0;
-    int matlIndex = d_sharedState->getArchesMaterial(archIndex)->getDWIndex(); 
+    int matlIndex = d_sharedState->getArchesMaterial(archIndex)->getDWIndex();
 
-    CCVariable<double> model; 
+    CCVariable<double> model;
     CCVariable<double> gas_source;
-    
+
     new_dw->allocateAndPut( model, d_modelLabel, matlIndex, patch );
     model.initialize(0.0);
     new_dw->allocateAndPut( gas_source, d_gasLabel, matlIndex, patch );
@@ -187,9 +186,9 @@ Deposition::initVars( const ProcessorGroup * pc,
 
 
 //---------------------------------------------------------------------------
-// Method: Schedule the calculation of the model 
+// Method: Schedule the calculation of the model
 //---------------------------------------------------------------------------
-void 
+void
 Deposition::sched_computeModel( const LevelP& level, SchedulerP& sched, int timeSubStep )
 {
   std::string taskname = "Deposition::computeModel";
@@ -198,52 +197,51 @@ Deposition::sched_computeModel( const LevelP& level, SchedulerP& sched, int time
   Ghost::GhostType gn = Ghost::None;
   Ghost::GhostType  gaf = Ghost::AroundFaces;
 
-  if ( !_is_weight ){ 
-    std::string abscissa_name = ParticleTools::append_env( _abscissa_name, d_quadNode ); 
-    _abscissa_label = VarLabel::find(abscissa_name); 
+  if ( !_is_weight ){
+    std::string abscissa_name = ParticleTools::append_env( _abscissa_name, d_quadNode );
+    _abscissa_label = VarLabel::find(abscissa_name);
     if ( _abscissa_label == 0 )
-      throw InvalidValue("Error: Abscissa not found: "+abscissa_name, __FILE__, __LINE__); 
+      throw InvalidValue("Error: Abscissa not found: "+abscissa_name, __FILE__, __LINE__);
   }
 
   if (timeSubStep == 0) {
     tsk->computes(d_modelLabel);
     tsk->computes(d_gasLabel);
-    tsk->requires(Task::OldDW, _w_label, gn, 0); 
-    tsk->requires(Task::OldDW, _rate_depX_varlabel, gaf, 1); 
-    tsk->requires(Task::OldDW, _rate_depY_varlabel, gaf, 1); 
-    tsk->requires(Task::OldDW, _rate_depZ_varlabel, gaf, 1); 
+    tsk->requires(Task::OldDW, _w_label, gn, 0);
+    tsk->requires(Task::OldDW, _rate_depX_varlabel, gaf, 1);
+    tsk->requires(Task::OldDW, _rate_depY_varlabel, gaf, 1);
+    tsk->requires(Task::OldDW, _rate_depZ_varlabel, gaf, 1);
     tsk->requires(Task::OldDW, _length_varlabel, gn, 0 );
     tsk->requires(Task::OldDW, _particle_density_varlabel, gn, 0 );
     if ( !_is_weight )
-      tsk->requires(Task::OldDW, _abscissa_label, gn, 0); 
+      tsk->requires(Task::OldDW, _abscissa_label, gn, 0);
   } else {
-    tsk->modifies(d_modelLabel); 
-    tsk->modifies(d_gasLabel); 
-    tsk->requires(Task::NewDW, _w_label, gn, 0); 
-    tsk->requires(Task::NewDW, _rate_depX_varlabel, gaf, 1); 
-    tsk->requires(Task::NewDW, _rate_depY_varlabel, gaf, 1); 
-    tsk->requires(Task::NewDW, _rate_depZ_varlabel, gaf, 1); 
+    tsk->modifies(d_modelLabel);
+    tsk->modifies(d_gasLabel);
+    tsk->requires(Task::NewDW, _w_label, gn, 0);
+    tsk->requires(Task::NewDW, _rate_depX_varlabel, gaf, 1);
+    tsk->requires(Task::NewDW, _rate_depY_varlabel, gaf, 1);
+    tsk->requires(Task::NewDW, _rate_depZ_varlabel, gaf, 1);
     tsk->requires(Task::NewDW, _length_varlabel, gn, 0 );
     tsk->requires(Task::NewDW, _particle_density_varlabel, gn, 0 );
     if ( !_is_weight )
-      tsk->requires(Task::NewDW, _abscissa_label, gn, 0); 
+      tsk->requires(Task::NewDW, _abscissa_label, gn, 0);
   }
 
-  tsk->requires(Task::OldDW, d_fieldLabels->d_sharedState->get_delt_label(), gn, 0);
-  tsk->requires(Task::OldDW, VarLabel::find("volFraction"), gn, 0 ); 
+  tsk->requires(Task::OldDW, VarLabel::find("volFraction"), gn, 0 );
 
-  sched->addTask(tsk, level->eachPatch(), d_sharedState->allArchesMaterials()); 
+  sched->addTask(tsk, level->eachPatch(), d_sharedState->allArchesMaterials());
 
 }
 //---------------------------------------------------------------------------
-// Method: Actually compute the source term 
+// Method: Actually compute the source term
 //---------------------------------------------------------------------------
 void
-Deposition::computeModel( const ProcessorGroup* pc, 
-                   const PatchSubset* patches, 
-                   const MaterialSubset* matls, 
-                   DataWarehouse* old_dw, 
-                   DataWarehouse* new_dw, 
+Deposition::computeModel( const ProcessorGroup* pc,
+                   const PatchSubset* patches,
+                   const MaterialSubset* matls,
+                   DataWarehouse* old_dw,
+                   DataWarehouse* new_dw,
                    const int timeSubStep )
 {
   //patch loop
@@ -253,52 +251,48 @@ Deposition::computeModel( const ProcessorGroup* pc,
 
     const Patch* patch = patches->get(p);
     int archIndex = 0;
-    int matlIndex = d_fieldLabels->d_sharedState->getArchesMaterial(archIndex)->getDWIndex(); 
+    int matlIndex = d_fieldLabels->d_sharedState->getArchesMaterial(archIndex)->getDWIndex();
 
-    Vector DX = patch->dCell(); 
+    Vector DX = patch->dCell();
     double vol = DX.x()*DX.y()*DX.z();
     double area_x = DX.y()*DX.z();
     double area_y = DX.x()*DX.z();
     double area_z = DX.x()*DX.y();
 
-    delt_vartype DT;
-    old_dw->get(DT, d_fieldLabels->d_sharedState->get_delt_label());
-    double dt = DT; 
-
-    CCVariable<double> model; 
+    CCVariable<double> model;
     CCVariable<double> gas_source;
-    DataWarehouse* which_dw; 
+    DataWarehouse* which_dw;
 
-    if ( timeSubStep == 0 ){ 
+    if ( timeSubStep == 0 ){
       new_dw->allocateAndPut( model, d_modelLabel, matlIndex, patch );
       new_dw->allocateAndPut( gas_source, d_gasLabel, matlIndex, patch );
       gas_source.initialize(0.0);
       model.initialize(0.0);
-      which_dw = old_dw; 
-    } else { 
-      new_dw->getModifiable( model, d_modelLabel, matlIndex, patch ); 
-      new_dw->getModifiable( gas_source, d_gasLabel, matlIndex, patch ); 
-      which_dw = new_dw; 
+      which_dw = old_dw;
+    } else {
+      new_dw->getModifiable( model, d_modelLabel, matlIndex, patch );
+      new_dw->getModifiable( gas_source, d_gasLabel, matlIndex, patch );
+      which_dw = new_dw;
     }
 
-    constCCVariable<double> w; 
-    constCCVariable<double> a; 
-    constCCVariable<double> diam; 
-    constCCVariable<double> rhop; 
-    constCCVariable<double> vol_fraction; 
+    constCCVariable<double> w;
+    constCCVariable<double> a;
+    constCCVariable<double> diam;
+    constCCVariable<double> rhop;
+    constCCVariable<double> vol_fraction;
     constSFCXVariable<double> rate_X;
     constSFCYVariable<double> rate_Y;
     constSFCZVariable<double> rate_Z;
 
-    which_dw->get( w, _w_label, matlIndex, patch, gn, 0 ); 
-    which_dw->get( diam, _length_varlabel, matlIndex, patch, gn, 0 ); 
-    which_dw->get( rhop, _particle_density_varlabel, matlIndex, patch, gn, 0 ); 
-    which_dw->get( rate_X, _rate_depX_varlabel, matlIndex, patch, gaf, 1 ); 
-    which_dw->get( rate_Y, _rate_depY_varlabel, matlIndex, patch, gaf, 1 ); 
-    which_dw->get( rate_Z, _rate_depZ_varlabel, matlIndex, patch, gaf, 1 ); 
-    old_dw->get( vol_fraction, VarLabel::find("volFraction"), matlIndex, patch, gn, 0 ); 
-    if ( !_is_weight ){ 
-      which_dw->get( a, _abscissa_label, matlIndex, patch, gn, 0 ); 
+    which_dw->get( w, _w_label, matlIndex, patch, gn, 0 );
+    which_dw->get( diam, _length_varlabel, matlIndex, patch, gn, 0 );
+    which_dw->get( rhop, _particle_density_varlabel, matlIndex, patch, gn, 0 );
+    which_dw->get( rate_X, _rate_depX_varlabel, matlIndex, patch, gaf, 1 );
+    which_dw->get( rate_Y, _rate_depY_varlabel, matlIndex, patch, gaf, 1 );
+    which_dw->get( rate_Z, _rate_depZ_varlabel, matlIndex, patch, gaf, 1 );
+    old_dw->get( vol_fraction, VarLabel::find("volFraction"), matlIndex, patch, gn, 0 );
+    if ( !_is_weight ){
+      which_dw->get( a, _abscissa_label, matlIndex, patch, gn, 0 );
     }
 
     for (CellIterator iter=patch->getCellIterator(); !iter.done(); iter++){
@@ -306,7 +300,7 @@ Deposition::computeModel( const ProcessorGroup* pc,
       IntVector cpx = c + IntVector(1,0,0);
       IntVector cpy = c + IntVector(0,1,0);
       IntVector cpz = c + IntVector(0,0,1);
-      if ( vol_fraction[c] > 0. ){ 
+      if ( vol_fraction[c] > 0. ){
         // add all deposit flux per area
         double mass_out = 0.0;
         mass_out += abs(rate_X[c])*area_x;
@@ -316,15 +310,15 @@ Deposition::computeModel( const ProcessorGroup* pc,
         mass_out += abs(rate_Y[cpy])*area_y;
         mass_out += abs(rate_Z[cpz])*area_z;
         double vol_p = (_pi/6.0)*pow(diam[c],3.0);
-        if ( _is_weight ){ 
-          model[c] = - mass_out / (rhop[c] * vol_p * vol * _w_scale); // scaled #/(m^3s) 
-        } else { 
-          model[c] = - mass_out / (rhop[c] * vol_p * vol * _w_scale) * (a[c]/_a_scale); // scaled #/(m^3s) 
+        if ( _is_weight ){
+          model[c] = - mass_out / (rhop[c] * vol_p * vol * _w_scale); // scaled #/(m^3s)
+        } else {
+          model[c] = - mass_out / (rhop[c] * vol_p * vol * _w_scale) * (a[c]/_a_scale); // scaled #/(m^3s)
         }
 
-      } else { 
+      } else {
 
-        model[c] = 0.0; 
+        model[c] = 0.0;
 
       }
 

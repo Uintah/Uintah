@@ -303,7 +303,6 @@ CO::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info,
 
     IntVector c = *iter;
 
-    double small = 1e-16;
     if ( (*temperature_old)[c] > _T_crit || (*volFraction)[c] < 1e-10 ) { // the volFraction condition is needed to avoid nan in intrusion cells.
 
       (*d_new)[c] = 0.0;
