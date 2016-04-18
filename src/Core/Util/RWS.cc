@@ -28,8 +28,6 @@
 #include <cstdlib>
 #include <cstring>
 
-#include <Core/Util/notset.h>
-
 namespace Uintah {
 using std::string;
 
@@ -88,9 +86,6 @@ char* removeLTWhiteSpace(char* str)
           str[index2]=='\t' ||
           str[index2]=='\n' ||
           str[index2]=='\r')) index2--;
-
-  if (index1>index2) 
-    return NOT_SET;
 
   str[index2+1]='\0';
   sprintf(newstr,"%s",&str[index1]);

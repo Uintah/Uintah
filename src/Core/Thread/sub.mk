@@ -35,17 +35,13 @@ SRCDIR   := Core/Thread
 SRCS     += \
 	$(SRCDIR)/CleanupManager.cc \
 	$(SRCDIR)/Guard.cc \
-	$(SRCDIR)/MutexPool.cc \
 	$(SRCDIR)/ParallelBase.cc \
 	$(SRCDIR)/Runnable.cc \
 	$(SRCDIR)/Thread.cc \
 	$(SRCDIR)/ThreadError.cc \
 	$(SRCDIR)/SimpleReducer.cc \
-	$(SRCDIR)/ThreadLock.cc \
 	$(SRCDIR)/ThreadGroup.cc \
 	$(SRCDIR)/Thread_unix.cc \
-	$(SRCDIR)/ThreadPool.cc \
-	$(SRCDIR)/WorkQueue.cc \
 	$(SRCDIR)/CrashPad.cc
 
 SRCS += $(TIME_IMPL) $(THREAD_IMPL) $(ATOMIC_IMPL)

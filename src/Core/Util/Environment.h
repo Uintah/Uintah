@@ -22,7 +22,7 @@
  * IN THE SOFTWARE.
  */
 /*
-  Environment.h: Interface to setting environemnt variables and parsing .rc files
+  Environment.h: Interface to setting environment variables and parsing .rc files
 
   Written by:
     McKay Davis

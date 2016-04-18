@@ -24,7 +24,6 @@
 
 
 /*
- *  NotFinished.h:  Consistent way to keep track of holes in the code...
  *
  *  Written by:
  *   Wayne witzel
