@@ -29,6 +29,8 @@
 #include <sstream>
 #include <stdexcept>
 
+namespace WasatchCore{
+
 //--------------------------------------------------------------------
 
 template< typename FieldT >
@@ -110,3 +112,5 @@ template class Extrapolant< SpatialOps::XVolField >;
 template class Extrapolant< SpatialOps::YVolField >;
 template class Extrapolant< SpatialOps::ZVolField >;
 //==================================================================
+
+}

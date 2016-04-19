@@ -125,7 +125,7 @@ namespace WasatchCore{
     typedef FluxLimiterInterpolant< CellT, typename FaceTypes<CellT>::YFace >  InterpC2FYLimiter;
     typedef FluxLimiterInterpolant< CellT, typename FaceTypes<CellT>::ZFace >  InterpC2FZLimiter;
     
-    typedef Extrapolant<CellT> BoundaryExtrapolant;
+    typedef WasatchCore::Extrapolant<CellT> BoundaryExtrapolant;
   };
 }
 
