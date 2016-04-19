@@ -39,7 +39,7 @@
 #include <limits>
 
 #include <spatialops/structured/IntVec.h>
-
+namespace WasatchCore{
 #ifndef DBLMAX
 #define DBLMAX std::numeric_limits<double>::max()
 #endif
@@ -96,5 +96,6 @@ public:
                        const bool skipBCs=false);
 
 };
+} // namespace WasatchCore
 
 #endif // Extrapolant_h

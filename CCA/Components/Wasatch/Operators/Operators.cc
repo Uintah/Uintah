@@ -96,19 +96,19 @@ namespace WasatchCore{
   opDB.register_new_operator<OpZ>( scinew OpZ() );                    \
 }
   
-#define BUILD_UPWIND_LIMITER( VOLT )                                    \
+#define BUILD_UPWIND_LIMITER( VOLT )                                  \
 {                                                                     \
   typedef FluxLimiterInterpolant<VOLT,FaceTypes<VOLT>::XFace> OpX;    \
   typedef FluxLimiterInterpolant<VOLT,FaceTypes<VOLT>::YFace> OpY;    \
   typedef FluxLimiterInterpolant<VOLT,FaceTypes<VOLT>::ZFace> OpZ;    \
-  opDB.register_new_operator<OpX>( scinew OpX(dim,bcPlus,bcMinus) );          \
-  opDB.register_new_operator<OpY>( scinew OpY(dim,bcPlus,bcMinus) );          \
-  opDB.register_new_operator<OpZ>( scinew OpZ(dim,bcPlus,bcMinus) );          \
+  opDB.register_new_operator<OpX>( scinew OpX(dim,bcPlus,bcMinus) );  \
+  opDB.register_new_operator<OpY>( scinew OpY(dim,bcPlus,bcMinus) );  \
+  opDB.register_new_operator<OpZ>( scinew OpZ(dim,bcPlus,bcMinus) );  \
 }
   
-#define BUILD_EXTRAPOLANT( VOLT )                    \
-{                                                    \
-  typedef Extrapolant<VOLT> OpVol;                     \
+#define BUILD_EXTRAPOLANT( VOLT )                                     \
+{                                                                     \
+  typedef WasatchCore::Extrapolant<VOLT> OpVol;                       \
   opDB.register_new_operator<OpVol>( scinew OpVol(bcMinus, bcPlus) ); \
 }
 
