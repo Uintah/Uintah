@@ -23,8 +23,7 @@ from optparse import OptionParser
 from sys import argv, exit
 from string import upper
 
-#from subprocess import check_output # needed to get full pathname response from which command
-
+from subprocess import check_output # needed to get full pathname response from which command
 from helpers.runSusTests import nameoftest, testOS, input, num_processes, testOS, setGeneratingGoldStandards, userFlags
 
 ####################################################################################
