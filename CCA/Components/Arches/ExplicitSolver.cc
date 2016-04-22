@@ -1141,6 +1141,7 @@ ExplicitSolver::initialize( const LevelP& level,
                         //variables to be properly allocated.
                         //
   d_props->doTableMatching();
+  d_props->sched_checkTableBCs( level, sched );
   d_props->sched_computeProps( level, sched, initialize_it, modify_ref_den, time_substep );
 
   d_init_timelabel = scinew TimeIntegratorLabel(d_lab, TimeIntegratorStepType::FE);
@@ -1297,7 +1298,16 @@ ExplicitSolver::sched_restartInitialize( const LevelP& level, SchedulerP& sched 
   SourceTermFactory::SourceMap& sources = srcFactory.retrieve_all_sources();
   for (SourceTermFactory::SourceMap::iterator isrc=sources.begin(); isrc !=sources.end(); isrc++){
     SourceTermBase* src = isrc->second;
-    src->sched_RestartInitialize(level, sched);
+    src->sched_restartInitialize(level, sched);
+  }
+
+  //__________________________________
+  //  initialize property models
+  PropertyModelFactory& propFactory = PropertyModelFactory::self();
+  PropertyModelFactory::PropMap& properties = propFactory.retrieve_all_property_models();
+  for (PropertyModelFactory::PropMap::iterator iprop=properties.begin(); iprop !=properties.end(); iprop++){
+    PropertyModelBase* prop = iprop->second;
+    prop->sched_restartInitialize(level, sched);
   }
 
 }
@@ -3770,7 +3780,10 @@ ExplicitSolver::sched_scalarInit( const LevelP& level,
   EqnFactory& eqnFactory = EqnFactory::self();
   EqnFactory::EqnMap& scalar_eqns = eqnFactory.retrieve_all_eqns();
   for (EqnFactory::EqnMap::iterator ieqn=scalar_eqns.begin(); ieqn != scalar_eqns.end(); ieqn++) {
+
     EqnBase* eqn = ieqn->second;
+
+    eqn->sched_checkBCs( level, sched );
 
     const VarLabel* tempVar = eqn->getTransportEqnLabel();
     tsk->computes( tempVar );

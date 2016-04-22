@@ -23,35 +23,35 @@
 
 //===============================================================
 
-/** 
+/**
 * @class  SourceTermBase
 * @author Jeremy Thornock
 * @date   Nov, 5 2008
-* 
-* @brief A base class for source terms for a transport 
-*        equation. 
-* 
-*/ 
+*
+* @brief A base class for source terms for a transport
+*        equation.
+*
+*/
 
 namespace Uintah {
 
-class BoundaryCondition; 
-class Properties; 
+class BoundaryCondition;
+class Properties;
 
-class SourceTermBase{ 
+class SourceTermBase{
 
-public: 
+public:
 
-  SourceTermBase( std::string srcName, SimulationStateP& sharedState, 
+  SourceTermBase( std::string srcName, SimulationStateP& sharedState,
                   std::vector<std::string> reqLabelNames, std::string type );
 
   virtual ~SourceTermBase();
 
-  /** @brief Indicates the var type of source this is **/ 
-  enum MY_GRID_TYPE {CC_SRC, CCVECTOR_SRC, FX_SRC, FY_SRC, FZ_SRC}; 
+  /** @brief Indicates the var type of source this is **/
+  enum MY_GRID_TYPE {CC_SRC, CCVECTOR_SRC, FX_SRC, FY_SRC, FZ_SRC};
 
   /** @brief Input file interface */
-  virtual void problemSetup(const ProblemSpecP& db) = 0;  
+  virtual void problemSetup(const ProblemSpecP& db) = 0;
 
   /** @brief Returns a list of required variables from the DW for scheduling */
   //virtual void getDwVariableList() = 0;
@@ -60,66 +60,66 @@ public:
   virtual void sched_computeSource(const LevelP& level, SchedulerP& sched, int timeSubStep ) = 0;
 
   /** @brief Actually compute the source. */
-  virtual void computeSource( const ProcessorGroup* pc, 
-                              const PatchSubset* patches, 
-                              const MaterialSubset* matls, 
-                              DataWarehouse* old_dw, 
-                              DataWarehouse* new_dw, 
+  virtual void computeSource( const ProcessorGroup* pc,
+                              const PatchSubset* patches,
+                              const MaterialSubset* matls,
+                              DataWarehouse* old_dw,
+                              DataWarehouse* new_dw,
                               int timeSubStep ) = 0;
 
   /** @brief  Initialize variables. */
   virtual void sched_initialize( const LevelP& level, SchedulerP& sched ) = 0;
-  
-  /** @brief  Initialize variables during a restart */
-  virtual void sched_RestartInitialize( const LevelP& level, SchedulerP& sched );
 
-  /** @brief Work to be performed after properties are setup */ 
+  /** @brief  Initialize variables during a restart */
+  virtual void sched_restartInitialize( const LevelP& level, SchedulerP& sched ){};
+
+  /** @brief Work to be performed after properties are setup */
   virtual void extraSetup( GridP& grid, BoundaryCondition* bc, Properties* prop ){ }
 
-  /** @brief Returns the source label **/ 
+  /** @brief Returns the source label **/
   inline const VarLabel* getSrcLabel(){
     return _src_label; }
 
-  /** @brief Returns a list of any extra local labels this source may compute **/ 
+  /** @brief Returns a list of any extra local labels this source may compute **/
   inline const std::vector<const VarLabel*> getExtraLocalLabels(){
     return _extra_local_labels; }
 
   /** @brief Return the grid type of source (CC, FCX, etc... ) **/
   inline MY_GRID_TYPE getSourceGridType(){ return _source_grid_type; }
 
-  /** @brief Return the type of source (constant, do_radation, etc... ) **/ 
+  /** @brief Return the type of source (constant, do_radation, etc... ) **/
   inline std::string getSourceType(){ return _type; }
 
-  /** @brief Return the list of table lookup species needed for this source term **/ 
-  inline ChemHelper::TableLookup* get_tablelookup_species(){ return _table_lookup_species; };  
+  /** @brief Return the list of table lookup species needed for this source term **/
+  inline ChemHelper::TableLookup* get_tablelookup_species(){ return _table_lookup_species; };
 
   /** @brief Return an int indicating the stage this source should be executed **/
-  int stage_compute() const { return _stage; } 
+  int stage_compute() const { return _stage; }
 
   /** @brief Set the stage number **/
   void set_stage( const int stage );
 
-  /** @brief Builder class containing instructions on how to build the property model **/ 
-  class Builder { 
+  /** @brief Builder class containing instructions on how to build the property model **/
+  class Builder {
 
-    public: 
+    public:
 
       virtual ~Builder() {}
 
-      virtual SourceTermBase* build() = 0; 
+      virtual SourceTermBase* build() = 0;
 
-    protected: 
+    protected:
 
       std::string _name;
-      std::string _type; 
-  }; 
+      std::string _type;
+  };
 
 protected:
 
-  std::string _src_name;                                  ///< User assigned source name 
-  std::string _init_type;                                 ///< Initialization type. 
+  std::string _src_name;                                  ///< User assigned source name
+  std::string _init_type;                                 ///< Initialization type.
   std::string _type;                                      ///< Source type (eg, constant, westbrook dryer, .... )
-  bool _compute_me;                                       ///< To indicate if calculating this source is needed or has already been computed. 
+  bool _compute_me;                                       ///< To indicate if calculating this source is needed or has already been computed.
   const VarLabel* _src_label;                             ///< Source varlabel
   int _stage;                                             ///< At which stage should this be computed: 0) before table lookup 1) after table lookup 2) after RK ave
   SimulationStateP& _shared_state;                        ///< Local copy of sharedState

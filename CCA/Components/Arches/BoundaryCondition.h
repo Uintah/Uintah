@@ -891,7 +891,6 @@ BoundaryCondition_new* d_newBC;
 int index_map[3][3];
 
 const VarLabel* d_radiation_temperature_label;           // a copy of temperature from table with "forced" BC in the extra cell
-const VarLabel* d_DummyLabel;                            // a label whose only purpose to force the order of tasks.
 const VarLabel* d_temperature_label;
 
 inline int getNormal( Patch::FaceType face ) {          // This routine can be replaced with:

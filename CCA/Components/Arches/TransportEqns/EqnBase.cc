@@ -253,10 +253,6 @@ EqnBase::sched_checkBCs( const LevelP& level, SchedulerP& sched )
   string taskname = "EqnBase::checkBCs";
   Task* tsk = scinew Task(taskname, this, &EqnBase::checkBCs);
 
-   // We want tasks in boundarycondition.cc to run before this task. We use the following dummy label to achieve this.
-   const VarLabel* DummyLabel = VarLabel::find("ForceTaskExecutionOrder");
-   tsk->requires(Task::NewDW, DummyLabel, Ghost::None,0 );
-
   sched->addTask( tsk, level->eachPatch(), d_fieldLabels->d_sharedState->allArchesMaterials() );
 }
 

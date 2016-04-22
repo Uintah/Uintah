@@ -1433,6 +1433,15 @@ namespace Uintah {
 
     TransformBase* _iv_transform;
 
+    /** @brief Check to ensure all BCs are set **/
+    void sched_checkTableBCs( const LevelP& level, SchedulerP& sched );
+    void checkTableBCs( const ProcessorGroup* pc,
+                        const PatchSubset* patches,
+                        const MaterialSubset* matls,
+                        DataWarehouse* old_dw,
+                        DataWarehouse* new_dw );
+
+
   protected:
 
     /** @brief Performs post mixing on table look up value based

@@ -359,3 +359,37 @@ void HeatLoss::initialize( const ProcessorGroup* pc,
 
   }
 }
+
+void HeatLoss::sched_restartInitialize( const LevelP& level, SchedulerP& sched )
+{
+  std::string taskname = "HeatLoss::restartInitialize";
+  Task* tsk = scinew Task(taskname, this, &HeatLoss::restartInitialize);
+  tsk->computes(_prop_label);
+
+  sched->addTask(tsk, level->eachPatch(), _shared_state->allArchesMaterials());
+}
+void HeatLoss::restartInitialize( const ProcessorGroup * pc,
+                                  const PatchSubset    * patches,
+                                  const MaterialSubset * matls,
+                                  DataWarehouse        * old_dw,
+                                  DataWarehouse        * new_dw )
+{
+  //patch loop
+  for (int p=0; p < patches->size(); p++){
+
+    const Patch* patch = patches->get(p);
+    int archIndex = 0;
+    int matlIndex = _shared_state->getArchesMaterial(archIndex)->getDWIndex();
+
+    CCVariable<double> prop;
+    //new_dw->getModifiable( prop, _prop_label, matlIndex, patch );
+    new_dw->allocateAndPut(prop, _prop_label, matlIndex, patch );
+
+    //check the BCs + initialize BC
+    _boundary_condition->checkBCs( patch, _prop_name, matlIndex );
+
+    //Apply boundary conditions
+    _boundary_condition->setScalarValueBC( 0, patch, prop, _prop_name );
+
+  }
+}

@@ -28,7 +28,7 @@
 CLASS
     Properties
        Sets up the Properties ????
-       
+
 GENERAL INFORMATION
     Properties.h - Declaration of Properties class
 
@@ -36,13 +36,13 @@ GENERAL INFORMATION
 
    All major modifications since 01.01.2004 done by:
    Stanislav Borodai(borodai@crsim.utah.edu)
-    
+
     Creation Date : 05-30-2000
 
     C-SAFE
-    
+
 KEYWORDS
-    
+
 DESCRIPTION
 
 PATTERNS
@@ -70,21 +70,21 @@ namespace Uintah {
 class MixingModel;
 class MixingRxnTable;
 class TabPropsInterface;
-class MixingRxnModel; 
+class MixingRxnModel;
 class TimeIntegratorLabel;
 class PhysicalConstants;
 class Properties {
 
 public:
-  
+
   // GROUP: Constructors:
   ///////////////////////////////////////////////////////////////////////
   // Constructor taking
-  //   [in] 
+  //   [in]
 
   Properties(ArchesLabel* label, \
              const MPMArchesLabel* MAlb,
-             PhysicalConstants* phys_const, 
+             PhysicalConstants* phys_const,
              const ProcessorGroup* myworld);
 
   // GROUP: Destructors :
@@ -99,17 +99,17 @@ public:
 
   void problemSetup(const ProblemSpecP& params);
 
-  void sched_averageRKProps(SchedulerP&, 
+  void sched_averageRKProps(SchedulerP&,
                             const PatchSet* patches,
                             const MaterialSet* matls,
                             const TimeIntegratorLabel* timelabels );
 
-  void sched_saveTempDensity(SchedulerP&, 
+  void sched_saveTempDensity(SchedulerP&,
                             const PatchSet* patches,
                             const MaterialSet* matls,
                             const TimeIntegratorLabel* timelabels);
 
-  void sched_computeDrhodt(SchedulerP& sched, 
+  void sched_computeDrhodt(SchedulerP& sched,
                             const PatchSet* patches,
                             const MaterialSet* matls,
                             const TimeIntegratorLabel* timelabels);
@@ -119,8 +119,8 @@ public:
   ///////////////////////////////////////////////////////////////////////
   // Get the number of mixing variables
 
-  inline int getNumMixVars() const{ 
-    return d_numMixingVars; 
+  inline int getNumMixVars() const{
+    return d_numMixingVars;
   }
 
   // GROUP: Set Methods :
@@ -147,27 +147,29 @@ public:
     return d_carbon_fuel*f+d_carbon_air*(1.0-f);
   }
   inline const std::string getMixingModelType(){
-    return mixModel; 
+    return mixModel;
   }
   inline MixingRxnModel* getMixRxnModel(){
-    return d_mixingRxnTable; 
+    return d_mixingRxnTable;
   }
 
-  void addLookupSpecies( ); 
+  void addLookupSpecies( );
 
-  //for the new table:
   void sched_computeProps( const LevelP&,
                            SchedulerP&,
-                           const bool initialize, 
-                           const bool modify_ref_den, 
-                           const int time_substep ); 
+                           const bool initialize,
+                           const bool modify_ref_den,
+                           const int time_substep );
 
-  void doTableMatching(); 
+  void sched_checkTableBCs( const LevelP&,
+                            SchedulerP& sched );
+
+  void doTableMatching();
 
 protected :
 
 private:
-  
+
 
   ///////////////////////////////////////////////////////////////////////
   // Carry out actual computation of density reference array
@@ -196,16 +198,16 @@ private:
   // GROUP: Constructors Not Instantiated:
   ///////////////////////////////////////////////////////////////////////
   // Copy Constructor (never instantiated)
-  //   [in] 
-  //        const Properties&   
+  //   [in]
+  //        const Properties&
 
   Properties(const Properties&);
 
   // GROUP: Operators Not Instantiated:
   ///////////////////////////////////////////////////////////////////////
   // Assignment Operator (never instantiated)
-  //   [in] 
-  //        const Properties&   
+  //   [in]
+  //        const Properties&
 
   Properties& operator=(const Properties&);
 
@@ -230,7 +232,7 @@ private:
       int d_numMixingVars;
       double d_opl;
       IntVector d_denRef;
-      
+
       MixingRxnModel* d_mixingRxnTable;
 
       BoundaryCondition* d_bc;
@@ -256,4 +258,3 @@ private:
 
 
 #endif
-

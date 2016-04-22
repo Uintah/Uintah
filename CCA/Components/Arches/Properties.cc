@@ -28,7 +28,7 @@
 #include <CCA/Components/Arches/ArchesLabel.h>
 #if HAVE_TABPROPS
 # include <CCA/Components/Arches/ChemMix/TabPropsInterface.h>
-#endif 
+#endif
 # include <CCA/Components/Arches/ChemMix/ClassicTableInterface.h>
 # include <CCA/Components/Arches/ChemMix/ColdFlow.h>
 # include <CCA/Components/Arches/ChemMix/ConstantProps.h>
@@ -65,12 +65,12 @@ using namespace Uintah;
 //****************************************************************************
 // Default constructor for Properties
 //****************************************************************************
-Properties::Properties(ArchesLabel* label, 
+Properties::Properties(ArchesLabel* label,
                        const MPMArchesLabel* MAlb,
-                       PhysicalConstants* phys_const, 
+                       PhysicalConstants* phys_const,
                        const ProcessorGroup* myworld):
-                       d_lab(label), d_MAlab(MAlb), 
-                       d_physicalConsts(phys_const), 
+                       d_lab(label), d_MAlab(MAlb),
+                       d_physicalConsts(phys_const),
                        d_myworld(myworld)
 {
 }
@@ -80,16 +80,16 @@ Properties::Properties(ArchesLabel* label,
 //****************************************************************************
 Properties::~Properties()
 {
-  if ( mixModel == "TabProps" || mixModel == "ClassicTable" 
-      || mixModel == "ColdFlow" || mixModel == "ConstantProps" ){ 
-    delete d_mixingRxnTable; 
+  if ( mixModel == "TabProps" || mixModel == "ClassicTable"
+      || mixModel == "ColdFlow" || mixModel == "ConstantProps" ){
+    delete d_mixingRxnTable;
   }
 }
 
 //****************************************************************************
 // Problem Setup for Properties
 //****************************************************************************
-void 
+void
 Properties::problemSetup(const ProblemSpecP& params)
 {
 
@@ -102,45 +102,45 @@ Properties::problemSetup(const ProblemSpecP& params)
   d_denRef = d_physicalConsts->getRefPoint();
 
   // check to see if gas is adiabatic and (if DQMOM) particles are not:
-  d_adiabGas_nonadiabPart = false; 
+  d_adiabGas_nonadiabPart = false;
   if (params->findBlock("DQMOM")) {
     ProblemSpecP db_dqmom = params->findBlock("DQMOM");
-    db_dqmom->getWithDefault("adiabGas_nonadiabPart", d_adiabGas_nonadiabPart, false); 
+    db_dqmom->getWithDefault("adiabGas_nonadiabPart", d_adiabGas_nonadiabPart, false);
   }
 
   // read type of mixing model
-  mixModel = "NA"; 
+  mixModel = "NA";
   if (db->findBlock("ClassicTable"))
     mixModel = "ClassicTable";
   else if (db->findBlock("ColdFlow"))
     mixModel = "ColdFlow";
   else if (db->findBlock("ConstantProps"))
-    mixModel = "ConstantProps"; 
+    mixModel = "ConstantProps";
 #if HAVE_TABPROPS
   else if (db->findBlock("TabProps"))
     mixModel = "TabProps";
-#endif 
+#endif
   else
     throw InvalidValue("ERROR!: No mixing/reaction table specified! If you are attempting to use the new TabProps interface, ensure that you configured properly with TabProps and Boost libs.",__FILE__,__LINE__);
 
-  if (mixModel == "ClassicTable") { 
+  if (mixModel == "ClassicTable") {
     // New Classic interface
-    d_mixingRxnTable = scinew ClassicTableInterface( d_lab, d_MAlab ); 
-    d_mixingRxnTable->problemSetup( db ); 
+    d_mixingRxnTable = scinew ClassicTableInterface( d_lab, d_MAlab );
+    d_mixingRxnTable->problemSetup( db );
   } else if (mixModel == "ColdFlow") {
-    d_mixingRxnTable = scinew ColdFlow( d_lab, d_MAlab ); 
-    d_mixingRxnTable->problemSetup( db ); 
-  } else if (mixModel == "ConstantProps" ) { 
-    d_mixingRxnTable = scinew ConstantProps( d_lab, d_MAlab ); 
-    d_mixingRxnTable->problemSetup( db ); 
+    d_mixingRxnTable = scinew ColdFlow( d_lab, d_MAlab );
+    d_mixingRxnTable->problemSetup( db );
+  } else if (mixModel == "ConstantProps" ) {
+    d_mixingRxnTable = scinew ConstantProps( d_lab, d_MAlab );
+    d_mixingRxnTable->problemSetup( db );
   }
 #if HAVE_TABPROPS
   else if (mixModel == "TabProps") {
     // New TabPropsInterface stuff...
     d_mixingRxnTable = scinew TabPropsInterface( d_lab, d_MAlab );
-    d_mixingRxnTable->problemSetup( db ); 
+    d_mixingRxnTable->problemSetup( db );
   }
-#endif 
+#endif
   else{
     throw InvalidValue("Mixing Model not supported: " + mixModel, __FILE__, __LINE__);
   }
@@ -149,7 +149,7 @@ Properties::problemSetup(const ProblemSpecP& params)
 //****************************************************************************
 // Schedule the averaging of properties for Runge-Kutta step
 //****************************************************************************
-void 
+void
 Properties::sched_averageRKProps( SchedulerP& sched, const PatchSet* patches,
                                   const MaterialSet* matls,
                                   const TimeIntegratorLabel* timelabels )
@@ -159,21 +159,21 @@ Properties::sched_averageRKProps( SchedulerP& sched, const PatchSet* patches,
   Task* tsk = scinew Task(taskname, this,
                           &Properties::averageRKProps,
                           timelabels);
-                          
+
   Ghost::GhostType  gn = Ghost::None;
   tsk->requires(Task::OldDW, d_lab->d_densityCPLabel,     gn, 0);
   tsk->requires(Task::NewDW, d_lab->d_densityTempLabel,   gn, 0);
   tsk->requires(Task::NewDW, d_lab->d_densityCPLabel,     gn, 0);
   tsk->modifies(d_lab->d_densityGuessLabel);
-  
-  
-  
+
+
+
   sched->addTask(tsk, patches, matls);
 }
 //****************************************************************************
 // Actually average the Runge-Kutta properties here
 //****************************************************************************
-void 
+void
 Properties::averageRKProps( const ProcessorGroup*,
                             const PatchSubset* patches,
                             const MaterialSubset*,
@@ -186,7 +186,7 @@ Properties::averageRKProps( const ProcessorGroup*,
     const Patch* patch = patches->get(p);
     int archIndex = 0; // only one arches material
     int indx = d_lab->d_sharedState->
-                     getArchesMaterial(archIndex)->getDWIndex(); 
+                     getArchesMaterial(archIndex)->getDWIndex();
 
     constCCVariable<double> old_density;
     constCCVariable<double> rho1_density;
@@ -198,7 +198,7 @@ Properties::averageRKProps( const ProcessorGroup*,
     new_dw->get(rho1_density, d_lab->d_densityTempLabel,  indx, patch, gn, 0);
     new_dw->get(new_density,  d_lab->d_densityCPLabel,    indx, patch, gn, 0);
     new_dw->getModifiable(density_guess, d_lab->d_densityGuessLabel, indx, patch);
-    
+
     double factor_old, factor_new, factor_divide;
     factor_old = timelabels->factor_old;
     factor_new = timelabels->factor_new;
@@ -211,7 +211,7 @@ Properties::averageRKProps( const ProcessorGroup*,
       for (int colY = indexLow.y(); colY < indexHigh.y(); colY ++) {
         for (int colX = indexLow.x(); colX < indexHigh.x(); colX ++) {
           IntVector currCell(colX, colY, colZ);
-          
+
           if (new_density[currCell] > 0.0) {
 
             double predicted_density;
@@ -229,7 +229,7 @@ Properties::averageRKProps( const ProcessorGroup*,
               predicted_density = new_density[currCell];
 
             }
-            
+
             density_guess[currCell] = predicted_density;
           }
 
@@ -242,8 +242,8 @@ Properties::averageRKProps( const ProcessorGroup*,
 //****************************************************************************
 // Schedule saving of temp density
 //****************************************************************************
-void 
-Properties::sched_saveTempDensity(SchedulerP& sched, 
+void
+Properties::sched_saveTempDensity(SchedulerP& sched,
                                   const PatchSet* patches,
                                   const MaterialSet* matls,
                                   const TimeIntegratorLabel* timelabels)
@@ -261,7 +261,7 @@ Properties::sched_saveTempDensity(SchedulerP& sched,
 //****************************************************************************
 // Actually save temp density here
 //****************************************************************************
-void 
+void
 Properties::saveTempDensity(const ProcessorGroup*,
                             const PatchSubset* patches,
                             const MaterialSubset*,
@@ -274,7 +274,7 @@ Properties::saveTempDensity(const ProcessorGroup*,
     const Patch* patch = patches->get(p);
     int archIndex = 0; // only one arches material
     int indx = d_lab->d_sharedState->
-                     getArchesMaterial(archIndex)->getDWIndex(); 
+                     getArchesMaterial(archIndex)->getDWIndex();
 
     CCVariable<double> temp_density;
 
@@ -285,15 +285,15 @@ Properties::saveTempDensity(const ProcessorGroup*,
 //****************************************************************************
 // Schedule the computation of drhodt
 //****************************************************************************
-void 
-Properties::sched_computeDrhodt(SchedulerP& sched, 
+void
+Properties::sched_computeDrhodt(SchedulerP& sched,
                                 const PatchSet* patches,
-                                const MaterialSet* matls, 
+                                const MaterialSet* matls,
                                 const TimeIntegratorLabel* timelabels)
 {
   string taskname =  "Properties::computeDrhodt" +
                      timelabels->integrator_step_name;
-  
+
   Task* tsk = scinew Task(taskname, this,
                           &Properties::computeDrhodt,
                           timelabels);
@@ -304,9 +304,9 @@ Properties::sched_computeDrhodt(SchedulerP& sched,
   }else{
     parent_old_dw = Task::OldDW;
   }
-  
+
   Ghost::GhostType  gn = Ghost::None;
-  Ghost::GhostType  ga = Ghost::AroundCells; 
+  Ghost::GhostType  ga = Ghost::AroundCells;
 
   tsk->requires(Task::NewDW, d_lab->d_cellInfoLabel, gn);
   tsk->requires(parent_old_dw, d_lab->d_sharedState->get_delt_label());
@@ -317,7 +317,7 @@ Properties::sched_computeDrhodt(SchedulerP& sched,
   tsk->requires(Task::NewDW   , d_lab->d_filterVolumeLabel , ga , 1);
   tsk->requires(Task::NewDW   , d_lab->d_cellTypeLabel     , ga , 1);
 
-  //tsk->requires(Task::NewDW, VarLabel::find("mixture_fraction"), gn, 0); 
+  //tsk->requires(Task::NewDW, VarLabel::find("mixture_fraction"), gn, 0);
 
   if ( timelabels->integrator_step_number == TimeIntegratorStepNumber::First ) {
     tsk->computes(d_lab->d_filterdrhodtLabel);
@@ -331,7 +331,7 @@ Properties::sched_computeDrhodt(SchedulerP& sched,
 //****************************************************************************
 // Compute drhodt
 //****************************************************************************
-void 
+void
 Properties::computeDrhodt(const ProcessorGroup* pc,
                           const PatchSubset* patches,
                           const MaterialSubset*,
@@ -345,23 +345,23 @@ Properties::computeDrhodt(const ProcessorGroup* pc,
   }else{
    parent_old_dw = old_dw;
   }
-  
+
   int drhodt_1st_order = 1;
   int current_step = d_lab->d_sharedState->getCurrentTopLevelTimeStep();
-  if (d_MAlab){ 
+  if (d_MAlab){
     drhodt_1st_order = 2;
   }
   delt_vartype delT, old_delT;
   parent_old_dw->get(delT, d_lab->d_sharedState->get_delt_label() );
-  
-  
+
+
   if (timelabels->integrator_step_number == TimeIntegratorStepNumber::First){
     new_dw->put(delT, d_lab->d_oldDeltaTLabel);
   }
   double delta_t = delT;
   delta_t *= timelabels->time_multiplier;
   delta_t *= timelabels->time_position_multiplier_after_average;
-  
+
   parent_old_dw->get(old_delT, d_lab->d_oldDeltaTLabel);
   double  old_delta_t = old_delT;
 
@@ -371,32 +371,32 @@ Properties::computeDrhodt(const ProcessorGroup* pc,
     const Patch* patch = patches->get(p);
     int archIndex = 0; // only one arches material
     int indx = d_lab->d_sharedState->
-                     getArchesMaterial(archIndex)->getDWIndex(); 
+                     getArchesMaterial(archIndex)->getDWIndex();
 
     constCCVariable<double> new_density;
     constCCVariable<double> old_density;
     constCCVariable<double> old_old_density;
-    //constCCVariable<double> mf; 
+    //constCCVariable<double> mf;
     CCVariable<double> drhodt;
     CCVariable<double> filterdrhodt;
-    constCCVariable<double> filterVolume; 
-    constCCVariable<int> cellType; 
+    constCCVariable<double> filterVolume;
+    constCCVariable<int> cellType;
     Ghost::GhostType  gn = Ghost::None;
-    Ghost::GhostType  ga = Ghost::AroundCells; 
-    
+    Ghost::GhostType  ga = Ghost::AroundCells;
+
     parent_old_dw->get(old_density,     d_lab->d_densityCPLabel,     indx, patch,gn, 0);
 
-    new_dw->get( cellType, d_lab->d_cellTypeLabel, indx, patch, ga, 1 ); 
-    new_dw->get( filterVolume, d_lab->d_filterVolumeLabel, indx, patch, ga, 1 ); 
-    //new_dw->get( mf, VarLabel::find("mixture_fraction"), indx, patch, gn, 0); 
+    new_dw->get( cellType, d_lab->d_cellTypeLabel, indx, patch, ga, 1 );
+    new_dw->get( filterVolume, d_lab->d_filterVolumeLabel, indx, patch, ga, 1 );
+    //new_dw->get( mf, VarLabel::find("mixture_fraction"), indx, patch, gn, 0);
 
     PerPatch<CellInformationP> cellInfoP;
     new_dw->get(cellInfoP, d_lab->d_cellInfoLabel, indx, patch);
-    
+
     CellInformation* cellinfo = cellInfoP.get().get_rep();
 
     new_dw->get(new_density, d_lab->d_densityCPLabel,  indx, patch, gn, 0);
-    
+
     if ( timelabels->integrator_step_number == TimeIntegratorStepNumber::First ){
       new_dw->allocateAndPut(filterdrhodt, d_lab->d_filterdrhodtLabel, indx, patch);
     }else{
@@ -420,12 +420,12 @@ Properties::computeDrhodt(const ProcessorGroup* pc,
             IntVector currcell(ii,jj,kk);
 
             double vol =cellinfo->sns[jj]*cellinfo->stb[kk]*cellinfo->sew[ii];
-            //double rho_f = 1.18; 
-            //double rho_ox = 0.5; 
-            //double newnewrho = mf[currcell]/rho_ox + (1.0 - mf[currcell])/rho_f; 
+            //double rho_f = 1.18;
+            //double rho_ox = 0.5;
+            //double newnewrho = mf[currcell]/rho_ox + (1.0 - mf[currcell])/rho_f;
             drhodt[currcell] = (new_density[currcell] -
                                 old_density[currcell])*vol/delta_t;
-            //drhodt[currcell] = (newnewrho - old_density[currcell]*vol/delta_t); 
+            //drhodt[currcell] = (newnewrho - old_density[currcell]*vol/delta_t);
           }
         }
       }
@@ -445,16 +445,16 @@ Properties::computeDrhodt(const ProcessorGroup* pc,
                                 old_factor*old_density[currcell] +
                                 old_old_density[currcell])*vol /
                                (old_delta_t*factor);
-            //double rho_f = 1.18; 
-            //double rho_ox = 0.5; 
-            //double newnewrho = mf[currcell]/rho_f + (1.0 - mf[currcell])/rho_ox; 
+            //double rho_f = 1.18;
+            //double rho_ox = 0.5;
+            //double newnewrho = mf[currcell]/rho_f + (1.0 - mf[currcell])/rho_ox;
           }
         }
       }
     }
 
     if ((d_filter_drhodt)&&(!(d_3d_periodic))) {
-    // filtering for periodic case is not implemented 
+    // filtering for periodic case is not implemented
     // if it needs to be then drhodt will require 1 layer of boundary cells to be computed
       d_filter->applyFilter_noPetsc<CCVariable<double> >(pc, patch, drhodt, filterVolume, cellType, filterdrhodt);
     }else{
@@ -480,42 +480,48 @@ Properties::computeDrhodt(const ProcessorGroup* pc,
 void
 Properties::sched_computeProps( const LevelP& level,
                                 SchedulerP& sched,
-                                const bool initialize, 
-                                const bool modify_ref_den, 
+                                const bool initialize,
+                                const bool modify_ref_den,
                                 const int time_substep )
 {
-  // this method is temporary while we get rid of properties.cc 
-  d_mixingRxnTable->sched_getState( level, sched, time_substep, initialize, modify_ref_den ); 
+  // this method is temporary while we get rid of properties.cc
+  d_mixingRxnTable->sched_getState( level, sched, time_substep, initialize, modify_ref_den );
 
 }
 
-void 
+void
+Properties::sched_checkTableBCs( const LevelP& level,
+                                SchedulerP& sched )
+{
+  d_mixingRxnTable->sched_checkTableBCs( level, sched );
+}
+
+void
 Properties::addLookupSpecies( ){
 
-  std::vector<std::string> sps; 
-  sps = d_lab->model_req_species; 
+  std::vector<std::string> sps;
+  sps = d_lab->model_req_species;
 
-  if ( mixModel == "ClassicTable"  || mixModel == "TabProps" 
-      || "ColdFlow" || "ConstantProps" ) { 
+  if ( mixModel == "ClassicTable"  || mixModel == "TabProps"
+      || "ColdFlow" || "ConstantProps" ) {
     for ( vector<string>::iterator i = sps.begin(); i != sps.end(); i++ ){
-      d_mixingRxnTable->insertIntoMap( *i ); 
+      d_mixingRxnTable->insertIntoMap( *i );
     }
   }
 
-  std::vector<std::string> old_sps; 
-  old_sps = d_lab->model_req_old_species; 
-  if ( mixModel == "ClassicTable"  || mixModel == "TabProps" 
-      || "ColdFlow" || "ConstantProps") { 
+  std::vector<std::string> old_sps;
+  old_sps = d_lab->model_req_old_species;
+  if ( mixModel == "ClassicTable"  || mixModel == "TabProps"
+      || "ColdFlow" || "ConstantProps") {
     for ( vector<string>::iterator i = old_sps.begin(); i != old_sps.end(); i++ ){
-      d_mixingRxnTable->insertOldIntoMap( *i ); 
+      d_mixingRxnTable->insertOldIntoMap( *i );
     }
   }
 }
 
-void 
-Properties::doTableMatching(){ 
+void
+Properties::doTableMatching(){
 
-  d_mixingRxnTable->tableMatching(); 
+  d_mixingRxnTable->tableMatching();
 
 }
-

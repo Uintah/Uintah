@@ -591,42 +591,26 @@ ClassicTableInterface::getState( const ProcessorGroup* pc,
         int totalIVs = d_allIndepVarNames.size();
         int counter = 0;
 
-        // look to make sure every variable has a BC set:
-        // stuff the bc values into a container for use later
-        for ( int i = 0; i < (int) d_allIndepVarNames.size(); i++ ){
+        // use the first IV to get the iterator:
+        std::string variable_name = d_allIndepVarNames[0];
+        string bc_kind="NotSet";
+        double bc_value = 0.0;
+        std::string bc_s_value = "NA";
+        bool foundIterator = "false";
+        std::string face_name;
 
-          std::string variable_name = d_allIndepVarNames[i];
-          string bc_kind="NotSet";
-          double bc_value = 0.0;
-          std::string bc_s_value = "NA";
-          bool foundIterator = "false";
-          std::string face_name;
+        getBCKind( patch, face, child, variable_name, matlIndex, bc_kind, face_name );
 
-          getBCKind( patch, face, child, variable_name, matlIndex, bc_kind, face_name );
-
-          if ( bc_kind == "FromFile" ){
-            foundIterator =
-              getIteratorBCValue<std::string>( patch, face, child, variable_name, matlIndex, bc_s_value, bound_ptr );
-            counter++;
-          } else {
-            foundIterator =
-              getIteratorBCValue<double>( patch, face, child, variable_name, matlIndex, bc_value, bound_ptr );
-            counter++;
-          }
-
-          if ( !foundIterator ){
-            throw InvalidValue( "Error: Independent variable missing a boundary condition spec: "+variable_name, __FILE__, __LINE__);
-          }
-
+        if ( bc_kind == "FromFile" ){
+          foundIterator =
+            getIteratorBCValue<std::string>( patch, face, child, variable_name, matlIndex, bc_s_value, bound_ptr );
+          counter++;
+        } else {
+          foundIterator =
+            getIteratorBCValue<double>( patch, face, child, variable_name, matlIndex, bc_value, bound_ptr );
+          counter++;
         }
 
-        if ( counter != totalIVs ){
-          stringstream msg;
-          msg << "Error: For face " << face << " there are missing IVs in the boundary specification." << endl;
-          throw InvalidValue( msg.str(), __FILE__, __LINE__);
-        }
-
-        // now use the last bound_ptr to loop over all boundary cells:
         for (bound_ptr.reset(); !bound_ptr.done(); bound_ptr++){
 
           IntVector c   =   *bound_ptr;
@@ -699,11 +683,9 @@ ClassicTableInterface::getState( const ProcessorGroup* pc,
       }
     }
 
-
     for ( DepVarMap::iterator i = depend_storage.begin(); i != depend_storage.end(); ++i ){
       delete i->second.var;
     }
-
 
     // reference density modification
     if ( modify_ref_den ) {
