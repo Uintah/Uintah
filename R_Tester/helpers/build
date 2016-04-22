@@ -95,7 +95,7 @@ fi
 
 
 #__________________________________
-echo "#!/bin/csh -f" > configure_command
+echo "#!/bin/csh" > configure_command
 echo "../../src/configure \\" >> configure_command
  
 if [ "$mode" = "dbg" ]; then
