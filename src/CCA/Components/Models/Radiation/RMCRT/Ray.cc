@@ -111,7 +111,9 @@ Ray::Ray( const TypeDescription::Type FLT_DBL ) : RMCRTCommon( FLT_DBL)
   d_orderOfInterpolation = -9;
   d_onOff_SetBCs   = true;
   d_radiometer     = NULL;
-  d_dbgCells.push_back( IntVector(36,0,0) );
+  d_dbgCells.push_back( IntVector(0,0,0));
+  d_dbgCells.push_back( IntVector(5,5,5));
+  
   d_halo          = IntVector(-9,-9,-9);
   d_rayDirSampleAlgo = NAIVE;
   d_cellTypeCoarsenLogic = ROUNDUP;
@@ -135,20 +137,6 @@ Ray::Ray( const TypeDescription::Type FLT_DBL ) : RMCRTCommon( FLT_DBL)
   d_dirSignSwap[SOUTH]    = IntVector( 1, 1,  1);
   d_dirSignSwap[TOP]      = IntVector( 1, 1, -1);
   d_dirSignSwap[BOT]      = IntVector( 1, 1,  1);
-
-  d_locationIndexOrder[EAST]  = IntVector(1,0,2);
-  d_locationIndexOrder[WEST]  = IntVector(1,0,2);
-  d_locationIndexOrder[NORTH] = IntVector(0,1,2);
-  d_locationIndexOrder[SOUTH] = IntVector(0,1,2);
-  d_locationIndexOrder[TOP]   = IntVector(0,2,1);
-  d_locationIndexOrder[BOT]   = IntVector(0,2,1);
-
-  d_locationShift[EAST]   = IntVector(1, 0, 0);
-  d_locationShift[WEST]   = IntVector(0, 0, 0);
-  d_locationShift[NORTH]  = IntVector(0, 1, 0);
-  d_locationShift[SOUTH]  = IntVector(0, 0, 0);
-  d_locationShift[TOP]    = IntVector(0, 0, 1);
-  d_locationShift[BOT]    = IntVector(0, 0, 0);
 }
 
 //---------------------------------------------------------------------------
@@ -1105,8 +1093,6 @@ Ray::rayTrace( const ProcessorGroup* pg,
    }
     unsigned long int size = 0;                   // current size of PathIndex
     Vector Dx = patch->dCell();                   // cell spacing
-    double DyDx = Dx.y() / Dx.x();                //noncubic
-    double DzDx = Dx.z() / Dx.x();                //noncubic
 
     //______________________________________________________________________
     //           R A D I O M E T E R
@@ -1136,6 +1122,7 @@ Ray::rayTrace( const ProcessorGroup* pg,
         // determine if origin has one or more boundary faces, and if so, populate boundaryFaces vector
         boundFlux[origin].p = has_a_boundary(origin, celltype, boundaryFaces);
 
+        Point CC_pos = level->getCellPosition(origin);
         //__________________________________
         // Loop over boundary faces of the cell and compute incident radiative flux
         for (vector<int>::iterator it=boundaryFaces.begin() ; it < boundaryFaces.end(); it++ ){
@@ -1157,7 +1144,8 @@ Ray::rayTrace( const ProcessorGroup* pg,
           // Flux ray loop
           for (int iRay=0; iRay < d_nFluxRays; iRay++){
 
-            Vector direction_vector, ray_location;
+            Vector direction_vector;
+            Vector rayOrigin;
             double cosTheta;
 
             if ( d_rayDirSampleAlgo == LATIN_HYPER_CUBE ){    // Latin-Hyper-Cube sampling
@@ -1168,13 +1156,12 @@ Ray::rayTrace( const ProcessorGroup* pg,
                                      direction_vector, cosTheta );
             }
 
-              rayLocation_cellFace( mTwister, origin, d_locationIndexOrder[RayFace], d_locationShift[RayFace],
-                                    DyDx, DzDx, ray_location);
-
-            updateSumI<T>( direction_vector, ray_location, origin, Dx, sigmaT4OverPi, abskg, celltype, size, sumI, mTwister);
+            rayLocation_cellFace( mTwister, RayFace, Dx, CC_pos, rayOrigin);
+            
+            updateSumI<T>( level, direction_vector, rayOrigin, origin, Dx, sigmaT4OverPi, abskg, celltype, size, sumI, mTwister);
 
             sumProjI += cosTheta * (sumI - sumI_prev);   // must subtract sumI_prev, since sumI accumulates intensity
-            sumCos += cosTheta;
+            sumCos   += cosTheta;
 
             sumI_prev = sumI;
 
@@ -1189,10 +1176,13 @@ Ray::rayTrace( const ProcessorGroup* pg,
 
 /*`==========TESTING==========*/
 #if DEBUG == 2
-          printf( "\n      [%d, %d, %d]  face: %d sumProjI:  %g BF: %g\n",
+          if( isDbgCell(origin) ) {
+            printf( "\n      [%d, %d, %d]  face: %d sumProjI:  %g BF: %g\n",
                     origin.x(), origin.y(), origin.z(), face, sumProjI, boundFlux[origin][ face ]);
+          }
 #endif
 /*===========TESTING==========`*/
+
         } // boundary faces loop
       }  // end cell iterator
     }   // end if d_solveBoundaryFlux
@@ -1244,6 +1234,7 @@ Ray::rayTrace( const ProcessorGroup* pg,
         randVector(rand_i, mTwister, origin);
       }
       double sumI = 0;
+      Point CC_pos = level->getCellPosition(origin);
 
       // ray loop
       for (int iRay=0; iRay < d_nDivQRays; iRay++){
@@ -1256,9 +1247,9 @@ Ray::rayTrace( const ProcessorGroup* pg,
         }
 
         Vector rayOrigin;
-        ray_Origin( mTwister, origin, DyDx,  DzDx, d_CCRays, rayOrigin);
+        ray_Origin( mTwister, CC_pos, Dx, d_CCRays, rayOrigin);
 
-        updateSumI< T >( direction_vector, rayOrigin, origin, Dx,  sigmaT4OverPi, abskg, celltype, size, sumI, mTwister);
+        updateSumI< T >( level, direction_vector, rayOrigin, origin, Dx,  sigmaT4OverPi, abskg, celltype, size, sumI, mTwister);
 
       }  // Ray loop
 
@@ -1820,30 +1811,58 @@ Ray::findRayDirectionHyperCube(MTRand& mTwister,
 
   return direction_vector;
 }
+
 //______________________________________________________________________
 //
-//  Compute the Ray location from a cell face
+//  Compute the Ray location on a cell face
 void Ray::rayLocation_cellFace( MTRand& mTwister,
-                                const IntVector& origin,
-                                const IntVector &indexOrder,
-                                const IntVector &shift,
-                                const double &DyDx,
-                                const double &DzDx,
-                                Vector& location)
+                                 const int face,
+                                 const Vector Dx,
+                                 const Point CC_pos,
+                                 Vector& rayOrigin)
 {
-  Vector tmp;
-  tmp[0] =  mTwister.rand() ;
-  tmp[1] =  0;
-  tmp[2] =  mTwister.rand() ;
+  double cellOrigin[3];
+  // left, bottom, back corner of the cell
+  cellOrigin[X] = CC_pos.x() - 0.5 * Dx[X];
+  cellOrigin[Y] = CC_pos.y() - 0.5 * Dx[Y];
+  cellOrigin[Z] = CC_pos.z() - 0.5 * Dx[Z];
 
-  // Put point on correct face
-  location[0] = tmp[indexOrder[0]] + shift[0];
-  location[1] = (tmp[indexOrder[1]] + shift[1]) * DyDx;
-  location[2] = (tmp[indexOrder[2]] + shift[2]) * DzDx;
-
-  location[0] += origin.x();
-  location[1] += origin.y();
-  location[2] += origin.z();
+  switch(face)
+  {
+    case WEST:
+      rayOrigin[X] = cellOrigin[X];
+      rayOrigin[Y] = cellOrigin[Y] + mTwister.rand() * Dx[Y];
+      rayOrigin[Z] = cellOrigin[Z] + mTwister.rand() * Dx[Z];
+      break;
+    case EAST:
+      rayOrigin[X] = cellOrigin[X] +  Dx[X];
+      rayOrigin[Y] = cellOrigin[Y] + mTwister.rand() * Dx[Y];
+      rayOrigin[Z] = cellOrigin[Z] + mTwister.rand() * Dx[Z];
+      break;
+    case SOUTH:
+      rayOrigin[X] = cellOrigin[X] + mTwister.rand() * Dx[X];
+      rayOrigin[Y] = cellOrigin[Y];
+      rayOrigin[Z] = cellOrigin[Z] + mTwister.rand() * Dx[Z];
+      break;
+    case NORTH:
+      rayOrigin[X] = cellOrigin[X] + mTwister.rand() * Dx[X];
+      rayOrigin[Y] = cellOrigin[Y] + Dx[Y];
+      rayOrigin[Z] = cellOrigin[Z] + mTwister.rand() * Dx[Z];
+      break;
+    case BOT:
+      rayOrigin[X] = cellOrigin[X] + mTwister.rand() * Dx[X];;
+      rayOrigin[Y] = cellOrigin[Y] + mTwister.rand() * Dx[Y];;
+      rayOrigin[Z] = cellOrigin[Z];
+      break;
+    case TOP:
+      rayOrigin[X] = cellOrigin[X] + mTwister.rand() * Dx[X];;
+      rayOrigin[Y] = cellOrigin[Y] + mTwister.rand() * Dx[Y];;
+      rayOrigin[Z] = cellOrigin[Z] + Dx[Z];
+      break;
+    default:
+      throw InternalError("Ray::rayLocation_cellFace,  Invalid FaceType Specified", __FILE__, __LINE__);
+      return;
+  }
 }
 
 //______________________________________________________________________
@@ -1899,8 +1918,8 @@ bool Ray::has_a_boundary(const IntVector &c,
     hasBoundary = true;
   }
 
-// if none of the above returned true, then the current cell must not be adjacent to a wall
-return (hasBoundary);
+  // if none of the above returned true, then the current cell must not be adjacent to a wall
+  return (hasBoundary);
 }
 
 

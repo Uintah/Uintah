@@ -133,8 +133,6 @@ namespace Uintah{
                             const IntVector& origin,
                             const int iRay,
                             VR_variables& VR,
-                            const double DyDx,
-                            const double DzDx,
                             Vector& directionVector,
                             double& cosVRTheta );
 

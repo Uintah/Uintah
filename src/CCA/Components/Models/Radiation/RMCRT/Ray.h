@@ -201,8 +201,6 @@ namespace Uintah{
       // Boundary flux constant variables  (consider using array container when C++ 11 is used)
       std::map <int,IntVector> d_dirIndexOrder;
       std::map <int,IntVector> d_dirSignSwap;
-      std::map <int,IntVector> d_locationIndexOrder;
-      std::map <int,IntVector> d_locationShift;
       
       const VarLabel* d_mag_grad_abskgLabel;
       const VarLabel* d_mag_grad_sigmaT4Label;
@@ -323,14 +321,12 @@ namespace Uintah{
                                 const int &dir );
 
       //__________________________________
-      /** @brief Adjust the location of a ray origin depending on the cell face */
+      /** @brief Adjust the location of a ray origin depending on the cell face */                                 
       void rayLocation_cellFace( MTRand& mTwister,
-                                 const IntVector& origin,
-                                 const IntVector &indexOrder,
-                                 const IntVector &shift,
-                                 const double &DyDx,
-                                 const double &DzDx,
-                                 Vector& location );
+                                 const int face,
+                                 const Vector Dx,
+                                 const Point CC_pos,
+                                 Vector& location);
 
       //__________________________________
       /** @brief Adjust the direction of a ray depending on the cell face */
