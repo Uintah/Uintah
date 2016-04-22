@@ -34,10 +34,11 @@
 
 #include <include/sci_defs/uintah_testdefs.h.in>
 
-#define DEBUG -9 // 1: divQ, 2: boundFlux, 3: scattering
+#define DEBUG -9         // 1: divQ, 2: boundFlux, 3: scattering
+#define FIXED_RAY_DIR -9 // Sets ray direction.  1: (0.7071,0.7071, 0), 2: (0.7071, 0, 0.7071), 3: (0, 0.7071, 0.7071)
 
-//#define FAST_EXP   // This uses a fast approximate exp() function that is 
-                   // significantly faster.
+//#define FAST_EXP       // This uses a fast approximate exp() function that is 
+                         // significantly faster.
 
 //______________________________________________________________________
 //
@@ -326,8 +327,6 @@ RMCRTCommon::sigmaT4( const ProcessorGroup*,
     }
   }
 }
-
-
 //______________________________________________________________________
 //
 //______________________________________________________________________
@@ -345,6 +344,23 @@ RMCRTCommon::findStepSize(int step[],
       step[d] = -1;
       sign[d] = 0;
     }
+  }
+}
+
+//______________________________________________________________________
+//
+//______________________________________________________________________
+void
+RMCRTCommon::raySignStep(double sign[],
+                         int cellStep[],
+                         const Vector& inv_direction_vector){
+  // get new step and sign
+  for ( int d=0; d<3; d++){
+    double me = copysign((double)1.0, inv_direction_vector[d]);  // +- 1
+    
+    sign[d] = std::max(0.0, me);    // 0, 1
+    
+    cellStep[d] = int(me);
   }
 }
 
@@ -370,9 +386,41 @@ RMCRTCommon::findRayDirection(MTRand& mTwister,
   direction_vector[1] = r*sin(theta);
   direction_vector[2] = plusMinus_one;
 
+/*`==========TESTING==========*/
+#if ( FIXED_RAY_DIR == 1)
+   direction_vector = Vector(0.70711, 0.70711, 0.);
+#elif ( FIXED_RAY_DIR == 2 )
+   direction_vector = Vector(0.70711, 0.0, 0.70711);
+#elif ( FIXED_RAY_DIR == 3 )
+   direction_vector = Vector(0.0, 0.70711, 0.70711);
+#else
+#endif
+/*===========TESTING==========`*/
+
   return direction_vector;
 }
 
+
+//______________________________________________________________________
+//  Compute the physical location of a ray's origin
+//______________________________________________________________________
+void
+RMCRTCommon::ray_Origin( MTRand& mTwister,
+                         const Point  CC_pos,
+                         const Vector dx,
+                         const bool   useCCRays,
+                         Vector& rayOrigin)
+{
+  if( useCCRays == false ){
+    rayOrigin[0] =  CC_pos.x() - 0.5*dx.x()  + mTwister.rand() * dx.x(); 
+    rayOrigin[1] =  CC_pos.y() - 0.5*dx.y()  + mTwister.rand() * dx.y(); 
+    rayOrigin[2] =  CC_pos.z() - 0.5*dx.z()  + mTwister.rand() * dx.z();
+  }else{
+    rayOrigin[0] = CC_pos(0);
+    rayOrigin[1] = CC_pos(1);
+    rayOrigin[2] = CC_pos(2);
+  }
+}
 
 //______________________________________________________________________
 //  Compute the physical location of the ray
@@ -406,6 +454,29 @@ RMCRTCommon::reflect(double& fs,
                     const double abskg,
                     bool& in_domain,
                     int& step,
+                    double& sign,
+                    double& ray_direction)
+{
+  fs = fs * (1 - abskg);
+
+  //put cur back inside the domain
+  cur = prevCell;
+  in_domain = true;
+
+  // apply reflection condition
+  step *= -1;                // begin stepping in opposite direction
+  sign *= -1;
+  ray_direction *= -1;
+  //dbg2 << " REFLECTING " << endl;
+}
+
+void
+RMCRTCommon::reflect(double& fs,
+                    IntVector& cur,
+                    IntVector& prevCell,
+                    const double abskg,
+                    bool& in_domain,
+                    int& step,
                     bool& sign,
                     double& ray_direction)
 {
@@ -427,8 +498,9 @@ RMCRTCommon::reflect(double& fs,
 //______________________________________________________________________
 template <class T >
 void
-RMCRTCommon::updateSumI ( Vector& ray_direction,
-                         Vector& ray_location,
+RMCRTCommon::updateSumI (const Level* level, 
+                         Vector& ray_direction,
+                         Vector& ray_origin,
                          const IntVector& origin,
                          const Vector& Dx,
                          constCCVariable< T >& sigmaT4OverPi,
@@ -441,30 +513,38 @@ RMCRTCommon::updateSumI ( Vector& ray_direction,
 {
   IntVector cur = origin;
   IntVector prevCell = cur;
-  // Step and sign for ray marching
-  int step[3];                                          // Gives +1 or -1 based on sign
-  bool sign[3];
+  // Cell stepping direction for ray marching
+  int    step[3];                                          
+  double sign[3];                 //   is 0 for negative ray direction 
+
   Vector inv_ray_direction = Vector(1.0)/ray_direction;
 
 /*`==========TESTING==========*/
 #if DEBUG == 1
   if( isDbgCell(origin) ) {
-    printf("        updateSumI: [%d,%d,%d] ray_dir [%g,%g,%g] ray_loc [%g,%g,%g]\n", origin.x(), origin.y(), origin.z(),ray_direction.x(), ray_direction.y(), ray_direction.z(), ray_location.x(), ray_location.y(), ray_location.z());
-    printf("        inv_ray_dir [%g,%g,%g]\n", inv_ray_direction.x(), inv_ray_direction.y(), inv_ray_direction.z());
+    printf("        updateSumI: [%d,%d,%d] ray_dir [%g,%g,%g] ray_loc [%g,%g,%g]\n", origin.x(), origin.y(), origin.z(),ray_direction.x(), ray_direction.y(), ray_direction.z(), ray_origin.x(), ray_origin.y(), ray_origin.z());
   }
 #endif
 /*===========TESTING==========`*/
 
-  findStepSize(step, sign, inv_ray_direction);
-  Vector D_DxRatio(1, Dx.y()/Dx.x(), Dx.z()/Dx.x() );
-
-  Vector tMax;         // (mixing bools, ints and doubles)
-  tMax.x( (origin[0] + sign[0]                - ray_location[0]) * inv_ray_direction[0] );
-  tMax.y( (origin[1] + sign[1] * D_DxRatio[1] - ray_location[1]) * inv_ray_direction[1] );
-  tMax.z( (origin[2] + sign[2] * D_DxRatio[2] - ray_location[2]) * inv_ray_direction[2] );
-
+  raySignStep(sign, step, ray_direction);
+ 
+  Point CC_pos = level->getCellPosition(origin);
+  
+  // rayDx is the distance from bottom, left, back, corner of cell to ray
+  double rayDx[3];
+  rayDx[0] = ray_origin.x() - ( CC_pos.x() - 0.5*Dx[0] );
+  rayDx[1] = ray_origin.y() - ( CC_pos.y() - 0.5*Dx[1] );
+  rayDx[2] = ray_origin.z() - ( CC_pos.z() - 0.5*Dx[2] );
+  
+  // tMax is the physical distance from the ray origin to each of the respective planes of intersection
+  double tMax[3];
+  tMax[0] = (sign[0] * Dx[0] - rayDx[0]) * inv_ray_direction.x();
+  tMax[1] = (sign[1] * Dx[1] - rayDx[1]) * inv_ray_direction.y();
+  tMax[2] = (sign[2] * Dx[2] - rayDx[2]) * inv_ray_direction.z();
+    
   //Length of t to traverse one cell
-  Vector tDelta = Abs(inv_ray_direction) * D_DxRatio;
+  Vector tDelta = Abs(inv_ray_direction) * Dx;
 
   //Initializes the following values for each ray
   bool in_domain     = true;
@@ -474,25 +554,23 @@ RMCRTCommon::updateSumI ( Vector& ray_direction,
   int nReflect       = 0;                 // Number of reflections
   double optical_thickness      = 0;
   double expOpticalThick_prev   = 1.0;
+  double rayLength              = 0.0;
+  Vector ray_location           = ray_origin;
 
 
 #ifdef RAY_SCATTER
-  double scatCoeff = d_sigmaScat;          //[m^-1]  !! HACK !! This needs to come from data warehouse
-  if (scatCoeff == 0) scatCoeff = 1e-99;  // avoid division by zero
+  double scatCoeff = std::max( d_sigmaScat, 1e-99 ); // avoid division by zero  [m^-1]
 
   // Determine the length at which scattering will occur
   // See CCA/Components/Arches/RMCRT/PaulasAttic/MCRT/ArchesRMCRT/ray.cc
-  double scatLength = -log(mTwister.randDblExc() ) / scatCoeff;
-  double curLength = 0;
+  double scatLength = -log(mTwister.randDblExc() ) / scatCoeff; 
 #endif
 
-      
   //+++++++Begin ray tracing+++++++++++++++++++
   //Threshold while loop
   while ( intensity > d_threshold ){
-
     DIR dir = NONE;
-
+    
     while (in_domain){
 
       prevCell = cur;
@@ -500,8 +578,10 @@ RMCRTCommon::updateSumI ( Vector& ray_direction,
 
       T abskg_prev = abskg[prevCell];  // optimization
       T sigmaT4OverPi_prev = sigmaT4OverPi[prevCell];
+      
       //__________________________________
       //  Determine which cell the ray will enter next
+      dir = NONE;
       if ( tMax[0] < tMax[1] ){        // X < Y
         if ( tMax[0] < tMax[2] ){      // X < Z
           dir = X;
@@ -518,40 +598,37 @@ RMCRTCommon::updateSumI ( Vector& ray_direction,
 
       //__________________________________
       //  update marching variables
-      cur[dir]  = cur[dir] + step[dir];
+      cur[dir]   = cur[dir] + step[dir];
       disMin     = (tMax[dir] - tMax_prev);
       tMax_prev  = tMax[dir];
-      tMax[dir] = tMax[dir] + tDelta[dir];
+      tMax[dir]  = tMax[dir] + tDelta[dir];
+      rayLength += disMin;
 
       ray_location[0] = ray_location[0] + (disMin  * ray_direction[0]);
       ray_location[1] = ray_location[1] + (disMin  * ray_direction[1]);
       ray_location[2] = ray_location[2] + (disMin  * ray_direction[2]);
 
-/*`==========TESTING==========*/
-#if DEBUG == 1
-if( isDbgCell( origin )){
-   printf( "            cur [%d,%d,%d] prev [%d,%d,%d] ", cur.x(), cur.y(), cur.z(), prevCell.x(), prevCell.y(), prevCell.z());
-   printf( " dir %d ", dir );
-   printf( "tMax [%g,%g,%g] ",tMax.x(),tMax.y(), tMax.z());
-   printf( "rayLoc [%g,%g,%g] ",ray_location.x(),ray_location.y(), ray_location.z());
-   printf( "inv_dir [%g,%g,%g] ",inv_ray_direction.x(),inv_ray_direction.y(), inv_ray_direction.z());
-   printf( "disMin %g \n",disMin );
-
-   printf( "            abskg[prev] %g  \t sigmaT4OverPi[prev]: %g \n",abskg[prevCell],  sigmaT4OverPi[prevCell]);
-   printf( "            abskg[cur]  %g  \t sigmaT4OverPi[cur]:  %g  \t  cellType: %i\n",abskg[cur], sigmaT4OverPi[cur], celltype[cur]);
-}
-#endif
-/*===========TESTING==========`*/
-//cout << "cur " << cur << " face " << face << " tmax " << tMax << " rayLoc " << ray_location <<
-//        " inv_dir: " << inv_ray_direction << " disMin: " << disMin << endl;
-
       in_domain = (celltype[cur] == d_flowCell);
-
-
-      optical_thickness += Dx.x() * abskg_prev*disMin; // as long as tDeltaY,Z tMax.y(),Z and ray_location[1],[2]..
-      // were adjusted by DyDx  or DzDx, this line is now correct for noncubic domains.
+      
+      optical_thickness += abskg_prev*disMin; 
 
       nRaySteps++;
+      
+ /*`==========TESTING==========*/
+#if ( DEBUG >= 1 )
+      if( isDbgCell( origin )){
+         printf( "            cur [%d,%d,%d] prev [%d,%d,%d] ", cur.x(), cur.y(), cur.z(), prevCell.x(), prevCell.y(), prevCell.z());
+         printf( " dir %d ", dir );
+         printf( "tMax [%g,%g,%g] ",tMax[0],tMax[1], tMax[2]);
+         printf( "rayLoc [%g,%g,%g] ",ray_location.x(),ray_location.y(), ray_location.z());
+         printf( "disMin %g tMax[dir]: %g tMax_prev: %g, Dx[dir]: %g\n",disMin, tMax[dir], tMax_prev, Dx[dir]);
+
+         printf( "            abskg[prev] %g  \t sigmaT4OverPi[prev]: %g \n",abskg[prevCell],  sigmaT4OverPi[prevCell]);
+         printf( "            abskg[cur]  %g  \t sigmaT4OverPi[cur]:  %g  \t  cellType: %i\n",abskg[cur], sigmaT4OverPi[cur], celltype[cur]);
+         printf( "            optical_thickkness %g \t rayLength: %g\n", optical_thickness, rayLength);
+      }
+#endif
+/*===========TESTING==========`*/     
 
       //Eqn 3-15(see below reference) while
       //Third term inside the parentheses is accounted for in Inet. Chi is accounted for in Inet calc.
@@ -592,19 +669,18 @@ if( isDbgCell( origin )){
       expOpticalThick_prev = expOpticalThick;
 
 #ifdef RAY_SCATTER
-      curLength += disMin * Dx.x();
-
-      if (curLength > scatLength && in_domain){
-
+      if (rayLength > scatLength && in_domain ){
+            
         // get new scatLength for each scattering event
         scatLength = -log(mTwister.randDblExc() ) / scatCoeff;
 
         ray_direction     =  findRayDirection( mTwister, cur );
+
         inv_ray_direction = Vector(1.0)/ray_direction;
 
         // get new step and sign
         int stepOld = step[dir];
-        findStepSize( step, sign, inv_ray_direction);
+        raySignStep( sign, step, ray_direction);
 
         // if sign[dir] changes sign, put ray back into prevCell (back scattering)
         // a sign change only occurs when the product of old and new is negative
@@ -612,20 +688,31 @@ if( isDbgCell( origin )){
           cur = prevCell;
         }
 
-        // get new tMax (mixing bools, ints and doubles)
-        tMax.x( ( cur[0] + sign[0]                - ray_location[0]) * inv_ray_direction[0] );
-        tMax.y( ( cur[1] + sign[1] * D_DxRatio[1] - ray_location[1]) * inv_ray_direction[1] );
-        tMax.z( ( cur[2] + sign[2] * D_DxRatio[2] - ray_location[2]) * inv_ray_direction[2] );
+        Point CC_pos = level->getCellPosition(cur);
+        rayDx[0] = ray_location.x() - ( CC_pos.x() - 0.5*Dx[0] );
+        rayDx[1] = ray_location.y() - ( CC_pos.y() - 0.5*Dx[1] );
+        rayDx[2] = ray_location.z() - ( CC_pos.z() - 0.5*Dx[2] );
+  
+        tMax[0] = (sign[0] * Dx[0] - rayDx[0]) * inv_ray_direction.x();
+        tMax[1] = (sign[1] * Dx[1] - rayDx[1]) * inv_ray_direction.y();
+        tMax[2] = (sign[2] * Dx[2] - rayDx[2]) * inv_ray_direction.z();       
 
-        // Length of t to traverse one cell
-        tDelta    = Abs(inv_ray_direction) * D_DxRatio;
-        tMax_prev = 0;
-        curLength = 0;  // allow for multiple scattering events per ray
+        //Length of t to traverse one cell
+        tDelta = Abs(inv_ray_direction) * Dx;
 /*`==========TESTING==========*/
-#if DEBUG == 3
- printf( "%i, %i, %i, tmax: %g, %g, %g  tDelta: %g, %g, %g \n", cur.x(), cur.y(), cur.z(), tMax.x(), tMax.y(), tMax.z(), tDelta.x(), tDelta.y() , tDelta.z());
+#if (DEBUG == 3)
+        if( isDbgCell( origin)  ){
+          Vector mytDelta = tDelta / Dx;
+          Vector myrayLoc = ray_location / Dx;
+          printf( "            Scatter: [%i, %i, %i], rayLength: %g, tmax: %g, %g, %g  tDelta: %g, %g, %g  ray_dir: %g, %g, %g\n",cur.x(), cur.y(), cur.z(),rayLength, tMax[0] / Dx[0], tMax[1] / Dx[1], tMax[2] / Dx[2], mytDelta.x(), mytDelta.y() , mytDelta.z(), ray_direction.x(), ray_direction.y() , ray_direction.z());
+          printf( "                    dir: %i sign: [%g, %g, %g], step [%i, %i, %i] cur: [%i, %i, %i], prevCell: [%i, %i, %i]\n", dir, sign[0], sign[1], sign[2], step[0], step[1], step[2], cur[0], cur[1], cur[2], prevCell[0], prevCell[1], prevCell[2] );
+          printf( "                    ray_location: [%g, %g, %g]\n", myrayLoc[0], myrayLoc[1], myrayLoc[2] );
+//          printf("                     rayDx         [%g, %g, %g]  CC_pos[%g, %g, %g]\n", rayDx[0], rayDx[1], rayDx[2], CC_pos.x(), CC_pos.y(), CC_pos.z());
+        }
 #endif
 /*===========TESTING==========`*/
+        tMax_prev = 0;
+        rayLength = 0;  // allow for multiple scattering events per ray
       }
 #endif
 
@@ -647,7 +734,7 @@ if( isDbgCell( origin )){
     if(!d_allowReflect) intensity = 0;
 
 /*`==========TESTING==========*/
-#if DEBUG == 1
+#if DEBUG >0
 if( isDbgCell( origin)  ){
    printf( "            cur [%d,%d,%d] intensity: %g expOptThick: %g, fs: %g allowReflect: %i\n",
           cur.x(), cur.y(), cur.z(), intensity,  exp(-optical_thickness), fs, d_allowReflect );
@@ -742,7 +829,7 @@ bool
 RMCRTCommon::isDbgCell( const IntVector me)
 {
 
-  if(me == IntVector(10,10,10) ){
+  if(me == IntVector(0,0,0) ){
     return true;
   }
   for( unsigned int i = 0; i<d_dbgCells.size(); i++) {
@@ -788,8 +875,8 @@ RMCRTCommon::randVector( vector <int> &int_array,
 // Explicit template instantiations:
 
 template void
-  RMCRTCommon::updateSumI ( Vector&, Vector&, const IntVector&, const Vector&, constCCVariable< double >&, constCCVariable<double>&, constCCVariable<int>&, unsigned long int&, double&, MTRand&);
+  RMCRTCommon::updateSumI ( const Level*, Vector&, Vector&, const IntVector&, const Vector&, constCCVariable< double >&, constCCVariable<double>&, constCCVariable<int>&, unsigned long int&, double&, MTRand&);
 
 template void
-  RMCRTCommon::updateSumI ( Vector&, Vector&, const IntVector&, const Vector&, constCCVariable< float >&, constCCVariable<float>&, constCCVariable<int>&, unsigned long int&, double&, MTRand&);
+  RMCRTCommon::updateSumI ( const Level*, Vector&, Vector&, const IntVector&, const Vector&, constCCVariable< float >&, constCCVariable<float>&, constCCVariable<int>&, unsigned long int&, double&, MTRand&);
 

@@ -323,7 +323,7 @@ Radiometer::sched_radiometer( const LevelP& level,
   
   vector<const Patch*> myPatches = getPatchSet( sched, level );
   bool hasRadiometers = false;
-  int nGhostCells = SHRT_MAX;
+  int nGhostCells = 0;           // This should be 0 for patches without radiometers
   
   //__________________________________
   //  If this processor owns any patches with radiometers
@@ -352,9 +352,9 @@ Radiometer::sched_radiometer( const LevelP& level,
   // The taskgraph must be recompiled to detect a change in the conditional.
   // The taskgraph recompilation is activated from RMCRTCommon:doRecompileTaskgraph()
   Ghost::GhostType  gac  = Ghost::AroundCells;
-  tsk->requires( abskg_dw ,    d_abskgLabel  ,   gac, SHRT_MAX);
-  tsk->requires( sigma_dw ,    d_sigmaT4Label,   gac, SHRT_MAX);
-  tsk->requires( celltype_dw , d_cellTypeLabel , gac, SHRT_MAX);
+  tsk->requires( abskg_dw ,    d_abskgLabel  ,   gac, SHRT_MAX);    // Do not change this from SHRT_MAX -> nGhostCells
+  tsk->requires( sigma_dw ,    d_sigmaT4Label,   gac, SHRT_MAX);    // It will hang on the first timestep on 2 cores with RMCRT_radiometer.ups
+  tsk->requires( celltype_dw , d_cellTypeLabel , gac, SHRT_MAX);    // This needs further investigation.  -Todd
 
   tsk->modifies( d_VRFluxLabel );
 
@@ -516,9 +516,7 @@ Radiometer::radiometerFlux( const Patch* patch,
   }
 
   unsigned long int size = 0;                   // current size of PathIndex
-  Vector Dx = patch->dCell();                   // cell spacing
-  double DyDx = Dx.y() / Dx.x();                //noncubic
-  double DzDx = Dx.z() / Dx.x();                //noncubic
+  Vector Dx = patch->dCell();                   // cell spacing          
 
   IntVector lo = patch->getCellLowIndex();
   IntVector hi = patch->getCellHighIndex();
@@ -538,6 +536,7 @@ Radiometer::radiometerFlux( const Patch* patch,
       double sumI      = 0;
       double sumProjI  = 0;
       double sumI_prev = 0;
+      Point CC_pos = level->getCellPosition(c);
 
       //__________________________________
       // ray loop
@@ -545,15 +544,15 @@ Radiometer::radiometerFlux( const Patch* patch,
 
         Vector rayOrigin;
         bool useCCRays = true;
-        ray_Origin(mTwister, c, DyDx, DzDx, useCCRays, rayOrigin);
+        ray_Origin( mTwister, CC_pos, Dx, useCCRays, rayOrigin);
 
 
         double cosVRTheta;
         Vector direction_vector;
-        rayDirection_VR( mTwister, c, iRay, d_VR, DyDx, DzDx, direction_vector, cosVRTheta);
+        rayDirection_VR( mTwister, c, iRay, d_VR, direction_vector, cosVRTheta);
 
         // get the intensity for this ray
-        updateSumI< T >( direction_vector, rayOrigin, c, Dx, sigmaT4OverPi, abskg, celltype, size, sumI, mTwister);
+        updateSumI< T >(level, direction_vector, rayOrigin, c, Dx, sigmaT4OverPi, abskg, celltype, size, sumI, mTwister);
 
         sumProjI += cosVRTheta * (sumI - sumI_prev); // must subtract sumI_prev, since sumI accumulates intensity
                                                      // from all the rays up to that point
@@ -577,8 +576,6 @@ Radiometer::rayDirection_VR( MTRand& mTwister,
                              const IntVector& origin,
                              const int iRay,
                              VR_variables& VR,
-                             const double DyDx,
-                             const double DzDx,
                              Vector& direction_vector,
                              double& cosVRTheta)
 {

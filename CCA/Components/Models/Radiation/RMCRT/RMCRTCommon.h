@@ -73,8 +73,9 @@ namespace Uintah{
       //__________________________________
       // @brief Update the running total of the incident intensity */
       template <class T>
-      void  updateSumI ( Vector& ray_direction, // can change if scattering occurs
-                         Vector& ray_location,
+      void  updateSumI ( const Level* level,
+                         Vector& ray_direction, // can change if scattering occurs
+                         Vector& ray_origin,
                          const IntVector& origin,
                          const Vector& Dx,
                          constCCVariable< T >& sigmaT4Pi,
@@ -111,6 +112,15 @@ namespace Uintah{
                    const double abskg,
                    bool& in_domain,
                    int& step,
+                   double& sign,
+                   double& ray_direction);
+                   
+      void reflect(double& fs,
+                   IntVector& cur,
+                   IntVector& prevCell,
+                   const double abskg,
+                   bool& in_domain,
+                   int& step,
                    bool& sign,
                    double& ray_direction);
 
@@ -119,7 +129,21 @@ namespace Uintah{
       void findStepSize(int step[],
                         bool sign[],
                         const Vector& inv_direction_vector);
+
+      //__________________________________
+      //  returns +- 1 for ray direction sign and cellStep
+      void raySignStep( double sign[],
+                        int cellStep[],
+                        const Vector& inv_direction_vector);
       
+      //__________________________________
+      //
+      void ray_Origin( MTRand& mTwister,
+                       const Point  CC_position,  
+                       const Vector Dx,
+                       const bool useCCRays,
+                       Vector& rayOrigin);
+
       //__________________________________
       //
       void ray_Origin( MTRand& mTwister,
