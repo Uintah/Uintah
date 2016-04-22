@@ -71,7 +71,7 @@ public:
   void sched_initialize( const LevelP& level,
                          SchedulerP& sched );
 
-  void sched_RestartInitialize( const LevelP& level,
+  void sched_restartInitialize( const LevelP& level,
                                 SchedulerP& sched );
 
   void initialize( const ProcessorGroup* pc,
@@ -116,9 +116,9 @@ public:
   //______________________________________________________________________
   //
 private:
-    
-    // 
-    void restartInitializeHack( const ProcessorGroup* , const PatchSubset* , 
+
+    //
+    void restartInitializeHack( const ProcessorGroup* , const PatchSubset* ,
                                    const MaterialSubset* , DataWarehouse*, DataWarehouse*);
 
 
@@ -156,11 +156,11 @@ private:
                          SchedulerP& sched );
 
     void fluxInit( const ProcessorGroup* pc,
-                   const PatchSubset* patches,          
-                   const MaterialSubset* matls,         
-                   DataWarehouse* old_dw,               
-                   DataWarehouse* new_dw );             
-                        
+                   const PatchSubset* patches,
+                   const MaterialSubset* matls,
+                   DataWarehouse* old_dw,
+                   DataWarehouse* new_dw );
+
     //__________________________________
     //  move  6 CCVariable<double> -> CCVariable<stencil7>
     void sched_DBLsToStencil( const LevelP& level,

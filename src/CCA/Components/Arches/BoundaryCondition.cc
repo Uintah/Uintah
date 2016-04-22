@@ -114,10 +114,6 @@ BoundaryCondition::BoundaryCondition(const ArchesLabel* label,
 
   d_radiation_temperature_label = VarLabel::create("radiation_temperature", CCVariable<double>::getTypeDescription());
 
-  // Since this task may alter a member of patch, we need to force it to happen in a certain order.
-  // To achive this, a computes/requires combination to achieve this.  See EqnBase.cc for requires portion.
-  d_DummyLabel = VarLabel::create("ForceTaskExecutionOrder", CCVariable<double>::getTypeDescription());
-
 }
 
 
@@ -142,7 +138,6 @@ BoundaryCondition::~BoundaryCondition()
   }
 
   VarLabel::destroy(d_radiation_temperature_label);
-  VarLabel::destroy(d_DummyLabel);
 }
 
 //****************************************************************************
@@ -2650,8 +2645,6 @@ BoundaryCondition::sched_setupBCInletVelocities(SchedulerP& sched,
     tsk->requires( Task::NewDW, the_info.total_area_label );
 
   }
-
-  tsk->computes(d_DummyLabel);
 
   if ( doing_restart ) {
     tsk->requires( Task::OldDW, d_lab->d_volFractionLabel, Ghost::None, 0 );
