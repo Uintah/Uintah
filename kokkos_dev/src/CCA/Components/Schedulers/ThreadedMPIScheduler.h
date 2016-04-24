@@ -93,20 +93,18 @@ class ThreadedMPIScheduler : public MPIScheduler {
 
   private:
 
-    // Disable copy and assignment
-    ThreadedMPIScheduler( const ThreadedMPIScheduler& );
-    ThreadedMPIScheduler& operator=( const ThreadedMPIScheduler& );
+    // eliminate copy, assignment and move
+    ThreadedMPIScheduler( const ThreadedMPIScheduler & )            = delete;
+    ThreadedMPIScheduler& operator=( const ThreadedMPIScheduler & ) = delete;
+    ThreadedMPIScheduler( ThreadedMPIScheduler && )                 = delete;
+    ThreadedMPIScheduler& operator=( ThreadedMPIScheduler && )      = delete;
 
     void assignTask( DetailedTask* task, int iteration );
 
     int getAvailableThreadNum();
 
-    std::condition_variable  d_nextsignal;
-    std::mutex               d_nextmutex;             // conditional wait mutex
-    TaskWorker*              t_worker[MAX_THREADS];   // workers
-    std::thread*             t_thread[MAX_THREADS];   // actual threads
-    QueueAlg                 taskQueueAlg_;
-    int                      numThreads_;
+    QueueAlg                 m_task_queue_alg{MostMessages};
+    int                      m_num_threads{-1};
 };
 
 
@@ -114,33 +112,35 @@ class TaskWorker {
 
   public:
 
-    TaskWorker( ThreadedMPIScheduler* scheduler, int thread_id );
+    TaskWorker( ThreadedMPIScheduler * scheduler );
 
-    ~TaskWorker();
+    ~TaskWorker(){}
 
     void run();
 
-    void quit() { d_quit = true; };
+    void quit() { m_quit = true; };
 
     double getWaittime();
 
     void resetWaittime( double start );
 
-    friend class ThreadedMPIScheduler;
 
   private:
 
-    ThreadedMPIScheduler*    d_scheduler;
-    DetailedTask*            d_task;
-    std::condition_variable  d_runsignal;
-    std::mutex               d_runmutex;
-    bool                     d_quit;
-    int                      d_thread_id;
-    int                      d_rank;
-    int                      d_iteration;
-    double                   d_waittime;
-    double                   d_waitstart;
-    size_t                   d_numtasks;
+    bool                     m_quit{false};
+    int                      m_rank;
+    int                      m_iteration{0};
+    size_t                   m_num_tasks{0};
+    double                   m_wait_time{0.0};
+    double                   m_wait_start{0.0};
+
+    ThreadedMPIScheduler*    m_scheduler{nullptr};
+    DetailedTask*            m_task{nullptr};
+
+    std::condition_variable  m_run_signal;
+    std::mutex               m_run_mutex;
+
+    friend class ThreadedMPIScheduler;
 };
 
 }  // End namespace Uintah
