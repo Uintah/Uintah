@@ -21,14 +21,12 @@
  * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
  * IN THE SOFTWARE.
  */
-// Core SCIRun Includes
+
 #include <Core/Malloc/Allocator.h>
 #include <Core/Util/RWS.h>
 #include <Core/Util/Assert.h>
 #include <Core/Util/FileUtils.h>
 #include <Core/Util/sci_system.h>
-
-// STL Includes
 #include   <Core/Util/Environment.h> // includes <string>
 
 #include   <iostream>

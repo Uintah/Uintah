@@ -28,7 +28,6 @@
 
 #include <Core/Geometry/IntVector.h>
 #include <Core/Exceptions/InternalError.h>
-#include <Core/Thread/Mutex.h>
 
 using namespace Uintah;
 
@@ -46,14 +45,14 @@ void GridVariableBase::getMPIBuffer(BufferInfo& buffer,
   startbuf += strides.x()*off.x()+strides.y()*off.y()+strides.z()*off.z();
   IntVector d = high-low;
   MPI_Datatype type1d;
-  MPI_Type_create_hvector(d.x(), 1, strides.x(), basetype, &type1d);
+  MPI::Type_create_hvector(d.x(), 1, strides.x(), basetype, &type1d);
 
   MPI_Datatype type2d;
-  MPI_Type_create_hvector(d.y(), 1, strides.y(), type1d, &type2d);
-  MPI_Type_free(&type1d);
+  MPI::Type_create_hvector(d.y(), 1, strides.y(), type1d, &type2d);
+  MPI::Type_free(&type1d);
   MPI_Datatype type3d;
-  MPI_Type_create_hvector(d.z(), 1, strides.z(), type2d, &type3d);
-  MPI_Type_free(&type2d);
-  MPI_Type_commit(&type3d);
+  MPI::Type_create_hvector(d.z(), 1, strides.z(), type2d, &type3d);
+  MPI::Type_free(&type2d);
+  MPI::Type_commit(&type3d);
   buffer.add(startbuf, 1, type3d, true);
 }

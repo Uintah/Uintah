@@ -21,9 +21,7 @@
  * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
  * IN THE SOFTWARE.
  */
-#include <Core/Thread/Mutex.h>
-#include <Core/Thread/Thread.h>
-extern Uintah::Mutex cerrLock;
+
 #ifdef __APPLE__
 // This is a hack.  gcc 3.3 #undefs isnan in the cmath header, which
 // make the isnan function not work.  This define makes the cmath header
@@ -71,6 +69,7 @@ extern Uintah::Mutex cerrLock;
 #include <vector>
 #include <sstream>
 #include <iostream>
+#include <mutex>
 
 #include <cfloat>
 #include <sci_defs/hypre_defs.h>
@@ -88,6 +87,8 @@ extern Uintah::Mutex cerrLock;
 
 using namespace std;
 using namespace Uintah;
+
+extern std::mutex cerrLock;
 
 //__________________________________
 //  To turn on normal output

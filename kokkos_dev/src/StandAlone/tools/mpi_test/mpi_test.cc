@@ -39,7 +39,7 @@
 #include <string>
 #include <sstream>
 
-#include <Core/Thread/Time.h>    // for currentSeconds()
+#include <Core/Util/Time.h>    // for currentSeconds()
 #include <Core/Util/FileUtils.h> // for testFilesystem()
 
 using std::stringstream;
@@ -119,7 +119,7 @@ usage( const string & prog, const string & badArg )
     cout << "         -vv   - Be very verbose... see -v warning...\n";
     cout << "\n";
   }
-  MPI_Finalize();
+  MPI::Finalize();
   exit(1);
 }
 
@@ -148,18 +148,18 @@ main( int argc, char* argv[] )
 {
   gethostname( (char*)&hostname, HOST_NAME_SIZE );
 
-  MPI_Init( &argc, &argv );
+  MPI::Init( &argc, &argv );
 
-  MPI_Comm_rank( MPI_COMM_WORLD, &rank );
-  MPI_Comm_size( MPI_COMM_WORLD, &procs );
+  MPI::Comm_rank( MPI_COMM_WORLD, &rank );
+  MPI::Comm_size( MPI_COMM_WORLD, &procs );
 
   parseArgs( argc, argv ); // Should occur after variables 'rank' and 'procs' set...
 
 #if DO_DEBUG
-  // Many times if there is a problem with a node, the MPI_Init() call above will just hang.
+  // Many times if there is a problem with a node, the MPI::Init() call above will just hang.
   // If debugging, sometimes it is useful to print something out at this point to track
   // how many nodes have initialized... and to get an idea of how long it took.
-  printf( "Finished MPI_Init() on rank %d.\n", rank );
+  printf( "Finished MPI::Init() on rank %d.\n", rank );
 #endif
 
   if( rank == 0 ) {
@@ -178,10 +178,10 @@ main( int argc, char* argv[] )
         std::fill(&hnMessage[0],&hnMessage[HOST_NAME_SIZE],'\0');
         MPI_Status status;
 
-        MPI_Recv( hnMessage, HOST_NAME_SIZE, MPI_CHAR, proc, 0, MPI_COMM_WORLD, &status );
+        MPI::Recv( hnMessage, HOST_NAME_SIZE, MPI_CHAR, proc, 0, MPI_COMM_WORLD, &status );
 
         // int numBytesReceived = -1;
-        // MPI_Get_count( &status, MPI_CHAR, &numBytesReceived );
+        // MPI::Get_count( &status, MPI_CHAR, &numBytesReceived );
         // printf("result is %d, received bytes: %d\n", result, numBytesReceived);
 
         hostnames[ proc ] = hnMessage;
@@ -194,7 +194,7 @@ main( int argc, char* argv[] )
     }
     else {
       // everyone but rank 0 needs to send rank 0 a message with it's name...
-      MPI_Send( hostname, HOST_NAME_SIZE, MPI_CHAR, 0, 0, MPI_COMM_WORLD );
+      MPI::Send( hostname, HOST_NAME_SIZE, MPI_CHAR, 0, 0, MPI_COMM_WORLD );
     }
   }
  
@@ -202,18 +202,18 @@ main( int argc, char* argv[] )
   // exact processor number (rank) if there is a problem...
   testme( point2pointasync_test,  "Point To Point ASync" );
 
-  testme( allreduce_test,        "MPI_Allreduce" );
-  testme( reduce_test,           "MPI_Reduce" );
-  testme( broadcast_test,        "MPI_Bcast" );
-  testme( allgather_test,        "MPI_Allgather" );
-  testme( gather_test,           "MPI_Gather" );
+  testme( allreduce_test,        "MPI::Allreduce" );
+  testme( reduce_test,           "MPI::Reduce" );
+  testme( broadcast_test,        "MPI::Bcast" );
+  testme( allgather_test,        "MPI::Allgather" );
+  testme( gather_test,           "MPI::Gather" );
   testme( point2pointsync_test, "Point To Point Sync" );
 
   if( args.testFileSystem ) {
     testme( fileSystem_test,       "File System" );
   }
   
-  MPI_Finalize();
+  MPI::Finalize();
   return 0;
 }
 
@@ -238,7 +238,7 @@ testme(int (*testfunc)(void),const char* name)
 
   int all_pass = false;
   
-  MPI_Allreduce( &pass, &all_pass, 1, MPI_INT, MPI_LAND, MPI_COMM_WORLD);
+  MPI::Allreduce( &pass, &all_pass, 1, MPI_INT, MPI_LAND, MPI_COMM_WORLD);
  
   if( rank == 0) {
 
@@ -253,12 +253,12 @@ testme(int (*testfunc)(void),const char* name)
   
   if( !all_pass ) {
     // Sync processors so output is in sync
-    MPI_Barrier(MPI_COMM_WORLD);
+    MPI::Barrier(MPI_COMM_WORLD);
     cout << error_stream.str();
     cout.flush();
     error_stream.str("");
     // Sync processors so output is in sync
-    MPI_Barrier(MPI_COMM_WORLD);
+    MPI::Barrier(MPI_COMM_WORLD);
   }
   return all_pass;
 }
@@ -270,7 +270,7 @@ allreduce_test()
   int pass=true;
   int message;
   int n=procs-1;
-  MPI_Allreduce(&rank,&message,1,MPI_INT,MPI_SUM,MPI_COMM_WORLD);
+  MPI::Allreduce(&rank,&message,1,MPI_INT,MPI_SUM,MPI_COMM_WORLD);
 
   if( message != (n*(n+1))/2 ) {
     pass=false;
@@ -288,7 +288,7 @@ broadcast_test()
   int message;
   for( int p=0;p<procs;p++ ) {
     message=rank;
-    MPI_Bcast(&message,1,MPI_INT,p,MPI_COMM_WORLD);
+    MPI::Bcast(&message,1,MPI_INT,p,MPI_COMM_WORLD);
     if(message != p) {
       pass = false;
       error_stream << "     rank " << rank << ": Bcast from rank " << p << " incorrect\n";
@@ -307,7 +307,7 @@ reduce_test()
 
   for( int p = 0; p < procs; p++ ) {
     message=rank;
-    MPI_Reduce(&rank,&message,1,MPI_INT,MPI_SUM,p,MPI_COMM_WORLD);
+    MPI::Reduce(&rank,&message,1,MPI_INT,MPI_SUM,p,MPI_COMM_WORLD);
     
     if( p == rank && message != (n*(n+1))/2 ) {
       pass = false;
@@ -324,7 +324,7 @@ allgather_test()
   int         pass = true;
   vector<int> message(procs,0);
   
-  MPI_Allgather(&rank,1,MPI_INT,&message[0],1,MPI_INT,MPI_COMM_WORLD);
+  MPI::Allgather(&rank,1,MPI_INT,&message[0],1,MPI_INT,MPI_COMM_WORLD);
 
   for( int p = 0; p < procs; p++ ) {
     if( message[p] != p ) {
@@ -344,7 +344,7 @@ gather_test()
   for( int p=0; p < procs; p++ ) {
     vector<int> message(procs,0);
     
-    MPI_Gather(&rank,1,MPI_INT,&message[0],1,MPI_INT,p,MPI_COMM_WORLD);
+    MPI::Gather(&rank,1,MPI_INT,&message[0],1,MPI_INT,p,MPI_COMM_WORLD);
 
     if( rank == p ) {
       for( int p = 0; p < procs; p++ ) {
@@ -392,7 +392,7 @@ fileSystem_test()
       MPI_Request  * rrequest = new MPI_Request[ procs-1 ];
 
       for( int proc = 1; proc < procs; proc++ ) {    
-        MPI_Irecv( &messages[proc-1], 1, MPI_INT, proc, proc, MPI_COMM_WORLD, &rrequest[proc-1] );
+        MPI::Irecv( &messages[proc-1], 1, MPI_INT, proc, proc, MPI_COMM_WORLD, &rrequest[proc-1] );
       }
       bool done = false;
       int  totalCompleted = 0;
@@ -417,7 +417,7 @@ fileSystem_test()
 
         // See if any processors have reported their status...
         //
-        MPI_Testsome( procs-1, rrequest, &numCompleted, completedBuffer, status );
+        MPI::Testsome( procs-1, rrequest, &numCompleted, completedBuffer, status );
 
         if( numCompleted > 0 ) {
           for( int pos = 0; pos < numCompleted; pos++ ) {
@@ -471,7 +471,7 @@ fileSystem_test()
       // Tell rank 0 that we have succeeded or failed (-rank).
       int data = pass ? rank : -rank;
 
-      MPI_Isend( &data, 1, MPI_INT, 0, rank, MPI_COMM_WORLD, &request );
+      MPI::Isend( &data, 1, MPI_INT, 0, rank, MPI_COMM_WORLD, &request );
     }
   } // end if verbose
 
@@ -498,10 +498,10 @@ point2pointasync_test()
     //}
 
     //start send
-    MPI_Isend( &data, 1, MPI_INT, p, p, MPI_COMM_WORLD, &srequest[p] );
+    MPI::Isend( &data, 1, MPI_INT, p, p, MPI_COMM_WORLD, &srequest[p] );
     
     //start recv
-    MPI_Irecv( &messages[p], 1, MPI_INT, p, rank, MPI_COMM_WORLD, &rrequest[p] );
+    MPI::Irecv( &messages[p], 1, MPI_INT, p, rank, MPI_COMM_WORLD, &rrequest[p] );
 
     //if( rank == 5 ) { // Simulate proc 5 sending bad info....
     //  data = 99;
@@ -537,10 +537,10 @@ point2pointasync_test()
   
   while( !done ) {
 
-    // While it is unclear in the docs, apparently the MPI_Testsome
+    // While it is unclear in the docs, apparently the MPI::Testsome
     // not only tests for the data having arrived, but handles the
     // recv too (ie, places the data in the specified buffer).
-    MPI_Testsome( procs, rrequest, &numCompleted, completedBuffer, status );
+    MPI::Testsome( procs, rrequest, &numCompleted, completedBuffer, status );
 
     //reset timer if progress is made
     if(numCompleted>0)
@@ -612,9 +612,9 @@ point2pointsync_test()
     if( pp == rank ) { // sending
       for( int p = 0; p < procs; p++ ) {
         if( p != pp ) { // Don't send to our self...
-          MPI_Send( &rank, 1, MPI_INT, p, p, MPI_COMM_WORLD );
+          MPI::Send( &rank, 1, MPI_INT, p, p, MPI_COMM_WORLD );
           if( rank == 0 && ( args.verbose > 1 )) {
-            cout << "Proc 0 finished MPI_Send to rank: " << p << "\n";
+            cout << "Proc 0 finished MPI::Send to rank: " << p << "\n";
           }
         }
       }
@@ -622,9 +622,9 @@ point2pointsync_test()
     else { // recieving
       MPI_Status status;
       message=-1;
-      MPI_Recv(&message,1,MPI_INT,pp,rank,MPI_COMM_WORLD,&status);
+      MPI::Recv(&message,1,MPI_INT,pp,rank,MPI_COMM_WORLD,&status);
       if( rank == 0 && ( args.verbose > 1 ) ) {
-        cout << "Proc 0 just MPI_Recv'd from rank: " << pp << "\n";
+        cout << "Proc 0 just MPI::Recv'd from rank: " << pp << "\n";
       }
       if( message != pp ) {
         pass = false;

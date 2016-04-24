@@ -22,71 +22,83 @@
  * IN THE SOFTWARE.
  */
 
-#ifndef UINTAH_HOMEBREW_SendState_H
-#define UINTAH_HOMEBREW_SendState_H
+#ifndef CCA_COMPONENTS_SCHEDULERS_SENDSTATE_H
+#define CCA_COMPONENTS_SCHEDULERS_SENDSTATE_H
 
-#include <map>
 #include <Core/Grid/Ghost.h>
 #include <Core/Grid/Variables/PSPatchMatlGhostRange.h>
 
+#include <map>
+
 namespace Uintah {
 
-  class Patch;
-  class ParticleSubset;
+class Patch;
+class ParticleSubset;
 
 /**************************************
-     
-     CLASS
-       SendState
-      
-       Short Description...
-      
-     GENERAL INFORMATION
-      
-       SendState.h
-      
-       Steven G. Parker
-       Department of Computer Science
-       University of Utah
-      
-       Center for the Simulation of Accidental Fires and Explosions (C-SAFE)
-      
-             
-     KEYWORDS
-       SendState
-      
-     DESCRIPTION
-       Long description...
-      
-     WARNING
-      
-     ****************************************/
 
-  class SendState {
-  public:
+ CLASS
+ SendState
 
-    SendState();
-    ~SendState();
+ GENERAL INFORMATION
 
-    ParticleSubset* find_sendset(int dest, const Patch*, int matl, 
-                                 IntVector low, IntVector high, int dwid = 0) const;
-    void add_sendset( ParticleSubset* pset, int dest, const Patch*, int matl,  
-                      IntVector low, IntVector high, int dwid = 0 );
+ SendState.h
 
-    void reset(); // Clears out all sendsets...
+ Steven G. Parker
+ Department of Computer Science
+ University of Utah
 
-    void print();
+ Center for the Simulation of Accidental Fires and Explosions (C-SAFE)
 
-  private:
 
-    typedef std::map<std::pair<PSPatchMatlGhostRange, int>, ParticleSubset*> maptype;
-    maptype sendSubsets;
-    SendState(const SendState&);
-    SendState& operator=(const SendState&);
-    mutable CrowdMonitor d_lock;
+ KEYWORDS
+ SendState
 
-   };
-} // End namespace Uintah
+ DESCRIPTION
 
-#endif
+ ****************************************/
+
+class SendState {
+
+public:
+
+  SendState()   = default;
+  ~SendState();
+
+  ParticleSubset* find_sendset(int dest,
+                               const Patch*,
+                               int matl,
+                               IntVector low,
+                               IntVector high,
+                               int dwid = 0) const;
+
+  void add_sendset(ParticleSubset* pset,
+                   int dest,
+                   const Patch*,
+                   int matl,
+                   IntVector low,
+                   IntVector high,
+                   int dwid = 0);
+
+  void reset();  // Clears out all sendsets...
+
+  void print();
+
+
+private:
+
+  // disable copy, assignment, and move
+  SendState( const SendState & )            = delete;
+  SendState& operator=( const SendState & ) = delete;
+  SendState( SendState && )                 = delete;
+  SendState& operator=( SendState && )      = delete;
+
+  typedef std::map<std::pair<PSPatchMatlGhostRange, int>, ParticleSubset*> maptype;
+  maptype sendSubsets;
+
+};
+
+}  // End namespace Uintah
+
+#endif // CCA_COMPONENTS_SCHEDULERS_SENDSTATE_H
 

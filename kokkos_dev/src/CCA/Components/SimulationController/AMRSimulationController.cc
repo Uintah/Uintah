@@ -48,7 +48,7 @@
 #include <Core/Parallel/ProcessorGroup.h>
 #include <Core/ProblemSpec/ProblemSpec.h>
 #include <Core/ProblemSpec/ProblemSpecP.h>
-#include <Core/Thread/Time.h>
+#include <Core/Util/Time.h>
 
 #include <CCA/Components/ReduceUda/UdaReducer.h>
 #include <CCA/Components/Regridder/PerPatchVars.h>
@@ -299,7 +299,7 @@ AMRSimulationController::run()
      
     if(dbg_barrier.active()) {
       start=Time::currentSeconds();
-      MPI_Barrier(d_myworld->getComm());
+      MPI::Barrier(d_myworld->getComm());
       barrier_times[2]+=Time::currentSeconds()-start;
     }
 
@@ -363,7 +363,7 @@ AMRSimulationController::run()
 
     if(dbg_barrier.active()) {
       start=Time::currentSeconds();
-      MPI_Barrier(d_myworld->getComm());
+      MPI::Barrier(d_myworld->getComm());
       barrier_times[3]+=Time::currentSeconds()-start;
     }
 
@@ -379,8 +379,9 @@ AMRSimulationController::run()
         skip      /= rr;
       }
        
-      for( int idw = 0; idw < totalFine; idw += skip ){
+      for( int idw = 0; idw < totalFine; idw += skip ) {
         DataWarehouse* dw = d_scheduler->get_dw( idw );
+        const VarLabel* dtlabel = d_sharedState->get_delt_label();
         dw->override( delt_vartype( delt_fine ), d_sharedState->get_delt_label(), level );
       }
     }
@@ -436,10 +437,10 @@ AMRSimulationController::run()
     // If debugging output the barrier times.
     if( dbg_barrier.active() ) {
       start = Time::currentSeconds();
-      MPI_Barrier( d_myworld->getComm() );
+      MPI::Barrier( d_myworld->getComm() );
       barrier_times[4]+=Time::currentSeconds()-start;
       double avg[5];
-      MPI_Reduce( barrier_times, avg, 5, MPI_DOUBLE, MPI_SUM, 0, d_myworld->getComm() );
+      MPI::Reduce( barrier_times, avg, 5, MPI_DOUBLE, MPI_SUM, 0, d_myworld->getComm() );
        
       if(d_myworld->myrank()==0) {
         cout << "Barrier Times: "; 
@@ -890,7 +891,7 @@ AMRSimulationController::doRegridding( GridP & currentGrid, bool initialTimestep
   if(dbg_barrier.active()) {
     double start;
     start=Time::currentSeconds();
-    MPI_Barrier(d_myworld->getComm());
+    MPI::Barrier(d_myworld->getComm());
     barrier_times[0]+=Time::currentSeconds()-start;
   }
   
@@ -907,7 +908,7 @@ AMRSimulationController::doRegridding( GridP & currentGrid, bool initialTimestep
     if(dbg_barrier.active()) {
       double start;
       start=Time::currentSeconds();
-      MPI_Barrier(d_myworld->getComm());
+      MPI::Barrier(d_myworld->getComm());
       barrier_times[1]+=Time::currentSeconds()-start;
     }
     

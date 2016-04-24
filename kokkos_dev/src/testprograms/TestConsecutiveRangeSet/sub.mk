@@ -35,7 +35,6 @@ SRCS := $(SRCDIR)/TestConsecutiveRangeSet.cc
 
 PSELIBS := \
 	Core/Exceptions \
-	Core/Thread \
 	Core/Containers \
 	testprograms/TestSuite
 

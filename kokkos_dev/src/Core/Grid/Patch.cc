@@ -35,10 +35,10 @@
 #include <Core/Grid/BoundaryConditions/BoundCond.h>
 #include <Core/Grid/BoundaryConditions/BoundCondFactory.h>
 #include <Core/Containers/StaticArray.h>
-#include <Core/Thread/AtomicCounter.h>
-#include <Core/Thread/Mutex.h>
 #include <Core/Math/MiscMath.h>
 
+#include <atomic>
+#include <mutex>
 #include <iostream>
 #include <sstream>
 #include <cstdio>
@@ -48,9 +48,10 @@ using namespace std;
 using namespace Uintah;
 
 
-static AtomicCounter ids("Patch ID counter",0);
-static Mutex ids_init("ID init");
-extern Uintah::Mutex coutLock; // Used to sync (when output by multiple threads)
+static std::atomic<int32_t> ids{0};
+static std::mutex ids_init{};
+
+extern std::mutex coutLock; // Used to sync (when output by multiple threads)
 
 Patch::Patch(const Level* level,
              const IntVector& lowIndex, const IntVector& highIndex,
@@ -62,11 +63,11 @@ Patch::Patch(const Level* level,
 {
   
   if(d_id == -1){
-    d_id = ids++;
+    d_id = ids.fetch_add(1, std::memory_order_relaxed);
 
   } else {
     if(d_id >= ids)
-      ids.set(d_id+1);
+      ids.store(d_id+1, std::memory_order_relaxed);
   }
    
   // DON'T call setBCType here     

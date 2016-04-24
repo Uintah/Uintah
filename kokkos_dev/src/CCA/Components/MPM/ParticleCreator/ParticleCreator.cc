@@ -105,7 +105,6 @@ using namespace std;
 
 ParticleCreator::ParticleCreator(MPMMaterial* matl, 
                                  MPMFlags* flags)
-:d_lock("Particle Creator lock")
 {
   d_lb = scinew MPMLabel();
   d_useLoadCurves = flags->d_useLoadCurves;

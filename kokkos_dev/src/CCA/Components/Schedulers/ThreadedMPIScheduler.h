@@ -26,8 +26,10 @@
 #define CCA_COMPONENTS_SCHEDULERS_THREADEDMPISCHEDULER_H
 
 #include <CCA/Components/Schedulers/MPIScheduler.h>
-#include <Core/Thread/ConditionVariable.h>
-#include <Core/Thread/Runnable.h>
+
+#include <condition_variable>
+#include <mutex>
+#include <thread>
 
 namespace Uintah {
 
@@ -99,16 +101,16 @@ class ThreadedMPIScheduler : public MPIScheduler {
 
     int getAvailableThreadNum();
 
-    ConditionVariable d_nextsignal;
-    Mutex             d_nextmutex;             // conditional wait mutex
-    TaskWorker*       t_worker[MAX_THREADS];   // workers
-    Thread*           t_thread[MAX_THREADS];   // actual threads
-    QueueAlg          taskQueueAlg_;
-    int               numThreads_;
+    std::condition_variable  d_nextsignal;
+    std::mutex               d_nextmutex;             // conditional wait mutex
+    TaskWorker*              t_worker[MAX_THREADS];   // workers
+    std::thread*             t_thread[MAX_THREADS];   // actual threads
+    QueueAlg                 taskQueueAlg_;
+    int                      numThreads_;
 };
 
 
-class TaskWorker : public Runnable {
+class TaskWorker {
 
   public:
 
@@ -128,17 +130,17 @@ class TaskWorker : public Runnable {
 
   private:
 
-    ThreadedMPIScheduler* d_scheduler;
-    DetailedTask*         d_task;
-    ConditionVariable     d_runsignal;
-    Mutex                 d_runmutex;
-    bool                  d_quit;
-    int                   d_thread_id;
-    int                   d_rank;
-    int                   d_iteration;
-    double                d_waittime;
-    double                d_waitstart;
-    size_t                d_numtasks;
+    ThreadedMPIScheduler*    d_scheduler;
+    DetailedTask*            d_task;
+    std::condition_variable  d_runsignal;
+    std::mutex               d_runmutex;
+    bool                     d_quit;
+    int                      d_thread_id;
+    int                      d_rank;
+    int                      d_iteration;
+    double                   d_waittime;
+    double                   d_waitstart;
+    size_t                   d_numtasks;
 };
 
 }  // End namespace Uintah

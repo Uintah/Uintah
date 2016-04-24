@@ -22,11 +22,11 @@
  * IN THE SOFTWARE.
  */
 
-
+#include <Core/Parallel/Parallel.h>
 #include <Core/Parallel/ProcessorGroup.h>
-#include <Core/Thread/Thread.h>
 
 #include <iostream>
+#include <cstdlib>
 
 
 using namespace Uintah;
@@ -59,9 +59,9 @@ void ProcessorGroup::setgComm( int nComm ) const
 
   d_gComms.resize(nComm);
   for (int i = curr_size; i < nComm; i++) {
-    if (MPI_Comm_dup(d_comm, &d_gComms[i]) != MPI_SUCCESS) {
-      std::cerr << "Rank: " << d_rank << " - MPI Error in MPI_Comm_dup\n";
-      Thread::exitAll(1);
+    if (MPI::Comm_dup(d_comm, &d_gComms[i]) != MPI_SUCCESS) {
+      std::cerr << "Rank: " << d_rank << " - MPI Error in MPI::Comm_dup\n";
+      Parallel::exitAll(1);
     }
   }
 }

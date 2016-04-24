@@ -31,25 +31,37 @@
 #include <CCA/Ports/LoadBalancer.h>
 #include <CCA/Ports/Output.h>
 
-#include <Core/Parallel/ProcessorGroup.h>
 #include <Core/Grid/Variables/ParticleSubset.h>
 #include <Core/Grid/Variables/ComputeSet.h>
 #include <Core/Malloc/Allocator.h>
-#include <Core/Thread/Time.h>
-#include <Core/Thread/Mutex.h>
+#include <Core/Parallel/ProcessorGroup.h>
+#include <Core/Parallel/CrowdMonitor.hpp>
+#include <Core/Util/Time.h>
 #include <Core/Util/DebugStream.h>
 #include <Core/Util/FancyAssert.h>
 
-#include <sci_defs/mpi_defs.h> // For MPIPP_H on SGI
+#include <sci_defs/mpi_defs.h>
 
 
 #ifdef UINTAH_ENABLE_KOKKOS
 #include <Kokkos_Core.hpp>
 #endif //UINTAH_ENABLE_KOKKOS
 
+namespace {
+
+// Tags for each CrowdMonitor
+struct send_tag{};
+struct recv_tag{};
+
+using  send_monitor = Uintah::CrowdMonitor<send_tag>;
+using  recv_monitor = Uintah::CrowdMonitor<recv_tag>;
+
+}
+
 #include <sstream>
 #include <iomanip>
 #include <map>
+#include <mutex>
 #include <cstring>
 
 // Pack data into a buffer before sending -- testing to see if this
@@ -60,8 +72,8 @@
 using namespace Uintah;
 
 // Used to sync cout/cerr so it is readable when output by multiple threads
-extern Uintah::Mutex coutLock;
-extern Uintah::Mutex cerrLock;
+extern std::mutex coutLock;
+extern std::mutex cerrLock;
 
 static DebugStream dbg(          "MPIScheduler_DBG",        false );
 static DebugStream dbgst(        "SendTiming",              false );
@@ -89,11 +101,7 @@ MPIScheduler::MPIScheduler( const ProcessorGroup* myworld,
     parentScheduler_(parentScheduler),
     oport_(oport),
     numMessages_(0),
-    messageVolume_(0),
-    recvLock("MPI receive lock"),
-    sendLock("MPI send lock"),
-    dlbLock("loadbalancer lock"),
-    waittimesLock("waittimes lock")
+    messageVolume_(0)
 {
 #ifdef UINTAH_ENABLE_KOKKOS
   Kokkos::initialize();
@@ -200,23 +208,23 @@ MPIScheduler::verifyChecksum()
 
     if (mpidbg.active()) {
       coutLock.lock();
-      mpidbg << d_myworld->myrank() << " (MPI_Allreduce) Checking checksum of " << checksum << '\n';
+      mpidbg << d_myworld->myrank() << " (MPI::Allreduce) Checking checksum of " << checksum << '\n';
       coutLock.unlock();
     }
 
     int result_checksum;
-    MPI_Allreduce(&checksum, &result_checksum, 1, MPI_INT, MPI_MIN, d_myworld->getComm());
+    MPI::Allreduce(&checksum, &result_checksum, 1, MPI_INT, MPI_MIN, d_myworld->getComm());
 
     if (checksum != result_checksum) {
       std::cerr << "Failed task checksum comparison! Not all processes are executing the same taskgraph\n";
       std::cerr << "  Rank-" << d_myworld->myrank() << " of " << d_myworld->size() - 1 << ": has sum " << checksum
                 << "  and global is " << result_checksum << '\n';
-      MPI_Abort(d_myworld->getComm(), 1);
+      MPI::Abort(d_myworld->getComm(), 1);
     }
 
     if (mpidbg.active()) {
       coutLock.lock();
-      mpidbg << d_myworld->myrank() << " (MPI_Allreduce) Check succeeded\n";
+      mpidbg << d_myworld->myrank() << " (MPI::Allreduce) Check succeeded\n";
       coutLock.unlock();
     }
   }
@@ -484,12 +492,12 @@ MPIScheduler::postMPISends( DetailedTask* task,
       numSend++;
       int typeSize;
 
-      MPI_Type_size(datatype, &typeSize);
+      MPI::Type_size(datatype, &typeSize);
       messageVolume_ += count * typeSize;
       volSend += count * typeSize;
 
       MPI_Request requestid;
-      MPI_Isend(buf, count, datatype, to, batch->messageTag, d_myworld->getComm(), &requestid);
+      MPI::Isend(buf, count, datatype, to, batch->messageTag, d_myworld->getComm(), &requestid);
       int bytes = count;
 
       // with multi-threaded schedulers (derived from MPIScheduler), this is written per thread
@@ -502,9 +510,10 @@ MPIScheduler::postMPISends( DetailedTask* task,
       //
       // APH - 01/24/15
       //
-      sendLock.writeLock();
-      sends_[thread_id].add(requestid, bytes, mpibuff.takeSendlist(), ostr.str(), batch->messageTag);
-      sendLock.writeUnlock();
+      send_monitor send_lock{ Uintah::CrowdMonitor<send_tag>::WRITER };
+      {
+        sends_[thread_id].add(requestid, bytes, mpibuff.takeSendlist(), ostr.str(), batch->messageTag);
+      }
 
       mpi_info_[TotalSendMPI] += Time::currentSeconds() - start;
 
@@ -530,11 +539,10 @@ MPIScheduler::postMPISends( DetailedTask* task,
 //
 int MPIScheduler::pendingMPIRecvs()
 {
-  int num = 0;
-  recvLock.readLock();
-  num = recvs_.numRequests();
-  recvLock.readUnlock();
-  return num;
+  recv_monitor send_lock{ Uintah::CrowdMonitor<recv_tag>::READER };
+  {
+    return recvs_.numRequests();
+  }
 }
 
 //______________________________________________________________________
@@ -582,7 +590,7 @@ void MPIScheduler::postMPIRecvs( DetailedTask* task,
     std::vector<DependencyBatch*>::iterator sorted_iter = sorted_reqs.begin();
 
   // Receive any of the foreign requires
-  recvLock.writeLock();
+  recv_monitor recv_lock{ Uintah::CrowdMonitor<recv_tag>::WRITER };
   {
     for (; sorted_iter != sorted_reqs.end(); sorted_iter++) {
       DependencyBatch* batch = *sorted_iter;
@@ -725,7 +733,7 @@ void MPIScheduler::postMPIRecvs( DetailedTask* task,
         cerrLock.unlock();
         }
 
-        MPI_Irecv(buf, count, datatype, from, batch->messageTag, d_myworld->getComm(), &requestid);
+        MPI::Irecv(buf, count, datatype, from, batch->messageTag, d_myworld->getComm(), &requestid);
         int bytes = count;
         recvs_.add(requestid, bytes, scinew ReceiveHandler(p_mpibuff, pBatchRecvHandler), ostr.str(), batch->messageTag);
         mpi_info_[TotalRecvMPI] += Time::currentSeconds() - start;
@@ -749,8 +757,7 @@ void MPIScheduler::postMPIRecvs( DetailedTask* task,
 #endif
       }
     }  // end for loop over requires
-  }
-  recvLock.writeUnlock();
+  } // end dep_lock{ CrowdMonitor::WRITER }
 
   double drecv = Time::currentSeconds() - recvstart;
   mpi_info_[TotalRecv] += drecv;
@@ -770,7 +777,7 @@ void MPIScheduler::processMPIRecvs(int how_much)
 
   double start = Time::currentSeconds();
 
-  recvLock.writeLock();
+  recv_monitor recv_lock{ Uintah::CrowdMonitor<recv_tag>::WRITER };
   {
     switch (how_much) {
       case TEST :
@@ -806,8 +813,7 @@ void MPIScheduler::processMPIRecvs(int how_much)
         coutLock.unlock();
         break;
     } // end switch
-  }
-  recvLock.writeUnlock();
+  } // end recv_lock{ CrowdMonitor::WRITER }
 
   mpi_info_[TotalWaitMPI] += Time::currentSeconds() - start;
   CurrentWaitTime += Time::currentSeconds() - start;
@@ -977,7 +983,7 @@ MPIScheduler::execute( int tgnum     /* = 0 */,
     // Copy the restart flag to all processors
     int myrestart = dws[dws.size() - 1]->timestepRestarted();
     int netrestart;
-    MPI_Allreduce(&myrestart, &netrestart, 1, MPI_INT, MPI_LOR, d_myworld->getComm());
+    MPI::Allreduce(&myrestart, &netrestart, 1, MPI_INT, MPI_LOR, d_myworld->getComm());
     if (netrestart) {
       dws[dws.size() - 1]->restartTimestep();
       if (dws[0]) {
@@ -1052,8 +1058,8 @@ MPIScheduler::outputTimingStats(const char* label)
   double avgCell = -1, maxCell = -1;
 
   MPI_Comm comm = d_myworld->getComm();
-  MPI_Reduce(&d_times[0], &d_totaltimes[0], static_cast<int>(d_times.size()), MPI_DOUBLE, MPI_SUM, 0, comm);
-  MPI_Reduce(&d_times[0], &d_maxtimes[0],   static_cast<int>(d_times.size()), MPI_DOUBLE, MPI_MAX, 0, comm);
+  MPI::Reduce(&d_times[0], &d_totaltimes[0], static_cast<int>(d_times.size()), MPI_DOUBLE, MPI_SUM, 0, comm);
+  MPI::Reduce(&d_times[0], &d_maxtimes[0],   static_cast<int>(d_times.size()), MPI_DOUBLE, MPI_MAX, 0, comm);
 
   double total = 0, avgTotal = 0, maxTotal = 0;
   for (int i = 0; i < (int)d_totaltimes.size(); i++) {

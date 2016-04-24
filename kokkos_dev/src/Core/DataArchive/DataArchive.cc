@@ -43,7 +43,7 @@
 #include <Core/Grid/Variables/VarLabel.h>
 #include <Core/Math/MiscMath.h>
 #include <Core/Parallel/Parallel.h>
-#include <Core/Thread/Time.h>
+#include <Core/Util/Time.h>
 #include <Core/Util/Assert.h>
 #include <Core/Util/DebugStream.h>
 #include <Core/Util/XMLUtils.h>
@@ -75,14 +75,12 @@ DataArchive::DataArchive( const string & filebase,
                           const int      numProcessors /* = 1 */,
                           const bool     verbose       /* = true */ ) :
   ref_cnt(0),
-  lock("DataArchive ref_cnt lock"),
   timestep_cache_size(10),
   default_cache_size(10),
   d_filebase(filebase),
   d_cell_scale( Vector(1.0,1.0,1.0) ),
   d_processor(processor),
   d_numProcessors(numProcessors),
-  d_lock("DataArchive lock"),
   d_particlePositionName("p.x")
 {
 #ifdef STATIC_BUILD

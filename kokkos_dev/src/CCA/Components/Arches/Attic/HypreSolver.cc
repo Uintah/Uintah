@@ -27,7 +27,7 @@
 #include <fstream> // work around compiler bug with RHEL 3
 
 #include <CCA/Components/Arches/HypreSolver.h>
-#include <Core/Thread/Time.h>
+#include <Core/Util/Time.h>
 #include <CCA/Components/Arches/Arches.h>
 #include <Core/Exceptions/InvalidValue.h>
 #include <Core/Exceptions/ProblemSetupException.h>

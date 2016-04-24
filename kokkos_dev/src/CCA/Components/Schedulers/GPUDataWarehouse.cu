@@ -34,7 +34,6 @@
 
 #include <sci_defs/cuda_defs.h>
 
-#include <Core/Thread/Thread.h>
 #include <Core/Parallel/Parallel.h>
 #include <Core/Parallel/ProcessorGroup.h>
 #include <CCA/Components/Schedulers/SchedulerCommon.h>

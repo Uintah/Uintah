@@ -60,7 +60,6 @@
 #include <Core/Geometry/Point.h>
 #include <Core/Math/MinMax.h>
 #include <Core/Util/DebugStream.h>
-#include <Core/Thread/Mutex.h>
 
 #include <iostream>
 #include <fstream>
@@ -77,9 +76,6 @@ static DebugStream cout_dbg("FractureMPM", false);
 static DebugStream cout_convert("MPMConv", false);
 static DebugStream cout_heat("MPMHeat", false);
 static DebugStream amr_doing("AMRMPM", false);
-
-// From ThreadPool.cc:  Used for syncing cerr'ing so it is easier to read.
-extern Mutex cerrLock;
 
 static Vector face_norm(Patch::FaceType f)
 {

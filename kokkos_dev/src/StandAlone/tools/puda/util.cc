@@ -22,8 +22,7 @@
  * IN THE SOFTWARE.
  */
 #include <StandAlone/tools/puda/util.h>
-
-#include <Core/Thread/Thread.h>
+#include <Core/Parallel/Parallel.h>
 
 #include <cstdlib>
 #include <iostream>
@@ -31,7 +30,7 @@
 using namespace std;
 
 void
-Uintah::findTimestep_loopLimits( const bool tslow_set, 
+Uintah::findTimestep_loopLimits( const bool tslow_set,
                                  const bool tsup_set,
                                  const vector<double> times,
                                  unsigned long & time_step_lower,
@@ -44,7 +43,7 @@ Uintah::findTimestep_loopLimits( const bool tslow_set,
     cerr << "\n";
     cerr << "ERROR: 'timesteplow' must be between 0 and " << times.size()-1 << ".  You had " << time_step_lower << ".\n";
     cerr << "\n";
-    Uintah::Thread::exitAll( 2 );
+    Parallel::exitAll( 2 );
   }
   if( !tsup_set ) {
     time_step_upper = times.size() - 1;
@@ -53,6 +52,6 @@ Uintah::findTimestep_loopLimits( const bool tslow_set,
     cerr << "\n";
     cerr << "Error: 'timestephigh' must be between 0 and " << times.size()-1 << ".  You had " << time_step_upper << ".\n";
     cerr << "\n";
-    Uintah::Thread::exitAll( 2 );
+    Parallel::exitAll( 2 );
   }
 }

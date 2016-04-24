@@ -27,10 +27,9 @@
 #include <Core/Grid/Variables/VarLabel.h>
 #include <Core/Grid/Variables/VarTypes.h>
 #include <Core/Parallel/Parallel.h>
-#include <Core/Thread/Thread.h>
 #include <Core/Parallel/ProcessorGroup.h>
 #include <Core/ProblemSpec/ProblemSpec.h>
-#include <Core/Thread/Time.h>
+#include <Core/Util/Time.h>
 
 #include <iostream>
 #include <sstream>

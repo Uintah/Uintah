@@ -32,7 +32,7 @@
 #include <Core/Grid/PatchBVH/PatchBVH.h>
 #include <Core/Grid/Variables/CellIterator.h>
 #include <Core/Parallel/ProcessorGroup.h>
-#include <Core/Thread/Time.h>
+#include <Core/Util/Time.h>
 #include <Core/Util/DebugStream.h>
 using namespace Uintah;
 
@@ -170,7 +170,7 @@ Grid* TiledRegridder::regrid(Grid* oldGrid)
 
   //for each level fine to coarse 
   for(int l=min(oldGrid->numLevels()-1,d_maxLevels-2); l >= 0;l--) {
-    //MPI_Barrier(d_myworld->getComm());
+    //MPI::Barrier(d_myworld->getComm());
     rtimes[15+l]+=Time::currentSeconds()-start;
     start=Time::currentSeconds();
     const LevelP level=oldGrid->getLevel(l);
@@ -248,7 +248,7 @@ Grid* TiledRegridder::regrid(Grid* oldGrid)
   // ignore...
   if (rgtimes.active()) {
     double avg[20] = { 0 };
-    MPI_Reduce(rtimes, avg, 20, MPI_DOUBLE, MPI_SUM, 0, d_myworld->getComm());
+    MPI::Reduce(rtimes, avg, 20, MPI_DOUBLE, MPI_SUM, 0, d_myworld->getComm());
     if (d_myworld->myrank() == 0) {
       cout << "Regrid Avg Times: ";
       for (int i = 0; i < 20; i++) {
@@ -258,7 +258,7 @@ Grid* TiledRegridder::regrid(Grid* oldGrid)
       cout << endl;
     }
     double max[20] = { 0 };
-    MPI_Reduce(rtimes, max, 20, MPI_DOUBLE, MPI_MAX, 0, d_myworld->getComm());
+    MPI::Reduce(rtimes, max, 20, MPI_DOUBLE, MPI_MAX, 0, d_myworld->getComm());
     if (d_myworld->myrank() == 0) {
       cout << "Regrid Max Times: ";
       for (int i = 0; i < 20; i++) {
@@ -582,7 +582,7 @@ bool TiledRegridder::verifyGrid(Grid *grid)
   int num_levels=grid->numLevels();
   grid_dbg << d_myworld->myrank() << " Grid number of levels:" << num_levels << endl;
   their_checksums.resize(d_myworld->size());
-  MPI_Gather(&num_levels,1,MPI_INT,&their_checksums[0],1,MPI_INT,0,d_myworld->getComm());
+  MPI::Gather(&num_levels,1,MPI_INT,&their_checksums[0],1,MPI_INT,0,d_myworld->getComm());
 
   if(d_myworld->myrank()==0)
   {
@@ -623,7 +623,7 @@ bool TiledRegridder::verifyGrid(Grid *grid)
   }
 
   their_checksums.resize(checksums.size()*d_myworld->size());
-  MPI_Gather(&checksums[0],checksums.size(),MPI_INT,&their_checksums[0],checksums.size(),MPI_INT,0,d_myworld->getComm());
+  MPI::Gather(&checksums[0],checksums.size(),MPI_INT,&their_checksums[0],checksums.size(),MPI_INT,0,d_myworld->getComm());
  
   if(d_myworld->myrank()==0)
   {
@@ -710,7 +710,7 @@ void TiledRegridder::GatherTiles(vector<IntVector>& mytiles, vector<IntVector> &
     }
    
     //gather the number of tiles on each processor
-    MPI_Allgather(&mycount,1,MPI_UNSIGNED,&counts[0],1,MPI_UNSIGNED,d_myworld->getComm());
+    MPI::Allgather(&mycount,1,MPI_UNSIGNED,&counts[0],1,MPI_UNSIGNED,d_myworld->getComm());
 
     //compute the displacements and recieve counts for a gatherv
     vector<int> displs(d_myworld->size());
@@ -728,7 +728,7 @@ void TiledRegridder::GatherTiles(vector<IntVector>& mytiles, vector<IntVector> &
     gtiles.resize(pos/sizeof(CompressedIntVector));
 
     //gatherv tiles
-    MPI_Allgatherv(&tiles[0],recvcounts[d_myworld->myrank()], MPI_BYTE, &gtiles[0], &recvcounts[0],
+    MPI::Allgatherv(&tiles[0],recvcounts[d_myworld->myrank()], MPI_BYTE, &gtiles[0], &recvcounts[0],
                    &displs[0], MPI_BYTE, d_myworld->getComm());
     
     //tiles might not be unique so add them to a set to make them unique

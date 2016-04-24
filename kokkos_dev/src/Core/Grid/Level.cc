@@ -33,18 +33,18 @@
 #include <Core/Malloc/Allocator.h>
 #include <Core/Math/MiscMath.h>
 #include <Core/OS/ProcessInfo.h> // For Memory Check
+#include <Core/Parallel/CrowdMonitor.hpp>
 #include <Core/Parallel/Parallel.h>
 #include <Core/Parallel/ProcessorGroup.h>
 #include <Core/ProblemSpec/ProblemSpec.h>
-#include <Core/Thread/AtomicCounter.h>
-#include <Core/Thread/Mutex.h>
-#include <Core/Thread/Thread.h>
-#include <Core/Thread/Time.h>
+#include <Core/Util/Time.h>
 #include <Core/Util/DebugStream.h>
 #include <Core/Util/FancyAssert.h>
 #include <Core/Util/Handle.h>
 #include <Core/Util/ProgressiveWarning.h>
 
+#include <atomic>
+#include <mutex>
 #include <algorithm>
 #include <cmath>
 #include <iostream>
@@ -53,11 +53,18 @@
 using namespace std;
 using namespace Uintah;
 
-static AtomicCounter ids("Level ID counter",0);
-static Mutex         ids_init("ID init");
+namespace {
 
-static DebugStream   bcout("BCTypes", false);
-static DebugStream   rgtimes("RGTimes",false);
+struct patch_cache_tag{};
+using patch_cache_monitor = Uintah::CrowdMonitor<patch_cache_tag>;
+
+}
+
+static std::atomic<int32_t> ids{0};
+static std::mutex           ids_init{};
+static DebugStream bcout{  "BCTypes", false};
+static DebugStream rgtimes{"RGTimes", false};
+
 //______________________________________________________________________
 //
 Level::Level(       Grid      * grid,
@@ -71,8 +78,7 @@ Level::Level(       Grid      * grid,
   d_int_spatial_range(Point(DBL_MAX,DBL_MAX,DBL_MAX),Point(DBL_MIN,DBL_MIN,DBL_MIN)),
   d_index(index),
   d_patchDistribution(-1,-1,-1), d_periodicBoundaries(0, 0, 0), d_id(id),
-  d_refinementRatio(refinementRatio),
-  d_cachelock("Level Cache Lock")
+  d_refinementRatio(refinementRatio)
 {
   d_stretched   = false;
   d_each_patch  = 0;
@@ -84,10 +90,10 @@ Level::Level(       Grid      * grid,
   d_nCellsPatch_max  = IntVector(0,0,0);
 
   if( d_id == -1 ) {
-    d_id = ids++;
+    d_id = ids.fetch_add(1,std::memory_order_relaxed);
   }
   else if(d_id >= ids) {
-    ids.set(d_id+1);
+    ids.store(d_id+1, std::memory_order_relaxed);
   }
 }
 //______________________________________________________________________
@@ -410,7 +416,7 @@ Level::getRelativeLevel( int offset ) const
 
 //______________________________________________________________________
 //
-Point
+Uintah::Point
 Level::getNodePosition( const IntVector & v ) const
 {
   if( d_stretched ) {
@@ -424,7 +430,7 @@ Level::getNodePosition( const IntVector & v ) const
 //______________________________________________________________________
 //
 
-Point
+Uintah::Point
 Level::getCellPosition( const IntVector & v ) const
 {
   if( d_stretched ) {
@@ -477,7 +483,7 @@ Level::getCellIndex( const Point & p ) const
 //______________________________________________________________________
 //
 
-Point
+Uintah::Point
 Level::positionToIndex( const Point & p ) const
 {
   if(d_stretched){
@@ -515,24 +521,24 @@ Level::positionToIndex( const Point & p ) const
 void Level::selectPatches(const IntVector& low, const IntVector& high,
                           selectType& neighbors, bool withExtraCells, bool cache) const
 {
- if(cache){
-   // look it up in the cache first
-   d_cachelock.readLock();
-   selectCache::const_iterator iter = d_selectCache.find(make_pair(low, high));
+  if (cache) {
+    // look it up in the cache first
+    patch_cache_monitor patch_cache_read_lock{ Uintah::CrowdMonitor<patch_cache_tag>::READER };
+    {
+      selectCache::const_iterator iter = d_selectCache.find(make_pair(low, high));
 
-   if (iter != d_selectCache.end()) {
-     const vector<const Patch*>& cache = iter->second;
-     for (unsigned i = 0; i < cache.size(); i++) {
-       neighbors.push_back(cache[i]);
-     }
-     d_cachelock.readUnlock();
-     return;
-   }
-   d_cachelock.readUnlock();
-   ASSERT(neighbors.size() == 0);
- }
+      if (iter != d_selectCache.end()) {
+        const vector<const Patch*>& cache = iter->second;
+        for (unsigned i = 0; i < cache.size(); i++) {
+          neighbors.push_back(cache[i]);
+        }
+        return;
+      }
+    }
+    ASSERT(neighbors.size() == 0);
+  }
 
-   //cout << Parallel::getMPIRank() << " Level Quesy: " << low << " " << high << endl;
+   //cout << Parallel::getMPIRank() << " Level Query: " << low << " " << high << endl;
    d_bvh->query(low, high, neighbors, withExtraCells);
    sort(neighbors.begin(), neighbors.end(), Patch::Compare());
 
@@ -560,17 +566,18 @@ void Level::selectPatches(const IntVector& low, const IntVector& high,
   }
 #endif
 
-   if(cache){
-     // put it in the cache - start at orig_size in case there was something in
-     // neighbors before this query
-     d_cachelock.writeLock();
-     vector<const Patch*>& cache = d_selectCache[make_pair(low,high)];
-     cache.reserve(6);  // don't reserve too much to save memory, not too little to avoid too much reallocation
-     for (int i = 0; i < neighbors.size(); i++) {
-       cache.push_back(neighbors[i]);
-     }
-     d_cachelock.writeUnlock();
-   }
+  if (cache) {
+    // put it in the cache - start at orig_size in case there was something in
+    // neighbors before this query
+    patch_cache_monitor patch_cache_read_lock { Uintah::CrowdMonitor<patch_cache_tag>::WRITER };
+    {
+      vector<const Patch*>& cache = d_selectCache[make_pair(low, high)];
+      cache.reserve(6);  // don't reserve too much to save memory, not too little to avoid too much reallocation
+      for (int i = 0; i < neighbors.size(); i++) {
+        cache.push_back(neighbors[i]);
+      }
+    }
+  }
 }
 
 //______________________________________________________________________
@@ -880,9 +887,9 @@ void Level::setBCTypes()
   if(numProcs>1){
     //allgather bctypes
     if(mybctypes.size()==0){
-      MPI_Allgatherv(0,0,MPI_UNSIGNED,&bctypes[0],&recvcounts[0],&displacements[0],MPI_UNSIGNED,myworld->getComm());
+      MPI::Allgatherv(0,0,MPI_UNSIGNED,&bctypes[0],&recvcounts[0],&displacements[0],MPI_UNSIGNED,myworld->getComm());
     } else {
-      MPI_Allgatherv(&mybctypes[0],mybctypes.size(),MPI_UNSIGNED,&bctypes[0],&recvcounts[0],&displacements[0],MPI_UNSIGNED,myworld->getComm());
+      MPI::Allgatherv(&mybctypes[0],mybctypes.size(),MPI_UNSIGNED,&bctypes[0],&recvcounts[0],&displacements[0],MPI_UNSIGNED,myworld->getComm());
     }
   }else{
      bctypes.swap(mybctypes);
@@ -948,7 +955,7 @@ void Level::setBCTypes()
   
   if(rgtimes.active()){
     double avg[3]={0};
-    MPI_Reduce(rtimes,avg,3,MPI_DOUBLE,MPI_SUM,0,myworld->getComm());
+    MPI::Reduce(rtimes,avg,3,MPI_DOUBLE,MPI_SUM,0,myworld->getComm());
     
     if(myworld->myrank()==0) {
 
@@ -961,7 +968,7 @@ void Level::setBCTypes()
     }
 
     double max[3]={0};
-    MPI_Reduce(rtimes,max,3,MPI_DOUBLE,MPI_MAX,0,myworld->getComm());
+    MPI::Reduce(rtimes,max,3,MPI_DOUBLE,MPI_MAX,0,myworld->getComm());
 
     if(myworld->myrank()==0) {
       cout << "SetBCType Max Times: ";

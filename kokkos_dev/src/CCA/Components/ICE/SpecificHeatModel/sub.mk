@@ -30,7 +30,7 @@
 SRCDIR   := CCA/Components/ICE/SpecificHeatModel
 
 SRCS     += $(SRCDIR)/SpecificHeatFactory.cc    \
-	    $(SRCDIR)/SpecificHeat.cc           \
+	        $(SRCDIR)/SpecificHeat.cc           \
             $(SRCDIR)/Debye.cc                  \
             $(SRCDIR)/Component.cc              \
             $(SRCDIR)/NASAPolynomial.cc         \
@@ -42,7 +42,8 @@ PSELIBS := \
 	Core/Parallel   \
 	Core/Exceptions \
 	Core/Math       \
-	Core/Exceptions Core/Thread Core/Geometry 
+	Core/Exceptions \
+	Core/Geometry 
 
 LIBS	:= 
 

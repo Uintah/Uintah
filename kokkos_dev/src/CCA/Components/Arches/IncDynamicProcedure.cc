@@ -42,15 +42,13 @@
 #include <Core/Grid/Variables/SFCZVariable.h>
 #include <Core/Grid/Variables/PerPatch.h>
 #include <Core/Parallel/Parallel.h>
-#include <Core/Thread/Thread.h>
 #include <Core/ProblemSpec/ProblemSpec.h>
 
 #include <Core/Grid/SimulationState.h>
 #include <Core/Exceptions/InvalidValue.h>
 #include <Core/Exceptions/VariableNotFoundInGrid.h>
 #include <Core/Parallel/ProcessorGroup.h>
-
-#include <Core/Thread/Time.h>
+#include <Core/Util/Time.h>
 
 using namespace std;
 using namespace Uintah;

@@ -49,7 +49,6 @@ SRCS += \
 #	$(SRCDIR)/TypeUtils.cc
 
 PSELIBS := 
-#	Core/Thread     \
 #	Core/Exceptions \
 #	Core/Util       \
 #	Core/Geometry

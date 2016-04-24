@@ -35,12 +35,14 @@
 #include <Core/Util/Assert.h>
 #include <Core/OS/Dir.h>
 #include <Core/Containers/ConsecutiveRangeSet.h>
-#include <Core/Thread/Mutex.h>
+
+#include <mutex>
 
 namespace Uintah {
+
 class DataWarehouse;
+
 using Uintah::ConsecutiveRangeSet;
-using Uintah::Mutex;
 
 
    /**************************************
@@ -520,7 +522,7 @@ using Uintah::Mutex;
        std::vector<bool> d_checkpointCalled;
        bool d_checkpointReductionCalled;
 #endif
-       Mutex d_outputLock;
+       std::mutex d_outputLock{};
 
        DataArchiver(const DataArchiver&);
        DataArchiver& operator=(const DataArchiver&);

@@ -55,7 +55,6 @@ PSELIBS := \
   CCA/Components/OnTheFlyAnalysis \
 	Core/Exceptions \
 	Core/Util       \
-	Core/Thread     \
 	Core/Geometry   
 
 LIBS := $(XML2_LIBRARY) $(PETSC_LIBRARY) $(MPI_LIBRARY) $(M_LIBRARY) \

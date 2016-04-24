@@ -50,7 +50,6 @@ PSELIBS := \
         Core/Grid         \
         Core/Math         \
 	Core/ProblemSpec  \
-        Core/Thread       \
         Core/Util
 
 LIBS := $(M_LIBRARY) $(F_LIBRARY)           \

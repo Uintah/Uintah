@@ -26,76 +26,96 @@
 #include <CCA/Components/Schedulers/SendState.h>
 #include <Core/Grid/Variables/ParticleSubset.h>
 #include <Core/Grid/Variables/PSPatchMatlGhostRange.h>
+#include <Core/Parallel/CrowdMonitor.hpp>
 #include <Core/Parallel/Parallel.h>
 #include <Core/Exceptions/InternalError.h>
 
-using namespace std;
 using namespace Uintah;
 
-SendState::SendState()
-: d_lock("SendState Lock")
-{
+namespace {
+
+// Tags for each CrowdMonitor
+struct send_subsets_tag{};
+
+using  send_subsets_monitor = Uintah::CrowdMonitor<send_subsets_tag>;
+
 }
+
 
 SendState::~SendState()
 {
-  d_lock.writeLock();
-  for( maptype::iterator iter = sendSubsets.begin(); iter != sendSubsets.end();iter++) {
-    if( iter->second->removeReference() ) {
-      delete iter->second;
+  send_subsets_monitor sends_write_lock{ Uintah::CrowdMonitor<send_subsets_tag>::WRITER };
+  {
+    for (maptype::iterator iter = sendSubsets.begin(); iter != sendSubsets.end(); iter++) {
+      if (iter->second->removeReference()) {
+        delete iter->second;
+      }
     }
   }
-  d_lock.writeUnlock();
 }
 
 ParticleSubset*
-SendState::find_sendset(int dest, const Patch* patch, int matlIndex,
-                        IntVector low, IntVector high, int dwid /* =0 */) const
+SendState::find_sendset(       int         dest
+                       , const Patch     * patch
+                       ,       int         matlIndex
+                       ,       IntVector   low
+                       ,       IntVector   high
+                       ,       int         dwid /* =0 */
+                       ) const
 {
-  d_lock.readLock();
-  ParticleSubset* ret;
-  maptype::const_iterator iter = sendSubsets.find( make_pair( PSPatchMatlGhostRange(patch, matlIndex, low, high, dwid), dest) );
+  send_subsets_monitor sends_write_lock{ Uintah::CrowdMonitor<send_subsets_tag>::READER };
+  {
+    ParticleSubset* ret;
+    maptype::const_iterator iter = sendSubsets.find(std::make_pair(PSPatchMatlGhostRange(patch, matlIndex, low, high, dwid), dest));
 
-  if( iter == sendSubsets.end() ) {
-    ret=NULL;
-  } else {
-    ret=iter->second;
+    if (iter == sendSubsets.end()) {
+      ret = NULL;
+    } else {
+      ret = iter->second;
+    }
+    return ret;
   }
-  d_lock.readUnlock();
-  return ret;
 }
 
 void
-SendState::add_sendset(ParticleSubset* sendset, int dest, const Patch* patch, 
-                       int matlIndex, IntVector low, IntVector high, int dwid /*=0*/)
+SendState::add_sendset(       ParticleSubset * sendset
+                      ,       int              dest
+                      , const Patch          * patch
+                      ,       int              matlIndex
+                      ,       IntVector        low
+                      ,       IntVector        high
+                      ,       int              dwid /*=0*/
+                      )
 {
-  d_lock.writeLock();
-  maptype::iterator iter = 
-    sendSubsets.find(make_pair(PSPatchMatlGhostRange(patch,matlIndex,low,high,dwid), dest));
-  if( iter != sendSubsets.end() ) {
-    cout << "sendSubset Already exists for sendset:" << *sendset << " on patch:" << *patch << " matl:" << matlIndex << endl;
-    SCI_THROW( InternalError( "sendSubset already exists", __FILE__, __LINE__ ) );
+  send_subsets_monitor sends_write_lock{ Uintah::CrowdMonitor<send_subsets_tag>::WRITER };
+  {
+    maptype::iterator iter = sendSubsets.find(std::make_pair(PSPatchMatlGhostRange(patch, matlIndex, low, high, dwid), dest));
+    if (iter != sendSubsets.end()) {
+      std::cout << "sendSubset already exists for sendset:" << *sendset << " on patch:"
+                << *patch << " matl:" << matlIndex << std::endl;
+      SCI_THROW(InternalError( "sendSubset already exists", __FILE__, __LINE__ ));
+    }
+    sendSubsets[std::make_pair(PSPatchMatlGhostRange(patch, matlIndex, low, high, dwid), dest)] = sendset;
+    sendset->addReference();
   }
-  sendSubsets[make_pair(PSPatchMatlGhostRange(patch, matlIndex, low, high, dwid), dest)]=sendset;
-  sendset->addReference();
-  d_lock.writeUnlock();
 }
 
 void
 SendState::reset()
 {
-  d_lock.writeLock();
-  sendSubsets.clear();
-  d_lock.writeUnlock();
+  send_subsets_monitor sends_write_lock{ Uintah::CrowdMonitor<send_subsets_tag>::WRITER };
+  {
+    sendSubsets.clear();
+  }
 }
 
 void
 SendState::print() 
 {
-  d_lock.readLock();
-  for (maptype::iterator iter = sendSubsets.begin(); iter != sendSubsets.end(); iter++) {
-    cout << Parallel::getMPIRank() << ' ' << *(iter->second) << " src/dest: " 
-         << iter->first.second << "\n";
+  send_subsets_monitor sends_write_lock{ Uintah::CrowdMonitor<send_subsets_tag>::READER };
+  {
+    for (maptype::iterator iter = sendSubsets.begin(); iter != sendSubsets.end(); iter++) {
+      std::cout << Parallel::getMPIRank() << ' ' << *(iter->second) << " src/dest: " << iter->first.second << std::endl;
+    }
   }
-  d_lock.readUnlock();
 }

@@ -25,7 +25,7 @@
 //----- PetscSolver.cc ----------------------------------------------
 
 #include <CCA/Components/Arches/Radiation/RadPetscSolver.h>
-#include <Core/Thread/Time.h>
+#include <Core/Util/Time.h>
 #include <CCA/Components/Arches/Arches.h>
 #include <CCA/Components/Arches/ArchesLabel.h>
 #include <CCA/Components/Arches/ArchesVariables.h>

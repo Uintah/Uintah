@@ -54,7 +54,7 @@ static Uintah::DebugStream visitdbg( "VisItLibSim", true );
 int visit_BroadcastIntCallback(int *value, int sender)
 {
   if( Parallel::usingMPI() )
-    return MPI_Bcast(value, 1, MPI_INT, sender, MPI_COMM_WORLD);
+    return MPI::Bcast(value, 1, MPI_INT, sender, MPI_COMM_WORLD);
   else
     return 0;
 }
@@ -67,7 +67,7 @@ int visit_BroadcastIntCallback(int *value, int sender)
 int visit_BroadcastStringCallback(char *str, int len, int sender)
 {
   if( Parallel::usingMPI() )
-    return MPI_Bcast(str, len, MPI_CHAR, sender, MPI_COMM_WORLD);
+    return MPI::Bcast(str, len, MPI_CHAR, sender, MPI_COMM_WORLD);
   else
     return 0;
 }
@@ -80,7 +80,7 @@ int visit_BroadcastStringCallback(char *str, int len, int sender)
 void visit_BroadcastSlaveCommand(int *command)
 {
   if( Parallel::usingMPI() )
-    MPI_Bcast(command, 1, MPI_INT, 0, MPI_COMM_WORLD);
+    MPI::Bcast(command, 1, MPI_INT, 0, MPI_COMM_WORLD);
 }
 
 

@@ -29,7 +29,7 @@
 #include <Core/IO/UintahZlibUtil.h>
 
 #include <Core/Math/MiscMath.h>
-#include <Core/Thread/Time.h>
+#include <Core/Util/Time.h>
 #include <Core/Util/DebugStream.h>
 
 #include <iostream>

@@ -38,10 +38,9 @@ SRCS += \
         $(SRCDIR)/RWS.cc                \
         $(SRCDIR)/sci_system.cc         \
         $(SRCDIR)/SizeTypeConvert.cc    \
-        $(SRCDIR)/Signals.cc            \
         $(SRCDIR)/soloader.cc           \
         $(SRCDIR)/StringUtil.cc         \
-        $(SRCDIR)/Timer.cc              \
+        $(SRCDIR)/Time.cc               \
         $(SRCDIR)/XMLUtils.cc           \
         $(SRCDIR)/Util.cc
 
@@ -53,7 +52,7 @@ ifeq ($(HAVE_CUDA),yes)
   DLINK_FILES += Core/Util/GPU.o
 endif
 
-PSELIBS := Core/Containers Core/Exceptions Core/Thread Core/Malloc
+PSELIBS := Core/Containers Core/Exceptions Core/Malloc
 
 LIBS := $(DL_LIBRARY) $(THREAD_LIBRARY) $(SOCKET_LIBRARY) $(CUDA_LIBRARY)
 

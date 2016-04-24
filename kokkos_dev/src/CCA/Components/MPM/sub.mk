@@ -77,7 +77,6 @@ PSELIBS := \
 	Core/Math           \
 	Core/Parallel       \
 	Core/ProblemSpec    \
-	Core/Thread         \
 	Core/Util           
 
 LIBS := $(XML2_LIBRARY) $(VT_LIBRARY) $(MPI_LIBRARY) $(M_LIBRARY) \

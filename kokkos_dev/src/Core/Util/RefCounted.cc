@@ -24,57 +24,53 @@
 
 
 #include <Core/Util/RefCounted.h>
-#include <Core/Thread/AtomicCounter.h>
-#include <Core/Thread/Mutex.h>
 #include <Core/Util/Assert.h>
 #include <Core/Util/FancyAssert.h>
 #include <Core/Malloc/Allocator.h>
 
+#include <atomic>
+#include <mutex>
+
 using namespace Uintah;
 
-static const int    NLOCKS=1024;
-static       Mutex* locks[NLOCKS];
-static       bool   initialized = false;
-static Mutex initlock("RefCounted initialization lock");
+static const int          NLOCKS=1024;
+static       std::mutex * locks[NLOCKS];
+static       bool         initialized = false;
+static       std::mutex   initlock{};
 
-static AtomicCounter* nextIndex;
-static AtomicCounter* freeIndex;
+static std::atomic<int32t> nextIndex{0};
+static std::atomic<int32t> freeIndex{0};
 
 
 RefCounted::RefCounted()
     : d_refCount(0)
 {
-  if(!initialized){
+  if (!initialized) {
     initlock.lock();
-    if(!initialized){
-      for(int i=0;i<NLOCKS;i++)
-	locks[i] = scinew Mutex("RefCounted Mutex");
-      nextIndex=new AtomicCounter("RefCounted nextIndex count", 0);
-      freeIndex=new AtomicCounter("RefCounted freeIndex count", 0);
-      initialized=true;
+    if (!initialized) {
+      for (int i = 0; i < NLOCKS; i++) {
+        locks[i] = new std::mutex{};
+      }
+      initialized = true;
     }
     initlock.unlock();
   }
-  d_lockIndex = ((*nextIndex)++)%NLOCKS;
+  d_lockIndex = nextIndex.fetch_add(1, std::memory_order_relaxed) % NLOCKS;
   ASSERT(d_lockIndex >= 0);
 }
 
 RefCounted::~RefCounted()
 {
   ASSERTEQ(d_refCount, 0);
-  int index = ++(*freeIndex);
-  if(index == *nextIndex){
+  int index = ++freeIndex;
+  if (index == nextIndex.load(std::memory_order_relaxed)) {
     initlock.lock();
-    if(*freeIndex == *nextIndex){
+    if (freeIndex.load(nextIndex) == nextIndex.load(nextIndex)) {
       initialized = false;
-      for(int i=0;i<NLOCKS;i++){
-	delete locks[i];
-	locks[i]=0;
+      for (int i = 0; i < NLOCKS; i++) {
+        delete locks[i];
+        locks[i] = 0;
       }
-      delete nextIndex;
-      nextIndex=0;
-      delete freeIndex;
-      freeIndex=0;
     }
     initlock.unlock();
   }

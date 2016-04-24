@@ -35,9 +35,6 @@
 #include <Core/Grid/Variables/ComputeSet.h>
 #include <Core/Grid/Variables/PSPatchMatlGhostRange.h>
 #include <Core/Grid/Variables/ScrubItem.h>
-#include <Core/Thread/ConditionVariable.h>
-#include <Core/Thread/CrowdMonitor.h>
-#include <Core/Thread/Mutex.h>
 
 #ifdef HAVE_CUDA
 #include <CCA/Components/Schedulers/GPUGridVariableGhosts.h>
@@ -48,6 +45,7 @@
 #include <queue>
 #include <vector>
 #include <map>
+#include <mutex>
 #include <set>
 
 #include <sci_defs/cuda_defs.h>
@@ -150,7 +148,8 @@ namespace Uintah {
     DependencyBatch( int           to,
                      DetailedTask* fromTask,
                      DetailedTask* toTask )
-        : comp_next(0), fromTask(fromTask), head(0), messageTag(-1), to(to), received_(false), madeMPIRequest_(false), lock_(0)
+        : comp_next(0), fromTask(fromTask), head(0),
+          messageTag(-1), to(to), received_(false), madeMPIRequest_(false)
     {
       toTasks.push_back(toTask);
     }
@@ -192,7 +191,7 @@ namespace Uintah {
 
     volatile bool received_;
     volatile bool madeMPIRequest_;
-    Mutex*        lock_;
+    std::mutex    lock_{};
     std::set<int> receiveListeners_;
 
     DependencyBatch( const DependencyBatch& );
@@ -390,7 +389,7 @@ namespace Uintah {
     std::map<DetailedTask*, InternalDependency*> internalDependents;
     
     unsigned long numPendingInternalDependencies;
-    Mutex         internalDependencyLock;
+    std::mutex         internalDependencyLock{};
     
     int resourceIndex;
     int staticOrder;
@@ -656,10 +655,6 @@ namespace Uintah {
     // for logging purposes - how much extra comm is going on
     int extraCommunication_;
     
-    mutable CrowdMonitor  readyQueueLock_;
-    mutable CrowdMonitor  mpiCompletedQueueLock_;
-    //Semaphore readyQueueSemaphore_;
-
     ScrubCountTable scrubCountTable_;
 
     DetailedTasks( const DetailedTasks& );

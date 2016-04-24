@@ -48,7 +48,6 @@ else
       Core/Malloc       \
       Core/Parallel     \
       Core/ProblemSpec  \
-      Core/Thread       \
       Core/Util         
 endif
 

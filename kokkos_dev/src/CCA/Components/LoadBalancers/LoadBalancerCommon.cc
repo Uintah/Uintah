@@ -35,12 +35,12 @@
 #include <Core/Grid/SimulationState.h>
 #include <Core/Parallel/Parallel.h>
 #include <Core/Parallel/ProcessorGroup.h>
-#include <Core/Thread/Mutex.h>
 #include <Core/Util/DebugStream.h>
 #include <Core/Util/FancyAssert.h>
-#include <Core/Util/NotFinished.h>
 
 #include <sci_values.h>
+
+#include <mutex>
 #include <sstream>
 
 using namespace Uintah;
@@ -48,7 +48,7 @@ using namespace std;
 
 // Debug: Used to sync cerr so it is readable (when output by
 // multiple threads at the same time)  From sus.cc:
-extern Uintah::Mutex cerrLock;
+extern std::mutex cerrLock;
 
 DebugStream lbDebug( "LoadBalancer", false );
 DebugStream neiDebug("Neighborhood", false );
@@ -320,7 +320,7 @@ LoadBalancerCommon::useSFC( const LevelP & level, int * order )
     vector<DistributedIndex> rbuf(level->numPatches());
 
     // Gather curve
-    MPI_Allgatherv(&indices[0], recvcounts[d_myworld->myrank()], MPI_BYTE, &rbuf[0], &recvcounts[0], 
+    MPI::Allgatherv(&indices[0], recvcounts[d_myworld->myrank()], MPI_BYTE, &rbuf[0], &recvcounts[0], 
                    &displs[0], MPI_BYTE, d_myworld->getComm());
 
     indices.swap(rbuf);

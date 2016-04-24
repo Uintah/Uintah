@@ -96,10 +96,5 @@ PROGRAM := $(SRCDIR)/test14
 SRCS := $(SRCDIR)/test14.cc
 include $(SCIRUN_SCRIPTS)/program.mk
 
-PROGRAM := $(SRCDIR)/test15
-SRCS := $(SRCDIR)/test15.cc
-
-include $(SCIRUN_SCRIPTS)/program.mk
-
 PSELIBS :=
 

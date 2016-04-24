@@ -80,7 +80,7 @@ clean(void)
 #if DRIVER_DEBUG
   hypre_FinalizeMemoryDebug();
 #endif
-  MPI_Finalize();    // Quit MPI
+  MPI::Finalize();    // Quit MPI
   return 0;
 }
 
@@ -109,7 +109,7 @@ serializeProcsBegin(void)
     //    dbg << "serializeProcsBegin Barrier "
     //        << setw(2) << right << i
     //        << "\n";
-    MPI_Barrier(MPI_COMM_WORLD); // Synchronize all procs to this point
+    MPI::Barrier(MPI_COMM_WORLD); // Synchronize all procs to this point
   }
 #endif
 }
@@ -127,14 +127,14 @@ serializeProcsEnd(void)
 {
   static int numProcs = -1;
   if (numProcs == -1) {
-    MPI_Comm_size(MPI_COMM_WORLD, &numProcs);
+    MPI::Comm_size(MPI_COMM_WORLD, &numProcs);
   }
 #if DRIVER_DEBUG
   for (int i = numProcs-1; i >= MYID; i--) {
     //    dbg << "serializeProcsEnd   Barrier "
     //        << setw(2) << right << i
     //        << "\n";
-    MPI_Barrier(MPI_COMM_WORLD); // Synchronize all procs to this point
+    MPI::Barrier(MPI_COMM_WORLD); // Synchronize all procs to this point
   }
 #endif
   if (!serializing) {

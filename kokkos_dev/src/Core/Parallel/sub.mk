@@ -41,7 +41,6 @@ SRCS     += \
 	$(SRCDIR)/UintahParallelPort.cc
 
 PSELIBS := \
-	Core/Thread \
 	Core/Exceptions \
 	Core/ProblemSpec \
 	Core/Util

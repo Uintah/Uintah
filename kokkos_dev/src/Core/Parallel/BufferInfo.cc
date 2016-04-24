@@ -43,7 +43,7 @@ BufferInfo::~BufferInfo()
     ASSERT(datatype!=MPI_DATATYPE_NULL);
     ASSERT(datatype!=MPI_INT);
     ASSERT(datatype!=MPI_DOUBLE);
-    MPI_Type_free(&datatype);
+    MPI::Type_free(&datatype);
     datatype = MPI_DATATYPE_NULL;
   }
 
@@ -52,7 +52,7 @@ BufferInfo::~BufferInfo()
       ASSERT( d_datatypes[i] != MPI_DATATYPE_NULL );
       ASSERT( d_datatypes[i] != MPI_INT );
       ASSERT( d_datatypes[i] != MPI_DOUBLE );
-      MPI_Type_free( &d_datatypes[i] );
+      MPI::Type_free( &d_datatypes[i] );
       d_datatypes[i] = MPI_DATATYPE_NULL;
     }
   }
@@ -101,8 +101,8 @@ BufferInfo::get_type( void*&        out_buf,
       for( unsigned int i = 0; i < d_startbufs.size(); i++ ) {
         indices[i] = (MPI_Aint)d_startbufs[i];
       }
-      MPI_Type_struct( count(), &d_counts[0], &indices[0], &d_datatypes[0], &datatype );
-      MPI_Type_commit( &datatype );
+      MPI::Type_struct( count(), &d_counts[0], &indices[0], &d_datatypes[0], &datatype );
+      MPI::Type_commit( &datatype );
       buf = 0;
       cnt = 1;
       d_free_datatype = true;

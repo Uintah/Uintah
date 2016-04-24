@@ -29,7 +29,6 @@
 
 #include <CCA/Components/Arches/ArchesMaterial.h>
 #include <CCA/Components/Arches/TimeIntegratorLabel.h>
-#include <Core/Thread/ConditionVariable.h>
 #include <Core/Util/DebugStream.h>
 
 #include   <string>
