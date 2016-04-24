@@ -429,7 +429,7 @@ ThreadedMPIScheduler::execute( int tgnum     /* = 0 */,
       }
     }
     //if it is time to run reduction task
-    else if ((phaseSyncTask[currphase] != NULL) && (phaseTasksDone[currphase] == phaseTasks[currphase] - 1)) {
+    else if ((phaseSyncTask[currphase] != nullptr) && (phaseTasksDone[currphase] == phaseTasks[currphase] - 1)) {
       DetailedTask* reducetask = phaseSyncTask[currphase];
 
       if (reducetask->getTask()->getType() == Task::Reduction) {
@@ -603,7 +603,7 @@ TaskWorker::run()
       return;
     }
 
-    ASSERT(m_task != NULL);
+    ASSERT(m_task != nullptr);
     try {
       if (m_task->getTask()->getType() == Task::Reduction) {
         m_scheduler->initiateReduction(m_task);
@@ -625,7 +625,7 @@ TaskWorker::run()
     // Signal main thread for next task.
     g_next_mutex.lock();
     m_run_mutex.lock();
-    m_task = NULL;
+    m_task = nullptr;
     m_iteration = 0;
     m_wait_start = Time::currentSeconds();
     g_next_signal.notify_one();
