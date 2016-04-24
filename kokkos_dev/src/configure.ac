@@ -1490,11 +1490,7 @@ case $host in
 
     SCI_CHECK_VERSION($CC,--version,4.0.0,GCC_VERSION=4.0,)
 
-    if test "$GCC_VERSION" = "4.0"; then
-       CFLAGS="$CFLAGS $extra_cflags -fno-common -dynamic $NO_LONG_DOUBLE"
-    else
-       CFLAGS="$CFLAGS $extra_cflags -fno-common -dynamic $NO_LONG_DOUBLE -fcoalesce-templates"
-    fi   
+    CFLAGS="$CFLAGS $extra_cflags -fno-common -dynamic $NO_LONG_DOUBLE"
     CXXFLAGS="$CXXFLAGS $CFLAGS"
 
     SOFLAGS="-dynamiclib"
