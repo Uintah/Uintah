@@ -1,0 +1,17 @@
+<?xml version='1.0' encoding='ISO-8859-1' ?>
+<Uintah_Include>
+  <EOS type="JWL">
+    <!-- PBX LX-14 Reactants Parameters (These are the same parameters as those for PBX 9501)
+         From: 
+         Tarver, C.M. Tao, W.C. Lee, C.G. Sideways Plate Push Test for Detonating Solid Explosives.
+         Propellants, Explosives, Pyrotechnics, 21, 1996, pp. 238-246.
+     -->
+     <A> 9552.0e11 </A>
+     <B> -5.944e9  </B>
+     <Cv> 2.7806e6 </Cv>
+     <R1> 14.1     </R1>
+     <R2> 1.41     </R2>
+     <om> 0.8967   </om>
+     <rho0> 1835   </rho0>
+  </EOS>
+</Uintah_Include>

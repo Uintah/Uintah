@@ -1,0 +1,14 @@
+<?xml version='1.0' encoding='ISO-8859-1' ?>
+<Uintah_Include>
+  <EOS type="JWLC">
+    <!-- PBX 9501 Parameters -->
+    <!-- From Changwei's Thesis -->
+    <A>7.74304e11</A>
+    <B>20.927e9</B>
+    <C>1.3900e9</C>
+    <R1>4.5</R1>
+    <R2>1.5</R2>
+    <om>0.33</om>
+    <rho0>1840.0</rho0>
+  </EOS>
+</Uintah_Include>

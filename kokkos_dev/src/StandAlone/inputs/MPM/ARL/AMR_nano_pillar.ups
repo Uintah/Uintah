@@ -1,0 +1,190 @@
+<?xml version="1.0" encoding="iso-8859-1"?>
+<Uintah_specification>
+
+  <Meta>
+    <title>Nano Pillar Example 2</title>
+  </Meta>
+
+  <SimulationComponent type="amrmpm" />
+
+  <Time>
+     <maxTime>4</maxTime>
+     <initTime>0.0</initTime>
+     <delt_min>1.0e-16</delt_min>
+     <delt_max>1.0e-4</delt_max>
+     <max_Timesteps>   10     </max_Timesteps>
+     <timestep_multiplier>0.4</timestep_multiplier>
+  </Time>
+  <DataArchiver>
+    <filebase>amr_nano_pillar2.uda</filebase>
+    <outputTimestepInterval>1</outputTimestepInterval>
+    <save label="p.x"/>
+    <save label="p.mass"/>
+    <save label="p.volume"/>
+    <save label="p.velocity"/>
+    <save label="p.particleID"/>
+    <save label="p.scalefactor" />
+    <save label="p.concentration" />
+    <save label="g.mass"/>
+    <save label="g.concentration" />
+    <save label="g.velocity"/>
+  </DataArchiver>
+
+  <MPM>
+      <time_integrator>explicit</time_integrator>
+      <interpolator>linear</interpolator>
+      <scalar_diffusion>explicit</scalar_diffusion>
+  </MPM>
+
+  <AMR>
+     <useLockStep> true </useLockStep>
+     <MPM>
+     </MPM>
+   </AMR>
+
+  <PhysicalConstants>
+    <gravity>[0.0, 0.0, 0.0]</gravity>
+  </PhysicalConstants>
+
+  <MaterialProperties>
+       <MPM>
+         <material name="electrolyte">
+           <density>1000</density> <!-- kg/m^3 -->
+           <constitutive_model type="water"> 
+             <bulk_modulus>15000</bulk_modulus> <!-- Pa -->
+             <viscosity>.8</viscosity>
+             <gamma>7.0</gamma>
+           </constitutive_model>
+           <thermal_conductivity>0.0</thermal_conductivity>
+           <specific_heat>5</specific_heat>
+           <diffusion_model type = "jg">
+             <diffusivity>       2e-3   </diffusivity>
+             <max_concentration>  1.0      </max_concentration> <!-- #-->
+           </diffusion_model>
+           <geom_object>
+             <difference>
+               <box label = "boxE">
+                 <min>[0.0, 0.0, 0.0]</min>
+                 <!--<max>[1.0e-6, 1.0e-6, 0.75e-6]</max>-->
+                 <max>[1.0e-3, 1.0e-3, 1.5e-3]</max>
+               </box>
+               <cylinder label = "pillar_out">
+                 <bottom>[0.5e-3, 0.5e-3, 0.0]</bottom>
+                 <top>[0.5e-3, 0.5e-3, 1.25e-3]</top>
+                 <radius>.25e-3</radius>
+               </cylinder>
+             </difference>
+             <res>[2,2,2]</res>
+             <velocity>[0.0,0.0,0.0]</velocity>
+             <temperature>0</temperature>
+             <concentration> 0 </concentration>
+           </geom_object>
+         </material>
+
+         <material name="pillar">
+           <density>2330</density> <!-- kg/m^3 -->
+           <constitutive_model type="gao_elastic"> 
+             <bulk_modulus>      6.5e6    </bulk_modulus>  <!-- Pa -->
+             <shear_modulus>     3.9e6    </shear_modulus> <!-- Pa -->
+             <alpha>             1.0         </alpha>
+           </constitutive_model>
+           <thermal_conductivity>0.0</thermal_conductivity>
+           <specific_heat>5</specific_heat>
+           <diffusion_model type = "gao_diffusion">
+             <diffusivity>        1e-16    </diffusivity> <!-- m^2/s -->
+             <!--<partial_atomic_vol> 3.3  </partial_atomic_vol> --><!-- m^3/% Atoms -->
+             <partial_atomic_vol> 1e-16  </partial_atomic_vol><!-- m^3/% Atoms -->
+             <max_concentration>  1.0      </max_concentration> <!-- #-->
+             <operating_temp>     300      </operating_temp> <!-- Kelvin -->
+             <boltzmann_const>    1.38e-23 </boltzmann_const> <!-- m^2 kg / K s^2 -->
+           </diffusion_model>
+           <geom_object>
+             <cylinder label = "pillar_out"/>
+             <res>[2,2,2]</res>
+             <velocity>[0.0,0.0,0.0]</velocity>
+             <temperature>0</temperature>
+             <concentration> 0 </concentration>
+           </geom_object>
+         </material>
+
+         <diffusion_interface>
+           <type>common</type>
+         </diffusion_interface>
+         <contact>
+           <type>single_velocity</type>
+         </contact>
+      </MPM>
+    </MaterialProperties>
+       
+  <Grid>
+    <BoundaryConditions>
+      <Face side = "x-">
+        <BCType id = "all" label = "Velocity"     var = "Neumann">
+                              <value> [0.,0.,0.] </value>
+        </BCType>
+        <BCType id = "all" label = "SD-Type"  var = "Dirichlet">
+                              <value> 1.0  </value>
+        </BCType>
+      </Face>
+      <Face side = "x+">
+        <BCType id = "all" label = "Velocity"     var = "Neumann">
+                              <value> [0.,0.,0.] </value>
+        </BCType>
+        <BCType id = "all" label = "SD-Type"  var = "Dirichlet">
+                              <value> 1.0  </value>
+        </BCType>
+      </Face>
+      <Face side = "y-">
+        <BCType id = "all" label = "Velocity"     var = "Neumann">
+                              <value> [0.,0.,0.] </value>
+        </BCType>
+        <BCType id = "all" label = "SD-Type"  var = "Neumann">
+                              <value> 0.0  </value>
+        </BCType>
+      </Face>                  
+      <Face side = "y+">
+        <BCType id = "all" label = "Velocity"     var = "Neumann">
+                              <value> [0.,0.,0.] </value>
+        </BCType>
+        <BCType id = "all" label = "SD-Type"  var = "Neumann">
+                              <value> 0.0  </value>
+        </BCType>
+      </Face>
+      <Face side = "z-">
+        <BCType id = "all" label = "Velocity"     var = "Dirichlet">
+                              <value> [0.,0.,0.] </value>
+        </BCType>
+        <BCType id = "all" label = "SD-Type"  var = "Dirichlet">
+                              <value> 1.0  </value>
+        </BCType>
+      </Face>                  
+      <Face side = "z+">
+        <BCType id = "all" label = "Velocity"     var = "Neumann">
+                              <value> [0.,0.,0.] </value>
+        </BCType>
+        <BCType id = "all" label = "SD-Type"  var = "Dirichlet">
+                              <value> 1.0  </value>
+        </BCType>
+      </Face>
+    </BoundaryConditions>
+    <Level>
+      <Box label="1">
+        <lower>[0.0,    4.75e-4,    0.0]   </lower>
+        <upper>[1.0e-3, 5.25e-4, 1.5e-3]</upper>
+        <resolution>[20, 1, 30]        </resolution>
+        <extraCells>[0, 0, 0]          </extraCells>
+        <patches>[1,1,1]               </patches>
+      </Box>
+    </Level>
+    <Level>
+      <Box label="2">
+        <lower>[0.0,     4.75e-4, 0.0]    </lower>
+        <upper>[0.25e-3, 5.25e-4, 0.25e-3]</upper>
+        <resolution>[10, 1, 10]        </resolution>
+        <extraCells>[0, 0, 0]          </extraCells>
+        <patches>[1,1,1]               </patches>
+      </Box>
+    </Level>
+  </Grid>
+
+</Uintah_specification>

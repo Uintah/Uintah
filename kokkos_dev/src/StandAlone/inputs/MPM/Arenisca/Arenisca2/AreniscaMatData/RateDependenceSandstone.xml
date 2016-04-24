@@ -1,0 +1,6 @@
+<?xml version='1.0' encoding='ISO-8859-1' ?>
+<!-- Sandstone -->
+<Uintah_Include>
+    <T1_rate_dependence> 9e-7 </T1_rate_dependence>
+    <T2_rate_dependence> 5e-7 </T2_rate_dependence>
+</Uintah_Include>
