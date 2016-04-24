@@ -63,7 +63,6 @@ PSELIBS := \
        Core/OS                         \
        Core/Parallel                   \
        Core/ProblemSpec                \
-       Core/Thread                     \
        Core/Util                       
 
 ifeq ($(OS_NAME),Darwin)

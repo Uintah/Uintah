@@ -44,7 +44,7 @@
 #include <CCA/Ports/Scheduler.h>
 #include <Core/Math/MiscMath.h>
 #include <Core/Math/MinMax.h>
-#include <Core/Thread/Time.h>
+#include <Core/Util/Time.h>
 #include <Core/Util/DebugStream.h>
 #include <iomanip>
 

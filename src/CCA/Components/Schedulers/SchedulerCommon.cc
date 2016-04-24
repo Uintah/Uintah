@@ -49,7 +49,7 @@
 #include <Core/Parallel/ProcessorGroup.h>
 #include <Core/ProblemSpec/ProblemSpec.h>
 #include <Core/OS/ProcessInfo.h>
-#include <Core/Thread/Time.h>
+#include <Core/Util/Time.h>
 #include <Core/Util/DebugStream.h>
 #include <Core/Util/FancyAssert.h>
 
@@ -1464,7 +1464,7 @@ SchedulerCommon::scheduleAndDoDataCopy( const GridP&               grid,
           //Gather size from all processors
           int mycount = myPatchIDs.size();
           vector<int> counts(d_myworld->size());
-          MPI_Allgather(&mycount, 1, MPI_INT, &counts[0], 1, MPI_INT, d_myworld->getComm());
+          MPI::Allgather(&mycount, 1, MPI_INT, &counts[0], 1, MPI_INT, d_myworld->getComm());
 
           //compute recieve array offset and size
           vector<int> displs(d_myworld->size());
@@ -1476,7 +1476,7 @@ SchedulerCommon::scheduleAndDoDataCopy( const GridP&               grid,
           }
 
           vector<int> allPatchIDs(pos);  //receive array;
-          MPI_Allgatherv(&myPatchIDs[0], counts[d_myworld->myrank()], MPI_INT, &allPatchIDs[0], &counts[0], &displs[0], MPI_INT,
+          MPI::Allgatherv(&myPatchIDs[0], counts[d_myworld->myrank()], MPI_INT, &allPatchIDs[0], &counts[0], &displs[0], MPI_INT,
                          d_myworld->getComm());
           //make refinePatchSets from patch ids
           set<int> allPatchIDset(allPatchIDs.begin(), allPatchIDs.end());

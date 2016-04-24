@@ -26,8 +26,6 @@
 #define CCA_COMPONENTS_SCHEDULERS_UNIFIEDSCHEDULER_H
 
 #include <CCA/Components/Schedulers/MPIScheduler.h>
-#include <Core/Thread/ConditionVariable.h>
-#include <Core/Thread/Runnable.h>
 
 #ifdef HAVE_CUDA
 #include <CCA/Components/Schedulers/GPUGridVariableGhosts.h>
@@ -36,7 +34,10 @@
 
 #include <sci_defs/cuda_defs.h>
 
+#include <condition_variable>
+#include <mutex>
 #include <string>
+#include <thread>
 
 namespace Uintah {
 
@@ -119,11 +120,11 @@ class UnifiedScheduler : public MPIScheduler  {
 
     int getAvailableThreadNum();
 
-    ConditionVariable          d_nextsignal;           // conditional wait mutex
-    Mutex                      d_nextmutex;            // next mutex
-    Mutex                      schedulerLock;          // scheduler lock (acquire and release quickly)
+    std::condition_variable    d_nextsignal;           // conditional wait mutex
+    std::mutex                 d_nextmutex;            // next mutex
+    std::mutex                 schedulerLock;          // scheduler lock (acquire and release quickly)
     UnifiedSchedulerWorker*    t_worker[MAX_THREADS];  // the workers
-    Thread*                    t_thread[MAX_THREADS];  // the threads themselves
+    std::thread*               t_thread[MAX_THREADS];  // the threads themselves
 
     // thread shared data, needs lock protection when accessed
     std::vector<int>           phaseTasks;
@@ -302,7 +303,7 @@ class UnifiedScheduler : public MPIScheduler  {
 
 
 
-class UnifiedSchedulerWorker : public Runnable {
+class UnifiedSchedulerWorker {
 
 public:
   
@@ -320,15 +321,15 @@ public:
 
 private:
 
-  UnifiedScheduler*      d_scheduler;
-  ConditionVariable      d_runsignal;
-  Mutex                  d_runmutex;
-  bool                   d_quit;
-  bool                   d_idle;
-  int                    d_thread_id;
-  int                    d_rank;
-  double                 d_waittime;
-  double                 d_waitstart;
+  UnifiedScheduler*        d_scheduler;
+  std::condition_variable  d_runsignal;
+  std::mutex               d_runmutex;
+  bool                     d_quit;
+  bool                     d_idle;
+  int                      d_thread_id;
+  int                      d_rank;
+  double                   d_waittime;
+  double                   d_waitstart;
 
 
 };

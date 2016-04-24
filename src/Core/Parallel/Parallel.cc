@@ -28,12 +28,12 @@
 #include <Core/Parallel/ProcessorGroup.h>
 #include <Core/Exceptions/InternalError.h>
 #include <Core/Malloc/Allocator.h>
-#include <Core/Thread/Thread.h>
-#include <Core/Thread/Time.h>
+#include <Core/Util/Time.h>
 
 #include <cstdlib>
-#include <sstream>
 #include <iostream>
+#include <sstream>
+#include <thread>
 
 using namespace Uintah;
 
@@ -48,17 +48,15 @@ using std::ostringstream;
 #  undef THREADED_MPI_AVAILABLE
 #endif
 
-// bool         Parallel::allowThreads_;
-
-int             Parallel::numThreads_           = -1;
-bool            Parallel::determinedIfUsingMPI_ = false;
-
-bool            Parallel::initialized_          = false;
-bool            Parallel::usingMPI_             = false;
-bool            Parallel::usingDevice_          = false;
-int             Parallel::worldRank_            = -1;
-int             Parallel::worldSize_            = -1;
-ProcessorGroup* Parallel::rootContext_          = 0;
+int              Parallel::numThreads_           = -1;
+std::thread::id  Parallel::m_main_thread_id      = std::this_thread::get_id();
+bool             Parallel::determinedIfUsingMPI_ = false;
+bool             Parallel::initialized_          = false;
+bool             Parallel::usingMPI_             = false;
+bool             Parallel::usingDevice_          = false;
+int              Parallel::worldRank_            = -1;
+int              Parallel::worldSize_            = -1;
+ProcessorGroup*  Parallel::rootContext_          = 0;
 
 namespace Uintah {
 
@@ -77,7 +75,7 @@ MpiError(char* what, int errorcode)
   int  resultlen = -1;
   char string_name[ MPI_MAX_ERROR_STRING ];
 
-  MPI_Error_string( errorcode, string_name, &resultlen );
+  MPI::Error_string( errorcode, string_name, &resultlen );
   cerr << "MPI Error in " << what << ": " << string_name << '\n';
 
   exit(1);
@@ -112,17 +110,21 @@ Parallel::getNumThreads()
   return numThreads_;
 }
 
+std::thread::id
+Parallel::getMainThreadID()
+{
+  return m_main_thread_id;
+}
+
 void
 Parallel::setNumThreads( int num)
 {
    numThreads_ = num;
-   //allowThreads = true;
 }
 
 void
 Parallel::noThreading()
 {
-  //allowThreads_ = false;
   numThreads_ = 1;
 }
 
@@ -155,7 +157,6 @@ Parallel::determineIfRunningUnderMPI( int argc, char** argv )
   }
   if( char * max = getenv( "PSE_MAX_THREADS" ) ){
     numThreads_ = atoi( max );
-    // allowThreads_ = true;
     cerr << "PSE_MAX_THREADS set to " << numThreads_ << "\n";
 
     if( numThreads_ <= 0 || numThreads_ > 16 ){
@@ -241,11 +242,11 @@ Parallel::initializeManager(int& argc, char**& argv)
     const char* oldtag = Uintah::AllocatorSetDefaultTagMalloc("MPI initialization");
 #endif
 #ifdef THREADED_MPI_AVAILABLE
-    if( ( status = MPI_Init_thread( &argc, &argv, required, &provided ) ) != MPI_SUCCESS) {
+    if( ( status = MPI::Init_thread( &argc, &argv, required, &provided ) ) != MPI_SUCCESS) {
 #else
-    if( ( status = MPI_Init( &argc, &argv ) ) != MPI_SUCCESS) {
+    if( ( status = MPI::Init( &argc, &argv ) ) != MPI_SUCCESS) {
 #endif
-      MpiError(const_cast<char*>("MPI_Init"), status);
+      MpiError(const_cast<char*>("MPI::Init"), status);
     }
 
 #ifdef THREADED_MPI_AVAILABLE
@@ -257,12 +258,12 @@ Parallel::initializeManager(int& argc, char**& argv)
 #endif
 
     Uintah::worldComm_ = MPI_COMM_WORLD;
-    if( ( status=MPI_Comm_size( Uintah::worldComm_, &worldSize_ ) ) != MPI_SUCCESS ) {
-      MpiError(const_cast<char*>("MPI_Comm_size"), status);
+    if( ( status=MPI::Comm_size( Uintah::worldComm_, &worldSize_ ) ) != MPI_SUCCESS ) {
+      MpiError(const_cast<char*>("MPI::Comm_size"), status);
     }
 
-    if((status=MPI_Comm_rank( Uintah::worldComm_, &worldRank_ )) != MPI_SUCCESS) {
-      MpiError(const_cast<char*>("MPI_Comm_rank"), status);
+    if((status=MPI::Comm_rank( Uintah::worldComm_, &worldRank_ )) != MPI_SUCCESS) {
+      MpiError(const_cast<char*>("MPI::Comm_rank"), status);
     }
 
 #if ( !defined( DISABLE_SCI_MALLOC ) || defined( SCI_MALLOC_TRACE ) )
@@ -281,7 +282,7 @@ Parallel::initializeManager(int& argc, char**& argv)
       cout << "Parallel: MPI Level Required: " << required << ", provided: " << provided << "\n";
 #endif
     }
-     //MPI_Errhandler_set(MPI_COMM_WORLD, MPI_ERRORS_RETURN);
+     //MPI::Errhandler_set(MPI_COMM_WORLD, MPI_ERRORS_RETURN);
   }
   else {
     worldRank_   = 0;
@@ -299,7 +300,7 @@ Parallel::getMPIRank()
     cout << "ERROR:\n";
     cout << "ERROR: getMPIRank() called before initializeManager()...\n";
     cout << "ERROR:\n";
-    Thread::exitAll(1);
+    exitAll(1);
   }
   return worldRank_;
 }
@@ -320,7 +321,7 @@ Parallel::finalizeManager( Circumstances circumstances /* = NormalShutdown */ )
     // finalizeManager() can be easily/mistakenly called multiple
     // times.  This catches that case and returns harmlessly.
     //
-    // (One example of this occurs when MPI_Abort causes an SIG_TERM
+    // (One example of this occurs when MPI::Abort causes an SIG_TERM
     // to be thrown, which is caught by Uintah's exit handler, which
     // in turn calls finalizeManager.)
     return;
@@ -340,19 +341,19 @@ Parallel::finalizeManager( Circumstances circumstances /* = NormalShutdown */ )
     if(circumstances == Abort) {
       int errorcode = 1;
       if(getenv("LAMWORLD") || getenv("LAMRANK")) {
-        errorcode = (errorcode << 16) + 1; // see LAM man MPI_Abort
+        errorcode = (errorcode << 16) + 1; // see LAM man MPI::Abort
       }
       if( worldRank_ == 0 ) {
-        cout << "FinalizeManager() called... Calling MPI_Abort on rank " << worldRank_ << ".\n";
+        cout << "FinalizeManager() called... Calling MPI::Abort on rank " << worldRank_ << ".\n";
       }
       cerr.flush();
       cout.flush();
       Time::waitFor(1.0);
-      MPI_Abort( Uintah::worldComm_, errorcode );
+      MPI::Abort( Uintah::worldComm_, errorcode );
     } else {
       int status;
-      if ((status = MPI_Finalize()) != MPI_SUCCESS) {
-        MpiError(const_cast<char*>("MPI_Finalize"), status);
+      if ((status = MPI::Finalize()) != MPI_SUCCESS) {
+        MpiError(const_cast<char*>("MPI::Finalize"), status);
       }
     }
   }
@@ -373,4 +374,70 @@ Parallel::getRootProcessorGroup()
    }
 
    return rootContext_;
+}
+
+void
+Parallel::exitAll(int code)
+{
+//  if (getenv("SCIRUN_EXIT_CRASH_WORKAROUND")) {
+//    raise(SIGKILL);
+//  }
+//  CleanupManager::call_callbacks();
+//  if (initialized && !exiting) {
+//    exiting = true;
+//    lock_scheduler();
+//    if( initialized ){
+//      // Stop all of the other threads before we die, because
+//      // global destructors may destroy primitives that other
+//      // threads are using...
+//      Thread* me = Thread::self();
+//      for (int i = 0;i<numActive;i++){
+//        Thread_private * thread_priv = active[i];
+//
+//        // It seems like this is the correct place to call handleCleanup (on all the threads)...
+//        // However, I haven't tested this feature in SCIRun itself... it does work for Uintah
+//        // (which only has one (the main) thread).
+//        thread_priv->thread->handleCleanup();
+//
+//        if (thread_priv->thread != me){
+//          pthread_kill(thread_priv->threadid, SIGUSR2);
+//        }
+//      }
+//      // Wait for all threads to be in the signal handler
+//      int numtries = 100000;
+//      bool done = false;
+//      while(--numtries && !done){
+//        done = true;
+//        for (int i = 0;i<numActive;i++){
+//          Thread_private * thread_priv = active[i];
+//          if (thread_priv->thread != me){
+//            if (!thread_priv->is_blocked)
+//              done = false;
+//          }
+//        }
+//        sched_yield();
+//        //sleep(1);
+//      }
+//      if (!numtries){
+//        for (int i = 0;i<numActive;i++){
+//          Thread_private* thread_priv = active[i];
+//          if ( thread_priv->thread != me && !thread_priv->is_blocked ) {
+//            fprintf(stderr, "Thread: %s is slow to stop, giving up\n",
+//                    thread_priv->thread->getThreadName());
+//            //sleep(1000);
+//          }
+//        }
+//      }
+//    } // end if( initialized )
+//
+//    // See Thread.h for why we are doing this.
+//    if (Thread::getCallExit()) {
+//      ::exit(code);
+//    }
+//  }
+//  else if ( !initialized ) {
+//    // This case happens if the thread library is not being used.
+//    // Just use the normal exit function.
+//    ::exit(code);
+//  }
 }

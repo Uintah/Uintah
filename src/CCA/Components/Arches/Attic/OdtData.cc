@@ -31,12 +31,12 @@
   {
 //    ASSERTEQ(sizeof(odtData), sizeof(double)*10);
 //    MPI_Datatype mpitype;
-//    MPI_Type_vector(1, 10, 10, MPI_DOUBLE, &mpitype);
-//    MPI_Type_commit(&mpitype);
+//    MPI::Type_vector(1, 10, 10, MPI_DOUBLE, &mpitype);
+//    MPI::Type_commit(&mpitype);
 //    return mpitype;
       MPI_Datatype odt_type;
-      MPI_Type_contiguous(210, MPI_DOUBLE, &odt_type);
-      MPI_Type_commit(&odt_type);
+      MPI::Type_contiguous(210, MPI_DOUBLE, &odt_type);
+      MPI::Type_commit(&odt_type);
       return odt_type;
   }
 

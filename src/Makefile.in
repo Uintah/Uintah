@@ -105,7 +105,6 @@ ALL_PSE_LIBS =             \
         Core/OS            \
         Core/Parallel      \
         Core/ProblemSpec   \
-        Core/Thread        \
         Core/Util          \
         CCA/Ports          \
         CCA/Components/DataArchiver         \
@@ -164,7 +163,6 @@ ALL_STATIC_PSE_LIBS =                   \
     Core/Math                           \
     Core/Disclosure                     \
     Core/Util                           \
-    Core/Thread                         \
     Core/Geometry                       \
     Core/IO                             \
     Core/Exceptions                     \

@@ -46,7 +46,7 @@
 #include <Core/Parallel/Parallel.h>
 #include <Core/ProblemSpec/ProblemSpec.h>
 #include <Core/ProblemSpec/ProblemSpecP.h>
-#include <Core/Thread/Time.h>
+#include <Core/Util/Time.h>
 #include <cmath>
 #include <sci_defs/hypre_defs.h>
 #include <iomanip>

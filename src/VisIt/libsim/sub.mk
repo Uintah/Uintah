@@ -56,7 +56,6 @@ else
       Core/Malloc       \
       Core/Parallel     \
       Core/ProblemSpec  \
-      Core/Thread       \
       Core/Util         \
       Core/OS           \
       StandAlone/tools/uda2vis

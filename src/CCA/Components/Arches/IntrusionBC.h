@@ -18,7 +18,8 @@
 #include <Core/Exceptions/ParameterNotFound.h>
 #include <Core/Exceptions/InvalidValue.h>
 #include <Core/Util/DebugStream.h>
-#include <Core/Thread/ConditionVariable.h>
+
+#include <mutex>
 
 //============================================
 
@@ -1005,10 +1006,10 @@ namespace Uintah{
       bool _do_energy_exchange; 
       bool _mpm_energy_exchange; 
 
-      Mutex _bc_face_iterator_lock;
-      Mutex _interior_cell_iterator_lock;
-      Mutex _bc_cell_iterator_lock;
-      Mutex _iterator_initializer_lock;
+      std::mutex _bc_face_iterator_lock;
+      std::mutex _interior_cell_iterator_lock;
+      std::mutex _bc_cell_iterator_lock;
+      std::mutex _iterator_initializer_lock;
 
       const VarLabel* _T_label; 
 

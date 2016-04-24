@@ -21,7 +21,8 @@
  * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
  * IN THE SOFTWARE.
  */
-#include <Core/Thread/Time.h>
+
+#include <Core/Util/Time.h>
 #include <CCA/Components/Schedulers/DetailedTasks.h>
 #include <CCA/Components/Schedulers/CommRecMPI.h>
 #include <CCA/Components/Schedulers/MemoryLog.h>
@@ -30,11 +31,11 @@
 #include <CCA/Components/Schedulers/TaskGraph.h>
 
 #include <Core/Containers/ConsecutiveRangeSet.h>
+#include <Core/Parallel/CrowdMonitor.hpp>
 #include <Core/Parallel/Parallel.h>
 #include <Core/Parallel/ProcessorGroup.h>
 #include <Core/Grid/Grid.h>
 #include <Core/Grid/Variables/PSPatchMatlGhostRange.h>
-#include <Core/Thread/Mutex.h>
 #include <Core/Util/DebugStream.h>
 #include <Core/Util/FancyAssert.h>
 #include <Core/Util/ProgressiveWarning.h>
@@ -43,12 +44,14 @@
 #include <sci_algorithm.h>
 #include <sci_defs/cuda_defs.h>
 
+#include <mutex>
+
 using namespace Uintah;
 using namespace std;
 
 // sync cout/cerr so they are readable when output by multiple threads
-extern Uintah::Mutex cerrLock;
-extern Uintah::Mutex coutLock;
+extern std::mutex cerrLock;
+extern std::mutex coutLock;
 
 extern DebugStream mixedDebug;
 extern DebugStream mpidbg;
@@ -66,6 +69,18 @@ static int         dbgScrubPatch = -1;
 
 map<string, double> DependencyBatch::waittimes;
 
+namespace {
+
+// These are for uniquely identifying the Uintah::CrowdMonitors<Tag>
+// used to protect multi-threaded access to global data structures
+struct external_ready_tag{};
+struct internal_ready_tag{};
+
+using  external_ready_monitor = Uintah::CrowdMonitor<external_ready_tag>;
+using  internal_ready_monitor = Uintah::CrowdMonitor<internal_ready_tag>;
+
+}
+
 //_____________________________________________________________________________
 //
 DetailedTasks::DetailedTasks(       SchedulerCommon* sc,
@@ -80,9 +95,7 @@ DetailedTasks::DetailedTasks(       SchedulerCommon* sc,
   taskgraph_(taskgraph),
   mustConsiderInternalDependencies_(mustConsiderInternalDependencies),
   currentDependencyGeneration_(1),
-  extraCommunication_(0),
-  readyQueueLock_("DetailedTasks Ready Queue"),
-  mpiCompletedQueueLock_("DetailedTasks MPI completed Queue")
+  extraCommunication_(0)
 #ifdef HAVE_CUDA
   ,
   deviceVerifyDataTransferCompletionQueueLock_("DetailedTasks Device Verify Data Transfer Queue"),
@@ -143,7 +156,6 @@ DependencyBatch::~DependencyBatch()
     delete dep;
     dep = tmp;
   }
-  delete lock_;
 }
 
 //_____________________________________________________________________________
@@ -271,7 +283,6 @@ DetailedTask::DetailedTask(       Task*           task,
       internal_comp_head(0),
       taskGroup(taskGroup),
       numPendingInternalDependencies(0),
-      internalDependencyLock("DetailedTask Internal Dependencies"),
       resourceIndex(-1),
       staticOrder(-1),
       d_profileType(Normal)
@@ -1480,25 +1491,19 @@ DetailedTask::checkExternalDepCount()
 {
   if (mpidbg.active()) {
     cerrLock.lock();
-    mpidbg << "Rank-" << Parallel::getMPIRank() << " Task " << this->getTask()->getName() << " external deps: " << externalDependencyCount_
-           << " internal deps: " << numPendingInternalDependencies << "\n";
+    mpidbg << "Rank-" << Parallel::getMPIRank() << " Task " << this->getTask()->getName() << " external deps: "
+           << externalDependencyCount_ << " internal deps: " << numPendingInternalDependencies << "\n";
     cerrLock.unlock();
   }
 
   if (externalDependencyCount_ == 0 && taskGroup->sc_->useInternalDeps() && initiated_ && !task->usesMPI()) {
-    taskGroup->mpiCompletedQueueLock_.writeLock();
-    if (mpidbg.active()) {
-      cerrLock.lock();
-      mpidbg << "Rank-" << Parallel::getMPIRank() << " Task " << this->getTask()->getName()
-             << " MPI requirements satisfied, placing into external ready queue\n";
-      cerrLock.unlock();
+    external_ready_monitor external_ready_lock{ Uintah::CrowdMonitor<external_ready_tag>::WRITER };
+    {
+      if (externallyReady_ == false) {
+        taskGroup->mpiCompletedTasks_.push(this);
+        externallyReady_ = true;
+      }
     }
-
-    if (externallyReady_ == false) {
-      taskGroup->mpiCompletedTasks_.push(this);
-      externallyReady_ = true;
-    }
-    taskGroup->mpiCompletedQueueLock_.writeUnlock();
   }
 }
 
@@ -1900,22 +1905,10 @@ operator<<(       std::ostream& out,
 void
 DetailedTasks::internalDependenciesSatisfied( DetailedTask* task )
 {
-  if (mixedDebug.active()) {
-    cerrLock.lock();
-    mixedDebug << "Begin internalDependenciesSatisfied\n";
-    cerrLock.unlock();
-  }
-  readyQueueLock_.writeLock();
+  internal_ready_monitor external_ready_lock{ Uintah::CrowdMonitor<internal_ready_tag>::WRITER };
   {
     readyTasks_.push(task);
-
-    if (mixedDebug.active()) {
-      cerrLock.lock();
-      mixedDebug << *task << " satisfied.  Now " << readyTasks_.size() << " ready.\n";
-      cerrLock.unlock();
-    }
   }
-  readyQueueLock_.writeUnlock();
 }
 
 //_____________________________________________________________________________
@@ -1923,15 +1916,14 @@ DetailedTasks::internalDependenciesSatisfied( DetailedTask* task )
 DetailedTask*
 DetailedTasks::getNextInternalReadyTask()
 {
-  DetailedTask* nextTask = NULL;
-  readyQueueLock_.writeLock();
+  DetailedTask* nextTask = nullptr;
+  internal_ready_monitor external_ready_lock{ Uintah::CrowdMonitor<internal_ready_tag>::WRITER };
   {
     if (!readyTasks_.empty()) {
       nextTask = readyTasks_.front();
       readyTasks_.pop();
     }
   }
-  readyQueueLock_.writeUnlock();
   return nextTask;
 }
 
@@ -1940,13 +1932,10 @@ DetailedTasks::getNextInternalReadyTask()
 int
 DetailedTasks::numInternalReadyTasks()
 {
-  int size = 0;
-  readyQueueLock_.readLock();
+  internal_ready_monitor external_ready_lock{ Uintah::CrowdMonitor<internal_ready_tag>::READER };
   {
-    size = readyTasks_.size();
+    return readyTasks_.size();
   }
-  readyQueueLock_.readUnlock();
-  return size;
 }
 
 //_____________________________________________________________________________
@@ -1954,15 +1943,14 @@ DetailedTasks::numInternalReadyTasks()
 DetailedTask*
 DetailedTasks::getNextExternalReadyTask()
 {
-  DetailedTask* nextTask = NULL;
-  mpiCompletedQueueLock_.writeLock();
+  DetailedTask* nextTask = nullptr;
+  external_ready_monitor external_ready_lock{ Uintah::CrowdMonitor<external_ready_tag>::WRITER };
   {
     if (!mpiCompletedTasks_.empty()) {
       nextTask = mpiCompletedTasks_.top();
       mpiCompletedTasks_.pop();
     }
   }
-  mpiCompletedQueueLock_.writeUnlock();
   return nextTask;
 }
 
@@ -1972,12 +1960,11 @@ int
 DetailedTasks::numExternalReadyTasks()
 {
   int size = 0;
-  mpiCompletedQueueLock_.readLock();
+
+  external_ready_monitor external_ready_lock{ Uintah::CrowdMonitor<external_ready_tag>::READER };
   {
-    size = mpiCompletedTasks_.size();
+    return mpiCompletedTasks_.size();
   }
-  mpiCompletedQueueLock_.readUnlock();
-  return size;
 }
 
 #ifdef HAVE_CUDA
@@ -2254,11 +2241,6 @@ DetailedTasks::initializeBatches()
 void
 DependencyBatch::reset()
 {
-  if (toTasks.size() > 1) {
-    if (lock_ == 0) {
-      lock_ = scinew Mutex("DependencyBatch receive lock");
-    }
-  }
   received_ = false;
   madeMPIRequest_ = false;
 }
@@ -2269,16 +2251,15 @@ bool
 DependencyBatch::makeMPIRequest()
 {
   if (toTasks.size() > 1) {
-    ASSERT(lock_ != 0);
     if (!madeMPIRequest_) {
-      lock_->lock();
+      lock_.lock();
       if (!madeMPIRequest_) {
         madeMPIRequest_ = true;
-        lock_->unlock();
+        lock_.unlock();
         return true;  // first to make the request
       }
       else {
-        lock_->unlock();
+        lock_.unlock();
         return false;  // got beat out -- request already made
       }
     }
@@ -2298,12 +2279,11 @@ void
 DependencyBatch::addReceiveListener( int mpiSignal )
 {
   ASSERT(toTasks.size() > 1);  // only needed when multiple tasks need a batch
-  ASSERT(lock_ != 0);
-  lock_->lock();
+  lock_.lock();
   {
     receiveListeners_.insert(mpiSignal);
   }
-  lock_->unlock();
+  lock_.unlock();
 }
 
 //_____________________________________________________________________________
@@ -2351,7 +2331,7 @@ DependencyBatch::received( const ProcessorGroup * pg )
     {
       for (set<int>::iterator iter = receiveListeners_.begin(); iter != receiveListeners_.end(); ++iter) {
         // send WakeUp messages to threads on the same processor
-        MPI_Send(0, 0, MPI_INT, pg->myrank(), *iter, pg->getComm());
+        MPI::Send(0, 0, MPI_INT, pg->myrank(), *iter, pg->getComm());
       }
       receiveListeners_.clear();
     }

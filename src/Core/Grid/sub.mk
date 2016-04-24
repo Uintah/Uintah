@@ -70,7 +70,6 @@ SRCS += \
 PSELIBS := \
         Core/Geometry    \
         Core/Exceptions  \
-        Core/Thread      \
         Core/Util        \
         Core/Containers  \
         Core/Parallel    \

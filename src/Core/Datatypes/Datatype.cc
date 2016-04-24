@@ -35,42 +35,33 @@
  */
 
 #include <Core/Datatypes/Datatype.h>
-#include <Core/Thread/AtomicCounter.h>
 #include <Core/Util/Assert.h>
+
+#include <atomic>
+#include <mutex>
 
 namespace Uintah {
 
-static AtomicCounter* current_generation = 0;
-static Mutex init_lock("Datatypes generation counter initialization lock");
+static std::atomic<int32_t> current_generation{1};
+static std::mutex init_lock{};
 
 
 int
 Datatype::compute_new_generation()
 {
-  if(!current_generation)
-  {
-    init_lock.lock();
-    if(!current_generation)
-    {
-      current_generation = new AtomicCounter("Datatype generation counter", 1);
-      init_lock.unlock();
-    }
-  }
-  return (*current_generation)++;
+  return current_generation.fetch_add(1, std::memory_order_relaxed);
 }
 
 
 
 Datatype::Datatype()
   : ref_cnt(0),
-    lock("Datatype ref_cnt lock"),
     generation(compute_new_generation())
 {
 }
 
 Datatype::Datatype(const Datatype&)
   : ref_cnt(0),
-    lock("Datatype ref_cnt lock"),
     generation(compute_new_generation())
 {
 }

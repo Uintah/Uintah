@@ -33,10 +33,7 @@
 #include <Core/Grid/Variables/SFCXVariable.h>
 #include <Core/Grid/Variables/SFCYVariable.h>
 #include <Core/Grid/Variables/SFCZVariable.h>
-#include <Core/Thread/Mutex.h>
-#include <Core/Thread/Thread.h>
-#include <Core/Thread/ThreadGroup.h>
-#include <Core/Thread/Time.h>
+#include <Core/Util/Time.h>
 
 #ifdef HAVE_CUDA
 #include <CCA/Components/Schedulers/GPUDataWarehouse.h>
@@ -48,14 +45,16 @@
 
 #include <cstring>
 #include <iomanip>
+#include <mutex>
+
 #define USE_PACKING
 
 using namespace std;
 using namespace Uintah;
 
 // sync cout/cerr so they are readable when output by multiple threads
-extern Uintah::Mutex coutLock;
-extern Uintah::Mutex cerrLock;
+extern std::mutex coutLock;
+extern std::mutex cerrLock;
 
 extern DebugStream taskdbg;
 extern DebugStream waitout;
@@ -665,7 +664,7 @@ UnifiedScheduler::execute( int tgnum     /* = 0 */,
 
     float queuelength = lengthsum / totaltasks;
     float allqueuelength = 0;
-    MPI_Reduce(&queuelength, &allqueuelength, 1, MPI_FLOAT, MPI_SUM, 0, d_myworld->getComm());
+    MPI::Reduce(&queuelength, &allqueuelength, 1, MPI_FLOAT, MPI_SUM, 0, d_myworld->getComm());
 
     proc0cout << "average queue length:" << allqueuelength / d_myworld->size() << std::endl;
   }
@@ -703,7 +702,7 @@ UnifiedScheduler::execute( int tgnum     /* = 0 */,
     int myrestart = dws[dws.size() - 1]->timestepRestarted();
     int netrestart;
 
-    MPI_Allreduce(&myrestart, &netrestart, 1, MPI_INT, MPI_LOR, d_myworld->getComm());
+    MPI::Allreduce(&myrestart, &netrestart, 1, MPI_INT, MPI_LOR, d_myworld->getComm());
 
     if (netrestart) {
       dws[dws.size() - 1]->restartTimestep();
@@ -732,11 +731,6 @@ void UnifiedScheduler::markTaskConsumed(int& numTasksDone, int& currphase, int n
 
   //Update the count of tasks consumed by the scheduler.
   numTasksDone++;
-  //cerrLock.lock();
-  //{
-  //cout << myRankThread() << " Consumed task: " << dtask->getName() << " tasks done is: " << numTasksDone << " of " << ntasks << endl;
-  //}
-  //cerrLock.unlock();
   if (taskorder.active()) {
     if (d_myworld->myrank() == d_myworld->size() / 2) {
       coutLock.lock();

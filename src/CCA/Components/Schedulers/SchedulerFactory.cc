@@ -27,8 +27,8 @@
 #include <CCA/Components/Schedulers/SingleProcessorScheduler.h>
 #include <CCA/Components/Schedulers/MPIScheduler.h>
 #include <CCA/Components/Schedulers/DynamicMPIScheduler.h>
-#include <CCA/Components/Schedulers/ThreadedMPIScheduler.h>
-#include <CCA/Components/Schedulers/UnifiedScheduler.h>
+//#include <CCA/Components/Schedulers/ThreadedMPIScheduler.h>
+//#include <CCA/Components/Schedulers/UnifiedScheduler.h>
 
 #include <Core/Exceptions/ProblemSetupException.h>
 #include <Core/Parallel/Parallel.h>
@@ -126,12 +126,12 @@ SchedulerFactory::create( const ProblemSpecP   & ps,
   else if (scheduler == "DynamicMPI") {
     sch = scinew DynamicMPIScheduler(world, output, NULL);
   }
-  else if (scheduler == "ThreadedMPI") {
-    sch = scinew ThreadedMPIScheduler(world, output, NULL);
-  }
-  else if (scheduler == "Unified") {
-    sch = scinew UnifiedScheduler(world, output, NULL);
-  }
+//  else if (scheduler == "ThreadedMPI") {
+//    sch = scinew ThreadedMPIScheduler(world, output, NULL);
+//  }
+//  else if (scheduler == "Unified") {
+//    sch = scinew UnifiedScheduler(world, output, NULL);
+//  }
   else {
     sch = 0;
     std::string error = "Unknown scheduler: '" + scheduler

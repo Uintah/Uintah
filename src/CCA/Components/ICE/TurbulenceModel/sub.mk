@@ -30,7 +30,7 @@
 SRCDIR   := CCA/Components/ICE/TurbulenceModel
 
 SRCS     += $(SRCDIR)/TurbulenceFactory.cc    \
-	     $(SRCDIR)/Turbulence.cc           \
+	        $(SRCDIR)/Turbulence.cc           \
             $(SRCDIR)/DynamicModel.cc         \
             $(SRCDIR)/SmagorinskyModel.cc    
 
@@ -40,7 +40,8 @@ PSELIBS := \
 	Core/Parallel   \
 	Core/Exceptions \
 	Core/Math       \
-	Core/Exceptions Core/Thread Core/Geometry 
+	Core/Exceptions \
+	Core/Geometry 
 
 LIBS	:= 
 

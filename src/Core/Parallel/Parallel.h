@@ -25,20 +25,23 @@
 #ifndef CORE_PARALLEL_PARALLEL_H
 #define CORE_PARALLEL_PARALLEL_H
 
-#include <Core/Thread/Thread.h>
+#include <thread>
+
 
 // Macros used to eliminate excess spew on large parallel runs...
 //
-//   Note, make sure that MPI_Init (or MPI_Init_thread) is called
+//   Note, make sure that MPI::Init (or MPI::Init_thread) is called
 //   before using isProc0_macro.
 //
 #define isProc0_macro ( Uintah::Parallel::getMPIRank() == 0 &&           \
 			( ( Uintah::Parallel::getNumThreads() > 1 &&	\
-			    Uintah::Thread::self()->myid() == 0 ) ||	\
+			    Uintah::Parallel::getMainThreadID() == std::this_thread::get_id() ) ||	\
 			  ( Uintah::Parallel::getNumThreads() <= 1 ) ) )
 
 #define proc0cout if( isProc0_macro ) std::cout
 #define proc0cerr if( isProc0_macro ) std::cerr
+
+#define MAX_THREADS 64
 
 namespace Uintah {
 
@@ -142,28 +145,27 @@ class Parallel {
       // allowed to use to compute its tasks.  
       static int getNumThreads();
 
-      //////////
-      // Insert Documentation here:
+      static std::thread::id getMainThreadID();
+
       static void setNumThreads( int num );
       
+      static void exitAll(int code);
+
    private:
       Parallel();
       Parallel( const Parallel& );
       ~Parallel();
       Parallel& operator=( const Parallel& );
 
-//     static bool          allowThreads;
-
-      static int             numThreads_;
-      static bool            determinedIfUsingMPI_;
-
-      static bool            initialized_;
-      static bool            usingMPI_;
-      static bool            usingDevice_;
-//      static MPI_Comm        worldComm_;
-      static int             worldRank_;
-      static int             worldSize_;
-      static ProcessorGroup* rootContext_;
+      static int               numThreads_;
+      static std::thread::id   m_main_thread_id;
+      static bool              determinedIfUsingMPI_;
+      static bool              initialized_;
+      static bool              usingMPI_;
+      static bool              usingDevice_;
+      static int               worldRank_;
+      static int               worldSize_;
+      static ProcessorGroup*   rootContext_;
 
 };
 

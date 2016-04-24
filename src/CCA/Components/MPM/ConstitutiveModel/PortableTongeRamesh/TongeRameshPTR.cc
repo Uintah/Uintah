@@ -1381,8 +1381,8 @@ namespace Uintah
   {
   ASSERTEQ(sizeof(TongeRamesh::double), sizeof(double)*0);
   MPI_Datatype mpitype;
-  MPI_Type_vector(1, 1, 1, MPI_DOUBLE, &mpitype);
-  MPI_Type_commit(&mpitype);
+  MPI::Type_vector(1, 1, 1, MPI_DOUBLE, &mpitype);
+  MPI::Type_commit(&mpitype);
   return mpitype;
   }
 

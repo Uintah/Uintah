@@ -81,9 +81,7 @@
 #include <Core/OS/ProcessInfo.h>
 #include <Core/Parallel/Parallel.h>
 #include <Core/Parallel/ProcessorGroup.h>
-#include <Core/Thread/Mutex.h>
-#include <Core/Thread/Time.h>
-#include <Core/Thread/Thread.h>
+#include <Core/Util/Time.h>
 #include <Core/Util/DebugStream.h>
 #include <Core/Util/Environment.h>
 #include <Core/Util/FileUtils.h>
@@ -112,6 +110,7 @@
 #include <iomanip>
 #include <iostream>
 #include <cstdio>
+#include <mutex>
 #include <string>
 #include <vector>
 #include <stdexcept>
@@ -129,14 +128,14 @@ using namespace std;
 #endif
 
 // If we are using MPICH version 1, 
-// we must call MPI_Init() before parsing args
+// we must call MPI::Init() before parsing args
 #if defined(HAVE_MPICH) && (MPI_VERSION < 2)
 #  define HAVE_MPICH_OLD
 #endif
 
 
 // Used to sync cerr so it is readable when output by multiple threads
-extern Mutex cerrLock;
+extern std::mutex cerrLock;
 
 static DebugStream stackDebug("ExceptionStack", true);
 static DebugStream dbgwait("WaitForDebugger", false);
@@ -149,7 +148,7 @@ quit(const std::string & msg = "")
     cerr << msg << "\n";
   }
   Uintah::Parallel::finalizeManager();
-  Thread::exitAll(2);
+  Parallel::exitAll(2);
 }
 
 static
@@ -162,7 +161,7 @@ usage(const std::string& message, const std::string& badarg, const std::string& 
   argv = 0;
 
   // Initialize MPI so that "usage" is only printed by proc 0.
-  // (If we are using MPICH, then MPI_Init() has already been called.)
+  // (If we are using MPICH, then MPI::Init() has already been called.)
   Uintah::Parallel::initializeManager(argc, argv);
 #endif
 
@@ -217,19 +216,19 @@ sanityChecks()
     printf("\nERROR:\n");
     printf("ERROR: Environment variable MALLOC_STATS set, but  --enable-sci-malloc was not configured...\n");
     printf("ERROR:\n\n");
-    Thread::exitAll(1);
+    Parallel::exitAll(1);
   }
   if (getenv("MALLOC_TRACE")) {
     printf("\nERROR:\n");
     printf("ERROR: Environment variable MALLOC_TRACE set, but  --enable-sci-malloc was not configured...\n");
     printf("ERROR:\n\n");
-    Thread::exitAll(1);
+    Parallel::exitAll(1);
   }
   if (getenv("MALLOC_STRICT")) {
     printf("\nERROR:\n");
     printf("ERROR: Environment variable MALLOC_STRICT set, but --enable-sci-malloc  was not configured...\n");
     printf("ERROR:\n\n");
-    Thread::exitAll(1);
+    Parallel::exitAll(1);
   }
 #endif
 }
@@ -252,11 +251,6 @@ main( int argc, char *argv[], char *env[] )
   string oldTag;
   MALLOC_TRACE_TAG_SCOPE("main()");
 
-  // Turn off Thread asking so sus can cleanly exit on abortive behavior.  
-  // Can override this behavior with the environment variable SCI_SIGNALMODE
-  Thread::setDefaultAbortMode("exit");
-  Thread::self()->setCleanupFunction( &abortCleanupFunc );
-  
 #if HAVE_IEEEFP_H
   fpsetmask(FP_X_OFL|FP_X_DZ|FP_X_INV);
 #endif
@@ -302,17 +296,17 @@ main( int argc, char *argv[], char *env[] )
     */
   //
   // When using old verison of MPICH, initializeManager() uses the arg list to
-  // determine whether sus is running with MPI before calling MPI_Init())
+  // determine whether sus is running with MPI before calling MPI::Init())
   //
   // NOTE: The main problem with calling initializeManager() before
   // parsing the args is that we don't know if thread MPI is going to
-  // However, MPICH veriosn 1 does not support Thread safety, so we will just dis-allow that.
+  // However, MPICH version 1 does not support Thread safety, so we will just dis-allow that.
   
   Uintah::Parallel::initializeManager( argc, argv );
 #endif
   /*
-    * Parse arguments
-    */
+   * Parse arguments
+   */
   for (int i = 1; i < argc; i++) {
     string arg = argv[i];
     if ((arg == "-help") || (arg == "-h")) {
@@ -334,12 +328,12 @@ main( int argc, char *argv[], char *env[] )
       }
       else if( numThreads > MAX_THREADS ) {
         usage( "Number of threads is out of range. Specify fewer threads, "
-               "or increase MAX_THREADS (.../src/Core/Thread/Threads.h) and recompile.", arg, argv[0] );
+               "or increase MAX_THREADS (.../src/Core/Parallel/Parallel.h) and recompile.", arg, argv[0] );
       }
       Uintah::Parallel::setNumThreads( numThreads );
     }
     else if (arg == "-threadmpi") {
-      //used threaded mpi (this option is handled in MPI_Communicator.cc  MPI_Init_thread
+      //used threaded mpi (this option is handled in MPI::Communicator.cc  MPI::Init_thread
     }
     else if (arg == "-solver") {
       if (++i == argc) {
@@ -392,10 +386,10 @@ main( int argc, char *argv[], char *env[] )
       } else {
         std::cout << "No GPU detected!" << std::endl;
       }
-      Thread::exitAll(retVal);
+      Parallel::exitAll(retVal);
 #endif
       cout << "No GPU detected!" << endl;
-      Thread::exitAll(2); //If the above didn't exit with a 1, then we didn't have a GPU, so exit with a 2.
+      Parallel::exitAll(2); //If the above didn't exit with a 1, then we didn't have a GPU, so exit with a 2.
       cout << "This doesn't run" << endl;
     }
 #ifdef HAVE_CUDA
@@ -519,7 +513,7 @@ main( int argc, char *argv[], char *env[] )
       cout << "ERROR: " + udaDir + " is a symbolic link.  Please use the full name of the UDA.\n";
       cout << "\n";
       Uintah::Parallel::finalizeManager();
-      Thread::exitAll( 1 );
+      Parallel::exitAll( 1 );
     }
   }
 
@@ -620,14 +614,14 @@ main( int argc, char *argv[], char *env[] )
       }
       proc0cout   << "\n";
       Uintah::Parallel::finalizeManager();
-      Thread::exitAll( 0 );
+      Parallel::exitAll( 0 );
     }
 
     if( onlyValidateUps ) {
       cout << "\nValidation of .ups File finished... good bye.\n\n";
       ups = 0; // This cleans up memory held by the 'ups'.
       Uintah::Parallel::finalizeManager();
-      Thread::exitAll( 0 );
+      Parallel::exitAll( 0 );
     }
 
     // If VisIt is included then the user may be attching into Visit's
@@ -886,7 +880,7 @@ main( int argc, char *argv[], char *env[] )
     if( Uintah::Parallel::getMPIRank() == 0 ) {
       cout << "\n\nAN EXCEPTION WAS THROWN... Goodbye.\n\n";
     }
-    Thread::exitAll(1);
+    Parallel::exitAll(1);
   }
 
   if( Uintah::Parallel::getMPIRank() == 0 ) {
@@ -894,7 +888,7 @@ main( int argc, char *argv[], char *env[] )
   }
 
   // use exitAll(0) since return does not work
-  Thread::exitAll(0);
+  Parallel::exitAll(0);
   return 0;
 
 } // end main()

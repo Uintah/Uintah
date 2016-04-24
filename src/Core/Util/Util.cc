@@ -24,11 +24,11 @@
 
 
 
-#include <Core/Thread/Mutex.h>
 #include <Core/Util/DebugStream.h>
 
-using Uintah::Mutex;
-Mutex coutLock( "cout lock" );
-Mutex cerrLock( "cerr lock" );
+#include <mutex>
+
+std::mutex coutLock{};
+std::mutex cerrLock{};
 
 Uintah::DebugStream dbg_barrier("MPIBarriers",false);

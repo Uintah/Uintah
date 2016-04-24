@@ -99,8 +99,8 @@ namespace Uintah {
   {
     ASSERTEQ(sizeof(fflux), sizeof(double)*6);
     MPI_Datatype mpitype;
-    MPI_Type_vector(1, 6, 6, MPI_DOUBLE, &mpitype);
-    MPI_Type_commit(&mpitype);
+    MPI::Type_vector(1, 6, 6, MPI_DOUBLE, &mpitype);
+    MPI::Type_commit(&mpitype);
     return mpitype;
   }
 

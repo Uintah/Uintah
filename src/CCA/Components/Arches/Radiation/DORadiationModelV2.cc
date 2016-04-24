@@ -38,7 +38,7 @@
 //#include <CCA/Components/Arches/Mixing/Common.h>
 #include <CCA/Components/Arches/BoundaryCondition.h>
 #include <Core/Exceptions/InternalError.h>
-#include <Core/Thread/Time.h>
+#include <Core/Util/Time.h>
 
 #include <Core/ProblemSpec/ProblemSpecP.h>
 #include <Core/ProblemSpec/ProblemSpec.h>

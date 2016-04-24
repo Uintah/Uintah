@@ -40,8 +40,7 @@ else
 	Core/Geometry          \
 	Core/Grid              \
 	Core/Parallel          \
-	Core/Math              \
-	Core/Thread            
+	Core/Math
 endif
 
 ifeq ($(IS_STATIC_BUILD),yes)

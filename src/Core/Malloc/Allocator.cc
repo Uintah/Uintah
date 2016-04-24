@@ -313,7 +313,6 @@ void UnLockAllocator(Allocator * /*a*/)
 #  else
 #    ifdef SCI_PTHREAD
 
-// This is code taken from Core/Thread/RecursiveMutex_default.cc
 // I'm using this code to make sure that if a thread locks the allocator
 // that this thread is the only one who can use the allocator until
 // it unlocks the mutex.

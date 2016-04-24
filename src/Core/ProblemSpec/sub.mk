@@ -39,7 +39,6 @@ PSELIBS := \
 	Core/Exceptions \
 	Core/Math       \
 	Core/Util       \
-	Core/Thread
 
 LIBS := $(XML2_LIBRARY)
 

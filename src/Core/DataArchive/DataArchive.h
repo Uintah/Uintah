@@ -39,15 +39,15 @@
 #include <Core/ProblemSpec/ProblemSpec.h>
 #include <Core/Util/Handle.h>
 #include <Core/Exceptions/VariableNotFoundInGrid.h>
-#include <Core/Thread/Mutex.h>
-#include <Core/Thread/Time.h>
+#include <Core/Util/Time.h>
 #include <Core/Util/DebugStream.h>
 #include <Core/Containers/ConsecutiveRangeSet.h>
 #include <Core/Containers/HashTable.h>
 
+#include <list>
+#include <mutex>
 #include <string>
 #include <vector>
-#include <list>
 
 #include <fcntl.h>
 #include <unistd.h>
@@ -278,7 +278,7 @@ public:
   // These are here for the LockingHandle interface.  The names should
   // match those found in Core/Datatypes/Datatype.h.
   int ref_cnt;
-  Mutex lock;
+  std::mutex lock{};
 
   // This is added to allow simple geometric scaling of the entire domain
   void setCellScale( Vector& s ){ d_cell_scale = s; }
@@ -441,7 +441,7 @@ private:
   int d_processor;
   int d_numProcessors;
 
-  Mutex d_lock;
+  std::mutex d_lock{};
     
   std::string d_particlePositionName;
 

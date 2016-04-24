@@ -553,8 +553,8 @@ static MPI_Datatype makeMPI_CMData()
 {
    ASSERTEQ(sizeof(SoilFoam::CMData), sizeof(double)*3);
    MPI_Datatype mpitype;
-   MPI_Type_vector(1, 3, 3, MPI_DOUBLE, &mpitype);
-   MPI_Type_commit(&mpitype);
+   MPI::Type_vector(1, 3, 3, MPI_DOUBLE, &mpitype);
+   MPI::Type_commit(&mpitype);
    return mpitype;
 }
 

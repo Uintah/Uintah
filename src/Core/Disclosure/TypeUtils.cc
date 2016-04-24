@@ -157,8 +157,8 @@ static MPI_Datatype makeMPI_Point()
 {
    ASSERTEQ(sizeof(Point), sizeof(double)*3);
    MPI_Datatype mpitype;
-   MPI_Type_vector(1, 3, 3, MPI_DOUBLE, &mpitype);
-   MPI_Type_commit(&mpitype);
+   MPI::Type_vector(1, 3, 3, MPI_DOUBLE, &mpitype);
+   MPI::Type_commit(&mpitype);
    return mpitype;
 }
 
@@ -176,8 +176,8 @@ static MPI_Datatype makeMPI_Vector()
 {
    ASSERTEQ(sizeof(Vector), sizeof(double)*3);
    MPI_Datatype mpitype;
-   MPI_Type_vector(1, 3, 3, MPI_DOUBLE, &mpitype);
-   MPI_Type_commit(&mpitype);
+   MPI::Type_vector(1, 3, 3, MPI_DOUBLE, &mpitype);
+   MPI::Type_commit(&mpitype);
    return mpitype;
 }
 

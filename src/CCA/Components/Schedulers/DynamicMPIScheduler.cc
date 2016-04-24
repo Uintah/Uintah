@@ -27,16 +27,16 @@
 #include <CCA/Components/Schedulers/TaskGraph.h>
 
 #include <Core/Exceptions/ProblemSetupException.h>
-#include <Core/Thread/Mutex.h>
-#include <Core/Thread/Time.h>
+#include <Core/Util/Time.h>
 
 #include <cstring>
+#include <mutex>
 
 using namespace Uintah;
 
 // Used to sync cout/cerr so it is readable when output by multiple threads
-extern Uintah::Mutex      coutLock;
-extern Uintah::Mutex      cerrLock;
+extern std::mutex      coutLock;
+extern std::mutex      cerrLock;
 
 extern DebugStream        taskdbg;
 extern DebugStream        taskorder;
@@ -407,7 +407,7 @@ DynamicMPIScheduler::execute( int tgnum     /*=0*/,
     float queuelength = lengthsum / totaltasks;
     float allqueuelength = 0;
 
-    MPI_Reduce(&queuelength, &allqueuelength, 1, MPI_FLOAT, MPI_SUM, 0, d_myworld->getComm());
+    MPI::Reduce(&queuelength, &allqueuelength, 1, MPI_FLOAT, MPI_SUM, 0, d_myworld->getComm());
 
     proc0cout << "average queue length:" << allqueuelength / d_myworld->size() << std::endl;
   }
@@ -444,7 +444,7 @@ DynamicMPIScheduler::execute( int tgnum     /*=0*/,
     int myrestart = dws[dws.size() - 1]->timestepRestarted();
     int netrestart;
 
-    MPI_Allreduce(&myrestart, &netrestart, 1, MPI_INT, MPI_LOR, d_myworld->getComm());
+    MPI::Allreduce(&myrestart, &netrestart, 1, MPI_INT, MPI_LOR, d_myworld->getComm());
 
     if (netrestart) {
       dws[dws.size() - 1]->restartTimestep();

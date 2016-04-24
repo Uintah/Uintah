@@ -25,7 +25,6 @@
 #ifndef __PARTICLE_CREATOR_H__
 #define __PARTICLE_CREATOR_H__
 
-#include <Core/Thread/CrowdMonitor.h>
 #include <Core/GeometryPiece/GeometryPiece.h>
 #include <Core/Grid/Variables/CCVariable.h>
 #include <Core/Grid/Variables/ParticleVariable.h>
@@ -166,9 +165,7 @@ namespace Uintah {
     bool d_useCPTI;
 
     std::vector<const VarLabel* > particle_state, particle_state_preReloc;
-
     
-    mutable CrowdMonitor   d_lock;
   };
 
 

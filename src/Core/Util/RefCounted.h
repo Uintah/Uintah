@@ -76,7 +76,7 @@ WARNING
       //////////
       // Insert Documentation Here:
       mutable int d_refCount;
-      int d_lockIndex;
+      int         d_lockIndex;
    };
 } // End namespace Uintah
 

@@ -25,7 +25,6 @@
 #ifndef Core_Util_RWS_h
 #define Core_Util_RWS_h 1
 
-#include <Core/Util/notset.h>
 #include <string>
 
 namespace Uintah {

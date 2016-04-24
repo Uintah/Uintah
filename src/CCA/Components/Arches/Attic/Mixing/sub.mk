@@ -49,7 +49,6 @@ PSELIBS := \
         Core/Util             \
         CCA/Components/Models \
         Core/Exceptions       \
-        Core/Thread           \
         Core/Parallel         \
         Core/Geometry   
 

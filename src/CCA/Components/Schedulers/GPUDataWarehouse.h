@@ -33,13 +33,11 @@
 #include <Core/Grid/Variables/GPUReductionVariable.h>
 #include <Core/Grid/Variables/GridVariableBase.h>
 #include <Core/Grid/Variables/GPUPerPatch.h>
-#include <Core/Thread/CrowdMonitor.h>
 
 
 #include <map> //for host code only.
 #include <string>
 #include <vector>
-#include <Core/Thread/CrowdMonitor.h>
 
 #define MAX_VARDB_ITEMS       10000000  //Due to how it's allocated, it will never use up this much space.
                                         //Only a very small fraction of it.

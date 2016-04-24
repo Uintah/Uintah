@@ -39,7 +39,7 @@
 #include <Core/Grid/BoundaryConditions/BCDataArray.h>
 #include <Core/Grid/BoundaryConditions/BoundCond.h>
 #include <sci_defs/cuda_defs.h>
-#include <Core/Thread/Thread.h>
+
 #ifdef HAVE_CUDA
 //#include <CCA/Components/Schedulers/GPUUtilities.h>
 #include <CCA/Components/Schedulers/GPUGridVariableInfo.h>

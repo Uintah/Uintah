@@ -112,7 +112,6 @@ PSELIBS := \
         Core/Math                       \
         Core/Parallel                   \
         Core/ProblemSpec                \
-        Core/Thread                     \
         Core/Util
 
 ifeq ($(HAVE_PETSC),yes)
