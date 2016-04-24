@@ -1,0 +1,190 @@
+<Uintah_specification>
+
+  <Meta>
+    <title>Test Density_Evaluator for Wasatch</title>
+  </Meta>
+
+  <SimulationComponent type="wasatch"/>
+
+  <Wasatch>
+    
+    <Density method="LOWMACH">
+      <NameTag name="rho"/> 
+    </Density>
+    
+    <!-- Set the initial condition expression for mixture fraction -->
+    <BasicExpression type="SVOL">
+      <TaskList>initialization</TaskList>
+      <NameTag name="f"/>
+      <SineFunction amplitude="0.5" frequency="2" offset="0.5">
+        <NameTag name="XSVOL"/>
+      </SineFunction>
+    </BasicExpression>
+    
+    <!-- Set the initial condition expression for heat loss -->
+    <BasicExpression type="SVOL">
+      <TaskList>initialization</TaskList>
+      <NameTag name="lambda"/>
+      <SineFunction amplitude="1.0" frequency="2" offset="0.0">
+        <NameTag name="YSVOL"/>
+      </SineFunction>
+    </BasicExpression>    
+            
+    <!-- Set up a tabular property evaluation to extract density for initialization-->
+    <TabProps>
+      <FileNamePrefix>inputs/Wasatch/FastChem_d</FileNamePrefix>
+      <TaskList>initialization</TaskList>
+      <IndependentVariable>
+        <NameTag name="f"/>
+        <NameInTable>MixtureFraction</NameInTable>
+      </IndependentVariable>
+      
+      <IndependentVariable>
+        <NameTag name="lambda"/>
+        <NameInTable>HeatLoss</NameInTable>
+      </IndependentVariable>
+      
+      <ExtractDensity>
+        <NameInTable>Density</NameInTable>
+        <NameTag name="rho"/>
+      </ExtractDensity>
+    </TabProps>
+	
+	<!-- CREATE AN EXPRESSION FOR HEAT LOSS -->
+    <BasicExpression type="SVOL">
+      <TaskList>advance_solution</TaskList>
+      <NameTag name="lambda"/>
+      <SineFunction amplitude="1.0" frequency="2" offset="0.0">
+        <NameTag name="YSVOL"/>
+      </SineFunction>
+    </BasicExpression>
+
+    <!-- Set up a tabular property evaluation to extract density within the advance_solution-->
+    <TabProps>
+      <FileNamePrefix>inputs/Wasatch/FastChem_d</FileNamePrefix>
+      <TaskList>advance_solution</TaskList>
+      <IndependentVariable>
+        <NameTag name="f"/>
+        <NameInTable>MixtureFraction</NameInTable>
+      </IndependentVariable>
+      
+      <IndependentVariable>
+        <NameTag name="lambda"/>
+        <NameInTable>HeatLoss</NameInTable>
+      </IndependentVariable>
+      
+      <ExtractDensity>
+        <NameInTable>Density</NameInTable>
+        <NameTag name="rho"/>
+        <DensityWeightedIVar>
+          <NameTag name="rhof" state="STATE_DYNAMIC"/>
+          <RelatedIVar>
+            <NameTag name="f"/>
+          </RelatedIVar>
+        </DensityWeightedIVar>
+      </ExtractDensity>
+      
+    </TabProps>
+    
+    <!-- SET THE INITIAL CONDITIONEXPRESSION FOR VelX -->
+    <BasicExpression type="XVOL">
+      <TaskList>initialization</TaskList>
+      <NameTag name="VelX"/>
+      <Constant> 10.0 </Constant>
+    </BasicExpression>
+    
+    <!-- SET THE INITIAL CONDITIONEXPRESSION FOR VelY -->
+    <BasicExpression type="YVOL">
+      <TaskList>initialization</TaskList>
+      <NameTag name="VelY"/>
+      <Constant> 0.0 </Constant>
+    </BasicExpression>
+
+    <!-- SET THE INITIAL CONDITIONEXPRESSION FOR VelZ -->
+    <BasicExpression type="ZVOL">
+      <TaskList>initialization</TaskList>
+      <NameTag name="VelZ"/>
+      <Constant> 0.0 </Constant>
+    </BasicExpression>
+         
+    <!-- CREATE AN EXPRESSION FOR VelX -->
+    <BasicExpression type="XVOL">
+      <TaskList>advance_solution</TaskList>
+      <NameTag name="VelX"/>
+      <Constant> 10.0 </Constant>
+    </BasicExpression>
+               
+    <!-- CREATE AN EXPRESSION FOR VelY -->
+    <BasicExpression type="YVOL">
+      <TaskList>advance_solution</TaskList>
+      <NameTag name="VelY"/>
+      <Constant> 0.0 </Constant>
+    </BasicExpression>
+    
+    <!-- CREATE AN EXPRESSION FOR VelZ -->
+    <BasicExpression type="ZVOL">
+      <TaskList>advance_solution</TaskList>
+      <NameTag name="VelZ"/>
+      <Constant> 0.0 </Constant>
+    </BasicExpression>
+    
+    <!-- Build a scalar transport equation for mixture fraction -->
+    <TransportEquation equation="generic">
+      <SolutionVariable>rhof</SolutionVariable>
+      <PrimitiveVariable>f</PrimitiveVariable>
+      <ConvectiveFlux direction="X" method="CENTRAL">
+        <AdvectiveVelocity>
+          <NameTag name="VelX"/>
+        </AdvectiveVelocity>
+      </ConvectiveFlux>
+      <ConvectiveFlux direction="Y" method="CENTRAL">
+        <AdvectiveVelocity>
+          <NameTag name="VelY"/>
+        </AdvectiveVelocity>
+      </ConvectiveFlux>
+      <ConvectiveFlux direction="Z" method="CENTRAL">
+        <AdvectiveVelocity>
+          <NameTag name="VelZ"/>
+        </AdvectiveVelocity>
+      </ConvectiveFlux>
+      <DiffusiveFlux direction="X" coefficient="0.1"/>
+      <DiffusiveFlux direction="Y" coefficient="0.2"/>
+      <DiffusiveFlux direction="Z" coefficient="0.3"/>
+    </TransportEquation>
+    </Wasatch>
+
+
+  <Time>
+    <maxTime>1.0</maxTime>
+    <initTime>0.0</initTime>
+    <delt_min>0.0001</delt_min>
+    <delt_max>0.0001</delt_max>
+    <timestep_multiplier>1.0</timestep_multiplier>
+  </Time>
+
+
+  <DataArchiver>
+    <filebase>density-eval-test.uda</filebase>
+    <outputTimestepInterval>1</outputTimestepInterval>
+    <outputInitTimestep/>
+    <checkpoint cycle="10" interval="0.001"/>
+    <compression>gzip</compression>
+    <save label="f"/>
+    <save label="lambda"/>
+    <save label="rho"/>
+    <save label="rhof"/>
+  </DataArchiver> 
+
+  <Grid>
+      <Level>
+      <Box label="1">
+        <lower>[0,0,0]</lower>
+        <upper>[3.141592653589793,3.141592653589793,0.03]</upper>
+        <resolution>[100,100,2]</resolution>
+        <patches>[3,3,1]</patches>
+      </Box>
+      <periodic>[1,1,1]</periodic>
+    </Level>
+  </Grid>
+
+</Uintah_specification>

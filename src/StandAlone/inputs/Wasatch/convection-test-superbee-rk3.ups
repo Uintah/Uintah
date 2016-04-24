@@ -1,0 +1,139 @@
+<Uintah_specification>
+
+  <Meta>
+    <title>Test for Superbee Limiter</title>
+  </Meta>
+
+  <SimulationComponent type="wasatch"/>
+
+  <Wasatch>
+
+    <Density method="CONSTANT">
+      <Constant value="1.0" name="density"/>
+    </Density>
+
+   <TimeIntegrator>RK3SSP</TimeIntegrator>
+
+    <!-- Set the initial condition for non-staggered scalar -->
+    <BasicExpression type="SVOL">
+      <TaskList>initialization</TaskList>
+      <NameTag name="phi0-scalar"/>
+      <SineFunction amplitude="10.0" frequency="2.0" offset="0.0">
+         <NameTag name="XSVOL"/>
+       </SineFunction>
+    </BasicExpression>
+    
+    <!-- Set the initial condition for non-staggered scalar -->
+    <BasicExpression type="SVOL">
+      <TaskList>initialization</TaskList>
+      <NameTag name="phi1-scalar"/>
+      <SineFunction amplitude="10.0" frequency="1.0" offset="0.0">
+         <NameTag name="YSVOL"/>
+       </SineFunction>
+    </BasicExpression>
+    
+    <!-- Set the initial condition for non-staggered scalar -->
+    <BasicExpression type="SVOL">
+      <TaskList>initialization</TaskList>
+      <NameTag name="phi2-scalar"/>
+      <SineFunction amplitude="10.0" frequency="3.0" offset="0.0">
+         <NameTag name="ZSVOL"/>
+       </SineFunction>
+    </BasicExpression>
+  
+    <!-- CREATE AN EXPRESSION FOR THE VELOCITY FIELD -->
+    <BasicExpression type="XVOL">
+      <TaskList>advance_solution</TaskList>
+      <NameTag name="u"/>
+      <Constant>1.0</Constant>
+    </BasicExpression>
+    
+    <!-- CREATE AN EXPRESSION FOR THE VELOCITY FIELD -->
+    <BasicExpression type="YVOL">
+      <TaskList>advance_solution</TaskList>
+      <NameTag name="v"/>
+      <Constant>1.0</Constant>
+    </BasicExpression>
+    
+    <!-- CREATE AN EXPRESSION FOR THE VELOCITY FIELD -->
+    <BasicExpression type="ZVOL">
+      <TaskList>advance_solution</TaskList>
+      <NameTag name="w"/>
+      <Constant>1.0</Constant>
+    </BasicExpression>
+    
+    <!-- Build a non-staggered scalar transport equation -->
+    <TransportEquation equation="generic">
+
+      <SolutionVariable>phi0-scalar</SolutionVariable>
+      
+      <ConvectiveFlux direction="X" method="SUPERBEE">
+        <AdvectiveVelocity>
+            <NameTag name="u"/>
+        </AdvectiveVelocity>
+      </ConvectiveFlux>
+    
+    </TransportEquation>
+    
+    <!-- Build a non-staggered scalar transport equation -->
+    <TransportEquation equation="generic">
+
+      <SolutionVariable>phi1-scalar</SolutionVariable>
+      
+      <ConvectiveFlux direction="Y" method="SUPERBEE">
+        <AdvectiveVelocity>
+            <NameTag name="v"/>
+        </AdvectiveVelocity>
+      </ConvectiveFlux>
+      
+    </TransportEquation>
+
+    <!-- Build a non-staggered scalar transport equation -->
+    <TransportEquation equation="generic">
+
+      <SolutionVariable>phi2-scalar</SolutionVariable>
+
+      <ConvectiveFlux direction="Z" method="SUPERBEE">
+        <AdvectiveVelocity>
+            <NameTag name="w"/>
+        </AdvectiveVelocity>
+      </ConvectiveFlux>
+
+    </TransportEquation>
+
+  </Wasatch>
+
+
+  <Time>
+    <maxTime>0.1</maxTime>
+    <initTime>0.0</initTime>
+    <delt_min>0.001</delt_min>
+    <delt_max>0.001</delt_max>
+    <timestep_multiplier>1.0</timestep_multiplier>
+  </Time>
+
+
+  <DataArchiver>
+    <filebase>convection-test-superbee-rk3.uda</filebase>
+    <outputTimestepInterval>2</outputTimestepInterval>
+    <outputInitTimestep/>
+    <checkpoint cycle="2" interval="0.01"/>
+    <compression>gzip</compression>
+    <save label="phi0-scalar"/>
+    <save label="phi1-scalar"/>
+    <save label="phi2-scalar"/>
+  </DataArchiver> 
+
+  <Grid>
+    <Level>
+      <Box label="1">
+        <lower>[0,0,0]</lower>
+        <upper>[3,3,3]</upper>
+        <resolution>[12,12,12]</resolution>
+        <patches>[1,1,1]</patches>
+      </Box>
+      <periodic>[1,1,1]</periodic>
+    </Level>
+  </Grid>
+
+</Uintah_specification>

@@ -1,0 +1,53 @@
+
+General notes
+______________________________________________________________________
+
+
+
+computeEquilibrationPressure
+______________________________________________________________________
+  -  When computing rho_micro for MPM matls you can't use mass_CC/mat_volume or
+     for that matter you can't use mat_volume for anything.  Why?  
+
+We discovered that there is a huge error in rho_micro_mpm if you 
+use the mass and volume from the particles that has been interpolated
+to the cell-center.  To illustrate the problem lets look at what happens
+when you pressurize the 4 particles in the figure below by adding internal
+energy to the surrounding gas.
+
+*             ________________________
+*            |    |    |    |    |    |
+*            |    |  x |  x |  x |    |
+*            |____|____|____|____|____|
+*            |    |    |    |    |    | (.) = particles
+*            |    |    | . .|    |    |  x  = cells that have
+*            |    |  x | . .|  x |    |       interpolated mass and
+*            |____|____|____|____|____|       volume
+*            |    |    |    |    |    |
+*            |    |    |    |    |    |
+*            |    |  x |  x |  x |    |
+*            |____|____|____|____|____|
+
+
+The particle volume will feel the pressure and change
+according to the volumetric stress. That volume is then interpolated to
+the nodes and finally to the cell-centers.  The mass is also
+interpolated but it doesn't vary as a result of the pressure.  Now when
+you compute the mass_CC/mat_vol_CC at the cell centers you end up with
+ rho_micro based on the pressure of the cell with the particles.  Well,
+what happens if the pressure in the cell adjacent to the particles is
+at a completely different pressure?  You'll compute the wrong
+rho_micro, since it's based on the pressure in the cell with the
+particles.
+
+ Here are some numbers that illustrate the magnitude of the error.
+This is for a single cell filled with  particles that is being
+pressurized by the surrounding gas.  Below is the rho_micro computed
+via mass/mat_vol and the equation of state the % difference.
+
+   cell         mass/vol             Constitutive Model
+[int 6, 4, 5] rho_micro_mpm 1.39667 rho_micro_CM 8.65469 diff 519.666
+[int 4, 5, 5] rho_micro_mpm 1.39667 rho_micro_CM 2.2386  diff 60.2812
+[int 5, 5, 5] rho_micro_mpm 1.39667 rho_micro_CM 1.53844 diff 10.1503
+[int 6, 5, 5] rho_micro_mpm 1.39667 rho_micro_CM 2.2386  diff 60.2811
+[int 4, 6, 5] rho_micro_mpm 1.39667 rho_micro_CM 8.65469 diff 519.666

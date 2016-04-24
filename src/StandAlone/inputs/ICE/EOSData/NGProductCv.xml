@@ -1,0 +1,10 @@
+<?xml version='1.0' encoding='ISO-8859-1' ?>
+<Uintah_Include>
+  <SpecificHeatModel type="Polynomial">
+    <!-- NG Product Specific Heat Model -->
+    <Tmin>      250  </Tmin>  <!-- K -->
+    <MaxOrder>    7  </MaxOrder>
+    <coefficient> [8.14825e14, 1.77638e14, -1.40582e13, 5.26619e11, -1.0082e10, 9.4924e7, -4.13882e5, 1435.5] </coefficient>
+  </SpecificHeatModel>
+</Uintah_Include>
+
