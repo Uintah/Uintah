@@ -306,7 +306,7 @@ ArchesTable::setup(const bool cerrSwitch)
 
   gzFile gzFp = gzopen( filename_.c_str(), "r" );
 
-  if( gzFp == NULL ) {
+  if( gzFp == nullptr ) {
     // If errno is 0, then not enough memory to uncompress file.
     cout << "Error: gz open failed for file: '" << filename_ << "'.  (Errno: " << errno << ")\n";
     throw ProblemSetupException("Unable to open the given input file: " + filename_, __FILE__, __LINE__);

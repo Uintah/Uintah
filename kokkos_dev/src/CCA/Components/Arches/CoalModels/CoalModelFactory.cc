@@ -100,7 +100,7 @@ void
 CoalModelFactory::register_model( const std::string name,
                                   ModelBuilder* builder )
 {
-  ASSERT( builder != NULL );
+  ASSERT( builder != nullptr );
 
   BuildMap::iterator iBuilder = builders_.find( name );
   if( iBuilder == builders_.end() ){

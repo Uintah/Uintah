@@ -57,7 +57,7 @@ bool CircleBCData::operator==(const BCGeomBase& rhs) const
   const CircleBCData* p_rhs =
     dynamic_cast<const CircleBCData*>(&rhs);
 
-  if (p_rhs == NULL)
+  if (p_rhs == nullptr)
     return false;
   else
     return (this->d_radius == p_rhs->d_radius) && 

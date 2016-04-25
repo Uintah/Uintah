@@ -72,7 +72,7 @@ static DebugStream schedulercommon_dbg("SchedulerCommon_DBG", false);
 extern DebugStream use_single_device;
 extern DebugStream simulate_multiple_gpus;
 // for calculating memory usage when sci-malloc is disabled.
-char* SchedulerCommon::start_addr = NULL;
+char* SchedulerCommon::start_addr = nullptr;
 
 
 SchedulerCommon::SchedulerCommon( const ProcessorGroup* myworld,
@@ -81,8 +81,8 @@ SchedulerCommon::SchedulerCommon( const ProcessorGroup* myworld,
     m_outPort_( oport ),
     trackingVarsPrintLocation_( 0 ),
     d_maxMemUse( 0 ),
-    m_graphDoc_( NULL ),
-    m_nodes_( NULL )
+    m_graphDoc_( nullptr ),
+    m_nodes_( nullptr )
 {
   d_generation = 0;
   numOldDWs    = 0;
@@ -90,7 +90,7 @@ SchedulerCommon::SchedulerCommon( const ProcessorGroup* myworld,
   emit_taskgraph_    = false;
   d_useSmallMessages = true;
   restartable        = false;
-  memlogfile_        = NULL;
+  memlogfile_        = nullptr;
 
   for (int i = 0; i < Task::TotalDWs; i++) {
     dwmap[i] = Task::InvalidDW;
@@ -205,7 +205,7 @@ SchedulerCommon::makeTaskGraphDoc(const DetailedTasks* /* dt*/,
   
   ProblemSpecP meta = m_graphDoc_->appendChild( "Meta" );
   meta->appendElement("username", getenv("LOGNAME"));
-  time_t t = time(NULL);
+  time_t t = time(nullptr);
   meta->appendElement("date", ctime(&t));
   
   m_nodes_ = m_graphDoc_->appendChild("Nodes");
@@ -275,8 +275,8 @@ SchedulerCommon::finalizeNodes( int process /* = 0 */ )
     }
     
     //m_graphDoc_->releaseDocument();
-    //m_graphDoc_ = NULL;
-    //m_nodes_ = NULL;
+    //m_graphDoc_ = nullptr;
+    //m_nodes_ = nullptr;
 }
 
 //______________________________________________________________________
@@ -431,7 +431,7 @@ handleError(       int     errorPosition,
 
   map<string, bool> * varToReportedMap = errorsReported[ errorPosition ];
 
-  if( varToReportedMap == NULL ) {
+  if( varToReportedMap == nullptr ) {
     varToReportedMap = new map<string, bool>;
     errorsReported[ errorPosition ] = varToReportedMap;
   }
@@ -494,7 +494,7 @@ SchedulerCommon::printTrackedVars( DetailedTask* dt,
       ostringstream mesg;
 
       mesg << "WARNING: VarTracker: Not printing requested variable (" << trackingVars_[i] 
-           << ") because DW is NULL.  Requested DW was: " 
+           << ") because DW is nullptr.  Requested DW was: " 
            << dt->getTask()->mapDataWarehouse(trackingDWs_[i]) << "\n";
 
       handleError( 1, mesg.str(), trackingVars_[i] );
@@ -524,7 +524,7 @@ SchedulerCommon::printTrackedVars( DetailedTask* dt,
     if (!label) {
       ostringstream mesg;
       mesg << "WARNING: VarTracker: Not printing requested variable (" << trackingVars_[i]
-           << ") because label is NULL.\n";
+           << ") because label is nullptr.\n";
       handleError( 2, mesg.str(), trackingVars_[i] );
       continue;
     }
@@ -1582,7 +1582,7 @@ SchedulerCommon::scheduleAndDoDataCopy( const GridP&               grid,
 
       // cout << "REDUNCTION:  Label(" << setw(15) << currentReductionVar.label_->getName() << "): Patch(" << reinterpret_cast<int>(currentReductionVar.level_) << "): Material(" << currentReductionVar.matlIndex_ << ")" << endl; 
       const Level* oldLevel = currentReductionVar.domain_;
-      const Level* newLevel = NULL;
+      const Level* newLevel = nullptr;
       if (oldLevel && oldLevel->getIndex() < grid->numLevels()) {
 
         if (oldLevel->getIndex() >= grid->numLevels()) {
@@ -1713,7 +1713,7 @@ SchedulerCommon::copyDataToNewGrid( const ProcessorGroup*,
 
                 vector<Variable *> varlist;
                 oldDataWarehouse->d_varDB.getlist(label, matl, oldPatch, varlist);
-                GridVariableBase* v = NULL;
+                GridVariableBase* v = nullptr;
 
                 IntVector srclow = copyLowIndex;
                 IntVector srchigh = copyHighIndex;

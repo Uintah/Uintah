@@ -99,7 +99,7 @@ SimulationController::SimulationController( const ProcessorGroup * myworld,
   d_reduceUda              = false;
   d_doMultiTaskgraphing    = false;
   d_usingLocalFileSystems  = false;
-  d_archive                = NULL;
+  d_archive                = nullptr;
   d_sim                    = 0;
 
   d_grid_ps                = d_ups->findBlock( "Grid" );
@@ -878,7 +878,7 @@ SimulationController::getMemoryStats ( int timestep, bool create )
   // Get memory stats for each proc if MALLOC_PERPROC is in the environent.
   if ( getenv( "MALLOC_PERPROC" ) )
   {
-    ostream* mallocPerProcStream = NULL;
+    ostream* mallocPerProcStream = nullptr;
     char* filenamePrefix = getenv( "MALLOC_PERPROC" );
 
     if ( !filenamePrefix || strlen( filenamePrefix ) == 0 )

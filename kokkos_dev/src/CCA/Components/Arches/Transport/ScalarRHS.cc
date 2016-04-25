@@ -358,7 +358,7 @@ ScalarRHS::compute_bcs( const Patch* patch, ArchesTaskInfoManager* tsk_info,
       const WasatchCore::BndCondSpec* mybc = ibc_info->second.find(_task_name);
 
       /// @TODO: Perform this check upstream so I don't have to do it here.
-      if ( mybc != NULL ) {
+      if ( mybc != nullptr ) {
 
         const SpatialOps::SpatialMask<SVolF>* mask = ihelper->second->get_spatial_mask<SVolF>( ibc_info->second, pid );
 

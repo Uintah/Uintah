@@ -754,7 +754,7 @@ void addParticleData(MaterialParticleDataMap& matlParticleDataMap,
           // Add a new MaterialPatchData for each matl for this next patch.
           MaterialParticleData& data = matlParticleDataMap[matl];
           data.setMatl(matl);
-          ParticleVariableBase* pvb = NULL;
+          ParticleVariableBase* pvb = nullptr;
           switch(subtype->getType()){
           case Uintah::TypeDescription::double_type:
             pvb = scinew ParticleVariable<double>();

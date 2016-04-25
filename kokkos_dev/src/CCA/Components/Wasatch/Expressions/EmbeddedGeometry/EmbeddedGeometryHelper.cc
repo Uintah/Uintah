@@ -128,8 +128,8 @@ namespace WasatchCore{
     if( parser->findBlock("EmbeddedGeometry") ){
       vNames.set_has_embedded_geometry(true);
       
-      Expr::ExpressionBuilder* volFracBuilder = NULL;
-      Expr::ExpressionBuilder* volFracBuilderInit = NULL;
+      Expr::ExpressionBuilder* volFracBuilder = nullptr;
+      Expr::ExpressionBuilder* volFracBuilderInit = nullptr;
       GraphHelper* const initgh = gc[INITIALIZATION];
       GraphHelper* const solngh = gc[ADVANCE_SOLUTION];
       

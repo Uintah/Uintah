@@ -1359,7 +1359,7 @@ buildActivatedMaximalSuperBoxes(RangeQuerier& rangeQuerier,
 // Composes the smallest SuperBox that contains both this SuperBox
 // and the BasicBox called neighbor.  If no such SuperBox exists that
 // is contained within the region called withinRegion or if any of the
-// boxes in this SuperBox are "unavailable" then NULL is returned.
+// boxes in this SuperBox are "unavailable" then nullptr is returned.
 template <class BoxP, class Point, class Volume, class Value, class Evaluator>
 template <class RangeQuerier>
 CompositeBox<BoxP, Point, Volume, Value, Evaluator>*

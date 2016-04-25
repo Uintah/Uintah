@@ -6244,7 +6244,7 @@ void ICE::ICEModelSetup::registerAMR_RefluxVariable(const MaterialSet* matlSet,
   t->matls   = matlSet->getSubset(0);
   string var_adv_name = var->getName() + "_adv";
   t->var_adv = VarLabel::find(var_adv_name);  //Advected conserved quantity
-  if(t->var_adv==NULL){
+  if(t->var_adv==nullptr){
     throw ProblemSetupException("The refluxing variable name("+var_adv_name +") could not be found",
                                    __FILE__, __LINE__);
   }

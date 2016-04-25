@@ -659,7 +659,7 @@ namespace WasatchCore{
 
           Uintah::ParticleSubset* const pset = newDW->haveParticleSubset(material, patch) ?
               newDW->getParticleSubset(material, patch) :
-              ( oldDW ? (oldDW->haveParticleSubset(material, patch) ? oldDW->getParticleSubset(material, patch) : NULL ) : NULL );
+              ( oldDW ? (oldDW->haveParticleSubset(material, patch) ? oldDW->getParticleSubset(material, patch) : nullptr ) : nullptr );
 
           AllocInfo ainfo( oldDW, newDW, material, patch, pset, pg, isGPUTask );
           fml_->allocate_fields( ainfo );

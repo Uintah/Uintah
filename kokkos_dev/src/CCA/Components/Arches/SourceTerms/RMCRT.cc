@@ -115,7 +115,7 @@ RMCRT_Radiation::problemSetup( const ProblemSpecP& inputdb )
   ProblemSpecP alg_ps = rmcrt_ps->findBlock("algorithm");
   if (alg_ps){
 
-    string type="NULL";
+    string type="nullptr";
     alg_ps->getAttribute("type", type);
 
     if (type == "dataOnion" ) {                   // DATA ONION
@@ -549,7 +549,7 @@ RMCRT_Radiation::sched_setBoundaryConditions( const LevelP& level,
 
   std::string taskname = "RMCRT_radiation::setBoundaryConditions";
 
-  Task* tsk = NULL;
+  Task* tsk = nullptr;
   if( _FLT_DBL == TypeDescription::double_type ){
 
     tsk= scinew Task( taskname, this, &RMCRT_Radiation::setBoundaryConditions< double >,

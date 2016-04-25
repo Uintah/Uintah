@@ -453,7 +453,7 @@ const VarLabel* ArchesLabel::getVarlabelByRole( VARID role ){
 
      the_label = VarLabel::find(i->second); 
 
-     if ( the_label != NULL ){
+     if ( the_label != nullptr ){
 
       return the_label; 
 

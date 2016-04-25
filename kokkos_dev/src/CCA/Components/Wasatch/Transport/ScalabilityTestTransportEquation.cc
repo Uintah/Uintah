@@ -59,7 +59,7 @@ namespace WasatchCore{
     const Expr::Tag diffFluxTag( thisPhiName + tagNames.diffusiveflux + dir, Expr::STATE_NONE );
     const Expr::Tag phiTag( thisPhiName, Expr::STATE_DYNAMIC );
 
-    Expr::ExpressionBuilder* builder = NULL;
+    Expr::ExpressionBuilder* builder = nullptr;
     FieldSelector fs;
 
     if( dir=="X" ){
@@ -83,7 +83,7 @@ namespace WasatchCore{
       throw Uintah::ProblemSetupException( msg.str(), __FILE__, __LINE__ );
     }
 
-    if( builder == NULL ){
+    if( builder == nullptr ){
       std::ostringstream msg;
       msg << "Could not build a diffusive velocity expression for '" << thisPhiName << "'" << endl;
       throw Uintah::ProblemSetupException( msg.str(), __FILE__, __LINE__ );

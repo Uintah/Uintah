@@ -176,7 +176,7 @@ void RMCRT_Test::problemSetup(const ProblemSpecP& prob_spec,
     ProblemSpecP alg_ps = rmcrt_ps->findBlock("algorithm");
     if (alg_ps){
 
-      string type="NULL";
+      string type="nullptr";
       alg_ps->getAttribute("type", type);
 
       if (type == "dataOnion" ) {
@@ -306,7 +306,7 @@ void RMCRT_Test::scheduleInitialize ( const LevelP& level,
 {
 
 
-  Task* task = NULL;
+  Task* task = nullptr;
   if (!d_old_uda) {
     task = scinew Task( "RMCRT_Test::initialize", this,
                         &RMCRT_Test::initialize );
@@ -785,7 +785,7 @@ void RMCRT_Test::initializeWithUda (const ProcessorGroup*,
   // Determine what type (float/double) the variables were saved as
   vector<string> vars;
   vector<const Uintah::TypeDescription*> types;
-  const Uintah::TypeDescription* subType = NULL;
+  const Uintah::TypeDescription* subType = nullptr;
 
   archive->queryVariables(vars, types);
 

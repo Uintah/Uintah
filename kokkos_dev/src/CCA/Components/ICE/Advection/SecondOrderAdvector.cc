@@ -708,7 +708,7 @@ void SecondOrderAdvector::q_FC_fluxes(const CCVariable<T>& /*q_CC*/,
     VarLabel* xlabel = VarLabel::find(x_name);
     VarLabel* ylabel = VarLabel::find(y_name);
     VarLabel* zlabel = VarLabel::find(z_name);  
-    if (xlabel == NULL || ylabel == NULL || zlabel == NULL){
+    if (xlabel == nullptr || ylabel == nullptr || zlabel == nullptr){
       throw InternalError( "Advector: q_FC_fluxes: variable label not found: " 
                             + x_name + " or " + y_name + " or " + z_name, __FILE__, __LINE__);
     }

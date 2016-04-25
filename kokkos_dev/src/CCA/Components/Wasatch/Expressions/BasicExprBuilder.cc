@@ -96,7 +96,7 @@ namespace WasatchCore{
   build_basic_particle_expr( Uintah::ProblemSpecP params )
   {
     const Expr::Tag tag = parse_nametag( params->findBlock("NameTag") );    
-    Expr::ExpressionBuilder* builder = NULL;
+    Expr::ExpressionBuilder* builder = nullptr;
 
     if( params->findBlock("Constant") ){
       double val;  params->get("Constant",val);
@@ -187,7 +187,7 @@ namespace WasatchCore{
     
     const TagNames& tagNames = TagNames::self();
 
-    Expr::ExpressionBuilder* builder = NULL;
+    Expr::ExpressionBuilder* builder = nullptr;
     
     //    std::string exprType;
     //    Uintah::ProblemSpecP valParams = params->get( "value", exprType );
@@ -559,7 +559,7 @@ namespace WasatchCore{
     
     const TagNames& tagNames = TagNames::self();
 
-    Expr::ExpressionBuilder* builder = NULL;
+    Expr::ExpressionBuilder* builder = nullptr;
     
     //std::string exprType;
     //bool valParams = params->get("value",exprType);
@@ -628,7 +628,7 @@ namespace WasatchCore{
   build_precipitation_expr( Uintah::ProblemSpecP params , Uintah::ProblemSpecP wasatchParams )
   {
     const Expr::Tag tag = parse_nametag( params->findBlock("NameTag") );
-    Expr::ExpressionBuilder* builder = NULL;
+    Expr::ExpressionBuilder* builder = nullptr;
 
     const double kB = 1.3806488e-23;
     const double nA = 6.023e23;
@@ -1095,7 +1095,7 @@ namespace WasatchCore{
   create_expressions_from_input( Uintah::ProblemSpecP uintahSpec,
                                  GraphCategories& gc )
   {
-    Expr::ExpressionBuilder* builder = NULL;
+    Expr::ExpressionBuilder* builder = nullptr;
     
     Uintah::ProblemSpecP parser = uintahSpec->findBlock("Wasatch");
     //___________________________________

@@ -330,7 +330,7 @@ public:
   //////////
   // Look for the child tag named 'name' and pass back its
   // 'value'.  Returns the child ProblemSpecP if found, otherwise
-  // NULL.  Has the possiblity of throwing a ProblemSetupException
+  // nullptr.  Has the possiblity of throwing a ProblemSetupException
   // if the data is not the correct type (ie: you call
   // get(name,double) but the tag contains a string).
   //

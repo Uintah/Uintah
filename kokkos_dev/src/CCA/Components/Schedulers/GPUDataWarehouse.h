@@ -157,8 +157,8 @@ public:
     size_t copiedOffset;
     //The default constructor
     contiguousArrayInfo() {
-      allocatedDeviceMemory = NULL;
-      allocatedHostMemory = NULL;
+      allocatedDeviceMemory = nullptr;
+      allocatedHostMemory = nullptr;
       sizeOfAllocatedMemory = 0;
       assignedOffset = 0; //To keep up to the point where data has been "put".  Computes data will be assigned
       copiedOffset = 0; //To keep up to the point where data will need to be copied.  Required data will be copied
@@ -388,9 +388,9 @@ public:
   }
 
   //HOST_DEVICE void put(GPUGridVariableBase& var, char const* label, int patchID, int matlIndex, bool overWrite=false);
-  __host__ void put(GPUGridVariableBase& var, size_t sizeOfDataType, char const* label, int patchID, int matlIndx, int levelIndx = 0, bool staging = false, GhostType gtype = None, int numGhostCells = 0, void* hostPtr = NULL);
-  __host__ void put(GPUReductionVariableBase& var, size_t sizeOfDataType, char const* label, int patchID, int matlIndx, int levelIndx = 0, void* hostPtr = NULL);
-  __host__ void put(GPUPerPatchBase& var, size_t sizeOfDataType, char const* label, int patchID, int matlIndx, int levelIndx = 0, void* hostPtr = NULL);
+  __host__ void put(GPUGridVariableBase& var, size_t sizeOfDataType, char const* label, int patchID, int matlIndx, int levelIndx = 0, bool staging = false, GhostType gtype = None, int numGhostCells = 0, void* hostPtr = nullptr);
+  __host__ void put(GPUReductionVariableBase& var, size_t sizeOfDataType, char const* label, int patchID, int matlIndx, int levelIndx = 0, void* hostPtr = nullptr);
+  __host__ void put(GPUPerPatchBase& var, size_t sizeOfDataType, char const* label, int patchID, int matlIndx, int levelIndx = 0, void* hostPtr = nullptr);
 
   __host__ void allocateAndPut(GPUGridVariableBase& var, char const* label, int patchID, int matlIndx, int levelIndx, bool staging, int3 low, int3 high, size_t sizeOfDataType, GhostType gtype = None, int numGhostCells = 0);
   __host__ void allocateAndPut(GPUReductionVariableBase& var, char const* label, int patchID, int matlIndx, int levelIndx, size_t sizeOfDataType);

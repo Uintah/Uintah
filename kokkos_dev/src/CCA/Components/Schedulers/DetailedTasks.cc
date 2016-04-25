@@ -360,10 +360,10 @@ DetailedTask::doit( const ProcessorGroup*                 pg,
     }
   }
   else {
-    task->doit(event, pg, patches, matls, dws, NULL, NULL, NULL, -1);
+    task->doit(event, pg, patches, matls, dws, nullptr, nullptr, nullptr, -1);
   }
 #else
-  task->doit(event, pg, patches, matls, dws, NULL, NULL, NULL, -1);
+  task->doit(event, pg, patches, matls, dws, nullptr, nullptr, nullptr, -1);
 #endif
 
   for (int i = 0; i < (int)dws.size(); i++) {
@@ -821,7 +821,7 @@ DetailedTasks::findMatchingDetailedDep(       DependencyBatch*  batch,
             dbg << fromPatch->getID() << '\n';
           }
           else {
-            dbg << "NULL\n";
+            dbg << "nullptr\n";
           }
           dbg << d_myworld->myrank() << " TP: " << totalLow << " " << totalHigh << std::endl;
         }
@@ -1055,7 +1055,7 @@ DetailedTasks::possiblyCreateDependency(       DetailedTask*              from,
     }
 
     //remove the matching_dep from the batch list
-    if (parent_dep == NULL) {
+    if (parent_dep == nullptr) {
       batch->head = matching_dep->next;
     }
     else {
@@ -1080,10 +1080,10 @@ DetailedTasks::possiblyCreateDependency(       DetailedTask*              from,
   new_dep->patchLow = varRangeLow;
   new_dep->patchHigh = varRangeHigh;
 
-  if (insert_dep == NULL) {
+  if (insert_dep == nullptr) {
     //no dependencies are in the list so add it to the head
     batch->head = new_dep;
-    new_dep->next = NULL;
+    new_dep->next = nullptr;
   }
   else {
     //dependencies already exist so add it at the insert location.
@@ -1132,7 +1132,7 @@ DetailedTasks::possiblyCreateDependency(       DetailedTask*              from,
       dbg << fromPatch->getID() << '\n';
     }
     else {
-      dbg << "NULL\n";
+      dbg << "nullptr\n";
     }
   }
 }
@@ -1263,7 +1263,7 @@ void DetailedTasks::createInternalDependencyBatch(DetailedTask* from,
     }
 
     //remove the matching_dep from the batch list
-    if (parent_dep == NULL) {
+    if (parent_dep == nullptr) {
       batch->head = matching_dep->next;
     } else {
       parent_dep->next = matching_dep->next;
@@ -1289,10 +1289,10 @@ void DetailedTasks::createInternalDependencyBatch(DetailedTask* from,
   new_dep->patchHigh = varRangeHigh;
 
 
-  if (insert_dep == NULL) {
+  if (insert_dep == nullptr) {
     //no dependencies are in the list so add it to the head
     batch->head = new_dep;
-    new_dep->next = NULL;
+    new_dep->next = nullptr;
   } else {
     //depedencies already exist so add it at the insert location.
     new_dep->next = insert_dep->next;
@@ -1336,7 +1336,7 @@ void DetailedTasks::createInternalDependencyBatch(DetailedTask* from,
     if (fromPatch)
       dbg << fromPatch->getID() << '\n';
     else
-      dbg << "NULL\n";
+      dbg << "nullptr\n";
   }
 
 }
@@ -1573,7 +1573,7 @@ cudaStream_t* DetailedTask::getCudaStreamForThisTask(unsigned int deviceNum) con
   if (it != d_cudaStreams.end()) {
     return it->second;
   }
-  return NULL;
+  return nullptr;
 }
 
 
@@ -1585,9 +1585,9 @@ cudaStream_t* DetailedTask::getCudaStreamForThisTask(unsigned int deviceNum) con
 
 void DetailedTask::setCudaStreamForThisTask(unsigned int deviceNum, cudaStream_t* s)
 {
-  if (s == NULL) {
-    printf("ERROR! - DetailedTask::setCudaStreamForThisTask() - A request was made to assign a stream at address NULL into this task %s\n", getName().c_str());
-    SCI_THROW(InternalError("A request was made to assign a stream at address NULL into this task :"+ getName() , __FILE__, __LINE__));
+  if (s == nullptr) {
+    printf("ERROR! - DetailedTask::setCudaStreamForThisTask() - A request was made to assign a stream at address nullptr into this task %s\n", getName().c_str());
+    SCI_THROW(InternalError("A request was made to assign a stream at address nullptr into this task :"+ getName() , __FILE__, __LINE__));
   } else {
     if (d_cudaStreams.find(deviceNum) == d_cudaStreams.end()) {
       d_cudaStreams.insert(std::pair<unsigned int, cudaStream_t*>(deviceNum,s));
@@ -1609,9 +1609,9 @@ bool DetailedTask::checkCudaStreamDoneForThisTask() const
   cudaError_t retVal;
   for (std::map<unsigned int, cudaStream_t*>::const_iterator it = d_cudaStreams.begin(); it != d_cudaStreams.end(); ++it) {
     OnDemandDataWarehouse::uintahSetCudaDevice(it->first);
-    if (it->second == NULL) {
-      printf("ERROR! - DetailedTask::checkCudaStreamDoneForThisTask() - Stream pointer with NULL address for task %s\n", getName().c_str());
-      SCI_THROW(InternalError("Stream pointer with NULL address for task: " + getName() , __FILE__, __LINE__));
+    if (it->second == nullptr) {
+      printf("ERROR! - DetailedTask::checkCudaStreamDoneForThisTask() - Stream pointer with nullptr address for task %s\n", getName().c_str());
+      SCI_THROW(InternalError("Stream pointer with nullptr address for task: " + getName() , __FILE__, __LINE__));
       return false;
     }
     retVal = cudaStreamQuery(*(it->second));
@@ -1650,9 +1650,9 @@ bool DetailedTask::checkCudaStreamDoneForThisTask(unsigned int deviceNum_) const
     SCI_THROW(InternalError("Request for stream information for a device, but it wasn't assigned any streams for that device.  For task: " + getName() , __FILE__, __LINE__));
     return false;
   }
-  if (it->second == NULL) {
-    printf("ERROR! - DetailedTask::checkCudaStreamDoneForThisTask() - Stream pointer with NULL address for task %s\n", getName().c_str());
-    SCI_THROW(InternalError("Stream pointer with NULL address for task: " + getName() , __FILE__, __LINE__));
+  if (it->second == nullptr) {
+    printf("ERROR! - DetailedTask::checkCudaStreamDoneForThisTask() - Stream pointer with nullptr address for task %s\n", getName().c_str());
+    SCI_THROW(InternalError("Stream pointer with nullptr address for task: " + getName() , __FILE__, __LINE__));
     return false;
   }
 
@@ -1700,8 +1700,8 @@ void DetailedTask::setTaskGpuDataWarehouse(const unsigned int whichDevice, Task:
 
   } else {
     TaskGpuDataWarehouses temp;
-    temp.TaskGpuDW[0] = NULL;
-    temp.TaskGpuDW[1] = NULL;
+    temp.TaskGpuDW[0] = nullptr;
+    temp.TaskGpuDW[1] = nullptr;
     temp.TaskGpuDW[DW] = TaskDW;
     TaskGpuDWs.insert(std::pair<unsigned int, TaskGpuDataWarehouses>(whichDevice, temp));
   }
@@ -1713,14 +1713,14 @@ GPUDataWarehouse* DetailedTask::getTaskGpuDataWarehouse(const unsigned int which
   if (it != TaskGpuDWs.end()) {
     return it->second.TaskGpuDW[DW];
   }
-  return NULL;
+  return nullptr;
 
 }
 
 void DetailedTask::deleteTaskGpuDataWarehouses() {
   for (std::map<unsigned int, TaskGpuDataWarehouses>::iterator it = TaskGpuDWs.begin(); it != TaskGpuDWs.end(); ++it) {
     for (int i = 0; i < 2; i++) {
-        if (it->second.TaskGpuDW[i] != NULL) {
+        if (it->second.TaskGpuDW[i] != nullptr) {
           //Note: Do not call the clear() method.  The Task GPU DWs only contains a "snapshot"
           //of the things in the GPU.  The host side GPU DWs is responsible for
           //deallocating all the GPU resources.  The only thing we do want to clean
@@ -1734,7 +1734,7 @@ void DetailedTask::deleteTaskGpuDataWarehouses() {
 
           it->second.TaskGpuDW[i]->cleanup();
           free(it->second.TaskGpuDW[i]);
-          it->second.TaskGpuDW[i] = NULL;
+          it->second.TaskGpuDW[i] = nullptr;
         }
       }
   }
@@ -1975,7 +1975,7 @@ DetailedTasks::numExternalReadyTasks()
 DetailedTask*
 DetailedTasks::getNextVerifyDataTransferCompletionTask()
 {
-  DetailedTask* nextTask = NULL;
+  DetailedTask* nextTask = nullptr;
   deviceVerifyDataTransferCompletionQueueLock_.writeLock();
   {
     if (!verifyDataTransferCompletionTasks_.empty()) {
@@ -1993,7 +1993,7 @@ DetailedTasks::getNextVerifyDataTransferCompletionTask()
 DetailedTask*
 DetailedTasks::getNextFinalizeDevicePreparationTask()
 {
-  DetailedTask* nextTask = NULL;
+  DetailedTask* nextTask = nullptr;
   deviceFinalizePreparationQueueLock_.writeLock();
   if (!finalizeDevicePreparationTasks_.empty()) {
     nextTask = finalizeDevicePreparationTasks_.top();
@@ -2008,7 +2008,7 @@ DetailedTasks::getNextFinalizeDevicePreparationTask()
 DetailedTask*
 DetailedTasks::getNextInitiallyReadyDeviceTask()
 {
-  DetailedTask* nextTask = NULL;
+  DetailedTask* nextTask = nullptr;
   deviceReadyQueueLock_.writeLock();
   {
     if (!initiallyReadyDeviceTasks_.empty()) {
@@ -2026,7 +2026,7 @@ DetailedTasks::getNextInitiallyReadyDeviceTask()
 DetailedTask*
 DetailedTasks::getNextCompletionPendingDeviceTask()
 {
-  DetailedTask* nextTask = NULL;
+  DetailedTask* nextTask = nullptr;
   deviceCompletedQueueLock_.writeLock();
   if (!completionPendingDeviceTasks_.empty()) {
     nextTask = completionPendingDeviceTasks_.top();
@@ -2042,7 +2042,7 @@ DetailedTasks::getNextCompletionPendingDeviceTask()
 DetailedTask*
 DetailedTasks::getNextFinalizeHostPreparationTask()
 {
-  DetailedTask* nextTask = NULL;
+  DetailedTask* nextTask = nullptr;
   hostFinalizePreparationQueueLock_.writeLock();
   if (!finalizeHostPreparationTasks_.empty()) {
     nextTask = finalizeHostPreparationTasks_.top();
@@ -2056,7 +2056,7 @@ DetailedTasks::getNextFinalizeHostPreparationTask()
 //
 DetailedTask* DetailedTasks::getNextInitiallyReadyHostTask()
 {
-  DetailedTask* nextTask = NULL;
+  DetailedTask* nextTask = nullptr;
   hostReadyQueueLock_.writeLock();
   if (!initiallyReadyHostTasks_.empty()) {
     nextTask = initiallyReadyHostTasks_.top();
@@ -2109,7 +2109,7 @@ DetailedTasks::peekNextInitiallyReadyDeviceTask()
 DetailedTask*
 DetailedTasks::peekNextCompletionPendingDeviceTask()
 {
-  DetailedTask* dtask = NULL;
+  DetailedTask* dtask = nullptr;
   deviceCompletedQueueLock_.readLock();
   {
     dtask = completionPendingDeviceTasks_.top();

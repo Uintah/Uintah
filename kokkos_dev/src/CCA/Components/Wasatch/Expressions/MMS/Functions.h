@@ -241,7 +241,7 @@ evaluate()
   // use gzFile utilities as they can handle both gzip and ascii files.
   gzFile inputFile = gzopen( filename_.c_str(), "r" );
   
-  if(inputFile == NULL) {
+  if(inputFile == nullptr) {
     std::ostringstream warn;
     warn << "ERROR: WasatchCore::ReadFromFileExpresssion: \n Unable to open the given input file " << filename_;
     throw Uintah::ProblemSetupException(warn.str(), __FILE__, __LINE__);

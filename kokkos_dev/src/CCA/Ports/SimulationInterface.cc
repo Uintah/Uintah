@@ -102,7 +102,7 @@ SimulationInterface::getSubCycleProgress(DataWarehouse* fineDW)
   // DWs are always created in order of time.
   int fineID = fineDW->getID();  
   int coarseNewID = fineDW->getOtherDataWarehouse(Task::CoarseNewDW)->getID();
-  // need to do this check, on init timestep, old DW is NULL, and getOtherDW will throw exception
+  // need to do this check, on init timestep, old DW is nullptr, and getOtherDW will throw exception
   if (fineID == coarseNewID)
     return 1.0; 
   int coarseOldID = fineDW->getOtherDataWarehouse(Task::CoarseOldDW)->getID();

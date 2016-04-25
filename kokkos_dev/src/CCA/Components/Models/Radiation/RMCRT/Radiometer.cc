@@ -246,7 +246,7 @@ Radiometer::sched_initializeRadVars( const LevelP& level,
 
   std::string taskname = "Radiometer::initializeRadVars";
 
-  Task* tsk = NULL;
+  Task* tsk = nullptr;
   if ( RMCRTCommon::d_FLT_DBL == TypeDescription::double_type ){
     tsk= scinew Task( taskname, this, &Radiometer::initializeRadVars< double >, radCalc_freq );
   }else{

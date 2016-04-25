@@ -69,7 +69,7 @@ SendState::find_sendset(       int         dest
     maptype::const_iterator iter = sendSubsets.find(std::make_pair(PSPatchMatlGhostRange(patch, matlIndex, low, high, dwid), dest));
 
     if (iter == sendSubsets.end()) {
-      ret = NULL;
+      ret = nullptr;
     } else {
       ret = iter->second;
     }

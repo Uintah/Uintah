@@ -110,7 +110,7 @@ Ray::Ray( const TypeDescription::Type FLT_DBL ) : RMCRTCommon( FLT_DBL)
   d_gn            = Ghost::None;
   d_orderOfInterpolation = -9;
   d_onOff_SetBCs   = true;
-  d_radiometer     = NULL;
+  d_radiometer     = nullptr;
   d_dbgCells.push_back( IntVector(0,0,0));
   d_dbgCells.push_back( IntVector(5,5,5));
   
@@ -250,7 +250,7 @@ Ray::problemSetup( const ProblemSpecP& prob_spec,
 
   if (alg_ps){
 
-    string type="NULL";
+    string type="nullptr";
 
     if( !alg_ps->getAttribute("type", type) ){
       throw ProblemSetupException("RMCRT: No type specified for algorithm.  Please choose dataOnion on RMCRT_coarseLevel", __FILE__, __LINE__);
@@ -296,7 +296,7 @@ Ray::problemSetup( const ProblemSpecP& prob_spec,
   //__________________________________
   //  Logic for coarsening of cellType
   if (isMultilevel){
-    string tmp = "NULL";
+    string tmp = "nullptr";
     rmcrt_ps->get("cellTypeCoarsenLogic", tmp );
     if (tmp == "ROUNDDOWN"){
       d_cellTypeCoarsenLogic = ROUNDDOWN;
@@ -413,7 +413,7 @@ Ray::sched_rayTrace( const LevelP& level,
                      const int radCalc_freq )
 {
   std::string taskname = "Ray::rayTrace";
-  Task *tsk = NULL;
+  Task *tsk = nullptr;
 
   if (Parallel::usingDevice()) {          // G P U
 
@@ -1308,7 +1308,7 @@ Ray::sched_rayTrace_dataOnion( const LevelP& level,
     return;
   }
   std::string taskname = "";
-  Task* tsk = NULL;
+  Task* tsk = nullptr;
 
   if (Parallel::usingDevice()) {          // G P U
     taskname = "Ray::rayTraceDataOnionGPU";
@@ -1950,7 +1950,7 @@ Ray::sched_setBoundaryConditions( const LevelP& level,
 
   std::string taskname = "Ray::setBoundaryConditions";
 
-  Task* tsk = NULL;
+  Task* tsk = nullptr;
   if( RMCRTCommon::d_FLT_DBL == TypeDescription::double_type ){
 
     tsk= scinew Task( taskname, this, &Ray::setBoundaryConditions< double >,
@@ -2259,7 +2259,7 @@ void Ray::sched_ROI_Extents ( const LevelP& level,
 
   printSchedule(level,dbg,"Ray::ROI_Extents");
 
-  Task* tsk = NULL;
+  Task* tsk = nullptr;
   if( RMCRTCommon::d_FLT_DBL == TypeDescription::double_type ){
     tsk= scinew Task( "Ray::ROI_Extents", this, &Ray::ROI_Extents< double >);
   } else {
@@ -2373,7 +2373,7 @@ void Ray::sched_Coarsen_Q ( const LevelP& coarseLevel,
   const Uintah::TypeDescription* td = variable->typeDescription();
   const Uintah::TypeDescription::Type subtype = td->getSubType()->getType();
 
-  Task* tsk = NULL;
+  Task* tsk = nullptr;
   switch( subtype ) {
     case TypeDescription::double_type:
       tsk = scinew Task( taskname, this, &Ray::coarsen_Q< double >,

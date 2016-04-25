@@ -102,7 +102,7 @@ populate_reduction_variable( const Uintah::ProcessorGroup* const pg,
       if( newDW->exists(thisVarLabel_,im,patch) ){
         newDW->get( val, thisVarLabel_, im, patch );
         dbg_red << this->get_tag().name() << " patch " << patch->getID() << " val = " << *val << std::endl;
-        Uintah::ReductionVariableBase* redcVar = NULL;
+        Uintah::ReductionVariableBase* redcVar = nullptr;
         
         switch (reductionName_) {
           case ReduceMin: redcVar = scinew UintahReduceMin(*val); break;

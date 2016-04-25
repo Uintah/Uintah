@@ -59,7 +59,7 @@ SimulationTime::SimulationTime(const ProblemSpecP& params)
   {
     // max_iterations is deprecated now... verify that it isn't used....
     int max_iterations = 0;
-    if( time_ps->get( "max_iterations", max_iterations ).get_rep() != NULL ) {
+    if( time_ps->get( "max_iterations", max_iterations ).get_rep() != nullptr ) {
       std::cerr << "\n";
       std::cerr << "The 'max_iterations' flag (in the .ups file) is deprecated.  Please use the 'max_Timesteps' flag instead..\n";
       std::cerr << "\n";

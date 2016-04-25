@@ -83,7 +83,7 @@ ProcessInfo::getInfo( int info_type )
 
   FILE* file = fopen( statusFileName, "r" );
 
-  if ( file == NULL ) {
+  if ( file == nullptr ) {
     // FIXME: Throw an exception!
   }
   else {

@@ -45,7 +45,7 @@ UnknownVariable::UnknownVariable(const std::string& varname, int dwid,
    s << "Unknown variable: " << varname;
 
    if (dwid!=-1) s << " requested from DW " << dwid;
-   if (patch != NULL) {
+   if (patch != nullptr) {
       s << ", Level "<< patch->getLevel()->getIndex()
         << ", patch " << patch->getID()
         << "(" << patch->toString() << ")";
@@ -72,7 +72,7 @@ UnknownVariable::UnknownVariable(const std::string& varname, int dwid,
    s << "Unknown variable: " << varname;
 
    if (dwid!=-1) s << " requested from DW " << dwid;
-   if (level != NULL) {
+   if (level != nullptr) {
      s << " on level " << level->getIndex();
    }
    

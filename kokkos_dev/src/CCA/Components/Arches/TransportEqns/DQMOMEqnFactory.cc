@@ -64,7 +64,7 @@ DQMOMEqnFactory::self()
 void 
 DQMOMEqnFactory::register_scalar_eqn( const std::string name, DQMOMEqnBuilderBase* builder ) 
 {
-  ASSERT( builder != NULL );
+  ASSERT( builder != nullptr );
 
   BuildMap::iterator i = builders_.find( name );
   if( i == builders_.end() ){

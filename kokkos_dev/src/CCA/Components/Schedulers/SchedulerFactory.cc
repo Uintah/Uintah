@@ -118,19 +118,19 @@ SchedulerFactory::create( const ProblemSpecP   & ps,
 
   // Check for specific scheduler request from the input file
   if (scheduler == "SingleProcessor") {
-    sch = scinew SingleProcessorScheduler(world, output, NULL);
+    sch = scinew SingleProcessorScheduler(world, output, nullptr);
   }
   else if (scheduler == "MPI") {
-    sch = scinew MPIScheduler(world, output, NULL);
+    sch = scinew MPIScheduler(world, output, nullptr);
   }
   else if (scheduler == "DynamicMPI") {
-    sch = scinew DynamicMPIScheduler(world, output, NULL);
+    sch = scinew DynamicMPIScheduler(world, output, nullptr);
   }
   else if (scheduler == "ThreadedMPI") {
-    sch = scinew ThreadedMPIScheduler(world, output, NULL);
+    sch = scinew ThreadedMPIScheduler(world, output, nullptr);
   }
 //  else if (scheduler == "Unified") {
-//    sch = scinew UnifiedScheduler(world, output, NULL);
+//    sch = scinew UnifiedScheduler(world, output, nullptr);
 //  }
   else {
     sch = 0;

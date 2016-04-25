@@ -112,7 +112,7 @@ namespace WasatchCore{
 
     const TagNames& tagNames = TagNames::self();
     
-    solverParams_ = NULL;
+    solverParams_ = nullptr;
     const bool enablePressureSolve = !(params->findBlock("DisablePressureSolve"));
     const EmbeddedGeometryHelper& embedGeom = EmbeddedGeometryHelper::self();
     //__________________

@@ -43,7 +43,7 @@ class GPUReductionVariable : public GPUReductionVariableBase {
 
     HOST_DEVICE GPUReductionVariable()
     {
-      d_data = NULL;
+      d_data = nullptr;
     }
 
     HOST_DEVICE virtual ~GPUReductionVariable() {}

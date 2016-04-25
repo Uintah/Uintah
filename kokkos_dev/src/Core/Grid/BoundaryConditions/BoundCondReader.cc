@@ -1219,10 +1219,10 @@ void BoundCondReader::combineBCS()
       }
 
       // If there is more than one BCGeomBase element find the SideBC
-      SideBCData* side_bc = NULL;
-      DifferenceBCData* diff_bc = NULL;
-      BCGeomBase* other_bc = NULL;
-      UnionBCData* union_bc = NULL;
+      SideBCData* side_bc = nullptr;
+      DifferenceBCData* diff_bc = nullptr;
+      BCGeomBase* other_bc = nullptr;
+      UnionBCData* union_bc = nullptr;
 
       if (bcgeom_vec.size() > 1) {
 

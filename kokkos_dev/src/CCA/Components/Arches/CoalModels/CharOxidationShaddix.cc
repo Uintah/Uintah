@@ -71,8 +71,8 @@ CharOxidationShaddix::CharOxidationShaddix( std::string modelName,
   _D3 = 0.219e-4; //O2-N2
   _T0 = 293.0;
   
-  _char_birth_label = NULL;
-  _rawcoal_birth_label = NULL; 
+  _char_birth_label = nullptr;
+  _rawcoal_birth_label = nullptr; 
 
 }
 
@@ -352,9 +352,9 @@ CharOxidationShaddix::sched_computeModel( const LevelP& level, SchedulerP& sched
   tsk->requires( which_dw, d_fieldLabels->d_densityCPLabel, gn, 0);
   tsk->requires( Task::NewDW, _devolCharLabel, gn, 0);
   tsk->requires( Task::NewDW, _devolRCLabel, gn, 0);
-  if ( _char_birth_label != NULL )
+  if ( _char_birth_label != nullptr )
     tsk->requires( Task::NewDW, _char_birth_label, gn, 0 ); 
-  if ( _rawcoal_birth_label != NULL ) 
+  if ( _rawcoal_birth_label != nullptr ) 
     tsk->requires( Task::NewDW, _rawcoal_birth_label, gn, 0 ); 
 
   sched->addTask(tsk, level->eachPatch(), d_sharedState->allArchesMaterials()); 
@@ -459,11 +459,11 @@ CharOxidationShaddix::computeModel( const ProcessorGroup * pc,
     constCCVariable<double> char_birth; 
     bool add_rawcoal_birth = false; 
     bool add_char_birth = false; 
-    if ( _rawcoal_birth_label != NULL ){ 
+    if ( _rawcoal_birth_label != nullptr ){ 
       add_rawcoal_birth = true; 
       new_dw->get( rawcoal_birth, _rawcoal_birth_label, matlIndex, patch, gn, 0 ); 
     }
-    if ( _char_birth_label != NULL ){ 
+    if ( _char_birth_label != nullptr ){ 
       add_char_birth = true; 
       new_dw->get( char_birth, _rawcoal_birth_label, matlIndex, patch, gn, 0 ); 
     }

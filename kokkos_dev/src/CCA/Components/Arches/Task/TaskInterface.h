@@ -351,10 +351,10 @@ protected:
       RegisterNewVariableHelper(){};
 
       void create_variable( const std::string name, std::vector<const VarLabel*>& local_labels ){
-        const VarLabel* test = NULL;
+        const VarLabel* test = nullptr;
         test = VarLabel::find( name );
 
-        if ( test == NULL ){
+        if ( test == nullptr ){
 
           const VarLabel* label = VarLabel::create( name, T::getTypeDescription() );
           local_labels.push_back(label);
@@ -385,10 +385,10 @@ protected:
   struct TaskInterface::RegisterNewVariableHelper<SpatialOps::SpatialField<SpatialOps::SVol, double> >{
 
     void create_variable( const std::string name, std::vector<const VarLabel*>& local_labels  ){
-      const VarLabel* test = NULL;
+      const VarLabel* test = nullptr;
       test = VarLabel::find( name );
 
-      if ( test == NULL ){
+      if ( test == nullptr ){
 
         const VarLabel* label = VarLabel::create( name, WasatchCore::get_uintah_field_type_descriptor<
                                                  SpatialOps::SpatialField<SpatialOps::SVol, double> >() );
@@ -408,10 +408,10 @@ protected:
   struct TaskInterface::RegisterNewVariableHelper<SpatialOps::SpatialField<SpatialOps::XVol, double> >{
 
     void create_variable( const std::string name, std::vector<const VarLabel*>& local_labels  ){
-      const VarLabel* test = NULL;
+      const VarLabel* test = nullptr;
       test = VarLabel::find( name );
 
-      if ( test == NULL ){
+      if ( test == nullptr ){
 
         const VarLabel* label = VarLabel::create( name, WasatchCore::get_uintah_field_type_descriptor<
                                                  SpatialOps::SpatialField<SpatialOps::XVol, double> >() );
@@ -431,10 +431,10 @@ protected:
   struct TaskInterface::RegisterNewVariableHelper<SpatialOps::SpatialField<SpatialOps::YVol, double> >{
 
     void create_variable( const std::string name, std::vector<const VarLabel*>& local_labels  ){
-      const VarLabel* test = NULL;
+      const VarLabel* test = nullptr;
       test = VarLabel::find( name );
 
-      if ( test == NULL ){
+      if ( test == nullptr ){
 
         const VarLabel* label = VarLabel::create( name, WasatchCore::get_uintah_field_type_descriptor<
                                                  SpatialOps::SpatialField<SpatialOps::YVol, double> >() );
@@ -454,10 +454,10 @@ protected:
   struct TaskInterface::RegisterNewVariableHelper<SpatialOps::SpatialField<SpatialOps::ZVol, double> >{
 
     void create_variable( const std::string name, std::vector<const VarLabel*>& local_labels ){
-      const VarLabel* test = NULL;
+      const VarLabel* test = nullptr;
       test = VarLabel::find( name );
 
-      if ( test == NULL ){
+      if ( test == nullptr ){
 
         const VarLabel* label = VarLabel::create( name, WasatchCore::get_uintah_field_type_descriptor<
                                                  SpatialOps::SpatialField<SpatialOps::ZVol, double> >() );
@@ -477,10 +477,10 @@ protected:
   struct TaskInterface::RegisterNewVariableHelper<SpatialOps::Particle::ParticleField>{
 
     void create_variable( const std::string name, std::vector<const VarLabel*>& local_labels ){
-      const VarLabel* test = NULL;
+      const VarLabel* test = nullptr;
       test = VarLabel::find( name );
 
-      if ( test == NULL ){
+      if ( test == nullptr ){
 
         const VarLabel* label = VarLabel::create( name, WasatchCore::get_uintah_field_type_descriptor<
                                                  SpatialOps::Particle::ParticleField>() );

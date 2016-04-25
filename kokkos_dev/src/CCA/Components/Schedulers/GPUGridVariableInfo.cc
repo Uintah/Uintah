@@ -348,7 +348,7 @@ void DeviceGridVariables::addTaskGpuDWVar(const Patch* patchPointer,
 
   //TODO: The Task DW doesn't hold any pointers.  So what does that mean about contiguous arrays?
   //Should contiguous arrays be organized by task???
-  DeviceGridVariableInfo tmp(NULL, GpuUtilities::unknown, false, sizeOfDataType, matlIndx, levelIndx, patchPointer, dep, whichGPU);
+  DeviceGridVariableInfo tmp(nullptr, GpuUtilities::unknown, false, sizeOfDataType, matlIndx, levelIndx, patchPointer, dep, whichGPU);
   vars.insert( std::map<GpuUtilities::LabelPatchMatlLevelDw, DeviceGridVariableInfo>::value_type( lpmld, tmp ) );
   if (gpu_stats.active()) {
     cerrLock.lock();
@@ -432,7 +432,7 @@ void DeviceGridVariables::addTaskGpuDWStagingVar(const Patch* patchPointer,
    }
 
   size_t varMemSize = sizeVector.x() * sizeVector.y() * sizeVector.z() * sizeOfDataType;
-  DeviceGridVariableInfo tmp(NULL, GpuUtilities::unknown, true, sizeVector, sizeOfDataType, varMemSize , offset, matlIndx, levelIndx, patchPointer, dep, Ghost::None, 0, whichGPU);
+  DeviceGridVariableInfo tmp(nullptr, GpuUtilities::unknown, true, sizeVector, sizeOfDataType, varMemSize , offset, matlIndx, levelIndx, patchPointer, dep, Ghost::None, 0, whichGPU);
   vars.insert( std::map<GpuUtilities::LabelPatchMatlLevelDw, DeviceGridVariableInfo>::value_type( lpmld, tmp ) );
   if (gpu_stats.active()) {
     cerrLock.lock();
@@ -465,7 +465,7 @@ void DeviceGridVariables::addVarToBeGhostReady(const Patch* patchPointer,
   std::pair <std::multimap<GpuUtilities::LabelPatchMatlLevelDw, DeviceGridVariableInfo>::iterator, std::multimap<GpuUtilities::LabelPatchMatlLevelDw, DeviceGridVariableInfo>::iterator> ret;
   ret = vars.equal_range(lpmld);
   if (ret.first == ret.second) {
-    DeviceGridVariableInfo tmp(NULL, GpuUtilities::unknown, false, 0, matlIndx, levelIndx, patchPointer, dep, whichGPU);
+    DeviceGridVariableInfo tmp(nullptr, GpuUtilities::unknown, false, 0, matlIndx, levelIndx, patchPointer, dep, whichGPU);
     vars.insert( std::map<GpuUtilities::LabelPatchMatlLevelDw, DeviceGridVariableInfo>::value_type( lpmld, tmp ) );
     if (gpu_stats.active()) {
       cerrLock.lock();

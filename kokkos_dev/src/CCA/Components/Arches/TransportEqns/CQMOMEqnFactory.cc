@@ -42,7 +42,7 @@ CQMOMEqnFactory::self()
 void
 CQMOMEqnFactory::register_scalar_eqn( const std::string name, CQMOMEqnBuilderBase* builder )
 {
-  ASSERT( builder != NULL );
+  ASSERT( builder != nullptr );
   
   BuildMap::iterator i = builders_.find( name );
   if( i == builders_.end() ){

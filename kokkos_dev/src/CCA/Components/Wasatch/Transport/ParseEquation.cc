@@ -82,8 +82,8 @@ namespace WasatchCore{
                                                 const bool isConstDensity,
                                                 GraphCategories& gc )
   {
-    EqnTimestepAdaptorBase* adaptor = NULL;
-    EquationBase* transeqn = NULL;
+    EqnTimestepAdaptorBase* adaptor = nullptr;
+    EquationBase* transeqn = nullptr;
     
     std::string eqnLabel, solnVariable;
     
@@ -123,8 +123,8 @@ namespace WasatchCore{
       throw Uintah::InvalidValue( msg.str(), __FILE__, __LINE__ );
     }
     
-    assert( transeqn != NULL );
-    assert( adaptor  != NULL );
+    assert( transeqn != nullptr );
+    assert( adaptor  != nullptr );
     
     //_____________________________________________________
     // set up initial conditions on this transport equation

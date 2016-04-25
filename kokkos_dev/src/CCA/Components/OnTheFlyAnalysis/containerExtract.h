@@ -112,7 +112,7 @@ namespace Uintah {
           IntVector c;
           VarLabel* vl;
 
-          extractCell() { type = INCIDENT; face = TOP; c = IntVector(-1,-1,-1); vl = NULL; }
+          extractCell() { type = INCIDENT; face = TOP; c = IntVector(-1,-1,-1); vl = nullptr; }
           extractCell(enum EXTRACT_MODE t, enum FACE f, IntVector i, VarLabel* v):
             type(t), face(f), c(i), vl(v) {}
       };

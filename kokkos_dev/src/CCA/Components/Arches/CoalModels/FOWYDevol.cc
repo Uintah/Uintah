@@ -59,7 +59,7 @@ FOWYDevol::FOWYDevol( std::string modelName,
 
   std::string v_inf_name = ParticleTools::append_env( "v_inf", qn ); 
   _v_inf_label = VarLabel::create( v_inf_name, CCVariable<double>::getTypeDescription() );
-  _rawcoal_birth_label = NULL; 
+  _rawcoal_birth_label = nullptr; 
 
 }
 
@@ -285,7 +285,7 @@ FOWYDevol::sched_computeModel( const LevelP& level, SchedulerP& sched, int timeS
   tsk->requires( Task::OldDW, d_fieldLabels->d_sharedState->get_delt_label()); 
   tsk->requires( Task::NewDW, _RHS_source_varlabel, gn, 0 ); 
   tsk->requires( Task::NewDW, _char_RHS_source_varlabel, gn, 0 ); 
-  if ( _rawcoal_birth_label != NULL )
+  if ( _rawcoal_birth_label != nullptr )
     tsk->requires( Task::NewDW, _rawcoal_birth_label, gn, 0 ); 
 
   sched->addTask(tsk, level->eachPatch(), d_sharedState->allArchesMaterials()); 
@@ -360,7 +360,7 @@ FOWYDevol::computeModel( const ProcessorGroup * pc,
 
     constCCVariable<double> rawcoal_birth; 
     bool add_birth = false; 
-    if ( _rawcoal_birth_label != NULL ){ 
+    if ( _rawcoal_birth_label != nullptr ){ 
       add_birth = true; 
       new_dw->get( rawcoal_birth, _rawcoal_birth_label, matlIndex, patch, gn, 0 ); 
     }

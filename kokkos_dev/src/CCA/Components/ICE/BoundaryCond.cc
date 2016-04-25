@@ -1177,7 +1177,7 @@ void BC_bulletproofing(const ProblemSpecP& prob_spec,
     face_ps->getAttributes(face);
 
     //loop through the attributes and find  (x-,x+,y-,y+... )
-    string side = "NULL";
+    string side = "nullptr";
     
     for( map<string,string>::iterator iter = face.begin(); iter !=  face.end(); iter++ ){
       string me = (*iter).second;

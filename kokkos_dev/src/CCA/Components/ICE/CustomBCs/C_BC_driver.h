@@ -41,11 +41,11 @@ namespace Uintah {
   struct customBC_globalVars {
 
     customBC_globalVars() {
-      lodi              = NULL;
-      slip              = NULL;
-      mms               = NULL;
-      sine              = NULL;
-      inletVel          = NULL;
+      lodi              = nullptr;
+      slip              = nullptr;
+      mms               = nullptr;
+      sine              = nullptr;
+      inletVel          = nullptr;
 
       usingLodi         = false;
       usingMicroSlipBCs = false;
@@ -90,11 +90,11 @@ namespace Uintah {
 
     customBC_localVars() {
       
-      lodi        = NULL;
-      slip        = NULL;
-      mms         = NULL;
-      sine        = NULL;
-      inletVel    = NULL;
+      lodi        = nullptr;
+      slip        = nullptr;
+      mms         = nullptr;
+      sine        = nullptr;
+      inletVel    = nullptr;
       
       setLodiBcs        = false;
       setMicroSlipBcs   = false;

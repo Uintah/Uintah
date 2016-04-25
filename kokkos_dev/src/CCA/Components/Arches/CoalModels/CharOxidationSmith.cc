@@ -63,8 +63,8 @@ CharOxidationSmith::CharOxidationSmith( std::string modelName,
   _R_cal = 1.9872036; // [cal/ (K mol) ]
   _R = 8.314; // [J/ (K mol) ]
   
-  _char_birth_label = NULL;
-  _rawcoal_birth_label = NULL; 
+  _char_birth_label = nullptr;
+  _rawcoal_birth_label = nullptr; 
 
 }
 
@@ -463,9 +463,9 @@ CharOxidationSmith::sched_computeModel( const LevelP& level, SchedulerP& sched, 
   
   tsk->requires( which_dw, d_fieldLabels->d_densityCPLabel, gn, 0);
   tsk->requires( Task::NewDW, _devolRCLabel, gn, 0);
-  if ( _char_birth_label != NULL )
+  if ( _char_birth_label != nullptr )
     tsk->requires( Task::NewDW, _char_birth_label, gn, 0 ); 
-  if ( _rawcoal_birth_label != NULL ) 
+  if ( _rawcoal_birth_label != nullptr ) 
     tsk->requires( Task::NewDW, _rawcoal_birth_label, gn, 0 ); 
 
   sched->addTask(tsk, level->eachPatch(), d_sharedState->allArchesMaterials()); 
@@ -582,11 +582,11 @@ CharOxidationSmith::computeModel( const ProcessorGroup * pc,
     constCCVariable<double> char_birth; 
     bool add_rawcoal_birth = false; 
     bool add_char_birth = false; 
-    if ( _rawcoal_birth_label != NULL ){ 
+    if ( _rawcoal_birth_label != nullptr ){ 
       add_rawcoal_birth = true; 
       new_dw->get( rawcoal_birth, _rawcoal_birth_label, matlIndex, patch, gn, 0 ); 
     }
-    if ( _char_birth_label != NULL ){ 
+    if ( _char_birth_label != nullptr ){ 
       add_char_birth = true; 
       new_dw->get( char_birth, _rawcoal_birth_label, matlIndex, patch, gn, 0 ); 
     }

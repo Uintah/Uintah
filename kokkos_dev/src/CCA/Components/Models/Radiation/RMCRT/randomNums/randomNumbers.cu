@@ -66,7 +66,7 @@ void stopwatch( char message[], time_t start)
   double secs;
   time_t stop;                 /* timing variables             */
 
-  stop = time(NULL);
+  stop = time(nullptr);
   secs = difftime(stop, start);               
   fprintf(stdout,"    %.f [s] %s  \n",secs, message);       
 }
@@ -231,22 +231,22 @@ void randDeviceGPU( double *M, double *N,int nRandNums)
 
   //__________________________________
   //  Global Memory Kernel
-  time_t start = time(NULL);
+  time_t start = time(nullptr);
   setup_kernel<<<dimGrid, dimBlock>>>( randNumStates );
   stopwatch("  randDeviceGPU setup_kernel: ", start);
   
-  start = time(NULL);
+  start = time(nullptr);
   randNumKernel<<<dimGrid, dimBlock>>>( randNumStates, Md, Nd, nRandNums );
   stopwatch("  randDeviceGPU randNumKernel: ", start);
   
   //__________________________________
   //   copy from device memory and free memory
-  start = time(NULL);
+  start = time(nullptr);
   cudaMemcpy( M, Md, size, cudaMemcpyDeviceToHost );
   cudaMemcpy( N, Nd, size, cudaMemcpyDeviceToHost );
   stopwatch(" randDeviceGPU memcopy: ", start);
   
-  start = time(NULL);
+  start = time(nullptr);
   cudaFree( Md );
   cudaFree( Nd );
   cudaFree(randNumStates) ;
@@ -274,17 +274,17 @@ int main( int argc, char** argv)
     double* rand_devGPU_N  = (double*)malloc(mem_size); 
        
     time_t start;
-    start = time(NULL);
+    start = time(nullptr);
     //__________________________________
     //  Compute the random numbers
     randCPU( rand_CPU, nRandNums );
     stopwatch(" randCPU: ", start);
     
-    start = time(NULL);
+    start = time(nullptr);
     randHostGPU( rand_hostGPU, nRandNums);
     stopwatch(" randHostGPU: ", start);
      
-    start = time(NULL);    
+    start = time(nullptr);    
     randDeviceGPU( rand_devGPU_M, rand_devGPU_N, nRandNums);
     stopwatch(" randDeviceGPU: ", start);
     

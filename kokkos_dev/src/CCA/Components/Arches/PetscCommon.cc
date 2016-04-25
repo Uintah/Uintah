@@ -409,7 +409,7 @@ void PetscLocalToGlobalMapping(const PatchSet* perproc_patches,
 void finalizePetscSolver()
 {
 // The following is to enable PETSc memory logging
-//  int ierrd = PetscTrDump(NULL);
+//  int ierrd = PetscTrDump(nullptr);
 //  if(ierrd)
 //    throw UintahPetscError(ierrd, "PetscTrDump");
   int ierr = PetscFinalize();

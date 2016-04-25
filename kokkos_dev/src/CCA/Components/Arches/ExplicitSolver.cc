@@ -324,7 +324,7 @@ ExplicitSolver::problemSetup( const ProblemSpecP & params,
 
                 //Add any table lookup species to the table lookup list:
                 ChemHelper::TableLookup*  tbl_lookup = a_src.get_tablelookup_species();
-                if ( tbl_lookup != NULL )
+                if ( tbl_lookup != nullptr )
                   d_lab->add_species_struct( tbl_lookup );
 
               }

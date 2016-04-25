@@ -179,7 +179,7 @@ RMCRTCommon::sched_DoubleToFloat( const LevelP& level,
   const Uintah::TypeDescription::Type subtype = td->getSubType()->getType();
 
   // only run task if a conversion is needed.
-  Task* tsk = NULL;
+  Task* tsk = nullptr;
   if ( RMCRTCommon::d_FLT_DBL == TypeDescription::float_type &&  subtype == TypeDescription::double_type ){
     tsk = scinew Task( "RMCRTCommon::DoubleToFloat", this, &RMCRTCommon::DoubleToFloat, myDW, radCalc_freq);
   } else {
@@ -245,7 +245,7 @@ RMCRTCommon::sched_sigmaT4( const LevelP& level,
 {
   std::string taskname = "RMCRTCommon::sigmaT4";
 
-  Task* tsk = NULL;
+  Task* tsk = nullptr;
   if ( RMCRTCommon::d_FLT_DBL == TypeDescription::double_type ){
     tsk = scinew Task( taskname, this, &RMCRTCommon::sigmaT4<double>, temp_dw, radCalc_freq, includeEC );
   } else {

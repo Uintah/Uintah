@@ -843,7 +843,7 @@ void AMRMPM::scheduleInterpolateParticlesToGrid_CFI(SchedulerP& sched,
     printSchedule(patches,cout_doing,
                   "AMRMPM::scheduleInterpolateParticlesToGrid_CFI");
 
-    Task* t = NULL;
+    Task* t = nullptr;
     if( d_CFI_interpolator == "gimp" ){
 
       t = scinew Task("AMRMPM::interpolateParticlesToGrid_CFI_GIMP",
